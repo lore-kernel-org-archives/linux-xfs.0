@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBMGiTsk006638 for <xfs@oss.sgi.com>; Mon, 22 Dec 2008 10:44:29 -0600
+	mBMGimLq006771 for <xfs@oss.sgi.com>; Mon, 22 Dec 2008 10:44:48 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1F7543F8E9
-	for <xfs@oss.sgi.com>; Mon, 22 Dec 2008 08:44:27 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3C6F73F8F0
+	for <xfs@oss.sgi.com>; Mon, 22 Dec 2008 08:44:46 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id nVWnb7oy8ub9nkXC for
-	<xfs@oss.sgi.com>; Mon, 22 Dec 2008 08:44:27 -0800 (PST)
-Message-Id: <20081222164355.600566000@bombadil.infradead.org>
+	by cuda.sgi.com with ESMTP id E4tIKKEsMa8PGFgh for
+	<xfs@oss.sgi.com>; Mon, 22 Dec 2008 08:44:46 -0800 (PST)
+Message-Id: <20081222164412.220377000@bombadil.infradead.org>
 References: <20081222163831.755809000@bombadil.infradead.org>
-Date: Mon, 22 Dec 2008 11:38:36 -0500
+Date: Mon, 22 Dec 2008 11:38:51 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 05/20] xfsprogs Polish translation update
+Subject: [PATCH 20/20] xfsprogs: resync libxfs with the kernel code
+Content-Disposition: inline; filename=libxfs-resync
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,6844 +22,5343 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6754346016266131628=="
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============6754346016266131628==
-Content-Disposition: inline; filename=xfsprogs-gettext-update-polish-translation
+Also use the kernel xfs_iread now instead of a duplicated version.
 
 
-From: Jakub Bogusz <qboosh@pld-linux.org>.
 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
----
- xfsprogs/po/pl.po | 2900 ++++++++++++++++++++++++++++++-----------------------
- 1 files changed, 1618 insertions(+), 1282 deletions(-)
-
-diff --git a/xfsprogs/po/pl.po b/xfsprogs/po/pl.po
-index 79cb822..b4e1d76 100644
---- a/xfsprogs/po/pl.po
-+++ b/xfsprogs/po/pl.po
-@@ -1,180 +1,180 @@
- # Polish translation for xfsprogs.
- # This file is distributed under the same license as the xfsprogs package.
--# Jakub Bogusz <qboosh@pld-linux.org>, 2006.
-+# Jakub Bogusz <qboosh@pld-linux.org>, 2006-2008.
- #
- msgid ""
- msgstr ""
--"Project-Id-Version: xfsprogs 2.8.11\n"
-+"Project-Id-Version: xfsprogs 2.9.8\n"
- "Report-Msgid-Bugs-To: \n"
--"POT-Creation-Date: 2006-08-23 19:22+0200\n"
--"PO-Revision-Date: 2006-08-23 19:24+0200\n"
-+"POT-Creation-Date: 2008-04-23 15:54+1000\n"
-+"PO-Revision-Date: 2008-06-18 17:11+0200\n"
- "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
- "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
- "MIME-Version: 1.0\n"
- "Content-Type: text/plain; charset=ISO-8859-2\n"
- "Content-Transfer-Encoding: 8bit\n"
- 
--#: ../copy/xfs_copy.c:96
-+#: ../copy/xfs_copy.c:102
- #, c-format
- msgid "Check logfile \"%s\" for more details\n"
- msgstr "Wiêcej szczegó³ów w pliku loga \"%s\"\n"
- 
--#: ../copy/xfs_copy.c:102
-+#: ../copy/xfs_copy.c:108
- #, c-format
- msgid "%s:  could not write to logfile \"%s\".\n"
- msgstr "%s: nie uda³o siê zapisaæ pliku loga \"%s\".\n"
- 
--#: ../copy/xfs_copy.c:105
-+#: ../copy/xfs_copy.c:111
- #, c-format
- msgid "Aborting XFS copy -- logfile error -- reason: %s\n"
- msgstr "Przerwano XFS copy - b³±d pliku loga - przyczyna: %s\n"
- 
--#: ../copy/xfs_copy.c:120 ../copy/xfs_copy.c:280 ../copy/xfs_copy.c:557
--#: ../copy/xfs_copy.c:564
-+#: ../copy/xfs_copy.c:126 ../copy/xfs_copy.c:286 ../copy/xfs_copy.c:563
-+#: ../copy/xfs_copy.c:570
- msgid "Aborting XFS copy - reason"
- msgstr "Przerwano XFS copy - przyczyna"
- 
--#: ../copy/xfs_copy.c:134
-+#: ../copy/xfs_copy.c:140
- msgid "THE FOLLOWING COPIES FAILED TO COMPLETE\n"
- msgstr "NASTÊPUJ¡CYCH KOPII NIE UDA£O SIÊ UKOÑCZYÆ\n"
- 
--#: ../copy/xfs_copy.c:138
-+#: ../copy/xfs_copy.c:144
- msgid "write error"
- msgstr "b³±d zapisu"
- 
--#: ../copy/xfs_copy.c:140
-+#: ../copy/xfs_copy.c:146
- msgid "lseek64 error"
- msgstr "b³±d lseek64"
- 
--#: ../copy/xfs_copy.c:141
-+#: ../copy/xfs_copy.c:147
- #, c-format
- msgid " at offset %lld\n"
- msgstr " pod offsetem %lld\n"
- 
--#: ../copy/xfs_copy.c:145
-+#: ../copy/xfs_copy.c:151
- #, c-format
- msgid "All copies completed.\n"
- msgstr "Wszystkie kopie ukoñczone.\n"
- 
--#: ../copy/xfs_copy.c:148
-+#: ../copy/xfs_copy.c:154
- #, c-format
- msgid "See \"%s\" for more details.\n"
- msgstr "Wiêcej szczegó³ów w \"%s\".\n"
- 
--#: ../copy/xfs_copy.c:249
-+#: ../copy/xfs_copy.c:255
- #, c-format
- msgid "%s:  write error on target %d \"%s\" at offset %lld\n"
- msgstr "%s: b³±d zapisu przy celu %d \"%s\" pod offsetem %lld\n"
- 
--#: ../copy/xfs_copy.c:254
-+#: ../copy/xfs_copy.c:260
- #, c-format
- msgid "%s:  lseek64 error on target %d \"%s\" at offset %lld\n"
- msgstr "%s: b³±d lseek64 przy celu %d \"%s\" pod offsetem %lld\n"
- 
--#: ../copy/xfs_copy.c:260
-+#: ../copy/xfs_copy.c:266
- #, c-format
- msgid "Aborting target %d - reason"
- msgstr "Przerywano zapis celu %d - przyczyna"
- 
--#: ../copy/xfs_copy.c:264
-+#: ../copy/xfs_copy.c:270
- msgid "Aborting XFS copy - no more targets.\n"
- msgstr "Przerwano XFS copy - nie ma wiêcej celów.\n"
- 
--#: ../copy/xfs_copy.c:275
-+#: ../copy/xfs_copy.c:281
- #, c-format
- msgid "%s:  thread %d died unexpectedly, target \"%s\" incomplete\n"
- msgstr "%s: w±tek %d zmar³ nieoczekiwanie, cel \"%s\" niekompletny\n"
- 
--#: ../copy/xfs_copy.c:277
-+#: ../copy/xfs_copy.c:283
- #, c-format
- msgid "%s:  offset was probably %lld\n"
- msgstr "%s: offset prawdopodobnie %lld\n"
- 
--#: ../copy/xfs_copy.c:288
-+#: ../copy/xfs_copy.c:294
- #, c-format
- msgid "%s: Unknown child died (should never happen!)\n"
- msgstr "%s: Nieznany potomek zmar³ (nie powinno siê zdarzyæ!)\n"
- 
--#: ../copy/xfs_copy.c:298
-+#: ../copy/xfs_copy.c:304
- #, c-format
- msgid "Usage: %s [-bd] [-L logfile] source target [target ...]\n"
- msgstr "Sk³adnia: %s [-bd] [-L plik_loga] ¼ród³o cel [cel ...]\n"
- 
--#: ../copy/xfs_copy.c:380
-+#: ../copy/xfs_copy.c:386
- #, c-format
- msgid "%s:  lseek64 failure at offset %lld\n"
- msgstr "%s: niepowodzenie lseek64 pod offsetem %lld\n"
- 
--#: ../copy/xfs_copy.c:395
-+#: ../copy/xfs_copy.c:401
- #, c-format
- msgid "assert error:  buf->length = %d, buf->size = %d\n"
- msgstr "b³±d zapewnienia: buf->length = %d, buf->size = %d\n"
- 
--#: ../copy/xfs_copy.c:402
-+#: ../copy/xfs_copy.c:408
- #, c-format
- msgid "%s:  read failure at offset %lld\n"
- msgstr "%s: b³±d odczytu pod offsetem %lld\n"
- 
--#: ../copy/xfs_copy.c:537 ../growfs/xfs_growfs.c:179 ../io/init.c:177
--#: ../mkfs/xfs_mkfs.c:1253 ../quota/init.c:131 ../repair/xfs_repair.c:261
-+#: ../copy/xfs_copy.c:543 ../growfs/xfs_growfs.c:179 ../io/init.c:180
-+#: ../mkfs/xfs_mkfs.c:1354 ../quota/init.c:131 ../repair/xfs_repair.c:313
- #: ../rtcp/xfs_rtcp.c:57
- #, c-format
- msgid "%s version %s\n"
- msgstr "%s wersja %s\n"
- 
--#: ../copy/xfs_copy.c:555
-+#: ../copy/xfs_copy.c:561
- #, c-format
- msgid "%s: couldn't open log file \"%s\"\n"
- msgstr "%s: nie uda³o siê otworzyæ pliku loga \"%s\"\n"
- 
--#: ../copy/xfs_copy.c:562
-+#: ../copy/xfs_copy.c:568
- #, c-format
- msgid "%s: couldn't set up logfile stream\n"
- msgstr "%s: nie uda³o siê ustanowiæ strumienia pliku loga\n"
- 
--#: ../copy/xfs_copy.c:574
-+#: ../copy/xfs_copy.c:580
- msgid "Couldn't allocate target array\n"
- msgstr "Nie uda³o siê przydzieliæ tablicy celów\n"
- 
--#: ../copy/xfs_copy.c:589
-+#: ../copy/xfs_copy.c:595
- #, c-format
- msgid "%s: couldn't register atexit function.\n"
- msgstr "%s: nie uda³o siê zarejestrowaæ funkcji atexit.\n"
- 
--#: ../copy/xfs_copy.c:598
-+#: ../copy/xfs_copy.c:604
- #, c-format
- msgid "%s:  couldn't open source \"%s\"\n"
- msgstr "%s: nie uda³o siê otworzyæ ¼ród³a \"%s\"\n"
- 
--#: ../copy/xfs_copy.c:604
-+#: ../copy/xfs_copy.c:610
- #, c-format
- msgid "%s:  couldn't stat source \"%s\"\n"
- msgstr "%s: nie uda³o siê wykonaæ stat na ¼ródle \"%s\"\n"
- 
--#: ../copy/xfs_copy.c:614
-+#: ../copy/xfs_copy.c:620
- #, c-format
- msgid "%s: Cannot set direct I/O flag on \"%s\".\n"
- msgstr "%s: Nie mo¿na ustawiæ flagi bezpo¶redniego we/wy na \"%s\".\n"
- 
--#: ../copy/xfs_copy.c:619
-+#: ../copy/xfs_copy.c:625
- #, c-format
- msgid "%s: xfsctl on file \"%s\" failed.\n"
- msgstr "%s: xfsctl na pliku \"%s\" nie powiod³o siê.\n"
- 
--#: ../copy/xfs_copy.c:642
-+#: ../copy/xfs_copy.c:648
- #, c-format
- msgid "%s:  Warning -- a filesystem is mounted on the source device.\n"
- msgstr "%s: Uwaga - system plików jest podmontowany na urz±dzeniu ¼ród³owym.\n"
- 
--#: ../copy/xfs_copy.c:645
-+#: ../copy/xfs_copy.c:651
- msgid "\t\tGenerated copies may be corrupt unless the source is\n"
- msgstr "\t\tWygenerowane kopie mog± byæ uszkodzone o ile ¼ród³o nie jest\n"
- 
--#: ../copy/xfs_copy.c:647
-+#: ../copy/xfs_copy.c:653
- msgid "\t\tunmounted or mounted read-only.  Copy proceeding...\n"
- msgstr "\t\todmontowane lub podmontowane tylko do odczytu. Kopiowanie w trakcie...\n"
- 
--#: ../copy/xfs_copy.c:664
-+#: ../copy/xfs_copy.c:670
- #, c-format
- msgid ""
- "%s: couldn't initialize XFS library\n"
-@@ -183,7 +183,7 @@ msgstr ""
- "%s: nie uda³o siê zainicjowaæ biblioteki XFS\n"
- "%s: Przerwano.\n"
- 
--#: ../copy/xfs_copy.c:678
-+#: ../copy/xfs_copy.c:684
- #, c-format
- msgid ""
- "%s: %s filesystem failed to initialize\n"
-@@ -192,7 +192,7 @@ msgstr ""
- "%s: Nie powiod³a siê inicjalizacja systemu plików %s\n"
- "%s: Przerwano.\n"
- 
--#: ../copy/xfs_copy.c:682
-+#: ../copy/xfs_copy.c:688
- #, c-format
- msgid ""
- "%s %s filesystem failed to initialize\n"
-@@ -201,7 +201,7 @@ msgstr ""
- "%s: Nie powiod³a siê inicjalizacja systemu plików %s\n"
- "%s: Przerwano.\n"
- 
--#: ../copy/xfs_copy.c:686
-+#: ../copy/xfs_copy.c:692
- #, c-format
- msgid ""
- "%s: %s has an external log.\n"
-@@ -210,7 +210,7 @@ msgstr ""
- "%s: %s ma zewnêtrzny log.\n"
- "%s: Przerwano.\n"
- 
--#: ../copy/xfs_copy.c:690
-+#: ../copy/xfs_copy.c:696
- #, c-format
- msgid ""
- "%s: %s has a real-time section.\n"
-@@ -219,7 +219,7 @@ msgstr ""
- "%s: %s ma sekcjê real-time.\n"
- "%s: Przerwano.\n"
- 
--#: ../copy/xfs_copy.c:715
-+#: ../copy/xfs_copy.c:721
- msgid ""
- "Error:  filesystem block size is smaller than the disk sectorsize.\n"
- "Aborting XFS copy now.\n"
-@@ -227,12 +227,12 @@ msgstr ""
- "B³±d: rozmiar bloku systemu plików jest mniejszy ni¿ rozmiar sektora dysku.\n"
- "Przerwano XFS copy.\n"
- 
--#: ../copy/xfs_copy.c:736
-+#: ../copy/xfs_copy.c:742
- #, c-format
- msgid "Creating file %s\n"
- msgstr "Tworzenie pliku %s\n"
- 
--#: ../copy/xfs_copy.c:754
-+#: ../copy/xfs_copy.c:760
- #, c-format
- msgid ""
- "%s:  a filesystem is mounted on target device \"%s\".\n"
-@@ -241,66 +241,66 @@ msgstr ""
- "%s: na urz±dzeniu docelowym \"%s\" jest podmontowany system plików.\n"
- "%s nie mo¿e kopiowaæ na podmontowane systemy plików. Przerwano.\n"
- 
--#: ../copy/xfs_copy.c:765
-+#: ../copy/xfs_copy.c:771
- #, c-format
- msgid "%s:  couldn't open target \"%s\"\n"
- msgstr "%s: nie uda³o siê otworzyæ celu \"%s\"\n"
- 
--#: ../copy/xfs_copy.c:775
-+#: ../copy/xfs_copy.c:781
- #, c-format
- msgid "%s:  cannot grow data section.\n"
- msgstr "%s: nie mo¿na powiêkszyæ sekcji danych.\n"
- 
--#: ../copy/xfs_copy.c:783
-+#: ../copy/xfs_copy.c:789
- #, c-format
- msgid "%s:  xfsctl on \"%s\" failed.\n"
- msgstr "%s: xfsctl na \"%s\" nie powiod³o siê.\n"
- 
--#: ../copy/xfs_copy.c:802
-+#: ../copy/xfs_copy.c:808
- #, c-format
- msgid "%s:  failed to write last block\n"
- msgstr "%s: nie uda³o siê zapisaæ ostatniego bloku\n"
- 
--#: ../copy/xfs_copy.c:804
-+#: ../copy/xfs_copy.c:810
- #, c-format
- msgid "\tIs target \"%s\" too small?\n"
- msgstr "\tCzy cel \"%s\" jest zbyt ma³y?\n"
- 
--#: ../copy/xfs_copy.c:814
-+#: ../copy/xfs_copy.c:820
- msgid "Couldn't initialize global thread mask\n"
- msgstr "Nie uda³o siê zainicjowaæ globalnej maski w±tków\n"
- 
--#: ../copy/xfs_copy.c:821
-+#: ../copy/xfs_copy.c:827
- msgid "Error initializing wbuf 0\n"
- msgstr "B³±d inicjalizacji wbuf 0\n"
- 
--#: ../copy/xfs_copy.c:829
-+#: ../copy/xfs_copy.c:835
- msgid "Error initializing btree buf 1\n"
- msgstr "B³±d inicjalizacji btree buf 1\n"
- 
--#: ../copy/xfs_copy.c:834
-+#: ../copy/xfs_copy.c:840
- msgid "Error creating first semaphore.\n"
- msgstr "B³±d tworzenia pierwszego semafora.\n"
- 
--#: ../copy/xfs_copy.c:849
-+#: ../copy/xfs_copy.c:855
- msgid "Couldn't malloc space for thread args\n"
- msgstr "Nie uda³o siê przydzieliæ miejsca na argumenty w±tku\n"
- 
--#: ../copy/xfs_copy.c:861
-+#: ../copy/xfs_copy.c:867
- #, c-format
- msgid "Error creating thread mutex %d\n"
- msgstr "B³±d podczas tworzenia sekcji krytycznej %d w±tku\n"
- 
--#: ../copy/xfs_copy.c:878
-+#: ../copy/xfs_copy.c:884
- #, c-format
- msgid "Error creating thread for target %d\n"
- msgstr "B³±d podczas tworzenia w±tku dla celu %d\n"
- 
--#: ../copy/xfs_copy.c:971
-+#: ../copy/xfs_copy.c:977
- msgid "WARNING:  source filesystem inconsistent.\n"
- msgstr "UWAGA: ¼ród³owy system plików niespójny.\n"
- 
--#: ../copy/xfs_copy.c:973
-+#: ../copy/xfs_copy.c:979
- msgid "  A leaf btree rec isn't a leaf.  Aborting now.\n"
- msgstr " Li¶æ rekordu b-drzewa nie jest li¶ciem. Przerwano.\n"
- 
-@@ -349,32 +349,32 @@ msgid ""
- "meta-data=%-22s isize=%-6u agcount=%u, agsize=%u blks\n"
- "         =%-22s sectsz=%-5u attr=%u\n"
- "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
--"         =%-22s sunit=%-6u swidth=%u blks, unwritten=%u\n"
-+"         =%-22s sunit=%-6u swidth=%u blks\n"
- "naming   =version %-14u bsize=%-6u\n"
- "log      =%-22s bsize=%-6u blocks=%u, version=%u\n"
--"         =%-22s sectsz=%-5u sunit=%u blks\n"
-+"         =%-22s sectsz=%-5u sunit=%u blks, lazy-count=%u\n"
- "realtime =%-22s extsz=%-6u blocks=%llu, rtextents=%llu\n"
- msgstr ""
- "metadane=%-22s isize=%-6u agcount=%u, agsize=%u bloków\n"
- "        =%-22s sectsz=%-5u attr=%u\n"
- "dane    =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
--"        =%-22s sunit=%-6u swidth=%u bloków, niezapisanych=%u\n"
-+"        =%-22s sunit=%-6u swidth=%u bloków\n"
- "nazwy   =wersja %-14u bsize=%-6u\n"
- "log     =%-22s bsize=%-6u blocks=%u, wersja=%u\n"
--"        =%-22s sectsz=%-5u sunit=%u bloków\n"
-+"        =%-22s sectsz=%-5u sunit=%u bloków, lazy-count=%u\n"
- "realtime=%-22s extsz=%-6u blocks=%llu, rtextents=%llu\n"
- 
--#: ../growfs/xfs_growfs.c:82 ../growfs/xfs_growfs.c:443
--#: ../growfs/xfs_growfs.c:444
-+#: ../growfs/xfs_growfs.c:82 ../growfs/xfs_growfs.c:445
-+#: ../growfs/xfs_growfs.c:446
- msgid "internal"
- msgstr "wewnêtrzny"
- 
- #: ../growfs/xfs_growfs.c:82 ../growfs/xfs_growfs.c:85
--#: ../growfs/xfs_growfs.c:443 ../growfs/xfs_growfs.c:444
-+#: ../growfs/xfs_growfs.c:445 ../growfs/xfs_growfs.c:446
- msgid "external"
- msgstr "zewnêtrzny"
- 
--#: ../growfs/xfs_growfs.c:85 ../mkfs/xfs_mkfs.c:1559
-+#: ../growfs/xfs_growfs.c:85 ../mkfs/xfs_mkfs.c:1672
- msgid "none"
- msgstr "brak"
- 
-@@ -393,128 +393,128 @@ msgstr "%s: podany plik [\"%s\"] nie jest na systemie plik
- msgid "%s: cannot determine geometry of filesystem mounted at %s: %s\n"
- msgstr "%s: nie mo¿na okre¶liæ geometrii systemu plików podmontowanego pod %s: %s\n"
- 
--#: ../growfs/xfs_growfs.c:264
-+#: ../growfs/xfs_growfs.c:265
- #, c-format
- msgid "%s: failed to access data device for %s\n"
- msgstr "%s: nie uda³o siê uzyskaæ dostêpu do urz±dzenia z danymi dla %s\n"
- 
--#: ../growfs/xfs_growfs.c:269
-+#: ../growfs/xfs_growfs.c:270
- #, c-format
- msgid "%s: failed to access external log for %s\n"
- msgstr "%s: nie uda³o siê uzyskaæ dostêpu do zewnêtrznego loga dla %s\n"
- 
--#: ../growfs/xfs_growfs.c:275
-+#: ../growfs/xfs_growfs.c:276
- #, c-format
- msgid "%s: failed to access realtime device for %s\n"
- msgstr "%s: nie uda³o siê uzyskaæ dostêpu do urz±dzenia realtime dla %s\n"
- 
--#: ../growfs/xfs_growfs.c:310
-+#: ../growfs/xfs_growfs.c:312
- #, c-format
- msgid "data size %lld too large, maximum is %lld\n"
- msgstr "rozmiar danych %lld zbyt du¿y, maksymalny to %lld\n"
- 
--#: ../growfs/xfs_growfs.c:320
-+#: ../growfs/xfs_growfs.c:322
- #, c-format
- msgid "data size %lld too small, old size is %lld\n"
- msgstr "rozmiar danych %lld zbyt ma³y, stary rozmiar to %lld\n"
- 
--#: ../growfs/xfs_growfs.c:328
-+#: ../growfs/xfs_growfs.c:330
- #, c-format
- msgid "data size unchanged, skipping\n"
- msgstr "rozmiar danych nie zmieniony, pominiêto\n"
- 
--#: ../growfs/xfs_growfs.c:331
-+#: ../growfs/xfs_growfs.c:333
- #, c-format
- msgid "inode max pct unchanged, skipping\n"
- msgstr "maksymalny procent i-wêz³ów nie zmieniony, pominiêto\n"
- 
--#: ../growfs/xfs_growfs.c:338 ../growfs/xfs_growfs.c:377
--#: ../growfs/xfs_growfs.c:412
-+#: ../growfs/xfs_growfs.c:340 ../growfs/xfs_growfs.c:379
-+#: ../growfs/xfs_growfs.c:414
- #, c-format
- msgid "%s: growfs operation in progress already\n"
- msgstr "%s: operacja growfs ju¿ trwa\n"
- 
--#: ../growfs/xfs_growfs.c:342
-+#: ../growfs/xfs_growfs.c:344
- #, c-format
- msgid "%s: XFS_IOC_FSGROWFSDATA xfsctl failed: %s\n"
- msgstr "%s: xfsctl XFS_IOC_FSGROWFSDATA nie powiod³o siê: %s\n"
- 
--#: ../growfs/xfs_growfs.c:358
-+#: ../growfs/xfs_growfs.c:360
- #, c-format
- msgid "realtime size %lld too large, maximum is %lld\n"
- msgstr "rozmiar realtime %lld zbyt du¿y, maksymalny to %lld\n"
- 
--#: ../growfs/xfs_growfs.c:364
-+#: ../growfs/xfs_growfs.c:366
- #, c-format
- msgid "realtime size %lld too small, old size is %lld\n"
- msgstr "rozmiar realtime %lld zbyt ma³y, stary rozmiar to %lld\n"
- 
--#: ../growfs/xfs_growfs.c:370
-+#: ../growfs/xfs_growfs.c:372
- #, c-format
- msgid "realtime size unchanged, skipping\n"
- msgstr "rozmiar realtime nie zmieniony, pominiêto\n"
- 
--#: ../growfs/xfs_growfs.c:381
-+#: ../growfs/xfs_growfs.c:383
- #, c-format
- msgid "%s: realtime growth not implemented\n"
- msgstr "%s: powiêkszanie realtime nie jest zaimplementowane\n"
- 
--#: ../growfs/xfs_growfs.c:385
-+#: ../growfs/xfs_growfs.c:387
- #, c-format
- msgid "%s: XFS_IOC_FSGROWFSRT xfsctl failed: %s\n"
- msgstr "%s: xfsctl XFS_IOC_FSGROWFSRT nie powiod³o siê: %s\n"
- 
--#: ../growfs/xfs_growfs.c:406
-+#: ../growfs/xfs_growfs.c:408
- #, c-format
- msgid "log size unchanged, skipping\n"
- msgstr "rozmiar loga nie zmieniony, pominiêto\n"
- 
--#: ../growfs/xfs_growfs.c:416
-+#: ../growfs/xfs_growfs.c:418
- #, c-format
- msgid "%s: log growth not supported yet\n"
- msgstr "%s: powiêkszanie loga nie jest jeszcze obs³ugiwane\n"
- 
--#: ../growfs/xfs_growfs.c:420
-+#: ../growfs/xfs_growfs.c:422
- #, c-format
- msgid "%s: XFS_IOC_FSGROWFSLOG xfsctl failed: %s\n"
- msgstr "%s: xfsctl XFS_IOC_FSGROWFSLOG nie powiod³o siê: %s\n"
- 
--#: ../growfs/xfs_growfs.c:428
-+#: ../growfs/xfs_growfs.c:430
- #, c-format
- msgid "%s: XFS_IOC_FSGEOMETRY xfsctl failed: %s\n"
- msgstr "%s: xfsctl XFS_IOC_FSGEOMETRY nie powiod³o siê: %s\n"
- 
--#: ../growfs/xfs_growfs.c:433
-+#: ../growfs/xfs_growfs.c:435
- #, c-format
- msgid "data blocks changed from %lld to %lld\n"
- msgstr "bloki danych zmienione z %lld na %lld\n"
- 
--#: ../growfs/xfs_growfs.c:436
-+#: ../growfs/xfs_growfs.c:438
- #, c-format
- msgid "inode max percent changed from %d to %d\n"
- msgstr "maksymalny procent i-wêz³ów zmieniony z %d na %d\n"
- 
--#: ../growfs/xfs_growfs.c:439
-+#: ../growfs/xfs_growfs.c:441
- #, c-format
- msgid "log blocks changed from %d to %d\n"
- msgstr "bloki loga zmienione z %d na %d\n"
- 
--#: ../growfs/xfs_growfs.c:442
-+#: ../growfs/xfs_growfs.c:444
- #, c-format
- msgid "log changed from %s to %s\n"
- msgstr "log zmieniony - by³ %s, jest %s\n"
- 
--#: ../growfs/xfs_growfs.c:446
-+#: ../growfs/xfs_growfs.c:448
- #, c-format
- msgid "realtime blocks changed from %lld to %lld\n"
- msgstr "bloki realtime zmienione z %lld na %lld\n"
- 
--#: ../growfs/xfs_growfs.c:449
-+#: ../growfs/xfs_growfs.c:451
- #, c-format
- msgid "realtime extent size changed from %d to %d\n"
- msgstr "rozmiar fragmentu realtime zmieniony z %d na %d\n"
- 
--#: ../io/attr.c:58
-+#: ../io/attr.c:59
- #, c-format
- msgid ""
- "\n"
-@@ -534,6 +534,7 @@ msgid ""
- " e -- for non-realtime files, observe the inode extent size value\n"
- " E -- children created in this directory inherit the extent size value\n"
- " f -- do not include this file when defragmenting the filesystem\n"
-+" S -- enable filestreams allocator for this directory\n"
- "\n"
- " Options:\n"
- " -R -- recursively descend (useful when current file is a directory)\n"
-@@ -559,6 +560,7 @@ msgstr ""
- " e - dla plików nie-realtime - przestrzeganie warto¶ci rozmiaru fragmentu i-wêz³a\n"
- " E - wpisy tworzone w tym katalogu dziedzicz± warto¶æ rozmiaru fragmentu\n"
- " f - nie uwzglêdnianie tego pliku przy defragmentacji systemu plików\n"
-+" S - w³±czenie przydzielania strumieni plikowych dla tego katalogu\n"
- "\n"
- " Opcje:\n"
- " -R - rekurencyjne zag³êbianie siê (przydatne kiedy bie¿±cy plik jest katalogiem)\n"
-@@ -567,7 +569,7 @@ msgstr ""
- " -v - tryb szczegó³owy; pokazywanie d³ugich nazw flag zamiast pojedynczych znaków\n"
- "\n"
- 
--#: ../io/attr.c:88
-+#: ../io/attr.c:90
- #, c-format
- msgid ""
- "\n"
-@@ -591,6 +593,7 @@ msgid ""
- " +/-e -- set/clear the extent-size flag\n"
- " +/-E -- set/clear the extent-size inheritance flag\n"
- " +/-f -- set/clear the no-defrag flag\n"
-+" +/-S -- set/clear the filestreams allocator flag\n"
- " Note1: user must have certain capabilities to modify immutable/append-only.\n"
- " Note2: immutable/append-only files cannot be deleted; removing these files\n"
- "        requires the immutable/append-only flag to be cleared first.\n"
-@@ -619,6 +622,7 @@ msgstr ""
- " +/-e - ustawienie/zdjêcie flagi extent-size (rozmiaru fragmentu)\n"
- " +/-E - ustawienie/zdjêcie flagi dziedziczenia rozmiaru fragmentu\n"
- " +/-f - ustawienie/zdjêcie flagi no-defrag\n"
-+" +/-S - ustawienie/zdjêcie flagi przydzielania strumieni plikowych\n"
- " Uwaga1: u¿ytkownik musi mieæ pewne uprawnienia do zmiany flag\n"
- "         immutable/append-only\n"
- " Uwaga2: plików immutable/append-only nie mo¿na usuwaæ; usuwanie tych plików\n"
-@@ -627,55 +631,59 @@ msgstr ""
- "         realtime i (zwyk³y) plik musi byæ pusty przy ustawianiu flagi.\n"
- "\n"
- 
--#: ../io/attr.c:168 ../io/attr.c:244 ../io/open.c:403 ../io/open.c:475
-+#: ../io/attr.c:171 ../io/attr.c:247 ../io/open.c:403 ../io/open.c:475
- #: ../io/open.c:599 ../io/open.c:621 ../libxfs/init.c:108 ../mkfs/proto.c:284
--#: ../quota/project.c:87 ../quota/project.c:117 ../quota/project.c:147
-+#: ../quota/project.c:103 ../quota/project.c:142 ../quota/project.c:181
- #, c-format
- msgid "%s: cannot open %s: %s\n"
- msgstr "%s: nie mo¿na otworzyæ %s: %s\n"
- 
--#: ../io/attr.c:171 ../io/attr.c:218 ../io/attr.c:247 ../io/attr.c:318
--#: ../quota/project.c:90 ../quota/project.c:121 ../quota/project.c:151
-+#: ../io/attr.c:174 ../io/attr.c:221 ../io/attr.c:250 ../io/attr.c:321
-+#: ../quota/project.c:106 ../quota/project.c:146 ../quota/project.c:185
- #, c-format
- msgid "%s: cannot get flags on %s: %s\n"
- msgstr "%s: nie mo¿na pobraæ flag %s: %s\n"
- 
--#: ../io/attr.c:253 ../io/attr.c:324
-+#: ../io/attr.c:256 ../io/attr.c:327
- #, c-format
- msgid "%s: cannot set flags on %s: %s\n"
- msgstr "%s: nie mo¿na ustawiæ flag %s: %s\n"
- 
--#: ../io/attr.c:288 ../io/attr.c:302
-+#: ../io/attr.c:291 ../io/attr.c:305
- #, c-format
- msgid "%s: unknown flag\n"
- msgstr "%s: nieznana flaga\n"
- 
--#: ../io/attr.c:308
-+#: ../io/attr.c:311
- #, c-format
- msgid "%s: bad chattr command, not +/-X\n"
- msgstr "%s: z³e polecenie chattr - nie +/-X\n"
- 
--#: ../io/attr.c:333
-+#: ../io/attr.c:336
- msgid "chattr"
- msgstr "chattr"
- 
--#: ../io/attr.c:335
-+#: ../io/attr.c:338
- msgid "[-R|-D] [+/-"
- msgstr "[-R|-D] [+/-"
- 
--#: ../io/attr.c:340
-+#: ../io/attr.c:338
-+msgid "]"
-+msgstr "]"
+Index: xfs-cmds/xfsprogs/include/xfs_ag.h
+===================================================================
+--- xfs-cmds.orig/xfsprogs/include/xfs_ag.h	2008-12-06 20:05:46.000000000 +0100
++++ xfs-cmds/xfsprogs/include/xfs_ag.h	2008-12-06 20:05:49.000000000 +0100
+@@ -91,6 +91,8 @@
+ #define	XFS_AGF_BLOCK(mp)	XFS_HDR_BLOCK(mp, XFS_AGF_DADDR(mp))
+ #define	XFS_BUF_TO_AGF(bp)	((xfs_agf_t *)XFS_BUF_PTR(bp))
+ 
++extern int xfs_read_agf(struct xfs_mount *mp, struct xfs_trans *tp,
++			xfs_agnumber_t agno, int flags, struct xfs_buf **bpp);
+ 
+ /*
+  * Size of the unlinked inode hash table in the agi.
+@@ -142,6 +144,9 @@
+ #define	XFS_AGI_BLOCK(mp)	XFS_HDR_BLOCK(mp, XFS_AGI_DADDR(mp))
+ #define	XFS_BUF_TO_AGI(bp)	((xfs_agi_t *)XFS_BUF_PTR(bp))
+ 
++extern int xfs_read_agi(struct xfs_mount *mp, struct xfs_trans *tp,
++				xfs_agnumber_t agno, struct xfs_buf **bpp);
 +
-+#: ../io/attr.c:343
- msgid "change extended inode flags on the currently open file"
- msgstr "zmiana rozszerzonych flag i-wêz³ów aktualnie otwartego pliku"
+ /*
+  * The third a.g. block contains the a.g. freelist, an array
+  * of block pointers to blocks owned by the allocation btree code.
+@@ -204,6 +209,11 @@
+ #endif
+ } xfs_perag_t;
  
--#: ../io/attr.c:343
-+#: ../io/attr.c:346
- msgid "lsattr"
- msgstr "lsattr"
- 
--#: ../io/attr.c:345
-+#: ../io/attr.c:348
- msgid "[-R|-D|-a|-v]"
- msgstr "[-R|-D|-a|-v]"
- 
--#: ../io/attr.c:350
-+#: ../io/attr.c:353
- msgid "list extended inode flags set on the currently open file"
- msgstr "wypisanie rozszerzonych flag i-wêz³ów aktualnie otwartego pliku"
- 
-@@ -722,113 +730,117 @@ msgstr ""
- " otwarty tylko do odczytu).\n"
- "\n"
- 
--#: ../io/bmap.c:116
-+#: ../io/bmap.c:120
- #, c-format
- msgid "%s: can't get geometry [\"%s\"]: %s\n"
- msgstr "%s: nie mo¿na uzyskaæ geometrii [\"%s\"]: %s\n"
- 
--#: ../io/bmap.c:124
-+#: ../io/bmap.c:128
- #, c-format
- msgid "%s: cannot read attrs on \"%s\": %s\n"
- msgstr "%s: nie mo¿na odczytaæ atrybutów \"%s\": %s\n"
- 
--#: ../io/bmap.c:142
-+#: ../io/bmap.c:146
- #, c-format
- msgid "%s: malloc of %d bytes failed.\n"
- msgstr "%s: przydzielenie %d bajtów nie powiod³o siê.\n"
- 
--#: ../io/bmap.c:190
-+#: ../io/bmap.c:194
- #, c-format
- msgid "%s: xfsctl(XFS_IOC_GETBMAPX) iflags=0x%x [\"%s\"]: %s\n"
- msgstr "%s: xfsctl(XFS_IOC_GETBMAPX) iflags=0x%x [\"%s\"]: %s\n"
- 
--#: ../io/bmap.c:221
-+#: ../io/bmap.c:225
- #, c-format
- msgid "%s: cannot realloc %d bytes\n"
- msgstr "%s: nie mo¿na wykonaæ realloc na %d bajtów\n"
- 
--#: ../io/bmap.c:230
-+#: ../io/bmap.c:234
- #, c-format
- msgid "%s: no extents\n"
- msgstr "%s: brak fragmentów\n"
- 
--#: ../io/bmap.c:243 ../io/bmap.c:361
-+#: ../io/bmap.c:248 ../io/bmap.c:376
- #, c-format
- msgid "hole"
- msgstr "dziura"
- 
--#: ../io/bmap.c:252
-+#: ../io/bmap.c:257
- #, c-format
- msgid " %lld blocks\n"
- msgstr " %lld bloków\n"
- 
--#: ../io/bmap.c:321
-+#: ../io/bmap.c:336
- msgid "EXT"
- msgstr "EXT"
- 
--#: ../io/bmap.c:322
-+#: ../io/bmap.c:337
- msgid "FILE-OFFSET"
- msgstr "OFFSET-W-PLIKU"
- 
--#: ../io/bmap.c:323
-+#: ../io/bmap.c:338
-+msgid "RT-BLOCK-RANGE"
-+msgstr "ZAKRES-BLOKÓW-RT"
++/*
++ * tags for inode radix tree
++ */
++#define XFS_ICI_RECLAIM_TAG	0	/* inode is to be reclaimed */
 +
-+#: ../io/bmap.c:338
- msgid "BLOCK-RANGE"
- msgstr "ZAKRES-BLOKÓW"
- 
--#: ../io/bmap.c:324
-+#: ../io/bmap.c:339
- msgid "AG"
- msgstr "AG"
- 
--#: ../io/bmap.c:325
-+#: ../io/bmap.c:340
- msgid "AG-OFFSET"
- msgstr "OFFSET-AG"
- 
--#: ../io/bmap.c:326
-+#: ../io/bmap.c:341
- msgid "TOTAL"
- msgstr "RAZEM"
- 
--#: ../io/bmap.c:327
-+#: ../io/bmap.c:342
- msgid " FLAGS"
- msgstr " FLAGI"
- 
--#: ../io/bmap.c:390
-+#: ../io/bmap.c:410
- #, c-format
- msgid " FLAG Values:\n"
- msgstr " Warto¶ci FLAG:\n"
- 
--#: ../io/bmap.c:391
-+#: ../io/bmap.c:411
- #, c-format
- msgid "    %*.*o Unwritten preallocated extent\n"
- msgstr "    %*.*o Nie zapisany, ju¿ przydzielony fragment\n"
- 
--#: ../io/bmap.c:393
-+#: ../io/bmap.c:413
- #, c-format
- msgid "    %*.*o Doesn't begin on stripe unit\n"
- msgstr "    %*.*o Nie zaczyna siê od jednostki pasa\n"
- 
--#: ../io/bmap.c:395
-+#: ../io/bmap.c:415
- #, c-format
- msgid "    %*.*o Doesn't end   on stripe unit\n"
- msgstr "    %*.*o Nie koñczy siê na jednostce pasa\n"
- 
--#: ../io/bmap.c:397
-+#: ../io/bmap.c:417
- #, c-format
- msgid "    %*.*o Doesn't begin on stripe width\n"
- msgstr "    %*.*o Nie zaczyna siê na szeroko¶ci pasa\n"
- 
--#: ../io/bmap.c:399
-+#: ../io/bmap.c:419
- #, c-format
- msgid "    %*.*o Doesn't end   on stripe width\n"
- msgstr "    %*.*o Nie koñczy siê na szeroko¶ci pasa\n"
- 
--#: ../io/bmap.c:410
-+#: ../io/bmap.c:430
- msgid "bmap"
- msgstr "bmap"
- 
--#: ../io/bmap.c:415
-+#: ../io/bmap.c:435
- msgid "[-adlpv] [-n nx]"
- msgstr "[-adlpv] [-n nx]"
- 
--#: ../io/bmap.c:416
-+#: ../io/bmap.c:436
- msgid "print block mapping for an XFS file"
- msgstr "wypisanie mapowania bloków dla pliku na XFS-ie"
- 
-@@ -874,15 +886,15 @@ msgstr ""
- "\n"
- 
- #: ../io/fadvise.c:93 ../io/madvise.c:87 ../io/mincore.c:48 ../io/mmap.c:206
--#: ../io/mmap.c:301 ../io/mmap.c:407 ../io/mmap.c:554 ../io/prealloc.c:43
-+#: ../io/mmap.c:301 ../io/mmap.c:387 ../io/mmap.c:546 ../io/prealloc.c:43
- #: ../io/pwrite.c:282 ../io/sendfile.c:126
- #, c-format
- msgid "non-numeric offset argument -- %s\n"
- msgstr "nieliczbowy argument bêd±cy offsetem - %s\n"
- 
- #: ../io/fadvise.c:100 ../io/madvise.c:94 ../io/mincore.c:54 ../io/mmap.c:212
--#: ../io/mmap.c:308 ../io/mmap.c:414 ../io/mmap.c:561 ../io/pread.c:360
--#: ../io/pread.c:368 ../io/prealloc.c:48 ../io/pwrite.c:288
-+#: ../io/mmap.c:308 ../io/mmap.c:394 ../io/mmap.c:553 ../io/pread.c:330
-+#: ../io/pread.c:338 ../io/prealloc.c:48 ../io/pwrite.c:288
- #: ../io/sendfile.c:133
- #, c-format
- msgid "non-numeric length argument -- %s\n"
-@@ -949,7 +961,7 @@ msgstr ",tylko dopisywanie"
- msgid ",non-block"
- msgstr ",nieblokuj±cy"
- 
--#: ../io/file.c:81 ../io/sendfile.c:103 ../quota/path.c:107
-+#: ../io/file.c:81 ../io/sendfile.c:103 ../quota/path.c:112
- #, c-format
- msgid "value %d is out of range (0-%d)\n"
- msgstr "warto¶æ %d jest spoza zakresu (0-%d)\n"
-@@ -962,7 +974,7 @@ msgstr "file"
- msgid "f"
- msgstr "f"
- 
--#: ../io/file.c:94 ../quota/path.c:121
-+#: ../io/file.c:94 ../quota/path.c:126
- msgid "[N]"
- msgstr "[N]"
- 
-@@ -970,15 +982,15 @@ msgstr "[N]"
- msgid "set the current file"
- msgstr "ustawienie bie¿±cego pliku"
- 
--#: ../io/file.c:101 ../quota/path.c:127
-+#: ../io/file.c:101 ../quota/path.c:133
- msgid "print"
- msgstr "print"
- 
--#: ../io/file.c:102 ../quota/path.c:128
-+#: ../io/file.c:102 ../quota/path.c:134
- msgid "p"
- msgstr "p"
- 
--#: ../io/file.c:107
-+#: ../io/file.c:108
- msgid "list current open files and memory mappings"
- msgstr "wypisanie aktualnie otwartych plików i odwzorowañ w pamiêci"
- 
-@@ -1012,9 +1024,10 @@ msgstr "odmro
- msgid "fsync"
- msgstr "fsync"
- 
--#: ../io/fsync.c:55
-+#: ../io/fsync.c:55 ../repair/progress.c:430 ../repair/progress.c:440
-+#: ../repair/progress.c:456 ../repair/progress.c:474 ../repair/progress.c:489
- msgid "s"
--msgstr "s"
-+msgstr " "
- 
- #: ../io/fsync.c:59
- msgid "calls fsync(2) to flush all in-core file state to disk"
-@@ -1066,23 +1079,23 @@ msgstr "map i-w
- msgid "Usage: %s [-adFfmrRstx] [-p prog] [-c cmd]... file\n"
- msgstr "Sk³adnia: %s [-adFfmrRstx] [-p program] [-c polecenie]... plik\n"
- 
--#: ../io/init.c:95 ../io/mmap.c:168 ../io/mmap.c:175 ../io/mmap.c:178
-+#: ../io/init.c:98 ../io/mmap.c:168 ../io/mmap.c:175 ../io/mmap.c:178
- #: ../io/open.c:281
- #, c-format
- msgid "no files are open, try 'help open'\n"
- msgstr "nie ma otwartych plików, spróbuj 'help open'\n"
- 
--#: ../io/init.c:99 ../io/mmap.c:167 ../io/mmap.c:174
-+#: ../io/init.c:102 ../io/mmap.c:167 ../io/mmap.c:174
- #, c-format
- msgid "no mapped regions, try 'help mmap'\n"
- msgstr "nie ma podmapowanych regionów, spróbuj 'help mmap'\n"
- 
--#: ../io/init.c:105
-+#: ../io/init.c:108
- #, c-format
- msgid "foreign file active, %s command is for XFS filesystems only\n"
- msgstr "aktywny jest plik obcy, polecenie %s jest tylko dla systemów plików XFS\n"
- 
--#: ../io/init.c:150 ../io/open.c:303
-+#: ../io/init.c:153 ../io/open.c:303
- #, c-format
- msgid "non-numeric mode -- %s\n"
- msgstr "tryb nieliczbowy - %s\n"
-@@ -1291,7 +1304,7 @@ msgstr ""
- " -s - wykonanie zapisu synchronicznego (MS_SYNC)\n"
- "\n"
- 
--#: ../io/mmap.c:350
-+#: ../io/mmap.c:330
- #, c-format
- msgid ""
- "\n"
-@@ -1336,7 +1349,7 @@ msgstr ""
- "   etapie nie ma prób wy³apania sygna³ów...\n"
- "\n"
- 
--#: ../io/mmap.c:502
-+#: ../io/mmap.c:494
- #, c-format
- msgid ""
- "\n"
-@@ -1366,84 +1379,84 @@ msgstr ""
- " Zapisy s± wykonywane kolejno, domy¶lnie od offsetu pocz±tkowego.\n"
- "\n"
- 
--#: ../io/mmap.c:538 ../io/pread.c:345 ../io/pwrite.c:249 ../io/pwrite.c:268
-+#: ../io/mmap.c:530 ../io/pread.c:315 ../io/pwrite.c:249 ../io/pwrite.c:268
- #, c-format
- msgid "non-numeric seed -- %s\n"
- msgstr "nieliczbowy zarodek - %s\n"
- 
--#: ../io/mmap.c:587
-+#: ../io/mmap.c:580
- msgid "mmap"
- msgstr "mmap"
- 
--#: ../io/mmap.c:588
-+#: ../io/mmap.c:581
- msgid "mm"
- msgstr "mm"
- 
--#: ../io/mmap.c:593
-+#: ../io/mmap.c:586
- msgid "[N] | [-rwx] [off len]"
- msgstr "[N] | [-rwx] [offset d³ugo¶æ]"
- 
--#: ../io/mmap.c:595
-+#: ../io/mmap.c:588
- msgid "mmap a range in the current file, show mappings"
- msgstr "odwzorowanie przedzia³u w bie¿±cym pliku, pokazanie odwzorowañ"
- 
--#: ../io/mmap.c:598
-+#: ../io/mmap.c:591
- msgid "mread"
- msgstr "mread"
- 
--#: ../io/mmap.c:599
-+#: ../io/mmap.c:592
- msgid "mr"
- msgstr "mr"
- 
--#: ../io/mmap.c:604
-+#: ../io/mmap.c:597
- msgid "[-r] [off len]"
- msgstr "[-r] [offset d³ugo¶æ]"
- 
--#: ../io/mmap.c:606
-+#: ../io/mmap.c:599
- msgid "reads data from a region in the current memory mapping"
- msgstr "odczyt danych z regionu w bie¿±cym odwzorowaniu pamiêci"
- 
--#: ../io/mmap.c:609
-+#: ../io/mmap.c:602
- msgid "msync"
- msgstr "msync"
- 
--#: ../io/mmap.c:610
-+#: ../io/mmap.c:603
- msgid "ms"
- msgstr "ms"
- 
--#: ../io/mmap.c:615
-+#: ../io/mmap.c:608
- msgid "[-ais] [off len]"
- msgstr "[-ais] [offset d³ugo¶æ]"
- 
--#: ../io/mmap.c:616
-+#: ../io/mmap.c:609
- msgid "flush a region in the current memory mapping"
- msgstr "zrzucenie regionu w bie¿±cym odwzorowaniu pamiêci"
- 
--#: ../io/mmap.c:619
-+#: ../io/mmap.c:612
- msgid "munmap"
- msgstr "munmap"
- 
--#: ../io/mmap.c:620
-+#: ../io/mmap.c:613
- msgid "mu"
- msgstr "mu"
- 
--#: ../io/mmap.c:625
-+#: ../io/mmap.c:618
- msgid "unmaps the current memory mapping"
- msgstr "usuniêcie bie¿±cego odwzorowania pamiêci"
- 
--#: ../io/mmap.c:627
-+#: ../io/mmap.c:620
- msgid "mwrite"
- msgstr "mwrite"
- 
--#: ../io/mmap.c:628
-+#: ../io/mmap.c:621
- msgid "mw"
- msgstr "mw"
- 
--#: ../io/mmap.c:633
-+#: ../io/mmap.c:626
- msgid "[-r] [-S seed] [off len]"
- msgstr "[-r] [-S warto¶æ] [offset d³ugo¶æ]"
- 
--#: ../io/mmap.c:635
-+#: ../io/mmap.c:628
- msgid "writes data into a region in the current memory mapping"
- msgstr "zapis danych do regionu w bie¿±cym odwzorowaniu pamiêci"
- 
-@@ -2122,34 +2135,34 @@ msgstr ""
- " (dowolny offset mo¿e byæ w tym trybie czytany wiêcej ni¿ raz).\n"
- "\n"
- 
--#: ../io/pread.c:316 ../io/pwrite.c:215
-+#: ../io/pread.c:286 ../io/pwrite.c:215
- #, c-format
- msgid "non-numeric bsize -- %s\n"
- msgstr "nieliczbowy rozmiar bloku - %s\n"
- 
--#: ../io/pread.c:407
-+#: ../io/pread.c:375
- #, c-format
- msgid "read %lld/%lld bytes at offset %lld\n"
- msgstr "odczytano %lld/%lld bajtów od offsetu %lld\n"
- 
--#: ../io/pread.c:409 ../io/pwrite.c:335 ../io/sendfile.c:163
-+#: ../io/pread.c:377 ../io/pwrite.c:334 ../io/sendfile.c:163
- #, c-format
- msgid "%s, %d ops; %s (%s/sec and %.4f ops/sec)\n"
- msgstr "%s, %d operacji; %s (%s/sek i %.4f operacji/sek)\n"
- 
--#: ../io/pread.c:422
-+#: ../io/pread.c:390
- msgid "pread"
- msgstr "pread"
- 
--#: ../io/pread.c:423
-+#: ../io/pread.c:391
- msgid "r"
- msgstr "r"
- 
--#: ../io/pread.c:428
-+#: ../io/pread.c:396
- msgid "[-b bs] [-v] off len"
- msgstr "[-b rozm_bloku] [-v] offset d³ugo¶æ"
- 
--#: ../io/pread.c:429
-+#: ../io/pread.c:397
- msgid "reads a number of bytes at a specified offset"
- msgstr "odczyt podanej liczby bajtów od podanego offsetu"
- 
-@@ -2246,7 +2259,7 @@ msgstr ""
- msgid "non-numeric skip -- %s\n"
- msgstr "nieliczbowy liczba bajtów do pominiêcia - %s\n"
- 
--#: ../io/pwrite.c:333
-+#: ../io/pwrite.c:332
- #, c-format
- msgid "wrote %lld/%lld bytes at offset %lld\n"
- msgstr "zapisano %lld/%lld bajtów od offsetu %lld\n"
-@@ -2419,36 +2432,46 @@ msgstr "Uwaga - urz
- msgid "Failed forking lvdisplay process\n"
- msgstr "Nie uda³o siê odga³êziæ procesu lvdisplay\n"
- 
--#: ../libdisk/md.c:52
-+#: ../libdisk/md.c:61
- #, c-format
--msgid "Error getting MD array info from %s\n"
--msgstr "B³±d podczas pobierania informacji o macierzy MD z %s\n"
-+msgid "Error getting MD array device from %s\n"
-+msgstr "B³±d podczas pobierania urz±dzenia macierzy MD z %s\n"
- 
--#: ../libxcmd/command.c:82
-+#: ../libdisk/md.c:68
- #, c-format
--msgid "command \"%s\" not found\n"
--msgstr "nie znaleziono polecenia \"%s\"\n"
-+msgid "Couldn't malloc device string\n"
-+msgstr "Nie mo¿na przydzieliæ ³añcucha nazwy urz±dzenia\n"
- 
--#: ../libxcmd/command.c:90
-+#: ../libdisk/md.c:84
-+#, c-format
-+msgid "Error getting MD array info from %s\n"
-+msgstr "B³±d podczas pobierania informacji o macierzy MD z %s\n"
+ #define	XFS_AG_MAXLEVELS(mp)		((mp)->m_ag_maxlevels)
+ #define	XFS_MIN_FREELIST_RAW(bl,cl,mp)	\
+ 	(MIN(bl + 1, XFS_AG_MAXLEVELS(mp)) + MIN(cl + 1, XFS_AG_MAXLEVELS(mp)))
+Index: xfs-cmds/xfsprogs/include/xfs_bmap.h
+===================================================================
+--- xfs-cmds.orig/xfsprogs/include/xfs_bmap.h	2008-12-06 20:05:46.000000000 +0100
++++ xfs-cmds/xfsprogs/include/xfs_bmap.h	2008-12-06 20:05:49.000000000 +0100
+@@ -356,15 +356,18 @@
+ 	xfs_bmap_free_t		*flist,		/* i/o: list extents to free */
+ 	int			*committed);	/* xact committed or not */
+ 
++/* bmap to userspace formatter - copy to user & advance pointer */
++typedef int (*xfs_bmap_format_t)(void **, struct getbmapx *, int *);
 +
-+#: ../libxcmd/command.c:85
- #, c-format
- msgid "bad argument count %d to %s, expected at least %d arguments\n"
- msgstr "b³êdna liczba argumentów %d dla %s, oczekiwano co najmniej %d argumentów\n"
- 
--#: ../libxcmd/command.c:94
-+#: ../libxcmd/command.c:89
- #, c-format
- msgid "bad argument count %d to %s, expected %d arguments\n"
- msgstr "b³êdna liczba argumentów %d dla %s, oczekiwano %d argumentów\n"
- 
--#: ../libxcmd/command.c:98
-+#: ../libxcmd/command.c:93
- #, c-format
- msgid "bad argument count %d to %s, expected between %d and %d arguments\n"
- msgstr "b³êdna liczba argumentów %d dla %s, oczekiwano od %d do %d argumentów\n"
- 
--#: ../libxcmd/command.c:160
-+#: ../libxcmd/command.c:155
- #, c-format
- msgid "cannot strdup command '%s': %s\n"
- msgstr "nie mo¿na wykonaæ strdup na poleceniu '%s': %s\n"
- 
-+#: ../libxcmd/command.c:171 ../libxcmd/command.c:189
-+#, c-format
-+msgid "command \"%s\" not found\n"
-+msgstr "nie znaleziono polecenia \"%s\"\n"
-+
- #: ../libxcmd/help.c:33
- #, c-format
- msgid ""
-@@ -2521,64 +2544,70 @@ msgstr "q"
- msgid "exit the program"
- msgstr "wyj¶cie z programu"
- 
--#: ../libxfs/darwin.c:39
-+#: ../libxfs/darwin.c:41
- #, c-format
- msgid "%s: error opening the device special file \"%s\": %s\n"
- msgstr "%s: b³±d podczas otwierania pliku specjalnego urz±dzenia \"%s\": %s\n"
- 
--#: ../libxfs/darwin.c:46
-+#: ../libxfs/darwin.c:48
- #, c-format
- msgid "%s: can't tell if \"%s\" is writable: %s\n"
- msgstr "%s: nie mo¿na stwierdziæ czy \"%s\" jest zapisywalny: %s\n"
- 
--#: ../libxfs/darwin.c:73 ../libxfs/freebsd.c:114 ../libxfs/irix.c:57
--#: ../libxfs/linux.c:132
-+#: ../libxfs/darwin.c:76 ../libxfs/freebsd.c:116 ../libxfs/irix.c:58
-+#: ../libxfs/linux.c:137
- #, c-format
- msgid "%s: cannot stat the device file \"%s\": %s\n"
- msgstr "%s: nie mo¿na wykonaæ stat na pliku urz±dzenia \"%s\": %s\n"
- 
--#: ../libxfs/darwin.c:83
-+#: ../libxfs/darwin.c:86
- #, c-format
- msgid "%s: can't determine device size: %s\n"
- msgstr "%s: nie mo¿na okre¶liæ rozmiaru urz±dzenia: %s\n"
- 
--#: ../libxfs/freebsd.c:47
-+#: ../libxfs/darwin.c:139 ../libxfs/freebsd.c:198 ../libxfs/irix.c:106
-+#: ../libxfs/linux.c:215
-+#, c-format
-+msgid "%s: can't determine memory size\n"
-+msgstr "%s: nie mo¿na okre¶liæ rozmiaru pamiêci\n"
-+
-+#: ../libxfs/freebsd.c:49
- #, c-format
- msgid "%s: %s possibly contains a mounted filesystem\n"
- msgstr "%s: %s mo¿e zawieraæ podmontowany system plików\n"
- 
--#: ../libxfs/freebsd.c:58 ../libxfs/linux.c:65
-+#: ../libxfs/freebsd.c:60 ../libxfs/linux.c:66
- #, c-format
- msgid "%s: %s contains a mounted filesystem\n"
- msgstr "%s: %s zawiera podmontowany system plików\n"
- 
--#: ../libxfs/freebsd.c:73 ../libxfs/linux.c:83
-+#: ../libxfs/freebsd.c:75 ../libxfs/linux.c:84
- #, c-format
- msgid "%s: %s contains a possibly writable, mounted filesystem\n"
- msgstr "%s: %s zawiera podmontowany, byæ mo¿e zapisywalny system plików\n"
- 
--#: ../libxfs/freebsd.c:87 ../libxfs/linux.c:97
-+#: ../libxfs/freebsd.c:89 ../libxfs/linux.c:98
- #, c-format
- msgid "%s: %s contains a mounted and writable filesystem\n"
- msgstr "%s: %s zawiera podmontowany, zapisywalny system plików\n"
- 
- # XXX: msgid bug
--#: ../libxfs/freebsd.c:127
-+#: ../libxfs/freebsd.c:129
- #, c-format
- msgid "%s: Not a device or file: \"%s\"n"
- msgstr "%s: Nie jest urz±dzeniem ani plikiem: \"%s\"n"
- 
--#: ../libxfs/freebsd.c:134
-+#: ../libxfs/freebsd.c:136
- #, c-format
- msgid "%s: DIOCGMEDIASIZE failed on \"%s\": %s\n"
- msgstr "%s: DIOCGMEDIASIE nie powiod³o siê dla \"%s\": %s\n"
- 
--#: ../libxfs/freebsd.c:141
-+#: ../libxfs/freebsd.c:143
- #, c-format
- msgid "%s: DIOCGSECTORSIZE failed on \"%s\": %s\n"
- msgstr "%s: DIOCGSECTORSIZE nie powiod³o siê dla \"%s\": %s\n"
- 
--#: ../libxfs/init.c:78 ../libxfs/init.c:169
-+#: ../libxfs/init.c:78 ../libxfs/init.c:177
- #, c-format
- msgid "%s: %s: device %lld is not open\n"
- msgstr "%s: %s: urz±dzenie %lld nie jest otwarte\n"
-@@ -2588,167 +2617,172 @@ msgstr "%s: %s: urz
- msgid "%s: cannot stat %s: %s\n"
- msgstr "%s: nie mo¿na wykonaæ stat na %s: %s\n"
- 
--#: ../libxfs/init.c:131
-+#: ../libxfs/init.c:139
- #, c-format
- msgid "%s: device %lld is already open\n"
- msgstr "%s: urz±dzenie %lld jest ju¿ otwarte\n"
- 
--#: ../libxfs/init.c:144
-+#: ../libxfs/init.c:152
- #, c-format
- msgid "%s: %s: too many open devices\n"
- msgstr "%s: %s: zbyt du¿o otwartych urz±dzeñ\n"
- 
--#: ../libxfs/init.c:187
-+#: ../libxfs/init.c:195
- #, c-format
- msgid "%s: can't find a character device matching %s\n"
- msgstr "%s: nie mo¿na odnale¼æ urz±dzenia znakowego odpowiadaj±cego %s\n"
- 
--#: ../libxfs/init.c:193
-+#: ../libxfs/init.c:201
- #, c-format
- msgid "%s: can't find a block device matching %s\n"
- msgstr "%s: nie mo¿na odnale¼æ urz±dzenia blokowego odpowiadaj±cego %s\n"
- 
--#: ../libxfs/init.c:308
-+#: ../libxfs/init.c:316
- #, c-format
- msgid "%s: can't get size for data subvolume\n"
- msgstr "%s: nie mo¿na pobraæ rozmiaru podwolumenu danych\n"
- 
--#: ../libxfs/init.c:313
-+#: ../libxfs/init.c:321
- #, c-format
- msgid "%s: can't get size for log subvolume\n"
- msgstr "%s: nie mo¿na pobraæ rozmiaru podwolumenu loga\n"
- 
--#: ../libxfs/init.c:318
-+#: ../libxfs/init.c:326
- #, c-format
- msgid "%s: can't get size for realtime subvolume\n"
- msgstr "%s: nie mo¿na pobraæ rozmiaru podwolumenu realtime\n"
- 
--#: ../libxfs/init.c:413
-+#: ../libxfs/init.c:421
- #, c-format
- msgid "%s: cannot read realtime bitmap inode (%d)\n"
- msgstr "%s: nie mo¿na odczytaæ i-wêz³a bitmapy realtime (%d)\n"
- 
--#: ../libxfs/init.c:423
-+#: ../libxfs/init.c:431
- #, c-format
- msgid "%s: cannot read realtime summary inode (%d)\n"
- msgstr "%s: nie mo¿na odczytaæ i-wêz³a opisu realtime (%d)\n"
- 
--#: ../libxfs/init.c:447
-+#: ../libxfs/init.c:455
- #, c-format
- msgid "%s: filesystem has a realtime subvolume\n"
- msgstr "%s: system plików ma podwolumen realtime\n"
- 
--#: ../libxfs/init.c:469
-+#: ../libxfs/init.c:477
- #, c-format
- msgid "%s: realtime init - %llu != %llu\n"
- msgstr "%s: inicjalizacja realtime - %llu != %llu\n"
- 
--#: ../libxfs/init.c:477
-+#: ../libxfs/init.c:485
- #, c-format
- msgid "%s: realtime size check failed\n"
- msgstr "%s: sprawdzenie rozmiaru realtime nie powiod³o siê\n"
- 
--#: ../libxfs/init.c:563
-+#: ../libxfs/init.c:571
- #, c-format
- msgid "%s: size check failed\n"
- msgstr "%s: sprawdzenie rozmiaru nie powiod³o siê\n"
- 
--#: ../libxfs/init.c:587
-+#: ../libxfs/init.c:595
- #, c-format
- msgid "%s: data size check failed\n"
- msgstr "%s: sprawdzenie rozmiaru danych nie powiod³o siê\n"
- 
--#: ../libxfs/init.c:600
-+#: ../libxfs/init.c:608
- #, c-format
- msgid "%s: log size checks failed\n"
- msgstr "%s: sprawdzenie rozmiaru loga nie powiod³o siê\n"
- 
--#: ../libxfs/init.c:610
-+#: ../libxfs/init.c:619
- #, c-format
- msgid "%s: realtime device init failed\n"
- msgstr "%s: inicjalizacja urz±dzenia realtime nie powiod³a siê\n"
- 
--#: ../libxfs/init.c:618
-+#: ../libxfs/init.c:627
- #, c-format
- msgid "%s: failed to alloc %ld bytes: %s\n"
- msgstr "%s: nie uda³o siê przydzieliæ %ld bajtów: %s\n"
- 
--#: ../libxfs/init.c:632
-+#: ../libxfs/init.c:641
- #, c-format
- msgid "%s: cannot read root inode (%d)\n"
- msgstr "%s: nie mo¿na odczytaæ i-wêz³a g³ównego (%d)\n"
- 
--#: ../libxfs/linux.c:110
-+#: ../libxfs/init.c:660
-+#, c-format
-+msgid "%s: cannot init perag data (%d)\n"
-+msgstr "%s: nie mo¿na zainicjowaæ tabeli perag (%d)\n"
-+
-+#: ../libxfs/linux.c:113
- #, c-format
--msgid "%s: warning - cannot set blocksize on block device %s: %s\n"
--msgstr "%s: uwaga - nie mo¿na ustawiæ rozmiaru bloku urz±dzenia blokowego %s: %s\n"
-+msgid "%s: %s - cannot set blocksize on block device %s: %s\n"
-+msgstr "%s: %s - nie mo¿na ustawiæ rozmiaru bloku urz±dzenia blokowego %s: %s\n"
- 
--#: ../libxfs/linux.c:155
-+#: ../libxfs/linux.c:160
- #, c-format
- msgid "%s: can't determine device size\n"
- msgstr "%s: nie mo¿na okre¶liæ rozmiaru urz±dzenia\n"
- 
--#: ../libxfs/linux.c:163
-+#: ../libxfs/linux.c:168
- #, c-format
- msgid "%s: warning - cannot get sector size from block device %s: %s\n"
- msgstr "%s: uwaga - nie mo¿na pobraæ rozmiaru sektora urz±dzenia blokowego %s: %s\n"
- 
--#: ../libxfs/rdwr.c:38
-+#: ../libxfs/rdwr.c:40
- #, c-format
- msgid "%s: %s can't memalign %d bytes: %s\n"
- msgstr "%s: %s nie mo¿na wykonaæ memalign dla %d bajtów: %s\n"
- 
--#: ../libxfs/rdwr.c:48
-+#: ../libxfs/rdwr.c:50
- #, c-format
- msgid "%s: %s seek to offset %llu failed: %s\n"
- msgstr "%s: %s zmiana offsetu na %llu nie powiod³a siê: %s\n"
- 
--#: ../libxfs/rdwr.c:58
-+#: ../libxfs/rdwr.c:60
- #, c-format
- msgid "%s: %s write failed: %s\n"
- msgstr "%s: %s zapis nie powiód³ siê: %s\n"
- 
--#: ../libxfs/rdwr.c:62
-+#: ../libxfs/rdwr.c:64
- #, c-format
- msgid "%s: %s not progressing?\n"
- msgstr "%s: %s nie postêpuje?\n"
- 
--#: ../libxfs/rdwr.c:272
-+#: ../libxfs/rdwr.c:319
- #, c-format
- msgid "%s: %s can't memalign %u bytes: %s\n"
- msgstr "%s: %s nie mo¿na wykonaæ memalign dla %u bajtów: %s\n"
- 
--#: ../libxfs/rdwr.c:349
-+#: ../libxfs/rdwr.c:454
- #, c-format
- msgid "%s: read failed: %s\n"
- msgstr "%s: odczyt nie powiód³ siê: %s\n"
- 
--#: ../libxfs/rdwr.c:391
-+#: ../libxfs/rdwr.c:497
- #, c-format
- msgid "%s: pwrite64 failed: %s\n"
- msgstr "%s: pwrite64 nie powiod³o siê: %s\n"
- 
--#: ../libxfs/rdwr.c:398
-+#: ../libxfs/rdwr.c:504
- #, c-format
- msgid "%s: error - wrote only %d of %d bytes\n"
- msgstr "%s: b³±d - zapisano tylko %d z %d bajtów\n"
- 
--#: ../libxfs/rdwr.c:493
-+#: ../libxfs/rdwr.c:652
- #, c-format
- msgid "%s: zone init failed (%s, %d bytes): %s\n"
- msgstr "%s: inicjalizacja strefy nie powiod³a siê (%s, %d bajtów): %s\n"
- 
--#: ../libxfs/rdwr.c:512
-+#: ../libxfs/rdwr.c:671
- #, c-format
- msgid "%s: zone calloc failed (%s, %d bytes): %s\n"
- msgstr "%s: calloc dla strefy nie powiod³o siê (%s, %d bajtów): %s\n"
- 
--#: ../libxfs/rdwr.c:547
-+#: ../libxfs/rdwr.c:706
- #, c-format
- msgid "%s: calloc failed (%d bytes): %s\n"
- msgstr "%s: calloc nie powiod³o siê (%d bajtów): %s\n"
- 
--#: ../libxfs/rdwr.c:576
-+#: ../libxfs/rdwr.c:735
- #, c-format
- msgid "%s: realloc failed (%d bytes): %s\n"
- msgstr "%s: realloc nie powiod³o siê (%d bajtów): %s\n"
-@@ -2768,7 +2802,7 @@ msgstr "%s: uwaga - itobp nie powiod
- msgid "%s: warning - iflush_int failed (%d)\n"
- msgstr "%s: uwaga - iflush_int nie powiod³o siê (%d)\n"
- 
--#: ../libxfs/trans.c:685 ../libxfs/trans.c:791
-+#: ../libxfs/trans.c:684 ../libxfs/trans.c:790
- #, c-format
- msgid "%s: unrecognised log item type\n"
- msgstr "%s: nierozpoznany typ elementu loga\n"
-@@ -2996,239 +3030,249 @@ msgstr "rozmiar loga %lld blok
- msgid "log size %lld bytes too large, maximum size is %d bytes\n"
- msgstr "rozmiar loga %lld bajtów jest zbyt du¿y, maksymalny rozmiar to %d bajtów\n"
- 
--#: ../mkfs/xfs_mkfs.c:442
-+#: ../mkfs/xfs_mkfs.c:476
- #, c-format
- msgid "agsize (%lldb) too small, need at least %lld blocks\n"
- msgstr "agsize (%lldb) zbyt ma³e, potrzeba co najmniej %lld bloków\n"
- 
--#: ../mkfs/xfs_mkfs.c:450
-+#: ../mkfs/xfs_mkfs.c:484
- #, c-format
- msgid "agsize (%lldb) too big, maximum is %lld blocks\n"
- msgstr "agsize (%lldb) zbyt du¿e, maksimum to %lld bloków\n"
- 
--#: ../mkfs/xfs_mkfs.c:458
-+#: ../mkfs/xfs_mkfs.c:492
- #, c-format
- msgid "agsize (%lldb) too big, data area is %lld blocks\n"
- msgstr "agsize (%lldb) zbyt du¿e, obszar danych to %lld bloków\n"
- 
--#: ../mkfs/xfs_mkfs.c:465
-+#: ../mkfs/xfs_mkfs.c:499
- #, c-format
- msgid "too many allocation groups for size = %lld\n"
- msgstr "zbyt du¿o grup alokacji dla rozmiaru = %lld\n"
- 
--#: ../mkfs/xfs_mkfs.c:467
-+#: ../mkfs/xfs_mkfs.c:501
- #, c-format
- msgid "need at most %lld allocation groups\n"
- msgstr "potrzeba najwy¿ej %lld grup alokacji\n"
- 
--#: ../mkfs/xfs_mkfs.c:475
-+#: ../mkfs/xfs_mkfs.c:509
- #, c-format
- msgid "too few allocation groups for size = %lld\n"
- msgstr "zbyt ma³o grup alokacji dla rozmiaru = %lld\n"
- 
--#: ../mkfs/xfs_mkfs.c:477
-+#: ../mkfs/xfs_mkfs.c:511
- #, c-format
- msgid "need at least %lld allocation groups\n"
- msgstr "potrzeba co najmniej %lld grup alokacji\n"
- 
--#: ../mkfs/xfs_mkfs.c:490
-+#: ../mkfs/xfs_mkfs.c:524
- #, c-format
- msgid "last AG size %lld blocks too small, minimum size is %lld blocks\n"
- msgstr "rozmiar ostatniej AG %lld bloków zbyt ma³y, minimalny rozmiar to %lld bloków\n"
- 
--#: ../mkfs/xfs_mkfs.c:501
-+#: ../mkfs/xfs_mkfs.c:535
- #, c-format
- msgid "%lld allocation groups is too many, maximum is %lld\n"
- msgstr "%lld grup alokacji to zbyt du¿o, maksimum to %lld\n"
- 
--#: ../mkfs/xfs_mkfs.c:747
-+#: ../mkfs/xfs_mkfs.c:559
-+#, c-format
-+msgid "error reading existing superblock -- failed to memalign buffer\n"
-+msgstr "b³±d podczas odczytu istniej±cego superbloku - nie uda³o siê wykonaæ memalign dla bufora\n"
-+
-+#: ../mkfs/xfs_mkfs.c:565
-+#, c-format
-+msgid "existing superblock read failed: %s\n"
-+msgstr "odczyt istniej±cego superbloku nie powiód³ siê: %s\n"
-+
-+#: ../mkfs/xfs_mkfs.c:847
- #, c-format
- msgid "%s: Specify data sunit in 512-byte blocks, no unit suffix\n"
- msgstr "%s: sunit danych nale¿y podaæ w 512-bajtowych blokach, bez jednostki\n"
- 
--#: ../mkfs/xfs_mkfs.c:763
-+#: ../mkfs/xfs_mkfs.c:863
- #, c-format
- msgid "%s: Specify data swidth in 512-byte blocks, no unit suffix\n"
- msgstr "%s: swidth danych nale¿y podaæ w 512-bajtowych blokach, bez jednostki\n"
- 
--#: ../mkfs/xfs_mkfs.c:790
-+#: ../mkfs/xfs_mkfs.c:890
- #, c-format
- msgid "%s: Specify data sw as multiple of su, no unit suffix\n"
- msgstr "%s: sw danych nale¿y podaæ jako wielokrotno¶æ su, bez jednostki\n"
- 
--#: ../mkfs/xfs_mkfs.c:1017
-+#: ../mkfs/xfs_mkfs.c:1109
- #, c-format
- msgid "Specify log sunit in 512-byte blocks, no size suffix\n"
- msgstr "sunit nale¿y podaæ w 512-bajtowych blokach, bez jednostki\n"
- 
--#: ../mkfs/xfs_mkfs.c:1260
-+#: ../mkfs/xfs_mkfs.c:1361
- #, c-format
- msgid "extra arguments\n"
- msgstr "nadmiarowe argumenty\n"
- 
--#: ../mkfs/xfs_mkfs.c:1266
-+#: ../mkfs/xfs_mkfs.c:1367
- #, c-format
- msgid "cannot specify both %s and -d name=%s\n"
- msgstr "nie mo¿na podaæ jednocze¶nie %s i -d name=%s\n"
- 
--#: ../mkfs/xfs_mkfs.c:1283
-+#: ../mkfs/xfs_mkfs.c:1384
- #, c-format
- msgid "illegal block size %d\n"
- msgstr "niedozwolony rozmiar bloku %d\n"
- 
--#: ../mkfs/xfs_mkfs.c:1302
-+#: ../mkfs/xfs_mkfs.c:1403
- #, c-format
- msgid "illegal sector size %d\n"
- msgstr "niedozwolony rozmiar sektora %d\n"
- 
--#: ../mkfs/xfs_mkfs.c:1307
-+#: ../mkfs/xfs_mkfs.c:1408
- #, c-format
- msgid "illegal log sector size %d\n"
- msgstr "niedozwolony rozmiar sektora loga %d\n"
- 
--#: ../mkfs/xfs_mkfs.c:1319 ../mkfs/xfs_mkfs.c:1329
-+#: ../mkfs/xfs_mkfs.c:1420 ../mkfs/xfs_mkfs.c:1430
- #, c-format
- msgid "illegal directory block size %d\n"
- msgstr "niedozwolony rozmiar bloku katalogu %d\n"
- 
--#: ../mkfs/xfs_mkfs.c:1345
-+#: ../mkfs/xfs_mkfs.c:1446
- #, c-format
- msgid "both -d agcount= and agsize= specified, use one or the other\n"
- msgstr "podano jednocze¶nie -d agcount= i agsize=, mo¿na u¿yæ tylko jednej z tych opcji\n"
- 
--#: ../mkfs/xfs_mkfs.c:1351
-+#: ../mkfs/xfs_mkfs.c:1452
- #, c-format
- msgid "if -d file then -d name and -d size are required\n"
- msgstr "je¶li podano -d file, to -d name i -d size s± wymagane\n"
- 
--#: ../mkfs/xfs_mkfs.c:1360
-+#: ../mkfs/xfs_mkfs.c:1461
- #, c-format
- msgid "illegal data length %lld, not a multiple of %d\n"
- msgstr "niedozwolona d³ugo¶æ danych %lld, nie jest wielokrotno¶ci± %d\n"
- 
--#: ../mkfs/xfs_mkfs.c:1366
-+#: ../mkfs/xfs_mkfs.c:1467
- #, c-format
- msgid "warning: data length %lld not a multiple of %d, truncated to %lld\n"
- msgstr "uwaga: d³ugo¶æ danych %lld nie jest wielokrotno¶ci± %d, uciêto do %lld\n"
- 
--#: ../mkfs/xfs_mkfs.c:1380
-+#: ../mkfs/xfs_mkfs.c:1481
- #, c-format
- msgid "if -l file then -l name and -l size are required\n"
- msgstr "je¶li podano -l file to -l name i -l size s± wymagane\n"
- 
--#: ../mkfs/xfs_mkfs.c:1389
-+#: ../mkfs/xfs_mkfs.c:1490
- #, c-format
- msgid "illegal log length %lld, not a multiple of %d\n"
- msgstr "niedozwolona d³ugo¶æ loga %lld, nie jest wielokrotno¶ci± %d\n"
- 
--#: ../mkfs/xfs_mkfs.c:1396
-+#: ../mkfs/xfs_mkfs.c:1497
- #, c-format
- msgid "warning: log length %lld not a multiple of %d, truncated to %lld\n"
- msgstr "uwaga: d³ugo¶æ loga %lld nie jest wielokrotno¶ci± %d, uciêto do %lld\n"
- 
--#: ../mkfs/xfs_mkfs.c:1402
-+#: ../mkfs/xfs_mkfs.c:1503
- #, c-format
- msgid "if -r file then -r name and -r size are required\n"
- msgstr "je¶li podano -r file, to -r name i -r size s± wymagane\n"
- 
--#: ../mkfs/xfs_mkfs.c:1411
-+#: ../mkfs/xfs_mkfs.c:1512
- #, c-format
- msgid "illegal rt length %lld, not a multiple of %d\n"
- msgstr "niedozwolona d³ugo¶æ rt %lld, nie jest wielokrotno¶ci± %d\n"
- 
--#: ../mkfs/xfs_mkfs.c:1418
-+#: ../mkfs/xfs_mkfs.c:1519
- #, c-format
- msgid "warning: rt length %lld not a multiple of %d, truncated to %lld\n"
- msgstr "uwaga: d³ugo¶æ rt %lld nie jest wielokrotno¶ci± %d, uciêto do %lld\n"
- 
--#: ../mkfs/xfs_mkfs.c:1431
-+#: ../mkfs/xfs_mkfs.c:1532
- #, c-format
- msgid "illegal rt extent size %lld, not a multiple of %d\n"
- msgstr "niedozwolony rozmiar fragmentu rt %lld, nie jest wielokrotno¶ci± %d\n"
- 
--#: ../mkfs/xfs_mkfs.c:1437
-+#: ../mkfs/xfs_mkfs.c:1538
- #, c-format
- msgid "rt extent size %s too large, maximum %d\n"
- msgstr "rozmiar fragmentu rt %s zbyt du¿y, maksimum to %d\n"
- 
--#: ../mkfs/xfs_mkfs.c:1443
-+#: ../mkfs/xfs_mkfs.c:1544
- #, c-format
- msgid "rt extent size %s too small, minimum %d\n"
- msgstr "rozmiar fragmentu rt %s zbyt ma³y, minimum to %d\n"
- 
--#: ../mkfs/xfs_mkfs.c:1485
-+#: ../mkfs/xfs_mkfs.c:1588
- #, c-format
- msgid "illegal inode size %d\n"
- msgstr "niedozwolony rozmiar i-wêz³a %d\n"
- 
--#: ../mkfs/xfs_mkfs.c:1490
-+#: ../mkfs/xfs_mkfs.c:1593
- #, c-format
- msgid "allowable inode size with %d byte blocks is %d\n"
- msgstr "dozwolony rozmiar i-wêz³a przy blokach %d-bajtowych to %d\n"
- 
--#: ../mkfs/xfs_mkfs.c:1494
-+#: ../mkfs/xfs_mkfs.c:1597
- #, c-format
- msgid "allowable inode size with %d byte blocks is between %d and %d\n"
- msgstr "dozwolone rozmiary i-wêz³a przy blokach %d-bajtowych s± od %d do %d\n"
- 
--#: ../mkfs/xfs_mkfs.c:1502
-+#: ../mkfs/xfs_mkfs.c:1605
- #, c-format
- msgid "log stripe unit specified, using v2 logs\n"
- msgstr "podano jednostkê pasa loga, u¿yto logów v2\n"
- 
--#: ../mkfs/xfs_mkfs.c:1515
-+#: ../mkfs/xfs_mkfs.c:1623
- #, c-format
- msgid "no device name given in argument list\n"
- msgstr "nie podano nazwy urz±dzenia w li¶cie argumentów\n"
- 
--#: ../mkfs/xfs_mkfs.c:1535
-+#: ../mkfs/xfs_mkfs.c:1648
- #, c-format
- msgid "%s: Use the -f option to force overwrite.\n"
- msgstr "%s: Mo¿na u¿yæ opcji -f do wymuszenia nadpisania.\n"
- 
--#: ../mkfs/xfs_mkfs.c:1546
-+#: ../mkfs/xfs_mkfs.c:1659
- msgid "internal log"
- msgstr "log wewnêtrzny"
- 
--#: ../mkfs/xfs_mkfs.c:1548
-+#: ../mkfs/xfs_mkfs.c:1661
- msgid "volume log"
- msgstr "log na wolumenie"
- 
--#: ../mkfs/xfs_mkfs.c:1550
-+#: ../mkfs/xfs_mkfs.c:1663
- #, c-format
- msgid "no log subvolume or internal log\n"
- msgstr "brak podwolumenu loga ani loga wewnêtrznego\n"
- 
--#: ../mkfs/xfs_mkfs.c:1557
-+#: ../mkfs/xfs_mkfs.c:1670
- msgid "volume rt"
- msgstr "wolumen rt"
- 
--#: ../mkfs/xfs_mkfs.c:1562
-+#: ../mkfs/xfs_mkfs.c:1675
- #, c-format
- msgid "size %s specified for data subvolume is too large, maximum is %lld blocks\n"
- msgstr "rozmiar %s podany dla podwolumenu danych jest zbyt du¿y, maksimum to %lld bloków\n"
- 
--#: ../mkfs/xfs_mkfs.c:1569
-+#: ../mkfs/xfs_mkfs.c:1682
- #, c-format
- msgid "can't get size of data subvolume\n"
- msgstr "nie mo¿na pobraæ rozmiaru podwolumenu danych\n"
- 
--#: ../mkfs/xfs_mkfs.c:1574
-+#: ../mkfs/xfs_mkfs.c:1687
- #, c-format
- msgid "size %lld of data subvolume is too small, minimum %d blocks\n"
- msgstr "rozmiar %lld dla podwolumenu danych jest zbyt ma³y, minimum to %d bloków\n"
- 
--#: ../mkfs/xfs_mkfs.c:1581
-+#: ../mkfs/xfs_mkfs.c:1694
- #, c-format
- msgid "can't have both external and internal logs\n"
- msgstr "nie mo¿na mieæ jednocze¶nie zewnêtrznego i wewnêtrznego loga\n"
- 
--#: ../mkfs/xfs_mkfs.c:1585
-+#: ../mkfs/xfs_mkfs.c:1698
- #, c-format
- msgid "data and log sector sizes must be equal for internal logs\n"
- msgstr "rozmiary sektora danych i loga musz± byæ równe dla logów wewnêtrznych\n"
- 
--#: ../mkfs/xfs_mkfs.c:1591
-+#: ../mkfs/xfs_mkfs.c:1704
- #, c-format
- msgid ""
- "Warning: the data subvolume sector size %u is less than the sector size \n"
-@@ -3237,7 +3281,7 @@ msgstr ""
- "Uwaga: rozmiar sektora podwolumenu danych %u jest mniejszy od rozmiaru\n"
- "sektora zg³aszanego przez urz±dzenie (%u).\n"
- 
--#: ../mkfs/xfs_mkfs.c:1597
-+#: ../mkfs/xfs_mkfs.c:1710
- #, c-format
- msgid ""
- "Warning: the log subvolume sector size %u is less than the sector size\n"
-@@ -3246,7 +3290,7 @@ msgstr ""
- "Uwaga: rozmiar sektora podwolumenu loga %u jest mniejszy od rozmiaru\n"
- "sektora zg³aszanego przez urz±dzenie (%u).\n"
- 
--#: ../mkfs/xfs_mkfs.c:1603
-+#: ../mkfs/xfs_mkfs.c:1716
- #, c-format
- msgid ""
- "Warning: the realtime subvolume sector size %u is less than the sector size\n"
-@@ -3255,57 +3299,57 @@ msgstr ""
- "Uwaga: rozmiar sektora podwolumenu realtime %u jest mniejszy od rozmiaru\n"
- "sektora zg³aszanego przez urz±dzenie (%u).\n"
- 
--#: ../mkfs/xfs_mkfs.c:1617
-+#: ../mkfs/xfs_mkfs.c:1730
- #, c-format
- msgid "size %s specified for log subvolume is too large, maximum is %lld blocks\n"
- msgstr "rozmiar %s podany dla podwolumenu loga jest zbyt du¿y, maksimum to %lld bloków\n"
- 
--#: ../mkfs/xfs_mkfs.c:1624
-+#: ../mkfs/xfs_mkfs.c:1737
- #, c-format
- msgid "size specified for non-existent log subvolume\n"
- msgstr "podano rozmiar dla nie istniej±cego podwolumenu loga\n"
- 
--#: ../mkfs/xfs_mkfs.c:1627
-+#: ../mkfs/xfs_mkfs.c:1740
- #, c-format
- msgid "size %lld too large for internal log\n"
- msgstr "rozmiar %lld jest zbyt du¿y dla loga wewnêtrznego\n"
- 
--#: ../mkfs/xfs_mkfs.c:1654
-+#: ../mkfs/xfs_mkfs.c:1767
- #, c-format
- msgid "size %s specified for rt subvolume is too large, maximum is %lld blocks\n"
- msgstr "rozmiar %s podany dla podwolumenu rt jest zbyt du¿y, maksimum to %lld bloków\n"
- 
--#: ../mkfs/xfs_mkfs.c:1662
-+#: ../mkfs/xfs_mkfs.c:1775
- #, c-format
- msgid "size specified for non-existent rt subvolume\n"
- msgstr "podano rozmiar dla nie istniej±cego podwolumenu rt\n"
- 
--#: ../mkfs/xfs_mkfs.c:1679
-+#: ../mkfs/xfs_mkfs.c:1792
- #, c-format
- msgid "agsize (%lld) not a multiple of fs blk size (%d)\n"
- msgstr "agsize (%lld) nie jest wielokrotno¶ci± rozmiaru bloku systemu plików (%d)\n"
- 
--#: ../mkfs/xfs_mkfs.c:1707
-+#: ../mkfs/xfs_mkfs.c:1822
- #, c-format
- msgid "%s: Specified data stripe unit %d is not the same as the volume stripe unit %d\n"
- msgstr "%s: Podana jednostka pasa danych %d nie jest taka sama jak jednostka pasa wolumenu %d\n"
- 
--#: ../mkfs/xfs_mkfs.c:1713
-+#: ../mkfs/xfs_mkfs.c:1829
- #, c-format
- msgid "%s: Specified data stripe width %d is not the same as the volume stripe width %d\n"
- msgstr "%s: Podana szeroko¶æ pasa danych %d nie jest taka sama jak szeroko¶æ pasa wolumenu %d\n"
- 
--#: ../mkfs/xfs_mkfs.c:1758
-+#: ../mkfs/xfs_mkfs.c:1876
- #, c-format
- msgid "agsize rounded to %lld, swidth = %d\n"
- msgstr "agsize zaokr±glone do %lld, swidth = %d\n"
- 
--#: ../mkfs/xfs_mkfs.c:1765
-+#: ../mkfs/xfs_mkfs.c:1883
- #, c-format
- msgid "Allocation group size (%lld) is not a multiple of the stripe unit (%d)\n"
- msgstr "Rozmiar grupy alokacji (%lld) nie jest wielokrotno¶ci± jednostki pasa (%d)\n"
- 
--#: ../mkfs/xfs_mkfs.c:1787
-+#: ../mkfs/xfs_mkfs.c:1905
- #, c-format
- msgid ""
- "Warning: AG size is a multiple of stripe width.  This can cause performance\n"
-@@ -3317,113 +3361,114 @@ msgstr ""
- "Aby temu zapobiec, nale¿y uruchomiæ mkfs z rozmiarem AG o jedn± jednostkê\n"
- "pasa mniejszym, na przyk³ad %llu.\n"
- 
--#: ../mkfs/xfs_mkfs.c:1812
-+#: ../mkfs/xfs_mkfs.c:1930
- #, c-format
- msgid "%s: Stripe unit(%d) or stripe width(%d) is not a multiple of the block size(%d)\n"
- msgstr "%s: Jednostka pasa (%d) lub szeroko¶æ pasa (%d) nie jest wielokrotno¶ci± rozmiaru bloku (%d)\n"
- 
--#: ../mkfs/xfs_mkfs.c:1827
-+#: ../mkfs/xfs_mkfs.c:1945
- #, c-format
- msgid "log stripe unit (%d) must be a multiple of the block size (%d)\n"
- msgstr "jednostka pasa loga (%d) musi byæ wielokrotno¶ci± rozmiaru bloku (%d)\n"
- 
--#: ../mkfs/xfs_mkfs.c:1840
-+#: ../mkfs/xfs_mkfs.c:1958
- #, c-format
- msgid "log stripe unit (%d bytes) is too large (maximum is 256KiB)\n"
- msgstr "jednostka pasa loga (%d bajtów) jest zbyt du¿a (maksimum to 256KiB)\n"
- 
--#: ../mkfs/xfs_mkfs.c:1843
-+#: ../mkfs/xfs_mkfs.c:1961
- #, c-format
- msgid "log stripe unit adjusted to 32KiB\n"
- msgstr "jednostka pasa loga zmodyfikowana na 32KiB\n"
- 
--#: ../mkfs/xfs_mkfs.c:1868
-+#: ../mkfs/xfs_mkfs.c:1986
- #, c-format
- msgid "internal log size %lld too large, must fit in allocation group\n"
- msgstr "rozmiar wewnêtrznego loga %lld zbyt du¿y, musi siê zmie¶ciæ w grupie alokacji\n"
- 
--#: ../mkfs/xfs_mkfs.c:1875
-+#: ../mkfs/xfs_mkfs.c:1993
- #, c-format
- msgid "log ag number %d too large, must be less than %lld\n"
- msgstr "liczba ag loga %d zbyt du¿a, musi byæ mniejsza ni¿ %lld\n"
- 
--#: ../mkfs/xfs_mkfs.c:1905
-+#: ../mkfs/xfs_mkfs.c:2023
- #, c-format
- msgid ""
- "meta-data=%-22s isize=%-6d agcount=%lld, agsize=%lld blks\n"
- "         =%-22s sectsz=%-5u attr=%u\n"
- "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
--"         =%-22s sunit=%-6u swidth=%u blks, unwritten=%u\n"
-+"         =%-22s sunit=%-6u swidth=%u blks\n"
- "naming   =version %-14u bsize=%-6u\n"
- "log      =%-22s bsize=%-6d blocks=%lld, version=%d\n"
--"         =%-22s sectsz=%-5u sunit=%d blks\n"
-+"         =%-22s sectsz=%-5u sunit=%d blks, lazy-count=%d\n"
- "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"
- msgstr ""
- "metadane=%-22s isize=%-6d agcount=%lld, agsize=%lld bloków\n"
- "        =%-22s sectsz=%-5u attr=%u\n"
- "dane    =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
--"        =%-22s sunit=%-6u swidth=%u bloków, niezapisanych=%u\n"
-+"        =%-22s sunit=%-6u swidth=%u bloków\n"
- "nazwy   =wersja %-14u bsize=%-6u\n"
- "log     =%-22s bsize=%-6d blocks=%lld, wersja=%d\n"
--"        =%-22s sectsz=%-5u sunit=%d bloków\n"
-+"        =%-22s sectsz=%-5u sunit=%d bloków, lazy-count=%d\n"
- "realtime=%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"
- 
--#: ../mkfs/xfs_mkfs.c:2012
-+#: ../mkfs/xfs_mkfs.c:2140
- #, c-format
- msgid "%s: Growing the data section failed\n"
- msgstr "%s: Powiêkszenie sekcji danych nie powiod³o siê\n"
- 
--#: ../mkfs/xfs_mkfs.c:2041
-+#: ../mkfs/xfs_mkfs.c:2170
- #, c-format
- msgid "%s: filesystem failed to initialize\n"
- msgstr "%s: nie uda³o siê zainicjowaæ systemu plików\n"
- 
--#: ../mkfs/xfs_mkfs.c:2265
-+#: ../mkfs/xfs_mkfs.c:2394
- #, c-format
- msgid "%s: root inode created in AG %u, not AG 0\n"
- msgstr "%s: g³ówny i-wêze³ utworzony w AG %u, nie AG 0\n"
- 
--#: ../mkfs/xfs_mkfs.c:2332
-+#: ../mkfs/xfs_mkfs.c:2461
- #, c-format
- msgid "Cannot specify both -%c %s and -%c %s\n"
- msgstr "Nie mo¿na podaæ jednocze¶nie -%c %s i %c %s\n"
- 
--#: ../mkfs/xfs_mkfs.c:2343
-+#: ../mkfs/xfs_mkfs.c:2472
- #, c-format
- msgid "Illegal value %s for -%s option\n"
- msgstr "Niedozwolona warto¶æ %s dla opcji -%s\n"
- 
--#: ../mkfs/xfs_mkfs.c:2360
-+#: ../mkfs/xfs_mkfs.c:2489
- #, c-format
- msgid "-%c %s option requires a value\n"
- msgstr "Opcja -%c %s wymaga warto¶ci\n"
- 
--#: ../mkfs/xfs_mkfs.c:2373 ../repair/xfs_repair.c:140
-+#: ../mkfs/xfs_mkfs.c:2502 ../repair/xfs_repair.c:168
- #, c-format
- msgid "option respecified\n"
- msgstr "ponownie podana opcja\n"
- 
--#: ../mkfs/xfs_mkfs.c:2382 ../repair/xfs_repair.c:147
-+#: ../mkfs/xfs_mkfs.c:2511 ../repair/xfs_repair.c:175
- #, c-format
- msgid "unknown option -%c %s\n"
- msgstr "nieznana opcja -%c %s\n"
- 
--#: ../mkfs/xfs_mkfs.c:2421
-+#: ../mkfs/xfs_mkfs.c:2550
- #, c-format
- msgid "blocksize not available yet.\n"
- msgstr "rozmiar bloku jeszcze nie dostêpny.\n"
- 
--#: ../mkfs/xfs_mkfs.c:2447
-+#: ../mkfs/xfs_mkfs.c:2576
- #, c-format
- msgid ""
- "Usage: %s\n"
- "/* blocksize */\t\t[-b log=n|size=num]\n"
- "/* data subvol */\t[-d agcount=n,agsize=n,file,name=xxx,size=num,\n"
- "\t\t\t    (sunit=value,swidth=value|su=num,sw=num),\n"
--"\t\t\t    sectlog=n|sectsize=num,unwritten=0|1]\n"
-+"\t\t\t    sectlog=n|sectsize=num\n"
- "/* inode size */\t[-i log=n|perblock=n|size=num,maxpct=n,attr=0|1|2]\n"
- "/* log subvol */\t[-l agnum=n,internal,size=num,logdev=xxx,version=n\n"
--"\t\t\t    sunit=value|su=num,sectlog=n|sectsize=num]\n"
-+"\t\t\t    sunit=value|su=num,sectlog=n|sectsize=num,\n"
-+"\t\t\t    lazy-count=0|1]\n"
- "/* label */\t\t[-L label (maximum 12 characters)]\n"
- "/* naming */\t\t[-n log=n|size=num,version=n]\n"
- "/* prototype file */\t[-p fname]\n"
-@@ -3438,21 +3483,22 @@ msgid ""
- "<value> is xxx (512 byte blocks).\n"
- msgstr ""
- "Sk³adnia: %s\n"
--"/* rozmiar bloku */    [-b log=n|size=liczba]\n"
-+"/* rozmiar bloku */     [-b log=n|size=liczba]\n"
- "/* podwolumen danych */ [-d agcount=n,agsize=n,file,name=xxx,size=liczba,\n"
--"                          (sunit=warto¶æ,swidth=warto¶æ|su=liczba,sw=liczba),\n"
--"                          sectlog=n|sectsize=liczba,unwritten=0|1]\n"
--"/* rozmiar i-wêz³a */  [-i log=n|perblock=n|size=liczba,maxpct=n,attr=0|1|2]\n"
--"/* podwolumen loga */  [-i agnum=n,internal,size=liczba,logdev=xxx,version=n\n"
--"                         sunit=warto¶æ|su=liczba,sectlog=n|sectsize=liczba]\n"
--"/* etykieta */         [-L etykieta (maksymalnie 12 znaków)]\n"
--"/* nazwy */            [-n log=n|size=liczba,wersja=n]\n"
--"/* plik prototypu */   [-p nazwa_pliku]\n"
--"/* cisza */            [-q]\n"
--"/* podwolumen rt */    [-r extsize=liczba,size=liczba,rtdev=xxx]\n"
--"/* rozmiar sektora */  [-s log=n|size=liczba]\n"
--"/* wersja */           [-V]\n"
--"                       nazwa_urz±dzenia\n"
-+"                           (sunit=warto¶æ,swidth=warto¶æ|su=liczba,sw=liczba),\n"
-+"                           sectlog=n|sectsize=liczba]\n"
-+"/* rozmiar i-wêz³a */   [-i log=n|perblock=n|size=liczba,maxpct=n,attr=0|1|2]\n"
-+"/* podwolumen loga */   [-i agnum=n,internal,size=liczba,logdev=xxx,version=n\n"
-+"                           sunit=warto¶æ|su=liczba,sectlog=n|sectsize=liczba,\n"
-+"                           lazy-count=0|1]\n"
-+"/* etykieta */          [-L etykieta (maksymalnie 12 znaków)]\n"
-+"/* nazwy */             [-n log=n|size=liczba,wersja=n]\n"
-+"/* plik prototypu */    [-p nazwa_pliku]\n"
-+"/* cisza */             [-q]\n"
-+"/* podwolumen rt */     [-r extsize=liczba,size=liczba,rtdev=xxx]\n"
-+"/* rozmiar sektora */   [-s log=n|size=liczba]\n"
-+"/* wersja */            [-V]\n"
-+"                        nazwa_urz±dzenia\n"
- "<nazwa_urz±dzenia> jest wymagana, chyba ¿e podano -d name=xxx.\n"
- "<liczba> to xxx (bajtów), xxxs (sektorów), xxxb (bloków systemu plików),\n"
- "         xxxk (xxx KiB), xxxm (xxx MiB), xxxg (xxx GiB), xxxt (xxx TiB),\n"
-@@ -3666,7 +3712,6 @@ msgid "restore"
- msgstr "restore"
- 
- #: ../quota/edit.c:674 ../quota/report.c:33 ../quota/report.c:632
--#: ../quota/state.c:528
- msgid "[-gpu] [-f file]"
- msgstr "[-gpu] [-f plik]"
- 
-@@ -3725,64 +3770,64 @@ msgstr ""
- " -N - pominiêcie nag³ówka z wyj¶cia\n"
- "\n"
- 
--#: ../quota/free.c:137
-+#: ../quota/free.c:142
- #, c-format
- msgid "%s: project quota flag not set on %s\n"
- msgstr "%s: flaga quot projektu nie ustawiona dla %s\n"
- 
--#: ../quota/free.c:145
-+#: ../quota/free.c:150
- #, c-format
- msgid "%s: project ID %u (%s) doesn't match ID %u (%s)\n"
- msgstr "%s: ID projektu %u (%s) nie zgadza siê z ID %u (%s)\n"
- 
--#: ../quota/free.c:210
-+#: ../quota/free.c:215
- #, c-format
- msgid "Filesystem  "
- msgstr "System plików "
- 
--#: ../quota/free.c:210
-+#: ../quota/free.c:215
- #, c-format
- msgid "Filesystem          "
- msgstr "System plików       "
- 
--#: ../quota/free.c:213
-+#: ../quota/free.c:218
- #, c-format
- msgid "   Size   Used  Avail Use%%"
- msgstr " Rozmiar  U¿yto Dost. %%u¿."
- 
--#: ../quota/free.c:214
-+#: ../quota/free.c:219
- #, c-format
- msgid " 1K-blocks       Used  Available  Use%%"
- msgstr " Bloki 1K        U¿yto Dostêpnych %%u¿."
- 
--#: ../quota/free.c:217
-+#: ../quota/free.c:222
- #, c-format
- msgid " Inodes   Used   Free Use%%"
- msgstr " I-wêz³y  U¿yto Wolne %%u¿."
- 
--#: ../quota/free.c:218
-+#: ../quota/free.c:223
- #, c-format
- msgid "    Inodes      IUsed      IFree IUse%%"
- msgstr "   I-wêz³y      U¿ytoI     WolneI %%u¿I"
- 
--#: ../quota/free.c:219
-+#: ../quota/free.c:224
- #, c-format
- msgid " Pathname\n"
- msgstr " ¦cie¿ka\n"
- 
--#: ../quota/free.c:350
-+#: ../quota/free.c:355
- msgid "df"
- msgstr "df"
- 
--#: ../quota/free.c:351 ../repair/dir2.c:941 ../repair/dir2.c:1476
-+#: ../quota/free.c:356 ../repair/dir2.c:951 ../repair/dir2.c:1479
- msgid "free"
- msgstr "free"
- 
--#: ../quota/free.c:355
-+#: ../quota/free.c:360
- msgid "[-bir] [-hn] [-f file]"
- msgstr "[-bir] [hn] [-f plik]"
- 
--#: ../quota/free.c:356
-+#: ../quota/free.c:361
- msgid "show free and used counts for blocks and inodes"
- msgstr "pokazanie liczby wolnych i zajêtych bloków i i-wêz³ów"
- 
-@@ -3820,23 +3865,28 @@ msgstr " (projekt %u"
- msgid ", %s"
- msgstr ", %s"
- 
--#: ../quota/path.c:119
-+#: ../quota/path.c:103
-+#, c-format
-+msgid "No paths are available\n"
-+msgstr "Brak ¶cie¿ek\n"
-+
-+#: ../quota/path.c:124
- msgid "path"
- msgstr "path"
- 
--#: ../quota/path.c:120
-+#: ../quota/path.c:125
- msgid "paths"
- msgstr "paths"
- 
--#: ../quota/path.c:125
-+#: ../quota/path.c:131
- msgid "set current path, or show the list of paths"
- msgstr "ustawienie bie¿±cej ¶cie¿ki lub pokazanie listy ¶cie¿ek"
- 
--#: ../quota/path.c:132
-+#: ../quota/path.c:139
- msgid "list known mount points and projects"
- msgstr "wypisanie znanych punktów montowañ i projektów"
- 
--#: ../quota/project.c:37
-+#: ../quota/project.c:44
- #, c-format
- msgid ""
- "\n"
-@@ -3916,69 +3966,79 @@ msgstr ""
- " manuala xfs_quota.\n"
- "\n"
- 
--#: ../quota/project.c:94
-+#: ../quota/project.c:94 ../quota/project.c:133 ../quota/project.c:172
-+#, c-format
-+msgid "%s: cannot stat file %s\n"
-+msgstr "%s: nie mo¿na wykonaæ stat na pliku %s\n"
-+
-+#: ../quota/project.c:98 ../quota/project.c:137 ../quota/project.c:176
-+#, c-format
-+msgid "%s: skipping special file %s\n"
-+msgstr "%s: pominiêto plik specjalny %s\n"
-+
-+#: ../quota/project.c:110
- #, c-format
- msgid "%s - project identifier is not set (inode=%u, tree=%u)\n"
- msgstr "%s - identyfikator projektu nie ustawiony (i-wêze³=%u, drzewo=%u)\n"
- 
--#: ../quota/project.c:98
-+#: ../quota/project.c:114
- #, c-format
- msgid "%s - project inheritance flag is not set\n"
- msgstr "%s - flaga dziedziczenia projektu nie ustawiona\n"
- 
--#: ../quota/project.c:130
-+#: ../quota/project.c:155
- #, c-format
- msgid "%s: cannot clear project on %s: %s\n"
- msgstr "%s: nie mo¿na usun±æ projektu z %s: %s\n"
- 
--#: ../quota/project.c:160
-+#: ../quota/project.c:194
- #, c-format
- msgid "%s: cannot set project on %s: %s\n"
- msgstr "%s: nie mo¿na ustawiæ projektu na %s: %s\n"
- 
--#: ../quota/project.c:174
-+#: ../quota/project.c:208
- #, c-format
- msgid "Checking project %s (path %s)...\n"
- msgstr "Sprawdzanie projektu %s (¶cie¿ka %s)...\n"
- 
--#: ../quota/project.c:178
-+#: ../quota/project.c:212
- #, c-format
- msgid "Setting up project %s (path %s)...\n"
- msgstr "Ustanawianie projektu %s (¶cie¿ka %s)...\n"
- 
--#: ../quota/project.c:182
-+#: ../quota/project.c:216
- #, c-format
- msgid "Clearing project %s (path %s)...\n"
- msgstr "Usuwanie projektu %s (¶cie¿ka %s)...\n"
- 
--#: ../quota/project.c:205
-+#: ../quota/project.c:239
- #, c-format
- msgid "Processed %d %s paths for project %s\n"
- msgstr "Przetworzono %d ¶cie¿ek %s dla projektu %s\n"
- 
--#: ../quota/project.c:241
-+#: ../quota/project.c:275
- #, c-format
- msgid "projects file \"%s\" doesn't exist\n"
- msgstr "plik projektów \"%s\" nie istnieje\n"
- 
--#: ../quota/project.c:249
-+#: ../quota/project.c:283
- #, c-format
- msgid "%s - no such project in %s\n"
- msgstr "%s - nie ma takiego projektu w %s\n"
- 
--#: ../quota/project.c:262
-+#: ../quota/project.c:296
- msgid "project"
- msgstr "project"
- 
--#: ../quota/project.c:263
-+#: ../quota/project.c:297
- msgid "tree"
- msgstr "tree"
- 
--#: ../quota/project.c:265
-+#: ../quota/project.c:299
- msgid "[-c|-s|-C] project ..."
- msgstr "[-c|-s|-C] projekt ..."
- 
--#: ../quota/project.c:268
-+#: ../quota/project.c:302
- msgid "check, setup or clear project quota trees"
- msgstr "sprawdzenie, ustanowienie lub usuniêcie drzew projektów"
- 
-@@ -4133,39 +4193,39 @@ msgstr "Realtime Quota  Limit Czas ostrz.  "
- msgid "   Realtime      Quota      Limit  Warn/Time      "
- msgstr "   Realtime      Quota      Limit  Czas ostrz.    "
- 
--#: ../quota/quota.c:232
-+#: ../quota/quota.c:234
- #, c-format
- msgid "%s: cannot find user %s\n"
- msgstr "%s: nie mo¿na odnale¼æ u¿ytkownika %s\n"
- 
--#: ../quota/quota.c:279
-+#: ../quota/quota.c:283
- #, c-format
- msgid "%s: cannot find group %s\n"
- msgstr "%s: nie mo¿na odnale¼æ grupy %s\n"
- 
--#: ../quota/quota.c:333
-+#: ../quota/quota.c:339
- #, c-format
- msgid "%s: must specify a project name/ID\n"
- msgstr "%s: nale¿y podaæ nazwê/ID projektu\n"
- 
--#: ../quota/quota.c:345
-+#: ../quota/quota.c:351
- #, c-format
- msgid "%s: cannot find project %s\n"
- msgstr "%s: nie mo¿na odnale¼æ projektu %s\n"
- 
--#: ../quota/quota.c:445
-+#: ../quota/quota.c:451
- msgid "quota"
- msgstr "quota"
- 
--#: ../quota/quota.c:446
-+#: ../quota/quota.c:452
- msgid "l"
- msgstr "l"
- 
--#: ../quota/quota.c:450
--msgid "[-bir] [-gpu] [-hnv] [-f file] [id|name]..."
--msgstr "[-bir] [-gpu] [-hnv] [-f plik] [id|nazwa]..."
-+#: ../quota/quota.c:456
-+msgid "[-bir] [-gpu] [-hnNv] [-f file] [id|name]..."
-+msgstr "[-bir] [-gpu] [-hnNv] [-f plik] [id|nazwa]..."
- 
--#: ../quota/quota.c:451
-+#: ../quota/quota.c:457
- msgid "show usage and limits"
- msgstr "pokazanie wykorzystania i limitów"
- 
-@@ -4469,6 +4529,10 @@ msgstr "wy
- msgid "state"
- msgstr "state"
- 
-+#: ../quota/state.c:528
-+msgid "[-gpu] [-a] [-v] [-f file]"
-+msgstr "[-gpu] [-a] [-v] [-f plik]"
-+
- #: ../quota/state.c:529
- msgid "get overall quota state information"
- msgstr "uzyskanie ogólnych informacji o stanie quot"
-@@ -4915,7 +4979,7 @@ msgstr "wska
- msgid "bad attribute leaf magic # %#x for dir ino %llu\n"
- msgstr "b³êdna liczba magiczna li¶cia atrybutu %#x dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/attr_repair.c:991 ../repair/dinode.c:2539
-+#: ../repair/attr_repair.c:991 ../repair/dinode.c:2563
- #, c-format
- msgid "illegal attribute format %d, ino %llu\n"
- msgstr "niedozwolony format atrybutu %d, i-wêze³ %llu\n"
-@@ -4955,746 +5019,751 @@ msgstr "realloc w blkmap_getn nie powiod
- msgid "realloc failed in blkmap_grow (%u bytes)\n"
- msgstr "realloc nie powiod³o siê w blkmap_grow (%u bajtów)\n"
- 
--#: ../repair/dino_chunks.c:58
-+#: ../repair/dino_chunks.c:59
- #, c-format
- msgid "cannot read agbno (%u/%u), disk block %lld\n"
- msgstr "nie mo¿na odczytaæ agbno (%u/%u), blok dysku %lld\n"
- 
--#: ../repair/dino_chunks.c:154
-+#: ../repair/dino_chunks.c:157
- #, c-format
- msgid "uncertain inode block %d/%d already known\n"
- msgstr "niepewny blok i-wêz³a %d/%d ju¿ znany\n"
- 
--#: ../repair/dino_chunks.c:170 ../repair/dino_chunks.c:436
--#: ../repair/dino_chunks.c:493
-+#: ../repair/dino_chunks.c:173 ../repair/dino_chunks.c:443
-+#: ../repair/dino_chunks.c:505
- #, c-format
- msgid "inode block %d/%d multiply claimed, (state %d)\n"
- msgstr "blok i-wêz³a %d/%d ju¿ przypisany (stan %d)\n"
- 
--#: ../repair/dino_chunks.c:176 ../repair/dino_chunks.c:498
-+#: ../repair/dino_chunks.c:180 ../repair/dino_chunks.c:510
- #, c-format
- msgid "inode block %d/%d bad state, (state %d)\n"
- msgstr "blok i-wêz³a (%d/%d) w b³êdnym stanie (stan %d)\n"
- 
--#: ../repair/dino_chunks.c:443
-+#: ../repair/dino_chunks.c:450
- #, c-format
- msgid "uncertain inode block overlap, agbno = %d, ino = %llu\n"
- msgstr "niepewny blok i-wêz³a pokrywa siê, agbno = %d, i-wêze³ %llu\n"
- 
--#: ../repair/dino_chunks.c:480
-+#: ../repair/dino_chunks.c:492
- #, c-format
- msgid "uncertain inode block %llu already known\n"
- msgstr "niepewny blok i-wêz³a %llu ju¿ znany\n"
- 
--#: ../repair/dino_chunks.c:595 ../repair/phase7.c:99 ../repair/phase7.c:106
-+#: ../repair/dino_chunks.c:628
- #, c-format
--msgid "cannot read inode %llu, disk block %lld, cnt %d\n"
--msgstr "nie mo¿na odczytaæ i-wêz³a %llu, blok dysku %lld, cnt %d\n"
-+msgid "failed to allocate %d bytes of memory\n"
-+msgstr "nie uda³o siê przydzieliæ %d bajtów pamiêci\n"
- 
--#: ../repair/dino_chunks.c:692
-+#: ../repair/dino_chunks.c:640
- #, c-format
--msgid "can't read inode %llu, disk block %lld, cnt %d\n"
-+msgid "cannot read inode %llu, disk block %lld, cnt %d\n"
- msgstr "nie mo¿na odczytaæ i-wêz³a %llu, blok dysku %lld, cnt %d\n"
- 
--#: ../repair/dino_chunks.c:712 ../repair/dino_chunks.c:881
--#: ../repair/phase3.c:70
-+#: ../repair/dino_chunks.c:757 ../repair/dino_chunks.c:939
-+#: ../repair/phase3.c:74
- #, c-format
- msgid "bad state in block map %d\n"
- msgstr "b³êdny stan w mapie bloku %d\n"
- 
--#: ../repair/dino_chunks.c:716 ../repair/dino_chunks.c:886
-+#: ../repair/dino_chunks.c:761 ../repair/dino_chunks.c:944
- #, c-format
- msgid "inode block %llu multiply claimed, state was %d\n"
- msgstr "blok i-wêz³a %llu wielokrotnie przydzielony, stan by³ %d\n"
- 
--#: ../repair/dino_chunks.c:753
-+#: ../repair/dino_chunks.c:797
- #, c-format
- msgid "imap claims in-use inode %llu is free, "
- msgstr "imap twierdzi, ¿e u¿ywany i-wêze³ %llu jest wolny, "
- 
--#: ../repair/dino_chunks.c:762
-+#: ../repair/dino_chunks.c:804
- msgid "correcting imap\n"
- msgstr "poprawiono imap\n"
- 
--#: ../repair/dino_chunks.c:764
-+#: ../repair/dino_chunks.c:806
- msgid "would correct imap\n"
- msgstr "imap zosta³oby poprawione\n"
- 
--#: ../repair/dino_chunks.c:801
-+#: ../repair/dino_chunks.c:852
- #, c-format
- msgid "cleared root inode %llu\n"
- msgstr "wyczyszczono g³ówny i-wêze³ %llu\n"
- 
--#: ../repair/dino_chunks.c:805
-+#: ../repair/dino_chunks.c:856
- #, c-format
- msgid "would clear root inode %llu\n"
- msgstr "g³ówny wêze³ %llu zosta³by wyczyszczony\n"
- 
--#: ../repair/dino_chunks.c:814
-+#: ../repair/dino_chunks.c:865
- #, c-format
- msgid "cleared realtime bitmap inode %llu\n"
- msgstr "wyczyszczono i-wêze³ bitmapy realtime %llu\n"
- 
--#: ../repair/dino_chunks.c:819
-+#: ../repair/dino_chunks.c:870
- #, c-format
- msgid "would clear realtime bitmap inode %llu\n"
- msgstr "i-wêze³ bitmapy realtime %llu zosta³by wyczyszczony\n"
- 
--#: ../repair/dino_chunks.c:829
-+#: ../repair/dino_chunks.c:880
- #, c-format
- msgid "cleared realtime summary inode %llu\n"
- msgstr "wyczyszczono i-wêze³ opisu realtime %llu\n"
- 
--#: ../repair/dino_chunks.c:834
-+#: ../repair/dino_chunks.c:885
- #, c-format
- msgid "would clear realtime summary inode %llu\n"
- msgstr "i-wêze³ opisu realtime %llu zosta³by wyczyszczony\n"
- 
--#: ../repair/dino_chunks.c:840
-+#: ../repair/dino_chunks.c:891
- #, c-format
- msgid "cleared inode %llu\n"
- msgstr "wyczyszczono i-wêze³ %llu\n"
- 
--#: ../repair/dino_chunks.c:843
-+#: ../repair/dino_chunks.c:894
- #, c-format
- msgid "would have cleared inode %llu\n"
- msgstr "i-wêze³ %llu zosta³by wyczyszczony\n"
- 
--#: ../repair/dino_chunks.c:1025 ../repair/dino_chunks.c:1060
--#: ../repair/dino_chunks.c:1174
-+#: ../repair/dino_chunks.c:1100 ../repair/dino_chunks.c:1135
-+#: ../repair/dino_chunks.c:1249
- msgid "found inodes not in the inode allocation tree\n"
- msgstr "znaleziono i-wêz³y nieobecne w drzewie alokacji i-wêz³ów\n"
- 
--#: ../repair/dinode.c:70
-+#: ../repair/dinode.c:71
- msgid "Unknown inode format.\n"
- msgstr "Nieznany format i-wêz³a.\n"
- 
--#: ../repair/dinode.c:87
-+#: ../repair/dinode.c:88
- #, c-format
- msgid "clearing inode %llu attributes\n"
- msgstr "wyczyszczono atrybuty i-wêz³a %llu\n"
- 
--#: ../repair/dinode.c:90
-+#: ../repair/dinode.c:91
- #, c-format
- msgid "would have cleared inode %llu attributes\n"
- msgstr "atrybuty i-wêz³a %llu zosta³yby wyczyszczone\n"
- 
--#: ../repair/dinode.c:557 ../repair/dinode.c:1207 ../repair/scan.c:154
-+#: ../repair/dinode.c:541
-+#, c-format
-+msgid "inode %llu - bad rt extent start block number %llu, offset %llu\n"
-+msgstr "i-wêze³ %llu - b³êdny numer bloku pocz±tkowego fragmentu rt %llu, offset %llu\n"
-+
-+#: ../repair/dinode.c:546
-+#, c-format
-+msgid "inode %llu - bad rt extent last block number %llu, offset %llu\n"
-+msgstr "i-wêze³ %llu - b³êdny numer bloku koñcowego fragmentu rt %llu, offset %llu\n"
-+
-+#: ../repair/dinode.c:551
-+#, c-format
-+msgid "inode %llu - bad rt extent overflows - start %llu, end %llu, offset %llu\n"
-+msgstr "i-wêze³ %llu - b³êdne przepe³nienie fragmentu rt - pocz±tek %llu, koniec %llu, offset %llu\n"
-+
-+#: ../repair/dinode.c:564
-+#, c-format
-+msgid "malformed rt inode extent [%llu %llu] (fs rtext size = %u)\n"
-+msgstr "zniekszta³cony fragment i-wêz³a rt [%llu %llu] (rozmiar fs rtext = %u)\n"
-+
-+#: ../repair/dinode.c:579
-+#, c-format
-+msgid "data fork in rt ino %llu claims dup rt extent, off - %llu, start - %llu, count %llu\n"
-+msgstr "ga³±¼ danych w i-wê¼le rt %llu odwo³uje siê do powtórzonego fragmentu rt, offset %llu, pocz±tek %llu, liczba %llu\n"
-+
-+#: ../repair/dinode.c:597
-+#, c-format
-+msgid "bad state in rt block map %llu\n"
-+msgstr "b³êdny stan w mapie bloku rt %llu\n"
-+
-+#: ../repair/dinode.c:603
-+#, c-format
-+msgid "data fork in rt inode %llu found metadata block %llu in rt bmap\n"
-+msgstr "ga³±¼ danych w i-wê¼le rt %llu - znaleziono blok metadanych %llu w bmapie rt\n"
-+
-+#: ../repair/dinode.c:613
-+#, c-format
-+msgid "data fork in rt inode %llu claims used rt block %llu\n"
-+msgstr "ga³±¼ danych w i-wê¼le rt %llu odwo³uje siê do u¿ywanego bloku rt %llu\n"
-+
-+#: ../repair/dinode.c:620
-+#, c-format
-+msgid "illegal state %d in rt block map %llu\n"
-+msgstr "niedozwolony stan %d w mapie bloku rt %llu\n"
-+
-+#: ../repair/dinode.c:674 ../repair/dinode.c:1227 ../repair/scan.c:154
- msgid "data"
- msgstr "danych"
- 
--#: ../repair/dinode.c:559 ../repair/dinode.c:1209 ../repair/scan.c:156
-+#: ../repair/dinode.c:676 ../repair/dinode.c:1229 ../repair/scan.c:156
- msgid "attr"
- msgstr "atrybutów"
- 
--#: ../repair/dinode.c:562
-+#: ../repair/dinode.c:679
- msgid "real-time"
- msgstr "realtime"
- 
--#: ../repair/dinode.c:564
-+#: ../repair/dinode.c:681
- msgid "regular"
- msgstr "zwyk³ym"
- 
--#: ../repair/dinode.c:574
-+#: ../repair/dinode.c:690
- #, c-format
- msgid "bmap rec out of order, inode %llu entry %d [o s c] [%llu %llu %llu], %d [%llu %llu %llu]\n"
- msgstr "rekord bmap uszkodzony, i-wêze³ %llu wpis %d [o s c] [%llu %llu %llu], %d [%llu %llu %llu]\n"
- 
--#: ../repair/dinode.c:588
-+#: ../repair/dinode.c:703
- #, c-format
- msgid "zero length extent (off = %llu, fsbno = %llu) in ino %llu\n"
- msgstr "fragment zerowej d³ugo¶ci (off = %llu, fsbno = %llu) w i-wê¼le %llu\n"
- 
--#: ../repair/dinode.c:595
--#, c-format
--msgid "inode %llu - bad rt extent start block number %llu, offset %llu\n"
--msgstr "i-wêze³ %llu - b³êdny numer bloku pocz±tkowego fragmentu rt %llu, offset %llu\n"
+ /*
+- * Fcntl interface to xfs_bmapi.
++ * Get inode's extents as described in bmv, and format for output.
+  */
+ int						/* error code */
+ xfs_getbmap(
+ 	xfs_inode_t		*ip,
+-	struct getbmap		*bmv,		/* user bmap structure */
+-	void			__user *ap,	/* pointer to user's array */
+-	int			iflags);	/* interface flags */
++	struct getbmapx		*bmv,		/* user bmap structure */
++	xfs_bmap_format_t	formatter,	/* format to user */
++	void			*arg);		/* formatter arg */
+ 
+ /*
+  * Check if the endoff is outside the last extent. If so the caller will grow
+Index: xfs-cmds/xfsprogs/include/xfs_dfrag.h
+===================================================================
+--- xfs-cmds.orig/xfsprogs/include/xfs_dfrag.h	2008-12-06 20:05:46.000000000 +0100
++++ xfs-cmds/xfsprogs/include/xfs_dfrag.h	2008-12-06 20:05:49.000000000 +0100
+@@ -46,7 +46,7 @@
+ /*
+  * Syscall interface for xfs_swapext
+  */
+-int	xfs_swapext(struct xfs_swapext __user *sx);
++int	xfs_swapext(struct xfs_swapext *sx);
+ 
+ int	xfs_swap_extents(struct xfs_inode *ip, struct xfs_inode *tip,
+ 		struct xfs_swapext *sxp);
+Index: xfs-cmds/xfsprogs/include/xfs_dinode.h
+===================================================================
+--- xfs-cmds.orig/xfsprogs/include/xfs_dinode.h	2008-12-06 20:05:46.000000000 +0100
++++ xfs-cmds/xfsprogs/include/xfs_dinode.h	2008-12-06 20:05:49.000000000 +0100
+@@ -18,32 +18,29 @@
+ #ifndef __XFS_DINODE_H__
+ #define	__XFS_DINODE_H__
+ 
+-struct xfs_buf;
+-struct xfs_mount;
++#define	XFS_DINODE_MAGIC		0x494e	/* 'IN' */
++#define XFS_DINODE_GOOD_VERSION(v)	(((v) == 1 || (v) == 2))
+ 
+-#define	XFS_DINODE_VERSION_1	1
+-#define	XFS_DINODE_VERSION_2	2
+-#define XFS_DINODE_GOOD_VERSION(v)	\
+-	(((v) == XFS_DINODE_VERSION_1 || (v) == XFS_DINODE_VERSION_2))
+-#define	XFS_DINODE_MAGIC	0x494e	/* 'IN' */
 -
--#: ../repair/dinode.c:601
--#, c-format
--msgid "inode %llu - bad rt extent last block number %llu, offset %llu\n"
--msgstr "i-wêze³ %llu - b³êdny numer bloku koñcowego fragmentu rt %llu, offset %llu\n"
+-/*
+- * Disk inode structure.
+- * This is just the header; the inode is expanded to fill a variable size
+- * with the last field expanding.  It is split into the core and "other"
+- * because we only need the core part in the in-core inode.
+- */
+ typedef struct xfs_timestamp {
+ 	__be32		t_sec;		/* timestamp seconds */
+ 	__be32		t_nsec;		/* timestamp nanoseconds */
+ } xfs_timestamp_t;
+ 
+ /*
+- * Note: Coordinate changes to this structure with the XFS_DI_* #defines
+- * below, the offsets table in xfs_ialloc_log_di() and struct xfs_icdinode
+- * in xfs_inode.h.
++ * On-disk inode structure.
++ *
++ * This is just the header or "dinode core", the inode is expanded to fill a
++ * variable size the leftover area split into a data and an attribute fork.
++ * The format of the data and attribute fork depends on the format of the
++ * inode as indicated by di_format and di_aformat.  To access the data and
++ * attribute use the XFS_DFORK_PTR, XFS_DFORK_DPTR, and XFS_DFORK_PTR macros
++ * below.
++ *
++ * There is a very similar struct icdinode in xfs_inode which matches the
++ * layout of the first 96 bytes of this structure, but is kept in native
++ * format instead of big endian.
+  */
+-typedef struct xfs_dinode_core {
++typedef struct xfs_dinode {
+ 	__be16		di_magic;	/* inode magic # = XFS_DINODE_MAGIC */
+ 	__be16		di_mode;	/* mode and type of file */
+ 	__u8		di_version;	/* inode version */
+@@ -69,33 +66,12 @@
+ 	__be16		di_dmstate;	/* DMIG state info */
+ 	__be16		di_flags;	/* random flags, XFS_DIFLAG_... */
+ 	__be32		di_gen;		/* generation number */
+-} xfs_dinode_core_t;
+ 
+-#define DI_MAX_FLUSH 0xffff
++	/* di_next_unlinked is the only non-core field in the old dinode */
++	__be32		di_next_unlinked;/* agi unlinked list ptr */
++} __attribute__((packed)) xfs_dinode_t;
+ 
+-typedef struct xfs_dinode
+-{
+-	xfs_dinode_core_t	di_core;
+-	/*
+-	 * In adding anything between the core and the union, be
+-	 * sure to update the macros like XFS_LITINO below.
+-	 */
+-	__be32			di_next_unlinked;/* agi unlinked list ptr */
+-	union {
+-		xfs_bmdr_block_t di_bmbt;	/* btree root block */
+-		xfs_bmbt_rec_32_t di_bmx[1];	/* extent list */
+-		xfs_dir2_sf_t	di_dir2sf;	/* shortform directory v2 */
+-		char		di_c[1];	/* local contents */
+-		__be32		di_dev;		/* device for S_IFCHR/S_IFBLK */
+-		uuid_t		di_muuid;	/* mount point value */
+-		char		di_symlink[1];	/* local symbolic link */
+-	}		di_u;
+-	union {
+-		xfs_bmdr_block_t di_abmbt;	/* btree root block */
+-		xfs_bmbt_rec_32_t di_abmx[1];	/* extent list */
+-		xfs_attr_shortform_t di_attrsf;	/* shortform attribute list */
+-	}		di_a;
+-} xfs_dinode_t;
++#define DI_MAX_FLUSH 0xffff
+ 
+ /*
+  * The 32 bit link count in the inode theoretically maxes out at UINT_MAX.
+@@ -106,50 +82,14 @@
+ #define	XFS_MAXLINK_1		65535U
+ 
+ /*
+- * Bit names for logging disk inodes only
+- */
+-#define	XFS_DI_MAGIC		0x0000001
+-#define	XFS_DI_MODE		0x0000002
+-#define	XFS_DI_VERSION		0x0000004
+-#define	XFS_DI_FORMAT		0x0000008
+-#define	XFS_DI_ONLINK		0x0000010
+-#define	XFS_DI_UID		0x0000020
+-#define	XFS_DI_GID		0x0000040
+-#define	XFS_DI_NLINK		0x0000080
+-#define	XFS_DI_PROJID		0x0000100
+-#define	XFS_DI_PAD		0x0000200
+-#define	XFS_DI_ATIME		0x0000400
+-#define	XFS_DI_MTIME		0x0000800
+-#define	XFS_DI_CTIME		0x0001000
+-#define	XFS_DI_SIZE		0x0002000
+-#define	XFS_DI_NBLOCKS		0x0004000
+-#define	XFS_DI_EXTSIZE		0x0008000
+-#define	XFS_DI_NEXTENTS		0x0010000
+-#define	XFS_DI_NAEXTENTS	0x0020000
+-#define	XFS_DI_FORKOFF		0x0040000
+-#define	XFS_DI_AFORMAT		0x0080000
+-#define	XFS_DI_DMEVMASK		0x0100000
+-#define	XFS_DI_DMSTATE		0x0200000
+-#define	XFS_DI_FLAGS		0x0400000
+-#define	XFS_DI_GEN		0x0800000
+-#define	XFS_DI_NEXT_UNLINKED	0x1000000
+-#define	XFS_DI_U		0x2000000
+-#define	XFS_DI_A		0x4000000
+-#define	XFS_DI_NUM_BITS		27
+-#define	XFS_DI_ALL_BITS		((1 << XFS_DI_NUM_BITS) - 1)
+-#define	XFS_DI_CORE_BITS	(XFS_DI_ALL_BITS & ~(XFS_DI_U|XFS_DI_A))
 -
--#: ../repair/dinode.c:607
--#, c-format
--msgid "inode %llu - bad rt extent overflows - start %llu, end %llu, offset %llu\n"
--msgstr "i-wêze³ %llu - b³êdne przepe³nienie fragmentu rt - pocz±tek %llu, koniec %llu, offset %llu\n"
+-/*
+  * Values for di_format
+  */
+-typedef enum xfs_dinode_fmt
+-{
+-	XFS_DINODE_FMT_DEV,		/* CHR, BLK: di_dev */
+-	XFS_DINODE_FMT_LOCAL,		/* DIR, REG: di_c */
+-					/* LNK: di_symlink */
+-	XFS_DINODE_FMT_EXTENTS,		/* DIR, REG, LNK: di_bmx */
+-	XFS_DINODE_FMT_BTREE,		/* DIR, REG, LNK: di_bmbt */
+-	XFS_DINODE_FMT_UUID		/* MNT: di_uuid */
++typedef enum xfs_dinode_fmt {
++	XFS_DINODE_FMT_DEV,		/* xfs_dev_t */
++	XFS_DINODE_FMT_LOCAL,		/* bulk data */
++	XFS_DINODE_FMT_EXTENTS,		/* struct xfs_bmbt_rec */
++	XFS_DINODE_FMT_BTREE,		/* struct xfs_bmdr_block */
++	XFS_DINODE_FMT_UUID		/* uuid_t */
+ } xfs_dinode_fmt_t;
+ 
+ /*
+@@ -170,8 +110,8 @@
+ /*
+  * Inode data & attribute fork sizes, per inode.
+  */
+-#define XFS_DFORK_Q(dip)		((dip)->di_core.di_forkoff != 0)
+-#define XFS_DFORK_BOFF(dip)		((int)((dip)->di_core.di_forkoff << 3))
++#define XFS_DFORK_Q(dip)		((dip)->di_forkoff != 0)
++#define XFS_DFORK_BOFF(dip)		((int)((dip)->di_forkoff << 3))
+ 
+ #define XFS_DFORK_DSIZE(dip,mp) \
+ 	(XFS_DFORK_Q(dip) ? \
+@@ -186,23 +126,42 @@
+ 		XFS_DFORK_DSIZE(dip, mp) : \
+ 		XFS_DFORK_ASIZE(dip, mp))
+ 
+-#define XFS_DFORK_DPTR(dip)		    ((dip)->di_u.di_c)
++/*
++ * Return pointers to the data or attribute forks.
++ */
++#define XFS_DFORK_DPTR(dip) \
++	((char *)(dip) + sizeof(struct xfs_dinode))
+ #define XFS_DFORK_APTR(dip)	\
+-	((dip)->di_u.di_c + XFS_DFORK_BOFF(dip))
++	(XFS_DFORK_DPTR(dip) + XFS_DFORK_BOFF(dip))
+ #define XFS_DFORK_PTR(dip,w)	\
+ 	((w) == XFS_DATA_FORK ? XFS_DFORK_DPTR(dip) : XFS_DFORK_APTR(dip))
++
+ #define XFS_DFORK_FORMAT(dip,w) \
+ 	((w) == XFS_DATA_FORK ? \
+-		(dip)->di_core.di_format : \
+-		(dip)->di_core.di_aformat)
++		(dip)->di_format : \
++		(dip)->di_aformat)
+ #define XFS_DFORK_NEXTENTS(dip,w) \
+ 	((w) == XFS_DATA_FORK ? \
+-	 	be32_to_cpu((dip)->di_core.di_nextents) : \
+-	 	be16_to_cpu((dip)->di_core.di_anextents))
++		be32_to_cpu((dip)->di_nextents) : \
++		be16_to_cpu((dip)->di_anextents))
+ 
+ #define	XFS_BUF_TO_DINODE(bp)	((xfs_dinode_t *)XFS_BUF_PTR(bp))
+ 
+ /*
++ * For block and character special files the 32bit dev_t is stored at the
++ * beginning of the data fork.
++ */
++static inline xfs_dev_t xfs_dinode_get_rdev(struct xfs_dinode *dip)
++{
++	return be32_to_cpu(*(__be32 *)XFS_DFORK_DPTR(dip));
++}
++
++static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
++{
++	*(__be32 *)XFS_DFORK_DPTR(dip) = cpu_to_be32(rdev);
++}
++
++/*
+  * Values for di_flags
+  * There should be a one-to-one correspondence between these flags and the
+  * XFS_XFLAG_s.
+Index: xfs-cmds/xfsprogs/include/xfs_dir2_sf.h
+===================================================================
+--- xfs-cmds.orig/xfsprogs/include/xfs_dir2_sf.h	2008-12-06 20:05:46.000000000 +0100
++++ xfs-cmds/xfsprogs/include/xfs_dir2_sf.h	2008-12-06 20:05:49.000000000 +0100
+@@ -34,13 +34,6 @@
+ struct xfs_trans;
+ 
+ /*
+- * Maximum size of a shortform directory.
+- */
+-#define	XFS_DIR2_SF_MAX_SIZE	\
+-	(XFS_DINODE_MAX_SIZE - (uint)sizeof(xfs_dinode_core_t) - \
+-	 (uint)sizeof(xfs_agino_t))
 -
--#: ../repair/dinode.c:618
-+#: ../repair/dinode.c:730
- #, c-format
- msgid "inode %llu - bad extent starting block number %llu, offset %llu\n"
- msgstr "i-wêze³ %llu - b³êdny numer bloku pocz±tkowego fragmentu %llu, offset %llu\n"
+-/*
+  * Inode number stored as 8 8-bit values.
+  */
+ typedef	struct { __uint8_t i[8]; } xfs_dir2_ino8_t;
+Index: xfs-cmds/xfsprogs/include/xfs_fs.h
+===================================================================
+--- xfs-cmds.orig/xfsprogs/include/xfs_fs.h	2008-12-06 20:05:46.000000000 +0100
++++ xfs-cmds/xfsprogs/include/xfs_fs.h	2008-12-06 20:05:49.000000000 +0100
+@@ -113,22 +113,14 @@
+ #define BMV_IF_ATTRFORK		0x1	/* return attr fork rather than data */
+ #define BMV_IF_NO_DMAPI_READ	0x2	/* Do not generate DMAPI read event  */
+ #define BMV_IF_PREALLOC		0x4	/* rtn status BMV_OF_PREALLOC if req */
+-#define BMV_IF_VALID	(BMV_IF_ATTRFORK|BMV_IF_NO_DMAPI_READ|BMV_IF_PREALLOC)
+-#ifdef __KERNEL__
+-#define BMV_IF_EXTENDED 0x40000000	/* getpmapx if set */
+-#endif
++#define BMV_IF_DELALLOC		0x8	/* rtn status BMV_OF_DELALLOC if req */
++#define BMV_IF_VALID	\
++	(BMV_IF_ATTRFORK|BMV_IF_NO_DMAPI_READ|BMV_IF_PREALLOC|BMV_IF_DELALLOC)
  
--#: ../repair/dinode.c:623
-+#: ../repair/dinode.c:736
- #, c-format
- msgid "inode %llu - bad extent last block number %llu, offset %llu\n"
- msgstr "i-wêze³ %llu - b³êdny numer bloku koñcowego fragmentu %llu, offset %llu\n"
- 
--#: ../repair/dinode.c:629
-+#: ../repair/dinode.c:742
- #, c-format
- msgid "inode %llu - bad extent overflows - start %llu, end %llu, offset %llu\n"
- msgstr "i-wêze³ %llu - b³êdne przepe³nienie fragmentu - pocz±tek %llu, koniec %llu, offset %llu\n"
- 
--#: ../repair/dinode.c:636
-+#: ../repair/dinode.c:748
- #, c-format
- msgid "inode %llu - extent offset too large - start %llu, count %llu, offset %llu\n"
- msgstr "i-wêze³ %llu - offset fragmentu zbyt du¿y - pocz±tek %llu, liczba %llu, offset %llu\n"
- 
--#: ../repair/dinode.c:655
--#, c-format
--msgid "malformed rt inode extent [%llu %llu] (fs rtext size = %u)\n"
--msgstr "zniekszta³cony fragment i-wêz³a rt [%llu %llu] (rozmiar fs rtext = %u)\n"
+ /*	bmv_oflags values - returned for for each non-header segment */
+ #define BMV_OF_PREALLOC		0x1	/* segment = unwritten pre-allocation */
 -
--#: ../repair/dinode.c:676
--#, c-format
--msgid "data fork in rt ino %llu claims dup rt extent, off - %llu, start - %llu, count %llu\n"
--msgstr "ga³±¼ danych w i-wê¼le rt %llu odwo³uje siê do powtórzonego fragmentu rt, offset %llu, pocz±tek %llu, liczba %llu\n"
+-/*	Convert getbmap <-> getbmapx - move fields from p1 to p2. */
+-#define GETBMAP_CONVERT(p1,p2) {	\
+-	p2.bmv_offset = p1.bmv_offset;	\
+-	p2.bmv_block = p1.bmv_block;	\
+-	p2.bmv_length = p1.bmv_length;	\
+-	p2.bmv_count = p1.bmv_count;	\
+-	p2.bmv_entries = p1.bmv_entries;  }
 -
--#: ../repair/dinode.c:700
--#, c-format
--msgid "bad state in rt block map %llu\n"
--msgstr "b³êdny stan w mapie bloku rt %llu\n"
++#define BMV_OF_DELALLOC		0x2	/* segment = delayed allocation */
++#define BMV_OF_LAST		0x4	/* segment is the last in the file */
+ 
+ /*
+  * Structure for XFS_IOC_FSSETDM.
+@@ -426,10 +418,6 @@
+ #define XFS_IOC_GETXFLAGS	FS_IOC_GETFLAGS
+ #define XFS_IOC_SETXFLAGS	FS_IOC_SETFLAGS
+ #define XFS_IOC_GETVERSION	FS_IOC_GETVERSION
+-/* 32-bit compat counterparts */
+-#define XFS_IOC32_GETXFLAGS	FS_IOC32_GETFLAGS
+-#define XFS_IOC32_SETXFLAGS	FS_IOC32_SETFLAGS
+-#define XFS_IOC32_GETVERSION	FS_IOC32_GETVERSION
+ 
+ /*
+  * ioctl commands that replace IRIX fcntl()'s
+Index: xfs-cmds/xfsprogs/include/xfs_ialloc.h
+===================================================================
+--- xfs-cmds.orig/xfsprogs/include/xfs_ialloc.h	2008-12-06 20:05:46.000000000 +0100
++++ xfs-cmds/xfsprogs/include/xfs_ialloc.h	2008-12-06 20:05:49.000000000 +0100
+@@ -20,6 +20,7 @@
+ 
+ struct xfs_buf;
+ struct xfs_dinode;
++struct xfs_imap;
+ struct xfs_mount;
+ struct xfs_trans;
+ 
+@@ -104,17 +105,14 @@
+ 	xfs_ino_t	*first_ino);	/* first inode in deleted cluster */
+ 
+ /*
+- * Return the location of the inode in bno/len/off,
+- * for mapping it into a buffer.
++ * Return the location of the inode in imap, for mapping it into a buffer.
+  */
+ int
+-xfs_dilocate(
++xfs_imap(
+ 	struct xfs_mount *mp,		/* file system mount structure */
+ 	struct xfs_trans *tp,		/* transaction pointer */
+ 	xfs_ino_t	ino,		/* inode to locate */
+-	xfs_fsblock_t	*bno,		/* output: block containing inode */
+-	int		*len,		/* output: num blocks in cluster*/
+-	int		*off,		/* output: index in block of inode */
++	struct xfs_imap	*imap,		/* location map structure */
+ 	uint		flags);		/* flags for inode btree lookup */
+ 
+ /*
+Index: xfs-cmds/xfsprogs/include/xfs_inode.h
+===================================================================
+--- xfs-cmds.orig/xfsprogs/include/xfs_inode.h	2008-12-06 20:05:46.000000000 +0100
++++ xfs-cmds/xfsprogs/include/xfs_inode.h	2008-12-06 20:05:49.000000000 +0100
+@@ -19,7 +19,6 @@
+ #define	__XFS_INODE_H__
+ 
+ struct xfs_dinode;
+-struct xfs_dinode_core;
+ struct xfs_inode;
+ 
+ /*
+@@ -84,6 +83,16 @@
+ } xfs_ifork_t;
+ 
+ /*
++ * Inode location information.  Stored in the inode and passed to
++ * xfs_imap_to_bp() to get a buffer and dinode for a given inode.
++ */
++struct xfs_imap {
++	xfs_daddr_t	im_blkno;	/* starting BB of inode chunk */
++	ushort		im_len;		/* length in BBs of inode chunk */
++	ushort		im_boffset;	/* inode offset in block in bytes */
++};
++
++/*
+  * This is the xfs in-core inode structure.
+  * Most of the on-disk inode is embedded in the i_d field.
+  *
+@@ -112,7 +121,7 @@
+ } xfs_ictimestamp_t;
+ 
+ /*
+- * NOTE:  This structure must be kept identical to struct xfs_dinode_core
++ * NOTE:  This structure must be kept identical to struct xfs_dinode
+  * 	  in xfs_dinode.h except for the endianess annotations.
+  */
+ typedef struct xfs_icdinode {
+@@ -158,12 +167,6 @@
+ #define	XFS_IFEXTIREC	0x08	/* Indirection array of extent blocks */
+ 
+ /*
+- * Flags for xfs_itobp(), xfs_imap() and xfs_dilocate().
+- */
+-#define XFS_IMAP_LOOKUP		0x1
+-#define XFS_IMAP_BULKSTAT	0x2
 -
--#: ../repair/dinode.c:707
--#, c-format
--msgid "%s fork in rt inode %llu found metadata block %llu in %s bmap\n"
--msgstr "ga³±¼ %s w i-wê¼le rt %llu - znaleziono blok metadanych %llu w bmap %s\n"
+-/*
+  * Fork handling.
+  */
+ 
+@@ -232,27 +235,15 @@
+ 	__uint16_t	da_pad;		/* DMIG extra padding */
+ } dm_attrs_t;
+ 
+-typedef struct {
+-	struct xfs_inode	*ip_mnext;	/* next inode in mount list */
+-	struct xfs_inode	*ip_mprev;	/* ptr to prev inode */
+-	struct xfs_mount	*ip_mount;	/* fs mount struct ptr */
+-} xfs_iptr_t;
 -
--#: ../repair/dinode.c:715
--#, c-format
--msgid "%s fork in rt inode %llu claims used rt block %llu\n"
--msgstr "ga³±¼ %s w i-wê¼le rt %llu odwo³uje siê do u¿ywanego bloku rt %llu\n"
+ typedef struct xfs_inode {
+ 	/* Inode linking and identification information. */
+-	struct xfs_inode	*i_mnext;	/* next inode in mount list */
+-	struct xfs_inode	*i_mprev;	/* ptr to prev inode */
+ 	struct xfs_mount	*i_mount;	/* fs mount struct ptr */
+-	struct list_head	i_reclaim;	/* reclaim list */
+-	struct inode		*i_vnode;	/* vnode backpointer */
+ 	struct xfs_dquot	*i_udquot;	/* user dquot */
+ 	struct xfs_dquot	*i_gdquot;	/* group dquot */
+ 
+ 	/* Inode location stuff */
+ 	xfs_ino_t		i_ino;		/* inode number (agno/agino)*/
+-	xfs_daddr_t		i_blkno;	/* blkno of inode buffer */
+-	ushort			i_len;		/* len of inode buffer */
+-	ushort			i_boffset;	/* off of inode in buffer */
++	struct xfs_imap		i_imap;		/* location for xfs_imap() */
+ 
+ 	/* Extent information. */
+ 	xfs_ifork_t		*i_afp;		/* attribute fork pointer */
+@@ -271,7 +262,6 @@
+ 	unsigned short		i_flags;	/* see defined flags below */
+ 	unsigned char		i_update_core;	/* timestamps/size is dirty */
+ 	unsigned char		i_update_size;	/* di_size field is dirty */
+-	unsigned int		i_gen;		/* generation count */
+ 	unsigned int		i_delayed_blks;	/* count of delay alloc blks */
+ 
+ 	xfs_icdinode_t		i_d;		/* most of ondisk inode */
+@@ -279,6 +269,10 @@
+ 	xfs_fsize_t		i_size;		/* in-memory size */
+ 	xfs_fsize_t		i_new_size;	/* size when write completes */
+ 	atomic_t		i_iocount;	/* outstanding I/O count */
++
++	/* VFS inode */
++	struct inode		i_vnode;	/* embedded VFS inode */
++
+ 	/* Trace buffers per inode. */
+ #ifdef XFS_INODE_TRACE
+ 	struct ktrace		*i_trace;	/* general inode trace */
+@@ -306,13 +300,30 @@
+ /* Convert from vfs inode to xfs inode */
+ static inline struct xfs_inode *XFS_I(struct inode *inode)
+ {
+-	return (struct xfs_inode *)inode->i_private;
++	return container_of(inode, struct xfs_inode, i_vnode);
+ }
+ 
+ /* convert from xfs inode to vfs inode */
+ static inline struct inode *VFS_I(struct xfs_inode *ip)
+ {
+-	return (struct inode *)ip->i_vnode;
++	return &ip->i_vnode;
++}
++
++/*
++ * Get rid of a partially initialized inode.
++ *
++ * We have to go through destroy_inode to make sure allocations
++ * from init_inode_always like the security data are undone.
++ *
++ * We mark the inode bad so that it takes the short cut in
++ * the reclaim path instead of going through the flush path
++ * which doesn't make sense for an inode that has never seen the
++ * light of day.
++ */
++static inline void xfs_destroy_inode(struct xfs_inode *ip)
++{
++	make_bad_inode(VFS_I(ip));
++	return destroy_inode(VFS_I(ip));
+ }
+ 
+ /*
+@@ -392,17 +403,12 @@
+ /*
+  * In-core inode flags.
+  */
+-#define XFS_IGRIO	0x0001  /* inode used for guaranteed rate i/o */
+-#define XFS_IUIOSZ	0x0002  /* inode i/o sizes have been explicitly set */
+-#define XFS_IQUIESCE    0x0004  /* we have started quiescing for this inode */
+-#define XFS_IRECLAIM    0x0008  /* we have started reclaiming this inode    */
+-#define XFS_ISTALE	0x0010	/* inode has been staled */
+-#define XFS_IRECLAIMABLE 0x0020 /* inode can be reclaimed */
+-#define XFS_INEW	0x0040
+-#define XFS_IFILESTREAM	0x0080	/* inode is in a filestream directory */
+-#define XFS_IMODIFIED	0x0100	/* XFS inode state possibly differs */
+-				/* to the Linux inode state. */
+-#define XFS_ITRUNCATED	0x0200	/* truncated down so flush-on-close */
++#define XFS_IRECLAIM    0x0001  /* we have started reclaiming this inode    */
++#define XFS_ISTALE	0x0002	/* inode has been staled */
++#define XFS_IRECLAIMABLE 0x0004 /* inode can be reclaimed */
++#define XFS_INEW	0x0008	/* inode has just been allocated */
++#define XFS_IFILESTREAM	0x0010	/* inode is in a filestream directory */
++#define XFS_ITRUNCATED	0x0020	/* truncated down so flush-on-close */
+ 
+ /*
+  * Flags for inode locking.
+@@ -477,16 +483,8 @@
+ 	 ((pip)->i_d.di_mode & S_ISGID))
+ 
+ /*
+- * Flags for xfs_iget()
+- */
+-#define XFS_IGET_CREATE		0x1
+-#define XFS_IGET_BULKSTAT	0x2
 -
--#: ../repair/dinode.c:721
--#, c-format
--msgid "illegal state %d in %s block map %llu\n"
--msgstr "niedozwolony stan %d w mapie bloku %s %llu\n"
+-/*
+  * xfs_iget.c prototypes.
+  */
+-void		xfs_ihash_init(struct xfs_mount *);
+-void		xfs_ihash_free(struct xfs_mount *);
+ xfs_inode_t	*xfs_inode_incore(struct xfs_mount *, xfs_ino_t,
+ 				  struct xfs_trans *);
+ int		xfs_iget(struct xfs_mount *, struct xfs_trans *, xfs_ino_t,
+@@ -501,14 +499,10 @@
+ uint		xfs_ilock_map_shared(xfs_inode_t *);
+ void		xfs_iunlock_map_shared(xfs_inode_t *, uint);
+ void		xfs_ireclaim(xfs_inode_t *);
+-int		xfs_finish_reclaim(xfs_inode_t *, int, int);
+-int		xfs_finish_reclaim_all(struct xfs_mount *, int);
+ 
+ /*
+  * xfs_inode.c prototypes.
+  */
+-int		xfs_iread(struct xfs_mount *, struct xfs_trans *, xfs_ino_t,
+-			  xfs_inode_t **, xfs_daddr_t, uint);
+ int		xfs_ialloc(struct xfs_trans *, xfs_inode_t *, mode_t,
+ 			   xfs_nlink_t, xfs_dev_t, struct cred *, xfs_prid_t,
+ 			   int, struct xfs_buf **, boolean_t *, xfs_inode_t **);
+@@ -522,14 +516,10 @@
+ 				     xfs_fsize_t, int, int);
+ int		xfs_iunlink(struct xfs_trans *, xfs_inode_t *);
+ 
+-struct xfs_inode * xfs_inode_alloc(struct xfs_mount *, xfs_ino_t);
+-void		xfs_idestroy(xfs_inode_t *);
+-void		xfs_iextract(xfs_inode_t *);
+ void		xfs_iext_realloc(xfs_inode_t *, int, int);
+ void		xfs_ipin(xfs_inode_t *);
+ void		xfs_iunpin(xfs_inode_t *);
+ int		xfs_iflush(xfs_inode_t *, uint);
+-void		xfs_iflush_all(struct xfs_mount *);
+ void		xfs_ichgtime(xfs_inode_t *, int);
+ xfs_fsize_t	xfs_file_last_byte(xfs_inode_t *);
+ void		xfs_lock_inodes(xfs_inode_t **, int, uint);
+@@ -538,14 +528,70 @@
+ void		xfs_synchronize_atime(xfs_inode_t *);
+ void		xfs_mark_inode_dirty_sync(xfs_inode_t *);
+ 
++#if defined(XFS_INODE_TRACE)
++
++#define	INODE_TRACE_SIZE	16		/* number of trace entries */
++#define	INODE_KTRACE_ENTRY	1
++#define	INODE_KTRACE_EXIT	2
++#define	INODE_KTRACE_HOLD	3
++#define	INODE_KTRACE_REF	4
++#define	INODE_KTRACE_RELE	5
++
++extern void _xfs_itrace_entry(struct xfs_inode *, const char *, inst_t *);
++extern void _xfs_itrace_exit(struct xfs_inode *, const char *, inst_t *);
++extern void xfs_itrace_hold(struct xfs_inode *, char *, int, inst_t *);
++extern void _xfs_itrace_ref(struct xfs_inode *, char *, int, inst_t *);
++extern void xfs_itrace_rele(struct xfs_inode *, char *, int, inst_t *);
++#define xfs_itrace_entry(ip)	\
++	_xfs_itrace_entry(ip, __func__, (inst_t *)__return_address)
++#define xfs_itrace_exit(ip)	\
++	_xfs_itrace_exit(ip, __func__, (inst_t *)__return_address)
++#define xfs_itrace_exit_tag(ip, tag)	\
++	_xfs_itrace_exit(ip, tag, (inst_t *)__return_address)
++#define xfs_itrace_ref(ip)	\
++	_xfs_itrace_ref(ip, __FILE__, __LINE__, (inst_t *)__return_address)
++
++#else
++#define	xfs_itrace_entry(a)
++#define	xfs_itrace_exit(a)
++#define	xfs_itrace_exit_tag(a, b)
++#define	xfs_itrace_hold(a, b, c, d)
++#define	xfs_itrace_ref(a)
++#define	xfs_itrace_rele(a, b, c, d)
++#endif
++
++#define IHOLD(ip) \
++do { \
++	ASSERT(atomic_read(&VFS_I(ip)->i_count) > 0) ; \
++	atomic_inc(&(VFS_I(ip)->i_count)); \
++	xfs_itrace_hold((ip), __FILE__, __LINE__, (inst_t *)__return_address); \
++} while (0)
++
++#define IRELE(ip) \
++do { \
++	xfs_itrace_rele((ip), __FILE__, __LINE__, (inst_t *)__return_address); \
++	iput(VFS_I(ip)); \
++} while (0)
++
+ #endif /* __KERNEL__ */
+ 
++/*
++ * Flags for xfs_iget()
++ */
++#define XFS_IGET_CREATE		0x1
++#define XFS_IGET_BULKSTAT	0x2
++
++int		xfs_inotobp(struct xfs_mount *, struct xfs_trans *,
++			    xfs_ino_t, struct xfs_dinode **,
++			    struct xfs_buf **, int *, uint);
+ int		xfs_itobp(struct xfs_mount *, struct xfs_trans *,
+ 			  struct xfs_inode *, struct xfs_dinode **,
+-			  struct xfs_buf **, xfs_daddr_t, uint, uint);
++			  struct xfs_buf **, uint);
++int		xfs_iread(struct xfs_mount *, struct xfs_trans *,
++			  struct xfs_inode *, xfs_daddr_t, uint);
+ void		xfs_dinode_from_disk(struct xfs_icdinode *,
+-				     struct xfs_dinode_core *);
+-void		xfs_dinode_to_disk(struct xfs_dinode_core *,
++				     struct xfs_dinode *);
++void		xfs_dinode_to_disk(struct xfs_dinode *,
+ 				   struct xfs_icdinode *);
+ void		xfs_idestroy_fork(struct xfs_inode *, int);
+ void		xfs_idata_realloc(struct xfs_inode *, int, int);
+Index: xfs-cmds/xfsprogs/include/xfs_log.h
+===================================================================
+--- xfs-cmds.orig/xfsprogs/include/xfs_log.h	2008-12-06 20:05:46.000000000 +0100
++++ xfs-cmds/xfsprogs/include/xfs_log.h	2008-12-06 20:05:49.000000000 +0100
+@@ -134,6 +134,7 @@
+ #ifdef __KERNEL__
+ /* Log manager interfaces */
+ struct xfs_mount;
++struct xlog_ticket;
+ xfs_lsn_t xfs_log_done(struct xfs_mount *mp,
+ 		       xfs_log_ticket_t ticket,
+ 		       void		**iclog,
+@@ -177,6 +178,9 @@
+ 
+ void	  xlog_iodone(struct xfs_buf *);
+ 
++struct xlog_ticket * xfs_log_ticket_get(struct xlog_ticket *ticket);
++void	  xfs_log_ticket_put(struct xlog_ticket *ticket);
++
+ #endif
+ 
+ 
+Index: xfs-cmds/xfsprogs/include/xfs_log_priv.h
+===================================================================
+--- xfs-cmds.orig/xfsprogs/include/xfs_log_priv.h	2008-12-06 20:05:46.000000000 +0100
++++ xfs-cmds/xfsprogs/include/xfs_log_priv.h	2008-12-06 20:05:49.000000000 +0100
+@@ -245,6 +245,7 @@
+ 	struct xlog_ticket *t_next;	 /*			         :4|8 */
+ 	struct xlog_ticket *t_prev;	 /*				 :4|8 */
+ 	xlog_tid_t	   t_tid;	 /* transaction identifier	 : 4  */
++	atomic_t	   t_ref;	 /* ticket reference count       : 4  */
+ 	int		   t_curr_res;	 /* current reservation in bytes : 4  */
+ 	int		   t_unit_res;	 /* unit reservation in bytes    : 4  */
+ 	char		   t_ocnt;	 /* original count		 : 1  */
+@@ -309,6 +310,16 @@
+ } xlog_rec_ext_header_t;
+ 
+ #ifdef __KERNEL__
++
++/*
++ * Quite misnamed, because this union lays out the actual on-disk log buffer.
++ */
++typedef union xlog_in_core2 {
++	xlog_rec_header_t	hic_header;
++	xlog_rec_ext_header_t	hic_xheader;
++	char			hic_sector[XLOG_HEADER_SIZE];
++} xlog_in_core_2_t;
++
+ /*
+  * - A log record header is 512 bytes.  There is plenty of room to grow the
+  *	xlog_rec_header_t into the reserved space.
+@@ -338,7 +349,7 @@
+  * We'll put all the read-only and l_icloglock fields in the first cacheline,
+  * and move everything else out to subsequent cachelines.
+  */
+-typedef struct xlog_iclog_fields {
++typedef struct xlog_in_core {
+ 	sv_t			ic_force_wait;
+ 	sv_t			ic_write_wait;
+ 	struct xlog_in_core	*ic_next;
+@@ -361,41 +372,11 @@
+ 
+ 	/* reference counts need their own cacheline */
+ 	atomic_t		ic_refcnt ____cacheline_aligned_in_smp;
+-} xlog_iclog_fields_t;
 -
--#: ../repair/dinode.c:761
-+#: ../repair/dinode.c:779
- #, c-format
- msgid "%s fork in ino %llu claims dup extent, off - %llu, start - %llu, cnt %llu\n"
- msgstr "ga³±¼ %s w i-wê¼le %llu odwo³uje siê do powtórzonego fragmentu, offset %llu, pocz±tek %llu, liczba %llu\n"
- 
--#: ../repair/dinode.c:796
-+#: ../repair/dinode.c:810
- #, c-format
- msgid "%s fork in ino %llu claims free block %llu\n"
- msgstr "ga³±¼ %s w i-wê¼le %llu odwo³uje siê do wolnego bloku %llu\n"
- 
--#: ../repair/dinode.c:803
-+#: ../repair/dinode.c:819
- #, c-format
- msgid "bad state in block map %llu\n"
- msgstr "b³êdny stan w mapie bloku %llu\n"
- 
--#: ../repair/dinode.c:810
-+#: ../repair/dinode.c:824
- #, c-format
- msgid "%s fork in inode %llu claims metadata block %llu\n"
- msgstr "ga³±¼ %s w i-wê¼le %llu odwo³uje siê do bloku metadanych %llu\n"
- 
--#: ../repair/dinode.c:817
-+#: ../repair/dinode.c:832
- #, c-format
- msgid "%s fork in %s inode %llu claims used block %llu\n"
- msgstr "ga³±¼ %s w i-wê¼le %s %llu odwo³uje siê do u¿ywanego bloku %llu\n"
- 
--#: ../repair/dinode.c:822
-+#: ../repair/dinode.c:838
- #, c-format
- msgid "illegal state %d in block map %llu\n"
- msgstr "niedozwolony stan %d w mapie bloku %llu\n"
- 
--#: ../repair/dinode.c:900
-+#: ../repair/dinode.c:918
- #, c-format
- msgid "cannot read inode (%u/%u), disk block %lld\n"
- msgstr "nie mo¿na odczytaæ i-wêz³a (%u/%u), blok dysku %lld\n"
- 
--#: ../repair/dinode.c:1018 ../repair/dinode.c:1083
-+#: ../repair/dinode.c:1036 ../repair/dinode.c:1101
- #, c-format
- msgid "cannot read bmap block %llu\n"
- msgstr "nie mo¿na odczytaæ bloku bmap %llu\n"
- 
--#: ../repair/dinode.c:1039
-+#: ../repair/dinode.c:1057
- #, c-format
- msgid "# of bmap records in inode %llu exceeds max (%u, max - %u)\n"
- msgstr "liczba rekordów bmap w i-wê¼le %llu przekracza maksimum (%u, maksimum %u)\n"
- 
--#: ../repair/dinode.c:1048
-+#: ../repair/dinode.c:1066
- #, c-format
- msgid "- # of bmap records in inode %llu less than minimum (%u, min - %u), proceeding ...\n"
- msgstr "- liczba rekordów bmap w i-wê¼le %llu mniejsza ni¿ minimum (%u, minimum %u), kontynuacja...\n"
- 
--#: ../repair/dinode.c:1094
-+#: ../repair/dinode.c:1112
- #, c-format
- msgid "# of bmap records in inode %llu greater than maximum (%u, max - %u)\n"
- msgstr "liczba rekordów bmap w i-wê¼le %llu wiêksza ni¿ maksimum (%u, maksimum %u)\n"
- 
--#: ../repair/dinode.c:1103
-+#: ../repair/dinode.c:1121
- #, c-format
- msgid "- # of bmap records in inode %llu less than minimum (%u, min - %u), continuing...\n"
- msgstr "- liczba rekordów bmap w i-wê¼le %llu mniejsza ni¿ minimum (%u, minimum %u), kontynuacja...\n"
- 
--#: ../repair/dinode.c:1121
-+#: ../repair/dinode.c:1139
- #, c-format
- msgid "could not map block %llu\n"
- msgstr "nie uda³o siê odwzorowaæ bloku %llu\n"
- 
--#: ../repair/dinode.c:1153
-+#: ../repair/dinode.c:1171
- #, c-format
- msgid "get_bmapi() called for local inode %llu\n"
- msgstr "get_bmapi() wywo³ano dla lokalnego i-wêz³a %llu\n"
- 
--#: ../repair/dinode.c:1161
-+#: ../repair/dinode.c:1179
- #, c-format
- msgid "bad inode format for inode %llu\n"
- msgstr "b³êdny format i-wêz³a dla i-wêz³a %llu\n"
- 
--#: ../repair/dinode.c:1225
-+#: ../repair/dinode.c:1243
-+#, c-format
-+msgid "bad level %d in inode %llu bmap btree root block\n"
-+msgstr "b³êdny poziom %d w bloku g³ównym bmap btree i-wêz³a %llu\n"
-+
-+#: ../repair/dinode.c:1248
- #, c-format
--msgid "bad level 0 in inode %llu bmap btree root block\n"
--msgstr "b³êdny poziom 0 w bloku g³ównym bmap btree i-wêz³a %llu\n"
-+msgid "bad numrecs 0 in inode %llu bmap btree root block\n"
-+msgstr "b³êdne numrecs 0 w bloku g³ównym bmap btree i-wêz³a %llu\n"
- 
--#: ../repair/dinode.c:1239
-+#: ../repair/dinode.c:1259
- #, c-format
- msgid "indicated size of %s btree root (%d bytes) greater than space in inode %llu %s fork\n"
- msgstr "oznaczony rozmiar korzenia b-drzewa %s (%d bajtów) wiêkszy ni¿ miejsce w i-wê¼le %llu ga³êzi %s\n"
- 
--#: ../repair/dinode.c:1269 ../repair/scan.c:380
-+#: ../repair/dinode.c:1289 ../repair/scan.c:380
- #, c-format
- msgid "bad bmap btree ptr 0x%llx in ino %llu\n"
- msgstr "b³êdny wska¼nik bmap btree 0x%llx w i-wê¼le %llu\n"
- 
--#: ../repair/dinode.c:1291
-+#: ../repair/dinode.c:1310
- #, c-format
- msgid "correcting key in bmbt root (was %llu, now %llu) in inode %llu %s fork\n"
- msgstr "poprawiono klucz w korzeniu bmbt (by³ %llu, jest %llu) w i-wê¼le %llu ga³êzi %s\n"
- 
--#: ../repair/dinode.c:1305
-+#: ../repair/dinode.c:1322
- #, c-format
- msgid "bad key in bmbt root (is %llu, would reset to %llu) in inode %llu %s fork\n"
- msgstr "b³êdny klucz w korzeniu bmbt (jest %llu, zosta³y przestawiony na %llu) w i-wê¼le %llu ga³êzi %s\n"
- 
--#: ../repair/dinode.c:1324
-+#: ../repair/dinode.c:1339
- #, c-format
- msgid "out of order bmbt root key %llu in inode %llu %s fork\n"
- msgstr "niepoprawny klucz korzenia bmbt %llu w i-wê¼le %llu ga³êzi %s\n"
- 
--#: ../repair/dinode.c:1341
-+#: ../repair/dinode.c:1355
- #, c-format
- msgid "bad fwd (right) sibling pointer (saw %llu should be NULLDFSBNO)\n"
- msgstr "b³êdny wska¼nik fwd (prawy) (widziano %llu, powinno byæ NULLDFSBNO)\n"
- 
--#: ../repair/dinode.c:1344
-+#: ../repair/dinode.c:1358
- #, c-format
- msgid "\tin inode %u (%s fork) bmap btree block %llu\n"
- msgstr "\tw i-wê¼le %u (ga³êzi %s) bloku bmap btree %llu\n"
- 
--#: ../repair/dinode.c:1425
-+#: ../repair/dinode.c:1439
- #, c-format
- msgid "local inode %llu data fork is too large (size = %lld, max = %d)\n"
- msgstr "ga³±¼ danych lokalnego i-wêz³a %llu zbyt du¿a (rozmiar = %lld, maksimum = %d)\n"
- 
--#: ../repair/dinode.c:1435
-+#: ../repair/dinode.c:1449
- #, c-format
- msgid "local inode %llu attr fork too large (size %d, max = %d)\n"
- msgstr "ga³±¼ atrybutów lokalnego i-wêz³a %llu zbyt du¿a (rozmiar %d, maksimum = %d)\n"
- 
--#: ../repair/dinode.c:1443
-+#: ../repair/dinode.c:1457
- #, c-format
- msgid "local inode %llu attr too small (size = %d, min size = %d)\n"
- msgstr "ga³±¼ atrybutów lokalnego i-wêz³a %llu zbyt ma³a (rozmiar = %d, minimum = %d)\n"
- 
--#: ../repair/dinode.c:1473
-+#: ../repair/dinode.c:1487
- #, c-format
- msgid "mismatch between format (%d) and size (%lld) in symlink ino %llu\n"
- msgstr "niezgodno¶æ miêdzy formatem (%d) i rozmiarem (%lld) w i-wê¼le dowi±zania symbolicznego %llu\n"
- 
--#: ../repair/dinode.c:1481
-+#: ../repair/dinode.c:1495
- #, c-format
- msgid "mismatch between format (%d) and size (%lld) in symlink inode %llu\n"
- msgstr "niezgodno¶æ miêdzy formatem (%d) i rozmiarem (%lld) w i-wê¼le dowi±zania symbolicznego %llu\n"
- 
--#: ../repair/dinode.c:1497
-+#: ../repair/dinode.c:1511
- #, c-format
- msgid "bad number of extents (%d) in symlink %llu data fork\n"
- msgstr "b³êdna liczba fragmentów (%d) w ga³êzi danych dowi±zania symbolicznego %llu\n"
- 
--#: ../repair/dinode.c:1510
-+#: ../repair/dinode.c:1524
- #, c-format
- msgid "bad extent #%d offset (%llu) in symlink %llu data fork\n"
- msgstr "b³êdny offset fragmentu %d (%llu) w ga³êzi danych dowi±zania symbolicznego %llu\n"
- 
--#: ../repair/dinode.c:1516
-+#: ../repair/dinode.c:1530
- #, c-format
- msgid "bad extent #%d count (%llu) in symlink %llu data fork\n"
- msgstr "b³êdna liczba fragmentu #%d (%llu) w ga³êzi danych dowi±zania symbolicznego %llu\n"
- 
--#: ../repair/dinode.c:1569
-+#: ../repair/dinode.c:1583
- #, c-format
- msgid "symlink in inode %llu too long (%lld chars)\n"
- msgstr "dowi±zanie symboliczne w i-wê¼le %llu zbyt d³ugie (%lld znaków)\n"
- 
--#: ../repair/dinode.c:1603
-+#: ../repair/dinode.c:1617
- #, c-format
- msgid "cannot read inode %llu, file block %d, disk block %llu\n"
- msgstr "nie mo¿na odczytaæ i-wêz³a %llu, blok pliku %d, blok dysku %llu\n"
- 
--#: ../repair/dinode.c:1625
-+#: ../repair/dinode.c:1639
- #, c-format
- msgid "found illegal null character in symlink inode %llu\n"
- msgstr "znaleziono niedozwolony znak null w i-wê¼le dowi±zania symbolicznego %llu\n"
- 
--#: ../repair/dinode.c:1639 ../repair/dinode.c:1649
-+#: ../repair/dinode.c:1653 ../repair/dinode.c:1663
- #, c-format
- msgid "component of symlink in inode %llu too long\n"
- msgstr "sk³adnik dowi±zania symbolicznego w i-wê¼le %llu zbyt d³ugi\n"
- 
--#: ../repair/dinode.c:1675
-+#: ../repair/dinode.c:1689
- #, c-format
- msgid "inode %llu has bad inode type (IFMNT)\n"
- msgstr "i-wêze³ %llu ma b³êdny typ i-wêz³a (IFMNT)\n"
- 
--#: ../repair/dinode.c:1685
-+#: ../repair/dinode.c:1699
- #, c-format
- msgid "size of character device inode %llu != 0 (%lld bytes)\n"
- msgstr "rozmiar i-wêz³a urz±dzenia znakowego %llu != 0 (%lld bajtów)\n"
- 
--#: ../repair/dinode.c:1690
-+#: ../repair/dinode.c:1704
- #, c-format
- msgid "size of block device inode %llu != 0 (%lld bytes)\n"
- msgstr "rozmiar i-wêz³a urz±dzenia blokowego %llu != 0 (%lld bajtów)\n"
- 
--#: ../repair/dinode.c:1695
-+#: ../repair/dinode.c:1709
- #, c-format
- msgid "size of socket inode %llu != 0 (%lld bytes)\n"
- msgstr "rozmiar i-wêz³a gniazda %llu != 0 (%lld bajtów)\n"
- 
--#: ../repair/dinode.c:1700
-+#: ../repair/dinode.c:1714
- #, c-format
- msgid "size of fifo inode %llu != 0 (%lld bytes)\n"
- msgstr "rozmiar i-wêz³a potoku %llu != 0 (%lld bajtów)\n"
- 
--#: ../repair/dinode.c:1705
-+#: ../repair/dinode.c:1719
- #, c-format
- msgid "Internal error - process_misc_ino_types, illegal type %d\n"
- msgstr "B³±d wewnêtrzny - process_misc_ino_types, niedozwolony typ %d\n"
- 
--#: ../repair/dinode.c:1732
-+#: ../repair/dinode.c:1746
- #, c-format
- msgid "size of character device inode %llu != 0 (%llu blocks)\n"
- msgstr "rozmiar i-wêz³a urz±dzenia znakowego %llu != 0 (%llu bloków)\n"
- 
--#: ../repair/dinode.c:1737
-+#: ../repair/dinode.c:1751
- #, c-format
- msgid "size of block device inode %llu != 0 (%llu blocks)\n"
- msgstr "rozmiar i-wêz³a urz±dzenia blokowego %llu != 0 (%llu bloków)\n"
- 
--#: ../repair/dinode.c:1742
-+#: ../repair/dinode.c:1756
- #, c-format
- msgid "size of socket inode %llu != 0 (%llu blocks)\n"
- msgstr "rozmiar i-wêz³a gniazda %llu != 0 (%llu bloków)\n"
- 
--#: ../repair/dinode.c:1747
-+#: ../repair/dinode.c:1761
- #, c-format
- msgid "size of fifo inode %llu != 0 (%llu blocks)\n"
- msgstr "rozmiar i-wêz³a potoku %llu != 0 (%llu bloków)\n"
- 
--#: ../repair/dinode.c:1851
-+#: ../repair/dinode.c:1865
- #, c-format
- msgid "bad magic number 0x%x on inode %llu, "
- msgstr "b³êdna liczba magiczna 0x%x w i-wê¼le %llu, "
- 
--#: ../repair/dinode.c:1854
-+#: ../repair/dinode.c:1868
- msgid "resetting magic number\n"
- msgstr "przestawiono liczbê magiczn±\n"
- 
--#: ../repair/dinode.c:1859
-+#: ../repair/dinode.c:1873
- msgid "would reset magic number\n"
- msgstr "liczba magiczna zosta³aby przestawiona\n"
- 
--#: ../repair/dinode.c:1862
-+#: ../repair/dinode.c:1876
- #, c-format
- msgid "bad magic number 0x%x on inode %llu\n"
- msgstr "b³êdna liczba magiczna 0x%x w i-wê¼le %llu\n"
- 
--#: ../repair/dinode.c:1871
-+#: ../repair/dinode.c:1885
- #, c-format
- msgid "bad version number 0x%x on inode %llu, "
- msgstr "b³êdny numer wersji 0x%x w i-wê¼le %llu, "
- 
--#: ../repair/dinode.c:1874
-+#: ../repair/dinode.c:1888
- msgid "resetting version number\n"
- msgstr "przestawiono numer wersji\n"
- 
--#: ../repair/dinode.c:1880
-+#: ../repair/dinode.c:1894
- msgid "would reset version number\n"
- msgstr "numer wersji zosta³by przestawiony\n"
- 
--#: ../repair/dinode.c:1883
-+#: ../repair/dinode.c:1897
- #, c-format
- msgid "bad version number 0x%x on inode %llu\n"
- msgstr "b³êdny numer wersji 0x%x w i-wê¼le %llu\n"
- 
--#: ../repair/dinode.c:1894 ../repair/dinode.c:1905
-+#: ../repair/dinode.c:1908 ../repair/dinode.c:1919
- #, c-format
- msgid "bad (negative) size %lld on inode %llu\n"
- msgstr "b³êdny (ujemny) rozmiar %lld w i-wê¼le %llu\n"
- 
--#: ../repair/dinode.c:1936
-+#: ../repair/dinode.c:1950
- #, c-format
- msgid "imap claims a free inode %llu is in use, "
- msgstr "imap odwo³uje siê do wolnego bloku %llu, który jest w u¿yciu, "
- 
--#: ../repair/dinode.c:1939
-+#: ../repair/dinode.c:1953
- msgid "correcting imap and clearing inode\n"
- msgstr "poprawiono imap i wyczyszczono i-wêze³\n"
- 
--#: ../repair/dinode.c:1948
-+#: ../repair/dinode.c:1962
- msgid "would correct imap and clear inode\n"
- msgstr "poprawiono by imap i wyczyszczono by i-wêze³\n"
- 
--#: ../repair/dinode.c:1976
-+#: ../repair/dinode.c:1990
- #, c-format
- msgid "bad inode format in inode %llu\n"
- msgstr "b³êdny format i-wêz³a w i-wê¼le %llu\n"
- 
--#: ../repair/dinode.c:2037
-+#: ../repair/dinode.c:2052 ../repair/dinode.c:2061
- #, c-format
--msgid "Unexpected inode type %#o inode %llu\n"
--msgstr "Nieoczekiwany typ i-wêz³a %#o w i-wê¼le %llu\n"
-+msgid "bad inode type %#o inode %llu\n"
-+msgstr "b³êdny typ i-wêz³a %#o w i-wê¼le %llu\n"
- 
--#: ../repair/dinode.c:2047
-+#: ../repair/dinode.c:2071
- #, c-format
- msgid "bad inode type for root inode %llu, "
- msgstr "b³êdny typ i-wêz³a dla g³ównego i-wêz³a %llu, "
- 
--#: ../repair/dinode.c:2051
-+#: ../repair/dinode.c:2075
- msgid "resetting to directory\n"
- msgstr "przestawiono na katalog\n"
- 
--#: ../repair/dinode.c:2057
-+#: ../repair/dinode.c:2081
- msgid "would reset to directory\n"
- msgstr "zosta³by przestawiony na katalog\n"
- 
--#: ../repair/dinode.c:2061
-+#: ../repair/dinode.c:2085
- msgid "summary"
- msgstr "opisu"
- 
--#: ../repair/dinode.c:2065
-+#: ../repair/dinode.c:2089
- msgid "bitmap"
- msgstr "bitmapy"
- 
--#: ../repair/dinode.c:2069
-+#: ../repair/dinode.c:2093
- #, c-format
- msgid "user quota inode has bad type 0x%x\n"
- msgstr "i-wêze³ limitu u¿ytkownika ma b³êdny typ 0x%x\n"
- 
--#: ../repair/dinode.c:2087
-+#: ../repair/dinode.c:2111
- #, c-format
- msgid "group quota inode has bad type 0x%x\n"
- msgstr "i-wêze³ limitu grupy ma b³êdny typ 0x%x\n"
- 
--#: ../repair/dinode.c:2108
-+#: ../repair/dinode.c:2132
- #, c-format
- msgid "bad inode type for realtime %s inode %llu, "
- msgstr "b³êdny typ i-wêz³a dla i-wêz³a %s realtime %llu, "
- 
--#: ../repair/dinode.c:2112
-+#: ../repair/dinode.c:2136
- msgid "resetting to regular file\n"
- msgstr "przestawiono na zwyk³y plik\n"
- 
--#: ../repair/dinode.c:2118
-+#: ../repair/dinode.c:2142
- msgid "would reset to regular file\n"
- msgstr "zosta³by przestawiony na zwyk³y plik\n"
- 
--#: ../repair/dinode.c:2137
-+#: ../repair/dinode.c:2161
- #, c-format
- msgid "bad non-zero extent size %u for non-realtime/extsize inode %llu, "
- msgstr "b³êdny niezerowy rozmiar fragmentu %u dla extsize i-wêz³a nie-realtime %llu, "
- 
--#: ../repair/dinode.c:2141
-+#: ../repair/dinode.c:2165
- msgid "resetting to zero\n"
- msgstr "przestawiono na zero\n"
- 
--#: ../repair/dinode.c:2145
-+#: ../repair/dinode.c:2169
- msgid "would reset to zero\n"
- msgstr "zosta³by przestawiony na zero\n"
- 
--#: ../repair/dinode.c:2164
-+#: ../repair/dinode.c:2188
- #, c-format
- msgid "bad size %llu for realtime %s inode %llu\n"
- msgstr "b³êdny rozmiar %llu dla i-wêz³a %s realtime %llu\n"
- 
--#: ../repair/dinode.c:2180
-+#: ../repair/dinode.c:2204
- #, c-format
- msgid "bad # of extents (%u) for realtime %s inode %llu\n"
- msgstr "b³êdna liczba fragmentów (%u) dla i-wêz³± %s realtime %llu\n"
- 
--#: ../repair/dinode.c:2222
-+#: ../repair/dinode.c:2246
- #, c-format
- msgid "mismatch between format (%d) and size (%lld) in directory ino %llu\n"
- msgstr "niezgodno¶æ miêdzy formatem (%d) i rozmiarem (%lld) w i-wê¼le katalogu %llu\n"
- 
--#: ../repair/dinode.c:2244
-+#: ../repair/dinode.c:2268
- #, c-format
- msgid "bad data fork in symlink %llu\n"
- msgstr "b³êdna ga³±¼ danych w dowi±zaniu symbolicznym %llu\n"
- 
--#: ../repair/dinode.c:2286
-+#: ../repair/dinode.c:2310
- #, c-format
- msgid "found inode %llu claiming to be a real-time file\n"
- msgstr "znaleziono i-wêze³ %llu twierdz±cy, ¿e nale¿y do pliku realtime\n"
- 
--#: ../repair/dinode.c:2305
-+#: ../repair/dinode.c:2329
- #, c-format
- msgid "realtime bitmap inode %llu has bad size %lld (should be %lld)\n"
- msgstr "i-wêze³ bitmapy realtime %llu ma b³êdny rozmiar %lld (powinien byæ %lld)\n"
- 
--#: ../repair/dinode.c:2326
-+#: ../repair/dinode.c:2350
- #, c-format
- msgid "realtime summary inode %llu has bad size %lld (should be %d)\n"
- msgstr "i-wêze³ opisu realtime %llu ma b³êdny rozmiar %lld (powinien byæ %d)\n"
- 
--#: ../repair/dinode.c:2357
-+#: ../repair/dinode.c:2381
- #, c-format
- msgid "bad attr fork offset %d in dev inode %llu, should be %d\n"
- msgstr "b³êdny offset ga³êzi atrybutów %d w i-wê¼le urz±dzenia %llu, powinien byæ %d\n"
- 
--#: ../repair/dinode.c:2368
-+#: ../repair/dinode.c:2392
- #, c-format
- msgid "bad attr fork offset %d in uuid inode %llu, should be %d\n"
- msgstr "b³êdny offset ga³êzi atrybutów %d w i-wê¼le uuid %llu, powinien byæ %d\n"
- 
--#: ../repair/dinode.c:2380
-+#: ../repair/dinode.c:2404
- #, c-format
- msgid "bad attr fork offset %d in inode %llu, max=%d\n"
- msgstr "b³êdny offset ga³êzi atrybutów %d w i-wê¼le %llu, maksimum=%d\n"
- 
--#: ../repair/dinode.c:2388
-+#: ../repair/dinode.c:2412
- #, c-format
- msgid "unexpected inode format %d\n"
- msgstr "nieoczekiwany format i-wêz³a %d\n"
- 
--#: ../repair/dinode.c:2432 ../repair/dinode.c:2483
-+#: ../repair/dinode.c:2456 ../repair/dinode.c:2507
- #, c-format
- msgid "unknown format %d, ino %llu (mode = %d)\n"
- msgstr "nieznany format %d, i-wêze³ %llu (tryb = %d)\n"
- 
--#: ../repair/dinode.c:2442
-+#: ../repair/dinode.c:2466
- #, c-format
- msgid "bad data fork in inode %llu\n"
- msgstr "b³êdna ga³±¼ danych w i-wê¼le %llu\n"
- 
--#: ../repair/dinode.c:2506
-+#: ../repair/dinode.c:2530
- #, c-format
- msgid "bad attribute format %d in inode %llu, "
- msgstr "b³êdny format atrybutów %d w i-wê¼le %llu, "
- 
--#: ../repair/dinode.c:2509
-+#: ../repair/dinode.c:2533
- msgid "resetting value\n"
- msgstr "przestawiono warto¶æ\n"
- 
--#: ../repair/dinode.c:2513
-+#: ../repair/dinode.c:2537
- msgid "would reset value\n"
- msgstr "warto¶æ zosta³aby przestawiona\n"
- 
--#: ../repair/dinode.c:2554
-+#: ../repair/dinode.c:2578
- #, c-format
- msgid "bad attribute fork in inode %llu"
- msgstr "b³êdna ga³±¼ atrybutów w i-wê¼le %llu"
- 
--#: ../repair/dinode.c:2558
-+#: ../repair/dinode.c:2582
- msgid ", clearing attr fork\n"
- msgstr ", wyczyszczono ga³±¼ atrybutów\n"
- 
--#: ../repair/dinode.c:2568
-+#: ../repair/dinode.c:2592
- msgid ", would clear attr fork\n"
- msgstr ", ga³±¼ atrybutów zosta³aby wyczyszczona\n"
- 
--#: ../repair/dinode.c:2605
-+#: ../repair/dinode.c:2629
- #, c-format
- msgid "illegal attribute fmt %d, ino %llu\n"
- msgstr "niedozwolony format atrybutów %d, i-wêze³ %llu\n"
- 
--#: ../repair/dinode.c:2630
-+#: ../repair/dinode.c:2654
- #, c-format
- msgid "problem with attribute contents in inode %llu\n"
- msgstr "problem z zawarto¶ci± atrybutu w i-wê¼le %llu\n"
- 
--#: ../repair/dinode.c:2640
-+#: ../repair/dinode.c:2664
- msgid "would clear attr fork\n"
- msgstr "ga³±¼ atrybutów zosta³aby wyczyszczona\n"
- 
--#: ../repair/dinode.c:2676
-+#: ../repair/dinode.c:2700
- #, c-format
- msgid "correcting nblocks for inode %llu, was %llu - counted %llu\n"
- msgstr "poprawiono nblocks dla i-wêz³a %llu - by³o %llu, naliczono %llu\n"
- 
--#: ../repair/dinode.c:2683
-+#: ../repair/dinode.c:2707
- #, c-format
- msgid "bad nblocks %llu for inode %llu, would reset to %llu\n"
- msgstr "b³êdne nblocks %llu dla i-wêz³a %llu, zosta³oby przestawione na %llu\n"
- 
--#: ../repair/dinode.c:2690
-+#: ../repair/dinode.c:2714
- #, c-format
- msgid "too many data fork extents (%llu) in inode %llu\n"
- msgstr "zbyt du¿o fragmentów ga³êzi danych (%llu) w i-wê¼le %llu\n"
- 
--#: ../repair/dinode.c:2707
-+#: ../repair/dinode.c:2731
- #, c-format
- msgid "correcting nextents for inode %llu, was %d - counted %llu\n"
- msgstr "poprawiono nextents dla i-wêz³a %llu - by³o %d, naliczono %llu\n"
- 
--#: ../repair/dinode.c:2715
-+#: ../repair/dinode.c:2739
- #, c-format
- msgid "bad nextents %d for inode %llu, would reset to %llu\n"
- msgstr "b³êdne nextents %d dla i-wêz³a %llu, zosta³oby przestawione na %llu\n"
- 
--#: ../repair/dinode.c:2722
-+#: ../repair/dinode.c:2746
- #, c-format
- msgid "too many attr fork extents (%llu) in inode %llu\n"
- msgstr "zbyt du¿o fragmentów ga³êzi atrybutów (%llu) w i-wê¼le %llu\n"
- 
--#: ../repair/dinode.c:2738
-+#: ../repair/dinode.c:2762
- #, c-format
- msgid "correcting anextents for inode %llu, was %d - counted %llu\n"
- msgstr "poprawiono anextents dla i-wêz³a %llu - by³o %d, naliczono %llu\n"
- 
--#: ../repair/dinode.c:2747
-+#: ../repair/dinode.c:2771
- #, c-format
- msgid "bad anextents %d for inode %llu, would reset to %llu\n"
- msgstr "b³êdne anextents %d dla i-wêz³a %llu, zosta³oby przestawione na %llu\n"
- 
--#: ../repair/dinode.c:2766
-+#: ../repair/dinode.c:2790
- #, c-format
- msgid "problem with directory contents in inode %llu\n"
- msgstr "problem z zawarto¶ci± katalogu w i-wê¼le %llu\n"
- 
--#: ../repair/dinode.c:2779
-+#: ../repair/dinode.c:2803
- #, c-format
- msgid "problem with symbolic link in inode %llu\n"
- msgstr "problem z dowi±zaniem symbolicznym w i-wê¼le %llu\n"
- 
--#: ../repair/dinode.c:2791
-+#: ../repair/dinode.c:2815
- #, c-format
- msgid "Unexpected inode type\n"
- msgstr "Nieoczekiwany typ i-wêz³a\n"
- 
--#: ../repair/dinode.c:2836
-+#: ../repair/dinode.c:2860
- #, c-format
- msgid "version 2 inode %llu claims > %u links, "
- msgstr "i-wêze³ %llu w wersji 2 odwo³uje siê do > %u dowi±zañ, "
- 
--#: ../repair/dinode.c:2840
-+#: ../repair/dinode.c:2864
- msgid "updating superblock version number\n"
- msgstr "uaktualniono numer wersji superbloku\n"
- 
--#: ../repair/dinode.c:2843
-+#: ../repair/dinode.c:2867
- msgid "would update superblock version number\n"
- msgstr "numer wersji superbloku zosta³by uaktualniony\n"
- 
--#: ../repair/dinode.c:2851
-+#: ../repair/dinode.c:2875
- #, c-format
- msgid "WARNING:  version 2 inode %llu claims > %u links, "
- msgstr "UWAGA: i-wêze³ %llu w wersji 2 odwo³uje siê do > %u dowi±zañ, "
- 
--#: ../repair/dinode.c:2855
-+#: ../repair/dinode.c:2879
- #, c-format
- msgid ""
- "converting back to version 1,\n"
-@@ -5703,7 +5772,7 @@ msgstr ""
- "przekszta³cono z powrotem do wersji 1,\n"
- "\tmo¿e to zniszczyæ %d dowi±zañ\n"
- 
--#: ../repair/dinode.c:2870
-+#: ../repair/dinode.c:2894
- #, c-format
- msgid ""
- "would convert back to version 1,\n"
-@@ -5712,282 +5781,281 @@ msgstr ""
- "zosta³by przekszta³cony z powrotem do wersji 1,\n"
- "\tco mog³oby zniszczyæ %d dowi±zañ\n"
- 
--#: ../repair/dinode.c:2885
-+#: ../repair/dinode.c:2909
- #, c-format
- msgid "found version 2 inode %llu, "
- msgstr "znaleziono i-wêze³ %llu w wersji 2, "
- 
--#: ../repair/dinode.c:2887
-+#: ../repair/dinode.c:2911
- msgid "converting back to version 1\n"
- msgstr "przekszta³cono z powrotem do wersji 1\n"
- 
--#: ../repair/dinode.c:2896
-+#: ../repair/dinode.c:2920
- msgid "would convert back to version 1\n"
- msgstr "zosta³by przekszta³cony z powrotem do wersji 1\n"
- 
--#: ../repair/dinode.c:2911
-+#: ../repair/dinode.c:2935
- #, c-format
- msgid "clearing obsolete nlink field in version 2 inode %llu, was %d, now 0\n"
- msgstr "wyczyszczono przestarza³e pole nlink w i-wê¼le %llu w wersji 2 - by³o %d, jest 0\n"
- 
--#: ../repair/dinode.c:2917
-+#: ../repair/dinode.c:2941
- #, c-format
- msgid "would clear obsolete nlink field in version 2 inode %llu, currently %d\n"
- msgstr "przestarza³e pole nlink w i-wê¼le %llu w wersji 2 zosta³oby wyczyszczone, aktualnie %d\n"
- 
--#: ../repair/dir.c:155
-+#: ../repair/dir.c:154
- #, c-format
- msgid "invalid inode number %llu in directory %llu\n"
- msgstr "b³êdny numer i-wêz³a %llu w katalogu %llu\n"
- 
--#: ../repair/dir.c:160
-+#: ../repair/dir.c:159
- #, c-format
- msgid "entry in shortform dir %llu references rt bitmap inode %llu\n"
- msgstr "wpis w krótkim katalogu %llu odwo³uje siê do i-wêz³a bitmapy rt %llu\n"
- 
--#: ../repair/dir.c:165
-+#: ../repair/dir.c:164
- #, c-format
- msgid "entry in shortform dir %llu references rt summary inode %llu\n"
- msgstr "wpis w krótkim katalogu %llu odwo³uje siê do i-wêz³a opisu rt %llu\n"
- 
--#: ../repair/dir.c:170
-+#: ../repair/dir.c:169
- #, c-format
- msgid "entry in shortform dir %llu references user quota inode %llu\n"
- msgstr "wpis w krótkim katalogu %llu odwo³uje siê do i-wêz³a limitu u¿ytkownika %llu\n"
- 
--#: ../repair/dir.c:175
-+#: ../repair/dir.c:174
- #, c-format
- msgid "entry in shortform dir %llu references group quota inode %llu\n"
- msgstr "wpis w krótkim katalogu %llu odwo³uje siê do i-wêz³a limitu grupy %llu\n"
- 
--#: ../repair/dir.c:195
-+#: ../repair/dir.c:194
- #, c-format
- msgid "entry references free inode %llu in shortform directory %llu\n"
- msgstr "wpis odwo³uje siê do wolnego i-wêz³a %llu w krótkim katalogu %llu\n"
- 
--#: ../repair/dir.c:214
-+#: ../repair/dir.c:213
- #, c-format
- msgid "entry references non-existent inode %llu in shortform dir %llu\n"
- msgstr "wpis odwo³uje siê do nie istniej±cego i-wêz³a %llu w krótkim katalogu %llu\n"
- 
--#: ../repair/dir.c:238 ../repair/dir2.c:982
-+#: ../repair/dir.c:237 ../repair/dir2.c:992
- #, c-format
- msgid "zero length entry in shortform dir %llu, resetting to %d\n"
- msgstr "wpis zerowej d³ugo¶ci w krótkim katalogu %llu, przestawiono na %d\n"
- 
--#: ../repair/dir.c:243 ../repair/dir2.c:988
-+#: ../repair/dir.c:242 ../repair/dir2.c:998
- #, c-format
- msgid "zero length entry in shortform dir %llu, would set to %d\n"
- msgstr "wpis zerowej d³ugo¶ci w krótkim katalogu %llu, zosta³by przestawiony na %d\n"
- 
--#: ../repair/dir.c:248
-+#: ../repair/dir.c:247
- #, c-format
- msgid "zero length entry in shortform dir %llu, "
- msgstr "wpis zerowej d³ugo¶ci w krótkim katalogu %llu, "
- 
--#: ../repair/dir.c:251 ../repair/dir.c:294 ../repair/dir2.c:1041
-+#: ../repair/dir.c:250 ../repair/dir.c:293 ../repair/dir2.c:1051
- #, c-format
- msgid "junking %d entries\n"
- msgstr "wyrzucono %d wpisów\n"
- 
--#: ../repair/dir.c:254 ../repair/dir.c:303 ../repair/dir2.c:1050
-+#: ../repair/dir.c:253 ../repair/dir.c:302 ../repair/dir2.c:1060
- #, c-format
- msgid "would junk %d entries\n"
- msgstr "%d wpisów zosta³oby wyrzuconych\n"
- 
--#: ../repair/dir.c:272 ../repair/dir2.c:1018
-+#: ../repair/dir.c:271 ../repair/dir2.c:1028
- #, c-format
- msgid "size of last entry overflows space left in in shortform dir %llu, "
- msgstr "rozmiar ostatniego wpisu przekracza miejsce pozosta³e w krótkim katalogu %llu, "
- 
--#: ../repair/dir.c:275 ../repair/dir2.c:1022
-+#: ../repair/dir.c:274 ../repair/dir2.c:1032
- #, c-format
- msgid "resetting to %d\n"
- msgstr "przestawiono na %d\n"
- 
--#: ../repair/dir.c:280 ../repair/dir2.c:1027
-+#: ../repair/dir.c:279 ../repair/dir2.c:1037
- #, c-format
- msgid "would reset to %d\n"
- msgstr "zosta³by przestawiony na %d\n"
- 
--#: ../repair/dir.c:285 ../repair/dir2.c:1031
-+#: ../repair/dir.c:284 ../repair/dir2.c:1041
- #, c-format
- msgid "size of entry #%d overflows space left in in shortform dir %llu\n"
- msgstr "rozmiar wpisu #%d przekracza miejsce pozosta³e w krótkim katalogu %llu\n"
- 
--#: ../repair/dir.c:290 ../repair/dir2.c:1037
-+#: ../repair/dir.c:289 ../repair/dir2.c:1047
- #, c-format
- msgid "junking entry #%d\n"
- msgstr "wyrzucono wpis #%d\n"
- 
--#: ../repair/dir.c:299 ../repair/dir2.c:1046
-+#: ../repair/dir.c:298 ../repair/dir2.c:1056
- #, c-format
- msgid "would junk entry #%d\n"
- msgstr "wpis #%d zosta³by wyrzucony\n"
- 
--#: ../repair/dir.c:322 ../repair/dir2.c:1068
-+#: ../repair/dir.c:321 ../repair/dir2.c:1078
- #, c-format
- msgid "entry contains illegal character in shortform dir %llu\n"
- msgstr "wpis zawiera niedozwolony znak w krótkim katalogu %llu\n"
- 
--#: ../repair/dir.c:377 ../repair/dir2.c:1133 ../repair/phase6.c:2908
--#: ../repair/phase6.c:3323
-+#: ../repair/dir.c:376 ../repair/dir2.c:1143
- #, c-format
- msgid "junking entry \"%s\" in directory inode %llu\n"
- msgstr "wyrzucono wpis \"%s\" w i-wê¼le katalogu %llu\n"
- 
--#: ../repair/dir.c:381 ../repair/dir2.c:1137
-+#: ../repair/dir.c:380 ../repair/dir2.c:1147
- #, c-format
- msgid "would have junked entry \"%s\" in directory inode %llu\n"
- msgstr "wpis \"%s\" w i-wê¼le katalogu %llu zosta³by wyrzucony\n"
- 
--#: ../repair/dir.c:407 ../repair/dir2.c:1164
-+#: ../repair/dir.c:406 ../repair/dir2.c:1174
- #, c-format
- msgid "would have corrected entry count in directory %llu from %d to %d\n"
- msgstr "liczba wpisów w katalogu %llu zosta³aby poprawiona z %d na %d\n"
- 
--#: ../repair/dir.c:411 ../repair/dir2.c:1168
-+#: ../repair/dir.c:410 ../repair/dir2.c:1178
- #, c-format
- msgid "corrected entry count in directory %llu, was %d, now %d\n"
- msgstr "poprawiono liczbê wpisów w katalogu %llu - by³o %d, jest %d\n"
- 
--#: ../repair/dir.c:422 ../repair/dir2.c:1197
-+#: ../repair/dir.c:421 ../repair/dir2.c:1207
- #, c-format
- msgid "would have corrected directory %llu size from %lld to %lld\n"
- msgstr "rozmiar katalogu %llu zosta³by poprawiony z %lld na %lld\n"
- 
--#: ../repair/dir.c:427 ../repair/dir2.c:1203
-+#: ../repair/dir.c:426 ../repair/dir2.c:1213
- #, c-format
- msgid "corrected directory %llu size, was %lld, now %lld\n"
- msgstr "poprawiono rozmiar katalogu %llu - by³o %lld, jest %lld\n"
- 
--#: ../repair/dir.c:450 ../repair/dir2.c:1248
-+#: ../repair/dir.c:449 ../repair/dir2.c:1258
- #, c-format
- msgid "bogus .. inode number (%llu) in directory inode %llu, "
- msgstr "b³êdny numer i-wêz³a .. (%llu) w i-wê¼le katalogu %llu, "
- 
--#: ../repair/dir.c:453 ../repair/dir.c:487 ../repair/dir2.c:1253
--#: ../repair/dir2.c:1288
-+#: ../repair/dir.c:452 ../repair/dir.c:486 ../repair/dir2.c:1263
-+#: ../repair/dir2.c:1298
- msgid "clearing inode number\n"
- msgstr "wyczyszczono numer i-wêz³a\n"
- 
--#: ../repair/dir.c:459 ../repair/dir.c:493 ../repair/dir2.c:1259
--#: ../repair/dir2.c:1294
-+#: ../repair/dir.c:458 ../repair/dir.c:492 ../repair/dir2.c:1269
-+#: ../repair/dir2.c:1304
- msgid "would clear inode number\n"
- msgstr "numer i-wêz³a zosta³by wyczyszczony\n"
- 
--#: ../repair/dir.c:467 ../repair/dir2.c:1266
-+#: ../repair/dir.c:466 ../repair/dir2.c:1276
- #, c-format
- msgid "corrected root directory %llu .. entry, was %llu, now %llu\n"
- msgstr "poprawiono wpis .. g³ównego katalogu %llu - by³o %llu, jest %llu\n"
- 
--#: ../repair/dir.c:475 ../repair/dir2.c:1274
-+#: ../repair/dir.c:474 ../repair/dir2.c:1284
- #, c-format
- msgid "would have corrected root directory %llu .. entry from %llu to %llu\n"
- msgstr "wpis .. g³ównego katalogu %llu zosta³by poprawiony z %llu na %llu\n"
- 
--#: ../repair/dir.c:484
-+#: ../repair/dir.c:483
- #, c-format
- msgid "bad .. entry in dir ino %llu, points to self, "
- msgstr "b³êdny wpis .. w i-wê¼le katalogu %llu, wskazuje na siebie, "
- 
--#: ../repair/dir.c:532
-+#: ../repair/dir.c:531
- #, c-format
- msgid "bad range claimed [%d, %d) in da block\n"
- msgstr "b³êdny przedzia³ [%d, %d) przypisany w bloku da\n"
- 
--#: ../repair/dir.c:539
-+#: ../repair/dir.c:538
- #, c-format
- msgid "byte range end [%d %d) in da block larger than blocksize %d\n"
- msgstr "koniec przedzia³u bajtów [%d %d) w bloku da wiêkszy ni¿ rozmiar bloku %d\n"
- 
--#: ../repair/dir.c:546
-+#: ../repair/dir.c:545
- #, c-format
- msgid "multiply claimed byte %d in da block\n"
- msgstr "wielokrotnie u¿yty bajt %d w bloku da\n"
- 
--#: ../repair/dir.c:576
-+#: ../repair/dir.c:575
- #, c-format
- msgid "hole (start %d, len %d) out of range, block %d, dir ino %llu\n"
- msgstr "dziura (pocz±tek %d, d³ugo¶æ %d) poza zakresem, blok %d, i-wêze³ katalogu %llu\n"
- 
--#: ../repair/dir.c:587
-+#: ../repair/dir.c:586
- #, c-format
- msgid "hole claims used byte %d, block %d, dir ino %llu\n"
- msgstr "dziura odwo³uje siê do u¿ywanego bajtu %d, blok %d, i-wêze³ katalogu %llu\n"
- 
--#: ../repair/dir.c:702
-+#: ../repair/dir.c:701
- #, c-format
- msgid "- derived hole value %d, saw %d, block %d, dir ino %llu\n"
- msgstr "- wyprowadzona warto¶æ dziury %d, widziano %d, blok %d, i-wêze³ katalogu %llu\n"
- 
--#: ../repair/dir.c:721
-+#: ../repair/dir.c:720
- #, c-format
- msgid "- derived hole (base %d, size %d) in block %d, dir inode %llu not found\n"
- msgstr "- wyprowadzona dziura (podstawa %d, rozmiar %d) w bloku %d, i-wêze³ katalogu %llu nie znaleziona\n"
- 
--#: ../repair/dir.c:800 ../repair/dir.c:978 ../repair/phase4.c:234
--#: ../repair/phase4.c:718 ../repair/phase6.c:1130 ../repair/phase6.c:1674
-+#: ../repair/dir.c:796 ../repair/dir.c:974 ../repair/phase6.c:1169
-+#: ../repair/phase6.c:1719
- #, c-format
- msgid "can't read block %u (fsbno %llu) for directory inode %llu\n"
- msgstr "nie mo¿na odczytaæ bloku %u (fsbno %llu) dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir.c:804
-+#: ../repair/dir.c:800
- #, c-format
- msgid "can't read block %u (fsbno %llu) for attrbute fork of inode %llu\n"
- msgstr "nie mo¿na odczytaæ bloku %u (fsbno %llu) dla ga³êzi atrybutów i-wêz³a %llu\n"
- 
--#: ../repair/dir.c:813 ../repair/dir.c:988 ../repair/phase6.c:1140
-+#: ../repair/dir.c:809 ../repair/dir.c:984 ../repair/phase6.c:1179
- #, c-format
- msgid "bad dir/attr magic number in inode %llu, file bno = %u, fsbno = %llu\n"
- msgstr "b³êdna liczba magiczna katalogu/atrybutu w i-wê¼le %llu, bno pliku = %u, fsbno = %llu\n"
- 
--#: ../repair/dir.c:821 ../repair/dir2.c:324
-+#: ../repair/dir.c:817 ../repair/dir2.c:335
- #, c-format
- msgid "bad record count in inode %llu, count = %d, max = %d\n"
- msgstr "b³êdna liczba rekordów w i-wê¼le %llu, liczba = %d, maksimum = %d\n"
- 
--#: ../repair/dir.c:840 ../repair/dir2.c:341
-+#: ../repair/dir.c:836 ../repair/dir2.c:351
- #, c-format
- msgid "bad directory btree for directory inode %llu\n"
- msgstr "b³êdne b-drzewo katalogu dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir.c:844
-+#: ../repair/dir.c:840
- #, c-format
- msgid "bad attribute fork btree for inode %llu\n"
- msgstr "b³êdne b-drzewo ga³êzi atrybutów dla i-wêz³a %llu\n"
- 
--#: ../repair/dir.c:898
-+#: ../repair/dir.c:894
- #, c-format
- msgid "release_da_cursor_int got unexpected non-null bp, dabno = %u\n"
- msgstr "release_da_cursor_int otrzyma³o nieoczekiwany niepusty bp, dabno = %u\n"
- 
--#: ../repair/dir.c:959 ../repair/dir.c:1004
-+#: ../repair/dir.c:955 ../repair/dir.c:1000
- #, c-format
- msgid "bmap of block #%u of inode %llu failed\n"
- msgstr "bmap bloku #%u i-wêz³a %llu nie powiod³o siê\n"
- 
--#: ../repair/dir.c:1050
-+#: ../repair/dir.c:1046
- #, c-format
- msgid "directory/attribute block used/count inconsistency - %d/%hu\n"
- msgstr "niespójno¶æ warto¶ci used/count bloku katalogu/atrybutu - %d/%hu\n"
- 
--#: ../repair/dir.c:1060 ../repair/dir2.c:464
-+#: ../repair/dir.c:1056 ../repair/dir2.c:474
- #, c-format
- msgid "directory/attribute block hashvalue inconsistency, expected > %u / saw %u\n"
- msgstr "niespójno¶æ warto¶ci hasza bloku katalogu/atrybutu - oczekiwano > %u, widziano %u\n"
- 
--#: ../repair/dir.c:1067 ../repair/dir2.c:471
-+#: ../repair/dir.c:1063 ../repair/dir2.c:481
- #, c-format
- msgid "bad directory/attribute forward block pointer, expected 0, saw %u\n"
- msgstr "b³êdny wska¼nik bloku w przód katalogu/atrybutu - oczekiwano 0, widziano %u\n"
- 
--#: ../repair/dir.c:1073
-+#: ../repair/dir.c:1069
- #, c-format
- msgid "bad directory block in dir ino %llu\n"
- msgstr "b³êdny blok katalogu w i-wê¼le katalogu %llu\n"
- 
--#: ../repair/dir.c:1103
-+#: ../repair/dir.c:1099
- #, c-format
- msgid ""
- "correcting bad hashval in non-leaf dir/attr block\n"
-@@ -5996,7 +6064,7 @@ msgstr ""
- "poprawiono b³êdne hashval w bloku katalogu/atrybutu nie bêd±cego li¶ciem\n"
- "\tw i-wê¼le (poziomu %d) %llu.\n"
- 
--#: ../repair/dir.c:1111
-+#: ../repair/dir.c:1107
- #, c-format
- msgid ""
- "would correct bad hashval in non-leaf dir/attr block\n"
-@@ -6005,37 +6073,37 @@ msgstr ""
- "b³êdne hashval zosta³oby poprawione w bloku katalogu/atrybutu nie bêd±cego li¶ciem\n"
- "\tw i-wê¼le (poziomu %d) %llu.\n"
- 
--#: ../repair/dir.c:1249 ../repair/dir2.c:637
-+#: ../repair/dir.c:1245 ../repair/dir2.c:647
- #, c-format
- msgid "can't get map info for block %u of directory inode %llu\n"
- msgstr "nie mo¿na uzyskaæ informacji o mapie dla bloku %u i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir.c:1258
-+#: ../repair/dir.c:1254
- #, c-format
- msgid "can't read block %u (%llu) for directory inode %llu\n"
- msgstr "nie mo¿na odczytaæ bloku %u (%llu) dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir.c:1272
-+#: ../repair/dir.c:1268
- #, c-format
- msgid "bad magic number %x in block %u (%llu) for directory inode %llu\n"
- msgstr "b³êdna liczba magiczna %x w bloku %u (%llu) dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir.c:1280
-+#: ../repair/dir.c:1276
- #, c-format
- msgid "bad back pointer in block %u (%llu) for directory inode %llu\n"
- msgstr "b³êdny wska¼nik wstecz w bloku %u (%llu) dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir.c:1287
-+#: ../repair/dir.c:1283
- #, c-format
- msgid "entry count %d too large in block %u (%llu) for directory inode %llu\n"
- msgstr "liczba wpisów %d zbyt du¿a w bloku %u (%llu) dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir.c:1294
-+#: ../repair/dir.c:1290
- #, c-format
- msgid "bad level %d in block %u (%llu) for directory inode %llu\n"
- msgstr "b³êdny poziom %d w bloku %u (%llu) dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir.c:1352
-+#: ../repair/dir.c:1348
- #, c-format
- msgid ""
- "correcting bad hashval in interior dir/attr block\n"
-@@ -6044,7 +6112,7 @@ msgstr ""
- "poprawiono b³êdne hashval w wewnêtrznym bloku katalogu/atrybutu\n"
- "\tw i-wê¼le (poziomu %d) %llu.\n"
- 
--#: ../repair/dir.c:1360
-+#: ../repair/dir.c:1356
- #, c-format
- msgid ""
- "would correct bad hashval in interior dir/attr block\n"
-@@ -6053,423 +6121,418 @@ msgstr ""
- "b³êdne hashval zosta³oby poprawione w wewnêtrznym bloku katalogu/atrybutu\n"
- "\tw i-wê¼le (poziomu %d) %llu.\n"
- 
--#: ../repair/dir.c:1480
-+#: ../repair/dir.c:1476
- #, c-format
- msgid "marking bad entry in directory inode %llu\n"
- msgstr "oznaczono b³êdny wpis w i-wê¼le katalogu %llu\n"
- 
--#: ../repair/dir.c:1506
-+#: ../repair/dir.c:1502
- #, c-format
- msgid "deleting zero length entry in directory inode %llu\n"
- msgstr "usuniêto wpis zerowej d³ugo¶ci w i-wê¼le katalogu %llu\n"
- 
--#: ../repair/dir.c:1605
-+#: ../repair/dir.c:1601
- #, c-format
- msgid "deleting entry in directory inode %llu\n"
- msgstr "usuniêto wpis w i-wê¼le katalogu %llu\n"
- 
--#: ../repair/dir.c:1751
-+#: ../repair/dir.c:1747
- #, c-format
- msgid "directory block header conflicts with used space in directory inode %llu\n"
- msgstr "nag³ówek bloku katalogu jest w konflikcie z u¿ytym miejscem w i-wê¼le katalogu %llu\n"
- 
--#: ../repair/dir.c:1780
-+#: ../repair/dir.c:1776
- #, c-format
- msgid "nameidx %d for entry #%d, bno %d, ino %llu > fs blocksize, deleting entry\n"
- msgstr "nameidx %d dla wpisu #%d, bno %d, i-wêze³ %llu > rozmiaru bloku fs, usuniêto wpis\n"
- 
--#: ../repair/dir.c:1820
-+#: ../repair/dir.c:1816
- #, c-format
- msgid "nameidx %d, entry #%d, bno %d, ino %llu > fs blocksize, marking entry bad\n"
- msgstr "nameidx %d, wpis #%d, bno %d, i-wêze³ %llu > rozmiaru bloku fs, zaznaczono wpis jako b³êdny\n"
- 
--#: ../repair/dir.c:1837
-+#: ../repair/dir.c:1833
- #, c-format
- msgid "nameidx %d, entry #%d, bno %d, ino %llu > fs blocksize, would delete entry\n"
- msgstr "nameidx %d, wpis #%d, bno %d, i-wêze³ %llu > rozmiaru bloku fs, wpis zosta³by usuniêty\n"
- 
--#: ../repair/dir.c:1874
-+#: ../repair/dir.c:1870
- #, c-format
- msgid "invalid ino number %llu in dir ino %llu, entry #%d, bno %d\n"
- msgstr "nieprawid³owy numer i-wêz³a %llu w i-wê¼le katalogu %llu, wpis #%d, bno %d\n"
- 
--#: ../repair/dir.c:1878 ../repair/dir.c:1894 ../repair/dir.c:1911
--#: ../repair/dir.c:1927 ../repair/dir.c:1944
-+#: ../repair/dir.c:1874 ../repair/dir.c:1890 ../repair/dir.c:1907
-+#: ../repair/dir.c:1923 ../repair/dir.c:1940
- #, c-format
- msgid "\tclearing ino number in entry %d...\n"
- msgstr "\twyczyszczono numer i-wêz³a we wpisie %d...\n"
- 
--#: ../repair/dir.c:1885 ../repair/dir.c:1902 ../repair/dir.c:1918
--#: ../repair/dir.c:1935 ../repair/dir.c:1952
-+#: ../repair/dir.c:1881 ../repair/dir.c:1898 ../repair/dir.c:1914
-+#: ../repair/dir.c:1931 ../repair/dir.c:1948
- #, c-format
- msgid "\twould clear ino number in entry %d...\n"
- msgstr "\tnumer i-wêz³a we wpisie %d zosta³by wyczyszczony...\n"
- 
--#: ../repair/dir.c:1890
-+#: ../repair/dir.c:1886
- #, c-format
- msgid "entry #%d, bno %d in directory %llu references realtime bitmap inode %llu\n"
- msgstr "wpis #%d, bno %d w katalogu %llu odwo³uje siê do i-wêz³a bitmapy realtime %llu\n"
- 
--#: ../repair/dir.c:1907
-+#: ../repair/dir.c:1903
- #, c-format
- msgid "entry #%d, bno %d in directory %llu references realtime summary inode %llu\n"
- msgstr "wpis #%d, bno %d w katalogu %llu odwo³uje siê do i-wêz³a opisu realtime %llu\n"
- 
--#: ../repair/dir.c:1923
-+#: ../repair/dir.c:1919
- #, c-format
- msgid "entry #%d, bno %d in directory %llu references user quota inode %llu\n"
- msgstr "wpis #%d, bno %d w katalogu %llu odwo³uje siê do i-wêz³a limitu u¿ytkownika %llu\n"
- 
--#: ../repair/dir.c:1940
-+#: ../repair/dir.c:1936
- #, c-format
- msgid "entry #%d, bno %d in directory %llu references group quota inode %llu\n"
- msgstr "wpis #%d, bno %d w katalogu %llu odwo³uje siê do i-wêz³a limitu grupy %llu\n"
- 
--#: ../repair/dir.c:1983
-+#: ../repair/dir.c:1973
- #, c-format
- msgid "entry references free inode %llu in directory %llu, will clear entry\n"
- msgstr "wpis odwo³uje siê do wolnego i-wêz³a %llu w katalogu %llu, zostanie wyczyszczony\n"
- 
--#: ../repair/dir.c:1991
-+#: ../repair/dir.c:1981
- #, c-format
- msgid "entry references free inode %llu in directory %llu, would clear entry\n"
- msgstr "wpis odwo³uje siê do wolnego i-wêz³a %llu w katalogu %llu, zosta³by wyczyszczony\n"
- 
--#: ../repair/dir.c:1999
-+#: ../repair/dir.c:1989
- #, c-format
- msgid "bad ino number %llu in dir ino %llu, entry #%d, bno %d\n"
- msgstr "b³êdny numer i-wêz³a %llu w i-wê¼le katalogu %llu, wpis #%d, bno %d\n"
- 
--#: ../repair/dir.c:2002
-+#: ../repair/dir.c:1992
- msgid "clearing inode number...\n"
- msgstr "wyczyszczono numer i-wêz³a...\n"
- 
--#: ../repair/dir.c:2007
-+#: ../repair/dir.c:1997
- msgid "would clear inode number...\n"
- msgstr "numer i-wêz³a zosta³by wyczyszczony\n"
- 
--#: ../repair/dir.c:2027
-+#: ../repair/dir.c:2017
- #, c-format
- msgid "entry #%d, dir inode %llu, has zero-len name, deleting entry\n"
- msgstr "wpis #%d, i-wêze³ katalogu %llu ma nazwê zerowej d³ugo¶ci, usuniêto\n"
- 
--#: ../repair/dir.c:2066
-+#: ../repair/dir.c:2056
- #, c-format
- msgid "entry #%d, dir inode %llu, has zero-len name, marking entry bad\n"
- msgstr "wpis #%d, i-wêze³ katalogu %llu ma nazwê zerowej d³ugo¶ci, zaznaczono jako b³êdny\n"
- 
--#: ../repair/dir.c:2080
-+#: ../repair/dir.c:2070
- #, c-format
- msgid "bad size, entry #%d in dir inode %llu, block %u -- entry overflows block\n"
- msgstr "b³êdny rozmiar, wpis #%d w i-wê¼le katalogu %llu, blok %u - wpis wykracza poza blok\n"
- 
--#: ../repair/dir.c:2091
-+#: ../repair/dir.c:2081
- #, c-format
- msgid "dir entry slot %d in block %u conflicts with used space in dir inode %llu\n"
- msgstr "slot wpisu katalogu %d w bloku %u jest w konflikcie z u¿ytym miejscem w i-wê¼le katalogu %llu\n"
- 
--#: ../repair/dir.c:2130
-+#: ../repair/dir.c:2120
- #, c-format
- msgid "illegal name \"%s\" in directory inode %llu, entry will be cleared\n"
- msgstr "niedozwolona nazwa \"%s\" w i-wê¼le katalogu %llu, wpis zostanie wyczyszczony\n"
- 
--#: ../repair/dir.c:2136
-+#: ../repair/dir.c:2126
- #, c-format
- msgid "illegal name \"%s\" in directory inode %llu, entry would be cleared\n"
- msgstr "niedozwolona nazwa \"%s\" w i-wê¼le katalogu %llu, wpis zosta³by wyczyszczony\n"
- 
--#: ../repair/dir.c:2146
-+#: ../repair/dir.c:2136
- #, c-format
- msgid "\tmismatched hash value for entry \"%s\"\n"
- msgstr "\tniedopasowana warto¶æ hasza dla wpisu \"%s\"\n"
- 
--#: ../repair/dir.c:2150
-+#: ../repair/dir.c:2140
- #, c-format
- msgid "\t\tin directory inode %llu.  resetting hash value.\n"
- msgstr "\t\tw i-wê¼le katalogu %llu. Przestawiono warto¶æ hasza.\n"
- 
--#: ../repair/dir.c:2156
-+#: ../repair/dir.c:2146
- #, c-format
- msgid "\t\tin directory inode %llu.  would reset hash value.\n"
- msgstr "\t\tw i-wê¼le katalogu %llu. Warto¶æ hasza zosta³aby przestawiona.\n"
- 
--#: ../repair/dir.c:2186
-+#: ../repair/dir.c:2176
- #, c-format
- msgid "\tbad hash ordering for entry \"%s\"\n"
- msgstr "\tb³êdny porz±dek hasza dla wpisu \"%s\"\n"
- 
--#: ../repair/dir.c:2190
-+#: ../repair/dir.c:2180
- #, c-format
- msgid "\t\tin directory inode %llu.  will clear entry\n"
- msgstr "\t\tw i-wê¼le katalogu %llu. Wpis zostanie wyczyszczony.\n"
- 
--#: ../repair/dir.c:2198
-+#: ../repair/dir.c:2188
- #, c-format
- msgid "\t\tin directory inode %llu.  would clear entry\n"
- msgstr "\t\tw i-wê¼le katalogu %llu. Wpis zosta³by wyczyszczony.\n"
- 
--#: ../repair/dir.c:2215
-+#: ../repair/dir.c:2205
- #, c-format
- msgid "name \"%s\" (block %u, slot %d) conflicts with used space in dir inode %llu\n"
- msgstr "nazwa \"%s\" (blok %u, slot %d) jest w konflikcie z u¿ytym miejscem w i-wê¼le katalogu %llu\n"
- 
--#: ../repair/dir.c:2222
-+#: ../repair/dir.c:2212
- #, c-format
- msgid "will clear entry \"%s\" (#%d) in directory inode %llu\n"
- msgstr "wpis \"%s\" (#%d) zostanie wyczyszczony w i-wê¼le katalogu %llu\n"
- 
--#: ../repair/dir.c:2226
-+#: ../repair/dir.c:2216
- #, c-format
- msgid "would clear entry \"%s\" (#%d)in directory inode %llu\n"
- msgstr "wpis \"%s\" (#%d) zosta³by wyczyszczony w i-wê¼le katalogu %llu\n"
- 
--#: ../repair/dir.c:2262
-+#: ../repair/dir.c:2252
- #, c-format
- msgid "bad .. entry in dir ino %llu, points to self"
- msgstr "b³êdny wpis .. w i-wê¼le katalogu %llu, wskazuje na siebie"
- 
--#: ../repair/dir.c:2266 ../repair/dir.c:2363
-+#: ../repair/dir.c:2256 ../repair/dir.c:2353
- msgid "will clear entry\n"
- msgstr "wpis zostanie wyczyszczony\n"
- 
--#: ../repair/dir.c:2271 ../repair/dir.c:2367 ../repair/dir2.c:1641
-+#: ../repair/dir.c:2261 ../repair/dir.c:2357 ../repair/dir2.c:1644
- msgid "would clear entry\n"
- msgstr "wpis zosta³by wyczyszczony\n"
- 
--#: ../repair/dir.c:2281
-+#: ../repair/dir.c:2271
- #, c-format
- msgid "correcting .. entry in root inode %llu, was %llu\n"
- msgstr "poprawiono wpis .. w gównym i-wê¼le %llu, by³o %llu\n"
- 
--#: ../repair/dir.c:2288
-+#: ../repair/dir.c:2278
- #, c-format
- msgid "bad .. entry (%llu) in root inode %llu should be %llu\n"
- msgstr "b³êdny wpis .. (%llu) w g³ównym i-wê¼le %llu, powinno byæ %llu\n"
- 
--#: ../repair/dir.c:2305
-+#: ../repair/dir.c:2295
- #, c-format
- msgid "multiple .. entries in directory inode %llu, will clear second entry\n"
- msgstr "wiele wpisów .. w i-wê¼le katalogu %llu, drugi wpis zostanie wyczyszczony\n"
- 
--#: ../repair/dir.c:2311
-+#: ../repair/dir.c:2301
- #, c-format
- msgid "multiple .. entries in directory inode %llu, would clear second entry\n"
- msgstr "wiele wpisów .. w i-wê¼le katalogu %llu, drugi wpis zosta³by wyczyszczony\n"
- 
--#: ../repair/dir.c:2324
-+#: ../repair/dir.c:2314
- #, c-format
- msgid ". in directory inode %llu has wrong value (%llu), fixing entry...\n"
- msgstr ". w i-wê¼le katalogu %llu ma niepoprawn± warto¶æ (%llu), poprawiono wpis...\n"
- 
--#: ../repair/dir.c:2331
-+#: ../repair/dir.c:2321
- #, c-format
- msgid ". in directory inode %llu has wrong value (%llu)\n"
- msgstr ". w i-wê¼le katalogu %llu ma niepoprawn± warto¶æ (%llu)\n"
- 
--#: ../repair/dir.c:2337
-+#: ../repair/dir.c:2327
- #, c-format
- msgid "multiple . entries in directory inode %llu\n"
- msgstr "wiele wpisów . w i-wê¼le katalogu %llu\n"
- 
--#: ../repair/dir.c:2344
-+#: ../repair/dir.c:2334
- #, c-format
- msgid "will clear one . entry in directory inode %llu\n"
- msgstr "jeden wpis . w i-wê¼le katalogu %llu zostanie wyczyszczony\n"
- 
--#: ../repair/dir.c:2350
-+#: ../repair/dir.c:2340
- #, c-format
- msgid "would clear one . entry in directory inode %llu\n"
- msgstr "jeden wpis . w i-wê¼le katalogu %llu zosta³by wyczyszczony\n"
- 
--#: ../repair/dir.c:2360
-+#: ../repair/dir.c:2350
- #, c-format
- msgid "entry \"%s\" in directory inode %llu points to self, "
- msgstr "wpis \"%s\" w i-wê¼le katalogu %llu wskazuje na siebie, "
- 
--#: ../repair/dir.c:2385
-+#: ../repair/dir.c:2375
- #, c-format
- msgid "- resetting first used heap value from %d to %d in block %u of dir ino %llu\n"
- msgstr "- przestawiono pierwsz± u¿ywan± warto¶æ sterty z %d na %d w bloku %u i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir.c:2394
-+#: ../repair/dir.c:2384
- #, c-format
- msgid "- would reset first used value from %d to %d in block %u of dir ino %llu\n"
- msgstr "- pierwsza u¿ywana warto¶æ zosta³aby przestawiona z %d na %d w bloku %u i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir.c:2405
-+#: ../repair/dir.c:2395
- #, c-format
- msgid "- resetting namebytes cnt from %d to %d in block %u of dir inode %llu\n"
- msgstr "- przestawiono liczbê bajtów nazwy z %d na %d w bloku %u i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir.c:2414
-+#: ../repair/dir.c:2404
- #, c-format
- msgid "- would reset namebytes cnt from %d to %d in block %u of dir inode %llu\n"
- msgstr "- liczba bajtów nazwy zosta³aby przestawiona z %d na %d w bloku %u i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir.c:2450
-+#: ../repair/dir.c:2440
- #, c-format
- msgid "- found unexpected lost holes in block %u, dir inode %llu\n"
- msgstr "- znaleziono nieoczekiwane utracone dziury w bloku %u, i-wê¼le katalogu %llu\n"
- 
--#: ../repair/dir.c:2458
-+#: ../repair/dir.c:2448
- #, c-format
- msgid "- hole info non-optimal in block %u, dir inode %llu\n"
- msgstr "- nieoptymalna informacja o dziurze w bloku %u, i-wê¼le katalogu %llu\n"
- 
--#: ../repair/dir.c:2465
-+#: ../repair/dir.c:2455
- #, c-format
- msgid "- hole info incorrect in block %u, dir inode %llu\n"
- msgstr "- niepoprawna informacja o dziurze w bloku %u, i-wê¼le katalogu %llu\n"
- 
--#: ../repair/dir.c:2476
-+#: ../repair/dir.c:2466
- #, c-format
- msgid "- existing hole info for block %d, dir inode %llu (base, size) - \n"
- msgstr "- istniej±ca informacja o dziurze dla bloku %d, i-wêz³a katalogu %llu (podstawa, rozmiar) - \n"
- 
--#: ../repair/dir.c:2484
-+#: ../repair/dir.c:2474
- #, c-format
- msgid "- holes flag = %d\n"
- msgstr "- flaga dziur = %d\n"
- 
--#: ../repair/dir.c:2490
-+#: ../repair/dir.c:2480
- #, c-format
- msgid "- compacting block %u in dir inode %llu\n"
- msgstr "- zagêszczono blok %u w i-wê¼le katalogu %llu\n"
- 
--#: ../repair/dir.c:2531
-+#: ../repair/dir.c:2521
- #, c-format
- msgid "not enough space in block %u of dir inode %llu for all entries\n"
- msgstr "zbyt ma³o miejsca dla wszystkich wpisów w bloku %u i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir.c:2599
-+#: ../repair/dir.c:2589
- #, c-format
- msgid "- would compact block %u in dir inode %llu\n"
- msgstr "- bloku %u w i-wê¼le katalogu %llu zosta³by zagêszczony\n"
- 
--#: ../repair/dir.c:2661 ../repair/dir2.c:1826
-+#: ../repair/dir.c:2651 ../repair/dir2.c:1830
- #, c-format
- msgid "can't map block %u for directory inode %llu\n"
- msgstr "nie mo¿na odwzorowaæ bloku %u dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir.c:2672
-+#: ../repair/dir.c:2662
- #, c-format
- msgid "can't read file block %u (fsbno %llu, daddr %lld) for directory inode %llu\n"
- msgstr "nie mo¿na odczytaæ bloku pliku %u (fsbno %llu, daddr %lld) dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir.c:2686 ../repair/dir.c:2948
-+#: ../repair/dir.c:2676 ../repair/dir.c:2938
- #, c-format
- msgid "bad directory leaf magic # %#x for dir ino %llu\n"
- msgstr "b³êdna liczba magiczna li¶cia katalogu %#x dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir.c:2725
-+#: ../repair/dir.c:2715
- #, c-format
- msgid "bad sibling back pointer for directory block %u in directory inode %llu\n"
- msgstr "b³êdny wska¼nik wstecz dla bloku katalogu %u w i-wê¼le katalogu %llu\n"
- 
--#: ../repair/dir.c:2757 ../repair/dir2.c:1903
-+#: ../repair/dir.c:2747 ../repair/dir2.c:1907
- #, c-format
- msgid "bad hash path in directory %llu\n"
- msgstr "b³êdna ¶cie¿ka hasza w katalogu %llu\n"
- 
--#: ../repair/dir.c:2867
-+#: ../repair/dir.c:2857
- #, c-format
- msgid "out of range internal directory block numbers (inode %llu)\n"
- msgstr "numery bloków wewnêtrznego katalogu spoza zakresu (i-wêze³ %llu)\n"
- 
--#: ../repair/dir.c:2873
-+#: ../repair/dir.c:2863
- #, c-format
- msgid "setting directory inode (%llu) size to %llu bytes, was %lld bytes\n"
- msgstr "ustawiono rozmiar i-wêz³a katalogu (%llu) na %llu bajtów, by³o %lld bajtów\n"
- 
--#: ../repair/dir.c:2928
-+#: ../repair/dir.c:2918
- #, c-format
- msgid "block 0 for directory inode %llu is missing\n"
- msgstr "brak bloku 0 dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir.c:2935
-+#: ../repair/dir.c:2925
- #, c-format
- msgid "can't read block 0 for directory inode %llu\n"
- msgstr "nie mo¿na odczytaæ bloku 0 dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir.c:2972
-+#: ../repair/dir.c:2962
- #, c-format
- msgid "clearing forw/back pointers for directory inode %llu\n"
- msgstr "wyczyszczono wska¼niki w przód/wstecz dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir.c:2978
-+#: ../repair/dir.c:2968
- #, c-format
- msgid "would clear forw/back pointers for directory inode %llu\n"
- msgstr "wska¼niki w przód/wstecz dla i-wêz³a katalogu %llu zosta³yby wyczyszczone\n"
- 
--#: ../repair/dir.c:3048 ../repair/dir2.c:2114
-+#: ../repair/dir.c:3038 ../repair/dir2.c:2115
- #, c-format
- msgid "no . entry for directory %llu\n"
- msgstr "brak wpisu . dla katalogu %llu\n"
- 
--#: ../repair/dir.c:3058 ../repair/dir2.c:2124
-+#: ../repair/dir.c:3048 ../repair/dir2.c:2125
- #, c-format
- msgid "no .. entry for directory %llu\n"
- msgstr "brak wpisu .. dla katalogu %llu\n"
- 
--#: ../repair/dir.c:3060 ../repair/dir2.c:2126
-+#: ../repair/dir.c:3050 ../repair/dir2.c:2127
- #, c-format
- msgid "no .. entry for root directory %llu\n"
- msgstr "brak wpisu .. dla katalogu g³ównego %llu\n"
- 
--#: ../repair/dir2.c:55
-+#: ../repair/dir2.c:56
- #, c-format
- msgid "malloc failed (%u bytes) dir2_add_badlist:ino %llu\n"
- msgstr "malloc nie powiod³o siê (%u bajtów) w dir2_add_badlist:ino %llu\n"
- 
--#: ../repair/dir2.c:96 ../repair/dir2.c:197 ../repair/dir2.c:233
-+#: ../repair/dir2.c:97 ../repair/dir2.c:208 ../repair/dir2.c:244
- msgid "couldn't malloc dir2 buffer list\n"
- msgstr "nie mo¿na przydzieliæ listy bufora dir2\n"
- 
--#: ../repair/dir2.c:113
-+#: ../repair/dir2.c:124
- msgid "couldn't malloc dir2 buffer header\n"
- msgstr "nie mo¿na przydzieliæ nag³ówka bufora dir2\n"
- 
--#: ../repair/dir2.c:130
-+#: ../repair/dir2.c:141
- msgid "couldn't malloc dir2 buffer data\n"
- msgstr "nie mo¿na przydzieliæ danych bufora dir2\n"
- 
--#: ../repair/dir2.c:288 ../repair/dir2.c:648 ../repair/dir2.c:1706
--#: ../repair/phase6.c:2361
-+#: ../repair/dir2.c:304 ../repair/dir2.c:658 ../repair/dir2.c:1709
-+#: ../repair/phase6.c:2422
- #, c-format
- msgid "can't read block %u for directory inode %llu\n"
- msgstr "nie mo¿na odczytaæ bloku %u dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir2.c:299
-+#: ../repair/dir2.c:315
- #, c-format
- msgid "found non-root LEAFN node in inode %llu bno = %u\n"
- msgstr "znaleziono nieg³ówny wêze³ LEAFN w i-wê¼le %llu bno = %u\n"
- 
--#: ../repair/dir2.c:304
--#, c-format
--msgid "LEAFN node level is %d inode %llu bno = %u\n"
--msgstr "poziom wêz³a LEAFN wynosi %d i-wêze³ %llu bno = %u\n"
+-typedef union xlog_in_core2 {
+-	xlog_rec_header_t	hic_header;
+-	xlog_rec_ext_header_t	hic_xheader;
+-	char			hic_sector[XLOG_HEADER_SIZE];
+-} xlog_in_core_2_t;
 -
--#: ../repair/dir2.c:315
-+#: ../repair/dir2.c:325
- #, c-format
- msgid "bad dir magic number 0x%x in inode %llu bno = %u\n"
- msgstr "b³êdna liczba magiczna katalogu 0x%x w i-wê¼le %llu bno = %u\n"
+-typedef struct xlog_in_core {
+-	xlog_iclog_fields_t	hic_fields;
+-	xlog_in_core_2_t	*hic_data;
++	xlog_in_core_2_t	*ic_data;
++#define ic_header	ic_data->hic_header
+ } xlog_in_core_t;
  
--#: ../repair/dir2.c:392
-+#: ../repair/dir2.c:402
- #, c-format
- msgid "release_dir2_cursor_int got unexpected non-null bp, dabno = %u\n"
- msgstr "release_dir2_cursor_int otrzyma³ nieoczekiwany niezerowy bp, dabno = %u\n"
- 
--#: ../repair/dir2.c:455
-+#: ../repair/dir2.c:465
- #, c-format
- msgid "directory block used/count inconsistency - %d / %hu\n"
- msgstr "niespójno¶æ warto¶ci used/count bloku katalogu - %d / %hu\n"
- 
--#: ../repair/dir2.c:477
-+#: ../repair/dir2.c:487
- #, c-format
- msgid "bad directory block in inode %llu\n"
- msgstr "b³êdny blok katalogu w i-wê¼le %llu\n"
- 
--#: ../repair/dir2.c:498
-+#: ../repair/dir2.c:508
- #, c-format
- msgid ""
- "correcting bad hashval in non-leaf dir block\n"
-@@ -6478,7 +6541,7 @@ msgstr ""
- "poprawiono b³êdne hashval w bloku katalogu nie bêd±cego li¶ciem\n"
- "\tw i-wê¼le (poziomu %d) %llu.\n"
- 
--#: ../repair/dir2.c:505
-+#: ../repair/dir2.c:515
- #, c-format
- msgid ""
- "would correct bad hashval in non-leaf dir block\n"
-@@ -6487,27 +6550,27 @@ msgstr ""
- "b³êdne hashval w bloku katalogu nie bêd±cego li¶ciem zosta³oby poprawione\n"
- "\tw i-wê¼le (poziomu %d) %llu.\n"
- 
--#: ../repair/dir2.c:662
-+#: ../repair/dir2.c:672
- #, c-format
- msgid "bad magic number %x in block %u for directory inode %llu\n"
- msgstr "b³êdna liczba magiczna %x w bloku %u dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir2.c:670
-+#: ../repair/dir2.c:680
- #, c-format
- msgid "bad back pointer in block %u for directory inode %llu\n"
- msgstr "b³êdny wska¼nik wstecz w bloku %u dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir2.c:677
-+#: ../repair/dir2.c:687
- #, c-format
- msgid "entry count %d too large in block %u for directory inode %llu\n"
- msgstr "liczba wpisów %d zbyt du¿a w bloku %u dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir2.c:684
-+#: ../repair/dir2.c:694
- #, c-format
- msgid "bad level %d in block %u for directory inode %llu\n"
- msgstr "b³êdny poziom %d w bloku %u dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir2.c:728
-+#: ../repair/dir2.c:738
- #, c-format
- msgid ""
- "correcting bad hashval in interior dir block\n"
-@@ -6516,7 +6579,7 @@ msgstr ""
- "poprawiono b³êdne hashval w wewnêtrznym bloku katalogu\n"
- "\tw i-wê¼le (poziomu %d) %llu.\n"
- 
--#: ../repair/dir2.c:735
-+#: ../repair/dir2.c:745
- #, c-format
- msgid ""
- "would correct bad hashval in interior dir block\n"
-@@ -6525,385 +6588,394 @@ msgstr ""
- "b³êdne hashval w wewnêtrznym bloku katalogu zosta³oby poprawione\n"
- "\tw i-wê¼le (poziomu %d) %llu.\n"
- 
--#: ../repair/dir2.c:769
-+#: ../repair/dir2.c:779
- msgid "couldn't malloc dir2 shortform copy\n"
- msgstr "nie uda³o siê przydzieliæ krótkiej kopii dir2\n"
- 
--#: ../repair/dir2.c:909
-+#: ../repair/dir2.c:919
- msgid "current"
- msgstr "bie¿±cego i-wêz³a"
- 
--#: ../repair/dir2.c:912 ../repair/dir2.c:1435
-+#: ../repair/dir2.c:922 ../repair/dir2.c:1445
- msgid "invalid"
- msgstr "nieprawid³owego i-wêz³a"
- 
--#: ../repair/dir2.c:915 ../repair/dir2.c:1438
-+#: ../repair/dir2.c:925 ../repair/dir2.c:1448
- msgid "realtime bitmap"
- msgstr "i-wêz³a bitmapy realtime"
- 
--#: ../repair/dir2.c:918 ../repair/dir2.c:1441
-+#: ../repair/dir2.c:928 ../repair/dir2.c:1451
- msgid "realtime summary"
- msgstr "i-wêz³a opisu realtime"
- 
--#: ../repair/dir2.c:921 ../repair/dir2.c:1444
-+#: ../repair/dir2.c:931 ../repair/dir2.c:1454
- msgid "user quota"
- msgstr "i-wêz³a limitów u¿ytkownika"
- 
--#: ../repair/dir2.c:924 ../repair/dir2.c:1447
-+#: ../repair/dir2.c:934 ../repair/dir2.c:1457
- msgid "group quota"
- msgstr "i-wêz³a limitów grupy"
- 
--#: ../repair/dir2.c:958 ../repair/dir2.c:1484
-+#: ../repair/dir2.c:968 ../repair/dir2.c:1487
- msgid "non-existent"
- msgstr "nie istniej±cego i-wêz³a"
- 
--#: ../repair/dir2.c:962
-+#: ../repair/dir2.c:972
- #, c-format
- msgid "entry \"%*.*s\" in shortform directory %llu references %s inode %llu\n"
- msgstr "wpis \"%*.*s\" w krótkim katalogu %llu odwo³uje siê do %s %llu\n"
- 
--#: ../repair/dir2.c:994
-+#: ../repair/dir2.c:1004
- #, c-format
- msgid "zero length entry in shortform dir %llu"
- msgstr "wpis zerowej d³ugo¶ci w krótkim katalogu %llu"
- 
--#: ../repair/dir2.c:998
-+#: ../repair/dir2.c:1008
- #, c-format
- msgid ", junking %d entries\n"
- msgstr ", wyrzucono %d wpisów\n"
- 
--#: ../repair/dir2.c:1001
-+#: ../repair/dir2.c:1011
- #, c-format
- msgid ", would junk %d entries\n"
- msgstr ", %d wpisów zosta³oby wyrzucone\n"
- 
--#: ../repair/dir2.c:1075
-+#: ../repair/dir2.c:1085
- #, c-format
- msgid "entry contains offset out of order in shortform dir %llu\n"
- msgstr "wpis zawiera uszkodzony offset w krótkim katalogu %llu\n"
- 
--#: ../repair/dir2.c:1179
-+#: ../repair/dir2.c:1189
- #, c-format
- msgid "would have corrected i8 count in directory %llu from %d to %d\n"
- msgstr "liczba i8 zosta³aby poprawiona w katalogu %llu z %d na %d\n"
- 
--#: ../repair/dir2.c:1183
-+#: ../repair/dir2.c:1193
- #, c-format
- msgid "corrected i8 count in directory %llu, was %d, now %d\n"
- msgstr "poprawiono liczbê i8 w katalogu %llu - by³o %d, jest %d\n"
- 
--#: ../repair/dir2.c:1220
-+#: ../repair/dir2.c:1230
- #, c-format
- msgid "directory %llu offsets too high\n"
- msgstr "offsety zbyt du¿e w katalogu %llu\n"
- 
--#: ../repair/dir2.c:1225
-+#: ../repair/dir2.c:1235
- #, c-format
- msgid "would have corrected entry offsets in directory %llu\n"
- msgstr "offsety wpisów w katalogu %llu zosta³yby poprawione\n"
- 
--#: ../repair/dir2.c:1229
-+#: ../repair/dir2.c:1239
- #, c-format
- msgid "corrected entry offsets in directory %llu\n"
- msgstr "poprawiono offsety wpisów w katalogu %llu\n"
- 
--#: ../repair/dir2.c:1284
-+#: ../repair/dir2.c:1294
- #, c-format
- msgid "bad .. entry in directory inode %llu, points to self, "
- msgstr "b³êdny wpis .. w i-wê¼le katalogu %llu, wskazuje na siebie, "
- 
--#: ../repair/dir2.c:1396
-+#: ../repair/dir2.c:1406
- #, c-format
- msgid "corrupt block %u in directory inode %llu\n"
- msgstr "uszkodzony blok %u w i-wê¼le katalogu %llu\n"
- 
--#: ../repair/dir2.c:1399
-+#: ../repair/dir2.c:1409
- msgid "\twill junk block\n"
- msgstr "\tblok zostanie wyrzucony\n"
- 
--#: ../repair/dir2.c:1401
-+#: ../repair/dir2.c:1411
- msgid "\twould junk block\n"
- msgstr "\tblok zosta³by wyrzucony\n"
- 
--#: ../repair/dir2.c:1487
-+#: ../repair/dir2.c:1490
- #, c-format
- msgid "entry \"%*.*s\" at block %u offset %d in directory inode %llu references %s inode %llu\n"
- msgstr "wpis \"%*.*s\" w bloku %u offsecie %d w i-wê¼le katalogu %llu odwo³uje siê do %s %llu\n"
- 
--#: ../repair/dir2.c:1499
-+#: ../repair/dir2.c:1502
- #, c-format
- msgid "entry at block %u offset %d in directory inode %llu has 0 namelength\n"
- msgstr "wpis w bloku %u offsecie %d w i-wê¼le katalogu %llu ma zerow± d³ugo¶æ nazwy\n"
- 
--#: ../repair/dir2.c:1511
-+#: ../repair/dir2.c:1514
- #, c-format
- msgid "\tclearing inode number in entry at offset %d...\n"
- msgstr "\twyczyszczono numer i-wêz³a we wpisie o offsecie %d...\n"
- 
--#: ../repair/dir2.c:1517
-+#: ../repair/dir2.c:1520
- #, c-format
- msgid "\twould clear inode number in entry at offset %d...\n"
- msgstr "\tnumer i-wêz³a we wpisie o offsecie %d zosta³by wyczyszczony...\n"
- 
--#: ../repair/dir2.c:1530
-+#: ../repair/dir2.c:1533
- #, c-format
- msgid "entry at block %u offset %d in directory inode %llu has illegal name \"%*.*s\": "
- msgstr "wpis w bloku %u offsecie %d w i-wê¼le katalogu %llu ma niedozwolon± nazwê \"%*.*s\": "
- 
--#: ../repair/dir2.c:1561
-+#: ../repair/dir2.c:1564
- #, c-format
- msgid "bad .. entry in directory inode %llu, points to self: "
- msgstr "b³êdny wpis .. w i-wê¼le katalogu %llu, wskazuje na siebie: "
- 
--#: ../repair/dir2.c:1572
-+#: ../repair/dir2.c:1575
- #, c-format
- msgid "bad .. entry in root directory inode %llu, was %llu: "
- msgstr "b³êdny wpis w i-wê¼le g³ównego katalogu %llu, by³o %llu: "
- 
--#: ../repair/dir2.c:1577 ../repair/dir2.c:1609 ../repair/phase2.c:178
--#: ../repair/phase2.c:187 ../repair/phase2.c:196
-+#: ../repair/dir2.c:1580 ../repair/dir2.c:1612 ../repair/phase2.c:193
-+#: ../repair/phase2.c:202 ../repair/phase2.c:211
- msgid "correcting\n"
- msgstr "poprawiono\n"
- 
--#: ../repair/dir2.c:1581 ../repair/dir2.c:1613 ../repair/phase2.c:180
--#: ../repair/phase2.c:189 ../repair/phase2.c:198
-+#: ../repair/dir2.c:1584 ../repair/dir2.c:1616 ../repair/phase2.c:195
-+#: ../repair/phase2.c:204 ../repair/phase2.c:213
- msgid "would correct\n"
- msgstr "zosta³by poprawiony\n"
- 
--#: ../repair/dir2.c:1592
-+#: ../repair/dir2.c:1595
- #, c-format
- msgid "multiple .. entries in directory inode %llu: "
- msgstr "wiele wpisów .. w i-wê¼le katalogu %llu: "
- 
--#: ../repair/dir2.c:1605
-+#: ../repair/dir2.c:1608
- #, c-format
- msgid "bad . entry in directory inode %llu, was %llu: "
- msgstr "b³êdny wpis . w i-wê¼le katalogu %llu, by³o %llu: "
- 
--#: ../repair/dir2.c:1617
-+#: ../repair/dir2.c:1620
- #, c-format
- msgid "multiple . entries in directory inode %llu: "
- msgstr "wiele wpisów . w i-wê¼le katalogu %llu: "
- 
--#: ../repair/dir2.c:1627
-+#: ../repair/dir2.c:1630
- #, c-format
- msgid "entry \"%*.*s\" in directory inode %llu points to self: "
- msgstr "wpis \"%*.*s\" w i-wê¼le katalogu %llu wskazuje na siebie: "
- 
--#: ../repair/dir2.c:1639
-+#: ../repair/dir2.c:1642
- msgid "clearing entry\n"
- msgstr "wyczyszczono wpis\n"
- 
--#: ../repair/dir2.c:1653
-+#: ../repair/dir2.c:1656
- #, c-format
- msgid "bad bestfree table in block %u in directory inode %llu: "
- msgstr "b³êdna tablica bestfree w bloku %u w i-wê¼le katalogu %llu: "
- 
--#: ../repair/dir2.c:1657
-+#: ../repair/dir2.c:1660
- msgid "repairing table\n"
- msgstr "naprawiono tablicê\n"
- 
--#: ../repair/dir2.c:1661
-+#: ../repair/dir2.c:1664
- msgid "would repair table\n"
- msgstr "tablica zosta³aby naprawiona\n"
- 
--#: ../repair/dir2.c:1698
-+#: ../repair/dir2.c:1701
- #, c-format
- msgid "block %u for directory inode %llu is missing\n"
- msgstr "brak bloku %u dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir2.c:1715
-+#: ../repair/dir2.c:1718
- #, c-format
- msgid "bad directory block magic # %#x in block %u for directory inode %llu\n"
- msgstr "b³êdna liczba magiczna bloku katalogu %#x w bloku %u dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir2.c:1760
-+#: ../repair/dir2.c:1763
- #, c-format
- msgid "bad entry count in block %u of directory inode %llu\n"
- msgstr "b³êdna liczba wpisów w bloku %u i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir2.c:1770
-+#: ../repair/dir2.c:1773
- #, c-format
- msgid "bad hash ordering in block %u of directory inode %llu\n"
- msgstr "b³êdna kolejno¶æ hasza w bloku %u i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir2.c:1779
-+#: ../repair/dir2.c:1782
- #, c-format
- msgid "bad stale count in block %u of directory inode %llu\n"
- msgstr "b³êdna liczba stale %u i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir2.c:1836
-+#: ../repair/dir2.c:1840
- #, c-format
- msgid "can't read file block %u for directory inode %llu\n"
- msgstr "nie mo¿na odczytaæ bloku pliku %u dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir2.c:1847
-+#: ../repair/dir2.c:1851
- #, c-format
- msgid "bad directory leaf magic # %#x for directory inode %llu block %u\n"
- msgstr "b³êdna liczba magiczna li¶cia katalogu %#x dla i-wêz³a katalogu %llu bloku %u\n"
- 
--#: ../repair/dir2.c:1877
-+#: ../repair/dir2.c:1881
- #, c-format
- msgid "bad sibling back pointer for block %u in directory inode %llu\n"
- msgstr "b³êdny wska¼nik wstecz dla bloku %u w i-wê¼le katalogu %llu\n"
- 
--#: ../repair/dir2.c:2010
-+#: ../repair/dir2.c:2011
- #, c-format
- msgid "block %llu for directory inode %llu is missing\n"
- msgstr "brak bloku %llu dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir2.c:2019
-+#: ../repair/dir2.c:2020
- #, c-format
- msgid "can't read block %llu for directory inode %llu\n"
- msgstr "nie mo¿na odczytaæ bloku %llu dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir2.c:2027
-+#: ../repair/dir2.c:2028
- #, c-format
- msgid "bad directory block magic # %#x in block %llu for directory inode %llu\n"
- msgstr "b³êdna liczba magiczna bloku katalogu %#x w bloku %llu dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/dir2.c:2107
-+#: ../repair/dir2.c:2108
- #, c-format
- msgid "bad size/format for directory %llu\n"
- msgstr "b³êdny rozmiar/format dla katalogu %llu\n"
- 
--#: ../repair/dir_stack.c:91
--msgid "couldn't malloc dir stack element, try more swap\n"
--msgstr "nie uda³o siê przydzieliæ elementu stosu katalogu, nale¿y spróbowaæ zwiêkszyæ swap\n"
+ /*
+- * Defines to save our code from this glop.
+- */
+-#define	ic_force_wait	hic_fields.ic_force_wait
+-#define ic_write_wait	hic_fields.ic_write_wait
+-#define	ic_next		hic_fields.ic_next
+-#define	ic_prev		hic_fields.ic_prev
+-#define	ic_bp		hic_fields.ic_bp
+-#define	ic_log		hic_fields.ic_log
+-#define	ic_callback	hic_fields.ic_callback
+-#define	ic_callback_lock hic_fields.ic_callback_lock
+-#define	ic_callback_tail hic_fields.ic_callback_tail
+-#define	ic_trace	hic_fields.ic_trace
+-#define	ic_size		hic_fields.ic_size
+-#define	ic_offset	hic_fields.ic_offset
+-#define	ic_refcnt	hic_fields.ic_refcnt
+-#define	ic_bwritecnt	hic_fields.ic_bwritecnt
+-#define	ic_state	hic_fields.ic_state
+-#define ic_datap	hic_fields.ic_datap
+-#define ic_header	hic_data->hic_header
 -
--#: ../repair/incore.c:64
-+#: ../repair/incore.c:65
- msgid "couldn't allocate block map pointers\n"
- msgstr "nie uda³o siê przydzieliæ wska¼ników mapy bloków\n"
+-/*
+  * The reservation head lsn is not made up of a cycle number and block number.
+  * Instead, it uses a cycle number and byte number.  Logs don't expect to
+  * overflow 31 bits worth of byte offset, so using a byte number will mean
+@@ -404,6 +385,7 @@
+ typedef struct log {
+ 	/* The following fields don't need locking */
+ 	struct xfs_mount	*l_mp;	        /* mount point */
++	struct xfs_ail		*l_ailp;	/* AIL log is working with */
+ 	struct xfs_buf		*l_xbuf;        /* extra buffer for log
+ 						 * wrapping */
+ 	struct xfs_buftarg	*l_targ;        /* buftarg of log */
+Index: xfs-cmds/xfsprogs/include/xfs_mount.h
+===================================================================
+--- xfs-cmds.orig/xfsprogs/include/xfs_mount.h	2008-12-06 20:05:46.000000000 +0100
++++ xfs-cmds/xfsprogs/include/xfs_mount.h	2008-12-06 20:05:49.000000000 +0100
+@@ -18,7 +18,6 @@
+ #ifndef __XFS_MOUNT_H__
+ #define	__XFS_MOUNT_H__
  
--#: ../repair/incore.c:73
-+#: ../repair/incore.c:68
-+msgid "couldn't allocate block map locks\n"
-+msgstr "nie uda³o siê przydzieliæ blokad mapy bloków\n"
-+
-+#: ../repair/incore.c:76
- #, c-format
- msgid "couldn't allocate block map, size = %d\n"
- msgstr "nie uda³o siê przydzieliæ mapy bloków, rozmiar = %d\n"
- 
--#: ../repair/incore.c:90
-+#: ../repair/incore.c:94
- #, c-format
- msgid "couldn't allocate realtime block map, size = %llu\n"
- msgstr "nie uda³o siê przydzieliæ mapy bloków realtime, size = %llu\n"
- 
--#: ../repair/incore_ext.c:112 ../repair/incore_ext.c:666
-+#: ../repair/incore_ext.c:121 ../repair/incore_ext.c:679
- msgid "couldn't allocate new extent descriptors.\n"
- msgstr "nie uda³o siê przydzieliæ nowych deskryptorów fragmentów.\n"
- 
--#: ../repair/incore_ext.c:242
-+#: ../repair/incore_ext.c:254
- msgid "duplicate bno extent range\n"
- msgstr "powtórzony przedzia³ fragmentów bno\n"
- 
--#: ../repair/incore_ext.c:379
-+#: ../repair/incore_ext.c:391
- msgid ":  duplicate bno extent range\n"
- msgstr ": powtórzony przedzia³ fragmentów bno\n"
- 
--#: ../repair/incore_ext.c:543 ../repair/incore_ext.c:594
--#: ../repair/incore_ext.c:779 ../repair/incore_ext.c:831
-+#: ../repair/incore_ext.c:555 ../repair/incore_ext.c:606
-+#: ../repair/incore_ext.c:794 ../repair/incore_ext.c:849
- msgid "duplicate extent range\n"
- msgstr "powtórzony przedzia³ fragmentów\n"
- 
--#: ../repair/incore_ext.c:880
-+#: ../repair/incore_ext.c:907
- msgid "couldn't malloc dup extent tree descriptor table\n"
- msgstr "nie uda³o siê przydzieliæ tablicy deskryptorów drzewa powtórzonych fragmentów\n"
- 
--#: ../repair/incore_ext.c:885
-+#: ../repair/incore_ext.c:912
- msgid "couldn't malloc free by-bno extent tree descriptor table\n"
- msgstr "nie uda³o siê przydzieliæ tablicy deskryptorów drzewa wolnych fragmentów wg bno\n"
- 
--#: ../repair/incore_ext.c:890
-+#: ../repair/incore_ext.c:917
- msgid "couldn't malloc free by-bcnt extent tree descriptor table\n"
- msgstr "nie uda³o siê przydzieliæ tablicy deskryptorów drzewa wolnych fragmentów wg bcnt\n"
- 
--#: ../repair/incore_ext.c:896
-+#: ../repair/incore_ext.c:923
- msgid "couldn't malloc dup extent tree descriptor\n"
- msgstr "nie uda³o siê przydzieliæ deskryptora drzewa powtórzonych fragmentów\n"
- 
--#: ../repair/incore_ext.c:900
-+#: ../repair/incore_ext.c:927
- msgid "couldn't malloc bno extent tree descriptor\n"
- msgstr "nie uda³o siê przydzieliæ deskryptora drzewa fragmentów wg bno\n"
- 
--#: ../repair/incore_ext.c:904
-+#: ../repair/incore_ext.c:931
- msgid "couldn't malloc bcnt extent tree descriptor\n"
- msgstr "nie uda³o siê przydzieliæ deskryptora drzewa fragmentów wg bcnt\n"
- 
--#: ../repair/incore_ext.c:914
-+#: ../repair/incore_ext.c:941
- msgid "couldn't malloc dup rt extent tree descriptor\n"
- msgstr "nie uda³o siê przydzieliæ deskryptora drzewa powtórzonych fragmentów rt\n"
- 
--#: ../repair/incore_ino.c:77
-+#: ../repair/incore_ino.c:196 ../repair/incore_ino.c:205
-+#: ../repair/incore_ino.c:222 ../repair/incore_ino.c:231
-+msgid "could not allocate expanded nlink array\n"
-+msgstr "Nie uda³o siê przydzieliæ rozszerzonej tablicy nlink\n"
-+
-+#: ../repair/incore_ino.c:268
- msgid "inode map malloc failed\n"
- msgstr "przydzielenie mapy i-wêz³ów nie powiod³o siê\n"
- 
--#: ../repair/incore_ino.c:190
-+#: ../repair/incore_ino.c:298
-+msgid "could not allocate nlink array\n"
-+msgstr "Nie uda³o siê przydzieliæ tablicy nlink\n"
-+
-+#: ../repair/incore_ino.c:390
- msgid "add_aginode_uncertain - duplicate inode range\n"
- msgstr "add_aginode_uncertain - powtórzony przedzia³ i-wêz³ów\n"
- 
--#: ../repair/incore_ino.c:292
-+#: ../repair/incore_ino.c:488
- msgid "add_inode - duplicate inode range\n"
- msgstr "add_inode - powtórzony przedzia³ i-wêz³ów\n"
- 
--#: ../repair/incore_ino.c:386
-+#: ../repair/incore_ino.c:579
- #, c-format
- msgid "good inode list is --\n"
- msgstr "lista dobrych i-wêz³ów to:\n"
- 
--#: ../repair/incore_ino.c:389
-+#: ../repair/incore_ino.c:582
- #, c-format
- msgid "uncertain inode list is --\n"
- msgstr "lista niepewnych i-wêz³ów to:\n"
- 
--#: ../repair/incore_ino.c:394
-+#: ../repair/incore_ino.c:587
- #, c-format
- msgid "agno %d -- no inodes\n"
- msgstr "agno %d - brak i-wêz³ów\n"
- 
--#: ../repair/incore_ino.c:398
-+#: ../repair/incore_ino.c:591
- #, c-format
- msgid "agno %d\n"
- msgstr "agno %d\n"
- 
--#: ../repair/incore_ino.c:402
-+#: ../repair/incore_ino.c:595
- #, c-format
- msgid "\tptr = %lx, start = 0x%x, free = 0x%llx, confirmed = 0x%llx\n"
- msgstr "\tptr = %lx, start = 0x%x, wolne = 0x%llx, potwierdzone = 0x%llx\n"
- 
--#: ../repair/incore_ino.c:446
-+#: ../repair/incore_ino.c:646
- msgid "couldn't malloc parent list table\n"
- msgstr "nie uda³o siê przydzieliæ tablicy listy rodziców\n"
- 
--#: ../repair/incore_ino.c:452 ../repair/incore_ino.c:498
-+#: ../repair/incore_ino.c:657 ../repair/incore_ino.c:703
- msgid "couldn't memalign pentries table\n"
- msgstr "nie uda³o siê memalign na tablicy pentries\n"
- 
--#: ../repair/incore_ino.c:558
--msgid "could not malloc back pointer table\n"
--msgstr "nie uda³o siê przydzieliæ tablicy wska¼ników wstecz\n"
-+#: ../repair/incore_ino.c:761 ../repair/incore_ino.c:767
-+msgid "could not malloc inode extra data\n"
-+msgstr "nie uda³o siê przydzieliæ dodatkowych danych i-wêz³a\n"
- 
--#: ../repair/incore_ino.c:648
-+#: ../repair/incore_ino.c:815
- msgid "couldn't malloc inode tree descriptor table\n"
- msgstr "nie uda³o siê przydzieliæ tablicy deskryptorów drzewa i-wêz³ów\n"
- 
--#: ../repair/incore_ino.c:652
-+#: ../repair/incore_ino.c:819
- msgid "couldn't malloc uncertain ino tree descriptor table\n"
- msgstr "nie uda³o siê przydzieliæ tablicy deskryptorów drzewa i-wêz³ów niepewnych\n"
- 
--#: ../repair/incore_ino.c:657
-+#: ../repair/incore_ino.c:824
- msgid "couldn't malloc inode tree descriptor\n"
- msgstr "nie uda³o siê przydzieliæ deskryptora drzewa i-wêz³ów\n"
- 
--#: ../repair/incore_ino.c:661
-+#: ../repair/incore_ino.c:828
- msgid "couldn't malloc uncertain ino tree descriptor\n"
- msgstr "nie uda³o siê przydzieliæ deskryptora drzewa i-wêz³ów niepewnych\n"
- 
--#: ../repair/incore_ino.c:672
-+#: ../repair/incore_ino.c:839
- msgid "couldn't malloc uncertain inode cache area\n"
- msgstr "nie uda³o siê przydzieliæ obszaru pamiêci podrêcznej i-wêz³ów niepewnych\n"
- 
--#: ../repair/init.c:38
-+#: ../repair/init.c:42
- msgid "ts_alloc: cannot allocate thread specific storage\n"
- msgstr "ts_alloc: nie mo¿na przydzieliæ miejsca dla w±tku\n"
- 
--#: ../repair/init.c:137
-+#: ../repair/init.c:146
- msgid "couldn't initialize XFS library\n"
- msgstr "nie uda³o siê zainicjowaæ biblioteki XFS\n"
- 
-@@ -6924,39 +6996,66 @@ msgstr "nie uda
- msgid "Phase 1 - find and verify superblock...\n"
- msgstr "Faza 1 - szukanie i sprawdzanie superbloku...\n"
- 
--#: ../repair/phase1.c:75
-+#: ../repair/phase1.c:74
- msgid "error reading primary superblock\n"
- msgstr "b³±d podczas odczytu g³ównego superbloku\n"
- 
--#: ../repair/phase1.c:81
-+#: ../repair/phase1.c:80
- #, c-format
- msgid "bad primary superblock - %s !!!\n"
- msgstr "b³êdny g³ówny superblok - %s!!!\n"
- 
--#: ../repair/phase1.c:88
-+#: ../repair/phase1.c:87
- #, c-format
- msgid "couldn't verify primary superblock - %s !!!\n"
- msgstr "nie uda³o siê sprawdziæ g³ównego superbloku - %s!!!\n"
- 
--#: ../repair/phase1.c:97
-+#: ../repair/phase1.c:105
-+msgid "superblock has a features2 mismatch, correcting\n"
-+msgstr "superblok ma niepasuj±ce features2, poprawianie\n"
-+
-+#: ../repair/phase1.c:121
-+#, c-format
-+msgid "Enabling lazy-counters\n"
-+msgstr "W³±czanie leniwych liczników\n"
-+
-+#: ../repair/phase1.c:125
-+#, c-format
-+msgid "Disabling lazy-counters\n"
-+msgstr "Wy³±czanie leniwych liczników\n"
-+
-+#: ../repair/phase1.c:128
-+#, c-format
-+msgid "Lazy-counters are already %s\n"
-+msgstr "Leniwe liczniki ju¿ s± %s\n"
-+
-+#: ../repair/phase1.c:129
-+msgid "enabled"
-+msgstr "w³±czone"
-+
-+#: ../repair/phase1.c:129
-+msgid "disabled"
-+msgstr "wy³±czone"
-+
-+#: ../repair/phase1.c:136
- msgid "writing modified primary superblock\n"
- msgstr "zapisano zmodyfikowany g³ówny superblok\n"
- 
--#: ../repair/phase1.c:100
-+#: ../repair/phase1.c:139
- msgid "would write modified primary superblock\n"
- msgstr "zmodyfikowany g³ówny superblok zosta³by zapisany\n"
- 
--#: ../repair/phase2.c:54
-+#: ../repair/phase2.c:65
- #, c-format
- msgid "zero_log: cannot find log head/tail (xlog_find_tail=%d), zeroing it anyway\n"
- msgstr "zero_log: nie znaleziono pocz±tku/koñca loga (xlog_find_tail=%d), wyzerowano go\n"
- 
--#: ../repair/phase2.c:59
-+#: ../repair/phase2.c:70
- #, c-format
- msgid "zero_log: head block %lld tail block %lld\n"
- msgstr "zero_log: blok pocz±tku %lld blok koñca %lld\n"
- 
--#: ../repair/phase2.c:65
-+#: ../repair/phase2.c:76
- msgid ""
- "ALERT: The filesystem has valuable metadata changes in a log which is being\n"
- "destroyed because the -L option was used.\n"
-@@ -6964,7 +7063,7 @@ msgstr ""
- "UWAGA: system plików zawiera warto¶ciowe zmiany metadanych w logu, który jest\n"
- "niszczony, poniewa¿ u¿yto opcji -L.\n"
- 
--#: ../repair/phase2.c:69
-+#: ../repair/phase2.c:80
- msgid ""
- "ERROR: The filesystem has valuable metadata changes in a log which needs to\n"
- "be replayed.  Mount the filesystem to replay the log, and unmount it before\n"
-@@ -6981,449 +7080,401 @@ msgstr ""
- "Nale¿y zauwa¿yæ, ¿e zniszczenie loga mo¿e spowodowaæ uszkodzenia danych -\n"
- "proszê najpierw spróbowaæ podmontowaæ system plików.\n"
- 
--#: ../repair/phase2.c:111
-+#: ../repair/phase2.c:122
- msgid "This filesystem has an external log.  Specify log device with the -l option.\n"
- msgstr "Ten system plików ma zewnêtrzny log. Nale¿y podaæ urz±dzenie loga przy u¿yciu opcji -l.\n"
- 
--#: ../repair/phase2.c:114
-+#: ../repair/phase2.c:125
- #, c-format
- msgid "Phase 2 - using external log on %s\n"
- msgstr "Faza 2 - u¿ycie zewnêtrznego loga na %s\n"
- 
--#: ../repair/phase2.c:116
-+#: ../repair/phase2.c:127
- msgid "Phase 2 - using internal log\n"
- msgstr "Faza 2 - u¿ycie wewnêtrznego loga\n"
- 
--#: ../repair/phase2.c:120
-+#: ../repair/phase2.c:131
- msgid "        - zero log...\n"
- msgstr "        - zerowanie loga...\n"
- 
--#: ../repair/phase2.c:124
-+#: ../repair/phase2.c:135
- msgid "        - scan filesystem freespace and inode maps...\n"
- msgstr "        - przeszukiwanie wolnego miejsca i map i-wêz³ów w systemie plików...\n"
- 
--#: ../repair/phase2.c:147
-+#: ../repair/phase2.c:162
- msgid "root inode chunk not found\n"
- msgstr "nie znaleziono danych g³ównego i-wêz³a\n"
- 
--#: ../repair/phase2.c:169
-+#: ../repair/phase2.c:184
- msgid "        - found root inode chunk\n"
- msgstr "        - znaleziono dane g³ównego i-wêz³a\n"
- 
--#: ../repair/phase2.c:175
-+#: ../repair/phase2.c:190
- msgid "root inode marked free, "
- msgstr "g³ówny i-wêze³ oznaczony jako wolny, "
- 
--#: ../repair/phase2.c:184
-+#: ../repair/phase2.c:199
- msgid "realtime bitmap inode marked free, "
- msgstr "i-wêze³ bitmapy realtime oznaczony jako wolny, "
- 
--#: ../repair/phase2.c:193
-+#: ../repair/phase2.c:208
- msgid "realtime summary inode marked free, "
- msgstr "i-wêze³ opisu realtime oznaczony jako wolny, "
- 
--#: ../repair/phase3.c:113
-+#: ../repair/phase3.c:117
- #, c-format
- msgid "cannot read agi block %lld for ag %u\n"
- msgstr "nie mo¿na odczytaæ bloku agi %lld dla ag %u\n"
- 
--#: ../repair/phase3.c:136
-+#: ../repair/phase3.c:140
- #, c-format
- msgid "error following ag %d unlinked list\n"
- msgstr "b³±d podczas pod±¿ania za od³±czon± list± ag %d\n"
- 
--#: ../repair/phase3.c:151
-+#: ../repair/phase3.c:161 ../repair/phase4.c:125 ../repair/phase5.c:1468
-+#: ../repair/phase6.c:3844
-+#, c-format
-+msgid "        - agno = %d\n"
-+msgstr "        - agno = %d\n"
-+
-+#: ../repair/phase3.c:212
- msgid "Phase 3 - for each AG...\n"
- msgstr "Faza 3 - dla ka¿dej AG...\n"
- 
--#: ../repair/phase3.c:153
-+#: ../repair/phase3.c:214
- msgid "        - scan and clear agi unlinked lists...\n"
- msgstr "        - przeszukiwanie i czyszczenie od³±czonych list agi...\n"
- 
--#: ../repair/phase3.c:155
-+#: ../repair/phase3.c:216
- msgid "        - scan (but don't clear) agi unlinked lists...\n"
- msgstr "        - przeszukiwanie (ale nie czyszczenie) od³±czonych list agi...\n"
- 
--#: ../repair/phase3.c:171
-+#: ../repair/phase3.c:236
- msgid "        - process known inodes and perform inode discovery...\n"
- msgstr "        - przetwarzanie znanych i-wêz³ów i rozpoznawanie i-wêz³ów...\n"
- 
--#: ../repair/phase3.c:174 ../repair/phase4.c:1328 ../repair/phase6.c:3827
--#: ../repair/phase7.c:75
--#, c-format
--msgid "        - agno = %d\n"
--msgstr "        - agno = %d\n"
 -
--#: ../repair/phase3.c:185
-+#: ../repair/phase3.c:247
- msgid "        - process newly discovered inodes...\n"
- msgstr "        - przetwarzanie nowo rozpoznanych i-wêz³ów...\n"
+ typedef struct xfs_trans_reservations {
+ 	uint	tr_write;	/* extent alloc trans */
+ 	uint	tr_itruncate;	/* truncate trans */
+@@ -52,6 +51,8 @@
  
--#: ../repair/phase4.c:128 ../repair/phase4.c:594
--#, c-format
--msgid "couldn't read %s inode %llu\n"
--msgstr "nie uda³o siê odczytaæ i-wêz³a %s %llu\n"
+ #else /* __KERNEL__ */
+ 
++#include "xfs_sync.h"
++
+ struct cred;
+ struct log;
+ struct xfs_mount_args;
+@@ -62,6 +63,7 @@
+ struct xfs_swapext;
+ struct xfs_mru_cache;
+ struct xfs_nameops;
++struct xfs_ail;
+ 
+ /*
+  * Prototypes and functions for the Data Migration subsystem.
+@@ -115,7 +117,7 @@
+ 
+ typedef int	(*xfs_qminit_t)(struct xfs_mount *, uint *, uint *);
+ typedef int	(*xfs_qmmount_t)(struct xfs_mount *, uint, uint);
+-typedef int	(*xfs_qmunmount_t)(struct xfs_mount *);
++typedef void	(*xfs_qmunmount_t)(struct xfs_mount *);
+ typedef void	(*xfs_qmdone_t)(struct xfs_mount *);
+ typedef void	(*xfs_dqrele_t)(struct xfs_dquot *);
+ typedef int	(*xfs_dqattach_t)(struct xfs_inode *, uint);
+@@ -132,7 +134,7 @@
+ 			struct xfs_dquot **, struct xfs_dquot *);
+ typedef int	(*xfs_dqvopchownresv_t)(struct xfs_trans *, struct xfs_inode *,
+ 			struct xfs_dquot *, struct xfs_dquot *, uint);
+-typedef void	(*xfs_dqstatvfs_t)(struct xfs_inode *, bhv_statvfs_t *);
++typedef void	(*xfs_dqstatvfs_t)(struct xfs_inode *, struct kstatfs *);
+ typedef int	(*xfs_dqsync_t)(struct xfs_mount *, int flags);
+ typedef int	(*xfs_quotactl_t)(struct xfs_mount *, int, int, xfs_caddr_t);
+ 
+@@ -223,18 +225,10 @@
+ #define xfs_icsb_sync_counters_locked(mp, flags) do { } while (0)
+ #endif
+ 
+-typedef struct xfs_ail {
+-	struct list_head	xa_ail;
+-	uint			xa_gen;
+-	struct task_struct	*xa_task;
+-	xfs_lsn_t		xa_target;
+-} xfs_ail_t;
 -
--#: ../repair/phase4.c:153 ../repair/phase4.c:336 ../repair/phase4.c:619
--#: ../repair/phase4.c:817
--#, c-format
--msgid "        - clearing existing \"%s\" inode\n"
--msgstr "        - czyszczenie istniej±cego i-wêz³± \"%s\"\n"
+ typedef struct xfs_mount {
+ 	struct super_block	*m_super;
+ 	xfs_tid_t		m_tid;		/* next unused tid for fs */
+-	spinlock_t		m_ail_lock;	/* fs AIL mutex */
+-	xfs_ail_t		m_ail;		/* fs active log item list */
++	struct xfs_ail		*m_ail;		/* fs active log item list */
+ 	xfs_sb_t		m_sb;		/* copy of fs superblock */
+ 	spinlock_t		m_sb_lock;	/* sb counter lock */
+ 	struct xfs_buf		*m_sb_bp;	/* buffer for superblock */
+@@ -247,10 +241,6 @@
+ 	xfs_agnumber_t		m_agirotor;	/* last ag dir inode alloced */
+ 	spinlock_t		m_agirotor_lock;/* .. and lock protecting it */
+ 	xfs_agnumber_t		m_maxagi;	/* highest inode alloc group */
+-	struct xfs_inode	*m_inodes;	/* active inode list */
+-	struct list_head	m_del_inodes;	/* inodes to reclaim */
+-	mutex_t			m_ilock;	/* inode list mutex */
+-	uint			m_ireclaims;	/* count of calls to reclaim*/
+ 	uint			m_readio_log;	/* min read size log bytes */
+ 	uint			m_readio_blocks; /* min read size blocks */
+ 	uint			m_writeio_log;	/* min write size log bytes */
+@@ -311,9 +301,6 @@
+ 	int			m_sinoalign;	/* stripe unit inode alignment */
+ 	int			m_attr_magicpct;/* 37% of the blocksize */
+ 	int			m_dir_magicpct;	/* 37% of the dir blocksize */
+-	__uint8_t		m_mk_sharedro;	/* mark shared ro on unmount */
+-	__uint8_t		m_inode_quiesce;/* call quiesce on new inodes.
+-						   field governed by m_ilock */
+ 	__uint8_t		m_sectbb_log;	/* sectlog - BBSHIFT */
+ 	const struct xfs_nameops *m_dirnameops;	/* vector of dir name ops */
+ 	int			m_dirblksize;	/* directory block sz--bytes */
+@@ -340,7 +327,6 @@
+ 	spinlock_t		m_sync_lock;	/* work item list lock */
+ 	int			m_sync_seq;	/* sync thread generation no. */
+ 	wait_queue_head_t	m_wait_single_sync_task;
+-	struct vfsmount		*m_vfsmount;
+ } xfs_mount_t;
+ 
+ /*
+@@ -362,7 +348,6 @@
+ #define XFS_MOUNT_ATTR2		(1ULL << 8)	/* allow use of attr2 format */
+ #define XFS_MOUNT_GRPID		(1ULL << 9)	/* group-ID assigned from directory */
+ #define XFS_MOUNT_NORECOVERY	(1ULL << 10)	/* no recovery - dirty fs */
+-#define XFS_MOUNT_SHARED	(1ULL << 11)	/* shared mount */
+ #define XFS_MOUNT_DFLT_IOSIZE	(1ULL << 12)	/* set default i/o size */
+ #define XFS_MOUNT_OSYNCISOSYNC	(1ULL << 13)	/* o_sync is REALLY o_sync */
+ 						/* osyncisdsync is now default*/
+@@ -439,6 +424,16 @@
+ #define xfs_force_shutdown(m,f)	\
+ 	xfs_do_force_shutdown(m, f, __FILE__, __LINE__)
+ 
++#define SHUTDOWN_META_IO_ERROR	0x0001	/* write attempt to metadata failed */
++#define SHUTDOWN_LOG_IO_ERROR	0x0002	/* write attempt to the log failed */
++#define SHUTDOWN_FORCE_UMOUNT	0x0004	/* shutdown from a forced unmount */
++#define SHUTDOWN_CORRUPT_INCORE	0x0008	/* corrupt in-memory data structures */
++#define SHUTDOWN_REMOTE_REQ	0x0010	/* shutdown came from remote cell */
++#define SHUTDOWN_DEVICE_REQ	0x0020	/* failed all paths to the device */
++
++#define xfs_test_for_freeze(mp)		((mp)->m_super->s_frozen)
++#define xfs_wait_for_freeze(mp,l)	vfs_check_frozen((mp)->m_super, (l))
++
+ /*
+  * Flags for xfs_mountfs
+  */
+@@ -514,7 +509,6 @@
+ 
+ extern void	xfs_unmountfs(xfs_mount_t *);
+ extern int	xfs_unmountfs_writesb(xfs_mount_t *);
+-extern int	xfs_unmount_flush(xfs_mount_t *, int);
+ extern int	xfs_mod_incore_sb(xfs_mount_t *, xfs_sb_field_t, int64_t, int);
+ extern int	xfs_mod_incore_sb_unlocked(xfs_mount_t *, xfs_sb_field_t,
+ 			int64_t, int);
+@@ -524,13 +518,11 @@
+ extern int	xfs_readsb(xfs_mount_t *, int);
+ extern void	xfs_freesb(xfs_mount_t *);
+ extern int	xfs_fs_writable(xfs_mount_t *);
+-extern int	xfs_syncsub(xfs_mount_t *, int, int *);
+-extern int	xfs_sync_inodes(xfs_mount_t *, int, int *);
+ extern int	xfs_sb_validate_fsb_count(struct xfs_sb *, __uint64_t);
+ 
+-extern int	xfs_dmops_get(struct xfs_mount *, struct xfs_mount_args *);
++extern int	xfs_dmops_get(struct xfs_mount *);
+ extern void	xfs_dmops_put(struct xfs_mount *);
+-extern int	xfs_qmops_get(struct xfs_mount *, struct xfs_mount_args *);
++extern int	xfs_qmops_get(struct xfs_mount *);
+ extern void	xfs_qmops_put(struct xfs_mount *);
+ 
+ extern struct xfs_dmops xfs_dmcore_xfs;
+Index: xfs-cmds/xfsprogs/include/xfs_quota.h
+===================================================================
+--- xfs-cmds.orig/xfsprogs/include/xfs_quota.h	2008-12-06 20:05:46.000000000 +0100
++++ xfs-cmds/xfsprogs/include/xfs_quota.h	2008-12-06 20:05:49.000000000 +0100
+@@ -84,11 +84,9 @@
+ #define XFS_DQ_USER		0x0001		/* a user quota */
+ #define XFS_DQ_PROJ		0x0002		/* project quota */
+ #define XFS_DQ_GROUP		0x0004		/* a group quota */
+-#define XFS_DQ_FLOCKED		0x0008		/* flush lock taken */
+-#define XFS_DQ_DIRTY		0x0010		/* dquot is dirty */
+-#define XFS_DQ_WANT		0x0020		/* for lookup/reclaim race */
+-#define XFS_DQ_INACTIVE		0x0040		/* dq off mplist & hashlist */
+-#define XFS_DQ_MARKER		0x0080		/* sentinel */
++#define XFS_DQ_DIRTY		0x0008		/* dquot is dirty */
++#define XFS_DQ_WANT		0x0010		/* for lookup/reclaim race */
++#define XFS_DQ_INACTIVE		0x0020		/* dq off mplist & hashlist */
+ 
+ #define XFS_DQ_ALLTYPES		(XFS_DQ_USER|XFS_DQ_PROJ|XFS_DQ_GROUP)
+ 
+Index: xfs-cmds/xfsprogs/include/xfs_sb.h
+===================================================================
+--- xfs-cmds.orig/xfsprogs/include/xfs_sb.h	2008-12-06 20:05:46.000000000 +0100
++++ xfs-cmds/xfsprogs/include/xfs_sb.h	2008-12-06 20:05:49.000000000 +0100
+@@ -297,30 +297,34 @@
+ 
+ #define	XFS_SB_VERSION_NUM(sbp)	((sbp)->sb_versionnum & XFS_SB_VERSION_NUMBITS)
+ 
+-#ifdef __KERNEL__
+ static inline int xfs_sb_good_version(xfs_sb_t *sbp)
+ {
+-	return (((sbp->sb_versionnum >= XFS_SB_VERSION_1) && \
+-		  (sbp->sb_versionnum <= XFS_SB_VERSION_3)) || \
+-		   ((XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) && \
+-		    !((sbp->sb_versionnum & ~XFS_SB_VERSION_OKREALBITS) || \
+-		      ((sbp->sb_versionnum & XFS_SB_VERSION_MOREBITSBIT) && \
+-		       (sbp->sb_features2 & ~XFS_SB_VERSION2_OKREALBITS))) && \
+-	  	    (sbp->sb_shared_vn <= XFS_SB_MAX_SHARED_VN)));
+-}
++	/* We always support version 1-3 */
++	if (sbp->sb_versionnum >= XFS_SB_VERSION_1 &&
++	    sbp->sb_versionnum <= XFS_SB_VERSION_3)
++		return 1;
++
++	/* We support version 4 if all feature bits are supported */
++	if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) {
++		if ((sbp->sb_versionnum & ~XFS_SB_VERSION_OKREALBITS) ||
++		    ((sbp->sb_versionnum & XFS_SB_VERSION_MOREBITSBIT) &&
++		     (sbp->sb_features2 & ~XFS_SB_VERSION2_OKREALBITS)))
++			return 0;
++
++#ifdef __KERNEL__
++		if (sbp->sb_shared_vn > XFS_SB_MAX_SHARED_VN)
++			return 0;
+ #else
+-static inline int xfs_sb_good_version(xfs_sb_t *sbp)
+-{
+-	return (((sbp->sb_versionnum >= XFS_SB_VERSION_1) && \
+-		  (sbp->sb_versionnum <= XFS_SB_VERSION_3)) || \
+-		   ((XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) && \
+-		    !((sbp->sb_versionnum & ~XFS_SB_VERSION_OKREALBITS) || \
+-		      ((sbp->sb_versionnum & XFS_SB_VERSION_MOREBITSBIT) && \
+-		       (sbp->sb_features2 & ~XFS_SB_VERSION2_OKREALBITS))) && \
+-		  (!(sbp->sb_versionnum & XFS_SB_VERSION_SHAREDBIT) || \
+-		   (sbp->sb_shared_vn <= XFS_SB_MAX_SHARED_VN))));
++		if ((sbp->sb_versionnum & XFS_SB_VERSION_SHAREDBIT) &&
++		    sbp->sb_shared_vn > XFS_SB_MAX_SHARED_VN)
++			return 0;
++#endif
++
++		return 1;
++	}
++
++	return 0;
+ }
+-#endif /* __KERNEL__ */
+ 
+ /*
+  * Detect a mismatched features2 field.  Older kernels read/wrote
+@@ -333,123 +337,127 @@
+ 
+ static inline unsigned xfs_sb_version_tonew(unsigned v)
+ {
+-	return ((((v) == XFS_SB_VERSION_1) ? \
+-		0 : \
+-		(((v) == XFS_SB_VERSION_2) ? \
+-			XFS_SB_VERSION_ATTRBIT : \
+-			(XFS_SB_VERSION_ATTRBIT | XFS_SB_VERSION_NLINKBIT))) | \
+-		XFS_SB_VERSION_4);
++	if (v == XFS_SB_VERSION_1)
++		return XFS_SB_VERSION_4;
++
++	if (v == XFS_SB_VERSION_2)
++		return XFS_SB_VERSION_4 | XFS_SB_VERSION_ATTRBIT;
++
++	return XFS_SB_VERSION_4 | XFS_SB_VERSION_ATTRBIT |
++		XFS_SB_VERSION_NLINKBIT;
+ }
+ 
+ static inline unsigned xfs_sb_version_toold(unsigned v)
+ {
+-	return (((v) & (XFS_SB_VERSION_QUOTABIT | XFS_SB_VERSION_ALIGNBIT)) ? \
+-		0 : \
+-		(((v) & XFS_SB_VERSION_NLINKBIT) ? \
+-			XFS_SB_VERSION_3 : \
+-			(((v) & XFS_SB_VERSION_ATTRBIT) ?  \
+-				XFS_SB_VERSION_2 : \
+-				XFS_SB_VERSION_1)));
++	if (v & (XFS_SB_VERSION_QUOTABIT | XFS_SB_VERSION_ALIGNBIT))
++		return 0;
++	if (v & XFS_SB_VERSION_NLINKBIT)
++		return XFS_SB_VERSION_3;
++	if (v & XFS_SB_VERSION_ATTRBIT)
++		return XFS_SB_VERSION_2;
++	return XFS_SB_VERSION_1;
+ }
+ 
+ static inline int xfs_sb_version_hasattr(xfs_sb_t *sbp)
+ {
+-	return ((sbp)->sb_versionnum == XFS_SB_VERSION_2) || \
+-		 ((sbp)->sb_versionnum == XFS_SB_VERSION_3) || \
+-		 ((XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) && \
+-		  ((sbp)->sb_versionnum & XFS_SB_VERSION_ATTRBIT));
++	return sbp->sb_versionnum == XFS_SB_VERSION_2 ||
++		sbp->sb_versionnum == XFS_SB_VERSION_3 ||
++		(XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
++		 (sbp->sb_versionnum & XFS_SB_VERSION_ATTRBIT));
+ }
+ 
+ static inline void xfs_sb_version_addattr(xfs_sb_t *sbp)
+ {
+-	(sbp)->sb_versionnum = (((sbp)->sb_versionnum == XFS_SB_VERSION_1) ? \
+-		XFS_SB_VERSION_2 : \
+-		((XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) ? \
+-			((sbp)->sb_versionnum | XFS_SB_VERSION_ATTRBIT) : \
+-			(XFS_SB_VERSION_4 | XFS_SB_VERSION_ATTRBIT)));
++	if (sbp->sb_versionnum == XFS_SB_VERSION_1)
++		sbp->sb_versionnum = XFS_SB_VERSION_2;
++	else if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4)
++		sbp->sb_versionnum |= XFS_SB_VERSION_ATTRBIT;
++	else
++		sbp->sb_versionnum = XFS_SB_VERSION_4 | XFS_SB_VERSION_ATTRBIT;
+ }
+ 
+ static inline int xfs_sb_version_hasnlink(xfs_sb_t *sbp)
+ {
+-	return ((sbp)->sb_versionnum == XFS_SB_VERSION_3) || \
+-		 ((XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) && \
+-		  ((sbp)->sb_versionnum & XFS_SB_VERSION_NLINKBIT));
++	return sbp->sb_versionnum == XFS_SB_VERSION_3 ||
++		 (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
++		  (sbp->sb_versionnum & XFS_SB_VERSION_NLINKBIT));
+ }
+ 
+ static inline void xfs_sb_version_addnlink(xfs_sb_t *sbp)
+ {
+-	(sbp)->sb_versionnum = ((sbp)->sb_versionnum <= XFS_SB_VERSION_2 ? \
+-		XFS_SB_VERSION_3 : \
+-		((sbp)->sb_versionnum | XFS_SB_VERSION_NLINKBIT));
++	if (sbp->sb_versionnum <= XFS_SB_VERSION_2)
++		sbp->sb_versionnum = XFS_SB_VERSION_3;
++	else
++		sbp->sb_versionnum |= XFS_SB_VERSION_NLINKBIT;
+ }
+ 
+ static inline int xfs_sb_version_hasquota(xfs_sb_t *sbp)
+ {
+-	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) && \
+-		((sbp)->sb_versionnum & XFS_SB_VERSION_QUOTABIT);
++	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
++		(sbp->sb_versionnum & XFS_SB_VERSION_QUOTABIT);
+ }
+ 
+ static inline void xfs_sb_version_addquota(xfs_sb_t *sbp)
+ {
+-	(sbp)->sb_versionnum = \
+-		 (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 ? \
+-			((sbp)->sb_versionnum | XFS_SB_VERSION_QUOTABIT) : \
+-			(xfs_sb_version_tonew((sbp)->sb_versionnum) | \
+-			 XFS_SB_VERSION_QUOTABIT));
++	if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4)
++		sbp->sb_versionnum |= XFS_SB_VERSION_QUOTABIT;
++	else
++		sbp->sb_versionnum = xfs_sb_version_tonew(sbp->sb_versionnum) |
++					XFS_SB_VERSION_QUOTABIT;
+ }
+ 
+ static inline int xfs_sb_version_hasalign(xfs_sb_t *sbp)
+ {
+-	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) && \
+-		((sbp)->sb_versionnum & XFS_SB_VERSION_ALIGNBIT);
++	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
++		(sbp->sb_versionnum & XFS_SB_VERSION_ALIGNBIT);
+ }
+ 
+ static inline int xfs_sb_version_hasdalign(xfs_sb_t *sbp)
+ {
+-	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) && \
+-		((sbp)->sb_versionnum & XFS_SB_VERSION_DALIGNBIT);
++	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
++		(sbp->sb_versionnum & XFS_SB_VERSION_DALIGNBIT);
+ }
+ 
+ static inline int xfs_sb_version_hasshared(xfs_sb_t *sbp)
+ {
+-	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) && \
+-		((sbp)->sb_versionnum & XFS_SB_VERSION_SHAREDBIT);
++	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
++		(sbp->sb_versionnum & XFS_SB_VERSION_SHAREDBIT);
+ }
+ 
+ static inline int xfs_sb_version_hasdirv2(xfs_sb_t *sbp)
+ {
+-	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) && \
+-		((sbp)->sb_versionnum & XFS_SB_VERSION_DIRV2BIT);
++	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
++		(sbp->sb_versionnum & XFS_SB_VERSION_DIRV2BIT);
+ }
+ 
+ static inline int xfs_sb_version_haslogv2(xfs_sb_t *sbp)
+ {
+-	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) && \
+-		((sbp)->sb_versionnum & XFS_SB_VERSION_LOGV2BIT);
++	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
++		(sbp->sb_versionnum & XFS_SB_VERSION_LOGV2BIT);
+ }
+ 
+ static inline int xfs_sb_version_hasextflgbit(xfs_sb_t *sbp)
+ {
+-	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) && \
+-		((sbp)->sb_versionnum & XFS_SB_VERSION_EXTFLGBIT);
++	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
++		(sbp->sb_versionnum & XFS_SB_VERSION_EXTFLGBIT);
+ }
+ 
+ static inline int xfs_sb_version_hassector(xfs_sb_t *sbp)
+ {
+-	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) && \
+-		((sbp)->sb_versionnum & XFS_SB_VERSION_SECTORBIT);
++	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
++		(sbp->sb_versionnum & XFS_SB_VERSION_SECTORBIT);
+ }
+ 
+ static inline int xfs_sb_version_hasasciici(xfs_sb_t *sbp)
+ {
+-	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) && \
++	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
+ 		(sbp->sb_versionnum & XFS_SB_VERSION_BORGBIT);
+ }
+ 
+ static inline int xfs_sb_version_hasmorebits(xfs_sb_t *sbp)
+ {
+-	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) && \
+-		((sbp)->sb_versionnum & XFS_SB_VERSION_MOREBITSBIT);
++	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
++		(sbp->sb_versionnum & XFS_SB_VERSION_MOREBITSBIT);
+ }
+ 
+ /*
+@@ -464,22 +472,20 @@
+ 
+ static inline int xfs_sb_version_haslazysbcount(xfs_sb_t *sbp)
+ {
+-	return (xfs_sb_version_hasmorebits(sbp) &&	\
+-		((sbp)->sb_features2 & XFS_SB_VERSION2_LAZYSBCOUNTBIT));
++	return xfs_sb_version_hasmorebits(sbp) &&
++		(sbp->sb_features2 & XFS_SB_VERSION2_LAZYSBCOUNTBIT);
+ }
+ 
+ static inline int xfs_sb_version_hasattr2(xfs_sb_t *sbp)
+ {
+-	return (xfs_sb_version_hasmorebits(sbp)) &&	\
+-		((sbp)->sb_features2 & XFS_SB_VERSION2_ATTR2BIT);
++	return xfs_sb_version_hasmorebits(sbp) &&
++		(sbp->sb_features2 & XFS_SB_VERSION2_ATTR2BIT);
+ }
+ 
+ static inline void xfs_sb_version_addattr2(xfs_sb_t *sbp)
+ {
+-	((sbp)->sb_versionnum =	\
+-		((sbp)->sb_versionnum | XFS_SB_VERSION_MOREBITSBIT),	\
+-	((sbp)->sb_features2 =	\
+-		((sbp)->sb_features2 | XFS_SB_VERSION2_ATTR2BIT)));
++	sbp->sb_versionnum |= XFS_SB_VERSION_MOREBITSBIT;
++	sbp->sb_features2 |= XFS_SB_VERSION2_ATTR2BIT;
+ }
+ 
+ static inline void xfs_sb_version_removeattr2(xfs_sb_t *sbp)
+Index: xfs-cmds/xfsprogs/include/xfs_trans.h
+===================================================================
+--- xfs-cmds.orig/xfsprogs/include/xfs_trans.h	2008-12-06 20:05:46.000000000 +0100
++++ xfs-cmds/xfsprogs/include/xfs_trans.h	2008-12-06 20:05:49.000000000 +0100
+@@ -768,6 +768,7 @@
+ 	xfs_lsn_t			li_lsn;		/* last on-disk lsn */
+ 	struct xfs_log_item_desc	*li_desc;	/* ptr to current desc*/
+ 	struct xfs_mount		*li_mountp;	/* ptr to fs mount */
++	struct xfs_ail			*li_ailp;	/* ptr to AIL */
+ 	uint				li_type;	/* item type */
+ 	uint				li_flags;	/* misc flags */
+ 	struct xfs_log_item		*li_bio_list;	/* buffer item list */
+@@ -970,10 +971,6 @@
+ void		xfs_trans_cancel(xfs_trans_t *, int);
+ int		xfs_trans_ail_init(struct xfs_mount *);
+ void		xfs_trans_ail_destroy(struct xfs_mount *);
+-void		xfs_trans_push_ail(struct xfs_mount *, xfs_lsn_t);
+-xfs_lsn_t	xfs_trans_tail_ail(struct xfs_mount *);
+-void		xfs_trans_unlocked_item(struct xfs_mount *,
+-					xfs_log_item_t *);
+ xfs_log_busy_slot_t *xfs_trans_add_busy(xfs_trans_t *tp,
+ 					xfs_agnumber_t ag,
+ 					xfs_extlen_t idx);
+Index: xfs-cmds/xfsprogs/db/bmap.c
+===================================================================
+--- xfs-cmds.orig/xfsprogs/db/bmap.c	2008-12-06 20:05:46.000000000 +0100
++++ xfs-cmds/xfsprogs/db/bmap.c	2008-12-06 20:05:49.000000000 +0100
+@@ -171,9 +171,9 @@
+ 		push_cur();
+ 		set_cur_inode(iocur_top->ino);
+ 		dip = iocur_top->data;
+-		if (be32_to_cpu(dip->di_core.di_nextents))
++		if (dip->di_nextents)
+ 			dfork = 1;
+-		if (be16_to_cpu(dip->di_core.di_anextents))
++		if (dip->di_anextents)
+ 			afork = 1;
+ 		pop_cur();
+ 	}
+Index: xfs-cmds/xfsprogs/db/check.c
+===================================================================
+--- xfs-cmds.orig/xfsprogs/db/check.c	2008-12-06 20:05:46.000000000 +0100
++++ xfs-cmds/xfsprogs/db/check.c	2008-12-06 20:05:49.000000000 +0100
+@@ -2502,23 +2502,23 @@
+ 	inodata_t	*id,
+ 	xfs_ino_t	*parent)
+ {
+-	xfs_fsize_t	size = be64_to_cpu(dip->di_core.di_size);
++	xfs_fsize_t	size = be64_to_cpu(dip->di_size);
+ 
+ 	if (size <= XFS_DFORK_DSIZE(dip, mp) && 
+-				dip->di_core.di_format == XFS_DINODE_FMT_LOCAL)
++				dip->di_format == XFS_DINODE_FMT_LOCAL)
+ 		*parent = process_shortform_dir_v1(dip, dot, dotdot, id);
+ 	else if (size == XFS_LBSIZE(mp) &&
+-			(dip->di_core.di_format == XFS_DINODE_FMT_EXTENTS ||
+-			dip->di_core.di_format == XFS_DINODE_FMT_BTREE))
++			(dip->di_format == XFS_DINODE_FMT_EXTENTS ||
++			dip->di_format == XFS_DINODE_FMT_BTREE))
+ 		*parent = process_leaf_dir_v1(blkmap, dot, dotdot, id);
+ 	else if (size >= XFS_LBSIZE(mp) &&
+-			(dip->di_core.di_format == XFS_DINODE_FMT_EXTENTS ||
+-			dip->di_core.di_format == XFS_DINODE_FMT_BTREE))
++			(dip->di_format == XFS_DINODE_FMT_EXTENTS ||
++			dip->di_format == XFS_DINODE_FMT_BTREE))
+ 		*parent = process_node_dir_v1(blkmap, dot, dotdot, id);
+ 	else  {
+ 		dbprintf("bad size (%lld) or format (%d) for directory inode "
+ 			 "%lld\n",
+-			size, dip->di_core.di_format, id->ino);
++			size, dip->di_format, id->ino);
+ 		error++;
+ 		return 1;
+ 	}
+@@ -2535,25 +2535,25 @@
+ 	xfs_ino_t	*parent)
+ {
+ 	xfs_fileoff_t	last = 0;
+-	xfs_fsize_t	size = be64_to_cpu(dip->di_core.di_size);
++	xfs_fsize_t	size = be64_to_cpu(dip->di_size);
+ 
+ 	if (blkmap)
+ 		last = blkmap_last_off(blkmap);
+ 	if (size <= XFS_DFORK_DSIZE(dip, mp) &&
+-				dip->di_core.di_format == XFS_DINODE_FMT_LOCAL)
++				dip->di_format == XFS_DINODE_FMT_LOCAL)
+ 		*parent = process_sf_dir_v2(dip, dot, dotdot, id);
+ 	else if (last == mp->m_dirblkfsbs &&
+-			(dip->di_core.di_format == XFS_DINODE_FMT_EXTENTS ||
+-			dip->di_core.di_format == XFS_DINODE_FMT_BTREE))
++			(dip->di_format == XFS_DINODE_FMT_EXTENTS ||
++			dip->di_format == XFS_DINODE_FMT_BTREE))
+ 		*parent = process_block_dir_v2(blkmap, dot, dotdot, id);
+ 	else if (last >= mp->m_dirleafblk + mp->m_dirblkfsbs &&
+-			(dip->di_core.di_format == XFS_DINODE_FMT_EXTENTS ||
+-			dip->di_core.di_format == XFS_DINODE_FMT_BTREE))
++			(dip->di_format == XFS_DINODE_FMT_EXTENTS ||
++			dip->di_format == XFS_DINODE_FMT_BTREE))
+ 		*parent = process_leaf_node_dir_v2(blkmap, dot, dotdot, id, size);
+ 	else  {
+ 		dbprintf("bad size (%lld) or format (%d) for directory inode "
+ 			 "%lld\n",
+-			size, dip->di_core.di_format, id->ino);
++			size, dip->di_format, id->ino);
+ 		error++;
+ 		return 1;
+ 	}
+@@ -2639,7 +2639,7 @@
+ 		"dev", "local", "extents", "btree", "uuid"
+ 	};
+ 
+-	libxfs_dinode_from_disk(&idic, &dip->di_core);
++	libxfs_dinode_from_disk(&idic, dip);
+ 
+ 	ino = XFS_AGINO_TO_INO(mp, be32_to_cpu(agf->agf_seqno), agino);
+ 	if (!isfree) {
+@@ -2669,7 +2669,7 @@
+ 					idic.di_nblocks, ino);
+ 			error++;
+ 		}
+-		if (idic.di_version == XFS_DINODE_VERSION_1)
++		if (idic.di_version == 1)
+ 			nlink = idic.di_onlink;
+ 		else
+ 			nlink = idic.di_nlink;
+@@ -2773,7 +2773,7 @@
+ 		type = DBM_UNKNOWN;
+ 		break;
+ 	}
+-	if (idic.di_version == XFS_DINODE_VERSION_1)
++	if (idic.di_version == 1)
+ 		setlink_inode(id, idic.di_onlink, type == DBM_DIR, security);
+ 	else {
+ 		sbversion |= XFS_SB_VERSION_NLINKBIT;
+@@ -2901,12 +2901,12 @@
+ 	xfs_fsblock_t		bno;
+ 
+ 	bno = XFS_INO_TO_FSB(mp, id->ino);
+-	if (whichfork == XFS_DATA_FORK && be64_to_cpu(dip->di_core.di_size) >
++	if (whichfork == XFS_DATA_FORK && be64_to_cpu(dip->di_size) >
+ 						XFS_DFORK_DSIZE(dip, mp)) {
+ 		if (!sflag || id->ilist || CHECK_BLIST(bno))
+ 			dbprintf("local inode %lld data is too large (size "
+ 				 "%lld)\n",
+-				id->ino, be64_to_cpu(dip->di_core.di_size));
++				id->ino, be64_to_cpu(dip->di_size));
+ 		error++;
+ 	}
+ 	else if (whichfork == XFS_ATTR_FORK) {
+@@ -3638,7 +3638,7 @@
+ 	offset = XFS_DIR2_DATA_FIRST_OFFSET;
+ 	for (i = sf->hdr.count - 1, i8 = 0; i >= 0; i--) {
+ 		if ((__psint_t)sfe + xfs_dir2_sf_entsize_byentry(sf, sfe) -
+-		    (__psint_t)sf > be64_to_cpu(dip->di_core.di_size)) {
++		    (__psint_t)sf > be64_to_cpu(dip->di_size)) {
+ 			if (!sflag)
+ 				dbprintf("dir %llu bad size in entry at %d\n",
+ 					id->ino,
+@@ -3680,10 +3680,10 @@
+ 		sfe = xfs_dir2_sf_nextentry(sf, sfe);
+ 	}
+ 	if (i < 0 && (__psint_t)sfe - (__psint_t)sf != 
+-					be64_to_cpu(dip->di_core.di_size)) {
++					be64_to_cpu(dip->di_size)) {
+ 		if (!sflag)
+ 			dbprintf("dir %llu size is %lld, should be %u\n",
+-				id->ino, be64_to_cpu(dip->di_core.di_size),
++				id->ino, be64_to_cpu(dip->di_size),
+ 				(uint)((char *)sfe - (char *)sf));
+ 		error++;
+ 	}
+@@ -3760,9 +3760,9 @@
+ 				sfe->namelen, sfe->namelen, sfe->name, lino);
+ 		sfe = xfs_dir_sf_nextentry(sfe);
+ 	}
+-	if ((__psint_t)sfe - (__psint_t)sf != be64_to_cpu(dip->di_core.di_size))
++	if ((__psint_t)sfe - (__psint_t)sf != be64_to_cpu(dip->di_size))
+ 		dbprintf("dir %llu size is %lld, should be %d\n",
+-			id->ino, be64_to_cpu(dip->di_core.di_size),
++			id->ino, be64_to_cpu(dip->di_size),
+ 			(int)((char *)sfe - (char *)sf));
+ 	lino = XFS_GET_DIR_INO8(sf->hdr.parent);
+ 	cid = find_inode(lino, 1);
+Index: xfs-cmds/xfsprogs/db/dir2sf.c
+===================================================================
+--- xfs-cmds.orig/xfsprogs/db/dir2sf.c	2008-12-06 20:05:46.000000000 +0100
++++ xfs-cmds/xfsprogs/db/dir2sf.c	2008-12-06 20:05:49.000000000 +0100
+@@ -73,10 +73,10 @@
+ 	void		*obj,
+ 	int		startoff)
+ {
+-	xfs_dir2_sf_t	*sf;
++	xfs_dinode_t	*dip = obj;
++	xfs_dir2_sf_t	*sf = (xfs_dir2_sf_t *)XFS_DFORK_DPTR(dip);
+ 
+ 	ASSERT(bitoffs(startoff) == 0);
+-	sf = &((xfs_dinode_t *)obj)->di_u.di_dir2sf;
+ 	return sf->hdr.i8count == 0;
+ }
+ 
+@@ -86,10 +86,10 @@
+ 	void		*obj,
+ 	int		startoff)
+ {
+-	xfs_dir2_sf_t	*sf;
++	xfs_dinode_t	*dip = obj;
++	xfs_dir2_sf_t	*sf = (xfs_dir2_sf_t *)XFS_DFORK_DPTR(dip);
+ 
+ 	ASSERT(bitoffs(startoff) == 0);
+-	sf = &((xfs_dinode_t *)obj)->di_u.di_dir2sf;
+ 	return sf->hdr.i8count != 0;
+ }
+ 
+@@ -100,11 +100,11 @@
+ 	int		startoff,
+ 	int		idx)
+ {
+-	xfs_dir2_sf_t	*sf;
++	xfs_dinode_t	*dip = obj;
++	xfs_dir2_sf_t	*sf = (xfs_dir2_sf_t *)XFS_DFORK_DPTR(dip);
+ 
+ 	ASSERT(bitoffs(startoff) == 0);
+ 	ASSERT(idx == 0);
+-	sf = &((xfs_dinode_t *)obj)->di_u.di_dir2sf;
+ 	return bitize(sf->hdr.i8count ?
+ 		      (uint)sizeof(xfs_dir2_ino8_t) :
+ 		      (uint)sizeof(xfs_dir2_ino4_t));
+Index: xfs-cmds/xfsprogs/db/field.c
+===================================================================
+--- xfs-cmds.orig/xfsprogs/db/field.c	2008-12-06 20:05:46.000000000 +0100
++++ xfs-cmds/xfsprogs/db/field.c	2008-12-06 20:05:49.000000000 +0100
+@@ -150,8 +150,6 @@
+ 	  FTARG_DONULL, fa_dfsbno, NULL },
+ 	{ FLDT_DINODE_A, "dinode_a", NULL, (char *)inode_a_flds, inode_a_size,
+ 	  FTARG_SIZE|FTARG_OKEMPTY, NULL, inode_a_flds },
+-	{ FLDT_DINODE_CORE, "dinode_core", NULL, (char *)inode_core_flds,
+-	  SI(bitsz(xfs_dinode_core_t)), 0, NULL, inode_core_flds },
+ 	{ FLDT_DINODE_FMT, "dinode_fmt", fp_dinode_fmt, NULL,
+ 	  SI(bitsz(__int8_t)), 0, NULL, NULL },
+ 	{ FLDT_DINODE_U, "dinode_u", NULL, (char *)inode_u_flds, inode_u_size,
+Index: xfs-cmds/xfsprogs/db/field.h
+===================================================================
+--- xfs-cmds.orig/xfsprogs/db/field.h	2008-12-06 20:05:46.000000000 +0100
++++ xfs-cmds/xfsprogs/db/field.h	2008-12-06 20:05:49.000000000 +0100
+@@ -72,7 +72,6 @@
+ 	FLDT_DFILOFFD,
+ 	FLDT_DFSBNO,
+ 	FLDT_DINODE_A,
+-	FLDT_DINODE_CORE,
+ 	FLDT_DINODE_FMT,
+ 	FLDT_DINODE_U,
+ 	FLDT_DIR,
+Index: xfs-cmds/xfsprogs/db/frag.c
+===================================================================
+--- xfs-cmds.orig/xfsprogs/db/frag.c	2008-12-06 20:05:46.000000000 +0100
++++ xfs-cmds/xfsprogs/db/frag.c	2008-12-06 20:05:49.000000000 +0100
+@@ -308,20 +308,18 @@
+ 	xfs_dinode_t		*dip)
+ {
+ 	__uint64_t		actual;
+-	xfs_dinode_core_t	*dic;
+ 	__uint64_t		ideal;
+ 	xfs_ino_t		ino;
+ 	int			skipa;
+ 	int			skipd;
+ 
+-	dic = &dip->di_core;
+ 	ino = XFS_AGINO_TO_INO(mp, be32_to_cpu(agf->agf_seqno), agino);
+-	switch (be16_to_cpu(dic->di_mode) & S_IFMT) {
++	switch (be16_to_cpu(dip->di_mode) & S_IFMT) {
+ 	case S_IFDIR:
+ 		skipd = !dflag;
+ 		break;
+ 	case S_IFREG:
+-		if (!rflag && (be16_to_cpu(dic->di_flags) & XFS_DIFLAG_REALTIME))
++		if (!rflag && (be16_to_cpu(dip->di_flags) & XFS_DIFLAG_REALTIME))
+ 			skipd = 1;
+ 		else if (!Rflag &&
+ 			 (ino == mp->m_sb.sb_rbmino ||
+Index: xfs-cmds/xfsprogs/db/inode.c
+===================================================================
+--- xfs-cmds.orig/xfsprogs/db/inode.c	2008-12-06 20:05:46.000000000 +0100
++++ xfs-cmds/xfsprogs/db/inode.c	2008-12-06 20:05:49.000000000 +0100
+@@ -40,6 +40,7 @@
+ static int	inode_core_projid_count(void *obj, int startoff);
+ static int	inode_core_nlinkv1_count(void *obj, int startoff);
+ static int	inode_f(int argc, char **argv);
++static int	inode_u_offset(void *obj, int startoff, int idx);
+ static int	inode_u_bmbt_count(void *obj, int startoff);
+ static int	inode_u_bmx_count(void *obj, int startoff);
+ static int	inode_u_c_count(void *obj, int startoff);
+@@ -60,91 +61,85 @@
+ 
+ #define	OFF(f)	bitize(offsetof(xfs_dinode_t, di_ ## f))
+ const field_t	inode_flds[] = {
+-	{ "core", FLDT_DINODE_CORE, OI(OFF(core)), C1, 0, TYP_NONE },
+-	{ "next_unlinked", FLDT_AGINO, OI(OFF(next_unlinked)), C1, 0,
+-	  TYP_INODE },
+-	{ "u", FLDT_DINODE_U, OI(OFF(u)), C1, 0, TYP_NONE },
+-	{ "a", FLDT_DINODE_A, inode_a_offset, inode_a_count,
+-	  FLD_COUNT|FLD_OFFSET, TYP_NONE },
+-	{ NULL }
+-};
 -
--#: ../repair/phase4.c:185 ../repair/phase4.c:652
--#, c-format
--msgid "        - marking entry \"%s\" to be deleted\n"
--msgstr "        - zaznaczenie wpisu \"%s\" do usuniêcia\n"
+-#define	COFF(f)	bitize(offsetof(xfs_dinode_core_t, di_ ## f))
+-const field_t	inode_core_flds[] = {
+-	{ "magic", FLDT_UINT16X, OI(COFF(magic)), C1, 0, TYP_NONE },
+-	{ "mode", FLDT_UINT16O, OI(COFF(mode)), C1, 0, TYP_NONE },
+-	{ "version", FLDT_INT8D, OI(COFF(version)), C1, 0, TYP_NONE },
+-	{ "format", FLDT_DINODE_FMT, OI(COFF(format)), C1, 0, TYP_NONE },
+-	{ "nlinkv1", FLDT_UINT16D, OI(COFF(onlink)), inode_core_nlinkv1_count,
++	{ "magic", FLDT_UINT16X, OI(OFF(magic)), C1, 0, TYP_NONE },
++	{ "mode", FLDT_UINT16O, OI(OFF(mode)), C1, 0, TYP_NONE },
++	{ "version", FLDT_INT8D, OI(OFF(version)), C1, 0, TYP_NONE },
++	{ "format", FLDT_DINODE_FMT, OI(OFF(format)), C1, 0, TYP_NONE },
++	{ "nlinkv1", FLDT_UINT16D, OI(OFF(onlink)), inode_core_nlinkv1_count,
+ 	  FLD_COUNT, TYP_NONE },
+-	{ "nlinkv2", FLDT_UINT32D, OI(COFF(nlink)), inode_core_nlinkv2_count,
++	{ "nlinkv2", FLDT_UINT32D, OI(OFF(nlink)), inode_core_nlinkv2_count,
+ 	  FLD_COUNT, TYP_NONE },
+-	{ "onlink", FLDT_UINT16D, OI(COFF(onlink)), inode_core_onlink_count,
++	{ "onlink", FLDT_UINT16D, OI(OFF(onlink)), inode_core_onlink_count,
+ 	  FLD_COUNT, TYP_NONE },
+-	{ "projid", FLDT_UINT16D, OI(COFF(projid)), inode_core_projid_count,
++	{ "projid", FLDT_UINT16D, OI(OFF(projid)), inode_core_projid_count,
+ 	  FLD_COUNT, TYP_NONE },
+-	{ "uid", FLDT_UINT32D, OI(COFF(uid)), C1, 0, TYP_NONE },
+-	{ "gid", FLDT_UINT32D, OI(COFF(gid)), C1, 0, TYP_NONE },
+-	{ "flushiter", FLDT_UINT16D, OI(COFF(flushiter)), C1, 0, TYP_NONE },
+-	{ "atime", FLDT_TIMESTAMP, OI(COFF(atime)), C1, 0, TYP_NONE },
+-	{ "mtime", FLDT_TIMESTAMP, OI(COFF(mtime)), C1, 0, TYP_NONE },
+-	{ "ctime", FLDT_TIMESTAMP, OI(COFF(ctime)), C1, 0, TYP_NONE },
+-	{ "size", FLDT_FSIZE, OI(COFF(size)), C1, 0, TYP_NONE },
+-	{ "nblocks", FLDT_DRFSBNO, OI(COFF(nblocks)), C1, 0, TYP_NONE },
+-	{ "extsize", FLDT_EXTLEN, OI(COFF(extsize)), C1, 0, TYP_NONE },
+-	{ "nextents", FLDT_EXTNUM, OI(COFF(nextents)), C1, 0, TYP_NONE },
+-	{ "naextents", FLDT_AEXTNUM, OI(COFF(anextents)), C1, 0, TYP_NONE },
+-	{ "forkoff", FLDT_UINT8D, OI(COFF(forkoff)), C1, 0, TYP_NONE },
+-	{ "aformat", FLDT_DINODE_FMT, OI(COFF(aformat)), C1, 0, TYP_NONE },
+-	{ "dmevmask", FLDT_UINT32X, OI(COFF(dmevmask)), C1, 0, TYP_NONE },
+-	{ "dmstate", FLDT_UINT16D, OI(COFF(dmstate)), C1, 0, TYP_NONE },
+-	{ "flags", FLDT_UINT16X, OI(COFF(flags)), C1, FLD_SKIPALL, TYP_NONE },
++	{ "uid", FLDT_UINT32D, OI(OFF(uid)), C1, 0, TYP_NONE },
++	{ "gid", FLDT_UINT32D, OI(OFF(gid)), C1, 0, TYP_NONE },
++	{ "flushiter", FLDT_UINT16D, OI(OFF(flushiter)), C1, 0, TYP_NONE },
++	{ "atime", FLDT_TIMESTAMP, OI(OFF(atime)), C1, 0, TYP_NONE },
++	{ "mtime", FLDT_TIMESTAMP, OI(OFF(mtime)), C1, 0, TYP_NONE },
++	{ "ctime", FLDT_TIMESTAMP, OI(OFF(ctime)), C1, 0, TYP_NONE },
++	{ "size", FLDT_FSIZE, OI(OFF(size)), C1, 0, TYP_NONE },
++	{ "nblocks", FLDT_DRFSBNO, OI(OFF(nblocks)), C1, 0, TYP_NONE },
++	{ "extsize", FLDT_EXTLEN, OI(OFF(extsize)), C1, 0, TYP_NONE },
++	{ "nextents", FLDT_EXTNUM, OI(OFF(nextents)), C1, 0, TYP_NONE },
++	{ "naextents", FLDT_AEXTNUM, OI(OFF(anextents)), C1, 0, TYP_NONE },
++	{ "forkoff", FLDT_UINT8D, OI(OFF(forkoff)), C1, 0, TYP_NONE },
++	{ "aformat", FLDT_DINODE_FMT, OI(OFF(aformat)), C1, 0, TYP_NONE },
++	{ "dmevmask", FLDT_UINT32X, OI(OFF(dmevmask)), C1, 0, TYP_NONE },
++	{ "dmstate", FLDT_UINT16D, OI(OFF(dmstate)), C1, 0, TYP_NONE },
++	{ "flags", FLDT_UINT16X, OI(OFF(flags)), C1, FLD_SKIPALL, TYP_NONE },
+ 	{ "newrtbm", FLDT_UINT1,
+-	  OI(COFF(flags) + bitsz(__uint16_t) - XFS_DIFLAG_NEWRTBM_BIT - 1), C1,
++	  OI(OFF(flags) + bitsz(__uint16_t) - XFS_DIFLAG_NEWRTBM_BIT - 1), C1,
+ 	  0, TYP_NONE },
+ 	{ "prealloc", FLDT_UINT1,
+-	  OI(COFF(flags) + bitsz(__uint16_t) - XFS_DIFLAG_PREALLOC_BIT - 1), C1,
++	  OI(OFF(flags) + bitsz(__uint16_t) - XFS_DIFLAG_PREALLOC_BIT - 1), C1,
+ 	  0, TYP_NONE },
+ 	{ "realtime", FLDT_UINT1,
+-	  OI(COFF(flags) + bitsz(__uint16_t) - XFS_DIFLAG_REALTIME_BIT - 1), C1,
++	  OI(OFF(flags) + bitsz(__uint16_t) - XFS_DIFLAG_REALTIME_BIT - 1), C1,
+ 	  0, TYP_NONE },
+ 	{ "immutable", FLDT_UINT1,
+-	  OI(COFF(flags) + bitsz(__uint16_t) - XFS_DIFLAG_IMMUTABLE_BIT-1), C1,
++	  OI(OFF(flags) + bitsz(__uint16_t) - XFS_DIFLAG_IMMUTABLE_BIT-1), C1,
+ 	  0, TYP_NONE },
+ 	{ "append", FLDT_UINT1,
+-	  OI(COFF(flags) + bitsz(__uint16_t) - XFS_DIFLAG_APPEND_BIT - 1), C1,
++	  OI(OFF(flags) + bitsz(__uint16_t) - XFS_DIFLAG_APPEND_BIT - 1), C1,
+ 	  0, TYP_NONE },
+ 	{ "sync", FLDT_UINT1,
+-	  OI(COFF(flags) + bitsz(__uint16_t) - XFS_DIFLAG_SYNC_BIT - 1), C1,
++	  OI(OFF(flags) + bitsz(__uint16_t) - XFS_DIFLAG_SYNC_BIT - 1), C1,
+ 	  0, TYP_NONE },
+ 	{ "noatime", FLDT_UINT1,
+-	  OI(COFF(flags) + bitsz(__uint16_t) - XFS_DIFLAG_NOATIME_BIT - 1), C1,
++	  OI(OFF(flags) + bitsz(__uint16_t) - XFS_DIFLAG_NOATIME_BIT - 1), C1,
+ 	  0, TYP_NONE },
+ 	{ "nodump", FLDT_UINT1,
+-	  OI(COFF(flags) + bitsz(__uint16_t) - XFS_DIFLAG_NODUMP_BIT - 1), C1,
++	  OI(OFF(flags) + bitsz(__uint16_t) - XFS_DIFLAG_NODUMP_BIT - 1), C1,
+ 	  0, TYP_NONE },
+ 	{ "rtinherit", FLDT_UINT1,
+-	  OI(COFF(flags) + bitsz(__uint16_t) - XFS_DIFLAG_RTINHERIT_BIT-1), C1,
++	  OI(OFF(flags) + bitsz(__uint16_t) - XFS_DIFLAG_RTINHERIT_BIT-1), C1,
+ 	  0, TYP_NONE },
+ 	{ "projinherit", FLDT_UINT1,
+-	  OI(COFF(flags) + bitsz(__uint16_t) - XFS_DIFLAG_PROJINHERIT_BIT-1),C1,
++	  OI(OFF(flags) + bitsz(__uint16_t) - XFS_DIFLAG_PROJINHERIT_BIT-1),C1,
+ 	  0, TYP_NONE },
+ 	{ "nosymlinks", FLDT_UINT1,
+-	  OI(COFF(flags) + bitsz(__uint16_t) - XFS_DIFLAG_NOSYMLINKS_BIT-1), C1,
++	  OI(OFF(flags) + bitsz(__uint16_t) - XFS_DIFLAG_NOSYMLINKS_BIT-1), C1,
+ 	  0, TYP_NONE },
+ 	{ "extsz", FLDT_UINT1,
+-	  OI(COFF(flags) + bitsz(__uint16_t) - XFS_DIFLAG_EXTSIZE_BIT-1),C1,
++	  OI(OFF(flags) + bitsz(__uint16_t) - XFS_DIFLAG_EXTSIZE_BIT-1),C1,
+ 	  0, TYP_NONE },
+ 	{ "extszinherit", FLDT_UINT1,
+-	  OI(COFF(flags) + bitsz(__uint16_t) - XFS_DIFLAG_EXTSZINHERIT_BIT-1),C1,
++	  OI(OFF(flags) + bitsz(__uint16_t) - XFS_DIFLAG_EXTSZINHERIT_BIT-1),C1,
+ 	  0, TYP_NONE },
+ 	{ "nodefrag", FLDT_UINT1,
+-	  OI(COFF(flags) + bitsz(__uint16_t) - XFS_DIFLAG_NODEFRAG_BIT-1),C1,
++	  OI(OFF(flags) + bitsz(__uint16_t) - XFS_DIFLAG_NODEFRAG_BIT-1),C1,
+ 	  0, TYP_NONE },
+ 	{ "filestream", FLDT_UINT1,
+-	  OI(COFF(flags) + bitsz(__uint16_t) - XFS_DIFLAG_FILESTREAM_BIT-1),C1,
++	  OI(OFF(flags) + bitsz(__uint16_t) - XFS_DIFLAG_FILESTREAM_BIT-1),C1,
+ 	  0, TYP_NONE },
+-	{ "gen", FLDT_UINT32D, OI(COFF(gen)), C1, 0, TYP_NONE },
++	{ "gen", FLDT_UINT32D, OI(OFF(gen)), C1, 0, TYP_NONE },
++	{ "next_unlinked", FLDT_AGINO, OI(OFF(next_unlinked)), C1, 0,
++	  TYP_INODE },
++	{ "u", FLDT_DINODE_U, inode_u_offset, C1, FLD_OFFSET, TYP_NONE },
++	{ "a", FLDT_DINODE_A, inode_a_offset, inode_a_count,
++	  FLD_COUNT|FLD_OFFSET, TYP_NONE },
+ 	{ NULL }
+ };
+ 
+@@ -226,7 +221,7 @@
+ 	if (!XFS_DFORK_Q(dip))
+ 		return 0;
+ 	ASSERT((char *)XFS_DFORK_APTR(dip) - (char *)dip == byteize(startoff));
+-	return dip->di_core.di_aformat == XFS_DINODE_FMT_BTREE;
++	return dip->di_aformat == XFS_DINODE_FMT_BTREE;
+ }
+ 
+ static int
+@@ -242,8 +237,8 @@
+ 	if (!XFS_DFORK_Q(dip))
+ 		return 0;
+ 	ASSERT((char *)XFS_DFORK_APTR(dip) - (char *)dip == byteize(startoff));
+-	return dip->di_core.di_aformat == XFS_DINODE_FMT_EXTENTS ?
+-		be16_to_cpu(dip->di_core.di_anextents) : 0;
++	return dip->di_aformat == XFS_DINODE_FMT_EXTENTS ?
++		be16_to_cpu(dip->di_anextents) : 0;
+ }
+ 
+ static int
+@@ -251,10 +246,9 @@
+ 	void		*obj,
+ 	int		startoff)
+ {
+-	xfs_dinode_t	*dip;
++	xfs_dinode_t	*dip = obj;
+ 
+ 	ASSERT(startoff == 0);
+-	dip = obj;
+ 	return XFS_DFORK_Q(dip);
+ }
+ 
+@@ -264,11 +258,10 @@
+ 	int		startoff,
+ 	int		idx)
+ {
+-	xfs_dinode_t	*dip;
++	xfs_dinode_t	*dip = obj;
+ 
+ 	ASSERT(startoff == 0);
+ 	ASSERT(idx == 0);
+-	dip = obj;
+ 	ASSERT(XFS_DFORK_Q(dip));
+ 	return bitize((int)((char *)XFS_DFORK_APTR(dip) - (char *)dip));
+ }
+@@ -286,7 +279,7 @@
+ 	if (!XFS_DFORK_Q(dip))
+ 		return 0;
+ 	ASSERT((char *)XFS_DFORK_APTR(dip) - (char *)dip == byteize(startoff));
+-	return dip->di_core.di_aformat == XFS_DINODE_FMT_LOCAL;
++	return dip->di_aformat == XFS_DINODE_FMT_LOCAL;
+ }
+ 
+ int
+@@ -301,12 +294,12 @@
+ 	ASSERT(startoff == 0);
+ 	ASSERT(idx == 0);
+ 	dip = obj;
+-	switch (dip->di_core.di_aformat) {
++	switch (dip->di_aformat) {
+ 	case XFS_DINODE_FMT_LOCAL:
+ 		asf = (xfs_attr_shortform_t *)XFS_DFORK_APTR(dip);
+ 		return bitize(be16_to_cpu(asf->hdr.totsize));
+ 	case XFS_DINODE_FMT_EXTENTS:
+-		return (int)be16_to_cpu(dip->di_core.di_anextents) * 
++		return (int)be16_to_cpu(dip->di_anextents) *
+ 							bitsz(xfs_bmbt_rec_t);
+ 	case XFS_DINODE_FMT_BTREE:
+ 		return bitize((int)XFS_DFORK_ASIZE(dip, mp));
+@@ -320,12 +313,11 @@
+ 	void			*obj,
+ 	int			startoff)
+ {
+-	xfs_dinode_core_t	*dic;
++	xfs_dinode_t		*dip = obj;
+ 
+ 	ASSERT(startoff == 0);
+ 	ASSERT(obj == iocur_top->data);
+-	dic = obj;
+-	return dic->di_version == XFS_DINODE_VERSION_1;
++	return dip->di_version == 1;
+ }
+ 
+ static int
+@@ -333,12 +325,11 @@
+ 	void			*obj,
+ 	int			startoff)
+ {
+-	xfs_dinode_core_t	*dic;
++	xfs_dinode_t		*dip = obj;
+ 
+ 	ASSERT(startoff == 0);
+ 	ASSERT(obj == iocur_top->data);
+-	dic = obj;
+-	return dic->di_version == XFS_DINODE_VERSION_2;
++	return dip->di_version == 2;
+ }
+ 
+ static int
+@@ -346,12 +337,11 @@
+ 	void			*obj,
+ 	int			startoff)
+ {
+-	xfs_dinode_core_t	*dic;
++	xfs_dinode_t		*dip = obj;
+ 
+ 	ASSERT(startoff == 0);
+ 	ASSERT(obj == iocur_top->data);
+-	dic = obj;
+-	return dic->di_version == XFS_DINODE_VERSION_2;
++	return dip->di_version == 2;
+ }
+ 
+ static int
+@@ -359,12 +349,11 @@
+ 	void			*obj,
+ 	int			startoff)
+ {
+-	xfs_dinode_core_t	*dic;
++	xfs_dinode_t		*dip = obj;
+ 
+ 	ASSERT(startoff == 0);
+ 	ASSERT(obj == iocur_top->data);
+-	dic = obj;
+-	return dic->di_version == XFS_DINODE_VERSION_2;
++	return dip->di_version == 2;
+ }
+ 
+ static int
+@@ -428,17 +417,29 @@
+ }
+ 
+ static int
++inode_u_offset(
++	void		*obj,
++	int		startoff,
++	int		idx)
++{
++	xfs_dinode_t	*dip = obj;
++
++	ASSERT(startoff == 0);
++	ASSERT(idx == 0);
++	return bitize((int)((char *)XFS_DFORK_DPTR(dip) - (char *)dip));
++}
++
++static int
+ inode_u_bmbt_count(
+ 	void		*obj,
+ 	int		startoff)
+ {
+-	xfs_dinode_t	*dip;
++	xfs_dinode_t	*dip = obj;
+ 
+ 	ASSERT(bitoffs(startoff) == 0);
+ 	ASSERT(obj == iocur_top->data);
+-	dip = obj;
+-	ASSERT((char *)&dip->di_u - (char *)dip == byteize(startoff));
+-	return dip->di_core.di_format == XFS_DINODE_FMT_BTREE;
++	ASSERT(XFS_DFORK_DPTR(dip) - (char *)dip == byteize(startoff));
++	return dip->di_format == XFS_DINODE_FMT_BTREE;
+ }
+ 
+ static int
+@@ -446,14 +447,13 @@
+ 	void		*obj,
+ 	int		startoff)
+ {
+-	xfs_dinode_t	*dip;
++	xfs_dinode_t	*dip = obj;
+ 
+ 	ASSERT(bitoffs(startoff) == 0);
+ 	ASSERT(obj == iocur_top->data);
+-	dip = obj;
+-	ASSERT((char *)&dip->di_u - (char *)dip == byteize(startoff));
+-	return dip->di_core.di_format == XFS_DINODE_FMT_EXTENTS ?
+-		be32_to_cpu(dip->di_core.di_nextents) : 0;
++	ASSERT(XFS_DFORK_DPTR(dip) - (char *)dip == byteize(startoff));
++	return dip->di_format == XFS_DINODE_FMT_EXTENTS ?
++		be32_to_cpu(dip->di_nextents) : 0;
+ }
+ 
+ static int
+@@ -461,15 +461,14 @@
+ 	void		*obj,
+ 	int		startoff)
+ {
+-	xfs_dinode_t	*dip;
++	xfs_dinode_t	*dip = obj;
+ 
+ 	ASSERT(bitoffs(startoff) == 0);
+ 	ASSERT(obj == iocur_top->data);
+-	dip = obj;
+-	ASSERT((char *)&dip->di_u - (char *)dip == byteize(startoff));
+-	return dip->di_core.di_format == XFS_DINODE_FMT_LOCAL &&
+-	       (be16_to_cpu(dip->di_core.di_mode) & S_IFMT) == S_IFREG ?
+-		(int)be64_to_cpu(dip->di_core.di_size) : 0;
++	ASSERT(XFS_DFORK_DPTR(dip) - (char *)dip == byteize(startoff));
++	return dip->di_format == XFS_DINODE_FMT_LOCAL &&
++	       (be16_to_cpu(dip->di_mode) & S_IFMT) == S_IFREG ?
++		(int)be64_to_cpu(dip->di_size) : 0;
+ }
+ 
+ static int
+@@ -477,13 +476,12 @@
+ 	void		*obj,
+ 	int		startoff)
+ {
+-	xfs_dinode_t	*dip;
++	xfs_dinode_t	*dip = obj;
+ 
+ 	ASSERT(bitoffs(startoff) == 0);
+ 	ASSERT(obj == iocur_top->data);
+-	dip = obj;
+-	ASSERT((char *)&dip->di_u - (char *)dip == byteize(startoff));
+-	return dip->di_core.di_format == XFS_DINODE_FMT_DEV;
++	ASSERT(XFS_DFORK_DPTR(dip) - (char *)dip == byteize(startoff));
++	return dip->di_format == XFS_DINODE_FMT_DEV;
+ }
+ 
+ static int
+@@ -491,13 +489,12 @@
+ 	void		*obj,
+ 	int		startoff)
+ {
+-	xfs_dinode_t	*dip;
++	xfs_dinode_t	*dip = obj;
+ 
+ 	ASSERT(bitoffs(startoff) == 0);
+ 	ASSERT(obj == iocur_top->data);
+-	dip = obj;
+-	ASSERT((char *)&dip->di_u - (char *)dip == byteize(startoff));
+-	return dip->di_core.di_format == XFS_DINODE_FMT_UUID;
++	ASSERT(XFS_DFORK_DPTR(dip) - (char *)dip == byteize(startoff));
++	return dip->di_format == XFS_DINODE_FMT_UUID;
+ }
+ 
+ static int
+@@ -505,14 +502,13 @@
+ 	void		*obj,
+ 	int		startoff)
+ {
+-	xfs_dinode_t	*dip;
++	xfs_dinode_t	*dip = obj;
+ 
+ 	ASSERT(bitoffs(startoff) == 0);
+ 	ASSERT(obj == iocur_top->data);
+-	dip = obj;
+-	ASSERT((char *)&dip->di_u - (char *)dip == byteize(startoff));
+-	return dip->di_core.di_format == XFS_DINODE_FMT_LOCAL &&
+-	       (be16_to_cpu(dip->di_core.di_mode) & S_IFMT) == S_IFDIR
++	ASSERT(XFS_DFORK_DPTR(dip) - (char *)dip == byteize(startoff));
++	return dip->di_format == XFS_DINODE_FMT_LOCAL &&
++	       (be16_to_cpu(dip->di_mode) & S_IFMT) == S_IFDIR
+ 	       && !xfs_sb_version_hasdirv2(&mp->m_sb);
+ }
+ 
+@@ -521,14 +517,13 @@
+ 	void		*obj,
+ 	int		startoff)
+ {
+-	xfs_dinode_t	*dip;
++	xfs_dinode_t	*dip = obj;
+ 
+ 	ASSERT(bitoffs(startoff) == 0);
+ 	ASSERT(obj == iocur_top->data);
+-	dip = obj;
+-	ASSERT((char *)&dip->di_u - (char *)dip == byteize(startoff));
+-	return dip->di_core.di_format == XFS_DINODE_FMT_LOCAL &&
+-	       (be16_to_cpu(dip->di_core.di_mode) & S_IFMT) == S_IFDIR &&
++	ASSERT(XFS_DFORK_DPTR(dip) - (char *)dip == byteize(startoff));
++	return dip->di_format == XFS_DINODE_FMT_LOCAL &&
++	       (be16_to_cpu(dip->di_mode) & S_IFMT) == S_IFDIR &&
+ 	       xfs_sb_version_hasdirv2(&mp->m_sb);
+ }
+ 
+@@ -543,13 +538,13 @@
+ 	ASSERT(startoff == 0);
+ 	ASSERT(idx == 0);
+ 	dip = obj;
+-	switch (dip->di_core.di_format) {
++	switch (dip->di_format) {
+ 	case XFS_DINODE_FMT_DEV:
+ 		return bitsz(xfs_dev_t);
+ 	case XFS_DINODE_FMT_LOCAL:
+-		return bitize((int)be64_to_cpu(dip->di_core.di_size));
++		return bitize((int)be64_to_cpu(dip->di_size));
+ 	case XFS_DINODE_FMT_EXTENTS:
+-		return (int)be32_to_cpu(dip->di_core.di_nextents) * 
++		return (int)be32_to_cpu(dip->di_nextents) *
+ 						bitsz(xfs_bmbt_rec_t);
+ 	case XFS_DINODE_FMT_BTREE:
+ 		return bitize((int)XFS_DFORK_DSIZE(dip, mp));
+@@ -565,15 +560,14 @@
+ 	void		*obj,
+ 	int		startoff)
+ {
+-	xfs_dinode_t	*dip;
++	xfs_dinode_t	*dip = obj;
+ 
+ 	ASSERT(bitoffs(startoff) == 0);
+ 	ASSERT(obj == iocur_top->data);
+-	dip = obj;
+-	ASSERT((char *)&dip->di_u - (char *)dip == byteize(startoff));
+-	return dip->di_core.di_format == XFS_DINODE_FMT_LOCAL &&
+-	       (be16_to_cpu(dip->di_core.di_mode) & S_IFMT) == S_IFLNK ?
+-		(int)be64_to_cpu(dip->di_core.di_size) : 0;
++	ASSERT(XFS_DFORK_DPTR(dip) - (char *)dip == byteize(startoff));
++	return dip->di_format == XFS_DINODE_FMT_LOCAL &&
++	       (be16_to_cpu(dip->di_mode) & S_IFMT) == S_IFLNK ?
++		(int)be64_to_cpu(dip->di_size) : 0;
+ }
+ 
+ void
+@@ -609,7 +603,7 @@
+ 	off_cur(offset << mp->m_sb.sb_inodelog, mp->m_sb.sb_inodesize);
+ 	dip = iocur_top->data;
+ 	iocur_top->ino = ino;
+-	iocur_top->mode = be16_to_cpu(dip->di_core.di_mode);
++	iocur_top->mode = be16_to_cpu(dip->di_mode);
+ 	if ((iocur_top->mode & S_IFMT) == S_IFDIR)
+ 		iocur_top->dirino = ino;
+ 
+Index: xfs-cmds/xfsprogs/db/inode.h
+===================================================================
+--- xfs-cmds.orig/xfsprogs/db/inode.h	2008-12-06 20:05:46.000000000 +0100
++++ xfs-cmds/xfsprogs/db/inode.h	2008-12-06 20:05:49.000000000 +0100
+@@ -17,7 +17,7 @@
+  */
+ 
+ extern const struct field	inode_a_flds[];
+-extern const struct field	inode_core_flds[];
++extern const struct field	inode_flds[];
+ extern const struct field	inode_flds[];
+ extern const struct field	inode_hfld[];
+ extern const struct field	inode_u_flds[];
+Index: xfs-cmds/xfsprogs/db/metadump.c
+===================================================================
+--- xfs-cmds.orig/xfsprogs/db/metadump.c	2008-12-06 20:05:46.000000000 +0100
++++ xfs-cmds/xfsprogs/db/metadump.c	2008-12-06 20:05:49.000000000 +0100
+@@ -501,8 +501,8 @@
+ 	__uint64_t		ino_dir_size;
+ 	int			i;
+ 
+-	sfp = &dip->di_u.di_dir2sf;
+-	ino_dir_size = be64_to_cpu(dip->di_core.di_size);
++	sfp = (xfs_dir2_sf_t *)XFS_DFORK_DPTR(dip);
++	ino_dir_size = be64_to_cpu(dip->di_size);
+ 	if (ino_dir_size > XFS_DFORK_DSIZE(dip, mp)) {
+ 		ino_dir_size = XFS_DFORK_DSIZE(dip, mp);
+ 		if (show_warnings)
+@@ -554,8 +554,9 @@
+ 	xfs_dinode_t		*dip)
+ {
+ 	__uint64_t		len;
++	char			*symlink = XFS_DFORK_DPTR(dip);
+ 
+-	len = be64_to_cpu(dip->di_core.di_size);
++	len = be64_to_cpu(dip->di_size);
+ 	if (len > XFS_DFORK_DSIZE(dip, mp)) {
+ 		if (show_warnings)
+ 			print_warning("invalid size (%d) in symlink inode %llu",
+@@ -564,7 +565,7 @@
+ 	}
+ 
+ 	while (len > 0)
+-		dip->di_u.di_symlink[--len] = random() % 127 + 1;
++		symlink[--len] = random() % 127 + 1;
+ }
+ 
+ static void
+@@ -1142,27 +1143,24 @@
+ 	xfs_dinode_t		*dip,
+ 	typnm_t			itype)
+ {
+-	switch (dip->di_core.di_format) {
+-		case XFS_DINODE_FMT_LOCAL:
+-			if (!dont_obfuscate)
+-				switch (itype) {
+-					case TYP_DIR2:
+-						obfuscate_sf_dir(dip);
+-						break;
 -
--#: ../repair/phase4.c:213
--#, c-format
--msgid "couldn't map first leaf block of directory inode %llu\n"
--msgstr "nie uda³o siê odwzorowaæ pierwszego bloku li¶cia i-wêz³a katalogu %llu\n"
+-					case TYP_SYMLINK:
+-						obfuscate_sf_symlink(dip);
+-						break;
 -
--#: ../repair/phase4.c:242
--#, c-format
--msgid "bad magic # (0x%x) for directory leaf block (bno %u fsbno %llu)\n"
--msgstr "b³êdna liczba magiczna (0x%x) dla bloku li¶cia katalogu (bno %u fsbno %llu)\n"
+-					default: ;
+-				}
+-			break;
 -
--#: ../repair/phase4.c:379 ../repair/phase4.c:860
--#, c-format
--msgid "could not read %s inode %llu\n"
--msgstr "nie uda³o siê odczytaæ i-wêz³a %s %llu\n"
+-		case XFS_DINODE_FMT_EXTENTS:
+-			return process_exinode(dip, itype);
 -
--#: ../repair/phase4.c:430 ../repair/phase4.c:912
--#, c-format
--msgid "        - deleting existing \"%s\" entry\n"
--msgstr "        - usuwanie istniej±cego wpisu \"%s\"\n"
+-		case XFS_DINODE_FMT_BTREE:
+-			return process_btinode(dip, itype);
++	switch (dip->di_format) {
++	case XFS_DINODE_FMT_LOCAL:
++		if (!dont_obfuscate)
++			switch (itype) {
++			case TYP_DIR2:
++				obfuscate_sf_dir(dip);
++				break;
++			case TYP_SYMLINK:
++				obfuscate_sf_symlink(dip);
++				break;
++			default:
++				;
++		}
++		break;
++	case XFS_DINODE_FMT_EXTENTS:
++		return process_exinode(dip, itype);
++	case XFS_DINODE_FMT_BTREE:
++		return process_btinode(dip, itype);
+ 	}
+ 	return 1;
+ }
+@@ -1179,7 +1177,7 @@
+ 	cur_ino = XFS_AGINO_TO_INO(mp, agno, agino);
+ 
+ 	/* copy appropriate data fork metadata */
+-	switch (be16_to_cpu(dip->di_core.di_mode) & S_IFMT) {
++	switch (be16_to_cpu(dip->di_mode) & S_IFMT) {
+ 		case S_IFDIR:
+ 			memset(&dir_data, 0, sizeof(dir_data));
+ 			success = process_inode_data(dip, TYP_DIR2);
+@@ -1197,7 +1195,7 @@
+ 	/* copy extended attributes if they exist and forkoff is valid */
+ 	if (success && XFS_DFORK_DSIZE(dip, mp) < XFS_LITINO(mp)) {
+ 		attr_data.remote_val_count = 0;
+-		switch (dip->di_core.di_aformat) {
++		switch (dip->di_aformat) {
+ 			case XFS_DINODE_FMT_LOCAL:
+ 				if (!dont_obfuscate)
+ 					obfuscate_sf_attr(dip);
+Index: xfs-cmds/xfsprogs/libxfs/util.c
+===================================================================
+--- xfs-cmds.orig/xfsprogs/libxfs/util.c	2008-12-06 20:05:45.000000000 +0100
++++ xfs-cmds/xfsprogs/libxfs/util.c	2008-12-06 20:05:49.000000000 +0100
+@@ -47,126 +47,6 @@
+ }
+ 
+ /*
+- * Given a mount structure and an inode number, return a pointer
+- * to a newly allocated in-core inode coresponding to the given
+- * inode number.
+- *
+- * Initialize the inode's attributes and extent pointers if it
+- * already has them (it will not if the inode has no links).
+- *
+- * NOTE: this has slightly different behaviour to the kernel in
+- * that this version requires the already allocated *ip being 
+- * passed in while the kernel version does the allocation and 
+- * returns it in **ip.
+- */
+-int
+-libxfs_iread(
+-	xfs_mount_t     *mp,
+-	xfs_trans_t	*tp,
+-	xfs_ino_t	ino,
+-	xfs_inode_t	*ip,
+-	xfs_daddr_t	bno)
+-{
+-	xfs_buf_t	*bp;
+-	xfs_dinode_t	*dip;
+-	int		error;
 -
--#: ../repair/phase4.c:684
--#, c-format
--msgid "malloc failed (%u bytes) in longform2_delete_orphanage, ino %llu\n"
--msgstr "malloc nie powiod³o siê (%u bajtów) w longform2_delete_orphanage, i-wêze³ %llu\n"
+-	ip->i_ino = ino;
+-	ip->i_mount = mp;
 -
--#: ../repair/phase4.c:728
--#, c-format
--msgid "bad magic # (0x%x) for directory data block (bno %u fsbno %llu)\n"
--msgstr "b³êdna liczba magiczna (0x%x) dla bloku danych katalogu (bno %u fsbno %llu)\n"
+-	/*
+-	 * Get pointer's to the on-disk inode and the buffer containing it.
+-	 * If the inode number refers to a block outside the file system
+-	 * then xfs_itobp() will return NULL.  In this case we should
+-	 * return NULL as well.  Set i_blkno to 0 so that xfs_itobp() will
+-	 * know that this is a new incore inode.
+-	 */
+-	error = xfs_itobp(mp, tp, ip, &dip, &bp, bno, 0, XFS_BUF_LOCK);
+-	if (error) 
+-		return error;
 -
--#: ../repair/phase4.c:988
--#, c-format
--msgid "could not read buffer for root inode %llu (daddr %lld, size %d)\n"
--msgstr "nie uda³o siê odczytaæ bufora dla g³ównego i-wêz³a %llu (daddr %lld, rozmiar %d)\n"
+-	/*
+-	 * If we got something that isn't an inode it means someone
+-	 * (nfs or dmi) has a stale handle.
+-	 */
+-	if (be16_to_cpu(dip->di_core.di_magic) != XFS_DINODE_MAGIC) {
+-		xfs_trans_brelse(tp, bp);
+-		return EINVAL;
+-	}
 -
--#: ../repair/phase4.c:1034
--#, c-format
--msgid "unknown version #%d in root inode\n"
--msgstr "nieznana wersja #%d w g³ównym i-wê¼le\n"
+-	/*
+-	 * If the on-disk inode is already linked to a directory
+-	 * entry, copy all of the inode into the in-core inode.
+-	 * xfs_iformat() handles copying in the inode format
+-	 * specific information.
+-	 * Otherwise, just get the truly permanent information.
+-	 */
+-	if (dip->di_core.di_mode) {
+-		xfs_dinode_from_disk(&ip->i_d, &dip->di_core);
+-		error = xfs_iformat(ip, dip);
+-		if (error)  {
+-			xfs_trans_brelse(tp, bp);
+-			return error;
+-		}
+-	} else {
+-		ip->i_d.di_magic = be16_to_cpu(dip->di_core.di_magic);
+-		ip->i_d.di_version = dip->di_core.di_version;
+-		ip->i_d.di_gen = be32_to_cpu(dip->di_core.di_gen);
+-		ip->i_d.di_flushiter = be16_to_cpu(dip->di_core.di_flushiter);
+-		/*
+-		 * Make sure to pull in the mode here as well in
+-		 * case the inode is released without being used.
+-		 * This ensures that xfs_inactive() will see that
+-		 * the inode is already free and not try to mess
+-		 * with the uninitialized part of it.
+-		 */
+-		ip->i_d.di_mode = 0;
+-		/*
+-		 * Initialize the per-fork minima and maxima for a new
+-		 * inode here.  xfs_iformat will do it for old inodes.
+-		 */
+-		ip->i_df.if_ext_max =
+-			XFS_IFORK_DSIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t);
+-	}
 -
--#: ../repair/phase4.c:1141
-+#: ../repair/phase4.c:205
- msgid "Phase 4 - check for duplicate blocks...\n"
- msgstr "Faza 4 - sprawdzanie powtórzonych bloków...\n"
- 
--#: ../repair/phase4.c:1142
-+#: ../repair/phase4.c:206
- msgid "        - setting up duplicate extent list...\n"
- msgstr "        - tworzenie listy powtórzonych fragmentów...\n"
- 
--#: ../repair/phase4.c:1154
-+#: ../repair/phase4.c:220
- msgid "root inode would be lost\n"
- msgstr "g³ówny i-wêze³ zosta³by utracony\n"
- 
--#: ../repair/phase4.c:1156
-+#: ../repair/phase4.c:222
- msgid "root inode lost\n"
- msgstr "g³ówny i-wêze³ utracony\n"
- 
--#: ../repair/phase4.c:1164
--msgid "        - clear lost+found (if it exists) ...\n"
--msgstr "        - czyszczenie lost+found (je¶li istnieje)...\n"
+-	/*
+-	 * The inode format changed when we moved the link count and
+-	 * made it 32 bits long.  If this is an old format inode,
+-	 * convert it in memory to look like a new one.  If it gets
+-	 * flushed to disk we will convert back before flushing or
+-	 * logging it.  We zero out the new projid field and the old link
+-	 * count field.  We'll handle clearing the pad field (the remains
+-	 * of the old uuid field) when we actually convert the inode to
+-	 * the new format. We don't change the version number so that we
+-	 * can distinguish this from a real new format inode.
+-	 */
+-	if (ip->i_d.di_version == XFS_DINODE_VERSION_1) {
+-		ip->i_d.di_nlink = ip->i_d.di_onlink;
+-		ip->i_d.di_onlink = 0;
+-		ip->i_d.di_projid = 0;
+-	}
 -
--#: ../repair/phase4.c:1200
-+#: ../repair/phase4.c:256
- #, c-format
- msgid "unknown block state, ag %d, block %d\n"
- msgstr "nieznany stan bloku, ag %d, blok %d\n"
- 
--#: ../repair/phase4.c:1256
-+#: ../repair/phase4.c:314
- #, c-format
- msgid "unknown rt extent state, extent %llu\n"
- msgstr "nieznany stan fragmentu rt, fragment %llu\n"
- 
--#: ../repair/phase4.c:1317
-+#: ../repair/phase4.c:375
- msgid "        - check for inodes claiming duplicate blocks...\n"
- msgstr "        - szukanie i-wêz³ów odwo³uj±cych siê do powtórzonych bloków...\n"
- 
--#: ../repair/phase5.c:229
-+#: ../repair/phase5.c:234
- msgid "could not set up btree block array\n"
- msgstr "nie uda³o siê utworzyæ tablicy bloków b-drzewa\n"
- 
--#: ../repair/phase5.c:241
-+#: ../repair/phase5.c:246
- msgid "error - not enough free space in filesystem\n"
- msgstr "b³±d - za ma³o wolnego miejsca w systemie plików\n"
- 
--#: ../repair/phase5.c:464
-+#: ../repair/phase5.c:473
- #, c-format
- msgid "can't rebuild fs trees -- not enough free space on ag %u\n"
- msgstr "nie mo¿na przebudowaæ drzew systemu plików - za ma³o wolnego miejsca w ag %u\n"
- 
--#: ../repair/phase5.c:488
-+#: ../repair/phase5.c:497
- #, c-format
- msgid "ag %u - not enough free space to build freespace btrees\n"
- msgstr "ag %u - za ma³o wolnego miejsca na przebudowanie b-drzew wolnego miejsca\n"
- 
--#: ../repair/phase5.c:523
-+#: ../repair/phase5.c:532
- #, c-format
- msgid "not enough free blocks left to describe all free blocks in AG %u\n"
- msgstr "za ma³o wolnych bloków na opisanie wszystkich wolnych bloków w AG %u\n"
- 
--#: ../repair/phase5.c:1333
-+#: ../repair/phase5.c:1360
- #, c-format
- msgid "lost %d blocks in ag %u\n"
- msgstr "utracono %d bloków w ag %u\n"
- 
--#: ../repair/phase5.c:1336
-+#: ../repair/phase5.c:1363
- #, c-format
- msgid "thought we were going to lose %d blocks in ag %u, actually lost %d\n"
- msgstr "przewidywano utracenie %d bloków w ag %u, a utracono %d\n"
- 
--#: ../repair/phase5.c:1384 ../repair/xfs_repair.c:635
-+#: ../repair/phase5.c:1411 ../repair/xfs_repair.c:794
- msgid "couldn't get superblock\n"
- msgstr "nie uda³o siê pobraæ superbloku\n"
- 
--#: ../repair/phase5.c:1439
--msgid "Phase 5 - rebuild AG headers and trees...\n"
--msgstr "Faza 5 - przebudowywanie nag³ówków i drzew AG...\n"
+-	ip->i_delayed_blks = 0;
+-	ip->i_size = ip->i_d.di_size;
 -
--#: ../repair/phase5.c:1488
-+#: ../repair/phase5.c:1491
- #, c-format
- msgid "unable to rebuild AG %u.  Not enough free space in on-disk AG.\n"
- msgstr "nie uda³o siê przebudowaæ AG %u. Za ma³o wolnego miejsca w AG na dysku.\n"
- 
--#: ../repair/phase5.c:1528
-+#: ../repair/phase5.c:1531
- #, c-format
- msgid "unable to rebuild AG %u.  No free space.\n"
- msgstr "nie uda³o siê przebudowaæ AG %u. Brak wolnego miejsca.\n"
- 
--#: ../repair/phase5.c:1555
-+#: ../repair/phase5.c:1558
- #, c-format
- msgid "lost %d blocks in agno %d, sorry.\n"
- msgstr "niestety utracono %d bloków w agno %d.\n"
- 
--#: ../repair/phase5.c:1619
-+#: ../repair/phase5.c:1627
-+msgid "Phase 5 - rebuild AG headers and trees...\n"
-+msgstr "Faza 5 - przebudowywanie nag³ówków i drzew AG...\n"
-+
-+#: ../repair/phase5.c:1658
-+msgid "cannot alloc sb_icount_ag buffers\n"
-+msgstr "nie mo¿na przydzieliæ buforów sb_icount_ag\n"
-+
-+#: ../repair/phase5.c:1662
-+msgid "cannot alloc sb_ifree_ag buffers\n"
-+msgstr "nie mo¿na przydzieliæ buforów sb_ifree_ag\n"
-+
-+#: ../repair/phase5.c:1666
-+msgid "cannot alloc sb_fdblocks_ag buffers\n"
-+msgstr "nie mo¿na przydzieliæ buforów sb_fdblocks_ag\n"
-+
-+#: ../repair/phase5.c:1685
- msgid "        - generate realtime summary info and bitmap...\n"
- msgstr "        - generowanie opisu i bitmapy realtime...\n"
- 
--#: ../repair/phase5.c:1625
-+#: ../repair/phase5.c:1691
- msgid "        - reset superblock...\n"
- msgstr "        - przestawianie superbloku...\n"
- 
--#: ../repair/phase6.c:133
-+#: ../repair/phase6.c:134
- #, c-format
- msgid "malloc failed in dir_hash_add (%u bytes)\n"
- msgstr "malloc nie powiod³o siê w dir_hash_add (%u bajtów)\n"
- 
--#: ../repair/phase6.c:188
-+#: ../repair/phase6.c:189
- msgid "ok"
- msgstr "ok"
- 
--#: ../repair/phase6.c:189
-+#: ../repair/phase6.c:190
- msgid "duplicate leaf"
- msgstr "powtórzony li¶æ"
- 
--#: ../repair/phase6.c:190
-+#: ../repair/phase6.c:191
- msgid "hash value mismatch"
- msgstr "niezgodno¶æ warto¶ci hasza"
- 
--#: ../repair/phase6.c:191
-+#: ../repair/phase6.c:192
- msgid "no data entry"
- msgstr "brak wpisu danych"
- 
--#: ../repair/phase6.c:192
-+#: ../repair/phase6.c:193
- msgid "no leaf entry"
- msgstr "brak wpisu li¶cia"
- 
--#: ../repair/phase6.c:193
-+#: ../repair/phase6.c:194
- msgid "bad stale count"
- msgstr "b³êdna liczba stale"
- 
--#: ../repair/phase6.c:201
-+#: ../repair/phase6.c:202
- #, c-format
- msgid "bad hash table for directory inode %llu (%s): "
- msgstr "b³êdna tablica haszuj±ca dla i-wêz³a katalogu %llu (%s): "
- 
--#: ../repair/phase6.c:204
-+#: ../repair/phase6.c:205
- msgid "rebuilding\n"
- msgstr "przebudowano\n"
- 
--#: ../repair/phase6.c:206
-+#: ../repair/phase6.c:207
- msgid "would rebuild\n"
- msgstr "zosta³aby przebudowana\n"
- 
--#: ../repair/phase6.c:242
-+#: ../repair/phase6.c:243
- msgid "calloc failed in dir_hash_init\n"
- msgstr "calloc nie powiod³o siê w dir_hash_init\n"
- 
--#: ../repair/phase6.c:402
-+#: ../repair/phase6.c:398
- msgid "ran out of disk space!\n"
- msgstr "brak miejsca na dysku!\n"
- 
--#: ../repair/phase6.c:404
-+#: ../repair/phase6.c:400
- #, c-format
- msgid "xfs_trans_reserve returned %d\n"
- msgstr "xfs_trans_reserve zwróci³o %d\n"
- 
--#: ../repair/phase6.c:433 ../repair/phase6.c:526
-+#: ../repair/phase6.c:429 ../repair/phase6.c:522
- #, c-format
- msgid "couldn't iget realtime bitmap inode -- error - %d\n"
- msgstr "nie uda³o siê wykonaæ iget dla i-wêz³a bitmapy realtime - b³±d %d\n"
- 
--#: ../repair/phase6.c:483
-+#: ../repair/phase6.c:479
- #, c-format
- msgid "couldn't allocate realtime bitmap, error = %d\n"
- msgstr "nie uda³o siê przydzieliæ bitmapy realtime, b³±d = %d\n"
- 
--#: ../repair/phase6.c:496
-+#: ../repair/phase6.c:492
- #, c-format
- msgid "allocation of the realtime bitmap failed, error = %d\n"
- msgstr "przydzielenie bitmapy realtime nie powiod³o siê, b³±d = %d\n"
- 
--#: ../repair/phase6.c:539
-+#: ../repair/phase6.c:535
- #, c-format
- msgid "couldn't map realtime bitmap block %llu, error = %d\n"
- msgstr "nie uda³o siê odwzorowaæ bloku bitmapy realtime %llu, b³±d = %d\n"
- 
--#: ../repair/phase6.c:552
-+#: ../repair/phase6.c:548
- #, c-format
- msgid "can't access block %llu (fsbno %llu) of realtime bitmap inode %llu\n"
- msgstr "brak dostêpu do bloku %llu (fsbno %llu) i-wêz³a bitmapy realtime %llu\n"
- 
--#: ../repair/phase6.c:595 ../repair/phase6.c:666
-+#: ../repair/phase6.c:591 ../repair/phase6.c:662
- #, c-format
- msgid "couldn't iget realtime summary inode -- error - %d\n"
- msgstr "nie uda³o siê wykonaæ iget dla i-wêz³a opisu realtime - b³±d %d\n"
- 
--#: ../repair/phase6.c:608
-+#: ../repair/phase6.c:604
- #, c-format
- msgid "couldn't map realtime summary inode block %llu, error = %d\n"
- msgstr "nie uda³o siê odwzorowaæ bloku i-wêz³a opisu realtime %llu, b³±d = %d\n"
- 
--#: ../repair/phase6.c:621
-+#: ../repair/phase6.c:617
- #, c-format
- msgid "can't access block %llu (fsbno %llu) of realtime summary inode %llu\n"
- msgstr "brak dostêpu do bloku %llu (fsbno %llu) i-wêz³a opisu realtime %llu\n"
- 
--#: ../repair/phase6.c:722
-+#: ../repair/phase6.c:718
- #, c-format
- msgid "couldn't allocate realtime summary inode, error = %d\n"
- msgstr "nie uda³o siê przydzieliæ i-wêz³a opisu realtime, b³±d = %d\n"
- 
--#: ../repair/phase6.c:735
-+#: ../repair/phase6.c:731
- #, c-format
- msgid "allocation of the realtime summary ino failed, error = %d\n"
- msgstr "przydzielenie i-wêz³a opisu realtime nie powiod³o siê, b³±d = %d\n"
- 
--#: ../repair/phase6.c:762
-+#: ../repair/phase6.c:759
- #, c-format
- msgid "could not iget root inode -- error - %d\n"
- msgstr "nie uda³o siê wykonaæ iget dla g³ównego i-wêz³a - b³±d %d\n"
- 
--#: ../repair/phase6.c:828
-+#: ../repair/phase6.c:824
- #, c-format
--msgid "%d - couldn't iget root inode to make %s\n"
--msgstr "%d - nie uda³o siê wykonaæ iget dla g³ównego wêz³a, aby zrobiæ %s\n"
-+msgid "%d - couldn't iget root inode to obtain %s\n"
-+msgstr "%d - nie uda³o siê wykonaæ iget dla g³ównego wêz³a, aby uzyskaæ %s\n"
- 
--#: ../repair/phase6.c:834
-+#: ../repair/phase6.c:854
- #, c-format
- msgid "%s inode allocation failed %d\n"
- msgstr "przydzielenie i-wêz³± %s nie powiod³o siê - %d\n"
- 
--#: ../repair/phase6.c:851
-+#: ../repair/phase6.c:871
- #, c-format
--msgid "can't make %s, createname error %d, will try later\n"
--msgstr "nie mo¿na zrobiæ %s, b³±d createname %d, spróbujê pó¼niej\n"
-+msgid "can't make %s, createname error %d\n"
-+msgstr "nie mo¿na zrobiæ %s, b³±d createname %d\n"
- 
--#: ../repair/phase6.c:869
-+#: ../repair/phase6.c:890
- #, c-format
- msgid "%s directory creation failed -- bmapf error %d\n"
- msgstr "tworzenie katalogu %s nie powiod³o siê - b³±d bmapf %d\n"
- 
--#: ../repair/phase6.c:906
-+#: ../repair/phase6.c:930
- #, c-format
- msgid "%d - couldn't iget orphanage inode\n"
- msgstr "%d - nie uda³o siê wykonaæ iget dla i-wêz³a sierociñca\n"
- 
--#: ../repair/phase6.c:911
-+#: ../repair/phase6.c:944
- #, c-format
- msgid "%d - couldn't iget disconnected inode\n"
- msgstr "%d - nie uda³o siê wykonaæ iget dla od³±czonego i-wêz³a\n"
- 
--#: ../repair/phase6.c:925 ../repair/phase6.c:964 ../repair/phase6.c:1015
--#: ../repair/phase6.c:1856
-+#: ../repair/phase6.c:963 ../repair/phase6.c:1005 ../repair/phase6.c:1060
-+#: ../repair/phase6.c:1885
- #, c-format
- msgid "space reservation failed (%d), filesystem may be out of space\n"
- msgstr "nie uda³o siê zarezerwowaæ miejsca (%d), mo¿e brakowaæ miejsca w systemie plików\n"
- 
--#: ../repair/phase6.c:936 ../repair/phase6.c:976 ../repair/phase6.c:1025
-+#: ../repair/phase6.c:974 ../repair/phase6.c:1017 ../repair/phase6.c:1070
- #, c-format
- msgid "name create failed in %s (%d), filesystem may be out of space\n"
- msgstr "tworzenie nazwy nie powiod³o siê w %s (%d), mo¿e brakowaæ miejsca w systemie plików\n"
- 
--#: ../repair/phase6.c:945
-+#: ../repair/phase6.c:986
- #, c-format
- msgid "creation of .. entry failed (%d), filesystem may be out of space\n"
- msgstr "tworzenie wpisu .. nie powiod³o siê (%d), mo¿e brakowaæ miejsca w systemie plików\n"
- 
--#: ../repair/phase6.c:953
-+#: ../repair/phase6.c:994
- #, c-format
- msgid "bmap finish failed (err - %d), filesystem may be out of space\n"
- msgstr "zakoñczenie bmap nie powiod³o siê (b³±d %d), mo¿e brakowaæ miejsca w systemie plików\n"
- 
--#: ../repair/phase6.c:991
-+#: ../repair/phase6.c:1035
- #, c-format
- msgid "name replace op failed (%d), filesystem may be out of space\n"
- msgstr "operacja zast±pienia nazwy nie powiod³a siê (%d), mo¿e brakowaæ miejsca w systemie plików\n"
- 
--#: ../repair/phase6.c:998 ../repair/phase6.c:1034 ../repair/phase6.c:1879
-+#: ../repair/phase6.c:1042 ../repair/phase6.c:1079 ../repair/phase6.c:1908
- #, c-format
- msgid "bmap finish failed (%d), filesystem may be out of space\n"
- msgstr "zakoñczenie bmap nie powiod³o siê (%d), mo¿e brakowaæ miejsca w systemie plików\n"
- 
--#: ../repair/phase6.c:1076 ../repair/phase6.c:1238 ../repair/phase6.c:1656
-+#: ../repair/phase6.c:1120 ../repair/phase6.c:1277 ../repair/phase6.c:1701
- msgid "dir"
- msgstr "katalogu"
- 
--#: ../repair/phase6.c:1085 ../repair/phase6.c:1089
-+#: ../repair/phase6.c:1129 ../repair/phase6.c:1133
- #, c-format
- msgid "can't map block %d in %s inode %llu, xfs_bmapi returns %d, nmap = %d\n"
- msgstr "nie mo¿na odwzorowaæ bloku %d w i-wê¼le %s %llu, xfs_bmapi zwraca %d, nmap = %d\n"
- 
--#: ../repair/phase6.c:1097 ../repair/phase6.c:1100 ../repair/phase6.c:1735
--#: ../repair/phase6.c:1739
-+#: ../repair/phase6.c:1141 ../repair/phase6.c:1144 ../repair/phase6.c:1780
-+#: ../repair/phase6.c:1784
- #, c-format
- msgid "block %d in %s ino %llu doesn't exist\n"
- msgstr "blok %d w i-wê¼le %s %llu nie istnieje\n"
- 
--#: ../repair/phase6.c:1160 ../repair/phase6.c:1164
-+#: ../repair/phase6.c:1199 ../repair/phase6.c:1203
- #, c-format
- msgid "can't map block %d in %s ino %llu, xfs_bmapi returns %d, nmap = %d\n"
- msgstr "nie mo¿na odwzorowaæ bloku %d w i-wê¼le %s %llu, xfs_bmapi zwraca %d, nmap = %d\n"
- 
--#: ../repair/phase6.c:1172 ../repair/phase6.c:1176
-+#: ../repair/phase6.c:1211 ../repair/phase6.c:1215
- #, c-format
- msgid "block %d in %s inode %llu doesn't exist\n"
- msgstr "blok %d w i-wê¼le %s %llu nie istnieje\n"
- 
--#: ../repair/phase6.c:1256
-+#: ../repair/phase6.c:1295
- #, c-format
- msgid "can't read directory inode %llu (leaf) block %u (fsbno %llu)\n"
- msgstr "nie mo¿na odczytaæ i-wêz³a katalogu %llu bloku (li¶cia) %u (fsbno %llu)\n"
- 
--#: ../repair/phase6.c:1298
-+#: ../repair/phase6.c:1337
- #, c-format
- msgid "can't map block %d in directory %llu, xfs_bmapi returns %d, nmap = %d\n"
- msgstr "nie mo¿na odwzorowaæ bloku %d w katalogu %llu, xfs_bmapi zwraca %d, nmap = %d\n"
- 
--#: ../repair/phase6.c:1303
-+#: ../repair/phase6.c:1342
- #, c-format
- msgid "%s ino %llu block %d doesn't exist\n"
- msgstr "w i-wê¼le %s %llu blok %d nie istnieje\n"
- 
--#: ../repair/phase6.c:1358
-+#: ../repair/phase6.c:1397
- #, c-format
- msgid ""
- "couldn't remove bogus entry \"%s\" in\n"
-@@ -7432,467 +7483,682 @@ msgstr ""
- "nie uda³o siê usun±æ niepoprawnego wpisu \"%s\"\n"
- "\tw i-wê¼le katalogu %llu, b³±d = %d\n"
- 
--#: ../repair/phase6.c:1496
--#, c-format
--msgid "entry \"%s\" in dir inode %llu points to non-existent inode, "
--msgstr "wpis \"%s\" w i-wê¼le katalogu %llu wskazuje na nie istniej±cy i-wêzê³, "
-+#: ../repair/phase6.c:1421
-+msgid ", marking entry to be junked\n"
-+msgstr ", zaznaczono wpis do wyrzucenia\n"
- 
--#: ../repair/phase6.c:1502 ../repair/phase6.c:2245
--msgid "marking entry to be junked\n"
--msgstr "zaznaczono wpis do wyrzucenia\n"
-+#: ../repair/phase6.c:1425
-+msgid ", would junk entry\n"
-+msgstr ", wpis zosta³by wyrzucony\n"
- 
--#: ../repair/phase6.c:1504 ../repair/phase6.c:2247 ../repair/phase6.c:2787
--#: ../repair/phase6.c:3205
--msgid "would junk entry\n"
--msgstr "wpis zosta³by wyrzucony\n"
-+#: ../repair/phase6.c:1540
-+#, c-format
-+msgid "entry \"%s\" in dir inode %llu points to non-existent inode %llu"
-+msgstr "wpis \"%s\" w i-wê¼le katalogu %llu wskazuje na nie istniej±cy i-wêzê³ %llu"
- 
--#: ../repair/phase6.c:1524
-+#: ../repair/phase6.c:1558
- #, c-format
- msgid "entry \"%s\" in dir inode %llu points to free inode %llu"
- msgstr "wpis \"%s\" w i-wê¼le katalogu %llu wskazuje na wolny i-wêze³ %llu"
- 
--#: ../repair/phase6.c:1531 ../repair/phase6.c:1557 ../repair/phase6.c:2170
--#: ../repair/phase6.c:2270 ../repair/phase6.c:2829 ../repair/phase6.c:3248
--msgid ", marking entry to be junked\n"
--msgstr ", zaznaczono wpis do wyrzucenia\n"
+-	/*
+-	 * Use xfs_trans_brelse() to release the buffer containing the
+-	 * on-disk inode, because it was acquired with xfs_trans_read_buf()
+-	 * in xfs_itobp() above.  If tp is NULL, this is just a normal
+-	 * brelse().  If we're within a transaction, then xfs_trans_brelse()
+-	 * will only release the buffer if it is not dirty within the
+-	 * transaction.  It will be OK to release the buffer in this case,
+-	 * because inodes on disk are never destroyed and we will be
+-	 * locking the new in-core inode before putting it in the hash
+-	 * table where other processes can find it.  Thus we don't have
+-	 * to worry about the inode being changed just because we released
+-	 * the buffer.
+-	 */
+-	xfs_trans_brelse(tp, bp);
+-	return 0;
+-}
 -
--#: ../repair/phase6.c:1538 ../repair/phase6.c:1563 ../repair/phase6.c:2174
--#: ../repair/phase6.c:2276 ../repair/phase6.c:2833 ../repair/phase6.c:3252
--msgid ", would junk entry\n"
--msgstr ", wpis zosta³by wyrzucony\n"
-+#: ../repair/phase6.c:1574 ../repair/phase6.c:2245 ../repair/phase6.c:2859
-+#: ../repair/phase6.c:3264
-+#, c-format
-+msgid "%s (ino %llu) in root (%llu) is not a directory"
-+msgstr "%s (i-wêze³ %llu) w katalogu g³ównym (%llu) nie jest katalogiem"
+-/*
+  * Allocate an inode on disk and return a copy of it's in-core version.
+  * Set mode, nlink, and rdev appropriately within the inode.
+  * The uid and gid for the inode are set according to the contents of
+@@ -229,8 +109,8 @@
+ 	 * here rather than here and in the flush/logging code.
+ 	 */
+ 	if (xfs_sb_version_hasnlink(&tp->t_mountp->m_sb) &&
+-	    ip->i_d.di_version == XFS_DINODE_VERSION_1) {
+-		ip->i_d.di_version = XFS_DINODE_VERSION_2;
++	    ip->i_d.di_version == 1) {
++		ip->i_d.di_version = 2;
+ 		/* old link count, projid field, pad field already zeroed */
+ 	}
  
--#: ../repair/phase6.c:1551 ../repair/phase6.c:2165 ../repair/phase6.c:2823
--#: ../repair/phase6.c:3242
-+#: ../repair/phase6.c:1596 ../repair/phase6.c:2266 ../repair/phase6.c:2876
-+#: ../repair/phase6.c:3281
- #, c-format
- msgid "entry \"%s\" (ino %llu) in dir %llu is a duplicate name"
- msgstr "wpis \"%s\" (i-wêze³ %llu) w katalogu %llu jest powtórzon± nazw±"
+@@ -395,7 +275,7 @@
+ 	mp = ip->i_mount;
  
--#: ../repair/phase6.c:1589
-+#: ../repair/phase6.c:1627
- #, c-format
- msgid "entry \"%s\" in dir %llu points to an already connected dir inode %llu,\n"
- msgstr "wpis \"%s\" w katalogu %llu wskazuje na ju¿ pod³±czony i-wêze³ katalogu %llu,\n"
+ 	/* set *dip = inode's place in the buffer */
+-	dip = (xfs_dinode_t *)xfs_buf_offset(bp, ip->i_boffset);
++	dip = (xfs_dinode_t *)xfs_buf_offset(bp, ip->i_imap.im_boffset);
  
--#: ../repair/phase6.c:1600
-+#: ../repair/phase6.c:1636 ../repair/phase6.c:2360 ../repair/phase6.c:2910
-+#: ../repair/phase6.c:3311
-+#, c-format
-+msgid "entry \"%s\" in dir ino %llu doesn't have a .. entry, will set it in ino %llu.\n"
-+msgstr "wpis \"%s\" w i-wê¼le katalogu %llu nie ma wpisu .., zostanie ustawiony w i-wê¼le %llu.\n"
+ 	ASSERT(ip->i_d.di_magic == XFS_DINODE_MAGIC);
+ 	if ((ip->i_d.di_mode & S_IFMT) == S_IFREG) {
+@@ -416,7 +296,7 @@
+ 	 * because if the inode is dirty at all the core must
+ 	 * be.
+ 	 */
+-	xfs_dinode_to_disk(&dip->di_core, &ip->i_d);
++	xfs_dinode_to_disk(dip, &ip->i_d);
+ 
+ 	/*
+ 	 * If this is really an old format inode and the superblock version
+@@ -424,28 +304,26 @@
+ 	 * convert back to the old inode format.  If the superblock version
+ 	 * has been updated, then make the conversion permanent.
+ 	 */
+-	ASSERT(ip->i_d.di_version == XFS_DINODE_VERSION_1 ||
+-		xfs_sb_version_hasnlink(&mp->m_sb));
+-	if (ip->i_d.di_version == XFS_DINODE_VERSION_1) {
++	ASSERT(ip->i_d.di_version == 1 || xfs_sb_version_hasnlink(&mp->m_sb));
++	if (ip->i_d.di_version == 1) {
+ 		if (!xfs_sb_version_hasnlink(&mp->m_sb)) {
+ 			/*
+ 			 * Convert it back.
+ 			 */
+ 			ASSERT(ip->i_d.di_nlink <= XFS_MAXLINK_1);
+-			dip->di_core.di_onlink = cpu_to_be16(ip->i_d.di_nlink);
++			dip->di_onlink = cpu_to_be16(ip->i_d.di_nlink);
+ 		} else {
+ 			/*
+ 			 * The superblock version has already been bumped,
+ 			 * so just make the conversion to the new inode
+ 			 * format permanent.
+ 			 */
+-			ip->i_d.di_version = XFS_DINODE_VERSION_2;
+-			dip->di_core.di_version =  XFS_DINODE_VERSION_2;
++			ip->i_d.di_version = 2;
++			dip->di_version = 2;
+ 			ip->i_d.di_onlink = 0;
+-			dip->di_core.di_onlink = 0;
+-			memset(&(ip->i_d.di_pad[0]), 0, sizeof(ip->i_d.di_pad));
+-			memset(&(dip->di_core.di_pad[0]), 0,
+-			      sizeof(dip->di_core.di_pad));
++			dip->di_onlink = 0;
++			memset(&ip->i_d.di_pad[0], 0, sizeof(ip->i_d.di_pad));
++			memset(&dip->di_pad[0], 0, sizeof(dip->di_pad));
+ 			ASSERT(ip->i_d.di_projid == 0);
+ 		}
+ 	}
+Index: xfs-cmds/xfsprogs/libxfs/xfs_alloc.c
+===================================================================
+--- xfs-cmds.orig/xfsprogs/libxfs/xfs_alloc.c	2008-12-06 20:05:46.000000000 +0100
++++ xfs-cmds/xfsprogs/libxfs/xfs_alloc.c	2008-12-06 20:05:49.000000000 +0100
+@@ -2064,44 +2064,41 @@
+  * Read in the allocation group header (free/alloc section).
+  */
+ int					/* error */
+-xfs_alloc_read_agf(
+-	xfs_mount_t	*mp,		/* mount point structure */
+-	xfs_trans_t	*tp,		/* transaction pointer */
+-	xfs_agnumber_t	agno,		/* allocation group number */
+-	int		flags,		/* XFS_ALLOC_FLAG_... */
+-	xfs_buf_t	**bpp)		/* buffer for the ag freelist header */
++xfs_read_agf(
++	struct xfs_mount	*mp,	/* mount point structure */
++	struct xfs_trans	*tp,	/* transaction pointer */
++	xfs_agnumber_t		agno,	/* allocation group number */
++	int			flags,	/* XFS_BUF_ */
++	struct xfs_buf		**bpp)	/* buffer for the ag freelist header */
+ {
+-	xfs_agf_t	*agf;		/* ag freelist header */
++	struct xfs_agf	*agf;		/* ag freelist header */
+ 	int		agf_ok;		/* set if agf is consistent */
+-	xfs_buf_t	*bp;		/* return value */
+-	xfs_perag_t	*pag;		/* per allocation group data */
+ 	int		error;
+ 
+ 	ASSERT(agno != NULLAGNUMBER);
+ 	error = xfs_trans_read_buf(
+ 			mp, tp, mp->m_ddev_targp,
+ 			XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
+-			XFS_FSS_TO_BB(mp, 1),
+-			(flags & XFS_ALLOC_FLAG_TRYLOCK) ? XFS_BUF_TRYLOCK : 0U,
+-			&bp);
++			XFS_FSS_TO_BB(mp, 1), flags, bpp);
+ 	if (error)
+ 		return error;
+-	ASSERT(!bp || !XFS_BUF_GETERROR(bp));
+-	if (!bp) {
+-		*bpp = NULL;
++	if (!*bpp)
+ 		return 0;
+-	}
 +
-+#: ../repair/phase6.c:1644
- #, c-format
- msgid "entry \"%s\" in dir ino %llu not consistent with .. value (%llu) in ino %llu,\n"
- msgstr "wpis \"%s\" w i-wê¼le katalogu %llu niespójny z warto¶ci± .. (%llu) w i-wê¼le %llu,\n"
++	ASSERT(!XFS_BUF_GETERROR(*bpp));
++	agf = XFS_BUF_TO_AGF(*bpp);
++
+ 	/*
+ 	 * Validate the magic number of the agf block.
+ 	 */
+-	agf = XFS_BUF_TO_AGF(bp);
+ 	agf_ok =
+ 		be32_to_cpu(agf->agf_magicnum) == XFS_AGF_MAGIC &&
+ 		XFS_AGF_GOOD_VERSION(be32_to_cpu(agf->agf_versionnum)) &&
+ 		be32_to_cpu(agf->agf_freeblks) <= be32_to_cpu(agf->agf_length) &&
+ 		be32_to_cpu(agf->agf_flfirst) < XFS_AGFL_SIZE(mp) &&
+ 		be32_to_cpu(agf->agf_fllast) < XFS_AGFL_SIZE(mp) &&
+-		be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp);
++		be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp) &&
++		be32_to_cpu(agf->agf_seqno) == agno;
+ 	if (xfs_sb_version_haslazysbcount(&mp->m_sb))
+ 		agf_ok = agf_ok && be32_to_cpu(agf->agf_btreeblks) <=
+ 						be32_to_cpu(agf->agf_length);
+@@ -2109,9 +2106,41 @@
+ 			XFS_RANDOM_ALLOC_READ_AGF))) {
+ 		XFS_CORRUPTION_ERROR("xfs_alloc_read_agf",
+ 				     XFS_ERRLEVEL_LOW, mp, agf);
+-		xfs_trans_brelse(tp, bp);
++		xfs_trans_brelse(tp, *bpp);
+ 		return XFS_ERROR(EFSCORRUPTED);
+ 	}
++
++	XFS_BUF_SET_VTYPE_REF(*bpp, B_FS_AGF, XFS_AGF_REF);
++	return 0;
++}
++
++/*
++ * Read in the allocation group header (free/alloc section).
++ */
++int					/* error */
++xfs_alloc_read_agf(
++	struct xfs_mount	*mp,	/* mount point structure */
++	struct xfs_trans	*tp,	/* transaction pointer */
++	xfs_agnumber_t		agno,	/* allocation group number */
++	int			flags,	/* XFS_ALLOC_FLAG_... */
++	struct xfs_buf		**bpp)	/* buffer for the ag freelist header */
++{
++	struct xfs_agf		*agf;		/* ag freelist header */
++	struct xfs_perag	*pag;		/* per allocation group data */
++	int			error;
++
++	ASSERT(agno != NULLAGNUMBER);
++
++	error = xfs_read_agf(mp, tp, agno,
++			(flags & XFS_ALLOC_FLAG_TRYLOCK) ? XFS_BUF_TRYLOCK : 0,
++			bpp);
++	if (error)
++		return error;
++	if (!*bpp)
++		return 0;
++	ASSERT(!XFS_BUF_GETERROR(*bpp));
++
++	agf = XFS_BUF_TO_AGF(*bpp);
+ 	pag = &mp->m_perag[agno];
+ 	if (!pag->pagf_init) {
+ 		pag->pagf_freeblks = be32_to_cpu(agf->agf_freeblks);
+@@ -2139,8 +2168,6 @@
+ 		       be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNTi]));
+ 	}
+ #endif
+-	XFS_BUF_SET_VTYPE_REF(bp, B_FS_AGF, XFS_AGF_REF);
+-	*bpp = bp;
+ 	return 0;
+ }
  
--#: ../repair/phase6.c:1613 ../repair/phase6.c:2321
-+#: ../repair/phase6.c:1659 ../repair/phase6.c:2382
- #, c-format
- msgid "\twill clear entry \"%s\"\n"
- msgstr "\twpis \"%s\" zostanie wyczyszczony\n"
+Index: xfs-cmds/xfsprogs/libxfs/xfs_ialloc.c
+===================================================================
+--- xfs-cmds.orig/xfsprogs/libxfs/xfs_ialloc.c	2008-12-06 20:05:45.000000000 +0100
++++ xfs-cmds/xfsprogs/libxfs/xfs_ialloc.c	2008-12-06 20:05:49.000000000 +0100
+@@ -22,68 +22,6 @@
+  * Internal functions.
+  */
  
--#: ../repair/phase6.c:1616 ../repair/phase6.c:2324
-+#: ../repair/phase6.c:1662 ../repair/phase6.c:2385
- #, c-format
- msgid "\twould clear entry \"%s\"\n"
- msgstr "\twpis \"%s\" zosta³by wyczyszczony\n"
- 
--#: ../repair/phase6.c:1661
-+#: ../repair/phase6.c:1706
- #, c-format
- msgid "cannot map block 0 of directory inode %llu\n"
- msgstr "nie mo¿na odwzorowaæ bloku 0 i-wêz³a katalogu %llu\n"
- 
--#: ../repair/phase6.c:1685
-+#: ../repair/phase6.c:1730
- #, c-format
- msgid "bad magic # (0x%x) for dir ino %llu leaf block (bno %u fsbno %llu)\n"
- msgstr "b³êdna liczba magiczna (0x%x) dla bloku li¶cia i-wêz³a katalogu %llu (bno %u fsbno %llu)\n"
- 
--#: ../repair/phase6.c:1723 ../repair/phase6.c:1727
-+#: ../repair/phase6.c:1768 ../repair/phase6.c:1772
- #, c-format
- msgid "can't map leaf block %d in dir %llu, xfs_bmapi returns %d, nmap = %d\n"
- msgstr "nie mo¿na odwzorowaæ bloku li¶cia %d w katalogu %llu, xfs_bmapi zwraca %d, nmap = %d\n"
- 
--#: ../repair/phase6.c:1778
-+#: ../repair/phase6.c:1823
- #, c-format
- msgid "rebuilding directory inode %llu\n"
- msgstr "przebudowywanie i-wêz³a katalogu %llu\n"
- 
--#: ../repair/phase6.c:1806
-+#: ../repair/phase6.c:1848
- #, c-format
- msgid "xfs_bmap_last_offset failed -- error - %d\n"
- msgstr "xfs_bmap_last_offset nie powiod³o siê - b³±d %d\n"
- 
--#: ../repair/phase6.c:1812
--#, c-format
--msgid "couldn't iget parent inode %llu -- error - %d\n"
--msgstr "nie uda³o siê wykonaæ iget dla nadrzêdnego i-wêz³a %llu - b³±d %d\n"
+-/*
+- * Log specified fields for the inode given by bp and off.
+- */
+-STATIC void
+-xfs_ialloc_log_di(
+-	xfs_trans_t	*tp,		/* transaction pointer */
+-	xfs_buf_t	*bp,		/* inode buffer */
+-	int		off,		/* index of inode in buffer */
+-	int		fields)		/* bitmask of fields to log */
+-{
+-	int			first;		/* first byte number */
+-	int			ioffset;	/* off in bytes */
+-	int			last;		/* last byte number */
+-	xfs_mount_t		*mp;		/* mount point structure */
+-	static const short	offsets[] = {	/* field offsets */
+-						/* keep in sync with bits */
+-		offsetof(xfs_dinode_core_t, di_magic),
+-		offsetof(xfs_dinode_core_t, di_mode),
+-		offsetof(xfs_dinode_core_t, di_version),
+-		offsetof(xfs_dinode_core_t, di_format),
+-		offsetof(xfs_dinode_core_t, di_onlink),
+-		offsetof(xfs_dinode_core_t, di_uid),
+-		offsetof(xfs_dinode_core_t, di_gid),
+-		offsetof(xfs_dinode_core_t, di_nlink),
+-		offsetof(xfs_dinode_core_t, di_projid),
+-		offsetof(xfs_dinode_core_t, di_pad),
+-		offsetof(xfs_dinode_core_t, di_atime),
+-		offsetof(xfs_dinode_core_t, di_mtime),
+-		offsetof(xfs_dinode_core_t, di_ctime),
+-		offsetof(xfs_dinode_core_t, di_size),
+-		offsetof(xfs_dinode_core_t, di_nblocks),
+-		offsetof(xfs_dinode_core_t, di_extsize),
+-		offsetof(xfs_dinode_core_t, di_nextents),
+-		offsetof(xfs_dinode_core_t, di_anextents),
+-		offsetof(xfs_dinode_core_t, di_forkoff),
+-		offsetof(xfs_dinode_core_t, di_aformat),
+-		offsetof(xfs_dinode_core_t, di_dmevmask),
+-		offsetof(xfs_dinode_core_t, di_dmstate),
+-		offsetof(xfs_dinode_core_t, di_flags),
+-		offsetof(xfs_dinode_core_t, di_gen),
+-		offsetof(xfs_dinode_t, di_next_unlinked),
+-		offsetof(xfs_dinode_t, di_u),
+-		offsetof(xfs_dinode_t, di_a),
+-		sizeof(xfs_dinode_t)
+-	};
 -
--#: ../repair/phase6.c:1818
--#, c-format
--msgid "couldn't iget lost+found inode %llu -- error - %d\n"
--msgstr "nie uda³o siê wykonaæ iget dla i-wêz³a lost+found %llu - b³±d %d\n"
 -
--#: ../repair/phase6.c:1827
-+#: ../repair/phase6.c:1856
- #, c-format
- msgid "xfs_bunmapi failed -- error - %d\n"
- msgstr "xfs_bunmapi nie powiod³o siê - b³±d %d\n"
+-	ASSERT(offsetof(xfs_dinode_t, di_core) == 0);
+-	ASSERT((fields & (XFS_DI_U|XFS_DI_A)) == 0);
+-	mp = tp->t_mountp;
+-	/*
+-	 * Get the inode-relative first and last bytes for these fields
+-	 */
+-	xfs_btree_offsets(fields, offsets, XFS_DI_NUM_BITS, &first, &last);
+-	/*
+-	 * Convert to buffer offsets and log it.
+-	 */
+-	ioffset = off << mp->m_sb.sb_inodelog;
+-	first += ioffset;
+-	last += ioffset;
+-	xfs_trans_log_buf(tp, bp, first, last);
+-}
  
--#: ../repair/phase6.c:1869
-+#: ../repair/phase6.c:1898
- #, c-format
- msgid "name create failed in ino %llu (%d), filesystem may be out of space\n"
- msgstr "tworzenie nazwy nie powiod³o siê w i-wê¼le %llu (%d), mo¿e brakowaæ miejsca w systemie plików\n"
+ /*
+  * Allocation group level functions.
+@@ -364,9 +302,9 @@
+ 	 * able to use the file system.
+ 	 */
+ 	if (xfs_sb_version_hasnlink(&args.mp->m_sb))
+-		version = XFS_DINODE_VERSION_2;
++		version = 2;
+ 	else
+-		version = XFS_DINODE_VERSION_1;
++		version = 1;
  
--#: ../repair/phase6.c:1935
-+#: ../repair/phase6.c:1964
- #, c-format
- msgid "shrink_inode failed inode %llu block %u\n"
- msgstr "shrink_inode nie powiod³o siê dla i-wêz³a %llu bloku %u\n"
- 
--#: ../repair/phase6.c:2017
-+#: ../repair/phase6.c:2045
- #, c-format
- msgid "realloc failed in longform_dir2_entry_check_data (%u bytes)\n"
- msgstr "realloc nie powiod³o siê w longform_dir2_entry_check_data (%u bajtów)\n"
- 
--#: ../repair/phase6.c:2076
-+#: ../repair/phase6.c:2104
- #, c-format
- msgid "empty data block %u in directory inode %llu: "
- msgstr "pusty blok danych %u w i-wê¼le katalogu %llu: "
- 
--#: ../repair/phase6.c:2079
-+#: ../repair/phase6.c:2107
- #, c-format
- msgid "corrupt block %u in directory inode %llu: "
- msgstr "uszkodzony blok %u w i-wê¼le katalogu %llu: "
- 
--#: ../repair/phase6.c:2083
-+#: ../repair/phase6.c:2111
- msgid "junking block\n"
- msgstr "wyrzucono blok\n"
- 
--#: ../repair/phase6.c:2086
-+#: ../repair/phase6.c:2114
- msgid "would junk block\n"
- msgstr "blok zosta³by wyrzucony\n"
- 
--#: ../repair/phase6.c:2109
-+#: ../repair/phase6.c:2137
- #, c-format
- msgid "bad directory block magic # %#x for directory inode %llu block %d: "
- msgstr "b³êdna liczba magiczna bloku katalogu %#x dla i-wêz³a katalogu %llu bloku %d: "
- 
--#: ../repair/phase6.c:2113
-+#: ../repair/phase6.c:2141
- #, c-format
- msgid "fixing magic # to %#x\n"
- msgstr "poprawiono liczbê magiczn± na %#x\n"
- 
--#: ../repair/phase6.c:2117
-+#: ../repair/phase6.c:2145
- #, c-format
- msgid "would fix magic # to %#x\n"
- msgstr "liczba magiczna zosta³aby poprawiona na %#x\n"
- 
--#: ../repair/phase6.c:2138
-+#: ../repair/phase6.c:2166
- #, c-format
- msgid "directory inode %llu block %u has consecutive free entries: "
- msgstr "i-wêze³ katalogu %llu blok %u ma kolejne wolne wpisy: "
- 
--#: ../repair/phase6.c:2142
-+#: ../repair/phase6.c:2170
- msgid "joining together\n"
- msgstr "po³±czono\n"
- 
--#: ../repair/phase6.c:2151
-+#: ../repair/phase6.c:2179
- msgid "would join together\n"
- msgstr "zosta³yby po³±czone\n"
- 
--#: ../repair/phase6.c:2239
-+#: ../repair/phase6.c:2210
- #, c-format
--msgid "entry \"%s\" in directory inode %llu points to non-existent inode, "
--msgstr "wpis \"%s\" w i-wê¼le katalogu %llu wskazuje na nie istniej±cy i-wêze³, "
-+msgid "entry \"%s\" in directory inode %llu points to non-existent inode %llu"
-+msgstr "wpis \"%s\" w i-wê¼le katalogu %llu wskazuje na nie istniej±cy i-wêze³ %llu"
- 
--#: ../repair/phase6.c:2264
-+#: ../repair/phase6.c:2227
- #, c-format
- msgid "entry \"%s\" in directory inode %llu points to free inode %llu"
- msgstr "wpis \"%s\" w i-wê¼le katalogu %llu wskazuje na wolny i-wêze³ %llu"
- 
--#: ../repair/phase6.c:2300
-+#: ../repair/phase6.c:2290
- #, c-format
--msgid "entry \"%s\" in dir %llu points to an already connected directory inode %llu,\n"
--msgstr "wpis \"%s\" w katalogu %llu wskazuje na ju¿ pod³±czony i-wêze³ katalogu %llu,\n"
-+msgid "entry \"%s\" (ino %llu) in dir %llu is not in the the first block"
-+msgstr "wpis \"%s\" (i-wêze³ %llu) w katalogu %llu nie jest w pierwszym bloku"
- 
--#: ../repair/phase6.c:2310
-+#: ../repair/phase6.c:2316
- #, c-format
--msgid "entry \"%s\" in dir inode %llu inconsistent with .. value (%llu) in ino %llu,\n"
--msgstr "wpis \"%s\" w i-wê¼le katalogu %llu niespójny z warto¶ci± .. (%llu) w i-wê¼le %llu,\n"
-+msgid "entry \"%s\" in dir %llu is not the first entry"
-+msgstr "wpis \"%s\" w katalogu %llu nie jest pierwszym wpisem"
+ 	/*
+ 	 * Seed the new inode cluster with a random generation number. This
+@@ -387,18 +325,25 @@
+ 					 XFS_BUF_LOCK);
+ 		ASSERT(fbuf);
+ 		ASSERT(!XFS_BUF_GETERROR(fbuf));
 +
-+#: ../repair/phase6.c:2352
-+#, c-format
-+msgid "entry \"%s\" in dir %llu points to an already connected directory inode %llu\n"
-+msgstr "wpis \"%s\" w katalogu %llu wskazuje na ju¿ pod³±czony i-wêze³ katalogu %llu\n"
+ 		/*
+-		 * Set initial values for the inodes in this buffer.
++		 * Initialize all inodes in this buffer and then log them.
++		 *
++		 * XXX: It would be much better if we had just one transaction to
++		 *      log a whole cluster of inodes instead of all the indivdual
++		 *      transactions causing a lot of log traffic.
+ 		 */
+ 		xfs_biozero(fbuf, 0, ninodes << args.mp->m_sb.sb_inodelog);
+ 		for (i = 0; i < ninodes; i++) {
++			int	ioffset = i << args.mp->m_sb.sb_inodelog;
++			uint	isize = sizeof(struct xfs_dinode);
 +
-+#: ../repair/phase6.c:2369
-+#, c-format
-+msgid "entry \"%s\" in dir inode %llu inconsistent with .. value (%llu) in ino %llu\n"
-+msgstr "wpis \"%s\" w i-wê¼le katalogu %llu niespójny z warto¶ci± .. (%llu) w i-wê¼le %llu\n"
+ 			free = XFS_MAKE_IPTR(args.mp, fbuf, i);
+-			free->di_core.di_magic = cpu_to_be16(XFS_DINODE_MAGIC);
+-			free->di_core.di_version = version;
+-			free->di_core.di_gen = cpu_to_be32(gen);
++			free->di_magic = cpu_to_be16(XFS_DINODE_MAGIC);
++			free->di_version = version;
++			free->di_gen = cpu_to_be32(gen);
+ 			free->di_next_unlinked = cpu_to_be32(NULLAGINO);
+-			xfs_ialloc_log_di(tp, fbuf, i,
+-				XFS_DI_CORE_BITS | XFS_DI_NEXT_UNLINKED);
++			xfs_trans_log_buf(tp, fbuf, ioffset, ioffset + isize - 1);
+ 		}
+ 		xfs_trans_inode_alloc_buf(tp, fbuf);
+ 	}
+@@ -1019,38 +964,29 @@
+ 	return error;
+ }
  
--#: ../repair/phase6.c:2379 ../repair/phase6.c:2459
-+#: ../repair/phase6.c:2440 ../repair/phase6.c:2520
- #, c-format
- msgid "leaf block %u for directory inode %llu bad header\n"
- msgstr "b³êdny nag³ówek bloku li¶cia %u dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/phase6.c:2397
-+#: ../repair/phase6.c:2458
- #, c-format
- msgid "leaf block %u for directory inode %llu bad tail\n"
- msgstr "b³êdna koñcówka bloku li¶cia %u dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/phase6.c:2436
-+#: ../repair/phase6.c:2497
- #, c-format
- msgid "can't read leaf block %u for directory inode %llu\n"
- msgstr "nie mo¿na odczytaæ bloku li¶cia %u dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/phase6.c:2448
-+#: ../repair/phase6.c:2509
- #, c-format
- msgid "unknown magic number %#x for block %u in directory inode %llu\n"
- msgstr "nieznana liczba magiczna %#x dla bloku %u w i-wê¼le katalogu %llu\n"
- 
--#: ../repair/phase6.c:2483
-+#: ../repair/phase6.c:2544
- #, c-format
- msgid "can't read freespace block %u for directory inode %llu\n"
- msgstr "nie mo¿na odczytaæ bloku wolnego miejsca %u dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/phase6.c:2496
-+#: ../repair/phase6.c:2557
- #, c-format
- msgid "free block %u for directory inode %llu bad header\n"
- msgstr "b³êdny nag³ówek wolnego bloku %u dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/phase6.c:2509
-+#: ../repair/phase6.c:2570
- #, c-format
- msgid "free block %u entry %i for directory ino %llu bad\n"
- msgstr "b³êdny wpis wolnego bloku %u numer %i dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/phase6.c:2518
-+#: ../repair/phase6.c:2579
- #, c-format
- msgid "free block %u for directory inode %llu bad nused\n"
- msgstr "b³êdna liczba nused w wolnym bloku %u dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/phase6.c:2529
-+#: ../repair/phase6.c:2590
- #, c-format
- msgid "missing freetab entry %u for directory inode %llu\n"
- msgstr "brak wpisu freetab %u dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/phase6.c:2571
-+#: ../repair/phase6.c:2633
- #, c-format
- msgid "malloc failed in longform_dir2_entry_check (%u bytes)\n"
- msgstr "malloc nie powiod³o siê w longform_dir2_entry_check (%u bajtów)\n"
- 
--#: ../repair/phase6.c:2601
-+#: ../repair/phase6.c:2663
-+#, c-format
-+msgid "realloc failed in longform_dir2_entry_check (%u bytes)\n"
-+msgstr "realloc nie powiod³o siê w longform_dir2_entry_check (%u bajtów)\n"
-+
-+#: ../repair/phase6.c:2669
- #, c-format
- msgid "can't read data block %u for directory inode %llu\n"
- msgstr "nie mo¿na odczytaæ bloku danych %u dla i-wêz³a katalogu %llu\n"
- 
--#: ../repair/phase6.c:2699
-+#: ../repair/phase6.c:2767
- #, c-format
- msgid "shortform dir inode %llu has null data entries \n"
- msgstr "i-wêze³ krótkiego katalogu %llu ma zerowe wpisy danych\n"
- 
--#: ../repair/phase6.c:2785
--#, c-format
--msgid "entry \"%s\" in shortform dir %llu references non-existent ino %llu\n"
--msgstr "wpis \"%s\" w krótkim katalogu %llu odwo³uje siê do nie istniej±cego i-wêz³a %llu\n"
 -
--#: ../repair/phase6.c:2807
-+#: ../repair/phase6.c:2834
- #, c-format
--msgid "entry \"%s\" in shortform dir inode %llu points to free inode %llu\n"
--msgstr "wpis \"%s\" w i-wê¼le krótkiego katalogu %llu wskazuje na wolny i-wêze³ %llu\n"
-+msgid "entry \"%s\" in shortform dir %llu references non-existent ino %llu"
-+msgstr "wpis \"%s\" w krótkim katalogu %llu odwo³uje siê do nie istniej±cego i-wêz³a %llu"
+ /*
+- * Return the location of the inode in bno/off, for mapping it into a buffer.
++ * Return the location of the inode in imap, for mapping it into a buffer.
+  */
+-/*ARGSUSED*/
+ int
+-xfs_dilocate(
+-	xfs_mount_t	*mp,	/* file system mount structure */
+-	xfs_trans_t	*tp,	/* transaction pointer */
++xfs_imap(
++	xfs_mount_t	 *mp,	/* file system mount structure */
++	xfs_trans_t	 *tp,	/* transaction pointer */
+ 	xfs_ino_t	ino,	/* inode to locate */
+-	xfs_fsblock_t	*bno,	/* output: block containing inode */
+-	int		*len,	/* output: num blocks in inode cluster */
+-	int		*off,	/* output: index in block of inode */
+-	uint		flags)	/* flags concerning inode lookup */
++	struct xfs_imap	*imap,	/* location map structure */
++	uint		flags)	/* flags for inode btree lookup */
+ {
+ 	xfs_agblock_t	agbno;	/* block number of inode in the alloc group */
+-	xfs_buf_t	*agbp;	/* agi buffer */
+ 	xfs_agino_t	agino;	/* inode number within alloc group */
+ 	xfs_agnumber_t	agno;	/* allocation group number */
+ 	int		blks_per_cluster; /* num blocks per inode cluster */
+ 	xfs_agblock_t	chunk_agbno;	/* first block in inode chunk */
+-	xfs_agino_t	chunk_agino;	/* first agino in inode chunk */
+-	__int32_t	chunk_cnt;	/* count of free inodes in chunk */
+-	xfs_inofree_t	chunk_free;	/* mask of free inodes in chunk */
+ 	xfs_agblock_t	cluster_agbno;	/* first block in inode cluster */
+-	xfs_btree_cur_t	*cur;	/* inode btree cursor */
+ 	int		error;	/* error code */
+-	int		i;	/* temp state */
+ 	int		offset;	/* index of inode in its buffer */
+ 	int		offset_agbno;	/* blks from chunk start to inode */
  
--#: ../repair/phase6.c:2813 ../repair/phase6.c:2911 ../repair/phase6.c:3232
--#: ../repair/phase6.c:3327
-+#: ../repair/phase6.c:2847
- #, c-format
--msgid "would junk entry \"%s\"\n"
--msgstr "wpis \"%s\" zosta³by wyrzucony\n"
-+msgid "entry \"%s\" in shortform dir inode %llu points to free inode %llu"
-+msgstr "wpis \"%s\" w i-wê¼le krótkiego katalogu %llu wskazuje na wolny i-wêze³ %llu"
- 
--#: ../repair/phase6.c:2857
-+#: ../repair/phase6.c:2901
- #, c-format
- msgid "entry \"%s\" in dir %llu references already connected dir ino %llu,\n"
- msgstr "wpis \"%s\" w katalogu %llu odwo³uje siê do ju¿ pod³±czonego i-wêz³a katalogu %llu,\n"
- 
--#: ../repair/phase6.c:2869
-+#: ../repair/phase6.c:2918
- #, c-format
--msgid "entry \"%s\" in dir %llu not consistent with .. value (%llu) in dir ino %llu,\n"
--msgstr "wpis \"%s\" w katalogu %llu niespójny z warto¶ci± .. (%llu) w i-wê¼le katalogu %llu,\n"
-+msgid "entry \"%s\" in dir %llu not consistent with .. value (%llu) in dir ino %llu"
-+msgstr "wpis \"%s\" w katalogu %llu niespójny z warto¶ci± .. (%llu) w i-wê¼le katalogu %llu"
- 
--#: ../repair/phase6.c:2950 ../repair/phase6.c:3045 ../repair/phase6.c:3382
-+#: ../repair/phase6.c:2960 ../repair/phase6.c:3362
-+msgid "junking entry\n"
-+msgstr "wyrzucono wpis\n"
+ 	ASSERT(ino != NULLFSINO);
 +
-+#: ../repair/phase6.c:2964 ../repair/phase6.c:3366
-+msgid "would junk entry\n"
-+msgstr "wpis zosta³by wyrzucony\n"
+ 	/*
+ 	 * Split up the inode number into its parts.
+ 	 */
+@@ -1061,24 +997,24 @@
+ 	    ino != XFS_AGINO_TO_INO(mp, agno, agino)) {
+ #ifdef DEBUG
+ 		/* no diagnostics for bulkstat, ino comes from userspace */
+-		if (flags & XFS_IMAP_BULKSTAT)
++		if (flags & XFS_IGET_BULKSTAT)
+ 			return XFS_ERROR(EINVAL);
+ 		if (agno >= mp->m_sb.sb_agcount) {
+ 			xfs_fs_cmn_err(CE_ALERT, mp,
+-					"xfs_dilocate: agno (%d) >= "
++					"xfs_imap: agno (%d) >= "
+ 					"mp->m_sb.sb_agcount (%d)",
+ 					agno,  mp->m_sb.sb_agcount);
+ 		}
+ 		if (agbno >= mp->m_sb.sb_agblocks) {
+ 			xfs_fs_cmn_err(CE_ALERT, mp,
+-					"xfs_dilocate: agbno (0x%llx) >= "
++					"xfs_imap: agbno (0x%llx) >= "
+ 					"mp->m_sb.sb_agblocks (0x%lx)",
+ 					(unsigned long long) agbno,
+ 					(unsigned long) mp->m_sb.sb_agblocks);
+ 		}
+ 		if (ino != XFS_AGINO_TO_INO(mp, agno, agino)) {
+ 			xfs_fs_cmn_err(CE_ALERT, mp,
+-					"xfs_dilocate: ino (0x%llx) != "
++					"xfs_imap: ino (0x%llx) != "
+ 					"XFS_AGINO_TO_INO(mp, agno, agino) "
+ 					"(0x%llx)",
+ 					ino, XFS_AGINO_TO_INO(mp, agno, agino));
+@@ -1087,64 +1023,89 @@
+ #endif /* DEBUG */
+ 		return XFS_ERROR(EINVAL);
+ 	}
+-	if ((mp->m_sb.sb_blocksize >= XFS_INODE_CLUSTER_SIZE(mp)) ||
+-	    !(flags & XFS_IMAP_LOOKUP)) {
 +
-+#: ../repair/phase6.c:3003 ../repair/phase6.c:3098 ../repair/phase6.c:3421
- #, c-format
- msgid "setting size to %lld bytes to reflect junked entries\n"
- msgstr "ustawiono rozmiar na %lld aby odzwierciedla³ wyrzucone wpisy\n"
++	/*
++	 * If the inode cluster size is the same as the blocksize or
++	 * smaller we get to the buffer by simple arithmetics.
++	 */
++	if (XFS_INODE_CLUSTER_SIZE(mp) <= mp->m_sb.sb_blocksize) {
+ 		offset = XFS_INO_TO_OFFSET(mp, ino);
+ 		ASSERT(offset < mp->m_sb.sb_inopblock);
+-		*bno = XFS_AGB_TO_FSB(mp, agno, agbno);
+-		*off = offset;
+-		*len = 1;
++
++		imap->im_blkno = XFS_AGB_TO_DADDR(mp, agno, agbno);
++		imap->im_len = XFS_FSB_TO_BB(mp, 1);
++		imap->im_boffset = (ushort)(offset << mp->m_sb.sb_inodelog);
+ 		return 0;
+ 	}
++
+ 	blks_per_cluster = XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_blocklog;
+-	if (*bno != NULLFSBLOCK) {
++
++	/*
++	 * If we get a block number passed from bulkstat we can use it to
++	 * find the buffer easily.
++	 */
++	if (imap->im_blkno) {
+ 		offset = XFS_INO_TO_OFFSET(mp, ino);
+ 		ASSERT(offset < mp->m_sb.sb_inopblock);
+-		cluster_agbno = XFS_FSB_TO_AGBNO(mp, *bno);
+-		*off = ((agbno - cluster_agbno) * mp->m_sb.sb_inopblock) +
+-			offset;
+-		*len = blks_per_cluster;
++
++		cluster_agbno = XFS_DADDR_TO_AGBNO(mp, imap->im_blkno);
++		offset += (agbno - cluster_agbno) * mp->m_sb.sb_inopblock;
++
++		imap->im_len = XFS_FSB_TO_BB(mp, blks_per_cluster);
++		imap->im_boffset = (ushort)(offset << mp->m_sb.sb_inodelog);
+ 		return 0;
+ 	}
++
++	/*
++	 * If the inode chunks are aligned then use simple maths to
++	 * find the location. Otherwise we have to do a btree
++	 * lookup to find the location.
++	 */
+ 	if (mp->m_inoalign_mask) {
+ 		offset_agbno = agbno & mp->m_inoalign_mask;
+ 		chunk_agbno = agbno - offset_agbno;
+ 	} else {
++		xfs_btree_cur_t	*cur;	/* inode btree cursor */
++		xfs_agino_t	chunk_agino; /* first agino in inode chunk */
++		__int32_t	chunk_cnt; /* count of free inodes in chunk */
++		xfs_inofree_t	chunk_free; /* mask of free inodes in chunk */
++		xfs_buf_t	*agbp;	/* agi buffer */
++		int		i;	/* temp state */
++
+ 		down_read(&mp->m_peraglock);
+ 		error = xfs_ialloc_read_agi(mp, tp, agno, &agbp);
+ 		up_read(&mp->m_peraglock);
+ 		if (error) {
+-#ifdef DEBUG
+-			xfs_fs_cmn_err(CE_ALERT, mp, "xfs_dilocate: "
++			xfs_fs_cmn_err(CE_ALERT, mp, "xfs_imap: "
+ 					"xfs_ialloc_read_agi() returned "
+ 					"error %d, agno %d",
+ 					error, agno);
+-#endif /* DEBUG */
+ 			return error;
+ 		}
++
+ 		cur = xfs_inobt_init_cursor(mp, tp, agbp, agno);
+-		if ((error = xfs_inobt_lookup_le(cur, agino, 0, 0, &i))) {
+-#ifdef DEBUG
+-			xfs_fs_cmn_err(CE_ALERT, mp, "xfs_dilocate: "
++		error = xfs_inobt_lookup_le(cur, agino, 0, 0, &i);
++		if (error) {
++			xfs_fs_cmn_err(CE_ALERT, mp, "xfs_imap: "
+ 					"xfs_inobt_lookup_le() failed");
+-#endif /* DEBUG */
+ 			goto error0;
+ 		}
+-		if ((error = xfs_inobt_get_rec(cur, &chunk_agino, &chunk_cnt,
+-				&chunk_free, &i))) {
+-#ifdef DEBUG
+-			xfs_fs_cmn_err(CE_ALERT, mp, "xfs_dilocate: "
++
++		error = xfs_inobt_get_rec(cur, &chunk_agino, &chunk_cnt,
++				&chunk_free, &i);
++		if (error) {
++			xfs_fs_cmn_err(CE_ALERT, mp, "xfs_imap: "
+ 					"xfs_inobt_get_rec() failed");
+-#endif /* DEBUG */
+ 			goto error0;
+ 		}
+ 		if (i == 0) {
+ #ifdef DEBUG
+-			xfs_fs_cmn_err(CE_ALERT, mp, "xfs_dilocate: "
++			xfs_fs_cmn_err(CE_ALERT, mp, "xfs_imap: "
+ 					"xfs_inobt_get_rec() failed");
+ #endif /* DEBUG */
+ 			error = XFS_ERROR(EINVAL);
+ 		}
++ error0:
+ 		xfs_trans_brelse(tp, agbp);
+ 		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
+ 		if (error)
+@@ -1152,19 +1113,35 @@
+ 		chunk_agbno = XFS_AGINO_TO_AGBNO(mp, chunk_agino);
+ 		offset_agbno = agbno - chunk_agbno;
+ 	}
++
+ 	ASSERT(agbno >= chunk_agbno);
+ 	cluster_agbno = chunk_agbno +
+ 		((offset_agbno / blks_per_cluster) * blks_per_cluster);
+ 	offset = ((agbno - cluster_agbno) * mp->m_sb.sb_inopblock) +
+ 		XFS_INO_TO_OFFSET(mp, ino);
+-	*bno = XFS_AGB_TO_FSB(mp, agno, cluster_agbno);
+-	*off = offset;
+-	*len = blks_per_cluster;
++
++	imap->im_blkno = XFS_AGB_TO_DADDR(mp, agno, cluster_agbno);
++	imap->im_len = XFS_FSB_TO_BB(mp, blks_per_cluster);
++	imap->im_boffset = (ushort)(offset << mp->m_sb.sb_inodelog);
++
++	/*
++	 * If the inode number maps to a block outside the bounds
++	 * of the file system then return NULL rather than calling
++	 * read_buf and panicing when we get an error from the
++	 * driver.
++	 */
++	if ((imap->im_blkno + imap->im_len) >
++	    XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks)) {
++		xfs_fs_cmn_err(CE_ALERT, mp, "xfs_imap: "
++			"(imap->im_blkno (0x%llx) + imap->im_len (0x%llx)) > "
++			" XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks) (0x%llx)",
++			(unsigned long long) imap->im_blkno,
++			(unsigned long long) imap->im_len,
++			XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks));
++		return XFS_ERROR(EINVAL);
++	}
++
+ 	return 0;
+-error0:
+-	xfs_trans_brelse(tp, agbp);
+-	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+-	return error;
+ }
  
--#: ../repair/phase6.c:3202
-+#: ../repair/phase6.c:3237
- #, c-format
--msgid "entry \"%s\" in shortform directory %llu references non-existent inode %llu\n"
--msgstr "wpis \"%s\" w krótkim katalogu %llu odwo³uje siê do nie istniej±cego i-wêz³± %llu\n"
-+msgid "entry \"%s\" in shortform directory %llu references non-existent inode %llu"
-+msgstr "wpis \"%s\" w krótkim katalogu %llu odwo³uje siê do nie istniej±cego i-wêz³± %llu"
+ /*
+@@ -1232,70 +1209,95 @@
+ 	xfs_trans_log_buf(tp, bp, first, last);
+ }
  
--#: ../repair/phase6.c:3224
-+#: ../repair/phase6.c:3251
- #, c-format
--msgid "entry \"%s\" in shortform directory inode %llu points to free inode %llu\n"
--msgstr "wpis \"%s\" w i-wê¼le krótkiego katalogu %llu wskazuje na wolny i-wêze³ %llu\n"
-+msgid "entry \"%s\" in shortform directory inode %llu points to free inode %llu"
-+msgstr "wpis \"%s\" w i-wê¼le krótkiego katalogu %llu wskazuje na wolny i-wêze³ %llu"
++#ifdef DEBUG
++STATIC void
++xfs_check_agi_unlinked(
++	struct xfs_agi		*agi)
++{
++	int			i;
++
++	for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++)
++		ASSERT(agi->agi_unlinked[i]);
++}
++#else
++#define xfs_check_agi_unlinked(agi)
++#endif
++
+ /*
+  * Read in the allocation group header (inode allocation section)
+  */
+ int
+-xfs_ialloc_read_agi(
+-	xfs_mount_t	*mp,		/* file system mount structure */
+-	xfs_trans_t	*tp,		/* transaction pointer */
+-	xfs_agnumber_t	agno,		/* allocation group number */
+-	xfs_buf_t	**bpp)		/* allocation group hdr buf */
++xfs_read_agi(
++	struct xfs_mount	*mp,	/* file system mount structure */
++	struct xfs_trans	*tp,	/* transaction pointer */
++	xfs_agnumber_t		agno,	/* allocation group number */
++	struct xfs_buf		**bpp)	/* allocation group hdr buf */
+ {
+-	xfs_agi_t	*agi;		/* allocation group header */
+-	int		agi_ok;		/* agi is consistent */
+-	xfs_buf_t	*bp;		/* allocation group hdr buf */
+-	xfs_perag_t	*pag;		/* per allocation group data */
+-	int		error;
++	struct xfs_agi		*agi;	/* allocation group header */
++	int			agi_ok;	/* agi is consistent */
++	int			error;
  
--#: ../repair/phase6.c:3270
-+#: ../repair/phase6.c:3301
- #, c-format
- msgid "entry \"%s\" in directory inode %llu references already connected inode %llu,\n"
- msgstr "wpis \"%s\" w i-wê¼le katalogu %llu odwo³uje siê do ju¿ pod³±czonego i-wêz³a %llu,\n"
+ 	ASSERT(agno != NULLAGNUMBER);
+-	error = xfs_trans_read_buf(
+-			mp, tp, mp->m_ddev_targp,
++
++	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp,
+ 			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
+-			XFS_FSS_TO_BB(mp, 1), 0, &bp);
++			XFS_FSS_TO_BB(mp, 1), 0, bpp);
+ 	if (error)
+ 		return error;
+-	ASSERT(bp && !XFS_BUF_GETERROR(bp));
++
++	ASSERT(*bpp && !XFS_BUF_GETERROR(*bpp));
++	agi = XFS_BUF_TO_AGI(*bpp);
  
--#: ../repair/phase6.c:3283
-+#: ../repair/phase6.c:3319
- #, c-format
- msgid "entry \"%s\" in directory inode %llu not consistent with .. value (%llu) in inode %llu,\n"
- msgstr "wpis \"%s\" w i-wê¼le katalogu %llu niespójny z warto¶ci± .. (%llu) w i-wê¼le %llu,\n"
- 
--#: ../repair/phase6.c:3351
-+#: ../repair/phase6.c:3390
- #, c-format
- msgid "would fix i8count in inode %llu\n"
- msgstr "i8count w i-wê¼le %llu zosta³oby poprawione\n"
- 
--#: ../repair/phase6.c:3363
-+#: ../repair/phase6.c:3402
- #, c-format
- msgid "fixing i8count in inode %llu\n"
- msgstr "poprawiono i8count w i-wê¼le %llu\n"
- 
--#: ../repair/phase6.c:3427 ../repair/phase6.c:3431 ../repair/phase7.c:249
-+#: ../repair/phase6.c:3458 ../repair/phase6.c:3461 ../repair/phase7.c:83
- #, c-format
- msgid "couldn't map inode %llu, err = %d\n"
- msgstr "nie uda³o siê odwzorowaæ i-wêz³a %llu, b³±d = %d\n"
- 
--#: ../repair/phase6.c:3560
--#, c-format
--msgid "re-entering %s into root directory\n"
--msgstr "ponowne wprowadzanie %s do g³ównego katalogu\n"
+ 	/*
+ 	 * Validate the magic number of the agi block.
+ 	 */
+-	agi = XFS_BUF_TO_AGI(bp);
+-	agi_ok =
+-		be32_to_cpu(agi->agi_magicnum) == XFS_AGI_MAGIC &&
+-		XFS_AGI_GOOD_VERSION(be32_to_cpu(agi->agi_versionnum));
++	agi_ok = be32_to_cpu(agi->agi_magicnum) == XFS_AGI_MAGIC &&
++		XFS_AGI_GOOD_VERSION(be32_to_cpu(agi->agi_versionnum)) &&
++		be32_to_cpu(agi->agi_seqno) == agno;
+ 	if (unlikely(XFS_TEST_ERROR(!agi_ok, mp, XFS_ERRTAG_IALLOC_READ_AGI,
+ 			XFS_RANDOM_IALLOC_READ_AGI))) {
+-		XFS_CORRUPTION_ERROR("xfs_ialloc_read_agi", XFS_ERRLEVEL_LOW,
++		XFS_CORRUPTION_ERROR("xfs_read_agi", XFS_ERRLEVEL_LOW,
+ 				     mp, agi);
+-		xfs_trans_brelse(tp, bp);
++		xfs_trans_brelse(tp, *bpp);
+ 		return XFS_ERROR(EFSCORRUPTED);
+ 	}
++
++	XFS_BUF_SET_VTYPE_REF(*bpp, B_FS_AGI, XFS_AGI_REF);
++
++	xfs_check_agi_unlinked(agi);
++	return 0;
++}
++
++int
++xfs_ialloc_read_agi(
++	struct xfs_mount	*mp,	/* file system mount structure */
++	struct xfs_trans	*tp,	/* transaction pointer */
++	xfs_agnumber_t		agno,	/* allocation group number */
++	struct xfs_buf		**bpp)	/* allocation group hdr buf */
++{
++	struct xfs_agi		*agi;	/* allocation group header */
++	struct xfs_perag	*pag;	/* per allocation group data */
++	int			error;
++
++	error = xfs_read_agi(mp, tp, agno, bpp);
++	if (error)
++		return error;
++
++	agi = XFS_BUF_TO_AGI(*bpp);
+ 	pag = &mp->m_perag[agno];
++
+ 	if (!pag->pagi_init) {
+ 		pag->pagi_freecount = be32_to_cpu(agi->agi_freecount);
+ 		pag->pagi_count = be32_to_cpu(agi->agi_count);
+ 		pag->pagi_init = 1;
+-	} else {
+-		/*
+-		 * It's possible for these to be out of sync if
+-		 * we are in the middle of a forced shutdown.
+-		 */
+-		ASSERT(pag->pagi_freecount == be32_to_cpu(agi->agi_freecount) ||
+-			XFS_FORCED_SHUTDOWN(mp));
+-	}
 -
--#: ../repair/phase6.c:3577
--#, c-format
--msgid "can't make %s entry in root inode %llu, createname error %d\n"
--msgstr "nie mo¿na utworzyæ wpisu %s w g³ównym katalogu %llu, b³±d createname %d\n"
+-#ifdef DEBUG
+-	{
+-		int	i;
 -
--#: ../repair/phase6.c:3602
-+#: ../repair/phase6.c:3582
- msgid "recreating root directory .. entry\n"
- msgstr "ponowne tworzenie wpisu .. g³ównego katalogu\n"
+-		for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++)
+-			ASSERT(agi->agi_unlinked[i]);
+ 	}
+-#endif
  
--#: ../repair/phase6.c:3625
-+#: ../repair/phase6.c:3601
- #, c-format
- msgid "can't make \"..\" entry in root inode %llu, createname error %d\n"
- msgstr "nie mo¿na utworzyæ wpisu \"..\" w i-wê¼le g³ównego katalogu %llu, b³±d createname %d\n"
+-	XFS_BUF_SET_VTYPE_REF(bp, B_FS_AGI, XFS_AGI_REF);
+-	*bpp = bp;
++	/*
++	 * It's possible for these to be out of sync if
++	 * we are in the middle of a forced shutdown.
++	 */
++	ASSERT(pag->pagi_freecount == be32_to_cpu(agi->agi_freecount) ||
++		XFS_FORCED_SHUTDOWN(mp));
+ 	return 0;
+ }
  
--#: ../repair/phase6.c:3638
-+#: ../repair/phase6.c:3613
- msgid "would recreate root directory .. entry\n"
- msgstr "wpis .. g³ównego katalogu zosta³by ponownie utworzony\n"
+Index: xfs-cmds/xfsprogs/libxfs/xfs_inode.c
+===================================================================
+--- xfs-cmds.orig/xfsprogs/libxfs/xfs_inode.c	2008-12-06 20:05:45.000000000 +0100
++++ xfs-cmds/xfsprogs/libxfs/xfs_inode.c	2008-12-06 20:05:49.000000000 +0100
+@@ -91,10 +91,10 @@
+ xfs_imap_to_bp(
+ 	xfs_mount_t	*mp,
+ 	xfs_trans_t	*tp,
+-	xfs_imap_t	*imap,
++	struct xfs_imap	*imap,
+ 	xfs_buf_t	**bpp,
+ 	uint		buf_flags,
+-	uint		imap_flags)
++	uint		iget_flags)
+ {
+ 	int		error;
+ 	int		i;
+@@ -131,12 +131,12 @@
  
--#: ../repair/phase6.c:3717
-+#: ../repair/phase6.c:3690
- #, c-format
- msgid "would create missing \".\" entry in dir ino %llu\n"
- msgstr "brakuj±cy wpis \".\" w i-wê¼le katalogu %llu zosta³by utworzony\n"
+ 		dip = (xfs_dinode_t *)xfs_buf_offset(bp,
+ 					(i << mp->m_sb.sb_inodelog));
+-		di_ok = be16_to_cpu(dip->di_core.di_magic) == XFS_DINODE_MAGIC &&
+-			    XFS_DINODE_GOOD_VERSION(dip->di_core.di_version);
++		di_ok = be16_to_cpu(dip->di_magic) == XFS_DINODE_MAGIC &&
++			    XFS_DINODE_GOOD_VERSION(dip->di_version);
+ 		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
+ 						XFS_ERRTAG_ITOBP_INOTOBP,
+ 						XFS_RANDOM_ITOBP_INOTOBP))) {
+-			if (imap_flags & XFS_IMAP_BULKSTAT) {
++			if (iget_flags & XFS_IGET_BULKSTAT) {
+ 				xfs_trans_brelse(tp, bp);
+ 				return XFS_ERROR(EINVAL);
+ 			}
+@@ -148,7 +148,7 @@
+ 					"daddr %lld #%d (magic=%x)",
+ 				XFS_BUFTARG_NAME(mp->m_ddev_targp),
+ 				(unsigned long long)imap->im_blkno, i,
+-				be16_to_cpu(dip->di_core.di_magic));
++				be16_to_cpu(dip->di_magic));
+ #endif
+ 			xfs_trans_brelse(tp, bp);
+ 			return XFS_ERROR(EFSCORRUPTED);
+@@ -167,6 +167,49 @@
+ }
  
--#: ../repair/phase6.c:3724
-+#: ../repair/phase6.c:3696
- #, c-format
- msgid "creating missing \".\" entry in dir ino %llu\n"
- msgstr "tworzenie brakuj±cego wpisu \".\" w i-wê¼le katalogu %llu\n"
- 
--#: ../repair/phase6.c:3749
-+#: ../repair/phase6.c:3720
- #, c-format
- msgid "can't make \".\" entry in dir ino %llu, createname error %d\n"
- msgstr "nie mo¿na utworzyæ wpisu \".\" w i-wê¼le katalogu %llu, b³±d createname %d\n"
- 
--#: ../repair/phase6.c:3870
-+#: ../repair/phase6.c:3811
-+#, c-format
-+msgid "disconnected dir inode %llu, "
-+msgstr "od³±czony i-wêze³ katalogu %llu, "
+ /*
++ * This routine is called to map an inode number within a file
++ * system to the buffer containing the on-disk version of the
++ * inode.  It returns a pointer to the buffer containing the
++ * on-disk inode in the bpp parameter, and in the dip parameter
++ * it returns a pointer to the on-disk inode within that buffer.
++ *
++ * If a non-zero error is returned, then the contents of bpp and
++ * dipp are undefined.
++ *
++ * Use xfs_imap() to determine the size and location of the
++ * buffer to read from disk.
++ */
++int
++xfs_inotobp(
++	xfs_mount_t	*mp,
++	xfs_trans_t	*tp,
++	xfs_ino_t	ino,
++	xfs_dinode_t	**dipp,
++	xfs_buf_t	**bpp,
++	int		*offset,
++	uint		imap_flags)
++{
++	struct xfs_imap	imap;
++	xfs_buf_t	*bp;
++	int		error;
 +
-+#: ../repair/phase6.c:3813
-+#, c-format
-+msgid "disconnected inode %llu, "
-+msgstr "od³±czony i-wêze³ %llu, "
++	imap.im_blkno = 0;
++	error = xfs_imap(mp, tp, ino, &imap, imap_flags);
++	if (error)
++		return error;
 +
-+#: ../repair/phase6.c:3817
-+#, c-format
-+msgid "moving to %s\n"
-+msgstr "przeniesiono do %s\n"
++	error = xfs_imap_to_bp(mp, tp, &imap, &bp, XFS_BUF_LOCK, imap_flags);
++	if (error)
++		return error;
 +
-+#: ../repair/phase6.c:3820
-+#, c-format
-+msgid "would move to %s\n"
-+msgstr "zosta³by przeniesiony do %s\n"
++	*dipp = (xfs_dinode_t *)xfs_buf_offset(bp, imap.im_boffset);
++	*bpp = bp;
++	*offset = imap.im_boffset;
++	return 0;
++}
 +
-+#: ../repair/phase6.c:3894
- msgid "Phase 6 - check inode connectivity...\n"
- msgstr "Faza 6 - sprawdzanie ³±czno¶ci i-wêz³ów...\n"
- 
--#: ../repair/phase6.c:3889
-+#: ../repair/phase6.c:3913
- msgid "reinitializing root directory\n"
- msgstr "ponowne inicjowanie g³ównego katalogu\n"
- 
--#: ../repair/phase6.c:3894
-+#: ../repair/phase6.c:3918
- msgid "would reinitialize root directory\n"
- msgstr "g³ówny katalog zosta³by ponownie zainicjowany\n"
- 
--#: ../repair/phase6.c:3900
-+#: ../repair/phase6.c:3924
- msgid "reinitializing realtime bitmap inode\n"
- msgstr "ponowne inicjowanie i-wêz³a bitmapy realtime\n"
- 
--#: ../repair/phase6.c:3904
-+#: ../repair/phase6.c:3928
- msgid "would reinitialize realtime bitmap inode\n"
- msgstr "i-wêze³ bitmapy realtime zosta³by ponownie zainicjowany\n"
- 
--#: ../repair/phase6.c:3910
-+#: ../repair/phase6.c:3934
- msgid "reinitializing realtime summary inode\n"
- msgstr "ponowne inicjowanie i-wêz³a opisu realtime\n"
- 
--#: ../repair/phase6.c:3914
-+#: ../repair/phase6.c:3938
- msgid "would reinitialize realtime summary inode\n"
- msgstr "i-wêze³ opisu realtime zosta³by ponownie zainicjowany\n"
- 
--#: ../repair/phase6.c:3920
-+#: ../repair/phase6.c:3944
- msgid "        - resetting contents of realtime bitmap and summary inodes\n"
- msgstr "        - przestawianie zawarto¶ci i-wêz³ów bitmapy i opisu realtime\n"
- 
--#: ../repair/phase6.c:3923 ../repair/phase6.c:3928
-+#: ../repair/phase6.c:3947 ../repair/phase6.c:3952
- msgid "Warning:  realtime bitmap may be inconsistent\n"
- msgstr "Uwaga: bitmapa realtime mo¿e byæ niespójna\n"
- 
--#: ../repair/phase6.c:3936
-+#: ../repair/phase6.c:3958
-+msgid "        - traversing filesystem ...\n"
-+msgstr "        - przechodzenie systemu plików...\n"
 +
-+#: ../repair/phase6.c:3976
-+msgid "        - traversal finished ...\n"
-+msgstr "        - przechodzenie zakoñczone...\n"
++/*
+  * This routine is called to map an inode to the buffer containing
+  * the on-disk version of the inode.  It returns a pointer to the
+  * buffer containing the on-disk inode in the bpp parameter, and in
+@@ -176,15 +219,11 @@
+  * If a non-zero error is returned, then the contents of bpp and
+  * dipp are undefined.
+  *
+- * If the inode is new and has not yet been initialized, use xfs_imap()
+- * to determine the size and location of the buffer to read from disk.
+- * If the inode has already been mapped to its buffer and read in once,
+- * then use the mapping information stored in the inode rather than
+- * calling xfs_imap().  This allows us to avoid the overhead of looking
+- * at the inode btree for small block file systems (see xfs_dilocate()).
+- * We can tell whether the inode has been mapped in before by comparing
+- * its disk block address to 0.  Only uninitialized inodes will have
+- * 0 for the disk block address.
++ * The inode is expected to already been mapped to its buffer and read
++ * in once, thus we can use the mapping information stored in the inode
++ * rather than calling xfs_imap().  This allows us to avoid the overhead
++ * of looking at the inode btree for small block file systems
++ * (see xfs_imap()).
+  */
+ int
+ xfs_itobp(
+@@ -193,40 +232,14 @@
+ 	xfs_inode_t	*ip,
+ 	xfs_dinode_t	**dipp,
+ 	xfs_buf_t	**bpp,
+-	xfs_daddr_t	bno,
+-	uint		imap_flags,
+ 	uint		buf_flags)
+ {
+-	xfs_imap_t	imap;
+ 	xfs_buf_t	*bp;
+ 	int		error;
+ 
+-	if (ip->i_blkno == (xfs_daddr_t)0) {
+-		imap.im_blkno = bno;
+-		error = xfs_imap(mp, tp, ip->i_ino, &imap,
+-					XFS_IMAP_LOOKUP | imap_flags);
+-		if (error)
+-			return error;
+-
+-		/*
+-		 * Fill in the fields in the inode that will be used to
+-		 * map the inode to its buffer from now on.
+-		 */
+-		ip->i_blkno = imap.im_blkno;
+-		ip->i_len = imap.im_len;
+-		ip->i_boffset = imap.im_boffset;
+-	} else {
+-		/*
+-		 * We've already mapped the inode once, so just use the
+-		 * mapping that we saved the first time.
+-		 */
+-		imap.im_blkno = ip->i_blkno;
+-		imap.im_len = ip->i_len;
+-		imap.im_boffset = ip->i_boffset;
+-	}
+-	ASSERT(bno == 0 || bno == imap.im_blkno);
++	ASSERT(ip->i_imap.im_blkno != 0);
+ 
+-	error = xfs_imap_to_bp(mp, tp, &imap, &bp, buf_flags, imap_flags);
++	error = xfs_imap_to_bp(mp, tp, &ip->i_imap, &bp, buf_flags, 0);
+ 	if (error)
+ 		return error;
+ 
+@@ -237,7 +250,7 @@
+ 		return EAGAIN;
+ 	}
+ 
+-	*dipp = (xfs_dinode_t *)xfs_buf_offset(bp, imap.im_boffset);
++	*dipp = (xfs_dinode_t *)xfs_buf_offset(bp, ip->i_imap.im_boffset);
+ 	*bpp = bp;
+ 	return 0;
+ }
+@@ -250,10 +263,8 @@
+  * pointers.  For a file in B-tree format, only the root is immediately
+  * brought in-core.  The rest will be in-lined in if_extents when it
+  * is first referenced (see xfs_iread_extents()).
+- *
+- * Note: this requires user-space public scope for libxfs_iread
+  */
+-int
++STATIC int
+ xfs_iformat(
+ 	xfs_inode_t		*ip,
+ 	xfs_dinode_t		*dip)
+@@ -266,26 +277,26 @@
+ 		XFS_IFORK_DSIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t);
+ 	error = 0;
+ 
+-	if (unlikely(be32_to_cpu(dip->di_core.di_nextents) +
+-		     be16_to_cpu(dip->di_core.di_anextents) >
+-		     be64_to_cpu(dip->di_core.di_nblocks))) {
++	if (unlikely(be32_to_cpu(dip->di_nextents) +
++		     be16_to_cpu(dip->di_anextents) >
++		     be64_to_cpu(dip->di_nblocks))) {
+ 		xfs_fs_repair_cmn_err(CE_WARN, ip->i_mount,
+ 			"corrupt dinode %Lu, extent total = %d, nblocks = %Lu.",
+ 			(unsigned long long)ip->i_ino,
+-			(int)(be32_to_cpu(dip->di_core.di_nextents) +
+-			      be16_to_cpu(dip->di_core.di_anextents)),
++			(int)(be32_to_cpu(dip->di_nextents) +
++			      be16_to_cpu(dip->di_anextents)),
+ 			(unsigned long long)
+-				be64_to_cpu(dip->di_core.di_nblocks));
++				be64_to_cpu(dip->di_nblocks));
+ 		XFS_CORRUPTION_ERROR("xfs_iformat(1)", XFS_ERRLEVEL_LOW,
+ 				     ip->i_mount, dip);
+ 		return XFS_ERROR(EFSCORRUPTED);
+ 	}
+ 
+-	if (unlikely(dip->di_core.di_forkoff > ip->i_mount->m_sb.sb_inodesize)) {
++	if (unlikely(dip->di_forkoff > ip->i_mount->m_sb.sb_inodesize)) {
+ 		xfs_fs_repair_cmn_err(CE_WARN, ip->i_mount,
+ 			"corrupt dinode %Lu, forkoff = 0x%x.",
+ 			(unsigned long long)ip->i_ino,
+-			dip->di_core.di_forkoff);
++			dip->di_forkoff);
+ 		XFS_CORRUPTION_ERROR("xfs_iformat(2)", XFS_ERRLEVEL_LOW,
+ 				     ip->i_mount, dip);
+ 		return XFS_ERROR(EFSCORRUPTED);
+@@ -296,25 +307,25 @@
+ 	case S_IFCHR:
+ 	case S_IFBLK:
+ 	case S_IFSOCK:
+-		if (unlikely(dip->di_core.di_format != XFS_DINODE_FMT_DEV)) {
++		if (unlikely(dip->di_format != XFS_DINODE_FMT_DEV)) {
+ 			XFS_CORRUPTION_ERROR("xfs_iformat(3)", XFS_ERRLEVEL_LOW,
+ 					      ip->i_mount, dip);
+ 			return XFS_ERROR(EFSCORRUPTED);
+ 		}
+ 		ip->i_d.di_size = 0;
+ 		ip->i_size = 0;
+-		ip->i_df.if_u2.if_rdev = be32_to_cpu(dip->di_u.di_dev);
++		ip->i_df.if_u2.if_rdev = xfs_dinode_get_rdev(dip);
+ 		break;
+ 
+ 	case S_IFREG:
+ 	case S_IFLNK:
+ 	case S_IFDIR:
+-		switch (dip->di_core.di_format) {
++		switch (dip->di_format) {
+ 		case XFS_DINODE_FMT_LOCAL:
+ 			/*
+ 			 * no local regular files yet
+ 			 */
+-			if (unlikely((be16_to_cpu(dip->di_core.di_mode) & S_IFMT) == S_IFREG)) {
++			if (unlikely((be16_to_cpu(dip->di_mode) & S_IFMT) == S_IFREG)) {
+ 				xfs_fs_repair_cmn_err(CE_WARN, ip->i_mount,
+ 					"corrupt inode %Lu "
+ 					"(local format for regular file).",
+@@ -325,7 +336,7 @@
+ 				return XFS_ERROR(EFSCORRUPTED);
+ 			}
+ 
+-			di_size = be64_to_cpu(dip->di_core.di_size);
++			di_size = be64_to_cpu(dip->di_size);
+ 			if (unlikely(di_size > XFS_DFORK_DSIZE(dip, ip->i_mount))) {
+ 				xfs_fs_repair_cmn_err(CE_WARN, ip->i_mount,
+ 					"corrupt inode %Lu "
+@@ -367,7 +378,7 @@
+ 	ip->i_afp = kmem_zone_zalloc(xfs_ifork_zone, KM_SLEEP);
+ 	ip->i_afp->if_ext_max =
+ 		XFS_IFORK_ASIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t);
+-	switch (dip->di_core.di_aformat) {
++	switch (dip->di_aformat) {
+ 	case XFS_DINODE_FMT_LOCAL:
+ 		atp = (xfs_attr_shortform_t *)XFS_DFORK_APTR(dip);
+ 		size = be16_to_cpu(atp->hdr.totsize);
+@@ -579,7 +590,7 @@
+ void
+ xfs_dinode_from_disk(
+ 	xfs_icdinode_t		*to,
+-	xfs_dinode_core_t	*from)
++	xfs_dinode_t		*from)
+ {
+ 	to->di_magic = be16_to_cpu(from->di_magic);
+ 	to->di_mode = be16_to_cpu(from->di_mode);
+@@ -613,7 +624,7 @@
+ 
+ void
+ xfs_dinode_to_disk(
+-	xfs_dinode_core_t	*to,
++	xfs_dinode_t		*to,
+ 	xfs_icdinode_t		*from)
+ {
+ 	to->di_magic = cpu_to_be16(from->di_magic);
+@@ -647,6 +658,139 @@
+ }
+ 
+ /*
++ * Read the disk inode attributes into the in-core inode structure.
++ */
++int
++xfs_iread(
++	xfs_mount_t	*mp,
++	xfs_trans_t	*tp,
++	xfs_inode_t	*ip,
++	xfs_daddr_t	bno,
++	uint		iget_flags)
++{
++	xfs_buf_t	*bp;
++	xfs_dinode_t	*dip;
++	int		error;
 +
-+#: ../repair/phase6.c:3977
- #, c-format
--msgid "        - ensuring existence of %s directory\n"
--msgstr "        - zapewnianie istnienia katalogu %s\n"
-+msgid "        - moving disconnected inodes to %s ...\n"
-+msgstr "        - przenoszenie od³±czonych i-wêz³ów do %s...\n"
- 
--#: ../repair/phase6.c:3949
--msgid "        - traversing filesystem starting at / ... \n"
--msgstr "        - przechodzenie systemu plików pocz±wszy od / ...\n"
-+#: ../repair/phase7.c:43
-+#, c-format
-+msgid "resetting inode %llu nlinks from %d to %d\n"
-+msgstr "przestawiono nlinks i-wêz³a %llu z %d na %d\n"
- 
--#: ../repair/phase6.c:3958
--msgid "        - traversal finished ... \n"
--msgstr "        - przechodzenie zakoñczone...\n"
-+#: ../repair/phase7.c:49
-+#, c-format
-+msgid "nlinks %d will overflow v1 ino, ino %llu will be converted to version 2\n"
-+msgstr "nlinks %d przepe³ni i-wêze³ v1, i-wêze³ %llu bêdzie skonwertowany do wersji 2\n"
- 
--#: ../repair/phase6.c:3963
--msgid "        - root inode lost, cannot make new one in no modify mode ... \n"
--msgstr "        - utracony g³ówny i-wêze³, nie mo¿na utworzyæ nowego w trybie bez modyfikacji...\n"
-+#: ../repair/phase7.c:55
-+#, c-format
-+msgid "would have reset inode %llu nlinks from %d to %d\n"
-+msgstr "nlinks i-wêz³a %llu zosta³oby przestawione z %d na %d\n"
- 
--#: ../repair/phase6.c:3965
--msgid "        - skipping filesystem traversal from / ... \n"
--msgstr "        - pominiêto przechodzenie systemu plików od / ...\n"
-+#: ../repair/phase7.c:87
-+#, c-format
-+msgid "couldn't map inode %llu, err = %d, can't compare link counts\n"
-+msgstr "nie uda³o siê odwzorowaæ i-wêz³a %llu, b³±d %d, nie mo¿na porównaæ liczby dowi±zañ\n"
- 
--#: ../repair/phase6.c:3968
--msgid "        - traversing all unattached subtrees ... \n"
--msgstr "        - przechodzenie wszystkich niepod³±czonych poddrzew...\n"
-+#: ../repair/phase7.c:126
-+msgid "Phase 7 - verify and correct link counts...\n"
-+msgstr "Faza 7 - sprawdzanie i poprawianie liczby dowi±zañ...\n"
- 
--#: ../repair/phase6.c:4019
--msgid "        - traversals finished ... \n"
--msgstr "        - przechodzenie zakoñczone...\n"
-+#: ../repair/phase7.c:128
-+msgid "Phase 7 - verify link counts...\n"
-+msgstr "Faza 7 - sprawdzanie liczby dowi±zañ...\n"
- 
--#: ../repair/phase6.c:4024
--msgid "        - moving disconnected inodes to lost+found ... \n"
--msgstr "        - przenoszenie od³±czonych i-wêz³ów do lost+found...\n"
-+#: ../repair/prefetch.c:460
-+msgid "prefetch corruption\n"
-+msgstr "uszkodzenie prefetch\n"
- 
--#: ../repair/phase6.c:4048
-+#: ../repair/prefetch.c:617 ../repair/prefetch.c:713
- #, c-format
--msgid "disconnected dir inode %llu, "
--msgstr "od³±czony i-wêze³ katalogu %llu, "
-+msgid "failed to create prefetch thread: %s\n"
-+msgstr "nie uda³o siê utworzyæ w±tku prefetch: %s\n"
++	/*
++	 * Fill in the location information in the in-core inode.
++	 */
++	ip->i_imap.im_blkno = bno;
++	error = xfs_imap(mp, tp, ip->i_ino, &ip->i_imap, iget_flags);
++	if (error)
++		return error;
++	ASSERT(bno == 0 || bno == ip->i_imap.im_blkno);
 +
-+#: ../repair/progress.c:16
-+msgid "inodes"
-+msgstr "i-wêz³ów"
++	/*
++	 * Get pointers to the on-disk inode and the buffer containing it.
++	 */
++	error = xfs_imap_to_bp(mp, tp, &ip->i_imap, &bp,
++			       XFS_BUF_LOCK, iget_flags);
++	if (error)
++		return error;
++	dip = (xfs_dinode_t *)xfs_buf_offset(bp, ip->i_imap.im_boffset);
 +
-+#: ../repair/progress.c:18
-+msgid "blocks"
-+msgstr "bloków"
- 
--#: ../repair/phase6.c:4052
-+#: ../repair/progress.c:20
-+msgid "directories"
-+msgstr "katalogów"
++	/*
++	 * If we got something that isn't an inode it means someone
++	 * (nfs or dmi) has a stale handle.
++	 */
++	if (be16_to_cpu(dip->di_magic) != XFS_DINODE_MAGIC) {
++#ifdef DEBUG
++		xfs_fs_cmn_err(CE_ALERT, mp, "xfs_iread: "
++				"dip->di_magic (0x%x) != "
++				"XFS_DINODE_MAGIC (0x%x)",
++				be16_to_cpu(dip->di_magic),
++				XFS_DINODE_MAGIC);
++#endif /* DEBUG */
++		error = XFS_ERROR(EINVAL);
++		goto out_brelse;
++	}
 +
-+#: ../repair/progress.c:22
-+msgid "allocation groups"
-+msgstr "grup alokacji"
++	/*
++	 * If the on-disk inode is already linked to a directory
++	 * entry, copy all of the inode into the in-core inode.
++	 * xfs_iformat() handles copying in the inode format
++	 * specific information.
++	 * Otherwise, just get the truly permanent information.
++	 */
++	if (dip->di_mode) {
++		xfs_dinode_from_disk(&ip->i_d, dip);
++		error = xfs_iformat(ip, dip);
++		if (error)  {
++#ifdef DEBUG
++			xfs_fs_cmn_err(CE_ALERT, mp, "xfs_iread: "
++					"xfs_iformat() returned error %d",
++					error);
++#endif /* DEBUG */
++			goto out_brelse;
++		}
++	} else {
++		ip->i_d.di_magic = be16_to_cpu(dip->di_magic);
++		ip->i_d.di_version = dip->di_version;
++		ip->i_d.di_gen = be32_to_cpu(dip->di_gen);
++		ip->i_d.di_flushiter = be16_to_cpu(dip->di_flushiter);
++		/*
++		 * Make sure to pull in the mode here as well in
++		 * case the inode is released without being used.
++		 * This ensures that xfs_inactive() will see that
++		 * the inode is already free and not try to mess
++		 * with the uninitialized part of it.
++		 */
++		ip->i_d.di_mode = 0;
++		/*
++		 * Initialize the per-fork minima and maxima for a new
++		 * inode here.  xfs_iformat will do it for old inodes.
++		 */
++		ip->i_df.if_ext_max =
++			XFS_IFORK_DSIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t);
++	}
 +
-+#: ../repair/progress.c:24
-+msgid "AGI unlinked buckets"
-+msgstr "od³±czonych kube³ków AGI"
++	/*
++	 * The inode format changed when we moved the link count and
++	 * made it 32 bits long.  If this is an old format inode,
++	 * convert it in memory to look like a new one.  If it gets
++	 * flushed to disk we will convert back before flushing or
++	 * logging it.  We zero out the new projid field and the old link
++	 * count field.  We'll handle clearing the pad field (the remains
++	 * of the old uuid field) when we actually convert the inode to
++	 * the new format. We don't change the version number so that we
++	 * can distinguish this from a real new format inode.
++	 */
++	if (ip->i_d.di_version == 1) {
++		ip->i_d.di_nlink = ip->i_d.di_onlink;
++		ip->i_d.di_onlink = 0;
++		ip->i_d.di_projid = 0;
++	}
 +
-+#: ../repair/progress.c:26
-+msgid "extents"
-+msgstr "fragmentów"
++	ip->i_delayed_blks = 0;
++	ip->i_size = ip->i_d.di_size;
 +
-+#: ../repair/progress.c:28
-+msgid "realtime extents"
-+msgstr "fragmentów realtime"
++	/*
++	 * Mark the buffer containing the inode as something to keep
++	 * around for a while.  This helps to keep recently accessed
++	 * meta-data in-core longer.
++	 */
++	XFS_BUF_SET_REF(bp, XFS_INO_REF);
 +
-+#: ../repair/progress.c:30
-+msgid "unlinked lists"
-+msgstr "od³±czonych list"
++	/*
++	 * Use xfs_trans_brelse() to release the buffer containing the
++	 * on-disk inode, because it was acquired with xfs_trans_read_buf()
++	 * in xfs_itobp() above.  If tp is NULL, this is just a normal
++	 * brelse().  If we're within a transaction, then xfs_trans_brelse()
++	 * will only release the buffer if it is not dirty within the
++	 * transaction.  It will be OK to release the buffer in this case,
++	 * because inodes on disk are never destroyed and we will be
++	 * locking the new in-core inode before putting it in the hash
++	 * table where other processes can find it.  Thus we don't have
++	 * to worry about the inode being changed just because we released
++	 * the buffer.
++	 */
++ out_brelse:
++	xfs_trans_brelse(tp, bp);
++	return error;
++}
 +
-+#: ../repair/progress.c:37
- #, c-format
--msgid "disconnected inode %llu, "
--msgstr "od³±czony i-wêze³ %llu, "
-+msgid "        - %02d:%02d:%02d: %s - %llu of %llu %s done\n"
-+msgstr "        - %02d:%02d:%02d: %s - sprawdzono %llu z %llu %s\n"
++/*
+  * Read in extents from a btree-format inode.
+  * Allocate and fill in if_extents.  Real work is done in xfs_bmap.c.
+  */
+@@ -906,64 +1050,6 @@
+ 	ASSERT(ifp->if_bytes <= XFS_IFORK_SIZE(ip, whichfork));
+ }
  
--#: ../repair/phase6.c:4055
-+#: ../repair/progress.c:39
- #, c-format
--msgid "moving to %s\n"
--msgstr "przeniesiono do %s\n"
-+msgid "        - %02d:%02d:%02d: %s - %llu %s done\n"
-+msgstr "        - %02d:%02d:%02d: %s - sprawdzono %llu %s\n"
+-
+-
+-
+-/*
+- * Map inode to disk block and offset.
+- *
+- * mp -- the mount point structure for the current file system
+- * tp -- the current transaction
+- * ino -- the inode number of the inode to be located
+- * imap -- this structure is filled in with the information necessary
+- *	 to retrieve the given inode from disk
+- * flags -- flags to pass to xfs_dilocate indicating whether or not
+- *	 lookups in the inode btree were OK or not
+- */
+-int
+-xfs_imap(
+-	xfs_mount_t	*mp,
+-	xfs_trans_t	*tp,
+-	xfs_ino_t	ino,
+-	xfs_imap_t	*imap,
+-	uint		flags)
+-{
+-	xfs_fsblock_t	fsbno;
+-	int		len;
+-	int		off;
+-	int		error;
+-
+-	fsbno = imap->im_blkno ?
+-		XFS_DADDR_TO_FSB(mp, imap->im_blkno) : NULLFSBLOCK;
+-	error = xfs_dilocate(mp, tp, ino, &fsbno, &len, &off, flags);
+-	if (error)
+-		return error;
+-
+-	imap->im_blkno = XFS_FSB_TO_DADDR(mp, fsbno);
+-	imap->im_len = XFS_FSB_TO_BB(mp, len);
+-	imap->im_agblkno = XFS_FSB_TO_AGBNO(mp, fsbno);
+-	imap->im_ioffset = (ushort)off;
+-	imap->im_boffset = (ushort)(off << mp->m_sb.sb_inodelog);
+-
+-	/*
+-	 * If the inode number maps to a block outside the bounds
+-	 * of the file system then return NULL rather than calling
+-	 * read_buf and panicing when we get an error from the
+-	 * driver.
+-	 */
+-	if ((imap->im_blkno + imap->im_len) >
+-	    XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks)) {
+-		xfs_fs_cmn_err(CE_ALERT, mp, "xfs_imap: "
+-			"(imap->im_blkno (0x%llx) + imap->im_len (0x%llx)) > "
+-			" XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks) (0x%llx)",
+-			(unsigned long long) imap->im_blkno,
+-			(unsigned long long) imap->im_len,
+-			XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks));
+-		return EINVAL;
+-	}
+-	return 0;
+-}
+-
+ void
+ xfs_idestroy_fork(
+ 	xfs_inode_t	*ip,
+@@ -1077,7 +1163,7 @@
+  * In these cases, the format always takes precedence, because the
+  * format indicates the current state of the fork.
+  * 
+- * Note: this requires user-space public scope for libxfs_iread
++ * Note: this requires user-space public scope for libxfs_iflush_int
+  */
+ /*ARGSUSED*/
+ void
+@@ -1155,15 +1241,16 @@
+ 	case XFS_DINODE_FMT_DEV:
+ 		if (iip->ili_format.ilf_fields & XFS_ILOG_DEV) {
+ 			ASSERT(whichfork == XFS_DATA_FORK);
+-			dip->di_u.di_dev = cpu_to_be32(ip->i_df.if_u2.if_rdev);
++			xfs_dinode_put_rdev(dip, ip->i_df.if_u2.if_rdev);
+ 		}
+ 		break;
+ 
+ 	case XFS_DINODE_FMT_UUID:
+ 		if (iip->ili_format.ilf_fields & XFS_ILOG_UUID) {
+ 			ASSERT(whichfork == XFS_DATA_FORK);
+-			memcpy(&dip->di_u.di_muuid, &ip->i_df.if_u2.if_uuid,
+-				sizeof(uuid_t));
++			memcpy(XFS_DFORK_DPTR(dip),
++			       &ip->i_df.if_u2.if_uuid,
++			       sizeof(uuid_t));
+ 		}
+ 		break;
+ 
+Index: xfs-cmds/xfsprogs/libxfs/xfs_mount.c
+===================================================================
+--- xfs-cmds.orig/xfsprogs/libxfs/xfs_mount.c	2008-12-06 20:05:46.000000000 +0100
++++ xfs-cmds/xfsprogs/libxfs/xfs_mount.c	2008-12-06 20:05:49.000000000 +0100
+@@ -265,8 +265,7 @@
+ 	mp->m_sectbb_log = sbp->sb_sectlog - BBSHIFT;
+ 	mp->m_agno_log = xfs_highbit32(sbp->sb_agcount - 1) + 1;
+ 	mp->m_agino_log = sbp->sb_inopblog + sbp->sb_agblklog;
+-	mp->m_litino = sbp->sb_inodesize -
+-		((uint)sizeof(xfs_dinode_core_t) + (uint)sizeof(xfs_agino_t));
++	mp->m_litino = sbp->sb_inodesize - sizeof(struct xfs_dinode);
+ 	mp->m_blockmask = sbp->sb_blocksize - 1;
+ 	mp->m_blockwsize = sbp->sb_blocksize >> XFS_WORDLOG;
+ 	mp->m_blockwmask = mp->m_blockwsize - 1;
+Index: xfs-cmds/xfsprogs/libxlog/xfs_log_recover.c
+===================================================================
+--- xfs-cmds.orig/xfsprogs/libxlog/xfs_log_recover.c	2008-12-06 20:05:45.000000000 +0100
++++ xfs-cmds/xfsprogs/libxlog/xfs_log_recover.c	2008-12-06 20:05:49.000000000 +0100
+@@ -1238,7 +1238,6 @@
+ 	xlog_t			*log)
+ {
+ 	int			i, j, k;
+-	xlog_in_core_2_t	*xhdr;
+ 
+ 	for (i = 0; i < BTOBB(be32_to_cpu(rhead->h_len)) &&
+ 		  i < (XLOG_HEADER_CYCLE_SIZE / BBSIZE); i++) {
+@@ -1247,7 +1246,7 @@
+ 	}
+ 
+ 	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb)) {
+-		xhdr = (xlog_in_core_2_t *)rhead;
++		xlog_in_core_2_t *xhdr = (xlog_in_core_2_t *)rhead;
+ 		for ( ; i < BTOBB(be32_to_cpu(rhead->h_len)); i++) {
+ 			j = i / (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
+ 			k = i % (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
+Index: xfs-cmds/xfsprogs/logprint/log_misc.c
+===================================================================
+--- xfs-cmds.orig/xfsprogs/logprint/log_misc.c	2008-12-06 20:05:45.000000000 +0100
++++ xfs-cmds/xfsprogs/logprint/log_misc.c	2008-12-06 20:05:49.000000000 +0100
+@@ -642,7 +642,7 @@
+     mode = dino.di_mode & S_IFMT;
+     size = (int)dino.di_size;
+     xlog_print_trans_inode_core(&dino);
+-    *ptr += sizeof(xfs_dinode_core_t);
++    *ptr += sizeof(xfs_icdinode_t);
+ 
+     if (*i == num_ops-1 && f->ilf_size == 3)  {
+ 	return 1;
+Index: xfs-cmds/xfsprogs/repair/attr_repair.c
+===================================================================
+--- xfs-cmds.orig/xfsprogs/repair/attr_repair.c	2008-12-06 20:05:45.000000000 +0100
++++ xfs-cmds/xfsprogs/repair/attr_repair.c	2008-12-06 20:05:49.000000000 +0100
+@@ -840,8 +840,8 @@
+ 	bno = blkmap_get(blkmap, 0);
+ 
+ 	if ( bno == NULLDFSBNO ) {
+-		if (dip->di_core.di_aformat == XFS_DINODE_FMT_EXTENTS && 
+-				be16_to_cpu(dip->di_core.di_anextents) == 0)
++		if (dip->di_aformat == XFS_DINODE_FMT_EXTENTS &&
++				be16_to_cpu(dip->di_anextents) == 0)
+ 			return(0); /* the kernel can handle this state */
+ 		do_warn(_("block 0 of inode %llu attribute fork is missing\n"), 
+ 			ino);
+@@ -958,7 +958,7 @@
+ 	int		*repair)  /* returned if we did repair */
+ {
+ 	int		err;
+-	__u8		aformat = dip->di_core.di_aformat;
++	__u8		aformat = dip->di_aformat;
+ 	xfs_attr_shortform_t *asf;
+ 
+ 	asf = (xfs_attr_shortform_t *) XFS_DFORK_APTR(dip);
+Index: xfs-cmds/xfsprogs/repair/dino_chunks.c
+===================================================================
+--- xfs-cmds.orig/xfsprogs/repair/dino_chunks.c	2008-12-06 20:05:45.000000000 +0100
++++ xfs-cmds/xfsprogs/repair/dino_chunks.c	2008-12-06 20:05:49.000000000 +0100
+@@ -810,9 +810,9 @@
+ 			 * store on-disk nlink count for comparing in phase 7
+ 			 */
+ 			set_inode_disk_nlinks(ino_rec, irec_offset,
+-				dino->di_core.di_version > XFS_DINODE_VERSION_1
+-					? be32_to_cpu(dino->di_core.di_nlink)
+-					: be16_to_cpu(dino->di_core.di_onlink));
++				dino->di_version > 1
++					? be32_to_cpu(dino->di_nlink)
++					: be16_to_cpu(dino->di_onlink));
+ 
+ 		} else  {
+ 			set_inode_free(ino_rec, irec_offset);
+Index: xfs-cmds/xfsprogs/repair/dinode.c
+===================================================================
+--- xfs-cmds.orig/xfsprogs/repair/dinode.c	2008-12-06 20:05:45.000000000 +0100
++++ xfs-cmds/xfsprogs/repair/dinode.c	2008-12-06 20:05:49.000000000 +0100
+@@ -41,29 +41,29 @@
+  */
+ /* ARGSUSED */
+ int
+-calc_attr_offset(xfs_mount_t *mp, xfs_dinode_t *dino)
++calc_attr_offset(xfs_mount_t *mp, xfs_dinode_t *dip)
+ {
+-	xfs_dinode_core_t	*dinoc = &dino->di_core;
+-	int			offset = ((__psint_t) &dino->di_u)
+-						- (__psint_t)dino;
++	char			*dfork = XFS_DFORK_DPTR(dip);
++	xfs_bmdr_block_t	*bmdr = (xfs_bmdr_block_t *)dfork;
++	int			offset = ((__psint_t)dfork) - (__psint_t)dip;
+ 
+ 	/*
+ 	 * don't worry about alignment when calculating offset
+ 	 * because the data fork is already 8-byte aligned
+ 	 */
+-	switch (dinoc->di_format)  {
++	switch (dip->di_format)  {
+ 	case XFS_DINODE_FMT_DEV:
+ 		offset += sizeof(xfs_dev_t);
+ 		break;
+ 	case XFS_DINODE_FMT_LOCAL:
+-		offset += be64_to_cpu(dinoc->di_size);
++		offset += be64_to_cpu(dip->di_size);
+ 		break;
+ 	case XFS_DINODE_FMT_EXTENTS:
+-		offset += be32_to_cpu(dinoc->di_nextents) * 
++		offset += be32_to_cpu(dip->di_nextents) *
+ 						sizeof(xfs_bmbt_rec_t);
+ 		break;
+ 	case XFS_DINODE_FMT_BTREE:
+-		offset += be16_to_cpu(dino->di_u.di_bmbt.bb_numrecs) * 
++		offset += be16_to_cpu(bmdr->bb_numrecs) *
+ 						sizeof(xfs_bmbt_rec_t);
+ 		break;
+ 	default:
+@@ -77,11 +77,9 @@
+ 
+ /* ARGSUSED */
+ int
+-clear_dinode_attr(xfs_mount_t *mp, xfs_dinode_t *dino, xfs_ino_t ino_num)
++clear_dinode_attr(xfs_mount_t *mp, xfs_dinode_t *dip, xfs_ino_t ino_num)
+ {
+-	xfs_dinode_core_t *dinoc = &dino->di_core;
+-
+-	ASSERT(dinoc->di_forkoff != 0);
++	ASSERT(dip->di_forkoff != 0);
+ 
+ 	if (!no_modify)
+ 		fprintf(stderr, _("clearing inode %llu attributes\n"),
+@@ -90,16 +88,16 @@
+ 		fprintf(stderr, _("would have cleared inode %llu attributes\n"),
+ 			(unsigned long long)ino_num);
+ 
+-	if (be16_to_cpu(dinoc->di_anextents) != 0)  {
++	if (dip->di_anextents)  {
+ 		if (no_modify)
+-			return(1);
+-		dinoc->di_anextents = cpu_to_be16(0);
++			return 1;
++		dip->di_anextents = 0;
+ 	}
+ 
+-	if (dinoc->di_aformat != XFS_DINODE_FMT_EXTENTS)  {
++	if (dip->di_aformat != XFS_DINODE_FMT_EXTENTS)  {
+ 		if (no_modify)
+-			return(1);
+-		dinoc->di_aformat = XFS_DINODE_FMT_EXTENTS;
++			return 1;
++		dip->di_aformat = XFS_DINODE_FMT_EXTENTS;
+ 	}
+ 
+ 	/* get rid of the fork by clearing forkoff */
+@@ -115,168 +113,138 @@
+ 
+ 	if (!no_modify) {
+ 		xfs_attr_shortform_t *asf = (xfs_attr_shortform_t *)
+-				XFS_DFORK_APTR(dino);
++				XFS_DFORK_APTR(dip);
+ 		asf->hdr.totsize = cpu_to_be16(sizeof(xfs_attr_sf_hdr_t));
+ 		asf->hdr.count = 0;
+-		dinoc->di_forkoff = 0;  /* got to do this after asf is set */
++		dip->di_forkoff = 0;  /* got to do this after asf is set */
+ 	}
+ 
+ 	/*
+ 	 * always returns 1 since the fork gets zapped
+ 	 */
+-	return(1);
++	return 1;
+ }
+ 
+ /* ARGSUSED */
+ int
+-clear_dinode_core(xfs_dinode_core_t *dinoc, xfs_ino_t ino_num)
++clear_dinode_core(xfs_dinode_t *dip, xfs_ino_t ino_num)
+ {
+ 	int dirty = 0;
+ 
+-	if (be16_to_cpu(dinoc->di_magic) != XFS_DINODE_MAGIC)  {
++	if (be16_to_cpu(dip->di_magic) != XFS_DINODE_MAGIC) {
+ 		dirty = 1;
+-
+ 		if (no_modify)
+-			return(1);
+-
+-		dinoc->di_magic = cpu_to_be16(XFS_DINODE_MAGIC);
++			return 1;
++		dip->di_magic = cpu_to_be16(XFS_DINODE_MAGIC);
+ 	}
+ 
+-	if (!XFS_DINODE_GOOD_VERSION(dinoc->di_version) ||
+-	    (!fs_inode_nlink && dinoc->di_version > XFS_DINODE_VERSION_1))  {
++	if (!XFS_DINODE_GOOD_VERSION(dip->di_version) ||
++	    (!fs_inode_nlink && dip->di_version > 1)) {
+ 		dirty = 1;
+-
+ 		if (no_modify)
+-			return(1);
+-
+-		dinoc->di_version = (fs_inode_nlink) ? XFS_DINODE_VERSION_2
+-						: XFS_DINODE_VERSION_1;
++			return 1;
++		dip->di_version = (fs_inode_nlink) ? 2 : 1;
+ 	}
+ 
+-	if (be16_to_cpu(dinoc->di_mode) != 0)  {
++	if (dip->di_mode) {
+ 		dirty = 1;
+-
+ 		if (no_modify)
+-			return(1);
+-
+-		dinoc->di_mode = 0;
++			return 1;
++		dip->di_mode = 0;
+ 	}
+ 
+-	if (be16_to_cpu(dinoc->di_flags) != 0)  {
++	if (dip->di_flags) {
+ 		dirty = 1;
+-
+ 		if (no_modify)
+-			return(1);
+-
+-		dinoc->di_flags = 0;
++			return 1;
++		dip->di_flags = 0;
+ 	}
+ 
+-	if (be32_to_cpu(dinoc->di_dmevmask) != 0)  {
++	if (dip->di_dmevmask) {
+ 		dirty = 1;
+-
+ 		if (no_modify)
+-			return(1);
+-
+-		dinoc->di_dmevmask = 0;
++			return 1;
++		dip->di_dmevmask = 0;
+ 	}
+ 
+-	if (dinoc->di_forkoff != 0)  {
++	if (dip->di_forkoff) {
+ 		dirty = 1;
+-
+ 		if (no_modify)
+-			return(1);
+-
+-		dinoc->di_forkoff = 0;
++			return 1;
++		dip->di_forkoff = 0;
+ 	}
+ 
+-	if (dinoc->di_format != XFS_DINODE_FMT_EXTENTS)  {
++	if (dip->di_format != XFS_DINODE_FMT_EXTENTS) {
+ 		dirty = 1;
+-
+ 		if (no_modify)
+-			return(1);
+-
+-		dinoc->di_format = XFS_DINODE_FMT_EXTENTS;
++			return 1;
++		dip->di_format = XFS_DINODE_FMT_EXTENTS;
+ 	}
+ 
+-	if (dinoc->di_aformat != XFS_DINODE_FMT_EXTENTS)  {
++	if (dip->di_aformat != XFS_DINODE_FMT_EXTENTS) {
+ 		dirty = 1;
+-
+ 		if (no_modify)
+-			return(1);
+-
+-		dinoc->di_aformat = XFS_DINODE_FMT_EXTENTS;
++			return 1;
++		dip->di_aformat = XFS_DINODE_FMT_EXTENTS;
+ 	}
+ 
+-	if (be64_to_cpu(dinoc->di_size) != 0)  {
++	if (dip->di_size) {
+ 		dirty = 1;
+-
+ 		if (no_modify)
+-			return(1);
+-
+-		dinoc->di_size = 0;
++			return 1;
++		dip->di_size = 0;
+ 	}
+ 
+-	if (be64_to_cpu(dinoc->di_nblocks) != 0)  {
++	if (dip->di_nblocks) {
+ 		dirty = 1;
+-
+ 		if (no_modify)
+-			return(1);
+-
+-		dinoc->di_nblocks = 0;
++			return 1;
++		dip->di_nblocks = 0;
+ 	}
+ 
+-	if (be16_to_cpu(dinoc->di_onlink) != 0)  {
++	if (dip->di_onlink) {
+ 		dirty = 1;
+-
+ 		if (no_modify)
+-			return(1);
+-
+-		dinoc->di_onlink = 0;
++			return 1;
++		dip->di_onlink = 0;
+ 	}
+ 
+-	if (be32_to_cpu(dinoc->di_nextents) != 0)  {
++	if (dip->di_nextents) {
+ 		dirty = 1;
+-
+ 		if (no_modify)
+-			return(1);
+-
+-		dinoc->di_nextents = 0;
++			return 1;
++		dip->di_nextents = 0;
+ 	}
+ 
+-	if (be16_to_cpu(dinoc->di_anextents) != 0)  {
++	if (dip->di_anextents) {
+ 		dirty = 1;
+-
+ 		if (no_modify)
+-			return(1);
+-
+-		dinoc->di_anextents = 0;
++			return 1;
++		dip->di_anextents = 0;
+ 	}
+ 
+-	if (dinoc->di_version > XFS_DINODE_VERSION_1 &&
+-			be32_to_cpu(dinoc->di_nlink) != 0)  {
++	if (dip->di_version > 1 && dip->di_nlink) {
+ 		dirty = 1;
+-
+ 		if (no_modify)
+-			return(1);
+-
+-		dinoc->di_nlink = 0;
++			return 1;
++		dip->di_nlink = 0;
+ 	}
+ 
+-	return(dirty);
++	return dirty;
+ }
+ 
+ /* ARGSUSED */
+ int
+-clear_dinode_unlinked(xfs_mount_t *mp, xfs_dinode_t *dino)
++clear_dinode_unlinked(xfs_mount_t *mp, xfs_dinode_t *dip)
+ {
+ 
+-	if (be32_to_cpu(dino->di_next_unlinked) != NULLAGINO)  {
++	if (be32_to_cpu(dip->di_next_unlinked) != NULLAGINO) {
+ 		if (!no_modify)
+-			dino->di_next_unlinked = cpu_to_be32(NULLAGINO);
+-		return(1);
++			dip->di_next_unlinked = cpu_to_be32(NULLAGINO);
++		return 1;
+ 	}
+ 
+-	return(0);
++	return 0;
+ }
+ 
+ /*
+@@ -285,17 +253,17 @@
+  * returns > zero if the inode has been altered while being cleared
+  */
+ int
+-clear_dinode(xfs_mount_t *mp, xfs_dinode_t *dino, xfs_ino_t ino_num)
++clear_dinode(xfs_mount_t *mp, xfs_dinode_t *dip, xfs_ino_t ino_num)
+ {
+ 	int dirty;
+ 
+-	dirty = clear_dinode_core(&dino->di_core, ino_num);
+-	dirty += clear_dinode_unlinked(mp, dino);
++	dirty = clear_dinode_core(dip, ino_num);
++	dirty += clear_dinode_unlinked(mp, dip);
+ 
+ 	/* and clear the forks */
+ 
+ 	if (dirty && !no_modify)
+-		memset(&dino->di_u, 0, XFS_LITINO(mp));
++		memset(XFS_DFORK_DPTR(dip), 0, XFS_LITINO(mp));
+ 
+ 	return(dirty);
+ }
+@@ -1354,11 +1322,11 @@
+ 	xfs_ino_t		lino;
+ 
+ 	lino = XFS_AGINO_TO_INO(mp, agno, ino);
+-	if (whichfork == XFS_DATA_FORK && be64_to_cpu(dip->di_core.di_size) >
+-						XFS_DFORK_DSIZE(dip, mp)) {
++	if (whichfork == XFS_DATA_FORK &&
++	    be64_to_cpu(dip->di_size) > XFS_DFORK_DSIZE(dip, mp)) {
+ 		do_warn(
+ 	_("local inode %llu data fork is too large (size = %lld, max = %d)\n"),
+-			lino, be64_to_cpu(dip->di_core.di_size),
++			lino, be64_to_cpu(dip->di_size),
+ 			XFS_DFORK_DSIZE(dip, mp));
+ 		return(1);
+ 	} else if (whichfork == XFS_ATTR_FORK) {
+@@ -1383,7 +1351,7 @@
+ }
+ 
+ int
+-process_symlink_extlist(xfs_mount_t *mp, xfs_ino_t lino, xfs_dinode_t *dino)
++process_symlink_extlist(xfs_mount_t *mp, xfs_ino_t lino, xfs_dinode_t *dip)
+ {
+ 	xfs_dfiloff_t		expected_offset;
+ 	xfs_bmbt_rec_t		*rp;
+@@ -1392,23 +1360,23 @@
+ 	int			i;
+ 	int			max_blocks;
+ 
+-	if (be64_to_cpu(dino->di_core.di_size) <= XFS_DFORK_DSIZE(dino, mp)) {
+-		if (dino->di_core.di_format == XFS_DINODE_FMT_LOCAL)  
++	if (be64_to_cpu(dip->di_size) <= XFS_DFORK_DSIZE(dip, mp)) {
++		if (dip->di_format == XFS_DINODE_FMT_LOCAL)
+ 			return 0;
+ 		do_warn(_("mismatch between format (%d) and size (%lld) in "
+-			"symlink ino %llu\n"), dino->di_core.di_format, 
+-			be64_to_cpu(dino->di_core.di_size), lino);
++			"symlink ino %llu\n"), dip->di_format,
++			be64_to_cpu(dip->di_size), lino);
+ 		return 1;
+ 	}
+-	if (dino->di_core.di_format == XFS_DINODE_FMT_LOCAL) {
++	if (dip->di_format == XFS_DINODE_FMT_LOCAL) {
+ 		do_warn(_("mismatch between format (%d) and size (%lld) in "
+-			"symlink inode %llu\n"), dino->di_core.di_format,
+-			be64_to_cpu(dino->di_core.di_size), lino);
++			"symlink inode %llu\n"), dip->di_format,
++			be64_to_cpu(dip->di_size), lino);
+ 		return 1;
+ 	}
+ 
+-	rp = (xfs_bmbt_rec_t *)XFS_DFORK_DPTR(dino);
+-	numrecs = be32_to_cpu(dino->di_core.di_nextents);
++	rp = (xfs_bmbt_rec_t *)XFS_DFORK_DPTR(dip);
++	numrecs = be32_to_cpu(dip->di_nextents);
+ 
+ 	/*
+ 	 * the max # of extents in a symlink inode is equal to the
+@@ -1474,11 +1442,10 @@
+ process_symlink(
+ 	xfs_mount_t	*mp,
+ 	xfs_ino_t	lino,
+-	xfs_dinode_t	*dino,
++	xfs_dinode_t	*dip,
+ 	blkmap_t 	*blkmap)
+ {
+ 	xfs_dfsbno_t		fsbno;
+-	xfs_dinode_core_t	*dinoc = &dino->di_core;
+ 	xfs_buf_t		*bp = NULL;
+ 	char			*symlink, *cptr, *buf_data;
+ 	int			i, size, amountdone;
+@@ -1490,9 +1457,9 @@
+ 	 * the inode is structurally ok so we don't have to check
+ 	 * for that
+ 	 */
+-	if (be64_to_cpu(dinoc->di_size) >= MAXPATHLEN)  {
++	if (be64_to_cpu(dip->di_size) >= MAXPATHLEN)  {
+ 		do_warn(_("symlink in inode %llu too long (%lld chars)\n"),
+-			lino, be64_to_cpu(dinoc->di_size));
++			lino, be64_to_cpu(dip->di_size));
+ 		return(1);
+ 	}
+ 
+@@ -1501,13 +1468,13 @@
+ 	 * get symlink contents into data area
+ 	 */
+ 	symlink = &data[0];
+-	if (be64_to_cpu(dinoc->di_size) <= XFS_DFORK_DSIZE(dino, mp))  {
++	if (be64_to_cpu(dip->di_size) <= XFS_DFORK_DSIZE(dip, mp))  {
+ 		/*
+ 		 * local symlink, just copy the symlink out of the
+ 		 * inode into the data area
+ 		 */
+-		memmove(symlink, XFS_DFORK_DPTR(dino), 
+-						be64_to_cpu(dinoc->di_size));
++		memmove(symlink, XFS_DFORK_DPTR(dip),
++						be64_to_cpu(dip->di_size));
+ 	} else {
+ 		/*
+ 		 * stored in a meta-data file, have to bmap one block
+@@ -1516,7 +1483,7 @@
+ 		i = size = amountdone = 0;
+ 		cptr = symlink;
+ 
+-		while (amountdone < be64_to_cpu(dinoc->di_size)) {
++		while (amountdone < be64_to_cpu(dip->di_size)) {
+ 			fsbno = blkmap_get(blkmap, i);
+ 			if (fsbno != NULLDFSBNO)
+ 				bp = libxfs_readbuf(mp->m_dev,
+@@ -1530,7 +1497,7 @@
+ 			}
+ 
+ 			buf_data = (char *)XFS_BUF_PTR(bp);
+-			size = MIN(be64_to_cpu(dinoc->di_size) - amountdone, 
++			size = MIN(be64_to_cpu(dip->di_size) - amountdone,
+ 						XFS_FSB_TO_BB(mp, 1) * BBSIZE);
+ 			memmove(cptr, buf_data, size);
+ 			cptr += size;
+@@ -1539,12 +1506,12 @@
+ 			libxfs_putbuf(bp);
+ 		}
+ 	}
+-	data[be64_to_cpu(dinoc->di_size)] = '\0';
++	data[be64_to_cpu(dip->di_size)] = '\0';
+ 
+ 	/*
+ 	 * check for nulls
+ 	 */
+-	if (null_check(symlink, be64_to_cpu(dinoc->di_size)))  {
++	if (null_check(symlink, be64_to_cpu(dip->di_size)))  {
+ 		do_warn(
+ 		_("found illegal null character in symlink inode %llu\n"),
+ 			lino);
+@@ -1554,7 +1521,7 @@
+ 	/*
+ 	 * check for any component being too long
+ 	 */
+-	if (be64_to_cpu(dinoc->di_size) >= MAXNAMELEN)  {
++	if (be64_to_cpu(dip->di_size) >= MAXNAMELEN)  {
+ 		cptr = strchr(symlink, '/');
+ 
+ 		while (cptr != NULL)  {
+@@ -1585,7 +1552,7 @@
+  */
+ static int
+ process_misc_ino_types(xfs_mount_t	*mp,
+-			xfs_dinode_t	*dino,
++			xfs_dinode_t	*dip,
+ 			xfs_ino_t	lino,
+ 			int		type)
+ {
+@@ -1602,27 +1569,27 @@
+ 	/*
+ 	 * must also have a zero size
+ 	 */
+-	if (be64_to_cpu(dino->di_core.di_size) != 0)  {
++	if (be64_to_cpu(dip->di_size) != 0)  {
+ 		switch (type)  {
+ 		case XR_INO_CHRDEV:
+ 			do_warn(_("size of character device inode %llu != 0 "
+ 				  "(%lld bytes)\n"), lino,
+-				be64_to_cpu(dino->di_core.di_size));
++				be64_to_cpu(dip->di_size));
+ 			break;
+ 		case XR_INO_BLKDEV:
+ 			do_warn(_("size of block device inode %llu != 0 "
+ 				  "(%lld bytes)\n"), lino,
+-				be64_to_cpu(dino->di_core.di_size));
++				be64_to_cpu(dip->di_size));
+ 			break;
+ 		case XR_INO_SOCK:
+ 			do_warn(_("size of socket inode %llu != 0 "
+ 				  "(%lld bytes)\n"), lino,
+-				be64_to_cpu(dino->di_core.di_size));
++				be64_to_cpu(dip->di_size));
+ 			break;
+ 		case XR_INO_FIFO:
+ 			do_warn(_("size of fifo inode %llu != 0 "
+ 				  "(%lld bytes)\n"), lino,
+-				be64_to_cpu(dino->di_core.di_size));
++				be64_to_cpu(dip->di_size));
+ 			break;
+ 		default:
+ 			do_warn(_("Internal error - process_misc_ino_types, "
+@@ -1641,7 +1608,7 @@
+ {
+ 	/*
+ 	 * you can not enforce all misc types have zero data fork blocks
+-	 * by checking dino->di_core.di_nblocks because atotblocks (attribute
++	 * by checking dip->di_nblocks because atotblocks (attribute
+ 	 * blocks) are part of nblocks. We must check this later when atotblocks
+ 	 * has been calculated or by doing a simple check that anExtents == 0.
+ 	 * We must also guarantee that totblocks is 0. Thus nblocks checking
+@@ -1680,50 +1647,50 @@
+ 
+ static inline int
+ dinode_fmt(
+-	xfs_dinode_core_t *dinoc)
++	xfs_dinode_t	*dip)
+ {
+-	return be16_to_cpu(dinoc->di_mode) & S_IFMT;
++	return be16_to_cpu(dip->di_mode) & S_IFMT;
+ }
+ 
+ static inline void
+ change_dinode_fmt(
+-	xfs_dinode_core_t *dinoc,
++	xfs_dinode_t	*dip,
+ 	int		new_fmt)
+ {
+-	int		mode = be16_to_cpu(dinoc->di_mode);
++	int		mode = be16_to_cpu(dip->di_mode);
+ 
+ 	ASSERT((new_fmt & ~S_IFMT) == 0);
+ 
+ 	mode &= ~S_IFMT;
+ 	mode |= new_fmt;
+-	dinoc->di_mode = cpu_to_be16(mode);
++	dip->di_mode = cpu_to_be16(mode);
+ }
+ 
+ static int
+ check_dinode_mode_format(
+-	xfs_dinode_core_t *dinoc)
++	xfs_dinode_t	*dip)
+ {
+-	if (dinoc->di_format >= XFS_DINODE_FMT_UUID)
++	if (dip->di_format >= XFS_DINODE_FMT_UUID)
+ 		return -1;	/* FMT_UUID is not used */
+ 
+-	switch (dinode_fmt(dinoc)) {
++	switch (dinode_fmt(dip)) {
+ 	case S_IFIFO:
+ 	case S_IFCHR:
+ 	case S_IFBLK:
+ 	case S_IFSOCK:
+-		return (dinoc->di_format != XFS_DINODE_FMT_DEV) ? -1 : 0;
++		return (dip->di_format != XFS_DINODE_FMT_DEV) ? -1 : 0;
+ 
+ 	case S_IFDIR:
+-		return (dinoc->di_format < XFS_DINODE_FMT_LOCAL ||
+-			dinoc->di_format > XFS_DINODE_FMT_BTREE) ? -1 : 0;
++		return (dip->di_format < XFS_DINODE_FMT_LOCAL ||
++			dip->di_format > XFS_DINODE_FMT_BTREE) ? -1 : 0;
+ 
+ 	case S_IFREG:
+-		return (dinoc->di_format < XFS_DINODE_FMT_EXTENTS ||
+-			dinoc->di_format > XFS_DINODE_FMT_BTREE) ? -1 : 0;
++		return (dip->di_format < XFS_DINODE_FMT_EXTENTS ||
++			dip->di_format > XFS_DINODE_FMT_BTREE) ? -1 : 0;
+ 
+ 	case S_IFLNK:
+-		return (dinoc->di_format < XFS_DINODE_FMT_LOCAL ||
+-			dinoc->di_format > XFS_DINODE_FMT_EXTENTS) ? -1 : 0;
++		return (dip->di_format < XFS_DINODE_FMT_LOCAL ||
++			dip->di_format > XFS_DINODE_FMT_EXTENTS) ? -1 : 0;
+ 
+ 	default: ;
+ 	}
+@@ -1738,7 +1705,7 @@
+ static int
+ process_check_sb_inodes(
+ 	xfs_mount_t	*mp,
+-	xfs_dinode_core_t *dinoc,
++	xfs_dinode_t	*dip,
+ 	xfs_ino_t	lino,
+ 	int		*type,
+ 	int		*dirty)
+@@ -1746,11 +1713,11 @@
+ 	if (lino == mp->m_sb.sb_rootino) {
+ 	 	if (*type != XR_INO_DIR)  {
+ 			do_warn(_("root inode %llu has bad type 0x%x\n"),
+-				lino, dinode_fmt(dinoc));
++				lino, dinode_fmt(dip));
+ 			*type = XR_INO_DIR;
+ 			if (!no_modify)  {
+ 				do_warn(_("resetting to directory\n"));
+-				change_dinode_fmt(dinoc, S_IFDIR);
++				change_dinode_fmt(dip, S_IFDIR);
+ 				*dirty = 1;
+ 			} else
+ 				do_warn(_("would reset to directory\n"));
+@@ -1760,7 +1727,7 @@
+ 	if (lino == mp->m_sb.sb_uquotino)  {
+ 		if (*type != XR_INO_DATA)  {
+ 			do_warn(_("user quota inode %llu has bad type 0x%x\n"),
+-				lino, dinode_fmt(dinoc));
++				lino, dinode_fmt(dip));
+ 			mp->m_sb.sb_uquotino = NULLFSINO;
+ 			return 1;
+ 		}
+@@ -1769,7 +1736,7 @@
+ 	if (lino == mp->m_sb.sb_gquotino)  {
+ 		if (*type != XR_INO_DATA)  {
+ 			do_warn(_("group quota inode %llu has bad type 0x%x\n"),
+-				lino, dinode_fmt(dinoc));
++				lino, dinode_fmt(dip));
+ 			mp->m_sb.sb_gquotino = NULLFSINO;
+ 			return 1;
+ 		}
+@@ -1778,18 +1745,18 @@
+ 	if (lino == mp->m_sb.sb_rsumino) {
+ 		if (*type != XR_INO_RTSUM) {
+ 			do_warn(_("realtime summary inode %llu has bad type 0x%x, "),
+-				lino, dinode_fmt(dinoc));
++				lino, dinode_fmt(dip));
+ 			if (!no_modify)  {
+ 				do_warn(_("resetting to regular file\n"));
+-				change_dinode_fmt(dinoc, S_IFREG);
++				change_dinode_fmt(dip, S_IFREG);
+ 				*dirty = 1;
+ 			} else  {
+ 				do_warn(_("would reset to regular file\n"));
+ 			}
+ 		}
+-		if (mp->m_sb.sb_rblocks == 0 && dinoc->di_nextents != 0)  {
++		if (mp->m_sb.sb_rblocks == 0 && dip->di_nextents != 0)  {
+ 			do_warn(_("bad # of extents (%u) for realtime summary inode %llu\n"),
+-				be32_to_cpu(dinoc->di_nextents), lino);
++				be32_to_cpu(dip->di_nextents), lino);
+ 			return 1;
+ 		}
+ 		return 0;
+@@ -1797,18 +1764,18 @@
+ 	if (lino == mp->m_sb.sb_rbmino) {
+ 		if (*type != XR_INO_RTBITMAP) {
+ 			do_warn(_("realtime bitmap inode %llu has bad type 0x%x, "),
+-				lino, dinode_fmt(dinoc));
++				lino, dinode_fmt(dip));
+ 			if (!no_modify)  {
+ 				do_warn(_("resetting to regular file\n"));
+-				change_dinode_fmt(dinoc, S_IFREG);
++				change_dinode_fmt(dip, S_IFREG);
+ 				*dirty = 1;
+ 			} else  {
+ 				do_warn(_("would reset to regular file\n"));
+ 			}
+ 		}
+-		if (mp->m_sb.sb_rblocks == 0 && dinoc->di_nextents != 0)  {
++		if (mp->m_sb.sb_rblocks == 0 && dip->di_nextents != 0)  {
+ 			do_warn(_("bad # of extents (%u) for realtime bitmap inode %llu\n"),
+-				be32_to_cpu(dinoc->di_nextents), lino);
++				be32_to_cpu(dip->di_nextents), lino);
+ 			return 1;
+ 		}
+ 		return 0;
+@@ -1830,21 +1797,20 @@
+ static int
+ process_check_inode_sizes(
+ 	xfs_mount_t	*mp,
+-	xfs_dinode_t	*dino,
++	xfs_dinode_t	*dip,
+ 	xfs_ino_t	lino,
+ 	int		type)
+ {
+-	xfs_dinode_core_t *dinoc = &dino->di_core;
+-	xfs_fsize_t	size = be64_to_cpu(dinoc->di_size);
++	xfs_fsize_t	size = be64_to_cpu(dip->di_size);
+ 
+ 	switch (type)  {
+ 
+ 	case XR_INO_DIR:
+-		if (size <= XFS_DFORK_DSIZE(dino, mp) &&
+-				dinoc->di_format != XFS_DINODE_FMT_LOCAL) {
++		if (size <= XFS_DFORK_DSIZE(dip, mp) &&
++				dip->di_format != XFS_DINODE_FMT_LOCAL) {
+ 			do_warn(_("mismatch between format (%d) and size "
+ 				"(%lld) in directory ino %llu\n"),
+-				dinoc->di_format, size, lino);
++				dip->di_format, size, lino);
+ 			return 1;
+ 		}
+ 		if (size > XFS_DIR2_LEAF_OFFSET) {
+@@ -1855,7 +1821,7 @@
+ 		break;
+ 
+ 	case XR_INO_SYMLINK:
+-		if (process_symlink_extlist(mp, lino, dino))  {
++		if (process_symlink_extlist(mp, lino, dip))  {
+ 			do_warn(_("bad data fork in symlink %llu\n"), lino);
+ 			return 1;
+ 		}
+@@ -1866,7 +1832,7 @@
+ 	case XR_INO_SOCK:	/* fall through to FIFO case ... */
+ 	case XR_INO_MOUNTPOINT:	/* fall through to FIFO case ... */
+ 	case XR_INO_FIFO:
+-		if (process_misc_ino_types(mp, dino, lino, type))
++		if (process_misc_ino_types(mp, dip, lino, type))
+ 			return 1;
+ 		break;
+ 
+@@ -1914,17 +1880,17 @@
+ static int
+ process_check_inode_forkoff(
+ 	xfs_mount_t	*mp,
+-	xfs_dinode_core_t *dinoc,
++	xfs_dinode_t	*dip,
+ 	xfs_ino_t	lino)
+ {
+-	if (dinoc->di_forkoff == 0)
++	if (dip->di_forkoff == 0)
+ 		return 0;
+ 
+-	switch (dinoc->di_format)  {
++	switch (dip->di_format)  {
+ 	case XFS_DINODE_FMT_DEV:
+-		if (dinoc->di_forkoff != (roundup(sizeof(xfs_dev_t), 8) >> 3)) {
++		if (dip->di_forkoff != (roundup(sizeof(xfs_dev_t), 8) >> 3)) {
+ 			do_warn(_("bad attr fork offset %d in dev inode %llu, "
+-				"should be %d\n"), dinoc->di_forkoff, lino,
++				"should be %d\n"), dip->di_forkoff, lino,
+ 				(int)(roundup(sizeof(xfs_dev_t), 8) >> 3));
+ 			return 1;
+ 		}
+@@ -1932,15 +1898,15 @@
+ 	case XFS_DINODE_FMT_LOCAL:	/* fall through ... */
+ 	case XFS_DINODE_FMT_EXTENTS:	/* fall through ... */
+ 	case XFS_DINODE_FMT_BTREE:
+-		if (dinoc->di_forkoff >= (XFS_LITINO(mp) >> 3)) {
++		if (dip->di_forkoff >= (XFS_LITINO(mp) >> 3)) {
+ 			do_warn(_("bad attr fork offset %d in inode %llu, "
+-				"max=%d\n"), dinoc->di_forkoff, lino,
++				"max=%d\n"), dip->di_forkoff, lino,
+ 				XFS_LITINO(mp) >> 3);
+ 			return 1;
+ 		}
+ 		break;
+ 	default:
+-		do_error(_("unexpected inode format %d\n"), dinoc->di_format);
++		do_error(_("unexpected inode format %d\n"), dip->di_format);
+ 		break;
+ 	}
+ 	return 0;
+@@ -1951,24 +1917,24 @@
+  */
+ static int
+ process_inode_blocks_and_extents(
+-	xfs_dinode_core_t *dinoc,
++	xfs_dinode_t	*dip,
+ 	xfs_drfsbno_t	nblocks,
+ 	__uint64_t	nextents,
+ 	__uint64_t	anextents,
+ 	xfs_ino_t	lino,
+ 	int		*dirty)
+ {
+-	if (nblocks != be64_to_cpu(dinoc->di_nblocks))  {
++	if (nblocks != be64_to_cpu(dip->di_nblocks))  {
+ 		if (!no_modify)  {
+ 			do_warn(_("correcting nblocks for inode %llu, "
+ 				"was %llu - counted %llu\n"), lino,
+-				be64_to_cpu(dinoc->di_nblocks), nblocks);
+-			dinoc->di_nblocks = cpu_to_be64(nblocks);
++				be64_to_cpu(dip->di_nblocks), nblocks);
++			dip->di_nblocks = cpu_to_be64(nblocks);
+ 			*dirty = 1;
+ 		} else  {
+ 			do_warn(_("bad nblocks %llu for inode %llu, "
+ 				"would reset to %llu\n"),
+-				be64_to_cpu(dinoc->di_nblocks), lino, nblocks);
++				be64_to_cpu(dip->di_nblocks), lino, nblocks);
+ 		}
+ 	}
+ 
+@@ -1977,16 +1943,16 @@
+ 			nextents, lino);
+ 		return 1;
+ 	}
+-	if (nextents != be32_to_cpu(dinoc->di_nextents))  {
++	if (nextents != be32_to_cpu(dip->di_nextents))  {
+ 		if (!no_modify)  {
+ 			do_warn(_("correcting nextents for inode %llu, "
+ 				"was %d - counted %llu\n"), lino,
+-				be32_to_cpu(dinoc->di_nextents), nextents);
+-			dinoc->di_nextents = cpu_to_be32(nextents);
++				be32_to_cpu(dip->di_nextents), nextents);
++			dip->di_nextents = cpu_to_be32(nextents);
+ 			*dirty = 1;
+ 		} else  {
+ 			do_warn(_("bad nextents %d for inode %llu, would reset "
+-				"to %llu\n"), be32_to_cpu(dinoc->di_nextents),
++				"to %llu\n"), be32_to_cpu(dip->di_nextents),
+ 				lino, nextents);
+ 		}
+ 	}
+@@ -1996,16 +1962,16 @@
+ 			anextents, lino);
+ 		return 1;
+ 	}
+-	if (anextents != be16_to_cpu(dinoc->di_anextents))  {
++	if (anextents != be16_to_cpu(dip->di_anextents))  {
+ 		if (!no_modify)  {
+ 			do_warn(_("correcting anextents for inode %llu, "
+ 				"was %d - counted %llu\n"), lino,
+-				be16_to_cpu(dinoc->di_anextents), anextents);
+-			dinoc->di_anextents = cpu_to_be16(anextents);
++				be16_to_cpu(dip->di_anextents), anextents);
++			dip->di_anextents = cpu_to_be16(anextents);
+ 			*dirty = 1;
+ 		} else  {
+ 			do_warn(_("bad anextents %d for inode %llu, would reset"
+-				" to %llu\n"), be16_to_cpu(dinoc->di_anextents),
++				" to %llu\n"), be16_to_cpu(dip->di_anextents),
+ 				lino, anextents);
+ 		}
+ 	}
+@@ -2020,7 +1986,7 @@
+ 	xfs_mount_t	*mp,
+ 	xfs_agnumber_t	agno,
+ 	xfs_agino_t	ino,
+-	xfs_dinode_t	*dino,
++	xfs_dinode_t	*dip,
+ 	int		type,
+ 	int		*dirty,
+ 	xfs_drfsbno_t	*totblocks,
+@@ -2028,30 +1994,29 @@
+ 	blkmap_t	**dblkmap,
+ 	int		check_dups)
+ {
+-	xfs_dinode_core_t *dinoc = &dino->di_core;
+ 	xfs_ino_t	lino = XFS_AGINO_TO_INO(mp, agno, ino);
+ 	int		err = 0;
+ 
+-	*nextents = be32_to_cpu(dinoc->di_nextents);
+-	if (*nextents > be64_to_cpu(dinoc->di_nblocks))
++	*nextents = be32_to_cpu(dip->di_nextents);
++	if (*nextents > be64_to_cpu(dip->di_nblocks))
+ 		*nextents = 1;
+ 
+-	if (dinoc->di_format != XFS_DINODE_FMT_LOCAL && type != XR_INO_RTDATA)
++	if (dip->di_format != XFS_DINODE_FMT_LOCAL && type != XR_INO_RTDATA)
+ 		*dblkmap = blkmap_alloc(*nextents);
+ 	*nextents = 0;
+ 
+-	switch (dinoc->di_format) {
++	switch (dip->di_format) {
+ 	case XFS_DINODE_FMT_LOCAL:
+-		err = process_lclinode(mp, agno, ino, dino, XFS_DATA_FORK);
++		err = process_lclinode(mp, agno, ino, dip, XFS_DATA_FORK);
+ 		*totblocks = 0;
+ 		break;
+ 	case XFS_DINODE_FMT_EXTENTS:
+-		err = process_exinode(mp, agno, ino, dino, type, dirty,
++		err = process_exinode(mp, agno, ino, dip, type, dirty,
+ 			totblocks, nextents, dblkmap, XFS_DATA_FORK,
+ 			check_dups);
+ 		break;
+ 	case XFS_DINODE_FMT_BTREE:
+-		err = process_btinode(mp, agno, ino, dino, type, dirty,
++		err = process_btinode(mp, agno, ino, dip, type, dirty,
+ 			totblocks, nextents, dblkmap, XFS_DATA_FORK,
+ 			check_dups);
+ 		break;
+@@ -2060,13 +2025,13 @@
+ 		break;
+ 	default:
+ 		do_error(_("unknown format %d, ino %llu (mode = %d)\n"),
+-			dinoc->di_format, lino, be16_to_cpu(dinoc->di_mode));
++			dip->di_format, lino, be16_to_cpu(dip->di_mode));
+ 	}
+ 
+ 	if (err)  {
+ 		do_warn(_("bad data fork in inode %llu\n"), lino);
+ 		if (!no_modify)  {
+-			*dirty += clear_dinode(mp, dino, lino);
++			*dirty += clear_dinode(mp, dip, lino);
+ 			ASSERT(*dirty > 0);
+ 		}
+ 		return 1;
+@@ -2078,18 +2043,18 @@
+ 		 * re-process data fork to set bitmap since the
+ 		 * bitmap wasn't set the first time through
+ 		 */
+-		switch (dinoc->di_format) {
++		switch (dip->di_format) {
+ 		case XFS_DINODE_FMT_LOCAL:
+-			err = process_lclinode(mp, agno, ino, dino, 
++			err = process_lclinode(mp, agno, ino, dip,
+ 						XFS_DATA_FORK);
+ 			break;
+ 		case XFS_DINODE_FMT_EXTENTS:
+-			err = process_exinode(mp, agno, ino, dino, type,
++			err = process_exinode(mp, agno, ino, dip, type,
+ 				dirty, totblocks, nextents, dblkmap,
+ 				XFS_DATA_FORK, 0);
+ 			break;
+ 		case XFS_DINODE_FMT_BTREE:
+-			err = process_btinode(mp, agno, ino, dino, type,
++			err = process_btinode(mp, agno, ino, dip, type,
+ 				dirty, totblocks, nextents, dblkmap,
+ 				XFS_DATA_FORK, 0);
+ 			break;
+@@ -2098,8 +2063,8 @@
+ 			break;
+ 		default:
+ 			do_error(_("unknown format %d, ino %llu (mode = %d)\n"),
+-				dinoc->di_format, lino,
+-				be16_to_cpu(dinoc->di_mode));
++				dip->di_format, lino,
++				be16_to_cpu(dip->di_mode));
+ 		}
+ 
+ 		if (no_modify && err != 0)
+@@ -2118,7 +2083,7 @@
+ 	xfs_mount_t	*mp,
+ 	xfs_agnumber_t	agno,
+ 	xfs_agino_t	ino,
+-	xfs_dinode_t	*dino,
++	xfs_dinode_t	*dip,
+ 	int		type,
+ 	int		*dirty,
+ 	xfs_drfsbno_t	*atotblocks,
+@@ -2127,20 +2092,19 @@
+ 	int		extra_attr_check,
+ 	int		*retval)
+ {
+-	xfs_dinode_core_t *dinoc = &dino->di_core;
+ 	xfs_ino_t	lino = XFS_AGINO_TO_INO(mp, agno, ino);
+ 	blkmap_t	*ablkmap = NULL;
+ 	int		repair = 0;
+ 	int		err;
+ 
+-	if (!XFS_DFORK_Q(dino)) {
++	if (!XFS_DFORK_Q(dip)) {
+ 		*anextents = 0;
+-		if (dinoc->di_aformat != XFS_DINODE_FMT_EXTENTS) {
++		if (dip->di_aformat != XFS_DINODE_FMT_EXTENTS) {
+ 			do_warn(_("bad attribute format %d in inode %llu, "),
+-				dinoc->di_aformat, lino);
++				dip->di_aformat, lino);
+ 			if (!no_modify) {
+ 				do_warn(_("resetting value\n"));
+-				dinoc->di_aformat = XFS_DINODE_FMT_EXTENTS;
++				dip->di_aformat = XFS_DINODE_FMT_EXTENTS;
+ 				*dirty = 1;
+ 			} else
+ 				do_warn(_("would reset value\n"));
+@@ -2148,33 +2112,33 @@
+ 		return 0;
+ 	}
+ 
+-	*anextents = be16_to_cpu(dinoc->di_anextents);
+-	if (*anextents > be64_to_cpu(dinoc->di_nblocks))
++	*anextents = be16_to_cpu(dip->di_anextents);
++	if (*anextents > be64_to_cpu(dip->di_nblocks))
+ 		*anextents = 1;
+ 
+-	switch (dinoc->di_aformat) {
++	switch (dip->di_aformat) {
+ 	case XFS_DINODE_FMT_LOCAL:
+ 		*anextents = 0;
+ 		*atotblocks = 0;
+-		err = process_lclinode(mp, agno, ino, dino, XFS_ATTR_FORK);
++		err = process_lclinode(mp, agno, ino, dip, XFS_ATTR_FORK);
+ 		break;
+ 	case XFS_DINODE_FMT_EXTENTS:
+ 		ablkmap = blkmap_alloc(*anextents);
+ 		*anextents = 0;
+-		err = process_exinode(mp, agno, ino, dino, type, dirty,
++		err = process_exinode(mp, agno, ino, dip, type, dirty,
+ 				atotblocks, anextents, &ablkmap,
+ 				XFS_ATTR_FORK, check_dups);
+ 		break;
+ 	case XFS_DINODE_FMT_BTREE:
+ 		ablkmap = blkmap_alloc(*anextents);
+ 		*anextents = 0;
+-		err = process_btinode(mp, agno, ino, dino, type, dirty,
++		err = process_btinode(mp, agno, ino, dip, type, dirty,
+ 				atotblocks, anextents, &ablkmap,
+ 				XFS_ATTR_FORK, check_dups);
+ 		break;
+ 	default:
+ 		do_warn(_("illegal attribute format %d, ino %llu\n"),
+-				dinoc->di_aformat, lino);
++				dip->di_aformat, lino);
+ 		err = 1;
+ 		break;
+ 	}
+@@ -2193,11 +2157,11 @@
+ 		if (!no_modify)  {
+ 			if (delete_attr_ok)  {
+ 				do_warn(_(", clearing attr fork\n"));
+-				*dirty += clear_dinode_attr(mp, dino, lino);
+-				dinoc->di_aformat = XFS_DINODE_FMT_LOCAL;
++				*dirty += clear_dinode_attr(mp, dip, lino);
++				dip->di_aformat = XFS_DINODE_FMT_LOCAL;
+ 			} else  {
+ 				do_warn("\n");
+-				*dirty += clear_dinode(mp, dino, lino);
++				*dirty += clear_dinode(mp, dip, lino);
+ 			}
+ 			ASSERT(*dirty > 0);
+ 		} else  {
+@@ -2213,24 +2177,24 @@
+ 	}
+ 
+ 	if (check_dups)  {
+-		switch (dinoc->di_aformat) {
++		switch (dip->di_aformat) {
+ 		case XFS_DINODE_FMT_LOCAL:
+-			err = process_lclinode(mp, agno, ino, dino, 
++			err = process_lclinode(mp, agno, ino, dip,
+ 						XFS_ATTR_FORK);
+ 			break;
+ 		case XFS_DINODE_FMT_EXTENTS:
+-			err = process_exinode(mp, agno, ino, dino,
++			err = process_exinode(mp, agno, ino, dip,
+ 				type, dirty, atotblocks, anextents,
+ 				&ablkmap, XFS_ATTR_FORK, 0);
+ 			break;
+ 		case XFS_DINODE_FMT_BTREE:
+-			err = process_btinode(mp, agno, ino, dino,
++			err = process_btinode(mp, agno, ino, dip,
+ 				type, dirty, atotblocks, anextents,
+ 				&ablkmap, XFS_ATTR_FORK, 0);
+ 			break;
+ 		default:
+ 			do_error(_("illegal attribute fmt %d, ino %llu\n"),
+-				dinoc->di_aformat, lino);
++				dip->di_aformat, lino);
+ 		}
+ 
+ 		if (no_modify && err != 0) {
+@@ -2247,14 +2211,14 @@
+ 
+ 	/* get this only in phase 3, not in both phase 3 and 4 */
+ 	if (extra_attr_check &&
+-			process_attributes(mp, lino, dino, ablkmap, &repair)) {
++			process_attributes(mp, lino, dip, ablkmap, &repair)) {
+ 		do_warn(_("problem with attribute contents in inode %llu\n"),
+ 			lino);
+ 		if (!repair) {
+ 			/* clear attributes if not done already */
+ 			if (!no_modify)  {
+-				*dirty += clear_dinode_attr(mp, dino, lino);
+-				dinoc->di_aformat = XFS_DINODE_FMT_LOCAL;
++				*dirty += clear_dinode_attr(mp, dip, lino);
++				dip->di_aformat = XFS_DINODE_FMT_LOCAL;
+ 			} else  {
+ 				do_warn(_("would clear attr fork\n"));
+ 			}
+@@ -2277,18 +2241,18 @@
+ 
+ static int
+ process_check_inode_nlink_version(
+-	xfs_dinode_core_t *dinoc,
++	xfs_dinode_t	*dip,
+ 	xfs_ino_t	lino)
+ {
+ 	int		dirty = 0;
+ 
+-	if (dinoc->di_version > XFS_DINODE_VERSION_1 && !fs_inode_nlink)  {
++	if (dip->di_version > 1 && !fs_inode_nlink)  {
+ 		/*
+ 		 * do we have a fs/inode version mismatch with a valid
+ 		 * version 2 inode here that has to stay version 2 or
+ 		 * lose links?
+ 		 */
+-		if (be32_to_cpu(dinoc->di_nlink) > XFS_MAXLINK_1)  {
++		if (be32_to_cpu(dip->di_nlink) > XFS_MAXLINK_1)  {
+ 			/*
+ 			 * yes.  are nlink inodes allowed?
+ 			 */
+@@ -2318,17 +2282,17 @@
+ 				if (!no_modify)  {
+ 					do_warn(_("converting back to version 1,\n"
+ 						"this may destroy %d links\n"),
+-						be32_to_cpu(dinoc->di_nlink) -
++						be32_to_cpu(dip->di_nlink) -
+ 							XFS_MAXLINK_1);
+ 
+-					dinoc->di_version = XFS_DINODE_VERSION_1;
+-					dinoc->di_nlink = cpu_to_be32(XFS_MAXLINK_1);
+-					dinoc->di_onlink = cpu_to_be16(XFS_MAXLINK_1);
++					dip->di_version = 1;
++					dip->di_nlink = cpu_to_be32(XFS_MAXLINK_1);
++					dip->di_onlink = cpu_to_be16(XFS_MAXLINK_1);
+ 					dirty = 1;
+ 				} else  {
+ 					do_warn(_("would convert back to version 1,\n"
+ 						"\tthis might destroy %d links\n"),
+-						be32_to_cpu(dinoc->di_nlink) -
++						be32_to_cpu(dip->di_nlink) -
+ 							XFS_MAXLINK_1);
+ 				}
+ 			}
+@@ -2344,9 +2308,9 @@
+ 			do_warn(_("found version 2 inode %llu, "), lino);
+ 			if (!no_modify)  {
+ 				do_warn(_("converting back to version 1\n"));
+-				dinoc->di_version = XFS_DINODE_VERSION_1;
+-				dinoc->di_onlink = cpu_to_be16(
+-					be32_to_cpu(dinoc->di_nlink));
++				dip->di_version = 1;
++				dip->di_onlink = cpu_to_be16(
++					be32_to_cpu(dip->di_nlink));
+ 				dirty = 1;
+ 			} else  {
+ 				do_warn(_("would convert back to version 1\n"));
+@@ -2359,18 +2323,17 @@
+ 	 * to stay a version 2 inode.  it should have a zero
+ 	 * onlink field, so clear it.
+ 	 */
+-	if (dinoc->di_version > XFS_DINODE_VERSION_1 &&
+-			dinoc->di_onlink != 0 && fs_inode_nlink > 0) {
++	if (dip->di_version > 1 && dip->di_onlink != 0 && fs_inode_nlink > 0) {
+ 		if (!no_modify) {
+ 			do_warn(_("clearing obsolete nlink field in "
+ 				"version 2 inode %llu, was %d, now 0\n"),
+-				lino, be16_to_cpu(dinoc->di_onlink));
+-			dinoc->di_onlink = 0;
++				lino, be16_to_cpu(dip->di_onlink));
++			dip->di_onlink = 0;
+ 			dirty = 1;
+ 		} else  {
+ 			do_warn(_("would clear obsolete nlink field in "
+ 				"version 2 inode %llu, currently %d\n"),
+-				lino, be16_to_cpu(dinoc->di_onlink));
++				lino, be16_to_cpu(dip->di_onlink));
+ 		}
+ 	}
+ 	return dirty;
+@@ -2388,7 +2351,7 @@
+ /* ARGSUSED */
+ int
+ process_dinode_int(xfs_mount_t *mp,
+-		xfs_dinode_t *dino,
++		xfs_dinode_t *dip,
+ 		xfs_agnumber_t agno,
+ 		xfs_agino_t ino,
+ 		int was_free,		/* 1 if inode is currently free */
+@@ -2405,7 +2368,6 @@
+ {
+ 	xfs_drfsbno_t		totblocks = 0;
+ 	xfs_drfsbno_t		atotblocks = 0;
+-	xfs_dinode_core_t	*dinoc;
+ 	int			di_mode;
+ 	int			type;
+ 	int			retval = 0;
+@@ -2420,9 +2382,8 @@
+ 	*used = is_used;
+ 	type = XR_INO_UNKNOWN;
+ 
+-	dinoc = &dino->di_core;
+ 	lino = XFS_AGINO_TO_INO(mp, agno, ino);
+-	di_mode = be16_to_cpu(dinoc->di_mode);
++	di_mode = be16_to_cpu(dip->di_mode);
+ 
+ 	/*
+ 	 * if in verify mode, don't modify the inode.
+@@ -2438,35 +2399,33 @@
+ 	 */
+ 	ASSERT(uncertain == 0 || verify_mode != 0);
+ 
+-	if (be16_to_cpu(dinoc->di_magic) != XFS_DINODE_MAGIC)  {
++	if (be16_to_cpu(dip->di_magic) != XFS_DINODE_MAGIC)  {
+ 		retval = 1;
+ 		if (!uncertain)
+ 			do_warn(_("bad magic number 0x%x on inode %llu%c"),
+-				be16_to_cpu(dinoc->di_magic), lino,
++				be16_to_cpu(dip->di_magic), lino,
+ 				verify_mode ? '\n' : ',');
+ 		if (!verify_mode) {
+ 			if (!no_modify)  {
+ 				do_warn(_(" resetting magic number\n"));
+-				dinoc->di_magic = cpu_to_be16(XFS_DINODE_MAGIC);
++				dip->di_magic = cpu_to_be16(XFS_DINODE_MAGIC);
+ 				*dirty = 1;
+ 			} else
+ 				do_warn(_(" would reset magic number\n"));
+ 		}
+ 	}
+ 
+-	if (!XFS_DINODE_GOOD_VERSION(dinoc->di_version) ||
+-	    (!fs_inode_nlink && dinoc->di_version > XFS_DINODE_VERSION_1))  {
++	if (!XFS_DINODE_GOOD_VERSION(dip->di_version) ||
++	    (!fs_inode_nlink && dip->di_version > 1))  {
+ 		retval = 1;
+ 		if (!uncertain)
+ 			do_warn(_("bad version number 0x%x on inode %llu%c"),
+-				(__s8)dinoc->di_version, lino,
++				(__s8)dip->di_version, lino,
+ 				verify_mode ? '\n' : ',');
+ 		if (!verify_mode) {
+ 			if (!no_modify) {
+ 				do_warn(_(" resetting version number\n"));
+-				dinoc->di_version = (fs_inode_nlink) ?
+-					XFS_DINODE_VERSION_2 :
+-					XFS_DINODE_VERSION_1;
++				dip->di_version = (fs_inode_nlink) ? 2 : 1;
+ 				*dirty = 1;
+ 			} else
+ 				do_warn(_(" would reset version number\n"));
+@@ -2476,10 +2435,10 @@
+ 	/*
+ 	 * blow out of here if the inode size is < 0
+ 	 */
+-	if ((xfs_fsize_t)be64_to_cpu(dinoc->di_size) < 0)  {
++	if ((xfs_fsize_t)be64_to_cpu(dip->di_size) < 0)  {
+ 		if (!uncertain)
+ 			do_warn(_("bad (negative) size %lld on inode %llu\n"),
+-				be64_to_cpu(dinoc->di_size), lino);
++				be64_to_cpu(dip->di_size), lino);
+ 		if (verify_mode)
+ 			return 1;
+ 		goto clear_bad_out;
+@@ -2500,7 +2459,7 @@
+ 			 * set correctly
+ 			 */
+ 			if (!no_modify)
+-				*dirty += clear_dinode(mp, dino, lino);
++				*dirty += clear_dinode(mp, dip, lino);
+ 			*used = is_free;
+ 			return 0;
+ 		}
+@@ -2512,7 +2471,7 @@
+ 		do_warn(_("imap claims a free inode %llu is in use, "), lino);
+ 		if (!no_modify)  {
+ 			do_warn(_("correcting imap and clearing inode\n"));
+-			*dirty += clear_dinode(mp, dino, lino);
++			*dirty += clear_dinode(mp, dip, lino);
+ 			retval = 1;
+ 		} else
+ 			do_warn(_("would correct imap and clear inode\n"));
+@@ -2529,7 +2488,7 @@
+ 	 * free inodes since technically any format is legal
+ 	 * as we reset the inode when we re-use it.
+ 	 */
+-	if (di_mode != 0 && check_dinode_mode_format(dinoc) != 0) {
++	if (di_mode != 0 && check_dinode_mode_format(dip) != 0) {
+ 		if (!uncertain)
+ 			do_warn(_("bad inode format in inode %llu\n"), lino);
+ 		if (verify_mode)
+@@ -2549,7 +2508,7 @@
+ 	 * phase 4.  Ugly.
+ 	 */
+ 	if (check_dups && !no_modify)
+-		*dirty += clear_dinode_unlinked(mp, dino);
++		*dirty += clear_dinode_unlinked(mp, dip);
+ 
+ 	/* set type and map type info */
+ 
+@@ -2559,7 +2518,7 @@
+ 		*isa_dir = 1;
+ 		break;
+ 	case S_IFREG:
+-		if (be16_to_cpu(dinoc->di_flags) & XFS_DIFLAG_REALTIME)
++		if (be16_to_cpu(dip->di_flags) & XFS_DIFLAG_REALTIME)
+ 			type = XR_INO_RTDATA;
+ 		else if (lino == mp->m_sb.sb_rbmino)
+ 			type = XR_INO_RTBITMAP;
+@@ -2592,27 +2551,27 @@
+ 	/*
+ 	 * type checks for superblock inodes
+ 	 */
+-	if (process_check_sb_inodes(mp, dinoc, lino, &type, dirty) != 0)
++	if (process_check_sb_inodes(mp, dip, lino, &type, dirty) != 0)
+ 		goto clear_bad_out;
+ 
+ 	/*
+ 	 * only regular files with REALTIME or EXTSIZE flags set can have
+ 	 * extsize set, or directories with EXTSZINHERIT.
+ 	 */
+-	if (be32_to_cpu(dinoc->di_extsize) != 0) {
++	if (be32_to_cpu(dip->di_extsize) != 0) {
+ 		if ((type == XR_INO_RTDATA) ||
+-		    (type == XR_INO_DIR && (be16_to_cpu(dinoc->di_flags) &
++		    (type == XR_INO_DIR && (be16_to_cpu(dip->di_flags) &
+ 					XFS_DIFLAG_EXTSZINHERIT)) ||
+-		    (type == XR_INO_DATA && (be16_to_cpu(dinoc->di_flags) &
++		    (type == XR_INO_DATA && (be16_to_cpu(dip->di_flags) &
+ 				 XFS_DIFLAG_EXTSIZE)))  {
+ 			/* s'okay */ ;
+ 		} else {
+ 			do_warn(_("bad non-zero extent size %u for "
+ 					"non-realtime/extsize inode %llu, "),
+-					be32_to_cpu(dinoc->di_extsize), lino);
++					be32_to_cpu(dip->di_extsize), lino);
+ 			if (!no_modify)  {
+ 				do_warn(_("resetting to zero\n"));
+-				dinoc->di_extsize = 0;
++				dip->di_extsize = 0;
+ 				*dirty = 1;
+ 			} else
+ 				do_warn(_("would reset to zero\n"));
+@@ -2622,19 +2581,19 @@
+ 	/*
+ 	 * general size/consistency checks:
+ 	 */
+-	if (process_check_inode_sizes(mp, dino, lino, type) != 0)
++	if (process_check_inode_sizes(mp, dip, lino, type) != 0)
+ 		goto clear_bad_out;
+ 
+ 	/*
+ 	 * check for illegal values of forkoff
+ 	 */
+-	if (process_check_inode_forkoff(mp, dinoc, lino) != 0)
++	if (process_check_inode_forkoff(mp, dip, lino) != 0)
+ 		goto clear_bad_out;
+ 
+ 	/*
+ 	 * check data fork -- if it's bad, clear the inode
+ 	 */
+-	if (process_inode_data_fork(mp, agno, ino, dino, type, dirty,
++	if (process_inode_data_fork(mp, agno, ino, dip, type, dirty,
+ 			&totblocks, &nextents, &dblkmap, check_dups) != 0)
+ 		goto bad_out;
+ 
+@@ -2642,7 +2601,7 @@
+ 	 * check attribute fork if necessary.  attributes are
+ 	 * always stored in the regular filesystem.
+ 	 */
+-	if (process_inode_attr_fork(mp, agno, ino, dino, type, dirty,
++	if (process_inode_attr_fork(mp, agno, ino, dip, type, dirty,
+ 			&atotblocks, &anextents, check_dups, extra_attr_check,
+ 			&retval))
+ 		goto bad_out;
+@@ -2656,7 +2615,7 @@
+ 	/*
+ 	 * correct space counters if required
+ 	 */
+-	if (process_inode_blocks_and_extents(dinoc, totblocks + atotblocks,
++	if (process_inode_blocks_and_extents(dip, totblocks + atotblocks,
+ 			nextents, anextents, lino, dirty) != 0)
+ 		goto clear_bad_out;
+ 
+@@ -2666,9 +2625,9 @@
+ 	switch (type)  {
+ 	case XR_INO_DIR:
+ 		if (xfs_sb_version_hasdirv2(&mp->m_sb) ?
+-				process_dir2(mp, lino, dino, ino_discovery,
++				process_dir2(mp, lino, dip, ino_discovery,
+ 						dirty, "", parent, dblkmap) :
+-				process_dir(mp, lino, dino, ino_discovery,
++				process_dir(mp, lino, dip, ino_discovery,
+ 						dirty, "", parent, dblkmap)) {
+ 			do_warn(_("problem with directory contents in "
+ 				"inode %llu\n"), lino);
+@@ -2676,7 +2635,7 @@
+ 		}
+ 		break;
+ 	case XR_INO_SYMLINK:
+-		if (process_symlink(mp, lino, dino, dblkmap) != 0) {
++		if (process_symlink(mp, lino, dip, dblkmap) != 0) {
+ 			do_warn(_("problem with symbolic link in inode %llu\n"),
+ 				lino);
+ 			goto clear_bad_out;
+@@ -2694,13 +2653,13 @@
+ 	 * just leave nlinks alone.  even if it's set wrong,
+ 	 * it'll be reset when read in.
+ 	 */
+-	*dirty += process_check_inode_nlink_version(dinoc, lino);
++	*dirty += process_check_inode_nlink_version(dip, lino);
+ 
+ 	return retval;
+ 
+ clear_bad_out:
+ 	if (!no_modify)  {
+-		*dirty += clear_dinode(mp, dino, lino);
++		*dirty += clear_dinode(mp, dip, lino);
+ 		ASSERT(*dirty > 0);
+ 	}
+ bad_out:
+Index: xfs-cmds/xfsprogs/repair/dir.c
+===================================================================
+--- xfs-cmds.orig/xfsprogs/repair/dir.c	2008-12-06 20:05:45.000000000 +0100
++++ xfs-cmds/xfsprogs/repair/dir.c	2008-12-06 20:05:49.000000000 +0100
+@@ -107,7 +107,7 @@
+ 	sf = (xfs_dir_shortform_t *)XFS_DFORK_DPTR(dip);
+ 	max_size = XFS_DFORK_DSIZE(dip, mp);
+ 	num_entries = sf->hdr.count;
+-	ino_dir_size = be64_to_cpu(dip->di_core.di_size);
++	ino_dir_size = be64_to_cpu(dip->di_size);
+ 	*repair = 0;
+ 
+ 	ASSERT(ino_dir_size <= max_size);
+@@ -338,7 +338,7 @@
+ 
+ 			if (!no_modify)  {
+ 				tmp_elen = xfs_dir_sf_entsize_byentry(sf_entry);
+-				be64_add_cpu(&dip->di_core.di_size, -tmp_elen);
++				be64_add_cpu(&dip->di_size, -tmp_elen);
+ 				ino_dir_size -= tmp_elen;
+ 
+ 				tmp_sfe = (xfs_dir_sf_entry_t *)
+@@ -425,7 +425,7 @@
+ 				ino, (__int64_t) ino_dir_size,
+ 			(__int64_t)((__psint_t) next_sfe - (__psint_t) sf));
+ 
+-			dip->di_core.di_size = cpu_to_be64((__psint_t)next_sfe 
++			dip->di_size = cpu_to_be64((__psint_t)next_sfe
+ 							- (__psint_t)sf);
+ 			*dino_dirty = 1;
+ 			*repair = 1;
+@@ -954,7 +954,7 @@
+ 		return(fsbno);
+ 	}
+ 
+-	if (be64_to_cpu(dino->di_core.di_size) <= XFS_LBSIZE(mp))
++	if (be64_to_cpu(dino->di_size) <= XFS_LBSIZE(mp))
+ 		return(fsbno);
+ 
+ 	do {
+@@ -2551,7 +2551,7 @@
+ 	/*
+ 	 * sanity check inode size
+ 	 */
+-	if (be64_to_cpu(dip->di_core.di_size) <
++	if (be64_to_cpu(dip->di_size) <
+ 			(da_cursor.greatest_bno + 1) * mp->m_sb.sb_blocksize)  {
+ 		if ((xfs_fsize_t) da_cursor.greatest_bno
+ 				* mp->m_sb.sb_blocksize > UINT_MAX)  {
+@@ -2565,9 +2565,9 @@
+ _("setting directory inode (%llu) size to %llu bytes, was %lld bytes\n"),
+ 			ino, (xfs_dfiloff_t) (da_cursor.greatest_bno + 1)
+ 				* mp->m_sb.sb_blocksize,
+-			be64_to_cpu(dip->di_core.di_size));
++			be64_to_cpu(dip->di_size));
+ 
+-		dip->di_core.di_size = cpu_to_be64((da_cursor.greatest_bno + 1) 
++		dip->di_size = cpu_to_be64((da_cursor.greatest_bno + 1)
+ 						* mp->m_sb.sb_blocksize);
+ 	}
+ 	return(0);
+@@ -2709,13 +2709,13 @@
+ 	 * is only called ONCE so all the subordinate routines will
+ 	 * fix '.' and junk '..' if they're bogus.
+ 	 */
+-	if (be64_to_cpu(dip->di_core.di_size) <= XFS_DFORK_DSIZE(dip, mp))  {
++	if (be64_to_cpu(dip->di_size) <= XFS_DFORK_DSIZE(dip, mp))  {
+ 		dot = 1;
+ 		dotdot = 1;
+ 		if (process_shortform_dir(mp, ino, dip, ino_discovery,
+ 				dino_dirty, parent, dirname, &repair))
+ 			res = 1;
+-	} else if (be64_to_cpu(dip->di_core.di_size) <= XFS_LBSIZE(mp))  {
++	} else if (be64_to_cpu(dip->di_size) <= XFS_LBSIZE(mp))  {
+ 		if (process_leaf_dir(mp, ino, dip, ino_discovery,
+ 				dino_dirty, blkmap, &dot, &dotdot,
+ 				parent, dirname, &repair))
+Index: xfs-cmds/xfsprogs/repair/dir2.c
+===================================================================
+--- xfs-cmds.orig/xfsprogs/repair/dir2.c	2008-12-06 20:05:45.000000000 +0100
++++ xfs-cmds/xfsprogs/repair/dir2.c	2008-12-06 20:05:49.000000000 +0100
+@@ -806,7 +806,7 @@
+ 	xfs_dir2_sf_entry_t	*sfep;
+ 	xfs_dir2_sf_t		*sfp;
+ 
+-	sfp = &dip->di_u.di_dir2sf;
++	sfp = (xfs_dir2_sf_t *)XFS_DFORK_DPTR(dip);
+ 	sfep = xfs_dir2_sf_firstentry(sfp);
+ 	offset = XFS_DIR2_DATA_FIRST_OFFSET;
+ 
+@@ -858,10 +858,10 @@
+ 	xfs_dir2_sf_entry_t	*tmp_sfep;
+ 	xfs_ino_t		zero = 0;
+ 
+-	sfp = &dip->di_u.di_dir2sf;
++	sfp = (xfs_dir2_sf_t *)XFS_DFORK_DPTR(dip);
+ 	max_size = XFS_DFORK_DSIZE(dip, mp);
+ 	num_entries = sfp->hdr.count;
+-	ino_dir_size = be64_to_cpu(dip->di_core.di_size);
++	ino_dir_size = be64_to_cpu(dip->di_size);
+ 	offset = XFS_DIR2_DATA_FIRST_OFFSET;
+ 	bad_offset = *repair = 0;
+ 
+@@ -1097,7 +1097,7 @@
+ 			if (!no_modify)  {
+ 				tmp_elen =
+ 					xfs_dir2_sf_entsize_byentry(sfp, sfep);
+-				be64_add_cpu(&dip->di_core.di_size, -tmp_elen);
++				be64_add_cpu(&dip->di_size, -tmp_elen);
+ 				ino_dir_size -= tmp_elen;
+ 
+ 				tmp_sfep = (xfs_dir2_sf_entry_t *)
+@@ -1205,7 +1205,7 @@
+ 				(__int64_t)((__psint_t)next_sfep -
+ 					    (__psint_t)sfp));
+ 
+-			dip->di_core.di_size = cpu_to_be64(
++			dip->di_size = cpu_to_be64(
+ 					(__psint_t)next_sfep - (__psint_t)sfp);
+ 			*dino_dirty = 1;
+ 			*repair = 1;
+@@ -2069,20 +2069,20 @@
+ 	 */
+ 	if (blkmap)
+ 		last = blkmap_last_off(blkmap);
+-	if (be64_to_cpu(dip->di_core.di_size) <= XFS_DFORK_DSIZE(dip, mp) &&
+-			dip->di_core.di_format == XFS_DINODE_FMT_LOCAL) {
++	if (be64_to_cpu(dip->di_size) <= XFS_DFORK_DSIZE(dip, mp) &&
++			dip->di_format == XFS_DINODE_FMT_LOCAL) {
+ 		dot = dotdot = 1;
+ 		res = process_sf_dir2(mp, ino, dip, ino_discovery, dino_dirty,
+ 			dirname, parent, &repair);
+ 	} else if (last == mp->m_dirblkfsbs &&
+-			(dip->di_core.di_format == XFS_DINODE_FMT_EXTENTS ||
+-			dip->di_core.di_format == XFS_DINODE_FMT_BTREE)) {
++			(dip->di_format == XFS_DINODE_FMT_EXTENTS ||
++			dip->di_format == XFS_DINODE_FMT_BTREE)) {
+ 		res = process_block_dir2(mp, ino, dip, ino_discovery,
+ 			dino_dirty, dirname, parent, blkmap, &dot, &dotdot,
+ 			&repair);
+ 	} else if (last >= mp->m_dirleafblk + mp->m_dirblkfsbs &&
+-			(dip->di_core.di_format == XFS_DINODE_FMT_EXTENTS ||
+-			dip->di_core.di_format == XFS_DINODE_FMT_BTREE)) {
++			(dip->di_format == XFS_DINODE_FMT_EXTENTS ||
++			dip->di_format == XFS_DINODE_FMT_BTREE)) {
+ 		res = process_leaf_node_dir2(mp, ino, dip, ino_discovery,
+ 			dirname, parent, blkmap, &dot, &dotdot, &repair,
+ 			last > mp->m_dirleafblk + mp->m_dirblkfsbs);
+Index: xfs-cmds/xfsprogs/repair/phase6.c
+===================================================================
+--- xfs-cmds.orig/xfsprogs/repair/phase6.c	2008-12-06 20:05:45.000000000 +0100
++++ xfs-cmds/xfsprogs/repair/phase6.c	2008-12-06 20:05:49.000000000 +0100
+@@ -444,11 +444,11 @@
+ 			error);
+ 	}
+ 
+-	memset(&ip->i_d, 0, sizeof(xfs_dinode_core_t));
++	memset(&ip->i_d, 0, sizeof(xfs_icdinode_t));
+ 
+ 	ip->i_d.di_magic = XFS_DINODE_MAGIC;
+ 	ip->i_d.di_mode = S_IFREG;
+-	ip->i_d.di_version = XFS_DINODE_VERSION_1;
++	ip->i_d.di_version = 1;
+ 	ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
+ 	ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
+ 
+@@ -677,11 +677,11 @@
+ 			error);
+ 	}
+ 
+-	memset(&ip->i_d, 0, sizeof(xfs_dinode_core_t));
++	memset(&ip->i_d, 0, sizeof(xfs_icdinode_t));
+ 
+ 	ip->i_d.di_magic = XFS_DINODE_MAGIC;
+ 	ip->i_d.di_mode = S_IFREG;
+-	ip->i_d.di_version = XFS_DINODE_VERSION_1;
++	ip->i_d.di_version = 1;
+ 	ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
+ 	ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
+ 
+@@ -778,11 +778,11 @@
+ 	/*
+ 	 * take care of the core -- initialization from xfs_ialloc()
+ 	 */
+-	memset(&ip->i_d, 0, sizeof(xfs_dinode_core_t));
++	memset(&ip->i_d, 0, sizeof(xfs_icdinode_t));
+ 
+ 	ip->i_d.di_magic = XFS_DINODE_MAGIC;
+ 	ip->i_d.di_mode = (__uint16_t) mode|S_IFDIR;
+-	ip->i_d.di_version = XFS_DINODE_VERSION_1;
++	ip->i_d.di_version = 1;
+ 	ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
+ 	ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
+ 
+Index: xfs-cmds/xfsprogs/repair/prefetch.c
+===================================================================
+--- xfs-cmds.orig/xfsprogs/repair/prefetch.c	2008-12-06 20:05:45.000000000 +0100
++++ xfs-cmds/xfsprogs/repair/prefetch.c	2008-12-06 20:05:49.000000000 +0100
+@@ -330,7 +330,7 @@
+ 	xfs_dinode_t		*dino)
+ {
+ 	pf_read_bmbt_reclist(args, (xfs_bmbt_rec_t *)XFS_DFORK_DPTR(dino),
+-			be32_to_cpu(dino->di_core.di_nextents));
++			be32_to_cpu(dino->di_nextents));
+ }
+ 
+ static void
+@@ -338,27 +338,25 @@
+ 	prefetch_args_t		*args,
+ 	xfs_buf_t		*bp)
+ {
+-	xfs_dinode_t		*dino;
+ 	int			icnt = 0;
+ 	int			hasdir = 0;
+ 	int			isadir;
+-	xfs_dinode_core_t	*dinoc;
++	xfs_dinode_t		*dip;
+ 
+ 	for (icnt = 0; icnt < (XFS_BUF_COUNT(bp) >> mp->m_sb.sb_inodelog); icnt++) {
+-		dino = XFS_MAKE_IPTR(mp, bp, icnt);
+-		dinoc = &dino->di_core;
++		dip = XFS_MAKE_IPTR(mp, bp, icnt);
+ 
+ 		/*
+ 		 * We are only prefetching directory contents in extents
+ 		 * and btree nodes for other inodes
+ 		 */
+-		isadir = (be16_to_cpu(dinoc->di_mode) & S_IFMT) == S_IFDIR;
++		isadir = (be16_to_cpu(dip->di_mode) & S_IFMT) == S_IFDIR;
+ 		hasdir |= isadir;
+ 
+-		if (dinoc->di_format <= XFS_DINODE_FMT_LOCAL)
++		if (dip->di_format <= XFS_DINODE_FMT_LOCAL)
+ 			continue;
+ 
+-		if (!isadir && (dinoc->di_format == XFS_DINODE_FMT_EXTENTS ||
++		if (!isadir && (dip->di_format == XFS_DINODE_FMT_EXTENTS ||
+ 				args->dirs_only))
+ 			continue;
+ 
+@@ -367,30 +365,29 @@
+ 		 * its directory data. It's a cut down version of
+ 		 * process_dinode_int() in dinode.c.
+ 		 */
+-		if (dinoc->di_format > XFS_DINODE_FMT_BTREE)
++		if (dip->di_format > XFS_DINODE_FMT_BTREE)
+ 			continue;
+ 
+-		if (be16_to_cpu(dinoc->di_magic) != XFS_DINODE_MAGIC)
++		if (be16_to_cpu(dip->di_magic) != XFS_DINODE_MAGIC)
+ 			continue;
+ 
+-		if (!XFS_DINODE_GOOD_VERSION(dinoc->di_version) ||
+-				(!fs_inode_nlink && dinoc->di_version >
+-					XFS_DINODE_VERSION_1))
++		if (!XFS_DINODE_GOOD_VERSION(dip->di_version) ||
++		    (!fs_inode_nlink && dip->di_version > 1))
+ 			continue;
+ 
+-		if (be64_to_cpu(dinoc->di_size) <= XFS_DFORK_DSIZE(dino, mp))
++		if (be64_to_cpu(dip->di_size) <= XFS_DFORK_DSIZE(dip, mp))
+ 			continue;
+ 
+-		if ((dinoc->di_forkoff != 0) &&
+-				(dinoc->di_forkoff >= (XFS_LITINO(mp) >> 3)))
++		if (dip->di_forkoff &&
++		    (dip->di_forkoff >= (XFS_LITINO(mp) >> 3)))
+ 			continue;
+ 
+-		switch (dinoc->di_format) {
++		switch (dip->di_format) {
+ 			case XFS_DINODE_FMT_EXTENTS:
+-				pf_read_exinode(args, dino);
++				pf_read_exinode(args, dip);
+ 				break;
+ 			case XFS_DINODE_FMT_BTREE:
+-				pf_read_btinode(args, dino, isadir);
++				pf_read_btinode(args, dip, isadir);
+ 				break;
+ 		}
+ 	}
+Index: xfs-cmds/xfsprogs/include/libxfs.h
+===================================================================
+--- xfs-cmds.orig/xfsprogs/include/libxfs.h	2008-12-06 20:05:46.000000000 +0100
++++ xfs-cmds/xfsprogs/include/libxfs.h	2008-12-06 20:05:49.000000000 +0100
+@@ -389,10 +389,8 @@
+ 	struct cache_node	i_node;
+ 	xfs_mount_t		*i_mount;	/* fs mount struct ptr */
+ 	xfs_ino_t		i_ino;		/* inode number (agno/agino) */
+-	xfs_daddr_t		i_blkno;	/* blkno of inode buffer */
++	struct xfs_imap		i_imap;		/* location for xfs_imap() */
+ 	dev_t			i_dev;		/* dev for this inode */
+-	ushort			i_len;		/* len of inode buffer */
+-	ushort			i_boffset;	/* off of inode in buffer */
+ 	xfs_ifork_t		*i_afp;		/* attribute fork pointer */
+ 	xfs_ifork_t		i_df;		/* data fork */
+ 	xfs_trans_t		*i_transp;	/* ptr to owning transaction */
+@@ -419,8 +417,6 @@
+ 
+ extern void	libxfs_ichgtime (xfs_inode_t *, int);
+ extern int	libxfs_iflush_int (xfs_inode_t *, xfs_buf_t *);
+-extern int	libxfs_iread (xfs_mount_t *, xfs_trans_t *, xfs_ino_t,
+-				xfs_inode_t *, xfs_daddr_t);
+ 
+ /* Inode Cache Interfaces */
+ extern struct cache	*libxfs_icache;
+@@ -465,7 +461,6 @@
+ #include <xfs/xfs_attr_leaf.h>
+ #include <xfs/xfs_quota.h>
+ #include <xfs/xfs_trans_space.h>
+-#include <xfs/xfs_imap.h>
+ #include <xfs/xfs_log.h>
+ #include <xfs/xfs_log_priv.h>
+ 
+Index: xfs-cmds/xfsprogs/libxfs/logitem.c
+===================================================================
+--- xfs-cmds.orig/xfsprogs/libxfs/logitem.c	2008-12-06 20:05:45.000000000 +0100
++++ xfs-cmds/xfsprogs/libxfs/logitem.c	2008-12-06 20:05:49.000000000 +0100
+@@ -493,7 +493,7 @@
+ 	iip->ili_inode = ip;
+ 	iip->ili_format.ilf_type = XFS_LI_INODE;
+ 	iip->ili_format.ilf_ino = ip->i_ino;
+-	iip->ili_format.ilf_blkno = ip->i_blkno;
+-	iip->ili_format.ilf_len = ip->i_len;
+-	iip->ili_format.ilf_boffset = ip->i_boffset;
++	iip->ili_format.ilf_blkno = ip->i_imap.im_blkno;
++	iip->ili_format.ilf_len = ip->i_imap.im_len;
++	iip->ili_format.ilf_boffset = ip->i_imap.im_boffset;
+ }
+Index: xfs-cmds/xfsprogs/libxfs/rdwr.c
+===================================================================
+--- xfs-cmds.orig/xfsprogs/libxfs/rdwr.c	2008-12-06 20:05:46.000000000 +0100
++++ xfs-cmds/xfsprogs/libxfs/rdwr.c	2008-12-06 20:05:49.000000000 +0100
+@@ -677,7 +677,10 @@
+ 		fprintf(stderr, "%s: allocated inode, ino=%llu(%llu), %p\n",
+ 			__FUNCTION__, (unsigned long long)ino, bno, ip);
+ #endif
+-		if ((error = libxfs_iread(mp, tp, ino, ip, bno))) {
++		ip->i_ino = ino;
++		ip->i_mount = mp;
++		error = xfs_iread(mp, tp, ip, bno, 0);
++		if (error) {
+ 			cache_node_purge(libxfs_icache, &ino,
+ 					(struct cache_node *)ip);
+ 			ip = NULL;
+Index: xfs-cmds/xfsprogs/libxfs/trans.c
+===================================================================
+--- xfs-cmds.orig/xfsprogs/libxfs/trans.c	2008-12-06 20:05:46.000000000 +0100
++++ xfs-cmds/xfsprogs/libxfs/trans.c	2008-12-06 20:05:49.000000000 +0100
+@@ -592,7 +592,7 @@
+ 	/*
+ 	 * Get the buffer containing the on-disk inode.
+ 	 */
+-	error = xfs_itobp(mp, NULL, ip, &dip, &bp, 0, 0, 0);
++	error = xfs_itobp(mp, NULL, ip, &dip, &bp, 0);
+ 	if (error) {
+ 		fprintf(stderr, _("%s: warning - itobp failed (%d)\n"),
+ 			progname, error);
+Index: xfs-cmds/xfsprogs/libxfs/xfs.h
+===================================================================
+--- xfs-cmds.orig/xfsprogs/libxfs/xfs.h	2008-12-06 20:05:45.000000000 +0100
++++ xfs-cmds/xfsprogs/libxfs/xfs.h	2008-12-06 20:05:49.000000000 +0100
+@@ -181,6 +181,7 @@
+ #define XFS_BUF_UNDELAYWRITE(bp)	((bp)->b_flags &= ~LIBXFS_B_DIRTY)
+ #define XFS_BUF_SET_VTYPE(a,b)		((void) 0)
+ #define XFS_BUF_SET_VTYPE_REF(a,b,c)	((void) 0)
++#define XFS_BUF_SET_REF(a,b)		((void) 0)
+ #define XFS_BUF_SET_BDSTRAT_FUNC(a,b)	((void) 0)
+ 
+ #define xfs_incore(bt,blkno,len,lockit)	0
+@@ -300,7 +301,6 @@
+ /* xfs_inode.c */
+ void xfs_iflush_fork(xfs_inode_t *, xfs_dinode_t *, xfs_inode_log_item_t *,
+ 			int, xfs_buf_t *);
+-int xfs_iformat(xfs_inode_t *, xfs_dinode_t *);
+ 
+ /* xfs_mount.c */
+ int xfs_initialize_perag_data(xfs_mount_t *, xfs_agnumber_t);
+Index: xfs-cmds/xfsprogs/libxfs/xfs_da_btree.c
+===================================================================
+--- xfs-cmds.orig/xfsprogs/libxfs/xfs_da_btree.c	2008-12-06 20:05:46.000000000 +0100
++++ xfs-cmds/xfsprogs/libxfs/xfs_da_btree.c	2008-12-06 20:05:49.000000000 +0100
+@@ -1539,11 +1539,14 @@
+ 	int nmap, error, w, count, c, got, i, mapi;
+ 	xfs_trans_t *tp;
+ 	xfs_mount_t *mp;
++	xfs_drfsbno_t	nblks;
+ 
+ 	dp = args->dp;
+ 	mp = dp->i_mount;
+ 	w = args->whichfork;
+ 	tp = args->trans;
++	nblks = dp->i_d.di_nblocks;
 +
-+#: ../repair/progress.c:51
-+msgid "scanning filesystem freespace"
-+msgstr "przeszukiwanie wolnego miejsca w systemie plików"
-+
-+#: ../repair/progress.c:53
-+msgid "scanning agi unlinked lists"
-+msgstr "przeszukiwanie od³±czonych list agi"
-+
-+#: ../repair/progress.c:55
-+msgid "check uncertain AG inodes"
-+msgstr "sprawdzanie niepewnych i-wêz³ów AG"
-+
-+#: ../repair/progress.c:57
-+msgid "process known inodes and inode discovery"
-+msgstr "przetwarzanie znanych i-wêz³ów i rozpoznawanie i-wêz³ów"
-+
-+#: ../repair/progress.c:59
-+msgid "process newly discovered inodes"
-+msgstr "przetwarzanie nowo rozpoznanych i-wêz³ów"
-+
-+#: ../repair/progress.c:61
-+msgid "setting up duplicate extent list"
-+msgstr "tworzenie listy powtórzonych fragmentów"
-+
-+#: ../repair/progress.c:63
-+msgid "initialize realtime bitmap"
-+msgstr "inicjowanie bitmapy realtime"
-+
-+#: ../repair/progress.c:65
-+msgid "reset realtime bitmaps"
-+msgstr "ponowne tworzenie bitmapy realtime"
-+
-+#: ../repair/progress.c:67
-+msgid "check for inodes claiming duplicate blocks"
-+msgstr "szukanie i-wêz³ów odwo³uj±cych siê do powtórzonych bloków"
-+
-+#: ../repair/progress.c:69
-+msgid "rebuild AG headers and trees"
-+msgstr "przebudowywanie nag³ówków i drzew AG"
-+
-+#: ../repair/progress.c:71
-+msgid "traversing filesystem"
-+msgstr "przechodzenie systemu plików"
-+
-+#: ../repair/progress.c:73
-+msgid "traversing all unattached subtrees"
-+msgstr "przechodzenie wszystkich od³±czonych poddrzew"
-+
-+#: ../repair/progress.c:75
-+msgid "moving disconnected inodes to lost+found"
-+msgstr "przenoszenie od³±czonych i-wêz³ów do lost+found"
-+
-+#: ../repair/progress.c:77
-+msgid "verify and correct link counts"
-+msgstr "sprawdzanie i poprawianie liczby dowi±zañ"
-+
-+#: ../repair/progress.c:79
-+msgid "verify link counts"
-+msgstr "sprawdzanie liczby dowi±zañ"
-+
-+#: ../repair/progress.c:118
-+msgid "cannot malloc pointer to done vector\n"
-+msgstr "nie uda³o siê przydzieliæ wska¼nika do wektora wykonania\n"
-+
-+#: ../repair/progress.c:134
-+msgid "unable to create progress report thread\n"
-+msgstr "nie uda³o siê utworzyæ w±tku raportowania postêpu\n"
- 
--#: ../repair/phase6.c:4061
-+#: ../repair/progress.c:173
-+msgid "progress_rpt: cannot malloc progress msg buffer\n"
-+msgstr "progress_rpt: nie uda³o siê przydzieliæ bufora komunikatów postêpu\n"
-+
-+#: ../repair/progress.c:187
-+msgid "progress_rpt: cannot create timer\n"
-+msgstr "progress_rpt: nie mo¿na utworzyæ zegara\n"
-+
-+#: ../repair/progress.c:190
-+msgid "progress_rpt: cannot set timer\n"
-+msgstr "progress_rpt: nie mo¿na ustawiæ zegara\n"
-+
-+#: ../repair/progress.c:214
-+msgid "progress_rpt: cannot lock progress mutex\n"
-+msgstr "progress_rpt: nie mo¿na zablokowaæ muteksu\n"
-+
-+#: ../repair/progress.c:251 ../repair/progress.c:354
- #, c-format
--msgid "would move to %s\n"
--msgstr "zosta³by przeniesiony do %s\n"
-+msgid "%s"
-+msgstr "%s"
- 
--#: ../repair/phase7.c:41
-+#: ../repair/progress.c:259
- #, c-format
--msgid "resetting inode %llu nlinks from %d to %d\n"
--msgstr "przestawiono nlinks i-wêz³a %llu z %d na %d\n"
-+msgid "\t- %02d:%02d:%02d: Phase %d: elapsed time %s - processed %d %s per minute\n"
-+msgstr "\t- %02d:%02d:%02d: Faza %d: miniony czas %s - przetworzono %d %s na minutê\n"
- 
--#: ../repair/phase7.c:47
-+#: ../repair/progress.c:264
- #, c-format
--msgid "nlinks %d will overflow v1 ino, ino %llu will be converted to version 2\n"
--msgstr "nlinks %d przepe³ni i-wêze³ v1, i-wêze³ %llu bêdzie skonwertowany do wersji 2\n"
-+msgid "\t- %02d:%02d:%02d: Phase %d: %llu%% done - estimated remaining time %s\n"
-+msgstr "\t- %02d:%02d:%02d: Faza %d: %llu%% zrobione - przewidywany pozosta³y czas %s\n"
-+
-+#: ../repair/progress.c:272
-+msgid "progress_rpt: error unlock msg mutex\n"
-+msgstr "progress_rpt: b³±d odblokowywania muteksu komunikatów\n"
-+
-+#: ../repair/progress.c:278
-+msgid "cannot delete timer\n"
-+msgstr "nie mo¿na usun±æ zegara\n"
-+
-+#: ../repair/progress.c:292
-+msgid "set_progress_msg: cannot lock progress mutex\n"
-+msgstr "set_progress_msg: nie mo¿na zablokowaæ mutekstu postêpu\n"
- 
--#: ../repair/phase7.c:56
-+#: ../repair/progress.c:302
-+msgid "set_progress_msg: cannot unlock progress mutex\n"
-+msgstr "set_progress_msg: nie mo¿na odblokowaæ mutekstu postêpu\n"
-+
-+#: ../repair/progress.c:322
-+msgid "print_final_rpt: cannot lock progress mutex\n"
-+msgstr "print_final_rpt: nie mo¿na zablokowaæ mutekstu postêpu\n"
-+
-+#: ../repair/progress.c:358
-+msgid "print_final_rpt: cannot unlock progress mutex\n"
-+msgstr "print_final_rpt: nie mo¿na odblokowaæ muteksu postêpu\n"
-+
-+#: ../repair/progress.c:407
- #, c-format
--msgid "would have reset inode %llu nlinks from %d to %d\n"
--msgstr "nlinks i-wêz³a %llu zosta³oby przestawione z %d na %d\n"
-+msgid "%02d:%02d:%02d"
-+msgstr "%02d:%02d:%02d"
- 
--#: ../repair/phase7.c:140 ../repair/phase7.c:145
-+#: ../repair/progress.c:429
- #, c-format
--msgid "ino: %llu, bad d_inode magic saw: (0x%x) expecting (0x%x)\n"
--msgstr "i-wêze³: %llu, zauwa¿ono b³êdn± liczbê magiczn± d_inode (0x%x)\n"
-+msgid "%d week"
-+msgstr "%d tygodni"
- 
--#: ../repair/phase7.c:201
--msgid "Phase 7 - verify and correct link counts...\n"
--msgstr "Faza 7 - sprawdzanie i poprawianie liczby dowi±zañ...\n"
-+# XXX: ngettext()
-+#: ../repair/progress.c:439
-+#, c-format
-+msgid "%d day"
-+msgstr "%d dni"
- 
--#: ../repair/phase7.c:203
--msgid "Phase 7 - verify link counts...\n"
--msgstr "Faza 7 - sprawdzanie liczby dowi±zañ...\n"
-+#: ../repair/progress.c:446 ../repair/progress.c:463 ../repair/progress.c:481
-+#: ../repair/progress.c:491
-+msgid ", "
-+msgstr ", "
- 
--#: ../repair/phase7.c:253
-+#: ../repair/progress.c:455
- #, c-format
--msgid "couldn't map inode %llu, err = %d, can't compare link counts\n"
--msgstr "nie uda³o siê odwzorowaæ i-wêz³a %llu, b³±d %d, nie mo¿na porównaæ liczby dowi±zañ\n"
-+msgid "%d hour"
-+msgstr "%d godzin"
-+
-+#: ../repair/progress.c:473
-+#, c-format
-+msgid "%d minute"
-+msgstr "%d minut"
-+
-+#: ../repair/progress.c:488
-+#, c-format
-+msgid "%d second"
-+msgstr "%d sekund"
-+
-+#: ../repair/progress.c:509
-+#, c-format
-+msgid ""
-+"\n"
-+"        XFS_REPAIR Summary    %s\n"
-+msgstr ""
-+"\n"
-+"        Podsumowanie XFS_REPAIR %s\n"
-+
-+#: ../repair/progress.c:511
-+msgid "Phase\t\tStart\t\tEnd\t\tDuration\n"
-+msgstr "Faza\t\tPocz±tek\tKoniec\t\tCzas trwania\n"
-+
-+#: ../repair/progress.c:516 ../repair/progress.c:519
-+#, c-format
-+msgid "Phase %d:\tSkipped\n"
-+msgstr "Faza %d:\tPominiêta\n"
-+
-+#: ../repair/progress.c:523
-+#, c-format
-+msgid "Phase %d:\t%02d/%02d %02d:%02d:%02d\t%02d/%02d %02d:%02d:%02d\t%s\n"
-+msgstr "Faza %d:\t%02d.%02d %02d:%02d:%02d\t%02d.%02d %02d:%02d:%02d\t%s\n"
-+
-+#: ../repair/progress.c:529
-+#, c-format
-+msgid ""
-+"\n"
-+"Total run time: %s\n"
-+msgstr ""
-+"\n"
-+"Ca³kowity czas trwania: %s\n"
- 
- #: ../repair/rt.c:47
- msgid "couldn't allocate memory for incore realtime bitmap.\n"
-@@ -8106,165 +8372,175 @@ msgstr "oczekiwano poziomu %d, a uzyskano %d w bloku btbno %d/%d\n"
- msgid "bno freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"
- msgstr "blok b-drzewa bno wolnego miejsca przypisany (stan %d), agno %d, bno %d, podejrzany %d\n"
- 
--#: ../repair/scan.c:552
-+#: ../repair/scan.c:554
- #, c-format
- msgid "block (%d,%d) multiply claimed by bno space tree, state - %d\n"
- msgstr "blok (%d,%d) wielokrotnie przypisany do drzewa bno miejsca, stan - %d\n"
- 
--#: ../repair/scan.c:632
-+#: ../repair/scan.c:634
- #, c-format
- msgid "bad magic # %#x in btcnt block %d/%d\n"
- msgstr "b³êdna liczba magiczna %#x w bloku btcbt %d/%d\n"
- 
--#: ../repair/scan.c:639
-+#: ../repair/scan.c:641
- #, c-format
- msgid "expected level %d got %d in btcnt block %d/%d\n"
- msgstr "oczekiwano poziomu %d, a uzyskano %d w bloku btcnt %d/%d\n"
- 
--#: ../repair/scan.c:659
-+#: ../repair/scan.c:661
- #, c-format
- msgid "bcnt freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"
- msgstr "blok b-drzewa bcnt wolnego miejsca przypisany (stan %d), agno %d, bno %d, podejrzany %d\n"
- 
--#: ../repair/scan.c:711
-+#: ../repair/scan.c:715
- #, c-format
- msgid "block (%d,%d) already used, state %d\n"
- msgstr "blok (%d,%d) ju¿ u¿ywany, stan %d\n"
- 
--#: ../repair/scan.c:803
-+#: ../repair/scan.c:807
- #, c-format
- msgid "bad magic # %#x in inobt block %d/%d\n"
- msgstr "b³êdna liczba magiczna %#x w bloku inobt %d/%d\n"
- 
--#: ../repair/scan.c:811
-+#: ../repair/scan.c:815
- #, c-format
- msgid "expected level %d got %d in inobt block %d/%d\n"
- msgstr "oczekiwano poziomu %d, a uzyskano %d w bloku inobt %d/%d\n"
- 
--#: ../repair/scan.c:835
-+#: ../repair/scan.c:839
- #, c-format
- msgid "inode btree block claimed (state %d), agno %d, bno %d, suspect %d\n"
- msgstr "blok b-drzewa i-wêz³ów przypisany (stan %d), agno %d, bno %d, podejrzany %d\n"
- 
--#: ../repair/scan.c:860
-+#: ../repair/scan.c:864
- #, c-format
- msgid "dubious inode btree block header %d/%d\n"
- msgstr "w±tpliwy nag³ówek bloku b-drzewa i-wêz³ów %d/%d\n"
- 
--#: ../repair/scan.c:898
-+#: ../repair/scan.c:902
- #, c-format
- msgid "badly aligned inode rec (starting inode = %llu)\n"
- msgstr "b³êdnie wyrównany rekord i-wêz³a (pocz±tkowy i-wêze³ = %llu)\n"
- 
--#: ../repair/scan.c:914
-+#: ../repair/scan.c:918
- #, c-format
- msgid "bad starting inode # (%llu (0x%x 0x%x)) in ino rec, skipping rec\n"
- msgstr "b³êdny numer pocz±tkowego i-wêz³a (%llu (0x%x 0x%x)) w rekordzie i-wêz³a, pominiêto rekord\n"
- 
--#: ../repair/scan.c:923
-+#: ../repair/scan.c:927
- #, c-format
- msgid "bad ending inode # (%llu (0x%x 0x%x)) in ino rec, skipping rec\n"
- msgstr "b³êdny numer koñcowego i-wêz³a (%llu (0x%x 0x%x)) w rekordzie i-wêz³a, pominiêto rekord\n"
- 
--#: ../repair/scan.c:952
-+#: ../repair/scan.c:956
- #, c-format
- msgid "inode chunk claims used block, inobt block - agno %d, bno %d, inopb %d\n"
- msgstr "czê¶æ i-wêz³a odwo³uje siê do u¿ywanego bloku, blok inobt - agno %d, bno %d, inopb %d\n"
- 
--#: ../repair/scan.c:977
-+#: ../repair/scan.c:981
- #, c-format
- msgid "inode rec for ino %llu (%d/%d) overlaps existing rec (start %d/%d)\n"
- msgstr "rekord i-wêz³a dla i-wêz³a %llu (%d/%d) nachodzi na istniej±cy rekord (pocz±tek %d/%d)\n"
- 
--#: ../repair/scan.c:1030
-+#: ../repair/scan.c:1034
- #, c-format
- msgid "ir_freecount/free mismatch, inode chunk %d/%d, freecount %d nfree %d\n"
- msgstr "niezgodno¶æ ir_freecount/free, czê¶æ i-wêz³a %d/%d, freecount %d nfree %d\n"
- 
--#: ../repair/scan.c:1102
-+#: ../repair/scan.c:1106
- #, c-format
- msgid "can't read agfl block for ag %d\n"
- msgstr "nie mo¿na odczytaæ bloku agfl dla ag %d\n"
- 
--#: ../repair/scan.c:1116
-+#: ../repair/scan.c:1120
- #, c-format
- msgid "bad agbno %u in agfl, agno %d\n"
- msgstr "b³êdne agbno %u w agfl, agno %d\n"
- 
--#: ../repair/scan.c:1125
-+#: ../repair/scan.c:1129
- #, c-format
- msgid "freeblk count %d != flcount %d in ag %d\n"
- msgstr "liczba freeblk %d != flcount %d w ag %d\n"
- 
--#: ../repair/scan.c:1155
-+#: ../repair/scan.c:1156
- #, c-format
- msgid "can't get root superblock for ag %d\n"
- msgstr "nie mo¿na uzyskaæ g³ównego superbloku dla ag %d\n"
- 
--#: ../repair/scan.c:1161
-+#: ../repair/scan.c:1162
- msgid "can't allocate memory for superblock\n"
- msgstr "nie mo¿na przydzieliæ pamiêci dla superbloku\n"
- 
--#: ../repair/scan.c:1171
-+#: ../repair/scan.c:1172
- #, c-format
- msgid "can't read agf block for ag %d\n"
- msgstr "nie mo¿na odczytaæ bloku agf dla ag %d\n"
- 
--#: ../repair/scan.c:1182
-+#: ../repair/scan.c:1183
- #, c-format
- msgid "can't read agi block for ag %d\n"
- msgstr "nie mo¿na odczytaæ bloku agi dla ag %d\n"
- 
--#: ../repair/scan.c:1206
-+#: ../repair/scan.c:1207
- #, c-format
- msgid "reset bad sb for ag %d\n"
- msgstr "przestawiono b³êdny superbloku dla ag %d\n"
- 
--#: ../repair/scan.c:1209
-+#: ../repair/scan.c:1210
- #, c-format
- msgid "would reset bad sb for ag %d\n"
- msgstr "b³êdny superblok dla ag %d zosta³by przestawiony\n"
- 
--#: ../repair/scan.c:1214
-+#: ../repair/scan.c:1215
- #, c-format
- msgid "reset bad agf for ag %d\n"
- msgstr "przestawiono b³êdne agf dla ag %d\n"
- 
--#: ../repair/scan.c:1217
-+#: ../repair/scan.c:1218
- #, c-format
- msgid "would reset bad agf for ag %d\n"
- msgstr "b³êdne agf dla ag %d zosta³oby przestawione\n"
- 
--#: ../repair/scan.c:1222
-+#: ../repair/scan.c:1223
- #, c-format
- msgid "reset bad agi for ag %d\n"
- msgstr "przestawiono b³êdne agi dla ag %d\n"
- 
--#: ../repair/scan.c:1225
-+#: ../repair/scan.c:1226
- #, c-format
- msgid "would reset bad agi for ag %d\n"
- msgstr "b³êdna agi dla ag %d zosta³oby przestawione\n"
- 
--#: ../repair/scan.c:1235
-+#: ../repair/scan.c:1236
- #, c-format
- msgid "bad uncorrected agheader %d, skipping ag...\n"
- msgstr "b³êdny nie poprawiony agheader %d, pominiêto ag...\n"
- 
--#: ../repair/scan.c:1254
-+#: ../repair/scan.c:1252
- #, c-format
- msgid "bad agbno %u for btbno root, agno %d\n"
- msgstr "b³êdne agbno %u dla g³ównego btbno, agno %d\n"
- 
--#: ../repair/scan.c:1266
-+#: ../repair/scan.c:1264
- #, c-format
- msgid "bad agbno %u for btbcnt root, agno %d\n"
- msgstr "b³êdne agbno %u dla g³ównego btbcnt, agno %d\n"
- 
--#: ../repair/scan.c:1277
-+#: ../repair/scan.c:1275
- #, c-format
- msgid "bad agbno %u for inobt root, agno %d\n"
- msgstr "b³êdne agbno %u dla g³ównego inobt, agno %d\n"
- 
-+#: ../repair/threads.c:90
-+#, c-format
-+msgid "cannot create worker threads, error = [%d] %s\n"
-+msgstr "nie mo¿na utworzyæ w±tków pracuj±cych, b³±d: [%d] %s\n"
-+
-+#: ../repair/threads.c:108
-+#, c-format
-+msgid "cannot allocate worker item, error = [%d] %s\n"
-+msgstr "nie mo¿na przydzieliæ elementu pracuj±cego, b³±d: [%d] %s\n"
-+
- #: ../repair/versions.c:83
- #, c-format
- msgid "bogus quota flags 0x%x set in superblock"
-@@ -8430,102 +8706,142 @@ msgstr ""
- "\tzawiera wyrównane i-wêz³y. System plików zosta³by zdegradowany.\n"
- "\tTrwale zdegradowa³oby to wydajno¶æ tego systemu plików.\n"
- 
--#: ../repair/xfs_repair.c:73
-+#: ../repair/xfs_repair.c:87
- #, c-format
--msgid "Usage: %s [-nLvV] [-o subopt[=value]] [-l logdev] [-r rtdev] devname\n"
--msgstr "Sk³adnia: %s [-nLvV] [-o podopcja[=warto¶æ]] [-l urz_loga] [-r urz_rt] urz±dzenie\n"
-+msgid ""
-+"Usage: %s [options] device\n"
-+"\n"
-+"Options:\n"
-+"  -f           The device is a file\n"
-+"  -L           Force log zeroing. Do this as a last resort.\n"
-+"  -l logdev    Specifies the device where the external log resides.\n"
-+"  -m maxmem    Maximum amount of memory to be used in megabytes.\n"
-+"  -n           No modify mode, just checks the filesystem for damage.\n"
-+"  -P           Disables prefetching.\n"
-+"  -r rtdev     Specifies the device where the realtime section resides.\n"
-+"  -v           Verbose output.\n"
-+"  -c subopts   Change filesystem parameters - use xfs_admin.\n"
-+"  -o subopts   Override default behaviour, refer to man page.\n"
-+"  -t interval  Reporting interval in minutes.\n"
-+"  -d           Repair dangerously.\n"
-+"  -V           Reports version and exits.\n"
-+msgstr ""
-+"Sk³adnia: %s [opcje] urz±dzenie\n"
-+"\n"
-+"Opcje:\n"
-+"  -f           Urz±dzenie jest plikiem\n"
-+"  -L           Wymuszenie wyzerowania loga. Wykonywaæ tylko w ostateczno¶ci.\n"
-+"  -l urz_loga  Okre¶lenie urz±dzenia z zewnêtrznym logiem.\n"
-+"  -m maks_pam  Maksymalna ilo¶æ pamiêci do u¿ycia w megabajtach.\n"
-+"  -n           Tryb bez modyfikacji, tylko sprawdzenie systemu plików.\n"
-+"  -P           Wy³±czenie prefetch.\n"
-+"  -r urz_rt    Okre¶lenie urz±dzenia z sekcj± realtime.\n"
-+"  -v           Szczegó³owe wyj¶cie.\n"
-+"  -c podopcje  Zmiana parametrów systemu plików przy u¿yciu xfs_admina.\n"
-+"  -o podopcje  Zmiana domy¶lnego zachowania, wiêcej na stronie manuala.\n"
-+"  -t czas      Okres informowania o postêpach w minutach.\n"
-+"  -d           Naprawianie w sposób niebezpieczny.\n"
-+"  -V           Wypisanie informacji o wersji i zakoñczenie.\n"
- 
--#: ../repair/xfs_repair.c:85
-+#: ../repair/xfs_repair.c:113
- msgid "no error"
- msgstr "brak b³êdu"
- 
--#: ../repair/xfs_repair.c:86
-+#: ../repair/xfs_repair.c:114
- msgid "bad magic number"
- msgstr "b³êdna liczba magiczna"
- 
--#: ../repair/xfs_repair.c:87
-+#: ../repair/xfs_repair.c:115
- msgid "bad blocksize field"
- msgstr "b³êdne pole blocksize"
- 
--#: ../repair/xfs_repair.c:88
-+#: ../repair/xfs_repair.c:116
- msgid "bad blocksize log field"
- msgstr "b³êdne pole loga blocksize"
- 
--#: ../repair/xfs_repair.c:89
--msgid "bad version number"
--msgstr "b³êdny numer wersji"
-+#: ../repair/xfs_repair.c:117
-+msgid "bad or unsupported version"
-+msgstr "b³êdna lub nie obs³ugiwana wersja"
- 
--#: ../repair/xfs_repair.c:91
-+#: ../repair/xfs_repair.c:119
- msgid "filesystem mkfs-in-progress bit set"
- msgstr "ustawiony bit mkfs-in-progress systemu plików"
- 
--#: ../repair/xfs_repair.c:93
-+#: ../repair/xfs_repair.c:121
- msgid "inconsistent filesystem geometry information"
- msgstr "niespójne informacje o geometrii systemu plików"
- 
--#: ../repair/xfs_repair.c:95
-+#: ../repair/xfs_repair.c:123
- msgid "bad inode size or inconsistent with number of inodes/block"
- msgstr "b³êdny rozmiar i-wêz³a lub niespójno¶æ z liczb± i-wêz³ów/blok"
- 
--#: ../repair/xfs_repair.c:96
-+#: ../repair/xfs_repair.c:124
- msgid "bad sector size"
- msgstr "b³êdny rozmiar sektora"
- 
--#: ../repair/xfs_repair.c:98
-+#: ../repair/xfs_repair.c:126
- msgid "AGF geometry info conflicts with filesystem geometry"
- msgstr "informacje o geometrii AGF s± w konflikcie z geometri± systemu plików"
- 
--#: ../repair/xfs_repair.c:100
-+#: ../repair/xfs_repair.c:128
- msgid "AGI geometry info conflicts with filesystem geometry"
- msgstr "informacje o geometrii AGI s± w konflikcie z geometri± systemu plików"
- 
--#: ../repair/xfs_repair.c:102
-+#: ../repair/xfs_repair.c:130
- msgid "AG superblock geometry info conflicts with filesystem geometry"
- msgstr "informacje o geometrii superbloku AG s± w konflikcie z geometri± systemu plików"
- 
--#: ../repair/xfs_repair.c:103
-+#: ../repair/xfs_repair.c:131
- msgid "attempted to perform I/O beyond EOF"
- msgstr "próbowano wykonaæ operacjê we/wy poza koñcem pliku"
- 
--#: ../repair/xfs_repair.c:105
-+#: ../repair/xfs_repair.c:133
- msgid "inconsistent filesystem geometry in realtime filesystem component"
- msgstr "niespójna geometria systemu plików w sk³adniku realtime"
- 
--#: ../repair/xfs_repair.c:107
-+#: ../repair/xfs_repair.c:135
- msgid "maximum indicated percentage of inodes > 100%"
- msgstr "okre¶lono maksymalny procent i-wêz³ów > 100%"
- 
--#: ../repair/xfs_repair.c:109
-+#: ../repair/xfs_repair.c:137
- msgid "inconsistent inode alignment value"
- msgstr "niespójna warto¶æ wyrównania i-wêz³a"
- 
--#: ../repair/xfs_repair.c:111
-+#: ../repair/xfs_repair.c:139
- msgid "not enough secondary superblocks with matching geometry"
- msgstr "za ma³o zapasowych superbloków o pasuj±cej geometrii"
- 
--#: ../repair/xfs_repair.c:113
-+#: ../repair/xfs_repair.c:141
- msgid "bad stripe unit in superblock"
- msgstr "b³êdna jednostka pasa w superbloku"
- 
--#: ../repair/xfs_repair.c:115
-+#: ../repair/xfs_repair.c:143
- msgid "bad stripe width in superblock"
- msgstr "b³êdna szeroko¶æ pasa w superbloku"
- 
--#: ../repair/xfs_repair.c:117
-+#: ../repair/xfs_repair.c:145
- msgid "bad shared version number in superblock"
- msgstr "b³êdny numer wersji wspó³dzielenia w superbloku"
- 
--#: ../repair/xfs_repair.c:122
-+#: ../repair/xfs_repair.c:150
- #, c-format
- msgid "bad error code - %d\n"
- msgstr "b³êdny kod b³êdu - %d\n"
- 
--#: ../repair/xfs_repair.c:130
-+#: ../repair/xfs_repair.c:158
- #, c-format
- msgid "-%c %s option cannot have a value\n"
- msgstr "opcja -%c %s nie przyjmuje warto¶ci\n"
- 
--#: ../repair/xfs_repair.c:295
-+#: ../repair/xfs_repair.c:254
-+msgid "-o bhash option cannot be used with -m option\n"
-+msgstr "opcja -o bhash nie mo¿e byæ u¿yta wraz z opcj± -m\n"
-+
-+#: ../repair/xfs_repair.c:296
-+msgid "-m option cannot be used with -o bhash option\n"
-+msgstr "opcja -m nie mo¿e byæ u¿yta wraz z opcj± -o bhash\n"
-+
-+#: ../repair/xfs_repair.c:350
- #, c-format
- msgid ""
- "\n"
-@@ -8534,52 +8850,52 @@ msgstr ""
- "\n"
- "b³±d krytyczny - "
- 
--#: ../repair/xfs_repair.c:384
-+#: ../repair/xfs_repair.c:439
- #, c-format
- msgid "sb root inode value %llu %sinconsistent with calculated value %lu\n"
- msgstr "warto¶æ i-wêz³a g³ównego superbloku %llu %sniespójna z obliczon± warto¶ci± %lu\n"
- 
--#: ../repair/xfs_repair.c:391
-+#: ../repair/xfs_repair.c:446
- #, c-format
- msgid "resetting superblock root inode pointer to %lu\n"
- msgstr "przestawiono wska¼nik i-wêz³a g³ównego superbloku na %lu\n"
- 
--#: ../repair/xfs_repair.c:395
-+#: ../repair/xfs_repair.c:450
- #, c-format
- msgid "would reset superblock root inode pointer to %lu\n"
- msgstr "wska¼nik i-wêz³a g³ównego superbloku zosta³by przestawiony na %lu\n"
- 
--#: ../repair/xfs_repair.c:407
-+#: ../repair/xfs_repair.c:462
- #, c-format
- msgid "sb realtime bitmap inode %llu %sinconsistent with calculated value %lu\n"
- msgstr "i-wêze³ bitmapy realtime superbloku %llu %sniespójny z obliczon± warto¶ci± %lu\n"
- 
--#: ../repair/xfs_repair.c:414
-+#: ../repair/xfs_repair.c:469
- #, c-format
- msgid "resetting superblock realtime bitmap ino pointer to %lu\n"
- msgstr "przestawiono wska¼nik i-wêz³a bitmapy realtime superbloku na %lu\n"
- 
--#: ../repair/xfs_repair.c:418
-+#: ../repair/xfs_repair.c:473
- #, c-format
- msgid "would reset superblock realtime bitmap ino pointer to %lu\n"
- msgstr "wska¼nik i-wêz³a bitmapy realtime superbloku zosta³by przestawiony na %lu\n"
- 
--#: ../repair/xfs_repair.c:430
-+#: ../repair/xfs_repair.c:485
- #, c-format
- msgid "sb realtime summary inode %llu %sinconsistent with calculated value %lu\n"
- msgstr "i-wêze³ opisu realtime superbloku %llu %sniespójny z obliczon± warto¶ci± %lu\n"
- 
--#: ../repair/xfs_repair.c:437
-+#: ../repair/xfs_repair.c:492
- #, c-format
- msgid "resetting superblock realtime summary ino pointer to %lu\n"
- msgstr "przestawiono wska¼nik i-wêz³a opisu realtime superbloku na %lu\n"
- 
--#: ../repair/xfs_repair.c:441
-+#: ../repair/xfs_repair.c:496
- #, c-format
- msgid "would reset superblock realtime summary ino pointer to %lu\n"
- msgstr "wska¼nik i-wêz³a opisu realtime superbloku zosta³by przestawiony na %lu\n"
- 
--#: ../repair/xfs_repair.c:477
-+#: ../repair/xfs_repair.c:544
- msgid ""
- "Primary superblock would have been modified.\n"
- "Cannot proceed further in no_modify mode.\n"
-@@ -8589,41 +8905,61 @@ msgstr ""
- "Nie mo¿na kontynuowaæ w trybie bez modyfikacji.\n"
- "Zakoñczono.\n"
- 
--#: ../repair/xfs_repair.c:493
-+#: ../repair/xfs_repair.c:561
- #, c-format
- msgid "%s: cannot repair this filesystem.  Sorry.\n"
- msgstr "%s: niestety nie mo¿na naprawiæ tego systemu plików.\n"
- 
--#: ../repair/xfs_repair.c:520
-+#: ../repair/xfs_repair.c:585
-+#, c-format
-+msgid "        - reporting progress in intervals of %s\n"
-+msgstr "        - informowanie o postêpie w odstêpach %s\n"
-+
-+#: ../repair/xfs_repair.c:631
-+#, c-format
-+msgid "        - max_mem = %lu, icount = %llu, imem = %llu, dblock = %llu, dmem = %llu\n"
-+msgstr "        - max_mem = %lu, icount = %llu, imem = %llu, dblock = %llu, dmem = %llu\n"
-+
-+#: ../repair/xfs_repair.c:644
-+#, c-format
-+msgid "Required memory for repair is greater that the maximum specified with the -m option. Please increase it to at least %lu.\n"
-+msgstr "Pamiêæ wymagana do naprawy przekracza maksimum okre¶lone opcj± -m. Proszê j± zwiêkszyæ do co najmniej %lu.\n"
-+
-+#: ../repair/xfs_repair.c:662
-+#, c-format
-+msgid "        - block cache size set to %d entries\n"
-+msgstr "        - rozmiar bufora bloku ustawiony na %d wpisów\n"
-+
-+#: ../repair/xfs_repair.c:686
- msgid "Found unsupported filesystem features.  Exiting now.\n"
- msgstr "Znaleziono nie obs³ugiwane cechy systemu plików. Zakoñczono.\n"
- 
--#: ../repair/xfs_repair.c:543
-+#: ../repair/xfs_repair.c:704
- #, c-format
- msgid "No modify flag set, skipping phase 5\n"
- msgstr "Ustawiono flagê braku modyfikacji, pominiêto fazê 5\n"
- 
--#: ../repair/xfs_repair.c:555
-+#: ../repair/xfs_repair.c:718
- msgid "Inode allocation btrees are too corrupted, skipping phases 6 and 7\n"
- msgstr "B-drzewa alokacji i-wêz³ów s± zbyt uszkodzone, pominiêto fazy 6 i 7\n"
- 
--#: ../repair/xfs_repair.c:561
-+#: ../repair/xfs_repair.c:724
- msgid "Warning:  no quota inodes were found.  Quotas disabled.\n"
- msgstr "Uwaga: nie znaleziono i-wêz³ów limitów (quot). Limity wy³±czone.\n"
- 
--#: ../repair/xfs_repair.c:564
-+#: ../repair/xfs_repair.c:727
- msgid "Warning:  no quota inodes were found.  Quotas would be disabled.\n"
- msgstr "Uwaga: nie znaleziono i-wêz³ów limitów (quot). Limity zosta³yby wy³±czone.\n"
- 
--#: ../repair/xfs_repair.c:569
-+#: ../repair/xfs_repair.c:732
- msgid "Warning:  quota inodes were cleared.  Quotas disabled.\n"
- msgstr "Uwaga: i-wêz³y limitów (quot) by³y wyczyszczone. Limity wy³±czone.\n"
- 
--#: ../repair/xfs_repair.c:572
-+#: ../repair/xfs_repair.c:735
- msgid "Warning:  quota inodes would be cleared.  Quotas would be disabled.\n"
- msgstr "Uwaga: i-wêz³y limitów (quot) zosta³yby wyczyszczone. Limity zosta³yby wy³±czone.\n"
- 
--#: ../repair/xfs_repair.c:578
-+#: ../repair/xfs_repair.c:741
- msgid ""
- "Warning:  user quota information was cleared.\n"
- "User quotas can not be enforced until limit information is recreated.\n"
-@@ -8631,7 +8967,7 @@ msgstr ""
- "Uwaga: informacje o limitach u¿ytkowników by³y wyczyszczone.\n"
- "Limity u¿ytkowników nie mog± byæ wymuszone do czasu odtworzenia informacji.\n"
- 
--#: ../repair/xfs_repair.c:582
-+#: ../repair/xfs_repair.c:745
- msgid ""
- "Warning:  user quota information would be cleared.\n"
- "User quotas could not be enforced until limit information was recreated.\n"
-@@ -8639,7 +8975,7 @@ msgstr ""
- "Uwaga: informacje o limitach u¿ytkowników zosta³yby wyczyszczone.\n"
- "Limity u¿ytkowników nie mog³yby byæ wymuszone do czasu odtworzenia informacji.\n"
- 
--#: ../repair/xfs_repair.c:590
-+#: ../repair/xfs_repair.c:753
- msgid ""
- "Warning:  group quota information was cleared.\n"
- "Group quotas can not be enforced until limit information is recreated.\n"
-@@ -8647,7 +8983,7 @@ msgstr ""
- "Uwaga: informacje o limitach grup by³y wyczyszczone.\n"
- "Limity grup nie mog± byæ wymuszone do czasu odtworzenia informacji.\n"
- 
--#: ../repair/xfs_repair.c:594
-+#: ../repair/xfs_repair.c:757
- msgid ""
- "Warning:  group quota information would be cleared.\n"
- "Group quotas could not be enforced until limit information was recreated.\n"
-@@ -8655,7 +8991,7 @@ msgstr ""
- "Uwaga: informacje o limitach grup zosta³yby wyczyszczone.\n"
- "Limity grup nie mog³yby byæ wymuszone do czasu odtworzenia informacji.\n"
- 
--#: ../repair/xfs_repair.c:602
-+#: ../repair/xfs_repair.c:765
- msgid ""
- "Warning:  project quota information was cleared.\n"
- "Project quotas can not be enforced until limit information is recreated.\n"
-@@ -8663,7 +8999,7 @@ msgstr ""
- "Uwaga: informacje o limitach projektów by³y wyczyszczone.\n"
- "Limity projektów nie mog± byæ wymuszone do czasu odtworzenia informacji.\n"
- 
--#: ../repair/xfs_repair.c:606
-+#: ../repair/xfs_repair.c:769
- msgid ""
- "Warning:  project quota information would be cleared.\n"
- "Project quotas could not be enforced until limit information was recreated.\n"
-@@ -8671,15 +9007,15 @@ msgstr ""
- "Uwaga: informacje o limitach projektów zosta³yby wyczyszczone.\n"
- "Limity projektów nie mog³yby byæ wymuszone do czasu odtworzenia informacji.\n"
- 
--#: ../repair/xfs_repair.c:617
-+#: ../repair/xfs_repair.c:780
- msgid "No modify flag set, skipping filesystem flush and exiting.\n"
- msgstr "Flaga braku modyfikacji ustawiona, pominiêto zrzucanie systemu plików, zakoñczono.\n"
- 
--#: ../repair/xfs_repair.c:641
-+#: ../repair/xfs_repair.c:800
- msgid "Note - quota info will be regenerated on next quota mount.\n"
- msgstr "Uwaga - informacje o limitach zostan± ponownie wygenerowane przy nastêpnym montowaniu.\n"
- 
--#: ../repair/xfs_repair.c:647
-+#: ../repair/xfs_repair.c:806
- #, c-format
- msgid ""
- "Note - stripe unit (%d) and width (%d) fields have been reset.\n"
-@@ -8688,7 +9024,7 @@ msgstr ""
- "Uwaga - pola jednostki pasa (%d) i szeroko¶ci pasa (%d) zosta³y przestawione.\n"
- "Proszê ustawiæ przy u¿yciu mount -o sunit=<warto¶æ>,swidth=<warto¶æ>\n"
- 
--#: ../repair/xfs_repair.c:663
-+#: ../repair/xfs_repair.c:829
- msgid "done\n"
- msgstr "gotowe\n"
- 
--- 
-1.6.0.5
+ 	/*
+ 	 * For new directories adjust the file offset and block count.
+ 	 */
+@@ -1620,6 +1623,8 @@
+ 	}
+ 	if (mapp != &map)
+ 		kmem_free(mapp);
++	/* account for newly allocated blocks in reserved blocks total */
++	args->total -= dp->i_d.di_nblocks - nblks;
+ 	*new_blkno = (xfs_dablk_t)bno;
+ 	return 0;
+ }
+Index: xfs-cmds/xfsprogs/libxfs/xfs_bmap.c
+===================================================================
+--- xfs-cmds.orig/xfsprogs/libxfs/xfs_bmap.c	2008-12-06 20:05:46.000000000 +0100
++++ xfs-cmds/xfsprogs/libxfs/xfs_bmap.c	2008-12-06 20:05:49.000000000 +0100
+@@ -169,7 +169,7 @@
+  * Remove the entry "free" from the free item list.  Prev points to the
+  * previous entry, unless "free" is the head of the list.
+  * 
+- * Note: this requires user-space public scope for libxfs_iread
++ * Note: this requires user-space public scope for libxfs_bmap_finish
+  */
+ void
+ xfs_bmap_del_free(
+@@ -3250,7 +3250,7 @@
+  * Remove the entry "free" from the free item list.  Prev points to the
+  * previous entry, unless "free" is the head of the list.
+  *
+- * Note: this requires user-space public scope for libxfs_iread
++ * Note: this requires user-space public scope for libxfs_bmap_finish
+  */
+ void
+ xfs_bmap_del_free(
+Index: xfs-cmds/xfstests/186
+===================================================================
+--- xfs-cmds.orig/xfstests/186	2008-12-06 20:04:34.000000000 +0100
++++ xfs-cmds/xfstests/186	2008-12-06 20:05:59.000000000 +0100
+@@ -66,7 +66,7 @@
+ 
+ _filter_inode()
+ {
+-	tee -a $seq.full | egrep '^u.sfdir2|^a.sfattr|core.forkoff' |\
++	tee -a $seq.full | egrep '^u.sfdir2|^a.sfattr|forkoff' |\
+ 	egrep -v 'inumber|parent'
+ }
+ 
+Index: xfs-cmds/xfstests/186.out
+===================================================================
+--- xfs-cmds.orig/xfstests/186.out	2008-12-06 20:05:57.000000000 +0100
++++ xfs-cmds/xfstests/186.out	2008-12-06 20:05:59.000000000 +0100
+@@ -2,7 +2,7 @@
+ 
+ =================================
+ ATTR2
+-core.forkoff = 0
++forkoff = 0
+ u.sfdir2.hdr.count = 0
+ u.sfdir2.hdr.i8count = 0
+ =================================
+@@ -12,7 +12,7 @@
+ 
+ =================================
+ ATTR2
+-core.forkoff = 0
++forkoff = 0
+ u.sfdir2.hdr.count = 25
+ u.sfdir2.hdr.i8count = 0
+ u.sfdir2.list[0].namelen = 6
+@@ -98,7 +98,7 @@
+ =================================
+ ATTR
+ ATTR2
+-core.forkoff = 47
++forkoff = 47
+ u.sfdir2.hdr.count = 25
+ u.sfdir2.hdr.i8count = 0
+ u.sfdir2.list[0].namelen = 6
+@@ -195,7 +195,7 @@
+ 
+ =================================
+ ATTR
+-core.forkoff = 47
++forkoff = 47
+ u.sfdir2.hdr.count = 25
+ u.sfdir2.hdr.i8count = 0
+ u.sfdir2.list[0].namelen = 6
 
 -- 
-
-
---===============6754346016266131628==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6754346016266131628==--
