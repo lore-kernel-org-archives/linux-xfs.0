@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBMGiB2Z006537 for <xfs@oss.sgi.com>; Mon, 22 Dec 2008 10:44:11 -0600
+	mBMGi0ag006462 for <xfs@oss.sgi.com>; Mon, 22 Dec 2008 10:44:00 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 107623F8DC
-	for <xfs@oss.sgi.com>; Mon, 22 Dec 2008 08:44:09 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 651CD1775789
+	for <xfs@oss.sgi.com>; Mon, 22 Dec 2008 08:43:59 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 0yG8LcosiS6Wz1xa for
-	<xfs@oss.sgi.com>; Mon, 22 Dec 2008 08:44:09 -0800 (PST)
-Message-Id: <20081222164409.160109000@bombadil.infradead.org>
+	by cuda.sgi.com with ESMTP id CS6asKDdaWeu4guk for
+	<xfs@oss.sgi.com>; Mon, 22 Dec 2008 08:43:59 -0800 (PST)
+Message-Id: <20081222164357.420676000@bombadil.infradead.org>
 References: <20081222163831.755809000@bombadil.infradead.org>
-Date: Mon, 22 Dec 2008 11:38:44 -0500
+Date: Mon, 22 Dec 2008 11:38:38 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 13/20] xfstests: test 194,
-	test tricky mapping/conversion around holes
-Content-Disposition: inline; filename=xfstests-add-corruption-test
+Subject: [PATCH 07/20] return error status from the xfs_quota tool
+Content-Disposition: inline; filename=xfsprogs-quota-exitstatus.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,300 +29,425 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Eric Sandeen <sandeen@sandeen.net>                                           
+From: Arkadiusz Miskiewicz <arekm@maven.pl>
 
+xfs_quota doesn't report success/failure in exit status 
+which prevents it from being used in automated scripts easily.
 
-Related to 
-http://oss.sgi.com/bugzilla/show_bug.cgi?id=801
-
-Latest patch posted on that bug makes this testcase pass...
-
-(are we at 194 now?)
-
-first 2 tests are simple buffred writ tests making sure stale
-data isn't exposed, and hole-blocks aren't mapped.
-
-2nd 2 tests are more related to the above bug, tricky testcase
-uncovered by fsx on ppc64 which actually re-maps a block
-which should be a hole, bringing stale data back into existence.
+Add proper exit codes.
 
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 
---- /dev/null	2008-12-01 16:01:41.522110504 -0600
-+++ xfs-cmds/xfstests/194	2008-12-12 13:57:13.000000000 -0600
-@@ -0,0 +1,200 @@
-+#! /bin/sh
-+# FS QA Test No. 194
-+#
-+# Test mapping around/over holes for sub-page blocks
-+# http://oss.sgi.com/bugzilla/show_bug.cgi?id=801
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2008 Eric Sandeen.  All Rights Reserved.
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=sandeen@sandeen.net
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+
-+# only xfs supported due to use of xfs_bmap
-+_supported_fs xfs
-+_supported_os IRIX Linux
-+
-+# real QA test starts here
-+rm -f $seq.full
-+
-+# For this test we use block size = 1/8 page size
-+pgsize=`$here/src/feature -s`
-+blksize=`expr $pgsize / 8`
-+
-+#  EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
-+#  0: [0..63]:         160..223          0 (160..223)          64
-+#  1: [64..127]:       hole                                    64
-+
-+# Filter out file mountpoint and physical location info
-+_filter_bmap()
-+{
-+    tee -a $seq.full | \
-+    sed "s#$SCRATCH_MNT#SCRATCH_MNT#g" | \
-+    awk --assign blksize=$blksize \
-+        '$3 ~ /hole/   { print $1 "\t" $3 "\t" ($4 * 512) / blksize; next }
-+         $1 ~ /^[0-9]/ { print $1 "\tblocks\t" ($6 * 512) / blksize; next }
-+         	       { print $1 "\tTYPE\t" $6 }' 
-+}
-+
-+# Filter out offsets, which vary by blocksize
-+_filter_od()
-+{
-+    tee -a $seq.full | \
-+    sed -e "s/^[0-9A-Fa-f ]\{7,8\}//"
-+}
-+
-+_require_scratch
-+unset MKFS_OPTIONS
-+unset XFS_MKFS_OPTIONS
-+_scratch_mkfs_xfs -b size=$blksize >/dev/null 2>&1
-+_scratch_mount
-+
-+# 512b block / 4k page example:
-+#
-+#1) Write 1k of data (buffered):
-+#
-+# |1111|1111|
-+#
-+# 2) ftruncate back to 256 bytes:
-+#
-+# |1100|
-+#
-+# 3) ftruncate out to 4k: ("H" means hole (expected))
-+#
-+# |1100|HHHH|HHHH|HHHH|HHHH|HHHH|HHHH|HHHH|
-+#
-+# So we should have 1 block of data/0, 7 blocks of holes.
-+#
-+# 4) check what's there with a direct IO read
-+#
-+# In fact what I get is 1 block of data/0, 1 block of 0's, and 7 blocks of
-+# garbage:
-+#
-+# |1100|0000|GGGG|GGGG|GGGG|GGGG|GGGG|GGGG|
-+#
-+# The garbage is in fact stale data from the disk. 
-+#
-+# Check that we don't get stale data and that the hole is a hole:
-+
-+echo "== Test 1 =="
-+# Write, truncate in, truncate out
-+xfs_io \
-+-c "pwrite -S 0x11 -b `expr $pgsize / 2`  0 `expr $pgsize / 2`" \
-+-c "truncate `expr $blksize / 2`" \
-+-c "truncate $pgsize" \
-+-t -f $SCRATCH_MNT/testfile1 >> $seq.full
-+
-+# directio read of entire file
-+xfs_io \
-+-c "pread 0 $pgsize" \
-+-d $SCRATCH_MNT/testfile1 >> $seq.full
-+
-+xfs_bmap -v $SCRATCH_MNT/testfile1 | _filter_bmap
-+od -x $SCRATCH_MNT/testfile1 | _filter_od
-+
-+# Similar but write another block to create block/hole/block/hole
-+
-+echo "== Test 2 =="
-+# Write, truncate in, truncate out, write to middle
-+xfs_io \
-+-c "pwrite -S 0x11 -b `expr $pgsize / 2`  0 `expr $pgsize / 2`" \
-+-c "truncate `expr $blksize / 2`" \
-+-c "truncate $pgsize" \
-+-c "pwrite -S 0x22 -b $blksize `expr $blksize \* 4` $blksize" \
-+-t -f $SCRATCH_MNT/testfile2 >> $seq.full
-+
-+# directio read of entire file
-+xfs_io \
-+-c "pread 0 $pgsize" \
-+-d $SCRATCH_MNT/testfile2 >> $seq.full
-+
-+xfs_bmap -v $SCRATCH_MNT/testfile2 | _filter_bmap
-+od -x $SCRATCH_MNT/testfile2 | _filter_od
-+
-+# 512 byte block / 4k page example:
-+
-+# direct write 1 page (8 blocks) of "0x11" to 0x1000
-+# map read 1 block, 512 (0x200) at 0
-+# truncate to half a block, 256 (0x100)
-+# truncate to block+1, 513 (0x201)
-+# direct write "0x22" for 1 block at offset 2048 (0x800)
-+
-+# |1111|1111|1111|1111|1111|1111|1111|1111|     Write 1's
-+# |MRMR|1111|1111|1111|1111|1111|1111|1111|     mapread
-+# |11--|                                        truncate down
-+# |1100|0---|                                   truncate up, block+1
-+# |    |    |HHHH|HHHH|2222|                    Write 2's (extending)
-+
-+#           |uptodate?|
-+# |1100|0000|1111|1111|2222|----|----|----| 	<- potential badness
-+
-+# We're looking for this badness due to mapping over a hole:
-+# Exposes stale data from 0x400 (1024) through 0x800 (2048)
-+
-+# 00000000  11 11 11 11 11 11 11 11  11 11 11 11 11 11 11 11  |................|
-+# *
-+# 00000100  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-+# *
-+# 00000400  11 11 11 11 11 11 11 11  11 11 11 11 11 11 11 11  |................| <- BAD
-+# *
-+# 00000800  22 22 22 22 22 22 22 22  22 22 22 22 22 22 22 22  |""""""""""""""""|
-+# *
-+# 00000a00
-+
-+# We *should* get:
-+# |1100|HHHH|HHHH|HHHH|2222|----|----|----|
-+
-+echo "== Test 3 =="
-+xfs_io \
-+-c "pwrite -S 0x11 -b $pgsize 0 $pgsize" \
-+-c "mmap -r 0 $blksize" -c "mread 0 $blksize" -c "munmap" \
-+-c "truncate `expr $blksize / 2`" \
-+-c "truncate `expr $blksize + 1`" \
-+-c "pwrite -S 0x22 -b $blksize `expr $pgsize / 2` $blksize" \
-+-t -d -f $SCRATCH_MNT/testfile3 >> $seq.full
-+
-+xfs_bmap -v $SCRATCH_MNT/testfile3 | _filter_bmap
-+od -x $SCRATCH_MNT/testfile3 | _filter_od
-+
-+# Now try the same thing but write a sector in the middle of that hole
-+# If things go badly stale data will be exposed either side.
-+# This is most interesting for block size > 512 (page size > 4096)
-+
-+# We *should* get:
-+# |1100|HHHH|33HH|HHHH|2222|----|----|----|
-+
-+echo "== Test 4 =="
-+xfs_io \
-+-c "pwrite -S 0x11 -b $pgsize 0 $pgsize" \
-+-c "mmap -r 0 $blksize" -c "mread 0 $blksize" -c "munmap" \
-+-c "truncate `expr $blksize / 2`" \
-+-c "truncate `expr $blksize + 1`" \
-+-c "pwrite -S 0x22 -b $blksize `expr $pgsize / 2` $blksize" \
-+-c "pwrite -S 0x33 -b 512 `expr $blksize \* 2` 512" \
-+-t -d -f $SCRATCH_MNT/testfile4 >> $seq.full
-+
-+xfs_bmap -v $SCRATCH_MNT/testfile4 | _filter_bmap
-+od -x $SCRATCH_MNT/testfile4 | _filter_od
-+
-+# success, all done
-+status=0
-+exit
-
-
---- /dev/null	2008-12-01 16:01:41.522110504 -0600
-+++ xfs-cmds/xfstests/194.out	2008-12-12 13:57:14.000000000 -0600
-@@ -0,0 +1,59 @@
-+QA output created by 194
-+== Test 1 ==
-+SCRATCH_MNT/testfile1:	TYPE	
-+EXT:	TYPE	TOTAL
-+0:	blocks	1
-+1:	hole	7
-+1111 1111 1111 1111 1111 1111 1111 1111
-+*
-+0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+
-+== Test 2 ==
-+SCRATCH_MNT/testfile2:	TYPE	
-+EXT:	TYPE	TOTAL
-+0:	blocks	1
-+1:	hole	3
-+2:	blocks	1
-+3:	hole	3
-+1111 1111 1111 1111 1111 1111 1111 1111
-+*
-+0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+2222 2222 2222 2222 2222 2222 2222 2222
-+*
-+0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+
-+== Test 3 ==
-+SCRATCH_MNT/testfile3:	TYPE	
-+EXT:	TYPE	TOTAL
-+0:	blocks	1
-+1:	hole	3
-+2:	blocks	1
-+1111 1111 1111 1111 1111 1111 1111 1111
-+*
-+0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+2222 2222 2222 2222 2222 2222 2222 2222
-+*
-+
-+== Test 4 ==
-+SCRATCH_MNT/testfile4:	TYPE	
-+EXT:	TYPE	TOTAL
-+0:	blocks	1
-+1:	hole	1
-+2:	blocks	1
-+3:	hole	1
-+4:	blocks	1
-+1111 1111 1111 1111 1111 1111 1111 1111
-+*
-+0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+3333 3333 3333 3333 3333 3333 3333 3333
-+*
-+0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+2222 2222 2222 2222 2222 2222 2222 2222
-+*
-+
-
-
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+diff -urN xfs-cmds/xfsprogs/quota.org/edit.c xfs-cmds/xfsprogs/quota/edit.c
+--- xfs-cmds/xfsprogs/quota.org/edit.c	2007-09-11 04:01:20.000000000 +0200
++++ xfs-cmds/xfsprogs/quota/edit.c	2008-04-18 15:46:17.838170367 +0200
+@@ -140,9 +140,11 @@
+ 	d.d_rtb_hardlimit = *rtbhard;
+ 	d.d_rtb_softlimit = *rtbsoft;
+ 
+-	if (xfsquotactl(XFS_SETQLIM, dev, type, id, (void *)&d) < 0)
++	if (xfsquotactl(XFS_SETQLIM, dev, type, id, (void *)&d) < 0) {
++		exitcode = 1;
+ 		fprintf(stderr, _("%s: cannot set limits: %s\n"),
+ 				progname, strerror(errno));
++	}
+ }
+ 
+ static void
+@@ -159,10 +161,11 @@
+ {
+ 	uid_t		uid = uid_from_string(name);
+ 
+-	if (uid == -1)
++	if (uid == -1) {
++		exitcode = 1;
+ 		fprintf(stderr, _("%s: invalid user name: %s\n"),
+ 				progname, name);
+-	else
++	} else
+ 		set_limits(uid, type, mask, fs_path->fs_name,
+ 				bsoft, bhard, isoft, ihard, rtbsoft, rtbhard);
+ }
+@@ -181,10 +184,11 @@
+ {
+ 	gid_t		gid = gid_from_string(name);
+ 
+-	if (gid == -1)
++	if (gid == -1) {
++		exitcode = 1;
+ 		fprintf(stderr, _("%s: invalid group name: %s\n"),
+ 				progname, name);
+-	else
++	} else
+ 		set_limits(gid, type, mask, fs_path->fs_name,
+ 				bsoft, bhard, isoft, ihard, rtbsoft, rtbhard);
+ }
+@@ -203,10 +207,11 @@
+ {
+ 	prid_t		prid = prid_from_string(name);
+ 
+-	if (prid == -1)
++	if (prid == -1) {
++		exitcode = 1;
+ 		fprintf(stderr, _("%s: invalid project name: %s\n"),
+ 				progname, name);
+-	else
++	} else
+ 		set_limits(prid, type, mask, fs_path->fs_name,
+ 				bsoft, bhard, isoft, ihard, rtbsoft, rtbhard);
+ }
+@@ -315,12 +320,14 @@
+ 		else if (extractb(s, "rtbhard=", 7, bsize, ssize, &rtbhard))
+ 			mask |= FS_DQ_RTBHARD;
+ 		else {
++			exitcode = 1;
+ 			fprintf(stderr, _("%s: unrecognised argument %s\n"),
+ 				progname, s);
+ 			return 0;
+ 		}
+ 	}
+ 	if (!mask) {
++		exitcode = 1;
+ 		fprintf(stderr, _("%s: cannot find any valid arguments\n"),
+ 			progname);
+ 		return 0;
+@@ -428,6 +435,7 @@
+ 
+ 	if (fname) {
+ 		if ((fp = fopen(fname, "r")) == NULL) {
++			exitcode = 1;
+ 			fprintf(stderr, _("%s: fopen on %s failed: %s\n"),
+ 				progname, fname, strerror(errno));
+ 			return 0;
+@@ -458,9 +466,11 @@
+ 	d.d_btimer = value;
+ 	d.d_rtbtimer = value;
+ 
+-	if (xfsquotactl(XFS_SETQLIM, dev, type, 0, (void *)&d) < 0)
++	if (xfsquotactl(XFS_SETQLIM, dev, type, 0, (void *)&d) < 0) {
++		exitcode = 1;
+ 		fprintf(stderr, _("%s: cannot set timer: %s\n"),
+ 				progname, strerror(errno));
++	}
+ }
+ 
+ static int
+@@ -530,9 +540,11 @@
+ 	d.d_bwarns = value;
+ 	d.d_rtbwarns = value;
+ 
+-	if (xfsquotactl(XFS_SETQLIM, dev, type, id, (void *)&d) < 0)
++	if (xfsquotactl(XFS_SETQLIM, dev, type, id, (void *)&d) < 0) {
++		exitcode = 1;
+ 		fprintf(stderr, _("%s: cannot set warnings: %s\n"),
+ 				progname, strerror(errno));
++	}
+ }
+ 
+ static void
+@@ -544,10 +556,11 @@
+ {
+ 	uid_t		uid = uid_from_string(name);
+ 
+-	if (uid == -1)
++	if (uid == -1) {
++		exitcode = 1;
+ 		fprintf(stderr, _("%s: invalid user name: %s\n"),
+ 				progname, name);
+-	else
++	} else
+ 		set_warnings(uid, type, mask, fs_path->fs_name, value);
+ }
+ 
+@@ -560,10 +573,11 @@
+ {
+ 	gid_t		gid = gid_from_string(name);
+ 
+-	if (gid == -1)
++	if (gid == -1) {
++		exitcode = 1;
+ 		fprintf(stderr, _("%s: invalid group name: %s\n"),
+ 				progname, name);
+-	else
++	} else
+ 		set_warnings(gid, type, mask, fs_path->fs_name, value);
+ }
+ 
+@@ -576,10 +590,11 @@
+ {
+ 	prid_t		prid = prid_from_string(name);
+ 
+-	if (prid == -1)
++	if (prid == -1) {
++		exitcode = 1;
+ 		fprintf(stderr, _("%s: invalid project name: %s\n"),
+ 				progname, name);
+-	else
++	} else
+ 		set_warnings(prid, type, mask, fs_path->fs_name, value);
+ }
+ 
+diff -urN xfs-cmds/xfsprogs/quota.org/free.c xfs-cmds/xfsprogs/quota/free.c
+--- xfs-cmds/xfsprogs/quota.org/free.c	2007-09-11 04:01:20.000000000 +0200
++++ xfs-cmds/xfsprogs/quota/free.c	2008-04-18 15:46:57.233387016 +0200
+@@ -61,6 +61,7 @@
+ 	int			fd;
+ 
+ 	if ((fd = open(mount->fs_dir, O_RDONLY)) < 0) {
++		exitcode = 1;
+ 		fprintf(stderr, "%s: cannot open %s: %s\n",
+ 			progname, mount->fs_dir, strerror(errno));
+ 		return 0;
+@@ -128,17 +129,20 @@
+ 		return 0;
+ 
+ 	if ((fd = open(path->fs_dir, O_RDONLY)) < 0) {
++		exitcode = 1;
+ 		fprintf(stderr, "%s: cannot open %s: %s\n",
+ 			progname, path->fs_dir, strerror(errno));
+ 		return 0;
+ 	}
+ 
+ 	if ((xfsctl(path->fs_dir, fd, XFS_IOC_FSGETXATTR, &fsx)) < 0) {
++		exitcode = 1;
+ 		perror("XFS_IOC_FSGETXATTR");
+ 		close(fd);
+ 		return 0;
+ 	}
+ 	if (!(fsx.fsx_xflags & XFS_XFLAG_PROJINHERIT)) {
++		exitcode = 1;
+ 		fprintf(stderr, _("%s: project quota flag not set on %s\n"),
+ 			progname, path->fs_dir);
+ 		close(fd);
+@@ -146,6 +150,7 @@
+ 	}
+ 
+ 	if (path->fs_prid != fsx.fsx_projid) {
++		exitcode = 1;
+ 		fprintf(stderr,
+ 			_("%s: project ID %u (%s) doesn't match ID %u (%s)\n"),
+ 			progname, path->fs_prid, projects_file,
+diff -urN xfs-cmds/xfsprogs/quota.org/project.c xfs-cmds/xfsprogs/quota/project.c
+--- xfs-cmds/xfsprogs/quota.org/project.c	2007-09-11 04:01:20.000000000 +0200
++++ xfs-cmds/xfsprogs/quota/project.c	2008-04-18 15:49:06.202885828 +0200
+@@ -91,6 +91,7 @@
+ 	int			fd;
+ 
+ 	if (flag == FTW_NS ){
++		exitcode = 1;
+ 		fprintf(stderr, _("%s: cannot stat file %s\n"), progname, path);
+ 		return 0;
+ 	}
+@@ -99,14 +100,16 @@
+ 		return 0;
+ 	}
+ 
+-	if ((fd = open(path, O_RDONLY|O_NOCTTY)) == -1)
++	if ((fd = open(path, O_RDONLY|O_NOCTTY)) == -1) {
++		exitcode = 1;
+ 		fprintf(stderr, _("%s: cannot open %s: %s\n"),
+ 			progname, path, strerror(errno));
+-	else if ((xfsctl(path, fd, XFS_IOC_FSGETXATTR, &fsx)) < 0)
++	} else if ((xfsctl(path, fd, XFS_IOC_FSGETXATTR, &fsx)) < 0) {
++		exitcode = 1;
+ 		fprintf(stderr, _("%s: cannot get flags on %s: %s\n"),
+ 			progname, path, strerror(errno));
+-	else {
+-		if (fsx.fsx_projid != prid)
++	} else {
++		if (fsx.fsx_projid != prid)
+ 			printf(_("%s - project identifier is not set"
+ 				 " (inode=%u, tree=%u)\n"),
+ 				path, fsx.fsx_projid, (unsigned int)prid);
+@@ -130,6 +133,7 @@
+ 	int			fd;
+ 
+ 	if (flag == FTW_NS ){
++		exitcode = 1;
+ 		fprintf(stderr, _("%s: cannot stat file %s\n"), progname, path);
+ 		return 0;
+ 	}
+@@ -139,10 +143,12 @@
+ 	}
+ 
+ 	if ((fd = open(path, O_RDONLY|O_NOCTTY)) == -1) {
++		exitcode = 1;
+ 		fprintf(stderr, _("%s: cannot open %s: %s\n"),
+ 			progname, path, strerror(errno));
+ 		return 0;
+ 	} else if (xfsctl(path, fd, XFS_IOC_FSGETXATTR, &fsx) < 0) {
++		exitcode = 1;
+ 		fprintf(stderr, _("%s: cannot get flags on %s: %s\n"),
+ 			progname, path, strerror(errno));
+ 		close(fd);
+@@ -151,9 +157,11 @@
+ 
+ 	fsx.fsx_projid = 0;
+ 	fsx.fsx_xflags &= ~XFS_XFLAG_PROJINHERIT;
+-	if (xfsctl(path, fd, XFS_IOC_FSSETXATTR, &fsx) < 0)
++	if (xfsctl(path, fd, XFS_IOC_FSSETXATTR, &fsx) < 0) {
++		exitcode = 1;
+ 		fprintf(stderr, _("%s: cannot clear project on %s: %s\n"),
+ 			progname, path, strerror(errno));
++	}
+ 	close(fd);
+ 	return 0;
+ }
+@@ -169,6 +177,7 @@
+ 	int			fd;
+ 
+ 	if (flag == FTW_NS ){
++		exitcode = 1;
+ 		fprintf(stderr, _("%s: cannot stat file %s\n"), progname, path);
+ 		return 0;
+ 	}
+@@ -178,10 +187,12 @@
+ 	}
+ 
+ 	if ((fd = open(path, O_RDONLY|O_NOCTTY)) == -1) {
++		exitcode = 1;
+ 		fprintf(stderr, _("%s: cannot open %s: %s\n"),
+ 			progname, path, strerror(errno));
+ 		return 0;
+ 	} else if (xfsctl(path, fd, XFS_IOC_FSGETXATTR, &fsx) < 0) {
++		exitcode = 1;
+ 		fprintf(stderr, _("%s: cannot get flags on %s: %s\n"),
+ 			progname, path, strerror(errno));
+ 		close(fd);
+@@ -190,9 +201,11 @@
+ 
+ 	fsx.fsx_projid = prid;
+ 	fsx.fsx_xflags |= XFS_XFLAG_PROJINHERIT;
+-	if (xfsctl(path, fd, XFS_IOC_FSSETXATTR, &fsx) < 0)
++	if (xfsctl(path, fd, XFS_IOC_FSSETXATTR, &fsx) < 0) {
++		exitcode = 1;
+ 		fprintf(stderr, _("%s: cannot set project on %s: %s\n"),
+ 			progname, path, strerror(errno));
++	}
+ 	close(fd);
+ 	return 0;
+ }
+@@ -272,6 +285,7 @@
+ 
+ 	setprfiles();
+ 	if (access(projects_file, F_OK) != 0) {
++		exitcode = 1;
+ 		fprintf(stderr, _("projects file \"%s\" doesn't exist\n"),
+ 			projects_file);
+ 		return 0;
+@@ -279,10 +293,11 @@
+ 
+         while (argc > optind) {
+ 		prid = prid_from_string(argv[optind]);
+-		if (prid == -1)
++		if (prid == -1) {
++			exitcode = 1;
+ 			fprintf(stderr, _("%s - no such project in %s\n"),
+ 				argv[optind], projects_file);
+-		else
++		} else
+ 	                project(argv[optind], type);
+ 		optind++;
+ 	}
+diff -urN xfs-cmds/xfsprogs/quota.org/quota.c xfs-cmds/xfsprogs/quota/quota.c
+--- xfs-cmds/xfsprogs/quota.org/quota.c	2007-09-11 04:01:20.000000000 +0200
++++ xfs-cmds/xfsprogs/quota/quota.c	2008-04-18 15:49:28.803966289 +0200
+@@ -231,6 +231,7 @@
+ 			id = u->pw_uid;
+ 			name = u->pw_name;
+ 		} else {
++			exitcode = 1;
+ 			fprintf(stderr, _("%s: cannot find user %s\n"),
+ 				progname, name);
+ 			return;
+@@ -280,6 +281,7 @@
+ 				gid = g->gr_gid;
+ 				name = g->gr_name;
+ 			} else {
++				exitcode = 1;
+ 				fprintf(stderr, _("%s: cannot find group %s\n"),
+ 					progname, name);
+ 				return;
+@@ -336,6 +338,7 @@
+ 	prid_t		id;
+ 
+ 	if (!name) {
++		exitcode = 1;
+ 		fprintf(stderr, _("%s: must specify a project name/ID\n"),
+ 			progname);
+ 		return;
+@@ -348,6 +351,7 @@
+ 		id = p->pr_prid;
+ 		name = p->pr_name;
+ 	} else {
++		exitcode = 1;
+ 		fprintf(stderr, _("%s: cannot find project %s\n"),
+ 			progname, name);
+ 		return;
+diff -urN xfs-cmds/xfsprogs/quota.org/report.c xfs-cmds/xfsprogs/quota/report.c
+--- xfs-cmds/xfsprogs/quota.org/report.c	2007-09-11 04:01:20.000000000 +0200
++++ xfs-cmds/xfsprogs/quota/report.c	2008-04-18 15:49:40.684534248 +0200
+@@ -115,6 +115,7 @@
+ 	uint		id;
+ 
+ 	if ((mount = fs_table_lookup(dir, FS_MOUNT_POINT)) == NULL) {
++		exitcode = 1;
+ 		fprintf(stderr, "%s: cannot find mount point %s\n",
+ 			progname, dir);
+ 		return;
+diff -urN xfs-cmds/xfsprogs/quota.org/state.c xfs-cmds/xfsprogs/quota/state.c
+--- xfs-cmds/xfsprogs/quota.org/state.c	2007-09-11 04:01:20.000000000 +0200
++++ xfs-cmds/xfsprogs/quota/state.c	2008-04-18 15:50:18.026319397 +0200
+@@ -253,6 +253,7 @@
+ 
+ 	mount = fs_table_lookup(dir, FS_MOUNT_POINT);
+ 	if (!mount) {
++		exitcode = 1;
+ 		fprintf(stderr, "%s: unknown mount point %s\n", progname, dir);
+ 		return;
+ 	}
+@@ -274,6 +275,7 @@
+ 
+ 	mount = fs_table_lookup(dir, FS_MOUNT_POINT);
+ 	if (!mount) {
++		exitcode = 1;
+ 		fprintf(stderr, "%s: unknown mount point %s\n", progname, dir);
+ 		return;
+ 	}
+@@ -295,6 +297,7 @@
+ 
+ 	mount = fs_table_lookup(dir, FS_MOUNT_POINT);
+ 	if (!mount) {
++		exitcode = 1;
+ 		fprintf(stderr, "%s: unknown mount point %s\n", progname, dir);
+ 		return;
+ 	}
+@@ -327,6 +330,7 @@
+ 
+ 	mount = fs_table_lookup(dir, FS_MOUNT_POINT);
+ 	if (!mount) {
++		exitcode = 1;
+ 		fprintf(stderr, "%s: unknown mount point %s\n", progname, dir);
+ 		return;
+ 	}
+diff -urN xfs-cmds/xfsprogs/quota.org/util.c xfs-cmds/xfsprogs/quota/util.c
+--- xfs-cmds/xfsprogs/quota.org/util.c	2007-09-11 04:01:20.000000000 +0200
++++ xfs-cmds/xfsprogs/quota/util.c	2008-04-18 15:50:29.823550039 +0200
+@@ -413,11 +413,13 @@
+ 		return stdout;
+ 
+ 	if ((fd = open(fname, O_CREAT|O_WRONLY|O_EXCL, 0600)) < 0) {
++		exitcode = 1;
+ 		fprintf(stderr, _("%s: open on %s failed: %s\n"),
+ 			progname, fname, strerror(errno));
+ 		return NULL;
+ 	}
+ 	if ((fp = fdopen(fd, "w")) == NULL) {
++		exitcode = 1;
+ 		fprintf(stderr, _("%s: fdopen on %s failed: %s\n"),
+ 			progname, fname, strerror(errno));
+ 		close(fd);
 
 -- 
 
