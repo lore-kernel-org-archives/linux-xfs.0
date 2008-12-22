@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBMGiBxW006550 for <xfs@oss.sgi.com>; Mon, 22 Dec 2008 10:44:11 -0600
+	mBMGiDu7006572 for <xfs@oss.sgi.com>; Mon, 22 Dec 2008 10:44:13 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7D3E3177579B
-	for <xfs@oss.sgi.com>; Mon, 22 Dec 2008 08:44:10 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 748063F8E3
+	for <xfs@oss.sgi.com>; Mon, 22 Dec 2008 08:44:12 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id GVZUEPqfZhIFVdjg for
-	<xfs@oss.sgi.com>; Mon, 22 Dec 2008 08:44:10 -0800 (PST)
-Message-Id: <20081222164409.990496000@bombadil.infradead.org>
+	by cuda.sgi.com with ESMTP id IPeHxn0lNVfpJXGh for
+	<xfs@oss.sgi.com>; Mon, 22 Dec 2008 08:44:12 -0800 (PST)
+Message-Id: <20081222164411.347208000@bombadil.infradead.org>
 References: <20081222163831.755809000@bombadil.infradead.org>
-Date: Mon, 22 Dec 2008 11:38:46 -0500
+Date: Mon, 22 Dec 2008 11:38:50 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 15/20] fix xfsqa 189 for log and rt devices
-Content-Disposition: inline; filename=xfstests-fix-189-for-log-and-rtdev
+Subject: [PATCH 19/20] xfsdump: add support for building with sparse
+Content-Disposition: inline; filename=xfsdump-sparse
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,24 +29,26 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Matthew Kent <mkent@magoazul.com>                                            
 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-
---- xfs-cmds/xfstests/189.orig	2008-11-21 13:43:33.000000000 -0800
-+++ xfs-cmds/xfstests/189	2008-11-21 13:42:48.000000000 -0800
-@@ -188,8 +188,8 @@
- _need_to_be_root
- _require_scratch
+Index: xfs-cmds/xfsdump/include/buildmacros
+===================================================================
+--- xfs-cmds.orig/xfsdump/include/buildmacros	2008-11-13 18:31:57.000000000 +0100
++++ xfs-cmds/xfsdump/include/buildmacros	2008-11-13 18:58:13.000000000 +0100
+@@ -42,10 +42,10 @@ LIBNAME = $(basename $(LTLIBRARY))
+ LTOBJECTS = $(OBJECTS:.o=.lo)
+ LTVERSION = $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
  
--unset SCRATCH_OPTIONS
--unset MOUNT_OPTIONS
-+unset SCRATCH_RTDEV
-+unset SCRATCH_LOGDEV
+-LTLINK = $(LIBTOOL) --mode=link $(CC)
++LTLINK = $(LIBTOOL) --tag=CC --mode=link $(CC)
+ LTEXEC = $(LIBTOOL) --mode=execute
+ LTINSTALL = $(LIBTOOL) --mode=install $(INSTALL)
+-LTCOMPILE = $(LIBTOOL) --mode=compile $(CCF)
++LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CCF)
  
- _scratch_mkfs_xfs | _filter_mkfs 2>/dev/null
- 
+ ifeq ($(ENABLE_SHARED),yes)
+ LTLDFLAGS += -rpath $(PKG_LIB_DIR)
 
 -- 
 
