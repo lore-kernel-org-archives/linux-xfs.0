@@ -1,15 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBN0hl71016920 for <xfs@oss.sgi.com>; Mon, 22 Dec 2008 18:43:47 -0600
-Message-ID: <49503495.1050207@sgi.com>
-Date: Tue, 23 Dec 2008 11:45:09 +1100
-From: Lachlan McIlroy <lachlan@sgi.com>
+	mBN8ekro029108 for <xfs@oss.sgi.com>; Tue, 23 Dec 2008 02:40:46 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C386C177B7F2
+	for <xfs@oss.sgi.com>; Tue, 23 Dec 2008 00:40:44 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id e0yAQLWCDrHQQLMk for
+	<xfs@oss.sgi.com>; Tue, 23 Dec 2008 00:40:44 -0800 (PST)
+Date: Tue, 23 Dec 2008 03:40:13 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [Fwd: [PATCH] Fix race in xfs_write() between direct and
+	buffered I/O with DMAPI]
+Message-ID: <20081223084013.GA7604@infradead.org>
+References: <493779B1.3010703@sgi.com> <20081208225125.GA15647@infradead.org>
+	<493DFDBD.7060909@sgi.com> <20081209092240.GA23915@infradead.org>
+	<20081222085311.GB24795@infradead.org> <49503378.2080508@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] handle unaligned data in xfs_bmbt_disk_get_all
-References: <20081222145906.GA18859@infradead.org>
-In-Reply-To: <20081222145906.GA18859@infradead.org>
-Reply-To: lachlan@sgi.com
+Content-Disposition: inline
+In-Reply-To: <49503378.2080508@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,38 +31,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Lachlan McIlroy <lachlan@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
 
-Looks good.
+On Tue, Dec 23, 2008 at 11:40:24AM +1100, Lachlan McIlroy wrote:
+> Christoph Hellwig wrote:
+> > Do you need more input on this one?
+> 
+> Actually I just might.  Based on your last reponse I wasn't sure if
+> you wanted me to make further changes.
 
-Christoph Hellwig wrote:
-> In libxfs xfs_bmbt_disk_get_all needs to handle unaligned data and thus
-> has been updated to use get_unaligned_be64.  In kernelspace we don't strictly
-> need it as the routine is only used for tracing and xfsidbg, but let's keep
-> the two implementations in sync.
-> 
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Index: xfs/fs/xfs/xfs_bmap_btree.c
-> --- xfs.orig/fs/xfs/xfs_bmap_btree.c	2008-12-19 15:02:53.998907997 +0100
-> +++ xfs/fs/xfs/xfs_bmap_btree.c	2008-12-22 14:43:41.507247175 +0100
-> @@ -208,7 +208,8 @@ xfs_bmbt_disk_get_all(
->  	xfs_bmbt_rec_t	*r,
->  	xfs_bmbt_irec_t *s)
->  {
-> -	__xfs_bmbt_get_all(be64_to_cpu(r->l0), be64_to_cpu(r->l1), s);
-> +	__xfs_bmbt_get_all(get_unaligned_be64(&r->l0),
-> +				get_unaligned_be64(&r->l1), s);
->  }
->  
->  /*
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Well, my reponse was that I think we could do it more effecient, but the
+patch still looks correct to me.
+
+> Then I got side-tracked wondering
+> why we even have the 'goto retry' in the dmapi post event - why retry the
+> write if we get ENOSPC when we don't if dmapi is not enabled?  Could the
+> write get stuck in an infinite loop?
+
+We only retry on ENOSPC if the dmapi nospace even is enabled, or am I
+missing something?
 
 _______________________________________________
 xfs mailing list
