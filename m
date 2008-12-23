@@ -1,17 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBN0d1um016327 for <xfs@oss.sgi.com>; Mon, 22 Dec 2008 18:39:01 -0600
-Message-ID: <49503378.2080508@sgi.com>
-Date: Tue, 23 Dec 2008 11:40:24 +1100
+	mBN0hl71016920 for <xfs@oss.sgi.com>; Mon, 22 Dec 2008 18:43:47 -0600
+Message-ID: <49503495.1050207@sgi.com>
+Date: Tue, 23 Dec 2008 11:45:09 +1100
 From: Lachlan McIlroy <lachlan@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [Fwd: [PATCH] Fix race in xfs_write() between direct and	buffered
-	I/O with DMAPI]
-References: <493779B1.3010703@sgi.com> <20081208225125.GA15647@infradead.org>
-	<493DFDBD.7060909@sgi.com> <20081209092240.GA23915@infradead.org>
-	<20081222085311.GB24795@infradead.org>
-In-Reply-To: <20081222085311.GB24795@infradead.org>
+Subject: Re: [PATCH] handle unaligned data in xfs_bmbt_disk_get_all
+References: <20081222145906.GA18859@infradead.org>
+In-Reply-To: <20081222145906.GA18859@infradead.org>
 Reply-To: lachlan@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
@@ -26,16 +23,37 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs-oss <xfs@oss.sgi.com>
+Cc: xfs@oss.sgi.com
+
+Looks good.
 
 Christoph Hellwig wrote:
-> Do you need more input on this one?
-
-Actually I just might.  Based on your last reponse I wasn't sure if
-you wanted me to make further changes.  Then I got side-tracked wondering
-why we even have the 'goto retry' in the dmapi post event - why retry the
-write if we get ENOSPC when we don't if dmapi is not enabled?  Could the
-write get stuck in an infinite loop?
+> In libxfs xfs_bmbt_disk_get_all needs to handle unaligned data and thus
+> has been updated to use get_unaligned_be64.  In kernelspace we don't strictly
+> need it as the routine is only used for tracing and xfsidbg, but let's keep
+> the two implementations in sync.
+> 
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Index: xfs/fs/xfs/xfs_bmap_btree.c
+> --- xfs.orig/fs/xfs/xfs_bmap_btree.c	2008-12-19 15:02:53.998907997 +0100
+> +++ xfs/fs/xfs/xfs_bmap_btree.c	2008-12-22 14:43:41.507247175 +0100
+> @@ -208,7 +208,8 @@ xfs_bmbt_disk_get_all(
+>  	xfs_bmbt_rec_t	*r,
+>  	xfs_bmbt_irec_t *s)
+>  {
+> -	__xfs_bmbt_get_all(be64_to_cpu(r->l0), be64_to_cpu(r->l1), s);
+> +	__xfs_bmbt_get_all(get_unaligned_be64(&r->l0),
+> +				get_unaligned_be64(&r->l1), s);
+>  }
+>  
+>  /*
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
