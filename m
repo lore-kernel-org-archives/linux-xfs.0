@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBNHHmd4014404 for <xfs@oss.sgi.com>; Tue, 23 Dec 2008 11:17:48 -0600
-Received: from josefsipek.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 41660434F6
-	for <xfs@oss.sgi.com>; Tue, 23 Dec 2008 09:17:46 -0800 (PST)
-Received: from josefsipek.net (josefsipek.net [141.211.133.196]) by
-	cuda.sgi.com with ESMTP id 73lzcqotliAiuvim for
-	<xfs@oss.sgi.com>; Tue, 23 Dec 2008 09:17:46 -0800 (PST)
-Date: Tue, 23 Dec 2008 12:17:46 -0500
-From: "Josef 'Jeff' Sipek" <jeffpc@josefsipek.net>
-Subject: [PATCH] xfstests: make the mode consistent for all the test scripts
-Message-ID: <20081223171746.GA6284@josefsipek.net>
+	mBO18nJF027544 for <xfs@oss.sgi.com>; Tue, 23 Dec 2008 19:08:49 -0600
+Message-ID: <49518BF2.2020709@sgi.com>
+Date: Wed, 24 Dec 2008 12:10:10 +1100
+From: Lachlan McIlroy <lachlan@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
+Subject: Re: [Fwd: [PATCH] Fix race in xfs_write() between direct and	buffered
+	I/O with DMAPI]
+References: <493779B1.3010703@sgi.com> <20081208225125.GA15647@infradead.org>
+	<493DFDBD.7060909@sgi.com> <20081209092240.GA23915@infradead.org>
+	<20081222085311.GB24795@infradead.org> <49503378.2080508@sgi.com>
+	<20081223084013.GA7604@infradead.org>
+In-Reply-To: <20081223084013.GA7604@infradead.org>
+Reply-To: lachlan@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,95 +26,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
+Christoph Hellwig wrote:
+> On Tue, Dec 23, 2008 at 11:40:24AM +1100, Lachlan McIlroy wrote:
+>> Christoph Hellwig wrote:
+>>> Do you need more input on this one?
+>> Actually I just might.  Based on your last reponse I wasn't sure if
+>> you wanted me to make further changes.
+> 
+> Well, my reponse was that I think we could do it more effecient, but the
+> patch still looks correct to me.
+Okay great.  I'll check it in and we can improve it later when I understand
+what you meant!
 
-Signed-off-by: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
----
- 0 files changed, 0 insertions(+), 0 deletions(-)
- mode change 100644 => 100755 xfstests/104
- mode change 100755 => 100644 xfstests/112.out
- mode change 100644 => 100755 xfstests/141
- mode change 100644 => 100755 xfstests/164
- mode change 100644 => 100755 xfstests/165
- mode change 100644 => 100755 xfstests/166
- mode change 100644 => 100755 xfstests/167
- mode change 100644 => 100755 xfstests/170
- mode change 100644 => 100755 xfstests/171
- mode change 100644 => 100755 xfstests/172
- mode change 100644 => 100755 xfstests/173
- mode change 100644 => 100755 xfstests/174
- mode change 100644 => 100755 xfstests/179
- mode change 100644 => 100755 xfstests/180
- mode change 100644 => 100755 xfstests/182
- mode change 100644 => 100755 xfstests/183
- mode change 100644 => 100755 xfstests/184
- mode change 100644 => 100755 xfstests/185
- mode change 100644 => 100755 xfstests/188
- mode change 100644 => 100755 xfstests/189
-
-diff --git a/xfstests/104 b/xfstests/104
-old mode 100644
-new mode 100755
-diff --git a/xfstests/112.out b/xfstests/112.out
-old mode 100755
-new mode 100644
-diff --git a/xfstests/141 b/xfstests/141
-old mode 100644
-new mode 100755
-diff --git a/xfstests/164 b/xfstests/164
-old mode 100644
-new mode 100755
-diff --git a/xfstests/165 b/xfstests/165
-old mode 100644
-new mode 100755
-diff --git a/xfstests/166 b/xfstests/166
-old mode 100644
-new mode 100755
-diff --git a/xfstests/167 b/xfstests/167
-old mode 100644
-new mode 100755
-diff --git a/xfstests/170 b/xfstests/170
-old mode 100644
-new mode 100755
-diff --git a/xfstests/171 b/xfstests/171
-old mode 100644
-new mode 100755
-diff --git a/xfstests/172 b/xfstests/172
-old mode 100644
-new mode 100755
-diff --git a/xfstests/173 b/xfstests/173
-old mode 100644
-new mode 100755
-diff --git a/xfstests/174 b/xfstests/174
-old mode 100644
-new mode 100755
-diff --git a/xfstests/179 b/xfstests/179
-old mode 100644
-new mode 100755
-diff --git a/xfstests/180 b/xfstests/180
-old mode 100644
-new mode 100755
-diff --git a/xfstests/182 b/xfstests/182
-old mode 100644
-new mode 100755
-diff --git a/xfstests/183 b/xfstests/183
-old mode 100644
-new mode 100755
-diff --git a/xfstests/184 b/xfstests/184
-old mode 100644
-new mode 100755
-diff --git a/xfstests/185 b/xfstests/185
-old mode 100644
-new mode 100755
-diff --git a/xfstests/188 b/xfstests/188
-old mode 100644
-new mode 100755
-diff --git a/xfstests/189 b/xfstests/189
-old mode 100644
-new mode 100755
--- 
-1.5.6.5
+> 
+>> Then I got side-tracked wondering
+>> why we even have the 'goto retry' in the dmapi post event - why retry the
+>> write if we get ENOSPC when we don't if dmapi is not enabled?  Could the
+>> write get stuck in an infinite loop?
+> 
+> We only retry on ENOSPC if the dmapi nospace even is enabled, or am I
+> missing something?
+I don't think you're missing anything here.  I don't understand how the
+DMAPI stuff works but I imagined the event was there to indicate that the
+write failed but what I don't understand is why that justifies a retry.
+Is there something about DMAPI that needs the write to succeed?
 
 _______________________________________________
 xfs mailing list
