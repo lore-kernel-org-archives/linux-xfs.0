@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBQJBNM7011189 for <xfs@oss.sgi.com>; Fri, 26 Dec 2008 13:11:23 -0600
-Received: from lucidpixels.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B67844AD90
-	for <xfs@oss.sgi.com>; Fri, 26 Dec 2008 11:11:22 -0800 (PST)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by
-	cuda.sgi.com with ESMTP id Kx1YEMHniGBlFkvG for
-	<xfs@oss.sgi.com>; Fri, 26 Dec 2008 11:11:22 -0800 (PST)
-Date: Fri, 26 Dec 2008 04:07:19 -0500 (EST)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: RE: mismatch_cnt, random bitflips, silent corruption(?), mdadm/sw
-	raid[156]
-In-Reply-To: <A20315AE59B5C34585629E258D76A97C031B2765@34093-C3-EVS3.exchange.rackspace.com>
-Message-ID: <alpine.DEB.1.10.0812260401550.24520@p34.internal.lan>
-References: <alpine.DEB.1.10.0812250435260.12329@p34.internal.lan>
-	<A20315AE59B5C34585629E258D76A97C031B2765@34093-C3-EVS3.exchange.rackspace.com>
+	mBQJJCJe011633 for <xfs@oss.sgi.com>; Fri, 26 Dec 2008 13:19:13 -0600
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 12EAF1BF68EF
+	for <xfs@oss.sgi.com>; Fri, 26 Dec 2008 11:19:11 -0800 (PST)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com
+	with ESMTP id QSY7RsLUxB6aG5FG for <xfs@oss.sgi.com>;
+	Fri, 26 Dec 2008 11:19:11 -0800 (PST)
+Message-ID: <49552E0D.1030809@sandeen.net>
+Date: Fri, 26 Dec 2008 13:18:37 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
+Subject: Re: xfs_db 2.9.8: coredump
+References: <alpine.DEB.1.10.0812260931490.11656@p34.internal.lan>	<49551073.5090704@redhat.com>
+	<alpine.DEB.1.10.0812261243550.18703@p34.internal.lan>
+In-Reply-To: <alpine.DEB.1.10.0812261243550.18703@p34.internal.lan>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,53 +28,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: David Lethe <david@santools.com>
-Cc: linux-raid@vger.kernel.org, Alan Piszcz <ap@solarrain.com>, smartmontools-support@lists.sourceforge.net, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, Alan Piszcz <ap@solarrain.com>, esandeen@redhat.com, xfs@oss.sgi.com
+
+Justin Piszcz wrote:
+> 
+> On Fri, 26 Dec 2008, Eric Sandeen wrote:
 
 
-
-On Thu, 25 Dec 2008, David Lethe wrote:
-
->> -----Original Message-----
->> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+>> Or, get an xfs_metadump of the fs and see if db segfaults on that too.
 >>
->> Other options?
+>> I'd be curious  to know if xfs_repair -n flaggs any problems, as well.
 >>
->> How do others maintain data integrity?  Just not worry about it until
->> you have
->> to, rely on backups.. or?
+>> -Eric
 >>
->> Justin.
->
-> 4GB files using gpg and tar in the '90s?
-Sorry, to clarify they were ~650-700MiB tars but combined to around a ~4GiB
-file later on (from the late 90s), CD's were cheap and yeah 2GiB limit.  But
-later on to consolidate I moved them to 4GiB DVDs and thus tarred them together
-and then gpg on top of that.
+> 
+> # xfs_metadump -g /dev/sda1  /root/sda1.metadump
+> Copied 300096 of 426176 inodes (0 of 12 AGs)
+> Copying log
+> #
+> 
+> p34:~# xfs_db -c frag -f sda1.metadump
+> xfs_db: unexpected XFS SB magic number 0x5846534d
+> xfs_db: read failed: Invalid argument
+> xfs_db: data size check failed
+> cache_node_purge: refcount was 1, not zero (node=0x1ce4b80)
+> xfs_db: cannot read root inode (22)
+> cache_node_purge: refcount was 1, not zero (node=0x1ce4cd0)
+> xfs_db: cannot read realtime bitmap inode (22)
+> Segmentation fault (core dumped)
 
-> I know gpg had 2GB file-related bugs as late as 2005 that caused corruption, and
-> there was a heck of a lot of 2GB-related bugs in 2.2 and 2.4 kernels which you
-> must have been running back then.  You are also using later versions of these
-> programs on the new systems, and I'd be willing to bet they compound the problem by
-> assuming there was no corruption to begin with.
-Once I restored the data from DVDs, I was able to restore *all* data 
-successfully.
+well, you have to xfs_mdrestore that to a sparse file before pointing db
+at it for it to be valid (still, should not dump).
 
->
-> I use:
-> - gzipped tar archives, but I gzip the individual files, rather than the tarball. That way
-> any compression-related bugs are limited to a single file. I copy them to DVDs.
-That works as well, but are they your regular files gzipped, no encryption?
-
->
-> - For online/nearline, I now use a ZFS, but on a native Solaris system that functions as my primary
-> NFS/CIFS/iSCSI server with and a ZFS software-RAID based file system.   I am profoundly impressed with
-> it, and when they release the deduplication enhancement for ZFS, I'll adopt it and won't have to buy
-> any more DVDs, except for offsite archiving purposes.
-Wow, I did not know ZFS had plans for de-dupe!! I will have to look into this,
-thanks for the info.
-
-Justin.
+-Eric
 
 _______________________________________________
 xfs mailing list
