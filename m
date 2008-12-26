@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBQI1OF3006249 for <xfs@oss.sgi.com>; Fri, 26 Dec 2008 12:01:24 -0600
-Received: from lucidpixels.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A21CA4AB77
-	for <xfs@oss.sgi.com>; Fri, 26 Dec 2008 10:01:22 -0800 (PST)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by
-	cuda.sgi.com with ESMTP id gAlVgDFrQoWW6UN4 for
-	<xfs@oss.sgi.com>; Fri, 26 Dec 2008 10:01:22 -0800 (PST)
-Date: Fri, 26 Dec 2008 12:52:10 -0500 (EST)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: xfs_db 2.9.8: coredump
-In-Reply-To: <alpine.DEB.1.10.0812261243550.18703@p34.internal.lan>
-Message-ID: <alpine.DEB.1.10.0812261251520.18703@p34.internal.lan>
-References: <alpine.DEB.1.10.0812260931490.11656@p34.internal.lan>
-	<49551073.5090704@redhat.com>
-	<alpine.DEB.1.10.0812261243550.18703@p34.internal.lan>
+	mBQI6PqL006974 for <xfs@oss.sgi.com>; Fri, 26 Dec 2008 12:06:25 -0600
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 70D61178C8C6
+	for <xfs@oss.sgi.com>; Fri, 26 Dec 2008 10:06:24 -0800 (PST)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com
+	with ESMTP id lghKEyTpWyoYjoe9 for <xfs@oss.sgi.com>;
+	Fri, 26 Dec 2008 10:06:24 -0800 (PST)
+Message-ID: <49551019.7030802@sandeen.net>
+Date: Fri, 26 Dec 2008 11:10:49 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
+Subject: Re: xfs_db 2.9.8: coredump
+References: <alpine.DEB.1.10.0812260931490.11656@p34.internal.lan>
+In-Reply-To: <alpine.DEB.1.10.0812260931490.11656@p34.internal.lan>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,53 +27,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
 Cc: Alan Piszcz <ap@solarrain.com>, esandeen@redhat.com, xfs@oss.sgi.com
 
+Justin Piszcz wrote:
+> # xfs_db -V
+> xfs_db version 2.9.8
+> 
+> p34:~# xfs_db -c frag -f /dev/sda1
+> Segmentation fault (core dumped)
+> p34:~# xfs_db -c frag -r /dev/sda1
+> Segmentation fault (core dumped)
+> 
+> (It was working BEFORE I ran xfs_fsr on it, it was at 16% fragmentation).
+> 
+> Now it can no longer check it?
+> 
+> ===============================================================================
+> 
+> Program terminated with signal 11, Segmentation fault.
+> [New process 11346]
+> (gdb) bt
+> #0  0x00007f6a67c8c3e0 in ?? () from /lib/libc.so.6
+> #1  0x00007f6a67c8b43a in memmove () from /lib/libc.so.6
+> #2  0x0000000000403f2e in ?? ()
+> #3  0x0000000000412ff1 in ?? ()
+> #4  0x00000000004129cb in ?? ()
+> #5  0x0000000000413392 in ?? ()
 
+please run against a debug binary so we can get useful info...
 
-On Fri, 26 Dec 2008, Justin Piszcz wrote:
+If this was on fedora, just install the matching xfsprogs-debuginfo package.
 
->
->
-> On Fri, 26 Dec 2008, Eric Sandeen wrote:
->
->> Justin Piszcz wrote:
->>> # xfs_db -V
->>> xfs_db version 2.9.8
->>> 
->>> p34:~# xfs_db -c frag -f /dev/sda1
->>> Segmentation fault (core dumped)
->>> p34:~# xfs_db -c frag -r /dev/sda1
->>> Segmentation fault (core dumped)
->>> 
->>> (It was working BEFORE I ran xfs_fsr on it, it was at 16% fragmentation).
->>> 
->>> Now it can no longer check it?
->>> 
->> 
->> Or, get an xfs_metadump of the fs and see if db segfaults on that too.
->> 
->> I'd be curious  to know if xfs_repair -n flaggs any problems, as well.
->> 
->> -Eric
->>
-
-p34:~# umount /r1
-p34:~# sync
-p34:~# xfs_db -c frag -r /dev/sda1
-actual 365758, ideal 358711, fragmentation factor 1.93%
-p34:~# mount -a
-p34:~# xfs_db -c frag -r /dev/sda1
-actual 365758, ideal 358711, fragmentation factor 1.93%
-p34:~# mount -a ; dmesg | tail -n 2
-p34:~# xfs_fsr /dev/sda1
-/r1 start inode=0
-p34:~# xfs_db -c frag -r /dev/sda1
-actual 365751, ideal 358711, fragmentation factor 1.92%
-p34:~#
-
-Now it is working?  I do not understand.
+-Eric
 
 _______________________________________________
 xfs mailing list
