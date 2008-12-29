@@ -1,22 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBTMIiG1009496 for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 16:18:44 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0CF545072E
-	for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 14:18:43 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id KVm0WybmbwtRE3cu for
-	<xfs@oss.sgi.com>; Mon, 29 Dec 2008 14:18:43 -0800 (PST)
-Received: from hch by bombadil.infradead.org with local (Exim 4.68 #1 (Red Hat
-	Linux)) id 1LHQRf-0002f9-NW
-	for xfs@oss.sgi.com; Mon, 29 Dec 2008 22:18:43 +0000
-Message-Id: <20081229221843.642347000@bombadil.infradead.org>
-References: <20081229221802.268877000@bombadil.infradead.org>
-Date: Mon, 29 Dec 2008 17:18:05 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [patch 3/3] add a lock class for group/project dquots
-Content-Disposition: inline; filename=xfs-add-quota-classes
+	mBTMJ660009564 for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 16:19:06 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 728E017945B5
+	for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 14:19:04 -0800 (PST)
+Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
+	cuda.sgi.com with ESMTP id z2Aat725u8vjSPwP for
+	<xfs@oss.sgi.com>; Mon, 29 Dec 2008 14:19:04 -0800 (PST)
+Message-ID: <49594CD9.3010402@sandeen.net>
+Date: Mon, 29 Dec 2008 16:19:05 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: [PATCH] xfs-cmds: fix parallel installs in include/ dirs
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,52 +21,135 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
+Cc: Mike Frysinger <vapier@gentoo.org>
 
-We can have both a user and a group/project dquot locked at the same time,
-as long as the user dquot is locked first.  Tell lockdep about that fact
-by making the group/project dquots a different lock class.
+This is for http://oss.sgi.com/bugzilla/show_bug.cgi?id=759
+"fix parallel issue with include/ symlinks"
 
+Doing something like "make -j2 install install-dev" would lead
+to a race of removing & creating symlinks in include/
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Thanks to Mike for reporting & suggesting the fix.
 
-Index: xfs/fs/xfs/quota/xfs_dquot.c
+Reported-by: Mike Frysinger <vapier@gentoo.org>
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
+
+Index: xfs-cmds/acl/include/Makefile
 ===================================================================
---- xfs.orig/fs/xfs/quota/xfs_dquot.c	2008-12-29 12:24:33.018737674 +0100
-+++ xfs/fs/xfs/quota/xfs_dquot.c	2008-12-29 12:29:35.132612895 +0100
-@@ -73,6 +73,8 @@ int xfs_dqreq_num;
- int xfs_dqerror_mod = 33;
- #endif
+--- xfs-cmds.orig/acl/include/Makefile
++++ xfs-cmds/acl/include/Makefile
+@@ -9,10 +9,10 @@ HFILES = acl.h libacl.h acl_ea.h misc.h 
+ LSRCFILES = builddefs.in buildmacros buildrules config.h.in
+ LDIRT = sys acl
  
-+static struct lock_class_key xfs_dquot_other_class;
+-default:
+-	rm -f sys acl
+-	$(LN_S) . sys
+-	$(LN_S) . acl
++sys acl:
++	$(LN_S) . $@
 +
- /*
-  * Allocate and initialize a dquot. We don't always allocate fresh memory;
-  * we try to reclaim a free dquot if the number of incore dquots are above
-@@ -139,7 +141,15 @@ xfs_qm_dqinit(
- 		 ASSERT(dqp->q_trace);
- 		 xfs_dqtrace_entry(dqp, "DQRECLAIMED_INIT");
- #endif
--	 }
-+	}
-+
-+	/*
-+	 * In either case we need to make sure group quotas have a different
-+	 * lock class than user quotas, to make sure lockdep knows we can
-+	 * locks of one of each at the same time.
-+	 */
-+	if (!(type & XFS_DQ_USER))
-+		lockdep_set_class(&dqp->q_qlock, &xfs_dquot_other_class);
++default: sys acl
  
- 	/*
- 	 * log item gets initialized later
+ include $(BUILDRULES)
+ 
+@@ -22,4 +22,5 @@ install-dev: default
+ 	$(INSTALL) -m 644 acl.h $(PKG_INC_DIR)/sys/acl.h
+ 	$(INSTALL) -m 755 -d $(PKG_INC_DIR)/acl
+ 	$(INSTALL) -m 644 libacl.h $(PKG_INC_DIR)/acl/libacl.h
++
+ install install-lib:
+Index: xfs-cmds/attr/include/Makefile
+===================================================================
+--- xfs-cmds.orig/attr/include/Makefile
++++ xfs-cmds/attr/include/Makefile
+@@ -11,13 +11,15 @@ HFILES = $(INST_HFILES) misc.h walk_tree
+ LSRCFILES = builddefs.in buildmacros buildrules config.h.in
+ LDIRT = $(INCDIR)
+ 
+-default:
+-	rm -f $(INCDIR)
+-	$(LN_S) . $(INCDIR)
++$(INCDIR):
++	$(LN_S) . $@
++
++default: $(INCDIR)
+ 
+ include $(BUILDRULES)
+ 
+ install-dev: default
+ 	$(INSTALL) -m 755 -d $(PKG_INC_DIR)
+ 	$(INSTALL) -m 644 $(INST_HFILES) $(PKG_INC_DIR)
++
+ install install-lib:
+Index: xfs-cmds/dmapi/include/Makefile
+===================================================================
+--- xfs-cmds.orig/dmapi/include/Makefile
++++ xfs-cmds/dmapi/include/Makefile
+@@ -9,9 +9,10 @@ HFILES = dmapi.h
+ LSRCFILES = builddefs.in buildmacros buildrules dmapi_kern.h
+ LDIRT = xfs
+ 
+-default install :
+-	rm -f xfs
+-	$(LN_S) . xfs
++xfs:
++	$(LN_S) . $@
++
++default install: xfs
+ 
+ include $(BUILDRULES)
+ 
+Index: xfs-cmds/nfs4acl/include/Makefile
+===================================================================
+--- xfs-cmds.orig/nfs4acl/include/Makefile
++++ xfs-cmds/nfs4acl/include/Makefile
+@@ -9,9 +9,10 @@ HFILES = nfs4acl.h nfs4acl-internal.h nf
+ LSRCFILES = builddefs.in buildmacros buildrules config.h.in
+ LDIRT = sys
+ 
+-default:
+-	rm -f sys
+-	$(LN_S) . sys
++sys:
++	$(LN_S) . $@
++
++default: sys
+ 
+ include $(BUILDRULES)
+ 
+@@ -19,4 +20,5 @@ install-dev: default
+ 	$(INSTALL) -m 755 -d $(PKG_INC_DIR)
+ 	$(INSTALL) -m 755 -d $(PKG_INC_DIR)/sys
+ 	$(INSTALL) -m 644 nfs4acl.h $(PKG_INC_DIR)/sys/nfs4acl.h
++
+ install install-lib:
+Index: xfs-cmds/xfsprogs/include/Makefile
+===================================================================
+--- xfs-cmds.orig/xfsprogs/include/Makefile
++++ xfs-cmds/xfsprogs/include/Makefile
+@@ -40,10 +40,10 @@ LSRCFILES += platform_defs.h.in builddef
+ LSRCFILES += command.h input.h path.h project.h
+ LDIRT = xfs disk
+ 
+-default install :
+-	rm -f xfs disk
+-	$(LN_S) . xfs
+-	$(LN_S) . disk
++xfs disk:
++	$(LN_S) . $@
++
++default install: xfs disk
+ 
+ include $(BUILDRULES)
+ 
 
--- 
 
 _______________________________________________
 xfs mailing list
