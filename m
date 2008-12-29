@@ -1,18 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBTMJ660009564 for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 16:19:06 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 728E017945B5
-	for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 14:19:04 -0800 (PST)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id z2Aat725u8vjSPwP for
-	<xfs@oss.sgi.com>; Mon, 29 Dec 2008 14:19:04 -0800 (PST)
-Message-ID: <49594CD9.3010402@sandeen.net>
-Date: Mon, 29 Dec 2008 16:19:05 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: [PATCH] xfs-cmds: fix parallel installs in include/ dirs
+	mBTMJECw009589 for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 16:19:14 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5B0F2A59429
+	for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 14:19:14 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id tVYMHqWXHhNhnHGm for
+	<xfs@oss.sgi.com>; Mon, 29 Dec 2008 14:19:14 -0800 (PST)
+Received: from hch by bombadil.infradead.org with local (Exim 4.68 #1 (Red Hat
+	Linux)) id 1LHQRf-0002ei-Ii
+	for xfs@oss.sgi.com; Mon, 29 Dec 2008 22:18:43 +0000
+Message-Id: <20081229221843.492712000@bombadil.infradead.org>
+References: <20081229221802.268877000@bombadil.infradead.org>
+Date: Mon, 29 Dec 2008 17:18:04 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [patch 2/3] lockdep annotations for xfs_dqlock2
+Content-Disposition: inline; filename=xfs-fix-xfs_dqlock2-lockdep-warning
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,135 +25,73 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
-Cc: Mike Frysinger <vapier@gentoo.org>
+To: xfs@oss.sgi.com
 
-This is for http://oss.sgi.com/bugzilla/show_bug.cgi?id=759
-"fix parallel issue with include/ symlinks"
+xfs_dqlock2 locks two xfs_dquots, which is fine as it always locks the
+dquot with the lower id first.  Use mutex_lock_nested to tell lockdep
+about this fact.
 
-Doing something like "make -j2 install install-dev" would lead
-to a race of removing & creating symlinks in include/
 
-Thanks to Mike for reporting & suggesting the fix.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Reported-by: Mike Frysinger <vapier@gentoo.org>
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
-
-Index: xfs-cmds/acl/include/Makefile
+Index: xfs/fs/xfs/quota/xfs_dquot.c
 ===================================================================
---- xfs-cmds.orig/acl/include/Makefile
-+++ xfs-cmds/acl/include/Makefile
-@@ -9,10 +9,10 @@ HFILES = acl.h libacl.h acl_ea.h misc.h 
- LSRCFILES = builddefs.in buildmacros buildrules config.h.in
- LDIRT = sys acl
+--- xfs.orig/fs/xfs/quota/xfs_dquot.c	2008-12-29 11:28:54.459613573 +0100
++++ xfs/fs/xfs/quota/xfs_dquot.c	2008-12-29 11:29:31.037738842 +0100
+@@ -1383,6 +1383,12 @@ xfs_dqunlock_nonotify(
+ 	mutex_unlock(&(dqp->q_qlock));
+ }
  
--default:
--	rm -f sys acl
--	$(LN_S) . sys
--	$(LN_S) . acl
-+sys acl:
-+	$(LN_S) . $@
-+
-+default: sys acl
- 
- include $(BUILDRULES)
- 
-@@ -22,4 +22,5 @@ install-dev: default
- 	$(INSTALL) -m 644 acl.h $(PKG_INC_DIR)/sys/acl.h
- 	$(INSTALL) -m 755 -d $(PKG_INC_DIR)/acl
- 	$(INSTALL) -m 644 libacl.h $(PKG_INC_DIR)/acl/libacl.h
-+
- install install-lib:
-Index: xfs-cmds/attr/include/Makefile
++/*
++ * Lock two xfs_dquot structures.
++ *
++ * To avoid deadlocks we always lock the quota structure with
++ * the lowerd id first.
++ */
+ void
+ xfs_dqlock2(
+ 	xfs_dquot_t	*d1,
+@@ -1393,10 +1399,10 @@ xfs_dqlock2(
+ 		if (be32_to_cpu(d1->q_core.d_id) >
+ 		    be32_to_cpu(d2->q_core.d_id)) {
+ 			xfs_dqlock(d2);
+-			xfs_dqlock(d1);
++			mutex_lock_nested(&d1->q_qlock, XFS_QLOCK_2ND);
+ 		} else {
+ 			xfs_dqlock(d1);
+-			xfs_dqlock(d2);
++			mutex_lock_nested(&d2->q_qlock, XFS_QLOCK_2ND);
+ 		}
+ 	} else {
+ 		if (d1) {
+Index: xfs/fs/xfs/quota/xfs_dquot.h
 ===================================================================
---- xfs-cmds.orig/attr/include/Makefile
-+++ xfs-cmds/attr/include/Makefile
-@@ -11,13 +11,15 @@ HFILES = $(INST_HFILES) misc.h walk_tree
- LSRCFILES = builddefs.in buildmacros buildrules config.h.in
- LDIRT = $(INCDIR)
+--- xfs.orig/fs/xfs/quota/xfs_dquot.h	2008-12-27 17:55:09.920686659 +0100
++++ xfs/fs/xfs/quota/xfs_dquot.h	2008-12-29 11:29:31.043768451 +0100
+@@ -97,6 +97,16 @@ typedef struct xfs_dquot {
+ #define dq_hashlist	q_lists.dqm_hashlist
+ #define dq_flags	q_lists.dqm_flags
  
--default:
--	rm -f $(INCDIR)
--	$(LN_S) . $(INCDIR)
-+$(INCDIR):
-+	$(LN_S) . $@
++/*
++ * Lock hierachy for q_qlock:
++ *	XFS_QLOCK_NORMAL is the implicit default,
++ * 	XFS_QLOCK_DOUBLE is the dquot with the higher id in xfs_dqlock2
++ */
++enum {
++	XFS_QLOCK_NORMAL = 0,
++	XFS_QLOCK_2ND,
++};
 +
-+default: $(INCDIR)
+ #define XFS_DQHOLD(dqp)		((dqp)->q_nrefs++)
  
- include $(BUILDRULES)
- 
- install-dev: default
- 	$(INSTALL) -m 755 -d $(PKG_INC_DIR)
- 	$(INSTALL) -m 644 $(INST_HFILES) $(PKG_INC_DIR)
-+
- install install-lib:
-Index: xfs-cmds/dmapi/include/Makefile
-===================================================================
---- xfs-cmds.orig/dmapi/include/Makefile
-+++ xfs-cmds/dmapi/include/Makefile
-@@ -9,9 +9,10 @@ HFILES = dmapi.h
- LSRCFILES = builddefs.in buildmacros buildrules dmapi_kern.h
- LDIRT = xfs
- 
--default install :
--	rm -f xfs
--	$(LN_S) . xfs
-+xfs:
-+	$(LN_S) . $@
-+
-+default install: xfs
- 
- include $(BUILDRULES)
- 
-Index: xfs-cmds/nfs4acl/include/Makefile
-===================================================================
---- xfs-cmds.orig/nfs4acl/include/Makefile
-+++ xfs-cmds/nfs4acl/include/Makefile
-@@ -9,9 +9,10 @@ HFILES = nfs4acl.h nfs4acl-internal.h nf
- LSRCFILES = builddefs.in buildmacros buildrules config.h.in
- LDIRT = sys
- 
--default:
--	rm -f sys
--	$(LN_S) . sys
-+sys:
-+	$(LN_S) . $@
-+
-+default: sys
- 
- include $(BUILDRULES)
- 
-@@ -19,4 +20,5 @@ install-dev: default
- 	$(INSTALL) -m 755 -d $(PKG_INC_DIR)
- 	$(INSTALL) -m 755 -d $(PKG_INC_DIR)/sys
- 	$(INSTALL) -m 644 nfs4acl.h $(PKG_INC_DIR)/sys/nfs4acl.h
-+
- install install-lib:
-Index: xfs-cmds/xfsprogs/include/Makefile
-===================================================================
---- xfs-cmds.orig/xfsprogs/include/Makefile
-+++ xfs-cmds/xfsprogs/include/Makefile
-@@ -40,10 +40,10 @@ LSRCFILES += platform_defs.h.in builddef
- LSRCFILES += command.h input.h path.h project.h
- LDIRT = xfs disk
- 
--default install :
--	rm -f xfs disk
--	$(LN_S) . xfs
--	$(LN_S) . disk
-+xfs disk:
-+	$(LN_S) . $@
-+
-+default install: xfs disk
- 
- include $(BUILDRULES)
- 
+ #ifdef DEBUG
 
+-- 
 
 _______________________________________________
 xfs mailing list
