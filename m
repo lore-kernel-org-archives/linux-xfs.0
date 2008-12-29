@@ -1,24 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBTNXpC0008303 for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 17:33:52 -0600
-Received: from slurp.thebarn.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 414F71794832
-	for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 15:33:49 -0800 (PST)
-Received: from slurp.thebarn.com (cattelan-host202.dsl.visi.com
-	[208.42.117.202]) by cuda.sgi.com with ESMTP id
-	qHTCRGv4ZFrAA0LX for <xfs@oss.sgi.com>;
-	Mon, 29 Dec 2008 15:33:49 -0800 (PST)
-Received: from funky.thebarn.com (slurp.thebarn.com [208.42.117.201])
-	(authenticated bits=0)
-	by slurp.thebarn.com (8.14.0/8.14.0) with ESMTP id mBTN4OEA081742
-	for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 17:04:25 -0600 (CST)
-	(envelope-from cattelan@thebarn.com)
-Message-ID: <49595778.6000200@thebarn.com>
-Date: Mon, 29 Dec 2008 17:04:24 -0600
-From: Russell Cattelan <cattelan@thebarn.com>
+	mBTNchiR009170 for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 17:38:45 -0600
+Received: from baerbel.szm.maschinenbau.tu-darmstadt.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0BD8217949FD
+	for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 15:38:42 -0800 (PST)
+Received: from baerbel.szm.maschinenbau.tu-darmstadt.de
+	(baerbel.szm.maschinenbau.tu-darmstadt.de [130.83.48.97]) by
+	cuda.sgi.com with ESMTP id 2SIPHpmL2Wk79X1z for
+	<xfs@oss.sgi.com>; Mon, 29 Dec 2008 15:38:42 -0800 (PST)
+Received: from baerbel.szm.maschinenbau.tu-darmstadt.de (localhost [127.0.0.1])
+	by baerbel.szm.maschinenbau.tu-darmstadt.de (8.13.8/8.13.8) with ESMTP
+	id mBTNTGkn006834
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
+	for <xfs@oss.sgi.com>; Tue, 30 Dec 2008 00:29:18 +0100
+Received: (from tacke@localhost)
+	by baerbel.szm.maschinenbau.tu-darmstadt.de (8.13.8/8.13.8/Submit) id
+	mBTNTFMb006833 for xfs@oss.sgi.com; Tue, 30 Dec 2008 00:29:15 +0100
+Date: Tue, 30 Dec 2008 00:29:15 +0100
+From: Elrond <elrond+xfs.oss.sgi.com@samba-tng.org>
+Subject: xfsaild wakeups
+Message-ID: <20081229232915.GA6724@memak.tu-darmstadt.de>
 MIME-Version: 1.0
-Subject: xfs-cmds git tree re-imported
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,27 +35,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Based on Christoph's work to the xfs-authors list and his fix to cvsps
-that can now accurately detect ptools changes sets the xfs-cmds tree
-has been re-imported to git.
 
-Please see for more info on the git trees in general.
-http://xfs.org/index.php/Getting_the_latest_source_code
+Hi,
 
-Note a new clone of the xfs-cmds tree  is required since this is a fresh 
-import
-and does not share any commit data with the old import of xfs-cmds.
+The major issue of xfsaild wakeups was analyzed in
+February. (see
+http://oss.sgi.com/archives/xfs/2008-02/msg00169.html ).
 
-The xfs-import and dmapi-import trees have also been re-imported.
-These trees are not build able  trees but are good reference sources as
-they have much of the xfs history.
+A small issue persists. We're now at 1 wakeup per second
+and mounted filesystem. I have three xfs on my box and the
+number wants to grow. xfsaild is on place two of my
+powertop wakeup list. Sometimes place one.
 
-http://oss.sgi.com/cgi-bin/gitweb.cgi?p=cattelan/xfs-import/.git;a=summary
-http://oss.sgi.com/cgi-bin/gitweb.cgi?p=cattelan/dmapi-import/.git;a=summary
+Is anyone working on reducing this to zero for an idle fs?
 
--Russell
+
+Cheers,
+
+
+    Elrond
 
 _______________________________________________
 xfs mailing list
