@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBTA1r5h023846 for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 04:01:53 -0600
-Received: from qw-out-1920.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1CC82179274B
-	for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 02:01:52 -0800 (PST)
-Received: from qw-out-1920.google.com (qw-out-1920.google.com [74.125.92.149])
-	by cuda.sgi.com with ESMTP id rSuxM1mTkHtzCsJK for
-	<xfs@oss.sgi.com>; Mon, 29 Dec 2008 02:01:52 -0800 (PST)
-Received: by qw-out-1920.google.com with SMTP id 5so16256186qwc.32
-	for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 02:01:51 -0800 (PST)
-Message-ID: <43d009740812290201x30cadf9bx61c525f380746e64@mail.gmail.com>
-Date: Mon, 29 Dec 2008 17:01:51 +0700
-From: "Igor Podlesny" <for.poige+linux@gmail.com>
+	mBTB8E2o030517 for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 05:08:14 -0600
+Received: from pih-relay04.plus.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A97AE4E525
+	for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 03:08:13 -0800 (PST)
+Received: from pih-relay04.plus.net (pih-relay04.plus.net [212.159.14.17]) by
+	cuda.sgi.com with ESMTP id wqVrDCaWrSHa0cbd for
+	<xfs@oss.sgi.com>; Mon, 29 Dec 2008 03:08:13 -0800 (PST)
+Message-ID: <4958AF9E.7070005@yahoo.com>
+Date: Mon, 29 Dec 2008 11:08:14 +0000
+From: Sitsofe Wheeler <sitsofe@yahoo.com>
+MIME-Version: 1.0
 Subject: Re: Hi! I've noticed that kernel.org advertises 2.6.28 as "The latest
 	stable version of the Linux kernel is".
-In-Reply-To: <20081229092124.GA18987@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-References: <43d009740812282139x7597aafbn4474455c1aa1e0e8@mail.gmail.com>
-	<20081229092124.GA18987@infradead.org>
-Reply-To: for.poige+linux@gmail.com
+References: <fa.AyhwSGaa29qThLZ5OhBSbACDzmI@ifi.uio.no>
+	<fa.O2INIKnSvQY5+2WFbCRxoh8xutg@ifi.uio.no>
+	<fa.fGgFQweuOQlZ5w9soKo4267nPkc@ifi.uio.no>
+In-Reply-To: <fa.fGgFQweuOQlZ5w9soKo4267nPkc@ifi.uio.no>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,39 +30,16 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: for.poige+linux@gmail.com
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-2008/12/29 Christoph Hellwig <hch@infradead.org>:
-> On Mon, Dec 29, 2008 at 12:39:55PM +0700, Igor Podlesny wrote:
->> -- Copying several rather big files (~ 25--45 GiB) from XFS on LVM-2
->> on MDraid partition to another one, I had the system rebooted both
->> with 2.6.28 and 2.6.27.10 (accomplished using 2.6.24.7-rt(sic!)25). As
->> you probably understand, that's the case you even can't trace where's
->> the problem, at least on a desktop with GUI, not on server with plain
->> text display. Although, I'm afraid even text display wouldn't had a
->> chance to show anything, tracing that problem.
->
-> You don't have 4K_STACKs enabled by default, do you?
+Igor Podlesny wrote:
+> 	Yeah, I'll try to get backtraces, using null-modem cable, but alas, I
 
-	x86_64, so it's not applicable.
-	
-	I see you've included XFS guys, but that's hard to guess which
-sub-system is related to that crash, cause it's a stacked construction
-XFS/LVM-2/Linux Software RAID/sata_nv. Also, I've found there were
-some complaints bout netfilter's ipt_recent, which I was using, so
-I've decided to turn it off and see.
->
-> And instead of these rants bug reports would be more useful.
->
-	Yeah, I'll try to get backtraces, using null-modem cable, but alas, I
-don't have it yet. Nowadays it's not a thing easy to buy at a computer
-store. Also, my message (feedback) was written due to concerns bout
-quality degradation I saw. May be I was mistaken or not, but I felt
-it's better to talk about it to people who really cared and knew.
-
--- 
-End of message. Next message?
+Have you tried compiling your kernel with extended checks 
+(CONFIG_DEBUG_KERNEL in the Kernel hacking menu)? There are debug 
+poisoning options too. Sometimes this can flush out problems before they 
+become fatal...
 
 _______________________________________________
 xfs mailing list
