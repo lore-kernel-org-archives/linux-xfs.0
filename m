@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBTBbcGC001118 for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 05:37:38 -0600
+	mBTBbuBj001137 for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 05:37:56 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 22EA94E323
-	for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 03:37:38 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 794371792538
+	for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 03:37:55 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 52I445TWfZtSYBPt for
-	<xfs@oss.sgi.com>; Mon, 29 Dec 2008 03:37:38 -0800 (PST)
-Date: Mon, 29 Dec 2008 06:37:06 -0500
+	by cuda.sgi.com with ESMTP id SIxFucEVCBHOEnvI for
+	<xfs@oss.sgi.com>; Mon, 29 Dec 2008 03:37:55 -0800 (PST)
+Date: Mon, 29 Dec 2008 06:37:54 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests: test 194, test tricky mapping/conversion
-	around holes
-Message-ID: <20081229113706.GA10891@infradead.org>
-References: <4942C6E2.4040506@sandeen.net>
+Subject: Re: couple small xfstest patches
+Message-ID: <20081229113754.GB10891@infradead.org>
+References: <a2da1d27af9a31cc891cfeeafc27abf4.squirrel@mail.voxel.net>
+	<20081222130824.GC12367@infradead.org>
+	<494FAA58.7070605@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4942C6E2.4040506@sandeen.net>
+In-Reply-To: <494FAA58.7070605@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,26 +31,21 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs mailing list <xfs@oss.sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Fri, Dec 12, 2008 at 02:17:38PM -0600, Eric Sandeen wrote:
-> Related to 
-> http://oss.sgi.com/bugzilla/show_bug.cgi?id=801
+On Mon, Dec 22, 2008 at 08:55:20AM -0600, Eric Sandeen wrote:
+> Christoph Hellwig wrote:
+> > On Fri, Nov 21, 2008 at 01:45:23PM -0800, Matthew Kent wrote:
+> >> * 189 fails with external devices
+> >> * add a unified diff output option, find it easier on the eyes ;)
+> > 
+> > Thanks, I'll put these into my queue.  Question to the list:  any
+> > arguments against just making unified diffs the default for xfsqa
+> > output?
 > 
-> Latest patch posted on that bug makes this testcase pass...
-> 
-> (are we at 194 now?)
-> 
-> first 2 tests are simple buffred writ tests making sure stale
-> data isn't exposed, and hole-blocks aren't mapped.
-> 
-> 2nd 2 tests are more related to the above bug, tricky testcase
-> uncovered by fsx on ppc64 which actually re-maps a block
-> which should be a hole, bringing stale data back into existence.
+> none here; I run patched that way already.
 
-The testcase requires awk --asign, which my debian lenny testbox
-(mawk 1.3.3-11.1) doesn't have.  Any chance you could rework it
-to work with the posix awk features?
+Given that no one else complained I'll make it the default.
 
 _______________________________________________
 xfs mailing list
