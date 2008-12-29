@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBTBbuBj001137 for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 05:37:56 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 794371792538
-	for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 03:37:55 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id SIxFucEVCBHOEnvI for
-	<xfs@oss.sgi.com>; Mon, 29 Dec 2008 03:37:55 -0800 (PST)
-Date: Mon, 29 Dec 2008 06:37:54 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: couple small xfstest patches
-Message-ID: <20081229113754.GB10891@infradead.org>
-References: <a2da1d27af9a31cc891cfeeafc27abf4.squirrel@mail.voxel.net>
-	<20081222130824.GC12367@infradead.org>
-	<494FAA58.7070605@sandeen.net>
+	mBTBGA1D031799 for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 05:16:10 -0600
+Received: from qw-out-1920.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5E1FC4E5FC
+	for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 03:16:10 -0800 (PST)
+Received: from qw-out-1920.google.com (qw-out-1920.google.com [74.125.92.148])
+	by cuda.sgi.com with ESMTP id CIO00gAhLddDY3uJ for
+	<xfs@oss.sgi.com>; Mon, 29 Dec 2008 03:16:10 -0800 (PST)
+Received: by qw-out-1920.google.com with SMTP id 5so16302545qwc.32
+	for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 03:16:09 -0800 (PST)
+Message-ID: <43d009740812290316v7babab12t218a0e122e05f871@mail.gmail.com>
+Date: Mon, 29 Dec 2008 18:16:09 +0700
+From: "Igor Podlesny" <for.poige+linux@gmail.com>
+Subject: Re: Hi! I've noticed that kernel.org advertises 2.6.28 as "The latest
+	stable version of the Linux kernel is".
+In-Reply-To: <4958AF9E.7070005@yahoo.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <494FAA58.7070605@sandeen.net>
+References: <fa.AyhwSGaa29qThLZ5OhBSbACDzmI@ifi.uio.no>
+	<fa.O2INIKnSvQY5+2WFbCRxoh8xutg@ifi.uio.no>
+	<fa.fGgFQweuOQlZ5w9soKo4267nPkc@ifi.uio.no>
+	<4958AF9E.7070005@yahoo.com>
+Reply-To: for.poige+linux@gmail.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,22 +35,66 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Sitsofe Wheeler <sitsofe@yahoo.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, Dec 22, 2008 at 08:55:20AM -0600, Eric Sandeen wrote:
-> Christoph Hellwig wrote:
-> > On Fri, Nov 21, 2008 at 01:45:23PM -0800, Matthew Kent wrote:
-> >> * 189 fails with external devices
-> >> * add a unified diff output option, find it easier on the eyes ;)
-> > 
-> > Thanks, I'll put these into my queue.  Question to the list:  any
-> > arguments against just making unified diffs the default for xfsqa
-> > output?
-> 
-> none here; I run patched that way already.
+2008/12/29 Sitsofe Wheeler <sitsofe@yahoo.com>:
+> Igor Podlesny wrote:
+>>
+>>        Yeah, I'll try to get backtraces, using null-modem cable, but alas,
+>> I
+>
+> Have you tried compiling your kernel with extended checks
+> (CONFIG_DEBUG_KERNEL in the Kernel hacking menu)? There are debug poisoning
+> options too. Sometimes this can flush out problems before they become
+> fatal...
+>
+2.6.28's:
 
-Given that no one else complained I'll make it the default.
+# CONFIG_DEBUG_DRIVER is not set
+# CONFIG_DEBUG_DEVRES is not set
+# CONFIG_DEBUG_FS is not set
+CONFIG_DEBUG_KERNEL=y
+CONFIG_DEBUG_SHIRQ=y
+# CONFIG_DEBUG_OBJECTS is not set
+CONFIG_DEBUG_PREEMPT=y
+# CONFIG_DEBUG_RT_MUTEXES is not set
+# CONFIG_DEBUG_SPINLOCK is not set
+# CONFIG_DEBUG_MUTEXES is not set
+# CONFIG_DEBUG_LOCK_ALLOC is not set
+# CONFIG_DEBUG_SPINLOCK_SLEEP is not set
+# CONFIG_DEBUG_LOCKING_API_SELFTESTS is not set
+# CONFIG_DEBUG_KOBJECT is not set
+CONFIG_DEBUG_BUGVERBOSE=y
+# CONFIG_DEBUG_INFO is not set
+# CONFIG_DEBUG_VM is not set
+# CONFIG_DEBUG_VIRTUAL is not set
+# CONFIG_DEBUG_WRITECOUNT is not set
+CONFIG_DEBUG_MEMORY_INIT=y
+CONFIG_DEBUG_LIST=y
+# CONFIG_DEBUG_SG is not set
+# CONFIG_DEBUG_BLOCK_EXT_DEVT is not set
+CONFIG_DEBUG_STACKOVERFLOW=y
+# CONFIG_DEBUG_STACK_USAGE is not set
+# CONFIG_DEBUG_PAGEALLOC is not set
+# CONFIG_DEBUG_PER_CPU_MAPS is not set
+CONFIG_DEBUG_RODATA=y
+# CONFIG_DEBUG_RODATA_TEST is not set
+# CONFIG_DEBUG_NX_TEST is not set
+
+	-- Nothing in dmesg; when it freezes or reboots, even if there're
+some messages on console, they wouldn't be seen in graphics mode. As I
+said, now my suspicion is netfilter's ipt_recent; I've turned it off
+and now waiting. Another kernel I'm using now (2.6.24-ovz-006.5+) is
+built with stack usage reporting; that's the latest stack depth
+report:
+
+[   54.312696] modprobe used greatest stack depth: 3904 bytes left
+
+	Dunno whether it's rather low or ok.
+
+-- 
+End of message. Next message?
 
 _______________________________________________
 xfs mailing list
