@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBTFu9NW024661 for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 09:56:09 -0600
+	mBTHTZgX031890 for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 11:29:36 -0600
 Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 80C501BF6E4C
-	for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 07:56:07 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 362B54F746
+	for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 09:29:33 -0800 (PST)
 Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id 4XwG8FaAehQwpKDn for
-	<xfs@oss.sgi.com>; Mon, 29 Dec 2008 07:56:07 -0800 (PST)
+	cuda.sgi.com with ESMTP id YYbrXcR3cmKA9QoC for
+	<xfs@oss.sgi.com>; Mon, 29 Dec 2008 09:29:33 -0800 (PST)
 Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by mail.sandeen.net (Postfix) with ESMTP id 83D7FAC358C
-	for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 09:56:07 -0600 (CST)
-Message-ID: <4958F317.5090608@sandeen.net>
-Date: Mon, 29 Dec 2008 09:56:07 -0600
+	by mail.sandeen.net (Postfix) with ESMTP id E3745AC358C
+	for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 11:29:01 -0600 (CST)
+Message-ID: <495908DE.7040704@sandeen.net>
+Date: Mon, 29 Dec 2008 11:29:02 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH V2] xfstests: test 194, test tricky mapping/conversion around
-	holes
-References: <4942C6E2.4040506@sandeen.net>
-In-Reply-To: <4942C6E2.4040506@sandeen.net>
+Subject: [PATCH xfstests] 198: test aio+dio writes into sparse files
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,32 +30,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs mailing list <xfs@oss.sgi.com>
+To: xfs-oss <xfs@oss.sgi.com>
 
-Related to 
-http://oss.sgi.com/bugzilla/show_bug.cgi?id=801
+Older kernels were not doing completion properly, and converting
+unwritten extents at the wrong offsets; this exposed stale data.
 
-Latest patch posted on that bug makes this testcase pass...
-
-first 2 tests are simple buffred writ tests making sure stale
-data isn't exposed, and hole-blocks aren't mapped.
-
-2nd 2 tests are more related to the above bug, tricky testcase
-uncovered by fsx on ppc64 which actually re-maps a block
-which should be a hole, bringing stale data back into existence.
-
-V2, don't use non-posix awk extensions
+Xen w/ the blktap driver was hitting this.
 
 Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 ---
 
---- /dev/null	2008-12-15 12:59:36.525062048 -0600
-+++ 194	2008-12-29 09:57:29.000000000 -0600
-@@ -0,0 +1,206 @@
+Index: xfstests/198
+===================================================================
+--- /dev/null
++++ xfstests/198
+@@ -0,0 +1,45 @@
 +#! /bin/sh
-+# FS QA Test No. 194
++# FS QA Test No. 198
 +#
-+# Test mapping around/over holes for sub-page blocks
++# Test that aio+dio into holes does completion at the proper offsets
++# See also https://bugzilla.redhat.com/show_bug.cgi?id=217098
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2008 Eric Sandeen.  All Rights Reserved.
@@ -72,7 +63,7 @@ Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 +
 +here=`pwd`
 +tmp=/tmp/$$
-+status=1	# failure is the default!
++status=1        # failure is the default!
 +trap "_cleanup; exit \$status" 0 1 2 3 15
 +
 +_cleanup()
@@ -85,245 +76,453 @@ Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 +. ./common.rc
 +. ./common.filter
 +
-+# only xfs supported due to use of xfs_bmap
++# This should actually run on anything that supports O_DIRECT + AIO...
 +_supported_fs xfs
-+_supported_os IRIX Linux
++_supported_os Linux
++
++echo "Silence is golden."
 +
 +# real QA test starts here
 +rm -f $seq.full
 +
-+# For this test we use block size = 1/8 page size
-+pgsize=`$here/src/feature -s`
-+blksize=`expr $pgsize / 8`
++rm -f "$TEST_DIR/aiodio_sparse*"
++$here/src/aiodio_sparse2 "$TEST_DIR/aiodio_sparse"
 +
-+# Filter out file mountpoint and physical location info
-+# Input: 
-+#  EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
-+#  0: [0..63]:         160..223          0 (160..223)          64
-+#  1: [64..127]:       hole                                    64
-+# Output:
-+#  SCRATCH_MNT/testfile4:	TYPE	
-+#  EXT:	TYPE	TOTAL
-+#  0:	blocks	1
-+#  1:	hole	1
-+
-+_filter_bmap()
-+{
-+    tee -a $seq.full | \
-+    sed "s#$SCRATCH_MNT#SCRATCH_MNT#g" | \
-+    awk \
-+        '$3 ~ /hole/     { print $1 "\t" $3 "\t" ($4 * 512) / blksize; next }
-+         $1 ~ /^[0-9]/   { print $1 "\tblocks\t" ($6 * 512) / blksize; next }
-+         $1 ~ /^SCRATCH/ { print $1; next }
-+         	         { print $1 "\tTYPE\t" $6 }' blksize=$blksize
-+}
-+
-+# Filter out offsets, which vary by blocksize
-+_filter_od()
-+{
-+    tee -a $seq.full | \
-+    sed -e "s/^[0-9A-Fa-f ]\{7,8\}//"
-+}
-+
-+_require_scratch
-+unset MKFS_OPTIONS
-+unset XFS_MKFS_OPTIONS
-+_scratch_mkfs_xfs -b size=$blksize >/dev/null 2>&1
-+_scratch_mount
-+
-+# 512b block / 4k page example:
-+#
-+#1) Write 1k of data (buffered):
-+#
-+# |1111|1111|
-+#
-+# 2) ftruncate back to 256 bytes:
-+#
-+# |1100|
-+#
-+# 3) ftruncate out to 4k: ("H" means hole (expected))
-+#
-+# |1100|HHHH|HHHH|HHHH|HHHH|HHHH|HHHH|HHHH|
-+#
-+# So we should have 1 block of data/0, 7 blocks of holes.
-+#
-+# 4) check what's there with a direct IO read
-+#
-+# In fact what I get is 1 block of data/0, 1 block of 0's, and 7 blocks of
-+# garbage:
-+#
-+# |1100|0000|GGGG|GGGG|GGGG|GGGG|GGGG|GGGG|
-+#
-+# The garbage is in fact stale data from the disk. 
-+#
-+# Check that we don't get stale data and that the hole is a hole:
-+
-+echo "== Test 1 =="
-+# Write, truncate in, truncate out
-+xfs_io \
-+-c "pwrite -S 0x11 -b `expr $pgsize / 2`  0 `expr $pgsize / 2`" \
-+-c "truncate `expr $blksize / 2`" \
-+-c "truncate $pgsize" \
-+-t -f $SCRATCH_MNT/testfile1 >> $seq.full
-+
-+# directio read of entire file
-+xfs_io \
-+-c "pread 0 $pgsize" \
-+-d $SCRATCH_MNT/testfile1 >> $seq.full
-+
-+xfs_bmap -v $SCRATCH_MNT/testfile1 | _filter_bmap
-+od -x $SCRATCH_MNT/testfile1 | _filter_od
-+
-+# Similar but write another block to create block/hole/block/hole
-+
-+echo "== Test 2 =="
-+# Write, truncate in, truncate out, write to middle
-+xfs_io \
-+-c "pwrite -S 0x11 -b `expr $pgsize / 2`  0 `expr $pgsize / 2`" \
-+-c "truncate `expr $blksize / 2`" \
-+-c "truncate $pgsize" \
-+-c "pwrite -S 0x22 -b $blksize `expr $blksize \* 4` $blksize" \
-+-t -f $SCRATCH_MNT/testfile2 >> $seq.full
-+
-+# directio read of entire file
-+xfs_io \
-+-c "pread 0 $pgsize" \
-+-d $SCRATCH_MNT/testfile2 >> $seq.full
-+
-+xfs_bmap -v $SCRATCH_MNT/testfile2 | _filter_bmap
-+od -x $SCRATCH_MNT/testfile2 | _filter_od
-+
-+# 512 byte block / 4k page example:
-+
-+# direct write 1 page (8 blocks) of "0x11" to 0x1000
-+# map read 1 block, 512 (0x200) at 0
-+# truncate to half a block, 256 (0x100)
-+# truncate to block+1, 513 (0x201)
-+# direct write "0x22" for 1 block at offset 2048 (0x800)
-+
-+# |1111|1111|1111|1111|1111|1111|1111|1111|     Write 1's
-+# |MRMR|1111|1111|1111|1111|1111|1111|1111|     mapread
-+# |11--|                                        truncate down
-+# |1100|0---|                                   truncate up, block+1
-+# |    |    |HHHH|HHHH|2222|                    Write 2's (extending)
-+
-+#           |uptodate?|
-+# |1100|0000|1111|1111|2222|----|----|----| 	<- potential badness
-+
-+# We're looking for this badness due to mapping over a hole:
-+# Exposes stale data from 0x400 (1024) through 0x800 (2048)
-+
-+# 00000000  11 11 11 11 11 11 11 11  11 11 11 11 11 11 11 11  |................|
-+# *
-+# 00000100  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-+# *
-+# 00000400  11 11 11 11 11 11 11 11  11 11 11 11 11 11 11 11  |................| <- BAD
-+# *
-+# 00000800  22 22 22 22 22 22 22 22  22 22 22 22 22 22 22 22  |""""""""""""""""|
-+# *
-+# 00000a00
-+
-+# We *should* get:
-+# |1100|HHHH|HHHH|HHHH|2222|----|----|----|
-+
-+echo "== Test 3 =="
-+xfs_io \
-+-c "pwrite -S 0x11 -b $pgsize 0 $pgsize" \
-+-c "mmap -r 0 $blksize" -c "mread 0 $blksize" -c "munmap" \
-+-c "truncate `expr $blksize / 2`" \
-+-c "truncate `expr $blksize + 1`" \
-+-c "pwrite -S 0x22 -b $blksize `expr $pgsize / 2` $blksize" \
-+-t -d -f $SCRATCH_MNT/testfile3 >> $seq.full
-+
-+xfs_bmap -v $SCRATCH_MNT/testfile3 | _filter_bmap
-+od -x $SCRATCH_MNT/testfile3 | _filter_od
-+
-+# Now try the same thing but write a sector in the middle of that hole
-+# If things go badly stale data will be exposed either side.
-+# This is most interesting for block size > 512 (page size > 4096)
-+
-+# We *should* get:
-+# |1100|HHHH|33HH|HHHH|2222|----|----|----|
-+
-+echo "== Test 4 =="
-+xfs_io \
-+-c "pwrite -S 0x11 -b $pgsize 0 $pgsize" \
-+-c "mmap -r 0 $blksize" -c "mread 0 $blksize" -c "munmap" \
-+-c "truncate `expr $blksize / 2`" \
-+-c "truncate `expr $blksize + 1`" \
-+-c "pwrite -S 0x22 -b $blksize `expr $pgsize / 2` $blksize" \
-+-c "pwrite -S 0x33 -b 512 `expr $blksize \* 2` 512" \
-+-t -d -f $SCRATCH_MNT/testfile4 >> $seq.full
-+
-+xfs_bmap -v $SCRATCH_MNT/testfile4 | _filter_bmap
-+od -x $SCRATCH_MNT/testfile4 | _filter_od
-+
-+# success, all done
-+status=0
++status=$?
 +exit
+Index: xfstests/198.out
+===================================================================
+--- /dev/null
++++ xfstests/198.out
+@@ -0,0 +1,2 @@
++QA output created by 198
++Silence is golden.
+Index: xfstests/group
+===================================================================
+--- xfstests.orig/group
++++ xfstests/group
+@@ -288,3 +288,4 @@ nfs4acl		tes@sgi.com donaldd@sgi.com
+ 189 mount auto
+ 190 rw auto
+ 191 nfs4acl auto
++198 aio auto
+Index: xfstests/src/Makefile
+===================================================================
+--- xfstests.orig/src/Makefile
++++ xfstests/src/Makefile
+@@ -17,6 +17,11 @@ LINUX_TARGETS = loggen xfsctl bstat t_mt
+ 	fs_perms testx looptest locktest unwritten_mmap \
+ 	bulkstat_unlink_test bulkstat_unlink_test_modified
+ 
++ifeq ($(HAVE_AIO), true)
++LINUX_TARGETS += aiodio_sparse2
++LIBAIO = -laio
++endif
++
+ IRIX_TARGETS = open_unlink
+ 
+ ifeq ($(PKG_PLATFORM),linux)
+@@ -115,6 +120,9 @@ locktest: locktest.o
+ unwritten_sync: unwritten_sync.o
+ 	$(LINKTEST)
+ 
++aiodio_sparse2: aiodio_sparse2.o
++	$(LINKTEST) $(LIBAIO)
++
+ ifeq ($(PKG_PLATFORM),irix)
+ fill2: fill2.o
+ 	$(LINKTEST)  -lgen
+Index: xfstests/src/aiodio_sparse2.c
+===================================================================
+--- /dev/null
++++ xfstests/src/aiodio_sparse2.c
+@@ -0,0 +1,385 @@
++/* gcc -g -Wall -O2 aiodio_sparse.c -o aiodio_sparse -laio */
++
++/*
++ * From http://developer.osdl.org/daniel/AIO/TESTS/aiodio_sparse.c
++ * With patch from https://bugzilla.redhat.com/attachment.cgi?id=142124
++ * (Bug https://bugzilla.redhat.com/show_bug.cgi?id=217098)
++ */
++
++#ifndef _GNU_SOURCE
++#define _GNU_SOURCE
++#endif
++#include <sys/types.h>
++#include <errno.h>
++#include <signal.h>
++#include <fcntl.h>
++#include <stdio.h>
++#include <unistd.h>
++#include <stdlib.h>
++#include <limits.h>
++#include <sys/mman.h>
++#include <sys/wait.h>
++
++#include <libaio.h>
++
++int debug;
++
++/*
++ * aiodio_sparse - issue async O_DIRECT writes to holes is a file while
++ *	concurrently reading the file and checking that the read never reads
++ *	uninitailized data.
++ */
++
++unsigned char *check_zero(unsigned char *buf, int size)
++{
++	unsigned char *p;
++
++	p = buf;
++
++	while (size > 0) {
++		if (*buf != 1) {
++			fprintf(stderr, "non one buffer at buf[%ld] => 0x%02x,%02x,%02x,%02x\n",
++				buf - p, (unsigned int)buf[0],
++				size > 1 ? (unsigned int)buf[1] : 0,
++				size > 2 ? (unsigned int)buf[2] : 0,
++				size > 3 ? (unsigned int)buf[3] : 0);
++			if (debug)
++				fprintf(stderr, "buf %p, p %p\n", buf, p);
++			return buf;
++		}
++		buf++;
++		size--;
++	}
++	return 0;	/* all zeros */
++}
++
++volatile int got_signal;
++
++void
++sig_term_func(int i, siginfo_t *si, void *p)
++{
++	if (debug)
++		fprintf(stderr, "sig(%d, %p, %p)\n", i, si, p);
++	got_signal++;
++}
++
++/*
++ * do async DIO writes to a sparse file
++ */
++void aiodio_sparse(char *filename, int align, int writesize, int filesize, int num_aio, int step, int sparse, int direct, int keep)
++{
++	int fd;
++	void *bufptr;
++	int i;
++	int w;
++	static struct sigaction s;
++	struct iocb **iocbs;
++	off_t offset;
++	io_context_t myctx;
++	struct io_event event;
++	int aio_inflight;
++
++	s.sa_sigaction = sig_term_func;
++	s.sa_flags = SA_SIGINFO;
++	sigaction(SIGTERM, &s, 0);
++
++	if ((num_aio * step) > filesize) {
++		num_aio = filesize / step;
++	}
++	memset(&myctx, 0, sizeof(myctx));
++	io_queue_init(num_aio, &myctx);
++
++	iocbs = (struct iocb **)calloc(num_aio, sizeof(struct iocb *));
++	for (i = 0; i < num_aio; i++) {
++		if ((iocbs[i] = (struct iocb *)calloc(1, sizeof(struct iocb))) == 0) {
++			perror("cannot malloc iocb");
++			return;
++		}
++	}
++
++	fd = open(filename, direct|O_WRONLY|O_CREAT, 0666);
++
++	if (fd < 0) {
++		perror("cannot create file");
++		return;
++	}
++
++	if (sparse)
++		ftruncate(fd, filesize);
++
++	/*
++	 * allocate the iocbs array and iocbs with buffers
++	 */
++	offset = 0;
++	for (i = 0; i < num_aio; i++) {
++		void *bufptr;
++
++		if (posix_memalign(&bufptr, align, writesize)) {
++			perror("cannot malloc aligned memory");
++			close(fd);
++			unlink(filename);
++			return;
++		}
++		memset(bufptr, 1, writesize);
++		io_prep_pwrite(iocbs[i], fd, bufptr, writesize, offset);
++		offset += step;
++	}
++
++	/*
++	 * start the 1st num_aio write requests
++	 */
++	if ((w = io_submit(myctx, num_aio, iocbs)) < 0) {
++		perror("io_submit failed");
++		close(fd);
++		unlink(filename);
++		return;
++	}
++	if (debug) 
++		fprintf(stderr, "io_submit() return %d\n", w);
++
++	/*
++	 * As AIO requests finish, keep issuing more AIO until done.
++	 */
++	aio_inflight = num_aio;
++	if (debug)
++		fprintf(stderr, "aiodio_sparse: %d i/o in flight\n", aio_inflight);
++	while (offset < filesize)  {
++		int n;
++		struct iocb *iocbp;
++
++		if (debug)
++			fprintf(stderr, "aiodio_sparse: offset %ld filesize %d inflight %d\n",
++				offset, filesize, aio_inflight);
++
++		if ((n = io_getevents(myctx, 1, 1, &event, 0)) != 1) {
++			if (-n != EINTR)
++				fprintf(stderr, "io_getevents() returned %d\n", n);
++			break;
++		}
++		if (debug)
++			fprintf(stderr, "aiodio_sparse: io_getevent() returned %d\n", n);
++		aio_inflight--;
++		if (got_signal)
++			break;		/* told to stop */
++		/*
++		 * check if write succeeded.
++		 */
++		iocbp = event.obj;
++		if (event.res2 != 0 || event.res != iocbp->u.c.nbytes) {
++			fprintf(stderr,
++				"AIO write offset %lld expected %ld got %ld\n",
++				iocbp->u.c.offset, iocbp->u.c.nbytes,
++				event.res);
++			break;
++		}
++		if (debug)
++			fprintf(stderr, "aiodio_sparse: io_getevent() res %ld res2 %ld\n",
++				event.res, event.res2);
++		
++		/* start next write */
++		io_prep_pwrite(iocbp, fd, iocbp->u.c.buf, writesize, offset);
++		offset += step;
++		if ((w = io_submit(myctx, 1, &iocbp)) < 0) {
++			fprintf(stderr, "io_submit failed at offset %ld\n",
++				offset);
++			perror("");
++			break;
++		}
++		if (debug) 
++			fprintf(stderr, "io_submit() return %d\n", w);
++		aio_inflight++;
++	}
++
++	/*
++	 * wait for AIO requests in flight.
++	 */
++	while (aio_inflight > 0) {
++		int n;
++		struct iocb *iocbp;
++
++		if ((n = io_getevents(myctx, 1, 1, &event, 0)) != 1) {
++			perror("io_getevents failed");
++			break;
++		}
++		aio_inflight--;
++		/*
++		 * check if write succeeded.
++		 */
++		iocbp = event.obj;
++		if (event.res2 != 0 || event.res != iocbp->u.c.nbytes) {
++			fprintf(stderr,
++				"AIO write offset %lld expected %ld got %ld\n",
++				iocbp->u.c.offset, iocbp->u.c.nbytes,
++				event.res);
++		}
++	}
++	if (debug)
++		fprintf(stderr, "AIO DIO write done\n");
++	close(fd);
++	if ((fd = open(filename, O_RDONLY)) < 0)
++		exit(1);
++
++	bufptr = malloc(writesize);
++	for (offset = 0; offset < filesize; offset += step)  {
++		unsigned char *badbuf;
++
++		lseek(fd, offset, SEEK_SET);
++		if (read(fd, bufptr, writesize) < writesize) {
++			fprintf(stderr, "short read() at offset %ld\n", offset);
++			exit(11);
++		}
++		if ((badbuf = check_zero(bufptr, writesize))) {
++			fprintf(stderr, "non-one read at offset %ld\n",
++				offset + badbuf - (unsigned char*)bufptr);
++			fprintf(stderr, "*** WARNING *** %s has not been unlinked; if you don't rm it manually first, it may influence the next run\n", filename);
++			exit(10);
++		}
++	}
++	close(fd);
++	if (!keep)
++		unlink(filename);
++	else
++		fprintf(stderr, "*** WARNING *** You requested %s not to be unlinked; if you don't rm it manually first, it may influence the next run\n", filename);
++		
++}
++
++void dirty_freeblocks(char *filename, int size)
++{
++	int fd;
++	void *p;
++	int pg;
++	char filename2[PATH_MAX];
++	
++
++	pg = getpagesize();
++	size = ((size + pg - 1) / pg) * pg;
++	sprintf(filename2, "%s.xx.%d", filename, getpid());
++	fd = open(filename2, O_CREAT|O_RDWR, 0666);
++	if (fd < 0) {
++		perror("cannot open file");
++		exit(2);
++	}
++	ftruncate(fd, size);
++	p = mmap(0, size, PROT_WRITE|PROT_READ, MAP_SHARED|MAP_FILE, fd, 0);
++	if (p == MAP_FAILED) {
++		perror("cannot mmap");
++		exit(2);
++	}
++	memset(p, 0xaa, size);
++	msync(p, size, MS_SYNC);
++	munmap(p, size);
++	close(fd);
++	unlink(filename2);
++}
++
++void usage()
++{
++	fprintf(stderr, "usage: dio_sparse [-n step] [-s filesize]"
++		" [-w writesize] [-r readsize] filename\n");
++	exit(1);
++}
++
++/*
++ * Scale value by kilo, mega, or giga.
++ */
++long long scale_by_kmg(long long value, char scale)
++{
++	switch (scale) {
++	case 'g':
++	case 'G':
++		value *= 1024;
++	case 'm':
++	case 'M':
++		value *= 1024;
++	case 'k':
++	case 'K':
++		value *= 1024;
++		break;
++	case '\0':
++		break;
++	default:
++		usage();
++		break;
++	}
++	return value;
++}
++
++/*
++ *	usage:
++ * aiodio_sparse [-r readsize] [-w writesize] [-n step] [-a align] [-i num_aio] filename
++ */
++
++int main(int argc, char **argv)
++{
++	char filename[PATH_MAX];
++	long alignment = 512;
++	int readsize = 65536;
++	int writesize = 65536;
++	int filesize = 100*1024*1024;
++	int num_aio = 16;
++	int step = 5*1024*1024;
++	int c, direct = O_DIRECT, keep = 0, sparse = 1;
++	extern char *optarg;
++	extern int optind, optopt, opterr;
++
++	while ((c = getopt(argc, argv, "dr:w:n:a:s:i:DkS")) != -1) {
++		char *endp;
++		switch (c) {
++		case 'D':
++			direct = 0;
++			break;
++		case 'k':
++			keep = 1;
++			break;
++		case 'S':
++			sparse = 0;
++			break;
++		case 'd':
++			debug++;
++			break;
++		case 'i':
++			num_aio = atoi(optarg);
++			break;
++		case 'a':
++			alignment = strtol(optarg, &endp, 0);
++			alignment = (int)scale_by_kmg((long long)alignment,
++                                                        *endp);
++			break;
++		case 'r':
++			readsize = strtol(optarg, &endp, 0);
++			readsize = (int)scale_by_kmg((long long)readsize, *endp);
++			break;
++		case 'w':
++			writesize = strtol(optarg, &endp, 0);
++			writesize = (int)scale_by_kmg((long long)writesize, *endp);
++			break;
++		case 's':
++			filesize = strtol(optarg, &endp, 0);
++			filesize = (int)scale_by_kmg((long long)filesize, *endp);
++			break;
++		case 'n':
++			step = strtol(optarg, &endp, 0);
++			step = (int)scale_by_kmg((long long)step, *endp);
++			break;
++		case '?':
++			usage();
++			break;
++		}
++	}
++
++	strncpy(filename, argv[argc-1], PATH_MAX);
++
++	/*
++	 * Create some dirty free blocks by allocating, writing, syncing,
++	 * and then unlinking and freeing.
++	 */
++	dirty_freeblocks(filename, filesize);
++
++	/*
++	 * Parent write to a hole in a file using async direct i/o
++	 */
++
++	aiodio_sparse(filename, alignment, writesize, filesize, num_aio, step, sparse, direct, keep);
++
++	return 0;
++}
 
---- /dev/null	2008-12-15 12:59:36.525062048 -0600
-+++ 194.out	2008-12-29 09:57:33.000000000 -0600
-@@ -0,0 +1,59 @@
-+QA output created by 194
-+== Test 1 ==
-+SCRATCH_MNT/testfile1:
-+EXT:	TYPE	TOTAL
-+0:	blocks	1
-+1:	hole	7
-+1111 1111 1111 1111 1111 1111 1111 1111
-+*
-+0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+
-+== Test 2 ==
-+SCRATCH_MNT/testfile2:
-+EXT:	TYPE	TOTAL
-+0:	blocks	1
-+1:	hole	3
-+2:	blocks	1
-+3:	hole	3
-+1111 1111 1111 1111 1111 1111 1111 1111
-+*
-+0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+2222 2222 2222 2222 2222 2222 2222 2222
-+*
-+0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+
-+== Test 3 ==
-+SCRATCH_MNT/testfile3:
-+EXT:	TYPE	TOTAL
-+0:	blocks	1
-+1:	hole	3
-+2:	blocks	1
-+1111 1111 1111 1111 1111 1111 1111 1111
-+*
-+0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+2222 2222 2222 2222 2222 2222 2222 2222
-+*
-+
-+== Test 4 ==
-+SCRATCH_MNT/testfile4:
-+EXT:	TYPE	TOTAL
-+0:	blocks	1
-+1:	hole	1
-+2:	blocks	1
-+3:	hole	1
-+4:	blocks	1
-+1111 1111 1111 1111 1111 1111 1111 1111
-+*
-+0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+3333 3333 3333 3333 3333 3333 3333 3333
-+*
-+0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+2222 2222 2222 2222 2222 2222 2222 2222
-+*
-+
 
 _______________________________________________
 xfs mailing list
