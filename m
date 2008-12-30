@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBUN9FAo007375 for <xfs@oss.sgi.com>; Tue, 30 Dec 2008 17:09:15 -0600
+	mBUN9ELR007372 for <xfs@oss.sgi.com>; Tue, 30 Dec 2008 17:09:15 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D900D17996E2
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DD12A53C3E
 	for <xfs@oss.sgi.com>; Tue, 30 Dec 2008 15:09:13 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id SXNytXAgsKDRVyPw for
+	by cuda.sgi.com with ESMTP id XvbLPglleVJXis6G for
 	<xfs@oss.sgi.com>; Tue, 30 Dec 2008 15:09:13 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.68 #1 (Red Hat
-	Linux)) id 1LHni5-0000IS-Mz
+	Linux)) id 1LHni5-0000Ha-CW
 	for xfs@oss.sgi.com; Tue, 30 Dec 2008 23:09:13 +0000
-Message-Id: <20081230230913.619447000@bombadil.infradead.org>
+Message-Id: <20081230230913.302710000@bombadil.infradead.org>
 References: <20081230230810.986105000@bombadil.infradead.org>
-Date: Tue, 30 Dec 2008 18:08:15 -0500
+Date: Tue, 30 Dec 2008 18:08:13 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 5/5] xfstests: test 197, add a testcase for d_off truncation
-Content-Disposition: inline; filename=xfstests-add-d_off-truncation-test
+Subject: [PATCH 3/5] xfstests: test 195, add a testcase for the nodump flag
+Content-Disposition: inline; filename=xfstests-add-dump-flag-test
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,115 +32,22 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Make sure our directory offsets fit into a 32 bit value.
-Based on a report by John Stanley.
+Based on http://oss.sgi.com/bugzilla/show_bug.cgi?id=340.
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfstests/src/Makefile
-===================================================================
---- xfstests/src/Makefile	2008-12-30 14:35:02.000000000 +0000
-+++ xfstests/src/Makefile	2008-12-30 14:36:01.000000000 +0000
-@@ -15,7 +15,7 @@
- LINUX_TARGETS = loggen xfsctl bstat t_mtab getdevicesize \
- 	preallo_rw_pattern_reader preallo_rw_pattern_writer ftrunc trunc \
- 	fs_perms testx looptest locktest unwritten_mmap \
--	bulkstat_unlink_test bulkstat_unlink_test_modified
-+	bulkstat_unlink_test bulkstat_unlink_test_modified t_dir_offset
- 
- IRIX_TARGETS = open_unlink
- 
-Index: xfstests/src/t_dir_offset.c
+Index: xfstests/195
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ xfstests/src/t_dir_offset.c	2008-12-30 14:35:05.000000000 +0000
-@@ -0,0 +1,62 @@
-+
-+#include <fcntl.h>
-+#include <stdio.h>
-+#include <unistd.h>
-+#include <stdint.h>
-+#include <stdlib.h>
-+#include <sys/stat.h>
-+#include <sys/syscall.h>
-+
-+struct linux_dirent64 {
-+	uint64_t	d_ino;
-+	int64_t		d_off;
-+	unsigned short	d_reclen;
-+	unsigned char	d_type;
-+        char		d_name[0];
-+};
-+
-+
-+#define BUF_SIZE 4096
-+
-+int
-+main(int argc, char *argv[])
-+{
-+	int fd, nread;
-+	char buf[BUF_SIZE];
-+	struct linux_dirent64 *d;
-+	int bpos;
-+
-+	fd = open(argv[1], O_RDONLY | O_DIRECTORY);
-+	if (fd < 0) {
-+		perror("open");
-+		exit(EXIT_FAILURE);
-+	}
-+
-+	for ( ; ; ) {
-+		nread = syscall(SYS_getdents64, fd, buf, BUF_SIZE);
-+		if (nread == -1) {
-+			perror("getdents");
-+			exit(EXIT_FAILURE);
-+		}
-+
-+		if (nread == 0)
-+			break;
-+
-+		for (bpos = 0; bpos < nread;) {
-+			d = (struct linux_dirent64 *) (buf + bpos);
-+			/*
-+			 * Can't use off_t here xfsqa is compiled with
-+			 * -D_FILE_OFFSET_BITS=64
-+			 */
-+			if (d->d_off != (long)d->d_off) {
-+	                        fprintf(stderr, "detected d_off truncation "
-+						"d_name = %s, d_off = %lld\n",
-+						d->d_name, (long long)d->d_off);
-+        	                exit(EXIT_FAILURE);
-+                	}
-+			bpos += d->d_reclen;
-+		}
-+	}
-+
-+	exit(EXIT_SUCCESS);
-+}
-Index: xfstests/group
-===================================================================
---- xfstests/group	2008-12-30 14:35:02.000000000 +0000
-+++ xfstests/group	2008-12-30 14:35:05.000000000 +0000
-@@ -299,3 +299,4 @@
- 194 rw auto
- 195 ioctl dump auto
- 196 quota auto
-+197 dir auto
-Index: xfstests/197
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ xfstests/197	2008-12-30 14:35:05.000000000 +0000
-@@ -0,0 +1,49 @@
++++ xfstests/195	2008-12-29 17:55:16.000000000 +0000
+@@ -0,0 +1,75 @@
 +#! /bin/sh
-+# FS QA Test No. 197
++# FS QA Test No. 195
 +#
-+# Check that d_off can be represented in a 32 bit long type without
-+# truncation.
++# Make sure the chattr dump flag gets picked up by xfsdump without a sync
 +#
-+# Based on a testcase from John Stanley <jpsinthemix@verizon.net>.
-+#
-+# http://oss.sgi.com/bugzilla/show_bug.cgi?id=808
++# http://oss.sgi.com/bugzilla/show_bug.cgi?id=340
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2008 Christoph Hellwig.
@@ -158,9 +65,27 @@ Index: xfstests/197
 +
 +_cleanup()
 +{
-+	rm -rf $TEST_DIR/ttt
++	rm -rf $TEST_DIR/d
++	rm -f $TEST_DIR/dumpfile
 +}
 +trap "_cleanup; exit \$status" 0 1 2 3 15
++
++#
++# Perform a level 0 dump that respects the chattr dump exclude flag,
++# and grep the output for the inode number we expect / do not expect
++# to be skipped
++#
++# Only dump a subtree so we get away with a single partition for
++# the subtree to be dumped and the dump file.
++#
++_do_dump()
++{
++	xfsdump -l 0 -s d -F  \
++		-L prova -M prova \
++		-f $TEST_DIR/dumpfile -e -v excluded_files=debug $TEST_DIR \
++		| grep "ino $inum" \
++		| sed -e 's/xfsdump: pruned ino [0-9]*, owner 0, estimated size 0: skip flag set/xfsdump: pruned ino NNN, owner 0, estimated size 0: skip flag set/'
++}
 +
 +# get standard environment, filters and checks
 +. ./common.rc
@@ -170,24 +95,50 @@ Index: xfstests/197
 +_supported_fs xfs
 +_supported_os Linux
 +
++_require_user
 +
-+mkdir $TEST_DIR/ttt
-+for n in {1..168}; do
-+    touch $TEST_DIR/ttt/$n;
-+done
-+src/t_dir_offset $TEST_DIR/ttt
++echo "Preparing subtree"
++mkdir $TEST_DIR/d
++touch $TEST_DIR/d/t
++inum=`stat --format "%i" $TEST_DIR/d/t`
++
++echo "No dump exclude flag set (should not be skipped)"
++_do_dump
++
++echo "Dump exclude flag set, but no sync yet (should be skipped)"
++chattr +d $TEST_DIR/d/t
++_do_dump
++
++echo "Dump exclude flag set, after sync (should be skipped)"
++sync
++_do_dump
 +
 +# success, all done
 +echo "*** done"
 +rm -f $seq.full
 +status=0
-Index: xfstests/197.out
+Index: xfstests/195.out
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ xfstests/197.out	2008-12-30 14:35:05.000000000 +0000
-@@ -0,0 +1,2 @@
-+QA output created by 197
++++ xfstests/195.out	2008-12-29 17:16:38.000000000 +0000
+@@ -0,0 +1,8 @@
++QA output created by 195
++Preparing subtree
++No dump exclude flag set (should not be skipped)
++Dump exclude flag set, but no sync yet (should be skipped)
++xfsdump: pruned ino NNN, owner 0, estimated size 0: skip flag set
++Dump exclude flag set, after sync (should be skipped)
++xfsdump: pruned ino NNN, owner 0, estimated size 0: skip flag set
 +*** done
+Index: xfstests/group
+===================================================================
+--- xfstests/group	2008-12-29 17:16:24.000000000 +0000
++++ xfstests/group	2008-12-29 17:55:09.000000000 +0000
+@@ -297,3 +297,4 @@
+ 192 atime
+ 193 metadata auto
+ 194 rw auto
++195 ioctl dump auto
 
 -- 
 
