@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBU7a5v5014257 for <xfs@oss.sgi.com>; Tue, 30 Dec 2008 01:36:06 -0600
-Received: from parsec.stupidest.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8C5DB1795818
-	for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 23:36:05 -0800 (PST)
-Received: from parsec.stupidest.org (splinter.f00f.org [216.75.21.205]) by
-	cuda.sgi.com with ESMTP id EbvK7nbDyEVXGoFJ for
-	<xfs@oss.sgi.com>; Mon, 29 Dec 2008 23:36:05 -0800 (PST)
-Date: Mon, 29 Dec 2008 12:17:41 -0800
-From: Chris Wedgwood <cw@f00f.org>
-Subject: Re: massively truncated files with XFS with sudden power loss on
-	2.6.27 and 2.6.28
-Message-ID: <20081229201741.GA20024@puku.stupidest.org>
-References: <200812291920.34123.Martin@Lichtvoll.de>
-	<4959205E.4000000@thebarn.com>
-	<20081229192957.GC18092@puku.stupidest.org>
-	<49592E7D.4050208@xfs.org>
+	mBUB3pp4003678 for <xfs@oss.sgi.com>; Tue, 30 Dec 2008 05:03:51 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6C1CE51A9D
+	for <xfs@oss.sgi.com>; Tue, 30 Dec 2008 03:03:51 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id DdPXBqaCiIavoDW8 for
+	<xfs@oss.sgi.com>; Tue, 30 Dec 2008 03:03:51 -0800 (PST)
+Received: from hch by bombadil.infradead.org with local (Exim 4.68 #1 (Red Hat
+	Linux)) id 1LHcO7-0006qL-08
+	for xfs@oss.sgi.com; Tue, 30 Dec 2008 11:03:51 +0000
+Date: Tue, 30 Dec 2008 06:03:50 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/2] fix dentry aliasing issues in open_by_handle
+Message-ID: <20081230110350.GA22461@infradead.org>
+References: <20081228191333.GA25289@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <49592E7D.4050208@xfs.org>
+In-Reply-To: <20081228191333.GA25289@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,23 +31,902 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Russell Cattelan <cattelan@thebarn.com>
-Cc: Martin Steigerwald <Martin@Lichtvoll.de>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Dec 29, 2008 at 02:09:33PM -0600, Russell Cattelan wrote:
+On Sun, Dec 28, 2008 at 02:13:33PM -0500, Christoph Hellwig wrote:
+> Open by handle just grabs an inode by handle and then creates itself
+> a dentry for it.  While this works for regular files it is horribly
+> broken for directories, where the VFS locking relies on the fact that
+> there is only just one single dentry for a given inode, and that
+> these are always connected to the root of the filesystem so that
+> it's locking algorithms work (see Documentations/filesystems/Locking)
+> 
+> Remove all the existing open by handle code and replace it with a small
+> wrapper around the exportfs code which deals with all these issues.
+> At the same time we also make the checks for a valid handle strict
+> enough to reject all not perfectly well formed handles - given that
+> we never hand out others that's okay and simplifies the code.
 
-> Still why is the file size making it to disk before the data and
-> more importantly the extent transaction to the log?
+Update to apply against the current tree:
 
-well, as you know, it's logged, the data isn't
 
-> that should have been fixed.
-
-the window was shrunk to write out begins on close for existing files
-the are opened with truncate (i think nathans did that some time
-ago?)
-
-new files won't be affected by that change
+Index: xfs/fs/xfs/linux-2.6/xfs_ioctl.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_ioctl.c	2008-12-29 01:11:13.000000000 +0000
++++ xfs/fs/xfs/linux-2.6/xfs_ioctl.c	2008-12-29 01:11:14.000000000 +0000
+@@ -50,12 +50,14 @@
+ #include "xfs_vnodeops.h"
+ #include "xfs_quota.h"
+ #include "xfs_inode_item.h"
++#include "xfs_export.h"
+ 
+ #include <linux/capability.h>
+ #include <linux/dcache.h>
+ #include <linux/mount.h>
+ #include <linux/namei.h>
+ #include <linux/pagemap.h>
++#include <linux/exportfs.h>
+ 
+ /*
+  * xfs_find_handle maps from userspace xfs_fsop_handlereq structure to
+@@ -146,96 +148,64 @@
+ 	return error;
+ }
+ 
++STATIC int
++handle_acceptable(
++	void			*context,
++	struct dentry		*dentry)
++{
++	return 1;
++}
+ 
+ /*
+- * Convert userspace handle data into inode.
+- *
+- * We use the fact that all the fsop_handlereq ioctl calls have a data
+- * structure argument whose first component is always a xfs_fsop_handlereq_t,
+- * so we can pass that sub structure into this handy, shared routine.
+- *
+- * If no error, caller must always iput the returned inode.
++ * Convert userspace handle data into a dentry.
+  */
+-STATIC int
+-xfs_vget_fsop_handlereq(
+-	xfs_mount_t		*mp,
+-	struct inode		*parinode,	/* parent inode pointer    */
+-	xfs_fsop_handlereq_t	*hreq,
+-	struct inode		**inode)
+-{
+-	void			__user *hanp;
+-	size_t			hlen;
+-	xfs_fid_t		*xfid;
+-	xfs_handle_t		*handlep;
++struct dentry *
++xfs_handle_to_dentry(
++	struct file		*parfilp,
++	void __user		*uhandle,
++	u32			hlen)
++{
+ 	xfs_handle_t		handle;
+-	xfs_inode_t		*ip;
+-	xfs_ino_t		ino;
+-	__u32			igen;
+-	int			error;
++	struct xfs_fid64	fid;
+ 
+ 	/*
+ 	 * Only allow handle opens under a directory.
+ 	 */
+-	if (!S_ISDIR(parinode->i_mode))
+-		return XFS_ERROR(ENOTDIR);
+-
+-	hanp = hreq->ihandle;
+-	hlen = hreq->ihandlen;
+-	handlep = &handle;
+-
+-	if (hlen < sizeof(handlep->ha_fsid) || hlen > sizeof(*handlep))
+-		return XFS_ERROR(EINVAL);
+-	if (copy_from_user(handlep, hanp, hlen))
+-		return XFS_ERROR(EFAULT);
+-	if (hlen < sizeof(*handlep))
+-		memset(((char *)handlep) + hlen, 0, sizeof(*handlep) - hlen);
+-	if (hlen > sizeof(handlep->ha_fsid)) {
+-		if (handlep->ha_fid.fid_len !=
+-		    (hlen - sizeof(handlep->ha_fsid) -
+-		            sizeof(handlep->ha_fid.fid_len)) ||
+-		    handlep->ha_fid.fid_pad)
+-			return XFS_ERROR(EINVAL);
+-	}
+-
+-	/*
+-	 * Crack the handle, obtain the inode # & generation #
+-	 */
+-	xfid = (struct xfs_fid *)&handlep->ha_fid;
+-	if (xfid->fid_len == sizeof(*xfid) - sizeof(xfid->fid_len)) {
+-		ino  = xfid->fid_ino;
+-		igen = xfid->fid_gen;
+-	} else {
+-		return XFS_ERROR(EINVAL);
+-	}
+-
+-	/*
+-	 * Get the XFS inode, building a Linux inode to go with it.
+-	 */
+-	error = xfs_iget(mp, NULL, ino, 0, XFS_ILOCK_SHARED, &ip, 0);
+-	if (error)
+-		return error;
+-	if (ip == NULL)
+-		return XFS_ERROR(EIO);
+-	if (ip->i_d.di_gen != igen) {
+-		xfs_iput_new(ip, XFS_ILOCK_SHARED);
+-		return XFS_ERROR(ENOENT);
+-	}
++	if (!S_ISDIR(parfilp->f_path.dentry->d_inode->i_mode))
++		return ERR_PTR(-ENOTDIR);
+ 
+-	xfs_iunlock(ip, XFS_ILOCK_SHARED);
++	if (hlen != sizeof(xfs_handle_t))
++		return ERR_PTR(-EINVAL);
++	if (copy_from_user(&handle, uhandle, hlen))
++		return ERR_PTR(-EFAULT);
++	if (handle.ha_fid.fid_len !=
++	    sizeof(handle.ha_fid) - sizeof(handle.ha_fid.fid_len))
++		return ERR_PTR(-EINVAL);
++
++	memset(&fid, 0, sizeof(struct fid));
++	fid.ino = handle.ha_fid.fid_ino;
++	fid.gen = handle.ha_fid.fid_gen;
++
++	return exportfs_decode_fh(parfilp->f_path.mnt, (struct fid *)&fid, 3,
++			FILEID_INO32_GEN | XFS_FILEID_TYPE_64FLAG,
++			handle_acceptable, NULL);
++}
+ 
+-	*inode = VFS_I(ip);
+-	return 0;
++STATIC struct dentry *
++xfs_handlereq_to_dentry(
++	struct file		*parfilp,
++	xfs_fsop_handlereq_t	*hreq)
++{
++	return xfs_handle_to_dentry(parfilp, hreq->ihandle, hreq->ihandlen);
+ }
+ 
+ int
+ xfs_open_by_handle(
+-	xfs_mount_t		*mp,
+-	xfs_fsop_handlereq_t	*hreq,
+ 	struct file		*parfilp,
+-	struct inode		*parinode)
++	xfs_fsop_handlereq_t	*hreq)
+ {
+ 	int			error;
+-	int			new_fd;
++	int			fd;
+ 	int			permflag;
+ 	struct file		*filp;
+ 	struct inode		*inode;
+@@ -244,19 +214,21 @@
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -XFS_ERROR(EPERM);
+ 
+-	error = xfs_vget_fsop_handlereq(mp, parinode, hreq, &inode);
+-	if (error)
+-		return -error;
++	dentry = xfs_handlereq_to_dentry(parfilp, hreq);
++	if (IS_ERR(dentry))
++		return PTR_ERR(dentry);
++	inode = dentry->d_inode;
+ 
+ 	/* Restrict xfs_open_by_handle to directories & regular files. */
+ 	if (!(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode))) {
+-		iput(inode);
+-		return -XFS_ERROR(EINVAL);
++		error = -XFS_ERROR(EINVAL);
++		goto out_dput;
+ 	}
+ 
+ #if BITS_PER_LONG != 32
+ 	hreq->oflags |= O_LARGEFILE;
+ #endif
++
+ 	/* Put open permission in namei format. */
+ 	permflag = hreq->oflags;
+ 	if ((permflag+1) & O_ACCMODE)
+@@ -266,50 +238,44 @@
+ 
+ 	if ((!(permflag & O_APPEND) || (permflag & O_TRUNC)) &&
+ 	    (permflag & FMODE_WRITE) && IS_APPEND(inode)) {
+-		iput(inode);
+-		return -XFS_ERROR(EPERM);
++		error = -XFS_ERROR(EPERM);
++		goto out_dput;
+ 	}
+ 
+ 	if ((permflag & FMODE_WRITE) && IS_IMMUTABLE(inode)) {
+-		iput(inode);
+-		return -XFS_ERROR(EACCES);
++		error = -XFS_ERROR(EACCES);
++		goto out_dput;
+ 	}
+ 
+ 	/* Can't write directories. */
+-	if ( S_ISDIR(inode->i_mode) && (permflag & FMODE_WRITE)) {
+-		iput(inode);
+-		return -XFS_ERROR(EISDIR);
++	if (S_ISDIR(inode->i_mode) && (permflag & FMODE_WRITE)) {
++		error = -XFS_ERROR(EISDIR);
++		goto out_dput;
+ 	}
+ 
+-	if ((new_fd = get_unused_fd()) < 0) {
+-		iput(inode);
+-		return new_fd;
++	fd = get_unused_fd();
++	if (fd < 0) {
++		error = fd;
++		goto out_dput;
+ 	}
+ 
+-	dentry = d_obtain_alias(inode);
+-	if (IS_ERR(dentry)) {
+-		put_unused_fd(new_fd);
+-		return PTR_ERR(dentry);
+-	}
+-
+-	/* Ensure umount returns EBUSY on umounts while this file is open. */
+-	mntget(parfilp->f_path.mnt);
+-
+-	/* Create file pointer. */
+-	filp = dentry_open(dentry, parfilp->f_path.mnt, hreq->oflags);
++	filp = dentry_open(dentry, mntget(parfilp->f_path.mnt), hreq->oflags);
+ 	if (IS_ERR(filp)) {
+-		put_unused_fd(new_fd);
+-		return -XFS_ERROR(-PTR_ERR(filp));
++		put_unused_fd(fd);
++		return PTR_ERR(filp);
+ 	}
+ 
+ 	if (inode->i_mode & S_IFREG) {
+-		/* invisible operation should not change atime */
+ 		filp->f_flags |= O_NOATIME;
+ 		filp->f_mode |= FMODE_NOCMTIME;
+ 	}
+ 
+-	fd_install(new_fd, filp);
+-	return new_fd;
++	fd_install(fd, filp);
++	return fd;
++
++ out_dput:
++	dput(dentry);
++	return error;
+ }
+ 
+ /*
+@@ -340,11 +306,10 @@
+ 
+ int
+ xfs_readlink_by_handle(
+-	xfs_mount_t		*mp,
+-	xfs_fsop_handlereq_t	*hreq,
+-	struct inode		*parinode)
++	struct file		*parfilp,
++	xfs_fsop_handlereq_t	*hreq)
+ {
+-	struct inode		*inode;
++	struct dentry		*dentry;
+ 	__u32			olen;
+ 	void			*link;
+ 	int			error;
+@@ -352,26 +317,28 @@
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -XFS_ERROR(EPERM);
+ 
+-	error = xfs_vget_fsop_handlereq(mp, parinode, hreq, &inode);
+-	if (error)
+-		return -error;
++	dentry = xfs_handlereq_to_dentry(parfilp, hreq);
++	if (IS_ERR(dentry))
++		return PTR_ERR(dentry);
+ 
+ 	/* Restrict this handle operation to symlinks only. */
+-	if (!S_ISLNK(inode->i_mode)) {
++	if (!S_ISLNK(dentry->d_inode->i_mode)) {
+ 		error = -XFS_ERROR(EINVAL);
+-		goto out_iput;
++		goto out_dput;
+ 	}
+ 
+ 	if (copy_from_user(&olen, hreq->ohandlen, sizeof(__u32))) {
+ 		error = -XFS_ERROR(EFAULT);
+-		goto out_iput;
++		goto out_dput;
+ 	}
+ 
+ 	link = kmalloc(MAXPATHLEN+1, GFP_KERNEL);
+-	if (!link)
+-		goto out_iput;
++	if (!link) {
++		error = -XFS_ERROR(ENOMEM);
++		goto out_dput;
++	}
+ 
+-	error = -xfs_readlink(XFS_I(inode), link);
++	error = -xfs_readlink(XFS_I(dentry->d_inode), link);
+ 	if (error)
+ 		goto out_kfree;
+ 	error = do_readlink(hreq->ohandle, olen, link);
+@@ -380,32 +347,31 @@
+ 
+  out_kfree:
+ 	kfree(link);
+- out_iput:
+-	iput(inode);
++ out_dput:
++	dput(dentry);
+ 	return error;
+ }
+ 
+ STATIC int
+ xfs_fssetdm_by_handle(
+-	xfs_mount_t		*mp,
+-	void			__user *arg,
+-	struct inode		*parinode)
++	struct file		*parfilp,
++	void			__user *arg)
+ {
+ 	int			error;
+ 	struct fsdmidata	fsd;
+ 	xfs_fsop_setdm_handlereq_t dmhreq;
+-	struct inode		*inode;
++	struct dentry		*dentry;
+ 
+ 	if (!capable(CAP_MKNOD))
+ 		return -XFS_ERROR(EPERM);
+ 	if (copy_from_user(&dmhreq, arg, sizeof(xfs_fsop_setdm_handlereq_t)))
+ 		return -XFS_ERROR(EFAULT);
+ 
+-	error = xfs_vget_fsop_handlereq(mp, parinode, &dmhreq.hreq, &inode);
+-	if (error)
+-		return -error;
++	dentry = xfs_handlereq_to_dentry(parfilp, &dmhreq.hreq);
++	if (IS_ERR(dentry))
++		return PTR_ERR(dentry);
+ 
+-	if (IS_IMMUTABLE(inode) || IS_APPEND(inode)) {
++	if (IS_IMMUTABLE(dentry->d_inode) || IS_APPEND(dentry->d_inode)) {
+ 		error = -XFS_ERROR(EPERM);
+ 		goto out;
+ 	}
+@@ -415,24 +381,23 @@
+ 		goto out;
+ 	}
+ 
+-	error = -xfs_set_dmattrs(XFS_I(inode), fsd.fsd_dmevmask,
++	error = -xfs_set_dmattrs(XFS_I(dentry->d_inode), fsd.fsd_dmevmask,
+ 				 fsd.fsd_dmstate);
+ 
+  out:
+-	iput(inode);
++	dput(dentry);
+ 	return error;
+ }
+ 
+ STATIC int
+ xfs_attrlist_by_handle(
+-	xfs_mount_t		*mp,
+ 	void			__user *arg,
+-	struct inode		*parinode)
++	struct file		*parfilp)
+ {
+-	int			error;
++	int			error = -ENOMEM;
+ 	attrlist_cursor_kern_t	*cursor;
+ 	xfs_fsop_attrlist_handlereq_t al_hreq;
+-	struct inode		*inode;
++	struct dentry		*dentry;
+ 	char			*kbuf;
+ 
+ 	if (!capable(CAP_SYS_ADMIN))
+@@ -448,16 +413,16 @@
+ 	if (al_hreq.flags & ~(ATTR_ROOT | ATTR_SECURE))
+ 		return -XFS_ERROR(EINVAL);
+ 
+-	error = xfs_vget_fsop_handlereq(mp, parinode, &al_hreq.hreq, &inode);
+-	if (error)
+-		goto out;
++	dentry = xfs_handlereq_to_dentry(parfilp, &al_hreq.hreq);
++	if (IS_ERR(dentry))
++		return PTR_ERR(dentry);
+ 
+ 	kbuf = kmalloc(al_hreq.buflen, GFP_KERNEL);
+ 	if (!kbuf)
+-		goto out_vn_rele;
++		goto out_dput;
+ 
+ 	cursor = (attrlist_cursor_kern_t *)&al_hreq.pos;
+-	error = xfs_attr_list(XFS_I(inode), kbuf, al_hreq.buflen,
++	error = -xfs_attr_list(XFS_I(dentry->d_inode), kbuf, al_hreq.buflen,
+ 					al_hreq.flags, cursor);
+ 	if (error)
+ 		goto out_kfree;
+@@ -467,10 +432,9 @@
+ 
+  out_kfree:
+ 	kfree(kbuf);
+- out_vn_rele:
+-	iput(inode);
+- out:
+-	return -error;
++ out_dput:
++	dput(dentry);
++	return error;
+ }
+ 
+ int
+@@ -545,15 +509,13 @@
+ 
+ STATIC int
+ xfs_attrmulti_by_handle(
+-	xfs_mount_t		*mp,
+-	void			__user *arg,
+ 	struct file		*parfilp,
+-	struct inode		*parinode)
++	void			__user *arg)
+ {
+ 	int			error;
+ 	xfs_attr_multiop_t	*ops;
+ 	xfs_fsop_attrmulti_handlereq_t am_hreq;
+-	struct inode		*inode;
++	struct dentry		*dentry;
+ 	unsigned int		i, size;
+ 	char			*attr_name;
+ 
+@@ -562,19 +524,19 @@
+ 	if (copy_from_user(&am_hreq, arg, sizeof(xfs_fsop_attrmulti_handlereq_t)))
+ 		return -XFS_ERROR(EFAULT);
+ 
+-	error = xfs_vget_fsop_handlereq(mp, parinode, &am_hreq.hreq, &inode);
+-	if (error)
+-		goto out;
++	dentry = xfs_handlereq_to_dentry(parfilp, &am_hreq.hreq);
++	if (IS_ERR(dentry))
++		return PTR_ERR(dentry);
+ 
+ 	error = E2BIG;
+ 	size = am_hreq.opcount * sizeof(xfs_attr_multiop_t);
+ 	if (!size || size > 16 * PAGE_SIZE)
+-		goto out_vn_rele;
++		goto out_dput;
+ 
+ 	error = ENOMEM;
+ 	ops = kmalloc(size, GFP_KERNEL);
+ 	if (!ops)
+-		goto out_vn_rele;
++		goto out_dput;
+ 
+ 	error = EFAULT;
+ 	if (copy_from_user(ops, am_hreq.ops, size))
+@@ -596,25 +558,28 @@
+ 
+ 		switch (ops[i].am_opcode) {
+ 		case ATTR_OP_GET:
+-			ops[i].am_error = xfs_attrmulti_attr_get(inode,
+-					attr_name, ops[i].am_attrvalue,
+-					&ops[i].am_length, ops[i].am_flags);
++			ops[i].am_error = xfs_attrmulti_attr_get(
++					dentry->d_inode, attr_name,
++					ops[i].am_attrvalue, &ops[i].am_length,
++					ops[i].am_flags);
+ 			break;
+ 		case ATTR_OP_SET:
+ 			ops[i].am_error = mnt_want_write(parfilp->f_path.mnt);
+ 			if (ops[i].am_error)
+ 				break;
+-			ops[i].am_error = xfs_attrmulti_attr_set(inode,
+-					attr_name, ops[i].am_attrvalue,
+-					ops[i].am_length, ops[i].am_flags);
++			ops[i].am_error = xfs_attrmulti_attr_set(
++					dentry->d_inode, attr_name,
++					ops[i].am_attrvalue, ops[i].am_length,
++					ops[i].am_flags);
+ 			mnt_drop_write(parfilp->f_path.mnt);
+ 			break;
+ 		case ATTR_OP_REMOVE:
+ 			ops[i].am_error = mnt_want_write(parfilp->f_path.mnt);
+ 			if (ops[i].am_error)
+ 				break;
+-			ops[i].am_error = xfs_attrmulti_attr_remove(inode,
+-					attr_name, ops[i].am_flags);
++			ops[i].am_error = xfs_attrmulti_attr_remove(
++					dentry->d_inode, attr_name,
++					ops[i].am_flags);
+ 			mnt_drop_write(parfilp->f_path.mnt);
+ 			break;
+ 		default:
+@@ -628,9 +593,8 @@
+ 	kfree(attr_name);
+  out_kfree_ops:
+ 	kfree(ops);
+- out_vn_rele:
+-	iput(inode);
+- out:
++ out_dput:
++	dput(dentry);
+ 	return -error;
+ }
+ 
+@@ -1421,23 +1385,23 @@
+ 
+ 		if (copy_from_user(&hreq, arg, sizeof(xfs_fsop_handlereq_t)))
+ 			return -XFS_ERROR(EFAULT);
+-		return xfs_open_by_handle(mp, &hreq, filp, inode);
++		return xfs_open_by_handle(filp, &hreq);
+ 	}
+ 	case XFS_IOC_FSSETDM_BY_HANDLE:
+-		return xfs_fssetdm_by_handle(mp, arg, inode);
++		return xfs_fssetdm_by_handle(filp, arg);
+ 
+ 	case XFS_IOC_READLINK_BY_HANDLE: {
+ 		xfs_fsop_handlereq_t	hreq;
+ 
+ 		if (copy_from_user(&hreq, arg, sizeof(xfs_fsop_handlereq_t)))
+ 			return -XFS_ERROR(EFAULT);
+-		return xfs_readlink_by_handle(mp, &hreq, inode);
++		return xfs_readlink_by_handle(filp, &hreq);
+ 	}
+ 	case XFS_IOC_ATTRLIST_BY_HANDLE:
+-		return xfs_attrlist_by_handle(mp, arg, inode);
++		return xfs_attrlist_by_handle(arg, filp);
+ 
+ 	case XFS_IOC_ATTRMULTI_BY_HANDLE:
+-		return xfs_attrmulti_by_handle(mp, arg, filp, inode);
++		return xfs_attrmulti_by_handle(filp, arg);
+ 
+ 	case XFS_IOC_SWAPEXT: {
+ 		struct xfs_swapext	sxp;
+Index: xfs/fs/xfs/linux-2.6/xfs_ioctl.h
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_ioctl.h	2008-12-29 01:09:51.000000000 +0000
++++ xfs/fs/xfs/linux-2.6/xfs_ioctl.h	2008-12-29 01:11:14.000000000 +0000
+@@ -34,16 +34,13 @@
+ 
+ extern int
+ xfs_open_by_handle(
+-	xfs_mount_t		*mp,
+-	xfs_fsop_handlereq_t	*hreq,
+ 	struct file		*parfilp,
+-	struct inode		*parinode);
++	xfs_fsop_handlereq_t	*hreq);
+ 
+ extern int
+ xfs_readlink_by_handle(
+-	xfs_mount_t		*mp,
+-	xfs_fsop_handlereq_t	*hreq,
+-	struct inode		*parinode);
++	struct file		*parfilp,
++	xfs_fsop_handlereq_t	*hreq);
+ 
+ extern int
+ xfs_attrmulti_attr_get(
+@@ -67,6 +64,12 @@
+ 	char			*name,
+ 	__uint32_t		flags);
+ 
++extern struct dentry *
++xfs_handle_to_dentry(
++	struct file		*parfilp,
++	void __user		*uhandle,
++	u32			hlen);
++
+ extern long
+ xfs_file_ioctl(
+ 	struct file		*filp,
+Index: xfs/fs/xfs/linux-2.6/xfs_ioctl32.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_ioctl32.c	2008-12-29 01:09:51.000000000 +0000
++++ xfs/fs/xfs/linux-2.6/xfs_ioctl32.c	2008-12-29 03:01:34.000000000 +0000
+@@ -340,96 +340,24 @@
+ 	return 0;
+ }
+ 
+-/*
+- * Convert userspace handle data into inode.
+- *
+- * We use the fact that all the fsop_handlereq ioctl calls have a data
+- * structure argument whose first component is always a xfs_fsop_handlereq_t,
+- * so we can pass that sub structure into this handy, shared routine.
+- *
+- * If no error, caller must always iput the returned inode.
+- */
+-STATIC int
+-xfs_vget_fsop_handlereq_compat(
+-	xfs_mount_t		*mp,
+-	struct inode		*parinode,	/* parent inode pointer    */
+-	compat_xfs_fsop_handlereq_t	*hreq,
+-	struct inode		**inode)
++STATIC struct dentry *
++xfs_compat_handlereq_to_dentry(
++	struct file		*parfilp,
++	compat_xfs_fsop_handlereq_t *hreq)
+ {
+-	void			__user *hanp;
+-	size_t			hlen;
+-	xfs_fid_t		*xfid;
+-	xfs_handle_t		*handlep;
+-	xfs_handle_t		handle;
+-	xfs_inode_t		*ip;
+-	xfs_ino_t		ino;
+-	__u32			igen;
+-	int			error;
+-
+-	/*
+-	 * Only allow handle opens under a directory.
+-	 */
+-	if (!S_ISDIR(parinode->i_mode))
+-		return XFS_ERROR(ENOTDIR);
+-
+-	hanp = compat_ptr(hreq->ihandle);
+-	hlen = hreq->ihandlen;
+-	handlep = &handle;
+-
+-	if (hlen < sizeof(handlep->ha_fsid) || hlen > sizeof(*handlep))
+-		return XFS_ERROR(EINVAL);
+-	if (copy_from_user(handlep, hanp, hlen))
+-		return XFS_ERROR(EFAULT);
+-	if (hlen < sizeof(*handlep))
+-		memset(((char *)handlep) + hlen, 0, sizeof(*handlep) - hlen);
+-	if (hlen > sizeof(handlep->ha_fsid)) {
+-		if (handlep->ha_fid.fid_len !=
+-		    (hlen - sizeof(handlep->ha_fsid) -
+-			    sizeof(handlep->ha_fid.fid_len)) ||
+-		    handlep->ha_fid.fid_pad)
+-			return XFS_ERROR(EINVAL);
+-	}
+-
+-	/*
+-	 * Crack the handle, obtain the inode # & generation #
+-	 */
+-	xfid = (struct xfs_fid *)&handlep->ha_fid;
+-	if (xfid->fid_len == sizeof(*xfid) - sizeof(xfid->fid_len)) {
+-		ino  = xfid->fid_ino;
+-		igen = xfid->fid_gen;
+-	} else {
+-		return XFS_ERROR(EINVAL);
+-	}
+-
+-	/*
+-	 * Get the XFS inode, building a Linux inode to go with it.
+-	 */
+-	error = xfs_iget(mp, NULL, ino, 0, XFS_ILOCK_SHARED, &ip, 0);
+-	if (error)
+-		return error;
+-	if (ip == NULL)
+-		return XFS_ERROR(EIO);
+-	if (ip->i_d.di_gen != igen) {
+-		xfs_iput_new(ip, XFS_ILOCK_SHARED);
+-		return XFS_ERROR(ENOENT);
+-	}
+-
+-	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+-
+-	*inode = VFS_I(ip);
+-	return 0;
++	return xfs_handle_to_dentry(parfilp,
++			compat_ptr(hreq->ihandle), hreq->ihandlen);
+ }
+ 
+ STATIC int
+ xfs_compat_attrlist_by_handle(
+-	xfs_mount_t		*mp,
+-	void			__user *arg,
+-	struct inode		*parinode)
++	struct file		*parfilp,
++	void			__user *arg)
+ {
+ 	int			error;
+ 	attrlist_cursor_kern_t	*cursor;
+ 	compat_xfs_fsop_attrlist_handlereq_t al_hreq;
+-	struct inode		*inode;
++	struct dentry		*dentry;
+ 	char			*kbuf;
+ 
+ 	if (!capable(CAP_SYS_ADMIN))
+@@ -446,17 +374,17 @@
+ 	if (al_hreq.flags & ~(ATTR_ROOT | ATTR_SECURE))
+ 		return -XFS_ERROR(EINVAL);
+ 
+-	error = xfs_vget_fsop_handlereq_compat(mp, parinode, &al_hreq.hreq,
+-					       &inode);
+-	if (error)
+-		goto out;
++	dentry = xfs_compat_handlereq_to_dentry(parfilp, &al_hreq.hreq);
++	if (IS_ERR(dentry))
++		return PTR_ERR(dentry);
+ 
++	error = -ENOMEM;
+ 	kbuf = kmalloc(al_hreq.buflen, GFP_KERNEL);
+ 	if (!kbuf)
+-		goto out_vn_rele;
++		goto out_dput;
+ 
+ 	cursor = (attrlist_cursor_kern_t *)&al_hreq.pos;
+-	error = xfs_attr_list(XFS_I(inode), kbuf, al_hreq.buflen,
++	error = -xfs_attr_list(XFS_I(dentry->d_inode), kbuf, al_hreq.buflen,
+ 					al_hreq.flags, cursor);
+ 	if (error)
+ 		goto out_kfree;
+@@ -466,22 +394,20 @@
+ 
+  out_kfree:
+ 	kfree(kbuf);
+- out_vn_rele:
+-	iput(inode);
+- out:
+-	return -error;
++ out_dput:
++	dput(dentry);
++	return error;
+ }
+ 
+ STATIC int
+ xfs_compat_attrmulti_by_handle(
+-	xfs_mount_t				*mp,
+-	void					__user *arg,
+-	struct inode				*parinode)
++	struct file				*parfilp,
++	void					__user *arg)
+ {
+ 	int					error;
+ 	compat_xfs_attr_multiop_t		*ops;
+ 	compat_xfs_fsop_attrmulti_handlereq_t	am_hreq;
+-	struct inode				*inode;
++	struct dentry				*dentry;
+ 	unsigned int				i, size;
+ 	char					*attr_name;
+ 
+@@ -491,20 +417,19 @@
+ 			   sizeof(compat_xfs_fsop_attrmulti_handlereq_t)))
+ 		return -XFS_ERROR(EFAULT);
+ 
+-	error = xfs_vget_fsop_handlereq_compat(mp, parinode, &am_hreq.hreq,
+-					       &inode);
+-	if (error)
+-		goto out;
++	dentry = xfs_compat_handlereq_to_dentry(parfilp, &am_hreq.hreq);
++	if (IS_ERR(dentry))
++		return PTR_ERR(dentry);
+ 
+ 	error = E2BIG;
+ 	size = am_hreq.opcount * sizeof(compat_xfs_attr_multiop_t);
+ 	if (!size || size > 16 * PAGE_SIZE)
+-		goto out_vn_rele;
++		goto out_dput;
+ 
+ 	error = ENOMEM;
+ 	ops = kmalloc(size, GFP_KERNEL);
+ 	if (!ops)
+-		goto out_vn_rele;
++		goto out_dput;
+ 
+ 	error = EFAULT;
+ 	if (copy_from_user(ops, compat_ptr(am_hreq.ops), size))
+@@ -527,20 +452,21 @@
+ 
+ 		switch (ops[i].am_opcode) {
+ 		case ATTR_OP_GET:
+-			ops[i].am_error = xfs_attrmulti_attr_get(inode,
+-					attr_name,
++			ops[i].am_error = xfs_attrmulti_attr_get(
++					dentry->d_inode, attr_name,
+ 					compat_ptr(ops[i].am_attrvalue),
+ 					&ops[i].am_length, ops[i].am_flags);
+ 			break;
+ 		case ATTR_OP_SET:
+-			ops[i].am_error = xfs_attrmulti_attr_set(inode,
+-					attr_name,
++			ops[i].am_error = xfs_attrmulti_attr_set(
++					dentry->d_inode, attr_name,
+ 					compat_ptr(ops[i].am_attrvalue),
+ 					ops[i].am_length, ops[i].am_flags);
+ 			break;
+ 		case ATTR_OP_REMOVE:
+-			ops[i].am_error = xfs_attrmulti_attr_remove(inode,
+-					attr_name, ops[i].am_flags);
++			ops[i].am_error = xfs_attrmulti_attr_remove(
++					dentry->d_inode, attr_name,
++					ops[i].am_flags);
+ 			break;
+ 		default:
+ 			ops[i].am_error = EINVAL;
+@@ -553,22 +479,20 @@
+ 	kfree(attr_name);
+  out_kfree_ops:
+ 	kfree(ops);
+- out_vn_rele:
+-	iput(inode);
+- out:
++ out_dput:
++	dput(dentry);
+ 	return -error;
+ }
+ 
+ STATIC int
+ xfs_compat_fssetdm_by_handle(
+-	xfs_mount_t		*mp,
+-	void			__user *arg,
+-	struct inode		*parinode)
++	struct file		*parfilp,
++	void			__user *arg)
+ {
+ 	int			error;
+ 	struct fsdmidata	fsd;
+ 	compat_xfs_fsop_setdm_handlereq_t dmhreq;
+-	struct inode		*inode;
++	struct dentry		*dentry;
+ 
+ 	if (!capable(CAP_MKNOD))
+ 		return -XFS_ERROR(EPERM);
+@@ -576,12 +500,11 @@
+ 			   sizeof(compat_xfs_fsop_setdm_handlereq_t)))
+ 		return -XFS_ERROR(EFAULT);
+ 
+-	error = xfs_vget_fsop_handlereq_compat(mp, parinode, &dmhreq.hreq,
+-					       &inode);
+-	if (error)
+-		return -error;
++	dentry = xfs_compat_handlereq_to_dentry(parfilp, &dmhreq.hreq);
++	if (IS_ERR(dentry))
++		return PTR_ERR(dentry);
+ 
+-	if (IS_IMMUTABLE(inode) || IS_APPEND(inode)) {
++	if (IS_IMMUTABLE(dentry->d_inode) || IS_APPEND(dentry->d_inode)) {
+ 		error = -XFS_ERROR(EPERM);
+ 		goto out;
+ 	}
+@@ -591,11 +514,11 @@
+ 		goto out;
+ 	}
+ 
+-	error = -xfs_set_dmattrs(XFS_I(inode), fsd.fsd_dmevmask,
++	error = -xfs_set_dmattrs(XFS_I(dentry->d_inode), fsd.fsd_dmevmask,
+ 				 fsd.fsd_dmstate);
+ 
+ out:
+-	iput(inode);
++	dput(dentry);
+ 	return error;
+ }
+ 
+@@ -724,21 +647,21 @@
+ 
+ 		if (xfs_compat_handlereq_copyin(&hreq, arg))
+ 			return -XFS_ERROR(EFAULT);
+-		return xfs_open_by_handle(mp, &hreq, filp, inode);
++		return xfs_open_by_handle(filp, &hreq);
+ 	}
+ 	case XFS_IOC_READLINK_BY_HANDLE_32: {
+ 		struct xfs_fsop_handlereq	hreq;
+ 
+ 		if (xfs_compat_handlereq_copyin(&hreq, arg))
+ 			return -XFS_ERROR(EFAULT);
+-		return xfs_readlink_by_handle(mp, &hreq, inode);
++		return xfs_readlink_by_handle(filp, &hreq);
+ 	}
+ 	case XFS_IOC_ATTRLIST_BY_HANDLE_32:
+-		return xfs_compat_attrlist_by_handle(mp, arg, inode);
++		return xfs_compat_attrlist_by_handle(filp, arg);
+ 	case XFS_IOC_ATTRMULTI_BY_HANDLE_32:
+-		return xfs_compat_attrmulti_by_handle(mp, arg, inode);
++		return xfs_compat_attrmulti_by_handle(filp, arg);
+ 	case XFS_IOC_FSSETDM_BY_HANDLE_32:
+-		return xfs_compat_fssetdm_by_handle(mp, arg, inode);
++		return xfs_compat_fssetdm_by_handle(filp, arg);
+ 	default:
+ 		return -XFS_ERROR(ENOIOCTLCMD);
+ 	}
 
 _______________________________________________
 xfs mailing list
