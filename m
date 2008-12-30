@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBUEKWAR019596 for <xfs@oss.sgi.com>; Tue, 30 Dec 2008 08:20:32 -0600
-Received: from qw-out-1920.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B2C791797185
-	for <xfs@oss.sgi.com>; Tue, 30 Dec 2008 06:20:30 -0800 (PST)
-Received: from qw-out-1920.google.com (qw-out-1920.google.com [74.125.92.150])
-	by cuda.sgi.com with ESMTP id 9BDYDKpHd8OS2IRf for
-	<xfs@oss.sgi.com>; Tue, 30 Dec 2008 06:20:30 -0800 (PST)
-Received: by qw-out-1920.google.com with SMTP id 5so17253074qwc.32
-	for <xfs@oss.sgi.com>; Tue, 30 Dec 2008 06:20:29 -0800 (PST)
-Date: Tue, 30 Dec 2008 08:20:26 -0600
-From: Matt Garman <matthew.garman@gmail.com>
-Subject: Re: mismatch_cnt, random bitflips, silent corruption(?), mdadm/sw
-	raid[156]
-Message-ID: <20081230142026.GB3549@sewage.raw-sewage.fake>
-References: <alpine.DEB.1.10.0812250435260.12329@p34.internal.lan>
+	mBUFvQgY026562 for <xfs@oss.sgi.com>; Tue, 30 Dec 2008 09:57:28 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 886A717978B9
+	for <xfs@oss.sgi.com>; Tue, 30 Dec 2008 07:57:26 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id G95GuHjDHms6b9YO for
+	<xfs@oss.sgi.com>; Tue, 30 Dec 2008 07:57:26 -0800 (PST)
+Date: Tue, 30 Dec 2008 10:57:26 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH, RFC] directory offset overflows in 2.6.28
+Message-ID: <20081230155726.GA30568@infradead.org>
+References: <20081229220745.GA12966@infradead.org>
+	<20081230001117.GA5220@disturbed>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.1.10.0812250435260.12329@p34.internal.lan>
+In-Reply-To: <20081230001117.GA5220@disturbed>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,30 +29,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-raid@vger.kernel.org, Alan Piszcz <ap@solarrain.com>, smartmontools-support@lists.sourceforge.net, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com, John Stanley <jpsinthemix@verizon.net>
 
-On Thu, Dec 25, 2008 at 01:04:07PM -0500, Justin Piszcz wrote:
-> Options/alternatives for maintaining data integrity?
->
-> 1. Obviously DVD and/or LTO-tape (multiple copies of data at rest)
-> http://epoka.dk/media/Linear_Tape_Open_(LTO)_Ultrium_Data_Cartridges.pdf
-> -> For LTO-2/LTO-3
-> -> Uncorrected bit error rate 1x10-17 1x10-17
-> -> Undetected bit error rate 1x10-27 1x10-27
->
-> 2. ZFS, but only runs in user-space in Linux.
->
-> 3. Keep an md5sum for each file on the filesystem and run daily
-> checks?
+On Tue, Dec 30, 2008 at 11:11:17AM +1100, Dave Chinner wrote:
+> On Mon, Dec 29, 2008 at 05:07:45PM -0500, Christoph Hellwig wrote:
+> > The patch below is a dumb version of just putting back the masking,
+> > to make sure we have the same behavior as in 2.6.27 and earlier.
+> > I think we should at least hide it in a macro that is well-commented,
+> > but I suspect we also need to make sure that we never ever get bigger
+> > offsets in directories in some way.
+> 
+> I think we need that macro sooner rather than later ;)
 
-I've recently started using par2[1][2] on backed up files.
+> In this case, you can do the masking at the time cook is
+> assigned. I haven't checked, but I suspect the rest will be the
+> same. That will make the patch less invasive and with a macro
+> somewhat cleaner...
 
-I just started doing this, so don't know how it will work in the
-long run.  Can't hurt, anyway, other than taking up more space.
+That way we could replace two assignment by one one time each
+in xfs_dir2_leaf.c and xfs_dir2_block.c.
 
-[1] http://www.par2.net/
-[2] http://parchive.sourceforge.net/
+I started working on the macro, but it seems even more hacky.
+
+When looking at the big picture we have two problems:
+
+ - the end of directory marker which always seems to be always too
+   large for 32bit values for 32 bit indices
+ - directories that actually are too large to be represented using
+   32 bit signed offsets.  I guess we just can't support those
+   for apps using the 32bit readdir interface and the EOVERFLOW
+   is valid for those.  The current approach as in < 2.6.28 and
+   with this patch breaks that second case in subtile ways.
+
+So, I'd just push the first hacky opencoded patch into 2.6.29 and
+-stable now to revert to the old behaviour with all it's faults, and
+in the meantime I'll look into a proper way finding a better end of
+directory indicator.  That should also help Russell's BSD concerns.
 
 _______________________________________________
 xfs mailing list
