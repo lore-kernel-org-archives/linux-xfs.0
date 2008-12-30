@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBU4NZNY003754 for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 22:23:35 -0600
-Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5B0DA1795387
-	for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 20:23:34 -0800 (PST)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id KqDLla7ihVVOLT3o for <xfs@oss.sgi.com>;
-	Mon, 29 Dec 2008 20:23:34 -0800 (PST)
-Date: Tue, 30 Dec 2008 05:23:33 +0100
-From: Nick Piggin <npiggin@suse.de>
-Subject: Re: BUG: soft lockup - is this XFS problem?
-Message-ID: <20081230042333.GC27679@wotan.suse.de>
-References: <gifgp1$8ic$1@ger.gmane.org> <20081223171259.GA11945@infradead.org>
-Mime-Version: 1.0
+	mBU7Y0KT013993 for <xfs@oss.sgi.com>; Tue, 30 Dec 2008 01:34:00 -0600
+Received: from parsec.stupidest.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3699417957E9
+	for <xfs@oss.sgi.com>; Mon, 29 Dec 2008 23:33:58 -0800 (PST)
+Received: from parsec.stupidest.org (splinter.f00f.org [216.75.21.205]) by
+	cuda.sgi.com with ESMTP id 73Y5GHBo4DcnVkWC for
+	<xfs@oss.sgi.com>; Mon, 29 Dec 2008 23:33:58 -0800 (PST)
+Date: Mon, 29 Dec 2008 16:14:25 -0800
+From: Chris Wedgwood <cw@f00f.org>
+Subject: Re: massively truncated files with XFS with sudden power loss on
+	2.6.27 and 2.6.28
+Message-ID: <20081230001425.GA25516@puku.stupidest.org>
+References: <200812291920.34123.Martin@Lichtvoll.de>
+	<49592045.3050103@sandeen.net>
+MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20081223171259.GA11945@infradead.org>
+In-Reply-To: <49592045.3050103@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,19 +30,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-kernel@vger.kernel.org, Roman Kononov <kernel@kononov.ftml.net>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Martin Steigerwald <Martin@Lichtvoll.de>, xfs@oss.sgi.com
 
-On Tue, Dec 23, 2008 at 12:12:59PM -0500, Christoph Hellwig wrote:
-> 
-> Nick, I've seen various reports like this by Roman.  It seems to be
-> caused by an interaction of the lockless pagecache with the xfs
-> I/O code.  Any idea what might be wrong here:
+On Mon, Dec 29, 2008 at 01:08:53PM -0600, Eric Sandeen wrote:
 
-Hmm, it could get into a loop here if there is a page in the pagecache
-with a zero refcount, which might be a problem with XFS... other looping
-conditions might indicate a problem iwth lockless pagecache or radix
-tree. It would be very helpful to know what condition it is looping on...
+> It is certainly at least possible that whatever is writing the KDE
+> files is not following good practices for data integrity... I can't
+> say that for sure, but apps have responsibility here, too.  :)
+
+BTW, it's not just KDE that does this.  A lot of apps that IMO should
+be more careful aren't.
+
+For example apt/dpkg on debian.  It's possible if you lose
+power/oops/whatever during upgrade you can eat those files and cause
+much pain.
+
+
+It's bad enough I started work on a replacement for these that uses
+sqlite.
 
 _______________________________________________
 xfs mailing list
