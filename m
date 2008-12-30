@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBUGu8Ps021014 for <xfs@oss.sgi.com>; Tue, 30 Dec 2008 10:56:09 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 57C571797A1B
-	for <xfs@oss.sgi.com>; Tue, 30 Dec 2008 08:56:07 -0800 (PST)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id HPkz3nGXr4sDdMfS for
-	<xfs@oss.sgi.com>; Tue, 30 Dec 2008 08:56:07 -0800 (PST)
-Message-ID: <495A5287.5080900@sandeen.net>
-Date: Tue, 30 Dec 2008 10:55:35 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	mBUHIv1P023510 for <xfs@oss.sgi.com>; Tue, 30 Dec 2008 11:18:58 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BD6D61797E29
+	for <xfs@oss.sgi.com>; Tue, 30 Dec 2008 09:18:57 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id H3TmoDLquI1wb6zU for
+	<xfs@oss.sgi.com>; Tue, 30 Dec 2008 09:18:57 -0800 (PST)
+Date: Tue, 30 Dec 2008 12:18:25 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs-cmds: fix parallel installs in include/ dirs
+Message-ID: <20081230171825.GA31624@infradead.org>
+References: <49594CD9.3010402@sandeen.net>
+	<20081230115224.GA24210@infradead.org>
+	<20081230124936.GA26322@infradead.org>
+	<200812300907.31459.vapier@gentoo.org>
 MIME-Version: 1.0
-Subject: Re: new acl tarball release?
-References: <20081226195506.GA4173@infradead.org>
-In-Reply-To: <20081226195506.GA4173@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <200812300907.31459.vapier@gentoo.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,28 +31,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Nathan Scott <nathans@debian.org>, xfs@oss.sgi.com
+To: Mike Frysinger <vapier@gentoo.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
 
-Christoph Hellwig wrote:
-> The current acl 2.2.47 release has a quite nasty bug about following
-> symlinks, which is already fixes in the current ptools/cvs/git tree:
-> 
-> 	http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=499076
-> 	http://oss.sgi.com/bugzilla/show_bug.cgi?id=790
-> 
-> Any chance we can put out a 2.2.48 release with that fix so that the
-> broken version doesn't end up in distros?
-> 
-> The oss bugzilla also has another patch that needs reviewing.
-> 
-> AFAICS the same problems symlink walking code is also used in attr,
-> so it could use an update, too.
+On Tue, Dec 30, 2008 at 09:07:30AM -0500, Mike Frysinger wrote:
+> acl-2.2.47 built fine for me with `./configure && make` and this patch ...
 
-If we can hang on just a bit I see that Fedora is carrying about 6
-patches, I'll get those submitted Real Soon Now.
+Works now after a make distclean for me.
 
--Eric
+> that said, if the only purpose of this is to make sure there are symlinks in 
+> include/, why not do it at the tail end of configure ?  then there will be no 
+> weird parallel magic to worry about, and everything will always be available 
+> once configure has finished.
+
+I'll leave that to Eric or anyone else who wants to play a build system
+expert on TV :)
 
 _______________________________________________
 xfs mailing list
