@@ -1,22 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBV40ups029385 for <xfs@oss.sgi.com>; Tue, 30 Dec 2008 22:00:56 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3EA961799B65
-	for <xfs@oss.sgi.com>; Tue, 30 Dec 2008 20:00:51 -0800 (PST)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id heG5Fli0a4f1Odrn for
-	<xfs@oss.sgi.com>; Tue, 30 Dec 2008 20:00:51 -0800 (PST)
-Message-ID: <495AEE51.9030805@sandeen.net>
-Date: Tue, 30 Dec 2008 22:00:17 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	mBVA2mvo020582 for <xfs@oss.sgi.com>; Wed, 31 Dec 2008 04:02:48 -0600
+Received: from smtp.gentoo.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F1042179A3FF
+	for <xfs@oss.sgi.com>; Wed, 31 Dec 2008 02:02:47 -0800 (PST)
+Received: from smtp.gentoo.org (smtp.gentoo.org [140.211.166.183]) by
+	cuda.sgi.com with ESMTP id SPyjvFXPEo0QqCj4 for
+	<xfs@oss.sgi.com>; Wed, 31 Dec 2008 02:02:47 -0800 (PST)
+From: Mike Frysinger <vapier@gentoo.org>
+Subject: xfs userspace status
+Date: Wed, 31 Dec 2008 02:42:06 -0500
 MIME-Version: 1.0
-Subject: Re: [PATCH 5/5] xfstests: test 197,
-	add a testcase for d_off truncation
-References: <20081230230810.986105000@bombadil.infradead.org>
-	<20081230230913.619447000@bombadil.infradead.org>
-In-Reply-To: <20081230230913.619447000@bombadil.infradead.org>
+Message-Id: <200812310242.08183.vapier@gentoo.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,60 +21,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============6387259974587408216=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>, Eric Sandeen <sandeen@sandeen.net>, Christoph Hellwig <hch@infradead.org>
 
-Christoph Hellwig wrote:
+--===============6387259974587408216==
+Content-Type: multipart/signed;
+  boundary="nextPart1253151.ihSq2zjSdL";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-> Make sure our directory offsets fit into a 32 bit value.
-> Based on a report by John Stanley.
-> 
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
+--nextPart1253151.ihSq2zjSdL
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-...
+sorry, i dont keep abreast of xfs things beyond packaging in Gentoo.  is=20
+upstream moving out of SGI or something ?
+-mike
 
-> +struct linux_dirent64 {
-> +	uint64_t	d_ino;
-> +	int64_t		d_off;
-> +	unsigned short	d_reclen;
-> +	unsigned char	d_type;
-> +        char		d_name[0];
-> +};
+--nextPart1253151.ihSq2zjSdL
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
-...
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
 
-> +		for (bpos = 0; bpos < nread;) {
-> +			d = (struct linux_dirent64 *) (buf + bpos);
-> +			/*
-> +			 * Can't use off_t here xfsqa is compiled with
-> +			 * -D_FILE_OFFSET_BITS=64
-> +			 */
-> +			if (d->d_off != (long)d->d_off) {
+iQIcBAABAgAGBQJJWyJQAAoJEEFjO5/oN/WBudQQAJLqAYYQxxYwBYYjy1s9xLRG
+SBgAEnXSAksR92SkMCV37WO5F/egivqNRaGXdbmwsp2wOS5CtNoq31yA4h3CGSBa
+ls5EphwgleZdjuIKvV3/u6+9uKRYSq4C29MNEXsYZdjYnjEfD+7NenqLSV471k3K
+LbWo5c3b9CuiPmd4w083SX1b5f1VkJT6QfjHt+/rVZF7yChp+nz1AU/pKwOb4suK
+43RogLTcFBlfkg6cdJqMTn/ctIXZP7qCWBW7Rs/bWLg78R0kF3LRxAqpNjNCHCaX
+zBUldrHMkl5E8H7TLNljqo2SUe0V9+h8CGpoRBL6mxc0GIaegx/hRq8ETygDOmMH
+J+Ngsa8iWyeXS7DiIH5s3tJwX+e2X9Ds8I/OgGVtlt6HozGoObCSt+UJ+MtndDBB
+OOK/4PieNgm4hqMKSVJ/C/mu5KXCppMbIdSJ7PFJ4a16vuOVzlVHcy92u8Ad7Ekw
+6VNkjVV4K5ILRAXloknaFS9oq5MGVSLR9wqLapTJLP5n3TkkmIXB/iJUeBsJLRm2
+yS9t4J+ZcfQXK68FKA0b+tMxUIOgDCfNDpjZBDyG/Er4KaKma/NzuBVcHiqriDHz
+4XTRprDYJTQR8jUw6DPYS6GGFup+4FoSE1wIBevCEEptAziROFl0EulZ76Rwefwx
+0bOhDM0hUx3imqMOOe4N
+=Kuzq
+-----END PGP SIGNATURE-----
 
-So can this test only fail on a 32-bit arch?  I haven't paid enough
-attention to the original bug... sorry if that's a dumb question.  :)
+--nextPart1253151.ihSq2zjSdL--
 
--Eric
 
-> +	                        fprintf(stderr, "detected d_off truncation "
-> +						"d_name = %s, d_off = %lld\n",
-> +						d->d_name, (long long)d->d_off);
-> +        	                exit(EXIT_FAILURE);
-> +                	}
-> +			bpos += d->d_reclen;
-> +		}
-> +	}
-> +
-> +	exit(EXIT_SUCCESS);
-> +}
+--===============6387259974587408216==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============6387259974587408216==--
