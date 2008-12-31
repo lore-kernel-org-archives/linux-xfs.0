@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBVAWgCY022999 for <xfs@oss.sgi.com>; Wed, 31 Dec 2008 04:32:43 -0600
+	mBVC8d8f029746 for <xfs@oss.sgi.com>; Wed, 31 Dec 2008 06:08:40 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9C235179A80F
-	for <xfs@oss.sgi.com>; Wed, 31 Dec 2008 02:32:42 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B3E09179B6DA
+	for <xfs@oss.sgi.com>; Wed, 31 Dec 2008 04:08:39 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id PtC8MfHCLzKJv2Xe for
-	<xfs@oss.sgi.com>; Wed, 31 Dec 2008 02:32:42 -0800 (PST)
-Date: Wed, 31 Dec 2008 04:21:16 -0500
+	by cuda.sgi.com with ESMTP id ExXNYI7R4ywBdgeW for
+	<xfs@oss.sgi.com>; Wed, 31 Dec 2008 04:08:39 -0800 (PST)
+Date: Wed, 31 Dec 2008 07:08:39 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfs userspace status
-Message-ID: <20081231092116.GA16552@infradead.org>
-References: <200812310242.08183.vapier@gentoo.org>
+Subject: Re: [PATCH 1/5] xfstests: fix compiler warnings
+Message-ID: <20081231120839.GA17991@infradead.org>
+References: <20081230230810.986105000@bombadil.infradead.org>
+	<20081230230912.986540000@bombadil.infradead.org>
+	<495AD1EF.3080109@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <200812310242.08183.vapier@gentoo.org>
+In-Reply-To: <495AD1EF.3080109@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,15 +30,11 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mike Frysinger <vapier@gentoo.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-On Wed, Dec 31, 2008 at 02:42:06AM -0500, Mike Frysinger wrote:
-> sorry, i dont keep abreast of xfs things beyond packaging in Gentoo.  is 
-> upstream moving out of SGI or something ?
-
-Upstream is still SGI, but we're playing akpm to collect all patches
-into a tree SGI can pull.
+Thanks for the reviews. All these patches and your new testcase are now
+push out.
 
 _______________________________________________
 xfs mailing list
