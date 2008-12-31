@@ -1,18 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBVA2mvo020582 for <xfs@oss.sgi.com>; Wed, 31 Dec 2008 04:02:48 -0600
-Received: from smtp.gentoo.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F1042179A3FF
-	for <xfs@oss.sgi.com>; Wed, 31 Dec 2008 02:02:47 -0800 (PST)
-Received: from smtp.gentoo.org (smtp.gentoo.org [140.211.166.183]) by
-	cuda.sgi.com with ESMTP id SPyjvFXPEo0QqCj4 for
-	<xfs@oss.sgi.com>; Wed, 31 Dec 2008 02:02:47 -0800 (PST)
-From: Mike Frysinger <vapier@gentoo.org>
-Subject: xfs userspace status
-Date: Wed, 31 Dec 2008 02:42:06 -0500
+	mBVAWiB9023014 for <xfs@oss.sgi.com>; Wed, 31 Dec 2008 04:32:44 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 67DD654B63
+	for <xfs@oss.sgi.com>; Wed, 31 Dec 2008 02:32:43 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id f4XZKxpHBB55BHWV for
+	<xfs@oss.sgi.com>; Wed, 31 Dec 2008 02:32:43 -0800 (PST)
+Date: Wed, 31 Dec 2008 04:30:09 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/5] xfstests: fix compiler warnings
+Message-ID: <20081231093009.GA2120@infradead.org>
+References: <20081230230810.986105000@bombadil.infradead.org>
+	<20081230230912.986540000@bombadil.infradead.org>
+	<495AD1EF.3080109@sandeen.net>
 MIME-Version: 1.0
-Message-Id: <200812310242.08183.vapier@gentoo.org>
+Content-Disposition: inline
+In-Reply-To: <495AD1EF.3080109@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,62 +26,27 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6387259974587408216=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>, Eric Sandeen <sandeen@sandeen.net>, Christoph Hellwig <hch@infradead.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
---===============6387259974587408216==
-Content-Type: multipart/signed;
-  boundary="nextPart1253151.ihSq2zjSdL";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+On Tue, Dec 30, 2008 at 07:59:11PM -0600, Eric Sandeen wrote:
+> Just in case this gets transplanted outside xfstests, where _GNU_SOURCE
+> may not be defined on the make commandline, would it make sense to just
+> put this #define inside
+> 
+> #ifndef _GNU_SOURCE?
+> 
+> Just a thought; otherwise looks good to me.
 
---nextPart1253151.ihSq2zjSdL
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
-
-sorry, i dont keep abreast of xfs things beyond packaging in Gentoo.  is=20
-upstream moving out of SGI or something ?
--mike
-
---nextPart1253151.ihSq2zjSdL
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-
-iQIcBAABAgAGBQJJWyJQAAoJEEFjO5/oN/WBudQQAJLqAYYQxxYwBYYjy1s9xLRG
-SBgAEnXSAksR92SkMCV37WO5F/egivqNRaGXdbmwsp2wOS5CtNoq31yA4h3CGSBa
-ls5EphwgleZdjuIKvV3/u6+9uKRYSq4C29MNEXsYZdjYnjEfD+7NenqLSV471k3K
-LbWo5c3b9CuiPmd4w083SX1b5f1VkJT6QfjHt+/rVZF7yChp+nz1AU/pKwOb4suK
-43RogLTcFBlfkg6cdJqMTn/ctIXZP7qCWBW7Rs/bWLg78R0kF3LRxAqpNjNCHCaX
-zBUldrHMkl5E8H7TLNljqo2SUe0V9+h8CGpoRBL6mxc0GIaegx/hRq8ETygDOmMH
-J+Ngsa8iWyeXS7DiIH5s3tJwX+e2X9Ds8I/OgGVtlt6HozGoObCSt+UJ+MtndDBB
-OOK/4PieNgm4hqMKSVJ/C/mu5KXCppMbIdSJ7PFJ4a16vuOVzlVHcy92u8Ad7Ekw
-6VNkjVV4K5ILRAXloknaFS9oq5MGVSLR9wqLapTJLP5n3TkkmIXB/iJUeBsJLRm2
-yS9t4J+ZcfQXK68FKA0b+tMxUIOgDCfNDpjZBDyG/Er4KaKma/NzuBVcHiqriDHz
-4XTRprDYJTQR8jUw6DPYS6GGFup+4FoSE1wIBevCEEptAziROFl0EulZ76Rwefwx
-0bOhDM0hUx3imqMOOe4N
-=Kuzq
------END PGP SIGNATURE-----
-
---nextPart1253151.ihSq2zjSdL--
-
-
---===============6387259974587408216==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Yeah, we could.  OR we could expect people who take it outside add it
+manually after some feature is missing as we do for all other programs
+in xfsqa :)
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6387259974587408216==--
