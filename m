@@ -1,17 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n01HEjH5007288 for <xfs@oss.sgi.com>; Thu, 1 Jan 2009 11:14:45 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2AC8657F1F
-	for <xfs@oss.sgi.com>; Thu,  1 Jan 2009 09:14:41 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 1UU7Ygkn4Tp57q5i for
-	<xfs@oss.sgi.com>; Thu, 01 Jan 2009 09:14:41 -0800 (PST)
-Date: Thu, 1 Jan 2009 12:14:09 -0500
+	n01HHEWX007587 for <xfs@oss.sgi.com>; Thu, 1 Jan 2009 11:17:15 -0600
+Date: Thu, 1 Jan 2009 12:17:13 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: XFS internal error when NFS client accesses nonexistent inode
-Message-ID: <20090101171409.GA18020@infradead.org>
+Subject: Feature requests, was Re: XFS internal error when NFS client
+	accesses nonexistent inode
+Message-ID: <20090101171713.GB18020@infradead.org>
 References: <87zlicfncr.fsf@server.ak.quickcircuit.co.nz>
 MIME-Version: 1.0
 Content-Disposition: inline
@@ -32,52 +27,32 @@ To: Mario Becroft <mb@gem.win.co.nz>
 Cc: xfs@oss.sgi.com
 
 On Thu, Jan 01, 2009 at 03:09:08AM +1300, Mario Becroft wrote:
-> I hit a seemingly strange problem today when I xfsdump/restored some
-> filesystems from one volume onto another. When I exported the new
-> volumes, errors like the following started to occur:
+> While I am writing, two things I wish XFS could do, and two more that
+> would be jolly nice to have:
 > 
-> Dec 31 09:12:46 nfs1 kernel: nfsd: non-standard errno: -117
-> 
-> Bumping up the XFS debug level revealed the following (full details at
-> the end):
-> 
-> Dec 31 09:12:46 nfs1 kernel: Filesystem "dm-17": XFS internal error xfs_imap_to_bp at line 186 of file fs/xfs/xfs_inode.c.  Caller 0xffffffff80374c48
+> 1. shrink filesystems
 
-This is:
+http://xfs.org/index.php/Shrinking_Support
 
+> 2. dump/restore preserving inode numbers
 
-                di_ok = be16_to_cpu(dip->di_core.di_magic) ==
-			    XFS_DINODE_GOOD_VERSION(dip->di_core.di_version);
-		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
-						XFS_ERRTAG_ITOBP_INOTOBP,
-						XFS_RANDOM_ITOBP_INOTOBP))) {
-			if (imap_flags & XFS_IMAP_BULKSTAT) {
-				xfs_trans_brelse(tp, bp);
-				return XFS_ERROR(EINVAL);
-			}
- here -->		XFS_CORRUPTION_ERROR("xfs_imap_to_bp",
-						XFS_ERRLEVEL_HIGH, mp, dip);
+That's very hard to do, given that inode numbers encode the location
+on disk.  To support your NFS exporting scenario you would also have
+to preserve the generation number, which also forms part of the nfs file
+handle.
 
-> After wasting quite a lot of time, I finally realised that this was
-> probably caused by NFS clients accessing nonexistent file handles that
-> they had open from when the filesystem was previously exported, prior to
-> the dump/restore.
->
-> Is my analysis correct? Is an internal error the expected behaviour in
-> this case? And can this cause any harm?
+> 3. high-performance dump with multi-threaded reading to fully utilise
+> disk throughput
 
-That explanation makes a lot of sense.  As seen in the snipplet above
-we actually have checks for bulkstat which might hand in invalid inode
-numbers, and I think we need to extent this check to nfs export and
-the handle ioctls, too as we can get arbitrary inode numbers passed
-from a client / user space.  In addition we should probably translate
-the error number into something more useful.
+Didn't xfsdump in IRIX have some sort of multi-stream support.  Bill, do
+you remember anything like that?
 
-I will create a testcase using the handle ioctls for this and provide
-a fix to handle this issue more gracefully.
+> 4. on-line xfs_check/repair
 
-Except for shutting down a perfectly fine filesystem this should
-not cause additional damage.
+Well, you can check online, it's just not going to give good results.
+Using snaphots you can easily check online, and with a little hack
+even repair, but you'd still have to reboot to then use the repaired
+filesystem.
 
 _______________________________________________
 xfs mailing list
