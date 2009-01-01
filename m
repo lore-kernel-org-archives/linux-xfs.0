@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n01NcmOU005114 for <xfs@oss.sgi.com>; Thu, 1 Jan 2009 17:38:48 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4592A5855C
-	for <xfs@oss.sgi.com>; Thu,  1 Jan 2009 15:20:47 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id SFO94DeAwBMp9SXC for
-	<xfs@oss.sgi.com>; Thu, 01 Jan 2009 15:20:47 -0800 (PST)
-Date: Thu, 1 Jan 2009 18:20:16 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: XFS internal error when NFS client accesses nonexistent inode
-Message-ID: <20090101232016.GA4476@infradead.org>
-References: <87zlicfncr.fsf@server.ak.quickcircuit.co.nz>
-	<20090101171409.GA18020@infradead.org>
-	<20090101190039.GA29959@infradead.org>
-	<87ocyqpqhp.fsf@server.ak.quickcircuit.co.nz>
+	n01NsqAs006599 for <xfs@oss.sgi.com>; Thu, 1 Jan 2009 17:54:55 -0600
+Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A49471BF85CE
+	for <xfs@oss.sgi.com>; Thu,  1 Jan 2009 15:54:50 -0800 (PST)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net
+	[203.16.214.145]) by cuda.sgi.com with ESMTP id
+	XlLdQ6iFPR6Uh5iI for <xfs@oss.sgi.com>;
+	Thu, 01 Jan 2009 15:54:50 -0800 (PST)
+Date: Fri, 2 Jan 2009 10:54:47 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfsaild wakeups
+Message-ID: <20090101235447.GH10725@disturbed>
+References: <20081229232915.GA6724@memak.tu-darmstadt.de>
+	<20081230233522.GB10725@disturbed>
+	<20081231153050.GA18736@memak.tu-darmstadt.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <87ocyqpqhp.fsf@server.ak.quickcircuit.co.nz>
+In-Reply-To: <20081231153050.GA18736@memak.tu-darmstadt.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,40 +31,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mario Becroft <mb@gem.win.co.nz>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Elrond <elrond+xfs.oss.sgi.com@samba-tng.org>, xfs@oss.sgi.com
 
-On Fri, Jan 02, 2009 at 12:15:46PM +1300, Mario Becroft wrote:
-> Christoph Hellwig <hch@infradead.org> writes:
+On Wed, Dec 31, 2008 at 04:30:50PM +0100, Elrond wrote:
+> On Wed, Dec 31, 2008 at 10:35:22AM +1100, Dave Chinner wrote:
+> > On Tue, Dec 30, 2008 at 12:29:15AM +0100, Elrond wrote:
+> > > 
+> > > Hi,
+> > > 
+> > > The major issue of xfsaild wakeups was analyzed in
+> > > February. (see
+> > > http://oss.sgi.com/archives/xfs/2008-02/msg00169.html ).
+> > > 
+> > > A small issue persists. We're now at 1 wakeup per second
+> > > and mounted filesystem. I have three xfs on my box and the
+> > > number wants to grow. xfsaild is on place two of my
+> > > powertop wakeup list. Sometimes place one.
+> > > 
+> > > Is anyone working on reducing this to zero for an idle fs?
+> > 
+> > It's on the list of things to do given that 2.6.29 will have
+> > the fix for the bug that the periodic wakeup is catching.
 > 
-> > Btw, you update /proc/sys/fs/xfs/error_level manually?  The corruption
-> > test only triggers from a avalue of 5, but 3 is the default.
-> 
-> I was getting:
-> 
-> Dec 31 09:12:46 nfs1 kernel: nfsd: non-standard errno: -117
-> 
-> and in trying to figure out what it meant, I bumped up the XFS debug
-> level to 6, which enabled me to see the errors from XFS. Maybe I should
-> have just left it alone?
->
-> I should have pointed out that when this happened, the filesystem did
-> not actually shut down. So it did not cause any real problems. Should it
-> have been shutting down?
-> 
-> I was mainly just worried that depending on what data it happened to hit
+> So the xfs part is mostly prepared and when 2.6.29 has the
+> base fix, xfs will follow soon?
 
-Looking at the code again there indeed aren't shutdowns, just
-stacktraces.  So yes, the stacktraces are caused by the higher error
-level.  With debug kernels it's still a kernel crash though, but no one
-should run debug kernels on their production machines.
+It's all XFS stuff ;)
 
-> when accessing the nonexistent inode, it might screw things up. If I do
-> encounter any shutdowns, I will apply the patch you sent through. Thanks
-> for the ultra-fast response.
+What I mean is that the underlying XFS problem that required
+the AIL watchdog (the 1s wakeup) is now fixed so we can remove the
+periodic wakeup. That removal will probably be in 2.6.30....
 
-Please try the second patch which I cc'ed you on as it gives back
-the correct error code to the nfs clients.
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
