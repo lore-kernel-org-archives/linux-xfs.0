@@ -1,31 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBVFUrLN011432 for <xfs@oss.sgi.com>; Wed, 31 Dec 2008 09:30:55 -0600
-Received: from baerbel.szm.maschinenbau.tu-darmstadt.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 816A155610
-	for <xfs@oss.sgi.com>; Wed, 31 Dec 2008 07:30:52 -0800 (PST)
-Received: from baerbel.szm.maschinenbau.tu-darmstadt.de
-	(baerbel.szm.maschinenbau.tu-darmstadt.de [130.83.48.97]) by
-	cuda.sgi.com with ESMTP id uVYc0SxJ2A4q5uZO for
-	<xfs@oss.sgi.com>; Wed, 31 Dec 2008 07:30:52 -0800 (PST)
-Received: from baerbel.szm.maschinenbau.tu-darmstadt.de (localhost [127.0.0.1])
-	by baerbel.szm.maschinenbau.tu-darmstadt.de (8.13.8/8.13.8) with ESMTP
-	id mBVFUpOp018832
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
-	for <xfs@oss.sgi.com>; Wed, 31 Dec 2008 16:30:51 +0100
-Received: (from tacke@localhost)
-	by baerbel.szm.maschinenbau.tu-darmstadt.de (8.13.8/8.13.8/Submit) id
-	mBVFUoFd018831 for xfs@oss.sgi.com; Wed, 31 Dec 2008 16:30:50 +0100
-Date: Wed, 31 Dec 2008 16:30:50 +0100
-From: Elrond <elrond+xfs.oss.sgi.com@samba-tng.org>
-Subject: Re: xfsaild wakeups
-Message-ID: <20081231153050.GA18736@memak.tu-darmstadt.de>
-References: <20081229232915.GA6724@memak.tu-darmstadt.de>
-	<20081230233522.GB10725@disturbed>
+	n019owGf006663 for <xfs@oss.sgi.com>; Thu, 1 Jan 2009 03:50:59 -0600
+Received: from winston.telenet-ops.be (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F2674577A9
+	for <xfs@oss.sgi.com>; Thu,  1 Jan 2009 01:50:56 -0800 (PST)
+Received: from winston.telenet-ops.be (winston.telenet-ops.be
+	[195.130.137.75]) by cuda.sgi.com with ESMTP id
+	HLOEPBCk5oMGFtQj for <xfs@oss.sgi.com>;
+	Thu, 01 Jan 2009 01:50:56 -0800 (PST)
+Date: Thu, 1 Jan 2009 10:50:52 +0100 (CET)
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [GIT PULL] XFS update for 2.6.29
+In-Reply-To: <20081230030845.A4F0558AE206@chook.melbourne.sgi.com>
+Message-ID: <Pine.LNX.4.64.0901011048090.14380@anakin>
+References: <20081230030845.A4F0558AE206@chook.melbourne.sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20081230233522.GB10725@disturbed>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,40 +28,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Lachlan McIlroy <lachlan@sgi.com>, Christoph Hellwig <hch@infradead.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Linux Kernel Development <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-
-Hi Dave,
-
-On Wed, Dec 31, 2008 at 10:35:22AM +1100, Dave Chinner wrote:
-> On Tue, Dec 30, 2008 at 12:29:15AM +0100, Elrond wrote:
-> > 
-> > Hi,
-> > 
-> > The major issue of xfsaild wakeups was analyzed in
-> > February. (see
-> > http://oss.sgi.com/archives/xfs/2008-02/msg00169.html ).
-> > 
-> > A small issue persists. We're now at 1 wakeup per second
-> > and mounted filesystem. I have three xfs on my box and the
-> > number wants to grow. xfsaild is on place two of my
-> > powertop wakeup list. Sometimes place one.
-> > 
-> > Is anyone working on reducing this to zero for an idle fs?
+On Tue, 30 Dec 2008, Lachlan McIlroy wrote:
+> The following changes since commit 3c92ec8ae91ecf59d88c798301833d7cf83f2179:
+>   Linus Torvalds (1):
+>         Merge branch 'next' of git://git.kernel.org/.../paulus/powerpc
 > 
-> It's on the list of things to do given that 2.6.29 will have
-> the fix for the bug that the periodic wakeup is catching.
+> are available in the git repository at:
+> 
+>   git://oss.sgi.com/oss/git/xfs/xfs.git for-linus
 
-So the xfs part is mostly prepared and when 2.6.29 has the
-base fix, xfs will follow soon?
+> Christoph Hellwig (91):
+>       [XFS] refactor xfs_btree_readahead
 
-Great!
+On m68k, with CONFIG_LBD=n:
 
+| fs/xfs/xfs_btree.c: In function 'xfs_btree_readahead_lblock':
+| fs/xfs/xfs_btree.c:736: warning: comparison is always true due to limited range of data type
+| fs/xfs/xfs_btree.c:741: warning: comparison is always true due to limited range of data type
 
-Greetings
+left/right = xfs_fsblock_t (32 or 64 bit), NULLDFSBNO = xfs_dfsbno_t (64 bit)
 
+Gr{oetje,eeting}s,
 
-    Elrond
+						Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
 
 _______________________________________________
 xfs mailing list
