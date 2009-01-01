@@ -1,19 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n01JLI8J015967 for <xfs@oss.sgi.com>; Thu, 1 Jan 2009 13:21:19 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0B3E358275
-	for <xfs@oss.sgi.com>; Thu,  1 Jan 2009 11:21:16 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id hSFeFEWLB3vQ8hzj for
-	<xfs@oss.sgi.com>; Thu, 01 Jan 2009 11:21:16 -0800 (PST)
-Date: Thu, 1 Jan 2009 14:21:16 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] pass XFS_IGET_BULKSTAT to xfs_iget for handle operations
-Message-ID: <20090101192116.GA6986@infradead.org>
+	n01MPuhm030698 for <xfs@oss.sgi.com>; Thu, 1 Jan 2009 16:25:56 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C7F6258593
+	for <xfs@oss.sgi.com>; Thu,  1 Jan 2009 14:25:52 -0800 (PST)
+Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
+	cuda.sgi.com with ESMTP id QE5AUzN63D9LJnXi for
+	<xfs@oss.sgi.com>; Thu, 01 Jan 2009 14:25:52 -0800 (PST)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail.sandeen.net (Postfix) with ESMTP id 9A64DAC6273
+	for <xfs@oss.sgi.com>; Thu,  1 Jan 2009 16:25:19 -0600 (CST)
+Message-ID: <495D42CE.6060806@sandeen.net>
+Date: Thu, 01 Jan 2009 16:25:18 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
+Subject: [PATCH] create xfstests install target
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,58 +30,86 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Mario Becroft <mb@gem.win.co.nz>
+To: xfs-oss <xfs@oss.sgi.com>
 
-NFS clients or users of the handle ioctls can pass us arbitrary inode
-numbers through the exportfs interface.  Make sure we use the
-XFS_IGET_BULKSTAT so that these don't cause shutdowns due to the corruption
-checks.  Also translate the EINVAL we get back for invalid inode clusters
-into an ESTALE which is more appropinquate, and remove the useless check
-for a NULL inode on a successfull xfs_iget return.
+Not sure what the best location for this is in the end, but that's
+just a one-line change in builddefs.in if it should move.  Currently
+it goes to whatever configure thinks "libexecdir" is.
 
-I have a testcase to reproduce this using the handle interface which
-I will submit to xfsqa.
+Once we have an install target we can probably hook this up
+to makepkgs etc, too, and even publish tarballs & packages.  :)
 
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
 
-Reported-by: Mario Becroft <mb@gem.win.co.nz>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Index: xfs/fs/xfs/linux-2.6/xfs_export.c
+Index: xfstests-dev.work/Makefile
 ===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_export.c	2009-01-01 20:06:06.145674550 +0100
-+++ xfs/fs/xfs/linux-2.6/xfs_export.c	2009-01-01 20:14:59.673658382 +0100
-@@ -126,11 +126,26 @@ xfs_nfs_get_inode(
- 	if (ino == 0)
- 		return ERR_PTR(-ESTALE);
+--- xfstests-dev.work.orig/Makefile
++++ xfstests-dev.work/Makefile
+@@ -62,7 +62,21 @@ $(DMAPI_MAKEFILE):
+ aclocal.m4::
+ 	aclocal --acdir=`pwd`/m4 --output=$@
  
--	error = xfs_iget(mp, NULL, ino, 0, XFS_ILOCK_SHARED, &ip, 0);
--	if (error)
-+	/*
-+	 * The XFS_IGET_BULKSTAT means that an invalid inode number is just
-+	 * fine and not an indication of a corrupted filesystem.  Because
-+	 * clients can send any kind of invalid file handle, e.g. after
-+	 * a restore on the server we have to deal with this case gracefully.
-+	 */
-+	error = xfs_iget(mp, NULL, ino, XFS_IGET_BULKSTAT,
-+			 XFS_ILOCK_SHARED, &ip, 0);
-+	if (error) {
-+		/*
-+		 * EINVAL means the inode cluster doesn't exist anymore.
-+		 * This implies the filehandle is stale, so we should
-+		 * translate it here.
-+		 * We don't use ESTALE directly down the chain to not
-+		 * confuse applications using bulkstat that expect EINVAL.
-+		 */
-+		if (error == EINVAL)
-+			error = ESTALE;
- 		return ERR_PTR(-error);
--	if (!ip)
--		return ERR_PTR(-EIO);
-+	}
+-install install-dev install-lib:
++install: default $(addsuffix -install,$(SUBDIRS))
++	$(INSTALL) -m 755 -d $(PKG_LIB_DIR)
++	$(INSTALL) -m 755 check $(PKG_LIB_DIR)
++	$(INSTALL) -m 755 [0-9]?? $(PKG_LIB_DIR)
++	$(INSTALL) -m 755 run.* $(PKG_LIB_DIR)
++	$(INSTALL) -m 644 group $(PKG_LIB_DIR)
++	$(INSTALL) -m 644 randomize.awk $(PKG_LIB_DIR)
++	$(INSTALL) -m 644 [0-9]??.* $(PKG_LIB_DIR)
++	$(INSTALL) -m 644 common* $(PKG_LIB_DIR)
++
++# Nothing.
++install-dev install-lib:
++
++%-install:
++	$(MAKE) -C $* install
  
- 	if (ip->i_d.di_gen != generation) {
- 		xfs_iput_new(ip, XFS_ILOCK_SHARED);
+ realclean distclean: clean
+ 	rm -f $(LDIRT) $(CONFIGURE)
+Index: xfstests-dev.work/include/builddefs.in
+===================================================================
+--- xfstests-dev.work.orig/include/builddefs.in
++++ xfstests-dev.work/include/builddefs.in
+@@ -27,6 +27,8 @@ PKG_RELEASE     = @pkg_release@
+ PKG_VERSION     = @pkg_version@
+ PKG_PLATFORM    = @pkg_platform@
+ PKG_DISTRIBUTION= @pkg_distribution@
++PKG_SBIN_DIR    = @sbindir@
++PKG_LIB_DIR     = @libexecdir@@libdirsuffix@/@pkg_name@
+ 
+ CC              = @cc@
+ AWK             = @awk@
+Index: xfstests-dev.work/ltp/Makefile
+===================================================================
+--- xfstests-dev.work.orig/ltp/Makefile
++++ xfstests-dev.work/ltp/Makefile
+@@ -49,3 +49,8 @@ ifeq ($(HAVE_AIO), true)
+ aio-stress: aio-stress.c
+ 	$(LINKTEST) $(LIBAIO) $(LDLIBS)
+ endif
++
++install:
++	$(INSTALL) -m 755 -d $(PKG_LIB_DIR)/ltp
++	$(INSTALL) -m 755 $(TARGETS) $(PKG_LIB_DIR)/ltp
++
+Index: xfstests-dev.work/src/Makefile
+===================================================================
+--- xfstests-dev.work.orig/src/Makefile
++++ xfstests-dev.work/src/Makefile
+@@ -126,3 +126,10 @@ open_unlink: open_unlink.o $(LIBHANDLE)
+ 	$(LINKTEST) $(LIBHANDLE) $(LDLIBS)
+ 
+ endif
++
++install:
++	$(INSTALL) -m 755 -d $(PKG_LIB_DIR)/src
++	$(INSTALL) -m 755 $(TARGETS) $(PKG_LIB_DIR)/src
++	$(INSTALL) -m 755 fill2attr fill2fs $(PKG_LIB_DIR)/src
++	$(INSTALL) -m 755 fill2fs_check scaleread.sh $(PKG_LIB_DIR)/src
++	$(INSTALL) -m 644 dumpfile $(PKG_LIB_DIR)/src
 
 _______________________________________________
 xfs mailing list
