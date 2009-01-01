@@ -1,16 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n01HHEWX007587 for <xfs@oss.sgi.com>; Thu, 1 Jan 2009 11:17:15 -0600
-Date: Thu, 1 Jan 2009 12:17:13 -0500
+	n01HbvxJ009025 for <xfs@oss.sgi.com>; Thu, 1 Jan 2009 11:37:57 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B47201BF7CEC
+	for <xfs@oss.sgi.com>; Thu,  1 Jan 2009 09:37:56 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id vwkoX3dO19H3RclK for
+	<xfs@oss.sgi.com>; Thu, 01 Jan 2009 09:37:56 -0800 (PST)
+Date: Thu, 1 Jan 2009 12:37:56 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Feature requests, was Re: XFS internal error when NFS client
-	accesses nonexistent inode
-Message-ID: <20090101171713.GB18020@infradead.org>
+Subject: Re: XFS internal error when NFS client accesses nonexistent inode
+Message-ID: <20090101173756.GA31126@infradead.org>
 References: <87zlicfncr.fsf@server.ak.quickcircuit.co.nz>
+	<20090101171409.GA18020@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <87zlicfncr.fsf@server.ak.quickcircuit.co.nz>
+In-Reply-To: <20090101171409.GA18020@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,33 +32,23 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Mario Becroft <mb@gem.win.co.nz>
 Cc: xfs@oss.sgi.com
 
-On Thu, Jan 01, 2009 at 03:09:08AM +1300, Mario Becroft wrote:
-> While I am writing, two things I wish XFS could do, and two more that
-> would be jolly nice to have:
-> 
-> 1. shrink filesystems
+This should cure your shutdowns on a 2.6.27-ish codebase:
 
-http://xfs.org/index.php/Shrinking_Support
 
-> 2. dump/restore preserving inode numbers
 
-That's very hard to do, given that inode numbers encode the location
-on disk.  To support your NFS exporting scenario you would also have
-to preserve the generation number, which also forms part of the nfs file
-handle.
-
-> 3. high-performance dump with multi-threaded reading to fully utilise
-> disk throughput
-
-Didn't xfsdump in IRIX have some sort of multi-stream support.  Bill, do
-you remember anything like that?
-
-> 4. on-line xfs_check/repair
-
-Well, you can check online, it's just not going to give good results.
-Using snaphots you can easily check online, and with a little hack
-even repair, but you'd still have to reboot to then use the repaired
-filesystem.
+Index: btrfs-unstable/fs/xfs/linux-2.6/xfs_export.c
+===================================================================
+--- btrfs-unstable.orig/fs/xfs/linux-2.6/xfs_export.c	2009-01-01 18:34:39.868671500 +0100
++++ btrfs-unstable/fs/xfs/linux-2.6/xfs_export.c	2009-01-01 18:35:37.224782654 +0100
+@@ -127,8 +127,8 @@ xfs_nfs_get_inode(
+ 	if (ino == 0)
+ 		return ERR_PTR(-ESTALE);
+ 
+-	error = xfs_iget(mp, NULL, ino, 0, XFS_ILOCK_SHARED, &ip, 0);
++	error = xfs_iget(mp, NULL, ino, XFS_IGET_BULKSTAT, XFS_ILOCK_SHARED, &ip, 0);
+ 		return ERR_PTR(-error);
+ 	if (!ip)
+ 		return ERR_PTR(-EIO);
 
 _______________________________________________
 xfs mailing list
