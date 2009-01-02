@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n02I3qvL019163 for <xfs@oss.sgi.com>; Fri, 2 Jan 2009 12:03:53 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A17BB1BFA1F9
-	for <xfs@oss.sgi.com>; Fri,  2 Jan 2009 10:03:51 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id eivplr97bIU4HsLK for
-	<xfs@oss.sgi.com>; Fri, 02 Jan 2009 10:03:51 -0800 (PST)
-Date: Fri, 2 Jan 2009 13:03:20 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests Makepkgs framework, builds rpms
-Message-ID: <20090102180320.GD29506@infradead.org>
-References: <495D42CE.6060806@sandeen.net> <495D8E64.5070206@sandeen.net>
+	n02IQPJq021093 for <xfs@oss.sgi.com>; Fri, 2 Jan 2009 12:26:25 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0C9FF5A528
+	for <xfs@oss.sgi.com>; Fri,  2 Jan 2009 10:26:23 -0800 (PST)
+Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
+	cuda.sgi.com with ESMTP id Jt1qVstZD6xFBt9E for
+	<xfs@oss.sgi.com>; Fri, 02 Jan 2009 10:26:23 -0800 (PST)
+Message-ID: <495E5C4D.80307@sandeen.net>
+Date: Fri, 02 Jan 2009 12:26:21 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <495D8E64.5070206@sandeen.net>
+Subject: Re: [PATCH] create xfstests install target
+References: <495D42CE.6060806@sandeen.net>
+	<20090102180247.GC29506@infradead.org>
+In-Reply-To: <20090102180247.GC29506@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,26 +28,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Jan 01, 2009 at 09:47:48PM -0600, Eric Sandeen wrote:
-> With the install target in place, this lets us do Makepkgs:
+Christoph Hellwig wrote:
+> On Thu, Jan 01, 2009 at 04:25:18PM -0600, Eric Sandeen wrote:
+>> Not sure what the best location for this is in the end, but that's
+>> just a one-line change in builddefs.in if it should move.  Currently
+>> it goes to whatever configure thinks "libexecdir" is.
 > 
-> == dist, log is Logs/dist
-> Wrote: /root/src/xfstests-dev.work/build/xfstests-1.0.0.src.tar.gz
-> Wrote: /root/src/xfstests-dev.work/build/tar/xfstests-1.0.0.tar.gz
-> Wrote: /root/src/xfstests-dev.work/build/rpm/xfstests-1.0.0-1.src.rpm
-> Wrote: /root/src/xfstests-dev.work/build/rpm/xfstests-1.0.0-1.x86_64.rpm
+> I think that's incorrect. libexecdir is /usr/lib for FHS or /usr/libexec
+> for BSDish filesystem layouts, but /use should be read-only mountable.
 > 
-> It's all largely cut & pasted from the xfsprogs framework.
-> I'll let the debian elves do the things they do for debian 
-> packaging if they're interested...
-> 
-> xfstests could use more work to make it package-friendly but this
-> is a good start at least.
+> Maybe /var/lib/xfstests as a start?  That seems to be the dumping ground
+> for random stuff that needs write access.  
 
-You missed the Debian packaging :)  I'll give it a try.
+Ok, easy enough.
+
+> Even better would be keeping
+> the scripts under /usr/lib and the output in /var/lib, but that might
+> be too much work.
+
+Yeah at least right now I'm not that highly motivated.  :)
+
+>> +PKG_SBIN_DIR    = @sbindir@
+> 
+> This one doesn't actually seem to be used.
+
+true, it's not ... I put it in there thinking about putting a wrapper in
+sbin or /usr/sbin so tests could be launched from root's path ...
+
+-Eric
+
+> Otherwise looks good to me.
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
