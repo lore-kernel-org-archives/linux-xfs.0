@@ -1,18 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n029wiDc016600 for <xfs@oss.sgi.com>; Fri, 2 Jan 2009 03:58:44 -0600
-Date: Fri, 2 Jan 2009 04:58:42 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [GIT PULL] XFS update for 2.6.29
-Message-ID: <20090102095842.GA24652@infradead.org>
-References: <20081230030845.A4F0558AE206@chook.melbourne.sgi.com>
-	<Pine.LNX.4.64.0901011048090.14380@anakin>
-	<20090101170329.GA17892@infradead.org>
-	<Pine.LNX.4.64.0901021056360.14380@anakin>
+	n02A39bi016919 for <xfs@oss.sgi.com>; Fri, 2 Jan 2009 04:03:10 -0600
+Received: from parsec.stupidest.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 76B9D59390
+	for <xfs@oss.sgi.com>; Fri,  2 Jan 2009 02:03:08 -0800 (PST)
+Received: from parsec.stupidest.org (splinter.f00f.org [216.75.21.205]) by
+	cuda.sgi.com with ESMTP id Z1OJhZ17qxE6vcz9 for
+	<xfs@oss.sgi.com>; Fri, 02 Jan 2009 02:03:08 -0800 (PST)
+Received: from stupidest.org (unknown [10.0.1.1])
+	by parsec.stupidest.org (Postfix) with ESMTP id 25B74AEFA4
+	for <xfs@oss.sgi.com>; Fri,  2 Jan 2009 02:03:07 -0800 (PST)
+Date: Fri, 2 Jan 2009 02:03:06 -0800
+From: Chris Wedgwood <cw@f00f.org>
+Subject: [PATCH] fix xfs_fsr insufficient space check
+Message-ID: <20090102100306.GA36830@puku.stupidest.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0901021056360.14380@anakin>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,18 +29,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Linux Kernel Development <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+To: xfs@oss.sgi.com
 
-On Fri, Jan 02, 2009 at 10:57:43AM +0100, Geert Uytterhoeven wrote:
-> > Hmm, can't reproduce it here with CONFIG_LBD=n on x86, but the following
-> 
-> x86-32 or -64?
-> 
-> It may also depend on the compiler version. I have gcc version 4.1.2 20061115
-> (prerelease) (Debian 4.1.1-21).
+The xfs_fsr insufficient check should consider the blocks used not the
+file length.  Without this change it is not possible to reorganize
+sparse files when file size exceeds the free space.
 
-32 bit, gcc version 4.3.2 (Debian 4.3.2-1) 
+Signed-off-by: Chris Wedgwood <cw@f00f.org>
+
+
+--- fsr/xfs_fsr.c.orig	2009-01-02 01:51:03.049181411 -0800
++++ fsr/xfs_fsr.c	2009-01-02 01:53:56.297180891 -0800
+@@ -912,9 +912,9 @@
+ 	}
+ 	bsize = vfss.f_frsize ? vfss.f_frsize : vfss.f_bsize;
+ 
+-	if (statp->bs_size > ((vfss.f_bfree * bsize) - minimumfree)) {
++	if ((statp->bs_blksize * statp->bs_blocks) > ((vfss.f_bfree * bsize) - minimumfree)) {
+ 		fsrprintf(_("insufficient freespace for: %s: "
+-			"size=%lld: ignoring\n"), fname, statp->bs_size);
++			"size=%lld: ignoring\n"), fname, statp->bs_blksize * statp->bs_blocks);
+ 		return 1;
+ 	}
+ 
 
 _______________________________________________
 xfs mailing list
