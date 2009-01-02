@@ -1,20 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n023OYdj020689 for <xfs@oss.sgi.com>; Thu, 1 Jan 2009 21:24:34 -0600
+	n023lrSD022002 for <xfs@oss.sgi.com>; Thu, 1 Jan 2009 21:47:54 -0600
 Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E84F358C99
-	for <xfs@oss.sgi.com>; Thu,  1 Jan 2009 19:24:32 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 702F01BF8A21
+	for <xfs@oss.sgi.com>; Thu,  1 Jan 2009 19:47:49 -0800 (PST)
 Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id 9iR9Q5toQcGjGnns for
-	<xfs@oss.sgi.com>; Thu, 01 Jan 2009 19:24:32 -0800 (PST)
-Message-ID: <495D88EE.2040406@sandeen.net>
-Date: Thu, 01 Jan 2009 21:24:30 -0600
+	cuda.sgi.com with ESMTP id 3QdOpB8Ts97JgPZK for
+	<xfs@oss.sgi.com>; Thu, 01 Jan 2009 19:47:49 -0800 (PST)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail.sandeen.net (Postfix) with ESMTP id CFB4DAC6273
+	for <xfs@oss.sgi.com>; Thu,  1 Jan 2009 21:47:49 -0600 (CST)
+Message-ID: <495D8E64.5070206@sandeen.net>
+Date: Thu, 01 Jan 2009 21:47:48 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: Corruption of in-memory data detected
-References: <169670ec0901011846q1d370e6cu31514519afc8295d@mail.gmail.com>
-In-Reply-To: <169670ec0901011846q1d370e6cu31514519afc8295d@mail.gmail.com>
+Subject: [PATCH] xfstests Makepkgs framework, builds rpms
+References: <495D42CE.6060806@sandeen.net>
+In-Reply-To: <495D42CE.6060806@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,152 +32,208 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Thomas Gutzler <thomas.gutzler@gmail.com>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-Thomas Gutzler wrote:
-> Hi,
-> 
-> I've been running an 8x500G hardware SATA RAID5 on an adaptec 31605
-> controller for a while. The operating system is ubuntu feisty with the
-> 2.6.22-16-server kernel. Recently, I added a disk. After the array
-> rebuild was completed, I kept getting errors from the xfs module such
-> as this one:
-> Dec 30 22:55:39 io kernel: [21844.939832] Filesystem "sda":
-> xfs_iflush: Bad inode 1610669723 magic number 0xec9d, ptr 0xe523eb00
-> Dec 30 22:55:39 io kernel: [21844.939879] xfs_force_shutdown(sda,0x8)
-> called from line 3277 of file
-> /build/buildd/linux-source-2.6.22-2.6.22/fs/xfs/xfs_inode.c.  Return
-> address = 0xf8af263c
-> Dec 30 22:55:39 io kernel: [21844.939885] Filesystem "sda": Corruption
-> of in-memory data detected.  Shutting down filesystem: sda
-> 
-> My first thought was to run memcheck on the machine, which completed
-> several passes without error; the raid controller doesn't report any
-> SMART failures either.
+With the install target in place, this lets us do Makepkgs:
 
-Both good ideas, but note that "Corruption of in-memory data detected"
-doesn't necessarily mean bad memory (though it might, so memcheck was
-prudent).  0xec9d is not the correct magic nr. for an on-disk inode, so
-that's why things went south.  Were there no storage related errors
-prior to this?
+== dist, log is Logs/dist
+Wrote: /root/src/xfstests-dev.work/build/xfstests-1.0.0.src.tar.gz
+Wrote: /root/src/xfstests-dev.work/build/tar/xfstests-1.0.0.tar.gz
+Wrote: /root/src/xfstests-dev.work/build/rpm/xfstests-1.0.0-1.src.rpm
+Wrote: /root/src/xfstests-dev.work/build/rpm/xfstests-1.0.0-1.x86_64.rpm
 
-> After an xfs_repair, which fixed a few things, 
+It's all largely cut & pasted from the xfsprogs framework.
+I'll let the debian elves do the things they do for debian 
+packaging if they're interested...
 
-Knowing which things were fixed might lend some clues ...
+xfstests could use more work to make it package-friendly but this
+is a good start at least.
 
-> I mounted the file
-> system but the error kept reappearing after a few hours unless I
-> mounted read-only. Since xfs_ncheck -i always exited with 'Out of
-> memory'
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
 
-xfs_check takes a ton of memory; xfs_repair much less so
-
-> I decided to reduce the max amount of inodes to 1% (156237488)
-> by running xfs_growfs -m 1 - the total amount of inodes used is still
-> less than 1%. Unfortunately, both xfs_check and xfs_ncheck still say
-> 'out of memory' with 2GB installed.
-
-the max inodes really have no bearing on check or repair memory usage;
-it's just an upper limit on how many inodes *could* be created.
-
-> After the modification, the file system survived for a day until the
-> following happened:
-> Jan  2 09:33:29 io kernel: [232751.699812] BUG: unable to handle
-> kernel paging request at virtual address 0003fffb
-> Jan  2 09:33:29 io kernel: [232751.699848]  printing eip:
-> Jan  2 09:33:29 io kernel: [232751.699863] c017d872
-> Jan  2 09:33:29 io kernel: [232751.699865] *pdpt = 000000003711e001
-> Jan  2 09:33:29 io kernel: [232751.699881] *pde = 0000000000000000
-> Jan  2 09:33:29 io kernel: [232751.699898] Oops: 0002 [#1]
-> Jan  2 09:33:29 io kernel: [232751.699913] SMP
-> Jan  2 09:33:29 io kernel: [232751.699931] Modules linked in: nfs nfsd
-> exportfs lockd sunrpc xt_tcpudp nf_conntrack_ipv4 xt_state
-> nf_conntrack nfnetlink iptable_filter ip_tables x_tables ipv6 ext2
-> mbcache coretemp w83627ehf i2c_isa i2c_core acpi_cpufreq
-> cpufreq_userspace cpufreq_stats cpufreq_powersave cpufreq_ondemand
-> freq_table cpufreq_conservative psmouse serio_raw pcspkr shpchp
-> pci_hotplug evdev intel_agp agpgart xfs sr_mod cdrom pata_jmicron
-> ata_piix sg sd_mod ata_generic ohci1394 ieee1394 ahci libata e1000
-> aacraid scsi_mod uhci_hcd ehci_hcd usbcore thermal processor fan fuse
-> apparmor commoncap
-> Jan  2 09:33:29 io kernel: [232751.700180] CPU:    1
-> Jan  2 09:33:29 io kernel: [232751.700181] EIP:
-> 0060:[__slab_free+50/672]    Not tainted VLI
-> Jan  2 09:33:29 io kernel: [232751.700182] EFLAGS: 00010046
-> (2.6.22-16-server #1)
-> Jan  2 09:33:29 io kernel: [232751.700234] EIP is at __slab_free+0x32/0x2a0
-
-Memory corruption perhaps?
-
-> Jan  2 09:33:29 io kernel: [232751.700252] eax: 0000ffff   ebx:
-> ffffffff   ecx: ffffffff   edx: 000014aa
-> Jan  2 09:33:29 io kernel: [232751.700273] esi: c17fffe0   edi:
-> e6b8e0c0   ebp: f8ac2c8c   esp: c21dfe44
-> Jan  2 09:33:29 io kernel: [232751.700293] ds: 007b   es: 007b   fs:
-> 00d8  gs: 0000  ss: 0068
-> Jan  2 09:33:29 io kernel: [232751.700313] Process kswapd0 (pid: 198,
-> ti=c21de000 task=c21f39f0 task.ti=c21de000)
-> Jan  2 09:33:29 io kernel: [232751.700334] Stack: 00000000 00000065
-> 00000000 fffffffe ffffffff c17fffe0 00000287 e6b8e0c0
-> Jan  2 09:33:29 io kernel: [232751.700378]        00000001 c017e3fe
-> f8ac2c8c cecb7d20 00000001 df2e2600 f8ac2c8c df2e2600
-> Jan  2 09:33:29 io kernel: [232751.700422]        f8d7559c e8247900
-> f8ac5224 df2e2600 f8d7559c e8247900 f8ae1606 00000001
-> Jan  2 09:33:29 io kernel: [232751.700466] Call Trace:
-> Jan  2 09:33:29 io kernel: [232751.700499]  [kfree+126/192] kfree+0x7e/0xc0
-> Jan  2 09:33:29 io kernel: [232751.700519]  [<f8ac2c8c>]
-> xfs_idestroy_fork+0x2c/0xf0 [xfs]
-> Jan  2 09:33:29 io kernel: [232751.700561]  [<f8ac2c8c>]
-> xfs_idestroy_fork+0x2c/0xf0 [xfs]
-> Jan  2 09:33:29 io kernel: [232751.700601]  [<f8ac5224>]
-> xfs_idestroy+0x44/0xb0 [xfs]
-> Jan  2 09:33:29 io kernel: [232751.700640]  [<f8ae1606>]
-> xfs_finish_reclaim+0x36/0x160 [xfs]
-> Jan  2 09:33:29 io kernel: [232751.700681]  [<f8af1c47>]
-> xfs_fs_clear_inode+0x97/0xc0 [xfs]
-> Jan  2 09:33:29 io kernel: [232751.700721]  [clear_inode+143/320]
-> clear_inode+0x8f/0x140
-> Jan  2 09:33:29 io kernel: [232751.700743]  [dispose_list+26/224]
-> dispose_list+0x1a/0xe0
-> Jan  2 09:33:29 io kernel: [232751.700765]
-> [shrink_icache_memory+379/592] shrink_icache_memory+0x17b/0x250
-> Jan  2 09:33:29 io kernel: [232751.700789]  [shrink_slab+279/368]
-> shrink_slab+0x117/0x170
-> Jan  2 09:33:29 io kernel: [232751.700815]  [kswapd+859/1136] kswapd+0x35b/0x470
-> Jan  2 09:33:29 io kernel: [232751.700842]
-> [autoremove_wake_function+0/80] autoremove_wake_function+0x0/0x50
-> Jan  2 09:33:29 io kernel: [232751.700867]  [kswapd+0/1136] kswapd+0x0/0x470
-> Jan  2 09:33:29 io kernel: [232751.700886]  [kthread+66/112] kthread+0x42/0x70
-> Jan  2 09:33:29 io kernel: [232751.700904]  [kthread+0/112] kthread+0x0/0x70
-> Jan  2 09:33:29 io kernel: [232751.700923]
-> [kernel_thread_helper+7/28] kernel_thread_helper+0x7/0x1c
-> Jan  2 09:33:29 io kernel: [232751.700946]  =======================
-> Jan  2 09:33:29 io kernel: [232751.700962] Code: 53 89 cb 83 ec 14 8b
-> 6c 24 28 f0 0f ba 2e 00 19 c0 85 c0 74 0a 8b 06 a8 01 74 ef f3 90 eb
-> f6 f6 06 02 75 48 0f b7 46 0a 8b 56 14 <89> 14 83 0f b7 46 08 89 5e 14
-> 83 e8 01 f6 06 40 66 89 46 08 75
-> Jan  2 09:33:29 io kernel: [232751.701128] EIP: [__slab_free+50/672]
-> __slab_free+0x32/0x2a0 SS:ESP 0068:c21dfe44
-> 
-> Any thoughts what this could be or what could be done to fix it?
-
-seems like maybe something went wrong w/ the raid rebuild, if that's
-when things started going south.  Do you get any storage error related
-messages at all?
-
-Ubuntu knows best what's in this oldish distro kernel, I guess; I don't
-know offhand what might be going wrong.  If they have a debug kernel
-variant, you could run that to see if you get earlier indications of
-problems.
-
-If you can reproduce on a more recent upstream kernel, that would be
-interesting.
-
--Eric
-
-> Cheers,
->   Tom
+Index: xfstests-dev.work/Makepkgs
+===================================================================
+--- /dev/null
++++ xfstests-dev.work/Makepkgs
+@@ -0,0 +1,88 @@
++#! /bin/sh
++#
++#	Make whichever packages have been requested.
++#	Defaults to RPMs.
++#
++LOGDIR=Logs
++
++type=rpm
++verbose=false
++
++MAKE=${MAKE:-make}
++test ! -z "$MAKE" && make=$MAKE
++
++for opt in $*
++do
++	case "$opt" in
++	clean)
++		;; # ignored, kept for backward compatibility
++	rpm)
++		type=rpm ;;
++	debian)
++		type=debian ;;
++	verbose)
++		verbose=true ;;
++	*)
++		echo "Usage: Makepkgs [verbose] [debian|rpm]"; exit 1 ;;
++	esac
++done
++
++# start with a clean manifest
++test -f files.rpm && rm -f files.rpm
++test -f filesdevel.rpm && rm -f filesdevel.rpm
++test -f fileslib.rpm && rm -f fileslib.rpm
++
++test ! -d $LOGDIR && mkdir $LOGDIR
++rm -rf $LOGDIR/* > /dev/null 2>&1
++
++# build Debian packages, cleans itself before starting
++SUDO=${SUDO:-sudo}
++test ! -z "$SUDO" && sudo=$SUDO
++if [ $type = debian ] ; then
++	LOGDEB=`pwd`
++	LOGDEB=../`basename $LOGDEB`.log
++	echo "== Debian build, log is $LOGDEB"; echo
++	if $verbose ; then
++		dpkg-buildpackage -r$SUDO | tee $LOGDEB
++	else
++		dpkg-buildpackage -r$SUDO > $LOGDEB || exit 1
++	fi
++	exit 0
++fi
++
++# build RPM packages - manual clean before starting
++echo "== clean, log is $LOGDIR/clean"
++if $verbose ; then
++	$MAKE clean 2>&1 | tee $LOGDIR/clean
++else
++	$MAKE clean > $LOGDIR/clean 2>&1  || exit 1
++fi
++
++echo
++echo "== configure, log is $LOGDIR/configure"
++rm -f .census	# force configure to run here
++if $verbose ; then
++	$MAKE configure 2>&1 | tee $LOGDIR/configure
++else
++	$MAKE configure > $LOGDIR/configure 2>&1 || exit 1
++fi
++
++echo
++echo "== default, log is $LOGDIR/default"
++if $verbose ; then
++	$MAKE default 2>&1 | tee $LOGDIR/default
++else
++	$MAKE default > $LOGDIR/default 2>&1 || exit 1
++fi
++
++echo
++echo "== dist, log is $LOGDIR/dist"
++[ ! -f .census ] && touch .census
++if $verbose ; then
++	$MAKE -C build dist 2>&1 | tee $LOGDIR/dist
++else
++	$MAKE -C build dist > $LOGDIR/dist 2>&1 || exit 1
++	grep '^Wrote:' $LOGDIR/dist | sed -e 's/\.\.\/\.\.\///'
++fi
++
++exit 0
+Index: xfstests-dev.work/build/rpm/macros.template
+===================================================================
+--- /dev/null
++++ xfstests-dev.work/build/rpm/macros.template
+@@ -0,0 +1,30 @@
++#
++# rpmrc.template
++#
++# Template to fudge rpm directory structure inside IRIX-like build
++# environment
++
++# Force 386 build on all platforms
++%_target i386-pc-linux
++%_target_cpu i386
++%_target_os linux
++
++# topdir == $(WORKAREA)
++%_topdir %topdir%
++
++# Following directories are specific to the topdir
++# This is where build is done. In our case it's the same as $WORKAREA
++%_builddir %topdir%
++
++# This is where foo.1.99.tar.gz is living in the real world.
++# Be careful not to run full rpm build as it will override the sources
++%_sourcedir %topdir%/build
++
++# This is where binary RPM and source RPM would end up
++%_rpmdir    %topdir%/build/rpm
++%_srcrpmdir %topdir%/build/rpm
++%_specdir   %topdir%/build/rpm
++
++# Leave RPM files in the same directory - we're not building for
++# multiple architectures
++%_rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm
+Index: xfstests-dev.work/build/rpm/xfstests.spec.in
+===================================================================
+--- /dev/null
++++ xfstests-dev.work/build/rpm/xfstests.spec.in
+@@ -0,0 +1,49 @@
++Summary: XFS regression test suite
++Name: @pkg_name@
++Version: @pkg_version@
++Release: @pkg_release@
++Distribution: @pkg_distribution@
++Packager: Silicon Graphics, Inc. <http://www.sgi.com/>
++BuildRoot: @build_root@
++BuildRequires:  autoconf, xfsprogs-devel, e2fsprogs-devel
++BuildREquires:  libacl-devel, libattr-devel, libaio-devel
++Requires:       bash, xfsprogs, xfsdump, perl, acl, attr, bind-utils
++Requires:       bc, indent, quota
++Source: @pkg_name@-@pkg_version@.src.tar.gz
++License: GPL2+
++Vendor: Silicon Graphics, Inc.
++URL: http://oss.sgi.com/projects/xfs/
++Group: System Environment/Base
++
++%description
++The XFS regression test suite.  Also includes some support for
++acl, attr, dmapi, udf, and nfs testing.  Contains around 200 specific tests
++for userspace & kernelspace.
++
++%prep
++if [ -f .census ] ; then
++   if [ ! -d ${RPM_PACKAGE_NAME}-${RPM_PACKAGE_VERSION} ] ; then
++      ln -s . ${RPM_PACKAGE_NAME}-${RPM_PACKAGE_VERSION}
++   fi
++else
++%setup
++INSTALL_USER=root
++INSTALL_GROUP=root
++export INSTALL_USER INSTALL_GROUP
++@make@ configure
++fi
++
++%build
++@make@
++
++%install
++DIST_ROOT="$RPM_BUILD_ROOT"
++DIST_INSTALL=`pwd`/install.manifest
++export DIST_ROOT DIST_INSTALL
++@make@ install DIST_MANIFEST="$DIST_INSTALL"
++@make@ -C build/rpm rpmfiles DIST_MANIFEST="$DIST_INSTALL"
++
++%clean
++rm -rf $RPM_BUILD_ROOT
++
++%files -f build/rpm/rpmfiles
 
 _______________________________________________
 xfs mailing list
