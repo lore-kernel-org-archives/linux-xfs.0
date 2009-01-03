@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n033l1of027188 for <xfs@oss.sgi.com>; Fri, 2 Jan 2009 21:47:02 -0600
+	n0349bxs028615 for <xfs@oss.sgi.com>; Fri, 2 Jan 2009 22:09:37 -0600
 Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 026525BCE7
-	for <xfs@oss.sgi.com>; Fri,  2 Jan 2009 19:47:00 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 90D23175A868
+	for <xfs@oss.sgi.com>; Fri,  2 Jan 2009 20:09:34 -0800 (PST)
 Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id O1Wwsu4jKuEFjGeo for
-	<xfs@oss.sgi.com>; Fri, 02 Jan 2009 19:47:00 -0800 (PST)
-Message-ID: <495EDFB2.30603@sandeen.net>
-Date: Fri, 02 Jan 2009 21:46:58 -0600
+	cuda.sgi.com with ESMTP id 9A26RJwCzaH73DZP for
+	<xfs@oss.sgi.com>; Fri, 02 Jan 2009 20:09:34 -0800 (PST)
+Message-ID: <495EE4FC.9080808@sandeen.net>
+Date: Fri, 02 Jan 2009 22:09:32 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] create xfstests install target
-References: <495D42CE.6060806@sandeen.net>	<20090102180247.GC29506@infradead.org>
-	<495E5C4D.80307@sandeen.net>
-In-Reply-To: <495E5C4D.80307@sandeen.net>
+Subject: Re: oopses in xfs_attr_shortform_* on kerneloops.org
+References: <495D91A0.4050304@sandeen.net>
+	<20090102175911.GA29506@infradead.org>
+In-Reply-To: <20090102175911.GA29506@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,22 +31,27 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-Eric Sandeen wrote:
-> Christoph Hellwig wrote:
->> On Thu, Jan 01, 2009 at 04:25:18PM -0600, Eric Sandeen wrote:
->>> Not sure what the best location for this is in the end, but that's
->>> just a one-line change in builddefs.in if it should move.  Currently
->>> it goes to whatever configure thinks "libexecdir" is.
->> I think that's incorrect. libexecdir is /usr/lib for FHS or /usr/libexec
->> for BSDish filesystem layouts, but /use should be read-only mountable.
+Christoph Hellwig wrote:
+> On Thu, Jan 01, 2009 at 10:01:36PM -0600, Eric Sandeen wrote:
+>> I noticed this on kerneloops.org and pinged Christoph about it but I'll
+>> go ahead & point it out here & file a bug so it doesn't get lost:
 >>
->> Maybe /var/lib/xfstests as a start?  That seems to be the dumping ground
->> for random stuff that needs write access.  
+>> http://www.kerneloops.org/search.php?search=xfs_attr_shortform&btnG=Function+Search
+>>
+>> would seem to indicate a problem, though not a (recent) regression anyway.
 > 
-> Ok, easy enough.
+> Yeah, I've been looking into and the disassemly looks like we have
+> a NULL attribut fork pointer for some reason.  I did some poking
+> around in the code and couldn't a cause for it.  So if anyone of
+> the kerneloops submitters actually is on the list and can reproduce
+> it that would be extremly helpful.
 
-Or so one might think.  Anyone good with autoconf who can tell me how
-the *!@% to specify /var/lib ?
+This *might* be a clue:
+
+http://article.gmane.org/gmane.comp.file-systems.xfs.general/22156
+
+one of those oopses, and associated xfs_repair output for the fs in
+question... doesn't make anything clearer to me, though, offhand.
 
 -Eric
 
