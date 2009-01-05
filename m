@@ -1,14 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n053983T016300 for <xfs@oss.sgi.com>; Sun, 4 Jan 2009 21:09:09 -0600
-Message-ID: <49617A4D.2090200@sgi.com>
-Date: Mon, 05 Jan 2009 14:11:09 +1100
+	n053PMCi017454 for <xfs@oss.sgi.com>; Sun, 4 Jan 2009 21:25:22 -0600
+Message-ID: <49617E1F.7070305@sgi.com>
+Date: Mon, 05 Jan 2009 14:27:27 +1100
 From: Lachlan McIlroy <lachlan@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH, RFC] xfs_repair: allow filesystems with a single AG
-References: <20081224231901.GA652@infradead.org>
-In-Reply-To: <20081224231901.GA652@infradead.org>
+Subject: Re: [GIT PULL] XFS update for 2.6.29
+References: <20081230030845.A4F0558AE206@chook.melbourne.sgi.com>
+	<200812311419.10199.nickpiggin@yahoo.com.au>
+In-Reply-To: <200812311419.10199.nickpiggin@yahoo.com.au>
 Reply-To: lachlan@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
@@ -22,85 +23,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Nick Piggin <nickpiggin@yahoo.com.au>
 Cc: xfs@oss.sgi.com
 
-Looks fine to me but I feel that repair is compromised without the second
-SB so we should fix mkfs too to prevent people from creating single AG
-filesystems.
+Nick Piggin wrote:
+> On Tuesday 30 December 2008 14:08:45 Lachlan McIlroy wrote:
+>> The following changes since commit
+>> 3c92ec8ae91ecf59d88c798301833d7cf83f2179: Linus Torvalds (1):
+>>         Merge branch 'next' of git://git.kernel.org/.../paulus/powerpc
+>>
+>> are available in the git repository at:
+>>
+>>   git://oss.sgi.com/oss/git/xfs/xfs.git for-linus
+> 
+> Any reason you're not merging those vmap patches?
+> 
 
-Christoph Hellwig wrote:
-> Currently xfs_repair bails out on a filesystem with just a single AG.
-> But that's a perfectly valid configureation, so we should allow it.
-> 
-> Skip the geomery validation because we simply can't do it if we don't
-> have a secondary SB, and make sure to take the internal log into account
-> when guestimating the first inode cluster.
-> 
-> I'll also cook up a testcase for repair on single AG filesystems.
-> 
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reported-By: Arkadiusz Miskiewicz <arekm@maven.pl>
-> 
-> Index: xfsprogs/repair/sb.c
-> ===================================================================
-> --- xfsprogs.orig/repair/sb.c	2008-12-24 23:36:29.946033933 +0100
-> +++ xfsprogs/repair/sb.c	2008-12-24 23:42:08.101044710 +0100
-> @@ -773,14 +773,17 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
->  		break;
->  	case 1:
->  		/*
-> -		 * just report the geometry info and get out.
-> -		 * refuse to run further unless the force (-F)
-> -		 * option is in effect.
-> +		 * If we only have a single allocation group there is no
-> +		 * secondary superblock that we can use to verify the geometry
-> +		 * information.  Not much we can do here, as we don't want
-> +		 * to prevent the user from checking the filesystem.
-> +		 *
-> +		 * XXX(hch): We should allow putting a secondary superblock
-> +		 *	     into the last sector of a filesystem to so that
-> +		 *	     we can still have a backup for single allocation
-> +		 *	     group filesystems.
->  		 */
-> -		if (!force_geo)  {
-> -			do_warn(_("Only one AG detected - cannot proceed.\n"));
-> -			exit(1);
-> -		}
-> +		break;
->  	default:
->  		/*
->  		 * at least half of the probed superblocks have
-> Index: xfsprogs/repair/xfs_repair.c
-> ===================================================================
-> --- xfsprogs.orig/repair/xfs_repair.c	2008-12-25 00:00:09.116033372 +0100
-> +++ xfsprogs/repair/xfs_repair.c	2008-12-25 00:07:50.295036179 +0100
-> @@ -409,6 +409,19 @@ calc_mkfs(xfs_mount_t *mp)
->  	fino_bno = inobt_root + XFS_MIN_FREELIST_RAW(1, 1, mp) + 1;
->  
->  	/*
-> +	 * If we only have a single allocation group the log is also allocated
-> +	 * in the first allocation group and we need to add the number of
-> +	 * blocks used by the log to the above calculation.
-> +	 * All this of course doesn't apply if we have an external log.
-> +	 */
-> +	if (mp->m_sb.sb_agcount == 1 && mp->m_sb.sb_logstart) {
-> +		/*
-> +		 * XXX(hch): verify that sb_logstart makes sense?
-> +		 */
-> +		 fino_bno += mp->m_sb.sb_logblocks;
-> +	}
-> +
-> +	/*
->  	 * ditto the location of the first inode chunks in the fs ('/')
->  	 */
->  	if (xfs_sb_version_hasdalign(&mp->m_sb) && do_inoalign)  {
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Sorry Nick, I didn't realise we missed them.  Can you provide a pointer
+to them and I'll pull them in.
+
+Lachlan
 
 _______________________________________________
 xfs mailing list
