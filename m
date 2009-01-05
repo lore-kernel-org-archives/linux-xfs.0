@@ -1,23 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n051mQT5011760 for <xfs@oss.sgi.com>; Sun, 4 Jan 2009 19:48:26 -0600
-Received: from mx1.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 126585EED6
-	for <xfs@oss.sgi.com>; Sun,  4 Jan 2009 17:48:24 -0800 (PST)
-Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
-	with ESMTP id gCOPWUwFBhxsHUgl for <xfs@oss.sgi.com>;
-	Sun, 04 Jan 2009 17:48:24 -0800 (PST)
-Date: Mon, 5 Jan 2009 02:48:21 +0100
-From: Nick Piggin <npiggin@suse.de>
-Subject: Re: BUG: soft lockup - is this XFS problem?
-Message-ID: <20090105014821.GA367@wotan.suse.de>
-References: <gifgp1$8ic$1@ger.gmane.org> <20081223171259.GA11945@infradead.org>
-	<20081230042333.GC27679@wotan.suse.de>
-	<20090103214443.GA6612@infradead.org>
-Mime-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20090103214443.GA6612@infradead.org>
+	n053983T016300 for <xfs@oss.sgi.com>; Sun, 4 Jan 2009 21:09:09 -0600
+Message-ID: <49617A4D.2090200@sgi.com>
+Date: Mon, 05 Jan 2009 14:11:09 +1100
+From: Lachlan McIlroy <lachlan@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH, RFC] xfs_repair: allow filesystems with a single AG
+References: <20081224231901.GA652@infradead.org>
+In-Reply-To: <20081224231901.GA652@infradead.org>
+Reply-To: lachlan@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,99 +23,84 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Peter Klotz <peter.klotz@aon.at>, linux-kernel@vger.kernel.org, Roman Kononov <kernel@kononov.ftml.net>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Sat, Jan 03, 2009 at 04:44:43PM -0500, Christoph Hellwig wrote:
-> On Tue, Dec 30, 2008 at 05:23:33AM +0100, Nick Piggin wrote:
-> > On Tue, Dec 23, 2008 at 12:12:59PM -0500, Christoph Hellwig wrote:
-> > > 
-> > > Nick, I've seen various reports like this by Roman.  It seems to be
-> > > caused by an interaction of the lockless pagecache with the xfs
-> > > I/O code.  Any idea what might be wrong here:
-> > 
-> > Hmm, it could get into a loop here if there is a page in the pagecache
-> > with a zero refcount, which might be a problem with XFS... other looping
-> > conditions might indicate a problem iwth lockless pagecache or radix
-> > tree. It would be very helpful to know what condition it is looping on...
+Looks fine to me but I feel that repair is compromised without the second
+SB so we should fix mkfs too to prevent people from creating single AG
+filesystems.
+
+Christoph Hellwig wrote:
+> Currently xfs_repair bails out on a filesystem with just a single AG.
+> But that's a perfectly valid configureation, so we should allow it.
 > 
-> See http://oss.sgi.com/bugzilla/show_bug.cgi?id=805
-
-OK.. Hmm, well here is a modification to your patch which might help further.
-I'll see if I can reproduce it here meanwhile.
-
----
- mm/filemap.c |   29 +++++++++++++++++++++++++----
- 1 file changed, 25 insertions(+), 4 deletions(-)
-
-Index: linux-2.6/mm/filemap.c
-===================================================================
---- linux-2.6.orig/mm/filemap.c
-+++ linux-2.6/mm/filemap.c
-@@ -770,11 +770,13 @@ EXPORT_SYMBOL(find_or_create_page);
-  * find_get_pages() returns the number of pages which were found.
-  */
- unsigned find_get_pages(struct address_space *mapping, pgoff_t start,
--			    unsigned int nr_pages, struct page **pages)
-+			    unsigned int nr_pages,
-+			    struct page **pages)
- {
- 	unsigned int i;
- 	unsigned int ret;
- 	unsigned int nr_found;
-+	int locked = 0;
- 
- 	rcu_read_lock();
- restart:
-@@ -785,27 +787,46 @@ restart:
- 		struct page *page;
- repeat:
- 		page = radix_tree_deref_slot((void **)pages[i]);
--		if (unlikely(!page))
-+		if (unlikely(!page)) {
-+			if (printk_ratelimit())
-+				printk(KERN_INFO "unable to deref page\n");
- 			continue;
-+		}
-+
- 		/*
- 		 * this can only trigger if nr_found == 1, making livelock
- 		 * a non issue.
- 		 */
--		if (unlikely(page == RADIX_TREE_RETRY))
-+		if (unlikely(page == RADIX_TREE_RETRY)) {
-+			printk(KERN_INFO "got RADIX_TREE_RETRY\n");
- 			goto restart;
-+		}
- 
--		if (!page_cache_get_speculative(page))
-+		if (!page_cache_get_speculative(page)) {
-+			/* If the page is in the radix-tree, and the radix-tree
-+			 * is locked, the page must have a non-zero refcount */
-+			BUG_ON(locked);
-+			printk(KERN_INFO "page_cache_get failed\n");
-+			spin_lock_irq(&mapping->tree_lock);
-+			locked = 1;
- 			goto repeat;
-+		}
- 
- 		/* Has the page moved? */
- 		if (unlikely(page != *((void **)pages[i]))) {
-+			BUG_ON(locked);
-+			printk(KERN_INFO "page moved\n");
- 			page_cache_release(page);
-+			spin_lock_irq(&mapping->tree_lock);
-+			locked = 1;
- 			goto repeat;
- 		}
- 
- 		pages[ret] = page;
- 		ret++;
- 	}
-+	if (locked)
-+		spin_unlock_irq(&mapping->tree_lock);
- 	rcu_read_unlock();
- 	return ret;
- }
+> Skip the geomery validation because we simply can't do it if we don't
+> have a secondary SB, and make sure to take the internal log into account
+> when guestimating the first inode cluster.
+> 
+> I'll also cook up a testcase for repair on single AG filesystems.
+> 
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reported-By: Arkadiusz Miskiewicz <arekm@maven.pl>
+> 
+> Index: xfsprogs/repair/sb.c
+> ===================================================================
+> --- xfsprogs.orig/repair/sb.c	2008-12-24 23:36:29.946033933 +0100
+> +++ xfsprogs/repair/sb.c	2008-12-24 23:42:08.101044710 +0100
+> @@ -773,14 +773,17 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
+>  		break;
+>  	case 1:
+>  		/*
+> -		 * just report the geometry info and get out.
+> -		 * refuse to run further unless the force (-F)
+> -		 * option is in effect.
+> +		 * If we only have a single allocation group there is no
+> +		 * secondary superblock that we can use to verify the geometry
+> +		 * information.  Not much we can do here, as we don't want
+> +		 * to prevent the user from checking the filesystem.
+> +		 *
+> +		 * XXX(hch): We should allow putting a secondary superblock
+> +		 *	     into the last sector of a filesystem to so that
+> +		 *	     we can still have a backup for single allocation
+> +		 *	     group filesystems.
+>  		 */
+> -		if (!force_geo)  {
+> -			do_warn(_("Only one AG detected - cannot proceed.\n"));
+> -			exit(1);
+> -		}
+> +		break;
+>  	default:
+>  		/*
+>  		 * at least half of the probed superblocks have
+> Index: xfsprogs/repair/xfs_repair.c
+> ===================================================================
+> --- xfsprogs.orig/repair/xfs_repair.c	2008-12-25 00:00:09.116033372 +0100
+> +++ xfsprogs/repair/xfs_repair.c	2008-12-25 00:07:50.295036179 +0100
+> @@ -409,6 +409,19 @@ calc_mkfs(xfs_mount_t *mp)
+>  	fino_bno = inobt_root + XFS_MIN_FREELIST_RAW(1, 1, mp) + 1;
+>  
+>  	/*
+> +	 * If we only have a single allocation group the log is also allocated
+> +	 * in the first allocation group and we need to add the number of
+> +	 * blocks used by the log to the above calculation.
+> +	 * All this of course doesn't apply if we have an external log.
+> +	 */
+> +	if (mp->m_sb.sb_agcount == 1 && mp->m_sb.sb_logstart) {
+> +		/*
+> +		 * XXX(hch): verify that sb_logstart makes sense?
+> +		 */
+> +		 fino_bno += mp->m_sb.sb_logblocks;
+> +	}
+> +
+> +	/*
+>  	 * ditto the location of the first inode chunks in the fs ('/')
+>  	 */
+>  	if (xfs_sb_version_hasdalign(&mp->m_sb) && do_inoalign)  {
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
