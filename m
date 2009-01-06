@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n06F1RZQ023156 for <xfs@oss.sgi.com>; Tue, 6 Jan 2009 09:01:27 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 19A456585D
-	for <xfs@oss.sgi.com>; Tue,  6 Jan 2009 07:01:24 -0800 (PST)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id 3fhFguHsllkucSAP for
-	<xfs@oss.sgi.com>; Tue, 06 Jan 2009 07:01:24 -0800 (PST)
-References: <BAY123-W145701C4842C1B063295BDEAE10@phx.gbl>
-	<20090106011014.GA9448@disturbed>
-	<BAY123-W41D72B924FD31C7FE4A93DEADE0@phx.gbl>
-Message-Id: <3CEF371F-8849-416C-B166-9826D6A83EFE@sandeen.net>
+	n06G6juP026629 for <xfs@oss.sgi.com>; Tue, 6 Jan 2009 10:06:45 -0600
+Received: from mx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A67D566395
+	for <xfs@oss.sgi.com>; Tue,  6 Jan 2009 08:06:44 -0800 (PST)
+Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
+	with ESMTP id Wo3ciQXdCoOLFTKR for <xfs@oss.sgi.com>;
+	Tue, 06 Jan 2009 08:06:44 -0800 (PST)
+Message-ID: <49638190.3070803@sandeen.net>
+Date: Tue, 06 Jan 2009 10:06:40 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <BAY123-W41D72B924FD31C7FE4A93DEADE0@phx.gbl>
-Mime-Version: 1.0 (iPod Mail 5G77)
-Subject: Re: retrocompatibility XFS 2.10.1 with 2.8.1 ?
-Date: Tue, 6 Jan 2009 09:00:33 -0600
+MIME-Version: 1.0
+Subject: Re: need help to repair XFS partition
+References: <b75ef8170901060111l52b9a803uf31dc7baa80df721@mail.gmail.com>
+In-Reply-To: <b75ef8170901060111l52b9a803uf31dc7baa80df721@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,52 +23,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Tritium Tritium <tritium_helium@hotmail.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Gergely Soos <sogerc1@gmail.com>
+Cc: xfs@oss.sgi.com
 
-CgpPbiBKYW4gNiwgMjAwOSwgYXQgMjowMyBBTSwgVHJpdGl1bSBUcml0aXVtICAKPHRyaXRpdW1f
-aGVsaXVtQGhvdG1haWwuY29tPiB3cm90ZToKCj4KPiBUaGFua3MgZm9yIHlvdSByZXNwb25zZSAh
-Cj4KPiB1bmZvcnR1bmF0ZWx5ICwgSSBkb24ndCBrbm93IHRoZSBrZXJuZWwgdmVyc2lvbiBvZiBt
-eSBBZHNsIEJveCAuCj4gSSBzZWFyY2ggaW4gZG9jdW1lbnRhdGlvbiBhbmQgSSBkb24ndCBmaW5k
-IGFueSBpdGVtIGFib3V0IGEgIAo+IHBhcmFtZXRlciB3aGljaCB0YWtlIGEgY29tcGF0aWJpbGl0
-eSB3aXRoIG9sZCB4ZnMgc3VwcG9ydCAuCgpMb2cgaW4gYW5kIHR5cGUKCiAgICB1bmFtZSAtYQoK
-LUVyaWMKPgo+IFRoYW5rcyBhbmQgSSBob3BlIHNlZSB5b3UgbGF0ZXIgIQo+IFZpbmNlLgo+Cj4+
-IERhdGU6IFR1ZSwgNiBKYW4gMjAwOSAxMjoxMDoxNCArMTEwMAo+PiBGcm9tOiBkYXZpZEBmcm9t
-b3JiaXQuY29tCj4+IFRvOiB0cml0aXVtX2hlbGl1bUBob3RtYWlsLmNvbQo+PiBDQzogeGZzQG9z
-cy5zZ2kuY29tCj4+IFN1YmplY3Q6IFJlOiByZXRyb2NvbXBhdGliaWxpdHkgWEZTIDIuMTAuMSB3
-aXRoIDIuOC4xID8KPj4KPj4gT24gTW9uLCBKYW4gMDUsIDIwMDkgYXQgMDc6MDQ6MzBQTSArMDAw
-MCwgVHJpdGl1bSBUcml0aXVtIHdyb3RlOgo+Pj4KPj4+IEhJICEKPj4+Cj4+PiBJbiBmaXJzdCwg
-SSAnbSBhIGZyZW5jaCB1c2VyIGFuZCBzb3JyeSBmb3IgbXkgdmVyeSBiYWQgZW5nbGlzaCAuLi4K
-Pj4+IEZvciBhbiBBZHNsIEJveCwgSSB3YW50IHRvIHBhcnRpdGlvbm5pbmcgYW5kIGZvcm1hdCBt
-eSBleHRlcm5hbCAgCj4+PiBoYXJkIGRpc2sgZHJpdmUgdW5kZXIgWEZTIC5XaGF0IGEgZ29vZCBp
-ZGVhICwgaXNuJ3QgaXQgPyA7bykKPj4+IEkgZ2V0IG15IE1hbmRyaXZhIE9uZSAoSSBrbm93IGl0
-IGlzbid0IGEgInByb2Zlc3Npb25uYWwiICAKPj4+IGRpc3RyaWJ1dGlvbiBidXQgeW91IGtub3cg
-dGhlIEZyZW5jaCBzZWFyY2ggdGhlIHNpbXBsZSB0aGluZyAhKSAgCj4+PiBhbmQgdXNlIGZkaXNr
-IC1sICwgZ3BhcnRlZCBhbmQgbWtmcy54ZnMgL2Rldi94eHggLgo+Pj4gV2l0aCB0aGlzLCB0aGUg
-YWRzbCBib3ggcmVib290ICEgQW5kIG9mIGNvdXJzZSBpdCBkb2Vzbid0ICAKPj4+IHJlY29nbml6
-ZSB0aGUgcGFydGl0aW9uLgo+Pj4gSSB0cmllZCB3aXRoIGEgRGViaWFuIEV0Y2ggWEZTIC4uLiBh
-bmQgdGhpcyBpcyBhIFNVQ0NFU1MgIQo+Pj4gV2hlbiBJIGNvbXBhcmUgWEZTIHZlcnNpb25zIEkg
-ZmluZCBhIDIuMTAuMSBmb3IgTWFuZHJpdmEgYW5kIDIuOC4xICAKPj4+IGZvciBEZWJpYW4uCj4+
-Cj4+IFRoZSBkZWZhdWx0cyBta2ZzLnhmcyB1c2VzIGluIDIuMTAuMSBhcmUgZGlmZmVyZW50IHRv
-IDIuOC4xLiBUaGUKPj4gbmV3ZXIgdmVyc2lvbiBlbmFibGVzIGZlYXR1cmVzIHRoYXQgYXJlIG9u
-bHkgYXZhaWxibGUgaW4gbW9yZSByZWNlbnQKPj4ga2VybmVscyAoc2luY2UgYWJvdXQgMi42LjE5
-LCBJSVJDKSwgc28gaXQgd291bGQgc2VlbSB0aGF0IHlvdXIgQURTTAo+PiBib3ggaGFzIGFuIG9s
-ZCBrZXJuZWwgb24gaXQgdGhhdCBkb2VzIG5vdCBzdXBwb3J0IHRoZSBuZXdlciwgZmFzdGVyLAo+
-PiBzaGluaWVyIGZlYXR1cmVzIFhGUyBoYXMuLi4uCj4+Cj4+IFRoZSBrZXJuZWwgdmVyc2lvbiBv
-ZiB5b3VyIEFEU0wgYm94LCBhcyB3ZWxsIGFzIHRoZSBta2ZzLnhmcyBvdXRwdXQKPj4gZnJvbSBi
-b3RoIGRpc3RybydzIHdvdWxkIGhlbHAgY29uZmlybSB0aGlzLgo+Pgo+PiBDaGVlcnMsCj4+Cj4+
-IERhdmUuCj4+IC0tIAo+PiBEYXZlIENoaW5uZXIKPj4gZGF2aWRAZnJvbW9yYml0LmNvbQo+Cj4g
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX18KPiBUw6lsw6lwaG9uZXogZ3JhdHVpdGVtZW50IMOgIHRvdXMgdm9zIHByb2NoZXMg
-YXZlYyBXaW5kb3dzIExpdmUgIAo+IE1lc3NlbmdlciAgISAgVMOpbMOpY2hhcmdlei1sZSBtYWlu
-dGVuYW50ICEKPiBodHRwOi8vd3d3LndpbmRvd3NsaXZlLmZyL21lc3Nlbmdlci8xLmFzcAo+Cj4g
-W1tIVE1MIGFsdGVybmF0ZSB2ZXJzaW9uIGRlbGV0ZWRdXQo+Cj4gX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX18KPiB4ZnMgbWFpbGluZyBsaXN0Cj4geGZzQG9z
-cy5zZ2kuY29tCj4gaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCgpfX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBs
-aXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94
-ZnMK
+Gergely Soos wrote:
+> Greetings
+> 
+> I heard that people compliment XFS for being the fastest FS these days
+> so I thought I give it a try.
+> What I did was that I converted my old 107GB FAT32 partition to XFS (I
+> created an XFS over it) and I wanted to use it as /home
+> Everything went as it should, I moved the files from my old /home then I
+> restarted (cleanly!) under windows.
+> When I got back from windows I was no longer able to mount the XFS
+> partition.
+
+Which partition was it?  I wonder if a gpt label got re-written over it
+or something.
+
+> xfs_repair only said that the superblock is invalid and attempts to find
+> secondary superblocks but all candidates fail.
+> So I created a file on another computer with the exact same size as the
+> partition on my computer and created an XFS on it.
+
+> Then I extracted the first 512 bytes and copied to my HDD using dd. But
+> it complained about the UUID so I corrected it using khexedit.
+
+Did you keep the original first 512 bytes?  It would be worth looking
+at; try hexdump -C on it (the original) and send that if you have it.
+
+> Then xfs_db complained that it cannot find the root inode so I wrote a
+> little perl script to search it.
+> You can find it in myxfs.tar.bz2. It seems that it found the root inode
+> because after I corrected the address using khexedit
+> xfs_db started complaining about the realtime bitmap inodes, so I
+> corrected those too (using inode numbers rootino+1 and rootino+2).
+> And this is where I'm stuck.
+> The mount still fails, dmesg says that it cannot find the root inode,
+> xfs_repair says the same old thing, xfs_check says a lot of things,
+> most of them are messages like this: can't seek in filesystem at bb
+> <some numbers> or: ag bad magick number.
+> That exceeds my knowledge.
+> Please help me restore the partition, It contains lots of programmes I
+> wrote over the years and some of them are not backed up,
+> some of them are, but only an older version. I also have personal stuff
+> on it like my bill records that I cannot recover from anywhere else.
+> myxfs.tar.bz2 contains the perl script I mentioned above and the inodes
+> it found. The one staring with ri is the root inode,
+> the files starting with sb are the suspected superblocks (I also took
+> one of those at random and corrected the three inode numbers
+> with khexedit but the result is the same) and the file backup_bootsect
+> contains the original superblock that was on the disk after I came back
+> from windows xp. It does not look like anything to me...
+> The numbers after ri and sb are the starting address in bytes of the
+> inode on the disk.
+> I would also attach the output of xfs_metadump which I created after I
+> corrected the three inode numbers in the superblock but even bzip-ed
+> it is more than 3MB and the administrator of this list does not accept it.
+
+As Chris suggested, I would find a spare 100G somewhere and make a dd
+image now, so you have something to experiment with + a backup if things
+go wrong.
+
+It sounds like something under windows clobbered your filesystem, I
+guess, unless it's the gpt thing I mentioned, it's very strange.
+
+-Eric
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
