@@ -1,17 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n07EYdns007981 for <xfs@oss.sgi.com>; Wed, 7 Jan 2009 08:34:42 -0600
-Received: from moutng.kundenserver.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9FC3217B745F
-	for <xfs@oss.sgi.com>; Wed,  7 Jan 2009 06:34:38 -0800 (PST)
-Received: from moutng.kundenserver.de (moutng.kundenserver.de
-	[212.227.126.171]) by cuda.sgi.com with ESMTP id
-	nQNBERDwhpsaMFZF for <xfs@oss.sgi.com>;
-	Wed, 07 Jan 2009 06:34:38 -0800 (PST)
-Message-ID: <4964BD79.20806@poczta.onet.pl>
-Date: Wed, 07 Jan 2009 15:34:33 +0100
-From: aluno <aluno3@poczta.onet.pl>
+	n07EbtZK008183 for <xfs@oss.sgi.com>; Wed, 7 Jan 2009 08:37:56 -0600
+Received: from smtp5m5.poczta.onet.pl (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CCC771B3455E
+	for <xfs@oss.sgi.com>; Wed,  7 Jan 2009 06:37:54 -0800 (PST)
+Received: from smtp5m5.poczta.onet.pl (smtp5m5.poczta.onet.pl
+	[213.180.138.36]) by cuda.sgi.com with ESMTP id
+	18TC3eIrp3D0zDQM for <xfs@oss.sgi.com>;
+	Wed, 07 Jan 2009 06:37:54 -0800 (PST)
+Received: from ip-83-238-22-2.netia.com.pl ([83.238.22.2]:37050 "EHLO
+	[192.168.242.3]" rhost-flags-OK-FAIL-OK-FAIL) by ps5.mod5.onet
+	with ESMTPA id S251849908AbZAGOhvyi5Xp (ORCPT
+	<rfc822;xfs@oss.sgi.com>); Wed, 7 Jan 2009 15:37:51 +0100
+Message-ID: <4964BE38.8060007@poczta.onet.pl>
+Date: Wed, 07 Jan 2009 15:37:44 +0100
+From: "aluno3@poczta.onet.pl" <aluno3@poczta.onet.pl>
 MIME-Version: 1.0
 Subject: xfs_db problem
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -27,7 +31,6 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-
 
 Hello,
 
@@ -67,6 +70,7 @@ in init() procedure:
 
 
 Is it the right way to fix this problem?
+
 
 _______________________________________________
 xfs mailing list
