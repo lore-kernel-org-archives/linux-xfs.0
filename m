@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n07Lgm0r006352 for <xfs@oss.sgi.com>; Wed, 7 Jan 2009 15:42:49 -0600
-Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5C9836D50F
-	for <xfs@oss.sgi.com>; Wed,  7 Jan 2009 13:42:47 -0800 (PST)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net
-	[203.16.214.145]) by cuda.sgi.com with ESMTP id
-	iM7kqNa3kPoBFJmS for <xfs@oss.sgi.com>;
-	Wed, 07 Jan 2009 13:42:47 -0800 (PST)
-Date: Thu, 8 Jan 2009 08:42:44 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] fix corruption case for block size < page size
-Message-ID: <20090107214244.GE9448@disturbed>
-References: <4943FCD7.2010509@sandeen.net> <494735D9.8020809@sgi.com>
-	<49473F5C.3070308@sandeen.net> <49474530.2080809@sgi.com>
-	<4947466D.7000705@sandeen.net> <494748FA.20404@sandeen.net>
-	<49474FE4.2030500@sandeen.net> <49643C5A.30608@sgi.com>
-	<4964435C.802@sandeen.net> <49644C69.1000801@sgi.com>
+	n07M9o6p007589 for <xfs@oss.sgi.com>; Wed, 7 Jan 2009 16:09:50 -0600
+Received: from zaphod.dth.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 113C417B8D1C
+	for <xfs@oss.sgi.com>; Wed,  7 Jan 2009 14:09:49 -0800 (PST)
+Received: from zaphod.dth.net (zaphod.dth.net [85.159.112.68]) by cuda.sgi.com
+	with ESMTP id SinIzqenyt5R6Gb6 for <xfs@oss.sgi.com>;
+	Wed, 07 Jan 2009 14:09:49 -0800 (PST)
+Date: Wed, 7 Jan 2009 23:09:10 +0100
+From: Danny ter Haar <dth@dth.net>
+Subject: Re: problems showing up as XFS problems on kernels after 2.6.28-git2
+Message-ID: <20090107220910.GA12726@dth.net>
+References: <20090107165218.GA11132@dth.net>
+	<20090107180246.GA15218@infradead.org>
+	<20090107182415.GA12039@dth.net>
+	<20090107183115.GA6261@infradead.org>
+	<20090107184420.GA15653@dth.net>
+	<20090107185226.GA19010@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <49644C69.1000801@sgi.com>
+In-Reply-To: <20090107185226.GA19010@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,73 +29,35 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Lachlan McIlroy <lachlan@sgi.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-T24gV2VkLCBKYW4gMDcsIDIwMDkgYXQgMDU6MzI6MDlQTSArMTEwMCwgTGFjaGxhbiBNY0lscm95
-IHdyb3RlOgo+IEVyaWMgU2FuZGVlbiB3cm90ZToKPiA+IExhY2hsYW4gTWNJbHJveSB3cm90ZToK
-PiA+PiBFcmljIFNhbmRlZW4gd3JvdGU6Cj4gPj4+IEVyaWMgU2FuZGVlbiB3cm90ZToKPiA+Pj4K
-PiA+Pj4+IEdhaDsgb3Igbm90LiAgd2hhdCBpcyBnb2luZyBvbiBoZXJlLi4uICBEb2luZyBqdXN0
-IHN0ZXBzIDEsIDIsIDMsIDQKPiA+Pj4+IChlbmRpbmcgb24gdGhlIGV4dGVuZGluZyB0cnVuY2F0
-ZSk6Cj4gPj4+Pgo+ID4+Pj4gIyB4ZnNfaW8gLWMgInB3cml0ZSAtUyAweDExIC1iIDQwOTYgMCA0
-MDk2IiAtYyAibW1hcCAtciAwIDUxMiIgLWMgIm1yZWFkCj4gPj4+PiAwIDUxMiIgLWMgIm11bm1h
-cCIgLWMgInRydW5jYXRlIDI1NiIgLWMgInRydW5jYXRlIDUxNCIgLXQgLWQgLWYKPiA+Pj4+IC9t
-bnQvc2NyYXRjaC90ZXN0ZmlsZQo+ID4+Pj4KPiA+Pj4+ICMgeGZzX2JtYXAgLXYgL21udC9zY3Jh
-dGNoL3Rlc3RmaWxlCj4gPj4+PiAvbW50L3NjcmF0Y2gvdGVzdGZpbGU6Cj4gPj4+PiAgRVhUOiBG
-SUxFLU9GRlNFVCAgICAgIEJMT0NLLVJBTkdFICAgICAgQUcgQUctT0ZGU0VUICAgICAgICBUT1RB
-TAo+ID4+Pj4gICAgMDogWzAuLjBdOiAgICAgICAgICA2My4uNjMgICAgICAgICAgICAwICg2My4u
-NjMpICAgICAgICAgICAgIDEKPiA+Pj4+ICAgIDE6IFsxLi4xXTogICAgICAgICAgaG9sZSAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAxCj4gPj4+Pgo+ID4+Pj4gSXQgbG9va3Mg
-bGlrZSB3aGF0IEkgZXhwZWN0LCBhdCB0aGlzIHBvaW50LiAgQnV0IHRoZW46Cj4gPj4+Pgo+ID4+
-Pj4gIyBzeW5jCj4gPj4+PiAjIHhmc19ibWFwIC12IC9tbnQvc2NyYXRjaC90ZXN0ZmlsZQo+ID4+
-Pj4gL21udC9zY3JhdGNoL3Rlc3RmaWxlOgo+ID4+Pj4gIEVYVDogRklMRS1PRkZTRVQgICAgICBC
-TE9DSy1SQU5HRSAgICAgIEFHIEFHLU9GRlNFVCAgICAgICAgVE9UQUwKPiA+Pj4+ICAgIDA6IFsw
-Li4xXTogICAgICAgICAgNjMuLjY0ICAgICAgICAgICAgMCAoNjMuLjY0KSAgICAgICAgICAgICAy
-Cj4gPj4+Pgo+ID4+Pj4gVW0sIHdoeSdkIHRoYXQgbGFzdCBibG9jayBnZXQgbWFwcGVkIGluPyAg
-bW1hcCB2cy4gZGlyZWN0IElPIEknbQo+ID4+Pj4gZ3Vlc3NpbmcuLi4gdy9vIHRoZSBtbWFwIHJl
-YWQgdGhpcyBkb2VzIG5vdCBoYXBwZW4uCj4gPj4+IFJlcGx5aW5nIHRvIG15c2VsZiB0d2ljZT8g
-IEkgcmVhbGx5IG5lZWQgdG8gZ28gdG8gYmVkLgo+ID4+Pgo+ID4+PiBTbyB0aGlzIGFsbCBkb2Vz
-IHNlZW0gdG8gY29tZSBiYWNrIHRvIHBhZ2Vfc3RhdGVfY29udmVydC4KPiA+Pj4KPiA+Pj4gQm90
-aCB0aGUgZXh0ZW5kaW5nIHdyaXRlIGluIHRoZSBvcmlnaW5hbCBjYXNlIGFuZCB0aGUgc3luYyBh
-Ym92ZSBmaW5kCj4gPj4+IHRoZWlyIHdheSB0aGVyZTsgYnV0IGVzcC4gaW4gdGhlIHN5bmMgdGVz
-dCBhYm92ZSwgd2h5IGRvIHdlIGhhdmUgKmFueSoKPiA+Pj4gd29yayB0byBkbz8KPiA+PiBFcmlj
-LCBkaWQgeW91IGZpbmQgb3V0IHdoeSBzeW5jIHdhcyBhbGxvY2F0aW5nIHRoYXQgc2Vjb25kIGJs
-b2NrPwo+ID4gCj4gPiBJJ20gYWZyYWlkIHRoaXMgaGFzIGJlZW4gb24gdGhlIGJhY2sgYnVybmVy
-IChvciBtYXliZSBmdXJ0aGVyIGJhY2spIGZvcgo+ID4gYSB3aGlsZS4uLiBzby4uLiBlaXRoZXIg
-Im5vIiBvciAiSSBkb24ndCByZW1lbWJlciIgOikKPiAKPiBKdXN0IHRyeWluZyB5b3VyIHRlc3Qg
-Y2FzZS4gIEl0J3Mgbm90IHJlbGF0ZWQgdG8gZGlyZWN0IEkvTyBvciBtbWFwIEkvTwo+IHNpbmNl
-IEkgY2FuIHJlcHJvZHVjZSBpdCB3aXRob3V0IHRob3NlLgo+IAo+ICMgeGZzX2lvIC1mIC1jICJw
-d3JpdGUgLVMgMHgxMSAtYiA1MTMgMCA1MTMiIC1jICJ0cnVuY2F0ZSAxIiAtYyAidHJ1bmNhdGUg
-NTEzIiBmaWxlCj4gd3JvdGUgNTEzLzUxMyBieXRlcyBhdCBvZmZzZXQgMAo+IDUxMy4wMDAwMDAg
-Ynl0ZXMsIDEgb3BzOyAwLjAwMDAgc2VjICg4Ljg5NSBNaUIvc2VjIGFuZCAxODE4MS44MTgyIG9w
-cy9zZWMpCj4gIyB4ZnNfYm1hcCAtdnZwIGZpbGU7IHN5bmM7IHhmc19ibWFwIC12dnAgZmlsZQo+
-IGZpbGU6Cj4gICBFWFQ6IEZJTEUtT0ZGU0VUICAgICAgQkxPQ0stUkFOR0UgICAgICBBRyBBRy1P
-RkZTRVQgICAgICAgIFRPVEFMIEZMQUdTCj4gICAgIDA6IFswLi4wXTogICAgICAgICAgNDguLjQ4
-ICAgICAgICAgICAgMCAoNDguLjQ4KSAgICAgICAgICAgICAxIDAwMDAwCj4gICAgIDE6IFsxLi4x
-XTogICAgICAgICAgaG9sZSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAxCi4u
-Li4KPiBmaWxlOgo+ICAgRVhUOiBGSUxFLU9GRlNFVCAgICAgIEJMT0NLLVJBTkdFICAgICAgQUcg
-QUctT0ZGU0VUICAgICAgICBUT1RBTCBGTEFHUwo+ICAgICAwOiBbMC4uMV06ICAgICAgICAgIDQ4
-Li40OSAgICAgICAgICAgIDAgKDQ4Li40OSkgICAgICAgICAgICAgMiAwMDAwMAouLi4uCj4geGZz
-X2JtYXAgd2lsbCBjYXVzZSB0aGUgZmlsZSB0byBiZSBmbHVzaGVkIHNvIHRoZXJlIHNob3VsZCBi
-ZSBubyBkaXJ0eQo+IGRhdGEgdG8gYmUgZmx1c2hlZCBkdXJpbmcgdGhlIHN5bmMuICBTdHJhbmdl
-LgoKWWVhaCwgSSBub3RpY2VkIHRoYXQgYXMgd2VsbC4gQUZBSUNUIGl0IGlzIGJlY2F1c2UgdGhl
-IHN0YXRlIG9uCm9uIHRoZSBzZWNvbmQgYnVmZmVyIGhhcyBiZWVuIHRyYXNoZWQgYnkgdGhlIGRp
-c2NhcmQgYnV0IGl0IGhhcyBiZWVuCmxlZnQgdXB0b2RhdGUuIFRoZSByZXN1bHQgaXMgdGhhdCB4
-ZnNfZmx1c2hwYWdlcygpIGRvZXNuJ3QgdGhpbmsKdGhhdCB0aGVyZSBpcyBhbnl0aGluZyB0byB3
-cml0ZSBvdXQgYW5kIHRoZSBibWFwIGNvZGUgZmluZHMgbm8KZXh0ZW50IG9uIHRoYXQgcmFuZ2Ug
-c28g0ZZ0IGlzIGNvbnNpZGVyZWQgYSBob2xlLgoKSG93ZXZlciwgd2hlbiB0aGUgVkZTIGNvbWVz
-IGFsb25nIGFuZCB3cml0ZXMgdGhlIGRpcnR5IGlub2RlIGl0CnRoaW5rcyB0aGF0IHRoZSBwYWdl
-IGlzIGRpcnR5IGFuZCB3cml0ZXMgaXQuCnhmc19wYWdlX3N0YXRlX2NvbnZlcnQoKSB0aGVuIHNl
-ZXMgdGhlIHNlY29uZCBidWZmZXIgYXMgdXB0b2RhdGUgYnV0CnVubWFwcGVkIGFuZCB3aXRoaW4g
-RU9GIHNvIGl0IGFsbG9jYXRlcyB0aGUgYmxvY2sgYW5kIHdyaXRlcyBpdCBvdXQuCgpJSVJDLCB0
-aGUgY29kZSBpbiB4ZnNfcGFnZV9zdGF0ZV9jb252ZXJ0KCkgZGlkIHRoaXMgYWxsb2NhdGlvbiB0
-bwpjYXRjaCBtbWFwKCkgd3JpdGVzIGludG8gaG9sZXMuIFdlIGhhdmUgLT5wYWdlX21rd3JpdGUg
-dG8gY2F0Y2ggdGhpcwpub3cgYW5kIHR1cm4gdGhlbSBpbnRvIGRlbGFsbG9jIHdyaXRlcywgc28g
-cGVyaGFwcyB0aGlzIGNvZGUgcGF0aCBpcwpubyBsb25nZXIgbmVlZGVkIGFueW1vcmU/CgpDaGVl
-cnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QK
-eGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+Quoting Christoph Hellwig (hch@infradead.org):
+> Please only with CONFIG_DEBUG_INFO in that case.  CONFIG_XFS_DEBUG would
+> be useful if you could reproduce it, but it does change the addresses,
+> so it's harmful for the case of getting back to the source line.
+
+Hmm, one bug is never alone...
+
+During compile my laptop started smelling because of heat buildup and switched itself
+off. I re-compiled the kernel on a debian lenny32 box i have access to.
+I only added the "CONFIG_DEBUG_INFO" option.
+
+Rebooted the nas, and so far the machine is running without a problem :-(
+Am now gonna compile a kernel on the machine itself, to force a lot
+of disk activity.
+
+Will keep you posted.
+
+
+
+-- 
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
