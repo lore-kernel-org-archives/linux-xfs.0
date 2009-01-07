@@ -1,33 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n06Now3O022694 for <xfs@oss.sgi.com>; Tue, 6 Jan 2009 17:50:58 -0600
-Received: from wa-out-1112.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 80C7317B541B
-	for <xfs@oss.sgi.com>; Tue,  6 Jan 2009 15:50:57 -0800 (PST)
-Received: from wa-out-1112.google.com (wa-out-1112.google.com
-	[209.85.146.180]) by cuda.sgi.com with ESMTP id
-	8LRv5dPbS5xlUz2R for <xfs@oss.sgi.com>;
-	Tue, 06 Jan 2009 15:50:57 -0800 (PST)
-Received: by wa-out-1112.google.com with SMTP id j5so4577919wah.4
-	for <xfs@oss.sgi.com>; Tue, 06 Jan 2009 15:50:56 -0800 (PST)
-Message-ID: <b75ef8170901061526j3671c4d9qbdb16459789ab2d4@mail.gmail.com>
-Date: Wed, 7 Jan 2009 01:26:11 +0200
-From: "Gergely Soos" <sogerc1@gmail.com>
-Subject: Re: need help to repair XFS partition
-In-Reply-To: <20090106230930.GA24703@infradead.org>
+	n075LS6Q005296 for <xfs@oss.sgi.com>; Tue, 6 Jan 2009 23:21:28 -0600
+Message-ID: <49643C5A.30608@sgi.com>
+Date: Wed, 07 Jan 2009 16:23:38 +1100
+From: Lachlan McIlroy <lachlan@sgi.com>
 MIME-Version: 1.0
-References: <b75ef8170901060111l52b9a803uf31dc7baa80df721@mail.gmail.com>
-	<49638190.3070803@sandeen.net>
-	<b75ef8170901061004n75f52cffg7f810a51aca21ff@mail.gmail.com>
-	<4963A706.8000500@sandeen.net>
-	<b75ef8170901061351madb546flbc1631bc55cd4412@mail.gmail.com>
-	<4963D320.9010000@sandeen.net>
-	<b75ef8170901061431i68f8ebdey3ab08ea3dec9c079@mail.gmail.com>
-	<4963DDD2.4030501@sandeen.net>
-	<b75ef8170901061454v76081ca8x6f87e4bf14eb8491@mail.gmail.com>
-	<20090106230930.GA24703@infradead.org>
-Content-Disposition: inline
+Subject: Re: [PATCH] fix corruption case for block size < page size
+References: <49435F35.40109@sandeen.net>	<4943FCD7.2010509@sandeen.net>	<494735D9.8020809@sgi.com>	<49473F5C.3070308@sandeen.net>	<49474530.2080809@sgi.com>	<4947466D.7000705@sandeen.net>
+	<494748FA.20404@sandeen.net> <49474FE4.2030500@sandeen.net>
+In-Reply-To: <49474FE4.2030500@sandeen.net>
+Reply-To: lachlan@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,53 +23,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-I want to thank everybody for the help, especially for Eric.
-The solution was:
-fdisk /dev/hdd
-then go to expert mode (x)
-print the partition table (p)
-move the beginning of the partition (b) - where I increased the start number
-by 63
-write to disk and exit (w)
-Reboot and everything is fine.
-I'm so happy :)
+Eric Sandeen wrote:
+> Eric Sandeen wrote:
+> 
+>> Gah; or not.  what is going on here...  Doing just steps 1, 2, 3, 4
+>> (ending on the extending truncate):
+>>
+>> # xfs_io -c "pwrite -S 0x11 -b 4096 0 4096" -c "mmap -r 0 512" -c "mread
+>> 0 512" -c "munmap" -c "truncate 256" -c "truncate 514" -t -d -f
+>> /mnt/scratch/testfile
+>>
+>> # xfs_bmap -v /mnt/scratch/testfile
+>> /mnt/scratch/testfile:
+>>  EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
+>>    0: [0..0]:          63..63            0 (63..63)             1
+>>    1: [1..1]:          hole                                     1
+>>
+>> It looks like what I expect, at this point.  But then:
+>>
+>> # sync
+>> # xfs_bmap -v /mnt/scratch/testfile
+>> /mnt/scratch/testfile:
+>>  EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
+>>    0: [0..1]:          63..64            0 (63..64)             2
+>>
+>> Um, why'd that last block get mapped in?  mmap vs. direct IO I'm
+>> guessing... w/o the mmap read this does not happen.
+> 
+> Replying to myself twice?  I really need to go to bed.
+> 
+> So this all does seem to come back to page_state_convert.
+> 
+> Both the extending write in the original case and the sync above find
+> their way there; but esp. in the sync test above, why do we have *any*
+> work to do?
+Eric, did you find out why sync was allocating that second block?
 
-Gergely
-
-PS: I made a typo in my previous letter. Instead of 5132575420 I should have
-written 5132574720 in case anybody wonders...
-
-On Wed, Jan 7, 2009 at 1:09 AM, Christoph Hellwig <hch@infradead.org> wrote:
-
-> On Wed, Jan 07, 2009 at 12:54:52AM +0200, Gergely Soos wrote:
-> > Unfortunately it's not that simple. Actually that HDD has two partitions
-> and
-> > hdd2 is physically before hdd1 (they are reversed in the partition
-> table),
-> > so I absolutely need to move the start of the partition to the address
-> which
-> > is 63 sectors more than it is now.
-> > Currently it starts at absolute byte position 5132575420 and it should
-> start
-> > at 5132606976.
-> > Do you know what program is capable of doing this? I looked for MBR
-> > documentation and in the partition table it is stored in CHS format
-> > so it would be really hard (at least for me) to do it by hand.
->
-> If you want to mount the partitions once you can creat a loop device
-> ontop of you disk device and use the -o option, e.g.
->
->
-> losetup -o 5132606976 /dev/loop0 /dev/hdd1
->
-> and then mount /dev/loop0.  But that's not really something I'd want
-> to use for a longer time..
->
-
-
-[[HTML alternate version deleted]]
+> 
+> With a little instrumentation I see that for the truncate out; sync test
+> above we get to xfs_vm_writepage() for a page which is *not* dirty, and
+> yet we call page_state_convert on it and map in that 2nd block... Is
+> that right!?  I guess it is; ->write_cache_pages() clears dirty before
+> calling writepage.  Still why would this page be found dirty on this
+> path.  Bah.  Bedtime.
+> 
+> -Eric
 
 _______________________________________________
 xfs mailing list
