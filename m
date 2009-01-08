@@ -1,27 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n08MEQdE011234 for <xfs@oss.sgi.com>; Thu, 8 Jan 2009 16:14:26 -0600
-Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 103801BFC66C
-	for <xfs@oss.sgi.com>; Thu,  8 Jan 2009 14:14:25 -0800 (PST)
-Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id jTcwyVi2Lvn0ynqa for <xfs@oss.sgi.com>;
-	Thu, 08 Jan 2009 14:14:25 -0800 (PST)
-Received: from int-mx2.corp.redhat.com (int-mx2.corp.redhat.com [172.16.27.26])
-	by mx2.redhat.com (8.13.8/8.13.8) with ESMTP id n08J7dDi012882
-	for <xfs@oss.sgi.com>; Thu, 8 Jan 2009 14:07:39 -0500
-Received: from ns3.rdu.redhat.com (ns3.rdu.redhat.com [10.11.255.199])
-	by int-mx2.corp.redhat.com (8.13.1/8.13.1) with ESMTP id n08J7dSI012707
-	for <xfs@oss.sgi.com>; Thu, 8 Jan 2009 14:07:39 -0500
-Received: from neon.msp.redhat.com (neon.msp.redhat.com [10.15.80.10])
-	by ns3.rdu.redhat.com (8.13.8/8.13.8) with ESMTP id n08J7aWA001904
-	for <xfs@oss.sgi.com>; Thu, 8 Jan 2009 14:07:39 -0500
-Message-ID: <49664EF7.20707@sandeen.net>
-Date: Thu, 08 Jan 2009 13:07:35 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	n08MS6TH013091 for <xfs@oss.sgi.com>; Thu, 8 Jan 2009 16:28:07 -0600
+Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8FCE17244C
+	for <xfs@oss.sgi.com>; Thu,  8 Jan 2009 14:28:05 -0800 (PST)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net
+	[203.16.214.145]) by cuda.sgi.com with ESMTP id
+	h1LthNFHgnpKQeas for <xfs@oss.sgi.com>;
+	Thu, 08 Jan 2009 14:28:05 -0800 (PST)
+Date: Fri, 9 Jan 2009 09:28:00 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfsdump support for 64K page size
+Message-ID: <20090108222800.GG9448@disturbed>
+References: <4964C5EF.3060308@sgi.com> <4965629C.2000703@sgi.com>
 MIME-Version: 1.0
-Subject: [PATCH] attr: fix include/ symlink creation (again)
+Content-Disposition: inline
+In-Reply-To: <4965629C.2000703@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,33 +29,73 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs mailing list <xfs@oss.sgi.com>
+To: Mark Goodwin <markgw@sgi.com>
+Cc: xfs-dev <xfs-dev@sgi.com>, xfs@oss.sgi.com
 
-We need the "default" target first, otherwise a simple "make -C include"
-only ran the $(INCDIR) target, missing disk, and failures ensued.
+On Thu, Jan 08, 2009 at 01:19:08PM +1100, Mark Goodwin wrote:
+> Bill Kendall wrote:
+> > Various fixes to allow xfsdump/xfsrestore to work with 64K
+> > page size. This is essentially Chinner's patch from a while
+> > back.
+> >
+> > Signed-off-by: Bill Kendall <wkendall@sgi.com>
+> 
+> Lachlan reviewed and ack'd this on an internal list and I've committed
+> it (on Bill's behalf) as follows :
+> 
+> git://oss.sgi.com/xfs/cmds/xfsdump.git
+> 	commit 9502587dbbfdd465958889a568dc2842f10b1ff9
+> 	Author: Mark Goodwin <markgw@sgi.com>
+> 	Date:   Thu Jan 8 12:37:53 2009 +1100
+> 
+> 	    Various fixes to allow xfsdump/xfsrestore to work with 64K
+> 	    page size. This is essentially Chinner's patch from a while
+> 	    back.
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
+I guess I don't have a real name ;)
 
-diff --git a/include/Makefile b/include/Makefile
-index 3fde1fc..a645251 100644
---- a/include/Makefile
-+++ b/include/Makefile
-@@ -11,11 +11,11 @@ HFILES = $(INST_HFILES) misc.h walk_tree.h
- LSRCFILES = builddefs.in buildmacros buildrules config.h.in
- LDIRT = $(INCDIR)
- 
-+default: $(INCDIR)
-+
- $(INCDIR):
- 	$(LN_S) . $@
- 
--default: $(INCDIR)
--
- include $(BUILDRULES)
- 
- install-dev: default
+BTW, these changes are the *exact* patches I sent back in March.
+I note that the change logs from those patches have been dropped
+on the floor. i.e.:
 
+http://oss.sgi.com/archives/xfs/2008-05/msg00339.html
+
+The extended attr buffer size used by xfsdump is based on page size.
+The maximum buffer size the kernel will accept is 64k. On a 64k page
+machine, the default buffer size will be rejected by the kernel,
+thereby breaking dump and restore.
+
+Limit the buffer size to XATTR_LIST_MAX in dump, restore and
+libhandle so the kernel won't reject otherwise valid requests.
+
+----
+
+http://oss.sgi.com/archives/xfs/2008-05/msg00340.html
+
+xfsrestore has assumptions about page size built into the inode hunk
+size in the dump format. Seems to be a stupid thing to do - this
+patch simply comments out the asserts to allow it to work on
+64k page size machine, but probably subtly breaks the code.
+Nasty hack, really, but allows xfsqa tests to pass.
+
+----
+
+I'd also like to know what validation has been done of the second
+patch. e.g. is it going to break when dump and restore are done on
+machines of different page size? This is why I didn't sign-off on
+the second patch....
+
+> In any case, Christoph, please pull these commits into your kernel.org 
+> -dev trees.
+
+NACK. Lets do a proper review cycle first.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
