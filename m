@@ -1,24 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n08MnRUG015765 for <xfs@oss.sgi.com>; Thu, 8 Jan 2009 16:49:27 -0600
-Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AFE8F71EAB
-	for <xfs@oss.sgi.com>; Thu,  8 Jan 2009 14:49:25 -0800 (PST)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net
-	[203.16.214.145]) by cuda.sgi.com with ESMTP id
-	uIB7FAeWxRE36OtY for <xfs@oss.sgi.com>;
-	Thu, 08 Jan 2009 14:49:25 -0800 (PST)
-Date: Fri, 9 Jan 2009 09:43:50 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/3] xfs: truncate readdir offsets to signed 32 bit values
-Message-ID: <20090108224350.GJ9448@disturbed>
-References: <20090108184222.244013000@bombadil.infradead.org>
-	<20090108184430.165424000@bombadil.infradead.org>
-	<20090108190000.GA8440@infradead.org>
+	n08N8iPA018349 for <xfs@oss.sgi.com>; Thu, 8 Jan 2009 17:08:45 -0600
+Message-ID: <4966860C.5010400@sandeen.net>
+Date: Thu, 08 Jan 2009 17:02:36 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20090108190000.GA8440@infradead.org>
+Subject: Re: [PATCH] xfsdump support for 64K page size
+References: <4964C5EF.3060308@sgi.com> <4965629C.2000703@sgi.com>
+	<20090108222800.GG9448@disturbed>
+In-Reply-To: <20090108222800.GG9448@disturbed>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,41 +22,86 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Mark Goodwin <markgw@sgi.com>, Bill Kendall <wkendall@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs@oss.sgi.com
 
-On Thu, Jan 08, 2009 at 02:00:00PM -0500, Christoph Hellwig wrote:
-> On Thu, Jan 08, 2009 at 01:42:24PM -0500, Christoph Hellwig wrote:
-> > John Stanley reported EOVERFLOW errors in readdir from his self-build
-> > glibc.  I traced this down to glibc enabling d_off overflow checks
-> > in one of the about five million different getdents implementations.
-> > 
-> > In 2.6.28 Dave Woodhouse moved our readdir double buffering required
-> > for NFS4 readdirplus into nfsd and at that point we lost the capping
-> > of the directory offsets to 32 bit signed values.  Johns glibc used
-> > getdents64 to even implement readdir for normal 32 bit offset dirents,
-> > and failed with EOVERFLOW only if this happens on the first dirent in
-> > a getdents call.  I managed to come up with a testcase that uses
-> > raw getdents and does the EOVERFLOW check manually.  We always hit
-> > it with our last entry due to the special end of directory marker.
-> > 
-> > The patch below is a dumb version of just putting back the masking,
-> > to make sure we have the same behavior as in 2.6.27 and earlier.
-> > 
-> > I will work on a better and cleaner fix for 2.6.30.
-> > 
-> > Reported-by: John Stanley <jpsinthemix@verizon.net>
-> > Tested-by: John Stanley <jpsinthemix@verizon.net>
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+Dave Chinner wrote:
+> On Thu, Jan 08, 2009 at 01:19:08PM +1100, Mark Goodwin wrote:
+>> Bill Kendall wrote:
+>>> Various fixes to allow xfsdump/xfsrestore to work with 64K
+>>> page size. This is essentially Chinner's patch from a while
+>>> back.
+>>>
+>>> Signed-off-by: Bill Kendall <wkendall@sgi.com>
+>> Lachlan reviewed and ack'd this on an internal list and I've committed
+>> it (on Bill's behalf) as follows :
+>>
+>> git://oss.sgi.com/xfs/cmds/xfsdump.git
+>> 	commit 9502587dbbfdd465958889a568dc2842f10b1ff9
+>> 	Author: Mark Goodwin <markgw@sgi.com>
+>> 	Date:   Thu Jan 8 12:37:53 2009 +1100
+>>
+>> 	    Various fixes to allow xfsdump/xfsrestore to work with 64K
+>> 	    page size. This is essentially Chinner's patch from a while
+>> 	    back.
 > 
-> As arkem noticed I should not have sent out some half-mangled version
-> but the first crude patch.  Here it is:
+> I guess I don't have a real name ;)
+> 
+> BTW, these changes are the *exact* patches I sent back in March.
+> I note that the change logs from those patches have been dropped
+> on the floor. i.e.:
+> 
+> http://oss.sgi.com/archives/xfs/2008-05/msg00339.html
+> 
+> The extended attr buffer size used by xfsdump is based on page size.
+> The maximum buffer size the kernel will accept is 64k. On a 64k page
+> machine, the default buffer size will be rejected by the kernel,
+> thereby breaking dump and restore.
+> 
+> Limit the buffer size to XATTR_LIST_MAX in dump, restore and
+> libhandle so the kernel won't reject otherwise valid requests.
 
-Reviewed-by: Dave Chinner <david@fromorbit.com>
+Christoph pointed out on that thread that this define is linux-kernel
+specific, so should probably be in an #ifdef, #else, too.
 
--- 
-Dave Chinner
-david@fromorbit.com
+> ----
+> 
+> http://oss.sgi.com/archives/xfs/2008-05/msg00340.html
+> 
+> xfsrestore has assumptions about page size built into the inode hunk
+> size in the dump format. Seems to be a stupid thing to do - this
+> patch simply comments out the asserts to allow it to work on
+> 64k page size machine, but probably subtly breaks the code.
+> Nasty hack, really, but allows xfsqa tests to pass.
+
+Heh, I totally missed this and arrived at it independently, and hackily
+as well:
+
+http://oss.sgi.com/bugzilla/show_bug.cgi?id=799
+
+but I'm not sure that counts as review; hopefully Bill confirmed that
+this is safe?
+
+> ----
+> 
+> I'd also like to know what validation has been done of the second
+> patch. e.g. is it going to break when dump and restore are done on
+> machines of different page size? This is why I didn't sign-off on
+> the second patch....
+
+*nod* - there is a "standard" dumpfile as part of xfsqa, so at least I
+know it does properly restore that, still.  But has anything tested the
+other direction?
+
+-Eric
+
+>> In any case, Christoph, please pull these commits into your kernel.org 
+>> -dev trees.
+> 
+> NACK. Lets do a proper review cycle first.
+> 
+> Cheers,
+> 
+> Dave.
 
 _______________________________________________
 xfs mailing list
