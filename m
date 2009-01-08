@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n08MS6TH013091 for <xfs@oss.sgi.com>; Thu, 8 Jan 2009 16:28:07 -0600
+	n08Mgs1P014792 for <xfs@oss.sgi.com>; Thu, 8 Jan 2009 16:42:55 -0600
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8FCE17244C
-	for <xfs@oss.sgi.com>; Thu,  8 Jan 2009 14:28:05 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9258117C08B2
+	for <xfs@oss.sgi.com>; Thu,  8 Jan 2009 14:42:53 -0800 (PST)
 Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net
 	[203.16.214.145]) by cuda.sgi.com with ESMTP id
-	h1LthNFHgnpKQeas for <xfs@oss.sgi.com>;
-	Thu, 08 Jan 2009 14:28:05 -0800 (PST)
-Date: Fri, 9 Jan 2009 09:28:00 +1100
+	qmapCbJPK71hoVm6 for <xfs@oss.sgi.com>;
+	Thu, 08 Jan 2009 14:42:53 -0800 (PST)
+Date: Fri, 9 Jan 2009 09:42:47 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfsdump support for 64K page size
-Message-ID: <20090108222800.GG9448@disturbed>
-References: <4964C5EF.3060308@sgi.com> <4965629C.2000703@sgi.com>
+Subject: Re: [PATCH 1/3] xfs: fix compile of xfs_btree_readahead_lblock on m68k
+Message-ID: <20090108224247.GI9448@disturbed>
+References: <20090108184222.244013000@bombadil.infradead.org>
+	<20090108184429.823470000@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4965629C.2000703@sgi.com>
+In-Reply-To: <20090108184429.823470000@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,70 +30,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Goodwin <markgw@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Thu, Jan 08, 2009 at 01:19:08PM +1100, Mark Goodwin wrote:
-> Bill Kendall wrote:
-> > Various fixes to allow xfsdump/xfsrestore to work with 64K
-> > page size. This is essentially Chinner's patch from a while
-> > back.
-> >
-> > Signed-off-by: Bill Kendall <wkendall@sgi.com>
+On Thu, Jan 08, 2009 at 01:42:23PM -0500, Christoph Hellwig wrote:
+> Change the left/right variables to the proper always 64bit xfs_dfsbo_t
+> type because otherwise compilation fails for Geert on m68k without
+> CONFIG_LBD:
 > 
-> Lachlan reviewed and ack'd this on an internal list and I've committed
-> it (on Bill's behalf) as follows :
+> | fs/xfs/xfs_btree.c: In function 'xfs_btree_readahead_lblock':
+> | fs/xfs/xfs_btree.c:736: warning: comparison is always true due to limited range of data type
+> | fs/xfs/xfs_btree.c:741: warning: comparison is always true due to limited range of data type
 > 
-> git://oss.sgi.com/xfs/cmds/xfsdump.git
-> 	commit 9502587dbbfdd465958889a568dc2842f10b1ff9
-> 	Author: Mark Goodwin <markgw@sgi.com>
-> 	Date:   Thu Jan 8 12:37:53 2009 +1100
 > 
-> 	    Various fixes to allow xfsdump/xfsrestore to work with 64K
-> 	    page size. This is essentially Chinner's patch from a while
-> 	    back.
+> Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-I guess I don't have a real name ;)
+Reviewed-by: Dave Chinner <david@fromorbit.com>
 
-BTW, these changes are the *exact* patches I sent back in March.
-I note that the change logs from those patches have been dropped
-on the floor. i.e.:
-
-http://oss.sgi.com/archives/xfs/2008-05/msg00339.html
-
-The extended attr buffer size used by xfsdump is based on page size.
-The maximum buffer size the kernel will accept is 64k. On a 64k page
-machine, the default buffer size will be rejected by the kernel,
-thereby breaking dump and restore.
-
-Limit the buffer size to XATTR_LIST_MAX in dump, restore and
-libhandle so the kernel won't reject otherwise valid requests.
-
-----
-
-http://oss.sgi.com/archives/xfs/2008-05/msg00340.html
-
-xfsrestore has assumptions about page size built into the inode hunk
-size in the dump format. Seems to be a stupid thing to do - this
-patch simply comments out the asserts to allow it to work on
-64k page size machine, but probably subtly breaks the code.
-Nasty hack, really, but allows xfsqa tests to pass.
-
-----
-
-I'd also like to know what validation has been done of the second
-patch. e.g. is it going to break when dump and restore are done on
-machines of different page size? This is why I didn't sign-off on
-the second patch....
-
-> In any case, Christoph, please pull these commits into your kernel.org 
-> -dev trees.
-
-NACK. Lets do a proper review cycle first.
-
-Cheers,
-
-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
