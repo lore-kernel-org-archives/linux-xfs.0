@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n080cq4W018666 for <xfs@oss.sgi.com>; Wed, 7 Jan 2009 18:38:54 -0600
-Received: from zaphod.dth.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6547517B971D
-	for <xfs@oss.sgi.com>; Wed,  7 Jan 2009 16:38:47 -0800 (PST)
-Received: from zaphod.dth.net (zaphod.dth.net [85.159.112.68]) by cuda.sgi.com
-	with ESMTP id HAQKGvw5aTVnyfIh for <xfs@oss.sgi.com>;
-	Wed, 07 Jan 2009 16:38:47 -0800 (PST)
-Date: Thu, 8 Jan 2009 01:38:39 +0100
-From: Danny ter Haar <dth@dth.net>
-Subject: Re: problems showing up as XFS problems on kernels after 2.6.28-git2
-Message-ID: <20090108003839.GA466@dth.net>
-References: <20090107165218.GA11132@dth.net>
-	<20090107180246.GA15218@infradead.org>
-	<20090107182415.GA12039@dth.net>
-	<20090107183115.GA6261@infradead.org>
-	<20090107184420.GA15653@dth.net>
-	<20090107185226.GA19010@infradead.org>
+	n081PQOJ021553 for <xfs@oss.sgi.com>; Wed, 7 Jan 2009 19:25:26 -0600
+Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 97C936E045
+	for <xfs@oss.sgi.com>; Wed,  7 Jan 2009 17:25:25 -0800 (PST)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net
+	[203.16.214.145]) by cuda.sgi.com with ESMTP id
+	OB4kldIc1zJ5rLau for <xfs@oss.sgi.com>;
+	Wed, 07 Jan 2009 17:25:25 -0800 (PST)
+Date: Thu, 8 Jan 2009 12:19:36 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs error
+Message-ID: <20090108011936.GF9448@disturbed>
+References: <d96784ac0901062202t42927621r196894b6b2cc9449@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20090107185226.GA19010@infradead.org>
+In-Reply-To: <d96784ac0901062202t42927621r196894b6b2cc9449@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,42 +29,69 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Gomel Kiev <gomelkiev@gmail.com>
 Cc: xfs@oss.sgi.com
 
-Quoting Christoph Hellwig (hch@infradead.org):
-> On Wed, Jan 07, 2009 at 07:44:20PM +0100, Danny ter Haar wrote:
-> > Will compile a new kernel in the mean time with those 2 options:
-> > CONFIG_XFS_DEBUG & CONFIG_DEBUG_INFO
+On Tue, Jan 06, 2009 at 11:02:20PM -0700, Gomel Kiev wrote:
+> Hello, here is whole story, maybe somebody can help.
+> hardware: buffalo linkstation + "MS2UT+B"  in mirror mode, raid1.
+> 2x1tb seagate drives
+> buffalo :
+> root@BUFFALO:~# uname -a
+> Linux BUFFALO 2.6.16.16-arm1 #9 Wed Mar 7 14:17:36 JST 2007 armv5tejl unknown
 > 
-> Please only with CONFIG_DEBUG_INFO in that case.  CONFIG_XFS_DEBUG would
-> be useful if you could reproduce it, but it does change the addresses,
-> so it's harmful for the case of getting back to the source line.
+> xfs version:
+> root@BUFFALO:~# xfs_info -V /mnt/usbdisk2
+> xfs_info version 2.5.6
+
+That's on ARM...
+
+> on dec 12, log show errors:
+> Dec 12 04:26:28 BUFFALO kernel: 0x0: 60 f2 de 8d 58 cf 08 48 46 76 56
+> 8f 1e 3e 78 29
+> Dec 12 04:26:28 BUFFALO kernel: Filesystem "sdc1": XFS internal error
+> xfs_da_do_buf(2) at line 2221 of file fs/xfs/xfs_da_btree.c.  Caller
+> 0xc011ff60
+
+.... and you have a corrupted directory.
+
+> after that , could not mount drive(any). I removed drives from
+> external storage and connected to Knoppix
+> here is info:
+> Linux Knoppix 2.6.19 #7 SMP PREEMPT Sun Dec 17 22:01:07 CET 2006 i686 GNU/Linux
 > 
+> xfs version:
+> xfs_info version 2.8.11
 
-Okay, it barfed again:
+Which is x86....
 
-Let me first explain thati've set the sleeptimer for the storage harddrives
-to 24(x5=120 sec) in hdparm.conf:
+> dmesg shows:
+> Starting XFS recovery on filesystem: hda (logdev: internal)
+> Filesystem "hda": XFS internal error xlog_valid_rec_header(1) at line
+> 3503 of file fs/xfs/xfs_log_recover.c.  Caller 0xd14f14d2
+> [<d14eeceb>] xlog_valid_rec_header+0x10f/0x14c [xfs]
+> [<d14f14d2>] xlog_do_recovery_pass+0x1e2/0x940 [xfs]
+> [<d14f14d2>] xlog_do_recovery_pass+0x1e2/0x940 [xfs]
+> [<d14f34a7>] xlog_recover+0xdf/0x250 [xfs]
 
-/dev/sdb {
-        spindown_time = 24
-        }
+and this is trying to replay a dirty log in ARM format. You need
+to get the log cleaned before you'll be able to mount it on a
+non-ARM platform.
 
-/dev/sdc {
-        spindown_time = 24
-        }
+> xfs_repair on knoppix running 20 hours, showing:
+> Phase 1 - find and verify superblock...
+> couldn't verify primary superblock - not enough secondary superblocks
+> with match                   ing geometry !!!
 
-This is the error (snapped using netconsole)
+That implies a clean log - did you zero it first to get repair to
+run? Have you tried running repair on the ARM box?
 
-http://www.dth.net/kernel/c3/netconsole_2.6.28-git9d-error.txt
+Cheers,
 
-I rebooted again with the git2 kernel and xfs_check gave no errors:
-
-filer1:~# xfs_check /dev/sdb1 
-filer1:~# 
-
+Dave.
 -- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
