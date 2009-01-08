@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n08HR1Va013735 for <xfs@oss.sgi.com>; Thu, 8 Jan 2009 11:27:01 -0600
-Received: from rv-out-0708.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 51CCD17BD685
-	for <xfs@oss.sgi.com>; Thu,  8 Jan 2009 09:27:00 -0800 (PST)
-Received: from rv-out-0708.google.com (rv-out-0708.google.com
-	[209.85.198.242]) by cuda.sgi.com with ESMTP id
-	HGow5DEnZJjtiHRF for <xfs@oss.sgi.com>;
-	Thu, 08 Jan 2009 09:27:00 -0800 (PST)
-Received: by rv-out-0708.google.com with SMTP id f25so8376074rvb.32
-	for <xfs@oss.sgi.com>; Thu, 08 Jan 2009 09:27:00 -0800 (PST)
-Date: Thu, 8 Jan 2009 08:58:20 -0800
-From: Brandon Philips <brandon@ifup.org>
-Subject: Re: [patch 0/4] attr: test/ improvements and integrate with make
-Message-ID: <20090108165820.GA3832@jenkins>
-References: <20090108021947.404730068@ifup.org>
-	<20090108154453.GA5017@infradead.org>
+	n08I9E6b016719 for <xfs@oss.sgi.com>; Thu, 8 Jan 2009 12:09:14 -0600
+Received: from mx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0FBDA17BFD13
+	for <xfs@oss.sgi.com>; Thu,  8 Jan 2009 10:09:11 -0800 (PST)
+Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
+	with ESMTP id Fa3HMDKkl6K8d3DM for <xfs@oss.sgi.com>;
+	Thu, 08 Jan 2009 10:09:11 -0800 (PST)
+Received: from int-mx2.corp.redhat.com (int-mx2.corp.redhat.com [172.16.27.26])
+	by mx2.redhat.com (8.13.8/8.13.8) with ESMTP id n08I9AHQ001312
+	for <xfs@oss.sgi.com>; Thu, 8 Jan 2009 13:09:10 -0500
+Received: from ns3.rdu.redhat.com (ns3.rdu.redhat.com [10.11.255.199])
+	by int-mx2.corp.redhat.com (8.13.1/8.13.1) with ESMTP id n08I9AwO028169
+	for <xfs@oss.sgi.com>; Thu, 8 Jan 2009 13:09:11 -0500
+Received: from neon.msp.redhat.com (neon.msp.redhat.com [10.15.80.10])
+	by ns3.rdu.redhat.com (8.13.8/8.13.8) with ESMTP id n08I991k024953
+	for <xfs@oss.sgi.com>; Thu, 8 Jan 2009 13:09:10 -0500
+Message-ID: <49664144.3@redhat.com>
+Date: Thu, 08 Jan 2009 12:09:08 -0600
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20090108154453.GA5017@infradead.org>
+Subject: [PATCH] xfsprogs: fix include/ symlink creation (again)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,28 +34,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>, Andreas =?iso-8859-1?Q?Gr=FCnbacher?= <agruen@suse.de>
-Cc: xfs@oss.sgi.com
+To: xfs mailing list <xfs@oss.sgi.com>
 
-On 10:44 Thu 08 Jan 2009, Christoph Hellwig wrote:
-> On Wed, Jan 07, 2009 at 06:19:47PM -0800, brandon@ifup.org wrote:
-> > Hello-
-> > 
-> > NOTE: Timothy Shimmin's email (tes@sgi.com) seems to be gone. Who should
-> > I send patches like this to in the future?
-> 
-> That's not quite sorted out.  For now send them to Andreas Gruenbacher
-> and the xfs list.
+We need the "default" target first, otherwise a simple "make -C include"
+only ran the xfs target, missing disk, and failures ensued.
 
-Ok, thanks.
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
 
-Andreas, please review these patches if you can:
-  http://oss.sgi.com/archives/xfs/2009-01/msg00136.html
-  http://oss.sgi.com/archives/xfs/2009-01/msg00146.html
+(I'll do the other subdirs too.)
 
-Cheers,
-
-	Brandon
+diff --git a/include/Makefile b/include/Makefile
+index 1c68188..0403536 100644
+--- a/include/Makefile
++++ b/include/Makefile
+@@ -40,11 +40,11 @@ LSRCFILES += platform_defs.h.in builddefs.in buildmacros buildrules $(DKHFILES)
+ LSRCFILES += command.h input.h path.h project.h
+ LDIRT = xfs disk
+ 
++default install: xfs disk
++
+ xfs disk:
+ 	$(LN_S) . $@
+ 
+-default install: xfs disk
+-
+ include $(BUILDRULES)
+ 
+ install-dev: default
 
 _______________________________________________
 xfs mailing list
