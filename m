@@ -1,22 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n09MDVkW027592 for <xfs@oss.sgi.com>; Fri, 9 Jan 2009 16:13:31 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8F1E776F98
-	for <xfs@oss.sgi.com>; Fri,  9 Jan 2009 14:13:31 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id C6k6n6CRaqKMOxi3 for
-	<xfs@oss.sgi.com>; Fri, 09 Jan 2009 14:13:31 -0800 (PST)
-Received: from hch by bombadil.infradead.org with local (Exim 4.68 #1 (Red Hat
-	Linux)) id 1LLPbA-0003w5-On
-	for xfs@oss.sgi.com; Fri, 09 Jan 2009 22:13:00 +0000
-Message-Id: <20090109221300.520949000@bombadil.infradead.org>
-References: <20090109221104.237540000@bombadil.infradead.org>
-Date: Fri, 09 Jan 2009 17:11:08 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 4/7] xfs: lockdep annotations for xfs_dqlock2
-Content-Disposition: inline; filename=xfs-fix-xfs_dqlock2-lockdep-warning
+	n09MOH1Z028860 for <xfs@oss.sgi.com>; Fri, 9 Jan 2009 16:24:23 -0600
+Received: from zaphod.dth.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A7D4E76DA1
+	for <xfs@oss.sgi.com>; Fri,  9 Jan 2009 14:24:16 -0800 (PST)
+Received: from zaphod.dth.net (zaphod.dth.net [85.159.112.68]) by cuda.sgi.com
+	with ESMTP id DIV7Z4e4hoRaDnya for <xfs@oss.sgi.com>;
+	Fri, 09 Jan 2009 14:24:16 -0800 (PST)
+Date: Fri, 9 Jan 2009 23:23:38 +0100
+From: Danny ter Haar <dth@dth.net>
+Subject: Re: problems showing up as XFS problems on kernels after 2.6.28-git2
+Message-ID: <20090109222338.GA8856@dth.net>
+References: <20090108215602.GA24479@dth.net> <20090109004609.GM9448@disturbed>
+	<20090109012610.GA23075@dth.net> <20090109020800.GO9448@disturbed>
+	<20090109061043.GA31450@dth.net>
+	<20090109194445.GA28759@infradead.org>
+	<20090109195144.GA19857@dth.net>
+	<20090109195852.GA6362@infradead.org>
+	<20090109214206.GA2901@dth.net>
+	<20090109220138.GA5282@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20090109220138.GA5282@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,71 +31,25 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-xfs_dqlock2 locks two xfs_dquots, which is fine as it always locks the
-dquot with the lower id first.  Use mutex_lock_nested to tell lockdep 
-about this fact.
+Quoting Christoph Hellwig (hch@infradead.org):
+> git bisect good 3c92ec8ae91ecf59d88c798301833d7cf83f2179
+> git bisect bad 6a94cb73064c952255336cc57731904174b2c58f
+> Sorry for the confusion..
 
+*THANKS*
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Bisecting: 955 revisions left to test after this
 
-Index: xfs/fs/xfs/quota/xfs_dquot.c
-===================================================================
---- xfs.orig/fs/xfs/quota/xfs_dquot.c	2008-12-29 11:28:54.459613573 +0100
-+++ xfs/fs/xfs/quota/xfs_dquot.c	2008-12-29 11:29:31.037738842 +0100
-@@ -1383,6 +1383,12 @@ xfs_dqunlock_nonotify(
- 	mutex_unlock(&(dqp->q_qlock));
- }
- 
-+/*
-+ * Lock two xfs_dquot structures.
-+ *
-+ * To avoid deadlocks we always lock the quota structure with
-+ * the lowerd id first.
-+ */
- void
- xfs_dqlock2(
- 	xfs_dquot_t	*d1,
-@@ -1393,10 +1399,10 @@ xfs_dqlock2(
- 		if (be32_to_cpu(d1->q_core.d_id) >
- 		    be32_to_cpu(d2->q_core.d_id)) {
- 			xfs_dqlock(d2);
--			xfs_dqlock(d1);
-+			mutex_lock_nested(&d1->q_qlock, XFS_QLOCK_2ND);
- 		} else {
- 			xfs_dqlock(d1);
--			xfs_dqlock(d2);
-+			mutex_lock_nested(&d2->q_qlock, XFS_QLOCK_2ND);
- 		}
- 	} else {
- 		if (d1) {
-Index: xfs/fs/xfs/quota/xfs_dquot.h
-===================================================================
---- xfs.orig/fs/xfs/quota/xfs_dquot.h	2008-12-27 17:55:09.920686659 +0100
-+++ xfs/fs/xfs/quota/xfs_dquot.h	2008-12-29 11:29:31.043768451 +0100
-@@ -97,6 +97,16 @@ typedef struct xfs_dquot {
- #define dq_hashlist	q_lists.dqm_hashlist
- #define dq_flags	q_lists.dqm_flags
- 
-+/*
-+ * Lock hierachy for q_qlock:
-+ *	XFS_QLOCK_NORMAL is the implicit default,
-+ * 	XFS_QLOCK_DOUBLE is the dquot with the higher id in xfs_dqlock2
-+ */
-+enum {
-+	XFS_QLOCK_NORMAL = 0,
-+	XFS_QLOCK_2ND,
-+};
-+
- #define XFS_DQHOLD(dqp)		((dqp)->q_nrefs++)
- 
- #ifdef DEBUG
+;-)
+
+Danny
 
 -- 
 
