@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n09MD1dO027475 for <xfs@oss.sgi.com>; Fri, 9 Jan 2009 16:13:01 -0600
+	n09MD2Ie027503 for <xfs@oss.sgi.com>; Fri, 9 Jan 2009 16:13:03 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6EE6417C957D
-	for <xfs@oss.sgi.com>; Fri,  9 Jan 2009 14:13:01 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 403B176F86
+	for <xfs@oss.sgi.com>; Fri,  9 Jan 2009 14:13:02 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 5SD0FFwGMYRJcDdF for
-	<xfs@oss.sgi.com>; Fri, 09 Jan 2009 14:13:01 -0800 (PST)
+	by cuda.sgi.com with ESMTP id WbRrTlzN4QBxuVDg for
+	<xfs@oss.sgi.com>; Fri, 09 Jan 2009 14:13:02 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.68 #1 (Red Hat
-	Linux)) id 1LLPbB-0003wg-2S
+	Linux)) id 1LLPbB-0003yQ-UU
 	for xfs@oss.sgi.com; Fri, 09 Jan 2009 22:13:01 +0000
-Message-Id: <20090109221300.927598000@bombadil.infradead.org>
+Message-Id: <20090109221301.732829000@bombadil.infradead.org>
 References: <20090109221104.237540000@bombadil.infradead.org>
-Date: Fri, 09 Jan 2009 17:11:09 -0500
+Date: Fri, 09 Jan 2009 17:11:11 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 5/7] xfs: add a lock class for group/project dquots
-Content-Disposition: inline; filename=xfs-add-quota-classes
+Subject: [PATCH 7/7] xfs: sanity check attr fork size
+Content-Disposition: inline; filename=xfs-attr-sanity-check
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,43 +32,44 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-We can have both a user and a group/project dquot locked at the same time,
-as long as the user dquot is locked first.  Tell lockdep about that fact
-by making the group/project dquots a different lock class.
+Recently we have quite a few kerneloops reports about dereferencing a NULL
+if_data in the attribute fork.  From looking over the code this can only
+happen if we pass a 0 size argument to xfs_iformat_local.  This implies some
+sort of corruption and in fact the only mailinglist report about this from
+earlier this year was after a powerfail presumably on a system with write
+cache and without barriers.
+
+Add a quick sanity check for the attr fork size in xfs_iformat to catch
+these early and without an oops.
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <david@fromorbit.com>
 
-Index: xfs/fs/xfs/quota/xfs_dquot.c
+Index: linux-2.6/fs/xfs/xfs_inode.c
 ===================================================================
---- xfs.orig/fs/xfs/quota/xfs_dquot.c	2008-12-29 12:24:33.018737674 +0100
-+++ xfs/fs/xfs/quota/xfs_dquot.c	2008-12-29 12:29:35.132612895 +0100
-@@ -73,6 +73,8 @@ int xfs_dqreq_num;
- int xfs_dqerror_mod = 33;
- #endif
- 
-+static struct lock_class_key xfs_dquot_other_class;
+--- linux-2.6.orig/fs/xfs/xfs_inode.c	2009-01-04 17:35:11.955671640 +0100
++++ linux-2.6/fs/xfs/xfs_inode.c	2009-01-04 17:38:04.643673527 +0100
+@@ -424,6 +424,19 @@ xfs_iformat(
+ 	case XFS_DINODE_FMT_LOCAL:
+ 		atp = (xfs_attr_shortform_t *)XFS_DFORK_APTR(dip);
+ 		size = be16_to_cpu(atp->hdr.totsize);
 +
- /*
-  * Allocate and initialize a dquot. We don't always allocate fresh memory;
-  * we try to reclaim a free dquot if the number of incore dquots are above
-@@ -139,7 +141,15 @@ xfs_qm_dqinit(
- 		 ASSERT(dqp->q_trace);
- 		 xfs_dqtrace_entry(dqp, "DQRECLAIMED_INIT");
- #endif
--	 }
-+	}
++		if (unlikely(size < sizeof(struct xfs_attr_sf_hdr))) {
++			xfs_fs_repair_cmn_err(CE_WARN, ip->i_mount,
++				"corrupt inode %Lu "
++				"(bad attr fork size %Ld).",
++				(unsigned long long) ip->i_ino,
++				(long long) size);
++			XFS_CORRUPTION_ERROR("xfs_iformat(8)",
++					     XFS_ERRLEVEL_LOW,
++					     ip->i_mount, dip);
++			return XFS_ERROR(EFSCORRUPTED);
++		}
 +
-+	/*
-+	 * In either case we need to make sure group quotas have a different
-+	 * lock class than user quotas, to make sure lockdep knows we can
-+	 * locks of one of each at the same time.
-+	 */
-+	if (!(type & XFS_DQ_USER))
-+		lockdep_set_class(&dqp->q_qlock, &xfs_dquot_other_class);
- 
- 	/*
- 	 * log item gets initialized later
+ 		error = xfs_iformat_local(ip, dip, XFS_ATTR_FORK, size);
+ 		break;
+ 	case XFS_DINODE_FMT_EXTENTS:
 
 -- 
 
