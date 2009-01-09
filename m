@@ -1,15 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n08N8iPA018349 for <xfs@oss.sgi.com>; Thu, 8 Jan 2009 17:08:45 -0600
-Message-ID: <4966860C.5010400@sandeen.net>
-Date: Thu, 08 Jan 2009 17:02:36 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	n090GMVM026634 for <xfs@oss.sgi.com>; Thu, 8 Jan 2009 18:16:22 -0600
+Message-ID: <496697DD.7020105@sgi.com>
+Date: Fri, 09 Jan 2009 11:18:37 +1100
+From: Lachlan McIlroy <lachlan@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfsdump support for 64K page size
-References: <4964C5EF.3060308@sgi.com> <4965629C.2000703@sgi.com>
-	<20090108222800.GG9448@disturbed>
-In-Reply-To: <20090108222800.GG9448@disturbed>
+Subject: Re: [PATCH] fix corruption case for block size < page size
+References: <4943FCD7.2010509@sandeen.net> <494735D9.8020809@sgi.com>
+	<49473F5C.3070308@sandeen.net> <49474530.2080809@sgi.com>
+	<4947466D.7000705@sandeen.net> <494748FA.20404@sandeen.net>
+	<49474FE4.2030500@sandeen.net> <49643C5A.30608@sgi.com>
+	<4964435C.802@sandeen.net> <49644C69.1000801@sgi.com>
+	<20090107214244.GE9448@disturbed>
+In-Reply-To: <20090107214244.GE9448@disturbed>
+Reply-To: lachlan@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,92 +23,76 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Goodwin <markgw@sgi.com>, Bill Kendall <wkendall@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs@oss.sgi.com
+To: Lachlan McIlroy <lachlan@sgi.com>, Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
 
-Dave Chinner wrote:
-> On Thu, Jan 08, 2009 at 01:19:08PM +1100, Mark Goodwin wrote:
->> Bill Kendall wrote:
->>> Various fixes to allow xfsdump/xfsrestore to work with 64K
->>> page size. This is essentially Chinner's patch from a while
->>> back.
->>>
->>> Signed-off-by: Bill Kendall <wkendall@sgi.com>
->> Lachlan reviewed and ack'd this on an internal list and I've committed
->> it (on Bill's behalf) as follows :
->>
->> git://oss.sgi.com/xfs/cmds/xfsdump.git
->> 	commit 9502587dbbfdd465958889a568dc2842f10b1ff9
->> 	Author: Mark Goodwin <markgw@sgi.com>
->> 	Date:   Thu Jan 8 12:37:53 2009 +1100
->>
->> 	    Various fixes to allow xfsdump/xfsrestore to work with 64K
->> 	    page size. This is essentially Chinner's patch from a while
->> 	    back.
-> 
-> I guess I don't have a real name ;)
-> 
-> BTW, these changes are the *exact* patches I sent back in March.
-> I note that the change logs from those patches have been dropped
-> on the floor. i.e.:
-> 
-> http://oss.sgi.com/archives/xfs/2008-05/msg00339.html
-> 
-> The extended attr buffer size used by xfsdump is based on page size.
-> The maximum buffer size the kernel will accept is 64k. On a 64k page
-> machine, the default buffer size will be rejected by the kernel,
-> thereby breaking dump and restore.
-> 
-> Limit the buffer size to XATTR_LIST_MAX in dump, restore and
-> libhandle so the kernel won't reject otherwise valid requests.
-
-Christoph pointed out on that thread that this define is linux-kernel
-specific, so should probably be in an #ifdef, #else, too.
-
-> ----
-> 
-> http://oss.sgi.com/archives/xfs/2008-05/msg00340.html
-> 
-> xfsrestore has assumptions about page size built into the inode hunk
-> size in the dump format. Seems to be a stupid thing to do - this
-> patch simply comments out the asserts to allow it to work on
-> 64k page size machine, but probably subtly breaks the code.
-> Nasty hack, really, but allows xfsqa tests to pass.
-
-Heh, I totally missed this and arrived at it independently, and hackily
-as well:
-
-http://oss.sgi.com/bugzilla/show_bug.cgi?id=799
-
-but I'm not sure that counts as review; hopefully Bill confirmed that
-this is safe?
-
-> ----
-> 
-> I'd also like to know what validation has been done of the second
-> patch. e.g. is it going to break when dump and restore are done on
-> machines of different page size? This is why I didn't sign-off on
-> the second patch....
-
-*nod* - there is a "standard" dumpfile as part of xfsqa, so at least I
-know it does properly restore that, still.  But has anything tested the
-other direction?
-
--Eric
-
->> In any case, Christoph, please pull these commits into your kernel.org 
->> -dev trees.
-> 
-> NACK. Lets do a proper review cycle first.
-> 
-> Cheers,
-> 
-> Dave.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+RGF2ZSBDaGlubmVyIHdyb3RlOgo+IE9uIFdlZCwgSmFuIDA3LCAyMDA5IGF0IDA1OjMyOjA5UE0g
+KzExMDAsIExhY2hsYW4gTWNJbHJveSB3cm90ZToKPj4gRXJpYyBTYW5kZWVuIHdyb3RlOgo+Pj4g
+TGFjaGxhbiBNY0lscm95IHdyb3RlOgo+Pj4+IEVyaWMgU2FuZGVlbiB3cm90ZToKPj4+Pj4gRXJp
+YyBTYW5kZWVuIHdyb3RlOgo+Pj4+Pgo+Pj4+Pj4gR2FoOyBvciBub3QuICB3aGF0IGlzIGdvaW5n
+IG9uIGhlcmUuLi4gIERvaW5nIGp1c3Qgc3RlcHMgMSwgMiwgMywgNAo+Pj4+Pj4gKGVuZGluZyBv
+biB0aGUgZXh0ZW5kaW5nIHRydW5jYXRlKToKPj4+Pj4+Cj4+Pj4+PiAjIHhmc19pbyAtYyAicHdy
+aXRlIC1TIDB4MTEgLWIgNDA5NiAwIDQwOTYiIC1jICJtbWFwIC1yIDAgNTEyIiAtYyAibXJlYWQK
+Pj4+Pj4+IDAgNTEyIiAtYyAibXVubWFwIiAtYyAidHJ1bmNhdGUgMjU2IiAtYyAidHJ1bmNhdGUg
+NTE0IiAtdCAtZCAtZgo+Pj4+Pj4gL21udC9zY3JhdGNoL3Rlc3RmaWxlCj4+Pj4+Pgo+Pj4+Pj4g
+IyB4ZnNfYm1hcCAtdiAvbW50L3NjcmF0Y2gvdGVzdGZpbGUKPj4+Pj4+IC9tbnQvc2NyYXRjaC90
+ZXN0ZmlsZToKPj4+Pj4+ICBFWFQ6IEZJTEUtT0ZGU0VUICAgICAgQkxPQ0stUkFOR0UgICAgICBB
+RyBBRy1PRkZTRVQgICAgICAgIFRPVEFMCj4+Pj4+PiAgICAwOiBbMC4uMF06ICAgICAgICAgIDYz
+Li42MyAgICAgICAgICAgIDAgKDYzLi42MykgICAgICAgICAgICAgMQo+Pj4+Pj4gICAgMTogWzEu
+LjFdOiAgICAgICAgICBob2xlICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDEK
+Pj4+Pj4+Cj4+Pj4+PiBJdCBsb29rcyBsaWtlIHdoYXQgSSBleHBlY3QsIGF0IHRoaXMgcG9pbnQu
+ICBCdXQgdGhlbjoKPj4+Pj4+Cj4+Pj4+PiAjIHN5bmMKPj4+Pj4+ICMgeGZzX2JtYXAgLXYgL21u
+dC9zY3JhdGNoL3Rlc3RmaWxlCj4+Pj4+PiAvbW50L3NjcmF0Y2gvdGVzdGZpbGU6Cj4+Pj4+PiAg
+RVhUOiBGSUxFLU9GRlNFVCAgICAgIEJMT0NLLVJBTkdFICAgICAgQUcgQUctT0ZGU0VUICAgICAg
+ICBUT1RBTAo+Pj4+Pj4gICAgMDogWzAuLjFdOiAgICAgICAgICA2My4uNjQgICAgICAgICAgICAw
+ICg2My4uNjQpICAgICAgICAgICAgIDIKPj4+Pj4+Cj4+Pj4+PiBVbSwgd2h5J2QgdGhhdCBsYXN0
+IGJsb2NrIGdldCBtYXBwZWQgaW4/ICBtbWFwIHZzLiBkaXJlY3QgSU8gSSdtCj4+Pj4+PiBndWVz
+c2luZy4uLiB3L28gdGhlIG1tYXAgcmVhZCB0aGlzIGRvZXMgbm90IGhhcHBlbi4KPj4+Pj4gUmVw
+bHlpbmcgdG8gbXlzZWxmIHR3aWNlPyAgSSByZWFsbHkgbmVlZCB0byBnbyB0byBiZWQuCj4+Pj4+
+Cj4+Pj4+IFNvIHRoaXMgYWxsIGRvZXMgc2VlbSB0byBjb21lIGJhY2sgdG8gcGFnZV9zdGF0ZV9j
+b252ZXJ0Lgo+Pj4+Pgo+Pj4+PiBCb3RoIHRoZSBleHRlbmRpbmcgd3JpdGUgaW4gdGhlIG9yaWdp
+bmFsIGNhc2UgYW5kIHRoZSBzeW5jIGFib3ZlIGZpbmQKPj4+Pj4gdGhlaXIgd2F5IHRoZXJlOyBi
+dXQgZXNwLiBpbiB0aGUgc3luYyB0ZXN0IGFib3ZlLCB3aHkgZG8gd2UgaGF2ZSAqYW55Kgo+Pj4+
+PiB3b3JrIHRvIGRvPwo+Pj4+IEVyaWMsIGRpZCB5b3UgZmluZCBvdXQgd2h5IHN5bmMgd2FzIGFs
+bG9jYXRpbmcgdGhhdCBzZWNvbmQgYmxvY2s/Cj4+PiBJJ20gYWZyYWlkIHRoaXMgaGFzIGJlZW4g
+b24gdGhlIGJhY2sgYnVybmVyIChvciBtYXliZSBmdXJ0aGVyIGJhY2spIGZvcgo+Pj4gYSB3aGls
+ZS4uLiBzby4uLiBlaXRoZXIgIm5vIiBvciAiSSBkb24ndCByZW1lbWJlciIgOikKPj4gSnVzdCB0
+cnlpbmcgeW91ciB0ZXN0IGNhc2UuICBJdCdzIG5vdCByZWxhdGVkIHRvIGRpcmVjdCBJL08gb3Ig
+bW1hcCBJL08KPj4gc2luY2UgSSBjYW4gcmVwcm9kdWNlIGl0IHdpdGhvdXQgdGhvc2UuCj4+Cj4+
+ICMgeGZzX2lvIC1mIC1jICJwd3JpdGUgLVMgMHgxMSAtYiA1MTMgMCA1MTMiIC1jICJ0cnVuY2F0
+ZSAxIiAtYyAidHJ1bmNhdGUgNTEzIiBmaWxlCj4+IHdyb3RlIDUxMy81MTMgYnl0ZXMgYXQgb2Zm
+c2V0IDAKPj4gNTEzLjAwMDAwMCBieXRlcywgMSBvcHM7IDAuMDAwMCBzZWMgKDguODk1IE1pQi9z
+ZWMgYW5kIDE4MTgxLjgxODIgb3BzL3NlYykKPj4gIyB4ZnNfYm1hcCAtdnZwIGZpbGU7IHN5bmM7
+IHhmc19ibWFwIC12dnAgZmlsZQo+PiBmaWxlOgo+PiAgIEVYVDogRklMRS1PRkZTRVQgICAgICBC
+TE9DSy1SQU5HRSAgICAgIEFHIEFHLU9GRlNFVCAgICAgICAgVE9UQUwgRkxBR1MKPj4gICAgIDA6
+IFswLi4wXTogICAgICAgICAgNDguLjQ4ICAgICAgICAgICAgMCAoNDguLjQ4KSAgICAgICAgICAg
+ICAxIDAwMDAwCj4+ICAgICAxOiBbMS4uMV06ICAgICAgICAgIGhvbGUgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgMQo+IC4uLi4KPj4gZmlsZToKPj4gICBFWFQ6IEZJTEUtT0ZG
+U0VUICAgICAgQkxPQ0stUkFOR0UgICAgICBBRyBBRy1PRkZTRVQgICAgICAgIFRPVEFMIEZMQUdT
+Cj4+ICAgICAwOiBbMC4uMV06ICAgICAgICAgIDQ4Li40OSAgICAgICAgICAgIDAgKDQ4Li40OSkg
+ICAgICAgICAgICAgMiAwMDAwMAo+IC4uLi4KPj4geGZzX2JtYXAgd2lsbCBjYXVzZSB0aGUgZmls
+ZSB0byBiZSBmbHVzaGVkIHNvIHRoZXJlIHNob3VsZCBiZSBubyBkaXJ0eQo+PiBkYXRhIHRvIGJl
+IGZsdXNoZWQgZHVyaW5nIHRoZSBzeW5jLiAgU3RyYW5nZS4KPiAKPiBZZWFoLCBJIG5vdGljZWQg
+dGhhdCBhcyB3ZWxsLiBBRkFJQ1QgaXQgaXMgYmVjYXVzZSB0aGUgc3RhdGUgb24KPiBvbiB0aGUg
+c2Vjb25kIGJ1ZmZlciBoYXMgYmVlbiB0cmFzaGVkIGJ5IHRoZSBkaXNjYXJkIGJ1dCBpdCBoYXMg
+YmVlbgo+IGxlZnQgdXB0b2RhdGUuIFRoZSByZXN1bHQgaXMgdGhhdCB4ZnNfZmx1c2hwYWdlcygp
+IGRvZXNuJ3QgdGhpbmsKPiB0aGF0IHRoZXJlIGlzIGFueXRoaW5nIHRvIHdyaXRlIG91dCBhbmQg
+dGhlIGJtYXAgY29kZSBmaW5kcyBubwo+IGV4dGVudCBvbiB0aGF0IHJhbmdlIHNvINGWdCBpcyBj
+b25zaWRlcmVkIGEgaG9sZS4KPiAKPiBIb3dldmVyLCB3aGVuIHRoZSBWRlMgY29tZXMgYWxvbmcg
+YW5kIHdyaXRlcyB0aGUgZGlydHkgaW5vZGUgaXQKPiB0aGlua3MgdGhhdCB0aGUgcGFnZSBpcyBk
+aXJ0eSBhbmQgd3JpdGVzIGl0Lgo+IHhmc19wYWdlX3N0YXRlX2NvbnZlcnQoKSB0aGVuIHNlZXMg
+dGhlIHNlY29uZCBidWZmZXIgYXMgdXB0b2RhdGUgYnV0Cj4gdW5tYXBwZWQgYW5kIHdpdGhpbiBF
+T0Ygc28gaXQgYWxsb2NhdGVzIHRoZSBibG9jayBhbmQgd3JpdGVzIGl0IG91dC4KPiAKPiBJSVJD
+LCB0aGUgY29kZSBpbiB4ZnNfcGFnZV9zdGF0ZV9jb252ZXJ0KCkgZGlkIHRoaXMgYWxsb2NhdGlv
+biB0bwo+IGNhdGNoIG1tYXAoKSB3cml0ZXMgaW50byBob2xlcy4gV2UgaGF2ZSAtPnBhZ2VfbWt3
+cml0ZSB0byBjYXRjaCB0aGlzCj4gbm93IGFuZCB0dXJuIHRoZW0gaW50byBkZWxhbGxvYyB3cml0
+ZXMsIHNvIHBlcmhhcHMgdGhpcyBjb2RlIHBhdGggaXMKPiBubyBsb25nZXIgbmVlZGVkIGFueW1v
+cmU/CgpUaGFua3MgRGF2ZS4KCkVyaWMsIEkgdHJpZWQgeW91ciBwYXRjaCBhZ2FpbiBhbmQgaXQg
+Zml4ZWQgdGhpcyBwcm9ibGVtIGJ1dCBmcm9tIHRoZQpzb3VuZCBvZiBEYXZlJ3MgZGVzY3JpcHRp
+b24gaXQgbWF5IGJlIGEgY2FzZSBvZiByZW1vdmluZyBjb2RlIHJhdGhlcgp0aGFuIGFkZGluZyBh
+bm90aGVyIGNoZWNrLgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29t
+L21haWxtYW4vbGlzdGluZm8veGZzCg==
