@@ -1,16 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n0AGRZss003096 for <xfs@oss.sgi.com>; Sat, 10 Jan 2009 10:27:35 -0600
-Message-ID: <4968CC73.4070700@sandeen.net>
-Date: Sat, 10 Jan 2009 10:27:31 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	n0AHuSfD012042 for <xfs@oss.sgi.com>; Sat, 10 Jan 2009 11:56:30 -0600
+Received: from mail.gmx.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id 6E1FA78FFD
+	for <xfs@oss.sgi.com>; Sat, 10 Jan 2009 09:56:26 -0800 (PST)
+Received: from mail.gmx.net (mail.gmx.net [213.165.64.20]) by cuda.sgi.com
+	with SMTP id HWAoGGBpTDKyd3rk for <xfs@oss.sgi.com>;
+	Sat, 10 Jan 2009 09:56:26 -0800 (PST)
+Message-ID: <4968E145.3050807@gmx.net>
+Date: Sat, 10 Jan 2009 18:56:21 +0100
+From: Carsten Menke <bootsy52@gmx.net>
 MIME-Version: 1.0
-Subject: Re: [xfs-masters] 2.6.29-rc: kernel BUG at fs/xfs/support/debug.c:108
-References: <20090109044121.GA31280@orion>
-	<20090109053858.GP9448@disturbed>	<a4423d670901091353s7ff12207gcb38eb093d77d401@mail.gmail.com>	<a4423d670901091418j5c7fdfb2oeba2f4640f8e29d0@mail.gmail.com>	<a4423d670901091511y68a53808rfaab8148526224c6@mail.gmail.com>	<a4423d670901100419s2ae106bexac1a538caf654153@mail.gmail.com>	<20090110143924.GA25900@infradead.org>
-	<a4423d670901100709v1e7ce0bfs167547c5001787ac@mail.gmail.com>
-In-Reply-To: <a4423d670901100709v1e7ce0bfs167547c5001787ac@mail.gmail.com>
+Subject: Re: XFS: xfs_trans_cancel Filesystem shutdown
+References: <4963B97D.1020201@gmx.net> <49678756.10303@thebarn.com>
+In-Reply-To: <49678756.10303@thebarn.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,23 +27,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alexander Beregalov <a.beregalov@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, kernel-testers@vger.kernel.org, xfs@oss.sgi.com
+To: Russell Cattelan <cattelan@thebarn.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-Alexander Beregalov wrote:
-> 2009/1/10 Christoph Hellwig <hch@infradead.org>:
-
->> How big is the filesystem where you see this corruption? Maybe I could
->> reproduce it locally with a xfs_metadump image.
+Russell Cattelan wrote:
 > 
-> They are big enough, I have four such FS's for >200Gb
+> cc the xfs list.
+> 
+> Since you have wiped the file system it is going to be hard to get to 
+> the bottom of th issue.
+> It looks like you hit two different issues here, one is a shutdown and 
+> one look like a deadlock?
+> 
+> 
+> In the future it would be helpful to xfs_metadump the file system and 
+> then file a bug and attach the metadump image.
+> 
+Yes, I know, I have seen this after I created the new filesystem while further
+searching the net for possible causes of this, that a xfs_metadump is most of 
+the time needed to debug this. But as this is a production system the system had 
+to go online again as soon as possible, so I just decided
+to share the information I've got afterwards. The next time I will do the
+xfs_metadump (but then, I hope also that I won't be hit by the problem once again).
 
-An xfs_metadump should not be so large, though.
+Regards
 
-But bisecting as hch suggested (keepin the "working" header for each
-bisection point) would be great.
+Carsten
 
--Eric
+
+-- 
+"There are two major products that came out of Berkeley: LSD and UNIX.
+   We don't believe this to be a coincidence." --Jeremy S. Anderson
 
 _______________________________________________
 xfs mailing list
