@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n0AHuSfD012042 for <xfs@oss.sgi.com>; Sat, 10 Jan 2009 11:56:30 -0600
-Received: from mail.gmx.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id 6E1FA78FFD
-	for <xfs@oss.sgi.com>; Sat, 10 Jan 2009 09:56:26 -0800 (PST)
-Received: from mail.gmx.net (mail.gmx.net [213.165.64.20]) by cuda.sgi.com
-	with SMTP id HWAoGGBpTDKyd3rk for <xfs@oss.sgi.com>;
-	Sat, 10 Jan 2009 09:56:26 -0800 (PST)
-Message-ID: <4968E145.3050807@gmx.net>
-Date: Sat, 10 Jan 2009 18:56:21 +0100
-From: Carsten Menke <bootsy52@gmx.net>
+	n0AMKfnQ009678 for <xfs@oss.sgi.com>; Sat, 10 Jan 2009 16:20:41 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7212917B91A8
+	for <xfs@oss.sgi.com>; Sat, 10 Jan 2009 13:06:35 -0800 (PST)
+Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
+	cuda.sgi.com with ESMTP id CWKjbITUETCQjxJx for
+	<xfs@oss.sgi.com>; Sat, 10 Jan 2009 13:06:35 -0800 (PST)
+Message-ID: <496905C9.10807@sandeen.net>
+Date: Sat, 10 Jan 2009 14:32:09 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: XFS: xfs_trans_cancel Filesystem shutdown
-References: <4963B97D.1020201@gmx.net> <49678756.10303@thebarn.com>
-In-Reply-To: <49678756.10303@thebarn.com>
+Subject: Re: [PATCH] xfstests: add test 200, exercise read-only block devices
+	and mounts
+References: <20090104174223.GA10050@infradead.org>
+In-Reply-To: <20090104174223.GA10050@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,37 +28,187 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Russell Cattelan <cattelan@thebarn.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Russell Cattelan wrote:
-> 
-> cc the xfs list.
-> 
-> Since you have wiped the file system it is going to be hard to get to 
-> the bottom of th issue.
-> It looks like you hit two different issues here, one is a shutdown and 
-> one look like a deadlock?
-> 
-> 
-> In the future it would be helpful to xfs_metadump the file system and 
-> then file a bug and attach the metadump image.
-> 
-Yes, I know, I have seen this after I created the new filesystem while further
-searching the net for possible causes of this, that a xfs_metadump is most of 
-the time needed to debug this. But as this is a production system the system had 
-to go online again as soon as possible, so I just decided
-to share the information I've got afterwards. The next time I will do the
-xfs_metadump (but then, I hope also that I won't be hit by the problem once again).
+Christoph Hellwig wrote:
+> Make sure we do the right thing with blockdevices with a hard read-only
+> flag.
 
-Regards
+Looks good to me.
 
-Carsten
-
-
--- 
-"There are two major products that came out of Berkeley: LSD and UNIX.
-   We don't believe this to be a coincidence." --Jeremy S. Anderson
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Index: xfstests-dev/200
+> ===================================================================
+> --- /dev/null	1970-01-01 00:00:00.000000000 +0000
+> +++ xfstests-dev/200	2009-01-04 17:39:08.000000000 +0000
+> @@ -0,0 +1,120 @@
+> +#! /bin/sh
+> +# FS QA Test No. 200
+> +#
+> +# Check out various mount/remount/unmount scenarious on a read-only blockdev.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2009 Christoph Hellwig.
+> +#-----------------------------------------------------------------------
+> +#
+> +# creator
+> +owner=hch@lst.de
+> +
+> +seq=`basename $0`
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +
+> +_filter_scratch()
+> +{
+> +	sed -e "s,$SCRATCH_DEV,SCRATCH_DEV,g" | \
+> +		sed -e "s,$SCRATCH_MNT,SCRATCH_MNT,g"
+> +}
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	blockdev --setrw $SCRATCH_DEV
+> +}
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +# get standard environment, filters and checks
+> +. ./common.rc
+> +. ./common.filter
+> +
+> +# real QA test starts here
+> +_supported_fs xfs
+> +_supported_os Linux
+> +
+> +_require_scratch
+> +
+> +_scratch_mkfs_xfs >/dev/null 2>&1
+> +
+> +#
+> +# Mark the device read-only
+> +#
+> +echo "setting device read-only"
+> +blockdev --setro $SCRATCH_DEV
+> +
+> +#
+> +# Mount it, and make sure we can't write to it, and we can unmount it again
+> +#
+> +echo "mounting read-only block device:"
+> +_scratch_mount 2>&1 | _filter_scratch
+> +
+> +echo "touching file on read-only filesystem (should fail)"
+> +touch $SCRATCH_MNT/foo 2>&1 | _filter_scratch
+> +
+> +#
+> +# Apparently this used to be broken at some point:
+> +#	http://oss.sgi.com/bugzilla/show_bug.cgi?id=807
+> +#
+> +echo "unmounting read-only filesystem"
+> +umount $SCRATCH_MNT 2>&1 | _filter_scratch
+> +
+> +echo "setting device read-write"
+> +blockdev --setrw $SCRATCH_DEV
+> +
+> +echo "mounting read-write block device:"
+> +_scratch_mount 2>&1 | _filter_scratch
+> +
+> +echo "touch files"
+> +touch $SCRATCH_MNT/{0,1,2,3,4,5,6,7,8,9}{0,1,2,3,4,5,6,7,8,9}
+> +
+> +echo "going down:"
+> +src/godown -f $SCRATCH_MNT
+> +
+> +echo "unmounting shutdown filesystem:"
+> +umount $SCRATCH_MNT 2>&1 | _filter_scratch
+> +
+> +echo "setting device read-only"
+> +blockdev --setro $SCRATCH_DEV
+> +
+> +#
+> +# Mounting a filesystem that requires log-recovery fails unless
+> +# -o norecovery is used.
+> +#
+> +echo "mounting filesystem that needs recovery on a read-only device:"
+> +_scratch_mount 2>&1 | _filter_scratch
+> +
+> +echo "unmounting read-only filesystem"
+> +umount $SCRATCH_MNT 2>&1 | _filter_scratch
+> +
+> +#
+> +# This is the way out if the underlying device really is read-only.
+> +# Doesn't mean it's a good idea in practive, more a last resort
+> +# data recovery hack.
+> +#
+> +echo "mounting filesystem with -o norecovery on a read-only device:"
+> +_scratch_mount -o norecovery 2>&1 | _filter_scratch
+> +
+> +echo "unmounting read-only filesystem"
+> +umount $SCRATCH_MNT 2>&1 | _filter_scratch
+> +
+> +echo "setting device read-write"
+> +blockdev --setrw $SCRATCH_DEV
+> +
+> +#
+> +# But log recovery is performed when mount with -o ro as long as
+> +# the underlying device is not write protected.
+> +#
+> +echo "mounting filesystem that needs recovery with -o ro:"
+> +_scratch_mount -o ro 2>&1 | _filter_scratch
+> +
+> +
+> +# success, all done
+> +echo "*** done"
+> +rm -f $seq.full
+> +status=0
+> Index: xfstests-dev/200.out
+> ===================================================================
+> --- /dev/null	1970-01-01 00:00:00.000000000 +0000
+> +++ xfstests-dev/200.out	2009-01-04 17:39:38.000000000 +0000
+> @@ -0,0 +1,24 @@
+> +QA output created by 200
+> +setting device read-only
+> +mounting read-only block device:
+> +mount: block device SCRATCH_DEV is write-protected, mounting read-only
+> +touching file on read-only filesystem (should fail)
+> +touch: cannot touch `SCRATCH_MNT/foo': Read-only file system
+> +unmounting read-only filesystem
+> +setting device read-write
+> +mounting read-write block device:
+> +touch files
+> +going down:
+> +unmounting shutdown filesystem:
+> +setting device read-only
+> +mounting filesystem that needs recovery on a read-only device:
+> +mount: block device SCRATCH_DEV is write-protected, mounting read-only
+> +mount: cannot mount block device SCRATCH_DEV read-only
+> +unmounting read-only filesystem
+> +umount: SCRATCH_MNT: not mounted
+> +mounting filesystem with -o norecovery on a read-only device:
+> +mount: block device SCRATCH_DEV is write-protected, mounting read-only
+> +unmounting read-only filesystem
+> +setting device read-write
+> +mounting filesystem that needs recovery with -o ro:
+> +*** done
+> Index: xfstests-dev/group
+> ===================================================================
+> --- xfstests-dev.orig/group	2009-01-04 17:14:27.000000000 +0000
+> +++ xfstests-dev/group	2009-01-04 17:14:36.000000000 +0000
+> @@ -301,3 +301,4 @@
+>  196 quota auto
+>  197 dir auto
+>  199 mount auto
+> +200 mount auto
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
