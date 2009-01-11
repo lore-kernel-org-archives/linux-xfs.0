@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n0BDkRMu025938 for <xfs@oss.sgi.com>; Sun, 11 Jan 2009 07:46:27 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8F61217CDC74
-	for <xfs@oss.sgi.com>; Sun, 11 Jan 2009 05:46:25 -0800 (PST)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id BQsU5DZT0Nxq2KGU for
-	<xfs@oss.sgi.com>; Sun, 11 Jan 2009 05:46:25 -0800 (PST)
-Message-ID: <4969F830.1060209@sandeen.net>
-Date: Sun, 11 Jan 2009 07:46:24 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	n0BFkCM7002135 for <xfs@oss.sgi.com>; Sun, 11 Jan 2009 09:46:13 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DBB517AE0E
+	for <xfs@oss.sgi.com>; Sun, 11 Jan 2009 07:46:11 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id srmD2OjCVkvVt8tb for
+	<xfs@oss.sgi.com>; Sun, 11 Jan 2009 07:46:11 -0800 (PST)
+Date: Sun, 11 Jan 2009 10:45:23 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [GIT PULL] XFS update for 2.6.29
+Message-ID: <20090111154514.GA12526@infradead.org>
+References: <20081230030845.A4F0558AE206@chook.melbourne.sgi.com>
+	<Pine.LNX.4.64.0901011048090.14380@anakin>
+	<20090101170329.GA17892@infradead.org>
+	<Pine.LNX.4.64.0901021056360.14380@anakin>
+	<Pine.LNX.4.64.0901111137410.30201@anakin>
 MIME-Version: 1.0
-Subject: Re: mkfs.xfs with a 9TB realtime volume hangs
-References: <alpine.DEB.2.00.0811141231390.23165@kurp.hut.fi>
-	<49690F73.1070908@sandeen.net> <20090111103528.GA8071@disturbed>
-In-Reply-To: <20090111103528.GA8071@disturbed>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0901111137410.30201@anakin>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,34 +32,14 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>, Jan Wagner <jwagner@kurp.hut.fi>, xfs@oss.sgi.com
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Linux Kernel Development <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
 
-Dave Chinner wrote:
-> On Sat, Jan 10, 2009 at 03:13:23PM -0600, Eric Sandeen wrote:
+On Sun, Jan 11, 2009 at 11:38:13AM +0100, Geert Uytterhoeven wrote:
+> JFYI, the bug has entered Linus' tree. The fix hasn't.
 
-
->> With the default 4k extent size this takes forever (the man page claims
->> default is 64k, maybe this got broken at some point).
-> 
-> It got changed a few years back by Nathan, IIRC. 
-
-Yep, I found the commit yesterday, it was for buffered IO's benefit on
-the rt subvol, to reduce unwritten extent conversion IIRC.
-
-I was going to follow up w/ the commit etc yesterday, but the mailing
-list was down (again, sigh - this is indicative of sgi's staunch
-commitment to xfs, I'm sure) so had nothing to reply to.
-
--Eric
-
-> I bet the time
-> being taken a result of the blow-out in bitmap size caused by reducing
-> the extent size. Given it is non-linear, it may have something to do
-> with cache sizes as well.  e.g buftarg hashes not large enough.
-> 
-> Cheers,
-> 
-> Dave.
+I sent the patch when you told me about it, but I'm not the maintainer
+so I can't pus it myself.
 
 _______________________________________________
 xfs mailing list
