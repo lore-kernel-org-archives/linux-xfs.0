@@ -1,23 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n0C88vV9025934 for <xfs@oss.sgi.com>; Mon, 12 Jan 2009 02:08:57 -0600
-Message-ID: <a4423d670901120008j728af9cdrbed8bbb938117ea3@mail.gmail.com>
-Date: Mon, 12 Jan 2009 11:08:55 +0300
-From: "Alexander Beregalov" <a.beregalov@gmail.com>
-Subject: Re: [xfs-masters] 2.6.29-rc: kernel BUG at fs/xfs/support/debug.c:108
-In-Reply-To: <20090112034550.GI8071@disturbed>
+	n0CBEdlV009020 for <xfs@oss.sgi.com>; Mon, 12 Jan 2009 05:14:39 -0600
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 497C217D95E5
+	for <xfs@oss.sgi.com>; Mon, 12 Jan 2009 03:14:36 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31]) by cuda.sgi.com
+	with ESMTP id 6DjCeB9h7Dyop5hJ for <xfs@oss.sgi.com>;
+	Mon, 12 Jan 2009 03:14:36 -0800 (PST)
+Date: Mon, 12 Jan 2009 06:14:36 -0500 (EST)
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: spurious -ENOSPC on XFS
+Message-ID: <Pine.LNX.4.64.0901120509550.11089@hs20-bc2-1.build.redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-References: <a4423d670901091353s7ff12207gcb38eb093d77d401@mail.gmail.com>
-	<a4423d670901091511y68a53808rfaab8148526224c6@mail.gmail.com>
-	<a4423d670901100419s2ae106bexac1a538caf654153@mail.gmail.com>
-	<20090110143924.GA25900@infradead.org>
-	<a4423d670901100709v1e7ce0bfs167547c5001787ac@mail.gmail.com>
-	<20090110152803.GA7469@infradead.org> <20090110221459.GA8873@orion>
-	<20090111104659.GB8071@disturbed>
-	<a4423d670901111648w26e86baajcf7b6d98ff37d043@mail.gmail.com>
-	<20090112034550.GI8071@disturbed>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,42 +25,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, xfs@oss.sgi.com, kernel-testers@vger.kernel.org
+To: xfs@oss.sgi.com
+Cc: linux-kernel@vger.kernel.org
 
-2009/1/12 Dave Chinner <david@fromorbit.com>:
-> On Mon, Jan 12, 2009 at 03:48:13AM +0300, Alexander Beregalov wrote:
->> > Hmmmm - this might be getting closer to the source of the bug.
->> > It's being detecting when reading in the buffer to do a left shift
->> > now, not during the delete of a record.
->> >
->> > I'd suggest that you treat this as the same failure and continue
->> > the bisect to try to find when no problems show up at all.
->>
->> 687b890a184fef263ebb773926e1f4aa69240d01 is the first bad commit.
->
->    [XFS] implement generic xfs_btree_lshift
->
->    Make the btree left shift code generic. Based on a patch from David
->    Chinner with lots of changes to follow the original btree implementations
->    more closely. While this loses some of the generic helper routines for
->    inserting/moving/removing records it also solves some of the one off bugs
->    in the original code and makes it easier to verify.
->
->> Does it make sense?
->
-> Yes, a bug in that patch could corrupt the btree in memory which we then trip
-> over later in delrec before it has been written to disk.
->
-> Thank you for isolating the problem to that commit - it greatly narrows down
-> the amount of code we need to search to find the bug. I'll have a look tonight
-> to see if I can spot the problem.
+Hi
 
-It seems 9eaead5 (implement generic xfs_btree_rshift) is really guilty, unless
-the bug "XFS internal error xfs_btree_check_lblock at line 200 of file
-fs/xfs/xfs_btree.c:"
-which I posted 5 hours ago is completely different from the original
-bug message.
-I can not reproduce the bug on 278d0ca14.
+I discovered a bug in XFS in delayed allocation.
+
+When you take a small partition (52MB in my case) and copy many small 
+files on it (source code) that barely fits there, you get -ENOSPC. Then 
+sync the partition, some free space pops up, click "retry" in MC an the 
+copy continues. They you get again -ENOSPC, you must sync, click "retry" 
+and go on. And so on few times until the source code finally fits on the 
+XFS partition.
+
+This misbehavior is apparently caused by delayed allocation, delayed 
+allocation does not exactly know how much space will be occupied by data, 
+so it makes some upper bound guess. Because free space count is only a 
+guess, not the actual data being consumed, XFS should not return -ENOSPC 
+on behalf of it. When the free space overflows, XFS should sync itself, 
+retry allocation and only return -ENOSPC if it fails the second time, 
+after the sync.
+
+Mikulas
 
 _______________________________________________
 xfs mailing list
