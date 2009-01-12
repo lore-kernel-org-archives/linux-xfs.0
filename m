@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n0BNxpgB014076 for <xfs@oss.sgi.com>; Sun, 11 Jan 2009 17:59:52 -0600
-Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5C9C77BEE2
-	for <xfs@oss.sgi.com>; Sun, 11 Jan 2009 15:59:50 -0800 (PST)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net
-	[203.16.214.145]) by cuda.sgi.com with ESMTP id
-	ls1tXpBoavjS1d1j for <xfs@oss.sgi.com>;
-	Sun, 11 Jan 2009 15:59:50 -0800 (PST)
-Date: Mon, 12 Jan 2009 10:03:10 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 6/7] xfs: fix bad_features2 fixups for the root filesystem
-Message-ID: <20090111230310.GC8071@disturbed>
-References: <20090109221104.237540000@bombadil.infradead.org>
-	<20090109221301.289471000@bombadil.infradead.org>
+	n0C0mFrs019432 for <xfs@oss.sgi.com>; Sun, 11 Jan 2009 18:48:17 -0600
+Message-ID: <a4423d670901111648w26e86baajcf7b6d98ff37d043@mail.gmail.com>
+Date: Mon, 12 Jan 2009 03:48:13 +0300
+From: "Alexander Beregalov" <a.beregalov@gmail.com>
+Subject: Re: [xfs-masters] 2.6.29-rc: kernel BUG at fs/xfs/support/debug.c:108
+In-Reply-To: <20090111104659.GB8071@disturbed>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20090109221301.289471000@bombadil.infradead.org>
+References: <20090109044121.GA31280@orion>
+	<a4423d670901091353s7ff12207gcb38eb093d77d401@mail.gmail.com>
+	<a4423d670901091418j5c7fdfb2oeba2f4640f8e29d0@mail.gmail.com>
+	<a4423d670901091511y68a53808rfaab8148526224c6@mail.gmail.com>
+	<a4423d670901100419s2ae106bexac1a538caf654153@mail.gmail.com>
+	<20090110143924.GA25900@infradead.org>
+	<a4423d670901100709v1e7ce0bfs167547c5001787ac@mail.gmail.com>
+	<20090110152803.GA7469@infradead.org> <20090110221459.GA8873@orion>
+	<20090111104659.GB8071@disturbed>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,28 +30,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, xfs@oss.sgi.com, kernel-testers@vger.kernel.org
 
-On Fri, Jan 09, 2009 at 05:11:10PM -0500, Christoph Hellwig wrote:
-> Currently the bad_features2 fixup and the alignment updates in the superblock
-> are skipped if we mount a filesystem read-only.  But for the root filesystem
-> the typical case is to mount read-only first and only later remount writeable
-> so we'll never perform this update at all.  It's not a big problem but means
-> the logs of people needing the fixup get spammed at every boot because they
-> never happen on disk.
-> 
-> Reported-by: Arkadiusz Miskiewicz <arekm@maven.pl>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Hmmmm - this might be getting closer to the source of the bug.
+> It's being detecting when reading in the buffer to do a left shift
+> now, not during the delete of a record.
+>
+> I'd suggest that you treat this as the same failure and continue
+> the bisect to try to find when no problems show up at all.
 
-Looks sane.
-
-Reviewed-by: Dave Chinner <david@fromorbit.com>
-
-
--- 
-Dave Chinner
-david@fromorbit.com
+687b890a184fef263ebb773926e1f4aa69240d01 is the first bad commit.
+Does it make sense?
+It can not be reverted from the current git to be sure it is guilty
+due to merge conflicts.
 
 _______________________________________________
 xfs mailing list
