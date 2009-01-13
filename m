@@ -1,16 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n0D5tXTe027430 for <xfs@oss.sgi.com>; Mon, 12 Jan 2009 23:55:34 -0600
-Message-ID: <496C2D69.2010301@sgi.com>
-Date: Tue, 13 Jan 2009 16:58:01 +1100
-From: Lachlan McIlroy <lachlan@sgi.com>
+	n0DK4sN8005473 for <xfs@oss.sgi.com>; Tue, 13 Jan 2009 14:04:54 -0600
+Received: from zaphod.dth.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2DBF585732
+	for <xfs@oss.sgi.com>; Tue, 13 Jan 2009 12:04:52 -0800 (PST)
+Received: from zaphod.dth.net (zaphod.dth.net [85.159.112.68]) by cuda.sgi.com
+	with ESMTP id 0pRfMPKROomNpstg for <xfs@oss.sgi.com>;
+	Tue, 13 Jan 2009 12:04:52 -0800 (PST)
+Date: Tue, 13 Jan 2009 21:04:14 +0100
+From: Danny ter Haar <dth@dth.net>
+Subject: Re: problems showing up as XFS problems on kernels after 2.6.28-git2
+Message-ID: <20090113200414.GA21013@dth.net>
+References: <20090108215602.GA24479@dth.net> <20090109004609.GM9448@disturbed>
+	<20090109012610.GA23075@dth.net> <20090109020800.GO9448@disturbed>
+	<20090109061043.GA31450@dth.net>
+	<20090109194445.GA28759@infradead.org>
+	<20090109195144.GA19857@dth.net>
+	<20090109195852.GA6362@infradead.org>
+	<20090109214206.GA2901@dth.net>
+	<20090109220138.GA5282@infradead.org>
 MIME-Version: 1.0
-Subject: Re: spurious -ENOSPC on XFS
-References: <Pine.LNX.4.64.0901120509550.11089@hs20-bc2-1.build.redhat.com>
-	<20090112151133.GA24852@infradead.org>
-In-Reply-To: <20090112151133.GA24852@infradead.org>
-Reply-To: lachlan@sgi.com
+Content-Disposition: inline
+In-Reply-To: <20090109220138.GA5282@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,52 +31,98 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Mikulas Patocka <mpatocka@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> On Mon, Jan 12, 2009 at 06:14:36AM -0500, Mikulas Patocka wrote:
->> Hi
->>
->> I discovered a bug in XFS in delayed allocation.
->>
->> When you take a small partition (52MB in my case) and copy many small 
->> files on it (source code) that barely fits there, you get -ENOSPC. Then 
->> sync the partition, some free space pops up, click "retry" in MC an the 
->> copy continues. They you get again -ENOSPC, you must sync, click "retry" 
->> and go on. And so on few times until the source code finally fits on the 
->> XFS partition.
->>
->> This misbehavior is apparently caused by delayed allocation, delayed 
->> allocation does not exactly know how much space will be occupied by data, 
->> so it makes some upper bound guess. Because free space count is only a 
->> guess, not the actual data being consumed, XFS should not return -ENOSPC 
->> on behalf of it. When the free space overflows, XFS should sync itself, 
->> retry allocation and only return -ENOSPC if it fails the second time, 
->> after the sync.
-This sounds like a problem with speculative allocation - delayed allocations
-beyond eof.  Even if we write a small file, say 4k, a 64k chunk of delayed
-allocation will be credited to the file.  If we extend the file we use more
-of that chunk instead of allocating more.  When the file is closed and the
-last inode reference is dropped the excess delayed allocations are released
-back to freespace - this must be happening during the sync.
-
-> 
-> This looks a lot like: http://oss.sgi.com/bugzilla/show_bug.cgi?id=724
-> It's on my short-term todo list to turn the testcase in that entry
-> into a proper xfsqa testcase and followup on the investigation by
-> Dave and Eric.
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+SSdtIHN0dWNrIGluIHRyeWluZyB0byBiaXNlY3QgdGhlIHByb2JsZW0uCkkgcmVzdGFydGVkIGZy
+b20gc2NyYXRjaCBhbmQgc2FtZSByZXN1bHQ6CgpIZXJlIGlzIHdoYXQgaSBkaWQ6Cmxlbm55MzI6
+L3Vzci9zcmMjIGdpdCBjbG9uZSBnaXQ6Ly9naXQua2VybmVsLm9yZy9wdWIvc2NtL2xpbnV4L2tl
+cm5lbC9naXQvdG9ydmFsZHMvbGludXgtMi42LmdpdCBsaW51eC1naXQKSW5pdGlhbGl6ZWQgZW1w
+dHkgR2l0IHJlcG9zaXRvcnkgaW4gL3Vzci9zcmMvbGludXgtZ2l0Ly5naXQvCnJlbW90ZTogQ291
+bnRpbmcgb2JqZWN0czogMTA1NzUyMCwgZG9uZS4KcmVtb3RlOiBDb21wcmVzc2luZyBvYmplY3Rz
+OiAxMDAlICgxNzMwNTcvMTczMDU3KSwgZG9uZS4KUmVzb2x2aW5nIGRlbHRhczogMTAwJSAoODgx
+ODAxLzg4MTgwMSksIGRvbmUuCkNoZWNraW5nIG91dCBmaWxlczogMTAwJSAoMjY1NDQvMjY1NDQp
+LCBkb25lLgoKCiMgZ2l0IGJpc2VjdCBnb29kIDNjOTJlYzhhZTkxZWNmNTlkODhjNzk4MzAxODMz
+ZDdjZjgzZjIxNzkKIyBnaXQgYmlzZWN0IGJhZCA2YTk0Y2I3MzA2NGM5NTIyNTUzMzZjYzU3NzMx
+OTA0MTc0YjJjNThmCkJpc2VjdGluZzogOTU1IHJldmlzaW9ucyBsZWZ0IHRvIHRlc3QgYWZ0ZXIg
+dGhpcwpbNWVkMTgzNjgxNGQ5MDhmNDVjYWZkZTBlNzljYjg1MzE0YWI5ZDQxZF0gTWVyZ2UgZ2l0
+Oi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9rZXJuZWwvZ2l0L2RhdmVtL25ldC0yLjYK
+ClRoZSBFWFRSQVZFUlNJT04gaW4gdGhlIG1ha2VmaWxlIGF0IHRoaXMgcG9pbnQgd2FzICJwbGFp
+biIgMi42LjI4ICh3aGljaCBzZWVtcyBvZGQgdG8gbWUpCgpJIHJlbmFtZWQgaXQgdG8gIi1hMSIg
+YW5kIGNvbXBpbGVkIGtlcm5lbC4gCkluc3RhbGxlZC9yZWJvb3RlZC4KYWZ0ZXIgMTYgaG91cnMg
+KG92ZXJuaWdodCkgb2Ygbm8gdHJvdWJsZXMgaSB0aGluayBpdCBzZWVtZWQgc3RhYmxlOgpyZWJv
+b3QgICBzeXN0ZW0gYm9vdCAgMi42LjI4LWExICAgICAgICBGcmkgSmFuICA5IDE2OjU0IC0gMDk6
+MjkgICgxNjozNCkKCiMgZ2l0IGJpc2VjdCBnb29kCkJpc2VjdGluZzogNDc3IHJldmlzaW9ucyBs
+ZWZ0IHRvIHRlc3QgYWZ0ZXIgdGhpcwpNICAgICAgIHNjcmlwdHMvcGFja2FnZS9NYWtlZmlsZQpE
+ICAgICAgIHNjcmlwdHMvcGFja2FnZS9idWlsZGRlYgpbN2IyY2QwNzllYzhkY2M2NWNkY2E2NjIx
+MjQ1Y2ZhNWUzMGE4ZWY5Zl0gVjRML0RWQiAoMTAwMDcpOiBnc3BjYSAtIG01NjAyOiBSZWZhY3Rv
+ciB0aGUgZXJyb3IgaGFuZGxpbmcgaW4gdGhlIHM1azgzYQoKdmVyc2lvbiAiLWEyIiB3YXMgYnJh
+bmRlZCAib2siIGJ5IG1lIGFmdGVyIDMgaG91cnMgb2YgaGVhdnkgdXNlOgpyZWJvb3QgICBzeXN0
+ZW0gYm9vdCAgMi42LjI4LWEyICAgICAgICBTYXQgSmFuIDEwIDA5OjMxIC0gMTI6MzcgICgwMzow
+NikgCgojIGdpdCBiaXNlY3QgZ29vZApCaXNlY3Rpbmc6IDI2MiByZXZpc2lvbnMgbGVmdCB0byB0
+ZXN0IGFmdGVyIHRoaXMKWzYwOTRjODVhOTM1ZjdlYWRiNGM2MDdjNmRjNmQ4NmMwYTlmMDlhNGJd
+IE1lcmdlIGJyYW5jaCAnZm9yLWxpbnVzJyBvZiBnaXQ6Ly9naXQua2VybmVsLm9yZy9wdWIvc2Nt
+L2xpbnV4L2tlcm5lbC9naXQvcm9sYW5kL2luZmluaWJhbmQKClZlcnNpb24gIi1hMyIgYWxzbyBn
+b3QgbXkgYmxlc3Npbmc6CnJlYm9vdCAgIHN5c3RlbSBib290ICAyLjYuMjgtYTMgICAgICAgIFNh
+dCBKYW4gMTAgMTI6MzkgLSAxNzo1NSAgKDA1OjE1KSAgICAKCiMgZ2l0IGJpc2VjdCBnb29kCkJp
+c2VjdGluZzogMTMxIHJldmlzaW9ucyBsZWZ0IHRvIHRlc3QgYWZ0ZXIgdGhpcwpbYTE5NDE4OTUw
+MzRjZGEyYmZmYTIzYmE4NDU2MDdjODIxMzhjY2Y1Ml0gW1hGU10gcmVtb3ZlIGRlYWQgY29kZSBm
+b3Igb2xkIGlub2RlIGl0ZW0gcmVjb3ZlcnkKClRoaXMgdGltZSB0aGUgTWFrZWZpbGUgRVhUUkFW
+RVJTSU9OIGNoYW5nZWQgdG8gIi1SQzYiCkkgd2FzL2FtIHVuZGVyIHRoZSBpbXByZXNzaW9uIHRo
+YXQgaSdtIHRlc3RpbmcgYmV0d2VlbiAyLjYuMjgtZ2l0MiBhbmQgMi42LjI4LWdpdDMKU28gd2h5
+IGlzIHRoZSBNYWtlZmlsZSBnb2luZyB0aGlzIHdheSBiYWNrID8gZGF6emxlZCAmIGNvbmZ1c2Vk
+LgoKIi1hNCIgYmFyZmVkCgpsZW5ueTMyOi91c3Ivc3JjL2xpbnV4LWdpdCMgZ2l0IGJpc2VjdCBi
+YWQKQmlzZWN0aW5nOiA2NSByZXZpc2lvbnMgbGVmdCB0byB0ZXN0IGFmdGVyIHRoaXMKWzY0NDFl
+NTQ5MTU3Yjc0OWJhZTAwM2NjZTcwYjRjOGI2MmU0ODAxZmFdIFtYRlNdIGZhY3RvciB4ZnNfaWdl
+dF9jb3JlKCkgaW50byBoaXQgYW5kIG1pc3MgY2FzZXMKRVhUUkFWRVJTSU9OIHdlbnQgYmFhY2sg
+dG8gIi1SQzIiID8hCgoiLWE1IiB0b3RhbGx5IGZyb3plIHRoZSBtYWNoaW5lIChkaWRuJ3QgY2F0
+Y2ggYW55dGhpbmcgb24gdGhlIG5ldGNvbnNvbGUpCgpTbyBpIGludGVycHJldGVkIHRoYXQgYXMg
+YSAiZmFpbCIKCiMgZ2l0IGJpc2VjdCBiYWQKQmlzZWN0aW5nOiAzMiByZXZpc2lvbnMgbGVmdCB0
+byB0ZXN0IGFmdGVyIHRoaXMKW2ZkNmJjYzViNjMwNTEzOTJiYTcwOWE4ZmQzMzE3M2IyNjM2Njll
+MGFdIFtYRlNdIGtpbGwgeGZzX2JtYnRfbG9nX2Jsb2NrIGFuZCB4ZnNfYm1idF9sb2dfcmVjcwoK
+Tm93ICItYTYiIGRvZXNuJ3Qgd2FudCB0byBjb21waWxlOgoKIyBtYWtlLWtwa2cga2VybmVsLWlt
+YWdlIC0taW5pdHJkCmV4ZWMgZGViaWFuL3J1bGVzICBERUJJQU5fUkVWSVNJT049Mi42LjI4LWE2
+LTEwLjAwLkN1c3RvbSAgSU5JVFJEPVlFUyAga2VybmVsLWltYWdlIAo9PT09PT0gbWFraW5nIHRh
+cmdldCBkZWJpYW4vc3RhbXAvYnVpbGQva2VybmVsIFtuZXcgcHJlcmVxczogY29uZi52YXJzXT09
+PT09PQpUaGlzIGlzIGtlcm5lbCBwYWNrYWdlIHZlcnNpb24gMTEuMDE1Lgp0ZXN0ICEgLWYgc2Ny
+aXB0cy9wYWNrYWdlL2J1aWxkZGViLmtwa2ctZGlzdCB8fCBtdiAtZiBzY3JpcHRzL3BhY2thZ2Uv
+YnVpbGRkZWIua3BrZy1kaXN0IHNjcmlwdHMvcGFja2FnZS9idWlsZGRlYgp0ZXN0ICEgLWYgc2Ny
+aXB0cy9wYWNrYWdlL01ha2VmaWxlLmtwa2ctZGlzdCB8fCBtdiAtZiBzY3JpcHRzL3BhY2thZ2Uv
+TWFrZWZpbGUua3BrZy1kaXN0IHNjcmlwdHMvcGFja2FnZS9NYWtlZmlsZQovdXNyL2Jpbi9tYWtl
+IC1qMiAgIEFSQ0g9aTM4NiBcCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgYnpJbWFnZQpt
+YWtlWzFdOiBFbnRlcmluZyBkaXJlY3RvcnkgYC91c3Ivc3JjL2xpbnV4LWdpdCcKICBDSEsgICAg
+IGluY2x1ZGUvbGludXgvdmVyc2lvbi5oCiAgQ0hLICAgICBpbmNsdWRlL2xpbnV4L3V0c3JlbGVh
+c2UuaAogIENBTEwgICAgc2NyaXB0cy9jaGVja3N5c2NhbGxzLnNoCiAgQ0hLICAgICBpbmNsdWRl
+L2xpbnV4L2NvbXBpbGUuaAogIENDICAgICAgZnMveGZzL3hmc19hbGxvY19idHJlZS5vCmZzL3hm
+cy94ZnNfYWxsb2NfYnRyZWUuYzozODoyOTogZXJyb3I6IHhmc19idHJlZV90cmFjZS5oOiBObyBz
+dWNoIGZpbGUgb3IgZGlyZWN0b3J5CmZzL3hmcy94ZnNfYWxsb2NfYnRyZWUuYzogSW4gZnVuY3Rp
+b24g4oCYeGZzX2FsbG9jYnRfYWxsb2NfYmxvY2vigJk6CmZzL3hmcy94ZnNfYWxsb2NfYnRyZWUu
+Yzo4NDogZXJyb3I6IGltcGxpY2l0IGRlY2xhcmF0aW9uIG9mIGZ1bmN0aW9uIOKAmFhGU19CVFJF
+RV9UUkFDRV9DVVJTT1LigJkKZnMveGZzL3hmc19hbGxvY19idHJlZS5jOjg0OiBlcnJvcjog4oCY
+WEJUX0VOVFJZ4oCZIHVuZGVjbGFyZWQgKGZpcnN0IHVzZSBpbiB0aGlzIGZ1bmN0aW9uKQpmcy94
+ZnMveGZzX2FsbG9jX2J0cmVlLmM6ODQ6IGVycm9yOiAoRWFjaCB1bmRlY2xhcmVkIGlkZW50aWZp
+ZXIgaXMgcmVwb3J0ZWQgb25seSBvbmNlCmZzL3hmcy94ZnNfYWxsb2NfYnRyZWUuYzo4NDogZXJy
+b3I6IGZvciBlYWNoIGZ1bmN0aW9uIGl0IGFwcGVhcnMgaW4uKQpmcy94ZnMveGZzX2FsbG9jX2J0
+cmVlLmM6OTA6IGVycm9yOiDigJhYQlRfRVJST1LigJkgdW5kZWNsYXJlZCAoZmlyc3QgdXNlIGlu
+IHRoaXMgZnVuY3Rpb24pCmZzL3hmcy94ZnNfYWxsb2NfYnRyZWUuYzo5NTogZXJyb3I6IOKAmFhC
+VF9FWElU4oCZIHVuZGVjbGFyZWQgKGZpcnN0IHVzZSBpbiB0aGlzIGZ1bmN0aW9uKQpmcy94ZnMv
+eGZzX2FsbG9jX2J0cmVlLmM6IEluIGZ1bmN0aW9uIOKAmHhmc19hbGxvY2J0X2tpbGxfcm9vdOKA
+mToKZnMveGZzL3hmc19hbGxvY19idHJlZS5jOjI5MTogZXJyb3I6IOKAmFhCVF9FTlRSWeKAmSB1
+bmRlY2xhcmVkIChmaXJzdCB1c2UgaW4gdGhpcyBmdW5jdGlvbikKZnMveGZzL3hmc19hbGxvY19i
+dHJlZS5jOjMwMTogZXJyb3I6IOKAmFhCVF9FUlJPUuKAmSB1bmRlY2xhcmVkIChmaXJzdCB1c2Ug
+aW4gdGhpcyBmdW5jdGlvbikKZnMveGZzL3hmc19hbGxvY19idHJlZS5jOjMxMDogZXJyb3I6IOKA
+mFhCVF9FWElU4oCZIHVuZGVjbGFyZWQgKGZpcnN0IHVzZSBpbiB0aGlzIGZ1bmN0aW9uKQptYWtl
+WzNdOiAqKiogW2ZzL3hmcy94ZnNfYWxsb2NfYnRyZWUub10gRXJyb3IgMQptYWtlWzJdOiAqKiog
+W2ZzL3hmc10gRXJyb3IgMgptYWtlWzFdOiAqKiogW2ZzXSBFcnJvciAyCm1ha2VbMV06ICoqKiBX
+YWl0aW5nIGZvciB1bmZpbmlzaGVkIGpvYnMuLi4uCm1ha2VbMV06IExlYXZpbmcgZGlyZWN0b3J5
+IGAvdXNyL3NyYy9saW51eC1naXQnCm1ha2U6ICoqKiBbZGViaWFuL3N0YW1wL2J1aWxkL2tlcm5l
+bF0gRXJyb3IgMgoKCkluIHRoZSBtZWFuIHRpbWUgaSBjb21waWxlZC9yYW4gMi42LjI5LXJjMS1n
+aXQzIGJ1dCBpdCAoYXMgZXhwZWN0ZWQpIGJhcmZlZDoKCkFsIG5ldGNvbnNvbGUgbG9nZ2lucyBh
+cmUgaW4gbXkgZGlyZWN0b3J5OiBodHRwOi8vd3d3LmR0aC5uZXQva2VybmVsL2MzLwoKW0YxXSA7
+LSkKCi0tIAoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18K
+eGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxt
+YW4vbGlzdGluZm8veGZzCg==
