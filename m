@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n0DLnuEa010907 for <xfs@oss.sgi.com>; Tue, 13 Jan 2009 15:49:58 -0600
+	n0E1vQme027002 for <xfs@oss.sgi.com>; Tue, 13 Jan 2009 19:57:27 -0600
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D6A971BA3231
-	for <xfs@oss.sgi.com>; Tue, 13 Jan 2009 13:49:53 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 166F117F05AC
+	for <xfs@oss.sgi.com>; Tue, 13 Jan 2009 17:57:24 -0800 (PST)
 Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net
 	[203.16.214.145]) by cuda.sgi.com with ESMTP id
-	HHlwUzGCMqhAwMxY for <xfs@oss.sgi.com>;
-	Tue, 13 Jan 2009 13:49:53 -0800 (PST)
-Date: Wed, 14 Jan 2009 08:49:49 +1100
+	ygqPURqQVeQ9hQkD for <xfs@oss.sgi.com>;
+	Tue, 13 Jan 2009 17:57:24 -0800 (PST)
+Date: Wed, 14 Jan 2009 12:57:16 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: spurious -ENOSPC on XFS
-Message-ID: <20090113214949.GN8071@disturbed>
-References: <Pine.LNX.4.64.0901120509550.11089@hs20-bc2-1.build.redhat.com>
+Subject: Re: [PATCH 1/7] xfs: fix dentry aliasing issues in open_by_handle
+Message-ID: <20090114015716.GP8071@disturbed>
+References: <20090109221104.237540000@bombadil.infradead.org>
+	<20090109221259.292773000@bombadil.infradead.org>
+	<20090111233306.GH8071@disturbed>
+	<20090112153934.GA28382@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0901120509550.11089@hs20-bc2-1.build.redhat.com>
+In-Reply-To: <20090112153934.GA28382@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,65 +32,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Mon, Jan 12, 2009 at 06:14:36AM -0500, Mikulas Patocka wrote:
-> Hi
+On Mon, Jan 12, 2009 at 10:39:34AM -0500, Christoph Hellwig wrote:
+> On Mon, Jan 12, 2009 at 10:33:06AM +1100, Dave Chinner wrote:
+> > That should probably be namespaced correctly because it won't be
+> > static on debug builds. i.e.  xfs_handle_acceptable()
 > 
-> I discovered a bug in XFS in delayed allocation.
+> Ok.
 > 
-> When you take a small partition (52MB in my case) and copy many small 
-> files on it (source code) that barely fits there, you get -ENOSPC. Then 
-> sync the partition, some free space pops up, click "retry" in MC an the 
-> copy continues. They you get again -ENOSPC, you must sync, click "retry" 
-> and go on. And so on few times until the source code finally fits on the 
-> XFS partition.
+> > The args in this function are back to front compared to all the
+> > other functions - the others are (filp, arg), this one is the
+> > opposite.
+> 
+> Yeah, I first had all this way and then changed it around to match
+> the non-handle ioctls more closely but forgot this one.
+> 
+> Updated patch below:
+> 
+> ---
+> 
+> Subject: xfs: fix dentry aliasing issues in open_by_handle
+> From: Christoph Hellwig <hch@lst.de>
+> 
+> Open by handle just grabs an inode by handle and then creates itself
+> a dentry for it.  While this works for regular files it is horribly
+> broken for directories, where the VFS locking relies on the fact that
+> there is only just one single dentry for a given inode, and that
+> these are always connected to the root of the filesystem so that
+> it's locking algorithms work (see Documentations/filesystems/Locking)
+> 
+> Remove all the existing open by handle code and replace it with a small
+> wrapper around the exportfs code which deals with all these issues.
+> At the same time we also make the checks for a valid handle strict
+> enough to reject all not perfectly well formed handles - given that
+> we never hand out others that's okay and simplifies the code.
+> 
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Not a Bug. This is by design.
+Reviewed-by: Dave Chinner <david@fromorbit.com>
 
-> This misbehavior is apparently caused by delayed allocation, delayed 
-> allocation does not exactly know how much space will be occupied by data, 
-> so it makes some upper bound guess.
-
-No, we know *exactly* how much space is consumed by the data. What
-we don't know is how much space will be required for additional
-*metadata* to do the allocation so we reserve the worst case need so
-hat we should never get an ENOSPC during async writeback when we
-can't report the error to anyone.  Worst case is 4 metadata blocks
-per allocation (delalloc extent, really).
-
-If we ENOSPC in the delalloc path, we have two choices:
-
-	1. potentially lock the system up due to OOM and being
-	   unable to flush pages
-	2. throw away user data without being able to report an
-	   error to the application that wrote it originally.
-
-Personally, I don't like either option, so premature ENOSPC at
-write() time is fine by me....
-
-> Because free space count is only a 
-> guess, not the actual data being consumed, XFS should not return -ENOSPC 
-> on behalf of it. When the free space overflows, XFS should sync itself, 
-> retry allocation and only return -ENOSPC if it fails the second time, 
-> after the sync.
-
-It does, by graduated response (see xfs_iomap_write_delay() and
-xfs_flush_space()):
-
-	1. trigger async flush of the inode and retry
-	2. retry again
-	3. start a filesystem wide flush, wait 500ms and try again
-	4. really ENOSPC now.
-
-It could probably be improved but, quite frankly, XFS wasn't designed
-for small filesystems so I don't think this is worth investing any
-major effort in changing/fixing.
-
-Cheers,
-
-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
