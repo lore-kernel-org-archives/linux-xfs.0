@@ -1,21 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n0EJilGf026573 for <xfs@oss.sgi.com>; Wed, 14 Jan 2009 13:44:49 -0600
-Received: from eazy.amigager.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E0D088AEF8
-	for <xfs@oss.sgi.com>; Wed, 14 Jan 2009 11:44:46 -0800 (PST)
-Received: from eazy.amigager.de (eazy.amigager.de [213.239.192.238]) by
-	cuda.sgi.com with ESMTP id gYFv5FuQ66fPkGRg for
-	<xfs@oss.sgi.com>; Wed, 14 Jan 2009 11:44:46 -0800 (PST)
-Date: Wed, 14 Jan 2009 20:44:09 +0100
-From: Tino Keitel <tino.keitel@gmx.de>
-Subject: Re: problems showing up as XFS problems on kernels after 2.6.28-git2
-Message-ID: <20090114194409.GB4509@dose.home.local>
-References: <20090107165218.GA11132@dth.net>
+	n0ELisIJ001190 for <xfs@oss.sgi.com>; Wed, 14 Jan 2009 15:44:54 -0600
+Received: from mx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 778268B9B8
+	for <xfs@oss.sgi.com>; Wed, 14 Jan 2009 13:44:39 -0800 (PST)
+Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
+	with ESMTP id FZ9nZiKT1ZSC2VZl for <xfs@oss.sgi.com>;
+	Wed, 14 Jan 2009 13:44:39 -0800 (PST)
+Message-ID: <496E5C20.6070507@sandeen.net>
+Date: Wed, 14 Jan 2009 15:41:52 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20090107165218.GA11132@dth.net>
+Subject: Re: [linux-dvb] compiling on 2.6.28 broken?
+References: <20090112190420.51f75853@pedra.chehab.org>	
+	<20090112132130.6c932b85.akpm@linux-foundation.org>	
+	<20090112220624.4fbfee34@pedra.chehab.org>	
+	<20090112162337.318dd61d.akpm@linux-foundation.org>	
+	<20090113184755.87720@gmx.net>	
+	<20090113105947.9e774b69.akpm@linux-foundation.org>	
+	<20090113191757.74290@gmx.net>	
+	<20090113113700.776a94b5.akpm@linux-foundation.org>	
+	<20090113203843.GJ29283@parisc-linux.org>	
+	<1231957750.8269.28.camel@think.oraclecorp.com>
+	<496E56EB.2030301@gmx.de>
+	<1231968240.8269.48.camel@think.oraclecorp.com>
+	<496E5AB2.7040507@sandeen.net>
+In-Reply-To: <496E5AB2.7040507@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,76 +39,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-kernel@vger.kernel.org
-Cc: xfs@oss.sgi.com
+To: Chris Mason <chris.mason@oracle.com>
+Cc: wk <handygewinnspiel@gmx.de>, Matthew Wilcox <matthew@wil.cx>, linux-kernel@vger.kernel.org, mchehab@infradead.org, rjw@sisk.pl, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, HWerner4@gmx.de, Andrew Morton <akpm@linux-foundation.org>, xfs mailing list <xfs@oss.sgi.com>
 
-[added CC:]
-
-On Wed, Jan 07, 2009 at 17:52:18 +0100, dth wrote:
-> Am running low-power motherboard (via epia5000 c3) as a storage (samba/nfs)
-> server. (uses about 20 watts when both storage drives are in powersave mode)
+Eric Sandeen wrote:
+> Chris Mason wrote:
+>> On Wed, 2009-01-14 at 22:19 +0100, wk wrote:
+> ...
+>>> I cannot fully understand what strace -v outputs (see attachment), but 
+>>> what i see is that 'find' stops after finding a file with d_off = 4294967295
+>>> 4294967295  =  0xFFFFFFFF, adding any number greater that zero will be 
+>>> greater that 32bits, so this could be the reason for the message "value 
+>>> too large".
+>>>
+>>>
+>>>
+>>> I also noticed that i cannot access these files through samba if i boot 
+>>> from 2.6.28 - really strange.
+>>> If i reboot older kernels these are visible in samba again and fully 
+>>> accessible.
+>>>
+>>> Attached the log from stracing the command which was ivoked by the 
+>>> Makefile from v4l-dvb.
+>>> I guess this is all i could contribute to that problem. Thats stuff for 
+>>> xfs filesystem experts now..
+>> Seems suspect indeed.  Could you please attach the strace for the run
+>> that works on the older kernel?
 > 
-> OS = debian lenny
+> Chris got my attention on this one; you probably want this fix from hch:
 > 
-> Pimairy drive (60gig 2.5" pata disk using libata = sda)
->  512MB ext3 partition as /boot
->  swap, rest of the drive is XFS root file system.
-> 
-> storage:
-> 2 x 750GB drives on a sata controller (FastTrak S150 TX2plus)
-> sdb & sdc which have 1 big XFS partition.
-> 
-> Any kernel i try to boot after 2.6.28-git2 (i tried git4-9) 
-> sooner or later gives me an XFS error:
+> http://oss.sgi.com/archives/xfs/2009-01/msg00158.html
 
-[...]
+I should have referenced the sgi git tree commit:
 
-> Anyone else bitten by the same problem ?
-y
-Hi,
+http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/xfs.git;a=commitdiff;h=15440319767942a363f282d6585303d3d75088ba
 
-I get the same on a Mac mini Core Duo using 2.6.29-rc1. I just booted,
-started firefox and my /home died.
+and should have also cc'd the xfs list, doing so now.
 
-XFS internal error XFS_WANT_CORRUPTED_GOTO at line 3327 of file linux-2.6/fs/xfs/xfs_btree.c.  Caller 0xc022e9c6
-Pid: 4937, comm: firefox-bin Not tainted 2.6.29-rc1-00224-ga652504 #11
-Call Trace:
- [<c022e6d9>] xfs_btree_delrec+0xbd9/0xea0
- [<c022e9c6>] xfs_btree_delete+0x26/0x90
- [<c022b355>] xfs_btree_lookup_get_block+0xa5/0xe0
- [<c022933a>] xfs_bmbt_init_key_from_rec+0xa/0x20
- [<c022c6ba>] xfs_btree_lookup+0x21a/0x460
- [<c022e9c6>] xfs_btree_delete+0x26/0x90
- [<c02255ff>] xfs_bmap_del_extent+0x64f/0xb70
- [<c02262ea>] xfs_bunmapi+0x65a/0xb30
- [<c0244f6b>] xfs_itruncate_finish+0x1ab/0x3e0
- [<c026115d>] xfs_inactive+0x3cd/0x4f0
- [<c019113c>] clear_inode+0x5c/0x100
- [<c01917fe>] generic_delete_inode+0xce/0xe0
- [<c0190b24>] iput+0x44/0x50
- [<c01898a0>] do_unlinkat+0xe0/0x160
- [<c0188180>] lock_rename+0x0/0xa0
- [<c01033c5>] sysenter_do_call+0x12/0x25
-Filesystem "dm-1": XFS internal error xfs_trans_cancel at line 1164 of file linux-2.6/fs/xfs/xfs_trans.c. 
-Caller 0xc0261173
-
-Pid: 4937, comm: firefox-bin Not tainted 2.6.29-rc1-00224-ga652504 #11
-Call Trace:
- [<c025a54b>] xfs_trans_cancel+0xcb/0xf0
- [<c0261173>] xfs_inactive+0x3e3/0x4f0
- [<c0261173>] xfs_inactive+0x3e3/0x4f0
- [<c019113c>] clear_inode+0x5c/0x100
- [<c01917fe>] generic_delete_inode+0xce/0xe0
- [<c0190b24>] iput+0x44/0x50
- [<c01898a0>] do_unlinkat+0xe0/0x160
- [<c0188180>] lock_rename+0x0/0xa0
- [<c01033c5>] sysenter_do_call+0x12/0x25
-xfs_force_shutdown(dm-1,0x8) called from line 1165 of file linux-2.6/fs/xfs/xfs_trans.c.  Return address = 0xc025a563
-Filesystem "dm-1": Corruption of in-memory data detected.  Shutting down filesystem: dm-1
-Please umount the filesystem, and rectify the problem(s)
-
-Regards,
-Tino
+-Eric
 
 _______________________________________________
 xfs mailing list
