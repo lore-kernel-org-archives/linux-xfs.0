@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n0EI5607021434 for <xfs@oss.sgi.com>; Wed, 14 Jan 2009 12:05:07 -0600
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 912098F8050
-	for <xfs@oss.sgi.com>; Wed, 14 Jan 2009 10:05:02 -0800 (PST)
-Message-Id: <21E180C1-1019-4C30-A37C-631C3510583B@sgi.com>
-From: Felix Blyakher <felixb@sgi.com>
-In-Reply-To: <496E1F75.8040300@sandeen.net>
-Mime-Version: 1.0 (Apple Message framework v926)
-Subject: Re: XFS maintainership
-Date: Wed, 14 Jan 2009 12:05:01 -0600
-References: <200901090619.n096Jp20017008@oss.sgi.com>	<20090109065935.GA1600@infradead.org>	<20090109215218.GB10221@sgi.com>
-	<4968E61D.6070505@thebarn.com>	<20090113131855.GB8396@sgi.com>
-	<20090114012845.GO8071@disturbed>	<20090114054917.GT8071@disturbed>
-	<20090114055050.GU8071@disturbed> <496E1F75.8040300@sandeen.net>
+	n0EJilGf026573 for <xfs@oss.sgi.com>; Wed, 14 Jan 2009 13:44:49 -0600
+Received: from eazy.amigager.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E0D088AEF8
+	for <xfs@oss.sgi.com>; Wed, 14 Jan 2009 11:44:46 -0800 (PST)
+Received: from eazy.amigager.de (eazy.amigager.de [213.239.192.238]) by
+	cuda.sgi.com with ESMTP id gYFv5FuQ66fPkGRg for
+	<xfs@oss.sgi.com>; Wed, 14 Jan 2009 11:44:46 -0800 (PST)
+Date: Wed, 14 Jan 2009 20:44:09 +0100
+From: Tino Keitel <tino.keitel@gmx.de>
+Subject: Re: problems showing up as XFS problems on kernels after 2.6.28-git2
+Message-ID: <20090114194409.GB4509@dose.home.local>
+References: <20090107165218.GA11132@dth.net>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20090107165218.GA11132@dth.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,105 +28,76 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Russell Cattelan <cattelan@thebarn.com>, xfs@oss.sgi.com
+To: linux-kernel@vger.kernel.org
+Cc: xfs@oss.sgi.com
 
+[added CC:]
 
-On Jan 14, 2009, at 11:23 AM, Eric Sandeen wrote:
+On Wed, Jan 07, 2009 at 17:52:18 +0100, dth wrote:
+> Am running low-power motherboard (via epia5000 c3) as a storage (samba/nfs)
+> server. (uses about 20 watts when both storage drives are in powersave mode)
+> 
+> OS = debian lenny
+> 
+> Pimairy drive (60gig 2.5" pata disk using libata = sda)
+>  512MB ext3 partition as /boot
+>  swap, rest of the drive is XFS root file system.
+> 
+> storage:
+> 2 x 750GB drives on a sata controller (FastTrak S150 TX2plus)
+> sdb & sdc which have 1 big XFS partition.
+> 
+> Any kernel i try to boot after 2.6.28-git2 (i tried git4-9) 
+> sooner or later gives me an XFS error:
 
-> Dave Chinner wrote:
->> It seems to me that SGI wants to maintain control without doing any
->> of the work that having that control requires of them.  i.e. take
->> without any give....
->>
->> Point in case: we have a _critical_ 2.6.28 regression w.r.t.
->> directory handling. The community triaged the bug, the community
->> fixed the bug and the community reviewed the fix. It got checked
->> into the SGI controlled dev tree 4 days ago.  Now we are waiting for
->> SGI to stop playing "let's all be one happy family la-la-la" games
->> and get off their backsides and *act as responsible maintainers* by
->> pushing the fix to Linus ASAP.
->>
->> Please, show us that SGI is really going to act as the maintainer of
->> XFS. The only thing that will convince me right now that SGI should
->> continue as XFS maintainer is this:
->>
->> 	"Gesta non verba"
->
-> Ooh, bonus points for the Latin!
->
-> Since 12/10, when Melbourne got erased, there have only been 6 emails
-> from sgi to the list which were not from the short-timer skeleton crew
-> left in Melbourne.  3 of these had something to do with  
-> development.   2
-> were related to this question of maintainership.  1 was a test email.
+[...]
 
-OK, we're all here, and listening, and learning, and getting to
-know the process and responsibilities, setting up right environment,
-all that transitional stuff.
-Yes, we're overwhelmed at the moment, but not going to hide in
-the bushes. Just need some time.
+> Anyone else bitten by the same problem ?
+y
+Hi,
 
-> Meanwhile almost 100 patches have been sent, reviewed, and in many  
-> cases
-> committed by hch & others to the staging trees on kernel.org.
+I get the same on a Mac mini Core Duo using 2.6.29-rc1. I just booted,
+started firefox and my /home died.
 
-Hmm, while not actively participating, I've been monitoring
-all xfs channels I know of. I haven't seen 100 patches lately.
-Where they all posted to this list?
-Also, I think, I replied to one. Sure, it's not the right level
-of activity, but as I said, it's still transition period here.
+XFS internal error XFS_WANT_CORRUPTED_GOTO at line 3327 of file linux-2.6/fs/xfs/xfs_btree.c.  Caller 0xc022e9c6
+Pid: 4937, comm: firefox-bin Not tainted 2.6.29-rc1-00224-ga652504 #11
+Call Trace:
+ [<c022e6d9>] xfs_btree_delrec+0xbd9/0xea0
+ [<c022e9c6>] xfs_btree_delete+0x26/0x90
+ [<c022b355>] xfs_btree_lookup_get_block+0xa5/0xe0
+ [<c022933a>] xfs_bmbt_init_key_from_rec+0xa/0x20
+ [<c022c6ba>] xfs_btree_lookup+0x21a/0x460
+ [<c022e9c6>] xfs_btree_delete+0x26/0x90
+ [<c02255ff>] xfs_bmap_del_extent+0x64f/0xb70
+ [<c02262ea>] xfs_bunmapi+0x65a/0xb30
+ [<c0244f6b>] xfs_itruncate_finish+0x1ab/0x3e0
+ [<c026115d>] xfs_inactive+0x3cd/0x4f0
+ [<c019113c>] clear_inode+0x5c/0x100
+ [<c01917fe>] generic_delete_inode+0xce/0xe0
+ [<c0190b24>] iput+0x44/0x50
+ [<c01898a0>] do_unlinkat+0xe0/0x160
+ [<c0188180>] lock_rename+0x0/0xa0
+ [<c01033c5>] sysenter_do_call+0x12/0x25
+Filesystem "dm-1": XFS internal error xfs_trans_cancel at line 1164 of file linux-2.6/fs/xfs/xfs_trans.c. 
+Caller 0xc0261173
 
->  The
-> proposed new maintainer crew has not participated in this process  
-> yet to
-> any apparent degree.  No questions, no reviews, no acks, no vetoes.
-> This is not a personal attack by any means, but it seems that it might
-> reflect the resources available for these tasks inside sgi.
->
->> From my perspective, it certainly appears that much more xfs work is
-> being done outside sgi than inside sgi at this point in time.  This
-> *should* be a good thing for sgi, because one of your flagship storage
-> software offerings is being maintained & moving forward with very few
-> resource requirements from sgi.
->
-> But if sgi's role is simply to own and to veto and not to communicate,
-> collaborate, facilitate or contribute,
+Pid: 4937, comm: firefox-bin Not tainted 2.6.29-rc1-00224-ga652504 #11
+Call Trace:
+ [<c025a54b>] xfs_trans_cancel+0xcb/0xf0
+ [<c0261173>] xfs_inactive+0x3e3/0x4f0
+ [<c0261173>] xfs_inactive+0x3e3/0x4f0
+ [<c019113c>] clear_inode+0x5c/0x100
+ [<c01917fe>] generic_delete_inode+0xce/0xe0
+ [<c0190b24>] iput+0x44/0x50
+ [<c01898a0>] do_unlinkat+0xe0/0x160
+ [<c0188180>] lock_rename+0x0/0xa0
+ [<c01033c5>] sysenter_do_call+0x12/0x25
+xfs_force_shutdown(dm-1,0x8) called from line 1165 of file linux-2.6/fs/xfs/xfs_trans.c.  Return address = 0xc025a563
+Filesystem "dm-1": Corruption of in-memory data detected.  Shutting down filesystem: dm-1
+Please umount the filesystem, and rectify the problem(s)
 
-No, that's definitely not on anybody's mind here.
-I know, community were waiting for our comments on the process,
-but I tried not to reply with promises, but rather wait till
-first commit. As it's not there yet, here is my reply, not the
-way I wanted, though.
-
-> sgi will likely find that they've
-> been left behind in short order.  The internet is famous for routing
-> around damage.
->
-> On the other hand, we're here to help, if you engage us.
-
-Thanks, we'll definitely need that, but expecting that to
-be mutual. I have no doubt we'll contribute as well.
-
-> -Eric (speaking for myself, not my employer, FWIW)
-
-Felix (not speaking for sgi only)
-
->
->
->> Cheers,
->>
->> Dave.
->>
->> PS: I did say I was going to make myself unpopular :/
->
-> Perhaps only with some :)
->
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Regards,
+Tino
 
 _______________________________________________
 xfs mailing list
