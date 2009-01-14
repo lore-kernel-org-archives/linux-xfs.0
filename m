@@ -1,15 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n0ELp2mH001761 for <xfs@oss.sgi.com>; Wed, 14 Jan 2009 15:51:02 -0600
-Message-ID: <496E5DB8.1030007@sandeen.net>
-Date: Wed, 14 Jan 2009 15:48:40 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	n0EMH0Bu004343 for <xfs@oss.sgi.com>; Wed, 14 Jan 2009 16:17:01 -0600
+Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 103BD8BCE1
+	for <xfs@oss.sgi.com>; Wed, 14 Jan 2009 14:16:59 -0800 (PST)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net
+	[203.16.214.145]) by cuda.sgi.com with ESMTP id
+	kseRMLGZBaxlCcsF for <xfs@oss.sgi.com>;
+	Wed, 14 Jan 2009 14:16:59 -0800 (PST)
+Date: Thu, 15 Jan 2009 09:16:55 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: spurious -ENOSPC on XFS
+Message-ID: <20090114221655.GX8071@disturbed>
+References: <Pine.LNX.4.64.0901120509550.11089@hs20-bc2-1.build.redhat.com>
+	<20090112151133.GA24852@infradead.org> <496C2D69.2010301@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [linux-dvb] compiling on 2.6.28 broken?
-References: <20090112190420.51f75853@pedra.chehab.org>	<20090112132130.6c932b85.akpm@linux-foundation.org>	<20090112220624.4fbfee34@pedra.chehab.org>	<20090112162337.318dd61d.akpm@linux-foundation.org>	<20090113184755.87720@gmx.net>	<20090113105947.9e774b69.akpm@linux-foundation.org>	<20090113191757.74290@gmx.net>	<20090113113700.776a94b5.akpm@linux-foundation.org>	<20090113203843.GJ29283@parisc-linux.org>	<1231957750.8269.28.camel@think.oraclecorp.com>	<496E56EB.2030301@gmx.de>	<1231968240.8269.48.camel@think.oraclecorp.com>	<496E5AB2.7040507@sandeen.net>
-	<20090114134417.e6b29b52.akpm@linux-foundation.org>
-In-Reply-To: <20090114134417.e6b29b52.akpm@linux-foundation.org>
+Content-Disposition: inline
+In-Reply-To: <496C2D69.2010301@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,58 +30,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: handygewinnspiel@gmx.de, matthew@wil.cx, linux-kernel@vger.kernel.org, mchehab@infradead.org, rjw@sisk.pl, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, HWerner4@gmx.de, xfs mailing list <xfs@oss.sgi.com>, Christoph Hellwig <hch@lst.de>, stable@kernel.org, chris.mason@oracle.com
+To: Lachlan McIlroy <lachlan@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Mikulas Patocka <mpatocka@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Andrew Morton wrote:
-> On Wed, 14 Jan 2009 15:35:46 -0600
-> Eric Sandeen <sandeen@sandeen.net> wrote:
-> 
->> Chris Mason wrote:
->>> On Wed, 2009-01-14 at 22:19 +0100, wk wrote:
->> ...
->>>> I cannot fully understand what strace -v outputs (see attachment), but 
->>>> what i see is that 'find' stops after finding a file with d_off = 4294967295
->>>> 4294967295  =  0xFFFFFFFF, adding any number greater that zero will be 
->>>> greater that 32bits, so this could be the reason for the message "value 
->>>> too large".
->>>>
->>>>
->>>>
->>>> I also noticed that i cannot access these files through samba if i boot 
->>>> from 2.6.28 - really strange.
->>>> If i reboot older kernels these are visible in samba again and fully 
->>>> accessible.
->>>>
->>>> Attached the log from stracing the command which was ivoked by the 
->>>> Makefile from v4l-dvb.
->>>> I guess this is all i could contribute to that problem. Thats stuff for 
->>>> xfs filesystem experts now..
->>> Seems suspect indeed.  Could you please attach the strace for the run
->>> that works on the older kernel?
->> Chris got my attention on this one; you probably want this fix from hch:
->>
->> http://oss.sgi.com/archives/xfs/2009-01/msg00158.html
->>
-> 
-> Looks likely.  It is below, for anyone who would like to test it.
-> 
-> 
-> It is in linux-next.  Guys, do we plan to merge this into 2.6.29?
+On Tue, Jan 13, 2009 at 04:58:01PM +1100, Lachlan McIlroy wrote:
+> Christoph Hellwig wrote:
+>> On Mon, Jan 12, 2009 at 06:14:36AM -0500, Mikulas Patocka wrote:
+>>> Hi
+>>>
+>>> I discovered a bug in XFS in delayed allocation.
+>>>
+>>> When you take a small partition (52MB in my case) and copy many small 
+>>> files on it (source code) that barely fits there, you get -ENOSPC. 
+>>> Then sync the partition, some free space pops up, click "retry" in MC 
+>>> an the copy continues. They you get again -ENOSPC, you must sync, 
+>>> click "retry" and go on. And so on few times until the source code 
+>>> finally fits on the XFS partition.
+>>>
+>>> This misbehavior is apparently caused by delayed allocation, delayed  
+>>> allocation does not exactly know how much space will be occupied by 
+>>> data, so it makes some upper bound guess. Because free space count is 
+>>> only a guess, not the actual data being consumed, XFS should not 
+>>> return -ENOSPC on behalf of it. When the free space overflows, XFS 
+>>> should sync itself, retry allocation and only return -ENOSPC if it 
+>>> fails the second time, after the sync.
+> This sounds like a problem with speculative allocation - delayed allocations
+> beyond eof.  Even if we write a small file, say 4k, a 64k chunk of delayed
+> allocation will be credited to the file. 
 
-It should be merged there, yes.  Was hoping that sgi would request that
-soon....
+The second retry occurs without speculative EOF allocation. That's
+what the BMAPI_SYNC flag does....
 
-> (cc's stable@kernel.org)
-> 
-> This patch applies OK to 2.6.27 and 2.6.28.  Is it also needed there? 
-> If so, it should have had "Cc: <stable@kernel.org>" in the changelog so
-> that it doesn't get lost.
-> 
+That being said, it can't truncate away pre-existing speculative
+allocations on other files, which is why there is a global flush
+and wait before the third retry.....
 
-It is needed for .28, but should not be needed for .27 AFAIK.
+Cheers,
 
--Eric
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
