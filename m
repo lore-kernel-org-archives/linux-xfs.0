@@ -1,12 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n0F2Fh56023061 for <xfs@oss.sgi.com>; Wed, 14 Jan 2009 20:15:43 -0600
-Date: Thu, 15 Jan 2009 13:15:36 +1100
-Subject: [GIT PULL] XFS update for 2.6.29-rc2
+	n0F2L1ar023472 for <xfs@oss.sgi.com>; Wed, 14 Jan 2009 20:21:01 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BD4E18C731
+	for <xfs@oss.sgi.com>; Wed, 14 Jan 2009 18:20:59 -0800 (PST)
+Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
+	cuda.sgi.com with ESMTP id 4DbDmDXE2vILkqHp for
+	<xfs@oss.sgi.com>; Wed, 14 Jan 2009 18:20:59 -0800 (PST)
+Message-ID: <496E9D6A.8060708@sandeen.net>
+Date: Wed, 14 Jan 2009 20:20:26 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Message-Id: <20090115021536.BE17759391EC@chook.melbourne.sgi.com>
-From: lachlan@sgi.com (Lachlan McIlroy)
+Subject: Re: [patch 4/4] Remove the rest of the macro-to-function indirections.
+References: <20090101224009.616367334@sandeen.net>	<20090101224057.782251520@sandeen.net>
+	<4966DC61.1030204@sgi.com>
+In-Reply-To: <4966DC61.1030204@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,52 +28,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: lachlan@sgi.com
+Cc: xfs@oss.sgi.com
 
-The following changes since commit a6525042bfdfcab128bd91fad264de10fd24a55e:
-  Linus Torvalds (1):
-        Merge branch 'x86-pat-for-linus' of git://git.kernel.org/.../tip/linux-2.6-tip
+Lachlan McIlroy wrote:
+> Eric, I just tried to apply this patch and it failed.
+> Could you please update it and repost?
+> 
+> The other three patches in this series were fine.
+> 
+> Lachlan
 
-are available in the git repository at:
+sorry, this one slipped.  Will get on it :)
 
-  git://oss.sgi.com/xfs/xfs for-linus
-
-Christoph Hellwig (4):
-      [XFS] pass XFS_IGET_BULKSTAT to xfs_iget for handle operations
-      [XFS] fix compile of xfs_btree_readahead_lblock on m68k
-      [XFS] truncate readdir offsets to signed 32 bit values
-      [XFS] make xfs_ino_t an unsigned long long
-
-Eric Sandeen (3):
-      [XFS] Remove several unused typedefs.
-      [XFS] Remove macro-to-function indirections in attr code
-      [XFS] Remove macro-to-function indirections in the mask code
-
-Lachlan McIlroy (2):
-      [XFS] Update maintainers
-      Merge git://git.kernel.org/.../torvalds/linux-2.6 into for-linus
-
-Nick Piggin (2):
-      [XFS] remove old vmap cache
-      [XFS] use scalable vmap API
-
- MAINTAINERS                   |    4 +-
- fs/xfs/linux-2.6/xfs_aops.h   |    2 -
- fs/xfs/linux-2.6/xfs_buf.c    |   79 +-------------------------------------
- fs/xfs/linux-2.6/xfs_export.c |   23 +++++++++--
- fs/xfs/xfs_acl.h              |    1 -
- fs/xfs/xfs_ag.h               |    2 +-
- fs/xfs/xfs_attr_leaf.c        |   72 +++++++++++++++++-----------------
- fs/xfs/xfs_attr_leaf.h        |   12 ------
- fs/xfs/xfs_bit.h              |   10 +----
- fs/xfs/xfs_bmap_btree.c       |   84 ++++++++++++++++++++--------------------
- fs/xfs/xfs_btree.c            |    4 +-
- fs/xfs/xfs_dir2_block.c       |    7 ++-
- fs/xfs/xfs_dir2_leaf.c        |    6 +-
- fs/xfs/xfs_dir2_sf.c          |   15 ++++---
- fs/xfs/xfs_types.h            |    4 +-
- 15 files changed, 122 insertions(+), 203 deletions(-)
+Thanks,
+-Eric
 
 _______________________________________________
 xfs mailing list
