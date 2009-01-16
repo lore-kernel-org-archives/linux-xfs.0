@@ -1,28 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n0GKhsgI032432 for <xfs@oss.sgi.com>; Fri, 16 Jan 2009 14:43:55 -0600
-Received: from zaphod.dth.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CECFA180E5AE
-	for <xfs@oss.sgi.com>; Fri, 16 Jan 2009 12:43:51 -0800 (PST)
-Received: from zaphod.dth.net (zaphod.dth.net [85.159.112.68]) by cuda.sgi.com
-	with ESMTP id mNxre3rpM9iC3Frx for <xfs@oss.sgi.com>;
-	Fri, 16 Jan 2009 12:43:51 -0800 (PST)
-Date: Fri, 16 Jan 2009 21:43:46 +0100
-From: Danny ter Haar <dth@dth.net>
-Subject: Re: problems showing up as XFS problems on kernels after 2.6.28-git2
-Message-ID: <20090116204346.GA5117@dth.net>
-References: <20090109004609.GM9448@disturbed> <20090109012610.GA23075@dth.net>
-	<20090109020800.GO9448@disturbed> <20090109061043.GA31450@dth.net>
-	<20090109194445.GA28759@infradead.org>
-	<20090109195144.GA19857@dth.net>
-	<20090109195852.GA6362@infradead.org>
-	<20090109214206.GA2901@dth.net>
-	<20090109220138.GA5282@infradead.org>
-	<20090113200414.GA21013@dth.net>
+	n0GM9avR004167 for <xfs@oss.sgi.com>; Fri, 16 Jan 2009 16:09:37 -0600
+Received: from qb-out-1314.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id ECAEC96E16
+	for <xfs@oss.sgi.com>; Fri, 16 Jan 2009 14:09:35 -0800 (PST)
+Received: from qb-out-1314.google.com (qb-out-1314.google.com [72.14.204.175])
+	by cuda.sgi.com with ESMTP id Os5xMTU19OBByZEw for
+	<xfs@oss.sgi.com>; Fri, 16 Jan 2009 14:09:35 -0800 (PST)
+Received: by qb-out-1314.google.com with SMTP id e19so849205qba.8
+	for <xfs@oss.sgi.com>; Fri, 16 Jan 2009 14:09:34 -0800 (PST)
+Message-ID: <8998fba30901161409m37058e10yc25e062fad425710@mail.gmail.com>
+Date: Fri, 16 Jan 2009 14:09:34 -0800
+From: "Adam Fried-Gintis" <xfs@icosm.net>
+Subject: XFS without write barriers - safe on multipath device?
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20090113200414.GA21013@dth.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,29 +28,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Quoting Danny ter Haar (dth@dth.net):
-> I'm stuck in trying to bisect the problem.
-> I restarted from scratch and same result:
+Hi,
+I am just curious, if I see the warning that write barrier support is
+disabled when mounting an XFS filesystem through md multipath, does XFS have
+some OTHER provision for protecting the order of its writes to the
+underlying device, or is it unsafe to run with write back caching at that
+point? My underlying device is an active/active storage system - combined
+with the multipath driver, we are seeing metadata corruption on the
+filesystem, and I'm just trying to figure out if this is an invalid
+configuration to test or if the storage device is doing something wrong.
 
-[SNIP for bravery] 
+Thanks!
 
-> In the mean time i compiled/ran 2.6.29-rc1-git3 but it (as expected) barfed:
-> 
-> Al netconsole loggins are in my directory: http://www.dth.net/kernel/c3/
-> 
-> [F1] ;-)
+---
+Adam Fried-Gintis
 
-This was to my way to say "HELP"
 
-I'm stuck..
-
-Anyone have some tips/hunts/suggestions (like find another hobby ;-) )
-
-Danny
--- 
+[[HTML alternate version deleted]]
 
 _______________________________________________
 xfs mailing list
