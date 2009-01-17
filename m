@@ -1,25 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n0HMDt4m011956
-	for <linux-xfs@oss.sgi.com>; Sat, 17 Jan 2009 16:13:55 -0600
-Received: from fg-out-1718.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 450A8990CC
-	for <linux-xfs@oss.sgi.com>; Sat, 17 Jan 2009 14:13:53 -0800 (PST)
-Received: from fg-out-1718.google.com (fg-out-1718.google.com [72.14.220.157])
-	by cuda.sgi.com with ESMTP id PN3UaSR6XcSmdl8t for
-	<linux-xfs@oss.sgi.com>; Sat, 17 Jan 2009 14:13:53 -0800 (PST)
-Received: by fg-out-1718.google.com with SMTP id 19so1049465fgg.8
-	for <linux-xfs@oss.sgi.com>; Sat, 17 Jan 2009 14:13:52 -0800 (PST)
-Subject: Re: kernel 2.6.28 XFS internal error xfs_da_do_buf(2) at line 2112
-	of	file fs/xfs/xfs_da_btree.c
-From: Alessandro Bono <alessandro.bono@gmail.com>
-In-Reply-To: <4972484E.5030204@sandeen.net>
-References: <1232225359.8845.198.camel@champagne.cantina>
-	<4972484E.5030204@sandeen.net>
-Date: Sat, 17 Jan 2009 23:08:03 +0100
-Message-Id: <1232230083.8845.220.camel@champagne.cantina>
-Mime-Version: 1.0
+	n0HNPNFH017072 for <xfs@oss.sgi.com>; Sat, 17 Jan 2009 17:25:24 -0600
+Received: from zaphod.dth.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 661B599115
+	for <xfs@oss.sgi.com>; Sat, 17 Jan 2009 15:25:16 -0800 (PST)
+Received: from zaphod.dth.net (zaphod.dth.net [85.159.112.68]) by cuda.sgi.com
+	with ESMTP id eNpPTIHkA6fvQ4BI for <xfs@oss.sgi.com>;
+	Sat, 17 Jan 2009 15:25:16 -0800 (PST)
+Date: Sun, 18 Jan 2009 00:25:11 +0100
+From: Danny ter Haar <dth@dth.net>
+Subject: Re: problems showing up as XFS problems on kernels after 2.6.28-git2
+Message-ID: <20090117232511.GA8443@dth.net>
+References: <20090109020800.GO9448@disturbed> <20090109061043.GA31450@dth.net>
+	<20090109194445.GA28759@infradead.org>
+	<20090109195144.GA19857@dth.net>
+	<20090109195852.GA6362@infradead.org>
+	<20090109214206.GA2901@dth.net>
+	<20090109220138.GA5282@infradead.org>
+	<20090113200414.GA21013@dth.net> <20090116204346.GA5117@dth.net>
+	<20090117073824.GK8071@disturbed>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20090117073824.GK8071@disturbed>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,86 +35,76 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs <linux-xfs@oss.sgi.com>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Sat, 2009-01-17 at 15:06 -0600, Eric Sandeen wrote:
-> Alessandro Bono wrote:
-> > Hi all
-> > 
-> > New kernel new problem
-> > rsync over ssh to a usb disk get this scary message
-> > 
-> > Jan 17 17:39:50 champagne kernel: [30342.675488] 00000000: e8 1f 67 a1
-> > 7f 9c 65 fc c7 e9 c7 3f e1 d7 17 a7  ..g...e....?....
-> > Jan 17 17:39:50 champagne kernel: [30342.675504] Filesystem "sdb1": XFS
-> > internal error xfs_da_do_buf(2) at line 2112 of file
-> > fs/xfs/xfs_da_btree.c.  Caller 0xffffffffa0196e9f
-> 
-> This means that it read metadata with a bad magic number (the message
-> could be clearer).
-> 
-> Any storage errors in dmesg prior to this?
+Quoting Dave Chinner (david@fromorbit.com):
+> Sorry for not getting back to you sooner.
 
-In effect there is this message
-Jan 17 17:39:49 champagne kernel: [30342.273029] usb 4-3: reset high
-speed USB device using ehci_hcd and address 4
+No problem. I initally posted to LKLM, git redirected by Christoph to this
+list. I'm so stupid that i didn't check the other messages from this list.
+Sorry.
 
-I was using a usb pen that I disconnected just a second prior errors
-appear, for some reason plugging out usb pen caused a reset on usb disk
-(two port located on two side on my notebook, I didn't touch usb disk
-while disconnecting usb pen)
+> I think that Alexander tripped over this same problem during his bisect.
+> If you follow the thread from here:
+> http://oss.sgi.com/archives/xfs/2009-01/msg00496.html
 
-Jan 17 17:34:47 champagne kernel: [30039.760046] usb 4-5: new high speed
-USB device using ehci_hcd and address 5
-Jan 17 17:34:47 champagne kernel: [30039.902828] usb 4-5: configuration
-#1 chosen from 1 choice
-Jan 17 17:34:47 champagne kernel: [30039.955770] scsi7 : SCSI emulation
-for USB Mass Storage devices
-Jan 17 17:34:47 champagne kernel: [30039.959464] usb-storage: device
-found at 5
-Jan 17 17:34:47 champagne kernel: [30039.959470] usb-storage: waiting
-for device to settle before scanning
-Jan 17 17:34:52 champagne kernel: [30044.956409] usb-storage: device
-scan complete
-Jan 17 17:34:52 champagne kernel: [30044.957497] scsi 7:0:0:0:
-Direct-Access     USB      Driver           0.00 PQ: 0 ANSI: 0 CCS
-Jan 17 17:34:52 champagne kernel: [30045.242137] sd 7:0:0:0: [sdc]
-31318016 512-byte hardware sectors: (16.0 GB/14.9 GiB)
-Jan 17 17:34:52 champagne kernel: [30045.242644] sd 7:0:0:0: [sdc] Write
-Protect is off
-Jan 17 17:34:52 champagne kernel: [30045.242650] sd 7:0:0:0: [sdc] Mode
-Sense: 23 00 00 00
-Jan 17 17:34:52 champagne kernel: [30045.242655] sd 7:0:0:0: [sdc]
-Assuming drive cache: write through
-Jan 17 17:34:52 champagne kernel: [30045.249520] sd 7:0:0:0: [sdc]
-31318016 512-byte hardware sectors: (16.0 GB/14.9 GiB)
-Jan 17 17:34:52 champagne kernel: [30045.250007] sd 7:0:0:0: [sdc] Write
-Protect is off
-Jan 17 17:34:52 champagne kernel: [30045.250013] sd 7:0:0:0: [sdc] Mode
-Sense: 23 00 00 00
-Jan 17 17:34:52 champagne kernel: [30045.250018] sd 7:0:0:0: [sdc]
-Assuming drive cache: write through
-Jan 17 17:34:52 champagne kernel: [30045.250028]  sdc: sdc1
-Jan 17 17:34:52 champagne kernel: [30045.250863] sd 7:0:0:0: [sdc]
-Attached SCSI removable disk
-Jan 17 17:34:52 champagne kernel: [30045.251074] sd 7:0:0:0: Attached
-scsi generic sg3 type 0
-Jan 17 17:39:49 champagne kernel: [30342.166347] usb 4-5: USB
-disconnect, address 5
-Jan 17 17:39:49 champagne kernel: [30342.273029] usb 4-3: reset high
-speed USB device using ehci_hcd and address 4
+Yep! [cheer] i'm not alone! :-)
+But why only us two ? there must be thousands of users out there using
+XFS. Why did it bite us ? large filesystem together with slow hardware ?
 
-Is this a usb problem? 
+> You'll see that Alexander had the same problem and managed
+> to continue the bisect once he copied the xfs_btree_trace.h
+> header file from top-of-tree back into the broken commits.
 
-thanks Eric
+Grwat.
 
-> 
-> -Eric
+> I hope this helps (and I hope that the bisect lands on the
+> same commit that it did for Alexander).
+
+Do you want me to still try it ?
+I think you allready figured out where the culprit is ?!
+
+I saw changes in the announcement of 2.6.29-rc3 and took the plunge:
+
+# procinfo
+Memory:        Total        Used        Free     Buffers                       
+RAM:          506940      447868       59072          84                       
+Swap:         497972           0      497972                                   
+
+Bootup: Sat Jan 17 10:28:27 2009   Load average: 0.03 0.11 0.09 2/104 5259     
+
+user  :   00:09:30.12   3.2%  page in :           417582                       
+nice  :   00:00:00.00   0.0%  page out:          1220260                       
+system:   00:02:01.76   0.7%  page act:            41134                       
+IOwait:   00:03:34.28   1.2%  page dea:            13444                       
+hw irq:   00:00:01.94   0.0%  page flt:          1531395                       
+sw irq:   00:00:04.50   0.0%  swap in :                0                       
+idle  :   04:39:41.90  94.8%  swap out:                0                       
+uptime:   04:54:55.09         context :           892623                       
+
+irq   0:     799012  timer               irq  10:     101465  eth0             
+irq   1:          8  i8042               irq  11:      46893  sata_promise     
+irq   2:          0  cascade             irq  12:          0  uhci_hcd:usb1, uh
+irq   5:          0  acpi                irq  14:      50059  pata_via         
+irq   7:          1  parport0            irq  15:          0  pata_via         
+
+sda            15445r           22597w   sdb             2820r           23372w
+sda1             555r             284w   sdb1            2750r           23372w
+sda2               2r               0w   sdc               63r               3w
+sda5             136r               0w   sdc1              50r               3w
+sda6           14659r           22313w                                         
+
+lo          TX 59.65KiB      RX 59.65KiB      eth0        TX 13.40MiB      RX 23.78MiB     
+
+over 4 hours of uptime and moderate usage, so i'm not 100% convinced but this one
+looks good (so far)
+
+Let me know if i should persue some more.
+
+Thanks for all the help.
+
+Danny
 -- 
----
-Cordiali Saluti
-Alessandro Bono
 
 _______________________________________________
 xfs mailing list
