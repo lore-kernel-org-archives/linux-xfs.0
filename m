@@ -1,28 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n0I2p4XX000718 for <xfs@oss.sgi.com>; Sat, 17 Jan 2009 20:51:05 -0600
-Received: from zaphod.dth.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A3F8D994F0
-	for <xfs@oss.sgi.com>; Sat, 17 Jan 2009 18:51:02 -0800 (PST)
-Received: from zaphod.dth.net (zaphod.dth.net [85.159.112.68]) by cuda.sgi.com
-	with ESMTP id M7GVQT1BLGbkp9AI for <xfs@oss.sgi.com>;
-	Sat, 17 Jan 2009 18:51:02 -0800 (PST)
-Date: Sun, 18 Jan 2009 03:50:59 +0100
-From: Danny ter Haar <dth@dth.net>
-Subject: Re: problems showing up as XFS problems on kernels after 2.6.28-git2
-Message-ID: <20090118025059.GA6135@dth.net>
-References: <20090109061043.GA31450@dth.net>
-	<20090109194445.GA28759@infradead.org>
-	<20090109195144.GA19857@dth.net>
-	<20090109195852.GA6362@infradead.org>
-	<20090109214206.GA2901@dth.net>
-	<20090109220138.GA5282@infradead.org>
-	<20090113200414.GA21013@dth.net> <20090116204346.GA5117@dth.net>
-	<20090117073824.GK8071@disturbed> <20090117232511.GA8443@dth.net>
+	n0IH2h7E010749 for <xfs@oss.sgi.com>; Sun, 18 Jan 2009 11:02:45 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 49CE39A397
+	for <xfs@oss.sgi.com>; Sun, 18 Jan 2009 09:02:42 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id bnGN7kPwN2A1kZgr for
+	<xfs@oss.sgi.com>; Sun, 18 Jan 2009 09:02:42 -0800 (PST)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1LOb2n-0000Iu-G0
+	for xfs@oss.sgi.com; Sun, 18 Jan 2009 17:02:41 +0000
+Date: Sun, 18 Jan 2009 12:02:41 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 0/7] Remaining 2.6.29 queue
+Message-ID: <20090118170241.GA21181@infradead.org>
+References: <20090109221104.237540000@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20090117232511.GA8443@dth.net>
+In-Reply-To: <20090109221104.237540000@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,18 +31,14 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-> I saw changes in the announcement of 2.6.29-rc3 and took the plunge:
-> over 4 hours of uptime and moderate usage, so i'm not 100% convinced but this one
-> looks good (so far)
+On Fri, Jan 09, 2009 at 05:11:04PM -0500, Christoph Hellwig wrote:
+> These are my current outstanding patches for 2.6.29, consisting of
+> small enough fixes and lockdep annotations, and an early warning
+> for a attr corruption frequently seen on kerneloops.org.
 
-reboot   system boot  2.6.29-rc2       Sat Jan 17 10:28 - crash  (08:20)
-
-ok, not stable (for me)
-
-Danny
--- 
+Can we please get these pushed out to Linus?  Thanks.
 
 _______________________________________________
 xfs mailing list
