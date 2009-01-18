@@ -1,21 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n0HNoER9018688 for <xfs@oss.sgi.com>; Sat, 17 Jan 2009 17:50:14 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5C924181278C
-	for <xfs@oss.sgi.com>; Sat, 17 Jan 2009 15:50:12 -0800 (PST)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id 1VBAf9Fd50qXcnVe for
-	<xfs@oss.sgi.com>; Sat, 17 Jan 2009 15:50:12 -0800 (PST)
-Message-ID: <49726E94.4060806@sandeen.net>
-Date: Sat, 17 Jan 2009 17:49:40 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	n0I2p4XX000718 for <xfs@oss.sgi.com>; Sat, 17 Jan 2009 20:51:05 -0600
+Received: from zaphod.dth.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A3F8D994F0
+	for <xfs@oss.sgi.com>; Sat, 17 Jan 2009 18:51:02 -0800 (PST)
+Received: from zaphod.dth.net (zaphod.dth.net [85.159.112.68]) by cuda.sgi.com
+	with ESMTP id M7GVQT1BLGbkp9AI for <xfs@oss.sgi.com>;
+	Sat, 17 Jan 2009 18:51:02 -0800 (PST)
+Date: Sun, 18 Jan 2009 03:50:59 +0100
+From: Danny ter Haar <dth@dth.net>
+Subject: Re: problems showing up as XFS problems on kernels after 2.6.28-git2
+Message-ID: <20090118025059.GA6135@dth.net>
+References: <20090109061043.GA31450@dth.net>
+	<20090109194445.GA28759@infradead.org>
+	<20090109195144.GA19857@dth.net>
+	<20090109195852.GA6362@infradead.org>
+	<20090109214206.GA2901@dth.net>
+	<20090109220138.GA5282@infradead.org>
+	<20090113200414.GA21013@dth.net> <20090116204346.GA5117@dth.net>
+	<20090117073824.GK8071@disturbed> <20090117232511.GA8443@dth.net>
 MIME-Version: 1.0
-Subject: Re: help with xfs_repair on 10TB fs
-References: <adcf4ef70901170913l693376d7s6fd0395e2c88e10@mail.gmail.com>	<4972166D.5000006@sandeen.net>	<adcf4ef70901171042p31054ae0rb56819fce7b6f47e@mail.gmail.com>	<49722875.90202@sandeen.net>
-	<adcf4ef70901171514v2fa036a6o9deb0df7d9dd569d@mail.gmail.com>
-In-Reply-To: <adcf4ef70901171514v2fa036a6o9deb0df7d9dd569d@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20090117232511.GA8443@dth.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,23 +35,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alberto Accomazzi <aaccomazzi@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-Alberto Accomazzi wrote:
+> I saw changes in the announcement of 2.6.29-rc3 and took the plunge:
+> over 4 hours of uptime and moderate usage, so i'm not 100% convinced but this one
+> looks good (so far)
 
+reboot   system boot  2.6.29-rc2       Sat Jan 17 10:28 - crash  (08:20)
 
-> For the record, after upgrading to xfsprogs-2.10.2 as suggested by
-> Eric, xfs_repair completed successfully.  Unfortunately now I'm left
-> with dealing with quite a mess: 388K files in lost+found, with a
-> filesystem of over 160M inodes.  ugh...
-> 
-> Thanks for all your help, though...
-> -- Alberto
+ok, not stable (for me)
 
-Bummer.  What was the first thing that went wrong, by the way?
-
--Eric
+Danny
+-- 
 
 _______________________________________________
 xfs mailing list
