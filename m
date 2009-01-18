@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n0IJRPPj020616 for <xfs@oss.sgi.com>; Sun, 18 Jan 2009 13:27:25 -0600
+	n0IJSaCX020763 for <xfs@oss.sgi.com>; Sun, 18 Jan 2009 13:28:36 -0600
 Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 96C5D9AC96
-	for <xfs@oss.sgi.com>; Sun, 18 Jan 2009 11:27:24 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DF61C9AC9D
+	for <xfs@oss.sgi.com>; Sun, 18 Jan 2009 11:28:34 -0800 (PST)
 Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id 7Cf7SZ43Ux2BoqTD for
-	<xfs@oss.sgi.com>; Sun, 18 Jan 2009 11:27:24 -0800 (PST)
-Message-ID: <4973829B.6000008@sandeen.net>
-Date: Sun, 18 Jan 2009 13:27:23 -0600
+	cuda.sgi.com with ESMTP id D6r1gMTjaVzUSTH4 for
+	<xfs@oss.sgi.com>; Sun, 18 Jan 2009 11:28:34 -0800 (PST)
+Message-ID: <497382C0.5050406@sandeen.net>
+Date: Sun, 18 Jan 2009 13:28:00 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: only run 197 on 32-bit machines
-References: <496E9A84.2060304@sandeen.net>
-	<20090118171723.GA12645@infradead.org>
-In-Reply-To: <20090118171723.GA12645@infradead.org>
+Subject: Re: [PATCH] xfsprogs: allow xfs_freeze to work on non-xfs filesystems
+References: <496E6FB4.8070300@sandeen.net>
+	<20090118175842.GA15675@infradead.org>
+In-Reply-To: <20090118175842.GA15675@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,28 +29,24 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs-oss <xfs@oss.sgi.com>
+Cc: xfs mailing list <xfs@oss.sgi.com>
 
 Christoph Hellwig wrote:
-> On Wed, Jan 14, 2009 at 08:08:04PM -0600, Eric Sandeen wrote:
->> Don't run test 197 on 64-bit machines
+> On Wed, Jan 14, 2009 at 05:05:24PM -0600, Eric Sandeen wrote:
+>> allow xfs_freeze to freeze "foreign" filesystems
 >>
->> If it always passes on 64 bits, this gives a false
->> sense of security.  Make it obvious.
+>> Now that the freeze ioctl has been elevated to the VFS,
+>> let's let xfs_io and xfs_freeze freeze other filesystems
+>> as well - add the CMD_FOREIGN_OK flag to freeze & thaw.
+>>
+>> I think the worst that will happen on older kernels is that
+>> the command will fail with ENOSYS or EINVAL....
 > 
-> I don't think it matters, but your patch looks correct and if it helps
-> you in some way..
-> 
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
+> Looks good to me, but I thikn you should also update the
+> xfs_freeze manpage to mention that it works for non-XFS filesystems
+> on 2.6.29 or newer kernels.
 
-thanks
-
-I only wanted to put it in because I was looking at fedora, wanted to
-test it against this bug, ran it, it passed, and *then* I remembered
-that it'd only fail on 32-bit, and my test (on that hardware) wasn't
-really valid.
+Ok, will do - thanks.
 
 -Eric
 
