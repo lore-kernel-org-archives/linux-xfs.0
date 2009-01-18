@@ -1,21 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n0IHHPU8012009 for <xfs@oss.sgi.com>; Sun, 18 Jan 2009 11:17:25 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B70BA9A457
-	for <xfs@oss.sgi.com>; Sun, 18 Jan 2009 09:17:24 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 1IAc0GCNxAU6wr39 for
-	<xfs@oss.sgi.com>; Sun, 18 Jan 2009 09:17:24 -0800 (PST)
-Date: Sun, 18 Jan 2009 12:17:23 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests: only run 197 on 32-bit machines
-Message-ID: <20090118171723.GA12645@infradead.org>
-References: <496E9A84.2060304@sandeen.net>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <496E9A84.2060304@sandeen.net>
+	n0IHN80Z012432 for <xfs@oss.sgi.com>; Sun, 18 Jan 2009 11:23:08 -0600
+In-Reply-To: <20090118170241.GA21181@infradead.org>
+References: <20090109221104.237540000@bombadil.infradead.org>
+	<20090118170241.GA21181@infradead.org>
+Mime-Version: 1.0 (Apple Message framework v753.1)
+Message-Id: <9305FAB6-0189-4F82-9E12-22656A7ABF9F@sgi.com>
+From: Felix Blyakher <felixb@sgi.com>
+Subject: Re: [PATCH 0/7] Remaining 2.6.29 queue
+Date: Sun, 18 Jan 2009 11:22:42 -0600
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,20 +22,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Wed, Jan 14, 2009 at 08:08:04PM -0600, Eric Sandeen wrote:
-> Don't run test 197 on 64-bit machines
-> 
-> If it always passes on 64 bits, this gives a false
-> sense of security.  Make it obvious.
+Hi Christoph,
 
-I don't think it matters, but your patch looks correct and if it helps
-you in some way..
+On Jan 18, 2009, at 11:02 AM, Christoph Hellwig wrote:
 
+> On Fri, Jan 09, 2009 at 05:11:04PM -0500, Christoph Hellwig wrote:
+>> These are my current outstanding patches for 2.6.29, consisting of
+>> small enough fixes and lockdep annotations, and an early warning
+>> for a attr corruption frequently seen on kerneloops.org.
+>
+> Can we please get these pushed out to Linus?  Thanks.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+IIRC, Lachlan had problem applying your patches.
+I'll check it myself and let you know where we're
+here.
+
+Felix
+
 
 _______________________________________________
 xfs mailing list
