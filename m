@@ -1,28 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n0J3NbiE024085 for <xfs@oss.sgi.com>; Sun, 18 Jan 2009 21:23:37 -0600
-Received: from ipmail04.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B33A5181C059
-	for <xfs@oss.sgi.com>; Sun, 18 Jan 2009 19:23:34 -0800 (PST)
-Received: from ipmail04.adl2.internode.on.net (ipmail04.adl2.internode.on.net
-	[203.16.214.57]) by cuda.sgi.com with ESMTP id MAIFTzreYo7jC1HB
-	for <xfs@oss.sgi.com>; Sun, 18 Jan 2009 19:23:34 -0800 (PST)
-Date: Mon, 19 Jan 2009 14:17:43 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: problems showing up as XFS problems on kernels after 2.6.28-git2
-Message-ID: <20090119031743.GN8071@disturbed>
-References: <20090109061043.GA31450@dth.net>
-	<20090109194445.GA28759@infradead.org>
-	<20090109195144.GA19857@dth.net>
-	<20090109195852.GA6362@infradead.org>
-	<20090109214206.GA2901@dth.net>
-	<20090109220138.GA5282@infradead.org>
-	<20090113200414.GA21013@dth.net> <20090116204346.GA5117@dth.net>
-	<20090117073824.GK8071@disturbed> <20090117232511.GA8443@dth.net>
+	n0J4A9Sl027751 for <xfs@oss.sgi.com>; Sun, 18 Jan 2009 22:10:09 -0600
+Date: Mon, 19 Jan 2009 15:10:00 +1100
+Subject: [GIT PULL] XFS update for 2.6.29-rc3
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20090117232511.GA8443@dth.net>
+Message-Id: <20090119041000.7EFCE59391EB@chook.melbourne.sgi.com>
+From: lachlan@sgi.com (Lachlan McIlroy)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,59 +19,61 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Danny ter Haar <dth@dth.net>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Sun, Jan 18, 2009 at 12:25:11AM +0100, Danny ter Haar wrote:
-> Quoting Dave Chinner (david@fromorbit.com):
-> > Sorry for not getting back to you sooner.
-> 
-> No problem. I initally posted to LKLM, git redirected by Christoph to this
-> list. I'm so stupid that i didn't check the other messages from this list.
-> Sorry.
-> 
-> > I think that Alexander tripped over this same problem during his bisect.
-> > If you follow the thread from here:
-> > http://oss.sgi.com/archives/xfs/2009-01/msg00496.html
-> 
-> Yep! [cheer] i'm not alone! :-)
-> But why only us two ? there must be thousands of users out there using
-> XFS. Why did it bite us ? large filesystem together with slow hardware ?
+The following changes since commit f3b8436ad9a8ad36b3c9fa1fe030c7f38e5d3d0b:
+  Linus Torvalds (1):
+        Merge branch 'for-linus' of git://git.kernel.org/.../roland/infiniband
 
-No idea - I can't reproduce it either so there's some state
-that your filesystem is getting into that trips over it.
+are available in the git repository at:
 
-> > You'll see that Alexander had the same problem and managed
-> > to continue the bisect once he copied the xfs_btree_trace.h
-> > header file from top-of-tree back into the broken commits.
-> 
-> Grwat.
-> 
-> > I hope this helps (and I hope that the bisect lands on the
-> > same commit that it did for Alexander).
-> 
-> Do you want me to still try it ?
-> I think you allready figured out where the culprit is ?!
+  git://oss.sgi.com/xfs/xfs.git for-linus
 
-Yes, i think we have, but it wasn't totally conclusive. Can you
-continue your bisect to see if it narrows down to the same commit
-on your machine?
+Christoph Hellwig (7):
+      xfs: fix dentry aliasing issues in open_by_handle
+      xfs: use mnt_want_write in compat_attrmulti ioctl
+      xfs: add a separate lock class for the per-mount list of dquots
+      xfs: lockdep annotations for xfs_dqlock2
+      xfs: add a lock class for group/project dquots
+      xfs: fix bad_features2 fixups for the root filesystem
+      xfs: sanity check attr fork size
 
-I'm still trying to reproduce it but I haven't worked out what the
-initial state is. One thing that might be useful is to put a printk
-into the kernel on the failure path that prints the inode number
-out (e.g. at the goto that the WANT_CORRUPTED_GOTO jumps to). Then
-we can use xfs_db to find the file that is causing the problem and
-then use xfs_db or xfs_bmap to look at the extent tree prior to
-the corruption. That might help me set up the initial state needed
-to trip the problem.....
+Eric Sandeen (1):
+      [XFS] Remove the rest of the macro-to-function indirections.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+ fs/xfs/Kconfig                 |    1 +
+ fs/xfs/linux-2.6/xfs_ioctl.c   |  305 ++++++++++++++++++----------------------
+ fs/xfs/linux-2.6/xfs_ioctl.h   |   15 ++-
+ fs/xfs/linux-2.6/xfs_ioctl32.c |  184 ++++++++-----------------
+ fs/xfs/linux-2.6/xfs_super.c   |   17 ++-
+ fs/xfs/quota/xfs_dquot.c       |   38 ++++--
+ fs/xfs/quota/xfs_dquot.h       |   10 ++
+ fs/xfs/quota/xfs_qm.c          |    9 ++
+ fs/xfs/xfs_ag.h                |    6 +-
+ fs/xfs/xfs_alloc_btree.c       |    2 +-
+ fs/xfs/xfs_attr.c              |   26 ++--
+ fs/xfs/xfs_bmap.c              |  166 +++++++++++-----------
+ fs/xfs/xfs_bmap.h              |    2 -
+ fs/xfs/xfs_bmap_btree.c        |   10 +-
+ fs/xfs/xfs_bmap_btree.h        |    4 -
+ fs/xfs/xfs_btree.c             |    6 +-
+ fs/xfs/xfs_da_btree.c          |    8 +-
+ fs/xfs/xfs_ialloc.c            |    6 +-
+ fs/xfs/xfs_ialloc.h            |    2 -
+ fs/xfs/xfs_ialloc_btree.h      |    1 -
+ fs/xfs/xfs_inode.c             |   19 ++-
+ fs/xfs/xfs_inode_item.h        |    4 -
+ fs/xfs/xfs_iomap.c             |   10 +-
+ fs/xfs/xfs_itable.c            |    6 +-
+ fs/xfs/xfs_mount.c             |   26 ++--
+ fs/xfs/xfs_mount.h             |    9 +-
+ fs/xfs/xfs_rename.c            |    2 +-
+ fs/xfs/xfs_rtalloc.c           |    2 +-
+ fs/xfs/xfs_rw.h                |    1 -
+ fs/xfs/xfs_sb.h                |    2 +-
+ fs/xfs/xfs_vnodeops.c          |   20 ++--
+ 31 files changed, 436 insertions(+), 483 deletions(-)
 
 _______________________________________________
 xfs mailing list
