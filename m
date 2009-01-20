@@ -1,21 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n0K0kPC5002385 for <xfs@oss.sgi.com>; Mon, 19 Jan 2009 18:46:25 -0600
-Received: from ipmail04.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A51789FC88
-	for <xfs@oss.sgi.com>; Mon, 19 Jan 2009 16:46:18 -0800 (PST)
-Received: from ipmail04.adl2.internode.on.net (ipmail04.adl2.internode.on.net
-	[203.16.214.57]) by cuda.sgi.com with ESMTP id kXILt9pVYAEGcSbx
-	for <xfs@oss.sgi.com>; Mon, 19 Jan 2009 16:46:18 -0800 (PST)
-Date: Tue, 20 Jan 2009 11:46:11 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [XFS] 2.6.29-rc2: XFS internal error XFS_WANT_CORRUPTED_GOTO
-Message-ID: <20090120004611.GA6445@disturbed>
-References: <497468C1.3000001@gmail.com> <4974CA20.6050308@sandeen.net>
+	n0K29NrL006899 for <xfs@oss.sgi.com>; Mon, 19 Jan 2009 20:09:24 -0600
+Message-ID: <497532FD.9030302@sgi.com>
+Date: Tue, 20 Jan 2009 13:12:13 +1100
+From: Lachlan McIlroy <lachlan@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4974CA20.6050308@sandeen.net>
+Subject: Re: [PATCH] xfs_repair: allow filesystems with a single allocation
+	group
+References: <20090105201942.GA6960@infradead.org>	<20090118173417.GA32597@infradead.org>
+	<4973848B.1020201@sandeen.net>
+In-Reply-To: <4973848B.1020201@sandeen.net>
+Reply-To: lachlan@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,37 +25,188 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
-Cc: hch@infradead.org, Jacek Luczak <difrost.kernel@gmail.com>, LKML <linux-kernel@vger.kernel.org>, xfs mailing list <xfs@oss.sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Mon, Jan 19, 2009 at 12:44:48PM -0600, Eric Sandeen wrote:
-> Jacek Luczak wrote:
-> > Hi All,
-> > 
-> > I've stepped into XFS issue/bug. Yesterday I've compiled 2.6.29-rc2 and no
-> > didn't found errors. Today I've booted my notebook and XFS bug have occurred.
-> > System reboot didn't helped, same error appeared.
-> > 
-> > Some info:
-> > [1] config: http://pin.if.uz.zgora.pl/~difrost/linux-next/2.6.29-rc2.config
-> > [2] kernel logs:
-> > http://pin.if.uz.zgora.pl/~difrost/linux-next/2.6.29-rc2_XFS-bug.log
-> > [3] most interesting part of log below.
+Looks okay to me (with Eric's suggestions).
+
+Eric Sandeen wrote:
+> Christoph Hellwig wrote:
+>> Lachlan, Eric,
+>>
+>> does this version look okay now?
 > 
-> so this happens every mount?  Reproducible is good.  How large is the
-> filesystem (too large to extract elsewhere for analysis...?) (plus I
-> suppose it'll be hard to get to it when you can't even boot....)
-
-XFS folks, I suspect the common link between all the reports of this
-bug is that they are on 32-bit kernels. I can't reproduce this on
-a 64 bit kernel, and I'm trying to get a 32-bit UML built right now
-to test this theory.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> just minor edits on the manpage change, below
+> 
+>> On Mon, Jan 05, 2009 at 03:19:42PM -0500, Christoph Hellwig wrote:
+>>> Currently xfs_repair bails out on a filesystem with just a single AG.
+>>> But that's a perfectly valid configureation, so we should allow it.
+>>>
+>>> Because we could cause harm only allow it when using the force_geometry
+>>> suboption.  But we nice enough to tell the user about it when he needs it.
+>>>
+>>> Also make sure to take the internal log into account when guestimating the
+>>> first inode cluster offset.
+>>>
+>>> I'll also cook up a testcase for repair on single AG filesystems.
+>>>
+>>>
+>>> Signed-off-by: Christoph Hellwig <hch@lst.de>
+>>> Reported-By: Arkadiusz Miskiewicz <arekm@maven.pl>
+>>>
+>>> Index: xfsprogs-dev/repair/sb.c
+>>> ===================================================================
+>>> --- xfsprogs-dev.orig/repair/sb.c	2009-01-03 21:57:42.415546683 +0100
+>>> +++ xfsprogs-dev/repair/sb.c	2009-01-05 21:19:01.706752325 +0100
+>>> @@ -760,27 +760,37 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
+>>>  	switch (num_sbs)  {
+>>>  	case 2:
+>>>  		/*
+>>> -		 * all them have to be right.  if not, report geometry
+>>> -		 * and get out unless force option is in effect (-F)
+>>> +		 * If we only have two allocation groups, and the superblock
+>>> +		 * in the second allocation group differs from the primary
+>>> +		 * superblock we can't verify the geometry information.
+>>> +		 * Warn the user about this situation and get out unless
+>>> +		 * explicitly overridden.
+>>>  		 */
+>>>  		if (current->refs != 2)  {
+>>>  			if (!force_geo)  {
+>>>  				do_warn(
+>>> -	_("Only two AGs detected and they do not match - cannot proceed.\n"));
+>>> +	_("Only two AGs detected and they do not match - "
+>>> +	  "cannot validate filesystem geometry.\n"
+>>> +	  "Use the -o force_geometry option to proceed.\n"));
+>>>  				exit(1);
+>>>  			}
+>>>  		}
+>>> -		break;
+>>> +		goto out_free_list;
+>>>  	case 1:
+>>>  		/*
+>>> -		 * just report the geometry info and get out.
+>>> -		 * refuse to run further unless the force (-F)
+>>> -		 * option is in effect.
+>>> +		 * If we only have a single allocation group there is no
+>>> +		 * secondary superblock that we can use to verify the geometry
+>>> +		 * information.  Warn the user about this situation and get
+>>> +		 * out unless explicitly overridden.
+>>>  		 */
+>>>  		if (!force_geo)  {
+>>> -			do_warn(_("Only one AG detected - cannot proceed.\n"));
+>>> +			do_warn(
+>>> +	_("Only one AG detected - "
+>>> +	  "cannot validate filesystem geometry.\n"
+>>> +	  "Use the -o force_geometry option to proceed.\n"));
+>>>  			exit(1);
+>>>  		}
+>>> +		goto out_free_list;
+>>>  	default:
+>>>  		/*
+>>>  		 * at least half of the probed superblocks have
+>>> @@ -820,6 +830,7 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
+>>>  		sb_width = sb->sb_width;
+>>>  	}
+>>>  
+>>> +out_free_list:
+>>>  	free_geo(list);
+>>>  out:
+>>>  	free(sb);
+>>> Index: xfsprogs-dev/repair/xfs_repair.c
+>>> ===================================================================
+>>> --- xfsprogs-dev.orig/repair/xfs_repair.c	2009-01-03 21:57:42.416547229 +0100
+>>> +++ xfsprogs-dev/repair/xfs_repair.c	2009-01-05 20:53:24.810738262 +0100
+>>> @@ -62,6 +62,8 @@ char *o_opts[] = {
+>>>  	"bhash",
+>>>  #define	AG_STRIDE	4
+>>>  	"ag_stride",
+>>> +#define FORCE_GEO	5
+>>> +	"force_geometry",
+>>>  	NULL
+>>>  };
+>>>  
+>>> @@ -258,6 +260,13 @@ process_args(int argc, char **argv)
+>>>  				case AG_STRIDE:
+>>>  					ag_stride = (int)strtol(val, NULL, 0);
+>>>  					break;
+>>> +				case FORCE_GEO:
+>>> +					if (val)
+>>> +						noval('o', o_opts, FORCE_GEO);
+>>> +					if (force_geo)
+>>> +						respec('o', o_opts, FORCE_GEO);
+>>> +					force_geo = 1;
+>>> +					break;
+>>>  				default:
+>>>  					unknown('o', val);
+>>>  					break;
+>>> @@ -409,6 +418,19 @@ calc_mkfs(xfs_mount_t *mp)
+>>>  	fino_bno = inobt_root + XFS_MIN_FREELIST_RAW(1, 1, mp) + 1;
+>>>  
+>>>  	/*
+>>> +	 * If we only have a single allocation group the log is also allocated
+>>> +	 * in the first allocation group and we need to add the number of
+>>> +	 * blocks used by the log to the above calculation.
+>>> +	 * All this of course doesn't apply if we have an external log.
+>>> +	 */
+>>> +	if (mp->m_sb.sb_agcount == 1 && mp->m_sb.sb_logstart) {
+>>> +		/*
+>>> +		 * XXX(hch): verify that sb_logstart makes sense?
+>>> +		 */
+>>> +		 fino_bno += mp->m_sb.sb_logblocks;
+>>> +	}
+>>> +
+>>> +	/*
+>>>  	 * ditto the location of the first inode chunks in the fs ('/')
+>>>  	 */
+>>>  	if (xfs_sb_version_hasdalign(&mp->m_sb) && do_inoalign)  {
+>>> Index: xfsprogs-dev/man/man8/xfs_repair.8
+>>> ===================================================================
+>>> --- xfsprogs-dev.orig/man/man8/xfs_repair.8	2009-01-05 21:11:50.054546919 +0100
+>>> +++ xfsprogs-dev/man/man8/xfs_repair.8	2009-01-05 21:14:49.228027165 +0100
+>>> @@ -146,6 +146,15 @@ RAM size.
+>>>  This creates additional processing threads to parallel process
+>>>  AGs that span multiple concat units. This can significantly
+>>>  reduce repair times on concat based filesystems.
+>>> +.TP
+>>> +.BI force_geometry
+>>> +Check the filesystem even if geometry information could not be validate.
+> 
+> "validated."
+> 
+>>> +Geometry information can not be validated if there is only a single
+> 
+> "can not be validated if only a single allocation group exists"
+> 
+>>> +allocation group exists and thus no backups superblock exists, or
+>>> +if there are two allocation groups and the two superblocks do not
+>>> +agree on the filesystem geometry.  Only use this option if you validated
+>>> +the geometry yourself and know what your doing.  In doubt do a run
+> 
+> "know what you are doing.  If in doubt, do a run"
+> 
+>>> +in no modify mode first.
+> 
+> in "no-modify" (-n) mode first.
+> 
+>>>  .RE
+>>>  .TP
+>>>  .B \-t " interval"
+>>>
+>>> _______________________________________________
+>>> xfs mailing list
+>>> xfs@oss.sgi.com
+>>> http://oss.sgi.com/mailman/listinfo/xfs
+>> ---end quoted text---
+>>
+>> _______________________________________________
+>> xfs mailing list
+>> xfs@oss.sgi.com
+>> http://oss.sgi.com/mailman/listinfo/xfs
+>>
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
