@@ -1,17 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n0KEFKEp018216 for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 08:15:22 -0600
-Received: from mail-bw0-f13.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8A6AC1829A3F
-	for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 06:15:17 -0800 (PST)
-Received: from mail-bw0-f13.google.com (mail-bw0-f13.google.com
-	[209.85.218.13]) by cuda.sgi.com with ESMTP id j1Xkv7735B8dxff8
-	for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 06:15:17 -0800 (PST)
-Received: by bwz6 with SMTP id 6so229855bwz.20
-	for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 06:15:16 -0800 (PST)
-Message-ID: <4975DC24.5080806@gmail.com>
-Date: Tue, 20 Jan 2009 15:13:56 +0100
+	n0KELph0018522 for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 08:21:52 -0600
+Received: from mu-out-0910.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EE4001BA7210
+	for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 06:21:49 -0800 (PST)
+Received: from mu-out-0910.google.com (mu-out-0910.google.com
+	[209.85.134.184]) by cuda.sgi.com with ESMTP id
+	0ooqM2NjQrzJHcOD for <xfs@oss.sgi.com>;
+	Tue, 20 Jan 2009 06:21:49 -0800 (PST)
+Received: by mu-out-0910.google.com with SMTP id w1so1740850mue.2
+	for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 06:21:48 -0800 (PST)
+Message-ID: <4975DE45.7050004@gmail.com>
+Date: Tue, 20 Jan 2009 15:23:01 +0100
 From: Jacek Luczak <difrost.kernel@gmail.com>
 MIME-Version: 1.0
 Subject: Re: [XFS] 2.6.29-rc2: XFS internal error XFS_WANT_CORRUPTED_GOTO
@@ -61,7 +62,13 @@ Christoph Hellwig pisze:
 >  typedef __uint64_t	xfs_rtblock_t;	/* extent (block) in realtime area */
 > 
 
-Applied. Thanks. Will do some tests with your script.
+I've applied it and now running ,,fixed'' kernel. What I've notice is:
+$ LC_ALL=C df -h
+Filesystem            Size  Used Avail Use% Mounted on
+/dev/sda1              20G  -40E   40E   -  /
+/dev/sda5              20G  -23E   23E   -  /home
+/dev/sda6              56G   56G  774M  99% /NORA
+/dev/sda7              45G   44G  1.2G  98% /MAGAZYN
 
 -Jacek
 
