@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n0K9cpnK001537 for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 03:38:53 -0600
-Received: from mail-fx0-f32.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6F166A0637
-	for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 01:38:49 -0800 (PST)
-Received: from mail-fx0-f32.google.com (mail-fx0-f32.google.com
-	[209.85.220.32]) by cuda.sgi.com with ESMTP id r5vQg1aN3vCxAQW0
-	for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 01:38:49 -0800 (PST)
-Received: by fxm13 with SMTP id 13so759373fxm.20
-	for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 01:38:48 -0800 (PST)
-Message-ID: <497598BF.9080704@gmail.com>
-Date: Tue, 20 Jan 2009 10:26:23 +0100
+	n0KAinOq005411 for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 04:44:50 -0600
+Received: from mail-bw0-f13.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6279B10A81A7
+	for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 02:44:45 -0800 (PST)
+Received: from mail-bw0-f13.google.com (mail-bw0-f13.google.com
+	[209.85.218.13]) by cuda.sgi.com with ESMTP id r2aUdq4Sfn5FAwdX
+	for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 02:44:45 -0800 (PST)
+Received: by bwz6 with SMTP id 6so28196bwz.20
+	for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 02:44:44 -0800 (PST)
+Message-ID: <4975AAAF.4040804@gmail.com>
+Date: Tue, 20 Jan 2009 11:42:55 +0100
 From: Jacek Luczak <difrost.kernel@gmail.com>
 MIME-Version: 1.0
 Subject: Re: [XFS] 2.6.29-rc2: XFS internal error XFS_WANT_CORRUPTED_GOTO
 References: <497468C1.3000001@gmail.com> <4974CA20.6050308@sandeen.net>
-	<20090120004611.GA6445@disturbed>
-In-Reply-To: <20090120004611.GA6445@disturbed>
+	<49759844.5080405@gmail.com>
+In-Reply-To: <49759844.5080405@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,10 +30,11 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>, Jacek Luczak <difrost.kernel@gmail.com>, LKML <linux-kernel@vger.kernel.org>, hch@infradead.org, xfs mailing list <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: hch@infradead.org, LKML <linux-kernel@vger.kernel.org>, xfs mailing list <xfs@oss.sgi.com>
 
-Dave Chinner pisze:
-> On Mon, Jan 19, 2009 at 12:44:48PM -0600, Eric Sandeen wrote:
+Jacek Luczak pisze:
+> Eric Sandeen pisze:
 >> Jacek Luczak wrote:
 >>> Hi All,
 >>>
@@ -49,16 +50,44 @@ Dave Chinner pisze:
 >> so this happens every mount?  Reproducible is good.  How large is the
 >> filesystem (too large to extract elsewhere for analysis...?) (plus I
 >> suppose it'll be hard to get to it when you can't even boot....)
+>>
+>> -Eric
+>>
 > 
-> XFS folks, I suspect the common link between all the reports of this
-> bug is that they are on 32-bit kernels. I can't reproduce this on
-> a 64 bit kernel, and I'm trying to get a 32-bit UML built right now
-> to test this theory.
+> Hi Eric,
+> 
+> funny or sad thing is that this happens while mounting only one of partitions
+> (/home) which is:
+> $ df -h | grep /home
+> /dev/sda5              20G   14G  6,0G  69% /home
+> 
+> This bug is quite strange, as I mentioned, first boot on new kernel went OK,
+> next two resulted in such behavior. Now I'm running 2.6.29-rc2-12097-gf3b8436
+> and no bug here. Nevertheless I'm not fully happy, as it was seen before, the
+> bug might still happen (will boot few times to test it and report back to you).
+> 
+> First yesterday buggy but went unnoticed so I've started fluxbox and firefox
+> (errors seen in log), as usual, then found that sth is wrong. Second boot was
+> also buggy than I've returned to old kernel where everything was OK ... nearly
+> everything, cause firefox suddenly ,,forgot'' all configuration.
+> 
+> I will boot my notebook on all those 2.6.29-* kernel few times and maybe be able
+> to reproduce that bug.
 > 
 
-Yep, 32-bits here. I've googled a while looking for some answer and it looks
-like it has happen before in various kernel version (no report regarding 2.6.29
-AFAIR).
+I've made some tests. Basically umount + mount (with time measurement):
+
+$ for i in $(seq -s ' ' 1 20) ; do echo "[=> umount [$MNT]: $i" ; time umount
+$MNT ; [ $? -eq 0 ] && echo "[=> mount [$MNT]: $i" && time mount $MNT || break ;
+done 2>&1 | tee ~/${MNT##*/}_mount_git.log
+
+where MNT was set to three different partitions (all with XFS). Both on rc2 and
+git version, no bug appeared. If someone is interested (I've seen some delays in
+mounting before), some time results here:
+http://pin.if.uz.zgora.pl/~difrost/linux-next/mount_logs/
+
+I will still mess around so maybe it will appear once more than will try do some
+more tests (suggestions are welcome).
 
 -Jacek
 
