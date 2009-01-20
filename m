@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n0KBrQIX009213 for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 05:53:26 -0600
-Received: from mail-bw0-f13.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 76787D808B3
-	for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 03:53:23 -0800 (PST)
-Received: from mail-bw0-f13.google.com (mail-bw0-f13.google.com
-	[209.85.218.13]) by cuda.sgi.com with ESMTP id c3ylhS4eqx4HPJXf
-	for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 03:53:23 -0800 (PST)
-Received: by bwz6 with SMTP id 6so89130bwz.20
-	for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 03:53:22 -0800 (PST)
-Message-ID: <4975B9C4.7030401@gmail.com>
-Date: Tue, 20 Jan 2009 12:47:16 +0100
-From: Jacek Luczak <difrost.kernel@gmail.com>
-MIME-Version: 1.0
+	n0KCDc1B010322 for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 06:13:38 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C55331829943
+	for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 04:13:36 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id ZX6rV2TEToCMcPZf for
+	<xfs@oss.sgi.com>; Tue, 20 Jan 2009 04:13:36 -0800 (PST)
+Date: Tue, 20 Jan 2009 07:13:35 -0500
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [XFS] 2.6.29-rc2: XFS internal error XFS_WANT_CORRUPTED_GOTO
+Message-ID: <20090120121335.GA19182@infradead.org>
 References: <497468C1.3000001@gmail.com> <4974CA20.6050308@sandeen.net>
 	<20090120004611.GA6445@disturbed>
-	<20090120112910.GA6831@infradead.org>
-In-Reply-To: <20090120112910.GA6831@infradead.org>
+	<20090120112910.GA6831@infradead.org> <4975B9C4.7030401@gmail.com>
+	<20090120114906.GA12526@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20090120114906.GA12526@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,44 +31,76 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Eric Sandeen <sandeen@sandeen.net>, LKML <linux-kernel@vger.kernel.org>, xfs mailing list <xfs@oss.sgi.com>
+To: Jacek Luczak <difrost.kernel@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@sandeen.net>, LKML <linux-kernel@vger.kernel.org>, xfs mailing list <xfs@oss.sgi.com>
 
-Christoph Hellwig pisze:
-> On Tue, Jan 20, 2009 at 11:46:11AM +1100, Dave Chinner wrote:
->> On Mon, Jan 19, 2009 at 12:44:48PM -0600, Eric Sandeen wrote:
->>> Jacek Luczak wrote:
->>>> Hi All,
->>>>
->>>> I've stepped into XFS issue/bug. Yesterday I've compiled 2.6.29-rc2 and no
->>>> didn't found errors. Today I've booted my notebook and XFS bug have occurred.
->>>> System reboot didn't helped, same error appeared.
->>>>
->>>> Some info:
->>>> [1] config: http://pin.if.uz.zgora.pl/~difrost/linux-next/2.6.29-rc2.config
->>>> [2] kernel logs:
->>>> http://pin.if.uz.zgora.pl/~difrost/linux-next/2.6.29-rc2_XFS-bug.log
->>>> [3] most interesting part of log below.
->>> so this happens every mount?  Reproducible is good.  How large is the
->>> filesystem (too large to extract elsewhere for analysis...?) (plus I
->>> suppose it'll be hard to get to it when you can't even boot....)
->> XFS folks, I suspect the common link between all the reports of this
->> bug is that they are on 32-bit kernels. I can't reproduce this on
->> a 64 bit kernel, and I'm trying to get a 32-bit UML built right now
->> to test this theory.
+On Tue, Jan 20, 2009 at 06:49:06AM -0500, Christoph Hellwig wrote:
+> > > Just curious:  do you have CONFIG_LBD set?
+> > > 
+> > Hi Christoph,
+> > 
+> > the answer is:
+> > $ grep LBD .config
+> > # CONFIG_LBD is not set
 > 
-> I'm doing about half of my testing on 32 bit x86, and I couldn't
-> reproduce the detailed receipe  in the kernel.org bugzilla yet.
-> 
-> Just curious:  do you have CONFIG_LBD set?
-> 
-Hi Christoph,
+> Ok, let me reproduce it without that set..
 
-the answer is:
-$ grep LBD .config
-# CONFIG_LBD is not set
+Ok, on 32-bit x86 without CONFIG_LBD I can reliably reproduce the issue
+with the following script:
 
--Jacek
+
+#!/bin/bash
+
+TESTDIR=/mnt/test
+SCRATCHMNT=/mnt/scratch
+file=$SCRATCHMNT/f
+
+do_pwrite()
+{
+	offset=`expr $1 \* 512`
+	end=`expr $2 \* 512`
+	length=`expr $end - $offset`
+
+	xfs_io -d -f $file -c "pwrite $offset $length" >/dev/null
+}
+
+
+mkfs.xfs \
+	-b size=1024 \
+	-d file,name=$TESTDIR/fsfile,size=40146592b,agcount=16 \
+	-i attr=0 \
+	-l version=1
+
+mount -o loop,rw,noatime,nodiratime $TESTDIR/fsfile $SCRATCHMNT
+
+do_pwrite 30792 31039
+do_pwrite 30320 30791
+do_pwrite 29688 30319
+do_pwrite 29536 29687
+do_pwrite 27216 29535
+do_pwrite 24368 27215
+do_pwrite 21616 24367
+do_pwrite 20608 21615
+do_pwrite 19680 20607
+do_pwrite 19232 19679
+do_pwrite 17840 19231
+do_pwrite 16928 17839
+do_pwrite 15168 16927
+do_pwrite 14048 15167
+do_pwrite 12152 14047
+do_pwrite 11344 12151
+do_pwrite 8792 11343
+do_pwrite 6456 8791
+do_pwrite 5000 6455
+do_pwrite 1728 4999
+do_pwrite 0 1727
+
+sync
+sync
+
+> $SCRATCHMNT/bigfile
+
+#umount $SCRATCH
 
 _______________________________________________
 xfs mailing list
