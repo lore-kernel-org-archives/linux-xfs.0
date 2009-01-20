@@ -1,18 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n0KELph0018522 for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 08:21:52 -0600
-Received: from mu-out-0910.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EE4001BA7210
-	for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 06:21:49 -0800 (PST)
-Received: from mu-out-0910.google.com (mu-out-0910.google.com
-	[209.85.134.184]) by cuda.sgi.com with ESMTP id
-	0ooqM2NjQrzJHcOD for <xfs@oss.sgi.com>;
-	Tue, 20 Jan 2009 06:21:49 -0800 (PST)
-Received: by mu-out-0910.google.com with SMTP id w1so1740850mue.2
-	for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 06:21:48 -0800 (PST)
-Message-ID: <4975DE45.7050004@gmail.com>
-Date: Tue, 20 Jan 2009 15:23:01 +0100
+	n0KEON3H018739 for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 08:24:24 -0600
+Received: from mail-bw0-f13.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 506B91BDC54F
+	for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 06:24:21 -0800 (PST)
+Received: from mail-bw0-f13.google.com (mail-bw0-f13.google.com
+	[209.85.218.13]) by cuda.sgi.com with ESMTP id DyB2z8j4meblYaTA
+	for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 06:24:21 -0800 (PST)
+Received: by bwz6 with SMTP id 6so238902bwz.20
+	for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 06:24:20 -0800 (PST)
+Message-ID: <4975D88B.7020906@gmail.com>
+Date: Tue, 20 Jan 2009 14:58:35 +0100
 From: Jacek Luczak <difrost.kernel@gmail.com>
 MIME-Version: 1.0
 Subject: Re: [XFS] 2.6.29-rc2: XFS internal error XFS_WANT_CORRUPTED_GOTO
@@ -21,9 +20,8 @@ References: <497468C1.3000001@gmail.com> <4974CA20.6050308@sandeen.net>
 	<20090120112910.GA6831@infradead.org> <4975B9C4.7030401@gmail.com>
 	<20090120114906.GA12526@infradead.org>
 	<20090120121335.GA19182@infradead.org>
-	<20090120124515.GA31838@infradead.org> <4975D88B.7020906@gmail.com>
-	<20090120140514.GA2976@infradead.org>
-In-Reply-To: <20090120140514.GA2976@infradead.org>
+	<20090120124515.GA31838@infradead.org>
+In-Reply-To: <20090120124515.GA31838@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,35 +38,35 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: Eric Sandeen <sandeen@sandeen.net>, LKML <linux-kernel@vger.kernel.org>, xfs mailing list <xfs@oss.sgi.com>
 
 Christoph Hellwig pisze:
-> On Tue, Jan 20, 2009 at 02:58:35PM +0100, Jacek Luczak wrote:
->> Good job! Is there some ,,quick'' fix?
+> On Tue, Jan 20, 2009 at 07:13:35AM -0500, Christoph Hellwig wrote:
+>> On Tue, Jan 20, 2009 at 06:49:06AM -0500, Christoph Hellwig wrote:
+>>>>> Just curious:  do you have CONFIG_LBD set?
+>>>>>
+>>>> Hi Christoph,
+>>>>
+>>>> the answer is:
+>>>> $ grep LBD .config
+>>>> # CONFIG_LBD is not set
+>>> Ok, let me reproduce it without that set..
+>> Ok, on 32-bit x86 without CONFIG_LBD I can reliably reproduce the issue
+>> with the following script:
 > 
-> The patch below makes it go away for me, alternatively just enable
-> CONFIG_LBD.
+> Bisected down to:
 > 
+> commit 91cca5df9bc85efdabfa645f51d54259ed09f4bf
+> Author: Christoph Hellwig <hch@infradead.org>
+> Date:   Thu Oct 30 16:58:01 2008 +1100
 > 
-> Index: linux-2.6/fs/xfs/xfs_types.h
-> ===================================================================
-> --- linux-2.6.orig/fs/xfs/xfs_types.h	2009-01-20 14:55:55.806068213 +0100
-> +++ linux-2.6/fs/xfs/xfs_types.h	2009-01-20 14:56:01.437945154 +0100
-> @@ -96,7 +96,7 @@ typedef	__uint64_t	xfs_dfilblks_t;	/* nu
->  /*
->   * Memory based types are conditional.
->   */
-> -#if XFS_BIG_BLKNOS
-> +#if 1 //XFS_BIG_BLKNOS
->  typedef	__uint64_t	xfs_fsblock_t;	/* blockno in filesystem (agno|agbno) */
->  typedef __uint64_t	xfs_rfsblock_t;	/* blockno in filesystem (raw) */
->  typedef __uint64_t	xfs_rtblock_t;	/* extent (block) in realtime area */
+>     [XFS] implement generic xfs_btree_delete/delrec
+> 
+>     Make the btree delete code generic. Based on a patch from David Chinner
+>     with lots of changes to follow the original btree implementations more
+>     closely. While this loses some of the generic helper routines for
+>     inserting/moving/removing records it also solves some of the one off bugs
+>     in the original code and makes it easier to verify.
 > 
 
-I've applied it and now running ,,fixed'' kernel. What I've notice is:
-$ LC_ALL=C df -h
-Filesystem            Size  Used Avail Use% Mounted on
-/dev/sda1              20G  -40E   40E   -  /
-/dev/sda5              20G  -23E   23E   -  /home
-/dev/sda6              56G   56G  774M  99% /NORA
-/dev/sda7              45G   44G  1.2G  98% /MAGAZYN
+Good job! Is there some ,,quick'' fix?
 
 -Jacek
 
