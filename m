@@ -1,27 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	n0KNMi7F023776 for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 17:22:50 -0600
+	n0KNNFBg023864 for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 17:23:15 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 647E1182CCEF
-	for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 15:22:44 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5A36E182CD0D
+	for <xfs@oss.sgi.com>; Tue, 20 Jan 2009 15:23:15 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 98uWtDHOUiAWCmwN for
-	<xfs@oss.sgi.com>; Tue, 20 Jan 2009 15:22:44 -0800 (PST)
-Date: Tue, 20 Jan 2009 18:22:43 -0500
+	by cuda.sgi.com with ESMTP id ODgca7ialcFcHlKO for
+	<xfs@oss.sgi.com>; Tue, 20 Jan 2009 15:23:15 -0800 (PST)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1LPPwA-000707-WC
+	for xfs@oss.sgi.com; Tue, 20 Jan 2009 23:23:15 +0000
+Date: Tue, 20 Jan 2009 18:23:14 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Re: [XFS] 2.6.29-rc2: XFS internal error
-	XFS_WANT_CORRUPTED_GOTO
-Message-ID: <20090120232242.GA16776@infradead.org>
-References: <497468C1.3000001@gmail.com> <4974CA20.6050308@sandeen.net>
-	<20090120004611.GA6445@disturbed>
-	<20090120112910.GA6831@infradead.org> <4975B9C4.7030401@gmail.com>
-	<20090120114906.GA12526@infradead.org>
-	<20090120133521.GD10158@disturbed>
-	<20090120230306.GE10158@disturbed>
+Subject: [PATCH] xfstest: add test 201: btree corruption without CONFIG_LBD
+Message-ID: <20090120232314.GB16776@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20090120230306.GE10158@disturbed>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,29 +29,118 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>, Jacek Luczak <difrost.kernel@gmail.com>, Eric Sandeen <sandeen@sandeen.net>, LKML <linux-kernel@vger.kernel.org>, xfs mailing list <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Wed, Jan 21, 2009 at 10:03:06AM +1100, Dave Chinner wrote:
-> [XFS] Long btree pointers are still 64 bit on disk
-> 
-> On 32 bit machines with CONFIG_LBD=n, XFS reduces the
-> in memory size of xfs_fsblock_t to 32 bits so that it
-> will fit within 32 bit addressing. However, the disk format
-> for long btree pointers are still 64 bits in size.
-> 
-> The recent btree rewrite failed to take this into account
-> when initialising new btree blocks, setting sibling pointers
-> to NULL and checking if they are NULL. Hence checking whether
-> a 64 bit NULL was the same as a 32 bit NULL was failingi
-> resulting in NULL sibling pointers failing to be detected
-> correctly. This showed up as WANT_CORRUPTED_GOTO shutdowns
-> in xfs_btree_delrec.
-> 
-> Fix this by making all the comparisons and setting of long
-> pointer btree NULL blocks to the disk format, not the
-> in memory format. i.e. use NULLDFSBNO.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Thanks, this fixes the testcase for me.
+Index: xfstests-dev/201
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ xfstests-dev/201	2009-01-20 23:20:49.000000000 +0000
+@@ -0,0 +1,87 @@
++#! /bin/sh
++# FS QA Test No. 201
++#
++# Test out the infamout xfs_btree_delrec corruption.
++#
++# Only happens on 32-bit kernels without CONFIG_LBD, but it should be harmless
++# to run this everywhere.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2001 Christoph Hellwig.
++#-----------------------------------------------------------------------
++#
++# creator
++owner=hch@lst.de
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++
++do_pwrite()
++{
++	offset=`expr $1 \* 512`
++	end=`expr $2 \* 512`
++	length=`expr $end - $offset`
++
++	xfs_io -d -f $file -c "pwrite $offset $length" >/dev/null
++}
++
++
++
++_cleanup()
++{
++	umount $SCRATCH_MNT
++}
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++
++# real QA test starts here
++_supported_fs xfs
++_supported_os Linux
++
++file=$SCRATCH_MNT/f
++
++_require_scratch
++
++_scratch_mkfs_xfs >/dev/null 2>&1
++_scratch_mount
++
++# Create a fragmented file
++do_pwrite 30792 31039
++do_pwrite 30320 30791
++do_pwrite 29688 30319
++do_pwrite 29536 29687
++do_pwrite 27216 29535
++do_pwrite 24368 27215
++do_pwrite 21616 24367
++do_pwrite 20608 21615
++do_pwrite 19680 20607
++do_pwrite 19232 19679
++do_pwrite 17840 19231
++do_pwrite 16928 17839
++do_pwrite 15168 16927
++do_pwrite 14048 15167
++do_pwrite 12152 14047
++do_pwrite 11344 12151
++do_pwrite 8792 11343
++do_pwrite 6456 8791
++do_pwrite 5000 6455
++do_pwrite 1728 4999
++do_pwrite 0 1727
++
++sync
++sync
++
++# and truncate it again
++> $SCRATCH_MNT/bigfile
++
++# success, all done
++echo "*** done"
++rm -f $seq.full
++status=0
+Index: xfstests-dev/201.out
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ xfstests-dev/201.out	2009-01-20 23:17:30.000000000 +0000
+@@ -0,0 +1,2 @@
++QA output created by 201
++*** done
+Index: xfstests-dev/group
+===================================================================
+--- xfstests-dev.orig/group	2009-01-20 23:11:54.000000000 +0000
++++ xfstests-dev/group	2009-01-20 23:12:04.000000000 +0000
+@@ -302,3 +302,4 @@
+ 197 dir auto
+ 199 mount auto
+ 200 mount auto
++201 metadata auto
 
 _______________________________________________
 xfs mailing list
