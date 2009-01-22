@@ -1,14 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0M6BUZ0050873 for <xfs@oss.sgi.com>; Thu, 22 Jan 2009 00:11:31 -0600
-In-Reply-To: <1232578645-20213-1-git-send-email-felixb@sgi.com>
-References: <1232578645-20213-1-git-send-email-felixb@sgi.com>
-Mime-Version: 1.0 (Apple Message framework v753.1)
-Message-Id: <0AC805F5-C30E-4439-A32B-2625D7FBEDFD@sgi.com>
-From: Felix Blyakher <felixb@sgi.com>
-Subject: Re: [PATCH] [XFS] Warn on transaction in flight on read-only remount
-Date: Thu, 22 Jan 2009 00:10:15 -0600
+	n0M6DLWn050974 for <xfs@oss.sgi.com>; Thu, 22 Jan 2009 00:13:23 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0EAF2AB09B
+	for <xfs@oss.sgi.com>; Wed, 21 Jan 2009 22:12:36 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id 7ypIurH3c4HchvNq for
+	<xfs@oss.sgi.com>; Wed, 21 Jan 2009 22:12:36 -0800 (PST)
+Date: Thu, 22 Jan 2009 01:11:58 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] Re: Corrupted XFS log replay oops.
+Message-ID: <20090122061158.GA31104@infradead.org>
+References: <20090113142147.GE16333@alice> <20090120173455.GC21339@alice>
+	<20090121035703.GH10158@disturbed>
+	<200901211503.07308.nickpiggin@yahoo.com.au>
+	<20090122043747.GU10158@disturbed>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20090122043747.GU10158@disturbed>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,53 +27,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Felix Blyakher <felixb@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Nick Piggin <nickpiggin@yahoo.com.au>, Eric Sesterhenn <snakebyte@gmx.de>, Pavel Machek <pavel@suse.cz>, Chris Mason <chris.mason@oracle.com>, linux-kernel@vger.kernel.org, npiggin@yahoo.com.au, xfs@oss.sgi.com
 
-[resending after fixing xfs mailing list on oss]
+On Thu, Jan 22, 2009 at 03:37:47PM +1100, Dave Chinner wrote:
+>  xfs_buf_t *
+>  xlog_get_bp(
+>  	xlog_t		*log,
+> -	int		num_bblks)
+> +	int		nbblks)
 
-Just wanted to point out to discussion on this topic:
+Any reason for reanming this variable?  That causes quite a bit of
+churn.
 
-http://oss.sgi.com/archives/xfs/2008-12/msg00019.html
+>  {
+> -	ASSERT(num_bblks > 0);
+> +	if (nbblks <= 0 || nbblks > log->l_logBBsize) {
+> +		xlog_warn("XFS: Invalid block length (0x%x) given for buffer", nbblks);
 
-I merely took a suggestion from it, and put it in a patch.
+And doesn't prevent this line from needing a linebreak to stay under 80
+characters :)
 
-Felix
-
-On Jan 21, 2009, at 4:57 PM, Felix Blyakher wrote:
-
-> Till VFS can correctly support read-only remount without racing,
-> use WARN_ON instead of BUG_ON on detecting transaction in flight
-> after quiescing filesystem.
->
-> Signed-off-by: Felix Blyakher <felixb@sgi.com>
-> ---
->  fs/xfs/linux-2.6/xfs_sync.c |    5 ++++-
->  1 files changed, 4 insertions(+), 1 deletions(-)
->
-> diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-> index 2ed0353..d8373ee 100644
-> --- a/fs/xfs/linux-2.6/xfs_sync.c
-> +++ b/fs/xfs/linux-2.6/xfs_sync.c
-> @@ -371,7 +371,10 @@ xfs_quiesce_attr(
->  	/* flush inodes and push all remaining buffers out to disk */
->  	xfs_quiesce_fs(mp);
->
-> -	ASSERT_ALWAYS(atomic_read(&mp->m_active_trans) == 0);
-> +	/* Just warn here till VFS can correctly support
-> +	 * read-only remount without racing.
-> +	 */
-> +	WARN_ON(atomic_read(&mp->m_active_trans) == 0);
->
->  	/* Push the superblock and write an unmount record */
->  	error = xfs_log_sbcount(mp, 1);
-> -- 
-> 1.6.1
->
+Except for these nitpicks it looks fine to me.
 
 _______________________________________________
 xfs mailing list
