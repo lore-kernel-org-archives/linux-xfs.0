@@ -1,17 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0M43fqS037703 for <xfs@oss.sgi.com>; Wed, 21 Jan 2009 22:03:42 -0600
-In-Reply-To: <20090122012520.GS10158@disturbed>
-References: <20090121042217.GL10158@disturbed>
-	<20090121112648.GA9002@infradead.org>
-	<20090121230221.GP10158@disturbed>
-	<20090122012520.GS10158@disturbed>
-Mime-Version: 1.0 (Apple Message framework v753.1)
-Message-Id: <CAF7069E-851B-4840-B8E9-3E5701F3579F@sgi.com>
-From: Felix Blyakher <felixb@sgi.com>
-Subject: Re: [PATCH] Long btree pointers are still 64 bit on disk
-Date: Wed, 21 Jan 2009 22:02:26 -0600
+	n0M4iAJ4040341 for <xfs@oss.sgi.com>; Wed, 21 Jan 2009 22:44:11 -0600
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D1218AAAF7
+	for <xfs@oss.sgi.com>; Wed, 21 Jan 2009 20:43:24 -0800 (PST)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net
+	[203.16.214.146]) by cuda.sgi.com with ESMTP id
+	LqMx0yYP8muB7MPF for <xfs@oss.sgi.com>;
+	Wed, 21 Jan 2009 20:43:24 -0800 (PST)
+Date: Thu, 22 Jan 2009 15:37:47 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] Re: Corrupted XFS log replay oops.
+Message-ID: <20090122043747.GU10158@disturbed>
+References: <20090113142147.GE16333@alice> <20090120173455.GC21339@alice>
+	<20090121035703.GH10158@disturbed>
+	<200901211503.07308.nickpiggin@yahoo.com.au>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <200901211503.07308.nickpiggin@yahoo.com.au>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,119 +27,136 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Nick Piggin <nickpiggin@yahoo.com.au>
+Cc: Eric Sesterhenn <snakebyte@gmx.de>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Pavel Machek <pavel@suse.cz>, npiggin@yahoo.com.au, Chris Mason <chris.mason@oracle.com>
 
+On Wed, Jan 21, 2009 at 03:03:06PM +1100, Nick Piggin wrote:
+> On Wednesday 21 January 2009 14:57:03 Dave Chinner wrote:
+> > > [  235.250167] ------------[ cut here ]------------
+> > > [  235.250354] kernel BUG at mm/vmalloc.c:164!
+> > > [  235.250478] invalid opcode: 0000 [#1] PREEMPT DEBUG_PAGEALLOC
+> > > [  235.250869] last sysfs file: /sys/block/ram9/range
+> > > [  235.250998] Modules linked in:
+......
+> > > [  235.251037] Call Trace:
+> > > [  235.251037]  [<c01414cf>] ? trace_hardirqs_on+0xb/0xd
+> > > [  235.251037]  [<c018367c>] ? vm_map_ram+0x36e/0x38a
+> > > [  235.251037]  [<c03b2e1e>] ? _xfs_buf_map_pages+0x42/0x6d
+> > > [  235.251037]  [<c03b3773>] ? xfs_buf_get_noaddr+0xbc/0x11f
+> > > [  235.251037]  [<c03a2406>] ? xlog_get_bp+0x5a/0x5d
+> > > [  235.251037]  [<c03a28fa>] ? xlog_find_verify_log_record+0x26/0x208
+> > > [  235.251037]  [<c03a3521>] ? xlog_find_zeroed+0x1d6/0x214
+> > > [  235.251037]  [<c03a3584>] ? xlog_find_head+0x25/0x358
+> >
+> > .....
+> >
+> > Ok, that's crashing in the new vmap code. It might take a couple
+> > of days before I get a chance to look at this, but I've cc'd Nick Piggin
+> > in case he has a chance to look at it before that. It's probably
+> > an XFS bug, anyway.
+> 
+> Hmm, it is crashing in BUG_ON(addr >= end); where this could happen
+> if XFS asks to map a really huge (or -ve) number of pages and wraps
+> the range, or if vmap subsystem returns an address right near the
+> end of the address range and addr+size wraps (which would be a bug
+> in vmap of course, but I think maybe less likely).
 
-On Jan 21, 2009, at 7:25 PM, Dave Chinner wrote:
+It's a zero length range, not a negative value. A debug XFS would
+have assert failed on it, but it was completely unchecked on
+production builds. The following patch checks the length of blocks
+to build/read/write for being valid. Instead of an oops, we get:
 
-> On Wed, Jan 21, 2009 at 06:26:48AM -0500, Christoph Hellwig wrote:
->> Looks good and passes xfsqs for me.
->
-> Thanks Christoph.
->
-> SGI, patch with updated metadata is below.
+[ 1572.665001] XFS mounting filesystem loop0
+[ 1572.666942] XFS: Invalid block length (0x0) given for buffer
+[ 1572.667141] XFS: Log inconsistent (didn't find previous header)
+[ 1572.667141] XFS: empty log check failed
+[ 1572.667141] XFS: log mount/recovery failed: error 5
+[ 1572.671487] XFS: log mount failed
 
-I've added those tags myself as well, hope it's ok if
-tags order is different. It's already in ready to push
-state.
+Cheers,
 
-> Please include and push
-> to Linus ASAP.
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
-The account breakage on oss hold my push. Seems Russell
-resolved it, will push right away.
+[XFS] Check buffer lengths in log recovery
 
-Felix
+Before trying to obtain, read or write a buffer,
+check that the buffer length is actually valid. If
+it is not valid, then something read in the recovery
+process has been corrupted and we should abort
+recovery. 
 
->
-> Cheers,
->
-> Dave.
->
-> -----
->
-> [XFS] Long btree pointers are still 64 bit on disk
->
-> On 32 bit machines with CONFIG_LBD=n, XFS reduces the
-> in memory size of xfs_fsblock_t to 32 bits so that it
-> will fit within 32 bit addressing. However, the disk format
-> for long btree pointers are still 64 bits in size.
->
-> The recent btree rewrite failed to take this into account
-> when initialising new btree blocks, setting sibling pointers
-> to NULL and checking if they are NULL. Hence checking whether
-> a 64 bit NULL was the same as a 32 bit NULL was failingi
-> resulting in NULL sibling pointers failing to be detected
-> correctly. This showed up as WANT_CORRUPTED_GOTO shutdowns
-> in xfs_btree_delrec.
->
-> Fix this by making all the comparisons and setting of long
-> pointer btree NULL blocks to the disk format, not the
-> in memory format. i.e. use NULLDFSBNO.
->
-> Reported-by: Alexander Beregalov <a.beregalov@gmail.com>
-> Reported-by: Jacek Luczak <difrost.kernel@gmail.com>
-> Reported-by: Danny ter Haar <dth@dth.net>
-> Signed-off-by: Dave Chinner <david@fromorbit.com>
-> Tested-by: Jacek Luczak <difrost.kernel@gmail.com>
-> Reviewed-by: Christoph Hellwig <hch@infradead.org>
->
-> ---
->  fs/xfs/xfs_btree.c |   10 +++++-----
->  1 files changed, 5 insertions(+), 5 deletions(-)
->
-> diff --git a/fs/xfs/xfs_btree.c b/fs/xfs/xfs_btree.c
-> index 2c3ef20..6bc2136 100644
-> --- a/fs/xfs/xfs_btree.c
-> +++ b/fs/xfs/xfs_btree.c
-> @@ -843,7 +843,7 @@ xfs_btree_ptr_is_null(
->  	union xfs_btree_ptr	*ptr)
->  {
->  	if (cur->bc_flags & XFS_BTREE_LONG_PTRS)
-> -		return be64_to_cpu(ptr->l) == NULLFSBLOCK;
-> +		return be64_to_cpu(ptr->l) == NULLDFSBNO;
->  	else
->  		return be32_to_cpu(ptr->s) == NULLAGBLOCK;
->  }
-> @@ -854,7 +854,7 @@ xfs_btree_set_ptr_null(
->  	union xfs_btree_ptr	*ptr)
->  {
->  	if (cur->bc_flags & XFS_BTREE_LONG_PTRS)
-> -		ptr->l = cpu_to_be64(NULLFSBLOCK);
-> +		ptr->l = cpu_to_be64(NULLDFSBNO);
->  	else
->  		ptr->s = cpu_to_be32(NULLAGBLOCK);
->  }
-> @@ -918,8 +918,8 @@ xfs_btree_init_block(
->  	new->bb_numrecs = cpu_to_be16(numrecs);
->
->  	if (cur->bc_flags & XFS_BTREE_LONG_PTRS) {
-> -		new->bb_u.l.bb_leftsib = cpu_to_be64(NULLFSBLOCK);
-> -		new->bb_u.l.bb_rightsib = cpu_to_be64(NULLFSBLOCK);
-> +		new->bb_u.l.bb_leftsib = cpu_to_be64(NULLDFSBNO);
-> +		new->bb_u.l.bb_rightsib = cpu_to_be64(NULLDFSBNO);
->  	} else {
->  		new->bb_u.s.bb_leftsib = cpu_to_be32(NULLAGBLOCK);
->  		new->bb_u.s.bb_rightsib = cpu_to_be32(NULLAGBLOCK);
-> @@ -971,7 +971,7 @@ xfs_btree_ptr_to_daddr(
->  	union xfs_btree_ptr	*ptr)
->  {
->  	if (cur->bc_flags & XFS_BTREE_LONG_PTRS) {
-> -		ASSERT(be64_to_cpu(ptr->l) != NULLFSBLOCK);
-> +		ASSERT(be64_to_cpu(ptr->l) != NULLDFSBNO);
->
->  		return XFS_FSB_TO_DADDR(cur->bc_mp, be64_to_cpu(ptr->l));
->  	} else {
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Reported-by: Eric Sesterhenn <snakebyte@gmx.de>
+---
+ fs/xfs/xfs_log_recover.c |   31 +++++++++++++++++++++++++------
+ 1 files changed, 25 insertions(+), 6 deletions(-)
+
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 35cca98..b1047de 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -70,16 +70,21 @@ STATIC void	xlog_recover_check_summary(xlog_t *);
+ xfs_buf_t *
+ xlog_get_bp(
+ 	xlog_t		*log,
+-	int		num_bblks)
++	int		nbblks)
+ {
+-	ASSERT(num_bblks > 0);
++	if (nbblks <= 0 || nbblks > log->l_logBBsize) {
++		xlog_warn("XFS: Invalid block length (0x%x) given for buffer", nbblks);
++		XFS_ERROR_REPORT("xlog_get_bp(1)",
++				 XFS_ERRLEVEL_HIGH, log->l_mp);
++		return NULL;
++	}
+ 
+ 	if (log->l_sectbb_log) {
+-		if (num_bblks > 1)
+-			num_bblks += XLOG_SECTOR_ROUNDUP_BBCOUNT(log, 1);
+-		num_bblks = XLOG_SECTOR_ROUNDUP_BBCOUNT(log, num_bblks);
++		if (nbblks > 1)
++			nbblks += XLOG_SECTOR_ROUNDUP_BBCOUNT(log, 1);
++		nbblks = XLOG_SECTOR_ROUNDUP_BBCOUNT(log, nbblks);
+ 	}
+-	return xfs_buf_get_noaddr(BBTOB(num_bblks), log->l_mp->m_logdev_targp);
++	return xfs_buf_get_noaddr(BBTOB(nbblks), log->l_mp->m_logdev_targp);
+ }
+ 
+ void
+@@ -102,6 +107,13 @@ xlog_bread(
+ {
+ 	int		error;
+ 
++	if (nbblks <= 0 || nbblks > log->l_logBBsize) {
++		xlog_warn("XFS: Invalid block length (0x%x) given for buffer", nbblks);
++		XFS_ERROR_REPORT("xlog_bread(1)",
++				 XFS_ERRLEVEL_HIGH, log->l_mp);
++		return EFSCORRUPTED;
++	}
++
+ 	if (log->l_sectbb_log) {
+ 		blk_no = XLOG_SECTOR_ROUNDDOWN_BLKNO(log, blk_no);
+ 		nbblks = XLOG_SECTOR_ROUNDUP_BBCOUNT(log, nbblks);
+@@ -139,6 +151,13 @@ xlog_bwrite(
+ {
+ 	int		error;
+ 
++	if (nbblks <= 0 || nbblks > log->l_logBBsize) {
++		xlog_warn("XFS: Invalid block length (0x%x) given for buffer", nbblks);
++		XFS_ERROR_REPORT("xlog_bwrite(1)",
++				 XFS_ERRLEVEL_HIGH, log->l_mp);
++		return EFSCORRUPTED;
++	}
++
+ 	if (log->l_sectbb_log) {
+ 		blk_no = XLOG_SECTOR_ROUNDDOWN_BLKNO(log, blk_no);
+ 		nbblks = XLOG_SECTOR_ROUNDUP_BBCOUNT(log, nbblks);
 
 _______________________________________________
 xfs mailing list
