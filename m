@@ -1,12 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from penguin4.americas.sgi.com (penguin4.americas.sgi.com
-	[128.162.240.140])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0N6FE2s168297 for <xfs@oss.sgi.com>; Fri, 23 Jan 2009 00:15:15 -0600
+	n0N6M62j169004 for <xfs@oss.sgi.com>; Fri, 23 Jan 2009 00:22:06 -0600
+In-Reply-To: <20090123000617.GB4970@infradead.org>
+References: <20090113142147.GE16333@alice> <20090120173455.GC21339@alice>
+	<20090121035703.GH10158@disturbed>
+	<200901211503.07308.nickpiggin@yahoo.com.au>
+	<20090122043747.GU10158@disturbed>
+	<20090122061158.GA31104@infradead.org>
+	<20090123000203.GC32390@disturbed>
+	<20090123000617.GB4970@infradead.org>
+Mime-Version: 1.0 (Apple Message framework v753.1)
+Message-Id: <287917FE-424B-4DAD-B957-6B37C171E888@sgi.com>
 From: Felix Blyakher <felixb@sgi.com>
-Subject: [PATCH] [XFS] Warn on transaction in flight on read-only remount
-Date: Fri, 23 Jan 2009 00:14:30 -0600
-Message-Id: <1232691270-3826-1-git-send-email-felixb@sgi.com>
+Subject: Re: [PATCH] Re: Corrupted XFS log replay oops.
+Date: Fri, 23 Jan 2009 00:20:44 -0600
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -15,41 +23,33 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Nick Piggin <nickpiggin@yahoo.com.au>, Eric Sesterhenn <snakebyte@gmx.de>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Pavel Machek <pavel@suse.cz>, npiggin@yahoo.com.au, Chris Mason <chris.mason@oracle.com>
 
-Till VFS can correctly support read-only remount without racing,
-use WARN_ON instead of BUG_ON on detecting transaction in flight
-after quiescing filesystem.
 
-Signed-off-by: Felix Blyakher <felixb@sgi.com>
----
- fs/xfs/linux-2.6/xfs_sync.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+On Jan 22, 2009, at 6:06 PM, Christoph Hellwig wrote:
 
-diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index 2ed0353..a608e72 100644
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -371,7 +371,11 @@ xfs_quiesce_attr(
- 	/* flush inodes and push all remaining buffers out to disk */
- 	xfs_quiesce_fs(mp);
- 
--	ASSERT_ALWAYS(atomic_read(&mp->m_active_trans) == 0);
-+	/*
-+	 * Just warn here till VFS can correctly support
-+	 * read-only remount without racing.
-+	 */
-+	WARN_ON(atomic_read(&mp->m_active_trans) != 0);
- 
- 	/* Push the superblock and write an unmount record */
- 	error = xfs_log_sbcount(mp, 1);
--- 
-1.6.1
+>> [XFS] Check buffer lengths in log recovery
+>>
+>> Before trying to obtain, read or write a buffer,
+>> check that the buffer length is actually valid. If
+>> it is not valid, then something read in the recovery
+>> process has been corrupted and we should abort
+>> recovery.
+>>
+>> Reported-by: Eric Sesterhenn <snakebyte@gmx.de>
+>> Signed-off-by: Dave Chinner <david@fromorbit.com>
+>> Tested-by: Eric Sesterhenn <snakebyte@gmx.de>
+>
+>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+Reviewed-by: Felix Blyakher <felixb@sgi.com>
+
 
 _______________________________________________
 xfs mailing list
