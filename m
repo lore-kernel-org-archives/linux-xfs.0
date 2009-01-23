@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0N042cL124476 for <xfs@oss.sgi.com>; Thu, 22 Jan 2009 18:04:02 -0600
-Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2B22AAE7B6
-	for <xfs@oss.sgi.com>; Thu, 22 Jan 2009 16:03:17 -0800 (PST)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net
-	[203.16.214.146]) by cuda.sgi.com with ESMTP id
-	91i0hF7yaSeuPjsG for <xfs@oss.sgi.com>;
-	Thu, 22 Jan 2009 16:03:17 -0800 (PST)
-Date: Fri, 23 Jan 2009 11:02:03 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] Re: Corrupted XFS log replay oops.
-Message-ID: <20090123000203.GC32390@disturbed>
-References: <20090113142147.GE16333@alice> <20090120173455.GC21339@alice>
-	<20090121035703.GH10158@disturbed>
-	<200901211503.07308.nickpiggin@yahoo.com.au>
-	<20090122043747.GU10158@disturbed>
-	<20090122061158.GA31104@infradead.org>
+	n0N053YB124558 for <xfs@oss.sgi.com>; Thu, 22 Jan 2009 18:05:03 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 84BB2AE7EF
+	for <xfs@oss.sgi.com>; Thu, 22 Jan 2009 16:04:19 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id Vdt8EhxEgQG5CNHB for
+	<xfs@oss.sgi.com>; Thu, 22 Jan 2009 16:04:19 -0800 (PST)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1LQ9X0-0002d1-6x
+	for xfs@oss.sgi.com; Fri, 23 Jan 2009 00:04:18 +0000
+Date: Thu, 22 Jan 2009 19:04:18 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH] xfstests: add test 202, xfs_repair handling of single-AG
+	filesystems
+Message-ID: <20090123000418.GA4970@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20090122061158.GA31104@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,110 +30,103 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Nick Piggin <nickpiggin@yahoo.com.au>, Eric Sesterhenn <snakebyte@gmx.de>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Pavel Machek <pavel@suse.cz>, npiggin@yahoo.com.au, Chris Mason <chris.mason@oracle.com>
+To: xfs@oss.sgi.com
 
-On Thu, Jan 22, 2009 at 01:11:58AM -0500, Christoph Hellwig wrote:
-> On Thu, Jan 22, 2009 at 03:37:47PM +1100, Dave Chinner wrote:
-> >  xfs_buf_t *
-> >  xlog_get_bp(
-> >  	xlog_t		*log,
-> > -	int		num_bblks)
-> > +	int		nbblks)
-> 
-> Any reason for reanming this variable?  That causes quite a bit of
-> churn.
-> 
-> >  {
-> > -	ASSERT(num_bblks > 0);
-> > +	if (nbblks <= 0 || nbblks > log->l_logBBsize) {
-> > +		xlog_warn("XFS: Invalid block length (0x%x) given for buffer", nbblks);
-> 
-> And doesn't prevent this line from needing a linebreak to stay under 80
-> characters :)
 
-And now with line breaks.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-------
-
-[XFS] Check buffer lengths in log recovery
-
-Before trying to obtain, read or write a buffer,
-check that the buffer length is actually valid. If
-it is not valid, then something read in the recovery
-process has been corrupted and we should abort
-recovery.
-
-Reported-by: Eric Sesterhenn <snakebyte@gmx.de>
-Signed-off-by: Dave Chinner <david@fromorbit.com>
-Tested-by: Eric Sesterhenn <snakebyte@gmx.de>
----
- fs/xfs/xfs_log_recover.c |   34 ++++++++++++++++++++++++++++------
- 1 files changed, 28 insertions(+), 6 deletions(-)
-
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 35cca98..a37e4aa 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -70,16 +70,22 @@ STATIC void	xlog_recover_check_summary(xlog_t *);
- xfs_buf_t *
- xlog_get_bp(
- 	xlog_t		*log,
--	int		num_bblks)
-+	int		nbblks)
- {
--	ASSERT(num_bblks > 0);
-+	if (nbblks <= 0 || nbblks > log->l_logBBsize) {
-+		xlog_warn("XFS: Invalid block length (0x%x) given for buffer",
-+					nbblks);
-+		XFS_ERROR_REPORT("xlog_get_bp(1)",
-+					XFS_ERRLEVEL_HIGH, log->l_mp);
-+		return NULL;
-+	}
- 
- 	if (log->l_sectbb_log) {
--		if (num_bblks > 1)
--			num_bblks += XLOG_SECTOR_ROUNDUP_BBCOUNT(log, 1);
--		num_bblks = XLOG_SECTOR_ROUNDUP_BBCOUNT(log, num_bblks);
-+		if (nbblks > 1)
-+			nbblks += XLOG_SECTOR_ROUNDUP_BBCOUNT(log, 1);
-+		nbblks = XLOG_SECTOR_ROUNDUP_BBCOUNT(log, nbblks);
- 	}
--	return xfs_buf_get_noaddr(BBTOB(num_bblks), log->l_mp->m_logdev_targp);
-+	return xfs_buf_get_noaddr(BBTOB(nbblks), log->l_mp->m_logdev_targp);
- }
- 
- void
-@@ -102,6 +108,14 @@ xlog_bread(
- {
- 	int		error;
- 
-+	if (nbblks <= 0 || nbblks > log->l_logBBsize) {
-+		xlog_warn("XFS: Invalid block length (0x%x) given for buffer",
-+					nbblks);
-+		XFS_ERROR_REPORT("xlog_bread(1)",
-+					XFS_ERRLEVEL_HIGH, log->l_mp);
-+		return EFSCORRUPTED;
-+	}
+Index: xfstests-dev/202
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ xfstests-dev/202	2009-01-22 23:14:28.000000000 +0000
+@@ -0,0 +1,42 @@
++#! /bin/sh
++# FS QA Test No. 202
++#
++# Test out the xfs_repair -o force_geometry option on single-AG filesystems.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2009 Christoph Hellwig.
++#-----------------------------------------------------------------------
++#
++# creator
++owner=hch@lst.de
 +
- 	if (log->l_sectbb_log) {
- 		blk_no = XLOG_SECTOR_ROUNDDOWN_BLKNO(log, blk_no);
- 		nbblks = XLOG_SECTOR_ROUNDUP_BBCOUNT(log, nbblks);
-@@ -139,6 +153,14 @@ xlog_bwrite(
- {
- 	int		error;
- 
-+	if (nbblks <= 0 || nbblks > log->l_logBBsize) {
-+		xlog_warn("XFS: Invalid block length (0x%x) given for buffer",
-+					nbblks);
-+		XFS_ERROR_REPORT("xlog_bwrite(1)",
-+					XFS_ERRLEVEL_HIGH, log->l_mp);
-+		return EFSCORRUPTED;
-+	}
++seq=`basename $0`
++echo "QA output created by $seq"
 +
- 	if (log->l_sectbb_log) {
- 		blk_no = XLOG_SECTOR_ROUNDDOWN_BLKNO(log, blk_no);
- 		nbblks = XLOG_SECTOR_ROUNDUP_BBCOUNT(log, nbblks);
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++
++# real QA test starts here
++_supported_fs xfs
++_supported_os Linux
++
++_require_scratch
++
++echo "== Creating single-AG filesystem =="
++_scratch_mkfs_xfs -d agcount=1 >/dev/null 2>&1
++
++echo "== Trying to repair it (should fail) =="
++xfs_repair $SCRATCH_DEV
++
++echo "== Trying to repair it with -o force_geometry =="
++xfs_repair -o force_geometry $SCRATCH_DEV
++
++# success, all done
++echo "*** done"
++rm -f $seq.full
++status=0
+Index: xfstests-dev/202.out
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ xfstests-dev/202.out	2009-01-22 23:15:43.000000000 +0000
+@@ -0,0 +1,31 @@
++QA output created by 202
++== Creating single-AG filesystem ==
++== Trying to repair it (should fail) ==
++Phase 1 - find and verify superblock...
++Only one AG detected - cannot validate filesystem geometry.
++Use the -o force_geometry option to proceed.
++== Trying to repair it with -o force_geometry ==
++Phase 1 - find and verify superblock...
++Phase 2 - using internal log
++        - zero log...
++        - scan filesystem freespace and inode maps...
++        - found root inode chunk
++Phase 3 - for each AG...
++        - scan and clear agi unlinked lists...
++        - process known inodes and perform inode discovery...
++        - agno = 0
++        - process newly discovered inodes...
++Phase 4 - check for duplicate blocks...
++        - setting up duplicate extent list...
++        - check for inodes claiming duplicate blocks...
++        - agno = 0
++Phase 5 - rebuild AG headers and trees...
++        - reset superblock...
++Phase 6 - check inode connectivity...
++        - resetting contents of realtime bitmap and summary inodes
++        - traversing filesystem ...
++        - traversal finished ...
++        - moving disconnected inodes to lost+found ...
++Phase 7 - verify and correct link counts...
++done
++*** done
+Index: xfstests-dev/group
+===================================================================
+--- xfstests-dev.orig/group	2009-01-22 22:52:48.000000000 +0000
++++ xfstests-dev/group	2009-01-22 22:52:53.000000000 +0000
+@@ -303,3 +303,4 @@
+ 199 mount auto
+ 200 mount auto
+ 201 metadata auto
++202 repair auto
 
 _______________________________________________
 xfs mailing list
