@@ -1,20 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0NFQDpu203348 for <xfs@oss.sgi.com>; Fri, 23 Jan 2009 09:26:13 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9973518582BA
-	for <xfs@oss.sgi.com>; Fri, 23 Jan 2009 07:25:29 -0800 (PST)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id 5yJ19uGy3KqYUvDA for
-	<xfs@oss.sgi.com>; Fri, 23 Jan 2009 07:25:29 -0800 (PST)
-Message-ID: <4979E167.2040806@sandeen.net>
-Date: Fri, 23 Jan 2009 09:25:27 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	n0NIheL3215451 for <xfs@oss.sgi.com>; Fri, 23 Jan 2009 12:43:40 -0600
+Received: from an-out-0708.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 85E841859CF0
+	for <xfs@oss.sgi.com>; Fri, 23 Jan 2009 10:42:56 -0800 (PST)
+Received: from an-out-0708.google.com (an-out-0708.google.com
+	[209.85.132.250]) by cuda.sgi.com with ESMTP id
+	daULyqBlxoqt0WCb for <xfs@oss.sgi.com>;
+	Fri, 23 Jan 2009 10:42:56 -0800 (PST)
+Received: by an-out-0708.google.com with SMTP id d11so720944and.32
+	for <xfs@oss.sgi.com>; Fri, 23 Jan 2009 10:42:56 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: Strange fragmentation in nearly empty filesystem
-References: <20090123102130.GB8012@doctronic.de>
-In-Reply-To: <20090123102130.GB8012@doctronic.de>
+In-Reply-To: <20090120203319.GA7103@infradead.org>
+References: <20090110143924.GA25900@infradead.org>
+	<20090110152803.GA7469@infradead.org> <20090110221459.GA8873@orion>
+	<20090111104659.GB8071@disturbed>
+	<a4423d670901111648w26e86baajcf7b6d98ff37d043@mail.gmail.com>
+	<20090112034550.GI8071@disturbed>
+	<a4423d670901120008j728af9cdrbed8bbb938117ea3@mail.gmail.com>
+	<20090112211848.GL8071@disturbed>
+	<a4423d670901201054t3e48ece2ned4a7e3254250fce@mail.gmail.com>
+	<20090120203319.GA7103@infradead.org>
+Date: Fri, 23 Jan 2009 21:34:36 +0300
+Message-ID: <a4423d670901231034k6971ed91tbed3d6eab05d7285@mail.gmail.com>
+Subject: Re: [xfs-masters] 2.6.29-rc: kernel BUG at fs/xfs/support/debug.c:108
+From: Alexander Beregalov <a.beregalov@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,37 +38,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Carsten Oberscheid <oberscheid@doctronic.de>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs-masters@oss.sgi.com, kernel-testers@vger.kernel.org, xfs@oss.sgi.com
 
-Carsten Oberscheid wrote:
-> Hi there,
-> 
-> I am experiencing my XFS filesystem degrading over time in quite a
-> strange and annoying way. Googling "XFS fragmenation" tells me either
-> that this does not happen or to use xfs_fsr, which doesn't really help
-> me anymore -- see below. I'd appreciate any help on this.
-> 
-> Background: I am using two VMware virtual machines on my Linux
-> desktop. These virtual machines store images of their main memory in
-> .vmem files, which are about half a gigabyte in size for each of my
-> VMs. The .vmem files are created when starting the VM, written when
-> suspending it and read when resuming. I prefer suspendig and resuming
-> over shutting down and booting again, so with my VMs these files can
-> have a lifetime of several weeks.
+2009/1/20 Christoph Hellwig <hch@infradead.org>:
+> On Tue, Jan 20, 2009 at 09:54:44PM +0300, Alexander Beregalov wrote:
+>> Hi
+>>
+>> Is it a new bug?
+>> It is pre-2.6.29-rc1 kernel, which was supossed to be free of the bug
+>> "fs_is_ok, file: fs/xfs/xfs_btree.c, line: 3327"
+>
+> From the trace it's a post-btree consolidation kernel, so all the bugs
+> in -rc1 are there, too.  It looks like this is the readahead type
+> cockup that Geert noticed, so this particular one should be fixed in
+> -rc2.
+>
+> I would strongly recommend to just turn on CNFIG_LBD for post-2.6.28
+> kernels for now as all the problems showing up are without CONFIG_LBD.
+Yes, both bugs do not appear on kernel with CONFIG_LBD=y.
 
-I would suggest using xfs_bmap to look at the file layout, it will be
-much more informative than filefrag.
-
-I don't know how vmware is writing the files out (I don't use vmware, so
-can't test) but I'd suggest looking at xfs_bmap output when it's first
-created, and then also when it's first written (but perhaps before it
-gets too horribly fragmented).
-
-The first question I'd ask is whether it's a swiss-cheese looking sparse
-file with many holes.
-
--Eric
+But I do not need LBD. Does XFS strongly require LBD?
+Should I always turn it on even if I do not have files or devices of size 2Tb+ ?
 
 _______________________________________________
 xfs mailing list
