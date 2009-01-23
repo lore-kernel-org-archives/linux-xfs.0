@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0N0kYSi127921 for <xfs@oss.sgi.com>; Thu, 22 Jan 2009 18:46:34 -0600
+	n0N0vWNI128679 for <xfs@oss.sgi.com>; Thu, 22 Jan 2009 18:57:33 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5317AAEF2D
-	for <xfs@oss.sgi.com>; Thu, 22 Jan 2009 16:45:50 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 533831BA75F1
+	for <xfs@oss.sgi.com>; Thu, 22 Jan 2009 16:56:49 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id mCZQ9qjOd4BP7MnL for
-	<xfs@oss.sgi.com>; Thu, 22 Jan 2009 16:45:50 -0800 (PST)
+	by cuda.sgi.com with ESMTP id pqA3psOMjGLi3OT6 for
+	<xfs@oss.sgi.com>; Thu, 22 Jan 2009 16:56:49 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1LQAAh-00086I-FV
-	for xfs@oss.sgi.com; Fri, 23 Jan 2009 00:45:19 +0000
-Date: Thu, 22 Jan 2009 19:45:19 -0500
+	Linux)) id 1LQALo-0000qW-W0
+	for xfs@oss.sgi.com; Fri, 23 Jan 2009 00:56:48 +0000
+Date: Thu, 22 Jan 2009 19:56:48 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfsprogs: add xfs_estimate manpage
-Message-ID: <20090123004519.GA29225@infradead.org>
+Subject: [PATCH] xfsprogs: update doc/CHANGES
+Message-ID: <20090123005648.GA3194@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,121 +31,30 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-xfs_Estimate has been moved to xfsprogs a while ago, so the manpage
-should follow it.
-
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfsprogs-dev/man/man8/xfs_estimate.8
+Index: xfsprogs-dev/doc/CHANGES
 ===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ xfsprogs-dev/man/man8/xfs_estimate.8	2009-01-23 01:43:08.253480935 +0100
-@@ -0,0 +1,104 @@
-+.TH xfs_estimate 8
-+.SH NAME
-+xfs_estimate \- estimate the space that an XFS filesystem will take
-+.SH SYNOPSIS
-+.nf
-+\f3xfs_estimate\f1 [ \f3\-h?\f1 ] [ \f3\-b\f1 blocksize ] [ \f3\-i\f1 logsize ]
-+		   [ \f3\-e\f1 logsize ] [ \f3\-v\f1 ] directory ...
-+.fi
-+.SH DESCRIPTION
-+For each \f2directory\f1 argument,
-+.I xfs_estimate
-+estimates the space that directory would take if it were copied to an XFS
-+filesystem.
-+.I xfs_estimate
-+does not cross mount points.
-+The following definitions
-+are used:
-+.PD 0
-+.IP
-+KB = *1024
-+.IP
-+MB = *1024*1024
-+.IP
-+GB = *1024*1024*1024
-+.PD
-+.PP
-+The
-+.I xfs_estimate
-+options are:
-+.TP
-+\f3\-b\f1 \f2blocksize\f1
-+Use
-+.I blocksize
-+instead of the default blocksize of 4096 bytes.
-+The modifier
-+.B k
-+can be used
-+after the number to indicate multiplication by 1024.
-+For example,
-+.sp .8v
-+.RS
-+	\f4xfs_estimate \-b 64k /\f1
-+.RE
-+.IP
-+requests an estimate of the space required by the directory / on an
-+XFS filesystem using a blocksize of 64K (65536) bytes.
-+.TP
-+.B \-v
-+Display more information, formatted.
-+.TP
-+.B \-h
-+Display usage message.
-+.TP
-+.B \-?
-+Display usage message.
-+.TP
-+\f3\-i, \-e\f1 \f2logsize\f1
-+Use
-+.I logsize
-+instead of the default log size of 1000 blocks.
-+.B \-i
-+refers to an internal log, while
-+.B \-e
-+refers to an external log.
-+The modifiers
-+.B k
-+or
-+.B m
-+can be used
-+after the number to indicate multiplication by 1024 or 1048576, respectively.
-+.IP
-+For example,
-+.sp .8v
-+.RS
-+	\f4xfs_estimate \-i 1m /\f1
-+.RE
-+.IP
-+requests an estimate of the space required by the directory / on an
-+XFS filesystem using an internal log of 1 megabyte.
-+.SH EXAMPLES
-+.nf
-+.sp 8v
-+% \f4xfs_estimate \-e 10m /var/tmp\f1\f7
-+/var/tmp will take about 4.2 megabytes
-+        with the external log using 2560 blocks or about 10.0 megabytes
-+.fi
-+.nf
-+.sp .8v
-+% \f4xfs_estimate \-v \-e 10m /var/tmp\f1\f7
-+directory                     bsize   blocks    megabytes    logsize
-+/var/tmp                       4096      792        4.0MB   10485760
-+.fi
-+.nf
-+.sp .8v
-+% \f4xfs_estimate \-v /var/tmp\f1\f7
-+directory                     bsize   blocks    megabytes    logsize
-+/var/tmp                       4096     3352       14.0MB   10485760
-+.fi
-+.nf
-+.sp .8v
-+% \f4xfs_estimate /var/tmp\f1\f7
-+/var/tmp will take about 14.0 megabytes
-+.fi
-+.Ee
+--- xfsprogs-dev.orig/doc/CHANGES	2009-01-23 01:49:25.340595380 +0100
++++ xfsprogs-dev/doc/CHANGES	2009-01-23 01:55:30.661598153 +0100
+@@ -1,7 +1,15 @@
+ xfsprogs-3.0.0
++	- Various smaller xfs_repair improvements
++	- Various gettext improvements, thanks to Jakub Bogusz
++	- Polish translation update, thanks to Jakub Bogusz
++	- Various xfs_quta fixes, thanks to Arkadiusz Miskiewicz
++	- Support parallel builds
++	- Detection of btrfs, gfs and gfs2 in libdisk
++	- Addition of the xfs_fsr and xfs_estimate tools previous found
++	  in the xfsdump package
+ 	- Resync libxfs to latest kernel implemenation
+ 	- Update all of xfsprogs to latest kernel interfaces
+-	- Add sparse support to xfsprogs build (thanks to Christoph Hellwig)
++	- Add sparse support to xfsprogs build
+ 	- Cleanup devel package for xfsctl, libhandle and libdisk only
+ 	  (remove libxfs interfaces).
+ 
 
 _______________________________________________
 xfs mailing list
