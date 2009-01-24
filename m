@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0O3QgnN244586 for <xfs@oss.sgi.com>; Fri, 23 Jan 2009 21:26:42 -0600
-Date: Sat, 24 Jan 2009 04:22:10 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [xfs-masters] 2.6.29-rc: kernel BUG at fs/xfs/support/debug.c:108
-Message-ID: <20090124032210.GA30366@lst.de>
-References: <20090110152803.GA7469@infradead.org>
-	<20090110221459.GA8873@orion> <20090111104659.GB8071@disturbed>
-	<a4423d670901111648w26e86baajcf7b6d98ff37d043@mail.gmail.com>
-	<20090112034550.GI8071@disturbed>
-	<a4423d670901120008j728af9cdrbed8bbb938117ea3@mail.gmail.com>
-	<20090112211848.GL8071@disturbed>
-	<a4423d670901201054t3e48ece2ned4a7e3254250fce@mail.gmail.com>
-	<20090120203319.GA7103@infradead.org>
-	<a4423d670901231034k6971ed91tbed3d6eab05d7285@mail.gmail.com>
-Mime-Version: 1.0
+	n0O3RsTL244688 for <xfs@oss.sgi.com>; Fri, 23 Jan 2009 21:27:55 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1ED33B3D50
+	for <xfs@oss.sgi.com>; Fri, 23 Jan 2009 19:27:10 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id VbiNGbHljGADHFKd for
+	<xfs@oss.sgi.com>; Fri, 23 Jan 2009 19:27:10 -0800 (PST)
+Date: Fri, 23 Jan 2009 22:26:38 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfsprogs:move fsr over from xfsdump
+Message-ID: <20090124032638.GB14080@infradead.org>
+References: <20090123003342.GA24067@infradead.org>
+	<133A2143-EFC5-4D09-BF73-5C32B14C5C47@sgi.com>
+MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <a4423d670901231034k6971ed91tbed3d6eab05d7285@mail.gmail.com>
+In-Reply-To: <133A2143-EFC5-4D09-BF73-5C32B14C5C47@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,20 +29,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alexander Beregalov <a.beregalov@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, kernel-testers@vger.kernel.org, xfs@oss.sgi.com
+To: Felix Blyakher <felixb@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Fri, Jan 23, 2009 at 09:34:36PM +0300, Alexander Beregalov wrote:
-> But I do not need LBD. Does XFS strongly require LBD?
-> Should I always turn it on even if I do not have files or devices of size 2Tb+ ?
+On Fri, Jan 23, 2009 at 01:06:16AM -0600, Felix Blyakher wrote:
+> Christoph,
+>
+> There are several whitespace warnings while applying this patch:
 
-The bug is now fixed in the development tree, but until you upgrade
-to a kernel with the fix enabling CONFIG_LBD will keep you from hitting
-the bug.
+It's really just moving over the code, no need for whitespace cleanups.
+Especially not in userspace code where we don't have the whitespace
+policy on our kneck..
 
-As you unfortunately noticed the !CONFIG_LBD case doesn't really get
-much test coverage, so I would personally recommend turning it on even
-if you don't need it.
+> /data/lwork/attica1/felixb/xfscmds-git/xfsprogs/.git/rebase-apply/ 
+> patch:1632: space before tab in indent.
+
+Btw, I'd _really_ prefer just apply my patches myself to the shared
+commit development tree and not recreating the previous bottleneck.
 
 _______________________________________________
 xfs mailing list
