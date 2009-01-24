@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0O0YILX236164 for <xfs@oss.sgi.com>; Fri, 23 Jan 2009 18:34:19 -0600
-Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D7719185B528
-	for <xfs@oss.sgi.com>; Fri, 23 Jan 2009 16:33:33 -0800 (PST)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net
-	[203.16.214.146]) by cuda.sgi.com with ESMTP id
-	9SmpFvlDGFxCRZfz for <xfs@oss.sgi.com>;
-	Fri, 23 Jan 2009 16:33:33 -0800 (PST)
-Date: Sat, 24 Jan 2009 11:33:29 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Strange fragmentation in nearly empty filesystem
-Message-ID: <20090124003329.GE32390@disturbed>
-References: <20090123102130.GB8012@doctronic.de>
-MIME-Version: 1.0
+	n0O3QgnN244586 for <xfs@oss.sgi.com>; Fri, 23 Jan 2009 21:26:42 -0600
+Date: Sat, 24 Jan 2009 04:22:10 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [xfs-masters] 2.6.29-rc: kernel BUG at fs/xfs/support/debug.c:108
+Message-ID: <20090124032210.GA30366@lst.de>
+References: <20090110152803.GA7469@infradead.org>
+	<20090110221459.GA8873@orion> <20090111104659.GB8071@disturbed>
+	<a4423d670901111648w26e86baajcf7b6d98ff37d043@mail.gmail.com>
+	<20090112034550.GI8071@disturbed>
+	<a4423d670901120008j728af9cdrbed8bbb938117ea3@mail.gmail.com>
+	<20090112211848.GL8071@disturbed>
+	<a4423d670901201054t3e48ece2ned4a7e3254250fce@mail.gmail.com>
+	<20090120203319.GA7103@infradead.org>
+	<a4423d670901231034k6971ed91tbed3d6eab05d7285@mail.gmail.com>
+Mime-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20090123102130.GB8012@doctronic.de>
+In-Reply-To: <a4423d670901231034k6971ed91tbed3d6eab05d7285@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,59 +30,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Carsten Oberscheid <oberscheid@doctronic.de>
-Cc: xfs@oss.sgi.com
+To: Alexander Beregalov <a.beregalov@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, kernel-testers@vger.kernel.org, xfs@oss.sgi.com
 
-On Fri, Jan 23, 2009 at 11:21:30AM +0100, Carsten Oberscheid wrote:
-> Hi there,
-> 
-> I am experiencing my XFS filesystem degrading over time in quite a
-> strange and annoying way. Googling "XFS fragmenation" tells me either
-> that this does not happen or to use xfs_fsr, which doesn't really help
-> me anymore -- see below. I'd appreciate any help on this.
-> 
-> Background: I am using two VMware virtual machines on my Linux
-> desktop. These virtual machines store images of their main memory in
-> .vmem files, which are about half a gigabyte in size for each of my
-> VMs. The .vmem files are created when starting the VM, written when
-> suspending it and read when resuming. I prefer suspendig and resuming
-> over shutting down and booting again, so with my VMs these files can
-> have a lifetime of several weeks.
+On Fri, Jan 23, 2009 at 09:34:36PM +0300, Alexander Beregalov wrote:
+> But I do not need LBD. Does XFS strongly require LBD?
+> Should I always turn it on even if I do not have files or devices of size 2Tb+ ?
 
-Oh, that's vmware being incredibly stupid about how they write
-out the memory images. They only write pages that are allocated
-and it's sparse file full of holes. Effectively this guarantees
-file fragmentation over time as random holes are filled. For
-example, a .vmem file on a recent VM I built:
+The bug is now fixed in the development tree, but until you upgrade
+to a kernel with the fix enabling CONFIG_LBD will keep you from hitting
+the bug.
 
-$ xfs_bmap -vvp foo.vmem |grep hole |wc -l
-675
-$ xfs_bmap -vvp foo.vmem |grep -v hole |wc -l
-885
-$
-
-Contains 675 holes and almost 900 real extents in a 512MB memory
-image that has only 160MB of data blocks allocated.
-
-In reality, this is a classic case of the application doing a "smart
-optimisation" that looks good in the short term (i.e.  saves some
-disk space), but that has very bad long term side effects (i.e.
-guaranteed fragmentation of the file in the long term).
-
-You might be able to pre-allocate the .vmem files after the file
-is created with an xfs_io hack prior to it being badly fragmented;
-that should avoid the worse case fragmentation caused by writing
-randomly to a sparse file.
-
-In summary, this is an application problem, not a filesystem
-issue.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+As you unfortunately noticed the !CONFIG_LBD case doesn't really get
+much test coverage, so I would personally recommend turning it on even
+if you don't need it.
 
 _______________________________________________
 xfs mailing list
