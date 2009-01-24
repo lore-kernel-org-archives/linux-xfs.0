@@ -1,21 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0OFCQS8018884 for <xfs@oss.sgi.com>; Sat, 24 Jan 2009 09:12:26 -0600
-Received: from mail.qboosh.pl (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 009141BA9A26
-	for <xfs@oss.sgi.com>; Sat, 24 Jan 2009 07:11:41 -0800 (PST)
-Received: from mail.qboosh.pl (mail.qboosh.pl [217.73.31.61]) by cuda.sgi.com
-	with ESMTP id uNktoUnI5lvFzOwj for <xfs@oss.sgi.com>;
-	Sat, 24 Jan 2009 07:11:41 -0800 (PST)
-Date: Sat, 24 Jan 2009 16:08:33 +0100
-From: Jakub Bogusz <qboosh@pld-linux.org>
-Subject: Re: [PATCH] xfsprogs: add xfs_fsr to the gettext machinery
-Message-ID: <20090124150833.GA9158@stranger.qboosh.pl>
-References: <20090124141902.GA32331@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20090124141902.GA32331@infradead.org>
+	n0OI1AZ5026342 for <xfs@oss.sgi.com>; Sat, 24 Jan 2009 12:01:11 -0600
+In-Reply-To: <20090124143938.GA31680@lst.de>
+References: <20090124143938.GA31680@lst.de>
+Mime-Version: 1.0 (Apple Message framework v753.1)
+Message-Id: <679A4CA4-6A48-42B9-945E-7281BA709BC0@sgi.com>
+From: Felix Blyakher <felixb@sgi.com>
+Subject: Re: [PATCH] xfs_io: fix comment in bmap.c
+Date: Sat, 24 Jan 2009 11:59:51 -0600
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,41 +17,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Christoph Hellwig <hch@lst.de>
 Cc: xfs@oss.sgi.com
 
-On Sat, Jan 24, 2009 at 09:19:02AM -0500, Christoph Hellwig wrote:
-> When removing fsr from xfsdump I noticed it was tied up to gettext,
-> so we should make sure it still is in xfsprogs.
-> 
-> Jakub, any chance you could submit an update of the Polish translations
-> that takes the move into account?
 
-Yes.
-Could I get latest .pot (after this change) from somewhere?
+On Jan 24, 2009, at 8:39 AM, Christoph Hellwig wrote:
 
+> Based on a patch from Tomasz Majkowski <moosh009@gmail.com> in  
+> bugzilla
+> #785.
 
+Easy one, make comments reflect the code.
+Looks good.
+
+Felix
+
+>
+>
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Index: xfsprogs-dev/po/Makefile
+>
+> Index: xfsprogs-dev/io/bmap.c
 > ===================================================================
-> --- xfsprogs-dev.orig/po/Makefile	2009-01-24 15:17:00.847134077 +0100
-> +++ xfsprogs-dev/po/Makefile	2009-01-24 15:17:14.246285604 +0100
-> @@ -14,6 +14,7 @@ LDIRT = $(POTHEAD)
->  XGETTEXTFILES =	\
->  		$(TOPDIR)/copy/xfs_copy.c \
->  		$(TOPDIR)/estimate/xfs_estimate.c \
-> +		$(TOPDIR)/fsr/xfs_fsr.c \
->  		$(TOPDIR)/growfs/xfs_growfs.c \
->  		$(TOPDIR)/io/attr.c \
->  		$(TOPDIR)/io/bmap.c \
-
--- 
-Jakub Bogusz    http://qboosh.pl/
+> --- xfsprogs-dev.orig/io/bmap.c	2009-01-24 15:36:56.780113315 +0100
+> +++ xfsprogs-dev/io/bmap.c	2009-01-24 15:37:17.875168142 +0100
+> @@ -140,7 +140,7 @@ bmap_f(
+>  		}
+>  	}
+>
+> -	map_size = nflag ? nflag+2 : 32;	/* initial guess - 256 */
+> +	map_size = nflag ? nflag+2 : 32;	/* initial guess - 32 */
+>  	map = malloc(map_size*sizeof(*map));
+>  	if (map == NULL) {
+>  		fprintf(stderr, _("%s: malloc of %d bytes failed.\n"),
+> @@ -151,7 +151,7 @@ bmap_f(
+>
+>
+>  /*	Try the xfsctl(XFS_IOC_GETBMAPX) for the number of extents  
+> specified
+> - *	by nflag, or the initial guess number of extents (256).
+> + *	by nflag, or the initial guess number of extents (32).
+>   *
+>   *	If there are more extents than we guessed, use xfsctl
+>   *	(XFS_IOC_FSGETXATTR[A]) to get the extent count, realloc some more
+>
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
