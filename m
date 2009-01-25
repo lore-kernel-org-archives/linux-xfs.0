@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0PELjY7131824 for <xfs@oss.sgi.com>; Sun, 25 Jan 2009 08:21:45 -0600
+	n0PEMuD2131928 for <xfs@oss.sgi.com>; Sun, 25 Jan 2009 08:22:57 -0600
 Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3FD441BAB734
-	for <xfs@oss.sgi.com>; Sun, 25 Jan 2009 06:21:01 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 658851BAB776
+	for <xfs@oss.sgi.com>; Sun, 25 Jan 2009 06:22:13 -0800 (PST)
 Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id 6YqKaqJJdLEDwmfM for
-	<xfs@oss.sgi.com>; Sun, 25 Jan 2009 06:21:01 -0800 (PST)
-Message-ID: <497C754C.5090004@sandeen.net>
-Date: Sun, 25 Jan 2009 08:21:00 -0600
+	cuda.sgi.com with ESMTP id Gara7aoU4jQVzgwU for
+	<xfs@oss.sgi.com>; Sun, 25 Jan 2009 06:22:13 -0800 (PST)
+Message-ID: <497C7594.8080804@sandeen.net>
+Date: Sun, 25 Jan 2009 08:22:12 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfsprogs spec file update
-References: <1232777667.13684.20.camel@verge.scott.net.au>
-In-Reply-To: <1232777667.13684.20.camel@verge.scott.net.au>
+Subject: Re: [PATCH] xfstests: fix 122 for removed btree types
+References: <20090122220446.GA8723@infradead.org>
+In-Reply-To: <20090122220446.GA8723@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,51 +27,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Nathan Scott <nscott@aconex.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-Nathan Scott wrote:
-> Since binaries have moved between xfsprogs and xfsdump packages
-> in version 3.0.0, we need to fix the dependencies in the rpm
-> specfiles, else rpm will complain.
+Christoph Hellwig wrote:
+> With the the btree refactoring various btree trypes have been removed,
+> so remove them from the golden output for 122.
 > 
-> While in there, remove xfs-cmds Provides/Obsoletes lines, there
-> is no way anyone is ever going to be requiring those anymore (no
-> real-world upgrade path having such old skool SGI-released rpms).
-
-Seems fine to me, though before I update Fedora to the next version I'll
-probably pass the notion past the true RPM gurus to be sure :)
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
 
-> diff --git a/build/rpm/xfsprogs.spec.in b/build/rpm/xfsprogs.spec.in
-> index 2826a37..cf61225 100644
-> --- a/build/rpm/xfsprogs.spec.in
-> +++ b/build/rpm/xfsprogs.spec.in
-> @@ -5,10 +5,8 @@ Release: @pkg_release@
->  Distribution: @pkg_distribution@
->  Packager: Silicon Graphics, Inc. <http://www.sgi.com/>
->  BuildRoot: @build_root@ 
-> -Provides: xfs-cmds
-> -Obsoletes: xfs-cmds
->  Prereq: /sbin/ldconfig
-> -Conflicts: xfsdump < 2.0.0
-> +Conflicts: xfsdump < 3.0.0
->  Source: @pkg_name@-@pkg_version@.src.tar.gz
->  License: GPL
->  Vendor: Silicon Graphics, Inc.
-> @@ -32,8 +30,8 @@ with the IRIX version of XFS.
->  %package devel
->  Summary: XFS filesystem-specific static libraries and headers.
->  Group: Development/Libraries
-> -Requires: @pkg_name@ >= 2.0.0
-> -Conflicts: @pkg_name@ < 2.0.0
-> +Requires: @pkg_name@ >= 3.0.0
-> +Conflicts: @pkg_name@ < 3.0.0
->  
->  %description devel
->  xfsprogs-devel contains the libraries and header files needed to
-> 
+> Index: xfstests-dev/122.out
+> ===================================================================
+> --- xfstests-dev.orig/122.out	2009-01-04 19:22:15.000000000 +0000
+> +++ xfstests-dev/122.out	2009-01-04 19:22:31.000000000 +0000
+> @@ -65,10 +65,6 @@
+>  sizeof( xfs_bmbt_rec_64_t ) = 16
+>  sizeof( xfs_bmdr_block_t ) = 4
+>  sizeof( xfs_btnum_t ) = 4
+> -sizeof( xfs_btree_block_t ) = 24
+> -sizeof( xfs_btree_hdr_t ) = 8
+> -sizeof( xfs_btree_lblock_t ) = 24
+> -sizeof( xfs_btree_sblock_t ) = 16
+>  sizeof( xfs_buf_log_format_t ) = 24
+>  sizeof( xfs_da_blkinfo_t ) = 12
+>  sizeof( xfs_da_intnode_t ) = 24
 > 
 > _______________________________________________
 > xfs mailing list
