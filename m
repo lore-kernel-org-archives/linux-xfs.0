@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0PETOl6132314 for <xfs@oss.sgi.com>; Sun, 25 Jan 2009 08:29:24 -0600
+	n0PFlH0c138075 for <xfs@oss.sgi.com>; Sun, 25 Jan 2009 09:47:18 -0600
 Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 89797B5FE5
-	for <xfs@oss.sgi.com>; Sun, 25 Jan 2009 06:28:41 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1A2821BAB8BA
+	for <xfs@oss.sgi.com>; Sun, 25 Jan 2009 07:46:33 -0800 (PST)
 Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id gMA7zSgrIFjR6Vz6 for
-	<xfs@oss.sgi.com>; Sun, 25 Jan 2009 06:28:41 -0800 (PST)
-Message-ID: <497C7718.5090607@sandeen.net>
-Date: Sun, 25 Jan 2009 08:28:40 -0600
+	cuda.sgi.com with ESMTP id P7C6ubWIjZFxJyU5 for
+	<xfs@oss.sgi.com>; Sun, 25 Jan 2009 07:46:33 -0800 (PST)
+Message-ID: <497C8937.8080102@sandeen.net>
+Date: Sun, 25 Jan 2009 09:45:59 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfsprogs: add xfs_estimate manpage
-References: <20090123004519.GA29225@infradead.org>
-In-Reply-To: <20090123004519.GA29225@infradead.org>
+Subject: Re: Switching from (deprecated) IDE driver -> SATA (PATA support)
+References: <alpine.DEB.1.10.0901250553430.2441@p34.internal.lan>	<20090125110742.4ba54c0b@lxorguk.ukuu.org.uk>	<alpine.DEB.1.10.0901250705300.6888@p34.internal.lan>	<alpine.DEB.1.10.0901250715030.10379@p34.internal.lan>
+	<alpine.DEB.1.10.0901250726530.10805@p34.internal.lan>
+In-Reply-To: <alpine.DEB.1.10.0901250726530.10805@p34.internal.lan>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,145 +28,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> xfs_Estimate has been moved to xfsprogs a while ago, so the manpage
-> should follow it.
+Justin Piszcz wrote:
 
-Hmm we need a patch to remove from dump too right :)
-
-ACK for the move part, but some update to the man page to give a hint as
-to why this tool is useful seems reasonable... why would I want to use
-this thing?
-
-Also as an aside, why does the log size matter for space ultimately used?
-
-So:
-
-Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
-
-for the simple move but maybe we can update it a bit.
-
+> One final question, without udev, how does one determine the UUID of a non-XFS
+> partition, e.g., swap?
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> $ ls -l
+> total 0
+> lrwxrwxrwx 1 root root  9 2009-01-25 01:54 203fcd30-4e56-40e9-a8e5-93ddc8eb536a -> ../../md0
+> lrwxrwxrwx 1 root root 10 2009-01-25 01:54 2ef862e1-cf78-4065-a205-d1784716d633 -> ../../sdd1
+> lrwxrwxrwx 1 root root 10 2009-01-25 01:54 77ae4251-631f-4656-a365-c5723f5c5da8 -> ../../sdd2
 > 
-> Index: xfsprogs-dev/man/man8/xfs_estimate.8
-> ===================================================================
-> --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-> +++ xfsprogs-dev/man/man8/xfs_estimate.8	2009-01-23 01:43:08.253480935 +0100
-> @@ -0,0 +1,104 @@
-> +.TH xfs_estimate 8
-> +.SH NAME
-> +xfs_estimate \- estimate the space that an XFS filesystem will take
-> +.SH SYNOPSIS
-> +.nf
-> +\f3xfs_estimate\f1 [ \f3\-h?\f1 ] [ \f3\-b\f1 blocksize ] [ \f3\-i\f1 logsize ]
-> +		   [ \f3\-e\f1 logsize ] [ \f3\-v\f1 ] directory ...
-> +.fi
-> +.SH DESCRIPTION
-> +For each \f2directory\f1 argument,
-> +.I xfs_estimate
-> +estimates the space that directory would take if it were copied to an XFS
-> +filesystem.
-> +.I xfs_estimate
-> +does not cross mount points.
-> +The following definitions
-> +are used:
-> +.PD 0
-> +.IP
-> +KB = *1024
-> +.IP
-> +MB = *1024*1024
-> +.IP
-> +GB = *1024*1024*1024
-> +.PD
-> +.PP
-> +The
-> +.I xfs_estimate
-> +options are:
-> +.TP
-> +\f3\-b\f1 \f2blocksize\f1
-> +Use
-> +.I blocksize
-> +instead of the default blocksize of 4096 bytes.
-> +The modifier
-> +.B k
-> +can be used
-> +after the number to indicate multiplication by 1024.
-> +For example,
-> +.sp .8v
-> +.RS
-> +	\f4xfs_estimate \-b 64k /\f1
-> +.RE
-> +.IP
-> +requests an estimate of the space required by the directory / on an
-> +XFS filesystem using a blocksize of 64K (65536) bytes.
-> +.TP
-> +.B \-v
-> +Display more information, formatted.
-> +.TP
-> +.B \-h
-> +Display usage message.
-> +.TP
-> +.B \-?
-> +Display usage message.
-> +.TP
-> +\f3\-i, \-e\f1 \f2logsize\f1
-> +Use
-> +.I logsize
-> +instead of the default log size of 1000 blocks.
-> +.B \-i
-> +refers to an internal log, while
-> +.B \-e
-> +refers to an external log.
-> +The modifiers
-> +.B k
-> +or
-> +.B m
-> +can be used
-> +after the number to indicate multiplication by 1024 or 1048576, respectively.
-> +.IP
-> +For example,
-> +.sp .8v
-> +.RS
-> +	\f4xfs_estimate \-i 1m /\f1
-> +.RE
-> +.IP
-> +requests an estimate of the space required by the directory / on an
-> +XFS filesystem using an internal log of 1 megabyte.
-> +.SH EXAMPLES
-> +.nf
-> +.sp 8v
-> +% \f4xfs_estimate \-e 10m /var/tmp\f1\f7
-> +/var/tmp will take about 4.2 megabytes
-> +        with the external log using 2560 blocks or about 10.0 megabytes
-> +.fi
-> +.nf
-> +.sp .8v
-> +% \f4xfs_estimate \-v \-e 10m /var/tmp\f1\f7
-> +directory                     bsize   blocks    megabytes    logsize
-> +/var/tmp                       4096      792        4.0MB   10485760
-> +.fi
-> +.nf
-> +.sp .8v
-> +% \f4xfs_estimate \-v /var/tmp\f1\f7
-> +directory                     bsize   blocks    megabytes    logsize
-> +/var/tmp                       4096     3352       14.0MB   10485760
-> +.fi
-> +.nf
-> +.sp .8v
-> +% \f4xfs_estimate /var/tmp\f1\f7
-> +/var/tmp will take about 14.0 megabytes
-> +.fi
-> +.Ee
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+> p254:~# find /proc/|grep -i uuid
+> /proc/sys/kernel/random/uuid
+> p254:~# find /sys/|grep -i uuid 
+> p254:~#
+
+blkid:
+
+[root@mythbox ~]# blkid /dev/sda?
+/dev/sda1: LABEL="/movies" UUID="38da660b-3600-4508-a608-2e1a20041ecb"
+TYPE="xfs"
+/dev/sda2: LABEL="/video" UUID="7b5583ae-cd42-4db1-9868-d96a5ccd3fea"
+TYPE="xfs"
+/dev/sda3: LABEL="/boot" UUID="379dbe60-1988-47b9-9891-17038abcc1f0"
+TYPE="ext3" SEC_TYPE="ext2"
+/dev/sda5: LABEL="/" UUID="c7bd2307-e067-4185-a7a0-d8d54057f3b9" TYPE="xfs"
+/dev/sda6: TYPE="swap" LABEL="SWAP-sda6"
+UUID="ea3f5dae-2509-4764-a93e-b777e72fdfbd"
+
+-Eric
 
 _______________________________________________
 xfs mailing list
