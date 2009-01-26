@@ -1,19 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0Q7WiRO203697 for <xfs@oss.sgi.com>; Mon, 26 Jan 2009 01:32:45 -0600
+	n0Q7Wjwh203719 for <xfs@oss.sgi.com>; Mon, 26 Jan 2009 01:32:45 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 34222B757C
-	for <xfs@oss.sgi.com>; Sun, 25 Jan 2009 23:32:01 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B443E185E8EA
+	for <xfs@oss.sgi.com>; Sun, 25 Jan 2009 23:32:02 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id j96gWAEitOcUn6ES for
-	<xfs@oss.sgi.com>; Sun, 25 Jan 2009 23:32:01 -0800 (PST)
-Message-Id: <20090126073200.459094000@bombadil.infradead.org>
-Date: Mon, 26 Jan 2009 02:31:39 -0500
+	by cuda.sgi.com with ESMTP id 0LrC04Qx5eoppeHj for
+	<xfs@oss.sgi.com>; Sun, 25 Jan 2009 23:32:02 -0800 (PST)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1LRLww-00033m-CP
+	for xfs@oss.sgi.com; Mon, 26 Jan 2009 07:32:02 +0000
+Message-Id: <20090126073202.277472000@bombadil.infradead.org>
+Date: Mon, 26 Jan 2009 02:31:45 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 03/17] xfs: cleanup handling in xfs_swap_extents
+Subject: [PATCH 09/17] xfs: cleanup xfs_find_handle
 References: <20090126073136.384490000@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-cleanup-swapext
+Content-Disposition: inline; filename=xfs-cleanup-xfs_find_handle
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,196 +32,153 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Use multiple lables for proper error unwinding and get rid of some now
-superflous variables.
+Remove the superflous igrab by keeping a reference on the path/file all the
+time and clean up various bits of surrounding code.
 
 
-Signed-off-by: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs/fs/xfs/xfs_dfrag.c
+Index: xfs/fs/xfs/linux-2.6/xfs_ioctl.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_dfrag.c	2008-12-19 15:02:54.003908425 +0100
-+++ xfs/fs/xfs/xfs_dfrag.c	2008-12-22 15:59:55.013247371 +0100
-@@ -126,19 +126,17 @@ xfs_swap_extents(
- 	xfs_bstat_t	*sbp = &sxp->sx_stat;
- 	xfs_ifork_t	*tempifp, *ifp, *tifp;
- 	int		ilf_fields, tilf_fields;
--	static uint	lock_flags = XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL;
- 	int		error = 0;
- 	int		aforkblks = 0;
- 	int		taforkblks = 0;
- 	__uint64_t	tmp;
--	char		locked = 0;
+--- xfs.orig/fs/xfs/linux-2.6/xfs_ioctl.c	2009-01-21 21:03:27.828295110 +0100
++++ xfs/fs/xfs/linux-2.6/xfs_ioctl.c	2009-01-24 18:41:24.547427865 +0100
+@@ -78,92 +78,74 @@ xfs_find_handle(
+ 	int			hsize;
+ 	xfs_handle_t		handle;
+ 	struct inode		*inode;
++	struct file		*file = NULL;
++	struct path		path;
++	int			error;
++	struct xfs_inode	*ip;
  
- 	mp = ip->i_mount;
- 
- 	tempifp = kmem_alloc(sizeof(xfs_ifork_t), KM_MAYFAIL);
- 	if (!tempifp) {
- 		error = XFS_ERROR(ENOMEM);
--		goto error0;
-+		goto out;
- 	}
- 
- 	sbp = &sxp->sx_stat;
-@@ -151,25 +149,24 @@ xfs_swap_extents(
- 	 */
- 	xfs_lock_two_inodes(ip, tip, XFS_IOLOCK_EXCL);
- 	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
--	locked = 1;
- 
- 	/* Verify that both files have the same format */
- 	if ((ip->i_d.di_mode & S_IFMT) != (tip->i_d.di_mode & S_IFMT)) {
- 		error = XFS_ERROR(EINVAL);
--		goto error0;
-+		goto out_unlock;
- 	}
- 
- 	/* Verify both files are either real-time or non-realtime */
- 	if (XFS_IS_REALTIME_INODE(ip) != XFS_IS_REALTIME_INODE(tip)) {
- 		error = XFS_ERROR(EINVAL);
--		goto error0;
-+		goto out_unlock;
- 	}
- 
- 	/* Should never get a local format */
- 	if (ip->i_d.di_format == XFS_DINODE_FMT_LOCAL ||
- 	    tip->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
- 		error = XFS_ERROR(EINVAL);
--		goto error0;
-+		goto out_unlock;
- 	}
- 
- 	if (VN_CACHED(VFS_I(tip)) != 0) {
-@@ -177,13 +174,13 @@ xfs_swap_extents(
- 		error = xfs_flushinval_pages(tip, 0, -1,
- 				FI_REMAPF_LOCKED);
+-	memset((char *)&handle, 0, sizeof(handle));
+-
+-	switch (cmd) {
+-	case XFS_IOC_PATH_TO_FSHANDLE:
+-	case XFS_IOC_PATH_TO_HANDLE: {
+-		struct path path;
+-		int error = user_lpath((const char __user *)hreq->path, &path);
++	if (cmd == XFS_IOC_FD_TO_HANDLE) {
++		file = fget(hreq->fd);
++		if (!file)
++			return -EBADF;
++		inode = file->f_path.dentry->d_inode;
++	} else {
++		error = user_lpath((const char __user *)hreq->path, &path);
  		if (error)
--			goto error0;
-+			goto out_unlock;
+ 			return error;
+-
+-		ASSERT(path.dentry);
+-		ASSERT(path.dentry->d_inode);
+-		inode = igrab(path.dentry->d_inode);
+-		path_put(&path);
+-		break;
++		inode = path.dentry->d_inode;
  	}
++	ip = XFS_I(inode);
  
- 	/* Verify O_DIRECT for ftmp */
- 	if (VN_CACHED(VFS_I(tip)) != 0) {
- 		error = XFS_ERROR(EINVAL);
--		goto error0;
-+		goto out_unlock;
- 	}
+-	case XFS_IOC_FD_TO_HANDLE: {
+-		struct file	*file;
+-
+-		file = fget(hreq->fd);
+-		if (!file)
+-		    return -EBADF;
++	/*
++	 * We can only generate handles for inodes residing on a XFS filesystem,
++	 * and only for regular files, directories or symbolic links.
++	 */
++	error = -EINVAL;
++	if (inode->i_sb->s_magic != XFS_SB_MAGIC)
++		goto out_put;
  
- 	/* Verify all data are being swapped */
-@@ -191,7 +188,7 @@ xfs_swap_extents(
- 	    sxp->sx_length != ip->i_d.di_size ||
- 	    sxp->sx_length != tip->i_d.di_size) {
- 		error = XFS_ERROR(EFAULT);
--		goto error0;
-+		goto out_unlock;
- 	}
+-		ASSERT(file->f_path.dentry);
+-		ASSERT(file->f_path.dentry->d_inode);
+-		inode = igrab(file->f_path.dentry->d_inode);
+-		fput(file);
+-		break;
+-	}
++	error = -EBADF;
++	if (!S_ISREG(inode->i_mode) &&
++	    !S_ISDIR(inode->i_mode) &&
++	    !S_ISLNK(inode->i_mode))
++		goto out_put;
  
- 	/*
-@@ -201,7 +198,7 @@ xfs_swap_extents(
- 	 */
- 	if ( XFS_IFORK_Q(ip) != XFS_IFORK_Q(tip) ) {
- 		error = XFS_ERROR(EINVAL);
--		goto error0;
-+		goto out_unlock;
- 	}
- 
- 	/*
-@@ -216,7 +213,7 @@ xfs_swap_extents(
- 	    (sbp->bs_mtime.tv_sec != ip->i_d.di_mtime.t_sec) ||
- 	    (sbp->bs_mtime.tv_nsec != ip->i_d.di_mtime.t_nsec)) {
- 		error = XFS_ERROR(EBUSY);
--		goto error0;
-+		goto out_unlock;
- 	}
- 
- 	/* We need to fail if the file is memory mapped.  Once we have tossed
-@@ -227,7 +224,7 @@ xfs_swap_extents(
- 	 */
- 	if (VN_MAPPED(VFS_I(ip))) {
- 		error = XFS_ERROR(EBUSY);
--		goto error0;
-+		goto out_unlock;
- 	}
- 
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-@@ -250,8 +247,7 @@ xfs_swap_extents(
- 		xfs_iunlock(ip,  XFS_IOLOCK_EXCL);
- 		xfs_iunlock(tip, XFS_IOLOCK_EXCL);
- 		xfs_trans_cancel(tp, 0);
--		locked = 0;
--		goto error0;
-+		goto out;
- 	}
- 	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
- 
-@@ -261,19 +257,15 @@ xfs_swap_extents(
- 	if ( ((XFS_IFORK_Q(ip) != 0) && (ip->i_d.di_anextents > 0)) &&
- 	     (ip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL)) {
- 		error = xfs_bmap_count_blocks(tp, ip, XFS_ATTR_FORK, &aforkblks);
--		if (error) {
--			xfs_trans_cancel(tp, 0);
--			goto error0;
--		}
-+		if (error)
-+			goto out_trans_cancel;
- 	}
- 	if ( ((XFS_IFORK_Q(tip) != 0) && (tip->i_d.di_anextents > 0)) &&
- 	     (tip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL)) {
- 		error = xfs_bmap_count_blocks(tp, tip, XFS_ATTR_FORK,
- 			&taforkblks);
--		if (error) {
--			xfs_trans_cancel(tp, 0);
--			goto error0;
--		}
-+		if (error)
-+			goto out_trans_cancel;
- 	}
- 
- 	/*
-@@ -340,10 +332,10 @@ xfs_swap_extents(
- 
- 
- 	IHOLD(ip);
--	xfs_trans_ijoin(tp, ip, lock_flags);
-+	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
- 
- 	IHOLD(tip);
--	xfs_trans_ijoin(tp, tip, lock_flags);
-+	xfs_trans_ijoin(tp, tip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
- 
- 	xfs_trans_log_inode(tp, ip,  ilf_fields);
- 	xfs_trans_log_inode(tp, tip, tilf_fields);
-@@ -352,19 +344,19 @@ xfs_swap_extents(
- 	 * If this is a synchronous mount, make sure that the
- 	 * transaction goes to disk before returning to the user.
- 	 */
--	if (mp->m_flags & XFS_MOUNT_WSYNC) {
-+	if (mp->m_flags & XFS_MOUNT_WSYNC)
- 		xfs_trans_set_sync(tp);
+-	default:
+-		ASSERT(0);
+-		return -XFS_ERROR(EINVAL);
 -	}
  
- 	error = xfs_trans_commit(tp, XFS_TRANS_SWAPEXT);
--	locked = 0;
- 
-- error0:
--	if (locked) {
--		xfs_iunlock(ip,  lock_flags);
--		xfs_iunlock(tip, lock_flags);
+-	if (inode->i_sb->s_magic != XFS_SB_MAGIC) {
+-		/* we're not in XFS anymore, Toto */
+-		iput(inode);
+-		return -XFS_ERROR(EINVAL);
 -	}
--	if (tempifp != NULL)
--		kmem_free(tempifp);
-+out_unlock:
-+	xfs_iunlock(ip,  XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
-+	xfs_iunlock(tip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
-+out:
-+	kmem_free(tempifp);
- 	return error;
++	memcpy(&handle.ha_fsid, ip->i_mount->m_fixedfsid, sizeof(xfs_fsid_t));
+ 
+-	switch (inode->i_mode & S_IFMT) {
+-	case S_IFREG:
+-	case S_IFDIR:
+-	case S_IFLNK:
+-		break;
+-	default:
+-		iput(inode);
+-		return -XFS_ERROR(EBADF);
+-	}
+-
+-	/* now we can grab the fsid */
+-	memcpy(&handle.ha_fsid, XFS_I(inode)->i_mount->m_fixedfsid,
+-			sizeof(xfs_fsid_t));
+-	hsize = sizeof(xfs_fsid_t);
+-
+-	if (cmd != XFS_IOC_PATH_TO_FSHANDLE) {
+-		xfs_inode_t	*ip = XFS_I(inode);
++	if (cmd == XFS_IOC_PATH_TO_FSHANDLE) {
++		/*
++		 * This handle only contains an fsid, zero the rest.
++		 */
++		memset(&handle.ha_fid, 0, sizeof(handle.ha_fid));
++		hsize = sizeof(xfs_fsid_t);
++	} else {
+ 		int		lock_mode;
+ 
+-		/* need to get access to the xfs_inode to read the generation */
+ 		lock_mode = xfs_ilock_map_shared(ip);
+-
+-		/* fill in fid section of handle from inode */
+ 		handle.ha_fid.fid_len = sizeof(xfs_fid_t) -
+ 					sizeof(handle.ha_fid.fid_len);
+ 		handle.ha_fid.fid_pad = 0;
+ 		handle.ha_fid.fid_gen = ip->i_d.di_gen;
+ 		handle.ha_fid.fid_ino = ip->i_ino;
+-
+ 		xfs_iunlock_map_shared(ip, lock_mode);
+ 
+ 		hsize = XFS_HSIZE(handle);
+ 	}
+ 
+-	/* now copy our handle into the user buffer & write out the size */
++	error = -EFAULT;
+ 	if (copy_to_user(hreq->ohandle, &handle, hsize) ||
+-	    copy_to_user(hreq->ohandlen, &hsize, sizeof(__s32))) {
+-		iput(inode);
+-		return -XFS_ERROR(EFAULT);
+-	}
++	    copy_to_user(hreq->ohandlen, &hsize, sizeof(__s32)))
++		goto out_put;
+ 
+-	iput(inode);
+-	return 0;
++	error = 0;
 +
-+out_trans_cancel:
-+	xfs_trans_cancel(tp, 0);
-+	goto out_unlock;
++ out_put:
++	if (cmd == XFS_IOC_FD_TO_HANDLE)
++		fput(file);
++	else
++		path_put(&path);
++	return error;
  }
+ 
+ /*
 
 _______________________________________________
 xfs mailing list
