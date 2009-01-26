@@ -1,25 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0Q7uYes205582 for <xfs@oss.sgi.com>; Mon, 26 Jan 2009 01:56:35 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 889B1185ECA0
-	for <xfs@oss.sgi.com>; Sun, 25 Jan 2009 23:55:52 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id smLJ39zmcWA1NUBT for
-	<xfs@oss.sgi.com>; Sun, 25 Jan 2009 23:55:52 -0800 (PST)
-Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1LRMK0-0002ED-8N
-	for xfs@oss.sgi.com; Mon, 26 Jan 2009 07:55:52 +0000
-Date: Mon, 26 Jan 2009 02:55:52 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 03/17] xfs: cleanup handling in xfs_swap_extents
-Message-ID: <20090126075552.GA1062@infradead.org>
-References: <20090126073136.384490000@bombadil.infradead.org>
-	<20090126073200.459094000@bombadil.infradead.org>
+	n0Q875hC206225 for <xfs@oss.sgi.com>; Mon, 26 Jan 2009 02:07:06 -0600
+Received: from pastinake.doctronic.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5D5AD185EBDC
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2009 00:06:22 -0800 (PST)
+Received: from pastinake.doctronic.de (pastinake.doctronic.de [217.6.226.210])
+	by cuda.sgi.com with ESMTP id JzhgELCnlmFFkf4x for
+	<xfs@oss.sgi.com>; Mon, 26 Jan 2009 00:06:22 -0800 (PST)
+Received: from ZWERG.DOCTRONIC.LOCAL (zwerg.doctronic.de [192.168.4.131])
+	by pastinake.doctronic.de (8.13.1/8.13.1) with ESMTP id n0Q7vOh4003276
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2009 08:57:24 +0100
+Received: from co by ZWERG.DOCTRONIC.LOCAL with local (Exim 4.63)
+	(envelope-from <oberscheid@doctronic.de>) id 1LRMLU-0000a0-7m
+	for xfs@oss.sgi.com; Mon, 26 Jan 2009 08:57:24 +0100
+Date: Mon, 26 Jan 2009 08:57:24 +0100
+From: Carsten Oberscheid <oberscheid@doctronic.de>
+Subject: Re: Strange fragmentation in nearly empty filesystem
+Message-ID: <20090126075724.GA1753@doctronic.de>
+References: <20090123102130.GB8012@doctronic.de>
+	<20090124003329.GE32390@disturbed>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20090126073200.459094000@bombadil.infradead.org>
+In-Reply-To: <20090124003329.GE32390@disturbed>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,17 +37,98 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On Mon, Jan 26, 2009 at 02:31:39AM -0500, Christoph Hellwig wrote:
-> Use multiple lables for proper error unwinding and get rid of some now
-> superflous variables.
+On Sat, Jan 24, 2009 at 11:33:29AM +1100, Dave Chinner wrote:
+> Oh, that's vmware being incredibly stupid about how they write
+> out the memory images. They only write pages that are allocated
+> and it's sparse file full of holes. Effectively this guarantees
+> file fragmentation over time as random holes are filled. For
+> example, a .vmem file on a recent VM I built:
+> 
+> $ xfs_bmap -vvp foo.vmem |grep hole |wc -l
+> 675
+> $ xfs_bmap -vvp foo.vmem |grep -v hole |wc -l
+> 885
+> $
+> 
+> Contains 675 holes and almost 900 real extents in a 512MB memory
+> image that has only 160MB of data blocks allocated.
 
-Sorry, should have been cleanup error handling and marked as beein
-from Jeff.
+Well, things look a bit different over here:
 
-Jeff, maybe you should just resend this yourself so that it doesn't
-get messed up?  You can add my Tested-by flag as it passed xfsqa
-on multiple platforms for me (although with the recent swapext flaw
-I wonder if that actuall means anything :))
+
+[co@tangchai]~/vmware/foo ls -la *.vmem
+-rw------- 1 co co 536870912 2009-01-23 10:42 foo.vmem
+
+[co@tangchai]~/vmware/foo xfs_bmap -vvp  voo.vmem | grep hole | wc -l
+28
+
+[co@tangchai]~/vmware/foo xfs_bmap -vvp  foo.vmem | grep -v hole | wc -l
+98644
+
+
+The hole/extent ratio cannot really be compared with your example. The
+vmem file has been written about three or four times to reach this
+state.
+
+Now rebooting the VM to create a new vmem file:
+
+
+[co@tangchai]~/vmware/foo xfs_bmap -vvp  foo.vmem | grep hole | wc -l
+3308
+
+[co@tangchai]~/vmware/foo xfs_bmap -vvp  foo.vmem | grep -v hole | wc -l
+3327
+
+
+That looks more like swiss cheese to me. And remember, it is a new file.
+
+Now suspending the fresh VM for the first time, causing the vmem file
+to be written again:
+
+
+[co@tangchai]~/vmware/foo xfs_bmap -vvp  foo.vmem | grep hole | wc -l
+38
+
+[co@tangchai]~/vmware/foo xfs_bmap -vvp  foo.vmem | grep -v hole | wc -l
+6678
+
+
+Hmmm.
+
+Now one more thing:
+
+
+[co@tangchai]~/vmware/foo sudo xfs_fsr -v *vmem
+foo.vmem
+extents before:6708 after:77 DONE foo.vmem
+
+
+I happily accept your point about vmware writing the vmem file in a
+clumsy way that guarantees fragmentation. What bothers me is that
+today these files get fragmented *much* faster than they did about a
+year ago. Back then the vmem files used to start with one extent,
+stayed between one and a handful for a week (being written 6-10 times)
+and then rose to several thousand, maybe 10k or 20k during one or two
+more weeks. Applying xfs_fsr to the file then got it back to one
+extent.
+
+Today: see above. Heavy fragmentation right from the start, jumping to
+90k and more within 2 or 3 writes. No chance to defragment the file
+completely with xfs_fsr.
+
+All this on the same disk with the same filesystem which is and always
+has been more than 90% empty.
+
+So even vmware's way of writing the vmem files causes fragmentation,
+something has happened affecting the way fragmentation takes
+place. Can this really be an application problem, or is the
+application just making something obvious that happens on the
+filesystem level?
+
+Best regards
+
+
+Carsten Oberscheid
 
 _______________________________________________
 xfs mailing list
