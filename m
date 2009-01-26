@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0QLeIIK254578 for <xfs@oss.sgi.com>; Mon, 26 Jan 2009 15:40:19 -0600
+	n0QM2usP256239 for <xfs@oss.sgi.com>; Mon, 26 Jan 2009 16:02:56 -0600
 Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A43138F8057
-	for <xfs@oss.sgi.com>; Mon, 26 Jan 2009 13:39:33 -0800 (PST)
-Message-Id: <BC15B7D8-CBAF-4AE0-9FF5-29C16B5E557D@sgi.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 34E21AC00E
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2009 14:02:11 -0800 (PST)
+Message-Id: <70AF1484-5601-4331-A5A1-A64FB010E889@sgi.com>
 From: Felix Blyakher <felixb@sgi.com>
-In-Reply-To: <20090126073159.820491000@bombadil.infradead.org>
+In-Reply-To: <20090126073200.151836000@bombadil.infradead.org>
 Mime-Version: 1.0 (Apple Message framework v926)
-Subject: Re: [PATCH 01/17] xfs: cleanup error handling in xfs_mountfs:
-Date: Mon, 26 Jan 2009 15:39:33 -0600
+Subject: Re: [PATCH 02/17] xfs: make sure to free the real-time inodes in the
+	mount error path
+Date: Mon, 26 Jan 2009 16:02:05 -0600
 References: <20090126073136.384490000@bombadil.infradead.org>
-	<20090126073159.820491000@bombadil.infradead.org>
+	<20090126073200.151836000@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,9 +32,11 @@ Cc: xfs@oss.sgi.com
 
 On Jan 26, 2009, at 1:31 AM, Christoph Hellwig wrote:
 
-> Clean up the error handling in xfs_mountfs.  Use readable goto label  
-> names,
-> simplify the uuid handling and other error conditions.
+> When mount failes after allocating the real-time inodes we currently  
+> leak
+> them.  Add a new helper to free the real-time inodes which can be  
+> used by
+> both the mount and unmount path.
 >
 >
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
