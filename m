@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0Q7XGxC203857 for <xfs@oss.sgi.com>; Mon, 26 Jan 2009 01:33:17 -0600
+	n0Q7XFNo203851 for <xfs@oss.sgi.com>; Mon, 26 Jan 2009 01:33:16 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 23A35B75E0
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 79E3CB75E0
 	for <xfs@oss.sgi.com>; Sun, 25 Jan 2009 23:32:33 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id g0HtolVwZjvZCxPD for
+	by cuda.sgi.com with ESMTP id itI5HQo2N2pMxq8o for
 	<xfs@oss.sgi.com>; Sun, 25 Jan 2009 23:32:33 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1LRLwx-00036V-8e
-	for xfs@oss.sgi.com; Mon, 26 Jan 2009 07:32:03 +0000
-Message-Id: <20090126073203.169959000@bombadil.infradead.org>
-Date: Mon, 26 Jan 2009 02:31:50 -0500
+	Linux)) id 1LRLww-00034t-N2
+	for xfs@oss.sgi.com; Mon, 26 Jan 2009 07:32:02 +0000
+Message-Id: <20090126073202.588218000@bombadil.infradead.org>
+Date: Mon, 26 Jan 2009 02:31:47 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 14/17] xfs: remove the unused XFS_QMOPT_DQLOCK flag
+Subject: [PATCH 11/17] xfs: merge xfs_inode_flush into xfs_fs_write_inode
 References: <20090126073136.384490000@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-kill-XFS_QMOPT_DQLOCK
+Content-Disposition: inline; filename=xfs-kill-xfs_inode_flush
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,334 +32,164 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The XFS_QMOPT_DQLOCK flag introduces major complexity in the quota subsystem
-but isn't actually used anywhere.  So remove it and all the hazzles it
-introduces.
+Spliting the task for a VFS-induced inode flush into two functions doesn't
+make any sense, so merge the two functions dealing with it.
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs/fs/xfs/quota/xfs_qm.c
+Index: xfs/fs/xfs/linux-2.6/xfs_super.c
 ===================================================================
---- xfs.orig/fs/xfs/quota/xfs_qm.c	2009-01-21 21:03:27.835294745 +0100
-+++ xfs/fs/xfs/quota/xfs_qm.c	2009-01-24 18:56:04.215429212 +0100
-@@ -632,7 +632,6 @@ xfs_qm_dqattach_one(
- 	xfs_dqid_t	id,
- 	uint		type,
- 	uint		doalloc,
--	uint		dolock,
- 	xfs_dquot_t	*udqhint, /* hint */
- 	xfs_dquot_t	**IO_idqpp)
+--- xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2009-01-24 18:40:10.116428891 +0100
++++ xfs/fs/xfs/linux-2.6/xfs_super.c	2009-01-24 18:50:29.764553115 +0100
+@@ -990,26 +990,57 @@ xfs_fs_write_inode(
+ 	int			sync)
  {
-@@ -641,16 +640,16 @@ xfs_qm_dqattach_one(
+ 	struct xfs_inode	*ip = XFS_I(inode);
++	struct xfs_mount	*mp = ip->i_mount;
+ 	int			error = 0;
+-	int			flags = 0;
  
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
- 	error = 0;
+ 	xfs_itrace_entry(ip);
 +
- 	/*
- 	 * See if we already have it in the inode itself. IO_idqpp is
- 	 * &i_udquot or &i_gdquot. This made the code look weird, but
- 	 * made the logic a lot simpler.
- 	 */
--	if ((dqp = *IO_idqpp)) {
--		if (dolock)
--			xfs_dqlock(dqp);
-+	dqp = *IO_idqpp;
-+	if (dqp) {
- 		xfs_dqtrace_entry(dqp, "DQATTACH: found in ip");
--		goto done;
-+		return 0;
- 	}
- 
- 	/*
-@@ -659,38 +658,38 @@ xfs_qm_dqattach_one(
- 	 * lookup by dqid (xfs_qm_dqget) by caching a group dquot inside
- 	 * the user dquot.
- 	 */
--	ASSERT(!udqhint || type == XFS_DQ_GROUP || type == XFS_DQ_PROJ);
--	if (udqhint && !dolock)
-+	if (udqhint) {
-+		ASSERT(type == XFS_DQ_GROUP || type == XFS_DQ_PROJ);
- 		xfs_dqlock(udqhint);
- 
--	/*
--	 * No need to take dqlock to look at the id.
--	 * The ID can't change until it gets reclaimed, and it won't
--	 * be reclaimed as long as we have a ref from inode and we hold
--	 * the ilock.
--	 */
--	if (udqhint &&
--	    (dqp = udqhint->q_gdquot) &&
--	    (be32_to_cpu(dqp->q_core.d_id) == id)) {
--		ASSERT(XFS_DQ_IS_LOCKED(udqhint));
--		xfs_dqlock(dqp);
--		XFS_DQHOLD(dqp);
--		ASSERT(*IO_idqpp == NULL);
--		*IO_idqpp = dqp;
--		if (!dolock) {
-+		/*
-+		 * No need to take dqlock to look at the id.
-+		 *
-+		 * The ID can't change until it gets reclaimed, and it won't
-+		 * be reclaimed as long as we have a ref from inode and we
-+		 * hold the ilock.
-+		 */
-+		dqp = udqhint->q_gdquot;
-+		if (dqp && be32_to_cpu(dqp->q_core.d_id) == id) {
-+			xfs_dqlock(dqp);
-+			XFS_DQHOLD(dqp);
-+			ASSERT(*IO_idqpp == NULL);
-+			*IO_idqpp = dqp;
++	if (XFS_FORCED_SHUTDOWN(mp))
++		return XFS_ERROR(EIO);
 +
- 			xfs_dqunlock(dqp);
- 			xfs_dqunlock(udqhint);
-+			return 0;
- 		}
--		goto done;
--	}
--	/*
--	 * We can't hold a dquot lock when we call the dqget code.
--	 * We'll deadlock in no time, because of (not conforming to)
--	 * lock ordering - the inodelock comes before any dquot lock,
--	 * and we may drop and reacquire the ilock in xfs_qm_dqget().
--	 */
--	if (udqhint)
-+
-+		/*
-+		 * We can't hold a dquot lock when we call the dqget code.
-+		 * We'll deadlock in no time, because of (not conforming to)
-+		 * lock ordering - the inodelock comes before any dquot lock,
-+		 * and we may drop and reacquire the ilock in xfs_qm_dqget().
-+		 */
- 		xfs_dqunlock(udqhint);
+ 	if (sync) {
+ 		error = xfs_wait_on_pages(ip, 0, -1);
+ 		if (error)
+-			goto out_error;
+-		flags |= FLUSH_SYNC;
++			goto out;
 +	}
 +
- 	/*
- 	 * Find the dquot from somewhere. This bumps the
- 	 * reference count of dquot and returns it locked.
-@@ -698,48 +697,19 @@ xfs_qm_dqattach_one(
- 	 * disk and we didn't ask it to allocate;
- 	 * ESRCH if quotas got turned off suddenly.
- 	 */
--	if ((error = xfs_qm_dqget(ip->i_mount, ip, id, type,
--				 doalloc|XFS_QMOPT_DOWARN, &dqp))) {
--		if (udqhint && dolock)
--			xfs_dqlock(udqhint);
--		goto done;
--	}
-+	error = xfs_qm_dqget(ip->i_mount, ip, id, type, XFS_QMOPT_DOWARN, &dqp);
-+	if (error)
-+		return error;
- 
- 	xfs_dqtrace_entry(dqp, "DQATTACH: found by dqget");
++	/*
++	 * Bypass inodes which have already been cleaned by
++	 * the inode flush clustering code inside xfs_iflush
++	 */
++	if (xfs_inode_clean(ip))
++		goto out;
 +
++	/*
++	 * We make this non-blocking if the inode is contended, return
++	 * EAGAIN to indicate to the caller that they did not succeed.
++	 * This prevents the flush path from blocking on inodes inside
++	 * another operation right now, they get caught later by xfs_sync.
++	 */
++	if (sync) {
++		xfs_ilock(ip, XFS_ILOCK_SHARED);
++		xfs_iflock(ip);
++
++		error = xfs_iflush(ip, XFS_IFLUSH_SYNC);
++	} else {
++		error = EAGAIN;
++		if (!xfs_ilock_nowait(ip, XFS_ILOCK_SHARED))
++			goto out;
++		if (xfs_ipincount(ip) || !xfs_iflock_nowait(ip))
++			goto out_unlock;
++
++		error = xfs_iflush(ip, XFS_IFLUSH_ASYNC_NOBLOCK);
+ 	}
+-	error = xfs_inode_flush(ip, flags);
+ 
+-out_error:
++ out_unlock:
++	xfs_iunlock(ip, XFS_ILOCK_SHARED);
++ out:
  	/*
- 	 * dqget may have dropped and re-acquired the ilock, but it guarantees
- 	 * that the dquot returned is the one that should go in the inode.
+ 	 * if we failed to write out the inode then mark
+ 	 * it dirty again so we'll try again later.
  	 */
- 	*IO_idqpp = dqp;
--	ASSERT(dqp);
--	ASSERT(XFS_DQ_IS_LOCKED(dqp));
--	if (! dolock) {
--		xfs_dqunlock(dqp);
--		goto done;
--	}
--	if (! udqhint)
--		goto done;
+ 	if (error)
+ 		xfs_mark_inode_dirty_sync(ip);
 -
--	ASSERT(udqhint);
--	ASSERT(dolock);
--	ASSERT(XFS_DQ_IS_LOCKED(dqp));
--	if (! xfs_qm_dqlock_nowait(udqhint)) {
--		xfs_dqunlock(dqp);
--		xfs_dqlock(udqhint);
--		xfs_dqlock(dqp);
--	}
--      done:
--#ifdef QUOTADEBUG
--	if (udqhint) {
--		if (dolock)
--			ASSERT(XFS_DQ_IS_LOCKED(udqhint));
--	}
--	if (! error) {
--		if (dolock)
--			ASSERT(XFS_DQ_IS_LOCKED(dqp));
--	}
--#endif
--	return error;
-+	xfs_dqunlock(dqp);
-+	return 0;
+ 	return -error;
  }
  
- 
-@@ -754,24 +724,15 @@ xfs_qm_dqattach_one(
- STATIC void
- xfs_qm_dqattach_grouphint(
- 	xfs_dquot_t	*udq,
--	xfs_dquot_t	*gdq,
--	uint		locked)
-+	xfs_dquot_t	*gdq)
- {
- 	xfs_dquot_t	*tmp;
- 
--#ifdef QUOTADEBUG
--	if (locked) {
--		ASSERT(XFS_DQ_IS_LOCKED(udq));
--		ASSERT(XFS_DQ_IS_LOCKED(gdq));
--	}
--#endif
--	if (! locked)
--		xfs_dqlock(udq);
-+	xfs_dqlock(udq);
- 
- 	if ((tmp = udq->q_gdquot)) {
- 		if (tmp == gdq) {
--			if (! locked)
--				xfs_dqunlock(udq);
-+			xfs_dqunlock(udq);
- 			return;
- 		}
- 
-@@ -781,8 +742,6 @@ xfs_qm_dqattach_grouphint(
- 		 * because the freelist lock comes before dqlocks.
- 		 */
- 		xfs_dqunlock(udq);
--		if (locked)
--			xfs_dqunlock(gdq);
- 		/*
- 		 * we took a hard reference once upon a time in dqget,
- 		 * so give it back when the udquot no longer points at it
-@@ -795,9 +754,7 @@ xfs_qm_dqattach_grouphint(
- 
- 	} else {
- 		ASSERT(XFS_DQ_IS_LOCKED(udq));
--		if (! locked) {
--			xfs_dqlock(gdq);
--		}
-+		xfs_dqlock(gdq);
- 	}
- 
- 	ASSERT(XFS_DQ_IS_LOCKED(udq));
-@@ -810,10 +767,9 @@ xfs_qm_dqattach_grouphint(
- 		XFS_DQHOLD(gdq);
- 		udq->q_gdquot = gdq;
- 	}
--	if (! locked) {
--		xfs_dqunlock(gdq);
--		xfs_dqunlock(udq);
--	}
-+
-+	xfs_dqunlock(gdq);
-+	xfs_dqunlock(udq);
- }
- 
- 
-@@ -821,8 +777,6 @@ xfs_qm_dqattach_grouphint(
-  * Given a locked inode, attach dquot(s) to it, taking U/G/P-QUOTAON
-  * into account.
-  * If XFS_QMOPT_DQALLOC, the dquot(s) will be allocated if needed.
-- * If XFS_QMOPT_DQLOCK, the dquot(s) will be returned locked. This option pretty
-- * much made this code a complete mess, but it has been pretty useful.
-  * If XFS_QMOPT_ILOCKED, then inode sent is already locked EXCL.
-  * Inode may get unlocked and relocked in here, and the caller must deal with
-  * the consequences.
-@@ -851,7 +805,6 @@ xfs_qm_dqattach(
- 	if (XFS_IS_UQUOTA_ON(mp)) {
- 		error = xfs_qm_dqattach_one(ip, ip->i_d.di_uid, XFS_DQ_USER,
- 						flags & XFS_QMOPT_DQALLOC,
--						flags & XFS_QMOPT_DQLOCK,
- 						NULL, &ip->i_udquot);
- 		if (error)
- 			goto done;
-@@ -863,11 +816,9 @@ xfs_qm_dqattach(
- 		error = XFS_IS_GQUOTA_ON(mp) ?
- 			xfs_qm_dqattach_one(ip, ip->i_d.di_gid, XFS_DQ_GROUP,
- 						flags & XFS_QMOPT_DQALLOC,
--						flags & XFS_QMOPT_DQLOCK,
- 						ip->i_udquot, &ip->i_gdquot) :
- 			xfs_qm_dqattach_one(ip, ip->i_d.di_projid, XFS_DQ_PROJ,
- 						flags & XFS_QMOPT_DQALLOC,
--						flags & XFS_QMOPT_DQLOCK,
- 						ip->i_udquot, &ip->i_gdquot);
- 		/*
- 		 * Don't worry about the udquot that we may have
-@@ -898,22 +849,13 @@ xfs_qm_dqattach(
- 		/*
- 		 * Attach i_gdquot to the gdquot hint inside the i_udquot.
- 		 */
--		xfs_qm_dqattach_grouphint(ip->i_udquot, ip->i_gdquot,
--					 flags & XFS_QMOPT_DQLOCK);
-+		xfs_qm_dqattach_grouphint(ip->i_udquot, ip->i_gdquot);
- 	}
- 
-       done:
- 
- #ifdef QUOTADEBUG
- 	if (! error) {
--		if (ip->i_udquot) {
--			if (flags & XFS_QMOPT_DQLOCK)
--				ASSERT(XFS_DQ_IS_LOCKED(ip->i_udquot));
--		}
--		if (ip->i_gdquot) {
--			if (flags & XFS_QMOPT_DQLOCK)
--				ASSERT(XFS_DQ_IS_LOCKED(ip->i_gdquot));
--		}
- 		if (XFS_IS_UQUOTA_ON(mp))
- 			ASSERT(ip->i_udquot);
- 		if (XFS_IS_OQUOTA_ON(mp))
-Index: xfs/fs/xfs/quota/xfs_trans_dquot.c
+Index: xfs/fs/xfs/linux-2.6/xfs_vnode.h
 ===================================================================
---- xfs.orig/fs/xfs/quota/xfs_trans_dquot.c	2009-01-21 21:03:27.837294860 +0100
-+++ xfs/fs/xfs/quota/xfs_trans_dquot.c	2009-01-24 18:56:04.216429130 +0100
-@@ -624,10 +624,9 @@ xfs_trans_dqresv(
- 	xfs_qcnt_t	*resbcountp;
- 	xfs_quotainfo_t	*q = mp->m_quotainfo;
+--- xfs.orig/fs/xfs/linux-2.6/xfs_vnode.h	2009-01-21 21:03:27.831294794 +0100
++++ xfs/fs/xfs/linux-2.6/xfs_vnode.h	2009-01-24 18:50:29.764553115 +0100
+@@ -41,11 +41,6 @@ struct attrlist_cursor_kern;
+ #define IO_INVIS	0x00020		/* don't update inode timestamps */
  
--	if (! (flags & XFS_QMOPT_DQLOCK)) {
--		xfs_dqlock(dqp);
--	}
--	ASSERT(XFS_DQ_IS_LOCKED(dqp));
-+
-+	xfs_dqlock(dqp);
-+
- 	if (flags & XFS_TRANS_DQ_RES_BLKS) {
- 		hardlimit = be64_to_cpu(dqp->q_core.d_blk_hardlimit);
- 		if (!hardlimit)
-@@ -740,10 +739,8 @@ xfs_trans_dqresv(
- 	ASSERT(dqp->q_res_icount >= be64_to_cpu(dqp->q_core.d_icount));
- 
- error_return:
--	if (! (flags & XFS_QMOPT_DQLOCK)) {
--		xfs_dqunlock(dqp);
--	}
--	return (error);
-+	xfs_dqunlock(dqp);
-+	return error;
- }
- 
- 
-@@ -753,8 +750,7 @@ error_return:
-  * grp/prj quotas is important, because this follows a both-or-nothing
-  * approach.
-  *
-- * flags = XFS_QMOPT_DQLOCK indicate if dquot(s) need to be locked.
-- *	   XFS_QMOPT_FORCE_RES evades limit enforcement. Used by chown.
-+ * flags = XFS_QMOPT_FORCE_RES evades limit enforcement. Used by chown.
-  *	   XFS_QMOPT_ENOSPC returns ENOSPC not EDQUOT.  Used by pquota.
-  *	   XFS_TRANS_DQ_RES_BLKS reserves regular disk blocks
-  *	   XFS_TRANS_DQ_RES_RTBLKS reserves realtime disk blocks
-Index: xfs/fs/xfs/xfs_quota.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_quota.h	2009-01-24 18:52:52.211583834 +0100
-+++ xfs/fs/xfs/xfs_quota.h	2009-01-24 18:56:04.217428839 +0100
-@@ -187,7 +187,6 @@ typedef struct xfs_qoff_logformat {
-  * to a single function. None of these XFS_QMOPT_* flags are meant to have
-  * persistent values (ie. their values can and will change between versions)
+ /*
+- * Flags for xfs_inode_flush
+- */
+-#define FLUSH_SYNC		1	/* wait for flush to complete	*/
+-
+-/*
+  * Flush/Invalidate options for vop_toss/flush/flushinval_pages.
   */
--#define XFS_QMOPT_DQLOCK	0x0000001 /* dqlock */
- #define XFS_QMOPT_DQALLOC	0x0000002 /* alloc dquot ondisk if needed */
- #define XFS_QMOPT_UQUOTA	0x0000004 /* user dquot requested */
- #define XFS_QMOPT_PQUOTA	0x0000008 /* project dquot requested */
+ #define FI_NONE			0	/* none */
+Index: xfs/fs/xfs/xfs_vnodeops.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_vnodeops.c	2009-01-24 18:50:11.826428845 +0100
++++ xfs/fs/xfs/xfs_vnodeops.c	2009-01-24 18:50:29.767553567 +0100
+@@ -2589,51 +2589,6 @@ std_return:
+ }
+ 
+ int
+-xfs_inode_flush(
+-	xfs_inode_t	*ip,
+-	int		flags)
+-{
+-	xfs_mount_t	*mp = ip->i_mount;
+-	int		error = 0;
+-
+-	if (XFS_FORCED_SHUTDOWN(mp))
+-		return XFS_ERROR(EIO);
+-
+-	/*
+-	 * Bypass inodes which have already been cleaned by
+-	 * the inode flush clustering code inside xfs_iflush
+-	 */
+-	if (xfs_inode_clean(ip))
+-		return 0;
+-
+-	/*
+-	 * We make this non-blocking if the inode is contended,
+-	 * return EAGAIN to indicate to the caller that they
+-	 * did not succeed. This prevents the flush path from
+-	 * blocking on inodes inside another operation right
+-	 * now, they get caught later by xfs_sync.
+-	 */
+-	if (flags & FLUSH_SYNC) {
+-		xfs_ilock(ip, XFS_ILOCK_SHARED);
+-		xfs_iflock(ip);
+-	} else if (xfs_ilock_nowait(ip, XFS_ILOCK_SHARED)) {
+-		if (xfs_ipincount(ip) || !xfs_iflock_nowait(ip)) {
+-			xfs_iunlock(ip, XFS_ILOCK_SHARED);
+-			return EAGAIN;
+-		}
+-	} else {
+-		return EAGAIN;
+-	}
+-
+-	error = xfs_iflush(ip, (flags & FLUSH_SYNC) ? XFS_IFLUSH_SYNC
+-						    : XFS_IFLUSH_ASYNC_NOBLOCK);
+-	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+-
+-	return error;
+-}
+-
+-
+-int
+ xfs_set_dmattrs(
+ 	xfs_inode_t     *ip,
+ 	u_int		evmask,
+Index: xfs/fs/xfs/xfs_vnodeops.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_vnodeops.h	2009-01-24 18:50:11.832429121 +0100
++++ xfs/fs/xfs/xfs_vnodeops.h	2009-01-24 18:50:40.648430311 +0100
+@@ -38,7 +38,6 @@ int xfs_readdir(struct xfs_inode	*dp, vo
+ int xfs_symlink(struct xfs_inode *dp, struct xfs_name *link_name,
+ 		const char *target_path, mode_t mode, struct xfs_inode **ipp,
+ 		cred_t *credp);
+-int xfs_inode_flush(struct xfs_inode *ip, int flags);
+ int xfs_set_dmattrs(struct xfs_inode *ip, u_int evmask, u_int16_t state);
+ int xfs_reclaim(struct xfs_inode *ip);
+ int xfs_change_file_space(struct xfs_inode *ip, int cmd,
 
 _______________________________________________
 xfs mailing list
