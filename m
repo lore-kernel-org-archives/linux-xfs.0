@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0Q7kusI205044 for <xfs@oss.sgi.com>; Mon, 26 Jan 2009 01:46:57 -0600
+	n0Q7lKhT205073 for <xfs@oss.sgi.com>; Mon, 26 Jan 2009 01:47:21 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A365CB769E
-	for <xfs@oss.sgi.com>; Sun, 25 Jan 2009 23:45:47 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4BB02B76B4
+	for <xfs@oss.sgi.com>; Sun, 25 Jan 2009 23:46:38 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id arjPAwihT3jhjBOE for
-	<xfs@oss.sgi.com>; Sun, 25 Jan 2009 23:45:47 -0800 (PST)
-Date: Mon, 26 Jan 2009 02:45:47 -0500
+	by cuda.sgi.com with ESMTP id U5S6DrQsJrPJ8nl1 for
+	<xfs@oss.sgi.com>; Sun, 25 Jan 2009 23:46:38 -0800 (PST)
+Date: Mon, 26 Jan 2009 02:46:36 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfsprogs: add xfs_estimate manpage
-Message-ID: <20090126074547.GA27188@infradead.org>
-References: <20090123004519.GA29225@infradead.org>
-	<497C7718.5090607@sandeen.net>
+Subject: Re: [PATCH] don't reallocate sxp variable passed into xfs_swapext
+Message-ID: <20090126074636.GB27188@infradead.org>
+References: <497D258C.1000908@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <497C7718.5090607@sandeen.net>
+In-Reply-To: <497D258C.1000908@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,25 +29,26 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Andrew Morton <akpm@linux-foundation.org>, pm@debian.org, xfs-oss <xfs@oss.sgi.com>
 
-On Sun, Jan 25, 2009 at 08:28:40AM -0600, Eric Sandeen wrote:
-> Christoph Hellwig wrote:
-> > xfs_Estimate has been moved to xfsprogs a while ago, so the manpage
-> > should follow it.
+On Sun, Jan 25, 2009 at 08:53:00PM -0600, Eric Sandeen wrote:
+> fixes kernel.org bugzilla 12538, xfs_fsr fails on 2.6.29-rc kernels
 > 
-> Hmm we need a patch to remove from dump too right :)
-
-I already put that in.
-
-> ACK for the move part, but some update to the man page to give a hint as
-> to why this tool is useful seems reasonable... why would I want to use
-> this thing?
+> Regression caused by 743bb4650da9e2595d6cedd01c680b5b9398c74a
 > 
-> Also as an aside, why does the log size matter for space ultimately used?
+> This was an embarrasing mistake, reallocating the sxp pointer passed
+> in from the main ioctl switch.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net
+> Reported-by: Paul Martin <pm@debian.org>
+> Tested-by: Paul Martin <pm@debian.org>
 
-I have no idea what this tools is useful for.  It always seemed rather odd
-to me.
+Yikes.  Looks good to me, but any chance you could try cooking up a
+xfsqa test that would hit this as our existing xfs_fsr test apparently
+doesn't?
+
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
