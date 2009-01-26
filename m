@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0Q7XGg2203870 for <xfs@oss.sgi.com>; Mon, 26 Jan 2009 01:33:17 -0600
+	n0Q7XjUC203940 for <xfs@oss.sgi.com>; Mon, 26 Jan 2009 01:33:46 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4D848B75E7
-	for <xfs@oss.sgi.com>; Sun, 25 Jan 2009 23:32:34 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5495AB75EF
+	for <xfs@oss.sgi.com>; Sun, 25 Jan 2009 23:33:03 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 73RHiEnVuSh1G3BT for
-	<xfs@oss.sgi.com>; Sun, 25 Jan 2009 23:32:34 -0800 (PST)
+	by cuda.sgi.com with ESMTP id sM2yck1ZidEw8hWK for
+	<xfs@oss.sgi.com>; Sun, 25 Jan 2009 23:33:03 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1LRLwx-00037N-G4
+	Linux)) id 1LRLwx-000382-LN
 	for xfs@oss.sgi.com; Mon, 26 Jan 2009 07:32:03 +0000
-Message-Id: <20090126073203.388857000@bombadil.infradead.org>
-Date: Mon, 26 Jan 2009 02:31:51 -0500
+Message-Id: <20090126073203.550396000@bombadil.infradead.org>
+Date: Mon, 26 Jan 2009 02:31:52 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 15/17] xfs: remove
-	XFS_QM_LOCK/XFS_QM_UNLOCK/XFS_QM_HOLD/XFS_QM_RELE
+Subject: [PATCH 16/17] xfs: use mutex_is_locked in XFS_DQ_IS_LOCKED
 References: <20090126073136.384490000@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-kill-XFS_QM_LOCK
+Content-Disposition: inline; filename=xfs-XFS_DQ_IS_LOCKED-use-mutex_is_locked
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,68 +32,43 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Remove these macros which only obsfucated the code in rather nast ways.
-
+Now that we have a helper to test if a mutex is held use it instead of our
+own little hacks.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs/fs/xfs/quota/xfs_qm.c
+Index: xfs/fs/xfs/quota/xfs_dquot.h
 ===================================================================
---- xfs.orig/fs/xfs/quota/xfs_qm.c	2008-12-30 20:38:36.144493445 +0100
-+++ xfs/fs/xfs/quota/xfs_qm.c	2008-12-30 21:55:41.865496758 +0100
-@@ -219,7 +219,7 @@ xfs_qm_hold_quotafs_ref(
- 	 * the structure could disappear between the entry to this routine and
- 	 * a HOLD operation if not locked.
- 	 */
--	XFS_QM_LOCK(xfs_Gqm);
-+	mutex_lock(&xfs_Gqm_lock);
+--- xfs.orig/fs/xfs/quota/xfs_dquot.h	2008-12-30 09:58:43.271493395 +0100
++++ xfs/fs/xfs/quota/xfs_dquot.h	2008-12-30 09:59:38.831495515 +0100
+@@ -109,19 +109,6 @@ enum {
  
- 	if (xfs_Gqm == NULL)
- 		xfs_Gqm = xfs_Gqm_init();
-@@ -228,8 +228,8 @@ xfs_qm_hold_quotafs_ref(
- 	 * debugging and statistical purposes, but ...
- 	 * Just take a reference and get out.
- 	 */
--	XFS_QM_HOLD(xfs_Gqm);
--	XFS_QM_UNLOCK(xfs_Gqm);
-+	xfs_Gqm->qm_nrefs++;
-+	mutex_unlock(&xfs_Gqm_lock);
+ #define XFS_DQHOLD(dqp)		((dqp)->q_nrefs++)
  
- 	return 0;
- }
-@@ -277,13 +277,12 @@ xfs_qm_rele_quotafs_ref(
- 	 * Destroy the entire XQM. If somebody mounts with quotaon, this'll
- 	 * be restarted.
- 	 */
--	XFS_QM_LOCK(xfs_Gqm);
--	XFS_QM_RELE(xfs_Gqm);
--	if (xfs_Gqm->qm_nrefs == 0) {
-+	mutex_lock(&xfs_Gqm_lock);
-+	if (--xfs_Gqm->qm_nrefs == 0) {
- 		xfs_qm_destroy(xfs_Gqm);
- 		xfs_Gqm = NULL;
- 	}
--	XFS_QM_UNLOCK(xfs_Gqm);
-+	mutex_unlock(&xfs_Gqm_lock);
- }
- 
- /*
-Index: xfs/fs/xfs/quota/xfs_qm.h
-===================================================================
---- xfs.orig/fs/xfs/quota/xfs_qm.h	2008-12-30 20:38:32.989527673 +0100
-+++ xfs/fs/xfs/quota/xfs_qm.h	2008-12-30 21:15:23.500493377 +0100
-@@ -158,11 +158,6 @@ typedef struct xfs_dquot_acct {
- #define XFS_QM_IWARNLIMIT	5
- #define XFS_QM_RTBWARNLIMIT	5
- 
--#define XFS_QM_LOCK(xqm)	(mutex_lock(&xqm##_lock))
--#define XFS_QM_UNLOCK(xqm)	(mutex_unlock(&xqm##_lock))
--#define XFS_QM_HOLD(xqm)	((xqm)->qm_nrefs++)
--#define XFS_QM_RELE(xqm)	((xqm)->qm_nrefs--)
+-#ifdef DEBUG
+-static inline int
+-XFS_DQ_IS_LOCKED(xfs_dquot_t *dqp)
+-{
+-	if (mutex_trylock(&dqp->q_qlock)) {
+-		mutex_unlock(&dqp->q_qlock);
+-		return 0;
+-	}
+-	return 1;
+-}
+-#endif
 -
- extern void		xfs_qm_destroy_quotainfo(xfs_mount_t *);
- extern void		xfs_qm_mount_quotas(xfs_mount_t *);
- extern int		xfs_qm_quotacheck(xfs_mount_t *);
+-
+ /*
+  * Manage the q_flush completion queue embedded in the dquot.  This completion
+  * queue synchronizes processes attempting to flush the in-core dquot back to
+@@ -142,6 +129,7 @@ static inline void xfs_dqfunlock(xfs_dqu
+ 	complete(&dqp->q_flush);
+ }
+ 
++#define XFS_DQ_IS_LOCKED(dqp)	(mutex_is_locked(&((dqp)->q_qlock)))
+ #define XFS_DQ_IS_ON_FREELIST(dqp)  ((dqp)->dq_flnext != (dqp))
+ #define XFS_DQ_IS_DIRTY(dqp)	((dqp)->dq_flags & XFS_DQ_DIRTY)
+ #define XFS_QM_ISUDQ(dqp)	((dqp)->dq_flags & XFS_DQ_USER)
 
 _______________________________________________
 xfs mailing list
