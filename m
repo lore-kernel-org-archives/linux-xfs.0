@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0R25uRJ007972 for <xfs@oss.sgi.com>; Mon, 26 Jan 2009 20:05:57 -0600
-Received: from postoffice2.aconex.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 96ED1BBA42
-	for <xfs@oss.sgi.com>; Mon, 26 Jan 2009 18:05:13 -0800 (PST)
-Received: from postoffice2.aconex.com (mail.aconex.com [203.89.202.182]) by
-	cuda.sgi.com with ESMTP id 6MvSI7XXfOEACbkd for
-	<xfs@oss.sgi.com>; Mon, 26 Jan 2009 18:05:13 -0800 (PST)
-Subject: Re: Disable journaling
-From: Nathan Scott <nscott@aconex.com>
+	n0R2DZSF008253 for <xfs@oss.sgi.com>; Mon, 26 Jan 2009 20:13:35 -0600
+Received: from fg-out-1718.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CBAEE18646E5
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2009 18:12:52 -0800 (PST)
+Received: from fg-out-1718.google.com (fg-out-1718.google.com [72.14.220.157])
+	by cuda.sgi.com with ESMTP id 54HQTq4SG5HfsG5u for
+	<xfs@oss.sgi.com>; Mon, 26 Jan 2009 18:12:52 -0800 (PST)
+Received: by fg-out-1718.google.com with SMTP id 19so3913973fgg.8
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2009 18:12:51 -0800 (PST)
+MIME-Version: 1.0
 In-Reply-To: <497E6759.3060300@sandeen.net>
 References: <b211fe280901261723h6dd1db69t9d24c8d6774b18bc@mail.gmail.com>
 	<497E6759.3060300@sandeen.net>
-Date: Tue, 27 Jan 2009 13:02:04 +1100
-Message-Id: <1233021724.4460.25.camel@verge.scott.net.au>
-Mime-Version: 1.0
+Date: Tue, 27 Jan 2009 00:12:50 -0200
+Message-ID: <b211fe280901261812g6677ef60j2f64f4b257d3990@mail.gmail.com>
+Subject: Re: Disable journaling
+From: Iuri Diniz <iuridiniz@gmail.com>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,36 +31,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Iuri Diniz <iuridiniz@gmail.com>, Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, 2009-01-26 at 19:46 -0600, Eric Sandeen wrote:
-> 
-> > Maybe, the ext4 (like ext3 does) will support it by doing this:
-> > 
-> > tune2fs -O ^has_journal /dev/sda1
-> > 
+Hello Eric,
+
+On Mon, Jan 26, 2009 at 11:46 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+
 > > Is possible to disable journaling on XFS too?
-> 
+>
 > No, it's not right possible today.  There used to be a sort of config
 > option that disabled journaling ages ago, but it's gone now.  Not sure
 > it ever worked on Linux.
+>
+> Ext4 does have an option to disable journaling now, which is
+> interesting.
 
-It never did - suffered from adding "never-tested" code paths
-in critical areas at the top of the journalling layer in XFS.
-Alot of the ordering of work, releasing of resources, etc in
-metadata I/O depends on work being scheduled at log I/O
-completion time, so if you remove the log entirely, it moves
-several things around in ways that are tricky to get right.
 
-Its much simpler to just create a ramdisk and house the journal
-there, if you don't want the benefits of a journal (which might
-sound attractive, right up to the point you actually need them).
+Thanks for this information.
 
-cheers.
 
---
-Nathan
+> If I ever have any time I'd like to see how hard it might
+> be to allow a mount option to xfs to also make journaling a no-op.
+>
+
+I'm new on filesystems but, is there another useful reason for having XFS
+with no journaling?
+
+I know that a journaling filesystem will slightly degrade the write
+performance because the extra write operation (the write on journaling).
+
+
+>
+> > Thanks in advance
+> >
+> > [1]
+> http://www.phoronix.com/scan.php?page=article&item=ext4_benchmarks&num=4
+>
+> Fatally flawed article FWIW, their bonnie++ results are comically bad
+> (you try deleting 8G files on ext3, see if you can do 200 per second)  I
+> alerted them to the bonnie++ problems, and explained what they had done
+> wrong in the results parsing, and although they link to my email, they
+> leave the ridiculous graphs in place.  The iozone results may be better,
+> but I'd be very inclined to do my own testing rather than use those
+> results right now.
+
+
+But about the sequential read tests, do you think that are ok?
+
+
+[[HTML alternate version deleted]]
 
 _______________________________________________
 xfs mailing list
