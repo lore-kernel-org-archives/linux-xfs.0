@@ -1,29 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0R8TFAC031343 for <xfs@oss.sgi.com>; Tue, 27 Jan 2009 02:29:15 -0600
-Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 50ED0BC8DD
-	for <xfs@oss.sgi.com>; Tue, 27 Jan 2009 00:28:30 -0800 (PST)
-Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.162.198]) by
-	cuda.sgi.com with ESMTP id NLGtuEXAUe03j4nT for
-	<xfs@oss.sgi.com>; Tue, 27 Jan 2009 00:28:30 -0800 (PST)
-Received: from mailsrv2.i.zmi.at (h081217054243.dyn.cm.kabsi.at
-	[81.217.54.243])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv1.zmi.at (Postfix) with ESMTP id 53BC92B32
-	for <xfs@oss.sgi.com>; Tue, 27 Jan 2009 09:28:29 +0100 (CET)
-Received: from saturn.localnet (saturn.i.zmi.at [10.0.0.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv2.i.zmi.at (Postfix) with ESMTPSA id 954F240016B
-	for <xfs@oss.sgi.com>; Tue, 27 Jan 2009 09:28:29 +0100 (CET)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: xfs open questions
-Date: Tue, 27 Jan 2009 09:28:23 +0100
+	n0R8fKdV031811 for <xfs@oss.sgi.com>; Tue, 27 Jan 2009 02:41:20 -0600
+Received: from pastinake.doctronic.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 48B541866B7D
+	for <xfs@oss.sgi.com>; Tue, 27 Jan 2009 00:40:35 -0800 (PST)
+Received: from pastinake.doctronic.de (pastinake.doctronic.de [217.6.226.210])
+	by cuda.sgi.com with ESMTP id 7OjbO7e6v1yHXK3f for
+	<xfs@oss.sgi.com>; Tue, 27 Jan 2009 00:40:35 -0800 (PST)
+Received: from ZWERG.DOCTRONIC.LOCAL (zwerg.doctronic.de [192.168.4.131])
+	by pastinake.doctronic.de (8.13.1/8.13.1) with ESMTP id n0R8eYZZ006900
+	for <xfs@oss.sgi.com>; Tue, 27 Jan 2009 09:40:34 +0100
+Received: from co by ZWERG.DOCTRONIC.LOCAL with local (Exim 4.63)
+	(envelope-from <oberscheid@doctronic.de>) id 1LRjUo-0004Yu-HH
+	for xfs@oss.sgi.com; Tue, 27 Jan 2009 09:40:34 +0100
+Date: Tue, 27 Jan 2009 09:40:34 +0100
+From: Carsten Oberscheid <oberscheid@doctronic.de>
+Subject: Re: Strange fragmentation in nearly empty filesystem
+Message-ID: <20090127084034.GA16931@doctronic.de>
+References: <20090123102130.GB8012@doctronic.de>
+	<20090124003329.GE32390@disturbed>
+	<20090126075724.GA1753@doctronic.de> <497E02CD.2020000@sandeen.net>
+	<20090127071023.GA16511@doctronic.de>
 MIME-Version: 1.0
-Message-Id: <200901270928.29215@zmi.at>
+Content-Disposition: inline
+In-Reply-To: <20090127071023.GA16511@doctronic.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,167 +33,103 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1708324522948711885=="
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
+On Tue, Jan 27, 2009 at 08:10:23AM +0100, Carsten Oberscheid wrote:
+> =
 
---===============1708324522948711885==
-Content-Type: multipart/signed;
-  boundary="nextPart1543269.X2EgIuhjkV";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+> I'll see what tests I can do and report back about the findings.
 
-
---nextPart1543269.X2EgIuhjkV
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
-
-Dear list,
-
-I'm new here, experienced admin, trying to understand XFS correctly.=20
-I've read=20
-http://xfs.org/index.php/XFS_Status_Updates
-http://oss.sgi.com/projects/xfs/training/index.html
-http://en.wikipedia.org/wiki/Xfs
-and still have some xfs questions, which I guess should be in the FAQ=20
-also because they were the first questions I raised when trying XFS. I=20
-hope this is the correct list to ask this, and hope this very long first=20
-mail isn't too intrusive:
-
-- Stripe Alignment
-It's very nice to have the FS understand where it runs on, and that you=20
-can optimize for it. But the documentation on how to do that correctly=20
-is incomplete.
-http://oss.sgi.com/projects/xfs/training/xfs_slides_04_mkfs.pdf
-On page 5 is an example an an "8+1 RAID". Does it mean "9 disks in=20
-RAID-5"? So 8 are data and 1 is parity, and for XFS only the data disks=20
-are important?
-If so, when I have a 8 disks RAID 6 (where 2 are parity, 6 data) and a 8=20
-disks RAID-50 (again 2 parity, 6 data) would be the same?
-Let's say I have 64k stripe size on the RAID controller, with above 8=20
-disks RAID 6. So best performance would be
-mkfs -d su=3D64k,sw=3D$((64*6))k
-is that correct? It would be good if there's clearer documentation with=20
-more examples.
-
-- 64bit Inodes
-On the allocator's slides=20
-http://oss.sgi.com/projects/xfs/training/xfs_slides_06_allocators.pdf
-it's said that if the volume is >1TB, 32bit Inodes make the FS suffer,=20
-and that 64bit Inodes should be used. Is that a safe function?=20
-Documentation says some backup tools can't handle 64bit Inodes, are=20
-there problems with other programs as well? Is the system fully=20
-supporting 64bit Inodes? 64bit Linux kernel needed I guess?
-And if I already created a FS >1TB with 32bit Inodes, it would be better=20
-to recreate it with 64bit Inodes and restore all data then?
-
-- Allocation Groups
-When I create a XFS with 2TB, and I know it will be growing as we expand=20
-the RAID later, how do I optimize the AG's? If I now start with=20
-agcount=3D16, and later expand the RAID +1TB so having 3 instead 2TB, what=
-=20
-happens to the agcount? Is it increased, or are existing AGs expanded so=20
-you still have 16 AGs? I guess that new AG's are created, but it's=20
-nowhere documented.
-
-- mkfs warnings about stripe width multiples
-For a RAID 5 with 4 disks having 2,4TB on LVM I did:
-# mkfs.xfs -f -L oriondata -b size=3D4096 -d su=3D65536,sw=3D3,agcount=3D40=
- -i=20
-attr=3D2 -l lazy-count=3D1,su=3D65536 /dev/p3u_data/data1
-Warning: AG size is a multiple of stripe width.  This can cause=20
-performance problems by aligning all AGs on the same disk.  To avoid=20
-this, run mkfs with an AG size that is one stripe unit smaller, for=20
-example 13762544.
-meta-data=3D/dev/p3u_data/data1    isize=3D256    agcount=3D40,=20
-agsize=3D13762560 blks
-         =3D                       sectsz=3D512   attr=3D2
-data     =3D                       bsize=3D4096   blocks=3D550502400,=20
-imaxpct=3D5
-         =3D                       sunit=3D16     swidth=3D48 blks
-naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0
-log      =3Dinternal log           bsize=3D4096   blocks=3D32768, version=
-=3D2
-         =3D                       sectsz=3D512   sunit=3D16 blks, lazy-
-count=3D1
-realtime =3Dnone                   extsz=3D4096   blocks=3D0, rtextents=3D0
-
-and so I did it again with
-# mkfs.xfs -f -L oriondata -b size=3D4096 -d=20
-su=3D65536,sw=3D3,agsize=3D13762544b -i attr=3D2 -l lazy-count=3D1,su=3D655=
-36=20
-/dev/p3u_data/data1
-meta-data=3D/dev/p3u_data/data1    isize=3D256    agcount=3D40,=20
-agsize=3D13762544 blks
-         =3D                       sectsz=3D512   attr=3D2
-data     =3D                       bsize=3D4096   blocks=3D550501760,=20
-imaxpct=3D5
-         =3D                       sunit=3D16     swidth=3D48 blks
-naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0
-log      =3Dinternal log           bsize=3D4096   blocks=3D32768, version=
-=3D2
-         =3D                       sectsz=3D512   sunit=3D16 blks, lazy-
-count=3D1
-realtime =3Dnone                   extsz=3D4096   blocks=3D0, rtextents=3D0
-
-It would be good if mkfs would correctly says "... run mkfs with an AG=20
-size that is one stripe unit smaller, for example 13762544b". The "b" at=20
-the end is very important, that cost me a lot of search in the=20
-beginning.
-Is there a limit on the number of AG's? Theoretical and practical? Is=20
-there a guideline how many AGs to use? Depending on CPU cores, or number=20
-of parallel users, or spindles, or something else? Page 4 of the mkfs=20
-docs (link above) says "too few or too many AG's should be avoided", but=20
-what numbers are "few" and "many"?
-
-- PostgreSQL
-The PostgreSQL database creates a directory per DB. From the docs I read=20
-that this creates all Inodes within the same AG. But wouldn't it be=20
-better for performance to have each table on a different AG? This could=20
-be manually achieved manually, but I'd like to hear if that's better or=20
-not.
-Or are there other tweaks to remember when using PostgreSQL on XFS? This=20
-question was raised on the PostgreSQL admin list, and if there are good=20
-guidelines I'm happy to post them there.
-
-mfg zmi
---=20
-// Michael Monnerie, Ing.BSc    -----      http://it-management.at
-// Tel: 0660 / 415 65 31                      .network.your.ideas.
-// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
-// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
-// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
+Just booted an Ubuntu live CD from October 2007 and mounted the
+filesystem in question. Could not run vmware from there easily, so I
+tried just a copy of the vmem file:
 
 
---nextPart1543269.X2EgIuhjkV
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+root@ubuntu# uname -a
+Linux tangchai 2.6.27-7-generic #1 SMP Tue Nov 4 19:33:06 UTC 2008 x86_64 G=
+NU/Linux
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
+root@ubuntu# xfs_bmap -vvp foo.vmem | grep hole | wc -l
+34
+root@ubuntu# xfs_bmap -vvp foo.vmem | grep -v hole | wc -l
+38
 
-iEYEABECAAYFAkl+xawACgkQzhSR9xwSCbRm+ACg6K46gnHnM9qiYhJ4LCDVRGqp
-lhkAoLF6FJV6w1Ewvt8o9bechow++H5q
-=N3cr
------END PGP SIGNATURE-----
+root@ubuntu# cp foo.vmem test
 
---nextPart1543269.X2EgIuhjkV--
+root@ubuntu# xfs_bmap -vvp test | grep hole | wc -l
+27078
+root@ubuntu# xfs_bmap -vvp test | grep -v hole | wc -l
+27081
 
 
---===============1708324522948711885==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+So a simple copy of a hardly fragmented vmem file gets very badly
+fragmented. If we assume the vmem file fragmentation to be caused by
+vmware writing this file inefficiently, does this mean that cp is even
+worse?
+
+For comparison, I created a new clean dummy file:
+
+
+root@ubuntu# dd if=3D/dev/zero of=3Dztest bs=3D1000 count=3D500000
+500000+0 records in
+500000+0 records out
+500000000 bytes (500 MB) copied, 6.52903 seconds, 76.6 MB/s
+
+root@ubuntu# xfs_bmap -vvp ztest | grep hole | wc -l =
+
+0
+
+root@ubuntu# xfs_bmap -vvp ztest | grep -v hole | wc -l =
+
+14
+
+root@ubuntu# cp ztest ztest2
+
+root@ubuntu# xfs_bmap -vvp ztest2 | grep hole | wc -l =
+
+0
+
+root@ubuntu# xfs_bmap -vvp ztest2 | grep -v hole | wc -l =
+
+3
+
+
+No problem here. I repeated all this after rebooting my current
+kernel, with the same results. Copying the vmem file to an etx3
+filesystem gives about 1,700 extents, which is also bad, but not as
+bad as on the XFS disk.
+
+While this test says nothing about the interaction of old/new kernel
+and old/new VMware, for me it raises some questions about
+file-specific properties affecting fragmentation which appear to be
+independent of recent kernel changes. Please bear with me if I miss
+something obvious, I'm just a user.
+
+Regards
+
+
+Carsten Oberscheid
+
+
+
+
+
+-- =
+
+carsten oberscheid                  d  o  c  t  r  o  n  i  c
+email oberscheid@doctronic.de       information publishing + retrieval
+phone +49 228 92 682 00             http://www.doctronic.de
+
+doctronic GmbH & Co. KG, Bonn
+Handelsregister: HRA 4685 (AG Bonn); USt-ID: DE 210 898 186
+Komplement=E4rin:  doctronic Verwaltungsges. mbH, Bonn, HRB 8926 (AG Bonn)
+Gesch=E4ftsf=FChrer: Holger Fl=F6rke, Ingo K=FCper, Carsten Oberscheid
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============1708324522948711885==--
