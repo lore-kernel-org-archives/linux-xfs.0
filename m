@@ -1,24 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0R2DZSF008253 for <xfs@oss.sgi.com>; Mon, 26 Jan 2009 20:13:35 -0600
-Received: from fg-out-1718.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CBAEE18646E5
-	for <xfs@oss.sgi.com>; Mon, 26 Jan 2009 18:12:52 -0800 (PST)
-Received: from fg-out-1718.google.com (fg-out-1718.google.com [72.14.220.157])
-	by cuda.sgi.com with ESMTP id 54HQTq4SG5HfsG5u for
-	<xfs@oss.sgi.com>; Mon, 26 Jan 2009 18:12:52 -0800 (PST)
-Received: by fg-out-1718.google.com with SMTP id 19so3913973fgg.8
-	for <xfs@oss.sgi.com>; Mon, 26 Jan 2009 18:12:51 -0800 (PST)
+	n0R87799030135 for <xfs@oss.sgi.com>; Tue, 27 Jan 2009 02:07:08 -0600
+Received: from pastinake.doctronic.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F2125BC651
+	for <xfs@oss.sgi.com>; Tue, 27 Jan 2009 00:06:23 -0800 (PST)
+Received: from pastinake.doctronic.de (pastinake.doctronic.de [217.6.226.210])
+	by cuda.sgi.com with ESMTP id Zwq1vfS5B6rpJJHH for
+	<xfs@oss.sgi.com>; Tue, 27 Jan 2009 00:06:23 -0800 (PST)
+Received: from ZWERG.DOCTRONIC.LOCAL (zwerg.doctronic.de [192.168.4.131])
+	by pastinake.doctronic.de (8.13.1/8.13.1) with ESMTP id n0R7ANMH027579
+	for <xfs@oss.sgi.com>; Tue, 27 Jan 2009 08:10:23 +0100
+Received: from co by ZWERG.DOCTRONIC.LOCAL with local (Exim 4.63)
+	(envelope-from <oberscheid@doctronic.de>) id 1LRi5X-0004LU-CU
+	for xfs@oss.sgi.com; Tue, 27 Jan 2009 08:10:23 +0100
+Date: Tue, 27 Jan 2009 08:10:23 +0100
+From: Carsten Oberscheid <oberscheid@doctronic.de>
+Subject: Re: Strange fragmentation in nearly empty filesystem
+Message-ID: <20090127071023.GA16511@doctronic.de>
+References: <20090123102130.GB8012@doctronic.de>
+	<20090124003329.GE32390@disturbed>
+	<20090126075724.GA1753@doctronic.de> <497E02CD.2020000@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <497E6759.3060300@sandeen.net>
-References: <b211fe280901261723h6dd1db69t9d24c8d6774b18bc@mail.gmail.com>
-	<497E6759.3060300@sandeen.net>
-Date: Tue, 27 Jan 2009 00:12:50 -0200
-Message-ID: <b211fe280901261812g6677ef60j2f64f4b257d3990@mail.gmail.com>
-Subject: Re: Disable journaling
-From: Iuri Diniz <iuridiniz@gmail.com>
 Content-Disposition: inline
+In-Reply-To: <497E02CD.2020000@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,53 +38,36 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hello Eric,
+On Mon, Jan 26, 2009 at 12:37:01PM -0600, Eric Sandeen wrote:
+> 
+> It's possible that vmware changed too, I suppose.  If it's leaving holes
+> now, you won't get back to one extent.
 
-On Mon, Jan 26, 2009 at 11:46 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+Point taken.
 
-> > Is possible to disable journaling on XFS too?
->
-> No, it's not right possible today.  There used to be a sort of config
-> option that disabled journaling ages ago, but it's gone now.  Not sure
-> it ever worked on Linux.
->
-> Ext4 does have an option to disable journaling now, which is
-> interesting.
+> How hard would it be to boot a kernel from a year ago, with your current
+> vmware, and see how that goes - it might be an interesting test.
 
+Indeed. Unfortunately, since this is my office desktop PC, I'm quite
+reluctant to fiddle around with it too much. But perhaps I find an
+older live CD to try this with.
 
-Thanks for this information.
+> I'd try to sort out the 2 moving parts you have, vmware & kernel.  See
+> which one seems to have affected this behavior the most; downgrade one
+> of the 2 pieces, and see how it behaves.
 
+Sounds perfectly reasonable.
 
-> If I ever have any time I'd like to see how hard it might
-> be to allow a mount option to xfs to also make journaling a no-op.
->
+So I understand that there are no known issues with XFS that might
+explain this long term fragmentation behaviour, and that there are no
+magic XFS options to improve it.
 
-I'm new on filesystems but, is there another useful reason for having XFS
-with no journaling?
+I'll see what tests I can do and report back about the findings.
 
-I know that a journaling filesystem will slightly degrade the write
-performance because the extra write operation (the write on journaling).
-
-
->
-> > Thanks in advance
-> >
-> > [1]
-> http://www.phoronix.com/scan.php?page=article&item=ext4_benchmarks&num=4
->
-> Fatally flawed article FWIW, their bonnie++ results are comically bad
-> (you try deleting 8G files on ext3, see if you can do 200 per second)  I
-> alerted them to the bonnie++ problems, and explained what they had done
-> wrong in the results parsing, and although they link to my email, they
-> leave the ridiculous graphs in place.  The iozone results may be better,
-> but I'd be very inclined to do my own testing rather than use those
-> results right now.
+Thank you & best regards
 
 
-But about the sequential read tests, do you think that are ok?
-
-
-[[HTML alternate version deleted]]
+Carsten Oberscheid
 
 _______________________________________________
 xfs mailing list
