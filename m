@@ -1,29 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0R87799030135 for <xfs@oss.sgi.com>; Tue, 27 Jan 2009 02:07:08 -0600
-Received: from pastinake.doctronic.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F2125BC651
-	for <xfs@oss.sgi.com>; Tue, 27 Jan 2009 00:06:23 -0800 (PST)
-Received: from pastinake.doctronic.de (pastinake.doctronic.de [217.6.226.210])
-	by cuda.sgi.com with ESMTP id Zwq1vfS5B6rpJJHH for
-	<xfs@oss.sgi.com>; Tue, 27 Jan 2009 00:06:23 -0800 (PST)
-Received: from ZWERG.DOCTRONIC.LOCAL (zwerg.doctronic.de [192.168.4.131])
-	by pastinake.doctronic.de (8.13.1/8.13.1) with ESMTP id n0R7ANMH027579
-	for <xfs@oss.sgi.com>; Tue, 27 Jan 2009 08:10:23 +0100
-Received: from co by ZWERG.DOCTRONIC.LOCAL with local (Exim 4.63)
-	(envelope-from <oberscheid@doctronic.de>) id 1LRi5X-0004LU-CU
-	for xfs@oss.sgi.com; Tue, 27 Jan 2009 08:10:23 +0100
-Date: Tue, 27 Jan 2009 08:10:23 +0100
-From: Carsten Oberscheid <oberscheid@doctronic.de>
-Subject: Re: Strange fragmentation in nearly empty filesystem
-Message-ID: <20090127071023.GA16511@doctronic.de>
-References: <20090123102130.GB8012@doctronic.de>
-	<20090124003329.GE32390@disturbed>
-	<20090126075724.GA1753@doctronic.de> <497E02CD.2020000@sandeen.net>
+	n0R8Obhd031111 for <xfs@oss.sgi.com>; Tue, 27 Jan 2009 02:24:37 -0600
+Received: from fg-out-1718.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D0C04BC8B1
+	for <xfs@oss.sgi.com>; Tue, 27 Jan 2009 00:23:54 -0800 (PST)
+Received: from fg-out-1718.google.com (fg-out-1718.google.com [72.14.220.154])
+	by cuda.sgi.com with ESMTP id eJmUjE00gwkLoUkN for
+	<xfs@oss.sgi.com>; Tue, 27 Jan 2009 00:23:54 -0800 (PST)
+Received: by fg-out-1718.google.com with SMTP id 13so37517fge.8
+	for <xfs@oss.sgi.com>; Tue, 27 Jan 2009 00:23:53 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <497E02CD.2020000@sandeen.net>
+In-Reply-To: <497E0163.8010207@sandeen.net>
+References: <6efe08af0901252337m22844fc2yee3cef2a8ed8ac6@mail.gmail.com>
+	<497E0163.8010207@sandeen.net>
+Date: Tue, 27 Jan 2009 10:23:53 +0200
+Message-ID: <6efe08af0901270023k1f8dbcd6te5592cbf3eff7129@mail.gmail.com>
+Subject: Re: xfs_repair refuse to repair my corrupted xfs partition
+From: "Vitaly V. Ch" <vitaly.v.ch@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,38 +30,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-On Mon, Jan 26, 2009 at 12:37:01PM -0600, Eric Sandeen wrote:
-> 
-> It's possible that vmware changed too, I suppose.  If it's leaving holes
-> now, you won't get back to one extent.
+I use xfs_repair version 2.9.7 from slackware 12.1
 
-Point taken.
+\\wbr Vitaly Chernookiy
 
-> How hard would it be to boot a kernel from a year ago, with your current
-> vmware, and see how that goes - it might be an interesting test.
-
-Indeed. Unfortunately, since this is my office desktop PC, I'm quite
-reluctant to fiddle around with it too much. But perhaps I find an
-older live CD to try this with.
-
-> I'd try to sort out the 2 moving parts you have, vmware & kernel.  See
-> which one seems to have affected this behavior the most; downgrade one
-> of the 2 pieces, and see how it behaves.
-
-Sounds perfectly reasonable.
-
-So I understand that there are no known issues with XFS that might
-explain this long term fragmentation behaviour, and that there are no
-magic XFS options to improve it.
-
-I'll see what tests I can do and report back about the findings.
-
-Thank you & best regards
-
-
-Carsten Oberscheid
+On Mon, Jan 26, 2009 at 8:30 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+> Vitaly V. Ch wrote:
+>> Hi All!
+>
+> ...
+>
+>> #xfs_repai /dev/loop0
+>> Phase 1 - find and verify superblock...
+>> Phase 2 - using internal log
+>>         - zero log...
+>>         - scan filesystem freespace and inode maps...
+>>         - found root inode chunk
+>> Phase 3 - for each AG...
+>>         - scan and clear agi unlinked lists...
+>>         - process known inodes and perform inode discovery...
+>>         - agno = 0
+>> entry "" in shortform directory 128 references invalid inode 0
+>> zero length entry in shortform dir 128, junking 3 entries
+>> corrected entry count in directory 128, was 3, now 0
+>> corrected directory 128 size, was 69, now 6
+>> bogus .. inode number (0) in directory inode 128, clearing inode number
+>> xfs_repair: dir2.c:2133: process_dir2: Assertion `(ino !=
+>> mp->m_sb.sb_rootino && ino != *parent) || (ino == mp->m_sb.sb_rootino
+>> && (ino == *parent || need_root_dotdot == 1))' failed.
+>>
+>>
+>> What I can do for repair my data? There was no hardware failure
+>
+> you haven't said what version of xfs_repair you're using; if you are not
+> using the latest (2.10.2) please try that first.
+>
+> -Eric
+>
 
 _______________________________________________
 xfs mailing list
