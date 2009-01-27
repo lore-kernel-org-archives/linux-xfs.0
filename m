@@ -1,21 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0RHYFiR062860 for <xfs@oss.sgi.com>; Tue, 27 Jan 2009 11:34:16 -0600
-Received: from can12.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EDAD81868B63
-	for <xfs@oss.sgi.com>; Tue, 27 Jan 2009 09:33:33 -0800 (PST)
-Received: from can12.de (can12.de [213.203.199.141]) by cuda.sgi.com with
-	ESMTP id QfCd8slzDqqKA23G for <xfs@oss.sgi.com>;
-	Tue, 27 Jan 2009 09:33:33 -0800 (PST)
-Received: from [192.168.0.3] (p54AAD276.dip.t-dialin.net [84.170.210.118])
-	by can12.de (can12.de) with ESMTP id 6C6B42B4CCA
-	for <xfs@oss.sgi.com>; Tue, 27 Jan 2009 18:33:33 +0100 (CET)
-Message-Id: <A22069E0-B39A-41CF-9467-4524055B1970@hal-9k.de>
-From: Julian Einwag <julian@hal-9k.de>
-Mime-Version: 1.0 (Apple Message framework v930.3)
-Subject: XFS trouble: task xfssyncd blocked for more than 120 seconds. 
-Date: Tue, 27 Jan 2009 18:33:29 +0100
+	n0RHcHgx063058 for <xfs@oss.sgi.com>; Tue, 27 Jan 2009 11:38:17 -0600
+Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A5C6530407E
+	for <xfs@oss.sgi.com>; Tue, 27 Jan 2009 09:37:32 -0800 (PST)
+Message-Id: <DA349E86-62A1-46A3-ADF0-7519EE941DEB@sgi.com>
+From: Felix Blyakher <felixb@sgi.com>
+In-Reply-To: <20090126073202.588218000@bombadil.infradead.org>
+Mime-Version: 1.0 (Apple Message framework v926)
+Subject: Re: [PATCH 11/17] xfs: merge xfs_inode_flush into xfs_fs_write_inode
+Date: Tue, 27 Jan 2009 11:37:31 -0600
+References: <20090126073136.384490000@bombadil.infradead.org>
+	<20090126073202.588218000@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,71 +25,22 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Hi,
+On Jan 26, 2009, at 1:31 AM, Christoph Hellwig wrote:
 
-we're currently using XFS on our POP/IMAP server for storage of the  
-user's mailboxes (Linux kernel version 2.6.27.10, x86_64).
-Howevere, we're experencing some seemingly random filesystem lockups  
-during which the filesystem can still be read, but not written. The  
-following error messages show in in the system logs:
+> Spliting the task for a VFS-induced inode flush into two functions  
+> doesn't
+> make any sense, so merge the two functions dealing with it.
+>
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Jan 27 17:03:01 postman-64b kernel: "echo 0 > /proc/sys/kernel/ 
-hung_task_timeout_secs" disables this message.
-Jan 27 17:03:01 postman-64b kernel: xfssyncd      D  
-0000000100921c06     0  3090      2
-Jan 27 17:03:01 postman-64b kernel:  ffff88067b1cbd70 0000000000000046  
-0000000000000000 0000000000000001
-Jan 27 17:03:01 postman-64b kernel:  ffff88067a6124c0 ffff88067cc7c980  
-ffff88067a612718 00000002a8421200
-Jan 27 17:03:01 postman-64b kernel:  00000000fffffffd 0000000000001000  
-0000000000000000 0000000000000001
-Jan 27 17:03:01 postman-64b kernel: Call Trace:
-Jan 27 17:03:01 postman-64b kernel:  [<ffffffff8041d432>]  
-schedule_timeout+0x1e/0xad
-Jan 27 17:03:01 postman-64b kernel:  [<ffffffffa01ce88e>]  
-xfs_buf_iorequest+0x5d/0x61 [xfs]
-Jan 27 17:03:01 postman-64b kernel:  [<ffffffffa01d2352>]  
-xfs_bdstrat_cb+0x36/0x3a [xfs]
-Jan 27 17:03:01 postman-64b kernel:  [<ffffffff8041c9e4>]  
-wait_for_common+0xc8/0x132
-Jan 27 17:03:01 postman-64b kernel:  [<ffffffff8022b373>]  
-default_wake_function+0x0/0xe
-Jan 27 17:03:01 postman-64b kernel:  [<ffffffffa01c70ba>]  
-xfs_finish_reclaim+0x110/0x13b [xfs]
-Jan 27 17:03:01 postman-64b kernel:  [<ffffffffa01c7169>]  
-xfs_finish_reclaim_all+0x84/0xc9 [xfs]
-Jan 27 17:03:01 postman-64b kernel:  [<ffffffffa01c634b>] xfs_syncsub 
-+0x4c/0x226 [xfs]
-Jan 27 17:03:01 postman-64b kernel:  [<ffffffffa01d3d54>]  
-xfs_sync_worker+0x17/0x36 [xfs]
-Jan 27 17:03:01 postman-64b kernel:  [<ffffffffa01d4cb3>] xfssyncd 
-+0x133/0x182 [xfs]
-Jan 27 17:03:01 postman-64b kernel:  [<ffffffffa01d4b80>] xfssyncd 
-+0x0/0x182 [xfs]
-Jan 27 17:03:01 postman-64b kernel:  [<ffffffff80244a68>] kthread 
-+0x47/0x73
-Jan 27 17:03:01 postman-64b kernel:  [<ffffffff8022f77f>] schedule_tail 
-+0x27/0x5f
-Jan 27 17:03:01 postman-64b kernel:  [<ffffffff8020ccf9>] child_rip 
-+0xa/0x11
-Jan 27 17:03:01 postman-64b kernel:  [<ffffffff802f9395>]  
-generic_unplug_device+0x0/0x2d
-Jan 27 17:03:01 postman-64b kernel:  [<ffffffff80244a21>] kthread 
-+0x0/0x73
-Jan 27 17:03:01 postman-64b kernel:  [<ffffffff8020ccef>] child_rip 
-+0x0/0x11
+Seems like nothing is taken or added, just the merge of two
+functions. Looks good.
 
-Only rebooting helps.
-
-The filesystem is hosted on a hardware-based RAID5 array.
-
-We're currently out of ideas on what might be causing this, so any  
-hints would be greately appreciated.
-
-Best regards,
-Julian Einwag
+Reviewed-by: Felix Blyakher <felixb@sgi.com>
 
 _______________________________________________
 xfs mailing list
