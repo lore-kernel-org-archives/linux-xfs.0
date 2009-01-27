@@ -1,23 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0RFgBdF055927 for <xfs@oss.sgi.com>; Tue, 27 Jan 2009 09:42:11 -0600
+	n0RGsNfh059961 for <xfs@oss.sgi.com>; Tue, 27 Jan 2009 10:54:24 -0600
 Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9A63E8F8046
-	for <xfs@oss.sgi.com>; Tue, 27 Jan 2009 07:41:26 -0800 (PST)
-Message-Id: <A16A162C-CC8E-4DC8-9BD5-42BF2A93BA2A@sgi.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3B4A5AC00F
+	for <xfs@oss.sgi.com>; Tue, 27 Jan 2009 08:53:39 -0800 (PST)
+Message-Id: <D600F33F-5B96-4F55-B8AA-9301AFBEA66B@sgi.com>
 From: Felix Blyakher <felixb@sgi.com>
-In-Reply-To: <20090127143724.GP16931@doctronic.de>
+In-Reply-To: <20090126073202.440548000@bombadil.infradead.org>
 Mime-Version: 1.0 (Apple Message framework v926)
-Subject: Re: Strange fragmentation in nearly empty filesystem
-Date: Tue, 27 Jan 2009 09:41:25 -0600
-References: <20090123102130.GB8012@doctronic.de>
-	<20090124003329.GE32390@disturbed>
-	<20090126075724.GA1753@doctronic.de> <497E02CD.2020000@sandeen.net>
-	<20090127071023.GA16511@doctronic.de>
-	<20090127084034.GA16931@doctronic.de>
-	<497F0C78.7060501@sandeen.net>
-	<20090127143724.GP16931@doctronic.de>
+Subject: Re: [PATCH 10/17] xfs: factor out attr fork reset handling
+Date: Tue, 27 Jan 2009 10:53:37 -0600
+References: <20090126073136.384490000@bombadil.infradead.org>
+	<20090126073202.440548000@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,25 +25,18 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Carsten Oberscheid <oberscheid@doctronic.de>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Jan 27, 2009, at 8:37 AM, Carsten Oberscheid wrote:
+On Jan 26, 2009, at 1:31 AM, Christoph Hellwig wrote:
 
-> Just out of couriosity (and stubbornness): Are there any XFS
-> parameters that might influence fragmentation for the better, in case
-> I have to put up with a stupid application?
+> We currently duplicate code to reset the attribute fork after the last
+> attribute has been deleted.  Factor this out into a small helper.
+>
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Not much could be tuned in XFS for random writes over the holes.
-Ideally such file should be preallocated. Can you provide
-vmware the zero filled file by doing
-
-dd if=/dev/zero of=foo.mem count=512 bs=1024k
-
-instead of letting vmware populate it over the time and thus
-badly fragmenting it.
-
-Felix
+Reviewed-by: Felix Blyakher <felixb@sgi.com>
 
 _______________________________________________
 xfs mailing list
