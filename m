@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0SIr11K144675 for <xfs@oss.sgi.com>; Wed, 28 Jan 2009 12:53:02 -0600
-Received: from slurp.thebarn.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 48A68C43C1
-	for <xfs@oss.sgi.com>; Wed, 28 Jan 2009 10:52:19 -0800 (PST)
-Received: from slurp.thebarn.com (cattelan-host202.dsl.visi.com
-	[208.42.117.202]) by cuda.sgi.com with ESMTP id
-	U0ZBtEY5Fu71Jcwe for <xfs@oss.sgi.com>;
-	Wed, 28 Jan 2009 10:52:19 -0800 (PST)
-Message-ID: <4980A4BB.9050502@thebarn.com>
-Date: Wed, 28 Jan 2009 12:32:27 -0600
-From: Russell Cattelan <cattelan@thebarn.com>
+	n0SKN4Bi150908 for <xfs@oss.sgi.com>; Wed, 28 Jan 2009 14:23:05 -0600
+Received: from mail.lichtvoll.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3798E1880F63
+	for <xfs@oss.sgi.com>; Wed, 28 Jan 2009 12:22:21 -0800 (PST)
+Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
+	cuda.sgi.com with ESMTP id qk0szb8VAnVcqBkj for
+	<xfs@oss.sgi.com>; Wed, 28 Jan 2009 12:22:21 -0800 (PST)
+Received: from shambhala.lichtvoll.home
+	(DSL01.212.114.235.144.ip-pool.NEFkom.net [212.114.235.144])
+	by mail.lichtvoll.de (Postfix) with ESMTPSA id D4F475AE91
+	for <xfs@oss.sgi.com>; Wed, 28 Jan 2009 21:21:44 +0100 (CET)
+From: Martin Steigerwald <Martin@lichtvoll.de>
+Subject: invalidated gpg signatures (was: Re: xfs open questions)
+Date: Wed, 28 Jan 2009 21:22:00 +0100
+References: <200901270928.29215@zmi.at> <4980712A.4050500@thebarn.com>
+	<49807510.20100@thebarn.com> (sfid-20090128_201347_468687_E8D58AED)
+In-Reply-To: <49807510.20100@thebarn.com>
 MIME-Version: 1.0
-Subject: Re: XFS trouble: task xfssyncd blocked for more than 120 seconds.
-References: <A22069E0-B39A-41CF-9467-4524055B1970@hal-9k.de>
-In-Reply-To: <A22069E0-B39A-41CF-9467-4524055B1970@hal-9k.de>
+Message-Id: <200901282122.05588.Martin@lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,121 +28,72 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3813669555047342748=="
+Content-Type: multipart/mixed; boundary="===============2253445426859883053=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Julian Einwag <julian@hal-9k.de>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---===============3813669555047342748==
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig90542657B7197C8294A6B9D5"
+--===============2253445426859883053==
+Content-Type: multipart/signed;
+  boundary="nextPart1489635.Dn0nRFu71v";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig90542657B7197C8294A6B9D5
-Content-Type: text/plain; charset=ISO-8859-1
+--nextPart1489635.Dn0nRFu71v
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Could get a call trace of all process the next time this happens?
-
-srq-t
-
-That would help us to see what else is going on and what might be
-holding things up.
-
-
-Julian Einwag wrote:
-> Hi,
+Am Mittwoch 28 Januar 2009 schrieb Russell Cattelan:
+> Russell Cattelan wrote:
+> > Michael Monnerie wrote:
+> >> On Mittwoch 28 Januar 2009 Russell Cattelan wrote:
+> >>> The sig is there, are you saying it's broken somehow?
+> >>> It might have something to do with the html stripper.
+> >>
+> >> Yes, I use kmail (from KDE) which automatically displays mails with
+> >> gpg- sigs in different colours to easily see if it's
+> >> correct/trusted/wrong. And on this list, my messages all come with
+> >> "Invalid Sig".
+> >
+> > Well I ran a test email through the test list on oss and it seems to
+> > work fine.
+> >
+> > Let try it here then, I'm going to sign this and see if it come back
+> > to me with a valid sig.
 >
-> we're currently using XFS on our POP/IMAP server for storage of the
-> user's mailboxes (Linux kernel version 2.6.27.10, x86_64).
-> Howevere, we're experencing some seemingly random filesystem lockups
-> during which the filesystem can still be read, but not written. The
-> following error messages show in in the system logs:
->
-> Jan 27 17:03:01 postman-64b kernel: "echo 0 >
-> /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> Jan 27 17:03:01 postman-64b kernel: xfssyncd      D
-> 0000000100921c06     0  3090      2
-> Jan 27 17:03:01 postman-64b kernel:  ffff88067b1cbd70 0000000000000046
-> 0000000000000000 0000000000000001
-> Jan 27 17:03:01 postman-64b kernel:  ffff88067a6124c0 ffff88067cc7c980
-> ffff88067a612718 00000002a8421200
-> Jan 27 17:03:01 postman-64b kernel:  00000000fffffffd 0000000000001000
-> 0000000000000000 0000000000000001
-> Jan 27 17:03:01 postman-64b kernel: Call Trace:
-> Jan 27 17:03:01 postman-64b kernel:  [<ffffffff8041d432>]
-> schedule_timeout+0x1e/0xad
-> Jan 27 17:03:01 postman-64b kernel:  [<ffffffffa01ce88e>]
-> xfs_buf_iorequest+0x5d/0x61 [xfs]
-> Jan 27 17:03:01 postman-64b kernel:  [<ffffffffa01d2352>]
-> xfs_bdstrat_cb+0x36/0x3a [xfs]
-> Jan 27 17:03:01 postman-64b kernel:  [<ffffffff8041c9e4>]
-> wait_for_common+0xc8/0x132
-> Jan 27 17:03:01 postman-64b kernel:  [<ffffffff8022b373>]
-> default_wake_function+0x0/0xe
-> Jan 27 17:03:01 postman-64b kernel:  [<ffffffffa01c70ba>]
-> xfs_finish_reclaim+0x110/0x13b [xfs]
-> Jan 27 17:03:01 postman-64b kernel:  [<ffffffffa01c7169>]
-> xfs_finish_reclaim_all+0x84/0xc9 [xfs]
-> Jan 27 17:03:01 postman-64b kernel:  [<ffffffffa01c634b>]
-> xfs_syncsub+0x4c/0x226 [xfs]
-> Jan 27 17:03:01 postman-64b kernel:  [<ffffffffa01d3d54>]
-> xfs_sync_worker+0x17/0x36 [xfs]
-> Jan 27 17:03:01 postman-64b kernel:  [<ffffffffa01d4cb3>]
-> xfssyncd+0x133/0x182 [xfs]
-> Jan 27 17:03:01 postman-64b kernel:  [<ffffffffa01d4b80>]
-> xfssyncd+0x0/0x182 [xfs]
-> Jan 27 17:03:01 postman-64b kernel:  [<ffffffff80244a68>]
-> kthread+0x47/0x73
-> Jan 27 17:03:01 postman-64b kernel:  [<ffffffff8022f77f>]
-> schedule_tail+0x27/0x5f
-> Jan 27 17:03:01 postman-64b kernel:  [<ffffffff8020ccf9>]
-> child_rip+0xa/0x11
-> Jan 27 17:03:01 postman-64b kernel:  [<ffffffff802f9395>]
-> generic_unplug_device+0x0/0x2d
-> Jan 27 17:03:01 postman-64b kernel:  [<ffffffff80244a21>]
-> kthread+0x0/0x73
-> Jan 27 17:03:01 postman-64b kernel:  [<ffffffff8020ccef>]
-> child_rip+0x0/0x11
->
-> Only rebooting helps.
->
-> The filesystem is hosted on a hardware-based RAID5 array.
->
-> We're currently out of ideas on what might be causing this, so any
-> hints would be greately appreciated.
->
-> Best regards,
-> Julian Einwag
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> Grr try #2
 
+Shown as invalid here - as the signature of Michael. I mentioned this a=20
+few times already to.
 
+Signing this as well, but I expect it will come out as invalid too.
 
---------------enig90542657B7197C8294A6B9D5
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+I think it can't be Mailman. As I am on several Mailman mailinglist where=20
+this works.
+
+=2D-=20
+Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
+GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
+
+--nextPart1489635.Dn0nRFu71v
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (Darwin)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+Version: GnuPG v1.4.9 (GNU/Linux)
 
-iD8DBQFJgKS/NRmM+OaGhBgRApb7AJwO2SZfRQtCBeWXbCfAZqpglDhYEQCfbJpy
-tTMndI8koWNhat/asyx5nGo=
-=2+TN
+iEYEABECAAYFAkmAvmgACgkQmRvqrKWZhMcOUQCffTezGqCe70i2DFFp+RB3cQvY
+SiIAn3apAobG8w1EZsU+R1syDnEzJOCn
+=8irw
 -----END PGP SIGNATURE-----
 
---------------enig90542657B7197C8294A6B9D5--
+--nextPart1489635.Dn0nRFu71v--
 
 
---===============3813669555047342748==
+--===============2253445426859883053==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -149,4 +104,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============3813669555047342748==--
+--===============2253445426859883053==--
