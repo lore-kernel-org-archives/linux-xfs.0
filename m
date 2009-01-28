@@ -1,28 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0SKPj7A151016 for <xfs@oss.sgi.com>; Wed, 28 Jan 2009 14:25:45 -0600
-Received: from mail.lichtvoll.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 19E9418817D8
-	for <xfs@oss.sgi.com>; Wed, 28 Jan 2009 12:25:03 -0800 (PST)
-Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
-	cuda.sgi.com with ESMTP id wscJRtCnctKSkvBm for
-	<xfs@oss.sgi.com>; Wed, 28 Jan 2009 12:25:03 -0800 (PST)
-Received: from shambhala.lichtvoll.home
-	(DSL01.212.114.235.144.ip-pool.NEFkom.net [212.114.235.144])
-	by mail.lichtvoll.de (Postfix) with ESMTPSA id E74AD5AE91
-	for <xfs@oss.sgi.com>; Wed, 28 Jan 2009 21:25:02 +0100 (CET)
-From: Martin Steigerwald <Martin@lichtvoll.de>
-Subject: Re: [PATCH] xfs: cleanup error handling in xfs_swap_extents
-Date: Wed, 28 Jan 2009 21:25:23 +0100
-References: <20090126073136.384490000@bombadil.infradead.org>
-	<20090126075552.GA1062@infradead.org>
-	<20090127002739.GO5587@josefsipek.net>
-	(sfid-20090127_115035_586596_A8E5110A)
-In-Reply-To: <20090127002739.GO5587@josefsipek.net>
+	n0SKbnvI151624 for <xfs@oss.sgi.com>; Wed, 28 Jan 2009 14:37:50 -0600
+Received: from nf-out-0910.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E7AD4C57D4
+	for <xfs@oss.sgi.com>; Wed, 28 Jan 2009 12:37:07 -0800 (PST)
+Received: from nf-out-0910.google.com (nf-out-0910.google.com
+	[64.233.182.186]) by cuda.sgi.com with ESMTP id
+	4EQTOZvBRiDMKdZ0 for <xfs@oss.sgi.com>;
+	Wed, 28 Jan 2009 12:37:07 -0800 (PST)
+Received: by nf-out-0910.google.com with SMTP id h3so1270365nfh.42
+	for <xfs@oss.sgi.com>; Wed, 28 Jan 2009 12:37:06 -0800 (PST)
+Date: Wed, 28 Jan 2009 21:37:03 +0100
+From: Iustin Pop <iusty@k1024.org>
+Subject: Re: invalidated gpg signatures (was: Re: xfs open questions)
+Message-ID: <20090128203703.GB3958@teal.hq.k1024.org>
+References: <200901270928.29215@zmi.at> <4980712A.4050500@thebarn.com>
+	<49807510.20100@thebarn.com>
+	<200901282122.05588.Martin@lichtvoll.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-Message-Id: <200901282125.24272.Martin@lichtvoll.de>
+In-Reply-To: <200901282122.05588.Martin@lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,19 +33,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Martin Steigerwald <Martin@lichtvoll.de>
+Cc: xfs@oss.sgi.com
 
-Am Dienstag 27 Januar 2009 schrieb Josef 'Jeff' Sipek:
-> From: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
->
-> Use multiple lables for proper error unwinding and get rid of some now
-> superflous variables.
+On Wed, Jan 28, 2009 at 09:22:00PM +0100, Martin Steigerwald wrote:
+> Am Mittwoch 28 Januar 2009 schrieb Russell Cattelan:
+> > Russell Cattelan wrote:
+> > > Michael Monnerie wrote:
+> > >> On Mittwoch 28 Januar 2009 Russell Cattelan wrote:
+> > >>> The sig is there, are you saying it's broken somehow?
+> > >>> It might have something to do with the html stripper.
+> > >>
+> > >> Yes, I use kmail (from KDE) which automatically displays mails with
+> > >> gpg- sigs in different colours to easily see if it's
+> > >> correct/trusted/wrong. And on this list, my messages all come with
+> > >> "Invalid Sig".
+> > >
+> > > Well I ran a test email through the test list on oss and it seems to
+> > > work fine.
+> > >
+> > > Let try it here then, I'm going to sign this and see if it come back
+> > > to me with a valid sig.
+> >
+> > Grr try #2
+> 
+> Shown as invalid here - as the signature of Michael. I mentioned this a 
+> few times already to.
+> 
+> Signing this as well, but I expect it will come out as invalid too.
 
-Typo in description: s/lables/labels
+For what is worth, gpg tells me on your email:
 
--- 
-Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
-GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
+gpg: Signature made Wed 28 Jan 2009 09:22:00 PM CET using DSA key ID A59984C7
+gpg: Good signature from "Martin Steigerwald <Martin@Lichtvoll.de>"
+gpg:                 aka "Martin Steigerwald <Martin.Steigerwald@Web.de>"
+gpg:                 aka "Martin Steigerwald (Helios) <Martin@Lichtvoll.de>"
+gpg:                 aka "Martin Steigerwald <Martin.Steigerwald@Googlemail.com>"
+
+So maybe it's not the mailling list itself, but something else?
+
+regards,
+iustin
 
 _______________________________________________
 xfs mailing list
