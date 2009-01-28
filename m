@@ -1,16 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0S9W2eT114692 for <xfs@oss.sgi.com>; Wed, 28 Jan 2009 03:32:02 -0600
-Message-ID: <498025D2.1060706@sgi.com>
-Date: Wed, 28 Jan 2009 20:30:58 +1100
-From: Mark Goodwin <markgw@sgi.com>
+	n0SDveDP128351 for <xfs@oss.sgi.com>; Wed, 28 Jan 2009 07:57:41 -0600
+Received: from main.carme.maven.pl (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 874E5C2C05
+	for <xfs@oss.sgi.com>; Wed, 28 Jan 2009 05:56:57 -0800 (PST)
+Received: from main.carme.maven.pl (main.carme.maven.pl [193.239.45.138]) by
+	cuda.sgi.com with ESMTP id BndDhB9EqnpmiG6Y for
+	<xfs@oss.sgi.com>; Wed, 28 Jan 2009 05:56:57 -0800 (PST)
+Received: from [83.238.65.58] (port=3101 helo=maven.pl ident=matrix157)
+	by main.carme.maven.pl with esmtpsa (TLSv1:DHE-RSA-AES256-SHA:256)
+	(Exim 4.69) (envelope-from <arekm@maven.pl>) id 1LSAuW-0011jQ-7B
+	for xfs@oss.sgi.com; Wed, 28 Jan 2009 14:56:56 +0100
+From: =?utf-8?q?Arkadiusz=20Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: [PATCH 1/2] [QUOTA]: xfs_quota project takes -d option to limit
+	directory depth
+Date: Wed, 28 Jan 2009 14:56:54 +0100
+Message-Id: <1233151015-10496-1-git-send-email-arekm@maven.pl>
 MIME-Version: 1.0
-Subject: Re: xfs open questions
-References: <200901270928.29215@zmi.at> <497F130F.4010107@sandeen.net>
-	<200901280937.23743@zmi.at>
-In-Reply-To: <200901280937.23743@zmi.at>
-Reply-To: markgw@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,35 +26,76 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-
-
-Michael Monnerie wrote:
-> On Dienstag 27 Januar 2009 Eric Sandeen wrote:
->> I'd love to be able to update these pdf files, but despite asking for
->> the source document several times over a couple months, nothing has
->> been provided.  Unfortunately 'til then it's up to SGI to update them
->> and the community can't help much (SGI: hint, hint).
-
-it's (finally) on the Open Source Review Board meeting agenda
-for tomorrow (6am in my TZ :) I expect to release the src docs
-shortly after that; the oss release process is time consuming.
-
-> SGI, do you read that? Your users want to do your work, you should be
-> happy 'bout that!
-
-yes certainly, thanks.
-
-Cheers
--- Mark
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+eGZzX3F1b3RhIHByb2plY3QgZGlyZWN0b3J5IGRlcHRoIHByb2Nlc3NpbmcgY2FuIG5vdyBiZSBs
+aW1pdGVkCnRvIGNlcnRhaW4gZGVwdGguIEZvciBleGFtcGxlOiB4ZnNfcXVvdGEgLXggLWMgInBy
+b2plY3QgLWQgMiAtcyAxMCIKbGltaXRzIHJlY3Vyc2lvbiB0byBsZXZlbCAyLgoKU2lnbmVkLW9m
+Zi1ieTogQXJrYWRpdXN6IE1pxZtraWV3aWN6IDxhcmVrbUBtYXZlbi5wbD4KLS0tCiBxdW90YS9w
+cm9qZWN0LmMgfCAgIDM0ICsrKysrKysrKysrKysrKysrKysrKysrKysrKy0tLS0tLS0KIDEgZmls
+ZXMgY2hhbmdlZCwgMjcgaW5zZXJ0aW9ucygrKSwgNyBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQg
+YS9xdW90YS9wcm9qZWN0LmMgYi9xdW90YS9wcm9qZWN0LmMKaW5kZXggYjQxNzFlNS4uNjYzNTQ4
+NyAxMDA2NDQKLS0tIGEvcXVvdGEvcHJvamVjdC5jCisrKyBiL3F1b3RhL3Byb2plY3QuYwpAQCAt
+MjMsNiArMjMsNyBAQAogCiBzdGF0aWMgY21kaW5mb190IHByb2plY3RfY21kOwogc3RhdGljIHBy
+aWRfdCBwcmlkOworc3RhdGljIGludCByZWN1cnNlX2RlcHRoID0gLTE7CiAKIGVudW0gewogCUNI
+RUNLX1BST0pFQ1QJPSAweDEsCkBAIC03NSw2ICs3NiwxMCBAQCBwcm9qZWN0X2hlbHAodm9pZCkK
+ICIgd2hpY2ggZG8gbm90IGhhdmUgdGhlIHByb2plY3QgSUQgb2YgdGhlIHJlc3Qgb2YgdGhlIHRy
+ZWUsIG9yIGlmIHRoZSBpbm9kZVxuIgogIiBmbGFnIGlzIG5vdCBzZXQuXG4iCiAiXG4iCisiIFRo
+ZSAtZCA8ZGVwdGg+IG9wdGlvbiBhbGxvd3MgdG8gZGVzY2VuZCBhdCBtb3N0IDxkZXB0aD4gbGV2
+ZWxzIG9mIGRpcmVjdG9yaWVzXG4iCisiIGJlbG93IHRoZSBjb21tYW5kIGxpbmUgYXJndW1lbnRz
+LiAtZCAwIG1lYW5zIG9ubHkgYXBwbHkgdGhlIGFjdGlvbnNcbiIKKyIgdG8gdGhlIHRvcCBsZXZl
+bCBvZiB0aGUgcHJvamVjdHMuIC1kIC0xIG1lYW5zIG5vIHJlY3Vyc2lvbiBsaW1pdCAoZGVmYXVs
+dCkuXG4iCisiXG4iCiAiIFRoZSAvZXRjL3Byb2ppZCBhbmQgL2V0Yy9wcm9qZWN0cyBmaWxlIGZv
+cm1hdHMgYXJlIHNpbXBsZSwgYW5kIGRlc2NyaWJlZFxuIgogIiBvbiB0aGUgeGZzX3F1b3RhIG1h
+biBwYWdlLlxuIgogIlxuIikpOwpAQCAtOTAsNiArOTUsOSBAQCBjaGVja19wcm9qZWN0KAogCXN0
+cnVjdCBmc3hhdHRyCQlmc3g7CiAJaW50CQkJZmQ7CiAKKwlpZiAocmVjdXJzZV9kZXB0aCA+PSAw
+ICYmIGRhdGEtPmxldmVsID4gcmVjdXJzZV9kZXB0aCkKKwkJcmV0dXJuIC0xOworCiAJaWYgKGZs
+YWcgPT0gRlRXX05TICl7CiAJCWV4aXRjb2RlID0gMTsKIAkJZnByaW50ZihzdGRlcnIsIF8oIiVz
+OiBjYW5ub3Qgc3RhdCBmaWxlICVzXG4iKSwgcHJvZ25hbWUsIHBhdGgpOwpAQCAtMTMyLDYgKzE0
+MCw5IEBAIGNsZWFyX3Byb2plY3QoCiAJc3RydWN0IGZzeGF0dHIJCWZzeDsKIAlpbnQJCQlmZDsK
+IAorCWlmIChyZWN1cnNlX2RlcHRoID49IDAgJiYgZGF0YS0+bGV2ZWwgPiByZWN1cnNlX2RlcHRo
+KQorCQlyZXR1cm4gLTE7CisKIAlpZiAoZmxhZyA9PSBGVFdfTlMgKXsKIAkJZXhpdGNvZGUgPSAx
+OwogCQlmcHJpbnRmKHN0ZGVyciwgXygiJXM6IGNhbm5vdCBzdGF0IGZpbGUgJXNcbiIpLCBwcm9n
+bmFtZSwgcGF0aCk7CkBAIC0xNzYsNiArMTg3LDkgQEAgc2V0dXBfcHJvamVjdCgKIAlzdHJ1Y3Qg
+ZnN4YXR0cgkJZnN4OwogCWludAkJCWZkOwogCisJaWYgKHJlY3Vyc2VfZGVwdGggPj0gMCAmJiBk
+YXRhLT5sZXZlbCA+IHJlY3Vyc2VfZGVwdGgpCisJCXJldHVybiAtMTsKKwogCWlmIChmbGFnID09
+IEZUV19OUyApewogCQlleGl0Y29kZSA9IDE7CiAJCWZwcmludGYoc3RkZXJyLCBfKCIlczogY2Fu
+bm90IHN0YXQgZmlsZSAlc1xuIiksIHByb2duYW1lLCBwYXRoKTsKQEAgLTIxOSwxNSArMjMzLDE1
+IEBAIHByb2plY3Rfb3BlcmF0aW9ucygKIAlzd2l0Y2ggKHR5cGUpIHsKIAljYXNlIENIRUNLX1BS
+T0pFQ1Q6CiAJCXByaW50ZihfKCJDaGVja2luZyBwcm9qZWN0ICVzIChwYXRoICVzKS4uLlxuIiks
+IHByb2plY3QsIGRpcik7Ci0JCW5mdHcoZGlyLCBjaGVja19wcm9qZWN0LCAxMDAsIEZUV19QSFlT
+fEZUV19NT1VOVHxGVFdfREVQVEgpOworCQluZnR3KGRpciwgY2hlY2tfcHJvamVjdCwgMTAwLCBG
+VFdfUEhZU3xGVFdfTU9VTlQpOwogCQlicmVhazsKIAljYXNlIFNFVFVQX1BST0pFQ1Q6CiAJCXBy
+aW50ZihfKCJTZXR0aW5nIHVwIHByb2plY3QgJXMgKHBhdGggJXMpLi4uXG4iKSwgcHJvamVjdCwg
+ZGlyKTsKLQkJbmZ0dyhkaXIsIHNldHVwX3Byb2plY3QsIDEwMCwgRlRXX1BIWVN8RlRXX01PVU5U
+fEZUV19ERVBUSCk7CisJCW5mdHcoZGlyLCBzZXR1cF9wcm9qZWN0LCAxMDAsIEZUV19QSFlTfEZU
+V19NT1VOVCk7CiAJCWJyZWFrOwogCWNhc2UgQ0xFQVJfUFJPSkVDVDoKIAkJcHJpbnRmKF8oIkNs
+ZWFyaW5nIHByb2plY3QgJXMgKHBhdGggJXMpLi4uXG4iKSwgcHJvamVjdCwgZGlyKTsKLQkJbmZ0
+dyhkaXIsIGNsZWFyX3Byb2plY3QsIDEwMCwgRlRXX1BIWVN8RlRXX01PVU5UfEZUV19ERVBUSCk7
+CisJCW5mdHcoZGlyLCBjbGVhcl9wcm9qZWN0LCAxMDAsIEZUV19QSFlTfEZUV19NT1VOVCk7CiAJ
+CWJyZWFrOwogCX0KIH0KQEAgLTI0OSw4ICsyNjMsOSBAQCBwcm9qZWN0KAogCQljb3VudCsrOwog
+CX0KIAotCXByaW50ZihfKCJQcm9jZXNzZWQgJWQgJXMgcGF0aHMgZm9yIHByb2plY3QgJXNcbiIp
+LAotCQkgY291bnQsIHByb2plY3RzX2ZpbGUsIHByb2plY3QpOworCXByaW50ZihfKCJQcm9jZXNz
+ZWQgJWQgJXMgcGF0aHMgZm9yIHByb2plY3QgJXMgd2l0aCByZWN1cnNpb24gZGVwdGggJXMgKCVk
+KVxuIiksCisJCSBjb3VudCwgcHJvamVjdHNfZmlsZSwgcHJvamVjdCwKKwkJIHJlY3Vyc2VfZGVw
+dGggPCAwID8gImluZmluaXRlIiA6ICJsaW1pdGVkIiwgcmVjdXJzZV9kZXB0aCk7CiB9CiAKIHN0
+YXRpYyBpbnQKQEAgLTI2MCwxMSArMjc1LDE2IEBAIHByb2plY3RfZigKIHsKIAlpbnQJCWMsIHR5
+cGUgPSAwOwogCi0Jd2hpbGUgKChjID0gZ2V0b3B0KGFyZ2MsIGFyZ3YsICJjc0MiKSkgIT0gRU9G
+KSB7CisJd2hpbGUgKChjID0gZ2V0b3B0KGFyZ2MsIGFyZ3YsICJjZDpzQyIpKSAhPSBFT0YpIHsK
+IAkJc3dpdGNoIChjKSB7CiAJCWNhc2UgJ2MnOgogCQkJdHlwZSA9IENIRUNLX1BST0pFQ1Q7CiAJ
+CQlicmVhazsKKwkJY2FzZSAnZCc6CisJCQlyZWN1cnNlX2RlcHRoID0gYXRvaShvcHRhcmcpOwor
+CQkJaWYgKHJlY3Vyc2VfZGVwdGggPCAwKQorCQkJCXJlY3Vyc2VfZGVwdGggPSAtMTsKKwkJCWJy
+ZWFrOwogCQljYXNlICdzJzoKIAkJCXR5cGUgPSBTRVRVUF9QUk9KRUNUOwogCQkJYnJlYWs7CkBA
+IC0zMTEsNyArMzMxLDcgQEAgcHJvamVjdF9pbml0KHZvaWQpCiAJcHJvamVjdF9jbWQubmFtZSA9
+IF8oInByb2plY3QiKTsKIAlwcm9qZWN0X2NtZC5hbHRuYW1lID0gXygidHJlZSIpOwogCXByb2pl
+Y3RfY21kLmNmdW5jID0gcHJvamVjdF9mOwotCXByb2plY3RfY21kLmFyZ3MgPSBfKCJbLWN8LXN8
+LUNdIHByb2plY3QgLi4uIik7CisJcHJvamVjdF9jbWQuYXJncyA9IF8oIlstY3wtc3wtQ3wtZCA8
+ZGVwdGg+XSBwcm9qZWN0IC4uLiIpOwogCXByb2plY3RfY21kLmFyZ21pbiA9IDE7CiAJcHJvamVj
+dF9jbWQuYXJnbWF4ID0gLTE7CiAJcHJvamVjdF9jbWQub25lbGluZSA9IF8oImNoZWNrLCBzZXR1
+cCBvciBjbGVhciBwcm9qZWN0IHF1b3RhIHRyZWVzIik7Ci0tIAoxLjYuMS4xCgpfX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhm
+c0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
