@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0T7qhbG189006 for <xfs@oss.sgi.com>; Thu, 29 Jan 2009 01:52:44 -0600
+	n0T8H2nQ190582 for <xfs@oss.sgi.com>; Thu, 29 Jan 2009 02:17:03 -0600
 Received: from main.carme.maven.pl (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A58C6C8277
-	for <xfs@oss.sgi.com>; Wed, 28 Jan 2009 23:52:01 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3E15BC6595
+	for <xfs@oss.sgi.com>; Thu, 29 Jan 2009 00:16:20 -0800 (PST)
 Received: from main.carme.maven.pl (main.carme.maven.pl [193.239.45.138]) by
-	cuda.sgi.com with ESMTP id w6UqqU115Qh5cSl2 for
-	<xfs@oss.sgi.com>; Wed, 28 Jan 2009 23:52:01 -0800 (PST)
+	cuda.sgi.com with ESMTP id mcgi6Rf6sKmKJBfi for
+	<xfs@oss.sgi.com>; Thu, 29 Jan 2009 00:16:20 -0800 (PST)
 From: =?utf-8?q?Arkadiusz=20Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Subject: [PATCH] [MAN]: Document new project quota options (-d and -p).
-Date: Thu, 29 Jan 2009 08:51:56 +0100
-Message-Id: <1233215516-22256-1-git-send-email-arekm@maven.pl>
-In-Reply-To: <49814B19.2000907@bigpond.net.au>
-References: <49814B19.2000907@bigpond.net.au>
+Subject: [PATCH 2/3] [QUOTA]: Apply translation to two more strings.
+Date: Thu, 29 Jan 2009 09:16:17 +0100
+Message-Id: <1233216978-22645-2-git-send-email-arekm@maven.pl>
+In-Reply-To: <1233216978-22645-1-git-send-email-arekm@maven.pl>
+References: <1233216978-22645-1-git-send-email-arekm@maven.pl>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -28,49 +28,18 @@ Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: ddouwsma@bigpond.net.au
+Cc: arekm@carme.pld-linux.org
 
-RG9jdW1lbnQgLWQgPGRlcHRoPiBhbmQgLXAgPHBhdGg+IHByb2plY3QgcXVvdGEgb3B0aW9ucy4K
 ClNpZ25lZC1vZmYtYnk6IEFya2FkaXVzeiBNacWba2lld2ljeiA8YXJla21AbWF2ZW4ucGw+Ci0t
-LQogbWFuL21hbjgveGZzX3F1b3RhLjggfCAgIDQxICsrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKy0tCiAxIGZpbGVzIGNoYW5nZWQsIDM5IGluc2VydGlvbnMoKyksIDIgZGVs
-ZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvbWFuL21hbjgveGZzX3F1b3RhLjggYi9tYW4vbWFuOC94
-ZnNfcXVvdGEuOAppbmRleCA2ZDFlYTg1Li5lOWFmYTJlIDEwMDY0NAotLS0gYS9tYW4vbWFuOC94
-ZnNfcXVvdGEuOAorKysgYi9tYW4vbWFuOC94ZnNfcXVvdGEuOApAQCAtNTQ3LDYgKzU0NywxNCBA
-QCBpbnN0ZWFkIG9mIHN0ZG91dC4KIC5CIHByb2plY3QKIFsKIC5CIFwtY0NzCitbCisuQiBcLWQK
-Ky5JIGRlcHRoCitdCitbCisuQiBcLXAKKy5JIHBhdGgKK10KIC5JIGlkCiB8CiAuSSBuYW1lCkBA
-IC01NjIsOCArNTcwLDE0IEBAIGZpbGVzKS4gVGhlCiAuQlIgXC1DICwKIGFuZAogLkIgXC1zCi1v
-cHRpb25zIGFsbG93IHRoZSBkaXJlY3RvcnkKLXRyZWUgcXVvdGEgbWVjaGFuaXNtLCBkaXNjdXNz
-ZWQgaW4gZGV0YWlsIGJlbG93LCB0byBiZSBtYWludGFpbmVkLgorb3B0aW9ucyBhbGxvdyB0aGUg
-ZGlyZWN0b3J5IHRyZWUgcXVvdGEgbWVjaGFuaXNtIHRvIGJlIG1haW50YWluZWQuCisuQlIgXC1k
-CithbGxvd3MgdG8gbGltaXQgcmVjdXJzaW9uIGxldmVsIHdoZW4gcHJvY2Vzc2luZyBwcm9qZWN0
-IGRpcmVjdG9yaWVzCithbmQKKy5CUiBcLXAKK2FsbG93cyB0byBzcGVjaWZ5IHByb2plY3QgcGF0
-aHMgYXQgY29tbWFuZCBsaW5lICggaW5zdGVhZCBvZgorLkkgL2V0Yy9wcm9qZWN0cworKS4gQWxs
-IG9wdGlvbnMgYXJlIGRpc2N1c3NlZCBpbiBkZXRhaWwgYmVsb3cuCiAuU0ggRElSRUNUT1JZIFRS
-RUUgUVVPVEEKIFRoZSBwcm9qZWN0IHF1b3RhIG1lY2hhbmlzbSBpbiBYRlMgY2FuIGJlIHVzZWQg
-dG8gaW1wbGVtZW50IGEgZm9ybSBvZgogZGlyZWN0b3J5IHRyZWUgcXVvdGEsIHdoZXJlIGEgc3Bl
-Y2lmaWVkIGRpcmVjdG9yeSBhbmQgYWxsIG9mIHRoZSBmaWxlcwpAQCAtNjAyLDYgKzYxNiwxOCBA
-QCBvcHRpb24gY2FuIGJlIHVzZWQgdG8gY2hlY2sgd2hldGhlciBhCiB0cmVlIGlzIHNldHVwLCBp
-dCByZXBvcnRzIG5vdGhpbmcgaWYgdGhlIHRyZWUgaXMgY29ycmVjdCwgb3RoZXJ3aXNlIGl0CiBy
-ZXBvcnRzIHRoZSBwYXRocyBvZiBpbm9kZXMgd2hpY2ggZG8gbm90IGhhdmUgdGhlIHByb2plY3Qg
-SUQgb2YgdGhlIHJlc3QKIG9mIHRoZSB0cmVlLCBvciBpZiB0aGUgaW5vZGUgZmxhZyBpcyBub3Qg
-c2V0LgorLlBQCitPcHRpb24KKy5CIFwtZAorY2FuIGJlIHVzZWQgdG8gbGltaXQgcmVjdXJzaW9u
-IGxldmVsICgtMSBpcyBpbmZpbml0ZSwgMCBpcyB0b3AgbGV2ZWwgb25seSwKKzEgaXMgZmlyc3Qg
-bGV2ZWwgLi4uICkuCitPcHRpb24KKy5CIFwtcAorYWRkcyBwb3NpYmlsaXR5IHRvIHNwZWNpZnkg
-cHJvamVjdCBwYXRocyBpbiBjb21tYW5kIGxpbmUgd2l0aG91dCBhIG5lZWQKK2ZvcgorLkkgL2V0
-Yy9wcm9qZWN0cwordG8gZXhpc3QuIE5vdGUgdGhhdCBpZiBwcm9qZWN0cyBmaWxlIGV4aXN0cyB0
-aGVuIGl0IGlzIGFsc28gdXNlZC4KKwogLlNIIEZJTEUgRk9STUFUUwogVGhlcmUgYXJlIHR3byBm
-aWxlcyBpbnZvbHZlZCB3aXRoIHRoZSB0cmVlIHF1b3RhIG1lY2hhbmlzbSwgbmFtZWx5CiAuSSAv
-ZXRjL3Byb2plY3RzCkBAIC02NjYsNiArNjkyLDE3IEBAIGxvZyBmaWxlIGRpcmVjdG9yaWVzIHRv
-IG9ubHkgdXNpbmcgMSBnaWdhYnl0ZSBvZiBzcGFjZSkuCiAjIHhmc19xdW90YSBcLXggXC1jICds
-aW1pdCBcLXAgYmhhcmQ9MWcgbG9nZmlsZXMnIC92YXIKIC5pbiAtNQogLmZpCisuUFAKK1NhbWUg
-YXMgYWJvdmUgd2l0aG91dCBhIG5lZWQgZm9yIGNvbmZpZ3VyYXRpb24gZmlsZXMuCisubmYKKy5z
-cAorLmluICs1CisjIHJtIFwtZiAvZXRjL3Byb2plY3RzIC9ldGMvcHJvamlkCisjIG1vdW50IFwt
-byBwcmpxdW90YSAvZGV2L3h2bS92YXIgL3ZhcgorIyB4ZnNfcXVvdGEgXC14IFwtYyAncHJvamVj
-dCBcLXMgXC1wIC92YXIvbG9nIDQyJyAvdmFyCisjIHhmc19xdW90YSBcLXggXC1jICdsaW1pdCBc
-LXAgYmhhcmQ9MWcgNDInIC92YXIKKy5pbiAtNQorLmZpCiAuU0ggQ0FWRUFUUwogWEZTIGltcGxl
-bWVudHMgZGVsYXllZCBhbGxvY2F0aW9uIChha2EuIGFsbG9jYXRlLW9uLWZsdXNoKSBhbmQgdGhp
-cwogaGFzIGltcGxpY2F0aW9ucyBmb3IgdGhlIHF1b3RhIHN1YnN5c3RlbS4KLS0gCjEuNi4xLjEK
-Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWls
-aW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3Rp
-bmZvL3hmcwo=
+LQogcXVvdGEvcHJvamVjdC5jIHwgICAgMiArLQogMSBmaWxlcyBjaGFuZ2VkLCAxIGluc2VydGlv
+bnMoKyksIDEgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvcXVvdGEvcHJvamVjdC5jIGIvcXVv
+dGEvcHJvamVjdC5jCmluZGV4IDBmN2E5ZTIuLjE1MTAxNmMgMTAwNjQ0Ci0tLSBhL3F1b3RhL3By
+b2plY3QuYworKysgYi9xdW90YS9wcm9qZWN0LmMKQEAgLTI3MCw3ICsyNzAsNyBAQCBwcm9qZWN0
+KAogCiAJcHJpbnRmKF8oIlByb2Nlc3NlZCAlZCAoJXMgYW5kIGNtZGxpbmUpIHBhdGhzIGZvciBw
+cm9qZWN0ICVzIHdpdGggcmVjdXJzaW9uIGRlcHRoICVzICglZCkuXG4iKSwKIAkJIGNvdW50LCBw
+cm9qZWN0c19maWxlLCBwcm9qZWN0LAotCQkgcmVjdXJzZV9kZXB0aCA8IDAgPyAiaW5maW5pdGUi
+IDogImxpbWl0ZWQiLCByZWN1cnNlX2RlcHRoKTsKKwkJIHJlY3Vyc2VfZGVwdGggPCAwID8gXygi
+aW5maW5pdGUiKSA6IF8oImxpbWl0ZWQiKSwgcmVjdXJzZV9kZXB0aCk7CiB9CiAKIHN0YXRpYyBp
+bnQKLS0gCjEuNi4xLjEKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNv
+bS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
