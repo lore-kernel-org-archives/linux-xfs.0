@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0TLEm5d233799 for <xfs@oss.sgi.com>; Thu, 29 Jan 2009 15:14:48 -0600
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 80AE7AC013
-	for <xfs@oss.sgi.com>; Thu, 29 Jan 2009 13:14:04 -0800 (PST)
-Message-Id: <73D2B71C-8674-4C16-BCEE-AF8F88720ABF@sgi.com>
-From: Felix Blyakher <felixb@sgi.com>
-In-Reply-To: <20090126224130.53949fda.akpm@linux-foundation.org>
-Mime-Version: 1.0 (Apple Message framework v926)
-Subject: Re: new xfs git tree
-Date: Thu, 29 Jan 2009 15:14:03 -0600
-References: <20090119011601.GA14708@infradead.org>
-	<20090126224130.53949fda.akpm@linux-foundation.org>
+	n0TLiPbb235241 for <xfs@oss.sgi.com>; Thu, 29 Jan 2009 15:44:26 -0600
+Received: from mx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E805FCC780
+	for <xfs@oss.sgi.com>; Thu, 29 Jan 2009 13:43:43 -0800 (PST)
+Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
+	with ESMTP id Y8rRgbC1WVZUWCdZ for <xfs@oss.sgi.com>;
+	Thu, 29 Jan 2009 13:43:43 -0800 (PST)
+Message-ID: <4982230A.7000405@sandeen.net>
+Date: Thu, 29 Jan 2009 16:43:38 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: [PATCH] xfs_admin: exit gracefully for non-XFS fileststems
+References: <20090125050342.GA30091@lst.de>
+In-Reply-To: <20090125050342.GA30091@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,31 +23,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-next@vger.kernel.org, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
+
+Christoph Hellwig wrote:
+> Exit gracefully if the magic number doesn't match xfs in xfs_admin
+> and xfs_ncheck.  This is implemented by a new -C option to xfs_db
+> which makes it exit with a useful error message in case the filesystem
+> doesn't match the XFS superblock magic number.
+> 
+> 
+> Reported-by: Dick Middleton <dick@lingbrae.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+I guess I'd rather see this the reverse, and require a flag to allow
+xfs_db to work on something that doesn't look like xfs - err on the side
+of safety (hm but I suppose db is usually in read-only mode...)
+
+Addresses jeffpc's criticism too, to some degree; you can use -F to mean
+"force" or "foreign" :)  before xfs_db will touch the fs.
+
+So I think I personally like it better with the inverse, where it always
+exits on bad magic unless you explicitly tell it otherwise.  Making the
+error message reference the option might be nice ("Use -F to ignore this
+error" or somesuch)
 
 
-On Jan 27, 2009, at 12:41 AM, Andrew Morton wrote:
-
-> On Sun, 18 Jan 2009 20:16:01 -0500 Christoph Hellwig <hch@infradead.org 
-> > wrote:
->
->> git://git.kernel.org/pub/scm/fs/xfs/xfs.git has all the fixes the
->> have been peer-reviewed by the usual crowd, but still waiting for
->> a "maintainer" to respond..
->
-> Should we include that in linux-next?
-
-As a new maintainer, I confirm that  official xfs repository
-git://oss.sgi.com/oss/git/xfs/xfs was synced with kernel.org
-repo at one point and is being updated with the new patches
-on a regular basis. AFAIK, it's up-to-date now.
-
-Felix
+-Eric
 
 _______________________________________________
 xfs mailing list
