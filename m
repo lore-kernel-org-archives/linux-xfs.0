@@ -1,17 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0T5SEE8178166 for <xfs@oss.sgi.com>; Wed, 28 Jan 2009 23:28:16 -0600
-Message-ID: <49813E27.9010309@sgi.com>
-Date: Thu, 29 Jan 2009 16:27:03 +1100
-From: Mark Goodwin <markgw@sgi.com>
+	n0T7qhbG189006 for <xfs@oss.sgi.com>; Thu, 29 Jan 2009 01:52:44 -0600
+Received: from main.carme.maven.pl (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A58C6C8277
+	for <xfs@oss.sgi.com>; Wed, 28 Jan 2009 23:52:01 -0800 (PST)
+Received: from main.carme.maven.pl (main.carme.maven.pl [193.239.45.138]) by
+	cuda.sgi.com with ESMTP id w6UqqU115Qh5cSl2 for
+	<xfs@oss.sgi.com>; Wed, 28 Jan 2009 23:52:01 -0800 (PST)
+From: =?utf-8?q?Arkadiusz=20Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: [PATCH] [MAN]: Document new project quota options (-d and -p).
+Date: Thu, 29 Jan 2009 08:51:56 +0100
+Message-Id: <1233215516-22256-1-git-send-email-arekm@maven.pl>
+In-Reply-To: <49814B19.2000907@bigpond.net.au>
+References: <49814B19.2000907@bigpond.net.au>
 MIME-Version: 1.0
-Subject: Re: xfs open questions
-References: <200901270928.29215@zmi.at>
-	<497F130F.4010107@sandeen.net>	<200901280937.23743@zmi.at>
-	<498025D2.1060706@sgi.com> <4980754D.5060203@sandeen.net>
-In-Reply-To: <4980754D.5060203@sandeen.net>
-Reply-To: markgw@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,44 +23,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: ddouwsma@bigpond.net.au
 
-
-
-Eric Sandeen wrote:
-> Mark Goodwin wrote:
->> Michael Monnerie wrote:
->>> On Dienstag 27 Januar 2009 Eric Sandeen wrote:
->>>> I'd love to be able to update these pdf files, but despite asking for
->>>> the source document several times over a couple months, nothing has
->>>> been provided.  Unfortunately 'til then it's up to SGI to update them
->>>> and the community can't help much (SGI: hint, hint).
->> it's (finally) on the Open Source Review Board meeting agenda
->> for tomorrow (6am in my TZ :) I expect to release the src docs
->> shortly after that; the oss release process is time consuming.
->
-> Thanks for the update Mark, that's good news.  Sorry for being snippy.
-> I do know how these things go...  ;)
->
-> -Eric
-
-well it's now been approved for release under the GNU FDL to be hosted
-on oss.sgi.com. I guess one question now is how to deal with the proprietary
-doc & ppt binary formats. My first thought was another git repository at
-git://oss/xfs/cmds/xfsdocs.git which would also include the web site html
-content. But doc and ppt binary files apparently always result in git merge
-conflicts (can't be patched) ... thoughts?  Perhaps convert the content
-to wiki or maybe html and manage changes that way?
-
-Cheers
--- Mark
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+RG9jdW1lbnQgLWQgPGRlcHRoPiBhbmQgLXAgPHBhdGg+IHByb2plY3QgcXVvdGEgb3B0aW9ucy4K
+ClNpZ25lZC1vZmYtYnk6IEFya2FkaXVzeiBNacWba2lld2ljeiA8YXJla21AbWF2ZW4ucGw+Ci0t
+LQogbWFuL21hbjgveGZzX3F1b3RhLjggfCAgIDQxICsrKysrKysrKysrKysrKysrKysrKysrKysr
+KysrKysrKysrKysrKy0tCiAxIGZpbGVzIGNoYW5nZWQsIDM5IGluc2VydGlvbnMoKyksIDIgZGVs
+ZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvbWFuL21hbjgveGZzX3F1b3RhLjggYi9tYW4vbWFuOC94
+ZnNfcXVvdGEuOAppbmRleCA2ZDFlYTg1Li5lOWFmYTJlIDEwMDY0NAotLS0gYS9tYW4vbWFuOC94
+ZnNfcXVvdGEuOAorKysgYi9tYW4vbWFuOC94ZnNfcXVvdGEuOApAQCAtNTQ3LDYgKzU0NywxNCBA
+QCBpbnN0ZWFkIG9mIHN0ZG91dC4KIC5CIHByb2plY3QKIFsKIC5CIFwtY0NzCitbCisuQiBcLWQK
+Ky5JIGRlcHRoCitdCitbCisuQiBcLXAKKy5JIHBhdGgKK10KIC5JIGlkCiB8CiAuSSBuYW1lCkBA
+IC01NjIsOCArNTcwLDE0IEBAIGZpbGVzKS4gVGhlCiAuQlIgXC1DICwKIGFuZAogLkIgXC1zCi1v
+cHRpb25zIGFsbG93IHRoZSBkaXJlY3RvcnkKLXRyZWUgcXVvdGEgbWVjaGFuaXNtLCBkaXNjdXNz
+ZWQgaW4gZGV0YWlsIGJlbG93LCB0byBiZSBtYWludGFpbmVkLgorb3B0aW9ucyBhbGxvdyB0aGUg
+ZGlyZWN0b3J5IHRyZWUgcXVvdGEgbWVjaGFuaXNtIHRvIGJlIG1haW50YWluZWQuCisuQlIgXC1k
+CithbGxvd3MgdG8gbGltaXQgcmVjdXJzaW9uIGxldmVsIHdoZW4gcHJvY2Vzc2luZyBwcm9qZWN0
+IGRpcmVjdG9yaWVzCithbmQKKy5CUiBcLXAKK2FsbG93cyB0byBzcGVjaWZ5IHByb2plY3QgcGF0
+aHMgYXQgY29tbWFuZCBsaW5lICggaW5zdGVhZCBvZgorLkkgL2V0Yy9wcm9qZWN0cworKS4gQWxs
+IG9wdGlvbnMgYXJlIGRpc2N1c3NlZCBpbiBkZXRhaWwgYmVsb3cuCiAuU0ggRElSRUNUT1JZIFRS
+RUUgUVVPVEEKIFRoZSBwcm9qZWN0IHF1b3RhIG1lY2hhbmlzbSBpbiBYRlMgY2FuIGJlIHVzZWQg
+dG8gaW1wbGVtZW50IGEgZm9ybSBvZgogZGlyZWN0b3J5IHRyZWUgcXVvdGEsIHdoZXJlIGEgc3Bl
+Y2lmaWVkIGRpcmVjdG9yeSBhbmQgYWxsIG9mIHRoZSBmaWxlcwpAQCAtNjAyLDYgKzYxNiwxOCBA
+QCBvcHRpb24gY2FuIGJlIHVzZWQgdG8gY2hlY2sgd2hldGhlciBhCiB0cmVlIGlzIHNldHVwLCBp
+dCByZXBvcnRzIG5vdGhpbmcgaWYgdGhlIHRyZWUgaXMgY29ycmVjdCwgb3RoZXJ3aXNlIGl0CiBy
+ZXBvcnRzIHRoZSBwYXRocyBvZiBpbm9kZXMgd2hpY2ggZG8gbm90IGhhdmUgdGhlIHByb2plY3Qg
+SUQgb2YgdGhlIHJlc3QKIG9mIHRoZSB0cmVlLCBvciBpZiB0aGUgaW5vZGUgZmxhZyBpcyBub3Qg
+c2V0LgorLlBQCitPcHRpb24KKy5CIFwtZAorY2FuIGJlIHVzZWQgdG8gbGltaXQgcmVjdXJzaW9u
+IGxldmVsICgtMSBpcyBpbmZpbml0ZSwgMCBpcyB0b3AgbGV2ZWwgb25seSwKKzEgaXMgZmlyc3Qg
+bGV2ZWwgLi4uICkuCitPcHRpb24KKy5CIFwtcAorYWRkcyBwb3NpYmlsaXR5IHRvIHNwZWNpZnkg
+cHJvamVjdCBwYXRocyBpbiBjb21tYW5kIGxpbmUgd2l0aG91dCBhIG5lZWQKK2ZvcgorLkkgL2V0
+Yy9wcm9qZWN0cwordG8gZXhpc3QuIE5vdGUgdGhhdCBpZiBwcm9qZWN0cyBmaWxlIGV4aXN0cyB0
+aGVuIGl0IGlzIGFsc28gdXNlZC4KKwogLlNIIEZJTEUgRk9STUFUUwogVGhlcmUgYXJlIHR3byBm
+aWxlcyBpbnZvbHZlZCB3aXRoIHRoZSB0cmVlIHF1b3RhIG1lY2hhbmlzbSwgbmFtZWx5CiAuSSAv
+ZXRjL3Byb2plY3RzCkBAIC02NjYsNiArNjkyLDE3IEBAIGxvZyBmaWxlIGRpcmVjdG9yaWVzIHRv
+IG9ubHkgdXNpbmcgMSBnaWdhYnl0ZSBvZiBzcGFjZSkuCiAjIHhmc19xdW90YSBcLXggXC1jICds
+aW1pdCBcLXAgYmhhcmQ9MWcgbG9nZmlsZXMnIC92YXIKIC5pbiAtNQogLmZpCisuUFAKK1NhbWUg
+YXMgYWJvdmUgd2l0aG91dCBhIG5lZWQgZm9yIGNvbmZpZ3VyYXRpb24gZmlsZXMuCisubmYKKy5z
+cAorLmluICs1CisjIHJtIFwtZiAvZXRjL3Byb2plY3RzIC9ldGMvcHJvamlkCisjIG1vdW50IFwt
+byBwcmpxdW90YSAvZGV2L3h2bS92YXIgL3ZhcgorIyB4ZnNfcXVvdGEgXC14IFwtYyAncHJvamVj
+dCBcLXMgXC1wIC92YXIvbG9nIDQyJyAvdmFyCisjIHhmc19xdW90YSBcLXggXC1jICdsaW1pdCBc
+LXAgYmhhcmQ9MWcgNDInIC92YXIKKy5pbiAtNQorLmZpCiAuU0ggQ0FWRUFUUwogWEZTIGltcGxl
+bWVudHMgZGVsYXllZCBhbGxvY2F0aW9uIChha2EuIGFsbG9jYXRlLW9uLWZsdXNoKSBhbmQgdGhp
+cwogaGFzIGltcGxpY2F0aW9ucyBmb3IgdGhlIHF1b3RhIHN1YnN5c3RlbS4KLS0gCjEuNi4xLjEK
+Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWls
+aW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3Rp
+bmZvL3hmcwo=
