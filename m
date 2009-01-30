@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0ULuvDr054634 for <xfs@oss.sgi.com>; Fri, 30 Jan 2009 15:56:58 -0600
-Received: from mo-p05-ob.rzone.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F23BA1894BCB
-	for <xfs@oss.sgi.com>; Fri, 30 Jan 2009 13:56:16 -0800 (PST)
-Received: from mo-p05-ob.rzone.de (mo-p05-ob.rzone.de [81.169.146.181]) by
-	cuda.sgi.com with ESMTP id pdrNqYVDEbKnvgyN for
-	<xfs@oss.sgi.com>; Fri, 30 Jan 2009 13:56:16 -0800 (PST)
-Received: from [10.1.1.65] ([213.39.240.61])
-	by post.strato.de (mrclete mo46) (RZmta 18.15)
-	with ESMTP id D00a04l0UKAQDv for <xfs@oss.sgi.com>;
-	Fri, 30 Jan 2009 22:54:18 +0100 (MET)
-Message-ID: <498376CF.8020806@renderforce.de>
-Date: Fri, 30 Jan 2009 22:53:19 +0100
-From: Steffen Knauf <Steffen.Knauf@renderforce.de>
-MIME-Version: 1.0
-Subject: xfs_force_shutdown after Raid crash
-Reply-To: steffen.knauf@renderforce.de
+	n0UMOjwi055904 for <xfs@oss.sgi.com>; Fri, 30 Jan 2009 16:24:46 -0600
+Received: from theco.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 48E2318958DC
+	for <xfs@oss.sgi.com>; Fri, 30 Jan 2009 14:24:02 -0800 (PST)
+Received: from theco.de (scout.theco.de.mind.de [212.42.230.55]) by
+	cuda.sgi.com with ESMTP id 4qLTvMtX98wLaC2F for
+	<xfs@oss.sgi.com>; Fri, 30 Jan 2009 14:24:02 -0800 (PST)
+Date: Fri, 30 Jan 2009 23:23:59 +0100
+From: Ralf Liebenow <ralf@theco.de>
+Subject: XFS Kernel 2.6.27.7 oopses 
+Message-ID: <20090130222359.GB32142@theco.de>
+Mime-Version: 1.0
+Content-Disposition: inline
+Reply-To: ralf@theco.de
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,89 +23,147 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hello,
+Hello !
 
-after a raid crash (Raid Controller problem, 3 Disks of the Disk Group 
-were kicked out oft the diskgroup), 2 of 3 partitions (XFS FS) were 
-shutdown immediately.
-Perhaps somebody has a idea, what's the best solution (xfs_repair?).
+I heavily use XFS for an incremental backup server (by using rsync --link-d=
+est option
+to create hardlinks to unchanged files), and therefore have about 10 millio=
+n files
+on my TB Harddisk. To remove old versions nightly an "rm -rf" will remove a=
+ million
+hardlinks/files every night.
 
-here a small output of the logfile:
-------------------------------------------------------------------------------------------
-kernel: Call Trace: <ffffffff882c4d21>{:xfs:xfs_free_ag_extent+1081}
- kernel:        <ffffffff882c632e>{:xfs:xfs_free_extent+186} 
-<ffffffff882ebf66>{:xfs:xfs_efd_init+54}
-kernel:        <ffffffff88303acd>{:xfs:xfs_trans_get_efd+36} 
-<ffffffff882d26a5>{:xfs:xfs_bmap_finish+240}
-kernel:        <ffffffff882f3bb9>{:xfs:xfs_itruncate_finish+365} 
-<ffffffff8830bb87>{:xfs:xfs_inactive+558}
-kernel:        <ffffffff88311605>{:xfs:validate_fields+39} 
-<ffffffff8831406e>{:xfs:linvfs_clear_inode+165}
-kernel:        <ffffffff8019194a>{clear_inode+210} 
-<ffffffff80191a62>{generic_delete_inode+231}
-kernel:        <ffffffff80189f64>{do_unlinkat+213} 
-<ffffffff8010a7be>{system_call+126}
-kernel: xfs_force_shutdown(sdb2,0x8) called from line 4200 of file 
-fs/xfs/xfs_bmap.c.  Return address = 0xffffffff882d26e7
-kernel: Filesystem "sdb2": Corruption of in-memory data detected.  
-Shutting down filesystem: sdb2
-kernel: Please umount the filesystem, and rectify the problem(s)
-kernel: XFS internal error XFS_WANT_CORRUPTED_RETURN at line 298 of file 
-fs/xfs/xfs_alloc.c.  Caller 0xffffffff882c5b35
-munich kernel:
-munich kernel: Call Trace: 
-<ffffffff882c42a8>{:xfs:xfs_alloc_fixup_trees+700}
-munich kernel:        <ffffffff882db2b7>{:xfs:xfs_btree_init_cursor+49} 
-<ffffffff882c5b35>{:xfs:xfs_alloc_ag_vextent+3015}
-munich kernel:        <ffffffff802d035d>{__down_read+18} 
-<ffffffff882c661b>{:xfs:xfs_alloc_vextent+719}
-munich kernel:        <ffffffff882d43e8>{:xfs:xfs_bmapi+5590} 
-<ffffffff882f8f94>{:xfs:xlog_write+1518}
-munich kernel:        <ffffffff88316edd>{:xfs:kmem_zone_zalloc+30} 
-<ffffffff8830dae5>{:xfs:xfs_iomap_write_allocate+521}
-munich kernel:        <ffffffff8015aaf2>{mempool_alloc+49} 
-<ffffffff8830cc1a>{:xfs:xfs_iomap+762}
-munich kernel:        <ffffffff8830e5ea>{:xfs:xfs_map_blocks+53} 
-<ffffffff80177086>{alternate_node_alloc+112}
-munich kernel:        <ffffffff8830e940>{:xfs:xfs_page_state_convert+695}
-munich kernel:        <ffffffff80177086>{alternate_node_alloc+112} 
-<ffffffff801e478d>{cfq_set_request+619}
-munich kernel:        <ffffffff801eedd3>{swiotlb_map_sg+55} 
-<ffffffff880b16a3>{:mptscsih:mptscsih_qcmd+1399}
-munich kernel:        <ffffffff8830f3fd>{:xfs:linvfs_writepage+167} 
-<ffffffff8019bb7b>{mpage_writepages+435}
-munich kernel:        <ffffffff8830f356>{:xfs:linvfs_writepage+0} 
-<ffffffff801da7c1>{generic_make_request+339}
-munich kernel:        <ffffffff801dc34c>{submit_bio+186} 
-<ffffffff8015db47>{do_writepages+41}
-munich kernel:        <ffffffff8019a4c2>{__writeback_single_inode+449} 
-<ffffffff801293ea>{default_wake_function+0}
-munich kernel:        <ffffffff88312420>{:xfs:xfs_bdstrat_cb+55} 
-<ffffffff882fa6f2>{:xfs:xfs_log_need_covered+82}
-munich kernel:        <ffffffff8019aa62>{sync_sb_inodes+469} 
-<ffffffff80143b81>{keventd_create_kthread+0}
-munich kernel:        <ffffffff8019af12>{writeback_inodes+130} 
-<ffffffff8015dcc6>{wb_kupdate+218}
-munich kernel:        <ffffffff802cf340>{thread_return+0} 
-<ffffffff8015e506>{pdflush+0}
-munich kernel:        <ffffffff8015e674>{pdflush+366} 
-<ffffffff8015dbec>{wb_kupdate+0}
-munich kernel:        <ffffffff80143e66>{kthread+236} 
-<ffffffff8010b84e>{child_rip+8}
-munich kernel:        <ffffffff80143b81>{keventd_create_kthread+0} 
-<ffffffff80143d7a>{kthread+0}
-munich kernel:        <ffffffff8010b846>{child_rip+0}
-------------------------------------------------------------------------------------------
+After a while I had regular oopses and so I updated the system to make sure=
+ its
+on a current version.
 
-greets
+It is now a SuSE 11.1 64Bit with SuSE's Kernel 2.6.27.7-9-default
 
-Steffen
+The Server is a Quad-Core Intel 64Bit with 8 GB RAM running a 64Bit Linux.
+(I have vmware server 2 installed, so those modules can be seen in the kmes=
+g,
+but the OOPs happens also without them).
+
+Now sometimes the "rm -rf" Job OOPses the kernel and get stuck (there is no
+other measurable IO traffic on that system). The /proc/kmesg gives:
+
+cat /proc/kmsg =
+
+<0>general protection fault: 0000 [1] SMP =
+
+<0>last sysfs file: /sys/devices/system/cpu/cpu3/cache/index2/shared_cpu_map
+<4>CPU 3 =
+
+<4>Modules linked in: snd_pcm_oss snd_mixer_oss snd_seq snd_seq_device binf=
+mt_mi =
+
+sc vmnet(N) vsock(N) vmci(N) vmmon(N) nfsd lockd nfs_acl auth_rpcgss sunrpc=
+ expo =
+
+rtfs microcode fuse loop dm_mod snd_hda_intel st r8169 snd_pcm snd_timer os=
+st sn =
+
+d_page_alloc ppdev iTCO_wdt mii shpchp button rtc_cmos snd_hwdep pci_hotplu=
+g par =
+
+port_pc rtc_core sky2 ohci1394 intel_agp rtc_lib snd i2c_i801 iTCO_vendor_s=
+uppor =
+
+t ieee1394 parport pcspkr i2c_core sg soundcore raid456 async_xor async_mem=
+cpy a =
+
+sync_tx xor raid0 sd_mod crc_t10dif ehci_hcd uhci_hcd usbcore edd raid1 xfs=
+ fan  =
+
+ahci libata dock aic79xx scsi_transport_spi scsi_mod thermal processor ther=
+mal_s =
+
+ys hwmon
+<4>Supported: No
+<4>Pid: 5176, comm: xfssyncd Tainted: G          2.6.27.7-9-default #1
+<4>RIP: 0010:[<ffffffff80230865>]  [<ffffffff80230865>] __wake_up_common+0x=
+29/0x =
+
+76
+<4>RSP: 0018:ffff880114df9d30  EFLAGS: 00010086
+<4>RAX: 7fff8800255b8a70 RBX: ffff8800255b8a60 RCX: 0000000000000000
+<4>RDX: 0000000000000001 RSI: 0000000000000003 RDI: ffff8800255b8a68
+<4>RBP: ffff880114df9d60 R08: 7fff8800255b8a58 R09: 0000000000000282
+<4>R10: 0000000000000002 R11: ffff8800255b87c0 R12: 0000000000000001
+<4>R13: 0000000000000282 R14: ffff8800255b8a70 R15: 0000000000000000
+<4>FS:  0000000000000000(0000) GS:ffff88012fba0ec0(0000) knlGS:000000000000=
+0000
+<4>CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
+<4>CR2: 00007f28d42a2000 CR3: 0000000124e34000 CR4: 00000000000006e0
+<4>DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+<4>DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+<4>Process xfssyncd (pid: 5176, threadinfo ffff880114df8000, task ffff88012=
+bc1e0 =
+
+c0)
+<4>Stack:  0000000300000000 ffff8800255b8a60 ffff8800255b8a68 0000000000000=
+282
+<4> ffff88012d802000 0000000000000001 ffff880114df9d90 ffffffff8023219a
+<4> 0000000000000286 0000000000000000 ffff88006ef1d240 ffff88012aca3800
+<4>Call Trace:
+<4> [<ffffffff8023219a>] complete+0x38/0x4b
+<4> [<ffffffffa00f5316>] xfs_iflush+0x73/0x2ab [xfs]
+<4> [<ffffffffa010a7a2>] xfs_finish_reclaim+0x12a/0x168 [xfs]
+<4> [<ffffffffa010a871>] xfs_finish_reclaim_all+0x91/0xcb [xfs]
+<4> [<ffffffffa010925c>] xfs_syncsub+0x50/0x22b [xfs]
+<4> [<ffffffffa0118a3a>] xfs_sync_worker+0x17/0x36 [xfs]
+<4> [<ffffffffa01189d4>] xfssyncd+0x15d/0x1ac [xfs]
+<4> [<ffffffff8025434d>] kthread+0x47/0x73
+<4> [<ffffffff8020d7b9>] child_rip+0xa/0x11
+<4>
+<4>
+<0>Code: c9 c3 55 48 89 e5 41 57 4d 89 c7 41 56 4c 8d 77 08 41 55 41 54 41 =
+89 d4 =
+
+ 53 48 83 ec 08 89 75 d4 89 4d d0 48 8b 47 08 4c 8d 40 e8 <49> 8b 40 18 48 =
+8d 58 =
+
+ e8 eb 2d 45 8b 28 4c 89 f9 8b 55 d0 8b 75 =
+
+<1>RIP  [<ffffffff80230865>] __wake_up_common+0x29/0x76
+<4> RSP <ffff880114df9d30>
+<4>---[ end trace a069bd11f2b4e6ab ]---
+
+It _always_ gets stuck at the same place in "complete" of xfssyncd, so i do=
+nt
+think its hardware related.
+
+I also always did a xfs_repair after very OOPS->Reboot, so the filesystem i=
+tself
+should be consistent.
+
+I initilly used default settings for mkfs.xfs and mount. Now I use different
+settings, but get the same OOPs again, it seems to be unrelated.
+
+What do you recommend ? Has this bug already been addressed within the
+hundrets of fixes I've seen on the mailing list ? Shall I try a stock 2.6.28
+kernel ?
+
+   Thanks in advance !
+
+      Ralf
+-- =
+
+theCode AG =
+
+HRB 78053, Amtsgericht Charlottenbg
+USt-IdNr.: DE204114808
+Vorstand: Ralf Liebenow, Michael Oesterreich, Peter Witzel
+Aufsichtsratsvorsitzender: Wolf von Jaduczynski
+Oranienstr. 10-11, 10997 Berlin [=D7]
+fon +49 30 617 897-0  fax -10
+ralf@theCo.de http://www.theCo.de
 
 _______________________________________________
 xfs mailing list
