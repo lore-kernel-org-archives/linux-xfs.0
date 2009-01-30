@@ -1,17 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0UFUZad035149 for <xfs@oss.sgi.com>; Fri, 30 Jan 2009 09:30:36 -0600
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 40D0DAC012
-	for <xfs@oss.sgi.com>; Fri, 30 Jan 2009 07:29:52 -0800 (PST)
-Message-Id: <E7AB9F45-E23D-4BD9-8A47-9EC410CFD392@sgi.com>
-From: Felix Blyakher <felixb@sgi.com>
-In-Reply-To: <20090130074714.GA30377@infradead.org>
-Mime-Version: 1.0 (Apple Message framework v926)
-Subject: Re: [PATCH] xfs_db: exit on invalid magic number
-Date: Fri, 30 Jan 2009 09:29:50 -0600
-References: <20090130074714.GA30377@infradead.org>
+	n0UHYgwg041671 for <xfs@oss.sgi.com>; Fri, 30 Jan 2009 11:34:42 -0600
+Received: from ngcobalt07.manitu.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4266DCFF23
+	for <xfs@oss.sgi.com>; Fri, 30 Jan 2009 09:34:00 -0800 (PST)
+Received: from ngcobalt07.manitu.net (ngcobalt07.manitu.net [217.11.48.107])
+	by cuda.sgi.com with ESMTP id ndvXAabUy0jiNvLE for
+	<xfs@oss.sgi.com>; Fri, 30 Jan 2009 09:34:00 -0800 (PST)
+From: Roland Eggner <edvx1@systemanalysen.net>
+Subject: Re: [PATCH] enable possibility of ALL different atime mount options
+Date: Fri, 30 Jan 2009 10:50:00 +0100
+References: <200901300322.02079.edvx1@systemanalysen.net>
+	<4982854D.8000808@sandeen.net> <49828666.7040809@sandeen.net>
+In-Reply-To: <49828666.7040809@sandeen.net>
+MIME-Version: 1.0
+Content-Disposition: inline
+Message-Id: <200901301050.00469.edvx1@systemanalysen.net>
+Reply-To: Roland Eggner <edvx1@systemanalysen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,26 +26,49 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: SGI Project XFS mailing list <xfs@oss.sgi.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>
 
+On Friday Jan 30th 2009 at 05:47:34 Eric Sandeen wrote:
+> Eric Sandeen wrote:
+> > Roland Eggner wrote:
+> >> Utako Kusaka has provided this patch
+> >> http://oss.sgi.com/archives/xfs/2007-10/msg00168.html
+> >> It works for me GRACEFULLY with ALL different atime mount options: atime|noatime|relatime.
+> >> Note, the mount options are effective, not only accepted.
+> >> Prior to this patch, mount option atime has been ignored.
+> > 
+> > 
+> > 
+> >> Please put the patch to mainline, it would save worries for users, who need the traditional atime
+> >> bahavior.  Think of some corner cases for desktop usage.
+> >>
+> > 
+> > Which specific problem is this fixing for you?
+> > 
+> > you say that atime is ignored; but:
+> 
+> Sorry, I probably replied too quickly.  But I am still curious to know
+> what problem you are seeing that this patch fixes.
+> 
+> Thanks,
+> -Eric
 
-On Jan 30, 2009, at 1:47 AM, Christoph Hellwig wrote:
+On Wed Oct 17th 2007 at 13:56:00 +0900 Utako Kusaka wrote:
+>The atime is changed for reading but it returns to a previous value
+>after unmount.
+And his patch fixes this, nothing more and nothing less.
+Think of desktop machines, where you sometimes need precise atime stamps,
+and where atime only inode updates don't hurt performance because CPUs are
+almost always idle.  Think of e.g. important cron jobs, you want to know
+exactly, if at all, when and in which sequence they were executed.
 
-> Fail gracefully and with a useful error message when we detect an
-> invalid superblock magic in xfs_db.  Add a new -F flag to continue
-> when seeing the invalid magic number - that way xfs_check and
-> xfs_metadump can be used on a filesystem that has a corrupted primary
-> superblock.
->
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Reviewed-by: Felix Blyakher <felixb@sgi.com>
+-- 
+Roland Eggner
 
 _______________________________________________
 xfs mailing list
