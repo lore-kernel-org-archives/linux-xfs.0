@@ -1,17 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n0V1ngVU065146 for <xfs@oss.sgi.com>; Fri, 30 Jan 2009 19:49:42 -0600
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] fs: Add new pre-allocation ioctls to vfs for
-	compatibility with legacy xfs ioctls
-Date: Sat, 31 Jan 2009 02:48:41 +0100
-References: <4980C71F.1010804@ankitjain.org> <200901310138.34164.arnd@arndb.de>
-	<20090130171423.f99c88d0.akpm@linux-foundation.org>
-In-Reply-To: <20090130171423.f99c88d0.akpm@linux-foundation.org>
+	n0VAvt8W092312 for <xfs@oss.sgi.com>; Sat, 31 Jan 2009 04:57:56 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 49B97189F8AF
+	for <xfs@oss.sgi.com>; Sat, 31 Jan 2009 02:57:14 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id 3iSLqPRKOPGrzuoI for
+	<xfs@oss.sgi.com>; Sat, 31 Jan 2009 02:57:14 -0800 (PST)
+Date: Sat, 31 Jan 2009 05:57:12 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: xfs_force_shutdown after Raid crash
+Message-ID: <20090131105712.GA30061@infradead.org>
+References: <498376CF.8020806@renderforce.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-Message-Id: <200901310248.42820.arnd@arndb.de>
+In-Reply-To: <498376CF.8020806@renderforce.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,54 +24,26 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: mfasheh@suse.com, joel.becker@oracle.com, linux-kernel@vger.kernel.org, hch@infradead.org, xfs-masters@oss.sgi.com, viro@zeniv.linux.org.uk, Ankit Jain <me@ankitjain.org>, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
+To: Steffen Knauf <Steffen.Knauf@renderforce.de>
+Cc: xfs@oss.sgi.com
 
-On Saturday 31 January 2009, Andrew Morton wrote:
-> Is this written in a standard somewhere? =A0Is it guaranteed?
+On Fri, Jan 30, 2009 at 10:53:19PM +0100, Steffen Knauf wrote:
+> Hello,
+>
+> after a raid crash (Raid Controller problem, 3 Disks of the Disk Group  
+> were kicked out oft the diskgroup), 2 of 3 partitions (XFS FS) were  
+> shutdown immediately.
+> Perhaps somebody has a idea, what's the best solution (xfs_repair?).
 
-Alignment is defined in the architecture psABI documents. =
-
-Unfortunately, many of them were written before the 'long long'
-type became part of the C standard, so it's not strictly guaranteed.
-AFAICT, the alignment of __u64 on x86 is the same as the alignment
-of 'double' by convention.
-
-However, the problem is well-understood: x86 is the only one
-that has a problem in 32/64 bit compat mode. m68k has similar
-issues with 16/32 bit integers, but those don't apply here.
-
-> If some (perhaps non-gcc) compiler were to lay this out differently
-> (perhaps with suitable command-line options) then that's liveable
-> with - as long as the kernel never changes the layout. =A0Of course
-> it would be better to avoid this if poss.
-
-If a compiler was using irregular structure alignment, all sorts of
-library interfaces would break. The kernel ABI is only a small part
-of the problem then.
-
-> The other potential issue with a structure like this is that there's a
-> risk that it will lead us to copy four bytes of uninitialised kernel
-> memory out to userspace.
-> =
-
-> IOW, it seems a generally bad idea to rely upon compiler-added padding
-> for this sort of thing.
-
-Agreed in general, but the whole point of this particular patch was to
-provide compatibility with an interface that has been part of XFS for
-many years.
-Linux already has a better interface for new users (sys_fallocate), so
-changing the patch would not be helpful and not provide any advantage.
-
-There is also no leak of uninitialized data here, because this structure
-is only read, never written.
-
-	Arnd <><
+This looks like you were running with a write back cache enabled on the
+controller / disks but without barriers.  xfs_repair should be able
+to repair the filesystem.  If you're lucky only the freespace-btrees
+are corrupted (as in the trace below) as xfs_repair can rebuild them
+from scratch. 
 
 _______________________________________________
 xfs mailing list
