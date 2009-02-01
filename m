@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n111FPmT142094 for <xfs@oss.sgi.com>; Sat, 31 Jan 2009 19:15:26 -0600
-Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 36C62D4751
-	for <xfs@oss.sgi.com>; Sat, 31 Jan 2009 17:14:44 -0800 (PST)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net
-	[203.16.214.145]) by cuda.sgi.com with ESMTP id
-	hYhp7mCUl5KDy4qh for <xfs@oss.sgi.com>;
-	Sat, 31 Jan 2009 17:14:44 -0800 (PST)
-Date: Sun, 1 Feb 2009 11:54:26 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 11/17] xfs: merge xfs_inode_flush into xfs_fs_write_inode
-Message-ID: <20090201005426.GC24173@disturbed>
-References: <20090126073136.384490000@bombadil.infradead.org>
-	<20090126073202.588218000@bombadil.infradead.org>
+	n1158LAj152905 for <xfs@oss.sgi.com>; Sat, 31 Jan 2009 23:08:22 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 14E02D4B9C
+	for <xfs@oss.sgi.com>; Sat, 31 Jan 2009 21:07:41 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id C1XwdlUXPtaRbHob for
+	<xfs@oss.sgi.com>; Sat, 31 Jan 2009 21:07:41 -0800 (PST)
+Date: Sun, 1 Feb 2009 00:07:09 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] Apply gettext translation to more strings.
+Message-ID: <20090201050709.GA13018@infradead.org>
+References: <1233437682-11325-1-git-send-email-arekm@maven.pl>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20090126073202.588218000@bombadil.infradead.org>
+In-Reply-To: <1233437682-11325-1-git-send-email-arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,35 +28,11 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Arkadiusz Mi??kiewicz <arekm@maven.pl>
 Cc: xfs@oss.sgi.com
 
-On Mon, Jan 26, 2009 at 02:31:47AM -0500, Christoph Hellwig wrote:
-> Spliting the task for a VFS-induced inode flush into two functions doesn't
-
-Splitting
-
-> make any sense, so merge the two functions dealing with it.
-.....
-> +		error = xfs_iflush(ip, XFS_IFLUSH_ASYNC_NOBLOCK);
->  	}
-> -	error = xfs_inode_flush(ip, flags);
->  
-> -out_error:
-> + out_unlock:
-> +	xfs_iunlock(ip, XFS_ILOCK_SHARED);
-> + out:
-
-Don't need spaces before the labels.
-
-Otherwise looks OK.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Looks good to me.  I'll put this in if you promise to send an updated
+polish translation ASAP so we can cut 3.0.0 :)
 
 _______________________________________________
 xfs mailing list
