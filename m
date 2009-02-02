@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n12KHCQf008581 for <xfs@oss.sgi.com>; Mon, 2 Feb 2009 14:17:12 -0600
-Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AE00418A2EDF
-	for <xfs@oss.sgi.com>; Mon,  2 Feb 2009 12:16:31 -0800 (PST)
-Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id SvrK66rLANDyNYRv for <xfs@oss.sgi.com>;
-	Mon, 02 Feb 2009 12:16:31 -0800 (PST)
-Message-ID: <4987548A.1070809@sandeen.net>
-Date: Mon, 02 Feb 2009 14:16:10 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	n12KrNv7010329 for <xfs@oss.sgi.com>; Mon, 2 Feb 2009 14:53:24 -0600
+Date: Mon, 2 Feb 2009 20:51:02 +0000
+From: Jamie Lokier <jamie@shareable.org>
+Subject: Re: [xfs-masters] [PATCH] fs: Add new pre-allocation ioctls to vfs
+	for compatibility with legacy xfs ioctls
+Message-ID: <20090202205102.GG28129@shareable.org>
+References: <20090130171423.f99c88d0.akpm@linux-foundation.org>
+	<20090201164130.GA32276@infradead.org>
+	<4985D48A.6090007@panasas.com> <200902020131.04203.arnd@arndb.de>
+	<4986AEE8.5040609@panasas.com>
+	<Pine.LNX.4.64.0902020942230.11930@anakin>
+	<4986BE07.6090000@panasas.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: Fix *FLAGS passing and dependencies.
-References: <1233565776-563-1-git-send-email-arekm@maven.pl>
-In-Reply-To: <1233565776-563-1-git-send-email-arekm@maven.pl>
+Content-Disposition: inline
+In-Reply-To: <4986BE07.6090000@panasas.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,44 +24,68 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: =?UTF-8?B?QXJrYWRpdXN6IE1pxZtraWV3aWN6?= <arekm@maven.pl>
-Cc: xfs@oss.sgi.com
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, mfasheh@suse.com, Eric Sandeen <sandeen@sandeen.net>, joel.becker@oracle.com, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, Geert Uytterhoeven <geert@linux-m68k.org>, viro@zeniv.linux.org.uk, Ankit Jain <me@ankitjain.org>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 
-QXJrYWRpdXN6IE1pxZtraWV3aWN6IHdyb3RlOgo+IFBhc3MgKkZMQUdTIGluIHNvbWUgdGFyZ2V0
-cy4KPiAKPiBEcm9wIExJQkhBTkRMRSwgTElCQVRUUiBhbmQgTElCQUNMIGZyb20gZGVwcyBzaW5j
-ZSB0aGVyZSBhcmUgaW4gZm9ybQo+ICItbGxpYnJhcnkiLgoKdWdoLCB3ZWlyZC4KCj4gCj4gU2ln
-bmVkLW9mZi1ieTogQXJrYWRpdXN6IE1pw4XigLpraWV3aWN6IDxhcmVrbUBtYXZlbi5wbD4KCkxv
-b2tzIGZpbmUgdG8gbWUuICBJJ2xsIG1lcmdlIGl0IHRvIHRoZSBrZXJuZWwub3JnIHJlcG8uCgot
-RXJpYwoKPiAtLS0KPiAgc3JjL01ha2VmaWxlIHwgICAxMiArKysrKystLS0tLS0KPiAgMSBmaWxl
-cyBjaGFuZ2VkLCA2IGluc2VydGlvbnMoKyksIDYgZGVsZXRpb25zKC0pCj4gCj4gZGlmZiAtLWdp
-dCBhL3NyYy9NYWtlZmlsZSBiL3NyYy9NYWtlZmlsZQo+IGluZGV4IGFkNGMyMDQuLjYzNGUxYjMg
-MTAwNjQ0Cj4gLS0tIGEvc3JjL01ha2VmaWxlCj4gKysrIGIvc3JjL01ha2VmaWxlCj4gQEAgLTU4
-LDEwICs1OCwxMCBAQCBnZW5oYXNobmFtZXM6IGdlbmhhc2huYW1lcy5vCj4gIG5hbWV0ZXN0OiBu
-YW1ldGVzdC5vICQoTElCVEVTVCkKPiAgCSQoTElOS1RFU1QpICQoTElCVEVTVCkgJChMRExJQlMp
-Cj4gIAo+IC1ic3RhdDogYnN0YXQubyAkKExJQkhBTkRMRSkKPiArYnN0YXQ6IGJzdGF0Lm8KPiAg
-CSQoTElOS1RFU1QpICQoTElCSEFORExFKSAkKExETElCUykKPiAgCj4gLXRfaW1tdXRhYmxlOiB0
-X2ltbXV0YWJsZS5vICQoTElCSEFORExFKSAkKExJQkFDTCkKPiArdF9pbW11dGFibGU6IHRfaW1t
-dXRhYmxlLm8KPiAgCSQoTElOS1RFU1QpICQoTElCQUNMKSAkKExJQkhBTkRMRSkgJChMRExJQlMp
-Cj4gIAo+ICBsb2dnZW46CWxvZ2dlbi5vCj4gQEAgLTgyLDE3ICs4MiwxNyBAQCBtdWx0aV9vcGVu
-X3VubGluazogbXVsdGlfb3Blbl91bmxpbmsubwo+ICAjc2NhbGVyZWFkOiBzY2FsZXJlYWQubyAk
-KExETElCUykKPiAgIwkkKExJTktURVNUKQo+ICAKPiAtYWNsX2dldDogYWNsX2dldC5vICQoTElC
-QUNMKSAkKExJQkFUVFIpCj4gK2FjbF9nZXQ6IGFjbF9nZXQubwo+ICAJJChMSU5LVEVTVCkgJChM
-SUJBQ0wpICQoTElCQVRUUikgJChMRExJQlMpCj4gIAo+IC1kbWlwZXJmOiBkbWlwZXJmLm8gJChM
-SUJBVFRSKQo+ICtkbWlwZXJmOiBkbWlwZXJmLm8KPiAgCSQoTElOS1RFU1QpICQoTElCQVRUUikg
-JChMRExJQlMpCj4gIAo+ICBwcmVhbGxvX3J3X3BhdHRlcm5fcmVhZGVyOgo+IC0JJChDQykgLURS
-RUFEIGlvcGF0LmMgLW8gcHJlYWxsb19yd19wYXR0ZXJuX3JlYWRlcgo+ICsJJChDQykgJChHQ0ZM
-QUdTKSAkKExERkxBR1MpIC1EUkVBRCBpb3BhdC5jIC1vIHByZWFsbG9fcndfcGF0dGVybl9yZWFk
-ZXIKPiAgCj4gIHByZWFsbG9fcndfcGF0dGVybl93cml0ZXI6Cj4gLQkkKENDKSAtRFdSSVRFIGlv
-cGF0LmMgLW8gcHJlYWxsb19yd19wYXR0ZXJuX3dyaXRlcgo+ICsJJChDQykgJChHQ0ZMQUdTKSAk
-KExERkxBR1MpIC1EV1JJVEUgaW9wYXQuYyAtbyBwcmVhbGxvX3J3X3BhdHRlcm5fd3JpdGVyCj4g
-IAo+ICBmdHJ1bmM6IGZ0cnVuYy5vCj4gIAkkKExJTktURVNUKQo+IAo+IAo+IC0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLQo+IAo+IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-Cj4geGZzIG1haWxpbmcgbGlzdAo+IHhmc0Bvc3Muc2dpLmNvbQo+IGh0dHA6Ly9vc3Muc2dpLmNv
-bS9tYWlsbWFuL2xpc3RpbmZvL3hmcwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29z
-cy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+Boaz Harrosh wrote:
+> No the natural alignment is what it is, after the application of
+> __attribute__((packed(1))). In a well defined structure that is a no-opt.
+> But yes in ai64 the gcc programmers got lazy and did not make that analysis
+> after laying out the structure.
+
+No.  That's what you *want* packed to mean, but it doesn't mean that.
+
+__attribute__ packed on a struct definition means to pack the
+structure _and_ set its assumed alignment to 1.
+
+This is what the packed attribute historically means, and it cannot be
+changed without breaking existing code.
+
+If you want to remove padding from a structure, but still keep its
+natural alignment, you do it with two attributes together:
+__attribute__((packed, aligned(4))).  You have to choose the alignment
+you want in that case.
+
+GCC manual:
+     When used on a struct, or struct member, the `aligned' attribute
+     can only increase the alignment; in order to decrease it, the
+     `packed' attribute must be specified as well.  When used as part
+     of a typedef, the `aligned' attribute can both increase and
+     decrease alignment, and specifying the `packed' attribute will
+     generate a warning.
+
+It's a counterintuitive, because you must use
+__attribute__((aligned(1))) when declaring a variable to reduce its
+alignment, but you must use __attribute__((packed)) when declaring a
+struct type.  Doing it at the end of a struct typedef is a weird mix
+of semantics, so don't do that.
+
+By the way, this discussion is why the "-Wpacked" and "-Wpadding"
+options are available.
+
+> The base address can be unaligned even if the structure is aligned. In that
+> case you need the __atrubute__((aligned)) thingy.
+
+No, because __attribute__((packed)) on a struct doesn't mean what you
+want it to mean.  Use __attribute((packed,aligned(4))) if that's what
+you want.
+
+> Please note that I gave up on the compiler and understand that the
+> use of __packed is dangerous in some cases, sigh. My standing point
+> is to make sure there are no guesses left, and a BUILD_BUG_ON to
+> make sure of that.
+
+In this code, it's not a bug because it must be backward compatible
+with existing binary code.  "Fixing" the padding breaks
+compatibility, which is pointless for this patch.
+
+-- Jamie
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
