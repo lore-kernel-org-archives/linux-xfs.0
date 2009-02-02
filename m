@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n128kSO7235895 for <xfs@oss.sgi.com>; Mon, 2 Feb 2009 02:46:29 -0600
-Date: Mon, 2 Feb 2009 09:45:43 +0100 (CET)
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [xfs-masters] [PATCH] fs: Add new pre-allocation ioctls to vfs
-	for compatibility with legacy xfs ioctls
-In-Reply-To: <4986AEE8.5040609@panasas.com>
-Message-ID: <Pine.LNX.4.64.0902020942230.11930@anakin>
-References: <20090130171423.f99c88d0.akpm@linux-foundation.org>
-	<20090201164130.GA32276@infradead.org> <4985D48A.6090007@panasas.com>
-	<200902020131.04203.arnd@arndb.de> <4986AEE8.5040609@panasas.com>
-MIME-Version: 1.0
+	n1298k7E236751 for <xfs@oss.sgi.com>; Mon, 2 Feb 2009 03:08:46 -0600
+Received: from main.carme.maven.pl (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 56AA51BFF3EE
+	for <xfs@oss.sgi.com>; Mon,  2 Feb 2009 01:08:06 -0800 (PST)
+Received: from main.carme.maven.pl (main.carme.maven.pl [193.239.45.138]) by
+	cuda.sgi.com with ESMTP id LH0Il3RAiAJAF97L for
+	<xfs@oss.sgi.com>; Mon, 02 Feb 2009 01:08:06 -0800 (PST)
+From: =?utf-8?q?Arkadiusz=20Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: [PATCH] xfstests: Fix *FLAGS passing and dependencies.
+Date: Mon,  2 Feb 2009 10:08:04 +0100
+Message-Id: <1233565684-462-1-git-send-email-arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,61 +20,67 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, mfasheh@suse.com, Eric Sandeen <sandeen@sandeen.net>, joel.becker@oracle.com, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, viro@zeniv.linux.org.uk, Ankit Jain <me@ankitjain.org>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
+To: xfs@oss.sgi.com
+Cc: root <root@farm.lan>
 
-On Mon, 2 Feb 2009, Boaz Harrosh wrote:
-> Arnd Bergmann wrote:
-> > On Sunday 01 February 2009, Boaz Harrosh wrote:
-> >> Christoph Hellwig wrote:
-> >>> The structures have been defined exactly like that in XFS (and ocfs2)
-> >>> before, and there are similar cases in other ioctls handlers.
-> >>>
-> >>> If anyone feels like changing this in some way feel free to wade through
-> >>> the endless discussions about the pros and cons for it, but I think
-> >>> doing it in context of this patch is not helpful.
-> >> OK so ia64 gcc is broken in regard to __attribute__((packed(1))),
-> >> and it should not be used.
-> > 
-> > No, the compiler is correct, it has to generate more complex code
-> > if it cannot assume that data is naturally aligned and the architecture
-> > does not support unaligned loads. If you don't understand this, please
-> > at least read the list archives about the last five times this came up
-> > before claiming that the compiler is broken.
-> > 
-> 
-> Wrong!! Sorry, you guys don't listen.
-> I'm talking of the case where the structures are EXACTLY the same anyway
-> you look at them. sizeof(foo) == sizeof(foo_packed) and 
-> offsetof(foo_memmber) == offsetof(foo_packed_member) for every member of
-> the structure. foo && foo_packed are declared exactly the same but with
-> __attribute__((packed(1))) applied to the later.
-> 
-> THEN in ia64 case the compiler is brain dead, because it relates
-> "unalignment" to packed(1) which are two different things.
+From: root <root@farm.lan>
 
-The natural alignment of a structure is max(alignment(member)), for all
-members. With __attribute__((packed)), the natural alignment of the structure
-is 1, so the compiler cannot assume anything.
+Pass *FLAGS in some targets.
 
-While the ints in the structure may still be at offsets 0, 4, 8, and so on,
-this doesn't say anything about their actual memory addresses, as the struct
-base address itself may be unaligned.
+Drop LIBHANDLE, LIBATTR and LIBACL from deps since there are in form
+"-llibrary".
 
-Gr{oetje,eeting}s,
+Signed-off-by: root <root@farm.lan>
+---
+ src/Makefile |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-						Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
+diff --git a/src/Makefile b/src/Makefile
+index ad4c204..634e1b3 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -58,10 +58,10 @@ genhashnames: genhashnames.o
+ nametest: nametest.o $(LIBTEST)
+ 	$(LINKTEST) $(LIBTEST) $(LDLIBS)
+ 
+-bstat: bstat.o $(LIBHANDLE)
++bstat: bstat.o
+ 	$(LINKTEST) $(LIBHANDLE) $(LDLIBS)
+ 
+-t_immutable: t_immutable.o $(LIBHANDLE) $(LIBACL)
++t_immutable: t_immutable.o
+ 	$(LINKTEST) $(LIBACL) $(LIBHANDLE) $(LDLIBS)
+ 
+ loggen:	loggen.o
+@@ -82,17 +82,17 @@ multi_open_unlink: multi_open_unlink.o
+ #scaleread: scaleread.o $(LDLIBS)
+ #	$(LINKTEST)
+ 
+-acl_get: acl_get.o $(LIBACL) $(LIBATTR)
++acl_get: acl_get.o
+ 	$(LINKTEST) $(LIBACL) $(LIBATTR) $(LDLIBS)
+ 
+-dmiperf: dmiperf.o $(LIBATTR)
++dmiperf: dmiperf.o
+ 	$(LINKTEST) $(LIBATTR) $(LDLIBS)
+ 
+ preallo_rw_pattern_reader:
+-	$(CC) -DREAD iopat.c -o preallo_rw_pattern_reader
++	$(CC) $(GCFLAGS) $(LDFLAGS) -DREAD iopat.c -o preallo_rw_pattern_reader
+ 
+ preallo_rw_pattern_writer:
+-	$(CC) -DWRITE iopat.c -o preallo_rw_pattern_writer
++	$(CC) $(GCFLAGS) $(LDFLAGS) -DWRITE iopat.c -o preallo_rw_pattern_writer
+ 
+ ftrunc: ftrunc.o
+ 	$(LINKTEST)
+-- 
+1.6.1.1
 
 _______________________________________________
 xfs mailing list
