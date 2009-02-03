@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n137VqNM044337 for <xfs@oss.sgi.com>; Tue, 3 Feb 2009 01:31:52 -0600
-Message-ID: <4987F2B8.9070700@panasas.com>
-Date: Tue, 03 Feb 2009 09:31:04 +0200
-From: Boaz Harrosh <bharrosh@panasas.com>
+	n1389tgl046104 for <xfs@oss.sgi.com>; Tue, 3 Feb 2009 02:09:56 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EDC9F18ACEE3
+	for <xfs@oss.sgi.com>; Tue,  3 Feb 2009 00:09:16 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id 5vhM59peqPcMNb1t for
+	<xfs@oss.sgi.com>; Tue, 03 Feb 2009 00:09:16 -0800 (PST)
+Date: Tue, 3 Feb 2009 03:09:16 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: XFS status update for January 2009
+Message-ID: <20090203080915.GA8921@infradead.org>
 MIME-Version: 1.0
-Subject: Re: [xfs-masters] [PATCH] fs: Add new pre-allocation ioctls to vfs
-	for compatibility with legacy xfs ioctls
-References: <20090130171423.f99c88d0.akpm@linux-foundation.org>
-	<20090201164130.GA32276@infradead.org>
-	<4985D48A.6090007@panasas.com> <200902020131.04203.arnd@arndb.de>
-	<4986AEE8.5040609@panasas.com>
-	<Pine.LNX.4.64.0902020942230.11930@anakin>
-	<4986BE07.6090000@panasas.com>
-	<20090202205102.GG28129@shareable.org>
-In-Reply-To: <20090202205102.GG28129@shareable.org>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,81 +26,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jamie Lokier <jamie@shareable.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, mfasheh@suse.com, Eric Sandeen <sandeen@sandeen.net>, joel.becker@oracle.com, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, Geert Uytterhoeven <geert@linux-m68k.org>, viro@zeniv.linux.org.uk, Ankit Jain <me@ankitjain.org>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
+To: xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
-Jamie Lokier wrote:
-> Boaz Harrosh wrote:
->> No the natural alignment is what it is, after the application of
->> __attribute__((packed(1))). In a well defined structure that is a no-opt.
->> But yes in ai64 the gcc programmers got lazy and did not make that analysis
->> after laying out the structure.
-> 
-> No.  That's what you *want* packed to mean, but it doesn't mean that.
-> 
-> __attribute__ packed on a struct definition means to pack the
-> structure _and_ set its assumed alignment to 1.
-> 
-> This is what the packed attribute historically means, and it cannot be
-> changed without breaking existing code.
-> 
-> If you want to remove padding from a structure, but still keep its
-> natural alignment, you do it with two attributes together:
-> __attribute__((packed, aligned(4))).  You have to choose the alignment
-> you want in that case.
-> 
-> GCC manual:
->      When used on a struct, or struct member, the `aligned' attribute
->      can only increase the alignment; in order to decrease it, the
->      `packed' attribute must be specified as well.  When used as part
->      of a typedef, the `aligned' attribute can both increase and
->      decrease alignment, and specifying the `packed' attribute will
->      generate a warning.
-> 
-> It's a counterintuitive, because you must use
-> __attribute__((aligned(1))) when declaring a variable to reduce its
-> alignment, but you must use __attribute__((packed)) when declaring a
-> struct type.  Doing it at the end of a struct typedef is a weird mix
-> of semantics, so don't do that.
-> 
-> By the way, this discussion is why the "-Wpacked" and "-Wpadding"
-> options are available.
-> 
->> The base address can be unaligned even if the structure is aligned. In that
->> case you need the __atrubute__((aligned)) thingy.
-> 
-> No, because __attribute__((packed)) on a struct doesn't mean what you
-> want it to mean.  Use __attribute((packed,aligned(4))) if that's what
-> you want.
-> 
+January has been an extremely busy month on the userspace front.  Many
+smaller and medium updates went into xfsprogs, xfstests and to a lesser
+extent xfsdump.  xfsprogs and xfsdump are ramping up for getting a 3.0.0
+release out in early February which will include the first major re-sync
+with the kernel code in libxfs, a cleanup of the exported library interfaces
+and the move of two tools (xfs_fsr and xfs_estimate) from the xfsdump
+package to xfsprogs.  After this the xfsprogs package will contain all
+tools that use internal libxfs interfaces which fortunately equates to those
+needed for normal administration.  The xfsdump package now only contains
+the xfsdump/xfsrestore tools needed for backing up and restoring XFS
+filesystems.  In addition it grew a fix to support dump/restore on systems
+with a 64k page size.  A large number of acl/attr package patches was
+posted to the list, but pending a possible split of these packages from the
+XFS project these weren't processed yet.
 
-OK Thanks I'll use that then. 
-(And BUILD_BUG_ON to make sure)
+On the kernel side the big excitement in January was an in-memory corruption
+introduced in the btree refactoring which hit people running 32bit platforms
+without support for large block devices.  This issue was fixed and pushed
+to the 2.6.29 development tree after a long collaborative debugging effort
+at linux.conf.au.  Besides that about a dozen minor fixes were pushed to
+2.6.29 and the first batch of misc patches for the 2.6.30 release cycle
+was sent out.
 
->> Please note that I gave up on the compiler and understand that the
->> use of __packed is dangerous in some cases, sigh. My standing point
->> is to make sure there are no guesses left, and a BUILD_BUG_ON to
->> make sure of that.
-> 
-> In this code, it's not a bug because it must be backward compatible
-> with existing binary code.  "Fixing" the padding breaks
-> compatibility, which is pointless for this patch.
-> 
+At the end of December the SGI group in Melbourne which the previous
+XFS maintainer and some other developers worked for has been closed down
+and they will be missed greatly.  As a result maintainership has been passed
+on in a way that has been slightly controversial in the community, and the
+first patchset of work in progress in Melbourne have been posted to the list
+to be picked up by others.
 
-That's what I don't like. In compatibility problems situation, we actually
-have two kind of structures. I rather that they are spelled out explicitly
-and chosen from at the appropriate places. But I'll give up it is probably
-just me. (Though proof that it was not me who raised the subject)
-
-I would at least expect a big fat comment explaining what happened to the
-structure on what known ARCHs, and how it is expected to look in memory.
-And a BUILD_BUG_ON to make sure of that.
-
-> -- Jamie
-
-Thanks, the __attribute((packed,aligned(__WORD_SIZE))) is new for me
-
-Boaz
+The xfs.org wiki has gotten a little facelift on it's front page making it
+a lot easier to read.
 
 _______________________________________________
 xfs mailing list
