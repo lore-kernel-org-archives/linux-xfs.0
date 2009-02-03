@@ -1,21 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n12KrNv7010329 for <xfs@oss.sgi.com>; Mon, 2 Feb 2009 14:53:24 -0600
-Date: Mon, 2 Feb 2009 20:51:02 +0000
-From: Jamie Lokier <jamie@shareable.org>
-Subject: Re: [xfs-masters] [PATCH] fs: Add new pre-allocation ioctls to vfs
-	for compatibility with legacy xfs ioctls
-Message-ID: <20090202205102.GG28129@shareable.org>
-References: <20090130171423.f99c88d0.akpm@linux-foundation.org>
-	<20090201164130.GA32276@infradead.org>
-	<4985D48A.6090007@panasas.com> <200902020131.04203.arnd@arndb.de>
-	<4986AEE8.5040609@panasas.com>
-	<Pine.LNX.4.64.0902020942230.11930@anakin>
-	<4986BE07.6090000@panasas.com>
+	n131O43w023476 for <xfs@oss.sgi.com>; Mon, 2 Feb 2009 19:24:05 -0600
+Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E0E0718A4E83
+	for <xfs@oss.sgi.com>; Mon,  2 Feb 2009 17:23:23 -0800 (PST)
+Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.162.198]) by
+	cuda.sgi.com with ESMTP id UZWUUEVUBtANqxG6 for
+	<xfs@oss.sgi.com>; Mon, 02 Feb 2009 17:23:23 -0800 (PST)
+Received: from mailsrv2.i.zmi.at (h081217054243.dyn.cm.kabsi.at
+	[81.217.54.243])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv1.zmi.at (Postfix) with ESMTP id 86EDE3BA9
+	for <xfs@oss.sgi.com>; Tue,  3 Feb 2009 02:22:49 +0100 (CET)
+Received: from saturn.localnet (saturn.i.zmi.at [10.0.0.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv2.i.zmi.at (Postfix) with ESMTPSA id A887640016F
+	for <xfs@oss.sgi.com>; Tue,  3 Feb 2009 02:22:48 +0100 (CET)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: xfs_force_shutdown after Raid crash
+Date: Tue, 3 Feb 2009 02:22:47 +0100
+References: <498376CF.8020806@renderforce.de>
+	<20090131105712.GA30061@infradead.org>
+In-Reply-To: <20090131105712.GA30061@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4986BE07.6090000@panasas.com>
+Message-Id: <200902030222.47644@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,62 +40,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, mfasheh@suse.com, Eric Sandeen <sandeen@sandeen.net>, joel.becker@oracle.com, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, Geert Uytterhoeven <geert@linux-m68k.org>, viro@zeniv.linux.org.uk, Ankit Jain <me@ankitjain.org>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
+To: xfs@oss.sgi.com
 
-Boaz Harrosh wrote:
-> No the natural alignment is what it is, after the application of
-> __attribute__((packed(1))). In a well defined structure that is a no-opt.
-> But yes in ai64 the gcc programmers got lazy and did not make that analysis
-> after laying out the structure.
+On Samstag 31 Januar 2009 Christoph Hellwig wrote:
+> This looks like you were running with a write back cache enabled on
+> the controller / disks but without barriers.
 
-No.  That's what you *want* packed to mean, but it doesn't mean that.
+I've read that this is dangerous. How can I tell if I suffer the same? I 
+use an Areca 1680 SAS RAID Controller with 2GB Cache, so there could be 
+a lot of writes in it.
 
-__attribute__ packed on a struct definition means to pack the
-structure _and_ set its assumed alignment to 1.
-
-This is what the packed attribute historically means, and it cannot be
-changed without breaking existing code.
-
-If you want to remove padding from a structure, but still keep its
-natural alignment, you do it with two attributes together:
-__attribute__((packed, aligned(4))).  You have to choose the alignment
-you want in that case.
-
-GCC manual:
-     When used on a struct, or struct member, the `aligned' attribute
-     can only increase the alignment; in order to decrease it, the
-     `packed' attribute must be specified as well.  When used as part
-     of a typedef, the `aligned' attribute can both increase and
-     decrease alignment, and specifying the `packed' attribute will
-     generate a warning.
-
-It's a counterintuitive, because you must use
-__attribute__((aligned(1))) when declaring a variable to reduce its
-alignment, but you must use __attribute__((packed)) when declaring a
-struct type.  Doing it at the end of a struct typedef is a weird mix
-of semantics, so don't do that.
-
-By the way, this discussion is why the "-Wpacked" and "-Wpadding"
-options are available.
-
-> The base address can be unaligned even if the structure is aligned. In that
-> case you need the __atrubute__((aligned)) thingy.
-
-No, because __attribute__((packed)) on a struct doesn't mean what you
-want it to mean.  Use __attribute((packed,aligned(4))) if that's what
-you want.
-
-> Please note that I gave up on the compiler and understand that the
-> use of __packed is dangerous in some cases, sigh. My standing point
-> is to make sure there are no guesses left, and a BUILD_BUG_ON to
-> make sure of that.
-
-In this code, it's not a bug because it must be backward compatible
-with existing binary code.  "Fixing" the padding breaks
-compatibility, which is pointless for this patch.
-
--- Jamie
+mfg zmi
+-- 
+// Michael Monnerie, Ing.BSc    -----      http://it-management.at
+// Tel: 0660 / 415 65 31                      .network.your.ideas.
+// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
+// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
+// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
 
 _______________________________________________
 xfs mailing list
