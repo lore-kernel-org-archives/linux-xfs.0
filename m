@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n13FnnPM072507 for <xfs@oss.sgi.com>; Tue, 3 Feb 2009 09:49:49 -0600
+	n13FqQIm072663 for <xfs@oss.sgi.com>; Tue, 3 Feb 2009 09:52:27 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4BD7EDF7C7
-	for <xfs@oss.sgi.com>; Tue,  3 Feb 2009 07:49:09 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 154841C01DD6
+	for <xfs@oss.sgi.com>; Tue,  3 Feb 2009 07:51:47 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id cjCX0WpjDQGV867J for
-	<xfs@oss.sgi.com>; Tue, 03 Feb 2009 07:49:09 -0800 (PST)
-Date: Tue, 3 Feb 2009 10:49:08 -0500
+	by cuda.sgi.com with ESMTP id CYHO6skMDHKIa7g7 for
+	<xfs@oss.sgi.com>; Tue, 03 Feb 2009 07:51:47 -0800 (PST)
+Date: Tue, 3 Feb 2009 10:51:47 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfs_force_shutdown after Raid crash
-Message-ID: <20090203154907.GA21278@infradead.org>
-References: <498376CF.8020806@renderforce.de> <200902031022.38583@zmi.at>
-	<20090203093239.GA14963@infradead.org> <200902031140.08576@zmi.at>
+Subject: Re: reproducible xfs/vmap oops
+Message-ID: <20090203155147.GB21278@infradead.org>
+References: <20090201081224.GA22398@infradead.org>
+	<20090201161458.GA5930@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <200902031140.08576@zmi.at>
+In-Reply-To: <20090201161458.GA5930@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,23 +29,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, Nick Piggin <nickpiggin@yahoo.com.au>
 
-On Tue, Feb 03, 2009 at 11:40:08AM +0100, Michael Monnerie wrote:
-> On Dienstag 03 Februar 2009 Christoph Hellwig wrote:
-> > Yes. ?I would hope raid controllers disable the write cache on disks,
-> > but for lower end controllers I'm not sure they really do it.
+On Sun, Feb 01, 2009 at 11:14:58AM -0500, Christoph Hellwig wrote:
+> On Sun, Feb 01, 2009 at 03:12:24AM -0500, Christoph Hellwig wrote:
+> > When running xfsqa on the current xfs development tree (sometimes two
+> > runs are needed to trigger it) I get the following oops.  This seems to
+> > have been introduced by the last mainling merge (with
+> > 5ee810072175042775e39bdd3eaaa68884c27805), but I'd need to bisect it to
+> > make sure my gut feeling is right.
 > 
-> On Areca Controllers, I can select if I want it on or off. Could an 
-> information about the disk cache be written to the FAQ? Would for sure 
-> save some people's data... :-)
-> 
-> So battery backed controller cache on, disk cache off, barriers off.
-> Quite simple once you know it :-))
+> Still happens with a commit before that mainline merge.  Looking for
+> a good candiate for bisection now.
 
-Yeah, that sounds correct.  Do you volunteer for the FAQ entry?  xfs.org
-is a wiki so you could add it.  I'm happy to proof-read it if you want.
+I bisected it down to commit 0087167c9d5b1273e7e6bbe39a9ab13bdb9a39bb
+"[XFS] use scalable vmap API".
+
+Nick, any idea what this could be?
 
 _______________________________________________
 xfs mailing list
