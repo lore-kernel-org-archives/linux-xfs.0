@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n14GOZ5d161454 for <xfs@oss.sgi.com>; Wed, 4 Feb 2009 10:24:36 -0600
-Received: from smtp4-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1489CE7108
-	for <xfs@oss.sgi.com>; Wed,  4 Feb 2009 08:23:55 -0800 (PST)
-Received: from smtp4-g21.free.fr (smtp4-g21.free.fr [212.27.42.4]) by
-	cuda.sgi.com with ESMTP id jYku4GMaEUmIf3qS for
-	<xfs@oss.sgi.com>; Wed, 04 Feb 2009 08:23:55 -0800 (PST)
-Date: Wed, 4 Feb 2009 17:23:50 +0100
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: xfs_force_shutdown after Raid crash
-Message-ID: <20090204172350.6049628c@harpe.intellique.com>
-In-Reply-To: <20090204154153.GQ11617@kyra>
-References: <498376CF.8020806@renderforce.de> <200902031140.08576@zmi.at>
-	<20090203154907.GA21278@infradead.org> <200902040952.45440@zmi.at>
-	<20090204122241.GL24173@disturbed>
-	<20090204134538.24c2b4ac@harpe.intellique.com>
-	<20090204140113.GP11617@kyra>
-	<20090204161559.347679f7@harpe.intellique.com>
-	<20090204154153.GQ11617@kyra>
-Mime-Version: 1.0
+	n14GTDPp161607 for <xfs@oss.sgi.com>; Wed, 4 Feb 2009 10:29:14 -0600
+Received: from can12.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 40E071BB66AA
+	for <xfs@oss.sgi.com>; Wed,  4 Feb 2009 08:28:34 -0800 (PST)
+Received: from can12.de (can12.de [213.203.199.141]) by cuda.sgi.com with
+	ESMTP id QAog0JkS95OIqO34 for <xfs@oss.sgi.com>;
+	Wed, 04 Feb 2009 08:28:34 -0800 (PST)
+Received: from [192.168.0.2] (p54AAE5F5.dip.t-dialin.net [84.170.229.245])
+	by can12.de (can12.de) with ESMTP id 18F4E2B4FCF
+	for <xfs@oss.sgi.com>; Wed,  4 Feb 2009 17:28:05 +0100 (CET)
+Message-Id: <4D4B8415-C82D-4A23-9A08-F06A67DC92BA@hal-9k.de>
+From: Julian Einwag <julian@hal-9k.de>
+In-Reply-To: <4980A4BB.9050502@thebarn.com>
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Subject: Re: XFS trouble: task xfssyncd blocked for more than 120 seconds.
+Date: Wed, 4 Feb 2009 17:27:59 +0100
+References: <A22069E0-B39A-41CF-9467-4524055B1970@hal-9k.de>
+	<4980A4BB.9050502@thebarn.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,30 +27,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: KELEMEN Peter <Peter.Kelemen@cern.ch>
-Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Le Wed, 4 Feb 2009 16:41:53 +0100
-KELEMEN Peter <Peter.Kelemen@cern.ch> =E9crivait:
+Hi!
 
-> "Write cache includes the disk drive cache and controller cache."
-> =
+Am 28.01.2009 um 19:32 schrieb Russell Cattelan:
 
-> I assume this means you can only set the drive caches and the unit
-> caches together.
+> Could get a call trace of all process the next time this happens?
+>
+> srq-t
+>
+> That would help us to see what else is going on and what might be
+> holding things up.
 
-Oh, you're right, I've missed that. I think we'll plan some testing
-pulling out power cables under heavy write load pretty soon :)
 
--- =
+Just wanted to give a quick feedback here: We recently did an upgrade  
+to Kernel 2.6.28.3 and things have been running smoothly so far, so  
+we're hoping that the problem is gone.
 
-----------------------------------------
-Emmanuel Florac     |   Intellique
-----------------------------------------
+Best regards,
+Julian
 
 _______________________________________________
 xfs mailing list
