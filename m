@@ -1,29 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n13M8mj5096656 for <xfs@oss.sgi.com>; Tue, 3 Feb 2009 16:08:49 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E966FE2584
-	for <xfs@oss.sgi.com>; Tue,  3 Feb 2009 14:08:09 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id KPRVAqmjlmrfRowT for
-	<xfs@oss.sgi.com>; Tue, 03 Feb 2009 14:08:09 -0800 (PST)
-Date: Tue, 3 Feb 2009 17:08:09 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: reproducible xfs/vmap oops
-Message-ID: <20090203220808.GA9195@infradead.org>
-References: <20090201081224.GA22398@infradead.org>
-	<20090201161458.GA5930@infradead.org>
-	<20090203155147.GB21278@infradead.org>
-	<200902040303.13933.nickpiggin@yahoo.com.au>
-	<20090203160515.GA30986@infradead.org>
-	<20090203184409.GA22204@infradead.org>
-	<20090203210423.GA26628@infradead.org>
-	<20090203214245.GJ24173@disturbed>
-	<20090203214711.GA24837@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20090203214711.GA24837@infradead.org>
+	n140xa0M105573 for <xfs@oss.sgi.com>; Tue, 3 Feb 2009 18:59:37 -0600
+Received: from poopey.oranged.to (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 94BF9E2FCC
+	for <xfs@oss.sgi.com>; Tue,  3 Feb 2009 16:58:56 -0800 (PST)
+Received: from poopey.oranged.to (poopey.oranged.to [213.198.65.20]) by
+	cuda.sgi.com with ESMTP id cTCAF3CFeJreGWvn for
+	<xfs@oss.sgi.com>; Tue, 03 Feb 2009 16:58:56 -0800 (PST)
+Message-Id: <2653B83E-85DA-4949-BCED-AF2BA3D324E1@alink.co.za>
+From: George Barnett <george@alink.co.za>
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Subject: XFS corruption on ubuntu 2.6.27-9-server
+Date: Wed, 4 Feb 2009 11:32:11 +1100
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,34 +21,86 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>, Nick Piggin <nickpiggin@yahoo.com.au>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Feb 03, 2009 at 04:47:11PM -0500, Christoph Hellwig wrote:
-> On Wed, Feb 04, 2009 at 08:42:45AM +1100, Dave Chinner wrote:
-> > On Tue, Feb 03, 2009 at 04:04:23PM -0500, Christoph Hellwig wrote:
-> > > [ 3138.799436] XFS mounting filesystem vde
-> > > [ 3138.813184] va->va_start = 4290777088, va->va_end = 4096
-> > > [ 3138.834754] tmp->va_start = 4195352576, tmp->va_end = 4196401152
-> > > [ 3138.846352] ------------[ cut here ]------------
-> > > [ 3138.850332] kernel BUG at mm/vmalloc.c:298!
-> > > [ 3138.850332] invalid opcode: 0000 [#1] SMP 
-> > > 
-> > > The first va_end looks suspicious to me..
-> > 
-> > That is on i386, Christoph? If so, I'd suspect a 32 bit overflow
-> > as 4290777088 = 0xFFC01000 and va_start/va_end are unsigned longs.
-> > If we tried to map exactly 4MB the with va_start at 0xFFC01000 we'd
-> > end up with va_end at 0x100001000 which would wrap to 0x1000 = 4096.
-> 
-> Yeah, this is 32-bit x86.  Exactly my thoughts, but just to make sure
-> the overflow is in vmap and not in XFS I'm running with your checking
-> patch included now.
+Hi,
 
-Nope, your check doesn't trigger.  Looks like it's indeed in vmap.
+I'm seeing the following errors:
+
+[822153.422851] Filesystem "md2": XFS internal error xfs_da_do_buf(2)  
+at line 2107 of file /build/buildd/linux-2.6.27/fs/xfs/ 
+xfs_da_btree.c.  Caller 0xffffffffa03be8da
+[822153.422903] Pid: 3273, comm: du Not tainted 2.6.27-9-server #1
+[822153.422905]
+[822153.422906] Call Trace:
+[822153.422931]  [<ffffffffa03cab23>] xfs_error_report+0x43/0x50 [xfs]
+[822153.422956]  [<ffffffffa03be8da>] ? xfs_da_read_buf+0x2a/0x30 [xfs]
+[822153.422976]  [<ffffffffa03cab8d>] xfs_corruption_error+0x5d/0x80  
+[xfs]
+[822153.422995]  [<ffffffffa03be808>] xfs_da_do_buf+0x6a8/0x700 [xfs]
+[822153.423014]  [<ffffffffa03be8da>] ? xfs_da_read_buf+0x2a/0x30 [xfs]
+[822153.423019]  [<ffffffff80305b06>] ? mntput_no_expire+0x36/0x160
+[822153.423022]  [<ffffffff803866e1>] ? aa_permission+0x21/0xd0
+[822153.423041]  [<ffffffffa03be8da>] xfs_da_read_buf+0x2a/0x30 [xfs]
+[822153.423061]  [<ffffffffa03c34fa>] ? xfs_dir2_block_getdents+0x9a/ 
+0x210 [xfs]
+[822153.423080]  [<ffffffffa03c34fa>] xfs_dir2_block_getdents+0x9a/ 
+0x210 [xfs]
+[822153.423099]  [<ffffffffa03adf7b>] ? xfs_bmap_last_offset+0x13b/ 
+0x150 [xfs]
+[822153.423119]  [<ffffffffa03f9970>] ? xfs_hack_filldir+0x0/0x60 [xfs]
+[822153.423138]  [<ffffffffa03f9970>] ? xfs_hack_filldir+0x0/0x60 [xfs]
+[822153.423157]  [<ffffffffa03c148b>] xfs_readdir+0x9b/0xf0 [xfs]
+[822153.423176]  [<ffffffffa03f98a6>] xfs_file_readdir+0xd6/0x1a0 [xfs]
+[822153.423180]  [<ffffffff802f8810>] ? filldir+0x0/0xe0
+[822153.423183]  [<ffffffff80386821>] ? aa_file_permission+0x21/0xf0
+[822153.423185]  [<ffffffff802f8810>] ? filldir+0x0/0xe0
+[822153.423188]  [<ffffffff802f8810>] ? filldir+0x0/0xe0
+[822153.423191]  [<ffffffff802f8a9b>] vfs_readdir+0xbb/0xe0
+[822153.423194]  [<ffffffff802f8c28>] sys_getdents+0x88/0xe0
+[822153.423199]  [<ffffffff8021285a>] system_call_fastpath+0x16/0x1b
+
+This seems to happen reasonably regularly on my system and causes the  
+filesystem to be marked as dirty.  xfs_repair runs fine, but I end up  
+with a bunch of files moved to lost+found. There are no device errors  
+logged when this happens.
+
+Mount options:
+
+/dev/md2 on /data type xfs (rw,noatime)
+
+Kernel:
+
+Linux slut 2.6.27-9-server #1 SMP Thu Nov 20 22:56:07 UTC 2008 x86_64  
+GNU/Linux
+
+Device:
+
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]  
+[raid4] [raid10]
+md2 : active raid10 sda2[0] sdd2[3] sdb2[1]
+       1947655680 blocks super 1.2 128K chunks 2 far-copies [4/3] [UUUU]
+
+# xfs_info /dev/md2
+meta-data=/dev/md2               isize=256    agcount=32,  
+agsize=15216064 blks
+          =                       sectsz=512   attr=0
+data     =                       bsize=4096   blocks=486913920,  
+imaxpct=25
+          =                       sunit=32     swidth=128 blks
+naming   =version 2              bsize=4096
+log      =internal               bsize=4096   blocks=32768, version=1
+          =                       sectsz=512   sunit=0 blks, lazy- 
+count=0
+realtime =none                   extsz=524288 blocks=0, rtextents=0
+
+Any assistance would be greatly appreciated.
+
+George
 
 _______________________________________________
 xfs mailing list
