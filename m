@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1426DUA109222 for <xfs@oss.sgi.com>; Tue, 3 Feb 2009 20:06:14 -0600
-Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F2297E3007
-	for <xfs@oss.sgi.com>; Tue,  3 Feb 2009 18:05:34 -0800 (PST)
-Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id zLbgcupesLxZKFRz for <xfs@oss.sgi.com>;
-	Tue, 03 Feb 2009 18:05:34 -0800 (PST)
-Message-ID: <4988F7E7.9050008@sandeen.net>
-Date: Tue, 03 Feb 2009 20:05:27 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	n148GRot131650 for <xfs@oss.sgi.com>; Wed, 4 Feb 2009 02:16:28 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 021E218BB653
+	for <xfs@oss.sgi.com>; Wed,  4 Feb 2009 00:15:48 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id kR84E1GWYR9Deh4O for
+	<xfs@oss.sgi.com>; Wed, 04 Feb 2009 00:15:48 -0800 (PST)
+Date: Wed, 4 Feb 2009 03:15:47 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: reproducible xfs/vmap oops
+Message-ID: <20090204081547.GA21487@infradead.org>
+References: <20090201081224.GA22398@infradead.org>
+	<20090203214711.GA24837@infradead.org>
+	<20090203220808.GA9195@infradead.org>
+	<200902041648.55603.nickpiggin@yahoo.com.au>
 MIME-Version: 1.0
-Subject: Re: XFS corruption on ubuntu 2.6.27-9-server
-References: <2653B83E-85DA-4949-BCED-AF2BA3D324E1@alink.co.za>	<4988EF37.7020306@sandeen.net>
-	<5CCF20F5-33D5-409E-BB27-5E1C5CB4D9E5@alink.co.za>
-	<4988F363.1070708@sandeen.net>
-	<7B2E904E-498E-4EEC-A09F-4DE823E4FAB0@alink.co.za>
-In-Reply-To: <7B2E904E-498E-4EEC-A09F-4DE823E4FAB0@alink.co.za>
+Content-Disposition: inline
+In-Reply-To: <200902041648.55603.nickpiggin@yahoo.com.au>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,48 +31,62 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: George Barnett <george@alink.co.za>
-Cc: xfs@oss.sgi.com
+To: Nick Piggin <nickpiggin@yahoo.com.au>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-George Barnett wrote:
-> On 04/02/2009, at 12:46 PM, Eric Sandeen wrote:
-> 
->>> bad version number 0x0 on inode 18046
->>> bad magic number 0x0 on inode 18047
->>> bad version number 0x0 on inode 18047
->>> bad directory block magic # 0 in block 0 for directory inode 18000
->> Interesting that all the bad magic numbers were 0... not sure what to
->> make of that, offhand, I'm afraid...
-> 
-> Oh dear.
-> 
-> I'm going to try moving the filesystem to ext3 to see if this  
-> continues.  If it does, it would suggest a bug in the underlying  
-> raid10 implementation or a problem with the disks, although they're  
-> not reporting any errors [1].
+On Wed, Feb 04, 2009 at 04:48:55PM +1100, Nick Piggin wrote:
+> OK, I could reproduce this directly with a vmap test. With this patch,
+> I'm no longer able to. (not sure how this mail client goes with attaching
+> patches, sorry if it messes up)
 
-one thing to note is that xfs is very good at detecting on-disk
-corruption, not sure ext3 will be as good.  So ext3 may seem to run
-finer, longer, even if there is an underlying problem.
+With that patch applies I run into a different issue:
 
-> Is there any further debugging I can do before I start fresh?
-
-well, it'd be great to have an isolated testcase, if you can reproduce
-it succinctly.
-
-Also I don't know what exact kernel ubuntu uses or what patches are in
-it; you might try a stock upstream kernel w/ the same config,
-2.6.27.$LATEST, and see if you continue to have problems.
-
--Eric
-
-> George
-> 
-> 
-> 1.  The hardware ecc recovered smartctl metric is /very/ high,  
-> although I'm told this may be normal for samsung drives.  I cant think  
-> of any way to confirm a disk problem without a CRC checking fs though.
-> 
+[ 4909.811804] XFS mounting filesystem vde
+[ 4909.986343] ------------[ cut here ]------------
+[ 4909.999285] WARNING: at mm/vmalloc.c:105
+vmap_page_range+0x159/0x1b0()
+[ 4910.021800] Hardware name: 
+[ 4910.032628] Modules linked in:
+[ 4910.043549] Pid: 6770, comm: mount Not tainted 2.6.29-rc3-xfs #43
+[ 4910.069113] Call Trace:
+[ 4910.080264]  [<c079fbf6>] ? printk+0x18/0x1a
+[ 4910.091954]  [<c014cca3>] warn_slowpath+0x73/0xd0
+[ 4910.103164]  [<c019bb00>] ? __rmqueue_smallest+0xf0/0x170
+[ 4910.124547]  [<c01b547a>] ? alloc_vmap_area+0x6a/0x240
+[ 4910.139940]  [<c0139a05>] ? kvm_set_pte_at+0x45/0x50
+[ 4910.161273]  [<c01b4f49>] vmap_page_range+0x159/0x1b0
+[ 4910.172548]  [<c01b5931>] vm_map_ram+0x2e1/0x3a0
+[ 4910.193782]  [<c0453c19>] ? kmem_alloc+0x59/0xf0
+[ 4910.204960]  [<c0456eb9>] _xfs_buf_map_pages+0x89/0xc0
+[ 4910.216249]  [<c0457027>] xfs_buf_get_noaddr+0x137/0x170
+[ 4910.237660]  [<c0442ace>] xlog_get_bp+0x2e/0xd0
+[ 4910.248825]  [<c0443a6b>] xlog_write_log_records+0x4b/0x260
+[ 4910.270258]  [<c07a26e2>] ? _spin_unlock_irq+0x22/0x30
+[ 4910.282965]  [<c0443d22>] xlog_clear_stale_blocks+0xa2/0x180
+[ 4910.304712]  [<c0444fcc>] xlog_find_tail+0x46c/0x4f0
+[ 4910.326012]  [<c0445064>] xlog_recover+0x14/0xa0
+[ 4910.341291]  [<c043d9c0>] xfs_log_mount+0xa0/0x180
+[ 4910.352791]  [<c04481e8>] xfs_mountfs+0x348/0x6d0
+[ 4910.374052]  [<c05ac4e9>] ? __debug_object_init+0x229/0x340
+[ 4910.385427]  [<c05ac647>] ? debug_object_init+0x17/0x20
+[ 4910.406761]  [<c0156570>] ? init_timer+0x10/0x30
+[ 4910.422081]  [<c0448ca4>] ? xfs_mru_cache_create+0x114/0x150
+[ 4910.443597]  [<c045f01f>] xfs_fs_fill_super+0x1cf/0x310
+[ 4910.464931]  [<c01c6dd3>] get_sb_bdev+0x123/0x150
+[ 4910.476212]  [<c01dad87>] ? alloc_vfsmnt+0x77/0x100
+[ 4910.487458]  [<c01a7e11>] ? kstrdup+0x31/0x60
+[ 4910.508628]  [<c045d181>] xfs_fs_get_sb+0x21/0x30
+[ 4910.520744]  [<c045ee50>] ? xfs_fs_fill_super+0x0/0x310
+[ 4910.542092]  [<c01c5ada>] vfs_kern_mount+0x3a/0xa0
+[ 4910.553307]  [<c01c5b99>] do_kern_mount+0x39/0xe0
+[ 4910.564518]  [<c01dbacb>] do_mount+0x3ab/0x780
+[ 4910.585736]  [<c05ab621>] ? _raw_spin_lock+0x41/0x120
+[ 4910.597002]  [<c01da0ac>] ? copy_mount_options+0x3c/0x130
+[ 4910.621489]  [<c01dbf29>] sys_mount+0x89/0xc0
+[ 4910.632621]  [<c0120dfe>] syscall_call+0x7/0xb
+[ 4910.643772]  [<c0120000>] ? restore_sigcontext+0x140/0x150
+[ 4910.665203] ---[ end trace 5a228d052300b60a ]---
+[ 4910.676954] xfs_buf_get_noaddr: failed to map pages
 
 _______________________________________________
 xfs mailing list
