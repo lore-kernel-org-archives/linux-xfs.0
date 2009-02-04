@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n141TRmI107294 for <xfs@oss.sgi.com>; Tue, 3 Feb 2009 19:29:27 -0600
-Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F0FC018B8A5F
-	for <xfs@oss.sgi.com>; Tue,  3 Feb 2009 17:28:47 -0800 (PST)
-Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id CnvTqOg85i5vn4gY for <xfs@oss.sgi.com>;
-	Tue, 03 Feb 2009 17:28:47 -0800 (PST)
-Message-ID: <4988EF37.7020306@sandeen.net>
-Date: Tue, 03 Feb 2009 19:28:23 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+	n141ZUAb107633 for <xfs@oss.sgi.com>; Tue, 3 Feb 2009 19:35:30 -0600
+Received: from poopey.oranged.to (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2CC48E2C34
+	for <xfs@oss.sgi.com>; Tue,  3 Feb 2009 17:34:50 -0800 (PST)
+Received: from poopey.oranged.to (poopey.oranged.to [213.198.65.20]) by
+	cuda.sgi.com with ESMTP id 69wlpoZWrfOETcgT for
+	<xfs@oss.sgi.com>; Tue, 03 Feb 2009 17:34:50 -0800 (PST)
+Message-Id: <5CCF20F5-33D5-409E-BB27-5E1C5CB4D9E5@alink.co.za>
+From: George Barnett <george@alink.co.za>
+In-Reply-To: <4988EF37.7020306@sandeen.net>
+Mime-Version: 1.0 (Apple Message framework v930.3)
 Subject: Re: XFS corruption on ubuntu 2.6.27-9-server
+Date: Wed, 4 Feb 2009 12:34:45 +1100
 References: <2653B83E-85DA-4949-BCED-AF2BA3D324E1@alink.co.za>
-In-Reply-To: <2653B83E-85DA-4949-BCED-AF2BA3D324E1@alink.co.za>
+	<4988EF37.7020306@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,110 +24,241 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: George Barnett <george@alink.co.za>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-George Barnett wrote:
-> Hi,
-> 
-> I'm seeing the following errors:
-> 
-> [822153.422851] Filesystem "md2": XFS internal error xfs_da_do_buf(2)  
-> at line 2107 of file /build/buildd/linux-2.6.27/fs/xfs/ 
+On 04/02/2009, at 12:28 PM, Eric Sandeen wrote:
 
-we really should make that more informative.
+> George Barnett wrote:
+>> Hi,
+>>
+>> I'm seeing the following errors:
+>>
+>> [822153.422851] Filesystem "md2": XFS internal error xfs_da_do_buf(2)
+>> at line 2107 of file /build/buildd/linux-2.6.27/fs/xfs/
+>
+> we really should make that more informative.
+>
+> What it means is that you read a piece of metadata that did not match
+> any of the metadata magic numbers.
+>
+> hard to say whether it might be an xfs bug I think; this does come up
+> occasionally though and it'd at least be nice to print more details on
+> the error (what the magic *was*, what block, etc)
+>
+> Do you happen to have the repair output?
+>
+> Did your md raid lose power w/ write cache enabled?
 
-What it means is that you read a piece of metadata that did not match
-any of the metadata magic numbers.
+Hi Eric,
 
-hard to say whether it might be an xfs bug I think; this does come up
-occasionally though and it'd at least be nice to print more details on
-the error (what the magic *was*, what block, etc)
+Thanks for your response.  The system did not lose power.  This  
+failure just "happens".  I have a cronjob which rsync's /data to a  
+spare drive that's not on raid.  It seems that is enough to cause this  
+failure.
 
-Do you happen to have the repair output?
+Fortunately, I still have the xfs_repair output in my term buffer:
 
-Did your md raid lose power w/ write cache enabled?
+root@slut:/# xfs_repair /dev/md2
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+         - zero log...
+         - scan filesystem freespace and inode maps...
+         - found root inode chunk
+Phase 3 - for each AG...
+         - scan and clear agi unlinked lists...
+         - process known inodes and perform inode discovery...
+         - agno = 0
+bad magic number 0x0 on inode 18042
+bad version number 0x0 on inode 18042
+bad magic number 0x0 on inode 18043
+bad version number 0x0 on inode 18043
+bad magic number 0x0 on inode 18044
+bad version number 0x0 on inode 18044
+bad magic number 0x0 on inode 18045
+bad version number 0x0 on inode 18045
+bad magic number 0x0 on inode 18046
+bad version number 0x0 on inode 18046
+bad magic number 0x0 on inode 18047
+bad version number 0x0 on inode 18047
+bad directory block magic # 0 in block 0 for directory inode 18000
+corrupt block 0 in directory inode 18000
+	will junk block
+no . entry for directory 18000
+no .. entry for directory 18000
+problem with directory contents in inode 18000
+cleared inode 18000
+bad directory block magic # 0 in block 0 for directory inode 18006
+corrupt block 0 in directory inode 18006
+	will junk block
+no . entry for directory 18006
+no .. entry for directory 18006
+problem with directory contents in inode 18006
+cleared inode 18006
+bad magic number 0x0 on inode 18042, resetting magic number
+bad version number 0x0 on inode 18042, resetting version number
+imap claims a free inode 18042 is in use, correcting imap and clearing  
+inode
+cleared inode 18042
+bad magic number 0x0 on inode 18043, resetting magic number
+bad version number 0x0 on inode 18043, resetting version number
+imap claims a free inode 18043 is in use, correcting imap and clearing  
+inode
+cleared inode 18043
+bad magic number 0x0 on inode 18044, resetting magic number
+bad version number 0x0 on inode 18044, resetting version number
+imap claims a free inode 18044 is in use, correcting imap and clearing  
+inode
+cleared inode 18044
+bad magic number 0x0 on inode 18045, resetting magic number
+bad version number 0x0 on inode 18045, resetting version number
+imap claims a free inode 18045 is in use, correcting imap and clearing  
+inode
+cleared inode 18045
+bad magic number 0x0 on inode 18046, resetting magic number
+bad version number 0x0 on inode 18046, resetting version number
+imap claims a free inode 18046 is in use, correcting imap and clearing  
+inode
+cleared inode 18046
+bad magic number 0x0 on inode 18047, resetting magic number
+bad version number 0x0 on inode 18047, resetting version number
+imap claims a free inode 18047 is in use, correcting imap and clearing  
+inode
+cleared inode 18047
+         - agno = 1
+         - agno = 2
+         - agno = 3
+         - agno = 4
+         - agno = 5
+         - agno = 6
+         - agno = 7
+         - agno = 8
+         - agno = 9
+         - agno = 10
+         - agno = 11
+         - agno = 12
+         - agno = 13
+         - agno = 14
+         - agno = 15
+         - agno = 16
+         - agno = 17
+         - agno = 18
+         - agno = 19
+         - agno = 20
+         - agno = 21
+         - agno = 22
+         - agno = 23
+         - agno = 24
+         - agno = 25
+         - agno = 26
+         - agno = 27
+         - agno = 28
+         - agno = 29
+         - agno = 30
+         - agno = 31
+         - process newly discovered inodes...
+Phase 4 - check for duplicate blocks...
+         - setting up duplicate extent list...
+         - check for inodes claiming duplicate blocks...
+         - agno = 0
+         - agno = 1
+         - agno = 2
+         - agno = 3
+entry "classes.nib" in shortform directory 18009 references free inode  
+18047
+junking entry "classes.nib" in directory inode 18009
+         - agno = 4
+         - agno = 5
+         - agno = 6
+         - agno = 7
+entry "Spanish.lproj" at block 0 offset 296 in directory inode  
+1610630695 references free inode 18000
+	clearing inode number in entry at offset 296...
+         - agno = 8
+         - agno = 9
+         - agno = 10
+         - agno = 11
+         - agno = 12
+         - agno = 13
+         - agno = 14
+         - agno = 15
+         - agno = 16
+         - agno = 17
+         - agno = 18
+         - agno = 19
+         - agno = 20
+         - agno = 21
+         - agno = 22
+         - agno = 23
+         - agno = 24
+         - agno = 25
+         - agno = 26
+         - agno = 27
+         - agno = 28
+         - agno = 29
+         - agno = 30
+         - agno = 31
+entry "Resources" in shortform directory 4049684106 references free  
+inode 18006
+junking entry "Resources" in directory inode 4049684106
+Phase 5 - rebuild AG headers and trees...
+         - reset superblock...
+Phase 6 - check inode connectivity...
+         - resetting contents of realtime bitmap and summary inodes
+         - traversing filesystem ...
+bad hash table for directory inode 1610630695 (no data entry):  
+rebuilding
+rebuilding directory inode 1610630695
+         - traversal finished ...
+         - moving disconnected inodes to lost+found ...
+disconnected dir inode 18007, moving to lost+found
+disconnected inode 18024, moving to lost+found
+disconnected inode 18025, moving to lost+found
+disconnected inode 18026, moving to lost+found
+disconnected inode 18027, moving to lost+found
+disconnected inode 18028, moving to lost+found
+disconnected inode 18029, moving to lost+found
+disconnected inode 18030, moving to lost+found
+disconnected inode 18031, moving to lost+found
+disconnected inode 18037, moving to lost+found
+disconnected inode 18038, moving to lost+found
+disconnected inode 18039, moving to lost+found
+disconnected inode 18040, moving to lost+found
+disconnected inode 18041, moving to lost+found
+disconnected dir inode 268452448, moving to lost+found
+disconnected dir inode 268452449, moving to lost+found
+disconnected dir inode 536889431, moving to lost+found
+disconnected dir inode 536889432, moving to lost+found
+disconnected dir inode 805323820, moving to lost+found
+disconnected dir inode 805323821, moving to lost+found
+disconnected dir inode 1073761501, moving to lost+found
+disconnected dir inode 1073761502, moving to lost+found
+disconnected dir inode 1342194790, moving to lost+found
+disconnected dir inode 1342194791, moving to lost+found
+disconnected dir inode 1610630702, moving to lost+found
+disconnected dir inode 1879067163, moving to lost+found
+disconnected dir inode 2147967564, moving to lost+found
+disconnected dir inode 2436769389, moving to lost+found
+disconnected dir inode 2703685645, moving to lost+found
+disconnected dir inode 2703685648, moving to lost+found
+disconnected dir inode 2970453601, moving to lost+found
+disconnected dir inode 3240533616, moving to lost+found
+disconnected dir inode 3508468806, moving to lost+found
+disconnected dir inode 3777743419, moving to lost+found
+disconnected dir inode 4049684107, moving to lost+found
+Phase 7 - verify and correct link counts...
+resetting inode 5682 nlinks from 2 to 24
+resetting inode 1610630695 nlinks from 21 to 20
+resetting inode 4049684106 nlinks from 3 to 2
+done
 
--Eric
+Regards,
 
-> xfs_da_btree.c.  Caller 0xffffffffa03be8da
-> [822153.422903] Pid: 3273, comm: du Not tainted 2.6.27-9-server #1
-> [822153.422905]
-> [822153.422906] Call Trace:
-> [822153.422931]  [<ffffffffa03cab23>] xfs_error_report+0x43/0x50 [xfs]
-> [822153.422956]  [<ffffffffa03be8da>] ? xfs_da_read_buf+0x2a/0x30 [xfs]
-> [822153.422976]  [<ffffffffa03cab8d>] xfs_corruption_error+0x5d/0x80  
-> [xfs]
-> [822153.422995]  [<ffffffffa03be808>] xfs_da_do_buf+0x6a8/0x700 [xfs]
-> [822153.423014]  [<ffffffffa03be8da>] ? xfs_da_read_buf+0x2a/0x30 [xfs]
-> [822153.423019]  [<ffffffff80305b06>] ? mntput_no_expire+0x36/0x160
-> [822153.423022]  [<ffffffff803866e1>] ? aa_permission+0x21/0xd0
-> [822153.423041]  [<ffffffffa03be8da>] xfs_da_read_buf+0x2a/0x30 [xfs]
-> [822153.423061]  [<ffffffffa03c34fa>] ? xfs_dir2_block_getdents+0x9a/ 
-> 0x210 [xfs]
-> [822153.423080]  [<ffffffffa03c34fa>] xfs_dir2_block_getdents+0x9a/ 
-> 0x210 [xfs]
-> [822153.423099]  [<ffffffffa03adf7b>] ? xfs_bmap_last_offset+0x13b/ 
-> 0x150 [xfs]
-> [822153.423119]  [<ffffffffa03f9970>] ? xfs_hack_filldir+0x0/0x60 [xfs]
-> [822153.423138]  [<ffffffffa03f9970>] ? xfs_hack_filldir+0x0/0x60 [xfs]
-> [822153.423157]  [<ffffffffa03c148b>] xfs_readdir+0x9b/0xf0 [xfs]
-> [822153.423176]  [<ffffffffa03f98a6>] xfs_file_readdir+0xd6/0x1a0 [xfs]
-> [822153.423180]  [<ffffffff802f8810>] ? filldir+0x0/0xe0
-> [822153.423183]  [<ffffffff80386821>] ? aa_file_permission+0x21/0xf0
-> [822153.423185]  [<ffffffff802f8810>] ? filldir+0x0/0xe0
-> [822153.423188]  [<ffffffff802f8810>] ? filldir+0x0/0xe0
-> [822153.423191]  [<ffffffff802f8a9b>] vfs_readdir+0xbb/0xe0
-> [822153.423194]  [<ffffffff802f8c28>] sys_getdents+0x88/0xe0
-> [822153.423199]  [<ffffffff8021285a>] system_call_fastpath+0x16/0x1b
-> 
-> This seems to happen reasonably regularly on my system and causes the  
-> filesystem to be marked as dirty.  xfs_repair runs fine, but I end up  
-> with a bunch of files moved to lost+found. There are no device errors  
-> logged when this happens.
-> 
-> Mount options:
-> 
-> /dev/md2 on /data type xfs (rw,noatime)
-> 
-> Kernel:
-> 
-> Linux slut 2.6.27-9-server #1 SMP Thu Nov 20 22:56:07 UTC 2008 x86_64  
-> GNU/Linux
-> 
-> Device:
-> 
-> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]  
-> [raid4] [raid10]
-> md2 : active raid10 sda2[0] sdd2[3] sdb2[1]
->        1947655680 blocks super 1.2 128K chunks 2 far-copies [4/3] [UUUU]
-> 
-> # xfs_info /dev/md2
-> meta-data=/dev/md2               isize=256    agcount=32,  
-> agsize=15216064 blks
->           =                       sectsz=512   attr=0
-> data     =                       bsize=4096   blocks=486913920,  
-> imaxpct=25
->           =                       sunit=32     swidth=128 blks
-> naming   =version 2              bsize=4096
-> log      =internal               bsize=4096   blocks=32768, version=1
->           =                       sectsz=512   sunit=0 blks, lazy- 
-> count=0
-> realtime =none                   extsz=524288 blocks=0, rtextents=0
-> 
-> Any assistance would be greatly appreciated.
-> 
-> George
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+George
 
 _______________________________________________
 xfs mailing list
