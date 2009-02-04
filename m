@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n14Je547168590 for <xfs@oss.sgi.com>; Wed, 4 Feb 2009 13:40:05 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0BE92E88A4
-	for <xfs@oss.sgi.com>; Wed,  4 Feb 2009 11:39:26 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id u9WIQ6AseYTuGopl for
-	<xfs@oss.sgi.com>; Wed, 04 Feb 2009 11:39:26 -0800 (PST)
-Date: Wed, 4 Feb 2009 14:38:55 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: A rescue tool: xfs_irecover
-Message-ID: <20090204193855.GB26436@infradead.org>
-References: <alpine.LSU.2.00.0812292059020.15355@fbirervta.pbzchgretzou.qr>
-	<20090204082816.GA9111@infradead.org>
-	<alpine.LSU.2.00.0902041032510.27900@fbirervta.pbzchgretzou.qr>
+	n14K55OQ170231 for <xfs@oss.sgi.com>; Wed, 4 Feb 2009 14:05:05 -0600
+Message-ID: <4989F4C2.3030305@sgi.com>
+Date: Thu, 05 Feb 2009 07:04:18 +1100
+From: Mark Goodwin <markgw@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <alpine.LSU.2.00.0902041032510.27900@fbirervta.pbzchgretzou.qr>
+Subject: Re: IMPORTANT: XFS Documentation
+References: <1231946704.3929.36.camel@localhost.localdomain>
+	<20090120160346.GJ17616@sgi.com>
+	<1232480744.23291.101.camel@localhost.localdomain>
+	<20090128202715.GR16689@sgi.com>
+	<1233175168.25011.155.camel@localhost.localdomain>
+	<20090204183603.GA26714@sgi.com>
+In-Reply-To: <20090204183603.GA26714@sgi.com>
+Reply-To: markgw@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,27 +23,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jan Engelhardt <jengelh@medozas.de>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: John Hesterberg <jh@sgi.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, SGI Engineering Interfaces to Red Hat <redhat-interface@sgi.com>, Marizol Martinez <martinez@redhat.com>, Tony Ernst <tee@sgi.com>, George Beshers <gbeshers@sgi.com>, xfs-oss <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>, Gary Hagensen <gwh@sgi.com>, Ric Wheeler <rwheeler@redhat.com>
 
-On Wed, Feb 04, 2009 at 10:33:28AM +0100, Jan Engelhardt wrote:
-> On Wednesday 2009-02-04 09:28, Christoph Hellwig wrote:
-> 
-> >I looked into importing this into xfsprogs, and from a quick look
-> >it could be simplified a lot by using code from libxfs or maybe even
-> >by merging it into xfs_db and using the infrastructure there.
-> >
-> >But xfsprogs is licensed under GPLv2 and will stay that way as it shares
-> >a lot of code with the kernel.  Are you willing to relicense the tool
-> >under GPLv2 or later?
-> 
-> Yes; I updated the repository to reflect this (and add a manpage).
 
-Thanks!
+
+John Hesterberg wrote:
+> FYI, this just happened internally:
+>
+>     ==========================
+>     ADDITIONAL INFORMATION (TAKE)
+>     From: mark goodwin <markgw@sgi.com>
+>     Date: Feb 04 2009 02:34:02AM
+>     ==========================
+>
+>     add Copyright using Creative Commons Attribute Share Alike license,
+>     as approved by the OSRB for release to oss.sgi.com
+>     ...
+>     xfsdocs/xfs-website/training/docs/xfs_lab_01_build.doc - 1.3 - changed
+>     ...
+>
+> Just wanted you to know this is still in process and not
+> forgotten, since I hadn't seen any other communication about it
+> since last week.
+>
+
+Sorry for the delay - the lawyers were pondering the GNU FDL Vrs the
+Creative Commons license (and settled on the latter). So now that's 
+resolved,
+I've updated the copyrights in the doc sources and put them in a git tree:
+
+	git://oss.sgi.com/xfs/cmds/xfsdocs.git
+
+This repository is XFS group writable on oss.sgi.com. The directory 
+structure
+corresponds to (a subset of) the internal ptools tree below 
+xfs-cmds/xfsdocs.
+Since the files in this repository are binary, you'll need to co-ordinate
+check-out/check-in to avoid merge failures (git handles binaries but 
+can't merge
+them). I think Eric and/or others inside Redhat will have the first go 
+at it :)
+I also regenerated the PDFs and committed them too since they're also 
+present
+in the internal ptools tree.
+
+Thanks
+-- Mark
 
 _______________________________________________
 xfs mailing list
