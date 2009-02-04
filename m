@@ -1,24 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n14FGiJC158823 for <xfs@oss.sgi.com>; Wed, 4 Feb 2009 09:16:45 -0600
-Received: from smtp5-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1807718C24D0
-	for <xfs@oss.sgi.com>; Wed,  4 Feb 2009 07:16:04 -0800 (PST)
-Received: from smtp5-g21.free.fr (smtp5-g21.free.fr [212.27.42.5]) by
-	cuda.sgi.com with ESMTP id Pmbpbl7Rl6cdHYss for
-	<xfs@oss.sgi.com>; Wed, 04 Feb 2009 07:16:04 -0800 (PST)
-Date: Wed, 4 Feb 2009 16:15:59 +0100
-From: Emmanuel Florac <eflorac@intellique.com>
+	n14FPDgA159134 for <xfs@oss.sgi.com>; Wed, 4 Feb 2009 09:25:13 -0600
+Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 747EFE6A27
+	for <xfs@oss.sgi.com>; Wed,  4 Feb 2009 07:24:33 -0800 (PST)
+Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.162.198]) by
+	cuda.sgi.com with ESMTP id 302X1c7yJABvl4PM for
+	<xfs@oss.sgi.com>; Wed, 04 Feb 2009 07:24:33 -0800 (PST)
+Received: from mailsrv2.i.zmi.at (h081217054243.dyn.cm.kabsi.at
+	[81.217.54.243])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv1.zmi.at (Postfix) with ESMTP id 3D42A3D4F
+	for <xfs@oss.sgi.com>; Wed,  4 Feb 2009 16:24:33 +0100 (CET)
+Received: from saturn.localnet (saturn.i.zmi.at [10.0.0.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv2.i.zmi.at (Postfix) with ESMTPSA id EC9A9400171
+	for <xfs@oss.sgi.com>; Wed,  4 Feb 2009 16:24:32 +0100 (CET)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
 Subject: Re: xfs_force_shutdown after Raid crash
-Message-ID: <20090204161559.347679f7@harpe.intellique.com>
-In-Reply-To: <20090204140113.GP11617@kyra>
-References: <498376CF.8020806@renderforce.de> <200902031140.08576@zmi.at>
-	<20090203154907.GA21278@infradead.org> <200902040952.45440@zmi.at>
+Date: Wed, 4 Feb 2009 16:24:27 +0100
+References: <498376CF.8020806@renderforce.de> <200902040952.45440@zmi.at>
 	<20090204122241.GL24173@disturbed>
-	<20090204134538.24c2b4ac@harpe.intellique.com>
-	<20090204140113.GP11617@kyra>
-Mime-Version: 1.0
+In-Reply-To: <20090204122241.GL24173@disturbed>
+MIME-Version: 1.0
+Message-Id: <200902041624.32354@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,48 +35,99 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: multipart/mixed; boundary="===============0351599141675911664=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: KELEMEN Peter <Peter.Kelemen@cern.ch>
-Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Le Wed, 4 Feb 2009 15:01:13 +0100
-KELEMEN Peter <Peter.Kelemen@cern.ch> =E9crivait:
+--===============0351599141675911664==
+Content-Type: multipart/signed;
+  boundary="nextPart5224402.24jGHsuhDg";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-> > - 3ware : no information  =
+--nextPart5224402.24jGHsuhDg
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-> =
+(compressing 2 answers here)
 
-> 	/cX/uX set cache=3Doff
+On Mittwoch 04 Februar 2009 Dave Chinner wrote:
+> > With a single hard disk and barriers turned on (on=3Ddefault), a
+> > powerfail "only" looses data in the cache but at least does not
+> > destroy the filesystem.
+>
+> I'd drop this paragraph - powerfail can destroy filesystems even on
+> a single disk (e.g. root directory gets corrupted).
 
-Yes but it set cache for the array globally, I don't find anything about
-the individual disks write cache specifically. Same thing for Xyratex.
+Isn't that what barriers are for? If I understand correctly, barriers=20
+help against destroying the filesys, except root dir? But that should=20
+"easily" be fixable with xfs_repair or so?
 
-BTW I checked LSI MegaRAID  and it allows setting individual disks
-cache too :
+I'd like to have a paragraph for normal XFS users, a PC with harddisks,=20
+maybe with onboard RAID1 or 10. So if I could let the paragraph, that=20
+should be OK (as I hope the root dir destroy is a very, very seldom=20
+case).
 
-MegaCli -AdpCacheFlush -aN|-a0,1,2|-aALL -EnDskCache|DisDskCache =
+> > With a RAID controller with battery backed cache, you should turn
+> > off barriers, as recommended above. But then you *must* disable the
+> > hard disk write cache in order to ensure to keep the filesystem
+> > intact after a power failure.
+>
+> I'd change this to say "*must* disable the individual hard disk
+> write caches" to make it clear that it is referencing the disks
+> behind the raid controller. I'd also say "The method for doing this
+> is different for each RAID controller. Please consult your RAID
+> controller documentation to determine how to change these settings."
+
+That sounds good and I'll put it in.
+
+On Mittwoch 04 Februar 2009 Emmanuel Florac wrote:
+> I have some controllers at hand, and I had a quick glance :
+> - Areca : Allows setting individual cache for passthru disks, needs
+> actual testing for drives part of an array.
+
+Areca allows "Disk Write Cache Mode" on/off under "System Controls" ->=20
+"System Config" in the archttpd web interface, plus per Volume write=20
+back cache on/off, but that's not relevant when using battery (and those=20
+who don't - don't care anyway about their data).
+
+mfg zmi
+=2D-=20
+// Michael Monnerie, Ing.BSc    -----      http://it-management.at
+// Tel: 0660 / 415 65 31                      .network.your.ideas.
+// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
+// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
+// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
 
 
-So for now we have the following :
+--nextPart5224402.24jGHsuhDg
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
-disk cache settings control
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
 
-3Ware : no
-Xyratex : no
-Adaptec : yes
-LSI : yes
-Areca : possibly...
+iEYEABECAAYFAkmJszAACgkQzhSR9xwSCbTaoACg6udMEqM+KztpqeWtO8CwTFXD
+PjoAoN7wdkuplK2pidl1hHP/k8saBtpF
+=5vXg
+-----END PGP SIGNATURE-----
 
--- =
+--nextPart5224402.24jGHsuhDg--
 
-----------------------------------------
-Emmanuel Florac     |   Intellique
-----------------------------------------
+
+--===============0351599141675911664==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============0351599141675911664==--
