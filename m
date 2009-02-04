@@ -1,32 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n14FQMH8159273 for <xfs@oss.sgi.com>; Wed, 4 Feb 2009 09:26:22 -0600
-Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9816018C252D
-	for <xfs@oss.sgi.com>; Wed,  4 Feb 2009 07:25:43 -0800 (PST)
-Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.162.198]) by
-	cuda.sgi.com with ESMTP id wyaK9ifUWuwblzAX for
-	<xfs@oss.sgi.com>; Wed, 04 Feb 2009 07:25:43 -0800 (PST)
-Received: from mailsrv2.i.zmi.at (h081217054243.dyn.cm.kabsi.at
-	[81.217.54.243])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv1.zmi.at (Postfix) with ESMTP id 932213D51
-	for <xfs@oss.sgi.com>; Wed,  4 Feb 2009 16:25:42 +0100 (CET)
-Received: from saturn.localnet (saturn.i.zmi.at [10.0.0.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv2.i.zmi.at (Postfix) with ESMTPSA id 67195400171
-	for <xfs@oss.sgi.com>; Wed,  4 Feb 2009 16:25:42 +0100 (CET)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
+	n14FY879159535 for <xfs@oss.sgi.com>; Wed, 4 Feb 2009 09:34:08 -0600
+Received: from theco.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7853618C1B62
+	for <xfs@oss.sgi.com>; Wed,  4 Feb 2009 07:33:25 -0800 (PST)
+Received: from theco.de (scout.theco.de.mind.de [212.42.230.55]) by
+	cuda.sgi.com with ESMTP id vc8xWwfknJLKQsGt for
+	<xfs@oss.sgi.com>; Wed, 04 Feb 2009 07:33:25 -0800 (PST)
+Date: Wed, 4 Feb 2009 16:33:22 +0100
+From: Ralf Liebenow <ralf@theco.de>
 Subject: Re: xfs_force_shutdown after Raid crash
-Date: Wed, 4 Feb 2009 16:25:41 +0100
-References: <498376CF.8020806@renderforce.de> <20090204140113.GP11617@kyra>
-	<20090204161559.347679f7@harpe.intellique.com>
-In-Reply-To: <20090204161559.347679f7@harpe.intellique.com>
-MIME-Version: 1.0
-Message-Id: <200902041625.42174@zmi.at>
+Message-ID: <20090204153322.GC15454@theco.de>
+References: <498376CF.8020806@renderforce.de> <200902031140.08576@zmi.at>
+	<20090203154907.GA21278@infradead.org>
+	<200902040952.45440@zmi.at> <20090204122241.GL24173@disturbed>
+Mime-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20090204122241.GL24173@disturbed>
+Reply-To: ralf@theco.de
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,70 +27,138 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7623500159517656466=="
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============7623500159517656466==
-Content-Type: multipart/signed;
-  boundary="nextPart2294972.TRfJqUbHsh";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+Hello !
 
---nextPart2294972.TRfJqUbHsh
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Maybe this is a stupid question:
 
-On Mittwoch 04 Februar 2009 Emmanuel Florac wrote:
+Should Battery backed RAID controllers not always set their discs cache off=
+ ?
 
-[This talk is about which controllers allow individual disk write cache=20
-to be turned off]
-> 3Ware : no
-> Xyratex : no
-> Adaptec : yes
-> LSI : yes
-> Areca : possibly...
-
-correcting:
-Areca: yes
-
-mfg zmi
-=2D-=20
-// Michael Monnerie, Ing.BSc    -----      http://it-management.at
-// Tel: 0660 / 415 65 31                      .network.your.ideas.
-// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
-// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
-// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
+As I see it (in case of a power failure):
+  - the discs are connectet to the main power, so if there is a power
+    failure they're offline at that moment in time and their (write) cache =
+will
+    be gone in that instance of time too =
 
 
---nextPart2294972.TRfJqUbHsh
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+  - if they are connected to a battery backed RAID cache, I assume that
+    this cache will be written as soon as the system is online again
+    (if the battery lasts that long)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
+  - if a RAID controller does not turn off the disks write cache, the contr=
+oller
+    cannot know if previous writes have made it to the disk. A good
+    RAID Controller would also use its cache to re-organise the disc =
 
-iEYEABECAAYFAkmJs3YACgkQzhSR9xwSCbR/FgCg9zdCkkNmGS61f3sYGWQuKcUP
-+SQAoMzmTNnsaIvg2U+e2aDt0bbdlnPQ
-=hKuD
------END PGP SIGNATURE-----
+    writes to minimize seek times doing somthing like intelligent
+    command queuing. This would also mean, that any order of writes
+    to a disk could have been changed by the controller. This would
+    ultimately break any filesystem which does not explicitly fsyncing
+    consistent checkpoints to the disk, which would make battery backed
+    RAID Systems pretty useless ... would it ?
+  =
 
---nextPart2294972.TRfJqUbHsh--
+    So .. a battery backed RAID controller should default to "no disk write=
+ cache"
+    should it ? Otherwise why should anyone want to use such expensive
+    controllers ... it just does not make sense to have a battery backed
+    cache on the controller, when things get inconsistent at a power
+    outage ... It wouldn't have any purpuse ... I hope developers of
+    battery backed RAID controllers are aware of that implication ...
+
+  Greets
+    Ralf
+
+> On Wed, Feb 04, 2009 at 09:52:45AM +0100, Michael Monnerie wrote:
+> > On Dienstag 03 Februar 2009 Christoph Hellwig wrote:
+> > > Yeah, that sounds correct. =A0Do you volunteer for the FAQ entry?
+> > > =A0xfs.org is a wiki so you could add it. =A0I'm happy to proof-read =
+it
+> > > if you want.
+> > =
+
+> > I don't know if it's good and correct, I just put this in the wiki, and =
+
+> > additionally changed 2 sections, please check the wiki log if it's =
+
+> > correct:
+> > =
+
+> > =3D=3D Q. What about the hard disk write cache? =3D=3D
+> > =
+
+> > The problem with hard disk write caches is that their contents are lost =
+
+> > in case of a power outage. With hard disk cache sizes of currently up t=
+o =
+
+> > 32MB that can be a lot of valuable information.
+> > =
+
+> > With a single hard disk and barriers turned on (on=3Ddefault), a powerf=
+ail =
+
+> > "only" looses data in the cache but at least does not destroy the =
+
+> > filesystem.
+> =
+
+> I'd drop this paragraph - powerfail can destroy filesystems even on
+> a single disk (e.g. root directory gets corrupted).
+> =
+
+> > With a RAID controller with battery backed cache, you should turn off =
+
+> > barriers, as recommended above. But then you *must* disable the hard =
+
+> > disk write cache in order to ensure to keep the filesystem intact after =
+
+> > a power failure.
+> =
+
+> I'd change this to say "*must* disable the individual hard disk
+> write caches" to make it clear that it is referencing the disks
+> behind the raid controller. I'd also say "The method for doing this
+> is different for each RAID controller. Please consult your RAID
+> controller documentation to determine how to change these settings."
+> =
+
+> Cheers,
+> =
+
+> Dave.
+> -- =
+
+> Dave Chinner
+> david@fromorbit.com
+> =
+
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> =
 
 
---===============7623500159517656466==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+-- =
+
+theCode AG =
+
+HRB 78053, Amtsgericht Charlottenbg
+USt-IdNr.: DE204114808
+Vorstand: Ralf Liebenow, Michael Oesterreich, Peter Witzel
+Aufsichtsratsvorsitzender: Wolf von Jaduczynski
+Oranienstr. 10-11, 10997 Berlin [=D7]
+fon +49 30 617 897-0  fax -10
+ralf@theCo.de http://www.theCo.de
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============7623500159517656466==--
