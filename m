@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n148TQYj132141 for <xfs@oss.sgi.com>; Wed, 4 Feb 2009 02:29:27 -0600
+	n148VlCc132337 for <xfs@oss.sgi.com>; Wed, 4 Feb 2009 02:31:48 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3E79618BB549
-	for <xfs@oss.sgi.com>; Wed,  4 Feb 2009 00:28:48 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3A328E3D37
+	for <xfs@oss.sgi.com>; Wed,  4 Feb 2009 00:31:08 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id AR3J4OAzhfjL92kB for
-	<xfs@oss.sgi.com>; Wed, 04 Feb 2009 00:28:48 -0800 (PST)
-Date: Wed, 4 Feb 2009 03:28:17 -0500
+	by cuda.sgi.com with ESMTP id kCDg2O3H6YCFMCIE for
+	<xfs@oss.sgi.com>; Wed, 04 Feb 2009 00:31:08 -0800 (PST)
+Date: Wed, 4 Feb 2009 03:30:37 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: A rescue tool: xfs_irecover
-Message-ID: <20090204082816.GA9111@infradead.org>
-References: <alpine.LSU.2.00.0812292059020.15355@fbirervta.pbzchgretzou.qr>
+Subject: Re: reproducible xfs/vmap oops
+Message-ID: <20090204083037.GA17493@infradead.org>
+References: <20090201081224.GA22398@infradead.org>
+	<20090203214711.GA24837@infradead.org>
+	<20090203220808.GA9195@infradead.org>
+	<200902041648.55603.nickpiggin@yahoo.com.au>
+	<20090204081547.GA21487@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <alpine.LSU.2.00.0812292059020.15355@fbirervta.pbzchgretzou.qr>
+In-Reply-To: <20090204081547.GA21487@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,16 +32,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jan Engelhardt <jengelh@medozas.de>
-Cc: xfs@oss.sgi.com
+To: Nick Piggin <nickpiggin@yahoo.com.au>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-I looked into importing this into xfsprogs, and from a quick look
-it could be simplified a lot by using code from libxfs or maybe even
-by merging it into xfs_db and using the infrastructure there.
+On Wed, Feb 04, 2009 at 03:15:47AM -0500, Christoph Hellwig wrote:
+> On Wed, Feb 04, 2009 at 04:48:55PM +1100, Nick Piggin wrote:
+> > OK, I could reproduce this directly with a vmap test. With this patch,
+> > I'm no longer able to. (not sure how this mail client goes with attaching
+> > patches, sorry if it messes up)
+> 
+> With that patch applies I run into a different issue:
 
-But xfsprogs is licensed under GPLv2 and will stay that way as it shares
-a lot of code with the kernel.  Are you willing to relicense the tool
-under GPLv2 or later?
+And later on we run out of vmalloc space a lot getting warnings like
+this:
+
+[ 5796.986579] vmap allocation for size 4194304 failed: use
+vmalloc=<size> to increase size.
+[ 5797.008728] xfs_buf_get_noaddr: failed to map pages
+
+
+This didn't happen before.  Maybe it's a result of some of the more
+lazy TLB flushing?
 
 _______________________________________________
 xfs mailing list
