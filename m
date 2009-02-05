@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n15BOAB4209980 for <xfs@oss.sgi.com>; Thu, 5 Feb 2009 05:24:10 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DB87018CB4D0
-	for <xfs@oss.sgi.com>; Thu,  5 Feb 2009 03:23:31 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 8qj9E1EaxwzvSBxi for
-	<xfs@oss.sgi.com>; Thu, 05 Feb 2009 03:23:31 -0800 (PST)
-Date: Thu, 5 Feb 2009 06:22:59 -0500
+	n15BTk0L210196 for <xfs@oss.sgi.com>; Thu, 5 Feb 2009 05:29:46 -0600
+Date: Thu, 5 Feb 2009 06:29:06 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfsprogs 3.0.0 source tarball released
-Message-ID: <20090205112259.GA11781@infradead.org>
-References: <86FA5963-93E1-4BB6-ACC1-70D1628CB926@sgi.com>
+Subject: Re: IMPORTANT: XFS Documentation
+Message-ID: <20090205112906.GB11781@infradead.org>
+References: <1231946704.3929.36.camel@localhost.localdomain>
+	<20090120160346.GJ17616@sgi.com>
+	<1232480744.23291.101.camel@localhost.localdomain>
+	<20090128202715.GR16689@sgi.com>
+	<1233175168.25011.155.camel@localhost.localdomain>
+	<20090204183603.GA26714@sgi.com> <4989F4C2.3030305@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <86FA5963-93E1-4BB6-ACC1-70D1628CB926@sgi.com>
+In-Reply-To: <4989F4C2.3030305@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,17 +27,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Felix Blyakher <felixb@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Mark Goodwin <markgw@sgi.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, SGI Engineering Interfaces to Red Hat <redhat-interface@sgi.com>, Marizol Martinez <martinez@redhat.com>, Gary Hagensen <gwh@sgi.com>, George Beshers <gbeshers@sgi.com>, John Hesterberg <jh@sgi.com>, xfs-oss <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>, Tony Ernst <tee@sgi.com>, Ric Wheeler <rwheeler@redhat.com>
 
-On Wed, Feb 04, 2009 at 06:19:51PM -0600, Felix Blyakher wrote:
-> ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsprogs-3.0.0.tar.gz
+> Sorry for the delay - the lawyers were pondering the GNU FDL Vrs the
+> Creative Commons license (and settled on the latter). So now that's  
+> resolved,
+> I've updated the copyrights in the doc sources and put them in a git tree:
 >
-> This version contains important bug fixes and improvements
-> to xfsprogs 2.10.2:
+> 	git://oss.sgi.com/xfs/cmds/xfsdocs.git
 
-It looks like the tag / final CHANGES update for this one weren't pushed
-out to oss.sgi.com (unlike dmapi/xfsdump, which are there).
+Russell, can you add this to the list of repositories to be displayed on
+
+	http://oss.sgi.com/cgi-bin/gitweb.cgi
+
+?
+
+Talking about that any chance you could convert your cvsimport
+repositories to bare repos like all the others on oss?  And maybe
+move the old xfs-cmds import under cattelan/ like the other cvsimport
+ones?
 
 _______________________________________________
 xfs mailing list
