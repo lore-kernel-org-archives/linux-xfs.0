@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n14K55OQ170231 for <xfs@oss.sgi.com>; Wed, 4 Feb 2009 14:05:05 -0600
-Message-ID: <4989F4C2.3030305@sgi.com>
-Date: Thu, 05 Feb 2009 07:04:18 +1100
-From: Mark Goodwin <markgw@sgi.com>
-MIME-Version: 1.0
-Subject: Re: IMPORTANT: XFS Documentation
-References: <1231946704.3929.36.camel@localhost.localdomain>
-	<20090120160346.GJ17616@sgi.com>
-	<1232480744.23291.101.camel@localhost.localdomain>
-	<20090128202715.GR16689@sgi.com>
-	<1233175168.25011.155.camel@localhost.localdomain>
-	<20090204183603.GA26714@sgi.com>
-In-Reply-To: <20090204183603.GA26714@sgi.com>
-Reply-To: markgw@sgi.com
+	n150KYpA180320 for <xfs@oss.sgi.com>; Wed, 4 Feb 2009 18:20:34 -0600
+Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 87423AC012
+	for <xfs@oss.sgi.com>; Wed,  4 Feb 2009 16:19:52 -0800 (PST)
+Received: from eagdhcp-232-197.americas.sgi.com
+	(eagdhcp-232-197.americas.sgi.com [128.162.232.197])
+	by estes.americas.sgi.com (Postfix) with ESMTP id B2DE17000103
+	for <xfs@oss.sgi.com>; Wed,  4 Feb 2009 18:19:51 -0600 (CST)
+Message-Id: <86FA5963-93E1-4BB6-ACC1-70D1628CB926@sgi.com>
+From: Felix Blyakher <felixb@sgi.com>
+Mime-Version: 1.0 (Apple Message framework v926)
+Subject: xfsprogs 3.0.0 source tarball released
+Date: Wed, 4 Feb 2009 18:19:51 -0600
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,53 +26,27 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: John Hesterberg <jh@sgi.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, SGI Engineering Interfaces to Red Hat <redhat-interface@sgi.com>, Marizol Martinez <martinez@redhat.com>, Tony Ernst <tee@sgi.com>, George Beshers <gbeshers@sgi.com>, xfs-oss <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>, Gary Hagensen <gwh@sgi.com>, Ric Wheeler <rwheeler@redhat.com>
+To: xfs@oss.sgi.com
 
+ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsprogs-3.0.0.tar.gz
 
+This version contains important bug fixes and improvements
+to xfsprogs 2.10.2:
 
-John Hesterberg wrote:
-> FYI, this just happened internally:
->
->     ==========================
->     ADDITIONAL INFORMATION (TAKE)
->     From: mark goodwin <markgw@sgi.com>
->     Date: Feb 04 2009 02:34:02AM
->     ==========================
->
->     add Copyright using Creative Commons Attribute Share Alike license,
->     as approved by the OSRB for release to oss.sgi.com
->     ...
->     xfsdocs/xfs-website/training/docs/xfs_lab_01_build.doc - 1.3 - changed
->     ...
->
-> Just wanted you to know this is still in process and not
-> forgotten, since I hadn't seen any other communication about it
-> since last week.
->
-
-Sorry for the delay - the lawyers were pondering the GNU FDL Vrs the
-Creative Commons license (and settled on the latter). So now that's 
-resolved,
-I've updated the copyrights in the doc sources and put them in a git tree:
-
-	git://oss.sgi.com/xfs/cmds/xfsdocs.git
-
-This repository is XFS group writable on oss.sgi.com. The directory 
-structure
-corresponds to (a subset of) the internal ptools tree below 
-xfs-cmds/xfsdocs.
-Since the files in this repository are binary, you'll need to co-ordinate
-check-out/check-in to avoid merge failures (git handles binaries but 
-can't merge
-them). I think Eric and/or others inside Redhat will have the first go 
-at it :)
-I also regenerated the PDFs and committed them too since they're also 
-present
-in the internal ptools tree.
-
-Thanks
--- Mark
+xfsprogs-3.0.0 (4 February 2009)
+         - Various smaller xfs_repair improvements.
+         - Various gettext improvements, thanks to Jakub Bogusz.
+         - Polish translation update, thanks to Jakub Bogusz.
+         - Various xfs_quota fixes, thanks to Arkadiusz Miskiewicz.
+         - Support parallel builds.
+         - Detection of btrfs, gfs and gfs2 in libdisk.
+         - Addition of the xfs_fsr and xfs_estimate tools previous found
+           in the xfsdump package.
+         - Resync libxfs to latest kernel implemenation.
+         - Update all of xfsprogs to latest kernel interfaces.
+         - Add sparse support to xfsprogs build.
+         - Cleanup devel package for xfsctl, libhandle and libdisk only
+           (remove libxfs interfaces).
 
 _______________________________________________
 xfs mailing list
