@@ -1,30 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n154WL3X189630 for <xfs@oss.sgi.com>; Wed, 4 Feb 2009 22:32:21 -0600
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C37A91BB7E01
-	for <xfs@oss.sgi.com>; Wed,  4 Feb 2009 20:31:41 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31]) by cuda.sgi.com
-	with ESMTP id DjZsJ4BGVLfDKNB5 for <xfs@oss.sgi.com>;
-	Wed, 04 Feb 2009 20:31:41 -0800 (PST)
-Date: Wed, 4 Feb 2009 23:31:25 -0500 (EST)
-From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: Re: spurious -ENOSPC on XFS
-In-Reply-To: <20090204120852.GK24173@disturbed>
-Message-ID: <Pine.LNX.4.64.0902042310240.27204@hs20-bc2-1.build.redhat.com>
-References: <20090120232422.GF10158@disturbed>
-	<20090122205913.GA30859@infradead.org>
-	<20090122224347.GA18751@infradead.org>
-	<Pine.LNX.4.64.0901231509010.5179@hs20-bc2-1.build.redhat.com>
-	<20090124071249.GF32390@disturbed>
-	<Pine.LNX.4.64.0901291136050.19368@hs20-bc2-1.build.redhat.com>
-	<20090131235725.GA24173@disturbed>
-	<Pine.LNX.4.64.0902021214310.15622@hs20-bc2-1.build.redhat.com>
-	<20090203032740.GG24173@disturbed>
-	<Pine.LNX.4.64.0902031459350.28433@hs20-bc2-1.build.redhat.com>
-	<20090204120852.GK24173@disturbed>
-MIME-Version: 1.0
+	n155dUdr193171 for <xfs@oss.sgi.com>; Wed, 4 Feb 2009 23:39:30 -0600
+Received: from theco.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6ABBF18CA437
+	for <xfs@oss.sgi.com>; Wed,  4 Feb 2009 21:38:49 -0800 (PST)
+Received: from theco.de (scout.theco.de.mind.de [212.42.230.55]) by
+	cuda.sgi.com with ESMTP id Q6tXg0dFPjQsXaPz for
+	<xfs@oss.sgi.com>; Wed, 04 Feb 2009 21:38:49 -0800 (PST)
+Date: Thu, 5 Feb 2009 06:38:47 +0100
+From: Ralf Liebenow <ralf@theco.de>
+Subject: Re: XFS Kernel 2.6.27.7 oopses
+Message-ID: <20090205053847.GA24841@theco.de>
+References: <20090130222359.GB32142@theco.de>
+	<20090201003744.GB24173@disturbed>
+Mime-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20090201003744.GB24173@disturbed>
+Reply-To: ralf@theco.de
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,478 +26,206 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-> > ... and if you turn it into trylock, what are you going to do with the 
-> > inode that is just being written to? You should definitely flush it, but 
-> > trylock will skip it because it's already locked.
-> 
-> We've already flushed it directly. You disabled that code fearing
-> deadlocks. I've made it synchronous (i.e. not handed off to
-> xfssyncd) because the flush path requires us to hold the lock we are
-> already holding....
+Hello !
 
-This is not "fearing deadlocks". This was getting a real deadlock:
+Finally I found the time to compile and test the latest stable 2.6.28.3 ker=
+nel
+but I can reproduce it:
 
-Jan 29 16:51:55 slunicko kernel: SysRq : Show Blocked State
-Jan 29 16:51:55 slunicko kernel:   task                        PC stack   
-pid father
-Jan 29 16:51:55 slunicko kernel: xfssyncd      D 00000000004848e0     0 
-13321
-   2
-Jan 29 16:51:55 slunicko kernel: Call Trace:
-Jan 29 16:51:55 slunicko kernel:  [000000000060475c] io_schedule+0x20/0x44
-Jan 29 16:51:55 slunicko kernel:  [00000000004848e0] sync_page+0x64/0x74
-Jan 29 16:51:55 slunicko kernel:  [000000000060494c] 
-__wait_on_bit_lock+0x5c/0x9c
-Jan 29 16:51:55 slunicko kernel:  [0000000000484848] __lock_page+0x58/0x68
-Jan 29 16:51:55 slunicko kernel:  [000000000048b3fc] 
-write_cache_pages+0x170/0x38c
-Jan 29 16:51:55 slunicko kernel:  [000000000048b64c] 
-generic_writepages+0x34/0x48
-Jan 29 16:51:55 slunicko kernel:  [00000000101d0d48] 
-xfs_vm_writepages+0x3c/0x50 [xfs]
-Jan 29 16:51:55 slunicko kernel:  [000000000048b6a4] 
-do_writepages+0x44/0x7c
-Jan 29 16:51:55 slunicko kernel:  [00000000004850f4] 
-__filemap_fdatawrite_range+0x58/0x6c
-Jan 29 16:51:55 slunicko kernel:  [0000000000485cc8] 
-filemap_flush+0x20/0x34
-Jan 29 16:51:55 slunicko kernel:  [00000000101dbc64] 
-xfs_flush_inode_work+0x10/0x28 [xfs]
-Jan 29 16:51:55 slunicko kernel:  [00000000101dbf2c] xfssyncd+0x110/0x174 
+Feb  5 03:00:19 up kernel: general protection fault: 0000 [#1] SMP
+Feb  5 03:00:19 up kernel: last sysfs file: /sys/devices/system/cpu/cpu3/ca=
+che/index2/shared_cpu_map
+Feb  5 03:00:19 up kernel: CPU 2
+Feb  5 03:00:19 up kernel: Modules linked in: vmnet parport_pc vsock vmci v=
+mmon nfsd lockd nfs_acl auth_rpcgss snd_pcm_oss sunrpc snd_mi
+xer_oss exportfs snd_seq snd_seq_device binfmt_misc microcode fuse loop dm_=
+mod snd_hda_intel osst st snd_pcm snd_timer snd_page_alloc pp
+dev shpchp rtc_cmos i2c_i801 rtc_core button snd_hwdep r8169 rtc_lib pcspkr=
+ ohci1394 intel_agp mii i2c_core parport sky2 pci_hotplug iTC
+O_wdt ieee1394 iTCO_vendor_support snd sg soundcore raid456 async_xor async=
+_memcpy async_tx xor raid0 sd_mod crc_t10dif ehci_hcd uhci_hc
+d usbcore edd raid1 xfs fan ahci libata aic79xx scsi_transport_spi scsi_mod=
+ thermal processor thermal_sys hwmon [last unloaded: vmnet]
+Feb  5 03:00:19 up kernel: Pid: 1462, comm: xfssyncd Not tainted 2.6.28.3-9=
+-default #1
+Feb  5 03:00:19 up kernel: RIP: 0010:[<ffffffff802327a1>]  [<ffffffff802327=
+a1>] __wake_up_common+0x29/0x76
+Feb  5 03:00:19 up kernel: RSP: 0018:ffff88012e56fcf0  EFLAGS: 00010086
+Feb  5 03:00:19 up kernel: RAX: 7fff8800255b8a70 RBX: ffff8800255b8a60 RCX:=
+ 0000000000000000
+Feb  5 03:00:19 up kernel: RDX: 0000000000000001 RSI: 0000000000000003 RDI:=
+ ffff8800255b8a68
+Feb  5 03:00:19 up kernel: RBP: ffff88012e56fd20 R08: 7fff8800255b8a58 R09:=
+ ffff880129d02e18
+Feb  5 03:00:19 up kernel: R10: 0000000000000002 R11: 0000000300000000 R12:=
+ 0000000000000001
+Feb  5 03:00:19 up kernel: R13: 0000000000000286 R14: ffff8800255b8a70 R15:=
+ 0000000000000000
+Feb  5 03:00:19 up kernel: FS:  0000000000000000(0000) GS:ffff88012fb2e8c0(=
+0000) knlGS:0000000000000000
+Feb  5 03:00:19 up kernel: CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
+Feb  5 03:00:19 up kernel: CR2: 00007f075ee9ab00 CR3: 0000000000201000 CR4:=
+ 00000000000006e0
+Feb  5 03:00:19 up kernel: DR0: 0000000000000000 DR1: 0000000000000000 DR2:=
+ 0000000000000000
+Feb  5 03:00:19 up kernel: DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7:=
+ 0000000000000400
+Feb  5 03:00:19 up kernel: Process xfssyncd (pid: 1462, threadinfo ffff8801=
+2e56e000, task ffff88012c842640)
+Feb  5 03:00:19 up kernel: Stack:
+Feb  5 03:00:19 up kernel:  0000000300000000 ffff8800255b8a60 ffff8800255b8=
+a68 0000000000000286
+Feb  5 03:00:19 up kernel:  ffff88012b922000 ffff88012a1eb000 ffff88012e56f=
+d50 ffffffff8023410a
+Feb  5 03:00:19 up kernel:  ffff8800255b87c0 0000000000000000 ffff8800255b8=
+980 ffff88004dc64140
+Feb  5 03:00:19 up kernel: Call Trace:
+Feb  5 03:00:20 up kernel:  [<ffffffff8023410a>] complete+0x38/0x4c
+Feb  5 03:00:20 up kernel:  [<ffffffffa01a2424>] xfs_iflush+0x7a/0x2b2 [xfs]
+Feb  5 03:00:20 up kernel:  [<ffffffff802241cc>] ? default_spin_lock_flags+=
+0x17/0x1b
+Feb  5 03:00:20 up kernel:  [<ffffffffa01b7cf9>] xfs_finish_reclaim+0x136/0=
+x175 [xfs]
+Feb  5 03:00:20 up kernel:  [<ffffffffa01b7dd0>] xfs_finish_reclaim_all+0x9=
+8/0xd4 [xfs]
+Feb  5 03:00:20 up kernel:  [<ffffffffa01b694c>] xfs_syncsub+0x55/0x22f [xf=
+s]
+Feb  5 03:00:20 up kernel:  [<ffffffffa01b6b68>] xfs_sync+0x42/0x47 [xfs]
+Feb  5 03:00:20 up kernel:  [<ffffffffa01c55fd>] xfs_sync_worker+0x1f/0x41 =
 [xfs]
-Jan 29 16:51:55 slunicko kernel:  [000000000046556c] kthread+0x54/0x88
-Jan 29 16:51:55 slunicko kernel:  [000000000042b2a0] 
-kernel_thread+0x3c/0x54
-Jan 29 16:51:55 slunicko kernel:  [00000000004653b8] kthreadd+0xac/0x160
-Jan 29 16:51:55 slunicko kernel: pdflush       D 00000000004848e0     0 
-15226
-   2
-Jan 29 16:51:55 slunicko kernel: Call Trace:
-Jan 29 16:51:55 slunicko kernel:  [000000000060475c] io_schedule+0x20/0x44
-Jan 29 16:51:55 slunicko kernel:  [00000000004848e0] sync_page+0x64/0x74
-Jan 29 16:51:55 slunicko kernel:  [000000000060494c] 
-__wait_on_bit_lock+0x5c/0x9c
-Jan 29 16:51:55 slunicko kernel:  [0000000000484848] __lock_page+0x58/0x68
-Jan 29 16:51:55 slunicko kernel:  [000000000048b3fc] 
-write_cache_pages+0x170/0x38c
-Jan 29 16:51:55 slunicko kernel:  [000000000048b64c] 
-generic_writepages+0x34/0x48
-Jan 29 16:51:55 slunicko kernel:  [00000000101d0d48] 
-xfs_vm_writepages+0x3c/0x50 [xfs]
-Jan 29 16:51:55 slunicko kernel:  [000000000048b6a4] 
-do_writepages+0x44/0x7c
-Jan 29 16:51:55 slunicko kernel:  [00000000004ca350] 
-__writeback_single_inode+0x168/0x2e4
-Jan 29 16:51:55 slunicko kernel:  [00000000004ca90c] 
-generic_sync_sb_inodes+0x204/0x3a0
-Jan 29 16:51:55 slunicko kernel:  [00000000004caabc] 
-sync_sb_inodes+0x14/0x24
-Jan 29 16:51:55 slunicko kernel:  [00000000004cacd8] 
-writeback_inodes+0x8c/0x100
-Jan 29 16:51:55 slunicko kernel:  [000000000048c274] wb_kupdate+0xc4/0x15c
-Jan 29 16:51:55 slunicko kernel:  [000000000048c8dc] pdflush+0xfc/0x1cc
-Jan 29 16:51:55 slunicko kernel:  [000000000046556c] kthread+0x54/0x88
-Jan 29 16:51:55 slunicko kernel:  [000000000042b2a0] 
-kernel_thread+0x3c/0x54
-Jan 29 16:51:55 slunicko kernel: dd            D 00000000006045c4     0 
-16610  16597
-Jan 29 16:51:55 slunicko kernel: Call Trace:
-Jan 29 16:51:55 slunicko kernel:  [00000000006047d8] 
-schedule_timeout+0x24/0xb8
-Jan 29 16:51:55 slunicko kernel:  [00000000006045c4] 
-wait_for_common+0xe4/0x14c
-Jan 29 16:51:55 slunicko kernel:  [0000000000604700] 
-wait_for_completion+0x1c/0x2c
-Jan 29 16:51:55 slunicko kernel:  [00000000101dc7d8] 
-xfs_flush_inode+0xb0/0xc0 [xfs]
-Jan 29 16:51:55 slunicko kernel:  [00000000101b9b50] 
-xfs_flush_space+0x54/0xd0 [xfs]
-Jan 29 16:51:55 slunicko kernel:  [00000000101b9ec0] 
-xfs_iomap_write_delay+0x1bc/0x228 [xfs]
-Jan 29 16:51:55 slunicko kernel:  [00000000101ba4b8] xfs_iomap+0x1c4/0x2e0 
-[xfs]Jan 29 16:51:55 slunicko kernel:  [00000000101d0f04] 
-__xfs_get_blocks+0x74/0x240 [xfs]
-Jan 29 16:51:55 slunicko kernel:  [00000000101d112c] 
-xfs_get_blocks+0x24/0x38 [xfs]
-Jan 29 16:51:55 slunicko kernel:  [00000000004d05f0] 
-__block_prepare_write+0x184/0x41c
-Jan 29 16:51:55 slunicko kernel:  [00000000004d095c] 
-block_write_begin+0x84/0xe8
-Jan 29 16:51:55 slunicko kernel:  [00000000101d047c] 
-xfs_vm_write_begin+0x3c/0x50 [xfs]
-Jan 29 16:51:55 slunicko kernel:  [0000000000485258] 
-generic_file_buffered_write+0xe8/0x28c
-Jan 29 16:51:55 slunicko kernel:  [00000000101d8ec4] xfs_write+0x40c/0x604 
-[xfs]Jan 29 16:51:55 slunicko kernel:  [00000000101d4d3c] 
-xfs_file_aio_write+0x74/0x84 [xfs]
-Jan 29 16:51:55 slunicko kernel:  [00000000004ae70c] 
-do_sync_write+0x8c/0xdc
+Feb  5 03:00:20 up kernel:  [<ffffffffa01c558f>] xfssyncd+0x15d/0x1ac [xfs]
+Feb  5 03:00:20 up kernel:  [<ffffffffa01c5432>] ? xfssyncd+0x0/0x1ac [xfs]
+Feb  5 03:00:20 up kernel:  [<ffffffff802563e5>] kthread+0x49/0x76
+Feb  5 03:00:20 up kernel:  [<ffffffff8020d659>] child_rip+0xa/0x11
+Feb  5 03:00:20 up kernel:  [<ffffffff8025639c>] ? kthread+0x0/0x76
+Feb  5 03:00:20 up kernel:  [<ffffffff8020d64f>] ? child_rip+0x0/0x11
+Feb  5 03:00:20 up kernel: Code: c9 c3 55 48 89 e5 41 57 4d 89 c7 41 56 4c =
+8d 77 08 41 55 41 54 41 89 d4 53 48 83 ec 08 89 75 d4 89 4d d
+0 48 8b 47 08 4c 8d 40 e8 <49> 8b 40 18 48 8d 58 e8 eb 2d 45 8b 28 4c 89 f9=
+ 8b 55 d0 8b 75
+Feb  5 03:00:20 up kernel: RIP  [<ffffffff802327a1>] __wake_up_common+0x29/=
+0x76
+Feb  5 03:00:20 up kernel:  RSP <ffff88012e56fcf0>
+Feb  5 03:00:20 up kernel: ---[ end trace a0fbe14899a3ce1c ]---
 
-This one was obtained on a machine with 4k filesystem blocks, 8k pages and 
-dd bs=1 on a nearly full filesystem. Apparently it attempts to lock the 
-page that is already locked when writing to it.
+So its not SuSEs fault, and its the latest stable kernel from kernel.org ..=
+..
 
-The deadlock happened when I modified it to use completions (instead of 
-500ms wait) with the patch I already posted.
+Hmmm ... can I do something to help you find the problem ? I can
+reproduce it by creating some millon of hardlinks to files and then remove =
+some
+million hardlinks with one "rm -rf"
 
-> > > > There seems to be more bugs with forgetting to flush delayed allocation 
-> > > > --- you should flush delayed allocation after *every* failed allocate 
-> > > > attempt, but the code flushes it only after failed delayed allocate 
-> > > > attempt --- i.e. nondelayed allocators, such as xfs_iomap_write_direct 
-> > > > (and maybe other places) will still return -ENOSPC without attempting to 
-> > > > flush other inodes with delayed allocation.
-> .....
-> > > For metadata allocations (all over the place), we take a reservation
-> > > first
-> > 
-> > And what if the reservation fails? Do you flush in this case?
-> 
-> Well, if you read the rest of the paragraph you'd have the answer
-> to that question. I'll leave it quoted because it is relevant:
-> 
-> > > and so we could trigger a flush in certain circumstances if
-> > > the reservation fails (to avoid recursion and transaction subsystem
-> > > deadlocks). However, if you are not getting spurious enospc on
-> > > creating inodes (as opposed to writing to them) then I see no
-> > > immediate need for flushes there, either....
-> 
-> It is relevant because the test case Eric provided fails repeatedly
-> in xfs_create() on a reservation rather than on a data write, and
-> without a flush there no further data writes will occur to flush out
-> the blocks.
-> 
-> So a flush there is needed, too.
-> 
-> > > > @@ -415,6 +419,7 @@ xfs_syncd_queue_work(
-> > > >   * has failed with ENOSPC and we are in the process of scratching our
-> > > >   * heads, looking about for more room...
-> > > >   */
-> > > > +#if 0
-> > > >  STATIC void
-> > > >  xfs_flush_inode_work(
-> > > >  	struct xfs_mount *mp,
-> > > > @@ -424,16 +429,20 @@ xfs_flush_inode_work(
-> > > >  	filemap_flush(inode->i_mapping);
-> > > >  	iput(inode);
-> > > >  }
-> > > > +#endif
-> > > >  
-> > > >  void
-> > > >  xfs_flush_inode(
-> > > >  	xfs_inode_t	*ip)
-> > > >  {
-> > > > +#if 0
-> > > >  	struct inode	*inode = VFS_I(ip);
-> > > > +	DECLARE_COMPLETION_ONSTACK(completion);
-> > > >  
-> > > >  	igrab(inode);
-> > > > -	xfs_syncd_queue_work(ip->i_mount, inode, xfs_flush_inode_work);
-> > > > -	delay(msecs_to_jiffies(500));
-> > > > +	xfs_syncd_queue_work(ip->i_mount, inode, xfs_flush_inode_work, &completion);
-> > > > +	wait_for_completion(&completion);
-> > > > +#endif
-> > > 
-> > > Why did you turn off the initial inode flush?
-> > 
-> > Because it recurses into Linux VFS layer and deadlocks.
-> 
-> Not at all. It calls into the writeback code (not the VFS)
-> which does not take any locks except page locks before it
-> calls back into ->writepages....
+The Filesystem is 1 TB big.
 
-See the backtrace above.
+Settings:
+meta-data=3D/dev/sdd1              isize=3D256    agcount=3D32, agsize=3D76=
+30937 blks
+         =3D                       sectsz=3D512   attr=3D0
+data     =3D                       bsize=3D4096   blocks=3D244189984, imaxp=
+ct=3D25
+         =3D                       sunit=3D0      swidth=3D0 blks
+naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0
+log      =3Dinternal               bsize=3D4096   blocks=3D32768, version=
+=3D2
+         =3D                       sectsz=3D512   sunit=3D0 blks, lazy-coun=
+t=3D0
+realtime =3Dnone                   extsz=3D65536  blocks=3D0, rtextents=3D0
 
-> I've attached the WIP patch I have right now (based on yours) that
-> allows the test case to pass. It will need a bit of cleanup before
-> it is ready for prime-time, but is passes xfsqa here including the
-> ENOSPC stress tests.  Can you see if it fixes your test case and
-> whether it deadlocks?
+[I originally had log version=3D1 but with the same problem. The problem oc=
+curs
+ with barriers=3Don and with barriers=3Doff ]
 
-I can try it, but that filemap_fdatawrite is still wrong. I tried to call 
-filemap_fdatawrite myself with my patch and got the deadlock.
+I have not tried to run the system with one CPU core yet, that maybe a thing
+I can check tomorrow ...
 
-You just can't do it that you hold a page lock and call an generic kernel 
-function that takes other page locks. Even if you hacked it somehow to be 
-working now, over the long term it is unmaintainable.
+   Thanks for your help
+      Ralf
 
-Mikulas
+
+> On Fri, Jan 30, 2009 at 11:23:59PM +0100, Ralf Liebenow wrote:
+> > Hello !
+> > =
+
+> > I heavily use XFS for an incremental backup server (by using rsync --li=
+nk-dest option
+> > to create hardlinks to unchanged files), and therefore have about 10 mi=
+llion files
+> > on my TB Harddisk. To remove old versions nightly an "rm -rf" will remo=
+ve a million
+> > hardlinks/files every night.
+> > =
+
+> > After a while I had regular oopses and so I updated the system to make =
+sure its
+> > on a current version.
+> > =
+
+> > It is now a SuSE 11.1 64Bit with SuSE's Kernel 2.6.27.7-9-default
+> =
+
+> What kernel did you originally see this problem on?
+> =
+
+> > <4>Call Trace:
+> > <4> [<ffffffff8023219a>] complete+0x38/0x4b
+> > <4> [<ffffffffa00f5316>] xfs_iflush+0x73/0x2ab [xfs]
+> > <4> [<ffffffffa010a7a2>] xfs_finish_reclaim+0x12a/0x168 [xfs]
+> > <4> [<ffffffffa010a871>] xfs_finish_reclaim_all+0x91/0xcb [xfs]
+> > <4> [<ffffffffa010925c>] xfs_syncsub+0x50/0x22b [xfs]
+> > <4> [<ffffffffa0118a3a>] xfs_sync_worker+0x17/0x36 [xfs]
+> > <4> [<ffffffffa01189d4>] xfssyncd+0x15d/0x1ac [xfs]
+> > <4> [<ffffffff8025434d>] kthread+0x47/0x73
+> > <4> [<ffffffff8020d7b9>] child_rip+0xa/0x11
+> =
+
+> That may be a use after free. I know lachlan fixed a few in this
+> area, but I'm not sure what release those fixe?? ended up in....
+> =
+
+> > What do you recommend ? Has this bug already been addressed within the
+> > hundrets of fixes I've seen on the mailing list ? Shall I try a stock 2=
+.6.28
+> > kernel ?
+> =
+
+> Try the lastest 2.6.28.x stable kernel (*not* the straight 2.6.28 release
+> as there's a directory traversal bug that is fixed in 2.6.28.1) and
+> see if the problem persists.
+> =
 
 > Cheers,
-> 
+> =
+
 > Dave.
-> -- 
+> -- =
+
 > Dave Chinner
 > david@fromorbit.com
-> 
-> 
-> Use xfs_sync_inodes and not sync_blockdev. XFS keeps it's dirty
-> metadata in different address spaces to the block device, so
-> sync_blockdev does nothing.
-> 
-> Change that 500ms delay to a wait for completion, so that the
-> behavior is not dependent on magic timeout values.
-> 
-> Add a trylock option to xfs_sync_inodes() so that it won't
-> deadlock if we are already holding an inode lock.
-> 
-> Add xfs_flush_device() to inode allocation failure in the create
-> path as that is the other place that typically falls over due to
-> outstanding delayed allocation extents.
-> 
-> Based on work from Mikulas Patocka <mpatocka@redhat.com>.
-> 
-> ---
->  fs/xfs/linux-2.6/xfs_fs_subr.c |   14 ++++----
->  fs/xfs/linux-2.6/xfs_sync.c    |   66 +++++++++++++++++++--------------------
->  fs/xfs/linux-2.6/xfs_sync.h    |    6 ++-
->  fs/xfs/xfs_mount.h             |    2 +-
->  fs/xfs/xfs_vnodeops.c          |    6 ++++
->  5 files changed, 50 insertions(+), 44 deletions(-)
-> 
-> diff --git a/fs/xfs/linux-2.6/xfs_fs_subr.c b/fs/xfs/linux-2.6/xfs_fs_subr.c
-> index 5aeb777..08be36d 100644
-> --- a/fs/xfs/linux-2.6/xfs_fs_subr.c
-> +++ b/fs/xfs/linux-2.6/xfs_fs_subr.c
-> @@ -74,14 +74,14 @@ xfs_flush_pages(
->  
->  	if (mapping_tagged(mapping, PAGECACHE_TAG_DIRTY)) {
->  		xfs_iflags_clear(ip, XFS_ITRUNCATED);
-> -		ret = filemap_fdatawrite(mapping);
-> -		if (flags & XFS_B_ASYNC)
-> -			return -ret;
-> -		ret2 = filemap_fdatawait(mapping);
-> -		if (!ret)
-> -			ret = ret2;
-> +		ret = -filemap_fdatawrite(mapping);
->  	}
-> -	return -ret;
-> +	if (flags & XFS_B_ASYNC)
-> +		return ret;
-> +	ret2 = xfs_wait_on_pages(ip, first, last);
-> +	if (!ret)
-> +		ret = ret2;
-> +	return ret;
->  }
->  
->  int
-> diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-> index a608e72..fddb9de 100644
-> --- a/fs/xfs/linux-2.6/xfs_sync.c
-> +++ b/fs/xfs/linux-2.6/xfs_sync.c
-> @@ -62,12 +62,6 @@ xfs_sync_inodes_ag(
->  	uint32_t	first_index = 0;
->  	int		error = 0;
->  	int		last_error = 0;
-> -	int		fflag = XFS_B_ASYNC;
-> -
-> -	if (flags & SYNC_DELWRI)
-> -		fflag = XFS_B_DELWRI;
-> -	if (flags & SYNC_WAIT)
-> -		fflag = 0;		/* synchronous overrides all */
->  
->  	do {
->  		struct inode	*inode;
-> @@ -128,12 +122,23 @@ xfs_sync_inodes_ag(
->  		 * If we have to flush data or wait for I/O completion
->  		 * we need to hold the iolock.
->  		 */
-> -		if ((flags & SYNC_DELWRI) && VN_DIRTY(inode)) {
-> -			xfs_ilock(ip, XFS_IOLOCK_SHARED);
-> -			lock_flags |= XFS_IOLOCK_SHARED;
-> -			error = xfs_flush_pages(ip, 0, -1, fflag, FI_NONE);
-> -			if (flags & SYNC_IOWAIT)
-> +		if (flags & SYNC_DELWRI) {
-> +			if (VN_DIRTY(inode)) {
-> +				if (flags & SYNC_TRYLOCK) {
-> +					if (xfs_ilock_nowait(ip, XFS_IOLOCK_SHARED))
-> +						lock_flags |= XFS_IOLOCK_SHARED;
-> +				} else {
-> +					xfs_ilock(ip, XFS_IOLOCK_SHARED);
-> +					lock_flags |= XFS_IOLOCK_SHARED;
-> +				}
-> +				if (lock_flags & XFS_IOLOCK_SHARED) {
-> +					error = xfs_flush_pages(ip, 0, -1,
-> +							XFS_B_ASYNC, FI_NONE);
-> +				}
-> +			}
-> +			if (VN_CACHED(inode) && (flags & SYNC_IOWAIT)) {
->  				xfs_ioend_wait(ip);
-> +			}
->  		}
->  		xfs_ilock(ip, XFS_ILOCK_SHARED);
->  
-> @@ -388,7 +393,7 @@ xfs_quiesce_attr(
->  }
->  
->  /*
-> - * Enqueue a work item to be picked up by the vfs xfssyncd thread.
-> + * Enqueue a work item to be picked up by the xfssyncd thread.
->   * Doing this has two advantages:
->   * - It saves on stack space, which is tight in certain situations
->   * - It can be used (with care) as a mechanism to avoid deadlocks.
-> @@ -398,15 +403,17 @@ STATIC void
->  xfs_syncd_queue_work(
->  	struct xfs_mount *mp,
->  	void		*data,
-> -	void		(*syncer)(struct xfs_mount *, void *))
-> +	void		(*syncer)(struct xfs_mount *, void *),
-> +	struct completion *completion)
->  {
-> -	struct bhv_vfs_sync_work *work;
-> +	struct xfs_sync_work *work;
->  
-> -	work = kmem_alloc(sizeof(struct bhv_vfs_sync_work), KM_SLEEP);
-> +	work = kmem_zalloc(sizeof(struct xfs_sync_work), KM_SLEEP);
->  	INIT_LIST_HEAD(&work->w_list);
->  	work->w_syncer = syncer;
->  	work->w_data = data;
->  	work->w_mount = mp;
-> +	work->w_completion = completion;
->  	spin_lock(&mp->m_sync_lock);
->  	list_add_tail(&work->w_list, &mp->m_sync_list);
->  	spin_unlock(&mp->m_sync_lock);
-> @@ -419,25 +426,11 @@ xfs_syncd_queue_work(
->   * has failed with ENOSPC and we are in the process of scratching our
->   * heads, looking about for more room...
->   */
-> -STATIC void
-> -xfs_flush_inode_work(
-> -	struct xfs_mount *mp,
-> -	void		*arg)
-> -{
-> -	struct inode	*inode = arg;
-> -	filemap_flush(inode->i_mapping);
-> -	iput(inode);
-> -}
-> -
->  void
->  xfs_flush_inode(
->  	xfs_inode_t	*ip)
->  {
-> -	struct inode	*inode = VFS_I(ip);
-> -
-> -	igrab(inode);
-> -	xfs_syncd_queue_work(ip->i_mount, inode, xfs_flush_inode_work);
-> -	delay(msecs_to_jiffies(500));
-> +	xfs_flush_pages(ip, 0, -1, 0, FI_NONE);
->  }
->  
->  /*
-> @@ -450,7 +443,8 @@ xfs_flush_device_work(
->  	void		*arg)
->  {
->  	struct inode	*inode = arg;
-> -	sync_blockdev(mp->m_super->s_bdev);
-> +	xfs_sync_inodes(mp, SYNC_DELWRI | SYNC_TRYLOCK);
-> +	xfs_sync_inodes(mp, SYNC_DELWRI | SYNC_TRYLOCK | SYNC_IOWAIT);
->  	iput(inode);
->  }
->  
-> @@ -459,10 +453,11 @@ xfs_flush_device(
->  	xfs_inode_t	*ip)
->  {
->  	struct inode	*inode = VFS_I(ip);
-> +	DECLARE_COMPLETION_ONSTACK(completion);
->  
->  	igrab(inode);
-> -	xfs_syncd_queue_work(ip->i_mount, inode, xfs_flush_device_work);
-> -	delay(msecs_to_jiffies(500));
-> +	xfs_syncd_queue_work(ip->i_mount, inode, xfs_flush_device_work, &completion);
-> +	wait_for_completion(&completion);
->  	xfs_log_force(ip->i_mount, (xfs_lsn_t)0, XFS_LOG_FORCE|XFS_LOG_SYNC);
->  }
->  
-> @@ -497,7 +492,7 @@ xfssyncd(
->  {
->  	struct xfs_mount	*mp = arg;
->  	long			timeleft;
-> -	bhv_vfs_sync_work_t	*work, *n;
-> +	xfs_sync_work_t		*work, *n;
->  	LIST_HEAD		(tmp);
->  
->  	set_freezable();
-> @@ -530,6 +525,8 @@ xfssyncd(
->  		list_for_each_entry_safe(work, n, &tmp, w_list) {
->  			(*work->w_syncer)(mp, work->w_data);
->  			list_del(&work->w_list);
-> +			if (work->w_completion)
-> +				complete(work->w_completion);
->  			if (work == &mp->m_sync_work)
->  				continue;
->  			kmem_free(work);
-> @@ -545,6 +542,7 @@ xfs_syncd_init(
->  {
->  	mp->m_sync_work.w_syncer = xfs_sync_worker;
->  	mp->m_sync_work.w_mount = mp;
-> +	mp->m_sync_work.w_completion = NULL;
->  	mp->m_sync_task = kthread_run(xfssyncd, mp, "xfssyncd");
->  	if (IS_ERR(mp->m_sync_task))
->  		return -PTR_ERR(mp->m_sync_task);
-> diff --git a/fs/xfs/linux-2.6/xfs_sync.h b/fs/xfs/linux-2.6/xfs_sync.h
-> index 5f6de1e..de87a7f 100644
-> --- a/fs/xfs/linux-2.6/xfs_sync.h
-> +++ b/fs/xfs/linux-2.6/xfs_sync.h
-> @@ -20,18 +20,20 @@
->  
->  struct xfs_mount;
->  
-> -typedef struct bhv_vfs_sync_work {
-> +typedef struct xfs_sync_work {
->  	struct list_head	w_list;
->  	struct xfs_mount	*w_mount;
->  	void			*w_data;	/* syncer routine argument */
->  	void			(*w_syncer)(struct xfs_mount *, void *);
-> -} bhv_vfs_sync_work_t;
-> +	struct completion	*w_completion;
-> +} xfs_sync_work_t;
->  
->  #define SYNC_ATTR		0x0001	/* sync attributes */
->  #define SYNC_DELWRI		0x0002	/* look at delayed writes */
->  #define SYNC_WAIT		0x0004	/* wait for i/o to complete */
->  #define SYNC_BDFLUSH		0x0008	/* BDFLUSH is calling -- don't block */
->  #define SYNC_IOWAIT		0x0010  /* wait for all I/O to complete */
-> +#define SYNC_TRYLOCK		0x0020  /* only try to lock inodes */
->  
->  int xfs_syncd_init(struct xfs_mount *mp);
->  void xfs_syncd_stop(struct xfs_mount *mp);
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index f5e9937..775a2ac 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -322,7 +322,7 @@ typedef struct xfs_mount {
->  #endif
->  	struct xfs_mru_cache	*m_filestream;  /* per-mount filestream data */
->  	struct task_struct	*m_sync_task;	/* generalised sync thread */
-> -	bhv_vfs_sync_work_t	m_sync_work;	/* work item for VFS_SYNC */
-> +	xfs_sync_work_t		m_sync_work;	/* work item for VFS_SYNC */
->  	struct list_head	m_sync_list;	/* sync thread work item list */
->  	spinlock_t		m_sync_lock;	/* work item list lock */
->  	int			m_sync_seq;	/* sync thread generation no. */
-> diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-> index 0e55c5d..e1099e7 100644
-> --- a/fs/xfs/xfs_vnodeops.c
-> +++ b/fs/xfs/xfs_vnodeops.c
-> @@ -1449,6 +1449,12 @@ xfs_create(
->  	error = xfs_trans_reserve(tp, resblks, XFS_CREATE_LOG_RES(mp), 0,
->  			XFS_TRANS_PERM_LOG_RES, XFS_CREATE_LOG_COUNT);
->  	if (error == ENOSPC) {
-> +		/* flush delalloc blocks and retry */
-> +		xfs_flush_device(dp);
-> +		error = xfs_trans_reserve(tp, resblks, XFS_CREATE_LOG_RES(mp), 0,
-> +			XFS_TRANS_PERM_LOG_RES, XFS_CREATE_LOG_COUNT);
-> +	}
-> +	if (error == ENOSPC) {
->  		resblks = 0;
->  		error = xfs_trans_reserve(tp, 0, XFS_CREATE_LOG_RES(mp), 0,
->  				XFS_TRANS_PERM_LOG_RES, XFS_CREATE_LOG_COUNT);
-> 
+> =
+
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+-- =
+
+theCode AG =
+
+HRB 78053, Amtsgericht Charlottenbg
+USt-IdNr.: DE204114808
+Vorstand: Ralf Liebenow, Michael Oesterreich, Peter Witzel
+Aufsichtsratsvorsitzender: Wolf von Jaduczynski
+Oranienstr. 10-11, 10997 Berlin [=D7]
+fon +49 30 617 897-0  fax -10
+ralf@theCo.de http://www.theCo.de
 
 _______________________________________________
 xfs mailing list
