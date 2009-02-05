@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n150LjGE180371 for <xfs@oss.sgi.com>; Wed, 4 Feb 2009 18:21:46 -0600
+	n150M7vj180392 for <xfs@oss.sgi.com>; Wed, 4 Feb 2009 18:22:08 -0600
 Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E4335AC002
-	for <xfs@oss.sgi.com>; Wed,  4 Feb 2009 16:21:06 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8916D304062
+	for <xfs@oss.sgi.com>; Wed,  4 Feb 2009 16:21:26 -0800 (PST)
 Received: from eagdhcp-232-197.americas.sgi.com
 	(eagdhcp-232-197.americas.sgi.com [128.162.232.197])
-	by estes.americas.sgi.com (Postfix) with ESMTP id F011B7000103
-	for <xfs@oss.sgi.com>; Wed,  4 Feb 2009 18:21:05 -0600 (CST)
-Message-Id: <400220E1-CB3D-4CD3-B094-176629B246B5@sgi.com>
+	by estes.americas.sgi.com (Postfix) with ESMTP id B923C7000103
+	for <xfs@oss.sgi.com>; Wed,  4 Feb 2009 18:21:25 -0600 (CST)
+Message-Id: <4E94A3D9-F39D-4FB2-93B8-B31E403446F3@sgi.com>
 From: Felix Blyakher <felixb@sgi.com>
 Mime-Version: 1.0 (Apple Message framework v926)
-Subject: xfsdump 3.0.0 source tarball released
-Date: Wed, 4 Feb 2009 18:21:05 -0600
+Subject: dmapi 2.2.9 source tarball released
+Date: Wed, 4 Feb 2009 18:21:25 -0600
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,20 +28,13 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsdump-3.0.0.tar.gz
+ftp://oss.sgi.com/projects/xfs/cmd_tars/dmapi-2.2.9.tar.gz
 
-This version contains important bug fixes to xfsdump 2.2.49:
+This version contains changes since dmapi 2.2.8:
 
-xfsdump-3.0.0 (4 February 2009)
-         - Bump major package version number to signify changed
-           dependencies and moved binaries (xfs_fsr and estimate
-           have moved into xfsprogs).
-         - xfsdump should no longer make use of internal XFS
-           headers and libraries, in particular no use of libxfs
-           is permitted in this package anymore (such detailed
-           on-disk format knowledge is the realm of xfsprogs).
-         - Fix xfsdump/xfsrestore to work on systems with 64k
-           page size.
+dmapi-2.2.9 (4 February 2009)
+         - Various build system updates.
+
 
 _______________________________________________
 xfs mailing list
