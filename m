@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n15BTk0L210196 for <xfs@oss.sgi.com>; Thu, 5 Feb 2009 05:29:46 -0600
-Date: Thu, 5 Feb 2009 06:29:06 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: IMPORTANT: XFS Documentation
-Message-ID: <20090205112906.GB11781@infradead.org>
-References: <1231946704.3929.36.camel@localhost.localdomain>
-	<20090120160346.GJ17616@sgi.com>
-	<1232480744.23291.101.camel@localhost.localdomain>
-	<20090128202715.GR16689@sgi.com>
-	<1233175168.25011.155.camel@localhost.localdomain>
-	<20090204183603.GA26714@sgi.com> <4989F4C2.3030305@sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4989F4C2.3030305@sgi.com>
+	n15C6UxM211560 for <xfs@oss.sgi.com>; Thu, 5 Feb 2009 06:06:31 -0600
+Received: from smtp2-g21.free.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EF396EA532
+	for <xfs@oss.sgi.com>; Thu,  5 Feb 2009 04:05:50 -0800 (PST)
+Received: from smtp2-g21.free.fr (smtp2-g21.free.fr [212.27.42.2]) by
+	cuda.sgi.com with ESMTP id eRRw8W9BXiiyDuEb for
+	<xfs@oss.sgi.com>; Thu, 05 Feb 2009 04:05:50 -0800 (PST)
+Date: Thu, 5 Feb 2009 13:05:44 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: xfs_force_shutdown after Raid crash
+Message-ID: <20090205130544.223a8fcd@harpe.intellique.com>
+In-Reply-To: <200902050922.18307@zmi.at>
+References: <498376CF.8020806@renderforce.de> <20090204153322.GC15454@theco.de>
+	<200902041718.15836@zmi.at> <200902050922.18307@zmi.at>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,30 +24,26 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Goodwin <markgw@sgi.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, SGI Engineering Interfaces to Red Hat <redhat-interface@sgi.com>, Marizol Martinez <martinez@redhat.com>, Gary Hagensen <gwh@sgi.com>, George Beshers <gbeshers@sgi.com>, John Hesterberg <jh@sgi.com>, xfs-oss <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>, Tony Ernst <tee@sgi.com>, Ric Wheeler <rwheeler@redhat.com>
+To: Michael Monnerie <michael.monnerie@is.it-management.at>
+Cc: xfs@oss.sgi.com
 
-> Sorry for the delay - the lawyers were pondering the GNU FDL Vrs the
-> Creative Commons license (and settled on the latter). So now that's  
-> resolved,
-> I've updated the copyrights in the doc sources and put them in a git tree:
->
-> 	git://oss.sgi.com/xfs/cmds/xfsdocs.git
+Le Thu, 5 Feb 2009 09:22:09 +0100
+Michael Monnerie <michael.monnerie@is.it-management.at> =E9crivait:
 
-Russell, can you add this to the list of repositories to be displayed on
+> I have an answer from Areca support:
 
-	http://oss.sgi.com/cgi-bin/gitweb.cgi
+Excellent. I'll ask 3Ware, Adaptec and Xyratex on this particular
+point.
 
-?
+-- =
 
-Talking about that any chance you could convert your cvsimport
-repositories to bare repos like all the others on oss?  And maybe
-move the old xfs-cmds import under cattelan/ like the other cvsimport
-ones?
+----------------------------------------
+Emmanuel Florac     |   Intellique
+----------------------------------------
 
 _______________________________________________
 xfs mailing list
