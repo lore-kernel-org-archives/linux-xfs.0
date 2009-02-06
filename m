@@ -1,17 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n167Hvk6006515 for <xfs@oss.sgi.com>; Fri, 6 Feb 2009 01:18:00 -0600
-Date: Fri, 6 Feb 2009 02:17:17 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 09/17] xfs: cleanup xfs_find_handle
-Message-ID: <20090206071717.GA3295@infradead.org>
-References: <20090126073136.384490000@bombadil.infradead.org>
-	<20090126073202.277472000@bombadil.infradead.org>
-	<F4717E19-7A7F-40CD-BAEB-7AE519E797D0@sgi.com>
+	n16DgqPb029697 for <xfs@oss.sgi.com>; Fri, 6 Feb 2009 07:42:53 -0600
+Received: from kuber.nabble.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6880B18DB155
+	for <xfs@oss.sgi.com>; Fri,  6 Feb 2009 05:42:13 -0800 (PST)
+Received: from kuber.nabble.com (kuber.nabble.com [216.139.236.158]) by
+	cuda.sgi.com with ESMTP id DMtlJZglkc8OurCQ for
+	<xfs@oss.sgi.com>; Fri, 06 Feb 2009 05:42:13 -0800 (PST)
+Received: from isper.nabble.com ([192.168.236.156])
+	by kuber.nabble.com with esmtp (Exim 4.63)
+	(envelope-from <lists@nabble.com>) id 1LVQxi-0003gN-9G
+	for xfs@oss.sgi.com; Fri, 06 Feb 2009 05:41:42 -0800
+Message-ID: <21872592.post@talk.nabble.com>
+Date: Fri, 6 Feb 2009 05:41:42 -0800 (PST)
+From: cyjoyp <cyjoyp@gmail.com>
+Subject: Inode Core Information
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <F4717E19-7A7F-40CD-BAEB-7AE519E797D0@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,15 +29,16 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Felix Blyakher <felixb@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Feb 05, 2009 at 11:20:22PM -0600, Felix Blyakher wrote:
-> Do we want to verify here that cmd is either XFS_IOC_PATH_TO_FSHANDLE
-> or XFS_IOC_PATH_TO_HANDLE ...
 
-It's called in a single place for just these three subcases, so having
-another verification here doesn't seem juseful.
+Hello Everyone,
+      Could any one help in extracting the modified time information from
+xfs_dinode_core_t   structure (Inode Core)?
+     Please help me.
+-- 
+View this message in context: http://www.nabble.com/Inode-Core-Information-tp21872592p21872592.html
+Sent from the Xfs - General mailing list archive at Nabble.com.
 
 _______________________________________________
 xfs mailing list
