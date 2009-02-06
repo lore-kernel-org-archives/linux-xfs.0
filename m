@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n16Fx4GW036748 for <xfs@oss.sgi.com>; Fri, 6 Feb 2009 09:59:05 -0600
-Received: from mo-p05-ob.rzone.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3BFF0F4B06
-	for <xfs@oss.sgi.com>; Fri,  6 Feb 2009 07:58:25 -0800 (PST)
-Received: from mo-p05-ob.rzone.de (mo-p05-ob.rzone.de [81.169.146.182]) by
-	cuda.sgi.com with ESMTP id toH4lC5hEUznZ0Pk for
-	<xfs@oss.sgi.com>; Fri, 06 Feb 2009 07:58:25 -0800 (PST)
-Message-ID: <498C5DE1.9070200@renderforce.de>
-Date: Fri, 06 Feb 2009 16:57:21 +0100
-From: Steffen Knauf <Steffen.Knauf@renderforce.de>
+	n16HCuiG039757 for <xfs@oss.sgi.com>; Fri, 6 Feb 2009 11:12:56 -0600
+Received: from g5t0007.atlanta.hp.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7910318E21BC
+	for <xfs@oss.sgi.com>; Fri,  6 Feb 2009 09:12:17 -0800 (PST)
+Received: from g5t0007.atlanta.hp.com (g5t0007.atlanta.hp.com [15.192.0.44])
+	by cuda.sgi.com with ESMTP id 963zxk53NSqJdoEE for
+	<xfs@oss.sgi.com>; Fri, 06 Feb 2009 09:12:17 -0800 (PST)
+Received: from G3W0631.americas.hpqcorp.net (g3w0631.americas.hpqcorp.net
+	[16.233.59.15]) (using TLSv1 with cipher RC4-MD5 (128/128 bits))
+	(No client certificate requested)
+	by g5t0007.atlanta.hp.com (Postfix) with ESMTPS id 73340147B4
+	for <xfs@oss.sgi.com>; Fri,  6 Feb 2009 17:12:17 +0000 (UTC)
+From: "Ezzat, Ahmed" <Ahmed.Ezzat@hp.com>
+Date: Fri, 6 Feb 2009 17:11:03 +0000
+Subject: Question...
+Message-ID: <3B7AE9BA67C72B4891EF21842246A21C412E8E055C@GVW1097EXB.americas.hpqcorp.net>
+Content-Language: en-US
 MIME-Version: 1.0
-Subject: Re: xfs_force_shutdown after Raid crash
-References: <498376CF.8020806@renderforce.de>
-	<20090131105712.GA30061@infradead.org>
-In-Reply-To: <20090131105712.GA30061@infradead.org>
-Reply-To: Steffen.Knauf@liga01.de
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,50 +27,83 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: multipart/mixed; boundary="===============4035549459295948984=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+
+--===============4035549459295948984==
+Content-Language: en-US
+Content-Type: multipart/alternative;
+	boundary="_000_3B7AE9BA67C72B4891EF21842246A21C412E8E055CGVW1097EXBame_"
+
+--_000_3B7AE9BA67C72B4891EF21842246A21C412E8E055CGVW1097EXBame_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
 
 Hello,
 
-sorry for the delay. I don't know whether it is interesting, but after a 
-xfs_repair, the filesystem could completely rebuild.
-Thanks Chritoph. I'm a little bit confused about "write back cache" and 
-the "barrier" option.
-On the RAID Controller "Write Cache" is enabled, "Write Cache Periodic 
-Flush = 5 seconds" and "Write Cache Flush Ratio = 45 Percent".
-My kernelversion is 2.6.16 (SLES10), so the default should be nobarrier. 
-But i read in the official SGI xfs Training documentation that write 
-Barrier are enabled by default on SLES10.
-How can i check if barrier is on or off?. I don't find something in the log.
+Does XFS comes up as part of Red Hat Linux Enterprise 5 from HP? How to fin=
+d out (any specific commands that I can issue man page to see if a Linux in=
+stance support XFS or not?
 
-greets
+Where I can find documentation (user guide and administrative guide) for XF=
+S?
+Thanks,
 
-Steffen
+Ahmed
 
-> On Fri, Jan 30, 2009 at 10:53:19PM +0100, Steffen Knauf wrote:
->   
->> Hello,
->>
->> after a raid crash (Raid Controller problem, 3 Disks of the Disk Group  
->> were kicked out oft the diskgroup), 2 of 3 partitions (XFS FS) were  
->> shutdown immediately.
->> Perhaps somebody has a idea, what's the best solution (xfs_repair?).
->>     
+
+
+
+--_000_3B7AE9BA67C72B4891EF21842246A21C412E8E055CGVW1097EXBame_
+Content-Type: text/html; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+<html>
+<head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dus-ascii"=
 >
-> This looks like you were running with a write back cache enabled on the
-> controller / disks but without barriers.  xfs_repair should be able
-> to repair the filesystem.  If you're lucky only the freespace-btrees
-> are corrupted (as in the trace below) as xfs_repair can rebuild them
-> from scratch. 
->
->
->   
+<meta name=3D"Generator" content=3D"Microsoft Exchange Server">
+<!-- converted from rtf -->
+<style><!-- .EmailQuote { margin-left: 1pt; padding-left: 4pt; border-left:=
+ #800000 2px solid; } --></style>
+</head>
+<body>
+<font face=3D"Times New Roman, serif" size=3D"3">
+<div>&nbsp;</div>
+<div>Hello,</div>
+<div>&nbsp;</div>
+<div>Does XFS comes up as part of Red Hat Linux Enterprise 5 from HP? How t=
+o find out (any specific commands that I can issue man page to see if a Lin=
+ux instance support XFS or not?</div>
+<div>&nbsp;</div>
+<div>Where I can find documentation (user guide and administrative guide) f=
+or XFS?</div>
+<div>Thanks,</div>
+<div>&nbsp;</div>
+<div>Ahmed</div>
+<a name=3D"_MailAutoSig"></a>
+<div>&nbsp;</div>
+<div>&nbsp;</div>
+<div>&nbsp;</div>
+</font>
+</body>
+</html>
+
+--_000_3B7AE9BA67C72B4891EF21842246A21C412E8E055CGVW1097EXBame_--
+
+
+--===============4035549459295948984==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============4035549459295948984==--
