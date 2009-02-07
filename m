@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n16N5lGi057836 for <xfs@oss.sgi.com>; Fri, 6 Feb 2009 17:05:48 -0600
-Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4384818E58E5
-	for <xfs@oss.sgi.com>; Fri,  6 Feb 2009 15:05:07 -0800 (PST)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net
-	[203.16.214.146]) by cuda.sgi.com with ESMTP id
-	m0TPBhbfvZt8hSIB for <xfs@oss.sgi.com>;
-	Fri, 06 Feb 2009 15:05:07 -0800 (PST)
-Date: Sat, 7 Feb 2009 10:05:02 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Does XFS support the sync mount option?
-Message-ID: <20090206230502.GQ24173@disturbed>
-References: <884979c90902050643m78d2e0dbt85aa7f4369e243ef@mail.gmail.com>
+	n179BXvs087669 for <xfs@oss.sgi.com>; Sat, 7 Feb 2009 03:11:34 -0600
+Received: from wa-out-1112.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4BE91F7E6C
+	for <xfs@oss.sgi.com>; Sat,  7 Feb 2009 01:10:54 -0800 (PST)
+Received: from wa-out-1112.google.com (wa-out-1112.google.com
+	[209.85.146.179]) by cuda.sgi.com with ESMTP id
+	REOi3hlxjJlmGZrI for <xfs@oss.sgi.com>;
+	Sat, 07 Feb 2009 01:10:54 -0800 (PST)
+Received: by wa-out-1112.google.com with SMTP id k22so612863waf.4
+	for <xfs@oss.sgi.com>; Sat, 07 Feb 2009 01:10:54 -0800 (PST)
+Date: Sat, 7 Feb 2009 01:10:33 -0800
+From: Brandon Philips <brandon@ifup.org>
+Subject: Re: [patch 0/4] attr: test/ improvements and integrate with make
+Message-ID: <20090207091033.GO29636@jenkins.ifup.org>
+References: <20090108021947.404730068@ifup.org>
+	<20090108154453.GA5017@infradead.org>
+	<20090108165820.GA3832@jenkins>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <884979c90902050643m78d2e0dbt85aa7f4369e243ef@mail.gmail.com>
+In-Reply-To: <20090108165820.GA3832@jenkins>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,54 +29,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ewan Chalmers <ewan.chalmers@gmail.com>
+To: Christoph Hellwig <hch@infradead.org>, Andreas =?iso-8859-1?Q?Gr=FCnbacher?= <agruen@suse.de>
 Cc: xfs@oss.sgi.com
 
-T24gVGh1LCBGZWIgMDUsIDIwMDkgYXQgMDI6NDM6MjlQTSArMDAwMCwgRXdhbiBDaGFsbWVycyB3
-cm90ZToKPiBJIGFtIGludGVyZXN0ZWQgdG8ga25vdyB3aGV0aGVyIFhGUyBzdXBwb3J0cyB0aGUg
-c3luYyBtb3VudCBvcHRpb24uCgpZZXMuCgo+IEkgYW0gdXNpbmcgWEZTIG9uIGFuIGV4dGVybmFs
-IFVTQiBkaXNrIGFuZCBhdXRvbW91bnRpbmcgdXNpbmcgdGhlCj4gdWJ1bnR1L2RlYmlhbiB1c2Jt
-b3VudCBwYWNrYWdlCj4gKGh0dHA6Ly9wYWNrYWdlcy51YnVudHUuY29tL2ludHJlcGlkL3VzYm1v
-dW50KS4gVGhlIGRpc2sgaXMgY29ubmVjdGVkCj4gdG8gYSBoZWFkbGVzcyBzZXJ2ZXIuIEkgd291
-bGQgbGlrZSB0byBiZSBhYmxlIHRvIHNhZmVseSBzd2l0Y2ggdGhlCj4gZGlzayBvbi9vZmYgb24g
-ZGVtYW5kIHdpdGhvdXQgZmlyc3QgbG9nZ2luZyBpbiB0byB0aGUgYm94IHRvCj4gc3luYy91bm1v
-dW50LiBJIGJlbGlldmUgdGhlIHN5bmMgb3B0aW9uIGlzIGVzc2VudGlhbCB0byB0aGlzIHVzZSBj
-YXNlLgo+IFVzaW5nIHVzYm1vdW50LCBpdCBhcHBlYXJzIHRvIHdvcmsgY29ycmVjdGx5LCBidXQg
-dGhlIG91dHB1dCB0byBzeXNsb2cKPiBtYWtlcyBtZSB3b25kZXIuCgpZb3UndmUgcHVsbGVkIHRo
-ZSBwbHVnIG9uIHRoZSBibG9jayBkZXZpY2UsIGFuZCB5b3Ugd29uZGVyIHdoeSB0aGUKZmlsZXN5
-c3RlbSBkZXRlY3RzIGFuIElPIGVycm9yIGFuZCBzaHV00ZUgZG93bj8gWEZTIGlzIGRlc2lnbmVk
-IHRvIHByb3RlY3QKaXRzZWxmIHdoZW4gc29tZXRoaW5nIGdvZXMgd3Jvbmcgd2l0aCB0aGUgdW5k
-ZXJseWluZyBkZXZpY2UuCkV2ZXJ5IHRpbWUgeW91IHN3aXRjaCBvZmYgdGhlIGRyaXZlIHlvdSds
-bCBnZXQgdGhlc2UgZXJyb3JzLgoKQW5kICJzeW5jIiBvbmx5IHdvcmtzIGlmIHlvdSB0dXJuIGRy
-aXZlIHdyaXRlIGNhY2hlcyBvZmYgb3IgaGF2ZQpiYXJyaWVycyBlbmFibGVkLiBUaGVyZSBhcmUg
-bWFueSBwZW9wbGUgb3V0IHRoZXJlIHRoYXQgIGhhdmUgc3lzdGVtcwp0aGF0IGFyZSBzdXNlcHRp
-YmxlIHRvIGZhdGFsIGZpbGVzeXN0ZW0gY29ycnVwdGlvbiB0aGF0IGNvdWxkIGJlCnRyaWdnZXJl
-ZCBieSBkb2luZyB0aGlzIChiZWNhdXNlIGNyaXRpY2FsIG1ldGFkYXRhIGlzIGxvc3QgZnJvbQp0
-aGUgdm9sYXRpbGUgd3JpdGUgY2FjaGUgb24gdGhlIGRyaXZlIHdoZW4geW91IHBvd2VyIGl0IG9m
-ZikuCgo+IFRoZSBkZWZhdWx0IGNvbmZpZ3VyYXRpb24gZm9yIHVzYm1vdW50IGluY2x1ZGVzCj4g
-Cj4gRklMRVNZU1RFTVM9ImV4dDIgZXh0MyIKPiBNT1VOVE9QVElPTlM9InN5bmMsbm9leGVjLG5v
-ZGV2LG5vYXRpbWUiCgpPaCwgdGhhdCBtaWdodCBleHBsYWluIHdoeSBrZXJuZWxvb3BzIHJlY29y
-ZHMgc28gbWFueSBjcmFzaGVzIGluCmV4dDIvMyBmcm9tIHBlb3BsZSBwdWxsaW5nIHRoZSBwbHVn
-IG9uIFVTQiBkcml2ZXMuLi4KCj4gSSBoYXZlIGFkZGVkIHhmcyB0byB0aGUgRklMRVNZU1RFTVMg
-bGlzdC4KClBsZWFzZSBkb24ndC4gSSBkb24ndCB3YW50IHRvIGhhdmUgdG8gZGVhbCB3aXRoIGFs
-bCB0aGUgc2h1dGRvd25zCmFuZCBjb3JydXB0ZWQgZmlsZXN5c3RlbSByZXBvcnRzIHRoYXQgdGhp
-cyB3aWxsIHJlc3VsdCBpbi4KCj4gT24gc3dpdGNoaW5nIG9mZiB0aGUgZGlzaywgSSBzZWUgdGhl
-IGZvbGxvd2luZyBvdXRwdXQgaW4gc3lzbG9nCj4KPiBrZXJuZWw6IFsxMDM0MjU5LjkyMzYyOV0g
-dXNiIDEtMjogVVNCIGRpc2Nvbm5lY3QsIGFkZHJlc3MgMjYKPiBrZXJuZWw6IFsxMDM0MjU5Ljkz
-NjI1MV0geGZzX2ZvcmNlX3NodXRkb3duKHNkYjEsMHgxKSBjYWxsZWQgZnJvbSBsaW5lCj4gNDIw
-IG9mIGZpbGUgL2J1aWxkL2J1aWxkZC9saW51eC0yLjYuMjcvZnMveGZzL3hmc19ydy5jLiAgUmV0
-dXJuCj4gYWRkcmVzcyA9IDB4ZTBhOWRkYjQKPiBrZXJuZWw6IFsxMDM0MjU5LjkzNjMzNF0gRmls
-ZXN5c3RlbSAic2RiMSI6IEkvTyBFcnJvciBEZXRlY3RlZC4KPiBTaHV0dGluZyBkb3duIGZpbGVz
-eXN0ZW06IHNkYjEKLi4uLgo+IEJ1dCB0aGUgZGlzayByZW1vdW50cyBjbGVhbmx5IHdoZW4gaXQg
-aXMgc3dpdGNoZWQgYmFjayBvbi4KClRoYXQgZG9lc24ndCBtZWFuIGl0IGhhc24ndCBiZWVuIGNv
-cnJ1cHRlZC4gT25seSBhbiBvZmZsaW5lCmNoZWNrL3JlcGFpciB3aWxsIHRlbGwgeW91IHRoYXQu
-Cgo+IEkgd291bGQgYmUgaW50ZXJlc3RlZCB0byBrbm93IHdoZXRoZXIgaXQgaXMgcmVhc29uYWJs
-ZSB0byB1c2UgWEZTIGluCj4gdGhlIHdheSBJIGhhdmUgb3V0bGluZWQuCgpObywgaXQncyBub3Qg
-cmVhbGx5IGEgcmVhc29uYWJsZSB3YXkgdG8gdXNlIGFueSBmaWxlc3lzdGVtLgoKQ2hlZXJzLAoK
-RGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bv
-c3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On 08:58 Thu 08 Jan 2009, Brandon Philips wrote:
+> On 10:44 Thu 08 Jan 2009, Christoph Hellwig wrote:
+> > On Wed, Jan 07, 2009 at 06:19:47PM -0800, brandon@ifup.org wrote:
+> > > NOTE: Timothy Shimmin's email (tes@sgi.com) seems to be gone. Who should
+> > > I send patches like this to in the future?
+> > 
+> > That's not quite sorted out.  For now send them to Andreas Gruenbacher
+> > and the xfs list.
+> 
+> Ok, thanks.
+> 
+> Andreas, please review these patches if you can:
+>   http://oss.sgi.com/archives/xfs/2009-01/msg00136.html
+>   http://oss.sgi.com/archives/xfs/2009-01/msg00146.html
+
+I noticed that Christoph put acl-dev.git and attr-dev.git on
+git.kernel.org.  Great news! The process with CVS and TAKEs was a bit
+confusing.
+
+But, can I suggest that we merge the attr-dev and acl-dev tree into one
+git repo and share libmisc? I have done it over here:
+
+  http://ifup.org/git/?p=acl-attr-dev.git;a=summary
+  git clone git://ifup.org/philips/acl-attr-dev.git
+
+What do you think?
+
+Also, my test/ patchset hasn't gotten any feedback. I will merge them
+into either {acl,attr}-dev.git or my acl-attr-dev.git if they seem
+acceptable and send you a pull request.
+
+ http://oss.sgi.com/pipermail/xfs/2009-January/039600.html
+ http://oss.sgi.com/pipermail/xfs/2009-January/039610.html
+
+
+Cheers, Brandon
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
