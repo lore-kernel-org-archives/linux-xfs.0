@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n18MH8Sl197943
-	for <linux-xfs@oss.sgi.com>; Sun, 8 Feb 2009 16:17:08 -0600
-Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4AE1DFBE2F
-	for <linux-xfs@oss.sgi.com>; Sun,  8 Feb 2009 14:16:29 -0800 (PST)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net
-	[203.16.214.146]) by cuda.sgi.com with ESMTP id
-	c9TegDPZdDRuOji3 for <linux-xfs@oss.sgi.com>;
-	Sun, 08 Feb 2009 14:16:29 -0800 (PST)
-Date: Mon, 9 Feb 2009 09:16:25 +1100
-From: Dave Chinner <david@fromorbit.com>
+	n18MTbJU198489
+	for <linux-xfs@oss.sgi.com>; Sun, 8 Feb 2009 16:29:38 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3327918F0505
+	for <linux-xfs@oss.sgi.com>; Sun,  8 Feb 2009 14:29:00 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id VPHHU6Wdk4XL9CIL for
+	<linux-xfs@oss.sgi.com>; Sun, 08 Feb 2009 14:29:00 -0800 (PST)
+Date: Sun, 8 Feb 2009 17:28:59 -0500
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: XFS kernel BUG at fs/buffer.c:470! with 2.6.28.4
-Message-ID: <20090208221625.GB8830@disturbed>
+Message-ID: <20090208222859.GA2532@infradead.org>
 References: <1234011974.7435.11.camel@champagne.cantina>
 MIME-Version: 1.0
 Content-Disposition: inline
@@ -34,62 +33,17 @@ To: Alessandro Bono <alessandro.bono@gmail.com>
 Cc: linux-xfs <linux-xfs@oss.sgi.com>, linux-kernel <linux-kernel@vger.kernel.org>
 
 On Sat, Feb 07, 2009 at 02:06:13PM +0100, Alessandro Bono wrote:
-> Hi all
-> 
-> This time I hit kernel bug without any particular operation, normal
-> browsing, mail, news, etc
-> tell me if you need info asap because I want to reformat this machine
-> and switch back to ext3.
->
-> xfs seems really unstable in this particular
-> machine and after this crash I lose again configuration file of opened
-> program at crash time
-
-That's not XFS's fault - that's a broken application that does not
-safely overwrite files and hence you lose data on crash.
-
 > Feb  7 12:43:12 champagne kernel: [ 5828.167041] ------------[ cut
 > here ]------------
 > Feb  7 12:43:12 champagne kernel: [ 5828.167048] kernel BUG at
 > fs/buffer.c:470!
 
-I can't remember seeing that problem before.
+Per
+http://git.kernel.org/?p=linux/kernel/git/hpa/linux-2.6-allstable.git;a=blob;f=fs/buffer.c;h=665d446b25bc034241ef54c3c6b1d239c0ccf0f9;hb=d5b562330ec766292a3ac54ae5e0673610bd5b3d
 
-> Call Trace:
->  [<ffffffff8022806f>] ?  need_resched+0x1e/0x28
->  [<ffffffff8030be35>] ?  __up_write+0x12/0x45
->  [<ffffffffa01c2269>] ?  xfs_destroy_ioend+0x23/0x71 [xfs]
->  [<ffffffffa01c23db>] ?  xfs_end_bio_delalloc+0x0/0x19 [xfs]
->  [<ffffffffa01c23db>] ?  xfs_end_bio_delalloc+0x0/0x19 [xfs]
->  [<ffffffff80242d5e>] ?  run_workqueue+0x79/0xfe
->  [<ffffffff80242ed3>] ?  worker_thread+0xf0/0x102
->  [<ffffffff802461cd>] ?  autoremove_wake_function+0x0/0x2e
->  [<ffffffff80242de3>] ?  worker_thread+0x0/0x102
->  [<ffffffff80245ea2>] ?  kthread+0x47/0x73
->  [<ffffffff80231bfa>] ?  schedule_tail+0x27/0x60
->  [<ffffffff8020c3f9>] ?  child_rip+0xa/0x11
->  [<ffffffff80245e5b>] ?  kthread+0x0/0x73
->  [<ffffffff8020c3ef>] ?  child_rip+0x0/0x11
+line 470 in fs/buffer.c of 2.6.28.4 has a comment and no actual code.
 
-Standard delayed allocation IO completion trace. No idea what
-could have caused it. Perhaps a memory error? 
-
-Can you send the output of xfs_info on that filesystem, and
-perhaps run an xfs_repair -n  on it to see if there are any
-undetected errors on disk?
-
-Also, I note that you are using ext4 on some disks. Does this
-problem show up if you don't use ext4 at all? (We have had problems
-in the past with one filesystem not leaving bufferheads in the
-correct state and the system crashing when a different type of
-filesystem got them reallocated).
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+What additional patches do you have applied?
 
 _______________________________________________
 xfs mailing list
