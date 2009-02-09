@@ -1,15 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n194Wlw9219288 for <xfs@oss.sgi.com>; Sun, 8 Feb 2009 22:32:47 -0600
-Message-ID: <498FB128.4060008@melbourne.sgi.com>
-Date: Mon, 09 Feb 2009 15:29:28 +1100
-From: Greg Banks <gnb@melbourne.sgi.com>
+	n1978Jj0231009 for <xfs@oss.sgi.com>; Mon, 9 Feb 2009 01:08:20 -0600
+Message-ID: <498FD62D.9010604@sgi.com>
+Date: Mon, 09 Feb 2009 18:07:25 +1100
+From: Mark Goodwin <markgw@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [patch 2/5] [PATCH] acl: various improvements for test/run
-References: <20090108015355.613058570@ifup.org>	<20090108015418.699729152@ifup.org>
-	<200902090229.47550.agruen@suse.de>
-In-Reply-To: <200902090229.47550.agruen@suse.de>
+Subject: Re: IMPORTANT: XFS Documentation
+References: <1231946704.3929.36.camel@localhost.localdomain>	<20090120160346.GJ17616@sgi.com>	<1232480744.23291.101.camel@localhost.localdomain>	<20090128202715.GR16689@sgi.com>	<1233175168.25011.155.camel@localhost.localdomain>	<20090204183603.GA26714@sgi.com>
+	<4989F4C2.3030305@sgi.com> <20090205112906.GB11781@infradead.org>
+	<498D8F18.3080903@thebarn.com> <498F7861.6010109@sgi.com>
+	<498F7E71.8040600@xfs.org>
+In-Reply-To: <498F7E71.8040600@xfs.org>
+Reply-To: markgw@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,54 +21,27 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andreas Gruenbacher <agruen@suse.de>
-Cc: tes@sgi.com, brandon@ifup.org, Brandon Philips <bphilips@suse.de>, xfs@oss.sgi.com
+To: Russell Cattelan <cattelan@thebarn.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, SGI Engineering Interfaces to Red Hat <redhat-interface@sgi.com>, Marizol Martinez <martinez@redhat.com>, Tony Ernst <tee@sgi.com>, George Beshers <gbeshers@sgi.com>, John Hesterberg <jh@sgi.com>, xfs-oss <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, xfs-dev <xfs-dev@sgi.com>, Gary Hagensen <gwh@sgi.com>, Ric Wheeler <rwheeler@redhat.com>
 
-Andreas Gruenbacher wrote:
-> Brandon,
->
-> the version of the run script in the attr and acl packages is somewhat dated; 
-> I have made a few improvements since. I'll move this out of {acl,attr}/test 
-> and put the latest version into the libmisc/ directory.
->
-> Note that I recently rewrote the run script from scratch. Unlike the old 
-> version, the new one runs the whole script inside the same shell. There are 
-> still a few problems to be solved; most importantly, user switching doesn't 
-> work, yet.
-I hope you get that feature done soon, and look forward to reviewing
-it.  Let me just be Captain Obvious and say that user switching is a
-critical feature for code used to drive ACL tests ;-)
 
->  Eventually I want to replace the old version, though.
->
-> 	http://savannah.nongnu.org/projects/shrun
->
->
->
->   
->> Add a | test line that is similar to > but is interpreted as a regular
->> expression.
->>     
->
-> I have been using ">~" instead of "|" for that. I'm still not sure that 
-> including regular expression matching was a good idea though, so shrun 
-> doesn't have any of that yet. We'll se how things develop.
->
->
->   
-Regexp matching is the kind of thing that sounds like it could be quite
-useful, but it's a pain to implement.  When I wrote a Python interpreter
-for the shrun language for use in Newpynfs, I didn't bother implementing
-the regexp feature.
 
--- 
-Greg Banks, P.Engineer, SGI Australian Software Group.
-the brightly coloured sporks of revolution.
-I don't speak for SGI.
+Russell Cattelan wrote:
+> Mark Goodwin wrote:
+>> .... I'll clone it as a replacement and then merge in the training
+>> docs with updated copyrights. It's easier for SGI if the official
+>> tree is git://oss.sgi.com/xfs/cmds/xfsdocs.git
+> That's cool, I'll change the web site to point to the new repo
+> once you have it fixed up.
+> Just trying to keep the clutter down.
+
+Ok, done
+
+-- Mark
 
 _______________________________________________
 xfs mailing list
