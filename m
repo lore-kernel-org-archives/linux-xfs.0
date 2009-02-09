@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n19IDZFP261311 for <xfs@oss.sgi.com>; Mon, 9 Feb 2009 12:13:36 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 78362FFD3B
-	for <xfs@oss.sgi.com>; Mon,  9 Feb 2009 10:12:59 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id yvOdvfKEKvPmNCJO for
-	<xfs@oss.sgi.com>; Mon, 09 Feb 2009 10:12:59 -0800 (PST)
-Date: Mon, 9 Feb 2009 13:12:57 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [patch 0/4] attr: test/ improvements and integrate with make
-Message-ID: <20090209181257.GA18112@infradead.org>
-References: <20090108021947.404730068@ifup.org> <20090108165820.GA3832@jenkins>
-	<20090207091033.GO29636@jenkins.ifup.org>
-	<200902090000.00162.agruen@suse.de>
+	n19Ilwqi001042 for <xfs@oss.sgi.com>; Mon, 9 Feb 2009 12:47:58 -0600
+Received: from mx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A2F3618F8A63
+	for <xfs@oss.sgi.com>; Mon,  9 Feb 2009 10:47:20 -0800 (PST)
+Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
+	with ESMTP id HEe7RezpC8CVQxtO for <xfs@oss.sgi.com>;
+	Mon, 09 Feb 2009 10:47:20 -0800 (PST)
+Message-ID: <49906CAE.60209@sandeen.net>
+Date: Mon, 09 Feb 2009 11:49:34 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <200902090000.00162.agruen@suse.de>
+Subject: Re: download of attr_2.4.43-1.tar.gz
+References: <49906A23.2010504@pengutronix.de>
+In-Reply-To: <49906A23.2010504@pengutronix.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,27 +27,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andreas Gruenbacher <agruen@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, Brandon Philips <brandon@ifup.org>, xfs@oss.sgi.com
+To: Marc Kleine-Budde <mkl@pengutronix.de>
+Cc: xfs@oss.sgi.com
 
-On Sun, Feb 08, 2009 at 11:59:59PM +0100, Andreas Gruenbacher wrote:
-> >
-> >   http://ifup.org/git/?p=acl-attr-dev.git;a=summary
-> >   git clone git://ifup.org/philips/acl-attr-dev.git
-> >
-> > What do you think?
+Marc Kleine-Budde wrote:
+> Hello,
 > 
-> I believe it's a good start; we probably want to merge the trees eventually. 
-> The way how you have moved libmisc breaks the tarballs though; I have fixed 
-> it. Also, I was surprised that your repository has all the history rewritten 
-> instead of merging Christoph's trees, so I redid the merge.
+> is ftp://oss.sgi.com/projects/xfs/cmd_tars/ still the valid download
+> location for the "attr" package?
+> 
+> The permissions on the ftp server on
+> ftp://oss.sgi.com/projects/xfs/cmd_tars/ are mixed up, so that download
+> isn't possible anymore.
+> 
+> ncftp /projects/xfs/cmd_tars > pwd
+>   ftp://oss.sgi.com/projects/xfs/cmd_tars/
+> ncftp /projects/xfs/cmd_tars > dir attr_2.4.43-1.tar.gz
+> -rw-rw----       116991   Jul  3  2008   attr_2.4.43-1.tar.gz
+> ncftp /projects/xfs/cmd_tars > get attr_2.4.43-1.tar.gz
+> get attr_2.4.43-1.tar.gz: server said: Can't open attr_2.4.43-1.tar.gz: Permission denied
+> 
+> cheers, Marc
 
-I think the merge is a bad idea.  attr and acl serve quite
-different purposes and have been different source and binary packages in
-distros forever.  I'd rather keep it as it was for now and maybe find
-some way libacl could pick up libmisc from libattr.
+Should be fixed up now, sorry for the trouble!
 
-There's a reason we split up xfs-cmds into more manageable repositories.
+-Eric
 
 _______________________________________________
 xfs mailing list
