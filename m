@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n192nCGb214032 for <xfs@oss.sgi.com>; Sun, 8 Feb 2009 20:49:12 -0600
-Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7FA2FFC754
-	for <xfs@oss.sgi.com>; Sun,  8 Feb 2009 18:48:34 -0800 (PST)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net
-	[203.16.214.146]) by cuda.sgi.com with ESMTP id
-	2cYw3jYHKsdckxWW for <xfs@oss.sgi.com>;
-	Sun, 08 Feb 2009 18:48:34 -0800 (PST)
-Date: Mon, 9 Feb 2009 13:42:59 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 16/17] xfs: use mutex_is_locked in XFS_DQ_IS_LOCKED
-Message-ID: <20090209024259.GJ8830@disturbed>
-References: <20090126073136.384490000@bombadil.infradead.org>
-	<20090126073203.550396000@bombadil.infradead.org>
+	n193HMkI215452
+	for <linux-xfs@oss.sgi.com>; Sun, 8 Feb 2009 21:17:23 -0600
+Received: from mx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 93EE518F222E
+	for <linux-xfs@oss.sgi.com>; Sun,  8 Feb 2009 19:16:45 -0800 (PST)
+Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
+	with ESMTP id kCCdCsJZnxjCZgDN for <linux-xfs@oss.sgi.com>;
+	Sun, 08 Feb 2009 19:16:45 -0800 (PST)
+Message-ID: <498F9AC2.2020703@sandeen.net>
+Date: Sun, 08 Feb 2009 20:53:54 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20090126073203.550396000@bombadil.infradead.org>
+Subject: Re: XFS kernel BUG at fs/buffer.c:470! with 2.6.28.4
+References: <1234011974.7435.11.camel@champagne.cantina>	<20090208222859.GA2532@infradead.org>	<1234132752.12370.0.camel@champagne.cantina>	<20090208224249.GA11931@infradead.org>
+	<1234133120.12370.7.camel@champagne.cantina>
+	<498F9A53.3090409@sandeen.net>
+In-Reply-To: <498F9A53.3090409@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,20 +30,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Alessandro Bono <alessandro.bono@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs <linux-xfs@oss.sgi.com>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Mon, Jan 26, 2009 at 02:31:52AM -0500, Christoph Hellwig wrote:
-> Now that we have a helper to test if a mutex is held use it instead of our
-> own little hacks.
+Eric Sandeen wrote:
+> Alessandro Bono wrote:
+
+..
+
+>> sure, attached
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Well, that seems to not be from the kernel you were running; there is no
+> BUG() on line 470:
+> 
+> $ cat -n buffer.c | grep -8 "   470"
+>    462				       bdevname(bh->b_bdev, b));
+>    463			}
+>    464			set_bit(AS_EIO, &page->mapping->flags);
+>    465			set_buffer_write_io_error(bh);
+>    466			clear_buffer_uptodate(bh);
+>    467			SetPageError(page);
+>    468		}
+>    469	
+>    470		first = page_buffers(page);
 
-Reviewed-by: Dave Chinner <david@fromorbit.com>
+oh, oops :)  it's probably this BUG():
 
--- 
-Dave Chinner
-david@fromorbit.com
+#define page_buffers(page)                                      \
+        ({                                                      \
+                BUG_ON(!PagePrivate(page));                     \
+
+
+-Eric
 
 _______________________________________________
 xfs mailing list
