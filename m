@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n19H9GTm258636 for <xfs@oss.sgi.com>; Mon, 9 Feb 2009 11:09:16 -0600
-Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AC181FF5D3
-	for <xfs@oss.sgi.com>; Mon,  9 Feb 2009 09:08:38 -0800 (PST)
-Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id mEtYXFhdoLONsVwF for <xfs@oss.sgi.com>;
-	Mon, 09 Feb 2009 09:08:38 -0800 (PST)
-Message-ID: <49906313.9060501@sandeen.net>
-Date: Mon, 09 Feb 2009 11:08:35 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	n19HdYs7259800 for <xfs@oss.sgi.com>; Mon, 9 Feb 2009 11:39:35 -0600
+Received: from metis.ext.pengutronix.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9795118F7BA4
+	for <xfs@oss.sgi.com>; Mon,  9 Feb 2009 09:38:56 -0800 (PST)
+Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de
+	[92.198.50.35]) by cuda.sgi.com with ESMTP id uBavEepZOENykVVz
+	for <xfs@oss.sgi.com>; Mon, 09 Feb 2009 09:38:56 -0800 (PST)
+Received: from themisto.ext.pengutronix.de ([92.198.50.58] helo=[127.0.0.1])
+	by metis.ext.pengutronix.de with esmtp (Exim 4.63)
+	(envelope-from <mkl@pengutronix.de>) id 1LWa5r-0006fH-MT
+	for xfs@oss.sgi.com; Mon, 09 Feb 2009 18:38:54 +0100
+Message-ID: <49906A23.2010504@pengutronix.de>
+Date: Mon, 09 Feb 2009 18:38:43 +0100
+From: Marc Kleine-Budde <mkl@pengutronix.de>
 MIME-Version: 1.0
-Subject: Re: Accesing data on (old) XFS devices
-References: <54506.39868.qm@web34506.mail.mud.yahoo.com>
-In-Reply-To: <54506.39868.qm@web34506.mail.mud.yahoo.com>
+Subject: download of attr_2.4.43-1.tar.gz
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,89 +25,74 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============6342241956623357272=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Martin Mielke <m_mlk@yahoo.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Martin Mielke wrote:
-> Hi all,
-> 
-> I have 2 SCSI disks which were used on an (old) Silicon Graphics running on IRIX 6.5.x
-> I need to recover the data from those disks, dump them somewhere else and forget about the SGI disks...
-> 
-> OpenSUSE 11 sees the devices correctly and with fdisk I can see the partitions:
-> 
-> --
-> # fdisk -l /dev/sda
-> 
-> Disk /dev/sda (SGI disk label): 255 heads, 63 sectors, 4865 cylinders
-> Units = cylinders of 16065 * 512 bytes
-> 
-> ----- partitions -----
-> Pt#    Device  Info     Start       End   Sectors  Id  System
-> 1: /dev/sda1  boot        66      2213  34510368   a  SGI xfs
-> 2: /dev/sda2  swap         1        65   1048576   3  SGI raw
-> 9: /dev/sda3               0         0      4096   0  SGI volhdr
-> 11: /dev/sda4               0      2213  35563040   6  SGI volume
-> ----- Bootinfo -----
-> Bootfile: /unix
-> ----- Directory Entries -----
-> 0: sash       sector    2 size  273408
-> 1: ide        sector  536 size  249856
-> 2: symmon     sector 1024 size 1113600
-> 
-> 
-> # fdisk -l /dev/sdd
-> 
-> Disk /dev/sdd (SGI disk label): 255 heads, 63 sectors, 9729 cylinders
-> Units = cylinders of 16065 * 512 bytes
-> 
-> ----- partitions -----
-> Pt#    Device  Info     Start       End   Sectors  Id  System
-> 3: /dev/sdd1               1        16    262144   3  SGI raw
-> 4: /dev/sdd2              17        32    262144   3  SGI raw
-> 5: /dev/sdd3              33       293   4194304   3  SGI raw
-> 6: /dev/sdd4             294       555   4194304   3  SGI raw
-> 7: /dev/sdd5             556       816   4194304   3  SGI raw
-> 8: /dev/sdd6             817      1077   4194304   3  SGI raw
-> 9: /dev/sdd7               0         0      4096   0  SGI volhdr
-> 11: /dev/sdd8               0      2213  35563040   6  SGI volume
-> ----- Bootinfo -----
-> Bootfile: /unix
-> ----- Directory Entries -----
-> 
-> --
-> 
-> I added the following to /etc/raw:
-> --
-> raw1:sdd1
-> raw2:sdd2
-> raw3:sdd3
-> raw4:sdd4
-> raw5:sdd5
-> raw6:sdd6
-> --
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--===============6342241956623357272==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig7478F03FDF2667322631E678"
 
-You shouldn't need to play games w/ raw devices, I think.
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig7478F03FDF2667322631E678
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-I'd try:
+Hello,
 
-# file -s /dev/sdd?
-# file -s /dev/sda?
+is ftp://oss.sgi.com/projects/xfs/cmd_tars/ still the valid download
+location for the "attr" package?
 
-and see which partitions claim to hold xfs filesystems (I can't recall
-offhand how the sgi partitioning works...)
+The permissions on the ftp server on
+ftp://oss.sgi.com/projects/xfs/cmd_tars/ are mixed up, so that download
+isn't possible anymore.
 
-Those *should* just mount right up.  If they have dirty irix-format
-logs, you'll need to either mount (to replay the log) & unmount cleanly
-under irix, or zap it with xfs_repair -L
+ncftp /projects/xfs/cmd_tars > pwd
+  ftp://oss.sgi.com/projects/xfs/cmd_tars/
+ncftp /projects/xfs/cmd_tars > dir attr_2.4.43-1.tar.gz
+-rw-rw----       116991   Jul  3  2008   attr_2.4.43-1.tar.gz
+ncftp /projects/xfs/cmd_tars > get attr_2.4.43-1.tar.gz
+get attr_2.4.43-1.tar.gz: server said: Can't open attr_2.4.43-1.tar.gz: P=
+ermission denied
 
--Eric
+cheers, Marc
+
+--=20
+Pengutronix e.K.                         | Marc Kleine-Budde           |
+Linux Solutions for Science and Industry | Phone: +49-231-2826-924     |
+Vertretung West/Dortmund                 | Fax:   +49-5121-206917-5555 |
+Amtsgericht Hildesheim, HRA 2686         | http://www.pengutronix.de   |
+
+
+--------------enig7478F03FDF2667322631E678
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iEYEARECAAYFAkmQaisACgkQjTAFq1RaXHMkEACeKnj3FnbKcbN8CfiM3XgvQ91w
+tXYAn2B9bAen3e/zZgzs+53eFuuiluz/
+=jm49
+-----END PGP SIGNATURE-----
+
+--------------enig7478F03FDF2667322631E678--
+
+
+--===============6342241956623357272==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============6342241956623357272==--
