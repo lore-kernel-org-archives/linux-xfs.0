@@ -1,26 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n18Ndcna202464 for <xfs@oss.sgi.com>; Sun, 8 Feb 2009 17:39:39 -0600
-Received: from wa-out-1112.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 00A4F18F1D58
-	for <xfs@oss.sgi.com>; Sun,  8 Feb 2009 15:38:59 -0800 (PST)
-Received: from wa-out-1112.google.com (wa-out-1112.google.com
-	[209.85.146.177]) by cuda.sgi.com with ESMTP id
-	qW81t6C38BYayjEb for <xfs@oss.sgi.com>;
-	Sun, 08 Feb 2009 15:38:59 -0800 (PST)
-Received: by wa-out-1112.google.com with SMTP id k22so910841waf.4
-	for <xfs@oss.sgi.com>; Sun, 08 Feb 2009 15:38:58 -0800 (PST)
-Date: Sun, 8 Feb 2009 15:38:37 -0800
-From: Brandon Philips <brandon@ifup.org>
-Subject: Re: [patch 0/4] attr: test/ improvements and integrate with make
-Message-ID: <20090208233837.GA446@jenkins.ifup.org>
-References: <20090108021947.404730068@ifup.org> <20090108165820.GA3832@jenkins>
-	<20090207091033.GO29636@jenkins.ifup.org>
-	<200902090000.00162.agruen@suse.de>
+	n190S9JJ205664 for <xfs@oss.sgi.com>; Sun, 8 Feb 2009 18:28:10 -0600
+Message-ID: <498F7861.6010109@sgi.com>
+Date: Mon, 09 Feb 2009 11:27:13 +1100
+From: Mark Goodwin <markgw@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <200902090000.00162.agruen@suse.de>
+Subject: Re: IMPORTANT: XFS Documentation
+References: <1231946704.3929.36.camel@localhost.localdomain>	<20090120160346.GJ17616@sgi.com>	<1232480744.23291.101.camel@localhost.localdomain>	<20090128202715.GR16689@sgi.com>	<1233175168.25011.155.camel@localhost.localdomain>	<20090204183603.GA26714@sgi.com>
+	<4989F4C2.3030305@sgi.com> <20090205112906.GB11781@infradead.org>
+	<498D8F18.3080903@thebarn.com>
+In-Reply-To: <498D8F18.3080903@thebarn.com>
+Reply-To: markgw@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,58 +20,47 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andreas Gruenbacher <agruen@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
-
-On 23:59 Sun 08 Feb 2009, Andreas Gr=FCnbacher wrote:
-> On Saturday 07 February 2009 10:10:33 Brandon Philips wrote:
-> I believe it's a good start; we probably want to merge the trees eventual=
-ly. =
-
-> The way how you have moved libmisc breaks the tarballs though; I have fix=
-ed =
-
-> it. =
+To: Russell Cattelan <cattelan@thebarn.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, SGI Engineering Interfaces to Red Hat <redhat-interface@sgi.com>, Marizol Martinez <martinez@redhat.com>, Tony Ernst <tee@sgi.com>, George Beshers <gbeshers@sgi.com>, John Hesterberg <jh@sgi.com>, xfs-oss <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, xfs-dev <xfs-dev@sgi.com>, Gary Hagensen <gwh@sgi.com>, Ric Wheeler <rwheeler@redhat.com>
 
 
-Thanks. But, what do you mean by break the tarballs?
 
-> Also, I was surprised that your repository has all the history
-> rewritten instead of merging Christoph's trees, so I redid the merge.
+Russell Cattelan wrote:
+> Christoph Hellwig wrote:
+> ...
+>>> I've updated the copyrights in the doc sources and put them in a git tree:
+>>>
+>>>     git://oss.sgi.com/xfs/cmds/xfsdocs.git
+>> Russell, can you add this to the list of repositories to be displayed on
+>>
+>>     http://oss.sgi.com/cgi-bin/gitweb.cgi
+>
+> or maybe we should just update the existing xfs-website tree?
+> http://oss.sgi.com/cgi-bin/gitweb.cgi?p=cattelan/xfs-website/.git;a=summary
 
-I used git-stitch-repo[1] to rewrite the history as if they had been in
-the same tree. This has the advantage that you can go: =
+Rus, I didn't know that tree existed - it now has incorrect copyright
+notices for the doc sources. However, since it's ahead of ptools
+(and has cvs imported history too), I'll clone it as a replacement
+and then merge in the training docs with updated copyrights. It's easier
+for SGI if the official tree is git://oss.sgi.com/xfs/cmds/xfsdocs.git
+since the directory structure mirrors the internal ptools hierarchy,
+along with the other xfs/cmds trees.
 
- `git log acl/setfacl/setfacl.c`
+>> Talking about that any chance you could convert your cvsimport
+>> repositories to bare repos like all the others on oss?  And maybe
+>> move the old xfs-cmds import under cattelan/ like the other cvsimport
+>> ones?
+>>
+> I moved cvsimported xfs-import dmapi-import and xfs-cmds under archive.
 
-and have the whole history. Either way is fine with me though.
+Thanks for that.
 
-[1] http://ifup.org/2009/02/07/the-right-tool-for-the-job-git-stitch-repo
-
->   http://www.kernel.org/pub/scm/linux/kernel/git/agruen/xattr-tools.git
->   git://git.kernel.org/pub/scm/linux/kernel/git/agruen/xattr-tools.git
-> =
-
-> Are you fine with this tree?
-
-They look good to me.
-
-> Sorry for being slow. I will first add the other acked distro patches, th=
-en =
-
-> look at your changes.
-
-Great. Can we set a precedent that as patches get merged an email gets
-sent to xfs@oss.sgi.com still? If not I will just rss2email the git
-tree.
-
-Thanks,
-
-	Brandon
+Cheers
+-- Mark
 
 _______________________________________________
 xfs mailing list
