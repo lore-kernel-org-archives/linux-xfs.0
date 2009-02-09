@@ -1,22 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n193HN08215456
-	for <linux-xfs@oss.sgi.com>; Sun, 8 Feb 2009 21:17:24 -0600
-Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1C17118F2233
-	for <linux-xfs@oss.sgi.com>; Sun,  8 Feb 2009 19:16:45 -0800 (PST)
-Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id KDNJSkMlYUb0mpPm for <linux-xfs@oss.sgi.com>;
-	Sun, 08 Feb 2009 19:16:45 -0800 (PST)
-Message-ID: <498F9A53.3090409@sandeen.net>
-Date: Sun, 08 Feb 2009 20:52:03 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	n194Wlw9219288 for <xfs@oss.sgi.com>; Sun, 8 Feb 2009 22:32:47 -0600
+Message-ID: <498FB128.4060008@melbourne.sgi.com>
+Date: Mon, 09 Feb 2009 15:29:28 +1100
+From: Greg Banks <gnb@melbourne.sgi.com>
 MIME-Version: 1.0
-Subject: Re: XFS kernel BUG at fs/buffer.c:470! with 2.6.28.4
-References: <1234011974.7435.11.camel@champagne.cantina>	<20090208222859.GA2532@infradead.org>	<1234132752.12370.0.camel@champagne.cantina>	<20090208224249.GA11931@infradead.org>
-	<1234133120.12370.7.camel@champagne.cantina>
-In-Reply-To: <1234133120.12370.7.camel@champagne.cantina>
+Subject: Re: [patch 2/5] [PATCH] acl: various improvements for test/run
+References: <20090108015355.613058570@ifup.org>	<20090108015418.699729152@ifup.org>
+	<200902090229.47550.agruen@suse.de>
+In-Reply-To: <200902090229.47550.agruen@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,54 +22,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alessandro Bono <alessandro.bono@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs <linux-xfs@oss.sgi.com>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Andreas Gruenbacher <agruen@suse.de>
+Cc: tes@sgi.com, brandon@ifup.org, Brandon Philips <bphilips@suse.de>, xfs@oss.sgi.com
 
-Alessandro Bono wrote:
-> On Sun, 2009-02-08 at 17:42 -0500, Christoph Hellwig wrote:
->> On Sun, Feb 08, 2009 at 11:39:12PM +0100, Alessandro Bono wrote:
->>> On Sun, 2009-02-08 at 17:28 -0500, Christoph Hellwig wrote:
->>>> On Sat, Feb 07, 2009 at 02:06:13PM +0100, Alessandro Bono wrote:
->>>>> Feb  7 12:43:12 champagne kernel: [ 5828.167041] ------------[ cut
->>>>> here ]------------
->>>>> Feb  7 12:43:12 champagne kernel: [ 5828.167048] kernel BUG at
->>>>> fs/buffer.c:470!
->>>> Per
->>>> http://git.kernel.org/?p=linux/kernel/git/hpa/linux-2.6-allstable.git;a=blob;f=fs/buffer.c;h=665d446b25bc034241ef54c3c6b1d239c0ccf0f9;hb=d5b562330ec766292a3ac54ae5e0673610bd5b3d
->>>>
->>>> line 470 in fs/buffer.c of 2.6.28.4 has a comment and no actual code.
->>>>
->>>> What additional patches do you have applied?
->>>>
->>> vanilla kernel
->>> no additional patches at all
->> Well, the 2.6.28.4 clearly doesn't have a bug there.  Can you
->> attach the fs/buffer.c you built the kernel from?
->>
-> 
-> sure, attached
+Andreas Gruenbacher wrote:
+> Brandon,
+>
+> the version of the run script in the attr and acl packages is somewhat dated; 
+> I have made a few improvements since. I'll move this out of {acl,attr}/test 
+> and put the latest version into the libmisc/ directory.
+>
+> Note that I recently rewrote the run script from scratch. Unlike the old 
+> version, the new one runs the whole script inside the same shell. There are 
+> still a few problems to be solved; most importantly, user switching doesn't 
+> work, yet.
+I hope you get that feature done soon, and look forward to reviewing
+it.  Let me just be Captain Obvious and say that user switching is a
+critical feature for code used to drive ACL tests ;-)
 
-Well, that seems to not be from the kernel you were running; there is no
-BUG() on line 470:
+>  Eventually I want to replace the old version, though.
+>
+> 	http://savannah.nongnu.org/projects/shrun
+>
+>
+>
+>   
+>> Add a | test line that is similar to > but is interpreted as a regular
+>> expression.
+>>     
+>
+> I have been using ">~" instead of "|" for that. I'm still not sure that 
+> including regular expression matching was a good idea though, so shrun 
+> doesn't have any of that yet. We'll se how things develop.
+>
+>
+>   
+Regexp matching is the kind of thing that sounds like it could be quite
+useful, but it's a pain to implement.  When I wrote a Python interpreter
+for the shrun language for use in Newpynfs, I didn't bother implementing
+the regexp feature.
 
-$ cat -n buffer.c | grep -8 "   470"
-   462				       bdevname(bh->b_bdev, b));
-   463			}
-   464			set_bit(AS_EIO, &page->mapping->flags);
-   465			set_buffer_write_io_error(bh);
-   466			clear_buffer_uptodate(bh);
-   467			SetPageError(page);
-   468		}
-   469	
-   470		first = page_buffers(page);
-   471		local_irq_save(flags);
-   472		bit_spin_lock(BH_Uptodate_Lock, &first->b_state);
-   473	
-   474		clear_buffer_async_write(bh);
-   475		unlock_buffer(bh);
-   476		tmp = bh->b_this_page;
-   477		while (tmp != bh) {
-   478			if (buffer_async_write(tmp)) {
+-- 
+Greg Banks, P.Engineer, SGI Australian Software Group.
+the brightly coloured sporks of revolution.
+I don't speak for SGI.
 
 _______________________________________________
 xfs mailing list
