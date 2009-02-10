@@ -1,22 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1AJkNdD071306 for <xfs@oss.sgi.com>; Tue, 10 Feb 2009 13:46:23 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 510391903E67
-	for <xfs@oss.sgi.com>; Tue, 10 Feb 2009 11:45:47 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id p5Z05sfjewvWHXNg for
-	<xfs@oss.sgi.com>; Tue, 10 Feb 2009 11:45:47 -0800 (PST)
-Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1LWyXj-0000jc-Vo
-	for xfs@oss.sgi.com; Tue, 10 Feb 2009 19:45:16 +0000
-Message-Id: <20090210194515.812431000@bombadil.infradead.org>
-Date: Tue, 10 Feb 2009 14:44:24 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 2/2] xfs: reject swapext ioctl on swapfiles
+	n1AJvBjU071861 for <xfs@oss.sgi.com>; Tue, 10 Feb 2009 13:57:12 -0600
+Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D8AE2304092
+	for <xfs@oss.sgi.com>; Tue, 10 Feb 2009 11:56:32 -0800 (PST)
+Message-Id: <A482AB92-6E29-43EA-A671-43D86E041335@sgi.com>
+From: Felix Blyakher <felixb@sgi.com>
+In-Reply-To: <20090210194515.509547000@bombadil.infradead.org>
+Mime-Version: 1.0 (Apple Message framework v926)
+Subject: Re: [PATCH 1/2] xfs: fix error handling in xfs_log_mount
+Date: Tue, 10 Feb 2009 13:56:31 -0600
 References: <20090210194422.767988000@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-swapext-reject-swapfiles
+	<20090210194515.509547000@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,36 +21,77 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Swapfiles are magic - I/O is directly initialized by the VM without
-involving the filesystem.  Swapping out extents underneath the VM thus
-can cause severe problems.
+Isn't it a reworked Lachlan's patch:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+http://oss.sgi.com/archives/xfs/2009-02/msg00175.html
 
-Index: xfs/fs/xfs/xfs_dfrag.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_dfrag.c	2009-02-10 19:19:25.440068967 +0100
-+++ xfs/fs/xfs/xfs_dfrag.c	2009-02-10 19:20:35.182944272 +0100
-@@ -79,6 +79,12 @@ xfs_swapext(
- 		goto out_put_target_file;
- 	}
- 
-+	if (IS_SWAPFILE(file->f_path.dentry->d_inode) ||
-+	    IS_SWAPFILE(target_file->f_path.dentry->d_inode)) {
-+		error = XFS_ERROR(EINVAL);
-+		goto out_put_target_file;
-+	}
-+
- 	ip = XFS_I(file->f_path.dentry->d_inode);
- 	tip = XFS_I(target_file->f_path.dentry->d_inode);
- 
+Otherwise, looks good.
+
+Felix
+
+On Feb 10, 2009, at 1:44 PM, Christoph Hellwig wrote:
+
+> We can't just call xfs_log_unmount_dealloc on any failure because the
+> ail thread which is torn down by xfs_log_unmount_dealloc might not
+> be initialized yet.
+>
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+>
+> Index: xfs/fs/xfs/xfs_log.c
+> ===================================================================
+> --- xfs.orig/fs/xfs/xfs_log.c	2009-02-10 19:16:18.761945594 +0100
+> +++ xfs/fs/xfs/xfs_log.c	2009-02-10 19:18:54.177068965 +0100
+> @@ -574,7 +574,7 @@ xfs_log_mount(
+> 	error = xfs_trans_ail_init(mp);
+> 	if (error) {
+> 		cmn_err(CE_WARN, "XFS: AIL initialisation failed: error %d", error);
+> -		goto error;
+> +		goto out_free_log;
+> 	}
+> 	mp->m_log->l_ailp = mp->m_ail;
+>
+> @@ -594,20 +594,22 @@ xfs_log_mount(
+> 			mp->m_flags |= XFS_MOUNT_RDONLY;
+> 		if (error) {
+> 			cmn_err(CE_WARN, "XFS: log mount/recovery failed: error %d",  
+> error);
+> -			goto error;
+> +			goto out_destroy_ail;
+> 		}
+> 	}
+>
+> 	/* Normal transactions can now occur */
+> 	mp->m_log->l_flags &= ~XLOG_ACTIVE_RECOVERY;
+>
+> -	/* End mounting message in xfs_log_mount_finish */
+> 	return 0;
+> -error:
+> -	xfs_log_unmount_dealloc(mp);
+> +
+> +out_destroy_ail:
+> +	xfs_trans_ail_destroy(mp);
+> +out_free_log:
+> +	xlog_dealloc_log(mp->m_log);
+> out:
+> 	return error;
+> -}	/* xfs_log_mount */
+> +}
+>
+> /*
+>  * Finish the recovery of the file system.  This is separate from
+>
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
