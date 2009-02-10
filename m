@@ -1,15 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1ANL9FU082567 for <xfs@oss.sgi.com>; Tue, 10 Feb 2009 17:21:09 -0600
-Message-ID: <49920CB5.1020103@sgi.com>
-Date: Wed, 11 Feb 2009 10:24:37 +1100
+	n1ANU0v9082914 for <xfs@oss.sgi.com>; Tue, 10 Feb 2009 17:30:01 -0600
+Message-ID: <49920EC9.6060600@sgi.com>
+Date: Wed, 11 Feb 2009 10:33:29 +1100
 From: Lachlan McIlroy <lachlan@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/2] xfs: fix error handling in xfs_log_mount
-References: <20090210194422.767988000@bombadil.infradead.org>	<20090210194515.509547000@bombadil.infradead.org>	<A482AB92-6E29-43EA-A671-43D86E041335@sgi.com>	<20090210195756.GA7569@infradead.org>
-	<1E52072E-CA98-430B-9B2F-FDD0FDD1A7A4@sgi.com>
-In-Reply-To: <1E52072E-CA98-430B-9B2F-FDD0FDD1A7A4@sgi.com>
+Subject: Re: [PATCH] Re-dirty pages on I/O error
+References: <4990DCF6.5000900@sgi.com> <20090210100129.GN8830@disturbed>
+In-Reply-To: <20090210100129.GN8830@disturbed>
 Reply-To: lachlan@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -23,45 +22,30 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Felix Blyakher <felixb@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Lachlan McIlroy <lachlan@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-Felix Blyakher wrote:
-> 
-> On Feb 10, 2009, at 1:57 PM, Christoph Hellwig wrote:
-> 
->> On Tue, Feb 10, 2009 at 01:56:31PM -0600, Felix Blyakher wrote:
->>> Isn't it a reworked Lachlan's patch:
->>>
->>> http://oss.sgi.com/archives/xfs/2009-02/msg00175.html
+Dave Chinner wrote:
+> On Tue, Feb 10, 2009 at 12:48:38PM +1100, Lachlan McIlroy wrote:
+>> [This patch seems to have slipped through the proverbial crack.]
 >>
->> The patch isn't related to that one at all,
+>> If we get an error in xfs_page_state_convert() - and it's not EAGAIN - then
+>> we throw away the dirty page without converting the delayed allocation.  This
+>> leaves delayed allocations that can never be removed and confuses code that
+>> expects a flush of the file to clear them.  We need to re-dirty the page on
+>> error so we can try again later or report that the flush failed.
 > 
-> ... from the implementation point of view, yes.
-> 
->> but it aims to fix the
->> same issue.
-> 
-> That's what I meant.
-> 
->> Should probably get a Reported-by: tag for him,
-> 
-> Seems reasonable.
-> 
->> if
->> this is indeed the thing the original patch tried to fix.
-> 
-> That was my understanding. Let's Lachlan pitch in.
-I'd prefer both fixes go in so we have maximum defence against
-this problem happening again but I'm really not fussed.
+> As discussed previously, the fix that is needed in the page
+> invalidation path. i.e.  the page invalidate path clears the
+> buffer_delay() flag (via discard_buffer) before we get to
+> ->releasepage and so releasepage fails to convert the delalloc
+> extent before tossing the page....
 
-> 
-> Felix
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+I'll leave it up to you to implement that then Dave since I think you
+are the only one who understands your angle of attack.
+
+Meanwhile we have this patch running on customer systems and it's fixed
+the problems they were having with orphaned delayed allocations being
+left behind due to pages being erroneously invalidated.
 
 _______________________________________________
 xfs mailing list
