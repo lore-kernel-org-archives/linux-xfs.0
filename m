@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1BNYC8m163166 for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 17:34:13 -0600
-Received: from web30208.mail.mud.yahoo.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id 0801510EA3B
-	for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 15:33:36 -0800 (PST)
-Received: from web30208.mail.mud.yahoo.com (web30208.mail.mud.yahoo.com
-	[209.191.69.55]) by cuda.sgi.com with SMTP id OWcBirFHiuVMymug
-	for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 15:33:36 -0800 (PST)
-Message-ID: <586998.47540.qm@web30208.mail.mud.yahoo.com>
-Date: Wed, 11 Feb 2009 15:33:35 -0800 (PST)
+	n1BNYkab163214 for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 17:34:47 -0600
+Received: from web30201.mail.mud.yahoo.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id CF8291B3D41E
+	for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 15:34:10 -0800 (PST)
+Received: from web30201.mail.mud.yahoo.com (web30201.mail.mud.yahoo.com
+	[209.191.69.48]) by cuda.sgi.com with SMTP id 8GhbAikxRNr4LgQb
+	for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 15:34:10 -0800 (PST)
+Message-ID: <849745.82892.qm@web30201.mail.mud.yahoo.com>
+Date: Wed, 11 Feb 2009 15:34:09 -0800 (PST)
 From: <raksac@yahoo.com>
 Subject: Re: BUG: soft lockup detected on CPU#1!
 In-Reply-To: <alpine.DEB.1.10.0902110420520.13264@p34.internal.lan>
@@ -30,80 +30,65 @@ To: Justin Piszcz <jpiszcz@lucidpixels.com>
 Cc: xfs@oss.sgi.com
 
 
-Hi Justin,
-
-Thank you for the pointer. Well as suggested I did and
-now the xfsqa goes upto test 011 
-
-#! /bin/sh
-# FS QA Test No. 011
-#
-# dirstress
-
-but dies with a oops. Any suggestions?
-
-Here is the oops trace -
+With debug enabled it fails with this -
 
 BUG: unable to handle kernel NULL pointer dereference
 at virtual address 00000000
  printing eip:
 f8bd02c2
-*pde = e7167067
-Oops: 0000 [#1]
+*pde = d658e067
+Assertion failed: atomic_read(&ip->i_pincount) > 0,
+file: fs/xfs/xfs_inode.c, line: 2703
+------------[ cut here ]------------
+Kernel BUG at [verbose debug info unavailable]
+invalid opcode: 0000 [#1]
 PREEMPT SMP 
 last sysfs file:
-/devices/pci0000:00/0000:00:1f.3/i2c-0/0-002e/temp1_input
-Modules linked in: xfs sg sunrpc m24c02 pca9554
+/devices/pci0000:00/0000:00:1f.3/i2c-0/0-002e/temp2_input
+Modules linked in: sg xfs sunrpc m24c02 pca9554
 pca9555 mcp23016 lm85 hwmon_vid i2c_i801 i2c_core
 midplane uhci_hcd sk98lin tg3 e1000 mv_sata sd_mod
 ahci libata
-CPU:    1
-EIP:    0060:[<f8bd02c2>]    Not tainted VLI
-EFLAGS: 00010286   (2.6.18.rhel5 #2) 
-EIP is at xfs_iget_core+0x4d6/0x5e9 [xfs]
-eax: 00000000   ebx: e8ae7850   ecx: e79b2000   edx:
+CPU:    0
+EIP:    0060:[<f8bfde19>]    Not tainted VLI
+EFLAGS: 00010296   (2.6.18.rhel5 #2) 
+EIP is at assfail+0xd/0x13 [xfs]
+eax: 0000005c   ebx: e1fb4980   ecx: e4f46000   edx:
 00000000
-esi: e8ae7920   edi: ea44d2d0   ebp: ea44d298   esp:
-e79b3ce4
+esi: 00000007   edi: e1fb0a58   ebp: 00000007   esp:
+e4f47eb8
 ds: 007b   es: 007b   ss: 0068
-Process dirstress (pid: 9927, ti=e79b2000
-task=e790faa0 task.ti=e79b2000)
-Stack: ea7b0034 e9072c00 ea2a6380 0003b84a e8ae7850
-ea2a6380 02c9f600 00000004 
-       e9072c00 f8bd0478 1003b84a 00000000 00000001
-00000004 e79b3d5c 00000000 
-       00000000 ea7b0034 e9072c00 ea7b0034 1003b84a
-00000000 f8bebbf1 1003b84a 
+Process xfslogd/0 (pid: 4370, ti=e4f46000
+task=75118aa0 task.ti=e4f46000)
+Stack: f8c10ccb f8c090ae f8c08d97 00000a8f f8bd0dca
+00000526 f8be8e28 00000526 
+       00000007 e9db1d80 e861c008 e9db1da0 e861c000
+00000003 e9db1d80 e9db1ca4 
+       e9db1ca0 00000000 f8be8f56 00000000 00000000
+e9db1ca4 ea449880 ea449800 
 Call Trace:
- [<f8bd0478>] xfs_iget+0xa3/0x12f [xfs]
- [<f8bebbf1>] xfs_trans_iget+0x1bd/0x249 [xfs]
- [<f8bd4ebe>] xfs_ialloc+0xb9/0x5a9 [xfs]
- [<f8bdc777>] xlog_grant_push_ail+0x105/0x12c [xfs]
- [<f8bec673>] xfs_dir_ialloc+0x7e/0x26b [xfs]
- [<f8be8c81>] xfs_trans_reserve+0x15c/0x240 [xfs]
- [<f8bf12c8>] xfs_symlink+0x34a/0x862 [xfs]
- [<401a62dd>] avc_has_perm_noaudit+0x38f/0x42d
- [<401a6e9d>] avc_has_perm+0x3b/0x46
- [<f8bf9d8e>] xfs_vn_symlink+0x6a/0xad [xfs]
- [<4016a06d>] vfs_symlink+0xb2/0x11a
- [<4016a149>] sys_symlinkat+0x74/0xab
- [<402a14c2>] _spin_lock+0xd/0x5a
- [<402a1593>] _spin_unlock+0xd/0x21
- [<4016f416>] dput+0x83/0x11c
- [<4015c89d>] __fput+0x152/0x175
- [<4016a18f>] sys_symlink+0xf/0x13
- [<40102b73>] syscall_call+0x7/0xb
+ [<f8bd0dca>] xfs_iunpin+0x21/0x49 [xfs]
+ [<f8be8e28>] xfs_trans_chunk_committed+0xc3/0xe6
+[xfs]
+ [<f8be8f56>] xfs_trans_committed+0x38/0xd1 [xfs]
+ [<f8bdba5c>] xlog_state_do_callback+0x1b7/0x329 [xfs]
+ [<f8bf66b7>] xfs_buf_iodone_work+0x41/0x63 [xfs]
+ [<401294c5>] run_workqueue+0x71/0xae
+ [<f8bf6676>] xfs_buf_iodone_work+0x0/0x63 [xfs]
+ [<40129666>] worker_thread+0xd9/0x10a
+ [<40116ca2>] default_wake_function+0x0/0xc
+ [<4012958d>] worker_thread+0x0/0x10a
+ [<4012be6d>] kthread+0xc1/0xec
+ [<4012bdac>] kthread+0x0/0xec
+ [<401038b3>] kernel_thread_helper+0x7/0x10
  =======================
-Code: 8b 40 08 a8 08 74 05 e8 6d ff 6c 47 8b 44 24 04
-05 38 01 00 00 e8 24 02 6d 47 8b 44 24 04 8b 98 2c 01
-00 00 85 db 74 3d 8b 43 04 <39> 18 74 14 b9 14 01 00
-00 ba 20 8a c0 f8 b8 d8 8c c0 f8 e8 32 
-EIP: [<f8bd02c2>] xfs_iget_core+0x4d6/0x5e9 [xfs]
-SS:ESP 0068:e79b3ce4
+Code: d2 df 51 47 89 ea b8 94 59 c2 f8 e8 a9 37 6a 47
+83 c4 0c 85 ff 75 02 0f 0b 5b 5e 5f 5d c3 51 52 50 68
+cb 0c c1 f8 e8 ab df 51 47 <0f> 0b 83 c4 10 c3 55 57
+56 53 83 ec 14 89 44 24 04 89 d7 89 cd 
+EIP: [<f8bfde19>] assfail+0xd/0x13 [xfs] SS:ESP
+0068:e4f47eb8
  <0>Kernel panic - not syncing: Fatal exception
-
-Thanks,
-Rakesh
 
 --- Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
 
