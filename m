@@ -1,16 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1B4C4Re106046 for <xfs@oss.sgi.com>; Tue, 10 Feb 2009 22:12:05 -0600
-Message-ID: <499250E5.7030804@sgi.com>
-Date: Wed, 11 Feb 2009 15:15:33 +1100
-From: Lachlan McIlroy <lachlan@sgi.com>
+	n1B7H2Uo115756 for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 01:17:03 -0600
+Received: from web30205.mail.mud.yahoo.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id BDCFE191833C
+	for <xfs@oss.sgi.com>; Tue, 10 Feb 2009 23:16:25 -0800 (PST)
+Received: from web30205.mail.mud.yahoo.com (web30205.mail.mud.yahoo.com
+	[209.191.69.52]) by cuda.sgi.com with SMTP id Gq8oUUpi8DDyMeOH
+	for <xfs@oss.sgi.com>; Tue, 10 Feb 2009 23:16:25 -0800 (PST)
+Message-ID: <407126.80177.qm@web30205.mail.mud.yahoo.com>
+Date: Tue, 10 Feb 2009 23:16:25 -0800 (PST)
+From: <raksac@yahoo.com>
+Subject: BUG: soft lockup detected on CPU#1!
 MIME-Version: 1.0
-Subject: Re: [PATCH] Don't reset di_format in xfs_ifree()
-References: <49921B3E.8040406@sgi.com>
-	<468EF145-F778-4420-9445-6A5505EB16D5@sgi.com>
-In-Reply-To: <468EF145-F778-4420-9445-6A5505EB16D5@sgi.com>
-Reply-To: lachlan@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,86 +21,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Felix Blyakher <felixb@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Felix Blyakher wrote:
-> 
-> On Feb 10, 2009, at 6:26 PM, Lachlan McIlroy wrote:
-> 
->> I hit a panic while flushing a reclaimed inode that is fairly
->> reproducible under load.
-> 
-> What kind of panic was that? Where in xfs_iext_get_ext() did
-> it panic?
 
-It was a bad address so I suspect that either ifp->if_u1.if_ext_irec
-or ifp->if_u1.if_extents was dereferenced when they have been freed
-(or not even allocated).  The correct di_format was XFS_DINODE_FMT_LOCAL
-so ifp->if_u1.if_data should have been used.
+Hello,
 
-> 
->> In xfs_iflush_fork() we're led to believe that there are extents
->> on this inode but there aren't any.  Actually the inode was a
->> directory.  I added some debugging to xfs_ifree() and found
->> that di_format was XFS_DINODE_FMT_LOCAL and got reset to
->> XFS_DINODE_FMT_EXTENTS and this has confused the code in
->> xfs_iflush_fork().
->>
->> [<ffffffffa0047de7>] xfs_iext_get_ext+0x6c/0xca [xfs]
-> 
-> I assume you're running debug xfs, as I can see xfs_iext_get_ext()
-> only in assert statements.
-Yes, debug.
+I am running the 2.6.28 based xfs kernel driver on a
+custom kernel with following kernel config enabled.
 
-> 
->> [<ffffffffa004a3d4>] xfs_iflush_fork+0x1b0/0x3c6 [xfs]
->> [<ffffffffa004aa3f>] xfs_iflush_int+0x455/0x5a1 [xfs]
->> [<ffffffffa004b0da>] xfs_iflush+0x229/0x2d6 [xfs]
->> [<ffffffffa007283c>] xfs_reclaim_inode+0xd8/0x10f [xfs]
->> [<ffffffffa0072976>] xfs_reclaim_inodes_ag+0x103/0x13e [xfs]
->> [<ffffffffa00729f3>] xfs_reclaim_inodes+0x42/0x60 [xfs]
->> [<ffffffffa0072d1b>] xfs_sync_worker+0x30/0x8a [xfs]
->> [<ffffffffa0073416>] xfssyncd+0x14e/0x1a2 [xfs]
->> [<ffffffffa00732c8>] ? xfssyncd+0x0/0x1a2 [xfs]
->> [<ffffffff8104fc70>] kthread+0x49/0x79
->>
->> I made this change and it passes the load test and XFSQA too.  I'm
->> not sure if this is indicative of a bigger problem though.
->>
->> Index: xfs-fix/fs/xfs/xfs_inode.c
->> ===================================================================
->> --- xfs-fix.orig/fs/xfs/xfs_inode.c
->> +++ xfs-fix/fs/xfs/xfs_inode.c
->> @@ -2165,8 +2165,6 @@ xfs_ifree(
->>      ip->i_d.di_forkoff = 0;        /* mark the attr fork not in use */
->>      ip->i_df.if_ext_max =
->>          XFS_IFORK_DSIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t);
->> -    ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
->> -    ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
-> 
-> So, the idea here is to reset the ip->i_d. It seems strange
-> to choose XFS_DINODE_FMT_EXTENTS as initializer, and even
-> more strange how not changing di_aformat could affect your panic.
-I figure if one (di_format) is wrong then the other probably is too.
+CONFIG_PREEMPT
+CONFIG_DETECT_SOFTLOCKUP
 
-> 
-> Just asking the questions at this time.
-> Felix
-> 
->>      /*
->>       * Bump the generation count so no one will be confused
->>       * by reincarnations of this inode.
->>
->> _______________________________________________
->> xfs mailing list
->> xfs@oss.sgi.com
->> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+Running the following xfsqa causes a soft lockup. The
+configuration is a x86 with Hyperthreading, 4GB RAM
+and a AHCI connected JBOD. Its 100% reproducible.
+
+Any suggestions/inputs on where to start debugging the
+problem would be much appreciated.
+
+#! /bin/sh
+# FS QA Test No. 008
+#
+# randholes test
+#
+
+BUG: soft lockup detected on CPU#1!
+ [<4013d525>] softlockup_tick+0x9c/0xaf
+ [<40123246>] update_process_times+0x3d/0x60
+ [<401100ab>] smp_apic_timer_interrupt+0x52/0x58
+ [<40103633>] apic_timer_interrupt+0x1f/0x24
+ [<402a1557>] _spin_lock_irqsave+0x48/0x61
+ [<f8b8fe30>] xfs_iflush_cluster+0x16d/0x31c [xfs]
+ [<f8b9018b>] xfs_iflush+0x1ac/0x271 [xfs]
+ [<f8ba49a1>] xfs_inode_flush+0xd6/0xfa [xfs]
+ [<f8bb13c8>] xfs_fs_write_inode+0x27/0x40 [xfs]
+ [<401789d9>] __writeback_single_inode+0x1b0/0x2ff
+ [<40101ad5>] __switch_to+0x23/0x1f9
+ [<40178f87>] sync_sb_inodes+0x196/0x261
+ [<4017920a>] writeback_inodes+0x67/0xb1
+ [<401465df>] wb_kupdate+0x7b/0xe0
+ [<40146bc3>] pdflush+0x0/0x1b5
+ [<40146ce1>] pdflush+0x11e/0x1b5
+ [<40146564>] wb_kupdate+0x0/0xe0
+ [<4012be6d>] kthread+0xc1/0xec
+ [<4012bdac>] kthread+0x0/0xec
+ [<401038b3>] kernel_thread_helper+0x7/0x10
+ =======================
+
+Thanks,
+Rakesh
+
+
+      
 
 _______________________________________________
 xfs mailing list
