@@ -1,18 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1B7H2Uo115756 for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 01:17:03 -0600
-Received: from web30205.mail.mud.yahoo.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id BDCFE191833C
-	for <xfs@oss.sgi.com>; Tue, 10 Feb 2009 23:16:25 -0800 (PST)
-Received: from web30205.mail.mud.yahoo.com (web30205.mail.mud.yahoo.com
-	[209.191.69.52]) by cuda.sgi.com with SMTP id Gq8oUUpi8DDyMeOH
-	for <xfs@oss.sgi.com>; Tue, 10 Feb 2009 23:16:25 -0800 (PST)
-Message-ID: <407126.80177.qm@web30205.mail.mud.yahoo.com>
-Date: Tue, 10 Feb 2009 23:16:25 -0800 (PST)
-From: <raksac@yahoo.com>
-Subject: BUG: soft lockup detected on CPU#1!
+	n1B7tFbr117126 for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 01:55:16 -0600
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 410A81918381
+	for <xfs@oss.sgi.com>; Tue, 10 Feb 2009 23:54:38 -0800 (PST)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net
+	[203.16.214.146]) by cuda.sgi.com with ESMTP id
+	FQBdfQkSbLhK0wqU for <xfs@oss.sgi.com>;
+	Tue, 10 Feb 2009 23:54:38 -0800 (PST)
+Date: Wed, 11 Feb 2009 18:54:33 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 10/13] xfs: add CRC checks to the AGFL
+Message-ID: <20090211075433.GQ8830@disturbed>
+References: <20090210202241.546501000@bombadil.infradead.org>
+	<20090210202941.150266000@bombadil.infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20090210202941.150266000@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,58 +30,57 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
+On Tue, Feb 10, 2009 at 03:22:51PM -0500, Christoph Hellwig wrote:
+> Add CRC checks, location information and a magic number to the AGFL.
+> Previously the AGFL was just a block containing nothing but the
+> free block pointers.  The new AGFL has a real header with the usual
+> boilerplate instead, so that we can verify it's not corrupted and
+> written into the right place.
 
-Hello,
+I haven't had a chance to look over any of this series in detail - just
+a quick glance really - but this popped out as looking wrong:
 
-I am running the 2.6.28 based xfs kernel driver on a
-custom kernel with following kernel config enabled.
+> +/*
+> + * Size of the AGFL.  For CRC-enabled filesystes we steal the last two slots
+> + * for location information (agno) and the crc.
+> + */
+> +#define XFS_AGFL_SIZE(mp) \
+> +	((mp)->m_sb.sb_sectsize / sizeof(xfs_agblock_t) - \
+> +	 (xfs_sb_version_hascrc(&((mp)->m_sb)) ? sizeof(struct xfs_agfl) : 0))
 
-CONFIG_PREEMPT
-CONFIG_DETECT_SOFTLOCKUP
+sb_sectsize is in bytes, sizeof(xfs_agblock_t) is in bytes, which
+means that the numerator is a count of the number of agblocks that
+will fit in the AGFL. sizeof(struct xfs_agfl) is also in bytes,
+so your subtracting a number of bytes from a count of agblocks....
 
-Running the following xfsqa causes a soft lockup. The
-configuration is a x86 with Hyperthreading, 4GB RAM
-and a AHCI connected JBOD. Its 100% reproducible.
+I think you mean:
 
-Any suggestions/inputs on where to start debugging the
-problem would be much appreciated.
+#define XFS_AGFL_SIZE(mp) \
+	(((mp)->m_sb.sb_sectsize - (xfs_sb_version_hascrc(&((mp)->m_sb)) ? \
+						sizeof(struct xfs_agfl) : 0)) \
+	  / sizeof(xfs_agblock_t))
 
-#! /bin/sh
-# FS QA Test No. 008
-#
-# randholes test
-#
+>  typedef struct xfs_agfl {
+> -	__be32		agfl_bno[1];	/* actually XFS_AGFL_SIZE(mp) */
+> +	__be32		agfl_magicnum;
+> +	__be32		agfl_seqno;
+> +	uuid_t		agfl_uuid;
+> +	__be32		agfl_crc;
+> +	__be32		agfl_bno[];	/* actually XFS_AGFL_SIZE(mp) */
+>  } xfs_agfl_t;
 
-BUG: soft lockup detected on CPU#1!
- [<4013d525>] softlockup_tick+0x9c/0xaf
- [<40123246>] update_process_times+0x3d/0x60
- [<401100ab>] smp_apic_timer_interrupt+0x52/0x58
- [<40103633>] apic_timer_interrupt+0x1f/0x24
- [<402a1557>] _spin_lock_irqsave+0x48/0x61
- [<f8b8fe30>] xfs_iflush_cluster+0x16d/0x31c [xfs]
- [<f8b9018b>] xfs_iflush+0x1ac/0x271 [xfs]
- [<f8ba49a1>] xfs_inode_flush+0xd6/0xfa [xfs]
- [<f8bb13c8>] xfs_fs_write_inode+0x27/0x40 [xfs]
- [<401789d9>] __writeback_single_inode+0x1b0/0x2ff
- [<40101ad5>] __switch_to+0x23/0x1f9
- [<40178f87>] sync_sb_inodes+0x196/0x261
- [<4017920a>] writeback_inodes+0x67/0xb1
- [<401465df>] wb_kupdate+0x7b/0xe0
- [<40146bc3>] pdflush+0x0/0x1b5
- [<40146ce1>] pdflush+0x11e/0x1b5
- [<40146564>] wb_kupdate+0x0/0xe0
- [<4012be6d>] kthread+0xc1/0xec
- [<4012bdac>] kthread+0x0/0xec
- [<401038b3>] kernel_thread_helper+0x7/0x10
- =======================
+And judging by that you are stealing more than 2 slots - more like
+8 slots.
 
-Thanks,
-Rakesh
+Cheers,
 
-
-      
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
