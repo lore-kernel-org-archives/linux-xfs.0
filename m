@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1BHAgqA142597 for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 11:10:43 -0600
-Received: from lucidpixels.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BFBB410AB10
-	for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 09:10:06 -0800 (PST)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by
-	cuda.sgi.com with ESMTP id LcwUcuyue5rQAWWY for
-	<xfs@oss.sgi.com>; Wed, 11 Feb 2009 09:10:06 -0800 (PST)
-Date: Wed, 11 Feb 2009 12:10:05 -0500 (EST)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: sunit & swidth on RAID-1?
-In-Reply-To: <20090211165316.GA4430@dentifrice>
-Message-ID: <alpine.DEB.1.10.0902111208280.18885@p34.internal.lan>
-References: <20090211155638.GA3864@dentifrice>
-	<alpine.DEB.1.10.0902111141560.18885@p34.internal.lan>
-	<20090211165316.GA4430@dentifrice>
+	n1BHHKE3143282 for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 11:17:21 -0600
+Received: from mx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 96BE710ABEF
+	for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 09:16:44 -0800 (PST)
+Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
+	with ESMTP id sdqAY8FP66Js9Y6Q for <xfs@oss.sgi.com>;
+	Wed, 11 Feb 2009 09:16:44 -0800 (PST)
+Message-ID: <499300E2.7000207@sandeen.net>
+Date: Wed, 11 Feb 2009 10:46:26 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
+Subject: Re: sunit & swidth on RAID-1?
+References: <20090211155638.GA3864@dentifrice>
+In-Reply-To: <20090211155638.GA3864@dentifrice>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,50 +23,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: mike dentifrice <fluor@poivron.org>
 Cc: xfs@oss.sgi.com
 
+mike dentifrice wrote:
+> Hello,
+> 
+> I would like to know if it makes any sense to specify sunit & swidth
+> parameters as mount options to XFS filesystems sitting on a Linux
+> software RAID-1 array, as advertised here [1] or there [2].
+> 
+> I'm asking, because it seems that chunk_size does not matter in a RAID-1
+> context, nor do stripe units; or do they?
+
+I don't think it does matter.  And for what it's worth, mkfs.xfs queries
+an MD raid, but ignores raid1/10/0:
+
+                /*
+                 * Ignore levels we don't want aligned (e.g. linear)
+                 * and deduct disk(s) from stripe width on RAID4/5/6
+                 */
+                switch (md.level) {
+                case 6:
+                        md.raid_disks--;
+                        /* fallthrough */
+                case 5:
+                case 4:
+                        md.raid_disks--;
+                        /* fallthrough */
+                case 1:
+                case 0:
+                case 10:
+                        break;
+                default:
+                        return 0;
+
+In general, mkfs.xfs on md should just "do the right thing"
+
+-Eric
 
 
-On Wed, 11 Feb 2009, mike dentifrice wrote:
-
-> Justin Piszcz a dit:
->> mkfs.xfs will auto-optimize for software-raid arrays for the most
->> part,  with HW raid on a 3ware controller, tweaking mkfs.xfs does not
->> help very  much.  with SW raid, at least for raid1 - I use the
->> defaults.
->
-> Thanks for your reply. However, I wonder about the defaults:
->
-> 	xfs_info /dev/md1 | grep -E '(sunit|swidth)'
->
-> Outputs:
->
->        sunit=0      swidth=0 blks, unwritten=1
->        sectsz=512   sunit=0 blks
->
-> What's the consequence of 0 values in this case?
->
-> Greetings,
->
-> -- 
-> mike dentifrice <fluor@poivron.org>
->
-
-# xfs_info /dev/md2 | grep -E '(sunit|swidth)'
-          =                       sunit=0      swidth=0 blks
-          =                       sectsz=512   sunit=0 blks, lazy-count=0
-
-Mine is similar, I guess you would need to benchmark to find out if you 
-were worried about it.  I ran multiple copies from a RAID1 (dual raptors)
-and was able to get the performance of both of the drives combine, so I am 
-not really worried about this setting.
-
-Justin.
+> Any tip would be appreciated,
+> 
+> [1] http://www.socalsysadmin.com/2008/10/15/optimizing-xfs-on-raid-arrays/
+> [2] http://feedblog.org/2008/06/18/howto-configure-raid-strides-in-xfs/
+> 
 
 _______________________________________________
 xfs mailing list
