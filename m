@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1BHHKE3143282 for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 11:17:21 -0600
+	n1BHQTdC143748 for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 11:26:29 -0600
 Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 96BE710ABEF
-	for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 09:16:44 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D6AA115D2B4E
+	for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 09:25:53 -0800 (PST)
 Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id sdqAY8FP66Js9Y6Q for <xfs@oss.sgi.com>;
-	Wed, 11 Feb 2009 09:16:44 -0800 (PST)
-Message-ID: <499300E2.7000207@sandeen.net>
-Date: Wed, 11 Feb 2009 10:46:26 -0600
+	with ESMTP id fyxJutaeGmWIYXJH for <xfs@oss.sgi.com>;
+	Wed, 11 Feb 2009 09:25:53 -0800 (PST)
+Message-ID: <49930A1B.7010905@sandeen.net>
+Date: Wed, 11 Feb 2009 11:25:47 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: sunit & swidth on RAID-1?
-References: <20090211155638.GA3864@dentifrice>
-In-Reply-To: <20090211155638.GA3864@dentifrice>
+Subject: Re: rfc 1/2: specfile: use rpm macros where possible
+References: <alpine.LSU.2.00.0902111802320.25232@fbirervta.pbzchgretzou.qr>
+In-Reply-To: <alpine.LSU.2.00.0902111802320.25232@fbirervta.pbzchgretzou.qr>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,51 +27,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: mike dentifrice <fluor@poivron.org>
+To: Jan Engelhardt <jengelh@medozas.de>
 Cc: xfs@oss.sgi.com
 
-mike dentifrice wrote:
-> Hello,
+Jan Engelhardt wrote:
+> parent d8a0f148be5b5ea67ee84c61201e98d345c14eda (v{3.0.0})
+> commit c32f9b41de79a420e0896d2d4321ce74235d26ce
+> Author: Jan Engelhardt <jengelh@medozas.de>
+> Date:   Wed Feb 11 17:52:53 2009 +0100
 > 
-> I would like to know if it makes any sense to specify sunit & swidth
-> parameters as mount options to XFS filesystems sitting on a Linux
-> software RAID-1 array, as advertised here [1] or there [2].
+> specfile: use rpm macros where possible
 > 
-> I'm asking, because it seems that chunk_size does not matter in a RAID-1
-> context, nor do stripe units; or do they?
+> This way less places need to be changes (when a developer decides
+> to change it..) after the placeholders have been substituted.
+> 
+> Signed-off-by: Jan Engelhardt <jengelh@medozas.de>
+> ---
 
-I don't think it does matter.  And for what it's worth, mkfs.xfs queries
-an MD raid, but ignores raid1/10/0:
+Fine by me, though I never use the specfile (who does?)
 
-                /*
-                 * Ignore levels we don't want aligned (e.g. linear)
-                 * and deduct disk(s) from stripe width on RAID4/5/6
-                 */
-                switch (md.level) {
-                case 6:
-                        md.raid_disks--;
-                        /* fallthrough */
-                case 5:
-                case 4:
-                        md.raid_disks--;
-                        /* fallthrough */
-                case 1:
-                case 0:
-                case 10:
-                        break;
-                default:
-                        return 0;
-
-In general, mkfs.xfs on md should just "do the right thing"
+I figure most distros have their own specfile to accomodate
+distro-specific policies, macros, etc.
 
 -Eric
-
-
-> Any tip would be appreciated,
-> 
-> [1] http://www.socalsysadmin.com/2008/10/15/optimizing-xfs-on-raid-arrays/
-> [2] http://feedblog.org/2008/06/18/howto-configure-raid-strides-in-xfs/
-> 
 
 _______________________________________________
 xfs mailing list
