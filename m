@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1BH5hIQ142257 for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 11:05:44 -0600
-Received: from sovereign.computergmbh.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D3452191A939
-	for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 09:05:07 -0800 (PST)
-Received: from sovereign.computergmbh.de (sovereign.computergmbh.de
-	[85.214.69.204]) by cuda.sgi.com with ESMTP id tobVKCxnr5igoOIU
-	for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 09:05:07 -0800 (PST)
-Received: from localhost (localhost [127.0.0.1])
-	by sovereign.computergmbh.de (Postfix) with ESMTP id 7A9C7404534D
-	for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 18:04:34 +0100 (CET)
-Date: Wed, 11 Feb 2009 18:04:34 +0100 (CET)
-From: Jan Engelhardt <jengelh@medozas.de>
-Subject: rfc 2/2: specfile: remove Distribution tag
-In-Reply-To: <alpine.LSU.2.00.0902111802320.25232@fbirervta.pbzchgretzou.qr>
-Message-ID: <alpine.LSU.2.00.0902111804070.25232@fbirervta.pbzchgretzou.qr>
-References: <alpine.LSU.2.00.0902111802320.25232@fbirervta.pbzchgretzou.qr>
+	n1BHAgqA142597 for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 11:10:43 -0600
+Received: from lucidpixels.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BFBB410AB10
+	for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 09:10:06 -0800 (PST)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by
+	cuda.sgi.com with ESMTP id LcwUcuyue5rQAWWY for
+	<xfs@oss.sgi.com>; Wed, 11 Feb 2009 09:10:06 -0800 (PST)
+Date: Wed, 11 Feb 2009 12:10:05 -0500 (EST)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: sunit & swidth on RAID-1?
+In-Reply-To: <20090211165316.GA4430@dentifrice>
+Message-ID: <alpine.DEB.1.10.0902111208280.18885@p34.internal.lan>
+References: <20090211155638.GA3864@dentifrice>
+	<alpine.DEB.1.10.0902111141560.18885@p34.internal.lan>
+	<20090211165316.GA4430@dentifrice>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -26,53 +25,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: mike dentifrice <fluor@poivron.org>
+Cc: xfs@oss.sgi.com
 
 
 
-parent c32f9b41de79a420e0896d2d4321ce74235d26ce (v{3.0.0}-1-gc32f9b4)
-commit 4ee2e6de88b43bc9b4e1cc5a59cee264afd14123
-Author: Jan Engelhardt <jengelh@medozas.de>
-Date:   Wed Feb 11 17:54:05 2009 +0100
+On Wed, 11 Feb 2009, mike dentifrice wrote:
 
-specfile: remove Distribution tag
+> Justin Piszcz a dit:
+>> mkfs.xfs will auto-optimize for software-raid arrays for the most
+>> part,  with HW raid on a 3ware controller, tweaking mkfs.xfs does not
+>> help very  much.  with SW raid, at least for raid1 - I use the
+>> defaults.
+>
+> Thanks for your reply. However, I wonder about the defaults:
+>
+> 	xfs_info /dev/md1 | grep -E '(sunit|swidth)'
+>
+> Outputs:
+>
+>        sunit=0      swidth=0 blks, unwritten=1
+>        sectsz=512   sunit=0 blks
+>
+> What's the consequence of 0 values in this case?
+>
+> Greetings,
+>
+> -- 
+> mike dentifrice <fluor@poivron.org>
+>
 
-There exist a number of rpm specfile tags that make it possible to
-mislead users of the produced RPM package, because its presence
-overrides anything that has been specified in ~/.rpmmacros (or the
-configuration files of the build system used). Such is especially
-annoying when Packager:/Vendor: is put in specfiles, because it is
-then almost impossible to get the name/email of the person who
-_really_ did the packaging (assuming s/he set it in their
-.rpmmacros).
+# xfs_info /dev/md2 | grep -E '(sunit|swidth)'
+          =                       sunit=0      swidth=0 blks
+          =                       sectsz=512   sunit=0 blks, lazy-count=0
 
-Such similarly applies to the Distribution: tag, which is why I
-suggest its removal and let the build systems provide the proper
-string instead.
+Mine is similar, I guess you would need to benchmark to find out if you 
+were worried about it.  I ran multiple copies from a RAID1 (dual raptors)
+and was able to get the performance of both of the drives combine, so I am 
+not really worried about this setting.
 
-Signed-off-by: Jan Engelhardt <jengelh@medozas.de>
----
- build/rpm/xfsprogs.spec.in |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
-
-diff --git a/build/rpm/xfsprogs.spec.in b/build/rpm/xfsprogs.spec.in
-index d9b3f2e..ab773dd 100644
---- a/build/rpm/xfsprogs.spec.in
-+++ b/build/rpm/xfsprogs.spec.in
-@@ -2,7 +2,6 @@ Summary: Utilities for managing the XFS filesystem.
- Name: @pkg_name@
- Version: @pkg_version@
- Release: @pkg_release@
--Distribution: @pkg_distribution@
- Packager: Silicon Graphics, Inc. <http://www.sgi.com/>
- BuildRoot: @build_root@ 
- Prereq: /sbin/ldconfig
--- 
-# Created with git-export-patch
+Justin.
 
 _______________________________________________
 xfs mailing list
