@@ -1,29 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1ANxV1v084358 for <xfs@oss.sgi.com>; Tue, 10 Feb 2009 17:59:32 -0600
-Received: from ti-out-0910.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DAF2F107B53
-	for <xfs@oss.sgi.com>; Tue, 10 Feb 2009 15:58:54 -0800 (PST)
-Received: from ti-out-0910.google.com (ti-out-0910.google.com
-	[209.85.142.187]) by cuda.sgi.com with ESMTP id
-	dnqDi0n7DbE3er3o for <xfs@oss.sgi.com>;
-	Tue, 10 Feb 2009 15:58:54 -0800 (PST)
-Received: by ti-out-0910.google.com with SMTP id a6so68243tib.18
-	for <xfs@oss.sgi.com>; Tue, 10 Feb 2009 15:58:53 -0800 (PST)
-Message-ID: <4991EA04.4080707@gmail.com>
-Date: Wed, 11 Feb 2009 07:56:36 +1100
-From: Mark Goodwin <goodwinos@gmail.com>
+	n1B0NAgb085408 for <xfs@oss.sgi.com>; Tue, 10 Feb 2009 18:23:11 -0600
+Received: from [134.14.52.238] (unknown [134.14.52.238])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 804678F80CF
+	for <xfs@oss.sgi.com>; Tue, 10 Feb 2009 16:22:30 -0800 (PST)
+Message-ID: <49921B3E.8040406@sgi.com>
+Date: Wed, 11 Feb 2009 11:26:38 +1100
+From: Lachlan McIlroy <lachlan@sgi.com>
 MIME-Version: 1.0
-Subject: Re: IMPORTANT: XFS Documentation
-References: <20090204183603.GA26714@sgi.com> <4989F4C2.3030305@sgi.com>
-	<20090205112906.GB11781@infradead.org>
-	<498D8F18.3080903@thebarn.com> <498F7861.6010109@sgi.com>
-	<498F7E71.8040600@xfs.org> <498FD62D.9010604@sgi.com>
-	<20090210180948.GA18457@infradead.org>
-	<4991C670.5010409@redhat.com> <4991E508.7000303@gmail.com>
-	<20090210203726.GA26918@infradead.org>
-In-Reply-To: <20090210203726.GA26918@infradead.org>
+Subject: [PATCH] Don't reset di_format in xfs_ifree()
+Reply-To: lachlan@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,18 +23,46 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs-oss <xfs@oss.sgi.com>
 
-Christoph Hellwig wrote:
-> On Wed, Feb 11, 2009 at 07:35:20AM +1100, Mark Goodwin wrote:
->> OK, I put it back how I had it set up originally.
-> 
-> Can you keep the website repo as xfs/cmds/xfsweb.git?
-> 
+I hit a panic while flushing a reclaimed inode that is fairly
+reproducible under load.
 
-yes, I left it as xfs/cmds/xfswebsite.git
+In xfs_iflush_fork() we're led to believe that there are extents
+on this inode but there aren't any.  Actually the inode was a
+directory.  I added some debugging to xfs_ifree() and found
+that di_format was XFS_DINODE_FMT_LOCAL and got reset to
+XFS_DINODE_FMT_EXTENTS and this has confused the code in
+xfs_iflush_fork().
 
+[<ffffffffa0047de7>] xfs_iext_get_ext+0x6c/0xca [xfs]
+[<ffffffffa004a3d4>] xfs_iflush_fork+0x1b0/0x3c6 [xfs]
+[<ffffffffa004aa3f>] xfs_iflush_int+0x455/0x5a1 [xfs]
+[<ffffffffa004b0da>] xfs_iflush+0x229/0x2d6 [xfs]
+[<ffffffffa007283c>] xfs_reclaim_inode+0xd8/0x10f [xfs]
+[<ffffffffa0072976>] xfs_reclaim_inodes_ag+0x103/0x13e [xfs]
+[<ffffffffa00729f3>] xfs_reclaim_inodes+0x42/0x60 [xfs]
+[<ffffffffa0072d1b>] xfs_sync_worker+0x30/0x8a [xfs]
+[<ffffffffa0073416>] xfssyncd+0x14e/0x1a2 [xfs]
+[<ffffffffa00732c8>] ? xfssyncd+0x0/0x1a2 [xfs]
+[<ffffffff8104fc70>] kthread+0x49/0x79
+
+I made this change and it passes the load test and XFSQA too.  I'm
+not sure if this is indicative of a bigger problem though.
+
+Index: xfs-fix/fs/xfs/xfs_inode.c
+===================================================================
+--- xfs-fix.orig/fs/xfs/xfs_inode.c
++++ xfs-fix/fs/xfs/xfs_inode.c
+@@ -2165,8 +2165,6 @@ xfs_ifree(
+  	ip->i_d.di_forkoff = 0;		/* mark the attr fork not in use */
+  	ip->i_df.if_ext_max =
+  		XFS_IFORK_DSIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t);
+-	ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
+-	ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
+  	/*
+  	 * Bump the generation count so no one will be confused
+  	 * by reincarnations of this inode.
 
 _______________________________________________
 xfs mailing list
