@@ -1,20 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1BHQTdC143748 for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 11:26:29 -0600
-Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D6AA115D2B4E
-	for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 09:25:53 -0800 (PST)
-Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id fyxJutaeGmWIYXJH for <xfs@oss.sgi.com>;
-	Wed, 11 Feb 2009 09:25:53 -0800 (PST)
-Message-ID: <49930A1B.7010905@sandeen.net>
-Date: Wed, 11 Feb 2009 11:25:47 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	n1BLD8dR155324 for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 15:13:09 -0600
+Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 85A8B10DF6B
+	for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 13:12:30 -0800 (PST)
+Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.162.198]) by
+	cuda.sgi.com with ESMTP id mMngAvGyJfQPTQST for
+	<xfs@oss.sgi.com>; Wed, 11 Feb 2009 13:12:30 -0800 (PST)
+Received: from mailsrv2.i.zmi.at (h081217054243.dyn.cm.kabsi.at
+	[81.217.54.243])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv1.zmi.at (Postfix) with ESMTP id 7964E3F7A
+	for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 22:12:28 +0100 (CET)
+Received: from saturn.localnet (saturn.i.zmi.at [10.0.0.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv2.i.zmi.at (Postfix) with ESMTPSA id DAE7B400160
+	for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 22:12:28 +0100 (CET)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: sunit & swidth on RAID-1?
+Date: Wed, 11 Feb 2009 22:12:28 +0100
+References: <20090211155638.GA3864@dentifrice>
+	<alpine.DEB.1.10.0902111141560.18885@p34.internal.lan>
+	<20090211165316.GA4430@dentifrice>
+In-Reply-To: <20090211165316.GA4430@dentifrice>
 MIME-Version: 1.0
-Subject: Re: rfc 1/2: specfile: use rpm macros where possible
-References: <alpine.LSU.2.00.0902111802320.25232@fbirervta.pbzchgretzou.qr>
-In-Reply-To: <alpine.LSU.2.00.0902111802320.25232@fbirervta.pbzchgretzou.qr>
+Content-Disposition: inline
+Message-Id: <200902112212.28571@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,33 +37,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jan Engelhardt <jengelh@medozas.de>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Jan Engelhardt wrote:
-> parent d8a0f148be5b5ea67ee84c61201e98d345c14eda (v{3.0.0})
-> commit c32f9b41de79a420e0896d2d4321ce74235d26ce
-> Author: Jan Engelhardt <jengelh@medozas.de>
-> Date:   Wed Feb 11 17:52:53 2009 +0100
-> 
-> specfile: use rpm macros where possible
-> 
-> This way less places need to be changes (when a developer decides
-> to change it..) after the placeholders have been substituted.
-> 
-> Signed-off-by: Jan Engelhardt <jengelh@medozas.de>
-> ---
+On Mittwoch 11 Februar 2009 mike dentifrice wrote:
+> =A0 =A0 =A0 =A0 sunit=3D0 =A0 =A0 =A0swidth=3D0 blks, unwritten=3D1
+> =A0 =A0 =A0 =A0 sectsz=3D512 =A0 sunit=3D0 blks
+>
+> What's the consequence of 0 values in this case?
 
-Fine by me, though I never use the specfile (who does?)
+XFS then knows that 512 byte (aka sector) alignment is sufficient, as =
 
-I figure most distros have their own specfile to accomodate
-distro-specific policies, macros, etc.
+RAID-1 will only write 512b to each disk and does not need full stripe =
 
--Eric
+unit writes like RAID-4/5/6 need. Therefore performance is better with =
+
+the values you have.
+
+mfg zmi
+-- =
+
+// Michael Monnerie, Ing.BSc    -----      http://it-management.at
+// Tel: 0660 / 415 65 31                      .network.your.ideas.
+// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
+// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
+// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
 
 _______________________________________________
 xfs mailing list
