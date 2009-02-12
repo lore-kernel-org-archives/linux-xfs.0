@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1C6dCug225456 for <xfs@oss.sgi.com>; Thu, 12 Feb 2009 00:39:13 -0600
+	n1C6gZRp226143 for <xfs@oss.sgi.com>; Thu, 12 Feb 2009 00:42:35 -0600
 Received: from josefsipek.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 34AB3111EA5
-	for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 22:38:37 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BAA951122FD
+	for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 22:41:59 -0800 (PST)
 Received: from josefsipek.net (josefsipek.net [141.211.133.196]) by
-	cuda.sgi.com with ESMTP id fcFi8suEJe90vbLF for
-	<xfs@oss.sgi.com>; Wed, 11 Feb 2009 22:38:37 -0800 (PST)
-Date: Thu, 12 Feb 2009 01:38:36 -0500
+	cuda.sgi.com with ESMTP id 9Cj02CddPjNe0QYr for
+	<xfs@oss.sgi.com>; Wed, 11 Feb 2009 22:41:59 -0800 (PST)
+Date: Thu, 12 Feb 2009 01:41:28 -0500
 From: "Josef 'Jeff' Sipek" <jeffpc@josefsipek.net>
-Subject: Re: [PATCH 12/13] xfs: add version 3 inode format with CRCs
-Message-ID: <20090212063836.GB824@josefsipek.net>
+Subject: Re: [PATCH 13/13] xfs: add CRC checks for quota blocks
+Message-ID: <20090212064128.GC824@josefsipek.net>
 References: <20090210202241.546501000@bombadil.infradead.org>
-	<20090210202941.455393000@bombadil.infradead.org>
+	<20090210202941.616680000@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20090210202941.455393000@bombadil.infradead.org>
+In-Reply-To: <20090210202941.616680000@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,41 +32,63 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Tue, Feb 10, 2009 at 03:22:53PM -0500, Christoph Hellwig wrote:
-...
-> Index: xfs/fs/xfs/xfs_dinode.h
+On Tue, Feb 10, 2009 at 03:22:54PM -0500, Christoph Hellwig wrote:
+> Use the reserved space in struct xfs_dqblk to store a UUID and a crc
+> for the quota blocks.
+> 
+> I'm pondering if we should just move the crc check into xfs_qm_dqcheck
+> where all the other validity checks are located.
+> 
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Index: xfs/fs/xfs/xfs_quota.h
 > ===================================================================
-> --- xfs.orig/fs/xfs/xfs_dinode.h	2009-02-10 19:45:51.939069576 +0100
-> +++ xfs/fs/xfs/xfs_dinode.h	2009-02-10 19:45:59.195068745 +0100
-> @@ -69,11 +69,32 @@ typedef struct xfs_dinode {
->  
->  	/* di_next_unlinked is the only non-core field in the old dinode */
->  	__be32		di_next_unlinked;/* agi unlinked list ptr */
-> -} __attribute__((packed)) xfs_dinode_t;
+> --- xfs.orig/fs/xfs/xfs_quota.h	2009-02-09 08:47:34.234069111 +0100
+> +++ xfs/fs/xfs/xfs_quota.h	2009-02-10 20:15:36.874947481 +0100
+> @@ -77,7 +77,13 @@ typedef struct	xfs_disk_dquot {
+>   */
+>  typedef struct xfs_dqblk {
+>  	xfs_disk_dquot_t  dd_diskdq;	/* portion that lives incore as well */
+> -	char		  dd_fill[32];	/* filling for posterity */
+> +	char		  dd_fill[12];	/* filling for posterity */
 > +
-> +	/* start of the extended dinode, writable fields */
-> +	__be32		di_crc;		/* CRC of the inode */
-> +	__be64		di_changecount;	/* number of attribute changes */
-> +	__u8		di_pad2[16];	/* more padding for future expansion */
+> +	/*
+> +	 * These two are only present one filesystems with the CRC bits set.
+> +	 */
+> +	__be32		  dd_crc;	/* checksum */
+> +	uuid_t		  dd_uuid;	/* location information */
+>  } xfs_dqblk_t;
+
+Again, why put the crc/uuid at the end?
+
+> Index: xfs/fs/xfs/quota/xfs_dquot.c
+> ===================================================================
+> --- xfs.orig/fs/xfs/quota/xfs_dquot.c	2009-02-10 19:55:01.982070089 +0100
+> +++ xfs/fs/xfs/quota/xfs_dquot.c	2009-02-10 20:23:25.618944664 +0100
+> @@ -368,6 +369,40 @@ xfs_qm_adjust_dqtimers(
+...
+> +STATIC int
+> +xfs_dquot_verify_crc(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_buf		*bp)
+> +{
+> +	struct xfs_dqblk	*d = (struct xfs_dqblk *)XFS_BUF_PTR(bp);
+> +	int			i;
 > +
-> +	/* fields only written to during inode creation */
-> +	xfs_timestamp_t	di_crtime;	/* time created */
-> +	__be64		di_ino;		/* inode number */
-> +	uuid_t		di_uuid;	/* UUID of the filesystem */
-> +} xfs_dinode_t;
+> +	for (i = 0; i < XFS_QM_DQPERBLK(mp); i++, d++) {
+> +		if (!xfs_verify_cksum((char *)d, sizeof(struct xfs_dqblk),
+> +				 offsetof(struct xfs_dqblk, dd_crc))) {
+> +//		    !uuid_equal(&agfl->agfl_uuid, &mp->m_sb.sb_uuid) ||
 
-Hrm...removing the packed attribute... Eric, do you remember the ARM ABI
-alignment rules? Regardless of ARM, are those fields aligned nicely? (From a
-quick glance at the code looks ok.)
-
-Also, why is the padding filed in the middle of these fields? IOW, why are
-crtime/ino/uuid at the end?
+Dead code?
 
 Josef 'Jeff' Sipek.
 
 -- 
-Bad pun of the week: The formula 1 control computer suffered from a race
-condition
+FORTUNE PROVIDES QUESTIONS FOR THE GREAT ANSWERS: #19
+A:      To be or not to be.
+Q:      What is the square root of 4b^2?
 
 _______________________________________________
 xfs mailing list
