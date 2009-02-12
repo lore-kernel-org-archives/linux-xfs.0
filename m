@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1CMXXMi089713 for <xfs@oss.sgi.com>; Thu, 12 Feb 2009 16:33:33 -0600
-Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CDCE3118F3B
-	for <xfs@oss.sgi.com>; Thu, 12 Feb 2009 14:32:56 -0800 (PST)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net
-	[203.16.214.146]) by cuda.sgi.com with ESMTP id
-	CDQY6hpErENDLbk2 for <xfs@oss.sgi.com>;
-	Thu, 12 Feb 2009 14:32:56 -0800 (PST)
-Date: Fri, 13 Feb 2009 09:32:53 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] Don't reset di_format in xfs_ifree()
-Message-ID: <20090212223253.GV8830@disturbed>
-References: <49921B3E.8040406@sgi.com> <20090211092020.GR8830@disturbed>
-	<49937458.2000500@sgi.com>
+	n1CNlQsw093649 for <xfs@oss.sgi.com>; Thu, 12 Feb 2009 17:47:28 -0600
+Received: from mail-fx0-f11.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B83DE192A4E1
+	for <xfs@oss.sgi.com>; Thu, 12 Feb 2009 15:46:50 -0800 (PST)
+Received: from mail-fx0-f11.google.com (mail-fx0-f11.google.com
+	[209.85.220.11]) by cuda.sgi.com with ESMTP id DkJnXZrXtSWSwhqJ
+	for <xfs@oss.sgi.com>; Thu, 12 Feb 2009 15:46:50 -0800 (PST)
+Received: by fxm4 with SMTP id 4so15603fxm.20
+	for <xfs@oss.sgi.com>; Thu, 12 Feb 2009 15:46:49 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <49937458.2000500@sgi.com>
+In-Reply-To: <20090206230502.GQ24173@disturbed>
+References: <884979c90902050643m78d2e0dbt85aa7f4369e243ef@mail.gmail.com>
+	<20090206230502.GQ24173@disturbed>
+Date: Thu, 12 Feb 2009 23:46:48 +0000
+Message-ID: <884979c90902121546g35f594b1s592859ac7b832533@mail.gmail.com>
+Subject: Re: Does XFS support the sync mount option?
+From: Ewan Chalmers <ewan.chalmers@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,68 +30,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Lachlan McIlroy <lachlan@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Ewan Chalmers <ewan.chalmers@gmail.com>, xfs@oss.sgi.com
 
-On Thu, Feb 12, 2009 at 11:59:04AM +1100, Lachlan McIlroy wrote:
-> Dave Chinner wrote:
->> On Wed, Feb 11, 2009 at 11:26:38AM +1100, Lachlan McIlroy wrote:
->>> I hit a panic while flushing a reclaimed inode that is fairly
->>> reproducible under load.
->>>
->>> In xfs_iflush_fork() we're led to believe that there are extents
->>> on this inode but there aren't any.  Actually the inode was a
->>> directory.  I added some debugging to xfs_ifree() and found
->>> that di_format was XFS_DINODE_FMT_LOCAL and got reset to
->>> XFS_DINODE_FMT_EXTENTS and this has confused the code in
->>> xfs_iflush_fork().
-....
->> I think the problem may be that the size of the fork has not been
->> reset to zero, not that format has been changed. If it was in local
->> format, the truncates prior to freeing would not have done anything
->> and the size of the data/attr fork would still be non-zero.  Hence
->> if the fork is then changed to extent format, xfs_iextents_copy()
->> will be triggered from xfs_iflush_fork() and you'd see something
->> like the confusion you are seeing.
->>
->> Hence I think we should be ensuring the fork size is set to zero for
->> both the attr/data fork when the format is changed, not removing
->> the change of type....
->
-> Yes, I agree.  I just don't have the time to hunt it down.  I see
-> there's a call to xfs_idestroy_fork() in xfs_ireclaim() for directories
-> but xfs_ireclaim() gets called after xfs_iflush() in xfs_reclaim_inode().
+Thanks for your detailed reply.
 
-I suspect it should be in xfs_inactive() if we are in local format.
-This is what happens with the attribute fork.  I think that is where
-we need something like:
+> And "sync" only works if you turn drive write caches off or have
+> barriers enabled. There are many people out there that  have systems
+> that are suseptible to fatal filesystem corruption that could be
+> triggered by doing this (because critical metadata is lost from
+> the volatile write cache on the drive when you power it off).
 
-	if ((ip->i_d.di_mode & S_IFMT) == S_IFDIR &&
-	    ip->i_d.di_nextents == 0)
-		xfs_idestroy_fork(ip, XFS_DATA_FORK);
+According to the FAQ, barriers are enabled by default since 2.6.17. I
+have 2.9.8, so I guess barriers are enabled. I have checked and dmesg
+contains no errors relating to barriers.
 
-> Might also need something like:
->
-> @@ -2445,6 +2447,7 @@ xfs_idestroy_fork(
->                         kmem_free(ifp->if_u1.if_data);
->                         ifp->if_u1.if_data = NULL;
->                         ifp->if_real_bytes = 0;
-> +                       ifp->if_bytes = 0;
->                 }
->         } else if ((ifp->if_flags & XFS_IFEXTENTS) &&
->                    ((ifp->if_flags & XFS_IFEXTIREC) ||
+Also according the FAQ... "With a single hard disk and barriers turned
+on (on=default), the drive write cache is flushed before an after a
+barrier is issued. A powerfail "only" loses data in the cache but no
+essential ordering is violated, and corruption will not occur."
 
-Looking at that, the whole if (local) {} else if (extent/btree)
-code could probably be replaced with a single call to
-xfs_iext_destroy() as it does the cleanup correctly in both cases,
-anyway....
+So it sounds like pulling the plug on the disk should not cause
+corruption in this case (sync mount and barriers default enabled). Or
+am I just plain wrong?
 
-Cheers,
+(BTW, I've done an xfs_repair which reported no errors.)
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Ewan
 
 _______________________________________________
 xfs mailing list
