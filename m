@@ -1,20 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1BNaiYD163400 for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 17:36:45 -0600
-Received: from lucidpixels.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0F96310EA4A
-	for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 15:36:08 -0800 (PST)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by
-	cuda.sgi.com with ESMTP id DtzvwOoLHBmzzsSY for
-	<xfs@oss.sgi.com>; Wed, 11 Feb 2009 15:36:08 -0800 (PST)
-Date: Wed, 11 Feb 2009 18:36:08 -0500 (EST)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: BUG: soft lockup detected on CPU#1!
-In-Reply-To: <586998.47540.qm@web30208.mail.mud.yahoo.com>
-Message-ID: <alpine.DEB.1.10.0902111835420.27406@p34.internal.lan>
-References: <586998.47540.qm@web30208.mail.mud.yahoo.com>
+	n1C0tVSj169251 for <xfs@oss.sgi.com>; Wed, 11 Feb 2009 18:55:32 -0600
+Message-ID: <49937458.2000500@sgi.com>
+Date: Thu, 12 Feb 2009 11:59:04 +1100
+From: Lachlan McIlroy <lachlan@sgi.com>
 MIME-Version: 1.0
+Subject: Re: [PATCH] Don't reset di_format in xfs_ifree()
+References: <49921B3E.8040406@sgi.com> <20090211092020.GR8830@disturbed>
+In-Reply-To: <20090211092020.GR8830@disturbed>
+Reply-To: lachlan@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,49 +22,53 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: raksac@yahoo.com
-Cc: xfs@oss.sgi.com
+To: Lachlan McIlroy <lachlan@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
+Dave Chinner wrote:
+> On Wed, Feb 11, 2009 at 11:26:38AM +1100, Lachlan McIlroy wrote:
+>> I hit a panic while flushing a reclaimed inode that is fairly
+>> reproducible under load.
+>>
+>> In xfs_iflush_fork() we're led to believe that there are extents
+>> on this inode but there aren't any.  Actually the inode was a
+>> directory.  I added some debugging to xfs_ifree() and found
+>> that di_format was XFS_DINODE_FMT_LOCAL and got reset to
+>> XFS_DINODE_FMT_EXTENTS and this has confused the code in
+>> xfs_iflush_fork().
+> 
+> Wow. I wonder why we've never seen this before - it's not a new
+> problem AFAICT.
+> 
+> A freed inode is supposed to have both forks in extent format
+> with zero extents - it means the fork is empty. Changing it
+> to local format means that it is not in the expected state
+> for a subsequent create.
+> 
+> I think the problem may be that the size of the fork has not been
+> reset to zero, not that format has been changed. If it was in local
+> format, the truncates prior to freeing would not have done anything
+> and the size of the data/attr fork would still be non-zero.  Hence
+> if the fork is then changed to extent format, xfs_iextents_copy()
+> will be triggered from xfs_iflush_fork() and you'd see something
+> like the confusion you are seeing.
+> 
+> Hence I think we should be ensuring the fork size is set to zero for
+> both the attr/data fork when the format is changed, not removing
+> the change of type....
 
-On Wed, 11 Feb 2009, raksac@yahoo.com wrote:
+Yes, I agree.  I just don't have the time to hunt it down.  I see
+there's a call to xfs_idestroy_fork() in xfs_ireclaim() for directories
+but xfs_ireclaim() gets called after xfs_iflush() in xfs_reclaim_inode().
+Might also need something like:
 
->
-> Hi Justin,
->
-> Thank you for the pointer. Well as suggested I did and
-> now the xfsqa goes upto test 011
->
-> #! /bin/sh
-> # FS QA Test No. 011
-> #
-> # dirstress
->
-> but dies with a oops. Any suggestions?
->
-> Here is the oops trace -
->
-> BUG: unable to handle kernel NULL pointer dereference
-> at virtual address 00000000
-> printing eip:
-> f8bd02c2
-> *pde = e7167067
-> Oops: 0000 [#1]
-> PREEMPT SMP
-> last sysfs file:
-> /devices/pci0000:00/0000:00:1f.3/i2c-0/0-002e/temp1_input
-> Modules linked in: xfs sg sunrpc m24c02 pca9554
-> pca9555 mcp23016 lm85 hwmon_vid i2c_i801 i2c_core
-> midplane uhci_hcd sk98lin tg3 e1000 mv_sata sd_mod
-> ahci libata
-> CPU:    1
-> EIP:    0060:[<f8bd02c2>]    Not tainted VLI
-> EFLAGS: 00010286   (2.6.18.rhel5 #2)
-> EIP is at xfs_iget_core+0x4d6/0x5e9 [xfs]
-
-Can you show uname -a output?
-
-EFLAGS: 00010286   (2.6.18.rhel5 #2)
-                     ^^^^^^^^^^^^
+@@ -2445,6 +2447,7 @@ xfs_idestroy_fork(
+                         kmem_free(ifp->if_u1.if_data);
+                         ifp->if_u1.if_data = NULL;
+                         ifp->if_real_bytes = 0;
++                       ifp->if_bytes = 0;
+                 }
+         } else if ((ifp->if_flags & XFS_IFEXTENTS) &&
+                    ((ifp->if_flags & XFS_IFEXTIREC) ||
 
 _______________________________________________
 xfs mailing list
