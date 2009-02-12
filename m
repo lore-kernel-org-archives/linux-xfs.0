@@ -1,19 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1CMHUsq088983 for <xfs@oss.sgi.com>; Thu, 12 Feb 2009 16:17:30 -0600
-Received: from web30203.mail.mud.yahoo.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id F3A35119102
-	for <xfs@oss.sgi.com>; Thu, 12 Feb 2009 14:16:54 -0800 (PST)
-Received: from web30203.mail.mud.yahoo.com (web30203.mail.mud.yahoo.com
-	[209.191.69.50]) by cuda.sgi.com with SMTP id BuBHIJ8bW41aoBbX
-	for <xfs@oss.sgi.com>; Thu, 12 Feb 2009 14:16:54 -0800 (PST)
-Message-ID: <3453.33822.qm@web30203.mail.mud.yahoo.com>
-Date: Thu, 12 Feb 2009 14:16:53 -0800 (PST)
-From: <raksac@yahoo.com>
-Subject: Re: BUG: soft lockup detected on CPU#1!
-In-Reply-To: <49949E64.8020904@sandeen.net>
+	n1CMXXMi089713 for <xfs@oss.sgi.com>; Thu, 12 Feb 2009 16:33:33 -0600
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CDCE3118F3B
+	for <xfs@oss.sgi.com>; Thu, 12 Feb 2009 14:32:56 -0800 (PST)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net
+	[203.16.214.146]) by cuda.sgi.com with ESMTP id
+	CDQY6hpErENDLbk2 for <xfs@oss.sgi.com>;
+	Thu, 12 Feb 2009 14:32:56 -0800 (PST)
+Date: Fri, 13 Feb 2009 09:32:53 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] Don't reset di_format in xfs_ifree()
+Message-ID: <20090212223253.GV8830@disturbed>
+References: <49921B3E.8040406@sgi.com> <20090211092020.GR8830@disturbed>
+	<49937458.2000500@sgi.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <49937458.2000500@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,68 +30,68 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: Lachlan McIlroy <lachlan@sgi.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
+On Thu, Feb 12, 2009 at 11:59:04AM +1100, Lachlan McIlroy wrote:
+> Dave Chinner wrote:
+>> On Wed, Feb 11, 2009 at 11:26:38AM +1100, Lachlan McIlroy wrote:
+>>> I hit a panic while flushing a reclaimed inode that is fairly
+>>> reproducible under load.
+>>>
+>>> In xfs_iflush_fork() we're led to believe that there are extents
+>>> on this inode but there aren't any.  Actually the inode was a
+>>> directory.  I added some debugging to xfs_ifree() and found
+>>> that di_format was XFS_DINODE_FMT_LOCAL and got reset to
+>>> XFS_DINODE_FMT_EXTENTS and this has confused the code in
+>>> xfs_iflush_fork().
+....
+>> I think the problem may be that the size of the fork has not been
+>> reset to zero, not that format has been changed. If it was in local
+>> format, the truncates prior to freeing would not have done anything
+>> and the size of the data/attr fork would still be non-zero.  Hence
+>> if the fork is then changed to extent format, xfs_iextents_copy()
+>> will be triggered from xfs_iflush_fork() and you'd see something
+>> like the confusion you are seeing.
+>>
+>> Hence I think we should be ensuring the fork size is set to zero for
+>> both the attr/data fork when the format is changed, not removing
+>> the change of type....
+>
+> Yes, I agree.  I just don't have the time to hunt it down.  I see
+> there's a call to xfs_idestroy_fork() in xfs_ireclaim() for directories
+> but xfs_ireclaim() gets called after xfs_iflush() in xfs_reclaim_inode().
 
-Guys,
+I suspect it should be in xfs_inactive() if we are in local format.
+This is what happens with the attribute fork.  I think that is where
+we need something like:
 
-Thank you for taking the time to write. Having said
-where I stand and we are kind of on the same page. Is
-there something I can expect which would put me on a
-track of nailing down the problem. It maybe a wild
-goose chase but something that I can start with would
-be much appreciated.
+	if ((ip->i_d.di_mode & S_IFMT) == S_IFDIR &&
+	    ip->i_d.di_nextents == 0)
+		xfs_idestroy_fork(ip, XFS_DATA_FORK);
 
-Unfortunately there is no distro which gets closer to
-where mainline lives today. Reading the changelog
-there are several problems that I have already come
-across and has convincingly driven me to take on this
-task.
+> Might also need something like:
+>
+> @@ -2445,6 +2447,7 @@ xfs_idestroy_fork(
+>                         kmem_free(ifp->if_u1.if_data);
+>                         ifp->if_u1.if_data = NULL;
+>                         ifp->if_real_bytes = 0;
+> +                       ifp->if_bytes = 0;
+>                 }
+>         } else if ((ifp->if_flags & XFS_IFEXTENTS) &&
+>                    ((ifp->if_flags & XFS_IFEXTIREC) ||
 
-Thanks,
-Rakesh
+Looking at that, the whole if (local) {} else if (extent/btree)
+code could probably be replaced with a single call to
+xfs_iext_destroy() as it does the cleanup correctly in both cases,
+anyway....
 
---- Eric Sandeen <sandeen@sandeen.net> wrote:
+Cheers,
 
-> raksac@yahoo.com wrote:
-> > Well the problem is the older kernel XFS driver is
-> > buggy to such a large extent that there is data
-> loss
-> > even for data on rest should a power loss occur.
-> > 
-> > With a newer version back port I can preserve the
-> > kernel version change since it becomes far more
-> > reaching to the other kernel components and they
-> have
-> > to move, to which ..... there is strong
-> reservation.
-> > 
-> > Hope this gives you the perspective.
-> 
-> It's totally understandable why you might want to do
-> it.
-> 
-> It's also totally understandable why upstream
-> developers can't spend a
-> lot of time on your custom codebase.
-> 
-> What you need, of course, is a distribution with
-> good support for xfs,
-> so you can make it Someone Else's Problem.  :)
-> 
-> -Eric
-> 
-> > Thanks,
-> > Rakesh 
-> 
-> 
-> 
-> 
-
-
-
-      
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
