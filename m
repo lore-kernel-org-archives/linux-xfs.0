@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1CLtov6087336 for <xfs@oss.sgi.com>; Thu, 12 Feb 2009 15:55:50 -0600
-Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5ACA818E83D6
-	for <xfs@oss.sgi.com>; Thu, 12 Feb 2009 13:55:13 -0800 (PST)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net
-	[203.16.214.146]) by cuda.sgi.com with ESMTP id
-	zBtbMM0E0gycZXD0 for <xfs@oss.sgi.com>;
-	Thu, 12 Feb 2009 13:55:13 -0800 (PST)
-Date: Fri, 13 Feb 2009 08:55:08 +1100
-From: Dave Chinner <david@fromorbit.com>
+	n1CLu9fX087363 for <xfs@oss.sgi.com>; Thu, 12 Feb 2009 15:56:09 -0600
+Received: from web30205.mail.mud.yahoo.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id EFB2A18EBC63
+	for <xfs@oss.sgi.com>; Thu, 12 Feb 2009 13:55:33 -0800 (PST)
+Received: from web30205.mail.mud.yahoo.com (web30205.mail.mud.yahoo.com
+	[209.191.69.52]) by cuda.sgi.com with SMTP id tsBr2VWcH06fSsR9
+	for <xfs@oss.sgi.com>; Thu, 12 Feb 2009 13:55:33 -0800 (PST)
+Message-ID: <159640.7088.qm@web30205.mail.mud.yahoo.com>
+Date: Thu, 12 Feb 2009 13:55:33 -0800 (PST)
+From: <raksac@yahoo.com>
 Subject: Re: BUG: soft lockup detected on CPU#1!
-Message-ID: <20090212215508.GT8830@disturbed>
-References: <alpine.DEB.1.10.0902111835420.27406@p34.internal.lan>
-	<235313.30733.qm@web30205.mail.mud.yahoo.com>
+In-Reply-To: <20090212214916.GS8830@disturbed>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <235313.30733.qm@web30205.mail.mud.yahoo.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,28 +26,60 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: raksac@yahoo.com
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Feb 12, 2009 at 01:22:16AM -0800, raksac@yahoo.com wrote:
+
+Hi Dave,
+
+No it does not. Just sits there any access to mount
+point (ll) also blocks forever.
+
+I must point out that I brought the changes from
+2.6.28.4 xfs into my private space and that seems to
+show improvement on test 008 however now test 011 dies
+with kernel oops.
+
+Please see my reply posts.
+
+Thanks,
+Rakesh
+--- Dave Chinner <david@fromorbit.com> wrote:
+
+> On Tue, Feb 10, 2009 at 11:16:25PM -0800,
+> raksac@yahoo.com wrote:
+> > 
+> > Hello,
+> > 
+> > I am running the 2.6.28 based xfs kernel driver on
+> a
+> > custom kernel with following kernel config
+> enabled.
+> > 
+> > CONFIG_PREEMPT
+> > CONFIG_DETECT_SOFTLOCKUP
+> > 
+> > Running the following xfsqa causes a soft lockup.
+> The
+> > configuration is a x86 with Hyperthreading, 4GB
+> RAM
+> > and a AHCI connected JBOD. Its 100% reproducible.
 > 
-> Hi Justin,
+> Is the system making progress, or has it hung? i.e.
+> does the test
+> complete?
 > 
-> Yes it is a 2.6.18 rhel5 based custom kernel but the
-> XFS driver is a back port from the 2.6.28.4
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
 
-Then you get to keep all the broken bits to yourself.  If you want
-to throw random versions of XFS at random versions of kernels then
-we can't help you - we don't have the time or resources to support
-random backports of XFS to older kernels (and non-vanilla kernels
-at that).
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+      
 
 _______________________________________________
 xfs mailing list
