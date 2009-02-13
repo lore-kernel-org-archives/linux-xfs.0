@@ -1,20 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1D4vPYe108037 for <xfs@oss.sgi.com>; Thu, 12 Feb 2009 22:57:26 -0600
-Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6302F1922C3B
-	for <xfs@oss.sgi.com>; Thu, 12 Feb 2009 20:56:50 -0800 (PST)
-Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id QRvwLANhyZmmJngu for <xfs@oss.sgi.com>;
-	Thu, 12 Feb 2009 20:56:50 -0800 (PST)
-Message-ID: <4994FD8C.5020303@sandeen.net>
-Date: Thu, 12 Feb 2009 22:56:44 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	n1D9KLHa124415 for <xfs@oss.sgi.com>; Fri, 13 Feb 2009 03:20:22 -0600
+Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AF22D192C1B7
+	for <xfs@oss.sgi.com>; Fri, 13 Feb 2009 01:19:46 -0800 (PST)
+Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.162.198]) by
+	cuda.sgi.com with ESMTP id khUu2iGELzc91oFv for
+	<xfs@oss.sgi.com>; Fri, 13 Feb 2009 01:19:46 -0800 (PST)
+Received: from mailsrv2.i.zmi.at (h081217054243.dyn.cm.kabsi.at
+	[81.217.54.243])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv1.zmi.at (Postfix) with ESMTP id D111E3FC9
+	for <xfs@oss.sgi.com>; Fri, 13 Feb 2009 10:19:13 +0100 (CET)
+Received: from saturn.localnet (saturn.i.zmi.at [10.0.0.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv2.i.zmi.at (Postfix) with ESMTPSA id D8025400154
+	for <xfs@oss.sgi.com>; Fri, 13 Feb 2009 10:19:13 +0100 (CET)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: XFS kernel BUG at fs/buffer.c:470! with 2.6.28.4
+Date: Fri, 13 Feb 2009 10:19:13 +0100
+References: <1234011974.7435.11.camel@champagne.cantina>
+	<20090210104304.GP8830@disturbed>
+	<1234432077.9204.15.camel@champagne.cantina>
+In-Reply-To: <1234432077.9204.15.camel@champagne.cantina>
 MIME-Version: 1.0
-Subject: Re: BUG: soft lockup detected on CPU#1!
-References: <3453.33822.qm@web30203.mail.mud.yahoo.com>
-In-Reply-To: <3453.33822.qm@web30203.mail.mud.yahoo.com>
+Content-Disposition: inline
+Message-Id: <200902131019.13460@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,54 +41,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: raksac@yahoo.com
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-raksac@yahoo.com wrote:
-> Guys,
-> 
-> Thank you for taking the time to write. Having said
-> where I stand and we are kind of on the same page. Is
-> there something I can expect which would put me on a
-> track of nailing down the problem. It maybe a wild
-> goose chase but something that I can start with would
-> be much appreciated.
+On Donnerstag 12 Februar 2009 Alessandro Bono wrote:
+> I don't have abandoned idea of a hardware problem but I don't know
+> how to be sure any suggestion?
 
-Just random debugging thoughts...
+On Monday I explained how to test your RAM, don't know if you did 
+though.
 
-Try stock 2.6.28.4, to see if you have the same problem.  If so, and
-esp. if you also see it on 2.6.29, then you'll get a lot more attention
-here.  :)
-
-If not, then it's something with your backport most likely.  Figure out
-what you had to backport and see if it's possibly causing the error(s).
-
-If it's locked up, try sysrq-w (echo w > /proc/sysrq-trigger) and look
-at dmesg to see if other threads are locked against it.  Figure out why.
-
-On the oops try memory debugging etc, see if you're referencing freed
-memory, using corrupt lists, etc.
-
-Look for other errors in the logs prior to this.
-
-See if your filesystem is corrupted.
-
-Bug Red Hat for XFS support, assuming you're actually buying RHEL5
-support from them.  :)
-
-> Unfortunately there is no distro which gets closer to
-> where mainline lives today. Reading the changelog
-> there are several problems that I have already come
-> across and has convincingly driven me to take on this
-> task.
-
-well certainly there are distros with kernels newer than 2.6.18, but it
-depends on your needs & goals I guess.
-
-Good luck,
--Eric
-
--Eric
+mfg zmi
+-- 
+// Michael Monnerie, Ing.BSc    -----      http://it-management.at
+// Tel: 0660 / 415 65 31                      .network.your.ideas.
+// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
+// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
+// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
 
 _______________________________________________
 xfs mailing list
