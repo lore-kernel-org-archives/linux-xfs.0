@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1DEEBdn184570 for <xfs@oss.sgi.com>; Fri, 13 Feb 2009 08:14:11 -0600
-Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 546A2192D08F
-	for <xfs@oss.sgi.com>; Fri, 13 Feb 2009 06:13:35 -0800 (PST)
-Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id ebXSR8NhXYaGLABB for <xfs@oss.sgi.com>;
-	Fri, 13 Feb 2009 06:13:35 -0800 (PST)
-Message-ID: <49957FBB.40900@sandeen.net>
-Date: Fri, 13 Feb 2009 08:12:11 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	n1DKB0Zc204909 for <xfs@oss.sgi.com>; Fri, 13 Feb 2009 14:11:03 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 51E9A1933DE9
+	for <xfs@oss.sgi.com>; Fri, 13 Feb 2009 12:10:25 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id HYXZZwVD7gg9xTRk for
+	<xfs@oss.sgi.com>; Fri, 13 Feb 2009 12:10:25 -0800 (PST)
+Date: Fri, 13 Feb 2009 15:10:24 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 13/13] xfs: add CRC checks for quota blocks
+Message-ID: <20090213201024.GA7218@infradead.org>
+References: <20090210202241.546501000@bombadil.infradead.org>
+	<20090210202941.616680000@bombadil.infradead.org>
+	<20090212064128.GC824@josefsipek.net>
 MIME-Version: 1.0
-Subject: Re: xfs_fsr not defragmenting: 'could not open tmp file'
-References: <283651.13069.qm@web51408.mail.re2.yahoo.com>
-	<200902131014.59183@zmi.at>
-In-Reply-To: <200902131014.59183@zmi.at>
+Content-Disposition: inline
+In-Reply-To: <20090212064128.GC824@josefsipek.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,25 +30,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: xfs@oss.sgi.com
+To: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-Michael Monnerie wrote:
-> On Freitag 13 Februar 2009 Richard Troxell wrote:
->> xfs_fsr is coming from xfsprogs 3.0.0
->> Linux kernel is 2.6.23.9
->> Architecture is x86_64, but xfs_fsr is 32bit.
+On Thu, Feb 12, 2009 at 01:41:28AM -0500, Josef 'Jeff' Sipek wrote:
+> >  	xfs_disk_dquot_t  dd_diskdq;	/* portion that lives incore as well */
+> > -	char		  dd_fill[32];	/* filling for posterity */
+> > +	char		  dd_fill[12];	/* filling for posterity */
+> > +
+> > +	/*
+> > +	 * These two are only present one filesystems with the CRC bits set.
+> > +	 */
+> > +	__be32		  dd_crc;	/* checksum */
+> > +	uuid_t		  dd_uuid;	/* location information */
+> >  } xfs_dqblk_t;
 > 
-> I'm not a dev, but I'd suggest trying the newest 2.6.28 kernel and see 
-> if the problem persists. There have been many fixes since your kernel.
+> Again, why put the crc/uuid at the end?
+
+So that we can add additional infos either to xfs_disk_dquot_t
+(preserved in-core) or xfs_dqblk_t (purly on-disk).
+
+> > +		if (!xfs_verify_cksum((char *)d, sizeof(struct xfs_dqblk),
+> > +				 offsetof(struct xfs_dqblk, dd_crc))) {
+> > +//		    !uuid_equal(&agfl->agfl_uuid, &mp->m_sb.sb_uuid) ||
 > 
-> mfg zmi
+> Dead code?
 
-Actually, yes.  there were 32/64 issues until recently, and fsr was in
-fact using an ioctl that did not have a 32-bit handler.  These weren't
-fixed until 2.6.29-rc1.
-
--Eric
+Sorry, sent out a too early version.  The final patch actually verifies
+the uuid and the correct location in the quota file.
 
 _______________________________________________
 xfs mailing list
