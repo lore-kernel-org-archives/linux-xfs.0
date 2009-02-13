@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1D3G9JJ103070 for <xfs@oss.sgi.com>; Thu, 12 Feb 2009 21:16:14 -0600
-Received: from web51408.mail.re2.yahoo.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id EFC8C192ABD7
-	for <xfs@oss.sgi.com>; Thu, 12 Feb 2009 19:15:31 -0800 (PST)
-Received: from web51408.mail.re2.yahoo.com (web51408.mail.re2.yahoo.com
-	[206.190.38.187]) by cuda.sgi.com with SMTP id 3bPkvCfAVgfP9N4S
-	for <xfs@oss.sgi.com>; Thu, 12 Feb 2009 19:15:31 -0800 (PST)
-Message-ID: <283651.13069.qm@web51408.mail.re2.yahoo.com>
-Date: Thu, 12 Feb 2009 19:15:31 -0800 (PST)
-From: Richard Troxell <knavewave@yahoo.com>
-Subject: xfs_fsr not defragmenting: 'could not open tmp file'
+	n1D4vPYe108037 for <xfs@oss.sgi.com>; Thu, 12 Feb 2009 22:57:26 -0600
+Received: from mx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6302F1922C3B
+	for <xfs@oss.sgi.com>; Thu, 12 Feb 2009 20:56:50 -0800 (PST)
+Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
+	with ESMTP id QRvwLANhyZmmJngu for <xfs@oss.sgi.com>;
+	Thu, 12 Feb 2009 20:56:50 -0800 (PST)
+Message-ID: <4994FD8C.5020303@sandeen.net>
+Date: Thu, 12 Feb 2009 22:56:44 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
+Subject: Re: BUG: soft lockup detected on CPU#1!
+References: <3453.33822.qm@web30203.mail.mud.yahoo.com>
+In-Reply-To: <3453.33822.qm@web30203.mail.mud.yahoo.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,48 +27,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: raksac@yahoo.com
+Cc: xfs@oss.sgi.com
 
+raksac@yahoo.com wrote:
+> Guys,
+> 
+> Thank you for taking the time to write. Having said
+> where I stand and we are kind of on the same page. Is
+> there something I can expect which would put me on a
+> track of nailing down the problem. It maybe a wild
+> goose chase but something that I can start with would
+> be much appreciated.
 
-I am trying out the xfs_fsr utility, but am not having much luck getting it to actually do anything. Running with -vd, I see a flood of 'no such file messages' like the following.
+Just random debugging thoughts...
 
-ino=570425612
-ino=570425612 extents=12 can_save=11 tmp=/disk08-01/.fsr/ag329/tmp22898
-could not open tmp file: /disk08-01/.fsr/ag329/tmp22898: No such file or directory
+Try stock 2.6.28.4, to see if you have the same problem.  If so, and
+esp. if you also see it on 2.6.29, then you'll get a lot more attention
+here.  :)
 
-Just for the fun of it, I tried creating some of these directories, only to find the operation bails in the ioctl.
-ino=570425630
-ino=570425630 extents=13 can_save=12 tmp=/disk08-01/.fsr/ag328/tmp22898
-DEBUG: fsize=445760 blsz_dio=445440 d_min=512 d_max=2147483136 pgsz=4096
-Temporary file has 1 extents (13 in original)
-XFS_IOC_SWAPEXT failed: ino=570425630: Invalid argument
+If not, then it's something with your backport most likely.  Figure out
+what you had to backport and see if it's possibly causing the error(s).
 
+If it's locked up, try sysrq-w (echo w > /proc/sysrq-trigger) and look
+at dmesg to see if other threads are locked against it.  Figure out why.
 
-xfs_fsr is coming from xfsprogs 3.0.0
-Linux kernel is 2.6.23.9
-Architecture is x86_64, but xfs_fsr is 32bit.
+On the oops try memory debugging etc, see if you're referencing freed
+memory, using corrupt lists, etc.
 
+Look for other errors in the logs prior to this.
 
-I did some searching for through past post for any similiar cases, but could not find any. Here are some other useful outputs that I found from somewhat related posts.
+See if your filesystem is corrupted.
 
-# xfs_db -c frag -f /dev/sdp2
-actual 38348, ideal 1318, fragmentation factor 96.56%
+Bug Red Hat for XFS support, assuming you're actually buying RHEL5
+support from them.  :)
 
-Most of the files appear to have single extent layouts, but there are a few exceptions.
+> Unfortunately there is no distro which gets closer to
+> where mainline lives today. Reading the changelog
+> there are several problems that I have already come
+> across and has convincingly driven me to take on this
+> task.
 
-# xfs_db -c "frag -v" -f /dev/sdp2 
-...
-inode 570425622 actual 957 ideal 1
-...
+well certainly there are distros with kernels newer than 2.6.18, but it
+depends on your needs & goals I guess.
 
-I did a quick check of the 'bmap' of the inode listed above and the file looks non-sparse (all 'flag 0')
+Good luck,
+-Eric
 
-
-Thanks!
-
-
-
-      
+-Eric
 
 _______________________________________________
 xfs mailing list
