@@ -1,33 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1DAD3dN127295 for <xfs@oss.sgi.com>; Fri, 13 Feb 2009 04:13:04 -0600
-Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CECCA192C934
-	for <xfs@oss.sgi.com>; Fri, 13 Feb 2009 02:12:28 -0800 (PST)
-Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.162.198]) by
-	cuda.sgi.com with ESMTP id NYwkDxlsGWhWneoE for
-	<xfs@oss.sgi.com>; Fri, 13 Feb 2009 02:12:28 -0800 (PST)
-Received: from mailsrv2.i.zmi.at (h081217054243.dyn.cm.kabsi.at
-	[81.217.54.243])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv1.zmi.at (Postfix) with ESMTP id 5229C3FCE
-	for <xfs@oss.sgi.com>; Fri, 13 Feb 2009 11:12:27 +0100 (CET)
-Received: from saturn.localnet (saturn.i.zmi.at [10.0.0.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv2.i.zmi.at (Postfix) with ESMTPSA id 4983F400154
-	for <xfs@oss.sgi.com>; Fri, 13 Feb 2009 11:12:27 +0100 (CET)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: xfs_force_shutdown after Raid crash
-Date: Fri, 13 Feb 2009 11:12:26 +0100
-References: <498376CF.8020806@renderforce.de>
-	<20090204122625.GM24173@disturbed> <200902041603.22541@zmi.at>
-In-Reply-To: <200902041603.22541@zmi.at>
+	n1DD2TdS180900 for <xfs@oss.sgi.com>; Fri, 13 Feb 2009 07:02:29 -0600
+Received: from sovereign.computergmbh.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1DE75192C869
+	for <xfs@oss.sgi.com>; Fri, 13 Feb 2009 05:01:53 -0800 (PST)
+Received: from sovereign.computergmbh.de (sovereign.computergmbh.de
+	[85.214.69.204]) by cuda.sgi.com with ESMTP id xFXWMDVDoQwcI2az
+	for <xfs@oss.sgi.com>; Fri, 13 Feb 2009 05:01:53 -0800 (PST)
+Received: from localhost (localhost [127.0.0.1])
+	by sovereign.computergmbh.de (Postfix) with ESMTP id 8F14B400891C
+	for <xfs@oss.sgi.com>; Fri, 13 Feb 2009 14:01:52 +0100 (CET)
+Date: Fri, 13 Feb 2009 14:01:52 +0100 (CET)
+From: Jan Engelhardt <jengelh@medozas.de>
+Subject: xfs: add device name to kthreads
+Message-ID: <alpine.LSU.2.00.0902131357170.9310@fbirervta.pbzchgretzou.qr>
 MIME-Version: 1.0
-Content-Disposition: inline
-Message-Id: <200902131112.26910@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -42,32 +30,171 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On Mittwoch 04 Februar 2009 Michael Monnerie wrote:
-> On Mittwoch 04 Februar 2009 Dave Chinner wrote:
-> > > What just comes to my mind: what about XEN/VMware?
-> > >
-> > > What settings should be used within a virtual machine? Even if I
-> > > have battery backed cache and nobarrier on the host, the VM
-> > > itself could crash, or the whole host freeze. Is "nobarrier" save
-> > > within a VM?
-> >
-> > Depends on the implementation of the hypervisor.
->
-> OK, so we don't know?
-> I guess VMware will be the most used for Linux systems, and XEN usage
-> will soon grow a lot as it's directly in the kernel now. Does anybody
-> know for those two, whether "nobarrier" is save/needed/a bad thing?
+Hi developers,
 
-Does anybody know about XEN/VMware? It would be interesting, maybe worth 
-a FAQ entry if we have a good answer.
 
-mfg zmi
+suggestive cosmetic patch. Could also help beginners to identify why 
+there are so (potentially) many xfs threads around.
+
+==8<==
+parent 87afd28ea9ab9db1c5c8a26741a9b96e10d5b0d4 (v2.6.29-rc4-19-g87afd28)
+commit 989a86ff4846d81ad6fbf28432c72df21598c11c
+Author: Jan Engelhardt <jengelh@medozas.de>
+Date:   Mon Feb 9 10:30:40 2009 +0100
+
+xfs: add name to kthreads
+
+I thought it would be nice to see the device name in ps(1)'s, so
+let's have it. I am aware that the proc name is limited to 16
+characters or so (just being able to fit in xfssyncd/sdxy15), but it
+is better than none.
+
+Signed-off-by: Jan Engelhardt <jengelh@medozas.de>
+---
+ fs/xfs/linux-2.6/xfs_buf.c   |   10 ++++++----
+ fs/xfs/linux-2.6/xfs_buf.h   |    2 +-
+ fs/xfs/linux-2.6/xfs_super.c |   11 ++++++-----
+ fs/xfs/linux-2.6/xfs_sync.c  |    2 +-
+ fs/xfs/xfs_trans_ail.c       |    2 +-
+ fs/xfs/xfs_trans_priv.h      |    2 +-
+ 6 files changed, 16 insertions(+), 13 deletions(-)
+
+diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
+index d71dc44..e96cce0 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.c
++++ b/fs/xfs/linux-2.6/xfs_buf.c
+@@ -1469,7 +1469,8 @@ xfs_mapping_buftarg(
+ 
+ STATIC int
+ xfs_alloc_delwrite_queue(
+-	xfs_buftarg_t		*btp)
++	xfs_buftarg_t		*btp,
++	const char *fsname)
+ {
+ 	int	error = 0;
+ 
+@@ -1477,7 +1478,7 @@ xfs_alloc_delwrite_queue(
+ 	INIT_LIST_HEAD(&btp->bt_delwrite_queue);
+ 	spin_lock_init(&btp->bt_delwrite_lock);
+ 	btp->bt_flags = 0;
+-	btp->bt_task = kthread_run(xfsbufd, btp, "xfsbufd");
++	btp->bt_task = kthread_run(xfsbufd, btp, "xfsbufd/%s", fsname);
+ 	if (IS_ERR(btp->bt_task)) {
+ 		error = PTR_ERR(btp->bt_task);
+ 		goto out_error;
+@@ -1490,7 +1491,8 @@ out_error:
+ xfs_buftarg_t *
+ xfs_alloc_buftarg(
+ 	struct block_device	*bdev,
+-	int			external)
++	int			external,
++	const char *fsname)
+ {
+ 	xfs_buftarg_t		*btp;
+ 
+@@ -1502,7 +1504,7 @@ xfs_alloc_buftarg(
+ 		goto error;
+ 	if (xfs_mapping_buftarg(btp, bdev))
+ 		goto error;
+-	if (xfs_alloc_delwrite_queue(btp))
++	if (xfs_alloc_delwrite_queue(btp, fsname))
+ 		goto error;
+ 	xfs_alloc_bufhash(btp, external);
+ 	return btp;
+diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
+index 288ae7c..185beb9 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.h
++++ b/fs/xfs/linux-2.6/xfs_buf.h
+@@ -412,7 +412,7 @@ static inline int XFS_bwrite(xfs_buf_t *bp)
+ /*
+  *	Handling of buftargs.
+  */
+-extern xfs_buftarg_t *xfs_alloc_buftarg(struct block_device *, int);
++extern xfs_buftarg_t *xfs_alloc_buftarg(struct block_device *, int, const char *);
+ extern void xfs_free_buftarg(xfs_buftarg_t *);
+ extern void xfs_wait_buftarg(xfs_buftarg_t *);
+ extern int xfs_setsize_buftarg(xfs_buftarg_t *, unsigned int, unsigned int);
+diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
+index c71e226..0a9b25d 100644
+--- a/fs/xfs/linux-2.6/xfs_super.c
++++ b/fs/xfs/linux-2.6/xfs_super.c
+@@ -789,18 +789,18 @@ xfs_open_devices(
+ 	 * Setup xfs_mount buffer target pointers
+ 	 */
+ 	error = ENOMEM;
+-	mp->m_ddev_targp = xfs_alloc_buftarg(ddev, 0);
++	mp->m_ddev_targp = xfs_alloc_buftarg(ddev, 0, mp->m_fsname);
+ 	if (!mp->m_ddev_targp)
+ 		goto out_close_rtdev;
+ 
+ 	if (rtdev) {
+-		mp->m_rtdev_targp = xfs_alloc_buftarg(rtdev, 1);
++		mp->m_rtdev_targp = xfs_alloc_buftarg(rtdev, 1, mp->m_fsname);
+ 		if (!mp->m_rtdev_targp)
+ 			goto out_free_ddev_targ;
+ 	}
+ 
+ 	if (logdev && logdev != ddev) {
+-		mp->m_logdev_targp = xfs_alloc_buftarg(logdev, 1);
++		mp->m_logdev_targp = xfs_alloc_buftarg(logdev, 1, mp->m_fsname);
+ 		if (!mp->m_logdev_targp)
+ 			goto out_free_rtdev_targ;
+ 	} else {
+@@ -900,10 +900,11 @@ xfsaild(
+ 
+ int
+ xfsaild_start(
+-	struct xfs_ail	*ailp)
++	struct xfs_ail	*ailp,
++	const char *fsname)
+ {
+ 	ailp->xa_target = 0;
+-	ailp->xa_task = kthread_run(xfsaild, ailp, "xfsaild");
++	ailp->xa_task = kthread_run(xfsaild, ailp, "xfsaild/%s", fsname);
+ 	if (IS_ERR(ailp->xa_task))
+ 		return -PTR_ERR(ailp->xa_task);
+ 	return 0;
+diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+index a608e72..932dd4e 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.c
++++ b/fs/xfs/linux-2.6/xfs_sync.c
+@@ -545,7 +545,7 @@ xfs_syncd_init(
+ {
+ 	mp->m_sync_work.w_syncer = xfs_sync_worker;
+ 	mp->m_sync_work.w_mount = mp;
+-	mp->m_sync_task = kthread_run(xfssyncd, mp, "xfssyncd");
++	mp->m_sync_task = kthread_run(xfssyncd, mp, "xfssyncd/%s", mp->m_fsname);
+ 	if (IS_ERR(mp->m_sync_task))
+ 		return -PTR_ERR(mp->m_sync_task);
+ 	return 0;
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index 2d47f10..912e3d7 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -581,7 +581,7 @@ xfs_trans_ail_init(
+ 	ailp->xa_mount = mp;
+ 	INIT_LIST_HEAD(&ailp->xa_ail);
+ 	spin_lock_init(&ailp->xa_lock);
+-	error = xfsaild_start(ailp);
++	error = xfsaild_start(ailp, mp->m_fsname);
+ 	if (error)
+ 		goto out_free_ailp;
+ 	mp->m_ail = ailp;
+diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
+index 73e2ad3..e8684af 100644
+--- a/fs/xfs/xfs_trans_priv.h
++++ b/fs/xfs/xfs_trans_priv.h
+@@ -107,7 +107,7 @@ void			xfs_trans_ail_cursor_done(struct xfs_ail *ailp,
+ 
+ long	xfsaild_push(struct xfs_ail *, xfs_lsn_t *);
+ void	xfsaild_wakeup(struct xfs_ail *, xfs_lsn_t);
+-int	xfsaild_start(struct xfs_ail *);
++int	xfsaild_start(struct xfs_ail *, const char *);
+ void	xfsaild_stop(struct xfs_ail *);
+ 
+ #if BITS_PER_LONG != 64
 -- 
-// Michael Monnerie, Ing.BSc    -----      http://it-management.at
-// Tel: 0660 / 415 65 31                      .network.your.ideas.
-// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
-// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
-// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
+# Created with git-export-patch
 
 _______________________________________________
 xfs mailing list
