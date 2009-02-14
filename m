@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1EJgfcu011480 for <xfs@oss.sgi.com>; Sat, 14 Feb 2009 13:42:41 -0600
+	n1EKCLgS012888 for <xfs@oss.sgi.com>; Sat, 14 Feb 2009 14:12:22 -0600
 Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0D58912068A
-	for <xfs@oss.sgi.com>; Sat, 14 Feb 2009 11:42:06 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F371418D8F9F
+	for <xfs@oss.sgi.com>; Sat, 14 Feb 2009 12:11:46 -0800 (PST)
 Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id Vg9tYUQi7BSuaZWH for <xfs@oss.sgi.com>;
-	Sat, 14 Feb 2009 11:42:06 -0800 (PST)
-Message-ID: <499717D4.6090404@sandeen.net>
-Date: Sat, 14 Feb 2009 13:13:24 -0600
+	with ESMTP id 1eHnmp5JtKs372W2 for <xfs@oss.sgi.com>;
+	Sat, 14 Feb 2009 12:11:46 -0800 (PST)
+Message-ID: <4997257C.2090303@sandeen.net>
+Date: Sat, 14 Feb 2009 14:11:40 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: fix comment typos in test 201
-References: <20090214163917.GA19813@infradead.org>
-In-Reply-To: <20090214163917.GA19813@infradead.org>
+Subject: Re: [PATCH] test 199: test features2 fixup for the regular case, too
+References: <20090214164024.GB19813@infradead.org>
+In-Reply-To: <20090214164024.GB19813@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,30 +31,72 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
 Christoph Hellwig wrote:
+> Eric Sandeen noted that we should not only test the mount ro first, then
+> remount rw case in 199 but also the regular mount rw case.
+> 
+> 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-ACK
-
-> Index: xfstests-dev/201
+> 
+> Index: xfstests-dev/199
 > ===================================================================
-> --- xfstests-dev.orig/201	2009-02-14 15:06:31.000000000 +0000
-> +++ xfstests-dev/201	2009-02-14 15:06:42.000000000 +0000
-> @@ -1,13 +1,13 @@
+> --- xfstests-dev.orig/199	2009-02-14 15:08:08.000000000 +0000
+> +++ xfstests-dev/199	2009-02-14 15:10:53.000000000 +0000
+> @@ -1,8 +1,10 @@
 >  #! /bin/sh
->  # FS QA Test No. 201
+>  # FS QA Test No. 199
 >  #
-> -# Test out the infamout xfs_btree_delrec corruption.
-> +# Test out the infamous xfs_btree_delrec corruption.
->  #
->  # Only happens on 32-bit kernels without CONFIG_LBD, but it should be harmless
->  # to run this everywhere.
+> -# Check that a filesystem first mounted read-only and then remounted
+> -# performs the features2 fixup properly.
+> +# Check that the features2 localtion fixups work correctly.  We check both
+                                 ^^^ typo (location)
+> +# a regualar read-write mount of a filesystem and the case where the
+         ^^^ typo (regular)
+
+With those fixes, ACK, thanks!
+
+-Eric
+
+> +# filesystem is first mounted read-only and then later remounted read-write,
+> +# which is the usual case for the root filesystem.
 >  #
 >  #-----------------------------------------------------------------------
-> -# Copyright (c) 2001 Christoph Hellwig.
-> +# Copyright (c) 2009 Christoph Hellwig.
->  #-----------------------------------------------------------------------
+>  # Copyright (c) 2008 Christoph Hellwig.
+> @@ -51,8 +53,20 @@
+>  echo "Clearing features2:"
+>  xfs_db -x $SCRATCH_DEV -c 'sb' -c 'write features2 0'
+>  
+> +_scratch_mount
+> +umount $SCRATCH_MNT
+> +echo "Features 2 after mount rw:"
+> +xfs_db -x $SCRATCH_DEV -c 'sb' -c 'print features2'
+> +
+> +#
+> +# Clear the normal flags again for the second rount.
+> +#
+> +echo "Clearing features2:"
+> +xfs_db -x $SCRATCH_DEV -c 'sb' -c 'write features2 0'
+> +
 >  #
->  # creator
+>  # And print the flags after a mount ro and remount rw
+> +#
+>  _scratch_mount -o ro
+>  _scratch_mount -o remount,rw
+>  umount $SCRATCH_MNT
+> Index: xfstests-dev/199.out
+> ===================================================================
+> --- xfstests-dev.orig/199.out	2009-02-14 15:11:18.000000000 +0000
+> +++ xfstests-dev/199.out	2009-02-14 15:11:26.000000000 +0000
+> @@ -4,6 +4,10 @@
+>  bad_features2 = 0x8
+>  Clearing features2:
+>  features2 = 0
+> +Features 2 after mount rw:
+> +features2 = 0x8
+> +Clearing features2:
+> +features2 = 0
+>  Features 2 after mount ro and remount rw:
+>  features2 = 0x8
+>  *** done
 > 
 > _______________________________________________
 > xfs mailing list
