@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1DKB0Zc204909 for <xfs@oss.sgi.com>; Fri, 13 Feb 2009 14:11:03 -0600
+	n1EGdqJA003269 for <xfs@oss.sgi.com>; Sat, 14 Feb 2009 10:39:53 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 51E9A1933DE9
-	for <xfs@oss.sgi.com>; Fri, 13 Feb 2009 12:10:25 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A437F1202AD
+	for <xfs@oss.sgi.com>; Sat, 14 Feb 2009 08:39:17 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id HYXZZwVD7gg9xTRk for
-	<xfs@oss.sgi.com>; Fri, 13 Feb 2009 12:10:25 -0800 (PST)
-Date: Fri, 13 Feb 2009 15:10:24 -0500
+	by cuda.sgi.com with ESMTP id LWiICiKgm0EGWlrD for
+	<xfs@oss.sgi.com>; Sat, 14 Feb 2009 08:39:17 -0800 (PST)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1LYNXx-00059n-5t
+	for xfs@oss.sgi.com; Sat, 14 Feb 2009 16:39:17 +0000
+Date: Sat, 14 Feb 2009 11:39:17 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 13/13] xfs: add CRC checks for quota blocks
-Message-ID: <20090213201024.GA7218@infradead.org>
-References: <20090210202241.546501000@bombadil.infradead.org>
-	<20090210202941.616680000@bombadil.infradead.org>
-	<20090212064128.GC824@josefsipek.net>
+Subject: [PATCH] xfstests: fix comment typos in test 201
+Message-ID: <20090214163917.GA19813@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20090212064128.GC824@josefsipek.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,34 +29,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Feb 12, 2009 at 01:41:28AM -0500, Josef 'Jeff' Sipek wrote:
-> >  	xfs_disk_dquot_t  dd_diskdq;	/* portion that lives incore as well */
-> > -	char		  dd_fill[32];	/* filling for posterity */
-> > +	char		  dd_fill[12];	/* filling for posterity */
-> > +
-> > +	/*
-> > +	 * These two are only present one filesystems with the CRC bits set.
-> > +	 */
-> > +	__be32		  dd_crc;	/* checksum */
-> > +	uuid_t		  dd_uuid;	/* location information */
-> >  } xfs_dqblk_t;
-> 
-> Again, why put the crc/uuid at the end?
 
-So that we can add additional infos either to xfs_disk_dquot_t
-(preserved in-core) or xfs_dqblk_t (purly on-disk).
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-> > +		if (!xfs_verify_cksum((char *)d, sizeof(struct xfs_dqblk),
-> > +				 offsetof(struct xfs_dqblk, dd_crc))) {
-> > +//		    !uuid_equal(&agfl->agfl_uuid, &mp->m_sb.sb_uuid) ||
-> 
-> Dead code?
-
-Sorry, sent out a too early version.  The final patch actually verifies
-the uuid and the correct location in the quota file.
+Index: xfstests-dev/201
+===================================================================
+--- xfstests-dev.orig/201	2009-02-14 15:06:31.000000000 +0000
++++ xfstests-dev/201	2009-02-14 15:06:42.000000000 +0000
+@@ -1,13 +1,13 @@
+ #! /bin/sh
+ # FS QA Test No. 201
+ #
+-# Test out the infamout xfs_btree_delrec corruption.
++# Test out the infamous xfs_btree_delrec corruption.
+ #
+ # Only happens on 32-bit kernels without CONFIG_LBD, but it should be harmless
+ # to run this everywhere.
+ #
+ #-----------------------------------------------------------------------
+-# Copyright (c) 2001 Christoph Hellwig.
++# Copyright (c) 2009 Christoph Hellwig.
+ #-----------------------------------------------------------------------
+ #
+ # creator
 
 _______________________________________________
 xfs mailing list
