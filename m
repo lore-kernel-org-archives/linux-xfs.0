@@ -1,15 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1FK5fbi093585 for <xfs@oss.sgi.com>; Sun, 15 Feb 2009 14:05:41 -0600
-Date: Sun, 15 Feb 2009 15:05:07 -0500
+	n1FKD5u9093934 for <xfs@oss.sgi.com>; Sun, 15 Feb 2009 14:13:06 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AD846122DA9
+	for <xfs@oss.sgi.com>; Sun, 15 Feb 2009 12:12:31 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id KYeheMNzT8oie8EA for
+	<xfs@oss.sgi.com>; Sun, 15 Feb 2009 12:12:31 -0800 (PST)
+Date: Sun, 15 Feb 2009 15:12:00 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Re-dirty pages on I/O error
-Message-ID: <20090215200506.GA12161@infradead.org>
-References: <4990DCF6.5000900@sgi.com> <20090210100129.GN8830@disturbed>
+Subject: Re: [PATCH] Prevent lookup from finding bad buffers
+Message-ID: <20090215201200.GB12161@infradead.org>
+References: <4990EAF9.9010607@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20090210100129.GN8830@disturbed>
+In-Reply-To: <4990EAF9.9010607@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,28 +28,14 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Lachlan McIlroy <lachlan@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Lachlan McIlroy <lachlan@sgi.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Feb 10, 2009 at 09:01:29PM +1100, Dave Chinner wrote:
-> On Tue, Feb 10, 2009 at 12:48:38PM +1100, Lachlan McIlroy wrote:
-> > [This patch seems to have slipped through the proverbial crack.]
-> >
-> > If we get an error in xfs_page_state_convert() - and it's not EAGAIN - then
-> > we throw away the dirty page without converting the delayed allocation.  This
-> > leaves delayed allocations that can never be removed and confuses code that
-> > expects a flush of the file to clear them.  We need to re-dirty the page on
-> > error so we can try again later or report that the flush failed.
-> 
-> As discussed previously, the fix that is needed in the page
-> invalidation path. i.e.  the page invalidate path clears the
-> buffer_delay() flag (via discard_buffer) before we get to
-> ->releasepage and so releasepage fails to convert the delalloc
-> extent before tossing the page....
+On Tue, Feb 10, 2009 at 01:48:25PM +1100, Lachlan McIlroy wrote:
+> There's a bug in _xfs_buf_find() that will cause it to return buffers
+> that failed to be initialised.
 
-And we need to get started on that fix rather sooner than later.
-
-Any chance to get some testcase extrace from the scenarios at those
-customer sites?
+Is there a testcase for this?
 
 _______________________________________________
 xfs mailing list
