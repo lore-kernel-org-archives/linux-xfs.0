@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1H9WLCp215451 for <xfs@oss.sgi.com>; Tue, 17 Feb 2009 03:32:21 -0600
+	n1H9dSFY215927 for <xfs@oss.sgi.com>; Tue, 17 Feb 2009 03:39:29 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3B7C5128DEA
-	for <xfs@oss.sgi.com>; Tue, 17 Feb 2009 01:31:48 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6BF6115A02BA
+	for <xfs@oss.sgi.com>; Tue, 17 Feb 2009 01:38:55 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id blzO31bDjvGrtMVi for
-	<xfs@oss.sgi.com>; Tue, 17 Feb 2009 01:31:48 -0800 (PST)
-Date: Tue, 17 Feb 2009 04:31:47 -0500
+	by cuda.sgi.com with ESMTP id vZk1z8NYT9Cx0UvB for
+	<xfs@oss.sgi.com>; Tue, 17 Feb 2009 01:38:55 -0800 (PST)
+Date: Tue, 17 Feb 2009 04:38:24 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfs: prevent kernel crash due to corrupted inode log format
-Message-ID: <20090217093147.GA15620@infradead.org>
-References: <20090215191344.GA16706@infradead.org>
-	<200902162135.20065.arekm@maven.pl>
+Subject: Re: [PATCH] xfsdump: fix system() error reporting
+Message-ID: <20090217093824.GB15620@infradead.org>
+References: <20090216102845.GA6835@infradead.org>
+	<d38e348a0902161608r466a2582pfd5fd75e17a66f12@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <200902162135.20065.arekm@maven.pl>
+In-Reply-To: <d38e348a0902161608r466a2582pfd5fd75e17a66f12@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,19 +29,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Arkadiusz Miskiewicz <arekm@maven.pl>
-Cc: Christoph Hellwig <hch@infradead.org>, Andras Korn <korn-sgi.com@chardonnay.math.bme.hu>, xfs@oss.sgi.com
+To: Timothy Shimmin <timothy.shimmin@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Mon, Feb 16, 2009 at 09:35:19PM +0100, Arkadiusz Miskiewicz wrote:
-> On Sunday 15 of February 2009, Christoph Hellwig wrote:
-> > Andras Korn reported an oops on log replay causes by a corrupted
+On Tue, Feb 17, 2009 at 11:08:33AM +1100, Timothy Shimmin wrote:
+> Hi Christoph,
 > 
-> Where is that report? I'm wondering if it's the same issue as I'm seeing:
-> 
-> http://pld.pastebin.com/f15430869
-> http://pld.pastebin.com/fbcdce88
+> Looks reasonable.
+> Though, in the case of returning -1, it might be more interesting
+> to know the value of errno ? (I presume errno would be set in that case).
 
-Not related at all.
+>From looking at the manpage and the glibc implementation it seem like
+system does not actually set errno.
 
 _______________________________________________
 xfs mailing list
