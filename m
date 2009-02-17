@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1H0GWlx182680 for <xfs@oss.sgi.com>; Mon, 16 Feb 2009 18:16:33 -0600
-Received: from wf-out-1314.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 470DDA31551
-	for <xfs@oss.sgi.com>; Mon, 16 Feb 2009 16:15:58 -0800 (PST)
-Received: from wf-out-1314.google.com (wf-out-1314.google.com
-	[209.85.200.170]) by cuda.sgi.com with ESMTP id
-	1fDiZPeEyU41vqA9 for <xfs@oss.sgi.com>;
-	Mon, 16 Feb 2009 16:15:58 -0800 (PST)
-Received: by wf-out-1314.google.com with SMTP id 26so2655628wfd.32
-	for <xfs@oss.sgi.com>; Mon, 16 Feb 2009 16:15:57 -0800 (PST)
+	n1H33v7R194705 for <xfs@oss.sgi.com>; Mon, 16 Feb 2009 21:03:58 -0600
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E3C1A19493B2
+	for <xfs@oss.sgi.com>; Mon, 16 Feb 2009 19:03:22 -0800 (PST)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net
+	[203.16.214.146]) by cuda.sgi.com with ESMTP id
+	EQDJGtlez6Dd9aBa for <xfs@oss.sgi.com>;
+	Mon, 16 Feb 2009 19:03:22 -0800 (PST)
+Date: Tue, 17 Feb 2009 14:03:06 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] Don't reset di_format in xfs_ifree()
+Message-ID: <20090217030306.GC8830@disturbed>
+References: <49921B3E.8040406@sgi.com> <20090211092020.GR8830@disturbed>
+	<49937458.2000500@sgi.com> <20090212223253.GV8830@disturbed>
+	<20090215192507.GA15360@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20090216102845.GA6835@infradead.org>
-References: <20090216102845.GA6835@infradead.org>
-Date: Tue, 17 Feb 2009 11:08:33 +1100
-Message-ID: <d38e348a0902161608r466a2582pfd5fd75e17a66f12@mail.gmail.com>
-Subject: Re: [PATCH] xfsdump: fix system() error reporting
-From: Timothy Shimmin <timothy.shimmin@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20090215192507.GA15360@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,45 +32,39 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Hi Christoph,
+On Sun, Feb 15, 2009 at 02:25:08PM -0500, Christoph Hellwig wrote:
+> On Fri, Feb 13, 2009 at 09:32:53AM +1100, Dave Chinner wrote:
+> > > Yes, I agree.  I just don't have the time to hunt it down.  I see
+> > > there's a call to xfs_idestroy_fork() in xfs_ireclaim() for directories
+> > > but xfs_ireclaim() gets called after xfs_iflush() in xfs_reclaim_inode().
+> > 
+> > I suspect it should be in xfs_inactive() if we are in local format.
+> > This is what happens with the attribute fork.  I think that is where
+> > we need something like:
+> > 
+> > 	if ((ip->i_d.di_mode & S_IFMT) == S_IFDIR &&
+> > 	    ip->i_d.di_nextents == 0)
+> > 		xfs_idestroy_fork(ip, XFS_DATA_FORK);
+> 
+> Why would we special case directories?
 
-Looks reasonable.
-Though, in the case of returning -1, it might be more interesting
-to know the value of errno ? (I presume errno would be set in that case).
+I guess we don't need to - I was thinking purely of local format
+inodes....
 
---Tim
+> Btw, I can't reproduce this issue with the extent.c program and the
+> invocation from the next patch.  Does it need other parameters to
+> reproduce?
 
-On Mon, Feb 16, 2009 at 9:28 PM, Christoph Hellwig <hch@infradead.org> wrote:
-> Positive returns from system need the WEXITSTATUS macro applies to get
-> the real exit code of the executed command.
->
-> Based on analysis in oss BZ #804.
->
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
->
-> Index: xfsdump-dev/dump/content.c
-> ===================================================================
-> --- xfsdump-dev.orig/dump/content.c     2009-02-16 11:23:10.361944048 +0100
-> +++ xfsdump-dev/dump/content.c  2009-02-16 11:23:47.629070808 +0100
-> @@ -6735,7 +6735,8 @@ save_quotas( char *mntpnt, quota_info_t
->         sts = system( buf );
->         if( sts != 0 ) {
->             mlog( MLOG_ERROR, _(
-> -                  "%s failed with exit status: %d\n"), REPQUOTA, sts);
-> +                  "%s failed with exit status: %d\n"), REPQUOTA,
-> +                 sts == -1 ? -1 : WEXITSTATUS(sts));
->             return BOOL_FALSE;
->         }
->         if((fd = open( quotainfo->quotapath, O_RDONLY|O_DSYNC)) < 0) {
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
->
+No idea, I haven't been able to reproduce it either.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
