@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1HLoFRv250332 for <xfs@oss.sgi.com>; Tue, 17 Feb 2009 15:50:15 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EF9A9195998F
-	for <xfs@oss.sgi.com>; Tue, 17 Feb 2009 13:49:41 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 8VcyHn71NPcABvlq for
-	<xfs@oss.sgi.com>; Tue, 17 Feb 2009 13:49:41 -0800 (PST)
-Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1LZXoy-0001Ty-9l
-	for xfs@oss.sgi.com; Tue, 17 Feb 2009 21:49:40 +0000
-Date: Tue, 17 Feb 2009 16:49:40 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfsprogs: generate complete source tarball from Makepkgs
-Message-ID: <20090217214940.GA30787@infradead.org>
+	n1I73gOT015995 for <xfs@oss.sgi.com>; Wed, 18 Feb 2009 01:03:43 -0600
+Received: from rv-out-0708.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B603512D806
+	for <xfs@oss.sgi.com>; Tue, 17 Feb 2009 23:03:08 -0800 (PST)
+Received: from rv-out-0708.google.com (rv-out-0708.google.com
+	[209.85.198.243]) by cuda.sgi.com with ESMTP id
+	yZ40VtYj1VtpZOye for <xfs@oss.sgi.com>;
+	Tue, 17 Feb 2009 23:03:08 -0800 (PST)
+Received: by rv-out-0708.google.com with SMTP id c5so2228239rvf.32
+	for <xfs@oss.sgi.com>; Tue, 17 Feb 2009 23:03:08 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
+In-Reply-To: <20090217093824.GB15620@infradead.org>
+References: <20090216102845.GA6835@infradead.org>
+	<d38e348a0902161608r466a2582pfd5fd75e17a66f12@mail.gmail.com>
+	<20090217093824.GB15620@infradead.org>
+Date: Wed, 18 Feb 2009 17:38:48 +1100
+Message-ID: <d38e348a0902172238r5cf807adoc455636b86b59913@mail.gmail.com>
+Subject: Re: [PATCH] xfsdump: fix system() error reporting
+From: Timothy Shimmin <timothy.shimmin@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,86 +28,79 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============4309195628864833161=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-The source file lists in the Makefiles were missing a couple of files.
-Because those missing files include the new headers that are only
-installed on make install-qa that resulting tarball would not even be
-buildable.
+--===============4309195628864833161==
+Content-Type: multipart/alternative; boundary=000e0cd255341787cb04632bacfe
+
+--000e0cd255341787cb04632bacfe
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+
+On Tue, Feb 17, 2009 at 8:38 PM, Christoph Hellwig <hch@infradead.org>wrote:
+
+> On Tue, Feb 17, 2009 at 11:08:33AM +1100, Timothy Shimmin wrote:
+> > Hi Christoph,
+> >
+> > Looks reasonable.
+> > Though, in the case of returning -1, it might be more interesting
+> > to know the value of errno ? (I presume errno would be set in that case).
+>
+> From looking at the manpage and the glibc implementation it seem like
+> system does not actually set errno.
+>
+>
+Fair enough.
+
+Yeah, it didn't seem clear in the man page and
+I thought it might make a call to fork, waitpid etc which might set an
+errno.
+
+Cheers,
+Tim.
+
+--000e0cd255341787cb04632bacfe
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, Feb 17, 2009 at 8:38 PM, Christoph Hellwig <span dir=3D"ltr">&lt;<a=
+ href=3D"mailto:hch@infradead.org">hch@infradead.org</a>&gt;</span> wrote:<=
+br><div class=3D"gmail_quote"><blockquote class=3D"gmail_quote" style=3D"bo=
+rder-left: 1px solid rgb(204, 204, 204); margin: 0pt 0pt 0pt 0.8ex; padding=
+-left: 1ex;">
+<div class=3D"Ih2E3d">On Tue, Feb 17, 2009 at 11:08:33AM +1100, Timothy Shi=
+mmin wrote:<br>
+&gt; Hi Christoph,<br>
+&gt;<br>
+&gt; Looks reasonable.<br>
+&gt; Though, in the case of returning -1, it might be more interesting<br>
+&gt; to know the value of errno ? (I presume errno would be set in that cas=
+e).<br>
+<br>
+</div>From looking at the manpage and the glibc implementation it seem like=
+<br>
+system does not actually set errno.<br>
+<br>
+</blockquote></div><br>Fair enough.<br><br>Yeah, it didn&#39;t seem clear i=
+n the man page and<br>I thought it might make a call to fork, waitpid etc w=
+hich might set an errno.<br><br>Cheers,<br>Tim.<br>
+
+--000e0cd255341787cb04632bacfe--
 
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Index: xfsprogs-dev/include/buildmacros
-===================================================================
---- xfsprogs-dev.orig/include/buildmacros	2009-02-17 19:55:23.674944499 +0100
-+++ xfsprogs-dev/include/buildmacros	2009-02-17 19:55:52.654069638 +0100
-@@ -15,6 +15,7 @@ LDLIBS = $(LLDLIBS) $(PLDLIBS) $(MALLOCL
- 
- MAKEOPTS = --no-print-directory
- SRCFILES = Makefile $(HFILES) $(CFILES) $(LSRCFILES) $(LFILES) $(YFILES)
-+SRCFILES += $(QAHFILES)
- 
- DEPDIRT = dep dep.bak
- MANDIRT = *.[1-9].gz
-Index: xfsprogs-dev/db/Makefile
-===================================================================
---- xfsprogs-dev.orig/db/Makefile	2009-02-17 20:03:49.554944958 +0100
-+++ xfsprogs-dev/db/Makefile	2009-02-17 20:04:16.189070177 +0100
-@@ -15,6 +15,8 @@ HFILES = addr.h agf.h agfl.h agi.h attr.
- 	text.h type.h write.h attrset.h
- CFILES = $(HFILES:.h=.c)
- LSRCFILES = xfs_admin.sh xfs_check.sh xfs_ncheck.sh xfs_metadump.sh
-+LSRCFILES += xfs_check64.sh xfs_ncheck64.sh
-+
- LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
- LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG)
- LLDFLAGS += -static
-Index: xfsprogs-dev/doc/Makefile
-===================================================================
---- xfsprogs-dev.orig/doc/Makefile	2009-02-17 20:02:23.434944233 +0100
-+++ xfsprogs-dev/doc/Makefile	2009-02-17 20:02:40.158944629 +0100
-@@ -5,7 +5,7 @@
- TOPDIR = ..
- include $(TOPDIR)/include/builddefs
- 
--LSRCFILES = INSTALL PORTING CHANGES COPYING CREDITS
-+LSRCFILES = INSTALL PORTING CHANGES COPYING CREDITS sparse.txt
- LDIRT = *.gz
- 
- default: CHANGES.gz
-Index: xfsprogs-dev/include/Makefile
-===================================================================
---- xfsprogs-dev.orig/include/Makefile	2009-02-17 19:51:43.273069121 +0100
-+++ xfsprogs-dev/include/Makefile	2009-02-17 22:44:41.831973534 +0100
-@@ -37,7 +37,7 @@ PHFILES = darwin.h freebsd.h irix.h linu
- DKHFILES = volume.h fstyp.h dvh.h
- LSRCFILES = $(shell echo $(PHFILES) | sed -e "s/$(PKG_PLATFORM).h//g")
- LSRCFILES += platform_defs.h.in builddefs.in buildmacros buildrules $(DKHFILES)
--LSRCFILES += command.h input.h path.h project.h
-+LSRCFILES += command.h input.h path.h project.h unaligned.h
- LDIRT = xfs disk
- 
- default install: xfs disk
-Index: xfsprogs-dev/repair/Makefile
-===================================================================
---- xfsprogs-dev.orig/repair/Makefile	2009-02-17 20:03:01.254069430 +0100
-+++ xfsprogs-dev/repair/Makefile	2009-02-17 20:03:10.846069320 +0100
-@@ -5,6 +5,8 @@
- TOPDIR = ..
- include $(TOPDIR)/include/builddefs
- 
-+LSRCFILES = README
-+
- LTCOMMAND = xfs_repair
- 
- HFILES = agheader.h attr_repair.h avl.h avl64.h bmap.h dinode.h dir.h \
+--===============4309195628864833161==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============4309195628864833161==--
