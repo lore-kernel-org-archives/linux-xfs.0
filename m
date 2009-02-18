@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1I9bwmu022840 for <xfs@oss.sgi.com>; Wed, 18 Feb 2009 03:37:58 -0600
-Received: from smtp.welcomes-you.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 23AA712DD36
-	for <xfs@oss.sgi.com>; Wed, 18 Feb 2009 01:37:24 -0800 (PST)
-Received: from smtp.welcomes-you.com (welcomes-you.com [85.214.50.128]) by
-	cuda.sgi.com with ESMTP id UEGuPVUYPEgGhBcW for
-	<xfs@oss.sgi.com>; Wed, 18 Feb 2009 01:37:24 -0800 (PST)
-Message-ID: <499BD6BB.2000406@aei.mpg.de>
-Date: Wed, 18 Feb 2009 10:36:59 +0100
-From: Carsten Aulbert <carsten.aulbert@aei.mpg.de>
-MIME-Version: 1.0
-Subject: Re: xfs problems (possibly after upgrading from linux kernel	2.6.27.10
-	to .14)
-References: <499ACE6C.4060304@aei.mpg.de> <20090218091935.GD8830@disturbed>
-In-Reply-To: <20090218091935.GD8830@disturbed>
+	n1IMGIc7058198
+	for <linux-xfs@oss.sgi.com>; Wed, 18 Feb 2009 16:16:19 -0600
+Received: from out1.smtp.messagingengine.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id ADBD613177E
+	for <linux-xfs@oss.sgi.com>; Wed, 18 Feb 2009 14:15:44 -0800 (PST)
+Received: from out1.smtp.messagingengine.com (out1.smtp.messagingengine.com
+	[66.111.4.25]) by cuda.sgi.com with ESMTP id 8ADvjyx1MEqE0qMn
+	for <linux-xfs@oss.sgi.com>; Wed, 18 Feb 2009 14:15:44 -0800 (PST)
+Message-Id: <B50173E3-7975-4A71-903A-A76D910CBB3A@mailcan.com>
+From: Leon Woestenberg <leonw@mailcan.com>
+In-Reply-To: <18758.57121.570007.816329@tree.ty.sabi.co.uk>
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Subject: Re: 12x performance drop on md/linux+sw raid1 due to barriers [xfs]
+Date: Wed, 18 Feb 2009 23:14:22 +0100
+References: <alpine.DEB.1.10.0812060928030.14215@p34.internal.lan>
+	<200812141912.59649.Martin@lichtvoll.de>
+	<18757.33373.744917.457587@tree.ty.sabi.co.uk>
+	<200812151948.59870.Martin@lichtvoll.de>
+	<18758.57121.570007.816329@tree.ty.sabi.co.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,79 +28,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com
-Cc: linux-kernel@vger.kernel.org, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Peter Grandi <pg_xf2@xf2.for.sabi.co.UK>
+Cc: Linux XFS <linux-xfs@oss.sgi.com>
 
-Hi Dave,
+Hello,
 
-Dave Chinner schrieb:
-> On Tue, Feb 17, 2009 at 03:49:16PM +0100, Carsten Aulbert wrote:
->> Hi all,
->>
->> within the past few days we hit many XFS internal errors like these. Are these
->> errors known (and possibly already fixed)? I checked the commits till 
->> 2.6.27.17 and there does not seem anything related to this.
-> 
-> .....
-> 
->> Feb 16 20:34:49 n0035 kernel: [275873.335916] Filesystem "sda6": XFS internal error xfs_trans_cancel at line 1164 of file fs/xfs/xfs_
-> 
-> A transaction shutdown on create. That implies some kind of ENOSPC
-> issue.
-> 
->> Do you need more information or can I send these nodes into a re-install?
-> 
-> More information. Can you get a machine into a state where you can
-> trigger this condition reproducably by doing:
-> 
-> 	mount filesystem
-> 	touch /mnt/filesystem/some_new_file
-> 
-> If you can get it to that state, and you can provide an xfs_metadump
-> image of the filesystem when in that state, I can track down the
-> problem and fix it.
+On 15 dec 2008, at 23:50, Peter Grandi wrote:
 
-I can try doing that on a few machines, would a metadump help on a
-machine where this corruption occurred some time ago and is still in
-this state?
+> [ ... ]
+>
+>>> The purpose of barriers is to guarantee that relevant data is
+>>> known to be on persistent storage (kind of hardware 'fsync').
+>>>
+>
+>> [ ... ] Unfortunately in my understanding none of this is
+>> reflected by Documentation/block/barrier.txt
+>
+> But we are talking about XFS and barriers here. That described
+> just a (flawed, buggy) mechanism to implement those. Consider
+> for example:
+>
+>  http://www.xfs.org/index.php/XFS_FAQ#Write_barrier_support.
+>  http://www.xfs.org/index.php/XFS_FAQ#Q._Should_barriers_be_enabled_with_storage_which_has_a_persistent_write_cache.3F
+>
+> In any case as to the kernel "barrier" mechanism, its
+> description is misleading because it heavily fixates on the
+> ordering issue, which is just a consequence, but yet mentions
+> the far more important "flush/sync" aspect.
+>
+> Still, there is a lot of confusion about barrier support and
+> what it means at which level, as reflected in several online
+> discussions and the different behaviour of different kernel
+> versions.
+>
+The semantics of a barrier are whatever semantics we describe to it.  
+So we can continue to be confused about it.
 
-> 
->> Feb 16 22:01:28 n0260 kernel: [1129250.851451] Filesystem "sda6": xfs_iflush: Bad inode 1176564060 magic number 0x36b5, ptr 0xffff8801a7c06c00
-> 
-> However, this implies some kind of memory corruption is occurring.
-> That is reading the inode out of the buffer before flushing the
-> in-memory state to disk. This implies someone has scribbled over
-> page cache pages.
-> 
-> 
->> Feb 17 05:57:44 n0463 kernel: [1156816.912129] Filesystem "sda6": XFS internal error xfs_btree_check_sblock at line 307 of file fs/xfs/xfs_btree.c.  Caller 0xffffffff802dd15b
-> 
-> And that is another buffer that has been scribbled over.
-> Something is corrupting the page cache, I think. Whether the
-> original shutdown is caused by the some corruption, i don't
-> know.
-> 
+I strongly disagree on the ordering issue being a side effect.
 
-At least on two nodes  we ran memtest86+ overnight and so far no error.
+Correct ordering can be proven to be enough to provide transactional  
+correctness, enough to ensure that filesystems can not get corrupted  
+on power down.
 
->> plus a few more nodes showing the same characteristics 
-> 
-> Hmmmm. Did this show up in 2.6.27.10? Or did it start occurring only
-> after you upgraded from .10 to .14?
+Using barriers to guarantee that (all submitted) write requests  
+(before the barrier) made it to the medium are a stronger predicate.
 
-As far as I can see this only happened after the upgrade about 14 days
-ago. What strikes me odd is that we only had this occurring massively on
-Monday and Tuesday this week.
+The Linux approach and documentation talks about the first type of  
+semantics (which I rather like for them being strong enough and not  
+more).
 
-I don't know if a certain access pattern could trigger this somehow.
+Regards,
 
-Cheers
+Leon
 
-Carsten
 
 _______________________________________________
 xfs mailing list
