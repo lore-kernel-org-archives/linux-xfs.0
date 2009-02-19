@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1JFPt2J115590 for <xfs@oss.sgi.com>; Thu, 19 Feb 2009 09:25:56 -0600
-Received: from sovereign.computergmbh.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D3F6316242A2
-	for <xfs@oss.sgi.com>; Thu, 19 Feb 2009 07:25:22 -0800 (PST)
-Received: from sovereign.computergmbh.de (sovereign.computergmbh.de
-	[85.214.69.204]) by cuda.sgi.com with ESMTP id 19mdkMTS0GLQJ0PE
-	for <xfs@oss.sgi.com>; Thu, 19 Feb 2009 07:25:22 -0800 (PST)
-Date: Thu, 19 Feb 2009 16:25:20 +0100 (CET)
-From: Jan Engelhardt <jengelh@medozas.de>
-Subject: Re: rfc 1/2: specfile: use rpm macros where possible
-In-Reply-To: <20090215172417.GA20256@infradead.org>
-Message-ID: <alpine.LSU.2.00.0902191625070.20437@fbirervta.pbzchgretzou.qr>
-References: <alpine.LSU.2.00.0902111802320.25232@fbirervta.pbzchgretzou.qr>
-	<20090215172417.GA20256@infradead.org>
+	n1JGVnYZ117551 for <xfs@oss.sgi.com>; Thu, 19 Feb 2009 10:31:50 -0600
+Received: from mx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F3C9D134888
+	for <xfs@oss.sgi.com>; Thu, 19 Feb 2009 08:31:16 -0800 (PST)
+Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
+	with ESMTP id 223Y35gTwoMzXGxA for <xfs@oss.sgi.com>;
+	Thu, 19 Feb 2009 08:31:16 -0800 (PST)
+Received: from int-mx2.corp.redhat.com (int-mx2.corp.redhat.com [172.16.27.26])
+	by mx2.redhat.com (8.13.8/8.13.8) with ESMTP id n1JGVF7c001785
+	for <xfs@oss.sgi.com>; Thu, 19 Feb 2009 11:31:15 -0500
+Message-ID: <499D8950.9030708@sandeen.net>
+Date: Thu, 19 Feb 2009 10:31:12 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
+Subject: Re: libattr - severe memory leaks from attr_copy_file()
+References: <499D0471.6000600@redhat.com>
+In-Reply-To: <499D0471.6000600@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,15 +30,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Zdenek Prikryl <zprikryl@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Sunday 2009-02-15 18:24, Christoph Hellwig wrote:
+Zdenek Prikryl wrote:
+>> And the variable, text, is assigned straight away before any use,
+>> so I missed where the problem is.
+>>
+>> --Tim
+> 
+> The memory leak is really there. Look:
+> 
+> 54 attr_parse_attr_conf(struct error_context *ctx)
+> ...
+> 66 repeat:
+> 67         text = malloc(size_guess + 1);
+> 68         if (!text)
+> 69                 goto fail;
+> 70
+> 71         if ((file = fopen(ATTR_CONF, "r")) == NULL) {
+> 72                 if (errno == ENOENT)
+> 73                         return 0;
+> 74                 goto fail;
+> 75         }
+> 
+> Let's say that malloc() on the line 67 success, so we have text != NULL. Then,
+> fopen() on the line 71 fails and errno == ENOENT. In that case
+> attr_parse_attr_conf() simply returns 0, but text isn't freed. That's the point,
+> where memory leaks arise. I rewrote the patch, so now is more simpler.
 
->Thanks, I'll put these in.  Can you submit equivalent patches for
->xfsdump and dmapi, too?
->
-xfsdump and dmapi git repositories seem to have no .spec files.
+The patch you attached looks good to me, thanks.
+
+-Eric
 
 _______________________________________________
 xfs mailing list
