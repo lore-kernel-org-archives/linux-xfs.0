@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1K0IVwh139459 for <xfs@oss.sgi.com>; Thu, 19 Feb 2009 18:18:32 -0600
-Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E77ED137168
-	for <xfs@oss.sgi.com>; Thu, 19 Feb 2009 16:17:57 -0800 (PST)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net
-	[203.16.214.146]) by cuda.sgi.com with ESMTP id
-	Qn3VuBHPFsoUglbl for <xfs@oss.sgi.com>;
-	Thu, 19 Feb 2009 16:17:57 -0800 (PST)
-Date: Fri, 20 Feb 2009 11:17:53 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH, needs a new owner] XFS misc patches
-Message-ID: <20090220001753.GG8830@disturbed>
-References: <49939FDA.6090401@sgi.com> <20090219193403.GA22736@infradead.org>
+	n1K0eeXH140681 for <xfs@oss.sgi.com>; Thu, 19 Feb 2009 18:40:40 -0600
+Received: from rv-out-0506.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C0462136F2A
+	for <xfs@oss.sgi.com>; Thu, 19 Feb 2009 16:40:07 -0800 (PST)
+Received: from rv-out-0506.google.com (rv-out-0506.google.com
+	[209.85.198.236]) by cuda.sgi.com with ESMTP id
+	T5gyxLeiOMwtB2rG for <xfs@oss.sgi.com>;
+	Thu, 19 Feb 2009 16:40:07 -0800 (PST)
+Received: by rv-out-0506.google.com with SMTP id g9so532864rvb.4
+	for <xfs@oss.sgi.com>; Thu, 19 Feb 2009 16:40:06 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20090219193403.GA22736@infradead.org>
+In-Reply-To: <499D0471.6000600@redhat.com>
+References: <499D0471.6000600@redhat.com>
+Date: Fri, 20 Feb 2009 11:33:13 +1100
+Message-ID: <d38e348a0902191633x382e4683scfdc3f07b2f9be03@mail.gmail.com>
+Subject: Re: libattr - severe memory leaks from attr_copy_file()
+From: Timothy Shimmin <timothy.shimmin@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,114 +30,102 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Zdenek Prikryl <zprikryl@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Feb 19, 2009 at 02:34:03PM -0500, Christoph Hellwig wrote:
-> On Thu, Feb 12, 2009 at 03:04:42PM +1100, Mark Goodwin wrote:
-> >
-> > Series of 12 patches, originally by Dave Chinner. These will need
-> > forward porting to top-of-tree and careful review. See the description
-> > in each individual patch for details of each patch.
-> >
-> > 01/12 readpage-unwritten-mapping
-> 
-> Is there any other reason for this except for the slight cleanup?
-> Looks goodish to me and I'll throw it into my QA queue.
+Hi Zdenek,
 
-Cleanup, may as well use the buffer_unwritten state....
+On Thu, Feb 19, 2009 at 6:04 PM, Zdenek Prikryl <zprikryl@redhat.com> wrote:
+>> And the variable, text, is assigned straight away before any use,
+>> so I missed where the problem is.
+>>
+>> --Tim
+>
+> The memory leak is really there. Look:
+:-)
 
-> > 02/12 xfs-fix-log-io-latency
-> > 03/12 xfs-use-meta-io-for-async-metadata
-> 
-> Whered did we get stuck on these?  IIRC there was some sort of
-> regression on either the AS or deadlinke scheduler, right?
+>
+> 54 attr_parse_attr_conf(struct error_context *ctx)
+> ...
+> 66 repeat:
+> 67         text = malloc(size_guess + 1);
+> 68         if (!text)
+> 69                 goto fail;
+> 70
+> 71         if ((file = fopen(ATTR_CONF, "r")) == NULL) {
+> 72                 if (errno == ENOENT)
+> 73                         return 0;
+> 74                 goto fail;
+> 75         }
+>
+> Let's say that malloc() on the line 67 success, so we have text != NULL. Then,
+> fopen() on the line 71 fails and errno == ENOENT. In that case
+> attr_parse_attr_conf() simply returns 0, but text isn't freed. That's the point,
+> where memory leaks arise. I rewrote the patch, so now is more simpler.
+>
+Oh okay.
+I see. I was looking at the "fail" case.
+Hmmm.... the direct return case.
+The simpler patch looks better - cool.
 
-optimisations for a specific scheduler that aren't applicable to
-all. I have to get back to these at some point.
+So I now worry about all the cases where we call return directly.
+It looks like the code is building up an action list and string dup'ing
+patterns.
+So in the normal case where it processes them and then returns 0,
+I can't see where it is free'ing the text.
+Am I missing something again?
 
-> > 04/12 xfs-inval-page-fixup
-> 
-> Looks good to me, but not really useful until we actually have back
-> tracing in some useable tree..
+My other concern is the free(pattern) and the free(attr_actions->pattern)
+with the possibility of trying to free the pattern twice. Probably, could set
+pattern to NULL after it is put into the new action or some such.
 
-Though it will tell use whenever that nasty 'throw away delalloc
-pages without converting the extent first' problem is hit. That
-was the main purpose of the patch. Probably good to have that.
+--Tim
 
-> > 05/12 xfs-iolock-on-page-mkwrite
-> 
-> Do we have a testcase for those races?
 
-IIRC, fsx mixing direct io and mmap will trigger it fairly reliably.
-
-> > 06/12 xfs-non-block-writes-when-frozen
-> 
-> We don't actually ever set O_NDELAY for regular files, so this can't
-> actually be triggered.
-
-Was for NFS servers to prevent them from locking up all threads on a
-single fs while a snapshot was in progress on it. There was probably
-a matching piece to the NFS server write path.
-
-> > 07/12 xfs-non-block-setattr-size-when-frozen
-
-Ditto.
-
-> I wonder if we should do these kinds of things higher up, e.g. in the
-> vfsmount writer count API in the VFS.
-
-Probably be a good idea.
-
-> > 08/12 xfs-inode-search
-> 
-> Interesting idea, but really wants some refactoring of the surrounding
-> code first..
-
-Yes, needs reworking. But it was always sitting in my QA tree, so
-the concept seems to be sound. ;)
-
-> > 09/12 xfs-v2-inodes-default
-> 
-> Do we really care?  There shouldn't be any Linux filesystems with v1
-> inodes in the wild.
-
-Not really. it can be dropped.
-
-> > 10/12 xfs-inode-writeback-checking
-> 
-> b_io_callback is now in the CRC patch series, and we could add
-> additional checking there. 
-
-Yes, that was the intent.
-
-> Must say I don't really like the string
-> buffer on stack in that path.
-
-Neither do I - it was a quick hack ;)
-
-> > 11/12 xfs-inode-swap
-> 
-> Yeah, we need to revisit this eventually.  Big qustions is what we want
-> to do with symlinks in an xfs_reno or shrinkfs using this ioctl.
-
-Yup.
-
-> > 12/12 xfs-increase-iclogs
-> 
-> Interesting idea.  But 2MB is much larger than the current log buffer
-> window..
-
-No it isn't. We default to 8 log buffers, and when you say
-logbsize=262144, you have a 2MB window. I should go back and
-look at this again....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> --
+> Zdenek Prikryl <zprikryl@redhat.com>
+>
+>
+> diff -up attr-2.4.43/libattr/attr_copy_action.c.leak attr-2.4.43/libattr/attr_copy_action.c
+> --- attr-2.4.43/libattr/attr_copy_action.c.leak 2008-06-30 07:22:50.000000000 +0200
+> +++ attr-2.4.43/libattr/attr_copy_action.c      2009-02-17 09:50:38.000000000 +0100
+> @@ -53,7 +53,7 @@ free_attr_actions(void)
+>  static int
+>  attr_parse_attr_conf(struct error_context *ctx)
+>  {
+> -       char *text, *t;
+> +       char *text = NULL, *t;
+>        size_t size_guess = 4096, len;
+>        FILE *file;
+>        char *pattern = NULL;
+> @@ -64,15 +64,16 @@ attr_parse_attr_conf(struct error_contex
+>                return 0;
+>
+>  repeat:
+> -       text = malloc(size_guess + 1);
+> -       if (!text)
+> -               goto fail;
+> -
+>        if ((file = fopen(ATTR_CONF, "r")) == NULL) {
+>                if (errno == ENOENT)
+>                        return 0;
+>                goto fail;
+>        }
+> +
+> +       text = malloc(size_guess + 1);
+> +       if (!text)
+> +               goto fail;
+> +
+>        len = fread(text, 1, size_guess, file);
+>        if (ferror(file))
+>                goto fail;
+>
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+>
+>
 
 _______________________________________________
 xfs mailing list
