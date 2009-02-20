@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1K8rWEv164865 for <xfs@oss.sgi.com>; Fri, 20 Feb 2009 02:53:33 -0600
+	n1K8rW1p164864 for <xfs@oss.sgi.com>; Fri, 20 Feb 2009 02:53:33 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0136613818C
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E77741975A88
 	for <xfs@oss.sgi.com>; Fri, 20 Feb 2009 00:53:00 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id RAGkdG23r5VL4kdO for
+	by cuda.sgi.com with ESMTP id jIP5JZh6ObJs7Ftw for
 	<xfs@oss.sgi.com>; Fri, 20 Feb 2009 00:53:00 -0800 (PST)
-Message-Id: <20090220085230.115970000@bombadil.infradead.org>
-Date: Fri, 20 Feb 2009 03:52:14 -0500
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1LaR7V-00040v-CC
+	for xfs@oss.sgi.com; Fri, 20 Feb 2009 08:52:29 +0000
+Message-Id: <20090220085229.204188000@bombadil.infradead.org>
+Date: Fri, 20 Feb 2009 03:52:10 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 7/7] xfs: factor out code to find the longest free extent in
-	the AG
+Subject: [PATCH 3/7] xfs: cleanup xlog_recover_do_trans
 References: <20090220085207.663702000@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-factor-pag-freelist-check-2
+Content-Disposition: inline; filename=xfs-cleanup-xlog_recover_do_trans
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,134 +31,101 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Dave Chinner <dgc@sgi.com>
 
-From: Dave Chinner <dgc@sgi.com>
+Change the big if-elsif-else block handling the different item types
+into a more natural switch, remove assignments in conditionals and
+remove an out of place comment from centuries ago on IRIX.
 
-Signed-off-by: Dave Chinner <dgc@sgi.com>
 
-Index: xfs/fs/xfs/xfs_alloc.c
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: xfs/fs/xfs/xfs_log_recover.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_alloc.c	2009-02-15 19:40:08.270069722 +0100
-+++ xfs/fs/xfs/xfs_alloc.c	2009-02-15 22:50:10.763069641 +0100
-@@ -1872,6 +1872,25 @@ xfs_alloc_compute_maxlevels(
+--- xfs.orig/fs/xfs/xfs_log_recover.c	2009-02-19 20:39:19.268070123 +0100
++++ xfs/fs/xfs/xfs_log_recover.c	2009-02-19 20:42:06.038944151 +0100
+@@ -2763,51 +2763,48 @@ xlog_recover_do_trans(
+ 	int			error = 0;
+ 	xlog_recover_item_t	*item, *first_item;
+ 
+-	if ((error = xlog_recover_reorder_trans(trans)))
++	error = xlog_recover_reorder_trans(trans);
++	if (error)
+ 		return error;
++
+ 	first_item = item = trans->r_itemq;
+ 	do {
+-		/*
+-		 * we don't need to worry about the block number being
+-		 * truncated in > 1 TB buffers because in user-land,
+-		 * we're now n32 or 64-bit so xfs_daddr_t is 64-bits so
+-		 * the blknos will get through the user-mode buffer
+-		 * cache properly.  The only bad case is o32 kernels
+-		 * where xfs_daddr_t is 32-bits but mount will warn us
+-		 * off a > 1 TB filesystem before we get here.
+-		 */
+-		if ((ITEM_TYPE(item) == XFS_LI_BUF)) {
+-			if  ((error = xlog_recover_do_buffer_trans(log, item,
+-								 pass)))
+-				break;
+-		} else if ((ITEM_TYPE(item) == XFS_LI_INODE)) {
+-			if ((error = xlog_recover_do_inode_trans(log, item,
+-								pass)))
+-				break;
+-		} else if (ITEM_TYPE(item) == XFS_LI_EFI) {
+-			if ((error = xlog_recover_do_efi_trans(log, item, trans->r_lsn,
+-						  pass)))
+-				break;
+-		} else if (ITEM_TYPE(item) == XFS_LI_EFD) {
++		switch (ITEM_TYPE(item)) {
++		case XFS_LI_BUF:
++			error = xlog_recover_do_buffer_trans(log, item, pass);
++			break;
++		case XFS_LI_INODE:
++			error = xlog_recover_do_inode_trans(log, item, pass);
++			break;
++		case XFS_LI_EFI:
++			error = xlog_recover_do_efi_trans(log, item,
++							  trans->r_lsn, pass);
++			break;
++		case XFS_LI_EFD:
+ 			xlog_recover_do_efd_trans(log, item, pass);
+-		} else if (ITEM_TYPE(item) == XFS_LI_DQUOT) {
+-			if ((error = xlog_recover_do_dquot_trans(log, item,
+-								   pass)))
+-					break;
+-		} else if ((ITEM_TYPE(item) == XFS_LI_QUOTAOFF)) {
+-			if ((error = xlog_recover_do_quotaoff_trans(log, item,
+-								   pass)))
+-					break;
+-		} else {
+-			xlog_warn("XFS: xlog_recover_do_trans");
++			error = 0;
++			break;
++		case XFS_LI_DQUOT:
++			error = xlog_recover_do_dquot_trans(log, item, pass);
++			break;
++		case XFS_LI_QUOTAOFF:
++			error = xlog_recover_do_quotaoff_trans(log, item,
++							       pass);
++			break;
++		default:
++			xlog_warn(
++	"XFS: invalid item type (%d) xlog_recover_do_trans", ITEM_TYPE(item));
+ 			ASSERT(0);
+ 			error = XFS_ERROR(EIO);
+ 			break;
+ 		}
++
++		if (error)
++			return error;
+ 		item = item->ri_next;
+ 	} while (first_item != item);
+ 
+-	return error;
++	return 0;
  }
  
  /*
-+ * Find the length of the longest extent in an AG.
-+ */
-+xfs_extlen_t
-+xfs_alloc_min_freelist(
-+	struct xfs_mount	*mp,
-+	struct xfs_perag	*pag)
-+{
-+	xfs_extlen_t		need, delta = 0;
-+
-+	need = XFS_MIN_FREELIST_PAG(pag, mp);
-+	if (need > pag->pagf_flcount)
-+		delta = need - pag->pagf_flcount;
-+
-+	if (pag->pagf_longest > delta)
-+		return pag->pagf_longest - delta;
-+	return pag->pagf_flcount > 0 || pag->pagf_longest > 0;
-+}
-+
-+/*
-  * Decide whether to use this allocation group for this allocation.
-  * If so, fix up the btree freelist's size.
-  */
-@@ -1923,15 +1942,12 @@ xfs_alloc_fix_freelist(
- 	}
- 
- 	if (!(flags & XFS_ALLOC_FLAG_FREEING)) {
--		need = XFS_MIN_FREELIST_PAG(pag, mp);
--		delta = need > pag->pagf_flcount ? need - pag->pagf_flcount : 0;
- 		/*
- 		 * If it looks like there isn't a long enough extent, or enough
- 		 * total blocks, reject it.
- 		 */
--		longest = (pag->pagf_longest > delta) ?
--			(pag->pagf_longest - delta) :
--			(pag->pagf_flcount > 0 || pag->pagf_longest > 0);
-+		need = XFS_MIN_FREELIST_PAG(pag, mp);
-+		longest = xfs_alloc_min_freelist(mp, pag);
- 		if ((args->minlen + args->alignment + args->minalignslop - 1) >
- 				longest ||
- 		    ((int)(pag->pagf_freeblks + pag->pagf_flcount -
-Index: xfs/fs/xfs/xfs_alloc.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_alloc.h	2009-02-08 21:51:06.553944398 +0100
-+++ xfs/fs/xfs/xfs_alloc.h	2009-02-15 22:47:48.470968077 +0100
-@@ -100,6 +100,12 @@ typedef struct xfs_alloc_arg {
- #define XFS_ALLOC_USERDATA		1	/* allocation is for user data*/
- #define XFS_ALLOC_INITIAL_USER_DATA	2	/* special case start of file */
- 
-+/*
-+ * Find the length of the longest extent in an AG.
-+ */
-+xfs_extlen_t
-+xfs_alloc_min_freelist(struct xfs_mount *mp,
-+		struct xfs_perag *pag);
- 
- #ifdef __KERNEL__
- 
-Index: xfs/fs/xfs/xfs_bmap.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_bmap.c	2009-02-15 19:40:08.724068781 +0100
-+++ xfs/fs/xfs/xfs_bmap.c	2009-02-15 22:47:48.478974193 +0100
-@@ -2712,9 +2712,6 @@ xfs_bmap_btalloc(
- 	xfs_agnumber_t	startag;
- 	xfs_alloc_arg_t	args;
- 	xfs_extlen_t	blen;
--	xfs_extlen_t	delta;
--	xfs_extlen_t	longest;
--	xfs_extlen_t	need;
- 	xfs_extlen_t	nextminlen = 0;
- 	xfs_perag_t	*pag;
- 	int		nullfb;		/* true if ap->firstblock isn't set */
-@@ -2796,13 +2793,8 @@ xfs_bmap_btalloc(
- 			 * See xfs_alloc_fix_freelist...
- 			 */
- 			if (pag->pagf_init) {
--				need = XFS_MIN_FREELIST_PAG(pag, mp);
--				delta = need > pag->pagf_flcount ?
--					need - pag->pagf_flcount : 0;
--				longest = (pag->pagf_longest > delta) ?
--					(pag->pagf_longest - delta) :
--					(pag->pagf_flcount > 0 ||
--					 pag->pagf_longest > 0);
-+				xfs_extlen_t	longest;
-+				longest = xfs_alloc_min_freelist(mp, pag);
- 				if (blen < longest)
- 					blen = longest;
- 			} else
-Index: xfs/fs/xfs/xfs_filestream.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_filestream.c	2009-02-08 21:51:06.575944685 +0100
-+++ xfs/fs/xfs/xfs_filestream.c	2009-02-15 22:47:48.479944079 +0100
-@@ -140,7 +140,7 @@ _xfs_filestream_pick_ag(
- 	xfs_extlen_t	minlen)
- {
- 	int		err, trylock, nscan;
--	xfs_extlen_t	delta, longest, need, free, minfree, maxfree = 0;
-+	xfs_extlen_t	longest, free, minfree, maxfree = 0;
- 	xfs_agnumber_t	ag, max_ag = NULLAGNUMBER;
- 	struct xfs_perag *pag;
- 
-@@ -186,12 +186,7 @@ _xfs_filestream_pick_ag(
- 			goto next_ag;
- 		}
- 
--		need = XFS_MIN_FREELIST_PAG(pag, mp);
--		delta = need > pag->pagf_flcount ? need - pag->pagf_flcount : 0;
--		longest = (pag->pagf_longest > delta) ?
--		          (pag->pagf_longest - delta) :
--		          (pag->pagf_flcount > 0 || pag->pagf_longest > 0);
--
-+		longest = xfs_alloc_min_freelist(mp, pag);
- 		if (((minlen && longest >= minlen) ||
- 		     (!minlen && pag->pagf_freeblks >= minfree)) &&
- 		    (!pag->pagf_metadata || !(flags & XFS_PICK_USERDATA) ||
 
 _______________________________________________
 xfs mailing list
