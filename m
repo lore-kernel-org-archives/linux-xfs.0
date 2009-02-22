@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1MKdxUR062854 for <xfs@oss.sgi.com>; Sun, 22 Feb 2009 14:40:00 -0600
-Received: from smtp.gentoo.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E6ACC13EF3E
-	for <xfs@oss.sgi.com>; Sun, 22 Feb 2009 12:39:27 -0800 (PST)
-Received: from smtp.gentoo.org (smtp.gentoo.org [140.211.166.183]) by
-	cuda.sgi.com with ESMTP id ao15ThI6efrQSmlB for
-	<xfs@oss.sgi.com>; Sun, 22 Feb 2009 12:39:27 -0800 (PST)
-From: Mike Frysinger <vapier@gentoo.org>
-Subject: xfsprogs/xfsdump release process
-Date: Sun, 22 Feb 2009 15:39:25 -0500
-References: <200902221348.51905.vapier@gentoo.org>
-In-Reply-To: <200902221348.51905.vapier@gentoo.org>
+	n1MMnhSh065382 for <xfs@oss.sgi.com>; Sun, 22 Feb 2009 16:49:44 -0600
+Received: from josefsipek.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0CA2B198671A
+	for <xfs@oss.sgi.com>; Sun, 22 Feb 2009 14:49:12 -0800 (PST)
+Received: from josefsipek.net (josefsipek.net [141.211.133.196]) by
+	cuda.sgi.com with ESMTP id LfTXBAGaUcMrkThd for
+	<xfs@oss.sgi.com>; Sun, 22 Feb 2009 14:49:12 -0800 (PST)
+Date: Sun, 22 Feb 2009 17:48:41 -0500
+From: "Josef 'Jeff' Sipek" <jeffpc@josefsipek.net>
+Subject: Re: [PATCH 4/7] xfs: cleanup xlog_bread
+Message-ID: <20090222224841.GW13088@josefsipek.net>
+References: <20090220085207.663702000@bombadil.infradead.org>
+	<20090220085229.488121000@bombadil.infradead.org>
 MIME-Version: 1.0
-Message-Id: <200902221539.26143.vapier@gentoo.org>
+Content-Disposition: inline
+In-Reply-To: <20090220085229.488121000@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,71 +25,27 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============5814408495418424219=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
---===============5814408495418424219==
-Content-Type: multipart/signed;
-  boundary="nextPart2551234.SIliL9oXyZ";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+On Fri, Feb 20, 2009 at 03:52:11AM -0500, Christoph Hellwig wrote:
+> Most callers of xlog_bread need to call xlog_align to get the actual offset.
+> Consolidate that call into the main xlog_bread and provide a _xlog_bread
+> for those few that don't want the actual offset.
 
---nextPart2551234.SIliL9oXyZ
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Only one leading underscore? IOW, why not not __xlog_bread? (That's
+definitely more Linux-like.)
 
-On Sunday 22 February 2009 13:48:49 Mike Frysinger wrote:
-> how are release tarballs created ?  seems like there's an error in the
-> process as the dmapi-2.2.9 contains files it shouldnt.  for example,
-> autom4te.cache/, include/builddefs, etc...
+Josef 'Jeff' Sipek.
 
-in a similar vain, every xfsdump/xfsprogs release has made people run=20
-`autoconf` first as the configure script is considered part of the distclea=
-n=20
-target in general.  i dont think that makes any sense as the configure scri=
-pt=20
-should be included with every release tarball.
-=2Dmike
-
---nextPart2551234.SIliL9oXyZ
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.10 (GNU/Linux)
-
-iQIcBAABAgAGBQJJobf+AAoJEEFjO5/oN/WBkLAQANFv1hdvisCagBY7DsYFXqz5
-h4LlWhVIN8c9dv2W/aFvNqXvlkzj7GFp4LJPjQ7pxeyeiwtJ/UBHiI6L5bDiSD3n
-8Nc83ESyz8DXeqkoVi30i7hdX1BqsQb98hq6Emd7ywu7Qs2ExFHB7eVTyOLZstQ2
-dGkZHGUW6qukzLfF6dNuFp5BX+DkjuFJIcRnF+9tPXExhqfx/M626LxcJPMCCCcI
-hQQ2/868UAdJE5TK3oLNTahh7nRooY3jCgUFPIzFfZ0zk6/EhGE+rZtxR/+AldAP
-iXZTKYQR1M11NiqWSrN/0J6yONhhCKlgrHAsdrhHWKHHDvKIRafbJJ24ZUc/osIa
-39aXH0Vl2bLXDnkuj0rVNQipRBEA6gG8J6X1rZpyxpw7fKbjde0a5ztX2INBmeSU
-o3k+BMKn5GbXHXGVDf959vFqF4YAsfHmUkYPGyksYuklPVW3pG47r8vQivz1T6qO
-3aoRo4THJ+SjjDO9oevxM8RhbZ3MyEdECSrwM/UQjxzRolDzBptFojpWqUSg2Wz4
-MLkyQFTMCT1rjJR0wesHt5JmQUG0a/uwfhQVoi/JdU8/YPto2wpzBqrSRrgvem39
-7koeBYkzXDtDMTHhUQeab709beNYK0tq3O6mCfjYQpmR7YybAtQSJ54lOoECF6LD
-NOQigqSR/k0ipquVcvi6
-=Ys3X
------END PGP SIGNATURE-----
-
---nextPart2551234.SIliL9oXyZ--
-
-
---===============5814408495418424219==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+-- 
+The box said "Windows XP or better required". So I installed Linux.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============5814408495418424219==--
