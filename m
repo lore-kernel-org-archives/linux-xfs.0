@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1N51KEM074472 for <xfs@oss.sgi.com>; Sun, 22 Feb 2009 23:01:20 -0600
+	n1N5obbb076402 for <xfs@oss.sgi.com>; Sun, 22 Feb 2009 23:50:37 -0600
 Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B2B9D8F80B7
-	for <xfs@oss.sgi.com>; Sun, 22 Feb 2009 21:00:46 -0800 (PST)
-Message-Id: <FE09F2E2-54EC-41C8-9145-7B89C6E62AC2@sgi.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3A4743040DF
+	for <xfs@oss.sgi.com>; Sun, 22 Feb 2009 21:50:04 -0800 (PST)
+Received: from [IPv6???1] (sshgate.corp.sgi.com [198.149.20.12])
+	by estes.americas.sgi.com (Postfix) with ESMTP id 110367000103
+	for <xfs@oss.sgi.com>; Sun, 22 Feb 2009 23:50:04 -0600 (CST)
+Message-Id: <D149BFE3-FA5F-4FBB-B08B-7173E615215C@sgi.com>
 From: Felix Blyakher <felixb@sgi.com>
-In-Reply-To: <200902221539.26143.vapier@gentoo.org>
 Mime-Version: 1.0 (Apple Message framework v926)
-Subject: Re: xfsprogs/xfsdump release process
-Date: Sun, 22 Feb 2009 23:00:45 -0600
-References: <200902221348.51905.vapier@gentoo.org>
-	<200902221539.26143.vapier@gentoo.org>
+Subject: xfsprogs/xfsdump/dmapi tarballs and git cleanup
+Date: Sun, 22 Feb 2009 23:50:03 -0600
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,32 +22,29 @@ List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mike Frysinger <vapier@gentoo.org>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs-oss <xfs@oss.sgi.com>
+
+New clean (thanks to Mike Frysinger for pointing it out)
+dmapi source tarball is available at:
+
+ftp://oss.sgi.com/projects/xfs/cmd_tars/dmapi-2.2.9.tar.gz
+
+For completeness, the other source tarballs are at:
+
+ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsprogs-3.0.0.tar.gz
+ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsdump-3.0.0.tar.gz
 
 
-On Feb 22, 2009, at 2:39 PM, Mike Frysinger wrote:
+Also tags were cleaned up on xfsprogs/xfsdump/dmapi git repos,
+and they're available at:
 
-> On Sunday 22 February 2009 13:48:49 Mike Frysinger wrote:
->> how are release tarballs created ?  seems like there's an error in  
->> the
->> process as the dmapi-2.2.9 contains files it shouldnt.  for example,
->> autom4te.cache/, include/builddefs, etc...
->
-> in a similar vain, every xfsdump/xfsprogs release has made people run
-> `autoconf` first as the configure script is considered part of the  
-> distclean
-> target in general.  i dont think that makes any sense as the  
-> configure script
-> should be included with every release tarball.
+git://oss.sgi.com/xfs/cmds/xfsprogs.git
+git://oss.sgi.com/xfs/cmds/xfspdump.git
+git://oss.sgi.com/xfs/cmds/dmapi.git
 
-Mike, you're absolutely right here. The config files got into the
-dmapi tarball by mistake, sorry for this. I verified that neither
-xfsprogs nor xfsdump have any extra files. New (clean) dmapi tarball
-will be on the oss site shortly.
 
 Felix
 
