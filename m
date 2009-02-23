@@ -1,22 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1MMnhSh065382 for <xfs@oss.sgi.com>; Sun, 22 Feb 2009 16:49:44 -0600
-Received: from josefsipek.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0CA2B198671A
-	for <xfs@oss.sgi.com>; Sun, 22 Feb 2009 14:49:12 -0800 (PST)
-Received: from josefsipek.net (josefsipek.net [141.211.133.196]) by
-	cuda.sgi.com with ESMTP id LfTXBAGaUcMrkThd for
-	<xfs@oss.sgi.com>; Sun, 22 Feb 2009 14:49:12 -0800 (PST)
-Date: Sun, 22 Feb 2009 17:48:41 -0500
-From: "Josef 'Jeff' Sipek" <jeffpc@josefsipek.net>
-Subject: Re: [PATCH 4/7] xfs: cleanup xlog_bread
-Message-ID: <20090222224841.GW13088@josefsipek.net>
-References: <20090220085207.663702000@bombadil.infradead.org>
-	<20090220085229.488121000@bombadil.infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20090220085229.488121000@bombadil.infradead.org>
+	n1N51KEM074472 for <xfs@oss.sgi.com>; Sun, 22 Feb 2009 23:01:20 -0600
+Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B2B9D8F80B7
+	for <xfs@oss.sgi.com>; Sun, 22 Feb 2009 21:00:46 -0800 (PST)
+Message-Id: <FE09F2E2-54EC-41C8-9145-7B89C6E62AC2@sgi.com>
+From: Felix Blyakher <felixb@sgi.com>
+In-Reply-To: <200902221539.26143.vapier@gentoo.org>
+Mime-Version: 1.0 (Apple Message framework v926)
+Subject: Re: xfsprogs/xfsdump release process
+Date: Sun, 22 Feb 2009 23:00:45 -0600
+References: <200902221348.51905.vapier@gentoo.org>
+	<200902221539.26143.vapier@gentoo.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,25 +21,35 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Mike Frysinger <vapier@gentoo.org>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Feb 20, 2009 at 03:52:11AM -0500, Christoph Hellwig wrote:
-> Most callers of xlog_bread need to call xlog_align to get the actual offset.
-> Consolidate that call into the main xlog_bread and provide a _xlog_bread
-> for those few that don't want the actual offset.
 
-Only one leading underscore? IOW, why not not __xlog_bread? (That's
-definitely more Linux-like.)
+On Feb 22, 2009, at 2:39 PM, Mike Frysinger wrote:
 
-Josef 'Jeff' Sipek.
+> On Sunday 22 February 2009 13:48:49 Mike Frysinger wrote:
+>> how are release tarballs created ?  seems like there's an error in  
+>> the
+>> process as the dmapi-2.2.9 contains files it shouldnt.  for example,
+>> autom4te.cache/, include/builddefs, etc...
+>
+> in a similar vain, every xfsdump/xfsprogs release has made people run
+> `autoconf` first as the configure script is considered part of the  
+> distclean
+> target in general.  i dont think that makes any sense as the  
+> configure script
+> should be included with every release tarball.
 
--- 
-The box said "Windows XP or better required". So I installed Linux.
+Mike, you're absolutely right here. The config files got into the
+dmapi tarball by mistake, sorry for this. I verified that neither
+xfsprogs nor xfsdump have any extra files. New (clean) dmapi tarball
+will be on the oss site shortly.
+
+Felix
 
 _______________________________________________
 xfs mailing list
