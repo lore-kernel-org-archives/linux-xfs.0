@@ -1,20 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1NKrgsL109893 for <xfs@oss.sgi.com>; Mon, 23 Feb 2009 14:53:43 -0600
-Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 22CBF142FDD
-	for <xfs@oss.sgi.com>; Mon, 23 Feb 2009 12:53:11 -0800 (PST)
-Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id FmpP5iKIbE1islHI for <xfs@oss.sgi.com>;
-	Mon, 23 Feb 2009 12:53:11 -0800 (PST)
-Message-ID: <49A30CB3.4040100@sandeen.net>
-Date: Mon, 23 Feb 2009 14:53:07 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+	n1NLIt8v110773 for <xfs@oss.sgi.com>; Mon, 23 Feb 2009 15:18:56 -0600
+Received: from mda1.es.uci.edu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6310514374A
+	for <xfs@oss.sgi.com>; Mon, 23 Feb 2009 13:18:24 -0800 (PST)
+Received: from mda1.es.uci.edu (mda1.es.uci.edu [128.200.80.3]) by
+	cuda.sgi.com with ESMTP id 9vyiLOaxRZl5zPGH for
+	<xfs@oss.sgi.com>; Mon, 23 Feb 2009 13:18:24 -0800 (PST)
+Received: from smtp1.es.uci.edu (smtp1.es.uci.edu [128.200.80.34])
+	by mda1.es.uci.edu (8.13.1/8.13.1) with ESMTP id n1NLIOQ9005748
+	for <xfs@oss.sgi.com>; Mon, 23 Feb 2009 13:18:24 -0800
+From: Harry Mangalam <harry.mangalam@uci.edu>
 Subject: Re: XFS on ARM-based Linux on USR8700 NAS appliance w/ mdadm/RAID5
+Date: Mon, 23 Feb 2009 13:20:05 -0800
 References: <200902231243.33897.harry.mangalam@uci.edu>
-In-Reply-To: <200902231243.33897.harry.mangalam@uci.edu>
+	<49A30CB3.4040100@sandeen.net>
+In-Reply-To: <49A30CB3.4040100@sandeen.net>
+MIME-Version: 1.0
+Content-Disposition: inline
+Message-Id: <200902231320.05320.harry.mangalam@uci.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,75 +32,106 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Harry Mangalam <harry.mangalam@uci.edu>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-Harry Mangalam wrote:
-> Here's an unusual (long) tale of woe.
-> 
-> We had a USRobotics 8700 NAS appliance with 4 SATA disks in RAID5:
->  <http://www.usr.com/support/product-template.asp?prod=8700>
-> which was a fine (if crude) ARM-based Linux NAS until it stroked out 
-> at some point, leaving us with a degraded RAID5 and comatose NAS 
-> device.
-> 
-> We'd like to get the files back of course and I've moved the disks to 
-> a Linux PC, hooked them up to a cheap Silicon Image 4x SATA 
-> controller and brought up the whole frankenmess with mdadm.  It 
-> reported a clean but degraded array.
-> 
-> (much mdadm stuff deleted)
-> 
-> Shortening this up considerably, I was able to get the RAID5 
-> reconstituted with a new disk, but was not so fortunate with the 
-> filesystem.
-> 
-> The docs and files on the USR web site imply that the native 
-> filesystem was originally XFS, but when I try to mount it as such, I 
-> can't:
+Thanks for the quick response Eric!
 
-...snip...
+On Monday 23 February 2009, Eric Sandeen wrote:
+> Harry Mangalam wrote:
+> > Here's an unusual (long) tale of woe.
+> >
+> > We had a USRobotics 8700 NAS appliance with 4 SATA disks in
+> > RAID5:
 
-> and when I check dmesg:
-> [  245.008000] SGI XFS with ACLs, security attributes, realtime, large 
-> block numbers, no debug enabled
-> [  245.020000] SGI XFS Quota Management subsystem
-> [  245.020000] XFS: SB read failed
-> [  327.696000] md: md0 stopped.
-> [  327.696000] md: unbind<sdc1>
-> [  327.696000] md: export_rdev(sdc1)
-> [  327.696000] md: unbind<sde1>
-> [  327.696000] md: export_rdev(sde1)
-> [  327.696000] md: unbind<sdd1>
-> [  327.696000] md: export_rdev(sdd1)
-> [  439.660000] XFS: bad magic number
-> [  439.660000] XFS: SB validate failed
-> 
-> repeated attempts repeat the last 2 lines above.  This implies that 
-> the superblock is bad and xfs_repair also reports that:
-> xfs_repair /dev/md1
->         - creating 2 worker thread(s)
-> Phase 1 - find and verify superblock...
-> bad primary superblock - bad magic number !!!
+<snip>
 
-The main badness that I know of on some of the ARM NAS implementations
-is a change which was made due to differing alignment on the old arm
-ABI; the change that went into some vendor trees actually modified the
-on-disk format rather than fixing it up properly.  (This should be fixed
-upstream now).  There are other odd problems w/ cache aliasing too.
+> However this wouldn't cause a superblock mis-read like this.  If
+> you get it mounted, you *may* run into what looks like directory
+> corruption on the PC, though, due to the alignment issue.
+>
+> Anyway, first, I'd look around for "XFSB" in the early few blocks
+> of your raid and see if the raid might possibly have been rebuilt
+> out of order.
+>
+> # dd if=/dev/md0 bs=4k count=32 | hexdump -C | grep XFSB
+>
+> or so...
+>
+> -Eric
 
-However this wouldn't cause a superblock mis-read like this.  If you get
-it mounted, you *may* run into what looks like directory corruption on
-the PC, though, due to the alignment issue.
+No, I didn't find this - I did find some disk ID header stuff which 
+confirms that the filesystem is XFS and some other info that might be 
+useful, but no XFSB strings, even grepping 8MB into the device.
 
-Anyway, first, I'd look around for "XFSB" in the early few blocks of
-your raid and see if the raid might possibly have been rebuilt out of order.
+|<IPStorPartition|
+| version="3.0" s|
+|ize="595" owner=|
+|"NACS-SW-DIST" c|
+|hecksum="" signa|
+|ture="IpStOrDyNa|
+|MiCdIsK" dataSta|
+|rtAtSectorNo="16|
+|128" logvol="0" |
+|category="Virtua|
+|l Device"/>.<Phy|
+|sicalDev guid="5|
+|95e9fbb-1951-09c|
+|3-a30c-000045d3a|
+|a3b" Comment="" |
+|WorldWideID="FAL|
+|CON  LVMDISK-M09|
+|N01  v1.0-0-0-00|
+|"/>.............|
+|................|
 
-# dd if=/dev/md0 bs=4k count=32 | hexdump -C | grep XFSB
+|<DynamicDiskSegm|
+|ent guid="126de9|
+|2f-98a1-3c06-01e|
+|5-000045d3aa4d" |
+|firstSector="161|
+|28" lastSector="|
+|22271" owner="NA|
+|CS-SW-DIST" data|
+|set="1171499597"|
+| seqNo="0" isLas|
+|tSegment="true" |
+|sectorSize="512"|
+| type="Umap" lun|
+|Type="0" timesta|
+|mp="1171499597" |
+|umapTimestamp="0|
+|" deviceName="NA|
+|SDisk-00002" fil|
+|eSystem="XFS"/>.|
+|<DynamicDiskSegm|
+|ent guid="126de9|
+|2f-98a1-3c06-01e|
+|5-000045d3aa4d" |
+|firstSector="222|
+|72" lastSector="|
+|2928740095" owne|
+|r="NACS-SW-DIST"|
+| dataset="117149|
+|9597" seqNo="1" |
+|isLastSegment="t|
+|rue" sectorSize=|
+|"512" type="NAS"|
+| lunType="0" tim|
+|estamp="11714995|
+|97" umapTimestam|
+|p="0" deviceName|
+|="NASDisk-00002"|
+|/>..............|
+|................|
 
-or so...
 
--Eric
+-- 
+Harry Mangalam - Research Computing, NACS, E2148, Engineering Gateway, 
+UC Irvine 92697  949 824-0084(o), 949 285-4487(c)
+---
+Good judgment comes from experience; 
+Experience comes from bad judgment. [F. Brooks.]
 
 _______________________________________________
 xfs mailing list
