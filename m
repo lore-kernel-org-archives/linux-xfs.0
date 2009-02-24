@@ -1,24 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1OMZVeL169921 for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 16:35:32 -0600
-Received: from ipmail04.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2E398199A7FF
-	for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 14:34:59 -0800 (PST)
-Received: from ipmail04.adl2.internode.on.net (ipmail04.adl2.internode.on.net
-	[203.16.214.57]) by cuda.sgi.com with ESMTP id ENHCxG14TjXjF0fl
-	for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 14:34:59 -0800 (PST)
-Date: Wed, 25 Feb 2009 09:34:51 +1100
-From: Dave Chinner <david@fromorbit.com>
+	n1OMdpCg170121 for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 16:39:52 -0600
+Received: from e39.co.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B30A314D554
+	for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 14:39:19 -0800 (PST)
+Received: from e39.co.us.ibm.com (e39.co.us.ibm.com [32.97.110.160]) by
+	cuda.sgi.com with ESMTP id smXKRFyiTKlcAprE for
+	<xfs@oss.sgi.com>; Tue, 24 Feb 2009 14:39:19 -0800 (PST)
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com
+	[9.17.195.106])
+	by e39.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id n1OMaicH002835
+	for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 15:36:44 -0700
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id
+	n1OMdGWp094212 for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 15:39:16 -0700
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id
+	n1OMdFax029555 for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 15:39:16 -0700
 Subject: Re: next-20090220: XFS, IMA: BUG: sleeping function called from
 	invalid  context at mm/slub.c:1613
-Message-ID: <20090224223451.GE26138@disturbed>
+From: Mimi Zohar <zohar@linux.vnet.ibm.com>
+In-Reply-To: <20090220122242.b36a778f.akpm@linux-foundation.org>
 References: <a4423d670902200300n1d1bfdeeg6daca4b32989c9d3@mail.gmail.com>
 	<20090220122242.b36a778f.akpm@linux-foundation.org>
-	<20090224191429.GA10627@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20090224191429.GA10627@infradead.org>
+Date: Tue, 24 Feb 2009 17:39:14 -0500
+Message-Id: <1235515154.2953.14.camel@localhost.localdomain>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,39 +39,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, Alexander Beregalov <a.beregalov@gmail.com>, xfs@oss.sgi.com
 
-On Tue, Feb 24, 2009 at 02:14:29PM -0500, Christoph Hellwig wrote:
-> On Fri, Feb 20, 2009 at 12:22:42PM -0800, Andrew Morton wrote:
-> > But to fix this bug, xfs needs to stop calling inode_init_always()
-> > under read_lock().  Because inode_alloc_security() also can sleep (see
-> > new_inode_smack()).
-> 
-> The normal inode initialization path is fine as it's not in atomic
-> context, but if we relcaim a partially torn down inode in
-> xfs_iget_cache_hit we call inode_init_always under pag_ici_lock.
-> 
-> I wonder if we should just give up on trying to "recover" such
-> inodes.  Instead call finish_reclaim on them and restart the inode
-> cache lookup.
+On Fri, 2009-02-20 at 12:22 -0800, Andrew Morton wrote:
 
-The reason for this code is that journalling allows us to reuse the
-inode without flushing it to disk. If we reclaim it, then we force
-it to be flushed to disk before it can be reused. That will greatly
-slow down workloads that create and delete temporary files
-repeatedly.
+> But to fix this bug, xfs needs to stop calling inode_init_always()
+> under read_lock().  Because inode_alloc_security() also can sleep (see
+> new_inode_smack()).
 
-I had a brief look at the code, and I think it can be reworked to
-avoid re-initialisation under the pag_ici_lock. I should have some
-time this weekend to test a fix....
+Yes, even without IMA enabled, with SELINUX, PREEMPT, and DEBUG_PREEMPT
+enabled, I'm seeing the problem:
 
-Cheers,
+Feb 24 17:37:52 iicu10 kernel: BUG: sleeping function called from invalid context at mm/slub.c:1613
+Feb 24 17:37:52 iicu10 kernel: in_atomic(): 1, irqs_disabled(): 0, pid: 3209, name: vi
+Feb 24 17:37:52 iicu10 kernel: Pid: 3209, comm: vi Tainted: P           2.6.29-rc6-next-20090224 #5
+Feb 24 17:37:52 iicu10 kernel: Call Trace:
+Feb 24 17:37:52 iicu10 kernel: [<ffffffff8103d2c1>] __might_sleep+0x120/0x122
+Feb 24 17:37:52 iicu10 kernel: [<ffffffff810c9a96>] kmem_cache_alloc+0x32/0xd1
+Feb 24 17:37:52 iicu10 kernel: [<ffffffff811563ca>] selinux_inode_alloc_security+0x39/0x90
+Feb 24 17:37:52 iicu10 kernel: [<ffffffff8114ef12>] security_inode_alloc+0x1c/0x1e
+Feb 24 17:37:52 iicu10 kernel: [<ffffffff810e15b3>] inode_init_always+0xc3/0x1dc
+Feb 24 17:37:52 iicu10 kernel: [<ffffffffa0031a34>] xfs_iget+0x14e/0x49e [xfs]
+Feb 24 17:37:52 iicu10 kernel: [<ffffffffa00462c2>] xfs_trans_iget+0xa6/0xd4 [xfs]
+Feb 24 17:37:52 iicu10 kernel: [<ffffffffa003463c>] xfs_ialloc+0x96/0x517 [xfs]
+Feb 24 17:37:52 iicu10 kernel: [<ffffffff8118b5e2>] ? _raw_spin_lock+0x6c/0x112
+Feb 24 17:37:52 iicu10 kernel: [<ffffffff8118b5e2>] ? _raw_spin_lock+0x6c/0x112
+Feb 24 17:37:52 iicu10 kernel: [<ffffffffa0046bb1>] xfs_dir_ialloc+0x73/0x26a [x
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Mimi Zohar
 
 _______________________________________________
 xfs mailing list
