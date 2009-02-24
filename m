@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1ODYPJZ144915 for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 07:34:25 -0600
+	n1ODdxSS145215 for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 07:39:59 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 60E6214810E
-	for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 05:33:55 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 45C5F199432A
+	for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 05:39:29 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id AG1SwA0vl4elKIvd for
-	<xfs@oss.sgi.com>; Tue, 24 Feb 2009 05:33:55 -0800 (PST)
+	by cuda.sgi.com with ESMTP id lE0xCDwvjAdM6ssc for
+	<xfs@oss.sgi.com>; Tue, 24 Feb 2009 05:39:29 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1LbxQ2-0004Gn-VZ
-	for xfs@oss.sgi.com; Tue, 24 Feb 2009 13:33:54 +0000
-Date: Tue, 24 Feb 2009 08:33:54 -0500
+	Linux)) id 1LbxUw-0004p4-FR
+	for xfs@oss.sgi.com; Tue, 24 Feb 2009 13:38:58 +0000
+Date: Tue, 24 Feb 2009 08:38:58 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfs: only issues a cache flush on unmount if barriers are
-	enabled.
-Message-ID: <20090224133354.GA15820@infradead.org>
+Subject: [PATCH 1/2] xfs: a couple getbmap cleanups
+Message-ID: <20090224133858.GB15820@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -32,97 +31,263 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Currently we unconditionally issue a flush from xfs_free_buftarg, but
-since 2.6.29-rc1 this gives a warning in the style of
-
-	Filesystem "vdb": Disabling barriers, trial barrier write failed
-
-when the underlying device doesn't support these cache flushes.  So make
-the flush conditional on the barrier flag.
-
+ - reshuffle various conditionals for data vs attr fork to make the code
+   more readable
+ - do fine-grainded goto-based error handling
+ - exit early from conditionals instead of keeping a long else branch
+   around
+ - allow kmem_alloc to fail
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs/fs/xfs/linux-2.6/xfs_buf.c
+Index: xfs/fs/xfs/xfs_bmap.c
 ===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_buf.c	2009-02-23 22:46:03.363048798 +0100
-+++ xfs/fs/xfs/linux-2.6/xfs_buf.c	2009-02-23 22:48:47.915052140 +0100
-@@ -34,6 +34,12 @@
- #include <linux/backing-dev.h>
- #include <linux/freezer.h>
+--- xfs.orig/fs/xfs/xfs_bmap.c	2009-02-23 18:08:35.352924726 +0100
++++ xfs/fs/xfs/xfs_bmap.c	2009-02-23 18:23:49.527051836 +0100
+@@ -5857,7 +5857,7 @@ xfs_getbmap(
+ 	void			*arg)		/* formatter arg */
+ {
+ 	__int64_t		bmvend;		/* last block requested */
+-	int			error;		/* return value */
++	int			error = 0;	/* return value */
+ 	__int64_t		fixlen;		/* length for -1 case */
+ 	int			i;		/* extent number */
+ 	int			lock;		/* lock state */
+@@ -5876,30 +5876,8 @@ xfs_getbmap(
  
-+#include "xfs_sb.h"
-+#include "xfs_inum.h"
-+#include "xfs_ag.h"
-+#include "xfs_dmapi.h"
-+#include "xfs_mount.h"
+ 	mp = ip->i_mount;
+ 	iflags = bmv->bmv_iflags;
+-
+ 	whichfork = iflags & BMV_IF_ATTRFORK ? XFS_ATTR_FORK : XFS_DATA_FORK;
+ 
+-	/*	If the BMV_IF_NO_DMAPI_READ interface bit specified, do not
+-	 *	generate a DMAPI read event.  Otherwise, if the DM_EVENT_READ
+-	 *	bit is set for the file, generate a read event in order
+-	 *	that the DMAPI application may do its thing before we return
+-	 *	the extents.  Usually this means restoring user file data to
+-	 *	regions of the file that look like holes.
+-	 *
+-	 *	The "old behavior" (from XFS_IOC_GETBMAP) is to not specify
+-	 *	BMV_IF_NO_DMAPI_READ so that read events are generated.
+-	 *	If this were not true, callers of ioctl( XFS_IOC_GETBMAP )
+-	 *	could misinterpret holes in a DMAPI file as true holes,
+-	 *	when in fact they may represent offline user data.
+-	 */
+-	if ((iflags & BMV_IF_NO_DMAPI_READ) == 0 &&
+-	    DM_EVENT_ENABLED(ip, DM_EVENT_READ) &&
+-	    whichfork == XFS_DATA_FORK) {
+-		error = XFS_SEND_DATA(mp, DM_EVENT_READ, ip, 0, 0, 0, NULL);
+-		if (error)
+-			return XFS_ERROR(error);
+-	}
+-
+ 	if (whichfork == XFS_ATTR_FORK) {
+ 		if (XFS_IFORK_Q(ip)) {
+ 			if (ip->i_d.di_aformat != XFS_DINODE_FMT_EXTENTS &&
+@@ -5913,11 +5891,37 @@ xfs_getbmap(
+ 					 ip->i_mount);
+ 			return XFS_ERROR(EFSCORRUPTED);
+ 		}
+-	} else if (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS &&
+-		   ip->i_d.di_format != XFS_DINODE_FMT_BTREE &&
+-		   ip->i_d.di_format != XFS_DINODE_FMT_LOCAL)
+-		return XFS_ERROR(EINVAL);
+-	if (whichfork == XFS_DATA_FORK) {
 +
- static kmem_zone_t *xfs_buf_zone;
- STATIC int xfsbufd(void *);
- STATIC int xfsbufd_wakeup(int, gfp_t);
-@@ -1442,10 +1448,12 @@ xfs_unregister_buftarg(
- 
- void
- xfs_free_buftarg(
--	xfs_buftarg_t		*btp)
-+	struct xfs_mount	*mp,
-+	struct xfs_buftarg	*btp)
- {
- 	xfs_flush_buftarg(btp, 1);
--	xfs_blkdev_issue_flush(btp);
-+	if (mp->m_flags & XFS_MOUNT_BARRIER)
-+		xfs_blkdev_issue_flush(btp);
- 	xfs_free_bufhash(btp);
- 	iput(btp->bt_mapping->host);
- 
-Index: xfs/fs/xfs/linux-2.6/xfs_buf.h
-===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_buf.h	2009-02-23 22:46:03.375049208 +0100
-+++ xfs/fs/xfs/linux-2.6/xfs_buf.h	2009-02-23 22:46:35.660960473 +0100
-@@ -416,7 +416,7 @@ static inline int XFS_bwrite(xfs_buf_t *
-  *	Handling of buftargs.
-  */
- extern xfs_buftarg_t *xfs_alloc_buftarg(struct block_device *, int);
--extern void xfs_free_buftarg(xfs_buftarg_t *);
-+extern void xfs_free_buftarg(struct xfs_mount *, struct xfs_buftarg *);
- extern void xfs_wait_buftarg(xfs_buftarg_t *);
- extern int xfs_setsize_buftarg(xfs_buftarg_t *, unsigned int, unsigned int);
- extern int xfs_flush_buftarg(xfs_buftarg_t *, int);
-Index: xfs/fs/xfs/linux-2.6/xfs_super.c
-===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2009-02-23 22:46:46.637924949 +0100
-+++ xfs/fs/xfs/linux-2.6/xfs_super.c	2009-02-23 22:47:19.787924537 +0100
-@@ -740,15 +740,15 @@ xfs_close_devices(
- {
- 	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp) {
- 		struct block_device *logdev = mp->m_logdev_targp->bt_bdev;
--		xfs_free_buftarg(mp->m_logdev_targp);
-+		xfs_free_buftarg(mp, mp->m_logdev_targp);
- 		xfs_blkdev_put(logdev);
++		prealloced = 0;
++		fixlen = 1LL << 32;
++	} else {
++		/*
++		 * If the BMV_IF_NO_DMAPI_READ interface bit specified, do
++		 * not generate a DMAPI read event.  Otherwise, if the
++		 * DM_EVENT_READ bit is set for the file, generate a read
++		 * event in order that the DMAPI application may do its thing
++		 * before we return the extents.  Usually this means restoring
++		 * user file data to regions of the file that look like holes.
++		 *
++		 * The "old behavior" (from XFS_IOC_GETBMAP) is to not specify
++		 * BMV_IF_NO_DMAPI_READ so that read events are generated.
++		 * If this were not true, callers of ioctl(XFS_IOC_GETBMAP)
++		 * could misinterpret holes in a DMAPI file as true holes,
++		 * when in fact they may represent offline user data.
++		 */
++		if (DM_EVENT_ENABLED(ip, DM_EVENT_READ) &&
++		    !(iflags & BMV_IF_NO_DMAPI_READ)) {
++			error = XFS_SEND_DATA(mp, DM_EVENT_READ, ip,
++					      0, 0, 0, NULL);
++			if (error)
++				return XFS_ERROR(error);
++		}
++
++		if (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS &&
++		    ip->i_d.di_format != XFS_DINODE_FMT_BTREE &&
++		    ip->i_d.di_format != XFS_DINODE_FMT_LOCAL)
++			return XFS_ERROR(EINVAL);
++
+ 		if (xfs_get_extsz_hint(ip) ||
+ 		    ip->i_d.di_flags & (XFS_DIFLAG_PREALLOC|XFS_DIFLAG_APPEND)){
+ 			prealloced = 1;
+@@ -5926,42 +5930,34 @@ xfs_getbmap(
+ 			prealloced = 0;
+ 			fixlen = ip->i_size;
+ 		}
+-	} else {
+-		prealloced = 0;
+-		fixlen = 1LL << 32;
  	}
- 	if (mp->m_rtdev_targp) {
- 		struct block_device *rtdev = mp->m_rtdev_targp->bt_bdev;
--		xfs_free_buftarg(mp->m_rtdev_targp);
-+		xfs_free_buftarg(mp, mp->m_rtdev_targp);
- 		xfs_blkdev_put(rtdev);
+ 
+ 	if (bmv->bmv_length == -1) {
+ 		fixlen = XFS_FSB_TO_BB(mp, XFS_B_TO_FSB(mp, fixlen));
+-		bmv->bmv_length = MAX( (__int64_t)(fixlen - bmv->bmv_offset),
+-					(__int64_t)0);
+-	} else if (bmv->bmv_length < 0)
+-		return XFS_ERROR(EINVAL);
+-	if (bmv->bmv_length == 0) {
++		bmv->bmv_length =
++			max_t(__int64_t, fixlen - bmv->bmv_offset, 0);
++	} else if (bmv->bmv_length == 0) {
+ 		bmv->bmv_entries = 0;
+ 		return 0;
++	} else if (bmv->bmv_length < 0) {
++		return XFS_ERROR(EINVAL);
  	}
--	xfs_free_buftarg(mp->m_ddev_targp);
-+	xfs_free_buftarg(mp, mp->m_ddev_targp);
++
+ 	nex = bmv->bmv_count - 1;
+ 	if (nex <= 0)
+ 		return XFS_ERROR(EINVAL);
+ 	bmvend = bmv->bmv_offset + bmv->bmv_length;
+ 
+ 	xfs_ilock(ip, XFS_IOLOCK_SHARED);
+-
+-	if (((iflags & BMV_IF_DELALLOC) == 0) &&
+-	    (whichfork == XFS_DATA_FORK) &&
+-	    (ip->i_delayed_blks || ip->i_size > ip->i_d.di_size)) {
+-		/* xfs_fsize_t last_byte = xfs_file_last_byte(ip); */
+-		error = xfs_flush_pages(ip, (xfs_off_t)0,
+-					       -1, 0, FI_REMAPF);
+-		if (error) {
+-			xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+-		return error;
++	if (whichfork == XFS_DATA_FORK && !(iflags & BMV_IF_DELALLOC)) {
++		if (ip->i_delayed_blks || ip->i_size > ip->i_d.di_size) {
++			error = xfs_flush_pages(ip, 0, -1, 0, FI_REMAPF);
++			if (error)
++				goto out_unlock_iolock;
+ 		}
+-	}
+ 
+-	ASSERT(whichfork == XFS_ATTR_FORK || (iflags & BMV_IF_DELALLOC) ||
+-	       ip->i_delayed_blks == 0);
++		ASSERT(ip->i_delayed_blks == 0);
++	}
+ 
+ 	lock = xfs_ilock_map_shared(ip);
+ 
+@@ -5972,23 +5968,24 @@ xfs_getbmap(
+ 	if (nex > XFS_IFORK_NEXTENTS(ip, whichfork) * 2 + 1)
+ 		nex = XFS_IFORK_NEXTENTS(ip, whichfork) * 2 + 1;
+ 
+-	bmapi_flags = xfs_bmapi_aflag(whichfork) |
+-			((iflags & BMV_IF_PREALLOC) ? 0 : XFS_BMAPI_IGSTATE);
++	bmapi_flags = xfs_bmapi_aflag(whichfork);
++	if (!(iflags & BMV_IF_PREALLOC))
++		bmapi_flags |= XFS_BMAPI_IGSTATE;
+ 
+ 	/*
+ 	 * Allocate enough space to handle "subnex" maps at a time.
+ 	 */
+ 	subnex = 16;
+-	map = kmem_alloc(subnex * sizeof(*map), KM_SLEEP);
++	map = kmem_alloc(subnex * sizeof(*map), KM_MAYFAIL);
++	if (!map)
++		goto out_unlock_ilock;
+ 
+ 	bmv->bmv_entries = 0;
+ 
+-	if ((XFS_IFORK_NEXTENTS(ip, whichfork) == 0)) {
+-		if (((iflags & BMV_IF_DELALLOC) == 0) ||
+-		    whichfork == XFS_ATTR_FORK) {
+-			error = 0;
+-			goto unlock_and_return;
+-		}
++	if (XFS_IFORK_NEXTENTS(ip, whichfork) == 0 &&
++	    (whichfork == XFS_ATTR_FORK || !(iflags & BMV_IF_DELALLOC))) {
++		error = 0;
++		goto out_free_map;
+ 	}
+ 
+ 	nexleft = nex;
+@@ -6000,10 +5997,12 @@ xfs_getbmap(
+ 				  bmapi_flags, NULL, 0, map, &nmap,
+ 				  NULL, NULL);
+ 		if (error)
+-			goto unlock_and_return;
++			goto out_free_map;
+ 		ASSERT(nmap <= subnex);
+ 
+ 		for (i = 0; i < nmap && nexleft && bmv->bmv_length; i++) {
++			int full = 0;	/* user array is full */
++
+ 			out.bmv_oflags = 0;
+ 			if (map[i].br_state == XFS_EXT_UNWRITTEN)
+ 				out.bmv_oflags |= BMV_OF_PREALLOC;
+@@ -6018,36 +6017,32 @@ xfs_getbmap(
+ 			    whichfork == XFS_ATTR_FORK) {
+ 				/* came to the end of attribute fork */
+ 				out.bmv_oflags |= BMV_OF_LAST;
+-				goto unlock_and_return;
+-			} else {
+-				int full = 0;	/* user array is full */
+-
+-				if (!xfs_getbmapx_fix_eof_hole(ip, &out,
+-							prealloced, bmvend,
+-							map[i].br_startblock)) {
+-					goto unlock_and_return;
+-				}
+-
+-				/* format results & advance arg */
+-				error = formatter(&arg, &out, &full);
+-				if (error || full)
+-					goto unlock_and_return;
+-				nexleft--;
+-				bmv->bmv_offset =
+-					out.bmv_offset + out.bmv_length;
+-				bmv->bmv_length = MAX((__int64_t)0,
+-					(__int64_t)(bmvend - bmv->bmv_offset));
+-				bmv->bmv_entries++;
++				goto out_free_map;
+ 			}
++
++			if (!xfs_getbmapx_fix_eof_hole(ip, &out, prealloced,
++					bmvend, map[i].br_startblock))
++				goto out_free_map;
++
++			/* format results & advance arg */
++			error = formatter(&arg, &out, &full);
++			if (error || full)
++				goto out_free_map;
++			nexleft--;
++			bmv->bmv_offset =
++				out.bmv_offset + out.bmv_length;
++			bmv->bmv_length =
++				max_t(__int64_t, 0, bmvend - bmv->bmv_offset);
++			bmv->bmv_entries++;
+ 		}
+ 	} while (nmap && nexleft && bmv->bmv_length);
+ 
+-unlock_and_return:
++ out_free_map:
++	kmem_free(map);
++ out_unlock_ilock:
+ 	xfs_iunlock_map_shared(ip, lock);
++ out_unlock_iolock:
+ 	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+-
+-	kmem_free(map);
+-
+ 	return error;
  }
  
- /*
-@@ -817,9 +817,9 @@ xfs_open_devices(
- 
-  out_free_rtdev_targ:
- 	if (mp->m_rtdev_targp)
--		xfs_free_buftarg(mp->m_rtdev_targp);
-+		xfs_free_buftarg(mp, mp->m_rtdev_targp);
-  out_free_ddev_targ:
--	xfs_free_buftarg(mp->m_ddev_targp);
-+	xfs_free_buftarg(mp, mp->m_ddev_targp);
-  out_close_rtdev:
- 	if (rtdev)
- 		xfs_blkdev_put(rtdev);
 
 _______________________________________________
 xfs mailing list
