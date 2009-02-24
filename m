@@ -1,32 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1OMdpCg170121 for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 16:39:52 -0600
-Received: from e39.co.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B30A314D554
-	for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 14:39:19 -0800 (PST)
-Received: from e39.co.us.ibm.com (e39.co.us.ibm.com [32.97.110.160]) by
-	cuda.sgi.com with ESMTP id smXKRFyiTKlcAprE for
-	<xfs@oss.sgi.com>; Tue, 24 Feb 2009 14:39:19 -0800 (PST)
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com
-	[9.17.195.106])
-	by e39.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id n1OMaicH002835
-	for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 15:36:44 -0700
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id
-	n1OMdGWp094212 for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 15:39:16 -0700
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id
-	n1OMdFax029555 for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 15:39:16 -0700
-Subject: Re: next-20090220: XFS, IMA: BUG: sleeping function called from
-	invalid  context at mm/slub.c:1613
-From: Mimi Zohar <zohar@linux.vnet.ibm.com>
-In-Reply-To: <20090220122242.b36a778f.akpm@linux-foundation.org>
-References: <a4423d670902200300n1d1bfdeeg6daca4b32989c9d3@mail.gmail.com>
-	<20090220122242.b36a778f.akpm@linux-foundation.org>
-Date: Tue, 24 Feb 2009 17:39:14 -0500
-Message-Id: <1235515154.2953.14.camel@localhost.localdomain>
-Mime-Version: 1.0
+	n1OMlAhs170690
+	for <linux-xfs@oss.sgi.com>; Tue, 24 Feb 2009 16:47:11 -0600
+Received: from ipmail04.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8F86B199AA23
+	for <linux-xfs@oss.sgi.com>; Tue, 24 Feb 2009 14:46:39 -0800 (PST)
+Received: from ipmail04.adl2.internode.on.net (ipmail04.adl2.internode.on.net
+	[203.16.214.57]) by cuda.sgi.com with ESMTP id 3osOpN8Br5UTENop
+	for <linux-xfs@oss.sgi.com>; Tue, 24 Feb 2009 14:46:39 -0800 (PST)
+Date: Wed, 25 Feb 2009 09:46:36 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs_force_shutdown called from file fs/xfs/xfs_trans_buf.c
+Message-ID: <20090224224636.GF26138@disturbed>
+References: <1235480661.17293.28.camel@disciplina.fs3.ph>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1235480661.17293.28.camel@disciplina.fs3.ph>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,35 +29,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, Alexander Beregalov <a.beregalov@gmail.com>, xfs@oss.sgi.com
+To: Federico Sevilla III <jijo@fs3.ph>
+Cc: Linux XFS <linux-xfs@oss.sgi.com>
 
-On Fri, 2009-02-20 at 12:22 -0800, Andrew Morton wrote:
+[please don't reply to year old message threads with a new problem]
 
-> But to fix this bug, xfs needs to stop calling inode_init_always()
-> under read_lock().  Because inode_alloc_security() also can sleep (see
-> new_inode_smack()).
+On Tue, Feb 24, 2009 at 09:04:21PM +0800, Federico Sevilla III wrote:
+> Hi,
+> 
+> Recently, we had two file servers crash during periods of increased load
+> (increased access from workstations in the LAN). After the crash, the
+> XFS file systems would no longer mount. The mount process would just
+> stay in state D, with no progress, and no significant disk activity.
 
-Yes, even without IMA enabled, with SELINUX, PREEMPT, and DEBUG_PREEMPT
-enabled, I'm seeing the problem:
+What was the cause of the crash?
 
-Feb 24 17:37:52 iicu10 kernel: BUG: sleeping function called from invalid context at mm/slub.c:1613
-Feb 24 17:37:52 iicu10 kernel: in_atomic(): 1, irqs_disabled(): 0, pid: 3209, name: vi
-Feb 24 17:37:52 iicu10 kernel: Pid: 3209, comm: vi Tainted: P           2.6.29-rc6-next-20090224 #5
-Feb 24 17:37:52 iicu10 kernel: Call Trace:
-Feb 24 17:37:52 iicu10 kernel: [<ffffffff8103d2c1>] __might_sleep+0x120/0x122
-Feb 24 17:37:52 iicu10 kernel: [<ffffffff810c9a96>] kmem_cache_alloc+0x32/0xd1
-Feb 24 17:37:52 iicu10 kernel: [<ffffffff811563ca>] selinux_inode_alloc_security+0x39/0x90
-Feb 24 17:37:52 iicu10 kernel: [<ffffffff8114ef12>] security_inode_alloc+0x1c/0x1e
-Feb 24 17:37:52 iicu10 kernel: [<ffffffff810e15b3>] inode_init_always+0xc3/0x1dc
-Feb 24 17:37:52 iicu10 kernel: [<ffffffffa0031a34>] xfs_iget+0x14e/0x49e [xfs]
-Feb 24 17:37:52 iicu10 kernel: [<ffffffffa00462c2>] xfs_trans_iget+0xa6/0xd4 [xfs]
-Feb 24 17:37:52 iicu10 kernel: [<ffffffffa003463c>] xfs_ialloc+0x96/0x517 [xfs]
-Feb 24 17:37:52 iicu10 kernel: [<ffffffff8118b5e2>] ? _raw_spin_lock+0x6c/0x112
-Feb 24 17:37:52 iicu10 kernel: [<ffffffff8118b5e2>] ? _raw_spin_lock+0x6c/0x112
-Feb 24 17:37:52 iicu10 kernel: [<ffffffffa0046bb1>] xfs_dir_ialloc+0x73/0x26a [x
+....
 
-Mimi Zohar
+> On one of the servers now, on the same file system that had trouble, we
+> are having the following messages (the system otherwise remains usable,
+> though, which is weird):
+> 
+>         attempt to access beyond end of device
+>         sda7: rw=0, want=154858897362229008, limit=3885978852
+>         I/O error in filesystem ("sda7") meta-data dev sda7 block 0x2262b58bf959708       ("xfs_trans_read_buf") error 5 buf count 4096
+
+A corrupted extent pointer of some kind. xfs_repair should have
+found this. Can you run xfs_repair again? If it doesn't find
+anything, please upgrade xfs_repair to the latest version and
+try again.
+
+> Both servers use CentOS5 with the Linux 2.6.18-92.1.22.el5 kernel. For
+
+Oh. XFS is not really supported on that platform because it is pretty much
+completely untested on RHEL based kernels.
+
+> Please help me understand what the cause of this problem could be.
+
+Could be anything. Knowing what caused you systems to crash in the
+first place would be handy....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
