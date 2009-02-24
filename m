@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1ODSbxo144630 for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 07:28:38 -0600
+	n1ODYPJZ144915 for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 07:34:25 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0E7C1148055
-	for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 05:28:07 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 60E6214810E
+	for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 05:33:55 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id agAHE7ANAoMfjqi4 for
-	<xfs@oss.sgi.com>; Tue, 24 Feb 2009 05:28:07 -0800 (PST)
+	by cuda.sgi.com with ESMTP id AG1SwA0vl4elKIvd for
+	<xfs@oss.sgi.com>; Tue, 24 Feb 2009 05:33:55 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1LbxJx-0003cM-8x
-	for xfs@oss.sgi.com; Tue, 24 Feb 2009 13:27:37 +0000
-Date: Tue, 24 Feb 2009 08:27:37 -0500
+	Linux)) id 1LbxQ2-0004Gn-VZ
+	for xfs@oss.sgi.com; Tue, 24 Feb 2009 13:33:54 +0000
+Date: Tue, 24 Feb 2009 08:33:54 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfsprogs: add projects(5) and projid(5) manpages
-Message-ID: <20090224132737.GA8161@infradead.org>
+Subject: [PATCH] xfs: only issues a cache flush on unmount if barriers are
+	enabled.
+Message-ID: <20090224133354.GA15820@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,105 +32,97 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Document the /etc/projects and /etc/projid files in their own manpages
-instead of in xfs_quota(8).
+Currently we unconditionally issue a flush from xfs_free_buftarg, but
+since 2.6.29-rc1 this gives a warning in the style of
+
+	Filesystem "vdb": Disabling barriers, trial barrier write failed
+
+when the underlying device doesn't support these cache flushes.  So make
+the flush conditional on the barrier flag.
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfsprogs-dev/man/man5/projid.5
+Index: xfs/fs/xfs/linux-2.6/xfs_buf.c
 ===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ xfsprogs-dev/man/man5/projid.5	2009-02-23 21:33:15.289051004 +0100
-@@ -0,0 +1,29 @@
-+.TH projid 5
-+.SH NAME
-+projid \- the project name mapping file
-+.SH DESCRIPTION
-+The
-+.I /etc/projid
-+file provides a mapping between numeric project identifiers and a
-+simple human readable name (similar relationship to the one that
-+exists between usernames and uids).
-+Its format is simply:
-+.nf
-+.sp
-+.in +5
-+# comments are hash-prefixed
-+# ...
-+cage:10
-+logfiles:42
-+
-+.in -5
-+.fi
-+.PP
-+
-+This file is optional, if a project identifier cannot be mapped to
-+a name, it will be parsed and displayed as a numeric value.
-+
-+.SH SEE ALSO
-+.BR xfs_quota (8),
-+.BR xfsctl (3),
-+.BR projects (5).
-Index: xfsprogs-dev/man/man8/xfs_quota.8
-===================================================================
---- xfsprogs-dev.orig/man/man8/xfs_quota.8	2009-02-23 21:35:34.889050486 +0100
-+++ xfsprogs-dev/man/man8/xfs_quota.8	2009-02-23 21:36:25.138929778 +0100
-@@ -628,46 +628,6 @@ for
- .I /etc/projects
- to exist. Note that if projects file exists then it is also used.
+--- xfs.orig/fs/xfs/linux-2.6/xfs_buf.c	2009-02-23 22:46:03.363048798 +0100
++++ xfs/fs/xfs/linux-2.6/xfs_buf.c	2009-02-23 22:48:47.915052140 +0100
+@@ -34,6 +34,12 @@
+ #include <linux/backing-dev.h>
+ #include <linux/freezer.h>
  
--.SH FILE FORMATS
--There are two files involved with the tree quota mechanism, namely
--.I /etc/projects
--and
--.IR /etc/projid .
--The latter is optional.
--The
--.I /etc/projects
--file provides a mapping between numeric project identifiers and those
--directories which are the roots of the quota tree.
--Its format is simply:
--.nf
--.sp
--.in +5
--# comments are hash-prefixed
--# ...
--10:/export/cage
--42:/var/log
--.in -5
--.fi
--.PP
--The
--.I /etc/projid
--file provides a mapping between numeric project identifiers and a
--simple human readable name (similar relationship to the one that
--exists between usernames and uids).
--Its format is simply:
--.nf
--.sp
--.in +5
--# comments are hash-prefixed
--# ...
--cage:10
--logfiles:42
--.in -5
--.fi
--.PP
--This file is optional, if a project identifier cannot be mapped to
--a name, it will be displayed as a number only.
--.PP
- .SH EXAMPLES
- Enabling quota enforcement on an XFS filesystem (restrict a user
- to a set amount of space).
-@@ -752,4 +712,6 @@ Mapping of numeric project identifiers t
- .SH SEE ALSO
- .BR df (1),
- .BR mount (1),
--.BR sync (2).
-+.BR sync (2),
-+.BR projid (5),
-+.BR projects (5).
++#include "xfs_sb.h"
++#include "xfs_inum.h"
++#include "xfs_ag.h"
++#include "xfs_dmapi.h"
++#include "xfs_mount.h"
++
+ static kmem_zone_t *xfs_buf_zone;
+ STATIC int xfsbufd(void *);
+ STATIC int xfsbufd_wakeup(int, gfp_t);
+@@ -1442,10 +1448,12 @@ xfs_unregister_buftarg(
+ 
+ void
+ xfs_free_buftarg(
+-	xfs_buftarg_t		*btp)
++	struct xfs_mount	*mp,
++	struct xfs_buftarg	*btp)
+ {
+ 	xfs_flush_buftarg(btp, 1);
+-	xfs_blkdev_issue_flush(btp);
++	if (mp->m_flags & XFS_MOUNT_BARRIER)
++		xfs_blkdev_issue_flush(btp);
+ 	xfs_free_bufhash(btp);
+ 	iput(btp->bt_mapping->host);
+ 
+Index: xfs/fs/xfs/linux-2.6/xfs_buf.h
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_buf.h	2009-02-23 22:46:03.375049208 +0100
++++ xfs/fs/xfs/linux-2.6/xfs_buf.h	2009-02-23 22:46:35.660960473 +0100
+@@ -416,7 +416,7 @@ static inline int XFS_bwrite(xfs_buf_t *
+  *	Handling of buftargs.
+  */
+ extern xfs_buftarg_t *xfs_alloc_buftarg(struct block_device *, int);
+-extern void xfs_free_buftarg(xfs_buftarg_t *);
++extern void xfs_free_buftarg(struct xfs_mount *, struct xfs_buftarg *);
+ extern void xfs_wait_buftarg(xfs_buftarg_t *);
+ extern int xfs_setsize_buftarg(xfs_buftarg_t *, unsigned int, unsigned int);
+ extern int xfs_flush_buftarg(xfs_buftarg_t *, int);
+Index: xfs/fs/xfs/linux-2.6/xfs_super.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2009-02-23 22:46:46.637924949 +0100
++++ xfs/fs/xfs/linux-2.6/xfs_super.c	2009-02-23 22:47:19.787924537 +0100
+@@ -740,15 +740,15 @@ xfs_close_devices(
+ {
+ 	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp) {
+ 		struct block_device *logdev = mp->m_logdev_targp->bt_bdev;
+-		xfs_free_buftarg(mp->m_logdev_targp);
++		xfs_free_buftarg(mp, mp->m_logdev_targp);
+ 		xfs_blkdev_put(logdev);
+ 	}
+ 	if (mp->m_rtdev_targp) {
+ 		struct block_device *rtdev = mp->m_rtdev_targp->bt_bdev;
+-		xfs_free_buftarg(mp->m_rtdev_targp);
++		xfs_free_buftarg(mp, mp->m_rtdev_targp);
+ 		xfs_blkdev_put(rtdev);
+ 	}
+-	xfs_free_buftarg(mp->m_ddev_targp);
++	xfs_free_buftarg(mp, mp->m_ddev_targp);
+ }
+ 
+ /*
+@@ -817,9 +817,9 @@ xfs_open_devices(
+ 
+  out_free_rtdev_targ:
+ 	if (mp->m_rtdev_targp)
+-		xfs_free_buftarg(mp->m_rtdev_targp);
++		xfs_free_buftarg(mp, mp->m_rtdev_targp);
+  out_free_ddev_targ:
+-	xfs_free_buftarg(mp->m_ddev_targp);
++	xfs_free_buftarg(mp, mp->m_ddev_targp);
+  out_close_rtdev:
+ 	if (rtdev)
+ 		xfs_blkdev_put(rtdev);
 
 _______________________________________________
 xfs mailing list
