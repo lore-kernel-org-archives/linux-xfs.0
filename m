@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1OJ8Wf1160787 for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 13:08:32 -0600
+	n1OJ9Hm2160862 for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 13:09:18 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A166714C098
-	for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 11:08:02 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3434914C4FA
+	for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 11:08:48 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id aCDc3GIzGhnx7IbC for
-	<xfs@oss.sgi.com>; Tue, 24 Feb 2009 11:08:02 -0800 (PST)
-Date: Tue, 24 Feb 2009 14:07:31 -0500
+	by cuda.sgi.com with ESMTP id 6L1qCCf0V4mt39U0 for
+	<xfs@oss.sgi.com>; Tue, 24 Feb 2009 11:08:48 -0800 (PST)
+Date: Tue, 24 Feb 2009 14:08:47 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: rfc 1/2: specfile: use rpm macros where possible
-Message-ID: <20090224190731.GA22910@infradead.org>
-References: <alpine.LSU.2.00.0902111802320.25232@fbirervta.pbzchgretzou.qr>
-	<20090215172417.GA20256@infradead.org>
-	<alpine.LSU.2.00.0902191625070.20437@fbirervta.pbzchgretzou.qr>
+Subject: Re: [PATCH] fix parallel builds
+Message-ID: <20090224190847.GA30057@infradead.org>
+References: <1235487437-20761-1-git-send-email-vapier@gentoo.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <alpine.LSU.2.00.0902191625070.20437@fbirervta.pbzchgretzou.qr>
+In-Reply-To: <1235487437-20761-1-git-send-email-vapier@gentoo.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,18 +28,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jan Engelhardt <jengelh@medozas.de>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Mike Frysinger <vapier@gentoo.org>
+Cc: xfs@oss.sgi.com
 
-On Thu, Feb 19, 2009 at 04:25:20PM +0100, Jan Engelhardt wrote:
-> On Sunday 2009-02-15 18:24, Christoph Hellwig wrote:
-> 
-> >Thanks, I'll put these in.  Can you submit equivalent patches for
-> >xfsdump and dmapi, too?
-> >
-> xfsdump and dmapi git repositories seem to have no .spec files.
+On Tue, Feb 24, 2009 at 09:57:17AM -0500, Mike Frysinger wrote:
+> I noticed that xfsprogs-3.0.0 sometimes fails to build in parallel with an
+> error about fsr not being able to find libhandle.  Looking at the top level
+> Makefile shows the obvious missing depend (fsr: libhandle).  Playing around
+> a bit found a few more not so obvious missing depends on the include subdir
+> so I fixed that too.
 
-build/rpm/xfsdump.spec.in and build/rpm/dmapi.spec.in
+Thanks, I've put this in.
 
 _______________________________________________
 xfs mailing list
