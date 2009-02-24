@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1OF6LAw150192 for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 09:06:22 -0600
-Received: from smtp.gentoo.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 86C691994BC7
-	for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 07:05:51 -0800 (PST)
-Received: from smtp.gentoo.org (smtp.gentoo.org [140.211.166.183]) by
-	cuda.sgi.com with ESMTP id uzARaMq2v0gdpyLB for
-	<xfs@oss.sgi.com>; Tue, 24 Feb 2009 07:05:51 -0800 (PST)
-From: Mike Frysinger <vapier@gentoo.org>
-Subject: Re: xfsprogs/xfsdump release process
-Date: Tue, 24 Feb 2009 10:05:48 -0500
-References: <200902221348.51905.vapier@gentoo.org>
-	<200902221539.26143.vapier@gentoo.org>
-In-Reply-To: <200902221539.26143.vapier@gentoo.org>
-MIME-Version: 1.0
-Message-Id: <200902241005.49414.vapier@gentoo.org>
+	n1OFEl9U150526 for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 09:14:47 -0600
+Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9E1698F8170
+	for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 07:14:14 -0800 (PST)
+Message-Id: <3C7B0B6E-1316-41CC-8846-356FDC780287@sgi.com>
+From: Felix Blyakher <felixb@sgi.com>
+In-Reply-To: <200902240953.56992.vapier@gentoo.org>
+Mime-Version: 1.0 (Apple Message framework v926)
+Subject: Re: [patch] fix parallel build failures in xfsprogs-3.0.0
+Date: Tue, 24 Feb 2009 09:14:13 -0600
+References: <200902240010.25434.vapier@gentoo.org>
+	<200902240221.44184.vapier@gentoo.org>
+	<20090224131523.GA1579@infradead.org>
+	<200902240953.56992.vapier@gentoo.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,72 +23,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6225238398943948862=="
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Mike Frysinger <vapier@gentoo.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
 
---===============6225238398943948862==
-Content-Type: multipart/signed;
-  boundary="nextPart2515353.JvuoFKJtNU";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+On Feb 24, 2009, at 8:53 AM, Mike Frysinger wrote:
 
---nextPart2515353.JvuoFKJtNU
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+> the xfs.org wiki talks about git trees on sgi.com,
 
-On Sunday 22 February 2009 15:39:25 Mike Frysinger wrote:
-> On Sunday 22 February 2009 13:48:49 Mike Frysinger wrote:
-> > how are release tarballs created ?  seems like there's an error in the
-> > process as the dmapi-2.2.9 contains files it shouldnt.  for example,
-> > autom4te.cache/, include/builddefs, etc...
->
-> in a similar vain, every xfsdump/xfsprogs release has made people run
-> `autoconf` first as the configure script is considered part of the
-> distclean target in general.  i dont think that makes any sense as the
-> configure script should be included with every release tarball.
+Yes, they're still there.
 
-so how are release tarballs made ?  i dont see a "dist" target or anything ...
--mike
+> but some of them are old
+> and/or moved (like the xfs-cmds one) ...
 
---nextPart2515353.JvuoFKJtNU
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+xfs-cmds was split into separate repos for xfsprogs, xfsdump,
+and dmapi. And that info is on xfs.org. Here is the excerpt
+from the following page:
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.10 (GNU/Linux)
+http://www.xfs.org/index.php/Getting_the_latest_source_code
 
-iQIcBAABAgAGBQJJpAzNAAoJEEFjO5/oN/WBsQgQALC2X+88rO0UmzyE8sEtU4A+
-Hl4tT41bwIicxxGrqVKvvMLCkf9EuDh0T4t4IpFZ87NnnnvOpunO3cZ8zn/7kXPY
-5aTCMOEfJ9fDYyh8h1rGWqUW2nYQKbaWjBpC73PrY9ntJljUZKhtca/F78hlpYeX
-Ahq2rpglx22k6gd+4/vh0m50rxyn6IAyGt7JH7/Bd2S7uLkI/FWl4hL+g55l4IRr
-P23xJ57UvjxdHitrQAbvUT2bI6J8UtWtJqDdnVueTeSjJJCatfypyVEIfmjLsa5D
-tGilJc9YlI24xLKbt/EKTuRzkyN+eeV2zaW3junAv5xIXkN2Sf9ow+xEbUzoRCNZ
-mG+6dBZunr8eIbnr9+ZFazS/DbhhgbM9wQkEtC7Rj7A+8Zy2STbBZ/+C/NpuGckJ
-Lm3dLU3QaahYn6kpVwp89/kxrk3aLoumYAValqnY+usUlNT3bjnPUoxIamO41Iym
-2UybX+NPESdsYxqzWH09BZrzXPMaGJMtunidKlJiqg2cQhqdATivFYR89Eg/YCRU
-DBCqRSVE/vkjXQ+azzpqX3wOtqTx4CLMTV4w6DWvMNcj4SfmodgzAq//4Ol9oziZ
-1DXEzIUD6xdHNxJ+Qx4y9Qc0tO9Bb2zI9GVU6pt9rlJ7sjeb4JjZYem9k7ofRITS
-ms+P5nGpQtjQEtZT2zIv
-=rFNQ
------END PGP SIGNATURE-----
+XFS user space tools
 
---nextPart2515353.JvuoFKJtNU--
+     * xfsprogs
+
+$ git clone git://oss.sgi.com/xfs/cmds/xfsprogs
+
+XFS dump
+
+     * xfsdump
+
+$ git clone git://oss.sgi.com/xfs/cmds/xfsdump
+
+XFS tests
+
+     * xfstests
+
+$ git clone git://oss.sgi.com/xfs/cmds/xfstests
+
+DMAPI user space tools
+
+     * dmapi
+
+$ git clone git://oss.sgi.com/xfs/cmds/dmapi
 
 
---===============6225238398943948862==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+At times though the repos on kernel.org could be ahead of sgi ones.
+
+Felix
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6225238398943948862==--
