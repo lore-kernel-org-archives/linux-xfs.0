@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1OGcsbH153889 for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 10:38:55 -0600
+	n1OIdKvF159132 for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 12:39:21 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 63D9814A5CA
-	for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 08:38:24 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3C92B14C0A6
+	for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 10:38:51 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id JDdSPrxlD8ZXFg0P for
-	<xfs@oss.sgi.com>; Tue, 24 Feb 2009 08:38:24 -0800 (PST)
-Date: Tue, 24 Feb 2009 11:38:23 -0500
+	by cuda.sgi.com with ESMTP id 3A86ksKxr4kilGf8 for
+	<xfs@oss.sgi.com>; Tue, 24 Feb 2009 10:38:51 -0800 (PST)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1Lc2Ad-0006hr-Ii
+	for xfs@oss.sgi.com; Tue, 24 Feb 2009 18:38:19 +0000
+Date: Tue, 24 Feb 2009 13:38:19 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: XFS and XEN
-Message-ID: <20090224163823.GA19811@infradead.org>
-References: <200902170959.55077@zmi.at> <200902241604.29566@zmi.at>
+Subject: [PATCH] xfsdump: make sure Makpekgs is complete
+Message-ID: <20090224183819.GA25706@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <200902241604.29566@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,31 +29,57 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Feb 24, 2009 at 04:04:24PM +0100, Michael Monnerie wrote:
-> if you don't have highly reliable hardware, with redundant channels and 
-> battery backed caches, etc. stay away from XFS.
-> 
-> it's a pity, but XFS is only as reliable as the hardware you give it.  
-> in other words: you can be really sure that a software issue won't trash 
-> your XFS filesystem; but also that a hardware failure definitely will.
-> 
-> ext3, OTOH, might not have such an impressive record of correctness; but 
-> it's designed with redundancy in mind.  almost all vital structures are 
-> either replicated or reconstructable from other hints.  that makes fsck 
-> slow but effective, and in most cases, the journal analysis done when 
-> remounting after an unclean shutdown is enough to put it back on track.
-> 
-> i sure wish i could use XFS in more circumstances, but the needed 
-> hardware is prohibitive.
 
-It's the usual BS.  The difference is just that you actually see the
-corruption on XFS while it's pretty silent on extN.  If your Hardware
-(or Hypervisor) is not reliable you _will_ lose data.  Either silently
-or with a spectacular blowup if the filesystem actually has consistency
-checking (which XFS has a lot).
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: xfsdump-dev/doc/Makefile
+===================================================================
+--- xfsdump-dev.orig/doc/Makefile	2009-02-24 19:31:07.048152638 +0100
++++ xfsdump-dev/doc/Makefile	2009-02-24 19:31:34.859030054 +0100
+@@ -7,13 +7,8 @@ include $(TOPDIR)/include/builddefs
+ 
+ README = README.xfsdump
+ LSRCFILES = INSTALL PORTING CHANGES COPYING $(README) \
+-	directories.gif directories.obj               \
+-	files.gif files.obj                           \
+-	global_hdr.gif global_hdr.obj                 \
+-	inode_map.gif inode_map.obj                   \
+-	media_files.gif media_files.obj               \
+-	split_algorithm.gif split_algorithm.obj       \
+-	xfsdump.html xfsdump_ts.txt
++	xfsdump.html xfsdump_ts.txt \
++	*.obj *.gif
+ 
+ LDIRT = *.gz
+ 
+Index: xfsdump-dev/include/Makefile
+===================================================================
+--- xfsdump-dev.orig/include/Makefile	2009-02-24 19:31:49.244027259 +0100
++++ xfsdump-dev/include/Makefile	2009-02-24 19:37:18.132152625 +0100
+@@ -5,7 +5,7 @@
+ TOPDIR = ..
+ include $(TOPDIR)/include/builddefs
+ 
+-HFILES = swap.h
++HFILES = swab.h swap.h
+ LSRCFILES = builddefs.in buildmacros buildrules config.h.in
+ 
+ default install install-dev :
+Index: xfsdump-dev/inventory/Makefile
+===================================================================
+--- xfsdump-dev.orig/inventory/Makefile	2009-02-24 19:32:17.497028005 +0100
++++ xfsdump-dev/inventory/Makefile	2009-02-24 19:34:01.969057100 +0100
+@@ -7,7 +7,7 @@ include $(TOPDIR)/include/builddefs
+ 
+ LSRCFILES = inv_api.c inv_core.c inv_fstab.c inv_idx.c inv_mgr.c \
+ 	inv_oref.c inv_oref.h inv_priv.h inv_stobj.c inv_files.c \
+-	inventory.h
++	inventory.h getopt.h testmain.c
+ 
+ default install install-dev:
+ 
 
 _______________________________________________
 xfs mailing list
