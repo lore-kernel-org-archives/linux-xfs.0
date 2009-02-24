@@ -1,23 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1NMVf25113079 for <xfs@oss.sgi.com>; Mon, 23 Feb 2009 16:31:42 -0600
-Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5ED02143048
-	for <xfs@oss.sgi.com>; Mon, 23 Feb 2009 14:31:10 -0800 (PST)
-Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id uMCmXzryJGAPha6x for <xfs@oss.sgi.com>;
-	Mon, 23 Feb 2009 14:31:10 -0800 (PST)
-Message-ID: <49A323AB.4050104@sandeen.net>
-Date: Mon, 23 Feb 2009 16:31:07 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	n1O15Wfk117044 for <xfs@oss.sgi.com>; Mon, 23 Feb 2009 19:05:33 -0600
+Received: from smtp.gentoo.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 47C65143DDF
+	for <xfs@oss.sgi.com>; Mon, 23 Feb 2009 17:05:01 -0800 (PST)
+Received: from smtp.gentoo.org (smtp.gentoo.org [140.211.166.183]) by
+	cuda.sgi.com with ESMTP id 76yfKVyRLh1GKYbv for
+	<xfs@oss.sgi.com>; Mon, 23 Feb 2009 17:05:01 -0800 (PST)
+From: Mike Frysinger <vapier@gentoo.org>
+Subject: xfs_estimate/xfs_fsr: xfsprogs or xfsdump
+Date: Mon, 23 Feb 2009 20:04:58 -0500
 MIME-Version: 1.0
-Subject: Re: XFS on ARM-based Linux on USR8700 NAS appliance w/ mdadm/RAID5
-References: <200902231243.33897.harry.mangalam@uci.edu>
-	<200902231345.25062.harry.mangalam@uci.edu>
-	<49A31AFD.8070804@sandeen.net>
-	<200902231424.25130.harry.mangalam@uci.edu>
-In-Reply-To: <200902231424.25130.harry.mangalam@uci.edu>
+Message-Id: <200902232004.59366.vapier@gentoo.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,67 +21,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============6867252981958071746=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Harry Mangalam <harry.mangalam@uci.edu>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-Harry Mangalam wrote:
-> mount -t xfs -o loop,offset=11403264,ro,norecovery /dev/md0 /lost
-> 
-> gives me a mount(!!):
-> 
-> df -> /lost/public, but it's not a standard entry:
-> ?--------- ? ?    ?    ?    ? /lost/public
-> 
-> and dmesg coughs up many lines of XFS errors:
+--===============6867252981958071746==
+Content-Type: multipart/signed;
+  boundary="nextPart1833569.8djZQ6uJbe";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-not sure at this point.  i'd put it back in the nas box w/ the recreated
-raid mount -o ro,norecovery again for safety if you like, and hope for
-the best.
+--nextPart1833569.8djZQ6uJbe
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Otherwise maybe run repair; on a dd image if you prefer, again for
-safety....
+both the xfsprogs and xfsdump package provide xfs_estimate and xfs_fsr. =20
+shouldnt only one of these packages be providing them ?
+=2Dmike
 
--Eric
+--nextPart1833569.8djZQ6uJbe
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
-> loop: AES key scrubbing enabled
-> loop: loaded (max 8 devices)
-> Filesystem "loop0": Disabling barriers, not supported by the 
-> underlying device
-> Mounting filesystem "loop0" in no-recovery mode.  Filesystem will be 
-> inconsistent.
-> XFS resetting qflags for filesystem loop0
-> xfs_force_shutdown(loop0,0x1) called from line 424 of file 
-> fs/xfs/xfs_rw.c.  Return address = 0xfb2fc728
-> Filesystem "loop0": I/O Error Detected.  Shutting down filesystem: 
-> loop0
-> Please umount the filesystem, and rectify the problem(s)
-> xfs_force_shutdown(loop0,0x1) called from line 424 of file 
-> fs/xfs/xfs_rw.c.  Return address = 0xfb2fc728
-> Filesystem "loop0": Disabling barriers, not supported by the 
-> underlying device
-> Mounting filesystem "loop0" in no-recovery mode.  Filesystem will be 
-> inconsistent.
-> XFS resetting qflags for filesystem loop0
-> 
-> 
-> 
-> 
-> On Monday 23 February 2009, Eric Sandeen wrote:
->> try mount -o loop,offset=11403264 /dev/whatever /mnt/whatever
->>
->> I'd probably also add ro,norecovery to the options as well so you
->> don't actually write anything to it at this point.
->>
->> -Eric
-> 
-> 
-> 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.10 (GNU/Linux)
+
+iQIcBAABAgAGBQJJo0e7AAoJEEFjO5/oN/WBATwQAM4p6rBM8TheXtBzLRwFUCRn
+yVqTqYRcwW154M3r4vTTU559Vjd7EThWLtnsdW5OKQfpIKUX+KhOcrh7aN85d4Ww
++WNdeDLIVkRDW8GpYXNIuKLYbIhOFYxdZhDGwcdX8y3cFUg8TYdxxWtaAagpuJU5
+lGMK8WT5QVMWMD2t6rpA/FzA01NkGpNqZSHbhP5etkqJGAaGvtlqDiyX5EtXjaHu
+tVNNn0QqcakKvjyFgDp1XNiecj86FLh+IxFQZ4g482kiUWXGPSmbfLQf+COiBMPu
+d4ggd3MECihafeAwIYEWgLZEPFKw41XIiZkhDMfifN0W0Dm+wLQCntaGLlUN8D85
+uqChT73fIDh6Aq60ucJw2zv53SrtznTKqfcSJwU00rzMlk53NFCzMa06HxRmuf9e
+zrBw328+7m/GeyfHwOPQAvsIVoznitdKym/7x3ro5xMpc+jApAd5AbApGFs+LWbJ
+bVkrSCoGraUa/CbnBYvrvxVATcIOXBQMTNTtaOFT7Z35cGqbUiKTd3yG9/lo4eTj
+Zi+eonDXpHwD3ZVlyFE8YYPyox8NZh/9BdKAkFaU7iuCeI0EpPM7Ck9Sv7lytvA4
+S9Lb06/D6qypfQH7iDQbJBZ4y/s94RN+dTTU/3/osvOPUBYc+rjb0cHS2pPq1NZV
+vfmBpZrhoSuoRHJjkF/4
+=5oFy
+-----END PGP SIGNATURE-----
+
+--nextPart1833569.8djZQ6uJbe--
+
+
+--===============6867252981958071746==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============6867252981958071746==--
