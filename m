@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1PAGDSD199306 for <xfs@oss.sgi.com>; Wed, 25 Feb 2009 04:16:14 -0600
+	n1PAIaFo199462 for <xfs@oss.sgi.com>; Wed, 25 Feb 2009 04:18:36 -0600
 Received: from sovereign.computergmbh.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C5A2D1C07576
-	for <xfs@oss.sgi.com>; Wed, 25 Feb 2009 02:15:43 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D2296151BCC
+	for <xfs@oss.sgi.com>; Wed, 25 Feb 2009 02:18:05 -0800 (PST)
 Received: from sovereign.computergmbh.de (sovereign.computergmbh.de
-	[85.214.69.204]) by cuda.sgi.com with ESMTP id q5bTpsEyXN2jIHis
-	for <xfs@oss.sgi.com>; Wed, 25 Feb 2009 02:15:43 -0800 (PST)
-Date: Wed, 25 Feb 2009 11:15:10 +0100 (CET)
+	[85.214.69.204]) by cuda.sgi.com with ESMTP id omXEUcV6Q01unWEv
+	for <xfs@oss.sgi.com>; Wed, 25 Feb 2009 02:18:05 -0800 (PST)
+Date: Wed, 25 Feb 2009 11:18:04 +0100 (CET)
 From: Jan Engelhardt <jengelh@medozas.de>
-Subject: xfsdump: specfile: remove Distribution/Packager tag
-In-Reply-To: <20090224190731.GA22910@infradead.org>
-Message-ID: <alpine.LSU.2.00.0902251114250.20946@fbirervta.pbzchgretzou.qr>
+Subject: dmapi: specfile: remove Distribution/Packager tag
+In-Reply-To: <alpine.LSU.2.00.0902251114250.20946@fbirervta.pbzchgretzou.qr>
+Message-ID: <alpine.LSU.2.00.0902251117470.20946@fbirervta.pbzchgretzou.qr>
 References: <alpine.LSU.2.00.0902111802320.25232@fbirervta.pbzchgretzou.qr>
 	<20090215172417.GA20256@infradead.org>
 	<alpine.LSU.2.00.0902191625070.20437@fbirervta.pbzchgretzou.qr>
 	<20090224190731.GA22910@infradead.org>
+	<alpine.LSU.2.00.0902251114250.20946@fbirervta.pbzchgretzou.qr>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -33,24 +34,13 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Tuesday 2009-02-24 20:07, Christoph Hellwig wrote:
->On Thu, Feb 19, 2009 at 04:25:20PM +0100, Jan Engelhardt wrote:
->> On Sunday 2009-02-15 18:24, Christoph Hellwig wrote:
->> 
->> >Thanks, I'll put these in.  Can you submit equivalent patches for
->> >xfsdump and dmapi, too?
->> >
->> xfsdump and dmapi git repositories seem to have no .spec files.
->
->build/rpm/xfsdump.spec.in and build/rpm/dmapi.spec.in
 
-
-parent b7b66942273709925184998fb08283e279e0366f ()
-commit 0ba9509a63079457a356c07017ad0591968c3ae2
+parent e88a1b61f0258b51a1d0c99991cc25b28fddd1a8 ()
+commit 9db3ece5fd5dc3265f28869140be262f16ef95ac
 Author: Jan Engelhardt <jengelh@medozas.de>
-Date:   Wed Feb 25 11:13:03 2009 +0100
+Date:   Wed Feb 25 11:15:51 2009 +0100
 
-specfile: remove Distribution/Packager tag
+specfile: remove Distribution/Packager tag; use rpm macros
 
 There exist a number of rpm specfile tags that make it possible to
 mislead users of the produced RPM package, because its presence
@@ -65,24 +55,35 @@ Such similarly applies to the Distribution: tag, which is why I
 suggest its removal and let the build systems provide the proper
 string instead.
 
+Also make use of rpm macros in one place.
+
 Signed-off-by: Jan Engelhardt <jengelh@medozas.de>
 ---
- build/rpm/xfsdump.spec.in |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+ build/rpm/dmapi.spec.in |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-diff --git a/build/rpm/xfsdump.spec.in b/build/rpm/xfsdump.spec.in
-index 417dd84..59a6bb1 100644
---- a/build/rpm/xfsdump.spec.in
-+++ b/build/rpm/xfsdump.spec.in
-@@ -2,8 +2,6 @@ Summary: Administrative utilities for the XFS filesystem.
+diff --git a/build/rpm/dmapi.spec.in b/build/rpm/dmapi.spec.in
+index a0c5de6..22832da 100644
+--- a/build/rpm/dmapi.spec.in
++++ b/build/rpm/dmapi.spec.in
+@@ -2,8 +2,6 @@ Summary: Data Management API runtime environment.
  Name: @pkg_name@
  Version: @pkg_version@
  Release: @pkg_release@
 -Distribution: @pkg_distribution@
 -Packager: Silicon Graphics, Inc. <http://www.sgi.com/>
- BuildRoot: @build_root@ 
- Requires: xfsprogs >= 3.0.0, attr >= 2.0.0
- Source: @pkg_name@-@pkg_version@.src.tar.gz
+ BuildRoot: @build_root@
+ Prereq: /sbin/ldconfig
+ Conflicts: xfsdump < 2.0.0
+@@ -23,7 +21,7 @@ by the libdm library.
+ %package devel
+ Summary: Data Management API static libraries and headers.
+ Group: Development/Libraries
+-Requires: @pkg_name@ >= 2.0.4 xfsprogs-devel
++Requires: %name >= 2.0.4 xfsprogs-devel
+ 
+ %description devel
+ dmapi-devel contains the libraries and header files needed to
 -- 
 # Created with git-export-patch
 
