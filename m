@@ -1,34 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1PA1Vip198672
-	for <linux-xfs@oss.sgi.com>; Wed, 25 Feb 2009 04:01:32 -0600
-Received: from amanpulo.fs3.ph (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 10C8519A70B0
-	for <linux-xfs@oss.sgi.com>; Wed, 25 Feb 2009 02:00:59 -0800 (PST)
-Received: from amanpulo.fs3.ph (amanpulo.fs3.ph [202.81.162.101]) by
-	cuda.sgi.com with ESMTP id 7pNYx5BFU69GDkli for
-	<linux-xfs@oss.sgi.com>; Wed, 25 Feb 2009 02:00:59 -0800 (PST)
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by amanpulo.fs3.ph (Postfix) with ESMTP id 5DB673031823D
-	for <linux-xfs@oss.sgi.com>; Wed, 25 Feb 2009 18:00:56 +0800 (PHT)
-Received: from amanpulo.fs3.ph ([127.0.0.1])
-	by localhost (amanpulo.fs3.ph [127.0.0.1]) (amavisd-new, port 10026)
-	with LMTP id 7pxLBmfUQVgc for <linux-xfs@oss.sgi.com>;
-	Wed, 25 Feb 2009 18:00:56 +0800 (PHT)
-Received: from [10.37.1.117] (unknown [10.37.1.117])
-	(using SSLv3 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by amanpulo.fs3.ph (Postfix) with ESMTP id EAB3A30317947
-	for <linux-xfs@oss.sgi.com>; Wed, 25 Feb 2009 18:00:55 +0800 (PHT)
-Subject: Re: xfs_force_shutdown called from file fs/xfs/xfs_trans_buf.c
-From: Federico Sevilla III <jijo@fs3.ph>
-In-Reply-To: <20090224224636.GF26138@disturbed>
-References: <1235480661.17293.28.camel@disciplina.fs3.ph>
-	<20090224224636.GF26138@disturbed>
-Date: Wed, 25 Feb 2009 18:00:51 +0800
-Message-Id: <1235556051.17569.4.camel@disciplina.fs3.ph>
-Mime-Version: 1.0
+	n1PAGDSD199306 for <xfs@oss.sgi.com>; Wed, 25 Feb 2009 04:16:14 -0600
+Received: from sovereign.computergmbh.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C5A2D1C07576
+	for <xfs@oss.sgi.com>; Wed, 25 Feb 2009 02:15:43 -0800 (PST)
+Received: from sovereign.computergmbh.de (sovereign.computergmbh.de
+	[85.214.69.204]) by cuda.sgi.com with ESMTP id q5bTpsEyXN2jIHis
+	for <xfs@oss.sgi.com>; Wed, 25 Feb 2009 02:15:43 -0800 (PST)
+Date: Wed, 25 Feb 2009 11:15:10 +0100 (CET)
+From: Jan Engelhardt <jengelh@medozas.de>
+Subject: xfsdump: specfile: remove Distribution/Packager tag
+In-Reply-To: <20090224190731.GA22910@infradead.org>
+Message-ID: <alpine.LSU.2.00.0902251114250.20946@fbirervta.pbzchgretzou.qr>
+References: <alpine.LSU.2.00.0902111802320.25232@fbirervta.pbzchgretzou.qr>
+	<20090215172417.GA20256@infradead.org>
+	<alpine.LSU.2.00.0902191625070.20437@fbirervta.pbzchgretzou.qr>
+	<20090224190731.GA22910@infradead.org>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,96 +26,67 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1259320596917856552=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linux XFS <linux-xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
+
+On Tuesday 2009-02-24 20:07, Christoph Hellwig wrote:
+>On Thu, Feb 19, 2009 at 04:25:20PM +0100, Jan Engelhardt wrote:
+>> On Sunday 2009-02-15 18:24, Christoph Hellwig wrote:
+>> 
+>> >Thanks, I'll put these in.  Can you submit equivalent patches for
+>> >xfsdump and dmapi, too?
+>> >
+>> xfsdump and dmapi git repositories seem to have no .spec files.
+>
+>build/rpm/xfsdump.spec.in and build/rpm/dmapi.spec.in
 
 
---===============1259320596917856552==
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-+6h+eZ9RJAnSfFqG2PNj"
+parent b7b66942273709925184998fb08283e279e0366f ()
+commit 0ba9509a63079457a356c07017ad0591968c3ae2
+Author: Jan Engelhardt <jengelh@medozas.de>
+Date:   Wed Feb 25 11:13:03 2009 +0100
 
+specfile: remove Distribution/Packager tag
 
---=-+6h+eZ9RJAnSfFqG2PNj
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+There exist a number of rpm specfile tags that make it possible to
+mislead users of the produced RPM package, because its presence
+overrides anything that has been specified in ~/.rpmmacros (or the
+configuration files of the build system used). Such is especially
+annoying when Packager:/Vendor: is put in specfiles, because it is
+then almost impossible to get the name/email of the person who
+_really_ did the packaging (assuming s/he set it in their
+.rpmmacros).
 
-On Wed, 2009-02-25 at 09:46 +1100, Dave Chinner wrote:
-> On Tue, Feb 24, 2009 at 09:04:21PM +0800, Federico Sevilla III wrote:
-> > Hi,
-> >=20
-> > Recently, we had two file servers crash during periods of increased loa=
-d
-> > (increased access from workstations in the LAN). After the crash, the
-> > XFS file systems would no longer mount. The mount process would just
-> > stay in state D, with no progress, and no significant disk activity.
->=20
-> What was the cause of the crash?
+Such similarly applies to the Distribution: tag, which is why I
+suggest its removal and let the build systems provide the proper
+string instead.
 
-The engineers on site were unable to copy the exact error message, but
-whatever could be read of a photograph of the screen seems to point to
-similar issues with xfs_trans_read_buf error 5 as we're beginning to see
-now.
+Signed-off-by: Jan Engelhardt <jengelh@medozas.de>
+---
+ build/rpm/xfsdump.spec.in |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-We are unsure of the cause of the crash but know that the system load
-was higher than usual because of some larger files that people were busy
-working on at the time.
-
-> >         attempt to access beyond end of device
-> >         sda7: rw=3D0, want=3D154858897362229008, limit=3D3885978852
-> >         I/O error in filesystem ("sda7") meta-data dev sda7 block 0x226=
-2b58bf959708       ("xfs_trans_read_buf") error 5 buf count 4096
->=20
-> A corrupted extent pointer of some kind. xfs_repair should have
-> found this. Can you run xfs_repair again? If it doesn't find
-> anything, please upgrade xfs_repair to the latest version and
-> try again.
-
-Will do, and will revert to the list again with the results.
-
-> > Both servers use CentOS5 with the Linux 2.6.18-92.1.22.el5 kernel. For
->=20
-> Oh. XFS is not really supported on that platform because it is pretty muc=
-h
-> completely untested on RHEL based kernels.
-
-What would be the "community endorsed" approach to using our favorite
-file system on CentOS 5? Would you recommend we go with the CentOSPlus
-kernels instead?
-
-Thank you very much.
-
-Cheers!
-
---=20
-Federico Sevilla III
-F S 3 Consulting Inc.
-http://www.fs3.ph
-
---=-+6h+eZ9RJAnSfFqG2PNj
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQBJpRbT5rCBSJO3Rr4RAv+TAJ9M+ULxSLb3TdG2dGkwXuEXZfOkbgCeOVqG
-JOf8oiBjEZU6T2jXPahgrzA=
-=fLWb
------END PGP SIGNATURE-----
-
---=-+6h+eZ9RJAnSfFqG2PNj--
-
-
---===============1259320596917856552==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+diff --git a/build/rpm/xfsdump.spec.in b/build/rpm/xfsdump.spec.in
+index 417dd84..59a6bb1 100644
+--- a/build/rpm/xfsdump.spec.in
++++ b/build/rpm/xfsdump.spec.in
+@@ -2,8 +2,6 @@ Summary: Administrative utilities for the XFS filesystem.
+ Name: @pkg_name@
+ Version: @pkg_version@
+ Release: @pkg_release@
+-Distribution: @pkg_distribution@
+-Packager: Silicon Graphics, Inc. <http://www.sgi.com/>
+ BuildRoot: @build_root@ 
+ Requires: xfsprogs >= 3.0.0, attr >= 2.0.0
+ Source: @pkg_name@-@pkg_version@.src.tar.gz
+-- 
+# Created with git-export-patch
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============1259320596917856552==--
