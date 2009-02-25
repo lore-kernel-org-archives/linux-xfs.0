@@ -1,24 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1PAIaFo199462 for <xfs@oss.sgi.com>; Wed, 25 Feb 2009 04:18:36 -0600
-Received: from sovereign.computergmbh.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D2296151BCC
-	for <xfs@oss.sgi.com>; Wed, 25 Feb 2009 02:18:05 -0800 (PST)
-Received: from sovereign.computergmbh.de (sovereign.computergmbh.de
-	[85.214.69.204]) by cuda.sgi.com with ESMTP id omXEUcV6Q01unWEv
-	for <xfs@oss.sgi.com>; Wed, 25 Feb 2009 02:18:05 -0800 (PST)
-Date: Wed, 25 Feb 2009 11:18:04 +0100 (CET)
-From: Jan Engelhardt <jengelh@medozas.de>
-Subject: dmapi: specfile: remove Distribution/Packager tag
-In-Reply-To: <alpine.LSU.2.00.0902251114250.20946@fbirervta.pbzchgretzou.qr>
-Message-ID: <alpine.LSU.2.00.0902251117470.20946@fbirervta.pbzchgretzou.qr>
-References: <alpine.LSU.2.00.0902111802320.25232@fbirervta.pbzchgretzou.qr>
-	<20090215172417.GA20256@infradead.org>
-	<alpine.LSU.2.00.0902191625070.20437@fbirervta.pbzchgretzou.qr>
-	<20090224190731.GA22910@infradead.org>
-	<alpine.LSU.2.00.0902251114250.20946@fbirervta.pbzchgretzou.qr>
+	n1PBqTl6202999 for <xfs@oss.sgi.com>; Wed, 25 Feb 2009 05:52:30 -0600
+Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D68D019A7216
+	for <xfs@oss.sgi.com>; Wed, 25 Feb 2009 03:51:56 -0800 (PST)
+Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.162.198]) by
+	cuda.sgi.com with ESMTP id HFjhbe8E16jHNkDB for
+	<xfs@oss.sgi.com>; Wed, 25 Feb 2009 03:51:56 -0800 (PST)
+Received: from mailsrv2.i.zmi.at (h081217054243.dyn.cm.kabsi.at
+	[81.217.54.243])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv1.zmi.at (Postfix) with ESMTP id 7DCB442BE
+	for <xfs@oss.sgi.com>; Wed, 25 Feb 2009 12:51:23 +0100 (CET)
+Received: from saturn.localnet (saturn.i.zmi.at [10.0.0.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv2.i.zmi.at (Postfix) with ESMTPSA id 0BF8F400174
+	for <xfs@oss.sgi.com>; Wed, 25 Feb 2009 12:51:24 +0100 (CET)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: xfs_force_shutdown called from file fs/xfs/xfs_trans_buf.c
+Date: Wed, 25 Feb 2009 12:51:23 +0100
+References: <1235480661.17293.28.camel@disciplina.fs3.ph>
+	<20090224224636.GF26138@disturbed>
+	<1235556051.17569.4.camel@disciplina.fs3.ph>
+In-Reply-To: <1235556051.17569.4.camel@disciplina.fs3.ph>
 MIME-Version: 1.0
+Content-Disposition: inline
+Message-Id: <200902251251.23675@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,61 +41,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
+On Mittwoch 25 Februar 2009 Federico Sevilla III wrote:
+> What would be the "community endorsed" approach to using our favorite
+> file system on CentOS 5? Would you recommend we go with the
+> CentOSPlus kernels instead?
 
-parent e88a1b61f0258b51a1d0c99991cc25b28fddd1a8 ()
-commit 9db3ece5fd5dc3265f28869140be262f16ef95ac
-Author: Jan Engelhardt <jengelh@medozas.de>
-Date:   Wed Feb 25 11:15:51 2009 +0100
+We run openSUSE, but many servers with a vanilla kernel. So you can 
+upgrade whenever you like. Currently, 2.6.28.x is the newest version.
 
-specfile: remove Distribution/Packager tag; use rpm macros
+Problem could be that CentOS relies on a patched kernel in some place (I 
+don't use it so don't know), but if that doesn't hit you, it doesn't 
+matter. For example, openSUSE kernels support a nice graphical boot 
+instead of the text, but we don't need that.
+You must also take care of kernel bugs and updates yourself from the 
+moment you use your own compiled kernel.
 
-There exist a number of rpm specfile tags that make it possible to
-mislead users of the produced RPM package, because its presence
-overrides anything that has been specified in ~/.rpmmacros (or the
-configuration files of the build system used). Such is especially
-annoying when Packager:/Vendor: is put in specfiles, because it is
-then almost impossible to get the name/email of the person who
-_really_ did the packaging (assuming s/he set it in their
-.rpmmacros).
-
-Such similarly applies to the Distribution: tag, which is why I
-suggest its removal and let the build systems provide the proper
-string instead.
-
-Also make use of rpm macros in one place.
-
-Signed-off-by: Jan Engelhardt <jengelh@medozas.de>
----
- build/rpm/dmapi.spec.in |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
-
-diff --git a/build/rpm/dmapi.spec.in b/build/rpm/dmapi.spec.in
-index a0c5de6..22832da 100644
---- a/build/rpm/dmapi.spec.in
-+++ b/build/rpm/dmapi.spec.in
-@@ -2,8 +2,6 @@ Summary: Data Management API runtime environment.
- Name: @pkg_name@
- Version: @pkg_version@
- Release: @pkg_release@
--Distribution: @pkg_distribution@
--Packager: Silicon Graphics, Inc. <http://www.sgi.com/>
- BuildRoot: @build_root@
- Prereq: /sbin/ldconfig
- Conflicts: xfsdump < 2.0.0
-@@ -23,7 +21,7 @@ by the libdm library.
- %package devel
- Summary: Data Management API static libraries and headers.
- Group: Development/Libraries
--Requires: @pkg_name@ >= 2.0.4 xfsprogs-devel
-+Requires: %name >= 2.0.4 xfsprogs-devel
- 
- %description devel
- dmapi-devel contains the libraries and header files needed to
+mfg zmi
 -- 
-# Created with git-export-patch
+// Michael Monnerie, Ing.BSc    -----      http://it-management.at
+// Tel: 0660 / 415 65 31                      .network.your.ideas.
+// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
+// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
+// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
 
 _______________________________________________
 xfs mailing list
