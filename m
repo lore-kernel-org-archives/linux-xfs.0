@@ -1,32 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1P6fnFN191491 for <xfs@oss.sgi.com>; Wed, 25 Feb 2009 00:41:50 -0600
-Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8635F150F92
-	for <xfs@oss.sgi.com>; Tue, 24 Feb 2009 22:41:17 -0800 (PST)
-Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.162.198]) by
-	cuda.sgi.com with ESMTP id vpSfXcqeQHXJbzE8 for
-	<xfs@oss.sgi.com>; Tue, 24 Feb 2009 22:41:17 -0800 (PST)
-Received: from mailsrv2.i.zmi.at (h081217054243.dyn.cm.kabsi.at
-	[81.217.54.243])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv1.zmi.at (Postfix) with ESMTP id CBD8E42B5
-	for <xfs@oss.sgi.com>; Wed, 25 Feb 2009 07:40:43 +0100 (CET)
-Received: from saturn.localnet (saturn.i.zmi.at [10.0.0.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv2.i.zmi.at (Postfix) with ESMTPSA id D7266400174
-	for <xfs@oss.sgi.com>; Wed, 25 Feb 2009 07:40:43 +0100 (CET)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: XFS and XEN
-Date: Wed, 25 Feb 2009 07:40:33 +0100
-References: <200902170959.55077@zmi.at> <200902241604.29566@zmi.at>
-	<20090224163823.GA19811@infradead.org>
-In-Reply-To: <20090224163823.GA19811@infradead.org>
-MIME-Version: 1.0
-Message-Id: <200902250740.43223@zmi.at>
+	n1PA1Vip198672
+	for <linux-xfs@oss.sgi.com>; Wed, 25 Feb 2009 04:01:32 -0600
+Received: from amanpulo.fs3.ph (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 10C8519A70B0
+	for <linux-xfs@oss.sgi.com>; Wed, 25 Feb 2009 02:00:59 -0800 (PST)
+Received: from amanpulo.fs3.ph (amanpulo.fs3.ph [202.81.162.101]) by
+	cuda.sgi.com with ESMTP id 7pNYx5BFU69GDkli for
+	<linux-xfs@oss.sgi.com>; Wed, 25 Feb 2009 02:00:59 -0800 (PST)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by amanpulo.fs3.ph (Postfix) with ESMTP id 5DB673031823D
+	for <linux-xfs@oss.sgi.com>; Wed, 25 Feb 2009 18:00:56 +0800 (PHT)
+Received: from amanpulo.fs3.ph ([127.0.0.1])
+	by localhost (amanpulo.fs3.ph [127.0.0.1]) (amavisd-new, port 10026)
+	with LMTP id 7pxLBmfUQVgc for <linux-xfs@oss.sgi.com>;
+	Wed, 25 Feb 2009 18:00:56 +0800 (PHT)
+Received: from [10.37.1.117] (unknown [10.37.1.117])
+	(using SSLv3 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by amanpulo.fs3.ph (Postfix) with ESMTP id EAB3A30317947
+	for <linux-xfs@oss.sgi.com>; Wed, 25 Feb 2009 18:00:55 +0800 (PHT)
+Subject: Re: xfs_force_shutdown called from file fs/xfs/xfs_trans_buf.c
+From: Federico Sevilla III <jijo@fs3.ph>
+In-Reply-To: <20090224224636.GF26138@disturbed>
+References: <1235480661.17293.28.camel@disciplina.fs3.ph>
+	<20090224224636.GF26138@disturbed>
+Date: Wed, 25 Feb 2009 18:00:51 +0800
+Message-Id: <1235556051.17569.4.camel@disciplina.fs3.ph>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,72 +37,88 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6330066388149676925=="
+Content-Type: multipart/mixed; boundary="===============1259320596917856552=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Linux XFS <linux-xfs@oss.sgi.com>
 
---===============6330066388149676925==
-Content-Type: multipart/signed;
-  boundary="nextPart3296521.54puIVQzs9";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
 
---nextPart3296521.54puIVQzs9
-Content-Type: text/plain;
-  charset="iso-8859-1"
+--===============1259320596917856552==
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-+6h+eZ9RJAnSfFqG2PNj"
+
+
+--=-+6h+eZ9RJAnSfFqG2PNj
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 
-On Dienstag 24 Februar 2009 Christoph Hellwig wrote:
-> It's the usual BS. =A0The difference is just that you actually see the
-> corruption on XFS while it's pretty silent on extN. =A0If your Hardware
-> (or Hypervisor) is not reliable you _will_ lose data. =A0Either
-> silently or with a spectacular blowup if the filesystem actually has
-> consistency checking (which XFS has a lot).
+On Wed, 2009-02-25 at 09:46 +1100, Dave Chinner wrote:
+> On Tue, Feb 24, 2009 at 09:04:21PM +0800, Federico Sevilla III wrote:
+> > Hi,
+> >=20
+> > Recently, we had two file servers crash during periods of increased loa=
+d
+> > (increased access from workstations in the LAN). After the crash, the
+> > XFS file systems would no longer mount. The mount process would just
+> > stay in state D, with no progress, and no significant disk activity.
+>=20
+> What was the cause of the crash?
 
-Thank you for the explanation. So to clear up: It was not XFS's fault,=20
-but came from XEN? Can I write it like that on the FAQ?:
+The engineers on site were unable to copy the exact error message, but
+whatever could be read of a photograph of the screen seems to point to
+similar issues with xfs_trans_read_buf error 5 as we're beginning to see
+now.
 
-Q: Which settings are best with virtualization like VMware, XEN, qemu?
+We are unsure of the cause of the crash but know that the system load
+was higher than usual because of some larger files that people were busy
+working on at the time.
 
-The biggest problem is that those products seem to also virtualize disk=20
-writes in a way that even barriers don't work anymore, which means even=20
-a fsync is not reliable. Tests confirm that unplugging the power from=20
-such a system even with RAID controller with battery backed cache and=20
-hard disk cache turned off (which is save on a normal host) you can=20
-destroy a database within the virtual machine (client, domU whatever you=20
-call it).
+> >         attempt to access beyond end of device
+> >         sda7: rw=3D0, want=3D154858897362229008, limit=3D3885978852
+> >         I/O error in filesystem ("sda7") meta-data dev sda7 block 0x226=
+2b58bf959708       ("xfs_trans_read_buf") error 5 buf count 4096
+>=20
+> A corrupted extent pointer of some kind. xfs_repair should have
+> found this. Can you run xfs_repair again? If it doesn't find
+> anything, please upgrade xfs_repair to the latest version and
+> try again.
 
-In qemu you can specify cache=3Doff on the line specifying the virtual=20
-disk. For others I have no information what to do.
+Will do, and will revert to the list again with the results.
 
-mfg zmi
-=2D-=20
-// Michael Monnerie, Ing.BSc    -----      http://it-management.at
-// Tel: 0660 / 415 65 31                      .network.your.ideas.
-// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
-// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
-// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
+> > Both servers use CentOS5 with the Linux 2.6.18-92.1.22.el5 kernel. For
+>=20
+> Oh. XFS is not really supported on that platform because it is pretty muc=
+h
+> completely untested on RHEL based kernels.
 
+What would be the "community endorsed" approach to using our favorite
+file system on CentOS 5? Would you recommend we go with the CentOSPlus
+kernels instead?
 
---nextPart3296521.54puIVQzs9
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+Thank you very much.
+
+Cheers!
+
+--=20
+Federico Sevilla III
+F S 3 Consulting Inc.
+http://www.fs3.ph
+
+--=-+6h+eZ9RJAnSfFqG2PNj
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
+Version: GnuPG v1.4.6 (GNU/Linux)
 
-iEYEABECAAYFAkmk5+sACgkQzhSR9xwSCbQ2XgCdGbHavPxch1kQmBVaWRoMnls0
-5lsAoNj9i06sEO3xvLYgvObWAJWVFnfq
-=e6H0
+iD8DBQBJpRbT5rCBSJO3Rr4RAv+TAJ9M+ULxSLb3TdG2dGkwXuEXZfOkbgCeOVqG
+JOf8oiBjEZU6T2jXPahgrzA=
+=fLWb
 -----END PGP SIGNATURE-----
 
---nextPart3296521.54puIVQzs9--
+--=-+6h+eZ9RJAnSfFqG2PNj--
 
 
---===============6330066388149676925==
+--===============1259320596917856552==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -111,4 +129,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============6330066388149676925==--
+--===============1259320596917856552==--
