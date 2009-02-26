@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1Q14YlY236012 for <xfs@oss.sgi.com>; Wed, 25 Feb 2009 19:04:35 -0600
-Received: from smtp.gentoo.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8F41A19AB98F
-	for <xfs@oss.sgi.com>; Wed, 25 Feb 2009 17:04:04 -0800 (PST)
-Received: from smtp.gentoo.org (smtp.gentoo.org [140.211.166.183]) by
-	cuda.sgi.com with ESMTP id 2p6AzzwHvoytUPuU for
-	<xfs@oss.sgi.com>; Wed, 25 Feb 2009 17:04:04 -0800 (PST)
-From: Mike Frysinger <vapier@gentoo.org>
-Subject: Re: [patch] fix parallel build failures in xfsprogs-3.0.0
-Date: Wed, 25 Feb 2009 20:03:29 -0500
-References: <200902240010.25434.vapier@gentoo.org>
-	<200902241845.27249.vapier@gentoo.org>
-	<200902260126.14606.agruen@suse.de>
-In-Reply-To: <200902260126.14606.agruen@suse.de>
+	n1QAjZcG252598 for <xfs@oss.sgi.com>; Thu, 26 Feb 2009 04:45:36 -0600
+Received: from smtp5m5.poczta.onet.pl (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0AB43156F28
+	for <xfs@oss.sgi.com>; Thu, 26 Feb 2009 02:45:05 -0800 (PST)
+Received: from smtp5m5.poczta.onet.pl (smtp5m5.poczta.onet.pl
+	[213.180.138.36]) by cuda.sgi.com with ESMTP id
+	iNl9QBLJKVkOQ5E0 for <xfs@oss.sgi.com>;
+	Thu, 26 Feb 2009 02:45:05 -0800 (PST)
+Received: from ip-83-238-22-2.netia.com.pl ([83.238.22.2]:33870 "EHLO
+	[192.168.242.3]" rhost-flags-OK-FAIL-OK-FAIL) by ps5.mod5.onet
+	with ESMTPA id S50371421AbZBZKoQ3CAZH (ORCPT
+	<rfc822;xfs@oss.sgi.com>); Thu, 26 Feb 2009 11:44:16 +0100
+Message-ID: <49A67288.5060301@poczta.onet.pl>
+Date: Thu, 26 Feb 2009 11:44:24 +0100
+From: "aluno3@poczta.onet.pl" <aluno3@poczta.onet.pl>
 MIME-Version: 1.0
-Content-Disposition: inline
-Message-Id: <200902252003.32646.vapier@gentoo.org>
+Subject: XFS_repair and memory consumption
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,19 +30,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andreas Gruenbacher <agruen@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Wednesday 25 February 2009 19:26:14 Andreas Gruenbacher wrote:
-> On Wednesday, 25 February 2009 0:45:25 Mike Frysinger wrote:
-> > and for attr.git:
-> > http://sources.gentoo.org/sys-apps/attr/files/attr-2.4.39-gettext.patch
->
-> This functionality already exists (in both the acl and attr packages).
+Hello
 
-was this in the last release (2.4.43) ?  either way, can you highlight the 
-code you're referring to so there's no confusion on my part ;)
--mike
+I have a few question about xfs_repair and memory consumption
+
+I have 12 TB storage,2GB RAM and 2.6.27 32b and someday my power down.
+After started system, I tried xfs_repair for this storage (because I
+can`t mount this) with unsuccessful. Maybe I am in the wrong but I know
+that xfs_repair need about 2GB of memory per terabyte of file system space.
+
+Is any possible to run xfs_repair without 24GB RAM (in my case) ? Maybe
+I should use big SWAP instant of so much RAM?
+
+What is the difference running XFS_repair in 32 and 64 bit kernel?If any
+difference existing,  how much RAM must be in system with (for example)
+64TB in single volume in order to run XFS_repair
+
+Very thanks
+
+
 
 _______________________________________________
 xfs mailing list
