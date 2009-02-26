@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n1QFIWrw259359 for <xfs@oss.sgi.com>; Thu, 26 Feb 2009 09:18:33 -0600
-Received: from smtp.gentoo.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8AF36157EBF
-	for <xfs@oss.sgi.com>; Thu, 26 Feb 2009 07:18:02 -0800 (PST)
-Received: from smtp.gentoo.org (smtp.gentoo.org [140.211.166.183]) by
-	cuda.sgi.com with ESMTP id UWV5gISMbo0kuesI for
-	<xfs@oss.sgi.com>; Thu, 26 Feb 2009 07:18:02 -0800 (PST)
-From: Mike Frysinger <vapier@gentoo.org>
-Subject: Re: [patch] fix parallel build failures in xfsprogs-3.0.0
-Date: Thu, 26 Feb 2009 10:17:28 -0500
-References: <200902240010.25434.vapier@gentoo.org>
-	<200902252003.32646.vapier@gentoo.org>
-	<200902261323.09312.agruen@suse.de>
-In-Reply-To: <200902261323.09312.agruen@suse.de>
+	n1QFkfIV259882 for <xfs@oss.sgi.com>; Thu, 26 Feb 2009 09:46:42 -0600
+Received: from mx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9F7A21580D3
+	for <xfs@oss.sgi.com>; Thu, 26 Feb 2009 07:46:11 -0800 (PST)
+Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
+	with ESMTP id CUxFT0PRuDlESdLT for <xfs@oss.sgi.com>;
+	Thu, 26 Feb 2009 07:46:11 -0800 (PST)
+Message-ID: <49A6B93F.6010807@sandeen.net>
+Date: Thu, 26 Feb 2009 09:46:07 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-Message-Id: <200902261017.30017.vapier@gentoo.org>
+Subject: Re: XFS_repair and memory consumption
+References: <49A67288.5060301@poczta.onet.pl>
+In-Reply-To: <49A67288.5060301@poczta.onet.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,84 +27,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andreas Gruenbacher <agruen@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
+To: "aluno3@poczta.onet.pl" <aluno3@poczta.onet.pl>
+Cc: xfs@oss.sgi.com
 
-On Thursday 26 February 2009 07:23:08 Andreas Gruenbacher wrote:
-> On Thursday 26 February 2009 02:03:29 Mike Frysinger wrote:
-> > On Wednesday 25 February 2009 19:26:14 Andreas Gruenbacher wrote:
-> > > On Wednesday, 25 February 2009 0:45:25 Mike Frysinger wrote:
-> > > > and for attr.git:
-> > > > http://sources.gentoo.org/sys-apps/attr/files/attr-2.4.39-gettext.pat
-> > > >ch
-> > >
-> > > This functionality already exists (in both the acl and attr packages).
-> >
-> > was this in the last release (2.4.43) ?  either way, can you highlight
-> > the code you're referring to so there's no confusion on my part ;)
->
-> Hmm ... so there code that this patch adds to include/gettext.h already
-> exists in include/config.h.in, but ENABLE_GETTEXT isn't being defined
-> anywhere. So this part of your patch still seems to be needed, in both the
-> attr and acl packages.
->
-> When I add it, I get this far:
->
-> 	$ make aclocal.m4
-> 	$ autoconf
-> 	configure:3493: error: possibly undefined macro: AC_PROG_LIBTOOL
->       If this token and others are legitimate, please use m4_pattern_allow.
->       See the Autoconf documentation.
->
-> It turns out that aclocal.m4 is created with only the macros in the m4/
-> directory, and AC_PROG_LIBTOOL is not among them; this can be checked with:
->
-> 	$ aclocal --acdir=m4 --verbose
->
-> This would usually be fixed by including the macros in m4/ in addition, but
-> then I run into the next problem:
->
-> 	$ aclocal -I m4
-> 	$ autoconf
-> 	[...]
-> 	configure: error: cannot run /bin/sh ./config.sub
->
-> As per one of the libtool info pages,
->
-> > In order to use libtool, you need to include the following files with
-> > your package:
-> >
-> > `config.guess'
-> >      Attempt to guess a canonical system name.
-> >
-> > `config.sub'
-> >      Canonical system name validation subroutine script.
-> >
-> > `install-sh'
-> >      BSD-compatible `install' replacement script.
-> >
-> > `ltmain.sh'
-> >      A generic script implementing basic libtool functionality.
->
-> after adding config.guess, config.sub from automake, and ltmain.sh from
-> libtool (we already have our own install-sh), the package builds again.
->
-> I'm attaching a diff relative to the current repo excluding config.guess,
-> config.sub, and ltmain.sh which should be on your systems from automake and
-> libtool already.
->
-> This is quite insane. Is there a more reasonable way?
+aluno3@poczta.onet.pl wrote:
+> Hello
+> 
+> I have a few question about xfs_repair and memory consumption
+> 
+> I have 12 TB storage,2GB RAM and 2.6.27 32b and someday my power down.
+> After started system, I tried xfs_repair for this storage (because I
+> can`t mount this) with unsuccessful. Maybe I am in the wrong but I know
+> that xfs_repair need about 2GB of memory per terabyte of file system space.
 
-yes.  i dont know why the xfs progs have been packaging these autogenerated 
-files by themselves.
+Just to double check; were you unsuccessful due to ENOMEM?
 
-- remove aclocal.m4 from git
-- run `aclocal -I m4`
-- run `libtoolize -c -f`
-- run `autoconf`
-- copy the remaining files libtool wanted (normally created by automake, but 
-acl isnt using automake, so we cant use it to copy the files for us)
--mike
+-Eric
 
 _______________________________________________
 xfs mailing list
