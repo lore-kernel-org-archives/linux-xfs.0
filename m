@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n217x54i144744 for <xfs@oss.sgi.com>; Sun, 1 Mar 2009 01:59:06 -0600
-Received: from smtp.gentoo.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 965A816178A
-	for <xfs@oss.sgi.com>; Sat, 28 Feb 2009 23:58:30 -0800 (PST)
-Received: from smtp.gentoo.org (smtp.gentoo.org [140.211.166.183]) by
-	cuda.sgi.com with ESMTP id zjbhTYNmDAnGuIPc for
-	<xfs@oss.sgi.com>; Sat, 28 Feb 2009 23:58:30 -0800 (PST)
-From: Mike Frysinger <vapier@gentoo.org>
+	n21HOKir167924 for <xfs@oss.sgi.com>; Sun, 1 Mar 2009 11:24:21 -0600
+Received: from mx2.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C28AA16248A
+	for <xfs@oss.sgi.com>; Sun,  1 Mar 2009 09:23:51 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id s9VNN1h5eEuGtAls for <xfs@oss.sgi.com>;
+	Sun, 01 Mar 2009 09:23:51 -0800 (PST)
+From: Andreas Gruenbacher <agruen@suse.de>
 Subject: Re: [patch] fix parallel build failures in xfsprogs-3.0.0
-Date: Sun, 1 Mar 2009 02:58:27 -0500
+Date: Sun, 1 Mar 2009 18:23:09 +0100
 References: <200902240010.25434.vapier@gentoo.org>
-	<200902271055.51564.agruen@suse.de> <49A9E555.7040607@sgi.com>
-In-Reply-To: <49A9E555.7040607@sgi.com>
+	<200902280107.06699.agruen@suse.de> <49A9BA50.7050101@sandeen.net>
+In-Reply-To: <49A9BA50.7050101@sandeen.net>
 MIME-Version: 1.0
-Message-Id: <200903010258.28930.vapier@gentoo.org>
+Content-Disposition: inline
+Message-Id: <200903011823.09613.agruen@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,75 +25,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3645944816973395896=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Greg Banks <gnb@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>, Eric Sandeen <sandeen@sandeen.net>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>, Greg Banks <gnb@melbourne.sgi.com>, Mike Frysinger <vapier@gentoo.org>, xfs-oss <xfs@oss.sgi.com>
 
---===============3645944816973395896==
-Content-Type: multipart/signed;
-  boundary="nextPart1781653.3Hb6ZSkffo";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
-
---nextPart1781653.3Hb6ZSkffo
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
-
-On Saturday 28 February 2009 20:31:01 Greg Banks wrote:
+On Saturday, 28 February 2009 23:27:28 Eric Sandeen wrote:
 > Andreas Gruenbacher wrote:
-> > Jumping between different versions of the auto* tools would become quite
-> > ugly,
+> > On Friday, 27 February 2009 0:03:00 Christoph Hellwig wrote:
+> >> Do you plan to take over nfs4acl, too?
+> >
+> > I can sure copy the repository over from you if that is any help. How
+> > that project will proceed is still unclear though, so don't expect a lot
+> > to happen there anytime soon.
+> >
+> > Andreas
 >
-> Absolutely, you want to avoid that.  But conversely you can't rely on
-> everybody who ever needs to change configure.ac having exactly the same
-> version of autoconf as the maintainer.
+> I'd check in w/ Greg on that too, maybe?
 
-that isnt to say we should attempt to support every random version out ther=
-e. =20
-if people want to make with autotools, it's reasonable to require them to h=
-ave=20
-recent versions.
-=2Dmike
+Yes, makes sense. I've copied Christoph's tree over and set up permissions; 
+you should have access now.
 
---nextPart1781653.3Hb6ZSkffo
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+Greg doesn't have a kernel.org account yet, so I can't give him access at the 
+moment.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.10 (GNU/Linux)
+  git://git.kernel.org/pub/scm/linux/kernel/git/agruen/nfs4acl.git
+  ssh://master.kernel.org/pub/scm/linux/kernel/git/agruen/nfs4acl.git
 
-iQIcBAABAgAGBQJJqkAkAAoJEEFjO5/oN/WBT0AQAL8DWySdOmxByXqN6JMEhOtW
-U9G1xhhO9jYxBMq76tdqnL4ZOE0p6BbcMUg8HEbe2qBZfIlp08z86X+uxkQfDupJ
-do6JJfV+j+y7rqB1nRJEbzjnED3uILmZOmdkwfLCwy4Nn5inHHZQaIg4ywdacBeH
-ICQsFxAX4NEQM/VTZisWQxqQ+EJRg7OrESUfrIENTAhVhajZSSYMzqiOOuN0VHP1
-zPgwrZ1w5LxmkrZcf6PHIOWIfuuIZaGyvMY0UiPlAqT8gobg0NCHEiLZgVRDeIk+
-77/bdLgp9T3fAegyoZ3kdvrPQDMEzkqMQydHtKITGcDmCreT2d3zRGslpIfjayqf
-X7rt9ssiXv84YoD9jSn3QPk5UC+5IbSYxs6TExzp8oZzx2DVPiQFtqxZ30TB5HjX
-jEXdgKpq7xRjozsXlFEkys28bkyGz6Sd0S2hL7ks1zdunFkjecezhowpyMYpDaSl
-T/vykLJFBJHMaGLGkuCi82xhL6KcGU6Pc3C4bqmoFgKVZL/BpCver7ajeM7qwu2g
-4W/KGAG1JWDANxyVdG8fXBA4EBuzlsXOEJuQTg62azufj+TnOSDrU6aVdGF66jUf
-3A0ysbJv7zy4rZbfNDUml9PD/u3jmF2WCKPLBTctN4mq4cOWu4Bj3owHd14hIQoC
-7ljnldUhcSvfDUb2LOVW
-=fX6K
------END PGP SIGNATURE-----
+Would you like write access to the attr.git and acl.git trees as well?
 
---nextPart1781653.3Hb6ZSkffo--
-
-
---===============3645944816973395896==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Thanks,
+Andreas
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3645944816973395896==--
