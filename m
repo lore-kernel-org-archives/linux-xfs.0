@@ -1,33 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n242hP6E047366 for <xfs@oss.sgi.com>; Tue, 3 Mar 2009 20:43:27 -0600
-Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A97321680F0
-	for <xfs@oss.sgi.com>; Tue,  3 Mar 2009 18:42:55 -0800 (PST)
-Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.162.198]) by
-	cuda.sgi.com with ESMTP id Dlqc7wRH8wQ7FFFq for
-	<xfs@oss.sgi.com>; Tue, 03 Mar 2009 18:42:55 -0800 (PST)
-Received: from mailsrv2.i.zmi.at (h081217054243.dyn.cm.kabsi.at
-	[81.217.54.243])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv1.zmi.at (Postfix) with ESMTP id AF73B43AD
-	for <xfs@oss.sgi.com>; Wed,  4 Mar 2009 03:42:53 +0100 (CET)
-Received: from saturn.localnet (saturn.i.zmi.at [10.0.0.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv2.i.zmi.at (Postfix) with ESMTPSA id EF6ED400161
-	for <xfs@oss.sgi.com>; Wed,  4 Mar 2009 03:42:53 +0100 (CET)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: XFS and XEN
-Date: Wed, 4 Mar 2009 03:42:53 +0100
-References: <200902170959.55077@zmi.at> <200902241604.29566@zmi.at>
-	<20090224163823.GA19811@infradead.org>
-In-Reply-To: <20090224163823.GA19811@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-Message-Id: <200903040342.53587@zmi.at>
+	n242ruWO048011 for <xfs@oss.sgi.com>; Tue, 3 Mar 2009 20:53:58 -0600
+Message-Id: <6.0.0.20.2.20090304114824.06985898@172.19.0.2>
+Date: Wed, 04 Mar 2009 11:50:06 +0900
+From: Hisashi Hifumi <hifumi.hisashi@oss.ntt.co.jp>
+Subject: [PATCH] XFS: Pagecache usage optimization on XFS
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,29 +19,71 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs-masters@oss.sgi.com, xfs@oss.sgi.com
 
-I just got this info at XEN:
-> LVM does not honor write-barriers.
+Hi.
 
-Then I searched and found a thread were Eric also talked:
-http://lkml.org/lkml/2008/5/16/390
-http://hightechsorcery.com/2008/06/linux-write-barriers-write-caching-
-lvm-and-filesystems
+I introduced "is_partially_uptodate" aops for XFS.
 
-If I understand correctly, turning off disk cache write cache should be 
-enough to be save, even when using LVM. Is it really XEN that messed the 
-disk, or something else? Could the Areca controller driver do something 
-wrong? I'd really love to get a stable and data-secure system, as you 
-might understand.
+A page can have multiple buffers and even if a page is not uptodate, some buffers 
+can be uptodate on pagesize != blocksize environment.
+This aops checks that all buffers which correspond to a part of a file 
+that we want to read are uptodate. If so, we do not have to issue actual 
+read IO to HDD even if a page is not uptodate because the portion we 
+want to read are uptodate. 
+"block_is_partially_uptodate" function is already used by ext2/3/4.
+With the following patch random read/write mixed workloads or random read after 
+random write workloads can be optimized and we can get performance improvement.
 
-mfg zmi
--- 
-// Michael Monnerie, Ing.BSc    -----      http://it-management.at
-// Tel: 0660 / 415 65 31                      .network.your.ideas.
-// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
-// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
-// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
+I did a performance test using the sysbench.
+
+#sysbench --num-threads=4 --max-requests=100000 --test=fileio --file-num=1 
+--file-block-size=8K --file-total-size=1G --file-test-mode=rndrw --file-fsync-freq=0 
+--file-rw-ratio=0.5 run
+
+-2.6.29-rc6
+Test execution summary:
+    total time:                          123.8645s
+    total number of events:              100000
+    total time taken by event execution: 442.4994
+    per-request statistics:
+         min:                            0.0000s
+         avg:                            0.0044s
+         max:                            0.3387s
+         approx.  95 percentile:         0.0118s
+
+
+-2.6.29-rc6-patched
+Test execution summary:
+    total time:                          108.0757s
+    total number of events:              100000
+    total time taken by event execution: 417.7505
+    per-request statistics:
+         min:                            0.0000s
+         avg:                            0.0042s
+         max:                            0.3217s
+         approx.  95 percentile:         0.0118s
+
+
+arch: ia64
+pagesize: 16k
+blocksize: 4k
+
+
+Please merge following patch.
+Thanks.
+
+Signed-off-by: Hisashi Hifumi <hifumi.hisashi@oss.ntt.co.jp>
+
+diff -Nrup linux-2.6.29-rc6.org/fs/xfs/linux-2.6/xfs_aops.c linux-2.6.29-rc6.xfs/fs/xfs/linux-2.6/xfs_aops.c
+--- linux-2.6.29-rc6.org/fs/xfs/linux-2.6/xfs_aops.c	2009-03-02 09:26:08.000000000 +0900
++++ linux-2.6.29-rc6.xfs/fs/xfs/linux-2.6/xfs_aops.c	2009-03-04 10:26:21.000000000 +0900
+@@ -1623,4 +1623,5 @@ const struct address_space_operations xf
+ 	.bmap			= xfs_vm_bmap,
+ 	.direct_IO		= xfs_vm_direct_IO,
+ 	.migratepage		= buffer_migrate_page,
++	.is_partially_uptodate  = block_is_partially_uptodate,
+ };
 
 _______________________________________________
 xfs mailing list
