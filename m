@@ -1,33 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n256jg88127701 for <xfs@oss.sgi.com>; Thu, 5 Mar 2009 00:45:43 -0600
-Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A80AE17212C
-	for <xfs@oss.sgi.com>; Wed,  4 Mar 2009 22:45:12 -0800 (PST)
-Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.162.198]) by
-	cuda.sgi.com with ESMTP id 26QjUiMymsSCRIJR for
-	<xfs@oss.sgi.com>; Wed, 04 Mar 2009 22:45:12 -0800 (PST)
-Received: from mailsrv2.i.zmi.at (h081217054243.dyn.cm.kabsi.at
-	[81.217.54.243])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv1.zmi.at (Postfix) with ESMTP id C2E7743E5
-	for <xfs@oss.sgi.com>; Thu,  5 Mar 2009 07:44:39 +0100 (CET)
-Received: from saturn.localnet (saturn.i.zmi.at [10.0.0.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv2.i.zmi.at (Postfix) with ESMTPSA id CED8D40017A
-	for <xfs@oss.sgi.com>; Thu,  5 Mar 2009 07:44:39 +0100 (CET)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: XFS and XEN
-Date: Thu, 5 Mar 2009 07:44:39 +0100
-References: <200902170959.55077@zmi.at> <20090224163823.GA19811@infradead.org>
-	<200902250740.43223@zmi.at>
-In-Reply-To: <200902250740.43223@zmi.at>
+	n25EMD2v149667 for <xfs@oss.sgi.com>; Thu, 5 Mar 2009 08:22:13 -0600
+Received: from mail-fx0-f176.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 69BDA1737EC
+	for <xfs@oss.sgi.com>; Thu,  5 Mar 2009 06:21:46 -0800 (PST)
+Received: from mail-fx0-f176.google.com (mail-fx0-f176.google.com
+	[209.85.220.176]) by cuda.sgi.com with ESMTP id
+	JOgzmdYULUCNyKWE for <xfs@oss.sgi.com>;
+	Thu, 05 Mar 2009 06:21:46 -0800 (PST)
+Received: by fxm24 with SMTP id 24so3291169fxm.20
+	for <xfs@oss.sgi.com>; Thu, 05 Mar 2009 06:21:45 -0800 (PST)
+From: Hannes Eder <hannes@hanneseder.net>
+Date: Thu, 05 Mar 2009 15:20:25 +0100
+Message-ID: <20090305141912.22775.64010.stgit@f10box.hanneseder.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-Message-Id: <200903050744.39283@zmi.at>
+Subject: [PATCH 3/3 v2] xfs: include header files for prototypes
+In-Reply-To: <20090305133917.GC14854@lst.de>
+References: <20090304183136.525.13769.stgit@f10box.hanneseder.net>
+	<20090304183418.525.22262.stgit@f10box.hanneseder.net>
+	<20090305133917.GC14854@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,33 +32,74 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Mittwoch 25 Februar 2009 Michael Monnerie wrote:
-> Q: Which settings are best with virtualization like VMware, XEN,
-> qemu?
+Fix this sparse warnings:
+  fs/xfs/linux-2.6/xfs_ioctl.c:72:1: warning: symbol 'xfs_find_handle' was not declared. Should it be static?
+  fs/xfs/linux-2.6/xfs_ioctl.c:249:1: warning: symbol 'xfs_open_by_handle' was not declared. Should it be static?
+  fs/xfs/linux-2.6/xfs_ioctl.c:361:1: warning: symbol 'xfs_readlink_by_handle' was not declared. Should it be static?
+  fs/xfs/linux-2.6/xfs_ioctl.c:496:1: warning: symbol 'xfs_attrmulti_attr_get' was not declared. Should it be static?
+  fs/xfs/linux-2.6/xfs_ioctl.c:525:1: warning: symbol 'xfs_attrmulti_attr_set' was not declared. Should it be static?
+  fs/xfs/linux-2.6/xfs_ioctl.c:555:1: warning: symbol 'xfs_attrmulti_attr_remove' was not declared. Should it be static?
+  fs/xfs/linux-2.6/xfs_ioctl.c:657:1: warning: symbol 'xfs_ioc_space' was not declared. Should it be static?
+  fs/xfs/linux-2.6/xfs_ioctl.c:1340:1: warning: symbol 'xfs_file_ioctl' was not declared. Should it be static?
+  fs/xfs/support/debug.c:65:1: warning: symbol 'xfs_fs_vcmn_err' was not declared. Should it be static?
+  fs/xfs/support/debug.c:112:1: warning: symbol 'xfs_hex_dump' was not declared. Should it be static?
+
+Signed-off-by: Hannes Eder <hannes@hanneseder.net>
+Acked-by: Christoph Hellwig <hch@lst.de>
+---
+
+On Thu, Mar 5, 2009 at 2:39 PM, Christoph Hellwig <hch@lst.de> wrote:
+> looks good, except for a tiny nit-pick:
+
+I still treat this as a Acked-by: ... Ok?
+
+>> +++ b/fs/xfs/support/debug.c
+>> @@ -19,6 +19,7 @@
+>>  #include "debug.h"
+>>
+>>  /* xfs_mount.h drags a lot of crap in, sorry.. */
+>> +#include "xfs_error.h"
+>>  #include "xfs_sb.h"
+>>  #include "xfs_inum.h"
+>>  #include "xfs_ag.h"
 >
-> The biggest problem is that those products seem to also virtualize
-> disk writes in a way that even barriers don't work anymore, which
-> means even a fsync is not reliable. Tests confirm that unplugging the
-> power from such a system even with RAID controller with battery
-> backed cache and hard disk cache turned off (which is save on a
-> normal host) you can destroy a database within the virtual machine
-> (client, domU whatever you call it).
->
-> In qemu you can specify cache=off on the line specifying the virtual
-> disk. For others I have no information what to do.
+> as xfs_mount.h doesn't require xfs_error.h it should be included
+> above that comment.
 
-In as question 26 now
-http://xfs.org/index.php/XFS_FAQ
+hm. but that way it is still included before xfs_mount.h.
 
-mfg zmi
--- 
-// Michael Monnerie, Ing.BSc    -----      http://it-management.at
-// Tel: 0660 / 415 65 31                      .network.your.ideas.
-// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
-// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
-// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
+
+ fs/xfs/linux-2.6/xfs_ioctl.c |    1 +
+ fs/xfs/support/debug.c       |    1 +
+ 2 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/fs/xfs/linux-2.6/xfs_ioctl.c b/fs/xfs/linux-2.6/xfs_ioctl.c
+index 6f04493..d0b4994 100644
+--- a/fs/xfs/linux-2.6/xfs_ioctl.c
++++ b/fs/xfs/linux-2.6/xfs_ioctl.c
+@@ -34,6 +34,7 @@
+ #include "xfs_dir2_sf.h"
+ #include "xfs_dinode.h"
+ #include "xfs_inode.h"
++#include "xfs_ioctl.h"
+ #include "xfs_btree.h"
+ #include "xfs_ialloc.h"
+ #include "xfs_rtalloc.h"
+diff --git a/fs/xfs/support/debug.c b/fs/xfs/support/debug.c
+index ae54829..930bb34 100644
+--- a/fs/xfs/support/debug.c
++++ b/fs/xfs/support/debug.c
+@@ -17,6 +17,7 @@
+  */
+ #include <xfs.h>
+ #include "debug.h"
++#include "xfs_error.h"
+ 
+ /* xfs_mount.h drags a lot of crap in, sorry.. */
+ #include "xfs_sb.h"
 
 _______________________________________________
 xfs mailing list
