@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n293NMYN112563 for <xfs@oss.sgi.com>; Sun, 8 Mar 2009 22:23:23 -0500
+	n293oSw3113422 for <xfs@oss.sgi.com>; Sun, 8 Mar 2009 22:50:29 -0500
 Received: from millhouse.houseofnate.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 319301C2826F
-	for <xfs@oss.sgi.com>; Sun,  8 Mar 2009 20:22:55 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 086321968266
+	for <xfs@oss.sgi.com>; Sun,  8 Mar 2009 20:50:03 -0700 (PDT)
 Received: from millhouse.houseofnate.net
 	(dsl092-086-237.bos1.dsl.speakeasy.net [66.92.86.237]) by
-	cuda.sgi.com with ESMTP id NJm4vvvWi8z3RYcO for
-	<xfs@oss.sgi.com>; Sun, 08 Mar 2009 20:22:55 -0700 (PDT)
-Message-ID: <49B48B8E.3030602@houseofnate.net>
-Date: Sun, 08 Mar 2009 23:22:54 -0400
+	cuda.sgi.com with ESMTP id kDvpQSWeOHVkjIZa for
+	<xfs@oss.sgi.com>; Sun, 08 Mar 2009 20:50:03 -0700 (PDT)
+Message-ID: <49B491EA.4090003@houseofnate.net>
+Date: Sun, 08 Mar 2009 23:50:02 -0400
 From: "Nathaniel W. Turner" <nate@houseofnate.net>
 MIME-Version: 1.0
-Subject: [PATCH] xfs_repair: open filesystem device exclusively
+Subject: Re: [PATCH] xfs_repair: open filesystem device exclusively
+References: <49B48B8E.3030602@houseofnate.net>
+In-Reply-To: <49B48B8E.3030602@houseofnate.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,7 +30,11 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi folks,
+I forgot to mention that this is against xfsprogs 3.0.0.  Also, the
+indentation was a bit messed up on that last post, so here's the patch
+again (all 2 lines of it):
+
+----
 
 I'm sure there is a better way to fix this, but without this patch, two
 xfs_repair processes will happily operate on the same filesystem device
@@ -50,7 +56,7 @@ file instead of on a block device.
 (Error messages could probably be improved to be more user-friendly in
 this new failure case, and it probably wouldn't hurt to add a BLKROGET
 ioctl to check for read-only block devices with read-write permissions,
-but this should at least make things a bit safer.)
+but this does the job for me.)
 
 Signed-off-by: Nathaniel W. Turner <nate@houseofnate.net>
 ---
@@ -58,20 +64,18 @@ Signed-off-by: Nathaniel W. Turner <nate@houseofnate.net>
  1 files changed, 2 insertions(+), 0 deletions(-)
 
 diff --git a/repair/init.c b/repair/init.c
-index 8e508c4..3d88b8b 100644
+index 8e508c4..7e5052c 100644
 --- a/repair/init.c
 +++ b/repair/init.c
 @@ -142,6 +142,8 @@ xfs_init(libxfs_init_t *args)
-                args->isreadonly = (LIBXFS_ISREADONLY | LIBXFS_ISINACTIVE);
-        else if (dangerously)
-                args->isreadonly = (LIBXFS_ISINACTIVE | LIBXFS_DANGEROUSLY);
-+   else
-+               args->isreadonly = LIBXFS_EXCLUSIVELY;
-
-        if (!libxfs_init(args))
-                do_error(_("couldn't initialize XFS library\n"));
--- 
-1.5.6.3
+         args->isreadonly = (LIBXFS_ISREADONLY | LIBXFS_ISINACTIVE);
+     else if (dangerously)
+         args->isreadonly = (LIBXFS_ISINACTIVE | LIBXFS_DANGEROUSLY);
++    else
++        args->isreadonly = LIBXFS_EXCLUSIVELY;
+ 
+     if (!libxfs_init(args))
+         do_error(_("couldn't initialize XFS library\n"));
 
 -- 
 Nathaniel W. Turner
