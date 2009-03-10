@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n293oSw3113422 for <xfs@oss.sgi.com>; Sun, 8 Mar 2009 22:50:29 -0500
-Received: from millhouse.houseofnate.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 086321968266
-	for <xfs@oss.sgi.com>; Sun,  8 Mar 2009 20:50:03 -0700 (PDT)
-Received: from millhouse.houseofnate.net
-	(dsl092-086-237.bos1.dsl.speakeasy.net [66.92.86.237]) by
-	cuda.sgi.com with ESMTP id kDvpQSWeOHVkjIZa for
-	<xfs@oss.sgi.com>; Sun, 08 Mar 2009 20:50:03 -0700 (PDT)
-Message-ID: <49B491EA.4090003@houseofnate.net>
-Date: Sun, 08 Mar 2009 23:50:02 -0400
-From: "Nathaniel W. Turner" <nate@houseofnate.net>
+	n2AGg66D218744 for <xfs@oss.sgi.com>; Tue, 10 Mar 2009 11:42:27 -0500
+Received: from mx1.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 45B5D1865A1
+	for <xfs@oss.sgi.com>; Tue, 10 Mar 2009 09:41:21 -0700 (PDT)
+Received: from mx1.suse.de (mx1.suse.de [195.135.220.2]) by cuda.sgi.com with
+	ESMTP id ELSmoFTX9vsyVQYP for <xfs@oss.sgi.com>;
+	Tue, 10 Mar 2009 09:41:21 -0700 (PDT)
+From: Andreas Gruenbacher <agruen@suse.de>
+Subject: Re: [patch] fix parallel build failures in xfsprogs-3.0.0
+Date: Tue, 10 Mar 2009 17:41:06 +0100
+References: <200902240010.25434.vapier@gentoo.org>
+	<20090304172727.GA21463@infradead.org>
+	<200903081409.28808.agruen@suse.de>
+In-Reply-To: <200903081409.28808.agruen@suse.de>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_repair: open filesystem device exclusively
-References: <49B48B8E.3030602@houseofnate.net>
-In-Reply-To: <49B48B8E.3030602@houseofnate.net>
+Content-Disposition: inline
+Message-Id: <200903101741.07043.agruen@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,58 +30,66 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Mike Frysinger <vapier@gentoo.org>, xfs-oss <xfs@oss.sgi.com>
 
-I forgot to mention that this is against xfsprogs 3.0.0.  Also, the
-indentation was a bit messed up on that last post, so here's the patch
-again (all 2 lines of it):
+On Sunday 08 March 2009 14:09:28 Andreas Gruenbacher wrote:
+> On Wednesday, 4 March 2009 18:27:27 Christoph Hellwig wrote:
+> > I've tried to port the patch you checked into xfsprogs (see below for
+> > the diff), but it fails to build for me.  Any idea what might have
+> > gone wrong?
+>
+> git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git is missing the
+> following commit from
+> ssh://master.kernel.org/pub/scm/linux/kernel/git/agruen/acl.git:
+>
+>   commit 8de7788c29d2656f8d52d98327a80e4dfd1e3898
+>   Author: Barry Naujok <bnaujok@sgi.com>
+>   Date:   Tue Jan 23 14:51:14 2007 +0000
+>
+>     Fix cross-compile issues with libtool and compiler.
+>
+>     This is equivalent to commit de7b3f6 from Barry Naujok
+> <bnaujok@sgi.com> in the acl package, and part of the Gentoo package, as
+> pointed out by Mike Frysinger <vapier@gentoo.org>.
+>
+>     Signed-off-by: Andreas Gruenbacher <agruen@suse.de>
+>
+> While looking into this, I noticed that the attr and acl packages were
+> calling AC_PROG_LIBTOOL both in configure.in and m4/package_utilies.m4. I
+> have removed the redundant call from m4/package_utilies.m4 now.
 
-----
+As it turns out, I was running into more trouble with libtoolize from libtool 
+2.2.6. See this commit in attr.git:
 
-I'm sure there is a better way to fix this, but without this patch, two
-xfs_repair processes will happily operate on the same filesystem device
-at the same time.  It is also possible to mount a filesystem that is in
-the process of being repaired.
+  commit 604290f79a199eb0c73a0cd05a473e1801a00673
+  Author: Andreas Gruenbacher <agruen@suse.de>
+  Date:   Tue Mar 10 17:00:35 2009 +0100
 
-This seems like it's probably not ideal, so this patch just modifies
-xfs_repair to open the filesystem device with O_EXCL unless it was
-invoked in "no modify" or "dangerous" mode.
+    More libtoolize fixes
 
-The net effect is that a 2nd xfs_repair will now safely fail with
-"xfs_repair: cannot open /dev/foo: Device or resource busy", and a mount
-command will fail with (the slightly cryptic) "mount: /dev/foo already
-mounted or /mountpoint busy".
+    Recent versions of libtool behave slightly differently, which causes some
+    breakage in how libtoolize was used here.  Make sure that libtoolize adds
+    the auxiliary files (config.guess and config.sub).
 
-Note that this has no effect if the filesystem is stored in a regular
-file instead of on a block device.
+    Move install-sh into include/ so that libtoolize does not destroy it.
 
-(Error messages could probably be improved to be more user-friendly in
-this new failure case, and it probably wouldn't hurt to add a BLKROGET
-ioctl to check for read-only block devices with read-write permissions,
-but this does the job for me.)
+    Split up the ``make clean'' and ``make distclean'' targets: the former
+    removes all files generated during a build.  The latter removes all
+    files generated by libtoolize, autoconf, and configure as well.
 
-Signed-off-by: Nathaniel W. Turner <nate@houseofnate.net>
----
- repair/init.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+    Signed-off-by: Andreas Gruenbacher <agruen@suse.de>
 
-diff --git a/repair/init.c b/repair/init.c
-index 8e508c4..7e5052c 100644
---- a/repair/init.c
-+++ b/repair/init.c
-@@ -142,6 +142,8 @@ xfs_init(libxfs_init_t *args)
-         args->isreadonly = (LIBXFS_ISREADONLY | LIBXFS_ISINACTIVE);
-     else if (dangerously)
-         args->isreadonly = (LIBXFS_ISINACTIVE | LIBXFS_DANGEROUSLY);
-+    else
-+        args->isreadonly = LIBXFS_EXCLUSIVELY;
- 
-     if (!libxfs_init(args))
-         do_error(_("couldn't initialize XFS library\n"));
+With these changes, the build/*.src.tar.gz tarball should now build properly 
+without depending on the version of libtool on the system with:
 
--- 
-Nathaniel W. Turner
-http://houseofnate.net/
+	./configure
+	make
+	make install
+
+(The acl.git repository has the equivalent changes.)
+
+Andreas
 
 _______________________________________________
 xfs mailing list
