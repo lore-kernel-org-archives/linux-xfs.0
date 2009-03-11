@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2B2okh6244729 for <xfs@oss.sgi.com>; Tue, 10 Mar 2009 21:51:07 -0500
-Received: from ti-out-0910.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AC0371C31DF2
-	for <xfs@oss.sgi.com>; Tue, 10 Mar 2009 19:50:21 -0700 (PDT)
-Received: from ti-out-0910.google.com (ti-out-0910.google.com
-	[209.85.142.188]) by cuda.sgi.com with ESMTP id
-	OTLh5gbxmSKifX3D for <xfs@oss.sgi.com>;
-	Tue, 10 Mar 2009 19:50:21 -0700 (PDT)
-Received: by ti-out-0910.google.com with SMTP id a6so1980547tib.18
-	for <xfs@oss.sgi.com>; Tue, 10 Mar 2009 19:50:20 -0700 (PDT)
+	n2B4Uu58248825 for <xfs@oss.sgi.com>; Tue, 10 Mar 2009 23:31:17 -0500
+Received: from mx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1F4B01C320C3
+	for <xfs@oss.sgi.com>; Tue, 10 Mar 2009 21:30:11 -0700 (PDT)
+Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
+	with ESMTP id pFmBQb4rpv5AelPx for <xfs@oss.sgi.com>;
+	Tue, 10 Mar 2009 21:30:11 -0700 (PDT)
+Message-ID: <49B73E50.5080906@sandeen.net>
+Date: Tue, 10 Mar 2009 23:30:08 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <495D88EE.2040406@sandeen.net>
-References: <169670ec0901011846q1d370e6cu31514519afc8295d@mail.gmail.com>
-	<495D88EE.2040406@sandeen.net>
-Date: Wed, 11 Mar 2009 11:44:31 +0900
-Message-ID: <169670ec0903101944i2ea05432q7bf9776a347a11a5@mail.gmail.com>
 Subject: Re: Corruption of in-memory data detected
-From: Thomas Gutzler <thomas.gutzler@gmail.com>
+References: <169670ec0901011846q1d370e6cu31514519afc8295d@mail.gmail.com>	
+	<495D88EE.2040406@sandeen.net>
+	<169670ec0903101944i2ea05432q7bf9776a347a11a5@mail.gmail.com>
+In-Reply-To: <169670ec0903101944i2ea05432q7bf9776a347a11a5@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,220 +25,155 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
+To: Thomas Gutzler <thomas.gutzler@gmail.com>
 Cc: xfs@oss.sgi.com
 
-SGksCgphIHdoaWxlIGFnbyBJIHdhcyBoYXZpbmcgcHJvYmxlbXMgd2l0aCB0aGUgeGZzIG1vZHVs
-ZSBvbiB1YnVudHUKZmVpc3R5LiBJIGhhdmUgdGhlbiB1cGdyYWRlZCB0byA4LjEwIGludHJlcGlk
-IGFuZCBhbSBzdGlsbCBnZXR0aW5nIHRoZQpvY2Nhc2lvbmFsIGJ1Zy4gR29vZCB0aGluZyBpcyB0
-aGF0IG5vdyB0aGUgc3lzdGVtIGtlZXBzIHJ1bm5pbmcgYWZ0ZXIKdGhlIGJ1ZyBvY2N1cnMgd2l0
-aCBsb2FkIHNsb3dseSBpbmNyZWFzaW5nIGFzIHJhbmRvbSBwcm9jZXNzZXMgYXJlCmFmZmVjdGVk
-IGJ5IHRoaXMgdHVybiBpbnRvIHpvbWJpZXMuCgpPbiBGcmksIEphbiAyLCAyMDA5IGF0IDEyOjI0
-LCBFcmljIFNhbmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQ+IHdyb3RlOgo+IFRob21hcyBHdXR6
-bGVyIHdyb3RlOgo+PiBIaSwKPj4KPj4gSSd2ZSBiZWVuIHJ1bm5pbmcgYW4gOHg1MDBHIGhhcmR3
-YXJlIFNBVEEgUkFJRDUgb24gYW4gYWRhcHRlYyAzMTYwNQo+PiBjb250cm9sbGVyIGZvciBhIHdo
-aWxlLiBUaGUgb3BlcmF0aW5nIHN5c3RlbSBpcyB1YnVudHUgZmVpc3R5IHdpdGggdGhlCj4+IDIu
-Ni4yMi0xNi1zZXJ2ZXIga2VybmVsLiBSZWNlbnRseSwgSSBhZGRlZCBhIGRpc2suIEFmdGVyIHRo
-ZSBhcnJheQo+PiByZWJ1aWxkIHdhcyBjb21wbGV0ZWQsIEkga2VwdCBnZXR0aW5nIGVycm9ycyBm
-cm9tIHRoZSB4ZnMgbW9kdWxlIHN1Y2gKPj4gYXMgdGhpcyBvbmU6Cj4+IERlYyAzMCAyMjo1NToz
-OSBpbyBrZXJuZWw6IFsyMTg0NC45Mzk4MzJdIEZpbGVzeXN0ZW0gInNkYSI6Cj4+IHhmc19pZmx1
-c2g6IEJhZCBpbm9kZSAxNjEwNjY5NzIzIG1hZ2ljIG51bWJlciAweGVjOWQsIHB0ciAweGU1MjNl
-YjAwCj4+IERlYyAzMCAyMjo1NTozOSBpbyBrZXJuZWw6IFsyMTg0NC45Mzk4NzldIHhmc19mb3Jj
-ZV9zaHV0ZG93bihzZGEsMHg4KQo+PiBjYWxsZWQgZnJvbSBsaW5lIDMyNzcgb2YgZmlsZQo+PiAv
-YnVpbGQvYnVpbGRkL2xpbnV4LXNvdXJjZS0yLjYuMjItMi42LjIyL2ZzL3hmcy94ZnNfaW5vZGUu
-Yy4gwqBSZXR1cm4KPj4gYWRkcmVzcyA9IDB4ZjhhZjI2M2MKPj4gRGVjIDMwIDIyOjU1OjM5IGlv
-IGtlcm5lbDogWzIxODQ0LjkzOTg4NV0gRmlsZXN5c3RlbSAic2RhIjogQ29ycnVwdGlvbgo+PiBv
-ZiBpbi1tZW1vcnkgZGF0YSBkZXRlY3RlZC4gwqBTaHV0dGluZyBkb3duIGZpbGVzeXN0ZW06IHNk
-YQo+Pgo+PiBNeSBmaXJzdCB0aG91Z2h0IHdhcyB0byBydW4gbWVtY2hlY2sgb24gdGhlIG1hY2hp
-bmUsIHdoaWNoIGNvbXBsZXRlZAo+PiBzZXZlcmFsIHBhc3NlcyB3aXRob3V0IGVycm9yOyB0aGUg
-cmFpZCBjb250cm9sbGVyIGRvZXNuJ3QgcmVwb3J0IGFueQo+PiBTTUFSVCBmYWlsdXJlcyBlaXRo
-ZXIuCj4KPiBCb3RoIGdvb2QgaWRlYXMsIGJ1dCBub3RlIHRoYXQgIkNvcnJ1cHRpb24gb2YgaW4t
-bWVtb3J5IGRhdGEgZGV0ZWN0ZWQiCj4gZG9lc24ndCBuZWNlc3NhcmlseSBtZWFuIGJhZCBtZW1v
-cnkgKHRob3VnaCBpdCBtaWdodCwgc28gbWVtY2hlY2sgd2FzCj4gcHJ1ZGVudCkuIMKgMHhlYzlk
-IGlzIG5vdCB0aGUgY29ycmVjdCBtYWdpYyBuci4gZm9yIGFuIG9uLWRpc2sgaW5vZGUsIHNvCj4g
-dGhhdCdzIHdoeSB0aGluZ3Mgd2VudCBzb3V0aC4gwqBXZXJlIHRoZXJlIG5vIHN0b3JhZ2UgcmVs
-YXRlZCBlcnJvcnMKPiBwcmlvciB0byB0aGlzPwo+Cj4+IEFmdGVyIGFuIHhmc19yZXBhaXIsIHdo
-aWNoIGZpeGVkIGEgZmV3IHRoaW5ncywKPgo+IEtub3dpbmcgd2hpY2ggdGhpbmdzIHdlcmUgZml4
-ZWQgbWlnaHQgbGVuZCBzb21lIGNsdWVzIC4uLgo+Cj4+IEkgbW91bnRlZCB0aGUgZmlsZQo+PiBz
-eXN0ZW0gYnV0IHRoZSBlcnJvciBrZXB0IHJlYXBwZWFyaW5nIGFmdGVyIGEgZmV3IGhvdXJzIHVu
-bGVzcyBJCj4+IG1vdW50ZWQgcmVhZC1vbmx5LiBTaW5jZSB4ZnNfbmNoZWNrIC1pIGFsd2F5cyBl
-eGl0ZWQgd2l0aCAnT3V0IG9mCj4+IG1lbW9yeScKPgo+IHhmc19jaGVjayB0YWtlcyBhIHRvbiBv
-ZiBtZW1vcnk7IHhmc19yZXBhaXIgbXVjaCBsZXNzIHNvCj4KPj4gSSBkZWNpZGVkIHRvIHJlZHVj
-ZSB0aGUgbWF4IGFtb3VudCBvZiBpbm9kZXMgdG8gMSUgKDE1NjIzNzQ4OCkKPj4gYnkgcnVubmlu
-ZyB4ZnNfZ3Jvd2ZzIC1tIDEgLSB0aGUgdG90YWwgYW1vdW50IG9mIGlub2RlcyB1c2VkIGlzIHN0
-aWxsCj4+IGxlc3MgdGhhbiAxJS4gVW5mb3J0dW5hdGVseSwgYm90aCB4ZnNfY2hlY2sgYW5kIHhm
-c19uY2hlY2sgc3RpbGwgc2F5Cj4+ICdvdXQgb2YgbWVtb3J5JyB3aXRoIDJHQiBpbnN0YWxsZWQu
-Cj4KPiB0aGUgbWF4IGlub2RlcyByZWFsbHkgaGF2ZSBubyBiZWFyaW5nIG9uIGNoZWNrIG9yIHJl
-cGFpciBtZW1vcnkgdXNhZ2U7Cj4gaXQncyBqdXN0IGFuIHVwcGVyIGxpbWl0IG9uIGhvdyBtYW55
-IGlub2RlcyAqY291bGQqIGJlIGNyZWF0ZWQuCj4KPj4gQWZ0ZXIgdGhlIG1vZGlmaWNhdGlvbiwg
-dGhlIGZpbGUgc3lzdGVtIHN1cnZpdmVkIGZvciBhIGRheSB1bnRpbCB0aGUKPj4gZm9sbG93aW5n
-IGhhcHBlbmVkOgo+PiBKYW4gwqAyIDA5OjMzOjI5IGlvIGtlcm5lbDogWzIzMjc1MS42OTk4MTJd
-IEJVRzogdW5hYmxlIHRvIGhhbmRsZQo+PiBrZXJuZWwgcGFnaW5nIHJlcXVlc3QgYXQgdmlydHVh
-bCBhZGRyZXNzIDAwMDNmZmZiCj4+IEphbiDCoDIgMDk6MzM6MjkgaW8ga2VybmVsOiBbMjMyNzUx
-LjY5OTg0OF0gwqBwcmludGluZyBlaXA6Cj4+IEphbiDCoDIgMDk6MzM6MjkgaW8ga2VybmVsOiBb
-MjMyNzUxLjY5OTg2M10gYzAxN2Q4NzIKPj4gSmFuIMKgMiAwOTozMzoyOSBpbyBrZXJuZWw6IFsy
-MzI3NTEuNjk5ODY1XSAqcGRwdCA9IDAwMDAwMDAwMzcxMWUwMDEKPj4gSmFuIMKgMiAwOTozMzoy
-OSBpbyBrZXJuZWw6IFsyMzI3NTEuNjk5ODgxXSAqcGRlID0gMDAwMDAwMDAwMDAwMDAwMAo+PiBK
-YW4gwqAyIDA5OjMzOjI5IGlvIGtlcm5lbDogWzIzMjc1MS42OTk4OThdIE9vcHM6IDAwMDIgWyMx
-XQo+PiBKYW4gwqAyIDA5OjMzOjI5IGlvIGtlcm5lbDogWzIzMjc1MS42OTk5MTNdIFNNUAo+PiBK
-YW4gwqAyIDA5OjMzOjI5IGlvIGtlcm5lbDogWzIzMjc1MS42OTk5MzFdIE1vZHVsZXMgbGlua2Vk
-IGluOiBuZnMgbmZzZAo+PiBleHBvcnRmcyBsb2NrZCBzdW5ycGMgeHRfdGNwdWRwIG5mX2Nvbm50
-cmFja19pcHY0IHh0X3N0YXRlCj4+IG5mX2Nvbm50cmFjayBuZm5ldGxpbmsgaXB0YWJsZV9maWx0
-ZXIgaXBfdGFibGVzIHhfdGFibGVzIGlwdjYgZXh0Mgo+PiBtYmNhY2hlIGNvcmV0ZW1wIHc4MzYy
-N2VoZiBpMmNfaXNhIGkyY19jb3JlIGFjcGlfY3B1ZnJlcQo+PiBjcHVmcmVxX3VzZXJzcGFjZSBj
-cHVmcmVxX3N0YXRzIGNwdWZyZXFfcG93ZXJzYXZlIGNwdWZyZXFfb25kZW1hbmQKPj4gZnJlcV90
-YWJsZSBjcHVmcmVxX2NvbnNlcnZhdGl2ZSBwc21vdXNlIHNlcmlvX3JhdyBwY3Nwa3Igc2hwY2hw
-Cj4+IHBjaV9ob3RwbHVnIGV2ZGV2IGludGVsX2FncCBhZ3BnYXJ0IHhmcyBzcl9tb2QgY2Ryb20g
-cGF0YV9qbWljcm9uCj4+IGF0YV9waWl4IHNnIHNkX21vZCBhdGFfZ2VuZXJpYyBvaGNpMTM5NCBp
-ZWVlMTM5NCBhaGNpIGxpYmF0YSBlMTAwMAo+PiBhYWNyYWlkIHNjc2lfbW9kIHVoY2lfaGNkIGVo
-Y2lfaGNkIHVzYmNvcmUgdGhlcm1hbCBwcm9jZXNzb3IgZmFuIGZ1c2UKPj4gYXBwYXJtb3IgY29t
-bW9uY2FwCj4+IEphbiDCoDIgMDk6MzM6MjkgaW8ga2VybmVsOiBbMjMyNzUxLjcwMDE4MF0gQ1BV
-OiDCoCDCoDEKPj4gSmFuIMKgMiAwOTozMzoyOSBpbyBrZXJuZWw6IFsyMzI3NTEuNzAwMTgxXSBF
-SVA6Cj4+IDAwNjA6W19fc2xhYl9mcmVlKzUwLzY3Ml0gwqAgwqBOb3QgdGFpbnRlZCBWTEkKPj4g
-SmFuIMKgMiAwOTozMzoyOSBpbyBrZXJuZWw6IFsyMzI3NTEuNzAwMTgyXSBFRkxBR1M6IDAwMDEw
-MDQ2Cj4+ICgyLjYuMjItMTYtc2VydmVyICMxKQo+PiBKYW4gwqAyIDA5OjMzOjI5IGlvIGtlcm5l
-bDogWzIzMjc1MS43MDAyMzRdIEVJUCBpcyBhdCBfX3NsYWJfZnJlZSsweDMyLzB4MmEwCj4KPiBN
-ZW1vcnkgY29ycnVwdGlvbiBwZXJoYXBzPwo+Cj4+IEphbiDCoDIgMDk6MzM6MjkgaW8ga2VybmVs
-OiBbMjMyNzUxLjcwMDI1Ml0gZWF4OiAwMDAwZmZmZiDCoCBlYng6Cj4+IGZmZmZmZmZmIMKgIGVj
-eDogZmZmZmZmZmYgwqAgZWR4OiAwMDAwMTRhYQo+PiBKYW4gwqAyIDA5OjMzOjI5IGlvIGtlcm5l
-bDogWzIzMjc1MS43MDAyNzNdIGVzaTogYzE3ZmZmZTAgwqAgZWRpOgo+PiBlNmI4ZTBjMCDCoCBl
-YnA6IGY4YWMyYzhjIMKgIGVzcDogYzIxZGZlNDQKPj4gSmFuIMKgMiAwOTozMzoyOSBpbyBrZXJu
-ZWw6IFsyMzI3NTEuNzAwMjkzXSBkczogMDA3YiDCoCBlczogMDA3YiDCoCBmczoKPj4gMDBkOCDC
-oGdzOiAwMDAwIMKgc3M6IDAwNjgKPj4gSmFuIMKgMiAwOTozMzoyOSBpbyBrZXJuZWw6IFsyMzI3
-NTEuNzAwMzEzXSBQcm9jZXNzIGtzd2FwZDAgKHBpZDogMTk4LAo+PiB0aT1jMjFkZTAwMCB0YXNr
-PWMyMWYzOWYwIHRhc2sudGk9YzIxZGUwMDApCj4+IEphbiDCoDIgMDk6MzM6MjkgaW8ga2VybmVs
-OiBbMjMyNzUxLjcwMDMzNF0gU3RhY2s6IDAwMDAwMDAwIDAwMDAwMDY1Cj4+IDAwMDAwMDAwIGZm
-ZmZmZmZlIGZmZmZmZmZmIGMxN2ZmZmUwIDAwMDAwMjg3IGU2YjhlMGMwCj4+IEphbiDCoDIgMDk6
-MzM6MjkgaW8ga2VybmVsOiBbMjMyNzUxLjcwMDM3OF0gwqAgwqAgwqAgwqAwMDAwMDAwMSBjMDE3
-ZTNmZQo+PiBmOGFjMmM4YyBjZWNiN2QyMCAwMDAwMDAwMSBkZjJlMjYwMCBmOGFjMmM4YyBkZjJl
-MjYwMAo+PiBKYW4gwqAyIDA5OjMzOjI5IGlvIGtlcm5lbDogWzIzMjc1MS43MDA0MjJdIMKgIMKg
-IMKgIMKgZjhkNzU1OWMgZTgyNDc5MDAKPj4gZjhhYzUyMjQgZGYyZTI2MDAgZjhkNzU1OWMgZTgy
-NDc5MDAgZjhhZTE2MDYgMDAwMDAwMDEKPj4gSmFuIMKgMiAwOTozMzoyOSBpbyBrZXJuZWw6IFsy
-MzI3NTEuNzAwNDY2XSBDYWxsIFRyYWNlOgo+PiBKYW4gwqAyIDA5OjMzOjI5IGlvIGtlcm5lbDog
-WzIzMjc1MS43MDA0OTldIMKgW2tmcmVlKzEyNi8xOTJdIGtmcmVlKzB4N2UvMHhjMAo+PiBKYW4g
-wqAyIDA5OjMzOjI5IGlvIGtlcm5lbDogWzIzMjc1MS43MDA1MTldIMKgWzxmOGFjMmM4Yz5dCj4+
-IHhmc19pZGVzdHJveV9mb3JrKzB4MmMvMHhmMCBbeGZzXQo+PiBKYW4gwqAyIDA5OjMzOjI5IGlv
-IGtlcm5lbDogWzIzMjc1MS43MDA1NjFdIMKgWzxmOGFjMmM4Yz5dCj4+IHhmc19pZGVzdHJveV9m
-b3JrKzB4MmMvMHhmMCBbeGZzXQo+PiBKYW4gwqAyIDA5OjMzOjI5IGlvIGtlcm5lbDogWzIzMjc1
-MS43MDA2MDFdIMKgWzxmOGFjNTIyND5dCj4+IHhmc19pZGVzdHJveSsweDQ0LzB4YjAgW3hmc10K
-Pj4gSmFuIMKgMiAwOTozMzoyOSBpbyBrZXJuZWw6IFsyMzI3NTEuNzAwNjQwXSDCoFs8ZjhhZTE2
-MDY+XQo+PiB4ZnNfZmluaXNoX3JlY2xhaW0rMHgzNi8weDE2MCBbeGZzXQo+PiBKYW4gwqAyIDA5
-OjMzOjI5IGlvIGtlcm5lbDogWzIzMjc1MS43MDA2ODFdIMKgWzxmOGFmMWM0Nz5dCj4+IHhmc19m
-c19jbGVhcl9pbm9kZSsweDk3LzB4YzAgW3hmc10KPj4gSmFuIMKgMiAwOTozMzoyOSBpbyBrZXJu
-ZWw6IFsyMzI3NTEuNzAwNzIxXSDCoFtjbGVhcl9pbm9kZSsxNDMvMzIwXQo+PiBjbGVhcl9pbm9k
-ZSsweDhmLzB4MTQwCj4+IEphbiDCoDIgMDk6MzM6MjkgaW8ga2VybmVsOiBbMjMyNzUxLjcwMDc0
-M10gwqBbZGlzcG9zZV9saXN0KzI2LzIyNF0KPj4gZGlzcG9zZV9saXN0KzB4MWEvMHhlMAo+PiBK
-YW4gwqAyIDA5OjMzOjI5IGlvIGtlcm5lbDogWzIzMjc1MS43MDA3NjVdCj4+IFtzaHJpbmtfaWNh
-Y2hlX21lbW9yeSszNzkvNTkyXSBzaHJpbmtfaWNhY2hlX21lbW9yeSsweDE3Yi8weDI1MAo+PiBK
-YW4gwqAyIDA5OjMzOjI5IGlvIGtlcm5lbDogWzIzMjc1MS43MDA3ODldIMKgW3Nocmlua19zbGFi
-KzI3OS8zNjhdCj4+IHNocmlua19zbGFiKzB4MTE3LzB4MTcwCj4+IEphbiDCoDIgMDk6MzM6Mjkg
-aW8ga2VybmVsOiBbMjMyNzUxLjcwMDgxNV0gwqBba3N3YXBkKzg1OS8xMTM2XSBrc3dhcGQrMHgz
-NWIvMHg0NzAKPj4gSmFuIMKgMiAwOTozMzoyOSBpbyBrZXJuZWw6IFsyMzI3NTEuNzAwODQyXQo+
-PiBbYXV0b3JlbW92ZV93YWtlX2Z1bmN0aW9uKzAvODBdIGF1dG9yZW1vdmVfd2FrZV9mdW5jdGlv
-bisweDAvMHg1MAo+PiBKYW4gwqAyIDA5OjMzOjI5IGlvIGtlcm5lbDogWzIzMjc1MS43MDA4Njdd
-IMKgW2tzd2FwZCswLzExMzZdIGtzd2FwZCsweDAvMHg0NzAKPj4gSmFuIMKgMiAwOTozMzoyOSBp
-byBrZXJuZWw6IFsyMzI3NTEuNzAwODg2XSDCoFtrdGhyZWFkKzY2LzExMl0ga3RocmVhZCsweDQy
-LzB4NzAKPj4gSmFuIMKgMiAwOTozMzoyOSBpbyBrZXJuZWw6IFsyMzI3NTEuNzAwOTA0XSDCoFtr
-dGhyZWFkKzAvMTEyXSBrdGhyZWFkKzB4MC8weDcwCj4+IEphbiDCoDIgMDk6MzM6MjkgaW8ga2Vy
-bmVsOiBbMjMyNzUxLjcwMDkyM10KPj4gW2tlcm5lbF90aHJlYWRfaGVscGVyKzcvMjhdIGtlcm5l
-bF90aHJlYWRfaGVscGVyKzB4Ny8weDFjCj4+IEphbiDCoDIgMDk6MzM6MjkgaW8ga2VybmVsOiBb
-MjMyNzUxLjcwMDk0Nl0gwqA9PT09PT09PT09PT09PT09PT09PT09PQo+PiBKYW4gwqAyIDA5OjMz
-OjI5IGlvIGtlcm5lbDogWzIzMjc1MS43MDA5NjJdIENvZGU6IDUzIDg5IGNiIDgzIGVjIDE0IDhi
-Cj4+IDZjIDI0IDI4IGYwIDBmIGJhIDJlIDAwIDE5IGMwIDg1IGMwIDc0IDBhIDhiIDA2IGE4IDAx
-IDc0IGVmIGYzIDkwIGViCj4+IGY2IGY2IDA2IDAyIDc1IDQ4IDBmIGI3IDQ2IDBhIDhiIDU2IDE0
-IDw4OT4gMTQgODMgMGYgYjcgNDYgMDggODkgNWUgMTQKPj4gODMgZTggMDEgZjYgMDYgNDAgNjYg
-ODkgNDYgMDggNzUKPj4gSmFuIMKgMiAwOTozMzoyOSBpbyBrZXJuZWw6IFsyMzI3NTEuNzAxMTI4
-XSBFSVA6IFtfX3NsYWJfZnJlZSs1MC82NzJdCj4+IF9fc2xhYl9mcmVlKzB4MzIvMHgyYTAgU1M6
-RVNQIDAwNjg6YzIxZGZlNDQKPj4KPj4gQW55IHRob3VnaHRzIHdoYXQgdGhpcyBjb3VsZCBiZSBv
-ciB3aGF0IGNvdWxkIGJlIGRvbmUgdG8gZml4IGl0Pwo+Cj4gc2VlbXMgbGlrZSBtYXliZSBzb21l
-dGhpbmcgd2VudCB3cm9uZyB3LyB0aGUgcmFpZCByZWJ1aWxkLCBpZiB0aGF0J3MKPiB3aGVuIHRo
-aW5ncyBzdGFydGVkIGdvaW5nIHNvdXRoLiDCoERvIHlvdSBnZXQgYW55IHN0b3JhZ2UgZXJyb3Ig
-cmVsYXRlZAo+IG1lc3NhZ2VzIGF0IGFsbD8KCkkgY291bGRuJ3QgZmluZCBhbnkgZXJyb3JzIG90
-aGVyIHRoYW4gdGhlIGR1bXAgaW4gZG1lc2cgKHNlZSBiZWxvdykuCkkgYWxzbyBjYWxsZWQgYWRh
-cHRlYyBhbmQgdGhleSBzYWlkIHRoZXkgbmV2ZXIgaGFkIG1lbW9yeSBmYWlsdXJlIGluCnRoZXkg
-cmFpZCBjYXJkcy4KCj4gVWJ1bnR1IGtub3dzIGJlc3Qgd2hhdCdzIGluIHRoaXMgb2xkaXNoIGRp
-c3RybyBrZXJuZWwsIEkgZ3Vlc3M7IEkgZG9uJ3QKPiBrbm93IG9mZmhhbmQgd2hhdCBtaWdodCBi
-ZSBnb2luZyB3cm9uZy4gwqBJZiB0aGV5IGhhdmUgYSBkZWJ1ZyBrZXJuZWwKPiB2YXJpYW50LCB5
-b3UgY291bGQgcnVuIHRoYXQgdG8gc2VlIGlmIHlvdSBnZXQgZWFybGllciBpbmRpY2F0aW9ucyBv
-Zgo+IHByb2JsZW1zLgo+Cj4gSWYgeW91IGNhbiByZXByb2R1Y2Ugb24gYSBtb3JlIHJlY2VudCB1
-cHN0cmVhbSBrZXJuZWwsIHRoYXQgd291bGQgYmUKPiBpbnRlcmVzdGluZy4KCkhlcmUncyB0aGUg
-ZG1lc2cgb3V0cHV0OgpbMTM2OTcxMy42NzgwOTJdIEJVRzogdW5hYmxlIHRvIGhhbmRsZSBrZXJu
-ZWwgcGFnaW5nIHJlcXVlc3QgYXQgZmZmZjg3Zjk0N2RhNTA4OApbMTM2OTcxMy42ODI4ODJdIElQ
-OiBbPGZmZmZmZmZmYTAxZGIyNGY+XQp4ZnNfZGlyMl9ibG9ja19sb29rdXBfaW50KzB4Y2YvMHgy
-MTAgW3hmc10KWzEzNjk3MTMuNjg3ODAyXSBQR0QgMApbMTM2OTcxMy42ODgwNTVdIE9vcHM6IDAw
-MDAgWzFdIFNNUApbMTM2OTcxMy42ODgwNTVdIENQVSAxClsxMzY5NzEzLjY4ODA1NV0gTW9kdWxl
-cyBsaW5rZWQgaW46IG5sc19jcDQzNyBjaWZzIG5mc2QgYXV0aF9ycGNnc3MKZXhwb3J0ZnMgd21p
-IHZpZGVvIG91dHB1dCBzYnMgc2JzaGMgcGNpCl9zbG90IGNvbnRhaW5lciBiYXR0ZXJ5IGFjIHh0
-X3RjcHVkcCBuZl9jb25udHJhY2tfaXB2NCB4dF9zdGF0ZQpuZl9jb25udHJhY2sgbmZzIGxvY2tk
-IG5mc19hY2wgc3VucnBjIGlwdjYKaXB0YWJsZV9maWx0ZXIgaXBfdGFibGVzIHhfdGFibGVzIGV4
-dDMgamJkIG1iY2FjaGUgY3B1ZnJlcV91c2Vyc3BhY2UKY3B1ZnJlcV9zdGF0cyBjcHVmcmVxX3Bv
-d2Vyc2F2ZSBjcHVmcmUKcV9vbmRlbWFuZCBjcHVmcmVxX2NvbnNlcnZhdGl2ZSBhY3BpX2NwdWZy
-ZXEgZnJlcV90YWJsZSBzYnAyCnBhcnBvcnRfcGMgbHAgcGFycG9ydCBsb29wIGV2ZGV2IHBjc3Br
-ciBpVENPX3cKZHQgaVRDT192ZW5kb3Jfc3VwcG9ydCBidXR0b24gc2hwY2hwIHBjaV9ob3RwbHVn
-IGludGVsX2FncCB4ZnMKcGF0YV9qbWljcm9uIHNkX21vZCBjcmNfdDEwZGlmIHNnIHBhdGFfYWNw
-aQphdGFfcGlpeCBvaGNpMTM5NCBpZWVlMTM5NCBhYWNyYWlkIGF0YV9nZW5lcmljIGFoY2kgbGli
-YXRhIHNjc2lfbW9kCmUxMDAwZSBkb2NrIHVoY2lfaGNkIGVoY2lfaGNkIHVzYmNvcmUgdApoZXJt
-YWwgcHJvY2Vzc29yIGZhbiBmdXNlIHZlc2FmYiBmYmNvbiB0aWxlYmxpdCBmb250IGJpdGJsaXQg
-c29mdGN1cnNvcgpbMTM2OTcxMy42ODgwNTVdIFBpZDogNTI3OCwgY29tbTogc21iZCBOb3QgdGFp
-bnRlZCAyLjYuMjctMTEtc2VydmVyICMxClsxMzY5NzEzLjY4ODA1NV0gUklQOiAwMDEwOls8ZmZm
-ZmZmZmZhMDFkYjI0Zj5dICBbPGZmZmZmZmZmYTAxZGIyNGY+XQp4ZnNfZGlyMl9ibG9ja19sb29r
-dXBfaW50KzB4Y2YvMHgyMTAKW3hmc10KWzEzNjk3MTMuNjg4MDU1XSBSU1A6IDAwMTg6ZmZmZjg4
-MDA3MTIwYmEyOCAgRUZMQUdTOiAwMDAxMDI4NgpbMTM2OTcxMy42ODgwNTVdIFJBWDogMDAwMDAw
-MDVhMDcyZGVkOCBSQlg6IDAwMDAwMDAwZGEwNzJkZWQgUkNYOgowMDAwMDAwMDAwMDAwMDAwClsx
-MzY5NzEzLjY4ODA1NV0gUkRYOiAwMDAwMDAwMGI0MGU1YmRhIFJTSTogZmZmZjg4MDA3YTQ3NGM0
-OCBSREk6CmZmZmZmZmZmZGEwNzJkZWQKWzEzNjk3MTMuNjg4MDU1XSBSQlA6IGZmZmY4ODAwNzEy
-MGJhOTggUjA4OiBmZmZmODdmYTc3YTBlMTIwIFIwOToKMDAwMDAwMDBmZmZmZmZmZgpbMTM2OTcx
-My42ODgwNTVdIFIxMDogMDAwMDAwMDBkYjViMGViNCBSMTE6IGZmZmY4ODAwMTgxM2JmZjggUjEy
-OgpmZmZmODgwMDcxMjBiYWU4ClsxMzY5NzEzLjY4ODA1NV0gUjEzOiAwMDAwMDAwMDAwMDAwMDJh
-IFIxNDogMDAwMDAwMDAwMDAwMDAwMCBSMTU6CmZmZmY4ODAwNzEyMGJiNzQKWzEzNjk3MTMuNjg4
-MDU1XSBGUzogIDAwMDA3Zjc5YmY0NGU3MDAoMDAwMCkgR1M6ZmZmZjg4MDA3ZjgwMjg4MCgwMDAw
-KQprbmxHUzowMDAwMDAwMDAwMDAwMDAwClsxMzY5NzEzLjY4ODA1NV0gQ1M6ICAwMDEwIERTOiAw
-MDAwIEVTOiAwMDAwIENSMDogMDAwMDAwMDA4MDA1MDAzYgpbMTM2OTcxMy42ODgwNTVdIENSMjog
-ZmZmZjg3Zjk0N2RhNTA4OCBDUjM6IDAwMDAwMDAwNTNlODgwMDAgQ1I0OgowMDAwMDAwMDAwMDAw
-NmUwClsxMzY5NzEzLjY4ODA1NV0gRFIwOiAwMDAwMDAwMDAwMDAwMDAwIERSMTogMDAwMDAwMDAw
-MDAwMDAwMCBEUjI6CjAwMDAwMDAwMDAwMDAwMDAKWzEzNjk3MTMuNjg4MDU1XSBEUjM6IDAwMDAw
-MDAwMDAwMDAwMDAgRFI2OiAwMDAwMDAwMGZmZmYwZmYwIERSNzoKMDAwMDAwMDAwMDAwMDQwMApb
-MTM2OTcxMy42ODgwNTVdIFByb2Nlc3Mgc21iZCAocGlkOiA1Mjc4LCB0aHJlYWRpbmZvIGZmZmY4
-ODAwNzEyMGEwMDAsCnRhc2sgZmZmZjg4MDAwMzUwYWNlMCkKWzEzNjk3MTMuNjg4MDU1XSBTdGFj
-azogIGZmZmY4ODAwNzEyMGJkNjggZmZmZmZmZmY4MDJmYTA0YwpmZmZmODgwMDcxMjBiYWI0IGZm
-ZmY4ODAwNzEyMGJhYTgKWzEzNjk3MTMuNjg4MDU1XSAgZmZmZjg4MDAxODEzYjAwMCBmZmZmODgw
-MDdhY2IzMDAwIDAwMDAwMDAwMDAwMDAwMDAKZmZmZmZmZmZhMDFkMDI4OQpbMTM2OTcxMy42ODgw
-NTVdICBmZmZmODgwMDdhNDc0YzQ4IGZmZmY4ODAwMzVhMmM4YzAgZmZmZjg4MDA3MTIwYmFlOApm
-ZmZmODgwMDcxMjBiYWU4ClsxMzY5NzEzLjY4ODA1NV0gQ2FsbCBUcmFjZToKWzEzNjk3MTMuNjg4
-MDU1XSAgWzxmZmZmZmZmZjgwMmZhMDRjPl0gPyBkb19zZWxlY3QrMHg1YmMvMHg2MTAKWzEzNjk3
-MTMuNjg4MDU1XSAgWzxmZmZmZmZmZmEwMWQwMjg5Pl0gPyB4ZnNfYm1idF9nZXRfYmxvY2tjb3Vu
-dCsweDkvMHgyMCBbeGZzXQpbMTM2OTcxMy42ODgwNTVdICBbPGZmZmZmZmZmYTAxZGI0NzA+XSB4
-ZnNfZGlyMl9ibG9ja19sb29rdXArMHgyMC8weGMwIFt4ZnNdClsxMzY5NzEzLjY4ODA1NV0gIFs8
-ZmZmZmZmZmZhMDFkYTdlNT5dIHhmc19kaXJfbG9va3VwKzB4MTk1LzB4MWMwIFt4ZnNdClsxMzY5
-NzEzLjY4ODA1NV0gIFs8ZmZmZmZmZmZhMDIwYTZjYj5dIHhmc19sb29rdXArMHg3Yi8weGUwIFt4
-ZnNdClsxMzY5NzEzLjY4ODA1NV0gIFs8ZmZmZmZmZmY4MDJmZjlmNj5dID8gX19kX2xvb2t1cCsw
-eDE2LzB4MTUwClsxMzY5NzEzLjY4ODA1NV0gIFs8ZmZmZmZmZmZhMDIxNTlhMT5dIHhmc192bl9s
-b29rdXArMHg1MS8weDkwIFt4ZnNdClsxMzY5NzEzLjY4ODA1NV0gIFs8ZmZmZmZmZmY4MDJmNDk1
-ZT5dIHJlYWxfbG9va3VwKzB4ZWUvMHgxNzAKWzEzNjk3MTMuNjg4MDU1XSAgWzxmZmZmZmZmZjgw
-MmY0YTkwPl0gZG9fbG9va3VwKzB4YjAvMHgxMTAKWzEzNjk3MTMuNjg4MDU1XSAgWzxmZmZmZmZm
-ZjgwMmY1MGZkPl0gX19saW5rX3BhdGhfd2FsaysweDYwZC8weGMyMApbMTM2OTcxMy42ODgwNTVd
-ICBbPGZmZmZmZmZmODAzMDVlZjY+XSA/IG1udHB1dF9ub19leHBpcmUrMHgzNi8weDE2MApbMTM2
-OTcxMy42ODgwNTVdICBbPGZmZmZmZmZmODAyZjVjNGU+XSBwYXRoX3dhbGsrMHg2ZS8weGUwClsx
-MzY5NzEzLjY4ODA1NV0gIFs8ZmZmZmZmZmY4MDJmNWU2Mz5dIGRvX3BhdGhfbG9va3VwKzB4ZTMv
-MHgyMDAKWzEzNjk3MTMuNjg4MDU1XSAgWzxmZmZmZmZmZjgwMmYzODZhPl0gPyBnZXRuYW1lKzB4
-NGEvMHhiMApbMTM2OTcxMy42ODgwNTVdICBbPGZmZmZmZmZmODAyZjZjYmI+XSB1c2VyX3BhdGhf
-YXQrMHg3Yi8weGIwClsxMzY5NzEzLjY4ODA1NV0gIFs8ZmZmZmZmZmY4MDJlZGE2OD5dID8gY3Bf
-bmV3X3N0YXQrMHhlOC8weDEwMApbMTM2OTcxMy42ODgwNTVdICBbPGZmZmZmZmZmODAyZWRlN2Q+
-XSB2ZnNfc3RhdF9mZCsweDJkLzB4NjAKWzEzNjk3MTMuNjg4MDU1XSAgWzxmZmZmZmZmZjgwMmVk
-ZjVjPl0gc3lzX25ld3N0YXQrMHgyYy8weDUwClsxMzY5NzEzLjY4ODA1NV0gIFs8ZmZmZmZmZmY4
-MDIxMjg1YT5dIHN5c3RlbV9jYWxsX2Zhc3RwYXRoKzB4MTYvMHgxYgpbMTM2OTcxMy42ODgwNTVd
-ClsxMzY5NzEzLjY4ODA1NV0KWzEzNjk3MTMuNjg4MDU1XSBDb2RlOiBmOCAzMSBjOSA0NSA4YiAx
-MyA0ZCA4OSBkOCA0NCA4OSBkMiAwZiBjYSA4OSBkMAo4MyBlYSAwMSA0OCBjMSBlMCAwMyA0OSAy
-OSBjMCBlYiAwNyA4ZCA0YiAwMSAzOSBjYSA3YyAxYyA4ZCAxYyAxMSBkMQpmYiA0OCA2MyBmYiA8
-NDE+IDhiIDA0IGY4IDBmIGM4IDQxIDM5IGM1IDc0IDI2IDc3IGU0IDhkIDUzIGZmIDM5IGNhIDdk
-CmU0IDQ4ClsxMzY5NzEzLjY4ODA1NV0gUklQICBbPGZmZmZmZmZmYTAxZGIyNGY+XQp4ZnNfZGly
-Ml9ibG9ja19sb29rdXBfaW50KzB4Y2YvMHgyMTAgW3hmc10KWzEzNjk3MTMuNjg4MDU1XSAgUlNQ
-IDxmZmZmODgwMDcxMjBiYTI4PgpbMTM2OTcxMy42ODgwNTVdIENSMjogZmZmZjg3Zjk0N2RhNTA4
-OApbMTM2OTcxNC4wNTcyMzJdIC0tLVsgZW5kIHRyYWNlIDA3MzVjODcwMmQ1ZTc4OTkgXS0tLQoK
-V2hhdCBjYW4gSSBkbyB0byBoZWxwIGdldHRpbmcgdGhpcyBmaXhlZD8KClRvbQoKX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4
-ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+Thomas Gutzler wrote:
+> Hi,
+> 
+> a while ago I was having problems with the xfs module on ubuntu
+> feisty. I have then upgraded to 8.10 intrepid and am still getting the
+> occasional bug. 
+
+although from the looks of it, a different one.  I'm curious, if you log
+these bug with Ubuntu, do they look into it?  It'd be nice to at least
+have initial triage to know for example where in the function it blew up.
+
+> Good thing is that now the system keeps running after
+> the bug occurs with load slowly increasing as random processes are
+> affected by this turn into zombies.
+
+...
+
+>>> Jan  2 09:33:29 io kernel: [232751.701128] EIP: [__slab_free+50/672]
+>>> __slab_free+0x32/0x2a0 SS:ESP 0068:c21dfe44
+
+... last error was slab corruption perhaps
+
+>>> Any thoughts what this could be or what could be done to fix it?
+>> seems like maybe something went wrong w/ the raid rebuild, if that's
+>> when things started going south.  Do you get any storage error related
+>> messages at all?
+> 
+> I couldn't find any errors other than the dump in dmesg (see below).
+> I also called adaptec and they said they never had memory failure in
+> they raid cards.
+> 
+>> Ubuntu knows best what's in this oldish distro kernel, I guess; I don't
+>> know offhand what might be going wrong.  If they have a debug kernel
+>> variant, you could run that to see if you get earlier indications of
+>> problems.
+>>
+>> If you can reproduce on a more recent upstream kernel, that would be
+>> interesting.
+> 
+> Here's the dmesg output:
+> [1369713.678092] BUG: unable to handle kernel paging request at ffff87f947da5088
+> [1369713.682882] IP: [<ffffffffa01db24f>]
+> xfs_dir2_block_lookup_int+0xcf/0x210 [xfs]
+
+Ok, so this looks like a different problem; at least a different oops.
+
+> [1369713.687802] PGD 0
+> [1369713.688055] Oops: 0000 [1] SMP
+> [1369713.688055] CPU 1
+> [1369713.688055] Modules linked in: nls_cp437 cifs nfsd auth_rpcgss
+> exportfs wmi video output sbs sbshc pci
+> _slot container battery ac xt_tcpudp nf_conntrack_ipv4 xt_state
+> nf_conntrack nfs lockd nfs_acl sunrpc ipv6
+> iptable_filter ip_tables x_tables ext3 jbd mbcache cpufreq_userspace
+> cpufreq_stats cpufreq_powersave cpufre
+> q_ondemand cpufreq_conservative acpi_cpufreq freq_table sbp2
+> parport_pc lp parport loop evdev pcspkr iTCO_w
+> dt iTCO_vendor_support button shpchp pci_hotplug intel_agp xfs
+> pata_jmicron sd_mod crc_t10dif sg pata_acpi
+> ata_piix ohci1394 ieee1394 aacraid ata_generic ahci libata scsi_mod
+> e1000e dock uhci_hcd ehci_hcd usbcore t
+> hermal processor fan fuse vesafb fbcon tileblit font bitblit softcursor
+> [1369713.688055] Pid: 5278, comm: smbd Not tainted 2.6.27-11-server #1
+> [1369713.688055] RIP: 0010:[<ffffffffa01db24f>]  [<ffffffffa01db24f>]
+> xfs_dir2_block_lookup_int+0xcf/0x210
+> [xfs]
+> [1369713.688055] RSP: 0018:ffff88007120ba28  EFLAGS: 00010286
+> [1369713.688055] RAX: 00000005a072ded8 RBX: 00000000da072ded RCX:
+> 0000000000000000
+> [1369713.688055] RDX: 00000000b40e5bda RSI: ffff88007a474c48 RDI:
+> ffffffffda072ded
+> [1369713.688055] RBP: ffff88007120ba98 R08: ffff87fa77a0e120 R09:
+> 00000000ffffffff
+> [1369713.688055] R10: 00000000db5b0eb4 R11: ffff88001813bff8 R12:
+> ffff88007120bae8
+> [1369713.688055] R13: 000000000000002a R14: 0000000000000000 R15:
+> ffff88007120bb74
+> [1369713.688055] FS:  00007f79bf44e700(0000) GS:ffff88007f802880(0000)
+> knlGS:0000000000000000
+> [1369713.688055] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+> [1369713.688055] CR2: ffff87f947da5088 CR3: 0000000053e88000 CR4:
+> 00000000000006e0
+> [1369713.688055] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
+> 0000000000000000
+> [1369713.688055] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7:
+> 0000000000000400
+> [1369713.688055] Process smbd (pid: 5278, threadinfo ffff88007120a000,
+> task ffff88000350ace0)
+> [1369713.688055] Stack:  ffff88007120bd68 ffffffff802fa04c
+> ffff88007120bab4 ffff88007120baa8
+> [1369713.688055]  ffff88001813b000 ffff88007acb3000 0000000000000000
+> ffffffffa01d0289
+> [1369713.688055]  ffff88007a474c48 ffff880035a2c8c0 ffff88007120bae8
+> ffff88007120bae8
+> [1369713.688055] Call Trace:
+> [1369713.688055]  [<ffffffff802fa04c>] ? do_select+0x5bc/0x610
+> [1369713.688055]  [<ffffffffa01d0289>] ? xfs_bmbt_get_blockcount+0x9/0x20 [xfs]
+> [1369713.688055]  [<ffffffffa01db470>] xfs_dir2_block_lookup+0x20/0xc0 [xfs]
+> [1369713.688055]  [<ffffffffa01da7e5>] xfs_dir_lookup+0x195/0x1c0 [xfs]
+> [1369713.688055]  [<ffffffffa020a6cb>] xfs_lookup+0x7b/0xe0 [xfs]
+> [1369713.688055]  [<ffffffff802ff9f6>] ? __d_lookup+0x16/0x150
+> [1369713.688055]  [<ffffffffa02159a1>] xfs_vn_lookup+0x51/0x90 [xfs]
+> [1369713.688055]  [<ffffffff802f495e>] real_lookup+0xee/0x170
+> [1369713.688055]  [<ffffffff802f4a90>] do_lookup+0xb0/0x110
+> [1369713.688055]  [<ffffffff802f50fd>] __link_path_walk+0x60d/0xc20
+> [1369713.688055]  [<ffffffff80305ef6>] ? mntput_no_expire+0x36/0x160
+> [1369713.688055]  [<ffffffff802f5c4e>] path_walk+0x6e/0xe0
+> [1369713.688055]  [<ffffffff802f5e63>] do_path_lookup+0xe3/0x200
+> [1369713.688055]  [<ffffffff802f386a>] ? getname+0x4a/0xb0
+> [1369713.688055]  [<ffffffff802f6cbb>] user_path_at+0x7b/0xb0
+> [1369713.688055]  [<ffffffff802eda68>] ? cp_new_stat+0xe8/0x100
+> [1369713.688055]  [<ffffffff802ede7d>] vfs_stat_fd+0x2d/0x60
+> [1369713.688055]  [<ffffffff802edf5c>] sys_newstat+0x2c/0x50
+> [1369713.688055]  [<ffffffff8021285a>] system_call_fastpath+0x16/0x1b
+> [1369713.688055]
+> [1369713.688055]
+> [1369713.688055] Code: f8 31 c9 45 8b 13 4d 89 d8 44 89 d2 0f ca 89 d0
+> 83 ea 01 48 c1 e0 03 49 29 c0 eb 07 8d 4b 01 39 ca 7c 1c 8d 1c 11 d1
+> fb 48 63 fb <41> 8b 04 f8 0f c8 41 39 c5 74 26 77 e4 8d 53 ff 39 ca 7d
+> e4 48
+> [1369713.688055] RIP  [<ffffffffa01db24f>]
+> xfs_dir2_block_lookup_int+0xcf/0x210 [xfs]
+> [1369713.688055]  RSP <ffff88007120ba28>
+> [1369713.688055] CR2: ffff87f947da5088
+> [1369714.057232] ---[ end trace 0735c8702d5e7899 ]---
+> 
+> What can I do to help getting this fixed?
+> 
+> Tom
+
+can you make an xfs_metadump of the filesystem in question, and then try
+an xfs_repair?  Capture/save the repair output.  If repair finds errors,
+then perhaps the bug is triggered by bad error checking on a corrupted
+image, and we might reproduce it w/ the metadump image.
+
+It'd be nice if ubuntu had debug kernel variants (Fedora does this, I
+dunno about ubuntu) - if you are hitting any kind of memory corruption
+then a kernel with debug checks enabled might catch it sooner.
+
+-Eric
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
