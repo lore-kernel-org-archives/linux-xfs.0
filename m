@@ -1,32 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2CDrCn4079679 for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 08:53:32 -0500
-Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 91B6318F39F
-	for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 06:52:49 -0700 (PDT)
-Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.162.198]) by
-	cuda.sgi.com with ESMTP id SLpaypVx46mAR806 for
-	<xfs@oss.sgi.com>; Thu, 12 Mar 2009 06:52:49 -0700 (PDT)
-Received: from mailsrv2.i.zmi.at (h081217054243.dyn.cm.kabsi.at
-	[81.217.54.243])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv1.zmi.at (Postfix) with ESMTP id EE777450C
-	for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 14:52:16 +0100 (CET)
-Received: from saturn.localnet (saturn.i.zmi.at [10.0.0.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv2.i.zmi.at (Postfix) with ESMTPSA id E137340017F
-	for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 14:52:16 +0100 (CET)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: LWN article: 4K disk sectors
-Date: Thu, 12 Mar 2009 14:52:16 +0100
-References: <200903121258.51497@zmi.at> <49B909CC.7080402@sandeen.net>
-In-Reply-To: <49B909CC.7080402@sandeen.net>
+	n2CEEw9h080510 for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 09:15:19 -0500
+Received: from mail.lichtvoll.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E3FE81C39119
+	for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 07:14:13 -0700 (PDT)
+Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
+	cuda.sgi.com with ESMTP id sCmRaSVpMvk8Bn9Q for
+	<xfs@oss.sgi.com>; Thu, 12 Mar 2009 07:14:13 -0700 (PDT)
+Received: from shambhala.lichtvoll.home
+	(DSL01.83.171.186.52.ip-pool.NEFkom.net [83.171.186.52])
+	by mail.lichtvoll.de (Postfix) with ESMTPSA id DD7C95ADB7
+	for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 15:13:38 +0100 (CET)
+From: Martin Steigerwald <Martin@lichtvoll.de>
+Subject: Re: LWN article: ext4 and data loss
+Date: Thu, 12 Mar 2009 15:14:11 +0100
+References: <200903121239.35442@zmi.at> <49B9097C.1070003@sandeen.net>
+	(sfid-20090312_151043_496061_D19DDB11)
+In-Reply-To: <49B9097C.1070003@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-Message-Id: <200903121452.16419@zmi.at>
+Message-Id: <200903121514.12732.Martin@lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -41,42 +35,34 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On Donnerstag 12 M=E4rz 2009 Eric Sandeen wrote:
-> Take a look at the mkfs.xfs man page:
+Am Donnerstag 12 M=E4rz 2009 schrieb Eric Sandeen:
+> Michael Monnerie wrote:
+> > http://lwn.net/SubscriberLink/322823/e6979f02e5a73feb/
+> >
+> > Very good, maybe similar patches for XFS would help?
+> > IANA Coder, but could be a hint.
+> >
+> > mfg zmi
 >
-> =A0 =A0 =A0 =A0-s sector_size
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 This option specifies the fundamental =A0sect=
-or =A0size =A0of
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 the filesystem. =A0The sector_size is specifi=
-ed either as
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 a value in bytes with size=3Dvalue or as a ba=
-se two loga-
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 rithm value with log=3Dvalue. =A0The default =
-sector_size is
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 512 bytes. The minimum value for sector =A0si=
-ze =A0is =A0512;
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 the =A0maximum is 32768 (32 KiB). The sector_=
-size must be
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 a power of 2 size and cannot be made =A0large=
-r =A0than =A0the
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 filesystem block size.
+> ext4 is taking its hints from XFS in this regard, not the other way
+> around.  XFS dealt with this long ago.
 
-Ugh, I felt so good this morning, until you responded ... ;-)
+Hmmm, I remember having had similar issues with XFS not to long ago, where =
 
-I thought that it's a limitation of the Linux kernel in more parts than =
+at least some KDE configuration were lost or truncated. It seems =
 
-just the filesystem (like block cache), that sector sizes must be 512B. =
+applications will have to get rid of behavioral assumptions regation =
 
-If I had a 4K drive, would that be usable with XFS already?
+filesystem and use safe writing via fsync and whatever else for =
 
-mfg zmi
+configuration and other important files.
+
+I am thinking about a bug report for KDE at least.
+
 -- =
 
-// Michael Monnerie, Ing.BSc    -----      http://it-management.at
-// Tel: 0660 / 415 65 31                      .network.your.ideas.
-// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
-// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
-// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
+Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
+GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
 
 _______________________________________________
 xfs mailing list
