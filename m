@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2CDBYUQ077379 for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 08:11:55 -0500
+	n2CDBmDM077403 for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 08:12:09 -0500
 Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 726A01C38922
-	for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 06:11:11 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 156FE18F2EF
+	for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 06:11:04 -0700 (PDT)
 Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id aEio5PJuYHmlBVUO for <xfs@oss.sgi.com>;
-	Thu, 12 Mar 2009 06:11:11 -0700 (PDT)
-Message-ID: <49B9097C.1070003@sandeen.net>
-Date: Thu, 12 Mar 2009 08:09:16 -0500
+	with ESMTP id X9MHCdyi7pfw6dEc for <xfs@oss.sgi.com>;
+	Thu, 12 Mar 2009 06:11:04 -0700 (PDT)
+Message-ID: <49B909CC.7080402@sandeen.net>
+Date: Thu, 12 Mar 2009 08:10:36 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: LWN article: ext4 and data loss
-References: <200903121239.35442@zmi.at>
-In-Reply-To: <200903121239.35442@zmi.at>
+Subject: Re: LWN article: 4K disk sectors
+References: <200903121258.51497@zmi.at>
+In-Reply-To: <200903121258.51497@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,16 +31,22 @@ To: Michael Monnerie <michael.monnerie@is.it-management.at>
 Cc: xfs@oss.sgi.com
 
 Michael Monnerie wrote:
-> http://lwn.net/SubscriberLink/322823/e6979f02e5a73feb/
+> http://lwn.net/SubscriberLink/322777/16380cde8af0a37e/
 > 
-> Very good, maybe similar patches for XFS would help?
-> IANA Coder, but could be a hint.
-> 
-> mfg zmi
-> 
+> 4K disk sectors coming 2011, might be interesting for devs to prepare 
+> supporting it.
 
-ext4 is taking its hints from XFS in this regard, not the other way
-around.  XFS dealt with this long ago.
+Take a look at the mkfs.xfs man page:
+
+       -s sector_size
+              This option specifies the fundamental  sector  size  of
+              the filesystem.  The sector_size is specified either as
+              a value in bytes with size=value or as a base two loga-
+              rithm value with log=value.  The default sector_size is
+              512 bytes. The minimum value for sector  size  is  512;
+              the  maximum is 32768 (32 KiB). The sector_size must be
+              a power of 2 size and cannot be made  larger  than  the
+              filesystem block size.
 
 -Eric
 
