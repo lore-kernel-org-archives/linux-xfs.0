@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2CEHcbV080772 for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 09:17:58 -0500
-Received: from mail.lichtvoll.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5E8E11C3915A
-	for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 07:17:15 -0700 (PDT)
-Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
-	cuda.sgi.com with ESMTP id HXyeHnC5HfW0EOwk for
-	<xfs@oss.sgi.com>; Thu, 12 Mar 2009 07:17:15 -0700 (PDT)
-Received: from shambhala.lichtvoll.home
-	(DSL01.83.171.186.52.ip-pool.NEFkom.net [83.171.186.52])
-	by mail.lichtvoll.de (Postfix) with ESMTPSA id 121B15ADB7
-	for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 15:17:14 +0100 (CET)
-From: Martin Steigerwald <Martin@lichtvoll.de>
+	n2CEPi2Z081189 for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 09:26:04 -0500
+Received: from rgminet12.oracle.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7EB441C38F6D
+	for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 07:25:21 -0700 (PDT)
+Received: from rgminet12.oracle.com (rcsinet12.oracle.com [148.87.113.124]) by
+	cuda.sgi.com with ESMTP id q2eYeXAlhoPXjeD1 for
+	<xfs@oss.sgi.com>; Thu, 12 Mar 2009 07:25:21 -0700 (PDT)
 Subject: Re: LWN article: 4K disk sectors
-Date: Thu, 12 Mar 2009 15:17:47 +0100
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 References: <200903121258.51497@zmi.at> <49B909CC.7080402@sandeen.net>
-	<200903121452.16419@zmi.at> (sfid-20090312_151032_516649_56909F94)
-In-Reply-To: <200903121452.16419@zmi.at>
+	<200903121452.16419@zmi.at>
+Date: Thu, 12 Mar 2009 10:23:30 -0400
+In-Reply-To: <200903121452.16419@zmi.at> (Michael Monnerie's message of "Thu\,
+	12 Mar 2009 14\:52\:16 +0100")
+Message-ID: <yq1bps6q0pp.fsf@sermon.lab.mkp.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-Message-Id: <200903121517.48426.Martin@lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,59 +25,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Michael Monnerie <michael.monnerie@is.it-management.at>
+Cc: xfs@oss.sgi.com
 
-Am Donnerstag 12 M=E4rz 2009 schrieb Michael Monnerie:
-> On Donnerstag 12 M=E4rz 2009 Eric Sandeen wrote:
-> > Take a look at the mkfs.xfs man page:
-> >
-> > =A0 =A0 =A0 =A0-s sector_size
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 This option specifies the fundamental =A0se=
-ctor =A0size =A0of
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 the filesystem. =A0The sector_size is speci=
-fied either as
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 a value in bytes with size=3Dvalue or as a =
-base two loga-
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 rithm value with log=3Dvalue. =A0The defaul=
-t sector_size is
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 512 bytes. The minimum value for sector =A0=
-size =A0is =A0512;
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 the =A0maximum is 32768 (32 KiB). The secto=
-r_size must be
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 a power of 2 size and cannot be made =A0lar=
-ger =A0than =A0the
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 filesystem block size.
->
-> Ugh, I felt so good this morning, until you responded ... ;-)
->
-> I thought that it's a limitation of the Linux kernel in more parts than
-> just the filesystem (like block cache), that sector sizes must be 512B.
-> If I had a 4K drive, would that be usable with XFS already?
+>>>>> "Michael" == Michael Monnerie <michael.monnerie@is.it-management.at> writes:
 
-I have an USB stick with 2KB hardware sector size. It worked nicely when =
+Michael> I thought that it's a limitation of the Linux kernel in more
+Michael> parts than just the filesystem (like block cache), that sector
+Michael> sizes must be 512B.
 
-using fdisk instead of cfdisk which only supports 512 byte sectors. Dunno =
+Nope.  We've supported bigger sector sizes for years because of CD-ROMs,
+mainframe DASD, etc.
 
-remember exactly which filesystems I tried back then.
 
-And first I wondered why it had a partition in the first quarter of it and =
+Michael> If I had a 4K drive, would that be usable with XFS already?
 
-then empty space. I thought it might have been a fake 1 GB stick, but =
+# cat /sys/block/sdc/queue/hw_sector_size 
+4096
+# xfs_info /mnt
+meta-data=/dev/sdc1              isize=256    agcount=16, agsize=5113686 blks
+         =                       sectsz=4096  attr=0
+data     =                       bsize=4096   blocks=81818976, imaxpct=25
+         =                       sunit=0      swidth=0 blks, unwritten=1
+naming   =version 2              bsize=4096  
+log      =internal               bsize=4096   blocks=32768, version=2
+         =                       sectsz=4096  sunit=1 blks, lazy-count=0
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
-still just deleted the partition and made it size the whole disk in =
-
-cfdisk - well at least I thought I did. The Linux kernel complained about =
-
-writing beyond end of device while mkfsing, I think it was an ext3.
-
--- =
-
-Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
-GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
+-- 
+Martin K. Petersen	Oracle Linux Engineering
 
 _______________________________________________
 xfs mailing list
