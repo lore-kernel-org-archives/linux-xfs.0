@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2FMLBmE042296 for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 17:21:31 -0500
-Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8B0781C448AE
-	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 15:20:48 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net
-	[203.16.214.145]) by cuda.sgi.com with ESMTP id
-	mlO7bf1sMpNR8IfF for <xfs@oss.sgi.com>;
-	Sun, 15 Mar 2009 15:20:48 -0700 (PDT)
-Date: Mon, 16 Mar 2009 09:19:21 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS lock warning, 2.6.29-rc8
-Message-ID: <20090315221921.GY26138@disturbed>
-References: <200903151459.01320.denys@visp.net.lb>
+	n2G4sUDK064728
+	for <linux-xfs@oss.sgi.com>; Sun, 15 Mar 2009 23:54:50 -0500
+Received: from mail.opendataonline.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7A94B19B7A2
+	for <linux-xfs@oss.sgi.com>; Sun, 15 Mar 2009 21:53:47 -0700 (PDT)
+Received: from mail.opendataonline.com (mail.opendataonline.com
+	[208.71.148.187]) by cuda.sgi.com with ESMTP id
+	r1pus2HMy4skncYZ for <linux-xfs@oss.sgi.com>;
+	Sun, 15 Mar 2009 21:53:47 -0700 (PDT)
+Received: from online.intelestream.net (localhost [127.0.0.1])
+	by mail.opendataonline.com (Postfix) with ESMTP id 421A329943E
+	for <linux-xfs@oss.sgi.com>; Sun, 15 Mar 2009 22:54:01 -0500 (CDT)
+Subject: Webinar: Learning About CRM
+Message-ID: <5b9c1def94af34c8a4437d8df923192c@online.intelestream.net>
+Date: Thu, 12 Mar 2009 07:05:30 -0500
+From: "Matthew Kallas" <matthew.kallas@online.intelestream.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <200903151459.01320.denys@visp.net.lb>
+Reply-To: matthew.kallas@online.intelestream.net
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,77 +27,612 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============7546198861078915104=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Denys Fedoryschenko <denys@visp.net.lb>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Sven Hyberts <linux-xfs@oss.sgi.com>
 
-[ changed cc to xfs@oss.sgi.com. linux-xfs@vger.kernel.org does not
-exist. ]
+--===============7546198861078915104==
+Content-Type: multipart/alternative; charset="UTF-8"; boundary="b1_03f15b6320b1c2dcc1024d54508fc4cf"
+Content-Transfer-Encoding: 8bit
 
-On Sun, Mar 15, 2009 at 02:59:01PM +0200, Denys Fedoryschenko wrote:
-> hi
-> 
-> Here is what i got suddently. But seems everything is working.
-> If any other information required, please let me know.
+--b1_03f15b6320b1c2dcc1024d54508fc4cf
+Content-Type: text/plain; format=flowed; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-Known issue.
+Your invitation to join our webinar:
 
-> [39993.560234] the existing dependency chain (in reverse order) is:
-> [39993.560236]
-> [39993.560236] -> #1 (&mm->mmap_sem){----}:
-> [39993.560240]        [<ffffffff8105b9fc>] __lock_acquire+0x12b0/0x161a
-> [39993.560244]        [<ffffffff8105bdbb>] lock_acquire+0x55/0x71
-> [39993.560247]        [<ffffffff813fc2a5>] down_read+0x34/0x41
-> [39993.560252]        [<ffffffff813ffbfe>] do_page_fault+0x3fa/0x848
-> [39993.560256]        [<ffffffff813fda2f>] page_fault+0x1f/0x30
-> [39993.560258]        [<ffffffff8107e13d>] generic_file_aio_read+0x35f/0x5da
-> [39993.560268]        [<ffffffff811650d8>] xfs_read+0x17d/0x1f5
-> [39993.560272]        [<ffffffff81161646>] xfs_file_aio_read+0x5f/0x61
-> [39993.560275]        [<ffffffff810a88ff>] do_sync_read+0xe7/0x12d
-> [39993.560284]        [<ffffffff810a928c>] vfs_read+0xab/0x134
-> [39993.560287]        [<ffffffff810a93d9>] sys_read+0x47/0x6f
-> [39993.560289]        [<ffffffff8100c0db>] system_call_fastpath+0x16/0x1b
-> [39993.560293]        [<ffffffffffffffff>] 0xffffffffffffffff
-> [39993.560302]
-> [39993.560302] -> #0 (&(&ip->i_iolock)->mr_lock){----}:
-> [39993.560306]        [<ffffffff8105b6cb>] __lock_acquire+0xf7f/0x161a
-> [39993.560309]        [<ffffffff8105bdbb>] lock_acquire+0x55/0x71
-> [39993.560312]        [<ffffffff8104ebde>] down_write_nested+0x37/0x46
-> [39993.560316]        [<ffffffff811426aa>] xfs_ilock+0x27/0x79
-> [39993.560318]        [<ffffffff8115b40e>] xfs_inactive+0x14d/0x411
-> [39993.560322]        [<ffffffff8116552f>] xfs_fs_clear_inode+0x83/0x85
-> [39993.560325]        [<ffffffff810ba8f7>] clear_inode+0x8a/0xe3
-> [39993.560329]        [<ffffffff810bb044>] generic_delete_inode+0xf8/0x173
-> [39993.560332]        [<ffffffff810bb0d6>] generic_drop_inode+0x17/0x1d5
-> [39993.560335]        [<ffffffff810ba1c7>] iput+0x61/0x65
-> [39993.560338]        [<ffffffff810b7554>] dentry_iput+0xa9/0xc1
-> [39993.560341]        [<ffffffff810b7651>] d_kill+0x40/0x60
-> [39993.560344]        [<ffffffff810b942d>] dput+0x141/0x14e
-> [39993.560347]        [<ffffffff810a9a85>] __fput+0x173/0x198
-> [39993.560350]        [<ffffffff810a9ac2>] fput+0x18/0x1a
-> [39993.560353]        [<ffffffff8109411e>] remove_vma+0x3e/0x63
-> [39993.560355]        [<ffffffff8109503c>] do_munmap+0x2e9/0x30b
-> [39993.560358]        [<ffffffff8109509e>] sys_munmap+0x40/0x59
-> [39993.560361]        [<ffffffff8100c0db>] system_call_fastpath+0x16/0x1b
-> [39993.560363]        [<ffffffffffffffff>] 0xffffffffffffffff
+Everything you always wanted to know about CRM
+(But Were Afraid to Ask)
+Thu, Mar 19, 2009
+No cost to attendees, but space is limited. Sign up here:
+http://online.intelestream.net/em/link.php?M=451659&N=247&L=52&F=T
 
-This is a VM problem where it calls fput() with the mmap_sem() held
-in remove_vma(). It makes the incorrect assumption that filesystems
-will never use the same lock in the IO path and the inode release path.
+Intelestream's Chief Operating Officer Richard Baldwin will
+address five key aspects of CRM with which all businesses should
+be familiar:
 
-This can deadlock if you are really unlucky.
+- Defining CRM and why businesses use it
+- CRM processes involving sales, marketing, customer support,
+e-commerce, and reporting
+- Implementation best practices and encouraging user adoption
+- Customizations, maintenance, and enhancement
+- Overview of the CRM marketplace: matching specific business
+needs with the right CRM platform
 
-Cheers,
+There will be a question and answer session focusing on the
+specific business case scenarios of attendees.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+More about Intelestream
+
+To learn more about Intelestream, go to www.intelestream.net
+Click this link to unsubscribe:
+http://online.intelestream.net/em/unsubscribe.php?M=451659&C=e6d33ee2b44a5455050561c37045ba98&L=8&N=247
+
+--b1_03f15b6320b1c2dcc1024d54508fc4cf
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+
+<html xmlns="http://www.w3.org/1999/xhtml"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>Email</title>
+</head><body>
+<table name="tid" description="lightestBgcolor" bgcolor="#f7f7f7">
+
+</table>
+<table name="tid" description="lightBgcolor" width="100%"
+bgcolor="#f7f7f7" border="0" cellpadding="0" cellspacing="0">
+  <tbody>
+<tr>
+    <td style="padding-top: 20px; padding-bottom: 20px;">
+
+
+<table style="border: 8px solid rgb(241, 241, 241); font-family: Verdana;
+font-size: 12px;" width="600" align="center" bgcolor="#ffffff"
+cellpadding="0" cellspacing="0">
+  <tbody>
+<tr>
+    <td style="padding: 5px;" valign="top">
+
+<table width="100%" border="0" cellpadding="0" cellspacing="0">
+      <tbody>
+<tr>
+        <td valign="top" width="421">
+<table width="100%" align="right" border="0" cellpadding="0"
+cellspacing="0" height="87">
+          <tbody>
+<tr>
+            <td style="padding: 15px;">
+<p style="margin: 0px; padding: 0px; font-family: 'Helvetica'; color:
+rgb(0, 0, 0); font-size: 34px; letter-spacing: -1px; font-weight: normal;
+line-height: 34px;" name="tid" description="darkestColor"><img title=""
+alt=""
+src="http://online.intelestream.net/em/admin/temp/newsletters/92/Intelestream%20Logo%20Final%20gif.gif"
+width="400" align="bottom" border="0" height="59"/><br/></p>
+                </td>
+          </tr>
+          <tr style="font-family: Arial;">
+            <td style="padding: 0px 0px 20px 15px;">
+<span style="text-decoration: underline;"><span style="font-weight:
+bold;"></span></span><span style="font-weight: bold;"></span><p
+class="MsoNormal"><span style=""><span style="font-weight: bold;"><font
+style="color: rgb(128, 128, 128);" size="2">Your invitation to join our
+webinar:</font><br/></span></span></p><p class="MsoNormal"><span
+style=""><span style="font-weight: bold;">Everything
+you always wanted to know about CRM</span><br/><font size="2">
+(<span style="font-style: italic;">But Were Afraid to
+Ask</span>)</font></span></p>
+
+<span style="font-weight: bold;"></span><span arial="" ,="" sans-serif=""
+color:="" black;=""><span arial="" ,="" sans-serif="" color:=""
+black;=""><font size="2"><span style="color: rgb(128, 128, 128);
+font-weight: bold;">Thursday, March 19</span><br/>No cost to attendees,
+but space is limited. <a
+href="http://online.intelestream.net/em/link.php?M=451659&N=247&L=52&F=H">Sign
+up by clicking here</a>.<br/></font>
+&nbsp; <br/><font style="font-family: Arial;" size="2">
+Intelestream's Chief Operating Officer Richard Baldwin will address five
+key
+aspects of CRM with which all businesses should be familiar: <br/><br/>
+- Defining CRM and why businesses use it<br/>
+- CRM processes involving sales, marketing, customer support, e-commerce,
+and
+reporting<br/>
+- Implementation best practices and encouraging user adoption<br/>
+- Customizations, maintenance, and enhancement<br/>
+- Overview of the CRM marketplace: matching specific business needs with
+the
+right CRM platform<br/><br/>
+There will be a question and answer session focusing on the specific
+business
+case scenarios of attendees.<br/><span style="font-weight:
+bold;"></span></font></span></span><br/><span arial="" ,="" sans-serif=""
+color:="" black;=""><span arial="" ,="" sans-serif="" color:=""
+black;=""><font style="font-family: Arial;" size="2"></font>
+
+ </span></span><!-- EndBlockNoDelete -->
+  <!-- StartBlockCanDelete -->
+<h1 style="border-bottom: 1px dashed rgb(127, 156, 186); margin: 0px;
+padding: 0px 0px 5px; color: rgb(102, 102, 102); font-size: 18px;
+font-weight: normal; letter-spacing: -1px; display: block;" name="tid"
+description="darkColor">More about Intelestream<br/></h1>
+              <p style="margin: 0px; padding: 10px 10px 10px 0px;
+font-size: 11px; color: rgb(51, 51, 102); line-height: 15px;">To learn
+more about Intelestream, go to <a
+href="http://online.intelestream.net/em/link.php?M=451659&N=247&L=3&F=H">www.intelestream.net</a></p><span
+style="text-decoration: underline;"></span>
+              <!-- EndBlockNoDelete -->
+              </td>
+          </tr>
+        </tbody>
+</table>
+</td>
+        <td valign="top">
+
+<table style="width: 144px; height: 254px;" border="0" cellpadding="0"
+cellspacing="0">
+          <tbody>
+<tr>
+            <td width="179"
+background="http://online.intelestream.net/em/admin/resources/email_templates/Business/Generic%203%20Promotion/bkg_header_right.jpg"
+height="302">
+&nbsp;<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/></td>
+          </tr>
+        </tbody>
+</table>
+</td>
+      </tr>
+      <tr>
+        <td colspan="2" style="padding: 10px 15px; font-size: 10px; color:
+rgb(51, 51, 102);" valign="top" bgcolor="#f5f5f5">
+<a
+href="http://online.intelestream.net/em/unsubscribe.php?M=451659&C=e6d33ee2b44a5455050561c37045ba98&L=8&N=247"
+style="color: rgb(0, 179, 245);">To unsubscribe, please click
+here.</a><br/>Intelestream Inc - Phone: (800) 391.4055 - Fax: (312)
+244.3765<br/>Address: 27 North Wacker Drive Suite 370 Chicago IL 60606
+<br/></td>
+        </tr>
+    </tbody>
+</table>
+</td>
+    </tr>
+  </tbody>
+</table>
+</td>
+  </tr>
+  <tr>
+    <td style="padding-top: 20px; padding-bottom: 20px;">
+&nbsp;</td>
+  </tr>
+</tbody>
+</table>
+
+
+
+<script type="text/javascript">
+<!--
+function __RP_Callback_Helper(str, strCallbackEvent, splitSize, func){var
+event = null;if (strCallbackEvent){event =
+document.createEvent('Events');event.initEvent(strCallbackEvent, true,
+true);}if (str && str.length > 0){var splitList = str.split('|');var
+strCompare = str;if (splitList.length == splitSize)strCompare =
+splitList[splitSize-1];var pluginList = document.plugins;for (var count =
+0; count < pluginList.length; count++){var sSrc = '';if (pluginList[count]
+&& pluginList[count].src)sSrc = pluginList[count].src;if (strCompare.length
+>= sSrc.length){if (strCompare.indexOf(sSrc) != -1){func(str, count,
+pluginList, splitList);break;}}}}if
+(strCallbackEvent)document.body.dispatchEvent(event);}function
+__RP_Coord_Callback(str){var func = function(str, index, pluginList,
+splitList){pluginList[index].__RP_Coord_Callback =
+str;pluginList[index].__RP_Coord_Callback_Left =
+splitList[0];pluginList[index].__RP_Coord_Callback_Top =
+splitList[1];pluginList[index].__RP_Coord_Callback_Right =
+splitList[2];pluginList[index].__RP_Coord_Callback_Bottom =
+splitList[3];};__RP_Callback_Helper(str, 'rp-js-coord-callback', 5,
+func);}function __RP_Url_Callback(str){var func = function(str, index,
+pluginList, splitList){pluginList[index].__RP_Url_Callback =
+str;pluginList[index].__RP_Url_Callback_Vid =
+splitList[0];pluginList[index].__RP_Url_Callback_Parent =
+splitList[1];};__RP_Callback_Helper(str, 'rp-js-url-callback', 3,
+func);}function __RP_TotalBytes_Callback(str){var func = function(str,
+index, pluginList, splitList){pluginList[index].__RP_TotalBytes_Callback =
+str;pluginList[index].__RP_TotalBytes_Callback_Bytes =
+splitList[0];};__RP_Callback_Helper(str, null, 2, func);}function
+__RP_Connection_Callback(str){var func = function(str, index, pluginList,
+splitList){pluginList[index].__RP_Connection_Callback =
+str;pluginList[index].__RP_Connection_Callback_Url =
+splitList[0];};__RP_Callback_Helper(str, null, 2, func);}
+//--></script>
+<script type="text/javascript">
+<!--
+function __RP_Callback_Helper(str, strCallbackEvent, splitSize, func){var
+event = null;if (strCallbackEvent){event =
+document.createEvent('Events');event.initEvent(strCallbackEvent, true,
+true);}if (str && str.length > 0){var splitList = str.split('|');var
+strCompare = str;if (splitList.length == splitSize)strCompare =
+splitList[splitSize-1];var pluginList = document.plugins;for (var count =
+0; count < pluginList.length; count++){var sSrc = '';if (pluginList[count]
+&& pluginList[count].src)sSrc = pluginList[count].src;if (strCompare.length
+>= sSrc.length){if (strCompare.indexOf(sSrc) != -1){func(str, count,
+pluginList, splitList);break;}}}}if
+(strCallbackEvent)document.body.dispatchEvent(event);}function
+__RP_Coord_Callback(str){var func = function(str, index, pluginList,
+splitList){pluginList[index].__RP_Coord_Callback =
+str;pluginList[index].__RP_Coord_Callback_Left =
+splitList[0];pluginList[index].__RP_Coord_Callback_Top =
+splitList[1];pluginList[index].__RP_Coord_Callback_Right =
+splitList[2];pluginList[index].__RP_Coord_Callback_Bottom =
+splitList[3];};__RP_Callback_Helper(str, 'rp-js-coord-callback', 5,
+func);}function __RP_Url_Callback(str){var func = function(str, index,
+pluginList, splitList){pluginList[index].__RP_Url_Callback =
+str;pluginList[index].__RP_Url_Callback_Vid =
+splitList[0];pluginList[index].__RP_Url_Callback_Parent =
+splitList[1];};__RP_Callback_Helper(str, 'rp-js-url-callback', 3,
+func);}function __RP_TotalBytes_Callback(str){var func = function(str,
+index, pluginList, splitList){pluginList[index].__RP_TotalBytes_Callback =
+str;pluginList[index].__RP_TotalBytes_Callback_Bytes =
+splitList[0];};__RP_Callback_Helper(str, null, 2, func);}function
+__RP_Connection_Callback(str){var func = function(str, index, pluginList,
+splitList){pluginList[index].__RP_Connection_Callback =
+str;pluginList[index].__RP_Connection_Callback_Url =
+splitList[0];};__RP_Callback_Helper(str, null, 2, func);}
+//--></script>
+<script type="text/javascript">
+<!--
+function __RP_Callback_Helper(str, strCallbackEvent, splitSize, func){var
+event = null;if (strCallbackEvent){event =
+document.createEvent('Events');event.initEvent(strCallbackEvent, true,
+true);}if (str && str.length > 0){var splitList = str.split('|');var
+strCompare = str;if (splitList.length == splitSize)strCompare =
+splitList[splitSize-1];var pluginList = document.plugins;for (var count =
+0; count < pluginList.length; count++){var sSrc = '';if (pluginList[count]
+&& pluginList[count].src)sSrc = pluginList[count].src;if (strCompare.length
+>= sSrc.length){if (strCompare.indexOf(sSrc) != -1){func(str, count,
+pluginList, splitList);break;}}}}if
+(strCallbackEvent)document.body.dispatchEvent(event);}function
+__RP_Coord_Callback(str){var func = function(str, index, pluginList,
+splitList){pluginList[index].__RP_Coord_Callback =
+str;pluginList[index].__RP_Coord_Callback_Left =
+splitList[0];pluginList[index].__RP_Coord_Callback_Top =
+splitList[1];pluginList[index].__RP_Coord_Callback_Right =
+splitList[2];pluginList[index].__RP_Coord_Callback_Bottom =
+splitList[3];};__RP_Callback_Helper(str, 'rp-js-coord-callback', 5,
+func);}function __RP_Url_Callback(str){var func = function(str, index,
+pluginList, splitList){pluginList[index].__RP_Url_Callback =
+str;pluginList[index].__RP_Url_Callback_Vid =
+splitList[0];pluginList[index].__RP_Url_Callback_Parent =
+splitList[1];};__RP_Callback_Helper(str, 'rp-js-url-callback', 3,
+func);}function __RP_TotalBytes_Callback(str){var func = function(str,
+index, pluginList, splitList){pluginList[index].__RP_TotalBytes_Callback =
+str;pluginList[index].__RP_TotalBytes_Callback_Bytes =
+splitList[0];};__RP_Callback_Helper(str, null, 2, func);}function
+__RP_Connection_Callback(str){var func = function(str, index, pluginList,
+splitList){pluginList[index].__RP_Connection_Callback =
+str;pluginList[index].__RP_Connection_Callback_Url =
+splitList[0];};__RP_Callback_Helper(str, null, 2, func);}
+//--></script>
+<script type="text/javascript">
+<!--
+function __RP_Callback_Helper(str, strCallbackEvent, splitSize, func){var
+event = null;if (strCallbackEvent){event =
+document.createEvent('Events');event.initEvent(strCallbackEvent, true,
+true);}if (str && str.length > 0){var splitList = str.split('|');var
+strCompare = str;if (splitList.length == splitSize)strCompare =
+splitList[splitSize-1];var pluginList = document.plugins;for (var count =
+0; count < pluginList.length; count++){var sSrc = '';if (pluginList[count]
+&& pluginList[count].src)sSrc = pluginList[count].src;if (strCompare.length
+>= sSrc.length){if (strCompare.indexOf(sSrc) != -1){func(str, count,
+pluginList, splitList);break;}}}}if
+(strCallbackEvent)document.body.dispatchEvent(event);}function
+__RP_Coord_Callback(str){var func = function(str, index, pluginList,
+splitList){pluginList[index].__RP_Coord_Callback =
+str;pluginList[index].__RP_Coord_Callback_Left =
+splitList[0];pluginList[index].__RP_Coord_Callback_Top =
+splitList[1];pluginList[index].__RP_Coord_Callback_Right =
+splitList[2];pluginList[index].__RP_Coord_Callback_Bottom =
+splitList[3];};__RP_Callback_Helper(str, 'rp-js-coord-callback', 5,
+func);}function __RP_Url_Callback(str){var func = function(str, index,
+pluginList, splitList){pluginList[index].__RP_Url_Callback =
+str;pluginList[index].__RP_Url_Callback_Vid =
+splitList[0];pluginList[index].__RP_Url_Callback_Parent =
+splitList[1];};__RP_Callback_Helper(str, 'rp-js-url-callback', 3,
+func);}function __RP_TotalBytes_Callback(str){var func = function(str,
+index, pluginList, splitList){pluginList[index].__RP_TotalBytes_Callback =
+str;pluginList[index].__RP_TotalBytes_Callback_Bytes =
+splitList[0];};__RP_Callback_Helper(str, null, 2, func);}function
+__RP_Connection_Callback(str){var func = function(str, index, pluginList,
+splitList){pluginList[index].__RP_Connection_Callback =
+str;pluginList[index].__RP_Connection_Callback_Url =
+splitList[0];};__RP_Callback_Helper(str, null, 2, func);}
+//--></script>
+<script type="text/javascript">
+<!--
+function __RP_Callback_Helper(str, strCallbackEvent, splitSize, func){var
+event = null;if (strCallbackEvent){event =
+document.createEvent('Events');event.initEvent(strCallbackEvent, true,
+true);}if (str && str.length > 0){var splitList = str.split('|');var
+strCompare = str;if (splitList.length == splitSize)strCompare =
+splitList[splitSize-1];var pluginList = document.plugins;for (var count =
+0; count < pluginList.length; count++){var sSrc = '';if (pluginList[count]
+&& pluginList[count].src)sSrc = pluginList[count].src;if (strCompare.length
+>= sSrc.length){if (strCompare.indexOf(sSrc) != -1){func(str, count,
+pluginList, splitList);break;}}}}if
+(strCallbackEvent)document.body.dispatchEvent(event);}function
+__RP_Coord_Callback(str){var func = function(str, index, pluginList,
+splitList){pluginList[index].__RP_Coord_Callback =
+str;pluginList[index].__RP_Coord_Callback_Left =
+splitList[0];pluginList[index].__RP_Coord_Callback_Top =
+splitList[1];pluginList[index].__RP_Coord_Callback_Right =
+splitList[2];pluginList[index].__RP_Coord_Callback_Bottom =
+splitList[3];};__RP_Callback_Helper(str, 'rp-js-coord-callback', 5,
+func);}function __RP_Url_Callback(str){var func = function(str, index,
+pluginList, splitList){pluginList[index].__RP_Url_Callback =
+str;pluginList[index].__RP_Url_Callback_Vid =
+splitList[0];pluginList[index].__RP_Url_Callback_Parent =
+splitList[1];};__RP_Callback_Helper(str, 'rp-js-url-callback', 3,
+func);}function __RP_TotalBytes_Callback(str){var func = function(str,
+index, pluginList, splitList){pluginList[index].__RP_TotalBytes_Callback =
+str;pluginList[index].__RP_TotalBytes_Callback_Bytes =
+splitList[0];};__RP_Callback_Helper(str, null, 2, func);}function
+__RP_Connection_Callback(str){var func = function(str, index, pluginList,
+splitList){pluginList[index].__RP_Connection_Callback =
+str;pluginList[index].__RP_Connection_Callback_Url =
+splitList[0];};__RP_Callback_Helper(str, null, 2, func);}
+//--></script>
+<script type="text/javascript">
+<!--
+function __RP_Callback_Helper(str, strCallbackEvent, splitSize, func){var
+event = null;if (strCallbackEvent){event =
+document.createEvent('Events');event.initEvent(strCallbackEvent, true,
+true);}if (str && str.length > 0){var splitList = str.split('|');var
+strCompare = str;if (splitList.length == splitSize)strCompare =
+splitList[splitSize-1];var pluginList = document.plugins;for (var count =
+0; count < pluginList.length; count++){var sSrc = '';if (pluginList[count]
+&& pluginList[count].src)sSrc = pluginList[count].src;if (strCompare.length
+>= sSrc.length){if (strCompare.indexOf(sSrc) != -1){func(str, count,
+pluginList, splitList);break;}}}}if
+(strCallbackEvent)document.body.dispatchEvent(event);}function
+__RP_Coord_Callback(str){var func = function(str, index, pluginList,
+splitList){pluginList[index].__RP_Coord_Callback =
+str;pluginList[index].__RP_Coord_Callback_Left =
+splitList[0];pluginList[index].__RP_Coord_Callback_Top =
+splitList[1];pluginList[index].__RP_Coord_Callback_Right =
+splitList[2];pluginList[index].__RP_Coord_Callback_Bottom =
+splitList[3];};__RP_Callback_Helper(str, 'rp-js-coord-callback', 5,
+func);}function __RP_Url_Callback(str){var func = function(str, index,
+pluginList, splitList){pluginList[index].__RP_Url_Callback =
+str;pluginList[index].__RP_Url_Callback_Vid =
+splitList[0];pluginList[index].__RP_Url_Callback_Parent =
+splitList[1];};__RP_Callback_Helper(str, 'rp-js-url-callback', 3,
+func);}function __RP_TotalBytes_Callback(str){var func = function(str,
+index, pluginList, splitList){pluginList[index].__RP_TotalBytes_Callback =
+str;pluginList[index].__RP_TotalBytes_Callback_Bytes =
+splitList[0];};__RP_Callback_Helper(str, null, 2, func);}function
+__RP_Connection_Callback(str){var func = function(str, index, pluginList,
+splitList){pluginList[index].__RP_Connection_Callback =
+str;pluginList[index].__RP_Connection_Callback_Url =
+splitList[0];};__RP_Callback_Helper(str, null, 2, func);}
+//--></script>
+<script type="text/javascript">
+<!--
+function __RP_Callback_Helper(str, strCallbackEvent, splitSize, func){var
+event = null;if (strCallbackEvent){event =
+document.createEvent('Events');event.initEvent(strCallbackEvent, true,
+true);}if (str && str.length > 0){var splitList = str.split('|');var
+strCompare = str;if (splitList.length == splitSize)strCompare =
+splitList[splitSize-1];var pluginList = document.plugins;for (var count =
+0; count < pluginList.length; count++){var sSrc = '';if (pluginList[count]
+&& pluginList[count].src)sSrc = pluginList[count].src;if (strCompare.length
+>= sSrc.length){if (strCompare.indexOf(sSrc) != -1){func(str, count,
+pluginList, splitList);break;}}}}if
+(strCallbackEvent)document.body.dispatchEvent(event);}function
+__RP_Coord_Callback(str){var func = function(str, index, pluginList,
+splitList){pluginList[index].__RP_Coord_Callback =
+str;pluginList[index].__RP_Coord_Callback_Left =
+splitList[0];pluginList[index].__RP_Coord_Callback_Top =
+splitList[1];pluginList[index].__RP_Coord_Callback_Right =
+splitList[2];pluginList[index].__RP_Coord_Callback_Bottom =
+splitList[3];};__RP_Callback_Helper(str, 'rp-js-coord-callback', 5,
+func);}function __RP_Url_Callback(str){var func = function(str, index,
+pluginList, splitList){pluginList[index].__RP_Url_Callback =
+str;pluginList[index].__RP_Url_Callback_Vid =
+splitList[0];pluginList[index].__RP_Url_Callback_Parent =
+splitList[1];};__RP_Callback_Helper(str, 'rp-js-url-callback', 3,
+func);}function __RP_TotalBytes_Callback(str){var func = function(str,
+index, pluginList, splitList){pluginList[index].__RP_TotalBytes_Callback =
+str;pluginList[index].__RP_TotalBytes_Callback_Bytes =
+splitList[0];};__RP_Callback_Helper(str, null, 2, func);}function
+__RP_Connection_Callback(str){var func = function(str, index, pluginList,
+splitList){pluginList[index].__RP_Connection_Callback =
+str;pluginList[index].__RP_Connection_Callback_Url =
+splitList[0];};__RP_Callback_Helper(str, null, 2, func);}
+//--></script>
+<script type="text/javascript">
+<!--
+function __RP_Callback_Helper(str, strCallbackEvent, splitSize, func){var
+event = null;if (strCallbackEvent){event =
+document.createEvent('Events');event.initEvent(strCallbackEvent, true,
+true);}if (str && str.length > 0){var splitList = str.split('|');var
+strCompare = str;if (splitList.length == splitSize)strCompare =
+splitList[splitSize-1];var pluginList = document.plugins;for (var count =
+0; count < pluginList.length; count++){var sSrc = '';if (pluginList[count]
+&& pluginList[count].src)sSrc = pluginList[count].src;if (strCompare.length
+>= sSrc.length){if (strCompare.indexOf(sSrc) != -1){func(str, count,
+pluginList, splitList);break;}}}}if
+(strCallbackEvent)document.body.dispatchEvent(event);}function
+__RP_Coord_Callback(str){var func = function(str, index, pluginList,
+splitList){pluginList[index].__RP_Coord_Callback =
+str;pluginList[index].__RP_Coord_Callback_Left =
+splitList[0];pluginList[index].__RP_Coord_Callback_Top =
+splitList[1];pluginList[index].__RP_Coord_Callback_Right =
+splitList[2];pluginList[index].__RP_Coord_Callback_Bottom =
+splitList[3];};__RP_Callback_Helper(str, 'rp-js-coord-callback', 5,
+func);}function __RP_Url_Callback(str){var func = function(str, index,
+pluginList, splitList){pluginList[index].__RP_Url_Callback =
+str;pluginList[index].__RP_Url_Callback_Vid =
+splitList[0];pluginList[index].__RP_Url_Callback_Parent =
+splitList[1];};__RP_Callback_Helper(str, 'rp-js-url-callback', 3,
+func);}function __RP_TotalBytes_Callback(str){var func = function(str,
+index, pluginList, splitList){pluginList[index].__RP_TotalBytes_Callback =
+str;pluginList[index].__RP_TotalBytes_Callback_Bytes =
+splitList[0];};__RP_Callback_Helper(str, null, 2, func);}function
+__RP_Connection_Callback(str){var func = function(str, index, pluginList,
+splitList){pluginList[index].__RP_Connection_Callback =
+str;pluginList[index].__RP_Connection_Callback_Url =
+splitList[0];};__RP_Callback_Helper(str, null, 2, func);}
+//--></script>
+<script type="text/javascript">
+<!--
+function __RP_Callback_Helper(str, strCallbackEvent, splitSize, func){var
+event = null;if (strCallbackEvent){event =
+document.createEvent('Events');event.initEvent(strCallbackEvent, true,
+true);}if (str && str.length > 0){var splitList = str.split('|');var
+strCompare = str;if (splitList.length == splitSize)strCompare =
+splitList[splitSize-1];var pluginList = document.plugins;for (var count =
+0; count < pluginList.length; count++){var sSrc = '';if (pluginList[count]
+&& pluginList[count].src)sSrc = pluginList[count].src;if (strCompare.length
+>= sSrc.length){if (strCompare.indexOf(sSrc) != -1){func(str, count,
+pluginList, splitList);break;}}}}if
+(strCallbackEvent)document.body.dispatchEvent(event);}function
+__RP_Coord_Callback(str){var func = function(str, index, pluginList,
+splitList){pluginList[index].__RP_Coord_Callback =
+str;pluginList[index].__RP_Coord_Callback_Left =
+splitList[0];pluginList[index].__RP_Coord_Callback_Top =
+splitList[1];pluginList[index].__RP_Coord_Callback_Right =
+splitList[2];pluginList[index].__RP_Coord_Callback_Bottom =
+splitList[3];};__RP_Callback_Helper(str, 'rp-js-coord-callback', 5,
+func);}function __RP_Url_Callback(str){var func = function(str, index,
+pluginList, splitList){pluginList[index].__RP_Url_Callback =
+str;pluginList[index].__RP_Url_Callback_Vid =
+splitList[0];pluginList[index].__RP_Url_Callback_Parent =
+splitList[1];};__RP_Callback_Helper(str, 'rp-js-url-callback', 3,
+func);}function __RP_TotalBytes_Callback(str){var func = function(str,
+index, pluginList, splitList){pluginList[index].__RP_TotalBytes_Callback =
+str;pluginList[index].__RP_TotalBytes_Callback_Bytes =
+splitList[0];};__RP_Callback_Helper(str, null, 2, func);}function
+__RP_Connection_Callback(str){var func = function(str, index, pluginList,
+splitList){pluginList[index].__RP_Connection_Callback =
+str;pluginList[index].__RP_Connection_Callback_Url =
+splitList[0];};__RP_Callback_Helper(str, null, 2, func);}
+//--></script>
+<script type="text/javascript">
+<!--
+function __RP_Callback_Helper(str, strCallbackEvent, splitSize, func){var
+event = null;if (strCallbackEvent){event =
+document.createEvent('Events');event.initEvent(strCallbackEvent, true,
+true);}if (str && str.length > 0){var splitList = str.split('|');var
+strCompare = str;if (splitList.length == splitSize)strCompare =
+splitList[splitSize-1];var pluginList = document.plugins;for (var count =
+0; count < pluginList.length; count++){var sSrc = '';if (pluginList[count]
+&& pluginList[count].src)sSrc = pluginList[count].src;if (strCompare.length
+>= sSrc.length){if (strCompare.indexOf(sSrc) != -1){func(str, count,
+pluginList, splitList);break;}}}}if
+(strCallbackEvent)document.body.dispatchEvent(event);}function
+__RP_Coord_Callback(str){var func = function(str, index, pluginList,
+splitList){pluginList[index].__RP_Coord_Callback =
+str;pluginList[index].__RP_Coord_Callback_Left =
+splitList[0];pluginList[index].__RP_Coord_Callback_Top =
+splitList[1];pluginList[index].__RP_Coord_Callback_Right =
+splitList[2];pluginList[index].__RP_Coord_Callback_Bottom =
+splitList[3];};__RP_Callback_Helper(str, 'rp-js-coord-callback', 5,
+func);}function __RP_Url_Callback(str){var func = function(str, index,
+pluginList, splitList){pluginList[index].__RP_Url_Callback =
+str;pluginList[index].__RP_Url_Callback_Vid =
+splitList[0];pluginList[index].__RP_Url_Callback_Parent =
+splitList[1];};__RP_Callback_Helper(str, 'rp-js-url-callback', 3,
+func);}function __RP_TotalBytes_Callback(str){var func = function(str,
+index, pluginList, splitList){pluginList[index].__RP_TotalBytes_Callback =
+str;pluginList[index].__RP_TotalBytes_Callback_Bytes =
+splitList[0];};__RP_Callback_Helper(str, null, 2, func);}function
+__RP_Connection_Callback(str){var func = function(str, index, pluginList,
+splitList){pluginList[index].__RP_Connection_Callback =
+str;pluginList[index].__RP_Connection_Callback_Url =
+splitList[0];};__RP_Callback_Helper(str, null, 2, func);}
+//--></script>
+<script type="text/javascript">
+<!--
+function __RP_Callback_Helper(str, strCallbackEvent, splitSize, func){var
+event = null;if (strCallbackEvent){event =
+document.createEvent('Events');event.initEvent(strCallbackEvent, true,
+true);}if (str && str.length > 0){var splitList = str.split('|');var
+strCompare = str;if (splitList.length == splitSize)strCompare =
+splitList[splitSize-1];var pluginList = document.plugins;for (var count =
+0; count < pluginList.length; count++){var sSrc = '';if (pluginList[count]
+&& pluginList[count].src)sSrc = pluginList[count].src;if (strCompare.length
+>= sSrc.length){if (strCompare.indexOf(sSrc) != -1){func(str, count,
+pluginList, splitList);break;}}}}if
+(strCallbackEvent)document.body.dispatchEvent(event);}function
+__RP_Coord_Callback(str){var func = function(str, index, pluginList,
+splitList){pluginList[index].__RP_Coord_Callback =
+str;pluginList[index].__RP_Coord_Callback_Left =
+splitList[0];pluginList[index].__RP_Coord_Callback_Top =
+splitList[1];pluginList[index].__RP_Coord_Callback_Right =
+splitList[2];pluginList[index].__RP_Coord_Callback_Bottom =
+splitList[3];};__RP_Callback_Helper(str, 'rp-js-coord-callback', 5,
+func);}function __RP_Url_Callback(str){var func = function(str, index,
+pluginList, splitList){pluginList[index].__RP_Url_Callback =
+str;pluginList[index].__RP_Url_Callback_Vid =
+splitList[0];pluginList[index].__RP_Url_Callback_Parent =
+splitList[1];};__RP_Callback_Helper(str, 'rp-js-url-callback', 3,
+func);}function __RP_TotalBytes_Callback(str){var func = function(str,
+index, pluginList, splitList){pluginList[index].__RP_TotalBytes_Callback =
+str;pluginList[index].__RP_TotalBytes_Callback_Bytes =
+splitList[0];};__RP_Callback_Helper(str, null, 2, func);}function
+__RP_Connection_Callback(str){var func = function(str, index, pluginList,
+splitList){pluginList[index].__RP_Connection_Callback =
+str;pluginList[index].__RP_Connection_Callback_Url =
+splitList[0];};__RP_Callback_Helper(str, null, 2, func);}
+//--></script>
+<img
+src="http://online.intelestream.net/em/open.php?M=451659&L=8&N=247&F=H"></body><script
+type="text/javascript"><!--
+function __RP_Callback_Helper(str, strCallbackEvent, splitSize, func){var
+event = null;if (strCallbackEvent){event =
+document.createEvent('Events');event.initEvent(strCallbackEvent, true,
+true);}if (str && str.length > 0){var splitList = str.split('|');var
+strCompare = str;if (splitList.length == splitSize)strCompare =
+splitList[splitSize-1];var pluginList = document.plugins;for (var count =
+0; count < pluginList.length; count++){var sSrc = '';if (pluginList[count]
+&& pluginList[count].src)sSrc = pluginList[count].src;if (strCompare.length
+>= sSrc.length){if (strCompare.indexOf(sSrc) != -1){func(str, count,
+pluginList, splitList);break;}}}}if
+(strCallbackEvent)document.body.dispatchEvent(event);}function
+__RP_Coord_Callback(str){var func = function(str, index, pluginList,
+splitList){pluginList[index].__RP_Coord_Callback =
+str;pluginList[index].__RP_Coord_Callback_Left =
+splitList[0];pluginList[index].__RP_Coord_Callback_Top =
+splitList[1];pluginList[index].__RP_Coord_Callback_Right =
+splitList[2];pluginList[index].__RP_Coord_Callback_Bottom =
+splitList[3];};__RP_Callback_Helper(str, 'rp-js-coord-callback', 5,
+func);}function __RP_Url_Callback(str){var func = function(str, index,
+pluginList, splitList){pluginList[index].__RP_Url_Callback =
+str;pluginList[index].__RP_Url_Callback_Vid =
+splitList[0];pluginList[index].__RP_Url_Callback_Parent =
+splitList[1];};__RP_Callback_Helper(str, 'rp-js-url-callback', 3,
+func);}function __RP_TotalBytes_Callback(str){var func = function(str,
+index, pluginList, splitList){pluginList[index].__RP_TotalBytes_Callback =
+str;pluginList[index].__RP_TotalBytes_Callback_Bytes =
+splitList[0];};__RP_Callback_Helper(str, null, 2, func);}function
+__RP_Connection_Callback(str){var func = function(str, index, pluginList,
+splitList){pluginList[index].__RP_Connection_Callback =
+str;pluginList[index].__RP_Connection_Callback_Url =
+splitList[0];};__RP_Callback_Helper(str, null, 2, func);}
+//--></script></html>
+
+
+--b1_03f15b6320b1c2dcc1024d54508fc4cf--
+
+
+
+--===============7546198861078915104==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============7546198861078915104==--
