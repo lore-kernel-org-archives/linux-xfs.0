@@ -1,30 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2CC04t9074243 for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 07:00:25 -0500
-Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3A91C1C38185
-	for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 04:59:24 -0700 (PDT)
-Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.162.198]) by
-	cuda.sgi.com with ESMTP id KsPUn4HtbYPhye6M for
-	<xfs@oss.sgi.com>; Thu, 12 Mar 2009 04:59:24 -0700 (PDT)
-Received: from mailsrv2.i.zmi.at (h081217054243.dyn.cm.kabsi.at
-	[81.217.54.243])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv1.zmi.at (Postfix) with ESMTP id ED783450D
-	for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 12:58:51 +0100 (CET)
-Received: from saturn.localnet (saturn.i.zmi.at [10.0.0.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv2.i.zmi.at (Postfix) with ESMTPSA id DD36740017F
-	for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 12:58:51 +0100 (CET)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: LWN article: 4K disk sectors
-Date: Thu, 12 Mar 2009 12:58:51 +0100
+	n2CDBYUQ077379 for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 08:11:55 -0500
+Received: from mx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 726A01C38922
+	for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 06:11:11 -0700 (PDT)
+Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
+	with ESMTP id aEio5PJuYHmlBVUO for <xfs@oss.sgi.com>;
+	Thu, 12 Mar 2009 06:11:11 -0700 (PDT)
+Message-ID: <49B9097C.1070003@sandeen.net>
+Date: Thu, 12 Mar 2009 08:09:16 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-Message-Id: <200903121258.51497@zmi.at>
+Subject: Re: LWN article: ext4 and data loss
+References: <200903121239.35442@zmi.at>
+In-Reply-To: <200903121239.35442@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,20 +27,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Michael Monnerie <michael.monnerie@is.it-management.at>
+Cc: xfs@oss.sgi.com
 
-http://lwn.net/SubscriberLink/322777/16380cde8af0a37e/
+Michael Monnerie wrote:
+> http://lwn.net/SubscriberLink/322823/e6979f02e5a73feb/
+> 
+> Very good, maybe similar patches for XFS would help?
+> IANA Coder, but could be a hint.
+> 
+> mfg zmi
+> 
 
-4K disk sectors coming 2011, might be interesting for devs to prepare 
-supporting it.
+ext4 is taking its hints from XFS in this regard, not the other way
+around.  XFS dealt with this long ago.
 
-mfg zmi
--- 
-// Michael Monnerie, Ing.BSc    -----      http://it-management.at
-// Tel: 0660 / 415 65 31                      .network.your.ideas.
-// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
-// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
-// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
+-Eric
 
 _______________________________________________
 xfs mailing list
