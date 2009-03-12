@@ -1,15 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2CFEJmh084668 for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 10:14:40 -0500
-Received: from attica.americas.sgi.com (attica.americas.sgi.com
-	[128.162.236.44])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5147F304067
-	for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 08:13:57 -0700 (PDT)
-From: Felix Blyakher <felixb@sgi.com>
-Subject: [PATCH] Fix xfs debug build breakage
-Date: Thu, 12 Mar 2009 09:54:15 -0500
-Message-Id: <1236869655-14757-1-git-send-email-felixb@sgi.com>
+	n2CFH5ve084951 for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 10:17:25 -0500
+Received: from mx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9F4491C396B0
+	for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 08:16:42 -0700 (PDT)
+Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
+	with ESMTP id 2emaVGH7OqxUrXE5 for <xfs@oss.sgi.com>;
+	Thu, 12 Mar 2009 08:16:42 -0700 (PDT)
+Message-ID: <49B92449.90805@sandeen.net>
+Date: Thu, 12 Mar 2009 10:03:37 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: LWN article: 4K disk sectors
+References: <200903121258.51497@zmi.at>
+	<49B909CC.7080402@sandeen.net>	<200903121452.16419@zmi.at>
+	(sfid-20090312_151032_516649_56909F94)
+	<200903121517.48426.Martin@lichtvoll.de>
+In-Reply-To: <200903121517.48426.Martin@lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,43 +26,43 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Martin Steigerwald <Martin@lichtvoll.de>
+Cc: xfs@oss.sgi.com
 
-Fix xfs debug build breakage by pushing xfs_error.h after
-xfs_mount.h, which it depends on.
+Martin Steigerwald wrote:
+> Am Donnerstag 12 M=E4rz 2009 schrieb Michael Monnerie:
+>> On Donnerstag 12 M=E4rz 2009 Eric Sandeen wrote:
+>>> Take a look at the mkfs.xfs man page:
+>>>
+>>>        -s sector_size
+>>>               This option specifies the fundamental  sector  size  of
+>>>               the filesystem.  The sector_size is specified either as
+>>>               a value in bytes with size=3Dvalue or as a base two loga-
+>>>               rithm value with log=3Dvalue.  The default sector_size is
+>>>               512 bytes. The minimum value for sector  size  is  512;
+>>>               the  maximum is 32768 (32 KiB). The sector_size must be
+>>>               a power of 2 size and cannot be made  larger  than  the
+>>>               filesystem block size.
+>> Ugh, I felt so good this morning, until you responded ... ;-)
+>>
+>> I thought that it's a limitation of the Linux kernel in more parts than
+>> just the filesystem (like block cache), that sector sizes must be 512B.
+>> If I had a 4K drive, would that be usable with XFS already?
+> =
 
-Signed-off-by: Felix Blyakher <felixb@sgi.com>
----
- fs/xfs/support/debug.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> I have an USB stick with 2KB hardware sector size. It worked nicely when =
 
-diff --git a/fs/xfs/support/debug.c b/fs/xfs/support/debug.c
-index 930bb34..3f3610a 100644
---- a/fs/xfs/support/debug.c
-+++ b/fs/xfs/support/debug.c
-@@ -17,7 +17,6 @@
-  */
- #include <xfs.h>
- #include "debug.h"
--#include "xfs_error.h"
- 
- /* xfs_mount.h drags a lot of crap in, sorry.. */
- #include "xfs_sb.h"
-@@ -25,6 +24,7 @@
- #include "xfs_ag.h"
- #include "xfs_dmapi.h"
- #include "xfs_mount.h"
-+#include "xfs_error.h"
- 
- static char		message[1024];	/* keep it off the stack */
- static DEFINE_SPINLOCK(xfs_err_lock);
--- 
-1.5.4.rc3
+> using fdisk instead of cfdisk which only supports 512 byte sectors. Dunno =
+
+> remember exactly which filesystems I tried back then.
+
+really?  what kind of usb stick?  I've never seen such a thing.
+
+-Eric
 
 _______________________________________________
 xfs mailing list
