@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2CFH5ve084951 for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 10:17:25 -0500
+	n2CFH67s084954 for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 10:17:26 -0500
 Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9F4491C396B0
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2E0A91C396B4
 	for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 08:16:42 -0700 (PDT)
 Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id 2emaVGH7OqxUrXE5 for <xfs@oss.sgi.com>;
+	with ESMTP id 2SI8b29UMUDbPlCu for <xfs@oss.sgi.com>;
 	Thu, 12 Mar 2009 08:16:42 -0700 (PDT)
-Message-ID: <49B92449.90805@sandeen.net>
-Date: Thu, 12 Mar 2009 10:03:37 -0500
+Message-ID: <49B92423.4020708@sandeen.net>
+Date: Thu, 12 Mar 2009 10:02:59 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: LWN article: 4K disk sectors
-References: <200903121258.51497@zmi.at>
-	<49B909CC.7080402@sandeen.net>	<200903121452.16419@zmi.at>
-	(sfid-20090312_151032_516649_56909F94)
-	<200903121517.48426.Martin@lichtvoll.de>
-In-Reply-To: <200903121517.48426.Martin@lichtvoll.de>
+Subject: Re: LWN article: ext4 and data loss
+References: <200903121239.35442@zmi.at>
+	<49B9097C.1070003@sandeen.net>	(sfid-20090312_151043_496061_D19DDB11)
+	<200903121514.12732.Martin@lichtvoll.de>
+In-Reply-To: <200903121514.12732.Martin@lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,35 +33,48 @@ To: Martin Steigerwald <Martin@lichtvoll.de>
 Cc: xfs@oss.sgi.com
 
 Martin Steigerwald wrote:
-> Am Donnerstag 12 M=E4rz 2009 schrieb Michael Monnerie:
->> On Donnerstag 12 M=E4rz 2009 Eric Sandeen wrote:
->>> Take a look at the mkfs.xfs man page:
+> Am Donnerstag 12 M=E4rz 2009 schrieb Eric Sandeen:
+>> Michael Monnerie wrote:
+>>> http://lwn.net/SubscriberLink/322823/e6979f02e5a73feb/
 >>>
->>>        -s sector_size
->>>               This option specifies the fundamental  sector  size  of
->>>               the filesystem.  The sector_size is specified either as
->>>               a value in bytes with size=3Dvalue or as a base two loga-
->>>               rithm value with log=3Dvalue.  The default sector_size is
->>>               512 bytes. The minimum value for sector  size  is  512;
->>>               the  maximum is 32768 (32 KiB). The sector_size must be
->>>               a power of 2 size and cannot be made  larger  than  the
->>>               filesystem block size.
->> Ugh, I felt so good this morning, until you responded ... ;-)
->>
->> I thought that it's a limitation of the Linux kernel in more parts than
->> just the filesystem (like block cache), that sector sizes must be 512B.
->> If I had a 4K drive, would that be usable with XFS already?
+>>> Very good, maybe similar patches for XFS would help?
+>>> IANA Coder, but could be a hint.
+>>>
+>>> mfg zmi
+>> ext4 is taking its hints from XFS in this regard, not the other way
+>> around.  XFS dealt with this long ago.
 > =
 
-> I have an USB stick with 2KB hardware sector size. It worked nicely when =
+> Hmmm, I remember having had similar issues with XFS not to long ago, wher=
+e =
 
-> using fdisk instead of cfdisk which only supports 512 byte sectors. Dunno =
 
-> remember exactly which filesystems I tried back then.
+depends on what you mean by not too long ago, I think.  Yes, kde had
+this issue on xfs too, and xfs gave up on teaching apps to fsync, and
+implemented the same sorts of things ext4 has done (or will do) to
+mitigate this quite some time ago.
 
-really?  what kind of usb stick?  I've never seen such a thing.
+> at least some KDE configuration were lost or truncated. It seems =
+
+> applications will have to get rid of behavioral assumptions regation =
+
+> filesystem and use safe writing via fsync and whatever else for =
+
+> configuration and other important files.
+
+It's simple.  Want your data safe on disk?  fsync.  There's not a lot
+more to it than that.  (and if fsync hurts perf too much, re-think how
+you are storing your data)
+
+Filesystems can hack around some heuristics to try to make unsafe apps
+safer, but in the end, it's the app's job to make sure a buffered write
+hits permanent storage when it matters.
 
 -Eric
+
+> I am thinking about a bug report for KDE at least.
+> =
+
 
 _______________________________________________
 xfs mailing list
