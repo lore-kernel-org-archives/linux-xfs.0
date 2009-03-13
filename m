@@ -1,22 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2CNE6oB105067 for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 18:14:27 -0500
-Received: from idcmail-mo2no.shaw.ca (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D9DC71C3B6D8
-	for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 16:13:43 -0700 (PDT)
-Received: from idcmail-mo2no.shaw.ca (idcmail-mo2no.shaw.ca [64.59.134.9]) by
-	cuda.sgi.com with ESMTP id 4AjJPXr3TLpF7svw for
-	<xfs@oss.sgi.com>; Thu, 12 Mar 2009 16:13:43 -0700 (PDT)
-Message-ID: <58707.24.80.224.145.1236899620.squirrel@squirrel.kevinjamieson.com>
-In-Reply-To: <49B9611F.5040009@sandeen.net>
-References: <64323.24.80.224.145.1236883814.squirrel@squirrel.kevinjamieson.com>
-	<49B9611F.5040009@sandeen.net>
-Date: Thu, 12 Mar 2009 16:13:40 -0700 (PDT)
-Subject: Re: Oops at xfs_bmbt_get_startoff in SLES 10 2.6.16
-From: "Kevin Jamieson" <kevin@kevinjamieson.com>
+	n2D2SfWR112840 for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 21:29:01 -0500
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com
+	[134.14.52.130])
+	by relay3.corp.sgi.com (Postfix) with SMTP id 6F523AC01D
+	for <xfs@oss.sgi.com>; Thu, 12 Mar 2009 19:28:18 -0700 (PDT)
+Message-ID: <49B9C2BD.8070802@sgi.com>
+Date: Fri, 13 Mar 2009 13:19:41 +1100
+From: Greg Banks <gnb@sgi.com>
 MIME-Version: 1.0
-Reply-To: kevin@kevinjamieson.com
+Subject: Re: issues with project quota over nfs
+References: <296855.89556.qm@web31805.mail.mud.yahoo.com>
+In-Reply-To: <296855.89556.qm@web31805.mail.mud.yahoo.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,21 +25,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
+To: brian wince <bswince@yahoo.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, March 12, 2009 12:23 pm, Eric Sandeen wrote:
+brian wince wrote:
+> All,
+> We have a Quad-core server running gentoo 2.6.27-r7 that is used as an
+> nfs server for a xfs partition.
+> We are using project quota's on directories within this partition and
+> exporting this.
+> When a client tries to untar in the dir with project quotas set and
+> reaches the quota limit the load on the NFS server goes up
+> dramatically and stays like this for a few minutes after the tar has
+> gone through trying to write all of it files and failing due to quota
+> limit exceeded.
+>  
+> Is this a known issue and if so is there anything that can be done to
+> resolve this.
 
-> For SLES that usually is the best route...
->
-> However, http://oss.sgi.com/archives/xfs/2009-02/msg00220.html looks
-> applicable... don't think it ever got merged though.
->
-> perhaps you could test it?
+You probably want to update the client kernels to have this commit:
 
-Thanks, Eric. I will test Lachlan's patch on our system.
+http://git.kernel.org/?p=linux%2Fkernel%2Fgit%2Ftorvalds%2Flinux-2.6.git&a=commit&h=7b159fc18d417980f57aef64cab3417ee6af70f8
+>  
+> We do not see this issue if on the locally mounted partition. This
+> only happens over NFS.
+>  
+> Please let me know if you need more information or if this should be
+> addressed on a different list.
 
-Kevin
+You should ask NFS questions on the NFS list, linux-nfs@vger.kernel.org.
+
+-- 
+Greg Banks, P.Engineer, SGI Australian Software Group.
+the brightly coloured sporks of revolution.
+I don't speak for SGI.
 
 _______________________________________________
 xfs mailing list
