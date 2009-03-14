@@ -1,28 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2EJgdEd224063 for <xfs@oss.sgi.com>; Sat, 14 Mar 2009 14:42:59 -0500
+	n2EJhGx5224114 for <xfs@oss.sgi.com>; Sat, 14 Mar 2009 14:43:37 -0500
 Received: from mail.lichtvoll.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1939F1C42253
-	for <xfs@oss.sgi.com>; Sat, 14 Mar 2009 12:42:14 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 08172198A2D
+	for <xfs@oss.sgi.com>; Sat, 14 Mar 2009 12:42:32 -0700 (PDT)
 Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
-	cuda.sgi.com with ESMTP id Hao09N3SbH6jC9FT for
-	<xfs@oss.sgi.com>; Sat, 14 Mar 2009 12:42:14 -0700 (PDT)
-Received: from shambhala.lichtvoll.home
-	(DSL01.212.114.239.210.ip-pool.NEFkom.net [212.114.239.210])
-	by mail.lichtvoll.de (Postfix) with ESMTPSA id 9D2775AD2F
-	for <xfs@oss.sgi.com>; Sat, 14 Mar 2009 20:42:12 +0100 (CET)
+	cuda.sgi.com with ESMTP id 68idEszRA08mPjiJ for
+	<xfs@oss.sgi.com>; Sat, 14 Mar 2009 12:42:32 -0700 (PDT)
 From: Martin Steigerwald <Martin@lichtvoll.de>
 Subject: Re: LWN article: ext4 and data loss
-Date: Sat, 14 Mar 2009 20:42:51 +0100
-References: <200903121239.35442@zmi.at>
-	<200903121514.12732.Martin@lichtvoll.de>
-	<49B92423.4020708@sandeen.net>
-	(sfid-20090312_171308_416656_6FF6859A)
-In-Reply-To: <49B92423.4020708@sandeen.net>
+Date: Sat, 14 Mar 2009 20:43:10 +0100
+References: <200903121239.35442@zmi.at> (sfid-20090312_140116_228649_7791E639)
+In-Reply-To: <200903121239.35442@zmi.at>
 MIME-Version: 1.0
 Content-Disposition: inline
-Message-Id: <200903142042.51574.Martin@lichtvoll.de>
+Message-Id: <200903142043.11638.Martin@lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,58 +24,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
+Content-Type: text/plain; charset="iso-8859-15"
 Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Michael Monnerie <michael.monnerie@is.it-management.at>
 
-Am Donnerstag 12 M=E4rz 2009 schrieb Eric Sandeen:
-> Martin Steigerwald wrote:
-> > Am Donnerstag 12 M=E4rz 2009 schrieb Eric Sandeen:
-> >> Michael Monnerie wrote:
-> >>> http://lwn.net/SubscriberLink/322823/e6979f02e5a73feb/
-> >>>
-> >>> Very good, maybe similar patches for XFS would help?
-> >>> IANA Coder, but could be a hint.
-> >>>
-> >>> mfg zmi
-> >>
-> >> ext4 is taking its hints from XFS in this regard, not the other way
-> >> around.  XFS dealt with this long ago.
-> >
-> > Hmmm, I remember having had similar issues with XFS not to long ago,
-> > where
+Am Donnerstag 12 M=E4rz 2009 schrieb Michael Monnerie:
+> http://lwn.net/SubscriberLink/322823/e6979f02e5a73feb/
 >
-> depends on what you mean by not too long ago, I think.  Yes, kde had
-> this issue on xfs too, and xfs gave up on teaching apps to fsync, and
-> implemented the same sorts of things ext4 has done (or will do) to
-> mitigate this quite some time ago.
+> Very good, maybe similar patches for XFS would help?
+> IANA Coder, but could be a hint.
 
-Well 2.6.28 and 2.6.27.7. See
+BTW I think you gave away a subcriber only link. The article is not =
 
-http://oss.sgi.com/archives/xfs/2008-12/msg00540.html
+officially available yet:
 
-> > at least some KDE configuration were lost or truncated. It seems
-> > applications will have to get rid of behavioral assumptions regation
-> > filesystem and use safe writing via fsync and whatever else for
-> > configuration and other important files.
->
-> It's simple.  Want your data safe on disk?  fsync.  There's not a lot
-> more to it than that.  (and if fsync hurts perf too much, re-think how
-> you are storing your data)
->
-> Filesystems can hack around some heuristics to try to make unsafe apps
-> safer, but in the end, it's the app's job to make sure a buffered write
-> hits permanent storage when it matters.
+http://lwn.net/Articles/322823/
 
-Hmmm, okay. So here is:
+LWN might not be too happy with this.
 
-http://bugs.kde.org/187172
+Information about this is available elsewhere like on Heise:
 
-Feel free to add there. You'd need a bugzilla login tough.
+http://www.heise.de/english/newsticker/news/134483
 
-Ciao,
 -- =
 
 Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
