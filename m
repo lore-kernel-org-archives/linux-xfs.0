@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2FBQHpO006414 for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 06:26:38 -0500
+	n2FBQItD006415 for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 06:26:38 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 186591C4369D
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1CB331C436A1
 	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 04:25:54 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail11.adl2.internode.on.net
-	[203.16.214.75]) by cuda.sgi.com with ESMTP id GyqJ2btznJfDNF5G
+Received: from mail.internode.on.net (bld-mail09.adl2.internode.on.net
+	[203.16.214.73]) by cuda.sgi.com with ESMTP id ZwihiYwFkRvd1ioV
 	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 04:25:54 -0700 (PDT)
 Received: from destruction.internal (unverified [203.206.165.193])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	46132950-1927428
-	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 21:55:52 +1030 (CDT)
+	58260909-1927428
+	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 21:55:53 +1030 (CDT)
 Received: from dave by destruction.internal with local (Exim 4.69)
-	(envelope-from <dave@destruction>) id 1LioTO-0006h8-Ek
+	(envelope-from <dave@destruction>) id 1LioTO-0006hC-J8
 	for xfs@oss.sgi.com; Sun, 15 Mar 2009 22:25:42 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/2] [XFS] Validate log feature fields correctly
-Date: Sun, 15 Mar 2009 22:25:41 +1100
-Message-Id: <1237116342-25701-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/2] [XFS] Fix double free of inode
+Date: Sun, 15 Mar 2009 22:25:42 +1100
+Message-Id: <1237116342-25701-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1237116342-25701-1-git-send-email-david@fromorbit.com>
 References: <1237116342-25701-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,105 +36,59 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-If the large log sector size feature bit is set in the
-superblock by accident (say disk corruption), the then
-fields that are now considered valid are not checked on
-production kernels. The checks are present as ASSERT
-statements so cause a panic on a debug kernel.
+If we fail to initialise the VFS inode in inode_init_always(),
+it will call ->delete_inode internally resulting in the inode being
+freed. Hence we need to delay the call to inode_init_always()
+until after the XFS inode is sufficient set up to handle a
+call to ->delete_inode, and then if that fails do not touch
+the inode again at all as it has been freed.
 
-Change this so that the fields are validity checked if
-the feature bit is set and abort the log mount if the
-fields do not contain valid values.
-
-Reported-by: Eric Sesterhenn <snakebyte@gmx.de>
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/xfs_log.c |   41 ++++++++++++++++++++++++++++++-----------
- 1 files changed, 30 insertions(+), 11 deletions(-)
+ fs/xfs/xfs_iget.c |   23 ++++++++++++++---------
+ 1 files changed, 14 insertions(+), 9 deletions(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index c8f3008..60e6e63 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -562,9 +562,8 @@ xfs_log_mount(
- 	}
+diff --git a/fs/xfs/xfs_iget.c b/fs/xfs/xfs_iget.c
+index 478e587..89b81ee 100644
+--- a/fs/xfs/xfs_iget.c
++++ b/fs/xfs/xfs_iget.c
+@@ -69,15 +69,6 @@ xfs_inode_alloc(
+ 	ASSERT(!spin_is_locked(&ip->i_flags_lock));
+ 	ASSERT(completion_done(&ip->i_flush));
  
- 	mp->m_log = xlog_alloc_log(mp, log_target, blk_offset, num_bblks);
--	if (!mp->m_log) {
--		cmn_err(CE_WARN, "XFS: Log allocation failed: No memory!");
--		error = ENOMEM;
-+	if (IS_ERR(mp->m_log)) {
-+		error = -PTR_ERR(mp->m_log);
- 		goto out;
- 	}
- 
-@@ -1193,10 +1192,13 @@ xlog_alloc_log(xfs_mount_t	*mp,
- 	xfs_buf_t		*bp;
- 	int			i;
- 	int			iclogsize;
-+	int			error = ENOMEM;
- 
- 	log = kmem_zalloc(sizeof(xlog_t), KM_MAYFAIL);
--	if (!log)
+-	/*
+-	 * initialise the VFS inode here to get failures
+-	 * out of the way early.
+-	 */
+-	if (!inode_init_always(mp->m_super, VFS_I(ip))) {
+-		kmem_zone_free(xfs_inode_zone, ip);
 -		return NULL;
-+	if (!log) {
-+		xlog_warn("XFS: Log allocation failed: No memory!");
-+		goto out;
-+	}
- 
- 	log->l_mp	   = mp;
- 	log->l_targ	   = log_target;
-@@ -1214,19 +1216,35 @@ xlog_alloc_log(xfs_mount_t	*mp,
- 	log->l_grant_reserve_cycle = 1;
- 	log->l_grant_write_cycle = 1;
- 
-+	error = EFSCORRUPTED;
- 	if (xfs_sb_version_hassector(&mp->m_sb)) {
- 		log->l_sectbb_log = mp->m_sb.sb_logsectlog - BBSHIFT;
--		ASSERT(log->l_sectbb_log <= mp->m_sectbb_log);
-+		if (log->l_sectbb_log < 0 ||
-+		    log->l_sectbb_log > mp->m_sectbb_log) {
-+			xlog_warn("XFS: Log sector size (0x%x) out of range.",
-+						log->l_sectbb_log);
-+			goto out_free_log;
-+		}
+-	}
+-
+ 	/* initialise the xfs inode */
+ 	ip->i_ino = ino;
+ 	ip->i_mount = mp;
+@@ -113,6 +104,20 @@ xfs_inode_alloc(
+ #ifdef XFS_DIR2_TRACE
+ 	ip->i_dir_trace = ktrace_alloc(XFS_DIR2_KTRACE_SIZE, KM_NOFS);
+ #endif
++	/*
++	* Now initialise the VFS inode. We do this after the xfs_inode
++	* initialisation as internal failures will result in ->destroy_inode
++	* being called and that will pass down through the reclaim path and
++	* free the XFS inode. This path requires the XFS inode to already be
++	* initialised. Hence if this call fails, the xfs_inode has already
++	* been freed and we should not reference it at all in the error
++	* handling.
++	*/
++	if (!inode_init_always(mp->m_super, VFS_I(ip)))
++		return NULL;
 +
- 		/* for larger sector sizes, must have v2 or external log */
--		ASSERT(log->l_sectbb_log == 0 ||
--			log->l_logBBstart == 0 ||
--			xfs_sb_version_haslogv2(&mp->m_sb));
--		ASSERT(mp->m_sb.sb_logsectlog >= BBSHIFT);
-+		if (log->l_sectbb_log != 0 &&
-+		    (log->l_logBBstart != 0 &&
-+		     !xfs_sb_version_haslogv2(&mp->m_sb))) {
-+			xlog_warn("XFS: log sector size (0x%x) invalid "
-+				  "for configuration.", log->l_sectbb_log);
-+			goto out_free_log;
-+		}
-+		if (mp->m_sb.sb_logsectlog < BBSHIFT) {
-+			xlog_warn("XFS: Log sector log (0x%x) too small.",
-+						mp->m_sb.sb_logsectlog);
-+			goto out_free_log;
-+		}
- 	}
- 	log->l_sectbb_mask = (1 << log->l_sectbb_log) - 1;
++	/* prevent anyone from using this yet */
++	VFS_I(ip)->i_state = I_NEW|I_LOCK;
  
- 	xlog_get_iclog_buffer_size(mp, log);
- 
-+	error = ENOMEM;
- 	bp = xfs_buf_get_empty(log->l_iclog_size, mp->m_logdev_targp);
- 	if (!bp)
- 		goto out_free_log;
-@@ -1326,7 +1344,8 @@ out_free_iclog:
- 	xfs_buf_free(log->l_xbuf);
- out_free_log:
- 	kmem_free(log);
--	return NULL;
-+out:
-+	return ERR_PTR(-error);
- }	/* xlog_alloc_log */
- 
- 
+ 	return ip;
+ }
 -- 
 1.6.2
 
