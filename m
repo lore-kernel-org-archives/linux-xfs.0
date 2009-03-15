@@ -1,19 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2FBWftQ006958 for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 06:33:01 -0500
+	n2FBfJNc007742 for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 06:41:39 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9B4391C43846
-	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 04:32:18 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail02.adl2.internode.on.net
-	[203.16.214.66]) by cuda.sgi.com with ESMTP id oaFFkqvEey9Glfou
-	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 04:32:18 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B30371C43931
+	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 04:40:56 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail11.adl2.internode.on.net
+	[203.16.214.75]) by cuda.sgi.com with ESMTP id OnG0a6GuzlawkmNS
+	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 04:40:56 -0700 (PDT)
+Received: from destruction.internal (unverified [203.206.165.193])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	46133687-1927428
+	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 22:10:54 +1030 (CDT)
+Received: from dave by destruction.internal with local (Exim 4.69)
+	(envelope-from <dave@destruction>) id 1Liohw-0006l3-0l
+	for xfs@oss.sgi.com; Sun, 15 Mar 2009 22:40:44 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5/5] [XFS] Remove xfs_flush_space
-Date: Sun, 15 Mar 2009 22:31:47 +1100
-Message-Id: <1237116707-25793-6-git-send-email-david@fromorbit.com>
-In-Reply-To: <1237116707-25793-1-git-send-email-david@fromorbit.com>
-References: <1237116707-25793-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/2] XFS: Inform the xfsaild of the push target before sleeping
+Date: Sun, 15 Mar 2009 22:40:43 +1100
+Message-Id: <1237117243-25940-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1237117243-25940-1-git-send-email-david@fromorbit.com>
+References: <1237117243-25940-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,157 +35,137 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: mpatocka@redhat.com
 
-The only thing we need to do now when we get an ENOSPC condition during delayed
-allocation reservation is flush all the other inodes with delalloc blocks on
-them and retry without EOF preallocation. Remove the unneeded mess that is
-xfs_flush_space() and just call xfs_flush_inodes() directly from
-xfs_iomap_write_delay().
+When trying to reserve log space, we find the amount of space
+we need, then go to sleep waiting for space. When we are
+woken, we try to push the tail of the log forward to make
+sure we have space available.
 
-Also, change the location of the retry label to avoid trying to do EOF
-preallocation because we don't want to do that at ENOSPC. This enables us to
-remove the BMAPI_SYNC flag as it is no longer used.
+Unfortunately, this means that if there is not space available, and
+everyone who needs space goes to sleep there is no-one left to push
+the tail of the log to make space available. Once we have a thread
+waiting for space to become available, the others queue up behind
+it in a FIFO, and none of them push the tail of the log.
+
+This can result in everyone going to sleep in xlog_grant_log_space()
+if the first sleeper races with the last I/O that moves the tail
+of the log forward. With no further I/O tomove the tail of the log,
+there is nothing to wake the sleepers and hence all transactions
+just stop.
+
+Fix this by making sure the xfsaild will create enough space for the
+transaction that is about to sleep by moving the push target far
+enough forwards to ensure that that the curent proceeees will have
+enough space available when it is woken. That is, we push the
+AIL before we go to sleep.
+
+Because we've inserted the log ticket into the queue before we've
+pushed and gone to sleep, subsequent transactions will wait behind
+this one. Hence we are guaranteed to have space available when we
+are woken.
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/xfs_iomap.c |   61 ++++++++++++---------------------------------------
- fs/xfs/xfs_iomap.h |    3 +-
- 2 files changed, 16 insertions(+), 48 deletions(-)
+ fs/xfs/xfs_log.c |   37 +++++++++++++++++++------------------
+ 1 files changed, 19 insertions(+), 18 deletions(-)
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 7b8b170..5aaa2d7 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -338,38 +338,6 @@ xfs_iomap_eof_align_last_fsb(
- }
- 
- STATIC int
--xfs_flush_space(
--	xfs_inode_t	*ip,
--	int		*fsynced,
--	int		*ioflags)
--{
--	switch (*fsynced) {
--	case 0:
--		if (ip->i_delayed_blks) {
--			xfs_iunlock(ip, XFS_ILOCK_EXCL);
--			delay(1);
--			xfs_ilock(ip, XFS_ILOCK_EXCL);
--			*fsynced = 1;
--		} else {
--			*ioflags |= BMAPI_SYNC;
--			*fsynced = 2;
--		}
--		return 0;
--	case 1:
--		*fsynced = 2;
--		*ioflags |= BMAPI_SYNC;
--		return 0;
--	case 2:
--		xfs_iunlock(ip, XFS_ILOCK_EXCL);
--		xfs_flush_inodes(ip);
--		xfs_ilock(ip, XFS_ILOCK_EXCL);
--		*fsynced = 3;
--		return 0;
--	}
--	return 1;
--}
--
--STATIC int
- xfs_cmn_err_fsblock_zero(
- 	xfs_inode_t	*ip,
- 	xfs_bmbt_irec_t	*imap)
-@@ -538,15 +506,9 @@ error_out:
- }
- 
- /*
-- * If the caller is doing a write at the end of the file,
-- * then extend the allocation out to the file system's write
-- * iosize.  We clean up any extra space left over when the
-- * file is closed in xfs_inactive().
-- *
-- * For sync writes, we are flushing delayed allocate space to
-- * try to make additional space available for allocation near
-- * the filesystem full boundary - preallocation hurts in that
-- * situation, of course.
-+ * If the caller is doing a write at the end of the file, then extend the
-+ * allocation out to the file system's write iosize.  We clean up any extra
-+ * space left over when the file is closed in xfs_inactive().
-  */
- STATIC int
- xfs_iomap_eof_want_preallocate(
-@@ -565,7 +527,7 @@ xfs_iomap_eof_want_preallocate(
- 	int		n, error, imaps;
- 
- 	*prealloc = 0;
--	if ((ioflag & BMAPI_SYNC) || (offset + count) <= ip->i_size)
-+	if ((offset + count) <= ip->i_size)
- 		return 0;
- 
- 	/*
-@@ -611,7 +573,7 @@ xfs_iomap_write_delay(
- 	xfs_extlen_t	extsz;
- 	int		nimaps;
- 	xfs_bmbt_irec_t imap[XFS_WRITE_IMAPS];
--	int		prealloc, fsynced = 0;
-+	int		prealloc, flushed = 0;
- 	int		error;
- 
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-@@ -627,12 +589,12 @@ xfs_iomap_write_delay(
- 	extsz = xfs_get_extsz_hint(ip);
- 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
- 
--retry:
- 	error = xfs_iomap_eof_want_preallocate(mp, ip, offset, count,
- 				ioflag, imap, XFS_WRITE_IMAPS, &prealloc);
- 	if (error)
- 		return error;
- 
-+retry:
- 	if (prealloc) {
- 		aligned_offset = XFS_WRITEIO_ALIGN(mp, (offset + count - 1));
- 		ioalign = XFS_B_TO_FSBT(mp, aligned_offset);
-@@ -659,15 +621,22 @@ retry:
- 
- 	/*
- 	 * If bmapi returned us nothing, and if we didn't get back EDQUOT,
--	 * then we must have run out of space - flush delalloc, and retry..
-+	 * then we must have run out of space - flush all other inodes with
-+	 * delalloc blocks and retry without EOF preallocation.
- 	 */
- 	if (nimaps == 0) {
- 		xfs_iomap_enter_trace(XFS_IOMAP_WRITE_NOSPACE,
- 					ip, offset, count);
--		if (xfs_flush_space(ip, &fsynced, &ioflag))
-+		if (flushed)
- 			return XFS_ERROR(ENOSPC);
- 
-+		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+		xfs_flush_inodes(ip);
-+		xfs_ilock(ip, XFS_ILOCK_EXCL);
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 60e6e63..278960c 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -2573,18 +2573,19 @@ redo:
+ 			xlog_ins_ticketq(&log->l_reserve_headq, tic);
+ 		xlog_trace_loggrant(log, tic,
+ 				    "xlog_grant_log_space: sleep 2");
++		spin_unlock(&log->l_grant_lock);
++		xlog_grant_push_ail(log->l_mp, need_bytes);
++		spin_lock(&log->l_grant_lock);
 +
-+		flushed = 1;
- 		error = 0;
-+		prealloc = 0;
- 		goto retry;
+ 		XFS_STATS_INC(xs_sleep_logspace);
+ 		sv_wait(&tic->t_wait, PINOD|PLTWAIT, &log->l_grant_lock, s);
+ 
+-		if (XLOG_FORCED_SHUTDOWN(log)) {
+-			spin_lock(&log->l_grant_lock);
++		spin_lock(&log->l_grant_lock);
++		if (XLOG_FORCED_SHUTDOWN(log))
+ 			goto error_return;
+-		}
+ 
+ 		xlog_trace_loggrant(log, tic,
+ 				    "xlog_grant_log_space: wake 2");
+-		xlog_grant_push_ail(log->l_mp, need_bytes);
+-		spin_lock(&log->l_grant_lock);
+ 		goto redo;
+ 	} else if (tic->t_flags & XLOG_TIC_IN_Q)
+ 		xlog_del_ticketq(&log->l_reserve_headq, tic);
+@@ -2663,7 +2664,7 @@ xlog_regrant_write_log_space(xlog_t	   *log,
+ 	 * for more free space, otherwise try to get some space for
+ 	 * this transaction.
+ 	 */
+-
++	need_bytes = tic->t_unit_res;
+ 	if ((ntic = log->l_write_headq)) {
+ 		free_bytes = xlog_space_left(log, log->l_grant_write_cycle,
+ 					     log->l_grant_write_bytes);
+@@ -2683,26 +2684,25 @@ xlog_regrant_write_log_space(xlog_t	   *log,
+ 
+ 			xlog_trace_loggrant(log, tic,
+ 				    "xlog_regrant_write_log_space: sleep 1");
++			spin_unlock(&log->l_grant_lock);
++			xlog_grant_push_ail(log->l_mp, need_bytes);
++			spin_lock(&log->l_grant_lock);
++
+ 			XFS_STATS_INC(xs_sleep_logspace);
+ 			sv_wait(&tic->t_wait, PINOD|PLTWAIT,
+ 				&log->l_grant_lock, s);
+ 
+ 			/* If we're shutting down, this tic is already
+ 			 * off the queue */
+-			if (XLOG_FORCED_SHUTDOWN(log)) {
+-				spin_lock(&log->l_grant_lock);
++			spin_lock(&log->l_grant_lock);
++			if (XLOG_FORCED_SHUTDOWN(log))
+ 				goto error_return;
+-			}
+ 
+ 			xlog_trace_loggrant(log, tic,
+ 				    "xlog_regrant_write_log_space: wake 1");
+-			xlog_grant_push_ail(log->l_mp, tic->t_unit_res);
+-			spin_lock(&log->l_grant_lock);
+ 		}
  	}
  
-diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
-index ee1a0c1..87fb9d1 100644
---- a/fs/xfs/xfs_iomap.h
-+++ b/fs/xfs/xfs_iomap.h
-@@ -40,8 +40,7 @@ typedef enum {
- 	BMAPI_IGNSTATE = (1 << 4),	/* ignore unwritten state on read */
- 	BMAPI_DIRECT = (1 << 5),	/* direct instead of buffered write */
- 	BMAPI_MMAP = (1 << 6),		/* allocate for mmap write */
--	BMAPI_SYNC = (1 << 7),		/* sync write to flush delalloc space */
--	BMAPI_TRYLOCK = (1 << 8),	/* non-blocking request */
-+	BMAPI_TRYLOCK = (1 << 7),	/* non-blocking request */
- } bmapi_flags_t;
+-	need_bytes = tic->t_unit_res;
+-
+ redo:
+ 	if (XLOG_FORCED_SHUTDOWN(log))
+ 		goto error_return;
+@@ -2712,19 +2712,20 @@ redo:
+ 	if (free_bytes < need_bytes) {
+ 		if ((tic->t_flags & XLOG_TIC_IN_Q) == 0)
+ 			xlog_ins_ticketq(&log->l_write_headq, tic);
++		spin_unlock(&log->l_grant_lock);
++		xlog_grant_push_ail(log->l_mp, need_bytes);
++		spin_lock(&log->l_grant_lock);
++
+ 		XFS_STATS_INC(xs_sleep_logspace);
+ 		sv_wait(&tic->t_wait, PINOD|PLTWAIT, &log->l_grant_lock, s);
  
+ 		/* If we're shutting down, this tic is already off the queue */
+-		if (XLOG_FORCED_SHUTDOWN(log)) {
+-			spin_lock(&log->l_grant_lock);
++		spin_lock(&log->l_grant_lock);
++		if (XLOG_FORCED_SHUTDOWN(log))
+ 			goto error_return;
+-		}
  
+ 		xlog_trace_loggrant(log, tic,
+ 				    "xlog_regrant_write_log_space: wake 2");
+-		xlog_grant_push_ail(log->l_mp, need_bytes);
+-		spin_lock(&log->l_grant_lock);
+ 		goto redo;
+ 	} else if (tic->t_flags & XLOG_TIC_IN_Q)
+ 		xlog_del_ticketq(&log->l_write_headq, tic);
 -- 
 1.6.2
 
