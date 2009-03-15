@@ -1,19 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2FBWeBi006954 for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 06:33:00 -0500
+	n2FBWeGv006956 for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 06:33:01 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C67E719A010
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2C8431C43843
 	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 04:32:17 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail05.adl2.internode.on.net
-	[203.16.214.69]) by cuda.sgi.com with ESMTP id C4jM8ex01nOuT7xC
+Received: from mail.internode.on.net (bld-mail02.adl2.internode.on.net
+	[203.16.214.66]) by cuda.sgi.com with ESMTP id YmqwwLUFwJYMp4HM
 	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 04:32:17 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 4/5] [XFS] Flush delayed allcoation blocks on ENOSPC in create
-Date: Sun, 15 Mar 2009 22:31:46 +1100
-Message-Id: <1237116707-25793-5-git-send-email-david@fromorbit.com>
-In-Reply-To: <1237116707-25793-1-git-send-email-david@fromorbit.com>
-References: <1237116707-25793-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/5, RESEND] [XFS] Spurious ENOSPC fixes
+Date: Sun, 15 Mar 2009 22:31:42 +1100
+Message-Id: <1237116707-25793-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,40 +28,14 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: mpatocka@redhat.com
 
-If we are creating lots of small files, we can fail to get
-a reservation for inode create earlier than we should due to
-EOF preallocation done during delayed allocation reservation.
-Hence on the first reservation ENOSPC failure flush all the
-delayed allocation blocks out of the system and retry.
+This series fix the spurious ENOSPC problems reported by and
+partially solved by Mikulas Patocka. This series makes the recently
+posted QA tests 203 and 204 pass.
 
-This fixes the last commonly triggered spurious ENOSPC issue
-that has been reported.
+Mikulas, if I've got any of the attributions wrong for the
+bits of your code I used, let me know and I'll fix them.
 
-Signed-off-by: Dave Chinner <david@fromorbit.com>
----
- fs/xfs/xfs_vnodeops.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
-
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index 59de049..faf671b 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -1457,6 +1457,13 @@ xfs_create(
- 	error = xfs_trans_reserve(tp, resblks, log_res, 0,
- 			XFS_TRANS_PERM_LOG_RES, log_count);
- 	if (error == ENOSPC) {
-+		/* flush outstanding delalloc blocks and retry */
-+		xfs_flush_inodes(dp);
-+		error = xfs_trans_reserve(tp, resblks, XFS_CREATE_LOG_RES(mp), 0,
-+			XFS_TRANS_PERM_LOG_RES, XFS_CREATE_LOG_COUNT);
-+	}
-+	if (error == ENOSPC) {
-+		/* No space at all so try a "no-allocation" reservation */
- 		resblks = 0;
- 		error = xfs_trans_reserve(tp, 0, log_res, 0,
- 				XFS_TRANS_PERM_LOG_RES, log_count);
--- 
-1.6.2
+This is a resend with the correct sign-offs on it.
 
 _______________________________________________
 xfs mailing list
