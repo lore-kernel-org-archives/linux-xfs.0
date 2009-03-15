@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2F7nvBV256631 for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 02:50:18 -0500
+	n2F7ohve256690 for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 02:51:04 -0500
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8577D199CB8
-	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 00:49:35 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7C46F199BEA
+	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 00:50:21 -0700 (PDT)
 Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net
 	[203.16.214.145]) by cuda.sgi.com with ESMTP id
-	kx5bx4kFxFNEwRoG for <xfs@oss.sgi.com>;
-	Sun, 15 Mar 2009 00:49:35 -0700 (PDT)
-Date: Sun, 15 Mar 2009 18:49:34 +1100
+	qdrdXXwD4V75c1Hg for <xfs@oss.sgi.com>;
+	Sun, 15 Mar 2009 00:50:21 -0700 (PDT)
+Date: Sun, 15 Mar 2009 18:50:20 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/7] xfs: remove another leftover of the old inode log
-	item format
-Message-ID: <20090315074934.GQ26138@disturbed>
+Subject: Re: [PATCH 3/7] xfs: cleanup xlog_recover_do_trans
+Message-ID: <20090315075020.GR26138@disturbed>
 References: <20090220085207.663702000@bombadil.infradead.org>
-	<20090220085228.896448000@bombadil.infradead.org>
+	<20090220085229.204188000@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20090220085228.896448000@bombadil.infradead.org>
+In-Reply-To: <20090220085229.204188000@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,12 +33,13 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Fri, Feb 20, 2009 at 03:52:09AM -0500, Christoph Hellwig wrote:
-> There's another little snipplet of code left from the handling of the old
-> inode log item format in xlog_recover_do_inode_trans.  Kill it as it
-> can't be reached anymore.
+On Fri, Feb 20, 2009 at 03:52:10AM -0500, Christoph Hellwig wrote:
+> Change the big if-elsif-else block handling the different item types
+> into a more natural switch, remove assignments in conditionals and
+> remove an out of place comment from centuries ago on IRIX.
 
 Reviewed-by: Dave Chinner <david@fromorbit.com>
+
 -- 
 Dave Chinner
 david@fromorbit.com
