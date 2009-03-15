@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2FBWfm1006957 for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 06:33:01 -0500
+	n2FBWftQ006958 for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 06:33:01 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6C4321C43845
-	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 04:32:17 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail11.adl2.internode.on.net
-	[203.16.214.75]) by cuda.sgi.com with ESMTP id whAFrjhNWvuhon9n
-	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 04:32:17 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9B4391C43846
+	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 04:32:18 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail02.adl2.internode.on.net
+	[203.16.214.66]) by cuda.sgi.com with ESMTP id oaFFkqvEey9Glfou
+	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 04:32:18 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/5] [XFS] Use xfs_sync_inodes() for device flushing
-Date: Sun, 15 Mar 2009 22:31:43 +1100
-Message-Id: <1237116707-25793-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 5/5] [XFS] Remove xfs_flush_space
+Date: Sun, 15 Mar 2009 22:31:47 +1100
+Message-Id: <1237116707-25793-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1237116707-25793-1-git-send-email-david@fromorbit.com>
 References: <1237116707-25793-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,209 +30,155 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: mpatocka@redhat.com
 
-Currently xfs_device_flush calls sync_blockdev() which is
-a no-op for XFS as all it's metadata is held in a different
-address to the one sync_blockdev() works on.
+The only thing we need to do now when we get an ENOSPC condition during delayed
+allocation reservation is flush all the other inodes with delalloc blocks on
+them and retry without EOF preallocation. Remove the unneeded mess that is
+xfs_flush_space() and just call xfs_flush_inodes() directly from
+xfs_iomap_write_delay().
 
-Call xfs_sync_inodes() instead to flush all the delayed
-allocation blocks out. To do this as efficiently as possible,
-do it via two passes - one to do an async flush of all the
-dirty blocks and a second to wait for all the IO to complete.
-This requires some modification to the xfs-sync_inodes_ag()
-flush code to do efficiently.
+Also, change the location of the retry label to avoid trying to do EOF
+preallocation because we don't want to do that at ENOSPC. This enables us to
+remove the BMAPI_SYNC flag as it is no longer used.
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/linux-2.6/xfs_fs_subr.c |   14 ++++++------
- fs/xfs/linux-2.6/xfs_sync.c    |   43 +++++++++++++++++++++++----------------
- fs/xfs/linux-2.6/xfs_sync.h    |    7 +++--
- fs/xfs/xfs_iomap.c             |    2 +-
- fs/xfs/xfs_mount.h             |    2 +-
- 5 files changed, 38 insertions(+), 30 deletions(-)
+ fs/xfs/xfs_iomap.c |   61 ++++++++++++---------------------------------------
+ fs/xfs/xfs_iomap.h |    3 +-
+ 2 files changed, 16 insertions(+), 48 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_fs_subr.c b/fs/xfs/linux-2.6/xfs_fs_subr.c
-index 5aeb777..08be36d 100644
---- a/fs/xfs/linux-2.6/xfs_fs_subr.c
-+++ b/fs/xfs/linux-2.6/xfs_fs_subr.c
-@@ -74,14 +74,14 @@ xfs_flush_pages(
- 
- 	if (mapping_tagged(mapping, PAGECACHE_TAG_DIRTY)) {
- 		xfs_iflags_clear(ip, XFS_ITRUNCATED);
--		ret = filemap_fdatawrite(mapping);
--		if (flags & XFS_B_ASYNC)
--			return -ret;
--		ret2 = filemap_fdatawait(mapping);
--		if (!ret)
--			ret = ret2;
-+		ret = -filemap_fdatawrite(mapping);
- 	}
--	return -ret;
-+	if (flags & XFS_B_ASYNC)
-+		return ret;
-+	ret2 = xfs_wait_on_pages(ip, first, last);
-+	if (!ret)
-+		ret = ret2;
-+	return ret;
- }
- 
- int
-diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index a608e72..88caafc 100644
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -62,12 +62,6 @@ xfs_sync_inodes_ag(
- 	uint32_t	first_index = 0;
- 	int		error = 0;
- 	int		last_error = 0;
--	int		fflag = XFS_B_ASYNC;
--
--	if (flags & SYNC_DELWRI)
--		fflag = XFS_B_DELWRI;
--	if (flags & SYNC_WAIT)
--		fflag = 0;		/* synchronous overrides all */
- 
- 	do {
- 		struct inode	*inode;
-@@ -128,11 +122,23 @@ xfs_sync_inodes_ag(
- 		 * If we have to flush data or wait for I/O completion
- 		 * we need to hold the iolock.
- 		 */
--		if ((flags & SYNC_DELWRI) && VN_DIRTY(inode)) {
--			xfs_ilock(ip, XFS_IOLOCK_SHARED);
--			lock_flags |= XFS_IOLOCK_SHARED;
--			error = xfs_flush_pages(ip, 0, -1, fflag, FI_NONE);
--			if (flags & SYNC_IOWAIT)
-+		if (flags & SYNC_DELWRI) {
-+			if (VN_DIRTY(inode)) {
-+				if (flags & SYNC_TRYLOCK) {
-+					if (xfs_ilock_nowait(ip, XFS_IOLOCK_SHARED))
-+						lock_flags |= XFS_IOLOCK_SHARED;
-+				} else {
-+					xfs_ilock(ip, XFS_IOLOCK_SHARED);
-+					lock_flags |= XFS_IOLOCK_SHARED;
-+				}
-+				if (lock_flags & XFS_IOLOCK_SHARED) {
-+					error = xfs_flush_pages(ip, 0, -1,
-+							(flags & SYNC_WAIT) ? 0
-+								: XFS_B_ASYNC,
-+							FI_NONE);
-+				}
-+			}
-+			if (VN_CACHED(inode) && (flags & SYNC_IOWAIT))
- 				xfs_ioend_wait(ip);
- 		}
- 		xfs_ilock(ip, XFS_ILOCK_SHARED);
-@@ -400,9 +406,9 @@ xfs_syncd_queue_work(
- 	void		*data,
- 	void		(*syncer)(struct xfs_mount *, void *))
- {
--	struct bhv_vfs_sync_work *work;
-+	struct xfs_sync_work *work;
- 
--	work = kmem_alloc(sizeof(struct bhv_vfs_sync_work), KM_SLEEP);
-+	work = kmem_alloc(sizeof(struct xfs_sync_work), KM_SLEEP);
- 	INIT_LIST_HEAD(&work->w_list);
- 	work->w_syncer = syncer;
- 	work->w_data = data;
-@@ -445,23 +451,24 @@ xfs_flush_inode(
-  * (IOW, "If at first you don't succeed, use a Bigger Hammer").
-  */
- STATIC void
--xfs_flush_device_work(
-+xfs_flush_inodes_work(
- 	struct xfs_mount *mp,
- 	void		*arg)
- {
- 	struct inode	*inode = arg;
--	sync_blockdev(mp->m_super->s_bdev);
-+	xfs_sync_inodes(mp, SYNC_DELWRI | SYNC_TRYLOCK);
-+	xfs_sync_inodes(mp, SYNC_DELWRI | SYNC_TRYLOCK | SYNC_IOWAIT);
- 	iput(inode);
- }
- 
- void
--xfs_flush_device(
-+xfs_flush_inodes(
- 	xfs_inode_t	*ip)
- {
- 	struct inode	*inode = VFS_I(ip);
- 
- 	igrab(inode);
--	xfs_syncd_queue_work(ip->i_mount, inode, xfs_flush_device_work);
-+	xfs_syncd_queue_work(ip->i_mount, inode, xfs_flush_inodes_work);
- 	delay(msecs_to_jiffies(500));
- 	xfs_log_force(ip->i_mount, (xfs_lsn_t)0, XFS_LOG_FORCE|XFS_LOG_SYNC);
- }
-@@ -497,7 +504,7 @@ xfssyncd(
- {
- 	struct xfs_mount	*mp = arg;
- 	long			timeleft;
--	bhv_vfs_sync_work_t	*work, *n;
-+	xfs_sync_work_t		*work, *n;
- 	LIST_HEAD		(tmp);
- 
- 	set_freezable();
-diff --git a/fs/xfs/linux-2.6/xfs_sync.h b/fs/xfs/linux-2.6/xfs_sync.h
-index 04f058c..ec95e26 100644
---- a/fs/xfs/linux-2.6/xfs_sync.h
-+++ b/fs/xfs/linux-2.6/xfs_sync.h
-@@ -21,18 +21,19 @@
- struct xfs_mount;
- struct xfs_perag;
- 
--typedef struct bhv_vfs_sync_work {
-+typedef struct xfs_sync_work {
- 	struct list_head	w_list;
- 	struct xfs_mount	*w_mount;
- 	void			*w_data;	/* syncer routine argument */
- 	void			(*w_syncer)(struct xfs_mount *, void *);
--} bhv_vfs_sync_work_t;
-+} xfs_sync_work_t;
- 
- #define SYNC_ATTR		0x0001	/* sync attributes */
- #define SYNC_DELWRI		0x0002	/* look at delayed writes */
- #define SYNC_WAIT		0x0004	/* wait for i/o to complete */
- #define SYNC_BDFLUSH		0x0008	/* BDFLUSH is calling -- don't block */
- #define SYNC_IOWAIT		0x0010  /* wait for all I/O to complete */
-+#define SYNC_TRYLOCK		0x0020  /* only try to lock inodes */
- 
- int xfs_syncd_init(struct xfs_mount *mp);
- void xfs_syncd_stop(struct xfs_mount *mp);
-@@ -44,7 +45,7 @@ int xfs_quiesce_data(struct xfs_mount *mp);
- void xfs_quiesce_attr(struct xfs_mount *mp);
- 
- void xfs_flush_inode(struct xfs_inode *ip);
--void xfs_flush_device(struct xfs_inode *ip);
-+void xfs_flush_inodes(struct xfs_inode *ip);
- 
- int xfs_reclaim_inode(struct xfs_inode *ip, int locked, int sync_mode);
- int xfs_reclaim_inodes(struct xfs_mount *mp, int noblock, int mode);
 diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 08ce723..8b97d82 100644
+index 7b8b170..5aaa2d7 100644
 --- a/fs/xfs/xfs_iomap.c
 +++ b/fs/xfs/xfs_iomap.c
-@@ -361,7 +361,7 @@ xfs_flush_space(
+@@ -338,38 +338,6 @@ xfs_iomap_eof_align_last_fsb(
+ }
+ 
+ STATIC int
+-xfs_flush_space(
+-	xfs_inode_t	*ip,
+-	int		*fsynced,
+-	int		*ioflags)
+-{
+-	switch (*fsynced) {
+-	case 0:
+-		if (ip->i_delayed_blks) {
+-			xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-			delay(1);
+-			xfs_ilock(ip, XFS_ILOCK_EXCL);
+-			*fsynced = 1;
+-		} else {
+-			*ioflags |= BMAPI_SYNC;
+-			*fsynced = 2;
+-		}
+-		return 0;
+-	case 1:
+-		*fsynced = 2;
+-		*ioflags |= BMAPI_SYNC;
+-		return 0;
+-	case 2:
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-		xfs_flush_inodes(ip);
+-		xfs_ilock(ip, XFS_ILOCK_EXCL);
+-		*fsynced = 3;
+-		return 0;
+-	}
+-	return 1;
+-}
+-
+-STATIC int
+ xfs_cmn_err_fsblock_zero(
+ 	xfs_inode_t	*ip,
+ 	xfs_bmbt_irec_t	*imap)
+@@ -538,15 +506,9 @@ error_out:
+ }
+ 
+ /*
+- * If the caller is doing a write at the end of the file,
+- * then extend the allocation out to the file system's write
+- * iosize.  We clean up any extra space left over when the
+- * file is closed in xfs_inactive().
+- *
+- * For sync writes, we are flushing delayed allocate space to
+- * try to make additional space available for allocation near
+- * the filesystem full boundary - preallocation hurts in that
+- * situation, of course.
++ * If the caller is doing a write at the end of the file, then extend the
++ * allocation out to the file system's write iosize.  We clean up any extra
++ * space left over when the file is closed in xfs_inactive().
+  */
+ STATIC int
+ xfs_iomap_eof_want_preallocate(
+@@ -565,7 +527,7 @@ xfs_iomap_eof_want_preallocate(
+ 	int		n, error, imaps;
+ 
+ 	*prealloc = 0;
+-	if ((ioflag & BMAPI_SYNC) || (offset + count) <= ip->i_size)
++	if ((offset + count) <= ip->i_size)
  		return 0;
- 	case 2:
- 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
--		xfs_flush_device(ip);
+ 
+ 	/*
+@@ -611,7 +573,7 @@ xfs_iomap_write_delay(
+ 	xfs_extlen_t	extsz;
+ 	int		nimaps;
+ 	xfs_bmbt_irec_t imap[XFS_WRITE_IMAPS];
+-	int		prealloc, fsynced = 0;
++	int		prealloc, flushed = 0;
+ 	int		error;
+ 
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+@@ -627,12 +589,12 @@ xfs_iomap_write_delay(
+ 	extsz = xfs_get_extsz_hint(ip);
+ 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
+ 
+-retry:
+ 	error = xfs_iomap_eof_want_preallocate(mp, ip, offset, count,
+ 				ioflag, imap, XFS_WRITE_IMAPS, &prealloc);
+ 	if (error)
+ 		return error;
+ 
++retry:
+ 	if (prealloc) {
+ 		aligned_offset = XFS_WRITEIO_ALIGN(mp, (offset + count - 1));
+ 		ioalign = XFS_B_TO_FSBT(mp, aligned_offset);
+@@ -659,15 +621,22 @@ retry:
+ 
+ 	/*
+ 	 * If bmapi returned us nothing, and if we didn't get back EDQUOT,
+-	 * then we must have run out of space - flush delalloc, and retry..
++	 * then we must have run out of space - flush all other inodes with
++	 * delalloc blocks and retry without EOF preallocation.
+ 	 */
+ 	if (nimaps == 0) {
+ 		xfs_iomap_enter_trace(XFS_IOMAP_WRITE_NOSPACE,
+ 					ip, offset, count);
+-		if (xfs_flush_space(ip, &fsynced, &ioflag))
++		if (flushed)
+ 			return XFS_ERROR(ENOSPC);
+ 
++		xfs_iunlock(ip, XFS_ILOCK_EXCL);
 +		xfs_flush_inodes(ip);
- 		xfs_ilock(ip, XFS_ILOCK_EXCL);
- 		*fsynced = 3;
- 		return 0;
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 1438dd4..6df3a31 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -318,7 +318,7 @@ typedef struct xfs_mount {
- #endif
- 	struct xfs_mru_cache	*m_filestream;  /* per-mount filestream data */
- 	struct task_struct	*m_sync_task;	/* generalised sync thread */
--	bhv_vfs_sync_work_t	m_sync_work;	/* work item for VFS_SYNC */
-+	xfs_sync_work_t		m_sync_work;	/* work item for VFS_SYNC */
- 	struct list_head	m_sync_list;	/* sync thread work item list */
- 	spinlock_t		m_sync_lock;	/* work item list lock */
- 	int			m_sync_seq;	/* sync thread generation no. */
++		xfs_ilock(ip, XFS_ILOCK_EXCL);
++
++		flushed = 1;
+ 		error = 0;
++		prealloc = 0;
+ 		goto retry;
+ 	}
+ 
+diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
+index ee1a0c1..87fb9d1 100644
+--- a/fs/xfs/xfs_iomap.h
++++ b/fs/xfs/xfs_iomap.h
+@@ -40,8 +40,7 @@ typedef enum {
+ 	BMAPI_IGNSTATE = (1 << 4),	/* ignore unwritten state on read */
+ 	BMAPI_DIRECT = (1 << 5),	/* direct instead of buffered write */
+ 	BMAPI_MMAP = (1 << 6),		/* allocate for mmap write */
+-	BMAPI_SYNC = (1 << 7),		/* sync write to flush delalloc space */
+-	BMAPI_TRYLOCK = (1 << 8),	/* non-blocking request */
++	BMAPI_TRYLOCK = (1 << 7),	/* non-blocking request */
+ } bmapi_flags_t;
+ 
+ 
 -- 
 1.6.2
 
