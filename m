@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2FJ7x14032114 for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 14:08:20 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4E1BA19ABB0
-	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 12:07:16 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail05.adl2.internode.on.net
-	[203.16.214.69]) by cuda.sgi.com with ESMTP id Y4nHgbi75qZECCMf
-	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 12:07:16 -0700 (PDT)
-Received: from destruction.internal (unverified [203.206.165.193])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	43731180-1927428
-	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 22:16:54 +1030 (CDT)
-Received: from dave by destruction.internal with local (Exim 4.69)
-	(envelope-from <dave@destruction>) id 1Lionj-0006nV-WF
-	for xfs@oss.sgi.com; Sun, 15 Mar 2009 22:46:44 +1100
+	n2FMLBmE042296 for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 17:21:31 -0500
+Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8B0781C448AE
+	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 15:20:48 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net
+	[203.16.214.145]) by cuda.sgi.com with ESMTP id
+	mlO7bf1sMpNR8IfF for <xfs@oss.sgi.com>;
+	Sun, 15 Mar 2009 15:20:48 -0700 (PDT)
+Date: Mon, 16 Mar 2009 09:19:21 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 6/6] [XFS] introduce a per-ag inode iterator
-Date: Sun, 15 Mar 2009 22:46:43 +1100
-Message-Id: <1237117603-26071-7-git-send-email-david@fromorbit.com>
-In-Reply-To: <1237117603-26071-1-git-send-email-david@fromorbit.com>
-References: <1237117603-26071-1-git-send-email-david@fromorbit.com>
+Subject: Re: XFS lock warning, 2.6.29-rc8
+Message-ID: <20090315221921.GY26138@disturbed>
+References: <200903151459.01320.denys@visp.net.lb>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <200903151459.01320.denys@visp.net.lb>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,425 +25,75 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Denys Fedoryschenko <denys@visp.net.lb>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Given that we walk across the per-ag inode lists so
-often, it makes sense to introduce an iterator for this.
-Break the operations on each inode into two operations -
-a lookup validation step to confirm the inode is good to
-be used and an execution step that performs the operation
-on the inode.
+[ changed cc to xfs@oss.sgi.com. linux-xfs@vger.kernel.org does not
+exist. ]
 
-Convert the sync and reclaim code to use this new iterator.
-At some point the quota sync needs to be converted as well.
+On Sun, Mar 15, 2009 at 02:59:01PM +0200, Denys Fedoryschenko wrote:
+> hi
+> 
+> Here is what i got suddently. But seems everything is working.
+> If any other information required, please let me know.
 
-Signed-off-by: Dave Chinner <david@fromorbit.com>
----
- fs/xfs/linux-2.6/xfs_sync.c |  320 ++++++++++++++++++++-----------------------
- 1 files changed, 149 insertions(+), 171 deletions(-)
+Known issue.
 
-diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index f9c2a56..45dfff9 100644
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -48,6 +48,132 @@
- #include <linux/kthread.h>
- #include <linux/freezer.h>
- 
-+
-+STATIC xfs_inode_t *
-+xfs_inode_ag_lookup(
-+	xfs_mount_t	*mp,
-+	xfs_perag_t	*pag,
-+	int		(*lookup)(xfs_mount_t *mp, xfs_inode_t *ip),
-+	uint32_t	*first_index,
-+	int		tag)
-+{
-+	int		nr_found;
-+	xfs_inode_t	*ip;
-+	int		error = -ENOENT;
-+
-+	/*
-+	 * use a gang lookup to find the next inode in the tree
-+	 * as the tree is sparse and a gang lookup walks to find
-+	 * the number of objects requested.
-+	 */
-+	read_lock(&pag->pag_ici_lock);
-+	if (tag == -1) {
-+		nr_found = radix_tree_gang_lookup(&pag->pag_ici_root,
-+				(void**)&ip, *first_index, 1);
-+	} else {
-+		nr_found = radix_tree_gang_lookup_tag(&pag->pag_ici_root,
-+				(void**)&ip, *first_index, 1, tag);
-+	}
-+	if (!nr_found)
-+		goto unlock;
-+
-+	/*
-+	 * Update the index for the next lookup. Catch overflows
-+	 * into the next AG range which can occur if we have inodes
-+	 * in the last block of the AG and we are currently
-+	 * pointing to the last inode.
-+	 */
-+	*first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
-+	if (*first_index < XFS_INO_TO_AGINO(mp, ip->i_ino))
-+		goto unlock;
-+
-+
-+	error = lookup(mp, ip);
-+	read_unlock(&pag->pag_ici_lock);
-+	if (error)
-+		return ERR_PTR(error);
-+	return ip;
-+
-+unlock:
-+	read_unlock(&pag->pag_ici_lock);
-+	return NULL;
-+}
-+
-+STATIC int
-+xfs_inode_ag_walk(
-+	xfs_mount_t	*mp,
-+	xfs_agnumber_t	ag,
-+	int		(*lookup)(xfs_mount_t *mp, xfs_inode_t *ip),
-+	int		(*execute)(xfs_inode_t *ip, int flags),
-+	int		flags,
-+	int		tag)
-+{
-+	xfs_perag_t	*pag = &mp->m_perag[ag];
-+	uint32_t	first_index;
-+	int		last_error = 0;
-+	int		skipped;
-+
-+restart:
-+	skipped = 0;
-+	first_index = 0;
-+	do {
-+		int		error = 0;
-+		xfs_inode_t	*ip;
-+
-+		ip = xfs_inode_ag_lookup(mp, pag, lookup, &first_index, tag);
-+		if (!ip)
-+			break;
-+		if (IS_ERR(ip))
-+			continue;
-+
-+		error = execute(ip, flags);
-+		if (error == EAGAIN) {
-+			skipped++;
-+			continue;
-+		}
-+		if (error)
-+			last_error = error;
-+		/*
-+		 * bail out if the filesystem is corrupted.
-+		 */
-+		if (error == EFSCORRUPTED)
-+			break;
-+
-+	} while (1);
-+
-+	if (skipped) {
-+		delay(1);
-+		goto restart;
-+	}
-+
-+	xfs_put_perag(mp, pag);
-+	return last_error;
-+}
-+
-+STATIC int
-+xfs_inode_ag_iterator(
-+	xfs_mount_t	*mp,
-+	int		(*lookup)(xfs_mount_t *mp, xfs_inode_t *ip),
-+	int		(*execute)(xfs_inode_t *ip, int flags),
-+	int		flags,
-+	int		tag)
-+{
-+	int		error = 0;
-+	int		last_error = 0;
-+	xfs_agnumber_t	ag;
-+
-+	for (ag = 0; ag < mp->m_sb.sb_agcount; ag++) {
-+		if (!mp->m_perag[ag].pag_ici_init)
-+			continue;
-+		error = xfs_inode_ag_walk(mp, ag, lookup, execute, flags, tag);
-+		if (error)
-+			last_error = error;
-+		if (error == EFSCORRUPTED)
-+			break;
-+	}
-+	return XFS_ERROR(last_error);
-+}
-+
- static int
- xfs_sync_inode_data(
- 	struct xfs_inode	*ip,
-@@ -76,6 +202,7 @@ xfs_sync_inode_data(
- 	if (flags & SYNC_IOWAIT)
- 		xfs_ioend_wait(ip);
- 
-+	IRELE(ip);
- 	return error;
- }
- 
-@@ -91,7 +218,7 @@ xfs_sync_inode_flush(
- 	 * the inode flush clustering code inside xfs_iflush
- 	 */
- 	if (xfs_inode_clean(ip))
--		return 0;
-+		goto out_rele;
- 
- 	/*
- 	 * We make this non-blocking if the inode is contended,
-@@ -107,7 +234,7 @@ xfs_sync_inode_flush(
- 		error = xfs_iflush(ip, XFS_IFLUSH_SYNC);
- 	} else {
- 		if (!xfs_ilock_nowait(ip, XFS_ILOCK_SHARED))
--			goto out;
-+			goto out_rele;
- 		if (xfs_ipincount(ip) || !xfs_iflock_nowait(ip))
- 			goto out_unlock;
- 
-@@ -116,7 +243,8 @@ xfs_sync_inode_flush(
- 
- out_unlock:
- 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
--out:
-+out_rele:
-+	IRELE(ip);
- 	return error;
- }
- 
-@@ -151,115 +279,32 @@ error:
- 	return error;
- }
- 
--/*
-- * Sync all the inodes in the given AG according to the
-- * direction given by the flags.
-- */
--STATIC int
--xfs_sync_inodes_ag(
--	xfs_mount_t	*mp,
--	int		ag,
--	int		flags)
--{
--	xfs_perag_t	*pag = &mp->m_perag[ag];
--	int		nr_found;
--	uint32_t	first_index = 0;
--	int		error = 0;
--	int		last_error = 0;
--
--	do {
--		xfs_inode_t	*ip = NULL;
--
--		/*
--		 * use a gang lookup to find the next inode in the tree
--		 * as the tree is sparse and a gang lookup walks to find
--		 * the number of objects requested.
--		 */
--		read_lock(&pag->pag_ici_lock);
--		nr_found = radix_tree_gang_lookup(&pag->pag_ici_root,
--				(void**)&ip, first_index, 1);
--
--		if (!nr_found) {
--			read_unlock(&pag->pag_ici_lock);
--			break;
--		}
--
--		/*
--		 * Update the index for the next lookup. Catch overflows
--		 * into the next AG range which can occur if we have inodes
--		 * in the last block of the AG and we are currently
--		 * pointing to the last inode.
--		 */
--		first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
--		if (first_index < XFS_INO_TO_AGINO(mp, ip->i_ino)) {
--			read_unlock(&pag->pag_ici_lock);
--			break;
--		}
--
--		error = xfs_sync_inode_valid(mp, ip);
--		if (error) {
--			read_unlock(&pag->pag_ici_lock);
--			if (error == EFSCORRUPTED)
--				return 0;
--			continue;
--		}
--
--		/*
--		 * If we have to flush data or wait for I/O completion
--		 * we need to hold the iolock.
--		 */
--		if (flags & SYNC_DELWRI)
--			error = xfs_sync_inode_data(ip, flags);
--
--		if (flags & SYNC_ATTR)
--			error = xfs_sync_inode_flush(ip, flags);
--
--		IRELE(ip);
--
--		if (error)
--			last_error = error;
--		/*
--		 * bail out if the filesystem is corrupted.
--		 */
--		if (error == EFSCORRUPTED)
--			return XFS_ERROR(error);
--
--	} while (nr_found);
--
--	return last_error;
--}
--
- int
- xfs_sync_inodes(
- 	xfs_mount_t	*mp,
- 	int		flags)
- {
--	int		error;
--	int		last_error;
--	int		i;
-+	int		error = 0;
- 	int		lflags = XFS_LOG_FORCE;
- 
- 	if (mp->m_flags & XFS_MOUNT_RDONLY)
- 		return 0;
--	error = 0;
--	last_error = 0;
- 
- 	if (flags & SYNC_WAIT)
- 		lflags |= XFS_LOG_SYNC;
- 
--	for (i = 0; i < mp->m_sb.sb_agcount; i++) {
--		if (!mp->m_perag[i].pag_ici_init)
--			continue;
--		error = xfs_sync_inodes_ag(mp, i, flags);
--		if (error)
--			last_error = error;
--		if (error == EFSCORRUPTED)
--			break;
--	}
- 	if (flags & SYNC_DELWRI)
-+		error = xfs_inode_ag_iterator(mp, xfs_sync_inode_valid,
-+					xfs_sync_inode_data, flags, -1);
-+
-+	if (flags & SYNC_ATTR)
-+		error = xfs_inode_ag_iterator(mp, xfs_sync_inode_valid,
-+					xfs_sync_inode_flush, flags, -1);
-+
-+	if (!error && (flags & SYNC_DELWRI))
- 		xfs_log_force(mp, 0, lflags);
- 
--	return XFS_ERROR(last_error);
-+	return XFS_ERROR(error);
- }
- 
- STATIC int
-@@ -724,72 +769,12 @@ xfs_reclaim_inode_valid(
- 	return 0;
- }
- 
--STATIC void
--xfs_reclaim_inodes_ag(
--	xfs_mount_t	*mp,
--	int		ag,
--	int		mode)
-+static int
-+xfs_reclaim_inode_now(
-+	xfs_inode_t	*ip,
-+	int		flags)
- {
--	xfs_inode_t	*ip = NULL;
--	xfs_perag_t	*pag = &mp->m_perag[ag];
--	int		nr_found;
--	uint32_t	first_index;
--	int		skipped;
--
--restart:
--	first_index = 0;
--	skipped = 0;
--	do {
--		int	error;
--
--		/*
--		 * use a gang lookup to find the next inode in the tree
--		 * as the tree is sparse and a gang lookup walks to find
--		 * the number of objects requested.
--		 */
--		read_lock(&pag->pag_ici_lock);
--		nr_found = radix_tree_gang_lookup_tag(&pag->pag_ici_root,
--					(void**)&ip, first_index, 1,
--					XFS_ICI_RECLAIM_TAG);
--
--		if (!nr_found) {
--			read_unlock(&pag->pag_ici_lock);
--			break;
--		}
--
--		/*
--		 * Update the index for the next lookup. Catch overflows
--		 * into the next AG range which can occur if we have inodes
--		 * in the last block of the AG and we are currently
--		 * pointing to the last inode.
--		 */
--		first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
--		if (first_index < XFS_INO_TO_AGINO(mp, ip->i_ino)) {
--			read_unlock(&pag->pag_ici_lock);
--			break;
--		}
--
--		error = xfs_reclaim_inode_valid(mp, ip);
--		if (error) {
--			read_unlock(&pag->pag_ici_lock);
--			continue;
--		}
--		read_unlock(&pag->pag_ici_lock);
--
--		/*
--		 * hmmm - this is an inode already in reclaim. Do
--		 * we even bother catching it here?
--		 */
--		if (xfs_reclaim_inode(ip, 0, mode))
--			skipped++;
--	} while (nr_found);
--
--	if (skipped) {
--		delay(1);
--		goto restart;
--	}
--	return;
--
-+	return xfs_reclaim_inode(ip, 0, flags);
- }
- 
- int
-@@ -797,14 +782,7 @@ xfs_reclaim_inodes(
- 	xfs_mount_t	*mp,
- 	int		mode)
- {
--	int		i;
--
--	for (i = 0; i < mp->m_sb.sb_agcount; i++) {
--		if (!mp->m_perag[i].pag_ici_init)
--			continue;
--		xfs_reclaim_inodes_ag(mp, i, mode);
--	}
--	return 0;
-+	return xfs_inode_ag_iterator(mp, xfs_reclaim_inode_valid,
-+					xfs_reclaim_inode_now, mode,
-+					XFS_ICI_RECLAIM_TAG);
- }
--
--
+> [39993.560234] the existing dependency chain (in reverse order) is:
+> [39993.560236]
+> [39993.560236] -> #1 (&mm->mmap_sem){----}:
+> [39993.560240]        [<ffffffff8105b9fc>] __lock_acquire+0x12b0/0x161a
+> [39993.560244]        [<ffffffff8105bdbb>] lock_acquire+0x55/0x71
+> [39993.560247]        [<ffffffff813fc2a5>] down_read+0x34/0x41
+> [39993.560252]        [<ffffffff813ffbfe>] do_page_fault+0x3fa/0x848
+> [39993.560256]        [<ffffffff813fda2f>] page_fault+0x1f/0x30
+> [39993.560258]        [<ffffffff8107e13d>] generic_file_aio_read+0x35f/0x5da
+> [39993.560268]        [<ffffffff811650d8>] xfs_read+0x17d/0x1f5
+> [39993.560272]        [<ffffffff81161646>] xfs_file_aio_read+0x5f/0x61
+> [39993.560275]        [<ffffffff810a88ff>] do_sync_read+0xe7/0x12d
+> [39993.560284]        [<ffffffff810a928c>] vfs_read+0xab/0x134
+> [39993.560287]        [<ffffffff810a93d9>] sys_read+0x47/0x6f
+> [39993.560289]        [<ffffffff8100c0db>] system_call_fastpath+0x16/0x1b
+> [39993.560293]        [<ffffffffffffffff>] 0xffffffffffffffff
+> [39993.560302]
+> [39993.560302] -> #0 (&(&ip->i_iolock)->mr_lock){----}:
+> [39993.560306]        [<ffffffff8105b6cb>] __lock_acquire+0xf7f/0x161a
+> [39993.560309]        [<ffffffff8105bdbb>] lock_acquire+0x55/0x71
+> [39993.560312]        [<ffffffff8104ebde>] down_write_nested+0x37/0x46
+> [39993.560316]        [<ffffffff811426aa>] xfs_ilock+0x27/0x79
+> [39993.560318]        [<ffffffff8115b40e>] xfs_inactive+0x14d/0x411
+> [39993.560322]        [<ffffffff8116552f>] xfs_fs_clear_inode+0x83/0x85
+> [39993.560325]        [<ffffffff810ba8f7>] clear_inode+0x8a/0xe3
+> [39993.560329]        [<ffffffff810bb044>] generic_delete_inode+0xf8/0x173
+> [39993.560332]        [<ffffffff810bb0d6>] generic_drop_inode+0x17/0x1d5
+> [39993.560335]        [<ffffffff810ba1c7>] iput+0x61/0x65
+> [39993.560338]        [<ffffffff810b7554>] dentry_iput+0xa9/0xc1
+> [39993.560341]        [<ffffffff810b7651>] d_kill+0x40/0x60
+> [39993.560344]        [<ffffffff810b942d>] dput+0x141/0x14e
+> [39993.560347]        [<ffffffff810a9a85>] __fput+0x173/0x198
+> [39993.560350]        [<ffffffff810a9ac2>] fput+0x18/0x1a
+> [39993.560353]        [<ffffffff8109411e>] remove_vma+0x3e/0x63
+> [39993.560355]        [<ffffffff8109503c>] do_munmap+0x2e9/0x30b
+> [39993.560358]        [<ffffffff8109509e>] sys_munmap+0x40/0x59
+> [39993.560361]        [<ffffffff8100c0db>] system_call_fastpath+0x16/0x1b
+> [39993.560363]        [<ffffffffffffffff>] 0xffffffffffffffff
+
+This is a VM problem where it calls fput() with the mmap_sem() held
+in remove_vma(). It makes the incorrect assumption that filesystems
+will never use the same lock in the IO path and the inode release path.
+
+This can deadlock if you are really unlucky.
+
+Cheers,
+
+Dave.
 -- 
-1.6.2
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
