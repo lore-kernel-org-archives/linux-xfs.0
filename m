@@ -1,26 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2FBlIVi008382 for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 06:47:40 -0500
+	n2FBmDXX008515 for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 06:48:33 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2574C1C4395B
-	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 04:46:55 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail11.adl2.internode.on.net
-	[203.16.214.75]) by cuda.sgi.com with ESMTP id JGpZ7xW4ujrdGCRy
-	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 04:46:55 -0700 (PDT)
-Received: from destruction.internal (unverified [203.206.165.193])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	46133987-1927428
-	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 22:16:54 +1030 (CDT)
-Received: from dave by destruction.internal with local (Exim 4.69)
-	(envelope-from <dave@destruction>) id 1Lionj-0006nJ-K7
-	for xfs@oss.sgi.com; Sun, 15 Mar 2009 22:46:43 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A75D519A0E7
+	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 04:47:50 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail09.adl2.internode.on.net
+	[203.16.214.73]) by cuda.sgi.com with ESMTP id RdwDfOizHsrKyqtl
+	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 04:47:50 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/6] [XFS] Factor out inode validation for sync
-Date: Sun, 15 Mar 2009 22:46:40 +1100
-Message-Id: <1237117603-26071-4-git-send-email-david@fromorbit.com>
-In-Reply-To: <1237117603-26071-1-git-send-email-david@fromorbit.com>
-References: <1237117603-26071-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/5] [XFS] Make inode flush at ENOSPC synchronous
+Date: Sun, 15 Mar 2009 22:31:44 +1100
+Message-Id: <1237116707-25793-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1237116707-25793-1-git-send-email-david@fromorbit.com>
+References: <1237116707-25793-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,97 +28,123 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: mpatocka@redhat.com
 
-Separate the validation of inodes found by the radix
-tree walk from the radix tree lookup.
+When we are writing to a single file and hit ENOSPC, we trigger a background
+flush of the inode and try again.  Because we hold page locks and the iolock,
+the flush won't proceed until after we release these locks. This occurs once
+we've given up and ENOSPC has been reported. Hence if this one is the only
+dirty inode in the system, we'll get an ENOSPC prematurely.
+
+To fix this, remove the async flush from the allocation routines and move
+it to the top of the write path where we can do a synchronous flush
+and retry the write again. Only retry once as a second ENOSPC indicates
+that we really are ENOSPC.
+
+This avoids a page cache deadlock when trying to do this flush synchronously
+in the allocation layer that was identified by Mikulas Patocka.
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/linux-2.6/xfs_sync.c |   56 ++++++++++++++++++++++++++----------------
- 1 files changed, 35 insertions(+), 21 deletions(-)
+ fs/xfs/linux-2.6/xfs_lrw.c  |   18 +++++++++++++++++-
+ fs/xfs/linux-2.6/xfs_sync.c |   25 -------------------------
+ fs/xfs/linux-2.6/xfs_sync.h |    1 -
+ fs/xfs/xfs_iomap.c          |    2 +-
+ 4 files changed, 18 insertions(+), 28 deletions(-)
 
+diff --git a/fs/xfs/linux-2.6/xfs_lrw.c b/fs/xfs/linux-2.6/xfs_lrw.c
+index 7e90daa..9142192 100644
+--- a/fs/xfs/linux-2.6/xfs_lrw.c
++++ b/fs/xfs/linux-2.6/xfs_lrw.c
+@@ -751,10 +751,26 @@ start:
+ 			goto relock;
+ 		}
+ 	} else {
++		int enospc = 0;
++		ssize_t ret2 = 0;
++
++write_retry:
+ 		xfs_rw_enter_trace(XFS_WRITE_ENTER, xip, (void *)iovp, segs,
+ 				*offset, ioflags);
+-		ret = generic_file_buffered_write(iocb, iovp, segs,
++		ret2 = generic_file_buffered_write(iocb, iovp, segs,
+ 				pos, offset, count, ret);
++		/*
++		 * if we just got an ENOSPC, flush the inode now we
++		 * aren't holding any page locks and retry *once*
++		 */
++		if (ret2 == -ENOSPC && !enospc) {
++			error = xfs_flush_pages(xip, 0, -1, 0, FI_NONE);
++			if (error)
++				goto out_unlock_internal;
++			enospc = 1;
++			goto write_retry;
++		}
++		ret = ret2;
+ 	}
+ 
+ 	current->backing_dev_info = NULL;
 diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index b3d4f7a..a83438a 100644
+index 88caafc..73cf8dc 100644
 --- a/fs/xfs/linux-2.6/xfs_sync.c
 +++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -120,6 +120,37 @@ out:
- 	return error;
- }
- 
-+int
-+xfs_sync_inode_valid(
-+	xfs_mount_t	*mp,
-+	xfs_inode_t	*ip)
-+{
-+	struct inode	*inode;
-+	int		error;
-+
-+	/* nothing to sync during shutdown */
-+	if (XFS_FORCED_SHUTDOWN(mp))
-+		return EFSCORRUPTED;
-+
-+	/*
-+	 * If we can't get a reference on the inode, it must be in reclaim.
-+	 * Leave it for the reclaim code to flush. Also avoid inodes that
-+	 * haven't been fully initialised.
-+	 */
-+	error = ENOENT;
-+	inode = VFS_I(ip);
-+	if (!igrab(inode))
-+		goto error;
-+	if (is_bad_inode(inode) ||
-+	    xfs_iflags_test(ip, XFS_INEW))
-+		goto rele;
-+	return 0;
-+rele:
-+	IRELE(ip);
-+error:
-+	return error;
-+}
-+
- /*
-  * Sync all the inodes in the given AG according to the
-  * direction given by the flags.
-@@ -137,7 +168,6 @@ xfs_sync_inodes_ag(
- 	int		last_error = 0;
- 
- 	do {
--		struct inode	*inode;
- 		xfs_inode_t	*ip = NULL;
- 
- 		/*
-@@ -166,27 +196,11 @@ xfs_sync_inodes_ag(
- 			break;
- 		}
- 
--		/* nothing to sync during shutdown */
--		if (XFS_FORCED_SHUTDOWN(mp)) {
-+		error = xfs_sync_inode_valid(mp, ip);
-+		if (error) {
- 			read_unlock(&pag->pag_ici_lock);
--			return 0;
--		}
+@@ -426,31 +426,6 @@ xfs_syncd_queue_work(
+  * heads, looking about for more room...
+  */
+ STATIC void
+-xfs_flush_inode_work(
+-	struct xfs_mount *mp,
+-	void		*arg)
+-{
+-	struct inode	*inode = arg;
+-	filemap_flush(inode->i_mapping);
+-	iput(inode);
+-}
 -
--		/*
--		 * If we can't get a reference on the inode, it must be
--		 * in reclaim. Leave it for the reclaim code to flush.
--		 */
--		inode = VFS_I(ip);
--		if (!igrab(inode)) {
--			read_unlock(&pag->pag_ici_lock);
--			continue;
--		}
--		read_unlock(&pag->pag_ici_lock);
+-void
+-xfs_flush_inode(
+-	xfs_inode_t	*ip)
+-{
+-	struct inode	*inode = VFS_I(ip);
 -
--		/* avoid new or bad inodes */
--		if (is_bad_inode(inode) ||
--		    xfs_iflags_test(ip, XFS_INEW)) {
--			IRELE(ip);
-+			if (error == EFSCORRUPTED)
-+				return 0;
- 			continue;
- 		}
+-	igrab(inode);
+-	xfs_syncd_queue_work(ip->i_mount, inode, xfs_flush_inode_work);
+-	delay(msecs_to_jiffies(500));
+-}
+-
+-/*
+- * This is the "bigger hammer" version of xfs_flush_inode_work...
+- * (IOW, "If at first you don't succeed, use a Bigger Hammer").
+- */
+-STATIC void
+ xfs_flush_inodes_work(
+ 	struct xfs_mount *mp,
+ 	void		*arg)
+diff --git a/fs/xfs/linux-2.6/xfs_sync.h b/fs/xfs/linux-2.6/xfs_sync.h
+index ec95e26..6e83a35 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.h
++++ b/fs/xfs/linux-2.6/xfs_sync.h
+@@ -44,7 +44,6 @@ int xfs_sync_fsdata(struct xfs_mount *mp, int flags);
+ int xfs_quiesce_data(struct xfs_mount *mp);
+ void xfs_quiesce_attr(struct xfs_mount *mp);
  
+-void xfs_flush_inode(struct xfs_inode *ip);
+ void xfs_flush_inodes(struct xfs_inode *ip);
+ 
+ int xfs_reclaim_inode(struct xfs_inode *ip, int locked, int sync_mode);
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 8b97d82..7b8b170 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -347,7 +347,7 @@ xfs_flush_space(
+ 	case 0:
+ 		if (ip->i_delayed_blks) {
+ 			xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-			xfs_flush_inode(ip);
++			delay(1);
+ 			xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 			*fsynced = 1;
+ 		} else {
 -- 
 1.6.2
 
