@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2G6YQEj072675 for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 01:34:42 -0500
+	n2G6qMnf073745 for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 01:52:43 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 255A21C453FF
-	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 23:34:06 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 158C31C452CE
+	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 23:52:01 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id EB1w1MrFACjbhlSU for
-	<xfs@oss.sgi.com>; Sun, 15 Mar 2009 23:34:06 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1Lj6Oj-0002HA-Qn
-	for xfs@oss.sgi.com; Mon, 16 Mar 2009 06:34:05 +0000
-Date: Mon, 16 Mar 2009 02:34:05 -0400
+	by cuda.sgi.com with ESMTP id Gg9XD4oZeI6JA8pK for
+	<xfs@oss.sgi.com>; Sun, 15 Mar 2009 23:52:01 -0700 (PDT)
+Date: Mon, 16 Mar 2009 02:51:55 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfsprogs: add projects(5) and projid(5) manpages
-Message-ID: <20090316063405.GA7413@infradead.org>
-References: <20090224132737.GA8161@infradead.org>
-	<20090304173224.GB32471@infradead.org>
+Subject: Re: [patch] fix parallel build failures in xfsprogs-3.0.0
+Message-ID: <20090316065155.GA5659@infradead.org>
+References: <200902240010.25434.vapier@gentoo.org>
+	<200902271835.30912.agruen@suse.de>
+	<20090304172727.GA21463@infradead.org>
+	<200903081409.28808.agruen@suse.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20090304173224.GB32471@infradead.org>
+In-Reply-To: <200903081409.28808.agruen@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,152 +31,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Andreas Gruenbacher <agruen@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, Mike Frysinger <vapier@gentoo.org>, Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
 
-ping?
+On Sun, Mar 08, 2009 at 02:09:28PM +0100, Andreas Gruenbacher wrote:
+> On Wednesday, 4 March 2009 18:27:27 Christoph Hellwig wrote:
+> > I've tried to port the patch you checked into xfsprogs (see below for
+> > the diff), but it fails to build for me.  Any idea what might have
+> > gone wrong?
+> 
+> git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git is missing the following 
+> commit from ssh://master.kernel.org/pub/scm/linux/kernel/git/agruen/acl.git:
+> 
+>   commit 8de7788c29d2656f8d52d98327a80e4dfd1e3898
+>   Author: Barry Naujok <bnaujok@sgi.com>
+>   Date:   Tue Jan 23 14:51:14 2007 +0000
+> 
+>     Fix cross-compile issues with libtool and compiler.
+> 
+>     This is equivalent to commit de7b3f6 from Barry Naujok <bnaujok@sgi.com>
+>     in the acl package, and part of the Gentoo package, as pointed out by
+>     Mike Frysinger <vapier@gentoo.org>.
+> 
+>     Signed-off-by: Andreas Gruenbacher <agruen@suse.de>
+> 
+> While looking into this, I noticed that the attr and acl packages were calling 
 
-On Wed, Mar 04, 2009 at 12:32:24PM -0500, Christoph Hellwig wrote:
-> On Tue, Feb 24, 2009 at 08:27:37AM -0500, Christoph Hellwig wrote:
-> > Document the /etc/projects and /etc/projid files in their own manpages
-> > instead of in xfs_quota(8).
-> 
-> Doh, I forgot to quilt add projects.5, here's the complete patch:
-> 
-> Index: xfsprogs-dev/man/man5/projid.5
-> ===================================================================
-> --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-> +++ xfsprogs-dev/man/man5/projid.5	2009-03-04 18:30:40.451978384 +0100
-> @@ -0,0 +1,29 @@
-> +.TH projid 5
-> +.SH NAME
-> +projid \- the project name mapping file
-> +.SH DESCRIPTION
-> +The
-> +.I /etc/projid
-> +file provides a mapping between numeric project identifiers and a
-> +simple human readable name (similar relationship to the one that
-> +exists between usernames and uids).
-> +Its format is simply:
-> +.nf
-> +.sp
-> +.in +5
-> +# comments are hash-prefixed
-> +# ...
-> +cage:10
-> +logfiles:42
-> +
-> +.in -5
-> +.fi
-> +.PP
-> +
-> +This file is optional, if a project identifier cannot be mapped to
-> +a name, it will be parsed and displayed as a numeric value.
-> +
-> +.SH SEE ALSO
-> +.BR xfs_quota (8),
-> +.BR xfsctl (3),
-> +.BR projects (5).
-> Index: xfsprogs-dev/man/man8/xfs_quota.8
-> ===================================================================
-> --- xfsprogs-dev.orig/man/man8/xfs_quota.8	2009-03-03 16:45:43.355881326 +0100
-> +++ xfsprogs-dev/man/man8/xfs_quota.8	2009-03-04 18:30:40.452978791 +0100
-> @@ -628,46 +628,6 @@ for
->  .I /etc/projects
->  to exist. Note that if projects file exists then it is also used.
->  
-> -.SH FILE FORMATS
-> -There are two files involved with the tree quota mechanism, namely
-> -.I /etc/projects
-> -and
-> -.IR /etc/projid .
-> -The latter is optional.
-> -The
-> -.I /etc/projects
-> -file provides a mapping between numeric project identifiers and those
-> -directories which are the roots of the quota tree.
-> -Its format is simply:
-> -.nf
-> -.sp
-> -.in +5
-> -# comments are hash-prefixed
-> -# ...
-> -10:/export/cage
-> -42:/var/log
-> -.in -5
-> -.fi
-> -.PP
-> -The
-> -.I /etc/projid
-> -file provides a mapping between numeric project identifiers and a
-> -simple human readable name (similar relationship to the one that
-> -exists between usernames and uids).
-> -Its format is simply:
-> -.nf
-> -.sp
-> -.in +5
-> -# comments are hash-prefixed
-> -# ...
-> -cage:10
-> -logfiles:42
-> -.in -5
-> -.fi
-> -.PP
-> -This file is optional, if a project identifier cannot be mapped to
-> -a name, it will be displayed as a number only.
-> -.PP
->  .SH EXAMPLES
->  Enabling quota enforcement on an XFS filesystem (restrict a user
->  to a set amount of space).
-> @@ -752,4 +712,6 @@ Mapping of numeric project identifiers t
->  .SH SEE ALSO
->  .BR df (1),
->  .BR mount (1),
-> -.BR sync (2).
-> +.BR sync (2),
-> +.BR projid (5),
-> +.BR projects (5).
-> Index: xfsprogs-dev/man/man5/projects.5
-> ===================================================================
-> --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-> +++ xfsprogs-dev/man/man5/projects.5	2009-03-04 18:31:01.456981579 +0100
-> @@ -0,0 +1,31 @@
-> +.TH projects 5
-> +.SH NAME
-> +projects \- persistent project root defintion
-> +.SH DESCRIPTION
-> +The
-> +.I /etc/projects
-> +file provides a mapping between numeric project identifiers and those directories
-> +which are the roots of the quota tree.  Its format is simply:
-> +
-> +.nf
-> +.sp
-> +.in +5
-> +# comments are hash-prefixed
-> +# ...
-> +10:/export/cage
-> +42:/var/log
-> +.in -5
-> +.fi
-> +.PP
-> +The
-> +.I /etc/projects
-> +file is optional, instead
-> +.BR xfs_quota (8)
-> +can be used with the
-> +.B \-p
-> +argument to specify a project root directly for each operation.
-> +
-> +.SH SEE ALSO
-> +.BR xfs_quota (8),
-> +.BR xfsctl (3),
-> +.BR projid (5).
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
----end quoted text---
+Thank, I've pushed this patch to the xfsprogs, xfsdump and dmapi -dev
+repositories.
 
 _______________________________________________
 xfs mailing list
