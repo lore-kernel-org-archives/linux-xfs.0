@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2GAkWsI085645 for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 05:46:50 -0500
+	n2GAlec9085758 for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 05:48:00 -0500
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8F3731C46032
-	for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 03:46:10 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 796F01C46041
+	for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 03:47:18 -0700 (PDT)
 Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net
 	[203.16.214.145]) by cuda.sgi.com with ESMTP id
-	23CSu3qnjVYvJ56F for <xfs@oss.sgi.com>;
-	Mon, 16 Mar 2009 03:46:10 -0700 (PDT)
-Date: Mon, 16 Mar 2009 21:46:06 +1100
+	lXeQq0OPRWQSLzKY for <xfs@oss.sgi.com>;
+	Mon, 16 Mar 2009 03:47:18 -0700 (PDT)
+Date: Mon, 16 Mar 2009 21:47:12 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/5] [XFS] Make inode flush at ENOSPC synchronous
-Message-ID: <20090316104606.GI26138@disturbed>
-References: <1237116707-25793-1-git-send-email-david@fromorbit.com>
-	<1237116707-25793-3-git-send-email-david@fromorbit.com>
-	<20090316091235.GB2636@infradead.org>
+Subject: Re: [PATCH 1/6] [XFS] Split inode data writeback from inode sync.
+Message-ID: <20090316104712.GJ26138@disturbed>
+References: <1237117603-26071-1-git-send-email-david@fromorbit.com>
+	<1237117603-26071-2-git-send-email-david@fromorbit.com>
+	<20090316101008.GA2874@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20090316091235.GB2636@infradead.org>
+In-Reply-To: <20090316101008.GA2874@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,37 +32,80 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: mpatocka@redhat.com, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Mon, Mar 16, 2009 at 05:12:35AM -0400, Christoph Hellwig wrote:
-> On Sun, Mar 15, 2009 at 10:31:44PM +1100, Dave Chinner wrote:
-> >  	} else {
-> > +		int enospc = 0;
-> > +		ssize_t ret2 = 0;
+On Mon, Mar 16, 2009 at 06:10:08AM -0400, Christoph Hellwig wrote:
+> > +static int
+> > +xfs_sync_inode_data(
+> > +	struct xfs_inode	*ip,
+> > +	int			flags)
+> > +{
+> > +	struct inode	*inode = VFS_I(ip);
+> > +	int		error = 0;
 > > +
-> > +write_retry:
-> >  		xfs_rw_enter_trace(XFS_WRITE_ENTER, xip, (void *)iovp, segs,
-> >  				*offset, ioflags);
-> > -		ret = generic_file_buffered_write(iocb, iovp, segs,
-> > +		ret2 = generic_file_buffered_write(iocb, iovp, segs,
-> >  				pos, offset, count, ret);
-> > +		/*
-> > +		 * if we just got an ENOSPC, flush the inode now we
-> > +		 * aren't holding any page locks and retry *once*
-> > +		 */
-> > +		if (ret2 == -ENOSPC && !enospc) {
-> > +			error = xfs_flush_pages(xip, 0, -1, 0, FI_NONE);
-> > +			if (error)
-> > +				goto out_unlock_internal;
-> > +			enospc = 1;
-> > +			goto write_retry;
+> > +	if (VN_DIRTY(inode)) {
+> > +		int	locked = 0;
+> > +		if (flags & SYNC_TRYLOCK) {
+> > +			if (xfs_ilock_nowait(ip, XFS_IOLOCK_SHARED))
+> > +				locked = 1;
+> > +		} else {
+> > +			xfs_ilock(ip, XFS_IOLOCK_SHARED);
+> > +			locked = 1;
 > > +		}
-> > +		ret = ret2;
+> > +		if (locked) {
+> > +			error = xfs_flush_pages(ip, 0, -1,
+> > +					(flags & SYNC_WAIT) ? 0 : XFS_B_ASYNC,
+> > +					FI_NONE);
+> > +			xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+> > +		}
+> > +	}
+> > +
+> > +	if (flags & SYNC_IOWAIT)
+> > +		xfs_ioend_wait(ip);
+> > +
+> > +	return error;
+> > +}
 > 
-> Just use filemap_fdatawrite here directly..
+> In the end this should look more like:
+> 
+> 
+> 
+> static int
+> xfs_sync_inode_data(
+> 	struct xfs_inode	*ip,
+> 	int			flags)
+> {
+> 	struct inode	*inode = VFS_I(ip);
+> 	struct address_space *mapping = inode->i_mapping;
+> 	int		error = 0;
+> 
+> 	if (mapping_tagged(mapping, PAGECACHE_TAG_DIRTY)) {
+> 		if (!xfs_ilock_nowait(ip, XFS_IOLOCK_SHARED)) {
+> 			if (flags & SYNC_TRYLOCK)
+> 				goto out;
+> 			xfs_ilock(ip, XFS_IOLOCK_SHARED);
+> 		}
+> 
+> 		if (flags & SYNC_WAIT) {
+> 			error = filemap_write_and_wait(mapping);
+> 		else
+> 			error = filemap_fdatawrite(mapping);
+> 
+> 		xfs_iflags_clear(ip, XFS_ITRUNCATED);
+> 		xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+> 	}
+> 
+>  out:
+> 	if (flags & SYNC_IOWAIT)
+> 		xfs_ioend_wait(ip);
+> 	return -error;
+> }
 
-OK. will fix.
+Seems sane. I'll rework it around this.
 
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
