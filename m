@@ -1,17 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2GEpTuo097399 for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 09:51:49 -0500
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id ECD3630408B
-	for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 07:51:08 -0700 (PDT)
-Message-Id: <97425114-90E3-4421-9737-FD6ABF1860AE@sgi.com>
-From: Felix Blyakher <felixb@sgi.com>
-In-Reply-To: <49BE5CC9.9000605@renderforce.de>
-Mime-Version: 1.0 (Apple Message framework v926)
-Subject: Re: Multiple Mounting of one XFS Partition
-Date: Mon, 16 Mar 2009 09:38:21 -0500
-References: <49BE5CC9.9000605@renderforce.de>
+	n2GGHiun101731 for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 11:18:05 -0500
+Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B854819E06E
+	for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 09:17:21 -0700 (PDT)
+Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.162.198]) by
+	cuda.sgi.com with ESMTP id 1GvkQ3em8oLVdc2G for
+	<xfs@oss.sgi.com>; Mon, 16 Mar 2009 09:17:21 -0700 (PDT)
+Received: from mailsrv2.i.zmi.at (h081217054243.dyn.cm.kabsi.at
+	[81.217.54.243])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv1.zmi.at (Postfix) with ESMTP id 00CD3461C
+	for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 17:17:20 +0100 (CET)
+Received: from saturn.localnet (saturn.i.zmi.at [10.0.0.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv2.i.zmi.at (Postfix) with ESMTPSA id B2E4540017F
+	for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 17:17:19 +0100 (CET)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: LWN article: ext4 and data loss
+Date: Mon, 16 Mar 2009 17:17:19 +0100
+References: <200903121239.35442@zmi.at>
+	<200903142043.11638.Martin@lichtvoll.de>
+In-Reply-To: <200903142043.11638.Martin@lichtvoll.de>
+MIME-Version: 1.0
+Content-Disposition: inline
+Message-Id: <200903161717.19362@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,51 +36,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
+Content-Type: text/plain; charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: steffen.knauf@renderforce.de
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mar 16, 2009, at 9:06 AM, Steffen Knauf wrote:
+On Samstag 14 M=E4rz 2009 Martin Steigerwald wrote:
+> Am Donnerstag 12 M=E4rz 2009 schrieb Michael Monnerie:
+> > http://lwn.net/SubscriberLink/322823/e6979f02e5a73feb/
 
-> Hello,
->
-> i have 2 Servers which are connected with a raid via FibreChannel.
+> BTW I think you gave away a subcriber only link. The article is not
+> officially available yet:
+> http://lwn.net/Articles/322823/
+> LWN might not be too happy with this.
 
-Unless you have some sort of cluster filesystem, it's not going
-to work.
+Nope. I am a subscriber, and can generate such Links in order to =
 
->
-> Both of them have mounted the same XFS-Partition. But if i change a  
-> Filepermission
-> or add some Files at the Partition of server1, the partition of  
-> server2 don't show the modifications
-> until i remount the Partitions.
+provider an article to others. If you read that, they offer a "Free =
 
-The changes done by server1 won't be flushed to disk, where they
-could be seen by server2, till much later, or on unmount.
+trial subscription" for 3 months, and encourage you to pay then. I can =
 
-> I don't know how whether it is a cache Option or something else.
+recommend lwn.net a lot, so maybe some people subscribe there because of =
 
-That's how any modern filesystem work.
+my posting :-)
 
-Cheers,
-Felix
+mfg zmi
+-- =
 
->
-> Perhaps someone have an idea.
-> Thanks!
->
-> greets
->
-> Steffen
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+// Michael Monnerie, Ing.BSc    -----      http://it-management.at
+// Tel: 0660 / 415 65 31                      .network.your.ideas.
+// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
+// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
+// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
 
 _______________________________________________
 xfs mailing list
