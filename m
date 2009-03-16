@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2G6NZVR071788 for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 01:23:56 -0500
+	n2G6NvDC071804 for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 01:24:18 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7C16E1C452EF
-	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 23:23:14 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B4BE91C452F0
+	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 23:23:36 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id ZXQNHBxKwt6KVoAj for
-	<xfs@oss.sgi.com>; Sun, 15 Mar 2009 23:23:14 -0700 (PDT)
-Date: Mon, 16 Mar 2009 02:23:13 -0400
+	by cuda.sgi.com with ESMTP id i8Rh2V7BLADp8gU6 for
+	<xfs@oss.sgi.com>; Sun, 15 Mar 2009 23:23:36 -0700 (PDT)
+Date: Mon, 16 Mar 2009 02:23:36 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/3] [XFSQA] Reduce the number of processes forked
-Message-ID: <20090316062313.GA30641@infradead.org>
+Subject: Re: [PATCH 2/3] [XFSQA] Add simple delayed allocation ENOSPC test.
+Message-ID: <20090316062336.GB30641@infradead.org>
 References: <1237114181-18431-1-git-send-email-david@fromorbit.com>
-	<1237114181-18431-2-git-send-email-david@fromorbit.com>
+	<1237114181-18431-3-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1237114181-18431-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1237114181-18431-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,21 +32,13 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Sun, Mar 15, 2009 at 09:49:39PM +1100, Dave Chinner wrote:
-> One of the big cpu time consumers when running xfsqa on UML
-> is forking of new processes. when looping lots of times,
-> using 'expr' to calculate the loop counter increment means
-> we fork at least once every loop. using shell builtins means
-> that we don't fork and many tests run substantially faster.
-> 
-> Some tests are even runnable with this modification. e.g. 110
-> went from taking 4500s to run down to 9s with the loop iterators
-> changed to avoid forking.
+On Sun, Mar 15, 2009 at 09:49:40PM +1100, Dave Chinner wrote:
+> Using a small (100MB) filesystem and writing lots of
+> single block files can result in spurious ENOSPCs
+> being reported. Reproduce this test case so we can confirm
+> that it gets fixed.
 
 Looks good.
-
-Care to see if any tests should be added to the quick group after this?
-The above 110 sounds like a candidate for that.
 
 _______________________________________________
 xfs mailing list
