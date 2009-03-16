@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2GB1ICu087094 for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 06:01:38 -0500
-Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5E83C1C4558D
-	for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 04:00:56 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net
-	[203.16.214.145]) by cuda.sgi.com with ESMTP id
-	l5PvA3aifjwKR4Nh for <xfs@oss.sgi.com>;
-	Mon, 16 Mar 2009 04:00:56 -0700 (PDT)
-Date: Mon, 16 Mar 2009 22:00:52 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] XFS: Inform the xfsaild of the push target before
-	sleeping
-Message-ID: <20090316110052.GL26138@disturbed>
-References: <1237117243-25940-1-git-send-email-david@fromorbit.com>
-	<1237117243-25940-3-git-send-email-david@fromorbit.com>
-	<20090316103836.GA24744@infradead.org>
+	n2GEJ4mg094945 for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 09:19:24 -0500
+Received: from mo-p05-ob.rzone.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 76DDD19D655
+	for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 07:18:22 -0700 (PDT)
+Received: from mo-p05-ob.rzone.de (mo-p05-ob.rzone.de [81.169.146.181]) by
+	cuda.sgi.com with ESMTP id KAERm8tBToZqm0Jj for
+	<xfs@oss.sgi.com>; Mon, 16 Mar 2009 07:18:22 -0700 (PDT)
+Received: from [10.1.1.65] ([213.39.240.61])
+	by post.strato.de (mrclete mo56) (RZmta 18.26)
+	with ESMTP id 500ecbl2GDtNBh for <xfs@oss.sgi.com>;
+	Mon, 16 Mar 2009 15:07:09 +0100 (MET)
+Message-ID: <49BE5CC9.9000605@renderforce.de>
+Date: Mon, 16 Mar 2009 15:06:01 +0100
+From: Steffen Knauf <Steffen.Knauf@renderforce.de>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20090316103836.GA24744@infradead.org>
+Subject: Multiple Mounting of one XFS Partition
+Reply-To: steffen.knauf@renderforce.de
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,37 +26,27 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Mar 16, 2009 at 06:38:36AM -0400, Christoph Hellwig wrote:
-> This looks good to me.
-> 
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> But looking at that area I must say I'm not happy with it in general.
-> There are tons of useless roundtrips l_grant_lock because we drop
-> it just before calling xlog_grant_push_ail which needs it for
-> most of it's operation, and because we acquire it just before
-> sv_wait just to drop it.
-> 
-> And the duplication between xlog_grant_log_space
-> xlog_regrant_write_log_space is quite ugly, too.
+Hello,
 
-I totally agree, but I don't feel like trying to rewrite this
-code right now. Maybe some rainy day....
+i have 2 Servers which are connected with a raid via FibreChannel.
+Both of them have mounted the same XFS-Partition. But if i change a 
+Filepermission
+or add some Files at the Partition of server1, the partition of server2 
+don't show the modifications
+until i remount the Partitions. I don't know how whether it is a cache 
+Option or something else.
+Perhaps someone have an idea.
+Thanks!
 
-Cheers,
+greets
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Steffen
 
 _______________________________________________
 xfs mailing list
