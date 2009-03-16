@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2G6VWeA072301 for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 01:31:52 -0500
+	n2G6Vd3R072310 for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 01:32:00 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 640231C45398
-	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 23:31:11 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DEA3019BBE3
+	for <xfs@oss.sgi.com>; Sun, 15 Mar 2009 23:30:58 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id gm7bEFwwbClCmRZf for
-	<xfs@oss.sgi.com>; Sun, 15 Mar 2009 23:31:11 -0700 (PDT)
+	by cuda.sgi.com with ESMTP id bIn4JHlUd0CT9fZe for
+	<xfs@oss.sgi.com>; Sun, 15 Mar 2009 23:30:58 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1Lj6LQ-0001hm-K8
-	for xfs@oss.sgi.com; Mon, 16 Mar 2009 06:30:40 +0000
-Date: Mon, 16 Mar 2009 02:30:40 -0400
+	Linux)) id 1Lj6Lh-0001iC-Rx
+	for xfs@oss.sgi.com; Mon, 16 Mar 2009 06:30:57 +0000
+Date: Mon, 16 Mar 2009 02:30:57 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfsdump: make sure Makpekgs is complete
-Message-ID: <20090316063040.GA4957@infradead.org>
-References: <20090224183819.GA25706@infradead.org>
+Subject: Re: [PATCH 2/2] xfs: fix getbmap vs mmap deadlock
+Message-ID: <20090316063057.GC4957@infradead.org>
+References: <20090224133902.GC15820@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20090224183819.GA25706@infradead.org>
+In-Reply-To: <20090224133902.GC15820@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,55 +35,127 @@ To: xfs@oss.sgi.com
 
 ping?
 
-On Tue, Feb 24, 2009 at 01:38:19PM -0500, Christoph Hellwig wrote:
+On Tue, Feb 24, 2009 at 08:39:02AM -0500, Christoph Hellwig wrote:
+> xfs_getbmap (or rather the formatters called by it) copy out the getbmap
+> structures under the ilock, which can deadlock against mmap.  This has
+> been reported via bugzilla a while ago (#717) and has recently also
+> shown up via lockdep.
+> 
+> So allocate a temporary buffer to format the kernel getbmap structures
+> into and then copy them out after dropping the locks.
+> 
+> A little problem with this is that we limit the number of extents we
+> can copy out by the maximum allocation size, but I see no real way
+> around that.
+> 
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 
-> Index: xfsdump-dev/doc/Makefile
+> Index: xfs/fs/xfs/xfs_bmap.c
 > ===================================================================
-> --- xfsdump-dev.orig/doc/Makefile	2009-02-24 19:31:07.048152638 +0100
-> +++ xfsdump-dev/doc/Makefile	2009-02-24 19:31:34.859030054 +0100
-> @@ -7,13 +7,8 @@ include $(TOPDIR)/include/builddefs
+> --- xfs.orig/fs/xfs/xfs_bmap.c	2009-02-23 20:38:27.512925014 +0100
+> +++ xfs/fs/xfs/xfs_bmap.c	2009-02-23 20:40:46.720926193 +0100
+> @@ -5867,12 +5867,13 @@ xfs_getbmap(
+>  	int			nexleft;	/* # of user extents left */
+>  	int			subnex;		/* # of bmapi's can do */
+>  	int			nmap;		/* number of map entries */
+> -	struct getbmapx		out;		/* output structure */
+> +	struct getbmapx		*out;		/* output structure */
+>  	int			whichfork;	/* data or attr fork */
+>  	int			prealloced;	/* this is a file with
+>  						 * preallocated data space */
+>  	int			iflags;		/* interface flags */
+>  	int			bmapi_flags;	/* flags for xfs_bmapi */
+> +	int			cur_ext = 0;
 >  
->  README = README.xfsdump
->  LSRCFILES = INSTALL PORTING CHANGES COPYING $(README) \
-> -	directories.gif directories.obj               \
-> -	files.gif files.obj                           \
-> -	global_hdr.gif global_hdr.obj                 \
-> -	inode_map.gif inode_map.obj                   \
-> -	media_files.gif media_files.obj               \
-> -	split_algorithm.gif split_algorithm.obj       \
-> -	xfsdump.html xfsdump_ts.txt
-> +	xfsdump.html xfsdump_ts.txt \
-> +	*.obj *.gif
+>  	mp = ip->i_mount;
+>  	iflags = bmv->bmv_iflags;
+> @@ -5948,6 +5949,13 @@ xfs_getbmap(
+>  		return XFS_ERROR(EINVAL);
+>  	bmvend = bmv->bmv_offset + bmv->bmv_length;
 >  
->  LDIRT = *.gz
+> +
+> +	if (bmv->bmv_count > ULONG_MAX / sizeof(struct getbmapx))
+> +		return XFS_ERROR(ENOMEM);
+> +	out = kmem_zalloc(bmv->bmv_count * sizeof(struct getbmapx), KM_MAYFAIL);
+> +	if (!out)
+> +		return XFS_ERROR(ENOMEM);
+> +
+>  	xfs_ilock(ip, XFS_IOLOCK_SHARED);
+>  	if (whichfork == XFS_DATA_FORK && !(iflags & BMV_IF_DELALLOC)) {
+>  		if (ip->i_delayed_blks || ip->i_size > ip->i_d.di_size) {
+> @@ -6001,39 +6009,39 @@ xfs_getbmap(
+>  		ASSERT(nmap <= subnex);
 >  
-> Index: xfsdump-dev/include/Makefile
-> ===================================================================
-> --- xfsdump-dev.orig/include/Makefile	2009-02-24 19:31:49.244027259 +0100
-> +++ xfsdump-dev/include/Makefile	2009-02-24 19:37:18.132152625 +0100
-> @@ -5,7 +5,7 @@
->  TOPDIR = ..
->  include $(TOPDIR)/include/builddefs
+>  		for (i = 0; i < nmap && nexleft && bmv->bmv_length; i++) {
+> -			int full = 0;	/* user array is full */
+> -
+> -			out.bmv_oflags = 0;
+> +			out[cur_ext].bmv_oflags = 0;
+>  			if (map[i].br_state == XFS_EXT_UNWRITTEN)
+> -				out.bmv_oflags |= BMV_OF_PREALLOC;
+> +				out[cur_ext].bmv_oflags |= BMV_OF_PREALLOC;
+>  			else if (map[i].br_startblock == DELAYSTARTBLOCK)
+> -				out.bmv_oflags |= BMV_OF_DELALLOC;
+> -			out.bmv_offset = XFS_FSB_TO_BB(mp, map[i].br_startoff);
+> -			out.bmv_length = XFS_FSB_TO_BB(mp, map[i].br_blockcount);
+> -			out.bmv_unused1 = out.bmv_unused2 = 0;
+> +				out[cur_ext].bmv_oflags |= BMV_OF_DELALLOC;
+> +			out[cur_ext].bmv_offset =
+> +				XFS_FSB_TO_BB(mp, map[i].br_startoff);
+> +			out[cur_ext].bmv_length =
+> +				XFS_FSB_TO_BB(mp, map[i].br_blockcount);
+> +			out[cur_ext].bmv_unused1 = 0;
+> +			out[cur_ext].bmv_unused2 = 0;
+>  			ASSERT(((iflags & BMV_IF_DELALLOC) != 0) ||
+>  			      (map[i].br_startblock != DELAYSTARTBLOCK));
+>                          if (map[i].br_startblock == HOLESTARTBLOCK &&
+>  			    whichfork == XFS_ATTR_FORK) {
+>  				/* came to the end of attribute fork */
+> -				out.bmv_oflags |= BMV_OF_LAST;
+> +				out[cur_ext].bmv_oflags |= BMV_OF_LAST;
+>  				goto out_free_map;
+>  			}
 >  
-> -HFILES = swap.h
-> +HFILES = swab.h swap.h
->  LSRCFILES = builddefs.in buildmacros buildrules config.h.in
+> -			if (!xfs_getbmapx_fix_eof_hole(ip, &out, prealloced,
+> -					bmvend, map[i].br_startblock))
+> +			if (!xfs_getbmapx_fix_eof_hole(ip, &out[cur_ext],
+> +					prealloced, bmvend,
+> +					map[i].br_startblock))
+>  				goto out_free_map;
 >  
->  default install install-dev :
-> Index: xfsdump-dev/inventory/Makefile
-> ===================================================================
-> --- xfsdump-dev.orig/inventory/Makefile	2009-02-24 19:32:17.497028005 +0100
-> +++ xfsdump-dev/inventory/Makefile	2009-02-24 19:34:01.969057100 +0100
-> @@ -7,7 +7,7 @@ include $(TOPDIR)/include/builddefs
+> -			/* format results & advance arg */
+> -			error = formatter(&arg, &out, &full);
+> -			if (error || full)
+> -				goto out_free_map;
+>  			nexleft--;
+>  			bmv->bmv_offset =
+> -				out.bmv_offset + out.bmv_length;
+> +				out[cur_ext].bmv_offset +
+> +				out[cur_ext].bmv_length;
+>  			bmv->bmv_length =
+>  				max_t(__int64_t, 0, bmvend - bmv->bmv_offset);
+>  			bmv->bmv_entries++;
+> +			cur_ext++;
+>  		}
+>  	} while (nmap && nexleft && bmv->bmv_length);
 >  
->  LSRCFILES = inv_api.c inv_core.c inv_fstab.c inv_idx.c inv_mgr.c \
->  	inv_oref.c inv_oref.h inv_priv.h inv_stobj.c inv_files.c \
-> -	inventory.h
-> +	inventory.h getopt.h testmain.c
->  
->  default install install-dev:
+> @@ -6043,6 +6051,16 @@ xfs_getbmap(
+>  	xfs_iunlock_map_shared(ip, lock);
+>   out_unlock_iolock:
+>  	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+> +
+> +	for (i = 0; i < cur_ext; i++) {
+> +		int full = 0;	/* user array is full */
+> +
+> +		/* format results & advance arg */
+> +		error = formatter(&arg, &out[i], &full);
+> +		if (error || full)
+> +			break;
+> +	}
+> +
+>  	return error;
+>  }
 >  
 > 
 > _______________________________________________
