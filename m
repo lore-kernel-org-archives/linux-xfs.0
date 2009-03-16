@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2G9DRG1080605 for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 04:13:47 -0500
+	n2G9DroE080635 for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 04:14:13 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9D69819C306
-	for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 02:13:06 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 73F3519C308
+	for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 02:13:32 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id valv3AZ9SvpjwsDP for
-	<xfs@oss.sgi.com>; Mon, 16 Mar 2009 02:13:06 -0700 (PDT)
-Date: Mon, 16 Mar 2009 05:12:35 -0400
+	by cuda.sgi.com with ESMTP id bHg7VpbEl1j7SN4Q for
+	<xfs@oss.sgi.com>; Mon, 16 Mar 2009 02:13:32 -0700 (PDT)
+Date: Mon, 16 Mar 2009 05:13:31 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/5] [XFS] Make inode flush at ENOSPC synchronous
-Message-ID: <20090316091235.GB2636@infradead.org>
+Subject: Re: [PATCH 3/5] [XFS] Block callers of xfs_flush_inodes() correctly.
+Message-ID: <20090316091331.GC2636@infradead.org>
 References: <1237116707-25793-1-git-send-email-david@fromorbit.com>
-	<1237116707-25793-3-git-send-email-david@fromorbit.com>
+	<1237116707-25793-4-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1237116707-25793-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1237116707-25793-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,32 +32,21 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: mpatocka@redhat.com, xfs@oss.sgi.com
 
-On Sun, Mar 15, 2009 at 10:31:44PM +1100, Dave Chinner wrote:
->  	} else {
-> +		int enospc = 0;
-> +		ssize_t ret2 = 0;
-> +
-> +write_retry:
->  		xfs_rw_enter_trace(XFS_WRITE_ENTER, xip, (void *)iovp, segs,
->  				*offset, ioflags);
-> -		ret = generic_file_buffered_write(iocb, iovp, segs,
-> +		ret2 = generic_file_buffered_write(iocb, iovp, segs,
->  				pos, offset, count, ret);
-> +		/*
-> +		 * if we just got an ENOSPC, flush the inode now we
-> +		 * aren't holding any page locks and retry *once*
-> +		 */
-> +		if (ret2 == -ENOSPC && !enospc) {
-> +			error = xfs_flush_pages(xip, 0, -1, 0, FI_NONE);
-> +			if (error)
-> +				goto out_unlock_internal;
-> +			enospc = 1;
-> +			goto write_retry;
-> +		}
-> +		ret = ret2;
+On Sun, Mar 15, 2009 at 10:31:45PM +1100, Dave Chinner wrote:
+> xfs_flush_inodes() currently uses a magic timeout to wait for
+> some inodes to be flushed before returning. This isn't
+> really reliable but used to be the best that could be done
+> due to deadlock potential of waiting for the entire flush.
+> 
+> Now the inode flush is safe to execute while we hold page
+> and inode locks, we can wait for all the inodes to flush
+> synchronously. Convert the wait mechanism to a completion
+> to do this efficiently. This should remove all remaining
+> spurious ENOSPC errors from the delayed allocation reservation
+> path.
 
-Just use filemap_fdatawrite here directly..
-
+Why do we queue it up to a different thread if we synchronously wait
+for it anyway?
 
 _______________________________________________
 xfs mailing list
