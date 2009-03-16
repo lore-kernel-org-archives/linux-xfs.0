@@ -1,33 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2GGHiun101731 for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 11:18:05 -0500
-Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B854819E06E
-	for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 09:17:21 -0700 (PDT)
-Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.162.198]) by
-	cuda.sgi.com with ESMTP id 1GvkQ3em8oLVdc2G for
-	<xfs@oss.sgi.com>; Mon, 16 Mar 2009 09:17:21 -0700 (PDT)
-Received: from mailsrv2.i.zmi.at (h081217054243.dyn.cm.kabsi.at
-	[81.217.54.243])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv1.zmi.at (Postfix) with ESMTP id 00CD3461C
-	for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 17:17:20 +0100 (CET)
-Received: from saturn.localnet (saturn.i.zmi.at [10.0.0.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv2.i.zmi.at (Postfix) with ESMTPSA id B2E4540017F
-	for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 17:17:19 +0100 (CET)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: LWN article: ext4 and data loss
-Date: Mon, 16 Mar 2009 17:17:19 +0100
-References: <200903121239.35442@zmi.at>
-	<200903142043.11638.Martin@lichtvoll.de>
-In-Reply-To: <200903142043.11638.Martin@lichtvoll.de>
+	n2GL3dn8113933 for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 16:03:59 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B752E19F24E
+	for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 14:02:57 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id HkHWrQyFceJ0p34w for
+	<xfs@oss.sgi.com>; Mon, 16 Mar 2009 14:02:57 -0700 (PDT)
+Date: Mon, 16 Mar 2009 17:02:49 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [patch] fix parallel build failures in xfsprogs-3.0.0
+Message-ID: <20090316210249.GA2641@infradead.org>
+References: <200902240010.25434.vapier@gentoo.org>
+	<20090316070550.GA628@infradead.org>
+	<200903160331.53142.vapier@gentoo.org>
+	<200903161053.32745.agruen@suse.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-Message-Id: <200903161717.19362@zmi.at>
+In-Reply-To: <200903161053.32745.agruen@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,39 +27,513 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Andreas Gruenbacher <agruen@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@sandeen.net>, Mike Frysinger <vapier@gentoo.org>, xfs-oss <xfs@oss.sgi.com>
 
-On Samstag 14 M=E4rz 2009 Martin Steigerwald wrote:
-> Am Donnerstag 12 M=E4rz 2009 schrieb Michael Monnerie:
-> > http://lwn.net/SubscriberLink/322823/e6979f02e5a73feb/
+On Mon, Mar 16, 2009 at 10:53:32AM +0100, Andreas Gruenbacher wrote:
+> On Monday, 16 March 2009 8:31:48 Mike Frysinger wrote:
+> > usually what i do is something like:
+> > args=
+> > libtoolize -n --install 2>/dev/null && args="-i"
+> > libtoolize -c -f $args
+> 
+> Sigh, the usual GNU utility problem. I've added a compatibility fix to attr 
+> and acl now. Thanks!
 
-> BTW I think you gave away a subcriber only link. The article is not
-> officially available yet:
-> http://lwn.net/Articles/322823/
-> LWN might not be too happy with this.
+Ok.  Can anyone review the cumulated autotools/libtool patch for
+xfsprogs below?
 
-Nope. I am a subscriber, and can generate such Links in order to =
 
-provider an article to others. If you read that, they offer a "Free =
+Subject: Automake and libtool fixes
+From: Andreas Gruenbacher <agruen@suse.de>
 
-trial subscription" for 3 months, and encourage you to pay then. I can =
+Remove aclocal.m4 from the repository and generate it when needed.
+Move the AC_PROG_LIBTOOL autoconf macro and use libtoolize according to
+the libtool info pages.
 
-recommend lwn.net a lot, so maybe some people subscribe there because of =
+Make sure that libtoolize adds the auxiliary files (config.guess and
+config.sub).
 
-my posting :-)
+Move install-sh into include/ so that libtoolize does not destroy it.
 
-mfg zmi
--- =
+Split up the ``make clean'' and ``make distclean'' targets: the former
+removes all files generated during a build.  The latter removes all
+files generated by libtoolize, autoconf, and configure as well.
 
-// Michael Monnerie, Ing.BSc    -----      http://it-management.at
-// Tel: 0660 / 415 65 31                      .network.your.ideas.
-// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
-// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
-// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
+
+Signed-off-by: Andreas Gruenbacher <agruen@suse.de>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+
+Index: xfsprogs-dev/Makefile
+===================================================================
+--- xfsprogs-dev.orig/Makefile	2009-03-16 07:57:07.891007993 +0100
++++ xfsprogs-dev/Makefile	2009-03-16 21:58:18.036977931 +0100
+@@ -9,11 +9,18 @@ ifeq ($(HAVE_BUILDDEFS), yes)
+ include $(TOPDIR)/include/builddefs
+ endif
+ 
+-CONFIGURE = configure include/builddefs include/platform_defs.h
+-LSRCFILES = configure configure.in Makepkgs aclocal.m4 install-sh README VERSION
++CONFIGURE = \
++	aclocal.m4 \
++	configure config.guess config.sub \
++	ltmain.sh m4/libtool.m4 m4/ltoptions.m4 m4/ltsugar.m4 \
++	m4/ltversion.m4 m4/lt~obsolete.m4 \
++	include/builddefs include/platform_defs.h
++LSRCFILES = \
++	configure.in Makepkgs install-sh README VERSION \
++	configure aclocal.m4
+ 
+-LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
+-	Logs/* built .census install.* install-dev.* *.gz
++LDIRT = config.log config.status config.cache confdefs.h built .census \
++	Logs/* conftest* install.* install-dev.* *.dep *.gz
+ 
+ LIB_SUBDIRS = libxfs libxlog libxcmd libhandle libdisk
+ TOOL_SUBDIRS = copy db estimate fsck fsr growfs io logprint mkfs quota \
+@@ -21,7 +28,7 @@ TOOL_SUBDIRS = copy db estimate fsck fsr
+ 
+ SUBDIRS = include $(LIB_SUBDIRS) $(TOOL_SUBDIRS)
+ 
+-default: include/builddefs include/platform_defs.h
++default: configure include/builddefs include/platform_defs.h
+ ifeq ($(HAVE_BUILDDEFS), no)
+ 	$(MAKE) -C . $@
+ else
+@@ -45,7 +52,15 @@ else
+ clean:	# if configure hasn't run, nothing to clean
+ endif
+ 
++# Recent versions of libtool require the -i option for copying auxiliary
++# files (config.sub, config.guess, install-sh, ltmain.sh), while older
++# versions will copy those files anyway, and don't understand -i.
++LIBTOOLIZE_INSTALL = `libtoolize -n -i >/dev/null 2>/dev/null && echo -i`
++
+ configure include/builddefs:
++	libtoolize -c $(LIBTOOLIZE_INSTALL) -f
++	cp include/install-sh .
++	aclocal -I m4
+ 	autoconf
+ 	./configure \
+ 		--prefix=/ \
+@@ -68,9 +83,6 @@ include/platform_defs.h: include/buildde
+ 		$(MAKE) $(AM_MAKEFLAGS) include/builddefs; \
+ 	fi
+ 
+-aclocal.m4::
+-	aclocal --acdir=`pwd`/m4 --output=$@
+-
+ install: default $(addsuffix -install,$(SUBDIRS))
+ 	$(INSTALL) -m 755 -d $(PKG_DOC_DIR)
+ 	$(INSTALL) -m 644 README $(PKG_DOC_DIR)
+@@ -90,4 +102,5 @@ install-qa: install $(addsuffix -install
+ 
+ realclean distclean: clean
+ 	rm -f $(LDIRT) $(CONFIGURE)
++	rm -f include/builddefs include/config.h install-sh libtool
+ 	rm -rf autom4te.cache Logs
+Index: xfsprogs-dev/configure.in
+===================================================================
+--- xfsprogs-dev.orig/configure.in	2009-03-16 07:57:07.898984077 +0100
++++ xfsprogs-dev/configure.in	2009-03-16 21:58:18.036977931 +0100
+@@ -1,6 +1,10 @@
+ AC_INIT(include/libxfs.h)
++AC_CONFIG_AUX_DIR([.])
++AC_CONFIG_MACRO_DIR([m4])
+ AC_CONFIG_HEADER(include/platform_defs.h)
+ 
++AC_PROG_LIBTOOL
++
+ AC_ARG_ENABLE(shared,
+ [ --enable-shared=[yes/no] Enable use of shared libraries [default=yes]],,
+ 	enable_shared=yes)
+Index: xfsprogs-dev/m4/package_utilies.m4
+===================================================================
+--- xfsprogs-dev.orig/m4/package_utilies.m4	2009-03-16 07:57:07.903978218 +0100
++++ xfsprogs-dev/m4/package_utilies.m4	2009-03-16 07:57:09.538978690 +0100
+@@ -32,8 +32,6 @@ AC_DEFUN([AC_PACKAGE_UTILITIES],
+     AC_SUBST(make)
+     AC_PACKAGE_NEED_UTILITY($1, "$make", make, [GNU make])
+ 
+-    AC_PROG_LIBTOOL
+-
+     if test -z "$TAR"; then
+         AC_PATH_PROG(TAR, tar,, /usr/freeware/bin:/bin:/usr/local/bin:/usr/bin)
+     fi
+Index: xfsprogs-dev/include/Makefile
+===================================================================
+--- xfsprogs-dev.orig/include/Makefile	2009-03-16 21:58:09.403978018 +0100
++++ xfsprogs-dev/include/Makefile	2009-03-16 21:58:18.036977931 +0100
+@@ -36,8 +36,8 @@ HFILES += $(PKG_PLATFORM).h
+ PHFILES = darwin.h freebsd.h irix.h linux.h
+ DKHFILES = volume.h fstyp.h dvh.h
+ LSRCFILES = $(shell echo $(PHFILES) | sed -e "s/$(PKG_PLATFORM).h//g")
+-LSRCFILES += platform_defs.h.in builddefs.in buildmacros buildrules $(DKHFILES)
+-LSRCFILES += command.h input.h path.h project.h unaligned.h
++LSRCFILES += platform_defs.h.in builddefs.in buildmacros buildrules install-sh
++LSRCFILES += $(DKHFILES) command.h input.h path.h project.h unaligned.h
+ LDIRT = xfs disk
+ 
+ default install: xfs disk
+Index: xfsprogs-dev/include/install-sh
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ xfsprogs-dev/include/install-sh	2009-03-16 21:58:18.037978687 +0100
+@@ -0,0 +1,349 @@
++#! /bin/sh
++#
++# Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
++#
++# This script emulates bsd install and also recognises
++# two environment variables, with the following semantics :-
++#
++# $DIST_MANIFEST - if set, the name of the file to append manifest
++#                  information in the following format:
++#                  File     :  f mode owner group src target
++#                  Directory:  d mode owner group target
++#                  Symlink  :  l linkval target
++#
++# $DIST_ROOT     - if set, prepend to target
++#
++# The sematics of all combinations of these two variables
++# are as follows:
++#
++# $DIST_MANIFEST?  $DIST_ROOT? |   Copy?  Append Manifest?
++# -----------------------------+--------------------------
++#       not set       not set  |    yes        no
++#       not set       set      |    yes        no
++#       set           not set  |    no         yes
++#       set           set      |    yes        yes
++#
++_usage() {
++    echo "Usage: $prog [-o owner] [-g group] [-m mode] -d directory"
++    echo "or     $prog [-D] [-o owner] [-g group] [-m mode] file directory/file"
++    echo "or     $prog [-o owner] [-g group] [-m mode] file [file ...] directory"
++    echo "or     $prog -S file target  (creates \"target\" symlink)"
++    echo "or     $prog -T lt_arg [-o owner] [-g group] [-m mode] libtool.lai directory"
++    echo ""
++    echo "The \$DIST_MANIFEST and \$DIST_ROOT environment variables affect the"
++    echo "behaviour of this command - see comments in the script."
++    echo "The -D flag is only available for the second usage, and causes"
++    echo "the target directory to be created before installing the file."
++    echo ""
++    exit 1
++}
++
++_chown ()
++{
++    _st=255
++    if [ $# -eq 3 ] ; then
++	chown $1:$2 $3
++	_st=$?
++	if [ $_st -ne 0 ] ; then
++	    if [ $REAL_UID != '0' ] ; then
++		if [ ! -f $DIST_ROOT/.chown.quiet ] ; then
++		    echo '==============================================='
++		    echo Ownership of files under ${DIST_ROOT:-/}
++		    echo cannot be changed
++		    echo '==============================================='
++		    if [ -n "$DIST_ROOT" ] ; then
++			touch $DIST_ROOT/.chown.quiet
++		    fi
++		fi
++	       _st=0
++	    fi     
++	fi
++    fi
++
++    return $_st
++}
++
++
++_manifest ()
++{ 
++    echo $* | sed -e 's/\/\//\//g' >>${DIST_MANIFEST:-/dev/null}
++}
++
++prog=`basename $0`
++HERE=`pwd`
++dflag=false
++Dflag=false
++Sflag=false
++Tflag=false
++DIRMODE=755
++FILEMODE=644
++OWNER=`id -u`
++GROUP=`id -g`
++REAL_UID=$OWNER
++
++# default is to install and don't append manifest
++INSTALL=true
++MANIFEST=:
++
++[ -n "$DIST_MANIFEST" -a -z "$DIST_ROOT" ] && INSTALL=false
++[ -n "$DIST_MANIFEST" ] && MANIFEST="_manifest"
++
++[ $# -eq 0 ] && _usage
++
++if $INSTALL
++then
++    CP=cp; LN=ln; MKDIR=mkdir; CHMOD=chmod; CHOWN=_chown
++else
++    CP=true; LN=true; MKDIR=true; CHMOD=true; CHOWN=true
++fi
++
++[ -n "$DIST_ROOT" -a $REAL_UID -ne 0 ] && CHOWN=true
++
++while getopts "Dcm:d:S:o:g:T:" c $*
++do
++   case $c in
++   c)
++	;;
++   g)
++	GROUP=$OPTARG
++	;;
++   o)
++	OWNER=$OPTARG
++	;;
++   m)
++	DIRMODE=`expr $OPTARG`
++	FILEMODE=$DIRMODE
++	;;
++   D) 
++	Dflag=true
++	;;
++   S) 
++	symlink=$OPTARG
++	Sflag=true
++	;;
++   d) 
++	dir=$DIST_ROOT/$OPTARG
++	dflag=true
++	;;
++   T)
++	lt_install=$OPTARG
++	Tflag=true
++	;;
++   *)
++   	_usage
++	;;
++   esac
++done
++
++shift `expr $OPTIND - 1`
++
++status=0
++if $dflag
++then
++    #
++    # first usage
++    #
++    $MKDIR -p $dir 
++    status=$?
++    if [ $status -eq 0 ]
++    then
++	$CHMOD $DIRMODE $dir
++	status=$?
++    fi
++    if [ $status -eq 0 ]
++    then
++	$CHOWN $OWNER $GROUP $dir
++	status=$?
++    fi
++    $MANIFEST d $DIRMODE $OWNER $GROUP ${dir#$DIST_ROOT}
++elif $Sflag
++then
++    #
++    # fourth usage (symlink)
++    #
++    if [ $# -ne 1 ]
++    then
++    	_usage
++    else
++    	target=$DIST_ROOT/$1
++    fi
++    $LN -s -f $symlink $target
++    status=$?
++    $MANIFEST l $symlink ${target#$DIST_ROOT} 
++elif $Tflag
++then
++    #
++    # -T (install libs built by libtool)
++    #
++    if [ $# -ne 2 ]
++    then
++	_usage
++    else
++	libtool_lai=$1
++	# source the libtool variables
++	if [ ! -f $libtool_lai ]
++	then
++		echo "$prog: Unable to find libtool library file $libtool_lai"
++		exit 2
++	fi
++	. ./$libtool_lai
++	target=$DIST_ROOT/$2
++    fi
++    case $lt_install in
++    so_dot_version)
++	# Loop until we find libfoo.so.x.y.z, then break out.
++	for solib in $library_names
++	do
++		# does it have enough parts?  libfoo.so.x.y.z == 5
++		cnt=`echo "$solib" | sed -e 's/\./ /g' | wc -w`
++		if [ $cnt -eq 5 ]
++		then
++			install_name=$target/$solib
++			$CP $solib $install_name
++			status=$?
++			$MANIFEST f $FILEMODE $OWNER $GROUP $HERE/$solib ${install_name#$DIST_ROOT}
++			break
++		fi
++	done
++	;;
++
++    so_*)
++	case $lt_install in
++	so_dot_current)
++		# ln -s libfoo.so.x.y.z to libfoo.so.x
++		from_parts=5  # libfoo.so.x.y.z
++		to_parts=3    # libfoo.so.x
++		;;
++	so_base)
++		# ln -s libfoo.so.x to libfoo.so
++		from_parts=3  # libfoo.so.x
++		to_parts=2    # libfoo.so
++		;;
++	*)
++		echo "$prog: -T $lt_install invalid"
++		exit 2
++		;;
++	esac
++
++	# Loop until we find the names, then break out.
++	for solib in $library_names
++	do
++		# does it have enough parts?
++		cnt=`echo "$solib" | sed -e 's/\./ /g' | wc -w`
++		if [ $cnt -eq $from_parts ]
++		then
++			from_name=$solib
++		elif [ $cnt -eq $to_parts ]
++		then
++			to_name=$solib
++		fi
++
++		if [ -n "$from_name" ] && [ -n "$to_name" ]
++		then
++			install_name=$target/$to_name
++			$LN -s -f $from_name $install_name
++			status=$?
++			$MANIFEST l $from_name ${install_name#$DIST_ROOT}
++			break
++		fi
++	done
++	;;
++    old_lib)
++	install_name=$target/$old_library
++	$CP $old_library $install_name
++	status=$?
++	$MANIFEST f $FILEMODE $OWNER $GROUP $HERE/$old_library ${install_name#$DIST_ROOT}
++	;;
++    *)
++	echo "$prog: -T $lt_install invalid"
++	exit 2
++	;;
++    esac
++
++    case $lt_install in
++    old_lib|so_dot_version)
++	if [ $status -eq 0 ]
++	then
++		$CHMOD $FILEMODE $install_name
++		$CHOWN $OWNER $GROUP $install_name
++	fi
++	;;
++    esac
++
++else
++    list=""
++    dir=""
++    if [ $# -eq 2 ]
++    then
++	#
++	# second usage
++	#
++	f=$1
++	dir=$DIST_ROOT/$2
++	if $Dflag
++	then
++	    mkdir -p `dirname $dir`
++	fi
++	$CP $f $dir
++	status=$?
++	if [ $status -eq 0 ]
++	then 
++	    if [ -f $dir/$f ]
++	    then
++		$CHMOD $FILEMODE $dir/$f
++		status=$?
++		if [ $status -eq 0 ]
++		then
++		    $CHOWN $OWNER $GROUP $dir/$f
++		    status=$?
++		fi
++		$MANIFEST f $FILEMODE $OWNER $GROUP $HERE/$f ${dir#$DIST_ROOT}/$f
++	    else
++		$CHMOD $FILEMODE $dir
++		status=$?
++		if [ $status -eq 0 ]
++		then
++		    $CHOWN $OWNER $GROUP $dir
++		    status=$?
++		fi
++		$MANIFEST f $FILEMODE $OWNER $GROUP $HERE/$dir ${dir#$DIST_ROOT}
++	    fi
++	fi
++    else
++	#
++	# third usage
++	#
++	n=1
++	while [ $# -gt 0 ]
++	do
++	    if [ $# -gt 1 ]
++	    then
++		list="$list $1"
++	    else
++		dir=$DIST_ROOT/$1
++	    fi
++	    shift
++	done
++
++	# echo DIR=$dir list=\"$list\"
++	for f in $list
++	do
++	    $CP $f $dir
++	    status=$?
++	    if [ $status -eq 0 ]
++	    then
++		$CHMOD $FILEMODE $dir/$f
++		status=$?
++		if [ $status -eq 0 ]
++		then
++		    $CHOWN $OWNER $GROUP $dir/$f
++		    status=$?
++		fi
++		$MANIFEST f $FILEMODE $OWNER $GROUP $HERE/$f ${dir#$DIST_ROOT}/$f
++	    fi
++	    [ $status -ne 0 ] && break
++	done
++    fi
++fi
++
++exit $status
 
 _______________________________________________
 xfs mailing list
