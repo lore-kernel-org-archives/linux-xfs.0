@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2G9ehSq082213 for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 04:41:03 -0500
-Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9532319BDCA
-	for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 02:40:21 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net
-	[203.16.214.145]) by cuda.sgi.com with ESMTP id
-	IL8m4gSCV3I3HwhF for <xfs@oss.sgi.com>;
-	Mon, 16 Mar 2009 02:40:21 -0700 (PDT)
-Date: Mon, 16 Mar 2009 20:40:19 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/6] [XFS] introduce a AG inode tree walker
-Message-ID: <20090316094019.GD26138@disturbed>
-References: <1237117603-26071-1-git-send-email-david@fromorbit.com>
-	<20090316075338.GA19858@infradead.org>
+	n2G9u0vx082992 for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 04:56:20 -0500
+Received: from mx1.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4BE441C45B20
+	for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 02:55:38 -0700 (PDT)
+Received: from mx1.suse.de (ns1.suse.de [195.135.220.2]) by cuda.sgi.com with
+	ESMTP id CIgRZxLgcSPKF1XO for <xfs@oss.sgi.com>;
+	Mon, 16 Mar 2009 02:55:38 -0700 (PDT)
+From: Andreas Gruenbacher <agruen@suse.de>
+Subject: Re: [patch] fix parallel build failures in xfsprogs-3.0.0
+Date: Mon, 16 Mar 2009 10:53:32 +0100
+References: <200902240010.25434.vapier@gentoo.org>
+	<20090316070550.GA628@infradead.org>
+	<200903160331.53142.vapier@gentoo.org>
+In-Reply-To: <200903160331.53142.vapier@gentoo.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20090316075338.GA19858@infradead.org>
+Message-Id: <200903161053.32745.agruen@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,38 +30,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Mike Frysinger <vapier@gentoo.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
 
-On Mon, Mar 16, 2009 at 03:53:38AM -0400, Christoph Hellwig wrote:
-> On Sun, Mar 15, 2009 at 10:46:37PM +1100, Dave Chinner wrote:
-> > This series splits up the sync and reclaim code into three
-> > separate actions. The first is the tree walker, the second is
-> > the inode validation and the third is the operation to execute
-> > on the inode.
-> > 
-> > This allows us to somewhat abstract the radix tree away from the
-> > act of walking the cached inodes and puts in place mechanisms that
-> > can be extended for bulk inode cache lookups.
-> > 
-> > This also splits the inode writeback into separate data and metadata
-> > sync operations and optimises them a little......
-> 
-> Just did a quick XFSQA run with your whole patch series applied and
-> I get this oops in 001:
+On Monday, 16 March 2009 8:31:48 Mike Frysinger wrote:
+> usually what i do is something like:
+> args=
+> libtoolize -n --install 2>/dev/null && args="-i"
+> libtoolize -c -f $args
 
-I haven't seen that - it runs through a UML test run just fine.
-I'll see if I can reproduce it...
+Sigh, the usual GNU utility problem. I've added a compatibility fix to attr 
+and acl now. Thanks!
 
-If you drop the last patch (the iterator patch) does it work
-ok?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Andreas
 
 _______________________________________________
 xfs mailing list
