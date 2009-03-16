@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2GA27iV083231 for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 05:02:28 -0500
+	n2GAATNj083525 for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 05:10:50 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 18B3419C544
-	for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 03:01:46 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1965A19C7D0
+	for <xfs@oss.sgi.com>; Mon, 16 Mar 2009 03:10:08 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 9MxphkuGDuNq32lR for
-	<xfs@oss.sgi.com>; Mon, 16 Mar 2009 03:01:46 -0700 (PDT)
-Date: Mon, 16 Mar 2009 06:01:16 -0400
+	by cuda.sgi.com with ESMTP id FTi0MUil3pnJO2f6 for
+	<xfs@oss.sgi.com>; Mon, 16 Mar 2009 03:10:08 -0700 (PDT)
+Date: Mon, 16 Mar 2009 06:10:08 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/6] [XFS] introduce a AG inode tree walker
-Message-ID: <20090316100116.GA16218@infradead.org>
+Subject: Re: [PATCH 1/6] [XFS] Split inode data writeback from inode sync.
+Message-ID: <20090316101008.GA2874@infradead.org>
 References: <1237117603-26071-1-git-send-email-david@fromorbit.com>
-	<20090316075338.GA19858@infradead.org>
-	<20090316094019.GD26138@disturbed>
+	<1237117603-26071-2-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20090316094019.GD26138@disturbed>
+In-Reply-To: <1237117603-26071-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,14 +29,75 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Mar 16, 2009 at 08:40:19PM +1100, Dave Chinner wrote:
-> If you drop the last patch (the iterator patch) does it work
-> ok?
+> +static int
+> +xfs_sync_inode_data(
+> +	struct xfs_inode	*ip,
+> +	int			flags)
+> +{
+> +	struct inode	*inode = VFS_I(ip);
+> +	int		error = 0;
+> +
+> +	if (VN_DIRTY(inode)) {
+> +		int	locked = 0;
+> +		if (flags & SYNC_TRYLOCK) {
+> +			if (xfs_ilock_nowait(ip, XFS_IOLOCK_SHARED))
+> +				locked = 1;
+> +		} else {
+> +			xfs_ilock(ip, XFS_IOLOCK_SHARED);
+> +			locked = 1;
+> +		}
+> +		if (locked) {
+> +			error = xfs_flush_pages(ip, 0, -1,
+> +					(flags & SYNC_WAIT) ? 0 : XFS_B_ASYNC,
+> +					FI_NONE);
+> +			xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+> +		}
+> +	}
+> +
+> +	if (flags & SYNC_IOWAIT)
+> +		xfs_ioend_wait(ip);
+> +
+> +	return error;
+> +}
 
-No.  With patches 1-5 applied we deadlock early on because pag_ici_lock
-never gets released in xfs_sync_inodes_ag for the normal non-error case.
+In the end this should look more like:
+
+
+
+static int
+xfs_sync_inode_data(
+	struct xfs_inode	*ip,
+	int			flags)
+{
+	struct inode	*inode = VFS_I(ip);
+	struct address_space *mapping = inode->i_mapping;
+	int		error = 0;
+
+	if (mapping_tagged(mapping, PAGECACHE_TAG_DIRTY)) {
+		if (!xfs_ilock_nowait(ip, XFS_IOLOCK_SHARED)) {
+			if (flags & SYNC_TRYLOCK)
+				goto out;
+			xfs_ilock(ip, XFS_IOLOCK_SHARED);
+		}
+
+		if (flags & SYNC_WAIT) {
+			error = filemap_write_and_wait(mapping);
+		else
+			error = filemap_fdatawrite(mapping);
+
+		xfs_iflags_clear(ip, XFS_ITRUNCATED);
+		xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+	}
+
+ out:
+	if (flags & SYNC_IOWAIT)
+		xfs_ioend_wait(ip);
+	return -error;
+}
+
 
 _______________________________________________
 xfs mailing list
