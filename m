@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n26HmHsc225208 for <xfs@oss.sgi.com>; Fri, 6 Mar 2009 11:48:18 -0600
-Received: from mail-bw0-f168.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4ECFC179E33
-	for <xfs@oss.sgi.com>; Fri,  6 Mar 2009 09:47:50 -0800 (PST)
-Received: from mail-bw0-f168.google.com (mail-bw0-f168.google.com
-	[209.85.218.168]) by cuda.sgi.com with ESMTP id
-	Ovf2GfhKsJGWeAjh for <xfs@oss.sgi.com>;
-	Fri, 06 Mar 2009 09:47:50 -0800 (PST)
-Received: by bwz12 with SMTP id 12so458758bwz.20
-	for <xfs@oss.sgi.com>; Fri, 06 Mar 2009 09:47:50 -0800 (PST)
+	n2HHT0nq171581 for <xfs@oss.sgi.com>; Tue, 17 Mar 2009 12:29:19 -0500
+Received: from mo-p05-ob.rzone.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EF72A1A33DB
+	for <xfs@oss.sgi.com>; Tue, 17 Mar 2009 10:28:39 -0700 (PDT)
+Received: from mo-p05-ob.rzone.de (mo-p05-ob.rzone.de [81.169.146.181]) by
+	cuda.sgi.com with ESMTP id BjSHOU5RR2CgUgGd for
+	<xfs@oss.sgi.com>; Tue, 17 Mar 2009 10:28:39 -0700 (PDT)
+Received: from [10.1.1.65] ([213.39.240.61])
+	by post.strato.de (fruni mo42) (RZmta 18.26)
+	with ESMTP id J022b4l2HHLxaK for <xfs@oss.sgi.com>;
+	Tue, 17 Mar 2009 18:28:37 +0100 (MET)
+Message-ID: <49BFDD80.1060401@renderforce.de>
+Date: Tue, 17 Mar 2009 18:27:28 +0100
+From: Steffen Knauf <Steffen.Knauf@renderforce.de>
 MIME-Version: 1.0
-Date: Fri, 6 Mar 2009 19:47:49 +0200
-Message-ID: <5d96567b0903060947x5678a4b4tdfbc76a786dfe257@mail.gmail.com>
-Subject: xfs_irecover
-From: Raz <raziebe@gmail.com>
+Subject: Lost files + indentical Foldernames on XFS Partition
+Reply-To: Steffen.Knauf@liga01.de
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,20 +26,27 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: hch@infradead.org
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Christoph Hello
-i am trying to use xfs_ircover. when i typed:
-xfs_irecover -N 100  -D /dev/md5 -o /d2/temp/
-it just hangs. how about some verbosity ?
-i am using 2.6.18-8.el5 kernel
-thank you
-raz
+Hello,
+
+today i have a strange behavior. I have a a directory which contains 
+lots of indentical Folders with the same Name and Inode.
+I don't create Hardlinks or something else. On the other side some files 
+are suddenly vanished. A "ls -al" result in the following error: 
+"Access  to bla not possible: File or Directory not found."
+I don't find some Errormessages in the logfile. I don't know whether a 
+xfs_check make sense.
+
+greets
+
+Steffen
+
+
 
 _______________________________________________
 xfs mailing list
