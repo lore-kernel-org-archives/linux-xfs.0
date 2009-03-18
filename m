@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2I9fp21224791 for <xfs@oss.sgi.com>; Wed, 18 Mar 2009 04:42:13 -0500
+	n2I9fqxC224792 for <xfs@oss.sgi.com>; Wed, 18 Mar 2009 04:42:13 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 36FCE1A6298
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5B5371A629A
 	for <xfs@oss.sgi.com>; Wed, 18 Mar 2009 02:41:32 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id AHW7wsey2CmTl06u for
+	by cuda.sgi.com with ESMTP id WDRFsVTji0jkhjhF for
 	<xfs@oss.sgi.com>; Wed, 18 Mar 2009 02:41:32 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1LjsHD-0007dR-S7
-	for xfs@oss.sgi.com; Wed, 18 Mar 2009 09:41:31 +0000
-Message-Id: <20090318094131.771403000@bombadil.infradead.org>
-Date: Wed, 18 Mar 2009 05:41:20 -0400
+	Linux)) id 1LjsHE-0007dx-0f
+	for xfs@oss.sgi.com; Wed, 18 Mar 2009 09:41:32 +0000
+Message-Id: <20090318094131.924623000@bombadil.infradead.org>
+Date: Wed, 18 Mar 2009 05:41:21 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 1/5] xfs: cleanup uuid handling
+Subject: [PATCH 2/5] xfs: kill mutex_t typedef
 References: <20090318094119.561416000@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-uuid-cleanup
+Content-Disposition: inline; filename=xfs-kill-mutex_t
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,293 +32,150 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The uuid table handling should not be part of a semi-generic uuid library
-but in the XFS code using it, so move those bits to xfs_mount.c and
-refactor the whole glob to give a proper abstraction.
+People continue to complain about this for weird reasons, but there's
+really no point in keeping this typedef for a couple of users anyway.
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs/fs/xfs/support/uuid.c
+Index: xfs/fs/xfs/linux-2.6/mutex.h
 ===================================================================
---- xfs.orig/fs/xfs/support/uuid.c	2009-02-15 19:40:08.564944522 +0100
-+++ xfs/fs/xfs/support/uuid.c	2009-02-24 21:50:49.051029140 +0100
-@@ -17,10 +17,6 @@
-  */
- #include <xfs.h>
- 
--static DEFINE_MUTEX(uuid_monitor);
--static int	uuid_table_size;
--static uuid_t	*uuid_table;
--
- /* IRIX interpretation of an uuid_t */
- typedef struct {
- 	__be32	uu_timelow;
-@@ -46,12 +42,6 @@ uuid_getnodeuniq(uuid_t *uuid, int fsid 
- 	fsid[1] = be32_to_cpu(uup->uu_timelow);
- }
- 
--void
--uuid_create_nil(uuid_t *uuid)
--{
--	memset(uuid, 0, sizeof(*uuid));
--}
--
- int
- uuid_is_nil(uuid_t *uuid)
- {
-@@ -71,64 +61,3 @@ uuid_equal(uuid_t *uuid1, uuid_t *uuid2)
- {
- 	return memcmp(uuid1, uuid2, sizeof(uuid_t)) ? 0 : 1;
- }
--
+--- xfs.orig/fs/xfs/linux-2.6/mutex.h	2009-02-24 21:01:18.877182725 +0100
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+@@ -1,25 +0,0 @@
 -/*
-- * Given a 128-bit uuid, return a 64-bit value by adding the top and bottom
-- * 64-bit words.  NOTE: This function can not be changed EVER.  Although
-- * brain-dead, some applications depend on this 64-bit value remaining
-- * persistent.  Specifically, DMI vendors store the value as a persistent
-- * filehandle.
+- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 - */
--__uint64_t
--uuid_hash64(uuid_t *uuid)
--{
--	__uint64_t	*sp = (__uint64_t *)uuid;
+-#ifndef __XFS_SUPPORT_MUTEX_H__
+-#define __XFS_SUPPORT_MUTEX_H__
 -
--	return sp[0] + sp[1];
--}
+-#include <linux/mutex.h>
 -
--int
--uuid_table_insert(uuid_t *uuid)
--{
--	int	i, hole;
+-typedef struct mutex mutex_t;
 -
--	mutex_lock(&uuid_monitor);
--	for (i = 0, hole = -1; i < uuid_table_size; i++) {
--		if (uuid_is_nil(&uuid_table[i])) {
--			hole = i;
--			continue;
--		}
--		if (uuid_equal(uuid, &uuid_table[i])) {
--			mutex_unlock(&uuid_monitor);
--			return 0;
--		}
--	}
--	if (hole < 0) {
--		uuid_table = kmem_realloc(uuid_table,
--			(uuid_table_size + 1) * sizeof(*uuid_table),
--			uuid_table_size  * sizeof(*uuid_table),
--			KM_SLEEP);
--		hole = uuid_table_size++;
--	}
--	uuid_table[hole] = *uuid;
--	mutex_unlock(&uuid_monitor);
--	return 1;
--}
--
--void
--uuid_table_remove(uuid_t *uuid)
--{
--	int	i;
--
--	mutex_lock(&uuid_monitor);
--	for (i = 0; i < uuid_table_size; i++) {
--		if (uuid_is_nil(&uuid_table[i]))
--			continue;
--		if (!uuid_equal(uuid, &uuid_table[i]))
--			continue;
--		uuid_create_nil(&uuid_table[i]);
--		break;
--	}
--	ASSERT(i < uuid_table_size);
--	mutex_unlock(&uuid_monitor);
--}
-Index: xfs/fs/xfs/support/uuid.h
+-#endif /* __XFS_SUPPORT_MUTEX_H__ */
+Index: xfs/fs/xfs/linux-2.6/xfs_linux.h
 ===================================================================
---- xfs.orig/fs/xfs/support/uuid.h	2009-02-15 19:40:08.569944670 +0100
-+++ xfs/fs/xfs/support/uuid.h	2009-02-24 21:50:37.206029255 +0100
-@@ -22,12 +22,8 @@ typedef struct {
- 	unsigned char	__u_bits[16];
- } uuid_t;
+--- xfs.orig/fs/xfs/linux-2.6/xfs_linux.h	2009-02-24 21:01:34.596153088 +0100
++++ xfs/fs/xfs/linux-2.6/xfs_linux.h	2009-02-24 21:01:47.951030927 +0100
+@@ -38,7 +38,6 @@
+ #include <kmem.h>
+ #include <mrlock.h>
+ #include <sv.h>
+-#include <mutex.h>
+ #include <time.h>
  
--extern void uuid_create_nil(uuid_t *uuid);
- extern int uuid_is_nil(uuid_t *uuid);
- extern int uuid_equal(uuid_t *uuid1, uuid_t *uuid2);
- extern void uuid_getnodeuniq(uuid_t *uuid, int fsid [2]);
--extern __uint64_t uuid_hash64(uuid_t *uuid);
--extern int uuid_table_insert(uuid_t *uuid);
--extern void uuid_table_remove(uuid_t *uuid);
- 
- #endif	/* __XFS_SUPPORT_UUID_H__ */
-Index: xfs/fs/xfs/xfs_mount.c
+ #include <support/ktrace.h>
+@@ -51,6 +50,7 @@
+ #include <linux/blkdev.h>
+ #include <linux/slab.h>
+ #include <linux/module.h>
++#include <linux/mutex.h>
+ #include <linux/file.h>
+ #include <linux/swap.h>
+ #include <linux/errno.h>
+Index: xfs/fs/xfs/quota/xfs_dquot.h
 ===================================================================
---- xfs.orig/fs/xfs/xfs_mount.c	2009-02-24 15:32:35.871518446 +0100
-+++ xfs/fs/xfs/xfs_mount.c	2009-02-24 21:51:03.558027729 +0100
-@@ -45,7 +45,6 @@
- #include "xfs_fsops.h"
- #include "xfs_utils.h"
+--- xfs.orig/fs/xfs/quota/xfs_dquot.h	2009-02-24 20:59:24.413152831 +0100
++++ xfs/fs/xfs/quota/xfs_dquot.h	2009-02-24 20:59:39.642153943 +0100
+@@ -34,7 +34,7 @@
+  */
+ typedef struct xfs_dqhash {
+ 	struct xfs_dquot *qh_next;
+-	mutex_t		  qh_lock;
++	struct mutex	  qh_lock;
+ 	uint		  qh_version;	/* ever increasing version */
+ 	uint		  qh_nelems;	/* number of dquots on the list */
+ } xfs_dqhash_t;
+@@ -81,7 +81,7 @@ typedef struct xfs_dquot {
+ 	xfs_qcnt_t	 q_res_bcount;	/* total regular nblks used+reserved */
+ 	xfs_qcnt_t	 q_res_icount;	/* total inos allocd+reserved */
+ 	xfs_qcnt_t	 q_res_rtbcount;/* total realtime blks used+reserved */
+-	mutex_t		 q_qlock;	/* quota lock */
++	struct mutex	 q_qlock;	/* quota lock */
+ 	struct completion q_flush;	/* flush completion queue */
+ 	atomic_t          q_pincount;	/* dquot pin count */
+ 	wait_queue_head_t q_pinwait;	/* dquot pinning wait queue */
+Index: xfs/fs/xfs/quota/xfs_qm.c
+===================================================================
+--- xfs.orig/fs/xfs/quota/xfs_qm.c	2009-02-24 21:00:11.195028215 +0100
++++ xfs/fs/xfs/quota/xfs_qm.c	2009-02-24 21:00:30.583030096 +0100
+@@ -55,7 +55,7 @@
+  * quota functionality, including maintaining the freelist and hash
+  * tables of dquots.
+  */
+-mutex_t		xfs_Gqm_lock;
++struct mutex	xfs_Gqm_lock;
+ struct xfs_qm	*xfs_Gqm;
+ uint		ndquot;
  
--STATIC int	xfs_uuid_mount(xfs_mount_t *);
- STATIC void	xfs_unmountfs_wait(xfs_mount_t *);
- 
- 
-@@ -121,6 +120,84 @@ static const struct {
-     { sizeof(xfs_sb_t),			 0 }
+@@ -80,7 +80,7 @@ static struct shrinker xfs_qm_shaker = {
  };
  
-+static DEFINE_MUTEX(xfs_uuid_table_mutex);
-+static int xfs_uuid_table_size;
-+static uuid_t *xfs_uuid_table;
-+
-+/*
-+ * See if the UUID is unique among mounted XFS filesystems.
-+ * Mount fails if UUID is nil or a FS with the same UUID is already mounted.
-+ */
-+STATIC int
-+xfs_uuid_mount(
-+	struct xfs_mount	*mp)
-+{
-+	uuid_t			*uuid = &mp->m_sb.sb_uuid;
-+	int			hole, i;
-+
-+	if (mp->m_flags & XFS_MOUNT_NOUUID)
-+		return 0;
-+
-+	if (uuid_is_nil(uuid)) {
-+		cmn_err(CE_WARN,
-+			"XFS: Filesystem %s has nil UUID - can't mount",
-+			mp->m_fsname);
-+		return XFS_ERROR(EINVAL);
-+	}
-+
-+	mutex_lock(&xfs_uuid_table_mutex);
-+	for (i = 0, hole = -1; i < xfs_uuid_table_size; i++) {
-+		if (uuid_is_nil(&xfs_uuid_table[i])) {
-+			hole = i;
-+			continue;
-+		}
-+		if (uuid_equal(uuid, &xfs_uuid_table[i]))
-+			goto out_duplicate;
-+	}
-+
-+	if (hole < 0) {
-+		xfs_uuid_table = kmem_realloc(xfs_uuid_table,
-+			(xfs_uuid_table_size + 1) * sizeof(*xfs_uuid_table),
-+			xfs_uuid_table_size  * sizeof(*xfs_uuid_table),
-+			KM_SLEEP);
-+		hole = xfs_uuid_table_size++;
-+	}
-+	xfs_uuid_table[hole] = *uuid;
-+	mutex_unlock(&xfs_uuid_table_mutex);
-+
-+	return 0;
-+
-+ out_duplicate:
-+	mutex_unlock(&xfs_uuid_table_mutex);
-+	cmn_err(CE_WARN, "XFS: Filesystem %s has duplicate UUID - can't mount",
-+			 mp->m_fsname);
-+	return XFS_ERROR(EINVAL);
-+}
-+
-+STATIC void
-+xfs_uuid_unmount(
-+	struct xfs_mount	*mp)
-+{
-+	uuid_t			*uuid = &mp->m_sb.sb_uuid;
-+	int			i;
-+
-+	if (mp->m_flags & XFS_MOUNT_NOUUID)
-+		return;
-+
-+	mutex_lock(&xfs_uuid_table_mutex);
-+	for (i = 0; i < xfs_uuid_table_size; i++) {
-+		if (uuid_is_nil(&xfs_uuid_table[i]))
-+			continue;
-+		if (!uuid_equal(uuid, &xfs_uuid_table[i]))
-+			continue;
-+		memset(&xfs_uuid_table[i], 0, sizeof(uuid_t));
-+		break;
-+	}
-+	ASSERT(i < xfs_uuid_table_size);
-+	mutex_unlock(&xfs_uuid_table_mutex);
-+}
-+
-+
- /*
-  * Free up the resources associated with a mount structure.  Assume that
-  * the structure was initially zeroed, so we can tell which fields got
-@@ -1016,18 +1093,9 @@ xfs_mountfs(
+ #ifdef DEBUG
+-extern mutex_t	qcheck_lock;
++extern struct mutex	qcheck_lock;
+ #endif
  
- 	mp->m_maxioffset = xfs_max_file_offset(sbp->sb_blocklog);
+ #ifdef QUOTADEBUG
+Index: xfs/fs/xfs/quota/xfs_qm.h
+===================================================================
+--- xfs.orig/fs/xfs/quota/xfs_qm.h	2009-02-24 21:00:11.207028206 +0100
++++ xfs/fs/xfs/quota/xfs_qm.h	2009-02-24 21:00:52.676027690 +0100
+@@ -27,7 +27,7 @@ struct xfs_qm;
+ struct xfs_inode;
  
--	/*
--	 * XFS uses the uuid from the superblock as the unique
--	 * identifier for fsid.  We can not use the uuid from the volume
--	 * since a single partition filesystem is identical to a single
--	 * partition volume/filesystem.
--	 */
--	if (!(mp->m_flags & XFS_MOUNT_NOUUID)) {
--		if (xfs_uuid_mount(mp)) {
--			error = XFS_ERROR(EINVAL);
--			goto out;
--		}
--	}
-+	error = xfs_uuid_mount(mp);
-+	if (error)
-+		goto out;
+ extern uint		ndquot;
+-extern mutex_t		xfs_Gqm_lock;
++extern struct mutex	xfs_Gqm_lock;
+ extern struct xfs_qm	*xfs_Gqm;
+ extern kmem_zone_t	*qm_dqzone;
+ extern kmem_zone_t	*qm_dqtrxzone;
+@@ -79,7 +79,7 @@ typedef xfs_dqhash_t	xfs_dqlist_t;
+ typedef struct xfs_frlist {
+        struct xfs_dquot *qh_next;
+        struct xfs_dquot *qh_prev;
+-       mutex_t		 qh_lock;
++       struct mutex	 qh_lock;
+        uint		 qh_version;
+        uint		 qh_nelems;
+ } xfs_frlist_t;
+@@ -115,7 +115,7 @@ typedef struct xfs_quotainfo {
+ 	xfs_qwarncnt_t	 qi_bwarnlimit;	 /* limit for blks warnings */
+ 	xfs_qwarncnt_t	 qi_iwarnlimit;	 /* limit for inodes warnings */
+ 	xfs_qwarncnt_t	 qi_rtbwarnlimit;/* limit for rt blks warnings */
+-	mutex_t		 qi_quotaofflock;/* to serialize quotaoff */
++	struct mutex	 qi_quotaofflock;/* to serialize quotaoff */
+ 	xfs_filblks_t	 qi_dqchunklen;	 /* # BBs in a chunk of dqs */
+ 	uint		 qi_dqperchunk;	 /* # ondisk dqs in above chunk */
+ 	xfs_qcnt_t	 qi_bhardlimit;	 /* default data blk hard limit */
+Index: xfs/fs/xfs/quota/xfs_qm_syscalls.c
+===================================================================
+--- xfs.orig/fs/xfs/quota/xfs_qm_syscalls.c	2009-02-24 21:01:03.015027884 +0100
++++ xfs/fs/xfs/quota/xfs_qm_syscalls.c	2009-02-24 21:01:11.159155659 +0100
+@@ -960,7 +960,7 @@ xfs_dqhash_t *qmtest_udqtab;
+ xfs_dqhash_t *qmtest_gdqtab;
+ int	      qmtest_hashmask;
+ int	      qmtest_nfails;
+-mutex_t	      qcheck_lock;
++struct mutex  qcheck_lock;
  
- 	/*
- 	 * Set the minimum read and write sizes
-@@ -1275,8 +1343,7 @@ xfs_mountfs(
-  out_free_perag:
- 	xfs_free_perag(mp);
-  out_remove_uuid:
--	if (!(mp->m_flags & XFS_MOUNT_NOUUID))
--		uuid_table_remove(&mp->m_sb.sb_uuid);
-+	xfs_uuid_unmount(mp);
-  out:
- 	return error;
- }
-@@ -1351,9 +1418,7 @@ xfs_unmountfs(
- 	xfs_unmountfs_wait(mp); 		/* wait for async bufs */
- 	xfs_log_unmount_write(mp);
- 	xfs_log_unmount(mp);
--
--	if ((mp->m_flags & XFS_MOUNT_NOUUID) == 0)
--		uuid_table_remove(&mp->m_sb.sb_uuid);
-+	xfs_uuid_unmount(mp);
- 
- #if defined(DEBUG)
- 	xfs_errortag_clearall(mp, 0);
-@@ -1855,29 +1920,6 @@ xfs_freesb(
- }
- 
- /*
-- * See if the UUID is unique among mounted XFS filesystems.
-- * Mount fails if UUID is nil or a FS with the same UUID is already mounted.
-- */
--STATIC int
--xfs_uuid_mount(
--	xfs_mount_t	*mp)
--{
--	if (uuid_is_nil(&mp->m_sb.sb_uuid)) {
--		cmn_err(CE_WARN,
--			"XFS: Filesystem %s has nil UUID - can't mount",
--			mp->m_fsname);
--		return -1;
--	}
--	if (!uuid_table_insert(&mp->m_sb.sb_uuid)) {
--		cmn_err(CE_WARN,
--			"XFS: Filesystem %s has duplicate UUID - can't mount",
--			mp->m_fsname);
--		return -1;
--	}
--	return 0;
--}
--
--/*
-  * Used to log changes to the superblock unit and width fields which could
-  * be altered by the mount options, as well as any potential sb_features2
-  * fixup. Only the first superblock is updated.
+ #define DQTEST_HASHVAL(mp, id) (((__psunsigned_t)(mp) + \
+ 				 (__psunsigned_t)(id)) & \
 
 _______________________________________________
 xfs mailing list
