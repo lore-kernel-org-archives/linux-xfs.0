@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2ICcb5i237296 for <xfs@oss.sgi.com>; Wed, 18 Mar 2009 07:38:58 -0500
-Received: from smtp120.mail.mud.yahoo.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id 9821D1C4EEE1
-	for <xfs@oss.sgi.com>; Wed, 18 Mar 2009 05:37:56 -0700 (PDT)
-Received: from smtp120.mail.mud.yahoo.com (smtp120.mail.mud.yahoo.com
-	[209.191.84.77]) by cuda.sgi.com with SMTP id e5PEJnA0WgIp5L3n
-	for <xfs@oss.sgi.com>; Wed, 18 Mar 2009 05:37:56 -0700 (PDT)
-From: Nick Piggin <nickpiggin@yahoo.com.au>
-Subject: Re: fput under mmap_sem
-Date: Wed, 18 Mar 2009 23:37:48 +1100
-References: <200903151459.01320.denys@visp.net.lb>
-	<20090315221921.GY26138@disturbed>
-	<20090318071313.GA30011@infradead.org>
-In-Reply-To: <20090318071313.GA30011@infradead.org>
+	n2IE0WI4242613 for <xfs@oss.sgi.com>; Wed, 18 Mar 2009 09:00:52 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C6CCB1A7048
+	for <xfs@oss.sgi.com>; Wed, 18 Mar 2009 07:00:09 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31]) by cuda.sgi.com
+	with ESMTP id IUOwDu1iJezxbYzP for <xfs@oss.sgi.com>;
+	Wed, 18 Mar 2009 07:00:09 -0700 (PDT)
+Message-ID: <49C0FE64.3040203@sandeen.net>
+Date: Wed, 18 Mar 2009 09:00:04 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-Message-Id: <200903182337.48789.nickpiggin@yahoo.com.au>
+Subject: Re: Lost files + indentical Foldernames on XFS Partition
+References: <49BFDC6E.6050607@liga01.de> <49BFDDC5.9060500@sandeen.net>
+	<49C029AF.5070205@liga01.de>
+	<5948362D99F6F145B37A7D45B5DDA4481042DDA609@VMBX103.ihostexchange.net>
+	<49C0B41C.2060506@liga01.de>
+In-Reply-To: <49C0B41C.2060506@liga01.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,34 +30,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-mm@kvack.org, xfs@oss.sgi.com
+To: Steffen.Knauf@liga01.de
+Cc: Sebastian Brings <sbrings@silexmedia.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Wednesday 18 March 2009 18:13:13 Christoph Hellwig wrote:
-> On Mon, Mar 16, 2009 at 09:19:21AM +1100, Dave Chinner wrote:
-> > This is a VM problem where it calls fput() with the mmap_sem() held
-> > in remove_vma(). It makes the incorrect assumption that filesystems
-> > will never use the same lock in the IO path and the inode release path.
-> >
-> > This can deadlock if you are really unlucky.
->
-> I really wonder why other filesystems haven't hit this yet.  Any chance
-> we can get the fput moved out of mmap_sem to get rid of this class of
-> problems?
+Steffen Knauf wrote:
+>>
+>> Does this happen on the filesystem you mounted in parallel on two machines?
+>> I remember your question from early this week, so I ask 
+>>
+>> Sebastian
+>>   
+> Yes, but i mounted the partition only a short time parallel (we only 
+> read from this partition). At the moment, the mounted Filesystem is only 
+> mounted on one machine.
+> 
+> Steffen
+> 
 
-Yes I don't think there is any reason against holding the file refcount
-a little longer, but it can be pretty nasty to do in practice because
-of deep call chains and sometimes multiple fputs within a given lock
-section.
+oh... well in that case, do an xfs_repair before anything else.
 
-Possibly the easiest and quickest way will be to move aio's deferred
-__fput into a usable API and try that. If there are any performance
-problems, then we can try to move those fputs out from the mmap_sem
-one at a time (eg. I don't expect fput for vma replacement/merging to
-often cause the refcount to reach 0, and this is one of the harder
-places; wheras fput for a simple munmap might be more often causing
-refcount to reach 0 but it should be simpler to move out of mmap_sem
-if it is a problem).
+-Eric
 
 _______________________________________________
 xfs mailing list
