@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2I9gM7E224834 for <xfs@oss.sgi.com>; Wed, 18 Mar 2009 04:42:43 -0500
+	n2I9gNNE224836 for <xfs@oss.sgi.com>; Wed, 18 Mar 2009 04:42:43 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2DD461C4F729
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 542631C4F72A
 	for <xfs@oss.sgi.com>; Wed, 18 Mar 2009 02:42:03 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id rdWGWf5frDSOFFPJ for
+	by cuda.sgi.com with ESMTP id YOdFpD7E2msGUIbZ for
 	<xfs@oss.sgi.com>; Wed, 18 Mar 2009 02:42:03 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1LjsHE-0007ez-AX
+	Linux)) id 1LjsHE-0007fV-Gp
 	for xfs@oss.sgi.com; Wed, 18 Mar 2009 09:41:32 +0000
-Message-Id: <20090318094132.224487000@bombadil.infradead.org>
-Date: Wed, 18 Mar 2009 05:41:23 -0400
+Message-Id: <20090318094132.430583000@bombadil.infradead.org>
+Date: Wed, 18 Mar 2009 05:41:24 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 4/5] xfs: remove m_litino
+Subject: [PATCH 5/5] xfs: remove m_attroffset
 References: <20090318094119.561416000@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-kill-m_litino
+Content-Disposition: inline; filename=xfs-xfs_default_attroffset
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,52 +32,201 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-With the upcoming v3 inodes the inode data/attr area size needs to be
-calculated for each specific inode, so we can't cache it in the superblock
-anymore.
+With the upcoming v3 inodes the default attroffset needs to be calculated
+for each specific inode, so we can't cache it in the superblock anymore.
+
+Also replace the assert for wrong inode sizes with a proper error check
+also included in non-debug builds.  Note that the ENOSYS retourn for
+that might seem odd, but that error is returned by xfs_mount_validate_sb
+for all theoretically valid but not supported filesystem geometries.
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs/fs/xfs/xfs_dinode.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_dinode.h	2009-02-19 20:44:20.755069389 +0100
-+++ xfs/fs/xfs/xfs_dinode.h	2009-03-18 07:37:16.652977839 +0100
-@@ -103,7 +103,9 @@ typedef enum xfs_dinode_fmt {
- /*
-  * Inode size for given fs.
-  */
--#define	XFS_LITINO(mp)	((mp)->m_litino)
-+#define XFS_LITINO(mp) \
-+	((int)(((mp)->m_sb.sb_inodesize) - sizeof(struct xfs_dinode)))
-+
- #define	XFS_BROOT_SIZE_ADJ	\
- 	(XFS_BTREE_LBLOCK_LEN - sizeof(xfs_bmdr_block_t))
- 
 Index: xfs/fs/xfs/xfs_mount.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_mount.c	2009-03-18 07:37:15.633978066 +0100
-+++ xfs/fs/xfs/xfs_mount.c	2009-03-18 07:37:20.566978952 +0100
-@@ -651,7 +651,6 @@ xfs_mount_common(xfs_mount_t *mp, xfs_sb
- 	mp->m_sectbb_log = sbp->sb_sectlog - BBSHIFT;
- 	mp->m_agno_log = xfs_highbit32(sbp->sb_agcount - 1) + 1;
- 	mp->m_agino_log = sbp->sb_inopblog + sbp->sb_agblklog;
--	mp->m_litino = sbp->sb_inodesize - sizeof(struct xfs_dinode);
- 	mp->m_blockmask = sbp->sb_blocksize - 1;
+--- xfs.orig/fs/xfs/xfs_mount.c	2009-03-18 07:37:20.566978952 +0100
++++ xfs/fs/xfs/xfs_mount.c	2009-03-18 07:47:49.573979000 +0100
+@@ -333,6 +333,22 @@ xfs_mount_validate_sb(
+ 		return XFS_ERROR(ENOSYS);
+ 	}
+ 
++	/*
++	 * Currently only very few inode sizes are supported.
++	 */
++	switch (sbp->sb_inodesize) {
++	case 256:
++	case 512:
++	case 1024:
++	case 2048:
++		break;
++	default:
++		xfs_fs_mount_cmn_err(flags,
++			"inode size of %d bytes not supported",
++			sbp->sb_inodesize);
++		return XFS_ERROR(ENOSYS);
++	}
++
+ 	if (xfs_sb_validate_fsb_count(sbp, sbp->sb_dblocks) ||
+ 	    xfs_sb_validate_fsb_count(sbp, sbp->sb_rblocks)) {
+ 		xfs_fs_mount_cmn_err(flags,
+@@ -655,27 +671,6 @@ xfs_mount_common(xfs_mount_t *mp, xfs_sb
  	mp->m_blockwsize = sbp->sb_blocksize >> XFS_WORDLOG;
  	mp->m_blockwmask = mp->m_blockwsize - 1;
+ 
+-	/*
+-	 * Setup for attributes, in case they get created.
+-	 * This value is for inodes getting attributes for the first time,
+-	 * the per-inode value is for old attribute values.
+-	 */
+-	ASSERT(sbp->sb_inodesize >= 256 && sbp->sb_inodesize <= 2048);
+-	switch (sbp->sb_inodesize) {
+-	case 256:
+-		mp->m_attroffset = XFS_LITINO(mp) -
+-				   XFS_BMDR_SPACE_CALC(MINABTPTRS);
+-		break;
+-	case 512:
+-	case 1024:
+-	case 2048:
+-		mp->m_attroffset = XFS_BMDR_SPACE_CALC(6 * MINABTPTRS);
+-		break;
+-	default:
+-		ASSERT(0);
+-	}
+-	ASSERT(mp->m_attroffset < XFS_LITINO(mp));
+-
+ 	mp->m_alloc_mxr[0] = xfs_allocbt_maxrecs(mp, sbp->sb_blocksize, 1);
+ 	mp->m_alloc_mxr[1] = xfs_allocbt_maxrecs(mp, sbp->sb_blocksize, 0);
+ 	mp->m_alloc_mnr[0] = mp->m_alloc_mxr[0] / 2;
+Index: xfs/fs/xfs/xfs_attr_leaf.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_attr_leaf.c	2009-03-18 07:37:20.570978763 +0100
++++ xfs/fs/xfs/xfs_attr_leaf.c	2009-03-18 07:37:23.768978423 +0100
+@@ -155,7 +155,8 @@ xfs_attr_shortform_bytesfit(xfs_inode_t 
+ 		 * minimum offset only needs to be the space required for 
+ 		 * the btree root.
+ 		 */ 
+-		if (!dp->i_d.di_forkoff && dp->i_df.if_bytes > mp->m_attroffset)
++		if (!dp->i_d.di_forkoff && dp->i_df.if_bytes >
++		    xfs_default_attroffset(dp))
+ 			dsize = XFS_BMDR_SPACE_CALC(MINDBTPTRS);
+ 		break;
+ 		
+Index: xfs/fs/xfs/xfs_bmap.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_bmap.c	2009-03-18 07:37:20.575978772 +0100
++++ xfs/fs/xfs/xfs_bmap.c	2009-03-18 07:37:23.770978468 +0100
+@@ -3569,6 +3569,27 @@ xfs_bmap_extents_to_btree(
+ }
+ 
+ /*
++ * Calculate the default attribute fork offset for newly created inodes.
++ */
++uint
++xfs_default_attroffset(
++	struct xfs_inode	*ip)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	uint			offset;
++
++	if (mp->m_sb.sb_inodesize == 256) {
++		offset = XFS_LITINO(mp) -
++				XFS_BMDR_SPACE_CALC(MINABTPTRS);
++	} else {
++		offset = XFS_BMDR_SPACE_CALC(6 * MINABTPTRS);
++	}
++
++	ASSERT(offset < XFS_LITINO(mp));
++	return offset;
++}
++
++/*
+  * Helper routine to reset inode di_forkoff field when switching
+  * attribute fork from local to extent format - we reset it where
+  * possible to make space available for inline data fork extents.
+@@ -3580,15 +3601,18 @@ xfs_bmap_forkoff_reset(
+ 	int		whichfork)
+ {
+ 	if (whichfork == XFS_ATTR_FORK &&
+-	    (ip->i_d.di_format != XFS_DINODE_FMT_DEV) &&
+-	    (ip->i_d.di_format != XFS_DINODE_FMT_UUID) &&
+-	    (ip->i_d.di_format != XFS_DINODE_FMT_BTREE) &&
+-	    ((mp->m_attroffset >> 3) > ip->i_d.di_forkoff)) {
+-		ip->i_d.di_forkoff = mp->m_attroffset >> 3;
+-		ip->i_df.if_ext_max = XFS_IFORK_DSIZE(ip) /
+-					(uint)sizeof(xfs_bmbt_rec_t);
+-		ip->i_afp->if_ext_max = XFS_IFORK_ASIZE(ip) /
+-					(uint)sizeof(xfs_bmbt_rec_t);
++	    ip->i_d.di_format != XFS_DINODE_FMT_DEV &&
++	    ip->i_d.di_format != XFS_DINODE_FMT_UUID &&
++	    ip->i_d.di_format != XFS_DINODE_FMT_BTREE) {
++		uint	dfl_forkoff = xfs_default_attroffset(ip) >> 3;
++
++		if (dfl_forkoff > ip->i_d.di_forkoff) {
++			ip->i_d.di_forkoff = dfl_forkoff;
++			ip->i_df.if_ext_max =
++				XFS_IFORK_DSIZE(ip) / sizeof(xfs_bmbt_rec_t);
++			ip->i_afp->if_ext_max =
++				XFS_IFORK_ASIZE(ip) / sizeof(xfs_bmbt_rec_t);
++		}
+ 	}
+ }
+ 
+@@ -4057,7 +4081,7 @@ xfs_bmap_add_attrfork(
+ 	case XFS_DINODE_FMT_BTREE:
+ 		ip->i_d.di_forkoff = xfs_attr_shortform_bytesfit(ip, size);
+ 		if (!ip->i_d.di_forkoff)
+-			ip->i_d.di_forkoff = mp->m_attroffset >> 3;
++			ip->i_d.di_forkoff = xfs_default_attroffset(ip) >> 3;
+ 		else if (mp->m_flags & XFS_MOUNT_ATTR2)
+ 			version = 2;
+ 		break;
+@@ -4204,12 +4228,12 @@ xfs_bmap_compute_maxlevels(
+ 	 * (a signed 16-bit number, xfs_aextnum_t).
+ 	 *
+ 	 * Note that we can no longer assume that if we are in ATTR1 that
+-	 * the fork offset of all the inodes will be (m_attroffset >> 3)
+-	 * because we could have mounted with ATTR2 and then mounted back
+-	 * with ATTR1, keeping the di_forkoff's fixed but probably at
+-	 * various positions. Therefore, for both ATTR1 and ATTR2
+-	 * we have to assume the worst case scenario of a minimum size
+-	 * available.
++	 * the fork offset of all the inodes will be
++	 * (xfs_default_attroffset(ip) >> 3) because we could have mounted
++	 * with ATTR2 and then mounted back with ATTR1, keeping the
++	 * di_forkoff's fixed but probably at various positions. Therefore,
++	 * for both ATTR1 and ATTR2 we have to assume the worst case scenario
++	 * of a minimum size available.
+ 	 */
+ 	if (whichfork == XFS_DATA_FORK) {
+ 		maxleafents = MAXEXTNUM;
+Index: xfs/fs/xfs/xfs_bmap.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_bmap.h	2009-03-18 07:37:20.579979142 +0100
++++ xfs/fs/xfs/xfs_bmap.h	2009-03-18 07:37:23.772979002 +0100
+@@ -338,6 +338,10 @@ xfs_check_nostate_extents(
+ 	xfs_extnum_t		idx,
+ 	xfs_extnum_t		num);
+ 
++uint
++xfs_default_attroffset(
++	struct xfs_inode	*ip);
++
+ #ifdef __KERNEL__
+ 
+ /*
 Index: xfs/fs/xfs/xfs_mount.h
 ===================================================================
---- xfs.orig/fs/xfs/xfs_mount.h	2009-03-18 07:37:16.077856262 +0100
-+++ xfs/fs/xfs/xfs_mount.h	2009-03-18 07:37:20.585978718 +0100
-@@ -203,7 +203,6 @@ typedef struct xfs_mount {
+--- xfs.orig/fs/xfs/xfs_mount.h	2009-03-18 07:37:20.585978718 +0100
++++ xfs/fs/xfs/xfs_mount.h	2009-03-18 07:37:23.772979002 +0100
+@@ -198,7 +198,6 @@ typedef struct xfs_mount {
+ 	int			m_fixedfsid[2];	/* unchanged for life of FS */
+ 	uint			m_dmevmask;	/* DMI events for this FS */
+ 	__uint64_t		m_flags;	/* global mount flags */
+-	uint			m_attroffset;	/* inode attribute offset */
+ 	uint			m_dir_node_ents; /* #entries in a dir danode */
  	uint			m_attr_node_ents; /* #entries in attr danode */
  	int			m_ialloc_inos;	/* inodes in inode allocation */
- 	int			m_ialloc_blks;	/* blocks in inode allocation */
--	int			m_litino;	/* size of inode union area */
- 	int			m_inoalign_mask;/* mask sb_inoalignmt if used */
- 	uint			m_qflags;	/* quota status flags */
- 	xfs_trans_reservations_t m_reservations;/* precomputed res values */
 
 _______________________________________________
 xfs mailing list
