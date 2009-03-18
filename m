@@ -1,18 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2I3t41O202323 for <xfs@oss.sgi.com>; Tue, 17 Mar 2009 22:55:25 -0500
-Received: from SHAREPOINT.knowledgewave.local (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1496E1A5661
-	for <xfs@oss.sgi.com>; Tue, 17 Mar 2009 20:54:43 -0700 (PDT)
-Received: from SHAREPOINT.knowledgewave.local (rr-64-25-209-169.teljet.com
-	[64.25.209.169]) by cuda.sgi.com with ESMTP id av1xfPByLktqMmrW
-	for <xfs@oss.sgi.com>; Tue, 17 Mar 2009 20:54:43 -0700 (PDT)
+	n2I4c4II204426 for <xfs@oss.sgi.com>; Tue, 17 Mar 2009 23:38:24 -0500
+Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 246581C4E93C
+	for <xfs@oss.sgi.com>; Tue, 17 Mar 2009 21:37:20 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net
+	[203.16.214.145]) by cuda.sgi.com with ESMTP id
+	PCP0l36zhY2hP43E for <xfs@oss.sgi.com>;
+	Tue, 17 Mar 2009 21:37:20 -0700 (PDT)
+Date: Wed, 18 Mar 2009 15:17:52 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/5] [XFS] Use xfs_sync_inodes() for device flushing
+Message-ID: <20090318041752.GN26138@disturbed>
+References: <1237114679-18808-1-git-send-email-david@fromorbit.com>
+	<1237114679-18808-2-git-send-email-david@fromorbit.com>
+	<Pine.LNX.4.64.0903170857050.26754@hs20-bc2-1.build.redhat.com>
 MIME-Version: 1.0
-From: webinars@knowledgewave.com
-Date: 17 Mar 2009 23:54:43 -0400
-Subject: Learn to Love Microsoft Vista: No Fee Webinar
-Message-ID: <SHAREPOINTRRwrXSX0K00041012@SHAREPOINT.knowledgewave.local>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0903170857050.26754@hs20-bc2-1.build.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,102 +27,73 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============8903732184708179789=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Mikulas Patocka <mpatocka@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
---===============8903732184708179789==
-Content-Type: text/html; charset=utf-8
-Content-Transfer-Encoding: base64
+On Tue, Mar 17, 2009 at 09:08:36AM -0400, Mikulas Patocka wrote:
+> On Sun, 15 Mar 2009, Dave Chinner wrote:
+> 
+> > From: Dave Chinner <dgc@evostor.com>
+> > 
+> > Currently xfs_device_flush calls sync_blockdev() which is
+> > a no-op for XFS as all it's metadata is held in a different
+> > address to the one sync_blockdev() works on.
+> > 
+> > Call xfs_sync_inodes() instead to flush all the delayed
+> > allocation blocks out. To do this as efficiently as possible,
+> > do it via two passes - one to do an async flush of all the
+> > dirty blocks and a second to wait for all the IO to complete.
+> > This requires some modification to the xfs-sync_inodes_ag()
+> > flush code to do efficiently.
 
-DQo8aHRtbCB4bWxuczptPSJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL29mZmljZS8y
-MDA0LzEyL29tbWwiIHhtbG5zOnY9InVybjpzY2hlbWFzLW1pY3Jvc29mdC1jb206dm1sIiB4
-bWxuczpvPSJ1cm46c2NoZW1hcy1taWNyb3NvZnQtY29tOm9mZmljZTpvZmZpY2UiPg0KDQo8
-aGVhZD4NCjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+DQouc3R5bGUxIHsNCglmb250LXNpemU6
-IHgtc21hbGw7DQoJZm9udC1mYW1pbHk6IEFyaWFsLCBIZWx2ZXRpY2EsIHNhbnMtc2VyaWY7
-DQp9DQouc3R5bGUzIHsNCglmb250LWZhbWlseTogQ2FsaWJyaTsNCn0NCi5zdHlsZTQgew0K
-CWZvbnQtc2l6ZTogeC1zbWFsbDsNCn0NCjwvc3R5bGU+DQo8L2hlYWQ+DQoNCjx0aXRsZT5X
-ZWJpbmFyOiBObyBGZWUgRXZlbnQ6IE91dGxvb2sgMjAwNyBOZXcgRmVhdHVyZXM8L3RpdGxl
-Pg0KDQo8c3BhbiBjbGFzcz0ic3R5bGUzIj48c3BhbiBjbGFzcz0ic3R5bGU0Ij5EYXZpZA0K
-DQo8YnI+DQo8YnI+DQpKb2luIHVzIGF0IG5vIGNoYXJnZSENCkJhc2VkIG9uIGEgdHJlbWVu
-ZG91cyByZXNwb25zZSBLbm93bGVkZ2VXYXZlIGlzIGhvc3RpbmcgYW5vdGhlciBubyBmZWUg
-d2ViaW5hciB0aXRsZWQgDQo8c3Ryb25nPlRpcHMgYW5kIFRyaWNrcyBmb3IgV2luZG93cyBW
-aXN0YTwvc3Ryb25nPi4gPGJyPg0KPGJyPg0KPHN0cm9uZz48ZW0+PHNwYW4gY2xhc3M9InN0
-eWxlNCI+V2hhdCB3aWxsIHlvdSBsZWFybj88L3NwYW4+PC9lbT48L3N0cm9uZz48c3BhbiBj
-bGFzcz0ic3R5bGU0Ij48YnI+DQpFeHBsb3JlIHRoZSBwb3dlcmZ1bCBuZXcgZmVhdHVyZXMg
-aW4gdGhlIFdpbmRvd3MgVmlzdGEgb3BlcmF0aW5nIHN5c3RlbSwgaW5jbHVkaW5nLCB0aGUg
-bmV3IHVzZXIgaW50ZXJmYWNlLCBzZWFyY2gsIGFuZCBvcmdhbml6YXRpb25hbCB0b29scy4g
-V2UgYWxzbyBwcm92aWRlIHVzZWZ1bCB0aXBzIG9uIHVzaW5nIFdpbmRvd3MgSW50ZXJuZXQg
-RXhwbG9yZXIgNyBhbmQgaWxsdXN0cmF0ZSBwcmFjdGljYWwgZGVza3RvcCB0ZWNobmlxdWVz
-IHRoYXQgaGVscCB5b3UgdG8gYmUgbW9yZSBwcm9kdWN0aXZlIHJpZ2h0IGF3YXkuIEpvaW4g
-dXMgZm9yIHRoaXMgaW5mb3JtYXRpdmUgc2Vzc2lvbiB0byBzZWUgaG93IFdpbmRvd3MgVmlz
-dGEgcmVwcmVzZW50cyBhIGJyZWFrdGhyb3VnaCBpbiB1c2VyIGV4cGVyaWVuY2UuPGJyPg0K
-PGJyPg0KDQpLbm93bGVkZ2VXYXZlIHByb3ZpZGVzIG92ZXIgODArIHdlYmluYXIgdGl0bGVz
-IGluIGJvdGggb3BlbiBlbnJvbGxtZW50IGFuZCBjbG9zZWQgY29ycG9yYXRlIGZvcm1hdC4g
-VGhpcyBldmVudCBpcyBvcGVuIHRvIHRoZSBnZW5lcmFsIHB1YmxpYyBhbmQgdGhlcmUgaXMg
-DQo8c3Ryb25nPm5vIGZlZTwvc3Ryb25nPi4gRW5yb2xsIHRvZGF5IGFuZCBsZWFybiBmcm9t
-IHRoZSBleHBlcnRzLjxicj4NCjxicj4NCjwvc3Bhbj4NCjxzdHJvbmc+PHNwYW4gY2xhc3M9
-InN0eWxlNCI+UHJvZHVjdChzKTogTWljcm9zb2Z0IFdpbmRvd3MgVmlzdGEuICBBdWRpZW5j
-ZShzKTogQnVzaW5lc3MgUHJvZmVzc2lvbmFsLiBEdXJhdGlvbjogNjAgTWludXRlcywgU3Rh
-cnQgRGF0ZToNCjxzcGFuIGNsYXNzPSJ0ZXh0Ij48c3BhbiBjbGFzcz0ic3R5bGU5Ij5NYXJj
-aCAyMCwgMTA6MDBBTSBFU1Q8L3NwYW4+PC9zcGFuPi48L3NwYW4+PC9zdHJvbmc+PHNwYW4g
-Y2xhc3M9InN0eWxlNCI+PGJyPg0KPC9zcGFuPg0KPGEgaHJlZj0iaHR0cHM6Ly93d3cxLmdv
-dG9tZWV0aW5nLmNvbS9yZWdpc3Rlci81MzIwNDk3ODYiPjxzcGFuIGNsYXNzPSJzdHlsZTQi
-PlJlZ2lzdGVyIFRvZGF5PC9zcGFuPjwvYT48c3BhbiBjbGFzcz0ic3R5bGU0Ij46IENsaWNr
-IHRoZSBsaW5rLg0KPGJyPg0KPGJyPg0KPC9zcGFuPg0KV2ViaW5hcnMgYXJlDQo8L3NwYW4+
-IDxzdHJvbmc+PHNwYW4gY2xhc3M9InN0eWxlNCI+ZmFzdDwvc3Bhbj48L3N0cm9uZz48c3Bh
-biBjbGFzcz0ic3R5bGU0Ij4sIA0KPC9zcGFuPiA8c3Ryb25nPjxzcGFuIGNsYXNzPSJzdHls
-ZTQiPmNvbnZlbmllbnQ8L3NwYW4+PC9zdHJvbmc+PHNwYW4gY2xhc3M9InN0eWxlNCI+IGFu
-ZCANCjwvc3Bhbj4gPHN0cm9uZz4NCjxzcGFuIGNsYXNzPSJzdHlsZTQiPmFmZm9yZGFibGU8
-L3NwYW4+PC9zdHJvbmc+PHNwYW4gY2xhc3M9InN0eWxlNCI+LiBUaGVyZSBpcyBubyB3YXN0
-ZWQgdGltZS4gR2V0IHJpZ2h0IHRvIHRoZSBvYmplY3RpdmUgb2YgdGhlIA0KMS1ob3VyIHNl
-c3Npb24uIFdlYmluYXJzIGFyZSBkZXNpZ25lZCB0byBmaXQgZWFzaWx5IGludG8geW91ciBi
-dXN5IHNjaGVkdWxlLiBZb3UgDQpoYXZlIG5vIHRyYXZlbCBhbmQgbm8gdGltZSBvdXQgb2Yg
-dGhlIG9mZmljZSEgT3VyIHdlYmluYXJzIGFyZSBmcmVlIG9yIHByaWNlZCBhdCANCmxlc3Mg
-dGhhbiAkOTAhIFRoYXQmIzM5O3MgYSBmcmFjdGlvbiBvZiB0aGUgY29zdCBvZiB0cmF2ZWwg
-YW5kIGF0dGVuZGFuY2UgZmVlcyBmb3IgDQpvdGhlciBoaWdoLXByaWNlZCBjbGFzc2VzLCBj
-b25mZXJlbmNlcywgc2VtaW5hcnMgb3Igb3RoZXIgb25saW5lIHdlYmluYXJzLiZuYnNwOw0K
-PGJyPg0KPGJyPg0KPC9zcGFuPg0KPGEgaHJlZj0iaHR0cHM6Ly93d3cxLmdvdG9tZWV0aW5n
-LmNvbS9yZWdpc3Rlci81MzIwNDk3ODYiPjxzcGFuIGNsYXNzPSJzdHlsZTQiPlJlZ2lzdGVy
-IFRvZGF5PC9zcGFuPjwvYT48c3BhbiBjbGFzcz0ic3R5bGU0Ij46IENsaWNrIHRoZSBsaW5r
-Lg0KPGJyPg0KPGJyPg0KRm9yIG1vcmUgaW5mb3JtYXRpb24gb24gdGhpcyB3ZWJpbmFyIGFu
-ZCBvdXIgb3RoZXIgd2ViaW5hciBldmVudHMsIHBsZWFzZSBnbyB0byBvdXIgd2Vic2l0ZToN
-Cjwvc3Bhbj4gDQo8YSBocmVmPSJodHRwOi8vd3d3Lmtub3dsZWRnZXdhdmUuY29tL3dlYmlu
-YXJzLnBocCI+PHNwYW4gY2xhc3M9InN0eWxlNCI+aHR0cDovL3d3dy5rbm93bGVkZ2V3YXZl
-LmNvbS93ZWJpbmFycy5waHA8L3NwYW4+PC9hPjwvc3Bhbj4NCjxzcGFuIGNsYXNzPSJzdHls
-ZTMiPjxzcGFuIGNsYXNzPSJzdHlsZTQiPjxicj4NCjxicj4NClRoYW5rcywgYW5kIGhhdmUg
-YSBncmVhdCBkYXkuDQoNCjxicj4NCjxicj4NCjwvc3Bhbj4NCjxzdHJvbmc+PHNwYW4gY2xh
-c3M9InN0eWxlNCI+S25vd2xlZGdlV2F2ZSBXZWJpbmFyIFN0YWZmIDwvc3Bhbj4NCg0KIA0K
-DQogDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIA0KDQoNCjwv
-c3Ryb25nPjxicj4NCjxicj4NCjxpbWcgYWx0PSJLbm93bGVkZ2VXYXZlIFdlYmluYXJzIiBz
-cmM9Imh0dHA6Ly93d3cua25vd2xlZGdld2F2ZS5jb20vaW1hZ2VzL2xvZ28tY29sb3Itd2Vi
-LmpwZyIgd2lkdGg9IjI2MCIgaGVpZ2h0PSI1MSI+PGJyPg0KPGJyPg0KPGltZyBhbHQ9Ik1p
-Y3Jvc29mdCBHb2xkIFBhcnRuZXIiIHNyYz0iaHR0cDovL3d3dy5rbm93bGVkZ2V3YXZlLmNv
-bS9pbWFnZXMvbWljcm9zb2Z0R29sZENlcnRpZmllZC5naWYiIHdpZHRoPSIyNjMiIGhlaWdo
-dD0iNTIiPjxicj4NCjxicj4NCjxicj4NCjxhIGhyZWY9Im1haWx0bzp3ZWJpbmFyc0Brbm93
-bGVkZ2V3YXZlLmNvbSI+d2ViaW5hcnNAa25vd2xlZGdld2F2ZS5jb208L2E+PC9zcGFuPg0K
-PHNwYW4gY2xhc3M9InN0eWxlMyI+PGJyPg0KS25vd2xlZGdld2F2ZSBpcyBWZXJtb250J3Mg
-b25seSBDZXJ0aWZpZWQgTWljcm9zb2Z0IEdvbGQgUGFydG5lciBmb3IgTGVhcm5pbmcgU29s
-dXRpb25zLg0KIDxicj4NCsKpIDIwMDggS25vd2xlZGdlV2F2ZS4gDQo8YnI+DQozMCBDb21t
-dW5pdHkgRHJpdmUsIFN0ZSA1LCBTb3V0aCBCdXJsaW5ndG9uLCBWVCAwNTQwMyANCjxicj4N
-CkNhbGw6IDEtODAwLTgzMS04NDQ5DQogDQo8YnI+DQo8YnI+DQo8L3NwYW4+PHNwYW4gY2xh
-c3M9InN0eWxlMSI+VGhlIGVtYWlsIHdhcyBzZW50IHRvIHhmc0Bvc3Muc2dpLmNvbS4gSWYg
-eW91IHByZWZlciBub3QgdG8gcmVjZWl2ZSB0aGVzZSBlbWFpbHMsIHBsZWFzZSByZXBseSB0
-byB0aGlzIG1lc3NhZ2Ugd2l0aCBSRU1PVkUgaW4gdGhlIHN1YmplY3QgbGluZSBhbmQgd2Ug
-d2lsbCByZW1vdmUgeW91ciBlbWFpbCBhZGRyZXNzIGZyb20gZnV0dXJlIEtub3dsZWRnZVdh
-dmUgZGlzdHJpYnV0aW9ucy4NCjwvc3Bhbj4=
+.....
 
+> I tested the code and it works fine.
+> 
+> But I'm not somehow convinced that that TRYLOCK is right ... that it will 
+> avoid that pagelock-deadlock that I found before.
 
---===============8903732184708179789==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Care to expand on why?
+
+> What is the ordering of pagelock, ILOCK and IOLOCK?
+
+iolock, pagelock, and ilock is always the innermost of the three.
+
+> If you keep the 
+> ordering right, you don't need trylock.
+
+In this case, we are doing:
+
+	iolock exclusive
+	pagelock
+	<flush>
+
+Clearly we can't take the iolock during <flush> (nor any other
+several other places in XFS that might try to take the iolock), so
+trylock-and-fail is the usual method used in XFS for avoiding a
+deadlock in this scenario.
+
+> And if the ordering is wrong, 
+> trylock will only lower the probability of a deadlock, not avoid it 
+> completely.
+
+Details of why you think this? XFS uses trylocks extensively to
+avoid deadlocks in these sorts of situations, so I'm curious to
+know why you think this technique provide an absolute guarantee in
+this case....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============8903732184708179789==--
