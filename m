@@ -1,25 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2K4nA4k126474 for <xfs@oss.sgi.com>; Thu, 19 Mar 2009 23:49:31 -0500
-Received: from ipmail04.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 16B571AF60F
-	for <xfs@oss.sgi.com>; Thu, 19 Mar 2009 21:48:50 -0700 (PDT)
-Received: from ipmail04.adl2.internode.on.net (ipmail04.adl2.internode.on.net
-	[203.16.214.57]) by cuda.sgi.com with ESMTP id LaKh09BPcz0qXCdq
-	for <xfs@oss.sgi.com>; Thu, 19 Mar 2009 21:48:50 -0700 (PDT)
-Date: Fri, 20 Mar 2009 15:30:27 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/5] [XFS] Use xfs_sync_inodes() for device flushing
-Message-ID: <20090320043027.GO26138@disturbed>
-References: <1237114679-18808-1-git-send-email-david@fromorbit.com>
-	<1237114679-18808-2-git-send-email-david@fromorbit.com>
-	<Pine.LNX.4.64.0903170857050.26754@hs20-bc2-1.build.redhat.com>
-	<20090318041752.GN26138@disturbed>
-	<Pine.LNX.4.64.0903181207390.19233@hs20-bc2-1.build.redhat.com>
+	n2K7RSbq148324 for <xfs@oss.sgi.com>; Fri, 20 Mar 2009 02:27:49 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D82A51C58AAE
+	for <xfs@oss.sgi.com>; Fri, 20 Mar 2009 00:26:49 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id DmI6LJfQs00pNu5u for
+	<xfs@oss.sgi.com>; Fri, 20 Mar 2009 00:26:49 -0700 (PDT)
+Date: Fri, 20 Mar 2009 03:26:18 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH] xfs_io: fix extent array reallocation
+Message-ID: <20090320072618.GA26571@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0903181207390.19233@hs20-bc2-1.build.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,50 +26,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com, moosh009@gmail.com
 
-On Wed, Mar 18, 2009 at 12:14:51PM -0400, Mikulas Patocka wrote:
-> On Wed, 18 Mar 2009, Dave Chinner wrote:
-> > On Tue, Mar 17, 2009 at 09:08:36AM -0400, Mikulas Patocka wrote:
-> > > On Sun, 15 Mar 2009, Dave Chinner wrote:
-> What I find scary is those two recursive pagelocks being held without 
-> trylock. The sequence is like:
-> 
-> lock iolock 1
-> lock pagelock 1
-> --- submit request to xfssyncd, that does
-> trylock iolock 2
-> lock pagelock 2
+From: Tomasz Majkowski <moosh009@gmail.com>
 
-Those two pages will be on different inodes, so locking through all
-paths to pagelock 2 except for page writeback will be protected by the iolocks...
+The XFS_IOC_FSGETXATTRA ioctl only returns the number of allocated
+extents, so when we reallocate the extent array in the bmap command
+we have to account for the worst case where there is a whole between
+each two allocated extents.  Also add some slack to that case to
+allow for a file growing while we are racing with it.
 
-> ... now suppose that this is racing with another process that takes 
-> pagelock without taking iolock first (memory manager trying to flush files 
-> mmaped for write or so). It can do
-> 
-> lock pagelock 2
-> ... and submit flush request to a thread that is actually waiting to get 
-> pagelock 2.
 
-Which, AFAIK, is never done in XFS. Once we have a page locked in
-the writeback path we either dispatch it in an IO or unlock it
-directly before continuing. There should not be a case like you
-describe occurring (it is a bug if that does happen).
-
-> --- I don't know --- is there a possibility to reserve filesystem space 
-> for write-mapped files at the time of the first page fault? (so that the 
-> space won't be allocated at the time of a flush?).
-
-->page_mkwrite
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Index: xfsprogs-dev/io/bmap.c
+===================================================================
+--- xfsprogs-dev.orig/io/bmap.c	2009-03-20 06:28:33.000000000 +0000
++++ xfsprogs-dev/io/bmap.c	2009-03-20 06:29:52.000000000 +0000
+@@ -217,8 +217,8 @@
+ 			exitcode = 1;
+ 			return 0;
+ 		}
+-		if (fsx.fsx_nextents >= map_size-1) {
+-			map_size = 2*(fsx.fsx_nextents+1);
++		if (2 * fsx.fsx_nextents > map_size) {
++			map_size = 2 * fsx.fsx_nextents + 1;
+ 			map = realloc(map, map_size*sizeof(*map));
+ 			if (map == NULL) {
+ 				fprintf(stderr,
 
 _______________________________________________
 xfs mailing list
