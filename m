@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2L4GnqA217716 for <xfs@oss.sgi.com>; Fri, 20 Mar 2009 23:17:10 -0500
+	n2L4GplD217720 for <xfs@oss.sgi.com>; Fri, 20 Mar 2009 23:17:12 -0500
 Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1383E1C5CAA7
-	for <xfs@oss.sgi.com>; Fri, 20 Mar 2009 21:16:30 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C202D1B3AD1
+	for <xfs@oss.sgi.com>; Fri, 20 Mar 2009 21:16:32 -0700 (PDT)
 Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id uxzrCtcQoDbzqdI2 for <xfs@oss.sgi.com>;
-	Fri, 20 Mar 2009 21:16:30 -0700 (PDT)
-Message-ID: <49C46A14.8000602@sandeen.net>
-Date: Fri, 20 Mar 2009 23:16:20 -0500
+	with ESMTP id 4W0T0MMBBg8oFLzS for <xfs@oss.sgi.com>;
+	Fri, 20 Mar 2009 21:16:32 -0700 (PDT)
+Message-ID: <49C4632D.2050901@sandeen.net>
+Date: Fri, 20 Mar 2009 22:46:53 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfsprogs: add projects(5) and projid(5) manpages
-References: <20090224132737.GA8161@infradead.org>
-	<20090304173224.GB32471@infradead.org>
-In-Reply-To: <20090304173224.GB32471@infradead.org>
+Subject: Re: [PATCH] xfstests: add test 203, xfs_io bmap reallocation
+References: <20090320072857.GB26571@infradead.org>
+In-Reply-To: <20090320072857.GB26571@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,148 +28,540 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+Cc: Tomasz Majkowski <moosh009@gmail.com>, xfs@oss.sgi.com
 
 Christoph Hellwig wrote:
-> On Tue, Feb 24, 2009 at 08:27:37AM -0500, Christoph Hellwig wrote:
->> Document the /etc/projects and /etc/projid files in their own manpages
->> instead of in xfs_quota(8).
+> Test that we can get all extent/hole information for files with more
+> than 16 extents and 15 holes which require a reallocation based on
+> XFS_IOC_FSGETXATTR.
 > 
-> Doh, I forgot to quilt add projects.5, here's the complete patch:
+> Based on a testcase from Tomasz Majkowski <moosh009@gmail.com>.
+> 
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Looks fine.
+Looks fine to me (do we need a GPL header on the c file?  license on all
+of xfsqa is hard to sort out, I guess...)
 
-Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
+-Eric
 
-> Index: xfsprogs-dev/man/man5/projid.5
+> Index: xfstests-dev/203
 > ===================================================================
 > --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-> +++ xfsprogs-dev/man/man5/projid.5	2009-03-04 18:30:40.451978384 +0100
-> @@ -0,0 +1,29 @@
-> +.TH projid 5
-> +.SH NAME
-> +projid \- the project name mapping file
-> +.SH DESCRIPTION
-> +The
-> +.I /etc/projid
-> +file provides a mapping between numeric project identifiers and a
-> +simple human readable name (similar relationship to the one that
-> +exists between usernames and uids).
-> +Its format is simply:
-> +.nf
-> +.sp
-> +.in +5
-> +# comments are hash-prefixed
-> +# ...
-> +cage:10
-> +logfiles:42
+> +++ xfstests-dev/203	2009-03-20 07:28:06.000000000 +0000
+> @@ -0,0 +1,71 @@
+> +#! /bin/sh
+> +# FS QA Test No. 203
+> +#
+> +# Test out reallocation of the extent array in xfs_io.
+> +# Based on a testcase from Tomasz Majkowski <moosh009@gmail.com>.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2009 Christoph Hellwig.
+> +#-----------------------------------------------------------------------
+> +#
+> +# creator
+> +owner=hch@lst.de
 > +
-> +.in -5
-> +.fi
-> +.PP
+> +seq=`basename $0`
+> +echo "QA output created by $seq"
 > +
-> +This file is optional, if a project identifier cannot be mapped to
-> +a name, it will be parsed and displayed as a numeric value.
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
 > +
-> +.SH SEE ALSO
-> +.BR xfs_quota (8),
-> +.BR xfsctl (3),
-> +.BR projects (5).
-> Index: xfsprogs-dev/man/man8/xfs_quota.8
-> ===================================================================
-> --- xfsprogs-dev.orig/man/man8/xfs_quota.8	2009-03-03 16:45:43.355881326 +0100
-> +++ xfsprogs-dev/man/man8/xfs_quota.8	2009-03-04 18:30:40.452978791 +0100
-> @@ -628,46 +628,6 @@ for
->  .I /etc/projects
->  to exist. Note that if projects file exists then it is also used.
->  
-> -.SH FILE FORMATS
-> -There are two files involved with the tree quota mechanism, namely
-> -.I /etc/projects
-> -and
-> -.IR /etc/projid .
-> -The latter is optional.
-> -The
-> -.I /etc/projects
-> -file provides a mapping between numeric project identifiers and those
-> -directories which are the roots of the quota tree.
-> -Its format is simply:
-> -.nf
-> -.sp
-> -.in +5
-> -# comments are hash-prefixed
-> -# ...
-> -10:/export/cage
-> -42:/var/log
-> -.in -5
-> -.fi
-> -.PP
-> -The
-> -.I /etc/projid
-> -file provides a mapping between numeric project identifiers and a
-> -simple human readable name (similar relationship to the one that
-> -exists between usernames and uids).
-> -Its format is simply:
-> -.nf
-> -.sp
-> -.in +5
-> -# comments are hash-prefixed
-> -# ...
-> -cage:10
-> -logfiles:42
-> -.in -5
-> -.fi
-> -.PP
-> -This file is optional, if a project identifier cannot be mapped to
-> -a name, it will be displayed as a number only.
-> -.PP
->  .SH EXAMPLES
->  Enabling quota enforcement on an XFS filesystem (restrict a user
->  to a set amount of space).
-> @@ -752,4 +712,6 @@ Mapping of numeric project identifiers t
->  .SH SEE ALSO
->  .BR df (1),
->  .BR mount (1),
-> -.BR sync (2).
-> +.BR sync (2),
-> +.BR projid (5),
-> +.BR projects (5).
-> Index: xfsprogs-dev/man/man5/projects.5
+> +_write_holes()
+> +{
+> +	file=$1
+> +	holes=$2
+> +	let writes=$holes+1
+> +
+> +	offset=0
+> +	for i in `seq 0 $writes`; do
+> +		xfs_io -f $file -c "pwrite -q $offset 1"
+> +		let offset=$offset+0x100000
+> +	done
+> +}
+> +
+> +#       0: [0..7]: 104..111
+> +#       1: [8..2047]: hole
+> +_filter_bmap()
+> +{
+> +	awk '$3 ~ /hole/ { print $1, $2, $3; next }
+> +             {print $1, $2; next}'
+> +}
+> +
+> +_cleanup()
+> +{
+> +	rm -f $TEST_DIR/hole_file*
+> +	rm -f $TEST_DIR/r??
+> +}
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +# get standard environment, filters and checks
+> +. ./common.rc
+> +. ./common.filter
+> +
+> +# real QA test starts here
+> +_supported_fs xfs
+> +_supported_os Linux
+> +
+> +
+> +for i in 10 14 15 16 17 28 29 30 31; do
+> +        rm -f $TEST_DIR/hole_file
+> +	_write_holes $TEST_DIR/hole_file${i} ${i}
+> +done
+> +
+> +for i in 10 14 15 16 17 28 29 30 31; do
+> +        xfs_bmap $TEST_DIR/hole_file${i} | _filter_bmap
+> +	echo
+> +done
+> +
+> +# success, all done
+> +echo "*** done"
+> +rm -f $seq.full
+> +status=0
+> Index: xfstests-dev/203.out
 > ===================================================================
 > --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-> +++ xfsprogs-dev/man/man5/projects.5	2009-03-04 18:31:01.456981579 +0100
-> @@ -0,0 +1,31 @@
-> +.TH projects 5
-> +.SH NAME
-> +projects \- persistent project root defintion
-> +.SH DESCRIPTION
-> +The
-> +.I /etc/projects
-> +file provides a mapping between numeric project identifiers and those directories
-> +which are the roots of the quota tree.  Its format is simply:
+> +++ xfstests-dev/203.out	2009-03-20 07:09:51.000000000 +0000
+> @@ -0,0 +1,427 @@
+> +QA output created by 203
+> +/mnt/test/hole_file10: 
+> +0: [0..7]:
+> +1: [8..2047]: hole
+> +2: [2048..2055]:
+> +3: [2056..4095]: hole
+> +4: [4096..4103]:
+> +5: [4104..6143]: hole
+> +6: [6144..6151]:
+> +7: [6152..8191]: hole
+> +8: [8192..8199]:
+> +9: [8200..10239]: hole
+> +10: [10240..10247]:
+> +11: [10248..12287]: hole
+> +12: [12288..12295]:
+> +13: [12296..14335]: hole
+> +14: [14336..14343]:
+> +15: [14344..16383]: hole
+> +16: [16384..16391]:
+> +17: [16392..18431]: hole
+> +18: [18432..18439]:
+> +19: [18440..20479]: hole
+> +20: [20480..20487]:
+> +21: [20488..22527]: hole
+> +22: [22528..22535]:
 > +
-> +.nf
-> +.sp
-> +.in +5
-> +# comments are hash-prefixed
-> +# ...
-> +10:/export/cage
-> +42:/var/log
-> +.in -5
-> +.fi
-> +.PP
-> +The
-> +.I /etc/projects
-> +file is optional, instead
-> +.BR xfs_quota (8)
-> +can be used with the
-> +.B \-p
-> +argument to specify a project root directly for each operation.
+> +/mnt/test/hole_file14: 
+> +0: [0..7]:
+> +1: [8..2047]: hole
+> +2: [2048..2055]:
+> +3: [2056..4095]: hole
+> +4: [4096..4103]:
+> +5: [4104..6143]: hole
+> +6: [6144..6151]:
+> +7: [6152..8191]: hole
+> +8: [8192..8199]:
+> +9: [8200..10239]: hole
+> +10: [10240..10247]:
+> +11: [10248..12287]: hole
+> +12: [12288..12295]:
+> +13: [12296..14335]: hole
+> +14: [14336..14343]:
+> +15: [14344..16383]: hole
+> +16: [16384..16391]:
+> +17: [16392..18431]: hole
+> +18: [18432..18439]:
+> +19: [18440..20479]: hole
+> +20: [20480..20487]:
+> +21: [20488..22527]: hole
+> +22: [22528..22535]:
+> +23: [22536..24575]: hole
+> +24: [24576..24583]:
+> +25: [24584..26623]: hole
+> +26: [26624..26631]:
+> +27: [26632..28671]: hole
+> +28: [28672..28679]:
+> +29: [28680..30719]: hole
+> +30: [30720..30727]:
 > +
-> +.SH SEE ALSO
-> +.BR xfs_quota (8),
-> +.BR xfsctl (3),
-> +.BR projid (5).
+> +/mnt/test/hole_file15: 
+> +0: [0..7]:
+> +1: [8..2047]: hole
+> +2: [2048..2055]:
+> +3: [2056..4095]: hole
+> +4: [4096..4103]:
+> +5: [4104..6143]: hole
+> +6: [6144..6151]:
+> +7: [6152..8191]: hole
+> +8: [8192..8199]:
+> +9: [8200..10239]: hole
+> +10: [10240..10247]:
+> +11: [10248..12287]: hole
+> +12: [12288..12295]:
+> +13: [12296..14335]: hole
+> +14: [14336..14343]:
+> +15: [14344..16383]: hole
+> +16: [16384..16391]:
+> +17: [16392..18431]: hole
+> +18: [18432..18439]:
+> +19: [18440..20479]: hole
+> +20: [20480..20487]:
+> +21: [20488..22527]: hole
+> +22: [22528..22535]:
+> +23: [22536..24575]: hole
+> +24: [24576..24583]:
+> +25: [24584..26623]: hole
+> +26: [26624..26631]:
+> +27: [26632..28671]: hole
+> +28: [28672..28679]:
+> +29: [28680..30719]: hole
+> +30: [30720..30727]:
+> +31: [30728..32767]: hole
+> +32: [32768..32775]:
+> +
+> +/mnt/test/hole_file16: 
+> +0: [0..7]:
+> +1: [8..2047]: hole
+> +2: [2048..2055]:
+> +3: [2056..4095]: hole
+> +4: [4096..4103]:
+> +5: [4104..6143]: hole
+> +6: [6144..6151]:
+> +7: [6152..8191]: hole
+> +8: [8192..8199]:
+> +9: [8200..10239]: hole
+> +10: [10240..10247]:
+> +11: [10248..12287]: hole
+> +12: [12288..12295]:
+> +13: [12296..14335]: hole
+> +14: [14336..14343]:
+> +15: [14344..16383]: hole
+> +16: [16384..16391]:
+> +17: [16392..18431]: hole
+> +18: [18432..18439]:
+> +19: [18440..20479]: hole
+> +20: [20480..20487]:
+> +21: [20488..22527]: hole
+> +22: [22528..22535]:
+> +23: [22536..24575]: hole
+> +24: [24576..24583]:
+> +25: [24584..26623]: hole
+> +26: [26624..26631]:
+> +27: [26632..28671]: hole
+> +28: [28672..28679]:
+> +29: [28680..30719]: hole
+> +30: [30720..30727]:
+> +31: [30728..32767]: hole
+> +32: [32768..32775]:
+> +33: [32776..34815]: hole
+> +34: [34816..34823]:
+> +
+> +/mnt/test/hole_file17: 
+> +0: [0..7]:
+> +1: [8..2047]: hole
+> +2: [2048..2055]:
+> +3: [2056..4095]: hole
+> +4: [4096..4103]:
+> +5: [4104..6143]: hole
+> +6: [6144..6151]:
+> +7: [6152..8191]: hole
+> +8: [8192..8199]:
+> +9: [8200..10239]: hole
+> +10: [10240..10247]:
+> +11: [10248..12287]: hole
+> +12: [12288..12295]:
+> +13: [12296..14335]: hole
+> +14: [14336..14343]:
+> +15: [14344..16383]: hole
+> +16: [16384..16391]:
+> +17: [16392..18431]: hole
+> +18: [18432..18439]:
+> +19: [18440..20479]: hole
+> +20: [20480..20487]:
+> +21: [20488..22527]: hole
+> +22: [22528..22535]:
+> +23: [22536..24575]: hole
+> +24: [24576..24583]:
+> +25: [24584..26623]: hole
+> +26: [26624..26631]:
+> +27: [26632..28671]: hole
+> +28: [28672..28679]:
+> +29: [28680..30719]: hole
+> +30: [30720..30727]:
+> +31: [30728..32767]: hole
+> +32: [32768..32775]:
+> +33: [32776..34815]: hole
+> +34: [34816..34823]:
+> +35: [34824..36863]: hole
+> +36: [36864..36871]:
+> +
+> +/mnt/test/hole_file28: 
+> +0: [0..7]:
+> +1: [8..2047]: hole
+> +2: [2048..2055]:
+> +3: [2056..4095]: hole
+> +4: [4096..4103]:
+> +5: [4104..6143]: hole
+> +6: [6144..6151]:
+> +7: [6152..8191]: hole
+> +8: [8192..8199]:
+> +9: [8200..10239]: hole
+> +10: [10240..10247]:
+> +11: [10248..12287]: hole
+> +12: [12288..12295]:
+> +13: [12296..14335]: hole
+> +14: [14336..14343]:
+> +15: [14344..16383]: hole
+> +16: [16384..16391]:
+> +17: [16392..18431]: hole
+> +18: [18432..18439]:
+> +19: [18440..20479]: hole
+> +20: [20480..20487]:
+> +21: [20488..22527]: hole
+> +22: [22528..22535]:
+> +23: [22536..24575]: hole
+> +24: [24576..24583]:
+> +25: [24584..26623]: hole
+> +26: [26624..26631]:
+> +27: [26632..28671]: hole
+> +28: [28672..28679]:
+> +29: [28680..30719]: hole
+> +30: [30720..30727]:
+> +31: [30728..32767]: hole
+> +32: [32768..32775]:
+> +33: [32776..34815]: hole
+> +34: [34816..34823]:
+> +35: [34824..36863]: hole
+> +36: [36864..36871]:
+> +37: [36872..38911]: hole
+> +38: [38912..38919]:
+> +39: [38920..40959]: hole
+> +40: [40960..40967]:
+> +41: [40968..43007]: hole
+> +42: [43008..43015]:
+> +43: [43016..45055]: hole
+> +44: [45056..45063]:
+> +45: [45064..47103]: hole
+> +46: [47104..47111]:
+> +47: [47112..49151]: hole
+> +48: [49152..49159]:
+> +49: [49160..51199]: hole
+> +50: [51200..51207]:
+> +51: [51208..53247]: hole
+> +52: [53248..53255]:
+> +53: [53256..55295]: hole
+> +54: [55296..55303]:
+> +55: [55304..57343]: hole
+> +56: [57344..57351]:
+> +57: [57352..59391]: hole
+> +58: [59392..59399]:
+> +
+> +/mnt/test/hole_file29: 
+> +0: [0..7]:
+> +1: [8..2047]: hole
+> +2: [2048..2055]:
+> +3: [2056..4095]: hole
+> +4: [4096..4103]:
+> +5: [4104..6143]: hole
+> +6: [6144..6151]:
+> +7: [6152..8191]: hole
+> +8: [8192..8199]:
+> +9: [8200..10239]: hole
+> +10: [10240..10247]:
+> +11: [10248..12287]: hole
+> +12: [12288..12295]:
+> +13: [12296..14335]: hole
+> +14: [14336..14343]:
+> +15: [14344..16383]: hole
+> +16: [16384..16391]:
+> +17: [16392..18431]: hole
+> +18: [18432..18439]:
+> +19: [18440..20479]: hole
+> +20: [20480..20487]:
+> +21: [20488..22527]: hole
+> +22: [22528..22535]:
+> +23: [22536..24575]: hole
+> +24: [24576..24583]:
+> +25: [24584..26623]: hole
+> +26: [26624..26631]:
+> +27: [26632..28671]: hole
+> +28: [28672..28679]:
+> +29: [28680..30719]: hole
+> +30: [30720..30727]:
+> +31: [30728..32767]: hole
+> +32: [32768..32775]:
+> +33: [32776..34815]: hole
+> +34: [34816..34823]:
+> +35: [34824..36863]: hole
+> +36: [36864..36871]:
+> +37: [36872..38911]: hole
+> +38: [38912..38919]:
+> +39: [38920..40959]: hole
+> +40: [40960..40967]:
+> +41: [40968..43007]: hole
+> +42: [43008..43015]:
+> +43: [43016..45055]: hole
+> +44: [45056..45063]:
+> +45: [45064..47103]: hole
+> +46: [47104..47111]:
+> +47: [47112..49151]: hole
+> +48: [49152..49159]:
+> +49: [49160..51199]: hole
+> +50: [51200..51207]:
+> +51: [51208..53247]: hole
+> +52: [53248..53255]:
+> +53: [53256..55295]: hole
+> +54: [55296..55303]:
+> +55: [55304..57343]: hole
+> +56: [57344..57351]:
+> +57: [57352..59391]: hole
+> +58: [59392..59399]:
+> +59: [59400..61439]: hole
+> +60: [61440..61447]:
+> +
+> +/mnt/test/hole_file30: 
+> +0: [0..7]:
+> +1: [8..2047]: hole
+> +2: [2048..2055]:
+> +3: [2056..4095]: hole
+> +4: [4096..4103]:
+> +5: [4104..6143]: hole
+> +6: [6144..6151]:
+> +7: [6152..8191]: hole
+> +8: [8192..8199]:
+> +9: [8200..10239]: hole
+> +10: [10240..10247]:
+> +11: [10248..12287]: hole
+> +12: [12288..12295]:
+> +13: [12296..14335]: hole
+> +14: [14336..14343]:
+> +15: [14344..16383]: hole
+> +16: [16384..16391]:
+> +17: [16392..18431]: hole
+> +18: [18432..18439]:
+> +19: [18440..20479]: hole
+> +20: [20480..20487]:
+> +21: [20488..22527]: hole
+> +22: [22528..22535]:
+> +23: [22536..24575]: hole
+> +24: [24576..24583]:
+> +25: [24584..26623]: hole
+> +26: [26624..26631]:
+> +27: [26632..28671]: hole
+> +28: [28672..28679]:
+> +29: [28680..30719]: hole
+> +30: [30720..30727]:
+> +31: [30728..32767]: hole
+> +32: [32768..32775]:
+> +33: [32776..34815]: hole
+> +34: [34816..34823]:
+> +35: [34824..36863]: hole
+> +36: [36864..36871]:
+> +37: [36872..38911]: hole
+> +38: [38912..38919]:
+> +39: [38920..40959]: hole
+> +40: [40960..40967]:
+> +41: [40968..43007]: hole
+> +42: [43008..43015]:
+> +43: [43016..45055]: hole
+> +44: [45056..45063]:
+> +45: [45064..47103]: hole
+> +46: [47104..47111]:
+> +47: [47112..49151]: hole
+> +48: [49152..49159]:
+> +49: [49160..51199]: hole
+> +50: [51200..51207]:
+> +51: [51208..53247]: hole
+> +52: [53248..53255]:
+> +53: [53256..55295]: hole
+> +54: [55296..55303]:
+> +55: [55304..57343]: hole
+> +56: [57344..57351]:
+> +57: [57352..59391]: hole
+> +58: [59392..59399]:
+> +59: [59400..61439]: hole
+> +60: [61440..61447]:
+> +61: [61448..63487]: hole
+> +62: [63488..63495]:
+> +
+> +/mnt/test/hole_file31: 
+> +0: [0..7]:
+> +1: [8..2047]: hole
+> +2: [2048..2055]:
+> +3: [2056..4095]: hole
+> +4: [4096..4103]:
+> +5: [4104..6143]: hole
+> +6: [6144..6151]:
+> +7: [6152..8191]: hole
+> +8: [8192..8199]:
+> +9: [8200..10239]: hole
+> +10: [10240..10247]:
+> +11: [10248..12287]: hole
+> +12: [12288..12295]:
+> +13: [12296..14335]: hole
+> +14: [14336..14343]:
+> +15: [14344..16383]: hole
+> +16: [16384..16391]:
+> +17: [16392..18431]: hole
+> +18: [18432..18439]:
+> +19: [18440..20479]: hole
+> +20: [20480..20487]:
+> +21: [20488..22527]: hole
+> +22: [22528..22535]:
+> +23: [22536..24575]: hole
+> +24: [24576..24583]:
+> +25: [24584..26623]: hole
+> +26: [26624..26631]:
+> +27: [26632..28671]: hole
+> +28: [28672..28679]:
+> +29: [28680..30719]: hole
+> +30: [30720..30727]:
+> +31: [30728..32767]: hole
+> +32: [32768..32775]:
+> +33: [32776..34815]: hole
+> +34: [34816..34823]:
+> +35: [34824..36863]: hole
+> +36: [36864..36871]:
+> +37: [36872..38911]: hole
+> +38: [38912..38919]:
+> +39: [38920..40959]: hole
+> +40: [40960..40967]:
+> +41: [40968..43007]: hole
+> +42: [43008..43015]:
+> +43: [43016..45055]: hole
+> +44: [45056..45063]:
+> +45: [45064..47103]: hole
+> +46: [47104..47111]:
+> +47: [47112..49151]: hole
+> +48: [49152..49159]:
+> +49: [49160..51199]: hole
+> +50: [51200..51207]:
+> +51: [51208..53247]: hole
+> +52: [53248..53255]:
+> +53: [53256..55295]: hole
+> +54: [55296..55303]:
+> +55: [55304..57343]: hole
+> +56: [57344..57351]:
+> +57: [57352..59391]: hole
+> +58: [59392..59399]:
+> +59: [59400..61439]: hole
+> +60: [61440..61447]:
+> +61: [61448..63487]: hole
+> +62: [63488..63495]:
+> +63: [63496..65535]: hole
+> +64: [65536..65543]:
+> +
+> +*** done
+> Index: xfstests-dev/group
+> ===================================================================
+> --- xfstests-dev.orig/group	2009-03-20 06:56:23.000000000 +0000
+> +++ xfstests-dev/group	2009-03-20 06:57:06.000000000 +0000
+> @@ -307,3 +307,4 @@
+>  200 mount auto quick
+>  201 metadata auto quick
+>  202 repair auto quick
+> +203 ioctl auto
 > 
 > _______________________________________________
 > xfs mailing list
