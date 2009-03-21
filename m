@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2LMD5iA018599 for <xfs@oss.sgi.com>; Sat, 21 Mar 2009 17:13:25 -0500
+	n2LMDLXR018616 for <xfs@oss.sgi.com>; Sat, 21 Mar 2009 17:13:38 -0500
 Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 276701B50EC
-	for <xfs@oss.sgi.com>; Sat, 21 Mar 2009 15:12:25 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B9F3D1C5E751
+	for <xfs@oss.sgi.com>; Sat, 21 Mar 2009 15:12:42 -0700 (PDT)
 Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id PTaAfXFge1vrdKQq for <xfs@oss.sgi.com>;
-	Sat, 21 Mar 2009 15:12:25 -0700 (PDT)
-Message-ID: <49C5663A.7010403@sandeen.net>
-Date: Sat, 21 Mar 2009 17:12:10 -0500
+	with ESMTP id HlHQebxiUSLAirWn for <xfs@oss.sgi.com>;
+	Sat, 21 Mar 2009 15:12:42 -0700 (PDT)
+Message-ID: <49C56650.10008@sandeen.net>
+Date: Sat, 21 Mar 2009 17:12:32 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: add test 203, xfs_io bmap reallocation
-References: <20090320072857.GB26571@infradead.org>	<49C4632D.2050901@sandeen.net>
-	<20090321200215.GA8568@infradead.org>
-In-Reply-To: <20090321200215.GA8568@infradead.org>
+Subject: Re: [PATCH 3/5] xfs: kill ino64 mount option
+References: <20090318094119.561416000@bombadil.infradead.org>	<20090318094132.076764000@bombadil.infradead.org>	<49C4650B.4040509@sandeen.net>
+	<20090321200806.GA15245@infradead.org>
+In-Reply-To: <20090321200806.GA15245@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,25 +29,22 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Tomasz Majkowski <moosh009@gmail.com>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
 Christoph Hellwig wrote:
-> On Fri, Mar 20, 2009 at 10:46:53PM -0500, Eric Sandeen wrote:
+> On Fri, Mar 20, 2009 at 10:54:51PM -0500, Eric Sandeen wrote:
 >> Christoph Hellwig wrote:
->>> Test that we can get all extent/hole information for files with more
->>> than 16 extents and 15 holes which require a reallocation based on
->>> XFS_IOC_FSGETXATTR.
->>>
->>> Based on a testcase from Tomasz Majkowski <moosh009@gmail.com>.
->>>
->>>
->>> Signed-off-by: Christoph Hellwig <hch@lst.de>
->> Looks fine to me (do we need a GPL header on the c file?  license on all
->> of xfsqa is hard to sort out, I guess...)
+>>
+>>> The ino64 mount option adds a fixed offset to 32bit inode numbers
+>>> to bring them into the 64bit range.  There's no need for this kind
+>>> of debug tool given that it's easy to produce real 64bit inode numbers
+>>> for testing.
+>> hm, easy how?
 > 
-> There's no c file.
+> Actually test with a large enough device and let them spread evenly
+> over the AGs.
 
-Oh, heh.  I had Tomasz's original testcase in mind, sorry! :)
+It's the large-enough device which sometimes is at odds with "easy"
 
 -Eric
 
