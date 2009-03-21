@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2L4Gpfe217719 for <xfs@oss.sgi.com>; Fri, 20 Mar 2009 23:17:11 -0500
-Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2C4C51B3ACB
-	for <xfs@oss.sgi.com>; Fri, 20 Mar 2009 21:16:31 -0700 (PDT)
-Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id vyL2hiKdkUWmozzE for <xfs@oss.sgi.com>;
-	Fri, 20 Mar 2009 21:16:31 -0700 (PDT)
-Message-ID: <49C466CE.3000609@sandeen.net>
-Date: Fri, 20 Mar 2009 23:02:22 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	n2LK3STH011232 for <xfs@oss.sgi.com>; Sat, 21 Mar 2009 15:03:50 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4C16E1B4F7E
+	for <xfs@oss.sgi.com>; Sat, 21 Mar 2009 13:02:51 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id EjfnhKeBkBH1susF for
+	<xfs@oss.sgi.com>; Sat, 21 Mar 2009 13:02:51 -0700 (PDT)
+Date: Sat, 21 Mar 2009 16:02:15 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfstests: add test 203, xfs_io bmap reallocation
+Message-ID: <20090321200215.GA8568@infradead.org>
+References: <20090320072857.GB26571@infradead.org>
+	<49C4632D.2050901@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfsdump: make sure Makpekgs is complete
-References: <20090224183819.GA25706@infradead.org>
-In-Reply-To: <20090224183819.GA25706@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <49C4632D.2050901@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,66 +29,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>, Tomasz Majkowski <moosh009@gmail.com>, xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
-
-> Index: xfsdump-dev/doc/Makefile
-> ===================================================================
-> --- xfsdump-dev.orig/doc/Makefile	2009-02-24 19:31:07.048152638 +0100
-> +++ xfsdump-dev/doc/Makefile	2009-02-24 19:31:34.859030054 +0100
-> @@ -7,13 +7,8 @@ include $(TOPDIR)/include/builddefs
->  
->  README = README.xfsdump
->  LSRCFILES = INSTALL PORTING CHANGES COPYING $(README) \
-> -	directories.gif directories.obj               \
-> -	files.gif files.obj                           \
-> -	global_hdr.gif global_hdr.obj                 \
-> -	inode_map.gif inode_map.obj                   \
-> -	media_files.gif media_files.obj               \
-> -	split_algorithm.gif split_algorithm.obj       \
-> -	xfsdump.html xfsdump_ts.txt
-> +	xfsdump.html xfsdump_ts.txt \
-> +	*.obj *.gif
->  
->  LDIRT = *.gz
->  
-> Index: xfsdump-dev/include/Makefile
-> ===================================================================
-> --- xfsdump-dev.orig/include/Makefile	2009-02-24 19:31:49.244027259 +0100
-> +++ xfsdump-dev/include/Makefile	2009-02-24 19:37:18.132152625 +0100
-> @@ -5,7 +5,7 @@
->  TOPDIR = ..
->  include $(TOPDIR)/include/builddefs
->  
-> -HFILES = swap.h
-> +HFILES = swab.h swap.h
->  LSRCFILES = builddefs.in buildmacros buildrules config.h.in
->  
->  default install install-dev :
-> Index: xfsdump-dev/inventory/Makefile
-> ===================================================================
-> --- xfsdump-dev.orig/inventory/Makefile	2009-02-24 19:32:17.497028005 +0100
-> +++ xfsdump-dev/inventory/Makefile	2009-02-24 19:34:01.969057100 +0100
-> @@ -7,7 +7,7 @@ include $(TOPDIR)/include/builddefs
->  
->  LSRCFILES = inv_api.c inv_core.c inv_fstab.c inv_idx.c inv_mgr.c \
->  	inv_oref.c inv_oref.h inv_priv.h inv_stobj.c inv_files.c \
-> -	inventory.h
-> +	inventory.h getopt.h testmain.c
->  
->  default install install-dev:
->  
+On Fri, Mar 20, 2009 at 10:46:53PM -0500, Eric Sandeen wrote:
+> Christoph Hellwig wrote:
+> > Test that we can get all extent/hole information for files with more
+> > than 16 extents and 15 holes which require a reallocation based on
+> > XFS_IOC_FSGETXATTR.
+> > 
+> > Based on a testcase from Tomasz Majkowski <moosh009@gmail.com>.
+> > 
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+> Looks fine to me (do we need a GPL header on the c file?  license on all
+> of xfsqa is hard to sort out, I guess...)
+
+There's no c file.
 
 _______________________________________________
 xfs mailing list
