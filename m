@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2L3teLP216328 for <xfs@oss.sgi.com>; Fri, 20 Mar 2009 22:55:56 -0500
+	n2L3w6wE216548 for <xfs@oss.sgi.com>; Fri, 20 Mar 2009 22:58:26 -0500
 Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1AE6A1C5C8F1
-	for <xfs@oss.sgi.com>; Fri, 20 Mar 2009 20:55:01 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1975A1C5C90A
+	for <xfs@oss.sgi.com>; Fri, 20 Mar 2009 20:57:46 -0700 (PDT)
 Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id vdyabBRXUPvuE6WO for <xfs@oss.sgi.com>;
-	Fri, 20 Mar 2009 20:55:01 -0700 (PDT)
-Message-ID: <49C4650B.4040509@sandeen.net>
-Date: Fri, 20 Mar 2009 22:54:51 -0500
+	with ESMTP id B2iTWq5p0ep1SXTs for <xfs@oss.sgi.com>;
+	Fri, 20 Mar 2009 20:57:46 -0700 (PDT)
+Message-ID: <49C465AC.3010809@sandeen.net>
+Date: Fri, 20 Mar 2009 22:57:32 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH 3/5] xfs: kill ino64 mount option
+Subject: Re: [PATCH 4/5] xfs: remove m_litino
 References: <20090318094119.561416000@bombadil.infradead.org>
-	<20090318094132.076764000@bombadil.infradead.org>
-In-Reply-To: <20090318094132.076764000@bombadil.infradead.org>
+	<20090318094132.224487000@bombadil.infradead.org>
+In-Reply-To: <20090318094132.224487000@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,16 +33,13 @@ Cc: xfs@oss.sgi.com
 
 Christoph Hellwig wrote:
 
-> The ino64 mount option adds a fixed offset to 32bit inode numbers
-> to bring them into the 64bit range.  There's no need for this kind
-> of debug tool given that it's easy to produce real 64bit inode numbers
-> for testing.
+> With the upcoming v3 inodes the inode data/attr area size needs to be
+> calculated for each specific inode, so we can't cache it in the superblock
+> anymore.
 
-hm, easy how?
+hm, ok, but why do this now?
 
-Change seems fien though.
-
-Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
+-Eric
 
 _______________________________________________
 xfs mailing list
