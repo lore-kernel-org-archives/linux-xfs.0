@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2NGjfqU170969
-	for <linux-xfs@oss.sgi.com>; Mon, 23 Mar 2009 11:46:02 -0500
-Received: from qw-out-1920.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1C78D1C63466
-	for <linux-xfs@oss.sgi.com>; Mon, 23 Mar 2009 09:45:23 -0700 (PDT)
-Received: from qw-out-1920.google.com (qw-out-1920.google.com [74.125.92.146])
-	by cuda.sgi.com with ESMTP id yl1lVcxBCkgRYSH1 for
-	<linux-xfs@oss.sgi.com>; Mon, 23 Mar 2009 09:45:23 -0700 (PDT)
-Received: by qw-out-1920.google.com with SMTP id 9so1119514qwj.32
-	for <linux-xfs@oss.sgi.com>; Mon, 23 Mar 2009 09:45:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <174852.24274.qm@web51309.mail.re2.yahoo.com>
+	n2NIX9K3177619
+	for <linux-xfs@oss.sgi.com>; Mon, 23 Mar 2009 13:33:31 -0500
+Received: from uplift.swm.pp.se (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E7B8D13C02E1
+	for <linux-xfs@oss.sgi.com>; Mon, 23 Mar 2009 11:32:36 -0700 (PDT)
+Received: from uplift.swm.pp.se (swm.pp.se [212.247.200.143]) by cuda.sgi.com
+	with ESMTP id NKoFNBXdxeYuyU61 for <linux-xfs@oss.sgi.com>;
+	Mon, 23 Mar 2009 11:32:36 -0700 (PDT)
+Date: Mon, 23 Mar 2009 19:32:28 +0100 (CET)
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: How to configure 36 disks ?
+In-Reply-To: <87f94c370903230945k66a804a0iefbb76dd9c93fc16@mail.gmail.com>
+Message-ID: <alpine.DEB.1.10.0903231930000.25843@uplift.swm.pp.se>
 References: <49C7AC2C.9090307@tmr.com>
 	<174852.24274.qm@web51309.mail.re2.yahoo.com>
-Date: Mon, 23 Mar 2009 12:45:23 -0400
-Message-ID: <87f94c370903230945k66a804a0iefbb76dd9c93fc16@mail.gmail.com>
-Subject: Re: How to configure 36 disks ?
-From: Greg Freemyer <greg.freemyer@gmail.com>
+	<87f94c370903230945k66a804a0iefbb76dd9c93fc16@mail.gmail.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,43 +26,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jon@ehardcastle.com
-Cc: linux-aio@kvack.org, Linux RAID Mailing List <linux-raid@vger.kernel.org>, linux-xfs@oss.sgi.com, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Raz <raziebe@gmail.com>, linux-fsdevel@vger.kernel.org, Bill Davidsen <davidsen@tmr.com>
+To: Greg Freemyer <greg.freemyer@gmail.com>
+Cc: Jon@ehardcastle.com, Linux RAID Mailing List <linux-raid@vger.kernel.org>, linux-aio@kvack.org, linux-xfs@oss.sgi.com, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Raz <raziebe@gmail.com>, linux-fsdevel@vger.kernel.org, Bill Davidsen <davidsen@tmr.com>
 
-On Mon, Mar 23, 2009 at 12:02 PM, Jon Hardcastle
-<jd_hardcastle@yahoo.com> wrote:
->
-> I'd like to understand how you even go attaching that many devices to a system.. I am 'comparatively' new to this.. and have a 6 raid5 system.. not enterprise.. and i have slammed into case/power/sat slot issues already. What sort of hardware must one use to grow to a 36 array system!
+On Mon, 23 Mar 2009, Greg Freemyer wrote:
 
-For the drives you could get a few big enclosures:
+> http://www.pc-pitstop.com/sata_enclosures/sat122urd.asp
+> http://www.pc-pitstop.com/sata_enclosures/scsas16rm.asp
 
-http://www.pc-pitstop.com/sata_enclosures/sat122urd.asp
-http://www.pc-pitstop.com/sata_enclosures/scsas16rm.asp
+I would like to add this if you're on a budget:
 
-I don't think these offer PMP (port multiplexer) support.  I would
-look for ones that did if you're serious about doing something like
-this.
+<http://cgi.ebay.com/NORCO-RPC-4020-4u-rack-mountable-case-no-power-supply_W0QQitemZ380111981091QQcmdZViewItemQQptZCOMP_EN_Servers?hash=item380111981091&_trksid=p3286.c0.m14&_trkparms=72%3A1205|66%3A4|65%3A12|39%3A1|240%3A1318|301%3A1|293%3A1|294%3A200>
 
-If you used PMP with 4x drives per sata port, you would only need 9
-sata ports in the PC to control the 36 drives.  Not sure what the
-limits of PMP is, but 4x seems reasonable to me.
+> sata ports in the PC to control the 36 drives.  Not sure what the limits 
+> of PMP is, but 4x seems reasonable to me.
 
-Greg
+The PMPs I've seen take 5 drives each:
+
+<http://www.addonics.com/products/host_controller/ad5sapm.asp>
+
 -- 
-Greg Freemyer
-Head of EDD Tape Extraction and Processing team
-Litigation Triage Solutions Specialist
-http://www.linkedin.com/in/gregfreemyer
-First 99 Days Litigation White Paper -
-http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.pdf
-
-The Norcross Group
-The Intersection of Evidence & Technology
-http://www.norcrossgroup.com
+Mikael Abrahamsson    email: swmike@swm.pp.se
 
 _______________________________________________
 xfs mailing list
