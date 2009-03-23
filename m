@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2NGMnmR169500
-	for <linux-xfs@oss.sgi.com>; Mon, 23 Mar 2009 11:23:10 -0500
-Received: from mail.rtr.ca (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 075C41C62FAE
-	for <linux-xfs@oss.sgi.com>; Mon, 23 Mar 2009 09:22:10 -0700 (PDT)
-Received: from mail.rtr.ca (rtr.ca [76.10.145.34]) by cuda.sgi.com with ESMTP
-	id fwAZb287VIkYkLdW for <linux-xfs@oss.sgi.com>;
-	Mon, 23 Mar 2009 09:22:10 -0700 (PDT)
-Message-ID: <49C7B730.7030506@rtr.ca>
-Date: Mon, 23 Mar 2009 12:22:08 -0400
-From: Mark Lord <liml@rtr.ca>
+	n2NGNgGv169559
+	for <linux-xfs@oss.sgi.com>; Mon, 23 Mar 2009 11:23:58 -0500
+Received: from postman.lauml.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 363881C62FCA
+	for <linux-xfs@oss.sgi.com>; Mon, 23 Mar 2009 09:23:24 -0700 (PDT)
+Received: from postman.lauml.com (postman.lauml.com [205.134.240.66]) by
+	cuda.sgi.com with ESMTP id aRWSXwGswmKXQgDq for
+	<linux-xfs@oss.sgi.com>; Mon, 23 Mar 2009 09:23:24 -0700 (PDT)
+Message-ID: <49C7B778.7000604@xman.org>
+Date: Mon, 23 Mar 2009 09:23:20 -0700
+From: Christopher Smith <x@xman.org>
 MIME-Version: 1.0
 Subject: Re: How to configure 36 disks ?
 References: <174852.24274.qm@web51309.mail.re2.yahoo.com>
@@ -33,15 +33,14 @@ Cc: linux-aio@kvack.org, Linux RAID Mailing List <linux-raid@vger.kernel.org>, l
 
 Jon Hardcastle wrote:
 > I'd like to understand how you even go attaching that many devices to a system.. I am 'comparatively' new to this.. and have a 6 raid5 system.. not enterprise.. and i have slammed into case/power/sat slot issues already. What sort of hardware must one use to grow to a 36 array system!
-..
 
-Here's one way:
+You can always use this approach:
 
-  -- four onboard SATA ports
-  -- plus four add-in PCI/PCIX/PCIe 8-port Marvell SATA cards.
-  -- and a honkin' huge PSU!
+http://www.youtube.com/watch?v=96dWOEa4Djs
 
-:)
+--Chris
+
+P.S.: Sorry, couldn't resist.
 
 _______________________________________________
 xfs mailing list
