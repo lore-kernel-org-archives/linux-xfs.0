@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2OLoAlO047868
-	for <linux-xfs@oss.sgi.com>; Tue, 24 Mar 2009 16:50:20 -0500
-Received: from fmmailgate02.web.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 81CF21C69A6F
-	for <linux-xfs@oss.sgi.com>; Tue, 24 Mar 2009 14:49:20 -0700 (PDT)
-Received: from fmmailgate02.web.de (fmmailgate02.web.de [217.72.192.227]) by
-	cuda.sgi.com with ESMTP id iRJf3NESOmraa8wW for
-	<linux-xfs@oss.sgi.com>; Tue, 24 Mar 2009 14:49:20 -0700 (PDT)
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: How to configure 36 disks ?
-References: <174852.24274.qm@web51309.mail.re2.yahoo.com>
-Date: Tue, 24 Mar 2009 20:38:35 +0100
-In-Reply-To: <174852.24274.qm@web51309.mail.re2.yahoo.com> (Jon Hardcastle's
-	message of "Mon, 23 Mar 2009 09:02:14 -0700 (PDT)")
-Message-ID: <87hc1iemo4.fsf@frosties.localdomain>
+	n2OLtRdY048214 for <xfs@oss.sgi.com>; Tue, 24 Mar 2009 16:55:37 -0500
+Received: from mx2.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 503681C69D1E
+	for <xfs@oss.sgi.com>; Tue, 24 Mar 2009 14:54:39 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id ikNECLJNU0Vm5W2K for <xfs@oss.sgi.com>;
+	Tue, 24 Mar 2009 14:54:39 -0700 (PDT)
+From: Andreas Gruenbacher <agruen@suse.de>
+Subject: Re: [patch] fix parallel build failures in xfsprogs-3.0.0
+Date: Tue, 24 Mar 2009 19:18:39 +0100
+References: <200902240010.25434.vapier@gentoo.org>
+	<20090316210249.GA2641@infradead.org>
+	<20090324131249.GA6964@infradead.org>
+In-Reply-To: <20090324131249.GA6964@infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+Message-Id: <200903241918.39649.agruen@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,21 +30,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jon@eHardcastle.com
-Cc: linux-aio@kvack.org, Linux RAID Mailing List <linux-raid@vger.kernel.org>, linux-xfs@oss.sgi.com, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Raz <raziebe@gmail.com>, linux-fsdevel@vger.kernel.org, Bill Davidsen <davidsen@tmr.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Mike Frysinger <vapier@gentoo.org>, Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
 
-Jon Hardcastle <jd_hardcastle@yahoo.com> writes:
+On Tuesday, 24 March 2009 14:12:49 Christoph Hellwig wrote:
+> > +	ltmain.sh m4/libtool.m4 m4/ltoptions.m4 m4/ltsugar.m4 \
+> > +	m4/ltversion.m4 m4/lt~obsolete.m4 \
+>
+> Btw, where do these m4 files come from?
 
-> I'd like to understand how you even go attaching that many devices to a system.. I am 'comparatively' new to this.. and have a 6 raid5 system.. not enterprise.. and i have slammed into case/power/sat slot issues already. What sort of hardware must one use to grow to a 36 array system!
+>From libtool via libtoolize. The AC_PROG_LIBTOOL macro pulls them in AFAICT.
 
-Well, lets see.
+> Is this another libtool version dependency?
 
-Put 3 dual channel SAS controler in the box giving you 6 external SAS
-connectors. Buy 6 48x disk enclosures and connect them. Configure them
-all as JBOD and you get your 288 disks.
+It would seem so but the build system simply ignores files in the file list 
+that don't exist. This is all rather ugly, but at least the result works...
 
-MfG
-        Goswin
+Andreas 
 
 _______________________________________________
 xfs mailing list
