@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2OLtRdY048214 for <xfs@oss.sgi.com>; Tue, 24 Mar 2009 16:55:37 -0500
-Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 503681C69D1E
-	for <xfs@oss.sgi.com>; Tue, 24 Mar 2009 14:54:39 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id ikNECLJNU0Vm5W2K for <xfs@oss.sgi.com>;
-	Tue, 24 Mar 2009 14:54:39 -0700 (PDT)
-From: Andreas Gruenbacher <agruen@suse.de>
-Subject: Re: [patch] fix parallel build failures in xfsprogs-3.0.0
-Date: Tue, 24 Mar 2009 19:18:39 +0100
-References: <200902240010.25434.vapier@gentoo.org>
-	<20090316210249.GA2641@infradead.org>
-	<20090324131249.GA6964@infradead.org>
-In-Reply-To: <20090324131249.GA6964@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-Message-Id: <200903241918.39649.agruen@suse.de>
+	n2OMAxEU049056 for <xfs@oss.sgi.com>; Tue, 24 Mar 2009 17:11:09 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B78311C03A9
+	for <xfs@oss.sgi.com>; Tue, 24 Mar 2009 15:10:30 -0700 (PDT)
+Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
+	cuda.sgi.com with ESMTP id qpyRd1Id4ePnAbUk for
+	<xfs@oss.sgi.com>; Tue, 24 Mar 2009 15:10:30 -0700 (PDT)
+References: <20090318094119.561416000@bombadil.infradead.org>
+	<20090318094132.076764000@bombadil.infradead.org>
+	<49C4650B.4040509@sandeen.net>
+	<20090321200806.GA15245@infradead.org>
+	<49C56650.10008@sandeen.net> <20090324083037.GP26138@disturbed>
+Message-Id: <612C6156-D3B9-43BF-880A-DE54EB4F56A9@sandeen.net>
+From: Eric Sandeen <sandeen@sandeen.net>
+In-Reply-To: <20090324083037.GP26138@disturbed>
+Mime-Version: 1.0 (iPod Mail 5H11)
+Subject: Re: [PATCH 3/5] xfs: kill ino64 mount option
+Date: Tue, 24 Mar 2009 08:11:36 -0500
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,27 +27,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Mike Frysinger <vapier@gentoo.org>, Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Tuesday, 24 March 2009 14:12:49 Christoph Hellwig wrote:
-> > +	ltmain.sh m4/libtool.m4 m4/ltoptions.m4 m4/ltsugar.m4 \
-> > +	m4/ltversion.m4 m4/lt~obsolete.m4 \
+
+
+On Mar 24, 2009, at 3:30 AM, Dave Chinner <david@fromorbit.com> wrote:
+
+> On Sat, Mar 21, 2009 at 05:12:32PM -0500, Eric Sandeen wrote:
+>> Christoph Hellwig wrote:
+>>> On Fri, Mar 20, 2009 at 10:54:51PM -0500, Eric Sandeen wrote:
+>>>> Christoph Hellwig wrote:
+>>>>
+>>>>> The ino64 mount option adds a fixed offset to 32bit inode numbers
+>>>>> to bring them into the 64bit range.  There's no need for this kind
+>>>>> of debug tool given that it's easy to produce real 64bit inode  
+>>>>> numbers
+>>>>> for testing.
+>>>> hm, easy how?
+>>>
+>>> Actually test with a large enough device and let them spread evenly
+>>> over the AGs.
+>>
+>> It's the large-enough device which sometimes is at odds with "easy"
 >
-> Btw, where do these m4 files come from?
+> Sparse loopback image
 
->From libtool via libtoolize. The AC_PROG_LIBTOOL macro pulls them in AFAICT.
+OK I'm sold...
 
-> Is this another libtool version dependency?
+Eric
 
-It would seem so but the build system simply ignores files in the file list 
-that don't exist. This is all rather ugly, but at least the result works...
-
-Andreas 
+>
+> Cheers,
+>
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+>
 
 _______________________________________________
 xfs mailing list
