@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2PFKgxW101373 for <xfs@oss.sgi.com>; Wed, 25 Mar 2009 10:20:52 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A0E681C6D70C
-	for <xfs@oss.sgi.com>; Wed, 25 Mar 2009 08:20:15 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31]) by cuda.sgi.com
-	with ESMTP id pC7yiYmVSHf4yYi6 for <xfs@oss.sgi.com>;
-	Wed, 25 Mar 2009 08:20:15 -0700 (PDT)
-Date: Wed, 25 Mar 2009 11:19:47 -0400 (EDT)
-From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: Re: [PATCH 1/5] [XFS] Use xfs_sync_inodes() for device flushing
-In-Reply-To: <20090320043027.GO26138@disturbed>
-Message-ID: <Pine.LNX.4.64.0903251115310.27750@hs20-bc2-1.build.redhat.com>
-References: <1237114679-18808-1-git-send-email-david@fromorbit.com>
-	<1237114679-18808-2-git-send-email-david@fromorbit.com>
-	<Pine.LNX.4.64.0903170857050.26754@hs20-bc2-1.build.redhat.com>
-	<20090318041752.GN26138@disturbed>
-	<Pine.LNX.4.64.0903181207390.19233@hs20-bc2-1.build.redhat.com>
-	<20090320043027.GO26138@disturbed>
+	n2PJ4QKN111795 for <xfs@oss.sgi.com>; Wed, 25 Mar 2009 14:04:41 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 38E381C6EBA2
+	for <xfs@oss.sgi.com>; Wed, 25 Mar 2009 12:03:40 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id jRSdHWtiYzinrTX5 for
+	<xfs@oss.sgi.com>; Wed, 25 Mar 2009 12:03:40 -0700 (PDT)
+Date: Wed, 25 Mar 2009 15:03:34 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [patch] fix parallel build failures in xfsprogs-3.0.0
+Message-ID: <20090325190334.GA18742@infradead.org>
+References: <200902240010.25434.vapier@gentoo.org>
+	<20090316210249.GA2641@infradead.org>
+	<20090324131249.GA6964@infradead.org>
+	<200903241918.39649.agruen@suse.de>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <200903241918.39649.agruen@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,57 +31,16 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Andreas Gruenbacher <agruen@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@sandeen.net>, Mike Frysinger <vapier@gentoo.org>, xfs-oss <xfs@oss.sgi.com>
 
+On Tue, Mar 24, 2009 at 07:18:39PM +0100, Andreas Gruenbacher wrote:
+> It would seem so but the build system simply ignores files in the file list 
+> that don't exist. This is all rather ugly, but at least the result works...
 
-
-On Fri, 20 Mar 2009, Dave Chinner wrote:
-
-> On Wed, Mar 18, 2009 at 12:14:51PM -0400, Mikulas Patocka wrote:
-> > On Wed, 18 Mar 2009, Dave Chinner wrote:
-> > > On Tue, Mar 17, 2009 at 09:08:36AM -0400, Mikulas Patocka wrote:
-> > > > On Sun, 15 Mar 2009, Dave Chinner wrote:
-> > What I find scary is those two recursive pagelocks being held without 
-> > trylock. The sequence is like:
-> > 
-> > lock iolock 1
-> > lock pagelock 1
-> > --- submit request to xfssyncd, that does
-> > trylock iolock 2
-> > lock pagelock 2
-> 
-> Those two pages will be on different inodes, so locking through all
-> paths to pagelock 2 except for page writeback will be protected by the iolocks...
-> 
-> > ... now suppose that this is racing with another process that takes 
-> > pagelock without taking iolock first (memory manager trying to flush files 
-> > mmaped for write or so). It can do
-> > 
-> > lock pagelock 2
-> > ... and submit flush request to a thread that is actually waiting to get 
-> > pagelock 2.
-> 
-> Which, AFAIK, is never done in XFS. Once we have a page locked in
-> the writeback path we either dispatch it in an IO or unlock it
-> directly before continuing. There should not be a case like you
-> describe occurring (it is a bug if that does happen).
-> 
-> > --- I don't know --- is there a possibility to reserve filesystem space 
-> > for write-mapped files at the time of the first page fault? (so that the 
-> > space won't be allocated at the time of a flush?).
-> 
-> ->page_mkwrite
-
-This is called without page lock so it is ok.
-
-So I think there is no deadlock possibility.
-
-But I still say that it is scary to take two pagelocks recursively and 
-there is risk that someone will forget about these specific requirements 
-after few years and make a bug.
-
-Mikulas
+Oh well.  I've now pushed these patches to xfsprogs, xfsdump and dmapi
+as authored by you and reviewed by me as they were straight-forward
+ports.
 
 _______________________________________________
 xfs mailing list
