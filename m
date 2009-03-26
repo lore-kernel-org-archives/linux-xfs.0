@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2QGiOmP177143 for <xfs@oss.sgi.com>; Thu, 26 Mar 2009 11:44:34 -0500
-Received: from nuka.cjx.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AD55C13CF292
-	for <xfs@oss.sgi.com>; Thu, 26 Mar 2009 09:43:59 -0700 (PDT)
-Received: from nuka.cjx.com (37.233.187.81.in-addr.arpa [81.187.233.37]) by
-	cuda.sgi.com with ESMTP id n2W2TeVTsM3Cwl2f for
-	<xfs@oss.sgi.com>; Thu, 26 Mar 2009 09:43:59 -0700 (PDT)
-Received: from chris-allens-imac-g5.local (mac.cjx.com [10.0.1.8])
-	by nuka.cjx.com (8.14.3/8.14.3/Debian-4) with ESMTP id n2QGhUPf012956
-	for <xfs@oss.sgi.com>; Thu, 26 Mar 2009 16:43:31 GMT
-Message-ID: <49CBB0B5.7040107@cjx.com>
-Date: Thu, 26 Mar 2009 16:43:33 +0000
-From: Chris Allen <chris@cjx.com>
+	n2QJgsJ2185088 for <xfs@oss.sgi.com>; Thu, 26 Mar 2009 14:43:04 -0500
+Received: from josefsipek.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E8B8E1C9E74
+	for <xfs@oss.sgi.com>; Thu, 26 Mar 2009 12:42:07 -0700 (PDT)
+Received: from josefsipek.net (josefsipek.net [141.211.133.196]) by
+	cuda.sgi.com with ESMTP id Ja3KxeWuKo3fAgrh for
+	<xfs@oss.sgi.com>; Thu, 26 Mar 2009 12:42:07 -0700 (PDT)
+Date: Thu, 26 Mar 2009 15:42:06 -0400
+From: "Josef 'Jeff' Sipek" <jeffpc@josefsipek.net>
+Subject: Re: [PATCH 5/5] xfs: remove m_attroffset
+Message-ID: <20090326194206.GV27222@josefsipek.net>
+References: <20090318094119.561416000@bombadil.infradead.org>
+	<20090318094132.430583000@bombadil.infradead.org>
 MIME-Version: 1.0
-Subject: Re: accidentally deleted very large file (3.5TB) but still available
-	through loop device
-References: <49CBA221.2090701@cjx.com> <49CBA80A.8010500@sandeen.net>
-In-Reply-To: <49CBA80A.8010500@sandeen.net>
+Content-Disposition: inline
+In-Reply-To: <20090318094132.430583000@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,52 +25,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
+On Wed, Mar 18, 2009 at 05:41:24AM -0400, Christoph Hellwig wrote:
+> With the upcoming v3 inodes the default attroffset needs to be calculated
+> for each specific inode, so we can't cache it in the superblock anymore.
+> 
+> Also replace the assert for wrong inode sizes with a proper error check
+> also included in non-debug builds.  Note that the ENOSYS retourn for
+                                                           ^^^^^^^
 
+Typo.
 
-Eric Sandeen wrote:
-> Chris Allen wrote:
->   
->> Hi,
->>
->> In a nutshell, I did the following:
->>
->> 1. dd if=some_filesystem_dump of=some_file (where some_file resides on
->> an XFS filesystem and is 3.5TB large)
->>
->> 2. losetup /dev/loop0 some_file
->>
->> 3. mount /dev/loop0 /recovered
->>
->> [.... i can now access my recovered filesystem through /recovered ...]
->>
->> 4. rm some_file (remotely via an nfs export) (oops!)
->>
->> So, I just removed my 3.5TB file even though it is attached to the loop
->> device and mounted (XFS did this almost instantly).
->>
->>     
-> I'd suggest:
->
-> # xfs_freeze -f /recovered
-> # dd if=/dev/loop0 of=saved_file
-> # xfs_freeze -u /recovered
->
-> to be sure you get a consistent view of the fs.
->
-> -Eric
->   
+Otherwise it makes sense.
 
-Many thanks to those who have replied. This solution does indeed work 
-perfectly and
-I have recovered my lost file.
+Josef 'Jeff' Sipek.
 
-Chris.
+P.S. feel free to consider this an acked-by
+
+-- 
+The reasonable man adapts himself to the world; the unreasonable one
+persists in trying to adapt the world to himself. Therefore all progress
+depends on the unreasonable man.
+		- George Bernard Shaw
 
 _______________________________________________
 xfs mailing list
