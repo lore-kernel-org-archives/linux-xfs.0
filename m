@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2QKPTd8187456 for <xfs@oss.sgi.com>; Thu, 26 Mar 2009 15:25:39 -0500
-Received: from enyo.dsw2k3.info (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 538861C73CA0
-	for <xfs@oss.sgi.com>; Thu, 26 Mar 2009 13:24:43 -0700 (PDT)
-Received: from enyo.dsw2k3.info (enyo.dsw2k3.info [195.71.86.239]) by
-	cuda.sgi.com with ESMTP id 4e10GNgfVDH0MEP3 for
-	<xfs@oss.sgi.com>; Thu, 26 Mar 2009 13:24:43 -0700 (PDT)
-Date: Thu, 26 Mar 2009 21:24:29 +0100
-From: Matthias Schniedermeyer <ms@citd.de>
-Subject: Re: accidentally deleted very large file (3.5TB) but still
-	available through loop device
-Message-ID: <20090326202429.GA27234@citd.de>
-References: <49CBA221.2090701@cjx.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <49CBA221.2090701@cjx.com>
+	n2QMbhjR194043 for <xfs@oss.sgi.com>; Thu, 26 Mar 2009 17:37:53 -0500
+Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 11D843040E7
+	for <xfs@oss.sgi.com>; Thu, 26 Mar 2009 15:37:18 -0700 (PDT)
+Message-Id: <BC803350-6350-444B-9266-79574A1C4658@sgi.com>
+From: Felix Blyakher <felixb@sgi.com>
+In-Reply-To: <612C6156-D3B9-43BF-880A-DE54EB4F56A9@sandeen.net>
+Mime-Version: 1.0 (Apple Message framework v926)
+Subject: Re: [PATCH 3/5] xfs: kill ino64 mount option
+Date: Thu, 26 Mar 2009 17:37:11 -0500
+References: <20090318094119.561416000@bombadil.infradead.org>
+	<20090318094132.076764000@bombadil.infradead.org>
+	<49C4650B.4040509@sandeen.net>
+	<20090321200806.GA15245@infradead.org>
+	<49C56650.10008@sandeen.net> <20090324083037.GP26138@disturbed>
+	<612C6156-D3B9-43BF-880A-DE54EB4F56A9@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,89 +25,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Chris Allen <chris@cjx.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 26.03.2009 15:41, Chris Allen wrote:
-> Hi,
->
-> In a nutshell, I did the following:
->
-> 1. dd if=some_filesystem_dump of=some_file (where some_file resides on  
-> an XFS filesystem and is 3.5TB large)
->
-> 2. losetup /dev/loop0 some_file
->
-> 3. mount /dev/loop0 /recovered
->
-> [.... i can now access my recovered filesystem through /recovered ...]
->
-> 4. rm some_file (remotely via an nfs export) (oops!)
->
-> So, I just removed my 3.5TB file even though it is attached to the loop  
-> device and mounted (XFS did this almost instantly).
+On Mar 24, 2009, at 8:11 AM, Eric Sandeen wrote:
+
 >
 >
-> Now it *appears* that the filesystem as attached to /dev/loop0 and  
-> mounted on /recovered is still OK. I
-> can cd around it and copy files off.
+> On Mar 24, 2009, at 3:30 AM, Dave Chinner <david@fromorbit.com> wrote:
 >
-> So I have these questions:
+>> On Sat, Mar 21, 2009 at 05:12:32PM -0500, Eric Sandeen wrote:
+>>> Christoph Hellwig wrote:
+>>>> On Fri, Mar 20, 2009 at 10:54:51PM -0500, Eric Sandeen wrote:
+>>>>> Christoph Hellwig wrote:
+>>>>>
+>>>>>> The ino64 mount option adds a fixed offset to 32bit inode numbers
+>>>>>> to bring them into the 64bit range.  There's no need for this  
+>>>>>> kind
+>>>>>> of debug tool given that it's easy to produce real 64bit inode  
+>>>>>> numbers
+>>>>>> for testing.
+>>>>> hm, easy how?
+>>>>
+>>>> Actually test with a large enough device and let them spread evenly
+>>>> over the AGs.
+>>>
+>>> It's the large-enough device which sometimes is at odds with "easy"
+>>
+>> Sparse loopback image
+>
+> OK I'm sold...
+
+That addressed my concern too.
+
+Reviewed-by: Felix Blyakher <felixb@sgi.com>
+
 >
 >
-> 1. Is there any way I can get back the 1 file that I accidentally  
-> deleted (nothing else has been written to that partition since)
-
-Unfortunatly not directly. You can't create a directory entry for an 
-inode. It was discussed a few years back, but rejected for security 
-reasons. (I speak for the kernel in general, i don't know if there is a 
-XFS specific thing to create a directory entry for an inode.)
-
-> 2. Am I safe in accessing my filesystem through /dev/loop0 and  
-> /recovered even though the underlying file has been zapped? If so
-
-Yes. You are saved by the standard unix semantics of "only delete a file 
-if it's reference count is 0". A directory entry counts and having a file 
-open also counts.
-
-> I can quickly copy everything off onto another partition.
-
-As long as you don't reboot/umount the partition you are in no hurry.
-
-Only Murphy can really ruin your day now. ;-)
-
-> 3. Will this command: dd if=/dev/loop0 of=saved_file get my file back?
-
-Yes, but:
-- You should drop the caches before starting the copy:
-echo 3 > /proc/sys/vm/drop_caches
-- You should not touch the filesystem while copying. Especially you 
-shouldn't write anything. The "view" of the upper- and underside 
-(Filesystem vs. backing-store) are NOT kept in sync by the kernel. So it 
-is best not to touch the filesystem.
-
-You can also:
-xfs_freeze the filesystem (see man xfs_freeze)
-
-or umount the filesystem if the entry in "/etc/mtab" does NOT mention 
-"loop=/dev/loop<whatever>" or if you delete if before umounting.
-Because umount will only free the loop-device if there is a "loop=" or 
-with the parameter "-d" (see man umount)
-
-
-
-
-Bis denn
-
--- 
-Real Programmers consider "what you see is what you get" to be just as 
-bad a concept in Text Editors as it is in women. No, the Real Programmer
-wants a "you asked for it, you got it" text editor -- complicated, 
-cryptic, powerful, unforgiving, dangerous.
+> Eric
+>
+>>
+>> Cheers,
+>>
+>> Dave.
+>> -- 
+>> Dave Chinner
+>> david@fromorbit.com
+>>
+>
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
