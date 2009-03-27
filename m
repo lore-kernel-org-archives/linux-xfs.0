@@ -1,18 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2QMfgmM194189 for <xfs@oss.sgi.com>; Thu, 26 Mar 2009 17:41:52 -0500
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5AC20AC00E
-	for <xfs@oss.sgi.com>; Thu, 26 Mar 2009 15:41:17 -0700 (PDT)
-Message-Id: <3D659CF1-738E-4580-B390-9E7B65C4BE2F@sgi.com>
-From: Felix Blyakher <felixb@sgi.com>
-In-Reply-To: <20090318094132.224487000@bombadil.infradead.org>
-Mime-Version: 1.0 (Apple Message framework v926)
-Subject: Re: [PATCH 4/5] xfs: remove m_litino
-Date: Thu, 26 Mar 2009 17:41:16 -0500
-References: <20090318094119.561416000@bombadil.infradead.org>
-	<20090318094132.224487000@bombadil.infradead.org>
+	n2R8VYnu224613 for <xfs@oss.sgi.com>; Fri, 27 Mar 2009 03:31:49 -0500
+Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7943B1C752DF
+	for <xfs@oss.sgi.com>; Fri, 27 Mar 2009 01:31:06 -0700 (PDT)
+Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.162.198]) by
+	cuda.sgi.com with ESMTP id ml1SleM1SjyHsQxE for
+	<xfs@oss.sgi.com>; Fri, 27 Mar 2009 01:31:06 -0700 (PDT)
+Received: from mailsrv2.i.zmi.at (unknown [81.217.54.243])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv1.zmi.at (Postfix) with ESMTP id 9AF944C29
+	for <xfs@oss.sgi.com>; Fri, 27 Mar 2009 09:31:04 +0100 (CET)
+Received: from saturn.localnet (saturn.i.zmi.at [10.0.0.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv2.i.zmi.at (Postfix) with ESMTPSA id 9491640DC04
+	for <xfs@oss.sgi.com>; Fri, 27 Mar 2009 09:31:04 +0100 (CET)
+Subject: Re: How to configure 36 disks ?
+Content-Disposition: inline
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Date: Fri, 27 Mar 2009 09:31:03 +0100
+MIME-Version: 1.0
+Message-Id: <200903270931.03964@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,75 +32,56 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
+(I sent this mail on Tue 23:40 CET, but it seems it didn't arrive on the =
 
-On Mar 18, 2009, at 4:41 AM, Christoph Hellwig wrote:
+list. At least I didn't receive it. So I send again)
 
-> With the upcoming v3 inodes the inode data/attr area size needs to be
-> calculated for each specific inode, so we can't cache it in the  
-> superblock
-> anymore.
+On Montag 23 M=E4rz 2009 Raz wrote:
+> 1. redundancy.
+> 2. performance.
 
-The change looks fine. But what is "v3 inodes"? I'm sure it's been
-mentioned on the list, I'm just missing the history.
+First, you should have bought enclosures with included RAID controllers, =
 
-Reviewed-by: Felix Blyakher <felixb@sgi.com>
+then you'd be finished already.
 
->
->
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
->
-> Index: xfs/fs/xfs/xfs_dinode.h
-> ===================================================================
-> --- xfs.orig/fs/xfs/xfs_dinode.h	2009-02-19 20:44:20.755069389 +0100
-> +++ xfs/fs/xfs/xfs_dinode.h	2009-03-18 07:37:16.652977839 +0100
-> @@ -103,7 +103,9 @@ typedef enum xfs_dinode_fmt {
-> /*
->  * Inode size for given fs.
->  */
-> -#define	XFS_LITINO(mp)	((mp)->m_litino)
-> +#define XFS_LITINO(mp) \
-> +	((int)(((mp)->m_sb.sb_inodesize) - sizeof(struct xfs_dinode)))
-> +
-> #define	XFS_BROOT_SIZE_ADJ	\
-> 	(XFS_BTREE_LBLOCK_LEN - sizeof(xfs_bmdr_block_t))
->
-> Index: xfs/fs/xfs/xfs_mount.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/xfs_mount.c	2009-03-18 07:37:15.633978066 +0100
-> +++ xfs/fs/xfs/xfs_mount.c	2009-03-18 07:37:20.566978952 +0100
-> @@ -651,7 +651,6 @@ xfs_mount_common(xfs_mount_t *mp, xfs_sb
-> 	mp->m_sectbb_log = sbp->sb_sectlog - BBSHIFT;
-> 	mp->m_agno_log = xfs_highbit32(sbp->sb_agcount - 1) + 1;
-> 	mp->m_agino_log = sbp->sb_inopblog + sbp->sb_agblklog;
-> -	mp->m_litino = sbp->sb_inodesize - sizeof(struct xfs_dinode);
-> 	mp->m_blockmask = sbp->sb_blocksize - 1;
-> 	mp->m_blockwsize = sbp->sb_blocksize >> XFS_WORDLOG;
-> 	mp->m_blockwmask = mp->m_blockwsize - 1;
-> Index: xfs/fs/xfs/xfs_mount.h
-> ===================================================================
-> --- xfs.orig/fs/xfs/xfs_mount.h	2009-03-18 07:37:16.077856262 +0100
-> +++ xfs/fs/xfs/xfs_mount.h	2009-03-18 07:37:20.585978718 +0100
-> @@ -203,7 +203,6 @@ typedef struct xfs_mount {
-> 	uint			m_attr_node_ents; /* #entries in attr danode */
-> 	int			m_ialloc_inos;	/* inodes in inode allocation */
-> 	int			m_ialloc_blks;	/* blocks in inode allocation */
-> -	int			m_litino;	/* size of inode union area */
-> 	int			m_inoalign_mask;/* mask sb_inoalignmt if used */
-> 	uint			m_qflags;	/* quota status flags */
-> 	xfs_trans_reservations_t m_reservations;/* precomputed res values */
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+But then, I guess you wanted to save the money, but at least go get some =
+
+real hardware RAID controller. Look at Areca ( http://www.areca.com.tw ) =
+
+if you use Linux or Windows, the 1680 series SAS controllers can cope =
+
+with SAS/SATA drives, up to 128 drives per controller. You can put a =
+
+cache up to 4GB on the controller, and a battery backup module that =
+
+protects your data in case of power outages. Those controllers are =
+
+blazing fast, have good admin tools, send you an e-mail in case of =
+
+problems, and they used it in the video that Chris mentioned:
+http://blogs.sun.com/observatory/entry/don_t_shout_at_your
+
+In the end you see they used an Areca 16port, plus an Adaptec 8port (I =
+
+guess because they only had the Areca in 16port available).
+
+Then configure a RAID-60 or whatever you like.
+
+mfg zmi
+-- =
+
+// Michael Monnerie, Ing.BSc    -----      http://it-management.at
+// Tel: 0660 / 415 65 31                      .network.your.ideas.
+// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
+// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
+// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
+
 
 _______________________________________________
 xfs mailing list
