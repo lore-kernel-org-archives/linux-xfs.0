@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2RKNcx7006134 for <xfs@oss.sgi.com>; Fri, 27 Mar 2009 15:23:48 -0500
-Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AF4ED1CE30E
-	for <xfs@oss.sgi.com>; Fri, 27 Mar 2009 13:23:11 -0700 (PDT)
-Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id igsZg37crIjshEAJ for <xfs@oss.sgi.com>;
-	Fri, 27 Mar 2009 13:23:11 -0700 (PDT)
-Message-ID: <49CD359E.905@sandeen.net>
-Date: Fri, 27 Mar 2009 15:22:54 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	n2S1BmKK023836 for <xfs@oss.sgi.com>; Fri, 27 Mar 2009 20:12:04 -0500
+Received: from alopias.GreenKey.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DEB8613D6241
+	for <xfs@oss.sgi.com>; Fri, 27 Mar 2009 18:11:31 -0700 (PDT)
+Received: from alopias.GreenKey.net (alopias.GreenKey.net [209.209.60.60]) by
+	cuda.sgi.com with ESMTP id QTSrw8AsFo17USC2 for
+	<xfs@oss.sgi.com>; Fri, 27 Mar 2009 18:11:31 -0700 (PDT)
+Received: from [10.1.1.124] (unknown [209.209.31.8])
+	(Authenticated sender: curtis)
+	by alopias.GreenKey.net (Postfix) with ESMTP id 7242F6F05C
+	for <xfs@oss.sgi.com>; Fri, 27 Mar 2009 18:10:58 -0700 (PDT)
+Message-ID: <49CD7912.6080508@GreenKey.net>
+Date: Fri, 27 Mar 2009 18:10:42 -0700
+From: Curtis Doty <Curtis@greenkey.net>
 MIME-Version: 1.0
-Subject: Re: Corruption of in-memory data
-References: <49CD2EF0.9060009@blackopscode.com>
-In-Reply-To: <49CD2EF0.9060009@blackopscode.com>
+Subject: why xfs_write() race with O_DIRECT only?
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,64 +29,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Florian Hines <fhines@blackopscode.com>
-Cc: xfs@oss.sgi.com
+To: XFS <xfs@oss.sgi.com>
 
-Florian Hines wrote:
-> Hey everybody,
-> 
-> Over the last few day's I've been getting a rash (8 so far) of disk's
-> throwing the error "Filesystem "sdxX": Corruption of in-memory data
-> detected.  Shutting down filesystem: sdxX".  xfs_check never seem's to
-> find anything and just unmounting and remounting solves the issue at
-> least for awhile.   
+I'm guessing this is the race fixed in 2.6.29.
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=25051158
 
-try xfs_repair, with -n if you want a dry run.
+But my app is running O_DIRECT and only calls pwrite(). Is there
+something I'm missing that explains the aio stuff etc.?
 
-It's canceling a dirty transaction, I'm not sure why.  The message is a
-little misleading.  Want to try 2.6.29? :)
+../C
 
--Eric
-
-> Is this usually caused by bad ram ?  It's happened
-> on 6 systems so far (all using Debian Etch AMD64 with the stock 2.6.18
-> kernel, each system as a 5 sata drives, not raided).
-> 
-> Can anyone shed some light on what this error actually indicates for me  ?
-> 
-> --Full error from dmesg below--
->  Filesystem "sda3": XFS internal error xfs_trans_cancel at line 1138 of
-> file fs/xfs/xfs_trans.c.  Caller 0xffffffff8818ead5
-> 
-> Call Trace:
->  [<ffffffff8818fdd0>] :xfs:xfs_trans_cancel+0x5b/0xfe
->  [<ffffffff8818ead5>] :xfs:xfs_rename+0xa13/0xa9a
->  [<ffffffff881a0aac>] :xfs:xfs_vn_rename+0x2c/0x6f
->  [<ffffffff80220104>] __up_read+0x13/0x8a
->  [<ffffffff8817c732>] :xfs:xfs_iunlock+0x57/0x79
->  [<ffffffff80220104>] __up_read+0x13/0x8a
->  [<ffffffff8817c732>] :xfs:xfs_iunlock+0x57/0x79
->  [<ffffffff88195286>] :xfs:xfs_access+0x3d/0x46
->  [<ffffffff80228cc4>] vfs_rename+0x2d5/0x426
->  [<ffffffff802344fb>] sys_renameat+0x180/0x1f9
->  [<ffffffff80221605>] sys_newstat+0x28/0x31
->  [<ffffffff80257c16>] system_call+0x7e/0x83
-> 
-> xfs_force_shutdown(sda3,0x8) called from line 1139 of file
-> fs/xfs/xfs_trans.c.  Return address = 0xffffffff8818fdee
-> Filesystem "sda3": Corruption of in-memory data detected.  Shutting down
-> filesystem: sda3
-> Please umount the filesystem, and rectify the problem(s)
-> 
-> 
-> --
-> flo
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+------------[ cut here ]------------
+WARNING: at fs/xfs/linux-2.6/xfs_lrw.c:724 xfs_write+0x364/0x694()
+Modules linked in: dm_mod sg usbhid usbkbd usbmouse qla2xxx
+firmware_class scsi_transport_fc bnx2 hpilo ipmi_si ipmi_msghandler
+container shpchp pci_hotplug rng_core iTCO_wdt iTCO_vendor_support
+thermal button processor rtc_cmos rtc_core rtc_lib ehci_hcd uhci_hcd usbcore
+Pid: 5789, comm: myServer Not tainted 2.6.28.9 #1
+Call Trace:
+ [<c0122d30>] warn_on_slowpath+0x41/0x5b
+ [<c014f27b>] ? mempool_alloc+0x21/0xbc
+ [<c0217d2c>] ? xfs_vm_direct_IO+0x90/0xb4
+ [<c021800f>] ? xfs_get_blocks_direct+0x0/0x14
+ [<c021754b>] ? xfs_end_io_direct+0x0/0x5c
+ [<c014dde5>] ? generic_file_direct_write+0x184/0x1dc
+ [<c0210409>] ? xfs_trans_unlocked_item+0x28/0x3e
+ [<c021e034>] xfs_write+0x364/0x694
+ [<c0107a21>] ? read_tsc+0x9/0x26
+ [<c0136c67>] ? getnstimeofday+0x54/0xe4
+ [<c021ae6b>] xfs_file_aio_write+0x50/0x58
+ [<c016ba9d>] do_sync_write+0xab/0xe6
+ [<c01322be>] ? autoremove_wake_function+0x0/0x33
+ [<c03874b8>] ? schedule+0x737/0x785
+ [<c0107a21>] ? read_tsc+0x9/0x26
+ [<c016b9f2>] ? do_sync_write+0x0/0xe6
+ [<c016c177>] vfs_write+0x8c/0x108
+ [<c016c6a4>] sys_pwrite64+0x45/0x60
+ [<c0102be5>] sysenter_do_call+0x12/0x21
+ [<c0380000>] ? hpwdt_init_one+0x103/0x38d
+---[ end trace 3985be2a3d46f5ef ]---
 
 _______________________________________________
 xfs mailing list
