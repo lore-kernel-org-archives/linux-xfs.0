@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2T7jLuM118172 for <xfs@oss.sgi.com>; Sun, 29 Mar 2009 02:45:36 -0500
+	n2T7jWFD118178 for <xfs@oss.sgi.com>; Sun, 29 Mar 2009 02:45:47 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 34C861C7B697
-	for <xfs@oss.sgi.com>; Sun, 29 Mar 2009 00:44:57 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 125801D1566
+	for <xfs@oss.sgi.com>; Sun, 29 Mar 2009 00:45:07 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id WfmtT4EYaAOLdOGa for
-	<xfs@oss.sgi.com>; Sun, 29 Mar 2009 00:44:57 -0700 (PDT)
-Date: Sun, 29 Mar 2009 03:44:56 -0400
+	by cuda.sgi.com with ESMTP id RaVwvR6rykYkaU0h for
+	<xfs@oss.sgi.com>; Sun, 29 Mar 2009 00:45:07 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1Lnphb-0004pD-NG
+	for xfs@oss.sgi.com; Sun, 29 Mar 2009 07:45:07 +0000
+Date: Sun, 29 Mar 2009 03:45:07 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfs: properly truncate blocks outsize i_size on write_begin
-	failure
-Message-ID: <20090329074456.GE16402@infradead.org>
-References: <20090318063425.GA18386@infradead.org>
+Subject: Re: [PATCH 1/5] xfs: cleanup uuid handling
+Message-ID: <20090329074507.GF16402@infradead.org>
+References: <20090318094119.561416000@bombadil.infradead.org>
+	<20090318094131.771403000@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20090318063425.GA18386@infradead.org>
+In-Reply-To: <20090318094131.771403000@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,146 +33,297 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Nick Piggin <npiggin@suse.de>, linux-fsdevel@vger.kernel.org
 
 ping?
 
-On Wed, Mar 18, 2009 at 02:34:25AM -0400, Christoph Hellwig wrote:
-> As pointed out by Dave in the thread starting at
-> http://oss.sgi.com/archives/xfs/2008-04/msg00542.html the current use
-> of vmtruncate in block_write_begin is incorrect for filesystem not
-> using ->truncate for doing the actual on-disk truncatation.  Doing
-> it in ->truncate for a filesystem like XFS means it would be split
-> over multiple transactions leading to violations of the atomicy guarantee.
-> Historically (and still documented in Documentation/filesystems/Locking)
-> ->truncate is not a method but only a helper for setattr implementations
-> so this is correct.
+On Wed, Mar 18, 2009 at 05:41:20AM -0400, Christoph Hellwig wrote:
+> The uuid table handling should not be part of a semi-generic uuid library
+> but in the XFS code using it, so move those bits to xfs_mount.c and
+> refactor the whole glob to give a proper abstraction.
 > 
-> The correct fix would be to use ->setattr but that needs a new ATTR_NOLOCK
-> flag and an audit of all filesystems.  I'm still hoping to do that later
-> but for now I really want XFS fixed.
-> 
-> So just duplicate block_write_begin in XFS to do the proper truncation,
-> note that I need to export __block_prepare_write to no duplicate even
-> more code than nessecary.
-> 
-> GFS2 and UFS and possibly others wants the same kind of fix, too.
-> 
-> And I need to get rid of ->truncate one day to prevent people from using
-> it in stupid ways.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 
-> Index: xfs/fs/buffer.c
+> Index: xfs/fs/xfs/support/uuid.c
 > ===================================================================
-> --- xfs.orig/fs/buffer.c	2009-03-01 04:22:47.091430206 +0100
-> +++ xfs/fs/buffer.c	2009-03-01 04:22:59.913336991 +0100
-> @@ -1910,7 +1910,7 @@ void page_zero_new_buffers(struct page *
->  }
->  EXPORT_SYMBOL(page_zero_new_buffers);
+> --- xfs.orig/fs/xfs/support/uuid.c	2009-02-15 19:40:08.564944522 +0100
+> +++ xfs/fs/xfs/support/uuid.c	2009-02-24 21:50:49.051029140 +0100
+> @@ -17,10 +17,6 @@
+>   */
+>  #include <xfs.h>
 >  
-> -static int __block_prepare_write(struct inode *inode, struct page *page,
-> +int __block_prepare_write(struct inode *inode, struct page *page,
->  		unsigned from, unsigned to, get_block_t *get_block)
+> -static DEFINE_MUTEX(uuid_monitor);
+> -static int	uuid_table_size;
+> -static uuid_t	*uuid_table;
+> -
+>  /* IRIX interpretation of an uuid_t */
+>  typedef struct {
+>  	__be32	uu_timelow;
+> @@ -46,12 +42,6 @@ uuid_getnodeuniq(uuid_t *uuid, int fsid 
+>  	fsid[1] = be32_to_cpu(uup->uu_timelow);
+>  }
+>  
+> -void
+> -uuid_create_nil(uuid_t *uuid)
+> -{
+> -	memset(uuid, 0, sizeof(*uuid));
+> -}
+> -
+>  int
+>  uuid_is_nil(uuid_t *uuid)
 >  {
->  	unsigned block_start, block_end;
-> @@ -1989,6 +1989,7 @@ static int __block_prepare_write(struct 
->  		page_zero_new_buffers(page, from, to);
->  	return err;
+> @@ -71,64 +61,3 @@ uuid_equal(uuid_t *uuid1, uuid_t *uuid2)
+>  {
+>  	return memcmp(uuid1, uuid2, sizeof(uuid_t)) ? 0 : 1;
 >  }
-> +EXPORT_SYMBOL(__block_prepare_write);
->  
->  static int __block_commit_write(struct inode *inode, struct page *page,
->  		unsigned from, unsigned to)
-> Index: xfs/fs/xfs/linux-2.6/xfs_aops.c
+> -
+> -/*
+> - * Given a 128-bit uuid, return a 64-bit value by adding the top and bottom
+> - * 64-bit words.  NOTE: This function can not be changed EVER.  Although
+> - * brain-dead, some applications depend on this 64-bit value remaining
+> - * persistent.  Specifically, DMI vendors store the value as a persistent
+> - * filehandle.
+> - */
+> -__uint64_t
+> -uuid_hash64(uuid_t *uuid)
+> -{
+> -	__uint64_t	*sp = (__uint64_t *)uuid;
+> -
+> -	return sp[0] + sp[1];
+> -}
+> -
+> -int
+> -uuid_table_insert(uuid_t *uuid)
+> -{
+> -	int	i, hole;
+> -
+> -	mutex_lock(&uuid_monitor);
+> -	for (i = 0, hole = -1; i < uuid_table_size; i++) {
+> -		if (uuid_is_nil(&uuid_table[i])) {
+> -			hole = i;
+> -			continue;
+> -		}
+> -		if (uuid_equal(uuid, &uuid_table[i])) {
+> -			mutex_unlock(&uuid_monitor);
+> -			return 0;
+> -		}
+> -	}
+> -	if (hole < 0) {
+> -		uuid_table = kmem_realloc(uuid_table,
+> -			(uuid_table_size + 1) * sizeof(*uuid_table),
+> -			uuid_table_size  * sizeof(*uuid_table),
+> -			KM_SLEEP);
+> -		hole = uuid_table_size++;
+> -	}
+> -	uuid_table[hole] = *uuid;
+> -	mutex_unlock(&uuid_monitor);
+> -	return 1;
+> -}
+> -
+> -void
+> -uuid_table_remove(uuid_t *uuid)
+> -{
+> -	int	i;
+> -
+> -	mutex_lock(&uuid_monitor);
+> -	for (i = 0; i < uuid_table_size; i++) {
+> -		if (uuid_is_nil(&uuid_table[i]))
+> -			continue;
+> -		if (!uuid_equal(uuid, &uuid_table[i]))
+> -			continue;
+> -		uuid_create_nil(&uuid_table[i]);
+> -		break;
+> -	}
+> -	ASSERT(i < uuid_table_size);
+> -	mutex_unlock(&uuid_monitor);
+> -}
+> Index: xfs/fs/xfs/support/uuid.h
 > ===================================================================
-> --- xfs.orig/fs/xfs/linux-2.6/xfs_aops.c	2009-03-01 04:16:12.003305119 +0100
-> +++ xfs/fs/xfs/linux-2.6/xfs_aops.c	2009-03-01 04:21:55.618306704 +0100
-> @@ -1598,6 +1598,71 @@ xfs_vm_direct_IO(
->  	return ret;
->  }
+> --- xfs.orig/fs/xfs/support/uuid.h	2009-02-15 19:40:08.569944670 +0100
+> +++ xfs/fs/xfs/support/uuid.h	2009-02-24 21:50:37.206029255 +0100
+> @@ -22,12 +22,8 @@ typedef struct {
+>  	unsigned char	__u_bits[16];
+>  } uuid_t;
 >  
+> -extern void uuid_create_nil(uuid_t *uuid);
+>  extern int uuid_is_nil(uuid_t *uuid);
+>  extern int uuid_equal(uuid_t *uuid1, uuid_t *uuid2);
+>  extern void uuid_getnodeuniq(uuid_t *uuid, int fsid [2]);
+> -extern __uint64_t uuid_hash64(uuid_t *uuid);
+> -extern int uuid_table_insert(uuid_t *uuid);
+> -extern void uuid_table_remove(uuid_t *uuid);
+>  
+>  #endif	/* __XFS_SUPPORT_UUID_H__ */
+> Index: xfs/fs/xfs/xfs_mount.c
+> ===================================================================
+> --- xfs.orig/fs/xfs/xfs_mount.c	2009-02-24 15:32:35.871518446 +0100
+> +++ xfs/fs/xfs/xfs_mount.c	2009-02-24 21:51:03.558027729 +0100
+> @@ -45,7 +45,6 @@
+>  #include "xfs_fsops.h"
+>  #include "xfs_utils.h"
+>  
+> -STATIC int	xfs_uuid_mount(xfs_mount_t *);
+>  STATIC void	xfs_unmountfs_wait(xfs_mount_t *);
+>  
+>  
+> @@ -121,6 +120,84 @@ static const struct {
+>      { sizeof(xfs_sb_t),			 0 }
+>  };
+>  
+> +static DEFINE_MUTEX(xfs_uuid_table_mutex);
+> +static int xfs_uuid_table_size;
+> +static uuid_t *xfs_uuid_table;
+> +
 > +/*
-> + * This is a copy of fs/buffer.c:block_write_begin except for doing
-> + * the correct setattr call in the error case instead of the wrong
-> + * vmtruncate.
+> + * See if the UUID is unique among mounted XFS filesystems.
+> + * Mount fails if UUID is nil or a FS with the same UUID is already mounted.
 > + */
-> +static int
-> +xfs_block_write_begin(struct file *file, struct address_space *mapping,
-> +			loff_t pos, unsigned len, unsigned flags,
-> +			struct page **pagep, void **fsdata,
-> +			get_block_t *get_block)
+> +STATIC int
+> +xfs_uuid_mount(
+> +	struct xfs_mount	*mp)
 > +{
-> +	struct inode *inode = mapping->host;
-> +	int status = 0;
-> +	struct page *page;
-> +	pgoff_t index;
-> +	unsigned start, end;
-> +	int ownpage = 0;
+> +	uuid_t			*uuid = &mp->m_sb.sb_uuid;
+> +	int			hole, i;
 > +
-> +	index = pos >> PAGE_CACHE_SHIFT;
-> +	start = pos & (PAGE_CACHE_SIZE - 1);
-> +	end = start + len;
+> +	if (mp->m_flags & XFS_MOUNT_NOUUID)
+> +		return 0;
 > +
-> +	page = *pagep;
-> +	if (page == NULL) {
-> +		ownpage = 1;
-> +		page = grab_cache_page_write_begin(mapping, index, flags);
-> +		if (!page) {
-> +			status = -ENOMEM;
-> +			goto out;
-> +		}
-> +		*pagep = page;
-> +	} else
-> +		BUG_ON(!PageLocked(page));
-> +
-> +	status = __block_prepare_write(inode, page, start, end, get_block);
-> +	if (unlikely(status)) {
-> +		ClearPageUptodate(page);
-> +
-> +		if (ownpage) {
-> +			unlock_page(page);
-> +			page_cache_release(page);
-> +			*pagep = NULL;
-> +
-> +			/*
-> +			 * prepare_write() may have instantiated a few blocks
-> +			 * outside i_size.  Trim these off again. Don't need
-> +			 * i_size_read because we hold i_mutex.
-> +			 */
-> +			if (pos + len > inode->i_size) {
-> +				struct iattr newattrs;
-> +				int error;
-> +
-> +				newattrs.ia_size = inode->i_size;
-> +				newattrs.ia_valid = ATTR_SIZE | ATTR_FORCE;
-> +				error = xfs_setattr(XFS_I(inode), &newattrs,
-> +						    XFS_ATTR_NOLOCK);
-> +				WARN_ON(error); /* not much we can do.. */
-> +			}
-> +		}
+> +	if (uuid_is_nil(uuid)) {
+> +		cmn_err(CE_WARN,
+> +			"XFS: Filesystem %s has nil UUID - can't mount",
+> +			mp->m_fsname);
+> +		return XFS_ERROR(EINVAL);
 > +	}
 > +
-> +out:
-> +	return status;
+> +	mutex_lock(&xfs_uuid_table_mutex);
+> +	for (i = 0, hole = -1; i < xfs_uuid_table_size; i++) {
+> +		if (uuid_is_nil(&xfs_uuid_table[i])) {
+> +			hole = i;
+> +			continue;
+> +		}
+> +		if (uuid_equal(uuid, &xfs_uuid_table[i]))
+> +			goto out_duplicate;
+> +	}
+> +
+> +	if (hole < 0) {
+> +		xfs_uuid_table = kmem_realloc(xfs_uuid_table,
+> +			(xfs_uuid_table_size + 1) * sizeof(*xfs_uuid_table),
+> +			xfs_uuid_table_size  * sizeof(*xfs_uuid_table),
+> +			KM_SLEEP);
+> +		hole = xfs_uuid_table_size++;
+> +	}
+> +	xfs_uuid_table[hole] = *uuid;
+> +	mutex_unlock(&xfs_uuid_table_mutex);
+> +
+> +	return 0;
+> +
+> + out_duplicate:
+> +	mutex_unlock(&xfs_uuid_table_mutex);
+> +	cmn_err(CE_WARN, "XFS: Filesystem %s has duplicate UUID - can't mount",
+> +			 mp->m_fsname);
+> +	return XFS_ERROR(EINVAL);
 > +}
 > +
->  STATIC int
->  xfs_vm_write_begin(
->  	struct file		*file,
-> Index: xfs/include/linux/buffer_head.h
-> ===================================================================
-> --- xfs.orig/include/linux/buffer_head.h	2009-03-01 04:23:14.364305635 +0100
-> +++ xfs/include/linux/buffer_head.h	2009-03-01 04:23:19.081305583 +0100
-> @@ -218,6 +218,8 @@ int generic_write_end(struct file *, str
->  				struct page *, void *);
->  void page_zero_new_buffers(struct page *page, unsigned from, unsigned to);
->  int block_prepare_write(struct page*, unsigned, unsigned, get_block_t*);
-> +int __block_prepare_write(struct inode *inode, struct page *page,
-> +		unsigned from, unsigned to, get_block_t *get_block);
->  int cont_write_begin(struct file *, struct address_space *, loff_t,
->  			unsigned, unsigned, struct page **, void **,
->  			get_block_t *, loff_t *);
+> +STATIC void
+> +xfs_uuid_unmount(
+> +	struct xfs_mount	*mp)
+> +{
+> +	uuid_t			*uuid = &mp->m_sb.sb_uuid;
+> +	int			i;
+> +
+> +	if (mp->m_flags & XFS_MOUNT_NOUUID)
+> +		return;
+> +
+> +	mutex_lock(&xfs_uuid_table_mutex);
+> +	for (i = 0; i < xfs_uuid_table_size; i++) {
+> +		if (uuid_is_nil(&xfs_uuid_table[i]))
+> +			continue;
+> +		if (!uuid_equal(uuid, &xfs_uuid_table[i]))
+> +			continue;
+> +		memset(&xfs_uuid_table[i], 0, sizeof(uuid_t));
+> +		break;
+> +	}
+> +	ASSERT(i < xfs_uuid_table_size);
+> +	mutex_unlock(&xfs_uuid_table_mutex);
+> +}
+> +
+> +
+>  /*
+>   * Free up the resources associated with a mount structure.  Assume that
+>   * the structure was initially zeroed, so we can tell which fields got
+> @@ -1016,18 +1093,9 @@ xfs_mountfs(
+>  
+>  	mp->m_maxioffset = xfs_max_file_offset(sbp->sb_blocklog);
+>  
+> -	/*
+> -	 * XFS uses the uuid from the superblock as the unique
+> -	 * identifier for fsid.  We can not use the uuid from the volume
+> -	 * since a single partition filesystem is identical to a single
+> -	 * partition volume/filesystem.
+> -	 */
+> -	if (!(mp->m_flags & XFS_MOUNT_NOUUID)) {
+> -		if (xfs_uuid_mount(mp)) {
+> -			error = XFS_ERROR(EINVAL);
+> -			goto out;
+> -		}
+> -	}
+> +	error = xfs_uuid_mount(mp);
+> +	if (error)
+> +		goto out;
+>  
+>  	/*
+>  	 * Set the minimum read and write sizes
+> @@ -1275,8 +1343,7 @@ xfs_mountfs(
+>   out_free_perag:
+>  	xfs_free_perag(mp);
+>   out_remove_uuid:
+> -	if (!(mp->m_flags & XFS_MOUNT_NOUUID))
+> -		uuid_table_remove(&mp->m_sb.sb_uuid);
+> +	xfs_uuid_unmount(mp);
+>   out:
+>  	return error;
+>  }
+> @@ -1351,9 +1418,7 @@ xfs_unmountfs(
+>  	xfs_unmountfs_wait(mp); 		/* wait for async bufs */
+>  	xfs_log_unmount_write(mp);
+>  	xfs_log_unmount(mp);
+> -
+> -	if ((mp->m_flags & XFS_MOUNT_NOUUID) == 0)
+> -		uuid_table_remove(&mp->m_sb.sb_uuid);
+> +	xfs_uuid_unmount(mp);
+>  
+>  #if defined(DEBUG)
+>  	xfs_errortag_clearall(mp, 0);
+> @@ -1855,29 +1920,6 @@ xfs_freesb(
+>  }
+>  
+>  /*
+> - * See if the UUID is unique among mounted XFS filesystems.
+> - * Mount fails if UUID is nil or a FS with the same UUID is already mounted.
+> - */
+> -STATIC int
+> -xfs_uuid_mount(
+> -	xfs_mount_t	*mp)
+> -{
+> -	if (uuid_is_nil(&mp->m_sb.sb_uuid)) {
+> -		cmn_err(CE_WARN,
+> -			"XFS: Filesystem %s has nil UUID - can't mount",
+> -			mp->m_fsname);
+> -		return -1;
+> -	}
+> -	if (!uuid_table_insert(&mp->m_sb.sb_uuid)) {
+> -		cmn_err(CE_WARN,
+> -			"XFS: Filesystem %s has duplicate UUID - can't mount",
+> -			mp->m_fsname);
+> -		return -1;
+> -	}
+> -	return 0;
+> -}
+> -
+> -/*
+>   * Used to log changes to the superblock unit and width fields which could
+>   * be altered by the mount options, as well as any potential sb_features2
+>   * fixup. Only the first superblock is updated.
 > 
 > _______________________________________________
 > xfs mailing list
