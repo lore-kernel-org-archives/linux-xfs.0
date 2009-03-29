@@ -1,17 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2T7nOfZ118411 for <xfs@oss.sgi.com>; Sun, 29 Mar 2009 02:49:40 -0500
-Date: Sun, 29 Mar 2009 03:48:59 -0400
+	n2T7opdC118483 for <xfs@oss.sgi.com>; Sun, 29 Mar 2009 02:51:07 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A6DF813D8349
+	for <xfs@oss.sgi.com>; Sun, 29 Mar 2009 00:51:03 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id irszUBy3R9ABQld6 for
+	<xfs@oss.sgi.com>; Sun, 29 Mar 2009 00:51:03 -0700 (PDT)
+Date: Sun, 29 Mar 2009 03:50:26 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/5] xfs: remove m_litino
-Message-ID: <20090329074859.GG16402@infradead.org>
+Subject: Re: [PATCH 5/5] xfs: remove m_attroffset
+Message-ID: <20090329075026.GH16402@infradead.org>
 References: <20090318094119.561416000@bombadil.infradead.org>
-	<20090318094132.224487000@bombadil.infradead.org>
-	<3D659CF1-738E-4580-B390-9E7B65C4BE2F@sgi.com>
+	<20090318094132.430583000@bombadil.infradead.org>
+	<20090326194206.GV27222@josefsipek.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <3D659CF1-738E-4580-B390-9E7B65C4BE2F@sgi.com>
+In-Reply-To: <20090326194206.GV27222@josefsipek.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,24 +30,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Felix Blyakher <felixb@sgi.com>
+To: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
 Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Thu, Mar 26, 2009 at 05:41:16PM -0500, Felix Blyakher wrote:
->
-> On Mar 18, 2009, at 4:41 AM, Christoph Hellwig wrote:
->
->> With the upcoming v3 inodes the inode data/attr area size needs to be
->> calculated for each specific inode, so we can't cache it in the  
->> superblock
->> anymore.
->
-> The change looks fine. But what is "v3 inodes"? I'm sure it's been
-> mentioned on the list, I'm just missing the history.
+On Thu, Mar 26, 2009 at 03:42:06PM -0400, Josef 'Jeff' Sipek wrote:
+> On Wed, Mar 18, 2009 at 05:41:24AM -0400, Christoph Hellwig wrote:
+> > With the upcoming v3 inodes the default attroffset needs to be calculated
+> > for each specific inode, so we can't cache it in the superblock anymore.
+> > 
+> > Also replace the assert for wrong inode sizes with a proper error check
+> > also included in non-debug builds.  Note that the ENOSYS retourn for
+>                                                            ^^^^^^^
+> 
+> Typo.
+> 
+> Otherwise it makes sense.
+> 
+> Josef 'Jeff' Sipek.
+> 
+> P.S. feel free to consider this an acked-by
 
-It's the new inode format including a crc and uuid in the CRC patches.
-Because it has a larger core dinode the litoral area calculcations need
-to be more dynamic.
+Acked or reviewed?  This matters as I still need a formal review for
+this one..
 
 _______________________________________________
 xfs mailing list
