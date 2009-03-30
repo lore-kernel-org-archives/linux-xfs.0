@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2UEBh9h198043 for <xfs@oss.sgi.com>; Mon, 30 Mar 2009 09:11:53 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9ABD61D4968
-	for <xfs@oss.sgi.com>; Mon, 30 Mar 2009 07:11:19 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id kK0wsvx9ymr2IOLg for
-	<xfs@oss.sgi.com>; Mon, 30 Mar 2009 07:11:19 -0700 (PDT)
-Message-ID: <49D0D306.5040204@sandeen.net>
-Date: Mon, 30 Mar 2009 09:11:18 -0500
+	n2UFIM0Q201505 for <xfs@oss.sgi.com>; Mon, 30 Mar 2009 10:18:33 -0500
+Received: from mx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0E7A913DBC09
+	for <xfs@oss.sgi.com>; Mon, 30 Mar 2009 08:18:41 -0700 (PDT)
+Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
+	with ESMTP id EIL4keObAoiZW9nL for <xfs@oss.sgi.com>;
+	Mon, 30 Mar 2009 08:18:41 -0700 (PDT)
+Message-ID: <49D0E28B.4090207@sandeen.net>
+Date: Mon, 30 Mar 2009 10:17:31 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: xfs_freeze -f misbehaving under lenny / xfsprogs 2.9.8
-References: <49D09F2C.8060406@decisionsoft.co.uk>
-	<49D0CCEB.1000404@sandeen.net>
-	<49D0D01A.8090608@decisionsoft.co.uk>
-In-Reply-To: <49D0D01A.8090608@decisionsoft.co.uk>
+Subject: Re: Regression? 2.6.27-rc3 segfault on cold boot; not on warm boot.
+References: <48AD3921.5090709@dgreaves.com> <200808212026.17590.rjw@sisk.pl>
+	<48AFDCE7.7010508@dgreaves.com>
+In-Reply-To: <48AFDCE7.7010508@dgreaves.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,60 +28,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: strr-debian@decisionsoft.co.uk
-Cc: xfs@oss.sgi.com
+To: David Greaves <david@dgreaves.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, xfs@oss.sgi.com
 
-Stuart Rowan wrote:
-> Eric Sandeen wrote, on 30/03/09 14:45:
->> Stuart Rowan wrote:
->>> Hi,
->>>
->>> We have a backup script running on another machine that ssh's in to the 
->>> affected server and does the following:
->>> mkdir -p /tmp/foo;
->>> /usr/sbin/xfs_freeze -f /home;
->>> /sbin/lvcreate -s -L 20G -n snap-shot home ;
->>> /usr/sbin/xfs_freeze -u /home;
->>> mount -o nouuid,ro /dev/data/snap-shot /tmp/foo;
->>>
->>> It then rsyncs (over ssh) the data to the backup store from /tmp/foo
->>>
->>> The above command set hangs at running "/sbin/lvcreate -s -L 20G -n 
->>> snap-shot home;"
->>>
->>> All I/O to /home is of course blocked at this point so for example exim 
->>> starts queueing up all the mail.
+David Greaves wrote:
+> Rafael J. Wysocki wrote:
+>> [Adding CCs]
 >>
->> lvcreate now does the fs freeze on its own via the snapshot ioctl, so if
->> you run freeze manually first, you are stuck behind that first freeze.
->>
->> Just drop the xfs_freeze's from the above, and all should be well.
->>
->> -Eric
-> Eric,
+>> [The issue is probably present in 2.6.26 too]
 > 
-> Many thanks for your prompt reply and explanation :-)
+> Yes, below is a netconsole boot of 2.26.6.3
 > 
-> It's good to know that there's an easy solution ... except we now have to 
-> differentiate the commands to run in the backup script based on the version 
-> of lvm on the remote system :-$
+> I cold booted - lots of segfaults. I then did a ctrl-Alt-SysRq-S-U-B to a warm
+> boot. No segfaults
+> (lots of #### mark the split)
+> 
+> I've just started 2.6.25.14 building for tomorrow to confirm how far back it
+> goes. (I'm 99% sure 2.6.25 is OK)
+> 
+> David
 
-can't be *that* bad ... ;)
+(trimming cc's to xfs)
 
-> OOI when implementing the freeze ioctl, what made the developers decide 
-> that a freeze can't succeed on an already frozen filesystem ... you'd 
-> expect it to just be a no-op really?
+David, did you get anywhere with identifying this further?
 
-To complicate matters more, on newer upstream kernels w/ the freeze
-ioctl exposed for all filesystems, nested freezes are in fact supported.
-
-I'm not sure why sequential freezes were serialized initially, TBH...
-
+Thanks,
 -Eric
-
-> Cheers,
-> Stu.
-> 
 
 _______________________________________________
 xfs mailing list
