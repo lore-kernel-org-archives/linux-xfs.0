@@ -1,34 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n2VCZhwC260495 for <xfs@oss.sgi.com>; Tue, 31 Mar 2009 07:35:58 -0500
-Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 47B3A1C8353D
-	for <xfs@oss.sgi.com>; Tue, 31 Mar 2009 05:34:58 -0700 (PDT)
-Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.162.198]) by
-	cuda.sgi.com with ESMTP id kvADFkNBgX9NUqaK for
-	<xfs@oss.sgi.com>; Tue, 31 Mar 2009 05:34:58 -0700 (PDT)
-Received: from mailsrv2.i.zmi.at (h081217054243.dyn.cm.kabsi.at
-	[81.217.54.243])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv1.zmi.at (Postfix) with ESMTP id 2E3654F74
-	for <xfs@oss.sgi.com>; Tue, 31 Mar 2009 14:34:57 +0200 (CEST)
-Received: from saturn.localnet (saturn.i.zmi.at [10.0.0.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv2.i.zmi.at (Postfix) with ESMTPSA id 0ABB5400160
-	for <xfs@oss.sgi.com>; Tue, 31 Mar 2009 14:34:57 +0200 (CEST)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: xfs_freeze -f misbehaving under lenny / xfsprogs 2.9.8
-Date: Tue, 31 Mar 2009 14:34:56 +0200
-References: <49D09F2C.8060406@decisionsoft.co.uk>
-	<49D0CCEB.1000404@sandeen.net>
-	<49D0D01A.8090608@decisionsoft.co.uk>
-In-Reply-To: <49D0D01A.8090608@decisionsoft.co.uk>
-MIME-Version: 1.0
-Content-Disposition: inline
-Message-Id: <200903311434.56662@zmi.at>
+	n2VLr9nd029553 for <xfs@oss.sgi.com>; Tue, 31 Mar 2009 16:53:19 -0500
+Received: from ten.citi.umich.edu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 389A613E2FFF
+	for <xfs@oss.sgi.com>; Tue, 31 Mar 2009 14:53:34 -0700 (PDT)
+Received: from ten.citi.umich.edu (ten.citi.umich.edu [141.211.133.138]) by
+	cuda.sgi.com with ESMTP id WYGmNdv7fFeYbcey for
+	<xfs@oss.sgi.com>; Tue, 31 Mar 2009 14:53:34 -0700 (PDT)
+From: "Josef 'Jeff' Sipek" <jsipek@eecs.umich.edu>
+Subject: [PATCH 2/2] xfstests: Add an ignore file
+Date: Tue, 31 Mar 2009 17:50:34 -0400
+Message-Id: <1238536234-26969-3-git-send-email-jsipek@eecs.umich.edu>
+In-Reply-To: <1238536234-26969-1-git-send-email-jsipek@eecs.umich.edu>
+References: <1238536234-26969-1-git-send-email-jsipek@eecs.umich.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,36 +22,123 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>, Josef 'Jeff' Sipek <jsipek@eecs.umich.edu>
 
-On Montag 30 M=E4rz 2009 Stuart Rowan wrote:
-> OOI when implementing the freeze ioctl, what made the developers
-> decide that a freeze can't succeed on an already frozen filesystem
-> ... you'd expect it to just be a no-op really?
+From: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
 
-So you would break the unfreeze:
+Ignore generated files.
 
-xfs_freeze -f
-lvcreate -s (lvcreate does freeze;work;unfreeze)
-*now you are unfrozen*
-xfs_freeze -u
+Signed-off-by: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
+Signed-off-by: Josef 'Jeff' Sipek <jsipek@eecs.umich.edu>
+---
+ .gitignore |   90 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 90 insertions(+), 0 deletions(-)
+ create mode 100644 .gitignore
 
-The problem would be if you expect to be frozen still after the lvcreate =
-
-command and do some processing, that might be bad.
-
-mfg zmi
--- =
-
-// Michael Monnerie, Ing.BSc    -----      http://it-management.at
-// Tel: 0660 / 415 65 31                      .network.your.ideas.
-// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
-// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
-// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 0000000..2cd722b
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1,90 @@
++*.lo
++*.o
++*.la
++
++autom4te.cache
++configure
++include/builddefs
++include/config.h
++include/config.h.in
++lib/.libs
++
++dmapi/Makefile
++dmapi/config.log
++dmapi/config.status
++dmapi/libtool
++dmapi/src/Makefile
++dmapi/src/common/Makefile
++dmapi/src/common/cmd/.deps
++dmapi/src/common/cmd/Makefile
++dmapi/src/common/lib/.deps
++dmapi/src/common/lib/Makefile
++dmapi/src/sample_hsm/.deps
++dmapi/src/sample_hsm/Makefile
++dmapi/src/simple/.deps
++dmapi/src/simple/Makefile
++dmapi/src/suite1/Makefile
++dmapi/src/suite1/cmd/.deps
++dmapi/src/suite1/cmd/Makefile
++dmapi/src/suite2/Makefile
++dmapi/src/suite2/src/.deps
++dmapi/src/suite2/src/Makefile
++
++ltp/aio-stress
++ltp/doio
++ltp/fsstress
++ltp/fsx
++ltp/growfiles
++ltp/iogen
++
++src/alloc
++src/append_reader
++src/append_writer
++src/bstat
++src/bulkstat_unlink_test
++src/bulkstat_unlink_test_modified
++src/devzero
++src/dirperf
++src/dirstress
++src/dmiperf
++src/fault
++src/feature
++src/fill
++src/fill2
++src/fs_perms
++src/fstest
++src/ftrunc
++src/genhashnames
++src/getdevicesize
++src/getpagesize
++src/godown
++src/holes
++src/itrash
++src/locktest
++src/loggen
++src/looptest
++src/lstat64
++src/makeextents
++src/metaperf
++src/mmapcat
++src/multi_open_unlink
++src/nametest
++src/permname
++src/preallo_rw_pattern_reader
++src/preallo_rw_pattern_writer
++src/randholes
++src/rename
++src/resvtest
++src/runas
++src/t_access_root
++src/t_dir_offset
++src/t_immutable
++src/t_mtab
++src/testx
++src/trunc
++src/truncfile
++src/unwritten_mmap
++src/unwritten_sync
++src/usemem
++src/writemod
++src/xfsctl
+-- 
+1.6.0.6
 
 _______________________________________________
 xfs mailing list
