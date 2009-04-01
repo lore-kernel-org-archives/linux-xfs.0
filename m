@@ -1,15 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n317LfUR057550 for <xfs@oss.sgi.com>; Wed, 1 Apr 2009 02:21:56 -0500
-Date: Wed, 1 Apr 2009 03:21:17 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests: fix async io error handling in fsx
-Message-ID: <20090401072117.GA25131@infradead.org>
-References: <1238442101-24311-1-git-send-email-felixb@sgi.com>
+	n31EZk2C087759 for <xfs@oss.sgi.com>; Wed, 1 Apr 2009 09:35:56 -0500
+Received: from josefsipek.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 020321C890FB
+	for <xfs@oss.sgi.com>; Wed,  1 Apr 2009 07:35:22 -0700 (PDT)
+Received: from josefsipek.net (josefsipek.net [141.211.133.196]) by
+	cuda.sgi.com with ESMTP id 5YeIZyn3ggiCLpDt for
+	<xfs@oss.sgi.com>; Wed, 01 Apr 2009 07:35:22 -0700 (PDT)
+Date: Wed, 1 Apr 2009 10:35:22 -0400
+From: "Josef 'Jeff' Sipek" <jeffpc@josefsipek.net>
+Subject: Re: [PATCH 1/2] xfstests: make the mode consistent for all the
+	test scripts
+Message-ID: <20090401143522.GO19690@josefsipek.net>
+References: <1238536234-26969-1-git-send-email-jsipek@eecs.umich.edu>
+	<1238536234-26969-2-git-send-email-jsipek@eecs.umich.edu>
+	<20090401070823.GA3044@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1238442101-24311-1-git-send-email-felixb@sgi.com>
+In-Reply-To: <20090401070823.GA3044@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,60 +31,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Felix Blyakher <felixb@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Josef 'Jeff' Sipek <jsipek@eecs.umich.edu>, xfs@oss.sgi.com
 
-On Mon, Mar 30, 2009 at 02:41:41PM -0500, Felix Blyakher wrote:
-> The result of async io returned in the event.res in addition
-> to the number of bytes read/written provides negated error
-> number. The broken libaio defines event.res as unsigned
-> while the same structure in the kernel defines it as signed.
-> The kernel indeed treat it as signed, and returns the
-> negated error number. Till libaio is fixed we provide
-> the signed long temp var.
-> Also set errno for each error condition in aio_rw, as the
-> caller is not aio aware and expects ret(-1)+errno by the
-> traditional libc convention.
-> 
-> Signed-off-by: Felix Blyakher <felixb@sgi.com>
-> ---
->  ltp/fsx.c |   42 +++++++++++++++++++++++++++++++++++-------
->  1 files changed, 35 insertions(+), 7 deletions(-)
+On Wed, Apr 01, 2009 at 03:08:23AM -0400, Christoph Hellwig wrote:
+> A consistant mode sounds fine to me, but we'd have to pull this in as
+> git-pull not as patch, right?
 
->  	if (len != event.res) {
-> -		fprintf(stderr, "bad read length: %lu instead of %u\n",
-> -				event.res, len);
-> +		/*
-> +		 * The b0rked libaio defines event.res as unsigned.
-> +		 * However the kernel strucuture has it signed,
-> +		 * and it's used to pass negated error value.
-> +		 * Till the library is fixed use the temp var.
-> +		 */
-> +		res = (long)event.res;
-> +		if (res >= 0)
-> +			fprintf(stderr, "bad io length: %lu instead of %u\n",
-> +					res, len);
-> +		else {
-> +			fprintf(stderr, "errcode=%d\n", -res);
-> +			fprintf(stderr, "aio_rw: async io failed: %s\n",
-> +					strerror(-res));
-> +			goto out_error;
-> +		}
-> +
->  	}
->  	return event.res;
-> +
-> +out_error:
-> +	/*
-> +	 * The caller expects error return in traditional libc
-> +	 * convention, i.e. -1 and the errno set to error.
-> +	 */
-> +	errno = ret <= 0 ? -ret : -res;
-> +	return -1;
+Depends on how you manage xfs-dev.git.  patch(1) won't work, but git-apply
+will. Personally, I use guilt [1], which let's me push/pop patches much
+like quilt, but since it uses git-apply, it works with all the fancy things
+git diffs offer.
 
-I wonder why this doesn't give a compiler warning.  res is only
-initialized in that last branch above.  Wouldn't it be better to set
-ret to res inside that branch and only use ret down here?
+> Also for some reason some modes seem to change when actually running
+> xfstests which makes git barf when pulling into such a tree again, not
+> sure where that comes from.
+
+Hrm, I haven't seen this yet.
+
+Josef 'Jeff' Sipek.
+
+[1] http://git.kernel.org/?p=linux/kernel/git/jsipek/guilt.git;a=summary
+
+-- 
+The obvious mathematical breakthrough would be development of an easy way to
+factor large prime numbers.
+		- Bill Gates, The Road Ahead, pg. 265
 
 _______________________________________________
 xfs mailing list
