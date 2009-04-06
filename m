@@ -1,15 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n36GXqX7177782 for <xfs@oss.sgi.com>; Mon, 6 Apr 2009 11:34:08 -0500
-Date: Mon, 6 Apr 2009 12:33:31 -0400
+	n36HdHkY181222 for <xfs@oss.sgi.com>; Mon, 6 Apr 2009 12:39:34 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4F0711F17D6
+	for <xfs@oss.sgi.com>; Mon,  6 Apr 2009 10:38:57 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id AW6JgA8uxm3llbHz for
+	<xfs@oss.sgi.com>; Mon, 06 Apr 2009 10:38:57 -0700 (PDT)
+Date: Mon, 6 Apr 2009 13:38:55 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests: fix async io error handling in fsx
-Message-ID: <20090406163331.GA22240@infradead.org>
-References: <1239031576-26279-1-git-send-email-felixb@sgi.com>
+Subject: Re: why xfs_write() race with O_DIRECT only?
+Message-ID: <20090406173846.GA30403@infradead.org>
+References: <49CD7912.6080508@GreenKey.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1239031576-26279-1-git-send-email-felixb@sgi.com>
+In-Reply-To: <49CD7912.6080508@GreenKey.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,24 +28,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Felix Blyakher <felixb@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Curtis Doty <Curtis@greenkey.net>
+Cc: XFS <xfs@oss.sgi.com>
 
-On Mon, Apr 06, 2009 at 10:26:16AM -0500, Felix Blyakher wrote:
-> The result of async io returned in the event.res in addition
-> to the number of bytes read/written provides negated error
-> number. The broken libaio defines event.res as unsigned
-> while the same structure in the kernel defines it as signed.
-> The kernel indeed treats it as signed, and returns the
-> negated error number. Till libaio is fixed we provide
-> the signed long temp var.
-> Also set errno for each error condition in aio_rw, as the
-> caller is not aio aware and expects ret(-1)+errno by the
-> traditional libc convention.
+On Fri, Mar 27, 2009 at 06:10:42PM -0700, Curtis Doty wrote:
+> I'm guessing this is the race fixed in 2.6.29.
+> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=25051158
+> 
+> But my app is running O_DIRECT and only calls pwrite(). Is there
+> something I'm missing that explains the aio stuff etc.?
 
-Looks good.
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+The aboe patch only matters when using dmapi.  Can you send a simple
+sample program or other kind of testcases that reproduces the bug that
+you see?
 
 _______________________________________________
 xfs mailing list
