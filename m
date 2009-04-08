@@ -1,15 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n38DNYZx091757 for <xfs@oss.sgi.com>; Wed, 8 Apr 2009 08:23:50 -0500
-Date: Wed, 8 Apr 2009 09:22:54 -0400
+	n38DYAVm092220 for <xfs@oss.sgi.com>; Wed, 8 Apr 2009 08:34:25 -0500
+Date: Wed, 8 Apr 2009 09:33:50 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/6] xfs: use memdup_user()
-Message-ID: <20090408132254.GA5957@infradead.org>
-References: <49DC4CC0.9050805@cn.fujitsu.com> <49DC4D54.3020001@cn.fujitsu.com>
+Subject: Re: [PATCH 0/2, RESEND] [XFS] a couple of fixes
+Message-ID: <20090408133350.GA12013@infradead.org>
+References: <1237116342-25701-1-git-send-email-david@fromorbit.com>
+	<20090406222831.GA12016@infradead.org>
+	<09C35383-EA8E-4EC2-A067-B3FA327AFF4C@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <49DC4D54.3020001@cn.fujitsu.com>
+In-Reply-To: <09C35383-EA8E-4EC2-A067-B3FA327AFF4C@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,43 +24,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Li Zefan <lizf@cn.fujitsu.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: Felix Blyakher <felixb@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Wed, Apr 08, 2009 at 03:08:04PM +0800, Li Zefan wrote:
-> Remove open-coded memdup_user()
-> 
-> Signed-off-by: Li Zefan <lizf@cn.fujitsu.com>
-> ---
->  fs/xfs/linux-2.6/xfs_ioctl.c   |   23 +++++++----------------
->  fs/xfs/linux-2.6/xfs_ioctl32.c |   12 ++++--------
->  2 files changed, 11 insertions(+), 24 deletions(-)
-> 
-> diff --git a/fs/xfs/linux-2.6/xfs_ioctl.c b/fs/xfs/linux-2.6/xfs_ioctl.c
-> index d0b4994..34eaab6 100644
-> --- a/fs/xfs/linux-2.6/xfs_ioctl.c
-> +++ b/fs/xfs/linux-2.6/xfs_ioctl.c
-> @@ -489,17 +489,12 @@ xfs_attrmulti_attr_set(
->  	if (len > XATTR_SIZE_MAX)
->  		return EINVAL;
->  
-> -	kbuf = kmalloc(len, GFP_KERNEL);
-> -	if (!kbuf)
-> -		return ENOMEM;
-> -
-> -	if (copy_from_user(kbuf, ubuf, len))
-> -		goto out_kfree;
-> +	kbuf = memdup_user(ubuf, len);
-> +	if (IS_ERR(kbuf))
-> +		return PTR_ERR(kbuf);
+On Tue, Apr 07, 2009 at 11:45:33PM -0500, Felix Blyakher wrote:
+>
+> On Apr 6, 2009, at 5:28 PM, Christoph Hellwig wrote:
+>
+>> I've sucked these patches into my tree after reviewin and QAing them.
+>> Felix, can you pull this and send it to Linus for 2.6.30?
+>>
+>> 	git://git.kernel.org/pub/scm/fs/xfs/xfs.git
+>
+> I did pull from your tree, and pushed to oss.
+> But I stopped short from pushing the for-linus branch,
+> and generating the pull request, as I'm again seeing
+> the 'merge' commits. I'll try to sort it out tomorrow.
 
-wouldn't NULL be a better error return for this kind of interface,
-matching kmalloc?
-
-
-Otherwise the patch looks good to me.
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Note that you will always see some merge commits of both merged trees
+touched the same files.  What Linus objected was the large amount of
+merge commits.  The way to bring them down is to simply do less merges,
+just stay on the same mainline level for a longer time and only merge
+with mainline short before you prepare a pull or when you really need it
+due to conflicting changes making it in.
 
 _______________________________________________
 xfs mailing list
