@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n384AeRn059783 for <xfs@oss.sgi.com>; Tue, 7 Apr 2009 23:10:50 -0500
-Received: from postoffice2.aconex.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E14B614024B4
-	for <xfs@oss.sgi.com>; Tue,  7 Apr 2009 21:11:49 -0700 (PDT)
-Received: from postoffice2.aconex.com (mail.aconex.com [203.89.202.182]) by
-	cuda.sgi.com with ESMTP id 82FdMytUfx5QSJf0 for
-	<xfs@oss.sgi.com>; Tue, 07 Apr 2009 21:11:49 -0700 (PDT)
-Date: Wed, 8 Apr 2009 14:10:14 +1000 (EST)
-From: Nathan Scott <nscott@aconex.com>
-Message-ID: <430737146.3196421239163814099.JavaMail.root@mail-au.aconex.com>
-In-Reply-To: <20090408115648.efaee933.thomas@nchc.org.tw>
-Subject: Re: Build xfs 3.0 deb problem
-MIME-Version: 1.0
+	n384m5XM061911 for <xfs@oss.sgi.com>; Tue, 7 Apr 2009 23:48:15 -0500
+Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6D2BD8F8068
+	for <xfs@oss.sgi.com>; Tue,  7 Apr 2009 21:47:46 -0700 (PDT)
+Message-Id: <09C35383-EA8E-4EC2-A067-B3FA327AFF4C@sgi.com>
+From: Felix Blyakher <felixb@sgi.com>
+In-Reply-To: <20090406222831.GA12016@infradead.org>
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Subject: Re: [PATCH 0/2, RESEND] [XFS] a couple of fixes
+Date: Tue, 7 Apr 2009 23:45:33 -0500
+References: <1237116342-25701-1-git-send-email-david@fromorbit.com>
+	<20090406222831.GA12016@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,46 +21,27 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Thomas Tsai <thomas@nchc.org.tw>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
 
------ "Thomas Tsai" <thomas@nchc.org.tw> wrote:
+On Apr 6, 2009, at 5:28 PM, Christoph Hellwig wrote:
 
-> tkx for reply soon.
-> 
-> My package name is partclone(partclone.org), like partimage, but I
+> I've sucked these patches into my tree after reviewin and QAing them.
+> Felix, can you pull this and send it to Linus for 2.6.30?
+>
+> 	git://git.kernel.org/pub/scm/fs/xfs/xfs.git
 
-Sounds like xfs_copy(8)?
+I did pull from your tree, and pushed to oss.
+But I stopped short from pushing the for-linus branch,
+and generating the pull request, as I'm again seeing
+the 'merge' commits. I'll try to sort it out tomorrow.
 
-> used libxfs to check bitmap/super block and backup xfs partition. It's
-> GPL licensed.
-> 
-> We need GPL tool to backup XFS partition. The partimage can do that
-> but get some problems(not based on the xfs library).
-> The xfs library you maintained well, and it's why I use xfslibs-dev's
-> liarbry to write backup tool, "partclone.xfs" .
-
-Can this use xfs_copy directly?
-
-> so..., may I use xfslibs-dev to build partclone?
-> or stop it and remove?
-
-Its historically proved disasterous having ondisk filesystem knowledge
-in tools (e.g. grub) ... and restricts what filesystem developers can
-do in terms of extending their ondisk formats, somewhat.  It'd be alot
-better if you could use a tool shipped by the XFS folk rather than one
-you write yourself (libxfs is a very error prone interface modelled on
-kernel code, it wasn't designed as a general purpose API).
-
-cheers.
-
--- 
-Nathan
+Felix
 
 _______________________________________________
 xfs mailing list
