@@ -1,17 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n38DYAVm092220 for <xfs@oss.sgi.com>; Wed, 8 Apr 2009 08:34:25 -0500
-Date: Wed, 8 Apr 2009 09:33:50 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/2, RESEND] [XFS] a couple of fixes
-Message-ID: <20090408133350.GA12013@infradead.org>
-References: <1237116342-25701-1-git-send-email-david@fromorbit.com>
-	<20090406222831.GA12016@infradead.org>
-	<09C35383-EA8E-4EC2-A067-B3FA327AFF4C@sgi.com>
+	n38HXJKt107706 for <xfs@oss.sgi.com>; Wed, 8 Apr 2009 12:33:29 -0500
+Received: from sj-iport-3.cisco.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D65C2140656D
+	for <xfs@oss.sgi.com>; Wed,  8 Apr 2009 10:34:10 -0700 (PDT)
+Received: from sj-iport-3.cisco.com (sj-iport-3.cisco.com [171.71.176.72]) by
+	cuda.sgi.com with ESMTP id ZSEDhQXTUjirZgm0 for
+	<xfs@oss.sgi.com>; Wed, 08 Apr 2009 10:34:10 -0700 (PDT)
+From: Roland Dreier <rdreier@cisco.com>
+Subject: Re: [PATCH 4/6] xfs: use memdup_user()
+References: <49DC4CC0.9050805@cn.fujitsu.com> <49DC4D54.3020001@cn.fujitsu.com>
+	<20090408132254.GA5957@infradead.org>
+Date: Wed, 08 Apr 2009 10:31:25 -0700
+In-Reply-To: <20090408132254.GA5957@infradead.org> (Christoph Hellwig's
+	message of "Wed, 8 Apr 2009 09:22:54 -0400")
+Message-ID: <adabpr76oia.fsf@cisco.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <09C35383-EA8E-4EC2-A067-B3FA327AFF4C@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,29 +29,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Felix Blyakher <felixb@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Li Zefan <lizf@cn.fujitsu.com>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-On Tue, Apr 07, 2009 at 11:45:33PM -0500, Felix Blyakher wrote:
->
-> On Apr 6, 2009, at 5:28 PM, Christoph Hellwig wrote:
->
->> I've sucked these patches into my tree after reviewin and QAing them.
->> Felix, can you pull this and send it to Linus for 2.6.30?
->>
->> 	git://git.kernel.org/pub/scm/fs/xfs/xfs.git
->
-> I did pull from your tree, and pushed to oss.
-> But I stopped short from pushing the for-linus branch,
-> and generating the pull request, as I'm again seeing
-> the 'merge' commits. I'll try to sort it out tomorrow.
+ > wouldn't NULL be a better error return for this kind of interface,
+ > matching kmalloc?
 
-Note that you will always see some merge commits of both merged trees
-touched the same files.  What Linus objected was the large amount of
-merge commits.  The way to bring them down is to simply do less merges,
-just stay on the same mainline level for a longer time and only merge
-with mainline short before you prepare a pull or when you really need it
-due to conflicting changes making it in.
+I guess returning an error code from memdup_user() lets callers
+distinguish between ENOMEM and EFAULT.  Not sure if that's important or
+not but there probably are at least some sites that care.
+
+ - R.
 
 _______________________________________________
 xfs mailing list
