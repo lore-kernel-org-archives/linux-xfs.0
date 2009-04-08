@@ -1,17 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n38IwCL2112117 for <xfs@oss.sgi.com>; Wed, 8 Apr 2009 13:58:22 -0500
+	n38KYKpR126261 for <xfs@oss.sgi.com>; Wed, 8 Apr 2009 15:34:30 -0500
 Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0F1BD3040C0
-	for <xfs@oss.sgi.com>; Wed,  8 Apr 2009 11:57:53 -0700 (PDT)
-Message-Id: <578FD09C-C517-48C8-9299-7EB805D8337B@sgi.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3433DAC001
+	for <xfs@oss.sgi.com>; Wed,  8 Apr 2009 13:34:01 -0700 (PDT)
+Message-Id: <ACCF081B-8013-487F-A4FC-1B18B44D8F52@sgi.com>
 From: Felix Blyakher <felixb@sgi.com>
-In-Reply-To: <49CE3A1A.9020103@sandeen.net>
+In-Reply-To: <20090408132254.GA5957@infradead.org>
 Mime-Version: 1.0 (Apple Message framework v926)
-Subject: Re: xfstests license clarification?
-Date: Wed, 8 Apr 2009 13:47:08 -0500
-References: <49CE3A1A.9020103@sandeen.net>
+Subject: Re: [PATCH 4/6] xfs: use memdup_user()
+Date: Wed, 8 Apr 2009 15:06:40 -0500
+References: <49DC4CC0.9050805@cn.fujitsu.com> <49DC4D54.3020001@cn.fujitsu.com>
+	<20090408132254.GA5957@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,42 +25,53 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Li Zefan <lizf@cn.fujitsu.com>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
 
-On Mar 28, 2009, at 9:54 AM, Eric Sandeen wrote:
+On Apr 8, 2009, at 8:22 AM, Christoph Hellwig wrote:
 
-> Since most of the scripts themselves in xfstests make no mention of
-> redistribution, and only say "copyright sgi, all rights reserved" etc:
+> On Wed, Apr 08, 2009 at 03:08:04PM +0800, Li Zefan wrote:
+>> Remove open-coded memdup_user()
+>>
+>> Signed-off-by: Li Zefan <lizf@cn.fujitsu.com>
+>> ---
+>> fs/xfs/linux-2.6/xfs_ioctl.c   |   23 +++++++----------------
+>> fs/xfs/linux-2.6/xfs_ioctl32.c |   12 ++++--------
+>> 2 files changed, 11 insertions(+), 24 deletions(-)
+>>
+>> diff --git a/fs/xfs/linux-2.6/xfs_ioctl.c b/fs/xfs/linux-2.6/ 
+>> xfs_ioctl.c
+>> index d0b4994..34eaab6 100644
+>> --- a/fs/xfs/linux-2.6/xfs_ioctl.c
+>> +++ b/fs/xfs/linux-2.6/xfs_ioctl.c
+>> @@ -489,17 +489,12 @@ xfs_attrmulti_attr_set(
+>> 	if (len > XATTR_SIZE_MAX)
+>> 		return EINVAL;
+>>
+>> -	kbuf = kmalloc(len, GFP_KERNEL);
+>> -	if (!kbuf)
+>> -		return ENOMEM;
+>> -
+>> -	if (copy_from_user(kbuf, ubuf, len))
+>> -		goto out_kfree;
+>> +	kbuf = memdup_user(ubuf, len);
+>> +	if (IS_ERR(kbuf))
+>> +		return PTR_ERR(kbuf);
 >
-> #-----------------------------------------------------------------------
-> #  Copyright (c) 2006 Silicon Graphics, Inc.  All Rights Reserved.
-> #-----------------------------------------------------------------------
+> wouldn't NULL be a better error return for this kind of interface,
+> matching kmalloc?
 >
-> do we need to do anything in terms of making this look more like Free
-> Software (assuming that's the intent?)
+>
+> Otherwise the patch looks good to me.
+>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Yes, it was intent. And it's OK to add the GPL license blob
-there. Can't speak for non sgi files.
+Looks good to me too.
 
-Felix
+Reviewed-by: Felix Blyakher <felixb@sgi.com>
 
-> It might be a rats-nest, there are a several testcases in src/ gleaned
-> from mailing lists & bugs with little or no attribution; OTOH maybe  
-> this
-> stuff is trivial enough that it doesn't warrant copyright, I dunno.
->
-> Is it worth trying to clarify the license on the collection, or is  
-> this
-> just a can of worms?
->
-> -Eric
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+p.s. Replying to reply as I couldn't find the original post.
 
 _______________________________________________
 xfs mailing list
