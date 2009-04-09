@@ -1,18 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n38KYKpR126261 for <xfs@oss.sgi.com>; Wed, 8 Apr 2009 15:34:30 -0500
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3433DAC001
-	for <xfs@oss.sgi.com>; Wed,  8 Apr 2009 13:34:01 -0700 (PDT)
-Message-Id: <ACCF081B-8013-487F-A4FC-1B18B44D8F52@sgi.com>
-From: Felix Blyakher <felixb@sgi.com>
-In-Reply-To: <20090408132254.GA5957@infradead.org>
-Mime-Version: 1.0 (Apple Message framework v926)
+	n390hW1F140961 for <xfs@oss.sgi.com>; Wed, 8 Apr 2009 19:43:42 -0500
+Received: from song.cn.fujitsu.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AD70D1CA8BDE
+	for <xfs@oss.sgi.com>; Wed,  8 Apr 2009 17:42:51 -0700 (PDT)
+Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
+	cuda.sgi.com with ESMTP id oWECQrkUtJ4zB3TZ for
+	<xfs@oss.sgi.com>; Wed, 08 Apr 2009 17:42:51 -0700 (PDT)
+Message-ID: <49DD44B5.9040702@cn.fujitsu.com>
+Date: Thu, 09 Apr 2009 08:43:33 +0800
+From: Li Zefan <lizf@cn.fujitsu.com>
+MIME-Version: 1.0
 Subject: Re: [PATCH 4/6] xfs: use memdup_user()
-Date: Wed, 8 Apr 2009 15:06:40 -0500
-References: <49DC4CC0.9050805@cn.fujitsu.com> <49DC4D54.3020001@cn.fujitsu.com>
-	<20090408132254.GA5957@infradead.org>
+References: <49DC4CC0.9050805@cn.fujitsu.com>	<49DC4D54.3020001@cn.fujitsu.com>	<20090408132254.GA5957@infradead.org>
+	<adabpr76oia.fsf@cisco.com>
+In-Reply-To: <adabpr76oia.fsf@cisco.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,57 +24,23 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Li Zefan <lizf@cn.fujitsu.com>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: Roland Dreier <rdreier@cisco.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
+Roland Dreier wrote:
+>  > wouldn't NULL be a better error return for this kind of interface,
+>  > matching kmalloc?
+> 
+> I guess returning an error code from memdup_user() lets callers
+> distinguish between ENOMEM and EFAULT.  Not sure if that's important or
+> not but there probably are at least some sites that care.
+> 
 
-On Apr 8, 2009, at 8:22 AM, Christoph Hellwig wrote:
-
-> On Wed, Apr 08, 2009 at 03:08:04PM +0800, Li Zefan wrote:
->> Remove open-coded memdup_user()
->>
->> Signed-off-by: Li Zefan <lizf@cn.fujitsu.com>
->> ---
->> fs/xfs/linux-2.6/xfs_ioctl.c   |   23 +++++++----------------
->> fs/xfs/linux-2.6/xfs_ioctl32.c |   12 ++++--------
->> 2 files changed, 11 insertions(+), 24 deletions(-)
->>
->> diff --git a/fs/xfs/linux-2.6/xfs_ioctl.c b/fs/xfs/linux-2.6/ 
->> xfs_ioctl.c
->> index d0b4994..34eaab6 100644
->> --- a/fs/xfs/linux-2.6/xfs_ioctl.c
->> +++ b/fs/xfs/linux-2.6/xfs_ioctl.c
->> @@ -489,17 +489,12 @@ xfs_attrmulti_attr_set(
->> 	if (len > XATTR_SIZE_MAX)
->> 		return EINVAL;
->>
->> -	kbuf = kmalloc(len, GFP_KERNEL);
->> -	if (!kbuf)
->> -		return ENOMEM;
->> -
->> -	if (copy_from_user(kbuf, ubuf, len))
->> -		goto out_kfree;
->> +	kbuf = memdup_user(ubuf, len);
->> +	if (IS_ERR(kbuf))
->> +		return PTR_ERR(kbuf);
->
-> wouldn't NULL be a better error return for this kind of interface,
-> matching kmalloc?
->
->
-> Otherwise the patch looks good to me.
->
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-Looks good to me too.
-
-Reviewed-by: Felix Blyakher <felixb@sgi.com>
-
-p.s. Replying to reply as I couldn't find the original post.
+Right, and this API is simlilar to strndup_user().
 
 _______________________________________________
 xfs mailing list
