@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n39HBspG002961 for <xfs@oss.sgi.com>; Thu, 9 Apr 2009 12:12:09 -0500
-Date: Thu, 9 Apr 2009 13:11:35 -0400
+	n39HEVoI003303 for <xfs@oss.sgi.com>; Thu, 9 Apr 2009 12:14:46 -0500
+Date: Thu, 9 Apr 2009 13:14:12 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/2] xfs: a couple getbmap cleanups
-Message-ID: <20090409171135.GA25303@infradead.org>
-References: <20090224133858.GB15820@infradead.org>
-	<9EF64CF3-FDFC-4777-94A5-7295E827ABA4@sgi.com>
+Subject: Re: [PATCH 2/2] xfs: fix getbmap vs mmap deadlock
+Message-ID: <20090409171412.GB25303@infradead.org>
+References: <20090224133902.GC15820@infradead.org>
+	<2B47193B-9486-4500-80C4-E96750BEA54B@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <9EF64CF3-FDFC-4777-94A5-7295E827ABA4@sgi.com>
+In-Reply-To: <2B47193B-9486-4500-80C4-E96750BEA54B@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,15 +26,14 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Felix Blyakher <felixb@sgi.com>
 Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Mon, Apr 06, 2009 at 07:57:48PM -0500, Felix Blyakher wrote:
-> Shouldn't we set error to ENOMEM here?
+On Mon, Apr 06, 2009 at 07:42:57PM -0500, Felix Blyakher wrote:
+> Actually with the patch we either get all requested extents, or none
+> if we fail to get memory for them.
+> Should we teach the callers to expect ENOMEM and repeat the call
+> to xfs_getbmap with smaller number of extents?
 
-Yes, good catch.
-
-> Should the callers be taught to handle ENOMEM now?
-
-The kernel callchain handles it, and in userspace the only caller
-(xfs_io) will handled it by printing an out of memory message.
+The problem with any of that is that we don't actually get the exact
+extent list but always a racy version.
 
 _______________________________________________
 xfs mailing list
