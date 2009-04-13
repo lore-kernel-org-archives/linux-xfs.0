@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3DGYZix120022 for <xfs@oss.sgi.com>; Mon, 13 Apr 2009 11:34:45 -0500
-Received: from mail-ew0-f158.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B1C4920DF81
-	for <xfs@oss.sgi.com>; Mon, 13 Apr 2009 09:33:56 -0700 (PDT)
-Received: from mail-ew0-f158.google.com (mail-ew0-f158.google.com
-	[209.85.219.158]) by cuda.sgi.com with ESMTP id
-	L4qav8Wf9f6CdMHo for <xfs@oss.sgi.com>;
-	Mon, 13 Apr 2009 09:33:56 -0700 (PDT)
-Received: by ewy2 with SMTP id 2so2596952ewy.20
-	for <xfs@oss.sgi.com>; Mon, 13 Apr 2009 09:33:56 -0700 (PDT)
+	n3DHgdZv123409 for <xfs@oss.sgi.com>; Mon, 13 Apr 2009 12:42:50 -0500
+Received: from eu1sys200aog111.obsmtp.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D650820E6BE
+	for <xfs@oss.sgi.com>; Mon, 13 Apr 2009 10:42:17 -0700 (PDT)
+Received: from eu1sys200aog111.obsmtp.com (eu1sys200aog111.obsmtp.com
+	[207.126.144.131]) by cuda.sgi.com with ESMTP id
+	IdM0ikBDp2RNKBvb for <xfs@oss.sgi.com>;
+	Mon, 13 Apr 2009 10:42:17 -0700 (PDT)
+Received: from zeta.dmz-eu.st.com (ns2.st.com [164.129.230.9])
+	by beta.dmz-eu.st.com (STMicroelectronics) with ESMTP id 94215DA4B
+	for <xfs@oss.sgi.com>; Mon, 13 Apr 2009 17:41:01 +0000 (GMT)
+Received: from mail1.bri.st.com (mail1.bri.st.com [164.129.8.218])
+	by zeta.dmz-eu.st.com (STMicroelectronics) with ESMTP id 573DC4C3E9
+	for <xfs@oss.sgi.com>; Mon, 13 Apr 2009 17:42:11 +0000 (GMT)
+Message-ID: <49E37972.1070101@st.com>
+Date: Mon, 13 Apr 2009 18:42:10 +0100
+From: Stuart MENEFY <stuart.menefy@st.com>
 MIME-Version: 1.0
-In-Reply-To: <dbd747120904130913p45c2979eu5afd15f5a6ca7b7f@mail.gmail.com>
-References: <dbd747120904130713t7388971axf75ee779b5b1e1f2@mail.gmail.com>
-	<49E353FD.5060207@sandeen.net>
-	<dbd747120904130913p45c2979eu5afd15f5a6ca7b7f@mail.gmail.com>
-Date: Mon, 13 Apr 2009 18:33:55 +0200
-Message-ID: <dbd747120904130933i6ae66aedt7912a47b7e561f76@mail.gmail.com>
-Subject: Fwd: xfs - fixing wrong xfs size
-From: Nebojsa Trpkovic <trx.lists@gmail.com>
+Subject: Help debugging a use after free
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,169 +28,94 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3953404933895321822=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============3953404933895321822==
-Content-Type: multipart/alternative; boundary=0015174bde84d709a9046772475a
+Folks
 
---0015174bde84d709a9046772475a
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+For the last few days I've been trying to debug an apparent use after
+free in XFS code. This is in a 2.6.23.17 kernel on an SH4 processor,
+so this could easily be an XFS problem which has already been solved,
+or an architecture problem. This started because I've been trying to
+work around the D-cache aliasing problems which the SH4 suffers from
+because of XFS's use of vmap, so its also possible this is an obscure
+aliasing problem. I've also been unable to reproduce it on an x86_64,
+albeit with a slightly later kernel.
 
-On Mon, Apr 13, 2009 at 5:02 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+The problem occurs when running a loop which is essentially:
+  mount /dev/sda1 /mnt
+  bonnie++  -u root -f -s0 -n16:1024:1024 -b -d /mnt
+  umount /mnt
+on an otherwise clean partition, and usually takes at least 24 hours
+to appear.  The problem only occurs with SLAB poisoning enabled, and
+results in a misaligned access because the poison value when treated
+as a pointer is an illegal misaligned:
 
-> Nebojsa Trpkovic wrote:
-> > hello.
-> >
-> > I had problem with raid5 on my system.
-> > after recovering of the array, I can not mount XFS that resides on it.
-> > I've run xfs_check and xfs_repair (which fixed some errors) and now I
-> > can run them all day long without any errors.
-> >
-> > but, when I try to mount that partition, I get:
-> >
-> > mount: /dev/md0: can't read superblock
-> >
-> >
-> > and there's
-> >
-> > Filesystem "md0": Disabling barriers, not supported by the underlying
-> device
-> >
-> > attempt to access beyond end of device
-> > md0: rw=0, want=123024384, limit=123023488
-> > I/O error in filesystem ("md0") meta-data dev md0 block 0x75533f8
->
->       ("xfs_read_buf") error 5 buf count 4096
-> >
-> > XFS: size check 2 failed
->
-> So, the superblock says that the fs is 896 1k-blocks longer than the
-> device actually is.
->
-> > in the dmesg.
-> >
-> >
-> > is there any way to "fix" this wrong size of XFS ?
->
-> hard to say, almost certainly sounds like an md problem; is there a
-> chance that your raid recovery led to a device which is somehow smaller
-> than it started?  You could change the superblock block-count value, but
-> I'm guessing that something else has gone wrong.
->
-> It might be useful to know what errors xfs_repair found.
->
-> -Eric
->
+Unaligned kernel access on behalf of "bonnie++" pid=22419 pc=0x841a6c6c ins=0x8433
+Pid : 22419, Comm:             bonnie++
+PC is at xfs_trans_unlocked_item+0xc/0x60
+PC  : 841a6c6c SP  : 87f29d3c SR  : 40008000 TEA : 00402ebe    Not tainted
+R0  : 00000000 R1  : 841a6c60 R2  : 87f28000 R3  : 00000001
+R4  : 6b6b6b6b R5  : 6b6b6b6b R6  : 843342ac R7  : 840139c0
+R8  : 6b6b6b6b R9  : 6b6b6b6b R10 : 878cb000 R11 : 8452eb8c
+R12 : 00003255 R13 : 00000625 R14 : 87f29d4c
+MACH: 00000000 MACL: 0df75800 GBR : 297f9658 PR  : 84189d20
 
+Call trace:
+[<84189d20>] xfs_iunlock+0x60/0xc0
+[<841915da>] xfs_inode_item_push+0x1a/0x40
+[<841a6ff4>] xfs_trans_push_ail+0x1b4/0x240
+[<841971b6>] xlog_grant_push_ail+0xf6/0x180
+[<8419961c>] xfs_log_reserve+0x3c/0xc0
+[<841a540a>] xfs_trans_reserve+0x8a/0x220
+[<8418d6f0>] xfs_itruncate_finish+0x170/0x420
+[<841a7de0>] xfs_trans_ihold+0x0/0x20
+[<841a7de0>] xfs_trans_ihold+0x0/0x20
+[<841a7e60>] xfs_trans_ijoin+0x0/0xa0
+[<841b112a>] xfs_inactive+0x3ea/0x500
+[<84189da0>] xfs_ilock+0x0/0xe0
+[<841bf75c>] xfs_fs_clear_inode+0x3c/0xa0
+[<843379a0>] _spin_unlock+0x0/0x60
+[<840818da>] clear_inode+0x5a/0x140
+[<84081a92>] generic_delete_inode+0xd2/0x120
+[<84081bc6>] generic_drop_inode+0xe6/0x1c0
+[<84080e2e>] iput+0x4e/0x80
+[<840764ba>] do_unlinkat+0xfa/0x1a0
+[<8408fdba>] do_fsync+0x7a/0xe0
+[<8408fe40>] __do_fsync+0x20/0x60
+[<8407656e>] sys_unlink+0xe/0x20
+[<84076560>] sys_unlink+0x0/0x20
+[<840088f8>] syscall_call+0xa/0xe
 
-thx for quick reply.
+(Note that due to the way backtrace is implemented on SH architectures there
+are spurious values in this backtrace, so it is probably safe to ignore any
+entries of the form FN+0x0.)
 
-yes, I definitely had md problem - my raid5 made of 6 drives connected to
-ICH9R and 2 drives connected to the masterpeace of hardware called JMicron
-fell apart when later one just stopped working out of nowhere. after reboot,
-JMicron worked well, but raid was out of sync with 2 members failed. I've
-zeroed superblocks of raid partitions and created new one with
-"assume-clear". partition tables stayed intact - I had no need to change
-anything in them. that worked fine with /dev/md1 wich had reiserfs: after
-long and slow reiserfs --rebuild-tree I'm able to access all files on that
-partition. unforutuately, I have no way to mount xfs partition although
-xfs_check and xfs_repair give no errors (I had to run xfs_repair -L /dev/md0
-to get in this error-free situation).
+The problem is caused by the "xfs_inode_t" which is passed into
+xfs_iunlock() having already been freed at the SLAB level. Putting
+some additional tracing code into the free path, this structure is
+being freed by xfs_inode_item_destroy(), which is called from from
+xfs_idestroy() which is called from xfs_ireclaim().
 
-how can I set superblock block-count value (now I have realy nothing to
-loose - the only other option is to give up of that data) ?
+In between the free and use there appears to be some disk activity,
+as I see an allocate from the SCSI layer, plus a few other kmalloc
+and kfree's.
 
---0015174bde84d709a9046772475a
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Running with XFS_DEBUG enabled hasn't shown any problems, and still
+failed in the same way.
 
-<div class=3D"gmail_quote"><div><div></div><div class=3D"h5"><div class=3D"=
-gmail_quote">On Mon, Apr 13, 2009 at 5:02 PM, Eric Sandeen <span dir=3D"ltr=
-">&lt;<a href=3D"mailto:sandeen@sandeen.net" target=3D"_blank">sandeen@sand=
-een.net</a>&gt;</span> wrote:<br>
-<blockquote class=3D"gmail_quote" style=3D"border-left: 1px solid rgb(204, =
-204, 204); margin: 0pt 0pt 0pt 0.8ex; padding-left: 1ex;">
-<div>Nebojsa Trpkovic wrote:<br>
-&gt; hello.<br>
-&gt;<br>
-&gt; I had problem with raid5 on my system.<br>
-&gt; after recovering of the array, I can not mount XFS that resides on it.=
-<br>
-&gt; I&#39;ve run xfs_check and xfs_repair (which fixed some errors) and no=
-w I<br>
-&gt; can run them all day long without any errors.<br>
-&gt;<br>
-&gt; but, when I try to mount that partition, I get:<br>
-&gt;<br>
-&gt; mount: /dev/md0: can&#39;t read superblock<br>
-&gt;<br>
-&gt;<br>
-&gt; and there&#39;s<br>
-&gt;<br>
-&gt; Filesystem &quot;md0&quot;: Disabling barriers, not supported by the u=
-nderlying device<br>
-&gt;<br>
-&gt; attempt to access beyond end of device<br>
-&gt; md0: rw=3D0, want=3D123024384, limit=3D123023488<br>
-&gt; I/O error in filesystem (&quot;md0&quot;) meta-data dev md0 block 0x75=
-533f8<br>
-<br>
- =A0 =A0 =A0 (&quot;xfs_read_buf&quot;) error 5 buf count 4096<br>
-&gt;<br>
-&gt; XFS: size check 2 failed<br>
-<br>
-</div>So, the superblock says that the fs is 896 1k-blocks longer than the<=
-br>
-device actually is.<br>
-<div><br>
-&gt; in the dmesg.<br>
-&gt;<br>
-&gt;<br>
-&gt; is there any way to &quot;fix&quot; this wrong size of XFS ?<br>
-<br>
-</div>hard to say, almost certainly sounds like an md problem; is there a<b=
-r>
-chance that your raid recovery led to a device which is somehow smaller<br>
-than it started? =A0You could change the superblock block-count value, but<=
-br>
-I&#39;m guessing that something else has gone wrong.<br>
-<br>
-It might be useful to know what errors xfs_repair found.<br>
-<font color=3D"#888888"><br>
--Eric<br>
-</font></blockquote></div><br><br></div></div>thx for quick reply.<br><br>y=
-es, I definitely had md problem - my raid5 made of 6 drives connected to IC=
-H9R and 2 drives connected to the masterpeace of hardware called JMicron fe=
-ll apart when later one just stopped working out of nowhere. after reboot, =
-JMicron worked well, but raid was out of sync with 2 members failed. I&#39;=
-ve zeroed superblocks of raid partitions and created new one with &quot;ass=
-ume-clear&quot;. partition tables stayed intact - I had no need to change a=
-nything in them. that worked fine with /dev/md1 wich had reiserfs: after lo=
-ng and slow reiserfs --rebuild-tree I&#39;m able to access all files on tha=
-t partition. unforutuately, I have no way to mount xfs partition although x=
-fs_check and xfs_repair give no errors (I had to run xfs_repair -L /dev/md0=
- to get in this error-free situation). <br>
+So, does this sound like a problem which has been seen before?
+Alternatively can anyone suggest what would normally prevent this
+happening, and I can look into that (although I know next to nothing
+about the guts of the XFS code, so please don't be afraid to state
+the obvious!). Or any other suggestions welcome.
 
-<br>how can I set superblock block-count value (now I have realy nothing to=
- loose - the only other option is to give up of that data) ?<br><br><br>
-</div><br>
-
---0015174bde84d709a9046772475a--
-
-
---===============3953404933895321822==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Stuart
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3953404933895321822==--
