@@ -1,18 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3EIYr1R210584 for <xfs@oss.sgi.com>; Tue, 14 Apr 2009 13:35:04 -0500
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 79AB38F80D7
-	for <xfs@oss.sgi.com>; Tue, 14 Apr 2009 11:34:37 -0700 (PDT)
-Message-Id: <BB5058FD-E69F-4254-9548-82CD634C7FD6@sgi.com>
-From: Felix Blyakher <felixb@sgi.com>
-In-Reply-To: <49E4A131.5040309@isg.de>
-Mime-Version: 1.0 (Apple Message framework v926)
-Subject: Re: XFS support for TRIM / blkdev_issue_discard?
-Date: Tue, 14 Apr 2009 13:32:35 -0500
-References: <20090331053013.7642414167108@attica.americas.sgi.com>
-	<49E4A131.5040309@isg.de>
+	n3EJAmsS212613 for <xfs@oss.sgi.com>; Tue, 14 Apr 2009 14:11:03 -0500
+Received: from slurp.thebarn.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9F4DF141F630
+	for <xfs@oss.sgi.com>; Tue, 14 Apr 2009 12:12:15 -0700 (PDT)
+Received: from slurp.thebarn.com (cattelan-host202.dsl.visi.com
+	[208.42.117.202]) by cuda.sgi.com with ESMTP id
+	1mKBXqVg00pXGrb2 for <xfs@oss.sgi.com>;
+	Tue, 14 Apr 2009 12:12:15 -0700 (PDT)
+Message-ID: <49E4DF8C.4050800@thebarn.com>
+Date: Tue, 14 Apr 2009 14:10:04 -0500
+From: Russell Cattelan <cattelan@thebarn.com>
+MIME-Version: 1.0
+Subject: Re: Help debugging a use after free
+References: <49E37972.1070101@st.com>
+In-Reply-To: <49E37972.1070101@st.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,56 +24,115 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Peter Niemayer <niemayer@isg.de>
+To: Stuart MENEFY <stuart.menefy@st.com>
 Cc: xfs@oss.sgi.com
 
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-On Apr 14, 2009, at 9:44 AM, Peter Niemayer wrote:
-
-> Dear Felix Blyakher,
-
-Hi Peter,
-
-> do you know whether there are plans to support the ATA TRIM command /
-> blkdev_issue_discard() call in XFS for Linux anytime soon?
-
-This topic was indeed brought up in xfs discussions.
-Though, we don't have any definite plans on supporting it yet.
-That doesn't mean that we oppose to it, just the lack of
-resources at the moment.
-Your mail will bring it up for discussion again.
-
-Stay tuned,
-Felix
-
+Stuart MENEFY wrote:
+> Folks
+>
+> For the last few days I've been trying to debug an apparent use
+> after free in XFS code. This is in a 2.6.23.17 kernel on an SH4
+> processor, so this could easily be an XFS problem which has already
+> been solved, or an architecture problem. This started because I've
+> been trying to work around the D-cache aliasing problems which the
+> SH4 suffers from because of XFS's use of vmap, so its also possible
+> this is an obscure aliasing problem. I've also been unable to
+> reproduce it on an x86_64, albeit with a slightly later kernel.
+>
+> The problem occurs when running a loop which is essentially: mount
+> /dev/sda1 /mnt bonnie++  -u root -f -s0 -n16:1024:1024 -b -d /mnt
+> umount /mnt on an otherwise clean partition, and usually takes at
+> least 24 hours to appear.  The problem only occurs with SLAB
+> poisoning enabled, and results in a misaligned access because the
+> poison value when treated as a pointer is an illegal misaligned:
+>
+> Unaligned kernel access on behalf of "bonnie++" pid=22419
+> pc=0x841a6c6c ins=0x8433 Pid : 22419, Comm:             bonnie++ PC
+> is at xfs_trans_unlocked_item+0xc/0x60 PC  : 841a6c6c SP  :
+> 87f29d3c SR  : 40008000 TEA : 00402ebe    Not tainted R0  :
+> 00000000 R1  : 841a6c60 R2  : 87f28000 R3  : 00000001 R4  :
+> 6b6b6b6b R5  : 6b6b6b6b R6  : 843342ac R7  : 840139c0 R8  :
+> 6b6b6b6b R9  : 6b6b6b6b R10 : 878cb000 R11 : 8452eb8c R12 :
+> 00003255 R13 : 00000625 R14 : 87f29d4c MACH: 00000000 MACL:
+> 0df75800 GBR : 297f9658 PR  : 84189d20
+>
+> Call trace: [<84189d20>] xfs_iunlock+0x60/0xc0 [<841915da>]
+> xfs_inode_item_push+0x1a/0x40 [<841a6ff4>]
+> xfs_trans_push_ail+0x1b4/0x240 [<841971b6>]
+> xlog_grant_push_ail+0xf6/0x180 [<8419961c>]
+> xfs_log_reserve+0x3c/0xc0 [<841a540a>] xfs_trans_reserve+0x8a/0x220
+>  [<8418d6f0>] xfs_itruncate_finish+0x170/0x420 [<841a7de0>]
+> xfs_trans_ihold+0x0/0x20 [<841a7de0>] xfs_trans_ihold+0x0/0x20
+> [<841a7e60>] xfs_trans_ijoin+0x0/0xa0 [<841b112a>]
+> xfs_inactive+0x3ea/0x500 [<84189da0>] xfs_ilock+0x0/0xe0
+> [<841bf75c>] xfs_fs_clear_inode+0x3c/0xa0 [<843379a0>]
+> _spin_unlock+0x0/0x60 [<840818da>] clear_inode+0x5a/0x140
+> [<84081a92>] generic_delete_inode+0xd2/0x120 [<84081bc6>]
+> generic_drop_inode+0xe6/0x1c0 [<84080e2e>] iput+0x4e/0x80
+> [<840764ba>] do_unlinkat+0xfa/0x1a0 [<8408fdba>] do_fsync+0x7a/0xe0
+>  [<8408fe40>] __do_fsync+0x20/0x60 [<8407656e>] sys_unlink+0xe/0x20
+>  [<84076560>] sys_unlink+0x0/0x20 [<840088f8>] syscall_call+0xa/0xe
 >
 >
-> I ask because as someone who is currently benchmarking solid state  
-> disks
-> for certain usage scenarios I noticed that other filesystems are  
-> starting
-> to support the discarding of unused blocks, which allows to prevent
-> performance-degradation of SSDs during heavy use.
-> (See e.g. http://www.mail-archive.com/cluster-devel@redhat.com/msg03401.html
-> on the GFS2 support for the discard feature, it seems not too hard
-> to implement the support)
+> (Note that due to the way backtrace is implemented on SH
+> architectures there are spurious values in this backtrace, so it is
+> probably safe to ignore any entries of the form FN+0x0.)
 >
-> Amongst other SSDs, we have one in our tests that supports the ATA  
-> TRIM command,
-> and I would like to test the benefits of it, even if that requires me
-> to install an early kernel pre-release.
+> The problem is caused by the "xfs_inode_t" which is passed into
+> xfs_iunlock() having already been freed at the SLAB level. Putting
+> some additional tracing code into the free path, this structure is
+> being freed by xfs_inode_item_destroy(), which is called from from
+> xfs_idestroy() which is called from xfs_ireclaim().
+I guess the first question is which thread has actually free'ed the
+inode? it sounds like a race
+that seems unlikely unless you are on a multi processor system. I
+don't know anything about the SH4 architecture
+but I assume this is a single processor system?
+
+If you can instrument actually free that is causing the problem it
+would be good to print out the
+actually pid doing the free and as many return addresses that you can,
+so we can get an
+idea of the actual call chain.
+
+
 >
-> (Currently, XFS is our favorite filesystem for several reasons, so  
-> it would
-> be great if we could run our TRIM-support-benchmarks using it)
+> In between the free and use there appears to be some disk activity,
+>  as I see an allocate from the SCSI layer, plus a few other kmalloc
+>  and kfree's.
 >
-> Regards,
+> Running with XFS_DEBUG enabled hasn't shown any problems, and still
+>  failed in the same way.
+I wouldn't expect XFS_DEBUG to point out anything particularly
+interesting in this area,
+ but it never hurts to try.
 >
-> Peter Niemayer
+> So, does this sound like a problem which has been seen before?
+> Alternatively can anyone suggest what would normally prevent this
+> happening, and I can look into that (although I know next to
+> nothing about the guts of the XFS code, so please don't be afraid
+> to state the obvious!). Or any other suggestions welcome.
+>
+> Stuart
+>
+> _______________________________________________ xfs mailing list
+> xfs@oss.sgi.com http://oss.sgi.com/mailman/listinfo/xfs
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (Darwin)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iD8DBQFJ5N+LNRmM+OaGhBgRAn8vAJoCUKDPYWEyZlXs+PgwASpXSfLT9gCfRQja
+9TX1Y/ntxb8Ux9pzvg3V0Yg=
+=2Rcd
+-----END PGP SIGNATURE-----
 
 _______________________________________________
 xfs mailing list
