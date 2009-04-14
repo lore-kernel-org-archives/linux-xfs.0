@@ -1,20 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3DLmvt3133886 for <xfs@oss.sgi.com>; Mon, 13 Apr 2009 16:49:07 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 446CB141AB2F
-	for <xfs@oss.sgi.com>; Mon, 13 Apr 2009 14:50:19 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id LZxbzOTlFI3JTD3O for
-	<xfs@oss.sgi.com>; Mon, 13 Apr 2009 14:50:19 -0700 (PDT)
-Message-ID: <49E3B321.3060605@sandeen.net>
-Date: Mon, 13 Apr 2009 16:48:17 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	n3EBAeVq182391 for <xfs@oss.sgi.com>; Tue, 14 Apr 2009 06:10:51 -0500
+From: Nikanth Karthikesan <knikanth@suse.de>
+Subject: [PATCH 5/6] Handle possible bio_alloc failure in xfs
+Date: Tue, 14 Apr 2009 16:36:45 +0530
 MIME-Version: 1.0
-Subject: Re: [PATCH]fix fbno in  xfs_dir2_node_addname_int
-References: <47E5A982.8010002@gmail.com>
-In-Reply-To: <47E5A982.8010002@gmail.com>
+Content-Disposition: inline
+Message-Id: <200904141636.45463.knikanth@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,23 +20,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Kevin Xu <cgxu.gg@gmail.com>
-Cc: xfs@oss.sgi.com
+To: xfs-masters@oss.sgi.com
+Cc: Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Kevin Xu wrote:
-> if we didn't find a freespace block for our new entry  in the current 
-> freeindex block, 
-> return to the first freeindex block and continue to check.
-> 
+Handle bio_alloc failure in xfs.
 
-Kevin, you sent this and another patch a while ago, and we had asked for
-more information in the changelogs, a Signed-off-by: line, and a
-testcase if at all possible.
+Signed-off-by: Nikanth Karthikesan <knikanth@suse.de>
 
-Any chance that you can provide these things?
+---
 
-Thanks,
--Eric
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_buf.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_buf.c
++++ linux-2.6/fs/xfs/linux-2.6/xfs_buf.c
+@@ -1196,6 +1196,8 @@ _xfs_buf_ioapply(
+ 	      (XBF_READ|_XBF_PAGE_LOCKED)) &&
+ 	    (blocksize >= PAGE_CACHE_SIZE)) {
+ 		bio = bio_alloc(GFP_NOIO, 1);
++		if (unlikely(!bio))
++			goto out_enomem;
+ 
+ 		bio->bi_bdev = bp->b_target->bt_bdev;
+ 		bio->bi_sector = sector - (offset >> BBSHIFT);
+@@ -1217,6 +1219,9 @@ next_chunk:
+ 		nr_pages = total_nr_pages;
+ 
+ 	bio = bio_alloc(GFP_NOIO, nr_pages);
++	if (unlikely(!bio))
++		goto out_enomem;
++
+ 	bio->bi_bdev = bp->b_target->bt_bdev;
+ 	bio->bi_sector = sector;
+ 	bio->bi_end_io = xfs_buf_bio_end_io;
+@@ -1247,6 +1252,11 @@ submit_io:
+ 		bio_put(bio);
+ 		xfs_buf_ioerror(bp, EIO);
+ 	}
++	return;
++
++out_enomem:
++	xfs_buf_ioerror(bp, ENOMEM);
++	
+ }
+ 
+ int
+
+
 
 _______________________________________________
 xfs mailing list
