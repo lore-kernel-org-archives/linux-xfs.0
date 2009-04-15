@@ -1,14 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3FAgV9A257560 for <xfs@oss.sgi.com>; Wed, 15 Apr 2009 05:42:41 -0500
-Subject: [RESEND][PATCH 6/7] xfs: Remove code handling bio_alloc failure with
-	__GFP_WAIT
-Content-Disposition: inline
-From: Nikanth Karthikesan <knikanth@suse.de>
-Date: Wed, 15 Apr 2009 16:09:30 +0530
+	n3FBwfYY260398 for <xfs@oss.sgi.com>; Wed, 15 Apr 2009 06:58:51 -0500
+Received: from mail.isg.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 478932172E0
+	for <xfs@oss.sgi.com>; Wed, 15 Apr 2009 04:58:22 -0700 (PDT)
+Received: from mail.isg.de (rzfoobar.is-asp.com [217.11.194.155]) by
+	cuda.sgi.com with ESMTP id VniAPHVRpA6btEda for
+	<xfs@oss.sgi.com>; Wed, 15 Apr 2009 04:58:22 -0700 (PDT)
+Message-ID: <49E5CBDD.3070302@isg.de>
+Date: Wed, 15 Apr 2009 13:58:21 +0200
+From: Peter Niemayer <niemayer@isg.de>
 MIME-Version: 1.0
-Message-Id: <200904151609.30677.knikanth@suse.de>
+Subject: Re: XFS support for TRIM / blkdev_issue_discard?
+References: <20090331053013.7642414167108@attica.americas.sgi.com>
+	<49E4A131.5040309@isg.de>
+	<BB5058FD-E69F-4254-9548-82CD634C7FD6@sgi.com>
+In-Reply-To: <BB5058FD-E69F-4254-9548-82CD634C7FD6@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,44 +25,22 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-masters@oss.sgi.com
-Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <jens.axboe@oracle.com>, xfs@oss.sgi.com
+To: Felix Blyakher <felixb@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Resending as I accidentally missed Jens earlier.
+FYI: I added my proposal to the Wiki:
 
-Jens, can you merge this as well.
+http://xfs.org/index.php/Support_discarding_of_unused_sectors
 
-Thanks
-Nikanth
+(plus a reference at http://xfs.org/index.php/Ideas_for_XFS )
 
-Remove code handling bio_alloc failure with __GFP_WAIT.
-GFP_NOIO implies __GFP_WAIT.
+Regards,
 
-Signed-off-by: Nikanth Karthikesan <knikanth@suse.de>
-
----
-
-diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
-index 7ec89fc..fb4f516 100644
---- a/fs/xfs/linux-2.6/xfs_aops.c
-+++ b/fs/xfs/linux-2.6/xfs_aops.c
-@@ -421,10 +421,7 @@ xfs_alloc_ioend_bio(
- 	struct bio		*bio;
- 	int			nvecs = bio_get_nr_vecs(bh->b_bdev);
- 
--	do {
--		bio = bio_alloc(GFP_NOIO, nvecs);
--		nvecs >>= 1;
--	} while (!bio);
-+	bio = bio_alloc(GFP_NOIO, nvecs);
- 
- 	ASSERT(bio->bi_private == NULL);
- 	bio->bi_sector = bh->b_blocknr * (bh->b_size >> 9);
-
+Peter Niemayer
 
 _______________________________________________
 xfs mailing list
