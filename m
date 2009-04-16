@@ -1,22 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3GGTTGS079278 for <xfs@oss.sgi.com>; Thu, 16 Apr 2009 11:29:46 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7F35B142875F
-	for <xfs@oss.sgi.com>; Thu, 16 Apr 2009 09:31:29 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id OMG4CcIAt4DasWbR for
-	<xfs@oss.sgi.com>; Thu, 16 Apr 2009 09:31:29 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1LuUSf-0004tO-MK
-	for xfs@oss.sgi.com; Thu, 16 Apr 2009 16:29:13 +0000
-Date: Thu, 16 Apr 2009 12:29:13 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfsprogs: set default prefix to /usr
-Message-ID: <20090416162913.GA493@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
+	n3GGbUxE079573 for <xfs@oss.sgi.com>; Thu, 16 Apr 2009 11:37:40 -0500
+Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3C7AE30407B
+	for <xfs@oss.sgi.com>; Thu, 16 Apr 2009 09:37:15 -0700 (PDT)
+Message-Id: <BC2CA326-C91F-4F2B-9183-236F42E5E224@sgi.com>
+From: Felix Blyakher <felixb@sgi.com>
+In-Reply-To: <20090409171412.GB25303@infradead.org>
+Mime-Version: 1.0 (Apple Message framework v926)
+Subject: Re: [PATCH 2/2] xfs: fix getbmap vs mmap deadlock
+Date: Thu, 16 Apr 2009 11:05:46 -0500
+References: <20090224133902.GC15820@infradead.org>
+	<2B47193B-9486-4500-80C4-E96750BEA54B@sgi.com>
+	<20090409171412.GB25303@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,29 +22,38 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Make sure the installation defaults to /usr like all the other xfs
-tools.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Apr 9, 2009, at 12:14 PM, Christoph Hellwig wrote:
 
-Index: xfsprogs-dev/configure.in
-===================================================================
---- xfsprogs-dev.orig/configure.in	2009-04-16 18:27:53.870074796 +0200
-+++ xfsprogs-dev/configure.in	2009-04-16 18:27:57.850950773 +0200
-@@ -2,6 +2,7 @@ AC_INIT(include/libxfs.h)
- AC_CONFIG_AUX_DIR([.])
- AC_CONFIG_MACRO_DIR([m4])
- AC_CONFIG_HEADER(include/platform_defs.h)
-+AC_PREFIX_DEFAULT(/usr)
- 
- AC_PROG_LIBTOOL
- 
+> On Mon, Apr 06, 2009 at 07:42:57PM -0500, Felix Blyakher wrote:
+>> Actually with the patch we either get all requested extents, or none
+>> if we fail to get memory for them.
+>> Should we teach the callers to expect ENOMEM and repeat the call
+>> to xfs_getbmap with smaller number of extents?
+>
+> The problem with any of that is that we don't actually get the exact
+> extent list but always a racy version.
+
+Agree, but the alternative is ENOMEM, i.e. no bmap
+at all.
+Since the callers of xfs_getbmap are only ioctl's from
+the user apps, we can move the logic of retrying the
+call with the smaller number of extents to the app with
+the understanding that it may not be exact snapshot of
+the file's extents on a very active file. That would mean
+that your change in kernel is good as is, but the API for
+the GETBMAP[X] is changing by allowing ENOMEM returned.
+We'll need to update the man page, and add ENOMEM handling
+to xfs_bmap/xfs_io.
+
+Felix
 
 _______________________________________________
 xfs mailing list
