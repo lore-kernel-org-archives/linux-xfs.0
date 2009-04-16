@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3GFssUx078011 for <xfs@oss.sgi.com>; Thu, 16 Apr 2009 10:55:09 -0500
-Received: from slurp.thebarn.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2307D1CC731C
-	for <xfs@oss.sgi.com>; Thu, 16 Apr 2009 08:54:17 -0700 (PDT)
-Received: from slurp.thebarn.com (cattelan-host202.dsl.visi.com
-	[208.42.117.202]) by cuda.sgi.com with ESMTP id
-	MlWPoLe5eP0rNbxW for <xfs@oss.sgi.com>;
-	Thu, 16 Apr 2009 08:54:17 -0700 (PDT)
-Message-ID: <49E754A0.30608@thebarn.com>
-Date: Thu, 16 Apr 2009 10:54:08 -0500
-From: Russell Cattelan <cattelan@thebarn.com>
+	n3GGTTGS079278 for <xfs@oss.sgi.com>; Thu, 16 Apr 2009 11:29:46 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7F35B142875F
+	for <xfs@oss.sgi.com>; Thu, 16 Apr 2009 09:31:29 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id OMG4CcIAt4DasWbR for
+	<xfs@oss.sgi.com>; Thu, 16 Apr 2009 09:31:29 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1LuUSf-0004tO-MK
+	for xfs@oss.sgi.com; Thu, 16 Apr 2009 16:29:13 +0000
+Date: Thu, 16 Apr 2009 12:29:13 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH] xfsprogs: set default prefix to /usr
+Message-ID: <20090416162913.GA493@infradead.org>
 MIME-Version: 1.0
-Subject: Re: future of xfs, oss.sgi.com after sgi purchased?
-References: <49E65044.8080802@tlinx.org>
-In-Reply-To: <49E65044.8080802@tlinx.org>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,78 +29,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "Linda A. Walsh" <xfs@tlinx.org>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Make sure the installation defaults to /usr like all the other xfs
+tools.
 
-Linda A. Walsh wrote:
-> Not one to beat about the bush, but curious from a practical sense,
->
-> If sgi is being bought by another company, is there any idea about
-> the plans
-> for the xfs file system or the source code on 'oss.sgi.com'?
->
-> I'm _guessing_ that there is some interest in users and developers
-> to keep xfs alive after the 'sgi' moniker is purchased, but that
-> begs the question about the new company wanting to support the old
-> 'sgi.com' websites including
-> oss.sgi.com.
-It is probably to soon to actually speculate as to what is going to
-happen with oss.sgi.com once the sale of SGI happens.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-But is it probably worth while to understand oss has been primarily a
-volunteer effort for probably the last 5 years or more.
-There is nobody at SGI officially responsible for oss, most of the
-system maintenance is handled by Trevor Hurst (who does work at sgi)
-and myself (who does not), and the efforts of other external
-volunteers. The system itself is 2 processor Altix owned and housed by
-SGI in one of their data
-centers in Chippewa Falls Wisconsin.
-
-The XFS project also has xfs.org, which I also maintain independent of
-SGI systems and I will continue to do so for as long
-as XFS is alive and kicking.
->
-> Is there a danger of oss.sgi.com suddenly being yanked offline with
-> little to no warning, such that community members should start
-> keeping up-to-date, or is it already mirrored?  I'm assuming that
-> the current source code repository only exists on oss.sgi.com?
-> Should it be mirrored on some other external open-source site?
-> sourceforge? google? mozilla?
-Most things (git, cvs, mail list/archives etc)  are being mirrored at
-xfs.org as a precautionary measure against any sort of outage for
-quite some time now.
-
-I highly doubt there will be any sudden "yanking" of systems.
-
->
-> Is completely worthless to discuss new, desired features in some of
-> the utils? Will it be possible to support the xfs codebase if its
-> development no longer becomes necessary to sgi (or its parent company)?
-Well that is up to you I suppose, but given the number of external
-people willing to keep XFS going I suspect you will be able
-to find more than enough conversation about future development.
-
->
-> *sigh*,
-> -linda
->
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (Darwin)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iD8DBQFJ51SgNRmM+OaGhBgRAl42AJ9E1KHX90q7rhqWMJBv9rFAImB2agCcCbuQ
-/0PfKtwNbNeGz3xR7CY5SsU=
-=5Vv2
------END PGP SIGNATURE-----
+Index: xfsprogs-dev/configure.in
+===================================================================
+--- xfsprogs-dev.orig/configure.in	2009-04-16 18:27:53.870074796 +0200
++++ xfsprogs-dev/configure.in	2009-04-16 18:27:57.850950773 +0200
+@@ -2,6 +2,7 @@ AC_INIT(include/libxfs.h)
+ AC_CONFIG_AUX_DIR([.])
+ AC_CONFIG_MACRO_DIR([m4])
+ AC_CONFIG_HEADER(include/platform_defs.h)
++AC_PREFIX_DEFAULT(/usr)
+ 
+ AC_PROG_LIBTOOL
+ 
 
 _______________________________________________
 xfs mailing list
