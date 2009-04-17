@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3HEcB6r141516 for <xfs@oss.sgi.com>; Fri, 17 Apr 2009 09:38:22 -0500
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A70058F80E7
-	for <xfs@oss.sgi.com>; Fri, 17 Apr 2009 07:37:56 -0700 (PDT)
-Message-Id: <38A1E278-0C68-4301-A68D-C326E945399B@sgi.com>
-From: Felix Blyakher <felixb@sgi.com>
-In-Reply-To: <49E77ACA.9060301@tlinx.org>
-Mime-Version: 1.0 (Apple Message framework v926)
-Subject: Re: getting changes (fixes or enhancements) to xfs-tools
-Date: Thu, 16 Apr 2009 16:15:35 -0500
-References: <49E65044.8080802@tlinx.org> <49E6B6F7.6030500@sandeen.net>
-	<49E6ED88.5020008@tlinx.org> <49E746A0.5020008@sandeen.net>
-	<49E77ACA.9060301@tlinx.org>
+	n3HFUYAb144758 for <xfs@oss.sgi.com>; Fri, 17 Apr 2009 10:30:45 -0500
+Received: from eu1sys200aog110.obsmtp.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B436B142D3CC
+	for <xfs@oss.sgi.com>; Fri, 17 Apr 2009 08:32:34 -0700 (PDT)
+Received: from eu1sys200aog110.obsmtp.com (eu1sys200aog110.obsmtp.com
+	[207.126.144.129]) by cuda.sgi.com with ESMTP id
+	DHOeY2FGCXKFB8ZN for <xfs@oss.sgi.com>;
+	Fri, 17 Apr 2009 08:32:34 -0700 (PDT)
+Message-ID: <49E8A081.7020200@st.com>
+Date: Fri, 17 Apr 2009 16:30:09 +0100
+From: Stuart MENEFY <stuart.menefy@st.com>
+MIME-Version: 1.0
+Subject: Re: Help debugging a use after free
+References: <49E37972.1070101@st.com> <49E4DF8C.4050800@thebarn.com>
+In-Reply-To: <49E4DF8C.4050800@thebarn.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,135 +24,115 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "Linda A. Walsh" <xfs@tlinx.org>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Russell Cattelan <cattelan@thebarn.com>
+Cc: xfs@oss.sgi.com
 
+Thanks for getting back to me.
 
-On Apr 16, 2009, at 1:36 PM, Linda A. Walsh wrote:
-
-> Eric Sandeen wrote:
->> Linda A. Walsh wrote:
->>> I can understand that for kernel work, but what about the xfs utils?
->> Again, just look at the git logs.
->> -Eric
-> ----
+Russell Cattelan wrote:
+> Stuart MENEFY wrote:
+>> Folks
+>> 
+>> For the last few days I've been trying to debug an apparent use
+>> after free in XFS code. This is in a 2.6.23.17 kernel on an SH4
+>> processor, so this could easily be an XFS problem which has already
+>> been solved, or an architecture problem. This started because I've
+>> been trying to work around the D-cache aliasing problems which the
+>> SH4 suffers from because of XFS's use of vmap, so its also possible
+>> this is an obscure aliasing problem. I've also been unable to
+>> reproduce it on an x86_64, albeit with a slightly later kernel.
+>> 
+>> The problem occurs when running a loop which is essentially: mount
+>> /dev/sda1 /mnt bonnie++  -u root -f -s0 -n16:1024:1024 -b -d /mnt
+>> umount /mnt on an otherwise clean partition, and usually takes at
+>> least 24 hours to appear.  The problem only occurs with SLAB
+>> poisoning enabled, and results in a misaligned access because the
+>> poison value when treated as a pointer is an illegal misaligned:
+>> 
+>> Unaligned kernel access on behalf of "bonnie++" pid=22419
+>> pc=0x841a6c6c ins=0x8433 Pid : 22419, Comm:             bonnie++ PC
+>> is at xfs_trans_unlocked_item+0xc/0x60 PC  : 841a6c6c SP  :
+>> 87f29d3c SR  : 40008000 TEA : 00402ebe    Not tainted R0  :
+>> 00000000 R1  : 841a6c60 R2  : 87f28000 R3  : 00000001 R4  :
+>> 6b6b6b6b R5  : 6b6b6b6b R6  : 843342ac R7  : 840139c0 R8  :
+>> 6b6b6b6b R9  : 6b6b6b6b R10 : 878cb000 R11 : 8452eb8c R12 :
+>> 00003255 R13 : 00000625 R14 : 87f29d4c MACH: 00000000 MACL:
+>> 0df75800 GBR : 297f9658 PR  : 84189d20
+>> 
+>> Call trace: [<84189d20>] xfs_iunlock+0x60/0xc0 [<841915da>]
+>> xfs_inode_item_push+0x1a/0x40 [<841a6ff4>]
+>> xfs_trans_push_ail+0x1b4/0x240 [<841971b6>]
+>> xlog_grant_push_ail+0xf6/0x180 [<8419961c>]
+>> xfs_log_reserve+0x3c/0xc0 [<841a540a>] xfs_trans_reserve+0x8a/0x220
+>>  [<8418d6f0>] xfs_itruncate_finish+0x170/0x420 [<841a7de0>]
+>> xfs_trans_ihold+0x0/0x20 [<841a7de0>] xfs_trans_ihold+0x0/0x20
+>> [<841a7e60>] xfs_trans_ijoin+0x0/0xa0 [<841b112a>]
+>> xfs_inactive+0x3ea/0x500 [<84189da0>] xfs_ilock+0x0/0xe0
+>> [<841bf75c>] xfs_fs_clear_inode+0x3c/0xa0 [<843379a0>]
+>> _spin_unlock+0x0/0x60 [<840818da>] clear_inode+0x5a/0x140
+>> [<84081a92>] generic_delete_inode+0xd2/0x120 [<84081bc6>]
+>> generic_drop_inode+0xe6/0x1c0 [<84080e2e>] iput+0x4e/0x80
+>> [<840764ba>] do_unlinkat+0xfa/0x1a0 [<8408fdba>] do_fsync+0x7a/0xe0
+>>  [<8408fe40>] __do_fsync+0x20/0x60 [<8407656e>] sys_unlink+0xe/0x20
+>>  [<84076560>] sys_unlink+0x0/0x20 [<840088f8>] syscall_call+0xa/0xe
+>> 
+>> 
+>> (Note that due to the way backtrace is implemented on SH
+>> architectures there are spurious values in this backtrace, so it is
+>> probably safe to ignore any entries of the form FN+0x0.)
+>> 
+>> The problem is caused by the "xfs_inode_t" which is passed into
+>> xfs_iunlock() having already been freed at the SLAB level. Putting
+>> some additional tracing code into the free path, this structure is
+>> being freed by xfs_inode_item_destroy(), which is called from from
+>> xfs_idestroy() which is called from xfs_ireclaim().
 >
->   I understand you want people to see the work that has gone into the
-> kernel, but telling someone to search through 1327 entries just to  
-> find
-> an answer of 'no', seems a bit ...something.
+> I guess the first question is which thread has actually free'ed the
+> inode? it sounds like a race
 
-Eric responded about xfs utilities, which are not in the kernel.
+> that seems unlikely unless you are on a multi processor system. I
+> don't know anything about the SH4 architecture
+> but I assume this is a single processor system?
 
->    FWIW: I copied all 1327 entries to a text file and searched for
-> any string "xfs[a-z]" to search for any comments about utility  
-> changes.
-> Only strings found were for the daemons that are run.
+Correct, its a simple, in-order, uni-processor system.
 
-Wrong log.
+> If you can instrument actually free that is causing the problem it
+> would be good to print out the
+> actually pid doing the free and as many return addresses that you can,
+> so we can get an
+> idea of the actual call chain.
 
->    Now that I've determined that the xfs utils are not in the kernel
-> source tree (I wouldn't have expected them to be), maybe I can more
-> be less indirect and ask: Who is managing the the xfs_utils,
+The free is coming from the xfssyncd thread, the back trace looks like:
 
-Me, as well as Christoph in a (cloned) kernel.org tree.
+[<8418d0e2>] xfs_idestroy+0x22/0x100
+[<8418a1b0>] xfs_ireclaim+0x50/0x80
+[<841ad7f2>] xfs_finish_reclaim+0x32/0x1c0
+[<841ada30>] xfs_finish_reclaim_all+0xb0/0x100
+[<8418a780>] xfs_ilock_nowait+0x0/0x160
+[<841a9df2>] xfs_syncsub+0x52/0x360
+[<84335108>] schedule_timeout+0x48/0x100
+[<841ab684>] xfs_sync+0x24/0x40
+[<841e0ce0>] list_add+0x0/0x20
+[<841c041c>] vfs_sync+0x1c/0x40
+[<841bf37c>] vfs_sync_worker+0x1c/0x60
+[<841bf6b6>] xfssyncd+0xb6/0x140
+[<8402f0dc>] kthread+0x3c/0x80
+[<84012440>] complete+0x0/0x60
+[<841bf600>] xfssyncd+0x0/0x140
+[<8402f060>] kthread_should_stop+0x0/0x20
+[<84003984>] kernel_thread_helper+0x4/0x20
+[<8402f0a0>] kthread+0x0/0x80
+[<84003980>] kernel_thread_helper+0x0/0x20
 
-> Where are
-> they kept and
+with the same warning that there are probably some spurious entries here.
 
-on oss as tarballs:
+As before, any suggestions welcome.
 
-ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsprogs-3.0.0.tar.gz
-ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsdump-3.0.0.tar.gz
-
-The tarballs release announcement was posted to this list.
-
-Or in the git repositories on oss:
-
-git://oss.sgi.com/xfs/cmds/xfsprogs.git
-git://oss.sgi.com/xfs/cmds/xfsdump.git
-
-and kernel.org:
-
-git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
-git://git.kernel.org/pub/scm/fs/xfs/xfsdump-dev.git
-
-
-> What is the procedure for trying to get changes (fixes
-> or enhancements) to them?   (I prefer direct questioning, but too many
-> people, even in the engineering/sw community,  find it rude or abrupt,
-> so it's not usually my 1st choice).
->
-> In other words, does one:
->
-> (I) suggest new ideas and if the keeper(s) likes them, they are
->    implemented and redistributed?
-
-You mean implemented by maintainer? Others?
-Sure, they well may be, but it would depend on priorities.
-
->  OR
-> (II.1) suggest new ideas and see if keeper(s) approve of 'project' so
-
-Yes, it prudent to get the nod from others about goodness
-of the idea before implementing it.
-
->    one can then go and
->    (i) implement the changes in a local version, and then?
->    	(a) check them in?
-
-into your local tree ...
-
->
->          OR
->        (b) submit for approval so they can be approved for
->            inclusion (or fixing any found problems)
-
-That would be the right way to get it into the tree.
-See Documentation/SubmittingPatches. The idea applies to
-patches in the userland as well. Actually, we treat
-utilities exactly the same way as the kernel xfs.
-
->  OR
-> (III) just go off and implement the code, then come back and say, hey,
->    here are my changes for this idea, and just expect to be greeted
->    with open arms?  ;^/
-
-That may well be the case. But it also could be just the opposite.
-So, it's prudent to check the idea first.
-
-> ---
-> (I hope I got the indentation and syntax correct in that, English
-> syntax isn't always the easiest language to express nested options
-> in...:-))
->
->    I'm trying to get clear on process.  If they are in the kernel
-> tree, there may be no way for me to get from A->B, othewise, I'm
-> trying to find out where one might have hope of bouncing ideas
-
-I guess, you're already aware about the xfs mailing list.
-Post them there.
-
-Hope that helps.
-Felix
-
-> that
-> might get implemented or that if sufficiently positively received
-> might spure someone to try implementing the changes themselves (and
-> possibly (and possibly get in completely over their head....or not.)
->
-> :-)
-> thanks!
-> -linda
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Stuart
 
 _______________________________________________
 xfs mailing list
