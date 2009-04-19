@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3JLp6ht011215 for <xfs@oss.sgi.com>; Sun, 19 Apr 2009 16:51:06 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A268D14328DC
-	for <xfs@oss.sgi.com>; Sun, 19 Apr 2009 14:53:33 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id Av3g2YRFPT14FpHQ for
-	<xfs@oss.sgi.com>; Sun, 19 Apr 2009 14:53:33 -0700 (PDT)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail.sandeen.net (Postfix) with ESMTP id F20EAAC358C
-	for <xfs@oss.sgi.com>; Sun, 19 Apr 2009 16:50:59 -0500 (CDT)
-Message-ID: <49EB9CC3.1000305@sandeen.net>
-Date: Sun, 19 Apr 2009 16:50:59 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: [PATCH] xfstests: skip fsr tests if xfs_fsr utils not found
+	n3JLhKCf010921 for <xfs@oss.sgi.com>; Sun, 19 Apr 2009 16:43:20 -0500
+Received: from josefsipek.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 89DB11CD0C2D
+	for <xfs@oss.sgi.com>; Sun, 19 Apr 2009 14:43:15 -0700 (PDT)
+Received: from josefsipek.net (josefsipek.net [141.211.133.196]) by
+	cuda.sgi.com with ESMTP id 7R03oQR4nBwU96Ir for
+	<xfs@oss.sgi.com>; Sun, 19 Apr 2009 14:43:15 -0700 (PDT)
+Date: Sun, 19 Apr 2009 17:43:15 -0400
+From: "Josef 'Jeff' Sipek" <jeffpc@josefsipek.net>
+Subject: Re: [PATCH] xfstests: skip dump tests if dump utils not found
+Message-ID: <20090419214315.GT3709@josefsipek.net>
 References: <49EB8F90.20705@sandeen.net>
+MIME-Version: 1.0
+Content-Disposition: inline
 In-Reply-To: <49EB8F90.20705@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -32,44 +28,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Similar to the xfsdump-related patch; gracefully fail
-if no xfs_fsr is found.
+On Sun, Apr 19, 2009 at 03:54:40PM -0500, Eric Sandeen wrote:
+> I was running xfstests on a NAS box which had no xfsdump,
+> and any tests which required xfsdump were failing in not-so-nice
+> ways:
+> 
+> > xfsdump not found
+> 038      [failed, exit status 1] - output mismatch (see 038.out.bad)
+> 
+> I think using _notrun is a lot better:
+> 
+> 038      [not run] xfsdump not found
+> 
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-I'll probably send another for the acl & attr userspace,
-it's actually not always installed on minimal boxes.
+Sounds good.
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
+Josef 'Jeff' Sipek.
 
-diff --git a/042 b/042
-index 7c2bcac..6628040 100755
---- a/042
-+++ b/042
-@@ -37,6 +37,8 @@ _supported_os IRIX Linux
- 
- _require_scratch
- 
-+[ "$XFS_FSR_PROG" = "" ] && _notrun "xfs_fsr not found"
-+
- _cull_files()
- {
-     perl -e "\$manifest=\"$tmp.manifest\";" -e '
-diff --git a/111 b/111
-index 060c0bc..3ce4ee1 100755
---- a/111
-+++ b/111
-@@ -27,6 +27,8 @@ _supported_fs xfs
- _supported_os Linux
- _require_scratch
- 
-+[ "$XFS_FSR_PROG" = "" ] && _notrun "xfs_fsr not found"
-+
- # real QA test starts here
- umount $SCRATCH_DEV 2>/dev/null
- MKFS_OPTIONS="-bsize=4096"
-
+-- 
+Bad pun of the week: The formula 1 control computer suffered from a race
+condition
 
 _______________________________________________
 xfs mailing list
