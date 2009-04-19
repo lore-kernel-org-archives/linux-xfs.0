@@ -1,21 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3JFpYbQ258284 for <xfs@oss.sgi.com>; Sun, 19 Apr 2009 10:51:34 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E664C1432290
-	for <xfs@oss.sgi.com>; Sun, 19 Apr 2009 08:53:58 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id n2UXMgDt6DmqtewH for
-	<xfs@oss.sgi.com>; Sun, 19 Apr 2009 08:53:58 -0700 (PDT)
-Message-ID: <49EB487C.1020205@sandeen.net>
-Date: Sun, 19 Apr 2009 10:51:24 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: XFS support for TRIM / blkdev_issue_discard?
-References: <20090331053013.7642414167108@attica.americas.sgi.com>	<49E4A131.5040309@isg.de>	<BB5058FD-E69F-4254-9548-82CD634C7FD6@sgi.com>
-	<20090419081927.GE16929@discord.disaster>
-In-Reply-To: <20090419081927.GE16929@discord.disaster>
+	n3JGdTk0260387 for <xfs@oss.sgi.com>; Sun, 19 Apr 2009 11:39:30 -0500
+Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8F430AC005
+	for <xfs@oss.sgi.com>; Sun, 19 Apr 2009 09:39:22 -0700 (PDT)
+Message-Id: <81FBAD0F-AE2A-4780-BC8B-135C4CCE8D3A@sgi.com>
+From: Felix Blyakher <felixb@sgi.com>
+In-Reply-To: <20090418050544.GQ3709@josefsipek.net>
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Subject: Re: [PATCH] xfs: add more checks to superblock validation
+Date: Sun, 19 Apr 2009 11:39:20 -0500
+References: <1240002765-20279-1-git-send-email-felixb@sgi.com>
+	<20090418050544.GQ3709@josefsipek.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,36 +21,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Peter Niemayer <niemayer@isg.de>, xfs@oss.sgi.com
+To: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
+Cc: xfs@oss.sgi.com
 
-Dave Chinner wrote:
-> On Tue, Apr 14, 2009 at 01:32:35PM -0500, Felix Blyakher wrote:
->> On Apr 14, 2009, at 9:44 AM, Peter Niemayer wrote:
+
+On Apr 18, 2009, at 12:05 AM, Josef 'Jeff' Sipek wrote:
+
+> On Fri, Apr 17, 2009 at 04:12:45PM -0500, Felix Blyakher wrote:
+>> From: Olaf Weber <olaf@sgi.com>
 >>
->>> Dear Felix Blyakher,
->> Hi Peter,
+>> There had been reports where xfs filesystem was randomly
+>> corrupted with fsfuzzer, and xfs failed to handle it
+>> gracefully. This patch fixes couple of reported problem
+>> by providing additional checks in the superblock
+>> validation routine.
 >>
->>> do you know whether there are plans to support the ATA TRIM command /
->>> blkdev_issue_discard() call in XFS for Linux anytime soon?
->> This topic was indeed brought up in xfs discussions.
->> Though, we don't have any definite plans on supporting it yet.
-> 
-> I did some initial work on tracking extents being freed, but then
-> the TRIM request morphed into a "tell the largest free space around
-> the area just freed" and that is much harder to do than simply to
-> issue a "we just freed this bit" command.
+>> Signed-off-by: Felix Blyakher <felixb@sgi.com>
+>
+> Since this patch is from Olaf, shouldn't he have a s-o-b line as well?
 
-FWIW, ext[34] is still doing it block by block.  At least for SSDs, I
-think that's fine, isn't it?  For think provisioning it might be
-different.  I  think (?) the simply block-by-block free is still
-relevant, no?
+I was following the guidelines from the SubmittingPatches:
 
--Eric
+The "from" line must be the very first line in the message body,
+and has the form:
+
+         From: Original Author <author@example.com>
+
+The "from" line specifies who will be credited as the author of the
+patch in the permanent changelog.  If the "from" line is missing,
+then the "From:" line from the email header will be used to determine
+the patch author in the changelog.
+
+
+So, is "From:" enough here, or "Signed-off-by" is needed as well?
+
+Felix
+
+> I'm not really familiar with this part of the code...but it looks  
+> fine to
+> me.
+>
+> Josef 'Jeff' Sipek.
+>
+> -- 
+> Fact: 29.6% of all statistics are generated randomly.
 
 _______________________________________________
 xfs mailing list
