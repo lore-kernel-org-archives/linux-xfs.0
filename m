@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3JMEvlZ012393 for <xfs@oss.sgi.com>; Sun, 19 Apr 2009 17:14:57 -0500
+	n3JME6Kb012343 for <xfs@oss.sgi.com>; Sun, 19 Apr 2009 17:14:06 -0500
 Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 59A2130408C
-	for <xfs@oss.sgi.com>; Sun, 19 Apr 2009 15:14:50 -0700 (PDT)
-Message-Id: <0919D52D-307F-4259-B4A6-2A585E2141A5@sgi.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8FE198F8050
+	for <xfs@oss.sgi.com>; Sun, 19 Apr 2009 15:13:59 -0700 (PDT)
+Message-Id: <4A888B06-6722-49B2-BE3D-84F0DB6DA5D6@sgi.com>
 From: Felix Blyakher <felixb@sgi.com>
-In-Reply-To: <49EB9CC3.1000305@sandeen.net>
+In-Reply-To: <49EB8F90.20705@sandeen.net>
 Mime-Version: 1.0 (Apple Message framework v930.3)
-Subject: Re: [PATCH] xfstests: skip fsr tests if xfs_fsr utils not found
-Date: Sun, 19 Apr 2009 17:14:49 -0500
-References: <49EB8F90.20705@sandeen.net> <49EB9CC3.1000305@sandeen.net>
+Subject: Re: [PATCH] xfstests: skip dump tests if dump utils not found
+Date: Sun, 19 Apr 2009 17:13:58 -0500
+References: <49EB8F90.20705@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,17 +28,22 @@ To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
 
-On Apr 19, 2009, at 4:50 PM, Eric Sandeen wrote:
+On Apr 19, 2009, at 3:54 PM, Eric Sandeen wrote:
 
-> Similar to the xfsdump-related patch; gracefully fail
-> if no xfs_fsr is found.
+> I was running xfstests on a NAS box which had no xfsdump,
+> and any tests which required xfsdump were failing in not-so-nice
+> ways:
 >
-> I'll probably send another for the acl & attr userspace,
-> it's actually not always installed on minimal boxes.
+>> xfsdump not found
+> 038      [failed, exit status 1] - output mismatch (see 038.out.bad)
+>
+> I think using _notrun is a lot better:
+>
+> 038      [not run] xfsdump not found
 >
 > Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-Looks good.
+Seems good.
 
 Felix
 
