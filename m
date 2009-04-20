@@ -1,16 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3K12oJ1018367 for <xfs@oss.sgi.com>; Sun, 19 Apr 2009 20:02:50 -0500
-Date: Mon, 20 Apr 2009 11:02:37 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [xfs-masters] [RESEND][PATCH 6/7] xfs: Remove code handling
-	bio_alloc failure with __GFP_WAIT
-Message-ID: <20090420010237.GF16929@discord.disaster>
-References: <200904151609.30677.knikanth@suse.de>
+	n3K2YViH021160 for <xfs@oss.sgi.com>; Sun, 19 Apr 2009 21:34:31 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 725081432FBB
+	for <xfs@oss.sgi.com>; Sun, 19 Apr 2009 19:36:59 -0700 (PDT)
+Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
+	cuda.sgi.com with ESMTP id 9WEfuR23OGx7C6pY for
+	<xfs@oss.sgi.com>; Sun, 19 Apr 2009 19:36:59 -0700 (PDT)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail.sandeen.net (Postfix) with ESMTP id 784D5A9ABC2
+	for <xfs@oss.sgi.com>; Sun, 19 Apr 2009 21:34:24 -0500 (CDT)
+Message-ID: <49EBDF30.90702@sandeen.net>
+Date: Sun, 19 Apr 2009 21:34:24 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <200904151609.30677.knikanth@suse.de>
+Subject: [PATCH, RFC] put xfs build features into the stats file
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,38 +30,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Nikanth Karthikesan <knikanth@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, xfs@oss.sgi.com, Jens Axboe <jens.axboe@oracle.com>
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Apr 15, 2009 at 04:09:30PM +0530, Nikanth Karthikesan wrote:
-> Resending as I accidentally missed Jens earlier.
-> 
-> Jens, can you merge this as well.
-> 
-> Thanks
-> Nikanth
-> 
-> Remove code handling bio_alloc failure with __GFP_WAIT.
-> GFP_NOIO implies __GFP_WAIT.
+Running xfstests on an xfs build w/o xattrs enabled, I realized
+there's no reliable way to see if the running xfs has various
+features other than debug (which is shown in /proc/fs/xfs/stat)
 
-Not sure that is right. The intent of the code is that if we can't
-get a large bio immediately, try a smaller one which is more likely
-to succeed when we are under memory pressure. i.e. we will get IO
-moving faster than if we waited for a maximally sized biovec to be
-allocated.
+What do folks think of adding the BUILD_OPTIONS to this file
+as well?
 
-IOWs, I don't think __GFP_WAIT is implied by this code, regardless
-of what GFP_NOIO actually means now. The same code fragment can be
-found in NILFS, and it uses GFP_NOWAIT, not GFP_NOIO. I suspect that
-this is what this XFS code should be changed to use to retain the
-original intent of the code....
+# cat /proc/fs/xfs/stat
+extent_alloc 0 0 0 0
+...
+xpc 0 0 0
+debug 0
+features security attributes, large block numbers, no debug 
 
-Cheers,
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
 
-Dave.
--- 
-Dave Chinner
-dgc@evostor.com
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_stats.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_stats.c
++++ linux-2.6/fs/xfs/linux-2.6/xfs_stats.c
+@@ -89,6 +89,8 @@ xfs_read_xfsstats(
+ 		0);
+ #endif
+ 
++	len += sprintf(buffer + len, "features " XFS_BUILD_OPTIONS "\n");
++
+ 	if (offset >= len) {
+ 		*start = buffer;
+ 		*eof = 1;
 
 _______________________________________________
 xfs mailing list
