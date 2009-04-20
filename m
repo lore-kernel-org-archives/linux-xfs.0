@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3K314ds022364 for <xfs@oss.sgi.com>; Sun, 19 Apr 2009 22:01:04 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2F71D1CD1182
-	for <xfs@oss.sgi.com>; Sun, 19 Apr 2009 20:00:59 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id CTTldFx7CWDGn0a0 for
-	<xfs@oss.sgi.com>; Sun, 19 Apr 2009 20:00:59 -0700 (PDT)
-Message-ID: <49EBE56A.1070906@sandeen.net>
-Date: Sun, 19 Apr 2009 22:00:58 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	n3K7gUGm038745 for <xfs@oss.sgi.com>; Mon, 20 Apr 2009 02:42:31 -0500
+Received: from mail-gx0-f167.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 798EC22631C
+	for <xfs@oss.sgi.com>; Mon, 20 Apr 2009 00:42:25 -0700 (PDT)
+Received: from mail-gx0-f167.google.com (mail-gx0-f167.google.com
+	[209.85.217.167]) by cuda.sgi.com with ESMTP id
+	FQ6F8JK4WoWmZ9TL for <xfs@oss.sgi.com>;
+	Mon, 20 Apr 2009 00:42:25 -0700 (PDT)
+Received: by gxk11 with SMTP id 11so2260523gxk.20
+	for <xfs@oss.sgi.com>; Mon, 20 Apr 2009 00:42:25 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [PATCH, RFC] put xfs build features into the stats file
-References: <1520890652.3597921240196368192.JavaMail.root@mail-au.aconex.com>
-In-Reply-To: <1520890652.3597921240196368192.JavaMail.root@mail-au.aconex.com>
+In-Reply-To: <a4423d670904150543w3d6e1371i874618c6bd8bbd0e@mail.gmail.com>
+References: <a4423d670904150543w3d6e1371i874618c6bd8bbd0e@mail.gmail.com>
+Date: Mon, 20 Apr 2009 11:42:25 +0400
+Message-ID: <a4423d670904200042r476aa2d2p9b8125fe3c8600ac@mail.gmail.com>
+Subject: Re: 2.6.30-rc2: BUG: MAX_LOCKDEP_ENTRIES too low! when mounting
+	rootfs
+From: Alexander Beregalov <a.beregalov@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,26 +27,75 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Nathan Scott <nscott@aconex.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: LKML <linux-kernel@vger.kernel.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Ingo Molnar <mingo@elte.hu>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Peter Zijlstra <peterz@infradead.org>, xfs@oss.sgi.com
 
-Nathan Scott wrote:
-> Separate file?  That line uses a comma separator ... differs to
-> every other line in that stats file, painful for parsers.  And
-> no risk of breaking anything if its a separate file.
-> 
-> cheers.
-
-Hm good point.  Might do; not that big a deal, just wanted to be able to
-gracefully skip acl/attr xfstests if the xfs build didn't support it :)
-
--Eric
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+MjAwOS80LzE1IEFsZXhhbmRlciBCZXJlZ2Fsb3YgPGEuYmVyZWdhbG92QGdtYWlsLmNvbT46Cj4g
+SGkKPgo+IGJueDI6IGV0aDAgTklDIENvcHBlciBMaW5rIGlzIFVwLCAxMDAwIE1icHMgZnVsbCBk
+dXBsZXgsIHJlY2VpdmUgJgo+IHRyYW5zbWl0IGZsb3cgY29udHJvbCBPTgo+IEJVRzogTUFYX0xP
+Q0tERVBfRU5UUklFUyB0b28gbG93IQo+IHR1cm5pbmcgb2ZmIHRoZSBsb2NraW5nIGNvcnJlY3Ru
+ZXNzIHZhbGlkYXRvci4KPiBQaWQ6IDIzODIsIGNvbW06IG1vdW50IFRhaW50ZWQ6IEcgwqAgwqAg
+wqAgwqBXIMKgMi42LjMwLXJjMi1kaXJ0eSAjMTIxCj4gQ2FsbCBUcmFjZToKPiDCoFs8ZmZmZmZm
+ZmY4MDI4MGFhNz5dIGFkZF9sb2NrX3RvX2xpc3QrMHhmNy8weDExMAo+IMKgWzxmZmZmZmZmZjgw
+MjgyYWQxPl0gPyBjaGVja19pcnFfdXNhZ2UrMHhiMS8weDExMAo+IMKgWzxmZmZmZmZmZjgwMmRm
+NzNjPl0gPyBsb2NrX3N1cGVyKzB4M2MvMHg2MAo+IMKgWzxmZmZmZmZmZjgwMjg0ZjIwPl0gX19s
+b2NrX2FjcXVpcmUrMHhlODAvMHgxMmIwCj4gwqBbPGZmZmZmZmZmODAyZGY3M2M+XSA/IGxvY2tf
+c3VwZXIrMHgzYy8weDYwCj4gwqBbPGZmZmZmZmZmODAyODUzZjA+XSBsb2NrX2FjcXVpcmUrMHhh
+MC8weGUwCj4gwqBbPGZmZmZmZmZmODAyZGY3M2M+XSA/IGxvY2tfc3VwZXIrMHgzYy8weDYwCj4g
+wqBbPGZmZmZmZmZmODA1ZjBiNTA+XSA/IHVzYmZzX2ZpbGxfc3VwZXIrMHgwLzB4ZTAKPiDCoFs8
+ZmZmZmZmZmY4MDZkOTE3OD5dIF9fbXV0ZXhfbG9ja19jb21tb24rMHg2OC8weDUwMAo+IMKgWzxm
+ZmZmZmZmZjgwMmRmNzNjPl0gPyBsb2NrX3N1cGVyKzB4M2MvMHg2MAo+IMKgWzxmZmZmZmZmZjgw
+MmRmNzNjPl0gPyBsb2NrX3N1cGVyKzB4M2MvMHg2MAo+IMKgWzxmZmZmZmZmZjgwNWYwYjUwPl0g
+PyB1c2Jmc19maWxsX3N1cGVyKzB4MC8weGUwCj4gwqBbPGZmZmZmZmZmODA2ZDk3Mzg+XSBtdXRl
+eF9sb2NrX25lc3RlZCsweDQ4LzB4NzAKPiDCoFs8ZmZmZmZmZmY4MDJkZjczYz5dIGxvY2tfc3Vw
+ZXIrMHgzYy8weDYwCj4gwqBbPGZmZmZmZmZmODAyZGZhN2E+XSBfX2ZzeW5jX3N1cGVyKzB4MmEv
+MHhhMAo+IMKgWzxmZmZmZmZmZjgwMmRmYjEwPl0gZnN5bmNfc3VwZXIrMHgyMC8weDUwCj4gwqBb
+PGZmZmZmZmZmODAyZjFmNzA+XSA/IHNocmlua19kY2FjaGVfc2IrMHgyMC8weDQwCj4gwqBbPGZm
+ZmZmZmZmODAyZGZiOGM+XSBkb19yZW1vdW50X3NiKzB4NGMvMHgyNTAKPiDCoFs8ZmZmZmZmZmY4
+MDJlMDhhNT5dIGdldF9zYl9zaW5nbGUrMHg3NS8weDEwMAo+IMKgWzxmZmZmZmZmZjgwNWYwMmI5
+Pl0gdXNiX2dldF9zYisweDI5LzB4NTAKPiDCoFs8ZmZmZmZmZmY4MDJkZjBlNz5dIHZmc19rZXJu
+X21vdW50KzB4NjcvMHhmMAo+IMKgWzxmZmZmZmZmZjgwMmY5NDJkPl0gPyBnZXRfZnNfdHlwZSsw
+eDRkLzB4ZjAKPiDCoFs8ZmZmZmZmZmY4MDJkZjIxZD5dIGRvX2tlcm5fbW91bnQrMHg1ZC8weDEz
+MAo+IMKgWzxmZmZmZmZmZjgwMmZjZDg4Pl0gZG9fbW91bnQrMHgyZTgvMHg5MzAKPiDCoFs8ZmZm
+ZmZmZmY4MDJhOTk2ZT5dID8gX19nZXRfZnJlZV9wYWdlcysweDJlLzB4ODAKPiDCoFs8ZmZmZmZm
+ZmY4MDJmZDRiMD5dIHN5c19tb3VudCsweGUwLzB4MTIwCj4gwqBbPGZmZmZmZmZmODAyMGJhNmI+
+XSBzeXN0ZW1fY2FsbF9mYXN0cGF0aCsweDE2LzB4MWIKCkFub3RoZXIgb25lIHdpdGggWEZTCgpC
+VUc6IE1BWF9MT0NLREVQX0VOVFJJRVMgdG9vIGxvdyEKdHVybmluZyBvZmYgdGhlIGxvY2tpbmcg
+Y29ycmVjdG5lc3MgdmFsaWRhdG9yLgpQaWQ6IDE3MTcsIGNvbW06IG12IFRhaW50ZWQ6IEcgICAg
+ICAgIFcgIDIuNi4zMC1yYzItMDA0MjktZ2Q5MWRmYmItZGlydHkgIzM4CkNhbGwgVHJhY2U6CiBb
+PGZmZmZmZmZmODAyN2U0ZDc+XSBhZGRfbG9ja190b19saXN0KzB4ZjcvMHgxMTAKIFs8ZmZmZmZm
+ZmY4MDI4MDUwMT5dID8gY2hlY2tfaXJxX3VzYWdlKzB4YjEvMHgxMTAKIFs8ZmZmZmZmZmY4MDQx
+YWZhMj5dID8geGZzX21vZF9pbmNvcmVfc2JfYmF0Y2grMHg0Mi8weDE4MAogWzxmZmZmZmZmZjgw
+MjgyOTMwPl0gX19sb2NrX2FjcXVpcmUrMHhlNjAvMHgxMjkwCiBbPGZmZmZmZmZmODA0ZGJmM2U+
+XSA/IGRlYnVnX2NoZWNrX25vX29ial9mcmVlZCsweGFlLzB4MjEwCiBbPGZmZmZmZmZmODAyODFk
+YTc+XSA/IF9fbG9ja19hY3F1aXJlKzB4MmQ3LzB4MTI5MAogWzxmZmZmZmZmZjgwNDFhZmEyPl0g
+PyB4ZnNfbW9kX2luY29yZV9zYl9iYXRjaCsweDQyLzB4MTgwCiBbPGZmZmZmZmZmODAyODJlMDA+
+XSBsb2NrX2FjcXVpcmUrMHhhMC8weGUwCiBbPGZmZmZmZmZmODA0MWFmYTI+XSA/IHhmc19tb2Rf
+aW5jb3JlX3NiX2JhdGNoKzB4NDIvMHgxODAKIFs8ZmZmZmZmZmY4MDRkYzAyYz5dID8gZGVidWdf
+Y2hlY2tfbm9fb2JqX2ZyZWVkKzB4MTljLzB4MjEwCiBbPGZmZmZmZmZmODA2ZDkyZGI+XSBfc3Bp
+bl9sb2NrKzB4NGIvMHhhMAogWzxmZmZmZmZmZjgwNDFhZmEyPl0gPyB4ZnNfbW9kX2luY29yZV9z
+Yl9iYXRjaCsweDQyLzB4MTgwCiBbPGZmZmZmZmZmODAyN2Q4MDA+XSA/IHRyYWNlX2hhcmRpcnFz
+X29mZisweDIwLzB4NDAKIFs8ZmZmZmZmZmY4MDQxYWZhMj5dIHhmc19tb2RfaW5jb3JlX3NiX2Jh
+dGNoKzB4NDIvMHgxODAKIFs8ZmZmZmZmZmY4MDQxZTlhMD5dIHhmc190cmFuc191bnJlc2VydmVf
+YW5kX21vZF9zYisweDI2MC8weDMxMAogWzxmZmZmZmZmZjgwMjgxMTMwPl0gPyB0cmFjZV9oYXJk
+aXJxc19vbisweDIwLzB4NDAKIFs8ZmZmZmZmZmY4MDQwY2ViNz5dID8geGZzX2xvZ190aWNrZXRf
+cHV0KzB4NTcvMHg4MAogWzxmZmZmZmZmZjgwNDBjZWI3Pl0gPyB4ZnNfbG9nX3RpY2tldF9wdXQr
+MHg1Ny8weDgwCiBbPGZmZmZmZmZmODA0MGZmZDk+XSA/IHhmc19sb2dfZG9uZSsweDg5LzB4ZjAK
+IFs8ZmZmZmZmZmY4MDQxZjkwOT5dIF94ZnNfdHJhbnNfY29tbWl0KzB4MjI5LzB4NDUwCiBbPGZm
+ZmZmZmZmODA0MWNkMDM+XSB4ZnNfcmVuYW1lKzB4NTYzLzB4N2MwCiBbPGZmZmZmZmZmODAyODEw
+YWQ+XSA/IHRyYWNlX2hhcmRpcnFzX29uX2NhbGxlcisweDE4ZC8weDFmMAogWzxmZmZmZmZmZjgw
+MmU2NDhlPl0gPyB2ZnNfcmVuYW1lKzB4MTRlLzB4NDEwCiBbPGZmZmZmZmZmODA0MzRkYzQ+XSB4
+ZnNfdm5fcmVuYW1lKzB4NzQvMHhhMAogWzxmZmZmZmZmZjgwMmU2NGY4Pl0gdmZzX3JlbmFtZSsw
+eDFiOC8weDQxMAogWzxmZmZmZmZmZjgwNmQ5YjRmPl0gPyBfc3Bpbl91bmxvY2srMHgzZi8weDgw
+CiBbPGZmZmZmZmZmODAyZTkyZGI+XSBzeXNfcmVuYW1lYXQrMHgyM2IvMHgyODAKIFs8ZmZmZmZm
+ZmY4MDZkOWZmNT5dID8gX3NwaW5fdW5sb2NrX2lycXJlc3RvcmUrMHg1NS8weGIwCiBbPGZmZmZm
+ZmZmODA0ZDBkMTA+XSA/IF9fdXBfcmVhZCsweDkwLzB4ZDAKIFs8ZmZmZmZmZmY4MDIwYzRhZD5d
+ID8gcmV0aW50X3N3YXBncysweGUvMHgxMwogWzxmZmZmZmZmZjgwMjgxMGFkPl0gPyB0cmFjZV9o
+YXJkaXJxc19vbl9jYWxsZXIrMHgxOGQvMHgxZjAKIFs8ZmZmZmZmZmY4MDJlOTM0OT5dIHN5c19y
+ZW5hbWUrMHgyOS8weDUwCiBbPGZmZmZmZmZmODAyMGJhNmI+XSBzeXN0ZW1fY2FsbF9mYXN0cGF0
+aCsweDE2LzB4MWIKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9t
+YWlsbWFuL2xpc3RpbmZvL3hmcwo=
