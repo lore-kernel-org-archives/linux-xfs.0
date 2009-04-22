@@ -1,20 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3M37UqV167779 for <xfs@oss.sgi.com>; Tue, 21 Apr 2009 22:07:32 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C16DB22E970
-	for <xfs@oss.sgi.com>; Tue, 21 Apr 2009 20:07:24 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31]) by cuda.sgi.com
-	with ESMTP id b7xWsAH0DQA1rkkP for <xfs@oss.sgi.com>;
-	Tue, 21 Apr 2009 20:07:24 -0700 (PDT)
-Date: Tue, 21 Apr 2009 23:06:56 -0400 (EDT)
-From: Lachlan McIlroy <lmcilroy@redhat.com>
-Message-ID: <811197347.242901240369616266.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
-In-Reply-To: <1416563271.242851240369384712.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
-Subject: Re: Oops at xfs_bmbt_get_startoff in SLES 10 2.6.16
+	n3M6lhax186658 for <xfs@oss.sgi.com>; Wed, 22 Apr 2009 01:47:44 -0500
+From: Nikanth Karthikesan <knikanth@suse.de>
+Subject: [PATCH] xfs: fix xfs_alloc_ioend_bio code to try and get atleast a
+	smaller bio
+Date: Wed, 22 Apr 2009 12:15:17 +0530
+References: <200904151609.30677.knikanth@suse.de>
+	<20090420010237.GF16929@discord.disaster>
+In-Reply-To: <20090420010237.GF16929@discord.disaster>
 MIME-Version: 1.0
-Reply-To: Lachlan McIlroy <lmcilroy@redhat.com>
+Content-Disposition: inline
+Message-Id: <200904221215.18335.knikanth@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,77 +24,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, xfs@oss.sgi.com, Jens Axboe <jens.axboe@oracle.com>
 
------ "Eric Sandeen" <sandeen@sandeen.net> wrote:
+The intent of the code in xfs_alloc_ioend_bio() is that if we can't get a
+large bio immediately, try a smaller one which is more likely to succeed when
+we are under memory pressure. i.e. we will get IO moving faster than if we
+waited for a maximally sized biovec to be allocated. But GFP_NOIO implies
+__GFP_WAIT which would return only if it can allocate the bio. So the first
+attempt to get a larger bio itself would return only after it succeeds, which
+makes the logic useless.
 
-> Felix Blyakher wrote:
-> > On Apr 21, 2009, at 9:32 PM, Eric Sandeen wrote:
-> > 
-> >> Felix Blyakher wrote:
-> >>> On Apr 21, 2009, at 9:16 PM, Eric Sandeen wrote:
-> >>>
-> >>>> Kevin Jamieson wrote:
-> >>>>> On Thu, March 12, 2009 4:13 pm, Kevin Jamieson wrote:
-> >>>>>> On Thu, March 12, 2009 12:23 pm, Eric Sandeen wrote:
-> >>>>>>
-> >>>>>>> For SLES that usually is the best route...
-> >>>>>>>
-> >>>>>>> However,
-> http://oss.sgi.com/archives/xfs/2009-02/msg00220.html
-> >>>>>>> looks
-> >>>>>>> applicable... don't think it ever got merged though.
-> >>>>>>>
-> >>>>>>> perhaps you could test it?
-> >>>>>> Thanks, Eric. I will test Lachlan's patch on our system.
-> >>>>> To follow this up, since applying the patch from the above
-> thread
-> >>>>> there
-> >>>>> have been no re-occurrences of the issue on our test servers
-> over
-> >>>>> the past
-> >>>>> month.
-> >>>> And you hit it pretty reliably before, right?  Sounds like we
-> need  
-> >>>> to
-> >>>> give that a pretty strong eyeball and get it merged, perhaps.
-> >>> I was looking at this patch too.
-> >>> But I could never reproduce the problem, even with Lachlan's test
-> >>> program. Kevin, any idea what kind of io load triggered this
-> problem?
-> >>> The patch looks right, but I really want to prove the problem
-> >>> exists, and the patch addresses it.
-> >>>
-> >>> Felix
-> >>>
-> >> FWIW I can't reproduce either, with the stated commandline.
-> >>
-> >> Should try it with a 1k blocksize, though - maybe Lachlan tested 4k
-> on
-> >> 16k page ia64?
-> > 
-> > That's what I've tested on.
-> 
-> Ah, well, I just spoke with Lachlan and he said he tested on x86_64,
-> 4k/4k.  So hrm...
-You'll probably need to tweak the arguments to the test program to
-generate the precise senario to trigger the race.  I remember having
-to play around with them until I got it to crash reliably.  It will
-depend on how fast your CPUs are, how much of the file is cached before
-it is paged to disk, how fast the disks are, etc...
+Change it to try with GFP_NOWAIT for a bio. If not possible wait for it.
 
-The race requires a thread to be executing xfs_file_last_byte() while
-another thread is modifying the file's extent map - in particular
-shrinking the extent map by merging extents.
+See http://oss.sgi.com/archives/xfs-masters/2009-04/msg00027.html for the
+discussion.
 
-> 
-> -Eric
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Signed-off-by: Nikanth Karthikesan <knikanth@suse.de>
+
+---
+
+diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
+index 7ec89fc..002ce7f 100644
+--- a/fs/xfs/linux-2.6/xfs_aops.c
++++ b/fs/xfs/linux-2.6/xfs_aops.c
+@@ -419,12 +419,15 @@ xfs_alloc_ioend_bio(
+ 	struct buffer_head	*bh)
+ {
+ 	struct bio		*bio;
+-	int			nvecs = bio_get_nr_vecs(bh->b_bdev);
++	int			nr_iovecs = bio_get_nr_vecs(bh->b_bdev);
++	int			nvecs = nr_iovecs;
+ 
+ 	do {
+-		bio = bio_alloc(GFP_NOIO, nvecs);
+-		nvecs >>= 1;
+-	} while (!bio);
++		bio = bio_alloc(GFP_NOWAIT, nvecs);
++	} while (!bio && (nvecs >>= 1));
++
++	if (unlikely(!bio))
++		bio = bio_alloc(GFP_NOIO, nr_iovecs);
+ 
+ 	ASSERT(bio->bi_private == NULL);
+ 	bio->bi_sector = bh->b_blocknr * (bh->b_size >> 9);
 
 _______________________________________________
 xfs mailing list
