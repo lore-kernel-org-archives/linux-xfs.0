@@ -1,17 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3M6lhax186658 for <xfs@oss.sgi.com>; Wed, 22 Apr 2009 01:47:44 -0500
-From: Nikanth Karthikesan <knikanth@suse.de>
-Subject: [PATCH] xfs: fix xfs_alloc_ioend_bio code to try and get atleast a
-	smaller bio
-Date: Wed, 22 Apr 2009 12:15:17 +0530
-References: <200904151609.30677.knikanth@suse.de>
-	<20090420010237.GF16929@discord.disaster>
-In-Reply-To: <20090420010237.GF16929@discord.disaster>
+	n3M9jXFc192114 for <xfs@oss.sgi.com>; Wed, 22 Apr 2009 04:45:33 -0500
+Received: from pond.fysh.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 020F722F99C
+	for <xfs@oss.sgi.com>; Wed, 22 Apr 2009 02:45:28 -0700 (PDT)
+Received: from pond.fysh.org (pond.fysh.org [166.84.7.109]) by cuda.sgi.com
+	with ESMTP id svqsscZZQFo0GtqR for <xfs@oss.sgi.com>;
+	Wed, 22 Apr 2009 02:45:28 -0700 (PDT)
+Received: from mike by pond.fysh.org with local (Exim 4.69 #1 (Debian))
+	id 1LwZ1D-0006gN-Um
+	for xfs@oss.sgi.com; Wed, 22 Apr 2009 10:45:28 +0100
+Date: Wed, 22 Apr 2009 10:45:27 +0100
+From: Mike Ashton <mike@fysh.org>
+Subject: Re: fsck.xfs proposed improvements
+Message-ID: <20090422094527.GA16600@fysh.org>
+References: <mailman.0.1240318659.128675.xfs@oss.sgi.com>
+	<20090421142333.GA5197@fysh.org> <49EE441E.6040606@thebarn.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-Message-Id: <200904221215.18335.knikanth@suse.de>
+In-Reply-To: <49EE441E.6040606@thebarn.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,50 +32,61 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, xfs@oss.sgi.com, Jens Axboe <jens.axboe@oracle.com>
+To: xfs@oss.sgi.com
 
-The intent of the code in xfs_alloc_ioend_bio() is that if we can't get a
-large bio immediately, try a smaller one which is more likely to succeed when
-we are under memory pressure. i.e. we will get IO moving faster than if we
-waited for a maximally sized biovec to be allocated. But GFP_NOIO implies
-__GFP_WAIT which would return only if it can allocate the bio. So the first
-attempt to get a larger bio itself would return only after it succeeds, which
-makes the logic useless.
+On Tue, Apr 21, 2009 at 05:09:34PM -0500, Russell Cattelan wrote:
 
-Change it to try with GFP_NOWAIT for a bio. If not possible wait for it.
+Hi Russell (and others reading), and thanks for your reply.
 
-See http://oss.sgi.com/archives/xfs-masters/2009-04/msg00027.html for the
-discussion.
+> Well step back a bit, fsck.xfs exists simply to satisfy the initial
+> boot scripts that invokes fsck -t $fs_type.  The reason fsck.xfs
+> does nothing and should continue to do nothing is that by the time
+> you have access to the boot scripts and the fsck.xfs program the
+> root filesystem has already been mounted. Which means the root file
+> system has successfully made it through either a clean mount or a
+> log replay mount, neither of which needs additional verification.
 
-Signed-off-by: Nikanth Karthikesan <knikanth@suse.de>
+Now that's an interesting point; I hadn't seen it quite like that
+before.  It's now very clear to me that there's a semantic
+inconsistency between xfs and, say, ext2 in that the initial read only
+mount of ext2 is more directly analogous to a read-only _norecovery_
+mount of xfs.  The filesystem at that stage might be in an
+inconsistent state, but there's an expectation that you'll be able to
+read fsck (/xfs_repair) from it.  By handling the "fsck stage" at the
+time of the initial read only mount, some fragility has been
+introduced into the process.  The filesystem now only mounts if it's
+in a consistent state (bad!), even though we've redefined what
+"consistent" means to refer to journal integrity rather than the
+underlying filesystem integrity (good).  With badly behaved hardware,
+which seem prevalent, or any bugs which do get into xfs we could
+actually end up with xfs being less fault tolerant and less reliable
+in general use than other filesystems, which would be a bit of a
+shame.
 
----
+> It would not be unreasonable to do what you are suggesting in an
+> initrd startup script, provided xfs_repair was included in the
+> initrd (which has size and library requirements).
 
-diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
-index 7ec89fc..002ce7f 100644
---- a/fs/xfs/linux-2.6/xfs_aops.c
-+++ b/fs/xfs/linux-2.6/xfs_aops.c
-@@ -419,12 +419,15 @@ xfs_alloc_ioend_bio(
- 	struct buffer_head	*bh)
- {
- 	struct bio		*bio;
--	int			nvecs = bio_get_nr_vecs(bh->b_bdev);
-+	int			nr_iovecs = bio_get_nr_vecs(bh->b_bdev);
-+	int			nvecs = nr_iovecs;
- 
- 	do {
--		bio = bio_alloc(GFP_NOIO, nvecs);
--		nvecs >>= 1;
--	} while (!bio);
-+		bio = bio_alloc(GFP_NOWAIT, nvecs);
-+	} while (!bio && (nvecs >>= 1));
-+
-+	if (unlikely(!bio))
-+		bio = bio_alloc(GFP_NOIO, nr_iovecs);
- 
- 	ASSERT(bio->bi_private == NULL);
- 	bio->bi_sector = bh->b_blocknr * (bh->b_size >> 9);
+I think we can do it on direct mounts, but only if we can get to the
+bottom of readonly/norecovery semantics.  Obviously we don't
+necessarily want readonly mounts to be non recovered by default
+(although there is an argument for that).  
+
+Would it be crazy to propose a filesystem flag to control which
+default recovery behaviour a filesystem has?  A root filesystem isn't
+mounted read-only except a) on boot and b) when being tinkered with by
+someone competent, so I think it would be useful to be able to tell
+such a filesystem that it shouldn't attempt journal recovery on
+readonly mount, which would enable a meaningful use of a meaningful
+fsck.  What do you think about that?
+
+> This would probably be a matter of first implementing it and then
+> convincing the mkinitrd maintainers to add the support.
+
+I'm a bit out of my depth with the politics of that.  This would be a
+different person for each distribution?
+
+Mike.
 
 _______________________________________________
 xfs mailing list
