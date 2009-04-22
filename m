@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3MJA9VQ219370 for <xfs@oss.sgi.com>; Wed, 22 Apr 2009 14:10:09 -0500
-Received: from josefsipek.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 057A4143F54F
-	for <xfs@oss.sgi.com>; Wed, 22 Apr 2009 12:12:53 -0700 (PDT)
-Received: from josefsipek.net (josefsipek.net [141.211.133.196]) by
-	cuda.sgi.com with ESMTP id VHpkc82AZnFw01LE for
-	<xfs@oss.sgi.com>; Wed, 22 Apr 2009 12:12:53 -0700 (PDT)
-Date: Wed, 22 Apr 2009 15:10:04 -0400
-From: "Josef 'Jeff' Sipek" <jeffpc@josefsipek.net>
-Subject: Re: [PATCH] xfstests: filter out imaxpct value in test 096
-Message-ID: <20090422191004.GA3709@josefsipek.net>
-References: <49EE2664.7030701@sandeen.net>
+	n3MJNBYv220175 for <xfs@oss.sgi.com>; Wed, 22 Apr 2009 14:23:11 -0500
+Received: from mx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9D7521CDD1BD
+	for <xfs@oss.sgi.com>; Wed, 22 Apr 2009 12:23:07 -0700 (PDT)
+Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
+	with ESMTP id Ztb6X0QThFTmNMmS for <xfs@oss.sgi.com>;
+	Wed, 22 Apr 2009 12:23:07 -0700 (PDT)
+Message-ID: <49EF6E93.1050204@sandeen.net>
+Date: Wed, 22 Apr 2009 14:22:59 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <49EE2664.7030701@sandeen.net>
+Subject: Re: [PATCH] xfstests: enforce lazy-count=0 in log tests 018, 081, 082
+References: <49EE28EA.4010409@sandeen.net>
+	<20090422191226.GB3709@josefsipek.net>
+In-Reply-To: <20090422191226.GB3709@josefsipek.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,23 +28,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
+To: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
 Cc: xfs mailing list <xfs@oss.sgi.com>
 
-On Tue, Apr 21, 2009 at 03:02:44PM -0500, Eric Sandeen wrote:
-> xfstests: filter out imaxpct value in test 096
+Josef 'Jeff' Sipek wrote:
+> On Tue, Apr 21, 2009 at 03:13:30PM -0500, Eric Sandeen wrote:
+>> I was experimenting w/ default lazy-count=1, and it broke a few tests.
+>> Seems simplest to enforce lazy-count=0 in the common.log routines
+>> for now, and fix up the output?  (vs. updating all the expected
+>> output for these tests...)
+>>
+>> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 > 
-> On large filesystems, imaxpc drops from 25 to 5
-> 
-> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+> Hrm...are there any tests that explicitly check lazy-count=1?
 
-Makes sense.
+not that I know of, but you can set it in MKFS_OPTIONS or something like
+that, IIRC.
 
-Josef 'Jeff' Sipek.
-
--- 
-What is the difference between Mechanical Engineers and Civil Engineers?
-Mechanical Engineers build weapons, Civil Engineers build targets.
+-Eric
 
 _______________________________________________
 xfs mailing list
