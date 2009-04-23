@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3NHL0IX016739 for <xfs@oss.sgi.com>; Thu, 23 Apr 2009 12:21:01 -0500
+	n3NHB4Zi016406 for <xfs@oss.sgi.com>; Thu, 23 Apr 2009 12:11:05 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6D15F2369FD
-	for <xfs@oss.sgi.com>; Thu, 23 Apr 2009 10:20:58 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F066A1CE1EE1
+	for <xfs@oss.sgi.com>; Thu, 23 Apr 2009 10:11:01 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id bCdrT6xAm6NPm5Ky for
-	<xfs@oss.sgi.com>; Thu, 23 Apr 2009 10:20:58 -0700 (PDT)
-Date: Thu, 23 Apr 2009 13:20:15 -0400
+	by cuda.sgi.com with ESMTP id t1v8Bi9kkUiJIiCC for
+	<xfs@oss.sgi.com>; Thu, 23 Apr 2009 10:11:01 -0700 (PDT)
+Date: Thu, 23 Apr 2009 13:11:01 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests: add aio-dio-regress tests
-Message-ID: <20090423171937.GE11391@infradead.org>
-References: <49EFB75B.5030700@sandeen.net>
+Subject: Re: [PATCH] xfstests: filter out imaxpct value in test 096
+Message-ID: <20090423171101.GA11391@infradead.org>
+References: <49EE2664.7030701@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <49EFB75B.5030700@sandeen.net>
+In-Reply-To: <49EE2664.7030701@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,16 +29,16 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+Cc: xfs mailing list <xfs@oss.sgi.com>
 
-On Wed, Apr 22, 2009 at 07:33:31PM -0500, Eric Sandeen wrote:
-> Think it's worth pulling this in?
-> Also not sure where to put it, under the top dir or under src ...
+On Tue, Apr 21, 2009 at 03:02:44PM -0500, Eric Sandeen wrote:
+> xfstests: filter out imaxpct value in test 096
 > 
-> Takes about 250s to run them all.  Could break out the longer
-> one into a separate test so the rest could be in quick.
+> On large filesystems, imaxpc drops from 25 to 5
+> 
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-I would prefer to have a separate test for each of the programs.
+Looks good.
 
 _______________________________________________
 xfs mailing list
