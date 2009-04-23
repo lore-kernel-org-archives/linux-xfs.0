@@ -1,29 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3NEZJ3K010798 for <xfs@oss.sgi.com>; Thu, 23 Apr 2009 09:35:19 -0500
-Received: from pond.fysh.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 990D9235608
-	for <xfs@oss.sgi.com>; Thu, 23 Apr 2009 07:35:16 -0700 (PDT)
-Received: from pond.fysh.org (pond.fysh.org [166.84.7.109]) by cuda.sgi.com
-	with ESMTP id HXj1TKscnpyzpJcs for <xfs@oss.sgi.com>;
-	Thu, 23 Apr 2009 07:35:16 -0700 (PDT)
-Received: from mike by pond.fysh.org with local (Exim 4.69 #1 (Debian))
-	id 1Lx01D-0001aI-IH
-	for xfs@oss.sgi.com; Thu, 23 Apr 2009 15:35:15 +0100
-Date: Thu, 23 Apr 2009 15:35:15 +0100
-From: Mike Ashton <mike@fysh.org>
-Subject: Re: fsck.xfs proposed improvements
-Message-ID: <20090423143515.GA5878@fysh.org>
-References: <mailman.0.1240318659.128675.xfs@oss.sgi.com>
-	<20090421142333.GA5197@fysh.org> <49EE441E.6040606@thebarn.com>
-	<20090422094527.GA16600@fysh.org>
-	<87ws9cnz14.fsf@basil.nowhere.org>
-	<20090423084900.GB16600@fysh.org> <49F062E5.70800@sandeen.net>
-	<20090423141432.GC16600@fysh.org>
+	n3NGAdI8014191 for <xfs@oss.sgi.com>; Thu, 23 Apr 2009 11:10:40 -0500
+Received: from eu1sys200aog106.obsmtp.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D69F314444B6
+	for <xfs@oss.sgi.com>; Thu, 23 Apr 2009 09:13:24 -0700 (PDT)
+Received: from eu1sys200aog106.obsmtp.com (eu1sys200aog106.obsmtp.com
+	[207.126.144.121]) by cuda.sgi.com with ESMTP id
+	AstgCvjN0t8rNOGZ for <xfs@oss.sgi.com>;
+	Thu, 23 Apr 2009 09:13:24 -0700 (PDT)
+Message-ID: <49F092D6.4070507@st.com>
+Date: Thu, 23 Apr 2009 17:09:58 +0100
+From: Stuart MENEFY <stuart.menefy@st.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20090423141432.GC16600@fysh.org>
+Subject: Re: Help debugging a use after free
+References: <49E37972.1070101@st.com> <49E4DF8C.4050800@thebarn.com>
+	<49E8A081.7020200@st.com> <20090419081702.GD16929@discord.disaster>
+In-Reply-To: <20090419081702.GD16929@discord.disaster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,58 +29,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Russell Cattelan <cattelan@thebarn.com>, xfs@oss.sgi.com
 
-On Thu, Apr 23, 2009 at 07:45:25AM -0500, Eric Sandeen wrote:
+Dave Chinner wrote:
+> On Fri, Apr 17, 2009 at 04:30:09PM +0100, Stuart MENEFY wrote:
+>>> If you can instrument actually free that is causing the problem it
+>>> would be good to print out the
+>>> actually pid doing the free and as many return addresses that you can,
+>>> so we can get an
+>>> idea of the actual call chain.
+>> The free is coming from the xfssyncd thread, the back trace looks like:
+>>
+>> [<8418d0e2>] xfs_idestroy+0x22/0x100
+>> [<8418a1b0>] xfs_ireclaim+0x50/0x80
+>> [<841ad7f2>] xfs_finish_reclaim+0x32/0x1c0
+>> [<841ada30>] xfs_finish_reclaim_all+0xb0/0x100
+>> [<8418a780>] xfs_ilock_nowait+0x0/0x160
+>> [<841a9df2>] xfs_syncsub+0x52/0x360
+>> [<84335108>] schedule_timeout+0x48/0x100
+>> [<841ab684>] xfs_sync+0x24/0x40
+>> [<841e0ce0>] list_add+0x0/0x20
+>> [<841c041c>] vfs_sync+0x1c/0x40
+>> [<841bf37c>] vfs_sync_worker+0x1c/0x60
+>> [<841bf6b6>] xfssyncd+0xb6/0x140
+>> [<8402f0dc>] kthread+0x3c/0x80
+>> [<84012440>] complete+0x0/0x60
+>> [<841bf600>] xfssyncd+0x0/0x140
+>> [<8402f060>] kthread_should_stop+0x0/0x20
+>> [<84003984>] kernel_thread_helper+0x4/0x20
+>> [<8402f0a0>] kthread+0x0/0x80
+>> [<84003980>] kernel_thread_helper+0x0/0x20
+> 
+> There were some use-after-free fixes in .27 timeframe to the inode
+> reclaim code. Can you reeetest with a more recent kernel?
 
-> It certainly does sound like an interesting idea, but others' concerns
-> are relevant too.  The issues around how the root filesystem gets
-> mounted would need to be pretty clearly addressed.  Maybe you can spell
-> out your original proposal again, with updates to handle that issue?
->
-> (as an aside, there have been arguments in the past that readonly mounts
-> should not do recovery at all - i.e. "mount -o ro" doesn't just mean
-> that you can only read the filesystem, but that the mount will only ever
-> read the block device...)
+Possibly. I have a half-finished port of 2.6.27-rc4 to our hardware
+which I could probably get going fairly quickly. Do you think that
+would be sufficient to pick up the use-after-free fixes?
 
-I propose firstly that that behaviour should be configurable by per
-filesystem tuning, making it possible to set a root filesystem to
-default to norecovery on a read-only mount.  Then non-initrd mounting
-of / should always succeed, getting us access to fsck.xfs.
+Thanks
 
-I secondly, and I'm going to broke here, propose that
-xfs_check/xfs_repair (as invocations, not the code!) should be
-deprecated and both programs should be called fsck.xfs. When called
-with that name, they would have the following (familiar) semantics:
-
-fsck.xfs: verify journal integrity.  
-	If it's good, return "filesystem is clean" and exit.
-        If it's bad, invoke xfs_clean behaviour
-
-fsck.xfs -f:   invoke xfs_clean behaviour even with a good journal
-
-fsck.xfs -a: verify journal integrity
-	If it's good, return "filesystem is clean" and exit.
-        If it's bad, invoke xfs_repair -L behaviour
-
-(and so on)
-
-This makes fsck.xfs behave analogously to fsck.ext2 and friends, with
-it's clean and dirty flag.  The improvement xfs offers over ext2 in
-this area is that a filesystem is not only clean if shut down cleanly,
-but is also clean if shutdown unclearly but with a usable journal, but
-without behaving worse than ext2 by fsck.xfs thinking (incorrectly)
-that a filesystem repair will never be needed and giving a filesystem
-that won't mount a clean bill of health.
-
-With both these proposals implemented, both initrd and non-initrd boot
-processes would correctly handle xfs filesystem checking, using the
-xfs journal to give the current excellent general case performance but
-provide a safe approach to corrupted journals, without the need for
-specific xfs-related care from distribution maintainers.
-
-Thanks,
-Mike.
+Stuart
 
 _______________________________________________
 xfs mailing list
