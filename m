@@ -1,28 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3N6OYHv256564 for <xfs@oss.sgi.com>; Thu, 23 Apr 2009 01:24:34 -0500
-Received: from idcmail-mo2no.shaw.ca (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 586481CDFA61
-	for <xfs@oss.sgi.com>; Wed, 22 Apr 2009 23:24:31 -0700 (PDT)
-Received: from idcmail-mo2no.shaw.ca (idcmail-mo2no.shaw.ca [64.59.134.9]) by
-	cuda.sgi.com with ESMTP id Avfcr25sNXMWUHji for
-	<xfs@oss.sgi.com>; Wed, 22 Apr 2009 23:24:31 -0700 (PDT)
-Received: from bender.lan.kevinjamieson.com (bender.lan.kevinjamieson.com
-	[192.168.1.110])
-	by mail.kevinjamieson.com (Postfix) with ESMTP id EE65820058
-	for <xfs@oss.sgi.com>; Wed, 22 Apr 2009 23:24:29 -0700 (PDT)
-Message-ID: <49F0099D.3060004@kevinjamieson.com>
-Date: Wed, 22 Apr 2009 23:24:29 -0700
-From: Kevin Jamieson <kevin@kevinjamieson.com>
+	n3N8n7Yv000379 for <xfs@oss.sgi.com>; Thu, 23 Apr 2009 03:49:07 -0500
+Received: from pond.fysh.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4EEA61442106
+	for <xfs@oss.sgi.com>; Thu, 23 Apr 2009 01:51:53 -0700 (PDT)
+Received: from pond.fysh.org (pond.fysh.org [166.84.7.109]) by cuda.sgi.com
+	with ESMTP id K5CR9EK56u1JWAEP for <xfs@oss.sgi.com>;
+	Thu, 23 Apr 2009 01:51:53 -0700 (PDT)
+Date: Thu, 23 Apr 2009 09:49:00 +0100
+From: Mike Ashton <mike@fysh.org>
+Subject: Re: fsck.xfs proposed improvements
+Message-ID: <20090423084900.GB16600@fysh.org>
+References: <mailman.0.1240318659.128675.xfs@oss.sgi.com>
+	<20090421142333.GA5197@fysh.org> <49EE441E.6040606@thebarn.com>
+	<20090422094527.GA16600@fysh.org>
+	<87ws9cnz14.fsf@basil.nowhere.org>
 MIME-Version: 1.0
-Subject: Re: Oops at xfs_bmbt_get_startoff in SLES 10 2.6.16
-References: <64323.24.80.224.145.1236883814.squirrel@squirrel.kevinjamieson.com>	<49B9611F.5040009@sandeen.net>	<58707.24.80.224.145.1236899620.squirrel@squirrel.kevinjamieson.com>
-	<53630.24.80.224.145.1240361692.squirrel@squirrel.kevinjamieson.com>
-	<49EE7E17.8050006@sandeen.net>
-	<B32B0133-B835-4D31-B52A-364F607B9866@sgi.com>
-In-Reply-To: <B32B0133-B835-4D31-B52A-364F607B9866@sgi.com>
-Reply-To: kevin@kevinjamieson.com
+Content-Disposition: inline
+In-Reply-To: <87ws9cnz14.fsf@basil.nowhere.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,27 +27,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Andi Kleen <andi@firstfloor.org>
+Cc: xfs@oss.sgi.com
 
-Felix Blyakher wrote:
+On Wed, Apr 22, 2009 at 11:45:11PM +0200, Andi Kleen wrote:
+> Mike Ashton <mike@fysh.org> writes:
+> 
+> > With badly behaved hardware,
+> > which seem prevalent, or any bugs which do get into xfs we could
+> > actually end up with xfs being less fault tolerant and less reliable
+> > in general use than other filesystems, which would be a bit of a
+> > shame.
+> 
+> Most Linux file systems are not very fault tolerant in this sense;
+> e.g. on ext3 you have have to press return and accept lots of scary
+> messages to get through fsck.
 
-> But I could never reproduce the problem, even with Lachlan's test
-> program.
+Perhaps, but anecdotally/subjectively I've never had a ext3 based
+system fail to boot because I turned it off and on again.  I've had
+this happen with xfs root filesystems about 15 times over the past few
+years.  I'm getting to the point where I'm starting to question the
+wisdom of choosing xfs for my systems - whether it's actually mature
+enough for use in server environments - which given that it's the one
+which ought to be a total no-brainer in this respect, is a worry.
 
-I was not able to reproduce the problem with Lachlan's test program 
-either (although I did not experiment much with the parameters).
+I think even if I can't persuade you guys to make official
+improvements, I've got enough information to make ad-hoc improvements
+to my own systems, but I'm going to have a hard time on the advocacy
+front.  xfs rocks, but a system is only as good as its last power cut
+(or something).
 
-> Kevin, any idea what kind of io load triggered this problem?
+I'm hopeful that my readonly/norecovery tuning idea might catch
+someone's imagination, but we'll have to see.
 
-The workload consisted of predominantly (98%) 2-3MB file ingests through 
-an NFS share, with a a few (2%) 1GB file ingests, where the issue seemed 
-to trigger on the larger files.
-
-Kevin
+Mike.
 
 _______________________________________________
 xfs mailing list
