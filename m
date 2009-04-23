@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3NHS3nE017299 for <xfs@oss.sgi.com>; Thu, 23 Apr 2009 12:28:03 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1C14E1CE20B4
-	for <xfs@oss.sgi.com>; Thu, 23 Apr 2009 10:28:00 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 0hn4j7pD0bCu7s9h for
-	<xfs@oss.sgi.com>; Thu, 23 Apr 2009 10:28:00 -0700 (PDT)
-Date: Thu, 23 Apr 2009 13:27:56 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests: add aio-dio-regress tests
-Message-ID: <20090423172755.GA27780@infradead.org>
-References: <49EFB75B.5030700@sandeen.net>
-	<20090423171937.GE11391@infradead.org>
-	<49F0A485.8060408@sandeen.net>
+	n3NHPC0S017213 for <xfs@oss.sgi.com>; Thu, 23 Apr 2009 12:25:12 -0500
+Received: from mx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8A1771CE2065
+	for <xfs@oss.sgi.com>; Thu, 23 Apr 2009 10:25:09 -0700 (PDT)
+Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
+	with ESMTP id hQuZKGsaawCADNTK for <xfs@oss.sgi.com>;
+	Thu, 23 Apr 2009 10:25:09 -0700 (PDT)
+Message-ID: <49F0A44F.9040603@sandeen.net>
+Date: Thu, 23 Apr 2009 12:24:31 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <49F0A485.8060408@sandeen.net>
+Subject: Re: [PATCH] xfstests: enforce lazy-count=0 in log tests 018, 081, 082
+References: <49EE28EA.4010409@sandeen.net>
+	<20090423171151.GB11391@infradead.org>
+In-Reply-To: <20090423171151.GB11391@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,25 +28,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs mailing list <xfs@oss.sgi.com>
 
-On Thu, Apr 23, 2009 at 12:25:25PM -0500, Eric Sandeen wrote:
-> Christoph Hellwig wrote:
-> > On Wed, Apr 22, 2009 at 07:33:31PM -0500, Eric Sandeen wrote:
-> >> Think it's worth pulling this in?
-> >> Also not sure where to put it, under the top dir or under src ...
-> >>
-> >> Takes about 250s to run them all.  Could break out the longer
-> >> one into a separate test so the rest could be in quick.
-> > 
-> > I would prefer to have a separate test for each of the programs.
+Christoph Hellwig wrote:
+> On Tue, Apr 21, 2009 at 03:13:30PM -0500, Eric Sandeen wrote:
+>> I was experimenting w/ default lazy-count=1, and it broke a few tests.
+>> Seems simplest to enforce lazy-count=0 in the common.log routines
+>> for now, and fix up the output?  (vs. updating all the expected
+>> output for these tests...)
 > 
-> Fine by me.  Any thoughts on if this should live under src/ or not?  I'm
-> not sure why ltp/ doesn't, but I was just following that.
+> Didn't you just send a patch to make lazy-count=1 the default? :)
+> 
+> I'd rather see either a filter dealing with both variants or make
+> sure we always test the newer and more important case (lazy-count=1)
+> here.
 
-I don't think it matters too much.  The external dmapi tests are also
-under src.  In doubt I would put it under src/
+I don't think that a filter will be possible, it pretty fundamentally
+changes log traffic doesn't it?  I could make 2 expected outputs,
+perhaps, one for each...  I'll double check though.
+
+I just made it forced to 0 because I don't think these tests are really
+testing anything relevant to whether or not lazy-count is enabled...
+
+-Eric
 
 _______________________________________________
 xfs mailing list
