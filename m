@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3OHqREm094219 for <xfs@oss.sgi.com>; Fri, 24 Apr 2009 12:52:27 -0500
+	n3OHpcaN094051 for <xfs@oss.sgi.com>; Fri, 24 Apr 2009 12:51:45 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 391251CE636F
-	for <xfs@oss.sgi.com>; Fri, 24 Apr 2009 10:52:25 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 049C31CE651F
+	for <xfs@oss.sgi.com>; Fri, 24 Apr 2009 10:51:36 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id nUsJWjHJOx1kp0bu for
-	<xfs@oss.sgi.com>; Fri, 24 Apr 2009 10:52:25 -0700 (PDT)
-Date: Fri, 24 Apr 2009 13:52:24 -0400
+	by cuda.sgi.com with ESMTP id J01Jf8yAmpw3hsjn for
+	<xfs@oss.sgi.com>; Fri, 24 Apr 2009 10:51:36 -0700 (PDT)
+Date: Fri, 24 Apr 2009 13:51:35 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs_file_last_byte() needs to acquire ilock
-Message-ID: <20090424175224.GB32198@infradead.org>
-References: <1624785772.3251240539480564.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
+Subject: Re: [PATCH] xfstests: fix 130, 132 for inifinitely-fast disks
+Message-ID: <20090424175135.GA32198@infradead.org>
+References: <49F0B379.2060309@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1624785772.3251240539480564.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
+In-Reply-To: <49F0B379.2060309@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,34 +28,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Lachlan McIlroy <lmcilroy@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs mailing list <xfs@oss.sgi.com>
 
-On Thu, Apr 23, 2009 at 10:18:00PM -0400, Lachlan McIlroy wrote:
-> We had some systems crash with this stack:
+On Thu, Apr 23, 2009 at 01:29:13PM -0500, Eric Sandeen wrote:
+> Due to the new quantum/holographic storage I'm testing, my 
+> disks go infinitely fast, thereby breaking some filters:
 > 
-> [<a00000010000cb20>] ia64_leave_kernel+0x0/0x280
-> [<a00000021291ca00>] xfs_bmbt_get_startoff+0x0/0x20 [xfs]
-> [<a0000002129080b0>] xfs_bmap_last_offset+0x210/0x280 [xfs]
-> [<a00000021295b010>] xfs_file_last_byte+0x70/0x1a0 [xfs]
-> [<a00000021295b200>] xfs_itruncate_start+0xc0/0x1a0 [xfs]
-> [<a0000002129935f0>] xfs_inactive_free_eofblocks+0x290/0x460 [xfs]
-> [<a000000212998fb0>] xfs_release+0x1b0/0x240 [xfs]
-> [<a0000002129ad930>] xfs_file_release+0x70/0xa0 [xfs]
-> [<a000000100162ea0>] __fput+0x1a0/0x420
-> [<a000000100163160>] fput+0x40/0x60
+> -XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> +3 KiB, 1 ops; 0.0000 sec (inf EiB/sec and inf ops/sec)
 > 
-> The problem here is that xfs_file_last_byte() does not acquire the
-> inode lock and can therefore race with another thread that is modifying
-> the extext list.  While xfs_bmap_last_offset() is trying to lookup
-> what was the last extent some extents were merged and the extent list
-> shrunk so the index we lookup is now beyond the end of the extent list
-> and potentially in a freed buffer.
+> I'm no regexp expert but I think the below change will fix it.
 
-Looks good.
-
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Looks good to me.  I used to see this too when running xfsqa under qemu
+(with really fast disk (=host pagecache) and a really slow cpu..
 
 _______________________________________________
 xfs mailing list
