@@ -1,17 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3OLgkm5110941 for <xfs@oss.sgi.com>; Fri, 24 Apr 2009 16:42:46 -0500
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E8A003040A4
-	for <xfs@oss.sgi.com>; Fri, 24 Apr 2009 14:42:41 -0700 (PDT)
-Message-Id: <EA21B408-FBC8-4CBD-A3DA-9ED9AB125DE7@sgi.com>
-From: Felix Blyakher <felixb@sgi.com>
-In-Reply-To: <773418105.4861240544809694.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
-Mime-Version: 1.0 (Apple Message framework v926)
-Subject: Re: [PATCH] xfs_file_last_byte() needs to acquire ilock
-Date: Fri, 24 Apr 2009 16:42:41 -0500
-References: <773418105.4861240544809694.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
+	n3ON1QGJ113981 for <xfs@oss.sgi.com>; Fri, 24 Apr 2009 18:01:27 -0500
+Received: from mail.strands.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A5B001CE65DB
+	for <xfs@oss.sgi.com>; Fri, 24 Apr 2009 16:01:23 -0700 (PDT)
+Received: from mail.strands.com (mail.strands.com [217.116.18.226]) by
+	cuda.sgi.com with ESMTP id l1Qbe8kqnWv7Dqck for
+	<xfs@oss.sgi.com>; Fri, 24 Apr 2009 16:01:23 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+	by mail.strands.com (Postfix) with ESMTP id 43E603051E1
+	for <xfs@oss.sgi.com>; Sat, 25 Apr 2009 01:01:23 +0200 (CEST)
+Received: from mail.strands.com ([127.0.0.1])
+	by localhost (mail.strands.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id 7wmpc3VGM+Dc for <xfs@oss.sgi.com>;
+	Sat, 25 Apr 2009 01:01:22 +0200 (CEST)
+Received: from dhcp-client-1-54.cor.mystrands.in (cor-fw [206.192.226.50])
+	(using TLSv1 with cipher AES128-SHA (128/128 bits))
+	(Client did not present a certificate)
+	(Authenticated sender: petersen)
+	by mail.strands.com (Postfix) with ESMTPSA id 111BA305453
+	for <xfs@oss.sgi.com>; Sat, 25 Apr 2009 01:01:21 +0200 (CEST)
+Message-Id: <73EE3FB2-381F-43F1-82C1-FA4C020E7C02@strands.com>
+From: Poul Petersen <petersen@strands.com>
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Subject: Slab memory usage
+Date: Fri, 24 Apr 2009 16:01:18 -0700
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,98 +35,82 @@ List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Lachlan McIlroy <lmcilroy@redhat.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
+	I'm running Debian Lenny with kernel 2.6.26-1-amd64 and  
+xfsprogs-2.9.8-1. I've been having a problem with the amount of slab  
+memory that XFS seems to be consuming when running a rsync backup job,  
+a du, or other file-system intensive programs. Below is an example of  
+the output of slabtop and /proc/meminfo. I'm running a tool that  
+monitors free memory space, and it starts generating alerts, though I  
+don't blame it when the SLAB is running at 50% of memory!
 
-On Apr 23, 2009, at 10:46 PM, Lachlan McIlroy wrote:
+	When the process finishes, the memory usually frees up over a period  
+of several hours. However, on a similar system, even 24 hours after  
+the rsync job finished, the slab never freed up. On that machine, if I  
+run:
 
->
-> ----- "Eric Sandeen" <sandeen@sandeen.net> wrote:
->
->> Lachlan McIlroy wrote:
->>> We had some systems crash with this stack:
->>>
->>> [<a00000010000cb20>] ia64_leave_kernel+0x0/0x280
->>> [<a00000021291ca00>] xfs_bmbt_get_startoff+0x0/0x20 [xfs]
->>> [<a0000002129080b0>] xfs_bmap_last_offset+0x210/0x280 [xfs]
->>> [<a00000021295b010>] xfs_file_last_byte+0x70/0x1a0 [xfs]
->>> [<a00000021295b200>] xfs_itruncate_start+0xc0/0x1a0 [xfs]
->>> [<a0000002129935f0>] xfs_inactive_free_eofblocks+0x290/0x460 [xfs]
->>> [<a000000212998fb0>] xfs_release+0x1b0/0x240 [xfs]
->>> [<a0000002129ad930>] xfs_file_release+0x70/0xa0 [xfs]
->>> [<a000000100162ea0>] __fput+0x1a0/0x420
->>> [<a000000100163160>] fput+0x40/0x60
->>>
->>> The problem here is that xfs_file_last_byte() does not acquire the
->>> inode lock and can therefore race with another thread that is
->> modifying
->>> the extext list.  While xfs_bmap_last_offset() is trying to lookup
->>> what was the last extent some extents were merged and the extent
->> list
->>> shrunk so the index we lookup is now beyond the end of the extent
->> list
->>> and potentially in a freed buffer.
->>>
->>> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
->>> index e7ae08d..cf62d9d 100644
->>> --- a/fs/xfs/xfs_inode.c
->>> +++ b/fs/xfs/xfs_inode.c
->>> @@ -1258,8 +1258,10 @@ xfs_file_last_byte(
->>
->>        /*
->>         * Only check for blocks beyond the EOF if the extents have
->>         * been read in.  This eliminates the need for the inode
->> lock,
->>         * and it also saves us from looking when it really isn't
->>> 	 * necessary.
->>> 	 */
->>
->> I suppose that comment should be modified too, and maybe the commit
->> log
->> should say why, exactly, it was wrong? :)
-> Ha, I didn't even read the comment!  It's still kind of correct in
-> that we wont have to get the inode lock if the extents have not been
->
-> read in.
+echo 2 > /proc/sys/vm/drop_caches
 
-I'd still think the comments could be made less confusing
-if we're adding the inode lock here.
+	Then the slab goes down to something more like 1% or 2% of system  
+RAM. Any ideas what is causing this behaviour? And how I might  
+alleviate it?
 
-Felix
+Thanks,
 
->
->
->>
->> -Eric
->>
->>> 	if (ip->i_df.if_flags & XFS_IFEXTENTS) {
->>> +		xfs_ilock(ip, XFS_ILOCK_SHARED);
->>> 		error = xfs_bmap_last_offset(NULL, ip, &last_block,
->>> 			XFS_DATA_FORK);
->>> +		xfs_iunlock(ip, XFS_ILOCK_SHARED);
->>> 		if (error) {
->>> 			last_block = 0;
->>> 		}
->>>
->>> _______________________________________________
->>> xfs mailing list
->>> xfs@oss.sgi.com
->>> http://oss.sgi.com/mailman/listinfo/xfs
->>>
->>
->> _______________________________________________
->> xfs mailing list
->> xfs@oss.sgi.com
->> http://oss.sgi.com/mailman/listinfo/xfs
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+-poul
+
+slabtop
+=======
+
+  Active / Total Objects (% used)    : 7684622 / 7875871 (97.6%)
+  Active / Total Slabs (% used)      : 720661 / 720662 (100.0%)
+  Active / Total Caches (% used)     : 105 / 176 (59.7%)
+  Active / Total Size (% used)       : 2683658.81K / 2702989.38K (99.3%)
+  Minimum / Average / Maximum Object : 0.02K / 0.34K / 4096.00K
+
+   OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME
+1933952 1933787  99%    0.44K 241744        8    966976K xfs_inode
+1933918 1933787  99%    0.56K 276274        7   1105096K xfs_vnode
+1361008 1359980  99%    0.20K  71632       19    286528K dentry
+1311360 1309586  99%    0.12K  43712       30    174848K size-128
+1030770 1030548  99%    0.25K  68718       15    274872K size-256
+
+/proc/meminfo
+=============
+MemTotal:      8265368 kB
+MemFree:         54160 kB
+Buffers:          4252 kB
+Cached:         416880 kB
+SwapCached:     166676 kB
+Active:        4999204 kB
+Inactive:       278028 kB
+SwapTotal:     1951856 kB
+SwapFree:      1761736 kB
+Dirty:             324 kB
+Writeback:           0 kB
+AnonPages:     4855084 kB
+Mapped:          12632 kB
+Slab:          2883536 kB
+SReclaimable:  2411420 kB
+SUnreclaim:     472116 kB
+PageTables:     870112 kB
+NFS_Unstable:        0 kB
+Bounce:              0 kB
+WritebackTmp:        0 kB
+CommitLimit:   6084540 kB
+Committed_AS:  5172208 kB
+VmallocTotal: 34359738367 kB
+VmallocUsed:     90988 kB
+VmallocChunk: 34359647323 kB
+HugePages_Total:     0
+HugePages_Free:      0
+HugePages_Rsvd:      0
+HugePages_Surp:      0
+Hugepagesize:     2048 kB
 
 _______________________________________________
 xfs mailing list
