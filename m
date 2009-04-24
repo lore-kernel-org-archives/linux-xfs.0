@@ -1,30 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3O9LWU0072289 for <xfs@oss.sgi.com>; Fri, 24 Apr 2009 04:21:33 -0500
-Received: from pond.fysh.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6F4931CE46DD
-	for <xfs@oss.sgi.com>; Fri, 24 Apr 2009 02:21:29 -0700 (PDT)
-Received: from pond.fysh.org (pond.fysh.org [166.84.7.109]) by cuda.sgi.com
-	with ESMTP id S8KoZOi9oeWkxrQM for <xfs@oss.sgi.com>;
-	Fri, 24 Apr 2009 02:21:29 -0700 (PDT)
-Received: from mike by pond.fysh.org with local (Exim 4.69 #1 (Debian))
-	id 1LxHb7-0005Sn-0i
-	for xfs@oss.sgi.com; Fri, 24 Apr 2009 10:21:29 +0100
-Date: Fri, 24 Apr 2009 10:21:29 +0100
-From: Mike Ashton <mike@fysh.org>
-Subject: Re: fsck.xfs proposed improvements
-Message-ID: <20090424092128.GD16600@fysh.org>
-References: <mailman.0.1240318659.128675.xfs@oss.sgi.com>
-	<20090421142333.GA5197@fysh.org> <49EE441E.6040606@thebarn.com>
-	<20090422094527.GA16600@fysh.org>
-	<87ws9cnz14.fsf@basil.nowhere.org>
-	<20090423084900.GB16600@fysh.org> <49F062E5.70800@sandeen.net>
-	<20090423141432.GC16600@fysh.org>
-	<20090423143515.GA5878@fysh.org> <49F09521.9000103@thebarn.com>
+	n3OHqREm094219 for <xfs@oss.sgi.com>; Fri, 24 Apr 2009 12:52:27 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 391251CE636F
+	for <xfs@oss.sgi.com>; Fri, 24 Apr 2009 10:52:25 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id nUsJWjHJOx1kp0bu for
+	<xfs@oss.sgi.com>; Fri, 24 Apr 2009 10:52:25 -0700 (PDT)
+Date: Fri, 24 Apr 2009 13:52:24 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs_file_last_byte() needs to acquire ilock
+Message-ID: <20090424175224.GB32198@infradead.org>
+References: <1624785772.3251240539480564.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <49F09521.9000103@thebarn.com>
+In-Reply-To: <1624785772.3251240539480564.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,47 +28,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Lachlan McIlroy <lmcilroy@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Apr 23, 2009 at 11:19:45AM -0500, Russell Cattelan wrote:
+On Thu, Apr 23, 2009 at 10:18:00PM -0400, Lachlan McIlroy wrote:
+> We had some systems crash with this stack:
+> 
+> [<a00000010000cb20>] ia64_leave_kernel+0x0/0x280
+> [<a00000021291ca00>] xfs_bmbt_get_startoff+0x0/0x20 [xfs]
+> [<a0000002129080b0>] xfs_bmap_last_offset+0x210/0x280 [xfs]
+> [<a00000021295b010>] xfs_file_last_byte+0x70/0x1a0 [xfs]
+> [<a00000021295b200>] xfs_itruncate_start+0xc0/0x1a0 [xfs]
+> [<a0000002129935f0>] xfs_inactive_free_eofblocks+0x290/0x460 [xfs]
+> [<a000000212998fb0>] xfs_release+0x1b0/0x240 [xfs]
+> [<a0000002129ad930>] xfs_file_release+0x70/0xa0 [xfs]
+> [<a000000100162ea0>] __fput+0x1a0/0x420
+> [<a000000100163160>] fput+0x40/0x60
+> 
+> The problem here is that xfs_file_last_byte() does not acquire the
+> inode lock and can therefore race with another thread that is modifying
+> the extext list.  While xfs_bmap_last_offset() is trying to lookup
+> what was the last extent some extents were merged and the extent list
+> shrunk so the index we lookup is now beyond the end of the extent list
+> and potentially in a freed buffer.
 
-> Traditional thinking with a journaled filesystem has been that if
-> there is a dirty log then you do not want to risk mounting the
-> filesystem in an inconsistent state an thereby risking a system
-> crash or file system shutdown due to that inconsistent state.
+Looks good.
 
-Although I don't think you're doing anything more dangerous than
-mounting a non-fsck'd non-journaling filesystem read-only, which is
-the traditional unix boot method when you're not using initrd, I do
-accept that I've introduced a non-zero chance of a system crash in
-situations where everything is fine.  I think I've thought of a
-compromise.
 
-I propose the addition of a new mount semantic, let's call it
-"tryrecovery" for now, which will replay a log if possible or mount
-the filesystem in an inconsistent state otherwise.  So you would mark
-a filesystem as being a root fs, enabling this behaviour, and the
-kernel's attempt to mount its root filesystem would invoke this
-behaviour without the explicit knowledge of lilo, grub, kernel
-parameters, etc.
-
-I believe this would address both our concerns.  In the general case,
-the behaviour will be as it is now; the journal is played, the root
-filesystem will be mounted into known a good states and there's no
-chance of a crash, but if everything's gone to hell, we allow
-fingers-crossed access to the filesystem to be able to get access to
-the xfs_repair tool.
-
-> Also in the case of a mount -norecover with any subsequent repair
-> being done, it is probably
-> best to reboot at that point to ensure there is no bad FS data that
-> may be in cache.
-
-A remount to read/write ought to invalidate any cache/buffers for
-exactly that reason.
-
-Cheers,
-Mike.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
