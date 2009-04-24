@@ -1,29 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3NLaH6q039696 for <xfs@oss.sgi.com>; Thu, 23 Apr 2009 16:36:18 -0500
-Received: from slurp.thebarn.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 957BB1445DA8
-	for <xfs@oss.sgi.com>; Thu, 23 Apr 2009 14:39:06 -0700 (PDT)
-Received: from slurp.thebarn.com (cattelan-host202.dsl.visi.com
-	[208.42.117.202]) by cuda.sgi.com with ESMTP id
-	YrJBdvrFsy4MRYv8 for <xfs@oss.sgi.com>;
-	Thu, 23 Apr 2009 14:39:06 -0700 (PDT)
-Received: from funky.x.thebarn.com (slurp.thebarn.com [208.42.117.201])
-	(authenticated bits=0)
-	by slurp.thebarn.com (8.14.3/8.14.0) with ESMTP id n3NLZxth062593;
-	Thu, 23 Apr 2009 16:35:59 -0500 (CDT)
-	(envelope-from cattelan@xfs.org)
-Message-ID: <49F0DF3F.9060200@xfs.org>
-Date: Thu, 23 Apr 2009 16:35:59 -0500
-From: Russell Cattelan <cattelan@thebarn.com>
+	n3O2I6sf052363 for <xfs@oss.sgi.com>; Thu, 23 Apr 2009 21:18:06 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CF78B238644
+	for <xfs@oss.sgi.com>; Thu, 23 Apr 2009 19:18:02 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31]) by cuda.sgi.com
+	with ESMTP id u49oHBvqKGEDMH4i for <xfs@oss.sgi.com>;
+	Thu, 23 Apr 2009 19:18:02 -0700 (PDT)
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com
+	[172.16.52.254])
+	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id n3O2I1JG003581
+	for <xfs@oss.sgi.com>; Thu, 23 Apr 2009 22:18:01 -0400
+Received: from mail05.corp.redhat.com (zmail05.collab.prod.int.phx2.redhat.com
+	[10.5.5.46])
+	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id n3O2I0eR018592
+	for <xfs@oss.sgi.com>; Thu, 23 Apr 2009 22:18:01 -0400
+Date: Thu, 23 Apr 2009 22:18:00 -0400 (EDT)
+From: Lachlan McIlroy <lmcilroy@redhat.com>
+Message-ID: <1624785772.3251240539480564.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
+Subject: [PATCH] xfs_file_last_byte() needs to acquire ilock
 MIME-Version: 1.0
-Subject: Re: Help debugging a use after free
-References: <49E37972.1070101@st.com> <49E4DF8C.4050800@thebarn.com>
-	<49E8A081.7020200@st.com> <20090419081702.GD16929@discord.disaster>
-	<49F092D6.4070507@st.com> <49F09651.6010104@xfs.org>
-	<49F0B572.7090101@st.com>
-In-Reply-To: <49F0B572.7090101@st.com>
+Reply-To: Lachlan McIlroy <lmcilroy@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,98 +34,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stuart MENEFY <stuart.menefy@st.com>
-Cc: Russell Cattelan <cattelan@thebarn.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Stuart MENEFY wrote:
-> Russell Cattelan wrote:
->   
->> Stuart MENEFY wrote:
->>     
->>> Dave Chinner wrote:
->>>   
->>>       
->>>> On Fri, Apr 17, 2009 at 04:30:09PM +0100, Stuart MENEFY wrote:
->>>>     
->>>>         
->>>>>> If you can instrument actually free that is causing the problem it
->>>>>> would be good to print out the
->>>>>> actually pid doing the free and as many return addresses that you can,
->>>>>> so we can get an
->>>>>> idea of the actual call chain.
->>>>>>         
->>>>>>             
->>>>> The free is coming from the xfssyncd thread, the back trace looks like:
->>>>>
->>>>> [<8418d0e2>] xfs_idestroy+0x22/0x100
->>>>> [<8418a1b0>] xfs_ireclaim+0x50/0x80
->>>>> [<841ad7f2>] xfs_finish_reclaim+0x32/0x1c0
->>>>> [<841ada30>] xfs_finish_reclaim_all+0xb0/0x100
->>>>> [<8418a780>] xfs_ilock_nowait+0x0/0x160
->>>>> [<841a9df2>] xfs_syncsub+0x52/0x360
->>>>> [<84335108>] schedule_timeout+0x48/0x100
->>>>> [<841ab684>] xfs_sync+0x24/0x40
->>>>> [<841e0ce0>] list_add+0x0/0x20
->>>>> [<841c041c>] vfs_sync+0x1c/0x40
->>>>> [<841bf37c>] vfs_sync_worker+0x1c/0x60
->>>>> [<841bf6b6>] xfssyncd+0xb6/0x140
->>>>> [<8402f0dc>] kthread+0x3c/0x80
->>>>> [<84012440>] complete+0x0/0x60
->>>>> [<841bf600>] xfssyncd+0x0/0x140
->>>>> [<8402f060>] kthread_should_stop+0x0/0x20
->>>>> [<84003984>] kernel_thread_helper+0x4/0x20
->>>>> [<8402f0a0>] kthread+0x0/0x80
->>>>> [<84003980>] kernel_thread_helper+0x0/0x20
->>>>>       
->>>>>           
->>>> There were some use-after-free fixes in .27 timeframe to the inode
->>>> reclaim code. Can you reeetest with a more recent kernel?
->>>>     
->>>>         
->>> Possibly. I have a half-finished port of 2.6.27-rc4
->>>  to our hardware
->>> which I could probably get going fairly quickly. Do you think that
->>> would be sufficient to pick up the use-after-free fixes?
->>>
->>> Thanks
->>>
->>> Stuart
->>>
->>>   
->>>       
->> Any reason you are using an rc4? vs 2.6.27?
->>     
->
-> None, it just happened to be the latest at the time I did the work.
->
->   
->> I would simply run a diff over rc4 fs/xfs and 2.6.27 fs/xfs and see what
->> is different if anything.
->>     
->
-> There are about 500 lines of diff. Tracking them back to the git commits its
-> about 10 commits, most of which are self contained XFS specific changes,
-> and a couple are simple changes which affect all users of a kernel wide API.
-> So on a first glance bringing the XFS code upto 2.6.27 level wouldn't be a
-> problem. One of these change is a use-after-free fix (in buffers, not inodes
-> which appears to be the problem I'm seeing), so its probably worth the effort.
->
-> OK, I'll give that a try, and see what happens.
->
-> Stuart
->
->   
-Ya I have not looked specifically to see what is there in terms of inode
-use after free patches.
+We had some systems crash with this stack:
 
-The problem will be to track down why the ref counting is out of wack,
-and why it
-is allowing for the inode to be released.
+[<a00000010000cb20>] ia64_leave_kernel+0x0/0x280
+[<a00000021291ca00>] xfs_bmbt_get_startoff+0x0/0x20 [xfs]
+[<a0000002129080b0>] xfs_bmap_last_offset+0x210/0x280 [xfs]
+[<a00000021295b010>] xfs_file_last_byte+0x70/0x1a0 [xfs]
+[<a00000021295b200>] xfs_itruncate_start+0xc0/0x1a0 [xfs]
+[<a0000002129935f0>] xfs_inactive_free_eofblocks+0x290/0x460 [xfs]
+[<a000000212998fb0>] xfs_release+0x1b0/0x240 [xfs]
+[<a0000002129ad930>] xfs_file_release+0x70/0xa0 [xfs]
+[<a000000100162ea0>] __fput+0x1a0/0x420
+[<a000000100163160>] fput+0x40/0x60
 
-I wouldn't hurt to start with a more current xfs if possible to see if
-it is still a problem.
+The problem here is that xfs_file_last_byte() does not acquire the
+inode lock and can therefore race with another thread that is modifying
+the extext list.  While xfs_bmap_last_offset() is trying to lookup
+what was the last extent some extents were merged and the extent list
+shrunk so the index we lookup is now beyond the end of the extent list
+and potentially in a freed buffer.
 
--Russell
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index e7ae08d..cf62d9d 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1258,8 +1258,10 @@ xfs_file_last_byte(
+ 	 * necessary.
+ 	 */
+ 	if (ip->i_df.if_flags & XFS_IFEXTENTS) {
++		xfs_ilock(ip, XFS_ILOCK_SHARED);
+ 		error = xfs_bmap_last_offset(NULL, ip, &last_block,
+ 			XFS_DATA_FORK);
++		xfs_iunlock(ip, XFS_ILOCK_SHARED);
+ 		if (error) {
+ 			last_block = 0;
+ 		}
 
 _______________________________________________
 xfs mailing list
