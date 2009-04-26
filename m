@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3P11adc121323 for <xfs@oss.sgi.com>; Fri, 24 Apr 2009 20:01:36 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 403071CE72B1
-	for <xfs@oss.sgi.com>; Fri, 24 Apr 2009 18:01:33 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id lLTUqc2NajiVLj0G for
-	<xfs@oss.sgi.com>; Fri, 24 Apr 2009 18:01:33 -0700 (PDT)
-Message-ID: <49F260F1.4030503@sandeen.net>
-Date: Fri, 24 Apr 2009 20:01:37 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: Slab memory usage
-References: <73EE3FB2-381F-43F1-82C1-FA4C020E7C02@strands.com>
-In-Reply-To: <73EE3FB2-381F-43F1-82C1-FA4C020E7C02@strands.com>
+	n3QE79jM233111 for <xfs@oss.sgi.com>; Sun, 26 Apr 2009 09:07:11 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8D6851CE98AE
+	for <xfs@oss.sgi.com>; Sun, 26 Apr 2009 07:07:08 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id LLi38SQECazWLt8P for
+	<xfs@oss.sgi.com>; Sun, 26 Apr 2009 07:07:08 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1Ly50e-0008Lr-4O
+	for xfs@oss.sgi.com; Sun, 26 Apr 2009 14:07:08 +0000
+Message-Id: <20090426140708.037795000@bombadil.infradead.org>
+Date: Sun, 26 Apr 2009 10:03:09 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH 4/5] xfs: make sure xfs_sync_fsdata covers the log
+References: <20090426140305.113371000@bombadil.infradead.org>
+Content-Disposition: inline; filename=xfs-fix-xfs_sync_fsdata
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,84 +25,84 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Poul Petersen <petersen@strands.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Poul Petersen wrote:
-> 	I'm running Debian Lenny with kernel 2.6.26-1-amd64 and  
-> xfsprogs-2.9.8-1. I've been having a problem with the amount of slab  
-> memory that XFS seems to be consuming when running a rsync backup job,  
-> a du, or other file-system intensive programs. Below is an example of  
-> the output of slabtop and /proc/meminfo. I'm running a tool that  
-> monitors free memory space, and it starts generating alerts, though I  
-> don't blame it when the SLAB is running at 50% of memory!
-> 
-> 	When the process finishes, the memory usually frees up over a period  
-> of several hours. However, on a similar system, even 24 hours after  
-> the rsync job finished, the slab never freed up. On that machine, if I  
-> run:
-> 
-> echo 2 > /proc/sys/vm/drop_caches
-> 
-> 	Then the slab goes down to something more like 1% or 2% of system  
-> RAM. Any ideas what is causing this behaviour? And how I might  
-> alleviate it?
-> 
-> Thanks,
-> 
-> -poul
-> 
-> slabtop
-> =======
-> 
->   Active / Total Objects (% used)    : 7684622 / 7875871 (97.6%)
->   Active / Total Slabs (% used)      : 720661 / 720662 (100.0%)
->   Active / Total Caches (% used)     : 105 / 176 (59.7%)
->   Active / Total Size (% used)       : 2683658.81K / 2702989.38K (99.3%)
->   Minimum / Average / Maximum Object : 0.02K / 0.34K / 4096.00K
-> 
->    OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME
-> 1933952 1933787  99%    0.44K 241744        8    966976K xfs_inode
-> 1933918 1933787  99%    0.56K 276274        7   1105096K xfs_vnode
-> 1361008 1359980  99%    0.20K  71632       19    286528K dentry
+We want to always cover the log after writing out the superblock, and
+in case of a synchronous writeout make sure we actually wait for the
+log to be covered.  That way a filesystem that has been sync()ed can
+be considered clean by log recovery.
 
-
-o/~ the dentry's connected to the ... v-node, the v-node's connected to
-the ... i-node .... o/~
-
-This is really mostly the linux vfs hanging onto the dentries.  This in
-turn pins the inodes and related xfs structures.
-
-But, your memory is there for caching, most of the time.  If it's not
-(mostly) used, then it's wasted.  If the memory is needed for other
-purposes, the vfs frees the cached dentries, which in turn frees the
-related structures.  This really isn't necessarily indicative of a problem.
-
-There are some tunables* you could play with to change this behavior if
-you like, but unless you are actually seeing performance problems, I
-wouldn't be too concerned.
-
--Eric
-
-
-*from Documentation/sysctl/vm.txt:
-
-vfs_cache_pressure
-------------------
-
-Controls the tendency of the kernel to reclaim the memory which is used
-for caching of directory and inode objects.
-
-At the default value of vfs_cache_pressure=100 the kernel will attempt
-to reclaim dentries and inodes at a "fair" rate with respect to
-pagecache and swapcache reclaim.  Decreasing vfs_cache_pressure causes
-the kernel to prefer to retain dentry and inode caches.  Increasing
-vfs_cache_pressure beyond 100 causes the kernel to prefer to reclaim
-dentries and inodes.
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_sync.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_sync.c	2009-04-26 10:08:01.468074092 +0200
++++ linux-2.6/fs/xfs/linux-2.6/xfs_sync.c	2009-04-26 10:28:37.049956907 +0200
+@@ -208,11 +210,15 @@ xfs_sync_inodes(
+ STATIC int
+ xfs_commit_dummy_trans(
+ 	struct xfs_mount	*mp,
+-	uint			log_flags)
++	uint			flags)
+ {
+ 	struct xfs_inode	*ip = mp->m_rootip;
+ 	struct xfs_trans	*tp;
+ 	int			error;
++	int			log_flags = XFS_LOG_FORCE;
++
++	if (flags & SYNC_WAIT)
++		log_flags |= XFS_LOG_SYNC;
+ 
+ 	/*
+ 	 * Put a dummy transaction in the log to tell recovery
+@@ -230,13 +236,12 @@ xfs_commit_dummy_trans(
+ 	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+ 	xfs_trans_ihold(tp, ip);
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-	/* XXX(hch): ignoring the error here.. */
+ 	error = xfs_trans_commit(tp, 0);
+-
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 
++	/* the log force ensures this transaction is pushed to disk */
+ 	xfs_log_force(mp, 0, log_flags);
+-	return 0;
++	return error;
+ }
+ 
+ int
+@@ -276,6 +281,7 @@ xfs_sync_fsdata(
+ 		 */
+ 		if (XFS_BUF_ISPINNED(bp))
+ 			xfs_log_force(mp, 0, XFS_LOG_FORCE);
++		xfs_flush_buftarg(mp->m_ddev_targp, 1);
+ 	}
+ 
+ 
+@@ -284,7 +290,10 @@ xfs_sync_fsdata(
+ 	else
+ 		XFS_BUF_ASYNC(bp);
+ 
+-	return xfs_bwrite(mp, bp);
++	error = xfs_bwrite(mp, bp);
++	if (!error && xfs_log_need_covered(mp))
++		error = xfs_commit_dummy_trans(mp, (flags & SYNC_WAIT));
++	return error;
+ 
+  out_brelse:
+ 	xfs_buf_relse(bp);
+@@ -469,8 +478,6 @@ xfs_sync_worker(
+ 		/* dgc: errors ignored here */
+ 		error = XFS_QM_DQSYNC(mp, SYNC_BDFLUSH);
+ 		error = xfs_sync_fsdata(mp, SYNC_BDFLUSH);
+-		if (xfs_log_need_covered(mp))
+-			error = xfs_commit_dummy_trans(mp, XFS_LOG_FORCE);
+ 	}
+ 	mp->m_sync_seq++;
+ 	wake_up(&mp->m_wait_single_sync_task);
 
 _______________________________________________
 xfs mailing list
