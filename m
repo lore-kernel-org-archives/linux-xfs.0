@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3QE79cm233106 for <xfs@oss.sgi.com>; Sun, 26 Apr 2009 09:07:11 -0500
+	n3QE79hT233113 for <xfs@oss.sgi.com>; Sun, 26 Apr 2009 09:07:12 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4D8AF1CE98A6
-	for <xfs@oss.sgi.com>; Sun, 26 Apr 2009 07:07:08 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0C2B3144D3E4
+	for <xfs@oss.sgi.com>; Sun, 26 Apr 2009 07:10:16 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id uw0fKEgY7as3zd1I for
-	<xfs@oss.sgi.com>; Sun, 26 Apr 2009 07:07:08 -0700 (PDT)
+	by cuda.sgi.com with ESMTP id ZY127XHz0MJbURat for
+	<xfs@oss.sgi.com>; Sun, 26 Apr 2009 07:10:16 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1Ly50d-0008Jl-Vh
-	for xfs@oss.sgi.com; Sun, 26 Apr 2009 14:07:08 +0000
-Message-Id: <20090426140707.884922000@bombadil.infradead.org>
-Date: Sun, 26 Apr 2009 10:03:08 -0400
+	Linux)) id 1Ly50d-0008IE-Qo
+	for xfs@oss.sgi.com; Sun, 26 Apr 2009 14:07:07 +0000
+Message-Id: <20090426140707.713299000@bombadil.infradead.org>
+Date: Sun, 26 Apr 2009 10:03:07 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 3/5] xfs: make inodes dirty before issuing I/O
+Subject: [PATCH 2/5] xfs: cleanup ->sync_fs
 References: <20090426140305.113371000@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-mark-inode-dirty-early
+Content-Disposition: inline; filename=xfs-cleanup-sync_fs
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,89 +32,89 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-To make sure they get properly waited on in sync when I/O is in flight and
-we latter need to update the inode size.
+Sort out ->sync_fs to not perform a superblock writeback for the wait = 0 case
+as that is just an optional first pass and the superblock will be written back
+properly in the next call with wait = 1.  Instead perform an opportunistic
+quota writeback to have less work later.  Also remove the freeze special case
+as we do a proper wait = 1 call in the freeze code anyway.
+
+Also rename the function to xfs_fs_sync_fs to match the normal naming
+convention, update comments and avoid calling into the laptop_mode logic on
+an error.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 
-
-Index: linux-2.6/fs/xfs/linux-2.6/xfs_aops.c
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_super.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_aops.c	2009-04-26 10:33:05.556127371 +0200
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_aops.c	2009-04-26 10:37:23.137953826 +0200
-@@ -186,19 +186,37 @@ xfs_destroy_ioend(
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_super.c	2009-04-26 10:39:20.433949442 +0200
++++ linux-2.6/fs/xfs/linux-2.6/xfs_super.c	2009-04-26 10:43:31.297949640 +0200
+@@ -1105,7 +1105,7 @@ xfs_fs_put_super(
  }
  
- /*
-+ * If the end of the current ioend is beyond the current EOF,
-+ * return the new EOF value, otherwise zero.
-+ */
-+STATIC xfs_fsize_t
-+xfs_ioend_new_eof(
-+	xfs_ioend_t		*ioend)
-+{
-+	xfs_inode_t		*ip = XFS_I(ioend->io_inode);
-+	xfs_fsize_t		isize;
-+	xfs_fsize_t		bsize;
-+
-+	bsize = ioend->io_offset + ioend->io_size;
-+	isize = MAX(ip->i_size, ip->i_new_size);
-+	isize = MIN(isize, bsize);
-+	return isize > ip->i_d.di_size ? isize : 0;
-+}
-+
-+/*
-  * Update on-disk file size now that data has been written to disk.
-  * The current in-memory file size is i_size.  If a write is beyond
-  * eof i_new_size will be the intended file size until i_size is
-  * updated.  If this write does not extend all the way to the valid
-  * file size then restrict this update to the end of the write.
-  */
-+
- STATIC void
- xfs_setfilesize(
- 	xfs_ioend_t		*ioend)
+ STATIC int
+-xfs_fs_sync_super(
++xfs_fs_sync_fs(
+ 	struct super_block	*sb,
+ 	int			wait)
  {
- 	xfs_inode_t		*ip = XFS_I(ioend->io_inode);
- 	xfs_fsize_t		isize;
--	xfs_fsize_t		bsize;
+@@ -1113,23 +1113,23 @@ xfs_fs_sync_super(
+ 	int			error;
  
- 	ASSERT((ip->i_d.di_mode & S_IFMT) == S_IFREG);
- 	ASSERT(ioend->io_type != IOMAP_READ);
-@@ -206,14 +224,9 @@ xfs_setfilesize(
- 	if (unlikely(ioend->io_error))
- 		return;
- 
--	bsize = ioend->io_offset + ioend->io_size;
--
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
--
--	isize = MAX(ip->i_size, ip->i_new_size);
--	isize = MIN(isize, bsize);
--
--	if (ip->i_d.di_size < isize) {
-+	isize = xfs_ioend_new_eof(ioend);
-+	if (isize) {
- 		ip->i_d.di_size = isize;
- 		ip->i_update_core = 1;
- 		ip->i_update_size = 1;
-@@ -405,10 +418,16 @@ xfs_submit_ioend_bio(
- 	struct bio	*bio)
- {
- 	atomic_inc(&ioend->io_remaining);
--
- 	bio->bi_private = ioend;
- 	bio->bi_end_io = xfs_end_bio;
- 
-+	/*
-+	 * if the I/O is beyond EOF we mark the inode dirty immediately
-+	 * but don't update the inode size until I/O completion.
-+	 */
-+	if (xfs_ioend_new_eof(ioend))
-+		xfs_mark_inode_dirty_sync(XFS_I(ioend->io_inode));
+ 	/*
+-	 * Treat a sync operation like a freeze.  This is to work
+-	 * around a race in sync_inodes() which works in two phases
+-	 * - an asynchronous flush, which can write out an inode
+-	 * without waiting for file size updates to complete, and a
+-	 * synchronous flush, which wont do anything because the
+-	 * async flush removed the inode's dirty flag.  Also
+-	 * sync_inodes() will not see any files that just have
+-	 * outstanding transactions to be flushed because we don't
+-	 * dirty the Linux inode until after the transaction I/O
+-	 * completes.
++	 * Not much we can do fort the first async pass.  Writing out the
++	 * superblock would be contra-productive as we are going to redirty
++	 * when writing out other data and metadata (and writing out a single
++	 * block is quite fast anyway.
++	 *
++	 * Try to asynchronously kick of quota syncing at least.
+ 	 */
+-	if (wait || unlikely(sb->s_frozen == SB_FREEZE_WRITE))
+-		error = xfs_quiesce_data(mp);
+-	else
+-		error = xfs_sync_fsdata(mp, 0);
++	if (!wait) {
++		XFS_QM_DQSYNC(mp, SYNC_BDFLUSH);
++		return 0;
++	}
 +
- 	submit_bio(WRITE, bio);
- 	ASSERT(!bio_flagged(bio, BIO_EOPNOTSUPP));
- 	bio_put(bio);
++	error = xfs_quiesce_data(mp);
++	if (error)
++		return -error;
+ 
+-	if (unlikely(laptop_mode)) {
++	if (laptop_mode) {
+ 		int	prev_sync_seq = mp->m_sync_seq;
+ 
+ 		/*
+@@ -1148,7 +1148,7 @@ xfs_fs_sync_super(
+ 				mp->m_sync_seq != prev_sync_seq);
+ 	}
+ 
+-	return -error;
++	return 0;
+ }
+ 
+ STATIC int
+@@ -1522,7 +1522,7 @@ static struct super_operations xfs_super
+ 	.write_inode		= xfs_fs_write_inode,
+ 	.clear_inode		= xfs_fs_clear_inode,
+ 	.put_super		= xfs_fs_put_super,
+-	.sync_fs		= xfs_fs_sync_super,
++	.sync_fs		= xfs_fs_sync_fs,
+ 	.freeze_fs		= xfs_fs_freeze,
+ 	.statfs			= xfs_fs_statfs,
+ 	.remount_fs		= xfs_fs_remount,
 
 _______________________________________________
 xfs mailing list
