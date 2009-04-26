@@ -1,20 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3QE79GU233109 for <xfs@oss.sgi.com>; Sun, 26 Apr 2009 09:07:12 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8AE7C23E3E1
-	for <xfs@oss.sgi.com>; Sun, 26 Apr 2009 07:07:08 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id EJ1NcFYz5fFQFGKr for
-	<xfs@oss.sgi.com>; Sun, 26 Apr 2009 07:07:08 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1Ly50d-0008Gu-Dx
-	for xfs@oss.sgi.com; Sun, 26 Apr 2009 14:07:07 +0000
-Message-Id: <20090426140305.113371000@bombadil.infradead.org>
-Date: Sun, 26 Apr 2009 10:03:05 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 0/5] fix sync (test 182, grub)
+	n3QLpRps252312 for <xfs@oss.sgi.com>; Sun, 26 Apr 2009 16:51:28 -0500
+Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B915F1CEA2EB
+	for <xfs@oss.sgi.com>; Sun, 26 Apr 2009 14:51:24 -0700 (PDT)
+Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.162.198]) by
+	cuda.sgi.com with ESMTP id EBEqtMwTCwbsenYu for
+	<xfs@oss.sgi.com>; Sun, 26 Apr 2009 14:51:24 -0700 (PDT)
+Received: from mailsrv2.i.zmi.at (h081217107103.dyn.cm.kabsi.at
+	[81.217.107.103])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv1.zmi.at (Postfix) with ESMTP id 1B5135144
+	for <xfs@oss.sgi.com>; Sun, 26 Apr 2009 23:51:28 +0200 (CEST)
+Received: from saturn.localnet (saturn.i.zmi.at [10.0.0.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv2.i.zmi.at (Postfix) with ESMTPSA id 764E340017B
+	for <xfs@oss.sgi.com>; Sun, 26 Apr 2009 23:51:23 +0200 (CEST)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: Slab memory usage
+Date: Sun, 26 Apr 2009 23:51:22 +0200
+References: <73EE3FB2-381F-43F1-82C1-FA4C020E7C02@strands.com>
+	<49F260F1.4030503@sandeen.net>
+In-Reply-To: <49F260F1.4030503@sandeen.net>
+MIME-Version: 1.0
+Content-Disposition: inline
+Message-Id: <200904262351.22970@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,22 +36,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Revisit Dave's prototype to make sync equivalent to freeze, that is make
-sure not only we have all data on disk, but also the metadata in the right
-place and not requite a log recovery.  That fixes test 182 and should also
-help with the frequent grub complaints.
+On Samstag 25 April 2009 Eric Sandeen wrote:
+> *from Documentation/sysctl/vm.txt:
+>
+> vfs_cache_pressure
+> ------------------
+>
+> Controls the tendency of the kernel to reclaim the memory which is
+> used for caching of directory and inode objects.
+>
+> At the default value of vfs_cache_pressure=3D100 the kernel will
+> attempt to reclaim dentries and inodes at a "fair" rate with respect
+> to pagecache and swapcache reclaim. =A0Decreasing vfs_cache_pressure
+> causes the kernel to prefer to retain dentry and inode caches.
+> =A0Increasing vfs_cache_pressure beyond 100 causes the kernel to prefer
+> to reclaim dentries and inodes.
 
-The patches require Jan Kara's sync rewrite on -fsdevel and lkml
-(http://lkml.indiana.edu/hypermail/linux/kernel/0904.2/03643.html)
-so that sync actually calls into the filesystem in the correct order
-for the various parts of sync activity.
+So if I decrease it, lets say to 60, Linux prefers to remember =
+
+files/dirs over their content. An increase to 150 would mean Linux =
+
+prefers to keep file contents over dirs/files?
+
+If so, I think for a fileserver for many users accessing many =
+
+dirs/files, I'd prefer a lower value, in order to prevent searching. =
+
+Disk contents can be read fast, with all the read-ahead caching of =
+
+disks/controllers and Linux itself, but the scattered dirs take loooong =
+
+to scan sometimes. (Example: a foto collection with 50.000 files in many =
+
+dirs). Am I right?
+
+mfg zmi
+-- =
+
+// Michael Monnerie, Ing.BSc    -----      http://it-management.at
+// Tel: 0660 / 415 65 31                      .network.your.ideas.
+// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
+// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
+// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
 
 _______________________________________________
 xfs mailing list
