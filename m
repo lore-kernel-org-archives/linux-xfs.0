@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3TDo2qq163963 for <xfs@oss.sgi.com>; Wed, 29 Apr 2009 08:50:02 -0500
+	n3TDnfDv163938 for <xfs@oss.sgi.com>; Wed, 29 Apr 2009 08:49:42 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 24C83145B8C6
-	for <xfs@oss.sgi.com>; Wed, 29 Apr 2009 06:53:26 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DB28724C912
+	for <xfs@oss.sgi.com>; Wed, 29 Apr 2009 06:49:41 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id Dr94Hne1638zZDVA for
-	<xfs@oss.sgi.com>; Wed, 29 Apr 2009 06:53:26 -0700 (PDT)
+	by cuda.sgi.com with ESMTP id TTkMuh1xTMutOfYi for
+	<xfs@oss.sgi.com>; Wed, 29 Apr 2009 06:49:41 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1LzAAi-0004sF-QW
-	for xfs@oss.sgi.com; Wed, 29 Apr 2009 13:50:00 +0000
-Date: Wed, 29 Apr 2009 09:50:00 -0400
+	Linux)) id 1LzAAO-0001bG-GP
+	for xfs@oss.sgi.com; Wed, 29 Apr 2009 13:49:40 +0000
+Date: Wed, 29 Apr 2009 09:49:40 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] dmapi: add .gitignore
-Message-ID: <20090429135000.GB30808@infradead.org>
+Subject: [PATCH] dmapi: bump version and update CHANGES
+Message-ID: <20090429134940.GA30808@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,52 +31,30 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Index: dmapi-dev/.gitignore
+Index: dmapi-dev/VERSION
 ===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ dmapi-dev/.gitignore	2009-04-29 15:37:28.128650851 +0200
-@@ -0,0 +1,39 @@
-+# object files
-+*.o
+--- dmapi-dev.orig/VERSION	2009-04-29 15:35:03.447607212 +0200
++++ dmapi-dev/VERSION	2009-04-29 15:35:06.731519494 +0200
+@@ -3,5 +3,5 @@
+ #
+ PKG_MAJOR=2
+ PKG_MINOR=2
+-PKG_REVISION=9
++PKG_REVISION=10
+ PKG_BUILD=1
+Index: dmapi-dev/doc/CHANGES
+===================================================================
+--- dmapi-dev.orig/doc/CHANGES	2009-04-29 15:35:10.867482929 +0200
++++ dmapi-dev/doc/CHANGES	2009-04-29 15:36:03.542550769 +0200
+@@ -1,3 +1,8 @@
++dmapi-2.2.10
++	- Update the Makepkgs script to generate proper source tarballs.
++	- Small specfile improvements, thanks to Jan Engelhardt.
++	- Various autoconf/libtool fixes, thanks to Andreas Gruenbacher.
 +
-+# build system
-+.census
-+Logs/
-+include/builddefs
-+install-sh
-+
-+# magic diretory symlinks
-+include/xfs
-+
-+# Makepgs
-+build/src-manifest
-+build/dmapi-*.tar.gz
-+doc/CHANGES.gz
-+dmapi-*
-+
-+# autoconf generated files
-+aclocal.m4
-+autom4te.cache/
-+config.guess
-+config.log
-+config.status
-+config.sub
-+configure
-+
-+# libtool
-+libtool
-+ltmain.sh
-+*.lo
-+*.la
-+.libs
-+
-+# quilt stuff
-+.pc/
-+patches/
-+
-+# binaries
+ dmapi-2.2.9 (4 February 2009)
+ 	- Various build system updates.
+ 
 
 _______________________________________________
 xfs mailing list
