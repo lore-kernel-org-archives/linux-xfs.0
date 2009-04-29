@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3TEgav7165622 for <xfs@oss.sgi.com>; Wed, 29 Apr 2009 09:42:37 -0500
+	n3TEhLGt165654 for <xfs@oss.sgi.com>; Wed, 29 Apr 2009 09:43:22 -0500
 Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3B3CAAC004
-	for <xfs@oss.sgi.com>; Wed, 29 Apr 2009 07:42:37 -0700 (PDT)
-Message-Id: <04552742-BF7F-4F94-A658-1307A0C2D6A7@sgi.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5C00BAC007
+	for <xfs@oss.sgi.com>; Wed, 29 Apr 2009 07:43:22 -0700 (PDT)
+Message-Id: <645E0688-2C35-489F-B309-BE944F804346@sgi.com>
 From: Felix Blyakher <felixb@sgi.com>
-In-Reply-To: <20090429134940.GA30808@infradead.org>
+In-Reply-To: <20090429135000.GB30808@infradead.org>
 Mime-Version: 1.0 (Apple Message framework v926)
-Subject: Re: [PATCH] dmapi: bump version and update CHANGES
-Date: Wed, 29 Apr 2009 09:42:35 -0500
-References: <20090429134940.GA30808@infradead.org>
+Subject: Re: [PATCH] dmapi: add .gitignore
+Date: Wed, 29 Apr 2009 09:43:21 -0500
+References: <20090429135000.GB30808@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,34 +28,63 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
 
-On Apr 29, 2009, at 8:49 AM, Christoph Hellwig wrote:
+On Apr 29, 2009, at 8:50 AM, Christoph Hellwig wrote:
 
-> Index: dmapi-dev/VERSION
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Reviewed-by: Felix Blyakher <felixb@sgi.com>
+
+>
+>
+> Index: dmapi-dev/.gitignore
 > ===================================================================
-> --- dmapi-dev.orig/VERSION	2009-04-29 15:35:03.447607212 +0200
-> +++ dmapi-dev/VERSION	2009-04-29 15:35:06.731519494 +0200
-> @@ -3,5 +3,5 @@
-> #
-> PKG_MAJOR=2
-> PKG_MINOR=2
-> -PKG_REVISION=9
-> +PKG_REVISION=10
-> PKG_BUILD=1
-> Index: dmapi-dev/doc/CHANGES
-> ===================================================================
-> --- dmapi-dev.orig/doc/CHANGES	2009-04-29 15:35:10.867482929 +0200
-> +++ dmapi-dev/doc/CHANGES	2009-04-29 15:36:03.542550769 +0200
-> @@ -1,3 +1,8 @@
-> +dmapi-2.2.10
-> +	- Update the Makepkgs script to generate proper source tarballs.
-> +	- Small specfile improvements, thanks to Jan Engelhardt.
-> +	- Various autoconf/libtool fixes, thanks to Andreas Gruenbacher.
+> --- /dev/null	1970-01-01 00:00:00.000000000 +0000
+> +++ dmapi-dev/.gitignore	2009-04-29 15:37:28.128650851 +0200
+> @@ -0,0 +1,39 @@
+> +# object files
+> +*.o
 > +
-> dmapi-2.2.9 (4 February 2009)
-> 	- Various build system updates.
-
-
-Acked-by: Felix Blyakher <felixb@sgi.com>
+> +# build system
+> +.census
+> +Logs/
+> +include/builddefs
+> +install-sh
+> +
+> +# magic diretory symlinks
+> +include/xfs
+> +
+> +# Makepgs
+> +build/src-manifest
+> +build/dmapi-*.tar.gz
+> +doc/CHANGES.gz
+> +dmapi-*
+> +
+> +# autoconf generated files
+> +aclocal.m4
+> +autom4te.cache/
+> +config.guess
+> +config.log
+> +config.status
+> +config.sub
+> +configure
+> +
+> +# libtool
+> +libtool
+> +ltmain.sh
+> +*.lo
+> +*.la
+> +.libs
+> +
+> +# quilt stuff
+> +.pc/
+> +patches/
+> +
+> +# binaries
+>
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
