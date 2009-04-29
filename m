@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3SGIju7111930 for <xfs@oss.sgi.com>; Tue, 28 Apr 2009 11:18:46 -0500
-Received: from v007470.home.net.pl (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id 73D8E1456F9F
-	for <xfs@oss.sgi.com>; Tue, 28 Apr 2009 09:22:02 -0700 (PDT)
-Received: from v007470.home.net.pl (v007470.home.net.pl [212.85.125.104]) by
-	cuda.sgi.com with SMTP id n0d0qyTGSTkjeal7 for
-	<xfs@oss.sgi.com>; Tue, 28 Apr 2009 09:22:02 -0700 (PDT)
-From: Krzysztof =?utf-8?q?B=C5=82aszkowski?= <kb@sysmikro.com.pl>
-Subject: generating uevents by xfs
-Date: Tue, 28 Apr 2009 18:18:31 +0200
+	n3T3eL8Q142895 for <xfs@oss.sgi.com>; Tue, 28 Apr 2009 22:40:22 -0500
+Received: from qw-out-1920.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D15AF1459DCC
+	for <xfs@oss.sgi.com>; Tue, 28 Apr 2009 20:43:42 -0700 (PDT)
+Received: from qw-out-1920.google.com (qw-out-1920.google.com [74.125.92.144])
+	by cuda.sgi.com with ESMTP id 1w5uQYwb8yTqHk8V for
+	<xfs@oss.sgi.com>; Tue, 28 Apr 2009 20:43:42 -0700 (PDT)
+Received: by qw-out-1920.google.com with SMTP id 4so808928qwk.32
+	for <xfs@oss.sgi.com>; Tue, 28 Apr 2009 20:40:19 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_Yxy9JY+IVsuLkno"
-Message-Id: <200904281818.32127.kb@sysmikro.com.pl>
+Date: Tue, 28 Apr 2009 23:40:19 -0400
+Message-ID: <ff2243530904282040i1bb2cf12v3a329b045edf2f50@mail.gmail.com>
+Subject: xfs_repair Input/output error
+From: Cory Coager <ccoager@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,766 +23,146 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: multipart/mixed; boundary="===============9176173275803336237=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---Boundary-00=_Yxy9JY+IVsuLkno
-Content-Type: text/plain;
-  charset="us-ascii"
+--===============9176173275803336237==
+Content-Type: multipart/alternative; boundary=00163646d0bea7ebfa0468a95651
+
+--00163646d0bea7ebfa0468a95651
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 
-Hello,
+I had a power failure while I was running a defrag on an xfs partition. Now
+I am unable to mount, xfs_check or xfs_repair the partition. The partition
+is lvm and all other partitions seem to be fine except this one. When
+attempting to mount the partition the drive makes some funny noises and
+these messages spit out on the console:
 
-once upon i was asked to think about such facility for notifying userspace 
-when some mount point is nearly full at some level let's say e.g. 90% 
-(threshold should be configurable).
+hda: dma_intr: status=0x51 { DriveReady SeekComplete Error }
+hda: dma_intr: error=0x40 { UncorrectableError }, LBAsect=268552872,
+high=16, low=117416, sector=268552868
+ide: failed opcode was: unknown
+end_request: I/O error, dev hda, sector 268552868
 
-here is a solution designed by me and i would like to see comments on this 
-idea and solution.
+I believe the drive is fine because check_ide_smart reports:
 
-i verified these patches with 2.6.27.19 (SuSE) but there are also patches for 
-2.6.28.4 and 2.6.29.2 but i haven't given a try to latest two kernels.
+Id=  1, Status=11 {PreFailure , OnLine }, Value=100, Threshold= 60, Passed
+Id=  2, Status= 5 {PreFailure , OffLine}, Value=100, Threshold= 50, Passed
+Id=  3, Status= 7 {PreFailure , OnLine }, Value=151, Threshold= 24, Passed
+Id=  4, Status=18 {Advisory    , OnLine }, Value=100, Threshold=  0, Passed
+Id=  5, Status=51 {PreFailure , OnLine }, Value=100, Threshold=  5, Passed
+Id=  7, Status=11 {PreFailure , OnLine }, Value=100, Threshold= 67, Passed
+Id=  8, Status= 5 {PreFailure , OffLine}, Value=100, Threshold= 20, Passed
+Id=  9, Status=18 {Advisory    , OnLine }, Value= 96, Threshold=  0, Passed
+Id= 10, Status=19 {PreFailure , OnLine }, Value=100, Threshold= 60, Passed
+Id= 12, Status=50 {Advisory    , OnLine }, Value=100, Threshold=  0, Passed
+Id=192, Status=50 {Advisory    , OnLine }, Value= 99, Threshold= 50, Passed
+Id=193, Status=18 {Advisory    , OnLine }, Value= 99, Threshold= 50, Passed
+Id=194, Status= 2 {Advisory    , OnLine }, Value=137, Threshold=  0, Passed
+Id=196, Status=50 {Advisory    , OnLine }, Value=100, Threshold=  0, Passed
+Id=197, Status=34 {Advisory    , OnLine }, Value=100, Threshold=  0, Passed
+Id=198, Status= 8 {Advisory    , OffLine}, Value=100, Threshold=  0, Passed
+Id=199, Status=10 {Advisory    , OnLine }, Value=200, Threshold=  0, Passed
+OffLineStatus=0 {NeverStarted}, AutoOffLine=No, OffLineTimeout=92 minutes
+OffLineCapability=27 {Immediate Auto SuspendOnCmd}
+SmartRevision=16, CheckSum=151, SmartCapability=3 {SaveOnStandBy AutoSave}
 
-to use it one may need to pick right *-1- patch and the *-2 patch.
+I can xxd and dd this partition without getting any console errors. I can
+also mount the partition with -o ro,norecovery.  How do I repair this and
+recover my data?
 
+--00163646d0bea7ebfa0468a95651
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-Krzysztof Blaszkowski
-
---Boundary-00=_Yxy9JY+IVsuLkno
-Content-Type: text/x-diff;
-  charset="us-ascii";
-  name="xfs-sysfs-1-26292.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="xfs-sysfs-1-26292.diff"
-
-diff --git a/xfs/Makefile b/xfs/Makefile
-index c3dc491..b0a1330 100644
---- a/xfs/Makefile
-+++ b/xfs/Makefile
-@@ -88,7 +88,8 @@ xfs-y				+= xfs_alloc.o \
- 				   xfs_vnodeops.o \
- 				   xfs_rw.o \
- 				   xfs_dmops.o \
--				   xfs_qmops.o
-+				   xfs_qmops.o \
-+				   xfs_sysfs.o
- 
- xfs-$(CONFIG_XFS_TRACE)		+= xfs_btree_trace.o \
- 				   xfs_dir2_trace.o
-diff --git a/xfs/linux-2.6/xfs_super.c b/xfs/linux-2.6/xfs_super.c
-index 32ae502..99ac6ed 100644
---- a/xfs/linux-2.6/xfs_super.c
-+++ b/xfs/linux-2.6/xfs_super.c
-@@ -1082,6 +1082,9 @@ xfs_fs_put_super(
- 	xfs_close_devices(mp);
- 	xfs_qmops_put(mp);
- 	xfs_dmops_put(mp);
-+#ifdef CONFIG_SYSFS
-+	xfs_event_release(mp);
-+#endif
- 	xfs_free_fsname(mp);
- 	kfree(mp);
+<span class=3D"postbody">I had a power failure while I was running a
+defrag on an xfs partition. Now I am unable to mount, xfs_check or
+xfs_repair the partition. The partition is lvm and all other partitions
+seem to be fine except this one. When attempting to mount the partition
+the drive makes some funny noises and these messages spit out on the
+console:
+<br><br></span>hda: dma_intr: status=3D0x51 { DriveReady SeekComplete Error=
  }
-@@ -1509,6 +1512,9 @@ xfs_fs_fill_super(
- 
- 	kfree(mtpt);
- 
-+#ifdef CONFIG_SYSFS
-+	xfs_event_alloc(mp);
-+#endif
- 	xfs_itrace_exit(XFS_I(sb->s_root->d_inode));
- 	return 0;
- 
-@@ -1873,6 +1879,10 @@ init_xfs_fs(void)
- 	error = register_filesystem(&xfs_fs_type);
- 	if (error)
- 		goto out_sysctl_unregister;
-+
-+#ifdef CONFIG_SYSFS
-+	xfs_sysfs_init();
-+#endif	
- 	return 0;
- 
-  out_sysctl_unregister:
-@@ -1906,6 +1916,9 @@ exit_xfs_fs(void)
- 	xfs_free_trace_bufs();
- 	xfs_destroy_zones();
- 	ktrace_uninit();
-+#ifdef CONFIG_SYSFS
-+	xfs_sysfs_done();
-+#endif	
- }
- 
- module_init(init_xfs_fs);
-diff --git a/xfs/xfs_mount.c b/xfs/xfs_mount.c
-index 3530025..c19fc17 100644
---- a/xfs/xfs_mount.c
-+++ b/xfs/xfs_mount.c
-@@ -2413,3 +2413,25 @@ balance_counter:
- }
- 
- #endif
-+
-+
-+__uint64_t xfs_icsb_get_fdblocks_lazy(xfs_mount_t *mp)
-+{
-+        __uint64_t fdblocks = 0;
-+#ifdef HAVE_PERCPU_SB
-+        xfs_icsb_cnts_t *cntp;
-+        int i;
-+
-+        for_each_online_cpu(i) {
-+                cntp = (xfs_icsb_cnts_t *)per_cpu_ptr(mp->m_sb_cnts, i);
-+                fdblocks += cntp->icsb_fdblocks;
-+        }
-+
-+        if (xfs_icsb_counter_disabled(mp, XFS_SBS_FDBLOCKS))
-+                fdblocks = mp->m_sb.sb_fdblocks;
-+#else
-+        fdblocks = mp->m_sb.sb_fdblocks;
-+#endif
-+        return fdblocks - XFS_ALLOC_SET_ASIDE(mp);
-+}
-+
-diff --git a/xfs/xfs_mount.h b/xfs/xfs_mount.h
-index f5e9937..45ef4cb 100644
---- a/xfs/xfs_mount.h
-+++ b/xfs/xfs_mount.h
-@@ -329,6 +329,9 @@ typedef struct xfs_mount {
- 	wait_queue_head_t	m_wait_single_sync_task;
- 	__int64_t		m_update_flags;	/* sb flags we need to update
- 						   on the next remount,rw */
-+#ifdef CONFIG_SYSFS
-+	void *event_onlow;
-+#endif
- } xfs_mount_t;
- 
- /*
-@@ -528,6 +531,13 @@ extern void	xfs_qmops_put(struct xfs_mount *);
- 
- extern struct xfs_dmops xfs_dmcore_xfs;
- 
-+#ifdef CONFIG_SYSFS
-+extern void xfs_sysfs_init(void);
-+extern void xfs_sysfs_done(void);
-+extern int xfs_event_alloc(struct xfs_mount *mnt);
-+extern int xfs_event_release(struct xfs_mount *mnt);
-+#endif
-+
- #endif	/* __KERNEL__ */
- 
- extern void	xfs_mod_sb(struct xfs_trans *, __int64_t);
+<br>
+hda: dma_intr: error=3D0x40 { UncorrectableError }, LBAsect=3D268552872, hi=
+gh=3D16, low=3D117416, sector=3D268552868
+<br>
+ide: failed opcode was: unknown
+<br>
+end_request: I/O error, dev hda, sector 268552868<br><span class=3D"postbod=
+y">
 
---Boundary-00=_Yxy9JY+IVsuLkno
-Content-Type: text/x-diff;
-  charset="us-ascii";
-  name="xfs-sysfs-1-26284.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="xfs-sysfs-1-26284.diff"
+</span><span class=3D"postbody"><br>
+I believe the drive is fine because check_ide_smart reports:
+<br><br></span>Id=3D=A0 1, Status=3D11 {PreFailure , OnLine }, Value=3D100,=
+ Threshold=3D 60, Passed
+<br>
+Id=3D=A0 2, Status=3D 5 {PreFailure , OffLine}, Value=3D100, Threshold=3D 5=
+0, Passed
+<br>
+Id=3D=A0 3, Status=3D 7 {PreFailure , OnLine }, Value=3D151, Threshold=3D 2=
+4, Passed
+<br>
+Id=3D=A0 4, Status=3D18 {Advisory=A0 =A0 , OnLine }, Value=3D100, Threshold=
+=3D=A0 0, Passed
+<br>
+Id=3D=A0 5, Status=3D51 {PreFailure , OnLine }, Value=3D100, Threshold=3D=
+=A0 5, Passed
+<br>
+Id=3D=A0 7, Status=3D11 {PreFailure , OnLine }, Value=3D100, Threshold=3D 6=
+7, Passed
+<br>
+Id=3D=A0 8, Status=3D 5 {PreFailure , OffLine}, Value=3D100, Threshold=3D 2=
+0, Passed
+<br>
+Id=3D=A0 9, Status=3D18 {Advisory=A0 =A0 , OnLine }, Value=3D 96, Threshold=
+=3D=A0 0, Passed
+<br>
+Id=3D 10, Status=3D19 {PreFailure , OnLine }, Value=3D100, Threshold=3D 60,=
+ Passed
+<br>
+Id=3D 12, Status=3D50 {Advisory=A0 =A0 , OnLine }, Value=3D100, Threshold=
+=3D=A0 0, Passed
+<br>
+Id=3D192, Status=3D50 {Advisory=A0 =A0 , OnLine }, Value=3D 99, Threshold=
+=3D 50, Passed
+<br>
+Id=3D193, Status=3D18 {Advisory=A0 =A0 , OnLine }, Value=3D 99, Threshold=
+=3D 50, Passed
+<br>
+Id=3D194, Status=3D 2 {Advisory=A0 =A0 , OnLine }, Value=3D137, Threshold=
+=3D=A0 0, Passed
+<br>
+Id=3D196, Status=3D50 {Advisory=A0 =A0 , OnLine }, Value=3D100, Threshold=
+=3D=A0 0, Passed
+<br>
+Id=3D197, Status=3D34 {Advisory=A0 =A0 , OnLine }, Value=3D100, Threshold=
+=3D=A0 0, Passed
+<br>
+Id=3D198, Status=3D 8 {Advisory=A0 =A0 , OffLine}, Value=3D100, Threshold=
+=3D=A0 0, Passed
+<br>
+Id=3D199, Status=3D10 {Advisory=A0 =A0 , OnLine }, Value=3D200, Threshold=
+=3D=A0 0, Passed
+<br>
+OffLineStatus=3D0 {NeverStarted}, AutoOffLine=3DNo, OffLineTimeout=3D92 min=
+utes
+<br>
+OffLineCapability=3D27 {Immediate Auto SuspendOnCmd}
+<br>
+SmartRevision=3D16, CheckSum=3D151, SmartCapability=3D3 {SaveOnStandBy Auto=
+Save}<span class=3D"postbody"><br><br>I can xxd and dd this partition witho=
+ut getting any console errors.
+I can also mount the partition with -o ro,norecovery.=A0=20
+How do I repair this and recover my data?</span>
 
-diff --git a/xfs/Makefile b/xfs/Makefile
-index 737c9a4..1df5f4e 100644
---- a/xfs/Makefile
-+++ b/xfs/Makefile
-@@ -89,7 +89,8 @@ xfs-y				+= xfs_alloc.o \
- 				   xfs_vnodeops.o \
- 				   xfs_rw.o \
- 				   xfs_dmops.o \
--				   xfs_qmops.o
-+				   xfs_qmops.o \
-+				   xfs_sysfs.o
- 
- xfs-$(CONFIG_XFS_TRACE)		+= xfs_dir2_trace.o
- 
-diff --git a/xfs/linux-2.6/xfs_super.c b/xfs/linux-2.6/xfs_super.c
-index 37ebe36..7cc0b6b 100644
---- a/xfs/linux-2.6/xfs_super.c
-+++ b/xfs/linux-2.6/xfs_super.c
-@@ -1152,6 +1152,9 @@ xfs_fs_put_super(
- 	xfs_close_devices(mp);
- 	xfs_qmops_put(mp);
- 	xfs_dmops_put(mp);
-+#ifdef CONFIG_SYSFS
-+	xfs_event_release(mp);
-+#endif
- 	xfs_free_fsname(mp);
- 	kfree(mp);
- }
-@@ -1783,6 +1786,9 @@ xfs_fs_fill_super(
- 	xfs_itrace_exit(XFS_I(sb->s_root->d_inode));
- 
- 	kfree(args);
-+#ifdef CONFIG_SYSFS
-+	xfs_event_alloc(mp);
-+#endif
- 	return 0;
- 
-  out_filestream_unmount:
-@@ -2142,6 +2148,10 @@ init_xfs_fs(void)
- 	error = register_filesystem(&xfs_fs_type);
- 	if (error)
- 		goto out_sysctl_unregister;
-+
-+#ifdef CONFIG_SYSFS
-+	xfs_sysfs_init();
-+#endif	
- 	return 0;
- 
-  out_sysctl_unregister:
-@@ -2175,6 +2185,9 @@ exit_xfs_fs(void)
- 	xfs_free_trace_bufs();
- 	xfs_destroy_zones();
- 	ktrace_uninit();
-+#ifdef CONFIG_SYSFS
-+	xfs_sysfs_done();
-+#endif	
- }
- 
- module_init(init_xfs_fs);
-diff --git a/xfs/xfs_mount.c b/xfs/xfs_mount.c
-index 15f5dd2..47e8202 100644
---- a/xfs/xfs_mount.c
-+++ b/xfs/xfs_mount.c
-@@ -2442,3 +2442,25 @@ balance_counter:
- }
- 
- #endif
-+
-+
-+__uint64_t xfs_icsb_get_fdblocks_lazy(xfs_mount_t *mp)
-+{
-+        __uint64_t fdblocks = 0;
-+#ifdef HAVE_PERCPU_SB
-+        xfs_icsb_cnts_t *cntp;
-+        int i;
-+
-+        for_each_online_cpu(i) {
-+                cntp = (xfs_icsb_cnts_t *)per_cpu_ptr(mp->m_sb_cnts, i);
-+                fdblocks += cntp->icsb_fdblocks;
-+        }
-+
-+        if (xfs_icsb_counter_disabled(mp, XFS_SBS_FDBLOCKS))
-+                fdblocks = mp->m_sb.sb_fdblocks;
-+#else
-+        fdblocks = mp->m_sb.sb_fdblocks;
-+#endif
-+        return fdblocks - XFS_ALLOC_SET_ASIDE(mp);
-+}
-+
-diff --git a/xfs/xfs_mount.h b/xfs/xfs_mount.h
-index f3c1024..9a98c44 100644
---- a/xfs/xfs_mount.h
-+++ b/xfs/xfs_mount.h
-@@ -341,6 +341,9 @@ typedef struct xfs_mount {
- 	spinlock_t		m_sync_lock;	/* work item list lock */
- 	int			m_sync_seq;	/* sync thread generation no. */
- 	wait_queue_head_t	m_wait_single_sync_task;
-+#ifdef CONFIG_SYSFS
-+	void *event_onlow;
-+#endif
- } xfs_mount_t;
- 
- /*
-@@ -539,6 +542,13 @@ extern void	xfs_qmops_put(struct xfs_mou
- 
- extern struct xfs_dmops xfs_dmcore_xfs;
- 
-+#ifdef CONFIG_SYSFS
-+extern void xfs_sysfs_init(void);
-+extern void xfs_sysfs_done(void);
-+extern int xfs_event_alloc(struct xfs_mount *mnt);
-+extern int xfs_event_release(struct xfs_mount *mnt);
-+#endif
-+
- #endif	/* __KERNEL__ */
- 
- #endif	/* __XFS_MOUNT_H__ */
+--00163646d0bea7ebfa0468a95651--
 
---Boundary-00=_Yxy9JY+IVsuLkno
-Content-Type: text/x-diff;
-  charset="us-ascii";
-  name="xfs-sysfs-1-262719.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="xfs-sysfs-1-262719.diff"
 
-diff --git a/xfs/Makefile b/xfs/Makefile
-index ba17121..904372b 100644
---- a/xfs/Makefile
-+++ b/xfs/Makefile
-@@ -91,7 +91,8 @@ xfs-y				+= xfs_alloc.o \
- 				   xfs_vnodeops.o \
- 				   xfs_rw.o \
- 				   xfs_dmops.o \
--				   xfs_qmops.o
-+				   xfs_qmops.o \
-+				   xfs_sysfs.o
- 
- xfs-$(CONFIG_XFS_TRACE)		+= xfs_dir2_trace.o
- 
-diff --git a/xfs/linux-2.6/xfs_super.c b/xfs/linux-2.6/xfs_super.c
-index 9eaddb4..57f2558 100644
---- a/xfs/linux-2.6/xfs_super.c
-+++ b/xfs/linux-2.6/xfs_super.c
-@@ -1152,6 +1152,9 @@ xfs_fs_put_super(
- 	xfs_close_devices(mp);
- 	xfs_qmops_put(mp);
- 	xfs_dmops_put(mp);
-+#ifdef CONFIG_SYSFS
-+	xfs_event_release(mp);
-+#endif
- 	xfs_free_fsname(mp);
- 	kfree(mp);
- }
-@@ -1783,6 +1786,9 @@ xfs_fs_fill_super(
- 	xfs_itrace_exit(XFS_I(sb->s_root->d_inode));
- 
- 	kfree(args);
-+#ifdef CONFIG_SYSFS
-+	xfs_event_alloc(mp);
-+#endif
- 	return 0;
- 
-  out_filestream_unmount:
-@@ -2151,6 +2157,10 @@ init_xfs_fs(void)
- 	error = register_filesystem(&xfs_fs_type);
- 	if (error)
- 		goto out_sysctl_unregister;
-+
-+#ifdef CONFIG_SYSFS
-+	xfs_sysfs_init();
-+#endif	
- 	return 0;
- 
-  out_sysctl_unregister:
-@@ -2184,6 +2194,9 @@ exit_xfs_fs(void)
- 	xfs_free_trace_bufs();
- 	xfs_destroy_zones();
- 	ktrace_uninit();
-+#ifdef CONFIG_SYSFS
-+	xfs_sysfs_done();
-+#endif	
- }
- 
- module_init(init_xfs_fs);
-diff --git a/xfs/xfs_mount.c b/xfs/xfs_mount.c
-index a4503f5..2854b00 100644
---- a/xfs/xfs_mount.c
-+++ b/xfs/xfs_mount.c
-@@ -2441,3 +2441,25 @@ balance_counter:
- }
- 
- #endif
-+
-+
-+__uint64_t xfs_icsb_get_fdblocks_lazy(xfs_mount_t *mp)
-+{
-+        __uint64_t fdblocks = 0;
-+#ifdef HAVE_PERCPU_SB
-+        xfs_icsb_cnts_t *cntp;
-+        int i;
-+
-+        for_each_online_cpu(i) {
-+                cntp = (xfs_icsb_cnts_t *)per_cpu_ptr(mp->m_sb_cnts, i);
-+                fdblocks += cntp->icsb_fdblocks;
-+        }
-+
-+        if (xfs_icsb_counter_disabled(mp, XFS_SBS_FDBLOCKS))
-+                fdblocks = mp->m_sb.sb_fdblocks;
-+#else
-+        fdblocks = mp->m_sb.sb_fdblocks;
-+#endif
-+        return fdblocks - XFS_ALLOC_SET_ASIDE(mp);
-+}
-+
-diff --git a/xfs/xfs_mount.h b/xfs/xfs_mount.h
-index b6b8be8..a7c17fe 100644
---- a/xfs/xfs_mount.h
-+++ b/xfs/xfs_mount.h
-@@ -342,6 +342,9 @@ typedef struct xfs_mount {
- 	int			m_sync_seq;	/* sync thread generation no. */
- 	wait_queue_head_t	m_wait_single_sync_task;
- 	struct vfsmount         *m_vfsmount;
-+#ifdef CONFIG_SYSFS
-+	void *event_onlow;
-+#endif
- } xfs_mount_t;
- 
- /*
-@@ -540,6 +543,13 @@ extern void	xfs_qmops_put(struct xfs_mount *);
- 
- extern struct xfs_dmops xfs_dmcore_xfs;
- 
-+#ifdef CONFIG_SYSFS
-+extern void xfs_sysfs_init(void);
-+extern void xfs_sysfs_done(void);
-+extern int xfs_event_alloc(struct xfs_mount *mnt);
-+extern int xfs_event_release(struct xfs_mount *mnt);
-+#endif
-+
- #endif	/* __KERNEL__ */
- 
- #endif	/* __XFS_MOUNT_H__ */
-
---Boundary-00=_Yxy9JY+IVsuLkno
-Content-Type: text/x-diff;
-  charset="us-ascii";
-  name="xfs-sysfs-2.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="xfs-sysfs-2.diff"
-
-diff --git a/xfs/xfs_sysfs.c b/xfs/xfs_sysfs.c
-new file mode 100644
-index 0000000..cbb0ed2
---- /dev/null
-+++ b/xfs/xfs_sysfs.c
-@@ -0,0 +1,339 @@
-+/*
-+ * A sysfs interface for triggering events like "Nearly Out Of Space"
-+ * Krzysztof Blaszkowski <kb@sysmikro.com.pl> 2009
-+ *
-+ *
-+ * each mounted block device will be associted with a directory under
-+ *   /sys/fs/xfs-oos/ where there is a file "trigger" which sets
-+ * a free space trigger point and if crossed over then there will be raised
-+ * an uevent like this:
-+ *   UEVENT[1240929288.150050] change   /fs/xfs-oos/dm-18 (xfs-oos)
-+ *   ACTION=change
-+ *   DEVPATH=/fs/xfs-oos/dm-18
-+ *   SUBSYSTEM=xfs-oos
-+ *   XFSDEV=dm-18
-+ *   XFSLEFT=191111168
-+ *
-+ * syntax:
-+ * echo "1G" > /sys/fs/xfs-oos/ the_block_device_name /trigger
-+ * echo "400M" > /sys/fs/xfs-oos/ some_other_bdev /trigger
-+ * echo "20000000" > /sys/fs/xfs-oos/ yet_another_bdev /trigger
-+ *
-+ * the module polls each mount point every fixed time (5 sec)
-+ * and if necessary raises events. it utilizes hysteresis loop of 1/8 
-+ * of trigger value to avoid sending excessive events on small change.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+
-+
-+#ifdef CONFIG_SYSFS
-+
-+#include <linux/kobject.h>
-+#include <linux/string.h>
-+#include <linux/sysfs.h>
-+#include <linux/module.h>
-+#include <linux/init.h>
-+#include <linux/timer.h>
-+
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_types.h"
-+#include "xfs_bit.h"
-+#include "xfs_log.h"
-+#include "xfs_inum.h"
-+#include "xfs_trans.h"
-+#include "xfs_sb.h"
-+#include "xfs_ag.h"
-+#include "xfs_dir2.h"
-+#include "xfs_dmapi.h"
-+#include "xfs_mount.h"
-+
-+
-+static struct xfs_event_ctrl {
-+	struct kset *kset;
-+	struct timer_list poll;
-+	int poll_interval;
-+	spinlock_t kset_lock;
-+	/* because kset is acessed in different contextes then 
-+	 kobject locking (kset->lock) is not appropriate this time */
-+} xfs_event_ctrl;
-+
-+
-+
-+struct xfs_event_s {
-+	struct kobject kobj;
-+	__uint64_t trigger;
-+	__uint64_t left_bytes;
-+	struct xfs_mount *mp;
-+	int triggered:1;
-+	int fire_event:1;
-+};
-+
-+struct xfs_event_attribute {
-+	struct attribute attr;
-+	ssize_t (*show)(struct xfs_event_s *, struct xfs_event_attribute *, char *);
-+	ssize_t (*store)(struct xfs_event_s *, struct xfs_event_attribute *, const char *, ssize_t);
-+};
-+
-+
-+static ssize_t xfs_event_kobj_attr_show(struct kobject *_kobj,
-+			     struct attribute *a,
-+			     char *buf)
-+{
-+	struct xfs_event_attribute *attribute = container_of(a, struct xfs_event_attribute, attr);
-+	struct xfs_event_s *event = container_of(_kobj, struct xfs_event_s, kobj);
-+
-+	if (!attribute->show)
-+		return -EIO;
-+
-+	return attribute->show(event, attribute, buf);
-+}
-+
-+static ssize_t xfs_event_kobj_attr_store(struct kobject *_kobj,
-+			      struct attribute *a,
-+			      const char *buf, size_t len)
-+{
-+	struct xfs_event_attribute *attribute = container_of(a, struct xfs_event_attribute, attr);
-+	struct xfs_event_s *event = container_of(_kobj, struct xfs_event_s, kobj);
-+
-+	if (!attribute->store)
-+		return -EIO;
-+
-+	return attribute->store(event, attribute, buf, len);
-+}
-+
-+static void xfs_event_kobj_release(struct kobject *_kobj)
-+{
-+	struct xfs_event_s *event = container_of(_kobj, struct xfs_event_s, kobj);
-+	kfree(event);
-+}
-+
-+
-+static const struct sysfs_ops xfs_event_sysfs_ops = {
-+	.show = xfs_event_kobj_attr_show,
-+	.store = xfs_event_kobj_attr_store,
-+};
-+
-+static const struct attribute *xfs_events_attrs[];
-+static const struct kobj_type xfs_event_ktype = {
-+	.sysfs_ops = (void *)&xfs_event_sysfs_ops,
-+	.release = xfs_event_kobj_release,
-+	.default_attrs = (void *)xfs_events_attrs,
-+};
-+
-+
-+
-+
-+
-+static ssize_t xfs_trigger_get(struct xfs_event_s *event,
-+				struct xfs_event_attribute *obj_attr,
-+				char *buf)
-+{
-+	__uint64_t bs = event->mp->m_sb.sb_blocksize;
-+	
-+	return sprintf(buf, "%lld %lld %c", event->trigger * bs, event->left_bytes, event->triggered ? '1' : '0');
-+}
-+
-+static ssize_t xfs_trigger_set(struct xfs_event_s *event,
-+				struct xfs_event_attribute *obj_attr,
-+				const char *buf, ssize_t count)
-+{
-+	int rc;
-+	char unit;
-+	
-+	spin_lock_bh(&xfs_event_ctrl.kset_lock);
-+	rc = sscanf(buf, "%lld%c", &event->trigger, &unit);
-+	if (rc == 2) {
-+		switch(unit) {
-+			case 'T':
-+			case 't':
-+				event->trigger <<= 10;
-+			case 'G':
-+			case 'g':
-+				event->trigger <<= 10;
-+			case 'M':
-+			case 'm':
-+				event->trigger <<= 20;
-+		}
-+	}
-+	event->trigger /= event->mp->m_sb.sb_blocksize;
-+	spin_unlock_bh(&xfs_event_ctrl.kset_lock);
-+	return count;
-+}
-+
-+
-+static const struct xfs_event_attribute xfs_event_trigger = 
-+	__ATTR(trigger, S_IFREG | S_IRUGO | S_IWUSR,
-+	xfs_trigger_get,
-+	xfs_trigger_set);
-+
-+static const struct attribute *xfs_events_attrs[] = {
-+	&xfs_event_trigger.attr,
-+	NULL
-+}; 
-+
-+
-+extern __uint64_t xfs_icsb_get_fdblocks_lazy(xfs_mount_t *mp);
-+
-+static void xfs_event_fdblocks_poll(unsigned long arg)
-+{
-+	struct xfs_event_ctrl *ctrl = (struct xfs_event_ctrl *)arg;
-+	struct kset *kset = ctrl->kset;
-+	struct kobject *k, *tmp;
-+	
-+	struct list_head events_to_fire;
-+	
-+	INIT_LIST_HEAD(&events_to_fire);
-+	mod_timer(&ctrl->poll, jiffies + ctrl->poll_interval);
-+	spin_lock_bh(&ctrl->kset_lock);
-+	/* no need to use kset->lock */
-+	list_for_each_entry_safe(k, tmp, &kset->list, entry) {
-+		struct xfs_event_s *event = container_of(k, struct xfs_event_s, kobj);
-+		__uint64_t space_left = xfs_icsb_get_fdblocks_lazy(event->mp);
-+
-+		if (space_left < event->trigger && !event->triggered) {
-+			event->triggered = 1;
-+			kobject_get(&event->kobj);
-+			event->left_bytes = space_left * event->mp->m_sb.sb_blocksize;
-+			list_del(&event->kobj.entry);
-+			list_add(&event->kobj.entry, &events_to_fire);
-+		}
-+
-+		if (space_left > (event->trigger + (event->trigger >> 3)) 
-+			&& event->triggered) {
-+			event->triggered = 0;
-+		}
-+	
-+	}
-+	spin_unlock_bh(&ctrl->kset_lock);
-+	
-+	if (!list_empty(&events_to_fire)) {
-+		char buffer[256];
-+		char *envp[3];
-+	
-+		envp[0] = buffer;
-+		envp[2] = NULL;
-+		list_for_each_entry(k, &events_to_fire, entry) {
-+			struct xfs_event_s *event = container_of(k, struct xfs_event_s, kobj);
-+			
-+			envp[1] = envp[0] + snprintf(envp[0], 250, "XFSDEV=%s", k->name) + 1;
-+			snprintf(envp[1], 250 - (envp[1] - envp[0]), "XFSLEFT=%lld", event->left_bytes);
-+
-+//			printk("%s:%d firing [%s] [%s] [%s]\n", __FUNCTION__, __LINE__, k->name, envp[0], envp[1]);
-+			kobject_uevent_env(k, KOBJ_CHANGE, envp);
-+		}
-+
-+		spin_lock_bh(&ctrl->kset_lock);
-+		list_for_each_entry_safe(k, tmp, &events_to_fire, entry) {
-+			struct xfs_event_s *event = container_of(k, struct xfs_event_s, kobj);
-+
-+			list_del(&event->kobj.entry);
-+			list_add(&event->kobj.entry, &kset->list);
-+			kobject_put(&event->kobj);
-+		}
-+		spin_unlock_bh(&ctrl->kset_lock);
-+	}
-+}
-+
-+
-+/* api */
-+
-+void xfs_sysfs_init(void)
-+{
-+	memset(&xfs_event_ctrl, 0, sizeof(struct xfs_event_ctrl));
-+
-+	xfs_event_ctrl.poll_interval = HZ * 5;
-+	xfs_event_ctrl.kset = kset_create_and_add("xfs-oos", NULL, fs_kobj);
-+	spin_lock_init(&xfs_event_ctrl.kset_lock);
-+	if (!xfs_event_ctrl.kset) {
-+		cmn_err(CE_ALERT, "kset_create failed");
-+		return;
-+	}
-+}
-+
-+void xfs_sysfs_done(void)
-+{
-+	if (xfs_event_ctrl.kset) {
-+		BUG_ON(!list_empty(&xfs_event_ctrl.kset->list));
-+		kset_unregister(xfs_event_ctrl.kset);
-+		xfs_event_ctrl.kset = NULL;
-+	}
-+}
-+
-+/* stuff for xfs_fs_fill_super, xfs_fs_put_super */
-+
-+int xfs_event_alloc(struct xfs_mount *mnt)
-+{
-+	struct xfs_event_s * ev;
-+	int rc = -1;
-+	int empty;
-+	
-+	if (!xfs_event_ctrl.kset)
-+		return rc;
-+
-+	ev = kzalloc(sizeof(struct xfs_event_s), GFP_KERNEL);
-+
-+	spin_lock_bh(&xfs_event_ctrl.kset_lock);
-+	empty = list_empty(&xfs_event_ctrl.kset->list);
-+	
-+	if (ev) {
-+		ev->kobj.kset = xfs_event_ctrl.kset;
-+		ev->mp = mnt;
-+		
-+		rc = kobject_init_and_add(&ev->kobj, (void *)&xfs_event_ktype, NULL, "%s", mnt->m_fsname);
-+		if (!rc) {
-+			mnt->event_onlow = ev;
-+			kobject_uevent(&ev->kobj, KOBJ_ADD);
-+		} else {
-+			kobject_put(&ev->kobj); // ev will be freed too.
-+		}
-+	}
-+	spin_unlock_bh(&xfs_event_ctrl.kset_lock);
-+	
-+	if (empty) {
-+		init_timer(&xfs_event_ctrl.poll);
-+		xfs_event_ctrl.poll.function = xfs_event_fdblocks_poll;
-+		xfs_event_ctrl.poll.data = (unsigned long)&xfs_event_ctrl;
-+		xfs_event_ctrl.poll.expires = jiffies + xfs_event_ctrl.poll_interval;
-+		add_timer(&xfs_event_ctrl.poll);
-+	}
-+
-+	return rc;
-+}
-+
-+int xfs_event_release(struct xfs_mount *mnt)
-+{
-+	struct xfs_event_s * ev = (struct xfs_event_s *)mnt->event_onlow;
-+	int empty;
-+
-+	if (!xfs_event_ctrl.kset)
-+		return -1;
-+
-+	spin_lock_bh(&xfs_event_ctrl.kset_lock);
-+	if (ev)
-+		kobject_put(&ev->kobj);
-+
-+	empty = list_empty(&xfs_event_ctrl.kset->list);
-+	spin_unlock_bh(&xfs_event_ctrl.kset_lock);
-+
-+	if (empty) {
-+		del_timer_sync(&xfs_event_ctrl.poll);
-+	}
-+	
-+	return 0;
-+}
-+
-+#endif
-+
-
---Boundary-00=_Yxy9JY+IVsuLkno
+--===============9176173275803336237==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -793,4 +173,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---Boundary-00=_Yxy9JY+IVsuLkno--
+--===============9176173275803336237==--
