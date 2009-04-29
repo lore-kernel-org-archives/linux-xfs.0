@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3TF2ERT167282 for <xfs@oss.sgi.com>; Wed, 29 Apr 2009 10:02:14 -0500
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 659B430407A
-	for <xfs@oss.sgi.com>; Wed, 29 Apr 2009 08:02:12 -0700 (PDT)
-Message-Id: <CDC4B5EE-0A08-433E-8D90-C9BE6E0C85B2@sgi.com>
-From: Felix Blyakher <felixb@sgi.com>
-In-Reply-To: <20090429145048.GA15558@infradead.org>
-Mime-Version: 1.0 (Apple Message framework v926)
-Subject: Re: [PATCH 1/2] xfs: a couple getbmap cleanups
-Date: Wed, 29 Apr 2009 10:02:11 -0500
-References: <20090224133858.GB15820@infradead.org>
-	<9EF64CF3-FDFC-4777-94A5-7295E827ABA4@sgi.com>
-	<20090409171135.GA25303@infradead.org>
-	<6F8D4AC9-D76A-43FC-AA5C-78C86A12E244@sgi.com>
-	<20090429145048.GA15558@infradead.org>
+	n3THTu6d171645 for <xfs@oss.sgi.com>; Wed, 29 Apr 2009 12:29:57 -0500
+Received: from millhouse.houseofnate.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8661324D59D
+	for <xfs@oss.sgi.com>; Wed, 29 Apr 2009 10:29:54 -0700 (PDT)
+Received: from millhouse.houseofnate.net
+	(dsl092-086-237.bos1.dsl.speakeasy.net [66.92.86.237]) by
+	cuda.sgi.com with ESMTP id VYzmdlq6hnrmNpOJ for
+	<xfs@oss.sgi.com>; Wed, 29 Apr 2009 10:29:54 -0700 (PDT)
+Message-ID: <49F88E73.7060403@houseofnate.net>
+Date: Wed, 29 Apr 2009 13:29:23 -0400
+From: "Nathaniel W. Turner" <nate@houseofnate.net>
+MIME-Version: 1.0
+Subject: Re: crashes with xfs_fsr in 2.6.25-2-amd64 and 2.6.26-1-amd64 (debian)
+	(f'up)
+References: <20090428032406.GA14234@schmorp.de>
+In-Reply-To: <20090428032406.GA14234@schmorp.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,33 +29,39 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Marc Lehmann <schmorp@schmorp.de>
 Cc: xfs@oss.sgi.com
 
+Hi Marc,
 
-On Apr 29, 2009, at 9:50 AM, Christoph Hellwig wrote:
-
-> On Wed, Apr 29, 2009 at 09:40:40AM -0500, Felix Blyakher wrote:
->>
->> On Apr 9, 2009, at 12:11 PM, Christoph Hellwig wrote:
->>
->>> On Mon, Apr 06, 2009 at 07:57:48PM -0500, Felix Blyakher wrote:
->>>> Shouldn't we set error to ENOMEM here?
->>>
->>> Yes, good catch.
->>
->> Christoph, do you want to repost this patch with that change?
+Marc Lehmann wrote:
+> It also happens to the same filesystem each time (maybe because
+> it does the heavy I/O),a and it is also the same filesystem where
+> xfs_repair hangs in an endless loop often (but not always). (see
+> http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=525880)
 >
-> Yeah, I added it long ago.
+> The filesystem was created a month or so ago using blocksize of 512 and
+> lazy-count=1, but I have many of those xfs filesystems.
+>
+> Since this is a production system and I have no backup abilities, I have
+> to no choice but to reformat the disk now.
+>   
+I'm not sure about the root cause of your crash, but I just wanted to 
+mention that before you blow away this filesystem, you should probably 
+try repairing it with a recent version of xfs_repair (like 3.0.0). 
 
-I must have missed your updated patch.
+ftp://oss.sgi.com/projects/xfs/cmd_tars/
 
-> Below is the updated version.  I've been
-> running xfsqa on it quite a bit.
+Also, I have seen similar problems to those described in Debian bug 
+525880 with xfs_repair not making progress (although I'm running 
+32-bit), and adding "-P" to the xfs_repair invocation helped in many cases.
 
-Applied to the tree.
-Thanks,
-Felix
+Cheers,
+nate
+
+-- 
+Nathaniel W. Turner
+http://houseofnate.net/
 
 _______________________________________________
 xfs mailing list
