@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3TCofov162345 for <xfs@oss.sgi.com>; Wed, 29 Apr 2009 07:50:42 -0500
-Received: from one.firstfloor.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8A7471CF7A3A
-	for <xfs@oss.sgi.com>; Wed, 29 Apr 2009 05:50:40 -0700 (PDT)
-Received: from one.firstfloor.org (one.firstfloor.org [213.235.205.2]) by
-	cuda.sgi.com with ESMTP id boFxTPGuUYRGR9Ga for
-	<xfs@oss.sgi.com>; Wed, 29 Apr 2009 05:50:40 -0700 (PDT)
+	n3TDCku2162963 for <xfs@oss.sgi.com>; Wed, 29 Apr 2009 08:12:46 -0500
+Received: from v007470.home.net.pl (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id A21C71CF7DF7
+	for <xfs@oss.sgi.com>; Wed, 29 Apr 2009 06:12:45 -0700 (PDT)
+Received: from v007470.home.net.pl (v007470.home.net.pl [212.85.125.104]) by
+	cuda.sgi.com with SMTP id 4xpbSrPnCYTgzUCK for
+	<xfs@oss.sgi.com>; Wed, 29 Apr 2009 06:12:45 -0700 (PDT)
+From: Krzysztof =?utf-8?q?B=C5=82aszkowski?= <kb@sysmikro.com.pl>
 Subject: Re: generating uevents by xfs
-From: Andi Kleen <andi@firstfloor.org>
+Date: Wed, 29 Apr 2009 15:12:33 +0200
 References: <200904281818.32127.kb@sysmikro.com.pl>
-Date: Wed, 29 Apr 2009 14:50:38 +0200
-In-Reply-To: <200904281818.32127.kb@sysmikro.com.pl> (Krzysztof
-	=?iso-8859-1?Q?B=E2aszkowski's?= message of "Tue, 28 Apr 2009 18:18:31
-	+0200")
-Message-ID: <87r5zbpqsh.fsf@basil.nowhere.org>
+	<87r5zbpqsh.fsf@basil.nowhere.org>
+In-Reply-To: <87r5zbpqsh.fsf@basil.nowhere.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+Message-Id: <200904291512.33875.kb@sysmikro.com.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,36 +29,79 @@ Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Krzysztof =?iso-8859-1?Q?B=E2aszkowski?= <kb@sysmikro.com.pl>
+To: Andi Kleen <andi@firstfloor.org>
 Cc: xfs@oss.sgi.com
 
-Krzysztof B=E2aszkowski <kb@sysmikro.com.pl> writes:
-
-> Hello,
+On Wednesday 29 April 2009 14:50, Andi Kleen wrote:
+> Krzysztof B=E2aszkowski <kb@sysmikro.com.pl> writes:
+> > Hello,
+> >
+> > once upon i was asked to think about such facility for notifying
+> > userspace when some mount point is nearly full at some level let's say
+> > e.g. 90% (threshold should be configurable).
+> >
+> > here is a solution designed by me and i would like to see comments on
+> > this idea and solution.
 >
-> once upon i was asked to think about such facility for notifying userspac=
-e =
+> It doesn't seem to be very useful to poll in kernel for this. When you're
+> in kernel you could just hook into the respective functions that handle
+> disk allocation directly.
 
-> when some mount point is nearly full at some level let's say e.g. 90% =
+i reckon yes and no both. "no" because i wanted a solution which will have =
 
-> (threshold should be configurable).
->
-> here is a solution designed by me and i would like to see comments on thi=
+almost no impact on performance. if the speed wasn't an important concern =
+
+then why would one take care about per cpu counters like fdblocks ?
+
+
+> Polling can be as well done in user space only, =
+
+> so it doesn't make too much sense to put polling code into the kernel.
+
+yes i think too, that's maybe a bit too huge thing looking at benefits it =
+
+brings but consider bash instance consuming 1.5M (at least) and other thing=
 s =
 
-> idea and solution.
+spawned periodically, =
 
-It doesn't seem to be very useful to poll in kernel for this. When you're
-in kernel you could just hook into the respective functions that handle
-disk allocation directly. Polling can be as well done in user space only,
-so it doesn't make too much sense to put polling code into the kernel.
+do they have more sense ? i don't think so and this is the solution which =
 
--Andi
+voids all hassle with userspace polling because it uses unified notificatio=
+n =
 
+system and this can be good starting point for notification system for othe=
+r =
 
--- =
+purposes i haven't think of yet but maybe someone has a new idea regarding =
 
-ak@linux.intel.com -- Speaking for myself only.
+this.
+
+are these reasons good to (complete and) merge this stuff ?
+
+I found that the xfs-sysfs-2 requires small rework around event_alloc() and =
+
+event_release() because of very rare (but possible) race with timer functio=
+n =
+
+which drops lock (i decided to drop lock because i think kobject_uevent may =
+
+be synchronous in the case of deprecated /sbin/hotplug and i'm not sure als=
+o =
+
+how long it takes for udevd)
+
+i think that there is no point to update patch as long as we will not sort =
+out =
+
+if the whole idea is really worth to implement.
+
+Thanks for reply.
+
+Krzysztof Blaszkowski
+
+>
+> -Andi
 
 _______________________________________________
 xfs mailing list
