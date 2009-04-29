@@ -1,20 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3T3eL8Q142895 for <xfs@oss.sgi.com>; Tue, 28 Apr 2009 22:40:22 -0500
-Received: from qw-out-1920.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D15AF1459DCC
-	for <xfs@oss.sgi.com>; Tue, 28 Apr 2009 20:43:42 -0700 (PDT)
-Received: from qw-out-1920.google.com (qw-out-1920.google.com [74.125.92.144])
-	by cuda.sgi.com with ESMTP id 1w5uQYwb8yTqHk8V for
-	<xfs@oss.sgi.com>; Tue, 28 Apr 2009 20:43:42 -0700 (PDT)
-Received: by qw-out-1920.google.com with SMTP id 4so808928qwk.32
-	for <xfs@oss.sgi.com>; Tue, 28 Apr 2009 20:40:19 -0700 (PDT)
+	n3T4SOsU145216 for <xfs@oss.sgi.com>; Tue, 28 Apr 2009 23:28:24 -0500
+Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 215C824AA59
+	for <xfs@oss.sgi.com>; Tue, 28 Apr 2009 21:28:22 -0700 (PDT)
+Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.162.198]) by
+	cuda.sgi.com with ESMTP id VCAyXtVTIYWwuatQ for
+	<xfs@oss.sgi.com>; Tue, 28 Apr 2009 21:28:22 -0700 (PDT)
+Received: from mailsrv2.i.zmi.at (h081217107103.dyn.cm.kabsi.at
+	[81.217.107.103])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv1.zmi.at (Postfix) with ESMTP id 6DBE553C7
+	for <xfs@oss.sgi.com>; Wed, 29 Apr 2009 06:28:22 +0200 (CEST)
+Received: from saturn.localnet (saturn.i.zmi.at [10.0.0.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv2.i.zmi.at (Postfix) with ESMTPSA id 8C84340017B
+	for <xfs@oss.sgi.com>; Wed, 29 Apr 2009 06:28:21 +0200 (CEST)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: xfs_repair Input/output error
+Date: Wed, 29 Apr 2009 06:28:16 +0200
+References: <ff2243530904282040i1bb2cf12v3a329b045edf2f50@mail.gmail.com>
+In-Reply-To: <ff2243530904282040i1bb2cf12v3a329b045edf2f50@mail.gmail.com>
 MIME-Version: 1.0
-Date: Tue, 28 Apr 2009 23:40:19 -0400
-Message-ID: <ff2243530904282040i1bb2cf12v3a329b045edf2f50@mail.gmail.com>
-Subject: xfs_repair Input/output error
-From: Cory Coager <ccoager@gmail.com>
+Message-Id: <200904290628.20924@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,146 +34,93 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============9176173275803336237=="
+Content-Type: multipart/mixed; boundary="===============7513553217805091747=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============9176173275803336237==
-Content-Type: multipart/alternative; boundary=00163646d0bea7ebfa0468a95651
-
---00163646d0bea7ebfa0468a95651
-Content-Type: text/plain; charset=ISO-8859-1
+--===============7513553217805091747==
+Content-Type: multipart/signed;
+  boundary="nextPart2291964.UTdqCAq2Qg";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
 
-I had a power failure while I was running a defrag on an xfs partition. Now
-I am unable to mount, xfs_check or xfs_repair the partition. The partition
-is lvm and all other partitions seem to be fine except this one. When
-attempting to mount the partition the drive makes some funny noises and
-these messages spit out on the console:
-
-hda: dma_intr: status=0x51 { DriveReady SeekComplete Error }
-hda: dma_intr: error=0x40 { UncorrectableError }, LBAsect=268552872,
-high=16, low=117416, sector=268552868
-ide: failed opcode was: unknown
-end_request: I/O error, dev hda, sector 268552868
-
-I believe the drive is fine because check_ide_smart reports:
-
-Id=  1, Status=11 {PreFailure , OnLine }, Value=100, Threshold= 60, Passed
-Id=  2, Status= 5 {PreFailure , OffLine}, Value=100, Threshold= 50, Passed
-Id=  3, Status= 7 {PreFailure , OnLine }, Value=151, Threshold= 24, Passed
-Id=  4, Status=18 {Advisory    , OnLine }, Value=100, Threshold=  0, Passed
-Id=  5, Status=51 {PreFailure , OnLine }, Value=100, Threshold=  5, Passed
-Id=  7, Status=11 {PreFailure , OnLine }, Value=100, Threshold= 67, Passed
-Id=  8, Status= 5 {PreFailure , OffLine}, Value=100, Threshold= 20, Passed
-Id=  9, Status=18 {Advisory    , OnLine }, Value= 96, Threshold=  0, Passed
-Id= 10, Status=19 {PreFailure , OnLine }, Value=100, Threshold= 60, Passed
-Id= 12, Status=50 {Advisory    , OnLine }, Value=100, Threshold=  0, Passed
-Id=192, Status=50 {Advisory    , OnLine }, Value= 99, Threshold= 50, Passed
-Id=193, Status=18 {Advisory    , OnLine }, Value= 99, Threshold= 50, Passed
-Id=194, Status= 2 {Advisory    , OnLine }, Value=137, Threshold=  0, Passed
-Id=196, Status=50 {Advisory    , OnLine }, Value=100, Threshold=  0, Passed
-Id=197, Status=34 {Advisory    , OnLine }, Value=100, Threshold=  0, Passed
-Id=198, Status= 8 {Advisory    , OffLine}, Value=100, Threshold=  0, Passed
-Id=199, Status=10 {Advisory    , OnLine }, Value=200, Threshold=  0, Passed
-OffLineStatus=0 {NeverStarted}, AutoOffLine=No, OffLineTimeout=92 minutes
-OffLineCapability=27 {Immediate Auto SuspendOnCmd}
-SmartRevision=16, CheckSum=151, SmartCapability=3 {SaveOnStandBy AutoSave}
-
-I can xxd and dd this partition without getting any console errors. I can
-also mount the partition with -o ro,norecovery.  How do I repair this and
-recover my data?
-
---00163646d0bea7ebfa0468a95651
-Content-Type: text/html; charset=ISO-8859-1
+--nextPart2291964.UTdqCAq2Qg
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-<span class=3D"postbody">I had a power failure while I was running a
-defrag on an xfs partition. Now I am unable to mount, xfs_check or
-xfs_repair the partition. The partition is lvm and all other partitions
-seem to be fine except this one. When attempting to mount the partition
-the drive makes some funny noises and these messages spit out on the
-console:
-<br><br></span>hda: dma_intr: status=3D0x51 { DriveReady SeekComplete Error=
- }
-<br>
-hda: dma_intr: error=3D0x40 { UncorrectableError }, LBAsect=3D268552872, hi=
-gh=3D16, low=3D117416, sector=3D268552868
-<br>
-ide: failed opcode was: unknown
-<br>
-end_request: I/O error, dev hda, sector 268552868<br><span class=3D"postbod=
-y">
+On Mittwoch 29 April 2009 Cory Coager wrote:
+> When attempting to mount the partition the drive makes some funny
+> noises and these messages spit out on the console:
+>
+> hda: dma_intr: status=3D0x51 { DriveReady SeekComplete Error }
+> hda: dma_intr: error=3D0x40 { UncorrectableError }, LBAsect=3D268552872,
+> high=3D16, low=3D117416, sector=3D268552868
+> ide: failed opcode was: unknown
+> end_request: I/O error, dev hda, sector 268552868
 
-</span><span class=3D"postbody"><br>
-I believe the drive is fine because check_ide_smart reports:
-<br><br></span>Id=3D=A0 1, Status=3D11 {PreFailure , OnLine }, Value=3D100,=
- Threshold=3D 60, Passed
-<br>
-Id=3D=A0 2, Status=3D 5 {PreFailure , OffLine}, Value=3D100, Threshold=3D 5=
-0, Passed
-<br>
-Id=3D=A0 3, Status=3D 7 {PreFailure , OnLine }, Value=3D151, Threshold=3D 2=
-4, Passed
-<br>
-Id=3D=A0 4, Status=3D18 {Advisory=A0 =A0 , OnLine }, Value=3D100, Threshold=
-=3D=A0 0, Passed
-<br>
-Id=3D=A0 5, Status=3D51 {PreFailure , OnLine }, Value=3D100, Threshold=3D=
-=A0 5, Passed
-<br>
-Id=3D=A0 7, Status=3D11 {PreFailure , OnLine }, Value=3D100, Threshold=3D 6=
-7, Passed
-<br>
-Id=3D=A0 8, Status=3D 5 {PreFailure , OffLine}, Value=3D100, Threshold=3D 2=
-0, Passed
-<br>
-Id=3D=A0 9, Status=3D18 {Advisory=A0 =A0 , OnLine }, Value=3D 96, Threshold=
-=3D=A0 0, Passed
-<br>
-Id=3D 10, Status=3D19 {PreFailure , OnLine }, Value=3D100, Threshold=3D 60,=
- Passed
-<br>
-Id=3D 12, Status=3D50 {Advisory=A0 =A0 , OnLine }, Value=3D100, Threshold=
-=3D=A0 0, Passed
-<br>
-Id=3D192, Status=3D50 {Advisory=A0 =A0 , OnLine }, Value=3D 99, Threshold=
-=3D 50, Passed
-<br>
-Id=3D193, Status=3D18 {Advisory=A0 =A0 , OnLine }, Value=3D 99, Threshold=
-=3D 50, Passed
-<br>
-Id=3D194, Status=3D 2 {Advisory=A0 =A0 , OnLine }, Value=3D137, Threshold=
-=3D=A0 0, Passed
-<br>
-Id=3D196, Status=3D50 {Advisory=A0 =A0 , OnLine }, Value=3D100, Threshold=
-=3D=A0 0, Passed
-<br>
-Id=3D197, Status=3D34 {Advisory=A0 =A0 , OnLine }, Value=3D100, Threshold=
-=3D=A0 0, Passed
-<br>
-Id=3D198, Status=3D 8 {Advisory=A0 =A0 , OffLine}, Value=3D100, Threshold=
-=3D=A0 0, Passed
-<br>
-Id=3D199, Status=3D10 {Advisory=A0 =A0 , OnLine }, Value=3D200, Threshold=
-=3D=A0 0, Passed
-<br>
-OffLineStatus=3D0 {NeverStarted}, AutoOffLine=3DNo, OffLineTimeout=3D92 min=
-utes
-<br>
-OffLineCapability=3D27 {Immediate Auto SuspendOnCmd}
-<br>
-SmartRevision=3D16, CheckSum=3D151, SmartCapability=3D3 {SaveOnStandBy Auto=
-Save}<span class=3D"postbody"><br><br>I can xxd and dd this partition witho=
-ut getting any console errors.
-I can also mount the partition with -o ro,norecovery.=A0=20
-How do I repair this and recover my data?</span>
+This is definitely your drive gone bad.
 
---00163646d0bea7ebfa0468a95651--
+> I believe the drive is fine because check_ide_smart reports:
+
+If the drive "makes funny noises" and I/O errors are logged, it has bad=20
+sectors. Try with
+# smartctl -a /dev/sda
+and look for a line like this:
+5 Reallocated_Sector_Ct 0x0033 100 100 036 Pre-fail Always  -  0
+
+If the last number is >0, your drive has problems - replace it!
+
+=46or a full SMART check, please try:
+smartctl --smart=3Don --offlineauto=3Don --saveauto=3Don --test=3Dlong /dev=
+/sda
+
+This tells your drive to make a long selftest. It prints the estimated=20
+time for the test to run (usually 1-3h). Then check your smart values=20
+again. You should try to not use your drive during this time.
+
+> I can xxd and dd this partition without getting any console errors.=20
+
+It is possible the drive remapped the bad sectors itself.
+
+> I can also mount the partition with -o ro,norecovery.  How do I repair
+> this and recover my data?
+
+Plug in new drive.
+Boot from recovery cd
+dd if=3D/dev/sda of=3D/dev/sdb=20
+remove old drive
+xfs_repair
+enjoy
+
+mfg zmi
+=2D-=20
+// Michael Monnerie, Ing.BSc    -----      http://it-management.at
+// Tel: 0660 / 415 65 31                      .network.your.ideas.
+// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
+// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
+// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
 
 
---===============9176173275803336237==
+--nextPart2291964.UTdqCAq2Qg
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+
+iEYEABECAAYFAkn312QACgkQzhSR9xwSCbT+3ACeKSP5IOT3Fszjqn/XR1k0bLl2
+ZrkAoKRI3d09rq/HtzK+2bP+yDxynhDG
+=amuQ
+-----END PGP SIGNATURE-----
+
+--nextPart2291964.UTdqCAq2Qg--
+
+
+--===============7513553217805091747==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -173,4 +131,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============9176173275803336237==--
+--===============7513553217805091747==--
