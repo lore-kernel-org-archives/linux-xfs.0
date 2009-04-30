@@ -1,23 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n3THxAkL172833 for <xfs@oss.sgi.com>; Wed, 29 Apr 2009 12:59:13 -0500
-Received: from slurp.thebarn.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 66901145CF5E
-	for <xfs@oss.sgi.com>; Wed, 29 Apr 2009 11:02:34 -0700 (PDT)
-Received: from slurp.thebarn.com (cattelan-host202.dsl.visi.com
-	[208.42.117.202]) by cuda.sgi.com with ESMTP id
-	ot2Si9kAREGpkJBy for <xfs@oss.sgi.com>;
-	Wed, 29 Apr 2009 11:02:34 -0700 (PDT)
-Message-ID: <49F89549.8090505@thebarn.com>
-Date: Wed, 29 Apr 2009 12:58:33 -0500
-From: Russell Cattelan <cattelan@thebarn.com>
+	n3U5WJrf209916 for <xfs@oss.sgi.com>; Thu, 30 Apr 2009 00:32:19 -0500
+Date: Thu, 30 Apr 2009 00:32:16 -0500
+Subject: [GIT PULL] XFS update for 2.6.30-rc5
 MIME-Version: 1.0
-Subject: Re: crashes with xfs_fsr in 2.6.25-2-amd64 and 2.6.26-1-amd64 (debian)
-	(f'up)
-References: <20090428032406.GA14234@schmorp.de>
-	<49F88E73.7060403@houseofnate.net>
-In-Reply-To: <49F88E73.7060403@houseofnate.net>
+Message-Id: <20090430053216.2C65CA1FAB9F@attica.americas.sgi.com>
+From: felixb@sgi.com (Felix Blyakher)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,55 +19,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "Nathaniel W. Turner" <nate@houseofnate.net>, xfs-oss <xfs@oss.sgi.com>
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+The following changes since commit 091438dd5668396328a3419abcbc6591159eb8d1:
+  Linus Torvalds (1):
+        Linux 2.6.30-rc4
 
-Nathaniel W. Turner wrote:
-> Hi Marc,
->
-> Marc Lehmann wrote:
->> It also happens to the same filesystem each time (maybe because
->> it does the heavy I/O),a and it is also the same filesystem where
->> xfs_repair hangs in an endless loop often (but not always). (see
->> http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=525880)
->>
->> The filesystem was created a month or so ago using blocksize of 512
->> and
->> lazy-count=1, but I have many of those xfs filesystems.
->>
->> Since this is a production system and I have no backup abilities, I
->> have
->> to no choice but to reformat the disk now.
->>  
-> I'm not sure about the root cause of your crash,
-The crash is probably due to a bad inode, the file system needs to be
-repaired.
-> but I just wanted to mention that before you blow away this
-> filesystem, you should probably try repairing it with a recent
-> version of xfs_repair (like 3.0.0).
-> ftp://oss.sgi.com/projects/xfs/cmd_tars/
-That is a good suggestion, 2.9.8 is quite old at this point.
-xfs_check might also be useful as it might point to the problem inode.
->
-> Also, I have seen similar problems to those described in Debian bug
-> 525880 with xfs_repair not making progress (although I'm running
-> 32-bit), and adding "-P" to the xfs_repair invocation helped in many
-> cases.
->
-> Cheers,
-> nate
->
+are available in the git repository at:
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (Darwin)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+  git://oss.sgi.com/xfs/xfs for-linus
 
-iD8DBQFJ+JVJNRmM+OaGhBgRAilEAJ9jBvIqlvMtlog0Oyeeb0BPbaMrowCfXmTE
-2Pk4UxofSyr1zq6Dfuq8aDk=
-=L9qB
------END PGP SIGNATURE-----
+Christoph Hellwig (2):
+      xfs: a couple getbmap cleanups
+      xfs: fix getbmap vs mmap deadlock
+
+Lachlan McIlroy (1):
+      xfs_file_last_byte() needs to acquire ilock
+
+Olaf Weber (1):
+      xfs: add more checks to superblock validation
+
+ fs/xfs/xfs_bmap.c  |  192 ++++++++++++++++++++++++++++------------------------
+ fs/xfs/xfs_inode.c |    2 +
+ fs/xfs/xfs_mount.c |    3 +
+ 3 files changed, 108 insertions(+), 89 deletions(-)
 
 _______________________________________________
 xfs mailing list
