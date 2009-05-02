@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4UG7LdH150902 for <xfs@oss.sgi.com>; Sat, 30 May 2009 11:07:21 -0500
-Received: from one.firstfloor.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3ACFC2AF0B2
-	for <xfs@oss.sgi.com>; Sat, 30 May 2009 09:07:36 -0700 (PDT)
-Received: from one.firstfloor.org (one.firstfloor.org [213.235.205.2]) by
-	cuda.sgi.com with ESMTP id RL6hLYocBxnGCHug for
-	<xfs@oss.sgi.com>; Sat, 30 May 2009 09:07:36 -0700 (PDT)
-Date: Sat, 30 May 2009 18:14:25 +0200
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: [PATCH] xfs: prevent deadlock in xfs_qm_shake()
-Message-ID: <20090530161425.GO1065@one.firstfloor.org>
-References: <1243620631-10749-1-git-send-email-felixb@sgi.com>
-	<1243620631-10749-2-git-send-email-felixb@sgi.com>
-	<20090529192529.GA1599@infradead.org>
-	<87d49qeuqd.fsf@basil.nowhere.org>
-	<1A09BC73-E1E8-4EF4-AD29-FB93556C3E3B@sgi.com>
-Mime-Version: 1.0
+	n42AABEt050864 for <xfs@oss.sgi.com>; Sat, 2 May 2009 05:10:12 -0500
+Received: from moutng.kundenserver.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BFD5B146A2C6
+	for <xfs@oss.sgi.com>; Sat,  2 May 2009 03:13:50 -0700 (PDT)
+Received: from moutng.kundenserver.de (moutng.kundenserver.de
+	[212.227.126.186]) by cuda.sgi.com with ESMTP id
+	TnD20fOdXDtxCVwL for <xfs@oss.sgi.com>;
+	Sat, 02 May 2009 03:13:50 -0700 (PDT)
+Date: Sat, 2 May 2009 12:14:05 +0200
+From: Heinz Diehl <htd@fancy-poultry.org>
+Subject: Re: 2.6.30-rc4: xfs_fsr hangs
+Message-ID: <20090502101405.GA6145@fancy-poultry.org>
+References: <a4423d670905011333s664115bdh1d72392897567c1d@mail.gmail.com>
+MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1A09BC73-E1E8-4EF4-AD29-FB93556C3E3B@sgi.com>
+In-Reply-To: <a4423d670905011333s664115bdh1d72392897567c1d@mail.gmail.com>
+Reply-To: linux-kernel@vger.kernel.org
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,33 +30,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Felix Blyakher <felixb@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Andi Kleen <andi@firstfloor.org>, Hedi Berriche <hedi@sgi.com>, xfs@oss.sgi.com
+To: linux-kernel@vger.kernel.org
+Cc: Kernel Testers List <kernel-testers@vger.kernel.org>, Alexander Beregalov <a.beregalov@gmail.com>, xfs@oss.sgi.com
 
-On Sat, May 30, 2009 at 09:57:20AM -0500, Felix Blyakher wrote:
+On 01.05.2009, Alexander Beregalov wrote: 
+
+> # xfs_db -r /dev/sdc1
+> xfs_db> frag
+> actual 23805, ideal 22890, fragmentation factor 3.84%
+> # xfs_fsr -v /dev/sdc1
+> /mnt/c start inode=0
+> ino=158
+> extents before:3 after:1 DONE ino=158
 > 
-> (gfp_mask & __GFP_WAIT && gfp_mask & __GFP_FS)  != 0   or as Andi noted
-> (gfp_mask & (__GFP_WAIT|__GFP_FS)) == (__GFP_WAIT|__GFP_FS)
-> 
-> I'd prefer the former, as in my original patch.
-> 
-> Also, I accidentally put an extra open brace in a statement. After a
-> successful build I started playing with braces for more readability,
-> and left it in inconsistent state.
-> Seems like the preferred style in the kernel is as following:
-> 
-> return ((gfp_mask & __GFP_WAIT) && (gfp_mask & __GFP_FS)) != 0;
+>  then it hangs
 
-I would say it is
+I can't confirm this here on my systems:
 
-return (gfp_mask & __GFP_WAIT) && (gfp_mask & __GFP_FS);
+liesel:~ # uname -a
+Linux liesel 2.6.30-rc4 #1 SMP PREEMPT Sat May 2 11:49:13 CEST 2009 x86_64 x86_64 x86_64 GNU/Linux
 
-The != 0 is completely superfluous.
+liesel:~ # xfs_db -r /dev/sdc1
+xfs_db> frag
+actual 42974, ideal 42842, fragmentation factor 0.31%
+xfs_db> quit
 
--Andi
-
--- 
-ak@linux.intel.com -- Speaking for myself only.
+liesel:~ # xfs_fsr -v /dev/sdc1
+/home start inode=0
+ino=248755507
+ino=248755507 already fully defragmented.
+ino=536871160
+extents before:2 after:1 DONE ino=536871160
+ino=536875693
+extents before:3 after:1 DONE ino=536875693
+ino=615920545
+extents before:2 after:1 DONE ino=615920545
+ino=615920557
+extents before:2 after:1 DONE ino=615920557
+ino=1092324584
+extents before:4 after:1 DONE ino=1092324584
+liesel:~ #
 
 _______________________________________________
 xfs mailing list
