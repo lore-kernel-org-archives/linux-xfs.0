@@ -1,18 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n437JTd5089190 for <xfs@oss.sgi.com>; Sun, 3 May 2009 02:19:31 -0500
-Date: Sun, 3 May 2009 03:19:30 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: release.sh, take two
-Message-ID: <20090503071930.GA25756@infradead.org>
-References: <20090429141108.GA14578@infradead.org>
-	<20090429144734.GA15044@infradead.org>
-	<EE575CDF-D956-45DC-A58C-D17CF22F8C0A@sgi.com>
-	<65D7E102-E6EB-4555-9279-5436A54FA227@sgi.com>
+	n43EUeO5105876 for <xfs@oss.sgi.com>; Sun, 3 May 2009 09:30:41 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 902D0146C18E
+	for <xfs@oss.sgi.com>; Sun,  3 May 2009 07:34:28 -0700 (PDT)
+Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
+	cuda.sgi.com with ESMTP id 2VNCSFkmbcnKCBjd for
+	<xfs@oss.sgi.com>; Sun, 03 May 2009 07:34:28 -0700 (PDT)
+Message-ID: <49FDAA8E.80205@sandeen.net>
+Date: Sun, 03 May 2009 09:30:38 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <65D7E102-E6EB-4555-9279-5436A54FA227@sgi.com>
+Subject: Re: 2.6.30-rc4: xfs_fsr hangs
+References: <a4423d670905011333s664115bdh1d72392897567c1d@mail.gmail.com>	
+	<20090502101405.GA6145@fancy-poultry.org>	
+	<a4423d670905021135s4fdbea82t20cf75b61c59dc75@mail.gmail.com>	
+	<49FC9762.6010109@sandeen.net>	
+	<a4423d670905021159k51e91b12h96189005980b5e73@mail.gmail.com>	
+	<49FD2488.70503@sandeen.net>
+	<a4423d670905030015h59038741of55bae686ef923f0@mail.gmail.com>
+In-Reply-To: <a4423d670905030015h59038741of55bae686ef923f0@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,11 +33,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Felix Blyakher <felixb@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Alexander Beregalov <a.beregalov@gmail.com>
+Cc: xfs@oss.sgi.com
 
-Ok, I've commited it to the xfsprogs-dev, xfsdump-dev and dmapi-dev
-repositories.  As far as I'm converned we are now ready for a release.
+Alexander Beregalov wrote:
+> 2009/5/3 Eric Sandeen <sandeen@sandeen.net>:
+...
+
+>> Does this happen if you try to defrag a single file?  i.e. something like:
+> Yes, it does.
+
+Oh, interesting.  I didn't really expect that.  The testcase I provided
+worked for me.  Maybe you can provide your kernel .config and I'll try
+on a 32-bit box (I only tested 64-bit so far).
+
+Thanks,
+-Eric
 
 _______________________________________________
 xfs mailing list
