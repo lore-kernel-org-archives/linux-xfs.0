@@ -1,23 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n451pBdu236381 for <xfs@oss.sgi.com>; Mon, 4 May 2009 20:51:11 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 37C35147128E
-	for <xfs@oss.sgi.com>; Mon,  4 May 2009 18:55:06 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id NC81LfIDsDCuNjcF for
-	<xfs@oss.sgi.com>; Mon, 04 May 2009 18:55:06 -0700 (PDT)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail.sandeen.net (Postfix) with ESMTP id 05946AA60F5
-	for <xfs@oss.sgi.com>; Mon,  4 May 2009 20:51:11 -0500 (CDT)
-Message-ID: <49FF9B8E.7040607@sandeen.net>
-Date: Mon, 04 May 2009 20:51:10 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	n458s5oo005986 for <xfs@oss.sgi.com>; Tue, 5 May 2009 03:54:05 -0500
+Received: from mail-bw0-f226.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EE8881D0D108
+	for <xfs@oss.sgi.com>; Tue,  5 May 2009 01:54:07 -0700 (PDT)
+Received: from mail-bw0-f226.google.com (mail-bw0-f226.google.com
+	[209.85.218.226]) by cuda.sgi.com with ESMTP id
+	fD70oNSGCnRWqBTf for <xfs@oss.sgi.com>;
+	Tue, 05 May 2009 01:54:07 -0700 (PDT)
+Received: by bwz26 with SMTP id 26so4367703bwz.20
+	for <xfs@oss.sgi.com>; Tue, 05 May 2009 01:54:05 -0700 (PDT)
 MIME-Version: 1.0
-Subject: migration to selinux + xfs_fsr oddity....
+In-Reply-To: <a4423d670905031333o341981aal48168eeeb2870cdd@mail.gmail.com>
+References: <a4423d670905011333s664115bdh1d72392897567c1d@mail.gmail.com>
+	<20090502101405.GA6145@fancy-poultry.org>
+	<a4423d670905021135s4fdbea82t20cf75b61c59dc75@mail.gmail.com>
+	<49FC9762.6010109@sandeen.net>
+	<a4423d670905021159k51e91b12h96189005980b5e73@mail.gmail.com>
+	<49FD2488.70503@sandeen.net>
+	<a4423d670905030015h59038741of55bae686ef923f0@mail.gmail.com>
+	<49FDAA8E.80205@sandeen.net>
+	<a4423d670905031333o341981aal48168eeeb2870cdd@mail.gmail.com>
+Date: Tue, 5 May 2009 12:54:05 +0400
+Message-ID: <a4423d670905050154y3bd1eb0bv197062ef1b38f89d@mail.gmail.com>
+Subject: Re: 2.6.30-rc4: xfs_fsr hangs
+From: Alexander Beregalov <a.beregalov@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,59 +34,22 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-This came up in RH Bugzilla #498860, "xfs_fsr fails to complete"
-
-The reporter had an existing xfs filesystem from another Linux OS, and
-was using it under Fedora now.  He had some files for which xfs_fsr
-bails out with EINVAL:
-
-XFS_IOC_SWAPEXT failed: fragfile: Invalid argument
-
-It's failing this check in xfs_swap_extents():
-
-        /*
-         * If the target has extended attributes, the tmp file
-         * must also in order to ensure the correct data fork
-         * format.
-         */
-        if ( XFS_IFORK_Q(ip) != XFS_IFORK_Q(tip) ) {
-                error = XFS_ERROR(EINVAL);
-                goto error0;
-        }
-
-because the original filesystem had no selinux xattrs, but the new/temp
-file created during xfs_fsr got the selinux xattr, so failed this test.
-
-It can be demonstrated like this on a machine w/ selinux:
-
-# mkfs.xfs -dfile,name=fsfile,size=32m
-# mkdir test
-# mount -o loop,context="unconfined_u:object_r:user_tmp_t:s0" fsfile test
-# for I in `seq 10 -1 0`; do  dd if=/dev/zero of=test/fragfile bs=4k count=1
-seek=$I conv=notrunc oflag=sync; done
-# umount test
-# mount -o loop fsfile test
-# xfs_fsr test/fragfile
-XFS_IOC_SWAPEXT failed: fragfile: Invalid argument
-
-I'm not sure if this is the sort of thing to maybe just caveat &
-document, or try to work around ... somehow?  Maybe detect this case a
-bit better and print something more helpful about what has gone wrong?
-
-(As an aside ... looking at the above test and others related, and
-thinking about a few random reports that xfs_fsr corrupted a file, I
-can't help but think that maybe we are winding up with incompatible
-formats for the original and donor inodes in some cases...)
-
--Eric
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+MjAwOS81LzQgQWxleGFuZGVyIEJlcmVnYWxvdiA8YS5iZXJlZ2Fsb3ZAZ21haWwuY29tPjoKPiAy
+MDA5LzUvMyBFcmljIFNhbmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQ+Ogo+PiBBbGV4YW5kZXIg
+QmVyZWdhbG92IHdyb3RlOgo+Pj4gMjAwOS81LzMgRXJpYyBTYW5kZWVuIDxzYW5kZWVuQHNhbmRl
+ZW4ubmV0PjoKPj4gLi4uCj4+Cj4+Pj4gRG9lcyB0aGlzIGhhcHBlbiBpZiB5b3UgdHJ5IHRvIGRl
+ZnJhZyBhIHNpbmdsZSBmaWxlPyDCoGkuZS4gc29tZXRoaW5nIGxpa2U6Cj4+PiBZZXMsIGl0IGRv
+ZXMuCj4+Cj4+IE9oLCBpbnRlcmVzdGluZy4gwqBJIGRpZG4ndCByZWFsbHkgZXhwZWN0IHRoYXQu
+IMKgVGhlIHRlc3RjYXNlIEkgcHJvdmlkZWQKPj4gd29ya2VkIGZvciBtZS4gwqBNYXliZSB5b3Ug
+Y2FuIHByb3ZpZGUgeW91ciBrZXJuZWwgLmNvbmZpZyBhbmQgSSdsbCB0cnkKPj4gb24gYSAzMi1i
+aXQgYm94IChJIG9ubHkgdGVzdGVkIDY0LWJpdCBzbyBmYXIpLgo+IEF0dGFjaGVkLgoKQ2Fubm90
+IHJlcHJvZHVjZSBpdCBvbiB4ODZfNjQgYXMgd2VsbC4KCl9fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29t
+Cmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
