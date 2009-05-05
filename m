@@ -1,19 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n45HatWY039472 for <xfs@oss.sgi.com>; Tue, 5 May 2009 12:36:55 -0500
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E79DB8F8078
-	for <xfs@oss.sgi.com>; Tue,  5 May 2009 10:36:58 -0700 (PDT)
-Received: from eagdhcp-232-196.americas.sgi.com
-	(eagdhcp-232-196.americas.sgi.com [128.162.232.196])
-	by estes.americas.sgi.com (Postfix) with ESMTP id D98887000103
-	for <xfs@oss.sgi.com>; Tue,  5 May 2009 12:36:58 -0500 (CDT)
-Message-Id: <98FF66CA-9981-4F31-B645-4946EE9645D8@sgi.com>
-From: Felix Blyakher <felixb@sgi.com>
-Mime-Version: 1.0 (Apple Message framework v926)
-Subject: dmapi 2.2.10 source tarball released
-Date: Tue, 5 May 2009 12:36:58 -0500
+	n45KZJ3n052303 for <xfs@oss.sgi.com>; Tue, 5 May 2009 15:35:20 -0500
+Message-ID: <4A00A305.2010201@sandeen.net>
+Date: Tue, 05 May 2009 15:35:17 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: xfsprogs 3.0.1 source tarball released
+References: <A6A9C271-5B59-451F-A4CE-EC63BADDDEB7@sgi.com>
+In-Reply-To: <A6A9C271-5B59-451F-A4CE-EC63BADDDEB7@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,23 +17,23 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs mailing list <xfs@oss.sgi.com>
+To: Felix Blyakher <felixb@sgi.com>
+Cc: xfs mailing list <xfs@oss.sgi.com>
 
-ftp://oss.sgi.com/projects/xfs/cmd_tars/dmapi-2.2.10.tar.gz
+Felix Blyakher wrote:
+> ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsprogs-3.0.1.tar.gz
+> 
+> This version contains important bug fixes and improvements
+> to xfsprogs 3.0.0:
 
-This version contains changes since dmapi 2.2.9:
+Thanks Felix!  RPMs are in Fedora Rawhide now for anyone who cares about
+that sort of thing.  :)
 
-dmapi-2.2.10 (5 May 2009)
-         - Update the Makepkgs script to generate proper source  
-tarballs.
-         - Small specfile improvements, thanks to Jan Engelhardt.
-         - Various autoconf/libtool fixes, thanks to Andreas  
-Gruenbacher.
-
+-Eric
 
 _______________________________________________
 xfs mailing list
