@@ -1,18 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n46JWTIR140650 for <xfs@oss.sgi.com>; Wed, 6 May 2009 14:32:30 -0500
-Received: from andrew.triumf.ca (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 989911D13FEE
-	for <xfs@oss.sgi.com>; Wed,  6 May 2009 12:32:32 -0700 (PDT)
-Received: from andrew.triumf.ca (andrew.triumf.ca [142.90.106.59]) by
-	cuda.sgi.com with ESMTP id SS6XsVzIpk7tpRzB for
-	<xfs@oss.sgi.com>; Wed, 06 May 2009 12:32:32 -0700 (PDT)
-Date: Wed, 6 May 2009 12:32:25 -0700 (PDT)
-From: Andrew Daviel <advax@triumf.ca>
-Subject: Problems with XFS on iSCSI in RHEL4
-Message-ID: <Pine.LNX.4.64.0905061149480.26440@andrew.triumf.ca>
+	n472kJNK166383 for <xfs@oss.sgi.com>; Wed, 6 May 2009 21:46:20 -0500
+Received: from millhouse.houseofnate.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 046191D15144
+	for <xfs@oss.sgi.com>; Wed,  6 May 2009 19:46:22 -0700 (PDT)
+Received: from millhouse.houseofnate.net
+	(dsl092-086-237.bos1.dsl.speakeasy.net [66.92.86.237]) by
+	cuda.sgi.com with ESMTP id PWUSbJn5Rwemjq0m for
+	<xfs@oss.sgi.com>; Wed, 06 May 2009 19:46:22 -0700 (PDT)
+Message-ID: <4A024B7C.4010409@houseofnate.net>
+Date: Wed, 06 May 2009 22:46:20 -0400
+From: "Nathaniel W. Turner" <nate@houseofnate.net>
 MIME-Version: 1.0
+Subject: Re: [PATCH] xfs_repair: open filesystem device exclusively
+References: <49B48B8E.3030602@houseofnate.net>	<49B491EA.4090003@houseofnate.net>
+	<20090316212332.GA8496@infradead.org>
+In-Reply-To: <20090316212332.GA8496@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,52 +25,137 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: multipart/mixed; boundary="===============3014492648322656848=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, linux-iscsi-users@lists.sourceforge.net
+To: xfs@oss.sgi.com
 
+This is a multi-part message in MIME format.
+--===============3014492648322656848==
+Content-Type: multipart/alternative;
+ boundary="------------030107000307030706040705"
 
-A while back (2004) there was some discussion about problems with XFS
-and iSCSI.
+This is a multi-part message in MIME format.
+--------------030107000307030706040705
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-I wondered whether the issues had been fixed in later kernels, or whether 
-there is an underlying issue that will not go away.
+...just a friendly reminder to look at this again now that 3.0.1 is out.
 
-We have been using XFS for our mailstore both on local disks and on ATA 
-Over Ethernet to a CORAID box with no problem.
-We want to replace the CORAID with a Sun Storage 7410 box, using iSCSI 
-instead of AOE.
-
-When I create an ext3 volume on the Sun, things are OK.
-When I create an XFS volume, after doing mkdir, I get e.g.
-   kernel: Bad page state at free_hot_cold_page (in process 'iscsi-rx',
-   page c1069a20)
-   kernel: Trying to fix it up, but a reboot is needed
-   kernel: Bad page state at free_hot_cold_page (in process 'syslogd',
-   page c1069a20)
-
-Scientific Linux SL release 4.6
-kernel-smp-2.6.9-78.0.17.EL from kernel-2.6.9-78.0.17.EL.src.rpm
-   includes scsi_transport_iscsi.ko,iscsi_sfnet.ko
-kernel-module-xfs-2.6.9-78.0.17.ELsmp-0.4-1 from xfs-0.4-1.src.rpm
-iscsi-initiator-utils-4.0.3.0-6
-
-Also seen on:
-Scientific Linux SL release 4.5
-kernel-smp-2.6.9-55.0.6.EL.i686
-kernel-module-xfs-2.6.9-55.0.6.ELsmp-0.1-1.i686
-
-SL is basically the same as CENTOS (compiled from RHEL GPL'd sources)
-
+Christoph Hellwig wrote:
+> On Sun, Mar 08, 2009 at 11:50:02PM -0400, Nathaniel W. Turner wrote:
+>   
+>> (Error messages could probably be improved to be more user-friendly in
+>> this new failure case, and it probably wouldn't hurt to add a BLKROGET
+>> ioctl to check for read-only block devices with read-write permissions,
+>> but this does the job for me.)
+>>
+>> Signed-off-by: Nathaniel W. Turner <nate@houseofnate.net>
+>> ---
+>>  repair/init.c |    2 ++
+>>  1 files changed, 2 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/repair/init.c b/repair/init.c
+>> index 8e508c4..7e5052c 100644
+>> --- a/repair/init.c
+>> +++ b/repair/init.c
+>> @@ -142,6 +142,8 @@ xfs_init(libxfs_init_t *args)
+>>          args->isreadonly = (LIBXFS_ISREADONLY | LIBXFS_ISINACTIVE);
+>>      else if (dangerously)
+>>          args->isreadonly = (LIBXFS_ISINACTIVE | LIBXFS_DANGEROUSLY);
+>> +    else
+>> +        args->isreadonly = LIBXFS_EXCLUSIVELY;
+>>     
+>
+> Given that we skip it for -d and -n this is fine with me.
+>
+> I think we might want to delay this change in the way xfs_repair
+> operates until after we get a 3.0.1 release out with all the build
+> system fixes (hopefully really soon)
+>
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+>   
 
 -- 
-Andrew Daviel, TRIUMF, Canada
-Tel. +1 (604) 222-7376  (Pacific Time)
-Network Security Manager
+Nathaniel W. Turner
+http://houseofnate.net/
+
+
+--------------030107000307030706040705
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta content="text/html;charset=UTF-8" http-equiv="Content-Type">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+...just a friendly reminder to look at this again now that 3.0.1 is out.<br>
+<br>
+Christoph Hellwig wrote:
+<blockquote cite="mid:20090316212332.GA8496@infradead.org" type="cite">
+  <pre wrap="">On Sun, Mar 08, 2009 at 11:50:02PM -0400, Nathaniel W. Turner wrote:
+  </pre>
+  <blockquote type="cite">
+    <pre wrap="">(Error messages could probably be improved to be more user-friendly in
+this new failure case, and it probably wouldn't hurt to add a BLKROGET
+ioctl to check for read-only block devices with read-write permissions,
+but this does the job for me.)
+
+Signed-off-by: Nathaniel W. Turner <a class="moz-txt-link-rfc2396E" href="mailto:nate@houseofnate.net">&lt;nate@houseofnate.net&gt;</a>
+---
+ repair/init.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/repair/init.c b/repair/init.c
+index 8e508c4..7e5052c 100644
+--- a/repair/init.c
++++ b/repair/init.c
+@@ -142,6 +142,8 @@ xfs_init(libxfs_init_t *args)
+         args-&gt;isreadonly = (LIBXFS_ISREADONLY | LIBXFS_ISINACTIVE);
+     else if (dangerously)
+         args-&gt;isreadonly = (LIBXFS_ISINACTIVE | LIBXFS_DANGEROUSLY);
++    else
++        args-&gt;isreadonly = LIBXFS_EXCLUSIVELY;
+    </pre>
+  </blockquote>
+  <pre wrap=""><!---->
+Given that we skip it for -d and -n this is fine with me.
+
+I think we might want to delay this change in the way xfs_repair
+operates until after we get a 3.0.1 release out with all the build
+system fixes (hopefully really soon)
+
+_______________________________________________
+xfs mailing list
+<a class="moz-txt-link-abbreviated" href="mailto:xfs@oss.sgi.com">xfs@oss.sgi.com</a>
+<a class="moz-txt-link-freetext" href="http://oss.sgi.com/mailman/listinfo/xfs">http://oss.sgi.com/mailman/listinfo/xfs</a>
+  </pre>
+</blockquote>
+<br>
+<pre class="moz-signature" cols="72">-- 
+Nathaniel W. Turner
+<a class="moz-txt-link-freetext" href="http://houseofnate.net/">http://houseofnate.net/</a>
+</pre>
+</body>
+</html>
+
+--------------030107000307030706040705--
+
+
+--===============3014492648322656848==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3014492648322656848==--
