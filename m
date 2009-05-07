@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n472tvsB166897 for <xfs@oss.sgi.com>; Wed, 6 May 2009 21:55:58 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 37A0F1D15884
-	for <xfs@oss.sgi.com>; Wed,  6 May 2009 19:56:00 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id HD6rDRykr3J9jaVf for
-	<xfs@oss.sgi.com>; Wed, 06 May 2009 19:56:00 -0700 (PDT)
-Message-ID: <4A024DBF.40209@sandeen.net>
-Date: Wed, 06 May 2009 21:55:59 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	n47LkWXO228952 for <xfs@oss.sgi.com>; Thu, 7 May 2009 16:46:33 -0500
+Received: from mout.perfora.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8D7211480222
+	for <xfs@oss.sgi.com>; Thu,  7 May 2009 14:50:42 -0700 (PDT)
+Received: from mout.perfora.net (mout.perfora.net [74.208.4.195]) by
+	cuda.sgi.com with ESMTP id B2UuHf7cDamxp3fu for
+	<xfs@oss.sgi.com>; Thu, 07 May 2009 14:50:42 -0700 (PDT)
+Message-ID: <4A0356A5.3040408@timsesow.com>
+Date: Thu, 07 May 2009 15:46:13 -0600
+From: Tim Sesow <tim@timsesow.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_repair: open filesystem device exclusively
-References: <49B48B8E.3030602@houseofnate.net>
-	<49B491EA.4090003@houseofnate.net>
-In-Reply-To: <49B491EA.4090003@houseofnate.net>
+Subject: Re: Problems with XFS on iSCSI in RHEL4
+References: <Pine.LNX.4.64.0905061149480.26440@andrew.triumf.ca>
+In-Reply-To: <Pine.LNX.4.64.0905061149480.26440@andrew.triumf.ca>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,55 +23,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "Nathaniel W. Turner" <nate@houseofnate.net>
-Cc: xfs@oss.sgi.com
+To: Andrew Daviel <advax@triumf.ca>
+Cc: linux-iscsi-users@lists.sourceforge.net, xfs@oss.sgi.com
 
-Nathaniel W. Turner wrote:
-> I forgot to mention that this is against xfsprogs 3.0.0.  Also, the
-> indentation was a bit messed up on that last post, so here's the patch
-> again (all 2 lines of it):
-> 
-> ----
-> 
-> I'm sure there is a better way to fix this, but without this patch, two
-> xfs_repair processes will happily operate on the same filesystem device
-> at the same time.  It is also possible to mount a filesystem that is in
-> the process of being repaired.
-> 
-> This seems like it's probably not ideal, so this patch just modifies
-> xfs_repair to open the filesystem device with O_EXCL unless it was
-> invoked in "no modify" or "dangerous" mode.
+For what it is worth:  I run three systems, one 32-bit and two 64-bit, 
+with 2.6.24-rc3 kernels on
+them, using iSCSI storage running under OpenFiler as storage for
+XFS volumes.  The systems started out as CentOS 4.6 distributions.
 
-...
+Two of the volumes are less than 1TByte in size (300GB and 800GB).
+The third volume under LVM and is 45TBytes in size (several 
+multi-terabyte volumes
+merged into one LVM volume group).  The smaller volumes have been running
+for several months, the large volume only for about a month now.
+ 
+ I haven't encountered any problems creating or using those volumes with 
+XFS.
+The 45TByte volume also uses DMAPI as a mount option. 
 
-> Signed-off-by: Nathaniel W. Turner <nate@houseofnate.net>
-
-Christoph already looked I guess, but I'll give this my thumbs-up too :)
-
--Eric
-
-> ---
->  repair/init.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
-> 
-> diff --git a/repair/init.c b/repair/init.c
-> index 8e508c4..7e5052c 100644
-> --- a/repair/init.c
-> +++ b/repair/init.c
-> @@ -142,6 +142,8 @@ xfs_init(libxfs_init_t *args)
->          args->isreadonly = (LIBXFS_ISREADONLY | LIBXFS_ISINACTIVE);
->      else if (dangerously)
->          args->isreadonly = (LIBXFS_ISINACTIVE | LIBXFS_DANGEROUSLY);
-> +    else
-> +        args->isreadonly = LIBXFS_EXCLUSIVELY;
->  
->      if (!libxfs_init(args))
->          do_error(_("couldn't initialize XFS library\n"));
-> 
+Andrew Daviel wrote:
+>
+> A while back (2004) there was some discussion about problems with XFS
+> and iSCSI.
+>
+> I wondered whether the issues had been fixed in later kernels, or 
+> whether there is an underlying issue that will not go away.
+>
+> We have been using XFS for our mailstore both on local disks and on 
+> ATA Over Ethernet to a CORAID box with no problem.
+> We want to replace the CORAID with a Sun Storage 7410 box, using iSCSI 
+> instead of AOE.
+>
+> When I create an ext3 volume on the Sun, things are OK.
+> When I create an XFS volume, after doing mkdir, I get e.g.
+>   kernel: Bad page state at free_hot_cold_page (in process 'iscsi-rx',
+>   page c1069a20)
+>   kernel: Trying to fix it up, but a reboot is needed
+>   kernel: Bad page state at free_hot_cold_page (in process 'syslogd',
+>   page c1069a20)
+>
+> Scientific Linux SL release 4.6
+> kernel-smp-2.6.9-78.0.17.EL from kernel-2.6.9-78.0.17.EL.src.rpm
+>   includes scsi_transport_iscsi.ko,iscsi_sfnet.ko
+> kernel-module-xfs-2.6.9-78.0.17.ELsmp-0.4-1 from xfs-0.4-1.src.rpm
+> iscsi-initiator-utils-4.0.3.0-6
+>
+> Also seen on:
+> Scientific Linux SL release 4.5
+> kernel-smp-2.6.9-55.0.6.EL.i686
+> kernel-module-xfs-2.6.9-55.0.6.ELsmp-0.1-1.i686
+>
+> SL is basically the same as CENTOS (compiled from RHEL GPL'd sources)
+>
+>
 
 _______________________________________________
 xfs mailing list
