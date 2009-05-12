@@ -1,18 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4CAgur6063093 for <xfs@oss.sgi.com>; Tue, 12 May 2009 05:42:57 -0500
-Received: from pandora.asterdata.local (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 353B41D28082
-	for <xfs@oss.sgi.com>; Tue, 12 May 2009 03:43:02 -0700 (PDT)
-Received: from pandora.asterdata.local (71-6-94-85.static-ip.telepacific.net
-	[71.6.94.85]) by cuda.sgi.com with ESMTP id GxGJuUBIw1cWWCYn
-	for <xfs@oss.sgi.com>; Tue, 12 May 2009 03:43:02 -0700 (PDT)
-Subject: configure issue.
-From: Milind Dumbare <mdumbare@asterdata.com>
-Date: Tue, 12 May 2009 16:12:55 +0530
-Message-ID: <1242124975.3608.11.camel@alhena>
-MIME-Version: 1.0
+	n4CBuZZC067991 for <xfs@oss.sgi.com>; Tue, 12 May 2009 06:56:36 -0500
+Received: from padma.gslab.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id 6DD4327CAFA
+	for <xfs@oss.sgi.com>; Tue, 12 May 2009 04:56:41 -0700 (PDT)
+Received: from padma.gslab.com (padma.gslab.com [59.163.66.102]) by
+	cuda.sgi.com with SMTP id Tj4p5uxZ7dpBwIKM for
+	<xfs@oss.sgi.com>; Tue, 12 May 2009 04:56:41 -0700 (PDT)
+Received: from [172.20.25.198] (unknown [172.20.25.198])
+	(Authenticated sender: milind)
+	by padma.gslab.com (Postfix) with ESMTP id 88E2E17701C0
+	for <xfs@oss.sgi.com>; Tue, 12 May 2009 17:26:38 +0530 (IST)
+Subject: configure issue
+From: Milind <milind@gslab.com>
+Date: Tue, 12 May 2009 17:20:03 +0530
+Message-Id: <1242129003.3608.12.camel@alhena>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,7 +29,7 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
 I came across this problem when I was doing ./configure of xfsprogs.
 
