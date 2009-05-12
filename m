@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4CG3upY082459 for <xfs@oss.sgi.com>; Tue, 12 May 2009 11:03:57 -0500
+	n4CFulV7082151 for <xfs@oss.sgi.com>; Tue, 12 May 2009 10:56:47 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CB5791D296BF
-	for <xfs@oss.sgi.com>; Tue, 12 May 2009 09:04:03 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1249427DA01
+	for <xfs@oss.sgi.com>; Tue, 12 May 2009 08:56:53 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id u0VroArNUoC8pgJE for
-	<xfs@oss.sgi.com>; Tue, 12 May 2009 09:04:03 -0700 (PDT)
-Date: Tue, 12 May 2009 12:04:03 -0400
+	by cuda.sgi.com with ESMTP id oZA5BfvD0jjIfv5C for
+	<xfs@oss.sgi.com>; Tue, 12 May 2009 08:56:53 -0700 (PDT)
+Date: Tue, 12 May 2009 11:56:53 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: migration to selinux + xfs_fsr oddity....
-Message-ID: <20090512160403.GB28714@infradead.org>
-References: <49FF9B8E.7040607@sandeen.net>
+Subject: Re: Problems with XFS on iSCSI in RHEL4
+Message-ID: <20090512155653.GA28714@infradead.org>
+References: <Pine.LNX.4.64.0905061149480.26440@andrew.triumf.ca>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <49FF9B8E.7040607@sandeen.net>
+In-Reply-To: <Pine.LNX.4.64.0905061149480.26440@andrew.triumf.ca>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,24 +28,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Andrew Daviel <advax@triumf.ca>
+Cc: linux-iscsi-users@lists.sourceforge.net, xfs@oss.sgi.com
 
-On Mon, May 04, 2009 at 08:51:10PM -0500, Eric Sandeen wrote:
-> This came up in RH Bugzilla #498860, "xfs_fsr fails to complete"
->
-> The reporter had an existing xfs filesystem from another Linux OS, and
-> was using it under Fedora now.  He had some files for which xfs_fsr
-> bails out with EINVAL:
-> 
-> XFS_IOC_SWAPEXT failed: fragfile: Invalid argument
+On Wed, May 06, 2009 at 12:32:25PM -0700, Andrew Daviel wrote:
+> When I create an ext3 volume on the Sun, things are OK.
+> When I create an XFS volume, after doing mkdir, I get e.g.
+>   kernel: Bad page state at free_hot_cold_page (in process 'iscsi-rx',
+>   page c1069a20)
+>   kernel: Trying to fix it up, but a reboot is needed
+>   kernel: Bad page state at free_hot_cold_page (in process 'syslogd',
+>   page c1069a20)
 
-As analyzed in the bugzilla this is a problem when selinux attributes
-are created underneath due to selinux.
-
-Either we relax the attribute fork check an allow the new inode to have
-an attribute fork despite the old one not having one, or we need to
-create a fake xattr on the file to be defragmented.
+That looks like the old disagreement on whether we could send
+non-refcountable pages to the block layer.  XFS used to do this and
+iscsi didn't like it.  Until today it's still not specified if it
+is allowed or not and most drivers don't care but XFS stopped doing
+that.
 
 _______________________________________________
 xfs mailing list
