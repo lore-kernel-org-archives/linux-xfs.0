@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4CFulV7082151 for <xfs@oss.sgi.com>; Tue, 12 May 2009 10:56:47 -0500
+	n4CFr14A081964 for <xfs@oss.sgi.com>; Tue, 12 May 2009 10:53:01 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1249427DA01
-	for <xfs@oss.sgi.com>; Tue, 12 May 2009 08:56:53 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2352B1D292E3
+	for <xfs@oss.sgi.com>; Tue, 12 May 2009 08:53:08 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id oZA5BfvD0jjIfv5C for
-	<xfs@oss.sgi.com>; Tue, 12 May 2009 08:56:53 -0700 (PDT)
-Date: Tue, 12 May 2009 11:56:53 -0400
+	by cuda.sgi.com with ESMTP id E9FSCXTjALiE6b0S for
+	<xfs@oss.sgi.com>; Tue, 12 May 2009 08:53:08 -0700 (PDT)
+Date: Tue, 12 May 2009 11:53:01 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Problems with XFS on iSCSI in RHEL4
-Message-ID: <20090512155653.GA28714@infradead.org>
-References: <Pine.LNX.4.64.0905061149480.26440@andrew.triumf.ca>
+Subject: Re: mmap vs mtime in 2.6.26 and up
+Message-ID: <20090512155301.GA23160@infradead.org>
+References: <874ovws94s.fsf@tac.ki.iif.hu> <87ljp2v6vt.fsf@tac.ki.iif.hu>
+	<2c0942db0905120837g702b457bm52a412293925021a@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0905061149480.26440@andrew.triumf.ca>
+In-Reply-To: <2c0942db0905120837g702b457bm52a412293925021a@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,23 +29,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andrew Daviel <advax@triumf.ca>
-Cc: linux-iscsi-users@lists.sourceforge.net, xfs@oss.sgi.com
+To: Ray Lee <ray-lk@madrabbit.org>
+Cc: xfs@oss.sgi.com, linux-kernel@vger.kernel.org, Anton Salikhmetov <salikhmetov@gmail.com>, Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Ferenc Wagner <wferi@niif.hu>
 
-On Wed, May 06, 2009 at 12:32:25PM -0700, Andrew Daviel wrote:
-> When I create an ext3 volume on the Sun, things are OK.
-> When I create an XFS volume, after doing mkdir, I get e.g.
->   kernel: Bad page state at free_hot_cold_page (in process 'iscsi-rx',
->   page c1069a20)
->   kernel: Trying to fix it up, but a reboot is needed
->   kernel: Bad page state at free_hot_cold_page (in process 'syslogd',
->   page c1069a20)
+On Tue, May 12, 2009 at 08:37:43AM -0700, Ray Lee wrote:
+> > I've noticed that the last modification times of our RRD files got
+> > stuck after upgrading from 2.6.24 to 2.6.26 (Debian Etch -> Lenny; I
+> > also tested with 2.6.30-rc5, they are still stuck). ??It has some
+> > literature, most notably kernel bug #2645, but that's closed long ago
+> > and the resulting patch http://lkml.org/lkml/2008/1/22/370 is present
+> > in my kernels. ??Still, the test program (version 3 from the bug report)
+> > gives failures:
 
-That looks like the old disagreement on whether we could send
-non-refcountable pages to the block layer.  XFS used to do this and
-iscsi didn't like it.  Until today it's still not specified if it
-is allowed or not and most drivers don't care but XFS stopped doing
-that.
+The problem is pretty simple.  do_wp_page and __do_fault use
+file_update_time to update ctime and mtime.  But this function is only
+a helper for simply filesystems that have a binary inode dirty/non dirty
+state and keep the m/ctime purely in the Linux inode.  It must not be
+called from generic code as more complex filesystems need a notification
+through ->setattr to update the timestamps.  This will also affect other
+filesystems like ubifs.  I'm not entirely sure why it ever worked
+before, we must have picked up those c/mtime updates by accident
+somehow.
 
 _______________________________________________
 xfs mailing list
