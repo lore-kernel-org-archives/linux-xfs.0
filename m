@@ -1,21 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4BNsXhZ019188 for <xfs@oss.sgi.com>; Mon, 11 May 2009 18:54:33 -0500
-Received: from zimbra1.mindcentric.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 618AC1252C62
-	for <xfs@oss.sgi.com>; Mon, 11 May 2009 16:59:10 -0700 (PDT)
-Received: from zimbra1.mindcentric.com (zimbra.mindcentric.com
-	[216.98.159.230]) by cuda.sgi.com with ESMTP id
-	FZbNBOUuSiaBF4HC for <xfs@oss.sgi.com>;
-	Mon, 11 May 2009 16:59:10 -0700 (PDT)
-Received: from zimbra1.mindcentric.com (localhost.localdomain [127.0.0.1])
-	by zimbra1.mindcentric.com (Postfix) with ESMTP id 8B37B22ACADA
-	for <xfs@oss.sgi.com>; Mon, 11 May 2009 16:54:38 -0700 (PDT)
-Date: Mon, 11 May 2009 16:54:38 -0700 (PDT)
-From: Anshuman Sachdeva <asachdeva@attributor.com>
-Message-ID: <11164227.961242086072718.JavaMail.SYSTEM@lp-asachdeva>
-Subject: xfs hangs in hadoop file system
+	n4CAgur6063093 for <xfs@oss.sgi.com>; Tue, 12 May 2009 05:42:57 -0500
+Received: from pandora.asterdata.local (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 353B41D28082
+	for <xfs@oss.sgi.com>; Tue, 12 May 2009 03:43:02 -0700 (PDT)
+Received: from pandora.asterdata.local (71-6-94-85.static-ip.telepacific.net
+	[71.6.94.85]) by cuda.sgi.com with ESMTP id GxGJuUBIw1cWWCYn
+	for <xfs@oss.sgi.com>; Tue, 12 May 2009 03:43:02 -0700 (PDT)
+Subject: configure issue.
+From: Milind Dumbare <mdumbare@asterdata.com>
+Date: Tue, 12 May 2009 16:12:55 +0530
+Message-ID: <1242124975.3608.11.camel@alhena>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -31,14 +27,25 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi All,
-       Does any one else is also having same issue?
+I came across this problem when I was doing ./configure of xfsprogs.
 
+I had to install gettext from sources (as xfsprogs needed it) which
+resided in my toolchain and while doing configure xfsprogs's configure
+couldn't fine msgfmt, msgmerge and xgettext even if I do PATH=<path to
+my gettext/bin/>:$PATH.
 
+if I manually set MSGFMT, MSGMERGE to their binary paths this works.
 
+Is this not expected?
 
+When I looked at the sources if I change configure:12316 as follows
 
-Anshuman
+- as_dummy="/usr/bin:/usr/local/bin:/usr/freeware/bin"
++ as_dummy="/usr/bin:/usr/local/bin:/usr/freeware/bin:$PATH"
+
+this works for MSGFMT
+
+-Miline
 
 _______________________________________________
 xfs mailing list
