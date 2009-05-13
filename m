@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4D042Gl104106 for <xfs@oss.sgi.com>; Tue, 12 May 2009 19:04:02 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D63B01D11AA8
-	for <xfs@oss.sgi.com>; Tue, 12 May 2009 17:04:08 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id Z45FbIhCPhz9KbVq for
-	<xfs@oss.sgi.com>; Tue, 12 May 2009 17:04:08 -0700 (PDT)
-Message-ID: <4A0A0E76.6000701@sandeen.net>
-Date: Tue, 12 May 2009 19:04:06 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: file preallocation without unwritten flag being set
+	n4D4Yr2r113709 for <xfs@oss.sgi.com>; Tue, 12 May 2009 23:34:53 -0500
+Received: from web65601.mail.ac4.yahoo.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id D71642803A2
+	for <xfs@oss.sgi.com>; Tue, 12 May 2009 21:34:59 -0700 (PDT)
+Received: from web65601.mail.ac4.yahoo.com (web65601.mail.ac4.yahoo.com
+	[76.13.9.69]) by cuda.sgi.com with SMTP id tIER1aqZuc9FADa5 for
+	<xfs@oss.sgi.com>; Tue, 12 May 2009 21:34:59 -0700 (PDT)
+Message-ID: <618437.93111.qm@web65601.mail.ac4.yahoo.com>
 References: <283244.29270.qm@web65608.mail.ac4.yahoo.com>
-In-Reply-To: <283244.29270.qm@web65608.mail.ac4.yahoo.com>
+	<4A0A0E76.6000701@sandeen.net>
+Date: Tue, 12 May 2009 21:34:57 -0700 (PDT)
+From: p v <pvlogin@yahoo.com>
+Subject: Re: file preallocation without unwritten flag being set
+In-Reply-To: <4A0A0E76.6000701@sandeen.net>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,8 +28,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
+
+
+
+
+I want to avoid any metadata modifications while doing O_DIRECT reads (the fs is mounted with noatime). Right now I am doing it mostly for testing - I am seeing a performance degradation going from raw to xfs on a 10TB filesystem - probably due to my application but I am trying to narrow it down so I am starting with running randomio benchmark on raw - then 10TB file, then 10 1TB files, then 100 100GB files, ...
+
+But in general certain applications can definitely take care of the preallocated space (db, FB haystack, ...). What they require is minimal fragmentation so they would prefer to preallocate the space (fill the whole fs with contigous files) and then maintain in-files app specific metadata (such as valid offsets of initialized data, ...). What I would really like is to have vxfs equivalent of setext options -
+
+setext -r <reservation> -f chggsize
+
+And on top of that I would really love to have is vxfs equivalent of "nomtime" mount option. Then with O_DIRECT I have raw-like performance.
+
+With the unwritten mkfs option I could get the setext semantics. So what's the trick (before I dive into the xfs layout)? I am guessing that there is no equivalent for nomtime option?
+
+Thanks
+
+Peter Vajgel
+
+
+
+
+
+----- Original Message ----
+From: Eric Sandeen <sandeen@sandeen.net>
 To: p v <pvlogin@yahoo.com>
 Cc: xfs@oss.sgi.com
+Sent: Tuesday, May 12, 2009 5:04:06 PM
+Subject: Re: file preallocation without unwritten flag being set
 
 p v wrote:
 > 
@@ -75,6 +104,9 @@ Thanks,
 > _______________________________________________ xfs mailing list 
 > xfs@oss.sgi.com http://oss.sgi.com/mailman/listinfo/xfs
 > 
+
+
+      
 
 _______________________________________________
 xfs mailing list
