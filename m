@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4EGO4Fq232204 for <xfs@oss.sgi.com>; Thu, 14 May 2009 11:24:05 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2C4212878F6
-	for <xfs@oss.sgi.com>; Thu, 14 May 2009 09:24:11 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id ljWOX15PrRQBTnnv for
-	<xfs@oss.sgi.com>; Thu, 14 May 2009 09:24:11 -0700 (PDT)
-Message-ID: <4A0C45AA.3040307@sandeen.net>
-Date: Thu, 14 May 2009 11:24:10 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: Questions about xfstests regarding porting it to test ext4
-	filesystems
-References: <E1M4aRo-0000ri-0G@closure.thunk.org>
-In-Reply-To: <E1M4aRo-0000ri-0G@closure.thunk.org>
+	n4EHFprG234942 for <xfs@oss.sgi.com>; Thu, 14 May 2009 12:15:52 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 14878FAECAF
+	for <xfs@oss.sgi.com>; Thu, 14 May 2009 10:20:45 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id tgShC5sqEJzlJv1Y for
+	<xfs@oss.sgi.com>; Thu, 14 May 2009 10:20:45 -0700 (PDT)
+Message-Id: <20090514171558.014747000@bombadil.infradead.org>
+Date: Thu, 14 May 2009 13:12:34 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH 1/7] xfs: split inode data writeback from xfs_sync_inodes_ag
+References: <20090514171233.942489000@bombadil.infradead.org>
+Content-Disposition: inline; filename=sync1.diff
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,84 +22,93 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Theodore Ts'o wrote:
-> I've been playing around with xfstests (aka xfsqa) and have some
-> questions:
-> 
-> 1)  What is the best mailing list to use for discussions about xfstests? 
-> I'm *not* subscribed to xfs@oss.sgi.com, since I'm concerned about
-> traffic levels... I'm on too many high-volume mailing lists already.
+From: Dave Chinner <david@fromorbit.com>
 
-This one is fine.  it's not that high-volume but as you've found you
-don't have to subscribe, anyway.  :)
+In many cases we only want to sync inode data. Start spliting the inode sync
+into data sync and inode sync by factoring out the inode data flush.
 
-> 2)  Why is the TESTDIR have to be a persistent xfs volume?   I noticed
-> that when testing UDF and NFS, the scratch volume is used (and $testdir
-> is set to the point at the scratch directory).   Is there some
-> fundamental reason why there must be an XFS volume mounted, even if the
-> fundamental intention is to test some other filesystem type, whether
-> it's UDF, NFS, or Ext4?
+[hch: minor cleanups]
 
-Hm I'll have to dig, not certain.  I thought that TESTDIR would usually
-be used for non-destructive testing, general IO etc, while SCRATCHDIR
-would usually be used for any test that required lots of repeatability,
-and could therefore be more fs-specific.  But that's handwaving.
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-> 3) How much latitude/interest is there in modifying xfstests to be a bit
-> more filesystem independent?  
-
-I talked about just this at LSF last month and there seemed to be a bit
-of interest, it was the best plan we had coming out of the talk.
-
-I also talked about a fledgling effort from RH,
-http://git.fedoraproject.org/git/?p=tafs.git;a=summary
-
-> I understand the primary purpose of
-> xfstests has to be to support XFS development, but looking at the
-> scripts, there is a *huge* amount of XFS-specific assumptions all over
-> the shell scripts.  As a result I'm still of two minds whether it will
-> be less work to start from scratch to develop a test suite for ext4 (and
-> from the beginning try to make it filesystem independent) or to try to
-> hack xfstests and try to make it more filesystem indpendent.
-
-Yep, agreed.  I think it's worth evaluating whether the xfstests harness
-is within reach of the goal, though.  But you may be right about how
-much work it is to get there.
-
-Really the value to other filesystems is in the tests (those which are
-or could be made generic), more than the harness, I'd say.
-
-> A lot of
-> this depends on the time/interest with the xfstests upstream in working
-> with me.  (And assuming we get the licensing issues dealt with --- hence
-> my interest and time spent in trying to clarify the licensing situation
-> with the fsx program.)   
-
-and at least as importantly, the rest of the scripts, but we're making
-progress on that.
-
-> If there isn't a whole lot of interest in trying to make xfstests more
-> portable, that's fine.  It may be that I'm better off starting from
-> scratch.  There does seem to be a lot of work and experience represented
-> in the xfstest suite, though, so I would like to try exploring the
-> possibility of expanding its scope to also support testing other
-> filesystems (such as ext4, btrfs, etc.)
-
-There is interest, it's what we decided at least preliminarily at LSF,
-and now it's the "find time and see if it's feasible" part I guess.
-
--Eric
-
-> (I'm not on the xfs mailing list, so please keep me cc'ed, thanks.)
-> 
-> 						- Ted
+Index: xfs/fs/xfs/linux-2.6/xfs_sync.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_sync.c	2009-05-12 23:28:45.023811837 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_sync.c	2009-05-13 10:00:27.169659271 +0200
+@@ -48,6 +48,34 @@
+ #include <linux/kthread.h>
+ #include <linux/freezer.h>
+ 
++
++STATIC int
++xfs_sync_inode_data(
++	struct xfs_inode	*ip,
++	int			flags)
++{
++	struct inode	*inode = VFS_I(ip);
++	struct address_space *mapping = inode->i_mapping;
++	int		error = 0;
++
++	if (mapping_tagged(mapping, PAGECACHE_TAG_DIRTY)) {
++		if (!xfs_ilock_nowait(ip, XFS_IOLOCK_SHARED)) {
++			if (flags & SYNC_TRYLOCK)
++				goto out_wait;
++			xfs_ilock(ip, XFS_IOLOCK_SHARED);
++		}
++
++		error = xfs_flush_pages(ip, 0, -1, (flags & SYNC_WAIT) ?
++					0 : XFS_B_ASYNC, FI_NONE);
++		xfs_iunlock(ip, XFS_IOLOCK_SHARED);
++	}
++
++ out_wait:
++	if (flags & SYNC_IOWAIT)
++		xfs_ioend_wait(ip);
++	return error;
++}
++
+ /*
+  * Sync all the inodes in the given AG according to the
+  * direction given by the flags.
+@@ -123,27 +151,10 @@ xfs_sync_inodes_ag(
+ 		 * If we have to flush data or wait for I/O completion
+ 		 * we need to hold the iolock.
+ 		 */
+-		if (flags & SYNC_DELWRI) {
+-			if (VN_DIRTY(inode)) {
+-				if (flags & SYNC_TRYLOCK) {
+-					if (xfs_ilock_nowait(ip, XFS_IOLOCK_SHARED))
+-						lock_flags |= XFS_IOLOCK_SHARED;
+-				} else {
+-					xfs_ilock(ip, XFS_IOLOCK_SHARED);
+-					lock_flags |= XFS_IOLOCK_SHARED;
+-				}
+-				if (lock_flags & XFS_IOLOCK_SHARED) {
+-					error = xfs_flush_pages(ip, 0, -1,
+-							(flags & SYNC_WAIT) ? 0
+-								: XFS_B_ASYNC,
+-							FI_NONE);
+-				}
+-			}
+-			if (VN_CACHED(inode) && (flags & SYNC_IOWAIT))
+-				xfs_ioend_wait(ip);
+-		}
+-		xfs_ilock(ip, XFS_ILOCK_SHARED);
++		if (flags & SYNC_DELWRI)
++			error = xfs_sync_inode_data(ip, flags);
+ 
++		xfs_ilock(ip, XFS_ILOCK_SHARED);
+ 		if ((flags & SYNC_ATTR) && !xfs_inode_clean(ip)) {
+ 			if (flags & SYNC_WAIT) {
+ 				xfs_iflock(ip);
 
 _______________________________________________
 xfs mailing list
