@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4EHFpKC234941 for <xfs@oss.sgi.com>; Thu, 14 May 2009 12:15:52 -0500
+	n4EHFqU3234946 for <xfs@oss.sgi.com>; Thu, 14 May 2009 12:15:52 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A7D08287FFC
-	for <xfs@oss.sgi.com>; Thu, 14 May 2009 10:15:59 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 60A25FAECAF
+	for <xfs@oss.sgi.com>; Thu, 14 May 2009 10:20:45 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id SHu2LuFmVAfQjWDF for
-	<xfs@oss.sgi.com>; Thu, 14 May 2009 10:15:59 -0700 (PDT)
-Message-Id: <20090514171559.231368000@bombadil.infradead.org>
-Date: Thu, 14 May 2009 13:12:40 -0400
+	by cuda.sgi.com with ESMTP id ZiJBA0eyqF4Fo1CF for
+	<xfs@oss.sgi.com>; Thu, 14 May 2009 10:20:45 -0700 (PDT)
+Message-Id: <20090514171558.649403000@bombadil.infradead.org>
+Date: Thu, 14 May 2009 13:12:37 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 7/7] xfs: split xfs_sync_inodes
+Subject: [PATCH 4/7] xfs: remove unused parameter from xfs_reclaim_inodes
 References: <20090514171233.942489000@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-split-xfs_sync_inodes
+Content-Disposition: inline; filename=sync5.diff
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,204 +29,114 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-xfs_sync_inodes is used to write back either file data or inode metadata.
-In generally we always do these separately, except for one fishy case in
-xfs_fs_put_super that does both.  So separate xfs_sync_inodes into
-separate xfs_sync_data and xfs_sync_attr functions.  In xfs_fs_put_super
-we first call the data sync and then the attr sync as that was the previous
-order.  The moved log force in that path doesn't make a different because
-we will force the log again as part of the real unmount process.
+From: Dave Chinner <david@fromorbit.com>
 
-The filesystem readonly checks are not performed by the new function but
-instead moved into the callers, given that most callers alredy have it
-further up in the stack.  Also add debug checks that we do not pass in
-incorrect flags in the new xfs_sync_data and xfs_sync_attr function and
-fix the one place that did pass in a wrong flag.
+The noblock parameter of xfs_reclaim_inodes is only ever set to zero. Remove
+it and all the conditional code that is never executed.
 
-Also remove a comment mentioning xfs_sync_inodes that has been incorrect
-for a while because we always take either the iolock or ilock in the
-sync path these days.
-
-
+Signed-off-by: Dave Chinner <david@fromorbit.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs/fs/xfs/linux-2.6/xfs_super.c
-===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2009-05-14 19:09:00.178792110 +0200
-+++ xfs/fs/xfs/linux-2.6/xfs_super.c	2009-05-14 19:09:05.278808755 +0200
-@@ -1070,7 +1070,18 @@ xfs_fs_put_super(
- 	int			unmount_event_flags = 0;
- 
- 	xfs_syncd_stop(mp);
--	xfs_sync_inodes(mp, SYNC_ATTR|SYNC_DELWRI);
-+
-+	if (!(sb->s_flags & MS_RDONLY)) {
-+		/*
-+		 * XXX(hch): this should be SYNC_WAIT.
-+		 *
-+		 * Or more likely no needed at all because the VFS is already
-+		 * calling ->sync_fs after shutting down all filestem
-+		 * operations and just before calling ->put_super.
-+		 */
-+		xfs_sync_data(mp, 0);
-+		xfs_sync_attr(mp, 0);
-+	}
- 
- #ifdef HAVE_DMAPI
- 	if (mp->m_flags & XFS_MOUNT_DMAPI) {
 Index: xfs/fs/xfs/linux-2.6/xfs_sync.c
 ===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_sync.c	2009-05-14 19:09:04.687659175 +0200
-+++ xfs/fs/xfs/linux-2.6/xfs_sync.c	2009-05-14 19:09:05.279808603 +0200
-@@ -265,29 +265,40 @@ xfs_sync_inode_attr(
- 	return error;
- }
+--- xfs.orig/fs/xfs/linux-2.6/xfs_sync.c	2009-05-14 16:20:34.251688779 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_sync.c	2009-05-14 16:20:37.012658983 +0200
+@@ -383,7 +383,7 @@ xfs_quiesce_fs(
+ 	int	count = 0, pincount;
  
-+/*
-+ * Write out pagecache data for the whole filesystem.
-+ */
+ 	xfs_flush_buftarg(mp->m_ddev_targp, 0);
+-	xfs_reclaim_inodes(mp, 0, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
++	xfs_reclaim_inodes(mp, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
+ 
+ 	/*
+ 	 * This loop must run at least twice.  The first instance of the loop
+@@ -507,7 +507,7 @@ xfs_sync_worker(
+ 
+ 	if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
+ 		xfs_log_force(mp, (xfs_lsn_t)0, XFS_LOG_FORCE);
+-		xfs_reclaim_inodes(mp, 0, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
++		xfs_reclaim_inodes(mp, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
+ 		/* dgc: errors ignored here */
+ 		error = xfs_qm_sync(mp, SYNC_BDFLUSH);
+ 		error = xfs_sync_fsdata(mp, SYNC_BDFLUSH);
+@@ -701,7 +701,6 @@ STATIC void
+ xfs_reclaim_inodes_ag(
+ 	xfs_mount_t	*mp,
+ 	int		ag,
+-	int		noblock,
+ 	int		mode)
+ {
+ 	xfs_inode_t	*ip = NULL;
+@@ -747,25 +746,13 @@ restart:
+ 			continue;
+ 		}
+ 
+-		if (noblock) {
+-			if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)) {
+-				read_unlock(&pag->pag_ici_lock);
+-				continue;
+-			}
+-			if (xfs_ipincount(ip) ||
+-			    !xfs_iflock_nowait(ip)) {
+-				xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-				read_unlock(&pag->pag_ici_lock);
+-				continue;
+-			}
+-		}
+ 		read_unlock(&pag->pag_ici_lock);
+ 
+ 		/*
+ 		 * hmmm - this is an inode already in reclaim. Do
+ 		 * we even bother catching it here?
+ 		 */
+-		if (xfs_reclaim_inode(ip, noblock, mode))
++		if (xfs_reclaim_inode(ip, 0, mode))
+ 			skipped++;
+ 	} while (nr_found);
+ 
+@@ -780,7 +767,6 @@ restart:
  int
--xfs_sync_inodes(
--	xfs_mount_t	*mp,
--	int		flags)
-+xfs_sync_data(
-+	struct xfs_mount	*mp,
-+	int			flags)
+ xfs_reclaim_inodes(
+ 	xfs_mount_t	*mp,
+-	int		 noblock,
+ 	int		mode)
  {
--	int		error = 0;
--	int		lflags = XFS_LOG_FORCE;
-+	int			error;
- 
--	if (mp->m_flags & XFS_MOUNT_RDONLY)
--		return 0;
-+	ASSERT((flags & ~(SYNC_TRYLOCK|SYNC_WAIT|SYNC_IOWAIT)) == 0);
- 
--	if (flags & SYNC_WAIT)
--		lflags |= XFS_LOG_SYNC;
-+	error = xfs_inode_ag_iterator(mp, xfs_sync_inode_data, flags, -1);
-+	if (error)
-+		return XFS_ERROR(error);
- 
--	if (flags & SYNC_DELWRI)
--		error = xfs_inode_ag_iterator(mp, xfs_sync_inode_data, flags, -1);
-+	xfs_log_force(mp, 0,
-+		      (flags & SYNC_WAIT) ?
-+		       XFS_LOG_FORCE | XFS_LOG_SYNC :
-+		       XFS_LOG_FORCE);
-+	return 0;
-+}
- 
--	if (flags & SYNC_ATTR)
--		error = xfs_inode_ag_iterator(mp, xfs_sync_inode_attr, flags, -1);
-+/*
-+ * Write out inode metadata (attributes) for the whole filesystem.
-+ */
-+int
-+xfs_sync_attr(
-+	struct xfs_mount	*mp,
-+	int			flags)
-+{
-+	ASSERT((flags & ~SYNC_WAIT) == 0);
- 
--	if (!error && (flags & SYNC_DELWRI))
--		xfs_log_force(mp, 0, lflags);
--	return XFS_ERROR(error);
-+	return xfs_inode_ag_iterator(mp, xfs_sync_inode_attr, flags, -1);
+ 	int		i;
+@@ -788,7 +774,7 @@ xfs_reclaim_inodes(
+ 	for (i = 0; i < mp->m_sb.sb_agcount; i++) {
+ 		if (!mp->m_perag[i].pag_ici_init)
+ 			continue;
+-		xfs_reclaim_inodes_ag(mp, i, noblock, mode);
++		xfs_reclaim_inodes_ag(mp, i, mode);
+ 	}
+ 	return 0;
  }
- 
- STATIC int
-@@ -401,12 +412,12 @@ xfs_quiesce_data(
- 	int error;
- 
- 	/* push non-blocking */
--	xfs_sync_inodes(mp, SYNC_DELWRI|SYNC_BDFLUSH);
-+	xfs_sync_data(mp, 0);
- 	xfs_qm_sync(mp, SYNC_BDFLUSH);
- 	xfs_filestream_flush(mp);
- 
- 	/* push and block */
--	xfs_sync_inodes(mp, SYNC_DELWRI|SYNC_WAIT|SYNC_IOWAIT);
-+	xfs_sync_data(mp, SYNC_WAIT|SYNC_IOWAIT);
- 	xfs_qm_sync(mp, SYNC_WAIT);
- 
- 	/* write superblock and hoover up shutdown errors */
-@@ -435,7 +446,7 @@ xfs_quiesce_fs(
- 	 * logged before we can write the unmount record.
- 	 */
- 	do {
--		xfs_sync_inodes(mp, SYNC_ATTR|SYNC_WAIT);
-+		xfs_sync_attr(mp, SYNC_WAIT);
- 		pincount = xfs_flush_buftarg(mp->m_ddev_targp, 1);
- 		if (!pincount) {
- 			delay(50);
-@@ -518,8 +529,8 @@ xfs_flush_inodes_work(
- 	void		*arg)
- {
- 	struct inode	*inode = arg;
--	xfs_sync_inodes(mp, SYNC_DELWRI | SYNC_TRYLOCK);
--	xfs_sync_inodes(mp, SYNC_DELWRI | SYNC_TRYLOCK | SYNC_IOWAIT);
-+	xfs_sync_data(mp, SYNC_TRYLOCK);
-+	xfs_sync_data(mp, SYNC_TRYLOCK | SYNC_IOWAIT);
- 	iput(inode);
- }
- 
-Index: xfs/fs/xfs/linux-2.6/xfs_quotaops.c
-===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_quotaops.c	2009-05-14 19:05:24.908659400 +0200
-+++ xfs/fs/xfs/linux-2.6/xfs_quotaops.c	2009-05-14 19:09:05.280834851 +0200
-@@ -50,9 +50,11 @@ xfs_fs_quota_sync(
- {
- 	struct xfs_mount	*mp = XFS_M(sb);
- 
-+	if (sb->s_flags & MS_RDONLY)
-+		return -EROFS;
- 	if (!XFS_IS_QUOTA_RUNNING(mp))
- 		return -ENOSYS;
--	return -xfs_sync_inodes(mp, SYNC_DELWRI);
-+	return -xfs_sync_data(mp, 0);
- }
- 
- STATIC int
 Index: xfs/fs/xfs/linux-2.6/xfs_sync.h
 ===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_sync.h	2009-05-14 19:09:04.694659368 +0200
-+++ xfs/fs/xfs/linux-2.6/xfs_sync.h	2009-05-14 19:09:05.280834851 +0200
-@@ -29,8 +29,6 @@ typedef struct xfs_sync_work {
- 	struct completion	*w_completion;
- } xfs_sync_work_t;
+--- xfs.orig/fs/xfs/linux-2.6/xfs_sync.h	2009-05-14 16:19:44.268809697 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_sync.h	2009-05-14 16:20:37.012658983 +0200
+@@ -50,7 +50,7 @@ void xfs_quiesce_attr(struct xfs_mount *
+ void xfs_flush_inodes(struct xfs_inode *ip);
  
--#define SYNC_ATTR		0x0001	/* sync attributes */
--#define SYNC_DELWRI		0x0002	/* look at delayed writes */
- #define SYNC_WAIT		0x0004	/* wait for i/o to complete */
- #define SYNC_BDFLUSH		0x0008	/* BDFLUSH is calling -- don't block */
- #define SYNC_IOWAIT		0x0010  /* wait for all I/O to complete */
-@@ -41,7 +39,8 @@ void xfs_syncd_stop(struct xfs_mount *mp
+ int xfs_reclaim_inode(struct xfs_inode *ip, int locked, int sync_mode);
+-int xfs_reclaim_inodes(struct xfs_mount *mp, int noblock, int mode);
++int xfs_reclaim_inodes(struct xfs_mount *mp, int mode);
  
- int xfs_inode_flush(struct xfs_inode *ip, int sync);
- 
--int xfs_sync_inodes(struct xfs_mount *mp, int flags);
-+int xfs_sync_attr(struct xfs_mount *mp, int flags);
-+int xfs_sync_data(struct xfs_mount *mp, int flags);
- int xfs_sync_fsdata(struct xfs_mount *mp, int flags);
- 
- int xfs_quiesce_data(struct xfs_mount *mp);
-Index: xfs/fs/xfs/xfs_filestream.c
+ void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
+ void xfs_inode_clear_reclaim_tag(struct xfs_inode *ip);
+Index: xfs/fs/xfs/xfs_mount.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_filestream.c	2009-05-14 19:05:24.929659282 +0200
-+++ xfs/fs/xfs/xfs_filestream.c	2009-05-14 19:09:05.283807995 +0200
-@@ -542,10 +542,8 @@ xfs_filestream_associate(
- 	 * waiting for the lock because someone else is waiting on the lock we
- 	 * hold and we cannot drop that as we are in a transaction here.
- 	 *
--	 * Lucky for us, this inversion is rarely a problem because it's a
--	 * directory inode that we are trying to lock here and that means the
--	 * only place that matters is xfs_sync_inodes() and SYNC_DELWRI is
--	 * used. i.e. freeze, remount-ro, quotasync or unmount.
-+	 * Lucky for us, this inversion is not a problem because it's a
-+	 * directory inode that we are trying to lock here.
- 	 *
- 	 * So, if we can't get the iolock without sleeping then just give up
+--- xfs.orig/fs/xfs/xfs_mount.c	2009-05-14 16:19:44.318659340 +0200
++++ xfs/fs/xfs/xfs_mount.c	2009-05-14 16:20:37.013659110 +0200
+@@ -1371,7 +1371,7 @@ xfs_unmountfs(
+ 	 * need to force the log first.
  	 */
+ 	xfs_log_force(mp, (xfs_lsn_t)0, XFS_LOG_FORCE | XFS_LOG_SYNC);
+-	xfs_reclaim_inodes(mp, 0, XFS_IFLUSH_ASYNC);
++	xfs_reclaim_inodes(mp, XFS_IFLUSH_ASYNC);
+ 
+ 	xfs_qm_unmount(mp);
+ 
 
 _______________________________________________
 xfs mailing list
