@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4G1VZFZ081358 for <xfs@oss.sgi.com>; Fri, 15 May 2009 20:31:35 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B7C3B28D996
-	for <xfs@oss.sgi.com>; Fri, 15 May 2009 18:31:42 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id DQlOCNfgTTy2GmGv for
-	<xfs@oss.sgi.com>; Fri, 15 May 2009 18:31:42 -0700 (PDT)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail.sandeen.net (Postfix) with ESMTP id 0C2ACA9B0A4
-	for <xfs@oss.sgi.com>; Fri, 15 May 2009 20:31:41 -0500 (CDT)
-Message-ID: <4A0E177C.7070902@sandeen.net>
-Date: Fri, 15 May 2009 20:31:40 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	n4GGFn1G129570 for <xfs@oss.sgi.com>; Sat, 16 May 2009 11:15:49 -0500
+Received: from ey-out-1920.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8DC631484A0C
+	for <xfs@oss.sgi.com>; Sat, 16 May 2009 09:20:53 -0700 (PDT)
+Received: from ey-out-1920.google.com (ey-out-1920.google.com [74.125.78.149])
+	by cuda.sgi.com with ESMTP id 7K0wJco2iDTkvX9B for
+	<xfs@oss.sgi.com>; Sat, 16 May 2009 09:20:53 -0700 (PDT)
+Received: by ey-out-1920.google.com with SMTP id 4so642398eyg.32
+	for <xfs@oss.sgi.com>; Sat, 16 May 2009 09:15:55 -0700 (PDT)
 MIME-Version: 1.0
-Subject: [PATCH] xfsprogs: fix readline/editline for xfs_io and xfs_quota
+Date: Sat, 16 May 2009 12:15:54 -0400
+Message-ID: <554e24be0905160915l49ff901bn41e4332349c555bc@mail.gmail.com>
+Subject: quick question about filename length
+From: Chris Walker <christopher.walker@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,58 +27,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-It looks like libxcmd wasn't ever being built with -DENABLE_READLINE
-even when it was asked for by configure --enable-readline=yes
-so xfs_io & xfs_quota didn't get the functionality.
+Hello,
 
-This seems to fix it up for me (fixes editline too while we're
-at it).
+I see that
+#define MAXNAMELEN  256
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
+Is this the maximum length of the filename with full path?  Or is this
+just the name of the file?
 
-
-Index: xfsprogs-3.0.1/libxcmd/Makefile
-===================================================================
---- xfsprogs-3.0.1.orig/libxcmd/Makefile
-+++ xfsprogs-3.0.1/libxcmd/Makefile
-@@ -20,6 +20,14 @@ ifeq ($(HAVE_GETMNTINFO),yes)
- LCFLAGS += -DHAVE_GETMNTINFO
- endif
- 
-+ifeq ($(ENABLE_READLINE),yes)
-+LCFLAGS += -DENABLE_READLINE
-+endif
-+
-+ifeq ($(ENABLE_EDITLINE),yes)
-+LCFLAGS += -DENABLE_EDITLINE
-+endif
-+
- default: $(LTLIBRARY)
- 
- include $(BUILDRULES)
-
-Index: xfsprogs-3.0.1/growfs/Makefile
-===================================================================
---- xfsprogs-3.0.1.orig/growfs/Makefile
-+++ xfsprogs-3.0.1/growfs/Makefile
-@@ -10,6 +10,14 @@ LTCOMMAND = xfs_growfs
- CFILES = xfs_growfs.c
- 
- LLDLIBS = $(LIBXFS) $(LIBXCMD) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
-+ifeq ($(ENABLE_READLINE),yes)
-+LLDLIBS += $(LIBREADLINE) $(LIBTERMCAP)
-+endif
-+
-+ifeq ($(ENABLE_EDITLINE),yes)
-+LLDLIBS += $(LIBEDITLINE) $(LIBTERMCAP)
-+endif
-+
- LTDEPENDENCIES = $(LIBXFS) $(LIBXCMD)
- LLDFLAGS = -static
- LSRCFILES = xfs_info.sh
+Many thanks!
+Chris
 
 _______________________________________________
 xfs mailing list
