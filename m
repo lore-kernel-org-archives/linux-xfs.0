@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4GIH3ZN134343 for <xfs@oss.sgi.com>; Sat, 16 May 2009 13:17:04 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C20D4FBF08A
-	for <xfs@oss.sgi.com>; Sat, 16 May 2009 11:22:08 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id PucUuy78wZAsiADG for
-	<xfs@oss.sgi.com>; Sat, 16 May 2009 11:22:08 -0700 (PDT)
-Message-ID: <4A0F0325.8000908@sandeen.net>
-Date: Sat, 16 May 2009 13:17:09 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	n4GI6FiH133961 for <xfs@oss.sgi.com>; Sat, 16 May 2009 13:06:15 -0500
+Received: from ey-out-1920.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 08745BF7942
+	for <xfs@oss.sgi.com>; Sat, 16 May 2009 11:11:20 -0700 (PDT)
+Received: from ey-out-1920.google.com (ey-out-1920.google.com [74.125.78.147])
+	by cuda.sgi.com with ESMTP id OF5u6EUpoHsdaFtu for
+	<xfs@oss.sgi.com>; Sat, 16 May 2009 11:11:20 -0700 (PDT)
+Received: by ey-out-1920.google.com with SMTP id 4so650982eyg.32
+	for <xfs@oss.sgi.com>; Sat, 16 May 2009 11:06:22 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: xfs_repair after reboot refuse repair my filesystem
-References: <6efe08af0905130010g5e21f4d1w9efb4ed200b5b152@mail.gmail.com>	<4A0B0A71.5010609@sandeen.net>	<6efe08af0905140150g623d5564i5f5a06b5bf8543a5@mail.gmail.com>
-	<6efe08af0905150135q317d3b7dy37907332c02510c2@mail.gmail.com>
-In-Reply-To: <6efe08af0905150135q317d3b7dy37907332c02510c2@mail.gmail.com>
+In-Reply-To: <4A0EF228.3010702@sandeen.net>
+References: <554e24be0905160915l49ff901bn41e4332349c555bc@mail.gmail.com>
+	<4A0EF228.3010702@sandeen.net>
+Date: Sat, 16 May 2009 14:06:22 -0400
+Message-ID: <554e24be0905161106x6a62b7bldc65325ac4102628@mail.gmail.com>
+Subject: Re: quick question about filename length
+From: Chris Walker <christopher.walker@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,49 +26,53 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "Vitaly V. Ch" <vitaly.v.ch@gmail.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-Vitaly V. Ch wrote:
-> HI,
-> 
-> on my PC:
-> 
-> Fri 15 May 00:02:37|root@cvv:xfs# xfs_repair -V
-> xfs_repair version 3.0.1
-> Fri 15 May 00:03:26|root@cvv:xfs# xfs_mdrestore xfs.dump xfs.metaimg
-> Fri 15 May 00:03:37|root@cvv:xfs# xfs_repair -v xfs.metaimg
-> Phase 1 - find and verify superblock...
->         - block cache size set to 133976 entries
-> Phase 2 - using internal log
->         - zero log...
-> zero_log: head block 2 tail block 2
->         - scan filesystem freespace and inode maps...
->         - found root inode chunk
-> Phase 3 - for each AG...
->         - scan and clear agi unlinked lists...
->         - process known inodes and perform inode discovery...
->         - agno = 0
-> entry "" in shortform directory 128 references invalid inode 0
-> zero length entry in shortform dir 128, junking 3 entries
-> corrected entry count in directory 128, was 3, now 0
-> corrected directory 128 size, was 69, now 6
-> bogus .. inode number (0) in directory inode 128, clearing inode number
-> xfs_repair: dir2.c:2115: process_dir2: Assertion `(ino !=
-> mp->m_sb.sb_rootino && ino != *parent) || (ino == mp->m_sb.sb_rootino
-> && (ino == *p
-> arent || need_root_dotdot == 1))' failed.
-> Aborted
+Thanks for you quick reply, Eric.
 
-Is that the first repair of the image?  When I repair it on my box it
-finds many more errors, and does not trip the assert.  I tested 3.0.1 in
-fedora rawhide on x86 this time ...
+I have a user who is having filenames (path+filename) cut off at 255
+characters midway through a simulation -- but the problem must be
+elsewhere
 
--Eric
+Thanks again,
+Chris
+
+On Sat, May 16, 2009 at 1:04 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+> Chris Walker wrote:
+>> Hello,
+>>
+>> I see that
+>> #define MAXNAMELEN =A0256
+>>
+>> Is this the maximum length of the filename with full path? =A0Or is this
+>> just the name of the file?
+>>
+>> Many thanks!
+>> Chris
+>
+> /*
+> =A0* MAXNAMELEN is the length (including the terminating null) of
+> =A0* the longest permissible file (component) name.
+> =A0*/
+> #define MAXNAMELEN =A0 =A0 =A0256
+>
+> "component" means path component. =A0So just the name of the file or dir
+> in the path.
+>
+> See also how it's used in xfs_vn_lookup() for example:
+>
+> =A0 =A0 =A0 =A0if (dentry->d_name.len >=3D MAXNAMELEN)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return ERR_PTR(-ENAMETOOLONG);
+>
+> a dentry is one component of the path, not the entire path.
+>
+> -Eric
+>
 
 _______________________________________________
 xfs mailing list
