@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4GMETRP144477 for <xfs@oss.sgi.com>; Sat, 16 May 2009 17:14:30 -0500
+	n4GM1jLi143970 for <xfs@oss.sgi.com>; Sat, 16 May 2009 17:01:45 -0500
 Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A83F528EFF6
-	for <xfs@oss.sgi.com>; Sat, 16 May 2009 15:14:38 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 31758FBF585
+	for <xfs@oss.sgi.com>; Sat, 16 May 2009 15:06:51 -0700 (PDT)
 Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id 53Ql9XlyxH2uoLii for
-	<xfs@oss.sgi.com>; Sat, 16 May 2009 15:14:38 -0700 (PDT)
-Message-ID: <4A0F3ACD.7020905@sandeen.net>
-Date: Sat, 16 May 2009 17:14:37 -0500
+	cuda.sgi.com with ESMTP id m8Xxj6yDXawpnS8l for
+	<xfs@oss.sgi.com>; Sat, 16 May 2009 15:06:51 -0700 (PDT)
+Message-ID: <4A0F37CF.4030709@sandeen.net>
+Date: Sat, 16 May 2009 17:01:51 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
 Subject: Re: [PATCH] xfsprogs: fix readline/editline for xfs_io and	xfs_quota
 References: <4A0E177C.7070902@sandeen.net>
 	<20090516203413.GB28186@infradead.org>
-	<4A0F37CF.4030709@sandeen.net>
-In-Reply-To: <4A0F37CF.4030709@sandeen.net>
+In-Reply-To: <20090516203413.GB28186@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,32 +31,28 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-Eric Sandeen wrote:
-> Christoph Hellwig wrote:
-
-...
-
->> (btw, any reason we don't enable readline support by default if
->> we find the headers installed?)
+Christoph Hellwig wrote:
+> On Fri, May 15, 2009 at 08:31:40PM -0500, Eric Sandeen wrote:
+>> It looks like libxcmd wasn't ever being built with -DENABLE_READLINE
+>> even when it was asked for by configure --enable-readline=yes
+>> so xfs_io & xfs_quota didn't get the functionality.
 >>
+>> This seems to fix it up for me (fixes editline too while we're
+>> at it).
 > 
-> I dunno... Nathan, any idea?  Maybe some git-digging is in order.
+> I've also been wondering for quite some while why xfs_io didn't have
+> working readline support.
 > 
-> -Eric
+> This patch makes it work for me and looks good:
+> 
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> (btw, any reason we don't enable readline support by default if
+> we find the headers installed?)
 > 
 
-xfsprogs-2.4.2 (25 March 2003)
-        - Added the xfs_io(8) command, an xfs_db(8) alike command
-          for testing and debugging the XFS file IO path.
-        - Added an optional dependency on the GNU readline library
-          which is "off" by default and enabled with the configure
-          option --enable-readline=yes; it affects the interactive
-          tools only (xfs_db and now xfs_io).
-
-looks like it was done that way originally and never changed, commit
-e246ba5f93896ac873d25f65c05496e6e2c69e34 I think.
-
-Fine by me to make the default yes if it's there ...
+I dunno... Nathan, any idea?  Maybe some git-digging is in order.
 
 -Eric
 
