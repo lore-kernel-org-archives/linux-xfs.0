@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4GKY5hV140741 for <xfs@oss.sgi.com>; Sat, 16 May 2009 15:34:05 -0500
+	n4GKeGXM140979 for <xfs@oss.sgi.com>; Sat, 16 May 2009 15:40:17 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3DDA628ECA1
-	for <xfs@oss.sgi.com>; Sat, 16 May 2009 13:34:14 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CC7C828ECBC
+	for <xfs@oss.sgi.com>; Sat, 16 May 2009 13:40:25 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id XpE9bpFDodJGl2CP for
-	<xfs@oss.sgi.com>; Sat, 16 May 2009 13:34:14 -0700 (PDT)
-Date: Sat, 16 May 2009 16:34:13 -0400
+	by cuda.sgi.com with ESMTP id SEI8VY8mSOs23Crb for
+	<xfs@oss.sgi.com>; Sat, 16 May 2009 13:40:25 -0700 (PDT)
+Date: Sat, 16 May 2009 16:40:25 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfsprogs: fix readline/editline for xfs_io and xfs_quota
-Message-ID: <20090516203413.GB28186@infradead.org>
-References: <4A0E177C.7070902@sandeen.net>
+Subject: Re: [PATCH] xfsprogs:  add fallocate command to xfs_io
+Message-ID: <20090516204025.GC28186@infradead.org>
+References: <4A077195.3070708@sandeen.net>
+	<20090515171324.GA14804@infradead.org>
+	<20090515172711.GA23630@infradead.org>
+	<4A0DB97F.4020201@sandeen.net> <4A0DE88C.2040401@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4A0E177C.7070902@sandeen.net>
+In-Reply-To: <4A0DE88C.2040401@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,26 +32,27 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
 
-On Fri, May 15, 2009 at 08:31:40PM -0500, Eric Sandeen wrote:
-> It looks like libxcmd wasn't ever being built with -DENABLE_READLINE
-> even when it was asked for by configure --enable-readline=yes
-> so xfs_io & xfs_quota didn't get the functionality.
+On Fri, May 15, 2009 at 05:11:24PM -0500, Eric Sandeen wrote:
+> Instead of above does this work better?
 > 
-> This seems to fix it up for me (fixes editline too while we're
-> at it).
+> (just change AC_TRY_COMPILE to AC_TRY_LINK)
 
-I've also been wondering for quite some while why xfs_io didn't have
-working readline support.
+Yes, that correctly detects fallocate as not present for me and
+thus gives a working fallocate.
 
-This patch makes it work for me and looks good:
+> 
+> AC_DEFUN([AC_HAVE_FALLOCATE],
+>   [ AC_MSG_CHECKING([for fallocate])
+>     AC_TRY_LINK([
+> #include <linux/falloc.h>
+>     ], [
+>          fallocate(0, 0, 0, 0);
 
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-(btw, any reason we don't enable readline support by default if
-we find the headers installed?)
+Why do you nee to include <linux/falloc.h> here anyway?  You don't use
+any of the constants, and the fallocate libc call must be in another
+headers, so it obviously compiles even without a defintion for it.
 
 _______________________________________________
 xfs mailing list
