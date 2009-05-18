@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4IBhQV3242119 for <xfs@oss.sgi.com>; Mon, 18 May 2009 06:43:28 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9CD61FC4B1E
-	for <xfs@oss.sgi.com>; Mon, 18 May 2009 04:48:41 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id gD5sogxSj85RR5Xq for
-	<xfs@oss.sgi.com>; Mon, 18 May 2009 04:48:41 -0700 (PDT)
-Date: Mon, 18 May 2009 07:43:05 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: mmap vs mtime in 2.6.26 and up
-Message-ID: <20090518114305.GA6303@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20090515165054.GA11439@infradead.org>
+	n4ID3QU2245992 for <xfs@oss.sgi.com>; Mon, 18 May 2009 08:03:26 -0500
+Received: from padma.gslab.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id 45800FC4E34
+	for <xfs@oss.sgi.com>; Mon, 18 May 2009 06:08:41 -0700 (PDT)
+Received: from padma.gslab.com (padma.gslab.com [59.163.66.102]) by
+	cuda.sgi.com with SMTP id 9wbF3MLEofBhSp3T for
+	<xfs@oss.sgi.com>; Mon, 18 May 2009 06:08:41 -0700 (PDT)
+Subject: Re: EXT vs XFS at 80% filled filesystem
+From: Milind <milind@gslab.com>
+In-Reply-To: <20090430183450.GB19276@mit.edu>
+References: <49F9565E.40804@gslab.com>  <20090430183450.GB19276@mit.edu>
+Date: Mon, 18 May 2009 18:33:28 +0530
+Message-Id: <1242651808.3339.28.camel@alhena>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,32 +27,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ferenc Wagner <wferi@niif.hu>
-Cc: Peter Staubach <staubach@redhat.com>, Miklos Szeredi <mszeredi@suse.cz>, Ray Lee <ray-lk@madrabbit.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Andrew Morton <akpm@linux-foundation.org>
+To: Theodore Tso <tytso@mit.edu>
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-On Fri, May 15, 2009 at 12:50:54PM -0400, Christoph Hellwig wrote:
-> On Fri, May 15, 2009 at 06:40:29PM +0200, Ferenc Wagner wrote:
-> > Thanks for the analysis.  Unfortunately I don't nearly know enough to
-> > work on this issue, but would like to track it as it affects our
-> > backup system.  So, shouldn't #2645 be reopened again?
+Hi Theodore,
+
+I am facing some weird problem of cross compiling libuuid sources. I
+downloaded e2fsprogs and cross-compiled them but when I do "make
+install-libs" it doesn't really install libuuid.so but installs
+libuuid.a.
+
+Can I have some pointers to build libuuid.so to have it in my toolchain
+libraries.
+
+I have crawled through web but couldn't get any nice solution to this.
+
+Thanks in Advance
+-Miline
+
+On Thu, 2009-04-30 at 14:34 -0400, Theodore Tso wrote:
+> On Thu, Apr 30, 2009 at 01:12:22PM +0530, Milind Dumbare wrote:
+> > Hi,
+> >
+> > I have heard of XFS's performance is not good as compared to EXT3 when  
+> > the filesystem(disk) is 80% filled with data. Is it true? I have went  
+> > through lots of performance documents of both XFS and EXT3 but could not  
+> > find such performance benchmarking (for 80% full filesystems).
 > 
-> Yes, definitively as the current "fix" is incorrected.  I'll try to cook
-> up a correct version once I get some time.
-
-Doing this correctly in the framework of the current codee is
-unfortunately not so easy, as calling ->setattr requires taking i_mutex
-which we can't in the pagefaul path.
-
-To fix this properly we need to actually update the timestamps during
-msync and co as done by the patches from Miklos:
-
-	http://lkml.org/lkml/2007/2/28/166
-
-and Peter:
-
-	http://lkml.org/lkml/2006/5/31/176
-
------ End forwarded message -----
+> I've not heard of any such performance metrics, and I suspect it would
+> very much depend on how the filesystem was "aged".  A filesystem that
+> has been in use for a few years and is at 80% capacity will behave
+> very different from a brand-new filesystem which was freshly formatted
+> and then filled with a few large files until said filesystem was 80%
+> full.
+> 
+> 							- Ted
+> 
 
 _______________________________________________
 xfs mailing list
