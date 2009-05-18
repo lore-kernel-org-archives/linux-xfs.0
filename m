@@ -1,19 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4H0Lq8M148547 for <xfs@oss.sgi.com>; Sat, 16 May 2009 19:21:53 -0500
-Received: from postoffice2.aconex.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 44D2319D41B6
-	for <xfs@oss.sgi.com>; Sat, 16 May 2009 17:22:00 -0700 (PDT)
-Received: from postoffice2.aconex.com (mail.aconex.com [203.89.202.182]) by
-	cuda.sgi.com with ESMTP id RSnoGMDOB5g4Ldsb for
-	<xfs@oss.sgi.com>; Sat, 16 May 2009 17:22:00 -0700 (PDT)
-Date: Sun, 17 May 2009 10:21:53 +1000 (EST)
-From: Nathan Scott <nscott@aconex.com>
-Message-ID: <1390308465.5011561242519713247.JavaMail.root@mail-au.aconex.com>
-In-Reply-To: <4A0F3ACD.7020905@sandeen.net>
-Subject: Re: [PATCH] xfsprogs: fix readline/editline for xfs_io and xfs_quota
+	n4I6wrAb232679 for <xfs@oss.sgi.com>; Mon, 18 May 2009 01:58:53 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 81FE5291456
+	for <xfs@oss.sgi.com>; Sun, 17 May 2009 23:59:01 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	9HLcSeToOfJis3yc for <xfs@oss.sgi.com>;
+	Sun, 17 May 2009 23:59:01 -0700 (PDT)
+Date: Mon, 18 May 2009 16:58:54 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/7] xfs: split inode data writeback from
+	xfs_sync_inodes_ag
+Message-ID: <20090518065854.GP16929@discord.disaster>
+References: <20090514171233.942489000@bombadil.infradead.org>
+	<20090514171558.014747000@bombadil.infradead.org>
+	<921ca19c0905142149m68c9717cg83db37c468769c4d@mail.gmail.com>
+	<20090515172122.GB14804@infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20090515172122.GB14804@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,32 +33,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Sujit Karataparambil <sjt.kar@gmail.com>, xfs@oss.sgi.com
 
+On Fri, May 15, 2009 at 01:21:22PM -0400, Christoph Hellwig wrote:
+> That beeing said I don't really like the current implementation where we
+> have a SYNC_WAIT that waits for completion of data I/O and need a
+> separate SYNC_IOWAIT that waits for the after data I/O metadata
+> transaction completions.
 
------ "Eric Sandeen" <sandeen@sandeen.net> wrote:
+SYNC_IOWAIT is really only for waiting for direct IO to complete.
+e.g. for synchronisation with truncate. I'm not sure that it even
+matters for pure buffered data writeback.
 
-> Eric Sandeen wrote:
-> > Christoph Hellwig wrote:
-> 
-> ...
-> 
-> >> (btw, any reason we don't enable readline support by default if
-> >> we find the headers installed?)
-> >>
-> > 
-> > I dunno... Nathan, any idea?  Maybe some git-digging is in order.
-> > 
+> fs/xfs/linux-2.6/xfs_quotaops.c:        return -xfs_sync_data(mp, 0);
+> fs/xfs/linux-2.6/xfs_super.c:           xfs_sync_data(mp, 0);
+> fs/xfs/linux-2.6/xfs_sync.c:    xfs_sync_data(mp, 0);
+> fs/xfs/linux-2.6/xfs_sync.c:    xfs_sync_data(mp, SYNC_WAIT|SYNC_IOWAIT);
+> fs/xfs/linux-2.6/xfs_sync.c:    xfs_sync_data(mp, SYNC_TRYLOCK);
+> fs/xfs/linux-2.6/xfs_sync.c:    xfs_sync_data(mp, SYNC_TRYLOCK | SYNC_IOWAIT);
 
-No idea, sorry, too long ago... perhaps not wanting to introduce
-dependencies unexpectedly (rescue disks/installers, etc might not
-have readline lib).
+And only the data queisce cares about direct IO (i.e. for freeze)
+so I suspect that the SYNC_IOWAIT now could be removed and we
+use SYNC_WAIT to trigger the ioend completion wait....
 
-cheers.
+Cheers,
 
+Dave.
 -- 
-Nathan
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
