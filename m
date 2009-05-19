@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4JFDVAA051152 for <xfs@oss.sgi.com>; Tue, 19 May 2009 10:13:31 -0500
-Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E28BCFCB2CC
-	for <xfs@oss.sgi.com>; Tue, 19 May 2009 08:18:53 -0700 (PDT)
-Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id OeAFO81QT08tpYpE for <xfs@oss.sgi.com>;
-	Tue, 19 May 2009 08:18:53 -0700 (PDT)
-Message-ID: <4A12CCA2.3030003@sandeen.net>
-Date: Tue, 19 May 2009 10:13:38 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	n4JGk6WV055937 for <xfs@oss.sgi.com>; Tue, 19 May 2009 11:46:07 -0500
+Received: from moutng.kundenserver.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E8FB3FCFA63
+	for <xfs@oss.sgi.com>; Tue, 19 May 2009 09:51:28 -0700 (PDT)
+Received: from moutng.kundenserver.de (moutng.kundenserver.de
+	[212.227.126.187]) by cuda.sgi.com with ESMTP id
+	vywvFOHsBoLkLHeE for <xfs@oss.sgi.com>;
+	Tue, 19 May 2009 09:51:28 -0700 (PDT)
+Date: Tue, 19 May 2009 09:46:14 -0700 (PDT)
+From: Christian Kujau <lists@nerdbynature.de>
+Subject: Re: compilation error xfs_fsr.c:33:23 sys/xattr.h: No such file
+	ordirectory
+In-Reply-To: <005601c9d883$1f378f20$ae00a8c0@ferroamd64>
+Message-ID: <alpine.DEB.2.01.0905190938370.8681@bogon.housecafe.de>
+References: <005e01c9d856$7a89d450$ae00a8c0@ferroamd64>
+	<alpine.DEB.2.01.0905190256030.8681@bogon.housecafe.de>
+	<005601c9d883$1f378f20$ae00a8c0@ferroamd64>
 MIME-Version: 1.0
-Subject: Re: question on agcount and agsize
-References: <4A12BE15.3080908@pha.jhu.edu>
-In-Reply-To: <4A12BE15.3080908@pha.jhu.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,73 +31,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Josh Greenberg <josh@pha.jhu.edu>
+To: Alessandro Ferrari <alexferro@tiscali.it>
 Cc: xfs@oss.sgi.com
 
-Josh Greenberg wrote:
-> I've just installed xfs for the first time and I'm trying to put an xfs 
-> file system on a large disk. When I just tried with no arguments, it 
-> told me that the agsize was too large and the maximum is 268435455 
-> blocks. 
+On Tue, 19 May 2009, Alessandro Ferrari wrote:
+> I searched xattr.h and I founded it into:
 
-Odd, mkfs.xfs w/ no args should always work.  Which version of
-e2fsprogs?  How big is the block device (from /proc/partitions?)
+Apparently there's no sys/xattr.h on your system. What distribution do 
+you have? You'll need to install either the libc6-dev or glibc-headers 
+package, depending on which package of your distribution provides this 
+file.
 
-> I wasn't familiar with allocation groups at all so I researched 
-> this a little bit. I found out what an allocation group is but there 
-> aren't many recommendations on agcount other than "don't make it too 
-> big" because it slows the disk down as it gets full. However, after 
-> playing with the numbers, I found that the lowest number it will accept 
-> for agcount is 44. I now have a file system with the following structure:
-> 
-> meta-data=/dev/md0       isize=256    agcount=44, agsize=266361205 blks
->          =                       sectsz=512
-> data     =                       bsize=4096   blocks=11719892992, imaxpct=25
->          =                       sunit=0      swidth=0 blks, unwritten=1
-> naming   =version 2              bsize=4096
-> log      =internal log           bsize=4096   blocks=32768, version=1
->          =                       sectsz=512   sunit=0 blks
-> realtime =none                   extsz=65536  blocks=0, rtextents=0
-> 
-
-43T, nice :)
-
-> I have two questions:
-> 1. Does the agcount have to be a power of 2? Almost every example of 
-> agcount I've seen online has been a power of 2 (2, 4, 8, 16, and 32). 
-
-nope
-
-> I 
-> originally tried an agcount of 64 which worked but then tried to size it 
-> down so it wasn't too large. Will this cause problems later.
-
-No, this is likely fine.  This should be the default; for filesystems >
-32T it should max the AG size and give you 1 AG per Terabyte.
-
-> 2. Is 44 too large? Will I experience a slow down as the disk fills? 
-> I've seen people recommend that you not go over agcount=32 and even 
-> someone who said not to exceed agcount=8. What are the long term 
-> ramifications of this?
-
-well, smaller agcount -> larger AG.  There's also a limit to the AG size
-(1T IIRC), so there is no hard upper limit on ag count; bigger
-filesystems will eventually require more AGs.
-
-The upstream default is 4 AGs for smaller filesystems, but for 43T I
-think the default is to go to 1T AGs.
-
-Subdirectories spread out over AGs (each new subdir's files go to a new
-AG, in general, all other things being equal) so for smaller
-filesystems, 8 or 16 AGs was getting a little painful because stuff was
-being flung all over the disk.
-
-One thing you probably do want to do, however, is match the xfs geometry
-to your raid geometry, and specify sunit/swidth or su/sw combinations at
-mkfs time.  mkfs.xfs gets this geometry from lvm/md/evms/etc but can't
-get it from a hardware raid; you'll need to input that yourself.
-
--Eric
+Christian.
+-- 
+Vs lbh nfxrq Oehpr Fpuarvre gb qrpelcg guvf, ur'q pehfu lbhe fxhyy jvgu uvf
+ynhtu.
 
 _______________________________________________
 xfs mailing list
