@@ -1,27 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4J55bVK032149 for <xfs@oss.sgi.com>; Tue, 19 May 2009 00:05:42 -0500
-Received: from mail-fx0-f177.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 87BA6FCBD2D
-	for <xfs@oss.sgi.com>; Mon, 18 May 2009 22:10:56 -0700 (PDT)
-Received: from mail-fx0-f177.google.com (mail-fx0-f177.google.com
-	[209.85.220.177]) by cuda.sgi.com with ESMTP id
-	UZJoJCd0pF69J1vC for <xfs@oss.sgi.com>;
-	Mon, 18 May 2009 22:10:56 -0700 (PDT)
-Received: by fxm25 with SMTP id 25so3667457fxm.20
-	for <xfs@oss.sgi.com>; Mon, 18 May 2009 22:05:45 -0700 (PDT)
+	n4J7oLKS035782 for <xfs@oss.sgi.com>; Tue, 19 May 2009 02:50:22 -0500
+Received: from mail.gware.it (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id 713D319E363F
+	for <xfs@oss.sgi.com>; Tue, 19 May 2009 00:50:30 -0700 (PDT)
+Received: from mail.gware.it ([80.94.126.121]) by cuda.sgi.com with SMTP id
+	HojCwDQkrm6kvwP5 for <xfs@oss.sgi.com>;
+	Tue, 19 May 2009 00:50:30 -0700 (PDT)
+Message-ID: <005e01c9d856$7a89d450$ae00a8c0@ferroamd64>
+From: "Alessandro Ferrari" <alexferro@tiscali.it>
+Subject: compilation error xfs_fsr.c:33:23 sys/xattr.h: No such file or
+	directory
+Date: Tue, 19 May 2009 09:50:28 +0200
 MIME-Version: 1.0
-In-Reply-To: <4A11E27B.3010708@sandeen.net>
-References: <6efe08af0905130010g5e21f4d1w9efb4ed200b5b152@mail.gmail.com>
-	<4A0B0A71.5010609@sandeen.net>
-	<6efe08af0905140150g623d5564i5f5a06b5bf8543a5@mail.gmail.com>
-	<6efe08af0905150135q317d3b7dy37907332c02510c2@mail.gmail.com>
-	<4A0F0325.8000908@sandeen.net> <4A11E27B.3010708@sandeen.net>
-Date: Tue, 19 May 2009 05:05:45 +0000
-Message-ID: <6efe08af0905182205q4e7712f3y91279df0f35d843e@mail.gmail.com>
-Subject: Re: xfs_repair after reboot refuse repair my filesystem
-From: "Vitaly V. Ch" <vitaly.v.ch@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,36 +22,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-HI
+Linux kernel 2.4.37
 
-at now I get my data repaired. By default configure enable DEBUG mode.
-I force NDEBUG mode and xfs_repair successfully repair my data.
+I have downloaded:
+- acl_2.2.47-1.tar.gz
+- attr_2.4.43-1.tar.gz
+- xfsprogs-3.0.1-tar.gz
+- xfsdump-3.0.1-tar.gz
 
-\\wbr Vitaly Chernookiy
+I compiled and installed this tarballs in this order:
+- acl_2.2.47-1
+- attr_2.4.43-1
 
-On Mon, May 18, 2009 at 10:34 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
-> Eric Sandeen wrote:
->
->> Is that the first repair of the image? =A0When I repair it on my box it
->> finds many more errors, and does not trip the assert. =A0I tested 3.0.1 =
-in
->> fedora rawhide on x86 this time ...
->>
->> -Eric
->
-> Oh, well, I'm dumb; the asserts do nothing unless you build with DEBUG
-> on (as I guess you must have... they are off by default, as they are on
-> my build) - I'll try to find some time to look into it.
->
-> -Eric
->
+Now I have this error when I compile xfsprogs-3.0.1:
+
+xfs_fsr.c:33:23: sys/xattr.h: No such file or directory
+
+I have forgotten something?
+
+Thanks, alexferro
 
 _______________________________________________
 xfs mailing list
