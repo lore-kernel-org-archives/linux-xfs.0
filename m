@@ -1,21 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4JD9x4T045352 for <xfs@oss.sgi.com>; Tue, 19 May 2009 08:10:01 -0500
-Received: from mail.gware.it (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id 958B319E4C3A
-	for <xfs@oss.sgi.com>; Tue, 19 May 2009 06:10:04 -0700 (PDT)
-Received: from mail.gware.it ([80.94.126.121]) by cuda.sgi.com with SMTP id
-	wziRkgPHrHm0mnY4 for <xfs@oss.sgi.com>;
-	Tue, 19 May 2009 06:10:04 -0700 (PDT)
-Message-ID: <005601c9d883$1f378f20$ae00a8c0@ferroamd64>
-From: "Alessandro Ferrari" <alexferro@tiscali.it>
-References: <005e01c9d856$7a89d450$ae00a8c0@ferroamd64>
-	<alpine.DEB.2.01.0905190256030.8681@bogon.housecafe.de>
-Subject: Re: compilation error xfs_fsr.c:33:23 sys/xattr.h: No such file
-	ordirectory
-Date: Tue, 19 May 2009 15:10:03 +0200
-MIME-Version: 1.0
+	n4KC0O2e102333 for <xfs@oss.sgi.com>; Wed, 20 May 2009 07:00:24 -0500
+Received: from padma.gslab.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id 89EAF29B09B
+	for <xfs@oss.sgi.com>; Wed, 20 May 2009 05:00:33 -0700 (PDT)
+Received: from padma.gslab.com (padma.gslab.com [59.163.66.102]) by
+	cuda.sgi.com with SMTP id 05Tegv39kdszFcoX for
+	<xfs@oss.sgi.com>; Wed, 20 May 2009 05:00:33 -0700 (PDT)
+Subject: CFLAGS not taken while linking mkfs.xfs?
+From: Milind <milind@gslab.com>
+Date: Wed, 20 May 2009 17:30:27 +0530
+Message-Id: <1242820827.3457.21.camel@alhena>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,36 +21,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christian Kujau <lists@nerdbynature.de>
-Cc: xfs@oss.sgi.com
+To: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+Cc: Theodore Tso <tytso@mit.edu>
 
-Hi Chtistian!
+My CFLAGS are
+-Wl,--dynamic-linker,/home/beehive/toolchain/x86_64-unknown-linux-gnu/glibc-2.7/lib/ld-linux-x86-64.so.2,--rpath,/home/beehive/toolchain/x86_64-unknown-linux-gnu/glibc-2.7/lib/
 
->
-> sys/xattr.h should be part of a libc6-dev (or glibc-headers) package your
-> distribution provides, I think.
->
-> Christian.
-> -- 
-> SHA = "Schneier has access"
+when I cross compile xfsprogs and do ldd on mkfs/mkfs.xfs I see
+following thing
+	linux-vdso.so.1 =>  (0x00007fff8e5fe000)
+	libuuid.so.1
+=> /home/miline/toolchain/x86_64-unknown-linux-gnu/glibc-2.7/lib/libuuid.so.1 (0x00007f4386030000)
+	librt.so.1
+=> /home/miline/toolchain/x86_64-unknown-linux-gnu/glibc-2.7/lib/librt.so.1 (0x00007f4385e15000)
+	libpthread.so.0
+=> /home/miline/toolchain/x86_64-unknown-linux-gnu/glibc-2.7/lib/libpthread.so.0 (0x00007f4385bfa000)
+	libc.so.6
+=> /home/miline/toolchain/x86_64-unknown-linux-gnu/glibc-2.7/lib/libc.so.6 (0x00007f43858b1000)
+/lib64/ld-linux-x86-64.so.2 (0x00007f4386236000)
 
-I searched xattr.h and I founded it into:
+shouldn't mkfs.xfs be dependant
+on /home/miline/toolchain/x86_64-unknown-linux-gnu/glibc-2.7/lib/ld-linux-x86-64.so.2
+rather than
+/lib64/ld-linux-x86-64.so.2 (0x00007f4386236000)?
 
-- /usr/src/linux/include/linux/xattr.h dated 02/Dec/2008 09:01 (when I 
-compiled my kernel 2.4.37)
-- /usr/include/linux/xattr.h dated 07/Mar/2002
-- /usr/include/attr/xattr.h dated 18/May/2009 21:16 (when I compiled and 
-installed attr_2.4.43-1 tarball)
+When do following changes it works. 
 
-I am very confused?!?!
+ifdef LTCOMMAND
+$(LTCOMMAND) : $(SUBDIRS) $(OBJECTS) $(LTDEPENDENCIES)
+-        $(LTLINK) -o $@ $(LDFLAGS) $(OBJECTS) $(LDLIBS)
++         $(LTLINK) -o $@ $(CFLAGSS) $(LDFLAGS) $(OBJECTS) $(LDLIBS)
+endif
 
-Which is xattr.h correct for <sys/xattr.h> in xfs_fsr.c file ?
+linking of mkfs.xfs happes as follows with above change
 
-Alessandro 
+libtool: link: 
+gcc
+-Wl,--dynamic-linker,/home/miline/toolchain/x86_64-unknown-linux-gnu/glibc-2.7/lib/ld-linux-x86-64.so.2,
+--rpath,/home/miline/toolchain/x86_64-unknown-linux-gnu/glibc-2.7/lib -o
+mkfs.xfs maxtrres.o proto.o xfs_mkfs.o  ../libxfs/.libs/libxfs.a
+-luuid ../libdisk/.libs/libdisk.a -lrt -lpthread
+
+above problem is seen for other binaries too. Like xfs_io, xfs_copy.
+
+-Miline
 
 _______________________________________________
 xfs mailing list
