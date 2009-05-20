@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4KEKdfT105991 for <xfs@oss.sgi.com>; Wed, 20 May 2009 09:20:39 -0500
-Received: from thunker.thunk.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C4C1419F0FAA
-	for <xfs@oss.sgi.com>; Wed, 20 May 2009 07:20:49 -0700 (PDT)
-Received: from thunker.thunk.org (THUNK.ORG [69.25.196.29]) by cuda.sgi.com
-	with ESMTP id vSSGlMG937Kz5ehx for <xfs@oss.sgi.com>;
-	Wed, 20 May 2009 07:20:49 -0700 (PDT)
-Date: Wed, 20 May 2009 10:20:38 -0400
-From: Theodore Tso <tytso@mit.edu>
-Subject: Re: EXT vs XFS at 80% filled filesystem
-Message-ID: <20090520142038.GD24836@mit.edu>
-References: <49F9565E.40804@gslab.com> <20090430183450.GB19276@mit.edu>
-	<1242651808.3339.28.camel@alhena> <20090518131755.GJ32019@mit.edu>
-	<1242798210.3457.4.camel@alhena> <20090520105011.GD3523@mit.edu>
-	<1242820274.3457.12.camel@alhena>
+	n4KFJZdi109395 for <xfs@oss.sgi.com>; Wed, 20 May 2009 10:19:35 -0500
+Received: from mx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B1D9219F1A31
+	for <xfs@oss.sgi.com>; Wed, 20 May 2009 08:19:22 -0700 (PDT)
+Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
+	with ESMTP id ejggCqpOfJ1Tkhwt for <xfs@oss.sgi.com>;
+	Wed, 20 May 2009 08:19:22 -0700 (PDT)
+Message-ID: <4A141F72.3020607@sandeen.net>
+Date: Wed, 20 May 2009 10:19:14 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1242820274.3457.12.camel@alhena>
+Subject: Re: XFS internal error xfs_trans_cancel at line 1164 of
+	file	fs/xfs/xfs_trans.c
+References: <4A13AA1B.7080801@attglobal.net>
+In-Reply-To: <4A13AA1B.7080801@attglobal.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,23 +28,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Milind <milind@gslab.com>
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: stunnel@attglobal.net
+Cc: xfs@oss.sgi.com
 
-On Wed, May 20, 2009 at 05:21:14PM +0530, Milind wrote:
-> my CFLAGS are
-> CFLAGS=-Wl,--dynamic-linker,/home/miline/toolchain/x86_64-unknown-linux-gnu/glibc-2.7/lib/ld-linux-x86-64.so.2,--rpath,/home/miline/toolchain/x86_64-unknown-linux-gnu/glibc-2.7/lib/
+Eddie Atherton wrote:
+> I'm trying to install a clean Slackware 12.2 (2.6.27.7) under ESXi, and 
+> can almost guarantee getting this error immediately after formatting the 
+> root partition.  It's happened 4 out of the 5 times I've tried, so far.
 > 
-> libuuid.so is supposed to have dependancy
-> on /home/miline/toolchain/x86_64-unknown-linux-gnu/glibc-2.7/lib/ld-linux-x86-64.so.2 (third entry in ldd output) right? And not on /lib64/ld-linux-x86-64.so.2
+> The sequence of commands, after digging through the install scripts, 
+> that lead to this failure are just:
 > 
-> I tried modifying as follows but didn't really work. Any comments?
+> mkfs.xfs
+> mount
+> mkdir
 > 
+> Apologies for posting the stack trace as a couple of jpg's, but it's the 
+> only way I could capture them, as I don't have any VMs set up, yet, that 
+> have conectivity to upload any files.  The stack trace can be found at:
+> 
+> http://www.bogolinux.net/xfs_crash_a.JPG
+> http://www.bogolinux.net/xfs_crash_b.JPG
+> 
+> I'm guessing that it's something to do with this running under a VM, but 
+> is there any way to stop it happening.
+> 
+> Cheers,
+> Eddie
 
-I suggest you read the man page for "ld", in particular for the option
---rpath-link....
+Not sure what that is offhand, seems odd.  xfs_mkdir() is getting some
+error and cancelling a dirty transaction.  Perhaps someone on the list
+remembers better than me, a few causes of this were fixed but I don't
+remember details.  Any chance you can try, say, .28 or .29? :)
 
-						- Ted
+-Eric
 
 _______________________________________________
 xfs mailing list
