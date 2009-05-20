@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4KCkDFw103418 for <xfs@oss.sgi.com>; Wed, 20 May 2009 07:46:14 -0500
-Received: from mail.parisc-linux.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2825329B3DC
-	for <xfs@oss.sgi.com>; Wed, 20 May 2009 05:46:23 -0700 (PDT)
-Received: from mail.parisc-linux.org (palinux.external.hp.com [192.25.206.14])
-	by cuda.sgi.com with ESMTP id 7WXqOvR7lIpo46lB for
-	<xfs@oss.sgi.com>; Wed, 20 May 2009 05:46:23 -0700 (PDT)
-Date: Wed, 20 May 2009 06:46:22 -0600
-From: Matthew Wilcox <matthew@wil.cx>
+	n4KEKdfT105991 for <xfs@oss.sgi.com>; Wed, 20 May 2009 09:20:39 -0500
+Received: from thunker.thunk.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C4C1419F0FAA
+	for <xfs@oss.sgi.com>; Wed, 20 May 2009 07:20:49 -0700 (PDT)
+Received: from thunker.thunk.org (THUNK.ORG [69.25.196.29]) by cuda.sgi.com
+	with ESMTP id vSSGlMG937Kz5ehx for <xfs@oss.sgi.com>;
+	Wed, 20 May 2009 07:20:49 -0700 (PDT)
+Date: Wed, 20 May 2009 10:20:38 -0400
+From: Theodore Tso <tytso@mit.edu>
 Subject: Re: EXT vs XFS at 80% filled filesystem
-Message-ID: <20090520124622.GJ31779@parisc-linux.org>
+Message-ID: <20090520142038.GD24836@mit.edu>
 References: <49F9565E.40804@gslab.com> <20090430183450.GB19276@mit.edu>
 	<1242651808.3339.28.camel@alhena> <20090518131755.GJ32019@mit.edu>
 	<1242798210.3457.4.camel@alhena> <20090520105011.GD3523@mit.edu>
+	<1242820274.3457.12.camel@alhena>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20090520105011.GD3523@mit.edu>
+In-Reply-To: <1242820274.3457.12.camel@alhena>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,34 +31,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Theodore Tso <tytso@mit.edu>
-Cc: linux-fsdevel@vger.kernel.org, Milind <milind@gslab.com>, xfs@oss.sgi.com
+To: Milind <milind@gslab.com>
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, May 20, 2009 at 06:50:11AM -0400, Theodore Tso wrote:
-> The debian packages ultimately end up building e2fsprogs three times,
-> with different sets of configure options.  One is the standard build,
-> one is for the restricted-size build for boot floppies (which arguably
-> we don't need any more since we these days CD-ROM's have plenty of
-> space, and Debian doesn't support boot floppies any more) and one is
-> for the static build for e2fsck.static (although the utility of that
-> one is somewhat dubious given that even the shell is with shared
-> library, so if the filesystem is corrupted enough that shared libaries
-> don't work, it's rescue CD-ROM time; the main use for e2fsck.static is
-> for emergency use when someone running an older version of Debian
-> needs a newer e2fsck to fix a filesystem corruption).
+On Wed, May 20, 2009 at 05:21:14PM +0530, Milind wrote:
+> my CFLAGS are
+> CFLAGS=-Wl,--dynamic-linker,/home/miline/toolchain/x86_64-unknown-linux-gnu/glibc-2.7/lib/ld-linux-x86-64.so.2,--rpath,/home/miline/toolchain/x86_64-unknown-linux-gnu/glibc-2.7/lib/
+> 
+> libuuid.so is supposed to have dependancy
+> on /home/miline/toolchain/x86_64-unknown-linux-gnu/glibc-2.7/lib/ld-linux-x86-64.so.2 (third entry in ldd output) right? And not on /lib64/ld-linux-x86-64.so.2
+> 
+> I tried modifying as follows but didn't really work. Any comments?
+> 
 
-If you install sash, you really do get a statically linked shell:
+I suggest you read the man page for "ld", in particular for the option
+--rpath-link....
 
-$ ldd /bin/sash 
-ldd: exited with unknown exit code (126)
-$ file /bin/sash 
-/bin/sash: ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), statically linked, for GNU/Linux 2.6.8, stripped
-
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+						- Ted
 
 _______________________________________________
 xfs mailing list
