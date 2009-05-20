@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4JGk6WV055937 for <xfs@oss.sgi.com>; Tue, 19 May 2009 11:46:07 -0500
-Received: from moutng.kundenserver.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E8FB3FCFA63
-	for <xfs@oss.sgi.com>; Tue, 19 May 2009 09:51:28 -0700 (PDT)
-Received: from moutng.kundenserver.de (moutng.kundenserver.de
-	[212.227.126.187]) by cuda.sgi.com with ESMTP id
-	vywvFOHsBoLkLHeE for <xfs@oss.sgi.com>;
-	Tue, 19 May 2009 09:51:28 -0700 (PDT)
-Date: Tue, 19 May 2009 09:46:14 -0700 (PDT)
-From: Christian Kujau <lists@nerdbynature.de>
-Subject: Re: compilation error xfs_fsr.c:33:23 sys/xattr.h: No such file
-	ordirectory
-In-Reply-To: <005601c9d883$1f378f20$ae00a8c0@ferroamd64>
-Message-ID: <alpine.DEB.2.01.0905190938370.8681@bogon.housecafe.de>
-References: <005e01c9d856$7a89d450$ae00a8c0@ferroamd64>
-	<alpine.DEB.2.01.0905190256030.8681@bogon.housecafe.de>
-	<005601c9d883$1f378f20$ae00a8c0@ferroamd64>
-MIME-Version: 1.0
+	n4K5hSbt090893 for <xfs@oss.sgi.com>; Wed, 20 May 2009 00:43:29 -0500
+Received: from padma.gslab.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id 692CA299FCD
+	for <xfs@oss.sgi.com>; Tue, 19 May 2009 22:43:36 -0700 (PDT)
+Received: from padma.gslab.com (padma.gslab.com [59.163.66.102]) by
+	cuda.sgi.com with SMTP id l6PdIVegFNgrpRrw for
+	<xfs@oss.sgi.com>; Tue, 19 May 2009 22:43:36 -0700 (PDT)
+Subject: Re: EXT vs XFS at 80% filled filesystem
+From: Milind <milind@gslab.com>
+In-Reply-To: <20090518131755.GJ32019@mit.edu>
+References: <49F9565E.40804@gslab.com> <20090430183450.GB19276@mit.edu>
+	<1242651808.3339.28.camel@alhena>  <20090518131755.GJ32019@mit.edu>
+Date: Wed, 20 May 2009 11:13:30 +0530
+Message-Id: <1242798210.3457.4.camel@alhena>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,21 +28,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alessandro Ferrari <alexferro@tiscali.it>
-Cc: xfs@oss.sgi.com
+To: Theodore Tso <tytso@mit.edu>
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, 19 May 2009, Alessandro Ferrari wrote:
-> I searched xattr.h and I founded it into:
+I am building xfsprogs to add it to my toolchain and want xfsprogs to
+refer to my toolchain's libuuid. So I need libuuid.so in my toolchain.
+But building e2fsprogs from sources doesn't build libuuid as .so (builds
+as .a). Could you please give some pointers on building libuuid as .so?
 
-Apparently there's no sys/xattr.h on your system. What distribution do 
-you have? You'll need to install either the libc6-dev or glibc-headers 
-package, depending on which package of your distribution provides this 
-file.
+Do I have to change Makefiles? How do you do it for ubuntu/debian
+packages that you maintain?
 
-Christian.
--- 
-Vs lbh nfxrq Oehpr Fpuarvre gb qrpelcg guvf, ur'q pehfu lbhe fxhyy jvgu uvf
-ynhtu.
+Thanks in advance
+-Miline
+
+On Mon, 2009-05-18 at 09:17 -0400, Theodore Tso wrote:
+> On Mon, May 18, 2009 at 06:33:28PM +0530, Milind wrote:
+> > Hi Theodore,
+> > 
+> > I am facing some weird problem of cross compiling libuuid sources. I
+> > downloaded e2fsprogs and cross-compiled them but when I do "make
+> > install-libs" it doesn't really install libuuid.so but installs
+> > libuuid.a.
+> 
+> The "make install" taret is designed to install what is needed to run
+> the e2fsprogs programs, including shared libraries; "make
+> install-libs" is designed to install what as needed for development
+> purpoes.
+> 
+> So running "make install" in the lib/uuid" should do what you want.
+> 
+>    	   	 	     	 	   	  - Ted
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
