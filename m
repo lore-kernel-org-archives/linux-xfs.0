@@ -1,22 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4QC2bqX140511 for <xfs@oss.sgi.com>; Tue, 26 May 2009 07:02:39 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 330141A1C773
-	for <xfs@oss.sgi.com>; Tue, 26 May 2009 05:02:51 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id iydPrluDMvJecltN for
-	<xfs@oss.sgi.com>; Tue, 26 May 2009 05:02:51 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1M8vMo-0000MN-MW
-	for xfs@oss.sgi.com; Tue, 26 May 2009 12:02:50 +0000
-Date: Tue, 26 May 2009 08:02:50 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfstests: only run 164 for xfs
-Message-ID: <20090526120250.GA447@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
+	n4QCNHcc141886 for <xfs@oss.sgi.com>; Tue, 26 May 2009 07:23:17 -0500
+Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E9F808F8039
+	for <xfs@oss.sgi.com>; Tue, 26 May 2009 05:23:27 -0700 (PDT)
+Message-Id: <B5F3DA2A-EC30-4C28-9D94-18098D5BC43E@sgi.com>
+From: Felix Blyakher <felixb@sgi.com>
+In-Reply-To: <4A184EC4.1050007@sandeen.net>
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Subject: Re: [PATCH] fix overflow in xfs_growfs_data_private
+Date: Tue, 26 May 2009 07:23:26 -0500
+References: <4A184EC4.1050007@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,32 +20,49 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-
-Test 164 uses the xfs_io bmap subcommand which only works for XFS,
-so don't offer it for nfs and udf.
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Richard Ems <Richard.Ems@cape-horn-eng.com>, xfs-oss <xfs@oss.sgi.com>
 
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+On May 23, 2009, at 2:30 PM, Eric Sandeen wrote:
 
-Index: xfstests-dev/164
-===================================================================
---- xfstests-dev.orig/164	2009-05-26 12:00:00.000000000 +0000
-+++ xfstests-dev/164	2009-05-26 12:00:54.000000000 +0000
-@@ -54,8 +54,7 @@
- 
- # real QA test starts here
- 
--# Modify as appropriate.
--_supported_fs xfs udf nfs
-+_supported_fs xfs
- _supported_os IRIX Linux
- 
- testfile=$TEST_DIR/file.$seq
+> In the case where growing a filesystem would leave the last AG
+> too small, the fixup code has an overflow in the calculation
+> of the new size with one fewer ag, because "nagcount" is a 32
+> bit number.  If the new filesystem has > 2^32 blocks in it
+> this causes a problem resulting in an EINVAL return from growfs:
+>
+> # xfs_io -f -c "truncate 19998630180864" fsfile
+> # mkfs.xfs -f -bsize=4096 -dagsize=76288719b,size=3905982455b fsfile
+> # mount -o loop fsfile mnt/
+> # xfs_growfs mnt/
+
+Is it really 'mnt/', not '/mnt'?
+
+>
+> meta-data=/dev/loop0             isize=256    agcount=52,
+> agsize=76288719 blks
+>         =                       sectsz=512   attr=2
+> data     =                       bsize=4096   blocks=3905982455,  
+> imaxpct=5
+>         =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0
+> log      =internal               bsize=4096   blocks=32768, version=2
+>         =                       sectsz=512   sunit=0 blks, lazy- 
+> count=0
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed: Invalid argument
+>
+> Reported-by: richard.ems@cape-horn-eng.com
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+
+Nice find and the neat fix, Eric.
+
+Reviewed-by: Felix Blyakher <felixb@sgi.com>
 
 _______________________________________________
 xfs mailing list
