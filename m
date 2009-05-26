@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4Q997Ti133603 for <xfs@oss.sgi.com>; Tue, 26 May 2009 04:09:07 -0500
+	n4Q9BEQh133653 for <xfs@oss.sgi.com>; Tue, 26 May 2009 04:11:14 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E5A0B12FFAF0
-	for <xfs@oss.sgi.com>; Tue, 26 May 2009 02:15:09 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 08D052AC365
+	for <xfs@oss.sgi.com>; Tue, 26 May 2009 02:11:27 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id zsEYJ1GPoPGOWjEH for
-	<xfs@oss.sgi.com>; Tue, 26 May 2009 02:15:09 -0700 (PDT)
-Date: Tue, 26 May 2009 05:09:16 -0400
+	by cuda.sgi.com with ESMTP id pdhRC1fVqj8jnuVt for
+	<xfs@oss.sgi.com>; Tue, 26 May 2009 02:11:27 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1M8sgx-0005R7-O8
+	for xfs@oss.sgi.com; Tue, 26 May 2009 09:11:27 +0000
+Date: Tue, 26 May 2009 05:11:27 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Kernel crash with 2.6.29 + nfs + xfs (radix-tree)
-Message-ID: <20090526090916.GA17194@infradead.org>
-References: <20090520003745.GA27491@samad.com.au>
-	<20090520090558.GQ16929@discord.disaster>
-	<20090520095639.GA27496@samad.com.au>
+Subject: Re: [PATCH] xfs: validate quota log items during log recovery
+Message-ID: <20090526091127.GA20864@infradead.org>
+References: <20090303175427.GA20582@infradead.org>
+	<20090316075407.GB19858@infradead.org>
+	<20090329074246.GA16402@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20090520095639.GA27496@samad.com.au>
+In-Reply-To: <20090329074246.GA16402@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,28 +33,97 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Samad <alex@samad.com.au>
-Cc: randrik@mail.ru, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-So you're having primary a NFS workload, right?  Andrew had some
-dmesg output in bugzilla (please send this stuff to the list instead
-of hiding it in bugzilla if possible, BTW) that looks quite interesting:
+ping^3?
 
-May 24 08:48:00 (none) last message repeated 61 times                           
-May 24 08:48:47 (none) last message repeated 760 times                          
-May 24 08:50:55 (none) kernel: reconnect_path: npd != pd                        
-May 24 08:50:55 (none) last message repeated 9 times                            
-May 24 08:55:04 (none) kernel: reconnect_path: npd != pd                        
-May 24 08:56:05 (none) last message repeated 47 times                           
-May 24 08:56:49 (none) last message repeated 419 times
-
-which means we are in deep trouble with the dcache coherency.  Also
-the only way the bug you two report could happen from my audit is
-we get ->destroy_inode called twice for the same inode.
-
-So defintively some deep problems here.  Alex and Andrew, can you send
-me your .config, and a description of the workload your seing this on?
-Also the /etc/exports file would be interesting.
+On Sun, Mar 29, 2009 at 03:42:46AM -0400, Christoph Hellwig wrote:
+> ping^2?
+> 
+> On Mon, Mar 16, 2009 at 03:54:07AM -0400, Christoph Hellwig wrote:
+> > ping?
+> > 
+> > On Tue, Mar 03, 2009 at 12:54:27PM -0500, Christoph Hellwig wrote:
+> > > Arkadiusz has been seeing really strange crashes in xfs_qm_dqcheck that
+> > > I can only explain by a log item beeing too smal to actually fit the
+> > > xfs_dqblk_t we're dereferencing all over xfs_qm_dqcheck.  So add
+> > > graceful checks for NULL or too small quota items to the log recovery
+> > > code.
+> > > 
+> > > 
+> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > > 
+> > > Index: xfs/fs/xfs/xfs_log_recover.c
+> > > ===================================================================
+> > > --- xfs.orig/fs/xfs/xfs_log_recover.c	2009-03-02 04:15:11.410430892 +0100
+> > > +++ xfs/fs/xfs/xfs_log_recover.c	2009-03-02 04:16:29.649444226 +0100
+> > > @@ -1975,16 +1975,26 @@ xlog_recover_do_reg_buffer(
+> > >  		error = 0;
+> > >  		if (buf_f->blf_flags &
+> > >  		   (XFS_BLI_UDQUOT_BUF|XFS_BLI_PDQUOT_BUF|XFS_BLI_GDQUOT_BUF)) {
+> > > +			if (item->ri_buf[i].i_addr == NULL ||
+> > > +			    item->ri_buf[i].i_len < sizeof(xfs_dqblk_t)) {
+> > > +				cmn_err(CE_ALERT,
+> > > +	"XFS: dquot too small (%d) in xlog_recover_do_reg_buffer.",
+> > > +						item->ri_buf[i].i_len);
+> > > +				goto next;
+> > > +			}
+> > >  			error = xfs_qm_dqcheck((xfs_disk_dquot_t *)
+> > >  					       item->ri_buf[i].i_addr,
+> > >  					       -1, 0, XFS_QMOPT_DOWARN,
+> > >  					       "dquot_buf_recover");
+> > > +			if (error)
+> > > +				goto next;
+> > >  		}
+> > > -		if (!error)
+> > > -			memcpy(xfs_buf_offset(bp,
+> > > -				(uint)bit << XFS_BLI_SHIFT),	/* dest */
+> > > -				item->ri_buf[i].i_addr,		/* source */
+> > > -				nbits<<XFS_BLI_SHIFT);		/* length */
+> > > +
+> > > +		memcpy(xfs_buf_offset(bp,
+> > > +			(uint)bit << XFS_BLI_SHIFT),	/* dest */
+> > > +			item->ri_buf[i].i_addr,		/* source */
+> > > +			nbits<<XFS_BLI_SHIFT);		/* length */
+> > > + next:
+> > >  		i++;
+> > >  		bit += nbits;
+> > >  	}
+> > > @@ -2615,7 +2625,15 @@ xlog_recover_do_dquot_trans(
+> > >  		return (0);
+> > >  
+> > >  	recddq = (xfs_disk_dquot_t *)item->ri_buf[1].i_addr;
+> > > -	ASSERT(recddq);
+> > > +
+> > > +	if (item->ri_buf[1].i_addr == NULL ||
+> > > +	    item->ri_buf[1].i_len < sizeof(xfs_dqblk_t)) {
+> > > +		cmn_err(CE_ALERT,
+> > > +	"XFS: dquot too small (%d) in xlog_recover_do_dquot_trans.",
+> > > +			item->ri_buf[1].i_len);
+> > > +		return XFS_ERROR(EIO);
+> > > +	}
+> > > +
+> > >  	/*
+> > >  	 * This type of quotas was turned off, so ignore this record.
+> > >  	 */
+> > > 
+> > > _______________________________________________
+> > > xfs mailing list
+> > > xfs@oss.sgi.com
+> > > http://oss.sgi.com/mailman/listinfo/xfs
+> > ---end quoted text---
+> > 
+> > _______________________________________________
+> > xfs mailing list
+> > xfs@oss.sgi.com
+> > http://oss.sgi.com/mailman/listinfo/xfs
+> ---end quoted text---
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+---end quoted text---
 
 _______________________________________________
 xfs mailing list
