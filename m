@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4QK0Aqr158291 for <xfs@oss.sgi.com>; Tue, 26 May 2009 15:00:10 -0500
+	n4QKEqqX158965 for <xfs@oss.sgi.com>; Tue, 26 May 2009 15:14:52 -0500
 Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 921F91A1F90F
-	for <xfs@oss.sgi.com>; Tue, 26 May 2009 13:00:22 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0D7C41004E80
+	for <xfs@oss.sgi.com>; Tue, 26 May 2009 13:20:56 -0700 (PDT)
 Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id orMPQribCikoy2AR for <xfs@oss.sgi.com>;
-	Tue, 26 May 2009 13:00:22 -0700 (PDT)
-Message-ID: <4A1C4A44.1030309@sandeen.net>
-Date: Tue, 26 May 2009 15:00:04 -0500
+	with ESMTP id DnJRA2vCk76HL59g for <xfs@oss.sgi.com>;
+	Tue, 26 May 2009 13:20:56 -0700 (PDT)
+Message-ID: <4A1C4DBF.200@sandeen.net>
+Date: Tue, 26 May 2009 15:14:55 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH V2] drop xfs_version.h
-References: <4A1C449E.7070004@sandeen.net>
-	<20090526195140.GA4368@infradead.org>
-In-Reply-To: <20090526195140.GA4368@infradead.org>
+Subject: Re: [PATCH 1/7] xfs: split inode data writeback from
+	xfs_sync_inodes_ag
+References: <20090514171233.942489000@bombadil.infradead.org>
+	<20090514171558.014747000@bombadil.infradead.org>
+In-Reply-To: <20090514171558.014747000@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,86 +30,101 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs mailing list <xfs@oss.sgi.com>
+Cc: xfs@oss.sgi.com
 
-xfs_version.h is about 30 lines for the benefit of 
-one single define, which seems a bit silly.
+Christoph Hellwig wrote:
 
-Just drop the file and hardcode "SGI XFS" the 2 
-places it's used.
+> From: Dave Chinner <david@fromorbit.com>
+> 
+> In many cases we only want to sync inode data. Start spliting the inode sync
+> into data sync and inode sync by factoring out the inode data flush.
+> 
+> [hch: minor cleanups]
+> 
+> Signed-off-by: Dave Chinner <david@fromorbit.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-v2: merge together 2 now-shorter lines.
+Looks nice.... xfs_sync_inode_data(), now with 100% more readability!
+the old lock_flags uage was icky.
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
+Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
 
- fs/xfs/linux-2.6/xfs_version.h         |   29 -----------------
- linux-2.6/fs/xfs/linux-2.6/xfs_super.c |    6 +---
- 2 files changed, 2 insertions(+), 33 deletions(-)
-
-Index: linux-2.6/fs/xfs/linux-2.6/xfs_super.c
-===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_super.c
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_super.c
-@@ -48,7 +48,6 @@
- #include "xfs_buf_item.h"
- #include "xfs_utils.h"
- #include "xfs_vnodeops.h"
--#include "xfs_version.h"
- #include "xfs_log_priv.h"
- #include "xfs_trans_priv.h"
- #include "xfs_filestream.h"
-@@ -1788,8 +1787,7 @@ init_xfs_fs(void)
- {
- 	int			error;
- 
--	printk(KERN_INFO XFS_VERSION_STRING " with "
--			 XFS_BUILD_OPTIONS " enabled\n");
-+	printk(KERN_INFO "SGI XFS with " XFS_BUILD_OPTIONS " enabled\n");
- 
- 	ktrace_init(64);
- 	xfs_ioend_init();
-@@ -1867,5 +1865,5 @@ module_init(init_xfs_fs);
- module_exit(exit_xfs_fs);
- 
- MODULE_AUTHOR("Silicon Graphics, Inc.");
--MODULE_DESCRIPTION(XFS_VERSION_STRING " with " XFS_BUILD_OPTIONS " enabled");
-+MODULE_DESCRIPTION("SGI XFS with " XFS_BUILD_OPTIONS " enabled");
- MODULE_LICENSE("GPL");
-Index: linux-2.6/fs/xfs/linux-2.6/xfs_version.h
-===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_version.h
-+++ /dev/null
-@@ -1,29 +0,0 @@
--/*
-- * Copyright (c) 2001-2002,2005 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--#ifndef __XFS_VERSION_H__
--#define __XFS_VERSION_H__
--
--/*
-- * Dummy file that can contain a timestamp to put into the
-- * XFS init string, to help users keep track of what they're
-- * running
-- */
--
--#define XFS_VERSION_STRING "SGI XFS"
--
--#endif /* __XFS_VERSION_H__ */
+> Index: xfs/fs/xfs/linux-2.6/xfs_sync.c
+> ===================================================================
+> --- xfs.orig/fs/xfs/linux-2.6/xfs_sync.c	2009-05-12 23:28:45.023811837 +0200
+> +++ xfs/fs/xfs/linux-2.6/xfs_sync.c	2009-05-13 10:00:27.169659271 +0200
+> @@ -48,6 +48,34 @@
+>  #include <linux/kthread.h>
+>  #include <linux/freezer.h>
+>  
+> +
+> +STATIC int
+> +xfs_sync_inode_data(
+> +	struct xfs_inode	*ip,
+> +	int			flags)
+> +{
+> +	struct inode	*inode = VFS_I(ip);
+> +	struct address_space *mapping = inode->i_mapping;
+> +	int		error = 0;
+> +
+> +	if (mapping_tagged(mapping, PAGECACHE_TAG_DIRTY)) {
+> +		if (!xfs_ilock_nowait(ip, XFS_IOLOCK_SHARED)) {
+> +			if (flags & SYNC_TRYLOCK)
+> +				goto out_wait;
+> +			xfs_ilock(ip, XFS_IOLOCK_SHARED);
+> +		}
+> +
+> +		error = xfs_flush_pages(ip, 0, -1, (flags & SYNC_WAIT) ?
+> +					0 : XFS_B_ASYNC, FI_NONE);
+> +		xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+> +	}
+> +
+> + out_wait:
+> +	if (flags & SYNC_IOWAIT)
+> +		xfs_ioend_wait(ip);
+> +	return error;
+> +}
+> +
+>  /*
+>   * Sync all the inodes in the given AG according to the
+>   * direction given by the flags.
+> @@ -123,27 +151,10 @@ xfs_sync_inodes_ag(
+>  		 * If we have to flush data or wait for I/O completion
+>  		 * we need to hold the iolock.
+>  		 */
+> -		if (flags & SYNC_DELWRI) {
+> -			if (VN_DIRTY(inode)) {
+> -				if (flags & SYNC_TRYLOCK) {
+> -					if (xfs_ilock_nowait(ip, XFS_IOLOCK_SHARED))
+> -						lock_flags |= XFS_IOLOCK_SHARED;
+> -				} else {
+> -					xfs_ilock(ip, XFS_IOLOCK_SHARED);
+> -					lock_flags |= XFS_IOLOCK_SHARED;
+> -				}
+> -				if (lock_flags & XFS_IOLOCK_SHARED) {
+> -					error = xfs_flush_pages(ip, 0, -1,
+> -							(flags & SYNC_WAIT) ? 0
+> -								: XFS_B_ASYNC,
+> -							FI_NONE);
+> -				}
+> -			}
+> -			if (VN_CACHED(inode) && (flags & SYNC_IOWAIT))
+> -				xfs_ioend_wait(ip);
+> -		}
+> -		xfs_ilock(ip, XFS_ILOCK_SHARED);
+> +		if (flags & SYNC_DELWRI)
+> +			error = xfs_sync_inode_data(ip, flags);
+>  
+> +		xfs_ilock(ip, XFS_ILOCK_SHARED);
+>  		if ((flags & SYNC_ATTR) && !xfs_inode_clean(ip)) {
+>  			if (flags & SYNC_WAIT) {
+>  				xfs_iflock(ip);
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
