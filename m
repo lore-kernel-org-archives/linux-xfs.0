@@ -1,20 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4QHYt09153937 for <xfs@oss.sgi.com>; Tue, 26 May 2009 12:34:55 -0500
+	n4QJ4xHq156541 for <xfs@oss.sgi.com>; Tue, 26 May 2009 14:04:59 -0500
 Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C086D1A1ED97
-	for <xfs@oss.sgi.com>; Tue, 26 May 2009 10:35:08 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4FD572ADDD2
+	for <xfs@oss.sgi.com>; Tue, 26 May 2009 12:05:11 -0700 (PDT)
 Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id p8bO59O41Pgbse8n for <xfs@oss.sgi.com>;
-	Tue, 26 May 2009 10:35:08 -0700 (PDT)
-Message-ID: <4A1C2839.3010005@sandeen.net>
-Date: Tue, 26 May 2009 12:34:49 -0500
+	with ESMTP id hMC6U1fTyAfkCl5S for <xfs@oss.sgi.com>;
+	Tue, 26 May 2009 12:05:11 -0700 (PDT)
+Received: from int-mx2.corp.redhat.com (int-mx2.corp.redhat.com [172.16.27.26])
+	by mx2.redhat.com (8.13.8/8.13.8) with ESMTP id n4QJ5AlL030459
+	for <xfs@oss.sgi.com>; Tue, 26 May 2009 15:05:10 -0400
+Received: from ns3.rdu.redhat.com (ns3.rdu.redhat.com [10.11.255.199])
+	by int-mx2.corp.redhat.com (8.13.1/8.13.1) with ESMTP id n4QJ5Agq012454
+	for <xfs@oss.sgi.com>; Tue, 26 May 2009 15:05:10 -0400
+Received: from neon.msp.redhat.com (neon.msp.redhat.com [10.15.80.10])
+	by ns3.rdu.redhat.com (8.13.8/8.13.8) with ESMTP id n4QJ59Bb008005
+	for <xfs@oss.sgi.com>; Tue, 26 May 2009 15:05:09 -0400
+Message-ID: <4A1C3D65.4020306@sandeen.net>
+Date: Tue, 26 May 2009 14:05:09 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: kill xfs_qmops
-References: <20090224143736.GA16616@infradead.org>
-In-Reply-To: <20090224143736.GA16616@infradead.org>
+Subject: [PATCH] add more statics & drop some unused functions
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,289 +34,533 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs mailing list <xfs@oss.sgi.com>
 
-Christoph Hellwig wrote:
-> Kill the quota ops function vector and replace it with direct calls or
-> stubs in the CONFIG_XFS_QUOTA=n case.
-> 
-> Make sure we check XFS_IS_QUOTA_RUNNING in the right spots.  We can remove
-> the number of those checks because the XFS_TRANS_DQ_DIRTY flag can't be set
-> otherwise.
-> 
-> This brings us back closer to the way this code worked in IRIX and earlier
-> Linux versions, but we keep a lot of the more useful factoring of common
-> code.
-> 
-> Eventually we should also kill xfs_qm_bhv.c, but that's left for a later
-> patch.
-> 
-> Reduces the size of the source code by about 250 lines and the size of
-> XFS module by about 1.5 kilobytes with quotas enabled:
-> 
->    text	   data	    bss	    dec	    hex	filename
->  615957	   2960	   3848	 622765	  980ad	fs/xfs/xfs.o
->  617231	   3152	   3848	 624231	  98667	fs/xfs/xfs.o.old
-> 
-> 
-> Fallout:
-> 
->  - xfs_qm_dqattach is split into xfs_qm_dqattach_locked which expects
->    the inode locked and xfs_qm_dqattach which does the locking around it,
->    thus removing XFS_QMOPT_ILOCKED.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
+A lot more functions could be made static, but they need
+forward declarations; this does some easy ones, and also 
+found a few unused functions in the process.
 
-a few nitpicks & questions below
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
 
-> @@ -1398,14 +1400,16 @@ xfs_create(
->  	uint			cancel_flags;
->  	int			committed;
->  	xfs_prid_t		prid;
-> -	struct xfs_dquot	*udqp = NULL;
-> -	struct xfs_dquot	*gdqp = NULL;
-> +	struct xfs_dquot	*udqp, *gdqp;
->  	uint			resblks;
->  	uint			log_res;
->  	uint			log_count;
->  
->  	xfs_itrace_entry(dp);
->  
-> +	udqp = NULL;
-> +	gdqp = NULL;
+ linux-2.6/xfs_super.c |    2 +-
+ linux-2.6/xfs_sync.c  |   16 ----------------
+ linux-2.6/xfs_sync.h  |    1 -
+ xfs_ag.h              |    3 ---
+ xfs_alloc.c           |    2 +-
+ xfs_bmap.c            |    2 +-
+ xfs_bmap.h            |   11 -----------
+ xfs_bmap_btree.c      |   20 ++++++++++----------
+ xfs_bmap_btree.h      |    1 -
+ xfs_btree.c           |   42 +-----------------------------------------
+ xfs_btree.h           |   15 ---------------
+ xfs_inode.c           |    8 ++++----
+ xfs_inode.h           |    5 -----
+ xfs_itable.c          |    2 +-
+ xfs_itable.h          |    5 -----
+ xfs_log_priv.h        |    2 --
+ xfs_log_recover.c     |    2 +-
+ xfs_mount.c           |    2 +-
+ xfs_mount.h           |    3 ---
+ xfs_mru_cache.c       |   29 -----------------------------
+ xfs_mru_cache.h       |    1 -
+ xfs_rw.h              |    6 ------
+ xfs_vnodeops.c        |    2 +-
+ 23 files changed, 22 insertions(+), 160 deletions(-)
 
-Just wondering about the reason for this change?  in xfs_ioctl_setattr()
-it's a little weird because you gave udqp & gdqp the same treatment, but
-not olddquot (which is initialized to NULL in the declaration too)
-
-...
-
-> Index: xfs/fs/xfs/linux-2.6/xfs_super.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2009-02-24 15:32:16.141370566 +0100
-> +++ xfs/fs/xfs/linux-2.6/xfs_super.c	2009-02-24 15:32:35.866394539 +0100
-> @@ -416,6 +416,14 @@ xfs_parseargs(
->  		return EINVAL;
->  	}
->  
-> +#ifndef CONFIG_XFS_QUOTA
-> +	if (XFS_IS_QUOTA_RUNNING(mp)) {
-> +		cmn_err(CE_WARN,
-> +			"XFS: quota support not available in this kernel.");
-> +		return EINVAL;
-> +	}
-> +#endif
-
-The wording of the macro seems a little confusing in this location, how
-can quota be "running" if we are just starting the mount and there is no
-quota built in, but oh well, not really the fault of this patch I guess.
-
-Would it make any more sense to just say "if (mp->m_qflags)" instead,
-because  we just got done setting that bit of the structure in parseargs...?
-
-...
-
-> @@ -1214,7 +1222,10 @@ xfs_fs_statfs(
->  	statp->f_ffree = statp->f_files - (sbp->sb_icount - sbp->sb_ifree);
->  	spin_unlock(&mp->m_sb_lock);
->  
-> -	XFS_QM_DQSTATVFS(XFS_I(dentry->d_inode), statp);
-> +	if ((ip->i_d.di_flags & XFS_DIFLAG_PROJINHERIT) ||
-> +	    ((mp->m_qflags & (XFS_PQUOTA_ACCT|XFS_OQUOTA_ENFD))) ==
-> +			      (XFS_PQUOTA_ACCT|XFS_OQUOTA_ENFD))
-> +		xfs_qm_statvfs(ip, statp);
->  	return 0;
->  }
-
-Ok, so the tests for the ip & mp flags were removed from
-xfs_qm_statvfs() because they are always set here in the only caller...
-but would an ASSERT() of those be worth keeping in xfs_qm_statvfs?
-
-> @@ -1422,16 +1433,13 @@ xfs_fs_fill_super(
->  	error = xfs_dmops_get(mp);
->  	if (error)
->  		goto out_free_fsname;
-> -	error = xfs_qmops_get(mp);
-> -	if (error)
-> -		goto out_put_dmops;
->  
->  	if (silent)
->  		flags |= XFS_MFSI_QUIET;
->  
->  	error = xfs_open_devices(mp);
->  	if (error)
-> -		goto out_put_qmops;
-> +		goto out_put_dmops;
->  
->  	if (xfs_icsb_init_counters(mp))
->  		mp->m_flags |= XFS_MOUNT_NO_PERCPU_SB;
-> @@ -1500,8 +1508,6 @@ xfs_fs_fill_super(
->   out_destroy_counters:
->  	xfs_icsb_destroy_counters(mp);
->  	xfs_close_devices(mp);
-> - out_put_qmops:
-> -	xfs_qmops_put(mp);
->   out_put_dmops:
->  	xfs_dmops_put(mp);
->   out_free_fsname:
-> Index: xfs/fs/xfs/linux-2.6/xfs_sync.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/linux-2.6/xfs_sync.c	2009-02-24 15:32:16.149399312 +0100
-> +++ xfs/fs/xfs/linux-2.6/xfs_sync.c	2009-02-24 15:32:35.867425537 +0100
-> @@ -43,6 +43,7 @@
->  #include "xfs_buf_item.h"
->  #include "xfs_inode_item.h"
->  #include "xfs_rw.h"
-> +#include "xfs_quota.h"
->  
->  #include <linux/kthread.h>
->  #include <linux/freezer.h>
-> @@ -311,12 +312,12 @@ xfs_quiesce_data(
->  
->  	/* push non-blocking */
->  	xfs_sync_inodes(mp, SYNC_DELWRI|SYNC_BDFLUSH);
-> -	XFS_QM_DQSYNC(mp, SYNC_BDFLUSH);
-> +	xfs_qm_sync(mp, SYNC_BDFLUSH);
->  	xfs_filestream_flush(mp);
->  
->  	/* push and block */
->  	xfs_sync_inodes(mp, SYNC_DELWRI|SYNC_WAIT|SYNC_IOWAIT);
-> -	XFS_QM_DQSYNC(mp, SYNC_WAIT);
-> +	xfs_qm_sync(mp, SYNC_WAIT);
->  
->  	/* write superblock and hoover up shutdown errors */> Index: xfs/fs/xfs/quota/xfs_dquot.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/quota/xfs_dquot.c	2009-02-24 15:32:16.080370342 +0100
-> +++ xfs/fs/xfs/quota/xfs_dquot.c	2009-02-24 15:32:35.867425537 +0100
-> @@ -1194,7 +1194,9 @@ void
->  xfs_qm_dqrele(
->  	xfs_dquot_t	*dqp)
->  {
-> -	ASSERT(dqp);
-> +	if (!dqp)
-> +		return;
-> +
->  	xfs_dqtrace_entry(dqp, "DQRELE");
->  
->  	xfs_dqlock(dqp);
-
-dumb question, maybe - how do we get here w/ dqp == NULL when before it
-was an ASSERT?
-
-...
-
-> @@ -2469,8 +2479,10 @@ xfs_qm_vop_chown(
->  	uint		bfield = XFS_IS_REALTIME_INODE(ip) ?
->  				 XFS_TRANS_DQ_RTBCOUNT : XFS_TRANS_DQ_BCOUNT;
->  
-> +	if (!XFS_IS_QUOTA_RUNNING(ip->i_mount))
-> +		return NULL;
-> +
->  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-> -	ASSERT(XFS_IS_QUOTA_RUNNING(ip->i_mount));
->  
->  	/* old dquot */
->  	prevdq = *IO_olddq;
-
-seems a little weird to call this & return, should the (3) callers just
-check first?  I guess similar questions on other tests...
-
-> @@ -2508,14 +2520,15 @@ xfs_qm_vop_chown_reserve(
->  	xfs_dquot_t	*gdqp,
->  	uint		flags)
->  {
-> -	int		error;
-> -	xfs_mount_t	*mp;
-> +	xfs_mount_t	*mp = ip->i_mount;
->  	uint		delblks, blkflags, prjflags = 0;
->  	xfs_dquot_t	*unresudq, *unresgdq, *delblksudq, *delblksgdq;
-> +	int		error;
-> +
-> +	if (!XFS_IS_QUOTA_RUNNING(mp))
-> +		return 0;
-
-same question here
-
->  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
-> -	mp = ip->i_mount;
-> -	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
->  
->  	delblks = ip->i_delayed_blks;
->  	delblksudq = delblksgdq = unresudq = unresgdq = NULL;
-> @@ -2582,28 +2595,23 @@ xfs_qm_vop_chown_reserve(
->  
->  int
->  xfs_qm_vop_rename_dqattach(
-> -	xfs_inode_t	**i_tab)
-> +	struct xfs_inode	**i_tab)
->  {
-> -	xfs_inode_t	*ip;
-> -	int		i;
-> -	int		error;
-> -
-> -	ip = i_tab[0];
-> +	struct xfs_mount	*mp = i_tab[0]->i_mount;
-> +	int			i;
->  
-> -	if (! XFS_IS_QUOTA_ON(ip->i_mount))
-> +	if (!XFS_IS_QUOTA_RUNNING(mp) || !XFS_IS_QUOTA_ON(mp))
->  		return 0;
->  
-> -	if (XFS_NOT_DQATTACHED(ip->i_mount, ip)) {
-> -		error = xfs_qm_dqattach(ip, 0);
-> -		if (error)
-> -			return error;
-> -	}
->  	for (i = 1; (i < 4 && i_tab[i]); i++) {
-> +		struct xfs_inode	*ip = i_tab[i];
-> +		int			error;
-> +
->  		/*
->  		 * Watch out for duplicate entries in the table.
->  		 */
-> -		if ((ip = i_tab[i]) != i_tab[i-1]) {
-> -			if (XFS_NOT_DQATTACHED(ip->i_mount, ip)) {
-> +		if (i == 0 || ip != i_tab[i-1]) {
-
-
-                    ^^^^^^ how is that ever true?
-
-
-> +			if (XFS_NOT_DQATTACHED(mp, ip)) {
->  				error = xfs_qm_dqattach(ip, 0);
->  				if (error)
->  					return error;
-
-> Index: xfs/fs/xfs/xfs_mount.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/xfs_mount.c	2009-02-24 15:32:16.164399755 +0100
-> +++ xfs/fs/xfs/xfs_mount.c	2009-02-24 15:32:35.871518446 +0100
-
-...
-
-> @@ -1163,9 +1230,19 @@ xfs_mountfs(
->  	/*
->  	 * Complete the quota initialisation, post-log-replay component.
->  	 */
-> -	error = XFS_QM_MOUNT(mp, quotamount, quotaflags);
-> -	if (error)
-> -		goto out_rtunmount;
-> +	if (quotamount) {
-> +		ASSERT(mp->m_qflags == 0);
-> +		mp->m_qflags = quotaflags;
-> +
-> +		xfs_qm_mount_quotas(mp);
-
-Seems odd to me that this is a void, and quota mount failure doesn't
-stop the mount, but oh well, I guess it's always been that way.
-
-
-Aside from those nitpicks seems ok, though TBH I'm a bit confused about
-when we check XFS_IS_QUOTA_RUNNING vs XFS_IS_QUOTA_ON in this new world ....
-
--Eric
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_super.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_super.c
++++ linux-2.6/fs/xfs/linux-2.6/xfs_super.c
+@@ -688,7 +688,7 @@ xfs_barrier_test(
+ 	return error;
+ }
+ 
+-void
++STATIC void
+ xfs_mountfs_check_barriers(xfs_mount_t *mp)
+ {
+ 	int error;
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_sync.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_sync.c
++++ linux-2.6/fs/xfs/linux-2.6/xfs_sync.c
+@@ -640,22 +640,6 @@ __xfs_inode_clear_reclaim_tag(
+ 			XFS_INO_TO_AGINO(mp, ip->i_ino), XFS_ICI_RECLAIM_TAG);
+ }
+ 
+-void
+-xfs_inode_clear_reclaim_tag(
+-	xfs_inode_t	*ip)
+-{
+-	xfs_mount_t	*mp = ip->i_mount;
+-	xfs_perag_t	*pag = xfs_get_perag(mp, ip->i_ino);
+-
+-	read_lock(&pag->pag_ici_lock);
+-	spin_lock(&ip->i_flags_lock);
+-	__xfs_inode_clear_reclaim_tag(mp, pag, ip);
+-	spin_unlock(&ip->i_flags_lock);
+-	read_unlock(&pag->pag_ici_lock);
+-	xfs_put_perag(mp, pag);
+-}
+-
+-
+ STATIC void
+ xfs_reclaim_inodes_ag(
+ 	xfs_mount_t	*mp,
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_sync.h
+===================================================================
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_sync.h
++++ linux-2.6/fs/xfs/linux-2.6/xfs_sync.h
+@@ -51,7 +51,6 @@ int xfs_reclaim_inode(struct xfs_inode *
+ int xfs_reclaim_inodes(struct xfs_mount *mp, int noblock, int mode);
+ 
+ void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
+-void xfs_inode_clear_reclaim_tag(struct xfs_inode *ip);
+ void __xfs_inode_clear_reclaim_tag(struct xfs_mount *mp, struct xfs_perag *pag,
+ 				struct xfs_inode *ip);
+ #endif
+Index: linux-2.6/fs/xfs/xfs_ag.h
+===================================================================
+--- linux-2.6.orig/fs/xfs/xfs_ag.h
++++ linux-2.6/fs/xfs/xfs_ag.h
+@@ -91,9 +91,6 @@ typedef struct xfs_agf {
+ #define	XFS_AGF_BLOCK(mp)	XFS_HDR_BLOCK(mp, XFS_AGF_DADDR(mp))
+ #define	XFS_BUF_TO_AGF(bp)	((xfs_agf_t *)XFS_BUF_PTR(bp))
+ 
+-extern int xfs_read_agf(struct xfs_mount *mp, struct xfs_trans *tp,
+-			xfs_agnumber_t agno, int flags, struct xfs_buf **bpp);
+-
+ /*
+  * Size of the unlinked inode hash table in the agi.
+  */
+Index: linux-2.6/fs/xfs/xfs_alloc.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/xfs_alloc.c
++++ linux-2.6/fs/xfs/xfs_alloc.c
+@@ -2248,7 +2248,7 @@ xfs_alloc_put_freelist(
+ /*
+  * Read in the allocation group header (free/alloc section).
+  */
+-int					/* error */
++STATIC int				/* error */
+ xfs_read_agf(
+ 	struct xfs_mount	*mp,	/* mount point structure */
+ 	struct xfs_trans	*tp,	/* transaction pointer */
+Index: linux-2.6/fs/xfs/xfs_bmap.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/xfs_bmap.c
++++ linux-2.6/fs/xfs/xfs_bmap.c
+@@ -3713,7 +3713,7 @@ done:
+  * entry (null if none).  Else, *lastxp will be set to the index
+  * of the found entry; *gotp will contain the entry.
+  */
+-xfs_bmbt_rec_host_t *			/* pointer to found extent entry */
++STATIC xfs_bmbt_rec_host_t *		/* pointer to found extent entry */
+ xfs_bmap_search_multi_extents(
+ 	xfs_ifork_t	*ifp,		/* inode fork pointer */
+ 	xfs_fileoff_t	bno,		/* block number searched for */
+Index: linux-2.6/fs/xfs/xfs_bmap.h
+===================================================================
+--- linux-2.6.orig/fs/xfs/xfs_bmap.h
++++ linux-2.6/fs/xfs/xfs_bmap.h
+@@ -392,17 +392,6 @@ xfs_bmap_count_blocks(
+ 	int			whichfork,
+ 	int			*count);
+ 
+-/*
+- * Search the extent records for the entry containing block bno.
+- * If bno lies in a hole, point to the next entry.  If bno lies
+- * past eof, *eofp will be set, and *prevp will contain the last
+- * entry (null if none).  Else, *lastxp will be set to the index
+- * of the found entry; *gotp will contain the entry.
+- */
+-xfs_bmbt_rec_host_t *
+-xfs_bmap_search_multi_extents(struct xfs_ifork *, xfs_fileoff_t, int *,
+-			xfs_extnum_t *, xfs_bmbt_irec_t *, xfs_bmbt_irec_t *);
+-
+ #endif	/* __KERNEL__ */
+ 
+ #endif	/* __XFS_BMAP_H__ */
+Index: linux-2.6/fs/xfs/xfs_bmap_btree.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/xfs_bmap_btree.c
++++ linux-2.6/fs/xfs/xfs_bmap_btree.c
+@@ -202,16 +202,6 @@ xfs_bmbt_get_state(
+ 				ext_flag);
+ }
+ 
+-/* Endian flipping versions of the bmbt extraction functions */
+-void
+-xfs_bmbt_disk_get_all(
+-	xfs_bmbt_rec_t	*r,
+-	xfs_bmbt_irec_t *s)
+-{
+-	__xfs_bmbt_get_all(get_unaligned_be64(&r->l0),
+-				get_unaligned_be64(&r->l1), s);
+-}
+-
+ /*
+  * Extract the blockcount field from an on disk bmap extent record.
+  */
+@@ -816,6 +806,16 @@ xfs_bmbt_trace_key(
+ 	*l1 = 0;
+ }
+ 
++/* Endian flipping versions of the bmbt extraction functions */
++STATIC void
++xfs_bmbt_disk_get_all(
++	xfs_bmbt_rec_t	*r,
++	xfs_bmbt_irec_t *s)
++{
++	__xfs_bmbt_get_all(get_unaligned_be64(&r->l0),
++				get_unaligned_be64(&r->l1), s);
++}
++
+ STATIC void
+ xfs_bmbt_trace_record(
+ 	struct xfs_btree_cur	*cur,
+Index: linux-2.6/fs/xfs/xfs_bmap_btree.h
+===================================================================
+--- linux-2.6.orig/fs/xfs/xfs_bmap_btree.h
++++ linux-2.6/fs/xfs/xfs_bmap_btree.h
+@@ -220,7 +220,6 @@ extern xfs_fsblock_t xfs_bmbt_get_startb
+ extern xfs_fileoff_t xfs_bmbt_get_startoff(xfs_bmbt_rec_host_t *r);
+ extern xfs_exntst_t xfs_bmbt_get_state(xfs_bmbt_rec_host_t *r);
+ 
+-extern void xfs_bmbt_disk_get_all(xfs_bmbt_rec_t *r, xfs_bmbt_irec_t *s);
+ extern xfs_filblks_t xfs_bmbt_disk_get_blockcount(xfs_bmbt_rec_t *r);
+ extern xfs_fileoff_t xfs_bmbt_disk_get_startoff(xfs_bmbt_rec_t *r);
+ 
+Index: linux-2.6/fs/xfs/xfs_btree.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/xfs_btree.c
++++ linux-2.6/fs/xfs/xfs_btree.c
+@@ -646,46 +646,6 @@ xfs_btree_read_bufl(
+ }
+ 
+ /*
+- * Get a buffer for the block, return it read in.
+- * Short-form addressing.
+- */
+-int					/* error */
+-xfs_btree_read_bufs(
+-	xfs_mount_t	*mp,		/* file system mount point */
+-	xfs_trans_t	*tp,		/* transaction pointer */
+-	xfs_agnumber_t	agno,		/* allocation group number */
+-	xfs_agblock_t	agbno,		/* allocation group block number */
+-	uint		lock,		/* lock flags for read_buf */
+-	xfs_buf_t	**bpp,		/* buffer for agno/agbno */
+-	int		refval)		/* ref count value for buffer */
+-{
+-	xfs_buf_t	*bp;		/* return value */
+-	xfs_daddr_t	d;		/* real disk block address */
+-	int		error;
+-
+-	ASSERT(agno != NULLAGNUMBER);
+-	ASSERT(agbno != NULLAGBLOCK);
+-	d = XFS_AGB_TO_DADDR(mp, agno, agbno);
+-	if ((error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, d,
+-					mp->m_bsize, lock, &bp))) {
+-		return error;
+-	}
+-	ASSERT(!bp || !XFS_BUF_GETERROR(bp));
+-	if (bp != NULL) {
+-		switch (refval) {
+-		case XFS_ALLOC_BTREE_REF:
+-			XFS_BUF_SET_VTYPE_REF(bp, B_FS_MAP, refval);
+-			break;
+-		case XFS_INO_BTREE_REF:
+-			XFS_BUF_SET_VTYPE_REF(bp, B_FS_INOMAP, refval);
+-			break;
+-		}
+-	}
+-	*bpp = bp;
+-	return 0;
+-}
+-
+-/*
+  * Read-ahead the block, don't wait for it, don't return a buffer.
+  * Long-form addressing.
+  */
+@@ -2951,7 +2911,7 @@ error0:
+  * inode we have to copy the single block it was pointing to into the
+  * inode.
+  */
+-int
++STATIC int
+ xfs_btree_kill_iroot(
+ 	struct xfs_btree_cur	*cur)
+ {
+Index: linux-2.6/fs/xfs/xfs_btree.h
+===================================================================
+--- linux-2.6.orig/fs/xfs/xfs_btree.h
++++ linux-2.6/fs/xfs/xfs_btree.h
+@@ -379,20 +379,6 @@ xfs_btree_read_bufl(
+ 	int			refval);/* ref count value for buffer */
+ 
+ /*
+- * Get a buffer for the block, return it read in.
+- * Short-form addressing.
+- */
+-int					/* error */
+-xfs_btree_read_bufs(
+-	struct xfs_mount	*mp,	/* file system mount point */
+-	struct xfs_trans	*tp,	/* transaction pointer */
+-	xfs_agnumber_t		agno,	/* allocation group number */
+-	xfs_agblock_t		agbno,	/* allocation group block number */
+-	uint			lock,	/* lock flags for read_buf */
+-	struct xfs_buf		**bpp,	/* buffer for agno/agbno */
+-	int			refval);/* ref count value for buffer */
+-
+-/*
+  * Read-ahead the block, don't wait for it, don't return a buffer.
+  * Long-form addressing.
+  */
+@@ -432,7 +418,6 @@ int xfs_btree_decrement(struct xfs_btree
+ int xfs_btree_lookup(struct xfs_btree_cur *, xfs_lookup_t, int *);
+ int xfs_btree_update(struct xfs_btree_cur *, union xfs_btree_rec *);
+ int xfs_btree_new_iroot(struct xfs_btree_cur *, int *, int *);
+-int xfs_btree_kill_iroot(struct xfs_btree_cur *);
+ int xfs_btree_insert(struct xfs_btree_cur *, int *);
+ int xfs_btree_delete(struct xfs_btree_cur *, int *);
+ int xfs_btree_get_rec(struct xfs_btree_cur *, union xfs_btree_rec **, int *);
+Index: linux-2.6/fs/xfs/xfs_inode.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/xfs_inode.c
++++ linux-2.6/fs/xfs/xfs_inode.c
+@@ -642,7 +642,7 @@ xfs_iformat_btree(
+ 	return 0;
+ }
+ 
+-void
++STATIC void
+ xfs_dinode_from_disk(
+ 	xfs_icdinode_t		*to,
+ 	xfs_dinode_t		*from)
+@@ -1238,7 +1238,7 @@ xfs_isize_check(
+  * In that case the pages will still be in memory, but the inode size
+  * will never have been updated.
+  */
+-xfs_fsize_t
++STATIC xfs_fsize_t
+ xfs_file_last_byte(
+ 	xfs_inode_t	*ip)
+ {
+@@ -3828,7 +3828,7 @@ xfs_iext_inline_to_direct(
+ /*
+  * Resize an extent indirection array to new_size bytes.
+  */
+-void
++STATIC void
+ xfs_iext_realloc_indirect(
+ 	xfs_ifork_t	*ifp,		/* inode fork pointer */
+ 	int		new_size)	/* new indirection array size */
+@@ -3853,7 +3853,7 @@ xfs_iext_realloc_indirect(
+ /*
+  * Switch from indirection array to linear (direct) extent allocations.
+  */
+-void
++STATIC void
+ xfs_iext_indirect_to_direct(
+ 	 xfs_ifork_t	*ifp)		/* inode fork pointer */
+ {
+Index: linux-2.6/fs/xfs/xfs_inode.h
+===================================================================
+--- linux-2.6.orig/fs/xfs/xfs_inode.h
++++ linux-2.6/fs/xfs/xfs_inode.h
+@@ -520,7 +520,6 @@ void		xfs_ipin(xfs_inode_t *);
+ void		xfs_iunpin(xfs_inode_t *);
+ int		xfs_iflush(xfs_inode_t *, uint);
+ void		xfs_ichgtime(xfs_inode_t *, int);
+-xfs_fsize_t	xfs_file_last_byte(xfs_inode_t *);
+ void		xfs_lock_inodes(xfs_inode_t **, int, uint);
+ void		xfs_lock_two_inodes(xfs_inode_t *, xfs_inode_t *, uint);
+ 
+@@ -588,8 +587,6 @@ int		xfs_itobp(struct xfs_mount *, struc
+ 			  struct xfs_buf **, uint);
+ int		xfs_iread(struct xfs_mount *, struct xfs_trans *,
+ 			  struct xfs_inode *, xfs_daddr_t, uint);
+-void		xfs_dinode_from_disk(struct xfs_icdinode *,
+-				     struct xfs_dinode *);
+ void		xfs_dinode_to_disk(struct xfs_dinode *,
+ 				   struct xfs_icdinode *);
+ void		xfs_idestroy_fork(struct xfs_inode *, int);
+@@ -608,8 +605,6 @@ void		xfs_iext_remove_inline(xfs_ifork_t
+ void		xfs_iext_remove_direct(xfs_ifork_t *, xfs_extnum_t, int);
+ void		xfs_iext_remove_indirect(xfs_ifork_t *, xfs_extnum_t, int);
+ void		xfs_iext_realloc_direct(xfs_ifork_t *, int);
+-void		xfs_iext_realloc_indirect(xfs_ifork_t *, int);
+-void		xfs_iext_indirect_to_direct(xfs_ifork_t *);
+ void		xfs_iext_direct_to_inline(xfs_ifork_t *, xfs_extnum_t);
+ void		xfs_iext_inline_to_direct(xfs_ifork_t *, int);
+ void		xfs_iext_destroy(xfs_ifork_t *);
+Index: linux-2.6/fs/xfs/xfs_itable.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/xfs_itable.c
++++ linux-2.6/fs/xfs/xfs_itable.c
+@@ -39,7 +39,7 @@
+ #include "xfs_error.h"
+ #include "xfs_btree.h"
+ 
+-int
++STATIC int
+ xfs_internal_inum(
+ 	xfs_mount_t	*mp,
+ 	xfs_ino_t	ino)
+Index: linux-2.6/fs/xfs/xfs_itable.h
+===================================================================
+--- linux-2.6.orig/fs/xfs/xfs_itable.h
++++ linux-2.6/fs/xfs/xfs_itable.h
+@@ -99,11 +99,6 @@ xfs_bulkstat_one(
+ 	void			*dibuff,
+ 	int			*stat);
+ 
+-int
+-xfs_internal_inum(
+-	xfs_mount_t		*mp,
+-	xfs_ino_t		ino);
+-
+ typedef int (*inumbers_fmt_pf)(
+ 	void			__user *ubuffer, /* buffer to write to */
+ 	const xfs_inogrp_t	*buffer,	/* buffer to read from */
+Index: linux-2.6/fs/xfs/xfs_log_priv.h
+===================================================================
+--- linux-2.6.orig/fs/xfs/xfs_log_priv.h
++++ linux-2.6/fs/xfs/xfs_log_priv.h
+@@ -451,8 +451,6 @@ extern int	 xlog_find_tail(xlog_t	*log,
+ extern int	 xlog_recover(xlog_t *log);
+ extern int	 xlog_recover_finish(xlog_t *log);
+ extern void	 xlog_pack_data(xlog_t *log, xlog_in_core_t *iclog, int);
+-extern void	 xlog_recover_process_iunlinks(xlog_t *log);
+-
+ extern struct xfs_buf *xlog_get_bp(xlog_t *, int);
+ extern void	 xlog_put_bp(struct xfs_buf *);
+ 
+Index: linux-2.6/fs/xfs/xfs_log_recover.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/xfs_log_recover.c
++++ linux-2.6/fs/xfs/xfs_log_recover.c
+@@ -3237,7 +3237,7 @@ xlog_recover_process_one_iunlink(
+  * freeing of the inode and its removal from the list must be
+  * atomic.
+  */
+-void
++STATIC void
+ xlog_recover_process_iunlinks(
+ 	xlog_t		*log)
+ {
+Index: linux-2.6/fs/xfs/xfs_mount.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/xfs_mount.c
++++ linux-2.6/fs/xfs/xfs_mount.c
+@@ -1568,7 +1568,7 @@ xfs_mod_sb(xfs_trans_t *tp, __int64_t fi
+  *
+  * The m_sb_lock must be held when this routine is called.
+  */
+-int
++STATIC int
+ xfs_mod_incore_sb_unlocked(
+ 	xfs_mount_t	*mp,
+ 	xfs_sb_field_t	field,
+Index: linux-2.6/fs/xfs/xfs_mount.h
+===================================================================
+--- linux-2.6.orig/fs/xfs/xfs_mount.h
++++ linux-2.6/fs/xfs/xfs_mount.h
+@@ -415,13 +415,10 @@ typedef struct xfs_mod_sb {
+ 
+ extern int	xfs_log_sbcount(xfs_mount_t *, uint);
+ extern int	xfs_mountfs(xfs_mount_t *mp);
+-extern void	xfs_mountfs_check_barriers(xfs_mount_t *mp);
+ 
+ extern void	xfs_unmountfs(xfs_mount_t *);
+ extern int	xfs_unmountfs_writesb(xfs_mount_t *);
+ extern int	xfs_mod_incore_sb(xfs_mount_t *, xfs_sb_field_t, int64_t, int);
+-extern int	xfs_mod_incore_sb_unlocked(xfs_mount_t *, xfs_sb_field_t,
+-			int64_t, int);
+ extern int	xfs_mod_incore_sb_batch(xfs_mount_t *, xfs_mod_sb_t *,
+ 			uint, int);
+ extern int	xfs_mount_log_sb(xfs_mount_t *, __int64_t);
+Index: linux-2.6/fs/xfs/xfs_mru_cache.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/xfs_mru_cache.c
++++ linux-2.6/fs/xfs/xfs_mru_cache.c
+@@ -564,35 +564,6 @@ xfs_mru_cache_lookup(
+ }
+ 
+ /*
+- * To look up an element using its key, but leave its location in the internal
+- * lists alone, call xfs_mru_cache_peek().  If the element isn't found, this
+- * function returns NULL.
+- *
+- * See the comments above the declaration of the xfs_mru_cache_lookup() function
+- * for important locking information pertaining to this call.
+- */
+-void *
+-xfs_mru_cache_peek(
+-	xfs_mru_cache_t	*mru,
+-	unsigned long	key)
+-{
+-	xfs_mru_cache_elem_t *elem;
+-
+-	ASSERT(mru && mru->lists);
+-	if (!mru || !mru->lists)
+-		return NULL;
+-
+-	spin_lock(&mru->lock);
+-	elem = radix_tree_lookup(&mru->store, key);
+-	if (!elem)
+-		spin_unlock(&mru->lock);
+-	else
+-		__release(mru_lock); /* help sparse not be stupid */
+-
+-	return elem ? elem->value : NULL;
+-}
+-
+-/*
+  * To release the internal data structure spinlock after having performed an
+  * xfs_mru_cache_lookup() or an xfs_mru_cache_peek(), call xfs_mru_cache_done()
+  * with the data store pointer.
+Index: linux-2.6/fs/xfs/xfs_mru_cache.h
+===================================================================
+--- linux-2.6.orig/fs/xfs/xfs_mru_cache.h
++++ linux-2.6/fs/xfs/xfs_mru_cache.h
+@@ -49,7 +49,6 @@ int xfs_mru_cache_insert(struct xfs_mru_
+ void * xfs_mru_cache_remove(struct xfs_mru_cache *mru, unsigned long key);
+ void xfs_mru_cache_delete(struct xfs_mru_cache *mru, unsigned long key);
+ void *xfs_mru_cache_lookup(struct xfs_mru_cache *mru, unsigned long key);
+-void *xfs_mru_cache_peek(struct xfs_mru_cache *mru, unsigned long key);
+ void xfs_mru_cache_done(struct xfs_mru_cache *mru);
+ 
+ #endif /* __XFS_MRU_CACHE_H__ */
+Index: linux-2.6/fs/xfs/xfs_rw.h
+===================================================================
+--- linux-2.6.orig/fs/xfs/xfs_rw.h
++++ linux-2.6/fs/xfs/xfs_rw.h
+@@ -78,10 +78,4 @@ extern int xfs_read_buf(struct xfs_mount
+ extern void xfs_ioerror_alert(char *func, struct xfs_mount *mp,
+ 				xfs_buf_t *bp, xfs_daddr_t blkno);
+ 
+-/*
+- * Prototypes for functions in xfs_vnodeops.c.
+- */
+-extern int xfs_free_eofblocks(struct xfs_mount *mp, struct xfs_inode *ip,
+-			int flags);
+-
+ #endif /* __XFS_RW_H__ */
+Index: linux-2.6/fs/xfs/xfs_vnodeops.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/xfs_vnodeops.c
++++ linux-2.6/fs/xfs/xfs_vnodeops.c
+@@ -702,7 +702,7 @@ xfs_fsync(
+  * when the link count isn't zero and by xfs_dm_punch_hole() when
+  * punching a hole to EOF.
+  */
+-int
++STATIC int
+ xfs_free_eofblocks(
+ 	xfs_mount_t	*mp,
+ 	xfs_inode_t	*ip,
 
 _______________________________________________
 xfs mailing list
