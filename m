@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4QJZlBw157431 for <xfs@oss.sgi.com>; Tue, 26 May 2009 14:35:47 -0500
-Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 002552AE96C
-	for <xfs@oss.sgi.com>; Tue, 26 May 2009 12:36:00 -0700 (PDT)
-Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id 2yjtMyqHpgYnqzV6 for <xfs@oss.sgi.com>;
-	Tue, 26 May 2009 12:36:00 -0700 (PDT)
-Received: from int-mx2.corp.redhat.com (int-mx2.corp.redhat.com [172.16.27.26])
-	by mx2.redhat.com (8.13.8/8.13.8) with ESMTP id n4QJZxUq008163
-	for <xfs@oss.sgi.com>; Tue, 26 May 2009 15:35:59 -0400
-Received: from ns3.rdu.redhat.com (ns3.rdu.redhat.com [10.11.255.199])
-	by int-mx2.corp.redhat.com (8.13.1/8.13.1) with ESMTP id n4QJZxhr021133
-	for <xfs@oss.sgi.com>; Tue, 26 May 2009 15:35:59 -0400
-Received: from neon.msp.redhat.com (neon.msp.redhat.com [10.15.80.10])
-	by ns3.rdu.redhat.com (8.13.8/8.13.8) with ESMTP id n4QJZwob016030
-	for <xfs@oss.sgi.com>; Tue, 26 May 2009 15:35:58 -0400
-Message-ID: <4A1C449E.7070004@sandeen.net>
-Date: Tue, 26 May 2009 14:35:58 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	n4QK2nNC158373 for <xfs@oss.sgi.com>; Tue, 26 May 2009 15:02:50 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E3F992AE714
+	for <xfs@oss.sgi.com>; Tue, 26 May 2009 13:03:03 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id qXJFozFbn431iKrQ for
+	<xfs@oss.sgi.com>; Tue, 26 May 2009 13:03:03 -0700 (PDT)
+Date: Tue, 26 May 2009 16:03:03 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH V2] drop xfs_version.h
+Message-ID: <20090526200303.GA18261@infradead.org>
+References: <4A1C449E.7070004@sandeen.net>
+	<20090526195140.GA4368@infradead.org>
+	<4A1C4A44.1030309@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] drop xfs_version.h
+Content-Disposition: inline
+In-Reply-To: <4A1C4A44.1030309@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,83 +30,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs mailing list <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs mailing list <xfs@oss.sgi.com>
 
-xfs_version.h is about 30 lines for the benefit of 
-one single define, which seems a bit silly.
+On Tue, May 26, 2009 at 03:00:04PM -0500, Eric Sandeen wrote:
+> xfs_version.h is about 30 lines for the benefit of 
+> one single define, which seems a bit silly.
+> 
+> Just drop the file and hardcode "SGI XFS" the 2 
+> places it's used.
+> 
+> v2: merge together 2 now-shorter lines.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-Just drop the file and hardcode "SGI XFS" the 2 
-places it's used.
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
-
- fs/xfs/linux-2.6/xfs_version.h         |   29 -------------------
- linux-2.6/fs/xfs/linux-2.6/xfs_super.c |    5 +--
- 2 files changed, 2 insertions(+), 32 deletions(-)
-
-Index: linux-2.6/fs/xfs/linux-2.6/xfs_super.c
-===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_super.c
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_super.c
-@@ -48,7 +48,6 @@
- #include "xfs_buf_item.h"
- #include "xfs_utils.h"
- #include "xfs_vnodeops.h"
--#include "xfs_version.h"
- #include "xfs_log_priv.h"
- #include "xfs_trans_priv.h"
- #include "xfs_filestream.h"
-@@ -1788,7 +1787,7 @@ init_xfs_fs(void)
- {
- 	int			error;
- 
--	printk(KERN_INFO XFS_VERSION_STRING " with "
-+	printk(KERN_INFO "SGI XFS with "
- 			 XFS_BUILD_OPTIONS " enabled\n");
- 
- 	ktrace_init(64);
-@@ -1867,5 +1866,5 @@ module_init(init_xfs_fs);
- module_exit(exit_xfs_fs);
- 
- MODULE_AUTHOR("Silicon Graphics, Inc.");
--MODULE_DESCRIPTION(XFS_VERSION_STRING " with " XFS_BUILD_OPTIONS " enabled");
-+MODULE_DESCRIPTION("SGI XFS with " XFS_BUILD_OPTIONS " enabled");
- MODULE_LICENSE("GPL");
-Index: linux-2.6/fs/xfs/linux-2.6/xfs_version.h
-===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_version.h
-+++ /dev/null
-@@ -1,29 +0,0 @@
--/*
-- * Copyright (c) 2001-2002,2005 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--#ifndef __XFS_VERSION_H__
--#define __XFS_VERSION_H__
--
--/*
-- * Dummy file that can contain a timestamp to put into the
-- * XFS init string, to help users keep track of what they're
-- * running
-- */
--
--#define XFS_VERSION_STRING "SGI XFS"
--
--#endif /* __XFS_VERSION_H__ */
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
