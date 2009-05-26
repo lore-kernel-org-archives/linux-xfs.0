@@ -1,17 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4QCNHcc141886 for <xfs@oss.sgi.com>; Tue, 26 May 2009 07:23:17 -0500
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E9F808F8039
-	for <xfs@oss.sgi.com>; Tue, 26 May 2009 05:23:27 -0700 (PDT)
-Message-Id: <B5F3DA2A-EC30-4C28-9D94-18098D5BC43E@sgi.com>
-From: Felix Blyakher <felixb@sgi.com>
-In-Reply-To: <4A184EC4.1050007@sandeen.net>
-Mime-Version: 1.0 (Apple Message framework v930.3)
-Subject: Re: [PATCH] fix overflow in xfs_growfs_data_private
-Date: Tue, 26 May 2009 07:23:26 -0500
-References: <4A184EC4.1050007@sandeen.net>
+	n4QDNEYM144685 for <xfs@oss.sgi.com>; Tue, 26 May 2009 08:23:14 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EF7301001CF7
+	for <xfs@oss.sgi.com>; Tue, 26 May 2009 06:29:16 -0700 (PDT)
+Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
+	cuda.sgi.com with ESMTP id cH0RcPzcWxE0drQt for
+	<xfs@oss.sgi.com>; Tue, 26 May 2009 06:29:16 -0700 (PDT)
+References: <20090526120250.GA447@infradead.org>
+Message-Id: <6A03430F-1F6A-4F35-9557-D77AA35D79A8@sandeen.net>
+From: Eric Sandeen <sandeen@sandeen.net>
+In-Reply-To: <20090526120250.GA447@infradead.org>
+Mime-Version: 1.0 (iPod Mail 5H11)
+Subject: Re: [PATCH] xfstests: only run 164 for xfs
+Date: Tue, 26 May 2009 08:22:05 -0500
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,45 +27,42 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Richard Ems <Richard.Ems@cape-horn-eng.com>, xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
 
-On May 23, 2009, at 2:30 PM, Eric Sandeen wrote:
 
-> In the case where growing a filesystem would leave the last AG
-> too small, the fixup code has an overflow in the calculation
-> of the new size with one fewer ag, because "nagcount" is a 32
-> bit number.  If the new filesystem has > 2^32 blocks in it
-> this causes a problem resulting in an EINVAL return from growfs:
+On May 26, 2009, at 7:02 AM, Christoph Hellwig <hch@infradead.org>  
+wrote:
+
+> Test 164 uses the xfs_io bmap subcommand which only works for XFS,
+> so don't offer it for nfs and udf.
 >
-> # xfs_io -f -c "truncate 19998630180864" fsfile
-> # mkfs.xfs -f -bsize=4096 -dagsize=76288719b,size=3905982455b fsfile
-> # mount -o loop fsfile mnt/
-> # xfs_growfs mnt/
-
-Is it really 'mnt/', not '/mnt'?
-
 >
-> meta-data=/dev/loop0             isize=256    agcount=52,
-> agsize=76288719 blks
->         =                       sectsz=512   attr=2
-> data     =                       bsize=4096   blocks=3905982455,  
-> imaxpct=5
->         =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   ascii-ci=0
-> log      =internal               bsize=4096   blocks=32768, version=2
->         =                       sectsz=512   sunit=0 blks, lazy- 
-> count=0
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed: Invalid argument
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
 >
-> Reported-by: richard.ems@cape-horn-eng.com
-> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-
-Nice find and the neat fix, Eric.
-
-Reviewed-by: Felix Blyakher <felixb@sgi.com>
+> Index: xfstests-dev/164
+> ===================================================================
+> --- xfstests-dev.orig/164    2009-05-26 12:00:00.000000000 +0000
+> +++ xfstests-dev/164    2009-05-26 12:00:54.000000000 +0000
+> @@ -54,8 +54,7 @@
+>
+> # real QA test starts here
+>
+> -# Modify as appropriate.
+> -_supported_fs xfs udf nfs
+> +_supported_fs xfs
+> _supported_os IRIX Linux
+>
+> testfile=$TEST_DIR/file.$seq
+>
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+>
 
 _______________________________________________
 xfs mailing list
