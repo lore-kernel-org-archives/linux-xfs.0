@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4RKckv7209935 for <xfs@oss.sgi.com>; Wed, 27 May 2009 15:38:46 -0500
+	n4RKiFn3210148 for <xfs@oss.sgi.com>; Wed, 27 May 2009 15:44:15 -0500
 Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2EBA51486CEB
-	for <xfs@oss.sgi.com>; Wed, 27 May 2009 13:44:56 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 28E8C1D37631
+	for <xfs@oss.sgi.com>; Wed, 27 May 2009 13:44:28 -0700 (PDT)
 Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id 2Jd7xNnyFkLinY0B for <xfs@oss.sgi.com>;
-	Wed, 27 May 2009 13:44:56 -0700 (PDT)
-Message-ID: <4A1DA4D9.4000403@sandeen.net>
-Date: Wed, 27 May 2009 15:38:49 -0500
+	with ESMTP id IaRN28XJZADBtilM for <xfs@oss.sgi.com>;
+	Wed, 27 May 2009 13:44:28 -0700 (PDT)
+Message-ID: <4A1DA622.3050900@sandeen.net>
+Date: Wed, 27 May 2009 15:44:18 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH 3/7] xfs: factor out inode validation for sync
+Subject: Re: [PATCH 4/7] xfs: remove unused parameter from xfs_reclaim_inodes
 References: <20090514171233.942489000@bombadil.infradead.org>
-	<20090514171558.494200000@bombadil.infradead.org>
-In-Reply-To: <20090514171558.494200000@bombadil.infradead.org>
+	<20090514171558.649403000@bombadil.infradead.org>
+In-Reply-To: <20090514171558.649403000@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,99 +34,113 @@ Cc: xfs@oss.sgi.com
 Christoph Hellwig wrote:
 
 > From: Dave Chinner <david@fromorbit.com>
-> 
-> Separate the validation of inodes found by the radix
-> tree walk from the radix tree lookup.
-> 
+>
+> The noblock parameter of xfs_reclaim_inodes is only ever set to zero. Remove
+> it and all the conditional code that is never executed.
+>
 > Signed-off-by: Dave Chinner <david@fromorbit.com>
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-
 Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
 
 > Index: xfs/fs/xfs/linux-2.6/xfs_sync.c
 > ===================================================================
-> --- xfs.orig/fs/xfs/linux-2.6/xfs_sync.c	2009-05-14 16:19:52.080661336 +0200
-> +++ xfs/fs/xfs/linux-2.6/xfs_sync.c	2009-05-14 16:20:34.251688779 +0200
-> @@ -49,6 +49,39 @@
->  #include <linux/freezer.h>
+> --- xfs.orig/fs/xfs/linux-2.6/xfs_sync.c	2009-05-14 16:20:34.251688779 +0200
+> +++ xfs/fs/xfs/linux-2.6/xfs_sync.c	2009-05-14 16:20:37.012658983 +0200
+> @@ -383,7 +383,7 @@ xfs_quiesce_fs(
+>  	int	count = 0, pincount;
 >  
+>  	xfs_flush_buftarg(mp->m_ddev_targp, 0);
+> -	xfs_reclaim_inodes(mp, 0, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
+> +	xfs_reclaim_inodes(mp, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
 >  
-> +/* must be called with pag_ici_lock held and releases it */
-> +STATIC int
-> +xfs_sync_inode_valid(
-> +	struct xfs_inode	*ip,
-> +	struct xfs_perag	*pag)
-> +{
-> +	struct inode		*inode = VFS_I(ip);
-> +
-> +	/* nothing to sync during shutdown */
-> +	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
-> +		read_unlock(&pag->pag_ici_lock);
-> +		return EFSCORRUPTED;
-> +	}
-> +
-> +	/*
-> +	 * If we can't get a reference on the inode, it must be in reclaim.
-> +	 * Leave it for the reclaim code to flush. Also avoid inodes that
-> +	 * haven't been fully initialised.
-> +	 */
-> +	if (!igrab(inode)) {
-> +		read_unlock(&pag->pag_ici_lock);
-> +		return ENOENT;
-> +	}
-> +	read_unlock(&pag->pag_ici_lock);
-> +
-> +	if (is_bad_inode(inode) || xfs_iflags_test(ip, XFS_INEW)) {
-> +		IRELE(ip);
-> +		return ENOENT;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  STATIC int
->  xfs_sync_inode_data(
->  	struct xfs_inode	*ip,
-> @@ -121,7 +154,6 @@ xfs_sync_inodes_ag(
->  	int		last_error = 0;
+>  	/*
+>  	 * This loop must run at least twice.  The first instance of the loop
+> @@ -507,7 +507,7 @@ xfs_sync_worker(
 >  
->  	do {
-> -		struct inode	*inode;
->  		xfs_inode_t	*ip = NULL;
->  
->  		/*
-> @@ -150,27 +182,10 @@ xfs_sync_inodes_ag(
->  			break;
->  		}
->  
-> -		/* nothing to sync during shutdown */
-> -		if (XFS_FORCED_SHUTDOWN(mp)) {
-> -			read_unlock(&pag->pag_ici_lock);
-> -			return 0;
-> -		}
-> -
-> -		/*
-> -		 * If we can't get a reference on the inode, it must be
-> -		 * in reclaim. Leave it for the reclaim code to flush.
-> -		 */
-> -		inode = VFS_I(ip);
-> -		if (!igrab(inode)) {
-> -			read_unlock(&pag->pag_ici_lock);
-> -			continue;
-> -		}
-> -		read_unlock(&pag->pag_ici_lock);
-> -
-> -		/* avoid new or bad inodes */
-> -		if (is_bad_inode(inode) ||
-> -		    xfs_iflags_test(ip, XFS_INEW)) {
-> -			IRELE(ip);
-> +		error = xfs_sync_inode_valid(ip, pag);
-> +		if (error) {
-> +			if (error == EFSCORRUPTED)
-> +				return 0;
+>  	if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
+>  		xfs_log_force(mp, (xfs_lsn_t)0, XFS_LOG_FORCE);
+> -		xfs_reclaim_inodes(mp, 0, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
+> +		xfs_reclaim_inodes(mp, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
+>  		/* dgc: errors ignored here */
+>  		error = xfs_qm_sync(mp, SYNC_BDFLUSH);
+>  		error = xfs_sync_fsdata(mp, SYNC_BDFLUSH);
+> @@ -701,7 +701,6 @@ STATIC void
+>  xfs_reclaim_inodes_ag(
+>  	xfs_mount_t	*mp,
+>  	int		ag,
+> -	int		noblock,
+>  	int		mode)
+>  {
+>  	xfs_inode_t	*ip = NULL;
+> @@ -747,25 +746,13 @@ restart:
 >  			continue;
 >  		}
-
+>  
+> -		if (noblock) {
+> -			if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)) {
+> -				read_unlock(&pag->pag_ici_lock);
+> -				continue;
+> -			}
+> -			if (xfs_ipincount(ip) ||
+> -			    !xfs_iflock_nowait(ip)) {
+> -				xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> -				read_unlock(&pag->pag_ici_lock);
+> -				continue;
+> -			}
+> -		}
+>  		read_unlock(&pag->pag_ici_lock);
+>  
+>  		/*
+>  		 * hmmm - this is an inode already in reclaim. Do
+>  		 * we even bother catching it here?
+>  		 */
+> -		if (xfs_reclaim_inode(ip, noblock, mode))
+> +		if (xfs_reclaim_inode(ip, 0, mode))
+>  			skipped++;
+>  	} while (nr_found);
+>  
+> @@ -780,7 +767,6 @@ restart:
+>  int
+>  xfs_reclaim_inodes(
+>  	xfs_mount_t	*mp,
+> -	int		 noblock,
+>  	int		mode)
+>  {
+>  	int		i;
+> @@ -788,7 +774,7 @@ xfs_reclaim_inodes(
+>  	for (i = 0; i < mp->m_sb.sb_agcount; i++) {
+>  		if (!mp->m_perag[i].pag_ici_init)
+>  			continue;
+> -		xfs_reclaim_inodes_ag(mp, i, noblock, mode);
+> +		xfs_reclaim_inodes_ag(mp, i, mode);
+>  	}
+>  	return 0;
+>  }
+> Index: xfs/fs/xfs/linux-2.6/xfs_sync.h
+> ===================================================================
+> --- xfs.orig/fs/xfs/linux-2.6/xfs_sync.h	2009-05-14 16:19:44.268809697 +0200
+> +++ xfs/fs/xfs/linux-2.6/xfs_sync.h	2009-05-14 16:20:37.012658983 +0200
+> @@ -50,7 +50,7 @@ void xfs_quiesce_attr(struct xfs_mount *
+>  void xfs_flush_inodes(struct xfs_inode *ip);
+>  
+>  int xfs_reclaim_inode(struct xfs_inode *ip, int locked, int sync_mode);
+> -int xfs_reclaim_inodes(struct xfs_mount *mp, int noblock, int mode);
+> +int xfs_reclaim_inodes(struct xfs_mount *mp, int mode);
+>  
+>  void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
+>  void xfs_inode_clear_reclaim_tag(struct xfs_inode *ip);
+> Index: xfs/fs/xfs/xfs_mount.c
+> ===================================================================
+> --- xfs.orig/fs/xfs/xfs_mount.c	2009-05-14 16:19:44.318659340 +0200
+> +++ xfs/fs/xfs/xfs_mount.c	2009-05-14 16:20:37.013659110 +0200
+> @@ -1371,7 +1371,7 @@ xfs_unmountfs(
+>  	 * need to force the log first.
+>  	 */
+>  	xfs_log_force(mp, (xfs_lsn_t)0, XFS_LOG_FORCE | XFS_LOG_SYNC);
+> -	xfs_reclaim_inodes(mp, 0, XFS_IFLUSH_ASYNC);
+> +	xfs_reclaim_inodes(mp, XFS_IFLUSH_ASYNC);
+>  
+>  	xfs_qm_unmount(mp);
 
 _______________________________________________
 xfs mailing list
