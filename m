@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4RJ6tdG204913 for <xfs@oss.sgi.com>; Wed, 27 May 2009 14:06:55 -0500
+	n4RK6NvK208460 for <xfs@oss.sgi.com>; Wed, 27 May 2009 15:06:23 -0500
 Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 884C61A2DE2B
-	for <xfs@oss.sgi.com>; Wed, 27 May 2009 12:07:06 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0786C14868E1
+	for <xfs@oss.sgi.com>; Wed, 27 May 2009 13:12:33 -0700 (PDT)
 Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id 9QhmhBFz1lQEGuMz for <xfs@oss.sgi.com>;
-	Wed, 27 May 2009 12:07:06 -0700 (PDT)
-Message-ID: <4A1D8F4D.1040902@sandeen.net>
-Date: Wed, 27 May 2009 14:06:53 -0500
+	with ESMTP id PxBtNK67neKwGEyg for <xfs@oss.sgi.com>;
+	Wed, 27 May 2009 13:12:33 -0700 (PDT)
+Message-ID: <4A1D9D41.7040107@sandeen.net>
+Date: Wed, 27 May 2009 15:06:25 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: validate quota log items during log recovery
-References: <20090303175427.GA20582@infradead.org>	<4A1C13DC.5000605@sandeen.net>
-	<20090527091734.GA21958@infradead.org>
-In-Reply-To: <20090527091734.GA21958@infradead.org>
+Subject: Re: [PATCH] xfs: kill xfs_qmops
+References: <20090224143736.GA16616@infradead.org>	<4A1C2839.3010005@sandeen.net>
+	<20090527095616.GA19069@infradead.org>
+In-Reply-To: <20090527095616.GA19069@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,94 +32,54 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
 Christoph Hellwig wrote:
+...
 
+> never, but that's a bug because the loop should now start at 0.  Looks
+> like out quota testing in xfsqa still isn't that good or the first
+> inode is always already attached in normal operation (probably the latter).
+> 
 > Updated patch below:
 > 
 > 
-> Subject: xfs: validate quota log items during log recovery
+> Subject: xfs: kill xfs_qmops
 > From: Christoph Hellwig <hch@lst.de>
 > 
-> Arkadiusz has seen really strange crashes in xfs_qm_dqcheck that
-> I can only explain by a log item being too smal to actually fit the
-                                             ^^small ;)
-> xfs_dqblk_t we're dereferencing all over xfs_qm_dqcheck.  So add
-> graceful checks for NULL or too small quota items to the log recovery
+> Kill the quota ops function vector and replace it with direct calls or
+> stubs in the CONFIG_XFS_QUOTA=n case.
+> 
+> Make sure we check XFS_IS_QUOTA_RUNNING in the right spots.  We can remove
+> the number of those checks because the XFS_TRANS_DQ_DIRTY flag can't be set
+> otherwise.
+> 
+> This brings us back closer to the way this code worked in IRIX and earlier
+> Linux versions, but we keep a lot of the more useful factoring of common
 > code.
 > 
+> Eventually we should also kill xfs_qm_bhv.c, but that's left for a later
+> patch.
+> 
+> Reduces the size of the source code by about 250 lines and the size of
+> XFS module by about 1.5 kilobytes with quotas enabled:
+> 
+>    text	   data	    bss	    dec	    hex	filename
+>  615957	   2960	   3848	 622765	  980ad	fs/xfs/xfs.o
+>  617231	   3152	   3848	 624231	  98667	fs/xfs/xfs.o.old
+> 
+> 
+> Fallout:
+> 
+>  - xfs_qm_dqattach is split into xfs_qm_dqattach_locked which expects
+>    the inode locked and xfs_qm_dqattach which does the locking around it,
+>    thus removing XFS_QMOPT_ILOCKED.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
 
-A bit more verbose now isn't it, but oh well :)
+Looks better to me now, thanks.  Though worrisome that quota doesn't
+seem well-tested in xfsqa, as you said... but as far as I can tell seems
+ok now.  Have arekm test it a bit too ;)
 
 Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
-
-> Index: xfs/fs/xfs/xfs_log_recover.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/xfs_log_recover.c	2009-05-27 10:40:03.752821404 +0200
-> +++ xfs/fs/xfs/xfs_log_recover.c	2009-05-27 10:43:23.740939498 +0200
-> @@ -1975,16 +1975,30 @@ xlog_recover_do_reg_buffer(
->  		error = 0;
->  		if (buf_f->blf_flags &
->  		   (XFS_BLI_UDQUOT_BUF|XFS_BLI_PDQUOT_BUF|XFS_BLI_GDQUOT_BUF)) {
-> +			if (item->ri_buf[i].i_addr == NULL) {
-> +				cmn_err(CE_ALERT,
-> +					"XFS: NULL dquot in %s.", __func__);
-> +				goto next;
-> +			}
-> +			if (item->ri_buf[i].i_len < sizeof(xfs_dqblk_t)) {
-> +				cmn_err(CE_ALERT,
-> +					"XFS: dquot too small (%d) in %s.",
-> +					item->ri_buf[i].i_len, __func__);
-> +				goto next;
-> +			}
->  			error = xfs_qm_dqcheck((xfs_disk_dquot_t *)
->  					       item->ri_buf[i].i_addr,
->  					       -1, 0, XFS_QMOPT_DOWARN,
->  					       "dquot_buf_recover");
-> +			if (error)
-> +				goto next;
->  		}
-> -		if (!error)
-> -			memcpy(xfs_buf_offset(bp,
-> -				(uint)bit << XFS_BLI_SHIFT),	/* dest */
-> -				item->ri_buf[i].i_addr,		/* source */
-> -				nbits<<XFS_BLI_SHIFT);		/* length */
-> +
-> +		memcpy(xfs_buf_offset(bp,
-> +			(uint)bit << XFS_BLI_SHIFT),	/* dest */
-> +			item->ri_buf[i].i_addr,		/* source */
-> +			nbits<<XFS_BLI_SHIFT);		/* length */
-> + next:
->  		i++;
->  		bit += nbits;
->  	}
-> @@ -2615,7 +2629,19 @@ xlog_recover_do_dquot_trans(
->  		return (0);
->  
->  	recddq = (xfs_disk_dquot_t *)item->ri_buf[1].i_addr;
-> -	ASSERT(recddq);
-> +
-> +	if (item->ri_buf[1].i_addr == NULL) {
-> +		cmn_err(CE_ALERT,
-> +			"XFS: NULL dquot in %s.", __func__);
-> +		return XFS_ERROR(EIO);
-> +	}
-> +	if (item->ri_buf[1].i_len < sizeof(xfs_dqblk_t)) {
-> +		cmn_err(CE_ALERT,
-> +			"XFS: dquot too small (%d) in %s.",
-> +			item->ri_buf[1].i_len, __func__);
-> +		return XFS_ERROR(EIO);
-> +	}
-> +
->  	/*
->  	 * This type of quotas was turned off, so ignore this record.
->  	 */
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
 
 _______________________________________________
 xfs mailing list
