@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4R9Q0gI186039 for <xfs@oss.sgi.com>; Wed, 27 May 2009 04:26:01 -0500
-Received: from atlas.fiton.is (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 96C972B144C
-	for <xfs@oss.sgi.com>; Wed, 27 May 2009 02:26:12 -0700 (PDT)
-Received: from atlas.fiton.is ([62.145.135.105]) by cuda.sgi.com with ESMTP id
-	9mjryZMON4PE4xGs for <xfs@oss.sgi.com>;
-	Wed, 27 May 2009 02:26:12 -0700 (PDT)
-Received: from localhost ([127.0.0.1]) by atlas.fiton.is
-	(using TLSv1/SSLv3 with cipher AES128-SHA (128 bits))
-	for xfs@oss.sgi.com; Wed, 27 May 2009 09:26:55 +0000
-Message-Id: <59D949A6-71F6-4C4C-B5F9-B5B22B189771@fiton.is>
-From: =?ISO-8859-1?Q?Svavar_=D6rn_Eysteinsson?= <svavar@fiton.is>
-In-Reply-To: <4A1BE48F.9020107@dermichi.com>
-Mime-Version: 1.0 (Apple Message framework v935.3)
-Subject: Re: Incorrect Free Space / xfs_growfs on RAID5 Volume ?
-Date: Wed, 27 May 2009 09:26:10 +0000
-References: <BC442FE9-64FC-4F3C-A5AA-25C890AABD3C@fiton.is>
-	<4A1BE48F.9020107@dermichi.com>
+	n4R9HMCQ185700 for <xfs@oss.sgi.com>; Wed, 27 May 2009 04:17:25 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4C95F2B1550
+	for <xfs@oss.sgi.com>; Wed, 27 May 2009 02:17:35 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id glRPdJpiKqjAgUtq for
+	<xfs@oss.sgi.com>; Wed, 27 May 2009 02:17:35 -0700 (PDT)
+Date: Wed, 27 May 2009 05:17:34 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs: validate quota log items during log recovery
+Message-ID: <20090527091734.GA21958@infradead.org>
+References: <20090303175427.GA20582@infradead.org>
+	<4A1C13DC.5000605@sandeen.net>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4A1C13DC.5000605@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,96 +25,125 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="windows-1252"; Format="flowed"; DelSp="yes"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-Hi.
+On Tue, May 26, 2009 at 11:07:56AM -0500, Eric Sandeen wrote:
+> Christoph Hellwig wrote:
+> > Arkadiusz has been seeing really strange crashes in xfs_qm_dqcheck that
+> > I can only explain by a log item beeing too smal to actually fit the
+>                                  ^^being too small^^
 
-I read on http://www.carltonbale.com/2007/05/how-to-break-the-2tb-2-terabyt=
-e-file-system-limit/
-that if your kernel is compiled with CONFIG_LBD You can break the 2tb  =
+Thanks, corrected.
 
-limit. Any facts on that ?
+> > +			if (item->ri_buf[i].i_addr == NULL ||
+> > +			    item->ri_buf[i].i_len < sizeof(xfs_dqblk_t)) {
+> > +				cmn_err(CE_ALERT,
+> > +	"XFS: dquot too small (%d) in xlog_recover_do_reg_buffer.",
+> > +						item->ri_buf[i].i_len);
+> 
+> Shouldn't this differentiate between i_addr == NULL and i_len too small,
+> though?  While we're at it anyway...
+> 
+> Maybe:
 
-****
-Breaking 2TB Option 2 - Use Linux with CONFIG_LBD enabled. Most Linux  =
+I've split both into individual checks and used __func__ to print
+the function instead of hardconding it.
 
-file systems are capable of partitions larger than 2 TB, as long as  =
+> >  			error = xfs_qm_dqcheck((xfs_disk_dquot_t *)
+> >  					       item->ri_buf[i].i_addr,
+> >  					       -1, 0, XFS_QMOPT_DOWARN,
+> >  					       "dquot_buf_recover");
+> > +			if (error)
+> > +				goto next;
+> 
+> I guess we can't do much else, but what happens in the end, when we skip
+> a buffer...
 
-the Linux kernel itself is. (See this comparison of Linux file  =
-
-systems.) Most Linux distributions now have kernels compiled with  =
-
-CONFIG_LBD enabled (Ubuntu 6.10 does, for example.) As long as the  =
-
-kernel is configured/compiled properly, it is straight-forward to  =
-
-create a single 4TB EXT3 (or similar) partition.
-
-     * To summarize: 1 RAID array of five 1TB Drives -> 1 RAID level 5  =
-
-Volume Set that is 4TB -> 1 EXT3 (or similar) Linux partition that is  =
-
-4TB.
-****
-
-.... Is this maby out of my scope/setup ?
-
-
-Is there a simple way for me to check if my kernel has this option  =
-
-compiled in ?
-I'm running Fedora Core 6 with  2.6.27.7 #1 SMP Tue Nov 25 11:50:10  =
-
-GMT 2008 i686 i686 i386 GNU/Linux.
+Yeah, same action a a xfs_qm_dqcheck failure.  Error handling here
+probably wants to be revisited, but that should be a separate patch.
 
 
-And the FINAL question.... Is there any way for me to alter the raid  =
-
-volume, partitions to GPT or just format the /dev/sdb without loosing  =
-
-any data ?
-Maby it's just not possible without backup up data, and restore'ing ?
+Updated patch below:
 
 
-Thanks allot guys..
+Subject: xfs: validate quota log items during log recovery
+From: Christoph Hellwig <hch@lst.de>
+
+Arkadiusz has seen really strange crashes in xfs_qm_dqcheck that
+I can only explain by a log item being too smal to actually fit the
+xfs_dqblk_t we're dereferencing all over xfs_qm_dqcheck.  So add
+graceful checks for NULL or too small quota items to the log recovery
+code.
 
 
-Best regards,
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Svavar - Reykjavik - Iceland
-
-
-
-On 26.5.2009, at 12:46, Michael Weissenbacher wrote:
-
-> Hi Svavar!
->> Now the strange part. When I issue =93df -h=94 command it shows much  =
-
->> smaller
->> disk space added then it should have.
->
-> You have run into the 2TB limit for a DOS Paritition Table. You must  =
-
-> use GPT (GUID Partition Table) to overcome the limit. You can't use  =
-
-> fdisk for that since it has no GPT support. An alternative would be  =
-
-> parted [1]. I'm not sure how this can be done without data loss. An  =
-
-> alternative would be to not use partitions at all and create the XFS  =
-
-> directly on /dev/sdb.
-> This is not really an XFS issue but an partitioning issue.
->
-> [1] http://www.gnu.org/software/parted/index.shtml
->
-> hth,
-> Michael
-
+Index: xfs/fs/xfs/xfs_log_recover.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_log_recover.c	2009-05-27 10:40:03.752821404 +0200
++++ xfs/fs/xfs/xfs_log_recover.c	2009-05-27 10:43:23.740939498 +0200
+@@ -1975,16 +1975,30 @@ xlog_recover_do_reg_buffer(
+ 		error = 0;
+ 		if (buf_f->blf_flags &
+ 		   (XFS_BLI_UDQUOT_BUF|XFS_BLI_PDQUOT_BUF|XFS_BLI_GDQUOT_BUF)) {
++			if (item->ri_buf[i].i_addr == NULL) {
++				cmn_err(CE_ALERT,
++					"XFS: NULL dquot in %s.", __func__);
++				goto next;
++			}
++			if (item->ri_buf[i].i_len < sizeof(xfs_dqblk_t)) {
++				cmn_err(CE_ALERT,
++					"XFS: dquot too small (%d) in %s.",
++					item->ri_buf[i].i_len, __func__);
++				goto next;
++			}
+ 			error = xfs_qm_dqcheck((xfs_disk_dquot_t *)
+ 					       item->ri_buf[i].i_addr,
+ 					       -1, 0, XFS_QMOPT_DOWARN,
+ 					       "dquot_buf_recover");
++			if (error)
++				goto next;
+ 		}
+-		if (!error)
+-			memcpy(xfs_buf_offset(bp,
+-				(uint)bit << XFS_BLI_SHIFT),	/* dest */
+-				item->ri_buf[i].i_addr,		/* source */
+-				nbits<<XFS_BLI_SHIFT);		/* length */
++
++		memcpy(xfs_buf_offset(bp,
++			(uint)bit << XFS_BLI_SHIFT),	/* dest */
++			item->ri_buf[i].i_addr,		/* source */
++			nbits<<XFS_BLI_SHIFT);		/* length */
++ next:
+ 		i++;
+ 		bit += nbits;
+ 	}
+@@ -2615,7 +2629,19 @@ xlog_recover_do_dquot_trans(
+ 		return (0);
+ 
+ 	recddq = (xfs_disk_dquot_t *)item->ri_buf[1].i_addr;
+-	ASSERT(recddq);
++
++	if (item->ri_buf[1].i_addr == NULL) {
++		cmn_err(CE_ALERT,
++			"XFS: NULL dquot in %s.", __func__);
++		return XFS_ERROR(EIO);
++	}
++	if (item->ri_buf[1].i_len < sizeof(xfs_dqblk_t)) {
++		cmn_err(CE_ALERT,
++			"XFS: dquot too small (%d) in %s.",
++			item->ri_buf[1].i_len, __func__);
++		return XFS_ERROR(EIO);
++	}
++
+ 	/*
+ 	 * This type of quotas was turned off, so ignore this record.
+ 	 */
 
 _______________________________________________
 xfs mailing list
