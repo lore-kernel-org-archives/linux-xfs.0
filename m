@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4RIrM5E204148 for <xfs@oss.sgi.com>; Wed, 27 May 2009 13:53:22 -0500
+	n4RIrMOA204142 for <xfs@oss.sgi.com>; Wed, 27 May 2009 13:53:22 -0500
 Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B86492B394B
-	for <xfs@oss.sgi.com>; Wed, 27 May 2009 11:53:36 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 482182B394B
+	for <xfs@oss.sgi.com>; Wed, 27 May 2009 11:53:35 -0700 (PDT)
 Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id QXp0brse7VNSeriJ for
-	<xfs@oss.sgi.com>; Wed, 27 May 2009 11:53:36 -0700 (PDT)
+	cuda.sgi.com with ESMTP id 91Q3H9Mcu9JPWpQD for
+	<xfs@oss.sgi.com>; Wed, 27 May 2009 11:53:35 -0700 (PDT)
 From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [PATCH 7/9] Set default extN mount options
-Date: Wed, 27 May 2009 13:53:31 -0500
-Message-Id: <1243450413-12681-8-git-send-email-sandeen@sandeen.net>
+Subject: [PATCH 4/9] 069: make scratch mkfs quiet
+Date: Wed, 27 May 2009 13:53:28 -0500
+Message-Id: <1243450413-12681-5-git-send-email-sandeen@sandeen.net>
 In-Reply-To: <1243450413-12681-1-git-send-email-sandeen@sandeen.net>
 References: <1243450413-12681-1-git-send-email-sandeen@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,39 +30,28 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Eric Sandeen <sandeen@sandeen.net>
 
-ext2/3/4 don't support acls & attrs w/o specific mount
-options, so make those the default whenever we mount
-these filesystems.
+The _scratch_mkfs call in test 069 was not redirecting
+stderr to /dev/null; other mkfs's may be more noisy
+on stderr.
 
 Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 ---
- common.rc |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+ 069 |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/common.rc b/common.rc
-index 78514f4..54c36f3 100644
---- a/common.rc
-+++ b/common.rc
-@@ -49,6 +49,10 @@ _mount_opts()
-     nfs)
- 	export MOUNT_OPTIONS=$NFS_MOUNT_OPTIONS
- 	;;
-+    ext2|ext3|ext4)
-+	# acls & xattrs aren't turned on by default on ext$FOO
-+	export MOUNT_OPTIONS="-o acl,user_xattr $EXT_MOUNT_OPTIONS"
-+	;;
-     *)
- 	;;
-     esac
-@@ -585,7 +589,7 @@ _require_scratch()
- 		     _notrun "this test requires a valid \$SCRATCH_DEV"
- 		 fi
- 		 ;;
--	nfs*|ext2|ext3|reiserfs)
-+	nfs*|ext2|ext3|ext4|reiserfs)
- 		 echo $SCRATCH_DEV | grep -q ":" > /dev/null 2>&1
- 		 if [ ! -z "$SCRATCH_DEV" -a ! -b "$SCRATCH_DEV" -a "$?" != "0" ]
- 		 then
+diff --git a/069 b/069
+index 4950901..78689ed 100755
+--- a/069
++++ b/069
+@@ -32,7 +32,7 @@ rm -f $seq.full
+ umount $SCRATCH_DEV >/dev/null 2>&1
+ 
+ echo "*** mkfs"
+-_scratch_mkfs >/dev/null || _fail "mkfs failed"
++_scratch_mkfs >/dev/null 2>&1 || _fail "mkfs failed"
+ 
+ echo "*** mount FS"
+ _scratch_mount >/dev/null || _fail "mount failed"
 -- 
 1.5.5.6
 
