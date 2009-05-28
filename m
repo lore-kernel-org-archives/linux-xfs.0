@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4SKXAwO009575 for <xfs@oss.sgi.com>; Thu, 28 May 2009 15:33:10 -0500
+	n4SLCi3B011683 for <xfs@oss.sgi.com>; Thu, 28 May 2009 16:12:44 -0500
 Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4EFC51A3CCDB
-	for <xfs@oss.sgi.com>; Thu, 28 May 2009 13:33:23 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 605F3101F4BA
+	for <xfs@oss.sgi.com>; Thu, 28 May 2009 14:18:59 -0700 (PDT)
 Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id 3dVPLXUzntCH8UlY for <xfs@oss.sgi.com>;
-	Thu, 28 May 2009 13:33:23 -0700 (PDT)
-Message-ID: <4A1EF50D.8090900@redhat.com>
-Date: Thu, 28 May 2009 15:33:17 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	with ESMTP id a7MtfLAu2LSBwHkI for <xfs@oss.sgi.com>;
+	Thu, 28 May 2009 14:18:59 -0700 (PDT)
+Message-ID: <4A1EFE55.4020505@sandeen.net>
+Date: Thu, 28 May 2009 16:12:53 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] xfstests 206: test for overflow in growfs size calculation
+Subject: [PATCH V2] xfstests 206: test for overflow in growfs size calculation
+References: <4A1EF50D.8090900@redhat.com>
+In-Reply-To: <4A1EF50D.8090900@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,15 +39,17 @@ this trimming may cause an overflow in the new size calculation.
 Patch to fix it, and testcase at
 http://article.gmane.org/gmane.comp.file-systems.xfs.general/29193
 
+V2: now with proper expected (resized) output!
+
 Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 ---
 
 diff --git a/206 b/206
 new file mode 100755
-index 0000000..cb584f2
+index 0000000..dccf4c4
 --- /dev/null
 +++ b/206
-@@ -0,0 +1,82 @@
+@@ -0,0 +1,85 @@
 +#! /bin/sh
 +# FS QA Test No. 206
 +#
@@ -120,8 +124,11 @@ index 0000000..cb584f2
 +
 +echo "=== xfs_growfs ==="
 +xfs_growfs $tmpdir \
-+	| sed -e "s,^meta-data=.*isize,meta-data=FILE                   isize,g" \
-+	| grep -v "data blocks changed"
++	| sed -e "s,^meta-data=.*isize,meta-data=FILE                   isize,g"
++
++echo "=== xfs_info ==="
++xfs_info $tmpdir \
++	| sed -e "s,^meta-data=.*isize,meta-data=FILE                   isize,g"
 +
 +# _cleanup cleans up
 +
@@ -130,10 +137,10 @@ index 0000000..cb584f2
 +exit
 diff --git a/206.out b/206.out
 new file mode 100644
-index 0000000..14b2c34
+index 0000000..b17f728
 --- /dev/null
 +++ b/206.out
-@@ -0,0 +1,20 @@
+@@ -0,0 +1,30 @@
 +QA output created by 206
 +=== xfs_io ===
 +=== mkfs.xfs ===
@@ -154,6 +161,16 @@ index 0000000..14b2c34
 +log      =internal               bsize=4096   blocks=32768, version=2
 +         =                       sectsz=512   sunit=0 blks, lazy-count=0
 +realtime =none                   extsz=4096   blocks=0, rtextents=0
++data blocks changed from 3905982455 to 4882478016
++=== xfs_info ===
++meta-data=FILE                   isize=256    agcount=64, agsize=76288719 blks
++         =                       sectsz=512   attr=2
++data     =                       bsize=4096   blocks=4882478016, imaxpct=5
++         =                       sunit=0      swidth=0 blks
++naming   =version 2              bsize=4096   ascii-ci=0
++log      =internal               bsize=4096   blocks=32768, version=2
++         =                       sectsz=512   sunit=0 blks, lazy-count=0
++realtime =none                   extsz=4096   blocks=0, rtextents=0
 diff --git a/group b/group
 index 0ac33c2..343aace 100644
 --- a/group
@@ -162,7 +179,7 @@ index 0ac33c2..343aace 100644
  203 ioctl auto
  204 metadata rw auto
  205 metadata rw auto
-+206 growfs auto quick
++206 auto growfs quick
 
 _______________________________________________
 xfs mailing list
