@@ -1,21 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4RKiFn3210148 for <xfs@oss.sgi.com>; Wed, 27 May 2009 15:44:15 -0500
-Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 28E8C1D37631
-	for <xfs@oss.sgi.com>; Wed, 27 May 2009 13:44:28 -0700 (PDT)
-Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id IaRN28XJZADBtilM for <xfs@oss.sgi.com>;
-	Wed, 27 May 2009 13:44:28 -0700 (PDT)
-Message-ID: <4A1DA622.3050900@sandeen.net>
-Date: Wed, 27 May 2009 15:44:18 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	n4S9BLVh245283 for <xfs@oss.sgi.com>; Thu, 28 May 2009 04:11:22 -0500
+Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D6A631A34785
+	for <xfs@oss.sgi.com>; Thu, 28 May 2009 02:11:33 -0700 (PDT)
+Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.162.198]) by
+	cuda.sgi.com with ESMTP id CIclS4VzUa1tIJPn for
+	<xfs@oss.sgi.com>; Thu, 28 May 2009 02:11:33 -0700 (PDT)
+Received: from mailsrv2.i.zmi.at (h081217106033.dyn.cm.kabsi.at
+	[81.217.106.33])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv1.zmi.at (Postfix) with ESMTP id 9102E53DC
+	for <xfs@oss.sgi.com>; Thu, 28 May 2009 11:11:32 +0200 (CEST)
+Received: from saturn.localnet (saturn.i.zmi.at [10.0.0.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv2.i.zmi.at (Postfix) with ESMTPSA id 4D04940DC06
+	for <xfs@oss.sgi.com>; Thu, 28 May 2009 11:11:32 +0200 (CEST)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: [PATCH 7/9] Set default extN mount options
+Date: Thu, 28 May 2009 11:11:31 +0200
+References: <1243450413-12681-1-git-send-email-sandeen@sandeen.net>
+	<1243450413-12681-8-git-send-email-sandeen@sandeen.net>
+In-Reply-To: <1243450413-12681-8-git-send-email-sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH 4/7] xfs: remove unused parameter from xfs_reclaim_inodes
-References: <20090514171233.942489000@bombadil.infradead.org>
-	<20090514171558.649403000@bombadil.infradead.org>
-In-Reply-To: <20090514171558.649403000@bombadil.infradead.org>
+Message-Id: <200905281111.32011@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,125 +35,64 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============5582885400185823877=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
+--===============5582885400185823877==
+Content-Type: multipart/signed;
+  boundary="nextPart9966471.OB3AKUy6Pd";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-> From: Dave Chinner <david@fromorbit.com>
->
-> The noblock parameter of xfs_reclaim_inodes is only ever set to zero. Remove
-> it and all the conditional code that is never executed.
->
-> Signed-off-by: Dave Chinner <david@fromorbit.com>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
+--nextPart9966471.OB3AKUy6Pd
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-> Index: xfs/fs/xfs/linux-2.6/xfs_sync.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/linux-2.6/xfs_sync.c	2009-05-14 16:20:34.251688779 +0200
-> +++ xfs/fs/xfs/linux-2.6/xfs_sync.c	2009-05-14 16:20:37.012658983 +0200
-> @@ -383,7 +383,7 @@ xfs_quiesce_fs(
->  	int	count = 0, pincount;
->  
->  	xfs_flush_buftarg(mp->m_ddev_targp, 0);
-> -	xfs_reclaim_inodes(mp, 0, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
-> +	xfs_reclaim_inodes(mp, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
->  
->  	/*
->  	 * This loop must run at least twice.  The first instance of the loop
-> @@ -507,7 +507,7 @@ xfs_sync_worker(
->  
->  	if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
->  		xfs_log_force(mp, (xfs_lsn_t)0, XFS_LOG_FORCE);
-> -		xfs_reclaim_inodes(mp, 0, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
-> +		xfs_reclaim_inodes(mp, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
->  		/* dgc: errors ignored here */
->  		error = xfs_qm_sync(mp, SYNC_BDFLUSH);
->  		error = xfs_sync_fsdata(mp, SYNC_BDFLUSH);
-> @@ -701,7 +701,6 @@ STATIC void
->  xfs_reclaim_inodes_ag(
->  	xfs_mount_t	*mp,
->  	int		ag,
-> -	int		noblock,
->  	int		mode)
->  {
->  	xfs_inode_t	*ip = NULL;
-> @@ -747,25 +746,13 @@ restart:
->  			continue;
->  		}
->  
-> -		if (noblock) {
-> -			if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)) {
-> -				read_unlock(&pag->pag_ici_lock);
-> -				continue;
-> -			}
-> -			if (xfs_ipincount(ip) ||
-> -			    !xfs_iflock_nowait(ip)) {
-> -				xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> -				read_unlock(&pag->pag_ici_lock);
-> -				continue;
-> -			}
-> -		}
->  		read_unlock(&pag->pag_ici_lock);
->  
->  		/*
->  		 * hmmm - this is an inode already in reclaim. Do
->  		 * we even bother catching it here?
->  		 */
-> -		if (xfs_reclaim_inode(ip, noblock, mode))
-> +		if (xfs_reclaim_inode(ip, 0, mode))
->  			skipped++;
->  	} while (nr_found);
->  
-> @@ -780,7 +767,6 @@ restart:
->  int
->  xfs_reclaim_inodes(
->  	xfs_mount_t	*mp,
-> -	int		 noblock,
->  	int		mode)
->  {
->  	int		i;
-> @@ -788,7 +774,7 @@ xfs_reclaim_inodes(
->  	for (i = 0; i < mp->m_sb.sb_agcount; i++) {
->  		if (!mp->m_perag[i].pag_ici_init)
->  			continue;
-> -		xfs_reclaim_inodes_ag(mp, i, noblock, mode);
-> +		xfs_reclaim_inodes_ag(mp, i, mode);
->  	}
->  	return 0;
->  }
-> Index: xfs/fs/xfs/linux-2.6/xfs_sync.h
-> ===================================================================
-> --- xfs.orig/fs/xfs/linux-2.6/xfs_sync.h	2009-05-14 16:19:44.268809697 +0200
-> +++ xfs/fs/xfs/linux-2.6/xfs_sync.h	2009-05-14 16:20:37.012658983 +0200
-> @@ -50,7 +50,7 @@ void xfs_quiesce_attr(struct xfs_mount *
->  void xfs_flush_inodes(struct xfs_inode *ip);
->  
->  int xfs_reclaim_inode(struct xfs_inode *ip, int locked, int sync_mode);
-> -int xfs_reclaim_inodes(struct xfs_mount *mp, int noblock, int mode);
-> +int xfs_reclaim_inodes(struct xfs_mount *mp, int mode);
->  
->  void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
->  void xfs_inode_clear_reclaim_tag(struct xfs_inode *ip);
-> Index: xfs/fs/xfs/xfs_mount.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/xfs_mount.c	2009-05-14 16:19:44.318659340 +0200
-> +++ xfs/fs/xfs/xfs_mount.c	2009-05-14 16:20:37.013659110 +0200
-> @@ -1371,7 +1371,7 @@ xfs_unmountfs(
->  	 * need to force the log first.
->  	 */
->  	xfs_log_force(mp, (xfs_lsn_t)0, XFS_LOG_FORCE | XFS_LOG_SYNC);
-> -	xfs_reclaim_inodes(mp, 0, XFS_IFLUSH_ASYNC);
-> +	xfs_reclaim_inodes(mp, XFS_IFLUSH_ASYNC);
->  
->  	xfs_qm_unmount(mp);
+On Mittwoch 27 Mai 2009 Eric Sandeen wrote:
+> ext2/3/4 don't support acls & attrs w/o specific mount
+> options, so make those the default whenever we mount
+> these filesystems.
+
+The same for reiserfs, but I don't know if that is wanted/needed.
+
+mfg zmi
+=2D-=20
+// Michael Monnerie, Ing.BSc    -----      http://it-management.at
+// Tel: 0660 / 415 65 31                      .network.your.ideas.
+// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
+// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
+// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
+
+
+--nextPart9966471.OB3AKUy6Pd
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+
+iEYEABECAAYFAkoeVUQACgkQzhSR9xwSCbQifwCgzIMLdRqSVuOvPW0aPaSbnZtw
+OlgAn3VFhAw/7WmTS6SaHum2vpi3kfNb
+=LT19
+-----END PGP SIGNATURE-----
+
+--nextPart9966471.OB3AKUy6Pd--
+
+
+--===============5582885400185823877==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============5582885400185823877==--
