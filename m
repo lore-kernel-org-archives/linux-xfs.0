@@ -1,22 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4TEguOA060576 for <xfs@oss.sgi.com>; Fri, 29 May 2009 09:42:58 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F161F13022F1
-	for <xfs@oss.sgi.com>; Fri, 29 May 2009 07:49:17 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id mWYNe028H6zhXXy7 for
-	<xfs@oss.sgi.com>; Fri, 29 May 2009 07:49:17 -0700 (PDT)
-Date: Fri, 29 May 2009 10:43:05 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfsdump on mounted filesystem
-Message-ID: <20090529144305.GA4882@infradead.org>
-References: <8097683.3361243601669032.JavaMail.root@zcs-bi.informatik.uni-tuebingen.de>
-	<8418003.3381243601790069.JavaMail.root@zcs-bi.informatik.uni-tuebingen.de>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <8418003.3381243601790069.JavaMail.root@zcs-bi.informatik.uni-tuebingen.de>
+	n4TIAJnk079796 for <xfs@oss.sgi.com>; Fri, 29 May 2009 13:10:19 -0500
+From: Felix Blyakher <felixb@sgi.com>
+Subject: [PATCH] xfs: prevent deadlock in xfs_qm_shake()
+Date: Fri, 29 May 2009 13:10:31 -0500
+Message-Id: <1243620631-10749-2-git-send-email-felixb@sgi.com>
+In-Reply-To: <1243620631-10749-1-git-send-email-felixb@sgi.com>
+References: <1243620631-10749-1-git-send-email-felixb@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,19 +16,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jan Schulze <schulze@informatik.uni-tuebingen.de>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Hedi Berriche <hedi@sgi.com>
 
-On Fri, May 29, 2009 at 02:56:30PM +0200, Jan Schulze wrote:
-> Hi all,
-> 
-> is it advisable to use xfsdump on a mounted file system, or am I likely to be running into problems when doing so? 
+It's possible to recurse into filesystem from the memory
+allocation, which deadlocks in xfs_qm_shake(). Add check
+for __GFP_FS, and bailout if it is not set.
 
-In fact xfsdump requires a mounted filesystem.
+Signed-off-by: Felix Blyakher <felixb@sgi.com>
+Signed-off-by: Hedi Berriche <hedi@sgi.com>
+---
+ fs/xfs/linux-2.6/kmem.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/fs/xfs/linux-2.6/kmem.h b/fs/xfs/linux-2.6/kmem.h
+index af6843c..d8d2321 100644
+--- a/fs/xfs/linux-2.6/kmem.h
++++ b/fs/xfs/linux-2.6/kmem.h
+@@ -103,7 +103,7 @@ extern void *kmem_zone_zalloc(kmem_zone_t *, unsigned int __nocast);
+ static inline int
+ kmem_shake_allow(gfp_t gfp_mask)
+ {
+-	return (gfp_mask & __GFP_WAIT) != 0;
++	return ((gfp_mask & __GFP_WAIT && gfp_mask & __GFP_FS) != 0;
+ }
+ 
+ #endif /* __XFS_SUPPORT_KMEM_H__ */
+-- 
+1.5.4.rc3
 
 _______________________________________________
 xfs mailing list
