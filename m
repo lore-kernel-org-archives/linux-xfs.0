@@ -1,32 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4T6b5o2036514 for <xfs@oss.sgi.com>; Fri, 29 May 2009 01:37:05 -0500
+	n4T6aw1g036501 for <xfs@oss.sgi.com>; Fri, 29 May 2009 01:37:00 -0500
 Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A9A842B9553
-	for <xfs@oss.sgi.com>; Thu, 28 May 2009 23:37:18 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 880C71300EBF
+	for <xfs@oss.sgi.com>; Thu, 28 May 2009 23:43:17 -0700 (PDT)
 Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.162.198]) by
-	cuda.sgi.com with ESMTP id 3nDfj050FapDJmZF for
-	<xfs@oss.sgi.com>; Thu, 28 May 2009 23:37:18 -0700 (PDT)
+	cuda.sgi.com with ESMTP id bxng5C8rDYfxewP1 for
+	<xfs@oss.sgi.com>; Thu, 28 May 2009 23:43:17 -0700 (PDT)
 Received: from mailsrv2.i.zmi.at (h081217106033.dyn.cm.kabsi.at
 	[81.217.106.33])
 	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
 	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv1.zmi.at (Postfix) with ESMTP id 82B1510D1
-	for <xfs@oss.sgi.com>; Fri, 29 May 2009 08:37:17 +0200 (CEST)
+	by mailsrv1.zmi.at (Postfix) with ESMTP id 51EEE10D1
+	for <xfs@oss.sgi.com>; Fri, 29 May 2009 08:37:11 +0200 (CEST)
 Received: from saturn.localnet (saturn.i.zmi.at [10.0.0.2])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(Client did not present a certificate)
-	by mailsrv2.i.zmi.at (Postfix) with ESMTPSA id C1E5140DC06
-	for <xfs@oss.sgi.com>; Fri, 29 May 2009 08:37:17 +0200 (CEST)
+	by mailsrv2.i.zmi.at (Postfix) with ESMTPSA id 7AEC540DC06
+	for <xfs@oss.sgi.com>; Fri, 29 May 2009 08:37:11 +0200 (CEST)
 From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: [PATCH 7/9] Set default extN mount options
-Date: Fri, 29 May 2009 08:37:17 +0200
-References: <1243450413-12681-1-git-send-email-sandeen@sandeen.net>
-	<200905281235.21485@zmi.at> <4A1EA62C.8060008@sandeen.net>
-In-Reply-To: <4A1EA62C.8060008@sandeen.net>
+Subject: Re: [PATCH, RFC] xfsprogs: add xfs_reno(8)
+Date: Fri, 29 May 2009 08:37:06 +0200
+References: <20090528151804.GA31976@infradead.org>
+In-Reply-To: <20090528151804.GA31976@infradead.org>
 MIME-Version: 1.0
-Message-Id: <200905290837.17539@zmi.at>
+Message-Id: <200905290837.11098@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,49 +34,33 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0453121124541015953=="
+Content-Type: multipart/mixed; boundary="===============0756524896186902661=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============0453121124541015953==
+--===============0756524896186902661==
 Content-Type: multipart/signed;
-  boundary="nextPart6966916.cL5FOGP90d";
+  boundary="nextPart1395188.s3BalkoJBi";
   protocol="application/pgp-signature";
   micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
 
---nextPart6966916.cL5FOGP90d
+--nextPart1395188.s3BalkoJBi
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Content-Disposition: inline
 
-On Donnerstag 28 Mai 2009 Eric Sandeen wrote:
-> 'd be happy to include support for reiserfs as well. =A0I'd be even
-> happier if you tested this yourself and sent patches to make it work
-> :)
+On Donnerstag 28 Mai 2009 Christoph Hellwig wrote:
+> The Linux port of xfs_reno
 
-I'm not a coder, really, but just changing your line:
-+    ext2|ext3|ext4)
-to:
-+    ext2|ext3|ext4|reiserfs)
-does the job here. I meant that part:
+When used, does it move inodes on disk, or just change the numbers?
 
-diff --git a/common.rc b/common.rc
-index 78514f4..54c36f3 100644
-=2D-- a/common.rc
-+++ b/common.rc
-@@ -49,6 +49,10 @@ _mount_opts()
-     nfs)
-        export MOUNT_OPTIONS=3D$NFS_MOUNT_OPTIONS
-        ;;
-+    ext2|ext3|ext4)
-+       # acls & xattrs aren't turned on by default on ext$FOO
-+       export MOUNT_OPTIONS=3D"-o acl,user_xattr $EXT_MOUNT_OPTIONS"
-
-I never used xfstest as well, and won't realistically have time to do=20
-it.
+Because there seems to be still danger on inode64, would it be worth to=20
+sometimes run xfs_reno to get most files back to inode32, but still=20
+mount with inode64? I know this would create big inodes again, but at=20
+least old data would be safe.
 
 mfg zmi
 =2D-=20
@@ -88,22 +71,22 @@ mfg zmi
 // Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
 
 
---nextPart6966916.cL5FOGP90d
+--nextPart1395188.s3BalkoJBi
 Content-Type: application/pgp-signature; name=signature.asc 
 Content-Description: This is a digitally signed message part.
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.9 (GNU/Linux)
 
-iEYEABECAAYFAkofgp0ACgkQzhSR9xwSCbRTdgCeI3wcWyTF7wHLd2BGFDgeZ949
-fykAoOb+ocA0Nx80YJdKYMpdyHJZtFft
-=TtAK
+iEYEABECAAYFAkofgpcACgkQzhSR9xwSCbSsowCgw5cWr/ZSqv8FtG7z7hEieLBQ
+1mAAn37xVA+EfhR5PKj/58lgOWtnCDYI
+=pX1q
 -----END PGP SIGNATURE-----
 
---nextPart6966916.cL5FOGP90d--
+--nextPart1395188.s3BalkoJBi--
 
 
---===============0453121124541015953==
+--===============0756524896186902661==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -114,4 +97,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============0453121124541015953==--
+--===============0756524896186902661==--
