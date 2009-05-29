@@ -1,19 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4TJTbia085163 for <xfs@oss.sgi.com>; Fri, 29 May 2009 14:29:38 -0500
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 865BE8F80A1
-	for <xfs@oss.sgi.com>; Fri, 29 May 2009 12:29:50 -0700 (PDT)
-Message-Id: <1A19B6F4-40CD-46C0-8221-952EEEEB265B@sgi.com>
-From: Felix Blyakher <felixb@sgi.com>
-In-Reply-To: <20090529192529.GA1599@infradead.org>
-Mime-Version: 1.0 (Apple Message framework v926)
-Subject: Re: [PATCH] xfs: prevent deadlock in xfs_qm_shake()
-Date: Fri, 29 May 2009 14:29:50 -0500
-References: <1243620631-10749-1-git-send-email-felixb@sgi.com>
-	<1243620631-10749-2-git-send-email-felixb@sgi.com>
-	<20090529192529.GA1599@infradead.org>
+	n4TJRgAb085024 for <xfs@oss.sgi.com>; Fri, 29 May 2009 14:27:42 -0500
+Received: from mx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 55AE9102B4FD
+	for <xfs@oss.sgi.com>; Fri, 29 May 2009 12:34:03 -0700 (PDT)
+Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
+	with ESMTP id HT3g09hC4zTVpN3n for <xfs@oss.sgi.com>;
+	Fri, 29 May 2009 12:34:03 -0700 (PDT)
+Received: from int-mx2.corp.redhat.com (int-mx2.corp.redhat.com [172.16.27.26])
+	by mx2.redhat.com (8.13.8/8.13.8) with ESMTP id n4TJRtm4007489
+	for <xfs@oss.sgi.com>; Fri, 29 May 2009 15:27:55 -0400
+Received: from ns3.rdu.redhat.com (ns3.rdu.redhat.com [10.11.255.199])
+	by int-mx2.corp.redhat.com (8.13.1/8.13.1) with ESMTP id n4TJRs6o011369
+	for <xfs@oss.sgi.com>; Fri, 29 May 2009 15:27:55 -0400
+Received: from neon.msp.redhat.com (neon.msp.redhat.com [10.15.80.10])
+	by ns3.rdu.redhat.com (8.13.8/8.13.8) with ESMTP id n4TJRs3d029024
+	for <xfs@oss.sgi.com>; Fri, 29 May 2009 15:27:54 -0400
+Message-ID: <4A20373A.9070403@sandeen.net>
+Date: Fri, 29 May 2009 14:27:54 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: [PATCH] xfstests: reiserfs, gfs2, btrfs support
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,47 +30,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Hedi Berriche <hedi@sgi.com>, xfs@oss.sgi.com
+To: xfs mailing list <xfs@oss.sgi.com>
 
+This patch gets reiserfs, gfs2, and btrfs off the ground.
 
-On May 29, 2009, at 2:25 PM, Christoph Hellwig wrote:
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
 
-> On Fri, May 29, 2009 at 01:10:31PM -0500, Felix Blyakher wrote:
->> It's possible to recurse into filesystem from the memory
->> allocation, which deadlocks in xfs_qm_shake(). Add check
->> for __GFP_FS, and bailout if it is not set.
->>
->> Signed-off-by: Felix Blyakher <felixb@sgi.com>
->> Signed-off-by: Hedi Berriche <hedi@sgi.com>
->> ---
->> fs/xfs/linux-2.6/kmem.h |    2 +-
->> 1 files changed, 1 insertions(+), 1 deletions(-)
->>
->> diff --git a/fs/xfs/linux-2.6/kmem.h b/fs/xfs/linux-2.6/kmem.h
->> index af6843c..d8d2321 100644
->> --- a/fs/xfs/linux-2.6/kmem.h
->> +++ b/fs/xfs/linux-2.6/kmem.h
->> @@ -103,7 +103,7 @@ extern void *kmem_zone_zalloc(kmem_zone_t *,  
->> unsigned int __nocast);
->> static inline int
->> kmem_shake_allow(gfp_t gfp_mask)
->> {
->> -	return (gfp_mask & __GFP_WAIT) != 0;
->> +	return ((gfp_mask & __GFP_WAIT && gfp_mask & __GFP_FS) != 0;
->
-> Looks good to me.  But this could be written simpler as:
->
-> 	return ((gfp_mask & (__GFP_WAIT|__GFP_FS)) != 0;
-
-Yeah, sure. Weird it didn't occur to me :)
-
-Thanks,
-Felix
+diff --git a/common.rc b/common.rc
+index 54c36f3..c3e77e9 100644
+--- a/common.rc
++++ b/common.rc
+@@ -53,6 +53,14 @@ _mount_opts()
+ 	# acls & xattrs aren't turned on by default on ext$FOO
+ 	export MOUNT_OPTIONS="-o acl,user_xattr $EXT_MOUNT_OPTIONS"
+ 	;;
++    reiserfs)
++	# acls & xattrs aren't turned on by default on reiserfs
++	export MOUNT_OPTIONS="-o acl,user_xattr $REISERFS_MOUNT_OPTIONS"
++	;;
++    gfs2)
++	# acls aren't turned on by default on gfs2
++	export MOUNT_OPTIONS="-o acl $GFS2_MOUNT_OPTIONS"
++	;;
+     *)
+ 	;;
+     esac
+@@ -72,6 +80,12 @@ _mkfs_opts()
+     nfs)
+ 	export MKFS_OPTIONS=$NFS_MKFS_OPTIONS
+ 	;;
++    reiserfs)
++	export MKFS_OPTIONS="$REISERFS_MKFS_OPTIONS -q"
++	;;
++    gfs2)
++	export MKFS_OPTIONS="$GFS2_MKFS_OPTIONS -O -p lock_nolock"
++	;;
+     *)
+ 	;;
+     esac
+@@ -589,7 +603,7 @@ _require_scratch()
+ 		     _notrun "this test requires a valid \$SCRATCH_DEV"
+ 		 fi
+ 		 ;;
+-	nfs*|ext2|ext3|ext4|reiserfs)
++	nfs*|ext2|ext3|ext4|reiserfs|gfs2|btrfs)
+ 		 echo $SCRATCH_DEV | grep -q ":" > /dev/null 2>&1
+ 		 if [ ! -z "$SCRATCH_DEV" -a ! -b "$SCRATCH_DEV" -a "$?" != "0" ]
+ 		 then
 
 _______________________________________________
 xfs mailing list
