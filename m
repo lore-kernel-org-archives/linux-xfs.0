@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n4TDm8Ua057209 for <xfs@oss.sgi.com>; Fri, 29 May 2009 08:48:08 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 765F11302398
-	for <xfs@oss.sgi.com>; Fri, 29 May 2009 06:54:27 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id ww8DzIqWGgxgcLII for
-	<xfs@oss.sgi.com>; Fri, 29 May 2009 06:54:27 -0700 (PDT)
-Message-ID: <4A1FE7A2.9030302@sandeen.net>
-Date: Fri, 29 May 2009 08:48:18 -0500
+	n4TEu8Ir062561 for <xfs@oss.sgi.com>; Fri, 29 May 2009 09:56:08 -0500
+Received: from mx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 037BB1D379EC
+	for <xfs@oss.sgi.com>; Fri, 29 May 2009 07:56:22 -0700 (PDT)
+Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
+	with ESMTP id Hlo9GIe2FHDqep8z for <xfs@oss.sgi.com>;
+	Fri, 29 May 2009 07:56:22 -0700 (PDT)
+Message-ID: <4A1FF78C.7050406@sandeen.net>
+Date: Fri, 29 May 2009 09:56:12 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH, RFC] xfsprogs: add xfs_reno(8)
-References: <20090528151804.GA31976@infradead.org> <200905290837.11098@zmi.at>
-In-Reply-To: <200905290837.11098@zmi.at>
+Subject: Re: [PATCH V2] xfstests 206: test for overflow in growfs
+	size	calculation
+References: <4A1EF50D.8090900@redhat.com> <4A1EFE55.4020505@sandeen.net>
+	<20090529145025.GA9205@infradead.org>
+In-Reply-To: <20090529145025.GA9205@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,29 +29,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs mailing list <xfs@oss.sgi.com>
 
-Michael Monnerie wrote:
-> On Donnerstag 28 Mai 2009 Christoph Hellwig wrote:
->> The Linux port of xfs_reno
+Christoph Hellwig wrote:
+> On Thu, May 28, 2009 at 04:12:53PM -0500, Eric Sandeen wrote:
+>> Test trim of last small AG for large filesystem resizes
+>>
+>> As reported at
+>> http://article.gmane.org/gmane.comp.file-systems.xfs.general/29187
+>> this trimming may cause an overflow in the new size calculation.
+>>
+>> Patch to fix it, and testcase at
+>> http://article.gmane.org/gmane.comp.file-systems.xfs.general/29193
+>>
+>> V2: now with proper expected (resized) output!
 > 
-> When used, does it move inodes on disk, or just change the numbers?
+> This fails for me in really weird ways (Debian -testing, i386):
+> 
+> 
+> --- 206.out	2009-05-29 14:44:54.000000000 +0000
+> +++ 206.out.bad	2009-05-29 14:46:01.000000000 +0000
+> @@ -1,30 +1,18 @@
+>  QA output created by 206
+>  === xfs_io ===
+> +ftruncate: File too large
 
-Both.  location == number == location == number ...
+hm, 32-bit.  crud.  Should probably just restrict the test to 64-bit
+systems, since we need a file > 16T.
 
-> Because there seems to be still danger on inode64, would it be worth to 
-> sometimes run xfs_reno to get most files back to inode32, but still 
-> mount with inode64? I know this would create big inodes again, but at 
-> least old data would be safe.
+What's weirder is that xfs_io shoulda caused an error and caused the
+test to bail, I think.
 
-that sounds like going in circles....  I wouldn't recommend it.
-
-Either you want 64-bit inodes.... or not.
+As for the rest of it, I need better error handling I guess :)
 
 -Eric
-
-> mfg zmi
 
 _______________________________________________
 xfs mailing list
