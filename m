@@ -1,23 +1,44 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n42AABEt050864 for <xfs@oss.sgi.com>; Sat, 2 May 2009 05:10:12 -0500
-Received: from moutng.kundenserver.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BFD5B146A2C6
-	for <xfs@oss.sgi.com>; Sat,  2 May 2009 03:13:50 -0700 (PDT)
-Received: from moutng.kundenserver.de (moutng.kundenserver.de
-	[212.227.126.186]) by cuda.sgi.com with ESMTP id
-	TnD20fOdXDtxCVwL for <xfs@oss.sgi.com>;
-	Sat, 02 May 2009 03:13:50 -0700 (PDT)
-Date: Sat, 2 May 2009 12:14:05 +0200
-From: Heinz Diehl <htd@fancy-poultry.org>
-Subject: Re: 2.6.30-rc4: xfs_fsr hangs
-Message-ID: <20090502101405.GA6145@fancy-poultry.org>
-References: <a4423d670905011333s664115bdh1d72392897567c1d@mail.gmail.com>
+	n4TCv66Y054241 for <xfs@oss.sgi.com>; Fri, 29 May 2009 07:57:08 -0500
+Received: from mx5.informatik.uni-tuebingen.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1CABC2BB551
+	for <xfs@oss.sgi.com>; Fri, 29 May 2009 05:57:20 -0700 (PDT)
+Received: from mx5.informatik.uni-tuebingen.de
+	(mx5.Informatik.Uni-Tuebingen.De [134.2.12.32]) by cuda.sgi.com
+	with ESMTP id 1rv0tiVo9zJvihuM for <xfs@oss.sgi.com>;
+	Fri, 29 May 2009 05:57:20 -0700 (PDT)
+Received: from localhost (loopback [127.0.0.1])
+	by mx5.informatik.uni-tuebingen.de (Postfix) with ESMTP id 3D7F4125
+	for <xfs@oss.sgi.com>; Fri, 29 May 2009 14:57:19 +0200 (DFT)
+Received: from mx5.informatik.uni-tuebingen.de ([127.0.0.1])
+	by localhost (mx5 [127.0.0.1]) (amavisd-new, port 10024) with ESMTP
+	id 38954-02 for <xfs@oss.sgi.com>; Fri, 29 May 2009 14:57:17 +0200 (DFT)
+Received: from zcs-bi.informatik.uni-tuebingen.de
+	(zcs-bi.Informatik.Uni-Tuebingen.De [134.2.9.105])
+	by mx5.informatik.uni-tuebingen.de (Postfix) with ESMTP id 8846611C
+	for <xfs@oss.sgi.com>; Fri, 29 May 2009 14:57:16 +0200 (DFT)
+Received: from localhost (localhost [127.0.0.1])
+	by zcs-bi.informatik.uni-tuebingen.de (Postfix) with ESMTP id
+	DEFED4ABB3F
+	for <xfs@oss.sgi.com>; Fri, 29 May 2009 14:56:30 +0200 (CEST)
+Received: from zcs-bi.informatik.uni-tuebingen.de ([127.0.0.1])
+	by localhost (zcs-bi.informatik.uni-tuebingen.de [127.0.0.1])
+	(amavisd-new, port 10024)
+	with ESMTP id RF7K23unFq9P for <xfs@oss.sgi.com>;
+	Fri, 29 May 2009 14:56:30 +0200 (CEST)
+Received: from zcs-bi.informatik.uni-tuebingen.de
+	(zcs-bi.informatik.uni-tuebingen.de [134.2.9.105])
+	by zcs-bi.informatik.uni-tuebingen.de (Postfix) with ESMTP id
+	2357D4ABB3B
+	for <xfs@oss.sgi.com>; Fri, 29 May 2009 14:56:30 +0200 (CEST)
+Date: Fri, 29 May 2009 14:56:30 +0200 (CEST)
+From: Jan Schulze <schulze@informatik.uni-tuebingen.de>
+Message-ID: <8418003.3381243601790069.JavaMail.root@zcs-bi.informatik.uni-tuebingen.de>
+In-Reply-To: <8097683.3361243601669032.JavaMail.root@zcs-bi.informatik.uni-tuebingen.de>
+Subject: xfsdump on mounted filesystem
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <a4423d670905011333s664115bdh1d72392897567c1d@mail.gmail.com>
-Reply-To: linux-kernel@vger.kernel.org
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,46 +51,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-kernel@vger.kernel.org
-Cc: Kernel Testers List <kernel-testers@vger.kernel.org>, Alexander Beregalov <a.beregalov@gmail.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 01.05.2009, Alexander Beregalov wrote: 
+Hi all,
 
-> # xfs_db -r /dev/sdc1
-> xfs_db> frag
-> actual 23805, ideal 22890, fragmentation factor 3.84%
-> # xfs_fsr -v /dev/sdc1
-> /mnt/c start inode=0
-> ino=158
-> extents before:3 after:1 DONE ino=158
-> 
->  then it hangs
+is it advisable to use xfsdump on a mounted file system, or am I likely to be running into problems when doing so? 
 
-I can't confirm this here on my systems:
+The Wikipedia article on XFS states "The xfsdump utility backs up an XFS filesystem in inode order, and in contrast to traditional UNIX file systems which must be unmounted before dumping to guarantee a consistent dump image, XFS file systems can be dumped while the file system is in use."
 
-liesel:~ # uname -a
-Linux liesel 2.6.30-rc4 #1 SMP PREEMPT Sat May 2 11:49:13 CEST 2009 x86_64 x86_64 x86_64 GNU/Linux
+However, I have not found any other reference, that supports this statement. Also, I do not really understand, what "backing up in inode orde" means. Anybody can clear this up?
 
-liesel:~ # xfs_db -r /dev/sdc1
-xfs_db> frag
-actual 42974, ideal 42842, fragmentation factor 0.31%
-xfs_db> quit
 
-liesel:~ # xfs_fsr -v /dev/sdc1
-/home start inode=0
-ino=248755507
-ino=248755507 already fully defragmented.
-ino=536871160
-extents before:2 after:1 DONE ino=536871160
-ino=536875693
-extents before:3 after:1 DONE ino=536875693
-ino=615920545
-extents before:2 after:1 DONE ino=615920545
-ino=615920557
-extents before:2 after:1 DONE ino=615920557
-ino=1092324584
-extents before:4 after:1 DONE ino=1092324584
-liesel:~ #
+Best Regards,
+Jan
 
 _______________________________________________
 xfs mailing list
