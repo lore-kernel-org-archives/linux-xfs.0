@@ -1,24 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n51HguTN026084 for <xfs@oss.sgi.com>; Mon, 1 Jun 2009 12:42:56 -0500
-Received: from mail-bw0-f226.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C29972C2BD3
-	for <xfs@oss.sgi.com>; Mon,  1 Jun 2009 10:43:12 -0700 (PDT)
-Received: from mail-bw0-f226.google.com (mail-bw0-f226.google.com
-	[209.85.218.226]) by cuda.sgi.com with ESMTP id
-	9ytrj1H1r2s1eufX for <xfs@oss.sgi.com>;
-	Mon, 01 Jun 2009 10:43:12 -0700 (PDT)
-Received: by bwz26 with SMTP id 26so7231994bwz.20
-	for <xfs@oss.sgi.com>; Mon, 01 Jun 2009 10:43:11 -0700 (PDT)
+	n524QfE6070255 for <xfs@oss.sgi.com>; Mon, 1 Jun 2009 23:26:41 -0500
+Date: Mon, 01 Jun 2009 23:26:53 -0500
+Subject: [GIT PULL] XFS update for 2.6.30-rc8
 MIME-Version: 1.0
-In-Reply-To: <B5660F1A-7940-4E4A-92E8-8C0F93C274BD@sgi.com>
-References: <a4423d670906010822l6e8e112dl3d6f7de9e2179850@mail.gmail.com>
-	<B5660F1A-7940-4E4A-92E8-8C0F93C274BD@sgi.com>
-Date: Mon, 1 Jun 2009 21:43:11 +0400
-Message-ID: <a4423d670906011043v52426cb9s547547479b5f885d@mail.gmail.com>
-Subject: Re: 2.6.30-rc6: BUG at fs/xfs/support/debug.c:109!
-From: Alexander Beregalov <a.beregalov@gmail.com>
+Message-Id: <20090602042653.66DB5A1FAB93@attica.americas.sgi.com>
+From: felixb@sgi.com (Felix Blyakher)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,15 +19,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Felix Blyakher <felixb@sgi.com>
-Cc: Kernel Testers List <kernel-testers@vger.kernel.org>, xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-By the way,
-Felix, your last pull request was a month ago.
-Final release of 2.6.30 is coming soon, could you please send the
-fixes to Linus?
+The following changes since commit d9244b5d2fbfe9fa540024b410047af13ceec90f:
+  Linus Torvalds (1):
+        Merge branch 'hwmon-for-linus' of git://git.kernel.org/.../jdelvare/staging
 
-Just in case you do not read LKML.
+are available in the git repository at:
+
+  git://oss.sgi.com/xfs/xfs for-linus
+
+Eric Sandeen (1):
+      xfs: fix overflow in xfs_growfs_data_private
+
+Felix Blyakher (2):
+      xfs: fix double unlock in xfs_swap_extents()
+      xfs: prevent deadlock in xfs_qm_shake()
+
+ fs/xfs/linux-2.6/kmem.h |    2 +-
+ fs/xfs/xfs_dfrag.c      |    8 +++++---
+ fs/xfs/xfs_fsops.c      |    2 +-
+ 3 files changed, 7 insertions(+), 5 deletions(-)
 
 _______________________________________________
 xfs mailing list
