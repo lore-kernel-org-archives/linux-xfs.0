@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n52L8eOE129873 for <xfs@oss.sgi.com>; Tue, 2 Jun 2009 16:08:40 -0500
+	n52LuVbU132343 for <xfs@oss.sgi.com>; Tue, 2 Jun 2009 16:56:31 -0500
 From: Robert Herndon <rherndon@sgi.com>
-Subject: [PATCH] README: add hint on install-qa
-Date: Tue,  2 Jun 2009 16:08:54 -0500
-Message-Id: <1243976934-18008-1-git-send-email-rherndon@sgi.com>
+Subject: [PATCH] Add hint to see xfsprogs' doc/INSTALL in doc/INSTALL.
+Date: Tue,  2 Jun 2009 16:56:47 -0500
+Message-Id: <1243979807-20093-1-git-send-email-rherndon@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,33 +25,25 @@ Cc: Robert Herndon <rherndon@sgi.com>
 
 Signed-off-by: Robert Herndon <rherndon@sgi.com>
 ---
- README |   11 +++++++++++
- 1 files changed, 11 insertions(+), 0 deletions(-)
+ doc/INSTALL |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/README b/README
-index 375e07c..964578d 100644
---- a/README
-+++ b/README
-@@ -18,6 +18,17 @@ Preparing system for tests (IRIX and Linux):
+diff --git a/doc/INSTALL b/doc/INSTALL
+index ec5a4ef..19493f7 100644
+--- a/doc/INSTALL
++++ b/doc/INSTALL
+@@ -12,6 +12,9 @@ library from source, and how to install it.
  
-     - compile XFS into your kernel or load XFS modules
-     - install user tools including mkfs.xfs, xfs_db & xfs_bmap
-+    - install header files required to build xfstests' programs:
+ 1. Configure, build and install the package
+ 
++   Ensure that you have installed the required libraries and
++   header files.  See doc/INSTALL in the xfsprogs repository.
 +
-+        # cd <...>/xfsprogs
-+        # make install-qa
-+
-+        % cd <...>/xfstests
-+        % make xfstests
-+
-+      This creates the directory /usr/include/xfs and installs
-+      files there that are required to compile the programs in
-+      this directory.
-     - If you wish to run the udf components of the suite install 
-       mkfs_udf and udf_db for IRIX and mkudffs for Linux. Also download and 
-       build the Philips UDF Verification Software from 
+    The "dmapi" package uses autoconf/configure and expects a GNU build
+    environment (your platform must at least have both autoconf and gmake). 
+ 
 -- 
-1.5.6
+1.5.4.rc3
 
 _______________________________________________
 xfs mailing list
