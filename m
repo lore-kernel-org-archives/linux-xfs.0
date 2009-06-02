@@ -1,12 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n524QfE6070255 for <xfs@oss.sgi.com>; Mon, 1 Jun 2009 23:26:41 -0500
-Date: Mon, 01 Jun 2009 23:26:53 -0500
-Subject: [GIT PULL] XFS update for 2.6.30-rc8
+	n526U6qI078834 for <xfs@oss.sgi.com>; Tue, 2 Jun 2009 01:30:08 -0500
+Received: from mail.gmx.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id 40B612C5858
+	for <xfs@oss.sgi.com>; Mon,  1 Jun 2009 23:30:21 -0700 (PDT)
+Received: from mail.gmx.net (mail.gmx.net [213.165.64.20]) by cuda.sgi.com
+	with SMTP id bSU6tQLtRnoqZDHO for <xfs@oss.sgi.com>;
+	Mon, 01 Jun 2009 23:30:21 -0700 (PDT)
+From: Marvin <marvin24@gmx.de>
+Subject: Re: fsr stucks in D-state
+Date: Tue, 2 Jun 2009 08:30:18 +0200
+References: <200906011233.39721.marvin24@gmx.de>
+In-Reply-To: <200906011233.39721.marvin24@gmx.de>
 MIME-Version: 1.0
-Message-Id: <20090602042653.66DB5A1FAB93@attica.americas.sgi.com>
-From: felixb@sgi.com (Felix Blyakher)
+Content-Disposition: inline
+Message-Id: <200906020830.18866.marvin24@gmx.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,28 +28,58 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-The following changes since commit d9244b5d2fbfe9fa540024b410047af13ceec90f:
-  Linus Torvalds (1):
-        Merge branch 'hwmon-for-linus' of git://git.kernel.org/.../jdelvare/staging
 
-are available in the git repository at:
+Hi again,
 
-  git://oss.sgi.com/xfs/xfs for-linus
+On Monday 01 June 2009 12:33:39 Marvin wrote:
+> Hi,
+>
+> I observed a hang in D-state when using xfs_fsr.
+>
+> - xfsprogs is from git (3.0.2)
+> - kernel also (2.6.30-rc7...)
 
-Eric Sandeen (1):
-      xfs: fix overflow in xfs_growfs_data_private
+I pulled from "git://oss.sgi.com/xfs/xfs for-linus", which seems to include 
+some deadlock fixes. Now, fsr no longer deadlocks, so this seems to be fixed. 
+Sorry for the noise.
 
-Felix Blyakher (2):
-      xfs: fix double unlock in xfs_swap_extents()
-      xfs: prevent deadlock in xfs_qm_shake()
+Marvin
 
- fs/xfs/linux-2.6/kmem.h |    2 +-
- fs/xfs/xfs_dfrag.c      |    8 +++++---
- fs/xfs/xfs_fsops.c      |    2 +-
- 3 files changed, 7 insertions(+), 5 deletions(-)
+
+> I tried 2.6.29.4 and it worked flawless. Machine is powerpc32.
+>
+> Here is the sysrq-t trace:
+>
+> xfs_fsr       D 480f7f3c     0  4211   4210
+> Call Trace:
+> [d1adfc40] [00001032] 0x1032 (unreliable)
+> [d1adfd00] [c0008dd8] __switch_to+0x4c/0x6c
+> [d1adfd20] [c02c5294] __schedule+0x230/0x360
+> [d1adfd70] [c02c53ec] schedule+0x28/0x54
+> [d1adfd80] [c02c7964] rwsem_down_failed_common+0x104/0x25c
+> [d1adfdb0] [c02c7ae4] rwsem_down_write_failed+0x28/0x40
+> [d1adfde0] [c02c6994] down_write+0x30/0x40
+> [d1adfdf0] [c012399c] xfs_ilock+0x9c/0xa0
+> [d1adfe00] [c014375c] xfs_inactive+0x2e8/0x48c
+> [d1adfe40] [c015113c] xfs_fs_clear_inode+0x40/0x50
+> [d1adfe50] [c00ab764] clear_inode+0x68/0xec
+> [d1adfe60] [c00ac02c] generic_delete_inode+0x16c/0x170
+> [d1adfe80] [c00aaf20] iput+0x70/0x90
+> [d1adfe90] [c00a7424] dentry_iput+0xc8/0x154
+> [d1adfeb0] [c00a75e0] d_kill+0x50/0x8c
+> [d1adfed0] [c00a80cc] dput+0x110/0x210
+> [d1adfef0] [c0095b50] __fput+0x178/0x204
+> [d1adff10] [c0091eec] filp_close+0x6c/0xa0
+> [d1adff30] [c0091fd4] sys_close+0xb4/0x124
+> [d1adff40] [c0011fc4] ret_from_syscall+0x0/0x38
+> --- Exception: c01 at 0x480f7f3c
+>     LR = 0x1000397c
+>
+> Greetings
+>
+> Marvin
 
 _______________________________________________
 xfs mailing list
