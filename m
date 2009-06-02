@@ -1,11 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n52LrmKR132228 for <xfs@oss.sgi.com>; Tue, 2 Jun 2009 16:53:48 -0500
+	n52LiNR1131753 for <xfs@oss.sgi.com>; Tue, 2 Jun 2009 16:44:23 -0500
 From: Robert Herndon <rherndon@sgi.com>
-Subject: [PATCH] Add hint to see xfsprogs' doc/INSTALL in doc/INSTALL.
-Date: Tue,  2 Jun 2009 16:54:02 -0500
-Message-Id: <1243979642-10017-1-git-send-email-rherndon@sgi.com>
+Subject: [PATCH] Add -x mode to include/install-sh;
+	add build hints to doc/INSTALL.
+Date: Tue,  2 Jun 2009 16:44:40 -0500
+Message-Id: <1243979080-5665-1-git-send-email-rherndon@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,30 +26,48 @@ Cc: Robert Herndon <rherndon@sgi.com>
 
 Signed-off-by: Robert Herndon <rherndon@sgi.com>
 ---
- doc/INSTALL |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+ doc/INSTALL        |   11 ++++++++---
+ 1 files changed, 8 insertions(+), 3 deletions(-)
+ mode change 100644 => 100755 include/install-sh
 
 diff --git a/doc/INSTALL b/doc/INSTALL
-index 6c32f28..7cd71b4 100644
+index 2ecbf6c..b3a7a3c 100644
 --- a/doc/INSTALL
 +++ b/doc/INSTALL
 @@ -1,5 +1,5 @@
  This document describes how to configure and build the open source XFS
--commands and utilites ("xfsdump") from source, and how to install and
-+commands and utilities ("xfsdump") from source, and how to install and
+-commands and utilites ("xfsprogs") from source, and how to install and
++commands and utilities ("xfsprogs") from source, and how to install and
  run them.
  
- 0. If you have the binary rpm, simply install it and skip to step 2 (below).
-@@ -13,6 +13,9 @@ run them.
+ See the README file in the top level directory for details about how
+@@ -42,8 +42,12 @@ Linux Instructions
+ 	# make
+ 	# su root
+ 	# make install
+-	[and optionally, for the development libraries and headers]
++	[and optionally, for the development libraries and basic headers;
++         this is required to build xfsdump and dmapi]
+ 	# make install-dev
++	[and optionally, for the development libraries and full headers;
++         this is required to build xfstests]
++	# make install-qa
  
- 1. Configure, build and install the package
+    Note that there are so many "install" variants out there that we
+    wrote our own script (see "install-sh" in the top level directory).
+@@ -98,7 +102,8 @@ Mac OS X Instructions
+ 	$ make
+ 	$ su root
+ 	# make install
+-	[and optionally, for the development libraries and headers]
++	[and optionally, for the development libraries and headers;
++         this is required to build xfsdump and dmapi]
+ 	# make install-dev
  
-+   Ensure that you have installed the required libraries and
-+   header files.  See doc/INSTALL in the xfsprogs repository.
-+
-    The xfsdump package uses autoconf/configure and expects a GNU build
-    environment (your platform must at least have both autoconf and gmake). 
-    You will also need to have installed either the e2fsprogs-devel package
+ 
+diff --git a/include/install-sh b/include/install-sh
+old mode 100644
+new mode 100755
 -- 
 1.5.4.rc3
 
