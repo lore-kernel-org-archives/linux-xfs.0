@@ -1,21 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n526U6qI078834 for <xfs@oss.sgi.com>; Tue, 2 Jun 2009 01:30:08 -0500
-Received: from mail.gmx.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id 40B612C5858
-	for <xfs@oss.sgi.com>; Mon,  1 Jun 2009 23:30:21 -0700 (PDT)
-Received: from mail.gmx.net (mail.gmx.net [213.165.64.20]) by cuda.sgi.com
-	with SMTP id bSU6tQLtRnoqZDHO for <xfs@oss.sgi.com>;
-	Mon, 01 Jun 2009 23:30:21 -0700 (PDT)
-From: Marvin <marvin24@gmx.de>
-Subject: Re: fsr stucks in D-state
-Date: Tue, 2 Jun 2009 08:30:18 +0200
-References: <200906011233.39721.marvin24@gmx.de>
-In-Reply-To: <200906011233.39721.marvin24@gmx.de>
+	n528LX3J084197 for <xfs@oss.sgi.com>; Tue, 2 Jun 2009 03:21:33 -0500
+Received: from mail-bw0-f226.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8CE54148D4BC
+	for <xfs@oss.sgi.com>; Tue,  2 Jun 2009 01:28:14 -0700 (PDT)
+Received: from mail-bw0-f226.google.com (mail-bw0-f226.google.com
+	[209.85.218.226]) by cuda.sgi.com with ESMTP id
+	3cOEoghzuSDLp0rH for <xfs@oss.sgi.com>;
+	Tue, 02 Jun 2009 01:28:14 -0700 (PDT)
+Received: by bwz26 with SMTP id 26so7541023bwz.20
+	for <xfs@oss.sgi.com>; Tue, 02 Jun 2009 01:21:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-Message-Id: <200906020830.18866.marvin24@gmx.de>
+In-Reply-To: <D7FB8214-6C2B-4D13-9B50-C53CB74885C2@sgi.com>
+References: <a4423d670906010822l6e8e112dl3d6f7de9e2179850@mail.gmail.com>
+	<B5660F1A-7940-4E4A-92E8-8C0F93C274BD@sgi.com>
+	<a4423d670906011038qd809ebay22aebca5aaf271a4@mail.gmail.com>
+	<D7FB8214-6C2B-4D13-9B50-C53CB74885C2@sgi.com>
+Date: Tue, 2 Jun 2009 12:21:47 +0400
+Message-ID: <a4423d670906020121v131c9c12t35c3ffc7df048ee9@mail.gmail.com>
+Subject: Re: 2.6.30-rc6: BUG at fs/xfs/support/debug.c:109!
+From: Alexander Beregalov <a.beregalov@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,58 +33,86 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Felix Blyakher <felixb@sgi.com>
+Cc: Kernel Testers List <kernel-testers@vger.kernel.org>, xfs@oss.sgi.com
 
-
-Hi again,
-
-On Monday 01 June 2009 12:33:39 Marvin wrote:
-> Hi,
+2009/6/1 Felix Blyakher <felixb@sgi.com>:
 >
-> I observed a hang in D-state when using xfs_fsr.
+> On Jun 1, 2009, at 12:38 PM, Alexander Beregalov wrote:
 >
-> - xfsprogs is from git (3.0.2)
-> - kernel also (2.6.30-rc7...)
+>> It was Gentoo's `emerge --metadata`. It reads many small files (ebuilds).
+>> I am sure it cannot be easily reproduced.
+>
+> Right. Otherwise many more people would've reported it.
+>
+>> It runs fine everyday. I do not have a testcase.
+>> I can try to run it forever in loop if you need.
+>
+> Yes, that will be good.
+> The problem is that the traces are confusing. From one
+> side readdir stack makes sense based on your description
+> of the load, but OTOH the panic is from xfs_bmapi(), which
+> doesn't fit in that backtrace at all. It seems like
+> backtrace is from the concurrently running different thread.
+> Don't have good idea for this bug atm.
 
-I pulled from "git://oss.sgi.com/xfs/xfs for-linus", which seems to include 
-some deadlock fixes. Now, fsr no longer deadlocks, so this seems to be fixed. 
-Sorry for the noise.
+The host is still running, SysRq-W shows two precesses with the same
+stacktraces.
 
-Marvin
+SysRq : Show Blocked State
+  task                        PC stack   pid father
+emerge        D 0000000000000000  3856  8399   8387
+ ffff880078da7b48 0000000000000046 ffff8800074b4b40 ffff880078da7af4
+ 0000000000000001 000000000000d948 00000000001d2000 0000000000000001
+ ffff8800074b4b40 ffff88007f4725a0 ffff8800074b4eb8 0000000100000246
+Call Trace:
+ [<ffffffff802e7328>] ? do_lookup+0xd8/0x270
+ [<ffffffff806d707d>] __mutex_lock_common+0x16d/0x4f0
+ [<ffffffff802e7328>] ? do_lookup+0xd8/0x270
+ [<ffffffff80280eb0>] ? trace_hardirqs_on+0x20/0x40
+ [<ffffffff802e7328>] ? do_lookup+0xd8/0x270
+ [<ffffffff806d7528>] mutex_lock_nested+0x48/0x70
+ [<ffffffff802e7328>] do_lookup+0xd8/0x270
+ [<ffffffff802e7776>] __link_path_walk+0x2b6/0xf00
+ [<ffffffff802e884c>] ? do_path_lookup+0xec/0x200
+ [<ffffffff802e884c>] ? do_path_lookup+0xec/0x200
+ [<ffffffff802e863e>] path_walk+0x7e/0x100
+ [<ffffffff802e8816>] do_path_lookup+0xb6/0x200
+ [<ffffffff802e9bd8>] do_filp_open+0xf8/0x9e0
+ [<ffffffff802f6199>] ? alloc_fd+0x49/0x170
+ [<ffffffff806d987f>] ? _spin_unlock+0x3f/0x80
+ [<ffffffff802f6289>] ? alloc_fd+0x139/0x170
+ [<ffffffff802d7f6b>] do_sys_open+0x9b/0x130
+ [<ffffffff802d806e>] sys_open+0x2e/0x50
+ [<ffffffff8020ba6b>] system_call_fastpath+0x16/0x1b
+emerge        D 0000000000000000  3280  1643   1901
+ ffff88000f43bb48 0000000000000046 ffff88002dc33870 ffff88000f43baf4
+ 0000000000000001 000000000000d948 00000000001d2000 0000000000000003
+ ffff88002dc33870 ffff88007ea30000 ffff88002dc33be8 0000000300000246
+Call Trace:
+ [<ffffffff802e7328>] ? do_lookup+0xd8/0x270
+ [<ffffffff802e7328>] ? do_lookup+0xd8/0x270
+ [<ffffffff806d707d>] __mutex_lock_common+0x16d/0x4f0
+ [<ffffffff802e7328>] ? do_lookup+0xd8/0x270
+ [<ffffffff80280eb0>] ? trace_hardirqs_on+0x20/0x40
+ [<ffffffff802e7328>] ? do_lookup+0xd8/0x270
+ [<ffffffff806d7528>] mutex_lock_nested+0x48/0x70
+ [<ffffffff802e7328>] do_lookup+0xd8/0x270
+ [<ffffffff802e7776>] __link_path_walk+0x2b6/0xf00
+ [<ffffffff802e884c>] ? do_path_lookup+0xec/0x200
+ [<ffffffff802e884c>] ? do_path_lookup+0xec/0x200
+ [<ffffffff802e863e>] path_walk+0x7e/0x100
+ [<ffffffff802e8816>] do_path_lookup+0xb6/0x200
+ [<ffffffff802e9bd8>] do_filp_open+0xf8/0x9e0
+ [<ffffffff802f6199>] ? alloc_fd+0x49/0x170
+ [<ffffffff806d987f>] ? _spin_unlock+0x3f/0x80
+ [<ffffffff802f6289>] ? alloc_fd+0x139/0x170
+ [<ffffffff802d7f6b>] do_sys_open+0x9b/0x130
+ [<ffffffff802d806e>] sys_open+0x2e/0x50
+ [<ffffffff8020ba6b>] system_call_fastpath+0x16/0x1b
 
 
-> I tried 2.6.29.4 and it worked flawless. Machine is powerpc32.
->
-> Here is the sysrq-t trace:
->
-> xfs_fsr       D 480f7f3c     0  4211   4210
-> Call Trace:
-> [d1adfc40] [00001032] 0x1032 (unreliable)
-> [d1adfd00] [c0008dd8] __switch_to+0x4c/0x6c
-> [d1adfd20] [c02c5294] __schedule+0x230/0x360
-> [d1adfd70] [c02c53ec] schedule+0x28/0x54
-> [d1adfd80] [c02c7964] rwsem_down_failed_common+0x104/0x25c
-> [d1adfdb0] [c02c7ae4] rwsem_down_write_failed+0x28/0x40
-> [d1adfde0] [c02c6994] down_write+0x30/0x40
-> [d1adfdf0] [c012399c] xfs_ilock+0x9c/0xa0
-> [d1adfe00] [c014375c] xfs_inactive+0x2e8/0x48c
-> [d1adfe40] [c015113c] xfs_fs_clear_inode+0x40/0x50
-> [d1adfe50] [c00ab764] clear_inode+0x68/0xec
-> [d1adfe60] [c00ac02c] generic_delete_inode+0x16c/0x170
-> [d1adfe80] [c00aaf20] iput+0x70/0x90
-> [d1adfe90] [c00a7424] dentry_iput+0xc8/0x154
-> [d1adfeb0] [c00a75e0] d_kill+0x50/0x8c
-> [d1adfed0] [c00a80cc] dput+0x110/0x210
-> [d1adfef0] [c0095b50] __fput+0x178/0x204
-> [d1adff10] [c0091eec] filp_close+0x6c/0xa0
-> [d1adff30] [c0091fd4] sys_close+0xb4/0x124
-> [d1adff40] [c0011fc4] ret_from_syscall+0x0/0x38
-> --- Exception: c01 at 0x480f7f3c
->     LR = 0x1000397c
->
-> Greetings
->
-> Marvin
+I will try to reproduce it.
 
 _______________________________________________
 xfs mailing list
