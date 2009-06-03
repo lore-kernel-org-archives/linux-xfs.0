@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n53NPmkL201795 for <xfs@oss.sgi.com>; Wed, 3 Jun 2009 18:25:48 -0500
+	n53NJUvY201555 for <xfs@oss.sgi.com>; Wed, 3 Jun 2009 18:19:31 -0500
 Received: from josefsipek.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9913B11934EC
-	for <xfs@oss.sgi.com>; Wed,  3 Jun 2009 16:26:05 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 95DDE121102A
+	for <xfs@oss.sgi.com>; Wed,  3 Jun 2009 16:19:40 -0700 (PDT)
 Received: from josefsipek.net (josefsipek.net [141.211.133.196]) by
-	cuda.sgi.com with ESMTP id uTMkrasj77JokZfY for
-	<xfs@oss.sgi.com>; Wed, 03 Jun 2009 16:26:05 -0700 (PDT)
-Date: Wed, 3 Jun 2009 19:26:05 -0400
+	cuda.sgi.com with ESMTP id 4YOjIooJFqWjvZBC for
+	<xfs@oss.sgi.com>; Wed, 03 Jun 2009 16:19:40 -0700 (PDT)
+Date: Wed, 3 Jun 2009 19:19:39 -0400
 From: "Josef 'Jeff' Sipek" <jeffpc@josefsipek.net>
-Subject: Re: [PATCH 7/7] xfs: split xfs_sync_inodes
-Message-ID: <20090603232605.GB9167@josefsipek.net>
-References: <20090514171233.942489000@bombadil.infradead.org>
-	<20090514171559.231368000@bombadil.infradead.org>
+Subject: Re: [PATCH, RFC] xfstests: random fallocate calls in fsx
+Message-ID: <20090603231939.GA9167@josefsipek.net>
+References: <4A0B420E.3070908@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20090514171559.231368000@bombadil.infradead.org>
+In-Reply-To: <4A0B420E.3070908@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,44 +28,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs mailing list <xfs@oss.sgi.com>
 
-On Thu, May 14, 2009 at 01:12:40PM -0400, Christoph Hellwig wrote:
-> xfs_sync_inodes is used to write back either file data or inode metadata.
-> In generally we always do these separately, except for one fishy case in
-> xfs_fs_put_super that does both.  So separate xfs_sync_inodes into
-> separate xfs_sync_data and xfs_sync_attr functions.  In xfs_fs_put_super
-> we first call the data sync and then the attr sync as that was the previous
-> order.  The moved log force in that path doesn't make a different because
-                                                          ^^^^^^^^^
+Good idea.
 
-Typo.
+On Wed, May 13, 2009 at 04:56:30PM -0500, Eric Sandeen wrote:
+> Seems to work for me.  Any comments/suggestions?
+> 
+> I can probably make it fall back to the xfs ioctl if fallocate
+> isn't supported, if strongly desired.
 
-> Index: xfs/fs/xfs/linux-2.6/xfs_super.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2009-05-14 19:09:00.178792110 +0200
-> +++ xfs/fs/xfs/linux-2.6/xfs_super.c	2009-05-14 19:09:05.278808755 +0200
-> @@ -1070,7 +1070,18 @@ xfs_fs_put_super(
->  	int			unmount_event_flags = 0;
+Is the ioctl going away anytime soon? If not, it might be worth having fsx
+use _both_ if possible, or just the ioctl if fallocate doesn't seem to be
+available.
+
+> @@ -770,6 +788,64 @@ dotruncate(unsigned size)
+>  	}
+>  }
 >  
->  	xfs_syncd_stop(mp);
-> -	xfs_sync_inodes(mp, SYNC_ATTR|SYNC_DELWRI);
+> +#ifdef FALLOCATE
+> +/* fallocate is basically a no-op unless extending, then a lot like a truncate */
+> +void
+> +dofallocate(unsigned offset, unsigned length)
+> +{
+> +	unsigned end_offset;
+> +	int keep_size;
 > +
-> +	if (!(sb->s_flags & MS_RDONLY)) {
-> +		/*
-> +		 * XXX(hch): this should be SYNC_WAIT.
-> +		 *
-> +		 * Or more likely no needed at all because the VFS is already
-                                  ^^
+> +        if (length == 0) {
+> +                if (!quiet && testcalls > simulatedopcount)
+> +                        prt("skipping zero length fallocate\n");
+> +                log4(OP_SKIPPED, OP_FALLOCATE, offset, length);
+> +                return;
+> +        }
+> +
+> +	keep_size = random() % 2;
+> +
+> +	end_offset = keep_size ? 0 : offset + length;
 
-Typo.
+I prefer seeing explicit ( ) in this case.
 
+...
 -- 
-Real Programmers consider "what you see is what you get" to be just as bad a
-concept in Text Editors as it is in women. No, the Real Programmer wants a
-"you asked for it, you got it" text editor -- complicated, cryptic,
-powerful, unforgiving, dangerous.
+Reality is merely an illusion, albeit a very persistent one.
+		- Albert Einstein
 
 _______________________________________________
 xfs mailing list
