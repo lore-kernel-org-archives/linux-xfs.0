@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n53M186P197953 for <xfs@oss.sgi.com>; Wed, 3 Jun 2009 17:01:08 -0500
+	n53MIQJC198814 for <xfs@oss.sgi.com>; Wed, 3 Jun 2009 17:18:26 -0500
 Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 626362BEF97
-	for <xfs@oss.sgi.com>; Wed,  3 Jun 2009 15:01:25 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E04AB1BC9054
+	for <xfs@oss.sgi.com>; Wed,  3 Jun 2009 15:18:43 -0700 (PDT)
 Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id SEaN4g5FHZeWE64G for <xfs@oss.sgi.com>;
-	Wed, 03 Jun 2009 15:01:25 -0700 (PDT)
-Message-ID: <4A26F2A9.8050300@sandeen.net>
-Date: Wed, 03 Jun 2009 17:01:13 -0500
+	with ESMTP id gsbRePDjUOqin3kt for <xfs@oss.sgi.com>;
+	Wed, 03 Jun 2009 15:18:43 -0700 (PDT)
+Message-ID: <4A26F6B1.20509@sandeen.net>
+Date: Wed, 03 Jun 2009 17:18:25 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
 Subject: Re: [PATCH 5/7] xfs: introduce a per-ag inode iterator
@@ -47,7 +47,7 @@ Christoph Hellwig wrote:
 > Signed-off-by: Dave Chinner <david@fromorbit.com>
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Somehow I'm finding this hard to review, but...
+And a similar error handling question...
 
 > Index: xfs/fs/xfs/linux-2.6/xfs_sync.c
 > ===================================================================
@@ -86,82 +86,59 @@ Somehow I'm finding this hard to review, but...
 > +			skipped++;
 > +			continue;
 > +		}
-> +		if (error)
-> +			last_error = error;
-> +		/*
-> +		 * bail out if the filesystem is corrupted.
-> +		 */
-> +		if (error == EFSCORRUPTED)
-> +			break;
 
-Ok so here we are looking for EFSCORRUPTED from the "execute" function.
- This might be xfs_sync_inode_data, xfs_sync_inode_attr, or
-xfs_reclaim_inode_now.  But ...
-
-> +
-> +	} while (1);
+Ok, it's looking for EAGAIN here, I'm assuming this is for when we are
+calling xfs_reclaim_inode_now, because...
 
 ...
 
-> @@ -85,12 +201,17 @@ xfs_sync_inode_valid(
->  STATIC int
->  xfs_sync_inode_data(
->  	struct xfs_inode	*ip,
+> -STATIC void
+> -xfs_reclaim_inodes_ag(
+> -	xfs_mount_t	*mp,
+> -	int		ag,
+> -	int		mode)
+> +STATIC int
+> +xfs_reclaim_inode_now(
+> +	struct xfs_inode	*ip,
 > +	struct xfs_perag	*pag,
->  	int			flags)
+> +	int			flags)
 >  {
->  	struct inode	*inode = VFS_I(ip);
->  	struct address_space *mapping = inode->i_mapping;
->  	int		error = 0;
->  
-> +	error = xfs_sync_inode_valid(ip, pag);
-> +	if (error)
-> +		return 0;xfs_sync_inode_attr(
-> +
+> -	xfs_inode_t	*ip = NULL;
+> -	xfs_perag_t	*pag = &mp->m_perag[ag];
+> -	int		nr_found;
+> -	uint32_t	first_index;
+> -	int		skipped;
+> -
+> -restart:
+> -	first_index = 0;
+> -	skipped = 0;
+> -	do {
 
-xfs_sync_inode_valid can return 0, ENOENT, or EFSCORRUPTED.
+...
 
-Aren't we losing the error here...
+> -
+> -		/*
+> -		 * hmmm - this is an inode already in reclaim. Do
+> -		 * we even bother catching it here?
+> -		 */
+> -		if (xfs_reclaim_inode(ip, 0, mode))
+> -			skipped++;
+> -	} while (nr_found);
 
->  	if (mapping_tagged(mapping, PAGECACHE_TAG_DIRTY)) {
->  		if (!xfs_ilock_nowait(ip, XFS_IOLOCK_SHARED)) {
->  			if (flags & SYNC_TRYLOCK)
-> @@ -106,16 +227,22 @@ xfs_sync_inode_data(
->   out_wait:
->  	if (flags & SYNC_IOWAIT)
->  		xfs_ioend_wait(ip);
-> +	IRELE(ip);
->  	return error;
->  }
->  
->  STATIC int
->  xfs_sync_inode_attr(
->  	struct xfs_inode	*ip,
-> +	struct xfs_perag	*pag,
->  	int			flags)
->  {
->  	int			error = 0;
->  
-> +	error = xfs_sync_inode_valid(ip, pag);
-> +	if (error)
-> +		return 0;
+... because before, that's what we did above, after testing for a non-0
+return from xfs_reclaim_inode.
 
-and here?
-
-so xfs_sync_inode_data / xfs_sync_inode_attr are the "execute" in
-xfs_inode_ag_walk():
+But xfs_reclaim_inode_now() returns 0 or the result of
+xfs_reclaim_inode, which is 0/1, so above:
 
 > +		error = execute(ip, pag, flags);
 > +		if (error == EAGAIN) {
 > +			skipped++;
 > +			continue;
 > +		}
-> +		if (error)
-> +			last_error = error;
 
-above, and I think they're ignoring the return from
-xfs_sync_inode_valid(), therefore xfs_inode_ag_walk won't see
-EFSCORRUPTED from it either ... right?
+isn't going to see EAGAIN from xfs_reclaim_inode_now... am I following
+this right?
 
 -Eric
 
