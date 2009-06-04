@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n549FiGO232228 for <xfs@oss.sgi.com>; Thu, 4 Jun 2009 04:15:45 -0500
+	n549j3pj233848 for <xfs@oss.sgi.com>; Thu, 4 Jun 2009 04:45:04 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AD3701D3A9DA
-	for <xfs@oss.sgi.com>; Thu,  4 Jun 2009 02:16:00 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	tohNKFugoU6rKIAt for <xfs@oss.sgi.com>;
-	Thu, 04 Jun 2009 02:16:00 -0700 (PDT)
-Received: from discord (unverified [121.44.1.36])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id 530899-1927428
-	for <xfs@oss.sgi.com>; Thu, 04 Jun 2009 18:45:59 +0930 (CST)
-Received: from dave by discord with local (Exim 4.69)
-	(envelope-from <david@fromorbit.com>) id 1MC93G-0006ol-3s
-	for xfs@oss.sgi.com; Thu, 04 Jun 2009 19:15:58 +1000
-Date: Thu, 4 Jun 2009 19:15:58 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 48C361053373
+	for <xfs@oss.sgi.com>; Thu,  4 Jun 2009 02:51:57 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	Z3wbhHZS4GvkOJKt for <xfs@oss.sgi.com>;
+	Thu, 04 Jun 2009 02:51:57 -0700 (PDT)
+Date: Thu, 4 Jun 2009 19:45:12 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] [XFSQA] Add license boilerplate to 205
-Message-ID: <20090604091558.GS16929@discord.disaster>
+Subject: Re: [PATCH 5/5] xfs: fix xfs_quiesce_data
+Message-ID: <20090604094512.GU16929@discord.disaster>
+References: <20090426140305.113371000@bombadil.infradead.org>
+	<20090426140708.279368000@bombadil.infradead.org>
+	<4A071F06.8040106@sandeen.net>
+	<20090511201511.GB14195@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20090511201511.GB14195@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,39 +32,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-[XFSQA] Add license boilerplate to 205
+On Mon, May 11, 2009 at 04:15:11PM -0400, Christoph Hellwig wrote:
+> On Sun, May 10, 2009 at 01:37:58PM -0500, Eric Sandeen wrote:
+> > I guess I too would like a reason for the filestream_flush move
+> > somewhere in the changelog...
+> 
+> Hehe, maybe Dave can chime in.  Or I can test if it actually affects
+> anything and maybe move it out to another patch.  The lack of
+> reliability of the filesystreams tests doesn't make this any easier to
+> test.
 
-Signed-off-by: Dave Chinner <david@fromorbit.com>
----
- 205 |   13 +++++++++++++
- 1 files changed, 13 insertions(+), 0 deletions(-)
+(Just catching up on my mail backlog)
 
-diff --git a/205 b/205
-index 502adc7..c85e102 100755
---- a/205
-+++ b/205
-@@ -5,6 +5,19 @@
- #
- #-----------------------------------------------------------------------
- # Copyright (c) 2009 Dave Chinner
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- #-----------------------------------------------------------------------
- #
- # creator
+I think that the filestream_flush() call should actually be after
+the data flush. filestream_flush() is used to clear the filestream
+association cache which holds references to the inodes.
+
+Where the flush is currently placed is destroying the association
+that defines the AG the data should be written to before the data is
+written. As a result it may not end up in the AG carefully
+associated with the inode during the write() syscall.
+
+This may be one of the reasons for the filestreams tests failing
+frequently....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
