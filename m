@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n54Aevgd236783 for <xfs@oss.sgi.com>; Thu, 4 Jun 2009 05:40:58 -0500
+	n54Aj2up237010 for <xfs@oss.sgi.com>; Thu, 4 Jun 2009 05:45:02 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6F0BA2D024A
-	for <xfs@oss.sgi.com>; Thu,  4 Jun 2009 03:41:15 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7F4F02D027E
+	for <xfs@oss.sgi.com>; Thu,  4 Jun 2009 03:45:20 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id C9mUBNAsxn2i13Pt for
-	<xfs@oss.sgi.com>; Thu, 04 Jun 2009 03:41:15 -0700 (PDT)
-Date: Thu, 4 Jun 2009 06:41:14 -0400
+	by cuda.sgi.com with ESMTP id FFT5PhVz9M82881G for
+	<xfs@oss.sgi.com>; Thu, 04 Jun 2009 03:45:20 -0700 (PDT)
+Date: Thu, 4 Jun 2009 06:45:20 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] [XFSQA] Add license boilerplate to 205
-Message-ID: <20090604104114.GA8413@infradead.org>
-References: <20090604091558.GS16929@discord.disaster>
+Subject: Re: [PATCH 7/7] xfs: split xfs_sync_inodes
+Message-ID: <20090604104520.GB8413@infradead.org>
+References: <20090514171233.942489000@bombadil.infradead.org>
+	<20090514171559.231368000@bombadil.infradead.org>
+	<20090603232605.GB9167@josefsipek.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20090604091558.GS16929@discord.disaster>
+In-Reply-To: <20090603232605.GB9167@josefsipek.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,49 +30,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-Thanks, looks good.
+On Wed, Jun 03, 2009 at 07:26:05PM -0400, Josef 'Jeff' Sipek wrote:
+> > order.  The moved log force in that path doesn't make a different because
+>                                                           ^^^^^^^^^
+> 
+> Typo.
+> 
 
-On Thu, Jun 04, 2009 at 07:15:58PM +1000, Dave Chinner wrote:
-> [XFSQA] Add license boilerplate to 205
+> > +		 * Or more likely no needed at all because the VFS is already
+>                                   ^^
 > 
-> Signed-off-by: Dave Chinner <david@fromorbit.com>
-> ---
->  205 |   13 +++++++++++++
->  1 files changed, 13 insertions(+), 0 deletions(-)
-> 
-> diff --git a/205 b/205
-> index 502adc7..c85e102 100755
-> --- a/205
-> +++ b/205
-> @@ -5,6 +5,19 @@
->  #
->  #-----------------------------------------------------------------------
->  # Copyright (c) 2009 Dave Chinner
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
->  #-----------------------------------------------------------------------
->  #
->  # creator
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
----end quoted text---
+> Typo.
+
+
+Thanks, fixed both for the next iteration.
 
 _______________________________________________
 xfs mailing list
