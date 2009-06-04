@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n549NG9D232558 for <xfs@oss.sgi.com>; Thu, 4 Jun 2009 04:23:16 -0500
+	n549FiGO232228 for <xfs@oss.sgi.com>; Thu, 4 Jun 2009 04:15:45 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AE2F62CFE08
-	for <xfs@oss.sgi.com>; Thu,  4 Jun 2009 02:23:33 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
-	[150.101.137.103]) by cuda.sgi.com with ESMTP id
-	vXyPYxGQa2ywTcoB for <xfs@oss.sgi.com>;
-	Thu, 04 Jun 2009 02:23:33 -0700 (PDT)
-Date: Thu, 4 Jun 2009 19:23:30 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AD3701D3A9DA
+	for <xfs@oss.sgi.com>; Thu,  4 Jun 2009 02:16:00 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
+	[150.101.137.104]) by cuda.sgi.com with ESMTP id
+	tohNKFugoU6rKIAt for <xfs@oss.sgi.com>;
+	Thu, 04 Jun 2009 02:16:00 -0700 (PDT)
+Received: from discord (unverified [121.44.1.36])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id 530899-1927428
+	for <xfs@oss.sgi.com>; Thu, 04 Jun 2009 18:45:59 +0930 (CST)
+Received: from dave by discord with local (Exim 4.69)
+	(envelope-from <david@fromorbit.com>) id 1MC93G-0006ol-3s
+	for xfs@oss.sgi.com; Thu, 04 Jun 2009 19:15:58 +1000
+Date: Thu, 4 Jun 2009 19:15:58 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 2.6.30-rc6: BUG at fs/xfs/support/debug.c:109!
-Message-ID: <20090604092330.GT16929@discord.disaster>
-References: <a4423d670906010822l6e8e112dl3d6f7de9e2179850@mail.gmail.com>
+Subject: [PATCH] [XFSQA] Add license boilerplate to 205
+Message-ID: <20090604091558.GS16929@discord.disaster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <a4423d670906010822l6e8e112dl3d6f7de9e2179850@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,33 +33,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alexander Beregalov <a.beregalov@gmail.com>
-Cc: Kernel Testers List <kernel-testers@vger.kernel.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Jun 01, 2009 at 07:22:56PM +0400, Alexander Beregalov wrote:
-> Hi
-> 
-> Assertion failed: *nmap >= 1, file: fs/xfs/xfs_bmap.c, line: 4846
-.....
-> Call Trace:
->  [<ffffffff803d6bad>] xfs_bmapi+0xad/0x1ad0
->  [<ffffffff803ee5c0>] xfs_dir2_leaf_getdents+0x640/0x7b0
->  [<ffffffff803e975c>] xfs_readdir+0x12c/0x140
->  [<ffffffff80430b57>] xfs_file_readdir+0x47/0x70
->  [<ffffffff802ec500>] vfs_readdir+0xd0/0xf0
->  [<ffffffff802ec6b6>] sys_getdents+0x96/0x110
->  [<ffffffff8020ba6b>] system_call_fastpath+0x16/0x1b
+[XFSQA] Add license boilerplate to 205
 
-I'd say this indicates a corrupted directory.  Can you run
-'xfs_repair -n' over the filesystem and see if it finds a bad
-directory?
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+---
+ 205 |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/205 b/205
+index 502adc7..c85e102 100755
+--- a/205
++++ b/205
+@@ -5,6 +5,19 @@
+ #
+ #-----------------------------------------------------------------------
+ # Copyright (c) 2009 Dave Chinner
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ #-----------------------------------------------------------------------
+ #
+ # creator
 
 _______________________________________________
 xfs mailing list
