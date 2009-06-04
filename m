@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n54BQfa2239491 for <xfs@oss.sgi.com>; Thu, 4 Jun 2009 06:26:42 -0500
+	n54D2siZ244899 for <xfs@oss.sgi.com>; Thu, 4 Jun 2009 08:02:54 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BB7ED10541F2
-	for <xfs@oss.sgi.com>; Thu,  4 Jun 2009 04:33:37 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7E667148E6BD
+	for <xfs@oss.sgi.com>; Thu,  4 Jun 2009 06:09:49 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id o9dCNW1SjOQsCUjA for
-	<xfs@oss.sgi.com>; Thu, 04 Jun 2009 04:33:37 -0700 (PDT)
-Date: Thu, 4 Jun 2009 07:26:57 -0400
+	by cuda.sgi.com with ESMTP id LR931um4Tikr7Bbp for
+	<xfs@oss.sgi.com>; Thu, 04 Jun 2009 06:09:49 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1MCCb8-0006ot-NX
+	for xfs@oss.sgi.com; Thu, 04 Jun 2009 13:03:10 +0000
+Date: Thu, 4 Jun 2009 09:03:10 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Kernel crash with 2.6.29 + nfs + xfs (radix-tree)
-Message-ID: <20090604112657.GA10738@infradead.org>
-References: <20090520003745.GA27491@samad.com.au>
-	<20090520090558.GQ16929@discord.disaster>
-	<20090520095639.GA27496@samad.com.au>
-	<20090526090916.GA17194@infradead.org>
-	<20090527025457.GA32668@samad.com.au>
+Subject: [PATCH] xfstests: fix for bash 3.2
+Message-ID: <20090604130310.GA14560@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20090527025457.GA32668@samad.com.au>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,12 +29,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: randrik@mail.ru, Martin Spott <Martin.Spott@mgras.net>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Sorry guys, still haven't been able to track it down.  Any chance one
-of you could run with CONFIG_XFS_DEBUG enabled and see if it trips
-over any of the asserts?
+Bash 3.2 wants a space before the closing "]" in a test:
+
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: xfstests-dev/check
+===================================================================
+--- xfstests-dev.orig/check	2009-06-04 12:36:21.000000000 +0000
++++ xfstests-dev/check	2009-06-04 12:36:26.000000000 +0000
+@@ -160,7 +160,7 @@
+ 
+ EOF
+ 
+-if [ ! -z "$SCRATCH_DEV"]; then
++if [ ! -z "$SCRATCH_DEV" ]; then
+   umount $SCRATCH_DEV 2>/dev/null
+   # call the overridden mkfs - make sure the FS is built
+   # the same as we'll create it later.
 
 _______________________________________________
 xfs mailing list
