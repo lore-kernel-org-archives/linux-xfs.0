@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n55KWInk063333 for <xfs@oss.sgi.com>; Fri, 5 Jun 2009 15:32:18 -0500
+	n55KBpIX062755 for <xfs@oss.sgi.com>; Fri, 5 Jun 2009 15:11:51 -0500
 Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EA7601227B5E
-	for <xfs@oss.sgi.com>; Fri,  5 Jun 2009 13:32:36 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3065D2D728D
+	for <xfs@oss.sgi.com>; Fri,  5 Jun 2009 13:12:09 -0700 (PDT)
 Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id Z1ZTd7VYhUSWZ6YQ for <xfs@oss.sgi.com>;
-	Fri, 05 Jun 2009 13:32:36 -0700 (PDT)
-Message-ID: <4A2980D9.9050901@sandeen.net>
-Date: Fri, 05 Jun 2009 15:32:25 -0500
+	with ESMTP id Rjz2EBKpXQlG7oEF for <xfs@oss.sgi.com>;
+	Fri, 05 Jun 2009 13:12:09 -0700 (PDT)
+Message-ID: <4A297C0B.8060302@sandeen.net>
+Date: Fri, 05 Jun 2009 15:11:55 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH 7/7] xfs: split xfs_sync_inodes
-References: <20090514171233.942489000@bombadil.infradead.org>
-	<20090514171559.231368000@bombadil.infradead.org>
-In-Reply-To: <20090514171559.231368000@bombadil.infradead.org>
+Subject: Re: [PATCH 6/7] xfs: use generic inode iterator in
+	xfs_qm_dqrele_all_inodes
+References: <20090514171233.942489000@bombadil.infradead.org>	<20090514171559.029154000@bombadil.infradead.org>	<4A296EDA.9020802@sandeen.net>
+	<20090605191744.GA17489@infradead.org>
+In-Reply-To: <20090605191744.GA17489@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,209 +33,205 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
 Christoph Hellwig wrote:
-
-> xfs_sync_inodes is used to write back either file data or inode metadata.
-> In generally we always do these separately, except for one fishy case in
-  ^^^ "In general"
-
-> xfs_fs_put_super that does both.  So separate xfs_sync_inodes into
-> separate xfs_sync_data and xfs_sync_attr functions.  In xfs_fs_put_super
-> we first call the data sync and then the attr sync as that was the previous
-> order.  The moved log force in that path doesn't make a different because
-> we will force the log again as part of the real unmount process.
+> On Fri, Jun 05, 2009 at 02:15:38PM -0500, Eric Sandeen wrote:
+>> Does this need the same error propagation treatment as 5/7 ?
 > 
-> The filesystem readonly checks are not performed by the new function but
-> instead moved into the callers, given that most callers alredy have it
-> further up in the stack.  Also add debug checks that we do not pass in
-> incorrect flags in the new xfs_sync_data and xfs_sync_attr function and
-> fix the one place that did pass in a wrong flag.
+> Yes, I've already fixed this up in my local copy:
 > 
-> Also remove a comment mentioning xfs_sync_inodes that has been incorrect
-> for a while because we always take either the iolock or ilock in the
-> sync path these days.
+> Subject: xfs: use generic inode iterator in xfs_qm_dqrele_all_inodes
+> From: Christoph Hellwig <hch@lst.de>
+> 
+> Use xfs_inode_ag_iterator instead of opencoding the inode walk in the
+> quota code.  Mark xfs_inode_ag_iterator and xfs_sync_inode_valid non-static
+> to allow using them from the quota code.
 > 
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
 
-Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
+Ok, this looks fine to me.
 
-> Index: xfs/fs/xfs/linux-2.6/xfs_super.c
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+> 
+> Index: xfs/fs/xfs/quota/xfs_qm_syscalls.c
 > ===================================================================
-> --- xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2009-05-14 19:09:00.178792110 +0200
-> +++ xfs/fs/xfs/linux-2.6/xfs_super.c	2009-05-14 19:09:05.278808755 +0200
-> @@ -1070,7 +1070,18 @@ xfs_fs_put_super(
->  	int			unmount_event_flags = 0;
->  
->  	xfs_syncd_stop(mp);
-> -	xfs_sync_inodes(mp, SYNC_ATTR|SYNC_DELWRI);
-> +
-> +	if (!(sb->s_flags & MS_RDONLY)) {
-> +		/*
-> +		 * XXX(hch): this should be SYNC_WAIT.
-> +		 *
-> +		 * Or more likely no needed at all because the VFS is already
-> +		 * calling ->sync_fs after shutting down all filestem
-> +		 * operations and just before calling ->put_super.
-> +		 */
-> +		xfs_sync_data(mp, 0);
-> +		xfs_sync_attr(mp, 0);
-> +	}
->  
->  #ifdef HAVE_DMAPI
->  	if (mp->m_flags & XFS_MOUNT_DMAPI) {
-> Index: xfs/fs/xfs/linux-2.6/xfs_sync.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/linux-2.6/xfs_sync.c	2009-05-14 19:09:04.687659175 +0200
-> +++ xfs/fs/xfs/linux-2.6/xfs_sync.c	2009-05-14 19:09:05.279808603 +0200
-> @@ -265,29 +265,40 @@ xfs_sync_inode_attr(
->  	return error;
+> --- xfs.orig/fs/xfs/quota/xfs_qm_syscalls.c	2009-06-04 12:47:30.742821242 +0200
+> +++ xfs/fs/xfs/quota/xfs_qm_syscalls.c	2009-06-04 13:03:51.039832673 +0200
+> @@ -847,105 +847,55 @@ xfs_qm_export_flags(
 >  }
 >  
-> +/*
-> + * Write out pagecache data for the whole filesystem.
-> + */
->  int
-> -xfs_sync_inodes(
+>  
+> -/*
+> - * Release all the dquots on the inodes in an AG.
+> - */
+> -STATIC void
+> -xfs_qm_dqrele_inodes_ag(
 > -	xfs_mount_t	*mp,
-> -	int		flags)
-> +xfs_sync_data(
-> +	struct xfs_mount	*mp,
+> -	int		ag,
+> -	uint		flags)
+> +STATIC int
+> +xfs_dqrele_inode(
+> +	struct xfs_inode	*ip,
+> +	struct xfs_perag	*pag,
 > +	int			flags)
 >  {
-> -	int		error = 0;
-> -	int		lflags = XFS_LOG_FORCE;
+> -	xfs_inode_t	*ip = NULL;
+> -	xfs_perag_t	*pag = &mp->m_perag[ag];
+> -	int		first_index = 0;
+> -	int		nr_found;
+> -
+> -	do {
+> -		/*
+> -		 * use a gang lookup to find the next inode in the tree
+> -		 * as the tree is sparse and a gang lookup walks to find
+> -		 * the number of objects requested.
+> -		 */
+> -		read_lock(&pag->pag_ici_lock);
+> -		nr_found = radix_tree_gang_lookup(&pag->pag_ici_root,
+> -				(void**)&ip, first_index, 1);
+> -
+> -		if (!nr_found) {
+> -			read_unlock(&pag->pag_ici_lock);
+> -			break;
+> -		}
+> -
+> -		/*
+> -		 * Update the index for the next lookup. Catch overflows
+> -		 * into the next AG range which can occur if we have inodes
+> -		 * in the last block of the AG and we are currently
+> -		 * pointing to the last inode.
+> -		 */
+> -		first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
+> -		if (first_index < XFS_INO_TO_AGINO(mp, ip->i_ino)) {
+> -			read_unlock(&pag->pag_ici_lock);
+> -			break;
+> -		}
+> -
+> -		/* skip quota inodes */
+> -		if (ip == XFS_QI_UQIP(mp) || ip == XFS_QI_GQIP(mp)) {
+> -			ASSERT(ip->i_udquot == NULL);
+> -			ASSERT(ip->i_gdquot == NULL);
+> -			read_unlock(&pag->pag_ici_lock);
+> -			continue;
+> -		}
 > +	int			error;
 >  
-> -	if (mp->m_flags & XFS_MOUNT_RDONLY)
-> -		return 0;
-> +	ASSERT((flags & ~(SYNC_TRYLOCK|SYNC_WAIT|SYNC_IOWAIT)) == 0);
+> -		/*
+> -		 * If we can't get a reference on the inode, it must be
+> -		 * in reclaim. Leave it for the reclaim code to flush.
+> -		 */
+> -		if (!igrab(VFS_I(ip))) {
+> -			read_unlock(&pag->pag_ici_lock);
+> -			continue;
+> -		}
+> +	/* skip quota inodes */
+> +	if (ip == XFS_QI_UQIP(ip->i_mount) || ip == XFS_QI_GQIP(ip->i_mount)) {
+> +		ASSERT(ip->i_udquot == NULL);
+> +		ASSERT(ip->i_gdquot == NULL);
+>  		read_unlock(&pag->pag_ici_lock);
+> +		return 0;
+> +	}
 >  
-> -	if (flags & SYNC_WAIT)
-> -		lflags |= XFS_LOG_SYNC;
-> +	error = xfs_inode_ag_iterator(mp, xfs_sync_inode_data, flags, -1);
+> -		/* avoid new inodes though we shouldn't find any here */
+> -		if (xfs_iflags_test(ip, XFS_INEW)) {
+> -			IRELE(ip);
+> -			continue;
+> -		}
+> +	error = xfs_sync_inode_valid(ip, pag);
 > +	if (error)
-> +		return XFS_ERROR(error);
+> +		return error;
 >  
-> -	if (flags & SYNC_DELWRI)
-> -		error = xfs_inode_ag_iterator(mp, xfs_sync_inode_data, flags, -1);
-> +	xfs_log_force(mp, 0,
-> +		      (flags & SYNC_WAIT) ?
-> +		       XFS_LOG_FORCE | XFS_LOG_SYNC :
-> +		       XFS_LOG_FORCE);
+> -		xfs_ilock(ip, XFS_ILOCK_EXCL);
+> -		if ((flags & XFS_UQUOTA_ACCT) && ip->i_udquot) {
+> -			xfs_qm_dqrele(ip->i_udquot);
+> -			ip->i_udquot = NULL;
+> -		}
+> -		if (flags & (XFS_PQUOTA_ACCT|XFS_GQUOTA_ACCT) &&
+> -		    ip->i_gdquot) {
+> -			xfs_qm_dqrele(ip->i_gdquot);
+> -			ip->i_gdquot = NULL;
+> -		}
+> -		xfs_iput(ip, XFS_ILOCK_EXCL);
+> +	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> +	if ((flags & XFS_UQUOTA_ACCT) && ip->i_udquot) {
+> +		xfs_qm_dqrele(ip->i_udquot);
+> +		ip->i_udquot = NULL;
+> +	}
+> +	if (flags & (XFS_PQUOTA_ACCT|XFS_GQUOTA_ACCT) && ip->i_gdquot) {
+> +		xfs_qm_dqrele(ip->i_gdquot);
+> +		ip->i_gdquot = NULL;
+> +	}
+> +	xfs_iput(ip, XFS_ILOCK_EXCL);
+> +	IRELE(ip);
+>  
+> -	} while (nr_found);
 > +	return 0;
-> +}
->  
-> -	if (flags & SYNC_ATTR)
-> -		error = xfs_inode_ag_iterator(mp, xfs_sync_inode_attr, flags, -1);
-> +/*
-> + * Write out inode metadata (attributes) for the whole filesystem.
-> + */
-> +int
-> +xfs_sync_attr(
-> +	struct xfs_mount	*mp,
-> +	int			flags)
-> +{
-> +	ASSERT((flags & ~SYNC_WAIT) == 0);
->  
-> -	if (!error && (flags & SYNC_DELWRI))
-> -		xfs_log_force(mp, 0, lflags);
-> -	return XFS_ERROR(error);
-> +	return xfs_inode_ag_iterator(mp, xfs_sync_inode_attr, flags, -1);
 >  }
 >  
->  STATIC int
-> @@ -401,12 +412,12 @@ xfs_quiesce_data(
->  	int error;
->  
->  	/* push non-blocking */
-> -	xfs_sync_inodes(mp, SYNC_DELWRI|SYNC_BDFLUSH);
-> +	xfs_sync_data(mp, 0);
->  	xfs_qm_sync(mp, SYNC_BDFLUSH);
->  	xfs_filestream_flush(mp);
->  
->  	/* push and block */
-> -	xfs_sync_inodes(mp, SYNC_DELWRI|SYNC_WAIT|SYNC_IOWAIT);
-> +	xfs_sync_data(mp, SYNC_WAIT|SYNC_IOWAIT);
->  	xfs_qm_sync(mp, SYNC_WAIT);
->  
->  	/* write superblock and hoover up shutdown errors */
-> @@ -435,7 +446,7 @@ xfs_quiesce_fs(
->  	 * logged before we can write the unmount record.
->  	 */
->  	do {
-> -		xfs_sync_inodes(mp, SYNC_ATTR|SYNC_WAIT);
-> +		xfs_sync_attr(mp, SYNC_WAIT);
->  		pincount = xfs_flush_buftarg(mp->m_ddev_targp, 1);
->  		if (!pincount) {
->  			delay(50);
-> @@ -518,8 +529,8 @@ xfs_flush_inodes_work(
->  	void		*arg)
+> +
+>  /*
+>   * Go thru all the inodes in the file system, releasing their dquots.
+> + *
+>   * Note that the mount structure gets modified to indicate that quotas are off
+> - * AFTER this, in the case of quotaoff. This also gets called from
+> - * xfs_rootumount.
+> + * AFTER this, in the case of quotaoff.
+>   */
+>  void
+>  xfs_qm_dqrele_all_inodes(
+>  	struct xfs_mount *mp,
+>  	uint		 flags)
 >  {
->  	struct inode	*inode = arg;
-> -	xfs_sync_inodes(mp, SYNC_DELWRI | SYNC_TRYLOCK);
-> -	xfs_sync_inodes(mp, SYNC_DELWRI | SYNC_TRYLOCK | SYNC_IOWAIT);
-> +	xfs_sync_data(mp, SYNC_TRYLOCK);
-> +	xfs_sync_data(mp, SYNC_TRYLOCK | SYNC_IOWAIT);
->  	iput(inode);
+> -	int		i;
+> -
+>  	ASSERT(mp->m_quotainfo);
+> -	for (i = 0; i < mp->m_sb.sb_agcount; i++) {
+> -		if (!mp->m_perag[i].pag_ici_init)
+> -			continue;
+> -		xfs_qm_dqrele_inodes_ag(mp, i, flags);
+> -	}
+> +	xfs_inode_ag_iterator(mp, xfs_dqrele_inode, flags, -1);
 >  }
 >  
-> Index: xfs/fs/xfs/linux-2.6/xfs_quotaops.c
+>  /*------------------------------------------------------------------------*/
+> Index: xfs/fs/xfs/linux-2.6/xfs_sync.c
 > ===================================================================
-> --- xfs.orig/fs/xfs/linux-2.6/xfs_quotaops.c	2009-05-14 19:05:24.908659400 +0200
-> +++ xfs/fs/xfs/linux-2.6/xfs_quotaops.c	2009-05-14 19:09:05.280834851 +0200
-> @@ -50,9 +50,11 @@ xfs_fs_quota_sync(
->  {
->  	struct xfs_mount	*mp = XFS_M(sb);
->  
-> +	if (sb->s_flags & MS_RDONLY)
-> +		return -EROFS;
->  	if (!XFS_IS_QUOTA_RUNNING(mp))
->  		return -ENOSYS;
-> -	return -xfs_sync_inodes(mp, SYNC_DELWRI);
-> +	return -xfs_sync_data(mp, 0);
+> --- xfs.orig/fs/xfs/linux-2.6/xfs_sync.c	2009-06-04 13:01:29.388941822 +0200
+> +++ xfs/fs/xfs/linux-2.6/xfs_sync.c	2009-06-04 13:02:26.249965001 +0200
+> @@ -141,7 +141,7 @@ restart:
+>  	return last_error;
 >  }
 >  
->  STATIC int
+> -STATIC int
+> +int
+>  xfs_inode_ag_iterator(
+>  	struct xfs_mount	*mp,
+>  	int			(*execute)(struct xfs_inode *ip,
+> @@ -167,7 +167,7 @@ xfs_inode_ag_iterator(
+>  }
+>  
+>  /* must be called with pag_ici_lock held and releases it */
+> -STATIC int
+> +int
+>  xfs_sync_inode_valid(
+>  	struct xfs_inode	*ip,
+>  	struct xfs_perag	*pag)
 > Index: xfs/fs/xfs/linux-2.6/xfs_sync.h
 > ===================================================================
-> --- xfs.orig/fs/xfs/linux-2.6/xfs_sync.h	2009-05-14 19:09:04.694659368 +0200
-> +++ xfs/fs/xfs/linux-2.6/xfs_sync.h	2009-05-14 19:09:05.280834851 +0200
-> @@ -29,8 +29,6 @@ typedef struct xfs_sync_work {
->  	struct completion	*w_completion;
->  } xfs_sync_work_t;
->  
-> -#define SYNC_ATTR		0x0001	/* sync attributes */
-> -#define SYNC_DELWRI		0x0002	/* look at delayed writes */
->  #define SYNC_WAIT		0x0004	/* wait for i/o to complete */
->  #define SYNC_BDFLUSH		0x0008	/* BDFLUSH is calling -- don't block */
->  #define SYNC_IOWAIT		0x0010  /* wait for all I/O to complete */
-> @@ -41,7 +39,8 @@ void xfs_syncd_stop(struct xfs_mount *mp
->  
->  int xfs_inode_flush(struct xfs_inode *ip, int sync);
->  
-> -int xfs_sync_inodes(struct xfs_mount *mp, int flags);
-> +int xfs_sync_attr(struct xfs_mount *mp, int flags);
-> +int xfs_sync_data(struct xfs_mount *mp, int flags);
->  int xfs_sync_fsdata(struct xfs_mount *mp, int flags);
->  
->  int xfs_quiesce_data(struct xfs_mount *mp);
-> Index: xfs/fs/xfs/xfs_filestream.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/xfs_filestream.c	2009-05-14 19:05:24.929659282 +0200
-> +++ xfs/fs/xfs/xfs_filestream.c	2009-05-14 19:09:05.283807995 +0200
-> @@ -542,10 +542,8 @@ xfs_filestream_associate(
->  	 * waiting for the lock because someone else is waiting on the lock we
->  	 * hold and we cannot drop that as we are in a transaction here.
->  	 *
-> -	 * Lucky for us, this inversion is rarely a problem because it's a
-> -	 * directory inode that we are trying to lock here and that means the
-> -	 * only place that matters is xfs_sync_inodes() and SYNC_DELWRI is
-> -	 * used. i.e. freeze, remount-ro, quotasync or unmount.
-> +	 * Lucky for us, this inversion is not a problem because it's a
-> +	 * directory inode that we are trying to lock here.
->  	 *
->  	 * So, if we can't get the iolock without sleeping then just give up
->  	 */
+> --- xfs.orig/fs/xfs/linux-2.6/xfs_sync.h	2009-06-04 12:47:30.804939977 +0200
+> +++ xfs/fs/xfs/linux-2.6/xfs_sync.h	2009-06-04 13:02:26.249965001 +0200
+> @@ -54,4 +54,10 @@ void xfs_inode_set_reclaim_tag(struct xf
+>  void xfs_inode_clear_reclaim_tag(struct xfs_inode *ip);
+>  void __xfs_inode_clear_reclaim_tag(struct xfs_mount *mp, struct xfs_perag *pag,
+>  				struct xfs_inode *ip);
+> +
+> +int xfs_sync_inode_valid(struct xfs_inode *ip, struct xfs_perag *pag);
+> +int xfs_inode_ag_iterator(struct xfs_mount *mp,
+> +	int (*execute)(struct xfs_inode *ip, struct xfs_perag *pag, int flags),
+> +	int flags, int tag);
+> +
+>  #endif
 > 
 > _______________________________________________
 > xfs mailing list
