@@ -1,28 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n55GKVkA054997 for <xfs@oss.sgi.com>; Fri, 5 Jun 2009 11:20:31 -0500
+	n55IHxFn057979 for <xfs@oss.sgi.com>; Fri, 5 Jun 2009 13:17:59 -0500
 Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id ABE281BCE1FE
-	for <xfs@oss.sgi.com>; Fri,  5 Jun 2009 09:20:48 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DBCC72D6DB4
+	for <xfs@oss.sgi.com>; Fri,  5 Jun 2009 11:18:17 -0700 (PDT)
 Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id 6ulvwIprp0RWTBw2 for <xfs@oss.sgi.com>;
-	Fri, 05 Jun 2009 09:20:48 -0700 (PDT)
-Received: from int-mx2.corp.redhat.com (int-mx2.corp.redhat.com [172.16.27.26])
-	by mx2.redhat.com (8.13.8/8.13.8) with ESMTP id n55GKmWV006123
-	for <xfs@oss.sgi.com>; Fri, 5 Jun 2009 12:20:48 -0400
-Received: from ns3.rdu.redhat.com (ns3.rdu.redhat.com [10.11.255.199])
-	by int-mx2.corp.redhat.com (8.13.1/8.13.1) with ESMTP id n55GKlOg008817
-	for <xfs@oss.sgi.com>; Fri, 5 Jun 2009 12:20:47 -0400
-Received: from neon.msp.redhat.com (neon.msp.redhat.com [10.15.80.10])
-	by ns3.rdu.redhat.com (8.13.8/8.13.8) with ESMTP id n55GKiQ7005512
-	for <xfs@oss.sgi.com>; Fri, 5 Jun 2009 12:20:45 -0400
-Message-ID: <4A2945DC.8040809@redhat.com>
-Date: Fri, 05 Jun 2009 11:20:44 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	with ESMTP id 5gqOxwe53wXiWCaC for <xfs@oss.sgi.com>;
+	Fri, 05 Jun 2009 11:18:17 -0700 (PDT)
+Message-ID: <4A29615E.2070303@sandeen.net>
+Date: Fri, 05 Jun 2009 13:18:06 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] xfstests: update aio-stress.c, with copyright information
-	intact
+Subject: Re: [PATCH 5/7] xfs: introduce a per-ag inode iterator
+References: <20090514171233.942489000@bombadil.infradead.org>	<20090514171558.869514000@bombadil.infradead.org>	<4A26F6B1.20509@sandeen.net>
+	<20090604171726.GA13501@infradead.org>
+In-Reply-To: <20090604171726.GA13501@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,595 +28,460 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs mailing list <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Pulled from:
-http://ltp.cvs.sourceforge.net/viewvc/ltp/ltp/testcases/kernel/io/ltp-aiodio/aio-stress.c
-revision 1.8
+Christoph Hellwig wrote:
+> On Wed, Jun 03, 2009 at 05:18:25PM -0500, Eric Sandeen wrote:
+>> Ok, it's looking for EAGAIN here, I'm assuming this is for when we are
+>> calling xfs_reclaim_inode_now, because...
+>>
+>> ...
+>> ... because before, that's what we did above, after testing for a non-0
+>> return from xfs_reclaim_inode.
+>>
+>> But xfs_reclaim_inode_now() returns 0 or the result of
+>> xfs_reclaim_inode, which is 0/1, so above:
+> 
+> Yeah.  Updated patch below that besides addressing the other comments
+> makes xfs_reclaim_inode return -EAGAIN if it has to skip an inode.
+> 
+> Subject: xfs: introduce a per-ag inode iterator
+> From: Dave Chinner <david@fromorbit.com>
+> 
+> From: Dave Chinner <david@fromorbit.com>
+> 
+> Given that we walk across the per-ag inode lists so often, it makes sense to
+> introduce an iterator for this.
+> 
+> Convert the sync and reclaim code to use this new iterator, quota code will
+> follow in the next patch.
+> 
+> Also change xfs_reclaim_inode to return -EGAIN instead of 1 for an inode
+> already under reclaim.  This simplifies the AG iterator and doesn't
+> matter for the only other caller.
+> 
+> [hch: merged the lookup and execute callbacks back into one to get the
+>  pag_ici_lock locking correct and simplify the code flow]
+> 
+> Signed-off-by: Dave Chinner <david@fromorbit.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-There are a couple new options, but the main motivator is to
-get the license text intact again.
+Ok, I like this version :)
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-iff --git a/ltp/aio-stress.c b/ltp/aio-stress.c
-index 6ebe082..ab9e006 100644
---- a/ltp/aio-stress.c
-+++ b/ltp/aio-stress.c
-@@ -1,7 +1,45 @@
- /*
-+ * Copyright (c) 2004 SuSE, Inc.  All Rights Reserved.
-+ * 
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ * 
-+ * This program is distributed in the hope that it would be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-+ * 
-+ * Further, this software is distributed without any warranty that it is
-+ * free of the rightful claim of any third person regarding infringement
-+ * or the like.  Any license provided herein, whether implied or
-+ * otherwise, applies only to this software file.  Patent licenses, if
-+ * any, provided herein do not apply to combinations of this program with
-+ * other software, or any other product whatsoever.
-+ * 
-+ * You should have received a copy of the GNU General Public License along
-+ * with this program; if not, write the Free Software Foundation, Inc., 59
-+ * Temple Place - Suite 330, Boston MA 02111-1307, USA.
-+ * 
-+ *
-+ * aio-stress
-+ *
-+ * will open or create each file on the command line, and start a series
-+ * of aio to it.  
-+ *
-+ * aio is done in a rotating loop.  first file1 gets 8 requests, then
-+ * file2, then file3 etc.  As each file finishes writing, it is switched
-+ * to reads
-+ *
-+ * io buffers are aligned in case you want to do raw io
-+ *
-+ * compile with gcc -Wall -laio -lpthread -o aio-stress aio-stress.c
-+ *
-+ * run aio-stress -h to see the options
-+ *
-+ * Please mail Chris Mason (mason@suse.com) with bug reports or patches
-  */
- #define _FILE_OFFSET_BITS 64
--#define PROG_VERSION "0.18"
-+#define PROG_VERSION "0.21"
- #define NEW_GETEVENTS
- 
- #include <stdio.h>
-@@ -50,6 +88,7 @@ unsigned long page_size_mask;
- int o_direct = 0;
- int o_sync = 0;
- int latency_stats = 0;
-+int completion_latency_stats = 0;
- int io_iter = 8;
- int iterations = RUN_FOREVER;
- int max_io_submit = 0;
-@@ -67,6 +106,7 @@ int padded_reclen = 0;
- int stonewall = 1;
- int verify = 0;
- char *verify_buf = NULL;
-+int unlink_files = 0;
- 
- struct io_unit;
- struct thread_info;
-@@ -164,6 +204,8 @@ struct io_unit {
-     long res;
- 
-     struct io_unit *next;
-+
-+    struct timeval io_start_time;		/* time of io_submit */
- };
- 
- struct thread_info {
-@@ -203,15 +245,20 @@ struct thread_info {
- 
-     /* how much io this thread did in the last stage */
-     double stage_mb_trans;
-+
-+    /* latency completion stats i/o time from io_submit until io_getevents */
-+    struct io_latency io_completion_latency;
- };
- 
--static double time_since(struct timeval *tv) {
-+/*
-+ * return seconds between start_tv and stop_tv in double precision
-+ */
-+static double time_since(struct timeval *start_tv, struct timeval *stop_tv)
-+{
-     double sec, usec;
-     double ret;
--    struct timeval stop;
--    gettimeofday(&stop, NULL);
--    sec = stop.tv_sec - tv->tv_sec;
--    usec = stop.tv_usec - tv->tv_usec;
-+    sec = stop_tv->tv_sec - start_tv->tv_sec;
-+    usec = stop_tv->tv_usec - start_tv->tv_usec;
-     if (sec > 0 && usec < 0) {
-         sec--;
- 	usec += 1000000;
-@@ -222,11 +269,25 @@ static double time_since(struct timeval *tv) {
-     return ret;
- }
- 
--static void calc_latency(struct timeval *tv, struct io_latency *lat)
-+/*
-+ * return seconds between start_tv and now in double precision
-+ */
-+static double time_since_now(struct timeval *start_tv)
-+{
-+    struct timeval stop_time;
-+    gettimeofday(&stop_time, NULL);
-+    return time_since(start_tv, &stop_time);
-+}
-+
-+/*
-+ * Add latency info to latency struct 
-+ */
-+static void calc_latency(struct timeval *start_tv, struct timeval *stop_tv,
-+			struct io_latency *lat)
- {
-     double delta;
-     int i;
--    delta = time_since(tv);
-+    delta = time_since(start_tv, stop_tv);
-     delta = delta * 1000;
- 
-     if (delta > lat->max)
-@@ -344,20 +405,19 @@ static void print_time(struct io_oper *oper) {
-     double tput;
-     double mb;
- 
--    runtime = time_since(&oper->start_time); 
-+    runtime = time_since_now(&oper->start_time); 
-     mb = oper_mb_trans(oper);
-     tput = mb / runtime;
-     fprintf(stderr, "%s on %s (%.2f MB/s) %.2f MB in %.2fs\n", 
- 	    stage_name(oper->rw), oper->file_name, tput, mb, runtime);
- }
- 
--static void print_latency(struct thread_info *t) {
--    struct io_latency *lat = &t->io_submit_latency;
-+static void print_lat(char *str, struct io_latency *lat) {
-     double avg = lat->total_lat / lat->total_io;
-     int i;
-     double total_counted = 0;
--    fprintf(stderr, "latency min %.2f avg %.2f max %.2f\n\t", 
--            lat->min, avg, lat->max);
-+    fprintf(stderr, "%s min %.2f avg %.2f max %.2f\n\t", 
-+            str, lat->min, avg, lat->max);
- 
-     for (i = 0 ; i < DEVIATIONS ; i++) {
- 	fprintf(stderr, " %.0f < %d", lat->deviations[i], deviations[i]);
-@@ -366,16 +426,30 @@ static void print_latency(struct thread_info *t) {
-     if (total_counted && lat->total_io - total_counted)
-         fprintf(stderr, " < %.0f", lat->total_io - total_counted);
-     fprintf(stderr, "\n");
--    memset(&t->io_submit_latency, 0, sizeof(t->io_submit_latency));
-+    memset(lat, 0, sizeof(*lat));
-+}
-+
-+static void print_latency(struct thread_info *t)
-+{
-+    struct io_latency *lat = &t->io_submit_latency;
-+    print_lat("latency", lat);
-+}
-+
-+static void print_completion_latency(struct thread_info *t)
-+{
-+    struct io_latency *lat = &t->io_completion_latency;
-+    print_lat("completion latency", lat);
- }
- 
- /*
-  * updates the fields in the io operation struct that belongs to this
-  * io unit, and make the io unit reusable again
-  */
--void finish_io(struct thread_info *t, struct io_unit *io, long result) {
-+void finish_io(struct thread_info *t, struct io_unit *io, long result,
-+		struct timeval *tv_now) {
-     struct io_oper *oper = io->io_oper;
- 
-+    calc_latency(&io->io_start_time, tv_now, &t->io_completion_latency);
-     io->res = result;
-     io->busy = IO_FREE;
-     io->next = t->free_ious;
-@@ -396,6 +470,7 @@ int read_some_events(struct thread_info *t) {
-     int nr;
-     int i; 
-     int min_nr = io_iter;
-+    struct timeval stop_time;
- 
-     if (t->num_global_pending < io_iter)
-         min_nr = t->num_global_pending;
-@@ -408,10 +483,11 @@ int read_some_events(struct thread_info *t) {
-     if (nr <= 0)
-         return nr;
- 
-+    gettimeofday(&stop_time, NULL);
-     for (i = 0 ; i < nr ; i++) {
- 	event = t->events + i;
- 	event_io = (struct io_unit *)((unsigned long)event->obj); 
--	finish_io(t, event_io, event->res);
-+	finish_io(t, event_io, event->res, &stop_time);
-     }
-     return nr;
- }
-@@ -465,9 +541,11 @@ static int io_oper_wait(struct thread_info *t, struct io_oper *oper) {
- #else
-     while(io_getevents(t->io_ctx, 1, &event, NULL) > 0) {
- #endif
-+	struct timeval tv_now;
-         event_io = (struct io_unit *)((unsigned long)event.obj); 
- 
--	finish_io(t, event_io, event.res);
-+	gettimeofday(&tv_now, NULL);
-+	finish_io(t, event_io, event.res, &tv_now);
- 
- 	if (oper->num_pending == 0)
- 	    break;
-@@ -641,7 +719,8 @@ int build_oper(struct thread_info *t, struct io_oper *oper, int num_ios,
-  * runs through the iocbs in the array provided and updates
-  * counters in the associated oper struct
-  */
--static void update_iou_counters(struct iocb **my_iocbs, int nr) 
-+static void update_iou_counters(struct iocb **my_iocbs, int nr,
-+	struct timeval *tv_now) 
- {
-     struct io_unit *io;
-     int i;
-@@ -649,6 +728,7 @@ static void update_iou_counters(struct iocb **my_iocbs, int nr)
- 	io = (struct io_unit *)(my_iocbs[i]);
- 	io->io_oper->num_pending++;
- 	io->io_oper->started_ios++;
-+	io->io_start_time = *tv_now;	/* set time of io_submit */
-     }
- }
- 
-@@ -657,15 +737,18 @@ int run_built(struct thread_info *t, int num_ios, struct iocb **my_iocbs)
- {
-     int ret;
-     struct timeval start_time;
-+    struct timeval stop_time;
- 
- resubmit:
-     gettimeofday(&start_time, NULL);
-     ret = io_submit(t->io_ctx, num_ios, my_iocbs);
--    calc_latency(&start_time, &t->io_submit_latency);
-+    gettimeofday(&stop_time, NULL);
-+    calc_latency(&start_time, &stop_time, &t->io_submit_latency);
-+
-     if (ret != num_ios) {
- 	/* some ios got through */
- 	if (ret > 0) {
--	    update_iou_counters(my_iocbs, ret);
-+	    update_iou_counters(my_iocbs, ret, &stop_time);
- 	    my_iocbs += ret;
- 	    t->num_global_pending += ret;
- 	    num_ios -= ret;
-@@ -675,15 +758,19 @@ resubmit:
- 	 * retry
- 	 */
- 	if (ret > 0 || ret == -EAGAIN) {
-+	    int old_ret = ret;
- 	    if ((ret = read_some_events(t) > 0)) {
- 		goto resubmit;
-+	    } else {
-+	    	fprintf(stderr, "ret was %d and now is %d\n", ret, old_ret);
-+		abort();
- 	    }
- 	}
- 
- 	fprintf(stderr, "ret %d (%s) on io_submit\n", ret, strerror(-ret));
- 	return -1;
-     }
--    update_iou_counters(my_iocbs, ret);
-+    update_iou_counters(my_iocbs, ret, &stop_time);
-     t->num_global_pending += ret;
-     return 0;
- }
-@@ -972,7 +1059,7 @@ free_buffers:
-  */
- void global_thread_throughput(struct thread_info *t, char *this_stage) {
-     int i;
--    double runtime = time_since(&global_stage_start_time);
-+    double runtime = time_since_now(&global_stage_start_time);
-     double total_mb = 0;
-     double min_trans = 0;
- 
-@@ -1013,121 +1100,109 @@ int worker(struct thread_info *t)
-     aio_setup(&t->io_ctx, 512);
- 
- restart:
--    printf("Starting %s iter:%d \n", __FUNCTION__,iteration);
-     if (num_threads > 1) {
--        printf("num_threads %d \n", num_threads);
-         pthread_mutex_lock(&stage_mutex);
--        threads_starting++;
--        if (threads_starting == num_threads) {
--            threads_ending = 0;
--            gettimeofday(&global_stage_start_time, NULL);
--            pthread_cond_broadcast(&stage_cond);
--        }
--        while (threads_starting != num_threads)
--            pthread_cond_wait(&stage_cond, &stage_mutex);
-+	threads_starting++;
-+	if (threads_starting == num_threads) {
-+	    threads_ending = 0;
-+	    gettimeofday(&global_stage_start_time, NULL);
-+	    pthread_cond_broadcast(&stage_cond);
-+	}
-+	while (threads_starting != num_threads)
-+	    pthread_cond_wait(&stage_cond, &stage_mutex);
-         pthread_mutex_unlock(&stage_mutex);
-     }
-     if (t->active_opers) {
--//        printf("active_opers %p line:%d\n", t->active_opers, __LINE__);
-         this_stage = stage_name(t->active_opers->rw);
--        gettimeofday(&stage_time, NULL);
--        t->stage_mb_trans = 0;
-+	gettimeofday(&stage_time, NULL);
-+	t->stage_mb_trans = 0;
-     }
-+
-     cnt = 0;
-     /* first we send everything through aio */
--//    printf("cnt:%d max_iterations:%d oper:%p\n",cnt, iterations,oper);
--                        
--    while (t->active_opers && (cnt < iterations || iterations == RUN_FOREVER)) {
--//        printf("active_opers %p line:%d cnt:%d ", t->active_opers,__LINE__,cnt);
--        if (stonewall && threads_ending) {
--            oper = t->active_opers;     
--            oper->stonewalled = 1;
--            oper_list_del(oper, &t->active_opers);
--            oper_list_add(oper, &t->finished_opers);
--//            printf(" if branch\n");
--        } else {
--            run_active_list(t, io_iter,  max_io_submit);
--//            printf(" else branch\n");
-+    while(t->active_opers && (cnt < iterations || iterations == RUN_FOREVER)) {
-+	if (stonewall && threads_ending) {
-+	    oper = t->active_opers;
-+	    oper->stonewalled = 1;
-+	    oper_list_del(oper, &t->active_opers);
-+	    oper_list_add(oper, &t->finished_opers);
-+	} else {
-+	    run_active_list(t, io_iter,  max_io_submit);
-         }
--        cnt++;
-+	cnt++;
-     }
--  
-     if (latency_stats)
-         print_latency(t);
- 
-+    if (completion_latency_stats)
-+	print_completion_latency(t);
-+
-     /* then we wait for all the operations to finish */
-     oper = t->finished_opers;
--//    printf("line:%d oper:%p\n", __LINE__, oper);
-     do {
--        io_oper_wait(t, oper);
--        if (oper != NULL) {
--            oper = oper->next;
--        }
--    } while (oper != t->finished_opers);
--//    printf("finished_opers %p line:%d\n", t->finished_opers,__LINE__);
-+	if (!oper)
-+		break;
-+	io_oper_wait(t, oper);
-+	oper = oper->next;
-+    } while(oper != t->finished_opers);
- 
-     /* then we do an fsync to get the timing for any future operations
-      * right, and check to see if any of these need to get restarted
-      */
-     oper = t->finished_opers;
--//    printf("oper %p line:%d\n", oper,__LINE__);
--    while (oper) {
--        if (fsync_stages)
-+    while(oper) {
-+	if (fsync_stages)
-             fsync(oper->fd);
--        t->stage_mb_trans += oper_mb_trans(oper);
--        if (restart_oper(oper)) {
--            oper_list_del(oper, &t->finished_opers);
--            oper_list_add(oper, &t->active_opers);
--            oper = t->finished_opers;
--            continue;
--        }
--        oper = oper->next;
--        if (oper == t->finished_opers)
--            break;
-+	t->stage_mb_trans += oper_mb_trans(oper);
-+	if (restart_oper(oper)) {
-+	    oper_list_del(oper, &t->finished_opers);
-+	    oper_list_add(oper, &t->active_opers);
-+	    oper = t->finished_opers;
-+	    continue;
-+	}
-+	oper = oper->next;
-+	if (oper == t->finished_opers)
-+	    break;
-     } 
- 
-     if (t->stage_mb_trans && t->num_files > 0) {
--//        printf("num_files %d line:%d\n", t->num_files,__LINE__);
--        double seconds = time_since(&stage_time);
--        fprintf(stderr, "thread %d %s totals (%.2f MB/s) %.2f MB in %.2fs\n", 
--                t - global_thread_info, this_stage, t->stage_mb_trans/seconds, 
--                t->stage_mb_trans, seconds);
-+        double seconds = time_since_now(&stage_time);
-+	fprintf(stderr, "thread %d %s totals (%.2f MB/s) %.2f MB in %.2fs\n", 
-+	        t - global_thread_info, this_stage, t->stage_mb_trans/seconds, 
-+		t->stage_mb_trans, seconds);
-     }
- 
-     if (num_threads > 1) {
--//        printf("num_threads %d line:%d\n", num_threads,__LINE__);
--        pthread_mutex_lock(&stage_mutex);
--        threads_ending++;
--        if (threads_ending == num_threads) {
--            threads_starting = 0;
--            pthread_cond_broadcast(&stage_cond);
--            global_thread_throughput(t, this_stage);
--        }
--//        printf("threads_ending %d line:%d\n", threads_ending,__LINE__);
--        while (threads_ending != num_threads)
--            pthread_cond_wait(&stage_cond, &stage_mutex);
--        pthread_mutex_unlock(&stage_mutex);
-+	pthread_mutex_lock(&stage_mutex);
-+	threads_ending++;
-+	if (threads_ending == num_threads) {
-+	    threads_starting = 0;
-+	    pthread_cond_broadcast(&stage_cond);
-+	    global_thread_throughput(t, this_stage);
-+	}
-+	while(threads_ending != num_threads)
-+	    pthread_cond_wait(&stage_cond, &stage_mutex);
-+	pthread_mutex_unlock(&stage_mutex);
-     }
--
-+    
-     /* someone got restarted, go back to the beginning */
-     if (t->active_opers && (cnt < iterations || iterations == RUN_FOREVER)) {
--        iteration++;
-+	iteration++;
-         goto restart;
-     }
- 
-     /* finally, free all the ram */
--//    printf("finished_opers %p line:%d\n", t->finished_opers,__LINE__);
--    while (t->finished_opers) {
--        oper = t->finished_opers;
--        oper_list_del(oper, &t->finished_opers);
--        status = finish_oper(t, oper);
-+    while(t->finished_opers) {
-+	oper = t->finished_opers;
-+	oper_list_del(oper, &t->finished_opers);
-+	status = finish_oper(t, oper);
-     }
- 
-     if (t->num_global_pending) {
-         fprintf(stderr, "global num pending is %d\n", t->num_global_pending);
-     }
-     io_queue_release(t->io_ctx);
--
-+    
-     return status;
- }
- 
-@@ -1138,7 +1213,6 @@ int run_workers(struct thread_info *t, int num_threads)
-     int thread_ret;
-     int i;
- 
--//    printf("%s num_threads %d line:%d\n", __FUNCTION__,num_threads,__LINE__);
-     for(i = 0 ; i < num_threads ; i++) {
-         ret = pthread_create(&t[i].tid, NULL, (start_routine)worker, t + i);
- 	if (ret) {
-@@ -1178,6 +1252,10 @@ off_t parse_size(char *size_arg, off_t mult) {
-     case 'K':
-         mult = 1024;
- 	break;
-+    case 'b':
-+    case 'B':
-+        mult = 1;
-+	break;
-     }
-     ret = mult * num;
-     return ret;
-@@ -1205,7 +1283,9 @@ void print_usage(void) {
-     printf("\t-m shmfs mmap a file in /dev/shm for io buffers\n");
-     printf("\t-n no fsyncs between write stage and read stage\n");
-     printf("\t-l print io_submit latencies after each stage\n");
-+    printf("\t-L print io completion latencies after each stage\n");
-     printf("\t-t number of threads to run\n");
-+    printf("\t-u unlink files after completion\n");
-     printf("\t-v verification of bytes written\n");
-     printf("\t-x turn off thread stonewalling\n");
-     printf("\t-h this message\n");
-@@ -1232,7 +1312,7 @@ int main(int ac, char **av)
-     page_size_mask = getpagesize() - 1;
- 
-     while(1) {
--	c = getopt(ac, av, "a:b:c:C:m:s:r:d:i:I:o:t:lnhOSxv");
-+	c = getopt(ac, av, "a:b:c:C:m:s:r:d:i:I:o:t:lLnhOSxvu");
- 	if  (c < 0)
- 	    break;
- 
-@@ -1270,6 +1350,9 @@ int main(int ac, char **av)
- 	case 'l':
- 	    latency_stats = 1;
- 	    break;
-+	case 'L':
-+	    completion_latency_stats = 1;
-+	    break;
- 	case 'm':
- 	    if (!strcmp(optarg, "shm")) {
- 		fprintf(stderr, "using ipc shm\n");
-@@ -1296,6 +1379,9 @@ int main(int ac, char **av)
- 	case 'x':
- 	    stonewall = 0;
- 	    break;
-+	case 'u':
-+	    unlink_files = 1;
-+	    break;
- 	case 'v':
- 	    verify = 1;
- 	    break;
-@@ -1379,7 +1465,6 @@ int main(int ac, char **av)
- 	for (j = 0 ; j < num_contexts ; j++) {
- 	    thread_index = open_fds % num_threads;
- 	    open_fds++;
--//	    fprintf(stderr, "adding file %s thread %d\n", av[i], thread_index);
- 
- 	    rwfd = open(av[i], O_CREAT | O_RDWR | o_direct | o_sync, 0600);
- 	    assert(rwfd != -1);
-@@ -1407,25 +1492,21 @@ int main(int ac, char **av)
-     if (num_threads > 1){
-         printf("Running multi thread version num_threads:%d\n", num_threads);
-         run_workers(t, num_threads);
--    }
--    else {
-+    } else {
-         printf("Running single thread version \n");
--        status = worker(t);
-+	status = worker(t);
-     }
--
--
--    for (i = optind ; i < ac ; i++) {
--        printf("Cleaning up file %s \n", av[i]);
--        unlink(av[i]);
-+    if (unlink_files) {
-+	for (i = optind ; i < ac ; i++) {
-+	    printf("Cleaning up file %s \n", av[i]);
-+	    unlink(av[i]);
-+	}
-     }
- 
-     if (status) {
--    printf("non zero return %d \n", status);
--    }
--    else{
--        printf("aio-stress Completed successfully %d \n", status);
-+	exit(1);
-     }
--
--    exit(0);
-+    return status;
- }
- 
-+
-
+> Index: xfs/fs/xfs/linux-2.6/xfs_sync.c
+> ===================================================================
+> --- xfs.orig/fs/xfs/linux-2.6/xfs_sync.c	2009-06-04 12:50:25.380940755 +0200
+> +++ xfs/fs/xfs/linux-2.6/xfs_sync.c	2009-06-04 13:09:06.199942249 +0200
+> @@ -49,6 +49,123 @@
+>  #include <linux/freezer.h>
+>  
+>  
+> +STATIC xfs_inode_t *
+> +xfs_inode_ag_lookup(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_perag	*pag,
+> +	uint32_t		*first_index,
+> +	int			tag)
+> +{
+> +	int			nr_found;
+> +	struct xfs_inode	*ip;
+> +
+> +	/*
+> +	 * use a gang lookup to find the next inode in the tree
+> +	 * as the tree is sparse and a gang lookup walks to find
+> +	 * the number of objects requested.
+> +	 */
+> +	read_lock(&pag->pag_ici_lock);
+> +	if (tag == -1) {
+> +		nr_found = radix_tree_gang_lookup(&pag->pag_ici_root,
+> +				(void **)&ip, *first_index, 1);
+> +	} else {
+> +		nr_found = radix_tree_gang_lookup_tag(&pag->pag_ici_root,
+> +				(void **)&ip, *first_index, 1, tag);
+> +	}
+> +	if (!nr_found)
+> +		goto unlock;
+> +
+> +	/*
+> +	 * Update the index for the next lookup. Catch overflows
+> +	 * into the next AG range which can occur if we have inodes
+> +	 * in the last block of the AG and we are currently
+> +	 * pointing to the last inode.
+> +	 */
+> +	*first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
+> +	if (*first_index < XFS_INO_TO_AGINO(mp, ip->i_ino))
+> +		goto unlock;
+> +
+> +	return ip;
+> +
+> +unlock:
+> +	read_unlock(&pag->pag_ici_lock);
+> +	return NULL;
+> +}
+> +
+> +STATIC int
+> +xfs_inode_ag_walk(
+> +	struct xfs_mount	*mp,
+> +	xfs_agnumber_t		ag,
+> +	int			(*execute)(struct xfs_inode *ip,
+> +					   struct xfs_perag *pag, int flags),
+> +	int			flags,
+> +	int			tag)
+> +{
+> +	struct xfs_perag	*pag = &mp->m_perag[ag];
+> +	uint32_t		first_index;
+> +	int			last_error = 0;
+> +	int			skipped;
+> +
+> +restart:
+> +	skipped = 0;
+> +	first_index = 0;
+> +	do {
+> +		int		error = 0;
+> +		xfs_inode_t	*ip;
+> +
+> +		ip = xfs_inode_ag_lookup(mp, pag, &first_index, tag);
+> +		if (!ip)
+> +			break;
+> +
+> +		error = execute(ip, pag, flags);
+> +		if (error == EAGAIN) {
+> +			skipped++;
+> +			continue;
+> +		}
+> +		if (error)
+> +			last_error = error;
+> +		/*
+> +		 * bail out if the filesystem is corrupted.
+> +		 */
+> +		if (error == EFSCORRUPTED)
+> +			break;
+> +
+> +	} while (1);
+> +
+> +	if (skipped) {
+> +		delay(1);
+> +		goto restart;
+> +	}
+> +
+> +	xfs_put_perag(mp, pag);
+> +	return last_error;
+> +}
+> +
+> +STATIC int
+> +xfs_inode_ag_iterator(
+> +	struct xfs_mount	*mp,
+> +	int			(*execute)(struct xfs_inode *ip,
+> +					   struct xfs_perag *pag, int flags),
+> +	int			flags,
+> +	int			tag)
+> +{
+> +	int			error = 0;
+> +	int			last_error = 0;
+> +	xfs_agnumber_t		ag;
+> +
+> +	for (ag = 0; ag < mp->m_sb.sb_agcount; ag++) {
+> +		if (!mp->m_perag[ag].pag_ici_init)
+> +			continue;
+> +		error = xfs_inode_ag_walk(mp, ag, execute, flags, tag);
+> +		if (error) {
+> +			last_error = error;
+> +			if (error == EFSCORRUPTED)
+> +				break;
+> +		}
+> +	}
+> +	return XFS_ERROR(last_error);
+> +}
+> +
+>  /* must be called with pag_ici_lock held and releases it */
+>  STATIC int
+>  xfs_sync_inode_valid(
+> @@ -85,12 +202,17 @@ xfs_sync_inode_valid(
+>  STATIC int
+>  xfs_sync_inode_data(
+>  	struct xfs_inode	*ip,
+> +	struct xfs_perag	*pag,
+>  	int			flags)
+>  {
+>  	struct inode		*inode = VFS_I(ip);
+>  	struct address_space *mapping = inode->i_mapping;
+>  	int			error = 0;
+>  
+> +	error = xfs_sync_inode_valid(ip, pag);
+> +	if (error)
+> +		return error;
+> +
+>  	if (!mapping_tagged(mapping, PAGECACHE_TAG_DIRTY))
+>  		goto out_wait;
+>  
+> @@ -107,16 +229,22 @@ xfs_sync_inode_data(
+>   out_wait:
+>  	if (flags & SYNC_IOWAIT)
+>  		xfs_ioend_wait(ip);
+> +	IRELE(ip);
+>  	return error;
+>  }
+>  
+>  STATIC int
+>  xfs_sync_inode_attr(
+>  	struct xfs_inode	*ip,
+> +	struct xfs_perag	*pag,
+>  	int			flags)
+>  {
+>  	int			error = 0;
+>  
+> +	error = xfs_sync_inode_valid(ip, pag);
+> +	if (error)
+> +		return error;
+> +
+>  	xfs_ilock(ip, XFS_ILOCK_SHARED);
+>  	if (xfs_inode_clean(ip))
+>  		goto out_unlock;
+> @@ -136,117 +264,33 @@ xfs_sync_inode_attr(
+>  
+>   out_unlock:
+>  	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+> +	IRELE(ip);
+>  	return error;
+>  }
+>  
+> -/*
+> - * Sync all the inodes in the given AG according to the
+> - * direction given by the flags.
+> - */
+> -STATIC int
+> -xfs_sync_inodes_ag(
+> -	xfs_mount_t	*mp,
+> -	int		ag,
+> -	int		flags)
+> -{
+> -	xfs_perag_t	*pag = &mp->m_perag[ag];
+> -	int		nr_found;
+> -	uint32_t	first_index = 0;
+> -	int		error = 0;
+> -	int		last_error = 0;
+> -
+> -	do {
+> -		xfs_inode_t	*ip = NULL;
+> -
+> -		/*
+> -		 * use a gang lookup to find the next inode in the tree
+> -		 * as the tree is sparse and a gang lookup walks to find
+> -		 * the number of objects requested.
+> -		 */
+> -		read_lock(&pag->pag_ici_lock);
+> -		nr_found = radix_tree_gang_lookup(&pag->pag_ici_root,
+> -				(void**)&ip, first_index, 1);
+> -
+> -		if (!nr_found) {
+> -			read_unlock(&pag->pag_ici_lock);
+> -			break;
+> -		}
+> -
+> -		/*
+> -		 * Update the index for the next lookup. Catch overflows
+> -		 * into the next AG range which can occur if we have inodes
+> -		 * in the last block of the AG and we are currently
+> -		 * pointing to the last inode.
+> -		 */
+> -		first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
+> -		if (first_index < XFS_INO_TO_AGINO(mp, ip->i_ino)) {
+> -			read_unlock(&pag->pag_ici_lock);
+> -			break;
+> -		}
+> -
+> -		error = xfs_sync_inode_valid(ip, pag);
+> -		if (error) {
+> -			if (error == EFSCORRUPTED)
+> -				return 0;
+> -			continue;
+> -		}
+> -
+> -		/*
+> -		 * If we have to flush data or wait for I/O completion
+> -		 * we need to hold the iolock.
+> -		 */
+> -		if (flags & SYNC_DELWRI)
+> -			error = xfs_sync_inode_data(ip, flags);
+> -
+> -		if (flags & SYNC_ATTR)
+> -			error = xfs_sync_inode_attr(ip, flags);
+> -
+> -		IRELE(ip);
+> -
+> -		if (error)
+> -			last_error = error;
+> -		/*
+> -		 * bail out if the filesystem is corrupted.
+> -		 */
+> -		if (error == EFSCORRUPTED)
+> -			return XFS_ERROR(error);
+> -
+> -	} while (nr_found);
+> -
+> -	return last_error;
+> -}
+> -
+>  int
+>  xfs_sync_inodes(
+>  	xfs_mount_t	*mp,
+>  	int		flags)
+>  {
+> -	int		error;
+> -	int		last_error;
+> -	int		i;
+> +	int		error = 0;
+>  	int		lflags = XFS_LOG_FORCE;
+>  
+>  	if (mp->m_flags & XFS_MOUNT_RDONLY)
+>  		return 0;
+> -	error = 0;
+> -	last_error = 0;
+>  
+>  	if (flags & SYNC_WAIT)
+>  		lflags |= XFS_LOG_SYNC;
+>  
+> -	for (i = 0; i < mp->m_sb.sb_agcount; i++) {
+> -		if (!mp->m_perag[i].pag_ici_init)
+> -			continue;
+> -		error = xfs_sync_inodes_ag(mp, i, flags);
+> -		if (error)
+> -			last_error = error;
+> -		if (error == EFSCORRUPTED)
+> -			break;
+> -	}
+>  	if (flags & SYNC_DELWRI)
+> -		xfs_log_force(mp, 0, lflags);
+> +		error = xfs_inode_ag_iterator(mp, xfs_sync_inode_data, flags, -1);
+>  
+> -	return XFS_ERROR(last_error);
+> +	if (flags & SYNC_ATTR)
+> +		error = xfs_inode_ag_iterator(mp, xfs_sync_inode_attr, flags, -1);
+> +
+> +	if (!error && (flags & SYNC_DELWRI))
+> +		xfs_log_force(mp, 0, lflags);
+> +	return XFS_ERROR(error);
+>  }
+>  
+>  STATIC int
+> @@ -613,7 +657,7 @@ xfs_reclaim_inode(
+>  			xfs_ifunlock(ip);
+>  			xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>  		}
+> -		return 1;
+> +		return -EAGAIN;
+>  	}
+>  	__xfs_iflags_set(ip, XFS_IRECLAIM);
+>  	spin_unlock(&ip->i_flags_lock);
+> @@ -698,72 +742,20 @@ xfs_inode_clear_reclaim_tag(
+>  	xfs_put_perag(mp, pag);
+>  }
+>  
+> -
+> -STATIC void
+> -xfs_reclaim_inodes_ag(
+> -	xfs_mount_t	*mp,
+> -	int		ag,
+> -	int		mode)
+> +STATIC int
+> +xfs_reclaim_inode_now(
+> +	struct xfs_inode	*ip,
+> +	struct xfs_perag	*pag,
+> +	int			flags)
+>  {
+> -	xfs_inode_t	*ip = NULL;
+> -	xfs_perag_t	*pag = &mp->m_perag[ag];
+> -	int		nr_found;
+> -	uint32_t	first_index;
+> -	int		skipped;
+> -
+> -restart:
+> -	first_index = 0;
+> -	skipped = 0;
+> -	do {
+> -		/*
+> -		 * use a gang lookup to find the next inode in the tree
+> -		 * as the tree is sparse and a gang lookup walks to find
+> -		 * the number of objects requested.
+> -		 */
+> -		read_lock(&pag->pag_ici_lock);
+> -		nr_found = radix_tree_gang_lookup_tag(&pag->pag_ici_root,
+> -					(void**)&ip, first_index, 1,
+> -					XFS_ICI_RECLAIM_TAG);
+> -
+> -		if (!nr_found) {
+> -			read_unlock(&pag->pag_ici_lock);
+> -			break;
+> -		}
+> -
+> -		/*
+> -		 * Update the index for the next lookup. Catch overflows
+> -		 * into the next AG range which can occur if we have inodes
+> -		 * in the last block of the AG and we are currently
+> -		 * pointing to the last inode.
+> -		 */
+> -		first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
+> -		if (first_index < XFS_INO_TO_AGINO(mp, ip->i_ino)) {
+> -			read_unlock(&pag->pag_ici_lock);
+> -			break;
+> -		}
+> -
+> -		/* ignore if already under reclaim */
+> -		if (xfs_iflags_test(ip, XFS_IRECLAIM)) {
+> -			read_unlock(&pag->pag_ici_lock);
+> -			continue;
+> -		}
+> -
+> +	/* ignore if already under reclaim */
+> +	if (xfs_iflags_test(ip, XFS_IRECLAIM)) {
+>  		read_unlock(&pag->pag_ici_lock);
+> -
+> -		/*
+> -		 * hmmm - this is an inode already in reclaim. Do
+> -		 * we even bother catching it here?
+> -		 */
+> -		if (xfs_reclaim_inode(ip, 0, mode))
+> -			skipped++;
+> -	} while (nr_found);
+> -
+> -	if (skipped) {
+> -		delay(1);
+> -		goto restart;
+> +		return 0;
+>  	}
+> -	return;
+> +	read_unlock(&pag->pag_ici_lock);
+>  
+> +	return xfs_reclaim_inode(ip, 0, flags);
+>  }
+>  
+>  int
+> @@ -771,14 +763,6 @@ xfs_reclaim_inodes(
+>  	xfs_mount_t	*mp,
+>  	int		mode)
+>  {
+> -	int		i;
+> -
+> -	for (i = 0; i < mp->m_sb.sb_agcount; i++) {
+> -		if (!mp->m_perag[i].pag_ici_init)
+> -			continue;
+> -		xfs_reclaim_inodes_ag(mp, i, mode);
+> -	}
+> -	return 0;
+> +	return xfs_inode_ag_iterator(mp, xfs_reclaim_inode_now, mode,
+> +					XFS_ICI_RECLAIM_TAG);
+>  }
+> -
+> -
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
