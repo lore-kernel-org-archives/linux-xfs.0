@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n55JARwu060813 for <xfs@oss.sgi.com>; Fri, 5 Jun 2009 14:10:28 -0500
+	n55JHT5G061051 for <xfs@oss.sgi.com>; Fri, 5 Jun 2009 14:17:30 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7FB508BBE00
-	for <xfs@oss.sgi.com>; Fri,  5 Jun 2009 12:17:30 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B253F1A6D678
+	for <xfs@oss.sgi.com>; Fri,  5 Jun 2009 12:17:48 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id JfvPgvHHPY8vDc2k for
-	<xfs@oss.sgi.com>; Fri, 05 Jun 2009 12:17:30 -0700 (PDT)
-Date: Fri, 5 Jun 2009 15:10:26 -0400
+	by cuda.sgi.com with ESMTP id NRbhzhwF7dZnWrPS for
+	<xfs@oss.sgi.com>; Fri, 05 Jun 2009 12:17:48 -0700 (PDT)
+Date: Fri, 5 Jun 2009 15:17:45 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests: update aio-stress.c, with copyright
-	information intact
-Message-ID: <20090605191020.GA11399@infradead.org>
-References: <4A2945DC.8040809@redhat.com>
+Subject: Re: [PATCH 6/7] xfs: use generic inode iterator in
+	xfs_qm_dqrele_all_inodes
+Message-ID: <20090605191744.GA17489@infradead.org>
+References: <20090514171233.942489000@bombadil.infradead.org>
+	<20090514171559.029154000@bombadil.infradead.org>
+	<4A296EDA.9020802@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4A2945DC.8040809@redhat.com>
+In-Reply-To: <4A296EDA.9020802@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,24 +31,203 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs mailing list <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Fri, Jun 05, 2009 at 11:20:44AM -0500, Eric Sandeen wrote:
-> Pulled from:
-> http://ltp.cvs.sourceforge.net/viewvc/ltp/ltp/testcases/kernel/io/ltp-aiodio/aio-stress.c
-> revision 1.8
-> 
-> There are a couple new options, but the main motivator is to
-> get the license text intact again.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+On Fri, Jun 05, 2009 at 02:15:38PM -0500, Eric Sandeen wrote:
+> Does this need the same error propagation treatment as 5/7 ?
+
+Yes, I've already fixed this up in my local copy:
+
+Subject: xfs: use generic inode iterator in xfs_qm_dqrele_all_inodes
+From: Christoph Hellwig <hch@lst.de>
+
+Use xfs_inode_ag_iterator instead of opencoding the inode walk in the
+quota code.  Mark xfs_inode_ag_iterator and xfs_sync_inode_valid non-static
+to allow using them from the quota code.
 
 
-Looks good,
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
 
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Index: xfs/fs/xfs/quota/xfs_qm_syscalls.c
+===================================================================
+--- xfs.orig/fs/xfs/quota/xfs_qm_syscalls.c	2009-06-04 12:47:30.742821242 +0200
++++ xfs/fs/xfs/quota/xfs_qm_syscalls.c	2009-06-04 13:03:51.039832673 +0200
+@@ -847,105 +847,55 @@ xfs_qm_export_flags(
+ }
+ 
+ 
+-/*
+- * Release all the dquots on the inodes in an AG.
+- */
+-STATIC void
+-xfs_qm_dqrele_inodes_ag(
+-	xfs_mount_t	*mp,
+-	int		ag,
+-	uint		flags)
++STATIC int
++xfs_dqrele_inode(
++	struct xfs_inode	*ip,
++	struct xfs_perag	*pag,
++	int			flags)
+ {
+-	xfs_inode_t	*ip = NULL;
+-	xfs_perag_t	*pag = &mp->m_perag[ag];
+-	int		first_index = 0;
+-	int		nr_found;
+-
+-	do {
+-		/*
+-		 * use a gang lookup to find the next inode in the tree
+-		 * as the tree is sparse and a gang lookup walks to find
+-		 * the number of objects requested.
+-		 */
+-		read_lock(&pag->pag_ici_lock);
+-		nr_found = radix_tree_gang_lookup(&pag->pag_ici_root,
+-				(void**)&ip, first_index, 1);
+-
+-		if (!nr_found) {
+-			read_unlock(&pag->pag_ici_lock);
+-			break;
+-		}
+-
+-		/*
+-		 * Update the index for the next lookup. Catch overflows
+-		 * into the next AG range which can occur if we have inodes
+-		 * in the last block of the AG and we are currently
+-		 * pointing to the last inode.
+-		 */
+-		first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
+-		if (first_index < XFS_INO_TO_AGINO(mp, ip->i_ino)) {
+-			read_unlock(&pag->pag_ici_lock);
+-			break;
+-		}
+-
+-		/* skip quota inodes */
+-		if (ip == XFS_QI_UQIP(mp) || ip == XFS_QI_GQIP(mp)) {
+-			ASSERT(ip->i_udquot == NULL);
+-			ASSERT(ip->i_gdquot == NULL);
+-			read_unlock(&pag->pag_ici_lock);
+-			continue;
+-		}
++	int			error;
+ 
+-		/*
+-		 * If we can't get a reference on the inode, it must be
+-		 * in reclaim. Leave it for the reclaim code to flush.
+-		 */
+-		if (!igrab(VFS_I(ip))) {
+-			read_unlock(&pag->pag_ici_lock);
+-			continue;
+-		}
++	/* skip quota inodes */
++	if (ip == XFS_QI_UQIP(ip->i_mount) || ip == XFS_QI_GQIP(ip->i_mount)) {
++		ASSERT(ip->i_udquot == NULL);
++		ASSERT(ip->i_gdquot == NULL);
+ 		read_unlock(&pag->pag_ici_lock);
++		return 0;
++	}
+ 
+-		/* avoid new inodes though we shouldn't find any here */
+-		if (xfs_iflags_test(ip, XFS_INEW)) {
+-			IRELE(ip);
+-			continue;
+-		}
++	error = xfs_sync_inode_valid(ip, pag);
++	if (error)
++		return error;
+ 
+-		xfs_ilock(ip, XFS_ILOCK_EXCL);
+-		if ((flags & XFS_UQUOTA_ACCT) && ip->i_udquot) {
+-			xfs_qm_dqrele(ip->i_udquot);
+-			ip->i_udquot = NULL;
+-		}
+-		if (flags & (XFS_PQUOTA_ACCT|XFS_GQUOTA_ACCT) &&
+-		    ip->i_gdquot) {
+-			xfs_qm_dqrele(ip->i_gdquot);
+-			ip->i_gdquot = NULL;
+-		}
+-		xfs_iput(ip, XFS_ILOCK_EXCL);
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	if ((flags & XFS_UQUOTA_ACCT) && ip->i_udquot) {
++		xfs_qm_dqrele(ip->i_udquot);
++		ip->i_udquot = NULL;
++	}
++	if (flags & (XFS_PQUOTA_ACCT|XFS_GQUOTA_ACCT) && ip->i_gdquot) {
++		xfs_qm_dqrele(ip->i_gdquot);
++		ip->i_gdquot = NULL;
++	}
++	xfs_iput(ip, XFS_ILOCK_EXCL);
++	IRELE(ip);
+ 
+-	} while (nr_found);
++	return 0;
+ }
+ 
++
+ /*
+  * Go thru all the inodes in the file system, releasing their dquots.
++ *
+  * Note that the mount structure gets modified to indicate that quotas are off
+- * AFTER this, in the case of quotaoff. This also gets called from
+- * xfs_rootumount.
++ * AFTER this, in the case of quotaoff.
+  */
+ void
+ xfs_qm_dqrele_all_inodes(
+ 	struct xfs_mount *mp,
+ 	uint		 flags)
+ {
+-	int		i;
+-
+ 	ASSERT(mp->m_quotainfo);
+-	for (i = 0; i < mp->m_sb.sb_agcount; i++) {
+-		if (!mp->m_perag[i].pag_ici_init)
+-			continue;
+-		xfs_qm_dqrele_inodes_ag(mp, i, flags);
+-	}
++	xfs_inode_ag_iterator(mp, xfs_dqrele_inode, flags, -1);
+ }
+ 
+ /*------------------------------------------------------------------------*/
+Index: xfs/fs/xfs/linux-2.6/xfs_sync.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_sync.c	2009-06-04 13:01:29.388941822 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_sync.c	2009-06-04 13:02:26.249965001 +0200
+@@ -141,7 +141,7 @@ restart:
+ 	return last_error;
+ }
+ 
+-STATIC int
++int
+ xfs_inode_ag_iterator(
+ 	struct xfs_mount	*mp,
+ 	int			(*execute)(struct xfs_inode *ip,
+@@ -167,7 +167,7 @@ xfs_inode_ag_iterator(
+ }
+ 
+ /* must be called with pag_ici_lock held and releases it */
+-STATIC int
++int
+ xfs_sync_inode_valid(
+ 	struct xfs_inode	*ip,
+ 	struct xfs_perag	*pag)
+Index: xfs/fs/xfs/linux-2.6/xfs_sync.h
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_sync.h	2009-06-04 12:47:30.804939977 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_sync.h	2009-06-04 13:02:26.249965001 +0200
+@@ -54,4 +54,10 @@ void xfs_inode_set_reclaim_tag(struct xf
+ void xfs_inode_clear_reclaim_tag(struct xfs_inode *ip);
+ void __xfs_inode_clear_reclaim_tag(struct xfs_mount *mp, struct xfs_perag *pag,
+ 				struct xfs_inode *ip);
++
++int xfs_sync_inode_valid(struct xfs_inode *ip, struct xfs_perag *pag);
++int xfs_inode_ag_iterator(struct xfs_mount *mp,
++	int (*execute)(struct xfs_inode *ip, struct xfs_perag *pag, int flags),
++	int flags, int tag);
++
+ #endif
 
 _______________________________________________
 xfs mailing list
