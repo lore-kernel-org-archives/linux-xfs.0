@@ -1,21 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n55Kj7ZK063796 for <xfs@oss.sgi.com>; Fri, 5 Jun 2009 15:45:08 -0500
+	n55LHdgG064828 for <xfs@oss.sgi.com>; Fri, 5 Jun 2009 16:17:39 -0500
 Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 611EB2D7463
-	for <xfs@oss.sgi.com>; Fri,  5 Jun 2009 13:45:26 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DA5B02D75CC
+	for <xfs@oss.sgi.com>; Fri,  5 Jun 2009 14:17:57 -0700 (PDT)
 Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id HAl5dSjIM0qgogQr for <xfs@oss.sgi.com>;
-	Fri, 05 Jun 2009 13:45:26 -0700 (PDT)
-Message-ID: <4A2983DB.90300@sandeen.net>
-Date: Fri, 05 Jun 2009 15:45:15 -0500
+	with ESMTP id A8luaQXndeXDfFWL for <xfs@oss.sgi.com>;
+	Fri, 05 Jun 2009 14:17:57 -0700 (PDT)
+Received: from int-mx2.corp.redhat.com (int-mx2.corp.redhat.com [172.16.27.26])
+	by mx2.redhat.com (8.13.8/8.13.8) with ESMTP id n55LHuc0010044
+	for <xfs@oss.sgi.com>; Fri, 5 Jun 2009 17:17:56 -0400
+Received: from ns3.rdu.redhat.com (ns3.rdu.redhat.com [10.11.255.199])
+	by int-mx2.corp.redhat.com (8.13.1/8.13.1) with ESMTP id n55LHuQX026173
+	for <xfs@oss.sgi.com>; Fri, 5 Jun 2009 17:17:56 -0400
+Received: from neon.msp.redhat.com (neon.msp.redhat.com [10.15.80.10])
+	by ns3.rdu.redhat.com (8.13.8/8.13.8) with ESMTP id n55LHs3k020198
+	for <xfs@oss.sgi.com>; Fri, 5 Jun 2009 17:17:55 -0400
+Message-ID: <4A298B82.3050903@sandeen.net>
+Date: Fri, 05 Jun 2009 16:17:54 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH 9/7] xfs: remove SYNC_BDFLUSH
-References: <20090514171233.942489000@bombadil.infradead.org>
-	<20090528121947.GB30037@infradead.org>
-In-Reply-To: <20090528121947.GB30037@infradead.org>
+Subject: [PATCH xfstests: Make "new" script insert appropriate license on tests
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,152 +34,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs mailing list <xfs@oss.sgi.com>
 
-Christoph Hellwig wrote:
-> SYNC_BDFLUSH is a leftover from IRIX and rather misnamed for todays
-> code.  Make xfs_sync_fsdata and xfs_dq_sync use the SYNC_TRYLOCK flag
-> for not blocking on logs just as the inode sync code already does.
-> 
-> For xfs_sync_fsdata it's a trivial 1:1 replacement, but for xfs_qm_sync
-> I use the opportunity to decouple the non-blocking lock case from the
-> different flushing modes, similar to the inode sync code.
-> 
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Don't default to SGI copyright, someone else may be
+making this test...
 
-Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-> Index: xfs/fs/xfs/linux-2.6/xfs_sync.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/linux-2.6/xfs_sync.c	2009-05-27 13:02:57.426938830 +0200
-> +++ xfs/fs/xfs/linux-2.6/xfs_sync.c	2009-05-27 13:07:53.227939055 +0200
-> @@ -350,7 +350,7 @@ xfs_sync_fsdata(
->  	 * If this is xfssyncd() then only sync the superblock if we can
->  	 * lock it without sleeping and it is not pinned.
->  	 */
-> -	if (flags & SYNC_BDFLUSH) {
-> +	if (flags & SYNC_TRYLOCK) {
->  		ASSERT(!(flags & SYNC_WAIT));
->  
->  		bp = xfs_getsb(mp, XFS_BUF_TRYLOCK);
-> @@ -415,7 +415,7 @@ xfs_quiesce_data(
->  
->  	/* push non-blocking */
->  	xfs_sync_data(mp, 0);
-> -	xfs_qm_sync(mp, SYNC_BDFLUSH);
-> +	xfs_qm_sync(mp, SYNC_TRYLOCK);
->  	xfs_filestream_flush(mp);
->  
->  	/* push and block */
-> @@ -565,8 +565,8 @@ xfs_sync_worker(
->  		xfs_log_force(mp, (xfs_lsn_t)0, XFS_LOG_FORCE);
->  		xfs_reclaim_inodes(mp, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
->  		/* dgc: errors ignored here */
-> -		error = xfs_qm_sync(mp, SYNC_BDFLUSH);
-> -		error = xfs_sync_fsdata(mp, SYNC_BDFLUSH);
-> +		error = xfs_qm_sync(mp, SYNC_TRYLOCK);
-> +		error = xfs_sync_fsdata(mp, SYNC_TRYLOCK);
->  		if (xfs_log_need_covered(mp))
->  			error = xfs_commit_dummy_trans(mp, XFS_LOG_FORCE);
->  	}
-> Index: xfs/fs/xfs/quota/xfs_qm.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/quota/xfs_qm.c	2009-05-27 13:04:00.607842293 +0200
-> +++ xfs/fs/xfs/quota/xfs_qm.c	2009-05-27 13:10:21.688940102 +0200
-> @@ -905,11 +905,6 @@ xfs_qm_dqdetach(
->  	}
->  }
->  
-> -/*
-> - * This is called to sync quotas. We can be told to use non-blocking
-> - * semantics by either the SYNC_BDFLUSH flag or the absence of the
-> - * SYNC_WAIT flag.
-> - */
->  int
->  xfs_qm_sync(
->  	xfs_mount_t	*mp,
-> @@ -918,17 +913,13 @@ xfs_qm_sync(
->  	int		recl, restarts;
->  	xfs_dquot_t	*dqp;
->  	uint		flush_flags;
-> -	boolean_t	nowait;
->  	int		error;
->  
->  	if (!XFS_IS_QUOTA_RUNNING(mp) || !XFS_IS_QUOTA_ON(mp))
->  		return 0;
->  
-> +	flush_flags = (flags & SYNC_WAIT) ? XFS_QMOPT_SYNC : XFS_QMOPT_DELWRI;
->  	restarts = 0;
-> -	/*
-> -	 * We won't block unless we are asked to.
-> -	 */
-> -	nowait = (boolean_t)(flags & SYNC_BDFLUSH || (flags & SYNC_WAIT) == 0);
->  
->    again:
->  	xfs_qm_mplist_lock(mp);
-> @@ -948,18 +939,10 @@ xfs_qm_sync(
->  		 * don't 'seem' to be dirty. ie. don't acquire dqlock.
->  		 * This is very similar to what xfs_sync does with inodes.
->  		 */
-> -		if (flags & SYNC_BDFLUSH) {
-> -			if (! XFS_DQ_IS_DIRTY(dqp))
-> +		if (flags & SYNC_TRYLOCK) {
-> +			if (!XFS_DQ_IS_DIRTY(dqp))
->  				continue;
-> -		}
-> -
-> -		if (nowait) {
-> -			/*
-> -			 * Try to acquire the dquot lock. We are NOT out of
-> -			 * lock order, but we just don't want to wait for this
-> -			 * lock, unless somebody wanted us to.
-> -			 */
-> -			if (! xfs_qm_dqlock_nowait(dqp))
-> +			if (!xfs_qm_dqlock_nowait(dqp))
->  				continue;
->  		} else {
->  			xfs_dqlock(dqp);
-> @@ -976,7 +959,7 @@ xfs_qm_sync(
->  		/* XXX a sentinel would be better */
->  		recl = XFS_QI_MPLRECLAIMS(mp);
->  		if (!xfs_dqflock_nowait(dqp)) {
-> -			if (nowait) {
-> +			if (flags & SYNC_TRYLOCK) {
->  				xfs_dqunlock(dqp);
->  				continue;
->  			}
-> @@ -994,7 +977,6 @@ xfs_qm_sync(
->  		 * Let go of the mplist lock. We don't want to hold it
->  		 * across a disk write
->  		 */
-> -		flush_flags = (nowait) ? XFS_QMOPT_DELWRI : XFS_QMOPT_SYNC;
->  		xfs_qm_mplist_unlock(mp);
->  		xfs_dqtrace_entry(dqp, "XQM_SYNC: DQFLUSH");
->  		error = xfs_qm_dqflush(dqp, flush_flags);
-> Index: xfs/fs/xfs/linux-2.6/xfs_sync.h
-> ===================================================================
-> --- xfs.orig/fs/xfs/linux-2.6/xfs_sync.h	2009-05-27 13:07:58.997814418 +0200
-> +++ xfs/fs/xfs/linux-2.6/xfs_sync.h	2009-05-27 13:08:19.922972203 +0200
-> @@ -29,9 +29,8 @@ typedef struct xfs_sync_work {
->  	struct completion	*w_completion;
->  } xfs_sync_work_t;
->  
-> -#define SYNC_WAIT		0x0004	/* wait for i/o to complete */
-> -#define SYNC_BDFLUSH		0x0008	/* BDFLUSH is calling -- don't block */
-> -#define SYNC_TRYLOCK		0x0020  /* only try to lock inodes */
-> +#define SYNC_WAIT		0x0001	/* wait for i/o to complete */
-> +#define SYNC_TRYLOCK		0x0002  /* only try to lock inodes */
->  
->  int xfs_syncd_init(struct xfs_mount *mp);
->  void xfs_syncd_stop(struct xfs_mount *mp);
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+iff --git a/new b/new
+index 45ff163..8e32824 100755
+--- a/new
++++ b/new
+@@ -79,6 +79,8 @@ fi
+ 
+ echo -n "Creating skeletal script for you to edit ..."
+ 
++year=`date +%Y`
++
+ cat <<End-of-File >$id
+ #! /bin/sh
+ # FS QA Test No. $id
+@@ -86,7 +88,20 @@ cat <<End-of-File >$id
+ # what am I here for?
+ #
+ #-----------------------------------------------------------------------
+-# Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
++# Copyright (c) $year YOUR NAME HERE.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ #-----------------------------------------------------------------------
+ #
+ # creator
+
 
 _______________________________________________
 xfs mailing list
