@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n54M4WI8003182 for <xfs@oss.sgi.com>; Thu, 4 Jun 2009 17:04:33 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3B6DC2D2B7E
-	for <xfs@oss.sgi.com>; Thu,  4 Jun 2009 15:04:49 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id xXKk1aLowMMQCDh4 for
-	<xfs@oss.sgi.com>; Thu, 04 Jun 2009 15:04:49 -0700 (PDT)
-Message-ID: <4A2844FF.7010101@sandeen.net>
-Date: Thu, 04 Jun 2009 17:04:47 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	n559NOX8036359 for <xfs@oss.sgi.com>; Fri, 5 Jun 2009 04:23:24 -0500
+Received: from mail-fx0-f225.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1BE0D1058E63
+	for <xfs@oss.sgi.com>; Fri,  5 Jun 2009 02:30:22 -0700 (PDT)
+Received: from mail-fx0-f225.google.com (mail-fx0-f225.google.com
+	[209.85.220.225]) by cuda.sgi.com with ESMTP id
+	3Y4en6W52zZaAPsA for <xfs@oss.sgi.com>;
+	Fri, 05 Jun 2009 02:30:22 -0700 (PDT)
+Received: by fxm25 with SMTP id 25so1279271fxm.20
+	for <xfs@oss.sgi.com>; Fri, 05 Jun 2009 02:23:38 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: Repairing large partition
-References: <dc64e7230906041213s2bb9d67fj2df0b3db4ca37704@mail.gmail.com>	
-	<4A283A22.8050003@sandeen.net>
-	<dc64e7230906041437k1c1d0e42l80766fa290f2290f@mail.gmail.com>
-In-Reply-To: <dc64e7230906041437k1c1d0e42l80766fa290f2290f@mail.gmail.com>
+In-Reply-To: <20090604092330.GT16929@discord.disaster>
+References: <a4423d670906010822l6e8e112dl3d6f7de9e2179850@mail.gmail.com>
+	<20090604092330.GT16929@discord.disaster>
+Date: Fri, 5 Jun 2009 13:23:38 +0400
+Message-ID: <a4423d670906050223p4e72ceaaqa1dd942a2e52d1a3@mail.gmail.com>
+Subject: Re: 2.6.30-rc6: BUG at fs/xfs/support/debug.c:109!
+From: Alexander Beregalov <a.beregalov@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,74 +27,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: maillists0@gmail.com, xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Kernel Testers List <kernel-testers@vger.kernel.org>, xfs@oss.sgi.com
 
-maillists0@gmail.com wrote:
-> 
-> 
-> On Thu, Jun 4, 2009 at 5:18 PM, Eric Sandeen <sandeen@sandeen.net> 
-> wrote:
-> 
-> maillists0@gmail.com <mailto:maillists0@gmail.com> wrote:
->> Pardon if this is the wrong list for this question.
->> 
->> I had a 50T xfs partition, spread across 3 storage devices which 
->> were lvm'd. After a power failure, 2 disks on one device failed. It
->> was raid5, so that data is unrecoverable.
->> 
->> I replaced the failed disks and rebuilt that array. I can mount the
->> partition and see data on the first 2 devices. I ran xfs_repair
->> -n' to see what might be done a couple of days ago and it still
->> hasn't finished.  Does anyone know how I could recreate the
->> partition to include the third device without losing data from the
->> first two devices? Any help will be greatly appreciated, including
->> a pointer to the appropriate docs. Thanks.
-> 
-> so was it a concat of 3 raid5s?
->
-> 
-> Exactly.
-
-Ok, I'm not sure there are any appropriate docs for this case ... the
-trick will be that the files you can see may well have had portions of
-their data on the bad piece, and other portions on the good pieces, so
-even if you get the filesystem framework all back in place it might be a
-trick to see which remaining files are now corrupted.  Of course inodes
-& directories that were on the bad piece are gone, so those files are
-pretty well lost.
-
-xfs_repair -n is a good idea for a start, I think; I'd be sure you have
-the latest version, and using -P has been reported to actually speed
-things up for some people with very large filesystems.
-
-xfs_repair is probably the only documented/supported thing to try,
-though normally for this kind of extensive damage I'd suggest doing it
-on a filesystem image to see how it ends up... not so feasible with your
-filesystem, I suppose.
-
-One other option -might- be to do xfs_info on the mountpoint, get all
-the fs geometry, and re-mkfs (preferably with the same mkfs.xfs version)
-a sparse filesystem image on a file with the exact same geometry.  Then
-dd bits from that freshly mkfs'd filesystem image, at the right offsets,
-onto the recreated bad chunk of the concat.  Again, I'd feel better if
-you could do a dry run of this somehow ...
-
-You could maybe practice this by doing an xfs_metadump -o of the block
-device, xfs_mdrestore the resulting metadata image back into a sparse
-filesystem metadata image, do the above mkfs & dd trick into that image,
-and xfs_repair the result.  (you'd probably need some way to teach dd to
-honor the sparseness, see for example the make-sparse.c tool in
-http://bugzilla.kernel.org/show_bug.cgi?id=11525#c4)
-
-Just some random thoughts ...
-
--Eric
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+MjAwOS82LzQgRGF2ZSBDaGlubmVyIDxkYXZpZEBmcm9tb3JiaXQuY29tPjoKPiBPbiBNb24sIEp1
+biAwMSwgMjAwOSBhdCAwNzoyMjo1NlBNICswNDAwLCBBbGV4YW5kZXIgQmVyZWdhbG92IHdyb3Rl
+Ogo+PiBIaQo+Pgo+PiBBc3NlcnRpb24gZmFpbGVkOiAqbm1hcCA+PSAxLCBmaWxlOiBmcy94ZnMv
+eGZzX2JtYXAuYywgbGluZTogNDg0Ngo+IC4uLi4uCj4+IENhbGwgVHJhY2U6Cj4+IMKgWzxmZmZm
+ZmZmZjgwM2Q2YmFkPl0geGZzX2JtYXBpKzB4YWQvMHgxYWQwCj4+IMKgWzxmZmZmZmZmZjgwM2Vl
+NWMwPl0geGZzX2RpcjJfbGVhZl9nZXRkZW50cysweDY0MC8weDdiMAo+PiDCoFs8ZmZmZmZmZmY4
+MDNlOTc1Yz5dIHhmc19yZWFkZGlyKzB4MTJjLzB4MTQwCj4+IMKgWzxmZmZmZmZmZjgwNDMwYjU3
+Pl0geGZzX2ZpbGVfcmVhZGRpcisweDQ3LzB4NzAKPj4gwqBbPGZmZmZmZmZmODAyZWM1MDA+XSB2
+ZnNfcmVhZGRpcisweGQwLzB4ZjAKPj4gwqBbPGZmZmZmZmZmODAyZWM2YjY+XSBzeXNfZ2V0ZGVu
+dHMrMHg5Ni8weDExMAo+PiDCoFs8ZmZmZmZmZmY4MDIwYmE2Yj5dIHN5c3RlbV9jYWxsX2Zhc3Rw
+YXRoKzB4MTYvMHgxYgo+Cj4gSSdkIHNheSB0aGlzIGluZGljYXRlcyBhIGNvcnJ1cHRlZCBkaXJl
+Y3RvcnkuIMKgQ2FuIHlvdSBydW4KPiAneGZzX3JlcGFpciAtbicgb3ZlciB0aGUgZmlsZXN5c3Rl
+bSBhbmQgc2VlIGlmIGl0IGZpbmRzIGEgYmFkCj4gZGlyZWN0b3J5PwoKSGkgRGF2ZQoKSXQgaXMg
+YSByb290ZnMuIHhmc19yZXBhaXIgZm91bmQgYW5kIGZpeGVkIGFsbCBlcnJvcnMsIGJ1dCBhZnRl
+cgpyZWJvb3QgdGhlIHByb2JsZW0gc3RpbGwgcGVyc2lzdHMgKGJ1dCBhdCBhbm90aGVyIHN0YWdl
+IG9mIHJ1bm5pbmcKYGVtZXJnZWApLgoKbG9jYWxob3N0IH4gIyBlY2hvIHMgPiAvcHJvYy9zeXNy
+cS10cmlnZ2VyCmxvY2FsaG9zdCB+ICMgZWNobyBzID4gL3Byb2Mvc3lzcnEtdHJpZ2dlcgpsb2Nh
+bGhvc3QgfiAjIGVjaG8gdSA+IC9wcm9jL3N5c3JxLXRyaWdnZXIKbG9jYWxob3N0IH4gIyB4ZnNf
+cmVwYWlyIC1uZCAvZGV2L3NkYTIKUGhhc2UgMSAtIGZpbmQgYW5kIHZlcmlmeSBzdXBlcmJsb2Nr
+Li4uClBoYXNlIDIgLSB1c2luZyBpbnRlcm5hbCBsb2cKICAgICAgICAtIHNjYW4gZmlsZXN5c3Rl
+bSBmcmVlc3BhY2UgYW5kIGlub2RlIG1hcHMuLi4KICAgICAgICAtIGZvdW5kIHJvb3QgaW5vZGUg
+Y2h1bmsKUGhhc2UgMyAtIGZvciBlYWNoIEFHLi4uCiAgICAgICAgLSBzY2FuIChidXQgZG9uJ3Qg
+Y2xlYXIpIGFnaSB1bmxpbmtlZCBsaXN0cy4uLgogICAgICAgIC0gcHJvY2VzcyBrbm93biBpbm9k
+ZXMgYW5kIHBlcmZvcm0gaW5vZGUgZGlzY292ZXJ5Li4uCiAgICAgICAgLSBhZ25vID0gMAogICAg
+ICAgIC0gYWdubyA9IDEKICAgICAgICAtIGFnbm8gPSAyCiAgICAgICAgLSBhZ25vID0gMwogICAg
+ICAgIC0gYWdubyA9IDQKICAgICAgICAtIGFnbm8gPSA1CiAgICAgICAgLSBhZ25vID0gNgogICAg
+ICAgIC0gYWdubyA9IDcKICAgICAgICAtIGFnbm8gPSA4CiAgICAgICAgLSBhZ25vID0gOQogICAg
+ICAgIC0gYWdubyA9IDEwCiAgICAgICAgLSBhZ25vID0gMTEKICAgICAgICAtIGFnbm8gPSAxMgog
+ICAgICAgIC0gYWdubyA9IDEzCiAgICAgICAgLSBhZ25vID0gMTQKICAgICAgICAtIGFnbm8gPSAx
+NQogICAgICAgIC0gcHJvY2VzcyBuZXdseSBkaXNjb3ZlcmVkIGlub2Rlcy4uLgpQaGFzZSA0IC0g
+Y2hlY2sgZm9yIGR1cGxpY2F0ZSBibG9ja3MuLi4KICAgICAgICAtIHNldHRpbmcgdXAgZHVwbGlj
+YXRlIGV4dGVudCBsaXN0Li4uCiAgICAgICAgLSBjaGVjayBmb3IgaW5vZGVzIGNsYWltaW5nIGR1
+cGxpY2F0ZSBibG9ja3MuLi4KICAgICAgICAtIGFnbm8gPSAwCiAgICAgICAgLSBhZ25vID0gMQog
+ICAgICAgIC0gYWdubyA9IDIKICAgICAgICAtIGFnbm8gPSA0CiAgICAgICAgLSBhZ25vID0gMwog
+ICAgICAgIC0gYWdubyA9IDUKICAgICAgICAtIGFnbm8gPSA2CiAgICAgICAgLSBhZ25vID0gNwog
+ICAgICAgIC0gYWdubyA9IDgKICAgICAgICAtIGFnbm8gPSA5CiAgICAgICAgLSBhZ25vID0gMTAK
+ICAgICAgICAtIGFnbm8gPSAxMQogICAgICAgIC0gYWdubyA9IDEyCiAgICAgICAgLSBhZ25vID0g
+MTMKICAgICAgICAtIGFnbm8gPSAxNAogICAgICAgIC0gYWdubyA9IDE1Ck5vIG1vZGlmeSBmbGFn
+IHNldCwgc2tpcHBpbmcgcGhhc2UgNQpQaGFzZSA2IC0gY2hlY2sgaW5vZGUgY29ubmVjdGl2aXR5
+Li4uCiAgICAgICAgLSB0cmF2ZXJzaW5nIGZpbGVzeXN0ZW0gLi4uCiAgICAgICAgLSB0cmF2ZXJz
+YWwgZmluaXNoZWQgLi4uCiAgICAgICAgLSBtb3ZpbmcgZGlzY29ubmVjdGVkIGlub2RlcyB0byBs
+b3N0K2ZvdW5kIC4uLgpQaGFzZSA3IC0gdmVyaWZ5IGxpbmsgY291bnRzLi4uCk5vIG1vZGlmeSBm
+bGFnIHNldCwgc2tpcHBpbmcgZmlsZXN5c3RlbSBmbHVzaCBhbmQgZXhpdGluZy4KCl9fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QK
+eGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
