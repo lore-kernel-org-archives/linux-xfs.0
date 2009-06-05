@@ -1,24 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n559NOX8036359 for <xfs@oss.sgi.com>; Fri, 5 Jun 2009 04:23:24 -0500
-Received: from mail-fx0-f225.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1BE0D1058E63
-	for <xfs@oss.sgi.com>; Fri,  5 Jun 2009 02:30:22 -0700 (PDT)
-Received: from mail-fx0-f225.google.com (mail-fx0-f225.google.com
-	[209.85.220.225]) by cuda.sgi.com with ESMTP id
-	3Y4en6W52zZaAPsA for <xfs@oss.sgi.com>;
-	Fri, 05 Jun 2009 02:30:22 -0700 (PDT)
-Received: by fxm25 with SMTP id 25so1279271fxm.20
-	for <xfs@oss.sgi.com>; Fri, 05 Jun 2009 02:23:38 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20090604092330.GT16929@discord.disaster>
-References: <a4423d670906010822l6e8e112dl3d6f7de9e2179850@mail.gmail.com>
-	<20090604092330.GT16929@discord.disaster>
-Date: Fri, 5 Jun 2009 13:23:38 +0400
-Message-ID: <a4423d670906050223p4e72ceaaqa1dd942a2e52d1a3@mail.gmail.com>
-Subject: Re: 2.6.30-rc6: BUG at fs/xfs/support/debug.c:109!
-From: Alexander Beregalov <a.beregalov@gmail.com>
+	n55AQ6e5039136 for <xfs@oss.sgi.com>; Fri, 5 Jun 2009 05:26:11 -0500
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1F55B1BCBC40
+	for <xfs@oss.sgi.com>; Fri,  5 Jun 2009 03:26:24 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com
+	with ESMTP id KAh9LIefZFSSZhMk for <xfs@oss.sgi.com>;
+	Fri, 05 Jun 2009 03:26:24 -0700 (PDT)
+Date: Fri, 5 Jun 2009 12:26:23 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] xfs: remove ->write_super and stop maintaining ->s_dirt
+Message-ID: <20090605102622.GA30685@lst.de>
+Mime-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,55 +22,96 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Kernel Testers List <kernel-testers@vger.kernel.org>, xfs@oss.sgi.com
+To: viro@zeniv.linux.org.uk, xfs@oss.sgi.com
 
-MjAwOS82LzQgRGF2ZSBDaGlubmVyIDxkYXZpZEBmcm9tb3JiaXQuY29tPjoKPiBPbiBNb24sIEp1
-biAwMSwgMjAwOSBhdCAwNzoyMjo1NlBNICswNDAwLCBBbGV4YW5kZXIgQmVyZWdhbG92IHdyb3Rl
-Ogo+PiBIaQo+Pgo+PiBBc3NlcnRpb24gZmFpbGVkOiAqbm1hcCA+PSAxLCBmaWxlOiBmcy94ZnMv
-eGZzX2JtYXAuYywgbGluZTogNDg0Ngo+IC4uLi4uCj4+IENhbGwgVHJhY2U6Cj4+IMKgWzxmZmZm
-ZmZmZjgwM2Q2YmFkPl0geGZzX2JtYXBpKzB4YWQvMHgxYWQwCj4+IMKgWzxmZmZmZmZmZjgwM2Vl
-NWMwPl0geGZzX2RpcjJfbGVhZl9nZXRkZW50cysweDY0MC8weDdiMAo+PiDCoFs8ZmZmZmZmZmY4
-MDNlOTc1Yz5dIHhmc19yZWFkZGlyKzB4MTJjLzB4MTQwCj4+IMKgWzxmZmZmZmZmZjgwNDMwYjU3
-Pl0geGZzX2ZpbGVfcmVhZGRpcisweDQ3LzB4NzAKPj4gwqBbPGZmZmZmZmZmODAyZWM1MDA+XSB2
-ZnNfcmVhZGRpcisweGQwLzB4ZjAKPj4gwqBbPGZmZmZmZmZmODAyZWM2YjY+XSBzeXNfZ2V0ZGVu
-dHMrMHg5Ni8weDExMAo+PiDCoFs8ZmZmZmZmZmY4MDIwYmE2Yj5dIHN5c3RlbV9jYWxsX2Zhc3Rw
-YXRoKzB4MTYvMHgxYgo+Cj4gSSdkIHNheSB0aGlzIGluZGljYXRlcyBhIGNvcnJ1cHRlZCBkaXJl
-Y3RvcnkuIMKgQ2FuIHlvdSBydW4KPiAneGZzX3JlcGFpciAtbicgb3ZlciB0aGUgZmlsZXN5c3Rl
-bSBhbmQgc2VlIGlmIGl0IGZpbmRzIGEgYmFkCj4gZGlyZWN0b3J5PwoKSGkgRGF2ZQoKSXQgaXMg
-YSByb290ZnMuIHhmc19yZXBhaXIgZm91bmQgYW5kIGZpeGVkIGFsbCBlcnJvcnMsIGJ1dCBhZnRl
-cgpyZWJvb3QgdGhlIHByb2JsZW0gc3RpbGwgcGVyc2lzdHMgKGJ1dCBhdCBhbm90aGVyIHN0YWdl
-IG9mIHJ1bm5pbmcKYGVtZXJnZWApLgoKbG9jYWxob3N0IH4gIyBlY2hvIHMgPiAvcHJvYy9zeXNy
-cS10cmlnZ2VyCmxvY2FsaG9zdCB+ICMgZWNobyBzID4gL3Byb2Mvc3lzcnEtdHJpZ2dlcgpsb2Nh
-bGhvc3QgfiAjIGVjaG8gdSA+IC9wcm9jL3N5c3JxLXRyaWdnZXIKbG9jYWxob3N0IH4gIyB4ZnNf
-cmVwYWlyIC1uZCAvZGV2L3NkYTIKUGhhc2UgMSAtIGZpbmQgYW5kIHZlcmlmeSBzdXBlcmJsb2Nr
-Li4uClBoYXNlIDIgLSB1c2luZyBpbnRlcm5hbCBsb2cKICAgICAgICAtIHNjYW4gZmlsZXN5c3Rl
-bSBmcmVlc3BhY2UgYW5kIGlub2RlIG1hcHMuLi4KICAgICAgICAtIGZvdW5kIHJvb3QgaW5vZGUg
-Y2h1bmsKUGhhc2UgMyAtIGZvciBlYWNoIEFHLi4uCiAgICAgICAgLSBzY2FuIChidXQgZG9uJ3Qg
-Y2xlYXIpIGFnaSB1bmxpbmtlZCBsaXN0cy4uLgogICAgICAgIC0gcHJvY2VzcyBrbm93biBpbm9k
-ZXMgYW5kIHBlcmZvcm0gaW5vZGUgZGlzY292ZXJ5Li4uCiAgICAgICAgLSBhZ25vID0gMAogICAg
-ICAgIC0gYWdubyA9IDEKICAgICAgICAtIGFnbm8gPSAyCiAgICAgICAgLSBhZ25vID0gMwogICAg
-ICAgIC0gYWdubyA9IDQKICAgICAgICAtIGFnbm8gPSA1CiAgICAgICAgLSBhZ25vID0gNgogICAg
-ICAgIC0gYWdubyA9IDcKICAgICAgICAtIGFnbm8gPSA4CiAgICAgICAgLSBhZ25vID0gOQogICAg
-ICAgIC0gYWdubyA9IDEwCiAgICAgICAgLSBhZ25vID0gMTEKICAgICAgICAtIGFnbm8gPSAxMgog
-ICAgICAgIC0gYWdubyA9IDEzCiAgICAgICAgLSBhZ25vID0gMTQKICAgICAgICAtIGFnbm8gPSAx
-NQogICAgICAgIC0gcHJvY2VzcyBuZXdseSBkaXNjb3ZlcmVkIGlub2Rlcy4uLgpQaGFzZSA0IC0g
-Y2hlY2sgZm9yIGR1cGxpY2F0ZSBibG9ja3MuLi4KICAgICAgICAtIHNldHRpbmcgdXAgZHVwbGlj
-YXRlIGV4dGVudCBsaXN0Li4uCiAgICAgICAgLSBjaGVjayBmb3IgaW5vZGVzIGNsYWltaW5nIGR1
-cGxpY2F0ZSBibG9ja3MuLi4KICAgICAgICAtIGFnbm8gPSAwCiAgICAgICAgLSBhZ25vID0gMQog
-ICAgICAgIC0gYWdubyA9IDIKICAgICAgICAtIGFnbm8gPSA0CiAgICAgICAgLSBhZ25vID0gMwog
-ICAgICAgIC0gYWdubyA9IDUKICAgICAgICAtIGFnbm8gPSA2CiAgICAgICAgLSBhZ25vID0gNwog
-ICAgICAgIC0gYWdubyA9IDgKICAgICAgICAtIGFnbm8gPSA5CiAgICAgICAgLSBhZ25vID0gMTAK
-ICAgICAgICAtIGFnbm8gPSAxMQogICAgICAgIC0gYWdubyA9IDEyCiAgICAgICAgLSBhZ25vID0g
-MTMKICAgICAgICAtIGFnbm8gPSAxNAogICAgICAgIC0gYWdubyA9IDE1Ck5vIG1vZGlmeSBmbGFn
-IHNldCwgc2tpcHBpbmcgcGhhc2UgNQpQaGFzZSA2IC0gY2hlY2sgaW5vZGUgY29ubmVjdGl2aXR5
-Li4uCiAgICAgICAgLSB0cmF2ZXJzaW5nIGZpbGVzeXN0ZW0gLi4uCiAgICAgICAgLSB0cmF2ZXJz
-YWwgZmluaXNoZWQgLi4uCiAgICAgICAgLSBtb3ZpbmcgZGlzY29ubmVjdGVkIGlub2RlcyB0byBs
-b3N0K2ZvdW5kIC4uLgpQaGFzZSA3IC0gdmVyaWZ5IGxpbmsgY291bnRzLi4uCk5vIG1vZGlmeSBm
-bGFnIHNldCwgc2tpcHBpbmcgZmlsZXN5c3RlbSBmbHVzaCBhbmQgZXhpdGluZy4KCl9fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QK
-eGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+Al, can you put this in via the vfs tree?  With people starting to
+change these bits now I think we're better off feeding this through
+the VFS tree early than later via the XFS tree.
+
+--
+
+Subject: [PATCH] xfs: remove ->write_super and stop maintaining ->s_dirt
+From: Christoph Hellwig <hch@lst.de>
+
+the write_super method is used for
+
+ (1) writing back the superblock periodically from pdflush
+ (2) called just before ->sync_fs for data integerity syncs
+
+We don't need (1) because we have our own peridoc writeout through xfssyncd,
+and we don't need (2) because xfs_fs_sync_fs performs a proper synchronous
+superblock writeout after all other data and metadata has been written out.
+
+Also remove ->s_dirt tracking as it's only used to decide when too call
+->write_super.
+
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
+
+Index: vfs-2.6/fs/xfs/linux-2.6/xfs_super.c
+===================================================================
+--- vfs-2.6.orig/fs/xfs/linux-2.6/xfs_super.c	2009-05-11 11:13:24.528784658 +0200
++++ vfs-2.6/fs/xfs/linux-2.6/xfs_super.c	2009-05-11 22:09:29.802683006 +0200
+@@ -1108,15 +1108,6 @@ xfs_fs_put_super(
+ 	unlock_kernel();
+ }
+ 
+-STATIC void
+-xfs_fs_write_super(
+-	struct super_block	*sb)
+-{
+-	if (!(sb->s_flags & MS_RDONLY))
+-		xfs_sync_fsdata(XFS_M(sb), 0);
+-	sb->s_dirt = 0;
+-}
+-
+ STATIC int
+ xfs_fs_sync_super(
+ 	struct super_block	*sb,
+@@ -1141,7 +1132,6 @@ xfs_fs_sync_super(
+ 		error = xfs_quiesce_data(mp);
+ 	else
+ 		error = xfs_sync_fsdata(mp, 0);
+-	sb->s_dirt = 0;
+ 
+ 	if (unlikely(laptop_mode)) {
+ 		int	prev_sync_seq = mp->m_sync_seq;
+@@ -1447,7 +1437,6 @@ xfs_fs_fill_super(
+ 
+ 	XFS_SEND_MOUNT(mp, DM_RIGHT_NULL, mtpt, mp->m_fsname);
+ 
+-	sb->s_dirt = 1;
+ 	sb->s_magic = XFS_SB_MAGIC;
+ 	sb->s_blocksize = mp->m_sb.sb_blocksize;
+ 	sb->s_blocksize_bits = ffs(sb->s_blocksize) - 1;
+@@ -1537,7 +1526,6 @@ static struct super_operations xfs_super
+ 	.write_inode		= xfs_fs_write_inode,
+ 	.clear_inode		= xfs_fs_clear_inode,
+ 	.put_super		= xfs_fs_put_super,
+-	.write_super		= xfs_fs_write_super,
+ 	.sync_fs		= xfs_fs_sync_super,
+ 	.freeze_fs		= xfs_fs_freeze,
+ 	.statfs			= xfs_fs_statfs,
+Index: vfs-2.6/fs/xfs/xfs_trans.c
+===================================================================
+--- vfs-2.6.orig/fs/xfs/xfs_trans.c	2009-05-05 14:18:45.481659125 +0200
++++ vfs-2.6/fs/xfs/xfs_trans.c	2009-05-11 22:09:29.803682225 +0200
+@@ -628,8 +628,6 @@ xfs_trans_apply_sb_deltas(
+ 		xfs_trans_log_buf(tp, bp, offsetof(xfs_dsb_t, sb_icount),
+ 				  offsetof(xfs_dsb_t, sb_frextents) +
+ 				  sizeof(sbp->sb_frextents) - 1);
+-
+-	tp->t_mountp->m_super->s_dirt = 1;
+ }
+ 
+ /*
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
