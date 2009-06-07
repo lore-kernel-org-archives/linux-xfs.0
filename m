@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n57ItqJm184689
-	for <linux-xfs@oss.sgi.com>; Sun, 7 Jun 2009 13:55:52 -0500
+	n57K0ra5187700
+	for <linux-xfs@oss.sgi.com>; Sun, 7 Jun 2009 15:00:54 -0500
 Received: from foehn.mgras.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4E13F2DA9A9
-	for <linux-xfs@oss.sgi.com>; Sun,  7 Jun 2009 11:56:11 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 219341D3AC8C
+	for <linux-xfs@oss.sgi.com>; Sun,  7 Jun 2009 13:01:11 -0700 (PDT)
 Received: from foehn.mgras.de (quickstep.mgras.net [213.146.115.59]) by
-	cuda.sgi.com with ESMTP id G94rssRhQCAiyXpS for
-	<linux-xfs@oss.sgi.com>; Sun, 07 Jun 2009 11:56:11 -0700 (PDT)
+	cuda.sgi.com with ESMTP id KiM4XMCbnTAb3HLU for
+	<linux-xfs@oss.sgi.com>; Sun, 07 Jun 2009 13:01:11 -0700 (PDT)
 Received: from osprey.mgras.de (osprey.mgras.de [192.168.48.3])
-	by foehn.mgras.de (8.13.1/8.13.0) with ESMTP id n57ItMcF029646
-	for <linux-xfs@oss.sgi.com>; Sun, 7 Jun 2009 20:55:22 +0200 (CEST)
+	by foehn.mgras.de (8.13.1/8.13.0) with ESMTP id n57K0Mee029809
+	for <linux-xfs@oss.sgi.com>; Sun, 7 Jun 2009 22:00:22 +0200 (CEST)
 Received: (from news@localhost) by osprey.mgras.de (AIX5.1/8.11.6p2/8.11.0) id
-	n57ItL612510 for linux-xfs@oss.sgi.com;
-	Sun, 7 Jun 2009 20:55:21 +0200
+	n57K0Lg15540 for linux-xfs@oss.sgi.com;
+	Sun, 7 Jun 2009 22:00:21 +0200
 From: Martin Spott <Martin.Spott@mgras.net>
 Subject: Re: Kernel crash with 2.6.29 + nfs + xfs (radix-tree)
-Date: Sun, 7 Jun 2009 18:55:21 +0000 (UTC)
-Message-ID: <h0h2ep$8p0$1@osprey.mgras.de>
+Date: Sun, 7 Jun 2009 20:00:21 +0000 (UTC)
+Message-ID: <h0h68l$136q$1@osprey.mgras.de>
 References: <20090520003745.GA27491@samad.com.au>
-	<20090604112657.GA10738@infradead.org>
-	<4A2C0698.9060800@sandeen.net>
+	<20090607185558.GA753@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,23 +36,17 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: linux-xfs@oss.sgi.com
 
-Eric Sandeen wrote:
+Christoph Hellwig wrote:
 
-> CONFIG_XFS_DEBUG is more of addded checks and asserts, not so much in
-> the way of extra messages - at least, until you actually hit a problem.
+> That warning is what really makes me freak out, as it really, really
+> shouldn't happen.  Can you see if it gives any additional useful output
+> with the patch below?
 
-The problem I see is actually not logged as a crash in the 'usual' way
-(panics, oopses, traces the way I know), instead, the issue
-materializes in tons of messages of the sort:
+Find here a package containing the respective syslog section plus a (I
+think so) non-obfuscated metadump (in order to corellate to the
+directory names to the syslog):
 
-reconnect_path: npd != pd
-reconnect_path: npd != pd
-reconnect_path: npd != pd
-
-
-....  on a thorougly checked filesystem, plus the NFS service ceasing
-to serve clients. Obviously this is not covered by the added checks
-which are introduced by CONFIG_XFS_DEBUG.
+  http://foxtrot.mgras.net/static/xfs_debug-20090607.tgz
 
 Cheers,
 	Martin.
