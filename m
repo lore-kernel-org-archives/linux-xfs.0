@@ -1,24 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n57Itdrh184660
-	for <linux-xfs@oss.sgi.com>; Sun, 7 Jun 2009 13:55:47 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 918762DA993
-	for <linux-xfs@oss.sgi.com>; Sun,  7 Jun 2009 11:55:59 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id Kqg1jZZCvqfJmgoC for
-	<linux-xfs@oss.sgi.com>; Sun, 07 Jun 2009 11:55:59 -0700 (PDT)
-Date: Sun, 7 Jun 2009 14:55:58 -0400
-From: Christoph Hellwig <hch@infradead.org>
+	n57ItqJm184689
+	for <linux-xfs@oss.sgi.com>; Sun, 7 Jun 2009 13:55:52 -0500
+Received: from foehn.mgras.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4E13F2DA9A9
+	for <linux-xfs@oss.sgi.com>; Sun,  7 Jun 2009 11:56:11 -0700 (PDT)
+Received: from foehn.mgras.de (quickstep.mgras.net [213.146.115.59]) by
+	cuda.sgi.com with ESMTP id G94rssRhQCAiyXpS for
+	<linux-xfs@oss.sgi.com>; Sun, 07 Jun 2009 11:56:11 -0700 (PDT)
+Received: from osprey.mgras.de (osprey.mgras.de [192.168.48.3])
+	by foehn.mgras.de (8.13.1/8.13.0) with ESMTP id n57ItMcF029646
+	for <linux-xfs@oss.sgi.com>; Sun, 7 Jun 2009 20:55:22 +0200 (CEST)
+Received: (from news@localhost) by osprey.mgras.de (AIX5.1/8.11.6p2/8.11.0) id
+	n57ItL612510 for linux-xfs@oss.sgi.com;
+	Sun, 7 Jun 2009 20:55:21 +0200
+From: Martin Spott <Martin.Spott@mgras.net>
 Subject: Re: Kernel crash with 2.6.29 + nfs + xfs (radix-tree)
-Message-ID: <20090607185558.GA753@infradead.org>
+Date: Sun, 7 Jun 2009 18:55:21 +0000 (UTC)
+Message-ID: <h0h2ep$8p0$1@osprey.mgras.de>
 References: <20090520003745.GA27491@samad.com.au>
 	<20090604112657.GA10738@infradead.org>
-	<h0gtcd$136u$1@osprey.mgras.de>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <h0gtcd$136u$1@osprey.mgras.de>
+	<4A2C0698.9060800@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,60 +30,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Martin Spott <Martin.Spott@mgras.net>
-Cc: linux-xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-On Sun, Jun 07, 2009 at 05:28:45PM +0000, Martin Spott wrote:
-> reconnect_path: npd != pd
-> reconnect_path: npd != pd
-> reconnect_path: npd != pd
-> [...]
-> 
-> 
-> ....  I'm unable to find any helpful information in this context.
-> Anything I could try - this sunday evening ?
+Eric Sandeen wrote:
 
-That warning is what really makes me freak out, as it really, really
-shouldn't happen.  Can you see if it gives any additional useful output
-with the patch below?
+> CONFIG_XFS_DEBUG is more of addded checks and asserts, not so much in
+> the way of extra messages - at least, until you actually hit a problem.
+
+The problem I see is actually not logged as a crash in the 'usual' way
+(panics, oopses, traces the way I know), instead, the issue
+materializes in tons of messages of the sort:
+
+reconnect_path: npd != pd
+reconnect_path: npd != pd
+reconnect_path: npd != pd
 
 
-Index: linux-2.6/fs/exportfs/expfs.c
-===================================================================
---- linux-2.6.orig/fs/exportfs/expfs.c	2009-06-07 20:40:09.085814403 +0200
-+++ linux-2.6/fs/exportfs/expfs.c	2009-06-07 20:54:47.550942377 +0200
-@@ -88,6 +88,14 @@ find_disconnected_root(struct dentry *de
- 	return dentry;
- }
- 
-+static void dump_dentry(struct dentry *dentry, const char *var)
-+{
-+	printk("%s: dentry 0x%p inode 0x%p ino %lld name %s\n",
-+		var, dentry, dentry->d_inode,
-+		dentry->d_inode ?
-+			(unsigned long long)dentry->d_inode->i_ino : 0,
-+		dentry->d_name.name);
-+}
- 
- /*
-  * Make sure target_dir is fully connected to the dentry tree.
-@@ -187,8 +195,11 @@ reconnect_path(struct vfsmount *mnt, str
- 			 */
- 			if (npd == pd)
- 				noprogress = 0;
--			else
-+			else {
- 				printk("%s: npd != pd\n", __func__);
-+				dump_dentry(npd, "npd");
-+				dump_dentry(pd, "pd");
-+			}
- 			dput(npd);
- 			dput(ppd);
- 			if (IS_ROOT(pd)) {
+....  on a thorougly checked filesystem, plus the NFS service ceasing
+to serve clients. Obviously this is not covered by the added checks
+which are introduced by CONFIG_XFS_DEBUG.
+
+Cheers,
+	Martin.
+-- 
+ Unix _IS_ user friendly - it's just selective about who its friends are !
+--------------------------------------------------------------------------
 
 _______________________________________________
 xfs mailing list
