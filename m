@@ -1,21 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n587gBjW215489 for <xfs@oss.sgi.com>; Mon, 8 Jun 2009 02:42:13 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4FBE2148F40B
-	for <xfs@oss.sgi.com>; Mon,  8 Jun 2009 00:49:30 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id nGXNFPeLsyvqCL8M for
-	<xfs@oss.sgi.com>; Mon, 08 Jun 2009 00:49:30 -0700 (PDT)
-Date: Mon, 8 Jun 2009 03:42:30 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs_repair: catch bad depth in traverse_int_dir2block
-Message-ID: <20090608074230.GA28066@infradead.org>
-References: <4A2C8AD8.9030107@sandeen.net>
+	n58FiLV9235804 for <xfs@oss.sgi.com>; Mon, 8 Jun 2009 10:44:21 -0500
+Received: from mx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3FFF2148FB4B
+	for <xfs@oss.sgi.com>; Mon,  8 Jun 2009 08:51:40 -0700 (PDT)
+Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
+	with ESMTP id zXGcfJbaDNlXpiQ0 for <xfs@oss.sgi.com>;
+	Mon, 08 Jun 2009 08:51:40 -0700 (PDT)
+Received: from int-mx2.corp.redhat.com (int-mx2.corp.redhat.com [172.16.27.26])
+	by mx2.redhat.com (8.13.8/8.13.8) with ESMTP id n58Fidh9014007
+	for <xfs@oss.sgi.com>; Mon, 8 Jun 2009 11:44:39 -0400
+Received: from ns3.rdu.redhat.com (ns3.rdu.redhat.com [10.11.255.199])
+	by int-mx2.corp.redhat.com (8.13.1/8.13.1) with ESMTP id n58Fiarn004303
+	for <xfs@oss.sgi.com>; Mon, 8 Jun 2009 11:44:39 -0400
+Received: from neon.msp.redhat.com (neon.msp.redhat.com [10.15.80.10])
+	by ns3.rdu.redhat.com (8.13.8/8.13.8) with ESMTP id n58FiZRg024313
+	for <xfs@oss.sgi.com>; Mon, 8 Jun 2009 11:44:35 -0400
+Message-ID: <4A2D31E3.3090108@sandeen.net>
+Date: Mon, 08 Jun 2009 10:44:35 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4A2C8AD8.9030107@sandeen.net>
+Subject: [PATCH] xfstests: Allow fsx tests to run on generic filesystems
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,51 +34,91 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Richard Kolkovich <richard@intrameta.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs mailing list <xfs@oss.sgi.com>
 
-On Sun, Jun 07, 2009 at 10:51:52PM -0500, Eric Sandeen wrote:
-> A bad on-disk tree depth in traverse_int_dir2block() can
-> later cause a segfault when it's used as an array index in
-> this function; if we get something beyond the max depth,
-> just error out and the dir will get rebuilt.
-> 
-> Reported-by: Richard Kolkovich <richard@intrameta.com>
-> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-> ---
-> 
-> diff --git a/repair/dir2.c b/repair/dir2.c
-> index 9575fb1..2723e3b 100644
-> --- a/repair/dir2.c
-> +++ b/repair/dir2.c
-> @@ -339,9 +339,17 @@ traverse_int_dir2block(xfs_mount_t	*mp,
->  		/*
->  		 * maintain level counter
->  		 */
-> -		if (i == -1)
-> +		if (i == -1) {
->  			i = da_cursor->active = be16_to_cpu(node->hdr.level);
-> -		else  {
-> +			if (i >= XFS_DA_NODE_MAXDEPTH) {
-> +				do_warn(_("bad header depth for directory "
-> +					  "inode %llu\n"),
-> +					da_cursor->ino);
-> +				da_brelse(bp);
-> +				i = -1;
-> +				goto error_out;
-> +			}
-> +		} else {
+There is already logic in 075 to gracefully skip nfs for fsx
+invocations with -x (xfs-specific preallocation) - just extend
+this to any non-xfs filesystem, and add to test 112 as well.
 
->From reading the surrounding code this means the dir is now flagged
-as corrupted and we attemp to rebuild it.  Which is the only thing we
-can do here for now.
+Later we can change this behavior to use fallocate and include
+more filesystems but this gets some fsx coverage for now.
 
+Test 127 doesn't seem to have anything xfs-specific, so mark
+that as generic too.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-It would be very good to have an xfsqa testcase with a forcibly
-corrupted directoty (checked in image or using xfs_db) to verify this
-behaviour.
+diff --git a/075 b/075
+index 7948c1f..49d006d 100755
+--- a/075
++++ b/075
+@@ -66,11 +66,11 @@ _do_test()
+     echo "fsx.$_n : $_filter_param"
+     echo "-----------------------------------------------"
+ 
+-    if [ "$FSTYP" = "nfs" ]
++    if [ "$FSTYP" != "xfs" ]
+     then
+ 	if [ "$_n" = "1" -o "$_n" = "3" ]
+ 	then
+-	    # HACK: nfs don't handle preallocation (-x) so just skip this test
++	    # HACK: only xfs handles preallocation (-x) so just skip this test
+ 	    return
+ 	fi
+     fi
+@@ -124,7 +124,7 @@ _process_args()
+ 
+ 
+ # real QA test starts here
+-_supported_fs xfs udf nfs
++_supported_fs generic
+ _supported_os IRIX Linux
+ 
+ size10=`expr 10 \* 1024 \* 1024`	# 10 megabytes
+diff --git a/112 b/112
+index 70fa487..d6c2952 100755
+--- a/112
++++ b/112
+@@ -66,6 +66,15 @@ _do_test()
+     echo "fsx.$_n : $_filter_param"
+     echo "-----------------------------------------------"
+ 
++    if [ "$FSTYP" != "xfs" ]
++    then
++        if [ "$_n" = "1" -o "$_n" = "3" ]
++        then
++            # HACK: only xfs handles preallocation (-x) so just skip this test
++            return
++        fi
++    fi
++
+     # This cd and use of -P gets full debug on $here (not TEST_DEV)
+     cd $out
+     if ! $here/ltp/fsx $_param -P $here $seq.$_n >/dev/null
+@@ -113,7 +122,7 @@ _process_args()
+ 
+ 
+ # real QA test starts here
+-_supported_fs xfs
++_supported_fs generic
+ _supported_os Linux
+ 
+ [ -x $here/ltp/aio-stress ] || \
+diff --git a/127 b/127
+index 44db4fb..30f4fdb 100755
+--- a/127
++++ b/127
+@@ -103,7 +103,7 @@ _fsx_std_mmap()
+ }
+ 
+ # real QA test starts here
+-_supported_fs xfs
++_supported_fs generic
+ _supported_os Linux
+ 
+ _setup_testdir
+
 
 _______________________________________________
 xfs mailing list
