@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n58Fhk4f235766 for <xfs@oss.sgi.com>; Mon, 8 Jun 2009 10:43:48 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 82F2E2DD053
-	for <xfs@oss.sgi.com>; Mon,  8 Jun 2009 08:44:06 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id C4Wu3TyYKmMfarmX for
-	<xfs@oss.sgi.com>; Mon, 08 Jun 2009 08:44:06 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1MDh13-0007Mz-7P
-	for xfs@oss.sgi.com; Mon, 08 Jun 2009 15:44:05 +0000
-Date: Mon, 8 Jun 2009 11:44:05 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: pull request: sync changes + misc other bits for 2.6.31
-Message-ID: <20090608154405.GA28165@infradead.org>
+	n58GQir3237587 for <xfs@oss.sgi.com>; Mon, 8 Jun 2009 11:26:44 -0500
+Received: from mx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 08FE5148FE84
+	for <xfs@oss.sgi.com>; Mon,  8 Jun 2009 09:34:04 -0700 (PDT)
+Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
+	with ESMTP id owQAn5u7wXs88FSY for <xfs@oss.sgi.com>;
+	Mon, 08 Jun 2009 09:34:04 -0700 (PDT)
+Message-ID: <4A2D3BCC.2010000@sandeen.net>
+Date: Mon, 08 Jun 2009 11:26:52 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
+Subject: Re: [PATCH] xfstests: Allow fsx tests to run on generic filesystems
+References: <4A2D31E3.3090108@sandeen.net>
+	<20090608161646.GA14861@infradead.org>
+In-Reply-To: <20090608161646.GA14861@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,29 +28,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs mailing list <xfs@oss.sgi.com>
 
-Hi Felix,
+Christoph Hellwig wrote:
+> On Mon, Jun 08, 2009 at 10:44:35AM -0500, Eric Sandeen wrote:
+>> There is already logic in 075 to gracefully skip nfs for fsx
+>> invocations with -x (xfs-specific preallocation) - just extend
+>> this to any non-xfs filesystem, and add to test 112 as well.
+>>
+>> Later we can change this behavior to use fallocate and include
+>> more filesystems but this gets some fsx coverage for now.
+>>
+>> Test 127 doesn't seem to have anything xfs-specific, so mark
+>> that as generic too.
+> 
+> Good bandaid for now, but it would be even better to get a fsx
+> version using the generic prealloc calls one day :)
 
-please pull git://git.kernel.org/pub/scm/fs/xfs/xfs.git for the
-following changes:
+Will do after we're done w/ the planned fsx gyrations....
 
+-Eric
 
-Christoph Hellwig (8):
-      xfs: update max log size
-      xfs: validate quota log items during log recovery
-      xfs: kill xfs_qmops
-      xfs: split inode flushing from xfs_sync_inodes_ag
-      xfs: use generic inode iterator in xfs_qm_dqrele_all_inodes
-      xfs: split xfs_sync_inodes
-      xfs: remove SYNC_IOWAIT
-      xfs: remove SYNC_BDFLUSH
-
-Dave Chinner (4):
-      xfs: split inode data writeback from xfs_sync_inodes_ag
-      xfs: factor out inode validation for sync
-      xfs: remove unused parameter from xfs_reclaim_inodes
-      xfs: introduce a per-ag inode iterator
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
 
 _______________________________________________
 xfs mailing list
