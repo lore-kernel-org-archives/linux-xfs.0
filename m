@@ -1,15 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n59IWHjF052642 for <xfs@oss.sgi.com>; Tue, 9 Jun 2009 13:32:17 -0500
-Message-ID: <4A2EAAAC.1010103@redhat.com>
-Date: Tue, 09 Jun 2009 13:32:12 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	n59IMO6L052192 for <xfs@oss.sgi.com>; Tue, 9 Jun 2009 13:22:27 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C25C62E23F9
+	for <xfs@oss.sgi.com>; Tue,  9 Jun 2009 11:22:45 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id 9jbZYa4j03Da2SHf for
+	<xfs@oss.sgi.com>; Tue, 09 Jun 2009 11:22:45 -0700 (PDT)
+Date: Tue, 9 Jun 2009 14:22:45 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfstests: enable still more tests for generic filesystems
+Message-ID: <20090609182245.GA8282@infradead.org>
+References: <4A2EA474.7070401@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: enable test 080 for LInux
-References: <4A2EA257.9000702@redhat.com>
-	<20090609182801.GA12057@infradead.org>
-In-Reply-To: <20090609182801.GA12057@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <4A2EA474.7070401@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,44 +28,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs mailing list <xfs@oss.sgi.com>
 
-Christoph Hellwig wrote:
+On Tue, Jun 09, 2009 at 01:05:40PM -0500, Eric Sandeen wrote:
+> Make the following tests _supported_fs generic:
+> 
+> 088 - test out CAP_DAC_OVERRIDE and CAP_DAC_SEARCH code
+> 089 - Emulate the way Linux mount manipulates /etc/mtab
+> 113 - aio-stress (explicitly mark as generic)
+> 126 - tests various file permission options
+> 129 - looptests
+> 
+> These all pass on ext3, ext4, btrfs, and gfs2 as well
+> as xfs.
+> 
+> Also remove "generic" group from "groups," which was 
+> accidentally added.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-> That last line of the comment should be removed I think.
->
-> Given that IRIX doesn't work we should just remove it from _supported_os
-> above.
->   
-Heh, good points, here's the revised one:
+Looks good,
 
-Seems to work here...  Anyone know why it's disabled?
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
-
-diff --git a/080 b/080
-index e9721ad..dc51c59 100755
---- a/080
-+++ b/080
-@@ -47,14 +47,11 @@ _supported_fs xfs
- 
- # Apparently should be able to work on IRIX,
- # but not at the moment.
--# It does not work on Linux due to some locking issues...
--_supported_os IRIX
--
--[ $HOSTOS == IRIX ] && _notrun "Not working on IRIX yet"
-+_supported_os Linux
- 
- _setup_testdir
- 
--#quiet=-q
-+quiet=-q
- clean=-c
- 
- export here
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
