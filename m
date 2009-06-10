@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n5AFhKKq098574 for <xfs@oss.sgi.com>; Wed, 10 Jun 2009 10:43:21 -0500
+	n5AHvFQU104490 for <xfs@oss.sgi.com>; Wed, 10 Jun 2009 12:57:15 -0500
 Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 22453126E0D0
-	for <xfs@oss.sgi.com>; Wed, 10 Jun 2009 08:50:52 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 40739126EE2F
+	for <xfs@oss.sgi.com>; Wed, 10 Jun 2009 11:04:46 -0700 (PDT)
 Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id UE8Je5KH7W9oeUEZ for
-	<xfs@oss.sgi.com>; Wed, 10 Jun 2009 08:50:52 -0700 (PDT)
-Message-ID: <4A2FD4AD.9000802@sandeen.net>
-Date: Wed, 10 Jun 2009 10:43:41 -0500
+	cuda.sgi.com with ESMTP id pHm3NyOH2X8GY9L9 for
+	<xfs@oss.sgi.com>; Wed, 10 Jun 2009 11:04:46 -0700 (PDT)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail.sandeen.net (Postfix) with ESMTP id 3F4918F271B
+	for <xfs@oss.sgi.com>; Wed, 10 Jun 2009 12:57:34 -0500 (CDT)
+Message-ID: <4A2FF40F.1090808@sandeen.net>
+Date: Wed, 10 Jun 2009 12:57:35 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: xfs_growfs doesn't grow on 2TB raid
-References: <BAY108-W1262BA63B7F70EB6364C9AF3450@phx.gbl>
-	<4A2FB71D.3030606@sandeen.net>
-	<BAY108-W34738AFF57BDF4BD9B742AF3450@phx.gbl>
-In-Reply-To: <BAY108-W34738AFF57BDF4BD9B742AF3450@phx.gbl>
+Subject: [PATCH] xfstests: Gracefully fail aio tests if they weren't built
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,27 +30,107 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: jack the ripper <evil_metalpeet@hotmail.com>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-jack the ripper wrote:
-> *> cat /proc/partitions*
-> major minor  #blocks  name
-> 
+Gracefully fail aio tests if they weren't built
 
-... snip ...
+configure & make succeeds w/o aio headers or libs,
+so tests should handle that.
 
->    9        5 2441919680 md5  <-- md device
->  253        1 1953534716 dm-1 <-- dm-crypt device
-> 
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
 
-it looks like your md device is larger, but your dm-crypt device is no
-larger than it was, so it's not unusual that growfs isn't growing ...
 
-At this point I guess it looks more like a dm-crypt/cryptsetup/LUKS
-problem (or at least an admin question).
-
--Eric
+diff --git a/207 b/207
+index 89f88d0..8e29e90 100755
+--- a/207
++++ b/207
+@@ -47,7 +47,9 @@ _supported_fs generic
+ _supported_os Linux
+ 
+ rm -f $TEST_DIR/aio-testfile
+-src/aio-dio-regress/aio-dio-extend-stat $TEST_DIR/aio-testfile 2>&1
++AIO_TEST=src/aio-dio-regress/aio-dio-extend-stat
++[ -x $AIO_TEST ] || _notrun "$AIO_TEST not built"
++$AIO_TEST $TEST_DIR/aio-testfile 2>&1
+ status=$?
+ rm -f $TEST_DIR/aio-testfile
+ 
+diff --git a/208 b/208
+index 6043df3..9848f2f 100755
+--- a/208
++++ b/208
+@@ -47,7 +47,9 @@ _supported_fs generic
+ _supported_os Linux
+ 
+ rm -f $TEST_DIR/aio-testfile
+-src/aio-dio-regress/aio-dio-invalidate-failure  $TEST_DIR/aio-testfile 2>&1
++AIO_TEST=src/aio-dio-regress/aio-dio-invalidate-failure
++[ -x $AIO_TEST ] || _notrun "$AIO_TEST not built"
++$AIO_TEST $TEST_DIR/aio-testfile 2>&1
+ status=$?
+ rm -f $TEST_DIR/aio-testfile
+ 
+diff --git a/209 b/209
+index 8e42fad..57cd429 100755
+--- a/209
++++ b/209
+@@ -47,7 +47,9 @@ _supported_fs generic
+ _supported_os Linux
+ 
+ rm -f $TEST_DIR/aio-testfile
+-src/aio-dio-regress/aio-dio-invalidate-readahead $TEST_DIR/aio-testfile 2>&1
++AIO_TEST=src/aio-dio-regress/aio-dio-invalidate-readahead
++[ -x $AIO_TEST ] || _notrun "$AIO_TEST not built"
++$AIO_TEST $TEST_DIR/aio-testfile 2>&1
+ status=$?
+ rm -f $TEST_DIR/aio-testfile
+ 
+diff --git a/210 b/210
+index d12be17..8db47b4 100755
+--- a/210
++++ b/210
+@@ -47,7 +47,9 @@ _supported_fs generic
+ _supported_os Linux
+ 
+ rm -f $TEST_DIR/aio-testfile
+-src/aio-dio-regress/aio-dio-subblock-eof-read $TEST_DIR/aio-testfile 2>&1
++AIO_TEST=src/aio-dio-regress/aio-dio-subblock-eof-read
++[ -x $AIO_TEST ] || _notrun "$AIO_TEST not built"
++$AIO_TEST $TEST_DIR/aio-testfile 2>&1
+ status=$?
+ rm -f $TEST_DIR/aio-testfile
+ 
+diff --git a/211 b/211
+index f7581c2..57ab2b4 100755
+--- a/211
++++ b/211
+@@ -47,7 +47,9 @@ _supported_fs generic
+ _supported_os Linux
+ 
+ rm -f $TEST_DIR/aio-testfile
+-src/aio-dio-regress/aio-free-ring-with-bogus-nr-pages $TEST_DIR/aio-testfile 2>&1
++AIO_TEST=src/aio-dio-regress/aio-free-ring-with-bogus-nr-pages
++[ -x $AIO_TEST ] || _notrun "$AIO_TEST not built"
++$AIO_TEST $TEST_DIR/aio-testfile 2>&1
+ status=$?
+ rm -f $TEST_DIR/aio-testfile
+ 
+diff --git a/212 b/212
+index 44a23bf..f3e62ac 100755
+--- a/212
++++ b/212
+@@ -48,7 +48,9 @@ _supported_fs generic
+ _supported_os Linux
+ 
+ rm -f $TEST_DIR/aio-testfile
+-src/aio-dio-regress/aio-io-setup-with-nonwritable-context-pointer $TEST_DIR/aio-testfile 2>&1
++AIO_TEST=src/aio-dio-regress/aio-io-setup-with-nonwritable-context-pointer
++[ -x $AIO_TEST ] || _notrun "$AIO_TEST not built"
++$AIO_TEST $TEST_DIR/aio-testfile 2>&1
+ status=$?
+ rm -f $TEST_DIR/aio-testfile
+ 
 
 _______________________________________________
 xfs mailing list
