@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n5CERrqk207892 for <xfs@oss.sgi.com>; Fri, 12 Jun 2009 09:27:54 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 479011491183
-	for <xfs@oss.sgi.com>; Fri, 12 Jun 2009 07:35:29 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id XB81YjJQdDUNx6rr for
-	<xfs@oss.sgi.com>; Fri, 12 Jun 2009 07:35:29 -0700 (PDT)
-Message-ID: <4A3265F8.1080703@sandeen.net>
-Date: Fri, 12 Jun 2009 09:28:08 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	n5CFInLj211029 for <xfs@oss.sgi.com>; Fri, 12 Jun 2009 10:18:52 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D71A12F0441
+	for <xfs@oss.sgi.com>; Fri, 12 Jun 2009 08:19:11 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id CxTlGtNKEul9NimX for
+	<xfs@oss.sgi.com>; Fri, 12 Jun 2009 08:19:11 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1MF8X9-0002fO-Im
+	for xfs@oss.sgi.com; Fri, 12 Jun 2009 15:19:11 +0000
+Date: Fri, 12 Jun 2009 11:19:11 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH] xfs: fix small mismerge in xfs_vn_mknod
+Message-ID: <20090612151911.GA9832@infradead.org>
 MIME-Version: 1.0
-Subject: Re: grub no longer being maintained?  drops support for XFS?
-References: <4A31E0FF.8050400@tlinx.org>
-In-Reply-To: <4A31E0FF.8050400@tlinx.org>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,39 +29,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "Linda A. Walsh" <suse@tlinx.org>
-Cc: SuSE Linux <opensuse@opensuse.org>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Linda A. Walsh wrote:
-> I just saw this bug, https://bugzilla.novell.com/show_bug.cgi?id=459792,
-> that reports a problem in OpenSUSE with Grub being unable to boot with
-> XFS when someone upgraded from OpenSuSE11.0 to OpenSuSE11.1.
-> Quote:
-> 
-> Grub is unable to start if /boot is on xfs partition.
-> Found after updating from 11.0 to 11.1.
+Identation got messed up when merging the current_umask changes with
+the generic ACL support.
 
-Well, I see we have a thread...
 
-Grub makes bad assumptions about what it can do to a filesystem, and the
-problems lie with reading directly from and writing directly to a
-filesystem's block device while it's -mounted-, when grub is being
-installed.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Sometimes this even trips up ext3 as well, but the problem is more
-obvious with xfs.  If you look at all the sync sync sync sleeps in grub
-you'll see that they are desperately trying to make the block device
-coherent with the filesystem, which they simply cannot do with syncs and
-sleeps.  Some distros have tried adding xfs_freeze calls to quiesce the
-filesystem, and when this can be done, it generally works, but it'd be
-better if grub would just not do IO to the device while it's mounted, in
-general.
-
-That being said, hch's recent xfs sync changes should make this much
-more likely to succeed in the future at least, despite grub's notions of
-what's safe.
-
--Eric
+Index: xfs/fs/xfs/linux-2.6/xfs_iops.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_iops.c	2009-06-12 17:16:26.902939418 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_iops.c	2009-06-12 17:16:48.611940327 +0200
+@@ -225,8 +225,8 @@ xfs_vn_mknod(
+ 		if (IS_ERR(default_acl))
+ 			return -PTR_ERR(default_acl);
+ 
+-	if (!default_acl)
+-		mode &= ~current_umask();
++		if (!default_acl)
++			mode &= ~current_umask();
+ 	}
+ 
+ 	xfs_dentry_to_name(&name, dentry);
 
 _______________________________________________
 xfs mailing list
