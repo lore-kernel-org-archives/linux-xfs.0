@@ -1,19 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n5FIBVqI118804 for <xfs@oss.sgi.com>; Mon, 15 Jun 2009 13:11:32 -0500
-Received: from mx1.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A6F5A1303C0B
-	for <xfs@oss.sgi.com>; Mon, 15 Jun 2009 11:19:32 -0700 (PDT)
-Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
-	with ESMTP id Leqnk5HHH83zCq1F for <xfs@oss.sgi.com>;
-	Mon, 15 Jun 2009 11:19:32 -0700 (PDT)
-From: Andreas Gruenbacher <agruen@suse.de>
-Subject: [ANNOUNCE] attr/acl projects moved to savannah
-Date: Mon, 15 Jun 2009 20:10:28 +0200
+	n5FJgZUI121781 for <xfs@oss.sgi.com>; Mon, 15 Jun 2009 14:42:36 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C15452F9AE7
+	for <xfs@oss.sgi.com>; Mon, 15 Jun 2009 12:42:59 -0700 (PDT)
+Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
+	cuda.sgi.com with ESMTP id 8awP7hnASOBBKKWI for
+	<xfs@oss.sgi.com>; Mon, 15 Jun 2009 12:42:59 -0700 (PDT)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail.sandeen.net (Postfix) with ESMTP id 13F149A2F8B
+	for <xfs@oss.sgi.com>; Mon, 15 Jun 2009 14:42:57 -0500 (CDT)
+Message-ID: <4A36A448.4060406@sandeen.net>
+Date: Mon, 15 Jun 2009 14:43:04 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-Message-Id: <200906152010.29021.agruen@suse.de>
+Subject: xfs_io: fix test for fallocate on 32bit boxes
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,29 +30,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: fs-devel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-Hello All-
+xfs_io: fix test for fallocate on 32bit boxes
 
-we would like to announce that development of the attr and acl projects has
-moved to Savannah[1][2] which holds a single project mailing list[3] and the 
-git repositories[4][5]. Development of these utilities will continue there; 
-please use the mailing list for reporting bugs.
+As per Red Hat bug 500487, fallocate64 is missing in glibc,
+so attempts to build with fallocate and _FILE_OFFSET_BITS=64
+will fail.
 
-Previously, the project repositories were hosted on http://git.kernel.org/, 
-and even before that, in the xfs CVS on oss.sgi.com.
+So, change the config to test the way we will build, and
+it'll fail properly on x86 until glibc gets fixed.
 
-Thanks,
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
 
-        Team
+diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+index 1ac4666..1c1859d 100644
+--- a/m4/package_libcdev.m4
++++ b/m4/package_libcdev.m4
+@@ -105,6 +105,9 @@ AC_DEFUN([AC_HAVE_GETMNTINFO],
+ AC_DEFUN([AC_HAVE_FALLOCATE],
+   [ AC_MSG_CHECKING([for fallocate])
+     AC_TRY_LINK([
++#define _GNU_SOURCE
++#define _FILE_OFFSET_BITS 64
++#include <fcntl.h>
+ #include <linux/falloc.h>
+     ], [
+          fallocate(0, 0, 0, 0);
 
-[1] https://savannah.nongnu.org/projects/attr
-[2] https://savannah.nongnu.org/projects/acl
-[3] http://lists.nongnu.org/mailman/listinfo/acl-devel
-[4] git://git.savannah.nongnu.org/acl.git
-    http://git.savannah.gnu.org/cgit/acl.git
-[5] git://git.savannah.nongnu.org/attr.git
-    http://git.savannah.gnu.org/cgit/attr.git
 
 _______________________________________________
 xfs mailing list
