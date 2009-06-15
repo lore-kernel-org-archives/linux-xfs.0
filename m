@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n5FIFo4U119023 for <xfs@oss.sgi.com>; Mon, 15 Jun 2009 13:15:50 -0500
+	n5FIBVqI118804 for <xfs@oss.sgi.com>; Mon, 15 Jun 2009 13:11:32 -0500
 Received: from mx1.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 31FB91AD8A6D
-	for <xfs@oss.sgi.com>; Mon, 15 Jun 2009 11:16:12 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A6F5A1303C0B
+	for <xfs@oss.sgi.com>; Mon, 15 Jun 2009 11:19:32 -0700 (PDT)
 Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
-	with ESMTP id DHikSGFnmcYG2DN5 for <xfs@oss.sgi.com>;
-	Mon, 15 Jun 2009 11:16:12 -0700 (PDT)
+	with ESMTP id Leqnk5HHH83zCq1F for <xfs@oss.sgi.com>;
+	Mon, 15 Jun 2009 11:19:32 -0700 (PDT)
 From: Andreas Gruenbacher <agruen@suse.de>
 Subject: [ANNOUNCE] attr/acl projects moved to savannah
-Date: Mon, 15 Jun 2009 20:14:45 +0200
+Date: Mon, 15 Jun 2009 20:10:28 +0200
 MIME-Version: 1.0
 Content-Disposition: inline
-Message-Id: <200906152014.45943.agruen@suse.de>
+Message-Id: <200906152010.29021.agruen@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,7 +26,7 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: fs-devel@vger.kernel.org, xfs@oss.sgi.com
 
 Hello All-
 
