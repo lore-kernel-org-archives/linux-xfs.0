@@ -1,25 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n5G20Uik137529
-	for <linux-xfs@oss.sgi.com>; Mon, 15 Jun 2009 21:00:31 -0500
-Received: from kuber.nabble.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B415890C111
-	for <linux-xfs@oss.sgi.com>; Mon, 15 Jun 2009 19:08:31 -0700 (PDT)
-Received: from kuber.nabble.com (kuber.nabble.com [216.139.236.158]) by
-	cuda.sgi.com with ESMTP id wYSYdA4ZiQr8ROmM for
-	<linux-xfs@oss.sgi.com>; Mon, 15 Jun 2009 19:08:31 -0700 (PDT)
-Received: from isper.nabble.com ([192.168.236.156])
-	by kuber.nabble.com with esmtp (Exim 4.63)
-	(envelope-from <lists@nabble.com>) id 1MGNyl-0007A8-45
-	for linux-xfs@oss.sgi.com; Mon, 15 Jun 2009 19:00:51 -0700
-Message-ID: <24046118.post@talk.nabble.com>
-Date: Mon, 15 Jun 2009 19:00:51 -0700 (PDT)
-From: Smit Shah <getsmit@gmail.com>
-Subject: Re: XFS Preallocate using ALLOCSP
-In-Reply-To: <24042506.post@talk.nabble.com>
+	n5G35olo139843 for <xfs@oss.sgi.com>; Mon, 15 Jun 2009 22:05:50 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5EE041AD975F
+	for <xfs@oss.sgi.com>; Mon, 15 Jun 2009 20:06:13 -0700 (PDT)
+Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
+	cuda.sgi.com with ESMTP id aAy8tOgNhKbEynrD for
+	<xfs@oss.sgi.com>; Mon, 15 Jun 2009 20:06:13 -0700 (PDT)
+Message-ID: <4A370C2C.6030404@sandeen.net>
+Date: Mon, 15 Jun 2009 22:06:20 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-References: <24042506.post@talk.nabble.com>
+Subject: [PATCH 1/3] xfstests: basic fallocate boundary tests
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,34 +25,169 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
+Cc: ext4 development <linux-ext4@vger.kernel.org>
 
+This is just like test 072, but using fallocate instead
+of the xfs ioctl.  Just very basic fallocate tests.
 
-Ok i did the first part i.e preallocation using xfsctl() by using
-setresgid().
-But still is there some way this option could be incorporated in the
-fallocate system call.
+Also adds a "prealloc" group (./check -g prealloc)
 
-Smit Shah wrote:
-> 
-> Hi, 
-> 
-> I wanted to preallocate the file using the ALLOCSP so that the
-> preallocated space is zeroed out. Hence i used the xfsctl but the problem
-> is that i cannot execute  it as a non-root user.  So i tried using
-> fallocate but when i saw the xfs implementation of kernel it uses the
-> RESVP cmd and  since the unwritten flag is set i am assuming that the
-> performance of writing to the preallocated space will suffer because of
-> the metadata updates. So is there a way to preallocate using ALLOCSP as a
-> non-root user or else i would be required to modify the kernel ??
-> 
-> TIA, 
-> Smit 
-> 
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
 
--- 
-View this message in context: http://www.nabble.com/XFS-Preallocate-using-ALLOCSP-tp24042506p24046118.html
-Sent from the linux-xfs mailing list archive at Nabble.com.
+diff --git a/213 b/213
+new file mode 100755
+index 0000000..bf14245
+--- /dev/null
++++ b/213
+@@ -0,0 +1,88 @@
++#! /bin/sh
++# FS QA Test No. 213
++#
++# Check some unwritten extent boundary conditions, fallocate version.
++#
++# Based on xfs-specific test 072
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
++# Copyright (c) 2009 Red Hat, Inc. All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++# creator
++owner=sandeen@sandeen.net
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++here=`pwd`
++tmp=$TEST_DIR/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++
++# real QA test starts here
++# generic, but xfs_io's fallocate must work
++_supported_fs generic
++# only Linux supports fallocate
++_supported_os Linux
++
++[ -n "$XFS_IO_PROG" ] || _notrun "xfs_io executable not found"
++
++rm -f $seq.full
++
++testio=`$XFS_IO_PROG -F -f -c "falloc 0 1m" $TEST_DIR/$tmp.io 2>&1`
++echo $testio | grep -q "not found" && \
++	_notrun "xfs_io fallocate support is missing"
++echo $testio | grep -q "Operation not supported" && \
++	_notrun "xfs_io fallocate command failed (old kernel? wrong fs?)"
++
++# check there's enough freespace on $TEST_DIR ... (1GiB + 1MiB)
++avail=`df -P $TEST_DIR | awk 'END {print $4}'`
++[ "$avail" -ge 1049600 ] || _notrun "Test device is too small ($avail KiB)"
++
++echo Silence is golden
++
++# reserve 1GiB, truncate at 100bytes
++$XFS_IO_PROG -F -f -c 'falloc 0 1g' -c 'truncate 100' $TEST_DIR/ouch
++rm -f $TEST_DIR/ouch
++
++# reserve 1GiB, truncate at 1GiB
++$XFS_IO_PROG -F -f -c 'falloc 0 1g' -c 'truncate 1g' $TEST_DIR/ouch
++rm -f $TEST_DIR/ouch
++
++# reserve 1GiB, truncate at 2GiB
++$XFS_IO_PROG -F -f -c 'falloc 0 1g' -c 'truncate 2g' $TEST_DIR/ouch
++rm -f $TEST_DIR/ouch
++
++# reserve 1GiB, 1GiB hole, reserve 1MiB, truncate at 3GiB
++$XFS_IO_PROG -F -f -c 'falloc 0 1g' -c 'falloc 2g 1m' -c 'truncate 3g' $TEST_DIR/ouch
++rm -f $TEST_DIR/ouch
++
++# success, all done
++status=0
++exit
+diff --git a/group b/group
+index 1268ddd..578fa05 100644
+--- a/group
++++ b/group
+@@ -101,6 +101,10 @@ nfs4acl		tes@sgi.com donaldd@sgi.com
+ # test access time
+ atime
+ 
++# Test preallocation calls
++prealloc
++
++#
+ # test-group association ... one line per test
+ #
+ 001 rw dir udf auto quick
+@@ -111,7 +115,7 @@ atime
+ 006 dir udf auto quick
+ 007 dir udf auto quick
+ 008 rw ioctl auto quick
+-009 rw ioctl auto quick
++009 rw ioctl auto prealloc quick
+ 010 other udf auto
+ 011 dir udf auto quick
+ 012 rw auto quick
+@@ -174,7 +178,7 @@ atime
+ 069 rw udf auto quick
+ 070 attr udf auto quick
+ 071 rw
+-072 rw auto quick
++072 rw auto prealloc quick
+ 073 copy auto
+ 074 rw udf auto
+ 075 rw udf auto quick
+@@ -206,7 +210,7 @@ atime
+ 101 udf
+ 102 udf
+ 103 metadata dir ioctl auto quick
+-104 growfs ioctl
++104 growfs ioctl prealloc
+ 105 acl auto quick
+ 106 quota
+ 107 quota
+@@ -266,8 +270,8 @@ atime
+ 161 dmapi auto
+ 162 dmapi auto
+ 163 dmapi auto
+-164 rw pattern auto quick
+-165 rw pattern auto quick
++164 rw pattern auto prealloc quick
++165 rw pattern auto prealloc quick
+ 166 rw metadata auto quick
+ 167 rw metadata auto
+ 168 dmapi auto
+@@ -317,3 +321,4 @@ atime
+ 210 auto aio quick
+ 211 auto aio quick
+ 212 auto aio quick
++213 rw auto prealloc quick
 
 _______________________________________________
 xfs mailing list
