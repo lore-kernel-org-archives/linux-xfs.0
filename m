@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n5G35olo139843 for <xfs@oss.sgi.com>; Mon, 15 Jun 2009 22:05:50 -0500
+	n5G3CqGX140196 for <xfs@oss.sgi.com>; Mon, 15 Jun 2009 22:12:53 -0500
 Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5EE041AD975F
-	for <xfs@oss.sgi.com>; Mon, 15 Jun 2009 20:06:13 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B23BC2FAC47
+	for <xfs@oss.sgi.com>; Mon, 15 Jun 2009 20:13:15 -0700 (PDT)
 Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id aAy8tOgNhKbEynrD for
-	<xfs@oss.sgi.com>; Mon, 15 Jun 2009 20:06:13 -0700 (PDT)
-Message-ID: <4A370C2C.6030404@sandeen.net>
-Date: Mon, 15 Jun 2009 22:06:20 -0500
+	cuda.sgi.com with ESMTP id sdyk73T6VSFn4PDe for
+	<xfs@oss.sgi.com>; Mon, 15 Jun 2009 20:13:15 -0700 (PDT)
+Message-ID: <4A370DD2.6080204@sandeen.net>
+Date: Mon, 15 Jun 2009 22:13:22 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH 1/3] xfstests: basic fallocate boundary tests
+Subject: [PATCH 3/3] xfstests: fallocate + read/write tests, ext4 regression
+	tests
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,29 +29,29 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs-oss <xfs@oss.sgi.com>
 Cc: ext4 development <linux-ext4@vger.kernel.org>
 
-This is just like test 072, but using fallocate instead
-of the xfs ioctl.  Just very basic fallocate tests.
+New test to test basic mixed fallocate + read & write,
+includes a couple regression tests for bugs that ext4
+hit.  Uses xfs_io to generate fallocate calls, so requires
+git xfsprogs and very recent glibc at this point.
 
-Also adds a "prealloc" group (./check -g prealloc)
+Ext4 folks, this is hopefully a reasonable example of
+how to add a new test.  :)
 
 Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 ---
 
-diff --git a/213 b/213
+diff --git a/214 b/214
 new file mode 100755
-index 0000000..bf14245
+index 0000000..98cfc3a
 --- /dev/null
-+++ b/213
-@@ -0,0 +1,88 @@
++++ b/214
+@@ -0,0 +1,131 @@
 +#! /bin/sh
-+# FS QA Test No. 213
++# FS QA Test No. 214
 +#
-+# Check some unwritten extent boundary conditions, fallocate version.
-+#
-+# Based on xfs-specific test 072
++# Basic unwritten extent sanity checks
 +#
 +#-----------------------------------------------------------------------
-+# Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
 +# Copyright (c) 2009 Red Hat, Inc. All Rights Reserved.
 +#
 +# This program is free software; you can redistribute it and/or
@@ -100,94 +101,138 @@ index 0000000..bf14245
 +rm -f $seq.full
 +
 +testio=`$XFS_IO_PROG -F -f -c "falloc 0 1m" $TEST_DIR/$tmp.io 2>&1`
++
++# Old xfs_io doesn't have fallocate support
 +echo $testio | grep -q "not found" && \
 +	_notrun "xfs_io fallocate support is missing"
++# Old glibc, old kernels, and some filesystems don't have fallocate support
 +echo $testio | grep -q "Operation not supported" && \
 +	_notrun "xfs_io fallocate command failed (old kernel? wrong fs?)"
 +
-+# check there's enough freespace on $TEST_DIR ... (1GiB + 1MiB)
-+avail=`df -P $TEST_DIR | awk 'END {print $4}'`
-+[ "$avail" -ge 1049600 ] || _notrun "Test device is too small ($avail KiB)"
++# Ok, off we go.
 +
-+echo Silence is golden
-+
-+# reserve 1GiB, truncate at 100bytes
-+$XFS_IO_PROG -F -f -c 'falloc 0 1g' -c 'truncate 100' $TEST_DIR/ouch
++# Super-trivial; preallocate a region and read it; get 0s.
++echo "=== falloc & read  ==="
++$XFS_IO_PROG -F -f 		\
++	-c 'falloc 0 4096'	\
++	-c 'pread -v 0 4096'	\
++	$TEST_DIR/ouch | _filter_xfs_io_unique
 +rm -f $TEST_DIR/ouch
 +
-+# reserve 1GiB, truncate at 1GiB
-+$XFS_IO_PROG -F -f -c 'falloc 0 1g' -c 'truncate 1g' $TEST_DIR/ouch
++# Preallocate a chunk, write 1 byte, read it all back.
++# Should get no stale data.  Early ext4 bug.
++
++echo "=== falloc, write beginning, read ==="
++$XFS_IO_PROG -F -f 		\
++	-c 'falloc 0 512'	\
++	-c 'pwrite 0 1'		\
++	-c 'pread -v 0 512'	\
++	$TEST_DIR/ouch | _filter_xfs_io_unique
 +rm -f $TEST_DIR/ouch
 +
-+# reserve 1GiB, truncate at 2GiB
-+$XFS_IO_PROG -F -f -c 'falloc 0 1g' -c 'truncate 2g' $TEST_DIR/ouch
++# Same but write in the middle of the region
++echo "=== falloc, write middle, read ==="
++$XFS_IO_PROG -F -f 		\
++	-c 'falloc 0 512'	\
++	-c 'pwrite 256 1'	\
++	-c 'pread -v 0 512'	\
++	$TEST_DIR/ouch | _filter_xfs_io_unique
 +rm -f $TEST_DIR/ouch
 +
-+# reserve 1GiB, 1GiB hole, reserve 1MiB, truncate at 3GiB
-+$XFS_IO_PROG -F -f -c 'falloc 0 1g' -c 'falloc 2g 1m' -c 'truncate 3g' $TEST_DIR/ouch
++# Same but write the end of the region
++echo "=== falloc, write end, read ==="
++$XFS_IO_PROG -F -f		\
++	-c 'falloc 0 512'	\
++	-c 'pwrite 511 1'	\
++	-c 'pread -v 0 512'	\
++	$TEST_DIR/ouch | _filter_xfs_io_unique
++rm -f $TEST_DIR/ouch
++
++# Reported by IBM on ext4.
++#
++# Fixed by commit a41f20716975910d9beb90b7efc61107901492b8
++#
++# The file was previously preallocated, and then initialized the middle of
++# the preallocation area using Direct IO write, then overwrite part of
++# initialized area. Later after truncate the file (to the middle of the
++# initialized data), the initialized data *before* the new file size was
++# gone after remount the filesystem.
++
++echo "=== falloc, write, sync, truncate, read ==="
++# Allocate, write, sync, truncate (buffered)
++$XFS_IO_PROG -F -f				\
++	-c 'falloc         0x0     0x65C00'	\
++	-c 'pwrite -S 0xAA 0x12000 0x10000'	\
++	-c 'fsync'				\
++	-c 'truncate 0x16000'			\
++	$TEST_DIR/ouch | _filter_xfs_io_unique
++
++# now do a direct read and see what's on-disk
++$XFS_IO_PROG -F -f -d				\
++	-c 'pread -v 0 0x16000'			\
++	$TEST_DIR/ouch | _filter_xfs_io_unique
++
 +rm -f $TEST_DIR/ouch
 +
 +# success, all done
 +status=0
 +exit
+diff --git a/214.out b/214.out
+new file mode 100644
+index 0000000..b6344c2
+--- /dev/null
++++ b/214.out
+@@ -0,0 +1,41 @@
++QA output created by 214
++=== falloc & read  ===
++00000000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
++*
++read 4096/4096 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++=== falloc, write beginning, read ===
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++00000000:  cd 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
++00000010:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
++*
++read 512/512 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++=== falloc, write middle, read ===
++wrote 1/1 bytes at offset 256
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++00000000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
++*
++00000100:  cd 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
++00000110:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
++*
++read 512/512 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++=== falloc, write end, read ===
++wrote 1/1 bytes at offset 511
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++00000000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
++*
++000001f0:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 cd  ................
++read 512/512 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++=== falloc, write, sync, truncate, read ===
++wrote 65536/65536 bytes at offset 73728
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++00000000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
++*
++00012000:  aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa  ................
++*
++read 90112/90112 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
 diff --git a/group b/group
-index 1268ddd..578fa05 100644
+index 578fa05..c0ad793 100644
 --- a/group
 +++ b/group
-@@ -101,6 +101,10 @@ nfs4acl		tes@sgi.com donaldd@sgi.com
- # test access time
- atime
- 
-+# Test preallocation calls
-+prealloc
-+
-+#
- # test-group association ... one line per test
- #
- 001 rw dir udf auto quick
-@@ -111,7 +115,7 @@ atime
- 006 dir udf auto quick
- 007 dir udf auto quick
- 008 rw ioctl auto quick
--009 rw ioctl auto quick
-+009 rw ioctl auto prealloc quick
- 010 other udf auto
- 011 dir udf auto quick
- 012 rw auto quick
-@@ -174,7 +178,7 @@ atime
- 069 rw udf auto quick
- 070 attr udf auto quick
- 071 rw
--072 rw auto quick
-+072 rw auto prealloc quick
- 073 copy auto
- 074 rw udf auto
- 075 rw udf auto quick
-@@ -206,7 +210,7 @@ atime
- 101 udf
- 102 udf
- 103 metadata dir ioctl auto quick
--104 growfs ioctl
-+104 growfs ioctl prealloc
- 105 acl auto quick
- 106 quota
- 107 quota
-@@ -266,8 +270,8 @@ atime
- 161 dmapi auto
- 162 dmapi auto
- 163 dmapi auto
--164 rw pattern auto quick
--165 rw pattern auto quick
-+164 rw pattern auto prealloc quick
-+165 rw pattern auto prealloc quick
- 166 rw metadata auto quick
- 167 rw metadata auto
- 168 dmapi auto
-@@ -317,3 +321,4 @@ atime
- 210 auto aio quick
+@@ -322,3 +322,4 @@ prealloc
  211 auto aio quick
  212 auto aio quick
-+213 rw auto prealloc quick
+ 213 rw auto prealloc quick
++214 rw auto prealloc quick
 
 _______________________________________________
 xfs mailing list
