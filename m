@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n5G0I9h5134223
-	for <linux-xfs@oss.sgi.com>; Mon, 15 Jun 2009 19:18:09 -0500
+	n5G20Uik137529
+	for <linux-xfs@oss.sgi.com>; Mon, 15 Jun 2009 21:00:31 -0500
 Received: from kuber.nabble.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0BEA31AD8965
-	for <linux-xfs@oss.sgi.com>; Mon, 15 Jun 2009 17:18:32 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B415890C111
+	for <linux-xfs@oss.sgi.com>; Mon, 15 Jun 2009 19:08:31 -0700 (PDT)
 Received: from kuber.nabble.com (kuber.nabble.com [216.139.236.158]) by
-	cuda.sgi.com with ESMTP id b97xgBfJQjz1ABtH for
-	<linux-xfs@oss.sgi.com>; Mon, 15 Jun 2009 17:18:32 -0700 (PDT)
+	cuda.sgi.com with ESMTP id wYSYdA4ZiQr8ROmM for
+	<linux-xfs@oss.sgi.com>; Mon, 15 Jun 2009 19:08:31 -0700 (PDT)
 Received: from isper.nabble.com ([192.168.236.156])
 	by kuber.nabble.com with esmtp (Exim 4.63)
-	(envelope-from <lists@nabble.com>) id 1MGMNk-0003jp-0L
-	for linux-xfs@oss.sgi.com; Mon, 15 Jun 2009 17:18:32 -0700
-Message-ID: <24042506.post@talk.nabble.com>
-Date: Mon, 15 Jun 2009 17:18:32 -0700 (PDT)
+	(envelope-from <lists@nabble.com>) id 1MGNyl-0007A8-45
+	for linux-xfs@oss.sgi.com; Mon, 15 Jun 2009 19:00:51 -0700
+Message-ID: <24046118.post@talk.nabble.com>
+Date: Mon, 15 Jun 2009 19:00:51 -0700 (PDT)
 From: Smit Shah <getsmit@gmail.com>
-Subject: XFS Preallocate using ALLOCSP
+Subject: Re: XFS Preallocate using ALLOCSP
+In-Reply-To: <24042506.post@talk.nabble.com>
 MIME-Version: 1.0
+References: <24042506.post@talk.nabble.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,21 +35,30 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: linux-xfs@oss.sgi.com
 
 
-Hi, 
+Ok i did the first part i.e preallocation using xfsctl() by using
+setresgid().
+But still is there some way this option could be incorporated in the
+fallocate system call.
 
-I wanted to preallocate the file using the ALLOCSP so that the preallocated
-space is zeroed out. Hence i used the xfsctl but the problem is that i
-cannot execute  it as a non-root user.  So i tried using fallocate but when
-i saw the xfs implementation of kernel it uses the RESVP cmd and  since the
-unwritten flag is set i am assuming that the performance of writing to the
-preallocated space will suffer because of the metadata updates. So is there
-a way to preallocate using ALLOCSP as a non-root user or else i would be
-required to modify the kernel ??
+Smit Shah wrote:
+> 
+> Hi, 
+> 
+> I wanted to preallocate the file using the ALLOCSP so that the
+> preallocated space is zeroed out. Hence i used the xfsctl but the problem
+> is that i cannot execute  it as a non-root user.  So i tried using
+> fallocate but when i saw the xfs implementation of kernel it uses the
+> RESVP cmd and  since the unwritten flag is set i am assuming that the
+> performance of writing to the preallocated space will suffer because of
+> the metadata updates. So is there a way to preallocate using ALLOCSP as a
+> non-root user or else i would be required to modify the kernel ??
+> 
+> TIA, 
+> Smit 
+> 
 
-TIA, 
-Smit 
 -- 
-View this message in context: http://www.nabble.com/XFS-Preallocate-using-ALLOCSP-tp24042506p24042506.html
+View this message in context: http://www.nabble.com/XFS-Preallocate-using-ALLOCSP-tp24042506p24046118.html
 Sent from the linux-xfs mailing list archive at Nabble.com.
 
 _______________________________________________
