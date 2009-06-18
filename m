@@ -1,53 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n5IF3bAn018664 for <xfs@oss.sgi.com>; Thu, 18 Jun 2009 10:03:38 -0500
-Received: from mail.laber.fasel.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8AC4F306D60
-	for <xfs@oss.sgi.com>; Thu, 18 Jun 2009 08:04:02 -0700 (PDT)
-Received: from mail.laber.fasel.org (mail.laber.fasel.org [212.7.178.68]) by
-	cuda.sgi.com with ESMTP id xKuA13dXyS0l0aTy for
-	<xfs@oss.sgi.com>; Thu, 18 Jun 2009 08:04:02 -0700 (PDT)
-Received: from mail.laber.fasel.org (localhost [127.0.0.1])
-	by mail.laber.fasel.org (Postfix/wolfram.schlich.biz) with ESMTP id
-	3CBB56000AA
-	for <xfs@oss.sgi.com>; Thu, 18 Jun 2009 17:04:01 +0200 (CEST)
-Received: from localhost (localhost [127.0.0.1])
-	by mail.laber.fasel.org (Postfix/wolfram.schlich.biz) with ESMTP id
-	310F2600050
-	for <xfs@oss.sgi.com>; Thu, 18 Jun 2009 17:04:01 +0200 (CEST)
-Received: from mail.laber.fasel.org ([127.0.0.1])
-	by localhost (mail.laber.fasel.org [127.0.0.1]) (amavisd-new,
-	port 10026) with ESMTP id z1MQCTzo5EhC for <xfs@oss.sgi.com>;
-	Thu, 18 Jun 2009 17:04:00 +0200 (CEST)
-Received: from localhost (localhost [127.0.0.1])
-	by mail.laber.fasel.org (Postfix/wolfram.schlich.biz) with ESMTP id
-	0F20D6000AA
-	for <xfs@oss.sgi.com>; Thu, 18 Jun 2009 17:04:00 +0200 (CEST)
-Received: from mail.bla.fasel.org (mail.bla.fasel.org
-	[IPv6:2001:4b88:1066:32::35])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mail.bla.fasel.org",
-	Issuer "ca.bla.fasel.org" (verified OK))
-	by mail.laber.fasel.org (Postfix/wolfram.schlich.biz) with ESMTPS id
-	953CC6000AA
-	for <xfs@oss.sgi.com>; Thu, 18 Jun 2009 17:03:59 +0200 (CEST)
-Received: from localhost (localhost [127.0.0.1])
-	by mail.bla.fasel.org (Postfix) with ESMTP id 4BFE1407B12
-	for <xfs@oss.sgi.com>; Thu, 18 Jun 2009 17:03:58 +0200 (CEST)
-Received: from mail.bla.fasel.org (localhost [127.0.0.1])
-	by mail.bla.fasel.org (Postfix) with ESMTP id E5C13408CA5
-	for <xfs@oss.sgi.com>; Thu, 18 Jun 2009 17:03:57 +0200 (CEST)
-Date: Thu, 18 Jun 2009 17:03:57 +0200
-From: Wolfram Schlich <lists@wolfram.schlich.org>
-Subject: Re: xfs_trans_read_buf error / xfs_force_shutdown with LVM
-	snapshot and Xen kernel 2.6.18
-Message-ID: <20090618150357.GE16867@bla.fasel.org>
-References: <20090618065621.GD16867@bla.fasel.org>
-	<4A3A47AC.6070406@sandeen.net>
+	n5IJUhr3026182 for <xfs@oss.sgi.com>; Thu, 18 Jun 2009 14:30:44 -0500
+Received: from mail-fx0-f207.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8B60130742A
+	for <xfs@oss.sgi.com>; Thu, 18 Jun 2009 12:31:07 -0700 (PDT)
+Received: from mail-fx0-f207.google.com (mail-fx0-f207.google.com
+	[209.85.220.207]) by cuda.sgi.com with ESMTP id
+	KCDf8E8MxrG1raGz for <xfs@oss.sgi.com>;
+	Thu, 18 Jun 2009 12:31:07 -0700 (PDT)
+Received: by fxm3 with SMTP id 3so1243278fxm.20
+	for <xfs@oss.sgi.com>; Thu, 18 Jun 2009 12:31:07 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4A3A47AC.6070406@sandeen.net>
+Date: Thu, 18 Jun 2009 23:31:06 +0400
+Message-ID: <a4423d670906181231r7388df5am394bc55508272b3@mail.gmail.com>
+Subject: 2.6.30-06725: xfs_fsr: Assertion failed: ip->i_delayed_blks == 0,
+	file: fs/xfs/xfs_bmap.c, line: 5991
+From: Alexander Beregalov <a.beregalov@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -62,64 +31,49 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-* Eric Sandeen <sandeen@sandeen.net> [2009-06-18 16:09]:
-> Wolfram Schlich wrote:
-> > Hi!
-> > 
-> > I'm currently using LVM snapshots to create full system backups
-> > of a bunch of Xen-based virtual machines (so-called domUs).
-> > Those domUs all run Xen kernel 2.6.18 from the Xen 3.2.0 release
-> > (32bit domU on 32bit dom0, I can post the .config if needed).
-> > All domUs are using XFS on their LVM logical volumes.
-> > The backup of all mounted snapshot volumes is made using
-> > rsnapshot/rsync. This has been running smoothly for some
-> > weeks now on 5 domUs.
-> > 
-> > Yesterday this happened during the backup on 1 domU:
-> > --8<--
-> > kernel: I/O error in filesystem ("dm-21") meta-data dev dm-21 block 0x604d68       ("xfs_trans_read_buf") error 5 buf count 4096
-> [...]
-> > [...many more of such messages...]
-> 
-> Well these are all I/O errors happening -to- xfs, so xfs is unlikely to
-> be at fault here.  Any block layer messages before that?
+Hi
 
-Unfortunately not a single one :(
 
-> > Is it possible that the LVM snapshot (that should be using
-> > xfs_freeze/xfs_unfreeze) has created an inconsistent/damaged
-> > snapshot that was kept from being repaired through norecovery?
-> > Any other ideas?
-> 
-> If it was a proper snapshot norecovery shouldn't matter, as the fs
-> should be clean already (well, hopefully, 2.6.18 was a long time ago;
-> this is true today, anyway)
+Assertion failed: ip->i_delayed_blks == 0, file: fs/xfs/xfs_bmap.c, line: 5991
+------------[ cut here ]------------
+kernel BUG at fs/xfs/support/debug.c:109!
+invalid opcode: 0000 [#1] DEBUG_PAGEALLOC
+last sysfs file: /sys/devices/system/cpu/cpu0/cpufreq/scaling_setspeed
+Modules linked in: w83627hf hwmon_vid i2c_nforce2
 
-Ok.
-
-> I suppose it's possible that the snapshot was not consistent, and you're
-> hitting problems there, but things like:
-> 
-> > kernel: I/O error in filesystem ("dm-21") meta-data dev dm-21 block
-> 0xdd0       ("xfs_trans_read_buf") error 5 buf count 8192
-> 
-> looks like a failure to read a perfectly normal block, not out of bounds
-> or anything, so I'd most likely point to problems outside xfs.
-
-I've now traced it back to LVM. It seems that the LVM snapshot
-volume we were backing up at that time ran out of space and thus
-was automatically removed (thus, the block device which the XFS
-was on vanished).
-
-Stupid LVM does not log ANYTHING when it just deletes a snapshot
-running out of space :( I've now activated dmeventd which *does*
-log such events *sigh*
-
-Thanks!
--- 
-Regards,
-Wolfram Schlich <wschlich@gentoo.org>
-Gentoo Linux * http://dev.gentoo.org/~wschlich/
+Pid: 3164, comm: xfs_fsr Not tainted (2.6.30-06725-g1d89b30 #2)
+EIP: 0060:[<c11a063e>] EFLAGS: 00010292 CPU: 0
+EIP is at assfail+0x1e/0x30
+EAX: 00000061 EBX: 0000007f ECX: c13501b7 EDX: ef693d80
+ESI: 00000000 EDI: f67c3de4 EBP: f67c3d38 ESP: f67c3d28
+ DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 0068
+Process xfs_fsr (pid: 3164, ti=f67c2000 task=ef693d80 task.ti=f67c2000)
+Stack:
+ c142ab88 c140c8c5 c140c42d 00001767 f67c3dd0 c114d53f ffffffff ffffffff
+<0> 00000000 00000000 00000001 efdb91e4 ef693d80 f67c3d88 00000246 c109abea
+<0> f6df4768 00000246 00000000 00000000 c1198ca0 f3d732e0 e8ae8000 00000002
+Call Trace:
+ [<c114d53f>] ? xfs_getbmap+0x19f/0x7b0
+ [<c109abea>] ? __d_lookup+0xca/0x170
+ [<c1198ca0>] ? xfs_getbmap_format+0x0/0x30
+ [<c1073da6>] ? might_fault+0x46/0xa0
+ [<c11ca7e5>] ? copy_from_user+0x35/0x140
+ [<c1198e48>] ? xfs_ioc_getbmap+0x68/0xf0
+ [<c119a830>] ? xfs_file_ioctl+0x420/0x860
+ [<c104d3dd>] ? print_lock_contention_bug+0x1d/0x110
+ [<c106a3f6>] ? put_page+0x56/0x110
+ [<c1083ffc>] ? slab_pad_check+0x3c/0x120
+ [<c10852fd>] ? check_object+0x13d/0x200
+ [<c119a410>] ? xfs_file_ioctl+0x0/0x860
+ [<c1096950>] ? vfs_ioctl+0x20/0x70
+ [<c1096b4a>] ? do_vfs_ioctl+0x6a/0x5c0
+ [<c104ea5b>] ? trace_hardirqs_on+0xb/0x10
+ [<c1078f96>] ? remove_vma+0x56/0x70
+ [<c1078f96>] ? remove_vma+0x56/0x70
+ [<c1078f96>] ? remove_vma+0x56/0x70
+ [<c1079e4b>] ? do_munmap+0x23b/0x280
+ [<c10970d9>] ? sys_ioctl+0x39/0x70
+ [<c1002d58>] ? sysenter_do_call+0x12/0x36
 
 _______________________________________________
 xfs mailing list
