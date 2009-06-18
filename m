@@ -1,22 +1,53 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n5IDub7o014320
-	for <linux-xfs@oss.sgi.com>; Thu, 18 Jun 2009 08:56:37 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 395DC9446B2
-	for <linux-xfs@oss.sgi.com>; Thu, 18 Jun 2009 07:04:54 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id wiu5echXCZ10952Y for
-	<linux-xfs@oss.sgi.com>; Thu, 18 Jun 2009 07:04:54 -0700 (PDT)
-Message-ID: <4A3A47AC.6070406@sandeen.net>
-Date: Thu, 18 Jun 2009 08:57:00 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: xfs_trans_read_buf error / xfs_force_shutdown with LVM snapshot
-	and Xen kernel 2.6.18
+	n5IF3bAn018664 for <xfs@oss.sgi.com>; Thu, 18 Jun 2009 10:03:38 -0500
+Received: from mail.laber.fasel.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8AC4F306D60
+	for <xfs@oss.sgi.com>; Thu, 18 Jun 2009 08:04:02 -0700 (PDT)
+Received: from mail.laber.fasel.org (mail.laber.fasel.org [212.7.178.68]) by
+	cuda.sgi.com with ESMTP id xKuA13dXyS0l0aTy for
+	<xfs@oss.sgi.com>; Thu, 18 Jun 2009 08:04:02 -0700 (PDT)
+Received: from mail.laber.fasel.org (localhost [127.0.0.1])
+	by mail.laber.fasel.org (Postfix/wolfram.schlich.biz) with ESMTP id
+	3CBB56000AA
+	for <xfs@oss.sgi.com>; Thu, 18 Jun 2009 17:04:01 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+	by mail.laber.fasel.org (Postfix/wolfram.schlich.biz) with ESMTP id
+	310F2600050
+	for <xfs@oss.sgi.com>; Thu, 18 Jun 2009 17:04:01 +0200 (CEST)
+Received: from mail.laber.fasel.org ([127.0.0.1])
+	by localhost (mail.laber.fasel.org [127.0.0.1]) (amavisd-new,
+	port 10026) with ESMTP id z1MQCTzo5EhC for <xfs@oss.sgi.com>;
+	Thu, 18 Jun 2009 17:04:00 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+	by mail.laber.fasel.org (Postfix/wolfram.schlich.biz) with ESMTP id
+	0F20D6000AA
+	for <xfs@oss.sgi.com>; Thu, 18 Jun 2009 17:04:00 +0200 (CEST)
+Received: from mail.bla.fasel.org (mail.bla.fasel.org
+	[IPv6:2001:4b88:1066:32::35])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mail.bla.fasel.org",
+	Issuer "ca.bla.fasel.org" (verified OK))
+	by mail.laber.fasel.org (Postfix/wolfram.schlich.biz) with ESMTPS id
+	953CC6000AA
+	for <xfs@oss.sgi.com>; Thu, 18 Jun 2009 17:03:59 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+	by mail.bla.fasel.org (Postfix) with ESMTP id 4BFE1407B12
+	for <xfs@oss.sgi.com>; Thu, 18 Jun 2009 17:03:58 +0200 (CEST)
+Received: from mail.bla.fasel.org (localhost [127.0.0.1])
+	by mail.bla.fasel.org (Postfix) with ESMTP id E5C13408CA5
+	for <xfs@oss.sgi.com>; Thu, 18 Jun 2009 17:03:57 +0200 (CEST)
+Date: Thu, 18 Jun 2009 17:03:57 +0200
+From: Wolfram Schlich <lists@wolfram.schlich.org>
+Subject: Re: xfs_trans_read_buf error / xfs_force_shutdown with LVM
+	snapshot and Xen kernel 2.6.18
+Message-ID: <20090618150357.GE16867@bla.fasel.org>
 References: <20090618065621.GD16867@bla.fasel.org>
-In-Reply-To: <20090618065621.GD16867@bla.fasel.org>
+	<4A3A47AC.6070406@sandeen.net>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4A3A47AC.6070406@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,68 +60,66 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Wolfram Schlich <lists@wolfram.schlich.org>
-Cc: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Wolfram Schlich wrote:
-> Hi!
+* Eric Sandeen <sandeen@sandeen.net> [2009-06-18 16:09]:
+> Wolfram Schlich wrote:
+> > Hi!
+> > 
+> > I'm currently using LVM snapshots to create full system backups
+> > of a bunch of Xen-based virtual machines (so-called domUs).
+> > Those domUs all run Xen kernel 2.6.18 from the Xen 3.2.0 release
+> > (32bit domU on 32bit dom0, I can post the .config if needed).
+> > All domUs are using XFS on their LVM logical volumes.
+> > The backup of all mounted snapshot volumes is made using
+> > rsnapshot/rsync. This has been running smoothly for some
+> > weeks now on 5 domUs.
+> > 
+> > Yesterday this happened during the backup on 1 domU:
+> > --8<--
+> > kernel: I/O error in filesystem ("dm-21") meta-data dev dm-21 block 0x604d68       ("xfs_trans_read_buf") error 5 buf count 4096
+> [...]
+> > [...many more of such messages...]
 > 
-> I'm currently using LVM snapshots to create full system backups
-> of a bunch of Xen-based virtual machines (so-called domUs).
-> Those domUs all run Xen kernel 2.6.18 from the Xen 3.2.0 release
-> (32bit domU on 32bit dom0, I can post the .config if needed).
-> All domUs are using XFS on their LVM logical volumes.
-> The backup of all mounted snapshot volumes is made using
-> rsnapshot/rsync. This has been running smoothly for some
-> weeks now on 5 domUs.
+> Well these are all I/O errors happening -to- xfs, so xfs is unlikely to
+> be at fault here.  Any block layer messages before that?
+
+Unfortunately not a single one :(
+
+> > Is it possible that the LVM snapshot (that should be using
+> > xfs_freeze/xfs_unfreeze) has created an inconsistent/damaged
+> > snapshot that was kept from being repaired through norecovery?
+> > Any other ideas?
 > 
-> Yesterday this happened during the backup on 1 domU:
-> --8<--
-> kernel: I/O error in filesystem ("dm-21") meta-data dev dm-21 block 0x604d68       ("xfs_trans_read_buf") error 5 buf count 4096
-> kernel: I/O error in filesystem ("dm-21") meta-data dev dm-21 block 0x66c5a0       ("xfs_trans_read_buf") error 5 buf count 4096
-> kernel: I/O error in filesystem ("dm-21") meta-data dev dm-21 block 0x202f70       ("xfs_trans_read_buf") error 5 buf count 4096
-> kernel: I/O error in filesystem ("dm-21") meta-data dev dm-21 block 0x2701f8       ("xfs_trans_read_buf") error 5 buf count 4096
-> kernel: I/O error in filesystem ("dm-21") meta-data dev dm-21 block 0x6a78       ("xfs_trans_read_buf") error 5 buf count 4096
-> kernel: I/O error in filesystem ("dm-21") meta-data dev dm-21 block 0x600500       ("xfs_trans_read_buf") error 5 buf count 8192
-> kernel: I/O error in filesystem ("dm-21") meta-data dev dm-21 block 0x600520       ("xfs_trans_read_buf") error 5 buf count 8192
-> kernel: I/O error in filesystem ("dm-21") meta-data dev dm-21 block 0x600520       ("xfs_trans_read_buf") error 5 buf count 8192
-> kernel: I/O error in filesystem ("dm-21") meta-data dev dm-21 block 0xdd0       ("xfs_trans_read_buf") error 5 buf count 8192
-> kernel: I/O error in filesystem ("dm-21") meta-data dev dm-21 block 0x4055d0       ("xfs_trans_read_buf") error 5 buf count 8192
-> [...many more of such messages...]
+> If it was a proper snapshot norecovery shouldn't matter, as the fs
+> should be clean already (well, hopefully, 2.6.18 was a long time ago;
+> this is true today, anyway)
 
-Well these are all I/O errors happening -to- xfs, so xfs is unlikely to
-be at fault here.  Any block layer messages before that?
+Ok.
 
-> kernel: xfs_force_shutdown(dm-21,0x1) called from line 424 of file fs/xfs/xfs_rw.c.  Return address = 0xc02b1cbb
-> kernel: Filesystem "dm-21": I/O Error Detected.  Shutting down filesystem: dm-21
-> kernel: Please umount the filesystem, and rectify the problem(s)
-> kernel: xfs_force_shutdown(dm-21,0x1) called from line 424 of file fs/xfs/xfs_rw.c.  Return address = 0xc02b1cbb
-
-> --8<--
-> The rsync process was then terminated with SIGBUS (exit code 135 -> 128+7).
+> I suppose it's possible that the snapshot was not consistent, and you're
+> hitting problems there, but things like:
 > 
-> The device dm-21 was the snapshot of the /var filesystem and
-> was mounted using nouuid,norecovery.
+> > kernel: I/O error in filesystem ("dm-21") meta-data dev dm-21 block
+> 0xdd0       ("xfs_trans_read_buf") error 5 buf count 8192
 > 
-> Is it possible that the LVM snapshot (that should be using
-> xfs_freeze/xfs_unfreeze) has created an inconsistent/damaged
-> snapshot that was kept from being repaired through norecovery?
-> Any other ideas?
+> looks like a failure to read a perfectly normal block, not out of bounds
+> or anything, so I'd most likely point to problems outside xfs.
 
-If it was a proper snapshot norecovery shouldn't matter, as the fs
-should be clean already (well, hopefully, 2.6.18 was a long time ago;
-this is true today, anyway)
+I've now traced it back to LVM. It seems that the LVM snapshot
+volume we were backing up at that time ran out of space and thus
+was automatically removed (thus, the block device which the XFS
+was on vanished).
 
-I suppose it's possible that the snapshot was not consistent, and you're
-hitting problems there, but things like:
+Stupid LVM does not log ANYTHING when it just deletes a snapshot
+running out of space :( I've now activated dmeventd which *does*
+log such events *sigh*
 
-> kernel: I/O error in filesystem ("dm-21") meta-data dev dm-21 block
-0xdd0       ("xfs_trans_read_buf") error 5 buf count 8192
-
-looks like a failure to read a perfectly normal block, not out of bounds
-or anything, so I'd most likely point to problems outside xfs.
-
--Eric
+Thanks!
+-- 
+Regards,
+Wolfram Schlich <wschlich@gentoo.org>
+Gentoo Linux * http://dev.gentoo.org/~wschlich/
 
 _______________________________________________
 xfs mailing list
