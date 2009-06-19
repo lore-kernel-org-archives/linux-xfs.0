@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n5JHrAdI074498 for <xfs@oss.sgi.com>; Fri, 19 Jun 2009 12:53:11 -0500
+	n5JHrB3B074502 for <xfs@oss.sgi.com>; Fri, 19 Jun 2009 12:53:11 -0500
 Received: from thunker.thunk.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AC1EF129FDE5
-	for <xfs@oss.sgi.com>; Fri, 19 Jun 2009 10:53:36 -0700 (PDT)
-Received: from thunker.thunk.org (thunk.org [69.25.196.29]) by cuda.sgi.com
-	with ESMTP id aY8K0aAbXYB7xNHO for <xfs@oss.sgi.com>;
-	Fri, 19 Jun 2009 10:53:36 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 56C99129FDFA
+	for <xfs@oss.sgi.com>; Fri, 19 Jun 2009 10:53:37 -0700 (PDT)
+Received: from thunker.thunk.org (THUNK.ORG [69.25.196.29]) by cuda.sgi.com
+	with ESMTP id rC45r8dmVj1gH1Fl for <xfs@oss.sgi.com>;
+	Fri, 19 Jun 2009 10:53:37 -0700 (PDT)
 From: "Theodore Ts'o" <tytso@mit.edu>
-Subject: [PATCH 3/3] Fix _require_scratch test for extN, resierfs, gfs2,
-	and btrfs
-Date: Fri, 19 Jun 2009 13:53:33 -0400
-Message-Id: <1245434013-9433-3-git-send-email-tytso@mit.edu>
+Subject: [PATCH 2/3] Fix common.config to allow SCRATCH_DEV and SCRATCH_MNT to
+	be optional
+Date: Fri, 19 Jun 2009 13:53:32 -0400
+Message-Id: <1245434013-9433-2-git-send-email-tytso@mit.edu>
 In-Reply-To: <1245434013-9433-1-git-send-email-tytso@mit.edu>
 References: <1245434013-9433-1-git-send-email-tytso@mit.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,41 +31,43 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: tytso@mit.edu
 
-The extN, reiserfs, gfs2, and btrfs filesysytem types should use the
-same check for a block device as XFS and UDF, and not the test for
-NFS, which was checking for host:/foo/bar/baz when checking for a
-scratch device.
-
-Also, the NFS logic was also incorrect, in that it would allow a
-zero-length SCRATCH_DEV to continue.
+Commit 3ae9f2f8 purports to allow SCRATCH_DEV and SCRATCH_MNT to be
+optional, but tests in common.config will cause check to exit with an
+error if these environment variables are not defined.  Fix this problem.
 
 Signed-off-by: "Theodore Ts'o" <tytso@mit.edu>
 ---
- common.rc |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ common.config |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/common.rc b/common.rc
-index 581cfba..8b9ba7d 100644
---- a/common.rc
-+++ b/common.rc
-@@ -593,7 +593,7 @@ _supported_os()
- _require_scratch()
- {
-     case "$FSTYP" in
--	xfs|udf)
-+	xfs|udf|ext2|ext3|ext4|reiserfs|gfs2|btrfs)
- 		 if [ -z "$SCRATCH_DEV" -o "`_is_block_dev $SCRATCH_DEV`" = "" ]
- 		 then
- 		     _notrun "this test requires a valid \$SCRATCH_DEV"
-@@ -603,7 +603,7 @@ _require_scratch()
- 		     _notrun "this test requires a valid \$SCRATCH_DEV"
- 		 fi
- 		 ;;
--	nfs*|ext2|ext3|ext4|reiserfs|gfs2|btrfs)
-+	nfs*)
- 		 echo $SCRATCH_DEV | grep -q ":" > /dev/null 2>&1
- 		 if [ ! -z "$SCRATCH_DEV" -a ! -b "$SCRATCH_DEV" -a "$?" != "0" ]
- 		 then
+diff --git a/common.config b/common.config
+index 64df893..b304247 100644
+--- a/common.config
++++ b/common.config
+@@ -23,10 +23,10 @@
+ #                   mounted XFS file system, needs to be be world
+ #                   writeable
+ # TEST_DEV -        device for file system containing TEST_DIR
+-# SCRATCH_DEV -     device you can make a scratch file system on
+-# SCRATCH_MNT -     mount point for scratch file system
+ #
+ # and optionally:
++# SCRATCH_DEV -     device you can make a scratch file system on
++# SCRATCH_MNT -     mount point for scratch file system
+ # SCRATCH_LOGDEV -  scratch log device for external log testing
+ # SCRATCH_RTDEV -   scratch rt dev
+ # TEST_LOGDEV -     test log device for external log testing
+@@ -202,8 +202,8 @@ known_hosts()
+   [ -z "$TEST_DIR" ]       && MC="$MC TEST_DIR"
+   [ -z "$TEST_DEV" ]       && MC="$MC TEST_DEV"
+ 
+-  [ -z "$SCRATCH_MNT" ]    && MC="$MC SCRATCH_MNT"
+-  [ -z "$SCRATCH_DEV" ]    && MC="$MC SCRATCH_DEV"
++#  [ -z "$SCRATCH_MNT" ]    && MC="$MC SCRATCH_MNT"
++#  [ -z "$SCRATCH_DEV" ]    && MC="$MC SCRATCH_DEV"
+ 
+   [ "$MC" ] && (echo "Warning: need to define parameters for host $HOST";\
+ 	        echo "       or set variables:"; \
 -- 
 1.6.3.2.1.gb9f7d.dirty
 
