@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n5J9Zxbh058103 for <xfs@oss.sgi.com>; Fri, 19 Jun 2009 04:35:59 -0500
-Received: from firestarter.dermichi.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D03C330A52C
-	for <xfs@oss.sgi.com>; Fri, 19 Jun 2009 02:36:23 -0700 (PDT)
-Received: from firestarter.dermichi.com (firestarter.dermichi.com
-	[83.64.48.195]) by cuda.sgi.com with ESMTP id zW7PtinjoEjVt9Vc
-	for <xfs@oss.sgi.com>; Fri, 19 Jun 2009 02:36:23 -0700 (PDT)
-Received: from cerberus.net4you.net ([194.177.153.130] helo=[192.168.200.110])
-	by firestarter.dermichi.com with esmtpsa
-	(TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32) (Exim 4.69)
-	(envelope-from <mw@dermichi.com>) id 1MHaWE-0005cO-Nr
-	for xfs@oss.sgi.com; Fri, 19 Jun 2009 11:36:22 +0200
-Message-ID: <4A3B5C14.9070101@dermichi.com>
-Date: Fri, 19 Jun 2009 11:36:20 +0200
-From: Michael Weissenbacher <mw@dermichi.com>
+	n5JFcP7o070536 for <xfs@oss.sgi.com>; Fri, 19 Jun 2009 10:38:26 -0500
+Received: from mx2.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 943829502D1
+	for <xfs@oss.sgi.com>; Fri, 19 Jun 2009 08:46:49 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id To25vBTFjnGLRrxk for <xfs@oss.sgi.com>;
+	Fri, 19 Jun 2009 08:46:49 -0700 (PDT)
+From: Andreas Gruenbacher <agruen@suse.de>
+Subject: Re: Bug#531950: attr: FTBFS on GNU/kFreeBSD
+Date: Fri, 19 Jun 2009 17:37:57 +0200
+References: <364917872.6081221244543493694.JavaMail.root@mail-au.aconex.com>
+	<20090615094244.GA4793@infradead.org>
+	<Pine.LNX.4.62.0906151211550.15794@sci.felk.cvut.cz>
+In-Reply-To: <Pine.LNX.4.62.0906151211550.15794@sci.felk.cvut.cz>
 MIME-Version: 1.0
-Subject: XFS and atime update strangeness
+Content-Disposition: inline
+Message-Id: <200906191737.58393.agruen@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,32 +30,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Petr Salinger <Petr.Salinger@seznam.cz>, acl-devel@nongnu.org
+Cc: Christoph Hellwig <hch@infradead.org>, 531950-quiet@bugs.debian.org, Nathan Scott <nscott@aconex.com>, Aurelien Jarno <aurelien@aurel32.net>, xfs@oss.sgi.com
 
-Hi XFS-List!
-As i have been playing around with atime settings recently, i noticed that XFS handles atime updates very differently than other filesystems (at least different than ext2/3/4 and reiserfs). In fact it does not record atime changes permanently, it seems that atimes are only stored in the inode cache. I was testing this on a Gentoo Box with kernel 2.6.28-gentoo-r5 and 2.6.30 Vanilla.
+On Monday 15 June 2009 12:26:12 Petr Salinger wrote:
+> We would really appreciate to have either "#ifdef ENODATA" or
+> "#ifdef __linux__" applied to current debian version of package.
+> The debian maintainer does not want to diverge from (future) upstream,
+> which is quite understandable.
+>
+> Would be possible to special case ENODATA as 1st step and postpone
+> adding of syscall support later ?
 
-How to reproduce?
+Yes, done.
 
-invincible usr # ls -lu portage/header.txt
--rw-r--r-- 1 root root 121 2009-06-18 22:06 portage/header.txt
-invincible usr # date
-Fri Jun 19 11:24:53 CEST 2009
-invincible usr # cat portage/header.txt > /dev/null
-invincible usr # ls -lu portage/header.txt
--rw-r--r-- 1 root root 121 2009-06-19 11:24 portage/header.txt
-invincible usr # umount portage && mount portage
-invincible usr # ls -lu portage/header.txt
--rw-r--r-- 1 root root 121 2009-06-18 22:06 portage/header.txt
+> The current situation (unbuildable attr under Bebian) prevents
+> building of many other packages, namely kdelibs (and whole KDE 3.x),
+> kde4libs (and whole KDE 4.x) and gnome-vfs (almost whole GNOME) and even
+> vim editor under Debian GNU/kFreeBSD.
 
-So after umount && mount the atime instantly went back to the old value. I can also sometimes reproduce it by doing "sync && echo 3 > /proc/sys/vm/drop_caches". If i wait for a day the atime also reverts back. Rebooting the machine has the same effect.
-
-I haven't found anything in the official documentation stating this. The only reference i found was a while back in the mailing list:
-http://oss.sgi.com/archives/xfs/2007-10/msg00171.html
-
-I think there should be at least some information about this behavior in the official docs and the FAQ. IMO This feature/bug of XFS also collides with the recent change to make relatime the default in kernel 2.6.30. Is there any way to enable permanent atime updates in case someone wants them?
-
-Michael
+Thanks,
+Andreas
 
 _______________________________________________
 xfs mailing list
