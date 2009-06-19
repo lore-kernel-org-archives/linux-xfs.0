@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n5IM4IsG030208 for <xfs@oss.sgi.com>; Thu, 18 Jun 2009 17:04:19 -0500
-Received: from mail-fx0-f207.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6820F94B0A3
-	for <xfs@oss.sgi.com>; Thu, 18 Jun 2009 15:12:38 -0700 (PDT)
-Received: from mail-fx0-f207.google.com (mail-fx0-f207.google.com
-	[209.85.220.207]) by cuda.sgi.com with ESMTP id
-	xJJ4FDWzEzwSV3Ho for <xfs@oss.sgi.com>;
-	Thu, 18 Jun 2009 15:12:38 -0700 (PDT)
-Received: by fxm3 with SMTP id 3so1319809fxm.20
-	for <xfs@oss.sgi.com>; Thu, 18 Jun 2009 15:04:42 -0700 (PDT)
+	n5J9Zxbh058103 for <xfs@oss.sgi.com>; Fri, 19 Jun 2009 04:35:59 -0500
+Received: from firestarter.dermichi.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D03C330A52C
+	for <xfs@oss.sgi.com>; Fri, 19 Jun 2009 02:36:23 -0700 (PDT)
+Received: from firestarter.dermichi.com (firestarter.dermichi.com
+	[83.64.48.195]) by cuda.sgi.com with ESMTP id zW7PtinjoEjVt9Vc
+	for <xfs@oss.sgi.com>; Fri, 19 Jun 2009 02:36:23 -0700 (PDT)
+Received: from cerberus.net4you.net ([194.177.153.130] helo=[192.168.200.110])
+	by firestarter.dermichi.com with esmtpsa
+	(TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32) (Exim 4.69)
+	(envelope-from <mw@dermichi.com>) id 1MHaWE-0005cO-Nr
+	for xfs@oss.sgi.com; Fri, 19 Jun 2009 11:36:22 +0200
+Message-ID: <4A3B5C14.9070101@dermichi.com>
+Date: Fri, 19 Jun 2009 11:36:20 +0200
+From: Michael Weissenbacher <mw@dermichi.com>
 MIME-Version: 1.0
-In-Reply-To: <20090618205102.GA5805@infradead.org>
-References: <a4423d670906181231r7388df5am394bc55508272b3@mail.gmail.com>
-	<20090618205102.GA5805@infradead.org>
-Date: Fri, 19 Jun 2009 02:04:41 +0400
-Message-ID: <a4423d670906181504s7a36a4f6n9d910931a1ca478a@mail.gmail.com>
-Subject: Re: 2.6.30-06725: xfs_fsr: Assertion failed: ip->i_delayed_blks == 0,
-	file: fs/xfs/xfs_bmap.c, line: 5991
-From: Alexander Beregalov <a.beregalov@gmail.com>
+Subject: XFS and atime update strangeness
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,22 +26,38 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-MjAwOS82LzE5IENocmlzdG9waCBIZWxsd2lnIDxoY2hAaW5mcmFkZWFkLm9yZz46Cj4gRGlkIHRo
-aXMgaGFwcGVucyBvbmNlIG9yIG11bHRpcGxlIHRpbWVzPyDCoEl0IHNlZW1zIHRoYXQgZm9yIHNv
-bWUKT25jZS4gQnV0IEkgd2FzIGFibGUgdG8gcmVwcm9kdWNlIGl0IChub3Qgc28gZWFzeSkuClRo
-ZSBwYXRjaCBkb2VzIG5vdCB3b3JrLgoKPiByZWFzb24geGZzX2ZsdXNoX3BhZ2VzIGRpZG4ndCBm
-bHVzaCBhbGwgZGVsYWxsb2Mgc3BhY2UgYW5kIHRoZW4KPiB3ZSByaWdodGZ1bGx5IGhpdCB0aGlz
-IGFzc2VydGF0aW9uLgo+Cj4gSSByZWFsbHkgaGF0ZSB0aGUgY29kZSBpbiB4ZnNfZmx1c2hfcGFn
-ZXMgd2l0aCB0aGUgb3B0aW1pemF0aW9ucyBpdAo+IHRyaWVzIHRvIGFwcGx5LiDCoENhbiB5b3Ug
-Z2l2ZSB0aGUgcGF0Y2ggYmVsb3cgd2hpY2ggcmVtb3ZlcyB0aGUKPiBvcHRpbWl6YXRpb25zIGFu
-ZCB1c2VzIHNvbWUgbW9yZSBjb3JlIFZNIGNvZGUgaW5zdGVhZCBvZiBkb2luZyBvdXIKPiBvd24g
-dGhpbmc/CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4
-ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1h
-bi9saXN0aW5mby94ZnMK
+Hi XFS-List!
+As i have been playing around with atime settings recently, i noticed that XFS handles atime updates very differently than other filesystems (at least different than ext2/3/4 and reiserfs). In fact it does not record atime changes permanently, it seems that atimes are only stored in the inode cache. I was testing this on a Gentoo Box with kernel 2.6.28-gentoo-r5 and 2.6.30 Vanilla.
+
+How to reproduce?
+
+invincible usr # ls -lu portage/header.txt
+-rw-r--r-- 1 root root 121 2009-06-18 22:06 portage/header.txt
+invincible usr # date
+Fri Jun 19 11:24:53 CEST 2009
+invincible usr # cat portage/header.txt > /dev/null
+invincible usr # ls -lu portage/header.txt
+-rw-r--r-- 1 root root 121 2009-06-19 11:24 portage/header.txt
+invincible usr # umount portage && mount portage
+invincible usr # ls -lu portage/header.txt
+-rw-r--r-- 1 root root 121 2009-06-18 22:06 portage/header.txt
+
+So after umount && mount the atime instantly went back to the old value. I can also sometimes reproduce it by doing "sync && echo 3 > /proc/sys/vm/drop_caches". If i wait for a day the atime also reverts back. Rebooting the machine has the same effect.
+
+I haven't found anything in the official documentation stating this. The only reference i found was a while back in the mailing list:
+http://oss.sgi.com/archives/xfs/2007-10/msg00171.html
+
+I think there should be at least some information about this behavior in the official docs and the FAQ. IMO This feature/bug of XFS also collides with the recent change to make relatime the default in kernel 2.6.30. Is there any way to enable permanent atime updates in case someone wants them?
+
+Michael
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
