@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n5KHZTQ1127917 for <xfs@oss.sgi.com>; Sat, 20 Jun 2009 12:35:29 -0500
+	n5KHwo0t129337 for <xfs@oss.sgi.com>; Sat, 20 Jun 2009 12:58:50 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A329112A83E4
-	for <xfs@oss.sgi.com>; Sat, 20 Jun 2009 10:35:54 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4E07E30E95C
+	for <xfs@oss.sgi.com>; Sat, 20 Jun 2009 10:59:17 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id E1u6xX3OV62cfGuP for
-	<xfs@oss.sgi.com>; Sat, 20 Jun 2009 10:35:54 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1MI4Tq-0006tq-M2
-	for xfs@oss.sgi.com; Sat, 20 Jun 2009 17:35:54 +0000
-Date: Sat, 20 Jun 2009 13:35:54 -0400
+	by cuda.sgi.com with ESMTP id JhXzepj2q3Dw1jef for
+	<xfs@oss.sgi.com>; Sat, 20 Jun 2009 10:59:17 -0700 (PDT)
+Date: Sat, 20 Jun 2009 13:59:16 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfstests: don't print scratch mkfs and mount options
-	without scratch device
-Message-ID: <20090620173554.GA26470@infradead.org>
+Subject: Re: [PATCH 2/3] xfstests: move xfs_io filters to common.filter
+Message-ID: <20090620175916.GB3984@infradead.org>
+References: <4A370D00.7030309@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <4A370D00.7030309@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,44 +28,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: ext4 development <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-Also clean up the way the test configuration is printed.
+On Mon, Jun 15, 2009 at 10:09:52PM -0500, Eric Sandeen wrote:
+> Move duplicated xfs_io filters to common.filter
+> 
+> Also fix up 132 output, which was misfiltered due
+> to a bug in the filtering.
+> 
+> Doing this because I need this same filter for the next
+> added test.
 
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Ah, nice - common filters for xfs_io output were long overdue.
 
-Index: xfstests-dev/check
-===================================================================
---- xfstests-dev.orig/check	2009-06-20 17:31:00.000000000 +0000
-+++ xfstests-dev/check	2009-06-20 17:33:46.000000000 +0000
-@@ -161,18 +161,15 @@
- 
- [ -f check.time ] || touch check.time
- 
--FULL_FSTYP_DETAILS=`_full_fstyp_details`
--FULL_HOST_DETAILS=`_full_platform_details`
--FULL_MKFS_OPTIONS=`_scratch_mkfs_options`
--FULL_MOUNT_OPTIONS=`_scratch_mount_options`
--
--cat <<EOF
--FSTYP         -- $FULL_FSTYP_DETAILS
--PLATFORM      -- $FULL_HOST_DETAILS
--MKFS_OPTIONS  -- $FULL_MKFS_OPTIONS
--MOUNT_OPTIONS -- $FULL_MOUNT_OPTIONS
-+# print out our test configuration
-+echo "FSTYP         -- `_full_fstyp_details`"
-+echo "PLATFORM      -- `_full_platform_details`"
-+if [ ! -z "$SCRATCH_DEV" ]; then
-+  echo "MKFS_OPTIONS  -- `_scratch_mkfs_options`"
-+  echo "MOUNT_OPTIONS -- `_scratch_mount_options`"
-+fi
-+echo
- 
--EOF
- 
- if [ ! -z "$SCRATCH_DEV" ]; then
-   umount $SCRATCH_DEV 2>/dev/null
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
