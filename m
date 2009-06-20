@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n5KI0qYm129520 for <xfs@oss.sgi.com>; Sat, 20 Jun 2009 13:00:52 -0500
+	n5KHvxag129266 for <xfs@oss.sgi.com>; Sat, 20 Jun 2009 12:57:59 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C327E12A844B
-	for <xfs@oss.sgi.com>; Sat, 20 Jun 2009 11:01:18 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CD61A953680
+	for <xfs@oss.sgi.com>; Sat, 20 Jun 2009 11:06:30 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id UunfXNxJFBbvNdgz for
-	<xfs@oss.sgi.com>; Sat, 20 Jun 2009 11:01:18 -0700 (PDT)
-Date: Sat, 20 Jun 2009 14:01:16 -0400
+	by cuda.sgi.com with ESMTP id aBcgDoo4OWCY1fJN for
+	<xfs@oss.sgi.com>; Sat, 20 Jun 2009 11:06:30 -0700 (PDT)
+Date: Sat, 20 Jun 2009 13:58:24 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: 2.6.30-06725: xfs_fsr: Assertion failed: ip->i_delayed_blks ==
-	0,  file: fs/xfs/xfs_bmap.c, line: 5991
-Message-ID: <20090620180116.GD3984@infradead.org>
-References: <941396568.292261245481145500.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
-	<961884583.292281245481464174.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
+Subject: Re: [PATCH 1/3] xfstests: basic fallocate boundary tests
+Message-ID: <20090620175824.GA3984@infradead.org>
+References: <4A370C2C.6030404@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <961884583.292281245481464174.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
+In-Reply-To: <4A370C2C.6030404@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,25 +28,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Lachlan McIlroy <lmcilroy@redhat.com>
-Cc: Alexander Beregalov <a.beregalov@gmail.com>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: ext4 development <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-On Sat, Jun 20, 2009 at 03:04:24AM -0400, Lachlan McIlroy wrote:
-> Hi Alexander,
+On Mon, Jun 15, 2009 at 10:06:20PM -0500, Eric Sandeen wrote:
+> This is just like test 072, but using fallocate instead
+> of the xfs ioctl.  Just very basic fallocate tests.
 > 
-> I've seen this assertion before and if it's the problem I think it
-> is then it should be fixed with this patch:
-> 
-> http://oss.sgi.com/archives/xfs/2009-02/msg00176.html
-> 
-> It shouldn't be difficult to test this too - If you run about 1024
-> dd writers to separate 100MB files and then run xfs_bmap on each
-> file afterwards it should assert.
+> Also adds a "prealloc" group (./check -g prealloc)
 
-Thas is in a filesystem not big enough to actually fit those files,
-right?  Might be worth adding a testcase like this..
+Looks good to me, and does the right thing on my 32 bit test VM (notrun)
 
-Alex, can you give that patch a try?
+> +echo $testio | grep -q "not found" && \
+> +	_notrun "xfs_io fallocate support is missing"
+> +echo $testio | grep -q "Operation not supported" && \
+> +	_notrun "xfs_io fallocate command failed (old kernel? wrong fs?)"
+
+Maybe add a _require_fallocate as you need the same check in the next
+testcase?
 
 _______________________________________________
 xfs mailing list
