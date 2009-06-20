@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n5KIH02o130821 for <xfs@oss.sgi.com>; Sat, 20 Jun 2009 13:17:01 -0500
-Received: from mail-bw0-f226.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0593512A84D7
-	for <xfs@oss.sgi.com>; Sat, 20 Jun 2009 11:17:26 -0700 (PDT)
-Received: from mail-bw0-f226.google.com (mail-bw0-f226.google.com
-	[209.85.218.226]) by cuda.sgi.com with ESMTP id
-	lUM0YcC9IUBmnFa7 for <xfs@oss.sgi.com>;
-	Sat, 20 Jun 2009 11:17:26 -0700 (PDT)
-Received: by bwz26 with SMTP id 26so2168515bwz.20
-	for <xfs@oss.sgi.com>; Sat, 20 Jun 2009 11:17:25 -0700 (PDT)
+	n5KL03s8136833 for <xfs@oss.sgi.com>; Sat, 20 Jun 2009 16:00:03 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 868331492E9E
+	for <xfs@oss.sgi.com>; Sat, 20 Jun 2009 14:08:34 -0700 (PDT)
+Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
+	cuda.sgi.com with ESMTP id I3nwi1DttKcmLDGm for
+	<xfs@oss.sgi.com>; Sat, 20 Jun 2009 14:08:34 -0700 (PDT)
+Message-ID: <58093.76.66.127.206.1245531627.squirrel@www.sandeen.net>
+In-Reply-To: <20090620175953.GC3984@infradead.org>
+References: <4A370DD2.6080204@sandeen.net>
+	<20090620175953.GC3984@infradead.org>
+Date: Sat, 20 Jun 2009 16:00:27 -0500 (CDT)
+Subject: Re: [PATCH 3/3] xfstests: fallocate + read/write tests,
+	ext4 regression tests
+From: "Eric Sandeen" <sandeen@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20090620180116.GD3984@infradead.org>
-References: <941396568.292261245481145500.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
-	<961884583.292281245481464174.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
-	<20090620180116.GD3984@infradead.org>
-Date: Sat, 20 Jun 2009 22:17:25 +0400
-Message-ID: <a4423d670906201117w4fd43662j58fdbea89d668941@mail.gmail.com>
-Subject: Re: 2.6.30-06725: xfs_fsr: Assertion failed: ip->i_delayed_blks == 0,
-	file: fs/xfs/xfs_bmap.c, line: 5991
-From: Alexander Beregalov <a.beregalov@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,25 +25,32 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Lachlan McIlroy <lmcilroy@redhat.com>, xfs@oss.sgi.com
+Cc: ext4 development <linux-ext4@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
 
-MjAwOS82LzIwIENocmlzdG9waCBIZWxsd2lnIDxoY2hAaW5mcmFkZWFkLm9yZz46Cj4gT24gU2F0
-LCBKdW4gMjAsIDIwMDkgYXQgMDM6MDQ6MjRBTSAtMDQwMCwgTGFjaGxhbiBNY0lscm95IHdyb3Rl
-Ogo+PiBIaSBBbGV4YW5kZXIsCj4+Cj4+IEkndmUgc2VlbiB0aGlzIGFzc2VydGlvbiBiZWZvcmUg
-YW5kIGlmIGl0J3MgdGhlIHByb2JsZW0gSSB0aGluayBpdAo+PiBpcyB0aGVuIGl0IHNob3VsZCBi
-ZSBmaXhlZCB3aXRoIHRoaXMgcGF0Y2g6Cj4+Cj4+IGh0dHA6Ly9vc3Muc2dpLmNvbS9hcmNoaXZl
-cy94ZnMvMjAwOS0wMi9tc2cwMDE3Ni5odG1sCj4+Cj4+IEl0IHNob3VsZG4ndCBiZSBkaWZmaWN1
-bHQgdG8gdGVzdCB0aGlzIHRvbyAtIElmIHlvdSBydW4gYWJvdXQgMTAyNAo+PiBkZCB3cml0ZXJz
-IHRvIHNlcGFyYXRlIDEwME1CIGZpbGVzIGFuZCB0aGVuIHJ1biB4ZnNfYm1hcCBvbiBlYWNoCj4+
-IGZpbGUgYWZ0ZXJ3YXJkcyBpdCBzaG91bGQgYXNzZXJ0Lgo+Cj4gVGhhcyBpcyBpbiBhIGZpbGVz
-eXN0ZW0gbm90IGJpZyBlbm91Z2ggdG8gYWN0dWFsbHkgZml0IHRob3NlIGZpbGVzLAo+IHJpZ2h0
-PyDCoE1pZ2h0IGJlIHdvcnRoIGFkZGluZyBhIHRlc3RjYXNlIGxpa2UgdGhpcy4uCj4KPiBBbGV4
-LCBjYW4geW91IGdpdmUgdGhhdCBwYXRjaCBhIHRyeT8KClllcywgSSBoYXZlIGFwcGxpZWQgYW5k
-IHRlc3RpbmcgaXQgbm93LgpJIHdpbGwgbGV0IHlvdSBrbm93LgpUaGFua3MuCgpfX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhm
-c0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+Christoph Hellwig wrote:
+> On Mon, Jun 15, 2009 at 10:13:22PM -0500, Eric Sandeen wrote:
+>> New test to test basic mixed fallocate + read & write,
+>> includes a couple regression tests for bugs that ext4
+>> hit.  Uses xfs_io to generate fallocate calls, so requires
+>> git xfsprogs and very recent glibc at this point.
+>
+> Looks good to me, and again does the correct notrun for my 32-bit
+> VM.  Guess I need to do the raw syscall wireup i xfsprogs eventually..
+
+I don't mind doing it either ... how many arches? :)
+
+-Eric
+
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+>
+>
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
