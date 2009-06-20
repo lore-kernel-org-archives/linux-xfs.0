@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n5KHwo0t129337 for <xfs@oss.sgi.com>; Sat, 20 Jun 2009 12:58:50 -0500
+	n5KHbvKd128159 for <xfs@oss.sgi.com>; Sat, 20 Jun 2009 12:37:57 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4E07E30E95C
-	for <xfs@oss.sgi.com>; Sat, 20 Jun 2009 10:59:17 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 496EE1492A9F
+	for <xfs@oss.sgi.com>; Sat, 20 Jun 2009 10:46:28 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id JhXzepj2q3Dw1jef for
-	<xfs@oss.sgi.com>; Sat, 20 Jun 2009 10:59:17 -0700 (PDT)
-Date: Sat, 20 Jun 2009 13:59:16 -0400
+	by cuda.sgi.com with ESMTP id rFOUocLO0Wzx8ZyE for
+	<xfs@oss.sgi.com>; Sat, 20 Jun 2009 10:46:28 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1MI4WA-0006zV-91
+	for xfs@oss.sgi.com; Sat, 20 Jun 2009 17:38:18 +0000
+Date: Sat, 20 Jun 2009 13:38:18 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/3] xfstests: move xfs_io filters to common.filter
-Message-ID: <20090620175916.GB3984@infradead.org>
-References: <4A370D00.7030309@sandeen.net>
+Subject: [PATCH] xfstests: small common.config cleanup
+Message-ID: <20090620173818.GA26809@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4A370D00.7030309@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,23 +29,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: ext4 development <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Mon, Jun 15, 2009 at 10:09:52PM -0500, Eric Sandeen wrote:
-> Move duplicated xfs_io filters to common.filter
-> 
-> Also fix up 132 output, which was misfiltered due
-> to a bug in the filtering.
-> 
-> Doing this because I need this same filter for the next
-> added test.
+Don't list various non-mandatory options near the check for the
+mandatory ones, and make the test for the mandatory ones a proper if
+statements.
 
 
-Ah, nice - common filters for xfs_io output were long overdue.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Index: xfstests-dev/common.config
+===================================================================
+--- xfstests-dev.orig/common.config	2009-06-20 19:15:14.576805079 +0200
++++ xfstests-dev/common.config	2009-06-20 19:16:48.956930262 +0200
+@@ -191,27 +191,18 @@ known_hosts()
+   [ -f $HOST_CONFIG_DIR/$HOST ]        && . $HOST_CONFIG_DIR/$HOST
+   [ -f $HOST_CONFIG_DIR/$HOST.config ] && . $HOST_CONFIG_DIR/$HOST.config
+ 
++  #  Mandatory Config values.
+   MC=""
+-#  Non-Mandatory Config values.
+-#  [ -z "$MODULAR" ]        && MC="$MC MODULAR"
+-#  [ -z "$TEST_LOGDEV" ]    && MC="$MC TEST_LOGDEV"
+-#  [ -z "$SCRATCH_LOGDEV" ] && MC="$MC SCRATCH_LOGDEV"
+-#  [ -z "$SCRATCH_RTDEV" ]  && MC="$MC SCRATCH_RTDEV"
+-#  [ -z "$SCRATCH_MNT" ]    && MC="$MC SCRATCH_MNT"
+-#  [ -z "$SCRATCH_DEV" ]    && MC="$MC SCRATCH_DEV"
+-
+   [ -z "$EMAIL" ]          && MC="$MC EMAIL"
+   [ -z "$TEST_DIR" ]       && MC="$MC TEST_DIR"
+   [ -z "$TEST_DEV" ]       && MC="$MC TEST_DEV"
+ 
+-  [ "$MC" ] && (echo "Warning: need to define parameters for host $HOST";\
+-	        echo "       or set variables:"; \
+-		echo "       $MC")
+-#  if [ -e configs/$HOST.config ]
+-#     then echo "Not carring, we have a configfile ($HOST_CONFIG_DIR/$HOST)"
+-#  else
+-     [ "$MC" ] &&  exit 1
+-#  fi
++  if [ -n "$MC" ]; then
++    echo "Warning: need to define parameters for host $HOST"
++    echo "       or set variables:"
++    echo "       $MC"
++    exit 1
++  fi
+ }
+ 
+ if [ -f "$HOST_OPTIONS" ]; then
 
 _______________________________________________
 xfs mailing list
