@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n5KH6jPZ126169 for <xfs@oss.sgi.com>; Sat, 20 Jun 2009 12:06:46 -0500
+	n5KHExrO126659 for <xfs@oss.sgi.com>; Sat, 20 Jun 2009 12:15:00 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 085699529E4
-	for <xfs@oss.sgi.com>; Sat, 20 Jun 2009 10:15:09 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 46A78952B0F
+	for <xfs@oss.sgi.com>; Sat, 20 Jun 2009 10:23:31 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id M8RftgyCfC2fqXCf for
-	<xfs@oss.sgi.com>; Sat, 20 Jun 2009 10:15:09 -0700 (PDT)
-Date: Sat, 20 Jun 2009 13:07:03 -0400
+	by cuda.sgi.com with ESMTP id 2rXv8FCNWvTz7ZsJ for
+	<xfs@oss.sgi.com>; Sat, 20 Jun 2009 10:23:31 -0700 (PDT)
+Date: Sat, 20 Jun 2009 13:15:25 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Fix _require_scratch test for extN, resierfs, gfs2,
-	and btrfs
-Message-ID: <20090620170703.GB5508@infradead.org>
-References: <7D909252-70A0-44C2-A5D7-D56A4B6CD244@sgi.com>
-	<1245443301-27495-1-git-send-email-tytso@mit.edu>
+Subject: Re: [PATCH 2/3] Fix common.config to allow SCRATCH_DEV and
+	SCRATCH_MNT to be optional
+Message-ID: <20090620171525.GA11354@infradead.org>
+References: <1245434013-9433-1-git-send-email-tytso@mit.edu>
+	<1245434013-9433-2-git-send-email-tytso@mit.edu>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1245443301-27495-1-git-send-email-tytso@mit.edu>
+In-Reply-To: <1245434013-9433-2-git-send-email-tytso@mit.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,19 +33,14 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Theodore Ts'o <tytso@mit.edu>
 Cc: xfs@oss.sgi.com
 
-On Fri, Jun 19, 2009 at 04:28:21PM -0400, Theodore Ts'o wrote:
-> The extN, reiserfs, gfs2, and btrfs filesysytem types should use the
-> same check for a block device as XFS and UDF, and not the test for
-> NFS, which was checking for host:/foo/bar/baz when checking for a
-> scratch device.
+On Fri, Jun 19, 2009 at 01:53:32PM -0400, Theodore Ts'o wrote:
+> Commit 3ae9f2f8 purports to allow SCRATCH_DEV and SCRATCH_MNT to be
+> optional, but tests in common.config will cause check to exit with an
+> error if these environment variables are not defined.  Fix this problem.
 > 
-> Also, the NFS logic was also incorrect, in that it would allow a
-> zero-length SCRATCH_DEV to continue.
+> Signed-off-by: "Theodore Ts'o" <tytso@mit.edu>
 
-Thanks, I've applied this with a small modification to make the local
-disk case the default in the case statement so that we don't have to
-touch this function when adding support for additional local
-filesystems.
+Thanks, I've put this in.
 
 _______________________________________________
 xfs mailing list
