@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n5LJH7oX182121 for <xfs@oss.sgi.com>; Sun, 21 Jun 2009 14:17:08 -0500
+	n5LJGWfQ182093 for <xfs@oss.sgi.com>; Sun, 21 Jun 2009 14:16:36 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DE0471493645
-	for <xfs@oss.sgi.com>; Sun, 21 Jun 2009 12:25:45 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 81AEA30FEFC
+	for <xfs@oss.sgi.com>; Sun, 21 Jun 2009 12:16:59 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id tTuCNk8K0pCxH0VL for
-	<xfs@oss.sgi.com>; Sun, 21 Jun 2009 12:25:45 -0700 (PDT)
-Date: Sun, 21 Jun 2009 15:17:32 -0400
+	by cuda.sgi.com with ESMTP id 9uLJ6qr3EH449RAX for
+	<xfs@oss.sgi.com>; Sun, 21 Jun 2009 12:16:59 -0700 (PDT)
+Date: Sun, 21 Jun 2009 15:16:57 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/3] xfstests: fallocate + read/write tests, ext4
-	regression tests
-Message-ID: <20090621191732.GB19596@infradead.org>
-References: <4A370DD2.6080204@sandeen.net>
-	<20090620175953.GC3984@infradead.org>
-	<58093.76.66.127.206.1245531627.squirrel@www.sandeen.net>
+Subject: Re: [PATCH 1/3] xfstests: basic fallocate boundary tests
+Message-ID: <20090621191657.GA19596@infradead.org>
+References: <4A370C2C.6030404@sandeen.net>
+	<20090620175824.GA3984@infradead.org>
+	<4A3D55C3.6020902@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <58093.76.66.127.206.1245531627.squirrel@www.sandeen.net>
+In-Reply-To: <4A3D55C3.6020902@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,21 +33,34 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: Christoph Hellwig <hch@infradead.org>, ext4 development <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-On Sat, Jun 20, 2009 at 04:00:27PM -0500, Eric Sandeen wrote:
-> Christoph Hellwig wrote:
-> > On Mon, Jun 15, 2009 at 10:13:22PM -0500, Eric Sandeen wrote:
-> >> New test to test basic mixed fallocate + read & write,
-> >> includes a couple regression tests for bugs that ext4
-> >> hit.  Uses xfs_io to generate fallocate calls, so requires
-> >> git xfsprogs and very recent glibc at this point.
-> >
-> > Looks good to me, and again does the correct notrun for my 32-bit
-> > VM.  Guess I need to do the raw syscall wireup i xfsprogs eventually..
+On Sat, Jun 20, 2009 at 04:33:55PM -0500, Eric Sandeen wrote:
+> hmm this is really testing that xfs_io in particular has fallocate...
+> so maybe like this?
 > 
-> I don't mind doing it either ... how many arches? :)
+> diff --git a/common.rc b/common.rc
+> index 39350b3..55aecd6 100644
+> --- a/common.rc
+> +++ b/common.rc
+> @@ -704,6 +704,18 @@ _require_user()
+>      [ "$?" == "0" ] || _notrun "$qa_user user not defined."
+>  }
+>  
+> +# check that xfs_io, glibc, kernel, and filesystem all (!) support
+> +# fallocate
+> +#
+> +_require_xfs_io_falloc()
+> +	testio=`$XFS_IO_PROG -F -f -c "falloc 0 1m" $TEST_DIR/$tmp.io 2>&1`
+> +	rm -f $TEST_DIR/$tmp.io 2>&1 > /dev/null
+> +	echo $testio | grep -q "not found" && \
+> +		_notrun "xfs_io fallocate support is missing"
+> +	echo $testio | grep -q "Operation not supported" && \
+> +		_notrun "xfs_io fallocate command failed (old kernel/wrong fs?)"
+> +}
 
-Most important is x86 I think.  arm might be the other really important
-candidate.
+Looks good,
+
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
