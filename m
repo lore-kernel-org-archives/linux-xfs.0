@@ -1,17 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n5MI1BOR248518 for <xfs@oss.sgi.com>; Mon, 22 Jun 2009 13:01:11 -0500
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 303B1AC02D
-	for <xfs@oss.sgi.com>; Mon, 22 Jun 2009 11:01:36 -0700 (PDT)
-Message-Id: <4E752C93-A674-4725-AF23-C227C0A1E659@sgi.com>
-From: Felix Blyakher <felixb@sgi.com>
-In-Reply-To: <20090616214844.GA12310@infradead.org>
-Mime-Version: 1.0 (Apple Message framework v926)
+	n5MKwdbD255725 for <xfs@oss.sgi.com>; Mon, 22 Jun 2009 15:58:41 -0500
+Date: Mon, 22 Jun 2009 16:59:04 -0400
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH, RFC] xfs: event tracing support
-Date: Mon, 22 Jun 2009 13:01:35 -0500
+Message-ID: <20090622205904.GA1855@infradead.org>
 References: <20090616214844.GA12310@infradead.org>
+	<4E752C93-A674-4725-AF23-C227C0A1E659@sgi.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4E752C93-A674-4725-AF23-C227C0A1E659@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,42 +19,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Steven Rostedt <rostedt@goodmis.org>, xfs@oss.sgi.com
+To: Felix Blyakher <felixb@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-ia64@vger.kernel.org, Steven Rostedt <rostedt@goodmis.org>, xfs@oss.sgi.com
 
-
-On Jun 16, 2009, at 4:48 PM, Christoph Hellwig wrote:
-
-> Convert the old xfs tracing support that could only be used with the  
-> out
-> of tree kdb and xfsidbg patches to use the generic event tracer.
+On Mon, Jun 22, 2009 at 01:01:35PM -0500, Felix Blyakher wrote:
+>> To use it make sure CONFIG_EVENT_TRACING is enabled and then enable  
+>> all
+>> xfs trace channels by:
+>>
+>>   echo 1 > /sys/kernel/debug/tracing/events/xfs/enable
 >
-> To use it make sure CONFIG_EVENT_TRACING is enabled and then enable  
-> all
-> xfs trace channels by:
->
->   echo 1 > /sys/kernel/debug/tracing/events/xfs/enable
+> Does event tracing work on ia64 platform?
+> I spent some time on it over weekend, but was not able even
+> to force "CONFIG_EVENT_TRACING=y" setting in the .config.
+> Seems to build ok on x86_64, which does have CONFIG_TRACING
+> in defconfig, and allows to set CONFIG_EVENT_TRACING.
 
-Does event tracing work on ia64 platform?
-I spent some time on it over weekend, but was not able even
-to force "CONFIG_EVENT_TRACING=y" setting in the .config.
-Seems to build ok on x86_64, which does have CONFIG_TRACING
-in defconfig, and allows to set CONFIG_EVENT_TRACING.
+IA64 ftrace support was added earlier this year, but it seems it can't
+be enabled anymore since the big config option reshuffle.  Now tracing
+support requires the architecture to define the TRACE_IRQFLAGS_SUPPORT
+and STACKTRACE_SUPPORT symbols, which seems to be missing on ia64.
 
-If tracing is not available on all platforms, especially
-on ia64, which is one of preferred platforms at SGI, we need
-to preserve the original XFS tracing facilities. I know, it'll
-be PIA to keep both tracing methods, but we can't drop
-the working feature without good replacement.
+> If tracing is not available on all platforms, especially
+> on ia64, which is one of preferred platforms at SGI, we need
+> to preserve the original XFS tracing facilities. I know, it'll
+> be PIA to keep both tracing methods, but we can't drop
+> the working feature without good replacement.
 
-Hope, though, that I missed something on ia64, and it's
-fixable.
-
-Felix
+It's not working at all in mainline and never had.  And for about
+a year thaere hasn't been any tree around that actuall supports it..
 
 _______________________________________________
 xfs mailing list
