@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n5LJGWfQ182093 for <xfs@oss.sgi.com>; Sun, 21 Jun 2009 14:16:36 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 81AEA30FEFC
-	for <xfs@oss.sgi.com>; Sun, 21 Jun 2009 12:16:59 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 9uLJ6qr3EH449RAX for
-	<xfs@oss.sgi.com>; Sun, 21 Jun 2009 12:16:59 -0700 (PDT)
-Date: Sun, 21 Jun 2009 15:16:57 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/3] xfstests: basic fallocate boundary tests
-Message-ID: <20090621191657.GA19596@infradead.org>
-References: <4A370C2C.6030404@sandeen.net>
-	<20090620175824.GA3984@infradead.org>
-	<4A3D55C3.6020902@sandeen.net>
+	n5M0Sii7192821 for <xfs@oss.sgi.com>; Sun, 21 Jun 2009 19:28:45 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 956379357E2
+	for <xfs@oss.sgi.com>; Sun, 21 Jun 2009 17:37:22 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31]) by cuda.sgi.com
+	with ESMTP id ZlUtAI9fGYde21PE for <xfs@oss.sgi.com>;
+	Sun, 21 Jun 2009 17:37:22 -0700 (PDT)
+Date: Sun, 21 Jun 2009 20:29:00 -0400 (EDT)
+From: Lachlan McIlroy <lmcilroy@redhat.com>
+Message-ID: <117412553.303831245630540511.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
+In-Reply-To: <175383275.303721245629906853.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
+Subject: Re: 2.6.30-06725: xfs_fsr: Assertion failed: ip->i_delayed_blks ==
+	0,  file: fs/xfs/xfs_bmap.c, line: 5991
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4A3D55C3.6020902@sandeen.net>
+Reply-To: Lachlan McIlroy <lmcilroy@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,37 +28,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@infradead.org>, ext4 development <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Alexander Beregalov <a.beregalov@gmail.com>, xfs@oss.sgi.com
 
-On Sat, Jun 20, 2009 at 04:33:55PM -0500, Eric Sandeen wrote:
-> hmm this is really testing that xfs_io in particular has fallocate...
-> so maybe like this?
+
+----- "Christoph Hellwig" <hch@infradead.org> wrote:
+
+> On Sat, Jun 20, 2009 at 03:04:24AM -0400, Lachlan McIlroy wrote:
+> > Hi Alexander,
+> > 
+> > I've seen this assertion before and if it's the problem I think it
+> > is then it should be fixed with this patch:
+> > 
+> > http://oss.sgi.com/archives/xfs/2009-02/msg00176.html
+> > 
+> > It shouldn't be difficult to test this too - If you run about 1024
+> > dd writers to separate 100MB files and then run xfs_bmap on each
+> > file afterwards it should assert.
 > 
-> diff --git a/common.rc b/common.rc
-> index 39350b3..55aecd6 100644
-> --- a/common.rc
-> +++ b/common.rc
-> @@ -704,6 +704,18 @@ _require_user()
->      [ "$?" == "0" ] || _notrun "$qa_user user not defined."
->  }
->  
-> +# check that xfs_io, glibc, kernel, and filesystem all (!) support
-> +# fallocate
-> +#
-> +_require_xfs_io_falloc()
-> +	testio=`$XFS_IO_PROG -F -f -c "falloc 0 1m" $TEST_DIR/$tmp.io 2>&1`
-> +	rm -f $TEST_DIR/$tmp.io 2>&1 > /dev/null
-> +	echo $testio | grep -q "not found" && \
-> +		_notrun "xfs_io fallocate support is missing"
-> +	echo $testio | grep -q "Operation not supported" && \
-> +		_notrun "xfs_io fallocate command failed (old kernel/wrong fs?)"
-> +}
+> Thas is in a filesystem not big enough to actually fit those files,
+> right?  Might be worth adding a testcase like this..
+Smaller files might work too.  The trick will be to get enough threads
+flushing files at the same time that we exhaust the reserved space pool
+(ie xfs_trans_reserve() returns ENOSPC even when the XFS_TRANS_RESERVE
+flag is used).
 
-Looks good,
-
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> Alex, can you give that patch a try?
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
