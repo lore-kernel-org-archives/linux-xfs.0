@@ -1,23 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n5NHCfag038772
-	for <linux-xfs@oss.sgi.com>; Tue, 23 Jun 2009 12:12:41 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B0F001D43A8D
-	for <linux-xfs@oss.sgi.com>; Tue, 23 Jun 2009 10:13:09 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id A7UETzcJBzN7Ae1A for
-	<linux-xfs@oss.sgi.com>; Tue, 23 Jun 2009 10:13:09 -0700 (PDT)
-Date: Tue, 23 Jun 2009 13:13:05 -0400
+	n5NLUGPX048081 for <xfs@oss.sgi.com>; Tue, 23 Jun 2009 16:30:18 -0500
+Date: Tue, 23 Jun 2009 17:30:43 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: 2.6.30 panic - xfs_fs_destroy_inode
-Message-ID: <20090623171305.GB23971@infradead.org>
-References: <4A408316.2070903@news-service.com>
-	<1587994907.388291245745033392.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
+Subject: Re: [PATCH] xfs: implement ->dirty_inode callout
+Message-ID: <20090623213043.GA13921@infradead.org>
+References: <EBC1B5EB-A971-4769-8E2A-9C15BB069E11@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1587994907.388291245745033392.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
+In-Reply-To: <EBC1B5EB-A971-4769-8E2A-9C15BB069E11@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,19 +22,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Lachlan McIlroy <lmcilroy@redhat.com>
-Cc: Patrick Schreurs <patrick@news-service.com>, linux-xfs@oss.sgi.com, Tommy van Leeuwen <tommy@news-service.com>, Eric Sandeen <sandeen@sandeen.net>
+To: Felix Blyakher <felixb@sgi.com>
+Cc: xfs mailing list <xfs@oss.sgi.com>
 
-On Tue, Jun 23, 2009 at 04:17:13AM -0400, Lachlan McIlroy wrote:
-> It looks to me like xfs_reclaim_inode() has returned EAGAIN because the
-> XFS_RECLAIM flag was set on the xfs inode.  This implies we are trying
-> to reclaim an inode that is already in the process of being reclaimed.
-> I'm not sure how this happened but it could be a simple case of ignoring
-> this error since the reclaim is already in progress.
+On Tue, Jun 23, 2009 at 10:38:43AM -0500, Felix Blyakher wrote:
+> I'd like to (re)propose Dave's patch from the last October to
+> address the problem of atime never making to the disk. Many
+> people complained about it.
+> I may have slightly adjusted the patch to fit the latest
+> code, and verified it addresses the issue.
+>
+> The reference to the discussion on this matter on xfs mailing
+> list is here:
+>
+> http://oss.sgi.com/archives/xfs/2008-10/msg02102.html
 
-Well, having the reclaim already in progress means we're racing here.
-And I suspect this fits into the other bugs with possibly duplicat
-inodes we see after the inode+xfs_inode unification.
+
+Can you run some benchmarks to see what impact it has with the
+new relatime default?
+
+The only places where we actual look at i_update_core are fsync and
+the decision wether to flush out the inode fully in reclaim and
+I we should sync out the inode there.
+
+The VFS ends up calling into ->dirty_inode from the following places:
+
+ - set_page_dirty
+ - mark_buffer_dirty
+ - touch_atime
+ - file_update_time
+ - generic_file_direct_write
+
+And it doesn't distinguish between setting I_DIRTY_SYNC and
+I_DIRTY_DATASYNC which means we'll also get it for the first two
+events which only affect the data and not the inode core.
+
+I'd be much more comfortable if we'd pass down those flags to
+->dirty_inode and optimize based on that.
+
+
+On the bright side this patch will also allow us to hack around the VFS
+layering violation which currently causes missed c/mtime updates on
+mmaped writes.
 
 _______________________________________________
 xfs mailing list
