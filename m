@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n5N9mOG0020991 for <xfs@oss.sgi.com>; Tue, 23 Jun 2009 04:48:25 -0500
-Received: from mx1.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 397441079273
-	for <xfs@oss.sgi.com>; Tue, 23 Jun 2009 02:57:11 -0700 (PDT)
-Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
-	with ESMTP id udykhcDOQyFpBzXS for <xfs@oss.sgi.com>;
-	Tue, 23 Jun 2009 02:57:11 -0700 (PDT)
+	n5N9g7h0020667 for <xfs@oss.sgi.com>; Tue, 23 Jun 2009 04:42:07 -0500
+Received: from mx2.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 34BF1315DD8
+	for <xfs@oss.sgi.com>; Tue, 23 Jun 2009 02:42:33 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id jURkN83mBgs3urLW for <xfs@oss.sgi.com>;
+	Tue, 23 Jun 2009 02:42:33 -0700 (PDT)
 From: Andreas Gruenbacher <agruen@suse.de>
-Subject: Re: [Acl-devel] Re: getfacl gives octal output for Hebrew user/group
-	names
-Date: Tue, 23 Jun 2009 11:48:01 +0200
-References: <4A38F04C.9090909@linux.vnet.ibm.com>
-	<200906191917.45817.agruen@suse.de>
-	<4A3F3304.1080901@linux.vnet.ibm.com>
-In-Reply-To: <4A3F3304.1080901@linux.vnet.ibm.com>
+Subject: Re: [Acl-devel] Re: acl: Preserving the setuid/setgid/sticky bits
+Date: Tue, 23 Jun 2009 11:41:44 +0200
+References: <200906171446.08032.agruen@suse.de>
+	<20090623053221.GN3648@jenkins.smartcity.com>
+In-Reply-To: <20090623053221.GN3648@jenkins.smartcity.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-Message-Id: <200906231148.02088.agruen@suse.de>
+Message-Id: <200906231141.44790.agruen@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,32 +30,24 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: acl-devel@nongnu.org
-Cc: Anoop Vijayan <acv@linux.vnet.ibm.com>, xfs@oss.sgi.com
+Cc: Brandon Philips <brandon@ifup.org>, xfs@oss.sgi.com
 
-On Monday 22 June 2009 09:30:12 Anoop Vijayan wrote:
-> Also, acl_entry_to_any_str() in libacl/__acl_to_any_text.c calls quote.
-> I could not find the corresponding unquote calls for these.
+On Tuesday 23 June 2009 07:32:21 Brandon Philips wrote:
+> Will need to put a block around the getfacl mode output in the
+> POSIXLY_CORRECT case. Other than that SUID/SGID/sticky restore if the
+> comment exists makes sense to me.
 
-See acl_from_text() and several functions in setfacl/parse.c.
+Alright, fine by me.
 
-> If I wrap the above quote() calls with unquote(), the problem seems to be
-> resolved. Attaching a patch for the same.
+> New patch attached with this fix and a test case that will break with
+> the original patch applied.
 
-Yes, but this only proves that the quote and unquote functions work as 
-intended, it doesn't help fix the underlying problem at all that special 
-characters in file, user, or group names can mess up the output.
+Thanks, Brandon.
 
-I have updated the quoting code in the acl and attr packages now so that it 
-will only quote a few special characters line newline, carriage return, and a 
-few delimiter characters. So this should work for Hebrew or other special 
-characters now.
+I have committed this to the master branch now, together with a man page 
+update.
 
-Note that there is no way to not quote backslash as backslash is the escape 
-character used, so Samba names of the form "domain\user" will still be quoted. 
-It's possible to teach winbindd to use a different character; otherwise, 
-you'll have to live with the quoting.)
-
-Thanks,
+Cheers,
 Andreas
 
 _______________________________________________
