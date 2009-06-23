@@ -1,17 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n5NF0wo1033657 for <xfs@oss.sgi.com>; Tue, 23 Jun 2009 10:00:58 -0500
+	n5NFcHXQ035012 for <xfs@oss.sgi.com>; Tue, 23 Jun 2009 10:38:17 -0500
 Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B89808F808E
-	for <xfs@oss.sgi.com>; Tue, 23 Jun 2009 08:01:23 -0700 (PDT)
-Message-Id: <AE31FB8A-6C11-4177-85AB-794839A88080@sgi.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6DF448F8050
+	for <xfs@oss.sgi.com>; Tue, 23 Jun 2009 08:38:45 -0700 (PDT)
+Message-Id: <EBC1B5EB-A971-4769-8E2A-9C15BB069E11@sgi.com>
 From: Felix Blyakher <felixb@sgi.com>
-In-Reply-To: <4A3B5C14.9070101@dermichi.com>
 Mime-Version: 1.0 (Apple Message framework v926)
-Subject: Re: XFS and atime update strangeness
-Date: Tue, 23 Jun 2009 10:01:22 -0500
-References: <4A3B5C14.9070101@dermichi.com>
+Subject: [PATCH] xfs: implement ->dirty_inode callout 
+Date: Tue, 23 Jun 2009 10:38:43 -0500
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,88 +22,147 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Weissenbacher <mw@dermichi.com>
-Cc: xfs@oss.sgi.com
+To: xfs mailing list <xfs@oss.sgi.com>
 
-On Jun 19, 2009, at 4:36 AM, Michael Weissenbacher wrote:
+I'd like to (re)propose Dave's patch from the last October to
+address the problem of atime never making to the disk. Many
+people complained about it.
+I may have slightly adjusted the patch to fit the latest
+code, and verified it addresses the issue.
 
-> Hi XFS-List!
-> As i have been playing around with atime settings recently, i  
-> noticed that XFS handles atime updates very differently than other  
-> filesystems (at least different than ext2/3/4 and reiserfs). In fact  
-> it does not record atime changes permanently, it seems that atimes  
-> are only stored in the inode cache. I was testing this on a Gentoo  
-> Box with kernel 2.6.28-gentoo-r5 and 2.6.30 Vanilla.
->
->
-> How to reproduce?
->
-> invincible usr # ls -lu portage/header.txt
-> -rw-r--r-- 1 root root 121 2009-06-18 22:06 portage/header.txt
-> invincible usr # date
-> Fri Jun 19 11:24:53 CEST 2009
-> invincible usr # cat portage/header.txt > /dev/null
-> invincible usr # ls -lu portage/header.txt
-> -rw-r--r-- 1 root root 121 2009-06-19 11:24 portage/header.txt
-> invincible usr # umount portage && mount portage
-> invincible usr # ls -lu portage/header.txt
-> -rw-r--r-- 1 root root 121 2009-06-18 22:06 portage/header.txt
->
-> So after umount && mount the atime instantly went back to the old  
-> value. I can also sometimes reproduce it by doing "sync && echo 3 > / 
-> proc/sys/vm/drop_caches". If i wait for a day the atime also reverts  
-> back. Rebooting the machine has the same effect.
-
-Right. All this says that atime is updated in the incore inode,
-but never makes it to disk.
-Agree, it's easily reproducible in all latest releases.
-
-> I haven't found anything in the official documentation stating this.
-
-That's definitely not a feature to be documented. It has to
-be fixed.
-
-> The only reference i found was a while back in the mailing list:
-> http://oss.sgi.com/archives/xfs/2007-10/msg00171.html
-
-And again a year later
-
-http://oss.sgi.com/archives/xfs/2008-10/msg02064.html
-
-> I think there should be at least some information about this  
-> behavior in the official docs and the FAQ. IMO This feature/bug
-
-bug :)
-
-> of XFS also collides with the recent change to make relatime the  
-> default in kernel 2.6.30.
-
-If we properly sync the xfs inode to disk, whenever linux inode
-is dirtied with updated atime, it will work exactly as in VFS
-(whatever you see before remount), i.e. as relatime.
-
-For this we need the patch suggested by Dave Chinner:
+The reference to the discussion on this matter on xfs mailing
+list is here:
 
 http://oss.sgi.com/archives/xfs/2008-10/msg02102.html
 
-> Is there any way to enable permanent atime updates in case someone  
-> wants them?
+---
 
-That's another good request I'd like to address as well. The
-above mentioned patch just makes it behave as relatime.
+ From Dave Chinner <david@fromorbit.com>
 
-Thanks for bringing this up.
+XFS: Implement ->dirty_inode callout
 
-Felix
+Hook up ->dirty_inode so that when the VFS dirties an inode we
+can mark the XFS inode as "dirty with unlogged changes". This
+allows events such as touch_atime() to propagate the dirty state
+right through to XFS so it gets written back to disk.
 
->
->
-> Michael
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+
+diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
+index 7ec89fc..ee6863e 100644
+--- a/fs/xfs/linux-2.6/xfs_aops.c
++++ b/fs/xfs/linux-2.6/xfs_aops.c
+@@ -215,7 +215,6 @@ xfs_setfilesize(
+
+         if (ip->i_d.di_size < isize) {
+                 ip->i_d.di_size = isize;
+-               ip->i_update_core = 1;
+                 ip->i_update_size = 1;
+                 xfs_mark_inode_dirty_sync(ip);
+         }
+diff --git a/fs/xfs/linux-2.6/xfs_iops.c b/fs/xfs/linux-2.6/xfs_iops.c
+index 58973bb..7a51612 100644
+--- a/fs/xfs/linux-2.6/xfs_iops.c
++++ b/fs/xfs/linux-2.6/xfs_iops.c
+@@ -120,19 +120,11 @@ xfs_ichgtime(
+         }
+
+         /*
+-        * We update the i_update_core field _after_ changing
+-        * the timestamps in order to coordinate properly with
+-        * xfs_iflush() so that we don't lose timestamp updates.
+-        * This keeps us from having to hold the inode lock
+-        * while doing this.  We use the SYNCHRONIZE macro to
+-        * ensure that the compiler does not reorder the update
+-        * of i_update_core above the timestamp updates above.
++        * Update complete - now make sure everyone knows that the inode
++        * is dirty.
+          */
+-       if (sync_it) {
+-               SYNCHRONIZE();
+-               ip->i_update_core = 1;
++       if (sync_it)
+                 xfs_mark_inode_dirty_sync(ip);
+-       }
+  }
+
+  /*
+diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
+index 36fb8a6..3cc9ef2 100644
+--- a/fs/xfs/linux-2.6/xfs_super.c
++++ b/fs/xfs/linux-2.6/xfs_super.c
+@@ -973,6 +973,28 @@ xfs_fs_inode_init_once(
+  }
+
+  /*
++ * Dirty the XFS inode when mark_inode_dirty_sync() is called so that
++ * we catch unlogged VFS level updates to the inode. Care must be taken
++ * here - the transaction code calls mark_inode_dirty_sync() to mark  
+the
++ * VFS inode dirty in a transaction and clears the i_update_core field;
++ * it must clear the field after calling mark_inode_dirty_sync() to
++ * correctly indicate that the dirty state has been propagated into the
++ * inode log item.
++ *
++ * We need the barrier() to maintain correct ordering between unlogged
++ * updates and the transaction commit code that clears the  
+i_update_core
++ * field. This requires all updates to be completed before marking the
++ * inode dirty.
++ */
++STATIC void
++xfs_fs_dirty_inode(
++       struct inode    *inode)
++{
++       barrier();
++       XFS_I(inode)->i_update_core = 1;
++}
++
++/*
+   * Attempt to flush the inode, this will actually fail
+   * if the inode is pinned, but we dirty the inode again
+   * at the point when it is unpinned after a log write,
+@@ -1546,6 +1568,7 @@ xfs_fs_get_sb(
+  static struct super_operations xfs_super_operations = {
+         .alloc_inode            = xfs_fs_alloc_inode,
+         .destroy_inode          = xfs_fs_destroy_inode,
++       .dirty_inode            = xfs_fs_dirty_inode,
+         .write_inode            = xfs_fs_write_inode,
+         .clear_inode            = xfs_fs_clear_inode,
+         .put_super              = xfs_fs_put_super,
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 977c4ae..43c31c0 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -232,6 +232,15 @@ xfs_inode_item_format(
+         nvecs        = 1;
+
+         /*
++        * Make sure the linux inode is dirty. We do this before
++        * clearing i_update_core as the VFS will call back into
++        * XFS here and set i_update_core, so we need to dirty the
++        * inode first so that the ordering of i_update_core and
++        * unlogged modifications still works as described below.
++        */
++       xfs_mark_inode_dirty_sync(ip);
++
++       /*
+          * Clear i_update_core if the timestamps (or any other
+          * non-transactional modification) need flushing/logging
+          * and we're about to log them with the rest of the core.
+@@ -275,11 +284,6 @@ xfs_inode_item_format(
+          */
+         xfs_synchronize_atime(ip);
+
+-       /*
+-        * make sure the linux inode is dirty
+-        */
+-       xfs_mark_inode_dirty_sync(ip);
+-
+         vecp->i_addr = (xfs_caddr_t)&ip->i_d;
+         vecp->i_len  = sizeof(struct xfs_icdinode);
+         XLOG_VEC_SET_TYPE(vecp, XLOG_REG_TYPE_ICORE);
+
 
 _______________________________________________
 xfs mailing list
