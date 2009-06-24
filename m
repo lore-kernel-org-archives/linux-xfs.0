@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n5ON4c9K109333 for <xfs@oss.sgi.com>; Wed, 24 Jun 2009 18:04:38 -0500
-Received: from erebus.totalmanaged.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AEF8131EC9C
-	for <xfs@oss.sgi.com>; Wed, 24 Jun 2009 16:05:04 -0700 (PDT)
-Received: from erebus.totalmanaged.com (mx01.totalmanaged.com
-	[208.83.104.194]) by cuda.sgi.com with ESMTP id
-	wmP7D5ntYEU0eYwf for <xfs@oss.sgi.com>;
-	Wed, 24 Jun 2009 16:05:04 -0700 (PDT)
-From: Michael Moody <michael@gsc.cc>
-Date: Wed, 24 Jun 2009 16:05:00 -0700
-Subject: RE: mkfs.xfs created filesystem larger than underlying device
-Message-ID: <98D6DBD179F61A46AF5C064829A832A0185042D267@erebus.totalmanaged.com>
-References: <98D6DBD179F61A46AF5C064829A832A0185042D261@erebus.totalmanaged.com>
-	<4A42A7B7.3040403@sandeen.net>
-	<98D6DBD179F61A46AF5C064829A832A0185042D264@erebus.totalmanaged.com>
-	<4A42B087.5050205@sandeen.net>
-In-Reply-To: <4A42B087.5050205@sandeen.net>
-Content-Language: en-US
+	n5ON24Md109174 for <xfs@oss.sgi.com>; Wed, 24 Jun 2009 18:02:05 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 04D739867DF
+	for <xfs@oss.sgi.com>; Wed, 24 Jun 2009 16:11:00 -0700 (PDT)
+Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
+	cuda.sgi.com with ESMTP id cAA3NswIKCiF6w5y for
+	<xfs@oss.sgi.com>; Wed, 24 Jun 2009 16:11:00 -0700 (PDT)
+Message-ID: <4A42B087.5050205@sandeen.net>
+Date: Wed, 24 Jun 2009 18:02:31 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
+Subject: Re: mkfs.xfs created filesystem larger than underlying device
+References: <98D6DBD179F61A46AF5C064829A832A0185042D261@erebus.totalmanaged.com>	<4A42A7B7.3040403@sandeen.net>
+	<98D6DBD179F61A46AF5C064829A832A0185042D264@erebus.totalmanaged.com>
+In-Reply-To: <98D6DBD179F61A46AF5C064829A832A0185042D264@erebus.totalmanaged.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,35 +28,12 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
+To: Michael Moody <michael@gsc.cc>
 Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
-
-Are there still known issues with NFS and XFS? I'm performing the same test against a jfs formatted filesystem (exported via NFS), and so far, no issues. This is the latest centosplus kernel. Are there mount options which could cause XFS to have corruption?
-
-Michael S. Moody
-Sr. Systems Engineer
-Global Systems Consulting
-
-Direct: (650) 265-4154
-Web: http://www.GlobalSystemsConsulting.com
-
-Engineering Support: support@gsc.cc
-Billing Support: billing@gsc.cc
-Customer Support Portal:  http://my.gsc.cc
-
-NOTICE - This message contains privileged and confidential information intended only for the use of the addressee named above. If you are not the intended recipient of this message, you are hereby notified that you must not disseminate, copy or take any action in reliance on it. If you have received this message in error, please immediately notify Global Systems Consulting, its subsidiaries or associates. Any views expressed in this message are those of the individual sender, except where the sender specifically states them to be the view of Global Systems Consulting, its subsidiaries and associates.
-
-
------Original Message-----
-From: Eric Sandeen [mailto:sandeen@sandeen.net]
-Sent: Wednesday, June 24, 2009 5:03 PM
-To: Michael Moody
-Cc: xfs@oss.sgi.com
-Subject: Re: mkfs.xfs created filesystem larger than underlying device
 
 Michael Moody wrote:
 > It still looks wrong:
->
+> 
 > [root@filer5 /]# xfs_info /mnt/Volume1/
 > meta-data=/dev/Volume1-Rep-Store/Volume1-Replicated isize=256    agcount=32, agsize=146716768 blks
 >          =                       sectsz=512   attr=0
@@ -83,7 +56,7 @@ Michael Moody wrote:
 
 > [root@filer5 /]# cat /proc/partitions
 > major minor  #blocks  name
->
+> 
 ...
 >  253     5 18779746304 dm-5
 
@@ -91,9 +64,9 @@ Michael Moody wrote:
 
 so in bytes,
 
-xfs_info says:          19230460215296
-/proc/partitions says:  19230460215296 (same as above)
-df says:                19230325997568 (a little smaller, but ok)
+xfs_info says:		19230460215296
+/proc/partitions says:	19230460215296 (same as above)
+df says:		19230325997568 (a little smaller, but ok)
 
 So, I don't see a problem here.
 
