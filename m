@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n5OKlrPT103167 for <xfs@oss.sgi.com>; Wed, 24 Jun 2009 15:47:53 -0500
-Received: from erebus.totalmanaged.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7B5581495A4B
-	for <xfs@oss.sgi.com>; Wed, 24 Jun 2009 13:56:48 -0700 (PDT)
-Received: from erebus.totalmanaged.com (mx01.totalmanaged.com
-	[208.83.104.194]) by cuda.sgi.com with ESMTP id
-	jQrliGDnTnIOWhbt for <xfs@oss.sgi.com>;
-	Wed, 24 Jun 2009 13:56:48 -0700 (PDT)
-From: Michael Moody <michael@gsc.cc>
-Date: Wed, 24 Jun 2009 13:48:16 -0700
-Subject: mkfs.xfs created filesystem larger than underlying device
-Message-ID: <98D6DBD179F61A46AF5C064829A832A0185042D261@erebus.totalmanaged.com>
-Content-Language: en-US
+	n5OLeF67105365 for <xfs@oss.sgi.com>; Wed, 24 Jun 2009 16:40:15 -0500
+Received: from cobra.newdream.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EF8E896F867
+	for <xfs@oss.sgi.com>; Wed, 24 Jun 2009 14:49:09 -0700 (PDT)
+Received: from cobra.newdream.net (cobra.newdream.net [66.33.216.30]) by
+	cuda.sgi.com with ESMTP id pPu9PSSmwkEWTbW1 for
+	<xfs@oss.sgi.com>; Wed, 24 Jun 2009 14:49:09 -0700 (PDT)
+Date: Wed, 24 Jun 2009 14:40:42 -0700 (PDT)
+From: Sage Weil <sage@newdream.net>
+Subject: Re: inconsistent lock state on 2.6.30?
+In-Reply-To: <20090623170844.GA23971@infradead.org>
+Message-ID: <Pine.LNX.4.64.0906241438100.24641@cobra.newdream.net>
+References: <Pine.LNX.4.64.0906230925420.20462@cobra.newdream.net>
+	<20090623170844.GA23971@infradead.org>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -23,301 +24,109 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6896770194648055465=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
-
---===============6896770194648055465==
-Content-Language: en-US
-Content-Type: multipart/alternative;
-	boundary="_000_98D6DBD179F61A46AF5C064829A832A0185042D261erebustotalma_"
-
---_000_98D6DBD179F61A46AF5C064829A832A0185042D261erebustotalma_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-
-Hello all.
-
-I recently created an XFS filesystem on an x86_64 CentOS 5.3 system. I used=
- all tools in the repository:
-
-Xfsprogs-2.9.4-1
-Kernel 2.6.18-128.1.10.el5.centos.plus
-
-It is a somewhat complex configuration of:
-
-Areca RAID card with 16 1.5TB drives in a RAID 6 with 1 hotspare (100GB vol=
-ume was created for the OS, the rest was one large volume of ~19TB)
-I used pvcreate /dev/sdb to create a physical volume for LVM on the 19TB vo=
-lume.
-I then used vgcreate to create a volume group of 17.64TB
-I used lvcreate to create 5 logical volumes, 4x4TB, and 1x1.5TB
-On top of those logical volumes is drbd (/dev/drbd0-/dev/drbd4)
-On top of the drbd volumes, I created a volume group of 17.50TB (/dev/drbd0=
--/dev/drbd4)
-I created a logical volume of 17.49TB, upon which was created an xfs filesy=
-stem with no options (mkfs.xfs mkfs.xfs /dev/Volume1-Rep-Store/Volume1-Repl=
-icated -L Replicated)
-
-The resulting filesystem is larger than the underlying logical volume:
-
---- Logical volume ---
-  LV Name                /dev/Volume1-Rep-Store/Volume1-Replicated
-  VG Name                Volume1-Rep-Store
-  LV UUID                fB0q3f-80Kq-yFuy-NjKl-pmlW-jeiX-uEruWC
-  LV Write Access        read/write
-  LV Status              available
-  # open                 1
-  LV Size                17.49 TB
-  Current LE             4584899
-  Segments               5
-  Allocation             inherit
-  Read ahead sectors     auto
-  - currently set to     256
-  Block device           253:5
-
-/dev/mapper/Volume1--Rep--Store-Volume1--Replicated
-                       18T  411M   18T   1% /mnt/Volume1
-
-Why is this, and how can I fix it?
-
-Thanks,
-Michael
-
---_000_98D6DBD179F61A46AF5C064829A832A0185042D261erebustotalma_
-Content-Type: text/html; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-
-<html xmlns:v=3D"urn:schemas-microsoft-com:vml" xmlns:o=3D"urn:schemas-micr=
-osoft-com:office:office" xmlns:w=3D"urn:schemas-microsoft-com:office:word" =
-xmlns:x=3D"urn:schemas-microsoft-com:office:excel" xmlns:p=3D"urn:schemas-m=
-icrosoft-com:office:powerpoint" xmlns:a=3D"urn:schemas-microsoft-com:office=
-:access" xmlns:dt=3D"uuid:C2F41010-65B3-11d1-A29F-00AA00C14882" xmlns:s=3D"=
-uuid:BDC6E3F0-6DA3-11d1-A2A3-00AA00C14882" xmlns:rs=3D"urn:schemas-microsof=
-t-com:rowset" xmlns:z=3D"#RowsetSchema" xmlns:b=3D"urn:schemas-microsoft-co=
-m:office:publisher" xmlns:ss=3D"urn:schemas-microsoft-com:office:spreadshee=
-t" xmlns:c=3D"urn:schemas-microsoft-com:office:component:spreadsheet" xmlns=
-:odc=3D"urn:schemas-microsoft-com:office:odc" xmlns:oa=3D"urn:schemas-micro=
-soft-com:office:activation" xmlns:html=3D"http://www.w3.org/TR/REC-html40" =
-xmlns:q=3D"http://schemas.xmlsoap.org/soap/envelope/" xmlns:D=3D"DAV:" xmln=
-s:mt=3D"http://schemas.microsoft.com/sharepoint/soap/meetings/" xmlns:x2=3D=
-"http://schemas.microsoft.com/office/excel/2003/xml" xmlns:ois=3D"http://sc=
-hemas.microsoft.com/sharepoint/soap/ois/" xmlns:dir=3D"http://schemas.micro=
-soft.com/sharepoint/soap/directory/" xmlns:ds=3D"http://www.w3.org/2000/09/=
-xmldsig#" xmlns:dsp=3D"http://schemas.microsoft.com/sharepoint/dsp" xmlns:u=
-dc=3D"http://schemas.microsoft.com/data/udc" xmlns:xsd=3D"http://www.w3.org=
-/2001/XMLSchema" xmlns:sub=3D"http://schemas.microsoft.com/sharepoint/soap/=
-2002/1/alerts/" xmlns:ec=3D"http://www.w3.org/2001/04/xmlenc#" xmlns:sp=3D"=
-http://schemas.microsoft.com/sharepoint/" xmlns:sps=3D"http://schemas.micro=
-soft.com/sharepoint/soap/" xmlns:xsi=3D"http://www.w3.org/2001/XMLSchema-in=
-stance" xmlns:udcs=3D"http://schemas.microsoft.com/data/udc/soap" xmlns:udc=
-xf=3D"http://schemas.microsoft.com/data/udc/xmlfile" xmlns:udcp2p=3D"http:/=
-/schemas.microsoft.com/data/udc/parttopart" xmlns:wf=3D"http://schemas.micr=
-osoft.com/sharepoint/soap/workflow/" xmlns:dsss=3D"http://schemas.microsoft=
-.com/office/2006/digsig-setup" xmlns:dssi=3D"http://schemas.microsoft.com/o=
-ffice/2006/digsig" xmlns:mdssi=3D"http://schemas.openxmlformats.org/package=
-/2006/digital-signature" xmlns:mver=3D"http://schemas.openxmlformats.org/ma=
-rkup-compatibility/2006" xmlns:m=3D"http://schemas.microsoft.com/office/200=
-4/12/omml" xmlns:mrels=3D"http://schemas.openxmlformats.org/package/2006/re=
-lationships" xmlns:spwp=3D"http://microsoft.com/sharepoint/webpartpages" xm=
-lns:ex12t=3D"http://schemas.microsoft.com/exchange/services/2006/types" xml=
-ns:ex12m=3D"http://schemas.microsoft.com/exchange/services/2006/messages" x=
-mlns:pptsl=3D"http://schemas.microsoft.com/sharepoint/soap/SlideLibrary/" x=
-mlns:spsl=3D"http://microsoft.com/webservices/SharePointPortalServer/Publis=
-hedLinksService" xmlns:Z=3D"urn:schemas-microsoft-com:" xmlns:st=3D"&#1;" x=
-mlns=3D"http://www.w3.org/TR/REC-html40">
-
-<head>
-<META HTTP-EQUIV=3D"Content-Type" CONTENT=3D"text/html; charset=3Dus-ascii"=
->
-<meta name=3DGenerator content=3D"Microsoft Word 12 (filtered medium)">
-<style>
-<!--
- /* Font Definitions */
- @font-face
-	{font-family:"Cambria Math";
-	panose-1:2 4 5 3 5 4 6 3 2 4;}
-@font-face
-	{font-family:Calibri;
-	panose-1:2 15 5 2 2 2 4 3 2 4;}
- /* Style Definitions */
- p.MsoNormal, li.MsoNormal, div.MsoNormal
-	{margin:0in;
-	margin-bottom:.0001pt;
-	font-size:11.0pt;
-	font-family:"Calibri","sans-serif";}
-a:link, span.MsoHyperlink
-	{mso-style-priority:99;
-	color:blue;
-	text-decoration:underline;}
-a:visited, span.MsoHyperlinkFollowed
-	{mso-style-priority:99;
-	color:purple;
-	text-decoration:underline;}
-span.EmailStyle17
-	{mso-style-type:personal-compose;
-	font-family:"Calibri","sans-serif";
-	color:windowtext;}
-.MsoChpDefault
-	{mso-style-type:export-only;}
-@page Section1
-	{size:8.5in 11.0in;
-	margin:1.0in 1.0in 1.0in 1.0in;}
-div.Section1
-	{page:Section1;}
--->
-</style>
-<!--[if gte mso 9]><xml>
- <o:shapedefaults v:ext=3D"edit" spidmax=3D"1026" />
-</xml><![endif]--><!--[if gte mso 9]><xml>
- <o:shapelayout v:ext=3D"edit">
-  <o:idmap v:ext=3D"edit" data=3D"1" />
- </o:shapelayout></xml><![endif]-->
-</head>
-
-<body lang=3DEN-US link=3Dblue vlink=3Dpurple>
-
-<div class=3DSection1>
-
-<p class=3DMsoNormal>Hello all.<o:p></o:p></p>
-
-<p class=3DMsoNormal><o:p>&nbsp;</o:p></p>
-
-<p class=3DMsoNormal>I recently created an XFS filesystem on an x86_64 Cent=
-OS 5.3
-system. I used all tools in the repository:<o:p></o:p></p>
-
-<p class=3DMsoNormal><o:p>&nbsp;</o:p></p>
-
-<p class=3DMsoNormal>Xfsprogs-2.9.4-1<o:p></o:p></p>
-
-<p class=3DMsoNormal>Kernel 2.6.18-128.1.10.el5.centos.plus<o:p></o:p></p>
-
-<p class=3DMsoNormal><o:p>&nbsp;</o:p></p>
-
-<p class=3DMsoNormal>It is a somewhat complex configuration of:<o:p></o:p><=
-/p>
-
-<p class=3DMsoNormal><o:p>&nbsp;</o:p></p>
-
-<p class=3DMsoNormal>Areca RAID card with 16 1.5TB drives in a RAID 6 with =
-1
-hotspare (100GB volume was created for the OS, the rest was one large volum=
-e of
-~19TB)<o:p></o:p></p>
-
-<p class=3DMsoNormal>I used pvcreate /dev/sdb to create a physical volume f=
-or LVM
-on the 19TB volume.<o:p></o:p></p>
-
-<p class=3DMsoNormal>I then used vgcreate to create a volume group of 17.64=
-TB<o:p></o:p></p>
-
-<p class=3DMsoNormal>I used lvcreate to create 5 logical volumes, 4x4TB, an=
-d
-1x1.5TB<o:p></o:p></p>
-
-<p class=3DMsoNormal>On top of those logical volumes is drbd (/dev/drbd0-/d=
-ev/drbd4)<o:p></o:p></p>
-
-<p class=3DMsoNormal>On top of the drbd volumes, I created a volume group o=
-f
-17.50TB (/dev/drbd0-/dev/drbd4)<o:p></o:p></p>
-
-<p class=3DMsoNormal>I created a logical volume of 17.49TB, upon which was
-created an xfs filesystem with no options (mkfs.xfs mkfs.xfs
-/dev/Volume1-Rep-Store/Volume1-Replicated -L Replicated)<o:p></o:p></p>
-
-<p class=3DMsoNormal><o:p>&nbsp;</o:p></p>
-
-<p class=3DMsoNormal>The resulting filesystem is larger than the underlying
-logical volume:<o:p></o:p></p>
-
-<p class=3DMsoNormal><o:p>&nbsp;</o:p></p>
-
-<p class=3DMsoNormal>--- Logical volume ---<o:p></o:p></p>
-
-<p class=3DMsoNormal>&nbsp; LV Name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-/dev/Volume1-Rep-Store/Volume1-Replicated<o:p></o:p></p>
-
-<p class=3DMsoNormal>&nbsp; VG Name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Volume1-Rep-Store<o:p></=
-o:p></p>
-
-<p class=3DMsoNormal>&nbsp; LV UUID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; fB0q3f-80Kq-yFuy-NjKl-pm=
-lW-jeiX-uEruWC<o:p></o:p></p>
-
-<p class=3DMsoNormal>&nbsp; LV Write Access&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
-bsp;&nbsp; read/write<o:p></o:p></p>
-
-<p class=3DMsoNormal>&nbsp; LV Status&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
-bsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; available<o:p></o:p></p>
-
-<p class=3DMsoNormal>&nbsp; # open&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1<o:p></o:p></p>
-
-<p class=3DMsoNormal>&nbsp; LV Size&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 17.49 TB<o:p></o:p></p>
-
-<p class=3DMsoNormal>&nbsp; Current LE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4584899<o:p></o:p></p>
-
-<p class=3DMsoNormal>&nbsp; Segments&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 5<o:p></o:p></p>
-
-<p class=3DMsoNormal>&nbsp; Allocation&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; inherit<o:p></o:p></p>
-
-<p class=3DMsoNormal>&nbsp; Read ahead sectors&nbsp;&nbsp;&nbsp;&nbsp; auto=
-<o:p></o:p></p>
-
-<p class=3DMsoNormal>&nbsp; - currently set to&nbsp;&nbsp;&nbsp;&nbsp; 256<=
-o:p></o:p></p>
-
-<p class=3DMsoNormal>&nbsp; Block device&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-;&nbsp;&nbsp;&nbsp;&nbsp; 253:5<o:p></o:p></p>
-
-<p class=3DMsoNormal><o:p>&nbsp;</o:p></p>
-
-<p class=3DMsoNormal>/dev/mapper/Volume1--Rep--Store-Volume1--Replicated<o:=
-p></o:p></p>
-
-<p class=3DMsoNormal>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp; 18T&nbsp; 411M&nbsp;&nbsp; 18T&nbsp;&nbsp; 1% /mnt/Volume1<o:p></o:p></=
-p>
-
-<p class=3DMsoNormal><o:p>&nbsp;</o:p></p>
-
-<p class=3DMsoNormal>Why is this, and how can I fix it?<o:p></o:p></p>
-
-<p class=3DMsoNormal><o:p>&nbsp;</o:p></p>
-
-<p class=3DMsoNormal>Thanks,<o:p></o:p></p>
-
-<p class=3DMsoNormal>Michael<o:p></o:p></p>
-
-</div>
-
-</body>
-
-</html>
-
---_000_98D6DBD179F61A46AF5C064829A832A0185042D261erebustotalma_--
-
-
---===============6896770194648055465==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
+
+On Tue, 23 Jun 2009, Christoph Hellwig wrote:
+> On Tue, Jun 23, 2009 at 09:26:04AM -0700, Sage Weil wrote:
+> > Hi,
+> > 
+> > I have 6 machines using an XFS volume for logs, and strangely all 6 of 
+> > them spit out the following at roughly the same time last night.  Most are 
+> > around 50% full, all with a single directory full of large append-only 
+> > files.  They're all running similar workloads, and are all nfs exported.
+> > 
+> > Is this a known issue?  If there's any other info that'd be helpful, let 
+> > me know.
+> 
+> > [15995.063830] inconsistent {RECLAIM_FS-ON-R} -> {IN-RECLAIM_FS-W} usage.
+> > [15995.063830] kswapd0/290 [HC0[0]:SC0[0]:HE1:SE1] takes:
+> > [15995.063830]  (&(&ip->i_lock)->mr_lock){++++-?}, at: 
+> > [<ffffffff803af57a>] xfs_ilock+0x5b/0x79
+> > [15995.063830] {RECLAIM_FS-ON-R} state was registered at:
+> 
+> If I understand this correctly we take a rw/semaphore in the reclaim
+> path, and also in a memory allocation that may call back into the fs.
+> 
+> I don't think the actual condition is new, but I've never seen the
+> warning before.  The patch below should take care of it, can you give it
+> a try?
+
+Hmm, I caught it again:
+
+[ 7822.230090] =================================
+[ 7822.230208] [ INFO: inconsistent lock state ]
+[ 7822.230208] 2.6.30 #22
+[ 7822.230208] ---------------------------------
+[ 7822.230208] inconsistent {RECLAIM_FS-ON-W} -> {IN-RECLAIM_FS-W} usage.
+[ 7822.230208] kswapd0/290 [HC0[0]:SC0[0]:HE1:SE1] takes:
+[ 7822.230208]  (&(&ip->i_iolock)->mr_lock){++++?+}, at: [<ffffffff803af53a>] xfs_ilock+0x27/0x79
+[ 7822.230208] {RECLAIM_FS-ON-W} state was registered at:
+[ 7822.230208]   [<ffffffff8025c297>] mark_held_locks+0x4d/0x6b
+[ 7822.230208]   [<ffffffff8025c35d>] lockdep_trace_alloc+0xa8/0xc3
+[ 7822.230208]   [<ffffffff80287c4e>] __alloc_pages_internal+0x6d/0x457
+[ 7822.230208]   [<ffffffff802a7eb6>] alloc_pages_current+0xbe/0xc6
+[ 7822.230208]   [<ffffffff80281c19>] grab_cache_page_write_begin+0x5e/0xa2
+[ 7822.230208]   [<ffffffff802d2aa5>] block_write_begin+0x3d/0xcf
+[ 7822.230208]   [<ffffffff803cb634>] xfs_vm_write_begin+0x25/0x27
+[ 7822.230208]   [<ffffffff802825ba>] generic_file_buffered_write+0x139/0x2ff
+[ 7822.230208]   [<ffffffff803d172a>] xfs_write+0x4de/0x717
+[ 7822.230208]   [<ffffffff803ce0f1>] xfs_file_aio_write+0x61/0x63
+[ 7822.230208]   [<ffffffff802b080e>] do_sync_write+0xe7/0x12d
+[ 7822.340754]   [<ffffffff802b11c3>] vfs_write+0xae/0x137
+[ 7822.340754]   [<ffffffff802b1310>] sys_write+0x47/0x6e
+[ 7822.340754]   [<ffffffff8020bb2b>] system_call_fastpath+0x16/0x1b
+[ 7822.340754]   [<ffffffffffffffff>] 0xffffffffffffffff
+[ 7822.340754] irq event stamp: 10734119
+[ 7822.340754] hardirqs last  enabled at (10734119): [<ffffffff8062372c>] _spin_unlock_irqrestore+0x3f/0x68
+[ 7822.340754] hardirqs last disabled at (10734118): [<ffffffff80623a80>] _spin_lock_irqsave+0x19/0x7f
+[ 7822.340754] softirqs last  enabled at (10734016): [<ffffffff80240850>] __do_softirq+0x1d9/0x1e5
+[ 7822.340754] softirqs last disabled at (10733825): [<ffffffff8020ccbc>] call_softirq+0x1c/0x28
+[ 7822.340754] 
+[ 7822.340754] other info that might help us debug this:
+[ 7822.340754] 2 locks held by kswapd0/290:
+[ 7822.340754]  #0:  (shrinker_rwsem){++++..}, at: [<ffffffff8028d80c>] shrink_slab+0x38/0x188
+[ 7822.340754]  #1:  (iprune_mutex){+.+.-.}, at: [<ffffffff802c3a2b>] shrink_icache_memory+0x4b/0x23b
+[ 7822.340754] 
+[ 7822.340754] stack backtrace:
+[ 7822.340754] Pid: 290, comm: kswapd0 Not tainted 2.6.30 #22
+[ 7822.340754] Call Trace:
+[ 7822.340754]  [<ffffffff8025bd01>] print_usage_bug+0x1b2/0x1c3
+[ 7822.456334]  [<ffffffff8025c8e2>] ? check_usage_forwards+0x0/0x9c
+[ 7822.460330]  [<ffffffff8025c00c>] mark_lock+0x2fa/0x538
+[ 7822.464330]  [<ffffffff8025d9d5>] __lock_acquire+0x80d/0x16a9
+[ 7822.464330]  [<ffffffff8025e967>] lock_acquire+0xf6/0x11a
+[ 7822.464330]  [<ffffffff803af53a>] ? xfs_ilock+0x27/0x79
+[ 7822.464330]  [<ffffffff80252ab1>] down_write_nested+0x46/0x7a
+[ 7822.464330]  [<ffffffff803af53a>] ? xfs_ilock+0x27/0x79
+[ 7822.464330]  [<ffffffff803af53a>] xfs_ilock+0x27/0x79
+[ 7822.464330]  [<ffffffff803af648>] xfs_ireclaim+0x8d/0x153
+[ 7822.464330]  [<ffffffff803d3e74>] xfs_reclaim_inode+0x131/0x13f
+[ 7822.464330]  [<ffffffff803c6194>] xfs_reclaim+0x98/0xa9
+[ 7822.464330]  [<ffffffff803d2532>] xfs_fs_destroy_inode+0x37/0x57
+[ 7822.464330]  [<ffffffff802c38d3>] destroy_inode+0x3a/0x4f
+[ 7822.464330]  [<ffffffff802c39ac>] dispose_list+0xc4/0xf8
+[ 7822.464330]  [<ffffffff802c3be5>] shrink_icache_memory+0x205/0x23b
+[ 7822.464330]  [<ffffffff8028d8b3>] shrink_slab+0xdf/0x188
+[ 7822.464330]  [<ffffffff8028e109>] kswapd+0x4fc/0x6b2
+[ 7822.464330]  [<ffffffff80232c88>] ? finish_task_switch+0x3b/0xdc
+[ 7822.464330]  [<ffffffff8028b848>] ? isolate_pages_global+0x0/0x208
+[ 7822.464330]  [<ffffffff8024fd10>] ? autoremove_wake_function+0x0/0x38
+[ 7822.464330]  [<ffffffff8025c568>] ? trace_hardirqs_on+0xd/0xf
+[ 7822.464330]  [<ffffffff8028dc0d>] ? kswapd+0x0/0x6b2
+[ 7822.464330]  [<ffffffff8028dc0d>] ? kswapd+0x0/0x6b2
+[ 7822.464330]  [<ffffffff8024f8d1>] kthread+0x56/0x83
+[ 7822.464330]  [<ffffffff8020cbba>] child_rip+0xa/0x20
+[ 7822.464330]  [<ffffffff8020c580>] ? restore_args+0x0/0x30
+[ 7822.464330]  [<ffffffff8062064f>] ? __schedule+0xf9/0x948
+[ 7822.464330]  [<ffffffff8024f87b>] ? kthread+0x0/0x83
+[ 7822.464330]  [<ffffffff8020cbb0>] ? child_rip+0x0/0x20
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6896770194648055465==--
