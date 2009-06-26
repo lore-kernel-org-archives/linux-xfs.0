@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n5QLKSS9226182 for <xfs@oss.sgi.com>; Fri, 26 Jun 2009 16:20:29 -0500
+	n5QLPYft226720 for <xfs@oss.sgi.com>; Fri, 26 Jun 2009 16:25:35 -0500
 Received: from linta.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B9F649B20B2
-	for <xfs@oss.sgi.com>; Fri, 26 Jun 2009 14:29:34 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0E6ED107E9A0
+	for <xfs@oss.sgi.com>; Fri, 26 Jun 2009 14:34:41 -0700 (PDT)
 Received: from linta.de (isilmar.linta.de [213.133.102.198]) by cuda.sgi.com
-	with ESMTP id saGWC6oYzPLMq3Bn for <xfs@oss.sgi.com>;
-	Fri, 26 Jun 2009 14:29:34 -0700 (PDT)
-Date: Fri, 26 Jun 2009 23:21:06 +0200
+	with ESMTP id DS5asNssnhBh5oGd for <xfs@oss.sgi.com>;
+	Fri, 26 Jun 2009 14:34:41 -0700 (PDT)
+Date: Fri, 26 Jun 2009 23:26:11 +0200
 From: Hendrik Hoeth <hendrik.hoeth@cern.ch>
 Subject: Re: corrupt file system -- "Structure needs cleaning"
-Message-ID: <20090626212106.GH29416@mail.physik.uni-wuppertal.de>
+Message-ID: <20090626212611.GI29416@mail.physik.uni-wuppertal.de>
 References: <20090626195804.GG29416@mail.physik.uni-wuppertal.de>
-	<B1B6286B-1472-4584-8318-F9BB4E74BF8E@sgi.com>
+	<4A452CF7.3040807@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <B1B6286B-1472-4584-8318-F9BB4E74BF8E@sgi.com>
+In-Reply-To: <4A452CF7.3040807@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,44 +31,83 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Thus spake Felix Blyakher (felixb@sgi.com):
+Thus spake Eric Sandeen (sandeen@sandeen.net):
 
-> On Jun 26, 2009, at 2:58 PM, Hendrik Hoeth wrote:
->>
->> This is how I recovered (well, most of the data I had copied is
->> corrupt at the target location):
->
-> Some files would not make it to disk when filesystem shut down. I'd
-> expect that such files are short. Do you have other indication that
-> the files are corrupt?
+> > [14:44] root@jetway:/var/log # xfs_check /dev/mapper/hda_crypt_vg-home
+> 
+> xfs_check doesn't actually fix anything; I'd run xfs_repair.  Use -n
+> first if you want to see what it would do.
 
-Of course the last file was short, but even several of the files that
-had been copied just before are corrupt (it was a "cp -r" of a few
-directories, total ~ 700 MByte, the error appeared when copying the last
-directory). Those files have identical lengths as the source files, but
-different md5sum. Since it's music, I can hear the corrupt positions;
-they are at random positions somewhere in the files.
+I thought that if xfs_check doesn't show any errors, the filesystem is
+fine and doesn't need an xfs_repair. Is that wrong?
 
-> Seems like no corruption on disk.
-> The system detected in memory corruption and shut the filesystem
-> down to avoid writing bad (meta)data to disk. I don't have answer
-> for that problem, however you can continue to use the filesystem,
-> and may never see this problem again.
+Anyway xfs_repair looks healthy to me:
 
-Hmmm, at least no corruption as in "inconsistent file system", right?
-Still doesn't make me feel well ... I guess I should run a memtest.
+-------------------8<---------------------
+[23:23] root@jetway:~ # xfs_repair /dev/mapper/hda_crypt_vg-home
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+        - zero log...
+        - scan filesystem freespace and inode maps...
+        - found root inode chunk
+Phase 3 - for each AG...
+        - scan and clear agi unlinked lists...
+        - process known inodes and perform inode discovery...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - agno = 4
+        - agno = 5
+        - agno = 6
+        - agno = 7
+        - agno = 8
+        - agno = 9
+        - agno = 10
+        - agno = 11
+        - agno = 12
+        - agno = 13
+        - agno = 14
+        - agno = 15
+        - process newly discovered inodes...
+Phase 4 - check for duplicate blocks...
+        - setting up duplicate extent list...
+        - check for inodes claiming duplicate blocks...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - agno = 4
+        - agno = 5
+        - agno = 6
+        - agno = 7
+        - agno = 8
+        - agno = 9
+        - agno = 10
+        - agno = 11
+        - agno = 12
+        - agno = 13
+        - agno = 14
+        - agno = 15
+Phase 5 - rebuild AG headers and trees...
+        - reset superblock...
+Phase 6 - check inode connectivity...
+        - resetting contents of realtime bitmap and summary inodes
+        - traversing filesystem ...
+        - traversal finished ...
+        - moving disconnected inodes to lost+found ...
+Phase 7 - verify and correct link counts...
+done
+[23:23] root@jetway:~ # 
+-------------------8<---------------------
 
-> If it happens again, it could be useful to run debug XFS, which may
-> point to the problem.
+> If it doesn't find anything, then I guess you had some in-memory corruption.
 
-It's the first time that I had problems on this system, and it has been
-running continuously for 1 1/2 years now. So until today I thought it
-was stable. If the memtest doesn't show anything, I'll keep an eye on
-this.
+I'll run memtest.
 
-Thanks for the help,
+Thanks,
 
-     Hendrik
+    Hendrik
 
 -- 
 "You have to take the most direct road to go instead of your 
