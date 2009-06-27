@@ -1,19 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n5RExr05005736 for <xfs@oss.sgi.com>; Sat, 27 Jun 2009 09:59:53 -0500
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2823F30405F
-	for <xfs@oss.sgi.com>; Sat, 27 Jun 2009 08:00:21 -0700 (PDT)
-Message-Id: <7994423C-3028-4EEE-991B-B21F5019AEBE@sgi.com>
-From: Felix Blyakher <felixb@sgi.com>
-In-Reply-To: <20090627070854.GL29416@mail.physik.uni-wuppertal.de>
-Mime-Version: 1.0 (Apple Message framework v930.3)
-Subject: Re: corrupt file system -- "Structure needs cleaning"
-Date: Sat, 27 Jun 2009 10:00:19 -0500
-References: <20090626195804.GG29416@mail.physik.uni-wuppertal.de>
-	<B1B6286B-1472-4584-8318-F9BB4E74BF8E@sgi.com>
-	<20090627070854.GL29416@mail.physik.uni-wuppertal.de>
+	n5SHNANo070838 for <xfs@OSS.SGI.com>; Sun, 28 Jun 2009 12:23:11 -0500
+Received: from ty.sabi.co.UK (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3529632A72D
+	for <xfs@OSS.SGI.com>; Sun, 28 Jun 2009 10:23:38 -0700 (PDT)
+Received: from ty.sabi.co.UK (82-69-39-138.dsl.in-addr.zen.co.uk
+	[82.69.39.138]) by cuda.sgi.com with ESMTP id pvfHZCNmNEnthGJW
+	for <xfs@OSS.SGI.com>; Sun, 28 Jun 2009 10:23:38 -0700 (PDT)
+Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.UK)
+	by ty.sabi.co.UK with esmtp(Exim 4.68 #1) id 1MKWAX-0002sa-3g
+	for <xfs@OSS.SGI.com>; Sat, 27 Jun 2009 12:34:05 +0100
+MIME-Version: 1.0
+Message-ID: <19014.920.781178.319110@tree.ty.sabi.co.UK>
+Date: Sat, 27 Jun 2009 12:33:44 +0100
+Subject: RE: mkfs.xfs created filesystem larger than underlying device
+In-Reply-To: <98D6DBD179F61A46AF5C064829A832A0185042D265@erebus.totalmanaged.com>
+References: <98D6DBD179F61A46AF5C064829A832A0185042D261@erebus.totalmanaged.com>
+	<4A42A7B7.3040403@sandeen.net>
+	<98D6DBD179F61A46AF5C064829A832A0185042D265@erebus.totalmanaged.com>
+From: pg_xf2@xf2.to.sabi.co.UK (Peter Grandi)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,56 +28,43 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Hendrik Hoeth <hendrik.hoeth@cern.ch>
-Cc: xfs@oss.sgi.com
+To: Linux XFS <xfs@oss.sgi.com>
 
+>> I recently created an XFS filesystem on an x86_64 CentOS 5.3
+>> system.[ .. ] It is a somewhat complex configuration of:
 
-On Jun 27, 2009, at 2:08 AM, Hendrik Hoeth wrote:
+>> Areca RAID card with 16 1.5TB drives in a RAID 6 with 1
+>> hotspare (100GB volume was created for the OS, the rest was
+>> one large volume of ~19TB)
+>> I used pvcreate /dev/sdb to create a physical volume for LVM
+>> on the 19TB volume.
+>> I then used vgcreate to create a volume group of 17.64TB
+>> I used lvcreate to create 5 logical volumes, 4x4TB, and 1x1.5TB
+>> On top of those logical volumes is drbd (/dev/drbd0-/dev/drbd4)
+>> On top of the drbd volumes, I created a volume group of 17.50TB
+>> (/dev/drbd0-/dev/drbd4)
+>> I created a logical volume of 17.49TB, upon which was created
+>> an xfs filesystem with no options (mkfs.xfs mkfs.xfs
+>> /dev/Volume1-Rep-Store/Volume1-Replicated -L Replicated)
 
-> Thus spake Felix Blyakher (felixb@sgi.com):
->
->> Seems like no corruption on disk.
->> The system detected in memory corruption and shut the filesystem
->> down to avoid writing bad (meta)data to disk. I don't have answer
->> for that problem, however you can continue to use the filesystem,
->> and may never see this problem again. If it happens again, it
->> could be useful to run debug XFS, which may point to the problem.
->
-> I ran memtest over night, without any errors. So if this happens again
-> and I need to run xfs_db,
+One of the values of the XFS mailing list is the entertainment
+provided by some (many) of the posts. This is one of the best.
 
-No, I didn't mean xfs_db. That examines the data structures on disk,
-but apparently they're clean anyway.
+> In addition: I experienced significant corruption. I had only
+> about 3 files on the XFS filesystem, which was then exported
+> via nfs. I ran nfs_stress.sh against it, and my files ended up
+> corrupt, and the machine locked up. Ideas?
 
-> what do I need to do to get useful information
-> out? Haven't done that before ...
+Even better.
 
-What I meant is to rebuild the XFS with the CONFIG_XFS_DEBUG set.
-With that option XFS has much more checks in place and hopefully
-will assert earlier, giving us more clues.
-It would be great help to XFS developers, but I'm not sure if it's
-too much to ask for.
-
-Thanks,
-Felix
-
->
->
->    Hendrik
->
-> -- 
-> "You have to take the most direct road to go instead of your
-> meeting, you have to, this one ended, leave at once the CERN
-> domain."         (imprint on the CERN visitor ID cards)
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+(the purpose of this message is not just to give thanks for the
+entertainment, but also perhaps to induce second thoughts about
+the wisdom of the setup above, but as a rule people who do this
+kind of thing tend to think that they know better)
 
 _______________________________________________
 xfs mailing list
