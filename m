@@ -1,14 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n5T8DaI8116122 for <xfs@oss.sgi.com>; Mon, 29 Jun 2009 03:13:37 -0500
-Message-ID: <4A4877CA.2030209@dermichi.com>
-Date: Mon, 29 Jun 2009 10:14:02 +0200
-From: Michael Weissenbacher <mw@dermichi.com>
+	n5TCx7ZW131405 for <xfs@oss.sgi.com>; Mon, 29 Jun 2009 07:59:08 -0500
+Received: from mail51.messagelabs.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id B2AB412612C8
+	for <xfs@oss.sgi.com>; Mon, 29 Jun 2009 05:59:37 -0700 (PDT)
+Received: from mail51.messagelabs.com (mail51.messagelabs.com [216.82.241.99])
+	by cuda.sgi.com with SMTP id MgVEmgyZseeE821u for
+	<xfs@oss.sgi.com>; Mon, 29 Jun 2009 05:59:37 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: implement ->dirty_inode callout
-References: <EBC1B5EB-A971-4769-8E2A-9C15BB069E11@sgi.com>
-In-Reply-To: <EBC1B5EB-A971-4769-8E2A-9C15BB069E11@sgi.com>
+Subject: Correct usage of inode64/running out of inodes
+Message-ID: <OF97A83ACB.604AE440-ON862575E4.00450F9F-862575E4.00475C94@genco.com>
+From: Adam Donald <Adam.Donald@gencopharma.com>
+Date: Mon, 29 Jun 2009 07:59:33 -0500
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,93 +21,235 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============3691193767931765803=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Felix Blyakher <felixb@sgi.com>
-Cc: xfs mailing list <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Hi Felix!
-> I'd like to (re)propose Dave's patch from the last October to
-> address the problem of atime never making to the disk. Many
-> people complained about it.
-Tested here on 2.6.30 & works perfectly. I noticed that "strictatime" and "relatime" mounts options can't be used with XFS - had to change the default directly in fs/namespace.c.
+This is a multipart message in MIME format.
+--===============3691193767931765803==
+Content-Type: multipart/alternative; boundary="=_alternative 00475C92862575E4_="
 
-> Can you run some benchmarks to see what impact it has with the
-> new relatime default?
-I did some benchmarks here and wasn't able to see any significant differences, even when atime is fully enabled. The tests were done with kernel 2.6.30 on a VMWare ESXi Server 3.5.0. Real Hardware is a dual Quad Xeon 2.66GHz, 6-disk 146GB 15k RAID5 on PERC6 with 128MB BBU cache.
+This is a multipart message in MIME format.
+--=_alternative 00475C92862575E4_=
+Content-Type: text/plain; charset="US-ASCII"
 
-xfs_info of test fs
---------------------
-meta-data=/dev/sda3              isize=256    agcount=4, agsize=2365440 blks
-         =                       sectsz=512   attr=2
-data     =                       bsize=4096   blocks=9461760, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0
-log      =internal               bsize=4096   blocks=32768, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
+Hello
 
-bonnie++ results
-----------------
-bonnie_relatime_nopatch.txt
-Version 1.93c       ------Sequential Output------ --Sequential Input- --Random-
-Concurrency   1     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
-Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
-gentoo-x64-xfste 2G  1261  97 191145  34 95765  27  2951  97 234814  22  1169  17
-Latency             12375us     271ms     927ms   11581us   17640us   54677us
-Version 1.93c       ------Sequential Create------ --------Random Create--------
-gentoo-x64-xfstest  -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
-files:max:min        /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
-    32:100000:10/64  3951  42  1842  26 15114  87  4240  44   170   2  7004  57
-Latency               622ms   19046us     156ms     543ms     106ms    1080ms
-1.93c,1.93c,gentoo-x64-xfstest,1,1246251173,2G,,1261,97,191145,34,95765,27,2951,97,234814,22,1169,17,32,100000,10,,64,3951,42,1842,26,15114,87,4240,44,170,2,7004,57,12375us,271ms,927ms,11581us,17640us,54677us,622ms,19046us,156ms,543ms,106ms,1080ms
+In short, I believe that I have used the indode64 option correctly in 
+mounting my XFS device on my Centos 5.2 system, however, I seem to only 
+have 59 free inodes available and 7.5TB of free space.  I would appreciate 
+any insight as to what the best approach would be to fix this situation. 
+In case it is helpful, I have included output from various commands/files 
+below, the XFS device in question is /dev/mapper/VolGroup01-DATA01.  Thank 
+you in advance for your assistance!
 
-bonnie_relatime_withpach.txt
-Version 1.93c       ------Sequential Output------ --Sequential Input- --Random-
-Concurrency   1     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
-Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
-gentoo-x64-xfste 2G  1271  99 284571  57 120562  27  2925  98 234804  24  1227  19
-Latency             12436us     429ms     145ms   13323us   11892us   48055us
-Version 1.93c       ------Sequential Create------ --------Random Create--------
-gentoo-x64-xfstest  -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
-files:max:min        /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
-    32:100000:10/64  3178  46  2308  32 17881  96  4451  54   171   2  7380  60
-Latency               573ms   17378us   28025us   77271us     326ms     928ms
-1.93c,1.93c,gentoo-x64-xfstest,1,1245948051,2G,,1271,99,284571,57,120562,27,2925,98,234804,24,1227,19,32,100000,10,,64,3178,46,2308,32,17881,96,4451,54,171,2,7380,60,12436us,429ms,145ms,13323us,11892us,48055us,573ms,17378us,28025us,77271us,326ms,928ms
+uname:
+Linux NAS01 2.6.18-92.1.6.el5 #1 SMP Wed Jun 25 13:45:47 EDT 2008 x86_64 
+x86_64 x86_64 GNU/Linux
 
-bonnie_atime_withpatch.txt
-Version 1.93c       ------Sequential Output------ --Sequential Input- --Random-
-Concurrency   1     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
-Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
-gentoo-x64-xfste 2G  1309  99 166258  21 117374  29  3015  98 223034  25  1182  22
-Latency              8626us     496ms   23729us    9696us   28558us   43342us
-Version 1.93c       ------Sequential Create------ --------Random Create--------
-gentoo-x64-xfstest  -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
-files:max:min        /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
-    32:100000:10/64  3696  52  1806  27 16913  89  4072  60   167   2  6838  58
-Latency               600ms   21008us   26798us   55639us    1068ms    1045ms
-1.93c,1.93c,gentoo-x64-xfstest,1,1245923465,2G,,1309,99,166258,21,117374,29,3015,98,223034,25,1182,22,32,100000,10,,64,3696,52,1806,27,16913,89,4072,60,167,2,6838,58,8626us,496ms,23729us,9696us,28558us,43342us,600ms,21008us,26798us,55639us,1068ms,1045ms
+df -h:
+Filesystem            Size  Used Avail Use% Mounted on
+/dev/mapper/VolGroup00-LogVol00 71G   12G   55G  18% /
+/dev/sda1              99M   25M   70M  26% /boot
+tmpfs                    3.9G     0  3.9G   0% /dev/shm
+/dev/mapper/VolGroup01-DATA01   18T  9.9T  7.5T  57% /DATA01
 
-bonnie_noatime.txt
-Version 1.93c       ------Sequential Output------ --Sequential Input- --Random-
-Concurrency   1     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
-Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
-gentoo-x64-xfste 2G  1302  99 312421  52 115066  29  3121  99 243930  24  1282  18
-Latency              7750us     562ms   24417us   10083us   12990us   50122us
-Version 1.93c       ------Sequential Create------ --------Random Create--------
-gentoo-x64-xfstest  -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
-files:max:min        /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
-    32:100000:10/64  3917  55  1942  28 16849  91  4043  59   172   2  7705  63
-Latency               312ms     105ms    3530us     130ms     159ms     690ms
-1.93c,1.93c,gentoo-x64-xfstest,1,1245922347,2G,,1302,99,312421,52,115066,29,3121,99,243930,24,1282,18,32,100000,10,,64,3917,55,1942,28,16849,91,4043,59,172,2,7705,63,7750us,562ms,24417us,10083us,12990us,50122us,312ms,105ms,3530us,130ms,159ms,690ms
+df -ih:
+Filesystem            Inodes   IUsed   IFree IUse% Mounted on
+/dev/mapper/VolGroup00-LogVol00 19M    123K     19M    1% /
+/dev/sda1                26K      44     26K    1% /boot
+tmpfs                    999K       1    999K    1% /dev/shm
+/dev/mapper/VolGroup01-DATA01   18G    297K     18G    1% /DATA01
+
+mount:
+...
+/dev/mapper/VolGroup01-DATA01 on /DATA01 type xfs (rw,inode64)
+...
+
+fstab:
+...
+/dev/VolGroup01/DATA01  /DATA01                 xfs 
+rw,suid,dev,exec,auto,nouser,async,inode64      1 0
+...
+
+/usr/sbin/xfs_db -r -c sb -c p /dev/mapper/VolGroup01-DATA01:
+magicnum = 0x58465342
+blocksize = 4096
+dblocks = 4638613504
+rblocks = 0
+rextents = 0
+uuid = 2dc65efd-97e9-429f-a9bd-530bd86eac23
+logstart = 4294967300
+rootino = 128
+rbmino = 129
+rsumino = 130
+rextsize = 1
+agblocks = 144956672
+agcount = 32
+rbmblocks = 0
+logblocks = 32768
+versionnum = 0x3094
+sectsize = 512
+inodesize = 256
+inopblock = 16
+fname = "\000\000\000\000\000\000\000\000\000\000\000\000"
+blocklog = 12
+sectlog = 9
+inodelog = 8
+inopblog = 4
+agblklog = 28
+rextslog = 0
+inprogress = 0
+imax_pct = 25
+icount = 303360
+ifree = 59
+fdblocks = 2001250945
+frextents = 0
+uquotino = 0
+gquotino = 0
+qflags = 0
+flags = 0
+shared_vn = 0
+inoalignmt = 2
+unit = 0
+width = 0
+dirblklog = 0
+logsectlog = 0
+logsectsize = 0
+logsunit = 0
+features2 = 0
+
+______________________________________________________________________
+This email has been scanned by the MessageLabs Email Security System.
+For more information please visit http://www.messagelabs.com/email 
+______________________________________________________________________
+--=_alternative 00475C92862575E4_=
+Content-Type: text/html; charset="US-ASCII"
 
 
-hth,
-Michael
+<br><font size=2 face="sans-serif">Hello</font>
+<br>
+<br><font size=2 face="sans-serif">In short, I believe that I have used
+the indode64 option correctly in mounting my XFS device on my Centos 5.2
+system, however, I seem to only have 59 free inodes available and 7.5TB
+of free space. &nbsp;I would appreciate any insight as to what the best
+approach would be to fix this situation. &nbsp;In case it is helpful, I
+have included output from various commands/files below, the XFS device
+in question is /dev/mapper/VolGroup01-DATA01. &nbsp;Thank you in advance
+for your assistance!</font>
+<br>
+<br><font size=2 face="sans-serif">uname:</font>
+<br><font size=2 face="sans-serif">Linux NAS01 2.6.18-92.1.6.el5 #1 SMP
+Wed Jun 25 13:45:47 EDT 2008 x86_64 x86_64 x86_64 GNU/Linux</font>
+<br>
+<br><font size=2 face="sans-serif">df -h:</font>
+<br><font size=2 face="sans-serif">Filesystem &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp;Size &nbsp;Used Avail Use% Mounted on</font>
+<br><font size=2 face="sans-serif">/dev/mapper/VolGroup00-LogVol00 &nbsp;
+&nbsp; &nbsp; &nbsp;71G &nbsp; 12G &nbsp; 55G &nbsp;18% /</font>
+<br><font size=2 face="sans-serif">/dev/sda1 &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp;99M &nbsp; 25M &nbsp; 70M &nbsp;26% /boot</font>
+<br><font size=2 face="sans-serif">tmpfs &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 3.9G &nbsp; &nbsp;
+0 &nbsp;3.9G &nbsp; 0% /dev/shm</font>
+<br><font size=2 face="sans-serif">/dev/mapper/VolGroup01-DATA01 &nbsp;
+&nbsp; &nbsp; &nbsp;18T &nbsp;9.9T &nbsp;7.5T &nbsp;57% /DATA01</font>
+<br>
+<br><font size=2 face="sans-serif">df -ih:</font>
+<br><font size=2 face="sans-serif">Filesystem &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp;Inodes &nbsp; IUsed &nbsp; IFree IUse% Mounted on</font>
+<br><font size=2 face="sans-serif">/dev/mapper/VolGroup00-LogVol00 &nbsp;
+&nbsp; &nbsp; &nbsp;19M &nbsp; &nbsp;123K &nbsp; &nbsp; 19M &nbsp;
+&nbsp;1% /</font>
+<br><font size=2 face="sans-serif">/dev/sda1 &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;26K &nbsp; &nbsp; &nbsp;44 &nbsp; &nbsp; 26K
+&nbsp; &nbsp;1% /boot</font>
+<br><font size=2 face="sans-serif">tmpfs &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 999K &nbsp;
+&nbsp; &nbsp; 1 &nbsp; &nbsp;999K &nbsp; &nbsp;1% /dev/shm</font>
+<br><font size=2 face="sans-serif">/dev/mapper/VolGroup01-DATA01 &nbsp;
+&nbsp; &nbsp; &nbsp;18G &nbsp; &nbsp;297K &nbsp; &nbsp; 18G &nbsp;
+&nbsp;1% /DATA01</font>
+<br>
+<br><font size=2 face="sans-serif">mount:</font>
+<br><font size=2 face="sans-serif">...</font>
+<br><font size=2 face="sans-serif">/dev/mapper/VolGroup01-DATA01 on /DATA01
+type xfs (rw,inode64)</font>
+<br><font size=2 face="sans-serif">...</font>
+<br>
+<br><font size=2 face="sans-serif">fstab:</font>
+<br><font size=2 face="sans-serif">...</font>
+<br><font size=2 face="sans-serif">/dev/VolGroup01/DATA01 &nbsp;/DATA01
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; xfs &nbsp; &nbsp;
+rw,suid,dev,exec,auto,nouser,async,inode64 &nbsp; &nbsp; &nbsp;1 0</font>
+<br><font size=2 face="sans-serif">...</font>
+<br>
+<br><font size=2 face="sans-serif">/usr/sbin/xfs_db -r -c sb -c p /dev/mapper/VolGroup01-DATA01:</font>
+<br><font size=2 face="sans-serif">magicnum = 0x58465342</font>
+<br><font size=2 face="sans-serif">blocksize = 4096</font>
+<br><font size=2 face="sans-serif">dblocks = 4638613504</font>
+<br><font size=2 face="sans-serif">rblocks = 0</font>
+<br><font size=2 face="sans-serif">rextents = 0</font>
+<br><font size=2 face="sans-serif">uuid = 2dc65efd-97e9-429f-a9bd-530bd86eac23</font>
+<br><font size=2 face="sans-serif">logstart = 4294967300</font>
+<br><font size=2 face="sans-serif">rootino = 128</font>
+<br><font size=2 face="sans-serif">rbmino = 129</font>
+<br><font size=2 face="sans-serif">rsumino = 130</font>
+<br><font size=2 face="sans-serif">rextsize = 1</font>
+<br><font size=2 face="sans-serif">agblocks = 144956672</font>
+<br><font size=2 face="sans-serif">agcount = 32</font>
+<br><font size=2 face="sans-serif">rbmblocks = 0</font>
+<br><font size=2 face="sans-serif">logblocks = 32768</font>
+<br><font size=2 face="sans-serif">versionnum = 0x3094</font>
+<br><font size=2 face="sans-serif">sectsize = 512</font>
+<br><font size=2 face="sans-serif">inodesize = 256</font>
+<br><font size=2 face="sans-serif">inopblock = 16</font>
+<br><font size=2 face="sans-serif">fname = &quot;\000\000\000\000\000\000\000\000\000\000\000\000&quot;</font>
+<br><font size=2 face="sans-serif">blocklog = 12</font>
+<br><font size=2 face="sans-serif">sectlog = 9</font>
+<br><font size=2 face="sans-serif">inodelog = 8</font>
+<br><font size=2 face="sans-serif">inopblog = 4</font>
+<br><font size=2 face="sans-serif">agblklog = 28</font>
+<br><font size=2 face="sans-serif">rextslog = 0</font>
+<br><font size=2 face="sans-serif">inprogress = 0</font>
+<br><font size=2 face="sans-serif">imax_pct = 25</font>
+<br><font size=2 face="sans-serif">icount = 303360</font>
+<br><font size=2 face="sans-serif">ifree = 59</font>
+<br><font size=2 face="sans-serif">fdblocks = 2001250945</font>
+<br><font size=2 face="sans-serif">frextents = 0</font>
+<br><font size=2 face="sans-serif">uquotino = 0</font>
+<br><font size=2 face="sans-serif">gquotino = 0</font>
+<br><font size=2 face="sans-serif">qflags = 0</font>
+<br><font size=2 face="sans-serif">flags = 0</font>
+<br><font size=2 face="sans-serif">shared_vn = 0</font>
+<br><font size=2 face="sans-serif">inoalignmt = 2</font>
+<br><font size=2 face="sans-serif">unit = 0</font>
+<br><font size=2 face="sans-serif">width = 0</font>
+<br><font size=2 face="sans-serif">dirblklog = 0</font>
+<br><font size=2 face="sans-serif">logsectlog = 0</font>
+<br><font size=2 face="sans-serif">logsectsize = 0</font>
+<br><font size=2 face="sans-serif">logsunit = 0</font>
+<br><font size=2 face="sans-serif">features2 = 0</font>
+
+<BR>
+______________________________________________________________________<BR>
+This email has been scanned by the MessageLabs Email Security System.<BR>
+For more information please visit http://www.messagelabs.com/email <BR>
+______________________________________________________________________<BR>
+
+--=_alternative 00475C92862575E4_=--
+
+
+--===============3691193767931765803==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3691193767931765803==--
