@@ -1,29 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n5UH4YOO217367
-	for <linux-xfs@oss.sgi.com>; Tue, 30 Jun 2009 12:04:41 -0500
-Received: from ciao.gmane.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7C489332B2B
-	for <linux-xfs@oss.sgi.com>; Tue, 30 Jun 2009 10:05:04 -0700 (PDT)
-Received: from ciao.gmane.org (main.gmane.org [80.91.229.2]) by cuda.sgi.com
-	with ESMTP id DlpuaahFBsOw5K3N for <linux-xfs@oss.sgi.com>;
-	Tue, 30 Jun 2009 10:05:04 -0700 (PDT)
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1MLglS-0005m5-EO
-	for linux-xfs@oss.sgi.com; Tue, 30 Jun 2009 17:05:02 +0000
-Received: from inferno.cora.nwra.com ([65.44.101.162])
-	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Tue, 30 Jun 2009 17:05:02 +0000
-Received: from orion by inferno.cora.nwra.com with local (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Tue, 30 Jun 2009 17:05:02 +0000
-From: Orion Poplawski <orion@cora.nwra.com>
-Subject: =?utf-8?b?ZG9fSVJR?= stack overflow on 32-bit CentOS 4
-Date: Tue, 30 Jun 2009 17:00:13 +0000 (UTC)
-Message-ID: <loom.20090630T165732-116@post.gmane.org>
-Mime-Version: 1.0
+	n5UHqGMf219664
+	for <linux-xfs@oss.sgi.com>; Tue, 30 Jun 2009 12:52:16 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 62A781307020
+	for <linux-xfs@oss.sgi.com>; Tue, 30 Jun 2009 10:59:02 -0700 (PDT)
+Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
+	cuda.sgi.com with ESMTP id 03fKKWaY0HQPnTRM for
+	<linux-xfs@oss.sgi.com>; Tue, 30 Jun 2009 10:59:02 -0700 (PDT)
+Message-ID: <4A4A50EC.4090201@sandeen.net>
+Date: Tue, 30 Jun 2009 12:52:44 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: do_IRQ stack overflow on 32-bit CentOS 4
+References: <loom.20090630T165732-116@post.gmane.org>
+In-Reply-To: <loom.20090630T165732-116@post.gmane.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,20 +28,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Orion Poplawski <orion@cora.nwra.com>
+Cc: linux-xfs@oss.sgi.com
 
-Just hit a:
+Orion Poplawski wrote:
+> Just hit a:
+> 
+> do_IRQ: stack overflow: 452
+> 
+> on 32-bit CentOS 4 machine with xfs-kmod-0.4-2.el4.  Is there anything that can
+> be done to minimize this risk?  Running xfs over md raid5 array, exporting via
+> nfs.  More kernel dump messages are posted at:
+> 
+> http://bugs.centos.org/view.php?id=3136
 
-do_IRQ: stack overflow: 452
+get an x86_64 machine ;)
 
-on 32-bit CentOS 4 machine with xfs-kmod-0.4-2.el4.  Is there anything that can
-be done to minimize this risk?  Running xfs over md raid5 array, exporting via
-nfs.  More kernel dump messages are posted at:
+The stack overflow message is misleading; it means you have 452 -left-
 
-http://bugs.centos.org/view.php?id=3136
+unfortunately on some kernels, simply printing that message actually
+consumes what's left, and more.  See http://lkml.org/lkml/2007/8/29/245
 
-Thanks!
+This was fixed in 2.6.18-108.el5 and beyond.
 
+Upstream has some xfs stack size fixes; this may eventually make it to a
+centos near you.
+
+-Eric
 
 _______________________________________________
 xfs mailing list
