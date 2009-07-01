@@ -1,21 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n61JrJEh031156 for <xfs@oss.sgi.com>; Wed, 1 Jul 2009 14:53:19 -0500
+	n61KWWuB033108 for <xfs@oss.sgi.com>; Wed, 1 Jul 2009 15:32:33 -0500
 Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 297A31499232
-	for <xfs@oss.sgi.com>; Wed,  1 Jul 2009 13:00:12 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E04A51499037
+	for <xfs@oss.sgi.com>; Wed,  1 Jul 2009 13:39:26 -0700 (PDT)
 Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id 0ysHC6c0IfLiu85n for
-	<xfs@oss.sgi.com>; Wed, 01 Jul 2009 13:00:12 -0700 (PDT)
-Message-ID: <4A4BBECC.8000308@sandeen.net>
-Date: Wed, 01 Jul 2009 14:53:48 -0500
+	cuda.sgi.com with ESMTP id SRuW2cBUhfo8Uefn for
+	<xfs@oss.sgi.com>; Wed, 01 Jul 2009 13:39:26 -0700 (PDT)
+Message-ID: <4A4BC7FF.6050004@sandeen.net>
+Date: Wed, 01 Jul 2009 15:33:03 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: Seg fault during xfs repair (segmentation fault / segv)
-References: <4A4A596D.8030800@ssec.wisc.edu> <4A4A5C4E.7030605@sandeen.net>
-	<4A4A7D44.7040009@ssec.wisc.edu>
-In-Reply-To: <4A4A7D44.7040009@ssec.wisc.edu>
+Subject: [PATCH] xfs_repair: fix verify_ag_bno() overflow
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,57 +25,51 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jesse Stroik <jstroik@ssec.wisc.edu>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>, Jesse Stroik <jstroik@ssec.wisc.edu>
 
-Jesse Stroik wrote:
-> Eric,
-> 
-> Eric Sandeen wrote:
->> Jesse Stroik wrote:
->>> I have a server with a ~20TB xfs file system on Linux 
->>> (2.6.18-92.1.22.el5) and am running xfsprogs-2.9.4-4.el5.  We had a few 
->>> corrupted files which I believe were due to a SCSI issue after a recent 
->>> power outage.  Due to the corruption, I ran xfs_check and would like to 
->>> run xfs_repair on the system.
->> It'd really be great to test more recent xfsprogs first, that one is
->> about 2 years old.
->>
->> You can probably grab any recent fedora src.rpm and rebuild it, and
->> later go back to the centos version if you wish.
-> 
-> 
-> I fetched the current version from SVN using these directions: 
-> http://xfs.org/index.php/Getting_the_latest_source_code
-> 
-> I get identical results.
-> 
-> --------
-> ...
-> reset bad sb for ag 31
-> reset bad agf for ag 31
-> reset bad agi for ag 31
-> Segmentation fault
+The last test in verify_ag_bno() may overflow:
 
-Ok, from a metadump image Jesse provided (thanks!) it's dying in here:
+return (agbno >= (sbp->sb_dblocks -
+		((sbp->sb_agcount - 1) * sbp->sb_agblocks)));
 
-                bno = be32_to_cpu(agfl->agfl_bno[i]);
-                printf("agfl at %p i is %d agfl_bno[i] %u bno is %u\n",
-agfl, i, agfl->agfl_bno[i], bno);
-                if (verify_agbno(mp, be32_to_cpu(agf->agf_seqno), bno))
-                        set_agbno_state(mp, be32_to_cpu(agf->agf_seqno),
-                                        bno, XR_E_FREE);
+because sb_agcount & sb_agblocks are 32-bit integers; this
+may then miss corrupt agbnos for the last ag, which can in
+turn lead to out of bounds memory accesses later, for example
+when the block nr is used to offset in set_agbno_state():
 
-agfl_bno looks corrupt, and bno is coming out to be huge.
+	addr = ba_bmap[(agno)] + (ag_blockno)/XR_BB_NUM;
 
-set_agbno_state() does:
+Also make the first test simpler; agbno > sb_agblocks
+is -always- bad, regardless of the agno.  This may even
+speed it up a tiny bit.
 
-*(ba_bmap[(agno)] + (ag_blockno)/XR_BB_NUM) = ....
+Reported-by: Jesse Stroik <jstroik@ssec.wisc.edu>
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
 
-where ag_blockno is that bno above; this wanders us off into bad memory
-and boom.  I'll see what we can do to fix it up.
-
--Eric
+diff --git a/repair/dinode.c b/repair/dinode.c
+index fdf52db..f50f1ad 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -315,11 +315,14 @@ verify_ag_bno(xfs_sb_t *sbp,
+ 		xfs_agnumber_t agno,
+ 		xfs_agblock_t agbno)
+ {
+-	if (agno < (sbp->sb_agcount - 1)) 
+-		return (agbno >= sbp->sb_agblocks);
+-	if (agno == (sbp->sb_agcount - 1)) 
++	/* in all cases bno >= agblocks is bad */
++	if (agbno >= sbp->sb_agblocks)
++		return 1;
++	/* last ag may be smaller */
++	if (agno == (sbp->sb_agcount - 1))
+ 		return (agbno >= (sbp->sb_dblocks -
+-				((sbp->sb_agcount - 1) * sbp->sb_agblocks)));
++				((xfs_drfsbno_t)(sbp->sb_agcount - 1) *
++				 sbp->sb_agblocks)));
+ 	return 1;
+ }
+ 
 
 _______________________________________________
 xfs mailing list
