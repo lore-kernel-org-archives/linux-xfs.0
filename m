@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n63CuWh8167569 for <xfs@oss.sgi.com>; Fri, 3 Jul 2009 07:56:33 -0500
-Received: from mail-yx0-f203.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0AEBD1D48B89
-	for <xfs@oss.sgi.com>; Fri,  3 Jul 2009 05:57:05 -0700 (PDT)
-Received: from mail-yx0-f203.google.com (mail-yx0-f203.google.com
-	[209.85.210.203]) by cuda.sgi.com with ESMTP id
-	GEszB6By3o3AvsHg for <xfs@oss.sgi.com>;
-	Fri, 03 Jul 2009 05:57:05 -0700 (PDT)
-Received: by yxe41 with SMTP id 41so3121348yxe.20
-	for <xfs@oss.sgi.com>; Fri, 03 Jul 2009 05:57:05 -0700 (PDT)
+	n63EbQoM172078 for <xfs@oss.sgi.com>; Fri, 3 Jul 2009 09:37:27 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5CCC91AECFBD
+	for <xfs@oss.sgi.com>; Fri,  3 Jul 2009 07:37:58 -0700 (PDT)
+Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
+	cuda.sgi.com with ESMTP id D3pkZ5lR0qCfm26T for
+	<xfs@oss.sgi.com>; Fri, 03 Jul 2009 07:37:58 -0700 (PDT)
+Message-ID: <4A4E17C5.8020105@sandeen.net>
+Date: Fri, 03 Jul 2009 09:37:57 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Date: Fri, 3 Jul 2009 18:27:05 +0530
-Message-ID: <7778c60e0907030557j357f88e5g4ab3ce0d3377bb41@mail.gmail.com>
-Subject: Clustered version of XFS
-From: Tharindu Rukshan Bamunuarachchi <tharindu@sentstory.com>
-Reply-To: tharindu@sentstory.com
+Subject: Re: Clustered version of XFS
+References: <7778c60e0907030557j357f88e5g4ab3ce0d3377bb41@mail.gmail.com>
+In-Reply-To: <7778c60e0907030557j357f88e5g4ab3ce0d3377bb41@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,24 +27,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: tharindu@sentstory.com
+Cc: xfs@oss.sgi.com
 
-we are using XFS high speed transaction processing system.
+Tharindu Rukshan Bamunuarachchi wrote:
+> we are using XFS high speed transaction processing system.
+> 
+> we are very happy with XFS performance compared to ZFS, EXT3, JFS etc.
+> 
+> i have two questions regarding XFS ...
+> 
+> 1. Is there any cluster version of XFS. (e.g. like GFS, Luste, GPFS)
 
-we are very happy with XFS performance compared to ZFS, EXT3, JFS etc.
+SGI sells a product called CXFS (http://lmgtfy.com/?q=clustered+xfs) ;)
 
-i have two questions regarding XFS ...
+> 2. I am currently using my root partition as XFS. but i need to modify
+> XFS source code and reload module without rebooting machine.
+>     Is there anyway to play with XFS source/module while using XFS
+> module for mounted file system ....?
 
-1. Is there any cluster version of XFS. (e.g. like GFS, Luste, GPFS)
-2. I am currently using my root partition as XFS. but i need to modify
-XFS source code and reload module without rebooting machine.
-    Is there anyway to play with XFS source/module while using XFS
-module for mounted file system ....?
+In general no, but you might look into KSplice.
 
+-Eric
 
-cheers
-__
-tharindu
+> 
+> cheers
+> __
+> tharindu
 
 _______________________________________________
 xfs mailing list
