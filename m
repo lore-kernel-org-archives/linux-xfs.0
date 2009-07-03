@@ -1,18 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n62LTOoV118133 for <xfs@oss.sgi.com>; Thu, 2 Jul 2009 16:29:25 -0500
-Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2B2161D489A6
-	for <xfs@oss.sgi.com>; Thu,  2 Jul 2009 14:29:56 -0700 (PDT)
-Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id KkBjruQIpOEoyC5k for <xfs@oss.sgi.com>;
-	Thu, 02 Jul 2009 14:29:56 -0700 (PDT)
-Message-ID: <4A4D26C5.9070606@redhat.com>
-Date: Thu, 02 Jul 2009 16:29:41 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	n63BKKxj161591 for <xfs@oss.sgi.com>; Fri, 3 Jul 2009 06:20:20 -0500
+Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 801B133ECEC
+	for <xfs@oss.sgi.com>; Fri,  3 Jul 2009 04:20:50 -0700 (PDT)
+Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.162.198]) by
+	cuda.sgi.com with ESMTP id n3cd6hTmUgFYpg1a for
+	<xfs@oss.sgi.com>; Fri, 03 Jul 2009 04:20:50 -0700 (PDT)
+Received: from mailsrv2.i.zmi.at (h081217106033.dyn.cm.kabsi.at
+	[81.217.106.33])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv1.zmi.at (Postfix) with ESMTP id C4DB65380
+	for <xfs@oss.sgi.com>; Fri,  3 Jul 2009 13:22:26 +0200 (CEST)
+Received: from saturn.localnet (unknown [10.72.27.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv2.i.zmi.at (Postfix) with ESMTPSA id BAD3D400155
+	for <xfs@oss.sgi.com>; Fri,  3 Jul 2009 13:20:48 +0200 (CEST)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: bad fs - xfs_repair 3.01 crashes on it
+Date: Fri, 3 Jul 2009 13:20:43 +0200
 MIME-Version: 1.0
-Subject: [PATCH] bump up nr_to_write in xfs_vm_writepage
+Message-Id: <200907031320.48358@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,63 +32,224 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============2377985493959329584=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs mailing list <xfs@oss.sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, "MASON,
-	CHRISTOPHER" <CHRIS.MASON@oracle.com>
 
-Talking w/ someone who had a raid6 of 15 drives on an areca
-controller, he wondered why he could only get 300MB/s or so
-out of a streaming buffered write to xfs like so:
+--===============2377985493959329584==
+Content-Type: multipart/signed;
+  boundary="nextPart3171997.tSlmBtre28";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-dd if=/dev/zero of=/mnt/storage/10gbfile bs=128k count=81920
-10737418240 bytes (11 GB) copied, 34.294 s, 313 MB/s
+--nextPart3171997.tSlmBtre28
+Content-Type: multipart/mixed;
+  boundary="Boundary-01=_MmeTKaJHscv+BOH"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-when the same write directly to the device was going closer
-to 700MB/s...
+--Boundary-01=_MmeTKaJHscv+BOH
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-With the following change things get moving again for xfs:
+Tonight our server rebooted, and I found in /var/log/warn that he was cryin=
+g=20
+a lot about xfs since June 7 already:
 
-dd if=/dev/zero of=/mnt/storage/10gbfile bs=128k count=81920
-10737418240 bytes (11 GB) copied, 16.2938 s, 659 MB/s
+Jun  7 03:06:31 orion.i.zmi.at kernel: Filesystem "dm-0": corrupt inode 385=
+7051697 ((a)extents =3D 5).  Unmount and run xfs_repair.
+Jun  7 03:06:31 orion.i.zmi.at kernel: Pid: 23230, comm: xfs_fsr Tainted: G=
+          2.6.27.21-0.1-xen #1
+Jun  7 03:06:31 orion.i.zmi.at kernel:
+Jun  7 03:06:31 orion.i.zmi.at kernel: Call Trace:
+Jun  7 03:06:31 orion.i.zmi.at kernel:  [<ffffffff8020c597>] show_trace_log=
+_lvl+0x41/0x58
+Jun  7 03:06:31 orion.i.zmi.at kernel:  [<ffffffff804635e0>] dump_stack+0x6=
+9/0x6f
+Jun  7 03:06:31 orion.i.zmi.at kernel:  [<ffffffffa033bbcc>] xfs_iformat_ex=
+tents+0xc9/0x1c5 [xfs]
+Jun  7 03:06:31 orion.i.zmi.at kernel:  [<ffffffffa033c129>] xfs_iformat+0x=
+2b0/0x3f6 [xfs]
+Jun  7 03:06:31 orion.i.zmi.at kernel:  [<ffffffffa033c356>] xfs_iread+0xe7=
+/0x1ed [xfs]
+Jun  7 03:06:31 orion.i.zmi.at kernel:  [<ffffffffa0337920>] xfs_iget_core+=
+0x3a5/0x63a [xfs]
+Jun  7 03:06:31 orion.i.zmi.at kernel:  [<ffffffffa0337c97>] xfs_iget+0xe2/=
+0x187 [xfs]
+Jun  7 03:06:31 orion.i.zmi.at kernel:  [<ffffffffa0359302>] xfs_vget_fsop_=
+handlereq+0xc2/0x11b [xfs]
+Jun  7 03:06:31 orion.i.zmi.at kernel:  [<ffffffffa03593bb>] xfs_open_by_ha=
+ndle+0x60/0x1cb [xfs]
+Jun  7 03:06:31 orion.i.zmi.at kernel:  [<ffffffffa0359f6a>] xfs_ioctl+0x3c=
+a/0x680 [xfs]
+Jun  7 03:06:31 orion.i.zmi.at kernel:  [<ffffffffa0357ff6>] xfs_file_ioctl=
++0x25/0x69 [xfs]
+Jun  7 03:06:31 orion.i.zmi.at kernel:  [<ffffffff802aa8cd>] vfs_ioctl+0x21=
+/0x6c
+Jun  7 03:06:31 orion.i.zmi.at kernel:  [<ffffffff802aab3a>] do_vfs_ioctl+0=
+x222/0x231
+Jun  7 03:06:31 orion.i.zmi.at kernel:  [<ffffffff802aab9a>] sys_ioctl+0x51=
+/0x73
+Jun  7 03:06:31 orion.i.zmi.at kernel:  [<ffffffff8020b3b8>] system_call_fa=
+stpath+0x16/0x1b
+Jun  7 03:06:31 orion.i.zmi.at kernel:  [<00007f7231d6cb77>] 0x7f7231d6cb77
 
-Chris had sent out something similar at Christoph's suggestion,
-and Christoph reminded me of it, and I tested it a variant of
-it, and it seems to help shockingly well.
+But XFS didn't go offline, so nobody found this messages. There are a lot o=
+f them.
+They obviously are generated by the nightly "xfs_fsr -v -t 7200" which we r=
+un
+since then. It would have been nice if xfs_fsr could have displayed
+a message, so we would have received the cron mail. (But it got killed
+by the kernel, that's a good excuse)
 
-Feels like a bandaid though; thoughts?  Other tests to do?
+Anyway, so I went to xfs_repair (3.01) and got this:
 
-Thanks,
--Eric
+Phase 3 - for each AG...
+        - scan and clear agi unlinked lists...
+        - process known inodes and perform inode discovery...
+[snip]
+        - agno =3D 14
+local inode 3857051697 attr too small (size =3D 3, min size =3D 4)
+bad attribute fork in inode 3857051697, clearing attr fork
+clearing inode 3857051697 attributes
+cleared inode 3857051697
+[snip]
+Phase 4 - check for duplicate blocks...
+[snip]
+        - agno =3D 15
+data fork in regular inode 3857051697 claims used block 537147998
+xfs_repair: dinode.c:2108: process_inode_data_fork: Assertion `err =3D=3D 0=
+' failed.
 
-Signed-off-by: Christoph Hellwig <hch@infradead.org>
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-Cc: Chris Mason <chris.mason@oracle.com>
----
+And then xfs_repair crashes out, without having repaired. I attached the fu=
+ll=20
+xfs_repair log here, and http://zmi.at/x/xfs.metadump.data1.bz2
+the metadump.
 
-Index: linux-2.6/fs/xfs/linux-2.6/xfs_aops.c
-===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_aops.c
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_aops.c
-@@ -1268,6 +1268,13 @@ xfs_vm_writepage(
- 	if (!page_has_buffers(page))
- 		create_empty_buffers(page, 1 << inode->i_blkbits, 0);
- 
-+
-+	/*
-+	 *  VM calculation for nr_to_write seems off.  Bump it way
-+	 *  up, this gets simple streaming writes zippy again.
-+	 */
-+	wbc->nr_to_write *= 4;
-+
- 	/*
- 	 * Convert delayed allocate, unwritten or unmapped space
- 	 * to real space and flush out to disk.
+I'll not be here for a week now, I hope the problem is not very serious.
+
+mfg zmi
+=2D-=20
+// Michael Monnerie, Ing.BSc    -----      http://it-management.at
+// Tel: 0660 / 415 65 31                      .network.your.ideas.
+// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
+// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
+// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
+
+
+--Boundary-01=_MmeTKaJHscv+BOH
+Content-Type: text/plain;
+  charset="UTF-8";
+  name="xfsrepair.data1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="xfsrepair.data1"
+
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+        - zero log...
+        - scan filesystem freespace and inode maps...
+        - found root inode chunk
+Phase 3 - for each AG...
+        - scan and clear agi unlinked lists...
+        - process known inodes and perform inode discovery...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - agno = 4
+        - agno = 5
+        - agno = 6
+        - agno = 7
+        - agno = 8
+        - agno = 9
+        - agno = 10
+        - agno = 11
+        - agno = 12
+        - agno = 13
+        - agno = 14
+local inode 3857051697 attr too small (size = 3, min size = 4)
+bad attribute fork in inode 3857051697, clearing attr fork
+clearing inode 3857051697 attributes
+cleared inode 3857051697
+        - agno = 15
+        - agno = 16
+        - agno = 17
+        - agno = 18
+        - agno = 19
+        - agno = 20
+        - agno = 21
+        - agno = 22
+        - agno = 23
+        - agno = 24
+        - agno = 25
+        - agno = 26
+        - agno = 27
+        - agno = 28
+        - agno = 29
+        - agno = 30
+        - agno = 31
+        - agno = 32
+        - agno = 33
+        - agno = 34
+        - agno = 35
+        - agno = 36
+        - agno = 37
+        - agno = 38
+        - agno = 39
+        - process newly discovered inodes...
+Phase 4 - check for duplicate blocks...
+        - setting up duplicate extent list...
+        - check for inodes claiming duplicate blocks...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - agno = 4
+        - agno = 5
+        - agno = 6
+        - agno = 7
+        - agno = 8
+        - agno = 9
+        - agno = 10
+        - agno = 11
+        - agno = 12
+        - agno = 13
+        - agno = 14
+        - agno = 15
+data fork in regular inode 3857051697 claims used block 537147998
+xfs_repair: dinode.c:2108: process_inode_data_fork: Assertion `err == 0' failed.
+
+--Boundary-01=_MmeTKaJHscv+BOH--
+
+--nextPart3171997.tSlmBtre28
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+
+iEYEABECAAYFAkpN6ZAACgkQzhSR9xwSCbSOdACg7aZ5elczWsWNvZjXok3e7cL6
+aSsAn0rUX84zVftmgrdr/sg7QEYNOqnH
+=Z88E
+-----END PGP SIGNATURE-----
+
+--nextPart3171997.tSlmBtre28--
+
+
+--===============2377985493959329584==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============2377985493959329584==--
