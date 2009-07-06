@@ -1,17 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n65KKg0K047328 for <xfs@oss.sgi.com>; Sun, 5 Jul 2009 15:20:42 -0500
+	n665WHvt071522 for <xfs@oss.sgi.com>; Mon, 6 Jul 2009 00:32:17 -0500
 Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A983A8F8035
-	for <xfs@oss.sgi.com>; Sun,  5 Jul 2009 13:21:13 -0700 (PDT)
-Message-Id: <AB0A491A-6253-47A7-8E3D-DA6D05390F3A@sgi.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 944388F8096
+	for <xfs@oss.sgi.com>; Sun,  5 Jul 2009 22:32:49 -0700 (PDT)
+Received: from [IPv6???1] (sshgate.corp.sgi.com [198.149.20.12])
+	by estes.americas.sgi.com (Postfix) with ESMTP id 32B947000103
+	for <xfs@oss.sgi.com>; Mon,  6 Jul 2009 00:32:49 -0500 (CDT)
+Message-Id: <ADC0310A-A529-4DBF-B766-A23A355B7564@sgi.com>
 From: Felix Blyakher <felixb@sgi.com>
-In-Reply-To: <4A50E197.3070209@sandeen.net>
 Mime-Version: 1.0 (Apple Message framework v930.3)
-Subject: Re: [PATCH (trivial)] remove XFS_INO64_OFFSET
-Date: Sun, 5 Jul 2009 15:21:11 -0500
-References: <4A50E197.3070209@sandeen.net>
+Subject: maintainer on vacation, backup from sgi
+Date: Mon, 6 Jul 2009 00:32:47 -0500
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,44 +22,20 @@ List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs-oss list <xfs@oss.sgi.com>
 
+Hi,
 
-On Jul 5, 2009, at 12:23 PM, Eric Sandeen wrote:
+I'm going to be on vacation and not reachable till July 20.
+The whole xfs SGI team will be backing me up for the maintainership
+tasks. The point man for this, though, will be Olaf Weber  
+<olaf@sgi.com>.
 
-> Commit a19d9f887d81106d52cacbc9930207b487e07e0e removed the
-> ino64 option but left the XFS_INO64_OFFSET define it used
-> in place - just remove it.
->
-> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-
-Reviewed-by: Felix Blyakher <felixb@sgi.com>
-
->
-> ---
->
-> diff --git a/fs/xfs/xfs_inum.h b/fs/xfs/xfs_inum.h
-> index 7a28191..b8e4ee4 100644
-> --- a/fs/xfs/xfs_inum.h
-> +++ b/fs/xfs/xfs_inum.h
-> @@ -72,7 +72,6 @@ struct xfs_mount;
->
-> #if XFS_BIG_INUMS
-> #define	XFS_MAXINUMBER		((xfs_ino_t)((1ULL << 56) - 1ULL))
-> -#define	XFS_INO64_OFFSET	((xfs_ino_t)(1ULL << 32))
-> #else
-> #define	XFS_MAXINUMBER		((xfs_ino_t)((1ULL << 32) - 1ULL))
-> #endif
->
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+See you all in two weeks.
+Felix 
 
 _______________________________________________
 xfs mailing list
