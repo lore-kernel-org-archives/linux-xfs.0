@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n67Ge4Mh155908 for <xfs@oss.sgi.com>; Tue, 7 Jul 2009 11:40:04 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CEAAB1B00567
-	for <xfs@oss.sgi.com>; Tue,  7 Jul 2009 09:40:39 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id j90KOTNS6FkRfsHj for
-	<xfs@oss.sgi.com>; Tue, 07 Jul 2009 09:40:39 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1MODig-0003Hx-Ue
-	for xfs@oss.sgi.com; Tue, 07 Jul 2009 16:40:39 +0000
-Date: Tue, 7 Jul 2009 12:40:38 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfstests: fix trivial typo in test 204 description
-Message-ID: <20090707164038.GA9609@infradead.org>
+	n67H9965156892 for <xfs@oss.sgi.com>; Tue, 7 Jul 2009 12:09:10 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 043C81B00475
+	for <xfs@oss.sgi.com>; Tue,  7 Jul 2009 10:09:43 -0700 (PDT)
+Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
+	cuda.sgi.com with ESMTP id adcWsAUuoZ4vFRvU for
+	<xfs@oss.sgi.com>; Tue, 07 Jul 2009 10:09:43 -0700 (PDT)
+Message-ID: <4A538157.8000704@sandeen.net>
+Date: Tue, 07 Jul 2009 12:09:43 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
+Subject: Re: [PATCH] xfstests: fix trivial typo in test 204 description
+References: <20090707164038.GA9609@infradead.org>
+In-Reply-To: <20090707164038.GA9609@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,23 +27,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Christoph Hellwig wrote:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Index: xfstests-dev/204
+> ===================================================================
+> --- xfstests-dev.orig/204	2009-07-04 18:07:47.000000000 +0000
+> +++ xfstests-dev/204	2009-07-04 18:07:51.000000000 +0000
+> @@ -1,7 +1,7 @@
+>  #! /bin/sh
+>  # FS QA Test No. 204
+>  #
+> -# Test out ENOSPC flushiung on small filesystems.
+> +# Test out ENOSPC flushing on small filesystems.
+>  #
+>  #-----------------------------------------------------------------------
+>  # Copyright (c) 2009 Christoph Hellwig.
+> 
 
-Index: xfstests-dev/204
-===================================================================
---- xfstests-dev.orig/204	2009-07-04 18:07:47.000000000 +0000
-+++ xfstests-dev/204	2009-07-04 18:07:51.000000000 +0000
-@@ -1,7 +1,7 @@
- #! /bin/sh
- # FS QA Test No. 204
- #
--# Test out ENOSPC flushiung on small filesystems.
-+# Test out ENOSPC flushing on small filesystems.
- #
- #-----------------------------------------------------------------------
- # Copyright (c) 2009 Christoph Hellwig.
+Reviewed!  ;)
+
+(that always bugged me!)
+
+-Eric
 
 _______________________________________________
 xfs mailing list
