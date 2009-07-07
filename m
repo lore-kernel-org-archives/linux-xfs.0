@@ -1,15 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from fransum.emea.sgi.com (fransum.emea.sgi.com [144.253.208.10])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6796xXZ134507 for <xfs@oss.sgi.com>; Tue, 7 Jul 2009 04:07:00 -0500
-Subject: Re: [PATCH] bump up nr_to_write in xfs_vm_writepage
-References: <4A4D26C5.9070606@redhat.com>
-From: Olaf Weber <olaf@sgi.com>
-Date: Tue, 07 Jul 2009 11:07:30 +0200
-In-Reply-To: <4A4D26C5.9070606@redhat.com> (Eric Sandeen's message of "Thu,
-	02 Jul 2009 16:29:41 -0500")
-Message-ID: <bzyd48cc14d.fsf@fransum.emea.sgi.com>
+	n679br9i135713 for <xfs@oss.sgi.com>; Tue, 7 Jul 2009 04:37:53 -0500
+Received: from enyo.dsw2k3.info (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 43E719F20AE
+	for <xfs@oss.sgi.com>; Tue,  7 Jul 2009 02:45:11 -0700 (PDT)
+Received: from enyo.dsw2k3.info (enyo.dsw2k3.info [195.71.86.239]) by
+	cuda.sgi.com with ESMTP id 5lnjPOsbiLbYIFxQ for
+	<xfs@oss.sgi.com>; Tue, 07 Jul 2009 02:45:11 -0700 (PDT)
+Date: Tue, 7 Jul 2009 11:38:02 +0200
+From: Matthias Schniedermeyer <ms@citd.de>
+Subject: Re: [PATCH, RFC] default to inode64 on 64-bit systems
+Message-ID: <20090707093802.GA32125@citd.de>
+References: <4A52419E.5020301@sandeen.net>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4A52419E.5020301@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,51 +28,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, "MASON,
-	CHRISTOPHER" <CHRIS.MASON@oracle.com>, xfs mailing list <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs mailing list <xfs@oss.sgi.com>
 
-Eric Sandeen writes:
+On 06.07.2009 13:25, Eric Sandeen wrote:
+> I'm tiring of telling people to use the inode64 mount option
+> when they are experiencing bad performance on large xfs 
+> filesystems...
+> 
+> 32-bit userspace is still largely broken when it comes to still
+> using 32-bit stat calls, but on 64-bit systems this should be
+> safe.
+> 
+> The only problem here is moving the disk onto a 32-bit system, or using
+> 32-bit apps.  But I think it's a small risk.
+> 
+> What do we think about the following?
 
-> Talking w/ someone who had a raid6 of 15 drives on an areca
-> controller, he wondered why he could only get 300MB/s or so
-> out of a streaming buffered write to xfs like so:
+What is with people running 64bit kernel but 32bit Userspace?
 
-> dd if=/dev/zero of=/mnt/storage/10gbfile bs=128k count=81920
-> 10737418240 bytes (11 GB) copied, 34.294 s, 313 MB/s
 
-> when the same write directly to the device was going closer
-> to 700MB/s...
 
-> With the following change things get moving again for xfs:
 
-> dd if=/dev/zero of=/mnt/storage/10gbfile bs=128k count=81920
-> 10737418240 bytes (11 GB) copied, 16.2938 s, 659 MB/s
 
-> Chris had sent out something similar at Christoph's suggestion,
-> and Christoph reminded me of it, and I tested it a variant of
-> it, and it seems to help shockingly well.
-
-> Feels like a bandaid though; thoughts?  Other tests to do?
-
-If the nr_to_write calculation really yields a value that is too
-small, shouldn't it be fixed elsewhere?
-
-Otherwise it might make sense to make the fudge factor tunable.
-
-> +
-> +	/*
-> +	 *  VM calculation for nr_to_write seems off.  Bump it way
-> +	 *  up, this gets simple streaming writes zippy again.
-> +	 */
-> +	wbc->nr_to_write *= 4;
-> +
+Bis denn
 
 -- 
-Olaf Weber                 SGI               Phone:  +31(0)30-6696752
-                           Veldzigt 2b       Fax:    +31(0)30-6696799
-Technical Lead             3454 PW de Meern  Vnet:   955-7151
-Storage Software           The Netherlands   Email:  olaf@sgi.com
+Real Programmers consider "what you see is what you get" to be just as 
+bad a concept in Text Editors as it is in women. No, the Real Programmer
+wants a "you asked for it, you got it" text editor -- complicated, 
+cryptic, powerful, unforgiving, dangerous.
 
 _______________________________________________
 xfs mailing list
