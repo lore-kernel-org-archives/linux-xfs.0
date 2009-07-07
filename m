@@ -1,21 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n67Dvv2L147740 for <xfs@oss.sgi.com>; Tue, 7 Jul 2009 08:57:57 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7CCD13490EC
-	for <xfs@oss.sgi.com>; Tue,  7 Jul 2009 06:58:31 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id CrQC7KEuvJnF5xis for
-	<xfs@oss.sgi.com>; Tue, 07 Jul 2009 06:58:31 -0700 (PDT)
-Message-ID: <4A535485.8050901@sandeen.net>
-Date: Tue, 07 Jul 2009 08:58:29 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	n67EjSBv149558 for <xfs@oss.sgi.com>; Tue, 7 Jul 2009 09:45:28 -0500
+Date: Tue, 7 Jul 2009 10:46:01 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] bump up nr_to_write in xfs_vm_writepage
+Message-ID: <20090707144601.GA705@infradead.org>
+References: <4A4D26C5.9070606@redhat.com>
+	<bzyd48cc14d.fsf@fransum.emea.sgi.com>
+	<20090707101946.GB1934@infradead.org>
+	<bzy8wj0bu72.fsf@fransum.emea.sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: don't print scratch mkfs and mount options
-	without scratch device
-References: <20090620173554.GA26470@infradead.org>
-In-Reply-To: <20090620173554.GA26470@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <bzy8wj0bu72.fsf@fransum.emea.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,54 +25,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Olaf Weber <olaf@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>, xfs mailing list <xfs@oss.sgi.com>, "MASON,
+	CHRISTOPHER" <CHRIS.MASON@oracle.com>, linux-mm@kvack.org
 
-Christoph Hellwig wrote:
-> Also clean up the way the test configuration is printed.
+On Tue, Jul 07, 2009 at 01:37:05PM +0200, Olaf Weber wrote:
+> > In theory it should.  But given the amazing feedback of the VM people
+> > on this I'd rather make sure we do get the full HW bandwith on large
+> > arrays instead of sucking badly and not just wait forever.
 > 
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> So how do you feel about making the fudge factor tunable?  I don't
+> have a good sense myself of what the value should be, whether the
+> hard-coded 4 is good enough in general.
 
-Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
-
-> Index: xfstests-dev/check
-> ===================================================================
-> --- xfstests-dev.orig/check	2009-06-20 17:31:00.000000000 +0000
-> +++ xfstests-dev/check	2009-06-20 17:33:46.000000000 +0000
-> @@ -161,18 +161,15 @@
->  
->  [ -f check.time ] || touch check.time
->  
-> -FULL_FSTYP_DETAILS=`_full_fstyp_details`
-> -FULL_HOST_DETAILS=`_full_platform_details`
-> -FULL_MKFS_OPTIONS=`_scratch_mkfs_options`
-> -FULL_MOUNT_OPTIONS=`_scratch_mount_options`
-> -
-> -cat <<EOF
-> -FSTYP         -- $FULL_FSTYP_DETAILS
-> -PLATFORM      -- $FULL_HOST_DETAILS
-> -MKFS_OPTIONS  -- $FULL_MKFS_OPTIONS
-> -MOUNT_OPTIONS -- $FULL_MOUNT_OPTIONS
-> +# print out our test configuration
-> +echo "FSTYP         -- `_full_fstyp_details`"
-> +echo "PLATFORM      -- `_full_platform_details`"
-> +if [ ! -z "$SCRATCH_DEV" ]; then
-> +  echo "MKFS_OPTIONS  -- `_scratch_mkfs_options`"
-> +  echo "MOUNT_OPTIONS -- `_scratch_mount_options`"
-> +fi
-> +echo
->  
-> -EOF
->  
->  if [ ! -z "$SCRATCH_DEV" ]; then
->    umount $SCRATCH_DEV 2>/dev/null
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+A tunable means exposing an ABI, which I'd rather not do for a hack like
+this.  If you don't like the number feel free to experiment around with
+it, SGI should have enough large systems that can be used to test this
+out.
 
 _______________________________________________
 xfs mailing list
