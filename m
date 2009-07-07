@@ -1,22 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from fransum.emea.sgi.com (fransum.emea.sgi.com [144.253.208.10])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n67AhSoO139652 for <xfs@oss.sgi.com>; Tue, 7 Jul 2009 05:43:28 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D8DC11AFE537
-	for <xfs@oss.sgi.com>; Tue,  7 Jul 2009 03:44:03 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 9FHzLxG4rYMybQb3 for
-	<xfs@oss.sgi.com>; Tue, 07 Jul 2009 03:44:03 -0700 (PDT)
-Date: Tue, 7 Jul 2009 06:44:03 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests: add tests to check log size scaling
-Message-ID: <20090707104403.GA21747@infradead.org>
-References: <20090705194111.GA3834@infradead.org>
-	<4A52CAD6.1070807@sandeen.net>
+	n67BaXNW142072 for <xfs@oss.sgi.com>; Tue, 7 Jul 2009 06:36:34 -0500
+Subject: Re: [PATCH] bump up nr_to_write in xfs_vm_writepage
+References: <4A4D26C5.9070606@redhat.com>
+	<bzyd48cc14d.fsf@fransum.emea.sgi.com>
+	<20090707101946.GB1934@infradead.org>
+From: Olaf Weber <olaf@sgi.com>
+Date: Tue, 07 Jul 2009 13:37:05 +0200
+In-Reply-To: <20090707101946.GB1934@infradead.org> (Christoph Hellwig's
+	message of "Tue, 7 Jul 2009 06:19:46 -0400")
+Message-ID: <bzy8wj0bu72.fsf@fransum.emea.sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4A52CAD6.1070807@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,22 +24,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs mailing list <xfs@oss.sgi.com>, "MASON, CHRISTOPHER" <CHRIS.MASON@oracle.com>, linux-mm@kvack.org
 
-On Mon, Jul 06, 2009 at 11:11:02PM -0500, Eric Sandeen wrote:
-> Any reason to do this on the scratch dir vs. the test dir?  (Since
-> scratch dir became optional, I figure stuff that can go on the test dev
-> instead, probably should?)
-> 
-> not a big deal, it looks fine otherwise.
+Christoph Hellwig writes:
+> On Tue, Jul 07, 2009 at 11:07:30AM +0200, Olaf Weber wrote:
 
-The test should work just fine using the test dir, and given that these
-bits all cam from Dave I can't speak for his reason to use the scratch
-dir.  But given that even creating an empty 16TB filesystem uses up a
-lot of space I'd rather have as much as possible free space available
-instead of sharing it with an aged filesystem.
+>> If the nr_to_write calculation really yields a value that is too
+>> small, shouldn't it be fixed elsewhere?
 
+> In theory it should.  But given the amazing feedback of the VM people
+> on this I'd rather make sure we do get the full HW bandwith on large
+> arrays instead of sucking badly and not just wait forever.
+
+So how do you feel about making the fudge factor tunable?  I don't
+have a good sense myself of what the value should be, whether the
+hard-coded 4 is good enough in general.
+
+-- 
+Olaf Weber                 SGI               Phone:  +31(0)30-6696752
+                           Veldzigt 2b       Fax:    +31(0)30-6696799
+Technical Lead             3454 PW de Meern  Vnet:   955-7151
+Storage Software           The Netherlands   Email:  olaf@sgi.com
 
 _______________________________________________
 xfs mailing list
