@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n67H9965156892 for <xfs@oss.sgi.com>; Tue, 7 Jul 2009 12:09:10 -0500
+	n67IGmmO159806 for <xfs@oss.sgi.com>; Tue, 7 Jul 2009 13:16:48 -0500
 Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 043C81B00475
-	for <xfs@oss.sgi.com>; Tue,  7 Jul 2009 10:09:43 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 406C31B00C36
+	for <xfs@oss.sgi.com>; Tue,  7 Jul 2009 11:17:22 -0700 (PDT)
 Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id adcWsAUuoZ4vFRvU for
-	<xfs@oss.sgi.com>; Tue, 07 Jul 2009 10:09:43 -0700 (PDT)
-Message-ID: <4A538157.8000704@sandeen.net>
-Date: Tue, 07 Jul 2009 12:09:43 -0500
+	cuda.sgi.com with ESMTP id AXZk44lE63mQjGQH for
+	<xfs@oss.sgi.com>; Tue, 07 Jul 2009 11:17:22 -0700 (PDT)
+Message-ID: <4A539132.40907@sandeen.net>
+Date: Tue, 07 Jul 2009 13:17:22 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: fix trivial typo in test 204 description
-References: <20090707164038.GA9609@infradead.org>
-In-Reply-To: <20090707164038.GA9609@infradead.org>
+Subject: Re: [PATCH, RFC] default to inode64 on 64-bit systems
+References: <4A52419E.5020301@sandeen.net> <20090707093802.GA32125@citd.de>
+	<4A535650.7020309@sandeen.net> <20090707181352.GA3357@citd.de>
+In-Reply-To: <20090707181352.GA3357@citd.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,30 +28,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Matthias Schniedermeyer <ms@citd.de>
+Cc: xfs mailing list <xfs@oss.sgi.com>
 
-Christoph Hellwig wrote:
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Matthias Schniedermeyer wrote:
+> On 07.07.2009 09:06, Eric Sandeen wrote:
+>> Matthias Schniedermeyer wrote:
+>>> On 06.07.2009 13:25, Eric Sandeen wrote:
+>>>> I'm tiring of telling people to use the inode64 mount option
+>>>> when they are experiencing bad performance on large xfs 
+>>>> filesystems...
+>>>>
+>>>> 32-bit userspace is still largely broken when it comes to still
+>>>> using 32-bit stat calls, but on 64-bit systems this should be
+>>>> safe.
+>>>>
+>>>> The only problem here is moving the disk onto a 32-bit system, or using
+>>>> 32-bit apps.  But I think it's a small risk.
+>>>>
+>>>> What do we think about the following?
+>>> What is with people running 64bit kernel but 32bit Userspace?
+>> Good point.  I wonder how many do that...   hrm.
 > 
-> Index: xfstests-dev/204
-> ===================================================================
-> --- xfstests-dev.orig/204	2009-07-04 18:07:47.000000000 +0000
-> +++ xfstests-dev/204	2009-07-04 18:07:51.000000000 +0000
-> @@ -1,7 +1,7 @@
->  #! /bin/sh
->  # FS QA Test No. 204
->  #
-> -# Test out ENOSPC flushiung on small filesystems.
-> +# Test out ENOSPC flushing on small filesystems.
->  #
->  #-----------------------------------------------------------------------
->  # Copyright (c) 2009 Christoph Hellwig.
+> I'd guess pretty much anybody who what's to utilize the amount of RAM 
+> you can have nowadays, but doesn't have any single program that needs 
+> that amount of memory. Or, like in my case, just needs it for 
+> tmpfs/buffer cache.
+> 
+> Throw in some "i don't want to reinstall" or "my Distribution isn't 
+> biarch" and you have someone who justs recompils their kernel and be 
+> done with it. It took me only a few minutes (rotating my hardware around 
+> that day took way longer)
 > 
 
-Reviewed!  ;)
+*nod*
 
-(that always bugged me!)
+I waved hands about the mount path checking whether the "mount" command
+that started it was a 32-bit binary, and making a decision based on
+that... and Christoph pointed out that it'd be easy ... and then he gave
+me a dirty look for even thinking about it ;)
 
 -Eric
 
