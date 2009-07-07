@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n67E4RP2147956 for <xfs@oss.sgi.com>; Tue, 7 Jul 2009 09:04:27 -0500
+	n67Dswmm147654 for <xfs@oss.sgi.com>; Tue, 7 Jul 2009 08:54:58 -0500
 Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C63B1348DA7
-	for <xfs@oss.sgi.com>; Tue,  7 Jul 2009 07:05:02 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7A98E9F5D26
+	for <xfs@oss.sgi.com>; Tue,  7 Jul 2009 07:02:25 -0700 (PDT)
 Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id kJb2A680AZ1Iul63 for
-	<xfs@oss.sgi.com>; Tue, 07 Jul 2009 07:05:02 -0700 (PDT)
-Message-ID: <4A53560D.5080409@sandeen.net>
-Date: Tue, 07 Jul 2009 09:05:01 -0500
+	cuda.sgi.com with ESMTP id zYeFYhfUADuCdz84 for
+	<xfs@oss.sgi.com>; Tue, 07 Jul 2009 07:02:25 -0700 (PDT)
+Message-ID: <4A5353D2.7010508@sandeen.net>
+Date: Tue, 07 Jul 2009 08:55:30 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: small common.config cleanup
-References: <20090620173818.GA26809@infradead.org>
-In-Reply-To: <20090620173818.GA26809@infradead.org>
+Subject: Re: [PATCH] xfstests: add tests to check log size scaling
+References: <20090705194111.GA3834@infradead.org>	<4A52CAD6.1070807@sandeen.net>
+	<20090707104403.GA21747@infradead.org>
+In-Reply-To: <20090707104403.GA21747@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,62 +32,22 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
 Christoph Hellwig wrote:
-> Don't list various non-mandatory options near the check for the
-> mandatory ones, and make the test for the mandatory ones a proper if
-> statements.
+> On Mon, Jul 06, 2009 at 11:11:02PM -0500, Eric Sandeen wrote:
+>> Any reason to do this on the scratch dir vs. the test dir?  (Since
+>> scratch dir became optional, I figure stuff that can go on the test dev
+>> instead, probably should?)
+>>
+>> not a big deal, it looks fine otherwise.
 > 
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> The test should work just fine using the test dir, and given that these
+> bits all cam from Dave I can't speak for his reason to use the scratch
+> dir.  But given that even creating an empty 16TB filesystem uses up a
+> lot of space I'd rather have as much as possible free space available
+> instead of sharing it with an aged filesystem.
 
-Looks ok to me:
+Ok, it's fine by me as posted then, consider it reviewed.
 
-Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
-
-> Index: xfstests-dev/common.config
-> ===================================================================
-> --- xfstests-dev.orig/common.config	2009-06-20 19:15:14.576805079 +0200
-> +++ xfstests-dev/common.config	2009-06-20 19:16:48.956930262 +0200
-> @@ -191,27 +191,18 @@ known_hosts()
->    [ -f $HOST_CONFIG_DIR/$HOST ]        && . $HOST_CONFIG_DIR/$HOST
->    [ -f $HOST_CONFIG_DIR/$HOST.config ] && . $HOST_CONFIG_DIR/$HOST.config
->  
-> +  #  Mandatory Config values.
->    MC=""
-> -#  Non-Mandatory Config values.
-> -#  [ -z "$MODULAR" ]        && MC="$MC MODULAR"
-> -#  [ -z "$TEST_LOGDEV" ]    && MC="$MC TEST_LOGDEV"
-> -#  [ -z "$SCRATCH_LOGDEV" ] && MC="$MC SCRATCH_LOGDEV"
-> -#  [ -z "$SCRATCH_RTDEV" ]  && MC="$MC SCRATCH_RTDEV"
-> -#  [ -z "$SCRATCH_MNT" ]    && MC="$MC SCRATCH_MNT"
-> -#  [ -z "$SCRATCH_DEV" ]    && MC="$MC SCRATCH_DEV"
-> -
->    [ -z "$EMAIL" ]          && MC="$MC EMAIL"
->    [ -z "$TEST_DIR" ]       && MC="$MC TEST_DIR"
->    [ -z "$TEST_DEV" ]       && MC="$MC TEST_DEV"
->  
-> -  [ "$MC" ] && (echo "Warning: need to define parameters for host $HOST";\
-> -	        echo "       or set variables:"; \
-> -		echo "       $MC")
-> -#  if [ -e configs/$HOST.config ]
-> -#     then echo "Not carring, we have a configfile ($HOST_CONFIG_DIR/$HOST)"
-> -#  else
-> -     [ "$MC" ] &&  exit 1
-> -#  fi
-> +  if [ -n "$MC" ]; then
-> +    echo "Warning: need to define parameters for host $HOST"
-> +    echo "       or set variables:"
-> +    echo "       $MC"
-> +    exit 1
-> +  fi
->  }
->  
->  if [ -f "$HOST_OPTIONS" ]; then
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+-Eric
 
 _______________________________________________
 xfs mailing list
