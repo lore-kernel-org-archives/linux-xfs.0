@@ -1,23 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n67KJuec171954
-	for <linux-xfs@oss.sgi.com>; Tue, 7 Jul 2009 15:19:56 -0500
-Received: from netezza.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 11B2934AF29
-	for <linux-xfs@oss.sgi.com>; Tue,  7 Jul 2009 13:20:30 -0700 (PDT)
-Received: from netezza.com (mta.netezza.com [12.148.248.132]) by cuda.sgi.com
-	with ESMTP id qWdMH5VVSE2QeaW9 for <linux-xfs@oss.sgi.com>;
-	Tue, 07 Jul 2009 13:20:30 -0700 (PDT)
-Subject: Re: [2.6.27.25] assfail in xfs_attr_quiesce() during umount
-From: Paul Smith <paul@mad-scientist.net>
-In-Reply-To: <20090707190643.GA32467@infradead.org>
-References: <MAIL10OSN4RHlLx5ERz0002f238@mail1.netezza.com>
-	<20090707190643.GA32467@infradead.org>
-Date: Tue, 07 Jul 2009 16:18:43 -0400
-Message-Id: <1246997925.2984.1.camel@psmith-ubeta.netezza.com>
+	n68G4bxa235609 for <xfs@oss.sgi.com>; Wed, 8 Jul 2009 11:04:37 -0500
+Subject: [PATCH 34/44] includecheck fix: fs/xfs, xfs_iops.c
+From: Jaswinder Singh Rajput <jaswinder@kernel.org>
+In-Reply-To: <1247063308.4382.12.camel@ht.satnam>
+References: <1247063308.4382.12.camel@ht.satnam>
+Date: Wed, 08 Jul 2009 21:16:11 +0530
+Message-Id: <1247067971.4382.94.camel@ht.satnam>
 Mime-Version: 1.0
-Reply-To: paul@mad-scientist.net
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,16 +21,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Linux XFS <linux-xfs@oss.sgi.com>, david chinner <dgc@sgi.com>, linux-kernel@vger.kernel.org, christoph hellwig <hch@ifradead.org>
+To: felixb@sgi.com, xfs-masters@oss.sgi.com, xfs@oss.sgi.com, Sam Ravnborg <sam@ravnborg.org>, LKML <linux-kernel@vger.kernel.org>
 
-On Tue, 2009-07-07 at 15:06 -0400, Christoph Hellwig wrote:
-> It looks somehwat dangerous for me.  For now I would just comment
-> out the assert or change it to a WARN_ON as in the newer kernels.
 
-Hah!  :-).  OK, that works for me.
+fix the following 'make includecheck' warning:
 
-Thanks Christoph.
+  fs/xfs/linux-2.6/xfs_iops.c: xfs_acl.h is included more than once.
+
+Signed-off-by: Jaswinder Singh Rajput <jaswinderrajput@gmail.com>
+---
+ fs/xfs/linux-2.6/xfs_iops.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
+
+diff --git a/fs/xfs/linux-2.6/xfs_iops.c b/fs/xfs/linux-2.6/xfs_iops.c
+index 58973bb..793a146 100644
+--- a/fs/xfs/linux-2.6/xfs_iops.c
++++ b/fs/xfs/linux-2.6/xfs_iops.c
+@@ -43,7 +43,6 @@
+ #include "xfs_error.h"
+ #include "xfs_itable.h"
+ #include "xfs_rw.h"
+-#include "xfs_acl.h"
+ #include "xfs_attr.h"
+ #include "xfs_buf_item.h"
+ #include "xfs_utils.h"
+-- 
+1.6.0.6
+
+
 
 _______________________________________________
 xfs mailing list
