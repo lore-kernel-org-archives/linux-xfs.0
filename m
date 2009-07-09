@@ -1,14 +1,38 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n68G4bxa235609 for <xfs@oss.sgi.com>; Wed, 8 Jul 2009 11:04:37 -0500
-Subject: [PATCH 34/44] includecheck fix: fs/xfs, xfs_iops.c
-From: Jaswinder Singh Rajput <jaswinder@kernel.org>
-In-Reply-To: <1247063308.4382.12.camel@ht.satnam>
-References: <1247063308.4382.12.camel@ht.satnam>
-Date: Wed, 08 Jul 2009 21:16:11 +0530
-Message-Id: <1247067971.4382.94.camel@ht.satnam>
-Mime-Version: 1.0
+	n69242bR000346 for <xfs@oss.sgi.com>; Wed, 8 Jul 2009 21:04:02 -0500
+Received: from fgwmail7.fujitsu.co.jp (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EDD2F1B4C16D
+	for <xfs@oss.sgi.com>; Wed,  8 Jul 2009 19:04:36 -0700 (PDT)
+Received: from fgwmail7.fujitsu.co.jp (fgwmail7.fujitsu.co.jp [192.51.44.37])
+	by cuda.sgi.com with ESMTP id xqXE2Fpllrjb4AqV for
+	<xfs@oss.sgi.com>; Wed, 08 Jul 2009 19:04:36 -0700 (PDT)
+Received: from m4.gw.fujitsu.co.jp ([10.0.50.74])
+	by fgwmail7.fujitsu.co.jp (Fujitsu Gateway) with ESMTP id
+	n6924ZRr014807
+	for <xfs@oss.sgi.com> (envelope-from kosaki.motohiro@jp.fujitsu.com);
+	Thu, 9 Jul 2009 11:04:35 +0900
+Received: from smail (m4 [127.0.0.1])
+	by outgoing.m4.gw.fujitsu.co.jp (Postfix) with ESMTP id B068845DE7D
+	for <xfs@oss.sgi.com>; Thu,  9 Jul 2009 11:04:34 +0900 (JST)
+Received: from s4.gw.fujitsu.co.jp (s4.gw.fujitsu.co.jp [10.0.50.94])
+	by m4.gw.fujitsu.co.jp (Postfix) with ESMTP id 8124B45DE60
+	for <xfs@oss.sgi.com>; Thu,  9 Jul 2009 11:04:34 +0900 (JST)
+Received: from s4.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id 3C613E08001
+	for <xfs@oss.sgi.com>; Thu,  9 Jul 2009 11:04:34 +0900 (JST)
+Received: from ml14.s.css.fujitsu.com (ml14.s.css.fujitsu.com [10.249.87.104])
+	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id D5917E08003
+	for <xfs@oss.sgi.com>; Thu,  9 Jul 2009 11:04:33 +0900 (JST)
+From: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
+Subject: Re: [PATCH] bump up nr_to_write in xfs_vm_writepage
+In-Reply-To: <20090707104440.GB21747@infradead.org>
+References: <20090707193015.7DCD.A69D9226@jp.fujitsu.com>
+	<20090707104440.GB21747@infradead.org>
+Message-Id: <20090709110342.2386.A69D9226@jp.fujitsu.com>
+MIME-Version: 1.0
+Date: Thu,  9 Jul 2009 11:04:32 +0900 (JST)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,32 +45,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: felixb@sgi.com, xfs-masters@oss.sgi.com, xfs@oss.sgi.com, Sam Ravnborg <sam@ravnborg.org>, LKML <linux-kernel@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Eric Sandeen <sandeen@redhat.com>, kosaki.motohiro@jp.fujitsu.com, xfs mailing list <xfs@oss.sgi.com>, linux-mm@kvack.org, Olaf Weber <olaf@sgi.com>, "MASON, CHRISTOPHER" <CHRIS.MASON@oracle.com>
 
+> On Tue, Jul 07, 2009 at 07:33:04PM +0900, KOSAKI Motohiro wrote:
+> > At least, I agree with Olaf. if you got someone's NAK in past thread,
+> > Could you please tell me its url?
+> 
+> The previous thread was simply dead-ended and nothing happened.
+> 
 
-fix the following 'make includecheck' warning:
-
-  fs/xfs/linux-2.6/xfs_iops.c: xfs_acl.h is included more than once.
-
-Signed-off-by: Jaswinder Singh Rajput <jaswinderrajput@gmail.com>
----
- fs/xfs/linux-2.6/xfs_iops.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
-
-diff --git a/fs/xfs/linux-2.6/xfs_iops.c b/fs/xfs/linux-2.6/xfs_iops.c
-index 58973bb..793a146 100644
---- a/fs/xfs/linux-2.6/xfs_iops.c
-+++ b/fs/xfs/linux-2.6/xfs_iops.c
-@@ -43,7 +43,6 @@
- #include "xfs_error.h"
- #include "xfs_itable.h"
- #include "xfs_rw.h"
--#include "xfs_acl.h"
- #include "xfs_attr.h"
- #include "xfs_buf_item.h"
- #include "xfs_utils.h"
--- 
-1.6.0.6
+Can you remember this thread subject? sorry, I haven't remember it.
 
 
 
