@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6B0ZeHV131070 for <xfs@oss.sgi.com>; Fri, 10 Jul 2009 19:35:40 -0500
+	n6B5H0Is147697 for <xfs@oss.sgi.com>; Sat, 11 Jul 2009 00:17:01 -0500
 Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5354B1BD3ECA
-	for <xfs@oss.sgi.com>; Fri, 10 Jul 2009 17:36:15 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F1C2F1BD4133
+	for <xfs@oss.sgi.com>; Fri, 10 Jul 2009 22:17:37 -0700 (PDT)
 Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id IypZbwfgL1lFwh4Z for
-	<xfs@oss.sgi.com>; Fri, 10 Jul 2009 17:36:15 -0700 (PDT)
-Message-ID: <4A57DE7E.8080901@sandeen.net>
-Date: Fri, 10 Jul 2009 19:36:14 -0500
+	cuda.sgi.com with ESMTP id jIWxSQ2OImBjnyut for
+	<xfs@oss.sgi.com>; Fri, 10 Jul 2009 22:17:37 -0700 (PDT)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail.sandeen.net (Postfix) with ESMTP id B6479A7CE6A
+	for <xfs@oss.sgi.com>; Sat, 11 Jul 2009 00:17:36 -0500 (CDT)
+Message-ID: <4A582070.9040907@sandeen.net>
+Date: Sat, 11 Jul 2009 00:17:36 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: xfs_repair stops on "traversing filesystem..."
-References: <4A55FAF7.5040908@gmail.com>	<4A56D176.9010702@sandeen.net>	<4A56ED5F.10400@gmail.com>	<4A57A1C4.40004@sandeen.net>
-	<4A57AC69.7070502@gmail.com>	<4A57AF5D.6080603@sandeen.net>
-	<4A57D252.4020804@gmail.com>
-In-Reply-To: <4A57D252.4020804@gmail.com>
+Subject: [PATCH, RFC] xfs_repair - clear inodes in incorrect btree format
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,69 +30,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Tomek Kruszona <bloodyscarion@gmail.com>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-Tomek Kruszona wrote:
+See also RH bug #510823:
+https://bugzilla.redhat.com/show_bug.cgi?id=510823
 
-...
+This check in xfs_iformat_btree() tripped:
 
-> I made some tests and it seems, that filesystem to finish xfs_repair
-> needs to be repaired with bhash=1024... With default options it still
-> hangs on "traversing filesystem..." Is it possible to change this
-> behavior to normal in other way than reformat? 
+        /*
+         * blow out if -- fork has less extents than can fit in
+         * fork (fork shouldn't be a btree format), root btree
+         * block has more records than can fit into the fork,
+         * or the number of extents is greater than the number of
+         * blocks.
+         */
 
-It has nothing to do w/ the format, it's just internal to xfs_repair
-while it's running, the way it caches blocks that it has recently used.
+leading to:
 
-> Moreover I spotted some
-> strange thing. 16GB of data has been moved to lost+found. I tried to
+Jul 10 23:22:45 hermes kernel: Filesystem "dm-11": corrupt inode 2339503222
+(btree).  Unmount and run xfs_repair.
+Jul 10 23:22:45 hermes kernel: Filesystem "dm-11": XFS internal error
+xfs_iformat_btree at line 625 of file fs/xfs/xfs_inode.c.
 
-Yeah ...
+but repair finds nothing at all.  xfs_check, however, does flag the inodes
+as problematic:
 
-> clean L+F by
-> # rm -rf lost+found
-> 
-> but suddenly I got this:
-> 
-> # ls -l /mnt/storage/
-> ls: cannot access /mnt/storage/lost+found: No such file or directory
-> total 0
-> drwxr-xr-x 4 root    root 33 Mar  4 17:21 l_mirror
-> ?????????? ? ?       ?     ?            ? lost+found
+extent count for ino 2339503222 data fork too low (6) for file format
 
-huh.  let me try on the repaired metadata image...
+So I copied the xfs_check test into xfs_repair, and voila, it clears
+these inodes.
 
-[root@bear-05 bad-repair]# mount -o loop badfs.img mnt/
-[root@bear-05 bad-repair]# du -hc mnt/lost+found/
-26M	mnt/lost+found/1602304
-5.0M	mnt/lost+found/2558868
-18G	mnt/lost+found/
-18G	total
-[root@bear-05 bad-repair]# rm -rf mnt/lost+found/*
-[root@bear-05 bad-repair]# ls -l mnt/
-total 0
-drwxr-xr-x 4 root root 33 Mar  4 10:21 ??5?t??4
-drwxr-xr-x 0 root root  6 Jul 10 19:48 lost+found
-drwxr-xr-x 2 1000 root  6 Jun 30 08:45 tests
+But questions remain...
 
-Did you do something else to the fs in between?
+1) How'd it get into this state? ... but maybe more importantly...
+2) Should these really get cleared?  It's possibly a sane extent list,
+it's just that it -could- be in extents rather than btree format...
+3) By the same token, should the kernel really be choking on it?
 
-> I had to run xfs_repair (bhash=1024) once again and then l+f disappeared...
-> 
-> So I started to think: does it have some influence on data that are
-> stored on this filesystem? I'm afraid that files on this FS may become
-> inconsistent :/
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
 
-Well, I don't know what has gone wrong with your filesytem (or, with the
-storage beneath it, or whatever) - but it is certainly possible that
-with corrupted metadata, that there is corrupted data as well - all
-depends on the root cause ...
-
--Eric
-
-> Best regards,
-> Tomasz Kruszona
+diff --git a/repair/dinode.c b/repair/dinode.c
+index 84e1d05..3fc6cac 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -1280,6 +1280,14 @@ process_btinode(
+ 			last_key = cursor.level[level-1].first_key;
+ 		}
+ 	}
++	if (*nex <= XFS_DFORK_SIZE(dip, mp, whichfork) / sizeof(xfs_bmbt_rec_t)) {
++		do_warn(_("extent count for ino %lld %s fork too low "
++			  "(%d) for file format\n"),
++				lino,
++				whichfork == XFS_DATA_FORK ? _("data") : _("attr"),
++				*nex);
++		return(1);
++	}
+ 	/*
+ 	 * Check that the last child block's forward sibling pointer
+ 	 * is NULL.
 
 _______________________________________________
 xfs mailing list
