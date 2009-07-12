@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6CI9DgQ255988 for <xfs@oss.sgi.com>; Sun, 12 Jul 2009 13:09:13 -0500
+	n6CIpiE6258705 for <xfs@oss.sgi.com>; Sun, 12 Jul 2009 13:51:44 -0500
 Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 49C5535B4BA
-	for <xfs@oss.sgi.com>; Sun, 12 Jul 2009 11:09:50 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BEE15A32088
+	for <xfs@oss.sgi.com>; Sun, 12 Jul 2009 11:59:42 -0700 (PDT)
 Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id 0r2t3PKN1YqdnHOK for
-	<xfs@oss.sgi.com>; Sun, 12 Jul 2009 11:09:50 -0700 (PDT)
-Message-ID: <4A5A26EC.8090503@sandeen.net>
-Date: Sun, 12 Jul 2009 13:09:48 -0500
+	cuda.sgi.com with ESMTP id sjaLx42VNqk9VQtZ for
+	<xfs@oss.sgi.com>; Sun, 12 Jul 2009 11:59:42 -0700 (PDT)
+Message-ID: <4A5A30E4.6090309@sandeen.net>
+Date: Sun, 12 Jul 2009 13:52:20 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
 Subject: Re: bad fs - xfs_repair 3.01 crashes on it
-References: <200907031320.48358@zmi.at> <4A4EEBE6.6060909@sandeen.net>
-	<200907121902.32599@zmi.at>
-In-Reply-To: <200907121902.32599@zmi.at>
+References: <200907031320.48358@zmi.at>
+In-Reply-To: <200907031320.48358@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,44 +28,37 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: xfs@oss.sgi.com
+Cc: xfs mailing list <xfs@oss.sgi.com>
 
 Michael Monnerie wrote:
-> On Samstag 04 Juli 2009 Eric Sandeen wrote:
->> Where's Barry when you need him ....
+> Tonight our server rebooted, and I found in /var/log/warn that he was crying 
+> a lot about xfs since June 7 already:
 > 
-> Who's that?
+> Jun  7 03:06:31 orion.i.zmi.at kernel: Filesystem "dm-0": corrupt inode 3857051697 ((a)extents = 5).  Unmount and run xfs_repair.
+> Jun  7 03:06:31 orion.i.zmi.at kernel: Pid: 23230, comm: xfs_fsr Tainted: G          2.6.27.21-0.1-xen #1
+> Jun  7 03:06:31 orion.i.zmi.at kernel:
 
-The ex-sgi xfs_repair maintainer :)
+Hm, the other sort of interesting thing here is that a recently-reported
+RH bug:
 
->> Also I need to look at when the ASSERTs are active and when they
->> should be; the Fedora packaged xfsprogs doesn't have the ASSERT
->> active, and so this doesn't trip.  After 2 calls to xfs_repair on
->> Fedora, w/o the ASSERTs active, it checks clean on the 3rd (!).  Not
->> great.  Not sure how much was cleared out in the process either...
-> 
-> Any ideas/news on this? I'd like to xfs_repair that stuff. It seems to 
-> only hit one file, but I don't dare delete it, maybe it makes things 
-> worse?
-> 
-> mfg zmi
+[Bug 510823] "Structure needs cleaning" when reading files from an XFS
+partition (extent count for ino XYZ data fork too low (6) for file format)
 
-Sorry, I will get back to this soon - today I hope.  I seem to be
-getting more and more familiar w/ xfs_repair these days.  :)
+also seems to -possibly- be related to an xfs_fsr run, and also is
+related to extents in the wrong format.  In that case it was the
+opposite; an inode was found in btree format which had few enough
+extents that it should have been in the extents format in the inode; in
+your case, it looks like there were too many extents to fit in the
+format it had...
 
-If you do want to try deleting that one file or other such tricks, you
-can do it on a sparse metadata image of the fs as a dry run:
+Just out of curiosity, it looks like you have rather a lot of extended
+attributes on at least the inode above, is that accurate?  Or maybe
+that's part of the corruption?
 
-# xfs_metadump -o /dev/whatever metadump.img
-# xfs_mdrestore metadump.img filesystem.img
-# mount -o loop filesystem.img mnt/
-# <fiddle as you please>
-# umount mnt/
-# xfs_repair filesystem.img
-# mount -o loop filesystem.img mnt/
+I'll focus on getting xfs_repair to cope first, but I wonder what
+happened here...
 
-and see what happens...
-
+Thanks,
 -Eric
 
 _______________________________________________
