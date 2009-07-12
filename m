@@ -1,23 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6B5H0Is147697 for <xfs@oss.sgi.com>; Sat, 11 Jul 2009 00:17:01 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F1C2F1BD4133
-	for <xfs@oss.sgi.com>; Fri, 10 Jul 2009 22:17:37 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id jIWxSQ2OImBjnyut for
-	<xfs@oss.sgi.com>; Fri, 10 Jul 2009 22:17:37 -0700 (PDT)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	n6CH1wwK253734 for <xfs@oss.sgi.com>; Sun, 12 Jul 2009 12:01:59 -0500
+Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7DD6F130A5C1
+	for <xfs@oss.sgi.com>; Sun, 12 Jul 2009 10:09:55 -0700 (PDT)
+Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.162.198]) by
+	cuda.sgi.com with ESMTP id gKNerVbtqgtq3B0y for
+	<xfs@oss.sgi.com>; Sun, 12 Jul 2009 10:09:55 -0700 (PDT)
+Received: from mailsrv2.i.zmi.at (h081217106033.dyn.cm.kabsi.at
+	[81.217.106.33])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv1.zmi.at (Postfix) with ESMTP id 315F651A9
+	for <xfs@oss.sgi.com>; Sun, 12 Jul 2009 19:03:23 +0200 (CEST)
+Received: from saturn.localnet (unknown [10.72.27.2])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail.sandeen.net (Postfix) with ESMTP id B6479A7CE6A
-	for <xfs@oss.sgi.com>; Sat, 11 Jul 2009 00:17:36 -0500 (CDT)
-Message-ID: <4A582070.9040907@sandeen.net>
-Date: Sat, 11 Jul 2009 00:17:36 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	(Client did not present a certificate)
+	by mailsrv2.i.zmi.at (Postfix) with ESMTPSA id 11C21400163
+	for <xfs@oss.sgi.com>; Sun, 12 Jul 2009 19:02:33 +0200 (CEST)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: bad fs - xfs_repair 3.01 crashes on it
+Date: Sun, 12 Jul 2009 19:02:28 +0200
+References: <200907031320.48358@zmi.at> <4A4EEBE6.6060909@sandeen.net>
+In-Reply-To: <4A4EEBE6.6060909@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH, RFC] xfs_repair - clear inodes in incorrect btree format
+Message-Id: <200907121902.32599@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,71 +34,72 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============0206546897633130829=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-See also RH bug #510823:
-https://bugzilla.redhat.com/show_bug.cgi?id=510823
+--===============0206546897633130829==
+Content-Type: multipart/signed;
+  boundary="nextPart1339834.XHtPjja0fY";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-This check in xfs_iformat_btree() tripped:
+--nextPart1339834.XHtPjja0fY
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-        /*
-         * blow out if -- fork has less extents than can fit in
-         * fork (fork shouldn't be a btree format), root btree
-         * block has more records than can fit into the fork,
-         * or the number of extents is greater than the number of
-         * blocks.
-         */
+On Samstag 04 Juli 2009 Eric Sandeen wrote:
+> Where's Barry when you need him ....
 
-leading to:
+Who's that?
 
-Jul 10 23:22:45 hermes kernel: Filesystem "dm-11": corrupt inode 2339503222
-(btree).  Unmount and run xfs_repair.
-Jul 10 23:22:45 hermes kernel: Filesystem "dm-11": XFS internal error
-xfs_iformat_btree at line 625 of file fs/xfs/xfs_inode.c.
+> Also I need to look at when the ASSERTs are active and when they
+> should be; the Fedora packaged xfsprogs doesn't have the ASSERT
+> active, and so this doesn't trip. =A0After 2 calls to xfs_repair on
+> Fedora, w/o the ASSERTs active, it checks clean on the 3rd (!). =A0Not
+> great. =A0Not sure how much was cleared out in the process either...
 
-but repair finds nothing at all.  xfs_check, however, does flag the inodes
-as problematic:
+Any ideas/news on this? I'd like to xfs_repair that stuff. It seems to=20
+only hit one file, but I don't dare delete it, maybe it makes things=20
+worse?
 
-extent count for ino 2339503222 data fork too low (6) for file format
+mfg zmi
+=2D-=20
+// Michael Monnerie, Ing.BSc    -----      http://it-management.at
+// Tel: 0660 / 415 65 31                      .network.your.ideas.
+// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
+// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
+// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
 
-So I copied the xfs_check test into xfs_repair, and voila, it clears
-these inodes.
 
-But questions remain...
+--nextPart1339834.XHtPjja0fY
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
-1) How'd it get into this state? ... but maybe more importantly...
-2) Should these really get cleared?  It's possibly a sane extent list,
-it's just that it -could- be in extents rather than btree format...
-3) By the same token, should the kernel really be choking on it?
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
+iEYEABECAAYFAkpaFygACgkQzhSR9xwSCbQRvACfaRRccmXKKdFnHPzspRRxwWXP
+WKkAoNH+CrfMgMT9e/0N27B5UJhuA+IA
+=uwsS
+-----END PGP SIGNATURE-----
 
-diff --git a/repair/dinode.c b/repair/dinode.c
-index 84e1d05..3fc6cac 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -1280,6 +1280,14 @@ process_btinode(
- 			last_key = cursor.level[level-1].first_key;
- 		}
- 	}
-+	if (*nex <= XFS_DFORK_SIZE(dip, mp, whichfork) / sizeof(xfs_bmbt_rec_t)) {
-+		do_warn(_("extent count for ino %lld %s fork too low "
-+			  "(%d) for file format\n"),
-+				lino,
-+				whichfork == XFS_DATA_FORK ? _("data") : _("attr"),
-+				*nex);
-+		return(1);
-+	}
- 	/*
- 	 * Check that the last child block's forward sibling pointer
- 	 * is NULL.
+--nextPart1339834.XHtPjja0fY--
+
+
+--===============0206546897633130829==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============0206546897633130829==--
