@@ -1,14 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from fransum.emea.sgi.com (fransum.emea.sgi.com [144.253.208.10])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6D9WPBA038570 for <xfs@oss.sgi.com>; Mon, 13 Jul 2009 04:32:26 -0500
-Subject: Re: [PATCH, RFC] xfs_repair - clear inodes in incorrect btree format
-References: <4A582070.9040907@sandeen.net>
-From: Olaf Weber <olaf@sgi.com>
-Date: Mon, 13 Jul 2009 11:33:02 +0200
-In-Reply-To: <4A582070.9040907@sandeen.net> (Eric Sandeen's message of "Sat,
-	11 Jul 2009 00:17:36 -0500")
-Message-ID: <bzytz1hq65t.fsf@fransum.emea.sgi.com>
+	n6DA9WP5040312 for <xfs@oss.sgi.com>; Mon, 13 Jul 2009 05:09:32 -0500
+Date: Mon, 13 Jul 2009 12:10:05 +0200 (CEST)
+From: Julia Lawall <julia@diku.dk>
+Subject: [PATCH 1/2] fs/xfs: Drop unnecessary NULL test
+Message-ID: <Pine.LNX.4.64.0907131209250.6808@ask.diku.dk>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -22,69 +19,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: felixb@sgi.com, xfs-masters@oss.sgi.com, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-Eric Sandeen writes:
+From: Julia Lawall <julia@diku.dk>
 
-[...]
+The result of container_of should not be NULL.  In particular, in this case
+the argument to the enclosing function has passed though INIT_DELAYED_WORK,
+which dereferences it, implying that its container cannot be NULL.
 
-> But questions remain...
+The semantic match that finds this problem is as follows:
+(http://www.emn.fr/x-info/coccinelle/)
 
-> 1) How'd it get into this state? ... but maybe more importantly...
-> 2) Should these really get cleared?  It's possibly a sane extent list,
-> it's just that it -could- be in extents rather than btree format...
-> 3) By the same token, should the kernel really be choking on it?
+// <smpl>
+@@
+expression x,e;
+@@
+x = container_of(...)
+... when != x = e
+* x == NULL
+// </smpl>
 
-It is not clear to me yet how you could get into this state, but this
-is clearly an invariant the kernel actively maintains.
+Signed-off-by: Julia Lawall <julia@diku.dk>
 
-If the kernel "just" missed the underflow and kept the extents in
-btree format, then I don't see an apriori reason why the extent list
-as such would be invalid (as opposed to inefficiently stored).  If
-that's the primary model for getting into this state, then the file
-contents can be rescued and kernel-side the event should be
-survivable.
+---
+ fs/xfs/xfs_mru_cache.c              |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-But if the kernel tried to convert, failed, and didn't properly detect
-failure...  Without having a good answer for (1) I find it hard to
-convince myself that to be more forgiving wrt to (2) and (3) is safe.
-
-Olaf
-
-
-> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-
-Acked-By: Olaf Weber <olaf@sgi.com>
-
-> ---
-
-> diff --git a/repair/dinode.c b/repair/dinode.c
-> index 84e1d05..3fc6cac 100644
-> --- a/repair/dinode.c
-> +++ b/repair/dinode.c
-> @@ -1280,6 +1280,14 @@ process_btinode(
->  			last_key = cursor.level[level-1].first_key;
->  		}
->  	}
-> +	if (*nex <= XFS_DFORK_SIZE(dip, mp, whichfork) / sizeof(xfs_bmbt_rec_t)) {
-> +		do_warn(_("extent count for ino %lld %s fork too low "
-> +			  "(%d) for file format\n"),
-> +				lino,
-> +				whichfork == XFS_DATA_FORK ? _("data") : _("attr"),
-> +				*nex);
-> +		return(1);
-> +	}
->  	/*
->  	 * Check that the last child block's forward sibling pointer
->  	 * is NULL.
-
-
--- 
-Olaf Weber                 SGI               Phone:  +31(0)30-6696752
-                           Veldzigt 2b       Fax:    +31(0)30-6696799
-Technical Lead             3454 PW de Meern  Vnet:   955-7151
-Storage Software           The Netherlands   Email:  olaf@sgi.com
+diff --git a/fs/xfs/xfs_mru_cache.c b/fs/xfs/xfs_mru_cache.c
+index 4b0613d..0651ce7 100644
+--- a/fs/xfs/xfs_mru_cache.c
++++ b/fs/xfs/xfs_mru_cache.c
+@@ -280,8 +280,8 @@ _xfs_mru_cache_reap(
+ 	xfs_mru_cache_t		*mru = container_of(work, xfs_mru_cache_t, work.work);
+ 	unsigned long		now, next;
+ 
+-	ASSERT(mru && mru->lists);
+-	if (!mru || !mru->lists)
++	ASSERT(mru->lists);
++	if (!mru->lists)
+ 		return;
+ 
+ 	spin_lock(&mru->lock);
 
 _______________________________________________
 xfs mailing list
