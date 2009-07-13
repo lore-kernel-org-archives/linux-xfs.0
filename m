@@ -1,11 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from fransum.emea.sgi.com (fransum.emea.sgi.com [144.253.208.10])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6DA9WP5040312 for <xfs@oss.sgi.com>; Mon, 13 Jul 2009 05:09:32 -0500
-Date: Mon, 13 Jul 2009 12:10:05 +0200 (CEST)
-From: Julia Lawall <julia@diku.dk>
-Subject: [PATCH 1/2] fs/xfs: Drop unnecessary NULL test
-Message-ID: <Pine.LNX.4.64.0907131209250.6808@ask.diku.dk>
+	n6DBS8Fo044520 for <xfs@oss.sgi.com>; Mon, 13 Jul 2009 06:28:09 -0500
+Subject: Re: How to simulate journal corruption
+References: <SNT109-W2390816D3EF297CE0D07DEEC220@phx.gbl>
+From: Olaf Weber <olaf@sgi.com>
+Date: Mon, 13 Jul 2009 13:28:45 +0200
+In-Reply-To: <SNT109-W2390816D3EF297CE0D07DEEC220@phx.gbl> (crow al's message
+	of "Mon, 13 Jul 2009 13:55:05 +0800")
+Message-ID: <bzymy78rfde.fsf@fransum.emea.sgi.com>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -19,47 +22,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: felixb@sgi.com, xfs-masters@oss.sgi.com, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: crow al <al-john@hotmail.com>
+Cc: xfs@oss.sgi.com
 
-From: Julia Lawall <julia@diku.dk>
+crow al writes:
 
-The result of container_of should not be NULL.  In particular, in this case
-the argument to the enclosing function has passed though INIT_DELAYED_WORK,
-which dereferences it, implying that its container cannot be NULL.
+> Hi, there
 
-The semantic match that finds this problem is as follows:
-(http://www.emn.fr/x-info/coccinelle/)
+> I'm a QA engineer from Cisco. I'm working on a test case concerning
+> XFS journal playback failure, which needs to manually inject error
+> to XFS.
 
-// <smpl>
-@@
-expression x,e;
-@@
-x = container_of(...)
-... when != x = e
-* x == NULL
-// </smpl>
+> I did some google work but get no luck. Then I think maybe XFA-QA
+> could give me some advice. That why I come to here.
 
-Signed-off-by: Julia Lawall <julia@diku.dk>
+> Is there anyone could tell me how to inject error into XFS or is
+> there any tool could be used?
 
----
- fs/xfs/xfs_mru_cache.c              |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+For clobbering a filesystem image in general you can use fsfuzz.
+  http://people.redhat.com/sgrubb/files/fsfuzzer-0.7.tar.gz
 
-diff --git a/fs/xfs/xfs_mru_cache.c b/fs/xfs/xfs_mru_cache.c
-index 4b0613d..0651ce7 100644
---- a/fs/xfs/xfs_mru_cache.c
-+++ b/fs/xfs/xfs_mru_cache.c
-@@ -280,8 +280,8 @@ _xfs_mru_cache_reap(
- 	xfs_mru_cache_t		*mru = container_of(work, xfs_mru_cache_t, work.work);
- 	unsigned long		now, next;
- 
--	ASSERT(mru && mru->lists);
--	if (!mru || !mru->lists)
-+	ASSERT(mru->lists);
-+	if (!mru->lists)
- 		return;
- 
- 	spin_lock(&mru->lock);
+If log replay is of particular interest, you might want to modify that
+code to target the XFS log in particular.
+
+The XFS QA tests do not, IIRC, contain tests that deliberately trash
+the XFS log, but there are some tests that exercise log replay, and
+you may want to take a look at those to see ways to get an XFS
+filesystem image with a non-empty log to replay.
+
+Note that kernel-side, if log replay fails the expected/desired result
+is that kernel won't mount the filesystem.
+
+-- 
+Olaf Weber                 SGI               Phone:  +31(0)30-6696752
+                           Veldzigt 2b       Fax:    +31(0)30-6696799
+Technical Lead             3454 PW de Meern  Vnet:   955-7151
+Storage Software           The Netherlands   Email:  olaf@sgi.com
 
 _______________________________________________
 xfs mailing list
