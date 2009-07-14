@@ -1,21 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6E4DOBY086765 for <xfs@oss.sgi.com>; Mon, 13 Jul 2009 23:13:24 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1A4C1A556CA
-	for <xfs@oss.sgi.com>; Mon, 13 Jul 2009 21:21:29 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id rCE0FqqJ7iyl26EC for
-	<xfs@oss.sgi.com>; Mon, 13 Jul 2009 21:21:29 -0700 (PDT)
-Message-ID: <4A5C0606.4030102@sandeen.net>
-Date: Mon, 13 Jul 2009 23:13:58 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: [PATCH] xfs_repair - do not attempt to set shortform attr header
+	n6E655DX093635 for <xfs@oss.sgi.com>; Tue, 14 Jul 2009 01:05:06 -0500
+Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1E58D13659DD
+	for <xfs@oss.sgi.com>; Mon, 13 Jul 2009 23:05:43 -0700 (PDT)
+Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.162.198]) by
+	cuda.sgi.com with ESMTP id lqw5jjwwEtZJlXbS for
+	<xfs@oss.sgi.com>; Mon, 13 Jul 2009 23:05:43 -0700 (PDT)
+Received: from mailsrv2.i.zmi.at (h081217106033.dyn.cm.kabsi.at
+	[81.217.106.33])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv1.zmi.at (Postfix) with ESMTP id C9F195380
+	for <xfs@oss.sgi.com>; Tue, 14 Jul 2009 08:06:29 +0200 (CEST)
+Received: from saturn.localnet (unknown [10.72.27.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv2.i.zmi.at (Postfix) with ESMTPSA id 1D3F4400154
+	for <xfs@oss.sgi.com>; Tue, 14 Jul 2009 08:05:42 +0200 (CEST)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: [PATCH] xfs_repair - do not attempt to set shortform attr header
 	when clearing
-References: <200907031320.48358@zmi.at>
-In-Reply-To: <200907031320.48358@zmi.at>
+Date: Tue, 14 Jul 2009 08:05:35 +0200
+References: <200907031320.48358@zmi.at> <4A5C0606.4030102@sandeen.net>
+In-Reply-To: <4A5C0606.4030102@sandeen.net>
+MIME-Version: 1.0
+Message-Id: <200907140805.40854@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,133 +35,66 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============5489020220715345788=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: xfs mailing list <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-As reported in "bad fs - xfs_repair 3.01 crashes on it" ...
+--===============5489020220715345788==
+Content-Type: multipart/signed;
+  boundary="nextPart1550117.u71uDh1I6J";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-The filesystem encountered a bad attribute fork which is cleared:
+--nextPart1550117.u71uDh1I6J
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-local inode 3857051697 attr too small (size = 3, min size = 4)
-bad attribute fork in inode 3857051697, clearing attr fork
-clearing inode 3857051697 attributes
+On Dienstag 14 Juli 2009 Eric Sandeen wrote:
+> Whew.
 
-and then later this inode failed an assertion:
+It's people like you I'm afraid of ;-) Is there still blood in your=20
+vains or was it replaced with silicone once?
 
-data fork in regular inode 3857051697 claims used block 537147998
-xfs_repair: dinode.c:2108: process_inode_data_fork: Assertion `err == 0' failed.
+To ask in a simple way: Will this version fix the problem on my disk? If=20
+yes, where could I download it? (git ..?)
 
-The ASSERT is there because process_inode_data_fork() calls 
-process_exinode() twice; once with check_dups == 1, and again with 
-check_dups == 0.  The assertion is that they should both return the
-the same answer about whether the inode contained duplicate blocks.
+mfg zmi
+=2D-=20
+// Michael Monnerie, Ing.BSc    -----      http://it-management.at
+// Tel: 0660 / 415 65 31                      .network.your.ideas.
+// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
+// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
+// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
 
-However, they are tested in different ways; with check_dups set,
-process_exinode() simply does search_dup_extent() when it gets
-to process_bmbt_reclist_int(); without check_dups set, it utilizes
-the ba_bmap[][] array of bitmaps, compared against the current
-extent record.
 
-Long story short(er), when we cleared the bad attribute in
-clear_dinode_attr(), it used XFS_DFORK_APTR() to get to the
-shortform attribute header, and set some fields.  However,
-di_forkoff must have been corrupt as well, because setting these
-fields corrupted the extent list, and the 4th extent on the inode
-got its physical block modified from:
-431241822 / 0x19B43A5E
-to:
-537147998 / 0x20043A5E
+--nextPart1550117.u71uDh1I6J
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
-and this new (corrupt) physical block matched another inode's
-block, triggering the dup & return 1, triggering the ASSERT.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
 
-Whew.
+iEYEABECAAYFAkpcIDQACgkQzhSR9xwSCbQSgACfQEivU6R7aEMszohMpSPnWiva
+niwAoKkqGhwEnRjYRmy/YvjXvJi1KdIc
+=SoMX
+-----END PGP SIGNATURE-----
 
-Anyway, simply setting di_forkoff to 0 should be enough to flag
-the inode as having no attr fork, and messing with where we
-think the shortform attribute header may be is now shown to be
-dangerous.  Simply not mucking w/ the header seems to fix
-the problem, based on testing with the metadump image.
+--nextPart1550117.u71uDh1I6J--
 
-Almost.
 
-process_inode_attr_fork() calls clear_dinode_attr() which puts
-it into the XFS_DINODE_FMT_EXTENTS state, but upon return resets
-that to XFS_DINODE_FMT_LOCAL.  Later, it's checked that if 
-!XFS_DFORK_Q(), the format is XFS_DINODE_FMT_EXTENTS (!)
-and it gets reset.
-
-So drop the setting to XFS_DINODE_FMT_LOCAL; for whatever reason,
-"no attributes" seems to expect _EXTENTS format, see for example
-xfs_attr_shortform_remove(), clear_dinode_core(), and 
-xfs_attr_fork_reset() in the kernel, which all set it to _EXTENTS
-in this circumstance.
-
-Fix this up after both calls to clear_dinode_attr().
-
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
-
-diff --git a/repair/dinode.c b/repair/dinode.c
-index 84e1d05..23de0a8 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -103,23 +103,8 @@ clear_dinode_attr(xfs_mount_t *mp, xfs_dinode_t *dino, xfs_ino_t ino_num)
- 	}
- 
- 	/* get rid of the fork by clearing forkoff */
--
--	/* Originally, when the attr repair code was added, the fork was cleared
--	 * by turning it into shortform status.  This meant clearing the
--	 * hdr.totsize/count fields and also changing aformat to LOCAL
--	 * (vs EXTENTS).  Over various fixes, the aformat and forkoff have
--	 * been updated to not show an attribute fork at all, however.
--	 * It could be possible that resetting totsize/count are not needed,
--	 * but just to be safe, leave it in for now.
--	 */
--
--	if (!no_modify) {
--		xfs_attr_shortform_t *asf = (xfs_attr_shortform_t *)
--				XFS_DFORK_APTR(dino);
--		asf->hdr.totsize = cpu_to_be16(sizeof(xfs_attr_sf_hdr_t));
--		asf->hdr.count = 0;
--		dinoc->di_forkoff = 0;  /* got to do this after asf is set */
--	}
-+	if (!no_modify)
-+		dinoc->di_forkoff = 0;
- 
- 	/*
- 	 * always returns 1 since the fork gets zapped
-@@ -2195,7 +2180,6 @@ process_inode_attr_fork(
- 			if (delete_attr_ok)  {
- 				do_warn(_(", clearing attr fork\n"));
- 				*dirty += clear_dinode_attr(mp, dino, lino);
--				dinoc->di_aformat = XFS_DINODE_FMT_LOCAL;
- 			} else  {
- 				do_warn("\n");
- 				*dirty += clear_dinode(mp, dino, lino);
-@@ -2253,12 +2237,10 @@ process_inode_attr_fork(
- 			lino);
- 		if (!repair) {
- 			/* clear attributes if not done already */
--			if (!no_modify)  {
-+			if (!no_modify)
- 				*dirty += clear_dinode_attr(mp, dino, lino);
--				dinoc->di_aformat = XFS_DINODE_FMT_LOCAL;
--			} else  {
-+			else
- 				do_warn(_("would clear attr fork\n"));
--			}
- 			*atotblocks = 0;
- 			*anextents = 0;
- 		}
-
+--===============5489020220715345788==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============5489020220715345788==--
