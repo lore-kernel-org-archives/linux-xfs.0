@@ -1,22 +1,10 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6E6GY3Q094207 for <xfs@oss.sgi.com>; Tue, 14 Jul 2009 01:16:34 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 408FB10A2228
-	for <xfs@oss.sgi.com>; Mon, 13 Jul 2009 23:24:38 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id TM3yI116XHOCg9KM for
-	<xfs@oss.sgi.com>; Mon, 13 Jul 2009 23:24:38 -0700 (PDT)
-References: <200907031320.48358@zmi.at> <4A5C0606.4030102@sandeen.net>
-	<200907140805.40854@zmi.at>
-Message-Id: <87A18C52-F601-491F-94EA-ED16AB6CE574@sandeen.net>
-From: Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <200907140805.40854@zmi.at>
-Mime-Version: 1.0 (iPod Mail 7A341)
-Subject: Re: [PATCH] xfs_repair - do not attempt to set shortform attr header
-	when clearing
-Date: Tue, 14 Jul 2009 01:16:17 -0500
+Subject: Re: [PATCH 1/2] fs/xfs: Drop unnecessary NULL test
+References: <Pine.LNX.4.64.0907131209250.6808@ask.diku.dk>
+From: Olaf Weber <olaf@sgi.com>
+Date: Tue, 14 Jul 2009 12:34:43 +0200
+Message-ID: <bzy7hybzh6k.fsf@fransum.emea.sgi.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,45 +13,69 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Julia Lawall <julia@diku.dk>
+Cc: xfs-masters@oss.sgi.com, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Jul 14, 2009, at 1:05 AM, Michael Monnerie <michael.monnerie@is.it-management.at 
- > wrote:
+Julia Lawall writes:
 
-> On Dienstag 14 Juli 2009 Eric Sandeen wrote:
->> Whew.
->
-> It's people like you I'm afraid of ;-) Is there still blood in your
-> vains or was it replaced with silicone once?
+> From: Julia Lawall <julia@diku.dk>
+> The result of container_of should not be NULL.  In particular, in this case
+> the argument to the enclosing function has passed though INIT_DELAYED_WORK,
+> which dereferences it, implying that its container cannot be NULL.
 
-Heh.. :)
+Given the defn of container_of() it seems clear that neither its input
+pointer nor its result should ever be NULL.
 
->
-> To ask in a simple way: Will this version fix the problem on my  
-> disk? If
-> yes, where could I download it? (git ..?)
->
-It's not committed yet, you could patch it yourself now, or wait til  
-it's reviewed and committed...
+In this particular case, there is a check for NULL and early exit in
+xfs_mru_cache_create(), the function that does the INIT_DELAYED_WORK().
 
--Eric
-> mfg zmi
-> -- 
-> // Michael Monnerie, Ing.BSc    -----      http://it-management.at
-> // Tel: 0660 / 415 65 31                      .network.your.ideas.
-> // PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
-> // Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
-> // Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Olaf
+
+> The semantic match that finds this problem is as follows:
+> (http://www.emn.fr/x-info/coccinelle/)
+
+> // <smpl>
+> @@
+> expression x,e;
+> @@
+> x = container_of(...)
+> ... when != x = e
+> * x == NULL
+> // </smpl>
+
+> Signed-off-by: Julia Lawall <julia@diku.dk>
+
+Acked-By: Olaf Weber <olaf@sgi.com>
+
+> ---
+>  fs/xfs/xfs_mru_cache.c              |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+
+> diff --git a/fs/xfs/xfs_mru_cache.c b/fs/xfs/xfs_mru_cache.c
+> index 4b0613d..0651ce7 100644
+> --- a/fs/xfs/xfs_mru_cache.c
+> +++ b/fs/xfs/xfs_mru_cache.c
+> @@ -280,8 +280,8 @@ _xfs_mru_cache_reap(
+>  	xfs_mru_cache_t		*mru = container_of(work, xfs_mru_cache_t, work.work);
+>  	unsigned long		now, next;
+ 
+> -	ASSERT(mru && mru->lists);
+> -	if (!mru || !mru->lists)
+> +	ASSERT(mru->lists);
+> +	if (!mru->lists)
+>  		return;
+ 
+>  	spin_lock(&mru->lock);
+
+-- 
+Olaf Weber                 SGI               Phone:  +31(0)30-6696752
+                           Veldzigt 2b       Fax:    +31(0)30-6696799
+Technical Lead             3454 PW de Meern  Vnet:   955-7151
+Storage Software           The Netherlands   Email:  olaf@sgi.com
 
 _______________________________________________
 xfs mailing list
