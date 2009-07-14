@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6E27p4o082542 for <xfs@oss.sgi.com>; Mon, 13 Jul 2009 21:07:51 -0500
-Received: from snt0-omc3-s8.snt0.hotmail.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BD95C136538C
-	for <xfs@oss.sgi.com>; Mon, 13 Jul 2009 19:08:29 -0700 (PDT)
-Received: from snt0-omc3-s8.snt0.hotmail.com (snt0-omc3-s8.snt0.hotmail.com
-	[65.55.90.147]) by cuda.sgi.com with ESMTP id DuuTDG7M4YKVDUJn
-	for <xfs@oss.sgi.com>; Mon, 13 Jul 2009 19:08:29 -0700 (PDT)
-Message-ID: <SNT109-W281A335998D4B1CD86B0A9EC230@phx.gbl>
-From: crow al <al-john@hotmail.com>
-Subject: RE: How to simulate journal corruption
-Date: Tue, 14 Jul 2009 10:08:28 +0800
-In-Reply-To: <4A5B4833.9070300@sandeen.net>
-References: <SNT109-W2390816D3EF297CE0D07DEEC220@phx.gbl>
-	<4A5B4833.9070300@sandeen.net>
+	n6E4DOBY086765 for <xfs@oss.sgi.com>; Mon, 13 Jul 2009 23:13:24 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1A4C1A556CA
+	for <xfs@oss.sgi.com>; Mon, 13 Jul 2009 21:21:29 -0700 (PDT)
+Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
+	cuda.sgi.com with ESMTP id rCE0FqqJ7iyl26EC for
+	<xfs@oss.sgi.com>; Mon, 13 Jul 2009 21:21:29 -0700 (PDT)
+Message-ID: <4A5C0606.4030102@sandeen.net>
+Date: Mon, 13 Jul 2009 23:13:58 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
+Subject: [PATCH] xfs_repair - do not attempt to set shortform attr header
+	when clearing
+References: <200907031320.48358@zmi.at>
+In-Reply-To: <200907031320.48358@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,124 +24,133 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3076445187961817750=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: sandeen@sandeen.net, olaf@sgi.com
-Cc: xfs@oss.sgi.com
+To: Michael Monnerie <michael.monnerie@is.it-management.at>
+Cc: xfs mailing list <xfs@oss.sgi.com>
 
---===============3076445187961817750==
-Content-Type: multipart/alternative;
-	boundary="_2f5fceb3-8c3c-48a5-9614-0a3c9821fadd_"
+As reported in "bad fs - xfs_repair 3.01 crashes on it" ...
 
---_2f5fceb3-8c3c-48a5-9614-0a3c9821fadd_
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: 8bit
+The filesystem encountered a bad attribute fork which is cleared:
 
+local inode 3857051697 attr too small (size = 3, min size = 4)
+bad attribute fork in inode 3857051697, clearing attr fork
+clearing inode 3857051697 attributes
 
-Hi, Olaf & Eric
+and then later this inode failed an assertion:
 
-Thanks for your kindly reply. I will try your suggestions & if there is any interesting findings, I will let your know
+data fork in regular inode 3857051697 claims used block 537147998
+xfs_repair: dinode.c:2108: process_inode_data_fork: Assertion `err == 0' failed.
 
-Thanks & Regards.
-Lv Wentao.
+The ASSERT is there because process_inode_data_fork() calls 
+process_exinode() twice; once with check_dups == 1, and again with 
+check_dups == 0.  The assertion is that they should both return the
+the same answer about whether the inode contained duplicate blocks.
 
+However, they are tested in different ways; with check_dups set,
+process_exinode() simply does search_dup_extent() when it gets
+to process_bmbt_reclist_int(); without check_dups set, it utilizes
+the ba_bmap[][] array of bitmaps, compared against the current
+extent record.
 
+Long story short(er), when we cleared the bad attribute in
+clear_dinode_attr(), it used XFS_DFORK_APTR() to get to the
+shortform attribute header, and set some fields.  However,
+di_forkoff must have been corrupt as well, because setting these
+fields corrupted the extent list, and the 4th extent on the inode
+got its physical block modified from:
+431241822 / 0x19B43A5E
+to:
+537147998 / 0x20043A5E
 
+and this new (corrupt) physical block matched another inode's
+block, triggering the dup & return 1, triggering the ASSERT.
 
+Whew.
 
-> Date: Mon, 13 Jul 2009 09:44:03 -0500
-> From: sandeen@sandeen.net
-> To: al-john@hotmail.com
-> CC: xfs@oss.sgi.com
-> Subject: Re: How to simulate journal corruption
-> 
-> crow al wrote:
-> > Hi, there
-> > 
-> > I'm a QA engineer from Cisco. I'm working on a test case concerning XFS
-> > journal playback failure, which needs to manually inject error to XFS.
-> > 
-> > I did some google work but get no luck. Then I think maybe XFA-QA could
-> > give me some advice. That why I come to here.
-> > 
-> > Is there anyone could tell me how to inject error into XFS or is there
-> > any tool could be used?
-> > 
-> > Wish for your response.
-> > 
-> > Thanks & Regards.
-> > Lv Wentao.
-> 
-> test 044 in xfstests runs something called "loggen" which will generate
-> log traffic to be replayed on mount, if I'm reading it right.  Of course
-> that's an uncorrupted log ...
-> 
-> There is another tool called "fsfuzzer" which writes random junk over a
-> filesystem.  You could probably combine the two tools to create valid
-> logs to replay, and then write varying degrees of junk on top with
-> fsfuzzer, and try to replay the result.
-> 
-> You could probably even use fsfuzzer "stock" and just restrict the
-> fuzzing to the log portion of the filesystem.
-> 
-> I'm not sure what kinds of errors you are trying to catch - oopses,
-> hangs, improperly replaying a corrupted log, etc - but it sounds well
-> worth doing.  FWIW when I used fsfuzzer, it often ran into problems in
-> the log, so I imagine you'll uncover some interesting things; if you do,
-> please share.  :)
-> 
-> -Eric
+Anyway, simply setting di_forkoff to 0 should be enough to flag
+the inode as having no attr fork, and messing with where we
+think the shortform attribute header may be is now shown to be
+dangerous.  Simply not mucking w/ the header seems to fix
+the problem, based on testing with the metadump image.
 
-_________________________________________________________________
-With Windows Live, you can organize, edit, and share your photos.
-http://www.microsoft.com/middleeast/windows/windowslive/products/photo-gallery-edit.aspx
---_2f5fceb3-8c3c-48a5-9614-0a3c9821fadd_
-Content-Type: text/html; charset="gb2312"
-Content-Transfer-Encoding: 8bit
+Almost.
 
-<html>
-<head>
-<style>
-.hmmessage P
-{
-margin:0px;
-padding:0px
-}
-body.hmmessage
-{
-font-size: 10pt;
-font-family:Verdana
-}
-</style>
-</head>
-<body class='hmmessage'>
-Hi, Olaf &amp; Eric<br><br>Thanks for your kindly reply. I will try your suggestions &amp; if there is any interesting findings, I will let your know<br><br>Thanks &amp; Regards.<br>Lv Wentao.<meta http-equiv="Content-Type" content="text/html; charset=unicode">
-<meta name="Generator" content="Microsoft SafeHTML">
-<style>
-.hmmessage P
-{margin:0px;padding:0px;}
-body.hmmessage
-{font-size:10pt;font-family:Verdana;}
-</style>
+process_inode_attr_fork() calls clear_dinode_attr() which puts
+it into the XFS_DINODE_FMT_EXTENTS state, but upon return resets
+that to XFS_DINODE_FMT_LOCAL.  Later, it's checked that if 
+!XFS_DFORK_Q(), the format is XFS_DINODE_FMT_EXTENTS (!)
+and it gets reset.
 
-<br><br>&gt; Date: Mon, 13 Jul 2009 09:44:03 -0500<br>&gt; From: sandeen@sandeen.net<br>&gt; To: al-john@hotmail.com<br>&gt; CC: xfs@oss.sgi.com<br>&gt; Subject: Re: How to simulate journal corruption<br>&gt; <br>&gt; crow al wrote:<br>&gt; &gt; Hi, there<br>&gt; &gt; <br>&gt; &gt; I'm a QA engineer from Cisco. I'm working on a test case concerning XFS<br>&gt; &gt; journal playback failure, which needs to manually inject error to XFS.<br>&gt; &gt; <br>&gt; &gt; I did some google work but get no luck. Then I think maybe XFA-QA could<br>&gt; &gt; give me some advice. That why I come to here.<br>&gt; &gt; <br>&gt; &gt; Is there anyone could tell me how to inject error into XFS or is there<br>&gt; &gt; any tool could be used?<br>&gt; &gt; <br>&gt; &gt; Wish for your response.<br>&gt; &gt; <br>&gt; &gt; Thanks &amp; Regards.<br>&gt; &gt; Lv Wentao.<br>&gt; <br>&gt; test 044 in xfstests runs something called "loggen" which will generate<br>&gt; log traffic to be replayed on mount, 
- if I'm reading it right.  Of course<br>&gt; that's an uncorrupted log ...<br>&gt; <br>&gt; There is another tool called "fsfuzzer" which writes random junk over a<br>&gt; filesystem.  You could probably combine the two tools to create valid<br>&gt; logs to replay, and then write varying degrees of junk on top with<br>&gt; fsfuzzer, and try to replay the result.<br>&gt; <br>&gt; You could probably even use fsfuzzer "stock" and just restrict the<br>&gt; fuzzing to the log portion of the filesystem.<br>&gt; <br>&gt; I'm not sure what kinds of errors you are trying to catch - oopses,<br>&gt; hangs, improperly replaying a corrupted log, etc - but it sounds well<br>&gt; worth doing.  FWIW when I used fsfuzzer, it often ran into problems in<br>&gt; the log, so I imagine you'll uncover some interesting things; if you do,<br>&gt; please share.  :)<br>&gt; <br>&gt; -Eric<br><br /><hr />With Windows Live, you can organize, edit, and  <a href='http://www.microsoft.com/middleeast/windows
- /
- windowslive/products/photo-gallery-edit.aspx' target='_new'>share your photos.</a></body>
-</html>
---_2f5fceb3-8c3c-48a5-9614-0a3c9821fadd_--
+So drop the setting to XFS_DINODE_FMT_LOCAL; for whatever reason,
+"no attributes" seems to expect _EXTENTS format, see for example
+xfs_attr_shortform_remove(), clear_dinode_core(), and 
+xfs_attr_fork_reset() in the kernel, which all set it to _EXTENTS
+in this circumstance.
 
+Fix this up after both calls to clear_dinode_attr().
 
---===============3076445187961817750==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
+
+diff --git a/repair/dinode.c b/repair/dinode.c
+index 84e1d05..23de0a8 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -103,23 +103,8 @@ clear_dinode_attr(xfs_mount_t *mp, xfs_dinode_t *dino, xfs_ino_t ino_num)
+ 	}
+ 
+ 	/* get rid of the fork by clearing forkoff */
+-
+-	/* Originally, when the attr repair code was added, the fork was cleared
+-	 * by turning it into shortform status.  This meant clearing the
+-	 * hdr.totsize/count fields and also changing aformat to LOCAL
+-	 * (vs EXTENTS).  Over various fixes, the aformat and forkoff have
+-	 * been updated to not show an attribute fork at all, however.
+-	 * It could be possible that resetting totsize/count are not needed,
+-	 * but just to be safe, leave it in for now.
+-	 */
+-
+-	if (!no_modify) {
+-		xfs_attr_shortform_t *asf = (xfs_attr_shortform_t *)
+-				XFS_DFORK_APTR(dino);
+-		asf->hdr.totsize = cpu_to_be16(sizeof(xfs_attr_sf_hdr_t));
+-		asf->hdr.count = 0;
+-		dinoc->di_forkoff = 0;  /* got to do this after asf is set */
+-	}
++	if (!no_modify)
++		dinoc->di_forkoff = 0;
+ 
+ 	/*
+ 	 * always returns 1 since the fork gets zapped
+@@ -2195,7 +2180,6 @@ process_inode_attr_fork(
+ 			if (delete_attr_ok)  {
+ 				do_warn(_(", clearing attr fork\n"));
+ 				*dirty += clear_dinode_attr(mp, dino, lino);
+-				dinoc->di_aformat = XFS_DINODE_FMT_LOCAL;
+ 			} else  {
+ 				do_warn("\n");
+ 				*dirty += clear_dinode(mp, dino, lino);
+@@ -2253,12 +2237,10 @@ process_inode_attr_fork(
+ 			lino);
+ 		if (!repair) {
+ 			/* clear attributes if not done already */
+-			if (!no_modify)  {
++			if (!no_modify)
+ 				*dirty += clear_dinode_attr(mp, dino, lino);
+-				dinoc->di_aformat = XFS_DINODE_FMT_LOCAL;
+-			} else  {
++			else
+ 				do_warn(_("would clear attr fork\n"));
+-			}
+ 			*atotblocks = 0;
+ 			*anextents = 0;
+ 		}
+
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3076445187961817750==--
