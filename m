@@ -1,21 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6FDtl4O200688 for <xfs@oss.sgi.com>; Wed, 15 Jul 2009 08:55:48 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B68BD12A0862
-	for <xfs@oss.sgi.com>; Wed, 15 Jul 2009 07:04:02 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id yRSGIDgPQjGbIKHE for
-	<xfs@oss.sgi.com>; Wed, 15 Jul 2009 07:04:02 -0700 (PDT)
-Message-ID: <4A5DE008.5040103@sandeen.net>
-Date: Wed, 15 Jul 2009 08:56:24 -0500
+	n6FJWkOv215694 for <xfs@oss.sgi.com>; Wed, 15 Jul 2009 14:32:46 -0500
+Received: from mx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 843C7138C395
+	for <xfs@oss.sgi.com>; Wed, 15 Jul 2009 12:33:24 -0700 (PDT)
+Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
+	with ESMTP id fPKGxyIhD6jm5uIL for <xfs@oss.sgi.com>;
+	Wed, 15 Jul 2009 12:33:24 -0700 (PDT)
+Received: from int-mx2.corp.redhat.com (int-mx2.corp.redhat.com [172.16.27.26])
+	by mx2.redhat.com (8.13.8/8.13.8) with ESMTP id n6FJXOpA022740
+	for <xfs@oss.sgi.com>; Wed, 15 Jul 2009 15:33:24 -0400
+Received: from ns3.rdu.redhat.com (ns3.rdu.redhat.com [10.11.255.199])
+	by int-mx2.corp.redhat.com (8.13.1/8.13.1) with ESMTP id n6FJXNaq010293
+	for <xfs@oss.sgi.com>; Wed, 15 Jul 2009 15:33:23 -0400
+Received: from neon.msp.redhat.com (neon.msp.redhat.com [10.15.80.10])
+	by ns3.rdu.redhat.com (8.13.8/8.13.8) with ESMTP id n6FJXL3X016880
+	for <xfs@oss.sgi.com>; Wed, 15 Jul 2009 15:33:22 -0400
+Message-ID: <4A5E2F01.7030107@sandeen.net>
+Date: Wed, 15 Jul 2009 14:33:21 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH, RFC] xfs_repair - clear inodes in incorrect btree	format
-References: <4A582070.9040907@sandeen.net>
-	<20090715130705.GA27973@infradead.org>
-In-Reply-To: <20090715130705.GA27973@infradead.org>
+Subject: [PATCH] reduce bmv_count in xfs_vn_fiemap
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,70 +34,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs mailing list <xfs@oss.sgi.com>
 
-Christoph Hellwig wrote:
-> Adding this check is certainly better than having nothing, but I would
-> be much happier if we could do something.
-> 
-> On Sat, Jul 11, 2009 at 12:17:36AM -0500, Eric Sandeen wrote:
->> 1) How'd it get into this state? ... but maybe more importantly...
-> 
-> End of last year lachlan had case that looked a bit like this where
-> we had problems resetting the fork state.
-> 
->> 2) Should these really get cleared?  It's possibly a sane extent list,
->> it's just that it -could- be in extents rather than btree format...
-> 
-> That is indeed the the most likely case.  Do you still have a metadump
-> with this problem around?  We should probably sanity-check for a valid
-> looking extent format inode and then process it as such.
+commit 6321e3ed2acf3ee9643cdd403e1c88605d7944ba caused
+the full bmv_count's worth of getbmapx structures to get
+allocated; telling it to do MAXEXTNUM was a bit insane,
+resulting in ENOMEM.
 
-yep I do... and the user was able to perfectly copy off the files by
-disabling the kernel check, FWIW.  So in this case it really was OK.
+Chop it down to something reasonable, the caller can
+loop over this if the file has > 64 extents.
 
->> 3) By the same token, should the kernel really be choking on it?
-> 
-> Well, not choking could cause all kinds of harm by treating it as
-> a btree inode while it's not.  We could try to apply a very careful
-> variant of 2) above, but I'd really rather leave that kind of thing
-> to repair.
+(this is a regression, FWIW)
 
-Yep, probably best.
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
 
->> +	if (*nex <= XFS_DFORK_SIZE(dip, mp, whichfork) / sizeof(xfs_bmbt_rec_t)) {
->> +		do_warn(_("extent count for ino %lld %s fork too low "
->> +			  "(%d) for file format\n"),
->> +				lino,
->> +				whichfork == XFS_DATA_FORK ? _("data") : _("attr"),
->> +				*nex);
->> +		return(1);
->> +	}
-> 
-> Well, you'll get my ok in the sense of this looks good and better than
-> nothing, but I'd really prefer a real fixup for this issues.  Also the
-> code above looks a bit unreadable, why not:
-
-I guess I tend to prefer a real fixup too, if possible; I suppose
-there's existing infrastructure to check it as a btree inode, and
-hopefully to move it into extents as well.
-
-FWIW I just copied the check above from xfs_check ;)
-
-Sure, below formatting is better.
-
-thanks,
--Eric
-
-> 	if (*nex <= XFS_DFORK_SIZE(dip, mp, whichfork) /
-> 			sizeof(xfs_bmbt_rec_t)) {
-> 		do_warn(
-> 	_("extent count for ino %lld %s fork too low (%d) for file format\n"),
-> 			lino, forkname, *nex);
-> 		return 1;
-> 	}
-> 
+iff --git a/fs/xfs/linux-2.6/xfs_iops.c b/fs/xfs/linux-2.6/xfs_iops.c
+index 58973bb..370e9a7 100644
+--- a/fs/xfs/linux-2.6/xfs_iops.c
++++ b/fs/xfs/linux-2.6/xfs_iops.c
+@@ -680,8 +680,12 @@ xfs_vn_fiemap(
+ 	else
+ 		bm.bmv_length = BTOBB(length);
+ 
+-	/* our formatter will tell xfs_getbmap when to stop. */
+-	bm.bmv_count = MAXEXTNUM;
++	/*
++	 * xfs_getbmap allocates based on that; pick a count that's
++	 * not too outragous.
++	 * Our formatter will tell xfs_getbmap when to stop.
++	 */
++	bm.bmv_count = 64;
+ 	bm.bmv_iflags = BMV_IF_PREALLOC;
+ 	if (fieinfo->fi_flags & FIEMAP_FLAG_XATTR)
+ 		bm.bmv_iflags |= BMV_IF_ATTRFORK;
 
 _______________________________________________
 xfs mailing list
