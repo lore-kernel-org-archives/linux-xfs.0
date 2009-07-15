@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6F40LTv167141 for <xfs@oss.sgi.com>; Tue, 14 Jul 2009 23:00:21 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CCF0A137E991
-	for <xfs@oss.sgi.com>; Tue, 14 Jul 2009 21:01:00 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id sbuLEPgEw8BAOk9R for
-	<xfs@oss.sgi.com>; Tue, 14 Jul 2009 21:01:00 -0700 (PDT)
-Message-ID: <4A5D547A.9040005@sandeen.net>
-Date: Tue, 14 Jul 2009 23:00:58 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+	n6F3jdeX166395 for <xfs@oss.sgi.com>; Tue, 14 Jul 2009 22:45:40 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3C84F363EE4
+	for <xfs@oss.sgi.com>; Tue, 14 Jul 2009 20:46:19 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id 9XSyazAikmIhXVhK for
+	<xfs@oss.sgi.com>; Tue, 14 Jul 2009 20:46:19 -0700 (PDT)
+Date: Tue, 14 Jul 2009 23:46:18 -0400
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: xfs+nfs crash in 2.6.30 and 2.6.30.1
+Message-ID: <20090715034618.GA21478@infradead.org>
 References: <20090715030046.GA28592@rlogin.dk>
+MIME-Version: 1.0
+Content-Disposition: inline
 In-Reply-To: <20090715030046.GA28592@rlogin.dk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -30,22 +31,26 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Michael Ole Olsen <gnu@gmx.net>
 Cc: xfs <xfs@oss.sgi.com>
 
-Michael Ole Olsen wrote:
->             radix_tree_tag_set/xfs_inode_set_reclaim_tag crash
+On Wed, Jul 15, 2009 at 05:00:47AM +0200, Michael Ole Olsen wrote:
+> Everything was stable on server+client until the server got 2.6.30 kernel, 
+> the mdadm raid6 only works in 2.6.30 or above - mdadm fails to initialize it in 
+> anything else, so cannot downgrade (custom reshape to raid6 using echo into /sys,
+>  all Q blocks on one disk).
 > 
-> I keep getting kernel crashes with xfs+lvm2+mdadm (raid6) - correct in sync, 
-> all xfs partitions checked for corruption (but there were none, but the crashes persists).
-> 
-> The raid6 has just resynced now because of this kernel hang.
-> 
-> 2.6.30 and 2.6.30.1 kernels on my nfsv3 server keep crashing, both with/without SMP, dynticks,
->  selinux (although selinux for some reason seems to make it crash very often)
+> I have experimented with mount options on the client, and the client has 
+> been stable with these mount options before, when the server had a kernel
+>  below 2.6.30
 
-Thanks, I've pasted this info into the bug report; It's unlikely that
-it's a stack issue I think - the hint about selinux making it worse may
-be useful.
+Yes, we had a few reports of this already, but not been able to track it
+down.  Your instrcution below will be very helpful to reproduce and test
+it, I will looks at it on thursday when I get back home to my test
+systems.
 
--Eric
+> I saw someone talking about kernel stack size would be the cause for this xfs+nfs problem, 
+> is there anything to this?
+
+Unlikely, it looks like problem in the XFS inode cache code introduced
+in 2.6.29.
 
 _______________________________________________
 xfs mailing list
