@@ -1,20 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6G8CphX261710 for <xfs@oss.sgi.com>; Thu, 16 Jul 2009 03:12:52 -0500
-Received: from egateway.tatatechnologies.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C95D61397DD9
-	for <xfs@oss.sgi.com>; Thu, 16 Jul 2009 01:13:29 -0700 (PDT)
-Received: from egateway.tatatechnologies.com (egateway.tatatechnologies.com
-	[203.201.222.200]) by cuda.sgi.com with ESMTP id
-	t4VgEHT3IjXP9uGy for <xfs@oss.sgi.com>;
-	Thu, 16 Jul 2009 01:13:29 -0700 (PDT)
-Content-class: urn:content-classes:message
+	n6GAuQrK009422
+	for <linux-xfs@oss.sgi.com>; Thu, 16 Jul 2009 05:56:27 -0500
+Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 804F5139BE95
+	for <linux-xfs@oss.sgi.com>; Thu, 16 Jul 2009 03:57:05 -0700 (PDT)
+Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.162.198]) by
+	cuda.sgi.com with ESMTP id DBGXXUSsAgQfFu5N for
+	<linux-xfs@oss.sgi.com>; Thu, 16 Jul 2009 03:57:05 -0700 (PDT)
+Received: from mailsrv2.i.zmi.at (h081217106033.dyn.cm.kabsi.at
+	[81.217.106.33])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv1.zmi.at (Postfix) with ESMTP id C973353F0
+	for <linux-xfs@oss.sgi.com>; Thu, 16 Jul 2009 12:57:47 +0200 (CEST)
+Received: from saturn.localnet (unknown [10.72.27.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv2.i.zmi.at (Postfix) with ESMTPSA id E9DD3400154
+	for <linux-xfs@oss.sgi.com>; Thu, 16 Jul 2009 12:57:03 +0200 (CEST)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: LWN article: A new way to truncate() files
+Date: Thu, 16 Jul 2009 12:56:58 +0200
 MIME-Version: 1.0
-Subject: Chacl command not found 
-Date: Thu, 16 Jul 2009 13:43:25 +0530
-Message-ID: <FBC5D53CDA80FE43A05535FF85DA349B0494FAAF@ttpnemsg02.ttglobal.tatatechnologies.com>
-From: <anil.rathod@tatatechnologies.com>
+Message-Id: <200907161257.03539@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,274 +33,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7149385970954789130=="
+Content-Type: multipart/mixed; boundary="===============2557092943771171598=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-This is a multi-part message in MIME format.
+--===============2557092943771171598==
+Content-Type: multipart/signed;
+  boundary="nextPart2305894.SI8GXBnYSp";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
---===============7149385970954789130==
-Content-class: urn:content-classes:message
-Content-Type: multipart/alternative;
-	boundary="----_=_NextPart_001_01CA05ED.4B054433"
-
-This is a multi-part message in MIME format.
-
-------_=_NextPart_001_01CA05ED.4B054433
-Content-Type: text/plain; charset="us-ascii"
+--nextPart2305894.SI8GXBnYSp
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Hi,
+I'm pretty sure the core hackers are on linux-kernel, but for the rest=20
+of us LWN provided a good article explaining development, in this case=20
+it reaches into XFS that's why I post it here:
 
-=20
+http://lwn.net/SubscriberLink/341352/21ab5a5c7158ea80/
 
-We are using IRIX OS on our SGI tezro Server.
-
-I am facing a problem regarding to the ACL.
-
-chacl  this commad was not  supporting.
-
-=20
-
-=20
-
-=20
-
-Kindly help us regarding the same=20
-
-=20
-
-=20
-
-Anil Rathod=20
-
-Systems Administrator=20
-
-Tata Technologies=20
-
-Pune ,India=20
-
-=20
-
-Mob.+ 91 9011094209=20
-
-=20
-
-=20
-
-=20
-
-=20
-
-=20
-
-***************************************************************************=
-***********************************************************************
-Email Disclaimer:
-
-Information contained and transmitted by this e-mail (including any attachm=
-ents) is confidential, proprietary and legally privileged data of Tata Tech=
-nologies that is intended for use only by the addressee. If you are not the=
- intended recipient, you are notified that any review, use, dissemination, =
-distribution, copying or printing of this e-mail is strictly prohibited. Yo=
-u are requested to delete this e-mail or any copies immediately and notify =
-the sender by reply email. Internet communications cannot be guaranteed to =
-be timely, secure, error or virus-free.  Tata Technologies does not accept =
-any liability for virus infected email or errors or omissions or consequenc=
-es which may arise as a result of this e-mail transmission. To know more ab=
-out Tata Technologies please visit http://www.tatatechnologies.com
-***************************************************************************=
-*********************************************************************
-
-------_=_NextPart_001_01CA05ED.4B054433
-Content-Type: text/html; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-
-<html xmlns:o=3D"urn:schemas-microsoft-com:office:office" xmlns:w=3D"urn:sc=
-hemas-microsoft-com:office:word" xmlns:st1=3D"urn:schemas-microsoft-com:off=
-ice:smarttags" xmlns=3D"http://www.w3.org/TR/REC-html40">
-
-<head>
-<META HTTP-EQUIV=3D"Content-Type" CONTENT=3D"text/html; charset=3Dus-ascii">
-<meta name=3DGenerator content=3D"Microsoft Word 11 (filtered medium)">
-<o:SmartTagType namespaceuri=3D"urn:schemas-microsoft-com:office:smarttags"
- name=3D"country-region"/>
-<o:SmartTagType namespaceuri=3D"urn:schemas-microsoft-com:office:smarttags"
- name=3D"City"/>
-<o:SmartTagType namespaceuri=3D"urn:schemas-microsoft-com:office:smarttags"
- name=3D"place"/>
-<!--[if !mso]>
-<style>
-st1\:*{behavior:url(#default#ieooui) }
-</style>
-<![endif]-->
-<style>
-<!--
- /* Style Definitions */
- p.MsoNormal, li.MsoNormal, div.MsoNormal
-	{margin:0in;
-	margin-bottom:.0001pt;
-	font-size:12.0pt;
-	font-family:"Times New Roman";}
-a:link, span.MsoHyperlink
-	{color:blue;
-	text-decoration:underline;}
-a:visited, span.MsoHyperlinkFollowed
-	{color:purple;
-	text-decoration:underline;}
-span.EmailStyle17
-	{mso-style-type:personal-compose;
-	font-family:Arial;
-	color:windowtext;}
-@page Section1
-	{size:8.5in 11.0in;
-	margin:1.0in 1.25in 1.0in 1.25in;}
-div.Section1
-	{page:Section1;}
--->
-</style>
-
-</head>
-
-<body lang=3DEN-US link=3Dblue vlink=3Dpurple>
-
-<div class=3DSection1>
-
-<p class=3DMsoNormal><font size=3D2 face=3DArial><span style=3D'font-size:1=
-0.0pt;
-font-family:Arial'>Hi,<o:p></o:p></span></font></p>
-
-<p class=3DMsoNormal><font size=3D2 face=3DArial><span style=3D'font-size:1=
-0.0pt;
-font-family:Arial'><o:p>&nbsp;</o:p></span></font></p>
-
-<p class=3DMsoNormal><font size=3D2 face=3DArial><span style=3D'font-size:1=
-0.0pt;
-font-family:Arial'>We are using IRIX OS on our SGI tezro Server.<o:p></o:p>=
-</span></font></p>
-
-<p class=3DMsoNormal><font size=3D2 face=3DArial><span style=3D'font-size:1=
-0.0pt;
-font-family:Arial'>I am facing a problem regarding to the <b><span
-style=3D'font-weight:bold'>ACL.<o:p></o:p></span></b></span></font></p>
-
-<p class=3DMsoNormal><b><font size=3D2 face=3DArial><span style=3D'font-siz=
-e:10.0pt;
-font-family:Arial;font-weight:bold'>chacl</span></font></b><font size=3D2
-face=3DArial><span style=3D'font-size:10.0pt;font-family:Arial'> <b><span
-style=3D'font-weight:bold'>&nbsp;</span></b>this commad was not&nbsp; suppo=
-rting.<b><span
-style=3D'font-weight:bold'><o:p></o:p></span></b></span></font></p>
-
-<p class=3DMsoNormal><b><font size=3D2 face=3DArial><span style=3D'font-siz=
-e:10.0pt;
-font-family:Arial;font-weight:bold'><o:p>&nbsp;</o:p></span></font></b></p>
-
-<p class=3DMsoNormal><b><font size=3D2 face=3DArial><span style=3D'font-siz=
-e:10.0pt;
-font-family:Arial;font-weight:bold'><o:p>&nbsp;</o:p></span></font></b></p>
-
-<p class=3DMsoNormal><b><font size=3D2 face=3DArial><span style=3D'font-siz=
-e:10.0pt;
-font-family:Arial;font-weight:bold'><o:p>&nbsp;</o:p></span></font></b></p>
-
-<p class=3DMsoNormal><b><font size=3D2 face=3DArial><span style=3D'font-siz=
-e:10.0pt;
-font-family:Arial;font-weight:bold'>Kindly help us regarding the same <o:p>=
-</o:p></span></font></b></p>
-
-<p class=3DMsoNormal><b><font size=3D2 face=3DArial><span style=3D'font-siz=
-e:10.0pt;
-font-family:Arial;font-weight:bold'><o:p>&nbsp;</o:p></span></font></b></p>
-
-<p class=3DMsoNormal><b><font size=3D2 face=3DArial><span style=3D'font-siz=
-e:10.0pt;
-font-family:Arial;font-weight:bold'><o:p>&nbsp;</o:p></span></font></b></p>
-
-<p class=3DMsoNormal><b><font size=3D2 face=3DArial><span style=3D'font-siz=
-e:10.0pt;
-font-family:Arial;font-weight:bold'>Anil Rathod <o:p></o:p></span></font></=
-b></p>
-
-<p class=3DMsoNormal><b><font size=3D2 face=3DArial><span style=3D'font-siz=
-e:10.0pt;
-font-family:Arial;font-weight:bold'>Systems Administrator <o:p></o:p></span=
-></font></b></p>
-
-<p class=3DMsoNormal><b><font size=3D2 face=3DArial><span style=3D'font-siz=
-e:10.0pt;
-font-family:Arial;font-weight:bold'>Tata Technologies <o:p></o:p></span></f=
-ont></b></p>
-
-<p class=3DMsoNormal><st1:place w:st=3D"on"><st1:City w:st=3D"on"><b><font =
-size=3D2
-  face=3DArial><span style=3D'font-size:10.0pt;font-family:Arial;font-weigh=
-t:bold'>Pune</span></font></b></st1:City><b><font
- size=3D2 face=3DArial><span style=3D'font-size:10.0pt;font-family:Arial;fo=
-nt-weight:
- bold'> ,<st1:country-region w:st=3D"on">India</st1:country-region></span><=
-/font></b></st1:place><b><font
-size=3D2 face=3DArial><span style=3D'font-size:10.0pt;font-family:Arial;fon=
-t-weight:
-bold'> <o:p></o:p></span></font></b></p>
-
-<p class=3DMsoNormal><b><font size=3D2 face=3DArial><span style=3D'font-siz=
-e:10.0pt;
-font-family:Arial;font-weight:bold'><o:p>&nbsp;</o:p></span></font></b></p>
-
-<p class=3DMsoNormal><b><font size=3D2 face=3DArial><span style=3D'font-siz=
-e:10.0pt;
-font-family:Arial;font-weight:bold'>Mob.+ 91 9011094209 <o:p></o:p></span><=
-/font></b></p>
-
-<p class=3DMsoNormal><b><font size=3D2 face=3DArial><span style=3D'font-siz=
-e:10.0pt;
-font-family:Arial;font-weight:bold'><o:p>&nbsp;</o:p></span></font></b></p>
-
-<p class=3DMsoNormal><b><font size=3D2 face=3DArial><span style=3D'font-siz=
-e:10.0pt;
-font-family:Arial;font-weight:bold'><o:p>&nbsp;</o:p></span></font></b></p>
-
-<p class=3DMsoNormal><b><font size=3D2 face=3DArial><span style=3D'font-siz=
-e:10.0pt;
-font-family:Arial;font-weight:bold'><o:p>&nbsp;</o:p></span></font></b></p>
-
-<p class=3DMsoNormal><b><font size=3D2 face=3DArial><span style=3D'font-siz=
-e:10.0pt;
-font-family:Arial;font-weight:bold'><o:p>&nbsp;</o:p></span></font></b></p>
-
-<p class=3DMsoNormal><font size=3D2 face=3DArial><span style=3D'font-size:1=
-0.0pt;
-font-family:Arial'>&nbsp;<o:p></o:p></span></font></p>
-
-</div>
-
-<pre>**********************************************************************=
-****************************************************************************
-Email Disclaimer:
-
-Information contained and transmitted by this e-mail (including any attachm=
-ents) is confidential, proprietary and legally privileged data of Tata Tech=
-nologies that is intended for use only by the addressee. If you are not the=
- intended recipient, you are notified that any review, use, dissemination, =
-distribution, copying or printing of this e-mail is strictly prohibited. Yo=
-u are requested to delete this e-mail or any copies immediately and notify =
-the sender by reply email. Internet communications cannot be guaranteed to =
-be timely, secure, error or virus-free.  Tata Technologies does not accept =
-any liability for virus infected email or errors or omissions or consequenc=
-es which may arise as a result of this e-mail transmission. To know more ab=
-out Tata Technologies please visit http://www.tatatechnologies.com
-***************************************************************************=
-*********************************************************************
-</pre></body>
-
-</html>
-
-------_=_NextPart_001_01CA05ED.4B054433--
+mfg zmi
+=2D-=20
+// Michael Monnerie, Ing.BSc    -----      http://it-management.at
+// Tel: 0660 / 415 65 31                      .network.your.ideas.
+// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
+// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
+// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
 
 
---===============7149385970954789130==
+--nextPart2305894.SI8GXBnYSp
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+
+iEYEABECAAYFAkpfB38ACgkQzhSR9xwSCbSIEwCgzL+gAzJTap7szUfdez4tqAfj
+UO8AoL0WyykgmLYJzMfXqeOmPCo/IfCQ
+=FuUX
+-----END PGP SIGNATURE-----
+
+--nextPart2305894.SI8GXBnYSp--
+
+
+--===============2557092943771171598==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -301,4 +92,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============7149385970954789130==--
+--===============2557092943771171598==--
