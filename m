@@ -1,15 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6GJBIpD032543 for <xfs@oss.sgi.com>; Thu, 16 Jul 2009 14:11:18 -0500
-Message-ID: <4A5F7B7B.6020903@sandeen.net>
-Date: Thu, 16 Jul 2009 14:11:55 -0500
+	n6GJKLe1032821 for <xfs@oss.sgi.com>; Thu, 16 Jul 2009 14:20:21 -0500
+Received: from mx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 21A9A36A3A1
+	for <xfs@oss.sgi.com>; Thu, 16 Jul 2009 12:21:00 -0700 (PDT)
+Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
+	with ESMTP id tuJzlIKqAUYhxg2I for <xfs@oss.sgi.com>;
+	Thu, 16 Jul 2009 12:21:00 -0700 (PDT)
+Message-ID: <4A5F7D99.4010503@sandeen.net>
+Date: Thu, 16 Jul 2009 14:20:57 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH V3] reduce bmv_count in xfs_vn_fiemap
-References: <4A5E2F01.7030107@sandeen.net>	<bzybpnkhp62.fsf@fransum.emea.sgi.com>
-	<4A5F3DBA.9040005@sandeen.net>
-In-Reply-To: <4A5F3DBA.9040005@sandeen.net>
+Subject: Re: File system corruption
+References: <4A5F6C8C.609@jquigley.com>
+In-Reply-To: <4A5F6C8C.609@jquigley.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,51 +27,98 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Olaf Weber <olaf@sgi.com>
-Cc: xfs mailing list <xfs@oss.sgi.com>
+To: John Quigley <jquigley@jquigley.com>
+Cc: XFS Development <xfs@oss.sgi.com>
 
-commit 6321e3ed2acf3ee9643cdd403e1c88605d7944ba caused
-the full bmv_count's worth of getbmapx structures to get
-allocated; telling it to do MAXEXTNUM was a bit insane,
-resulting in ENOMEM every time.
+John Quigley wrote:
+> Hey Folks:
+> 
+> I'm periodically encountering an issue with XFS that you might perhaps be interested in.  The environment in which this manifests itself is on a CentOS Linux machine (custom 2.6.28.7 kernel), which is serving the XFS mount point in question with the standard Linux nfsd.  The XFS file system lives on an LVM device in a striping configuration (2 wide stripe), with two iSCSI volumes acting as the constituent physical volumes.  This configuration is somewhat baroque, I know.
+> 
+> I'm experiencing periodic file system corruption, which manifests in the XFS file system going offline, and refusing subsequent mounts.  The only way to recover from this has been to perform a xfs_repair -L, which has resulted in data loss on each occasion, as expected.
 
-Chop it down to something reasonable, the number of slots
-in the caller's input buffer.  If this is too large the 
-caller may get ENOMEM but the reason should not be a
-mystery, and they can try again with something smaller.
+The log corruption might be related to data reordering somewhere along
+your IO path, though I wouldn't swear to it.  But often when write
+caches are on, barriers are off, and power is lost, this sort of thing
+shows up.
 
-We add 1 to the value because in the normal getbmap
-world, bmv_count includes the header and xfs_getbmap does:
+> Now, here's what I witness in the system logs:
+> 
+> <snip>
+> kernel: XFS: bad magic number
+> kernel: XFS: SB validate failed
 
-        nex = bmv->bmv_count - 1;
-        if (nex <= 0)
-                return XFS_ERROR(EINVAL);
+That's the first error?
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
+> kernel: 00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> kernel: Filesystem "dm-0": XFS internal error xfs_ialloc_read_agi at line 1408 of file fs/xfs/xfs_ialloc.c.  Caller 0xffffffff8118711a
 
-V2: set it to the fiemap info's fi_extents_max
-V3: bump up by one to accomodate expected bmv header in core
+This means that after you read an agi, it failed a sanity test:
 
-diff --git a/fs/xfs/linux-2.6/xfs_iops.c b/fs/xfs/linux-2.6/xfs_iops.c
-index 58973bb..954d701 100644
---- a/fs/xfs/linux-2.6/xfs_iops.c
-+++ b/fs/xfs/linux-2.6/xfs_iops.c
-@@ -680,8 +680,7 @@ xfs_vn_fiemap(
- 	else
- 		bm.bmv_length = BTOBB(length);
- 
--	/* our formatter will tell xfs_getbmap when to stop. */
--	bm.bmv_count = MAXEXTNUM;
-+	bm.bmv_count = fieinfo->fi_extents_max + 1;
- 	bm.bmv_iflags = BMV_IF_PREALLOC;
- 	if (fieinfo->fi_flags & FIEMAP_FLAG_XATTR)
- 		bm.bmv_iflags |= BMV_IF_ATTRFORK;
+1403                 be32_to_cpu(agi->agi_magicnum) == XFS_AGI_MAGIC &&
+1404                 XFS_AGI_GOOD_VERSION(be32_to_cpu(agi->agi_versionnum));
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+bad magic number, etc.  The "00 00 00 00 ..." is the contents of the
+buffer that it thought was the agi, containing all that wonderful magic
+- but it's all 0s.
+
+...
+
+> The resultant stack trace coming from "XFS internal error xfs_ialloc_read_agi" repeats itself numerous times, at which point, the following is seen:
+> 
+> <snip>
+> 
+> kernel: 00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> kernel: Filesystem "dm-0": XFS internal error xfs_alloc_read_agf at line 2194 of file fs/xfs/xfs_alloc.c.  Caller 0xffffffff8115cf09
+
+Similar, but bad info on the AGF:
+2184         agf_ok =
+2185                 be32_to_cpu(agf->agf_magicnum) == XFS_AGF_MAGIC &&
+2186
+XFS_AGF_GOOD_VERSION(be32_to_cpu(agf->agf_versionnum)) &&
+2187                 be32_to_cpu(agf->agf_freeblks) <=
+be32_to_cpu(agf->agf_length) &&
+2188                 be32_to_cpu(agf->agf_flfirst) < XFS_AGFL_SIZE(mp) &&
+2189                 be32_to_cpu(agf->agf_fllast) < XFS_AGFL_SIZE(mp) &&
+2190                 be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp);
+
+Again w/ the zeros ...
+
+> 
+> kernel: Filesystem "dm-0": XFS internal error xfs_trans_cancel at line 1164 of file fs/xfs/xfs_trans.c.  Caller 0xffffffff811a9411
+
+...
+
+and then the fs tried to back out of a dirty transaction, which it can't
+do, but that's secondary.
+
+> kernel: xfs_force_shutdown(dm-0,0x8) called from line 1165 of file fs/xfs/xfs_trans.c.  Return address = 0xffffffff811a348e
+> kernel: Filesystem "dm-0": Corruption of in-memory data detected.  Shutting down filesystem: dm-0
+> kernel: Please umount the filesystem, and rectify the problem(s)
+> kernel: nfsd: non-standard errno: -117
+
+117 EFSCORRUPTED IIRC?
+
+> kernel: Filesystem "dm-0": xfs_log_force: error 5 returned.
+
+EIO
+
+> </snip>
+> 
+> I'm somewhat at a loss with this one - it's been experienced on a customer's installation, so I don't have ready access to the machine.  All internal tests to attempt reproduction with identical hardware/software configurations has been unfruitful.  I'm concerned about the custom kernel, and may attempt to downgrade to the stock CentOS 5.3 kernel (2.6.18, if I remember correctly).
+> 
+> Any insight would be hugely appreciated, and of course tell me how I can help further.  Thanks so much.
+
+I'm happy to blame the storage here, given the buffers full of 0s ...
+you could modify the messages to print the block nrs in question and go
+back directly to the storage, read it, and see what's there.
+
+Were there no iscsi or other assorted messages before all this?
+
+-Eric
+
+> John Quigley
+> jquigley.com
 
 _______________________________________________
 xfs mailing list
