@@ -1,20 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from fransum.emea.sgi.com (fransum.emea.sgi.com [144.253.208.10])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6HBA94A083133 for <xfs@oss.sgi.com>; Fri, 17 Jul 2009 06:10:10 -0500
-Received: from smtp2-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EBDF8A863E9
-	for <xfs@oss.sgi.com>; Fri, 17 Jul 2009 04:18:33 -0700 (PDT)
-Received: from smtp2-g21.free.fr (smtp2-g21.free.fr [212.27.42.2]) by
-	cuda.sgi.com with ESMTP id 8palkHF7ZF8llU4n for
-	<xfs@oss.sgi.com>; Fri, 17 Jul 2009 04:18:33 -0700 (PDT)
-Date: Fri, 17 Jul 2009 13:10:43 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: Multi threaded random IO
-Message-ID: <20090717131043.19b8e7de@harpe.intellique.com>
-In-Reply-To: <4A60442E.7010206@gslab.com>
-References: <4A60442E.7010206@gslab.com>
-Mime-Version: 1.0
+	n6HBjN4b085689 for <xfs@oss.sgi.com>; Fri, 17 Jul 2009 06:45:23 -0500
+Subject: Re: [PATCH V3] reduce bmv_count in xfs_vn_fiemap
+References: <4A5E2F01.7030107@sandeen.net>
+	<bzybpnkhp62.fsf@fransum.emea.sgi.com> <4A5F3DBA.9040005@sandeen.net>
+	<4A5F7B7B.6020903@sandeen.net>
+From: Olaf Weber <olaf@sgi.com>
+Date: Fri, 17 Jul 2009 13:46:02 +0200
+In-Reply-To: <4A5F7B7B.6020903@sandeen.net> (Eric Sandeen's message of "Thu,
+	16 Jul 2009 14:11:55 -0500")
+Message-ID: <bzyy6qnsfb9.fsf@fransum.emea.sgi.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,40 +20,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Milind Dumbare <milind@gslab.com>
-Cc: linux-fsdevel@vger.kernel.org, xfs mailing list <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs mailing list <xfs@oss.sgi.com>
 
-Le Fri, 17 Jul 2009 02:28:14 -0700
-Milind Dumbare <milind@gslab.com> =E9crivait:
+Eric Sandeen writes:
 
-> I see multi threaded random Write faster than multi threaded random =
+> commit 6321e3ed2acf3ee9643cdd403e1c88605d7944ba caused
+> the full bmv_count's worth of getbmapx structures to get
+> allocated; telling it to do MAXEXTNUM was a bit insane,
+> resulting in ENOMEM every time.
 
-> Read. Which is contradictory to standard "Reads faster that Writes"
-> law.
-> =
+> Chop it down to something reasonable, the number of slots
+> in the caller's input buffer.  If this is too large the 
+> caller may get ENOMEM but the reason should not be a
+> mystery, and they can try again with something smaller.
 
-> My test setup is.
-> 10MB record size, 2TB filesize, 8 threads.iozone
-> =
+> We add 1 to the value because in the normal getbmap
+> world, bmv_count includes the header and xfs_getbmap does:
 
-> Any comments?
+>         nex = bmv->bmv_count - 1;
+>         if (nex <= 0)
+>                 return XFS_ERROR(EINVAL);
 
-Well it very much depends upon your underlying hardware. For instance
-3Ware RAID cards with default settings read very poorly, they even get
-much slower in sequential read than sequential write.
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-So basically you have to provide much more detailed hardware setup :
-storage hardware, attachment, number and type of drives, RAID level...
+Reviewed-by: Olaf Weber <olaf@sgi.com>
 
--- =
+> ---
 
-----------------------------------------
-Emmanuel Florac     |   Intellique
-----------------------------------------
+> V2: set it to the fiemap info's fi_extents_max
+> V3: bump up by one to accomodate expected bmv header in core
+
+> diff --git a/fs/xfs/linux-2.6/xfs_iops.c b/fs/xfs/linux-2.6/xfs_iops.c
+> index 58973bb..954d701 100644
+> --- a/fs/xfs/linux-2.6/xfs_iops.c
+> +++ b/fs/xfs/linux-2.6/xfs_iops.c
+> @@ -680,8 +680,7 @@ xfs_vn_fiemap(
+>  	else
+>  		bm.bmv_length = BTOBB(length);
+ 
+> -	/* our formatter will tell xfs_getbmap when to stop. */
+> -	bm.bmv_count = MAXEXTNUM;
+> +	bm.bmv_count = fieinfo->fi_extents_max + 1;
+>  	bm.bmv_iflags = BMV_IF_PREALLOC;
+>  	if (fieinfo->fi_flags & FIEMAP_FLAG_XATTR)
+>  		bm.bmv_iflags |= BMV_IF_ATTRFORK;
+
+-- 
+Olaf Weber                 SGI               Phone:  +31(0)30-6696752
+                           Veldzigt 2b       Fax:    +31(0)30-6696799
+Technical Lead             3454 PW de Meern  Vnet:   955-7151
+Storage Software           The Netherlands   Email:  olaf@sgi.com
 
 _______________________________________________
 xfs mailing list
