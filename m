@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6HEnqtY096160 for <xfs@oss.sgi.com>; Fri, 17 Jul 2009 09:49:52 -0500
+	n6HI3wPW104969 for <xfs@oss.sgi.com>; Fri, 17 Jul 2009 13:04:00 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 938521D4D0AD
-	for <xfs@oss.sgi.com>; Fri, 17 Jul 2009 07:50:32 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 12464A90378
+	for <xfs@oss.sgi.com>; Fri, 17 Jul 2009 11:12:24 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id R1EGqZqrznyT3D5Q for
-	<xfs@oss.sgi.com>; Fri, 17 Jul 2009 07:50:32 -0700 (PDT)
-Date: Fri, 17 Jul 2009 10:50:31 -0400
+	by cuda.sgi.com with ESMTP id tKvGsS17fTdp8RIu for
+	<xfs@oss.sgi.com>; Fri, 17 Jul 2009 11:12:24 -0700 (PDT)
+Date: Fri, 17 Jul 2009 14:04:36 -0400
 From: Christoph Hellwig <hch@infradead.org>
 Subject: [PATCH] xfs: event tracing support
-Message-ID: <20090717145031.GA17590@infradead.org>
+Message-ID: <20090717180435.GA6561@infradead.org>
 References: <20090616214844.GA12310@infradead.org>
+	<20090717145031.GA17590@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20090616214844.GA12310@infradead.org>
+In-Reply-To: <20090717145031.GA17590@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,8 +32,8 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: linux-kernel@vger.kernel.org, Steven Rostedt <rostedt@goodmis.org>
 
-Subject: xfs: event tracing support
-From: Christoph Hellwig <hch@lst.de>
+[and now really the updated version instead of reposting the old one]
+
 
 Convert the old xfs tracing support that could only be used with the out
 of tree kdb and xfsidbg patches to use the generic event tracer.
@@ -90,6 +91,9 @@ All this gives a quite massive patch of:
 So while adding actual tracing support without xfsidbg we actually
 remove lots of lines of code.
 
+I'd love to get this out and into 2.6.31 still if possible so that we
+can have a tracing option out there in the field ASAP.
+
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
@@ -104,8 +108,8 @@ Updates since v1:
 
 Index: linux-2.6/fs/xfs/Makefile
 ===================================================================
---- linux-2.6.orig/fs/xfs/Makefile	2009-06-16 22:37:56.088814606 +0200
-+++ linux-2.6/fs/xfs/Makefile	2009-06-16 22:45:13.894814533 +0200
+--- linux-2.6.orig/fs/xfs/Makefile
++++ linux-2.6/fs/xfs/Makefile
 @@ -90,8 +90,7 @@ xfs-y				+= xfs_alloc.o \
  				   xfs_rw.o \
  				   xfs_dmops.o
@@ -125,8 +129,8 @@ Index: linux-2.6/fs/xfs/Makefile
 -
 Index: linux-2.6/fs/xfs/linux-2.6/xfs_aops.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_aops.c	2009-06-16 22:37:56.092814347 +0200
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_aops.c	2009-06-16 22:37:58.194969357 +0200
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_aops.c
++++ linux-2.6/fs/xfs/linux-2.6/xfs_aops.c
 @@ -38,6 +38,7 @@
  #include "xfs_rw.h"
  #include "xfs_iomap.h"
@@ -223,8 +227,8 @@ Index: linux-2.6/fs/xfs/linux-2.6/xfs_aops.c
  
 Index: linux-2.6/fs/xfs/linux-2.6/xfs_buf.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_buf.c	2009-06-16 22:37:56.097814635 +0200
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_buf.c	2009-06-16 22:37:58.195968716 +0200
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_buf.c
++++ linux-2.6/fs/xfs/linux-2.6/xfs_buf.c
 @@ -39,6 +39,7 @@
  #include "xfs_ag.h"
  #include "xfs_dmapi.h"
@@ -583,8 +587,8 @@ Index: linux-2.6/fs/xfs/linux-2.6/xfs_buf.c
  #ifdef CONFIG_KDB_MODULES
 Index: linux-2.6/fs/xfs/linux-2.6/xfs_buf.h
 ===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_buf.h	2009-06-16 22:37:56.102814993 +0200
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_buf.h	2009-06-16 22:37:58.196969053 +0200
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_buf.h
++++ linux-2.6/fs/xfs/linux-2.6/xfs_buf.h
 @@ -95,6 +95,28 @@ typedef enum {
  	_XFS_BARRIER_FAILED = (1 << 23),
  } xfs_buf_flags_t;
@@ -641,8 +645,8 @@ Index: linux-2.6/fs/xfs/linux-2.6/xfs_buf.h
  #define xfs_biomove(bp, off, len, data, rw) \
 Index: linux-2.6/fs/xfs/linux-2.6/xfs_lrw.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_lrw.c	2009-06-16 22:37:56.106814804 +0200
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_lrw.c	2009-06-16 22:37:58.197990761 +0200
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_lrw.c
++++ linux-2.6/fs/xfs/linux-2.6/xfs_lrw.c
 @@ -48,73 +48,12 @@
  #include "xfs_utils.h"
  #include "xfs_iomap.h"
@@ -800,8 +804,8 @@ Index: linux-2.6/fs/xfs/linux-2.6/xfs_lrw.c
  
 Index: linux-2.6/fs/xfs/linux-2.6/xfs_super.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_super.c	2009-06-16 22:37:56.111814253 +0200
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_super.c	2009-06-16 22:37:58.198969727 +0200
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_super.c
++++ linux-2.6/fs/xfs/linux-2.6/xfs_super.c
 @@ -15,6 +15,7 @@
   * along with this program; if not, write the Free Software Foundation,
   * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -972,8 +976,8 @@ Index: linux-2.6/fs/xfs/linux-2.6/xfs_super.c
  module_init(init_xfs_fs);
 Index: linux-2.6/fs/xfs/quota/xfs_dquot.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/quota/xfs_dquot.c	2009-06-16 22:37:56.168814460 +0200
-+++ linux-2.6/fs/xfs/quota/xfs_dquot.c	2009-06-16 22:37:58.199972089 +0200
+--- linux-2.6.orig/fs/xfs/quota/xfs_dquot.c
++++ linux-2.6/fs/xfs/quota/xfs_dquot.c
 @@ -47,6 +47,7 @@
  #include "xfs_trans_space.h"
  #include "xfs_trans_priv.h"
@@ -1071,8 +1075,8 @@ Index: linux-2.6/fs/xfs/quota/xfs_dquot.c
   * We overwrite the dquot limits only if they are zero and this
 Index: linux-2.6/fs/xfs/quota/xfs_dquot.h
 ===================================================================
---- linux-2.6.orig/fs/xfs/quota/xfs_dquot.h	2009-06-16 22:37:56.172814690 +0200
-+++ linux-2.6/fs/xfs/quota/xfs_dquot.h	2009-06-16 22:37:58.200967188 +0200
+--- linux-2.6.orig/fs/xfs/quota/xfs_dquot.h
++++ linux-2.6/fs/xfs/quota/xfs_dquot.h
 @@ -85,9 +85,6 @@ typedef struct xfs_dquot {
  	struct completion q_flush;	/* flush completion queue */
  	atomic_t          q_pincount;	/* dquot pin count */
@@ -1110,8 +1114,8 @@ Index: linux-2.6/fs/xfs/quota/xfs_dquot.h
  #else
 Index: linux-2.6/fs/xfs/support/ktrace.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/support/ktrace.c	2009-06-16 22:37:56.186814867 +0200
-+++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+--- linux-2.6.orig/fs/xfs/support/ktrace.c
++++ /dev/null
 @@ -1,323 +0,0 @@
 -/*
 - * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
@@ -1438,8 +1442,8 @@ Index: linux-2.6/fs/xfs/support/ktrace.c
 -}
 Index: linux-2.6/fs/xfs/support/ktrace.h
 ===================================================================
---- linux-2.6.orig/fs/xfs/support/ktrace.h	2009-06-16 22:37:56.192814584 +0200
-+++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+--- linux-2.6.orig/fs/xfs/support/ktrace.h
++++ /dev/null
 @@ -1,85 +0,0 @@
 -/*
 - * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
@@ -1528,8 +1532,8 @@ Index: linux-2.6/fs/xfs/support/ktrace.h
 -#endif	/* __XFS_SUPPORT_KTRACE_H__ */
 Index: linux-2.6/fs/xfs/xfs_alloc.h
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_alloc.h	2009-06-16 22:37:56.196814395 +0200
-+++ linux-2.6/fs/xfs/xfs_alloc.h	2009-06-16 22:37:58.201968503 +0200
+--- linux-2.6.orig/fs/xfs/xfs_alloc.h
++++ linux-2.6/fs/xfs/xfs_alloc.h
 @@ -37,6 +37,15 @@ typedef enum xfs_alloctype
  	XFS_ALLOCTYPE_THIS_BNO		/* at exactly this block */
  } xfs_alloctype_t;
@@ -1571,8 +1575,8 @@ Index: linux-2.6/fs/xfs/xfs_alloc.h
  xfs_alloc_mark_busy(xfs_trans_t *tp,
 Index: linux-2.6/fs/xfs/xfs_attr.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_attr.c	2009-06-16 22:37:56.201814123 +0200
-+++ linux-2.6/fs/xfs/xfs_attr.c	2009-06-16 22:37:58.202968630 +0200
+--- linux-2.6.orig/fs/xfs/xfs_attr.c
++++ linux-2.6/fs/xfs/xfs_attr.c
 @@ -47,6 +47,7 @@
  #include "xfs_trans_space.h"
  #include "xfs_rw.h"
@@ -1688,8 +1692,8 @@ Index: linux-2.6/fs/xfs/xfs_attr.c
 -#endif	/* XFS_ATTR_TRACE */
 Index: linux-2.6/fs/xfs/xfs_attr_sf.h
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_attr_sf.h	2009-06-16 22:37:56.206814342 +0200
-+++ linux-2.6/fs/xfs/xfs_attr_sf.h	2009-06-16 22:37:58.203991526 +0200
+--- linux-2.6.orig/fs/xfs/xfs_attr_sf.h
++++ linux-2.6/fs/xfs/xfs_attr_sf.h
 @@ -25,6 +25,10 @@
   * to fit into the literal area of the inode.
   */
@@ -1737,8 +1741,8 @@ Index: linux-2.6/fs/xfs/xfs_attr_sf.h
  #endif	/* __XFS_ATTR_SF_H__ */
 Index: linux-2.6/fs/xfs/xfs_bmap.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_bmap.c	2009-06-16 22:37:56.211814350 +0200
-+++ linux-2.6/fs/xfs/xfs_bmap.c	2009-06-16 22:37:58.206964670 +0200
+--- linux-2.6.orig/fs/xfs/xfs_bmap.c
++++ linux-2.6/fs/xfs/xfs_bmap.c
 @@ -54,6 +54,7 @@
  #include "xfs_buf_item.h"
  #include "xfs_filestream.h"
@@ -2121,8 +2125,8 @@ Index: linux-2.6/fs/xfs/xfs_bmap.c
  	ifp = XFS_IFORK_PTR(ip, whichfork);
 Index: linux-2.6/fs/xfs/xfs_bmap.h
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_bmap.h	2009-06-16 22:37:56.215815348 +0200
-+++ linux-2.6/fs/xfs/xfs_bmap.h	2009-06-16 22:37:58.207971502 +0200
+--- linux-2.6.orig/fs/xfs/xfs_bmap.h
++++ linux-2.6/fs/xfs/xfs_bmap.h
 @@ -95,6 +95,21 @@ typedef	struct xfs_bmap_free
  					/* need write cache flushing and no */
  					/* additional allocation alignments */
@@ -2192,8 +2196,8 @@ Index: linux-2.6/fs/xfs/xfs_bmap.h
   * Convert inode from non-attributed to attributed.
 Index: linux-2.6/fs/xfs/xfs_bmap_btree.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_bmap_btree.c	2009-06-16 22:37:56.220814658 +0200
-+++ linux-2.6/fs/xfs/xfs_bmap_btree.c	2009-06-16 22:37:58.208964436 +0200
+--- linux-2.6.orig/fs/xfs/xfs_bmap_btree.c
++++ linux-2.6/fs/xfs/xfs_bmap_btree.c
 @@ -779,12 +779,6 @@ xfs_bmbt_trace_enter(
  		(void *)a0, (void *)a1, (void *)a2, (void *)a3,
  		(void *)a4, (void *)a5, (void *)a6, (void *)a7,
@@ -2209,8 +2213,8 @@ Index: linux-2.6/fs/xfs/xfs_bmap_btree.c
  STATIC void
 Index: linux-2.6/fs/xfs/xfs_buf_item.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_buf_item.c	2009-06-16 22:37:56.225814666 +0200
-+++ linux-2.6/fs/xfs/xfs_buf_item.c	2009-06-16 22:37:58.209976995 +0200
+--- linux-2.6.orig/fs/xfs/xfs_buf_item.c
++++ linux-2.6/fs/xfs/xfs_buf_item.c
 @@ -29,6 +29,7 @@
  #include "xfs_buf_item.h"
  #include "xfs_trans_priv.h"
@@ -2364,8 +2368,8 @@ Index: linux-2.6/fs/xfs/xfs_buf_item.c
 -#endif /* XFS_BLI_TRACE */
 Index: linux-2.6/fs/xfs/xfs_buf_item.h
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_buf_item.h	2009-06-16 22:37:56.230814535 +0200
-+++ linux-2.6/fs/xfs/xfs_buf_item.h	2009-06-16 22:37:58.209976995 +0200
+--- linux-2.6.orig/fs/xfs/xfs_buf_item.h
++++ linux-2.6/fs/xfs/xfs_buf_item.h
 @@ -70,22 +70,21 @@ typedef struct xfs_buf_log_format_t {
  #define	XFS_BLI_INODE_ALLOC_BUF	0x10
  #define XFS_BLI_STALE_INODE	0x20
@@ -2409,8 +2413,8 @@ Index: linux-2.6/fs/xfs/xfs_buf_item.h
  	char			*bli_logged;	/* bytes logged (bitmap) */
 Index: linux-2.6/fs/xfs/xfs_dir2_trace.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_dir2_trace.c	2009-06-16 22:37:56.234814346 +0200
-+++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+--- linux-2.6.orig/fs/xfs/xfs_dir2_trace.c
++++ /dev/null
 @@ -1,216 +0,0 @@
 -/*
 - * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
@@ -2630,8 +2634,8 @@ Index: linux-2.6/fs/xfs/xfs_dir2_trace.c
 -#endif	/* XFS_DIR2_TRACE */
 Index: linux-2.6/fs/xfs/xfs_dir2_trace.h
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_dir2_trace.h	2009-06-16 22:37:56.238814786 +0200
-+++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+--- linux-2.6.orig/fs/xfs/xfs_dir2_trace.h
++++ /dev/null
 @@ -1,72 +0,0 @@
 -/*
 - * Copyright (c) 2000,2005 Silicon Graphics, Inc.
@@ -2707,8 +2711,8 @@ Index: linux-2.6/fs/xfs/xfs_dir2_trace.h
 -#endif	/* __XFS_DIR2_TRACE_H__ */
 Index: linux-2.6/fs/xfs/xfs_filestream.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_filestream.c	2009-06-16 22:37:56.243815283 +0200
-+++ linux-2.6/fs/xfs/xfs_filestream.c	2009-06-16 22:37:58.211964957 +0200
+--- linux-2.6.orig/fs/xfs/xfs_filestream.c
++++ linux-2.6/fs/xfs/xfs_filestream.c
 @@ -34,6 +34,7 @@
  #include "xfs_utils.h"
  #include "xfs_mru_cache.h"
@@ -2740,8 +2744,8 @@ Index: linux-2.6/fs/xfs/xfs_filestream.c
  
 Index: linux-2.6/fs/xfs/xfs_iget.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_iget.c	2009-06-16 22:37:56.247814256 +0200
-+++ linux-2.6/fs/xfs/xfs_iget.c	2009-06-16 22:37:58.211964957 +0200
+--- linux-2.6.orig/fs/xfs/xfs_iget.c
++++ linux-2.6/fs/xfs/xfs_iget.c
 @@ -43,7 +43,7 @@
  #include "xfs_inode_item.h"
  #include "xfs_bmap.h"
@@ -2751,8 +2755,8 @@ Index: linux-2.6/fs/xfs/xfs_iget.c
  
  
  /*
-@@ -86,27 +86,6 @@ xfs_inode_alloc(
- 	xfs_inode_init_acls(ip);
+@@ -85,27 +85,6 @@ xfs_inode_alloc(
+ 	ip->i_new_size = 0;
  
  	/*
 -	 * Initialize inode's trace buffers.
@@ -2779,7 +2783,7 @@ Index: linux-2.6/fs/xfs/xfs_iget.c
  	* Now initialise the VFS inode. We do this after the xfs_inode
  	* initialisation as internal failures will result in ->destroy_inode
  	* being called and that will pass down through the reclaim path and
-@@ -160,7 +139,7 @@ xfs_iget_cache_hit(
+@@ -159,7 +138,7 @@ xfs_iget_cache_hit(
  			goto out_error;
  		}
  
@@ -2788,7 +2792,7 @@ Index: linux-2.6/fs/xfs/xfs_iget.c
  
  		/*
  		 * We need to re-initialise the VFS inode as it has been
-@@ -212,8 +191,8 @@ xfs_iget_cache_hit(
+@@ -211,8 +190,8 @@ xfs_iget_cache_hit(
  		xfs_ilock(ip, lock_flags);
  
  	xfs_iflags_clear(ip, XFS_ISTALE);
@@ -2798,7 +2802,7 @@ Index: linux-2.6/fs/xfs/xfs_iget.c
  	return 0;
  
  out_error:
-@@ -246,7 +225,7 @@ xfs_iget_cache_miss(
+@@ -245,7 +224,7 @@ xfs_iget_cache_miss(
  	if (error)
  		goto out_destroy;
  
@@ -2807,7 +2811,7 @@ Index: linux-2.6/fs/xfs/xfs_iget.c
  
  	if ((ip->i_d.di_mode == 0) && !(flags & XFS_IGET_CREATE)) {
  		error = ENOENT;
-@@ -516,24 +495,6 @@ xfs_ireclaim(
+@@ -515,24 +494,6 @@ xfs_ireclaim(
  	if (ip->i_afp)
  		xfs_idestroy_fork(ip, XFS_ATTR_FORK);
  
@@ -2832,7 +2836,7 @@ Index: linux-2.6/fs/xfs/xfs_iget.c
  	if (ip->i_itemp) {
  		/*
  		 * Only if we are shutting down the fs will we see an
-@@ -658,7 +619,7 @@ xfs_ilock(
+@@ -656,7 +617,7 @@ xfs_ilock(
  	else if (lock_flags & XFS_ILOCK_SHARED)
  		mraccess_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
  
@@ -2841,7 +2845,7 @@ Index: linux-2.6/fs/xfs/xfs_iget.c
  }
  
  /*
-@@ -703,7 +664,7 @@ xfs_ilock_nowait(
+@@ -701,7 +662,7 @@ xfs_ilock_nowait(
  		if (!mrtryaccess(&ip->i_lock))
  			goto out_undo_iolock;
  	}
@@ -2850,7 +2854,7 @@ Index: linux-2.6/fs/xfs/xfs_iget.c
  	return 1;
  
   out_undo_iolock:
-@@ -765,7 +726,7 @@ xfs_iunlock(
+@@ -763,7 +724,7 @@ xfs_iunlock(
  		xfs_trans_unlocked_item(ip->i_itemp->ili_item.li_ailp,
  					(xfs_log_item_t*)(ip->i_itemp));
  	}
@@ -2859,7 +2863,7 @@ Index: linux-2.6/fs/xfs/xfs_iget.c
  }
  
  /*
-@@ -784,6 +745,8 @@ xfs_ilock_demote(
+@@ -782,6 +743,8 @@ xfs_ilock_demote(
  		mrdemote(&ip->i_lock);
  	if (lock_flags & XFS_IOLOCK_EXCL)
  		mrdemote(&ip->i_iolock);
@@ -2868,7 +2872,7 @@ Index: linux-2.6/fs/xfs/xfs_iget.c
  }
  
  #ifdef DEBUG
-@@ -814,52 +777,3 @@ xfs_isilocked(
+@@ -812,52 +775,3 @@ xfs_isilocked(
  	return 1;
  }
  #endif
@@ -2923,8 +2927,8 @@ Index: linux-2.6/fs/xfs/xfs_iget.c
 -#endif	/* XFS_INODE_TRACE */
 Index: linux-2.6/fs/xfs/xfs_inode.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_inode.c	2009-06-16 22:37:56.252814823 +0200
-+++ linux-2.6/fs/xfs/xfs_inode.c	2009-06-16 22:37:58.213965422 +0200
+--- linux-2.6.orig/fs/xfs/xfs_inode.c
++++ linux-2.6/fs/xfs/xfs_inode.c
 @@ -47,10 +47,10 @@
  #include "xfs_rw.h"
  #include "xfs_error.h"
@@ -3035,8 +3039,8 @@ Index: linux-2.6/fs/xfs/xfs_inode.c
   */
 Index: linux-2.6/fs/xfs/xfs_inode.h
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_inode.h	2009-06-16 22:37:56.256814425 +0200
-+++ linux-2.6/fs/xfs/xfs_inode.h	2009-06-16 22:37:58.215964070 +0200
+--- linux-2.6.orig/fs/xfs/xfs_inode.h
++++ linux-2.6/fs/xfs/xfs_inode.h
 @@ -213,7 +213,6 @@ typedef struct xfs_icdinode {
  
  struct bhv_desc;
@@ -3059,10 +3063,10 @@ Index: linux-2.6/fs/xfs/xfs_inode.h
  typedef struct dm_attrs_s {
  	__uint32_t	da_dmevmask;	/* DMIG event mask */
  	__uint16_t	da_dmstate;	/* DMIG state info */
-@@ -277,26 +269,6 @@ typedef struct xfs_inode {
- 	struct posix_acl	*i_acl;
- 	struct posix_acl	*i_default_acl;
- #endif
+@@ -272,26 +264,6 @@ typedef struct xfs_inode {
+ 
+ 	/* VFS inode */
+ 	struct inode		i_vnode;	/* embedded VFS inode */
 -
 -	/* Trace buffers per inode. */
 -#ifdef XFS_INODE_TRACE
@@ -3086,7 +3090,7 @@ Index: linux-2.6/fs/xfs/xfs_inode.h
  } xfs_inode_t;
  
  #define XFS_ISIZE(ip)	(((ip)->i_d.di_mode & S_IFMT) == S_IFREG) ? \
-@@ -429,6 +401,14 @@ static inline void xfs_ifunlock(xfs_inod
+@@ -424,6 +396,14 @@ static inline void xfs_ifunlock(xfs_inod
  #define XFS_LOCK_MASK		(XFS_IOLOCK_EXCL | XFS_IOLOCK_SHARED \
  				| XFS_ILOCK_EXCL | XFS_ILOCK_SHARED)
  
@@ -3101,7 +3105,7 @@ Index: linux-2.6/fs/xfs/xfs_inode.h
  /*
   * Flags for lockdep annotations.
   *
-@@ -478,6 +458,10 @@ static inline void xfs_ifunlock(xfs_inod
+@@ -473,6 +453,10 @@ static inline void xfs_ifunlock(xfs_inod
  #define	XFS_ITRUNC_DEFINITE	0x1
  #define	XFS_ITRUNC_MAYBE	0x2
  
@@ -3112,7 +3116,7 @@ Index: linux-2.6/fs/xfs/xfs_inode.h
  /*
   * For multiple groups support: if S_ISGID bit is set in the parent
   * directory, group of new file is set to that of the parent, and
-@@ -533,48 +517,31 @@ void		xfs_lock_two_inodes(xfs_inode_t *,
+@@ -528,48 +512,31 @@ void		xfs_lock_two_inodes(xfs_inode_t *,
  void		xfs_synchronize_atime(xfs_inode_t *);
  void		xfs_mark_inode_dirty_sync(xfs_inode_t *);
  
@@ -3170,8 +3174,8 @@ Index: linux-2.6/fs/xfs/xfs_inode.h
  
 Index: linux-2.6/fs/xfs/xfs_iomap.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_iomap.c	2009-06-16 22:37:56.262814072 +0200
-+++ linux-2.6/fs/xfs/xfs_iomap.c	2009-06-16 22:37:58.216972299 +0200
+--- linux-2.6.orig/fs/xfs/xfs_iomap.c
++++ linux-2.6/fs/xfs/xfs_iomap.c
 @@ -47,72 +47,8 @@
  #include "xfs_trans_space.h"
  #include "xfs_utils.h"
@@ -3324,8 +3328,8 @@ Index: linux-2.6/fs/xfs/xfs_iomap.c
  	count_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
 Index: linux-2.6/fs/xfs/xfs_log.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_log.c	2009-06-16 22:37:56.266814721 +0200
-+++ linux-2.6/fs/xfs/xfs_log.c	2009-06-16 22:37:58.218940008 +0200
+--- linux-2.6.orig/fs/xfs/xfs_log.c
++++ linux-2.6/fs/xfs/xfs_log.c
 @@ -40,6 +40,7 @@
  #include "xfs_dinode.h"
  #include "xfs_inode.h"
@@ -3495,8 +3499,8 @@ Index: linux-2.6/fs/xfs/xfs_log.c
  		/* Wait for log writes to have flushed */
 Index: linux-2.6/fs/xfs/xfs_log_priv.h
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_log_priv.h	2009-06-16 22:37:56.271814240 +0200
-+++ linux-2.6/fs/xfs/xfs_log_priv.h	2009-06-16 22:37:58.219964999 +0200
+--- linux-2.6.orig/fs/xfs/xfs_log_priv.h
++++ linux-2.6/fs/xfs/xfs_log_priv.h
 @@ -19,7 +19,6 @@
  #define __XFS_LOG_PRIV_H__
  
@@ -3541,9 +3545,12 @@ Index: linux-2.6/fs/xfs/xfs_log_priv.h
   * It's value must be outside the range of XFS_TRANS_* values.
 Index: linux-2.6/fs/xfs/linux-2.6/xfs_trace.h
 ===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_trace.h	2009-06-16 22:37:58.220964568 +0200
+--- /dev/null
++++ linux-2.6/fs/xfs/linux-2.6/xfs_trace.h
 @@ -0,0 +1,1035 @@
++#undef TRACE_SYSTEM
++#define TRACE_SYSTEM xfs
++
 +#if !defined(_TRACE_XFS_H) || defined(TRACE_HEADER_MULTI_READ)
 +#define _TRACE_XFS_H
 +
@@ -3583,9 +3590,6 @@ Index: linux-2.6/fs/xfs/linux-2.6/xfs_trace.h
 +#include "xfs_iomap.h"
 +#include "quota/xfs_dquot_item.h"
 +#include "quota/xfs_dquot.h"
-+
-+#undef TRACE_SYSTEM
-+#define TRACE_SYSTEM xfs
 +
 +char *xfs_fmtfsblock(xfs_fsblock_t bno);
 +void xfs_count_page_state(struct page *page, int *delalloc,
@@ -3816,7 +3820,7 @@ Index: linux-2.6/fs/xfs/linux-2.6/xfs_trace.h
 +	),
 +
 +	TP_printk("dev %d:%d %s bip 0x%p bp 0x%p flags %s recur %d refcount %d "
-+		  "blkno 0x%llx blen 0x%x bpflags %s pincount %d "
++		  "blkno 0x%llx blen %zd bpflags %s pincount %d "
 +		  "lockval %d lidesc 0x%p liflags %s",
 +		  MAJOR(__entry->dev), MINOR(__entry->dev),
 +		  __entry->id,
@@ -4175,7 +4179,7 @@ Index: linux-2.6/fs/xfs/linux-2.6/xfs_trace.h
 +	),
 +
 +	TP_printk("dev %d:%d ino 0x%llx %s size 0x%llx new_size 0x%llx "
-+		  "offset 0x%llx count 0x%x flags %s "
++		  "offset 0x%llx count %zd flags %s "
 +		  "startoff 0x%llx startblock 0x%llx blockcount 0x%llx",
 +		  MAJOR(__entry->dev), MINOR(__entry->dev),
 +		  __entry->ino,
@@ -4581,8 +4585,8 @@ Index: linux-2.6/fs/xfs/linux-2.6/xfs_trace.h
 +#include <trace/define_trace.h>
 Index: linux-2.6/fs/xfs/xfs.h
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs.h	2009-06-16 22:37:56.275814820 +0200
-+++ linux-2.6/fs/xfs/xfs.h	2009-06-16 22:37:58.221955126 +0200
+--- linux-2.6.orig/fs/xfs/xfs.h
++++ linux-2.6/fs/xfs/xfs.h
 @@ -25,21 +25,5 @@
  /* #define QUOTADEBUG 1 */
  #endif
@@ -4607,8 +4611,8 @@ Index: linux-2.6/fs/xfs/xfs.h
  #endif	/* __XFS_H__ */
 Index: linux-2.6/fs/xfs/quota/xfs_qm.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/quota/xfs_qm.c	2009-06-16 22:37:56.177814628 +0200
-+++ linux-2.6/fs/xfs/quota/xfs_qm.c	2009-06-16 22:37:58.222964962 +0200
+--- linux-2.6.orig/fs/xfs/quota/xfs_qm.c
++++ linux-2.6/fs/xfs/quota/xfs_qm.c
 @@ -47,6 +47,7 @@
  #include "xfs_trans_space.h"
  #include "xfs_utils.h"
@@ -4629,8 +4633,8 @@ Index: linux-2.6/fs/xfs/quota/xfs_qm.c
  	 * started afresh by xfs_qm_quotacheck.
 Index: linux-2.6/fs/xfs/quota/xfs_qm_syscalls.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/quota/xfs_qm_syscalls.c	2009-06-16 22:37:56.182815196 +0200
-+++ linux-2.6/fs/xfs/quota/xfs_qm_syscalls.c	2009-06-16 22:37:58.223966276 +0200
+--- linux-2.6.orig/fs/xfs/quota/xfs_qm_syscalls.c
++++ linux-2.6/fs/xfs/quota/xfs_qm_syscalls.c
 @@ -49,6 +49,7 @@
  #include "xfs_buf_item.h"
  #include "xfs_utils.h"
@@ -4641,8 +4645,8 @@ Index: linux-2.6/fs/xfs/quota/xfs_qm_syscalls.c
  # define qdprintk(s, args...)	cmn_err(CE_DEBUG, s, ## args)
 Index: linux-2.6/fs/xfs/xfs_btree.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_btree.c	2009-06-16 22:37:56.280813920 +0200
-+++ linux-2.6/fs/xfs/xfs_btree.c	2009-06-16 22:37:58.225964785 +0200
+--- linux-2.6.orig/fs/xfs/xfs_btree.c
++++ linux-2.6/fs/xfs/xfs_btree.c
 @@ -39,6 +39,7 @@
  #include "xfs_btree_trace.h"
  #include "xfs_ialloc.h"
@@ -4671,8 +4675,8 @@ Index: linux-2.6/fs/xfs/xfs_btree.c
  		return XFS_ERROR(EFSCORRUPTED);
 Index: linux-2.6/fs/xfs/xfs_da_btree.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_da_btree.c	2009-06-16 22:37:56.285814697 +0200
-+++ linux-2.6/fs/xfs/xfs_da_btree.c	2009-06-16 22:37:58.227972862 +0200
+--- linux-2.6.orig/fs/xfs/xfs_da_btree.c
++++ linux-2.6/fs/xfs/xfs_da_btree.c
 @@ -46,6 +46,7 @@
  #include "xfs_dir2_block.h"
  #include "xfs_dir2_node.h"
@@ -4692,8 +4696,8 @@ Index: linux-2.6/fs/xfs/xfs_da_btree.c
  			error = XFS_ERROR(EFSCORRUPTED);
 Index: linux-2.6/fs/xfs/xfs_inode_item.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_inode_item.c	2009-06-16 22:37:56.290814565 +0200
-+++ linux-2.6/fs/xfs/xfs_inode_item.c	2009-06-16 22:37:58.229964596 +0200
+--- linux-2.6.orig/fs/xfs/xfs_inode_item.c
++++ linux-2.6/fs/xfs/xfs_inode_item.c
 @@ -41,6 +41,7 @@
  #include "xfs_ialloc.h"
  #include "xfs_rw.h"
@@ -4713,8 +4717,8 @@ Index: linux-2.6/fs/xfs/xfs_inode_item.c
  					      XFS_LOG_FORCE);
 Index: linux-2.6/fs/xfs/xfs_rw.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_rw.c	2009-06-16 22:37:56.294814446 +0200
-+++ linux-2.6/fs/xfs/xfs_rw.c	2009-06-16 22:37:58.230970311 +0200
+--- linux-2.6.orig/fs/xfs/xfs_rw.c
++++ linux-2.6/fs/xfs/xfs_rw.c
 @@ -44,6 +44,7 @@
  #include "xfs_error.h"
  #include "xfs_buf_item.h"
@@ -4741,8 +4745,8 @@ Index: linux-2.6/fs/xfs/xfs_rw.c
  	 * No need to wait until the buffer is unpinned.
 Index: linux-2.6/fs/xfs/xfs_trans_buf.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_trans_buf.c	2009-06-16 22:37:56.299814524 +0200
-+++ linux-2.6/fs/xfs/xfs_trans_buf.c	2009-06-16 22:37:58.231964222 +0200
+--- linux-2.6.orig/fs/xfs/xfs_trans_buf.c
++++ linux-2.6/fs/xfs/xfs_trans_buf.c
 @@ -38,6 +38,7 @@
  #include "xfs_trans_priv.h"
  #include "xfs_error.h"
@@ -4852,8 +4856,8 @@ Index: linux-2.6/fs/xfs/xfs_trans_buf.c
  
 Index: linux-2.6/fs/xfs/linux-2.6/xfs_super.h
 ===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_super.h	2009-06-16 22:37:56.120814701 +0200
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_super.h	2009-06-16 22:37:58.231964222 +0200
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_super.h
++++ linux-2.6/fs/xfs/linux-2.6/xfs_super.h
 @@ -56,12 +56,6 @@ extern void xfs_qm_exit(void);
  # define XFS_BIGFS_STRING
  #endif
@@ -4877,8 +4881,8 @@ Index: linux-2.6/fs/xfs/linux-2.6/xfs_super.h
  
 Index: linux-2.6/fs/xfs/linux-2.6/xfs_ioctl.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_ioctl.c	2009-06-16 22:37:56.124814373 +0200
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_ioctl.c	2009-06-16 22:37:58.232964210 +0200
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_ioctl.c
++++ linux-2.6/fs/xfs/linux-2.6/xfs_ioctl.c
 @@ -51,6 +51,7 @@
  #include "xfs_quota.h"
  #include "xfs_inode_item.h"
@@ -4889,8 +4893,8 @@ Index: linux-2.6/fs/xfs/linux-2.6/xfs_ioctl.c
  #include <linux/dcache.h>
 Index: linux-2.6/fs/xfs/linux-2.6/xfs_iops.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_iops.c	2009-06-16 22:37:56.144814546 +0200
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_iops.c	2009-06-16 22:37:58.233964687 +0200
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_iops.c
++++ linux-2.6/fs/xfs/linux-2.6/xfs_iops.c
 @@ -48,6 +48,7 @@
  #include "xfs_buf_item.h"
  #include "xfs_utils.h"
@@ -4901,8 +4905,8 @@ Index: linux-2.6/fs/xfs/linux-2.6/xfs_iops.c
  #include <linux/xattr.h>
 Index: linux-2.6/fs/xfs/xfs_dfrag.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_dfrag.c	2009-06-16 22:37:56.303814475 +0200
-+++ linux-2.6/fs/xfs/xfs_dfrag.c	2009-06-16 22:37:58.233964687 +0200
+--- linux-2.6.orig/fs/xfs/xfs_dfrag.c
++++ linux-2.6/fs/xfs/xfs_dfrag.c
 @@ -43,6 +43,7 @@
  #include "xfs_error.h"
  #include "xfs_rw.h"
@@ -4921,8 +4925,8 @@ Index: linux-2.6/fs/xfs/xfs_dfrag.c
  		if (error)
 Index: linux-2.6/fs/xfs/xfs_dir2.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_dir2.c	2009-06-16 22:37:56.308814693 +0200
-+++ linux-2.6/fs/xfs/xfs_dir2.c	2009-06-16 22:37:58.234964744 +0200
+--- linux-2.6.orig/fs/xfs/xfs_dir2.c
++++ linux-2.6/fs/xfs/xfs_dir2.c
 @@ -40,9 +40,9 @@
  #include "xfs_dir2_leaf.h"
  #include "xfs_dir2_block.h"
@@ -4956,8 +4960,8 @@ Index: linux-2.6/fs/xfs/xfs_dir2.c
  	tp = args->trans;
 Index: linux-2.6/fs/xfs/xfs_log_recover.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_log_recover.c	2009-06-16 22:37:56.313814631 +0200
-+++ linux-2.6/fs/xfs/xfs_log_recover.c	2009-06-16 22:37:58.236963323 +0200
+--- linux-2.6.orig/fs/xfs/xfs_log_recover.c
++++ linux-2.6/fs/xfs/xfs_log_recover.c
 @@ -46,6 +46,7 @@
  #include "xfs_quota.h"
  #include "xfs_rw.h"
@@ -4968,8 +4972,8 @@ Index: linux-2.6/fs/xfs/xfs_log_recover.c
  STATIC int	xlog_clear_stale_blocks(xlog_t *, xfs_lsn_t);
 Index: linux-2.6/fs/xfs/xfs_mount.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_mount.c	2009-06-16 22:37:56.318814709 +0200
-+++ linux-2.6/fs/xfs/xfs_mount.c	2009-06-16 22:37:58.238940390 +0200
+--- linux-2.6.orig/fs/xfs/xfs_mount.c
++++ linux-2.6/fs/xfs/xfs_mount.c
 @@ -44,6 +44,8 @@
  #include "xfs_quota.h"
  #include "xfs_fsops.h"
@@ -4981,8 +4985,8 @@ Index: linux-2.6/fs/xfs/xfs_mount.c
  
 Index: linux-2.6/fs/xfs/xfs_rename.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_rename.c	2009-06-16 22:37:56.323814648 +0200
-+++ linux-2.6/fs/xfs/xfs_rename.c	2009-06-16 22:37:58.239964822 +0200
+--- linux-2.6.orig/fs/xfs/xfs_rename.c
++++ linux-2.6/fs/xfs/xfs_rename.c
 @@ -39,6 +39,7 @@
  #include "xfs_utils.h"
  #include "xfs_trans_space.h"
@@ -4993,8 +4997,8 @@ Index: linux-2.6/fs/xfs/xfs_rename.c
  /*
 Index: linux-2.6/fs/xfs/xfs_rtalloc.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_rtalloc.c	2009-06-16 22:37:56.327814668 +0200
-+++ linux-2.6/fs/xfs/xfs_rtalloc.c	2009-06-16 22:37:58.241964029 +0200
+--- linux-2.6.orig/fs/xfs/xfs_rtalloc.c
++++ linux-2.6/fs/xfs/xfs_rtalloc.c
 @@ -45,6 +45,7 @@
  #include "xfs_inode_item.h"
  #include "xfs_trans_space.h"
@@ -5005,8 +5009,8 @@ Index: linux-2.6/fs/xfs/xfs_rtalloc.c
  /*
 Index: linux-2.6/fs/xfs/xfs_vnodeops.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_vnodeops.c	2009-06-16 22:37:56.332814607 +0200
-+++ linux-2.6/fs/xfs/xfs_vnodeops.c	2009-06-16 22:37:58.243968754 +0200
+--- linux-2.6.orig/fs/xfs/xfs_vnodeops.c
++++ linux-2.6/fs/xfs/xfs_vnodeops.c
 @@ -53,6 +53,7 @@
  #include "xfs_log_priv.h"
  #include "xfs_filestream.h"
@@ -5025,8 +5029,8 @@ Index: linux-2.6/fs/xfs/xfs_vnodeops.c
  			goto out_unlock_iolock;
 Index: linux-2.6/fs/xfs/xfs_btree_trace.h
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_btree_trace.h	2009-06-16 22:37:56.336814139 +0200
-+++ linux-2.6/fs/xfs/xfs_btree_trace.h	2009-06-16 22:37:58.244972932 +0200
+--- linux-2.6.orig/fs/xfs/xfs_btree_trace.h
++++ linux-2.6/fs/xfs/xfs_btree_trace.h
 @@ -58,8 +58,6 @@ void xfs_btree_trace_argbi(const char *,
  		struct xfs_buf *, int, int);
  void xfs_btree_trace_argbii(const char *, struct xfs_btree_cur *,
@@ -5071,8 +5075,8 @@ Index: linux-2.6/fs/xfs/xfs_btree_trace.h
  #define	XFS_BTREE_TRACE_ARGIPR(c, i, p, r)
 Index: linux-2.6/fs/xfs/linux-2.6/xfs_lrw.h
 ===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_lrw.h	2009-06-16 22:37:56.148814566 +0200
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_lrw.h	2009-06-16 22:37:58.245981510 +0200
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_lrw.h
++++ linux-2.6/fs/xfs/linux-2.6/xfs_lrw.h
 @@ -20,52 +20,7 @@
  
  struct xfs_mount;
@@ -5128,8 +5132,8 @@ Index: linux-2.6/fs/xfs/linux-2.6/xfs_lrw.h
  extern void xfsbdstrat(struct xfs_mount *, struct xfs_buf *);
 Index: linux-2.6/fs/xfs/linux-2.6/xfs_vnode.h
 ===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_vnode.h	2009-06-16 22:37:56.153816809 +0200
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_vnode.h	2009-06-16 22:37:58.245981510 +0200
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_vnode.h
++++ linux-2.6/fs/xfs/linux-2.6/xfs_vnode.h
 @@ -40,6 +40,11 @@ struct attrlist_cursor_kern;
  #define IO_ISDIRECT	0x00004		/* bypass page cache */
  #define IO_INVIS	0x00020		/* don't update inode timestamps */
@@ -5144,8 +5148,8 @@ Index: linux-2.6/fs/xfs/linux-2.6/xfs_vnode.h
   */
 Index: linux-2.6/fs/xfs/xfs_attr.h
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_attr.h	2009-06-16 22:37:56.342814833 +0200
-+++ linux-2.6/fs/xfs/xfs_attr.h	2009-06-16 22:37:58.246939105 +0200
+--- linux-2.6.orig/fs/xfs/xfs_attr.h
++++ linux-2.6/fs/xfs/xfs_attr.h
 @@ -48,6 +48,16 @@ struct xfs_attr_list_context;
  #define ATTR_KERNOTIME	0x1000	/* [kernel] don't update inode timestamps */
  #define ATTR_KERNOVAL	0x2000	/* [kernel] get attr size only, not value */
@@ -5165,8 +5169,8 @@ Index: linux-2.6/fs/xfs/xfs_attr.h
   * attribute value or the buffer used for an attr_list() call.  Larger
 Index: linux-2.6/fs/xfs/xfs_iomap.h
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_iomap.h	2009-06-16 22:37:56.346814854 +0200
-+++ linux-2.6/fs/xfs/xfs_iomap.h	2009-06-16 22:37:58.246939105 +0200
+--- linux-2.6.orig/fs/xfs/xfs_iomap.h
++++ linux-2.6/fs/xfs/xfs_iomap.h
 @@ -43,6 +43,14 @@ typedef enum {
  	BMAPI_TRYLOCK = (1 << 7),	/* non-blocking request */
  } bmapi_flags_t;
@@ -5184,8 +5188,8 @@ Index: linux-2.6/fs/xfs/xfs_iomap.h
   * xfs_iomap_t:  File system I/O map
 Index: linux-2.6/fs/xfs/xfs_quota.h
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_quota.h	2009-06-16 22:37:56.351814443 +0200
-+++ linux-2.6/fs/xfs/xfs_quota.h	2009-06-16 22:37:58.247965422 +0200
+--- linux-2.6.orig/fs/xfs/xfs_quota.h
++++ linux-2.6/fs/xfs/xfs_quota.h
 @@ -92,6 +92,14 @@ typedef struct xfs_dqblk {
  
  #define XFS_DQ_ALLTYPES		(XFS_DQ_USER|XFS_DQ_PROJ|XFS_DQ_GROUP)
@@ -5203,8 +5207,8 @@ Index: linux-2.6/fs/xfs/xfs_quota.h
   * we can have a max of three dquots changing in a single transaction.
 Index: linux-2.6/fs/xfs/xfs_trans.h
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_trans.h	2009-06-16 22:37:56.356814591 +0200
-+++ linux-2.6/fs/xfs/xfs_trans.h	2009-06-16 22:37:58.248969810 +0200
+--- linux-2.6.orig/fs/xfs/xfs_trans.h
++++ linux-2.6/fs/xfs/xfs_trans.h
 @@ -100,6 +100,50 @@ typedef struct xfs_trans_header {
  #define	XFS_TRANS_TYPE_MAX		41
  /* new transaction types need to be reflected in xfs_logprint(8) */
@@ -5269,8 +5273,8 @@ Index: linux-2.6/fs/xfs/xfs_trans.h
  	void (*iop_format)(xfs_log_item_t *, struct xfs_log_iovec *);
 Index: linux-2.6/fs/xfs/xfs_error.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_error.c	2009-06-16 22:37:56.360814332 +0200
-+++ linux-2.6/fs/xfs/xfs_error.c	2009-06-16 22:37:58.248969810 +0200
+--- linux-2.6.orig/fs/xfs/xfs_error.c
++++ linux-2.6/fs/xfs/xfs_error.c
 @@ -217,3 +217,19 @@ xfs_corruption_error(
  		xfs_hex_dump(p, 16);
  	xfs_error_report(tag, level, mp, fname, linenum, ra);
@@ -5293,8 +5297,8 @@ Index: linux-2.6/fs/xfs/xfs_error.c
 +}
 Index: linux-2.6/fs/xfs/linux-2.6/xfs_fs_subr.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_fs_subr.c	2009-06-16 22:37:56.158815561 +0200
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_fs_subr.c	2009-06-16 22:37:58.249963302 +0200
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_fs_subr.c
++++ linux-2.6/fs/xfs/linux-2.6/xfs_fs_subr.c
 @@ -19,6 +19,7 @@
  #include "xfs_vnodeops.h"
  #include "xfs_bmap_btree.h"
@@ -5314,8 +5318,8 @@ Index: linux-2.6/fs/xfs/linux-2.6/xfs_fs_subr.c
  		ret = filemap_write_and_wait(mapping);
 Index: linux-2.6/fs/xfs/xfs_ag.h
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_ag.h	2009-06-16 22:37:56.365814061 +0200
-+++ linux-2.6/fs/xfs/xfs_ag.h	2009-06-16 22:37:58.249963302 +0200
+--- linux-2.6.orig/fs/xfs/xfs_ag.h
++++ linux-2.6/fs/xfs/xfs_ag.h
 @@ -86,6 +86,20 @@ typedef struct xfs_agf {
  #define	XFS_AGF_NUM_BITS	12
  #define	XFS_AGF_ALL_BITS	((1 << XFS_AGF_NUM_BITS) - 1)
@@ -5339,8 +5343,8 @@ Index: linux-2.6/fs/xfs/xfs_ag.h
  #define	XFS_AGF_BLOCK(mp)	XFS_HDR_BLOCK(mp, XFS_AGF_DADDR(mp))
 Index: linux-2.6/fs/xfs/xfs_alloc.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_alloc.c	2009-06-16 22:37:56.370814628 +0200
-+++ linux-2.6/fs/xfs/xfs_alloc.c	2009-06-16 22:37:58.251964256 +0200
+--- linux-2.6.orig/fs/xfs/xfs_alloc.c
++++ linux-2.6/fs/xfs/xfs_alloc.c
 @@ -38,6 +38,7 @@
  #include "xfs_ialloc.h"
  #include "xfs_alloc.h"
@@ -5824,8 +5828,8 @@ Index: linux-2.6/fs/xfs/xfs_alloc.c
  }
 Index: linux-2.6/fs/xfs/xfs_alloc_btree.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_alloc_btree.c	2009-06-16 22:37:56.375814776 +0200
-+++ linux-2.6/fs/xfs/xfs_alloc_btree.c	2009-06-16 22:37:58.253973171 +0200
+--- linux-2.6.orig/fs/xfs/xfs_alloc_btree.c
++++ linux-2.6/fs/xfs/xfs_alloc_btree.c
 @@ -39,6 +39,7 @@
  #include "xfs_ialloc.h"
  #include "xfs_alloc.h"
@@ -5852,8 +5856,8 @@ Index: linux-2.6/fs/xfs/xfs_alloc_btree.c
  
 Index: linux-2.6/fs/xfs/xfs_fsops.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_fsops.c	2009-06-16 22:37:56.379814517 +0200
-+++ linux-2.6/fs/xfs/xfs_fsops.c	2009-06-16 22:37:58.254967851 +0200
+--- linux-2.6.orig/fs/xfs/xfs_fsops.c
++++ linux-2.6/fs/xfs/xfs_fsops.c
 @@ -45,6 +45,7 @@
  #include "xfs_rtalloc.h"
  #include "xfs_rw.h"
@@ -5873,8 +5877,8 @@ Index: linux-2.6/fs/xfs/xfs_fsops.c
  		 * Free the new space.
 Index: linux-2.6/fs/xfs/xfs_da_btree.h
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_da_btree.h	2009-06-16 22:37:56.384814596 +0200
-+++ linux-2.6/fs/xfs/xfs_da_btree.h	2009-06-16 22:37:58.255971889 +0200
+--- linux-2.6.orig/fs/xfs/xfs_da_btree.h
++++ linux-2.6/fs/xfs/xfs_da_btree.h
 @@ -125,6 +125,13 @@ typedef struct xfs_da_args {
  #define XFS_DA_OP_OKNOENT	0x0008	/* lookup/add op, ENOENT ok, else die */
  #define XFS_DA_OP_CILOOKUP	0x0010	/* lookup to return CI name if found */
@@ -5891,8 +5895,8 @@ Index: linux-2.6/fs/xfs/xfs_da_btree.h
   * This is needed in the directory version 2 format case, when
 Index: linux-2.6/fs/xfs/xfs_dir2_block.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_dir2_block.c	2009-06-16 22:37:56.388814616 +0200
-+++ linux-2.6/fs/xfs/xfs_dir2_block.c	2009-06-16 22:37:58.256955394 +0200
+--- linux-2.6.orig/fs/xfs/xfs_dir2_block.c
++++ linux-2.6/fs/xfs/xfs_dir2_block.c
 @@ -36,8 +36,8 @@
  #include "xfs_dir2_data.h"
  #include "xfs_dir2_leaf.h"
@@ -5965,8 +5969,8 @@ Index: linux-2.6/fs/xfs/xfs_dir2_block.c
  	mp = dp->i_mount;
 Index: linux-2.6/fs/xfs/xfs_dir2_leaf.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_dir2_leaf.c	2009-06-16 22:37:56.394814473 +0200
-+++ linux-2.6/fs/xfs/xfs_dir2_leaf.c	2009-06-16 22:37:58.257939318 +0200
+--- linux-2.6.orig/fs/xfs/xfs_dir2_leaf.c
++++ linux-2.6/fs/xfs/xfs_dir2_leaf.c
 @@ -38,8 +38,8 @@
  #include "xfs_dir2_leaf.h"
  #include "xfs_dir2_block.h"
@@ -6040,8 +6044,8 @@ Index: linux-2.6/fs/xfs/xfs_dir2_leaf.c
  	tp = args->trans;
 Index: linux-2.6/fs/xfs/xfs_dir2_node.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_dir2_node.c	2009-06-16 22:37:56.398814703 +0200
-+++ linux-2.6/fs/xfs/xfs_dir2_node.c	2009-06-16 22:37:58.259964576 +0200
+--- linux-2.6.orig/fs/xfs/xfs_dir2_node.c
++++ linux-2.6/fs/xfs/xfs_dir2_node.c
 @@ -37,8 +37,8 @@
  #include "xfs_dir2_leaf.h"
  #include "xfs_dir2_block.h"
@@ -6135,8 +6139,8 @@ Index: linux-2.6/fs/xfs/xfs_dir2_node.c
  	 */
 Index: linux-2.6/fs/xfs/xfs_dir2_sf.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_dir2_sf.c	2009-06-16 22:37:56.403815130 +0200
-+++ linux-2.6/fs/xfs/xfs_dir2_sf.c	2009-06-16 22:37:58.259964576 +0200
+--- linux-2.6.orig/fs/xfs/xfs_dir2_sf.c
++++ linux-2.6/fs/xfs/xfs_dir2_sf.c
 @@ -37,7 +37,7 @@
  #include "xfs_dir2_data.h"
  #include "xfs_dir2_leaf.h"
@@ -6228,8 +6232,8 @@ Index: linux-2.6/fs/xfs/xfs_dir2_sf.c
  	/*
 Index: linux-2.6/fs/xfs/xfs_btree_trace.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_btree_trace.c	2009-06-16 22:37:56.409814916 +0200
-+++ linux-2.6/fs/xfs/xfs_btree_trace.c	2009-06-16 22:37:58.260964424 +0200
+--- linux-2.6.orig/fs/xfs/xfs_btree_trace.c
++++ linux-2.6/fs/xfs/xfs_btree_trace.c
 @@ -76,28 +76,6 @@ xfs_btree_trace_argbii(
  }
  
@@ -6261,8 +6265,8 @@ Index: linux-2.6/fs/xfs/xfs_btree_trace.c
  void
 Index: linux-2.6/fs/xfs/linux-2.6/xfs_acl.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_acl.c	2009-06-16 22:37:56.163814591 +0200
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_acl.c	2009-06-16 22:37:58.261967834 +0200
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_acl.c
++++ linux-2.6/fs/xfs/linux-2.6/xfs_acl.c
 @@ -21,6 +21,7 @@
  #include "xfs_bmap_btree.h"
  #include "xfs_inode.h"
@@ -6273,8 +6277,8 @@ Index: linux-2.6/fs/xfs/linux-2.6/xfs_acl.c
  
 Index: linux-2.6/fs/xfs/linux-2.6/xfs_linux.h
 ===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_linux.h	2009-06-16 22:38:10.769939937 +0200
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_linux.h	2009-06-16 22:38:20.904816654 +0200
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_linux.h
++++ linux-2.6/fs/xfs/linux-2.6/xfs_linux.h
 @@ -40,7 +40,6 @@
  #include <sv.h>
  #include <time.h>
@@ -6283,6 +6287,30 @@ Index: linux-2.6/fs/xfs/linux-2.6/xfs_linux.h
  #include <support/debug.h>
  #include <support/uuid.h>
  
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_ioctl32.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_ioctl32.c
++++ linux-2.6/fs/xfs/linux-2.6/xfs_ioctl32.c
+@@ -46,6 +46,7 @@
+ #include "xfs_attr.h"
+ #include "xfs_ioctl.h"
+ #include "xfs_ioctl32.h"
++#include "xfs_trace.h"
+ 
+ #define  _NATIVE_IOC(cmd, type) \
+ 	  _IOC(_IOC_DIR(cmd), _IOC_TYPE(cmd), _IOC_NR(cmd), sizeof(type))
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_sync.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_sync.c
++++ linux-2.6/fs/xfs/linux-2.6/xfs_sync.c
+@@ -44,6 +44,7 @@
+ #include "xfs_inode_item.h"
+ #include "xfs_rw.h"
+ #include "xfs_quota.h"
++#include "xfs_trace.h"
+ 
+ #include <linux/kthread.h>
+ #include <linux/freezer.h>
 
 _______________________________________________
 xfs mailing list
