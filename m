@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6IMGqL7176600 for <xfs@oss.sgi.com>; Sat, 18 Jul 2009 17:16:54 -0500
+	n6IMGqSH176599 for <xfs@oss.sgi.com>; Sat, 18 Jul 2009 17:16:55 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CAAEB137E093
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C3823137E091
 	for <xfs@oss.sgi.com>; Sat, 18 Jul 2009 15:17:33 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id UFcsSZICgISlJIAw for
+	by cuda.sgi.com with ESMTP id gcHZA58uaHszHRdx for
 	<xfs@oss.sgi.com>; Sat, 18 Jul 2009 15:17:33 -0700 (PDT)
-Message-Id: <20090718221732.747568000@bombadil.infradead.org>
-Date: Sat, 18 Jul 2009 18:14:55 -0400
+Message-Id: <20090718221732.489646000@bombadil.infradead.org>
+Date: Sat, 18 Jul 2009 18:14:54 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 3/9] xfs: switch to NOFS allocation under i_lock in
-	xfs_da_state_alloc
+Subject: [PATCH 2/9] xfs: switch to NOFS allocation under i_lock in xfs_getbmap
 References: <20090718221452.594956000@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-lockdep-da_state_alloc
+Content-Disposition: inline; filename=xfs-lockdep-getbmap
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,27 +30,27 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: sage@newdream.net
 
-xfs_da_state_alloc is always called with i_lock held, but i_lock is taken in
-reclaim context so all allocations under it must avoid recursions into the
-filesystem.
+xfs_getbmap allocates memory with i_lock held, but i_lock is taken in
+reclaim context so all allocations under it must avoid recursions into
+the filesystem.
 
 Reported by the new reclaim context tracing in lockdep.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6/fs/xfs/xfs_da_btree.c
+Index: linux-2.6/fs/xfs/xfs_bmap.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_da_btree.c	2009-07-10 13:05:24.812364541 +0200
-+++ linux-2.6/fs/xfs/xfs_da_btree.c	2009-07-10 13:16:00.834365485 +0200
-@@ -2201,7 +2201,7 @@ kmem_zone_t *xfs_dabuf_zone;		/* dabuf z
- xfs_da_state_t *
- xfs_da_state_alloc(void)
- {
--	return kmem_zone_zalloc(xfs_da_state_zone, KM_SLEEP);
-+	return kmem_zone_zalloc(xfs_da_state_zone, KM_NOFS);
- }
+--- linux-2.6.orig/fs/xfs/xfs_bmap.c	2009-07-10 13:05:24.808364312 +0200
++++ linux-2.6/fs/xfs/xfs_bmap.c	2009-07-10 13:16:00.830363579 +0200
+@@ -6009,7 +6009,7 @@ xfs_getbmap(
+ 	 */
+ 	error = ENOMEM;
+ 	subnex = 16;
+-	map = kmem_alloc(subnex * sizeof(*map), KM_MAYFAIL);
++	map = kmem_alloc(subnex * sizeof(*map), KM_MAYFAIL | KM_NOFS);
+ 	if (!map)
+ 		goto out_unlock_ilock;
  
- /*
 
 _______________________________________________
 xfs mailing list
