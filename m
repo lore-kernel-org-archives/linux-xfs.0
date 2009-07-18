@@ -1,20 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6IMGqo2176605 for <xfs@oss.sgi.com>; Sat, 18 Jul 2009 17:16:54 -0500
+	n6IMGqJO176609 for <xfs@oss.sgi.com>; Sat, 18 Jul 2009 17:16:55 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0110B137E095
-	for <xfs@oss.sgi.com>; Sat, 18 Jul 2009 15:17:33 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C2278A5E09A
+	for <xfs@oss.sgi.com>; Sat, 18 Jul 2009 15:25:26 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id O0nzwAcejzRELJlH for
-	<xfs@oss.sgi.com>; Sat, 18 Jul 2009 15:17:33 -0700 (PDT)
-Message-Id: <20090718221733.342002000@bombadil.infradead.org>
-Date: Sat, 18 Jul 2009 18:14:57 -0400
+	by cuda.sgi.com with ESMTP id 5E5LO1BNvsxKc8kK for
+	<xfs@oss.sgi.com>; Sat, 18 Jul 2009 15:25:26 -0700 (PDT)
+Message-Id: <20090718221452.594956000@bombadil.infradead.org>
+Date: Sat, 18 Jul 2009 18:14:52 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 5/9] xfs: switch to NOFS allocation under i_lock in
-	xfs_dir_cilookup_result
-References: <20090718221452.594956000@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-lockdep-dir2
+Subject: [PATCH 0/9] fixes for memory allocator recursions into the filesystem
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,27 +28,18 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: sage@newdream.net
 
-xfs_dir_cilookup_result is always called with i_lock held, but i_lock is taken
-in reclaim context so all allocations under it must avoid recursions into the
-filesystem.
+lockdep has recently start tracking if a lock is used in reclaim context
+and if so warns if we do allocations without the NOFS flag inside it.
 
-Reported by the new reclaim context tracing in lockdep.
+This patch series fixes the easy targers involving the i_lock by switching
+various allocations to the NOFS variant, or in case of the growfs code
+moving the allocation out of the lock.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+We still have some more issues that involve the iolock, but I think we
+can simply get rid of the iolock in the reclaim path, but I'll send that
+our for a separate discussion.
 
-Index: linux-2.6/fs/xfs/xfs_dir2.c
-===================================================================
---- linux-2.6.orig/fs/xfs/xfs_dir2.c	2009-07-10 13:05:24.817364338 +0200
-+++ linux-2.6/fs/xfs/xfs_dir2.c	2009-07-10 13:16:00.834365485 +0200
-@@ -256,7 +256,7 @@ xfs_dir_cilookup_result(
- 					!(args->op_flags & XFS_DA_OP_CILOOKUP))
- 		return EEXIST;
- 
--	args->value = kmem_alloc(len, KM_MAYFAIL);
-+	args->value = kmem_alloc(len, KM_NOFS | KM_MAYFAIL);
- 	if (!args->value)
- 		return ENOMEM;
- 
+Sage, this should fix the two reports you've sent a while ago.
 
 _______________________________________________
 xfs mailing list
