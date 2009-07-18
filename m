@@ -1,22 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6IEUYbI158431 for <xfs@oss.sgi.com>; Sat, 18 Jul 2009 09:30:34 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 88F241CCEEE1
-	for <xfs@oss.sgi.com>; Sat, 18 Jul 2009 07:31:15 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id PFvGJHDyHZsPVr3h for
-	<xfs@oss.sgi.com>; Sat, 18 Jul 2009 07:31:15 -0700 (PDT)
-Date: Sat, 18 Jul 2009 10:31:14 -0400
+	n6IEOxmk158181 for <xfs@oss.sgi.com>; Sat, 18 Jul 2009 09:25:00 -0500
+Date: Sat, 18 Jul 2009 10:25:39 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests: very basic defragmentation testing for xfs &
-	ext4
-Message-ID: <20090718143114.GC20905@infradead.org>
-References: <4A5E3A37.5050306@redhat.com>
+Subject: Re: [PATCH V3] reduce bmv_count in xfs_vn_fiemap
+Message-ID: <20090718142539.GB20905@infradead.org>
+References: <4A5E2F01.7030107@sandeen.net>
+	<bzybpnkhp62.fsf@fransum.emea.sgi.com>
+	<4A5F3DBA.9040005@sandeen.net> <4A5F7B7B.6020903@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4A5E3A37.5050306@redhat.com>
+In-Reply-To: <4A5F7B7B.6020903@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,60 +24,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: ext4 development <linux-ext4@vger.kernel.org>, xfs mailing list <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Olaf Weber <olaf@sgi.com>, xfs mailing list <xfs@oss.sgi.com>
 
-On Wed, Jul 15, 2009 at 03:21:11PM -0500, Eric Sandeen wrote:
-> Test a few very basic defragmentation scenarios.
-> 
-> This test creates some files, runs defrag on them,
-> and compares the before/after fragmentation as well
-> as file md5sums and timestamps.
-> 
-> (md5sums may just be reading buffered data though,
-> suggestions?)
+On Thu, Jul 16, 2009 at 02:11:55PM -0500, Eric Sandeen wrote:
+> V3: bump up by one to accomodate expected bmv header in core
 
-As Andreas said unmount it before.
+That is probably woth a comment next to setting it in the code.
 
-> The test currently expects to find e4defrag in
-> /usr/bin
+Otherwise looks good to me, and thanks for the fiemap tests so that
+we get test coverage for this.
 
-> +_supported_fs xfs ext4
 
-> +fragfile=$SCRATCH_MNT/fragfile.$$
-> +
-> +if [ "$FSTYP" == "xfs" ]; then
-> +	DEFRAG=/usr/sbin/xfs_fsr
-> +else
-> +	DEFRAG=/usr/bin/e4defrag
-> +fi
-> +
-> +_require_command $DEFRAG
-> +_require_command /usr/sbin/filefrag
-
-I think we're much better off adding a helpers for this in a new
-common.defrag (or adding it somwhere).
-
-Then set a DEFRAF_PROG variable there, and add a _require_defrag
-ala
-
-_require_defrag()
-{
-    case "$FSTYP" in
-    xfs)
-        DEFRAG_PROG=/usr/sbin/xfs_fsr
-	;;
-    ext4)
-        DEFRAG_PROG=/usr/bin/e4defrag
-	;;
-    *)
-        _notrun "defragmentation not supported for fstype \"$FSTYP\""
-	;;
-    esac
-
-    _require_command $DEFRAG
-    _require_command /usr/sbin/filefrag
-}
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
