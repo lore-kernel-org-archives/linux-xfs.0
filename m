@@ -1,17 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6IMGqJO176609 for <xfs@oss.sgi.com>; Sat, 18 Jul 2009 17:16:55 -0500
+	n6IMGqQw176608 for <xfs@oss.sgi.com>; Sat, 18 Jul 2009 17:16:54 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C2278A5E09A
-	for <xfs@oss.sgi.com>; Sat, 18 Jul 2009 15:25:26 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 51EE4363AC2
+	for <xfs@oss.sgi.com>; Sat, 18 Jul 2009 15:17:34 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 5E5LO1BNvsxKc8kK for
-	<xfs@oss.sgi.com>; Sat, 18 Jul 2009 15:25:26 -0700 (PDT)
-Message-Id: <20090718221452.594956000@bombadil.infradead.org>
-Date: Sat, 18 Jul 2009 18:14:52 -0400
+	by cuda.sgi.com with ESMTP id IvJNhdcPHfHCpAHH for
+	<xfs@oss.sgi.com>; Sat, 18 Jul 2009 15:17:34 -0700 (PDT)
+Message-Id: <20090718221733.640848000@bombadil.infradead.org>
+Date: Sat, 18 Jul 2009 18:14:58 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 0/9] fixes for memory allocator recursions into the filesystem
+Subject: [PATCH 6/9] xfs: switch to NOFS allocation under i_lock in
+	xfs_buf_associate_memory
+References: <20090718221452.594956000@bombadil.infradead.org>
+Content-Disposition: inline; filename=xfs-lockdep-buf
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,18 +31,32 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: sage@newdream.net
 
-lockdep has recently start tracking if a lock is used in reclaim context
-and if so warns if we do allocations without the NOFS flag inside it.
+xfs_buf_associate_memory is used for setting up the spare buffer for the
+log wrap case in xlog_sync which can happen under i_lock when called from
+xfs_fsync. The i_lock mutex is taken in reclaim context so all allocations
+under it must avoid recursions into the filesystem.  There are a couple
+more uses of xfs_buf_associate_memory in the log recovery code that are
+also affected by this, but I'd rather keep the code simple than passing on
+a gfp_mask argument.  Longer term we should just stop requiring the memoery
+allocation in xlog_sync by some smaller rework of the buffer layer.
 
-This patch series fixes the easy targers involving the i_lock by switching
-various allocations to the NOFS variant, or in case of the growfs code
-moving the allocation out of the lock.
+Reported by the new reclaim context tracing in lockdep.
 
-We still have some more issues that involve the iolock, but I think we
-can simply get rid of the iolock in the reclaim path, but I'll send that
-our for a separate discussion.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Sage, this should fix the two reports you've sent a while ago.
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_buf.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_buf.c	2009-07-18 18:26:07.359681952 +0200
++++ linux-2.6/fs/xfs/linux-2.6/xfs_buf.c	2009-07-18 18:26:53.531658254 +0200
+@@ -770,7 +770,7 @@ xfs_buf_associate_memory(
+ 	bp->b_pages = NULL;
+ 	bp->b_addr = mem;
+ 
+-	rval = _xfs_buf_get_pages(bp, page_count, 0);
++	rval = _xfs_buf_get_pages(bp, page_count, XBF_DONT_BLOCK);
+ 	if (rval)
+ 		return rval;
+ 
 
 _______________________________________________
 xfs mailing list
