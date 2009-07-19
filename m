@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6JMPVZ1257821
-	for <linux-xfs@oss.sgi.com>; Sun, 19 Jul 2009 17:25:31 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 46A1C370A70
-	for <linux-xfs@oss.sgi.com>; Sun, 19 Jul 2009 15:26:13 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id vyDBVvPh1Rg2t172 for
-	<linux-xfs@oss.sgi.com>; Sun, 19 Jul 2009 15:26:13 -0700 (PDT)
-Message-ID: <4A639D83.4010501@sandeen.net>
-Date: Sun, 19 Jul 2009 17:26:11 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+	n6JNv3KX001669
+	for <linux-xfs@oss.sgi.com>; Sun, 19 Jul 2009 18:57:03 -0500
+Received: from moutng.kundenserver.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 22637A97EDB
+	for <linux-xfs@oss.sgi.com>; Sun, 19 Jul 2009 17:05:42 -0700 (PDT)
+Received: from moutng.kundenserver.de (moutng.kundenserver.de
+	[212.227.126.177]) by cuda.sgi.com with ESMTP id
+	HkF0PUk2VC3gM9wu for <linux-xfs@oss.sgi.com>;
+	Sun, 19 Jul 2009 17:05:42 -0700 (PDT)
+Date: Sun, 19 Jul 2009 16:57:19 -0700 (PDT)
+From: Christian Kujau <lists@nerdbynature.de>
 Subject: Re: xfstests: nslookup not found
+In-Reply-To: <20090719182012.GA10936@infradead.org>
+Message-ID: <alpine.DEB.2.01.0907191653240.6439@bogon>
 References: <alpine.DEB.2.01.0907191050010.6439@bogon>
 	<20090719182012.GA10936@infradead.org>
-In-Reply-To: <20090719182012.GA10936@infradead.org>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,32 +33,72 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> On Sun, Jul 19, 2009 at 10:57:35AM -0700, Christian Kujau wrote:
->> Hi,
->>
->> while trying to run ./check in a current xfstests tree, execution stopped 
->> because "nslookup" was not available. I could've just installed this tool 
->> but I wondered why xfstests, a filesystem testing tool, would need 
->> nslookup at all. Turns out that it's being used in a routine called 
->> "_get_fqdn", which in turn is only called once in ./new, to set a variable 
->> called "owner" and I ask myself: do I really want my FQDN listed in the 
->> testresults, that maybe even get published for analysis? I changed this 
->> whole _get_fqdn thingy to just "uname -n", but I'm eager to know why the 
->> FQDN is crucial here :-)
-> 
-> It uses it as email address for the test owner.  In these days this
-> probably requires hand-editing anyway, but the fqdn is certainly
-> a better approximation than uname -n.
-> 
+On Sun, 19 Jul 2009 at 14:20, Christoph Hellwig wrote:
 > Can you resend a patch that just moves _get_fqdn and the check for
 > nslookup from common* into the "new" script?
 
-That'd be great - sounds like the right solution to me; I've run into
-this too but never bothered to fix it.  :)
+If I understand correctly, maybe something like this would be acceptable?
 
-Thanks,
--Eric
+I was tempted to use "hostname -f" to give out the fqdn, but appaerently 
+not every hostname knows "-f" and I did not want to let the whole script 
+fail just because nslookup is not in place.
+
+Christian.
+
+--- common.config.orig	2009-07-19 21:43:15.000000000 +0200
++++ common.config	2009-07-19 21:43:31.000000000 +0200
+@@ -120,9 +120,6 @@ export UMOUNT_PROG="`set_prog_path umoun
+ export FSSTRESS_PROG="`set_prog_path fsstress $PWD/ltp/fsstress`"
+ [ "$FSSTRESS_PROG" = "" ] && _fatal "fsstress not found"
+ 
+-export NSLOOKUP_PROG="`set_prog_path nslookup`"
+-[ "$NSLOOKUP_PROG" = "" ] && _fatal "nslookup not found"
+-
+ export PERL_PROG="`set_prog_path perl`"
+ [ "$PERL_PROG" = "" ] && _fatal "perl not found"
+ 
+--- common.rc.orig	2009-07-19 21:44:42.000000000 +0200
++++ common.rc	2009-07-19 21:45:06.000000000 +0200
+@@ -330,14 +330,6 @@ _get_pids_by_name()
+ 	-e "/[0-9]:[0-9][0-9]  *$1 /s/ .*//p"
+ }
+ 
+-# fqdn for localhost
+-#
+-_get_fqdn()
+-{
+-    host=`hostname`
+-    $NSLOOKUP_PROG $host | $AWK_PROG '{ if ($1 == "Name:") print $2 }'
+-}
+-
+ # fix malloc libs output
+ #
+ _fix_malloc()
+--- new.orig	2009-07-19 21:43:20.000000000 +0200
++++ new	2009-07-20 01:45:51.000000000 +0200
+@@ -32,6 +32,17 @@ _cleanup()
+     :
+ }
+ 
++# fqdn for localhost
++_get_fqdn()
++{
++    NSLOOKUP_PROG="`set_prog_path nslookup`"
++    if [ "$NSLOOKUP_PROG" = "" ]; then
++	getent hosts `uname -n` | awk '{print $2}'
++    else
++	$NSLOOKUP_PROG `hostname` | $AWK_PROG '{ if ($1 == "Name:") print $2 }'
++    fi
++}
++
+ if [ ! -f group ]
+ then
+     echo "Creating the group index ..."
+
+-- 
+BOFH excuse #274:
+
+It was OK before you touched it.
 
 _______________________________________________
 xfs mailing list
