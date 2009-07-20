@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6KHu8x4099362
-	for <linux-xfs@oss.sgi.com>; Mon, 20 Jul 2009 12:56:09 -0500
+	n6KJ6aMx102949 for <xfs@oss.sgi.com>; Mon, 20 Jul 2009 14:06:36 -0500
 Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 24E4D3736CB
-	for <linux-xfs@oss.sgi.com>; Mon, 20 Jul 2009 10:56:47 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8210D13BA3E8
+	for <xfs@oss.sgi.com>; Mon, 20 Jul 2009 12:07:17 -0700 (PDT)
 Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id 4CrKEZwkOE19fzi9 for <linux-xfs@oss.sgi.com>;
-	Mon, 20 Jul 2009 10:56:47 -0700 (PDT)
-Message-ID: <4A64AFD4.90407@sandeen.net>
-Date: Mon, 20 Jul 2009 12:56:36 -0500
+	with ESMTP id 6RYqptCcsgurNACM for <xfs@oss.sgi.com>;
+	Mon, 20 Jul 2009 12:07:17 -0700 (PDT)
+Received: from int-mx2.corp.redhat.com (int-mx2.corp.redhat.com [172.16.27.26])
+	by mx2.redhat.com (8.13.8/8.13.8) with ESMTP id n6KJ7H4s006453
+	for <xfs@oss.sgi.com>; Mon, 20 Jul 2009 15:07:17 -0400
+Received: from ns3.rdu.redhat.com (ns3.rdu.redhat.com [10.11.255.199])
+	by int-mx2.corp.redhat.com (8.13.1/8.13.1) with ESMTP id n6KJ7Gvm000554
+	for <xfs@oss.sgi.com>; Mon, 20 Jul 2009 15:07:16 -0400
+Received: from neon.msp.redhat.com (neon.msp.redhat.com [10.15.80.10])
+	by ns3.rdu.redhat.com (8.13.8/8.13.8) with ESMTP id n6KJ7F09021190
+	for <xfs@oss.sgi.com>; Mon, 20 Jul 2009 15:07:15 -0400
+Message-ID: <4A64C063.2070807@sandeen.net>
+Date: Mon, 20 Jul 2009 14:07:15 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] don't fail if nslookup is not found
-References: <alpine.DEB.2.01.0907191050010.6439@bogon>	<20090719182012.GA10936@infradead.org>	<alpine.DEB.2.01.0907191653240.6439@bogon>	<20090720001637.GA31674@infradead.org>	<alpine.DEB.2.01.0907191840150.6439@bogon>	<20090720093240.GA24549@infradead.org>
-	<alpine.DEB.2.01.0907201000510.6439@bogon>
-In-Reply-To: <alpine.DEB.2.01.0907201000510.6439@bogon>
+Subject: [PATCH] xfs_metadump: Allow operation on frozen filesystems
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,23 +34,116 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christian Kujau <lists@nerdbynature.de>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@oss.sgi.com
+To: xfs mailing list <xfs@oss.sgi.com>
 
-Christian Kujau wrote:
-> On Mon, 20 Jul 2009 at 05:32, Christoph Hellwig wrote:
->> Thanks, I've put the patch in and pushed it to the kernel.org
->> repository.
-> 
-> Thanks, Christoph. This reminds me to ask: why is there also a kernel.org 
-> repo, when there's one on oss.sgi.com too? (The latter being referenced in 
-> the XFS wiki)
+The xfs_metadump manpage says that it works on a frozen filesystem,
+but in reality it does not, and fails because the fs still looks
+mounted & writable.
 
-outsiders can't commit to sgi's git repo, so those doing active
-development can commit to the one on kernel.org, and then sgi
-periodically pulls those in to oss.sgi.com.
+I don't think we have a way to test for frozen (!) so add a -F 
+option which essentially overrides the xfs_db "-i" option with
+a later "-r" which is more forgiving.
 
--Eric
+Document this, and a few other missing bits in the manpage.
+
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
+
+iff --git a/db/xfs_metadump.sh b/db/xfs_metadump.sh
+index 28b04b8..ef51678 100755
+--- a/db/xfs_metadump.sh
++++ b/db/xfs_metadump.sh
+@@ -5,9 +5,9 @@
+ 
+ OPTS=" "
+ DBOPTS=" "
+-USAGE="Usage: xfs_metadump [-efogwV] [-m max_extents] [-l logdev] source target"
++USAGE="Usage: xfs_metadump [-efogwFV] [-m max_extent] [-l logdev] source target"
+ 
+-while getopts "efgl:m:owV" c
++while getopts "efgl:m:owFV" c
+ do
+ 	case $c in
+ 	e)	OPTS=$OPTS"-e ";;
+@@ -17,6 +17,7 @@ do
+ 	w)	OPTS=$OPTS"-w ";;
+ 	f)	DBOPTS=$DBOPTS" -f";;
+ 	l)	DBOPTS=$DBOPTS" -l "$OPTARG" ";;
++	F)	DBOPTS=$DBOPTS" -r";;
+ 	V)	xfs_db -p xfs_metadump -V
+ 		status=$?
+ 		exit $status
+@@ -29,7 +30,7 @@ done
+ set -- extra $@
+ shift $OPTIND
+ case $# in
+-	2)	xfs_db$DBOPTS -F -i -p xfs_metadump -c "metadump$OPTS $2" $1
++	2)	xfs_db -F -i $DBOPTS -p xfs_metadump -c "metadump$OPTS $2" $1
+ 		status=$?
+ 		;;
+ 	*)	echo $USAGE 1>&2
+diff --git a/man/man8/xfs_metadump.8 b/man/man8/xfs_metadump.8
+index f0ff1ae..1f74dd4 100644
+--- a/man/man8/xfs_metadump.8
++++ b/man/man8/xfs_metadump.8
+@@ -4,11 +4,15 @@ xfs_metadump \- copy XFS filesystem metadata to a file
+ .SH SYNOPSIS
+ .B xfs_metadump
+ [
+-.B \-efgow
++.B \-efgowFV
+ ] [
+ .B \-l
+ .I logdev
+ ]
++] [
++.B \-m
++.I max_extent
++]
+ .I source
+ .I target
+ .SH DESCRIPTION
+@@ -28,7 +32,10 @@ redirected to another program such as a compression application.
+ .B xfs_metadump
+ should only be used to copy unmounted filesystems, read-only mounted
+ filesystems, or frozen filesystems (see
+-.BR xfs_freeze (8)).
++.BR xfs_freeze (8)
++and the
++.B \-F
++option below).
+ Otherwise, the generated dump could be inconsistent or corrupt.
+ .PP
+ .B xfs_metadump
+@@ -94,12 +101,28 @@ For filesystems which use an external log, this specifies the device where the
+ external log resides. The external log is not copied, only internal logs are
+ copied.
+ .TP
++.BI \-m " max_extent"
++Specify the maximum size of a metadata extent to process, in filesystem blocks.
++Anything larger than this will be considered corrupt metadata, and skipped.
++The default is 1000 blocks.
++.TP
+ .B \-o
+ Disables obfuscation of file names and extended attributes.
+ .TP
+ .B \-w
+ Prints warnings of inconsistant metadata encountered to stderr. Bad metadata
+ is still copied.
++.TP
++.B \-F
++Allows a metadump of a filesystem frozen with
++.BR xfs_freeze (8).
++This overrides the normal tests that the fileystem is either unmounted
++or readonly; because there is no way to test for a frozen filesystem,
++this option must be manually specified.  Specifying this option on a 
++writable, non-frozen filesystem will likely result in a corrupted dump image.
++.TP
++.B \-V
++Prints out the current version number and exits.
+ .SH DIAGNOSTICS
+ .B xfs_metadump
+ returns an exit code of 0 if all readable metadata is succesfully copied or
 
 _______________________________________________
 xfs mailing list
