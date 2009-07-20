@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6KKcvgS107974 for <xfs@oss.sgi.com>; Mon, 20 Jul 2009 15:38:57 -0500
+	n6KLLB9c111703 for <xfs@oss.sgi.com>; Mon, 20 Jul 2009 16:21:12 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EFB5E37414F
-	for <xfs@oss.sgi.com>; Mon, 20 Jul 2009 13:39:39 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 643AD374466
+	for <xfs@oss.sgi.com>; Mon, 20 Jul 2009 14:21:54 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id CpecnIhUZVMeAcXt for
-	<xfs@oss.sgi.com>; Mon, 20 Jul 2009 13:39:39 -0700 (PDT)
-Date: Mon, 20 Jul 2009 16:39:39 -0400
+	by cuda.sgi.com with ESMTP id Xw5j2FsRWmqu1mpo for
+	<xfs@oss.sgi.com>; Mon, 20 Jul 2009 14:21:54 -0700 (PDT)
+Date: Mon, 20 Jul 2009 17:21:53 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs_metadump: Allow operation on frozen filesystems
-Message-ID: <20090720203939.GA5517@infradead.org>
-References: <4A64C063.2070807@sandeen.net>
+Subject: Re: [PATCH] use XFS_CORRUPTION_ERROR in xfs_btree_check_sblock
+Message-ID: <20090720212153.GA6832@infradead.org>
+References: <4A6492AF.3030809@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4A64C063.2070807@sandeen.net>
+In-Reply-To: <4A6492AF.3030809@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,18 +31,18 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs mailing list <xfs@oss.sgi.com>
 
-On Mon, Jul 20, 2009 at 02:07:15PM -0500, Eric Sandeen wrote:
-> The xfs_metadump manpage says that it works on a frozen filesystem,
-> but in reality it does not, and fails because the fs still looks
-> mounted & writable.
+On Mon, Jul 20, 2009 at 10:52:15AM -0500, Eric Sandeen wrote:
+> In Red Hat Bug 512552
+>  - Can't write to XFS mount during raid5 resync
 > 
-> I don't think we have a way to test for frozen (!) so add a -F 
-> option which essentially overrides the xfs_db "-i" option with
-> a later "-r" which is more forgiving.
+> a user ran into corruption while resyncing a raid, and we failed
+> a consistency test, but didn't get much more info; it'd be nice
+> to call XFS_CORRUPTION_ERROR here so we can see the buffer
+> contents.
+> 
+> Compile-tested only...
 
-Hmm, that feels a bit dagerous to me.  What about just adding an
-option to xfs_metadump to freeze the filesystem itself before performing
-the dump and then unfreeze it when done?
+Looks good to me, I'll throw it into my XFSQA queue..
 
 _______________________________________________
 xfs mailing list
