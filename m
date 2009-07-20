@@ -1,31 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6KBLgfa077352 for <xfs@oss.sgi.com>; Mon, 20 Jul 2009 06:21:42 -0500
-Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 09851371CFD
-	for <xfs@oss.sgi.com>; Mon, 20 Jul 2009 04:22:23 -0700 (PDT)
-Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.162.198]) by
-	cuda.sgi.com with ESMTP id Tk1QTmb3BIOmF0BW for
-	<xfs@oss.sgi.com>; Mon, 20 Jul 2009 04:22:23 -0700 (PDT)
-Received: from mailsrv2.i.zmi.at (h081217106033.dyn.cm.kabsi.at
-	[81.217.106.33])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv1.zmi.at (Postfix) with ESMTP id 2DBF44DAF
-	for <xfs@oss.sgi.com>; Mon, 20 Jul 2009 13:22:55 +0200 (CEST)
-Received: from saturn.localnet (unknown [10.72.27.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv2.i.zmi.at (Postfix) with ESMTPSA id 907CC40017E
-	for <xfs@oss.sgi.com>; Mon, 20 Jul 2009 13:22:22 +0200 (CEST)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: data switchs su,sw and sunit,swidth
-Date: Mon, 20 Jul 2009 13:22:21 +0200
-References: <4A626EC5.3090100@tlinx.org>
-In-Reply-To: <4A626EC5.3090100@tlinx.org>
+	n6KFpaaG092816 for <xfs@oss.sgi.com>; Mon, 20 Jul 2009 10:51:37 -0500
+Received: from mx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CAA0E372DDD
+	for <xfs@oss.sgi.com>; Mon, 20 Jul 2009 08:52:17 -0700 (PDT)
+Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
+	with ESMTP id 97ANfvUxtXl6OopB for <xfs@oss.sgi.com>;
+	Mon, 20 Jul 2009 08:52:17 -0700 (PDT)
+Received: from int-mx2.corp.redhat.com (int-mx2.corp.redhat.com [172.16.27.26])
+	by mx2.redhat.com (8.13.8/8.13.8) with ESMTP id n6KFqHDQ017111
+	for <xfs@oss.sgi.com>; Mon, 20 Jul 2009 11:52:17 -0400
+Received: from ns3.rdu.redhat.com (ns3.rdu.redhat.com [10.11.255.199])
+	by int-mx2.corp.redhat.com (8.13.1/8.13.1) with ESMTP id n6KFqGnJ009867
+	for <xfs@oss.sgi.com>; Mon, 20 Jul 2009 11:52:16 -0400
+Received: from neon.msp.redhat.com (neon.msp.redhat.com [10.15.80.10])
+	by ns3.rdu.redhat.com (8.13.8/8.13.8) with ESMTP id n6KFqF1a018376
+	for <xfs@oss.sgi.com>; Mon, 20 Jul 2009 11:52:15 -0400
+Message-ID: <4A6492AF.3030809@sandeen.net>
+Date: Mon, 20 Jul 2009 10:52:15 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Message-Id: <200907201322.22102@zmi.at>
+Subject: [PATCH] use XFS_CORRUPTION_ERROR in xfs_btree_check_sblock
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,86 +30,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============8260629242487193609=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs mailing list <xfs@oss.sgi.com>
 
---===============8260629242487193609==
-Content-Type: multipart/signed;
-  boundary="nextPart2080549.len0J7tyI9";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+In Red Hat Bug 512552
+ - Can't write to XFS mount during raid5 resync
 
---nextPart2080549.len0J7tyI9
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+a user ran into corruption while resyncing a raid, and we failed
+a consistency test, but didn't get much more info; it'd be nice
+to call XFS_CORRUPTION_ERROR here so we can see the buffer
+contents.
 
-On Sonntag 19 Juli 2009 Linda Walsh wrote:
-> Then, for RAID 1 (mirror) would 'sw'=3D=3D1? =A0Would setting the =A0su/sw
-> =A0value for a RAID 1 actually matter in any way? =A0Ie, technically --
-> it would fill in numbers for OS book-keeping, but wouldn't change
-> anything in terms of performance or layout, vs. 'physically' -- where
-> it could change disk layout or performance?
->
-> At RAID 0, I'd guess =A0sw=3D=3D2?
+Compile-tested only...
 
-Both RAID0 and RAID1 use sw=3D0.
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
 
-> In RAID 5, would it be =A0 sw =A0=3D=3D #Disks-1? =A0So even w/6 disks, it
-> still only uses 1 disk for parity and =A0sw =3D=3D 5?
-
-RAID5: sw =3D #Disks-1 ( so with 8 disks use 7)
-RAID6: sw =3D #Disks-2 ( so with 8 disks use 6)
-
-> I wonder what becomes a max-safe RAID 5 size? (or is the number of
-> parity disks a settable option with RAID 5?)
-
-RAID5 always only has 1 parity disk (well, technically it's not a=20
-physical disk, but the parity is distributed over all disks in the=20
-array).
-Don't know what you mean by "max-safe" size. The more disks you have,=20
-the bigger the chance that a single disk breaks. Also, I tested with=20
-Areca controllers, using more than 7 disks in a single RAID array=20
-doesn't improve speed anymore. So I use RAID-6 for up to 8 disks, and=20
-make it RAID-60 for up to 16 disks (with Areca controllers).
-
-mfg zmi
-=2D-=20
-// Michael Monnerie, Ing.BSc    -----      http://it-management.at
-// Tel: 0660 / 415 65 31                      .network.your.ideas.
-// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
-// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
-// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
-
-
---nextPart2080549.len0J7tyI9
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-
-iEYEABECAAYFAkpkU24ACgkQzhSR9xwSCbRBHQCdFEiFEEdfQy3ZZ7CfZnTdGF79
-lWMAnjDSVCEHFxd3K0cSGqRLCne1H60n
-=jLpb
------END PGP SIGNATURE-----
-
---nextPart2080549.len0J7tyI9--
-
-
---===============8260629242487193609==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+diff --git a/fs/xfs/xfs_btree.c b/fs/xfs/xfs_btree.c
+index e9df995..2671738 100644
+--- a/fs/xfs/xfs_btree.c
++++ b/fs/xfs/xfs_btree.c
+@@ -120,8 +120,8 @@ xfs_btree_check_sblock(
+ 			XFS_RANDOM_BTREE_CHECK_SBLOCK))) {
+ 		if (bp)
+ 			xfs_buftrace("SBTREE ERROR", bp);
+-		XFS_ERROR_REPORT("xfs_btree_check_sblock", XFS_ERRLEVEL_LOW,
+-				 cur->bc_mp);
++		XFS_CORRUPTION_ERROR("xfs_btree_check_sblock",
++			XFS_ERRLEVEL_LOW, cur->bc_mp, block);
+ 		return XFS_ERROR(EFSCORRUPTED);
+ 	}
+ 	return 0;
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============8260629242487193609==--
