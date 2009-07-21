@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6LEBhNe168826
-	for <linux-xfs@oss.sgi.com>; Tue, 21 Jul 2009 09:11:45 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D5EF1376C34
-	for <linux-xfs@oss.sgi.com>; Tue, 21 Jul 2009 07:12:26 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id xvEMCZeXWZyzzgMR for
-	<linux-xfs@oss.sgi.com>; Tue, 21 Jul 2009 07:12:26 -0700 (PDT)
-Date: Tue, 21 Jul 2009 10:12:25 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: 2.6.30 panic - xfs_fs_destroy_inode
-Message-ID: <20090721141225.GA24330@infradead.org>
-References: <4A408316.2070903@news-service.com>
-	<1587994907.388291245745033392.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
-	<20090623171305.GB23971@infradead.org>
-	<4A4A7205.6010101@news-service.com>
-	<20090701124441.GA12844@infradead.org>
-	<4A4CEEF2.7040101@news-service.com>
+	n6LFWapQ175157 for <xfs@oss.sgi.com>; Tue, 21 Jul 2009 10:32:37 -0500
+Received: from slurp.thebarn.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 51ECF376B8F
+	for <xfs@oss.sgi.com>; Tue, 21 Jul 2009 08:33:18 -0700 (PDT)
+Received: from slurp.thebarn.com (mail.thebarn.com [208.42.117.202]) by
+	cuda.sgi.com with ESMTP id IRyqU1VwbPN8mxa3 for
+	<xfs@oss.sgi.com>; Tue, 21 Jul 2009 08:33:18 -0700 (PDT)
+Received: from funky.x.thebarn.com (slurp.x.thebarn.com [10.0.0.11])
+	(authenticated bits=0)
+	by slurp.thebarn.com (8.14.3/8.14.0) with ESMTP id n6LFVIrt006246;
+	Tue, 21 Jul 2009 10:31:35 -0500 (CDT)
+	(envelope-from cattelan@xfs.org)
+Message-ID: <4A65DF46.1000900@xfs.org>
+Date: Tue, 21 Jul 2009 10:31:18 -0500
+From: Russell Cattelan <cattelan@thebarn.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4A4CEEF2.7040101@news-service.com>
+Subject: Re: Who did Aberdeen name as 2009 PLM Champion?
+References: <SEMA-CR-1-5KLR4J@ptcmarketing.com> <200907170815.02493@zmi.at>
+In-Reply-To: <200907170815.02493@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,39 +32,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Patrick Schreurs <patrick@news-service.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@oss.sgi.com, Tommy van Leeuwen <tommy@news-service.com>, Lachlan McIlroy <lmcilroy@redhat.com>, Eric Sandeen <sandeen@sandeen.net>
+To: Michael Monnerie <michael.monnerie@is.it-management.at>, xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Jul 02, 2009 at 07:31:30PM +0200, Patrick Schreurs wrote:
-> Hi Christoph,
+Michael Monnerie wrote:
+> On Donnerstag 16 Juli 2009 PTC Info wrote:
+>   
+>> This email was sent to: xfs@oss.sgi.com
+>>
+>> PTC, 140 Kendrick Street, Needham, MA 02494 USA
+>>
+>> If you wish to unsubscribe from all PTC Emails, please send a blank
+>> email to unsubscribe@ptc.com.
+>>     
 >
-> With this patch we see the following:
->
-> kernel BUG at fs/inode.c:1288!
+> Did someone try to unsubscribe from this? Maybe they do it really?
+>   
+no but I blacklisted all ptc.com addresses.
 
-Okay, I think I figured out what this is.  You hit the case where
-we re-use an inode that is gone from the VFS point of view, but
-still in xfs reclaimable state.  We reinitialize it using
-inode_init_always, but inode_init_always does not touch i_state, which
-still includes I_CLEAR.  See the patch below which sets it to the
-expected state.  What really worries me is that I don't seem to be
-able to actually hit that case in testing.
-
-Can you try the patch below ontop of the previous one?
-
-
-Index: linux-2.6/fs/xfs/xfs_iget.c
-===================================================================
---- linux-2.6.orig/fs/xfs/xfs_iget.c	2009-07-21 16:07:41.654923213 +0200
-+++ linux-2.6/fs/xfs/xfs_iget.c	2009-07-21 16:08:55.064151137 +0200
-@@ -206,6 +206,7 @@ xfs_iget_cache_hit(
- 			error = ENOMEM;
- 			goto out_error;
- 		}
-+		inode->i_state = I_LOCK|I_NEW;
- 	} else {
- 		/* If the VFS inode is being torn down, pause and try again. */
- 		if (!igrab(inode))
+> mfg zmi
+>   
 
 _______________________________________________
 xfs mailing list
