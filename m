@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6MCk7Xh241682
-	for <linux-xfs@oss.sgi.com>; Wed, 22 Jul 2009 07:46:09 -0500
-Received: from quickstep.mgras.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 11C76ABFFB2
-	for <linux-xfs@oss.sgi.com>; Wed, 22 Jul 2009 05:55:00 -0700 (PDT)
-Received: from quickstep.mgras.net (quickstep.mgras.net [213.146.115.59]) by
-	cuda.sgi.com with ESMTP id 7R9d2ZWUbty57lp8 for
-	<linux-xfs@oss.sgi.com>; Wed, 22 Jul 2009 05:55:00 -0700 (PDT)
-Received: from osprey.mgras.de (osprey.mgras.de [192.168.48.3])
-	by quickstep.mgras.net (8.13.1/8.13.0) with ESMTP id n6MCju3V019039
-	for <linux-xfs@oss.sgi.com>; Wed, 22 Jul 2009 14:45:57 +0200 (CEST)
-Received: (from news@localhost) by osprey.mgras.de (AIX5.1/8.11.6p2/8.11.0) id
-	n6MCjua26142 for linux-xfs@oss.sgi.com;
-	Wed, 22 Jul 2009 14:45:56 +0200
-From: Martin Spott <Martin.Spott@mgras.net>
-Subject: Re: patch 2.6.30 and 2.6.30.1 xfs/nfs oops fix, radix tree
-Date: Wed, 22 Jul 2009 12:45:55 +0000 (UTC)
-Message-ID: <h471m3$1168$1@osprey.mgras.de>
-References: <20090721012455.GG3229@rlogin.dk>
+	n6MEBsEQ246740 for <xfs@oss.sgi.com>; Wed, 22 Jul 2009 09:11:56 -0500
+Received: from slurp.thebarn.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E836737B61C
+	for <xfs@oss.sgi.com>; Wed, 22 Jul 2009 07:12:37 -0700 (PDT)
+Received: from slurp.thebarn.com (mail.thebarn.com [208.42.117.202]) by
+	cuda.sgi.com with ESMTP id qF98fldDpouH45uO for
+	<xfs@oss.sgi.com>; Wed, 22 Jul 2009 07:12:37 -0700 (PDT)
+Received: from funky.x.thebarn.com (slurp.x.thebarn.com [10.0.0.11])
+	(authenticated bits=0)
+	by slurp.thebarn.com (8.14.3/8.14.0) with ESMTP id n6MECKAV080592;
+	Wed, 22 Jul 2009 09:12:36 -0500 (CDT)
+	(envelope-from cattelan@xfs.org)
+Message-ID: <4A671E44.4040305@xfs.org>
+Date: Wed, 22 Jul 2009 09:12:20 -0500
+From: Russell Cattelan <cattelan@thebarn.com>
+MIME-Version: 1.0
+Subject: Re: does XFS support block sizes other than 512 bytes?
+References: <4A6119B5.6000706@tlinx.org>
+In-Reply-To: <4A6119B5.6000706@tlinx.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,32 +28,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: "Linda A. Walsh" <xfs@tlinx.org>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Michael Ole Olsen wrote:
+Linda A. Walsh wrote:
+> This one's a bit more specific than the last.  If memory serves me,
+> XFS supported differing block sizes (which you could do on a hardware
+> format
+> of a SCSI drive) back on IRIX.  But when first ported to Linux it didn't
+> work.  Was that ever fixed?  I seem to remember that going to 1-2K
+> block sizes
+> gave and extra 10%, and it almost seems logical that going to a 4kK
+> block size
+> would be ideal for xfs (presuming your disk doesn't start getting errors,
+> then it might get harder to remap sectors and you'd hit hard disk failure
+> (w/o remappable sectors) sooner.
+>
+> But at least 1K might be a reasonable tradeoff?  Been quite a while since
+> I tried it and don't even know if the SAS drives allow it (if they do,
+> I wonder
+> if the newer SATA drives do?)
+Yes
+XFS can support any power of 2 sector size up to the page size of your
+system.
+And it is recommend that on things like raid5 devices that the sector
+size be
+set to the same size as the filesystem block size.
 
-> Eric has been very helpful in helping me downgrade xfs in 2.6.30.1 to 2.6.28.7
-> version (getting 2.6.28.7 to compile in 2.6.30.1) which removed the oopses.
-> 
-> Just wanted to post here for other people like me that don't have an option
-> of downgrading their kernel (need i.e. mdadm>=2.6.30).
-
-A little side note here: Just I as an excercise, because I'm a curious
-person, I performed a similar procedure, taking the xfs sources from
-2.6.28.10, put them into a 2.6.30.2 tree, applied the patch and finally
-booted the resulting kernel:
-Don't try this on a machine you don't have console access to  ;-)
-
-Cheers,
-	Martin.
--- 
- Unix _IS_ user friendly - it's just selective about who its friends are !
---------------------------------------------------------------------------
+>
+> thanks more... :-)
+> -linda
+>
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+>
 
 _______________________________________________
 xfs mailing list
