@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6N4ArDr028716 for <xfs@oss.sgi.com>; Wed, 22 Jul 2009 23:10:54 -0500
+	n6N4J1wM029083 for <xfs@oss.sgi.com>; Wed, 22 Jul 2009 23:19:02 -0500
 Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 78248AC8DD1
-	for <xfs@oss.sgi.com>; Wed, 22 Jul 2009 21:19:51 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C81FBAC8E0D
+	for <xfs@oss.sgi.com>; Wed, 22 Jul 2009 21:28:00 -0700 (PDT)
 Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id Je7Klt5sJ7OFLr7w for
-	<xfs@oss.sgi.com>; Wed, 22 Jul 2009 21:19:51 -0700 (PDT)
-Message-ID: <4A67E2F5.2030400@sandeen.net>
-Date: Wed, 22 Jul 2009 23:11:33 -0500
+	cuda.sgi.com with ESMTP id FE5qMthxeHCT0W1i for
+	<xfs@oss.sgi.com>; Wed, 22 Jul 2009 21:28:00 -0700 (PDT)
+Message-ID: <4A67E4DE.1050904@sandeen.net>
+Date: Wed, 22 Jul 2009 23:19:42 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: XFS filesystem shutting down on linux 2.6.28.9 (xfs_rename)
-References: <000c01ca0ae0$e85420a0$b8fc61e0$@fr>
-In-Reply-To: <000c01ca0ae0$e85420a0$b8fc61e0$@fr>
+Subject: Re: XFS: file system too large to be mounted on this system. 2.6.30.1
+References: <1248313295.4730.2.camel@oxygen.netxsys.com>
+In-Reply-To: <1248313295.4730.2.camel@oxygen.netxsys.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,46 +27,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Gabriel Barazer <gabriel@oxeva.fr>
+To: Krzysztof Adamski <k@adamski.org>
 Cc: xfs@oss.sgi.com
 
-Gabriel Barazer wrote:
-> Hi,
+Krzysztof Adamski wrote:
+> I got "XFS: file system too large to be mounted on this system." when
+> mounting my not to large file system.
 > 
-> I recently put a NFS file server into production, with mostly XFS volumes on LVM. The server was quite low on traffic until this morning and one of the filesystems crashed twice since this morning with the following backtrace:
+> I'm running Debian lenny with a self compiled kernel, 32 bit userland
+> distribution.
 > 
-> Filesystem "dm-24": XFS internal error xfs_trans_cancel at line 1164 of file fs/xfs/xfs_trans.c.  Caller 0xffffffff811b09a7
-> Pid: 2053, comm: nfsd Not tainted 2.6.28.9-filer #1
-> Call Trace:
->  [<ffffffff811b09a7>] xfs_rename+0x4a1/0x4f6
->  [<ffffffff811b1806>] xfs_trans_cancel+0x56/0xed
->  [<ffffffff811b09a7>] xfs_rename+0x4a1/0x4f6
-...
-
-> xfs_force_shutdown(dm-24,0x8) called from line 1165 of file fs/xfs/xfs_trans.c.  Return address = 0xffffffff811b181f
-> Filesystem "dm-24": Corruption of in-memory data detected.  Shutting down filesystem: dm-24
+> I have both 32 and 64 bit kernels of the 2.6.30.1 installed. I was
+> running the 64bit kernel for a while, I needed to switch to the 32 bit
+> version to run VBox. After reboot to 32bit kernel, one filesystem would
+> not mount. The xfs_repair did not find any good superblocks.
+> Fortunately booting the 64bit kernel allowed mounting of this
+> filesystem.
+> This is a df while running 64bit kernel:
+> /dev/mapper/big--raid-file--store
+>                xfs   2558652416 2540114040  18538376 100% /file-store
+> /dev/sda1      xfs   195263012 194723636    539376 100% /disks/a1
 > 
-> The two crashed are related to the same function: xfs_rename.
+> The interesting part is that /disks/a1 did not have problem with
+> mounting on the 32bit kernel, just the /file-store.
 
-Can you do objdump -d xfs.ko | grep "xfs_rename\|xfs_trans_cancel" and
-maybe we can see which call to xfs_trans_cancel in xfs_rename this was.
 
-The problem relates to canceling a dirty transaction on an error path.
+Do you have CONFIG_LBD (or maye now CONFIG_LBDAF) set on the newer
+32-bit kernel?  You'll need that.
+
+If you do ....
+
+file-store is about 2T?  What is the filesystem block size?  (xfs_info
+on the mountpoint would tell you)
+
+The test is looking at whether the nr of filesystem blocks overflows
+based on CONFIG_LBD or not...
+
+and the function hasn't changed since 2007.... hrm.
+
+I'll put my money on CONFIG_LBDAF.
 
 -Eric
 
-> I _really_ cannot upgrade to 2.6.29 or later because of the "reconnect_path: npd != pd" bug and the maybe related radix-tree bug ( http://bugzilla.kernel.org/show_bug.cgi?id=13375 ) affecting all kernel version afeter 2.6.28.
+> When running 2.6.28.4 32bit kernel I have no problem with mounting this
+> filesystem. So something broke between 2.6.28.4 and 2.6.30.1
 > 
-> Unmounting then remounting the filesystem allow to access the mountpoint again without any error message or apparent file corruption.
-> This filesystem is used by ~30 NFS clients and contains about 5M files (100GB).
+> I can provide any other info.
 > 
-> Before using the volume over NFS, there was only local activity (rsync syncing) and we didn't get any error.
+> K
 > 
-> I expect to see this crash again in a few hours except if the volume is really corrupted. Does a full filesystem copy to a newly created volume would have a chance to solve the problem?
-> 
-> Thanks,
-> 
-> Gabriel
 > 
 > _______________________________________________
 > xfs mailing list
