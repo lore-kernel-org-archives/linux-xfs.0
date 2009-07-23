@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6MHqQEQ259389 for <xfs@oss.sgi.com>; Wed, 22 Jul 2009 12:52:28 -0500
-Received: from tac.ki.iif.hu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F3909AC3902
-	for <xfs@oss.sgi.com>; Wed, 22 Jul 2009 11:01:19 -0700 (PDT)
-Received: from tac.ki.iif.hu (tac.ki.iif.hu [193.6.222.43]) by cuda.sgi.com
-	with ESMTP id WEUbY5edYT5BIBPp for <xfs@oss.sgi.com>;
-	Wed, 22 Jul 2009 11:01:19 -0700 (PDT)
-From: Ferenc Wagner <wferi@niif.hu>
-Subject: Re: mmap vs mtime in 2.6.26 and up
-References: <20090518114305.GA6303@infradead.org>
-Date: Wed, 22 Jul 2009 19:52:09 +0200
-In-Reply-To: <20090518114305.GA6303@infradead.org> (Christoph Hellwig's
-	message of "Mon, 18 May 2009 07:43:05 -0400")
-Message-ID: <87ab2w8v1y.fsf@tac.ki.iif.hu>
-MIME-Version: 1.0
+	n6N1euBD021265 for <xfs@oss.sgi.com>; Wed, 22 Jul 2009 20:40:56 -0500
+Received: from radon.netxsys.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D5409AC8AA2
+	for <xfs@oss.sgi.com>; Wed, 22 Jul 2009 18:49:54 -0700 (PDT)
+Received: from radon.netxsys.com (radon.netxsys.com [204.16.202.162]) by
+	cuda.sgi.com with ESMTP id REjU1SmGj15bFHST for
+	<xfs@oss.sgi.com>; Wed, 22 Jul 2009 18:49:54 -0700 (PDT)
+Received: from [205.233.151.7] (Oxygen.NetXSys.Com [205.233.151.7])
+	by radon.netxsys.com (Postfix) with ESMTP id 6E0A9C0000A5
+	for <xfs@oss.sgi.com>; Wed, 22 Jul 2009 21:41:36 -0400 (EDT)
+Subject: XFS: file system too large to be mounted on this system. 2.6.30.1
+From: Krzysztof Adamski <k@adamski.org>
+Date: Wed, 22 Jul 2009 21:41:35 -0400
+Message-Id: <1248313295.4730.2.camel@oxygen.netxsys.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,40 +28,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Peter Staubach <staubach@redhat.com>, Miklos Szeredi <mszeredi@suse.cz>, Ray Lee <ray-lk@madrabbit.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Andrew Morton <akpm@linux-foundation.org>
+To: xfs@oss.sgi.com
 
-Christoph Hellwig <hch@infradead.org> writes:
+I got "XFS: file system too large to be mounted on this system." when
+mounting my not to large file system.
 
-> On Fri, May 15, 2009 at 12:50:54PM -0400, Christoph Hellwig wrote:
->> On Fri, May 15, 2009 at 06:40:29PM +0200, Ferenc Wagner wrote:
->>> Thanks for the analysis.  Unfortunately I don't nearly know enough to
->>> work on this issue, but would like to track it as it affects our
->>> backup system.  So, shouldn't #2645 be reopened again?
->> 
->> Yes, definitively as the current "fix" is incorrected.  I'll try to cook
->> up a correct version once I get some time.
->
-> Doing this correctly in the framework of the current codee is
-> unfortunately not so easy, as calling ->setattr requires taking i_mutex
-> which we can't in the pagefaul path.
->
-> To fix this properly we need to actually update the timestamps during
-> msync and co as done by the patches from Miklos:
-> 	http://lkml.org/lkml/2007/2/28/166
-> and Peter:
-> 	http://lkml.org/lkml/2006/5/31/176
+I'm running Debian lenny with a self compiled kernel, 32 bit userland
+distribution.
 
-Hi Christoph,
+I have both 32 and 64 bit kernels of the 2.6.30.1 installed. I was
+running the 64bit kernel for a while, I needed to switch to the 32 bit
+version to run VBox. After reboot to 32bit kernel, one filesystem would
+not mount. The xfs_repair did not find any good superblocks.
+Fortunately booting the 64bit kernel allowed mounting of this
+filesystem.
+This is a df while running 64bit kernel:
+/dev/mapper/big--raid-file--store
+               xfs   2558652416 2540114040  18538376 100% /file-store
+/dev/sda1      xfs   195263012 194723636    539376 100% /disks/a1
 
-http://bugzilla.kernel.org/show_bug.cgi?id=2645#c53 shows that Anton
-doesn't quite agree with you on this.  I really can't tell, would you
-(or anybody from the accused XFS community) please comment?  Or did
-you perhaps fix it meanwhile?  I can't easily test never kernels, but
-I will if there's some chance.
--- 
-Thanks,
-Feri.
+The interesting part is that /disks/a1 did not have problem with
+mounting on the 32bit kernel, just the /file-store.
+
+When running 2.6.28.4 32bit kernel I have no problem with mounting this
+filesystem. So something broke between 2.6.28.4 and 2.6.30.1
+
+I can provide any other info.
+
+K
+
 
 _______________________________________________
 xfs mailing list
