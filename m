@@ -1,24 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from fransum.emea.sgi.com (fransum.emea.sgi.com [144.253.208.10])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6OC4qM5126717 for <xfs@oss.sgi.com>; Fri, 24 Jul 2009 07:04:53 -0500
-Received: from acsinet11.oracle.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 261041B59CD7
-	for <xfs@oss.sgi.com>; Fri, 24 Jul 2009 05:05:36 -0700 (PDT)
-Received: from acsinet11.oracle.com (acsinet11.oracle.com [141.146.126.233])
-	by cuda.sgi.com with ESMTP id rfhSgim7X7rUi3ZI for
-	<xfs@oss.sgi.com>; Fri, 24 Jul 2009 05:05:36 -0700 (PDT)
-Date: Fri, 24 Jul 2009 08:05:19 -0400
-From: Chris Mason <chris.mason@oracle.com>
-Subject: Re: [PATCH] bump up nr_to_write in xfs_vm_writepage
-Message-ID: <20090724120519.GB16192@think>
-References: <20090709110342.2386.A69D9226@jp.fujitsu.com>
-	<20090709130134.GH18008@think>
-	<20090710153349.17EC.A69D9226@jp.fujitsu.com>
-	<7149D747-2769-4559-BAF6-AAD2B6C6C941@sgi.com>
+	n6OCq12m128707 for <xfs@oss.sgi.com>; Fri, 24 Jul 2009 07:52:01 -0500
+Subject: Re: umount xfs filesystem
+References: <4A66C5E7.7050408@readytec.it>
+From: Olaf Weber <olaf@sgi.com>
+Date: Fri, 24 Jul 2009 14:52:42 +0200
+In-Reply-To: <4A66C5E7.7050408@readytec.it> (Daniele Nuzzo's message of "Wed,
+	22 Jul 2009 09:55:19 +0200")
+Message-ID: <bzytz12kztx.fsf@fransum.emea.sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <7149D747-2769-4559-BAF6-AAD2B6C6C941@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,42 +22,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Felix Blyakher <felixb@sgi.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, xfs mailing list <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Olaf Weber <olaf@sgi.com>
+To: Daniele Nuzzo - Readytec SPA <d.nuzzo@readytec.it>
+Cc: xfs@oss.sgi.com
 
-On Fri, Jul 24, 2009 at 12:20:32AM -0500, Felix Blyakher wrote:
->
-> On Jul 10, 2009, at 2:12 AM, KOSAKI Motohiro wrote:
->> 3. Current wbc->nr_to_write value is not proper?
->>
->> Current writeback_set_ratelimit() doesn't permit that ratelimit_pages 
->> exceed
->> 4M byte. but it is too low restriction for nowadays.
->> (that's my understand. right?)
->>
->> =======================================================
->> void writeback_set_ratelimit(void)
->> {
->>        ratelimit_pages = vm_total_pages / (num_online_cpus() * 32);
->>        if (ratelimit_pages < 16)
->>                ratelimit_pages = 16;
->>        if (ratelimit_pages * PAGE_CACHE_SIZE > 4096 * 1024)
->>                ratelimit_pages = (4096 * 1024) / PAGE_CACHE_SIZE;
->> }
->> =======================================================
->>
->> Yes, 4M bytes are pretty magical constant. We have three choice
->>  A. Remove magical 4M constant simple (a bit danger)
->
-> That's will be outside the xfs, and seems like there is no much interest
-> from mm people.
->
->>  B. Decide high border from IO capability
+Daniele Nuzzo writes:
 
-It is worth pointing out that Jens Axboe is planning on more feedback
-controlled knobs as part of pdflush rework.
+> hi,
+> I think I need your advice-opinion ...
+> I set up a system like CentOS 5.3, lvm, drbd 8.2, various systems raid
+> (Adaptec aacraid or LSI MegaRAID with or without write back cache)
+> after some time of work (a few hours or days) do the umount is
+> slow... even a few minutes ... why?
+> I have already disabled barrier and write cache on drbd, but not on
+> the controller or the sas  drives... ideas?
+> thanks a lot.
 
--chris
+> p.s.
+> drbd partitions formatted with the default options.
+
+On unmount the system has flush all dirty data to disk.  Depending on
+the amount of data in memory, this might take a while.
+
+I'm not claiming this is definitely the case here, but it is an
+obvious candidate.
+
+-- 
+Olaf Weber                 SGI               Phone:  +31(0)30-6696752
+                           Veldzigt 2b       Fax:    +31(0)30-6696799
+Technical Lead             3454 PW de Meern  Vnet:   955-7151
+Storage Software           The Netherlands   Email:  olaf@sgi.com
 
 _______________________________________________
 xfs mailing list
