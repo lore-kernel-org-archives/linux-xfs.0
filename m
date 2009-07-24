@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6O31TQ4097030 for <xfs@oss.sgi.com>; Thu, 23 Jul 2009 22:01:29 -0500
+	n6O3VltA099061 for <xfs@oss.sgi.com>; Thu, 23 Jul 2009 22:31:48 -0500
 Received: from mta11.charter.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6CA9D10B6BCF
-	for <xfs@oss.sgi.com>; Thu, 23 Jul 2009 20:10:32 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1C08010B6A91
+	for <xfs@oss.sgi.com>; Thu, 23 Jul 2009 20:40:52 -0700 (PDT)
 Received: from mta11.charter.net (mta11.charter.net [216.33.127.80]) by
-	cuda.sgi.com with ESMTP id xFf2jw4Yp4UMKhBh for
-	<xfs@oss.sgi.com>; Thu, 23 Jul 2009 20:10:32 -0700 (PDT)
-Date: Thu, 23 Jul 2009 23:02:05 -0400
+	cuda.sgi.com with ESMTP id F3QvXdbmFZuOKD6c for
+	<xfs@oss.sgi.com>; Thu, 23 Jul 2009 20:40:52 -0700 (PDT)
+Date: Thu, 23 Jul 2009 23:32:21 -0400
 Subject: Re: Using xfsdump On Linux With IRIX Version 1 FS?
 From: Sean Elble <elbles@sessys.com>
-Message-ID: <C68E9C6D.B8C8%elbles@sessys.com>
+Message-ID: <C68EA385.B8CE%elbles@sessys.com>
 In-Reply-To: <4A691B2D.1090600@sandeen.net>
 Mime-version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -22,7 +22,7 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3218180145743308937=="
+Content-Type: multipart/mixed; boundary="===============0117578954530471012=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
@@ -31,16 +31,16 @@ Cc: xfs@oss.sgi.com
 > This message is in MIME format. Since your mail reader does not understand
 this format, some or all of this message may not be legible.
 
---===============3218180145743308937==
+--===============0117578954530471012==
 Content-type: multipart/signed;
 	protocol="application/pkcs7-signature";
 	micalg=sha1;
-	boundary="B_3331234925_2670211"
+	boundary="B_3331236741_2749541"
 
 > This message is in MIME format. Since your mail reader does not understand
 this format, some or all of this message may not be legible.
 
---B_3331234925_2670211
+--B_3331236741_2749541
 Content-type: text/plain;
 	charset="US-ASCII"
 Content-transfer-encoding: 7bit
@@ -76,14 +76,23 @@ On 7/23/09 10:23 PM, "Eric Sandeen" <sandeen@sandeen.net> wrote:
 > -Eric
 > 
 
-Thanks for the reply, Eric, I appreciate it.  I'll take a look and see what
-I can find, being sure to post back the latest version of the kernel with
-version 1 support.  Think it was removed during the 2.5.x period, or could
-it possibly have made it to the 2.6 era?
+Looks like the version 1 directory code was removed as of June 15th, 2006,
+per this:
+
+http://oss.sgi.com/archives/xfs/2006-06/msg00067.html
+
+But another post <http://oss.sgi.com/archives/xfs/2003-07/msg00495.html> has
+a 2.4.21 kernel being used with a patch, so I'm not sure if I want to try a
+2.6 kernel, or see if I can patch together a 2.4.x kernel on an old FC4 box
+I have laying around.  Truth be told, it's a lot of work just to blank the
+entries in /etc/shadow so I can login to a 150 MHz box again, so who knows
+if I'll even try at this point, hah.
+
+In any event, thanks a lot for the pointers in the right direction.
 
 -Sean
 
---B_3331234925_2670211
+--B_3331236741_2749541
 Content-type: application/pkcs7-signature; name="smime.p7s"
 Content-transfer-encoding: base64
 Content-disposition: attachment;
@@ -122,19 +131,19 @@ JVCUYsfbJ3FXJY3dqZw5jowgT2Vfldr394fWxghOrvbqNOUQGls1TXfjViF4gtwhGTXeJLHT
 HUb/XV9lTzGCAfwwggH4AgEBMHYwYjELMAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBD
 b25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFp
 bCBJc3N1aW5nIENBAhAvf5NHjc/BR/lyCoHqxXxjMAkGBSsOAwIaBQCgXTAjBgkqhkiG9w0B
-CQQxFgQUx5r6JecfvZDqqkY2fTnERLZ+HuowGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAc
-BgkqhkiG9w0BCQUxDxcNMDkwNzI0MDMwMjA1WjANBgkqhkiG9w0BAQEFAASCAQB4rRCDTjmS
-Rnyfj5rglm5UtNI+DOrbjWi3AhXVc9adwMXJHfJ2hc4rLwc4P7VMkvXLdOwPx0ObZ97Yg+Xx
-ppRdw8HpTqgZFRhyOO1GcAHS56NM2Eu3TkVr4PGHYFHcgIBqldCbUsOKDJbZJtJedz2c9G8h
-tUKLeEVhdM31Tstj2X0PjD13Z2+9JRAoI2ydhfOIKq24kftYEYVKxza7K0EVE+jrnUJ0jcn5
-vDgiYAEehFPYSBTEcYICy+kkSsCll/8au1hLPDN9Q+qk6I4s1tVKXPR7oKfiT39MnDwxISAE
-4tbmWDjyFlZQXp1epbzoz0yb7yVsgegop6CzI+stTs/S
+CQQxFgQU0hnMLPB1PpyVqPnymBRKrbEKvk8wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAc
+BgkqhkiG9w0BCQUxDxcNMDkwNzI0MDMzMjIxWjANBgkqhkiG9w0BAQEFAASCAQBGCI5JO60L
+fUqV2YxN4uJxXotp6d1CkrOQku85OEK48dEOmzZqBgiV4dSPImPV4sOe8UZECHExqFQsp8XI
+jZBBoWFgZ4CPXOtWnxSZk2PARn/UpJh7fHS3QSzAyWNjbBLNsyk0ohkZSyi0hhMen/kxpy2R
+7CevivL5qxsUNNlswnDqbiHxTFm7fAGnqPiLCFXvCamEkkvpIV5Yg29aJEaAGZzHrurqR74p
+CgYfGSrXyrn3k5NO8IGbCzzAslmZZvGTytmzGfOExCi+gP1x0v6deeLPcvU+N3q0UPVWMkRq
+QreqUFKuBV3BcFTCZqjPQKmOOOBh2vI4sjFVKb8JEPQV
 
---B_3331234925_2670211--
+--B_3331236741_2749541--
 
 
 
---===============3218180145743308937==
+--===============0117578954530471012==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -145,4 +154,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============3218180145743308937==--
+--===============0117578954530471012==--
