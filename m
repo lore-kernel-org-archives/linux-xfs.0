@@ -1,15 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from fransum.emea.sgi.com (fransum.emea.sgi.com [144.253.208.10])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6OCq12m128707 for <xfs@oss.sgi.com>; Fri, 24 Jul 2009 07:52:01 -0500
-Subject: Re: umount xfs filesystem
-References: <4A66C5E7.7050408@readytec.it>
-From: Olaf Weber <olaf@sgi.com>
-Date: Fri, 24 Jul 2009 14:52:42 +0200
-In-Reply-To: <4A66C5E7.7050408@readytec.it> (Daniele Nuzzo's message of "Wed,
-	22 Jul 2009 09:55:19 +0200")
-Message-ID: <bzytz12kztx.fsf@fransum.emea.sgi.com>
+	n6ODpNOC131162 for <xfs@oss.sgi.com>; Fri, 24 Jul 2009 08:51:24 -0500
+Received: from wf-out-1314.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BB0CF10BA026
+	for <xfs@oss.sgi.com>; Fri, 24 Jul 2009 07:00:31 -0700 (PDT)
+Received: from wf-out-1314.google.com (wf-out-1314.google.com
+	[209.85.200.169]) by cuda.sgi.com with ESMTP id
+	TAm6JLWJPQmiKJFa for <xfs@oss.sgi.com>;
+	Fri, 24 Jul 2009 07:00:31 -0700 (PDT)
+Received: by wf-out-1314.google.com with SMTP id 29so518392wff.32
+	for <xfs@oss.sgi.com>; Fri, 24 Jul 2009 06:52:07 -0700 (PDT)
 MIME-Version: 1.0
+Date: Fri, 24 Jul 2009 21:52:06 +0800
+Message-ID: <3ec42bdd0907240652q1bfb6784n9ba1c9e931b58900@mail.gmail.com>
+Subject: A question about installing XFS filesystem support on Debian Lenny
+From: feiji1983@gmail.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,35 +28,14 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Daniele Nuzzo - Readytec SPA <d.nuzzo@readytec.it>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Daniele Nuzzo writes:
-
-> hi,
-> I think I need your advice-opinion ...
-> I set up a system like CentOS 5.3, lvm, drbd 8.2, various systems raid
-> (Adaptec aacraid or LSI MegaRAID with or without write back cache)
-> after some time of work (a few hours or days) do the umount is
-> slow... even a few minutes ... why?
-> I have already disabled barrier and write cache on drbd, but not on
-> the controller or the sas  drives... ideas?
-> thanks a lot.
-
-> p.s.
-> drbd partitions formatted with the default options.
-
-On unmount the system has flush all dirty data to disk.  Depending on
-the amount of data in memory, this might take a while.
-
-I'm not claiming this is definitely the case here, but it is an
-obvious candidate.
-
--- 
-Olaf Weber                 SGI               Phone:  +31(0)30-6696752
-                           Veldzigt 2b       Fax:    +31(0)30-6696799
-Technical Lead             3454 PW de Meern  Vnet:   955-7151
-Storage Software           The Netherlands   Email:  olaf@sgi.com
+i recenttly got a NAS hard disk box which run Debian Lenny ,the linux
+kernel is 2.6.29. I can install xfsprogs with apt-get , after
+formatting  a partition using mkfs.xfs,  i can't mount it with command
+"mount -t xfs XXX XXX" , it says "xfs" is not supported. i think i
+have to install a path,but can't find one using apt-get,can any body
+tell me how can i fix this problem? Thanks.
 
 _______________________________________________
 xfs mailing list
