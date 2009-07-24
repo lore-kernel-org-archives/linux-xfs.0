@@ -1,31 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6ODlT7r130957 for <xfs@oss.sgi.com>; Fri, 24 Jul 2009 08:47:29 -0500
-Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E0DAD10B86C1
-	for <xfs@oss.sgi.com>; Fri, 24 Jul 2009 06:56:35 -0700 (PDT)
-Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.162.198]) by
-	cuda.sgi.com with ESMTP id MZ7nEBXKulfXCBXf for
-	<xfs@oss.sgi.com>; Fri, 24 Jul 2009 06:56:35 -0700 (PDT)
-Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv1.zmi.at (Postfix) with ESMTP id 63ECE53F0
-	for <xfs@oss.sgi.com>; Fri, 24 Jul 2009 15:48:36 +0200 (CEST)
-Received: from saturn.localnet (unknown [10.72.27.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id 57AB9400166
-	for <xfs@oss.sgi.com>; Fri, 24 Jul 2009 15:48:10 +0200 (CEST)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: umount xfs filesystem
-Date: Fri, 24 Jul 2009 15:48:09 +0200
-References: <4A66C5E7.7050408@readytec.it>
-	<bzytz12kztx.fsf@fransum.emea.sgi.com>
-In-Reply-To: <bzytz12kztx.fsf@fransum.emea.sgi.com>
+	n6ODgHej130733 for <xfs@oss.sgi.com>; Fri, 24 Jul 2009 08:42:17 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CFFEB13EF34D
+	for <xfs@oss.sgi.com>; Fri, 24 Jul 2009 06:43:01 -0700 (PDT)
+Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
+	cuda.sgi.com with ESMTP id TuHXF3kM6ZEXWgwl for
+	<xfs@oss.sgi.com>; Fri, 24 Jul 2009 06:43:01 -0700 (PDT)
+Message-ID: <4A69BA63.4030501@sandeen.net>
+Date: Fri, 24 Jul 2009 08:42:59 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Message-Id: <200907241548.09961@zmi.at>
+Subject: Re: BUG REPORT: XFS LOG FORWARD COMPATIBILITY PROBLEM
+References: <1301281514.948741248423723710.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
+In-Reply-To: <1301281514.948741248423723710.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,69 +23,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============5696817931328506463=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Lachlan McIlroy <lmcilroy@redhat.com>
+Cc: Eddy Zhao <eddy.y.zhao@gmail.com>, xfs@oss.sgi.com
 
---===============5696817931328506463==
-Content-Type: multipart/signed;
-  boundary="nextPart1457420.WZiSFGVdXm";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+Lachlan McIlroy wrote:
+> Hi Eddy,
+> 
+> CC'ing this to the xfs list.
+> 
+> ----- "Eddy Zhao" <eddy.y.zhao@gmail.com> wrote:
+> 
+>> Hello Felix, Lachlan:
+>>
+>> I find your names in 2.6.30 Changlog as XFS maintainer. Can you kindly
+>> take a look at the problem we are facing.
+>>
+>> Follow the sequence below to reproduce the problem
+>> - write data on 2.6.28 system
+>> - unplug usb disk while writing
+> I don't recommend you pull the usb disk out while the filesystem is still
+> mounted (if you can avoid it).
+> 
 
---nextPart1457420.WZiSFGVdXm
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Unless you have write barriers enabled and passing through to the USB
+device, or write cache turned off on the USB device, this test may well
+just be corrupting the log to an unreplayable state.
 
-On Freitag 24 Juli 2009 Olaf Weber wrote:
-> On unmount the system has flush all dirty data to disk. =A0Depending on
-> the amount of data in memory, this might take a while.
->
-> I'm not claiming this is definitely the case here, but it is an
-> obvious candidate.
+Although I can't explain why, w/o further modification, it seems to
+mount again on .28 ...
 
-The OP should try
-sync
-umount
-then he could see if sync takes long or umount
-
-mfg zmi
-=2D-=20
-// Michael Monnerie, Ing.BSc    -----      http://it-management.at
-// Tel: 0660 / 415 65 31                      .network.your.ideas.
-// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
-// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
-// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
-
-
---nextPart1457420.WZiSFGVdXm
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-
-iEYEABECAAYFAkppu5kACgkQzhSR9xwSCbRe8QCfaCxwYhaQtqP+1+7O0/k1JLLu
-y7UAoMBa/LxC7+r9uTTR5dTHrqMhBHM4
-=Cdqm
------END PGP SIGNATURE-----
-
---nextPart1457420.WZiSFGVdXm--
-
-
---===============5696817931328506463==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+-Eric
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============5696817931328506463==--
