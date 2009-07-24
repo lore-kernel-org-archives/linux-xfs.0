@@ -1,38 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6O5WNIn108903 for <xfs@oss.sgi.com>; Fri, 24 Jul 2009 00:32:24 -0500
-Received: from fgwmail6.fujitsu.co.jp (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5345F13D9A32
-	for <xfs@oss.sgi.com>; Thu, 23 Jul 2009 22:33:06 -0700 (PDT)
-Received: from fgwmail6.fujitsu.co.jp (fgwmail6.fujitsu.co.jp [192.51.44.36])
-	by cuda.sgi.com with ESMTP id oqyJgDkDW0i5uHBj for
-	<xfs@oss.sgi.com>; Thu, 23 Jul 2009 22:33:06 -0700 (PDT)
-Received: from m5.gw.fujitsu.co.jp ([10.0.50.75])
-	by fgwmail6.fujitsu.co.jp (Fujitsu Gateway) with ESMTP id
-	n6O5X4iI019103
-	for <xfs@oss.sgi.com> (envelope-from kosaki.motohiro@jp.fujitsu.com);
-	Fri, 24 Jul 2009 14:33:04 +0900
-Received: from smail (m5 [127.0.0.1])
-	by outgoing.m5.gw.fujitsu.co.jp (Postfix) with ESMTP id 4563945DE4F
-	for <xfs@oss.sgi.com>; Fri, 24 Jul 2009 14:33:04 +0900 (JST)
-Received: from s5.gw.fujitsu.co.jp (s5.gw.fujitsu.co.jp [10.0.50.95])
-	by m5.gw.fujitsu.co.jp (Postfix) with ESMTP id 1624745DE4E
-	for <xfs@oss.sgi.com>; Fri, 24 Jul 2009 14:33:04 +0900 (JST)
-Received: from s5.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s5.gw.fujitsu.co.jp (Postfix) with ESMTP id 018B0E1800B
-	for <xfs@oss.sgi.com>; Fri, 24 Jul 2009 14:33:04 +0900 (JST)
-Received: from ml13.s.css.fujitsu.com (ml13.s.css.fujitsu.com [10.249.87.103])
-	by s5.gw.fujitsu.co.jp (Postfix) with ESMTP id 9DA33E1800C
-	for <xfs@oss.sgi.com>; Fri, 24 Jul 2009 14:33:03 +0900 (JST)
-From: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
-Subject: Re: [PATCH] bump up nr_to_write in xfs_vm_writepage
-In-Reply-To: <7149D747-2769-4559-BAF6-AAD2B6C6C941@sgi.com>
-References: <20090710153349.17EC.A69D9226@jp.fujitsu.com>
-	<7149D747-2769-4559-BAF6-AAD2B6C6C941@sgi.com>
-Message-Id: <20090724143159.67B6.A69D9226@jp.fujitsu.com>
+	n6O7UR2x115829 for <xfs@oss.sgi.com>; Fri, 24 Jul 2009 02:30:28 -0500
+Received: from enyo.dsw2k3.info (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DD7CA13EC15B
+	for <xfs@oss.sgi.com>; Fri, 24 Jul 2009 00:31:11 -0700 (PDT)
+Received: from enyo.dsw2k3.info (enyo.dsw2k3.info [195.71.86.239]) by
+	cuda.sgi.com with ESMTP id 5SQTZ1R1vRWJKizS for
+	<xfs@oss.sgi.com>; Fri, 24 Jul 2009 00:31:11 -0700 (PDT)
+Date: Fri, 24 Jul 2009 09:30:30 +0200
+From: Matthias Schniedermeyer <ms@citd.de>
+Subject: Re: Using xfsdump On Linux With IRIX Version 1 FS?
+Message-ID: <20090724073030.GA15785@citd.de>
+References: <4A691B2D.1090600@sandeen.net> <C68EA385.B8CE%elbles@sessys.com>
 MIME-Version: 1.0
-Date: Fri, 24 Jul 2009 14:33:02 +0900 (JST)
+Content-Disposition: inline
+In-Reply-To: <C68EA385.B8CE%elbles@sessys.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -45,93 +28,75 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Felix Blyakher <felixb@sgi.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, Olaf Weber <olaf@sgi.com>, xfs mailing list <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, kosaki.motohiro@jp.fujitsu.com, Chris Mason <chris.mason@oracle.com>
+To: Sean Elble <elbles@sessys.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
+On 23.07.2009 23:32, Sean Elble wrote:
+> On 7/23/09 10:23 PM, "Eric Sandeen" <sandeen@sandeen.net> wrote:
 > 
-> On Jul 10, 2009, at 2:12 AM, KOSAKI Motohiro wrote:
+> > Sean Elble wrote:
+> >> Hi all,
+> >> 
+> >> While I am aware that the current kernel implementation of XFS doesn't
+> >> support mounting an IRIX filesystem with version 1 directories, I'm not so
+> >> sure whether xfsdump/xfsrestore will support the dumping of an IRIX
+> >> filesystem with version 1 directories.  To be more specific, I am dealing
+> >> with an old disk from an Indigo2, running IRIX 6.5.6m with version 1
+> >> (0x1094) directories.  I was hoping it had version 2 directories, but after
+> >> finding an old SCSI card I could put in a Linux box with XFS support, I
+> >> found just the opposite, obviously.  I had the old SCSI card back in its
+> >> donor system (which was up-and-running) when it occurred to me that
+> >> xfsdump/xfsrestore *might* be a possibility, and I can't take it (the donor
+> >> system) down again unless I know I can make this work.
+> >> 
+> >> If anyone can give me an answer to this question, I would certainly
+> >> appreciate it.  I didn't see anything in the man pages, and my Google
+> >> searches have proven fruitless thus far, but I've been known to be blind on
+> >> occasion.  :-)  Thanks, in advance.
+> >> 
+> > 
+> > linux used to work with v1 dirs, though there were some problems.  It
+> > never got fixed, was not critical for 99.9% of users, and got taken out.
+> >  But it might work well enough to do what you need.  Go through the
+> > changelogs or google, and try an older Linux kernel, perhaps ....
+> > 
+> > -Eric
+> > 
 > 
-> >> On Thu, Jul 09, 2009 at 11:04:32AM +0900, KOSAKI Motohiro wrote:
-> >>>> On Tue, Jul 07, 2009 at 07:33:04PM +0900, KOSAKI Motohiro wrote:
-> >>>>> At least, I agree with Olaf. if you got someone's NAK in past  
-> >>>>> thread,
-> >>>>> Could you please tell me its url?
-> >>>>
-> >>>> The previous thread was simply dead-ended and nothing happened.
-> >>>>
-> >>>
-> >>> Can you remember this thread subject? sorry, I haven't remember it.
-> >>
-> >> This is the original thread, it did lead to a few different patches
-> >> going in, but the nr_to_write change wasn't one of them.
-> >>
-> >> http://kerneltrap.org/mailarchive/linux-kernel/2008/10/1/3472704/thread
-> >
-> > Thanks good pointer. This thread have multiple interesting discussion.
-> >
-> > 1. making ext4_write_cache_pages() or modifying write_cache_pages()
-> >
-> > I think this is Christoph's homework. he said
-> >
-> >> I agree.  But I'm still not quite sure if that requirement is  
-> >> unique to
-> >> ext4 anyway.  Give me some time to dive into the writeback code  
-> >> again,
-> >> haven't been there for quite a while.
-> >
-> > if he says modifying write_cache_pages() is necessary, I'd like to  
-> > review it.
-> >
-> >
-> > 2. Current mapping->writeback_index updating is not proper?
-> >
-> > I'm not sure which solution is better. but I think your first  
-> > proposal is
-> > enough acceptable.
-> >
-> >
-> > 3. Current wbc->nr_to_write value is not proper?
-> >
-> > Current writeback_set_ratelimit() doesn't permit that  
-> > ratelimit_pages exceed
-> > 4M byte. but it is too low restriction for nowadays.
-> > (that's my understand. right?)
-> >
-> > =======================================================
-> > void writeback_set_ratelimit(void)
-> > {
-> >        ratelimit_pages = vm_total_pages / (num_online_cpus() * 32);
-> >        if (ratelimit_pages < 16)
-> >                ratelimit_pages = 16;
-> >        if (ratelimit_pages * PAGE_CACHE_SIZE > 4096 * 1024)
-> >                ratelimit_pages = (4096 * 1024) / PAGE_CACHE_SIZE;
-> > }
-> > =======================================================
-> >
-> > Yes, 4M bytes are pretty magical constant. We have three choice
-> >  A. Remove magical 4M constant simple (a bit danger)
+> Looks like the version 1 directory code was removed as of June 15th, 2006,
+> per this:
 > 
-> That's will be outside the xfs, and seems like there is no much interest
-> from mm people.
+> http://oss.sgi.com/archives/xfs/2006-06/msg00067.html
+> 
+> But another post <http://oss.sgi.com/archives/xfs/2003-07/msg00495.html> has
+> a 2.4.21 kernel being used with a patch, so I'm not sure if I want to try a
+> 2.6 kernel, or see if I can patch together a 2.4.x kernel on an old FC4 box
+> I have laying around.  Truth be told, it's a lot of work just to blank the
+> entries in /etc/shadow so I can login to a 150 MHz box again, so who knows
+> if I'll even try at this point, hah.
+> 
+> In any event, thanks a lot for the pointers in the right direction.
 
-That's ok. you can join mm people :)
+I'd guess the disc isn't very big.
+
+You just dd it completly (for backup).
+
+Then search for the content of the shadow-file and blank out the entry 
+with a hex-editor. Make sure that you don't change the filesize, pad 
+the previous/following entry with any character you have to remove.
 
 
 
-> >  B. Decide high border from IO capability
-> 
-> It's not clear to me how to calculate that high border, but again
-> it's outside of the xfs scope, and we don't have much control here.
-> 
-> >  C. Introduce new /proc knob (as Olaf proposed)
-> 
-> We need at least to play with different numbers, and putting the
-> knob (xfs tunable) would be one way to do it. Also, different
-> configurations may need different nr_to_write value.
-> 
-> In either way it seems hackish, but with the knob at least there is
-> some control of it.
 
+
+
+Bis denn
+
+-- 
+Real Programmers consider "what you see is what you get" to be just as 
+bad a concept in Text Editors as it is in women. No, the Real Programmer
+wants a "you asked for it, you got it" text editor -- complicated, 
+cryptic, powerful, unforgiving, dangerous.
 
 _______________________________________________
 xfs mailing list
