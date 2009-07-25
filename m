@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6PAaYAO194670 for <xfs@oss.sgi.com>; Sat, 25 Jul 2009 05:36:34 -0500
-Received: from moutng.kundenserver.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7779510C053C
-	for <xfs@oss.sgi.com>; Sat, 25 Jul 2009 03:45:46 -0700 (PDT)
-Received: from moutng.kundenserver.de (moutng.kundenserver.de [212.227.17.10])
-	by cuda.sgi.com with ESMTP id n1Hr9xsUUrUidFq1 for
-	<xfs@oss.sgi.com>; Sat, 25 Jul 2009 03:45:46 -0700 (PDT)
-Date: Sat, 25 Jul 2009 03:36:53 -0700 (PDT)
-From: Christian Kujau <lists@nerdbynature.de>
-Subject: Re: Using xfsdump On Linux With IRIX Version 1 FS?
-In-Reply-To: <20090725102258.GA1121@citd.de>
-Message-ID: <alpine.DEB.2.01.0907250332110.6426@bogon.housecafe.de>
-References: <C68F8010.B953%elbles@sessys.com>
-	<alpine.DEB.2.01.0907242048000.6426@bogon.housecafe.de>
-	<20090725072617.GA30450@citd.de>
-	<alpine.DEB.2.01.0907250241170.6426@bogon.housecafe.de>
-	<20090725102258.GA1121@citd.de>
+	n6PF2DLs212759 for <xfs@oss.sgi.com>; Sat, 25 Jul 2009 10:02:15 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6A01D385C3B
+	for <xfs@oss.sgi.com>; Sat, 25 Jul 2009 08:02:57 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id eQROGeAdtAM27DG5 for
+	<xfs@oss.sgi.com>; Sat, 25 Jul 2009 08:02:57 -0700 (PDT)
+Date: Sat, 25 Jul 2009 11:02:56 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs_repair: check for null single-block dir buffer
+	pointer in phase6
+Message-ID: <20090725150256.GA12148@infradead.org>
+References: <4A69C660.9000604@sandeen.net>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4A69C660.9000604@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,21 +29,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Matthias Schniedermeyer <ms@citd.de>
-Cc: Sean Elble <elbles@sessys.com>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Sat, 25 Jul 2009 at 12:22, Matthias Schniedermeyer wrote:
-> I meant: What is the advantage of using the a loop-device (of the image) 
-> instead of directly using the image?
+On Fri, Jul 24, 2009 at 09:34:08AM -0500, Eric Sandeen wrote:
+> @@ -2524,7 +2525,7 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
+>  
+>  	if (!dotdot_update) {
+>  		/* check btree and freespace */
+> -		if (isblock) {
+> +		if (isblock && bplist[0]) {
+>  			xfs_dir2_block_tail_t	*btp;
+>  			xfs_dir2_leaf_entry_t	*blp;
 
-Some tools don't like to act on flat files, i.e. mkfs.reiserfs won't 
-create a filesystem on a file without -forcing it, dunno about all the 
-xfsprogs though, or "hexedit", or....
-
--- 
-BOFH excuse #5:
-
-static from plastic slide rules
+This doesn't look quite correct to me.  Now we falls through to the
+final else statement when bplist[0] is zeroed.
 
 _______________________________________________
 xfs mailing list
