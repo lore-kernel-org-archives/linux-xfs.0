@@ -1,27 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6QFd5nj028454 for <xfs@oss.sgi.com>; Sun, 26 Jul 2009 10:39:05 -0500
-Received: from smtp5-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4A54D386F43
-	for <xfs@oss.sgi.com>; Sun, 26 Jul 2009 08:39:47 -0700 (PDT)
-Received: from smtp5-g21.free.fr (smtp5-g21.free.fr [212.27.42.5]) by
-	cuda.sgi.com with ESMTP id XC0dwo86BGQMmdfE for
-	<xfs@oss.sgi.com>; Sun, 26 Jul 2009 08:39:47 -0700 (PDT)
-Received: from smtp5-g21.free.fr (localhost [127.0.0.1])
-	by smtp5-g21.free.fr (Postfix) with ESMTP id 5B78BD480C0
-	for <xfs@oss.sgi.com>; Sun, 26 Jul 2009 17:39:41 +0200 (CEST)
-Received: from galadriel.home (pla78-1-82-235-234-79.fbx.proxad.net
-	[82.235.234.79])
-	by smtp5-g21.free.fr (Postfix) with ESMTP id 4DE9BD480CF
-	for <xfs@oss.sgi.com>; Sun, 26 Jul 2009 17:39:39 +0200 (CEST)
-Date: Sun, 26 Jul 2009 17:39:38 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: How to solve "No space left" problem on my 32bit machine?
-Message-ID: <20090726173938.4179bd18@galadriel.home>
-In-Reply-To: <389deec70907252030s3524b2ecj9b35da9ea376020f@mail.gmail.com>
-References: <389deec70907252030s3524b2ecj9b35da9ea376020f@mail.gmail.com>
-Mime-Version: 1.0
+	n6QMpg2B048730 for <xfs@oss.sgi.com>; Sun, 26 Jul 2009 17:51:43 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 979F010C2908
+	for <xfs@oss.sgi.com>; Sun, 26 Jul 2009 16:01:03 -0700 (PDT)
+Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
+	cuda.sgi.com with ESMTP id v0E93xAB53hKaVJK for
+	<xfs@oss.sgi.com>; Sun, 26 Jul 2009 16:01:03 -0700 (PDT)
+Message-ID: <4A6CDE2C.9070508@sandeen.net>
+Date: Sun, 26 Jul 2009 17:52:28 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: [PATCH] xfs_repair: check for null single-block dir buffer	pointer
+	in phase6
+References: <4A69C660.9000604@sandeen.net>
+	<20090725150256.GA12148@infradead.org>
+In-Reply-To: <20090725150256.GA12148@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,25 +25,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Le Sun, 26 Jul 2009 11:30:03 +0800 vous =E9criviez:
+Christoph Hellwig wrote:
+> On Fri, Jul 24, 2009 at 09:34:08AM -0500, Eric Sandeen wrote:
+>> @@ -2524,7 +2525,7 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
+>>  
+>>  	if (!dotdot_update) {
+>>  		/* check btree and freespace */
+>> -		if (isblock) {
+>> +		if (isblock && bplist[0]) {
+>>  			xfs_dir2_block_tail_t	*btp;
+>>  			xfs_dir2_leaf_entry_t	*blp;
+> 
+> This doesn't look quite correct to me.  Now we falls through to the
+> final else statement when bplist[0] is zeroed.
+> 
 
-> If on my 32-bit machine, what should I do?
+Oh, ugh, you're right.  Will fix that up, thanks.
 
-2.5TB is far from the 32 bits limit (16 TB). You're probably out of
-inodes (lots of small files?). You can add some with xfs_growfs, though.
-
--- =
-
---------------------------------------------------
-Emmanuel Florac               www.intellique.com   =
-
---------------------------------------------------
+-Eric
 
 _______________________________________________
 xfs mailing list
