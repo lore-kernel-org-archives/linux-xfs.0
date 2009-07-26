@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6PGOow0217579 for <xfs@oss.sgi.com>; Sat, 25 Jul 2009 11:24:50 -0500
+	n6Q0Nimi239129 for <xfs@oss.sgi.com>; Sat, 25 Jul 2009 19:23:45 -0500
 Received: from mta21.charter.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 616FC385D6E
-	for <xfs@oss.sgi.com>; Sat, 25 Jul 2009 09:25:35 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 890D510C0D0C
+	for <xfs@oss.sgi.com>; Sat, 25 Jul 2009 17:32:59 -0700 (PDT)
 Received: from mta21.charter.net (mta21.charter.net [216.33.127.81]) by
-	cuda.sgi.com with ESMTP id pCj9lW2D1TbbKYNS for
-	<xfs@oss.sgi.com>; Sat, 25 Jul 2009 09:25:35 -0700 (PDT)
-Date: Sat, 25 Jul 2009 12:25:30 -0400
+	cuda.sgi.com with ESMTP id HTEkxGKeK6wHSxqg for
+	<xfs@oss.sgi.com>; Sat, 25 Jul 2009 17:32:59 -0700 (PDT)
+Date: Sat, 25 Jul 2009 20:24:18 -0400
 Subject: Re: Using xfsdump On Linux With IRIX Version 1 FS?
 From: Sean Elble <elbles@sessys.com>
-Message-ID: <C690AA3A.B9D1%elbles@sessys.com>
+Message-ID: <C6911A72.B9D6%elbles@sessys.com>
 In-Reply-To: <alpine.DEB.2.01.0907250241170.6426@bogon.housecafe.de>
 Mime-version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -22,7 +22,7 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============4039859835399426749=="
+Content-Type: multipart/mixed; boundary="===============2573880321283084297=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christian Kujau <lists@nerdbynature.de>, Matthias Schniedermeyer <ms@citd.de>
@@ -31,16 +31,16 @@ Cc: xfs@oss.sgi.com
 > This message is in MIME format. Since your mail reader does not understand
 this format, some or all of this message may not be legible.
 
---===============4039859835399426749==
+--===============2573880321283084297==
 Content-type: multipart/signed;
 	protocol="application/pkcs7-signature";
 	micalg=sha1;
-	boundary="B_3331369530_141012"
+	boundary="B_3331398258_1856570"
 
 > This message is in MIME format. Since your mail reader does not understand
 this format, some or all of this message may not be legible.
 
---B_3331369530_141012
+--B_3331398258_1856570
 Content-type: text/plain;
 	charset="US-ASCII"
 Content-transfer-encoding: 7bit
@@ -58,23 +58,29 @@ On 7/25/09 5:46 AM, "Christian Kujau" <lists@nerdbynature.de> wrote:
 > I wanted to present an alternative to do the search - I don't know too
 > much about his setup, so it's up to him to follow this advice or not.
 > 
->
 
-I think (and hope, considering its age) that the disk is OK.  My concern was
-more with the speed that hexedit could traverse the drive searching for a
-string, as opposed to dd'ing the drive to disk, editing the image, and then
-dd'ing the image back to disk.
+Well, I ended up dd'ing the old SCSI disk to a file on a spare Linux box I
+have laying around for just this sort of purpose.  I then opened the
+resulting file up with hexedit, switched to ASCII mode, did a search for the
+root password hash, and replaced it with a known hash for "blah."
 
-Using the loopback driver is definitely a thought, but I don't know if the
-kernel on my spare box supports it or not.  I'll definitely take it into
-consideration, depending on how it goes, so thanks for the info.
+DD'ed the image back to the disk, threw it back in the Indigo2, and booted.
+I entered maintenace mode, ran sash, and cat'ed the /etc/shadow file.  It
+still had the old password.  So, back to the image file I went.  The
+password string was in there multiple times, to the point where I lost
+count.  I should have thought of that the first time around, but I figured
+once was good enough.  Searched and replaced the string until the old string
+wasn't in there anymore, reimaged the drive, put it back in the SGI, booted,
+and voila:  I can log in again.
 
->> Even with just 10MB/s it's less than 4 Minutes for 2GB.
->> In comparison it takes over 3 hours to copy a modern 1TB HDD @ 80MB/s.
-> 
-> ?? (what kind of comparison is that?)
-> 
-> C.
+The loopback method was a moot point, as the box I was using didn't have the
+loopback driver compiled in or available as a module, so I never even tried
+it.  I'll definitely keep it in mind (and in my inbox) should another few
+years go by and I can't remember the password again. :-)
+
+Thanks so much for all the help guys, I really appreciate it.
+
+-Sean
 
 -- 
 +-------------------------------------------------
@@ -85,7 +91,7 @@ consideration, depending on how it goes, so thanks for the info.
 |  Cell:     860.946.9477
 +-------------------------------------------------
 
---B_3331369530_141012
+--B_3331398258_1856570
 Content-type: application/pkcs7-signature; name="smime.p7s"
 Content-transfer-encoding: base64
 Content-disposition: attachment;
@@ -124,19 +130,19 @@ JVCUYsfbJ3FXJY3dqZw5jowgT2Vfldr394fWxghOrvbqNOUQGls1TXfjViF4gtwhGTXeJLHT
 HUb/XV9lTzGCAfwwggH4AgEBMHYwYjELMAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBD
 b25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFp
 bCBJc3N1aW5nIENBAhAvf5NHjc/BR/lyCoHqxXxjMAkGBSsOAwIaBQCgXTAjBgkqhkiG9w0B
-CQQxFgQUxMEWGRME39ChgeIkMY4SkQMyFa4wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAc
-BgkqhkiG9w0BCQUxDxcNMDkwNzI1MTYyNTMwWjANBgkqhkiG9w0BAQEFAASCAQB5tg+BoRS7
-YquOvWC6TYT0PgUrU2AdrJ8rNnflyxJoAD3kTc/2aPn7j/S9Pc07E4OmHcWv+xAiMQYctu1U
-eTRD5ruJnSsON+dSB2XcFOWyxadvlB7Q8U0RiTyi+klBTDMbqlme+z8EeBperz35f+BhtZ9J
-9a7z06VASqqzeg1WuMNylSjpdl2W84/mkjyR2H5mi0349pq0yHpdeHCBtGcQZ8kXtx5xyfVD
-vClUptMtj3fnPplLL0Mxv3WXV76EkqWUor0xHpscMiBzyT8JT1pJz2ICHhsrO1r7zafTMI9y
-c8S20FT9cnPRzwccf5ZD5PinhpQ8AIsHsmPVawf2Z/y+
+CQQxFgQUyAWeJ4f5lpFtrYEdODemMfQCMbswGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAc
+BgkqhkiG9w0BCQUxDxcNMDkwNzI2MDAyNDE4WjANBgkqhkiG9w0BAQEFAASCAQAvq2TeC81e
+2UdtEStOSPmU3tY1/J1fR+XAPrAr25qGzo6DV3wmpN57xoE0NfGt03pFZktPLStjHLZmeEKF
+zKxhwQIvxYPSsKzFPDRExL8c8cvwpcBt5cZQvckUD5f5X/IfRzZ5q4N5iapMRGrNre98ZRwJ
+GwWsEeRY7Was+icgo48Z1nniqVXlM3c8yzomtNggswWBew3iswxVSk+dIT9Xr06uiKhvJO/g
+mx32kBzrnD4hLOJaloeJ8+/C5O+ngWZzrks7HVB33lWxF11CfHXSwfxmuACy6/7kZzUuT8zA
+sG5KGqqq81FWIlF72j1ZWSxSklzDyr+XijxgBCO+jW0Y
 
---B_3331369530_141012--
+--B_3331398258_1856570--
 
 
 
---===============4039859835399426749==
+--===============2573880321283084297==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -147,4 +153,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============4039859835399426749==--
+--===============2573880321283084297==--
