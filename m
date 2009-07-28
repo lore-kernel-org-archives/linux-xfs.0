@@ -1,30 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6SBQmVb170744 for <xfs@oss.sgi.com>; Tue, 28 Jul 2009 06:26:49 -0500
-Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 992261D4FB47
-	for <xfs@oss.sgi.com>; Tue, 28 Jul 2009 04:27:33 -0700 (PDT)
-Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.162.198]) by
-	cuda.sgi.com with ESMTP id YeFSwnn7d55pBRH8 for
-	<xfs@oss.sgi.com>; Tue, 28 Jul 2009 04:27:33 -0700 (PDT)
-Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv1.zmi.at (Postfix) with ESMTP id 42D865543
-	for <xfs@oss.sgi.com>; Tue, 28 Jul 2009 13:27:51 +0200 (CEST)
-Received: from saturn.localnet (unknown [10.72.27.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id A996C40DC06
-	for <xfs@oss.sgi.com>; Tue, 28 Jul 2009 13:27:31 +0200 (CEST)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: Sviluppo di Comunita' a Vercelli
-Date: Tue, 28 Jul 2009 13:27:31 +0200
-References: <04767b64f3f1c771e150d4677df2770e@www.studiokappa.it>
-In-Reply-To: <04767b64f3f1c771e150d4677df2770e@www.studiokappa.it>
+	n6SCnei3174844 for <xfs@oss.sgi.com>; Tue, 28 Jul 2009 07:49:40 -0500
+Received: from mail-qy0-f173.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8A43A38D0E5
+	for <xfs@oss.sgi.com>; Tue, 28 Jul 2009 05:50:26 -0700 (PDT)
+Received: from mail-qy0-f173.google.com (mail-qy0-f173.google.com
+	[209.85.221.173]) by cuda.sgi.com with ESMTP id
+	XzvRQDTUDfzAk9dw for <xfs@oss.sgi.com>;
+	Tue, 28 Jul 2009 05:50:26 -0700 (PDT)
+Received: by qyk3 with SMTP id 3so4638740qyk.20
+	for <xfs@oss.sgi.com>; Tue, 28 Jul 2009 05:50:25 -0700 (PDT)
 MIME-Version: 1.0
-Message-Id: <200907281327.31274@zmi.at>
+In-Reply-To: <1938435153.1010831248671852499.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
+References: <362522677.1010811248671789619.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
+	<1938435153.1010831248671852499.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
+Date: Tue, 28 Jul 2009 20:50:25 +0800
+Message-ID: <b094161c0907280550y58cde45fja97b2c413c92a8d4@mail.gmail.com>
+Subject: Re: BUG REPORT: XFS LOG FORWARD COMPATIBILITY PROBLEM
+From: Eddy Zhao <eddy.y.zhao@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,56 +27,104 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============8926125917300615863=="
+Content-Type: multipart/mixed; boundary="===============1416429439103848319=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Lachlan McIlroy <lmcilroy@redhat.com>
+Cc: xfs@oss.sgi.com
 
---===============8926125917300615863==
-Content-Type: multipart/signed;
-  boundary="nextPart4536855.8fSo5PrMP0";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+--===============1416429439103848319==
+Content-Type: multipart/alternative; boundary=0016364ee89cb4510b046fc38331
+
+--0016364ee89cb4510b046fc38331
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 
---nextPart4536855.8fSo5PrMP0
-Content-Type: text/plain;
-  charset="iso-8859-15"
+Hello Lachlan:
+
+>
+> We all start somewhere!
+>
+
+Yes. I'll start from this problem :)
+
+>
+> It should also be the same architecture too - is it possible you have a
+> 32 bit kernel on the 2.6.10 system and a 64 bit kernel on the 2.6.28
+> system?  If so then this fix might help
+>
+
+The two systems are all 32bit.
+
+Enlightened by your suggestion, I find problem lies in the two systems are
+different architecture. One is arm, on is x86. Use 2.6.10 on both system,
+XFS created on arm can't mount on x86, vice versa (dump stack at
+xlog_recover_process_data).
+
+Use xfs_logprint to inspect log, tool exit with assertion failed:
+"item->ri_buf[0].i_len == sizeof(xfs_inode_log_format_t)". Debug the
+assertion and find xfs_inode_log_format_t on arm is 56 byte, on x86 is 52
+byte. Then find on 2.6.10 xfs_inode_log_format is not packed!! Fix this, fix
+the mount failed problem.
+
+Grep the code and find a lot other log/metadata needs pack on 2.6.10. I find
+these
+ xfs_fid64
+ xfs_extent_32_t
+ xfs_efi_log_format_32_t
+ xfs_efd_log_format_32_t
+ xfs_inode_log_format_32_t
+ xfs_flock64_32
+ compat_xfs_fsop_geom_v1_t
+ compat_xfs_inogrp_t
+ xfs_dir2_sf_off_t
+ xfs_dir2_sf_hdr_t
+ xfs_dir2_sf_entry_t
+
+Is there any other log/metadata needs pack on 2.6.10? Any other
+problem/caveat I need pay attention to while/besides fix pack bug?
+
+Thanks
+Eddy
+
+--0016364ee89cb4510b046fc38331
+Content-Type: text/html; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 
-On Montag 27 Juli 2009 news@studiokappa.it wrote:
-> Per cancellarti da questa lista clicca su
-> http://www.studiokappa.it/lists/?p=3Dunsubscribe&uid=3Df95d79661173a656ad
->12f819a35cc5d5
+<p>Hello Lachlan:</p>
+<p>&gt;<br>&gt; We all start somewhere!<br>&gt;</p>
+<p>Yes. I&#39;ll start from this problem :)</p>
+<p>&gt;<br>&gt; It should also be the same architecture too - is it possibl=
+e you have a<br>&gt; 32 bit kernel on the 2.6.10 system and a 64 bit kernel=
+ on the 2.6.28<br>&gt; system?=A0 If so then this fix might help<br>&gt;</p=
+>
 
-I tried this link, possibly it stops that spam.
+<p>The two systems are all 32bit.</p>
+<p>Enlightened by your suggestion, I find problem lies in the two systems a=
+re different architecture. One is arm, on is x86. Use 2.6.10 on both system=
+, XFS created on arm can&#39;t mount on x86, vice versa (dump stack at xlog=
+_recover_process_data). </p>
 
-mfg zmi
-=2D-=20
-// Michael Monnerie, Ing.BSc    -----      http://it-management.at
-// Tel: 0660 / 415 65 31                      .network.your.ideas.
-// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
-// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
-// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
+<p>Use xfs_logprint to inspect log, tool exit with assertion failed: &quot;=
+item-&gt;ri_buf[0].i_len =3D=3D sizeof(xfs_inode_log_format_t)&quot;. Debug=
+ the assertion and find xfs_inode_log_format_t on arm is 56 byte, on x86 is=
+ 52 byte. Then find on 2.6.10 xfs_inode_log_format is not packed!! Fix this=
+, fix the mount failed problem.</p>
+
+<p>Grep the code and find a lot other log/metadata needs pack on 2.6.10. I =
+find these<br>=A0xfs_fid64<br>=A0xfs_extent_32_t<br>=A0xfs_efi_log_format_3=
+2_t<br>=A0xfs_efd_log_format_32_t<br>=A0xfs_inode_log_format_32_t<br>=A0xfs=
+_flock64_32<br>
+=A0compat_xfs_fsop_geom_v1_t<br>=A0compat_xfs_inogrp_t<br>=A0xfs_dir2_sf_of=
+f_t<br>=A0xfs_dir2_sf_hdr_t<br>=A0xfs_dir2_sf_entry_t</p>
+<p>Is there any other log/metadata needs pack on 2.6.10? Any other problem/=
+caveat I need pay attention to while/besides fix pack bug?</p>
+<p>Thanks<br>Eddy</p>
+
+--0016364ee89cb4510b046fc38331--
 
 
---nextPart4536855.8fSo5PrMP0
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-
-iEYEABECAAYFAkpu4KMACgkQzhSR9xwSCbRmfgCcD1Pay39CNvM4yKfvL8pTdNNZ
-4gUAoOG3RbFBvIxq5YoejCS4zJr8V4Mf
-=+a/P
------END PGP SIGNATURE-----
-
---nextPart4536855.8fSo5PrMP0--
-
-
---===============8926125917300615863==
+--===============1416429439103848319==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -93,4 +135,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============8926125917300615863==--
+--===============1416429439103848319==--
