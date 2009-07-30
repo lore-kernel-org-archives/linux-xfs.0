@@ -1,29 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6U1OEUi033795 for <xfs@oss.sgi.com>; Wed, 29 Jul 2009 20:24:15 -0500
-Received: from qw-out-1920.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1B824142555F
-	for <xfs@oss.sgi.com>; Wed, 29 Jul 2009 18:25:01 -0700 (PDT)
-Received: from qw-out-1920.google.com (qw-out-1920.google.com [74.125.92.148])
-	by cuda.sgi.com with ESMTP id NsYcGQSkQxQK2bZL for
-	<xfs@oss.sgi.com>; Wed, 29 Jul 2009 18:25:01 -0700 (PDT)
-Received: by qw-out-1920.google.com with SMTP id 5so635082qwf.32
-	for <xfs@oss.sgi.com>; Wed, 29 Jul 2009 18:25:01 -0700 (PDT)
+	n6U9nI7m063648 for <xfs@oss.sgi.com>; Thu, 30 Jul 2009 04:49:18 -0500
+Received: from mail-yw0-f202.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D7E5239553B
+	for <xfs@oss.sgi.com>; Thu, 30 Jul 2009 02:49:55 -0700 (PDT)
+Received: from mail-yw0-f202.google.com (mail-yw0-f202.google.com
+	[209.85.211.202]) by cuda.sgi.com with ESMTP id
+	vVHVs4DFkDBvAkSe for <xfs@oss.sgi.com>;
+	Thu, 30 Jul 2009 02:49:55 -0700 (PDT)
+Received: by ywh40 with SMTP id 40so472595ywh.29
+	for <xfs@oss.sgi.com>; Thu, 30 Jul 2009 02:49:54 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4A70676B.4090105@sandeen.net>
-References: <362522677.1010811248671789619.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
-	<1938435153.1010831248671852499.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
-	<b094161c0907280550y58cde45fja97b2c413c92a8d4@mail.gmail.com>
-	<4A6F0978.4070709@sandeen.net>
-	<b094161c0907280759w6c525201vd4a17e22a8c1d582@mail.gmail.com>
-	<4A6F20D0.4050303@sandeen.net>
-	<b094161c0907290512q26efb74jc31f72ff7971210b@mail.gmail.com>
-	<4A70676B.4090105@sandeen.net>
-Date: Thu, 30 Jul 2009 09:25:00 +0800
-Message-ID: <b094161c0907291825h15ed4fbco8784bcae50dde23c@mail.gmail.com>
-Subject: Re: BUG REPORT: XFS LOG FORWARD COMPATIBILITY PROBLEM
-From: Eddy Zhao <eddy.y.zhao@gmail.com>
+Date: Thu, 30 Jul 2009 11:49:54 +0200
+Message-ID: <7dc591420907300249w76835ee5v4d5764dcadd71fa6@mail.gmail.com>
+Subject: xfs project quota question
+From: Erik Gulliksson <erik.gulliksson@diino.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,53 +24,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============5847761693471192556=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Lachlan McIlroy <lmcilroy@redhat.com>, xfs@oss.sgi.com
+To: xfs mailing list <xfs@oss.sgi.com>
 
---===============5847761693471192556==
-Content-Type: multipart/alternative; boundary=0016364ee2442bfd7e046fe22c87
+Hi,
 
---0016364ee2442bfd7e046fe22c87
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+We have recently started to use XFS for our production storage servers
+(coming from ZFS and Lustre/ext3) and are now considering activating
+project quota on quite massive scale. For our setup there would be
+between 10k and 100k "project directories" per filesystem, each with
+up to 1T data and up to 1M number of files. Would this even be
+feasible to consider? Have anyone done any tests with a big number of
+project quotas for an xfs file system? How well does it scale?
 
->
-> If you're signing up to make xfs_repair replay logs, I'm sure
-> we'd welcome the patch.  :)
->
+Best regards
+Erik Gulliksson
 
-I'll think twice and try.
-
-Thanks for the help! Eric, Lachlan
-
---0016364ee2442bfd7e046fe22c87
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-<div>&gt;</div>
-<div>&gt; If you&#39;re signing up to make xfs_repair replay logs, I&#39;m =
-sure<br>&gt; we&#39;d welcome the patch. =A0:)</div>
-<div>&gt;</div>
-<div>=A0</div>
-<div>I&#39;ll think twice and try.</div>
-<div>=A0</div>
-<div>Thanks for the help! Eric, Lachlan</div>
-
---0016364ee2442bfd7e046fe22c87--
-
-
---===============5847761693471192556==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+-- 
+Erik Gulliksson, erik.gulliksson@diino.net
+System Administrator, Diino AB
+http://www.diino.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============5847761693471192556==--
