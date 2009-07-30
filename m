@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6UGF3BQ084332 for <xfs@oss.sgi.com>; Thu, 30 Jul 2009 11:15:03 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C1466396DC1
-	for <xfs@oss.sgi.com>; Thu, 30 Jul 2009 09:15:50 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id 5jUwjcgPJPzqJ8nJ for
-	<xfs@oss.sgi.com>; Thu, 30 Jul 2009 09:15:50 -0700 (PDT)
-Message-ID: <4A71C735.1080004@sandeen.net>
-Date: Thu, 30 Jul 2009 11:15:49 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	n6UH2gAr087411 for <xfs@oss.sgi.com>; Thu, 30 Jul 2009 12:02:43 -0500
+Received: from kuber.nabble.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 007E810E9D2B
+	for <xfs@oss.sgi.com>; Thu, 30 Jul 2009 10:12:25 -0700 (PDT)
+Received: from kuber.nabble.com (kuber.nabble.com [216.139.236.158]) by
+	cuda.sgi.com with ESMTP id GMnW4eSJPrzVShXV for
+	<xfs@oss.sgi.com>; Thu, 30 Jul 2009 10:12:25 -0700 (PDT)
+Received: from isper.nabble.com ([192.168.236.156])
+	by kuber.nabble.com with esmtp (Exim 4.63)
+	(envelope-from <lists@nabble.com>) id 1MWZ2O-0005gs-VP
+	for xfs@oss.sgi.com; Thu, 30 Jul 2009 10:03:28 -0700
+Message-ID: <24742623.post@talk.nabble.com>
+Date: Thu, 30 Jul 2009 10:03:28 -0700 (PDT)
+From: rnb <neil.bell@gmail.com>
+Subject: xfs i/O error
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: actually hook up 198, make it generic
-References: <4A708FF7.5@sandeen.net> <20090730152756.GB27914@infradead.org>
-	<4A71BE6F.4030609@sandeen.net>
-In-Reply-To: <4A71BE6F.4030609@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,34 +29,90 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs mailing list <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Eric Sandeen wrote:
-> Christoph Hellwig wrote:
 
-...
+Running Ubuntu 9.04 kernel 2.26.28.14 generic
+Drive mounts fine.
+xfs_repair shows no errors
+sudo xfs_repair /dev/sdg1
+ Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+        - zero log...
+        - scan filesystem freespace and inode maps...
+        - found root inode chunk
+Phase 3 - for each AG...
+        - scan and clear agi unlinked lists...
+        - process known inodes and perform inode discovery...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - process newly discovered inodes...
+Phase 4 - check for duplicate blocks...
+        - setting up duplicate extent list...
+        - check for inodes claiming duplicate blocks...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+Phase 5 - rebuild AG headers and trees...
+        - reset superblock...
+Phase 6 - check inode connectivity...
+        - resetting contents of realtime bitmap and summary inodes
+        - traversing filesystem ...
+        - traversal finished ...
+        - moving disconnected inodes to lost+found ...
+Phase 7 - verify and correct link counts...
+done
 
->> Did we manage to get a proper copyright / license statement for this
->> one.
-> 
-> hadn't looked into it; I'll  ping Daniel McNeil who seems to be the
-> original author ...?
-> 
-> But I'll fix it and worry about the copyright later, since it's already
-> in ...
-> 
-> -Eric
-> 
+xfs_check did move a few things around but finished fine
 
-Actually there's a whole whack of nice tests at
-http://devresources.linux-foundation.org/daniel/AIO/TESTS/
+sudo xfs_fsr -v /dev/sdg1 <== This is just so far it is still running.
+/media/Films start inode=0
+ino=140
+bad read of 0 bytes from ino=140: Input/output error
+ino=139
+extents before:66 after:8      ino=139
+ino=145
+extents before:42 after:7      ino=145
+ino=146
+extents before:40 after:8      ino=146
+ino=143
+bad read of 0 bytes from ino=143: Input/output error
+ino=144
+extents before:27 after:8      ino=144
+ino=8763008
+bad read of 0 bytes from ino=8763008: Input/output error
+ino=8763059
+bad read of 0 bytes from ino=8763059: Input/output error
+ino=8763057
+extents before:307 after:12      ino=8763057
+ino=8763058
+extents before:259 after:11      ino=8763058
+ino=8763024
+bad read of 0 bytes from ino=8763024: Input/output error
+ino=8763055
+kk
+extents before:125 after:10      ino=8763055
+ino=8763030
+bad read of 0 bytes from ino=8763030: Input/output error
+ino=8763060
+bad read of 0 bytes from ino=8763060: Input/output error
+ino=8763056
+extents before:62 after:13      ino=8763056
+ino=8763066
 
-But I'm having trouble finding Daniel ...
-
-Seems like they'd all be good to pull in; one test per test, I guess.
-
--Eric
+Now my issue is how do I fix it if xfs_repair doesn't see a problem.
+Anything getting copied to the drive works fine in place wasn't until i
+tried to move it off I noticed the issue. Some things copy fine from it
+several others fail. Then i get Input/output error. It is a full 1tb drive .
+WD mybook it lost power which I think is what caused this issue. How can I
+correct the issue. Everything I try takes a hell of a long time and doesn't
+yield a positive result
+-- 
+View this message in context: http://www.nabble.com/xfs-i-O-error-tp24742623p24742623.html
+Sent from the Xfs - General mailing list archive at Nabble.com.
 
 _______________________________________________
 xfs mailing list
