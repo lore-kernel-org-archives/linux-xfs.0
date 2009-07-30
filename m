@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6UH2gAr087411 for <xfs@oss.sgi.com>; Thu, 30 Jul 2009 12:02:43 -0500
-Received: from kuber.nabble.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 007E810E9D2B
-	for <xfs@oss.sgi.com>; Thu, 30 Jul 2009 10:12:25 -0700 (PDT)
-Received: from kuber.nabble.com (kuber.nabble.com [216.139.236.158]) by
-	cuda.sgi.com with ESMTP id GMnW4eSJPrzVShXV for
-	<xfs@oss.sgi.com>; Thu, 30 Jul 2009 10:12:25 -0700 (PDT)
-Received: from isper.nabble.com ([192.168.236.156])
-	by kuber.nabble.com with esmtp (Exim 4.63)
-	(envelope-from <lists@nabble.com>) id 1MWZ2O-0005gs-VP
-	for xfs@oss.sgi.com; Thu, 30 Jul 2009 10:03:28 -0700
-Message-ID: <24742623.post@talk.nabble.com>
-Date: Thu, 30 Jul 2009 10:03:28 -0700 (PDT)
-From: rnb <neil.bell@gmail.com>
-Subject: xfs i/O error
+	n6UJ2P4m095507 for <xfs@oss.sgi.com>; Thu, 30 Jul 2009 14:02:27 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CE58F10ECDFF
+	for <xfs@oss.sgi.com>; Thu, 30 Jul 2009 12:12:10 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id Ss79o9fpBKMzVXtw for
+	<xfs@oss.sgi.com>; Thu, 30 Jul 2009 12:12:10 -0700 (PDT)
+Date: Thu, 30 Jul 2009 15:03:12 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 0/9] fixes for memory allocator recursions into the
+	filesystem
+Message-ID: <20090730190312.GA19593@infradead.org>
+References: <20090718221452.594956000@bombadil.infradead.org>
+	<Pine.LNX.4.64.0907301143510.14757@cobra.newdream.net>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0907301143510.14757@cobra.newdream.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,90 +30,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Sage Weil <sage@newdream.net>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
+On Thu, Jul 30, 2009 at 11:56:58AM -0700, Sage Weil wrote:
+> Hi Christoph,
+> 
+> I just noticed another warning (the same as the second one I sent 
+> before) with your patchset applied to 2.6.30.  This is the unresolved 
+> iolock issue you mentioned?  Just FYI.
 
-Running Ubuntu 9.04 kernel 2.26.28.14 generic
-Drive mounts fine.
-xfs_repair shows no errors
-sudo xfs_repair /dev/sdg1
- Phase 1 - find and verify superblock...
-Phase 2 - using internal log
-        - zero log...
-        - scan filesystem freespace and inode maps...
-        - found root inode chunk
-Phase 3 - for each AG...
-        - scan and clear agi unlinked lists...
-        - process known inodes and perform inode discovery...
-        - agno = 0
-        - agno = 1
-        - agno = 2
-        - agno = 3
-        - process newly discovered inodes...
-Phase 4 - check for duplicate blocks...
-        - setting up duplicate extent list...
-        - check for inodes claiming duplicate blocks...
-        - agno = 0
-        - agno = 1
-        - agno = 2
-        - agno = 3
-Phase 5 - rebuild AG headers and trees...
-        - reset superblock...
-Phase 6 - check inode connectivity...
-        - resetting contents of realtime bitmap and summary inodes
-        - traversing filesystem ...
-        - traversal finished ...
-        - moving disconnected inodes to lost+found ...
-Phase 7 - verify and correct link counts...
-done
-
-xfs_check did move a few things around but finished fine
-
-sudo xfs_fsr -v /dev/sdg1 <== This is just so far it is still running.
-/media/Films start inode=0
-ino=140
-bad read of 0 bytes from ino=140: Input/output error
-ino=139
-extents before:66 after:8      ino=139
-ino=145
-extents before:42 after:7      ino=145
-ino=146
-extents before:40 after:8      ino=146
-ino=143
-bad read of 0 bytes from ino=143: Input/output error
-ino=144
-extents before:27 after:8      ino=144
-ino=8763008
-bad read of 0 bytes from ino=8763008: Input/output error
-ino=8763059
-bad read of 0 bytes from ino=8763059: Input/output error
-ino=8763057
-extents before:307 after:12      ino=8763057
-ino=8763058
-extents before:259 after:11      ino=8763058
-ino=8763024
-bad read of 0 bytes from ino=8763024: Input/output error
-ino=8763055
-kk
-extents before:125 after:10      ino=8763055
-ino=8763030
-bad read of 0 bytes from ino=8763030: Input/output error
-ino=8763060
-bad read of 0 bytes from ino=8763060: Input/output error
-ino=8763056
-extents before:62 after:13      ino=8763056
-ino=8763066
-
-Now my issue is how do I fix it if xfs_repair doesn't see a problem.
-Anything getting copied to the drive works fine in place wasn't until i
-tried to move it off I noticed the issue. Some things copy fine from it
-several others fail. Then i get Input/output error. It is a full 1tb drive .
-WD mybook it lost power which I think is what caused this issue. How can I
-correct the issue. Everything I try takes a hell of a long time and doesn't
-yield a positive result
--- 
-View this message in context: http://www.nabble.com/xfs-i-O-error-tp24742623p24742623.html
-Sent from the Xfs - General mailing list archive at Nabble.com.
+Yes, that's the iolock one.  Patch will follow soon.
 
 _______________________________________________
 xfs mailing list
