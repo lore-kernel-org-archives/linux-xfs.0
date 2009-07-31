@@ -1,20 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n6V3b8i7122352 for <xfs@oss.sgi.com>; Thu, 30 Jul 2009 22:37:09 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 42EE5AD4724
-	for <xfs@oss.sgi.com>; Thu, 30 Jul 2009 20:46:54 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id Ob393GrPvzdSCDjr for
-	<xfs@oss.sgi.com>; Thu, 30 Jul 2009 20:46:54 -0700 (PDT)
-Message-ID: <4A726711.5050402@sandeen.net>
-Date: Thu, 30 Jul 2009 22:37:53 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	n6V5xUjb133952 for <xfs@oss.sgi.com>; Fri, 31 Jul 2009 00:59:31 -0500
+Date: Fri, 31 Jul 2009 01:00:15 -0500
+Subject: [GIT PULL] XFS update for 2.6.31-rc5
 MIME-Version: 1.0
-Subject: Re: xfs i/O error
-References: <24747808.post@talk.nabble.com> <200907310148.52085@zmi.at>
-In-Reply-To: <200907310148.52085@zmi.at>
+Message-Id: <20090731060015.45A8FA23CA6C@attica.americas.sgi.com>
+From: felixb@sgi.com (Felix Blyakher)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,32 +19,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: rnb <neil.bell@gmail.com>, xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Michael Monnerie wrote:
-> On Donnerstag 30 Juli 2009 rnb wrote:
->> [70273.864305] sd 8:0:0:0: [sdg] Sense Key : Medium Error [current]
->> [70273.864314] Info fld=0x0
->> [70273.864318] sd 8:0:0:0: [sdg] Add. Sense: Unrecovered read error
->> [70273.864327] end_request: I/O error, dev sdg, sector 378206415
-> 
-> Disk is bad, replace it.
-> 
-> mfg zmi
+The following changes since commit b592972493c38665efd7d429a01b23fcb21e331a:
+  Linus Torvalds (1):
+        Merge branch 'tracing-fixes-for-linus' of git://git.kernel.org/.../tip/linux-2.6-tip
 
-More or less, yep.
+are available in the git repository at:
 
-Read errors can be somewhat recoverable, if you write to that sector it
-will remap if it can.
+  git://oss.sgi.com/xfs/xfs for-linus
 
-But anyway yeah, it's not an xfs I/O error, it's a disk IO error, and
-xfs is bringing you the bad news.
+Eric Sandeen (2):
+      xfs: reduce bmv_count in xfs_vn_fiemap
+      xfs: bump up nr_to_write in xfs_vm_writepage
 
-repair may not have seen it because repair only looks at metadata, bad
-sectors may be data in blocks, found when you try to copy data around.
-
--eric
+ fs/xfs/linux-2.6/xfs_aops.c |    8 ++++++++
+ fs/xfs/linux-2.6/xfs_iops.c |    4 ++--
+ 2 files changed, 10 insertions(+), 2 deletions(-)
 
 _______________________________________________
 xfs mailing list
