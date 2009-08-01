@@ -1,44 +1,59 @@
-Return-Path: <eddy.y.zhao@gmail.com>
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	n71InJcx236572 for <xfs@oss.sgi.com>; Sat, 1 Aug 2009 13:49:26 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 54B4639CB60
+	for <xfs@oss.sgi.com>; Sat,  1 Aug 2009 11:49:44 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id 8lZzcVk6WKG5bkWg for
+	<xfs@oss.sgi.com>; Sat, 01 Aug 2009 11:49:44 -0700 (PDT)
+Date: Sat, 1 Aug 2009 14:49:43 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] use XFS_CORRUPTION_ERROR in xfs_btree_check_sblock
+Message-ID: <20090801184943.GA2712@infradead.org>
+References: <4A6492AF.3030809@sandeen.net>
+	<20090720212153.GA6832@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <b094161c0907290512q26efb74jc31f72ff7971210b@mail.gmail.com>
-References: <362522677.1010811248671789619.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
-	 <1938435153.1010831248671852499.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
-	 <b094161c0907280550y58cde45fja97b2c413c92a8d4@mail.gmail.com>
-	 <4A6F0978.4070709@sandeen.net>
-	 <b094161c0907280759w6c525201vd4a17e22a8c1d582@mail.gmail.com>
-	 <4A6F20D0.4050303@sandeen.net>
-	 <b094161c0907290512q26efb74jc31f72ff7971210b@mail.gmail.com>
-Date: Wed, 29 Jul 2009 21:11:29 +0800
-Message-ID: <b094161c0907290611x11e4f166obae2d6a8bc0c2dbc@mail.gmail.com>
-Subject: Re: BUG REPORT: XFS LOG FORWARD COMPATIBILITY PROBLEM
-From: Eddy Zhao <eddy.y.zhao@gmail.com>
-Content-Type: multipart/alternative; boundary=0016364ee2ead8aaf2046fd7ec1a
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Lachlan McIlroy <lmcilroy@redhat.com>, xfs@oss.sgi.com
-List-ID: <xfs>
-
---0016364ee2ead8aaf2046fd7ec1a
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Disposition: inline
+In-Reply-To: <20090720212153.GA6832@infradead.org>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Sender: xfs-bounces@oss.sgi.com
+Errors-To: xfs-bounces@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs mailing list <xfs@oss.sgi.com>
 
->
-> And there must be something silently goes wrong on disk after replaying
-the log.
->
+On Mon, Jul 20, 2009 at 05:21:53PM -0400, Christoph Hellwig wrote:
+> On Mon, Jul 20, 2009 at 10:52:15AM -0500, Eric Sandeen wrote:
+> > In Red Hat Bug 512552
+> >  - Can't write to XFS mount during raid5 resync
+> > 
+> > a user ran into corruption while resyncing a raid, and we failed
+> > a consistency test, but didn't get much more info; it'd be nice
+> > to call XFS_CORRUPTION_ERROR here so we can see the buffer
+> > contents.
+> > 
+> > Compile-tested only...
+> 
+> Looks good to me, I'll throw it into my XFSQA queue..
 
-Forget this. Nothing on disk will goes wrong even under the
-misinterpretation.
+I has survied quite a few xfsqa runs for me, so
 
---0016364ee2ead8aaf2046fd7ec1a
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
 
-<div>&gt;</div>
-<div>&gt; And there must be something silently goes wrong on disk after rep=
-laying the log.</div>
-<div>&gt;</div>
-<div>=A0</div>
-<div>Forget this. Nothing on disk will goes wrong even under the misinterpr=
-etation.</div>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
---0016364ee2ead8aaf2046fd7ec1a--
+sounds like another 2.6.31 candidate to me..
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
