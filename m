@@ -1,22 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n73ItB7q105143
-	for <linux-xfs@oss.sgi.com>; Mon, 3 Aug 2009 13:55:12 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8C73F1445D1D
-	for <linux-xfs@oss.sgi.com>; Mon,  3 Aug 2009 11:56:00 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id EgexB8UxWxUjrwWq for
-	<linux-xfs@oss.sgi.com>; Mon, 03 Aug 2009 11:56:00 -0700 (PDT)
-Message-ID: <4A7732BF.6020207@sandeen.net>
-Date: Mon, 03 Aug 2009 13:55:59 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	n73JBUbj106319 for <xfs@oss.sgi.com>; Mon, 3 Aug 2009 14:11:30 -0500
+Content-class: urn:content-classes:message
 MIME-Version: 1.0
-Subject: Re: How to solve "No space left" problem on my 32bit machine?
-References: <389deec70907252030s3524b2ecj9b35da9ea376020f@mail.gmail.com>	<4A6D075B.9060601@sandeen.net>	<389deec70907262347g1ca3637fn469596ec1e05148@mail.gmail.com>	<4A6DAE5D.6060704@sandeen.net>
-	<389deec70908030732n29d35220mc9acdb912ab10899@mail.gmail.com>
-In-Reply-To: <389deec70908030732n29d35220mc9acdb912ab10899@mail.gmail.com>
+Subject: RE: [PATCH] SGI-PV: Read buffer overflow
+Date: Mon, 3 Aug 2009 14:11:48 -0500
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83AB26@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <4A7575EF.8070404@gmail.com>
+From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,56 +21,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: hank peng <pengxihan@gmail.com>
-Cc: linux-xfs@oss.sgi.com
+To: Roel Kluin <roel.kluin@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, xfs@oss.sgi.com
 
-hank peng wrote:
-> 2009/7/27 Eric Sandeen <sandeen@sandeen.net>:
->> hank peng wrote:
->>> 2009/7/27 Eric Sandeen <sandeen@sandeen.net>:
->>>> hank peng wrote:
->>>>> Hi, folks:
->>>>> I have a 2.5T file system formatted with XFS, df tells me it still
->>>>> have about 10G space available, but I can't create new files or
->>>>> directory any more. Return message is "No space left on this device".
->>>>> I searched solution for this problem through google, and found this:
->>>>> http://oss.sgi.com/archives/xfs/2005-06/msg00347.html. I think it is a
->>>>> known "No space left" problem. I wonder whether it can only
->>>>> be solved on 64-bit machine? If on my 32-bit machine, what should I do?
->>>> On very recent kernels you can use 64-bit inodes on 32-bit machines; you
->>>> can try mounting with -o inode64 t allow this.
->>>>
->>> I tried -o inode64 option, but kernel gives me error message:
->>> XFS: inode64 option not allowed on this system
->>> I doubt this option can't be used on 32-bit machine.
->> That's why I said you need a very recent kernel, it was added relatively
->> recently:
->>
->> commit 6c31b93a14a453c8756ffd228e24910ffdf30c5d
->> Author: Christoph Hellwig <hch@infradead.org>
->> Date:   Fri Nov 28 14:23:32 2008 +1100
->>
->>    [XFS] allow inode64 mount option on 32 bit systems
->>
->> I believe this went into 2.6.29.
->>
-> I tried 2.6.30 and test it
-> 1. create an exact 2T LVM
-> 2. create XFS on it
-> 3. mont it with inode64 option
-> 4. write files on it to full extent
-> 5. use xfs_grow to expand it to 2.5T
-> 6. touch a file and no error message returned
-> 7. 'ls -l' can not show the file I created above.
+> Check whether index is within bounds before grabbing the element.
 > 
-> So I think I should do something on userspace tools, but how?
+> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+> ---
+> diff --git a/fs/xfs/xfs_da_btree.c b/fs/xfs/xfs_da_btree.c
+> index 9ff6e57..ef1d275 100644
+> --- a/fs/xfs/xfs_da_btree.c
+> +++ b/fs/xfs/xfs_da_btree.c
+> @@ -1414,8 +1414,9 @@ xfs_da_path_shift(xfs_da_state_t 
+> *state, xfs_da_state_path_t *path,
+>  	ASSERT(args != NULL);
+>  	ASSERT(path != NULL);
+>  	ASSERT((path->active > 0) && (path->active < XFS_DA_NODE_MAXDEPTH));
+> -	level = (path->active-1) - 1;	/* skip bottom layer in path */
+> -	for (blk = &path->blk[level]; level >= 0; blk--, level--) {
+> +	/* skip bottom layer in path */
+> +	for (level = (path->active-1) - 1; level >= 0; blk--, level--) {
 
-Doesn't sound like a userspace problem.  So touch succeeds (maybe echo
-$? after to be sure) but ls shows no file?  Anything in dmesg after that?
+No need to decrement "blk" above.  You are reassigning it anyway
+in the next statement.
 
-I'd have to find a 32-bit box w/ > 2T to test this I guess.  :)
+> +		blk = &path->blk[level];
+>  		ASSERT(blk->bp != NULL);
+>  		node = blk->bp->data;
+>  		ASSERT(be16_to_cpu(node->hdr.info.magic) == XFS_DA_NODE_MAGIC);
 
--Eric
+Note that if level were < 0 upon entry to the loop in its previous
+form, then the computed value of blk would never have been used.
+
+					-Alex
 
 _______________________________________________
 xfs mailing list
