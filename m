@@ -1,19 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n754W25j215766 for <xfs@oss.sgi.com>; Tue, 4 Aug 2009 23:32:03 -0500
-Received: from mail.vpac.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5F6F913A9F1B
-	for <xfs@oss.sgi.com>; Tue,  4 Aug 2009 21:32:52 -0700 (PDT)
-Received: from mail.vpac.org (mail.vpac.org [202.158.218.6]) by cuda.sgi.com
-	with ESMTP id iqgNeoADYEVqJe63 for <xfs@oss.sgi.com>;
-	Tue, 04 Aug 2009 21:32:52 -0700 (PDT)
-Date: Wed, 5 Aug 2009 14:32:44 +1000 (EST)
-From: Chris Samuel <csamuel@vpac.org>
-Message-ID: <1485133780.793941249446764456.JavaMail.root@mail.vpac.org>
-In-Reply-To: <4A790A09.8050502@sandeen.net>
-Subject: Re: XFS filesystem shutting down on linux 2.6.28.10 (xfs_rename)
+	n754EfRD214768 for <xfs@oss.sgi.com>; Tue, 4 Aug 2009 23:14:41 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2C3DB1454A90
+	for <xfs@oss.sgi.com>; Tue,  4 Aug 2009 21:15:31 -0700 (PDT)
+Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
+	cuda.sgi.com with ESMTP id 1dDZtJSLgUgeA6sV for
+	<xfs@oss.sgi.com>; Tue, 04 Aug 2009 21:15:31 -0700 (PDT)
+Message-ID: <4A790762.3010207@sandeen.net>
+Date: Tue, 04 Aug 2009 23:15:30 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
+Subject: Re: [PATCH 1/1] XFS: xfs_iformat realtime device target pointer check
+References: <1249329808.7686.26.camel@logos>	
+	<20090803214929.GB3167@infradead.org>
+	<1249351241.7513.18.camel@logos>	 <4A786110.8090404@sandeen.net>
+	<1249411898.7576.19.camel@logos>	
+	<4A7887CE.2060300@sandeen.net> <1249444550.7372.23.camel@logos>
+In-Reply-To: <1249444550.7372.23.camel@logos>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,52 +31,67 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: Ramon de Carvalho Valle <ramon@risesecurity.org>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, mszeredi@novell.com, hch@lst.de, xfs@oss.sgi.com
 
-
------ "Eric Sandeen" <sandeen@sandeen.net> wrote:
-
-Hi Eric,
-
-Thanks for the speedy response!
-
-> I'll take a look. [...]
-
-Thanks for that.
-
-> Is there any chance you could instrument xfs_rename so that for every
-> goto abort_return and goto error_return you add a printk so we know
-> which one you hit?
-
-Happy to do that, though we won't be able to reboot into it
-until another crash fails (the impact on the HPC jobs is too
-large I'm afraid :-( ).
-
-> Maybe something like:
+Ramon de Carvalho Valle wrote:
+> On Tue, 2009-08-04 at 14:11 -0500, Eric Sandeen wrote:
+>> Ramon de Carvalho Valle wrote:
+>>> The xfs_iformat function does not check if the realtime device target pointer
+>>> is valid when the XFS_DIFLAG_REALTIME flag is set on the ondisk inode
+>>> structure.
+>>>
+>>> Signed-off-by: Christoph Hellwig <hch@infradead.org>
+>>> Signed-off-by: Ramon de Carvalho Valle <ramon@risesecurity.org>
+>>> Cc: stable <stable@kernel.org>
+>>> ---
+>>>  fs/xfs/xfs_inode.c |   23 +++++++++++++++++------
+>>>  1 files changed, 17 insertions(+), 6 deletions(-)
+>>>
+>>> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+>>> index 1f22d65..37d3ee5 100644
+>>> --- a/fs/xfs/xfs_inode.c
+>>> +++ b/fs/xfs/xfs_inode.c
+>>> @@ -343,13 +343,24 @@ xfs_iformat(
+>>>  		return XFS_ERROR(EFSCORRUPTED);
+>>>  	}
+>>>  
+>>> +	if (unlikely((ip->i_d.di_flags & XFS_DIFLAG_REALTIME) &&
+>>> +			!ip->i_mount->m_rtdev_targp)) {
+>>> +		xfs_fs_repair_cmn_err(CE_WARN, ip->i_mount,
+>>> +			"corrupt dinode %Lu, flags = 0x%x.",
+>>> +			(unsigned long long)ip->i_ino,
+>>> +			ip->i_d.di_flags);
+>>> +		XFS_CORRUPTION_ERROR("xfs_iformat(3)", XFS_ERRLEVEL_LOW,
+>>> +				     ip->i_mount, dip);
+>> I think I'd rather not change all the corruption text tag ordering;
+>> it'll make it harder to track down any common occurrences of
+>> "xfs_iformat(X)" corruption in the future if they get renumbered now.
+>>
+>> I'd either make this xfs_iformat(2.1) ;) or just leave it as Christoph
+>> had.  "realtime" is a lot more informative than "3" anyway.
 > 
-> printk("line %s error %d\n", __LINE__, error);
+> I don't think this is a bad decision, because the corruption errors can
+> be easily identified by the output of xfs_fs_repair_cmn_err and the
+> source line. I think this is a reasonable change that will keep the code
+> clean and consistent.
+
+Until you wind up looking at a problem from some old kernel, or modified
+vendor kernel, and you realize that now you really don't know which
+error "xfs_iformat(6)" is anymore, and you either have to go digging
+through trees that aren't handy, or you just give up and don't bother to
+help because now it's too much of a pain.  ;)
+
+But I can leave it up to the folks @ sgi, I can see both sides of the
+argument, and I won't care too much either way.
+
+Thanks,
+-Eric
+
+> -Ramon
 > 
-> just before each goto, with appropriate braces {} sprinkled in as
-> necessary?
-> 
-> I can send a patch if that helps.
+>> -Eric
 
-If you could that would be great, we'd really appreciate it
-(I'm about to disappear into an afternoon of meetings now).
-
-> Sorry for the brute-force debugging but not at all sure
-> yet what this may be.
-
-No worries, quite understand!
-
-All the best,
-Chris
--- 
-Christopher Samuel - (03) 9925 4751 - Systems Manager
- The Victorian Partnership for Advanced Computing
- P.O. Box 201, Carlton South, VIC 3053, Australia
-VPAC is a not-for-profit Registered Research Agency
 
 _______________________________________________
 xfs mailing list
