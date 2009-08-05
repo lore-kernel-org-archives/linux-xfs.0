@@ -1,22 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n75LqqEX009896 for <xfs@oss.sgi.com>; Wed, 5 Aug 2009 16:52:52 -0500
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2CD738F8144
-	for <xfs@oss.sgi.com>; Wed,  5 Aug 2009 14:53:41 -0700 (PDT)
-Message-Id: <041FE945-8CBD-476C-83CD-E57748251711@sgi.com>
-From: Felix Blyakher <felixb@sgi.com>
-In-Reply-To: <4A790762.3010207@sandeen.net>
-Mime-Version: 1.0 (Apple Message framework v926)
-Subject: Re: [PATCH 1/1] XFS: xfs_iformat realtime device target pointer check
-Date: Wed, 5 Aug 2009 16:53:40 -0500
-References: <1249329808.7686.26.camel@logos>	
-	<20090803214929.GB3167@infradead.org>
-	<1249351241.7513.18.camel@logos>	 <4A786110.8090404@sandeen.net>
-	<1249411898.7576.19.camel@logos>	
-	<4A7887CE.2060300@sandeen.net> <1249444550.7372.23.camel@logos>
-	<4A790762.3010207@sandeen.net>
+	n75N7HRt013199
+	for <linux-xfs@oss.sgi.com>; Wed, 5 Aug 2009 18:07:18 -0500
+Received: from ciao.gmane.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A39F33AAE1A
+	for <linux-xfs@oss.sgi.com>; Wed,  5 Aug 2009 16:08:07 -0700 (PDT)
+Received: from ciao.gmane.org (main.gmane.org [80.91.229.2]) by cuda.sgi.com
+	with ESMTP id Zk4laLYo7e5Yyta7 for <linux-xfs@oss.sgi.com>;
+	Wed, 05 Aug 2009 16:08:07 -0700 (PDT)
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1MYpaT-00085P-Lp
+	for linux-xfs@oss.sgi.com; Wed, 05 Aug 2009 23:08:01 +0000
+Received: from adsl-71-147-53-109.dsl.emhril.sbcglobal.net ([71.147.53.109])
+	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+	id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Wed, 05 Aug 2009 23:08:01 +0000
+Received: from kononov by adsl-71-147-53-109.dsl.emhril.sbcglobal.net with
+	local (Gmexim 0.1 (Debian)) id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Wed, 05 Aug 2009 23:08:01 +0000
+From: Roman Kononov <kononov@ftml.net>
+Subject: Re: failed assertion related to realtime section
+Date: Wed, 05 Aug 2009 18:07:50 -0500
+Message-ID: <4A7A10C6.8030504@ftml.net>
+References: <h3gd94$clb$1@ger.gmane.org> <4A790380.7060805@sandeen.net>
+Mime-Version: 1.0
+In-Reply-To: <4A790380.7060805@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,96 +35,24 @@ List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, mszeredi@novell.com, Christoph Hellwig <hch@infradead.org>, xfs mailing list <xfs@oss.sgi.com>, Christoph Hellwig <hch@lst.de>, Ramon de Carvalho Valle <ramon@risesecurity.org>
+To: linux-xfs@oss.sgi.com
 
+Eric Sandeen wrote:
+> While realtime should probably work and not oops (!) I'm curious what
+> your use-case for realtime is?
 
-On Aug 4, 2009, at 11:15 PM, Eric Sandeen wrote:
+In my setup I need mostly sequential read/write access to a number of 
+huge files (>1GB) as well as small ones. My 16-disk system, providing 
+1GB/s of sequential access data rate, chokes when file fragments are 
+smaller than ~32MB. Using 32MB extents of the regular data section 
+helps, but fragmentation still develops. I hope (maybe I am wrong) that 
+the realtime section with its fixed extents eliminates the fragmentation 
+issue.
 
-> Ramon de Carvalho Valle wrote:
->> On Tue, 2009-08-04 at 14:11 -0500, Eric Sandeen wrote:
->>> Ramon de Carvalho Valle wrote:
->>>> The xfs_iformat function does not check if the realtime device  
->>>> target pointer
->>>> is valid when the XFS_DIFLAG_REALTIME flag is set on the ondisk  
->>>> inode
->>>> structure.
->>>>
->>>> Signed-off-by: Christoph Hellwig <hch@infradead.org>
->>>> Signed-off-by: Ramon de Carvalho Valle <ramon@risesecurity.org>
->>>> Cc: stable <stable@kernel.org>
->>>> ---
->>>> fs/xfs/xfs_inode.c |   23 +++++++++++++++++------
->>>> 1 files changed, 17 insertions(+), 6 deletions(-)
->>>>
->>>> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
->>>> index 1f22d65..37d3ee5 100644
->>>> --- a/fs/xfs/xfs_inode.c
->>>> +++ b/fs/xfs/xfs_inode.c
->>>> @@ -343,13 +343,24 @@ xfs_iformat(
->>>> 		return XFS_ERROR(EFSCORRUPTED);
->>>> 	}
->>>>
->>>> +	if (unlikely((ip->i_d.di_flags & XFS_DIFLAG_REALTIME) &&
->>>> +			!ip->i_mount->m_rtdev_targp)) {
->>>> +		xfs_fs_repair_cmn_err(CE_WARN, ip->i_mount,
->>>> +			"corrupt dinode %Lu, flags = 0x%x.",
->>>> +			(unsigned long long)ip->i_ino,
->>>> +			ip->i_d.di_flags);
->>>> +		XFS_CORRUPTION_ERROR("xfs_iformat(3)", XFS_ERRLEVEL_LOW,
->>>> +				     ip->i_mount, dip);
->>> I think I'd rather not change all the corruption text tag ordering;
->>> it'll make it harder to track down any common occurrences of
->>> "xfs_iformat(X)" corruption in the future if they get renumbered  
->>> now.
->>>
->>> I'd either make this xfs_iformat(2.1) ;) or just leave it as  
->>> Christoph
->>> had.  "realtime" is a lot more informative than "3" anyway.
->>
->> I don't think this is a bad decision, because the corruption errors  
->> can
->> be easily identified by the output of xfs_fs_repair_cmn_err and the
->> source line. I think this is a reasonable change that will keep the  
->> code
->> clean and consistent.
->
-> Until you wind up looking at a problem from some old kernel, or  
-> modified
-> vendor kernel, and you realize that now you really don't know which
-> error "xfs_iformat(6)" is anymore, and you either have to go digging
-> through trees that aren't handy, or you just give up and don't  
-> bother to
-> help because now it's too much of a pain.  ;)
->
-> But I can leave it up to the folks @ sgi, I can see both sides of the
-> argument, and I won't care too much either way.
-
-Agree with Eric, see the benefits of both approaches, but I think,
-it'll be cleaner without shifting the numbering of all messages.
-Otherwise, looks good.
-
-Felix
-
->
->
-> Thanks,
-> -Eric
->
->> -Ramon
->>
->>> -Eric
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux- 
-> kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+Roman
 
 _______________________________________________
 xfs mailing list
