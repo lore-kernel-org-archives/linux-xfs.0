@@ -1,21 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n764UmP9026809 for <xfs@oss.sgi.com>; Wed, 5 Aug 2009 23:30:49 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B9F6212B05F4
-	for <xfs@oss.sgi.com>; Wed,  5 Aug 2009 21:41:09 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id 1oE8GG6JBqc1QMdB for
-	<xfs@oss.sgi.com>; Wed, 05 Aug 2009 21:41:09 -0700 (PDT)
-Message-ID: <4A7A5CA8.8040702@sandeen.net>
-Date: Wed, 05 Aug 2009 23:31:36 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	n768kkUX041104
+	for <linux-xfs@oss.sgi.com>; Thu, 6 Aug 2009 03:46:47 -0500
+Received: from mail-fx0-f207.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 38B91B05A1D
+	for <linux-xfs@oss.sgi.com>; Thu,  6 Aug 2009 01:57:08 -0700 (PDT)
+Received: from mail-fx0-f207.google.com (mail-fx0-f207.google.com
+	[209.85.220.207]) by cuda.sgi.com with ESMTP id
+	gRdPg2mTWSsLLpnD for <linux-xfs@oss.sgi.com>;
+	Thu, 06 Aug 2009 01:57:08 -0700 (PDT)
+Received: by fxm3 with SMTP id 3so471156fxm.8
+	for <linux-xfs@oss.sgi.com>; Thu, 06 Aug 2009 01:47:35 -0700 (PDT)
 MIME-Version: 1.0
-Subject: [PATCH V2] xfstests 218: very basic defragmentation testing for xfs
-	& ext4
-References: <4A5E3A37.5050306@redhat.com>
-In-Reply-To: <4A5E3A37.5050306@redhat.com>
+In-Reply-To: <4A7732BF.6020207@sandeen.net>
+References: <389deec70907252030s3524b2ecj9b35da9ea376020f@mail.gmail.com>
+	<4A6D075B.9060601@sandeen.net>
+	<389deec70907262347g1ca3637fn469596ec1e05148@mail.gmail.com>
+	<4A6DAE5D.6060704@sandeen.net>
+	<389deec70908030732n29d35220mc9acdb912ab10899@mail.gmail.com>
+	<4A7732BF.6020207@sandeen.net>
+Date: Thu, 6 Aug 2009 16:47:34 +0800
+Message-ID: <389deec70908060147j6048ed83wacf82b04195e9bae@mail.gmail.com>
+Subject: Re: How to solve "No space left" problem on my 32bit machine?
+From: hank peng <pengxihan@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,267 +32,53 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: ext4 development <linux-ext4@vger.kernel.org>, xfs mailing list <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@oss.sgi.com
 
-Test a few very basic defragmentation scenarios.
-
-This test creates some files, runs defrag on them,
-and compares the before/after fragmentation as well
-as file md5sums and timestamps.
-
-The test currently expects to find e4defrag in
-/usr/bin
-
-It should be relatively easy to add more interestingly
-fragmented files to the tests, as well as to test
-that memory-mapped files aren't touched, etc - 
-but this gives us a framework.
-
-V2: remount before checking file contents, and create
-common.defrag.
-
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
-
-diff --git a/218 b/218
-new file mode 100755
-index 0000000..8c8afe7
---- /dev/null
-+++ b/218
-@@ -0,0 +1,96 @@
-+#! /bin/sh
-+# FS QA Test No. 218
-+#
-+# Basic defragmentation sanity tests
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2009 Eric Sandeen.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=sandeen@sandeen.net
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -f $tmp.*
-+    _cleanup_testdir
-+}
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+. ./common.defrag
-+
-+# real QA test starts here
-+_supported_fs xfs ext4
-+_supported_os Linux
-+
-+_setup_testdir
-+# We require scratch so that we'll have free contiguous space
-+_require_scratch
-+_scratch_mkfs >/dev/null 2>&1
-+_scratch_mount
-+
-+_require_defrag
-+
-+fragfile=$SCRATCH_MNT/fragfile.$$
-+
-+rm -f $fragfile
-+
-+# Craft some fragmented files, defrag them, check the result.
-+
-+echo "zero-length file:" | tee -a $seq.full
-+touch $fragfile
-+_defrag $fragfile
-+
-+echo "Sparse file (no blocks):" | tee -a $seq.full
-+xfs_io -F -f -c "truncate 1m" $fragfile
-+_defrag $fragfile
-+
-+echo "Contiguous file:" | tee -a $seq.full
-+dd if=/dev/zero of=$fragfile bs=4k count=4 &>/dev/null
-+_defrag $fragfile
-+
-+echo "Write backwards sync, but contiguous - should defrag to 1 extent" | tee -a $seq.full
-+for I in `seq 9 -1 0`; do
-+	dd if=/dev/zero of=$fragfile bs=4k count=1 conv=notrunc seek=$I oflag=sync &>/dev/null
-+done
-+_defrag $fragfile
-+
-+echo "Write backwards sync leaving holes - defrag should do nothing" | tee -a $seq.full
-+for I in `seq 31 -2 0`; do
-+	dd if=/dev/zero of=$fragfile bs=4k count=1 conv=notrunc seek=$I oflag=sync &>/dev/null
-+done
-+_defrag $fragfile
-+
-+echo "Write forwards sync leaving holes - defrag should do nothing" | tee -a $seq.full
-+for I in `seq 0 2 31`; do
-+	dd if=/dev/zero of=$fragfile bs=4k count=1 conv=notrunc seek=$I oflag=sync &>/dev/null
-+done
-+_defrag $fragfile
-+
-+rm -f $seq.full
-+status=0
-+exit
-diff --git a/218.out b/218.out
-new file mode 100644
-index 0000000..7559cdd
---- /dev/null
-+++ b/218.out
-@@ -0,0 +1,19 @@
-+QA output created by 218
-+zero-length file:
-+Before: 0
-+After: 0
-+Sparse file (no blocks):
-+Before: 0
-+After: 0
-+Contiguous file:
-+Before: 1
-+After: 1
-+Write backwards sync, but contiguous - should defrag to 1 extent
-+Before: 10
-+After: 1
-+Write backwards sync leaving holes - defrag should do nothing
-+Before: 16
-+After: 16
-+Write forwards sync leaving holes - defrag should do nothing
-+Before: 16
-+After: 16
-diff --git a/common.defrag b/common.defrag
-new file mode 100644
-index 0000000..a0716de
---- /dev/null
-+++ b/common.defrag
-@@ -0,0 +1,68 @@
-+##/bin/sh
-+#
-+# Copyright (c) 2009 Eric Sandeen
-+# All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#
-+# Functions useful for defragmentation tests
-+#
-+
-+_require_defrag()
-+{
-+    case "$FSTYP" in
-+    xfs)
-+        DEFRAG_PROG=/usr/sbin/xfs_fsr
-+	;;
-+    ext4)
-+        DEFRAG_PROG=/usr/bin/e4defrag
-+	;;
-+    *)
-+        _notrun "defragmentation not supported for fstype \"$FSTYP\""
-+	;;
-+    esac
-+
-+    _require_command $DEFRAG_PROG
-+    _require_command /usr/sbin/filefrag
-+}
-+
-+_extent_count()
-+{
-+	filefrag $1 | awk '{print $2}'
-+	filefrag -v $1  >> $seq.full 2>&1
-+}
-+
-+# Defrag file, check it, and remove it.
-+_defrag()
-+{
-+	echo -n "Before: "
-+	_extent_count $1
-+	CSUM_BEFORE=`md5sum $1`
-+	STAT_BEFORE=`stat -c "a: %x m: %y c: %z" $1`
-+	$DEFRAG_PROG -v $1 >> $seq.full 2>&1
-+	_scratch_remount
-+	STAT_AFTER=`stat -c "a: %x m: %y c: %z" $1`
-+	CSUM_AFTER=`md5sum $1`
-+	echo -n "After: "
-+	_extent_count $1
-+	if [ "$CSUM_BEFORE" != "$CSUM_AFTER" ]; then
-+		_fail "file checksum changed post-defrag ($CSUM_BEFORE/$CSUM_AFTER)"
-+	fi
-+	if [ "$STAT_BEFORE" != "$STAT_AFTER" ]; then
-+		_fail "file timestamps changed post-defrag:\n$STAT_BEFORE\n$STAT_AFTER"
-+	fi
-+	rm -f $1
-+}
-+
-diff --git a/common.rc b/common.rc
-index 0d655ca..82b0d51 100644
---- a/common.rc
-+++ b/common.rc
-@@ -198,6 +198,17 @@ _scratch_mount()
-     _mount -t $FSTYP `_scratch_mount_options $*`
- }
- 
-+_scratch_unmount()
-+{
-+    $UMOUNT_PROG $SCRATCH_DEV
-+}
-+
-+_scratch_remount()
-+{
-+    _scratch_unmount
-+    _scratch_mount
-+}
-+
- _test_mount()
- {
-     _test_options mount
-diff --git a/group b/group
-index 7a67ce7..b11f6a1 100644
---- a/group
-+++ b/group
-@@ -327,3 +327,4 @@ prealloc
- 215 auto metadata quick
- 216 log metadata auto quick
- 217 log metadata auto
-+218 auto fsr quick
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+MjAwOS84LzQgRXJpYyBTYW5kZWVuIDxzYW5kZWVuQHNhbmRlZW4ubmV0PjoKPiBoYW5rIHBlbmcg
+d3JvdGU6Cj4+IDIwMDkvNy8yNyBFcmljIFNhbmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQ+Ogo+
+Pj4gaGFuayBwZW5nIHdyb3RlOgo+Pj4+IDIwMDkvNy8yNyBFcmljIFNhbmRlZW4gPHNhbmRlZW5A
+c2FuZGVlbi5uZXQ+Ogo+Pj4+PiBoYW5rIHBlbmcgd3JvdGU6Cj4+Pj4+PiBIaSwgZm9sa3M6Cj4+
+Pj4+PiBJIGhhdmUgYSAyLjVUIGZpbGUgc3lzdGVtIGZvcm1hdHRlZCB3aXRoIFhGUywgZGYgdGVs
+bHMgbWUgaXQgc3RpbGwKPj4+Pj4+IGhhdmUgYWJvdXQgMTBHIHNwYWNlIGF2YWlsYWJsZSwgYnV0
+IEkgY2FuJ3QgY3JlYXRlIG5ldyBmaWxlcyBvcgo+Pj4+Pj4gZGlyZWN0b3J5IGFueSBtb3JlLiBS
+ZXR1cm4gbWVzc2FnZSBpcyAiTm8gc3BhY2UgbGVmdCBvbiB0aGlzIGRldmljZSIuCj4+Pj4+PiBJ
+IHNlYXJjaGVkIHNvbHV0aW9uIGZvciB0aGlzIHByb2JsZW0gdGhyb3VnaCBnb29nbGUsIGFuZCBm
+b3VuZCB0aGlzOgo+Pj4+Pj4gaHR0cDovL29zcy5zZ2kuY29tL2FyY2hpdmVzL3hmcy8yMDA1LTA2
+L21zZzAwMzQ3Lmh0bWwuIEkgdGhpbmsgaXQgaXMgYQo+Pj4+Pj4ga25vd24gIk5vIHNwYWNlIGxl
+ZnQiIHByb2JsZW0uIEkgd29uZGVyIHdoZXRoZXIgaXQgY2FuIG9ubHkKPj4+Pj4+IGJlIHNvbHZl
+ZCBvbiA2NC1iaXQgbWFjaGluZT8gSWYgb24gbXkgMzItYml0IG1hY2hpbmUsIHdoYXQgc2hvdWxk
+IEkgZG8/Cj4+Pj4+IE9uIHZlcnkgcmVjZW50IGtlcm5lbHMgeW91IGNhbiB1c2UgNjQtYml0IGlu
+b2RlcyBvbiAzMi1iaXQgbWFjaGluZXM7IHlvdQo+Pj4+PiBjYW4gdHJ5IG1vdW50aW5nIHdpdGgg
+LW8gaW5vZGU2NCB0IGFsbG93IHRoaXMuCj4+Pj4+Cj4+Pj4gSSB0cmllZCAtbyBpbm9kZTY0IG9w
+dGlvbiwgYnV0IGtlcm5lbCBnaXZlcyBtZSBlcnJvciBtZXNzYWdlOgo+Pj4+IFhGUzogaW5vZGU2
+NCBvcHRpb24gbm90IGFsbG93ZWQgb24gdGhpcyBzeXN0ZW0KPj4+PiBJIGRvdWJ0IHRoaXMgb3B0
+aW9uIGNhbid0IGJlIHVzZWQgb24gMzItYml0IG1hY2hpbmUuCj4+PiBUaGF0J3Mgd2h5IEkgc2Fp
+ZCB5b3UgbmVlZCBhIHZlcnkgcmVjZW50IGtlcm5lbCwgaXQgd2FzIGFkZGVkIHJlbGF0aXZlbHkK
+Pj4+IHJlY2VudGx5Ogo+Pj4KPj4+IGNvbW1pdCA2YzMxYjkzYTE0YTQ1M2M4NzU2ZmZkMjI4ZTI0
+OTEwZmZkZjMwYzVkCj4+PiBBdXRob3I6IENocmlzdG9waCBIZWxsd2lnIDxoY2hAaW5mcmFkZWFk
+Lm9yZz4KPj4+IERhdGU6IMKgIEZyaSBOb3YgMjggMTQ6MjM6MzIgMjAwOCArMTEwMAo+Pj4KPj4+
+IMKgIMKgW1hGU10gYWxsb3cgaW5vZGU2NCBtb3VudCBvcHRpb24gb24gMzIgYml0IHN5c3RlbXMK
+Pj4+Cj4+PiBJIGJlbGlldmUgdGhpcyB3ZW50IGludG8gMi42LjI5Lgo+Pj4KPj4gSSB0cmllZCAy
+LjYuMzAgYW5kIHRlc3QgaXQKPj4gMS4gY3JlYXRlIGFuIGV4YWN0IDJUIExWTQo+PiAyLiBjcmVh
+dGUgWEZTIG9uIGl0Cj4+IDMuIG1vbnQgaXQgd2l0aCBpbm9kZTY0IG9wdGlvbgo+PiA0LiB3cml0
+ZSBmaWxlcyBvbiBpdCB0byBmdWxsIGV4dGVudAo+PiA1LiB1c2UgeGZzX2dyb3cgdG8gZXhwYW5k
+IGl0IHRvIDIuNVQKPj4gNi4gdG91Y2ggYSBmaWxlIGFuZCBubyBlcnJvciBtZXNzYWdlIHJldHVy
+bmVkCj4+IDcuICdscyAtbCcgY2FuIG5vdCBzaG93IHRoZSBmaWxlIEkgY3JlYXRlZCBhYm92ZS4K
+Pj4KPj4gU28gSSB0aGluayBJIHNob3VsZCBkbyBzb21ldGhpbmcgb24gdXNlcnNwYWNlIHRvb2xz
+LCBidXQgaG93Pwo+Cj4gRG9lc24ndCBzb3VuZCBsaWtlIGEgdXNlcnNwYWNlIHByb2JsZW0uIMKg
+U28gdG91Y2ggc3VjY2VlZHMgKG1heWJlIGVjaG8KPiAkPyBhZnRlciB0byBiZSBzdXJlKSBidXQg
+bHMgc2hvd3Mgbm8gZmlsZT8gwqBBbnl0aGluZyBpbiBkbWVzZyBhZnRlciB0aGF0Pwo+Cj4gSSdk
+IGhhdmUgdG8gZmluZCBhIDMyLWJpdCBib3ggdy8gPiAyVCB0byB0ZXN0IHRoaXMgSSBndWVzcy4g
+wqA6KQo+Ckl0IGlzIGJlY2F1c2UgSSB1c2UgImxzIiBjb21tYW5kIGluIG9sZCB2ZXJzaW9uIG9m
+IGJ1c3lib3gsIGFmdGVyIEkKdXBkYXRlIGJ1c3lib3ggdG8gdGhlIGxhdGVzdCwgaXQgaXMgT0sg
+bm93LgoKSSBkb24ndCBjaGVjayB0aGUgc291cmNlIGNvZGUgb2Ygb2xkIHZlcnNpb24sIGJ1dCBp
+IGFtIHN1cmUgaXQgaXMgdGhlIHJlYXNvbi4KCgoKPiAtRXJpYwo+CgoKCi0tIApUaGUgc2ltcGxl
+c3QgaXMgbm90IGFsbCBiZXN0IGJ1dCB0aGUgYmVzdCBpcyBzdXJlbHkgdGhlIHNpbXBsZXN0IQoK
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxp
+bmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGlu
+Zm8veGZzCg==
