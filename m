@@ -1,33 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n760bii9017220
-	for <linux-xfs@oss.sgi.com>; Wed, 5 Aug 2009 19:37:46 -0500
-Received: from ciao.gmane.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C22BE145F890
-	for <linux-xfs@oss.sgi.com>; Wed,  5 Aug 2009 17:38:35 -0700 (PDT)
-Received: from ciao.gmane.org (main.gmane.org [80.91.229.2]) by cuda.sgi.com
-	with ESMTP id FStar5Y3mcKnMZ9o for <linux-xfs@oss.sgi.com>;
-	Wed, 05 Aug 2009 17:38:35 -0700 (PDT)
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1MYr02-0002lx-VP
-	for linux-xfs@oss.sgi.com; Thu, 06 Aug 2009 00:38:30 +0000
-Received: from adsl-71-147-53-109.dsl.emhril.sbcglobal.net ([71.147.53.109])
-	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Thu, 06 Aug 2009 00:38:30 +0000
-Received: from kononov by adsl-71-147-53-109.dsl.emhril.sbcglobal.net with
-	local (Gmexim 0.1 (Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Thu, 06 Aug 2009 00:38:30 +0000
-From: Roman Kononov <kononov@ftml.net>
-Subject: Re: failed assertion related to realtime section
-Date: Wed, 05 Aug 2009 19:38:18 -0500
-Message-ID: <4A7A25FA.4050201@ftml.net>
-References: <h3gd94$clb$1@ger.gmane.org>	<bzyzlb6p239.fsf@fransum.emea.sgi.com>
-	<4A5E7109.7000808@ftml.net>	<bzyfxcxgd3z.fsf@fransum.emea.sgi.com>
-	<4A78A260.1040501@ftml.net> <bzyiqh21oab.fsf@fransum.emea.sgi.com>
-Mime-Version: 1.0
-In-Reply-To: <bzyiqh21oab.fsf@fransum.emea.sgi.com>
+	n764UmP9026809 for <xfs@oss.sgi.com>; Wed, 5 Aug 2009 23:30:49 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B9F6212B05F4
+	for <xfs@oss.sgi.com>; Wed,  5 Aug 2009 21:41:09 -0700 (PDT)
+Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
+	cuda.sgi.com with ESMTP id 1oE8GG6JBqc1QMdB for
+	<xfs@oss.sgi.com>; Wed, 05 Aug 2009 21:41:09 -0700 (PDT)
+Message-ID: <4A7A5CA8.8040702@sandeen.net>
+Date: Wed, 05 Aug 2009 23:31:36 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: [PATCH V2] xfstests 218: very basic defragmentation testing for xfs
+	& ext4
+References: <4A5E3A37.5050306@redhat.com>
+In-Reply-To: <4A5E3A37.5050306@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,49 +24,265 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: ext4 development <linux-ext4@vger.kernel.org>, xfs mailing list <xfs@oss.sgi.com>
 
-Olaf Weber wrote:
-> A quick test on an available system
-> running a (much) older kernel runs to completion, so this appears to
-> be a regression.
+Test a few very basic defragmentation scenarios.
 
-Did you have the XFS_DEBUG option on? Without it, the filesystem with 
-realtime does not die right away, but hangs or crashes later.
+This test creates some files, runs defrag on them,
+and compares the before/after fragmentation as well
+as file md5sums and timestamps.
 
-> 
->> With which kernel version did you run the test?
-> 
-> Heavily-patched 2.6.16, which is what I had readily available at that
-> point.  But most or all of those patches + additional changes should
-> be in current XFS.
-> 
+The test currently expects to find e4defrag in
+/usr/bin
 
-Vanilla 2.6.16.19 without the lazy-counters option:
+It should be relatively easy to add more interestingly
+fragmented files to the tests, as well as to test
+that memory-mapped files aren't touched, etc - 
+but this gives us a framework.
 
-Assertion failed: ((tp)->t_blk_res) > 0, file: 
-/home/rk/linux-2.6.16.19/fs/xfs/xfs_bmap.c, line: 5452
+V2: remount before checking file contents, and create
+common.defrag.
 
-Call Trace:
-<ffffffff801e4b3f>{xfs_bunmapi+1335}
-<ffffffff8020c5c0>{xfs_itruncate_finish+769}
-<ffffffff8022be3c>{xfs_inactive_free_eofblocks+420}
-<ffffffff8022bf40>{xfs_release+190}
-<ffffffff80232e27>{linvfs_release+26}
-<ffffffff80169c60>{__fput+189}
-<ffffffff8016733a>{filp_close+93}
-<ffffffff801673db>{sys_close+150}
-<ffffffff8010aa2a>{system_call+126}
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
 
-It looks like it never worked.
-
-Any hope? :-(
-
-Roman
+diff --git a/218 b/218
+new file mode 100755
+index 0000000..8c8afe7
+--- /dev/null
++++ b/218
+@@ -0,0 +1,96 @@
++#! /bin/sh
++# FS QA Test No. 218
++#
++# Basic defragmentation sanity tests
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2009 Eric Sandeen.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++# creator
++owner=sandeen@sandeen.net
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -f $tmp.*
++    _cleanup_testdir
++}
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++. ./common.defrag
++
++# real QA test starts here
++_supported_fs xfs ext4
++_supported_os Linux
++
++_setup_testdir
++# We require scratch so that we'll have free contiguous space
++_require_scratch
++_scratch_mkfs >/dev/null 2>&1
++_scratch_mount
++
++_require_defrag
++
++fragfile=$SCRATCH_MNT/fragfile.$$
++
++rm -f $fragfile
++
++# Craft some fragmented files, defrag them, check the result.
++
++echo "zero-length file:" | tee -a $seq.full
++touch $fragfile
++_defrag $fragfile
++
++echo "Sparse file (no blocks):" | tee -a $seq.full
++xfs_io -F -f -c "truncate 1m" $fragfile
++_defrag $fragfile
++
++echo "Contiguous file:" | tee -a $seq.full
++dd if=/dev/zero of=$fragfile bs=4k count=4 &>/dev/null
++_defrag $fragfile
++
++echo "Write backwards sync, but contiguous - should defrag to 1 extent" | tee -a $seq.full
++for I in `seq 9 -1 0`; do
++	dd if=/dev/zero of=$fragfile bs=4k count=1 conv=notrunc seek=$I oflag=sync &>/dev/null
++done
++_defrag $fragfile
++
++echo "Write backwards sync leaving holes - defrag should do nothing" | tee -a $seq.full
++for I in `seq 31 -2 0`; do
++	dd if=/dev/zero of=$fragfile bs=4k count=1 conv=notrunc seek=$I oflag=sync &>/dev/null
++done
++_defrag $fragfile
++
++echo "Write forwards sync leaving holes - defrag should do nothing" | tee -a $seq.full
++for I in `seq 0 2 31`; do
++	dd if=/dev/zero of=$fragfile bs=4k count=1 conv=notrunc seek=$I oflag=sync &>/dev/null
++done
++_defrag $fragfile
++
++rm -f $seq.full
++status=0
++exit
+diff --git a/218.out b/218.out
+new file mode 100644
+index 0000000..7559cdd
+--- /dev/null
++++ b/218.out
+@@ -0,0 +1,19 @@
++QA output created by 218
++zero-length file:
++Before: 0
++After: 0
++Sparse file (no blocks):
++Before: 0
++After: 0
++Contiguous file:
++Before: 1
++After: 1
++Write backwards sync, but contiguous - should defrag to 1 extent
++Before: 10
++After: 1
++Write backwards sync leaving holes - defrag should do nothing
++Before: 16
++After: 16
++Write forwards sync leaving holes - defrag should do nothing
++Before: 16
++After: 16
+diff --git a/common.defrag b/common.defrag
+new file mode 100644
+index 0000000..a0716de
+--- /dev/null
++++ b/common.defrag
+@@ -0,0 +1,68 @@
++##/bin/sh
++#
++# Copyright (c) 2009 Eric Sandeen
++# All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#
++# Functions useful for defragmentation tests
++#
++
++_require_defrag()
++{
++    case "$FSTYP" in
++    xfs)
++        DEFRAG_PROG=/usr/sbin/xfs_fsr
++	;;
++    ext4)
++        DEFRAG_PROG=/usr/bin/e4defrag
++	;;
++    *)
++        _notrun "defragmentation not supported for fstype \"$FSTYP\""
++	;;
++    esac
++
++    _require_command $DEFRAG_PROG
++    _require_command /usr/sbin/filefrag
++}
++
++_extent_count()
++{
++	filefrag $1 | awk '{print $2}'
++	filefrag -v $1  >> $seq.full 2>&1
++}
++
++# Defrag file, check it, and remove it.
++_defrag()
++{
++	echo -n "Before: "
++	_extent_count $1
++	CSUM_BEFORE=`md5sum $1`
++	STAT_BEFORE=`stat -c "a: %x m: %y c: %z" $1`
++	$DEFRAG_PROG -v $1 >> $seq.full 2>&1
++	_scratch_remount
++	STAT_AFTER=`stat -c "a: %x m: %y c: %z" $1`
++	CSUM_AFTER=`md5sum $1`
++	echo -n "After: "
++	_extent_count $1
++	if [ "$CSUM_BEFORE" != "$CSUM_AFTER" ]; then
++		_fail "file checksum changed post-defrag ($CSUM_BEFORE/$CSUM_AFTER)"
++	fi
++	if [ "$STAT_BEFORE" != "$STAT_AFTER" ]; then
++		_fail "file timestamps changed post-defrag:\n$STAT_BEFORE\n$STAT_AFTER"
++	fi
++	rm -f $1
++}
++
+diff --git a/common.rc b/common.rc
+index 0d655ca..82b0d51 100644
+--- a/common.rc
++++ b/common.rc
+@@ -198,6 +198,17 @@ _scratch_mount()
+     _mount -t $FSTYP `_scratch_mount_options $*`
+ }
+ 
++_scratch_unmount()
++{
++    $UMOUNT_PROG $SCRATCH_DEV
++}
++
++_scratch_remount()
++{
++    _scratch_unmount
++    _scratch_mount
++}
++
+ _test_mount()
+ {
+     _test_options mount
+diff --git a/group b/group
+index 7a67ce7..b11f6a1 100644
+--- a/group
++++ b/group
+@@ -327,3 +327,4 @@ prealloc
+ 215 auto metadata quick
+ 216 log metadata auto quick
+ 217 log metadata auto
++218 auto fsr quick
 
 _______________________________________________
 xfs mailing list
