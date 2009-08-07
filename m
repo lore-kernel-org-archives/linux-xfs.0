@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n77Ga30V142460 for <xfs@oss.sgi.com>; Fri, 7 Aug 2009 11:36:05 -0500
-Received: from m6.scsend.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2735F3B2CE1
-	for <xfs@oss.sgi.com>; Fri,  7 Aug 2009 09:36:53 -0700 (PDT)
-Received: from m6.scsend.com (m6.scsend.com [67.225.198.82]) by cuda.sgi.com
-	with ESMTP id bBLnirx4Rw7LCe6f for <xfs@oss.sgi.com>;
-	Fri, 07 Aug 2009 09:36:53 -0700 (PDT)
-From: "Brian McCormick" <brian@nspired.net>
-Message-ID: <dee1fa431a2e4ca59960731baee64669@nspired.net>
-Date: Fri, 07 Aug 2009 13:36:53 -0300
-Subject: Moving Data Made Simple & Secure
-MIME-Version: 1.0
-Reply-To: brian@nspired.net
+	n77HPsIS144383 for <xfs@oss.sgi.com>; Fri, 7 Aug 2009 12:25:54 -0500
+Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 45562AC01C
+	for <xfs@oss.sgi.com>; Fri,  7 Aug 2009 10:26:43 -0700 (PDT)
+Message-Id: <24CFF78E-BB3F-47A1-8D6C-49EA198CCD94@sgi.com>
+From: Felix Blyakher <felixb@sgi.com>
+In-Reply-To: <20090804141834.526088000@bombadil.infradead.org>
+Mime-Version: 1.0 (Apple Message framework v926)
+Subject: Re: [PATCH 1/4] xfs: fix locking in xfs_iget_cache_hit
+Date: Fri, 7 Aug 2009 12:25:47 -0500
+References: <20090804141554.992235000@bombadil.infradead.org>
+	<20090804141834.526088000@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,190 +21,322 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3863909281642100221=="
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "Chinner, David" <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
---===============3863909281642100221==
-Content-Type: multipart/alternative;
-	boundary="----BCE6336805BC40D88B77B51A32B44F63"
+On Aug 4, 2009, at 9:15 AM, Christoph Hellwig wrote:
 
-------BCE6336805BC40D88B77B51A32B44F63
-Content-type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-
-
-
-Nspired Technologies | 130 Carriage Hill dr  | Casselberry | FL | 32707=
- | US
-
-
-This email was sent to xfs@oss=2Esgi=2Ecom, by brian@nspired=2Enet=2E
-To unsubscribe from this list - please use this link:=20
-http://app=2Escsend=2Ecom/unsubscribe=2Easp?outgoing_idno=3D5653804&e=3D=
-3001025&gId=3D5523506=2E
- If this message was received in error, please report it to:
- mailto:reportit@scsend=2Ecom?subject=3D5523506z3001025z5653804
-This email was powered by http://www=2Escsend=2Ecom
-
-------BCE6336805BC40D88B77B51A32B44F63
-Content-type: text/html; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4=2E01 Transitional//EN">
-<html>
-<head>
-<title>HTML Email</title>
-</head>
-<body><center><font size=3D"-2">Having trouble viewing this e-mail? <a =
-href=3D"http://app=2Esimplycast=2Ecom/email_view=2Easp?group_idno=3D552=
-3506&outgoing_idno=3D5653804&email_idno=3D3001025">please use this link=
-</a>=2E</font></center><br>
-</div> <table cellspacing=3D"0" cellpadding=3D"0" border=3D"0" width=3D=
-"100%"><tr><td class=3D'txt'><meta http-equiv=3D"Content-Type" content=3D=
-"text/html; charset=3Dutf-8" />
-<title>Untitled Document</title>
-<div align=3D"center">
-<table width=3D"683" align=3D"center" border=3D"0" cellspacing=3D"2">
-    <tbody>
-        <tr>
-            <td width=3D"683" align=3D"center"><strong><font color=3D"#=
-006600" size=3D"+1">Webinar: Is Your Company Transferring Sensitive Dat=
-a Securely?</font></strong></td>
-        </tr>
-    </tbody>
-</table>
-<table width=3D"698" border=3D"0" cellpadding=3D"2" cellspacing=3D"0">
-    <tbody>
-        <tr>
-            <td rowspan=3D"2" width=3D"478" align=3D"left" height=3D"94=
-" valign=3D"top">
-            <p align=3D"left">Organizations  are increasingly exchangin=
-g data with their customers, banks, vendors and other  trading partners=
-=2E This exchange is often being done using FTP, Email and other  unsec=
-ure methods=2E This often places sensitive data at risk, especially whe=
-n  this data is sent over the internet=2E These transfers can also beco=
-me time  consuming and unmanageable=2E</p>
-            <p align=3D"left"><strong><font color=3D"#006600">GoAnywher=
-e </font></strong>is an innovative solution for automating data retriev=
-al, translation, encryption, compression and distribution=2E With GoAny=
-where's intuitive interface and comprehensive functionality, you can ea=
-sily streamline and secure the exchange of data with your customers, tr=
-ading partners and enterprise servers=2E</p>
-            </td>
-            <td width=3D"204" height=3D"40">
-            <p align=3D"center"><strong><a href=3D"https://www1=2Egotom=
-eeting=2Ecom/register/973199881">REGISTER NOW</a></strong><a href=3D"ht=
-tps://www1=2Egotomeeting=2Ecom/register/973199881"><br />
-            <strong>Date: Wednesday Aug  12th</strong><br />
-            <strong>Time: 2:00 EDT</strong></a><strong></strong></p>
-            </td>
-        </tr>
-        <tr>
-            <td width=3D"204" height=3D"54"><a href=3D"http://nspiredte=
-chnologies=2Enet/GoAnywhere/GA%20Overview=2Ehtml"><img src=3D"http://ns=
-piredtechnologies=2Enet/Nspired=2Enet%20web%20site%20images/GA%20logo%2=
-0200=2Ejpg" alt=3D"GoAnywhere logo" longdesc=3D"file:///C|/Users/Brian/=
-Desktop/Shared Documents/Nspired=2Enet/Nspired=2Enet web site images/GA=
- logo 200=2Ejpg" width=3D"200" border=3D"0" height=3D"59" /></a></td>
-        </tr>
-        <tr>
-            <td colspan=3D"2" bgcolor=3D"#ffcc66" height=3D"234"><block=
-quote>
-            <p align=3D"left">- <strong><font color=3D"#006600" size=3D=
-"-1">Sends</font></strong><font size=3D"-1"> and retrieves files via E-=
-mail and secure E-mail</font><br />
-            - <strong><font color=3D"#006600" size=3D"-1">Simplifies</f=
-ont></strong><font size=3D"-1"> and automates FTP processes</font><br /=
+> The locking in xfs_iget_cache_hit currently has numerous problems:
 >
-            - <strong><font color=3D"#006600" size=3D"-1">Exchanges</fo=
-nt></strong><font size=3D"-1"> data with HTTP and HTTPS servers</font><=
-br />
-            - <strong><font color=3D"#006600" size=3D"-1">Compresses</f=
-ont></strong><font size=3D"-1"> and decompresses files using ZIP, GZIP =
-and TAR standards</font><br />
-            - <strong><font color=3D"#006600" size=3D"-1">Connects</fon=
-t></strong><font size=3D"-1"> to secure FTP servers (SFTP and FTPS) for=
- protected communication</font><br />
-            - <strong><font color=3D"#006600" size=3D"-1">Encrypts</fon=
-t></strong><font size=3D"-1"> and decrypts files using Open PGP encrypt=
-ion standard</font><br />
-            - <strong><font color=3D"#006600" size=3D"-1">Includes</fon=
-t></strong><font size=3D"-1"> integrated Key Management tools for Open =
-PGP keys, SSH keys and SSL certificates</font><br />
-            - <strong><font color=3D"#006600" size=3D"-1">Allows</font>=
-</strong><font size=3D"-1"> for centralized control and monitoring of t=
-ransfers through a browser interface</font><br />
-            - <strong><font color=3D"#006600" size=3D"-1">Contains</fon=
-t></strong><font size=3D"-1"> a comprehensive built-in scheduler</font>=
-<br />
-            - <strong><font color=3D"#006600" size=3D"-1">Produces</fon=
-t></strong><font size=3D"-1"> complete logging reports</font><br />
-            - <strong><font color=3D"#006600" size=3D"-1">Installs</fon=
-t></strong><font size=3D"-1"> to System i, Windows, Linux, UNIX, AIX, H=
-P-UX and Solaris platforms</font><br />
-            <font size=3D"-1">And much much more</font>
-            </p>
-            </blockquote></td>
-        </tr>
-    </tbody>
-</table>
-<table width=3D"683" border=3D"0">
-    <tbody>
-        <tr>
-            <td width=3D"334" align=3D"center" valign=3D"middle"><a hre=
-f=3D"http://nspiredtechnologies=2Enet/GoAnywhere/GA%20Overview=2Ehtml">=
-<img src=3D"http://nspiredtechnologies=2Enet/Nspired=2Enet%20web%20site=
-%20images/Linoma%20235=2Ejpg" alt=3D"Linoma Software" longdesc=3D"=2E=2E=
-/Nspired=2Enet/Nspired=2Enet web site images/Linoma 235=2Ejpg" width=3D=
-"235" border=3D"0" height=3D"76" /></a></td>
-            <td width=3D"335" align=3D"center" valign=3D"middle"><a hre=
-f=3D"http://nspiredtechnologies=2Enet/"><img src=3D"http://nspiredtechn=
-ologies=2Enet/Nspired=2Enet%20web%20site%20images/nspiredtechnologiesbl=
-uelogo%20trans%20small=2Ejpg" alt=3D"Nspired Technologies" longdesc=3D"=
-=2E=2E/Nspired=2Enet/Nspired=2Enet web site images/nspiredtechnologiesb=
-luelogo trans small=2Ejpg" width=3D"200" border=3D"0" height=3D"84" /><=
-/a></td>
-        </tr>
-    </tbody>
-</table>
-</div></td></tr></table>=20
-<center><br><table width=3D"100%" cellspacing=3D"0" cellpadding=3D"0" b=
-order=3D"0"><tr><td bgcolor=3D"#FFFFFF" align=3D"middle"><img src=3D"ht=
-tp://app=2Escsend=2Ecom/script/outgoing_open=2Easp?outgoing_idno=3D5653=
-804&e=3D3001025&gId=3D5523506" border=3D0 width=3D1 height=3D1>
+> - we clear the reclaim tag without i_flags_lock which protects  
+> modifications
+>   to it
+> - we call inode_init_always which can sleep with pag_ici_lock held
+> - we acquire and drop i_flags_lock a lot and thus provide no  
+> consistency
+>   between the various flags we set/clear under it
+>
+> This patch fixes all that with a major revamp of the locking in the  
+> function.
+> The new version acquires i_flags_lock early and only drops it once  
+> we need to
+> call into inode_init_always or before calling xfs_ilock.
+>
+> This patch fixes a bug seen in the wild where we race modifying the  
+> reclaim tag.
 
-<span style=3D"font-family:Verdana; font-size:11px; color:Black;">
+Some comments below as well as couple of questions based on the
+difference with previous code, not necessarily pointing to a
+problem. Just trying to figure it out for myself.
 
-This email was sent to xfs@oss=2Esgi=2Ecom, by brian@nspired=2Enet=2E
+>
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+>
+> Index: linux-2.6/fs/xfs/xfs_iget.c
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/xfs_iget.c	2009-08-01 23:20:54.775080254  
+> +0200
+> +++ linux-2.6/fs/xfs/xfs_iget.c	2009-08-01 23:20:54.807080483 +0200
+> @@ -133,80 +133,90 @@ xfs_iget_cache_hit(
+> 	int			flags,
+> 	int			lock_flags) __releases(pag->pag_ici_lock)
+> {
+> +	struct inode		*inode = VFS_I(ip);
+> 	struct xfs_mount	*mp = ip->i_mount;
+> -	int			error = EAGAIN;
+> +	int			error;
+> +
+> +	spin_lock(&ip->i_flags_lock);
+>
+> 	/*
+> -	 * If INEW is set this inode is being set up
+> -	 * If IRECLAIM is set this inode is being torn down
+> -	 * Pause and try again.
+> +	 * This inode is being torn down, pause and try again.
+> 	 */
+> -	if (xfs_iflags_test(ip, (XFS_INEW|XFS_IRECLAIM))) {
+> +	if (ip->i_flags & XFS_IRECLAIM) {
+> 		XFS_STATS_INC(xs_ig_frecycle);
+> +		error = EAGAIN;
+> 		goto out_error;
+> 	}
+>
+> -	/* If IRECLAIMABLE is set, we've torn down the vfs inode part */
+> -	if (xfs_iflags_test(ip, XFS_IRECLAIMABLE)) {
+> +	/*
+> +	 * If we are racing with another cache hit that is currently  
+> recycling
+> +	 * this inode out of the XFS_IRECLAIMABLE state, wait for the
+> +	 * initialisation to complete before continuing.
+> +	 */
+> +	if (ip->i_flags & XFS_INEW) {
 
- <br>You may <a href=3D"http://app=2Escsend=2Ecom/unsubscribe=2Easp?out=
-going_idno=3D5653804&e=3D3001025&gId=3D5523506" target=3D"_blank">unsub=
-scribe</a> from this list=2E If this message was received in error, ple=
-ase <a href=3D"mailto:reportit@scsend=2Ecom?subject=3D5523506z3001025z5=
-653804">report it</a>=2E
+Another case when we find XFS_INEW set is the race with the
+cache miss, which just set up a new inode. Would the proposed
+code be still sensible in that case? If yes, at least comments
+should be updated.
 
-</span><br><br><span style=3D"font-family:Verdana; font-size:11px; colo=
-r:Black;">&nbsp;&nbsp;Nspired Technologies | 130 Carriage Hill dr  | Ca=
-sselberry | FL | 32707 | US</span><br><br><a href=3D"http://www=2Escsen=
-d=2Ecom" target=3D"_blank"><img src=3D"http://app=2Escsend=2Ecom/images=
-/poweredby=2Egif" width=3D110 height=3D39 border=3D0 alt=3D"Powered by =
-SCSend"></a></td></tr></table></center></body>
-</html>
+>
+> +		spin_unlock(&ip->i_flags_lock);
+> +		read_unlock(&pag->pag_ici_lock);
+>
+> -		/*
+> -		 * If lookup is racing with unlink, then we should return an
+> -		 * error immediately so we don't remove it from the reclaim
+> -		 * list and potentially leak the inode.
+> -		 */
+> -		if ((ip->i_d.di_mode == 0) && !(flags & XFS_IGET_CREATE)) {
+> -			error = ENOENT;
+> -			goto out_error;
+> -		}
+> +		XFS_STATS_INC(xs_ig_frecycle);
+> +		wait_on_inode(inode);
 
-------BCE6336805BC40D88B77B51A32B44F63--
+It's possible to have XFS_INEW set, but no I_LOCK|I_NEW yet.
+Then the wait_on_inode() would return quickly even before the
+linux inode is reinitialized. Though, that was the case with
+the old code as well.
 
+>
+> +		return EAGAIN;
 
---===============3863909281642100221==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+This return seems inconsistent with usual goto end of function
+convention. I understand that in this case goto out_error would
+be incorrect. Should we create new label out_error_unlocked?
+
+>
+> +	}
+>
+> +	/*
+> +	 * If lookup is racing with unlink, then we should return an
+> +	 * error immediately so we don't remove it from the reclaim
+> +	 * list and potentially leak the inode.
+> +	 */
+> +	if (ip->i_d.di_mode == 0 && !(flags & XFS_IGET_CREATE)) {
+
+Previously the conclusion of the race with unlink was based on
+XFS_IRECLAIMABLE i_flag set in addition to the test above.
+Is is no longer a case, or not really necessary?
+
+>
+> +		error = ENOENT;
+> +		goto out_error;
+> +	}
+> +
+> +	/*
+> +	 * If IRECLAIMABLE is set, we've torn down the VFS inode already.
+> +	 * Need to carefully get it back into useable state.
+> +	 */
+> +	if (ip->i_flags & XFS_IRECLAIMABLE) {
+> 		xfs_itrace_exit_tag(ip, "xfs_iget.alloc");
+>
+> 		/*
+> -		 * We need to re-initialise the VFS inode as it has been
+> -		 * 'freed' by the VFS. Do this here so we can deal with
+> -		 * errors cleanly, then tag it so it can be set up correctly
+> -		 * later.
+> +		 * We need to set XFS_INEW atomically with clearing the
+> +		 * reclaimable tag so that we do have an indicator of the
+> +		 * inode still being initialized.
+> 		 */
+> -		if (!inode_init_always(mp->m_super, VFS_I(ip))) {
+> +		ip->i_flags |= XFS_INEW;
+> +		__xfs_inode_clear_reclaim_tag(pag, ip);
+> +
+> +		spin_unlock(&ip->i_flags_lock);
+> +		read_unlock(&pag->pag_ici_lock);
+> +
+> +		if (unlikely(!inode_init_always(mp->m_super, inode))) {
+> +			/*
+> +			 * Re-initializing the inode failed, and we are in deep
+> +			 * trouble.  Try to re-add it to the reclaim list.
+> +			 */
+> +			read_lock(&pag->pag_ici_lock);
+> +			spin_lock(&ip->i_flags_lock);
+> +
+> +			ip->i_flags &= ~XFS_INEW;
+> +			__xfs_inode_set_reclaim_tag(pag, ip);
+> +
+> 			error = ENOMEM;
+> 			goto out_error;
+> 		}
+> -
+> -		/*
+> -		 * We must set the XFS_INEW flag before clearing the
+> -		 * XFS_IRECLAIMABLE flag so that if a racing lookup does
+> -		 * not find the XFS_IRECLAIMABLE above but has the igrab()
+> -		 * below succeed we can safely check XFS_INEW to detect
+> -		 * that this inode is still being initialised.
+> -		 */
+> -		xfs_iflags_set(ip, XFS_INEW);
+> -		xfs_iflags_clear(ip, XFS_IRECLAIMABLE);
+> -
+> -		/* clear the radix tree reclaim flag as well. */
+> -		__xfs_inode_clear_reclaim_tag(mp, pag, ip);
+> -	} else if (!igrab(VFS_I(ip))) {
+> +		inode->i_state = I_LOCK|I_NEW;
+> +	} else {
+> 		/* If the VFS inode is being torn down, pause and try again. */
+> -		XFS_STATS_INC(xs_ig_frecycle);
+> -		goto out_error;
+> -	} else if (xfs_iflags_test(ip, XFS_INEW)) {
+> -		/*
+> -		 * We are racing with another cache hit that is
+> -		 * currently recycling this inode out of the XFS_IRECLAIMABLE
+> -		 * state. Wait for the initialisation to complete before
+> -		 * continuing.
+> -		 */
+> -		wait_on_inode(VFS_I(ip));
+> -	}
+> +		if (!igrab(inode)) {
+> +			error = EAGAIN;
+> +			goto out_error;
+> +		}
+>
+> -	if (ip->i_d.di_mode == 0 && !(flags & XFS_IGET_CREATE)) {
+> -		error = ENOENT;
+> -		iput(VFS_I(ip));
+> -		goto out_error;
+> +		/* We've got a live one. */
+> +		spin_unlock(&ip->i_flags_lock);
+> +		read_unlock(&pag->pag_ici_lock);
+> 	}
+>
+> -	/* We've got a live one. */
+> -	read_unlock(&pag->pag_ici_lock);
+> -
+> 	if (lock_flags != 0)
+> 		xfs_ilock(ip, lock_flags);
+>
+> @@ -216,6 +226,7 @@ xfs_iget_cache_hit(
+> 	return 0;
+>
+> out_error:
+> +	spin_unlock(&ip->i_flags_lock);
+> 	read_unlock(&pag->pag_ici_lock);
+> 	return error;
+> }
+> Index: linux-2.6/fs/xfs/linux-2.6/xfs_sync.c
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/linux-2.6/xfs_sync.c	2009-08-01  
+> 23:20:31.441330970 +0200
+> +++ linux-2.6/fs/xfs/linux-2.6/xfs_sync.c	2009-08-01  
+> 23:20:54.807080483 +0200
+> @@ -708,6 +708,17 @@ xfs_reclaim_inode(
+> 	return 0;
+> }
+>
+> +void
+> +__xfs_inode_set_reclaim_tag(
+> +	struct xfs_perag	*pag,
+> +	struct xfs_inode	*ip)
+> +{
+> +	radix_tree_tag_set(&pag->pag_ici_root,
+> +			   XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino),
+> +			   XFS_ICI_RECLAIM_TAG);
+> +	ip->i_flags |= XFS_IRECLAIMABLE;
+> +}
+> +
+> /*
+>  * We set the inode flag atomically with the radix tree tag.
+>  * Once we get tag lookups on the radix tree, this inode flag
+> @@ -722,9 +733,7 @@ xfs_inode_set_reclaim_tag(
+>
+> 	read_lock(&pag->pag_ici_lock);
+> 	spin_lock(&ip->i_flags_lock);
+> -	radix_tree_tag_set(&pag->pag_ici_root,
+> -			XFS_INO_TO_AGINO(mp, ip->i_ino), XFS_ICI_RECLAIM_TAG);
+> -	__xfs_iflags_set(ip, XFS_IRECLAIMABLE);
+> +	__xfs_inode_set_reclaim_tag(pag, ip);
+> 	spin_unlock(&ip->i_flags_lock);
+> 	read_unlock(&pag->pag_ici_lock);
+> 	xfs_put_perag(mp, pag);
+> @@ -732,27 +741,13 @@ xfs_inode_set_reclaim_tag(
+>
+> void
+> __xfs_inode_clear_reclaim_tag(
+> -	xfs_mount_t	*mp,
+> -	xfs_perag_t	*pag,
+> -	xfs_inode_t	*ip)
+> +	struct xfs_perag	*pag,
+> +	struct xfs_inode	*ip)
+> {
+> +	ip->i_flags &= ~XFS_IRECLAIMABLE;
+> 	radix_tree_tag_clear(&pag->pag_ici_root,
+> -			XFS_INO_TO_AGINO(mp, ip->i_ino), XFS_ICI_RECLAIM_TAG);
+> -}
+> -
+> -void
+> -xfs_inode_clear_reclaim_tag(
+> -	xfs_inode_t	*ip)
+> -{
+> -	xfs_mount_t	*mp = ip->i_mount;
+> -	xfs_perag_t	*pag = xfs_get_perag(mp, ip->i_ino);
+> -
+> -	read_lock(&pag->pag_ici_lock);
+> -	spin_lock(&ip->i_flags_lock);
+> -	__xfs_inode_clear_reclaim_tag(mp, pag, ip);
+> -	spin_unlock(&ip->i_flags_lock);
+> -	read_unlock(&pag->pag_ici_lock);
+> -	xfs_put_perag(mp, pag);
+> +			     XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino),
+> +			     XFS_ICI_RECLAIM_TAG);
+> }
+>
+> STATIC int
+> Index: linux-2.6/fs/xfs/linux-2.6/xfs_sync.h
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/linux-2.6/xfs_sync.h	2009-08-01  
+> 23:20:31.449329683 +0200
+> +++ linux-2.6/fs/xfs/linux-2.6/xfs_sync.h	2009-08-01  
+> 23:20:54.808079772 +0200
+> @@ -48,9 +48,8 @@ int xfs_reclaim_inode(struct xfs_inode *
+> int xfs_reclaim_inodes(struct xfs_mount *mp, int mode);
+>
+> void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
+> -void xfs_inode_clear_reclaim_tag(struct xfs_inode *ip);
+> -void __xfs_inode_clear_reclaim_tag(struct xfs_mount *mp, struct  
+> xfs_perag *pag,
+> -				struct xfs_inode *ip);
+> +void __xfs_inode_set_reclaim_tag(struct xfs_perag *pag, struct  
+> xfs_inode *ip);
+> +void __xfs_inode_clear_reclaim_tag(struct xfs_perag *pag, struct  
+> xfs_inode *ip);
+>
+> int xfs_sync_inode_valid(struct xfs_inode *ip, struct xfs_perag *pag);
+> int xfs_inode_ag_iterator(struct xfs_mount *mp,
+>
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3863909281642100221==--
