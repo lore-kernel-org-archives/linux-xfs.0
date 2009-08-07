@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n77IJZaA147045 for <xfs@oss.sgi.com>; Fri, 7 Aug 2009 13:19:40 -0500
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D58018F809C
-	for <xfs@oss.sgi.com>; Fri,  7 Aug 2009 11:20:21 -0700 (PDT)
-Message-Id: <096BC561-F806-4451-A63B-B296988B4FA5@sgi.com>
-From: Felix Blyakher <felixb@sgi.com>
-In-Reply-To: <20090804141836.606829000@bombadil.infradead.org>
-Mime-Version: 1.0 (Apple Message framework v926)
-Subject: Re: [PATCH 3/4] add __destroy_inode
-Date: Fri, 7 Aug 2009 13:20:21 -0500
-References: <20090804141554.992235000@bombadil.infradead.org>
-	<20090804141836.606829000@bombadil.infradead.org>
+	n77J9ffq149342 for <xfs@oss.sgi.com>; Fri, 7 Aug 2009 14:09:41 -0500
+Received: from mx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BD547146D732
+	for <xfs@oss.sgi.com>; Fri,  7 Aug 2009 12:10:32 -0700 (PDT)
+Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
+	with ESMTP id 7HECrMZIOBbAULHc for <xfs@oss.sgi.com>;
+	Fri, 07 Aug 2009 12:10:32 -0700 (PDT)
+Message-ID: <4A7C7C1C.2010202@redhat.com>
+Date: Fri, 07 Aug 2009 14:10:20 -0500
+From: Eric Sandeen <sandeen@redhat.com>
+MIME-Version: 1.0
+Subject: [PATCH] xfstests: 220 - generic quota sanity
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,99 +21,410 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>, ext4 development <linux-ext4@vger.kernel.org>
 
+Add some very basic quota sanity tests for generic filesystems.
 
-On Aug 4, 2009, at 9:15 AM, Christoph Hellwig wrote:
+This is based on test 108, but uses the generic quota tools,
+not xfs_quota, and therefore cannot test project quota.
 
-> When we want to tear down an inode that lost the add to the cache race
-> in XFS we must not call into ->destroy_inode because that would delete
-> the inode that won the race from the inode cache radix tree.
->
-> This patch provides the __destroy_inode helper needed to fix this,
-> the actual fix will be in th next patch.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Also, the IOs are much smaller (48k) so that ext3 won't get into
+indirect blocks and throw off the accounting.  This does
+assume 4k blocks though.
 
-Reviewed-by: Felix Blyakher <felixb@sgi.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
->
->
-> Index: linux-2.6/fs/inode.c
-> ===================================================================
-> --- linux-2.6.orig/fs/inode.c	2009-08-04 16:01:18.766801320 +0200
-> +++ linux-2.6/fs/inode.c	2009-08-04 16:01:37.281556243 +0200
-> @@ -228,7 +228,7 @@ static struct inode *alloc_inode(struct
-> 	return inode;
-> }
->
-> -void destroy_inode(struct inode *inode)
-> +void __destroy_inode(struct inode *inode)
-> {
-> 	BUG_ON(inode_has_buffers(inode));
-> 	ima_inode_free(inode);
-> @@ -240,13 +240,17 @@ void destroy_inode(struct inode *inode)
-> 	if (inode->i_default_acl && inode->i_default_acl != ACL_NOT_CACHED)
-> 		posix_acl_release(inode->i_default_acl);
-> #endif
-> +}
-> +EXPORT_SYMBOL(__destroy_inode);
-> +
-> +void destroy_inode(struct inode *inode)
-> +{
-> +	__destroy_inode(inode);
-> 	if (inode->i_sb->s_op->destroy_inode)
-> 		inode->i_sb->s_op->destroy_inode(inode);
-> 	else
-> 		kmem_cache_free(inode_cachep, (inode));
-> }
-> -EXPORT_SYMBOL(destroy_inode);
-> -
->
-> /*
->  * These are initializations that only need to be done
-> Index: linux-2.6/fs/xfs/xfs_inode.h
-> ===================================================================
-> --- linux-2.6.orig/fs/xfs/xfs_inode.h	2009-08-04 15:59:38.705782128  
-> +0200
-> +++ linux-2.6/fs/xfs/xfs_inode.h	2009-08-04 16:01:20.157556334 +0200
-> @@ -322,8 +322,11 @@ static inline struct inode *VFS_I(struct
->  */
-> static inline void xfs_destroy_inode(struct xfs_inode *ip)
-> {
-> -	make_bad_inode(VFS_I(ip));
-> -	return destroy_inode(VFS_I(ip));
-> +	struct inode *inode = VFS_I(ip);
-> +
-> +	make_bad_inode(inode);
-> +	__destroy_inode(inode);
-> +	inode->i_sb->s_op->destroy_inode(inode);
-> }
->
-> /*
-> Index: linux-2.6/include/linux/fs.h
-> ===================================================================
-> --- linux-2.6.orig/include/linux/fs.h	2009-08-04 16:01:18.770804693  
-> +0200
-> +++ linux-2.6/include/linux/fs.h	2009-08-04 16:01:20.159539128 +0200
-> @@ -2163,6 +2163,7 @@ extern void __iget(struct inode * inode)
-> extern void iget_failed(struct inode *);
-> extern void clear_inode(struct inode *);
-> extern void destroy_inode(struct inode *);
-> +extern void __destroy_inode(struct inode *);
-> extern struct inode *new_inode(struct super_block *);
-> extern int should_remove_suid(struct dentry *);
-> extern int file_remove_suid(struct file *);
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/220 b/220
+new file mode 100755
+index 0000000..3b828cb
+--- /dev/null
++++ b/220
+@@ -0,0 +1,123 @@
++#! /bin/sh
++# FS QA Test No. 220
++#
++# Simple quota accounting test for direct/buffered/mmap IO.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2009 Eric Sandeen.  All Rights Reserved.
++#
++# Based on test 108,
++# Copyright (c) 2005 Silicon Graphics, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++# creator
++owner=sandeen@sandeen.net
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++. ./common.quota
++
++filter_scratch()
++{
++	perl -ne "
++s,$SCRATCH_MNT,[SCR_MNT],;
++s,$SCRATCH_DEV,[SCR_DEV],;
++	print;"
++}
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux #IRIX
++_require_scratch
++_require_quota
++
++test_files()
++{
++	echo; echo "### create files, setting up ownership (type=$type)"
++	rm -f $SCRATCH_MNT/{buffer,direct,mmap}
++	touch $SCRATCH_MNT/{buffer,direct,mmap}
++	chown $uid $SCRATCH_MNT/{buffer,direct,mmap}
++	chgrp $gid $SCRATCH_MNT/{buffer,direct,mmap}
++	for file in $SCRATCH_MNT/{buffer,direct,mmap}; do
++		$here/src/lstat64 $file | head -3 | filter_scratch
++	done
++}
++
++test_accounting()
++{
++	echo "### some controlled buffered, direct and mmapd IO (type=$type)"
++	echo "--- initiating parallel IO..." >>$seq.full
++	# Small ios here because ext3 will account for indirect blocks too ...   :( 
++	# 48k will fit w/o indirect for 4k blocks (default blocksize)
++	$XFS_IO_PROG -F -c 'pwrite 0 48k' -c 'fsync' \
++					$SCRATCH_MNT/buffer >>$seq.full 2>&1 &
++	$XFS_IO_PROG -F -c 'pwrite 0 48k' -d \
++					$SCRATCH_MNT/direct >>$seq.full 2>&1 &
++	$XFS_IO_PROG -F -c 't 48k' -c 'mm -rw 0 48k' -c 'mw 0 48k' -c 'ms -s' \
++					$SCRATCH_MNT/mmap   >>$seq.full 2>&1 &
++	wait
++	echo "--- completed parallel IO ($type)" >>$seq.full
++
++	for file in $SCRATCH_MNT/{buffer,direct,mmap}; do
++		$here/src/lstat64 $file | head -3 | filter_scratch
++	done
++
++	repquota -$type -s -n $SCRATCH_MNT  | grep -v "^#0" | filter_scratch
++}
++
++# real QA test starts here
++rm -f $seq.full
++
++uid=1
++gid=2
++
++umount $SCRATCH_DEV 2>/dev/null
++_scratch_mkfs >> $seq.full 2>&1
++_scratch_mount "-o usrquota,grpquota"
++quotacheck -u -g $SCRATCH_MNT 2>/dev/null
++quotaon $SCRATCH_MNT 2>/dev/null
++umount $SCRATCH_DEV
++
++echo; echo "### test user accounting"
++export MOUNT_OPTIONS="-o usrquota"
++_qmount
++quotaon $SCRATCH_MNT 2>/dev/null
++type=u
++test_files
++test_accounting
++umount $SCRATCH_DEV 2>/dev/null
++
++echo; echo "### test group accounting"
++export MOUNT_OPTIONS="-o grpquota"
++_qmount
++quotaon $SCRATCH_MNT 2>/dev/null
++type=g
++test_files
++test_accounting
++umount $SCRATCH_DEV 2>/dev/null
++
++status=0
++exit
+diff --git a/220.out b/220.out
+new file mode 100644
+index 0000000..57db113
+--- /dev/null
++++ b/220.out
+@@ -0,0 +1,63 @@
++QA output created by 220
++
++### test user accounting
++
++### create files, setting up ownership (type=u)
++  File: "[SCR_MNT]/buffer"
++  Size: 0            Filetype: Regular File
++  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
++  File: "[SCR_MNT]/direct"
++  Size: 0            Filetype: Regular File
++  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
++  File: "[SCR_MNT]/mmap"
++  Size: 0            Filetype: Regular File
++  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
++### some controlled buffered, direct and mmapd IO (type=u)
++  File: "[SCR_MNT]/buffer"
++  Size: 53248        Filetype: Regular File
++  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
++  File: "[SCR_MNT]/direct"
++  Size: 53248        Filetype: Regular File
++  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
++  File: "[SCR_MNT]/mmap"
++  Size: 53248        Filetype: Regular File
++  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
++*** Report for user quotas on device [SCR_DEV]
++Block grace time: 7days; Inode grace time: 7days
++                        Block limits                File limits
++User            used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++#1        --     168       0       0              3     0     0       
++
++
++
++### test group accounting
++
++### create files, setting up ownership (type=g)
++  File: "[SCR_MNT]/buffer"
++  Size: 0            Filetype: Regular File
++  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
++  File: "[SCR_MNT]/direct"
++  Size: 0            Filetype: Regular File
++  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
++  File: "[SCR_MNT]/mmap"
++  Size: 0            Filetype: Regular File
++  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
++### some controlled buffered, direct and mmapd IO (type=g)
++  File: "[SCR_MNT]/buffer"
++  Size: 53248        Filetype: Regular File
++  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
++  File: "[SCR_MNT]/direct"
++  Size: 53248        Filetype: Regular File
++  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
++  File: "[SCR_MNT]/mmap"
++  Size: 53248        Filetype: Regular File
++  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
++*** Report for group quotas on device [SCR_DEV]
++Block grace time: 7days; Inode grace time: 7days
++                        Block limits                File limits
++Group           used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++#2        --     168       0       0              3     0     0       
++
++
+diff --git a/common.quota b/common.quota
+index a9dfb42..e2a7872 100644
+--- a/common.quota
++++ b/common.quota
+@@ -21,14 +21,27 @@
+ #
+ 
+ #
+-# checks that the XFS quota support in the kernel is enabled
++# checks that the generic quota support in the kernel is enabled
+ # and that we have valid quota user tools installed.
+ #
+ _require_quota()
+ {
++    [ -x /usr/bin/quota ] || _notrun "Quota user tools not installed"
++    _scratch_mount "-o usrquota,grpquota"
++    ret=$?
++    umount $SCRATCH_MNT
++    [ $ret -ne 0 ] && _notrun "Installed kernel does not support quota"
++}
++
++#
++# checks that the XFS quota support in the kernel is enabled
++# and that we have valid quota user tools installed.
++#
++_require_xfs_quota()
++{
+     src/feature -q $TEST_DEV
+     [ $? -ne 0 ] && _notrun "Installed kernel does not support XFS quota"
+-    [ -x /usr/sbin/xfs_quota ] || _notrun "Quota user tools not installed"
++    [ -x /usr/sbin/xfs_quota ] || _notrun "XFS quota user tools not installed"
+ }
+ 
+ #
+diff --git a/group b/group
+index e068e92..1fc280f 100644
+--- a/group
++++ b/group
+@@ -328,3 +328,4 @@ prealloc
+ 217 log metadata auto
+ 218 auto fsr quick
+ 219 auto
++220 auto quota
+
+diff --git a/050 b/050
+index abb806a..306a7b5 100755
+--- a/050
++++ b/050
+@@ -55,7 +55,7 @@ cp /dev/null $seq.full
+ chmod a+rwx $seq.full	# arbitrary users will write here
+ 
+ _require_scratch
+-_require_quota
++_require_xfs_quota
+ 
+ bsoft=100
+ bhard=500
+diff --git a/052 b/052
+index 16c78de..3d8bb9e 100755
+--- a/052
++++ b/052
+@@ -54,7 +54,7 @@ _supported_os IRIX Linux
+ rm -f $seq.full
+ 
+ _require_scratch
+-_require_quota
++_require_xfs_quota
+ _require_nobody
+ 
+ # setup a default run
+diff --git a/054 b/054
+index b495e51..b38efab 100755
+--- a/054
++++ b/054
+@@ -52,7 +52,7 @@ cp /dev/null $seq.full
+ chmod ugo+rwx $seq.full
+ 
+ _require_scratch
+-_require_quota
++_require_xfs_quota
+ 
+ _filter_stat()
+ {
+diff --git a/081 b/081
+index 3036484..c8eba80 100755
+--- a/081
++++ b/081
+@@ -54,7 +54,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
+ # prelim
+ rm -f $seq.full $tmp.*
+ _require_scratch
+-_require_quota
++_require_xfs_quota
+ _require_v2log
+  
+ echo "*** init FS"
+diff --git a/106 b/106
+index 7154979..30f740b 100755
+--- a/106
++++ b/106
+@@ -42,7 +42,7 @@ trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
+ _supported_fs xfs
+ _supported_os Linux #IRIX
+ _require_scratch
+-_require_quota
++_require_xfs_quota
+ _require_prjquota
+ 
+ # real QA test starts here
+diff --git a/107 b/107
+index cfa8213..f36dc21 100755
+--- a/107
++++ b/107
+@@ -54,7 +54,7 @@ s/Inode: \#\d+ \(\d+ blocks, \d+ extents\)/Inode: #[INO] (X blocks, Y extents)/;
+ _supported_fs xfs
+ _supported_os Linux #IRIX
+ _require_scratch
+-_require_quota
++_require_xfs_quota
+ _require_prjquota
+ 
+ # real QA test starts here
+diff --git a/108 b/108
+index 3f3e1fb..3a1fee9 100755
+--- a/108
++++ b/108
+@@ -49,7 +49,7 @@ s,$SCRATCH_DEV,[SCR_DEV],;
+ _supported_fs xfs
+ _supported_os Linux #IRIX
+ _require_scratch
+-_require_quota
++_require_xfs_quota
+ _require_prjquota
+ 
+ test_files()
+diff --git a/116 b/116
+index 8394054..e902ce9 100755
+--- a/116
++++ b/116
+@@ -51,7 +51,7 @@ _supported_fs xfs
+ _supported_os IRIX Linux
+ 
+ _require_scratch
+-_require_quota
++_require_xfs_quota
+ 
+ mkfs.xfs -f $SCRATCH_DEV >/dev/null 2>&1
+ mount -o uquota $SCRATCH_DEV $SCRATCH_MNT
+diff --git a/118 b/118
+index 6b28055..cb0e5ee 100755
+--- a/118
++++ b/118
+@@ -52,7 +52,7 @@ _supported_fs xfs
+ _supported_os IRIX Linux
+ 
+ _require_scratch
+-_require_quota
++_require_xfs_quota
+ 
+ _chowning_file()
+ {
+diff --git a/134 b/134
+index fc2ab74..f00e1f0 100755
+--- a/134
++++ b/134
+@@ -50,7 +50,7 @@ _cleanup()
+ _supported_fs xfs
+ _supported_os Linux IRIX
+ 
+-_require_quota
++_require_xfs_quota
+ 
+ dir=$SCRATCH_MNT/project
+ 
+diff --git a/196 b/196
+index 7768618..5da3659 100755
+--- a/196
++++ b/196
+@@ -51,7 +51,7 @@ _supported_fs xfs
+ _supported_os Linux
+ 
+ _require_scratch
+-_require_quota
++_require_xfs_quota
+ 
+ #
+ # Setup temporary replacements for /etc/projects and /etc/projid
+
 
 _______________________________________________
 xfs mailing list
