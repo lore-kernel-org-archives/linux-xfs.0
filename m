@@ -1,18 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n77J9ffq149342 for <xfs@oss.sgi.com>; Fri, 7 Aug 2009 14:09:41 -0500
-Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BD547146D732
-	for <xfs@oss.sgi.com>; Fri,  7 Aug 2009 12:10:32 -0700 (PDT)
-Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id 7HECrMZIOBbAULHc for <xfs@oss.sgi.com>;
-	Fri, 07 Aug 2009 12:10:32 -0700 (PDT)
-Message-ID: <4A7C7C1C.2010202@redhat.com>
-Date: Fri, 07 Aug 2009 14:10:20 -0500
-From: Eric Sandeen <sandeen@redhat.com>
-MIME-Version: 1.0
-Subject: [PATCH] xfstests: 220 - generic quota sanity
+	n78JUelE214489 for <xfs@oss.sgi.com>; Sat, 8 Aug 2009 14:30:41 -0500
+Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 04DE330407E
+	for <xfs@oss.sgi.com>; Sat,  8 Aug 2009 12:31:31 -0700 (PDT)
+Message-Id: <00980BBF-1206-4BEF-A8AE-B4A8DAE7EC27@sgi.com>
+From: Felix Blyakher <felixb@sgi.com>
+In-Reply-To: <alpine.DEB.2.00.0908080422440.12329@p34.internal.lan>
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Subject: Re: Kernel 2.6.30.4 XFS(..?) regression
+Date: Sat, 8 Aug 2009 14:31:29 -0500
+References: <alpine.DEB.2.00.0908080422440.12329@p34.internal.lan>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,410 +20,115 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>, ext4 development <linux-ext4@vger.kernel.org>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Add some very basic quota sanity tests for generic filesystems.
 
-This is based on test 108, but uses the generic quota tools,
-not xfs_quota, and therefore cannot test project quota.
+On Aug 8, 2009, at 3:39 AM, Justin Piszcz wrote:
 
-Also, the IOs are much smaller (48k) so that ext3 won't get into
-indirect blocks and throw off the accounting.  This does
-assume 4k blocks though.
+> Hello,
+>
+> After a period of read/writes to several drives, all processes that  
+> try to write to the drives (all XFS) enter D-state and the system  
+> becomes unresponsive, the load shoots up to > 100, etc.
+>
+> This problem did not occur with 2.6.29.1.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+The threads below don't ring a bell as something already seen or
+reported.
 
-diff --git a/220 b/220
-new file mode 100755
-index 0000000..3b828cb
---- /dev/null
-+++ b/220
-@@ -0,0 +1,123 @@
-+#! /bin/sh
-+# FS QA Test No. 220
-+#
-+# Simple quota accounting test for direct/buffered/mmap IO.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2009 Eric Sandeen.  All Rights Reserved.
-+#
-+# Based on test 108,
-+# Copyright (c) 2005 Silicon Graphics, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=sandeen@sandeen.net
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+. ./common.quota
-+
-+filter_scratch()
-+{
-+	perl -ne "
-+s,$SCRATCH_MNT,[SCR_MNT],;
-+s,$SCRATCH_DEV,[SCR_DEV],;
-+	print;"
-+}
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux #IRIX
-+_require_scratch
-+_require_quota
-+
-+test_files()
-+{
-+	echo; echo "### create files, setting up ownership (type=$type)"
-+	rm -f $SCRATCH_MNT/{buffer,direct,mmap}
-+	touch $SCRATCH_MNT/{buffer,direct,mmap}
-+	chown $uid $SCRATCH_MNT/{buffer,direct,mmap}
-+	chgrp $gid $SCRATCH_MNT/{buffer,direct,mmap}
-+	for file in $SCRATCH_MNT/{buffer,direct,mmap}; do
-+		$here/src/lstat64 $file | head -3 | filter_scratch
-+	done
-+}
-+
-+test_accounting()
-+{
-+	echo "### some controlled buffered, direct and mmapd IO (type=$type)"
-+	echo "--- initiating parallel IO..." >>$seq.full
-+	# Small ios here because ext3 will account for indirect blocks too ...   :( 
-+	# 48k will fit w/o indirect for 4k blocks (default blocksize)
-+	$XFS_IO_PROG -F -c 'pwrite 0 48k' -c 'fsync' \
-+					$SCRATCH_MNT/buffer >>$seq.full 2>&1 &
-+	$XFS_IO_PROG -F -c 'pwrite 0 48k' -d \
-+					$SCRATCH_MNT/direct >>$seq.full 2>&1 &
-+	$XFS_IO_PROG -F -c 't 48k' -c 'mm -rw 0 48k' -c 'mw 0 48k' -c 'ms -s' \
-+					$SCRATCH_MNT/mmap   >>$seq.full 2>&1 &
-+	wait
-+	echo "--- completed parallel IO ($type)" >>$seq.full
-+
-+	for file in $SCRATCH_MNT/{buffer,direct,mmap}; do
-+		$here/src/lstat64 $file | head -3 | filter_scratch
-+	done
-+
-+	repquota -$type -s -n $SCRATCH_MNT  | grep -v "^#0" | filter_scratch
-+}
-+
-+# real QA test starts here
-+rm -f $seq.full
-+
-+uid=1
-+gid=2
-+
-+umount $SCRATCH_DEV 2>/dev/null
-+_scratch_mkfs >> $seq.full 2>&1
-+_scratch_mount "-o usrquota,grpquota"
-+quotacheck -u -g $SCRATCH_MNT 2>/dev/null
-+quotaon $SCRATCH_MNT 2>/dev/null
-+umount $SCRATCH_DEV
-+
-+echo; echo "### test user accounting"
-+export MOUNT_OPTIONS="-o usrquota"
-+_qmount
-+quotaon $SCRATCH_MNT 2>/dev/null
-+type=u
-+test_files
-+test_accounting
-+umount $SCRATCH_DEV 2>/dev/null
-+
-+echo; echo "### test group accounting"
-+export MOUNT_OPTIONS="-o grpquota"
-+_qmount
-+quotaon $SCRATCH_MNT 2>/dev/null
-+type=g
-+test_files
-+test_accounting
-+umount $SCRATCH_DEV 2>/dev/null
-+
-+status=0
-+exit
-diff --git a/220.out b/220.out
-new file mode 100644
-index 0000000..57db113
---- /dev/null
-+++ b/220.out
-@@ -0,0 +1,63 @@
-+QA output created by 220
-+
-+### test user accounting
-+
-+### create files, setting up ownership (type=u)
-+  File: "[SCR_MNT]/buffer"
-+  Size: 0            Filetype: Regular File
-+  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
-+  File: "[SCR_MNT]/direct"
-+  Size: 0            Filetype: Regular File
-+  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
-+  File: "[SCR_MNT]/mmap"
-+  Size: 0            Filetype: Regular File
-+  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
-+### some controlled buffered, direct and mmapd IO (type=u)
-+  File: "[SCR_MNT]/buffer"
-+  Size: 53248        Filetype: Regular File
-+  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
-+  File: "[SCR_MNT]/direct"
-+  Size: 53248        Filetype: Regular File
-+  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
-+  File: "[SCR_MNT]/mmap"
-+  Size: 53248        Filetype: Regular File
-+  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
-+*** Report for user quotas on device [SCR_DEV]
-+Block grace time: 7days; Inode grace time: 7days
-+                        Block limits                File limits
-+User            used    soft    hard  grace    used  soft  hard  grace
-+----------------------------------------------------------------------
-+#1        --     168       0       0              3     0     0       
-+
-+
-+
-+### test group accounting
-+
-+### create files, setting up ownership (type=g)
-+  File: "[SCR_MNT]/buffer"
-+  Size: 0            Filetype: Regular File
-+  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
-+  File: "[SCR_MNT]/direct"
-+  Size: 0            Filetype: Regular File
-+  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
-+  File: "[SCR_MNT]/mmap"
-+  Size: 0            Filetype: Regular File
-+  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
-+### some controlled buffered, direct and mmapd IO (type=g)
-+  File: "[SCR_MNT]/buffer"
-+  Size: 53248        Filetype: Regular File
-+  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
-+  File: "[SCR_MNT]/direct"
-+  Size: 53248        Filetype: Regular File
-+  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
-+  File: "[SCR_MNT]/mmap"
-+  Size: 53248        Filetype: Regular File
-+  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
-+*** Report for group quotas on device [SCR_DEV]
-+Block grace time: 7days; Inode grace time: 7days
-+                        Block limits                File limits
-+Group           used    soft    hard  grace    used  soft  hard  grace
-+----------------------------------------------------------------------
-+#2        --     168       0       0              3     0     0       
-+
-+
-diff --git a/common.quota b/common.quota
-index a9dfb42..e2a7872 100644
---- a/common.quota
-+++ b/common.quota
-@@ -21,14 +21,27 @@
- #
- 
- #
--# checks that the XFS quota support in the kernel is enabled
-+# checks that the generic quota support in the kernel is enabled
- # and that we have valid quota user tools installed.
- #
- _require_quota()
- {
-+    [ -x /usr/bin/quota ] || _notrun "Quota user tools not installed"
-+    _scratch_mount "-o usrquota,grpquota"
-+    ret=$?
-+    umount $SCRATCH_MNT
-+    [ $ret -ne 0 ] && _notrun "Installed kernel does not support quota"
-+}
-+
-+#
-+# checks that the XFS quota support in the kernel is enabled
-+# and that we have valid quota user tools installed.
-+#
-+_require_xfs_quota()
-+{
-     src/feature -q $TEST_DEV
-     [ $? -ne 0 ] && _notrun "Installed kernel does not support XFS quota"
--    [ -x /usr/sbin/xfs_quota ] || _notrun "Quota user tools not installed"
-+    [ -x /usr/sbin/xfs_quota ] || _notrun "XFS quota user tools not installed"
- }
- 
- #
-diff --git a/group b/group
-index e068e92..1fc280f 100644
---- a/group
-+++ b/group
-@@ -328,3 +328,4 @@ prealloc
- 217 log metadata auto
- 218 auto fsr quick
- 219 auto
-+220 auto quota
+>
+>
+> Here is a part of the sysrq-w:
+>
+> [72037.131620] sh            D 00000006     0 13772  13771
+> [72037.131620]  00000000 00000086 c811f4c0 00000006 c94c9011  
+> c3606da0 c1433e88 cf596ab4
+> [72037.131620]  ca6a9524 ca6a9524 c1433e70 c02750f0 c03e72e5  
+> c03e85fd ca6a9528 c811f4c0
+> [72037.131620]  c94c9018 ca6a9524 00000000 c4d70a20 c02750f0  
+> c03e873a ca6a9528 ccccbe70
+> [72037.131620] Call Trace:
+> [72037.131620]  [<c02750f0>] ? xfs_dir_open+0x0/0x70
+> [72037.131620]  [<c03e72e5>] ? schedule+0x5/0x20
+> [72037.131620]  [<c03e85fd>] ? rwsem_down_failed_common+0x7d/0x170
+> [72037.131620]  [<c02750f0>] ? xfs_dir_open+0x0/0x70
+> [72037.131620]  [<c03e873a>] ? rwsem_down_read_failed+0x1a/0x24
+> [72037.131620]  [<c03e874b>] ? call_rwsem_down_read_failed+0x7/0xc
+> [72037.131620]  [<c03e7d29>] ? down_read+0x9/0x10
+> [72037.131620]  [<c0250e36>] ? xfs_ilock_map_shared+0x16/0x40
 
-diff --git a/050 b/050
-index abb806a..306a7b5 100755
---- a/050
-+++ b/050
-@@ -55,7 +55,7 @@ cp /dev/null $seq.full
- chmod a+rwx $seq.full	# arbitrary users will write here
- 
- _require_scratch
--_require_quota
-+_require_xfs_quota
- 
- bsoft=100
- bhard=500
-diff --git a/052 b/052
-index 16c78de..3d8bb9e 100755
---- a/052
-+++ b/052
-@@ -54,7 +54,7 @@ _supported_os IRIX Linux
- rm -f $seq.full
- 
- _require_scratch
--_require_quota
-+_require_xfs_quota
- _require_nobody
- 
- # setup a default run
-diff --git a/054 b/054
-index b495e51..b38efab 100755
---- a/054
-+++ b/054
-@@ -52,7 +52,7 @@ cp /dev/null $seq.full
- chmod ugo+rwx $seq.full
- 
- _require_scratch
--_require_quota
-+_require_xfs_quota
- 
- _filter_stat()
- {
-diff --git a/081 b/081
-index 3036484..c8eba80 100755
---- a/081
-+++ b/081
-@@ -54,7 +54,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
- # prelim
- rm -f $seq.full $tmp.*
- _require_scratch
--_require_quota
-+_require_xfs_quota
- _require_v2log
-  
- echo "*** init FS"
-diff --git a/106 b/106
-index 7154979..30f740b 100755
---- a/106
-+++ b/106
-@@ -42,7 +42,7 @@ trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
- _supported_fs xfs
- _supported_os Linux #IRIX
- _require_scratch
--_require_quota
-+_require_xfs_quota
- _require_prjquota
- 
- # real QA test starts here
-diff --git a/107 b/107
-index cfa8213..f36dc21 100755
---- a/107
-+++ b/107
-@@ -54,7 +54,7 @@ s/Inode: \#\d+ \(\d+ blocks, \d+ extents\)/Inode: #[INO] (X blocks, Y extents)/;
- _supported_fs xfs
- _supported_os Linux #IRIX
- _require_scratch
--_require_quota
-+_require_xfs_quota
- _require_prjquota
- 
- # real QA test starts here
-diff --git a/108 b/108
-index 3f3e1fb..3a1fee9 100755
---- a/108
-+++ b/108
-@@ -49,7 +49,7 @@ s,$SCRATCH_DEV,[SCR_DEV],;
- _supported_fs xfs
- _supported_os Linux #IRIX
- _require_scratch
--_require_quota
-+_require_xfs_quota
- _require_prjquota
- 
- test_files()
-diff --git a/116 b/116
-index 8394054..e902ce9 100755
---- a/116
-+++ b/116
-@@ -51,7 +51,7 @@ _supported_fs xfs
- _supported_os IRIX Linux
- 
- _require_scratch
--_require_quota
-+_require_xfs_quota
- 
- mkfs.xfs -f $SCRATCH_DEV >/dev/null 2>&1
- mount -o uquota $SCRATCH_DEV $SCRATCH_MNT
-diff --git a/118 b/118
-index 6b28055..cb0e5ee 100755
---- a/118
-+++ b/118
-@@ -52,7 +52,7 @@ _supported_fs xfs
- _supported_os IRIX Linux
- 
- _require_scratch
--_require_quota
-+_require_xfs_quota
- 
- _chowning_file()
- {
-diff --git a/134 b/134
-index fc2ab74..f00e1f0 100755
---- a/134
-+++ b/134
-@@ -50,7 +50,7 @@ _cleanup()
- _supported_fs xfs
- _supported_os Linux IRIX
- 
--_require_quota
-+_require_xfs_quota
- 
- dir=$SCRATCH_MNT/project
- 
-diff --git a/196 b/196
-index 7768618..5da3659 100755
---- a/196
-+++ b/196
-@@ -51,7 +51,7 @@ _supported_fs xfs
- _supported_os Linux
- 
- _require_scratch
--_require_quota
-+_require_xfs_quota
- 
- #
- # Setup temporary replacements for /etc/projects and /etc/projid
+Discounting bunch of spurious frames, here we're waiting for the
+xfs ilock.
 
+>
+> [72037.131620]  [<c027512d>] ? xfs_dir_open+0x3d/0x70
+> [72037.131620]  [<c0162289>] ? __dentry_open+0x89/0x240
+> [72037.131620]  [<c0162533>] ? nameidata_to_filp+0x53/0x70
+> [72037.131620]  [<c016e605>] ? do_filp_open+0x245/0x830
+> [72037.131620]  [<c0151ed1>] ? __do_fault+0x2b1/0x3d0
+> [72037.131620]  [<c016208b>] ? do_sys_open+0x5b/0x110
+> [72037.131620]  [<c01621bc>] ? sys_open+0x2c/0x40
+> [72037.131620]  [<c0102c48>] ? sysenter_do_call+0x12/0x26
+>
+> Here is a part of the sysrq-t: (after dmesg > dmesg.txt)
+>
+> [72119.690410] dmesg         D c769c720     0 13832  13824
+> [72119.690410]  00000000 00000086 c4d0e7c0 c769c720 c3237260  
+> cc6ad2a0 cfa47200 c017cb26
+> [72119.690410]  00000286 044805f1 c5d6bd18 0448058d c03e72e5  
+> c03e74a0 00004000 c053f2e0
+> [72119.690410]  c14c3d18 c6457d18 044805f1 c0124de0 c4d0e7c0  
+> c053c7c0 c049f170 00000064
+> [72119.690410] Call Trace:
+> [72119.690410]  [<c017cb26>] ? __writeback_single_inode+0x126/0x380
+> [72119.690410]  [<c03e72e5>] ? schedule+0x5/0x20
+> [72119.690410]  [<c03e74a0>] ? schedule_timeout+0xb0/0x110
+> [72119.690410]  [<c0124de0>] ? process_timeout+0x0/0x10
+> [72119.690410]  [<c03e6d71>] ? io_schedule_timeout+0x11/0x20
+> [72119.690410]  [<c0150b83>] ? congestion_wait+0x53/0x70
+> [72119.690410]  [<c012dbe0>] ? autoremove_wake_function+0x0/0x50
+> [72119.690410]  [<c0147c10>] ? balance_dirty_pages_ratelimited_nr 
+> +0xb0/0x1e0
+> [72119.690410]  [<c0142021>] ? generic_file_buffered_write+0x1a1/0x300
+> [72119.690410]  [<c02791ea>] ? xfs_write+0x77a/0x860
+
+At this point xfs ilock is released in xfs_write(), and it shouldn't
+be holding the other thread. Though, some other thread is.
+We'd need more info to figure it out. Maybe the whole output of both
+sysrq-w and sysrq-t.
+
+Felix
+
+>
+> [72119.690410]  [<c0134e54>] ? getnstimeofday+0x54/0x110
+> [72119.690410]  [<c0275361>] ? xfs_file_aio_write+0x61/0x70
+> [72119.690410]  [<c0163c15>] ? do_sync_write+0xd5/0x120
+> [72119.690410]  [<c0117958>] ? task_tick_fair+0x18/0x90
+> [72119.690410]  [<c013815f>] ? tick_handle_periodic+0xf/0x80
+> [72119.690410]  [<c012dbe0>] ? autoremove_wake_function+0x0/0x50
+> [72119.690410]  [<c0163b40>] ? do_sync_write+0x0/0x120
+> [72119.690410]  [<c0164750>] ? vfs_write+0xa0/0x140
+> [72119.690410]  [<c01648c1>] ? sys_write+0x41/0x80
+> [72119.690410]  [<c0102c48>] ? sysenter_do_call+0x12/0x26
+>
+> Kernel .config:
+> http://home.comcast.net/~jpiszcz/20090808/config-2.6.30.4.txt
+>
+> The only way to bring the host back is to reboot the system b to  
+> sysrq-trigger or hard reboot.
+>
+> Justin.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux- 
+> kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
 
 _______________________________________________
 xfs mailing list
