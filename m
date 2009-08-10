@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7AEIgvP062638 for <xfs@oss.sgi.com>; Mon, 10 Aug 2009 09:18:42 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 76E6DB22F3E
-	for <xfs@oss.sgi.com>; Mon, 10 Aug 2009 07:29:30 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id kGvpvpS2IItSCxW4 for
-	<xfs@oss.sgi.com>; Mon, 10 Aug 2009 07:29:30 -0700 (PDT)
-Message-ID: <4A802C75.3080904@sandeen.net>
-Date: Mon, 10 Aug 2009 09:19:33 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	n7AE8g9G062222 for <xfs@oss.sgi.com>; Mon, 10 Aug 2009 09:08:43 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 56914B218F6
+	for <xfs@oss.sgi.com>; Mon, 10 Aug 2009 07:19:31 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id sr728IDC2n43q1EO for
+	<xfs@oss.sgi.com>; Mon, 10 Aug 2009 07:19:31 -0700 (PDT)
+Date: Mon, 10 Aug 2009 10:09:30 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH V2] xfstests 218: very basic defragmentation testing
+	for xfs & ext4
+Message-ID: <20090810140930.GA24174@infradead.org>
+References: <4A5E3A37.5050306@redhat.com> <4A7A5CA8.8040702@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: fix spin_is_locked assert on uni-processor builds
-References: <20090810140006.GA21521@infradead.org>
-In-Reply-To: <20090810140006.GA21521@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <4A7A5CA8.8040702@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,45 +29,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, ext4 development <linux-ext4@vger.kernel.org>, xfs mailing list <xfs@oss.sgi.com>
 
-Christoph Hellwig wrote:
-> Without SMP or preemption spin_is_locked always returns false,
-> so we can't do an assert with it.  Instead use assert_spin_locked,
-> which does the right thing on all builds.
+On Wed, Aug 05, 2009 at 11:31:36PM -0500, Eric Sandeen wrote:
+> Test a few very basic defragmentation scenarios.
+> 
+> This test creates some files, runs defrag on them,
+> and compares the before/after fragmentation as well
+> as file md5sums and timestamps.
+> 
+> The test currently expects to find e4defrag in
+> /usr/bin
+> 
+> It should be relatively easy to add more interestingly
+> fragmented files to the tests, as well as to test
+> that memory-mapped files aren't touched, etc - 
+> but this gives us a framework.
+> 
+> V2: remount before checking file contents, and create
+> common.defrag.
 
-oops!
+The patch loks good to me,
 
-> This fixes kernel.org BZ #13621.
-> 
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reported-by: Johannes Engel <jcnengel@googlemail.com>
-> Tested-by: Johannes Engel <jcnengel@googlemail.com>
 
-Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-> 
-> Index: linux-2.6/fs/xfs/xfs_log.c
-> ===================================================================
-> --- linux-2.6.orig/fs/xfs/xfs_log.c	2009-08-09 23:27:07.889729629 -0300
-> +++ linux-2.6/fs/xfs/xfs_log.c	2009-08-09 23:27:24.092725926 -0300
-> @@ -3180,7 +3180,7 @@ try_again:
->  STATIC void
->  xlog_state_want_sync(xlog_t *log, xlog_in_core_t *iclog)
->  {
-> -	ASSERT(spin_is_locked(&log->l_icloglock));
-> +	assert_spin_locked(&log->l_icloglock);
->  
->  	if (iclog->ic_state == XLOG_STATE_ACTIVE) {
->  		xlog_state_switch_iclogs(log, iclog, 0);
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+Unfortunately it still fails on my Debian testing system with:
+
+ QA output created by 218
+ zero-length file:
+-Before: 0
+-After: 0
++Before: 1
++After: 1
+ Sparse file (no blocks):
+-Before: 0
+-After: 0
++Before: 1
++After: 1
+
+But that's due to a bug in filefrag that I have already reported to the
+Debian BTS.
 
 _______________________________________________
 xfs mailing list
