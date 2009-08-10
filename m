@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7AEbkLx063649 for <xfs@oss.sgi.com>; Mon, 10 Aug 2009 09:37:46 -0500
+	n7AEddOd063740 for <xfs@oss.sgi.com>; Mon, 10 Aug 2009 09:39:40 -0500
 Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 29A823B8AB3
-	for <xfs@oss.sgi.com>; Mon, 10 Aug 2009 07:38:39 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 415AB33C40B
+	for <xfs@oss.sgi.com>; Mon, 10 Aug 2009 07:50:27 -0700 (PDT)
 Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id 3NV0HBCvcqGSAMYt for
-	<xfs@oss.sgi.com>; Mon, 10 Aug 2009 07:38:39 -0700 (PDT)
-Message-ID: <4A8030F1.9060004@sandeen.net>
-Date: Mon, 10 Aug 2009 09:38:41 -0500
+	cuda.sgi.com with ESMTP id yMZg1C6jxRLBMYCc for
+	<xfs@oss.sgi.com>; Mon, 10 Aug 2009 07:50:27 -0700 (PDT)
+Message-ID: <4A803162.8020806@sandeen.net>
+Date: Mon, 10 Aug 2009 09:40:34 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH V2 1/2] xfstests: split out xfs & generic quota existence tests
+Subject: [PATCH V2 2/2] xfstests: 220 - generic quota sanity
 References: <4A7C7C1C.2010202@redhat.com>
 In-Reply-To: <4A7C7C1C.2010202@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,192 +30,227 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@redhat.com>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-Split out xfs & generic quota existence tests
+Add some very basic quota sanity tests for generic filesystems.
 
-Make a new test to test for generic quota tools, for
-generic filesystem testing.  Move the existing quota test
-to a new "xfs" name.
+This is based on test 108, but uses the generic quota tools,
+not xfs_quota, and therefore cannot test project quota.
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+Also, the IOs are much smaller (48k) so that ext3 won't get into
+indirect blocks and throw off the accounting.  This does
+assume 4k blocks though.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
-diff --git a/common.quota b/common.quota
-index a9dfb42..e2a7872 100644
---- a/common.quota
-+++ b/common.quota
-@@ -21,14 +21,27 @@
- #
- 
- #
--# checks that the XFS quota support in the kernel is enabled
-+# checks that the generic quota support in the kernel is enabled
- # and that we have valid quota user tools installed.
- #
- _require_quota()
- {
-+    [ -x /usr/bin/quota ] || _notrun "Quota user tools not installed"
-+    _scratch_mount "-o usrquota,grpquota"
-+    ret=$?
-+    umount $SCRATCH_MNT
-+    [ $ret -ne 0 ] && _notrun "Installed kernel does not support quota"
+V2: xfs test changes split out, fix 220.out for 12-block IO
+
+diff --git a/220 b/220
+new file mode 100644
+index 0000000..3b828cb
+--- /dev/null
++++ b/220
+@@ -0,0 +1,123 @@
++#! /bin/sh
++# FS QA Test No. 220
++#
++# Simple quota accounting test for direct/buffered/mmap IO.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2009 Eric Sandeen.  All Rights Reserved.
++#
++# Based on test 108,
++# Copyright (c) 2005 Silicon Graphics, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++# creator
++owner=sandeen@sandeen.net
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++. ./common.quota
++
++filter_scratch()
++{
++	perl -ne "
++s,$SCRATCH_MNT,[SCR_MNT],;
++s,$SCRATCH_DEV,[SCR_DEV],;
++	print;"
 +}
 +
-+#
-+# checks that the XFS quota support in the kernel is enabled
-+# and that we have valid quota user tools installed.
-+#
-+_require_xfs_quota()
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux #IRIX
++_require_scratch
++_require_quota
++
++test_files()
 +{
-     src/feature -q $TEST_DEV
-     [ $? -ne 0 ] && _notrun "Installed kernel does not support XFS quota"
--    [ -x /usr/sbin/xfs_quota ] || _notrun "Quota user tools not installed"
-+    [ -x /usr/sbin/xfs_quota ] || _notrun "XFS quota user tools not installed"
- }
- 
- #diff --git a/050 b/050
-index abb806a..306a7b5 100755
---- a/050
-+++ b/050
-@@ -55,7 +55,7 @@ cp /dev/null $seq.full
- chmod a+rwx $seq.full	# arbitrary users will write here
- 
- _require_scratch
--_require_quota
-+_require_xfs_quota
- 
- bsoft=100
- bhard=500
-diff --git a/052 b/052
-index 16c78de..3d8bb9e 100755
---- a/052
-+++ b/052
-@@ -54,7 +54,7 @@ _supported_os IRIX Linux
- rm -f $seq.full
- 
- _require_scratch
--_require_quota
-+_require_xfs_quota
- _require_nobody
- 
- # setup a default run
-diff --git a/054 b/054
-index b495e51..b38efab 100755
---- a/054
-+++ b/054
-@@ -52,7 +52,7 @@ cp /dev/null $seq.full
- chmod ugo+rwx $seq.full
- 
- _require_scratch
--_require_quota
-+_require_xfs_quota
- 
- _filter_stat()
- {
-diff --git a/081 b/081
-index 3036484..c8eba80 100755
---- a/081
-+++ b/081
-@@ -54,7 +54,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
- # prelim
- rm -f $seq.full $tmp.*
- _require_scratch
--_require_quota
-+_require_xfs_quota
- _require_v2log
-  
- echo "*** init FS"
-diff --git a/106 b/106
-index 7154979..30f740b 100755
---- a/106
-+++ b/106
-@@ -42,7 +42,7 @@ trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
- _supported_fs xfs
- _supported_os Linux #IRIX
- _require_scratch
--_require_quota
-+_require_xfs_quota
- _require_prjquota
- 
- # real QA test starts here
-diff --git a/107 b/107
-index cfa8213..f36dc21 100755
---- a/107
-+++ b/107
-@@ -54,7 +54,7 @@ s/Inode: \#\d+ \(\d+ blocks, \d+ extents\)/Inode: #[INO] (X blocks, Y extents)/;
- _supported_fs xfs
- _supported_os Linux #IRIX
- _require_scratch
--_require_quota
-+_require_xfs_quota
- _require_prjquota
- 
- # real QA test starts here
-diff --git a/108 b/108
-index 3f3e1fb..3a1fee9 100755
---- a/108
-+++ b/108
-@@ -49,7 +49,7 @@ s,$SCRATCH_DEV,[SCR_DEV],;
- _supported_fs xfs
- _supported_os Linux #IRIX
- _require_scratch
--_require_quota
-+_require_xfs_quota
- _require_prjquota
- 
- test_files()
-diff --git a/116 b/116
-index 8394054..e902ce9 100755
---- a/116
-+++ b/116
-@@ -51,7 +51,7 @@ _supported_fs xfs
- _supported_os IRIX Linux
- 
- _require_scratch
--_require_quota
-+_require_xfs_quota
- 
- mkfs.xfs -f $SCRATCH_DEV >/dev/null 2>&1
- mount -o uquota $SCRATCH_DEV $SCRATCH_MNT
-diff --git a/118 b/118
-index 6b28055..cb0e5ee 100755
---- a/118
-+++ b/118
-@@ -52,7 +52,7 @@ _supported_fs xfs
- _supported_os IRIX Linux
- 
- _require_scratch
--_require_quota
-+_require_xfs_quota
- 
- _chowning_file()
- {
-diff --git a/134 b/134
-index fc2ab74..f00e1f0 100755
---- a/134
-+++ b/134
-@@ -50,7 +50,7 @@ _cleanup()
- _supported_fs xfs
- _supported_os Linux IRIX
- 
--_require_quota
-+_require_xfs_quota
- 
- dir=$SCRATCH_MNT/project
- 
-diff --git a/196 b/196
-index 7768618..5da3659 100755
---- a/196
-+++ b/196
-@@ -51,7 +51,7 @@ _supported_fs xfs
- _supported_os Linux
- 
- _require_scratch
--_require_quota
-+_require_xfs_quota
- 
- #
- # Setup temporary replacements for /etc/projects and /etc/projid
-
++	echo; echo "### create files, setting up ownership (type=$type)"
++	rm -f $SCRATCH_MNT/{buffer,direct,mmap}
++	touch $SCRATCH_MNT/{buffer,direct,mmap}
++	chown $uid $SCRATCH_MNT/{buffer,direct,mmap}
++	chgrp $gid $SCRATCH_MNT/{buffer,direct,mmap}
++	for file in $SCRATCH_MNT/{buffer,direct,mmap}; do
++		$here/src/lstat64 $file | head -3 | filter_scratch
++	done
++}
++
++test_accounting()
++{
++	echo "### some controlled buffered, direct and mmapd IO (type=$type)"
++	echo "--- initiating parallel IO..." >>$seq.full
++	# Small ios here because ext3 will account for indirect blocks too ...   :( 
++	# 48k will fit w/o indirect for 4k blocks (default blocksize)
++	$XFS_IO_PROG -F -c 'pwrite 0 48k' -c 'fsync' \
++					$SCRATCH_MNT/buffer >>$seq.full 2>&1 &
++	$XFS_IO_PROG -F -c 'pwrite 0 48k' -d \
++					$SCRATCH_MNT/direct >>$seq.full 2>&1 &
++	$XFS_IO_PROG -F -c 't 48k' -c 'mm -rw 0 48k' -c 'mw 0 48k' -c 'ms -s' \
++					$SCRATCH_MNT/mmap   >>$seq.full 2>&1 &
++	wait
++	echo "--- completed parallel IO ($type)" >>$seq.full
++
++	for file in $SCRATCH_MNT/{buffer,direct,mmap}; do
++		$here/src/lstat64 $file | head -3 | filter_scratch
++	done
++
++	repquota -$type -s -n $SCRATCH_MNT  | grep -v "^#0" | filter_scratch
++}
++
++# real QA test starts here
++rm -f $seq.full
++
++uid=1
++gid=2
++
++umount $SCRATCH_DEV 2>/dev/null
++_scratch_mkfs >> $seq.full 2>&1
++_scratch_mount "-o usrquota,grpquota"
++quotacheck -u -g $SCRATCH_MNT 2>/dev/null
++quotaon $SCRATCH_MNT 2>/dev/null
++umount $SCRATCH_DEV
++
++echo; echo "### test user accounting"
++export MOUNT_OPTIONS="-o usrquota"
++_qmount
++quotaon $SCRATCH_MNT 2>/dev/null
++type=u
++test_files
++test_accounting
++umount $SCRATCH_DEV 2>/dev/null
++
++echo; echo "### test group accounting"
++export MOUNT_OPTIONS="-o grpquota"
++_qmount
++quotaon $SCRATCH_MNT 2>/dev/null
++type=g
++test_files
++test_accounting
++umount $SCRATCH_DEV 2>/dev/null
++
++status=0
++exit
+diff --git a/220.out b/220.out
+new file mode 100644
+index 0000000..a204087
+--- /dev/null
++++ b/220.out
+@@ -0,0 +1,63 @@
++QA output created by 220
++
++### test user accounting
++
++### create files, setting up ownership (type=u)
++  File: "[SCR_MNT]/buffer"
++  Size: 0            Filetype: Regular File
++  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
++  File: "[SCR_MNT]/direct"
++  Size: 0            Filetype: Regular File
++  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
++  File: "[SCR_MNT]/mmap"
++  Size: 0            Filetype: Regular File
++  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
++### some controlled buffered, direct and mmapd IO (type=u)
++  File: "[SCR_MNT]/buffer"
++  Size: 49152        Filetype: Regular File
++  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
++  File: "[SCR_MNT]/direct"
++  Size: 49152        Filetype: Regular File
++  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
++  File: "[SCR_MNT]/mmap"
++  Size: 49152        Filetype: Regular File
++  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
++*** Report for user quotas on device [SCR_DEV]
++Block grace time: 7days; Inode grace time: 7days
++                        Block limits                File limits
++User            used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++#1        --     144       0       0              3     0     0       
++
++
++
++### test group accounting
++
++### create files, setting up ownership (type=g)
++  File: "[SCR_MNT]/buffer"
++  Size: 0            Filetype: Regular File
++  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
++  File: "[SCR_MNT]/direct"
++  Size: 0            Filetype: Regular File
++  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
++  File: "[SCR_MNT]/mmap"
++  Size: 0            Filetype: Regular File
++  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
++### some controlled buffered, direct and mmapd IO (type=g)
++  File: "[SCR_MNT]/buffer"
++  Size: 49152        Filetype: Regular File
++  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
++  File: "[SCR_MNT]/direct"
++  Size: 49152        Filetype: Regular File
++  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
++  File: "[SCR_MNT]/mmap"
++  Size: 49152        Filetype: Regular File
++  Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
++*** Report for group quotas on device [SCR_DEV]
++Block grace time: 7days; Inode grace time: 7days
++                        Block limits                File limits
++Group           used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++#2        --     144       0       0              3     0     0       
++
++
+diff --git a/group b/group
+index e068e92..1fc280f 100644
+--- a/group
++++ b/group
+@@ -328,3 +328,4 @@ prealloc
+ 217 log metadata auto
+ 218 auto fsr quick
+ 219 auto
++220 auto quota
 
 _______________________________________________
 xfs mailing list
