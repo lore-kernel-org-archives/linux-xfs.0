@@ -1,22 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7BHlaN4149213 for <xfs@oss.sgi.com>; Tue, 11 Aug 2009 12:47:46 -0500
-Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 817B03BE84A
-	for <xfs@oss.sgi.com>; Tue, 11 Aug 2009 10:47:58 -0700 (PDT)
-Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id 67x0XEkfAKTQGjlt for <xfs@oss.sgi.com>;
-	Tue, 11 Aug 2009 10:47:58 -0700 (PDT)
-Message-ID: <4A81AEC3.1060200@sandeen.net>
-Date: Tue, 11 Aug 2009 12:47:47 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	n7C6MD8h182047 for <xfs@oss.sgi.com>; Wed, 12 Aug 2009 01:22:23 -0500
+Received: from attica.americas.sgi.com (attica.americas.sgi.com
+	[128.162.236.44])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 196688F80E0
+	for <xfs@oss.sgi.com>; Tue, 11 Aug 2009 23:22:57 -0700 (PDT)
+Date: Wed, 12 Aug 2009 01:13:31 -0500
+Subject: [GIT PULL] XFS update for 2.6.31-rc6
 MIME-Version: 1.0
-Subject: Re: Best design docs for XFS
-References: <4A808FC7.2020800@jquigley.com> <4A80A597.6050806@sandeen.net>
-	<20090811025356.GA28108@infradead.org>
-	<4A81A9F9.4030509@jquigley.com>
-In-Reply-To: <4A81A9F9.4030509@jquigley.com>
+Message-Id: <20090812061331.F29EAA1FAFA7@attica.americas.sgi.com>
+From: felixb@sgi.com (Felix Blyakher)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,53 +23,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: John Quigley <jquigley@jquigley.com>
-Cc: Christoph Hellwig <hch@infradead.org>, XFS Development <xfs@oss.sgi.com>
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-John Quigley wrote:
-> Christoph Hellwig wrote:
+The following changes since commit 7cb7beb31aa3d941833b6a6e553687422c31e4b6:
+  Linus Torvalds (1):
+        Merge branch 'release' of git://git.kernel.org/.../fyu/linux-2.6
 
-...
+are available in the git repository at:
 
->> Is there anything specific you're looking for?
-> 
-> In my work, I've just begun to use XFS as the interface into a very
-> large, virtual storage system, to great effect.  It's my first direct
-> interaction with the file system, and I've been hugely impressed with
-> its power, speed and versatility.
-> 
-> The only unresolved problem that we're experiencing has to do with
-> file system corruption in a failover scenario, and my immediate need
-> in understanding some of the internals is to wrap my hands around
-> this problem (I may email this list with details if I can
-> sufficiently explain myself).
+  git://oss.sgi.com/xfs/xfs for-linus
 
-Any failover you're doing would need to be handled outside the
-filesystem, of course; STONITH etc?  I don't know that reading xfs
-internals will be all that relevant.
+Christoph Hellwig (11):
+      xfs: avoid memory allocation under m_peraglock in growfs code
+      xfs: switch to NOFS allocation under i_lock in xfs_getbmap
+      xfs: switch to NOFS allocation under i_lock in xfs_da_state_alloc
+      xfs: switch to NOFS allocation under i_lock in xfs_da_buf_make
+      xfs: switch to NOFS allocation under i_lock in xfs_dir_cilookup_result
+      xfs: switch to NOFS allocation under i_lock in xfs_buf_associate_memory
+      xfs: switch to NOFS allocation under i_lock in xfs_attr_rmtval_set
+      xfs: switch to NOFS allocation under i_lock in xfs_readlink_bmap
+      xfs: switch to NOFS allocation under i_lock in xfs_attr_rmtval_get
+      xfs: check for dinode realtime flag corruption
+      xfs: fix spin_is_locked assert on uni-processor builds
 
-But I suppose the details may help if you think it is an xfs-related
-problem.
+Eric Sandeen (1):
+      use XFS_CORRUPTION_ERROR in xfs_btree_check_sblock
 
-> A more long-term need we have is for clustering support.  I've read
-> lightly about CXFS, though it appears to be inactive, or at least not
-> open source.  Has clustering support been discussed with the members
-> here?  If so, I'd like to take part in those conversations if there's
-> sufficient interest to engage in that way.
-
-CXFS is and probably will be the only direct clustering mechanism for
-xfs... it is still active, though as you note it is not (and probably
-will never be?) open source.
-
-block-layer failover should be as possible on xfs as any other
-filesystem, though.
-
--Eric
-
-> Thanks very much again.
-> 
-> John Quigley jquigley.com
-> 
+ fs/xfs/linux-2.6/xfs_buf.c |    2 +-
+ fs/xfs/xfs_attr.c          |    8 +++++---
+ fs/xfs/xfs_bmap.c          |    2 +-
+ fs/xfs/xfs_btree.c         |    4 ++--
+ fs/xfs/xfs_da_btree.c      |    6 +++---
+ fs/xfs/xfs_dir2.c          |    2 +-
+ fs/xfs/xfs_fsops.c         |   20 ++++++++++++++------
+ fs/xfs/xfs_inode.c         |   10 ++++++++++
+ fs/xfs/xfs_log.c           |    2 +-
+ fs/xfs/xfs_vnodeops.c      |    4 +++-
+ 10 files changed, 41 insertions(+), 19 deletions(-)
 
 _______________________________________________
 xfs mailing list
