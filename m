@@ -1,20 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7DLJHi4051988 for <xfs@oss.sgi.com>; Thu, 13 Aug 2009 16:19:28 -0500
-Received: from smtp5-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EBE2314AF272
-	for <xfs@oss.sgi.com>; Thu, 13 Aug 2009 14:19:14 -0700 (PDT)
-Received: from smtp5-g21.free.fr (smtp5-g21.free.fr [212.27.42.5]) by
-	cuda.sgi.com with ESMTP id HWxYNKurXR09W2Fj for
-	<xfs@oss.sgi.com>; Thu, 13 Aug 2009 14:19:14 -0700 (PDT)
-Date: Thu, 13 Aug 2009 23:17:39 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: XFS corruption with failover
-Message-ID: <20090813231739.5c7db91d@galadriel.home>
+	n7DM0Cb4053816 for <xfs@oss.sgi.com>; Thu, 13 Aug 2009 17:00:22 -0500
+Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2AA8F304089
+	for <xfs@oss.sgi.com>; Thu, 13 Aug 2009 15:00:58 -0700 (PDT)
+Message-Id: <E037F1E5-2CC8-4F6E-92ED-AFE7BE6EBD1B@sgi.com>
+From: Felix Blyakher <felixb@sgi.com>
 In-Reply-To: <4A8474D2.7050508@jquigley.com>
+Mime-Version: 1.0 (Apple Message framework v926)
+Subject: Re: XFS corruption with failover
+Date: Thu, 13 Aug 2009 16:44:05 -0500
 References: <4A8474D2.7050508@jquigley.com>
-Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,42 +20,81 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: John Quigley <jquigley@jquigley.com>
 Cc: XFS Development <xfs@oss.sgi.com>
 
-Le Thu, 13 Aug 2009 15:17:22 -0500 vous =E9criviez:
 
-> Any advice or insight into what we're doing wrong would be very much
-> appreciated.  My apologies in advance for the somewhat off-topic
+On Aug 13, 2009, at 3:17 PM, John Quigley wrote:
+
+> Folks:
+>
+> We're deploying XFS in a configuration where the file system is  
+> being exported with NFS.  XFS is being mounted on Linux, with  
+> default options; an iSCSI volume is the formatted media.  We're  
+> working out a failover solution for this deployment utilizing Linux  
+> HA.  Things appear to work correctly in the general case, but in  
+> continuous testing we're getting XFS superblock corruption on a very  
+> reproducible basis.
+> The sequence of events in our test scenario:
+>
+> 1. NFS server #1 online
+> 2. Run IO to NFS server #1 from NFS client
+> 3. NFS server #1 offline, (via passing 'b' to /proc/sysrq-trigger)
+> 4. NFS server #2 online
+> 5. XFS mounted as part of failover mechanism, mount fails
+>
+> The mount fails with the following:
+>
+> <snip>
+> kernel: XFS mounting filesystem sde
+> kernel: Starting XFS recovery on filesystem: sde (logdev: internal)
+> kernel: XFS: xlog_recover_process_data: bad clientid
+> kernel: XFS: log mount/recovery failed: error 5
+
+This is an IO error. Is the block device (/dev/sde) accessible
+from the server #2 OK? Can you dd from that device?
+
+>
+> kernel: XFS: log mount failed
+> </snip>
+>
+> When running xfs_repair:
+
+That's not a good time to run xfs_repair. There were no
+indication that the filesystem is corrupted.
+
+Let's take for a sec "NFS server #2" out of the picture.
+Can you mount the filesystem from the original server
+after it reboots?
+
+Felix
+
+>
+>
+> <snip>
+> [root@machine ~]# xfs_repair /dev/sde xfs_repair: warning - cannot  
+> set blocksize on block device /dev/sde: Invalid argument
+> Phase 1 - find and verify superblock...
+> Phase 2 - using internal log
+>       - zero log...
+> ERROR: The filesystem has valuable metadata changes in a log which  
+> needs ...
+> </snip>
+>
+> Any advice or insight into what we're doing wrong would be very much  
+> appreciated.  My apologies in advance for the somewhat off-topic  
 > question.
-
-By killing abruptly the primary server while doing IO, you're probably
-pushing the envelope... You may have a somewhat better luck with a
-cluster fs, OCFS2 works very well for me usually (GFS is a complete
-PITA to setup). =
-
-
-The better option would be to disallow completely write
-caching on the client side (because this is probably where it's going
-wrong) however I don't know how. You can get it to flush extremely
-often by playing with  /proc/sys/vm/dirty_expire_centiseconds
-and /proc/sys/vm/dirty_writeback_centisecs, though. Safer settings
-generally imply terrible performance, though, you've been warned.
-
-Ah another thing may be some cache option in the iSCSI target. what
-target are you using?  =
-
-
--- =
-
---------------------------------------------------
-Emmanuel Florac               www.intellique.com   =
-
---------------------------------------------------
+>
+> - John Quigley
+>
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
