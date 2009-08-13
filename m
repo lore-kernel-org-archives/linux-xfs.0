@@ -1,21 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7D3GcK1248043 for <xfs@oss.sgi.com>; Wed, 12 Aug 2009 22:16:48 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 59856149FBE3
-	for <xfs@oss.sgi.com>; Wed, 12 Aug 2009 20:17:14 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id QctMYnZTMoAZOgyz for
-	<xfs@oss.sgi.com>; Wed, 12 Aug 2009 20:17:14 -0700 (PDT)
-Message-ID: <4A838598.4000608@sandeen.net>
-Date: Wed, 12 Aug 2009 22:16:40 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	n7DCbW77020987 for <xfs@oss.sgi.com>; Thu, 13 Aug 2009 07:37:42 -0500
+Received: from mail.bgs.hu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id B07583C741A
+	for <xfs@oss.sgi.com>; Thu, 13 Aug 2009 05:37:49 -0700 (PDT)
+Received: from mail.bgs.hu (bgs.hu [195.228.254.245]) by cuda.sgi.com with
+	SMTP id 1PH8LZEdUsGU5ASP for <xfs@oss.sgi.com>;
+	Thu, 13 Aug 2009 05:37:49 -0700 (PDT)
+Message-ID: <4A84090A.6040601@bgs.hu>
+Date: Thu, 13 Aug 2009 14:37:30 +0200
+From: Bgs <bgs@bgs.hu>
 MIME-Version: 1.0
-Subject: Re: free space of root partition decreases unaccountably by some
-	1024	blocks on every umount+linux shutdown
-References: <200908121955.07682.edvx1@systemanalysen.net>
-In-Reply-To: <200908121955.07682.edvx1@systemanalysen.net>
+Subject: fs change on read-only mount
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,40 +21,28 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Roland Eggner <edvx1@systemanalysen.net>
-Cc: SGI Project XFS mailing list <xfs@oss.sgi.com>
+To: SGI Project XFS mailing list <xfs@oss.sgi.com>
 
-Roland Eggner wrote:
-> History which lead to actual problem
-> ------------------------------------
-> On July 4th I switched from kernel 2.6.29.5 to 2.6.29.6.
-> =
 
-> On July 18th I noticed the first time this unaccountable decrease of free=
- space of my root partition /dev/hda7:
-> For at least several boot-shutdown-cycles it has decreased on every cycle=
- by some 1020 =85 1030 blocks from originally above 100 MB to 96 MB.
-> Expected change at most =B11 block.  Neither xfs_check nor xfs_repair -dn=
- could detect any flaws.
+ Greetings,
 
-Maybe I missed it in the email, but how have you ruled out the
-possibility that files are simply growing, thereby using the space?
+I don't know xfs' superblock handling well enough, so I'm asking for
+advice here:
 
-Have you compared
+Does xfs write anything on the disk when mounting read-only? Is it
+possible to use a partitions hash (or some well defined portion of the
+partition) for integrity checks?
 
-# ls -laR /
+The partitions are used read-only and hash would be re-generated  if any
+rw action was done (after remount ro or full reboot of course). Can this
+be done? I'm concerned about 'mount count' like writes...
 
-and/or
-
-# du -hcx /
-
-between a couple of boots?
-
--Eric
+Thanks in advance
+Bgs
 
 _______________________________________________
 xfs mailing list
