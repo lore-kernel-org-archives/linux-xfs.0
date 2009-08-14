@@ -1,19 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7EDoCVD107915 for <xfs@oss.sgi.com>; Fri, 14 Aug 2009 08:50:22 -0500
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 845898F8111
-	for <xfs@oss.sgi.com>; Fri, 14 Aug 2009 06:50:58 -0700 (PDT)
-Message-Id: <A19572B5-36F2-447D-A0F5-96405150ED5E@sgi.com>
-From: Felix Blyakher <felixb@sgi.com>
-In-Reply-To: <4A84B050.4020500@sandeen.net>
-Mime-Version: 1.0 (Apple Message framework v930.3)
-Subject: Re: XFS corruption with failover
-Date: Fri, 14 Aug 2009 08:21:57 -0500
-References: <4A8474D2.7050508@jquigley.com>
-	<E037F1E5-2CC8-4F6E-92ED-AFE7BE6EBD1B@sgi.com>
-	<4A84B050.4020500@sandeen.net>
+	n7EEKYVW109613 for <xfs@oss.sgi.com>; Fri, 14 Aug 2009 09:20:50 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2E1CB1B6E4B3
+	for <xfs@oss.sgi.com>; Fri, 14 Aug 2009 07:21:21 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id INHRrOMZj7DNWoCs for
+	<xfs@oss.sgi.com>; Fri, 14 Aug 2009 07:21:21 -0700 (PDT)
+Date: Fri, 14 Aug 2009 10:18:07 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [Patch] Re: xfs crash, kernel 2.6.29
+Message-ID: <20090814141807.GA2891@infradead.org>
+References: <200908110921.50752.Christian.Fischer@easterngraphics.com>
+	<20090811142029.GB30913@infradead.org>
+	<200908141456.58683.Christian.Fischer@easterngraphics.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <200908141456.58683.Christian.Fischer@easterngraphics.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,48 +26,21 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: John Quigley <jquigley@jquigley.com>, XFS Development <xfs@oss.sgi.com>
+To: Christian Fischer <Christian.Fischer@easterngraphics.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Andrew Lyon <andrew.lyon@gmail.com>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
+On Fri, Aug 14, 2009 at 02:56:58PM +0200, Christian Fischer wrote:
+> backported to 2.6.29-xen-r4 from
+> http://code.google.com/p/gentoo-xen-kernel/downloads/list
+> 
+> Can you please review it?
 
-On Aug 13, 2009, at 7:31 PM, Eric Sandeen wrote:
-
->> This is an IO error. Is the block device (/dev/sde) accessible
->> from the server #2 OK? Can you dd from that device?
->
-> Are you sure?
-
-No, I'm not. Replied first without looking at the code ^)
-
->
->
->                if (ohead->oh_clientid != XFS_TRANSACTION &&
->                    ohead->oh_clientid != XFS_LOG) {
->                        xlog_warn(
->                "XFS: xlog_recover_process_data: bad clientid");
->                        ASSERT(0);
->                        return (XFS_ERROR(EIO));
->                }
->
-> so it does say EIO but that seems to me to be the wrong error; loks  
-> more
-> like a bad log to me.
-
-Agree. It does look like corrupted (incomplete) log.
-
->
->
-> It does make me wonder if there's any sort of per-initiator caching on
-> the iscsi target or something.  </handwave>
-
-Yep, somewhere piece of log left out in a cache, and wasn't flushed
-to disk.
-
-Felix
+I'll reviewed it and do some QA over the weekend, and we'll send it to
+-stable then.
 
 _______________________________________________
 xfs mailing list
