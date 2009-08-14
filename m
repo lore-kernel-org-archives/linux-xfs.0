@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7E1DoeS063752 for <xfs@oss.sgi.com>; Thu, 13 Aug 2009 20:14:00 -0500
-Received: from mail.jquigley.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AB5603CB301
-	for <xfs@oss.sgi.com>; Thu, 13 Aug 2009 18:14:32 -0700 (PDT)
-Received: from mail.jquigley.com (main.jquigley.com [67.23.32.156]) by
-	cuda.sgi.com with ESMTP id MjhxbaZWtprWTLtU for
-	<xfs@oss.sgi.com>; Thu, 13 Aug 2009 18:14:32 -0700 (PDT)
-Message-ID: <4A84BA59.5010604@jquigley.com>
-Date: Thu, 13 Aug 2009 20:14:01 -0500
-From: John Quigley <jquigley@jquigley.com>
+	n7E1YkVl064898 for <xfs@oss.sgi.com>; Thu, 13 Aug 2009 20:34:56 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E68FB3CADE3
+	for <xfs@oss.sgi.com>; Thu, 13 Aug 2009 18:35:22 -0700 (PDT)
+Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
+	cuda.sgi.com with ESMTP id rzF4SixsYJmIkn2l for
+	<xfs@oss.sgi.com>; Thu, 13 Aug 2009 18:35:22 -0700 (PDT)
+Message-ID: <4A84BF5A.8030502@sandeen.net>
+Date: Thu, 13 Aug 2009 20:35:22 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
 Subject: Re: XFS corruption with failover
-References: <1851101658.1934521250210319746.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
-In-Reply-To: <1851101658.1934521250210319746.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
+References: <1405534054.1935051250211481446.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
+In-Reply-To: <1405534054.1935051250211481446.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,20 +23,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Lachlan McIlroy <lmcilroy@redhat.com>
-Cc: XFS Development <xfs@oss.sgi.com>
+Cc: John Quigley <jquigley@jquigley.com>, XFS Development <xfs@oss.sgi.com>
 
 Lachlan McIlroy wrote:
-> If that fails too can you run xfs_logprint on /dev/sde and
-> post any errors it reports?
+> ----- "Eric Sandeen" <sandeen@sandeen.net> wrote:
+> 
+>> Felix Blyakher wrote:
+>>> On Aug 13, 2009, at 3:17 PM, John Quigley wrote:
+>>>
+>>>> Folks:
+>>>>
+>>>> We're deploying XFS in a configuration where the file system is  
+>>>> being exported with NFS.  XFS is being mounted on Linux, with  
+>>>> default options; an iSCSI volume is the formatted media.  We're  
+>>>> working out a failover solution for this deployment utilizing Linux
+>>  
+>>>> HA.  Things appear to work correctly in the general case, but in  
+>>>> continuous testing we're getting XFS superblock corruption on a
+>> very  
+>>>> reproducible basis.
+>>>> The sequence of events in our test scenario:
+>>>>
+>>>> 1. NFS server #1 online
+>>>> 2. Run IO to NFS server #1 from NFS client
+>>>> 3. NFS server #1 offline, (via passing 'b' to /proc/sysrq-trigger)
+>>>> 4. NFS server #2 online
+>>>> 5. XFS mounted as part of failover mechanism, mount fails
+>>>>
+>>>> The mount fails with the following:
+>>>>
+>>>> <snip>
+>>>> kernel: XFS mounting filesystem sde
+>>>> kernel: Starting XFS recovery on filesystem: sde (logdev:
+>> internal)
+>>>> kernel: XFS: xlog_recover_process_data: bad clientid
+>>>> kernel: XFS: log mount/recovery failed: error 5
+>>> This is an IO error. Is the block device (/dev/sde) accessible
+>>> from the server #2 OK? Can you dd from that device?
+>> Are you sure?
+>>
+>>                 if (ohead->oh_clientid != XFS_TRANSACTION &&
+>>                     ohead->oh_clientid != XFS_LOG) {
+>>                         xlog_warn(
+>>                 "XFS: xlog_recover_process_data: bad clientid");
+>>                         ASSERT(0);
+>>                         return (XFS_ERROR(EIO));
+>>                 }
+>>
+>> so it does say EIO but that seems to me to be the wrong error; loks
+>> more
+>> like a bad log to me.
+>>
+>> It does make me wonder if there's any sort of per-initiator caching
+>> on
+>> the iscsi target or something.  </handwave>
+> Should barriers be enabled in XFS then?
 
-I'll definitely do so, thanks.
+Could try it but I bet the iscsi target doesn't claim to support them...
 
-- John Quigley
+-eric
+
+>> -Eric
+>>
+>> _______________________________________________
+>> xfs mailing list
+>> xfs@oss.sgi.com
+>> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
