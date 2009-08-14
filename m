@@ -1,22 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7ECvIDS104041 for <xfs@oss.sgi.com>; Fri, 14 Aug 2009 07:57:34 -0500
-Received: from intranet.easterngraphics.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4A3F21B6E244
-	for <xfs@oss.sgi.com>; Fri, 14 Aug 2009 05:57:34 -0700 (PDT)
-Received: from intranet.easterngraphics.com (intranet.easterngraphics.com
-	[62.80.28.49]) by cuda.sgi.com with ESMTP id rSiHHXVB9wfVYl4L
-	for <xfs@oss.sgi.com>; Fri, 14 Aug 2009 05:57:34 -0700 (PDT)
-From: Christian Fischer <Christian.Fischer@easterngraphics.com>
-Subject: [Patch] Re: xfs crash, kernel 2.6.29
-Date: Fri, 14 Aug 2009 14:56:58 +0200
-References: <200908110921.50752.Christian.Fischer@easterngraphics.com>
-	<20090811142029.GB30913@infradead.org>
-In-Reply-To: <20090811142029.GB30913@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-Message-Id: <200908141456.58683.Christian.Fischer@easterngraphics.com>
+	n7EDoCVD107915 for <xfs@oss.sgi.com>; Fri, 14 Aug 2009 08:50:22 -0500
+Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 845898F8111
+	for <xfs@oss.sgi.com>; Fri, 14 Aug 2009 06:50:58 -0700 (PDT)
+Message-Id: <A19572B5-36F2-447D-A0F5-96405150ED5E@sgi.com>
+From: Felix Blyakher <felixb@sgi.com>
+In-Reply-To: <4A84B050.4020500@sandeen.net>
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Subject: Re: XFS corruption with failover
+Date: Fri, 14 Aug 2009 08:21:57 -0500
+References: <4A8474D2.7050508@jquigley.com>
+	<E037F1E5-2CC8-4F6E-92ED-AFE7BE6EBD1B@sgi.com>
+	<4A84B050.4020500@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,41 +22,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Andrew Lyon <andrew.lyon@gmail.com>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: John Quigley <jquigley@jquigley.com>, XFS Development <xfs@oss.sgi.com>
 
-On Tuesday 11 August 2009, Christoph Hellwig wrote:
-> On Tue, Aug 11, 2009 at 09:21:50AM +0200, Christian Fischer wrote:
-> > We had a new crash yesterday, server uptime maybe 20 hours.
-> >
-> > This is 2.6.29-xen-r4 from
-> > http://code.google.com/p/gentoo-xen-kernel/downloads/list
-> >
-> > @Eric/Andrew: do we have a xfs or a xen patches problem?
+
+On Aug 13, 2009, at 7:31 PM, Eric Sandeen wrote:
+
+>> This is an IO error. Is the block device (/dev/sde) accessible
+>> from the server #2 OK? Can you dd from that device?
 >
-> It's a known bug that we just fixed in 2.6.31-rc.  Can you check if this
-> patch
+> Are you sure?
+
+No, I'm not. Replied first without looking at the code ^)
+
 >
-> 	http://bugzilla.kernel.org/attachment.cgi?id=22590
 >
-> applies to 2.6.29 (I produced it against 2.6.30)
+>                if (ohead->oh_clientid != XFS_TRANSACTION &&
+>                    ohead->oh_clientid != XFS_LOG) {
+>                        xlog_warn(
+>                "XFS: xlog_recover_process_data: bad clientid");
+>                        ASSERT(0);
+>                        return (XFS_ERROR(EIO));
+>                }
+>
+> so it does say EIO but that seems to me to be the wrong error; loks  
+> more
+> like a bad log to me.
 
-backported to 2.6.29-xen-r4 from
-http://code.google.com/p/gentoo-xen-kernel/downloads/list
+Agree. It does look like corrupted (incomplete) log.
 
-Can you please review it?
+>
+>
+> It does make me wonder if there's any sort of per-initiator caching on
+> the iscsi target or something.  </handwave>
 
-The kernel complies and runs, but I can't test it.
-I can't reproduce a crash as you could with 2.6.30 and 2.6.31.
-Nothing triggers it.
+Yep, somewhere piece of log left out in a cache, and wasn't flushed
+to disk.
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13375
-
-Christian
+Felix
 
 _______________________________________________
 xfs mailing list
