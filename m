@@ -1,14 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7E0cBpJ061225 for <xfs@oss.sgi.com>; Thu, 13 Aug 2009 19:38:21 -0500
-Date: Thu, 13 Aug 2009 20:38:39 -0400 (EDT)
-From: Lachlan McIlroy <lmcilroy@redhat.com>
-Message-ID: <1851101658.1934521250210319746.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
-In-Reply-To: <424153067.1934481250210293891.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
-Subject: Re: XFS corruption with failover
+	n7E19V8B063464 for <xfs@oss.sgi.com>; Thu, 13 Aug 2009 20:09:47 -0500
+Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 97F183CB055
+	for <xfs@oss.sgi.com>; Thu, 13 Aug 2009 18:10:06 -0700 (PDT)
+Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.162.198]) by
+	cuda.sgi.com with ESMTP id StQ6E9yN1xtWaJNG for
+	<xfs@oss.sgi.com>; Thu, 13 Aug 2009 18:10:06 -0700 (PDT)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: Resizing XFS on GPT partition
+Date: Fri, 14 Aug 2009 03:09:29 +0200
+References: <200908140148.28810@zmi.at> <4A84AF6C.3010801@sandeen.net>
+In-Reply-To: <4A84AF6C.3010801@sandeen.net>
 MIME-Version: 1.0
-Reply-To: Lachlan McIlroy <lmcilroy@redhat.com>
+Message-Id: <200908140309.34058@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,97 +23,80 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============1562202076616467498=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Felix Blyakher <felixb@sgi.com>
-Cc: John Quigley <jquigley@jquigley.com>, XFS Development <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: Eric Sandeen <sandeen@sandeen.net>
 
------ "Felix Blyakher" <felixb@sgi.com> wrote:
+--===============1562202076616467498==
+Content-Type: multipart/signed;
+  boundary="nextPart37899587.xJ3sraQm2n";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-> On Aug 13, 2009, at 3:17 PM, John Quigley wrote:
-> 
-> > Folks:
-> >
-> > We're deploying XFS in a configuration where the file system is  
-> > being exported with NFS.  XFS is being mounted on Linux, with  
-> > default options; an iSCSI volume is the formatted media.  We're  
-> > working out a failover solution for this deployment utilizing Linux 
-> 
-> > HA.  Things appear to work correctly in the general case, but in  
-> > continuous testing we're getting XFS superblock corruption on a very
->  
-> > reproducible basis.
-> > The sequence of events in our test scenario:
-> >
-> > 1. NFS server #1 online
-> > 2. Run IO to NFS server #1 from NFS client
-> > 3. NFS server #1 offline, (via passing 'b' to /proc/sysrq-trigger)
-> > 4. NFS server #2 online
-> > 5. XFS mounted as part of failover mechanism, mount fails
-> >
-> > The mount fails with the following:
-> >
-> > <snip>
-> > kernel: XFS mounting filesystem sde
-> > kernel: Starting XFS recovery on filesystem: sde (logdev: internal)
-> > kernel: XFS: xlog_recover_process_data: bad clientid
-> > kernel: XFS: log mount/recovery failed: error 5
-> 
-> This is an IO error. Is the block device (/dev/sde) accessible
-> from the server #2 OK? Can you dd from that device?
-> 
-> >
-> > kernel: XFS: log mount failed
-> > </snip>
-> >
-> > When running xfs_repair:
-> 
-> That's not a good time to run xfs_repair. There were no
-> indication that the filesystem is corrupted.
-> 
-> Let's take for a sec "NFS server #2" out of the picture.
-> Can you mount the filesystem from the original server
-> after it reboots?
-If that fails too can you run xfs_logprint on /dev/sde and
-post any errors it reports?
+--nextPart37899587.xJ3sraQm2n
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-> 
-> Felix
-> 
-> >
-> >
-> > <snip>
-> > [root@machine ~]# xfs_repair /dev/sde xfs_repair: warning - cannot 
-> 
-> > set blocksize on block device /dev/sde: Invalid argument
-> > Phase 1 - find and verify superblock...
-> > Phase 2 - using internal log
-> >       - zero log...
-> > ERROR: The filesystem has valuable metadata changes in a log which 
-> 
-> > needs ...
-> > </snip>
-> >
-> > Any advice or insight into what we're doing wrong would be very much
->  
-> > appreciated.  My apologies in advance for the somewhat off-topic  
-> > question.
-> >
-> > - John Quigley
-> >
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+On Freitag 14 August 2009 Eric Sandeen wrote:
+> File a bug against parted. =A0:)
+
+You think that's easy? I went there:
+http://parted.alioth.debian.org/cgi-bin/trac.cgi/newticket#preview
+And always got this:
+500 Internal Server Error (Submission rejected as potential spam)
+
+After creating an account the text was accepted:
+http://parted.alioth.debian.org/cgi-bin/trac.cgi/ticket/222
+
+> I agree, parted should just resize the partition as you asked and
+> shut up about anything else. =A0I'm surprised that it can't - even if
+> the fs is unmounted?
+
+Yes, unmounted, of course. They are strange. They know xfs does this=20
+only when online. I wonder what they will write about my report.
+
+> I have no idea what happened to "do one thing and do it well." =A0:)
+
+Yes, KISS (keep it small and simple).
+
+mfg zmi
+=2D-=20
+// Michael Monnerie, Ing.BSc    -----      http://it-management.at
+// Tel: 0660 / 415 65 31                      .network.your.ideas.
+// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
+// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
+// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
+
+
+--nextPart37899587.xJ3sraQm2n
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+
+iEYEABECAAYFAkqEuU0ACgkQzhSR9xwSCbTY7QCeLf+WHU33ihfcBXvXUmo5Flbj
+RdAAoON65huS32JgjlJ39LSIHn+Bz8tT
+=ZxAD
+-----END PGP SIGNATURE-----
+
+--nextPart37899587.xJ3sraQm2n--
+
+
+--===============1562202076616467498==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============1562202076616467498==--
