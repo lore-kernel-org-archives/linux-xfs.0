@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7E167S5063009 for <xfs@oss.sgi.com>; Thu, 13 Aug 2009 20:06:18 -0500
+	n7E0o6Gw061996 for <xfs@oss.sgi.com>; Thu, 13 Aug 2009 19:50:18 -0500
 Received: from mail.jquigley.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4878D1B69441
-	for <xfs@oss.sgi.com>; Thu, 13 Aug 2009 18:06:52 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A48983CB1F1
+	for <xfs@oss.sgi.com>; Thu, 13 Aug 2009 17:50:42 -0700 (PDT)
 Received: from mail.jquigley.com (main.jquigley.com [67.23.32.156]) by
-	cuda.sgi.com with ESMTP id V0dZrCjnynyf2hgb for
-	<xfs@oss.sgi.com>; Thu, 13 Aug 2009 18:06:52 -0700 (PDT)
-Received: from [10.1.1.11] (OSH-NAT-213-122.onshore.net [66.146.213.122])
-	(Authenticated sender: jquigley@mail.jquigley.com)
-	by mail.jquigley.com (Postfix) with ESMTPSA id 7F102204116
-	for <xfs@oss.sgi.com>; Fri, 14 Aug 2009 01:06:19 +0000 (UTC)
-Message-ID: <4A84B88A.4070701@jquigley.com>
-Date: Thu, 13 Aug 2009 20:06:18 -0500
+	cuda.sgi.com with ESMTP id Jg4k6PhyAeka0SsI for
+	<xfs@oss.sgi.com>; Thu, 13 Aug 2009 17:50:42 -0700 (PDT)
+Message-ID: <4A84B4DE.1090809@jquigley.com>
+Date: Thu, 13 Aug 2009 19:50:38 -0500
 From: John Quigley <jquigley@jquigley.com>
 MIME-Version: 1.0
 Subject: Re: XFS corruption with failover
-References: <4A8474D2.7050508@jquigley.com>	<E037F1E5-2CC8-4F6E-92ED-AFE7BE6EBD1B@sgi.com>
-	<4A84B050.4020500@sandeen.net>
-In-Reply-To: <4A84B050.4020500@sandeen.net>
+References: <4A8474D2.7050508@jquigley.com>
+	<20090813231739.5c7db91d@galadriel.home>
+In-Reply-To: <20090813231739.5c7db91d@galadriel.home>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,41 +28,30 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: XFS Development <xfs@oss.sgi.com>
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: XFS Development <xfs@oss.sgi.com>
 
-Eric Sandeen wrote:
-> Are you sure?
-> 
->                 if (ohead->oh_clientid != XFS_TRANSACTION &&
->                     ohead->oh_clientid != XFS_LOG) {
->                         xlog_warn(
->                 "XFS: xlog_recover_process_data: bad clientid");
->                         ASSERT(0);
->                         return (XFS_ERROR(EIO));
->                 }
-> 
-> so it does say EIO but that seems to me to be the wrong error; loks more
-> like a bad log to me.
+Emmanuel Florac wrote:
+> By killing abruptly the primary server while doing IO, you're probably
+> pushing the envelope... You may have a somewhat better luck with a
+> cluster fs, OCFS2 works very well for me usually (GFS is a complete
+> PITA to setup).
 
-Hey Eric:
+Acknowledged; we've looked at GFS, and I've been meaning to read up on OCFS2.  For various reasons, particularly performance, ease of deployment and flexible growth, XFS has been the clear winner in our particular case (and our case is fairly unique, as our volume is backed by a distributed storage device).
 
-That would certainly be consistent with our experience, as the only way we're able to bring the file system back online is by zeroing the log.
+> You can get it to flush extremely
+> often by playing with  /proc/sys/vm/dirty_expire_centiseconds
+> and /proc/sys/vm/dirty_writeback_centisecs, though. Safer settings
+> generally imply terrible performance, though, you've been warned.
 
-> It does make me wonder if there's any sort of per-initiator caching on
-> the iscsi target or something.  </handwave>
+Okay, interesting, I wasn't aware of these and will look into it.
 
-There isn't, as mentioned above, though we have several intermediate layers between the file system and iSCSI initiator, including multipath and LVM, both of which I was initially suspicious of.  In testing with a similar scenario but in a more isolate fashion without those two intermediates, the behavior was still present.  Also, just to clarify the topology:
+> Ah another thing may be some cache option in the iSCSI target. what
+> target are you using?  
 
-                  /-----[Failover Secondary]------\
-                 /                                 \
- NFS Client ----/                                   \-----[ISCSI Target]----[Distributed Storage]
-                \                                   /
-                 \                                 /
-                  \-----[Failover Primary]--------/
+No caching target side - I can speak definitely on that because I wrote it (integrates with our data dispersal stack [1]).  Also, we're utilizing the same target when failing over; it's just the ISCSI initiator (aka, the NFS server) that is changing.
 
-Those two failover machines, Primary and Secondary, act as the NFS server, the XFS mountpoint and ISCSI initiator.  Only one failover machine is logged into the ISCSI target/has XFS mounted.
-
-Thanks very much for your cycles on this guys.
+Thank you kindly for the quick response.
 
 - John Quigley
 
