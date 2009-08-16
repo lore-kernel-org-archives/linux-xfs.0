@@ -1,18 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7G2MkYT220171 for <xfs@oss.sgi.com>; Sat, 15 Aug 2009 21:23:02 -0500
-Date: Sat, 15 Aug 2009 22:23:31 -0400
+	n7G2OGwc220236 for <xfs@oss.sgi.com>; Sat, 15 Aug 2009 21:24:31 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 583EA3D2D86
+	for <xfs@oss.sgi.com>; Sat, 15 Aug 2009 19:25:01 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id pNx76kIThExvFS3K for
+	<xfs@oss.sgi.com>; Sat, 15 Aug 2009 19:25:01 -0700 (PDT)
+Date: Sat, 15 Aug 2009 22:25:00 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Kernel 2.6.30.4 XFS(..?) regression (happened again)
-Message-ID: <20090816022331.GA2309@infradead.org>
-References: <alpine.DEB.2.00.0908080422440.12329@p34.internal.lan>
-	<00980BBF-1206-4BEF-A8AE-B4A8DAE7EC27@sgi.com>
-	<alpine.DEB.2.00.0908090605080.16485@p34.internal.lan>
-	<alpine.DEB.2.00.0908110624420.22426@p34.internal.lan>
+Subject: Re: [PATCH, RFC] xfs: batched discard support
+Message-ID: <20090816022500.GA12392@infradead.org>
+References: <20090816004705.GA7347@infradead.org> <4A876255.10606@rtr.ca>
+	<4A876CA9.20906@rtr.ca>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.00.0908110624420.22426@p34.internal.lan>
+In-Reply-To: <4A876CA9.20906@rtr.ca>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,17 +29,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Mark Lord <liml@rtr.ca>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, jens.axboe@oracle.com, linux-fsdevel@vger.kernel.org
 
-All your traces seem to have in common that you're block on locks hold
-by processed doing I/O.  Especially a lot of page locks which are
-controlled by the VM and not the filesystem.  Can you try with commit
-8aa7e847d834ed937a9ad37a0f2ad5b8584c1ab0 from 2.6.31-rc applied, or
-better directly 2.6.3-rc6?
+On Sat, Aug 15, 2009 at 10:19:21PM -0400, Mark Lord wrote:
+> Mark Lord wrote:
+>> Christoph Hellwig wrote:
+> ..
+>>> Mark, any chance to try it?  Just create an XFS filesystem, age it a
+>>> bit and then call the attached little trim.c program on the mountmoint
+>>> (or any file inside the filesystem for that matter)
+>> ..
+>>
+>> Looking at it now.  Thanks, Christoph!
+> ..
+>
+> Fails to work on 64-bit kernel w/ 32-bit userspace (no compat ioctl).
+> Rebuilding with 32-bit kernel now..
 
-I would be surprised if this is something inside XFS, but running with
-CONFIG_XFS_DEBUG never hurts.
+The actual ioctl is compatible, just add the
+
+	case XFS_IOC_TRIM:
+		return xfs_ioc_trim(mp, arg);
+
+to xfs_file_compat_ioctl().  I'll add this to the next spin of the
+patch.
 
 _______________________________________________
 xfs mailing list
