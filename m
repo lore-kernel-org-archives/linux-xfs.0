@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7GL1Dnm018430 for <xfs@oss.sgi.com>; Sun, 16 Aug 2009 16:01:23 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 80F801D5A952
-	for <xfs@oss.sgi.com>; Sun, 16 Aug 2009 14:01:40 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id g6BuZZikR0J6ILcX for
-	<xfs@oss.sgi.com>; Sun, 16 Aug 2009 14:01:40 -0700 (PDT)
-Message-ID: <4A8873B0.30203@sandeen.net>
-Date: Sun, 16 Aug 2009 16:01:36 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH 1/4] xfs: fix locking in xfs_iget_cache_hit
-References: <20090804141554.992235000@bombadil.infradead.org>	<20090804141834.526088000@bombadil.infradead.org>	<24CFF78E-BB3F-47A1-8D6C-49EA198CCD94@sgi.com>
-	<20090810170940.GA2580@infradead.org>
+	n7GNapQd029112 for <xfs@oss.sgi.com>; Sun, 16 Aug 2009 18:37:01 -0500
+Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1EFC18F80FC
+	for <xfs@oss.sgi.com>; Sun, 16 Aug 2009 16:37:39 -0700 (PDT)
+Message-Id: <BF8D127F-8F72-4B8C-B14C-24DD1C7EC235@sgi.com>
+From: Felix Blyakher <felixb@sgi.com>
 In-Reply-To: <20090810170940.GA2580@infradead.org>
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Subject: Re: [PATCH 1/4] xfs: fix locking in xfs_iget_cache_hit
+Date: Sun, 16 Aug 2009 17:54:35 -0500
+References: <20090804141554.992235000@bombadil.infradead.org>
+	<20090804141834.526088000@bombadil.infradead.org>
+	<24CFF78E-BB3F-47A1-8D6C-49EA198CCD94@sgi.com>
+	<20090810170940.GA2580@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,78 +23,159 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
 
+On Aug 10, 2009, at 12:09 PM, Christoph Hellwig wrote:
+
+> On Fri, Aug 07, 2009 at 12:25:47PM -0500, Felix Blyakher wrote:
+>>> +	if (ip->i_flags & XFS_INEW) {
+>>
+>> Another case when we find XFS_INEW set is the race with the
+>> cache miss, which just set up a new inode. Would the proposed
+>> code be still sensible in that case? If yes, at least comments
+>> should be updated.
+>
+>>> +		wait_on_inode(inode);
+>>
+>> It's possible to have XFS_INEW set, but no I_LOCK|I_NEW yet.
+>> Then the wait_on_inode() would return quickly even before the
+>> linux inode is reinitialized. Though, that was the case with
+>> the old code as well.
+>
+> The wait_on_inode is only sensible for the non-recycle case.
+
+The case, I was referring to, was indeed the reclaimable one when
+the first thread is going through
+
+     xfs_iget
+	xfs_iget_cache_hit
+             if (ip->i_flags & XFS_IRECLAIMABLE) {
+                 ip->i_flags |= XFS_INEW;
+-->
+         xfs_setup_inode
+             inode->i_state = I_NEW|I_LOCK;
+
+
+while another therad run through the following sequence right where the
+arrow shows above:
+
+         xfs_iget_cache_hit
+             if (ip->i_flags & XFS_INEW) {
+                 wait_on_inode
+
+There is nothing to wait on here yet, as I_LOCK is not set yet.
+
+		
+> But it's
+> not actually very useful with our flags scheme, so for now I've  
+> reverted
+> to do the old-style polling and just added an XXX comment that we'll
+> eventually look into a better scheme.
+>
+>>> +	/*
+>>> +	 * If lookup is racing with unlink, then we should return an
+>>> +	 * error immediately so we don't remove it from the reclaim
+>>> +	 * list and potentially leak the inode.
+>>> +	 */
+>>> +	if (ip->i_d.di_mode == 0 && !(flags & XFS_IGET_CREATE)) {
+>>
+>> Previously the conclusion of the race with unlink was based on
+>> XFS_IRECLAIMABLE i_flag set in addition to the test above.
+>> Is is no longer a case, or not really necessary?
+>
+> We actually had the test two times in the old code, once for the
+> reclaim case, and once after the igrab succeeded. I just moved it into
+
+> a single command place.
+
+which doesn't test for XFS_IRECLAIMABLE.
+I just wanted to make sure that was the intention.
+
+>  I've updated the comment to match that.
+
+Thanks, that will make the intention clear.
+
+>
+>
+>
 > New version below:
-
+>
+> -- 
+>
+> Subject: xfs: fix locking in xfs_iget_cache_hit
+> From: Christoph Hellwig <hch@lst.de>
+>
 > The locking in xfs_iget_cache_hit currently has numerous problems:
-> 
->  - we clear the reclaim tag without i_flags_lock which protects modifications
->    to it
->  - we call inode_init_always which can sleep with pag_ici_lock held
->    (this is oss.sgi.com BZ #819)
->  - we acquire and drop i_flags_lock a lot and thus provide no consistency
->    between the various flags we set/clear under it
-> 
-> This patch fixes all that with a major revamp of the locking in the function.
-> The new version acquires i_flags_lock early and only drops it once we need to
+>
+> - we clear the reclaim tag without i_flags_lock which protects  
+> modifications
+>   to it
+> - we call inode_init_always which can sleep with pag_ici_lock held
+>   (this is oss.sgi.com BZ #819)
+> - we acquire and drop i_flags_lock a lot and thus provide no  
+> consistency
+>   between the various flags we set/clear under it
+>
+> This patch fixes all that with a major revamp of the locking in the  
+> function.
+> The new version acquires i_flags_lock early and only drops it once  
+> we need to
 > call into inode_init_always or before calling xfs_ilock.
-> 
-> This patch fixes a bug seen in the wild where we race modifying the reclaim tag.
-> 
+>
+> This patch fixes a bug seen in the wild where we race modifying the  
+> reclaim tag.
+>
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-This seems ok to me but I have to be honest, I'm having a hard time
-getting my head around back into the inode lifecycle.
+Reviewed-by: Felix Blyakher <felixb@sgi.com>
 
-one comment, I wonder if it's worth capturing the actual error from
-inode_init_always() vs. turning every error into ENOMEM?  True, today
-it's the only error we can get but why re-set it?
-
--Eric
-
+>
+>
 > Index: linux-2.6/fs/xfs/xfs_iget.c
 > ===================================================================
-> --- linux-2.6.orig/fs/xfs/xfs_iget.c	2009-08-10 13:10:19.141974933 -0300
+> --- linux-2.6.orig/fs/xfs/xfs_iget.c	2009-08-10 13:10:19.141974933  
+> -0300
 > +++ linux-2.6/fs/xfs/xfs_iget.c	2009-08-10 13:19:06.913056731 -0300
 > @@ -191,80 +191,83 @@ xfs_iget_cache_hit(
->  	int			flags,
->  	int			lock_flags) __releases(pag->pag_ici_lock)
->  {
+> 	int			flags,
+> 	int			lock_flags) __releases(pag->pag_ici_lock)
+> {
 > +	struct inode		*inode = VFS_I(ip);
->  	struct xfs_mount	*mp = ip->i_mount;
+> 	struct xfs_mount	*mp = ip->i_mount;
 > -	int			error = EAGAIN;
 > +	int			error;
 > +
 > +	spin_lock(&ip->i_flags_lock);
->  
->  	/*
+>
+> 	/*
 > -	 * If INEW is set this inode is being set up
 > -	 * If IRECLAIM is set this inode is being torn down
 > -	 * Pause and try again.
 > +	 * If we are racing with another cache hit that is currently
 > +	 * instantiating this inode or currently recycling it out of
 > +	 * reclaimabe state, wait for the initialisation to complete
+                      ^ l
+
+>
 > +	 * before continuing.
 > +	 *
 > +	 * XXX(hch): eventually we should do something equivalent to
 > +	 *	     wait_on_inode to wait for these flags to be cleared
 > +	 *	     instead of polling for it.
->  	 */
+> 	 */
 > -	if (xfs_iflags_test(ip, (XFS_INEW|XFS_IRECLAIM))) {
 > +	if (ip->i_flags & (XFS_INEW|XFS_IRECLAIM)) {
->  		XFS_STATS_INC(xs_ig_frecycle);
+> 		XFS_STATS_INC(xs_ig_frecycle);
 > +		error = EAGAIN;
->  		goto out_error;
->  	}
->  
+> 		goto out_error;
+> 	}
+>
 > -	/* If IRECLAIMABLE is set, we've torn down the vfs inode part */
 > -	if (xfs_iflags_test(ip, XFS_IRECLAIMABLE)) {
 > -
@@ -115,15 +195,15 @@ it's the only error we can get but why re-set it?
 > +		error = ENOENT;
 > +		goto out_error;
 > +	}
->  
+>
 > +	/*
 > +	 * If IRECLAIMABLE is set, we've torn down the VFS inode already.
 > +	 * Need to carefully get it back into useable state.
 > +	 */
 > +	if (ip->i_flags & XFS_IRECLAIMABLE) {
->  		xfs_itrace_exit_tag(ip, "xfs_iget.alloc");
->  
->  		/*
+> 		xfs_itrace_exit_tag(ip, "xfs_iget.alloc");
+>
+> 		/*
 > -		 * We need to re-initialise the VFS inode as it has been
 > -		 * 'freed' by the VFS. Do this here so we can deal with
 > -		 * errors cleanly, then tag it so it can be set up correctly
@@ -131,7 +211,7 @@ it's the only error we can get but why re-set it?
 > +		 * We need to set XFS_INEW atomically with clearing the
 > +		 * reclaimable tag so that we do have an indicator of the
 > +		 * inode still being initialized.
->  		 */
+> 		 */
 > -		if (inode_init_always(mp->m_super, VFS_I(ip))) {
 > +		ip->i_flags |= XFS_INEW;
 > +		ip->i_flags &= ~XFS_IRECLAIMABLE;
@@ -152,9 +232,9 @@ it's the only error we can get but why re-set it?
 > +			ip->i_flags |= XFS_IRECLAIMABLE;
 > +			__xfs_inode_set_reclaim_tag(pag, ip);
 > +
->  			error = ENOMEM;
->  			goto out_error;
->  		}
+> 			error = ENOMEM;
+> 			goto out_error;
+> 		}
 > -
 > -		/*
 > -		 * We must set the XFS_INEW flag before clearing the
@@ -170,8 +250,12 @@ it's the only error we can get but why re-set it?
 > -		__xfs_inode_clear_reclaim_tag(mp, pag, ip);
 > -	} else if (!igrab(VFS_I(ip))) {
 > +		inode->i_state = I_LOCK|I_NEW;
+
+Seems redundant, as that will be set one step later in  
+xfs_setup_inode().
+
 > +	} else {
->  		/* If the VFS inode is being torn down, pause and try again. */
+> 		/* If the VFS inode is being torn down, pause and try again. */
 > -		XFS_STATS_INC(xs_ig_frecycle);
 > -		goto out_error;
 > -	} else if (xfs_iflags_test(ip, XFS_INEW)) {
@@ -187,7 +271,7 @@ it's the only error we can get but why re-set it?
 > +			error = EAGAIN;
 > +			goto out_error;
 > +		}
->  
+>
 > -	if (ip->i_d.di_mode == 0 && !(flags & XFS_IGET_CREATE)) {
 > -		error = ENOENT;
 > -		iput(VFS_I(ip));
@@ -195,30 +279,32 @@ it's the only error we can get but why re-set it?
 > +		/* We've got a live one. */
 > +		spin_unlock(&ip->i_flags_lock);
 > +		read_unlock(&pag->pag_ici_lock);
->  	}
->  
+> 	}
+>
 > -	/* We've got a live one. */
 > -	read_unlock(&pag->pag_ici_lock);
 > -
->  	if (lock_flags != 0)
->  		xfs_ilock(ip, lock_flags);
->  
+> 	if (lock_flags != 0)
+> 		xfs_ilock(ip, lock_flags);
+>
 > @@ -274,6 +277,7 @@ xfs_iget_cache_hit(
->  	return 0;
->  
->  out_error:
+> 	return 0;
+>
+> out_error:
 > +	spin_unlock(&ip->i_flags_lock);
->  	read_unlock(&pag->pag_ici_lock);
->  	return error;
->  }
+> 	read_unlock(&pag->pag_ici_lock);
+> 	return error;
+> }
 > Index: linux-2.6/fs/xfs/linux-2.6/xfs_sync.c
 > ===================================================================
-> --- linux-2.6.orig/fs/xfs/linux-2.6/xfs_sync.c	2009-08-10 13:10:19.146974522 -0300
-> +++ linux-2.6/fs/xfs/linux-2.6/xfs_sync.c	2009-08-10 13:10:59.958993938 -0300
+> --- linux-2.6.orig/fs/xfs/linux-2.6/xfs_sync.c	2009-08-10  
+> 13:10:19.146974522 -0300
+> +++ linux-2.6/fs/xfs/linux-2.6/xfs_sync.c	2009-08-10  
+> 13:10:59.958993938 -0300
 > @@ -708,6 +708,16 @@ xfs_reclaim_inode(
->  	return 0;
->  }
->  
+> 	return 0;
+> }
+>
 > +void
 > +__xfs_inode_set_reclaim_tag(
 > +	struct xfs_perag	*pag,
@@ -229,32 +315,35 @@ it's the only error we can get but why re-set it?
 > +			   XFS_ICI_RECLAIM_TAG);
 > +}
 > +
->  /*
->   * We set the inode flag atomically with the radix tree tag.
->   * Once we get tag lookups on the radix tree, this inode flag
+> /*
+>  * We set the inode flag atomically with the radix tree tag.
+>  * Once we get tag lookups on the radix tree, this inode flag
 > @@ -722,8 +732,7 @@ xfs_inode_set_reclaim_tag(
->  
->  	read_lock(&pag->pag_ici_lock);
->  	spin_lock(&ip->i_flags_lock);
+>
+> 	read_lock(&pag->pag_ici_lock);
+> 	spin_lock(&ip->i_flags_lock);
 > -	radix_tree_tag_set(&pag->pag_ici_root,
 > -			XFS_INO_TO_AGINO(mp, ip->i_ino), XFS_ICI_RECLAIM_TAG);
 > +	__xfs_inode_set_reclaim_tag(pag, ip);
->  	__xfs_iflags_set(ip, XFS_IRECLAIMABLE);
->  	spin_unlock(&ip->i_flags_lock);
->  	read_unlock(&pag->pag_ici_lock);
+> 	__xfs_iflags_set(ip, XFS_IRECLAIMABLE);
+> 	spin_unlock(&ip->i_flags_lock);
+> 	read_unlock(&pag->pag_ici_lock);
 > Index: linux-2.6/fs/xfs/linux-2.6/xfs_sync.h
 > ===================================================================
-> --- linux-2.6.orig/fs/xfs/linux-2.6/xfs_sync.h	2009-08-10 13:10:19.153974227 -0300
-> +++ linux-2.6/fs/xfs/linux-2.6/xfs_sync.h	2009-08-10 13:10:59.962994168 -0300
+> --- linux-2.6.orig/fs/xfs/linux-2.6/xfs_sync.h	2009-08-10  
+> 13:10:19.153974227 -0300
+> +++ linux-2.6/fs/xfs/linux-2.6/xfs_sync.h	2009-08-10  
+> 13:10:59.962994168 -0300
 > @@ -48,6 +48,7 @@ int xfs_reclaim_inode(struct xfs_inode *
->  int xfs_reclaim_inodes(struct xfs_mount *mp, int mode);
->  
->  void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
-> +void __xfs_inode_set_reclaim_tag(struct xfs_perag *pag, struct xfs_inode *ip);
->  void xfs_inode_clear_reclaim_tag(struct xfs_inode *ip);
->  void __xfs_inode_clear_reclaim_tag(struct xfs_mount *mp, struct xfs_perag *pag,
->  				struct xfs_inode *ip);
-
+> int xfs_reclaim_inodes(struct xfs_mount *mp, int mode);
+>
+> void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
+> +void __xfs_inode_set_reclaim_tag(struct xfs_perag *pag, struct  
+> xfs_inode *ip);
+> void xfs_inode_clear_reclaim_tag(struct xfs_inode *ip);
+> void __xfs_inode_clear_reclaim_tag(struct xfs_mount *mp, struct  
+> xfs_perag *pag,
+> 				struct xfs_inode *ip);
 
 _______________________________________________
 xfs mailing list
