@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7JIiNZk221128 for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 13:44:38 -0500
+	n7JIiO87221131 for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 13:44:39 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 02F3514E5920
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1659514E5924
 	for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 11:45:12 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id xHBWoZ9kFiWrQxdX for
+	by cuda.sgi.com with ESMTP id 5nX5vgZaJBTWbnOe for
 	<xfs@oss.sgi.com>; Wed, 19 Aug 2009 11:45:12 -0700 (PDT)
-Message-Id: <20090819184512.134691786@bombadil.infradead.org>
-Date: Wed, 19 Aug 2009 14:43:00 -0400
+Message-Id: <20090819184512.292693252@bombadil.infradead.org>
+Date: Wed, 19 Aug 2009 14:43:01 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 2/4] vfs: add __destroy_inode
+Subject: [PATCH 3/4] xfs: fix freeing of inodes not yet added to the inode
+	cache
 References: <20090819184258.542698202@bombadil.infradead.org>
-Content-Disposition: inline; filename=iget2
+Content-Disposition: inline; filename=iget3
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,61 +31,216 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: stable@kernel.org
 Cc: xfs@oss.sgi.com
 
-When we want to tear down an inode that lost the add to the cache race
-in XFS we must not call into ->destroy_inode because that would delete
-the inode that won the race from the inode cache radix tree.
+When freeing an inode that lost race getting added to the inode cache we
+must not call into ->destroy_inode, because that would delete the inode
+that won the race from the inode cache radix tree.
     
-This patch provides the __destroy_inode helper needed to fix this,
-the actual fix will be in th next patch.  As XFS was the only reason
-destroy_inode was exported we shift the export to the new __destroy_inode.
-    
-backport of upstream commit 2e00c97e2c1d2ffc9e26252ca26b237678b0b772
+This patch uses splits a new xfs_inode_free helper out of xfs_ireclaim
+and uses that plus __destroy_inode to make sure we really only free
+the memory allocted for the inode that lost the race, and not mess with
+the inode cache state.
 
+upstream commit b36ec0428a06fcbdb67d61e9e664154e5dd9a8c7
+    
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
+Reported-by: Alex Samad <alex@samad.com.au>
+Reported-by: Andrew Randrianasulu <randrik@mail.ru>
+Reported-by: Stephane <sharnois@max-t.com>
+Reported-by: Tommy <tommy@news-service.com>
+Reported-by: Miah Gregory <mace@darksilence.net>
+Reported-by: Gabriel Barazer <gabriel@oxeva.fr>
+Reported-by: Leandro Lucarella <llucax@gmail.com>
+Reported-by: Daniel Burr <dburr@fami.com.au>
+Reported-by: Nickolay <newmail@spaces.ru>
+Reported-by: Michael Guntsche <mike@it-loops.com>
+Reported-by: Dan Carley <dan.carley+linuxkern-bugs@gmail.com>
+Reported-by: Michael Ole Olsen <gnu@gmx.net>
+Reported-by: Michael Weissenbacher <mw@dermichi.com>
+Reported-by: Martin Spott <Martin.Spott@mgras.net>
+Reported-by: Christian Kujau <lists@nerdbynature.de>
+Tested-by: Michael Guntsche <mike@it-loops.com>
+Tested-by: Dan Carley <dan.carley+linuxkern-bugs@gmail.com>
+Tested-by: Christian Kujau <lists@nerdbynature.de>
 
-Index: linux-2.6/fs/inode.c
+Index: linux-2.6/fs/xfs/xfs_iget.c
 ===================================================================
---- linux-2.6.orig/fs/inode.c	2009-08-15 22:27:13.274661514 -0300
-+++ linux-2.6/fs/inode.c	2009-08-15 22:28:08.261344721 -0300
-@@ -220,18 +220,22 @@ static struct inode *alloc_inode(struct 
- 	return inode;
+--- linux-2.6.orig/fs/xfs/xfs_iget.c	2009-08-15 22:27:13.274661514 -0300
++++ linux-2.6/fs/xfs/xfs_iget.c	2009-08-15 22:29:15.763191002 -0300
+@@ -115,6 +115,71 @@ xfs_inode_alloc(
+ 	return ip;
  }
  
--void destroy_inode(struct inode *inode)
-+void __destroy_inode(struct inode *inode)
- {
- 	BUG_ON(inode_has_buffers(inode));
- 	ima_inode_free(inode);
- 	security_inode_free(inode);
-+}
-+EXPORT_SYMBOL(__destroy_inode);
-+
-+void destroy_inode(struct inode *inode)
++STATIC void
++xfs_inode_free(
++	struct xfs_inode	*ip)
 +{
-+	__destroy_inode(inode);
- 	if (inode->i_sb->s_op->destroy_inode)
- 		inode->i_sb->s_op->destroy_inode(inode);
- 	else
- 		kmem_cache_free(inode_cachep, (inode));
++	switch (ip->i_d.di_mode & S_IFMT) {
++	case S_IFREG:
++	case S_IFDIR:
++	case S_IFLNK:
++		xfs_idestroy_fork(ip, XFS_DATA_FORK);
++		break;
++	}
++
++	if (ip->i_afp)
++		xfs_idestroy_fork(ip, XFS_ATTR_FORK);
++
++#ifdef XFS_INODE_TRACE
++	ktrace_free(ip->i_trace);
++#endif
++#ifdef XFS_BMAP_TRACE
++	ktrace_free(ip->i_xtrace);
++#endif
++#ifdef XFS_BTREE_TRACE
++	ktrace_free(ip->i_btrace);
++#endif
++#ifdef XFS_RW_TRACE
++	ktrace_free(ip->i_rwtrace);
++#endif
++#ifdef XFS_ILOCK_TRACE
++	ktrace_free(ip->i_lock_trace);
++#endif
++#ifdef XFS_DIR2_TRACE
++	ktrace_free(ip->i_dir_trace);
++#endif
++
++	if (ip->i_itemp) {
++		/*
++		 * Only if we are shutting down the fs will we see an
++		 * inode still in the AIL. If it is there, we should remove
++		 * it to prevent a use-after-free from occurring.
++		 */
++		xfs_log_item_t	*lip = &ip->i_itemp->ili_item;
++		struct xfs_ail	*ailp = lip->li_ailp;
++
++		ASSERT(((lip->li_flags & XFS_LI_IN_AIL) == 0) ||
++				       XFS_FORCED_SHUTDOWN(ip->i_mount));
++		if (lip->li_flags & XFS_LI_IN_AIL) {
++			spin_lock(&ailp->xa_lock);
++			if (lip->li_flags & XFS_LI_IN_AIL)
++				xfs_trans_ail_delete(ailp, lip);
++			else
++				spin_unlock(&ailp->xa_lock);
++		}
++		xfs_inode_item_destroy(ip);
++		ip->i_itemp = NULL;
++	}
++
++	/* asserts to verify all state is correct here */
++	ASSERT(atomic_read(&ip->i_iocount) == 0);
++	ASSERT(atomic_read(&ip->i_pincount) == 0);
++	ASSERT(!spin_is_locked(&ip->i_flags_lock));
++	ASSERT(completion_done(&ip->i_flush));
++
++	kmem_zone_free(xfs_inode_zone, ip);
++}
++
+ /*
+  * Check the validity of the inode we just found it the cache
+  */
+@@ -291,7 +356,8 @@ out_preload_end:
+ 	if (lock_flags)
+ 		xfs_iunlock(ip, lock_flags);
+ out_destroy:
+-	xfs_destroy_inode(ip);
++	__destroy_inode(VFS_I(ip));
++	xfs_inode_free(ip);
+ 	return error;
  }
--EXPORT_SYMBOL(destroy_inode);
+ 
+@@ -499,62 +565,7 @@ xfs_ireclaim(
+ 	XFS_QM_DQDETACH(ip->i_mount, ip);
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
+ 
+-	switch (ip->i_d.di_mode & S_IFMT) {
+-	case S_IFREG:
+-	case S_IFDIR:
+-	case S_IFLNK:
+-		xfs_idestroy_fork(ip, XFS_DATA_FORK);
+-		break;
+-	}
 -
+-	if (ip->i_afp)
+-		xfs_idestroy_fork(ip, XFS_ATTR_FORK);
+-
+-#ifdef XFS_INODE_TRACE
+-	ktrace_free(ip->i_trace);
+-#endif
+-#ifdef XFS_BMAP_TRACE
+-	ktrace_free(ip->i_xtrace);
+-#endif
+-#ifdef XFS_BTREE_TRACE
+-	ktrace_free(ip->i_btrace);
+-#endif
+-#ifdef XFS_RW_TRACE
+-	ktrace_free(ip->i_rwtrace);
+-#endif
+-#ifdef XFS_ILOCK_TRACE
+-	ktrace_free(ip->i_lock_trace);
+-#endif
+-#ifdef XFS_DIR2_TRACE
+-	ktrace_free(ip->i_dir_trace);
+-#endif
+-	if (ip->i_itemp) {
+-		/*
+-		 * Only if we are shutting down the fs will we see an
+-		 * inode still in the AIL. If it is there, we should remove
+-		 * it to prevent a use-after-free from occurring.
+-		 */
+-		xfs_log_item_t	*lip = &ip->i_itemp->ili_item;
+-		struct xfs_ail	*ailp = lip->li_ailp;
+-
+-		ASSERT(((lip->li_flags & XFS_LI_IN_AIL) == 0) ||
+-				       XFS_FORCED_SHUTDOWN(ip->i_mount));
+-		if (lip->li_flags & XFS_LI_IN_AIL) {
+-			spin_lock(&ailp->xa_lock);
+-			if (lip->li_flags & XFS_LI_IN_AIL)
+-				xfs_trans_ail_delete(ailp, lip);
+-			else
+-				spin_unlock(&ailp->xa_lock);
+-		}
+-		xfs_inode_item_destroy(ip);
+-		ip->i_itemp = NULL;
+-	}
+-	/* asserts to verify all state is correct here */
+-	ASSERT(atomic_read(&ip->i_iocount) == 0);
+-	ASSERT(atomic_read(&ip->i_pincount) == 0);
+-	ASSERT(!spin_is_locked(&ip->i_flags_lock));
+-	ASSERT(completion_done(&ip->i_flush));
+-	kmem_zone_free(xfs_inode_zone, ip);
++	xfs_inode_free(ip);
+ }
  
  /*
-  * These are initializations that only need to be done
-Index: linux-2.6/include/linux/fs.h
+Index: linux-2.6/fs/xfs/xfs_inode.h
 ===================================================================
---- linux-2.6.orig/include/linux/fs.h	2009-08-15 22:27:13.278697992 -0300
-+++ linux-2.6/include/linux/fs.h	2009-08-15 22:27:19.278690522 -0300
-@@ -2162,6 +2162,7 @@ extern void __iget(struct inode * inode)
- extern void iget_failed(struct inode *);
- extern void clear_inode(struct inode *);
- extern void destroy_inode(struct inode *);
-+extern void __destroy_inode(struct inode *);
- extern struct inode *new_inode(struct super_block *);
- extern int should_remove_suid(struct dentry *);
- extern int file_remove_suid(struct file *);
+--- linux-2.6.orig/fs/xfs/xfs_inode.h	2009-08-15 22:27:04.386665034 -0300
++++ linux-2.6/fs/xfs/xfs_inode.h	2009-08-15 22:29:15.763191002 -0300
+@@ -309,23 +309,6 @@ static inline struct inode *VFS_I(struct
+ }
+ 
+ /*
+- * Get rid of a partially initialized inode.
+- *
+- * We have to go through destroy_inode to make sure allocations
+- * from init_inode_always like the security data are undone.
+- *
+- * We mark the inode bad so that it takes the short cut in
+- * the reclaim path instead of going through the flush path
+- * which doesn't make sense for an inode that has never seen the
+- * light of day.
+- */
+-static inline void xfs_destroy_inode(struct xfs_inode *ip)
+-{
+-	make_bad_inode(VFS_I(ip));
+-	return destroy_inode(VFS_I(ip));
+-}
+-
+-/*
+  * i_flags helper functions
+  */
+ static inline void
 
 _______________________________________________
 xfs mailing list
