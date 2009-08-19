@@ -1,17 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7JG4JAh216147 for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 11:04:30 -0500
-Received: from mx1.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 15F971BDBC93
-	for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 09:04:48 -0700 (PDT)
-Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
-	with ESMTP id b255TqfllimLv3Bo for <xfs@oss.sgi.com>;
-	Wed, 19 Aug 2009 09:04:48 -0700 (PDT)
+	n7JG4PIM216152 for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 11:04:35 -0500
+Received: from mx2.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 163B51BDBCAE
+	for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 09:04:50 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id SXZOXCz8v8TbPc7M for <xfs@oss.sgi.com>;
+	Wed, 19 Aug 2009 09:04:50 -0700 (PDT)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 14/17] xfs: Use new syncing helper
-Date: Wed, 19 Aug 2009 18:04:41 +0200
-Message-Id: <1250697884-22288-15-git-send-email-jack@suse.cz>
+Subject: [PATCH 03/17] vfs: Remove syncing from generic_file_direct_write()
+	and generic_file_buffered_write()
+Date: Wed, 19 Aug 2009 18:04:30 +0200
+Message-Id: <1250697884-22288-4-git-send-email-jack@suse.cz>
 In-Reply-To: <1250697884-22288-1-git-send-email-jack@suse.cz>
 References: <1250697884-22288-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -28,30 +29,75 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: LKML <linux-kernel@vger.kernel.org>
-Cc: hch@infradead.org, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+Cc: Jan Kara <jack@suse.cz>, Joel Becker <joel.becker@oracle.com>, xfs@oss.sgi.com, hch@infradead.org, ocfs2-devel@oss.oracle.com
 
-Use new generic_write_sync() helper from xfs_write().
+generic_file_direct_write() and generic_file_buffered_write() called
+generic_osync_inode() if it was called on O_SYNC file or IS_SYNC inode. But
+this is superfluous since generic_file_aio_write() does the syncing as well.
+Also XFS and OCFS2 which call these functions directly handle syncing
+themselves. So let's have a single place where syncing happens:
+generic_file_aio_write().
 
+CC: ocfs2-devel@oss.oracle.com
+CC: Joel Becker <joel.becker@oracle.com>
 CC: Felix Blyakher <felixb@sgi.com>
 CC: xfs@oss.sgi.com
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/xfs/linux-2.6/xfs_lrw.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ mm/filemap.c |   25 -------------------------
+ 1 files changed, 0 insertions(+), 25 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_lrw.c b/fs/xfs/linux-2.6/xfs_lrw.c
-index 7078974..aeb5a39 100644
---- a/fs/xfs/linux-2.6/xfs_lrw.c
-+++ b/fs/xfs/linux-2.6/xfs_lrw.c
-@@ -817,7 +817,7 @@ write_retry:
- 		xfs_iunlock(xip, iolock);
- 		if (need_i_mutex)
- 			mutex_unlock(&inode->i_mutex);
--		error2 = sync_page_range(inode, mapping, pos, ret);
-+		error2 = generic_write_sync(file, pos, ret);
- 		if (!error)
- 			error = error2;
- 		if (need_i_mutex)
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 554a396..3bee198 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -2187,20 +2187,7 @@ generic_file_direct_write(struct kiocb *iocb, const struct iovec *iov,
+ 		}
+ 		*ppos = end;
+ 	}
+-
+-	/*
+-	 * Sync the fs metadata but not the minor inode changes and
+-	 * of course not the data as we did direct DMA for the IO.
+-	 * i_mutex is held, which protects generic_osync_inode() from
+-	 * livelocking.  AIO O_DIRECT ops attempt to sync metadata here.
+-	 */
+ out:
+-	if ((written >= 0 || written == -EIOCBQUEUED) &&
+-	    ((file->f_flags & O_SYNC) || IS_SYNC(inode))) {
+-		int err = generic_osync_inode(inode, mapping, OSYNC_METADATA);
+-		if (err < 0)
+-			written = err;
+-	}
+ 	return written;
+ }
+ EXPORT_SYMBOL(generic_file_direct_write);
+@@ -2332,8 +2319,6 @@ generic_file_buffered_write(struct kiocb *iocb, const struct iovec *iov,
+ {
+ 	struct file *file = iocb->ki_filp;
+ 	struct address_space *mapping = file->f_mapping;
+-	const struct address_space_operations *a_ops = mapping->a_ops;
+-	struct inode *inode = mapping->host;
+ 	ssize_t status;
+ 	struct iov_iter i;
+ 
+@@ -2343,16 +2328,6 @@ generic_file_buffered_write(struct kiocb *iocb, const struct iovec *iov,
+ 	if (likely(status >= 0)) {
+ 		written += status;
+ 		*ppos = pos + status;
+-
+-		/*
+-		 * For now, when the user asks for O_SYNC, we'll actually give
+-		 * O_DSYNC
+-		 */
+-		if (unlikely((file->f_flags & O_SYNC) || IS_SYNC(inode))) {
+-			if (!a_ops->writepage || !is_sync_kiocb(iocb))
+-				status = generic_osync_inode(inode, mapping,
+-						OSYNC_METADATA|OSYNC_DATA);
+-		}
+   	}
+ 	
+ 	/*
 -- 
 1.6.0.2
 
