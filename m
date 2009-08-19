@@ -1,24 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7JFl68T215613 for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 10:47:16 -0500
-Received: from mail.jquigley.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 88A073E169C
-	for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 08:47:26 -0700 (PDT)
-Received: from mail.jquigley.com (main.jquigley.com [67.23.32.156]) by
-	cuda.sgi.com with ESMTP id HwY66vKlfFjpiXM9 for
-	<xfs@oss.sgi.com>; Wed, 19 Aug 2009 08:47:26 -0700 (PDT)
-Received: from [10.1.1.11] (OSH-NAT-213-122.onshore.net [66.146.213.122])
-	(Authenticated sender: jquigley@mail.jquigley.com)
-	by mail.jquigley.com (Postfix) with ESMTPSA id 3250D204116
-	for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 15:46:56 +0000 (UTC)
-Message-ID: <4A8C1E6E.8020405@jquigley.com>
-Date: Wed, 19 Aug 2009 10:46:54 -0500
-From: John Quigley <jquigley@jquigley.com>
-MIME-Version: 1.0
-Subject: Re: XFS corruption with failover
-References: <606994882.2142291250648292843.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
-In-Reply-To: <606994882.2142291250648292843.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
+	n7JG4JAh216147 for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 11:04:30 -0500
+Received: from mx1.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 15F971BDBC93
+	for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 09:04:48 -0700 (PDT)
+Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
+	with ESMTP id b255TqfllimLv3Bo for <xfs@oss.sgi.com>;
+	Wed, 19 Aug 2009 09:04:48 -0700 (PDT)
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 14/17] xfs: Use new syncing helper
+Date: Wed, 19 Aug 2009 18:04:41 +0200
+Message-Id: <1250697884-22288-15-git-send-email-jack@suse.cz>
+In-Reply-To: <1250697884-22288-1-git-send-email-jack@suse.cz>
+References: <1250697884-22288-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,28 +22,38 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: XFS Development <xfs@oss.sgi.com>
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: hch@infradead.org, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-Lachlan McIlroy wrote:
-> xfs_logprint doesn't find any problems with this log but that doesn't mean
-> the kernel doesn't - they use different implementations to read the log.  I
-> noticed that the active part of the log wraps around the physical end/start
-> of the log which reminds of this fix:
+Use new generic_write_sync() helper from xfs_write().
 
-Very interesting indeed, thank you /very/ much for looking at this.
+CC: Felix Blyakher <felixb@sgi.com>
+CC: xfs@oss.sgi.com
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/xfs/linux-2.6/xfs_lrw.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> I think the fix made it into 2.6.24.
-
-We're currently using the very latest 2.6.30, unfortunately.  We've distilled this into a reproducible environment with a stack of NFS + XFS to a local disk + automated sysrq 'b' reboots.  We're working on getting this bundled up into a nice little package as a VirtualBox vm for your consumption.  Please tell me if this is not desirable.
-
-Thanks very much again.
-
-John Quigley
-jquigley.com
+diff --git a/fs/xfs/linux-2.6/xfs_lrw.c b/fs/xfs/linux-2.6/xfs_lrw.c
+index 7078974..aeb5a39 100644
+--- a/fs/xfs/linux-2.6/xfs_lrw.c
++++ b/fs/xfs/linux-2.6/xfs_lrw.c
+@@ -817,7 +817,7 @@ write_retry:
+ 		xfs_iunlock(xip, iolock);
+ 		if (need_i_mutex)
+ 			mutex_unlock(&inode->i_mutex);
+-		error2 = sync_page_range(inode, mapping, pos, ret);
++		error2 = generic_write_sync(file, pos, ret);
+ 		if (!error)
+ 			error = error2;
+ 		if (need_i_mutex)
+-- 
+1.6.0.2
 
 _______________________________________________
 xfs mailing list
