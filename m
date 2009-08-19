@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7J8GrAq197199 for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 03:17:08 -0500
-Received: from intranet.easterngraphics.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D9BC23DF712
-	for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 01:17:18 -0700 (PDT)
-Received: from intranet.easterngraphics.com (intranet.easterngraphics.com
-	[62.80.28.49]) by cuda.sgi.com with ESMTP id rcACeVGoSEbnBk9w
-	for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 01:17:18 -0700 (PDT)
-From: Christian Fischer <Christian.Fischer@easterngraphics.com>
-Subject: Re: [Patch] Re: xfs crash, kernel 2.6.29
-Date: Wed, 19 Aug 2009 10:16:53 +0200
-References: <200908110921.50752.Christian.Fischer@easterngraphics.com>
-	<20090814141807.GA2891@infradead.org>
-	<f4527be0908190050h5f3a4ca8h7d1712ab677616db@mail.gmail.com>
-In-Reply-To: <f4527be0908190050h5f3a4ca8h7d1712ab677616db@mail.gmail.com>
+	n7JAE3qs201824 for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 05:14:16 -0500
+Received: from mail.galactic.com.hk (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6105C3DFBC8
+	for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 03:14:41 -0700 (PDT)
+Received: from mail.galactic.com.hk (galactic.com.hk [211.154.134.176]) by
+	cuda.sgi.com with ESMTP id syVJ9b4tWPvhH1pc for
+	<xfs@oss.sgi.com>; Wed, 19 Aug 2009 03:14:41 -0700 (PDT)
+Received: from galactic.com.hk (localhost [127.0.0.1])
+	by mail.galactic.com.hk (8.13.4/8.13.4) with ESMTP id n7JAL9vg018386
+	for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 18:21:17 +0800
+From: "Frank Peng" <fpeng@galactic.com.hk>
+Subject: xfs_quota: cannot set limits.Why ?
+Date: Wed, 19 Aug 2009 18:21:09 +0800
+Message-Id: <20090819101701.M38080@galactic.com.hk>
 MIME-Version: 1.0
-Content-Disposition: inline
-Message-Id: <200908191016.54339.Christian.Fischer@easterngraphics.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,56 +28,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andrew Lyon <andrew.lyon@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wednesday 19 August 2009, Andrew Lyon wrote:
-> On Fri, Aug 14, 2009 at 3:18 PM, Christoph Hellwig<hch@infradead.org> wrote:
-> > On Fri, Aug 14, 2009 at 02:56:58PM +0200, Christian Fischer wrote:
-> >> backported to 2.6.29-xen-r4 from
-> >> http://code.google.com/p/gentoo-xen-kernel/downloads/list
-> >>
-> >> Can you please review it?
-> >
-> > I'll reviewed it and do some QA over the weekend, and we'll send it to
-> > -stable then.
->
-> Did the patch fix the problem?
->
-> Andy
+Dear sir,
 
-Hi Andrew,
+linux-nr79:~ # cat /etc/issue
+Welcome to openSUSE 11.1 - Kernel \r (\l).
 
-nice to hear you.
+linux-nr79:/boot # cat config-2.6.27.7-9-default | grep XFS
+CONFIG_XFS_FS=m
+CONFIG_XFS_QUOTA=y
+CONFIG_XFS_DMAPI=y
+CONFIG_XFS_POSIX_ACL=y
+CONFIG_XFS_RT=y
+# CONFIG_XFS_DEBUG is not set
+CONFIG_VXFS_FS=m
 
-All i can say is that the kernel compiles and runs.
+linux-nr79:~ # mount /dev/sdc1 /xfs
+linux-nr79:~ # mount -o remount,usrquota,grpquota /xfs
 
-On my testbox I can't reproduce the fs crash, seems 2.6.29.4 is more stable 
-than 2.6.30/31.
+linux-nr79:~ # mount
+/dev/sda2 on / type ext3 (rw,acl,user_xattr)
+/proc on /proc type proc (rw)
+sysfs on /sys type sysfs (rw)
+debugfs on /sys/kernel/debug type debugfs (rw)
+udev on /dev type tmpfs (rw)
+devpts on /dev/pts type devpts (rw,mode=0620,gid=5)
+fusectl on /sys/fs/fuse/connections type fusectl (rw)
+securityfs on /sys/kernel/security type securityfs (rw)
+/dev/sdc2 on /ext3 type ext3 (rw,usrquota,grpquota)
+/dev/sdc1 on /xfs type xfs (rw,usrquota,grpquota)
 
-I've tried Erics steps to reproduce for 2.6.30/31, tried stressing the nfs 
-mount with iozone, tried recursive unpacking and removing eclipse (a lot of 
-small files) and this in a lot of parallel tasks.
+linux-nr79:~ # xfs_quota -x -c 'limit bsoft=5m bhard=6m user01' /xfs
+xfs_quota: cannot set limits: Function not implemented
 
-Nothing triggers the bug.
-You know, if I can't reproduce it I can't say whether it is fixed or not.
+Why cannot set limits? Any idea how I can use xfs quota? 
+Thanks.
 
-I'll update one server this week with the patched kernel and switch nfs on 
-again, and wait then for the next crash. Hope that comes never.
 
-Christian
--- 
-------------------------------------------------------------
-EasternGraphics - visualize your business
-
-Christian Fischer
-Administration
-http://www.EasternGraphics.com
-phone: +49 3677 678265
-
-EasternGraphics GmbH - Albert-Einstein-Strasse 1 - DE-98693 Ilmenau
-Geschaeftsfuehrer - Ekkehard Beier, Volker Blankenberg, Frank Wicht
-Amtsgericht Jena - HRB 304052
+Best Regards,
+Frank
 
 _______________________________________________
 xfs mailing list
