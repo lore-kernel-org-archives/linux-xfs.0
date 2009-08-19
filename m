@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7JB51NM203273 for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 06:05:11 -0500
-Received: from firestarter.dermichi.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0565D3DFB21
-	for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 04:05:19 -0700 (PDT)
-Received: from firestarter.dermichi.com (firestarternew.dermichi.com
-	[78.41.115.230]) by cuda.sgi.com with ESMTP id 08WEPSDdIGFmPSQE
-	for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 04:05:19 -0700 (PDT)
-Message-ID: <4A8BDC66.5080008@dermichi.com>
-Date: Wed, 19 Aug 2009 13:05:10 +0200
-From: Michael Weissenbacher <mw@dermichi.com>
+	n7JFl68T215613 for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 10:47:16 -0500
+Received: from mail.jquigley.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 88A073E169C
+	for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 08:47:26 -0700 (PDT)
+Received: from mail.jquigley.com (main.jquigley.com [67.23.32.156]) by
+	cuda.sgi.com with ESMTP id HwY66vKlfFjpiXM9 for
+	<xfs@oss.sgi.com>; Wed, 19 Aug 2009 08:47:26 -0700 (PDT)
+Received: from [10.1.1.11] (OSH-NAT-213-122.onshore.net [66.146.213.122])
+	(Authenticated sender: jquigley@mail.jquigley.com)
+	by mail.jquigley.com (Postfix) with ESMTPSA id 3250D204116
+	for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 15:46:56 +0000 (UTC)
+Message-ID: <4A8C1E6E.8020405@jquigley.com>
+Date: Wed, 19 Aug 2009 10:46:54 -0500
+From: John Quigley <jquigley@jquigley.com>
 MIME-Version: 1.0
-Subject: Re: xfs_quota: cannot set limits.Why ?
-References: <20090819101701.M38080@galactic.com.hk>
-In-Reply-To: <20090819101701.M38080@galactic.com.hk>
+Subject: Re: XFS corruption with failover
+References: <606994882.2142291250648292843.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
+In-Reply-To: <606994882.2142291250648292843.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,69 +27,28 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Frank Peng <fpeng@galactic.com.hk>
-Cc: xfs@oss.sgi.com
+To: XFS Development <xfs@oss.sgi.com>
 
-Hi Frank!
-The problem is that you cannot set usrquota and grpquota via a remount command. You must take care that these flags are set on the very first mount of the filesystem. Otherwise they are silently ignored and quotas are not enforced at all.
+Lachlan McIlroy wrote:
+> xfs_logprint doesn't find any problems with this log but that doesn't mean
+> the kernel doesn't - they use different implementations to read the log.  I
+> noticed that the active part of the log wraps around the physical end/start
+> of the log which reminds of this fix:
 
-hth,
-Michael
+Very interesting indeed, thank you /very/ much for looking at this.
 
--------- Original-Nachricht --------
-Betreff: xfs_quota: cannot set limits.Why ?
-Von: Frank Peng <fpeng@galactic.com.hk>
-An: xfs@oss.sgi.com
-Datum: 19.08.2009 12:21
+> I think the fix made it into 2.6.24.
 
-> Dear sir,
-> 
-> linux-nr79:~ # cat /etc/issue
-> Welcome to openSUSE 11.1 - Kernel \r (\l).
-> 
-> linux-nr79:/boot # cat config-2.6.27.7-9-default | grep XFS
-> CONFIG_XFS_FS=m
-> CONFIG_XFS_QUOTA=y
-> CONFIG_XFS_DMAPI=y
-> CONFIG_XFS_POSIX_ACL=y
-> CONFIG_XFS_RT=y
-> # CONFIG_XFS_DEBUG is not set
-> CONFIG_VXFS_FS=m
-> 
-> linux-nr79:~ # mount /dev/sdc1 /xfs
-> linux-nr79:~ # mount -o remount,usrquota,grpquota /xfs
-> 
-> linux-nr79:~ # mount
-> /dev/sda2 on / type ext3 (rw,acl,user_xattr)
-> /proc on /proc type proc (rw)
-> sysfs on /sys type sysfs (rw)
-> debugfs on /sys/kernel/debug type debugfs (rw)
-> udev on /dev type tmpfs (rw)
-> devpts on /dev/pts type devpts (rw,mode=0620,gid=5)
-> fusectl on /sys/fs/fuse/connections type fusectl (rw)
-> securityfs on /sys/kernel/security type securityfs (rw)
-> /dev/sdc2 on /ext3 type ext3 (rw,usrquota,grpquota)
-> /dev/sdc1 on /xfs type xfs (rw,usrquota,grpquota)
-> 
-> linux-nr79:~ # xfs_quota -x -c 'limit bsoft=5m bhard=6m user01' /xfs
-> xfs_quota: cannot set limits: Function not implemented
-> 
-> Why cannot set limits? Any idea how I can use xfs quota? 
-> Thanks.
-> 
-> 
-> Best Regards,
-> Frank
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+We're currently using the very latest 2.6.30, unfortunately.  We've distilled this into a reproducible environment with a stack of NFS + XFS to a local disk + automated sysrq 'b' reboots.  We're working on getting this bundled up into a nice little package as a VirtualBox vm for your consumption.  Please tell me if this is not desirable.
+
+Thanks very much again.
+
+John Quigley
+jquigley.com
 
 _______________________________________________
 xfs mailing list
