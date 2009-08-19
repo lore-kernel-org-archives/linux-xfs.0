@@ -1,18 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7JIiN3p221127 for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 13:44:39 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0FAB33E26C8
-	for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 11:45:12 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id gncSq7KzkZFobAu2 for
-	<xfs@oss.sgi.com>; Wed, 19 Aug 2009 11:45:12 -0700 (PDT)
-Message-Id: <20090819184258.542698202@bombadil.infradead.org>
-Date: Wed, 19 Aug 2009 14:42:58 -0400
+	n7JIiOTZ221129 for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 13:44:39 -0500
+Message-Id: <20090819184512.452411477@bombadil.infradead.org>
+Date: Wed, 19 Aug 2009 14:43:02 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 0/4] 2.6.30-stable backport of the XFS+NFSD inode cache race
-	fix
+Subject: [PATCH 4/4] xfs: fix spin_is_locked assert on uni-processor builds
+References: <20090819184258.542698202@bombadil.infradead.org>
+Content-Disposition: inline; filename=fix-spin_is_locked-assert
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,13 +24,34 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: stable@kernel.org
 Cc: xfs@oss.sgi.com
 
+xfs: fix spin_is_locked assert on uni-processor builds
+   
+Without SMP or preemption spin_is_locked always returns false,
+so we can't do an assert with it.  Instead use assert_spin_locked,
+which does the right thing on all builds.
 
-This is a backport of the fix for the XFS inode cache races lots of people
-have reported.  The context for the two VFS patches changed quite a bit from
-2.6.30 to 2.6.31-rc so I consider these backports.  The backport has been
-tested by me with xfstest for XFS and extN, and by lots of users that have
-been waiting for the fix for their nfs servers still running 2.6.30.
 
+upstream commit a8914f3a6d72c97328597a556a99daaf5cc288ae
+    
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
+Reported-by: Johannes Engel <jcnengel@googlemail.com>
+Tested-by: Johannes Engel <jcnengel@googlemail.com>
+Signed-off-by: Felix Blyakher <felixb@sgi.com>
+
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 3750f04..9dbdff3 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -3180,7 +3180,7 @@ try_again:
+ STATIC void
+ xlog_state_want_sync(xlog_t *log, xlog_in_core_t *iclog)
+ {
+-	ASSERT(spin_is_locked(&log->l_icloglock));
++	assert_spin_locked(&log->l_icloglock);
+ 
+ 	if (iclog->ic_state == XLOG_STATE_ACTIVE) {
+ 		xlog_state_switch_iclogs(log, iclog, 0);
 
 _______________________________________________
 xfs mailing list
