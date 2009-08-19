@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7IH7UFW153456 for <xfs@oss.sgi.com>; Tue, 18 Aug 2009 12:07:40 -0500
-Received: from thunker.thunk.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 90F713DC94C
-	for <xfs@oss.sgi.com>; Tue, 18 Aug 2009 10:08:10 -0700 (PDT)
-Received: from thunker.thunk.org (THUNK.ORG [69.25.196.29]) by cuda.sgi.com
-	with ESMTP id JF6lgaSncA095bxW for <xfs@oss.sgi.com>;
-	Tue, 18 Aug 2009 10:08:10 -0700 (PDT)
-Date: Tue, 18 Aug 2009 13:04:56 -0400
-From: Theodore Tso <tytso@mit.edu>
-Subject: Re: [PATCH] Add ext2/3/4-specific _check_extN_filesystem function
-Message-ID: <20090818170456.GF28560@mit.edu>
-References: <1250607467-15085-1-git-send-email-tytso@mit.edu>
-	<20090818161116.GA2162@infradead.org>
+	n7J2HvmB180953 for <xfs@oss.sgi.com>; Tue, 18 Aug 2009 21:18:07 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C30C93DE9DA
+	for <xfs@oss.sgi.com>; Tue, 18 Aug 2009 19:18:16 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31]) by cuda.sgi.com
+	with ESMTP id 1kolfaO4jhz4vc7B for <xfs@oss.sgi.com>;
+	Tue, 18 Aug 2009 19:18:16 -0700 (PDT)
+Date: Tue, 18 Aug 2009 22:18:12 -0400 (EDT)
+From: Lachlan McIlroy <lmcilroy@redhat.com>
+Message-ID: <606994882.2142291250648292843.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
+In-Reply-To: <990461759.2142271250648177725.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
+Subject: Re: XFS corruption with failover
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20090818161116.GA2162@infradead.org>
+Reply-To: Lachlan McIlroy <lmcilroy@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,26 +27,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: John Quigley <jquigley@jquigley.com>
+Cc: XFS Development <xfs@oss.sgi.com>
 
-On Tue, Aug 18, 2009 at 12:11:16PM -0400, Christoph Hellwig wrote:
-> On Tue, Aug 18, 2009 at 10:57:47AM -0400, Theodore Ts'o wrote:
-> > The _check_generic_filesystem function doesn't force a full filesystem
-> > check, so filesystem inconsistencies after a test wouldn't be noticed.
-> > To fix this, I added an extN specific check filesystem function.
+----- "John Quigley" <jquigley@jquigley.com> wrote:
+
+> Lachlan McIlroy wrote:
+> > If that fails too can you run xfs_logprint on /dev/sde and
+> > post any errors it reports?
 > 
-> Looks like the only difference between the generic and the extN
-> check routine is the addition of -f to the fsck command line.  What
-> about just introducing a _fsck_args similar to _mount_opts where
-> filesystems can set their additional required mount options?
+> My apologies for the delayed response; output of logprint can be
+> downloaded as a ~4MB bzip:
+> 
+> http://www.jquigley.com/files/tmp/xfs-failover-logprint.bz2
 
-That would work, yeah, and would be result in far less code
-duplication in common.rc.  I'll take a whack at it and resubmit.
+xfs_logprint doesn't find any problems with this log but that doesn't mean
+the kernel doesn't - they use different implementations to read the log.  I
+noticed that the active part of the log wraps around the physical end/start
+of the log which reminds of this fix:
 
-Thanks,
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=d1afb678ce77b930334a8a640a05b8e68178a377
 
-						- Ted
+I remember that without this fix we were seeing ASSERTs in the log recovery
+code - unfortunately I don't remember exactly where but it could be from
+the same location you are getting the "bad clientid" error.  When a log
+record wraps the end/start of the physical log we need to do two I/Os to
+read the log record in.  This bug caused the second read to go to an
+incorrect location in the buffer which overwrote part of the first I/O and
+corrupted the log record.  I think the fix made it into 2.6.24.
+
+> 
+> Thanks very much for your consideration.
+> 
+> - John Quigley
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
