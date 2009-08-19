@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7J7oPOa196189 for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 02:50:36 -0500
-Received: from mail-bw0-f210.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A9AA71D5C541
-	for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 00:50:44 -0700 (PDT)
-Received: from mail-bw0-f210.google.com (mail-bw0-f210.google.com
-	[209.85.218.210]) by cuda.sgi.com with ESMTP id
-	k4iaLRMAXHALXIdg for <xfs@oss.sgi.com>;
-	Wed, 19 Aug 2009 00:50:44 -0700 (PDT)
-Received: by bwz6 with SMTP id 6so3944774bwz.20
-	for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 00:50:39 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20090814141807.GA2891@infradead.org>
-References: <200908110921.50752.Christian.Fischer@easterngraphics.com>
-	<20090811142029.GB30913@infradead.org>
-	<200908141456.58683.Christian.Fischer@easterngraphics.com>
-	<20090814141807.GA2891@infradead.org>
-Date: Wed, 19 Aug 2009 08:50:39 +0100
-Message-ID: <f4527be0908190050h5f3a4ca8h7d1712ab677616db@mail.gmail.com>
+	n7J8GrAq197199 for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 03:17:08 -0500
+Received: from intranet.easterngraphics.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D9BC23DF712
+	for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 01:17:18 -0700 (PDT)
+Received: from intranet.easterngraphics.com (intranet.easterngraphics.com
+	[62.80.28.49]) by cuda.sgi.com with ESMTP id rcACeVGoSEbnBk9w
+	for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 01:17:18 -0700 (PDT)
+From: Christian Fischer <Christian.Fischer@easterngraphics.com>
 Subject: Re: [Patch] Re: xfs crash, kernel 2.6.29
-From: Andrew Lyon <andrew.lyon@gmail.com>
+Date: Wed, 19 Aug 2009 10:16:53 +0200
+References: <200908110921.50752.Christian.Fischer@easterngraphics.com>
+	<20090814141807.GA2891@infradead.org>
+	<f4527be0908190050h5f3a4ca8h7d1712ab677616db@mail.gmail.com>
+In-Reply-To: <f4527be0908190050h5f3a4ca8h7d1712ab677616db@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+Message-Id: <200908191016.54339.Christian.Fischer@easterngraphics.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,24 +30,56 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Christian Fischer <Christian.Fischer@easterngraphics.com>, xfs@oss.sgi.com
+To: Andrew Lyon <andrew.lyon@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On Fri, Aug 14, 2009 at 3:18 PM, Christoph Hellwig<hch@infradead.org> wrote:
-> On Fri, Aug 14, 2009 at 02:56:58PM +0200, Christian Fischer wrote:
->> backported to 2.6.29-xen-r4 from
->> http://code.google.com/p/gentoo-xen-kernel/downloads/list
->>
->> Can you please review it?
+On Wednesday 19 August 2009, Andrew Lyon wrote:
+> On Fri, Aug 14, 2009 at 3:18 PM, Christoph Hellwig<hch@infradead.org> wrote:
+> > On Fri, Aug 14, 2009 at 02:56:58PM +0200, Christian Fischer wrote:
+> >> backported to 2.6.29-xen-r4 from
+> >> http://code.google.com/p/gentoo-xen-kernel/downloads/list
+> >>
+> >> Can you please review it?
+> >
+> > I'll reviewed it and do some QA over the weekend, and we'll send it to
+> > -stable then.
 >
-> I'll reviewed it and do some QA over the weekend, and we'll send it to
-> -stable then.
+> Did the patch fix the problem?
 >
->
+> Andy
 
-Did the patch fix the problem?
+Hi Andrew,
 
-Andy
+nice to hear you.
+
+All i can say is that the kernel compiles and runs.
+
+On my testbox I can't reproduce the fs crash, seems 2.6.29.4 is more stable 
+than 2.6.30/31.
+
+I've tried Erics steps to reproduce for 2.6.30/31, tried stressing the nfs 
+mount with iozone, tried recursive unpacking and removing eclipse (a lot of 
+small files) and this in a lot of parallel tasks.
+
+Nothing triggers the bug.
+You know, if I can't reproduce it I can't say whether it is fixed or not.
+
+I'll update one server this week with the patched kernel and switch nfs on 
+again, and wait then for the next crash. Hope that comes never.
+
+Christian
+-- 
+------------------------------------------------------------
+EasternGraphics - visualize your business
+
+Christian Fischer
+Administration
+http://www.EasternGraphics.com
+phone: +49 3677 678265
+
+EasternGraphics GmbH - Albert-Einstein-Strasse 1 - DE-98693 Ilmenau
+Geschaeftsfuehrer - Ekkehard Beier, Volker Blankenberg, Frank Wicht
+Amtsgericht Jena - HRB 304052
 
 _______________________________________________
 xfs mailing list
