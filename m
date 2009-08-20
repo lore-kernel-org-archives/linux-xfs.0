@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7K19fGp240551 for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 20:09:51 -0500
-Received: from mail2.shareable.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6AB6114EDF93
-	for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 18:10:28 -0700 (PDT)
-Received: from mail2.shareable.org (mail2.shareable.org [80.68.89.115]) by
-	cuda.sgi.com with ESMTP id uCUPQHlAFnV179WR for
-	<xfs@oss.sgi.com>; Wed, 19 Aug 2009 18:10:28 -0700 (PDT)
-Date: Thu, 20 Aug 2009 02:10:04 +0100
-From: Jamie Lokier <jamie@shareable.org>
+	n7K1dMqj241989 for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 20:39:32 -0500
+Received: from mail.rtr.ca (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 293A53E3FA9
+	for <xfs@oss.sgi.com>; Wed, 19 Aug 2009 18:40:04 -0700 (PDT)
+Received: from mail.rtr.ca (rtr.ca [76.10.145.34]) by cuda.sgi.com with ESMTP
+	id Eq7wvFJ4TDYjzqzg for <xfs@oss.sgi.com>;
+	Wed, 19 Aug 2009 18:40:04 -0700 (PDT)
+Message-ID: <4A8CA956.2060406@rtr.ca>
+Date: Wed, 19 Aug 2009 21:39:34 -0400
+From: Mark Lord <liml@rtr.ca>
+MIME-Version: 1.0
 Subject: Re: [PATCH, RFC] xfs: batched discard support
-Message-ID: <20090820011004.GC14005@shareable.org>
 References: <20090816004705.GA7347@infradead.org>
 	<20090819203916.GA25296@elte.hu>
-	<20090820010552.GA22107@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20090820010552.GA22107@infradead.org>
+In-Reply-To: <20090819203916.GA25296@elte.hu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,31 +24,26 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Paul Mackerras <paulus@samba.org>, liml@rtr.ca, linux-fsdevel@vger.kernel.org, Ingo Molnar <mingo@elte.hu>, Linus Torvalds <torvalds@linux-foundation.org>
+To: Ingo Molnar <mingo@elte.hu>
+Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Paul Mackerras <paulus@samba.org>, jens.axboe@oracle.com, linux-fsdevel@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>
 
-Christoph Hellwig wrote:
-> > So i'm torn about the 'syscall versus ioctl' issue, i'd 
-> > like to avoid making interface design mistakes and i'd 
-> > like to solicit some opinions about this. I've attached 
-> > the perfcounters ioctl patch below.
-> 
-> Only add a syscall if it has _one_ clear defined purpose,
-> which has kernel-wide meaning.
+[resending, after fixing the Cc: list; somebody trimmed it earlier]
 
-One clear defined purpose which comes to mind is a "trim" or "punch"
-system call, for making holes in files as well as trimming block
-devices.  Several other OSes have that capability on files.
+Jamie Lokier wrote:
+..
+> I don't remember - does TRIM guarantee the blocks read zeros afterwards?
+..
 
-I don't remember - does TRIM guarantee the blocks read zeros afterwards?
+No, it doesn't.
 
-It would be tidy if it does, as it could have the same meaning with files.
+A drive can optionally support "deterministic TRIM", whereby it will return
+consistent data for any given trimmed sector afterwards, but that doesn't mean zeros.
 
--- Jamie
+-ml
 
 _______________________________________________
 xfs mailing list
