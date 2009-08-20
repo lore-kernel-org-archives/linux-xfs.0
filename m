@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7KFhEqX104501 for <xfs@oss.sgi.com>; Thu, 20 Aug 2009 10:43:24 -0500
-Received: from mail.sf-mail.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 66D0514F98F4
-	for <xfs@oss.sgi.com>; Thu, 20 Aug 2009 08:43:59 -0700 (PDT)
-Received: from mail.sf-mail.de (mail.sf-mail.de [62.27.20.61]) by cuda.sgi.com
-	with ESMTP id AB11ONVaWWj7Pb3o for <xfs@oss.sgi.com>;
-	Thu, 20 Aug 2009 08:43:59 -0700 (PDT)
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [PATCH, RFC] xfs: batched discard support
-Date: Thu, 20 Aug 2009 17:43:41 +0200
-References: <20090816004705.GA7347@infradead.org>
-	<4A8D5442.1000302@redhat.com> <4A8D5FDB.7080505@rtr.ca>
-In-Reply-To: <4A8D5FDB.7080505@rtr.ca>
+	n7KGQnha106565 for <xfs@oss.sgi.com>; Thu, 20 Aug 2009 11:27:04 -0500
+Date: Thu, 20 Aug 2009 12:27:29 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 07/17] vfs: Introduce new helpers for syncing after
+	writing to O_SYNC file or IS_SYNC inode
+Message-ID: <20090820162729.GA24659@infradead.org>
+References: <1250697884-22288-1-git-send-email-jack@suse.cz>
+	<1250697884-22288-8-git-send-email-jack@suse.cz>
+	<20090819162638.GE6150@infradead.org>
+	<20090820121531.GC16486@duck.novell.com>
 MIME-Version: 1.0
-Message-Id: <200908201743.50167.eike-kernel@sf-tec.de>
+Content-Disposition: inline
+In-Reply-To: <20090820121531.GC16486@duck.novell.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,114 +22,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============2354912876131097244=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Lord <liml@rtr.ca>
-Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>, linux-scsi@vger.kernel.org, Neil Brown <neilb@suse.de>, Ric Wheeler <rwheeler@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Paul Mackerras <paulus@samba.org>, jens.axboe@oracle.com, linux-fsdevel@vger.kernel.org, Ingo Molnar <mingo@elte.hu>, Linus Torvalds <torvalds@linux-foundation.org>
+To: Jan Kara <jack@suse.cz>
+Cc: linux-ext4@vger.kernel.org, tytso@mit.edu, linux-ntfs-dev@lists.sourceforge.net, LKML <linux-kernel@vger.kernel.org>, Joel Becker <joel.becker@oracle.com>, Christoph Hellwig <hch@infradead.org>, Anton Altaparmakov <aia21@cantab.net>, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, Evgeniy Polyakov <zbr@ioremap.net>, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 
---===============2354912876131097244==
-Content-Type: multipart/signed;
-  boundary="nextPart1495252.XOLBvpv6Aq";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+On Thu, Aug 20, 2009 at 02:15:31PM +0200, Jan Kara wrote:
+> On Wed 19-08-09 12:26:38, Christoph Hellwig wrote:
+> > Looks good to me.  Eventually we should use those SYNC_ flags also all
+> > through the fsync codepath, but I'll see if I can incorporate that in my
+> > planned fsync rewrite.
+>   Yes, I thought I'll leave that for later. BTW it should be fairly easy to
+> teach generic_sync_file() to do fdatawait() before calling ->fsync() if the
+> filesystem sets some flag in inode->i_mapping (or somewhere else) as is
+> needed for XFS, btrfs, etc.
 
---nextPart1495252.XOLBvpv6Aq
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Maybe you can help brain storming, but I still can't see any way in that
+the
 
-Mark Lord wrote:
-> Ric Wheeler wrote:
-> > Note that returning consistent data is critical for devices that are
-> > used in a RAID group since you will need each RAID block that is used to
-> > compute the parity to continue to return the same data until you
-> > overwrite it with new data :-)
-> >
-> > If we have a device that does not support this (or is misconfigured not
-> > to do this), we should not use those devices in an MD group & do discard
-> > against it...
->
-> ..
->
-> Well, that's a bit drastic.  But the RAID software should at least
-> not issue TRIM commands in ignorance of such.
->
-> Would it still be okay to do the TRIMs when the entire parity stripe
-> (across all members) is being discarded?  (As opposed to just partial
-> data there being dropped)
+  - write data
+  - write inode
+  - wait for data
 
-I think there might be a related usecase that could benefit from=20
-TRIM/UNMAP/whatever support in file systems even if the physical devices do=
-=20
-not support that. I have a RAID5 at work with LVM over it. This week I dele=
-ted=20
-an old logical volume of some 200GB that has been moved to a different volu=
-me=20
-group, tomorrow I will start to replace all the disks in the raid with bigg=
-er=20
-ones. So if the LVM told the raid "hey, this space is totally garbage from =
-now=20
-on" the raid would not have to do any calculation when it has to rebuild th=
-at=20
-but could simply write fixed patterns to all disks (e.g. 0 to first data, 0=
- to=20
-second data and 0 as "0 xor 0" to parity). With the knowledge that some of =
-the=20
-underlying devices would support "write all to zero" this operation could b=
-e=20
-speed up even more, with "write all fixed pattern" every unused chunk would=
- go=20
-down to a single write operation (per disk) on rebuild regardless which par=
-ity=20
-algorithm is used.
+actually is a benefit in terms of semantics (I agree that it could be
+faster in theory, but even that is debatable with todays seek latencies
+in disks)
 
-And even if things are in use the RAID can benefit from such things. If we=
-=20
-just define that every unmapped space will always be 0 when read and I writ=
-e=20
-to a raid volume and the other part of the checksum calculation is unmapped=
-=20
-checksumming becomes easy as we already know half of the values before: 0. =
-So=20
-we can save the reads from the second data stripe and most of the calculati=
-on.
-"dd if=3D/dev/md0" on an unmapped space is more or less the same as "dd=20
-if=3D/dev/zero" than.
+Think about a simple non-journaling filesystem like ext2:
 
-I only fear that these things are too obviously as I would be the first to=
-=20
-have this idea ;)
-
-Greetings,
-
-Eike
-
---nextPart1495252.XOLBvpv6Aq
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
-
-iEYEABECAAYFAkqNbzYACgkQXKSJPmm5/E5LNQCdFqJ/6Rb+l/1Jdd8GNwG86+MF
-g8sAmwXujLHOGE0WsLOAchKRWCzuayAG
-=PtAF
------END PGP SIGNATURE-----
-
---nextPart1495252.XOLBvpv6Aq--
+ (1) block get allocated during ->write before putting data in
+      - this dirties the inode because we update i_block/i_size/etc
+ (2) we call fsync (or the O_SNC handling code for that matter)
+      - we start writeout of the data, which takes forever because the
+	file is very large
+      - then we write out the inode, including the i_size/i_blocks
+	update
+      - due to some reason this gets reordered before the data writeout
+	finishes (without that happening there would be no benefit to
+	this ordering anyway)
+ (3) no we call filemap_fdatawait to wait for data I/O to finish
 
 
---===============2354912876131097244==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Now the system crashes between (2) and (3).  After that we we do have
+stale data in the inode in the area not written yet.
+
+Is there some case between that simple filesystem and the i_size update
+from I/O completion handler in XFS/ext4 where this behaviour actually
+buys us anything?  Any ext3 magic maybe?
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============2354912876131097244==--
