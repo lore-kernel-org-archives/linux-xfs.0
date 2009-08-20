@@ -1,29 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7HLB1fY093557 for <xfs@oss.sgi.com>; Mon, 17 Aug 2009 16:11:18 -0500
-Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 066743D8D0D
-	for <xfs@oss.sgi.com>; Mon, 17 Aug 2009 14:11:11 -0700 (PDT)
-Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.162.198]) by
-	cuda.sgi.com with ESMTP id hqacrP7H4WNxRpve for
-	<xfs@oss.sgi.com>; Mon, 17 Aug 2009 14:11:11 -0700 (PDT)
-Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv1.zmi.at (Postfix) with ESMTP id E44635380
-	for <xfs@oss.sgi.com>; Mon, 17 Aug 2009 23:11:08 +0200 (CEST)
-Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id 3AD20400166
-	for <xfs@oss.sgi.com>; Mon, 17 Aug 2009 23:11:08 +0200 (CEST)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: disk performance strange/low
-Date: Mon, 17 Aug 2009 23:11:07 +0200
+	n7KCOeC8091583
+	for <linux-xfs@oss.sgi.com>; Thu, 20 Aug 2009 07:24:50 -0500
+Received: from mail-ew0-f223.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A8AC31B76574
+	for <linux-xfs@oss.sgi.com>; Thu, 20 Aug 2009 05:25:01 -0700 (PDT)
+Received: from mail-ew0-f223.google.com (mail-ew0-f223.google.com
+	[209.85.219.223]) by cuda.sgi.com with ESMTP id
+	clyWDf5ixaav5rOv for <linux-xfs@oss.sgi.com>;
+	Thu, 20 Aug 2009 05:25:01 -0700 (PDT)
+Received: by ewy23 with SMTP id 23so5377806ewy.8
+	for <linux-xfs@oss.sgi.com>; Thu, 20 Aug 2009 05:24:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-Message-Id: <200908172311.07660@zmi.at>
+In-Reply-To: <20090817211437.GA5929@infradead.org>
+References: <4A408316.2070903@news-service.com>
+	<1587994907.388291245745033392.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
+	<20090623171305.GB23971@infradead.org>
+	<4A4A7205.6010101@news-service.com>
+	<20090701124441.GA12844@infradead.org>
+	<4A4CEEF2.7040101@news-service.com>
+	<20090721141225.GA24330@infradead.org>
+	<89c4f90c0907220155u5d9331dj3cbe53efcf6b51f2@mail.gmail.com>
+	<20090817211437.GA5929@infradead.org>
+Date: Thu, 20 Aug 2009 14:24:59 +0200
+Message-ID: <89c4f90c0908200524m2dc7df3dk27de7337bd2ae4a@mail.gmail.com>
+Subject: Re: 2.6.30 panic - xfs_fs_destroy_inode
+From: Tommy van Leeuwen <tommy@news-service.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,55 +35,65 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Patrick Schreurs <patrick@news-service.com>, linux-xfs@oss.sgi.com, Lachlan McIlroy <lmcilroy@redhat.com>, Eric Sandeen <sandeen@sandeen.net>
 
-I've got an Areca RAID Controller with 5x 1TB disks, and in the last 
-time I often found it to be strange. Now I investigated, and found this. 
->From another server I NFS mount a share, and make
-dd if=/dev/sda of=/server/share/test.dd bs=1024k
-so that should do big sequential writes. But the performance goes up and 
-down, like you see in this output from "iostat -kx 5 555". You see write 
-KB/s is 5824, 23207, 87283, 704, 40187. Up and down all the time. Could 
-that be solved by the patch you discussed last time, or is there 
-something else?
+On Mon, Aug 17, 2009 at 11:14 PM, Christoph Hellwig<hch@infradead.org> wrot=
+e:
+> On Wed, Jul 22, 2009 at 10:55:54AM +0200, Tommy van Leeuwen wrote:
+>> Unfortunately we still get errors, with this patch on top of the
+>> previous one: The difference is that is now crashes within an hour
+>> instead of once a week, so that might be good for troubleshooting.
+>
+> Hi Tommy and sorry for dropping the ball on this, I didn't remember this
+> mail anymore until I look for more reporters of the inode related
+> problems.
 
-Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-
-sz avgqu-sz   await  svctm  %util
-sdb               0,00   401,20    1,20   77,09     4,78  5824,00   
-148,91   152,25 2595,77  12,76  99,92
+Hi Chris, no problem. We're always busy ourself too. We will check out
+the new fixes but we need some time to deploy them. We will take the
+extra debug info with it just in case. We'll report back when we have
+some news.
 
-avg-cpu:  %user   %nice %system %iowait  %steal   %idle
-           0,00    0,00   34,77   67,03    2,20    7,21
-sdb               0,00  1094,40    2,20  245,80     8,80 23207,20   
-187,23   153,64   43,24   4,03 100,00
-
-avg-cpu:  %user   %nice %system %iowait  %steal   %idle
-           0,00    0,00   41,08   56,83    0,30   15,65
-sdb               0,00   295,20    6,40  791,20    25,60 87283,40   
-218,93   119,19  259,89   1,21  96,56
-
-avg-cpu:  %user   %nice %system %iowait  %steal   %idle
-           0,00    0,00   61,45   55,92    0,50    4,62
-sdb               0,00     3,60    0,00    4,60     0,00   704,80   
-306,43   140,01 2979,30 217,39 100,00
-
-avg-cpu:  %user   %nice %system %iowait  %steal   %idle
-           0,00    0,00   21,12   75,50    0,10   10,06
-sdb               0,00  1252,80    0,20  270,00     0,80 40187,20   
-297,47   151,38 1160,49   3,70  99,84
+Cheers,
+Tommy
 
 
-mfg zmi
--- 
-// Michael Monnerie, Ing.BSc    -----      http://it-management.at
-// Tel: 0660 / 415 65 31                      .network.your.ideas.
-// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
-// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
-// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
+>
+> Current mainline (Linus' git as of today) has a lot of the fixes in this
+> area, any chance I could trick you into trying it? =A0Maybe including the
+> debug patch below which adds a printk to that one culprit that I thing
+> might remain:
+>
+> Also if it still happens any chance you could send output of the dmesg
+> command instead of the syslog files? =A0For some reason syslogd usually
+> eats up some bits of kernel oops message..
+>
+>
+> Index: linux-2.6/fs/xfs/xfs_iget.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- linux-2.6.orig/fs/xfs/xfs_iget.c =A0 =A02009-08-17 18:08:39.563217129=
+ -0300
+> +++ linux-2.6/fs/xfs/xfs_iget.c 2009-08-17 18:09:12.999316531 -0300
+> @@ -242,6 +242,8 @@ xfs_iget_cache_hit(
+>
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0error =3D -inode_init_always(mp->m_super, =
+inode);
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (error) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 printk("XFS: inode_init_alw=
+ays failed to re-initialize inode\n");
+> +
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/*
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 * Re-initializing the ino=
+de failed, and we are in deep
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 * trouble. =A0Try to re-a=
+dd it to the reclaim list.
+>
 
 _______________________________________________
 xfs mailing list
