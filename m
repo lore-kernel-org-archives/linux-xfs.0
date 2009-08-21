@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7LHx7Qg185933 for <xfs@oss.sgi.com>; Fri, 21 Aug 2009 12:59:17 -0500
-Received: from mx1.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E62293EB73A
-	for <xfs@oss.sgi.com>; Fri, 21 Aug 2009 10:59:44 -0700 (PDT)
-Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
-	with ESMTP id Q32mFlI46yJTFkx7 for <xfs@oss.sgi.com>;
-	Fri, 21 Aug 2009 10:59:44 -0700 (PDT)
-Date: Fri, 21 Aug 2009 19:59:43 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 13/17] xfs: Convert sync_page_range() to simple
-	fdatawrite_range()
-Message-ID: <20090821175943.GB10145@duck.novell.com>
-References: <1250875447-15622-1-git-send-email-jack@suse.cz>
-	<1250875447-15622-14-git-send-email-jack@suse.cz>
-	<20090821172801.GA30254@lst.de>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20090821172801.GA30254@lst.de>
+	n7LN6bF3204953 for <xfs@oss.sgi.com>; Fri, 21 Aug 2009 18:06:47 -0500
+Received: from radon.netxsys.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 590E1150D01D
+	for <xfs@oss.sgi.com>; Fri, 21 Aug 2009 16:07:00 -0700 (PDT)
+Received: from radon.netxsys.com (radon.netxsys.com [204.16.202.162]) by
+	cuda.sgi.com with ESMTP id VxLM3d757C6i5cdh for
+	<xfs@oss.sgi.com>; Fri, 21 Aug 2009 16:07:00 -0700 (PDT)
+Received: from [205.233.151.7] (Oxygen.NetXSys.Com [205.233.151.7])
+	by radon.netxsys.com (Postfix) with ESMTP id A827DC000093
+	for <xfs@oss.sgi.com>; Fri, 21 Aug 2009 19:06:57 -0400 (EDT)
+Subject: XFS disk half full, yet it is reporting out of disk (linux)
+From: Krzysztof Adamski <k@adamski.org>
+Date: Fri, 21 Aug 2009 19:06:56 -0400
+Message-Id: <1250896016.8535.19.camel@oxygen.netxsys.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,20 +28,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri 21-08-09 19:28:01, Christoph Hellwig wrote:
-> On Fri, Aug 21, 2009 at 07:24:03PM +0200, Jan Kara wrote:
-> > +		error2 = filemap_fdatawrite_range(mapping, pos, pos + ret - 1);
-> 
-> I think this should be a filemap_write_and_wait_range
-  Ah true, I somehow misinterpretted what xfs_write_sync_logforce() does.
+I'm running a 64bit kernel Linux (Debian Lenny) self compiled kernel
+2.6.30.4. I have created a 5T xfs filesystem, it is about half full but
+I get "No space left on device"
 
-									Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+Here is the output of df:
+gen:/fstore-1# df .
+Filesystem           1K-blocks      Used Available Use% Mounted on
+/dev/mapper/mega--raid--1-fstore--1
+                     5265707008 2711698716 2554008292  52% /fstore-1
+gen:/fstore-1# df -i .
+Filesystem            Inodes   IUsed   IFree IUse% Mounted on
+/dev/mapper/mega--raid--1-fstore--1
+                     1053167616  736704 1052430912    1% /fstore-1
+gen:/fstore-1# >abc
+-bash: abc: No space left on device
+
+What limit did I hit?
+
+K
 
 _______________________________________________
 xfs mailing list
