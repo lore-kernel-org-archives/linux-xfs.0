@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7L7AomK156172 for <xfs@oss.sgi.com>; Fri, 21 Aug 2009 02:11:00 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0204815061BF
-	for <xfs@oss.sgi.com>; Fri, 21 Aug 2009 00:11:17 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id oWUktDtD07cD1aEg for
-	<xfs@oss.sgi.com>; Fri, 21 Aug 2009 00:11:17 -0700 (PDT)
-Date: Fri, 21 Aug 2009 03:11:15 -0400 (EDT)
-From: Lachlan McIlroy <lmcilroy@redhat.com>
-Message-ID: <193616431.76011250838675275.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
-In-Reply-To: <1194138654.75921250838215929.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
-Subject: Re: XFS corruption with failover
+	n7LCkZNh170553 for <xfs@oss.sgi.com>; Fri, 21 Aug 2009 07:46:50 -0500
+Received: from mx3.mail.elte.hu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9FBFB1D5E86C
+	for <xfs@oss.sgi.com>; Fri, 21 Aug 2009 05:46:54 -0700 (PDT)
+Received: from mx3.mail.elte.hu (mx3.mail.elte.hu [157.181.1.138]) by
+	cuda.sgi.com with ESMTP id lYJJvKIGlPABkkMj for
+	<xfs@oss.sgi.com>; Fri, 21 Aug 2009 05:46:54 -0700 (PDT)
+Date: Fri, 21 Aug 2009 14:46:38 +0200
+From: Ingo Molnar <mingo@elte.hu>
+Subject: Re: [PATCH, RFC] xfs: batched discard support
+Message-ID: <20090821124638.GC10263@elte.hu>
+References: <20090816004705.GA7347@infradead.org>
+	<20090819203916.GA25296@elte.hu>
+	<20090820010552.GA22107@infradead.org>
 MIME-Version: 1.0
-Reply-To: Lachlan McIlroy <lmcilroy@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20090820010552.GA22107@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,152 +30,79 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: John Quigley <jquigley@jquigley.com>
-Cc: XFS Development <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Paul Mackerras <paulus@samba.org>, liml@rtr.ca, linux-fsdevel@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>
 
------ "John Quigley" <jquigley@jquigley.com> wrote:
 
-> Lachlan McIlroy wrote:
-> > xfs_logprint doesn't find any problems with this log but that
-> doesn't mean
-> > the kernel doesn't - they use different implementations to read the
-> log.  I
-> > noticed that the active part of the log wraps around the physical
-> end/start
-> > of the log which reminds of this fix:
-Hang on, I made a mistake there.  The xfs_logprint transactional view
-of the log didn't find any errors but dumping the contents of the log
-shows a different story.
+* Christoph Hellwig <hch@infradead.org> wrote:
 
-$ xfs_logprint -f xfs-failover-logprint 
-xfs_logprint:
-    data device: 0xffffffffffffffff
-    log device: 0xffffffffffffffff daddr: 0 length: 262144
-
-Header 0xb wanted 0xfeedbabe
-**********************************************************************
-* ERROR: header cycle=11          block=6168                         *
-**********************************************************************
-Bad log record header
-
-$ xfs_logprint -d -f xfs-failover-logprint 
-
-xfs_logprint:
-    data device: 0xffffffffffffffff
-    log device: 0xffffffffffffffff daddr: 0 length: 262144
-
-[00000 - 00000] Cycle 0xffffffff New Cycle 0x0000000c
-    32 HEADER Cycle 12 tail 11:257848 len  32256 ops 707
-    96 HEADER Cycle 12 tail 11:257848 len  24064 ops 456
-   144 HEADER Cycle 12 tail 11:257848 len   3584 ops 25
-   152 HEADER Cycle 12 tail 11:257848 len  32256 ops 708
-   216 HEADER Cycle 12 tail 11:257848 len  32256 ops 706
-   280 HEADER Cycle 12 tail 11:257848 len  32256 ops 709
-   344 HEADER Cycle 12 tail 11:257848 len   3584 ops 18
-   352 HEADER Cycle 12 tail 11:257848 len  32256 ops 708
-   416 HEADER Cycle 12 tail 11:257848 len  32256 ops 706
-   480 HEADER Cycle 12 tail 11:257848 len  32256 ops 709
-   544 HEADER Cycle 12 tail 11:257848 len  32256 ops 707
-   608 HEADER Cycle 12 tail 11:257848 len  32256 ops 710
-   672 HEADER Cycle 12 tail 11:257848 len  32256 ops 707
-   736 HEADER Cycle 12 tail 11:257848 len  32256 ops 709
-   800 HEADER Cycle 12 tail 11:257848 len  32256 ops 707
-   864 HEADER Cycle 12 tail 11:257848 len  32256 ops 706
-   928 HEADER Cycle 12 tail 11:257848 len  32256 ops 709
-   992 HEADER Cycle 12 tail 11:257848 len  32256 ops 707
-  1056 HEADER Cycle 12 tail 11:257848 len  32256 ops 710
-  1120 HEADER Cycle 12 tail 11:257848 len  32256 ops 707
-  1184 HEADER Cycle 12 tail 11:257848 len  32256 ops 709
-  1248 HEADER Cycle 12 tail 11:257848 len  32256 ops 707
-  1312 HEADER Cycle 12 tail 11:257848 len  32256 ops 706
-  1376 HEADER Cycle 12 tail 11:257848 len  32256 ops 709
-  1440 HEADER Cycle 12 tail 11:257848 len  32256 ops 707
-  1504 HEADER Cycle 12 tail 11:257848 len  32256 ops 710
-  1568 HEADER Cycle 12 tail 11:257848 len  24064 ops 437
-  1616 HEADER Cycle 12 tail 11:257848 len   3584 ops 25
-  1624 HEADER Cycle 12 tail 11:257848 len  32256 ops 708
-  1688 HEADER Cycle 12 tail 11:257848 len  32256 ops 706
-  1752 HEADER Cycle 12 tail 11:257848 len  32256 ops 709
-  1816 HEADER Cycle 12 tail 11:257848 len  32256 ops 707
-  1880 HEADER Cycle 12 tail 11:257848 len  32256 ops 710
-  1944 HEADER Cycle 12 tail 11:257848 len  32256 ops 707
-  2008 HEADER Cycle 12 tail 11:257848 len  32256 ops 709
-  2072 HEADER Cycle 11 tail 11:257848 len      0 ops 0
-[00000 - 02072] Cycle 0x0000000c New Cycle 0x0000000b
-  2073 HEADER Cycle 11 tail 11:257848 len      0 ops 0
-  2074 HEADER Cycle 11 tail 11:257848 len      0 ops 0
-  2075 HEADER Cycle 11 tail 11:257848 len      0 ops 0
-.........
-  6165 HEADER Cycle 11 tail 11:257848 len      0 ops 0
-  6166 HEADER Cycle 11 tail 11:257848 len      0 ops 0
-  6167 HEADER Cycle 11 tail 11:257848 len      0 ops 0
-  6184 HEADER Cycle 11 tail 10:260744 len  32256 ops 707
-  6248 HEADER Cycle 11 tail 10:260744 len  32256 ops 710
-  6312 HEADER Cycle 11 tail 10:260744 len  32256 ops 707
-..........
-
-So we get to block 6168 and there's an unexpected state change - instead
-of a magic number we have the cycle number.
-
-BLKNO: 6167
- 0 bebaedfe  b000000  2000000        0  b000000 17180000  b000000 38ef0300 
- 8        0        0        0        0        0        0        0        0 
-10        0        0        0        0        0        0        0        0 
-18        0        0        0        0        0        0        0        0 
-20        0        0        0        0        0        0        0        0 
-28        0        0        0        0        0        0        0        0 
-30        0        0        0        0        0        0        0        0 
-38        0        0        0        0        0        0        0        0 
-40        0        0        0        0        0        0        0        0 
-48        0        0        0  1000000 af447af9 4a44d930 5a9b0fa0 20d7ba86 
-50        0        0        0        0        0        0        0        0 
-58        0        0        0        0        0        0        0        0 
-60        0        0        0        0        0        0        0        0 
-68        0        0        0        0        0        0        0        0 
-70        0        0        0        0        0        0        0        0 
-78        0        0        0        0        0        0        0        0 
-
-BLKNO: 6168
- 0  b000000       69 81a4494e    10201       63       63        1        0 
- 8        0    20000 4a857400 207b4682 4a859784 21b73460 4a859784 21b73460 
-10  5f60000        0        0        0        0        0  2000000        0 
-18        0        0 b00428a0        0      269 780528a0        0      169 
-20 780528a0 10000000       69 5452414e        3        0        1 780528a0 
-28 38000000       69    2123b        1        0        0   12c126        0 
-30        0        0        0        0    96090        0       10      600 
-38 780528a0 60000000       69 81a4494e    10201       63       63        1 
-40        0        0    20000 4a857400 207b4682 4a859784 21b73460 4a859784 
-48 21b73460  5f60000        0        0        0        0        0  2000000 
-50        0        0        0 780528a0        0      269 400628a0        0 
-58      169 400628a0 10000000       69 5452414e        3        0        1 
-60 400628a0 38000000       69    2123b        1        0        0   12c126 
-68        0        0        0        0        0    96090        0       10 
-70      600 400628a0 60000000       69 81a4494e    10201       63       63 
-78        1        0        0    20000 4a857400 207b4682 4a859784 21c676a0 
-
-I don't know what's happened here.  It may not even be related to the log
-recovery failure.
-
+> On Wed, Aug 19, 2009 at 10:39:16PM +0200, Ingo Molnar wrote:
+> > A general interface design question: you added a new 
+> > ioctl XFS_IOC_TRIM case. It's a sub-case of an 
+> > ugly-looking demultiplexing xfs_file_ioctl().
 > 
-> Very interesting indeed, thank you /very/ much for looking at this.
+> ioctl is per defintion a multiplexer.
+
+Yes, and? There's two variants of multiplexing:
+
+  - multiplex something rather straightforward and related
+  - multiplex unrelated fields, data, structures
+
+I consider the second one 'ugly', the first one 'ok-ish'. YMMV.
+
+> > What is your threshold for turning something into a syscall? 
+> > When are ioctls acceptable in your opinion?
+> > 
+> > I'm asking this because we are facing a similar problem with 
+> > perfcounters: we need to extend the ioctl functionality there 
+> > but introducing a new syscall looks wasteful.
+> > 
+> > So i'm torn about the 'syscall versus ioctl' issue, i'd like to 
+> > avoid making interface design mistakes and i'd like to solicit 
+> > some opinions about this. I've attached the perfcounters ioctl 
+> > patch below.
 > 
-> > I think the fix made it into 2.6.24.
+> Only add a syscall if it has _one_ clear defined purpose, which 
+> has kernel-wide meaning.
 > 
-> We're currently using the very latest 2.6.30, unfortunately.  We've
-> distilled this into a reproducible environment with a stack of NFS +
-> XFS to a local disk + automated sysrq 'b' reboots.  We're working on
-> getting this bundled up into a nice little package as a VirtualBox vm
-> for your consumption.  Please tell me if this is not desirable.
+> Do not add an syscall that is just another multiplexer without 
+> structure. Most likely it will just be even worse than sys_ioctl.
 > 
-> Thanks very much again.
+> Also really don't bother adding a system call that is specific to 
+> one singler driver or filesystem.  Besides horrible logistics - 
+> you'd need some always built-in stub calling out to the possibly 
+> modular drivers/filesystem - it also simply doesn't make any 
+> semantical sense.  I can't say I like the ioctl use in 
+> perfcounters much, but adding a special syscalls instead would be 
+> even more horrible.
 > 
-> John Quigley
-> jquigley.com
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> As for the trim support this really just was an RFC to start 
+> bringing some code into play instead of the endless masturbation 
+> about hat code that doesn't exist happens on hardware most people 
+> don't have.  The interface will most ceetainly change and I hope 
+> we will have a common interface for all filesystems (or at least 
+> those that care).
+
+Okay, i'm confused.
+
+I'd like to understand the technical basis of your critisism and i'd 
+like to address any deficiencies of the perfcounters code. You said 
+you dont like the ioctl solution we have, but that you'd like a 
+separate syscall even less.
+
+Perfcounters are a kernel-wide concept, encompassing 100% of all 
+Linux installations, not just some special hardware.
+
+So by your own standard above they seem to be more than eligible for 
+system calls (i hope i'm not mis-stating it), as long as they are 
+cleanly structured. Yet you dont like the interface nor any future 
+pushing of the currently ioctl bits of the interface into syscalls.
+
+Is there any other interface form you'd like more?
+
+Thanks,
+
+	Ingo
 
 _______________________________________________
 xfs mailing list
