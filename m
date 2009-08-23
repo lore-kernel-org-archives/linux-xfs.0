@@ -1,30 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7MKvO69014531 for <xfs@oss.sgi.com>; Sat, 22 Aug 2009 15:57:39 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 10D7D3EE8B6
-	for <xfs@oss.sgi.com>; Sat, 22 Aug 2009 13:58:14 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 6DivUXDzzLgRbiI5 for
-	<xfs@oss.sgi.com>; Sat, 22 Aug 2009 13:58:14 -0700 (PDT)
-Date: Sat, 22 Aug 2009 16:55:02 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Kernel 2.6.30.4 XFS(..?) regression (& with/2.6.31-rc6)
-Message-ID: <20090822205502.GA18904@infradead.org>
-References: <00980BBF-1206-4BEF-A8AE-B4A8DAE7EC27@sgi.com>
-	<alpine.DEB.2.00.0908090605080.16485@p34.internal.lan>
-	<alpine.DEB.2.00.0908110624420.22426@p34.internal.lan>
-	<20090816022331.GA2309@infradead.org>
-	<alpine.DEB.2.00.0908171024380.12533@p34.internal.lan>
-	<alpine.DEB.2.00.0908220624440.30321@p34.internal.lan>
-	<20090822142550.GA10003@infradead.org>
-	<alpine.DEB.2.00.0908221044420.30321@p34.internal.lan>
-	<20090822201558.GA17955@infradead.org>
-	<alpine.DEB.2.00.0908221645440.20848@p34.internal.lan>
+	n7NIHQwv073212 for <xfs@oss.sgi.com>; Sun, 23 Aug 2009 13:17:36 -0500
+Received: from mail.jquigley.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B0CBC1D5EEB0
+	for <xfs@oss.sgi.com>; Sun, 23 Aug 2009 11:17:46 -0700 (PDT)
+Received: from mail.jquigley.com (main.jquigley.com [67.23.32.156]) by
+	cuda.sgi.com with ESMTP id xThJ9HJiRHUYKzZY for
+	<xfs@oss.sgi.com>; Sun, 23 Aug 2009 11:17:46 -0700 (PDT)
+Received: from [10.1.1.11] (OSH-NAT-213-122.onshore.net [66.146.213.122])
+	(Authenticated sender: jquigley@mail.jquigley.com)
+	by mail.jquigley.com (Postfix) with ESMTPSA id 86596204544
+	for <xfs@oss.sgi.com>; Sun, 23 Aug 2009 18:17:44 +0000 (UTC)
+Message-ID: <4A9187C7.9010206@jquigley.com>
+Date: Sun, 23 Aug 2009 13:17:43 -0500
+From: John Quigley <jquigley@jquigley.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.00.0908221645440.20848@p34.internal.lan>
+Subject: Re: XFS corruption with power failure
+References: <606994882.2142291250648292843.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
+	<4A8C1E6E.8020405@jquigley.com>
+In-Reply-To: <4A8C1E6E.8020405@jquigley.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,23 +28,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: XFS Development <xfs@oss.sgi.com>
 
-On Sat, Aug 22, 2009 at 04:46:52PM -0400, Justin Piszcz wrote:
->> Well, that would be a good way to find it.  But I'm personally not
->> interested in spending much time on debugging a problem if it only
->> happens with fishy out of tree modules.
->>
->
-> .. No out of tree modules are used ..
+John Quigley wrote:
+> We've distilled this into a reproducible environment with a stack of NFS + XFS 
+> to a local disk + automated sysrq 'b' reboots.  We're working on getting 
+> this bundled up into a nice little package as a VirtualBox vm for your 
+> consumption.  Please tell me if this is not desirable.
 
-Your previous mail said it only happened using loop-aes.  Is that the
-case or not?
+The self-contained and reproducible environment can be downloaded from the following location:
+
+  http://www.jquigley.com/tmp/xfsVM.tar.bz2
+
+That's a ~550 MB (compressed) image that can be 'imported' directly into the latest VirtualBox.  Instructions for setting up the environment (trivial, should take you a mere couple of minutes):
+
+  http://www.jquigley.com/tmp/README.txt
+
+The basic concept here is to use the VM as the file server, accessing the XFS file system thereon through the guest OS which acts as the NFS client.  Automated reboots are effected with cron and sysrq 'b', so you can just set this up and run it until failure.
+
+Hope this helps lend insight - if there are any questions, please ask.  Thanks for your time.
+
+- John Quigley
 
 _______________________________________________
 xfs mailing list
