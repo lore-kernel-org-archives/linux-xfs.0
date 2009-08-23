@@ -1,30 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7NMiHLC084364 for <xfs@oss.sgi.com>; Sun, 23 Aug 2009 17:44:34 -0500
+	n7NMouDa084609 for <xfs@oss.sgi.com>; Sun, 23 Aug 2009 17:51:11 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 319573F0229
-	for <xfs@oss.sgi.com>; Sun, 23 Aug 2009 15:45:08 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DB7B43F01D2
+	for <xfs@oss.sgi.com>; Sun, 23 Aug 2009 15:51:47 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id dFfpxgcgJXqORF9l for
-	<xfs@oss.sgi.com>; Sun, 23 Aug 2009 15:45:08 -0700 (PDT)
-Date: Sun, 23 Aug 2009 18:45:04 -0400
+	by cuda.sgi.com with ESMTP id 3peUcbqFJHiecez1 for
+	<xfs@oss.sgi.com>; Sun, 23 Aug 2009 15:51:47 -0700 (PDT)
+Date: Sun, 23 Aug 2009 18:48:38 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Kernel 2.6.30.4 XFS(..?) regression (& with/2.6.31-rc6)
-Message-ID: <20090823224504.GA19942@infradead.org>
-References: <alpine.DEB.2.00.0908110624420.22426@p34.internal.lan>
-	<20090816022331.GA2309@infradead.org>
-	<alpine.DEB.2.00.0908171024380.12533@p34.internal.lan>
-	<alpine.DEB.2.00.0908220624440.30321@p34.internal.lan>
-	<20090822142550.GA10003@infradead.org>
-	<alpine.DEB.2.00.0908221044420.30321@p34.internal.lan>
-	<20090822201558.GA17955@infradead.org>
-	<alpine.DEB.2.00.0908221645440.20848@p34.internal.lan>
-	<20090822205502.GA18904@infradead.org>
-	<alpine.DEB.2.00.0908221659030.23463@p34.internal.lan>
+Subject: Re: 2.6.26.3 / loop-aes/xfs corruption?
+Message-ID: <20090823224838.GB19942@infradead.org>
+References: <alpine.DEB.2.00.0908221040220.30321@p34.internal.lan>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.00.0908221659030.23463@p34.internal.lan>
+In-Reply-To: <alpine.DEB.2.00.0908221040220.30321@p34.internal.lan>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,34 +29,30 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-Ok, let's see where errors could happen then.
+On Sat, Aug 22, 2009 at 10:44:31AM -0400, Justin Piszcz wrote:
+> Hi,
+>
+> On an older machine:
+>
+> [2340962.903497] XFS internal error XFS_WANT_CORRUPTED_GOTO at line 1545 of file
+>  fs/xfs/xfs_alloc.c.  Caller 0xc021ccd8
+> [2340962.903497] Pid: 24649, comm: mv Not tainted 2.6.26.3 #1
 
-There are four theoretical possibilities:
+This is a very typical sign for corruption cause by the lack of write
+barriers on enabled write caches.
 
- (a) XFS
- (b) loop driver
- (c) crypto loop code
- (d) block layer
+> [2340962.911473] Filesystem "loop0": Corruption of in-memory data detected.  Shu
 
-Or combinations thereof.
+And using the loop device is kindof a worsened version of hanving write
+caches as we don't just have small disk caches that can fill up but
+major amounts of the main memory.
 
-I would take (a) and (d) as more unlikely as they tend to get used much
-more and I would have heard more bug reports already.
-
-The cryptoloop code hasn't changed at all since 2.6.29.
-
-The loop code howver has a very interesting commit just after 2.6.39:
-
-commit 68db1961bbf4e16c220ccec4a780e966bc1fece3
-Author: Nikanth Karthikesan <knikanth@suse.de>
-Date:   Tue Mar 24 12:29:54 2009 +0100
-
-    loop: support barrier writes
-
-Can you try reverting this one (it cleanly reverse-applies against
-2.6.30 and current mainline) and see if that makes a difference?
+The loop device before 2.6.30 is unfortunately not safe in case of
+system crashes.  And given your other report we'll have to see if maybe
+the barrier support in 2.6.30 cause other kinds of problems to, although
+it could be something else.
 
 _______________________________________________
 xfs mailing list
