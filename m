@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7NMouDa084609 for <xfs@oss.sgi.com>; Sun, 23 Aug 2009 17:51:11 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DB7B43F01D2
-	for <xfs@oss.sgi.com>; Sun, 23 Aug 2009 15:51:47 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 3peUcbqFJHiecez1 for
-	<xfs@oss.sgi.com>; Sun, 23 Aug 2009 15:51:47 -0700 (PDT)
-Date: Sun, 23 Aug 2009 18:48:38 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: 2.6.26.3 / loop-aes/xfs corruption?
-Message-ID: <20090823224838.GB19942@infradead.org>
-References: <alpine.DEB.2.00.0908221040220.30321@p34.internal.lan>
+	n7OACEDM116304 for <xfs@oss.sgi.com>; Mon, 24 Aug 2009 05:12:25 -0500
+Received: from sovereign.computergmbh.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 507C81B7AABC
+	for <xfs@oss.sgi.com>; Mon, 24 Aug 2009 03:13:00 -0700 (PDT)
+Received: from sovereign.computergmbh.de (sovereign.computergmbh.de
+	[85.214.69.204]) by cuda.sgi.com with ESMTP id Otdsa7G6yoOsHb3y
+	for <xfs@oss.sgi.com>; Mon, 24 Aug 2009 03:13:00 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+	by sovereign.computergmbh.de (Postfix) with ESMTP id DD92E4179336
+	for <xfs@oss.sgi.com>; Mon, 24 Aug 2009 12:12:59 +0200 (CEST)
+Date: Mon, 24 Aug 2009 12:12:59 +0200 (CEST)
+From: Jan Engelhardt <jengelh@medozas.de>
+Subject: xfs_check does not recognize fs truncation
+Message-ID: <alpine.LSU.2.00.0908241208520.1028@fbirervta.pbzchgretzou.qr>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.00.0908221040220.30321@p34.internal.lan>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,31 +28,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Sat, Aug 22, 2009 at 10:44:31AM -0400, Justin Piszcz wrote:
-> Hi,
->
-> On an older machine:
->
-> [2340962.903497] XFS internal error XFS_WANT_CORRUPTED_GOTO at line 1545 of file
->  fs/xfs/xfs_alloc.c.  Caller 0xc021ccd8
-> [2340962.903497] Pid: 24649, comm: mv Not tainted 2.6.26.3 #1
+Hi,
 
-This is a very typical sign for corruption cause by the lack of write
-barriers on enabled write caches.
 
-> [2340962.911473] Filesystem "loop0": Corruption of in-memory data detected.  Shu
+This I see on xfsprogs-2.10.1 with kernel 2.6.29.6:
 
-And using the loop device is kindof a worsened version of hanving write
-caches as we don't just have small disk caches that can fill up but
-major amounts of the main memory.
+# xfs_check /dev/loop0
+# echo $?
+0
+# mount /dev/loop0 /mnt
+Filesystem "loop0": Disabling barriers, trial barrier write failed
+attempt to access beyond end of device
+loop0: rw=0, want=3670016, limit=3649536
+I/O error in filesystem ("loop0") meta-data dev loop0 block 0x37ffff
+("xfs_read_buf") error 5 buf count 512
+XFS: size check 2 failed
 
-The loop device before 2.6.30 is unfortunately not safe in case of
-system crashes.  And given your other report we'll have to see if maybe
-the barrier support in 2.6.30 cause other kinds of problems to, although
-it could be something else.
+The fs is truncated (my fault/intention), but xfs_check returning 0 is 
+unexpected.
 
 _______________________________________________
 xfs mailing list
