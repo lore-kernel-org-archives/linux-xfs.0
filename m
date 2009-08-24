@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7OEmamt130164 for <xfs@oss.sgi.com>; Mon, 24 Aug 2009 09:48:52 -0500
+	n7OFTduN132812 for <xfs@oss.sgi.com>; Mon, 24 Aug 2009 10:29:54 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 809F83F2935
-	for <xfs@oss.sgi.com>; Mon, 24 Aug 2009 07:49:08 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3D8FE3F232A
+	for <xfs@oss.sgi.com>; Mon, 24 Aug 2009 08:30:31 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id gretsFBo5AIzHyhX for
-	<xfs@oss.sgi.com>; Mon, 24 Aug 2009 07:49:08 -0700 (PDT)
-Date: Mon, 24 Aug 2009 10:49:04 -0400
+	by cuda.sgi.com with ESMTP id tXBZrtfrIJWfAy7I for
+	<xfs@oss.sgi.com>; Mon, 24 Aug 2009 08:30:31 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1MfbV8-000696-SN
+	for xfs@oss.sgi.com; Mon, 24 Aug 2009 15:30:30 +0000
+Date: Mon, 24 Aug 2009 11:30:30 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Changing a file system from case sensitive to case insensitive...
-Message-ID: <20090824144904.GB20898@infradead.org>
-References: <4A928413.4050205@tlinx.org>
+Subject: Re: [PATCH 0/7] inode allocation cleanups
+Message-ID: <20090824153030.GA19864@infradead.org>
+References: <20090512211607.197071000@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4A928413.4050205@tlinx.org>
+In-Reply-To: <20090512211607.197071000@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,16 +31,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "Linda A. Walsh" <xfs@tlinx.org>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Mon, Aug 24, 2009 at 05:14:11AM -0700, Linda A. Walsh wrote:
-> I don't suppose this is possible after the file system is
-> already up and running?
->
-> Or...could be made possible?
+ping?  any reviewers for this?
 
-It's not theoretically impossible, but not implemented right now.
+On Tue, May 12, 2009 at 05:16:07PM -0400, Christoph Hellwig wrote:
+> 
+> This series contains various cleanups and refactorings to xfs_ialloc.c,
+> some of them are my own and some are from Dave Chinner.
+> 
+> The last patch is also from Dave and speeds up the search for free inodes
+> in allocation groups with lots of inodes.  I ported it ontop of all
+> the previous patches, which made it a lot cleaner.
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+---end quoted text---
 
 _______________________________________________
 xfs mailing list
