@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7OGv6gU136888 for <xfs@oss.sgi.com>; Mon, 24 Aug 2009 11:57:16 -0500
-Received: from Ishtar.sc.tlinx.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D6DC01520E31
-	for <xfs@oss.sgi.com>; Mon, 24 Aug 2009 09:57:29 -0700 (PDT)
-Received: from Ishtar.sc.tlinx.org (ishtar.tlinx.org [64.81.245.74]) by
-	cuda.sgi.com with ESMTP id L5O8CX6DTDL9Gpv4 for
-	<xfs@oss.sgi.com>; Mon, 24 Aug 2009 09:57:29 -0700 (PDT)
-Message-ID: <4A92C43B.1060604@tlinx.org>
-Date: Mon, 24 Aug 2009 09:47:55 -0700
-From: "Linda A. Walsh" <xfs@tlinx.org>
-MIME-Version: 1.0
-Subject: Re: Changing a file system from case sensitive to case	insensitive...
+	n7OHei4g138993 for <xfs@oss.sgi.com>; Mon, 24 Aug 2009 12:41:00 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DFBA73F3825
+	for <xfs@oss.sgi.com>; Mon, 24 Aug 2009 10:41:36 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id HTIMB9StzhllD7CP for
+	<xfs@oss.sgi.com>; Mon, 24 Aug 2009 10:41:36 -0700 (PDT)
+Date: Mon, 24 Aug 2009 13:41:34 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Changing a file system from case sensitive to case insensitive...
+Message-ID: <20090824174134.GA25187@infradead.org>
 References: <4A928413.4050205@tlinx.org> <20090824144904.GB20898@infradead.org>
-In-Reply-To: <20090824144904.GB20898@infradead.org>
+	<4A92C43B.1060604@tlinx.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4A92C43B.1060604@tlinx.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,31 +25,35 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: "Linda A. Walsh" <xfs@tlinx.org>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
+
+On Mon, Aug 24, 2009 at 09:47:55AM -0700, Linda A. Walsh wrote:
+>
+>
+> Christoph Hellwig wrote: 
+>> It's not theoretically impossible, but not implemented right now.
+> ----
+> 	How difficult -- would it just be changing a flag
+> in the super, in the simple case -- i.e. with the result that
+> a user could lose access to any files of alternate cases?
+
+The CI flag relaly only hcanges on thing in the on disk format, and
+that is the hash used for calculating the directory b+tree indices.
+So what you need to do is the following algorithm
 
 
+foreach diretory {
+	read the whole directory structure into memory
+	rewrite the btree with the case insensitive hash
+}
 
-Christoph Hellwig wrote: 
-> It's not theoretically impossible, but not implemented right now.
-----
-	How difficult -- would it just be changing a flag
-in the super, in the simple case -- i.e. with the result that
-a user could lose access to any files of alternate cases?
-
-	I know it's not what's there now, but there is a nice search
-option in 'Gvim', 'smartcase', where if you use a lower case
-search string, it finds strings of either case, but if you explicitly
-have any letter capitalized, then it forces a case sensitive search.
-
-	That could be a recovery mechanism for conflicts, but would
-likely involve more work...
-
--l
+handling of conflicts would be a pretty natural fallout of this,
+by checking for hash conflicts with the new case-sensitive flag.
 
 _______________________________________________
 xfs mailing list
