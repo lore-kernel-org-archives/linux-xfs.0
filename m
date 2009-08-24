@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7OCEORw123320 for <xfs@oss.sgi.com>; Mon, 24 Aug 2009 07:14:34 -0500
-Received: from Ishtar.sc.tlinx.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EF5831D5FB27
-	for <xfs@oss.sgi.com>; Mon, 24 Aug 2009 05:14:47 -0700 (PDT)
-Received: from Ishtar.sc.tlinx.org (ishtar.tlinx.org [64.81.245.74]) by
-	cuda.sgi.com with ESMTP id IakUPDgonR9e9TvJ for
-	<xfs@oss.sgi.com>; Mon, 24 Aug 2009 05:14:47 -0700 (PDT)
-Received: from [192.168.3.11] (Athena [192.168.3.11])
-	by Ishtar.sc.tlinx.org (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7OCEBwi005059 for <xfs@oss.sgi.com>; Mon, 24 Aug 2009 05:14:13 -0700
-Message-ID: <4A928413.4050205@tlinx.org>
-Date: Mon, 24 Aug 2009 05:14:11 -0700
-From: "Linda A. Walsh" <xfs@tlinx.org>
+	n7OEoYVT130252 for <xfs@oss.sgi.com>; Mon, 24 Aug 2009 09:50:49 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1F426151E1ED
+	for <xfs@oss.sgi.com>; Mon, 24 Aug 2009 07:51:03 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id Ks28gY1KF8byQu9B for
+	<xfs@oss.sgi.com>; Mon, 24 Aug 2009 07:51:03 -0700 (PDT)
+Date: Mon, 24 Aug 2009 10:47:52 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: xfs_check does not recognize fs truncation
+Message-ID: <20090824144752.GA20898@infradead.org>
+References: <alpine.LSU.2.00.0908241208520.1028@fbirervta.pbzchgretzou.qr>
 MIME-Version: 1.0
-Subject: Changing a file system from case sensitive to case insensitive...
+Content-Disposition: inline
+In-Reply-To: <alpine.LSU.2.00.0908241208520.1028@fbirervta.pbzchgretzou.qr>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,24 +24,20 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Jan Engelhardt <jengelh@medozas.de>
+Cc: xfs@oss.sgi.com
 
-I don't suppose this is possible after the file system is
-already up and running?
+On Mon, Aug 24, 2009 at 12:12:59PM +0200, Jan Engelhardt wrote:
+> Hi,
+> 
+> 
+> This I see on xfsprogs-2.10.1 with kernel 2.6.29.6:
 
-Or...could be made possible?
-
-Doesn't seem like an impossible problem on file systems that have 
-few or no collisions...
-
-Is it possible or doable or just easy and I don't know about it?
-
-Thanks...
--linda
+What does xfs_repair -n say?
 
 _______________________________________________
 xfs mailing list
