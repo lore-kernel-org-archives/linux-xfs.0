@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7OIbrTT141534 for <xfs@oss.sgi.com>; Mon, 24 Aug 2009 13:38:03 -0500
+	n7OJP4Rp144306 for <xfs@oss.sgi.com>; Mon, 24 Aug 2009 14:25:14 -0500
 Received: from Ishtar.sc.tlinx.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9AD7215227DC
-	for <xfs@oss.sgi.com>; Mon, 24 Aug 2009 11:38:37 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 76F541526305
+	for <xfs@oss.sgi.com>; Mon, 24 Aug 2009 12:25:54 -0700 (PDT)
 Received: from Ishtar.sc.tlinx.org (ishtar.tlinx.org [64.81.245.74]) by
-	cuda.sgi.com with ESMTP id C2l4tS63O11gLJx2 for
-	<xfs@oss.sgi.com>; Mon, 24 Aug 2009 11:38:37 -0700 (PDT)
-Message-ID: <4A92DE02.5050303@tlinx.org>
-Date: Mon, 24 Aug 2009 11:37:54 -0700
+	cuda.sgi.com with ESMTP id 1CTNLFXtEHfgpejJ for
+	<xfs@oss.sgi.com>; Mon, 24 Aug 2009 12:25:54 -0700 (PDT)
+Received: from [192.168.3.11] (Athena [192.168.3.11])
+	by Ishtar.sc.tlinx.org (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	n7OJPMpx012911 for <xfs@oss.sgi.com>; Mon, 24 Aug 2009 12:25:24 -0700
+Message-ID: <4A92E922.2030404@tlinx.org>
+Date: Mon, 24 Aug 2009 12:25:22 -0700
 From: "Linda A. Walsh" <xfs@tlinx.org>
 MIME-Version: 1.0
-Subject: Re: Changing a file system from case sensitive to case	insensitive...
-References: <4A928413.4050205@tlinx.org> <20090824144904.GB20898@infradead.org>
-	<4A92C43B.1060604@tlinx.org> <20090824174134.GA25187@infradead.org>
-In-Reply-To: <20090824174134.GA25187@infradead.org>
+Subject: xfs logbufs default, (also noatime,
+	lazy-count(of partition formatter)...32767b v. 32768b...
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,35 +29,37 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs-oss <xfs@oss.sgi.com>
 
+Is there a reason why logbufs=8 should't become the default?
+Isn't it the best choice for most users given today's memory
+constraints (or lack thereof?)
 
+I saw a message about xfs parameter tuning and still see the 
+mention to:
+'logbufs=8,noatime' having to be specified on every mount.
 
-Christoph Hellwig wrote:
-> foreach diretory {
-> 	read the whole directory structure into memory
-> 	rewrite the btree with the case insensitive hash
-> }
----
-	Looks like a trivial shell script...;^)...
+If the desire is to provide default optimal tuning, maybe a 
+default of logbufs to 8 would be a good idea, and maybe a
+mkfs flag to default to 'noatime' and a 64MB internal log
+size would be good ideas for *most* users?
 
-I'm sure there's a bash-app for that...
+How much of problem is defaulting to a 64MB internal log
+size when file partitions are measured in the 100GB range?
 
-*sigh*
+I'm not sure how much use it is to even remember typing lazy-count=1
+on the size partition each time.
 
-And here I thought it was as simple as setting a flag on disk.
+One more 'nit', while I think of it...for a 64MB log buffer size,
+one should be able to specify 32768b, but last I tried, that gave
+a 'too large' error...isn't 32768*4=64MB, not 32767b?
 
-Sounds like the implementation lends itself to having an extended-attr
-to potentially set the option on a dir-by-dir basis 
-similar to the +d bit, though it would only apply to dirs and files
-within -- but not subdirs (due to different mount locations)?
+What's really created when I use the 32767b max?  64MB or 
+"64MB-4K"? (maybe it doesn't matter, but if a log process
+wrote exactly 16MB chunks, it would be a bit short on the 4th
+write..)...
 
-That might certainly be more flexible than a whole disk as well if it
-is practical.
-
-Then as the 'attr' was set, the hash could be rebuilt either inplace,
-or created as a newdir with files being moved to the new dir.
+-l
 
 _______________________________________________
 xfs mailing list
