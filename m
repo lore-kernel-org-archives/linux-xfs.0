@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7PIPL4j216608 for <xfs@oss.sgi.com>; Tue, 25 Aug 2009 13:25:36 -0500
+	n7PIgDss217746 for <xfs@oss.sgi.com>; Tue, 25 Aug 2009 13:42:28 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CD54C1532B7A
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2009 11:26:13 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 99FA91533610
+	for <xfs@oss.sgi.com>; Tue, 25 Aug 2009 11:43:05 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id WmZlFbnNIZJPKf72 for
-	<xfs@oss.sgi.com>; Tue, 25 Aug 2009 11:26:13 -0700 (PDT)
+	by cuda.sgi.com with ESMTP id Xz9VNPpFWMeV9QwI for
+	<xfs@oss.sgi.com>; Tue, 25 Aug 2009 11:43:05 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1Mg0ij-0001FY-Gc
-	for xfs@oss.sgi.com; Tue, 25 Aug 2009 18:26:13 +0000
-Message-Id: <20090825182613.394877770@bombadil.infradead.org>
-Date: Tue, 25 Aug 2009 14:21:40 -0400
+	Linux)) id 1Mg0z3-0004vr-Ak
+	for xfs@oss.sgi.com; Tue, 25 Aug 2009 18:43:05 +0000
+Message-Id: <20090825184305.100918146@bombadil.infradead.org>
+Date: Tue, 25 Aug 2009 14:41:47 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 6/9] xfs: switch to NOFS allocation under i_lock in
-	xfs_buf_associate_memory
-References: <20090825182134.299870049@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-lockdep-buf
+Subject: [PATCH 2/3] xfs: do not take the iolock in xfs_ireclaim
+References: <20090825184145.704014101@bombadil.infradead.org>
+Content-Disposition: inline; filename=xfs-lockdep-ireclaim
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,32 +32,34 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-xfs_buf_associate_memory is used for setting up the spare buffer for the
-log wrap case in xlog_sync which can happen under i_lock when called from
-xfs_fsync. The i_lock mutex is taken in reclaim context so all allocations
-under it must avoid recursions into the filesystem.  There are a couple
-more uses of xfs_buf_associate_memory in the log recovery code that are
-also affected by this, but I'd rather keep the code simple than passing on
-a gfp_mask argument.  Longer term we should just stop requiring the memoery
-allocation in xlog_sync by some smaller rework of the buffer layer.
-
-Reported by the new reclaim context tracing in lockdep.
+While the comment claims we need it to synchronize with inode cache lookups
+that is not the case.  Today we make sure to always do an igrab in all
+sync variants which do the proper checks for a deleted inode, and we also
+have the proper checks in xfs_iget.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6/fs/xfs/linux-2.6/xfs_buf.c
+Index: xfs/fs/xfs/xfs_iget.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_buf.c	2009-07-18 18:26:07.359681952 +0200
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_buf.c	2009-07-18 18:26:53.531658254 +0200
-@@ -770,7 +770,7 @@ xfs_buf_associate_memory(
- 	bp->b_pages = NULL;
- 	bp->b_addr = mem;
+--- xfs.orig/fs/xfs/xfs_iget.c	2009-08-20 13:51:15.695189094 -0300
++++ xfs/fs/xfs/xfs_iget.c	2009-08-24 11:23:32.793789269 -0300
+@@ -500,13 +500,11 @@ xfs_ireclaim(
+ 	 * can reference the inodes in the cache without taking references.
+ 	 *
+ 	 * We make that OK here by ensuring that we wait until the inode is
+-	 * unlocked after the lookup before we go ahead and free it.  We get
+-	 * both the ilock and the iolock because the code may need to drop the
+-	 * ilock one but will still hold the iolock.
++	 * unlocked after the lookup before we go ahead and free it.
+ 	 */
+-	xfs_ilock(ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	xfs_qm_dqdetach(ip);
+-	xfs_iunlock(ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
  
--	rval = _xfs_buf_get_pages(bp, page_count, 0);
-+	rval = _xfs_buf_get_pages(bp, page_count, XBF_DONT_BLOCK);
- 	if (rval)
- 		return rval;
- 
+ 	switch (ip->i_d.di_mode & S_IFMT) {
+ 	case S_IFREG:
 
 _______________________________________________
 xfs mailing list
