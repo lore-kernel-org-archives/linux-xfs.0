@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7PIPM30216609 for <xfs@oss.sgi.com>; Tue, 25 Aug 2009 13:25:37 -0500
+	n7PISV5x216826 for <xfs@oss.sgi.com>; Tue, 25 Aug 2009 13:28:46 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8ECF71532B7A
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2009 11:26:14 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 030C33F904C
+	for <xfs@oss.sgi.com>; Tue, 25 Aug 2009 11:29:22 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id MdHINFLvPeFGldPt for
-	<xfs@oss.sgi.com>; Tue, 25 Aug 2009 11:26:14 -0700 (PDT)
+	by cuda.sgi.com with ESMTP id 33obMfCK4OEWdUKQ for
+	<xfs@oss.sgi.com>; Tue, 25 Aug 2009 11:29:22 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1Mg0ii-0001CO-61
-	for xfs@oss.sgi.com; Tue, 25 Aug 2009 18:26:12 +0000
-Message-Id: <20090825182134.299870049@bombadil.infradead.org>
-Date: Tue, 25 Aug 2009 14:21:34 -0400
+	Linux)) id 1Mg0ij-0001G4-M8
+	for xfs@oss.sgi.com; Tue, 25 Aug 2009 18:26:13 +0000
+Message-Id: <20090825182613.609733555@bombadil.infradead.org>
+Date: Tue, 25 Aug 2009 14:21:41 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 0/9] stop taking the iolock in the reclaim path
+Subject: [PATCH 7/9] xfs: switch to NOFS allocation under i_lock in
+	xfs_attr_rmtval_set
+References: <20090825182134.299870049@bombadil.infradead.org>
+Content-Disposition: inline; filename=xfs-lockdep-buf-2
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,24 +33,29 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Currently we take the iolock in the reclaim path in various places.
-Taking it in the inode reclaim path means however that we can't take
-it while doing memory allocations that recurse back into the filesystem,
-and recently lockdep has been enhanced to find these cases and noticed
-quite a few of these in XFS.
+xfs_attr_rmtval_set is always called with i_lock held, and i_lock is taken
+in reclaim context so all allocations under it must avoid recursions into
+the filesystem.
 
-We had similar issues with the ilock, but we could get away with just
-stopping to do filesystem-recursing allocation under the ilock as there
-were just a few.  The iolock is however taken over larger critical sections
-protection actual I/O and it's almost impossible to switch all these to
-NOFS allocations.  Based on what the iolock is used for we don't actually
-need it in the reclaim path, though - at this point the inode is dead
-and no one has any other reference to it.  See the listing in the
-first patch for a more detailed list of our current iolock holders and
-why they can't contend with the reclaim path.
+Reported by the new reclaim context tracing in lockdep.
 
-I would greatly appreciate some indepth-review of this to make sure I
-haven't missed a big loophole..
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: linux-2.6/fs/xfs/xfs_attr.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/xfs_attr.c	2009-07-18 18:49:20.129533080 +0200
++++ linux-2.6/fs/xfs/xfs_attr.c	2009-07-18 18:50:01.713535041 +0200
+@@ -2141,8 +2141,8 @@ xfs_attr_rmtval_set(xfs_da_args_t *args)
+ 		dblkno = XFS_FSB_TO_DADDR(mp, map.br_startblock),
+ 		blkcnt = XFS_FSB_TO_BB(mp, map.br_blockcount);
+ 
+-		bp = xfs_buf_get_flags(mp->m_ddev_targp, dblkno,
+-							blkcnt, XFS_BUF_LOCK);
++		bp = xfs_buf_get_flags(mp->m_ddev_targp, dblkno, blkcnt,
++				       XFS_BUF_LOCK | XBF_DONT_BLOCK);
+ 		ASSERT(bp);
+ 		ASSERT(!XFS_BUF_GETERROR(bp));
+ 
 
 _______________________________________________
 xfs mailing list
