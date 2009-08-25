@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7PIgDtR217747 for <xfs@oss.sgi.com>; Tue, 25 Aug 2009 13:42:28 -0500
+	n7PIgHdA217749 for <xfs@oss.sgi.com>; Tue, 25 Aug 2009 13:42:32 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EFB481533613
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2009 11:43:05 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5813F3F94B3
+	for <xfs@oss.sgi.com>; Tue, 25 Aug 2009 11:43:08 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id AkMd31wmBjSs6Ane for
-	<xfs@oss.sgi.com>; Tue, 25 Aug 2009 11:43:05 -0700 (PDT)
+	by cuda.sgi.com with ESMTP id REldqWw0u8hChtSp for
+	<xfs@oss.sgi.com>; Tue, 25 Aug 2009 11:43:08 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1Mg0z3-0004wN-Ka
+	Linux)) id 1Mg0z2-0004vK-Vf
 	for xfs@oss.sgi.com; Tue, 25 Aug 2009 18:43:05 +0000
-Message-Id: <20090825184305.433008786@bombadil.infradead.org>
-Date: Tue, 25 Aug 2009 14:41:48 -0400
+Message-Id: <20090825184304.779391665@bombadil.infradead.org>
+Date: Tue, 25 Aug 2009 14:41:46 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 3/3] xfs: do not wait for the iolock in xfs_free_eofblocks
+Subject: [PATCH 1/3] xfs: do not take the iolock in xfs_inactive
 References: <20090825184145.704014101@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-lockdep-free_eofblocks
+Content-Disposition: inline; filename=xfs-lockdep-inactive
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,124 +32,157 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-For both callers of xfs_free_eofblocks taking the iolock in blocking
-fashion causes problems:
+When xfs_inactive is called we already have the inode torn down and no
+one else can have a reference to it.  That means the iolock here is
+superflous as all other users require a proper reference to it:
 
- - in xfs_release is causes a lock order reversal with the mmap lock
- - due to xfs_inactive beeing called from reclaim context it would
-   forbid memory allocation under the iolock.
-
-As mention in the previous platch there is no need to acquire iolock in
-the inactive path as the inode is dead enough at that point.  For release
-we can just acquire the lock in a non-blocking fashion.  This will leave
-the pre-allocation on the file in case of lock contention, but we will
-still take care of it on the final iput.
-
+ - xfs_vm_vmap, xfs_vn_fallocate, xfs_read, xfs_write, xfs_splice_read,
+   xfs_splice_write and xfs_setattr are all implementations of VFS methods
+   that require such a life inode
+ - xfs_getbmap and xfs_swap_extents are ioctl sub command for which the
+   same is true
+ - xfs_truncate_file is only called on quota inodes just return from
+   xfs_iget
+ - xfs_sync_inode_data does the lock just after an igrab()
+ - xfs_filestream_associate and xfs_filestream_new_ag take the iolock
+   on the parent inode of an inode which by VFS rules must be referenced
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 Index: xfs/fs/xfs/xfs_vnodeops.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_vnodeops.c	2009-08-24 11:23:28.798259252 -0300
-+++ xfs/fs/xfs/xfs_vnodeops.c	2009-08-24 11:23:34.886280913 -0300
-@@ -714,9 +714,14 @@ xfs_fsync(
+--- xfs.orig/fs/xfs/xfs_vnodeops.c	2009-08-20 13:51:15.699188904 -0300
++++ xfs/fs/xfs/xfs_vnodeops.c	2009-08-24 11:23:28.798259252 -0300
+@@ -869,10 +869,10 @@ xfs_inactive_symlink_rmt(
+ 	 * the second transaction.  In the error paths we need it
+ 	 * held so the cancel won't rele it, see below.
+ 	 */
+-	xfs_ilock(ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	size = (int)ip->i_d.di_size;
+ 	ip->i_d.di_size = 0;
+-	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
++	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+ 	xfs_trans_ihold(tp, ip);
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 	/*
+@@ -917,7 +917,7 @@ xfs_inactive_symlink_rmt(
+ 	 * Mark it dirty so it will be logged and moved forward in the log as
+ 	 * part of every commit.
+ 	 */
+-	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
++	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+ 	xfs_trans_ihold(tp, ip);
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 	/*
+@@ -977,7 +977,7 @@ xfs_inactive_symlink_rmt(
+ 	 * joined to the transaction.
+ 	 */
+ 	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
+-	xfs_iunlock(ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	*tpp = NULL;
+ 	return error;
+ 
+@@ -1006,7 +1006,7 @@ xfs_inactive_symlink_local(
+ 		*tpp = NULL;
+ 		return error;
+ 	}
+-	xfs_ilock(ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 
+ 	/*
+ 	 * Zero length symlinks _can_ exist.
+@@ -1029,7 +1029,6 @@ xfs_inactive_attrs(
+ 	int		error;
+ 	xfs_mount_t	*mp;
+ 
+-	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
+ 	tp = *tpp;
+ 	mp = ip->i_mount;
+ 	ASSERT(ip->i_d.di_forkoff != 0);
+@@ -1051,7 +1050,7 @@ xfs_inactive_attrs(
+ 		goto error_cancel;
+ 
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+-	xfs_trans_ijoin(tp, ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
++	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+ 	xfs_trans_ihold(tp, ip);
+ 	xfs_idestroy_fork(ip, XFS_ATTR_FORK);
+ 
+@@ -1065,7 +1064,6 @@ error_cancel:
+ 	xfs_trans_cancel(tp, 0);
+ error_unlock:
+ 	*tpp = NULL;
+-	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+ 	return error;
  }
  
- /*
-- * This is called by xfs_inactive to free any blocks beyond eof
-- * when the link count isn't zero and by xfs_dm_punch_hole() when
-- * punching a hole to EOF.
-+ * We either call this from xfs_release when dropping the last reference to
-+ * a file structure, or from xfs_inactive when dropping an inode out of the
-+ * cache that has not been deleted.  In the first case we must take the
-+ * iolock to protect against concurrent truncate calls, but we can't
-+ * acquire it in the normal blocking way as that would created a lock order
-+ * reversal against mmap_sem.  In the latter case we don't need the iolock
-+ * at all because we're called on inode that is dead enough to not see any
-+ * I/O at all.
-  */
- STATIC int
- xfs_free_eofblocks(
-@@ -766,6 +771,11 @@ xfs_free_eofblocks(
- 		 */
- 		tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
- 
-+		if (use_iolock && !xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
-+			xfs_trans_cancel(tp, 0);
-+			return EAGAIN;
-+		}
-+
- 		/*
- 		 * Do the xfs_itruncate_start() call before
- 		 * reserving any log space because
-@@ -773,16 +783,10 @@ xfs_free_eofblocks(
- 		 * cache and we can't
+@@ -1210,12 +1208,10 @@ xfs_inactive(
+ 		 * will call into the buffer cache and we can't
  		 * do that within a transaction.
  		 */
--		if (use_iolock)
--			xfs_ilock(ip, XFS_IOLOCK_EXCL);
- 		error = xfs_itruncate_start(ip, XFS_ITRUNC_DEFINITE,
- 				    ip->i_size);
--		if (error) {
--			xfs_trans_cancel(tp, 0);
--			if (use_iolock)
--				xfs_iunlock(ip, XFS_IOLOCK_EXCL);
--			return error;
--		}
-+		if (error)
-+			goto out_cancel;
+-		xfs_ilock(ip, XFS_IOLOCK_EXCL);
  
- 		error = xfs_trans_reserve(tp, 0,
- 					  XFS_ITRUNCATE_LOG_RES(mp),
-@@ -790,14 +794,12 @@ xfs_free_eofblocks(
- 					  XFS_ITRUNCATE_LOG_COUNT);
+ 		error = xfs_itruncate_start(ip, XFS_ITRUNC_DEFINITE, 0);
  		if (error) {
- 			ASSERT(XFS_FORCED_SHUTDOWN(mp));
--			xfs_trans_cancel(tp, 0);
+ 			xfs_trans_cancel(tp, 0);
 -			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
--			return error;
-+			goto out_cancel;
+ 			return VN_INACTIVE_CACHE;
+ 		}
+ 
+@@ -1227,12 +1223,11 @@ xfs_inactive(
+ 			/* Don't call itruncate_cleanup */
+ 			ASSERT(XFS_FORCED_SHUTDOWN(mp));
+ 			xfs_trans_cancel(tp, 0);
+-			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+ 			return VN_INACTIVE_CACHE;
  		}
  
  		xfs_ilock(ip, XFS_ILOCK_EXCL);
--		xfs_trans_ijoin(tp, ip,
--				XFS_IOLOCK_EXCL |
-+		xfs_trans_ijoin(tp, ip, use_iolock ?
-+				XFS_IOLOCK_EXCL|XFS_ILOCK_EXCL :
- 				XFS_ILOCK_EXCL);
+-		xfs_trans_ijoin(tp, ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
++		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
  		xfs_trans_ihold(tp, ip);
  
-@@ -821,6 +823,12 @@ xfs_free_eofblocks(
- 					    : XFS_ILOCK_EXCL));
- 	}
- 	return error;
-+
-+out_cancel:
-+	xfs_trans_cancel(tp, 0);
-+	if (use_iolock)
-+		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-+	return error;
- }
+ 		/*
+@@ -1248,7 +1243,7 @@ xfs_inactive(
+ 		if (error) {
+ 			xfs_trans_cancel(tp,
+ 				XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
+-			xfs_iunlock(ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
++			xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 			return VN_INACTIVE_CACHE;
+ 		}
+ 	} else if ((ip->i_d.di_mode & S_IFMT) == S_IFLNK) {
+@@ -1266,7 +1261,7 @@ xfs_inactive(
+ 			return VN_INACTIVE_CACHE;
+ 		}
  
- /*
-@@ -1117,7 +1125,7 @@ xfs_release(
- 		    (!(ip->i_d.di_flags &
- 				(XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND)))) {
- 			error = xfs_free_eofblocks(mp, ip, XFS_FREE_EOF_LOCK);
--			if (error)
-+			if (error && error != EAGAIN)
- 				return error;
+-		xfs_trans_ijoin(tp, ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
++		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+ 		xfs_trans_ihold(tp, ip);
+ 	} else {
+ 		error = xfs_trans_reserve(tp, 0,
+@@ -1279,8 +1274,8 @@ xfs_inactive(
+ 			return VN_INACTIVE_CACHE;
  		}
+ 
+-		xfs_ilock(ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
+-		xfs_trans_ijoin(tp, ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
++		xfs_ilock(ip, XFS_ILOCK_EXCL);
++		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+ 		xfs_trans_ihold(tp, ip);
  	}
-@@ -1187,7 +1195,7 @@ xfs_inactive(
- 		     (!(ip->i_d.di_flags &
- 				(XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND)) ||
- 		      (ip->i_delayed_blks != 0)))) {
--			error = xfs_free_eofblocks(mp, ip, XFS_FREE_EOF_LOCK);
-+			error = xfs_free_eofblocks(mp, ip, XFS_FREE_EOF_NOLOCK);
- 			if (error)
- 				return VN_INACTIVE_CACHE;
- 		}
+ 
+@@ -1346,7 +1341,7 @@ xfs_inactive(
+ 	 * Release the dquots held by inode, if any.
+ 	 */
+ 	xfs_qm_dqdetach(ip);
+-	xfs_iunlock(ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 
+  out:
+ 	return VN_INACTIVE_CACHE;
 
 _______________________________________________
 xfs mailing list
