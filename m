@@ -1,18 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7PHwl6x215642 for <xfs@oss.sgi.com>; Tue, 25 Aug 2009 12:58:57 -0500
-Received: from cf--amer001e--3.americas.sgi.com
-	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 51238304097
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2009 10:59:40 -0700 (PDT)
-Content-class: urn:content-classes:message
-MIME-Version: 1.0
-Subject: RE: [PATCH 0/7] inode allocation cleanups
-Date: Tue, 25 Aug 2009 12:57:16 -0500
-Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83ABCE@cf--amer001e--3.americas.sgi.com>
-In-Reply-To: <20090824153030.GA19864@infradead.org>
-From: "Alex Elder" <aelder@sgi.com>
+	n7PIPfAq216629 for <xfs@oss.sgi.com>; Tue, 25 Aug 2009 13:25:56 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A48843F9018
+	for <xfs@oss.sgi.com>; Tue, 25 Aug 2009 11:26:13 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id oaXDxp5UVsLUaTk4 for
+	<xfs@oss.sgi.com>; Tue, 25 Aug 2009 11:26:13 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1Mg0ij-0001F2-Ay
+	for xfs@oss.sgi.com; Tue, 25 Aug 2009 18:26:13 +0000
+Message-Id: <20090825182613.244772510@bombadil.infradead.org>
+Date: Tue, 25 Aug 2009 14:21:39 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH 5/9] xfs: switch to NOFS allocation under i_lock in
+	xfs_dir_cilookup_result
+References: <20090825182134.299870049@bombadil.infradead.org>
+Content-Disposition: inline; filename=xfs-lockdep-dir2
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,46 +26,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-> ping?  any reviewers for this?
+xfs_dir_cilookup_result is always called with i_lock held, but i_lock is taken
+in reclaim context so all allocations under it must avoid recursions into the
+filesystem.
 
-I no longer have these in my mailbox, but I've reviewed them
-all, and they all look good.  Very nice result of getting rid
-of duplication and making functions a more manageable size.
-One comment on patch 5 below.
+Reported by the new reclaim context tracing in lockdep.
 
-					-Alex
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-# [PATCH 1/7] xfs: factor out inode initialisation   Christoph Hellwig
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
-# [PATCH 2/7] xfs: improve xfs_inobt_get_rec prototype   Christoph Hellwig
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
-# [PATCH 3/7] xfs: improve xfs_inobt_update prototype   Christoph Hellwig
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
-# [PATCH 4/7] xfs: factor out debug checks from xfs_dialloc and xfs_difree   Christoph Hellwig
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
-# [PATCH 5/7] xfs: untangle xfs_dialloc   Christoph Hellwig
-    No cursor cleanup on WANT_CORRUPTED_RETURN() just after "if (pagno == agno)".
-    (Maybe I'm misreading the patch.)  I realize this is still better than the
-    ASSERT() in place currently, but maybe it should be WANT_CORRUPTED_GOTO(error0)
-    instead.
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
-# [PATCH 6/7] xfs: rationalize xfs_inobt_lookup*   Christoph Hellwig
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
-# [PATCH 7/7] xfs: speed up free inode search   Christoph Hellwig 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+Index: linux-2.6/fs/xfs/xfs_dir2.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/xfs_dir2.c	2009-07-10 13:05:24.817364338 +0200
++++ linux-2.6/fs/xfs/xfs_dir2.c	2009-07-10 13:16:00.834365485 +0200
+@@ -256,7 +256,7 @@ xfs_dir_cilookup_result(
+ 					!(args->op_flags & XFS_DA_OP_CILOOKUP))
+ 		return EEXIST;
+ 
+-	args->value = kmem_alloc(len, KM_MAYFAIL);
++	args->value = kmem_alloc(len, KM_NOFS | KM_MAYFAIL);
+ 	if (!args->value)
+ 		return ENOMEM;
+ 
 
 _______________________________________________
 xfs mailing list
