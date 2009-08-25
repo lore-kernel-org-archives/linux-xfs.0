@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7PIPMHX216610 for <xfs@oss.sgi.com>; Tue, 25 Aug 2009 13:25:37 -0500
+	n7PIPL4j216608 for <xfs@oss.sgi.com>; Tue, 25 Aug 2009 13:25:36 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F1E8F1532B7A
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2009 11:26:14 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CD54C1532B7A
+	for <xfs@oss.sgi.com>; Tue, 25 Aug 2009 11:26:13 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id W12UxSCKJIXSuQF6 for
-	<xfs@oss.sgi.com>; Tue, 25 Aug 2009 11:26:14 -0700 (PDT)
+	by cuda.sgi.com with ESMTP id WmZlFbnNIZJPKf72 for
+	<xfs@oss.sgi.com>; Tue, 25 Aug 2009 11:26:13 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1Mg0ii-0001Cy-Fv
-	for xfs@oss.sgi.com; Tue, 25 Aug 2009 18:26:12 +0000
-Message-Id: <20090825182612.298786838@bombadil.infradead.org>
-Date: Tue, 25 Aug 2009 14:21:35 -0400
+	Linux)) id 1Mg0ij-0001FY-Gc
+	for xfs@oss.sgi.com; Tue, 25 Aug 2009 18:26:13 +0000
+Message-Id: <20090825182613.394877770@bombadil.infradead.org>
+Date: Tue, 25 Aug 2009 14:21:40 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 1/9] xfs: avoid memory allocation under m_peraglock in growfs
-	code
+Subject: [PATCH 6/9] xfs: switch to NOFS allocation under i_lock in
+	xfs_buf_associate_memory
 References: <20090825182134.299870049@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-lockdep-growfs
+Content-Disposition: inline; filename=xfs-lockdep-buf
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,50 +33,32 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Allocate the memory for the larger m_perag array before taking the
-per-AG lock as the per-AG lock can be taken under the i_lock which
-can be taken from reclaim context.
+xfs_buf_associate_memory is used for setting up the spare buffer for the
+log wrap case in xlog_sync which can happen under i_lock when called from
+xfs_fsync. The i_lock mutex is taken in reclaim context so all allocations
+under it must avoid recursions into the filesystem.  There are a couple
+more uses of xfs_buf_associate_memory in the log recovery code that are
+also affected by this, but I'd rather keep the code simple than passing on
+a gfp_mask argument.  Longer term we should just stop requiring the memoery
+allocation in xlog_sync by some smaller rework of the buffer layer.
 
 Reported by the new reclaim context tracing in lockdep.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6/fs/xfs/xfs_fsops.c
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_buf.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_fsops.c	2009-07-10 13:05:24.798364926 +0200
-+++ linux-2.6/fs/xfs/xfs_fsops.c	2009-07-10 13:16:00.827394975 +0200
-@@ -167,17 +167,25 @@ xfs_growfs_data_private(
- 	new = nb - mp->m_sb.sb_dblocks;
- 	oagcount = mp->m_sb.sb_agcount;
- 	if (nagcount > oagcount) {
-+		void *new_perag, *old_perag;
-+
- 		xfs_filestream_flush(mp);
-+
-+		new_perag = kmem_zalloc(sizeof(xfs_perag_t) * nagcount,
-+					KM_MAYFAIL);
-+		if (!new_perag)
-+			return XFS_ERROR(ENOMEM);
-+
- 		down_write(&mp->m_peraglock);
--		mp->m_perag = kmem_realloc(mp->m_perag,
--			sizeof(xfs_perag_t) * nagcount,
--			sizeof(xfs_perag_t) * oagcount,
--			KM_SLEEP);
--		memset(&mp->m_perag[oagcount], 0,
--			(nagcount - oagcount) * sizeof(xfs_perag_t));
-+		memcpy(new_perag, mp->m_perag, sizeof(xfs_perag_t) * oagcount);
-+		old_perag = mp->m_perag;
-+		mp->m_perag = new_perag;
-+
- 		mp->m_flags |= XFS_MOUNT_32BITINODES;
- 		nagimax = xfs_initialize_perag(mp, nagcount);
- 		up_write(&mp->m_peraglock);
-+
-+		kmem_free(old_perag);
- 	}
- 	tp = xfs_trans_alloc(mp, XFS_TRANS_GROWFS);
- 	tp->t_flags |= XFS_TRANS_RESERVE;
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_buf.c	2009-07-18 18:26:07.359681952 +0200
++++ linux-2.6/fs/xfs/linux-2.6/xfs_buf.c	2009-07-18 18:26:53.531658254 +0200
+@@ -770,7 +770,7 @@ xfs_buf_associate_memory(
+ 	bp->b_pages = NULL;
+ 	bp->b_addr = mem;
+ 
+-	rval = _xfs_buf_get_pages(bp, page_count, 0);
++	rval = _xfs_buf_get_pages(bp, page_count, XBF_DONT_BLOCK);
+ 	if (rval)
+ 		return rval;
+ 
 
 _______________________________________________
 xfs mailing list
