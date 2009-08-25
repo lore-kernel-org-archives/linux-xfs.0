@@ -1,22 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7PIgHdA217749 for <xfs@oss.sgi.com>; Tue, 25 Aug 2009 13:42:32 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5813F3F94B3
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2009 11:43:08 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id REldqWw0u8hChtSp for
-	<xfs@oss.sgi.com>; Tue, 25 Aug 2009 11:43:08 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1Mg0z2-0004vK-Vf
-	for xfs@oss.sgi.com; Tue, 25 Aug 2009 18:43:05 +0000
-Message-Id: <20090825184304.779391665@bombadil.infradead.org>
-Date: Tue, 25 Aug 2009 14:41:46 -0400
+	n7PItqkh218221 for <xfs@oss.sgi.com>; Tue, 25 Aug 2009 13:56:08 -0500
+Date: Tue, 25 Aug 2009 14:56:45 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 1/3] xfs: do not take the iolock in xfs_inactive
-References: <20090825184145.704014101@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-lockdep-inactive
+Subject: Re: [PATCH 0/7] inode allocation cleanups
+Message-ID: <20090825185644.GA21563@infradead.org>
+References: <20090824153030.GA19864@infradead.org>
+	<1AB9A794DBDDF54A8A81BE2296F7BDFE83ABCE@cf--amer001e--3.americas.sgi.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1AB9A794DBDDF54A8A81BE2296F7BDFE83ABCE@cf--amer001e--3.americas.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,164 +19,387 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-When xfs_inactive is called we already have the inode torn down and no
-one else can have a reference to it.  That means the iolock here is
-superflous as all other users require a proper reference to it:
+On Tue, Aug 25, 2009 at 12:57:16PM -0500, Alex Elder wrote:
+> # [PATCH 5/7] xfs: untangle xfs_dialloc   Christoph Hellwig
+>     No cursor cleanup on WANT_CORRUPTED_RETURN() just after "if (pagno == agno)".
+>     (Maybe I'm misreading the patch.)  I realize this is still better than the
+>     ASSERT() in place currently, but maybe it should be WANT_CORRUPTED_GOTO(error0)
+>     instead.
 
- - xfs_vm_vmap, xfs_vn_fallocate, xfs_read, xfs_write, xfs_splice_read,
-   xfs_splice_write and xfs_setattr are all implementations of VFS methods
-   that require such a life inode
- - xfs_getbmap and xfs_swap_extents are ioctl sub command for which the
-   same is true
- - xfs_truncate_file is only called on quota inodes just return from
-   xfs_iget
- - xfs_sync_inode_data does the lock just after an igrab()
- - xfs_filestream_associate and xfs_filestream_new_ag take the iolock
-   on the parent inode of an inode which by VFS rules must be referenced
+Good catch, the two in xfs_dialloc should indeed be WANT_CORRUPTED_GOTOs.
+For the one in xfs_ialloc_next_rec.
+
+
+Below is the updated version of the patch, still needs to run through
+XFSQA again:
+
+
+Subject: xfs: untangle xfs_dialloc
+From: Christoph Hellwig <hch@lst.de>
+
+Clarify the control flow in xfs_dialloc.  Factor out a helper to go to the
+next node from the current one and improve the control flow by expanding
+composite if statements and using gotos.
+
+The xfs_ialloc_next_rec helper is borrowed from Dave Chinners dynamic
+allocation policy patches.
+
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
-Index: xfs/fs/xfs/xfs_vnodeops.c
+Index: xfs/fs/xfs/xfs_ialloc.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_vnodeops.c	2009-08-20 13:51:15.699188904 -0300
-+++ xfs/fs/xfs/xfs_vnodeops.c	2009-08-24 11:23:28.798259252 -0300
-@@ -869,10 +869,10 @@ xfs_inactive_symlink_rmt(
- 	 * the second transaction.  In the error paths we need it
- 	 * held so the cancel won't rele it, see below.
- 	 */
--	xfs_ilock(ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	size = (int)ip->i_d.di_size;
- 	ip->i_d.di_size = 0;
--	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
-+	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
- 	xfs_trans_ihold(tp, ip);
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 	/*
-@@ -917,7 +917,7 @@ xfs_inactive_symlink_rmt(
- 	 * Mark it dirty so it will be logged and moved forward in the log as
- 	 * part of every commit.
- 	 */
--	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
-+	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
- 	xfs_trans_ihold(tp, ip);
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 	/*
-@@ -977,7 +977,7 @@ xfs_inactive_symlink_rmt(
- 	 * joined to the transaction.
- 	 */
- 	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
--	xfs_iunlock(ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	*tpp = NULL;
- 	return error;
- 
-@@ -1006,7 +1006,7 @@ xfs_inactive_symlink_local(
- 		*tpp = NULL;
- 		return error;
+--- xfs.orig/fs/xfs/xfs_ialloc.c	2009-08-25 15:48:34.426442643 -0300
++++ xfs/fs/xfs/xfs_ialloc.c	2009-08-25 15:54:56.312444853 -0300
+@@ -589,6 +589,37 @@ nextag:
  	}
--	xfs_ilock(ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 
- 	/*
- 	 * Zero length symlinks _can_ exist.
-@@ -1029,7 +1029,6 @@ xfs_inactive_attrs(
- 	int		error;
- 	xfs_mount_t	*mp;
- 
--	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
- 	tp = *tpp;
- 	mp = ip->i_mount;
- 	ASSERT(ip->i_d.di_forkoff != 0);
-@@ -1051,7 +1050,7 @@ xfs_inactive_attrs(
- 		goto error_cancel;
- 
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	xfs_trans_ijoin(tp, ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
-+	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
- 	xfs_trans_ihold(tp, ip);
- 	xfs_idestroy_fork(ip, XFS_ATTR_FORK);
- 
-@@ -1065,7 +1064,6 @@ error_cancel:
- 	xfs_trans_cancel(tp, 0);
- error_unlock:
- 	*tpp = NULL;
--	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
- 	return error;
  }
  
-@@ -1210,12 +1208,10 @@ xfs_inactive(
- 		 * will call into the buffer cache and we can't
- 		 * do that within a transaction.
- 		 */
--		xfs_ilock(ip, XFS_IOLOCK_EXCL);
++/*
++ * Try to retrieve the next record to the left/right from the current one.
++ */
++STATIC int
++xfs_ialloc_next_rec(
++	struct xfs_btree_cur	*cur,
++	xfs_inobt_rec_incore_t	*rec,
++	int			*done,
++	int			left)
++{
++	int                     error;
++	int			i;
++
++	if (left)
++		error = xfs_btree_decrement(cur, 0, &i);
++	else
++		error = xfs_btree_increment(cur, 0, &i);
++
++	if (error)
++		return error;
++	*done = !i;
++	if (i) {
++		error = xfs_inobt_get_rec(cur, rec, &i);
++		if (error)
++			return error;
++		XFS_WANT_CORRUPTED_RETURN(i == 1);
++	}
++
++	return 0;
++}
++
  
- 		error = xfs_itruncate_start(ip, XFS_ITRUNC_DEFINITE, 0);
- 		if (error) {
- 			xfs_trans_cancel(tp, 0);
--			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
- 			return VN_INACTIVE_CACHE;
- 		}
+ /*
+  * Visible inode allocation functions.
+@@ -644,8 +675,8 @@ xfs_dialloc(
+ 	int		j;		/* result code */
+ 	xfs_mount_t	*mp;		/* file system mount structure */
+ 	int		offset;		/* index of inode in chunk */
+-	xfs_agino_t	pagino;		/* parent's a.g. relative inode # */
+-	xfs_agnumber_t	pagno;		/* parent's allocation group number */
++	xfs_agino_t	pagino;		/* parent's AG relative inode # */
++	xfs_agnumber_t	pagno;		/* parent's AG number */
+ 	xfs_inobt_rec_incore_t rec;	/* inode allocation record */
+ 	xfs_agnumber_t	tagno;		/* testing allocation group number */
+ 	xfs_btree_cur_t	*tcur;		/* temp cursor */
+@@ -781,186 +812,140 @@ nextag:
+ 		goto error0;
  
-@@ -1227,12 +1223,11 @@ xfs_inactive(
- 			/* Don't call itruncate_cleanup */
- 			ASSERT(XFS_FORCED_SHUTDOWN(mp));
- 			xfs_trans_cancel(tp, 0);
--			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
- 			return VN_INACTIVE_CACHE;
- 		}
- 
- 		xfs_ilock(ip, XFS_ILOCK_EXCL);
--		xfs_trans_ijoin(tp, ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
-+		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
- 		xfs_trans_ihold(tp, ip);
- 
- 		/*
-@@ -1248,7 +1243,7 @@ xfs_inactive(
- 		if (error) {
- 			xfs_trans_cancel(tp,
- 				XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
--			xfs_iunlock(ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
-+			xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 			return VN_INACTIVE_CACHE;
- 		}
- 	} else if ((ip->i_d.di_mode & S_IFMT) == S_IFLNK) {
-@@ -1266,7 +1261,7 @@ xfs_inactive(
- 			return VN_INACTIVE_CACHE;
- 		}
- 
--		xfs_trans_ijoin(tp, ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
-+		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
- 		xfs_trans_ihold(tp, ip);
- 	} else {
- 		error = xfs_trans_reserve(tp, 0,
-@@ -1279,8 +1274,8 @@ xfs_inactive(
- 			return VN_INACTIVE_CACHE;
- 		}
- 
--		xfs_ilock(ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
--		xfs_trans_ijoin(tp, ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
-+		xfs_ilock(ip, XFS_ILOCK_EXCL);
-+		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
- 		xfs_trans_ihold(tp, ip);
- 	}
- 
-@@ -1346,7 +1341,7 @@ xfs_inactive(
- 	 * Release the dquots held by inode, if any.
+ 	/*
+-	 * If in the same a.g. as the parent, try to get near the parent.
++	 * If in the same AG as the parent, try to get near the parent.
  	 */
- 	xfs_qm_dqdetach(ip);
--	xfs_iunlock(ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	if (pagno == agno) {
+-		if ((error = xfs_inobt_lookup_le(cur, pagino, 0, 0, &i)))
++		int		doneleft;	/* done, to the left */
++		int		doneright;	/* done, to the right */
++
++		error = xfs_inobt_lookup_le(cur, pagino, 0, 0, &i);
++		if (error)
++			goto error0;
++		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
++
++		error = xfs_inobt_get_rec(cur, &rec, &j);
++		if (error)
+ 			goto error0;
+-		if (i != 0 &&
+-		    (error = xfs_inobt_get_rec(cur, &rec, &j)) == 0 &&
+-		    j == 1 &&
+-		    rec.ir_freecount > 0) {
++		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
++
++		if (rec.ir_freecount > 0) {
+ 			/*
+ 			 * Found a free inode in the same chunk
+-			 * as parent, done.
++			 * as the parent, done.
+ 			 */
++			goto alloc_inode;
+ 		}
++
++
+ 		/*
+-		 * In the same a.g. as parent, but parent's chunk is full.
++		 * In the same AG as parent, but parent's chunk is full.
+ 		 */
+-		else {
+-			int	doneleft;	/* done, to the left */
+-			int	doneright;	/* done, to the right */
  
-  out:
- 	return VN_INACTIVE_CACHE;
+-			if (error)
+-				goto error0;
+-			ASSERT(i == 1);
+-			ASSERT(j == 1);
+-			/*
+-			 * Duplicate the cursor, search left & right
+-			 * simultaneously.
+-			 */
+-			if ((error = xfs_btree_dup_cursor(cur, &tcur)))
+-				goto error0;
+-			/*
+-			 * Search left with tcur, back up 1 record.
+-			 */
+-			if ((error = xfs_btree_decrement(tcur, 0, &i)))
+-				goto error1;
+-			doneleft = !i;
+-			if (!doneleft) {
+-				error = xfs_inobt_get_rec(tcur, &trec, &i);
+-				if (error)
+-					goto error1;
+-				XFS_WANT_CORRUPTED_GOTO(i == 1, error1);
++		/* duplicate the cursor, search left & right simultaneously */
++		error = xfs_btree_dup_cursor(cur, &tcur);
++		if (error)
++			goto error0;
++
++		/* search left with tcur, back up 1 record */
++		error = xfs_ialloc_next_rec(tcur, &trec, &doneleft, 1);
++		if (error)
++			goto error1;
++
++		/* search right with cur, go forward 1 record. */
++		error = xfs_ialloc_next_rec(cur, &rec, &doneright, 0);
++		if (error)
++			goto error1;
++
++		/*
++		 * Loop until we find an inode chunk with a free inode.
++		 */
++		while (!doneleft || !doneright) {
++			int	useleft;  /* using left inode chunk this time */
++
++			/* figure out the closer block if both are valid. */
++			if (!doneleft && !doneright) {
++				useleft = pagino -
++				 (trec.ir_startino + XFS_INODES_PER_CHUNK - 1) <
++				  rec.ir_startino - pagino;
++			} else {
++				useleft = !doneleft;
+ 			}
+-			/*
+-			 * Search right with cur, go forward 1 record.
+-			 */
+-			if ((error = xfs_btree_increment(cur, 0, &i)))
+-				goto error1;
+-			doneright = !i;
+-			if (!doneright) {
+-				error = xfs_inobt_get_rec(cur, &rec, &i);
+-				if (error)
+-					goto error1;
+-				XFS_WANT_CORRUPTED_GOTO(i == 1, error1);
++
++			/* free inodes to the left? */
++			if (useleft && trec.ir_freecount) {
++				rec = trec;
++				xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++				cur = tcur;
++				goto alloc_inode;
+ 			}
+-			/*
+-			 * Loop until we find the closest inode chunk
+-			 * with a free one.
+-			 */
+-			while (!doneleft || !doneright) {
+-				int	useleft;  /* using left inode
+-						     chunk this time */
+ 
+-				/*
+-				 * Figure out which block is closer,
+-				 * if both are valid.
+-				 */
+-				if (!doneleft && !doneright)
+-					useleft =
+-						pagino -
+-						(trec.ir_startino +
+-						 XFS_INODES_PER_CHUNK - 1) <
+-						 rec.ir_startino - pagino;
+-				else
+-					useleft = !doneleft;
+-				/*
+-				 * If checking the left, does it have
+-				 * free inodes?
+-				 */
+-				if (useleft && trec.ir_freecount) {
+-					/*
+-					 * Yes, set it up as the chunk to use.
+-					 */
+-					rec = trec;
+-					xfs_btree_del_cursor(cur,
+-						XFS_BTREE_NOERROR);
+-					cur = tcur;
+-					break;
+-				}
+-				/*
+-				 * If checking the right, does it have
+-				 * free inodes?
+-				 */
+-				if (!useleft && rec.ir_freecount) {
+-					/*
+-					 * Yes, it's already set up.
+-					 */
+-					xfs_btree_del_cursor(tcur,
+-						XFS_BTREE_NOERROR);
+-					break;
+-				}
+-				/*
+-				 * If used the left, get another one
+-				 * further left.
+-				 */
+-				if (useleft) {
+-					if ((error = xfs_btree_decrement(tcur, 0,
+-							&i)))
+-						goto error1;
+-					doneleft = !i;
+-					if (!doneleft) {
+-						error = xfs_inobt_get_rec(
+-							    tcur, &trec, &i);
+-						if (error)
+-							goto error1;
+-						XFS_WANT_CORRUPTED_GOTO(i == 1,
+-							error1);
+-					}
+-				}
+-				/*
+-				 * If used the right, get another one
+-				 * further right.
+-				 */
+-				else {
+-					if ((error = xfs_btree_increment(cur, 0,
+-							&i)))
+-						goto error1;
+-					doneright = !i;
+-					if (!doneright) {
+-						error = xfs_inobt_get_rec(
+-							    cur, &rec, &i);
+-						if (error)
+-							goto error1;
+-						XFS_WANT_CORRUPTED_GOTO(i == 1,
+-							error1);
+-					}
+-				}
++			/* free inodes to the right? */
++			if (!useleft && rec.ir_freecount) {
++				xfs_btree_del_cursor(tcur, XFS_BTREE_NOERROR);
++				goto alloc_inode;
+ 			}
+-			ASSERT(!doneleft || !doneright);
++
++			/* get next record to check */
++			if (useleft) {
++				error = xfs_ialloc_next_rec(tcur, &trec,
++								 &doneleft, 1);
++			} else {
++				error = xfs_ialloc_next_rec(cur, &rec,
++								 &doneright, 0);
++			}
++			if (error)
++				goto error1;
+ 		}
++		ASSERT(!doneleft || !doneright);
+ 	}
++
+ 	/*
+-	 * In a different a.g. from the parent.
++	 * In a different AG from the parent.
+ 	 * See if the most recently allocated block has any free.
+ 	 */
+ 	else if (be32_to_cpu(agi->agi_newino) != NULLAGINO) {
+-		if ((error = xfs_inobt_lookup_eq(cur,
+-				be32_to_cpu(agi->agi_newino), 0, 0, &i)))
++		error = xfs_inobt_lookup_eq(cur, be32_to_cpu(agi->agi_newino),
++					    0, 0, &i);
++		if (error)
+ 			goto error0;
+-		if (i == 1 &&
+-		    (error = xfs_inobt_get_rec(cur, &rec, &j)) == 0 &&
+-		    j == 1 &&
+-		    rec.ir_freecount > 0) {
+-			/*
+-			 * The last chunk allocated in the group still has
+-			 * a free inode.
+-			 */
++
++		if (i == 1) {
++			error = xfs_inobt_get_rec(cur, &rec, &j);
++			if (error)
++				goto error0;
++
++			if (j == 1 && rec.ir_freecount > 0) {
++				/*
++				 * The last chunk allocated in the group
++				 * still has a free inode.
++				 */
++				goto alloc_inode;
++			}
+ 		}
++
+ 		/*
+-		 * None left in the last group, search the whole a.g.
++		 * None left in the last group, search the whole AG
+ 		 */
+-		else {
++		error = xfs_inobt_lookup_ge(cur, 0, 0, 0, &i);
++		if (error)
++			goto error0;
++		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
++
++		for (;;) {
++			error = xfs_inobt_get_rec(cur, &rec, &i);
+ 			if (error)
+ 				goto error0;
+-			if ((error = xfs_inobt_lookup_ge(cur, 0, 0, 0, &i)))
++			XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
++			if (rec.ir_freecount > 0)
++				break;
++			error = xfs_btree_increment(cur, 0, &i);
++			if (error)
+ 				goto error0;
+-			ASSERT(i == 1);
+-			for (;;) {
+-				error = xfs_inobt_get_rec(cur, &rec, &i);
+-				if (error)
+-					goto error0;
+-				XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
+-				if (rec.ir_freecount > 0)
+-					break;
+-				if ((error = xfs_btree_increment(cur, 0, &i)))
+-					goto error0;
+-				XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
+-			}
++			XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
+ 		}
+ 	}
++
++alloc_inode:
+ 	offset = xfs_ialloc_find_free(&rec.ir_free);
+ 	ASSERT(offset >= 0);
+ 	ASSERT(offset < XFS_INODES_PER_CHUNK);
 
 _______________________________________________
 xfs mailing list
