@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7PIPfaH216628 for <xfs@oss.sgi.com>; Tue, 25 Aug 2009 13:25:56 -0500
+	n7PIPMHX216610 for <xfs@oss.sgi.com>; Tue, 25 Aug 2009 13:25:37 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 184363F9017
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F1E8F1532B7A
 	for <xfs@oss.sgi.com>; Tue, 25 Aug 2009 11:26:14 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id dhW5YYCz2OJiVXnx for
+	by cuda.sgi.com with ESMTP id W12UxSCKJIXSuQF6 for
 	<xfs@oss.sgi.com>; Tue, 25 Aug 2009 11:26:14 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1Mg0ij-0001Ga-R7
-	for xfs@oss.sgi.com; Tue, 25 Aug 2009 18:26:13 +0000
-Message-Id: <20090825182613.740162763@bombadil.infradead.org>
-Date: Tue, 25 Aug 2009 14:21:42 -0400
+	Linux)) id 1Mg0ii-0001Cy-Fv
+	for xfs@oss.sgi.com; Tue, 25 Aug 2009 18:26:12 +0000
+Message-Id: <20090825182612.298786838@bombadil.infradead.org>
+Date: Tue, 25 Aug 2009 14:21:35 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 8/9] xfs: switch to NOFS allocation under i_lock in
-	xfs_readlink_bmap
+Subject: [PATCH 1/9] xfs: avoid memory allocation under m_peraglock in growfs
+	code
 References: <20090825182134.299870049@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-lockdep-buf-3
+Content-Disposition: inline; filename=xfs-lockdep-growfs
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,29 +33,50 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-xfs_readlink_bmap is called with i_lock held, but i_lock is taken in
-reclaim context so all allocations under it must avoid recursions into
-the filesystem.  
+Allocate the memory for the larger m_perag array before taking the
+per-AG lock as the per-AG lock can be taken under the i_lock which
+can be taken from reclaim context.
 
 Reported by the new reclaim context tracing in lockdep.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6/fs/xfs/xfs_vnodeops.c
+Index: linux-2.6/fs/xfs/xfs_fsops.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_vnodeops.c	2009-07-18 20:29:59.041657600 +0200
-+++ linux-2.6/fs/xfs/xfs_vnodeops.c	2009-07-18 20:31:22.964535322 +0200
-@@ -547,7 +547,9 @@ xfs_readlink_bmap(
- 		d = XFS_FSB_TO_DADDR(mp, mval[n].br_startblock);
- 		byte_cnt = XFS_FSB_TO_B(mp, mval[n].br_blockcount);
- 
--		bp = xfs_buf_read(mp->m_ddev_targp, d, BTOBB(byte_cnt), 0);
-+		bp = xfs_buf_read_flags(mp->m_ddev_targp, d, BTOBB(byte_cnt),
-+					XBF_LOCK | XBF_MAPPED |
-+					XBF_DONT_BLOCK);
- 		error = XFS_BUF_GETERROR(bp);
- 		if (error) {
- 			xfs_ioerror_alert("xfs_readlink",
+--- linux-2.6.orig/fs/xfs/xfs_fsops.c	2009-07-10 13:05:24.798364926 +0200
++++ linux-2.6/fs/xfs/xfs_fsops.c	2009-07-10 13:16:00.827394975 +0200
+@@ -167,17 +167,25 @@ xfs_growfs_data_private(
+ 	new = nb - mp->m_sb.sb_dblocks;
+ 	oagcount = mp->m_sb.sb_agcount;
+ 	if (nagcount > oagcount) {
++		void *new_perag, *old_perag;
++
+ 		xfs_filestream_flush(mp);
++
++		new_perag = kmem_zalloc(sizeof(xfs_perag_t) * nagcount,
++					KM_MAYFAIL);
++		if (!new_perag)
++			return XFS_ERROR(ENOMEM);
++
+ 		down_write(&mp->m_peraglock);
+-		mp->m_perag = kmem_realloc(mp->m_perag,
+-			sizeof(xfs_perag_t) * nagcount,
+-			sizeof(xfs_perag_t) * oagcount,
+-			KM_SLEEP);
+-		memset(&mp->m_perag[oagcount], 0,
+-			(nagcount - oagcount) * sizeof(xfs_perag_t));
++		memcpy(new_perag, mp->m_perag, sizeof(xfs_perag_t) * oagcount);
++		old_perag = mp->m_perag;
++		mp->m_perag = new_perag;
++
+ 		mp->m_flags |= XFS_MOUNT_32BITINODES;
+ 		nagimax = xfs_initialize_perag(mp, nagcount);
+ 		up_write(&mp->m_peraglock);
++
++		kmem_free(old_perag);
+ 	}
+ 	tp = xfs_trans_alloc(mp, XFS_TRANS_GROWFS);
+ 	tp->t_flags |= XFS_TRANS_RESERVE;
 
 _______________________________________________
 xfs mailing list
