@@ -1,30 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7QI1kOR028297 for <xfs@oss.sgi.com>; Wed, 26 Aug 2009 13:02:01 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 05A55154BA71
-	for <xfs@oss.sgi.com>; Wed, 26 Aug 2009 11:02:36 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id rAUqCzOAA0kEBmoZ for
-	<xfs@oss.sgi.com>; Wed, 26 Aug 2009 11:02:36 -0700 (PDT)
-Date: Wed, 26 Aug 2009 14:02:34 -0400
+	n7QILrXM030127 for <xfs@oss.sgi.com>; Wed, 26 Aug 2009 13:22:08 -0500
+Date: Wed, 26 Aug 2009 14:22:36 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Kernel 2.6.30.4 loop(..?) regression (& with/2.6.31-rc6)
-Message-ID: <20090826180234.GC14019@infradead.org>
-References: <alpine.DEB.2.00.0908220624440.30321@p34.internal.lan>
-	<20090822142550.GA10003@infradead.org>
-	<alpine.DEB.2.00.0908221044420.30321@p34.internal.lan>
-	<20090822201558.GA17955@infradead.org>
-	<alpine.DEB.2.00.0908221645440.20848@p34.internal.lan>
-	<20090822205502.GA18904@infradead.org>
-	<alpine.DEB.2.00.0908221659030.23463@p34.internal.lan>
-	<20090823224504.GA19942@infradead.org>
-	<alpine.DEB.2.00.0908240704130.9427@p34.internal.lan>
-	<alpine.DEB.2.00.0908260949550.9396@p34.internal.lan>
+Subject: Re: [PATCH 07/17] vfs: Introduce new helpers for syncing after
+	writing to O_SYNC file or IS_SYNC inode
+Message-ID: <20090826182236.GA1290@infradead.org>
+References: <1250697884-22288-1-git-send-email-jack@suse.cz>
+	<1250697884-22288-8-git-send-email-jack@suse.cz>
+	<20090819162638.GE6150@infradead.org>
+	<20090820121531.GC16486@duck.novell.com>
+	<20090820162729.GA24659@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.00.0908260949550.9396@p34.internal.lan>
+In-Reply-To: <20090820162729.GA24659@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,19 +27,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Nikanth Karthikesan <knikanth@suse.de>, Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: linux-ext4@vger.kernel.org, tytso@mit.edu, linux-ntfs-dev@lists.sourceforge.net, LKML <linux-kernel@vger.kernel.org>, Joel Becker <joel.becker@oracle.com>, Christoph Hellwig <hch@infradead.org>, Anton Altaparmakov <aia21@cantab.net>, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, Evgeniy Polyakov <zbr@ioremap.net>, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 
-On Wed, Aug 26, 2009 at 09:50:27AM -0400, Justin Piszcz wrote:
-> So far the uptime is 2 days, if it does not recur in the next 24-48 
-> hours, do you recommend I follow up with the linux-crypto folks about 
-> this?  It appears this could be the cause (no issues, as of yet).
+On Thu, Aug 20, 2009 at 12:27:29PM -0400, Christoph Hellwig wrote:
+> Maybe you can help brain storming, but I still can't see any way in that
+> the
+> 
+>   - write data
+>   - write inode
+>   - wait for data
+> 
+> actually is a benefit in terms of semantics (I agree that it could be
+> faster in theory, but even that is debatable with todays seek latencies
+> in disks)
 
-At this point it doesn't look crypto related anymore, but like some
-bad interaction between layers once we add those fsync in the loop code.
+Btw, another reason why our current default is actively harmful:
 
-What filesystem does you loop image reside on?   Anything else special?
-Any way to trgiger it with just loop but not crypto, etc.
+	barriers
+
+With volatile write caches we do have to flush the disk write cache in
+->fsync, either implicitly by a metadata operation, or explicitly if
+only data changed.  Unless the filesystems waits itself for the data
+to hit the disk like XFS or btrfs will be issue the cache flush
+potentially before the data write has actually reached the disk cache.
 
 _______________________________________________
 xfs mailing list
