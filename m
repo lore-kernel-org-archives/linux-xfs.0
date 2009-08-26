@@ -1,30 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7QLUmMj043929 for <xfs@oss.sgi.com>; Wed, 26 Aug 2009 16:30:58 -0500
-Received: from lucidpixels.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E2ABB3FFE27
-	for <xfs@oss.sgi.com>; Wed, 26 Aug 2009 14:31:36 -0700 (PDT)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by
-	cuda.sgi.com with ESMTP id fQnDPynR27AHYR3b for
-	<xfs@oss.sgi.com>; Wed, 26 Aug 2009 14:31:36 -0700 (PDT)
-Date: Wed, 26 Aug 2009 17:31:06 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Kernel 2.6.30.4 loop(..?) regression (& with/2.6.31-rc6)
-In-Reply-To: <20090826212732.GA18124@infradead.org>
-Message-ID: <alpine.DEB.2.00.0908261728580.1594@p34.internal.lan>
-References: <alpine.DEB.2.00.0908221044420.30321@p34.internal.lan>
-	<20090822201558.GA17955@infradead.org>
-	<alpine.DEB.2.00.0908221645440.20848@p34.internal.lan>
-	<20090822205502.GA18904@infradead.org>
-	<alpine.DEB.2.00.0908221659030.23463@p34.internal.lan>
-	<20090823224504.GA19942@infradead.org>
-	<alpine.DEB.2.00.0908240704130.9427@p34.internal.lan>
-	<alpine.DEB.2.00.0908260949550.9396@p34.internal.lan>
-	<20090826180234.GC14019@infradead.org>
-	<alpine.DEB.2.00.0908261717001.1594@p34.internal.lan>
-	<20090826212732.GA18124@infradead.org>
+	n7QMAD2m046212 for <xfs@oss.sgi.com>; Wed, 26 Aug 2009 17:10:28 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 01370154E801
+	for <xfs@oss.sgi.com>; Wed, 26 Aug 2009 15:11:06 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id Z0nPe9DfWeRfnTvT for
+	<xfs@oss.sgi.com>; Wed, 26 Aug 2009 15:11:06 -0700 (PDT)
+Date: Wed, 26 Aug 2009 18:11:06 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs_io: actually issue 0 size writes
+Message-ID: <20090826221106.GB18119@infradead.org>
+References: <4A849096.1010600@sandeen.net>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4A849096.1010600@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,42 +24,29 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Nikanth Karthikesan <knikanth@suse.de>, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs mailing list <xfs@oss.sgi.com>
 
+On Thu, Aug 13, 2009 at 05:15:50PM -0500, Eric Sandeen wrote:
+> While testing some stuff in generic_write_checks() in the
+> kernel I realized that you can't actually use xfs_io to send
+> a 0-byte write in.  This is actually a condition worth testing:
+> 
+>        If  count  is zero and fd refers to a regular file,
+>        then write() may return a failure status if one  of
+>        the  errors  below  is  detected.  If no errors are
+>        detected, 0 will be returned  without  causing  any
+>        other  effect.
+> 
+> So fix that up.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-
-On Wed, 26 Aug 2009, Christoph Hellwig wrote:
-
-> On Wed, Aug 26, 2009 at 05:19:11PM -0400, Justin Piszcz wrote:
->> For the root filesystem, on / type xfs (rw,noatime)
->> For larger partitions (per the cryptoloop doc) the partition itself is
->> setup via cryptoloop and then XFS ontop of that.  Nothing special.
->
-> Just to make sure we have all data here - you see the problem only
-> with loop devices backed by XFS, only with loop devices backed by
-> raw partitions or with both?
-Both.
-
->
->>> Any way to trgiger it with just loop but not crypto, etc.
->> Unfortunately not that I am aware of..  Would trying the kernel with the
->> patch removed and mounted with -o nobarrier help to show us anything, or?
->
-> Actually, yes - seeing what happens if you run plain 2.6.30 or 2.6.31-rc
-> without the backout patch, but with -o nobarrier would be very
-> interesting.
->
-Will give it a try with 2.6.31-rc6 and mount all loop devices (both those 
-backed by XFS and raw partitions) with -o nobarrier to see if the problem 
-recurs.  So far though with that patch up until this next test, there were 
-no problems.
-
-Justin.
+Any reason you didn't put this in despite two positive reviews?
 
 _______________________________________________
 xfs mailing list
