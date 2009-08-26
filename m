@@ -1,31 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7QDoZFn014961 for <xfs@oss.sgi.com>; Wed, 26 Aug 2009 08:50:45 -0500
-Received: from lucidpixels.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2F7513FDB02
-	for <xfs@oss.sgi.com>; Wed, 26 Aug 2009 06:51:01 -0700 (PDT)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by
-	cuda.sgi.com with ESMTP id SxYFpWyGpO76cL6C for
-	<xfs@oss.sgi.com>; Wed, 26 Aug 2009 06:51:01 -0700 (PDT)
-Date: Wed, 26 Aug 2009 09:50:27 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Kernel 2.6.30.4 XFS(..?) regression (& with/2.6.31-rc6)
-In-Reply-To: <alpine.DEB.2.00.0908240704130.9427@p34.internal.lan>
-Message-ID: <alpine.DEB.2.00.0908260949550.9396@p34.internal.lan>
-References: <alpine.DEB.2.00.0908110624420.22426@p34.internal.lan>
-	<20090816022331.GA2309@infradead.org>
-	<alpine.DEB.2.00.0908171024380.12533@p34.internal.lan>
-	<alpine.DEB.2.00.0908220624440.30321@p34.internal.lan>
-	<20090822142550.GA10003@infradead.org>
-	<alpine.DEB.2.00.0908221044420.30321@p34.internal.lan>
-	<20090822201558.GA17955@infradead.org>
-	<alpine.DEB.2.00.0908221645440.20848@p34.internal.lan>
-	<20090822205502.GA18904@infradead.org>
-	<alpine.DEB.2.00.0908221659030.23463@p34.internal.lan>
-	<20090823224504.GA19942@infradead.org>
-	<alpine.DEB.2.00.0908240704130.9427@p34.internal.lan>
+	n7QHK1WW025705 for <xfs@oss.sgi.com>; Wed, 26 Aug 2009 12:20:12 -0500
+Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D14A83FF229
+	for <xfs@oss.sgi.com>; Wed, 26 Aug 2009 10:20:40 -0700 (PDT)
+Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.162.198]) by
+	cuda.sgi.com with ESMTP id G8yJ674xSAZGTKDc for
+	<xfs@oss.sgi.com>; Wed, 26 Aug 2009 10:20:40 -0700 (PDT)
+Received: from mailsrv.i.zmi.at (unknown [81.217.106.33])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv1.zmi.at (Postfix) with ESMTP id 779AF538C
+	for <xfs@oss.sgi.com>; Wed, 26 Aug 2009 19:20:36 +0200 (CEST)
+Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id 626C3400166
+	for <xfs@oss.sgi.com>; Wed, 26 Aug 2009 19:20:36 +0200 (CEST)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: disk performance strange/low
+Date: Wed, 26 Aug 2009 19:20:36 +0200
+References: <200908172311.07660@zmi.at> <200908180408.10738@zmi.at>
+	<20090818024350.GA3591@infradead.org>
+In-Reply-To: <20090818024350.GA3591@infradead.org>
 MIME-Version: 1.0
+Message-Id: <200908261920.47054@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,71 +34,72 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: multipart/mixed; boundary="===============8908697021400585368=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+
+--===============8908697021400585368==
+Content-Type: multipart/signed;
+  boundary="nextPart1640778.TIoIjraX38";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
+
+--nextPart1640778.TIoIjraX38
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
+
+On Dienstag 18 August 2009 Christoph Hellwig wrote:
+> On Tue, Aug 18, 2009 at 04:08:05AM +0200, Michael Monnerie wrote:
+> > On Montag 17 August 2009 Christoph Hellwig wrote:
+> > > Yes, that sounds like the problem of the VM not feeding us enough
+> > > pages to write. ?What kernel is this on? ?Latest 2.6.31-rc has a
+> > > workaround for it.
+> >
+> > 2.6.27.23-0.1-xen from openSUSE 11.1
+> > I can't switch as I use it with the free Xen. Thanks for the info.
+>
+> Try backporting commit c8a4051c3731b6db224482218cfd535ab9393ff8 from
+> mainline - it should apply just fine to a 2.6.27-ish kernel.
+
+Thank you. I'm not a patcher, could you tell me how to do that?
+
+mfg zmi
+=2D-=20
+// Michael Monnerie, Ing.BSc    -----      http://it-management.at
+// Tel: 0660 / 415 65 31                      .network.your.ideas.
+// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
+// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
+// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
 
 
+--nextPart1640778.TIoIjraX38
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
-On Mon, 24 Aug 2009, Justin Piszcz wrote:
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
 
->
->
-> On Sun, 23 Aug 2009, Christoph Hellwig wrote:
->
->> Ok, let's see where errors could happen then.
->> 
->> There are four theoretical possibilities:
->> 
->> (a) XFS
->> (b) loop driver
->> (c) crypto loop code
->> (d) block layer
->> 
->> Or combinations thereof.
->> 
->> I would take (a) and (d) as more unlikely as they tend to get used much
->> more and I would have heard more bug reports already.
->> 
->> The cryptoloop code hasn't changed at all since 2.6.29.
->> 
->> The loop code howver has a very interesting commit just after 2.6.39:
->> 
->> commit 68db1961bbf4e16c220ccec4a780e966bc1fece3
->> Author: Nikanth Karthikesan <knikanth@suse.de>
->> Date:   Tue Mar 24 12:29:54 2009 +0100
->>
->>    loop: support barrier writes
->> 
->> Can you try reverting this one (it cleanly reverse-applies against
->> 2.6.30 and current mainline) and see if that makes a difference?
->> 
->
-> Hello Christoph,
->
-> # patch -p1 -R < ../unpatch.patch
-> patching file drivers/block/loop.c
-> Hunk #1 succeeded at 473 (offset -1 lines).
-> Hunk #2 succeeded at 804 (offset -22 lines).
-> #
->
-> Patched, we'll see if the problem recurs.. thanks!
->
-> Justin.
->
+iEYEABECAAYFAkqVbu8ACgkQzhSR9xwSCbT4lQCaA2iy+tQ3JeHwt6cGMLjDZ+aJ
+I+AAoONKjM8qNCL7D/cKwHhjDdET3We6
+=Vtv+
+-----END PGP SIGNATURE-----
 
-Hi Christoph,
+--nextPart1640778.TIoIjraX38--
 
-So far the uptime is 2 days, if it does not recur in the next 24-48 hours, 
-do you recommend I follow up with the linux-crypto folks about this?  It 
-appears this could be the cause (no issues, as of yet).
 
-Justin.
+--===============8908697021400585368==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============8908697021400585368==--
