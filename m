@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7Q1F2ve238252 for <xfs@oss.sgi.com>; Tue, 25 Aug 2009 20:15:17 -0500
+	n7QBb4wQ007696 for <xfs@oss.sgi.com>; Wed, 26 Aug 2009 06:37:22 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 21DDE3FB148
-	for <xfs@oss.sgi.com>; Tue, 25 Aug 2009 18:15:33 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 21DCF3FCA41
+	for <xfs@oss.sgi.com>; Wed, 26 Aug 2009 04:37:36 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id M0kk35VwQD0gEkni for
-	<xfs@oss.sgi.com>; Tue, 25 Aug 2009 18:15:33 -0700 (PDT)
-Date: Tue, 25 Aug 2009 21:15:32 -0400
+	by cuda.sgi.com with ESMTP id 0kypjkMnfkBtKTb4 for
+	<xfs@oss.sgi.com>; Wed, 26 Aug 2009 04:37:36 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1MgGoq-00022w-Nz
+	for xfs@oss.sgi.com; Wed, 26 Aug 2009 11:37:36 +0000
+Date: Wed, 26 Aug 2009 07:37:36 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [2.6.30.4] XFS-related BUG and hang via shrink_icache_memory
-Message-ID: <20090826011532.GA24362@infradead.org>
-References: <20090826004658.GA30929@hostway.ca>
+Subject: [PATCH] xfs: use correct log reservation when handling ENOSPC in
+	xfs_create
+Message-ID: <20090826113736.GA15562@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20090826004658.GA30929@hostway.ca>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,20 +30,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Simon Kirby <sim@hostway.ca>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Aug 25, 2009 at 05:46:58PM -0700, Simon Kirby wrote:
-> On an NFS storage server, we started using some XFS filesystems along
-> with many other EXT3 (on LVM on AOE).  The following bug has occurred
-> twice, with the machine hanging immediately after (console full of
-> scrolling oopses or bugs -- haven't seen it myself -- after this):
+We added the ENOSPC handling patch in xfs_create just after it got mered
+with xfs_mkdir.  Change the log reservation to the variable for either
+the create or mkdir value so it does the right thing if get here for creating
+a directory.
 
-Known and fortunately fixed bug, get the patches to fix it from:
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-	http://bugzilla.kernel.org/attachment.cgi?id=22741
-
-It should also be included in the next upcoming 2.6.30-stable release.
+Index: xfs/fs/xfs/xfs_vnodeops.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_vnodeops.c	2009-08-24 11:35:52.794261954 -0300
++++ xfs/fs/xfs/xfs_vnodeops.c	2009-08-24 11:36:25.466636450 -0300
+@@ -1479,8 +1479,8 @@ xfs_create(
+ 	if (error == ENOSPC) {
+ 		/* flush outstanding delalloc blocks and retry */
+ 		xfs_flush_inodes(dp);
+-		error = xfs_trans_reserve(tp, resblks, XFS_CREATE_LOG_RES(mp), 0,
+-			XFS_TRANS_PERM_LOG_RES, XFS_CREATE_LOG_COUNT);
++		error = xfs_trans_reserve(tp, resblks, log_res, 0,
++				XFS_TRANS_PERM_LOG_RES, log_count);
+ 	}
+ 	if (error == ENOSPC) {
+ 		/* No space at all so try a "no-allocation" reservation */
 
 _______________________________________________
 xfs mailing list
