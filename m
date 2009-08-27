@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7R03cRf051131 for <xfs@oss.sgi.com>; Wed, 26 Aug 2009 19:03:54 -0500
-Date: Wed, 26 Aug 2009 20:04:23 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 07/17] vfs: Introduce new helpers for syncing after
-	writing to O_SYNC file or IS_SYNC inode
-Message-ID: <20090827000423.GA30076@infradead.org>
-References: <1250697884-22288-1-git-send-email-jack@suse.cz>
-	<1250697884-22288-8-git-send-email-jack@suse.cz>
-	<20090819162638.GE6150@infradead.org>
-	<20090820121531.GC16486@duck.novell.com>
-	<20090820162729.GA24659@infradead.org>
-	<20090826182236.GA1290@infradead.org>
+	n7R27wDN056367 for <xfs@oss.sgi.com>; Wed, 26 Aug 2009 21:08:09 -0500
+Received: from thunker.thunk.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F304A1552356
+	for <xfs@oss.sgi.com>; Wed, 26 Aug 2009 19:08:47 -0700 (PDT)
+Received: from thunker.thunk.org (thunk.org [69.25.196.29]) by cuda.sgi.com
+	with ESMTP id MACOpr3RWBVLoSs4 for <xfs@oss.sgi.com>;
+	Wed, 26 Aug 2009 19:08:47 -0700 (PDT)
+Date: Wed, 26 Aug 2009 22:05:33 -0400
+From: Theodore Tso <tytso@mit.edu>
+Subject: Re: [PATCH] Add ext2/3/4-specific _check_extN_filesystem function
+Message-ID: <20090827020533.GL6997@mit.edu>
+References: <1250607467-15085-1-git-send-email-tytso@mit.edu>
+	<20090818161116.GA2162@infradead.org>
+	<20090818170456.GF28560@mit.edu>
+	<20090826221201.GC18119@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20090826182236.GA1290@infradead.org>
+In-Reply-To: <20090826221201.GC18119@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,36 +31,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: linux-ext4@vger.kernel.org, tytso@mit.edu, linux-ntfs-dev@lists.sourceforge.net, LKML <linux-kernel@vger.kernel.org>, Joel Becker <joel.becker@oracle.com>, Christoph Hellwig <hch@infradead.org>, Anton Altaparmakov <aia21@cantab.net>, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, Evgeniy Polyakov <zbr@ioremap.net>, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Wed, Aug 26, 2009 at 02:22:36PM -0400, Christoph Hellwig wrote:
-> On Thu, Aug 20, 2009 at 12:27:29PM -0400, Christoph Hellwig wrote:
-> > Maybe you can help brain storming, but I still can't see any way in that
-> > the
+On Wed, Aug 26, 2009 at 06:12:01PM -0400, Christoph Hellwig wrote:
+> On Tue, Aug 18, 2009 at 01:04:56PM -0400, Theodore Tso wrote:
+> > > Looks like the only difference between the generic and the extN
+> > > check routine is the addition of -f to the fsck command line.  What
+> > > about just introducing a _fsck_args similar to _mount_opts where
+> > > filesystems can set their additional required mount options?
 > > 
-> >   - write data
-> >   - write inode
-> >   - wait for data
-> > 
-> > actually is a benefit in terms of semantics (I agree that it could be
-> > faster in theory, but even that is debatable with todays seek latencies
-> > in disks)
+> > That would work, yeah, and would be result in far less code
+> > duplication in common.rc.  I'll take a whack at it and resubmit.
 > 
-> Btw, another reason why our current default is actively harmful:
+> Are you still going to look at it realtively soon?  If not I'll just
+> put this version in to imrove the test coverage on extN and we can
+> clean it up later.
 > 
-> 	barriers
-> 
-> With volatile write caches we do have to flush the disk write cache in
-> ->fsync, either implicitly by a metadata operation, or explicitly if
-> only data changed.  Unless the filesystems waits itself for the data
-> to hit the disk like XFS or btrfs will be issue the cache flush
-> potentially before the data write has actually reached the disk cache.
 
-Ok, this one failed the reality check - no matter how hard I tried
-I could not reproduce that case in my test harness.  It turns out
-cache flush request are quite sensibly treated as barriers by the block
-layer and thus we drain the queue before issueing the cache flush.
+Sorry, work has gotten busy and I'm trying to get some last patches
+whipped into shape before the merge window opens.  I probably won't
+have time to look at this for at least a week or two.  So if you want
+to merge this version in for now, I'll try to clean it up when I have
+a chance.
+
+     	     	     	      	 - Ted
 
 _______________________________________________
 xfs mailing list
