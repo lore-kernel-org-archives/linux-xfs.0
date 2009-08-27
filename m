@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7R9kbHp078362 for <xfs@oss.sgi.com>; Thu, 27 Aug 2009 04:46:52 -0500
-Received: from mx1.empa.ch (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2D651402898
-	for <xfs@oss.sgi.com>; Thu, 27 Aug 2009 02:47:24 -0700 (PDT)
-Received: from mx1.empa.ch (mx1.empa.ch [152.88.7.31]) by cuda.sgi.com with
-	ESMTP id bhN4vOlXBLNObqbm for <xfs@oss.sgi.com>;
-	Thu, 27 Aug 2009 02:47:24 -0700 (PDT)
-From: "Passerone, Daniele" <Daniele.Passerone@empa.ch>
-Date: Thu, 27 Aug 2009 11:47:06 +0200
+	n7RA8vP4079649 for <xfs@oss.sgi.com>; Thu, 27 Aug 2009 05:09:07 -0500
+Received: from moutng.kundenserver.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0E7DD402B30
+	for <xfs@oss.sgi.com>; Thu, 27 Aug 2009 03:09:47 -0700 (PDT)
+Received: from moutng.kundenserver.de (moutng.kundenserver.de [212.227.17.8])
+	by cuda.sgi.com with ESMTP id XhZeBjs0CgCpzRBt for
+	<xfs@oss.sgi.com>; Thu, 27 Aug 2009 03:09:47 -0700 (PDT)
+Date: Thu, 27 Aug 2009 03:09:43 -0700 (PDT)
+From: Christian Kujau <lists@nerdbynature.de>
 Subject: RE: xfs data loss
-Message-ID: <B9A7B002C7FAFC469D4229539E909760308DA65237@DU-EXC-MAIL.empa.emp-eaw.ch>
+In-Reply-To: <B9A7B002C7FAFC469D4229539E909760308DA65237@DU-EXC-MAIL.empa.emp-eaw.ch>
+Message-ID: <alpine.DEB.2.01.0908270300530.5744@bogon.housecafe.de>
 References: <B9A7B002C7FAFC469D4229539E909760308DA651DE@DU-EXC-MAIL.empa.emp-eaw.ch>
 	<alpine.DEB.2.01.0908270232540.5744@bogon.housecafe.de>
-In-Reply-To: <alpine.DEB.2.01.0908270232540.5744@bogon.housecafe.de>
-Content-Language: en-US
+	<B9A7B002C7FAFC469D4229539E909760308DA65237@DU-EXC-MAIL.empa.emp-eaw.ch>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -29,37 +29,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christian Kujau <lists@nerdbynature.de>
+To: "Passerone, Daniele" <Daniele.Passerone@empa.ch>
 Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Thank you Christian for your reply.
+On Thu, 27 Aug 2009 at 11:47, Passerone, Daniele wrote:
+> Unfortunately xfs_ncheck was not killed, it went "D" state.
+> The box has 16Gb.
 
+"D" as in "waiting for I/O to complete". Were you able to confirm that, 
+i.e. was there really noticable disk i/o happening during xfs_ncheck or 
+was the process perhaps "stuck in D state"? I seem to remember that in 
+those cases the output of sysrq-w could be interesting.
 
->
->SLES 10, that's Linux 2.6.16-something, right?
->
+> Can I do something with my xfs_metadump [please be polite :-) ]
 
-Linux 2.6.16.60  x86_64
+You've put the dump online, let's hope some XFS wizard finds time to have 
+a look at this...I certainly can't read this :-\
 
->I know, I probably shouldn't ask this right now, but I'm kinda curious:
->_Why_ aren't they backed up?
->
+Christian.
+-- 
+BOFH excuse #228:
 
-It is absolutely legitimate as question.
-Because it is a storage unit of 20 TB that we can't backup, and the users know it.
-
-
->> 3) xfs_ncheck eats a lot of memory and freezes after 6-7 hours without
->giving output
->
->Did you look into the syslog too? Maybe the box was out of memory and
->killed xfs_ncheck. How much memory does the box have?
-
-Unfortunately xfs_ncheck was not killed, it went "D" state.
-The box has 16Gb.
-
-Can I do something with my xfs_metadump [please be polite :-) ]
-Daniele
+That function is not currently supported, but Bill Gates assures us it will be featured in the next upgrade.
 
 _______________________________________________
 xfs mailing list
