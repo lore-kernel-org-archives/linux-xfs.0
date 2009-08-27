@@ -1,17 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7R6o89x069171 for <xfs@oss.sgi.com>; Thu, 27 Aug 2009 01:50:18 -0500
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6AE4530404E
-	for <xfs@oss.sgi.com>; Wed, 26 Aug 2009 23:51:01 -0700 (PDT)
-Message-Id: <F4B636D7-71BF-46AB-825B-D3E93796F1E5@sgi.com>
-From: Felix Blyakher <felixb@sgi.com>
-In-Reply-To: <20090827031116.GA6147@infradead.org>
-Mime-Version: 1.0 (Apple Message framework v930.3)
-Subject: Re: [PATCH] xfs: merge fsync and O_SYNC handling
-Date: Thu, 27 Aug 2009 01:22:15 -0500
-References: <20090827031116.GA6147@infradead.org>
+	n7R7Lgee070391 for <xfs@oss.sgi.com>; Thu, 27 Aug 2009 02:21:58 -0500
+Received: from mx2.empa.ch (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D50CD15550BA
+	for <xfs@oss.sgi.com>; Thu, 27 Aug 2009 00:22:31 -0700 (PDT)
+Received: from mx2.empa.ch (mx2.empa.ch [152.88.7.32]) by cuda.sgi.com with
+	ESMTP id Q1alMF0UCyIFQiHR for <xfs@oss.sgi.com>;
+	Thu, 27 Aug 2009 00:22:31 -0700 (PDT)
+Received: from Du-Exc-Hub1.empa.emp-eaw.ch (localhost [127.0.0.1])
+	by mx2.empa.ch (Spam & Virus Firewall) with ESMTP id 9A113544D9A
+	for <xfs@oss.sgi.com>; Thu, 27 Aug 2009 09:22:04 +0200 (CEST)
+Received: from Du-Exc-Hub1.empa.emp-eaw.ch ([152.88.6.64]) by mx2.empa.ch with
+	ESMTP id CORAl0EkIhMl5GkJ for <xfs@oss.sgi.com>;
+	Thu, 27 Aug 2009 09:22:04 +0200 (CEST)
+From: "Passerone, Daniele" <Daniele.Passerone@empa.ch>
+Date: Thu, 27 Aug 2009 09:22:02 +0200
+Subject: xfs data loss
+Message-ID: <B9A7B002C7FAFC469D4229539E909760308DA651DE@DU-EXC-MAIL.empa.emp-eaw.ch>
+Content-Language: en-US
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,51 +28,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+
+Dear xfs developers
+
+We have a SUN X4500 with 48 500 GB drives, that we configured under SUSE SLES 10.
+
+Among others, we have 3 RAID5 xfs filesystems, /dev/md4 with 20 units (9.27 TB)
+/dev/md5 with 20 units (9.27 TB) and /dev/md6 with 5 units (1.95 TB)
+
+These units are not backed up.
+
+Due to a power shock, suddenly and without log messages about one half (5 TB) of the user 
+directories on /dev/md4 have disappeared.
+Upon reboot, /dev/md6 showed only 3 units, and after a xfs_repair it was again ok.
+/dev/md4 mounted immediately, but always with one half of the directories.
 
 
-On Aug 26, 2009, at 10:11 PM, Christoph Hellwig wrote:
+1) xfs_check gives no problem on /dev/md4
 
-> The guarantees for O_SYNC are exactly the same as the ones we need to
-> make for an fsync call (and given that Linux O_SYNC is O_DSYNC the
-> equivalent is fdadatasync, but we treat both the same in XFS), except
-> with a range data writeout.  Jan Kara has started unifying these two
-> path for filesystems using the generic helpers, and I've started to
-> look at XFS.
->
-> The actual transaction commited by xfs_fsync and  
-> xfs_write_sync_logforce
-> has a different transaction number, but actually is exactly the same.
-> We'll only use the fsync transaction going forward.  One major  
-> difference
-> is that xfs_write_sync_logforce never issues a cache flush unless we
-> commit a transaction causing that as a side-effect, which is an  
-> obvious
-> bug in the O_SYNC handling.  Second all the locking and i_update_size
-> vs i_update_core changes from 978b7237123d007b9fa983af6e0e2fa8f97f9934
-> never made it to xfs_write_sync_logforce, so we add them back.
->
-> To make xfs_fsync easily usable from the O_SYNC path, the  
-> filemap_fdatawait
-> call is moved up to xfs_file_fsync, so that we don't wait on the whole
-> file after we already waited for our portion in xfs_write.
->
-> We'll also use a plain call to filemap_write_and_wait_range instead
-> of the previous sync_page_rang which did it in two steps including
-> an half-hearted inode write out that doesn't help us.
->
-> Once we're done with this also remove the now useless i_update_size
-> tracking.
->
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+but 
 
-Reviewed-by: Felix Blyakher <felixb@sgi.com>
+2) xfs_logprint
+
+xfs_logprint:
+    data device: 0x904
+    log device: 0x904 daddr: 9279295544 length: 262144
+
+Header 0x1c8b wanted 0xfeedbabe
+**********************************************************************
+* ERROR: header cycle=7307        block=182240                       *
+**********************************************************************
+Bad log record header
+
+and the same happens on /dev/md5.
+
+
+3) xfs_ncheck eats a lot of memory and freezes after 6-7 hours without giving output
+
+4) I have a xfs_metadump in a file (1.8 GB) but I don't know what to do with it.
+
+WHat can I do? Any help would be appreciated, I would really be happy to recover those files...
+:-)
+
+Thank you in advance
+
+Daniele Passerone
+Empa, Switzerland
+
 
 _______________________________________________
 xfs mailing list
