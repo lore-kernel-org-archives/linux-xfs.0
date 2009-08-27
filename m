@@ -1,22 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7RA8vP4079649 for <xfs@oss.sgi.com>; Thu, 27 Aug 2009 05:09:07 -0500
-Received: from moutng.kundenserver.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0E7DD402B30
-	for <xfs@oss.sgi.com>; Thu, 27 Aug 2009 03:09:47 -0700 (PDT)
-Received: from moutng.kundenserver.de (moutng.kundenserver.de [212.227.17.8])
-	by cuda.sgi.com with ESMTP id XhZeBjs0CgCpzRBt for
-	<xfs@oss.sgi.com>; Thu, 27 Aug 2009 03:09:47 -0700 (PDT)
-Date: Thu, 27 Aug 2009 03:09:43 -0700 (PDT)
-From: Christian Kujau <lists@nerdbynature.de>
-Subject: RE: xfs data loss
-In-Reply-To: <B9A7B002C7FAFC469D4229539E909760308DA65237@DU-EXC-MAIL.empa.emp-eaw.ch>
-Message-ID: <alpine.DEB.2.01.0908270300530.5744@bogon.housecafe.de>
-References: <B9A7B002C7FAFC469D4229539E909760308DA651DE@DU-EXC-MAIL.empa.emp-eaw.ch>
-	<alpine.DEB.2.01.0908270232540.5744@bogon.housecafe.de>
-	<B9A7B002C7FAFC469D4229539E909760308DA65237@DU-EXC-MAIL.empa.emp-eaw.ch>
+	n7RC3HuG086132 for <xfs@oss.sgi.com>; Thu, 27 Aug 2009 07:03:33 -0500
+Date: Thu, 27 Aug 2009 08:03:49 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: PATCH] xfs: implement .dirty_inode to fix timestamp handling
+Message-ID: <20090827120349.GA13901@infradead.org>
+References: <20090827031242.GB6147@infradead.org>
+	<DD638BCE-CCAA-4540-9187-C0ACED984731@sgi.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <DD638BCE-CCAA-4540-9187-C0ACED984731@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,28 +23,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "Passerone, Daniele" <Daniele.Passerone@empa.ch>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Felix Blyakher <felixb@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Thu, 27 Aug 2009 at 11:47, Passerone, Daniele wrote:
-> Unfortunately xfs_ncheck was not killed, it went "D" state.
-> The box has 16Gb.
+On Thu, Aug 27, 2009 at 01:40:08AM -0500, Felix Blyakher wrote:
+>
+> On Aug 26, 2009, at 10:12 PM, Christoph Hellwig wrote:
+>
+>> [Note: this patch needs the O_SYNC patch applies first]
+>
+> I assume O_SYNC is not a prerequisite to this patch, it's just
+> needed to apply the current patch cleanly.
 
-"D" as in "waiting for I/O to complete". Were you able to confirm that, 
-i.e. was there really noticable disk i/o happening during xfs_ncheck or 
-was the process perhaps "stuck in D state"? I seem to remember that in 
-those cases the output of sysrq-w could be interesting.
-
-> Can I do something with my xfs_metadump [please be polite :-) ]
-
-You've put the dump online, let's hope some XFS wizard finds time to have 
-a look at this...I certainly can't read this :-\
-
-Christian.
--- 
-BOFH excuse #228:
-
-That function is not currently supported, but Bill Gates assures us it will be featured in the next upgrade.
+indeed.  it just removes setting an i_update_size close to an
+i_update_core we touch.
 
 _______________________________________________
 xfs mailing list
