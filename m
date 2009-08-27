@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7R6qcDw069278 for <xfs@oss.sgi.com>; Thu, 27 Aug 2009 01:52:48 -0500
+	n7R6dItZ068696 for <xfs@oss.sgi.com>; Thu, 27 Aug 2009 01:39:28 -0500
 Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B3CFC304075
-	for <xfs@oss.sgi.com>; Wed, 26 Aug 2009 23:53:31 -0700 (PDT)
-Message-Id: <E07B437D-A2F0-4A93-A5A5-CFA87EA0970D@sgi.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A178C8F80C9
+	for <xfs@oss.sgi.com>; Wed, 26 Aug 2009 23:40:11 -0700 (PDT)
+Message-Id: <DD638BCE-CCAA-4540-9187-C0ACED984731@sgi.com>
 From: Felix Blyakher <felixb@sgi.com>
-In-Reply-To: <1AB9A794DBDDF54A8A81BE2296F7BDFE83ABD9@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <20090827031242.GB6147@infradead.org>
 Mime-Version: 1.0 (Apple Message framework v930.3)
-Subject: Re: [PATCH] xfs_showargs() reports group *and* project quotas enabled
-Date: Thu, 27 Aug 2009 01:53:28 -0500
-References: <1AB9A794DBDDF54A8A81BE2296F7BDFE83ABD9@cf--amer001e--3.americas.sgi.com>
+Subject: Re: PATCH] xfs: implement .dirty_inode to fix timestamp handling
+Date: Thu, 27 Aug 2009 01:40:08 -0500
+References: <20090827031242.GB6147@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,56 +24,48 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
 
-On Aug 26, 2009, at 12:46 PM, Alex Elder wrote:
+On Aug 26, 2009, at 10:12 PM, Christoph Hellwig wrote:
 
-> If you enable group or project quotas on an XFS file system, then the
-> mount table presented through /proc/self/mounts erroneously shows
-> that both options are in effect for the file system.  The root of
-> the problem is some bad logic in the xfs_showargs() function, which
-> is used to format the file system type-specific options in effect
-> for a file system.
->
-> The problem originated in this GIT commit:
->    Move platform specific mount option parse out of core XFS code
->    Date: 11/22/07
->    Author: Dave Chinner
->    SHA1 ID: a67d7c5f5d25d0b13a4dfb182697135b014fa478
->
-> For XFS quotas, project and group quota management are mutually
-> exclusive--only one can be in effect at a time.  There are two
-> parts to managing quotas:  aggregating usage information; and
-> enforcing limits.  It is possible to have a quota in effect
-> (aggregating usage) but not enforced.
->
-> These features are recorded on an XFS mount point using these flags:
->    XFS_PQUOTA_ACCT - Project quotas are aggregated
->    XFS_GQUOTA_ACCT - Group quotas are aggregated
->    XFS_OQUOTA_ENFD - Project/group quotas are enforced
->
-> The code in error is in fs/xfs/linux-2.6/xfs_super.c:
->
->        if (mp->m_qflags & (XFS_PQUOTA_ACCT|XFS_OQUOTA_ENFD))
->                seq_puts(m, "," MNTOPT_PRJQUOTA);
->        else if (mp->m_qflags & XFS_PQUOTA_ACCT)
->                seq_puts(m, "," MNTOPT_PQUOTANOENF);
->
->        if (mp->m_qflags & (XFS_GQUOTA_ACCT|XFS_OQUOTA_ENFD))
->                seq_puts(m, "," MNTOPT_GRPQUOTA);
->        else if (mp->m_qflags & XFS_GQUOTA_ACCT)
->                seq_puts(m, "," MNTOPT_GQUOTANOENF);
->
-> The problem is that XFS_OQUOTA_ENFD will be set in mp->m_qflags
-> if either group or project quotas are enforced, and as a result
-> both MNTOPT_PRJQUOTA and MNTOPT_GRPQUOTA will be shown as mount
-> options.
+> [Note: this patch needs the O_SYNC patch applies first]
 
-Good catch, Alex.
+I assume O_SYNC is not a prerequisite to this patch, it's just
+needed to apply the current patch cleanly.
 
-> Signed-off-by: Alex Elder <aelder@sgi.com>
+>
+> This is picking up on Felix's repost of Dave's patch to implement a
+> .dirty_inode method.  We really need this notification because
+> the VFS keeps writing directly into the inode structure instead
+> of going through methods to update this state.  In addition to
+> the long-known atime issue we now also have a caller in VM code
+> that updates c/mtime that way for shared writeable mmaps.  And
+> I found another one that no one has noticed in practice in the FIFO
+> code.
+>
+> So implement ->dirty_inode to set i_update_core whenever the
+> inode gets externally dirties, and switch the c/mtime handling to
+> the same scheme we already use for atime (always picking up
+> the value from the Linux inode).
+>
+> Note that this patch also removes the xfs_synchronize_atime call
+> in xfs_reclaim - it was not only superflous (we'll never reclaim
+> a dirty inode), but also didn't do anything (I_CLEAR is always set
+> at this point).  I replaced it with a myriad of ASSERTs for now
+> to make my point.
+
+I like that ^)
+
+>
+>
+> Also switch to just using file_update_time for regular reads/writes -
+> that will get us all optimization done to it for free and make
+> sure we notice early when it breaks.
+>
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 Reviewed-by: Felix Blyakher <felixb@sgi.com>
 
