@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7R9ewK6078028 for <xfs@oss.sgi.com>; Thu, 27 Aug 2009 04:41:09 -0500
-Received: from moutng.kundenserver.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 48FFE40231F
-	for <xfs@oss.sgi.com>; Thu, 27 Aug 2009 02:41:15 -0700 (PDT)
-Received: from moutng.kundenserver.de (moutng.kundenserver.de [212.227.17.10])
-	by cuda.sgi.com with ESMTP id e4XW0E7UKjIPDMTf for
-	<xfs@oss.sgi.com>; Thu, 27 Aug 2009 02:41:15 -0700 (PDT)
-Date: Thu, 27 Aug 2009 02:41:10 -0700 (PDT)
-From: Christian Kujau <lists@nerdbynature.de>
-Subject: Re: xfs data loss
-In-Reply-To: <B9A7B002C7FAFC469D4229539E909760308DA651DE@DU-EXC-MAIL.empa.emp-eaw.ch>
-Message-ID: <alpine.DEB.2.01.0908270232540.5744@bogon.housecafe.de>
+	n7R9sKaF078770 for <xfs@oss.sgi.com>; Thu, 27 Aug 2009 04:54:36 -0500
+Received: from mx1.empa.ch (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0DD964029C9
+	for <xfs@oss.sgi.com>; Thu, 27 Aug 2009 02:55:07 -0700 (PDT)
+Received: from mx1.empa.ch (mx1.empa.ch [152.88.7.31]) by cuda.sgi.com with
+	ESMTP id FszyL4zcB2LbsOPG for <xfs@oss.sgi.com>;
+	Thu, 27 Aug 2009 02:55:07 -0700 (PDT)
+From: "Passerone, Daniele" <Daniele.Passerone@empa.ch>
+Date: Thu, 27 Aug 2009 11:54:44 +0200
+Subject: RE: xfs data loss
+Message-ID: <B9A7B002C7FAFC469D4229539E909760308DA6523C@DU-EXC-MAIL.empa.emp-eaw.ch>
 References: <B9A7B002C7FAFC469D4229539E909760308DA651DE@DU-EXC-MAIL.empa.emp-eaw.ch>
+	<alpine.DEB.2.01.0908270232540.5744@bogon.housecafe.de>
+In-Reply-To: <alpine.DEB.2.01.0908270232540.5744@bogon.housecafe.de>
+Content-Language: en-US
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -27,30 +29,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "Passerone, Daniele" <Daniele.Passerone@empa.ch>
+To: Christian Kujau <lists@nerdbynature.de>
 Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Thu, 27 Aug 2009 at 09:22, Passerone, Daniele wrote:
-> We have a SUN X4500 with 48 500 GB drives, that we configured under SUSE 
-> SLES 10.                                                                                                              
+Please find enclosed the link to my metadata dump
 
-SLES 10, that's Linux 2.6.16-something, right?
+http://snipurl.com/rfo6u
 
-> These units are not backed up.
 
-I know, I probably shouldn't ask this right now, but I'm kinda curious: 
-_Why_ aren't they backed up?
+Thank you in advance
 
-> 3) xfs_ncheck eats a lot of memory and freezes after 6-7 hours without giving output
-
-Did you look into the syslog too? Maybe the box was out of memory and 
-killed xfs_ncheck. How much memory does the box have?
-
-Christian.
--- 
-BOFH excuse #101:
-
-Collapsed Backbone
+Daniele
 
 _______________________________________________
 xfs mailing list
