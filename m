@@ -1,17 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7RHZGuC101594 for <xfs@oss.sgi.com>; Thu, 27 Aug 2009 12:35:34 -0500
-Date: Thu, 27 Aug 2009 13:35:40 -0400
+	n7RLIMKR111129 for <xfs@oss.sgi.com>; Thu, 27 Aug 2009 16:18:38 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6BF721567146
+	for <xfs@oss.sgi.com>; Thu, 27 Aug 2009 14:18:52 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id zEaNc3JIpG4vocmk for
+	<xfs@oss.sgi.com>; Thu, 27 Aug 2009 14:18:52 -0700 (PDT)
+Date: Thu, 27 Aug 2009 17:18:49 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 07/17] vfs: Introduce new helpers for syncing after
-	writing to O_SYNC file or IS_SYNC inode
-Message-ID: <20090827173540.GA19115@infradead.org>
-References: <1250875447-15622-1-git-send-email-jack@suse.cz>
-	<1250875447-15622-8-git-send-email-jack@suse.cz>
+Subject: Re: [PATCH] Add ext2/3/4-specific _check_extN_filesystem function
+Message-ID: <20090827211848.GA9427@infradead.org>
+References: <1250607467-15085-1-git-send-email-tytso@mit.edu>
+	<20090818161116.GA2162@infradead.org>
+	<20090818170456.GF28560@mit.edu>
+	<20090826221201.GC18119@infradead.org>
+	<20090827020533.GL6997@mit.edu>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1250875447-15622-8-git-send-email-jack@suse.cz>
+In-Reply-To: <20090827020533.GL6997@mit.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,40 +32,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: linux-ext4@vger.kernel.org, tytso@mit.edu, linux-ntfs-dev@lists.sourceforge.net, Joel Becker <joel.becker@oracle.com>, LKML <linux-kernel@vger.kernel.org>, Anton Altaparmakov <aia21@cantab.net>, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, linux-fsdevel@vger.kernel.org, Evgeniy Polyakov <zbr@ioremap.net>, xfs@oss.sgi.com, hch@lst.de, ocfs2-devel@oss.oracle.com
+To: Theodore Tso <tytso@mit.edu>
+Cc: xfs@oss.sgi.com
 
-> +int generic_write_sync(struct file *file, loff_t pos, loff_t count)
-> +{
-> +	if (!(file->f_flags & O_SYNC) && !IS_SYNC(file->f_mapping->host))
-> +		return 0;
-> +	return generic_sync_file(file, file->f_path.dentry, pos,
-> +				 pos + count - 1,
-> +				 SYNC_SUBMIT_DATA | SYNC_WAIT_DATA);
-> +}
-> +EXPORT_SYMBOL(generic_write_sync);
+On Wed, Aug 26, 2009 at 10:05:33PM -0400, Theodore Tso wrote:
+> Sorry, work has gotten busy and I'm trying to get some last patches
+> whipped into shape before the merge window opens.  I probably won't
+> have time to look at this for at least a week or two.  So if you want
+> to merge this version in for now, I'll try to clean it up when I have
+> a chance.
 
->  
-> +/* Flags for generic_sync_file */
-> +#define SYNC_INODE		1
-> +#define SYNC_SUBMIT_DATA	2
-> +#define SYNC_WAIT_DATA		4
-
-When I think about this more I really hate the latter two flags.
-There's really no reason to just do only either the submit or wait.
-I'd say kill the flags for now and just implement generic_write_sync
-as:
-
-int generic_write_sync(struct file *file, loff_t pos, loff_t count)
-{
-	if (!(file->f_flags & O_SYNC) && !IS_SYNC(file->f_mapping->host))
-		return 0;
-	return vfs_fsync_range(file, file->f_path.dentry, pos,
-			       pos + count - 1, 1);
-}
-
-and we can look into replacing the datasync flag with something more
-meaningfull later through the whole fsync stack.
+Ok, I've put it in now.
 
 _______________________________________________
 xfs mailing list
