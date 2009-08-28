@@ -1,17 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7SNI1cJ183346 for <xfs@oss.sgi.com>; Fri, 28 Aug 2009 18:18:12 -0500
-Received: from cf--amer001e--3.americas.sgi.com
-	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 717DA3040D8
-	for <xfs@oss.sgi.com>; Fri, 28 Aug 2009 16:18:56 -0700 (PDT)
+	n7SNI1ZU183343 for <xfs@oss.sgi.com>; Fri, 28 Aug 2009 18:18:11 -0500
 Content-class: urn:content-classes:message
 MIME-Version: 1.0
-Subject: RE: [PATCH 1/4] xfs: mark inodes dirty before issuing I/O
-Date: Fri, 28 Aug 2009 18:17:43 -0500
-Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83ABF2@cf--amer001e--3.americas.sgi.com>
-In-Reply-To: <20090827231557.717120121@bombadil.infradead.org>
+Subject: RE: [PATCH 2/4] xfs: make sure xfs_sync_fsdata covers the log 
+Date: Fri, 28 Aug 2009 18:18:24 -0500
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83ABF3@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <20090827231558.057467775@bombadil.infradead.org>
 From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -31,96 +27,89 @@ Cc: xfs@oss.sgi.com
 Christoph Hellwig wrote:
 > From: Dave Chinner <david@fromorbit.com>
 > 
-> To make sure they get properly waited on in sync when I/O is in flight and
-> we latter need to update the inode size.  Requires a new helper to check if an
-> ioend structure is beyond the current EOF.
-> 
+> We want to always cover the log after writing out the superblock, and
+> in case of a synchronous writeout make sure we actually wait for the
+> log to be covered.  That way a filesystem that has been sync()ed can
+> be considered clean by log recovery.
 > 
 > Signed-off-by: Dave Chinner <david@fromorbit.com>
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
+
+
 
 Looks good.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
-> Index: linux-2.6/fs/xfs/linux-2.6/xfs_aops.c
+
+
+> Index: linux-2.6/fs/xfs/linux-2.6/xfs_sync.c
 > ===================================================================
-> --- linux-2.6.orig/fs/xfs/linux-2.6/xfs_aops.c	2009-08-26 20:06:07.105357325 -0300
-> +++ linux-2.6/fs/xfs/linux-2.6/xfs_aops.c	2009-08-26 20:08:09.017355358 -0300
-> @@ -186,19 +186,37 @@ xfs_destroy_ioend(
+> --- linux-2.6.orig/fs/xfs/linux-2.6/xfs_sync.c	2009-07-07 16:03:51.871239376 +0200
+> +++ linux-2.6/fs/xfs/linux-2.6/xfs_sync.c	2009-07-07 18:24:48.722251281 +0200
+> @@ -309,11 +309,15 @@ xfs_sync_attr(
+>  STATIC int
+>  xfs_commit_dummy_trans(
+>  	struct xfs_mount	*mp,
+> -	uint			log_flags)
+> +	uint			flags)
+>  {
+>  	struct xfs_inode	*ip = mp->m_rootip;
+>  	struct xfs_trans	*tp;
+>  	int			error;
+> +	int			log_flags = XFS_LOG_FORCE;
+> +
+> +	if (flags & SYNC_WAIT)
+> +		log_flags |= XFS_LOG_SYNC;
+> 
+>  	/*
+>  	 * Put a dummy transaction in the log to tell recovery
+> @@ -331,13 +335,12 @@ xfs_commit_dummy_trans(
+>  	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+>  	xfs_trans_ihold(tp, ip);
+>  	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+> -	/* XXX(hch): ignoring the error here.. */
+>  	error = xfs_trans_commit(tp, 0);
+> -
+>  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> 
+> +	/* the log force ensures this transaction is pushed to disk */
+>  	xfs_log_force(mp, 0, log_flags);
+> -	return 0;
+> +	return error;
 >  }
 > 
->  /*
-> + * If the end of the current ioend is beyond the current EOF,
-> + * return the new EOF value, otherwise zero.
-> + */
-> +STATIC xfs_fsize_t
-> +xfs_ioend_new_eof(
-> +	xfs_ioend_t		*ioend)
-> +{
-> +	xfs_inode_t		*ip = XFS_I(ioend->io_inode);
-> +	xfs_fsize_t		isize;
-> +	xfs_fsize_t		bsize;
-> +
-> +	bsize = ioend->io_offset + ioend->io_size;
-> +	isize = MAX(ip->i_size, ip->i_new_size);
-> +	isize = MIN(isize, bsize);
-> +	return isize > ip->i_d.di_size ? isize : 0;
-> +}
-> +
-> +/*
->   * Update on-disk file size now that data has been written to disk.
->   * The current in-memory file size is i_size.  If a write is beyond
->   * eof i_new_size will be the intended file size until i_size is
->   * updated.  If this write does not extend all the way to the valid
->   * file size then restrict this update to the end of the write.
->   */
-> +
->  STATIC void
->  xfs_setfilesize(
->  	xfs_ioend_t		*ioend)
->  {
->  	xfs_inode_t		*ip = XFS_I(ioend->io_inode);
->  	xfs_fsize_t		isize;
-> -	xfs_fsize_t		bsize;
-> 
->  	ASSERT((ip->i_d.di_mode & S_IFMT) == S_IFREG);
->  	ASSERT(ioend->io_type != IOMAP_READ);
-> @@ -206,14 +224,9 @@ xfs_setfilesize(
->  	if (unlikely(ioend->io_error))
->  		return;
-> 
-> -	bsize = ioend->io_offset + ioend->io_size;
-> -
->  	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> -
-> -	isize = MAX(ip->i_size, ip->i_new_size);
-> -	isize = MIN(isize, bsize);
-> -
-> -	if (ip->i_d.di_size < isize) {
-> +	isize = xfs_ioend_new_eof(ioend);
-> +	if (isize) {
->  		ip->i_d.di_size = isize;
->  		xfs_mark_inode_dirty_sync(ip);
+>  int
+> @@ -377,6 +380,7 @@ xfs_sync_fsdata(
+>  		 */
+>  		if (XFS_BUF_ISPINNED(bp))
+>  			xfs_log_force(mp, 0, XFS_LOG_FORCE);
+> +		xfs_flush_buftarg(mp->m_ddev_targp, 1);
 >  	}
-> @@ -403,10 +416,16 @@ xfs_submit_ioend_bio(
->  	struct bio	*bio)
->  {
->  	atomic_inc(&ioend->io_remaining);
-> -
->  	bio->bi_private = ioend;
->  	bio->bi_end_io = xfs_end_bio;
 > 
-> +	/*
-> +	 * If the I/O is beyond EOF we mark the inode dirty immediately
-> +	 * but don't update the inode size until I/O completion.
-> +	 */
-> +	if (xfs_ioend_new_eof(ioend))
-> +		xfs_mark_inode_dirty_sync(XFS_I(ioend->io_inode));
-> +
->  	submit_bio(WRITE, bio);
->  	ASSERT(!bio_flagged(bio, BIO_EOPNOTSUPP));
->  	bio_put(bio);
+> 
+> @@ -385,7 +389,10 @@ xfs_sync_fsdata(
+>  	else
+>  		XFS_BUF_ASYNC(bp);
+> 
+> -	return xfs_bwrite(mp, bp);
+> +	error = xfs_bwrite(mp, bp);
+> +	if (!error && xfs_log_need_covered(mp))
+> +		error = xfs_commit_dummy_trans(mp, (flags & SYNC_WAIT));
+> +	return error;
+> 
+>   out_brelse:
+>  	xfs_buf_relse(bp);
+> @@ -571,8 +578,6 @@ xfs_sync_worker(
+>  		/* dgc: errors ignored here */
+>  		error = xfs_qm_sync(mp, SYNC_TRYLOCK);
+>  		error = xfs_sync_fsdata(mp, SYNC_TRYLOCK);
+> -		if (xfs_log_need_covered(mp))
+> -			error = xfs_commit_dummy_trans(mp, XFS_LOG_FORCE);
+>  	}
+>  	mp->m_sync_seq++;
+>  	wake_up(&mp->m_wait_single_sync_task);
 > 
 > _______________________________________________
 > xfs mailing list
