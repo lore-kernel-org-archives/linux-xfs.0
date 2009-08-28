@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7S9IvH2148343 for <xfs@oss.sgi.com>; Fri, 28 Aug 2009 04:19:13 -0500
-Received: from mx1.empa.ch (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DCE191B80E79
-	for <xfs@oss.sgi.com>; Fri, 28 Aug 2009 02:19:33 -0700 (PDT)
-Received: from mx1.empa.ch (mx1.empa.ch [152.88.7.31]) by cuda.sgi.com with
-	ESMTP id cKEamAIRbbJhw04e for <xfs@oss.sgi.com>;
-	Fri, 28 Aug 2009 02:19:33 -0700 (PDT)
-From: "Passerone, Daniele" <Daniele.Passerone@empa.ch>
-Date: Fri, 28 Aug 2009 11:19:12 +0200
-Subject: RE: xfs data loss
-Message-ID: <B9A7B002C7FAFC469D4229539E909760308DA65345@DU-EXC-MAIL.empa.emp-eaw.ch>
-References: <B9A7B002C7FAFC469D4229539E909760308DA651DE@DU-EXC-MAIL.empa.emp-eaw.ch>
-	<4A975A35.3060809@sandeen.net>
-In-Reply-To: <4A975A35.3060809@sandeen.net>
-Content-Language: en-US
+	n7SADP5D150323 for <xfs@oss.sgi.com>; Fri, 28 Aug 2009 05:13:36 -0500
+Received: from sovereign.computergmbh.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9508D1D61E2A
+	for <xfs@oss.sgi.com>; Fri, 28 Aug 2009 03:14:06 -0700 (PDT)
+Received: from sovereign.computergmbh.de (sovereign.computergmbh.de
+	[85.214.69.204]) by cuda.sgi.com with ESMTP id WeSkrgTch0VcdJBF
+	for <xfs@oss.sgi.com>; Fri, 28 Aug 2009 03:14:06 -0700 (PDT)
+Date: Fri, 28 Aug 2009 12:14:04 +0200 (CEST)
+From: Jan Engelhardt <jengelh@medozas.de>
+Subject: Re: xfs_check does not recognize fs truncation
+In-Reply-To: <alpine.LSU.2.00.0908241714410.17924@fbirervta.pbzchgretzou.qr>
+Message-ID: <alpine.LSU.2.00.0908281210250.15292@fbirervta.pbzchgretzou.qr>
+References: <alpine.LSU.2.00.0908241208520.1028@fbirervta.pbzchgretzou.qr>
+	<20090824144752.GA20898@infradead.org>
+	<alpine.LSU.2.00.0908241714410.17924@fbirervta.pbzchgretzou.qr>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -29,50 +29,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
->> Due to a power shock, suddenly and without log messages about one half
->(5 TB) of the user
->> directories on /dev/md4 have disappeared.
+
+On Monday 2009-08-24 18:04, Jan Engelhardt wrote:
+>On Monday 2009-08-24 16:47, Christoph Hellwig wrote:
+>>On Mon, Aug 24, 2009 at 12:12:59PM +0200, Jan Engelhardt wrote:
+>>> 
+>>> This I see on xfsprogs-2.10.1 with kernel 2.6.29.6:
+>>
+>>What does xfs_repair -n say?
 >
->I presume you mean after a reboot?
-
-
-
-No! No reboot at all.
-The directories were mounted via nfs to all our cluster,
-and are of the type 
-
-/pool/user
-
-all directories from 
-
-/pool/g*
-
-to
-
-/pool/z*
-
-have disappeared.
-
-Of course NO COMMAND of the kind rm /pool/[g-z]* was issued.
-
->Were the lost directories recently created?  I've never heard of
->untouched, existing directories disappearing after a power loss...
+>[success]
+>
+>You can get the image at
+>http://dev.medozas.de/files/linux-hist.img.lzma [179MB->1782MB]
 >
 
-Not at all.
-Here I am.
->
->Not much to go on here I'm afraid.  SLES10 is an old kernel, but it's
->supported by SuSE at least.
->
+If I pad the image with at least 20480*512 NUL bytes to a total of
+1879048192 bytes, xfs (kernel side) starts to accept the image and
+will mount it.
 
-Can you use my metadata, or is it useless?
-Thank you!
-
-Daniele
+The steps to return to the previous problematic size is as follows:
+# df
+Filesystem           1K-blocks      Used Available Use% Mounted on
+/dev/loop0             1824768   1274824    549944  70% /mnt/linux-hist
+# truncate --size=$((1824768*1024)) linux-hist.img
 
 _______________________________________________
 xfs mailing list
