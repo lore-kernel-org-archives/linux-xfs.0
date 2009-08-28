@@ -1,17 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7SIOT7E169467 for <xfs@oss.sgi.com>; Fri, 28 Aug 2009 13:24:44 -0500
-Date: Fri, 28 Aug 2009 14:24:54 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: pushing out a new xfsprogs release, was Re: [PATCH] xfsprogs: fix
-	unaligned access in libxfs
-Message-ID: <20090828182454.GA8217@infradead.org>
-References: <20090828153718.GA26409@infradead.org>
-	<4A9810C7.8010806@sandeen.net>
+	n7SJsgi9172597 for <xfs@oss.sgi.com>; Fri, 28 Aug 2009 14:54:52 -0500
+Date: Fri, 28 Aug 2009 23:55:00 +0400
+From: Alexey Dobriyan <adobriyan@gmail.com>
+Subject: [PATCH] xfs: switch to seq_file
+Message-ID: <20090828195500.GC15123@x200.localdomain>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4A9810C7.8010806@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,67 +20,227 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Gabriel Vlasiu <gabrielvlasiu@gmail.com>, nathans@debian.org, xfs@oss.sgi.com
+To: xfs-masters@oss.sgi.com
+Cc: hch@infradead.org, xfs@oss.sgi.com
 
-On Fri, Aug 28, 2009 at 10:15:51AM -0700, Eric Sandeen wrote:
-> Looks good to me.
->
-> Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
+create_proc_read_entry() is getting deprecated.
 
-Thanks.  What do people thing about pushing out a 3.0.3 xfsprogs
-release?
+Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+---
 
-Since 3.0.1 (discounting 3.0.2 as a Debian-only thing quickly following
-3.0.1): we have the following changes the list below.  It's not a whole
-lot, but everything is relatively small fixes, the the unaligned thing
-makes the 3.0 series so far unusable on strict alignment platforms.
+ fs/xfs/linux-2.6/xfs_stats.c |   51 ++++++++++++----------------
+ fs/xfs/quota/xfs_qm_stats.c  |   78 +++++++++++++++++--------------------------
+ 2 files changed, 55 insertions(+), 74 deletions(-)
 
-If we go for it I can update the CHANGES ASAP for the release, and
-ater that we can start putting in changes for a 3.1.0 release - I have
-Barry's repair speedups ready for a wider audience, Eric has the
-patch to make the lazy sb counters default and I can do the long
-needed resync with the kernel code.
-
-
-Changes from 3.0.1 to HEAD:
-
-
-
-Christoph Hellwig (3):
-      add release.sh
-      Merge branch 'master' of git://oss.sgi.com/xfs/cmds/xfsprogs
-      xfsprogs: fix unaligned access in libxfs
-
-David Chinner (1):
-      mkfs: allow to make larger logs
-
-Eric Sandeen (11):
-      xfsprogs: fix readline/editline for xfs_io and xfs_quota
-      xfs_io: add fallocate command
-      Update CHANGES file for recent commits
-      xfs_repair: catch bad depth in traverse_int_dir2block
-      xfs_io: fix test for fallocate on 32bit boxes
-      xfs_repair: fix agcount*agblocks overflows
-      xfs_metadump: agcount*agblocks overflow
-      xfs_repair: clear inodes in incorrect btree format
-      the freesp doesn't support "-f" so take it out of the usage().
-      xfs_db: do bounds checking in frag's scanfunc_bmap
-      xfs_io: actually issue 0 size writes
-
-Felix Blyakher (2):
-      Merge branch 'master' of git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev
-      3.0.1 release
-
-Nathan Scott (2):
-      Resolve minor man page warnings reported by lintian tool.
-      Debian packaging updates, and bumped minor version to 3.0.2.
-
-Nathaniel W. Turner (1):
-      xfs_repair: open filesystem device exclusively
-
-Robert Herndon (1):
-      add -x flags to include/install-sh
+--- a/fs/xfs/linux-2.6/xfs_stats.c
++++ b/fs/xfs/linux-2.6/xfs_stats.c
+@@ -20,16 +20,9 @@
+ 
+ DEFINE_PER_CPU(struct xfsstats, xfsstats);
+ 
+-STATIC int
+-xfs_read_xfsstats(
+-	char		*buffer,
+-	char		**start,
+-	off_t		offset,
+-	int		count,
+-	int		*eof,
+-	void		*data)
++static int xfs_stat_proc_show(struct seq_file *m, void *v)
+ {
+-	int		c, i, j, len, val;
++	int		c, i, j, val;
+ 	__uint64_t	xs_xstrat_bytes = 0;
+ 	__uint64_t	xs_write_bytes = 0;
+ 	__uint64_t	xs_read_bytes = 0;
+@@ -60,18 +53,18 @@ xfs_read_xfsstats(
+ 	};
+ 
+ 	/* Loop over all stats groups */
+-	for (i=j=len = 0; i < ARRAY_SIZE(xstats); i++) {
+-		len += sprintf(buffer + len, "%s", xstats[i].desc);
++	for (i=j = 0; i < ARRAY_SIZE(xstats); i++) {
++		seq_printf(m, "%s", xstats[i].desc);
+ 		/* inner loop does each group */
+ 		while (j < xstats[i].endpoint) {
+ 			val = 0;
+ 			/* sum over all cpus */
+ 			for_each_possible_cpu(c)
+ 				val += *(((__u32*)&per_cpu(xfsstats, c) + j));
+-			len += sprintf(buffer + len, " %u", val);
++			seq_printf(m, " %u", val);
+ 			j++;
+ 		}
+-		buffer[len++] = '\n';
++		seq_putc(m, '\n');
+ 	}
+ 	/* extra precision counters */
+ 	for_each_possible_cpu(i) {
+@@ -80,36 +73,38 @@ xfs_read_xfsstats(
+ 		xs_read_bytes += per_cpu(xfsstats, i).xs_read_bytes;
+ 	}
+ 
+-	len += sprintf(buffer + len, "xpc %Lu %Lu %Lu\n",
++	seq_printf(m, "xpc %Lu %Lu %Lu\n",
+ 			xs_xstrat_bytes, xs_write_bytes, xs_read_bytes);
+-	len += sprintf(buffer + len, "debug %u\n",
++	seq_printf(m, "debug %u\n",
+ #if defined(DEBUG)
+ 		1);
+ #else
+ 		0);
+ #endif
++	return 0;
++}
+ 
+-	if (offset >= len) {
+-		*start = buffer;
+-		*eof = 1;
+-		return 0;
+-	}
+-	*start = buffer + offset;
+-	if ((len -= offset) > count)
+-		return count;
+-	*eof = 1;
+-
+-	return len;
++static int xfs_stat_proc_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, xfs_stat_proc_show, NULL);
+ }
+ 
++static const struct file_operations xfs_stat_proc_fops = {
++	.owner		= THIS_MODULE,
++	.open		= xfs_stat_proc_open,
++	.read		= seq_read,
++	.llseek		= seq_lseek,
++	.release	= single_release,
++};
++
+ int
+ xfs_init_procfs(void)
+ {
+ 	if (!proc_mkdir("fs/xfs", NULL))
+ 		goto out;
+ 
+-	if (!create_proc_read_entry("fs/xfs/stat", 0, NULL,
+-			xfs_read_xfsstats, NULL))
++	if (!proc_create("fs/xfs/stat", 0, NULL,
++			 &xfs_stat_proc_fops))
+ 		goto out_remove_entry;
+ 	return 0;
+ 
+--- a/fs/xfs/quota/xfs_qm_stats.c
++++ b/fs/xfs/quota/xfs_qm_stats.c
+@@ -48,50 +48,34 @@
+ 
+ struct xqmstats xqmstats;
+ 
+-STATIC int
+-xfs_qm_read_xfsquota(
+-	char		*buffer,
+-	char		**start,
+-	off_t		offset,
+-	int		count,
+-	int		*eof,
+-	void		*data)
++static int xqm_proc_show(struct seq_file *m, void *v)
+ {
+-	int		len;
+-
+ 	/* maximum; incore; ratio free to inuse; freelist */
+-	len = sprintf(buffer, "%d\t%d\t%d\t%u\n",
++	seq_printf(m, "%d\t%d\t%d\t%u\n",
+ 			ndquot,
+ 			xfs_Gqm? atomic_read(&xfs_Gqm->qm_totaldquots) : 0,
+ 			xfs_Gqm? xfs_Gqm->qm_dqfree_ratio : 0,
+ 			xfs_Gqm? xfs_Gqm->qm_dqfreelist.qh_nelems : 0);
+-
+-	if (offset >= len) {
+-		*start = buffer;
+-		*eof = 1;
+-		return 0;
+-	}
+-	*start = buffer + offset;
+-	if ((len -= offset) > count)
+-		return count;
+-	*eof = 1;
+-
+-	return len;
++	return 0;
+ }
+ 
+-STATIC int
+-xfs_qm_read_stats(
+-	char		*buffer,
+-	char		**start,
+-	off_t		offset,
+-	int		count,
+-	int		*eof,
+-	void		*data)
++static int xqm_proc_open(struct inode *inode, struct file *file)
+ {
+-	int		len;
++	return single_open(file, xqm_proc_show, NULL);
++}
++
++static const struct file_operations xqm_proc_fops = {
++	.owner		= THIS_MODULE,
++	.open		= xqm_proc_open,
++	.read		= seq_read,
++	.llseek		= seq_lseek,
++	.release	= single_release,
++};
+ 
++static int xqmstat_proc_show(struct seq_file *m, void *v)
++{
+ 	/* quota performance statistics */
+-	len = sprintf(buffer, "qm %u %u %u %u %u %u %u %u\n",
++	seq_printf(m, "qm %u %u %u %u %u %u %u %u\n",
+ 			xqmstats.xs_qm_dqreclaims,
+ 			xqmstats.xs_qm_dqreclaim_misses,
+ 			xqmstats.xs_qm_dquot_dups,
+@@ -100,25 +84,27 @@ xfs_qm_read_stats(
+ 			xqmstats.xs_qm_dqwants,
+ 			xqmstats.xs_qm_dqshake_reclaims,
+ 			xqmstats.xs_qm_dqinact_reclaims);
++	return 0;
++}
+ 
+-	if (offset >= len) {
+-		*start = buffer;
+-		*eof = 1;
+-		return 0;
+-	}
+-	*start = buffer + offset;
+-	if ((len -= offset) > count)
+-		return count;
+-	*eof = 1;
+-
+-	return len;
++static int xqmstat_proc_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, xqmstat_proc_show, NULL);
+ }
+ 
++static const struct file_operations xqmstat_proc_fops = {
++	.owner		= THIS_MODULE,
++	.open		= xqmstat_proc_open,
++	.read		= seq_read,
++	.llseek		= seq_lseek,
++	.release	= single_release,
++};
++
+ void
+ xfs_qm_init_procfs(void)
+ {
+-	create_proc_read_entry("fs/xfs/xqmstat", 0, NULL, xfs_qm_read_stats, NULL);
+-	create_proc_read_entry("fs/xfs/xqm", 0, NULL, xfs_qm_read_xfsquota, NULL);
++	proc_create("fs/xfs/xqmstat", 0, NULL, &xqmstat_proc_fops);
++	proc_create("fs/xfs/xqm", 0, NULL, &xqm_proc_fops);
+ }
+ 
+ void
 
 _______________________________________________
 xfs mailing list
