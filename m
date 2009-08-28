@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7SFaiQ9163070 for <xfs@oss.sgi.com>; Fri, 28 Aug 2009 10:37:00 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E6D571D62E4E
-	for <xfs@oss.sgi.com>; Fri, 28 Aug 2009 08:37:18 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id csTGwz3NU161zGG2 for
-	<xfs@oss.sgi.com>; Fri, 28 Aug 2009 08:37:18 -0700 (PDT)
-Date: Fri, 28 Aug 2009 11:37:18 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfsprogs: fix unaligned access in libxfs
-Message-ID: <20090828153718.GA26409@infradead.org>
+	n7SH2Q2B166228 for <xfs@oss.sgi.com>; Fri, 28 Aug 2009 12:02:36 -0500
+Received: from cf--amer001e--3.americas.sgi.com
+	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CD8828F80F4
+	for <xfs@oss.sgi.com>; Fri, 28 Aug 2009 10:03:20 -0700 (PDT)
+Content-class: urn:content-classes:message
 MIME-Version: 1.0
-Content-Disposition: inline
+Subject: RE: [PATCH] xfs: simplify xfs_trans_iget
+Date: Fri, 28 Aug 2009 12:02:06 -0500
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83ABE9@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <20090826204701.GA31870@infradead.org>
+From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,229 +25,118 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Gabriel Vlasiu <gabrielvlasiu@gmail.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
+
+I have a couple of comments below--things I haven't convinced
+myself of yet--but overall this looks good, and is an improvement.
+
+					-Alex
+
+Christoph Hellwig wrote:
+> xfs_trans_iget is a wrapper for xfs_iget that adds the inode to the
+> transaction after it is read.  Except when the inode already is in the
+> inode cache, in which case it returns the existing locked inode with
+> increment lock recursion counts.
+> 
+> Now, no one in the tree every decrements these lock recursion counts,
+> so any user of this gets a potential double unlock when both the
+> original owner of the inode and the xfs_trans_iget caller unlock it. 
+> When looking 
+> back in a git bisect in the historic XFS tree there was only one place
+> that decremented these counts, xfs_trans_iput.  Introduced in commit
+> ca25df7a840f426eb566d52667b6950b92bb84b5 by Adam Sweeney in 1993,
+> and removed in commit 19f899a3ab155ff6a49c0c79b06f2f61059afaf3 by
+> Steve Lord in 2003.  And as long as it didn't slip through git bisects
+> cracks never actually used in that time frame.
+> 
+> A quick audit of the callers of xfs_trans_iget shows that no caller
+> really relies on this behaviour fortunately - xfs_ialloc allows this
+> inode from disk so it must not be there before, and all the RT
+> allocator routines only every add each RT bitmap inode once.
+> 
+> In addition to removing lots of code and reducing the size of the
+> inode item this patch also avoids the double inode cache lookup in each
+> create/mkdir/mknod transaction.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Index: linux-2.6/fs/xfs/xfs_iget.c
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/xfs_iget.c	2009-08-26 14:14:32.113357904
+> -0300 +++ linux-2.6/fs/xfs/xfs_iget.c	2009-08-26 14:15:40.613392686
+> -0300 @@ -456,32 +456,6 @@ out_error_or_again:
+>  	return error;
+>  }
+> 
+> -
+> -/*
+> - * Look for the inode corresponding to the given ino in the hash
+> table. 
+> - * If it is there and its i_transp pointer matches tp, return it.
+> - * Otherwise, return NULL.
+> - */
+> -xfs_inode_t *
+> -xfs_inode_incore(xfs_mount_t	*mp,
+> -		 xfs_ino_t	ino,
+> -		 xfs_trans_t	*tp)
+> -{
+> -	xfs_inode_t	*ip;
+> -	xfs_perag_t	*pag;
+> -
+> -	pag = xfs_get_perag(mp, ino);
+> -	read_lock(&pag->pag_ici_lock);
+> -	ip = radix_tree_lookup(&pag->pag_ici_root, XFS_INO_TO_AGINO(mp,
+> ino)); 
+> -	read_unlock(&pag->pag_ici_lock);
+> -	xfs_put_perag(mp, pag);
+> -
+> -	/* the returned inode must match the transaction */
+> -	if (ip && (ip->i_transp != tp))
+> -		return NULL;
 
 
-The get/put unaligned handlers we use to access the extent descriptor
-are not good enough for architectures like Sparc that do not tolerate
-dereferencing unaligned pointers.  Replace the implementation with the
-one the kernel uses on these architectures.  It might be a tad
-slower on architectures like x86, but I don't want to have multiple
-implementations around to not let the testing matrix explode.
-Also remove the unaligned.h header which includes another implementation
-for unaligned access we don't actually use anymore.
+This function was only ever called as a helper by xfs_trans_iget().
+And it does the same things as xfs_iget() does, but in a more
+restricted  context.  One difference I see is that this verifies
+the transaction pointers match--and if they do not, it returns NULL.
 
-Note that the little change to xfs_inode.c needs to go into the kernel
-aswell, I will send a patch for that shortly.
+In xfs_iget(), meanwhile, there is no such check.  I'm not familiar
+enough with the transaction code to know what circumstances that
+might lead a hashed inode without a matching transaction pointer,
+but thought I'd point it out anyway in hopes you maybe did...
 
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reported-by: Gabriel Vlasiu <gabrielvlasiu@gmail.com>
-Tested-by: Gabriel Vlasiu <gabrielvlasiu@gmail.com>
+> -	return ip;
+> -}
+> -
+>  /*
+>   * Decrement reference count of an inode structure and unlock it.
+>   *
 
-Index: xfsprogs-dev/libxfs/xfs.h
-===================================================================
---- xfsprogs-dev.orig/libxfs/xfs.h	2009-08-27 10:06:13.377855006 -0300
-+++ xfsprogs-dev/libxfs/xfs.h	2009-08-27 10:06:26.537884492 -0300
-@@ -127,19 +127,37 @@ static inline int __do_div(unsigned long
- #define max_t(type,x,y) \
- 	({ type __x = (x); type __y = (y); __x > __y ? __x: __y; })
- 
--/* only 64 bit accesses used in xfs kernel code */
--static inline __u64 get_unaligned_be64(void *ptr)
-+
-+static inline __uint32_t __get_unaligned_be32(const __uint8_t *p)
-+{
-+        return p[0] << 24 | p[1] << 16 | p[2] << 8 | p[3];
-+}
-+
-+static inline __uint64_t get_unaligned_be64(void *p)
- {
--	__be64	__tmp;
--	memmove(&__tmp, ptr, 8);
--	return be64_to_cpu(__tmp);
-+	return (__uint64_t)__get_unaligned_be32(p) << 32 |
-+			   __get_unaligned_be32(p + 4);
- }
- 
--static inline void put_unaligned(__be64 val, void *ptr)
-+static inline void __put_unaligned_be16(__uint16_t val, __uint8_t *p)
- {
--	memmove(ptr, &val, 8);
-+	*p++ = val >> 8;
-+	*p++ = val;
- }
- 
-+static inline void __put_unaligned_be32(__uint32_t val, __uint8_t *p)
-+{
-+	__put_unaligned_be16(val >> 16, p);
-+	__put_unaligned_be16(val, p + 2);
-+}
-+
-+static inline void put_unaligned_be64(__uint64_t val, void *p)
-+{
-+	__put_unaligned_be32(val >> 32, p);
-+	__put_unaligned_be32(val, p + 4);
-+}
-+
-+
- static inline __attribute__((const))
- int is_power_of_2(unsigned long n)
- {
-Index: xfsprogs-dev/libxfs/xfs_inode.c
-===================================================================
---- xfsprogs-dev.orig/libxfs/xfs_inode.c	2009-08-27 10:06:13.385884867 -0300
-+++ xfsprogs-dev/libxfs/xfs_inode.c	2009-08-27 10:06:26.541855737 -0300
-@@ -1056,8 +1056,8 @@ xfs_iextents_copy(
- 		}
- 
- 		/* Translate to on disk format */
--		put_unaligned(cpu_to_be64(ep->l0), &dp->l0);
--		put_unaligned(cpu_to_be64(ep->l1), &dp->l1);
-+		put_unaligned_be64(ep->l0, &dp->l0);
-+		put_unaligned_be64(ep->l1, &dp->l1);
- 		dp++;
- 		copied++;
- 	}
-Index: xfsprogs-dev/include/Makefile
-===================================================================
---- xfsprogs-dev.orig/include/Makefile	2009-08-28 12:29:42.257922053 -0300
-+++ xfsprogs-dev/include/Makefile	2009-08-28 12:29:55.830456736 -0300
-@@ -37,7 +37,7 @@ PHFILES = darwin.h freebsd.h irix.h linu
- DKHFILES = volume.h fstyp.h dvh.h
- LSRCFILES = $(shell echo $(PHFILES) | sed -e "s/$(PKG_PLATFORM).h//g")
- LSRCFILES += platform_defs.h.in builddefs.in buildmacros buildrules install-sh
--LSRCFILES += $(DKHFILES) command.h input.h path.h project.h unaligned.h
-+LSRCFILES += $(DKHFILES) command.h input.h path.h project.h
- LDIRT = xfs disk
- 
- default install: xfs disk
-Index: xfsprogs-dev/include/unaligned.h
-===================================================================
---- xfsprogs-dev.orig/include/unaligned.h	2009-08-28 12:29:34.710448280 -0300
-+++ /dev/null	1970-01-01 00:00:00.000000000 +0000
-@@ -1,120 +0,0 @@
--#ifndef _UNALIGNED_H_
--#define _UNALIGNED_H_
--
--/*
-- * For the benefit of those who are trying to port Linux to another
-- * architecture, here are some C-language equivalents. 
-- *
-- * This is based almost entirely upon Richard Henderson's
-- * asm-alpha/unaligned.h implementation.  Some comments were
-- * taken from David Mosberger's asm-ia64/unaligned.h header.
-- */
--
--/* 
-- * The main single-value unaligned transfer routines.
-- */
--#define get_unaligned(ptr) \
--	__get_unaligned((ptr), sizeof(*(ptr)))
--#define put_unaligned(x,ptr) \
--	__put_unaligned((__u64)(x), (ptr), sizeof(*(ptr)))
--
--/*
-- * This function doesn't actually exist.  The idea is that when
-- * someone uses the macros below with an unsupported size (datatype),
-- * the linker will alert us to the problem via an unresolved reference
-- * error.
-- */
--extern void bad_unaligned_access_length(void) __attribute__((noreturn));
--
--struct __una_u64 { __u64 x __attribute__((packed)); };
--struct __una_u32 { __u32 x __attribute__((packed)); };
--struct __una_u16 { __u16 x __attribute__((packed)); };
--
--/*
-- * Elemental unaligned loads 
-- */
--
--static inline __u64 __uldq(const __u64 *addr)
--{
--	const struct __una_u64 *ptr = (const struct __una_u64 *) addr;
--	return ptr->x;
--}
--
--static inline __u32 __uldl(const __u32 *addr)
--{
--	const struct __una_u32 *ptr = (const struct __una_u32 *) addr;
--	return ptr->x;
--}
--
--static inline __u16 __uldw(const __u16 *addr)
--{
--	const struct __una_u16 *ptr = (const struct __una_u16 *) addr;
--	return ptr->x;
--}
--
--/*
-- * Elemental unaligned stores 
-- */
--
--static inline void __ustq(__u64 val, __u64 *addr)
--{
--	struct __una_u64 *ptr = (struct __una_u64 *) addr;
--	ptr->x = val;
--}
--
--static inline void __ustl(__u32 val, __u32 *addr)
--{
--	struct __una_u32 *ptr = (struct __una_u32 *) addr;
--	ptr->x = val;
--}
--
--static inline void __ustw(__u16 val, __u16 *addr)
--{
--	struct __una_u16 *ptr = (struct __una_u16 *) addr;
--	ptr->x = val;
--}
--
--#define __get_unaligned(ptr, size) ({		\
--	const void *__gu_p = ptr;		\
--	__u64 val;				\
--	switch (size) {				\
--	case 1:					\
--		val = *(const __u8 *)__gu_p;	\
--		break;				\
--	case 2:					\
--		val = __uldw(__gu_p);		\
--		break;				\
--	case 4:					\
--		val = __uldl(__gu_p);		\
--		break;				\
--	case 8:					\
--		val = __uldq(__gu_p);		\
--		break;				\
--	default:				\
--		bad_unaligned_access_length();	\
--	};					\
--	(__typeof__(*(ptr)))val;		\
--})
--
--#define __put_unaligned(val, ptr, size)		\
--do {						\
--	void *__gu_p = ptr;			\
--	switch (size) {				\
--	case 1:					\
--		*(__u8 *)__gu_p = val;		\
--	        break;				\
--	case 2:					\
--		__ustw(val, __gu_p);		\
--		break;				\
--	case 4:					\
--		__ustl(val, __gu_p);		\
--		break;				\
--	case 8:					\
--		__ustq(val, __gu_p);		\
--		break;				\
--	default:				\
--	    	bad_unaligned_access_length();	\
--	};					\
--} while(0)
--
--#endif /* _UNALIGNED_H */
+. . .
+
+> Index: linux-2.6/fs/xfs/xfs_trans_inode.c
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/xfs_trans_inode.c	2009-08-26 14:15:45.689894519 -0300
+> +++ linux-2.6/fs/xfs/xfs_trans_inode.c	2009-08-26 14:17:14.434495492 -0300
+
+. . .
+
+> @@ -163,8 +89,6 @@ xfs_trans_ijoin(
+>  		xfs_inode_item_init(ip, ip->i_mount);
+>  	iip = ip->i_itemp;
+>  	ASSERT(iip->ili_flags == 0);
+> -	ASSERT(iip->ili_ilock_recur == 0);
+> -	ASSERT(iip->ili_iolock_recur == 0);
+
+These are the only other references, and (assuming we've done
+a lot of testing with ASSERT() enabled) it is evident that
+these are always zero at this point.  In any case, what this
+means is that xfs_trans_ijoin() must never be called after
+xfs_trans_iget() has been called on a hashed inode.  Again,
+I'm not familiar enough with how we manage transactions to
+to verify by inspection this is the case, but I presume it is.
 
 _______________________________________________
 xfs mailing list
