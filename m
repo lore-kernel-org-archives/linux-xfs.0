@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7SMdrNo181301 for <xfs@oss.sgi.com>; Fri, 28 Aug 2009 17:40:03 -0500
+	n7SNI1cJ183346 for <xfs@oss.sgi.com>; Fri, 28 Aug 2009 18:18:12 -0500
 Received: from cf--amer001e--3.americas.sgi.com
 	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DBAF58F80CA
-	for <xfs@oss.sgi.com>; Fri, 28 Aug 2009 15:40:47 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 717DA3040D8
+	for <xfs@oss.sgi.com>; Fri, 28 Aug 2009 16:18:56 -0700 (PDT)
 Content-class: urn:content-classes:message
 MIME-Version: 1.0
-Subject: RE: [PATCH] xfsprogs: fix unaligned access in libxfs
-Date: Fri, 28 Aug 2009 17:38:29 -0500
-Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83ABF1@cf--amer001e--3.americas.sgi.com>
-In-Reply-To: <20090828221530.GB17666@infradead.org>
+Subject: RE: [PATCH 1/4] xfs: mark inodes dirty before issuing I/O
+Date: Fri, 28 Aug 2009 18:17:43 -0500
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83ABF2@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <20090827231557.717120121@bombadil.infradead.org>
 From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -26,40 +26,106 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Gabriel Vlasiu <gabrielvlasiu@gmail.com>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
 Christoph Hellwig wrote:
-> On Fri, Aug 28, 2009 at 04:39:49PM -0500, Alex Elder wrote:
->>> +static inline __uint32_t __get_unaligned_be32(const __uint8_t *p)
->> 
->> 
->> It would be nice for this interface (and others) to take a (void *)
->> argument, but that would also mean immediately casting it to do
->> pointer arithmetic portably.  Not a big deal.
+> From: Dave Chinner <david@fromorbit.com>
 > 
-> the __ routines are internal implementation details, the kernel
-> has non-__ prefixed versions that take void pointers, but I didn't
-> bother to add them to xfsprogs as we only do unaligned access to
-> 64bit values.
+> To make sure they get properly waited on in sync when I/O is in flight and
+> we latter need to update the inode size.  Requires a new helper to check if an
+> ioend structure is beyond the current EOF.
 > 
-> That beeing said I dislike the interface taking void pointers as
-> it removes important error checking.  The actually visible interface
-> should take __be16/32/64 types to enforce they are used on the right
-> type.  Once I get some time I will push for that in the kernel again,
-> but for xfsprogs I really do want to stick to the kernel interfaces so
-> that we can share the code unmodified.
+> 
+> Signed-off-by: Dave Chinner <david@fromorbit.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-The results should be int types:  __be16, etc., I agree.  But
-I'm saying the unaligned addresses--which we (now) make no
-assumptions about and treat as character pointers--I think
-the void pointer explicitly captures that unaligned quality
-(and avoids any need for a cast).
+Looks good.
 
-In any event I think it's fine either way.  Really not a big
-deal, just a tiny detail that only a geek could love to
-argue about.
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
-					-Alex
+> Index: linux-2.6/fs/xfs/linux-2.6/xfs_aops.c
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/linux-2.6/xfs_aops.c	2009-08-26 20:06:07.105357325 -0300
+> +++ linux-2.6/fs/xfs/linux-2.6/xfs_aops.c	2009-08-26 20:08:09.017355358 -0300
+> @@ -186,19 +186,37 @@ xfs_destroy_ioend(
+>  }
+> 
+>  /*
+> + * If the end of the current ioend is beyond the current EOF,
+> + * return the new EOF value, otherwise zero.
+> + */
+> +STATIC xfs_fsize_t
+> +xfs_ioend_new_eof(
+> +	xfs_ioend_t		*ioend)
+> +{
+> +	xfs_inode_t		*ip = XFS_I(ioend->io_inode);
+> +	xfs_fsize_t		isize;
+> +	xfs_fsize_t		bsize;
+> +
+> +	bsize = ioend->io_offset + ioend->io_size;
+> +	isize = MAX(ip->i_size, ip->i_new_size);
+> +	isize = MIN(isize, bsize);
+> +	return isize > ip->i_d.di_size ? isize : 0;
+> +}
+> +
+> +/*
+>   * Update on-disk file size now that data has been written to disk.
+>   * The current in-memory file size is i_size.  If a write is beyond
+>   * eof i_new_size will be the intended file size until i_size is
+>   * updated.  If this write does not extend all the way to the valid
+>   * file size then restrict this update to the end of the write.
+>   */
+> +
+>  STATIC void
+>  xfs_setfilesize(
+>  	xfs_ioend_t		*ioend)
+>  {
+>  	xfs_inode_t		*ip = XFS_I(ioend->io_inode);
+>  	xfs_fsize_t		isize;
+> -	xfs_fsize_t		bsize;
+> 
+>  	ASSERT((ip->i_d.di_mode & S_IFMT) == S_IFREG);
+>  	ASSERT(ioend->io_type != IOMAP_READ);
+> @@ -206,14 +224,9 @@ xfs_setfilesize(
+>  	if (unlikely(ioend->io_error))
+>  		return;
+> 
+> -	bsize = ioend->io_offset + ioend->io_size;
+> -
+>  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> -
+> -	isize = MAX(ip->i_size, ip->i_new_size);
+> -	isize = MIN(isize, bsize);
+> -
+> -	if (ip->i_d.di_size < isize) {
+> +	isize = xfs_ioend_new_eof(ioend);
+> +	if (isize) {
+>  		ip->i_d.di_size = isize;
+>  		xfs_mark_inode_dirty_sync(ip);
+>  	}
+> @@ -403,10 +416,16 @@ xfs_submit_ioend_bio(
+>  	struct bio	*bio)
+>  {
+>  	atomic_inc(&ioend->io_remaining);
+> -
+>  	bio->bi_private = ioend;
+>  	bio->bi_end_io = xfs_end_bio;
+> 
+> +	/*
+> +	 * If the I/O is beyond EOF we mark the inode dirty immediately
+> +	 * but don't update the inode size until I/O completion.
+> +	 */
+> +	if (xfs_ioend_new_eof(ioend))
+> +		xfs_mark_inode_dirty_sync(XFS_I(ioend->io_inode));
+> +
+>  	submit_bio(WRITE, bio);
+>  	ASSERT(!bio_flagged(bio, BIO_EOPNOTSUPP));
+>  	bio_put(bio);
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
