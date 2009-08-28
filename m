@@ -1,13 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7SJsgi9172597 for <xfs@oss.sgi.com>; Fri, 28 Aug 2009 14:54:52 -0500
-Date: Fri, 28 Aug 2009 23:55:00 +0400
-From: Alexey Dobriyan <adobriyan@gmail.com>
-Subject: [PATCH] xfs: switch to seq_file
-Message-ID: <20090828195500.GC15123@x200.localdomain>
+	n7SJgR9i172118 for <xfs@oss.sgi.com>; Fri, 28 Aug 2009 14:42:42 -0500
+Received: from mx2.empa.ch (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2D93E157DDD4
+	for <xfs@oss.sgi.com>; Fri, 28 Aug 2009 12:43:12 -0700 (PDT)
+Received: from mx2.empa.ch (mx2.empa.ch [152.88.7.32]) by cuda.sgi.com with
+	ESMTP id eoMTFn6eDa7ADE8G for <xfs@oss.sgi.com>;
+	Fri, 28 Aug 2009 12:43:12 -0700 (PDT)
+From: "Passerone, Daniele" <Daniele.Passerone@empa.ch>
+Date: Fri, 28 Aug 2009 21:42:55 +0200
+Subject: RE: xfs data loss
+Message-ID: <B9A7B002C7FAFC469D4229539E909760308DA653F9@DU-EXC-MAIL.empa.emp-eaw.ch>
+References: <B9A7B002C7FAFC469D4229539E909760308DA651DE@DU-EXC-MAIL.empa.emp-eaw.ch>
+	<4A975A35.3060809@sandeen.net>
+	<B9A7B002C7FAFC469D4229539E909760308DA65345@DU-EXC-MAIL.empa.emp-eaw.ch>
+	<4A981133.6060009@sandeen.net>
+In-Reply-To: <4A981133.6060009@sandeen.net>
+Content-Language: en-US
 MIME-Version: 1.0
-Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,227 +31,51 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-masters@oss.sgi.com
-Cc: hch@infradead.org, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-create_proc_read_entry() is getting deprecated.
+Hi Eric, 
+and thank you for your attention and your time.
+>
+>Ok then perhaps I don't know what you mean by "power shock"
+>
+We work at a Materials science center, and there are big plants for 
+simulating earthquakes or so (believe it or not).
+These plants have sometimes the side effect of inducing strong 
+destabilizations in the power supply. 
+We suspect that such destabilization could have induced 
+an effect in the system of 48 drives which constitutes our NAS server.
+But of course, this is only an hypotesis.
+>
+>On the server as well?  Or just clients?  -really- no server-side errors
+>in the logs?
+>
+Really. 
+>Are you sure the storage hardware & the md volume is in ok shape?
 
-Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
----
+This is a very good question. 
+Indeed, the md volume (md6) close to the affected one (md4) showed loss of 2 disks upon reboot, but a 
+repair of THAT filesystem (md6) worked. 
 
- fs/xfs/linux-2.6/xfs_stats.c |   51 ++++++++++++----------------
- fs/xfs/quota/xfs_qm_stats.c  |   78 +++++++++++++++++--------------------------
- 2 files changed, 55 insertions(+), 74 deletions(-)
+>
+>Not yet, still wondering what really happened.
+>
+Me too
+Thanks a lot.
 
---- a/fs/xfs/linux-2.6/xfs_stats.c
-+++ b/fs/xfs/linux-2.6/xfs_stats.c
-@@ -20,16 +20,9 @@
- 
- DEFINE_PER_CPU(struct xfsstats, xfsstats);
- 
--STATIC int
--xfs_read_xfsstats(
--	char		*buffer,
--	char		**start,
--	off_t		offset,
--	int		count,
--	int		*eof,
--	void		*data)
-+static int xfs_stat_proc_show(struct seq_file *m, void *v)
- {
--	int		c, i, j, len, val;
-+	int		c, i, j, val;
- 	__uint64_t	xs_xstrat_bytes = 0;
- 	__uint64_t	xs_write_bytes = 0;
- 	__uint64_t	xs_read_bytes = 0;
-@@ -60,18 +53,18 @@ xfs_read_xfsstats(
- 	};
- 
- 	/* Loop over all stats groups */
--	for (i=j=len = 0; i < ARRAY_SIZE(xstats); i++) {
--		len += sprintf(buffer + len, "%s", xstats[i].desc);
-+	for (i=j = 0; i < ARRAY_SIZE(xstats); i++) {
-+		seq_printf(m, "%s", xstats[i].desc);
- 		/* inner loop does each group */
- 		while (j < xstats[i].endpoint) {
- 			val = 0;
- 			/* sum over all cpus */
- 			for_each_possible_cpu(c)
- 				val += *(((__u32*)&per_cpu(xfsstats, c) + j));
--			len += sprintf(buffer + len, " %u", val);
-+			seq_printf(m, " %u", val);
- 			j++;
- 		}
--		buffer[len++] = '\n';
-+		seq_putc(m, '\n');
- 	}
- 	/* extra precision counters */
- 	for_each_possible_cpu(i) {
-@@ -80,36 +73,38 @@ xfs_read_xfsstats(
- 		xs_read_bytes += per_cpu(xfsstats, i).xs_read_bytes;
- 	}
- 
--	len += sprintf(buffer + len, "xpc %Lu %Lu %Lu\n",
-+	seq_printf(m, "xpc %Lu %Lu %Lu\n",
- 			xs_xstrat_bytes, xs_write_bytes, xs_read_bytes);
--	len += sprintf(buffer + len, "debug %u\n",
-+	seq_printf(m, "debug %u\n",
- #if defined(DEBUG)
- 		1);
- #else
- 		0);
- #endif
-+	return 0;
-+}
- 
--	if (offset >= len) {
--		*start = buffer;
--		*eof = 1;
--		return 0;
--	}
--	*start = buffer + offset;
--	if ((len -= offset) > count)
--		return count;
--	*eof = 1;
--
--	return len;
-+static int xfs_stat_proc_open(struct inode *inode, struct file *file)
-+{
-+	return single_open(file, xfs_stat_proc_show, NULL);
- }
- 
-+static const struct file_operations xfs_stat_proc_fops = {
-+	.owner		= THIS_MODULE,
-+	.open		= xfs_stat_proc_open,
-+	.read		= seq_read,
-+	.llseek		= seq_lseek,
-+	.release	= single_release,
-+};
-+
- int
- xfs_init_procfs(void)
- {
- 	if (!proc_mkdir("fs/xfs", NULL))
- 		goto out;
- 
--	if (!create_proc_read_entry("fs/xfs/stat", 0, NULL,
--			xfs_read_xfsstats, NULL))
-+	if (!proc_create("fs/xfs/stat", 0, NULL,
-+			 &xfs_stat_proc_fops))
- 		goto out_remove_entry;
- 	return 0;
- 
---- a/fs/xfs/quota/xfs_qm_stats.c
-+++ b/fs/xfs/quota/xfs_qm_stats.c
-@@ -48,50 +48,34 @@
- 
- struct xqmstats xqmstats;
- 
--STATIC int
--xfs_qm_read_xfsquota(
--	char		*buffer,
--	char		**start,
--	off_t		offset,
--	int		count,
--	int		*eof,
--	void		*data)
-+static int xqm_proc_show(struct seq_file *m, void *v)
- {
--	int		len;
--
- 	/* maximum; incore; ratio free to inuse; freelist */
--	len = sprintf(buffer, "%d\t%d\t%d\t%u\n",
-+	seq_printf(m, "%d\t%d\t%d\t%u\n",
- 			ndquot,
- 			xfs_Gqm? atomic_read(&xfs_Gqm->qm_totaldquots) : 0,
- 			xfs_Gqm? xfs_Gqm->qm_dqfree_ratio : 0,
- 			xfs_Gqm? xfs_Gqm->qm_dqfreelist.qh_nelems : 0);
--
--	if (offset >= len) {
--		*start = buffer;
--		*eof = 1;
--		return 0;
--	}
--	*start = buffer + offset;
--	if ((len -= offset) > count)
--		return count;
--	*eof = 1;
--
--	return len;
-+	return 0;
- }
- 
--STATIC int
--xfs_qm_read_stats(
--	char		*buffer,
--	char		**start,
--	off_t		offset,
--	int		count,
--	int		*eof,
--	void		*data)
-+static int xqm_proc_open(struct inode *inode, struct file *file)
- {
--	int		len;
-+	return single_open(file, xqm_proc_show, NULL);
-+}
-+
-+static const struct file_operations xqm_proc_fops = {
-+	.owner		= THIS_MODULE,
-+	.open		= xqm_proc_open,
-+	.read		= seq_read,
-+	.llseek		= seq_lseek,
-+	.release	= single_release,
-+};
- 
-+static int xqmstat_proc_show(struct seq_file *m, void *v)
-+{
- 	/* quota performance statistics */
--	len = sprintf(buffer, "qm %u %u %u %u %u %u %u %u\n",
-+	seq_printf(m, "qm %u %u %u %u %u %u %u %u\n",
- 			xqmstats.xs_qm_dqreclaims,
- 			xqmstats.xs_qm_dqreclaim_misses,
- 			xqmstats.xs_qm_dquot_dups,
-@@ -100,25 +84,27 @@ xfs_qm_read_stats(
- 			xqmstats.xs_qm_dqwants,
- 			xqmstats.xs_qm_dqshake_reclaims,
- 			xqmstats.xs_qm_dqinact_reclaims);
-+	return 0;
-+}
- 
--	if (offset >= len) {
--		*start = buffer;
--		*eof = 1;
--		return 0;
--	}
--	*start = buffer + offset;
--	if ((len -= offset) > count)
--		return count;
--	*eof = 1;
--
--	return len;
-+static int xqmstat_proc_open(struct inode *inode, struct file *file)
-+{
-+	return single_open(file, xqmstat_proc_show, NULL);
- }
- 
-+static const struct file_operations xqmstat_proc_fops = {
-+	.owner		= THIS_MODULE,
-+	.open		= xqmstat_proc_open,
-+	.read		= seq_read,
-+	.llseek		= seq_lseek,
-+	.release	= single_release,
-+};
-+
- void
- xfs_qm_init_procfs(void)
- {
--	create_proc_read_entry("fs/xfs/xqmstat", 0, NULL, xfs_qm_read_stats, NULL);
--	create_proc_read_entry("fs/xfs/xqm", 0, NULL, xfs_qm_read_xfsquota, NULL);
-+	proc_create("fs/xfs/xqmstat", 0, NULL, &xqmstat_proc_fops);
-+	proc_create("fs/xfs/xqm", 0, NULL, &xqm_proc_fops);
- }
- 
- void
+Daniele
+
+>-eric
+>
+>> Thank you!
+>>
+>> Daniele
+>>
+>> _______________________________________________
+>> xfs mailing list
+>> xfs@oss.sgi.com
+>> http://oss.sgi.com/mailman/listinfo/xfs
+>>
 
 _______________________________________________
 xfs mailing list
