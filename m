@@ -1,20 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7TMD3gH246236 for <xfs@oss.sgi.com>; Sat, 29 Aug 2009 17:13:13 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A6B3740D3B0
-	for <xfs@oss.sgi.com>; Sat, 29 Aug 2009 15:13:31 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id 8UsB5lIOlJlUW7AX for
-	<xfs@oss.sgi.com>; Sat, 29 Aug 2009 15:13:31 -0700 (PDT)
-Message-ID: <4A99A80C.9010307@sandeen.net>
-Date: Sat, 29 Aug 2009 15:13:32 -0700
-From: Eric Sandeen <sandeen@sandeen.net>
+	n7TMpd5m247899 for <xfs@oss.sgi.com>; Sat, 29 Aug 2009 17:51:55 -0500
+Received: from mx1.empa.ch (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 454A540D3D7
+	for <xfs@oss.sgi.com>; Sat, 29 Aug 2009 15:52:25 -0700 (PDT)
+Received: from mx1.empa.ch (mx1.empa.ch [152.88.7.31]) by cuda.sgi.com with
+	ESMTP id zjEof9gX7CLdNETV for <xfs@oss.sgi.com>;
+	Sat, 29 Aug 2009 15:52:25 -0700 (PDT)
+Received: from Du-Exc-Hub1.empa.emp-eaw.ch (localhost [127.0.0.1])
+	by mx1.empa.ch (Spam & Virus Firewall) with ESMTP id CDC8BB30F4
+	for <xfs@oss.sgi.com>; Sun, 30 Aug 2009 00:52:06 +0200 (CEST)
+Received: from Du-Exc-Hub1.empa.emp-eaw.ch ([152.88.6.64]) by mx1.empa.ch with
+	ESMTP id rs2VTPPaHvWLlaAU for <xfs@oss.sgi.com>;
+	Sun, 30 Aug 2009 00:52:06 +0200 (CEST)
+From: "Passerone, Daniele" <Daniele.Passerone@empa.ch>
+Date: Sun, 30 Aug 2009 00:52:02 +0200
+Subject: xfs data loss
+Message-ID: <B9A7B002C7FAFC469D4229539E909760308DA65408@DU-EXC-MAIL.empa.emp-eaw.ch>
+References: <B9A7B002C7FAFC469D4229539E909760308DA651DE@DU-EXC-MAIL.empa.emp-eaw.ch>
+	<4A975A35.3060809@sandeen.net>
+	<B9A7B002C7FAFC469D4229539E909760308DA65345@DU-EXC-MAIL.empa.emp-eaw.ch>
+	<4A981133.6060009@sandeen.net>
+In-Reply-To: <4A981133.6060009@sandeen.net>
+Content-Language: en-US
 MIME-Version: 1.0
-Subject: Re: zero size file after power failure with kernel 2.6.30.5
-References: <200908292102.21710@zmi.at>
-In-Reply-To: <200908292102.21710@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,51 +33,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Michael Monnerie wrote:
-> I have /home mounted like this:
-> /dev/sda3 on /disks/work1 type xfs 
-> (rw,noatime,logbufs=8,logbsize=256k,attr2,barrier,largeio,swalloc)
-> 
-> Hardware: onboard SATA with a single WD VelociRaptor drive.
-> 
-> My power supply melted and so I had a power fail and a sudden death 
-> crash.
-> ( So please remember: even when you have a UPS, your power can fail ! )
-> 
-> After replacing the part, I had almost no isse with my KDE desktop. In 
-> earlier XFS releases, I constantly lost several config files all 
-> truncated to 0 length or at some point only contained NULLs on such 
-> occasions. So the situation improved a lot.
-> 
-> But almost is not good enough: Exactly my kmail config file was 0 sized 
-> - obviously: at least when I started kmail, it started fresh without any 
-> accounts or config, but once I exited kmail the config was created with 
-> the default values and about 12KB size, while my config has >200KB.
-> 
-> Shouldn't it be that this doesn't happen anymore? I'd love to be in a 
-> position where I really can rely on a crash not trashing any of my files 
-> anymore. I used to have reiserfs previously, and never, not a single 
-> time despite many crashes, did I have such an issue. I'd really be 
-> pleased so see such stability in XFS. I'm using barriers - what else 
-> must I do?
-> 
-> mfg zmi
+I would like to ask mr. Peter Grandi, whether it is really necessary to delivery ist vaste knowledge in such a harsh way.
+Is this the habit of this mailing list?
 
-this will depend on what kde is doing internally as well.
+Apart from that, thank you for you help. 
+I understand that RAID5 is not the ideal solution for that system, and I admit that
+in the urgence of solving the /md4 problem I miswrote the problem of /md6, which 
+of course was "erased" and not "repaired".
 
-No filesystem can magically protect against buffered data loss on a 
-crash.  An application could certainly be doing something that results 
-in this sort of thing.  w/o reading some kde code I can't say for sure, 
-and I don't mean to blame KDE, but this isn't necessarily a bug in xfs.
+But apart from that, it is not as easy to backup 20 TB, so we decided to set it as
+data storage leaving the responsibilty of the backup to our users.
+I do not consider it completely absurd.
 
--Eric
+Moreover, when a raid loses 2 devices, and the devices are still ok, it is possible
+to reassemble the raid by assuming the devices clean.
+
+This is not the case for /Raid/md4, where apparently all devices are there.
+
+THanks,
+Daniele
 
 _______________________________________________
 xfs mailing list
