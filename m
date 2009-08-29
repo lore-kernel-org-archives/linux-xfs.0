@@ -1,24 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7T7BHIZ205631 for <xfs@oss.sgi.com>; Sat, 29 Aug 2009 02:11:32 -0500
-Received: from mx2.empa.ch (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 79DFA40C1A0
-	for <xfs@oss.sgi.com>; Sat, 29 Aug 2009 00:12:04 -0700 (PDT)
-Received: from mx2.empa.ch (mx2.empa.ch [152.88.7.32]) by cuda.sgi.com with
-	ESMTP id kMygQStBwMEIMZDI for <xfs@oss.sgi.com>;
-	Sat, 29 Aug 2009 00:12:04 -0700 (PDT)
-From: "Passerone, Daniele" <Daniele.Passerone@empa.ch>
-Date: Sat, 29 Aug 2009 09:11:57 +0200
-Subject: RE: xfs data loss
-Message-ID: <B9A7B002C7FAFC469D4229539E909760308DA65400@DU-EXC-MAIL.empa.emp-eaw.ch>
+	n7T7ieKJ206983 for <xfs@oss.sgi.com>; Sat, 29 Aug 2009 02:44:51 -0500
+Received: from stlx01.stz-softwaretechnik.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D821E40C1AD
+	for <xfs@oss.sgi.com>; Sat, 29 Aug 2009 00:45:31 -0700 (PDT)
+Received: from stlx01.stz-softwaretechnik.com (stz-softwaretechnik.de
+	[217.160.223.211]) by cuda.sgi.com with ESMTP id
+	qNK6F9mMhqHbugkb for <xfs@oss.sgi.com>;
+	Sat, 29 Aug 2009 00:45:31 -0700 (PDT)
+Received: from rg by stlx01.stz-softwaretechnik.com with local (Exim 3.36 #1
+	(Debian)) id 1MhIcf-00027b-00
+	for <xfs@oss.sgi.com>; Sat, 29 Aug 2009 09:45:17 +0200
+Date: Sat, 29 Aug 2009 09:45:07 +0200
+From: Ralf Gross <Ralf-Lists@ralfgross.de>
+Subject: Re: xfs data loss
+Message-ID: <20090829074507.GN22826@p15145560.pureserver.info>
 References: <B9A7B002C7FAFC469D4229539E909760308DA651DE@DU-EXC-MAIL.empa.emp-eaw.ch>
 	<4A975A35.3060809@sandeen.net>
 	<B9A7B002C7FAFC469D4229539E909760308DA65345@DU-EXC-MAIL.empa.emp-eaw.ch>
 	<4A981133.6060009@sandeen.net>
-In-Reply-To: <4A981133.6060009@sandeen.net>
-Content-Language: en-US
-MIME-Version: 1.0
+	<B9A7B002C7FAFC469D4229539E909760308DA653FA@DU-EXC-MAIL.empa.emp-eaw.ch>
+Mime-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <B9A7B002C7FAFC469D4229539E909760308DA653FA@DU-EXC-MAIL.empa.emp-eaw.ch>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,10 +36,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-In particular, I don't understand why xfs_repair does not look for a secondary superblock
+Passerone, Daniele schrieb:
+> Dear Eric, all
+> During the night also the "twin" partition of the previously affected one
+> 
+> (/dev/md5) got problems, 
+> this time with a clear hardware problem: 
+> 
+> one of the 20 disks was going on failure (2 devices missing).
+> After that, and also after a reboot I cannot mount the partition:
+> can't read superblock.
+
+
+If it's a raid5 and 2 devices are missing, the raid is lost. Or am I
+missing something?
+
+Ralf
 
 _______________________________________________
 xfs mailing list
