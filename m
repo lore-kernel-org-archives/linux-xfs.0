@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7U1LcNU253652 for <xfs@oss.sgi.com>; Sat, 29 Aug 2009 20:21:48 -0500
+	n7U1Np9M253744 for <xfs@oss.sgi.com>; Sat, 29 Aug 2009 20:24:01 -0500
 Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1CDFC1583BFB
-	for <xfs@oss.sgi.com>; Sat, 29 Aug 2009 18:22:03 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 148DE1583F3D
+	for <xfs@oss.sgi.com>; Sat, 29 Aug 2009 18:24:43 -0700 (PDT)
 Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id O5ja6fCwkimJoDco for
-	<xfs@oss.sgi.com>; Sat, 29 Aug 2009 18:22:03 -0700 (PDT)
-Message-ID: <4A99D43D.5050208@sandeen.net>
-Date: Sat, 29 Aug 2009 18:22:05 -0700
+	cuda.sgi.com with ESMTP id zmVf6e7ulCMUm83b for
+	<xfs@oss.sgi.com>; Sat, 29 Aug 2009 18:24:43 -0700 (PDT)
+Message-ID: <4A99D4DF.50003@sandeen.net>
+Date: Sat, 29 Aug 2009 18:24:47 -0700
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: pushing out a new xfsprogs release,	was Re: [PATCH] xfsprogs:
-	fix unaligned access in libxfs
-References: <20090828153718.GA26409@infradead.org>	<4A9810C7.8010806@sandeen.net>	<20090828182454.GA8217@infradead.org>
-	<200908300017.07268@zmi.at>
-In-Reply-To: <200908300017.07268@zmi.at>
+Subject: Re: xfs data loss
+References: <B9A7B002C7FAFC469D4229539E909760308DA651DE@DU-EXC-MAIL.empa.emp-eaw.ch>	<4A975A35.3060809@sandeen.net>	<B9A7B002C7FAFC469D4229539E909760308DA65345@DU-EXC-MAIL.empa.emp-eaw.ch>	<4A981133.6060009@sandeen.net>
+	<B9A7B002C7FAFC469D4229539E909760308DA65408@DU-EXC-MAIL.empa.emp-eaw.ch>
+In-Reply-To: <B9A7B002C7FAFC469D4229539E909760308DA65408@DU-EXC-MAIL.empa.emp-eaw.ch>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,26 +28,38 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: xfs@oss.sgi.com
+To: "Passerone, Daniele" <Daniele.Passerone@empa.ch>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Michael Monnerie wrote:
-> On Freitag 28 August 2009 Christoph Hellwig wrote:
->> What do people thing about pushing out a 3.0.3 xfsprogs
->> release?
+Passerone, Daniele wrote:
+> I would like to ask mr. Peter Grandi, whether it is really necessary
+> to delivery ist vaste knowledge in such a harsh way. Is this the
+> habit of this mailing list?
+
+Not generally.
+
+> Apart from that, thank you for you help. I understand that RAID5 is
+> not the ideal solution for that system, and I admit that in the
+> urgence of solving the /md4 problem I miswrote the problem of /md6,
+> which of course was "erased" and not "repaired".
 > 
-> Is there the patch to repair my filesystem? I sent the metadump to Eric 
-> once, I think he did some patches. Are they there, or do I need 
-> something else also? I'm still having the problem, and would like to fix 
-> it.
+> But apart from that, it is not as easy to backup 20 TB, so we decided
+> to set it as data storage leaving the responsibilty of the backup to
+> our users. I do not consider it completely absurd.
+
+I think others have pointed out, though, that you start -increasing- the 
+risk of failure at a certain point...
+
+> Moreover, when a raid loses 2 devices, and the devices are still ok,
+> it is possible to reassemble the raid by assuming the devices clean.
 > 
-> mfg zmi
+> This is not the case for /Raid/md4, where apparently all devices are
+> there.
 
-Afraid I haven't fixed that one yet, sorry.  If you could open a bug on 
-xfs.org's bugzilla it'd be much better for tracking ...
-
-I did find that building xfsprogs w/o debug ASSERTs turned on, I could 
-get a clean fs after 2 runs, just to get you going again...
+This all seems most likely to be a raid failure problem, but it's hard 
+to know.  I can't imagine why you're getting suddenly-disappearing 
+directories without a reboot or even a single error message; I just 
+don't know what to make of that.
 
 -Eric
 
