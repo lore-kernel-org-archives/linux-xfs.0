@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7VIb6KE116113 for <xfs@oss.sgi.com>; Mon, 31 Aug 2009 13:37:16 -0500
-Received: from QMTA05.emeryville.ca.mail.comcast.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5D2E31B241B8
-	for <xfs@oss.sgi.com>; Mon, 31 Aug 2009 11:37:58 -0700 (PDT)
-Received: from QMTA05.emeryville.ca.mail.comcast.net
-	(qmta05.emeryville.ca.mail.comcast.net [76.96.30.48]) by
-	cuda.sgi.com with ESMTP id IswmKs3EloTGVikh for
-	<xfs@oss.sgi.com>; Mon, 31 Aug 2009 11:37:58 -0700 (PDT)
-Date: Mon, 31 Aug 2009 13:37:51 -0500
-From: Tim Walberg <twalberg@comcast.net>
-Subject: Re: xfs compat_ioctl?
-Message-ID: <20090831183751.GC19343@comcast.net>
-References: <4A9B759B.7020401@msgid.tls.msk.ru>
-	<20090831123010.GA2368@infradead.org>
+	n7VNANrj130089 for <xfs@OSS.SGI.com>; Mon, 31 Aug 2009 18:10:44 -0500
+Received: from ty.sabi.co.UK (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 56626159563F
+	for <xfs@OSS.SGI.com>; Mon, 31 Aug 2009 16:10:55 -0700 (PDT)
+Received: from ty.sabi.co.UK (82-69-39-138.dsl.in-addr.zen.co.uk
+	[82.69.39.138]) by cuda.sgi.com with ESMTP id h25vINvKGAvklvtB
+	for <xfs@OSS.SGI.com>; Mon, 31 Aug 2009 16:10:55 -0700 (PDT)
+Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.uk)
+	by ty.sabi.co.UK with esmtp(Exim 4.63 #1) id 1MiG1M-0007cr-Jq
+	for <xfs@OSS.SGI.com>; Mon, 31 Aug 2009 23:10:44 +0000
 MIME-Version: 1.0
-In-Reply-To: <20090831123010.GA2368@infradead.org>
-Reply-To: Tim Walberg <twalberg@comcast.net>
+Message-ID: <19100.22644.149019.555685@tree.ty.sabi.co.uk>
+Date: Mon, 31 Aug 2009 23:10:44 +0000
+Subject: Re: zero size file after power failure with kernel 2.6.30.5
+In-Reply-To: <4A99A80C.9010307@sandeen.net>
+References: <200908292102.21710@zmi.at>
+	<4A99A80C.9010307@sandeen.net>
+From: pg_xf2@xf2.sabi.co.UK (Peter Grandi)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,117 +27,53 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============5130973962771996180=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Michael Tokarev <mjt@tls.msk.ru>, Linux-kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: Linux XFS <xfs@oss.sgi.com>
 
+[ ... ]
 
---===============5130973962771996180==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Y5rl02BVI9TCfPar"
-Content-Disposition: inline
+>> Shouldn't it be that this doesn't happen anymore? I'd love to
+>> be in a position where I really can rely on a crash not
+>> trashing any of my files anymore.
 
+Then 'mount' with '-o sync', or write your own applications and
+patches to the GNU/Linux kernel to enforce well known atomicity
+and persistence semantics.
 
---Y5rl02BVI9TCfPar
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+This issue as related to several filesystems has been discussed
+in great depth over the past several months. Consider reading
+and if possible try to understand these contributions:
 
-I still get these on 2.6.30.4 on sparc64 (32-bit userspace a la Debian etch=
-):
+    http://sandeen.net/wordpress/?p=34
+    http://sandeen.net/wordpress/?p=42
+    https://bugs.edge.launchpad.net/ubuntu/+source/linux/+bug/317781/comments/45
+    http://lwn.net/SubscriberLink/322823/e6979f02e5a73feb/
+    http://loupgaroublond.blogspot.com/2009/03/anecdote-about-why-doing-wrong-thing-is.html
+    http://thunk.org/tytso/blog/2009/03/12/delayed-allocation-and-the-zero-length-file-problem/
+    http://mjg59.livejournal.com/108257.html
+    http://www.csamuel.org/2009/04/11/default-ext3-mode-changing-in-2630
+    http://tribulaciones.org/2009/03/is-ext4-unsafe/
 
-sparcy:~# uname -a
-Linux sparcy 2.6.30.4-sparcy #2 Sat Aug 1 21:14:46 CDT 2009 sparc64 GNU/Lin=
-ux
-sparcy:~# file $(which xfs_fsr)
-/usr/sbin/xfs_fsr: ELF 32-bit MSB executable, SPARC32PLUS, V8+ Required, ve=
-rsion 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.18=
-, stripped
-sparcy:~# dmesg | grep xfs | tail -5
-[62457.467755] ioctl32(xfs_fsr:18816): Unknown cmd fd(7) cmd(c0a8586d){t:'X=
-';sz:168} arg(00028e30) on /export
-[62473.400273] ioctl32(xfs_fsr:18816): Unknown cmd fd(7) cmd(c0a8586d){t:'X=
-';sz:168} arg(00028e30) on /export
-[62481.928844] ioctl32(xfs_fsr:18816): Unknown cmd fd(7) cmd(c0a8586d){t:'X=
-';sz:168} arg(00028e30) on /export
-[62486.304567] ioctl32(xfs_fsr:18816): Unknown cmd fd(7) cmd(c0a8586d){t:'X=
-';sz:168} arg(00028e30) on /export
-[62490.833736] ioctl32(xfs_fsr:18816): Unknown cmd fd(7) cmd(c0a8586d){t:'X=
-';sz:168} arg(00028e30) on /export
+>> I used to have reiserfs previously, and never, not a single
+>> time despite many crashes, did I have such an issue. I'd
+>> really be pleased so see such stability in XFS. I'm using
+>> barriers - what else must I do?
 
-Haven't tried rolling my own xfs_progs binaries yet. xfs_db also fails with
-a "Bus error" immediately on startup, but that may be a completely different
-issue...
+Barriers under GNU/Linux regrettably only enforce ordering. It
+is a POSIX weakness. Actual delays/semantics depend on kernel
+version.
 
+> this will depend on what kde is doing internally as well.
 
+Unfortunately KDE like most applications is known not to do the
+right thing (depending on specific app and version, but most IIRC).
 
-				tw
-
-
-
-
-On 08/31/2009 08:30 -0400, Christoph Hellwig wrote:
->>	On Mon, Aug 31, 2009 at 11:02:51AM +0400, Michael Tokarev wrote:
->>	> Hello!
->>	>
->>	> I tried to resize an xfs filesystem on 64bit 2.6.30 kernel
->>	> using 32bit userland, and that does not work, in dmesg I see:
->>	>
->>	> ioctl32(xfs_growfs:24426): Unknown cmd fd(3) cmd(400c586e){t:'X';sz:12=
-} arg(ffa56df4) on /mnt
->>	> ioctl32(xfs_growfs:24427): Unknown cmd fd(3) cmd(400c586e){t:'X';sz:12=
-} arg(ff991254) on /mnt
->>	>
->>	> so apparently there's no compat_ioctl layer for these ioctls.
->>	>
->>	> Are there any plans to add these? :)
->>=09
->>	Are you sure you're testing 2.6.30?  The copat ioctls were added in
->>	2.6.28.
->>	--
->>	To unsubscribe from this list: send the line "unsubscribe linux-kernel" =
-in
->>	the body of a message to majordomo@vger.kernel.org
->>	More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>	Please read the FAQ at  http://www.tux.org/lkml/
-End of included message
-
-
-
---=20
-+----------------------+
-| Tim Walberg          |
-| 830 Carriage Dr.     |
-| Algonquin, IL 60102  |
-| twalberg@comcast.net |
-+----------------------+
-
---Y5rl02BVI9TCfPar
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkqcGH8ACgkQw+Wcj22rJWb9gwCdEO1sUsrQJSOAIDeRojsbo85v
-ogIAoPBya+Taay/5rIWTwxtU1wcOhCwo
-=3hx+
------END PGP SIGNATURE-----
-
---Y5rl02BVI9TCfPar--
-
-
---===============5130973962771996180==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+[ ... ]
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============5130973962771996180==--
