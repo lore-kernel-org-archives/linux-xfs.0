@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7VImPrc116696 for <xfs@oss.sgi.com>; Mon, 31 Aug 2009 13:48:40 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B68111591F58
-	for <xfs@oss.sgi.com>; Mon, 31 Aug 2009 11:49:20 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id r6DAAFoHYmqcO3dW for
-	<xfs@oss.sgi.com>; Mon, 31 Aug 2009 11:49:20 -0700 (PDT)
-Date: Mon, 31 Aug 2009 14:49:18 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfs compat_ioctl?
-Message-ID: <20090831184918.GB10393@infradead.org>
+	n7VIrqQL116897 for <xfs@oss.sgi.com>; Mon, 31 Aug 2009 13:54:02 -0500
+Received: from mail-bw0-f216.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7FCA3412752
+	for <xfs@oss.sgi.com>; Mon, 31 Aug 2009 11:54:24 -0700 (PDT)
+Received: from mail-bw0-f216.google.com (mail-bw0-f216.google.com
+	[209.85.218.216]) by cuda.sgi.com with ESMTP id
+	9l9J5Pf3rzJc9sIp for <xfs@oss.sgi.com>;
+	Mon, 31 Aug 2009 11:54:24 -0700 (PDT)
+Received: by bwz12 with SMTP id 12so2050981bwz.20
+	for <xfs@oss.sgi.com>; Mon, 31 Aug 2009 11:54:24 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20090831182754.GA3620@infradead.org>
 References: <4A9B759B.7020401@msgid.tls.msk.ru>
 	<20090831123010.GA2368@infradead.org>
-	<20090831183751.GC19343@comcast.net>
-	<20090831184822.GA10393@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20090831184822.GA10393@infradead.org>
+	<64bb37e0908311114t4a3cefc3v8ea5092e1558c578@mail.gmail.com>
+	<20090831182754.GA3620@infradead.org>
+Date: Mon, 31 Aug 2009 20:42:55 +0200
+Message-ID: <64bb37e0908311142y4f9b6a8ex4918ac4dea09a4d2@mail.gmail.com>
+Subject: Re: xfs compat_ioctl?
+From: Torsten Kaiser <just.for.lkml@googlemail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,17 +33,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Tim Walberg <twalberg@comcast.net>, Christoph Hellwig <hch@infradead.org>, Michael Tokarev <mjt@tls.msk.ru>, Linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Michael Tokarev <mjt@tls.msk.ru>, Linux-kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-On Mon, Aug 31, 2009 at 02:48:22PM -0400, Christoph Hellwig wrote:
-> On Mon, Aug 31, 2009 at 01:37:51PM -0500, Tim Walberg wrote:
-> > Linux sparcy 2.6.30.4-sparcy #2 Sat Aug 1 21:14:46 CDT 2009 sparc64 GNU/Linux
-> > sparcy:~# file $(which xfs_fsr)
-> > /usr/sbin/xfs_fsr: ELF 32-bit MSB executable, SPARC32PLUS, V8+ Required, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.18, stripped
-> 
-> I'll take a look at that, thanks.
+On Mon, Aug 31, 2009 at 8:27 PM, Christoph Hellwig<hch@infradead.org> wrote:
+> I think you are right, the constant used is incorrect.  Does the small
+> patch below fix it for you?
 
-Err, sorry - is that with the patch I posted in this thread or without?
+Thanks, I will try it tomorrow.
+
+Torsten
+
+> Index: linux-2.6/fs/xfs/linux-2.6/xfs_ioctl32.c
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/linux-2.6/xfs_ioctl32.c       2009-08-31 15:25:06.093044591 -0300
+> +++ linux-2.6/fs/xfs/linux-2.6/xfs_ioctl32.c    2009-08-31 15:25:10.856544216 -0300
+> @@ -619,7 +619,7 @@ xfs_file_compat_ioctl(
+>        case XFS_IOC_GETVERSION_32:
+>                cmd = _NATIVE_IOC(cmd, long);
+>                return xfs_file_ioctl(filp, cmd, p);
+> -       case XFS_IOC_SWAPEXT: {
+> +       case XFS_IOC_SWAPEXT_32: {
+>                struct xfs_swapext        sxp;
+>                struct compat_xfs_swapext __user *sxu = arg;
+>
+>
 
 _______________________________________________
 xfs mailing list
