@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n7VNANrj130089 for <xfs@OSS.SGI.com>; Mon, 31 Aug 2009 18:10:44 -0500
-Received: from ty.sabi.co.UK (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 56626159563F
-	for <xfs@OSS.SGI.com>; Mon, 31 Aug 2009 16:10:55 -0700 (PDT)
-Received: from ty.sabi.co.UK (82-69-39-138.dsl.in-addr.zen.co.uk
-	[82.69.39.138]) by cuda.sgi.com with ESMTP id h25vINvKGAvklvtB
-	for <xfs@OSS.SGI.com>; Mon, 31 Aug 2009 16:10:55 -0700 (PDT)
-Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.uk)
-	by ty.sabi.co.UK with esmtp(Exim 4.63 #1) id 1MiG1M-0007cr-Jq
-	for <xfs@OSS.SGI.com>; Mon, 31 Aug 2009 23:10:44 +0000
+	n812bvSH139915 for <xfs@oss.sgi.com>; Mon, 31 Aug 2009 21:38:13 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 83A05413BD3
+	for <xfs@oss.sgi.com>; Mon, 31 Aug 2009 19:38:33 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id OAMQ49ITDedBY83I for
+	<xfs@oss.sgi.com>; Mon, 31 Aug 2009 19:38:33 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1MiJDM-0000TP-PE
+	for xfs@oss.sgi.com; Tue, 01 Sep 2009 02:35:20 +0000
+Date: Mon, 31 Aug 2009 22:35:20 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: pull request
+Message-ID: <20090901023520.GA32097@infradead.org>
 MIME-Version: 1.0
-Message-ID: <19100.22644.149019.555685@tree.ty.sabi.co.uk>
-Date: Mon, 31 Aug 2009 23:10:44 +0000
-Subject: Re: zero size file after power failure with kernel 2.6.30.5
-In-Reply-To: <4A99A80C.9010307@sandeen.net>
-References: <200908292102.21710@zmi.at>
-	<4A99A80C.9010307@sandeen.net>
-From: pg_xf2@xf2.sabi.co.UK (Peter Grandi)
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,47 +29,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linux XFS <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-[ ... ]
+First big batch for 2.6.32:  the ialloc changes + xfs_trans_iget
+simplification plus the O_SYNC fixup.
 
->> Shouldn't it be that this doesn't happen anymore? I'd love to
->> be in a position where I really can rely on a crash not
->> trashing any of my files anymore.
 
-Then 'mount' with '-o sync', or write your own applications and
-patches to the GNU/Linux kernel to enforce well known atomicity
-and persistence semantics.
+The following changes since commit 1da1daed813c534263a87ffc36d5b775e65231ad:
+  Felix Blyakher (1):
+        Merge branch 'master' of ssh+git://oss.sgi.com/oss/git/xfs/xfs
 
-This issue as related to several filesystems has been discussed
-in great depth over the past several months. Consider reading
-and if possible try to understand these contributions:
+are available in the git repository at:
 
-    http://sandeen.net/wordpress/?p=34
-    http://sandeen.net/wordpress/?p=42
-    https://bugs.edge.launchpad.net/ubuntu/+source/linux/+bug/317781/comments/45
-    http://lwn.net/SubscriberLink/322823/e6979f02e5a73feb/
-    http://loupgaroublond.blogspot.com/2009/03/anecdote-about-why-doing-wrong-thing-is.html
-    http://thunk.org/tytso/blog/2009/03/12/delayed-allocation-and-the-zero-length-file-problem/
-    http://mjg59.livejournal.com/108257.html
-    http://www.csamuel.org/2009/04/11/default-ext3-mode-changing-in-2630
-    http://tribulaciones.org/2009/03/is-ext4-unsafe/
+  git://git.kernel.org/pub/scm/fs/xfs/xfs.git master
 
->> I used to have reiserfs previously, and never, not a single
->> time despite many crashes, did I have such an issue. I'd
->> really be pleased so see such stability in XFS. I'm using
->> barriers - what else must I do?
+Christoph Hellwig (6):
+      xfs: improve xfs_inobt_get_rec prototype
+      xfs: improve xfs_inobt_update prototype
+      xfs: untangle xfs_dialloc
+      xfs: rationalize xfs_inobt_lookup*
+      xfs: merge fsync and O_SYNC handling
+      xfs: simplify xfs_trans_iget
 
-Barriers under GNU/Linux regrettably only enforce ordering. It
-is a POSIX weakness. Actual delays/semantics depend on kernel
-version.
+Dave Chinner (3):
+      xfs: factor out inode initialisation
+      xfs: factor out debug checks from xfs_dialloc and xfs_difree
+      xfs: speed up free inode search
 
-> this will depend on what kde is doing internally as well.
-
-Unfortunately KDE like most applications is known not to do the
-right thing (depending on specific app and version, but most IIRC).
-
-[ ... ]
+ fs/xfs/linux-2.6/xfs_aops.c |    1 -
+ fs/xfs/linux-2.6/xfs_file.c |   19 +-
+ fs/xfs/linux-2.6/xfs_lrw.c  |    7 +-
+ fs/xfs/xfs_ag.h             |    9 +
+ fs/xfs/xfs_ialloc.c         |  805 ++++++++++++++++++++++---------------------
+ fs/xfs/xfs_ialloc.h         |   18 +-
+ fs/xfs/xfs_iget.c           |   27 --
+ fs/xfs/xfs_inode.h          |    3 -
+ fs/xfs/xfs_inode_item.c     |   10 -
+ fs/xfs/xfs_inode_item.h     |    2 -
+ fs/xfs/xfs_itable.c         |   96 +++---
+ fs/xfs/xfs_rw.c             |   84 -----
+ fs/xfs/xfs_rw.h             |    1 -
+ fs/xfs/xfs_trans.h          |    2 +-
+ fs/xfs/xfs_trans_inode.c    |   86 +-----
+ fs/xfs/xfs_vnodeops.c       |   11 +-
+ 16 files changed, 499 insertions(+), 682 deletions(-)
 
 _______________________________________________
 xfs mailing list
