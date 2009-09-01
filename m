@@ -1,33 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n81MGmWR211868 for <xfs@oss.sgi.com>; Tue, 1 Sep 2009 17:16:58 -0500
-Received: from mailsrv5.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E0D0A418DE6
-	for <xfs@oss.sgi.com>; Tue,  1 Sep 2009 15:17:04 -0700 (PDT)
-Received: from mailsrv5.zmi.at (mailsrv5.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id QC683xtlAYPewMcj for
-	<xfs@oss.sgi.com>; Tue, 01 Sep 2009 15:17:04 -0700 (PDT)
-Received: from mailsrv.i.zmi.at (unknown [81.217.106.33])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv5.zmi.at (Postfix) with ESMTP id 5552069A
-	for <xfs@oss.sgi.com>; Wed,  2 Sep 2009 00:16:55 +0200 (CEST)
-Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id 26477400161
-	for <xfs@oss.sgi.com>; Wed,  2 Sep 2009 00:16:58 +0200 (CEST)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: xfs data loss
-Date: Wed, 2 Sep 2009 00:16:07 +0200
-References: <B9A7B002C7FAFC469D4229539E909760308DA651DE@DU-EXC-MAIL.empa.emp-eaw.ch>
-	<B9A7B002C7FAFC469D4229539E909760308DA65408@DU-EXC-MAIL.empa.emp-eaw.ch>
-	<19101.5976.387292.614270@tree.ty.sabi.co.uk>
-In-Reply-To: <19101.5976.387292.614270@tree.ty.sabi.co.uk>
+	n81MAjVH211390 for <xfs@oss.sgi.com>; Tue, 1 Sep 2009 17:10:56 -0500
+Received: from attica.americas.sgi.com (attica.americas.sgi.com
+	[128.162.236.44])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B9A3F3040BC
+	for <xfs@oss.sgi.com>; Tue,  1 Sep 2009 15:11:42 -0700 (PDT)
+Date: Tue, 01 Sep 2009 17:06:12 -0500
+Subject: [GIT PULL] XFS update for 2.6.31
 MIME-Version: 1.0
-Content-Disposition: inline
-Message-Id: <200909020016.07984@zmi.at>
+Message-Id: <20090901220612.BED9AA23CA70@attica.americas.sgi.com>
+From: felixb@sgi.com (Felix Blyakher)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,21 +23,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Dienstag 01 September 2009 Peter Grandi wrote:
-> knowing *exactly* what has failed may help you a lot.
+The following changes since commit 37d0892c5a94e208cf863e3b7bac014edee4346d:
+  Ian Kent (1):
+        autofs4 - fix missed case when changing to use struct path
 
-Thank you for your very verbose posting, it was fun to read. And the 
-last line should be answered by the OP.
+are available in the git repository at:
 
-mfg zmi
--- 
-// Michael Monnerie, Ing.BSc    -----      http://it-management.at
-// Tel: 0660 / 415 65 31                      .network.your.ideas.
-// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
-// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
-// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
+  git://oss.sgi.com/xfs/xfs for-linus
+
+Christoph Hellwig (1):
+      xfs: actually enable the swapext compat handler
+
+ fs/xfs/linux-2.6/xfs_ioctl32.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
 _______________________________________________
 xfs mailing list
