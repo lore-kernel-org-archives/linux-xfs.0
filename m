@@ -1,29 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n81EJuKv179894 for <xfs@oss.sgi.com>; Tue, 1 Sep 2009 09:20:06 -0500
-Received: from smtp2-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7E7504164FA
-	for <xfs@oss.sgi.com>; Tue,  1 Sep 2009 07:20:01 -0700 (PDT)
-Received: from smtp2-g21.free.fr (smtp2-g21.free.fr [212.27.42.2]) by
-	cuda.sgi.com with ESMTP id 9I1GYpknkffHXbmB for
-	<xfs@oss.sgi.com>; Tue, 01 Sep 2009 07:20:01 -0700 (PDT)
-Received: from smtp2-g21.free.fr (localhost [127.0.0.1])
-	by smtp2-g21.free.fr (Postfix) with ESMTP id 1C8264B01D8
-	for <xfs@oss.sgi.com>; Tue,  1 Sep 2009 16:19:05 +0200 (CEST)
-Received: from harpe.intellique.com (labo.djinux.com [82.225.196.72])
-	by smtp2-g21.free.fr (Postfix) with ESMTP id 2C0B24B0143
-	for <xfs@oss.sgi.com>; Tue,  1 Sep 2009 16:19:02 +0200 (CEST)
-Date: Tue, 1 Sep 2009 16:19:06 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: zero size file after power failure with kernel 2.6.30.5
-Message-ID: <20090901161906.0a4ca1d1@harpe.intellique.com>
-In-Reply-To: <19100.63566.98250.185404@tree.ty.sabi.co.uk>
-References: <200908292102.21710@zmi.at> <4A99A80C.9010307@sandeen.net>
-	<19100.22644.149019.555685@tree.ty.sabi.co.uk>
-	<200909010918.37886@zmi.at>
-	<19100.63566.98250.185404@tree.ty.sabi.co.uk>
-Mime-Version: 1.0
+	n81GxP2G188445 for <xfs@oss.sgi.com>; Tue, 1 Sep 2009 11:59:35 -0500
+Received: from mail-bw0-f216.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CC317159CCAE
+	for <xfs@oss.sgi.com>; Tue,  1 Sep 2009 10:00:11 -0700 (PDT)
+Received: from mail-bw0-f216.google.com (mail-bw0-f216.google.com
+	[209.85.218.216]) by cuda.sgi.com with ESMTP id
+	nR8z18Vrr54xdQlp for <xfs@oss.sgi.com>;
+	Tue, 01 Sep 2009 10:00:11 -0700 (PDT)
+Received: by bwz12 with SMTP id 12so134975bwz.20
+	for <xfs@oss.sgi.com>; Tue, 01 Sep 2009 10:00:06 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20090831182754.GA3620@infradead.org>
+References: <4A9B759B.7020401@msgid.tls.msk.ru>
+	<20090831123010.GA2368@infradead.org>
+	<64bb37e0908311114t4a3cefc3v8ea5092e1558c578@mail.gmail.com>
+	<20090831182754.GA3620@infradead.org>
+Date: Tue, 1 Sep 2009 19:00:05 +0200
+Message-ID: <64bb37e0909011000l78a0aef0wf4c53252c14af75e@mail.gmail.com>
+Subject: Re: xfs compat_ioctl?
+From: Torsten Kaiser <just.for.lkml@googlemail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,30 +29,33 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linux XFS <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Michael Tokarev <mjt@tls.msk.ru>, Linux-kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-Le Tue, 1 Sep 2009 10:32:46 +0000
-pg_xf2@xf2.sabi.co.UK (Peter Grandi) =E9crivait:
+On Mon, Aug 31, 2009 at 8:27 PM, Christoph Hellwig<hch@infradead.org> wrote:
+> I think you are right, the constant used is incorrect.  Does the small
+> patch below fix it for you?
 
-> If that and having good scalable performance at the same time
-> requires having dual power supplies, redundant storage paths,
-> and battery backup, that is the typical platform on which XFS is
-> deployed.
+Yes, after adding this patch, xfs_fsr works.
 
-To mitigate this, I used systems with XFS daily for the last 13 years,
-(including IRIX workstations or PCs with only one drive) and had only
-once a problem clearly related to XFS (a well known bug, long
-corrected nowadays).
-
--- =
-
-----------------------------------------
-Emmanuel Florac     |   Intellique
-----------------------------------------
+> Index: linux-2.6/fs/xfs/linux-2.6/xfs_ioctl32.c
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/linux-2.6/xfs_ioctl32.c       2009-08-31 15:25:06.093044591 -0300
+> +++ linux-2.6/fs/xfs/linux-2.6/xfs_ioctl32.c    2009-08-31 15:25:10.856544216 -0300
+> @@ -619,7 +619,7 @@ xfs_file_compat_ioctl(
+>        case XFS_IOC_GETVERSION_32:
+>                cmd = _NATIVE_IOC(cmd, long);
+>                return xfs_file_ioctl(filp, cmd, p);
+> -       case XFS_IOC_SWAPEXT: {
+> +       case XFS_IOC_SWAPEXT_32: {
+>                struct xfs_swapext        sxp;
+>                struct compat_xfs_swapext __user *sxu = arg;
+>
+>
 
 _______________________________________________
 xfs mailing list
