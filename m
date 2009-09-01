@@ -1,29 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n818jF6n163075 for <xfs@oss.sgi.com>; Tue, 1 Sep 2009 03:45:25 -0500
-Received: from mailsrv5.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A9FF4414FCA
-	for <xfs@oss.sgi.com>; Tue,  1 Sep 2009 01:45:40 -0700 (PDT)
-Received: from mailsrv5.zmi.at (mailsrv5.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id HTYwyfvovIqwbhE6 for
-	<xfs@oss.sgi.com>; Tue, 01 Sep 2009 01:45:40 -0700 (PDT)
-Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv5.zmi.at (Postfix) with ESMTP id BF0B96AD
-	for <xfs@oss.sgi.com>; Tue,  1 Sep 2009 10:45:30 +0200 (CEST)
-Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id 909F340015E
-	for <xfs@oss.sgi.com>; Tue,  1 Sep 2009 10:45:30 +0200 (CEST)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: minor bug in xfsprogs-3.0.3
-Date: Tue, 1 Sep 2009 10:44:44 +0200
+	n81CmI4r175077 for <xfs@OSS.SGI.com>; Tue, 1 Sep 2009 07:48:38 -0500
+Received: from ty.sabi.co.UK (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AB388415FE9
+	for <xfs@OSS.SGI.com>; Tue,  1 Sep 2009 05:49:04 -0700 (PDT)
+Received: from ty.sabi.co.UK (82-69-39-138.dsl.in-addr.zen.co.uk
+	[82.69.39.138]) by cuda.sgi.com with ESMTP id ZZuDEwsSwuArvu31
+	for <xfs@OSS.SGI.com>; Tue, 01 Sep 2009 05:49:04 -0700 (PDT)
+Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.uk)
+	by ty.sabi.co.UK with esmtp(Exim 4.63 #1) id 1MiQfO-000376-N7
+	for <xfs@OSS.SGI.com>; Tue, 01 Sep 2009 10:32:46 +0000
 MIME-Version: 1.0
-Content-Disposition: inline
-Message-Id: <200909011044.44938@zmi.at>
+Message-ID: <19100.63566.98250.185404@tree.ty.sabi.co.uk>
+Date: Tue, 1 Sep 2009 10:32:46 +0000
+Subject: Re: zero size file after power failure with kernel 2.6.30.5
+In-Reply-To: <200909010918.37886@zmi.at>
+References: <200908292102.21710@zmi.at> <4A99A80C.9010307@sandeen.net>
+	<19100.22644.149019.555685@tree.ty.sabi.co.uk>
+	<200909010918.37886@zmi.at>
+From: pg_xf2@xf2.sabi.co.UK (Peter Grandi)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,20 +32,111 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Linux XFS <xfs@oss.sgi.com>
 
-# xfs_info -V
-Usage: xfs_info [-V] [-t mtab] mountpoint
+[ ... ]
 
-It should print the version, right?
+>> Then 'mount' with '-o sync' [ ... ]
 
-mfg zmi
--- 
-// Michael Monnerie, Ing.BSc    -----      http://it-management.at
-// Tel: 0660 / 415 65 31                      .network.your.ideas.
-// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
-// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
-// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
+> Yes. I could also simply switch back to reiserfs, where I
+> never had this kind of issue, despite lots of crashes etc.
+
+Other people have a very different impression. Like 'ext3'
+ReiserFS does ordered writes, but those don't necessarily help
+because of the colossal amount of buffering that happens anyhow
+nowadays.
+
+> [ ... ] maybe someone taps into the problem and can improve
+> it.
+
+It is foremost an application problem, and then a block layer
+problem. The first is unsolvable ("user space sucks") in our
+lifetimes, and the second depends on the goodwill of the
+proprietors of the relevant kernel subsystem.
+
+As to application design, XFS is targeted at heavily parallel
+workloads on large storage arrays; its design takes advantage of
+what API semantics permit to improve that use case, and relies
+on applications making use of those API semantics properly.
+
+If that and having good scalable performance at the same time
+requires having dual power supplies, redundant storage paths,
+and battery backup, that is the typical platform on which XFS is
+deployed.
+
+> There was a similar problem with the change from ext3 to ext4,
+> with a big discussion. Ext4 has been improved,
+
+Actually it has been made worse, to compensate for bad
+application and block layer behaviour.
+
+Red Hat with 'ext4' have been trying to imply that an in-place
+upgrade to an 'ext3' compatible filesystem can support every
+possible point on the spectrum. Well, it turned out that they
+cannot. So there have been motions towards supporting XFS in
+5.4, to have a dual-filesystem strategy, which is what a large
+number of their important enterprise customers do anyhow.
+
+> [ ... ] In ext4 they reorganized the way metaupdates are done,
+> maybe that can help xfs too.
+
+But that makes performance worse in the large/paralell case.
+
+> [ ... ] It seems kmail writes its config every 7 minutes, so
+> it is vulnerable for 3 seconds then.
+
+That won't help that much. Apps and the block layer are really
+designed for older, gentler times. And never mind the clueless,
+moronic "optimization" of Linux block layer plugging/unplugging.
+
+Currently a single disk can write 100MB/s, memory sizes on many
+_laptops_ are 4GB with potentially 1-2GB or 10-20s of writes
+cached. On a server one can have RAIDs that can write at/s.
+
+If applications and the block layer are misbehaving, and '-o
+sync' is not used, even if one flushes cache every second, there
+can still be dozens of MB (on a laptop) to some GB (on a server)
+that get lost in that one second. The filesystem can try hard to
+ensure that metadata gets written nearly immediately, ensuring
+'fsck'-consistency, but it cannot do that for data in any
+sensible way unless the application and the block layer do the
+right thing, so data persistency is at best elusive.
+
+> I've set vm.dirty_expire_centisecs = 1000 now to improve the
+> situation a bit.
+
+It does not help that not only the applications and the block
+layer are misdesigned, but they also misdesigned for a time
+where data rates were a lot lower, so outstanding updates were
+bounded a lot lower.
+
+There are workarounds and by careful patching and changing
+default settings one can palliate the worst situations; but for
+example 10 seconds of 'dirty_expire_centisecs' seems way too
+long (IIRC you have a fairly large memory and RAID) and other
+settings matter more.
+
+I have written quite a bit in my blog about these issues, and
+you may find this particular entry rather relevant:
+
+  http://www.sabi.co.uk/blog/0707jul.html#070701
+
+In general on a fast machine I would use:
+
+  vm/dirty_ratio                  =4
+  vm/dirty_background_ratio       =2
+  vm/dirty_expire_centisecs       =400
+  vm/dirty_writeback_centisecs    =200
+
+or half of every one. Short flushing times also ensure more
+continuous flushing (without huge periodic gulps), which can
+significantly improve *write* performance for streaming
+applications (XFS etc. delayed allocation is designed to improve
+read performance despite the lack of preallocation).
+
+This cannot be done on laptops, where short flushing times are
+bad for power consumption, but at least they are battery backed,
+and hopefully SSDs will save us anyhow.
 
 _______________________________________________
 xfs mailing list
