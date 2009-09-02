@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n82DMpYp004377 for <xfs@oss.sgi.com>; Wed, 2 Sep 2009 08:23:01 -0500
+	n82DHVJW004099 for <xfs@oss.sgi.com>; Wed, 2 Sep 2009 08:17:41 -0500
 Received: from nexus.dynaweb.hu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7C7151B886C3
-	for <xfs@oss.sgi.com>; Wed,  2 Sep 2009 06:23:21 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C001041BCA0
+	for <xfs@oss.sgi.com>; Wed,  2 Sep 2009 06:18:02 -0700 (PDT)
 Received: from nexus.dynaweb.hu (nexus.dynaweb.hu [195.70.37.87]) by
-	cuda.sgi.com with ESMTP id 7iZN6mzd0f2dO8P8 for
-	<xfs@oss.sgi.com>; Wed, 02 Sep 2009 06:23:21 -0700 (PDT)
+	cuda.sgi.com with ESMTP id QA0JSOLW3FFoLMK7 for
+	<xfs@oss.sgi.com>; Wed, 02 Sep 2009 06:18:02 -0700 (PDT)
 Received: from localhost (localhost [127.0.0.1])
-	by nexus.dynaweb.hu (Postfix) with ESMTP id A5B304D454
-	for <xfs@oss.sgi.com>; Wed,  2 Sep 2009 15:22:47 +0200 (CEST)
+	by nexus.dynaweb.hu (Postfix) with ESMTP id 5515243B0E
+	for <xfs@oss.sgi.com>; Wed,  2 Sep 2009 15:17:31 +0200 (CEST)
 Received: from nexus.dynaweb.hu ([127.0.0.1])
 	by localhost (nexus.dynaweb.hu [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id F5OKfyZODlOD for <xfs@oss.sgi.com>;
-	Wed,  2 Sep 2009 15:22:46 +0200 (CEST)
+	with ESMTP id OQDweFb6RIiU for <xfs@oss.sgi.com>;
+	Wed,  2 Sep 2009 15:17:30 +0200 (CEST)
 Received: from raketa.ipn.dynaweb.hu (catv-80-99-36-176.catv.broadband.hu
 	[80.99.36.176])
-	by nexus.dynaweb.hu (Postfix) with ESMTPSA id 2A22C43B15
-	for <xfs@oss.sgi.com>; Wed,  2 Sep 2009 15:22:46 +0200 (CEST)
-Date: Wed, 2 Sep 2009 15:22:45 +0200
+	by nexus.dynaweb.hu (Postfix) with ESMTPSA id 0FC5440131
+	for <xfs@oss.sgi.com>; Wed,  2 Sep 2009 15:17:30 +0200 (CEST)
+Date: Wed, 2 Sep 2009 15:17:29 +0200
 From: RUMI Szabolcs <rumi_ml@rtfm.hu>
-Subject: Structure needs cleaning? (take #2)
-Message-Id: <20090902152245.b2969883.rumi_ml@rtfm.hu>
+Subject: Structure needs cleaning?
+Message-Id: <20090902151729.32701dd7.rumi_ml@rtfm.hu>
 Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -40,10 +40,15 @@ To: xfs@oss.sgi.com
 
 Hi!
 
-Sorry but my previous post was missing the important first two lines: 
+I'm experiencing errors like this:
 
-d62c8000: 2c 30 78 41 41 41 41 30 30 30 30 2c 36 2c 30 78  ,0xAAAA0000,6,0x
-Filesystem "sda10": XFS internal error xfs_da_do_buf(2) at line 2112 of file fs/xfs/xfs_da_btree.c.  Caller 0xc02cc790
+ls: cannot access 11090000.xhp: Structure needs cleaning
+
+These files were part of an OpenOffice 3.1.0 source tree, and could
+not be removed by rm -rf, which was also reporting the above error.
+
+In the dmesg there are errors like this, apparently the same one
+for each access attempt: 
 
 Pid: 29510, comm: mc Tainted: P           2.6.29-gentoo-r5-PAE #1
 Call Trace:
@@ -73,6 +78,8 @@ Call Trace:
  [<c01907b8>] vfs_readdir+0x78/0xb0
  [<c0190891>] sys_getdents64+0xa1/0xd0
  [<c01032f1>] sysenter_do_call+0x12/0x25
+
+Is this a known one?
 
 Thanks,
 Sab
