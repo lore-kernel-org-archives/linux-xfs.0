@@ -1,29 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n82DHVJW004099 for <xfs@oss.sgi.com>; Wed, 2 Sep 2009 08:17:41 -0500
-Received: from nexus.dynaweb.hu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C001041BCA0
-	for <xfs@oss.sgi.com>; Wed,  2 Sep 2009 06:18:02 -0700 (PDT)
-Received: from nexus.dynaweb.hu (nexus.dynaweb.hu [195.70.37.87]) by
-	cuda.sgi.com with ESMTP id QA0JSOLW3FFoLMK7 for
-	<xfs@oss.sgi.com>; Wed, 02 Sep 2009 06:18:02 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-	by nexus.dynaweb.hu (Postfix) with ESMTP id 5515243B0E
-	for <xfs@oss.sgi.com>; Wed,  2 Sep 2009 15:17:31 +0200 (CEST)
-Received: from nexus.dynaweb.hu ([127.0.0.1])
-	by localhost (nexus.dynaweb.hu [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id OQDweFb6RIiU for <xfs@oss.sgi.com>;
-	Wed,  2 Sep 2009 15:17:30 +0200 (CEST)
-Received: from raketa.ipn.dynaweb.hu (catv-80-99-36-176.catv.broadband.hu
-	[80.99.36.176])
-	by nexus.dynaweb.hu (Postfix) with ESMTPSA id 0FC5440131
-	for <xfs@oss.sgi.com>; Wed,  2 Sep 2009 15:17:30 +0200 (CEST)
-Date: Wed, 2 Sep 2009 15:17:29 +0200
-From: RUMI Szabolcs <rumi_ml@rtfm.hu>
-Subject: Structure needs cleaning?
-Message-Id: <20090902151729.32701dd7.rumi_ml@rtfm.hu>
-Mime-Version: 1.0
+	n82DxcAj006909 for <xfs@oss.sgi.com>; Wed, 2 Sep 2009 08:59:48 -0500
+Received: from mx1.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 12BD241B8DD
+	for <xfs@oss.sgi.com>; Wed,  2 Sep 2009 07:00:32 -0700 (PDT)
+Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
+	with ESMTP id VZ1hc3ecGvlZJZ36 for <xfs@oss.sgi.com>;
+	Wed, 02 Sep 2009 07:00:32 -0700 (PDT)
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 13/16] xfs: Convert sync_page_range() to simple
+	filemap_write_and_wait_range()
+Date: Wed,  2 Sep 2009 15:59:23 +0200
+Message-Id: <1251899966-7316-14-git-send-email-jack@suse.cz>
+In-Reply-To: <1251899966-7316-1-git-send-email-jack@suse.cz>
+References: <1251899966-7316-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,57 +23,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: linux-fsdevel@vger.kernel.org
+Cc: xfs@oss.sgi.com, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, hch@lst.de
 
-Hi!
+Christoph Hellwig says that it is enough for XFS to call
+filemap_write_and_wait_range() instead of sync_page_range() because we do
+all the metadata syncing when forcing the log.
 
-I'm experiencing errors like this:
+CC: Felix Blyakher <felixb@sgi.com>
+CC: xfs@oss.sgi.com
+CC: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/xfs/linux-2.6/xfs_lrw.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-ls: cannot access 11090000.xhp: Structure needs cleaning
-
-These files were part of an OpenOffice 3.1.0 source tree, and could
-not be removed by rm -rf, which was also reporting the above error.
-
-In the dmesg there are errors like this, apparently the same one
-for each access attempt: 
-
-Pid: 29510, comm: mc Tainted: P           2.6.29-gentoo-r5-PAE #1
-Call Trace:
- [<c02cc6c4>] xfs_da_do_buf+0x8c4/0x900
- [<c02cc790>] xfs_da_read_buf+0x30/0x40
- [<c02cc790>] xfs_da_read_buf+0x30/0x40
- [<c0191ef0>] pollwake+0x0/0x50
- [<c0191ef0>] pollwake+0x0/0x50
- [<c02cc790>] xfs_da_read_buf+0x30/0x40
- [<c02d2943>] xfs_dir2_leaf_lookup_int+0x63/0x2f0
- [<c02d2943>] xfs_dir2_leaf_lookup_int+0x63/0x2f0
- [<c02d3667>] xfs_dir2_leaf_lookup+0x27/0xc0
- [<c02cf32f>] xfs_dir2_isleaf+0x1f/0x60
- [<c02cfc78>] xfs_dir_lookup+0xd8/0x180
- [<c02fedab>] xfs_lookup+0x6b/0xf0
- [<c0309165>] xfs_vn_lookup+0x55/0xa0
- [<c018adda>] do_lookup+0x1ba/0x1e0
- [<c018ca1d>] __link_path_walk+0x6cd/0xd60
- [<c02d3def>] xfs_dir2_leaf_getdents+0x5ff/0xad0
- [<c018d264>] path_walk+0x54/0xc0
- [<c018d3a3>] do_path_lookup+0x83/0x170
- [<c018c30b>] getname+0x9b/0xe0
- [<c018e03a>] user_path_at+0x5a/0x90
- [<c018633f>] vfs_lstat_fd+0x1f/0x50
- [<c01863bf>] sys_lstat64+0xf/0x30
- [<c0194fd4>] touch_atime+0x14/0x130
- [<c01907b8>] vfs_readdir+0x78/0xb0
- [<c0190891>] sys_getdents64+0xa1/0xd0
- [<c01032f1>] sysenter_do_call+0x12/0x25
-
-Is this a known one?
-
-Thanks,
-Sab
+diff --git a/fs/xfs/linux-2.6/xfs_lrw.c b/fs/xfs/linux-2.6/xfs_lrw.c
+index 7078974..fde63a3 100644
+--- a/fs/xfs/linux-2.6/xfs_lrw.c
++++ b/fs/xfs/linux-2.6/xfs_lrw.c
+@@ -817,7 +817,8 @@ write_retry:
+ 		xfs_iunlock(xip, iolock);
+ 		if (need_i_mutex)
+ 			mutex_unlock(&inode->i_mutex);
+-		error2 = sync_page_range(inode, mapping, pos, ret);
++		error2 = filemap_write_and_wait_range(mapping, pos,
++						      pos + ret - 1);
+ 		if (!error)
+ 			error = error2;
+ 		if (need_i_mutex)
+-- 
+1.6.0.2
 
 _______________________________________________
 xfs mailing list
