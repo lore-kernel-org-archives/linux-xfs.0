@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n82Hvi2s034370 for <xfs@oss.sgi.com>; Wed, 2 Sep 2009 12:57:59 -0500
+	n82HwIFf034412 for <xfs@oss.sgi.com>; Wed, 2 Sep 2009 12:58:33 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D834215B1A29
-	for <xfs@oss.sgi.com>; Wed,  2 Sep 2009 10:58:40 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9640441E04A
+	for <xfs@oss.sgi.com>; Wed,  2 Sep 2009 10:58:42 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id j5ECizDNz8VHycsP for
-	<xfs@oss.sgi.com>; Wed, 02 Sep 2009 10:58:40 -0700 (PDT)
-Message-Id: <20090902175840.403232401@bombadil.infradead.org>
-Date: Wed, 02 Sep 2009 13:55:35 -0400
+	by cuda.sgi.com with ESMTP id 3XWEVUcA6owepWaI for
+	<xfs@oss.sgi.com>; Wed, 02 Sep 2009 10:58:42 -0700 (PDT)
+Message-Id: <20090902175842.081792481@bombadil.infradead.org>
+Date: Wed, 02 Sep 2009 13:55:44 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 04/14] repair: split up scanfunc_ino
+Subject: [PATCH 13/14] repair: optimize duplicate extent tracking
 References: <20090902175531.469184575@bombadil.infradead.org>
-Content-Disposition: inline; filename=repair-split-scanfunc_ino
+Content-Disposition: inline; filename=repair-dup_extents-btree
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,372 +30,342 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Barry Naujok <bnaujok@sgi.com>
 
-Split out a helper to scan a single inode chunk for suspect inodes from
-scanfunc_ino to make it more readable.
+Switch the duplicate extent tracking from an avl tree to our new btree
+implementation.  Modify search_dup_extent to find overlapping extents
+with differening start blocks instead of having the caller walk every
+possible start block.
 
 
 Signed-off-by: Barry Naujok <bnaujok@sgi.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfsprogs-dev/repair/scan.c
+Index: xfsprogs-dev/repair/dinode.c
 ===================================================================
---- xfsprogs-dev.orig/repair/scan.c	2009-08-21 19:00:15.000000000 +0000
-+++ xfsprogs-dev/repair/scan.c	2009-08-21 19:03:26.000000000 +0000
-@@ -625,6 +625,167 @@ scanfunc_cnt(
- 				suspect, isroot, XFS_ABTC_MAGIC);
- }
+--- xfsprogs-dev.orig/repair/dinode.c	2009-08-21 15:11:16.000000000 +0000
++++ xfsprogs-dev/repair/dinode.c	2009-08-21 15:11:29.000000000 +0000
+@@ -735,18 +735,14 @@ process_bmbt_reclist_int(
+ 			 * checking each entry without setting the
+ 			 * block bitmap
+ 			 */
+-			for (b = irec.br_startblock;
+-			     agbno < ebno;
+-			     b++, agbno++)  {
+-				if (search_dup_extent(mp, agno, agbno)) {
+-					do_warn(_("%s fork in ino %llu claims "
+-						"dup extent, off - %llu, "
+-						"start - %llu, cnt %llu\n"),
+-						forkname, ino, irec.br_startoff,
+-						irec.br_startblock,
+-						irec.br_blockcount);
+-					goto done;
+-				}
++			if (search_dup_extent(agno, agbno, ebno)) {
++				do_warn(_("%s fork in ino %llu claims "
++					"dup extent, off - %llu, "
++					"start - %llu, cnt %llu\n"),
++					forkname, ino, irec.br_startoff,
++					irec.br_startblock,
++					irec.br_blockcount);
++				goto done;
+ 			}
+ 			*tot += irec.br_blockcount;
+ 			continue;
+Index: xfsprogs-dev/repair/incore.h
+===================================================================
+--- xfsprogs-dev.orig/repair/incore.h	2009-08-21 15:11:16.000000000 +0000
++++ xfsprogs-dev/repair/incore.h	2009-08-21 15:11:29.000000000 +0000
+@@ -20,6 +20,8 @@
+ #define XFS_REPAIR_INCORE_H
  
-+static int
-+scan_single_ino_chunk(
-+	xfs_agnumber_t		agno,
-+	xfs_inobt_rec_t		*rp,
-+	int			suspect)
-+{
-+	xfs_ino_t		lino;
-+	xfs_agino_t		ino;
-+	xfs_agblock_t		agbno;
-+	int			j;
-+	int			nfree;
-+	int			off;
-+	int			state;
-+	ino_tree_node_t		*ino_rec, *first_rec, *last_rec;
-+
-+	ino = be32_to_cpu(rp->ir_startino);
-+	off = XFS_AGINO_TO_OFFSET(mp, ino);
-+	agbno = XFS_AGINO_TO_AGBNO(mp, ino);
-+	lino = XFS_AGINO_TO_INO(mp, agno, ino);
-+
-+	/*
-+	 * on multi-block block chunks, all chunks start
-+	 * at the beginning of the block.  with multi-chunk
-+	 * blocks, all chunks must start on 64-inode boundaries
-+	 * since each block can hold N complete chunks. if
-+	 * fs has aligned inodes, all chunks must start
-+	 * at a fs_ino_alignment*N'th agbno.  skip recs
-+	 * with badly aligned starting inodes.
-+	 */
-+	if (ino == 0 ||
-+	    (inodes_per_block <= XFS_INODES_PER_CHUNK && off !=  0) ||
-+	    (inodes_per_block > XFS_INODES_PER_CHUNK &&
-+	     off % XFS_INODES_PER_CHUNK != 0) ||
-+	    (fs_aligned_inodes && agbno % fs_ino_alignment != 0))  {
-+		do_warn(
-+	_("badly aligned inode rec (starting inode = %llu)\n"),
-+			lino);
-+		suspect++;
-+	}
-+
-+	/*
-+	 * verify numeric validity of inode chunk first
-+	 * before inserting into a tree.  don't have to
-+	 * worry about the overflow case because the
-+	 * starting ino number of a chunk can only get
-+	 * within 255 inodes of max (NULLAGINO).  if it
-+	 * gets closer, the agino number will be illegal
-+	 * as the agbno will be too large.
-+	 */
-+	if (verify_aginum(mp, agno, ino))  {
-+		do_warn(
-+_("bad starting inode # (%llu (0x%x 0x%x)) in ino rec, skipping rec\n"),
-+			lino, agno, ino);
-+		return ++suspect;
-+	}
-+
-+	if (verify_aginum(mp, agno,
-+			ino + XFS_INODES_PER_CHUNK - 1))  {
-+		do_warn(
-+_("bad ending inode # (%llu (0x%x 0x%x)) in ino rec, skipping rec\n"),
-+			lino + XFS_INODES_PER_CHUNK - 1,
-+			agno, ino + XFS_INODES_PER_CHUNK - 1);
-+		return ++suspect;
-+	}
-+
-+	/*
-+	 * set state of each block containing inodes
-+	 */
-+	if (off == 0 && !suspect)  {
-+		for (j = 0;
-+		     j < XFS_INODES_PER_CHUNK;
-+		     j += mp->m_sb.sb_inopblock)  {
-+			agbno = XFS_AGINO_TO_AGBNO(mp, ino + j);
-+			state = get_agbno_state(mp, agno, agbno);
-+			if (state == XR_E_UNKNOWN)  {
-+				set_agbno_state(mp, agno, agbno, XR_E_INO);
-+			} else if (state == XR_E_INUSE_FS && agno == 0 &&
-+				   ino + j >= first_prealloc_ino &&
-+				   ino + j < last_prealloc_ino)  {
-+				set_agbno_state(mp, agno, agbno, XR_E_INO);
-+			} else  {
-+				do_warn(
-+_("inode chunk claims used block, inobt block - agno %d, bno %d, inopb %d\n"),
-+					agno, agbno,
-+				mp->m_sb.sb_inopblock);
-+				/*
-+				 * XXX - maybe should mark
-+				 * block a duplicate
-+				 */
-+				return ++suspect;
-+			}
-+		}
-+	}
-+
-+	/*
-+	 * ensure only one avl entry per chunk
-+	 */
-+	find_inode_rec_range(agno, ino, ino + XFS_INODES_PER_CHUNK,
-+			     &first_rec, &last_rec);
-+	if (first_rec != NULL)  {
-+		/*
-+		 * this chunk overlaps with one (or more)
-+		 * already in the tree
-+		 */
-+		do_warn(
-+_("inode rec for ino %llu (%d/%d) overlaps existing rec (start %d/%d)\n"),
-+			lino, agno, ino, agno, first_rec->ino_startnum);
-+		suspect++;
-+
-+		/*
-+		 * if the 2 chunks start at the same place,
-+		 * then we don't have to put this one
-+		 * in the uncertain list.  go to the next one.
-+		 */
-+		if (first_rec->ino_startnum == ino)
-+			return suspect;
-+	}
-+
-+	nfree = 0;
-+
-+	/*
-+	 * now mark all the inodes as existing and free or used.
-+	 * if the tree is suspect, put them into the uncertain
-+	 * inode tree.
-+	 */
-+	if (!suspect)  {
-+		if (XFS_INOBT_IS_FREE_DISK(rp, 0)) {
-+			nfree++;
-+			ino_rec = set_inode_free_alloc(agno, ino);
-+		} else  {
-+			ino_rec = set_inode_used_alloc(agno, ino);
-+		}
-+		for (j = 1; j < XFS_INODES_PER_CHUNK; j++) {
-+			if (XFS_INOBT_IS_FREE_DISK(rp, j)) {
-+				nfree++;
-+				set_inode_free(ino_rec, j);
-+			} else  {
-+				set_inode_used(ino_rec, j);
-+			}
-+		}
-+	} else  {
-+		for (j = 0; j < XFS_INODES_PER_CHUNK; j++) {
-+			if (XFS_INOBT_IS_FREE_DISK(rp, j)) {
-+				nfree++;
-+				add_aginode_uncertain(agno, ino + j, 1);
-+			} else  {
-+				add_aginode_uncertain(agno, ino + j, 0);
-+			}
-+		}
-+	}
-+
-+	if (nfree != be32_to_cpu(rp->ir_freecount)) {
-+		do_warn(_("ir_freecount/free mismatch, inode "
-+			"chunk %d/%d, freecount %d nfree %d\n"),
-+			agno, ino, be32_to_cpu(rp->ir_freecount), nfree);
-+	}
-+
-+	return suspect;
-+}
+ #include "avl.h"
 +
 +
  /*
-  * this one walks the inode btrees sucking the info there into
-  * the incore avl tree.  We try and rescue corrupted btree records
-@@ -651,18 +812,11 @@ scanfunc_ino(
- 	int			isroot
- 	)
+  * contains definition information.  implementation (code)
+  * is spread out in separate files.
+@@ -179,23 +181,11 @@ get_bcnt_extent(xfs_agnumber_t agno, xfs
+ /*
+  * duplicate extent tree functions
+  */
+-void		add_dup_extent(xfs_agnumber_t agno,
+-				xfs_agblock_t startblock,
+-				xfs_extlen_t blockcount);
+-
+-extern avltree_desc_t   **extent_tree_ptrs;
+-/* ARGSUSED */
+-static inline int
+-search_dup_extent(xfs_mount_t *mp, xfs_agnumber_t agno, xfs_agblock_t agbno)
+-{
+-	ASSERT(agno < glob_agcount);
+-
+-	if (avl_findrange(extent_tree_ptrs[agno], agbno) != NULL)
+-		return(1);
+-
+-	return(0);
+-}
+ 
++int		add_dup_extent(xfs_agnumber_t agno, xfs_agblock_t startblock,
++			xfs_extlen_t blockcount);
++int		search_dup_extent(xfs_agnumber_t agno,
++			xfs_agblock_t start_agbno, xfs_agblock_t end_agbno);
+ void		add_rt_dup_extent(xfs_drtbno_t	startblock,
+ 				xfs_extlen_t	blockcount);
+ 
+Index: xfsprogs-dev/repair/incore_ext.c
+===================================================================
+--- xfsprogs-dev.orig/repair/incore_ext.c	2009-08-21 15:11:16.000000000 +0000
++++ xfsprogs-dev/repair/incore_ext.c	2009-08-21 15:24:07.000000000 +0000
+@@ -18,6 +18,7 @@
+ 
+ #include <libxfs.h>
+ #include "avl.h"
++#include "btree.h"
+ #include "globals.h"
+ #include "incore.h"
+ #include "agheader.h"
+@@ -72,8 +73,8 @@ static rt_ext_flist_t rt_ext_flist;
+ 
+ static avl64tree_desc_t	*rt_ext_tree_ptr;	/* dup extent tree for rt */
+ 
+-avltree_desc_t	**extent_tree_ptrs;		/* array of extent tree ptrs */
+-						/* one per ag for dups */
++static struct btree_root **dup_extent_trees;	/* per ag dup extent trees */
++
+ static avltree_desc_t	**extent_bno_ptrs;	/*
+ 						 * array of extent tree ptrs
+ 						 * one per ag for free extents
+@@ -100,6 +101,48 @@ static pthread_mutex_t	rt_ext_tree_lock;
+ static pthread_mutex_t	rt_ext_flist_lock;
+ 
+ /*
++ * duplicate extent tree functions
++ */
++
++void
++release_dup_extent_tree(
++	xfs_agnumber_t		agno)
++{
++	btree_clear(dup_extent_trees[agno]);
++}
++
++int
++add_dup_extent(
++	xfs_agnumber_t		agno,
++	xfs_agblock_t		startblock,
++	xfs_extlen_t		blockcount)
++{
++#ifdef XR_DUP_TRACE
++	fprintf(stderr, "Adding dup extent - %d/%d %d\n", agno, startblock,
++		blockcount);
++#endif
++	return btree_insert(dup_extent_trees[agno], startblock,
++				(void *)(uintptr_t)(startblock + blockcount));
++}
++
++int
++search_dup_extent(
++	xfs_agnumber_t		agno,
++	xfs_agblock_t		start_agbno,
++	xfs_agblock_t		end_agbno)
++{
++	unsigned long	bno;
++
++	if (!btree_find(dup_extent_trees[agno], start_agbno, &bno))
++		return 0;	/* this really shouldn't happen */
++	if (bno < end_agbno)
++		return 1;
++	return (uintptr_t)btree_peek_prev(dup_extent_trees[agno], NULL) >
++								start_agbno;
++}
++
++
++/*
+  * extent tree stuff is avl trees of duplicate extents,
+  * sorted in order by block number.  there is one tree per ag.
+  */
+@@ -211,14 +254,6 @@ release_extent_tree(avltree_desc_t *tree
+  * top-level (visible) routines
+  */
+ void
+-release_dup_extent_tree(xfs_agnumber_t agno)
+-{
+-	release_extent_tree(extent_tree_ptrs[agno]);
+-
+-	return;
+-}
+-
+-void
+ release_agbno_extent_tree(xfs_agnumber_t agno)
  {
--	xfs_ino_t		lino;
- 	int			i;
--	xfs_agino_t		ino;
--	xfs_agblock_t		agbno;
--	int			j;
--	int			nfree;
--	int			off;
- 	int			numrecs;
- 	int			state;
- 	xfs_inobt_ptr_t		*pp;
- 	xfs_inobt_rec_t		*rp;
--	ino_tree_node_t		*ino_rec, *first_rec, *last_rec;
- 	int			hdr_errors;
+ 	release_extent_tree(extent_bno_ptrs[agno]);
+@@ -522,93 +557,6 @@ get_bcnt_extent(xfs_agnumber_t agno, xfs
+ 	return(ext);
+ }
  
- 	hdr_errors = 0;
-@@ -737,165 +891,8 @@ _("inode btree block claimed (state %d),
- 		 * of INODES_PER_CHUNK (64) inodes.  off is the offset into
- 		 * the block.  skip processing of bogus records.
- 		 */
--		for (i = 0; i < numrecs; i++) {
--			ino = be32_to_cpu(rp[i].ir_startino);
--			off = XFS_AGINO_TO_OFFSET(mp, ino);
--			agbno = XFS_AGINO_TO_AGBNO(mp, ino);
--			lino = XFS_AGINO_TO_INO(mp, agno, ino);
--			/*
--			 * on multi-block block chunks, all chunks start
--			 * at the beginning of the block.  with multi-chunk
--			 * blocks, all chunks must start on 64-inode boundaries
--			 * since each block can hold N complete chunks. if
--			 * fs has aligned inodes, all chunks must start
--			 * at a fs_ino_alignment*N'th agbno.  skip recs
--			 * with badly aligned starting inodes.
--			 */
--			if (ino == 0 ||
--			    (inodes_per_block <= XFS_INODES_PER_CHUNK &&
--			     off !=  0) ||
--			    (inodes_per_block > XFS_INODES_PER_CHUNK &&
--			     off % XFS_INODES_PER_CHUNK != 0) ||
--			    (fs_aligned_inodes &&
--			     agbno % fs_ino_alignment != 0))  {
--				do_warn(
--			_("badly aligned inode rec (starting inode = %llu)\n"),
--					lino);
--				suspect++;
--			}
+-/*
+- * the next 2 routines manage the trees of duplicate extents -- 1 tree
+- * per AG
+- */
+-void
+-add_dup_extent(xfs_agnumber_t agno, xfs_agblock_t startblock,
+-		xfs_extlen_t blockcount)
+-{
+-	extent_tree_node_t *first, *last, *ext, *next_ext;
+-	xfs_agblock_t new_startblock;
+-	xfs_extlen_t new_blockcount;
 -
--			/*
--			 * verify numeric validity of inode chunk first
--			 * before inserting into a tree.  don't have to
--			 * worry about the overflow case because the
--			 * starting ino number of a chunk can only get
--			 * within 255 inodes of max (NULLAGINO).  if it
--			 * gets closer, the agino number will be illegal
--			 * as the agbno will be too large.
--			 */
--			if (verify_aginum(mp, agno, ino))  {
--				do_warn(
--_("bad starting inode # (%llu (0x%x 0x%x)) in ino rec, skipping rec\n"),
--					lino, agno, ino);
--				suspect++;
--				continue;
--			}
+-	ASSERT(agno < glob_agcount);
 -
--			if (verify_aginum(mp, agno,
--					ino + XFS_INODES_PER_CHUNK - 1))  {
--				do_warn(
--_("bad ending inode # (%llu (0x%x 0x%x)) in ino rec, skipping rec\n"),
--					lino + XFS_INODES_PER_CHUNK - 1,
--					agno, ino + XFS_INODES_PER_CHUNK - 1);
--				suspect++;
--				continue;
--			}
+-#ifdef XR_DUP_TRACE
+-	fprintf(stderr, "Adding dup extent - %d/%d %d\n", agno, startblock, blockcount);
+-#endif
+-	avl_findranges(extent_tree_ptrs[agno], startblock - 1,
+-		startblock + blockcount + 1,
+-		(avlnode_t **) &first, (avlnode_t **) &last);
+-	/*
+-	 * find adjacent and overlapping extent blocks
+-	 */
+-	if (first == NULL && last == NULL)  {
+-		/* nothing, just make and insert new extent */
 -
--			/*
--			 * set state of each block containing inodes
--			 */
--			if (off == 0 && !suspect)  {
--				for (j = 0;
--				     j < XFS_INODES_PER_CHUNK;
--				     j += mp->m_sb.sb_inopblock)  {
--					agbno = XFS_AGINO_TO_AGBNO(mp, ino + j);
--					state = get_agbno_state(mp,
--							agno, agbno);
+-		ext = mk_extent_tree_nodes(startblock, blockcount, XR_E_MULT);
 -
--					if (state == XR_E_UNKNOWN)  {
--						set_agbno_state(mp, agno,
--							agbno, XR_E_INO);
--					} else if (state == XR_E_INUSE_FS &&
--						agno == 0 &&
--						ino + j >= first_prealloc_ino &&
--						ino + j < last_prealloc_ino)  {
--						set_agbno_state(mp, agno,
--							agbno, XR_E_INO);
--					} else  {
--						do_warn(
--_("inode chunk claims used block, inobt block - agno %d, bno %d, inopb %d\n"),
--							agno, bno,
--							mp->m_sb.sb_inopblock);
--						suspect++;
--						/*
--						 * XXX - maybe should mark
--						 * block a duplicate
--						 */
--						continue;
--					}
--				}
--			}
--			/*
--			 * ensure only one avl entry per chunk
--			 */
--			find_inode_rec_range(agno, ino,
--					ino + XFS_INODES_PER_CHUNK,
--					&first_rec,
--					&last_rec);
--			if (first_rec != NULL)  {
--				/*
--				 * this chunk overlaps with one (or more)
--				 * already in the tree
--				 */
--				do_warn(
--_("inode rec for ino %llu (%d/%d) overlaps existing rec (start %d/%d)\n"),
--					lino, agno, ino,
--					agno, first_rec->ino_startnum);
--				suspect++;
--
--				/*
--				 * if the 2 chunks start at the same place,
--				 * then we don't have to put this one
--				 * in the uncertain list.  go to the next one.
--				 */
--				if (first_rec->ino_startnum == ino)
--					continue;
--			}
--
--			nfree = 0;
--
--			/*
--			 * now mark all the inodes as existing and free or used.
--			 * if the tree is suspect, put them into the uncertain
--			 * inode tree.
--			 */
--			if (!suspect)  {
--				if (XFS_INOBT_IS_FREE_DISK(&rp[i], 0)) {
--					nfree++;
--					ino_rec = set_inode_free_alloc(agno,
--									ino);
--				} else  {
--					ino_rec = set_inode_used_alloc(agno,
--									ino);
--				}
--				for (j = 1; j < XFS_INODES_PER_CHUNK; j++) {
--					if (XFS_INOBT_IS_FREE_DISK(&rp[i], j)) {
--						nfree++;
--						set_inode_free(ino_rec, j);
--					} else  {
--						set_inode_used(ino_rec, j);
--					}
--				}
--			} else  {
--				for (j = 0; j < XFS_INODES_PER_CHUNK; j++) {
--					if (XFS_INOBT_IS_FREE_DISK(&rp[i], j)) {
--						nfree++;
--						add_aginode_uncertain(agno,
--								ino + j, 1);
--					} else  {
--						add_aginode_uncertain(agno,
--								ino + j, 0);
--					}
--				}
--			}
--
--			if (nfree != be32_to_cpu(rp[i].ir_freecount)) {
--				do_warn(_("ir_freecount/free mismatch, inode "
--					"chunk %d/%d, freecount %d nfree %d\n"),
--					agno, ino,
--					be32_to_cpu(rp[i].ir_freecount), nfree);
--			}
+-		if (avl_insert(extent_tree_ptrs[agno],
+-				(avlnode_t *) ext) == NULL)  {
+-			do_error(_("duplicate extent range\n"));
 -		}
-+		for (i = 0; i < numrecs; i++)
-+			suspect = scan_single_ino_chunk(agno, &rp[i], suspect);
+-
+-		return;
+-	}
+-
+-	ASSERT(first != NULL && last != NULL);
+-
+-	/*
+-	 * find the new composite range, delete old extent nodes
+-	 * as we go
+-	 */
+-	new_startblock = startblock;
+-	new_blockcount = blockcount;
+-
+-	for (ext = first;
+-		ext != (extent_tree_node_t *) last->avl_node.avl_nextino;
+-		ext = next_ext)  {
+-		/*
+-		 * preserve the next inorder node
+-		 */
+-		next_ext = (extent_tree_node_t *) ext->avl_node.avl_nextino;
+-		/*
+-		 * just bail if the new extent is contained within an old one
+-		 */
+-		if (ext->ex_startblock <= startblock &&
+-				ext->ex_blockcount >= blockcount)
+-			return;
+-		/*
+-		 * now check for overlaps and adjacent extents
+-		 */
+-		if (ext->ex_startblock + ext->ex_blockcount >= startblock
+-			|| ext->ex_startblock <= startblock + blockcount)  {
+-
+-			if (ext->ex_startblock < new_startblock)
+-				new_startblock = ext->ex_startblock;
+-
+-			if (ext->ex_startblock + ext->ex_blockcount >
+-					new_startblock + new_blockcount)
+-				new_blockcount = ext->ex_startblock +
+-							ext->ex_blockcount -
+-							new_startblock;
+-
+-			avl_delete(extent_tree_ptrs[agno], (avlnode_t *) ext);
+-			continue;
+-		}
+-	}
+-
+-	ext = mk_extent_tree_nodes(new_startblock, new_blockcount, XR_E_MULT);
+-
+-	if (avl_insert(extent_tree_ptrs[agno], (avlnode_t *) ext) == NULL)  {
+-		do_error(_("duplicate extent range\n"));
+-	}
+-
+-	return;
+-}
+-
+ static __psunsigned_t
+ avl_ext_start(avlnode_t *node)
+ {
+@@ -901,10 +849,9 @@ incore_ext_init(xfs_mount_t *mp)
+ 	pthread_mutex_init(&rt_ext_tree_lock, NULL);
+ 	pthread_mutex_init(&rt_ext_flist_lock, NULL);
  
- 		if (suspect)
- 			bad_ino_btree = 1;
+-	if ((extent_tree_ptrs = malloc(agcount *
+-					sizeof(avltree_desc_t *))) == NULL)
+-		do_error(
+-	_("couldn't malloc dup extent tree descriptor table\n"));
++	dup_extent_trees = calloc(agcount, sizeof(struct btree_root *));
++	if (!dup_extent_trees)
++		do_error(_("couldn't malloc dup extent tree descriptor table\n"));
+ 
+ 	if ((extent_bno_ptrs = malloc(agcount *
+ 					sizeof(avltree_desc_t *))) == NULL)
+@@ -917,10 +864,6 @@ incore_ext_init(xfs_mount_t *mp)
+ 	_("couldn't malloc free by-bcnt extent tree descriptor table\n"));
+ 
+ 	for (i = 0; i < agcount; i++)  {
+-		if ((extent_tree_ptrs[i] =
+-				malloc(sizeof(avltree_desc_t))) == NULL)
+-			do_error(
+-			_("couldn't malloc dup extent tree descriptor\n"));
+ 		if ((extent_bno_ptrs[i] =
+ 				malloc(sizeof(avltree_desc_t))) == NULL)
+ 			do_error(
+@@ -932,7 +875,7 @@ incore_ext_init(xfs_mount_t *mp)
+ 	}
+ 
+ 	for (i = 0; i < agcount; i++)  {
+-		avl_init_tree(extent_tree_ptrs[i], &avl_extent_tree_ops);
++		btree_init(&dup_extent_trees[i]);
+ 		avl_init_tree(extent_bno_ptrs[i], &avl_extent_tree_ops);
+ 		avl_init_tree(extent_bcnt_ptrs[i], &avl_extent_bcnt_tree_ops);
+ 	}
+@@ -959,18 +902,18 @@ incore_ext_teardown(xfs_mount_t *mp)
+ 	free_allocations(ba_list);
+ 
+ 	for (i = 0; i < mp->m_sb.sb_agcount; i++)  {
+-		free(extent_tree_ptrs[i]);
++		btree_destroy(dup_extent_trees[i]);
+ 		free(extent_bno_ptrs[i]);
+ 		free(extent_bcnt_ptrs[i]);
+ 	}
+ 
++	free(dup_extent_trees);
+ 	free(extent_bcnt_ptrs);
+ 	free(extent_bno_ptrs);
+-	free(extent_tree_ptrs);
+ 
+-	extent_bcnt_ptrs = extent_bno_ptrs = extent_tree_ptrs = NULL;
+-
+-	return;
++	dup_extent_trees = NULL;
++	extent_bcnt_ptrs = NULL;
++	extent_bno_ptrs = NULL;
+ }
+ 
+ int
+Index: xfsprogs-dev/repair/scan.c
+===================================================================
+--- xfsprogs-dev.orig/repair/scan.c	2009-08-21 15:11:16.000000000 +0000
++++ xfsprogs-dev/repair/scan.c	2009-08-21 15:23:51.000000000 +0000
+@@ -286,8 +286,9 @@ _("bad back (left) sibling pointer (saw 
+ 		 * filesystem
+ 		 */
+ 		if (type != XR_INO_RTDATA || whichfork != XFS_DATA_FORK)  {
+-			if (search_dup_extent(mp, XFS_FSB_TO_AGNO(mp, bno),
+-					XFS_FSB_TO_AGBNO(mp, bno)))
++			if (search_dup_extent(XFS_FSB_TO_AGNO(mp, bno),
++					XFS_FSB_TO_AGBNO(mp, bno),
++					XFS_FSB_TO_AGBNO(mp, bno) + 1))
+ 				return(1);
+ 		} else  {
+ 			if (search_rt_dup_extent(mp, bno))
 
 _______________________________________________
 xfs mailing list
