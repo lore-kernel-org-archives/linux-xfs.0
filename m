@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n82HvjIm034374 for <xfs@oss.sgi.com>; Wed, 2 Sep 2009 12:58:00 -0500
+	n82Hvi8H034369 for <xfs@oss.sgi.com>; Wed, 2 Sep 2009 12:57:59 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D771915B1A28
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5EBC841E03E
 	for <xfs@oss.sgi.com>; Wed,  2 Sep 2009 10:58:41 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id JVchCQzHAjpHurEl for
+	by cuda.sgi.com with ESMTP id aPadCMhukC8Dav4Y for
 	<xfs@oss.sgi.com>; Wed, 02 Sep 2009 10:58:41 -0700 (PDT)
-Message-Id: <20090902175841.284697389@bombadil.infradead.org>
-Date: Wed, 02 Sep 2009 13:55:40 -0400
+Message-Id: <20090902175840.740632507@bombadil.infradead.org>
+Date: Wed, 02 Sep 2009 13:55:37 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 09/14] repair: track logical to physical block mapping more
-	effeciently
+Subject: [PATCH 06/14] repair: use a btree instead of a radix tree for the
+	prefetch queue
 References: <20090902175531.469184575@bombadil.infradead.org>
-Content-Disposition: inline; filename=repair-blkmap-opt
+Content-Disposition: inline; filename=repair-radix-to-btree
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,682 +31,2467 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Barry Naujok <bnaujok@sgi.com>
 
-Currently we track the logical to physical block mapping by a structure which
-contains an array of physicial blocks.  This is extremly efficient and is
-replaced with the normal starblock storage we use in the kernel and on disk
-in this patch.
+Currently the prefetch queue in xfs_repair uses a radix tree implementation
+derived from the Linux kernel one to manage it's prefetch queue.
 
-In addition also use thread-local storage for the block map, this is possible
-because repair only processes one inode at a given time per thread, and the
-block map does not have to outlive the processing of a single inode.
-
-The combination of those factors means we can use pthread thread-local
-storage to store the block map, and we can re-use the allocation over
-and over again.
-
-This should be ported over to xfs_db eventually, or even better we could try
-to share the code.
-
-[hch: added a small fix in blkmap_set_ext to not call memmove unless needed]
+The radix tree implement is not very memory efficient for sparse indices,
+so replace it with a btree implementation that is much more efficient.
+This is not that important for the prefetch queue but will be very important
+for the next memory optimization patches which need a tree to store things
+like the block map which are very sparse, and we do not want to deal with
+two tree implementations (or rather three given that we still have avl.c
+around)
 
 Signed-off-by: Barry Naujok <bnaujok@sgi.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfsprogs-dev/repair/bmap.c
+Index: xfsprogs-dev/repair/Makefile
 ===================================================================
---- xfsprogs-dev.orig/repair/bmap.c	2009-08-20 02:32:34.000000000 +0000
-+++ xfsprogs-dev/repair/bmap.c	2009-08-20 02:32:45.000000000 +0000
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2000-2001,2005 Silicon Graphics, Inc.
-+ * Copyright (c) 2000-2001,2005,2008 Silicon Graphics, Inc.
-  * All Rights Reserved.
-  *
-  * This program is free software; you can redistribute it and/or
-@@ -21,106 +21,46 @@
- #include "bmap.h"
+--- xfsprogs-dev.orig/repair/Makefile	2009-08-20 00:01:58.000000000 +0000
++++ xfsprogs-dev/repair/Makefile	2009-08-20 00:06:43.000000000 +0000
+@@ -9,15 +9,15 @@
  
- /*
-- * Block mapping code taken from xfs_db.
-- */
--
--/*
-- * Append an extent to the block entry.
-- */
--void
--blkent_append(
--	blkent_t	**entp,
--	xfs_dfsbno_t	b,
--	xfs_dfilblks_t	c)
--{
--	blkent_t	*ent;
--	size_t		size;
--	int		i;
--
--	ent = *entp;
--	size = BLKENT_SIZE(c + ent->nblks);
--	if ((*entp = ent = realloc(ent, size)) == NULL) {
--		do_warn(_("realloc failed in blkent_append (%u bytes)\n"),
--			size);
--		return;
--	}
--	for (i = 0; i < c; i++)
--		ent->blks[ent->nblks + i] = b + i;
--	ent->nblks += c;
--}
--
--/*
-- * Make a new block entry.
-- */
--blkent_t *
--blkent_new(
--	xfs_dfiloff_t	o,
--	xfs_dfsbno_t	b,
--	xfs_dfilblks_t	c)
--{
--	blkent_t	*ent;
--	int		i;
--
--	if ((ent = malloc(BLKENT_SIZE(c))) == NULL) {
--		do_warn(_("malloc failed in blkent_new (%u bytes)\n"),
--			BLKENT_SIZE(c));
--		return ent;
--	}
--	ent->nblks = c;
--	ent->startoff = o;
--	for (i = 0; i < c; i++)
--		ent->blks[i] = b + i;
--	return ent;
--}
--
--/*
-- * Prepend an extent to the block entry.
-+ * Track the logical to physical block mapping for inodes.
+ LTCOMMAND = xfs_repair
+ 
+-HFILES = agheader.h attr_repair.h avl.h avl64.h bmap.h dinode.h dir.h \
+-	dir2.h err_protos.h globals.h incore.h protos.h rt.h \
+-	progress.h scan.h versions.h prefetch.h radix-tree.h threads.h
++HFILES = agheader.h attr_repair.h avl.h avl64.h bmap.h btree.h \
++	dinode.h dir.h dir2.h err_protos.h globals.h incore.h protos.h rt.h \
++	progress.h scan.h versions.h prefetch.h threads.h
+ 
+-CFILES = agheader.c attr_repair.c avl.c avl64.c bmap.c dino_chunks.c \
+-	dinode.c dir.c dir2.c globals.c incore.c \
++CFILES = agheader.c attr_repair.c avl.c avl64.c bmap.c btree.c \
++	dino_chunks.c dinode.c dir.c dir2.c globals.c incore.c \
+ 	incore_bmc.c init.c incore_ext.c incore_ino.c phase1.c \
+ 	phase2.c phase3.c phase4.c phase5.c phase6.c phase7.c \
+-	progress.c prefetch.c radix-tree.c rt.c sb.c scan.c threads.c \
++	progress.c prefetch.c rt.c sb.c scan.c threads.c \
+ 	versions.c xfs_repair.c
+ 
+ LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
+Index: xfsprogs-dev/repair/btree.c
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ xfsprogs-dev/repair/btree.c	2009-08-20 00:06:44.000000000 +0000
+@@ -0,0 +1,1234 @@
++/*
++ * Copyright (c) 2007, Silicon Graphics, Inc. Barry Naujok <bnaujok@sgi.com>
++ * All Rights Reserved.
 + *
-+ * Repair only processes one inode at a given time per thread, and the
-+ * block map does not have to outlive the processing of a single inode.
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
 + *
-+ * The combination of those factors means we can use pthreads thread-local
-+ * storage to store the block map, and we can re-use the allocation over
-+ * and over again.
-  */
--void
--blkent_prepend(
--	blkent_t	**entp,
--	xfs_dfsbno_t	b,
--	xfs_dfilblks_t	c)
--{
--	int		i;
--	blkent_t	*newent;
--	blkent_t	*oldent;
- 
--	oldent = *entp;
--	if ((newent = malloc(BLKENT_SIZE(oldent->nblks + c))) == NULL) {
--		do_warn(_("malloc failed in blkent_prepend (%u bytes)\n"),
--			BLKENT_SIZE(oldent->nblks + c));
--		*entp = newent;
--		return;
--	}
--	newent->nblks = oldent->nblks + c;
--	newent->startoff = oldent->startoff - c;
--	for (i = 0; i < c; i++)
--		newent->blks[i] = b + c;
--	for (; i < oldent->nblks + c; i++)
--		newent->blks[i] = oldent->blks[i - c];
--	free(oldent);
--	*entp = newent;
--}
-+pthread_key_t	dblkmap_key;
-+pthread_key_t	ablkmap_key;
- 
--/*
-- * Allocate a block map.
-- */
- blkmap_t *
- blkmap_alloc(
--	xfs_extnum_t	nex)
-+	xfs_extnum_t	nex,
-+	int		whichfork)
- {
-+	pthread_key_t	key;
- 	blkmap_t	*blkmap;
- 
-+	ASSERT(whichfork == XFS_DATA_FORK || whichfork == XFS_ATTR_FORK);
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
 +
- 	if (nex < 1)
- 		nex = 1;
--	if ((blkmap = malloc(BLKMAP_SIZE(nex))) == NULL) {
--		do_warn(_("malloc failed in blkmap_alloc (%u bytes)\n"),
--			BLKMAP_SIZE(nex));
--		return blkmap;
++#include <libxfs.h>
++#include "btree.h"
 +
-+	key = whichfork ? ablkmap_key : dblkmap_key;
-+	blkmap = pthread_getspecific(key);
-+	if (!blkmap || blkmap->naexts < nex) {
-+		blkmap = realloc(blkmap, BLKMAP_SIZE(nex));
-+		if (!blkmap) {
-+			do_warn(_("malloc failed in blkmap_alloc (%u bytes)\n"),
-+				BLKMAP_SIZE(nex));
++
++#define BTREE_KEY_MAX		7
++#define BTREE_KEY_MIN		(BTREE_KEY_MAX / 2)
++
++#define BTREE_PTR_MAX		(BTREE_KEY_MAX + 1)
++
++struct btree_node {
++	unsigned long		num_keys;
++	unsigned long		keys[BTREE_KEY_MAX];
++	struct btree_node *	ptrs[BTREE_PTR_MAX];
++};
++
++struct btree_cursor {
++	struct btree_node	*node;
++	int			index;
++};
++
++struct btree_root {
++	struct btree_node	*root_node;
++	struct btree_cursor	*cursor;	/* track path to end leaf */
++	int			height;
++	/* lookup cache */
++	int			keys_valid;	/* set if the cache is valid */
++	unsigned long		cur_key;
++	unsigned long		next_key;
++	void			*next_value;
++	unsigned long		prev_key;
++	void			*prev_value;
++#ifdef BTREE_STATS
++	struct btree_stats {
++		unsigned long	num_items;
++		unsigned long	max_items;
++		int		alloced;
++		int		cache_hits;
++		int		cache_misses;
++		int		lookup;
++		int		find;
++		int		key_update;
++		int		value_update;
++		int		insert;
++		int		delete;
++		int		inc_height;
++		int		dec_height;
++		int		shift_prev;
++		int		shift_next;
++		int		split;
++		int		merge_prev;
++		int		merge_next;
++		int		balance_prev;
++		int		balance_next;
++	} stats;
++#endif
++};
++
++
++static struct btree_node *
++btree_node_alloc(void)
++{
++	return calloc(1, sizeof(struct btree_node));
++}
++
++static void
++btree_node_free(
++	struct btree_node 	*node)
++{
++	free(node);
++}
++
++static void
++btree_free_nodes(
++	struct btree_node	*node,
++	int			level)
++{
++	int			i;
++
++	if (level)
++		for (i = 0; i <= node->num_keys; i++)
++			btree_free_nodes(node->ptrs[i], level - 1);
++	btree_node_free(node);
++}
++
++static void
++__btree_init(
++	struct btree_root	*root)
++{
++	memset(root, 0, sizeof(struct btree_root));
++	root->height = 1;
++	root->cursor = calloc(1, sizeof(struct btree_cursor));
++	root->root_node = btree_node_alloc();
++	ASSERT(root->root_node);
++#ifdef BTREE_STATS
++	root->stats.max_items = 1;
++	root->stats.alloced += 1;
++#endif
++}
++
++static void
++__btree_free(
++	struct btree_root	*root)
++{
++	btree_free_nodes(root->root_node, root->height - 1);
++	free(root->cursor);
++	root->height = 0;
++	root->cursor = NULL;
++	root->root_node = NULL;
++}
++
++void
++btree_init(
++	struct btree_root	**root)
++{
++	*root = calloc(1, sizeof(struct btree_root));
++	__btree_init(*root);
++}
++
++void
++btree_clear(
++	struct btree_root	*root)
++{
++	__btree_free(root);
++	__btree_init(root);
++}
++
++void
++btree_destroy(
++	struct btree_root	*root)
++{
++	__btree_free(root);
++	free(root);
++}
++
++int
++btree_is_empty(
++	struct btree_root	*root)
++{
++	return root->root_node->num_keys == 0;
++}
++
++static inline void
++btree_invalidate_cursor(
++	struct btree_root	*root)
++{
++	root->cursor[0].node = NULL;
++	root->keys_valid = 0;
++}
++
++static inline unsigned long
++btree_key_of_cursor(
++	struct btree_cursor	*cursor,
++	int			height)
++{
++	while (cursor->node->num_keys == cursor->index && --height > 0)
++		cursor++;
++	return cursor->node->keys[cursor->index];
++}
++
++static void *
++btree_get_prev(
++	struct btree_root	*root,
++	unsigned long		*key)
++{
++	struct btree_cursor	*cur = root->cursor;
++	int			level = 0;
++	struct btree_node	*node;
++
++	if (cur->index > 0) {
++		if (key)
++			*key = cur->node->keys[cur->index - 1];
++		return cur->node->ptrs[cur->index - 1];
++	}
++
++	/* else need to go up and back down the tree to find the previous */
++
++	while (cur->index == 0) {
++		if (++level == root->height)
 +			return NULL;
++		cur++;
++	}
++
++	/* the key is in the current level */
++	if (key)
++		*key = cur->node->keys[cur->index - 1];
++
++	/* descend back down the right side to get the pointer */
++	node = cur->node->ptrs[cur->index - 1];
++	while (level--)
++		node = node->ptrs[node->num_keys];
++	return node;
++}
++
++static void *
++btree_get_next(
++	struct btree_root	*root,
++	unsigned long		*key)
++{
++	struct btree_cursor	*cur = root->cursor;
++	int			level = 0;
++	struct btree_node	*node;
++
++	while (cur->index == cur->node->num_keys) {
++		if (++level == root->height)
++			return NULL;
++		cur++;
++	}
++	if (level == 0) {
++		if (key) {
++			cur->index++;
++			*key = btree_key_of_cursor(cur, root->height);
++			cur->index--;
 +		}
-+		pthread_setspecific(key, blkmap);
-+		blkmap->naexts = nex;
- 	}
--	blkmap->naents = nex;
--	blkmap->nents = 0;
++		return cur->node->ptrs[cur->index + 1];
++	}
 +
-+	blkmap->nexts = 0;
- 	return blkmap;
- }
- 
-@@ -131,14 +71,7 @@ void
- blkmap_free(
- 	blkmap_t	*blkmap)
- {
--	blkent_t	**entp;
--	xfs_extnum_t	i;
--
--	if (blkmap == NULL)
--		return;
--	for (i = 0, entp = blkmap->ents; i < blkmap->nents; i++, entp++)
--		free(*entp);
--	free(blkmap);
-+	/* nothing to do! - keep the memory around for the next inode */
- }
- 
- /*
-@@ -149,20 +82,18 @@ blkmap_get(
- 	blkmap_t	*blkmap,
- 	xfs_dfiloff_t	o)
- {
--	blkent_t	*ent;
--	blkent_t	**entp;
-+	bmap_ext_t	*ext = blkmap->exts;
- 	int		i;
- 
--	for (i = 0, entp = blkmap->ents; i < blkmap->nents; i++, entp++) {
--		ent = *entp;
--		if (o >= ent->startoff && o < ent->startoff + ent->nblks)
--			return ent->blks[o - ent->startoff];
-+	for (i = 0; i < blkmap->nexts; i++, ext++) {
-+		if (o >= ext->startoff && o < ext->startoff + ext->blockcount)
-+			return ext->startblock + (o - ext->startoff);
- 	}
- 	return NULLDFSBNO;
- }
- 
- /*
-- * Get a chunk of entries from a block map.
-+ * Get a chunk of entries from a block map - only used for reading dirv2 blocks
-  */
- int
- blkmap_getn(
-@@ -172,93 +103,62 @@ blkmap_getn(
- 	bmap_ext_t	**bmpp,
- 	bmap_ext_t	*bmpp_single)
- {
--	bmap_ext_t	*bmp;
--	blkent_t	*ent;
--	xfs_dfiloff_t	ento;
--	blkent_t	**entp;
-+	bmap_ext_t	*bmp = NULL;
-+	bmap_ext_t	*ext;
- 	int		i;
- 	int		nex;
- 
- 	if (nb == 1) {
--		/* 
-+		/*
- 		 * in the common case, when mp->m_dirblkfsbs == 1,
- 		 * avoid additional malloc/free overhead
- 		 */
- 		bmpp_single->startblock = blkmap_get(blkmap, o);
--		bmpp_single->blockcount = 1;
--		bmpp_single->startoff = 0;
--		bmpp_single->flag = 0;
--		*bmpp = bmpp_single;
--		return (bmpp_single->startblock != NULLDFSBNO) ? 1 : 0;
-+		goto single_ext;
- 	}
--	for (i = nex = 0, bmp = NULL, entp = blkmap->ents;
--	     i < blkmap->nents;
--	     i++, entp++) {
--		ent = *entp;
--		if (ent->startoff >= o + nb)
-+	ext = blkmap->exts;
-+	nex = 0;
-+	for (i = 0; i < blkmap->nexts; i++, ext++) {
++	node = cur->node->ptrs[cur->index + 1];
++	while (--level > 0)
++		node = node->ptrs[0];
++	if (key)
++		*key = node->keys[0];
++	return node->ptrs[0];
++}
 +
-+		if (ext->startoff >= o + nb)
- 			break;
--		if (ent->startoff + ent->nblks <= o)
-+		if (ext->startoff + ext->blockcount <= o)
- 			continue;
--		for (ento = ent->startoff;
--		     ento < ent->startoff + ent->nblks && ento < o + nb;
--		     ento++) {
--			if (ento < o)
--				continue;
--			if (bmp &&
--			    bmp[nex - 1].startoff + bmp[nex - 1].blockcount ==
--				    ento &&
--			    bmp[nex - 1].startblock + bmp[nex - 1].blockcount ==
--				    ent->blks[ento - ent->startoff])
--				bmp[nex - 1].blockcount++;
--			else {
--				bmp = realloc(bmp, ++nex * sizeof(*bmp));
--				if (bmp == NULL) {
--					do_warn(_("blkmap_getn realloc failed"
--						" (%u bytes)\n"),
--						nex * sizeof(*bmp));
--					continue;
--				}
--				bmp[nex - 1].startoff = ento;
--				bmp[nex - 1].startblock =
--					ent->blks[ento - ent->startoff];
--				bmp[nex - 1].blockcount = 1;
--				bmp[nex - 1].flag = 0;
--			}
++/*
++ * Lookup/Search functions
++ */
 +
-+		/*
-+		 * if all the requested blocks are in one extent (also common),
-+		 * use the bmpp_single option as well
-+		 */
-+		if (!bmp && o >= ext->startoff &&
-+		    o + nb <= ext->startoff + ext->blockcount) {
-+			bmpp_single->startblock =
-+				 ext->startblock + (o - ext->startoff);
-+			goto single_ext;
- 		}
++static int
++btree_do_search(
++	struct btree_root	*root,
++	unsigned long		key)
++{
++	unsigned long		k = 0;
++	struct btree_cursor	*cur = root->cursor + root->height;
++	struct btree_node	*node = root->root_node;
++	int			height = root->height;
++	int			key_found = 0;
++	int			i;
 +
-+		/*
-+		 * rare case - multiple extents for a single dir block
-+		 */
-+		bmp = malloc(nb * sizeof(bmap_ext_t));
-+		if (!bmp)
-+			do_error(_("blkmap_getn malloc failed (%u bytes)\n"),
-+						nb * sizeof(bmap_ext_t));
++	while (--height >= 0) {
++		cur--;
++		for (i = 0; i < node->num_keys; i++)
++			if (node->keys[i] >= key) {
++				k = node->keys[i];
++				key_found = 1;
++				break;
++			}
++		cur->node = node;
++		cur->index = i;
++		node = node->ptrs[i];
++	}
++	root->keys_valid = key_found;
++	if (!key_found)
++		return 0;
 +
-+		bmp[nex].startblock = ext->startblock + (o - ext->startoff);
-+		bmp[nex].blockcount = MIN(nb, ext->blockcount -
-+				(bmp[nex].startblock - ext->startblock));
-+		o += bmp[nex].blockcount;
-+		nb -= bmp[nex].blockcount;
-+		nex++;
- 	}
- 	*bmpp = bmp;
- 	return nex;
--}
--
--/*
-- * Make a block map larger.
-- */
--void
--blkmap_grow(
--	blkmap_t	**blkmapp,
--	blkent_t	**entp,
--	blkent_t	*newent)
--{
--	blkmap_t	*blkmap;
--	size_t		size;
--	int		i;
--	int		idx;
- 
--	blkmap = *blkmapp;
--	idx = (int)(entp - blkmap->ents);
--	if (blkmap->naents == blkmap->nents) {
--		size = BLKMAP_SIZE(blkmap->nents + 1);
--		if ((*blkmapp = blkmap = realloc(blkmap, size)) == NULL) {
--			do_warn(_("realloc failed in blkmap_grow (%u bytes)\n"),
--				size);
--			return;
--		}
--		blkmap->naents++;
--	}
--	for (i = blkmap->nents; i > idx; i--)
--		blkmap->ents[i] = blkmap->ents[i - 1];
--	blkmap->ents[idx] = newent;
--	blkmap->nents++;
-+single_ext:
-+	bmpp_single->blockcount = nb;
-+	bmpp_single->startoff = 0;	/* not even used by caller! */
-+	*bmpp = bmpp_single;
-+	return (bmpp_single->startblock != NULLDFSBNO) ? 1 : 0;
- }
- 
- /*
-@@ -268,12 +168,12 @@ xfs_dfiloff_t
- blkmap_last_off(
- 	blkmap_t	*blkmap)
- {
--	blkent_t	*ent;
-+	bmap_ext_t	*ext;
- 
--	if (!blkmap->nents)
-+	if (!blkmap->nexts)
- 		return NULLDFILOFF;
--	ent = blkmap->ents[blkmap->nents - 1];
--	return ent->startoff + ent->nblks;
-+	ext = blkmap->exts + blkmap->nexts - 1;
-+	return ext->startoff + ext->blockcount;
- }
- 
- /*
-@@ -285,73 +185,45 @@ blkmap_next_off(
- 	xfs_dfiloff_t	o,
- 	int		*t)
- {
--	blkent_t	*ent;
--	blkent_t	**entp;
-+	bmap_ext_t	*ext;
- 
--	if (!blkmap->nents)
-+	if (!blkmap->nexts)
- 		return NULLDFILOFF;
- 	if (o == NULLDFILOFF) {
- 		*t = 0;
--		ent = blkmap->ents[0];
--		return ent->startoff;
-+		return blkmap->exts[0].startoff;
- 	}
--	entp = &blkmap->ents[*t];
--	ent = *entp;
--	if (o < ent->startoff + ent->nblks - 1)
-+	ext = blkmap->exts + *t;
-+	if (o < ext->startoff + ext->blockcount - 1)
- 		return o + 1;
--	entp++;
--	if (entp >= &blkmap->ents[blkmap->nents])
-+	if (*t >= blkmap->nexts - 1)
- 		return NULLDFILOFF;
- 	(*t)++;
--	ent = *entp;
--	return ent->startoff;
-+	return ext[1].startoff;
- }
- 
- /*
-- * Set a block value in a block map.
-+ * Make a block map larger.
-  */
--void
--blkmap_set_blk(
--	blkmap_t	**blkmapp,
--	xfs_dfiloff_t	o,
--	xfs_dfsbno_t	b)
-+static blkmap_t *
-+blkmap_grow(
-+	blkmap_t	**blkmapp)
- {
--	blkmap_t	*blkmap;
--	blkent_t	*ent;
--	blkent_t	**entp;
--	blkent_t	*nextent;
--
--	blkmap = *blkmapp;
--	for (entp = blkmap->ents; entp < &blkmap->ents[blkmap->nents]; entp++) {
--		ent = *entp;
--		if (o < ent->startoff - 1) {
--			ent = blkent_new(o, b, 1);
--			blkmap_grow(blkmapp, entp, ent);
--			return;
--		}
--		if (o == ent->startoff - 1) {
--			blkent_prepend(entp, b, 1);
--			return;
--		}
--		if (o >= ent->startoff && o < ent->startoff + ent->nblks) {
--			ent->blks[o - ent->startoff] = b;
--			return;
--		}
--		if (o > ent->startoff + ent->nblks)
--			continue;
--		blkent_append(entp, b, 1);
--		if (entp == &blkmap->ents[blkmap->nents - 1])
--			return;
--		ent = *entp;
--		nextent = entp[1];
--		if (ent->startoff + ent->nblks < nextent->startoff)
--			return;
--		blkent_append(entp, nextent->blks[0], nextent->nblks);
--		blkmap_shrink(blkmap, &entp[1]);
--		return;
-+	pthread_key_t	key = dblkmap_key;
-+	blkmap_t	*blkmap = *blkmapp;
++	root->cur_key = k;
++	root->next_value = NULL;	/* do on-demand next value lookup */
++	root->prev_value = btree_get_prev(root, &root->prev_key);
++	return 1;
++}
 +
-+	if (pthread_getspecific(key) != blkmap) {
-+		key = ablkmap_key;
-+		ASSERT(pthread_getspecific(key) == blkmap);
- 	}
--	ent = blkent_new(o, b, 1);
--	blkmap_grow(blkmapp, entp, ent);
++static int
++btree_search(
++	struct btree_root	*root,
++	unsigned long		key)
++{
++	if (root->keys_valid && key <= root->cur_key &&
++				(!root->prev_value || key > root->prev_key)) {
++#ifdef BTREE_STATS
++		root->stats.cache_hits++;
++#endif
++		return 1;
++	}
++#ifdef BTREE_STATS
++	root->stats.cache_misses++;
++#endif
++	return btree_do_search(root, key);
++}
 +
-+	blkmap->naexts += 4;
-+	blkmap = realloc(blkmap, BLKMAP_SIZE(blkmap->naexts));
-+	if (blkmap == NULL)
-+		do_error(_("realloc failed in blkmap_grow\n"));
-+	*blkmapp = blkmap;
-+	pthread_setspecific(key, blkmap);
-+	return blkmap;
- }
- 
- /*
-@@ -364,46 +236,23 @@ blkmap_set_ext(
- 	xfs_dfsbno_t	b,
- 	xfs_dfilblks_t	c)
- {
--	blkmap_t	*blkmap;
--	blkent_t	*ent;
--	blkent_t	**entp;
-+	blkmap_t	*blkmap = *blkmapp;
- 	xfs_extnum_t	i;
- 
--	blkmap = *blkmapp;
--	if (!blkmap->nents) {
--		blkmap->ents[0] = blkent_new(o, b, c);
--		blkmap->nents = 1;
--		return;
--	}
--	entp = &blkmap->ents[blkmap->nents - 1];
--	ent = *entp;
--	if (ent->startoff + ent->nblks == o) {
--		blkent_append(entp, b, c);
--		return;
--	}
--	if (ent->startoff + ent->nblks < o) {
--		ent = blkent_new(o, b, c);
--		blkmap_grow(blkmapp, &blkmap->ents[blkmap->nents], ent);
--		return;
--	}
--	for (i = 0; i < c; i++)
--		blkmap_set_blk(blkmapp, o + i, b + i);
--}
-+	if (blkmap->nexts == blkmap->naexts)
-+		blkmap = blkmap_grow(blkmapp);
- 
--/*
-- * Make a block map smaller.
-- */
--void
--blkmap_shrink(
--	blkmap_t	*blkmap,
--	blkent_t	**entp)
--{
--	int		i;
--	int		idx;
-+	for (i = 0; i < blkmap->nexts; i++) {
-+		if (blkmap->exts[i].startoff > o) {
-+			memmove(blkmap->exts + i + 1,
-+				blkmap->exts + i,
-+				sizeof(bmap_ext_t) * (blkmap->nexts - i));
++void *
++btree_find(
++	struct btree_root	*root,
++	unsigned long		key,
++	unsigned long		*actual_key)
++{
++#ifdef BTREE_STATS
++	root->stats.find += 1;
++#endif
++	if (!btree_search(root, key))
++		return NULL;
++
++	if (actual_key)
++		*actual_key = root->cur_key;
++	return root->cursor->node->ptrs[root->cursor->index];
++}
++
++void *
++btree_lookup(
++	struct btree_root	*root,
++	unsigned long		key)
++{
++#ifdef BTREE_STATS
++	root->stats.lookup += 1;
++#endif
++	if (!btree_search(root, key) || root->cur_key != key)
++		return NULL;
++	return root->cursor->node->ptrs[root->cursor->index];
++}
++
++void *
++btree_peek_prev(
++	struct btree_root	*root,
++	unsigned long		*key)
++{
++	if (!root->keys_valid)
++		return NULL;
++	if (key)
++		*key = root->prev_key;
++	return root->prev_value;
++}
++
++void *
++btree_peek_next(
++	struct btree_root	*root,
++	unsigned long		*key)
++{
++	if (!root->keys_valid)
++		return NULL;
++	if (!root->next_value)
++		root->next_value = btree_get_next(root, &root->next_key);
++	if (key)
++		*key = root->next_key;
++	return root->next_value;
++}
++
++static void *
++btree_move_cursor_to_next(
++	struct btree_root	*root,
++	unsigned long		*key)
++{
++	struct btree_cursor	*cur = root->cursor;
++	int			level = 0;
++
++	while (cur->index == cur->node->num_keys) {
++		if (++level == root->height)
++			return NULL;
++		cur++;
++	}
++	cur->index++;
++	if (level == 0) {
++		if (key)
++			*key = btree_key_of_cursor(cur, root->height);
++		return cur->node->ptrs[cur->index];
++	}
++
++	while (--level >= 0) {
++		root->cursor[level].node = cur->node->ptrs[cur->index];
++		root->cursor[level].index = 0;
++		cur--;
++	}
++	if (key)
++		*key = cur->node->keys[0];
++	return cur->node->ptrs[0];
++}
++
++void *
++btree_lookup_next(
++	struct btree_root	*root,
++	unsigned long		*key)
++{
++	void			*value;
++
++	if (!root->keys_valid)
++		return NULL;
++
++	root->prev_key = root->cur_key;
++	root->prev_value = root->cursor->node->ptrs[root->cursor->index];
++
++	value = btree_move_cursor_to_next(root, &root->cur_key);
++	if (!value) {
++		btree_invalidate_cursor(root);
++		return NULL;
++ 	}
++ 	root->next_value = NULL;	/* on-demand next value fetch */
++	if (key)
++		*key = root->cur_key;
++	return value;
++}
++
++static void *
++btree_move_cursor_to_prev(
++	struct btree_root	*root,
++	unsigned long		*key)
++{
++	struct btree_cursor	*cur = root->cursor;
++	int			level = 0;
++
++	while (cur->index == 0) {
++		if (++level == root->height)
++			return NULL;
++		cur++;
++	}
++	cur->index--;
++	if (key)	/* the key is in the current level */
++		*key = cur->node->keys[cur->index];
++	while (level > 0) {
++		level--;
++		root->cursor[level].node = cur->node->ptrs[cur->index];
++		root->cursor[level].index = root->cursor[level].node->num_keys;
++		cur--;
++	}
++	return cur->node->ptrs[cur->index];
++}
++
++void *
++btree_lookup_prev(
++	struct btree_root	*root,
++	unsigned long		*key)
++{
++	void			*value;
++
++	if (!root->keys_valid)
++		return NULL;
++
++	value = btree_move_cursor_to_prev(root, &root->cur_key);
++	if (!value)
++		return NULL;
++	root->prev_value = btree_get_prev(root, &root->prev_key);
++ 	root->next_value = NULL;	/* on-demand next value fetch */
++	if (key)
++		*key = root->cur_key;
++	return value;
++}
++
++void *
++btree_uncached_lookup(
++	struct btree_root	*root,
++	unsigned long		key)
++{
++	/* cursor-less (ie. uncached) lookup */
++	int			height = root->height - 1;
++	struct btree_node	*node = root->root_node;
++	int			i;
++	int			key_found = 0;
++
++	while (height >= 0) {
++		for (i = 0; i < node->num_keys; i++)
++			if (node->keys[i] >= key) {
++				key_found = node->keys[i] == key;
++				break;
++			}
++		node = node->ptrs[i];
++		height--;
++	}
++	return key_found ? node : NULL;
++}
++
++/* Update functions */
++
++static inline void
++btree_update_node_key(
++	struct btree_root	*root,
++	struct btree_cursor	*cursor,
++	int			level,
++	unsigned long		new_key)
++{
++	int			i;
++
++#ifdef BTREE_STATS
++	root->stats.key_update += 1;
++#endif
++
++	cursor += level;
++	for (i = level; i < root->height; i++) {
++		if (cursor->index < cursor->node->num_keys) {
++			cursor->node->keys[cursor->index] = new_key;
 +			break;
 +		}
++		cursor++;
 +	}
- 
--	free(*entp);
--	idx = (int)(entp - blkmap->ents);
--	for (i = idx + 1; i < blkmap->nents; i++)
--		blkmap->ents[i] = blkmap->ents[i - 1];
--	blkmap->nents--;
-+	blkmap->exts[i].startoff = o;
-+	blkmap->exts[i].startblock = b;
-+	blkmap->exts[i].blockcount = c;
-+	blkmap->nexts++;
- }
-Index: xfsprogs-dev/repair/bmap.h
++}
++
++int
++btree_update_key(
++	struct btree_root	*root,
++	unsigned long		old_key,
++	unsigned long		new_key)
++{
++	if (!btree_search(root, old_key) || root->cur_key != old_key)
++		return ENOENT;
++
++	if (root->next_value && new_key >= root->next_key)
++		return EINVAL;
++
++	if (root->prev_value && new_key <= root->prev_key)
++		return EINVAL;
++
++	btree_update_node_key(root, root->cursor, 0, new_key);
++
++	return 0;
++}
++
++int
++btree_update_value(
++	struct btree_root	*root,
++	unsigned long		key,
++	void			*new_value)
++{
++	if (!new_value)
++		return EINVAL;
++
++	if (!btree_search(root, key) || root->cur_key != key)
++		return ENOENT;
++
++#ifdef BTREE_STATS
++	root->stats.value_update += 1;
++#endif
++	root->cursor->node->ptrs[root->cursor->index] = new_value;
++
++	return 0;
++}
++
++/*
++ * Cursor modification functions - used for inserting and deleting
++ */
++
++static struct btree_cursor *
++btree_copy_cursor_prev(
++	struct btree_root	*root,
++	struct btree_cursor	*dest_cursor,
++	int			level)
++{
++	struct btree_cursor	*src_cur = root->cursor + level;
++	struct btree_cursor	*dst_cur;
++	int			l = level;
++	int			i;
++
++	if (level >= root->height)
++		return NULL;
++
++	while (src_cur->index == 0) {
++		if (++l >= root->height)
++			return NULL;
++		src_cur++;
++	}
++	for (i = l; i < root->height; i++)
++		dest_cursor[i] = *src_cur++;
++
++	dst_cur = dest_cursor + l;
++	dst_cur->index--;
++	while (l-- >= level) {
++		dest_cursor[l].node = dst_cur->node->ptrs[dst_cur->index];
++		dest_cursor[l].index = dest_cursor[l].node->num_keys;
++		dst_cur--;
++	}
++	return dest_cursor;
++}
++
++static struct btree_cursor *
++btree_copy_cursor_next(
++	struct btree_root	*root,
++	struct btree_cursor	*dest_cursor,
++	int			level)
++{
++	struct btree_cursor	*src_cur = root->cursor + level;
++	struct btree_cursor	*dst_cur;
++	int			l = level;
++	int			i;
++
++	if (level >= root->height)
++		return NULL;
++
++	while (src_cur->index == src_cur->node->num_keys) {
++		if (++l >= root->height)
++			return NULL;
++		src_cur++;
++	}
++	for (i = l; i < root->height; i++)
++		dest_cursor[i] = *src_cur++;
++
++	dst_cur = dest_cursor + l;
++	dst_cur->index++;
++	while (l-- >= level) {
++		dest_cursor[l].node = dst_cur->node->ptrs[dst_cur->index];
++		dest_cursor[l].index = 0;
++		dst_cur--;
++	}
++	return dest_cursor;
++}
++
++/*
++ * Shift functions
++ *
++ * Tries to move items in the current leaf to its sibling if it has space.
++ * Used in both insert and delete functions.
++ * Returns the number of items shifted.
++ */
++
++static int
++btree_shift_to_prev(
++	struct btree_root	*root,
++	int			level,
++	struct btree_cursor	*prev_cursor,
++	int			num_children)
++{
++	struct btree_node	*node;
++	struct btree_node	*prev_node;
++	int			num_remain;	/* # of keys left in "node" */
++	unsigned long		key;
++	int			i;
++
++	if (!prev_cursor || !num_children)
++		return 0;
++
++	prev_node = prev_cursor[level].node;
++	node = root->cursor[level].node;
++
++	ASSERT(num_children > 0 && num_children <= node->num_keys + 1);
++
++	if ((prev_node->num_keys + num_children) > BTREE_KEY_MAX)
++		return 0;
++
++#ifdef BTREE_STATS
++	root->stats.shift_prev += 1;
++#endif
++
++	num_remain = node->num_keys - num_children;
++	ASSERT(num_remain == -1 || num_remain >= BTREE_KEY_MIN);
++
++	/* shift parent keys around */
++	level++;
++	if (num_remain > 0)
++		key = node->keys[num_children - 1];
++	else
++		key = btree_key_of_cursor(root->cursor + level,
++						root->height - level);
++	while (prev_cursor[level].index == prev_cursor[level].node->num_keys) {
++		level++;
++		ASSERT(level < root->height);
++	}
++	prev_node->keys[prev_node->num_keys] =
++			prev_cursor[level].node->keys[prev_cursor[level].index];
++	prev_cursor[level].node->keys[prev_cursor[level].index] = key;
++
++	/* copy pointers and keys to the end of the prev node */
++	for (i = 0; i < num_children - 1; i++) {
++		prev_node->keys[prev_node->num_keys + 1 + i] = node->keys[i];
++		prev_node->ptrs[prev_node->num_keys + 1 + i] = node->ptrs[i];
++	}
++	prev_node->ptrs[prev_node->num_keys + 1 + i] = node->ptrs[i];
++	prev_node->num_keys += num_children;
++
++	/* move remaining pointers/keys to start of node */
++	if (num_remain >= 0) {
++		for (i = 0; i < num_remain; i++) {
++			node->keys[i] = node->keys[num_children + i];
++			node->ptrs[i] = node->ptrs[num_children + i];
++		}
++		node->ptrs[i] = node->ptrs[num_children + i];
++		node->num_keys = num_remain;
++	} else
++		node->num_keys = 0;
++
++	return num_children;
++}
++
++static int
++btree_shift_to_next(
++	struct btree_root	*root,
++	int			level,
++	struct btree_cursor	*next_cursor,
++	int			num_children)
++{
++	struct btree_node	*node;
++	struct btree_node	*next_node;
++	int			num_remain;	/* # of children left in node */
++	int			i;
++
++	if (!next_cursor || !num_children)
++		return 0;
++
++	node = root->cursor[level].node;
++	next_node = next_cursor[level].node;
++
++	ASSERT(num_children > 0 && num_children <= node->num_keys + 1);
++
++	if ((next_node->num_keys + num_children) > BTREE_KEY_MAX)
++		return 0;
++
++	num_remain = node->num_keys + 1 - num_children;
++	ASSERT(num_remain == 0 || num_remain > BTREE_KEY_MIN);
++
++#ifdef BTREE_STATS
++	root->stats.shift_next += 1;
++#endif
++
++	/* make space for "num_children" items at beginning of next-leaf */
++	i = next_node->num_keys;
++	next_node->ptrs[num_children + i] = next_node->ptrs[i];
++	while (--i >= 0) {
++		next_node->keys[num_children + i] = next_node->keys[i];
++		next_node->ptrs[num_children + i] = next_node->ptrs[i];
++	}
++
++	/* update keys in parent and next node from parent */
++	do {
++		level++;
++		ASSERT(level < root->height);
++	} while (root->cursor[level].index == root->cursor[level].node->num_keys);
++
++	next_node->keys[num_children - 1] =
++		root->cursor[level].node->keys[root->cursor[level].index];
++	root->cursor[level].node->keys[root->cursor[level].index] =
++		node->keys[node->num_keys - num_children];
++
++	/* copy last "num_children" items from node into start of next-node */
++	for (i = 0; i < num_children - 1; i++) {
++		next_node->keys[i] = node->keys[num_remain + i];
++		next_node->ptrs[i] = node->ptrs[num_remain + i];
++	}
++	next_node->ptrs[i] = node->ptrs[num_remain + i];
++	next_node->num_keys += num_children;
++
++	if (num_remain > 0)
++		node->num_keys -= num_children;
++	else
++		node->num_keys = 0;
++
++	return num_children;
++}
++
++/*
++ * Insertion functions
++ */
++
++static struct btree_node *
++btree_increase_height(
++	struct btree_root	*root)
++{
++	struct btree_node	*new_root;
++	struct btree_cursor	*new_cursor;
++
++	new_cursor = realloc(root->cursor, (root->height + 1) *
++				sizeof(struct btree_cursor));
++	if (!new_cursor)
++		return NULL;
++	root->cursor = new_cursor;
++
++	new_root = btree_node_alloc();
++	if (!new_root)
++		return NULL;
++
++#ifdef BTREE_STATS
++	root->stats.alloced += 1;
++	root->stats.inc_height += 1;
++	root->stats.max_items *= BTREE_PTR_MAX;
++#endif
++
++	new_root->ptrs[0] = root->root_node;
++	root->root_node = new_root;
++
++	root->cursor[root->height].node = new_root;
++	root->cursor[root->height].index = 0;
++
++	root->height++;
++
++	return new_root;
++}
++
++static int
++btree_insert_item(
++	struct btree_root	*root,
++	int			level,
++	unsigned long		key,
++	void			*value);
++
++
++static struct btree_node *
++btree_split(
++	struct btree_root	*root,
++	int			level,
++	unsigned long		key,
++	int			*index)
++{
++	struct btree_node	*node = root->cursor[level].node;
++	struct btree_node	*new_node;
++	int			i;
++
++	new_node = btree_node_alloc();
++	if (!new_node)
++		return NULL;
++
++	if (btree_insert_item(root, level + 1, node->keys[BTREE_KEY_MIN],
++							new_node) != 0) {
++		btree_node_free(new_node);
++		return NULL;
++	}
++
++#ifdef BTREE_STATS
++	root->stats.alloced += 1;
++	root->stats.split += 1;
++#endif
++
++	for (i = 0; i < BTREE_KEY_MAX - BTREE_KEY_MIN - 1; i++) {
++		new_node->keys[i] = node->keys[BTREE_KEY_MIN + 1 + i];
++		new_node->ptrs[i] = node->ptrs[BTREE_KEY_MIN + 1 + i];
++	}
++	new_node->ptrs[i] = node->ptrs[BTREE_KEY_MIN + 1 + i];
++	new_node->num_keys = BTREE_KEY_MAX - BTREE_KEY_MIN - 1;
++
++	node->num_keys = BTREE_KEY_MIN;
++	if (key < node->keys[BTREE_KEY_MIN])
++		return node;	/* index doesn't change */
++
++	/* insertion point is in new node... */
++	*index -= BTREE_KEY_MIN + 1;
++	return new_node;
++}
++
++static int
++btree_insert_shift_to_prev(
++	struct btree_root	*root,
++	int			level,
++	int			*index)
++{
++	struct btree_cursor	tmp_cursor[root->height];
++	int			n;
++
++	if (*index <= 0)
++		return -1;
++
++	if (!btree_copy_cursor_prev(root, tmp_cursor, level + 1))
++		return -1;
++
++	n = MIN(*index, (BTREE_PTR_MAX - tmp_cursor[level].node->num_keys) / 2);
++	if (!n || !btree_shift_to_prev(root, level, tmp_cursor, n))
++		return -1;
++
++	*index -= n;
++	return 0;
++}
++
++static int
++btree_insert_shift_to_next(
++	struct btree_root	*root,
++	int			level,
++	int			*index)
++{
++	struct btree_cursor	tmp_cursor[root->height];
++	int			n;
++
++	if (*index >= BTREE_KEY_MAX)
++		return -1;
++
++	if (!btree_copy_cursor_next(root, tmp_cursor, level + 1))
++		return -1;
++
++	n = MIN(BTREE_KEY_MAX - *index,
++		(BTREE_PTR_MAX - tmp_cursor[level].node->num_keys) / 2);
++	if (!n || !btree_shift_to_next(root, level, tmp_cursor, n))
++		return -1;
++	return 0;
++}
++
++static int
++btree_insert_item(
++	struct btree_root	*root,
++	int			level,
++	unsigned long		key,
++	void			*value)
++{
++	struct btree_node	*node = root->cursor[level].node;
++	int			index = root->cursor[level].index;
++	int			i;
++
++	if (node->num_keys == BTREE_KEY_MAX) {
++		if (btree_insert_shift_to_prev(root, level, &index) == 0)
++			goto insert;
++		if (btree_insert_shift_to_next(root, level, &index) == 0)
++			goto insert;
++		if (level == root->height - 1) {
++			if (!btree_increase_height(root))
++				return ENOMEM;
++		}
++		node = btree_split(root, level, key, &index);
++		if (!node)
++			return ENOMEM;
++	}
++insert:
++	ASSERT(index <= node->num_keys);
++
++	i = node->num_keys;
++	node->ptrs[i + 1] = node->ptrs[i];
++	while (--i >= index) {
++		node->keys[i + 1] = node->keys[i];
++		node->ptrs[i + 1] = node->ptrs[i];
++	}
++
++	node->num_keys++;
++	node->keys[index] = key;
++
++	if (level == 0)
++		node->ptrs[index] = value;
++	else
++		node->ptrs[index + 1] = value;
++
++	return 0;
++}
++
++
++
++int
++btree_insert(
++	struct btree_root	*root,
++	unsigned long		key,
++	void			*value)
++{
++	int			result;
++
++	if (!value)
++		return EINVAL;
++
++	if (btree_search(root, key) && root->cur_key == key)
++		return EEXIST;
++
++#ifdef BTREE_STATS
++	root->stats.insert += 1;
++	root->stats.num_items += 1;
++#endif
++
++	result = btree_insert_item(root, 0, key, value);
++
++	btree_invalidate_cursor(root);
++
++	return result;
++}
++
++
++/*
++ * Deletion functions
++ *
++ * Rather more complicated as deletions has 4 ways to go once a node
++ * ends up with less than the minimum number of keys:
++ *   - move remainder to previous node
++ *   - move remainder to next node
++ *       (both will involve a parent deletion which may recurse)
++ *   - balance by moving some items from previous node
++ *   - balance by moving some items from next node
++ */
++
++static void
++btree_decrease_height(
++	struct btree_root	*root)
++{
++	struct btree_node	*old_root = root->root_node;
++
++	ASSERT(old_root->num_keys == 0);
++
++#ifdef BTREE_STATS
++	root->stats.alloced -= 1;
++	root->stats.dec_height += 1;
++	root->stats.max_items /= BTREE_PTR_MAX;
++#endif
++	root->root_node = old_root->ptrs[0];
++	btree_node_free(old_root);
++	root->height--;
++}
++
++static int
++btree_merge_with_prev(
++	struct btree_root	*root,
++	int			level,
++	struct btree_cursor	*prev_cursor)
++{
++	if (!prev_cursor)
++		return 0;
++
++	if (!btree_shift_to_prev(root, level, prev_cursor,
++					root->cursor[level].node->num_keys + 1))
++		return 0;
++
++#ifdef BTREE_STATS
++	root->stats.merge_prev += 1;
++#endif
++	return 1;
++}
++
++static int
++btree_merge_with_next(
++	struct btree_root	*root,
++	int			level,
++	struct btree_cursor	*next_cursor)
++{
++	if (!next_cursor)
++		return 0;
++
++	if (!btree_shift_to_next(root, level, next_cursor,
++					root->cursor[level].node->num_keys + 1))
++		return 0;
++
++#ifdef BTREE_STATS
++	root->stats.merge_next += 1;
++#endif
++	return 1;
++}
++
++static int
++btree_balance_with_prev(
++	struct btree_root	*root,
++	int			level,
++	struct btree_cursor	*prev_cursor)
++{
++	struct btree_cursor	*root_cursor = root->cursor;
++
++	if (!prev_cursor)
++		return 0;
++	ASSERT(prev_cursor[level].node->num_keys > BTREE_KEY_MIN);
++
++#ifdef BTREE_STATS
++	root->stats.balance_prev += 1;
++#endif
++	/*
++	 * Move some nodes from the prev node into the current node.
++	 * As the shift operation is a right shift and is relative to
++	 * the root cursor, make the root cursor the prev cursor and
++	 * pass in the root cursor as the next cursor.
++	 */
++
++	root->cursor = prev_cursor;
++	if (!btree_shift_to_next(root, level, root_cursor,
++		(prev_cursor[level].node->num_keys + 1 - BTREE_KEY_MIN) / 2))
++			abort();
++	root->cursor = root_cursor;
++
++	return 1;
++}
++
++static int
++btree_balance_with_next(
++	struct btree_root	*root,
++	int			level,
++	struct btree_cursor	*next_cursor)
++{
++	struct btree_cursor	*root_cursor = root->cursor;
++
++	if (!next_cursor)
++		return 0;
++	assert(next_cursor[level].node->num_keys > BTREE_KEY_MIN);
++
++#ifdef btree_stats
++	root->stats.balance_next += 1;
++#endif
++	/*
++	 * move some nodes from the next node into the current node.
++	 * as the shift operation is a left shift and is relative to
++	 * the root cursor, make the root cursor the next cursor and
++	 * pass in the root cursor as the prev cursor.
++	 */
++
++	root->cursor = next_cursor;
++	if (!btree_shift_to_prev(root, level, root_cursor,
++		(next_cursor[level].node->num_keys + 1 - BTREE_KEY_MIN) / 2))
++			abort();
++	root->cursor = root_cursor;
++
++	return 1;
++
++}
++
++static void
++btree_delete_key(
++	struct btree_root	*root,
++	int			level);
++
++/*
++ * btree_delete_node:
++ *
++ * Return 0 if it's done or 1 if the next level needs to be collapsed
++ */
++static void
++btree_delete_node(
++	struct btree_root	*root,
++	int			level)
++{
++	struct btree_cursor	prev_cursor[root->height];
++	struct btree_cursor	next_cursor[root->height];
++	struct btree_cursor	*pc;
++	struct btree_cursor	*nc;
++
++	/*
++	 * the node has underflowed, grab or merge keys/items from a
++	 * neighbouring node.
++	 */
++
++	if (level == root->height - 1) {
++		if (level > 0 && root->root_node->num_keys == 0)
++			btree_decrease_height(root);
++		return;
++	}
++
++	pc = btree_copy_cursor_prev(root, prev_cursor, level + 1);
++	if (!btree_merge_with_prev(root, level, pc)) {
++		nc = btree_copy_cursor_next(root, next_cursor, level + 1);
++		if (!btree_merge_with_next(root, level, nc)) {
++			/* merging failed, try redistrubution */
++			if (!btree_balance_with_prev(root, level, pc) &&
++			    !btree_balance_with_next(root, level, nc))
++				abort();
++			return;	/* when balancing, then the node isn't freed */
++		}
++	}
++
++#ifdef BTREE_STATS
++	root->stats.alloced -= 1;
++#endif
++	btree_node_free(root->cursor[level].node);
++
++	btree_delete_key(root, level + 1);
++}
++
++static void
++btree_delete_key(
++	struct btree_root	*root,
++	int			level)
++{
++	struct btree_node	*node = root->cursor[level].node;
++	int			index = root->cursor[level].index;
++
++	node->num_keys--;
++	if (index <= node->num_keys) {
++		/*
++		 * if not deleting the last item, shift higher items down
++		 * to cover the item being deleted
++		 */
++		while (index < node->num_keys) {
++			node->keys[index] = node->keys[index + 1];
++			node->ptrs[index] = node->ptrs[index + 1];
++			index++;
++		}
++		node->ptrs[index] = node->ptrs[index + 1];
++	} else {
++		/*
++		 * else update the associated parent key as the last key
++		 * in the leaf has changed
++		 */
++		btree_update_node_key(root, root->cursor, level + 1,
++						node->keys[node->num_keys]);
++	}
++	/*
++	 * if node underflows, either merge with sibling or rebalance
++	 * with sibling.
++	 */
++	if (node->num_keys < BTREE_KEY_MIN)
++		btree_delete_node(root, level);
++}
++
++void *
++btree_delete(
++	struct btree_root	*root,
++	unsigned long		key)
++{
++	void			*value;
++
++	value = btree_lookup(root, key);
++	if (!value)
++		return NULL;
++
++#ifdef BTREE_STATS
++	root->stats.delete += 1;
++	root->stats.num_items -= 1;
++#endif
++
++	btree_delete_key(root, 0);
++
++	btree_invalidate_cursor(root);
++
++	return value;
++}
++
++#ifdef BTREE_STATS
++void
++btree_print_stats(
++	struct btree_root	*root,
++	FILE			*f)
++{
++	unsigned long		max_items = root->stats.max_items *
++						(root->root_node->num_keys + 1);
++
++	fprintf(f, "\tnum_items = %lu, max_items = %lu (%lu%%)\n",
++			root->stats.num_items, max_items,
++			root->stats.num_items * 100 / max_items);
++	fprintf(f, "\talloced = %d nodes, %lu bytes, %lu bytes per item\n",
++			root->stats.alloced,
++			root->stats.alloced * sizeof(struct btree_node),
++			root->stats.alloced * sizeof(struct btree_node) /
++							root->stats.num_items);
++	fprintf(f, "\tlookup = %d\n", root->stats.lookup);
++	fprintf(f, "\tfind = %d\n", root->stats.find);
++	fprintf(f, "\tcache_hits = %d\n", root->stats.cache_hits);
++	fprintf(f, "\tcache_misses = %d\n", root->stats.cache_misses);
++	fprintf(f, "\tkey_update = %d\n", root->stats.key_update);
++	fprintf(f, "\tvalue_update = %d\n", root->stats.value_update);
++	fprintf(f, "\tinsert = %d\n", root->stats.insert);
++	fprintf(f, "\tshift_prev = %d\n", root->stats.shift_prev);
++	fprintf(f, "\tshift_next = %d\n", root->stats.shift_next);
++	fprintf(f, "\tsplit = %d\n", root->stats.split);
++	fprintf(f, "\tinc_height = %d\n", root->stats.inc_height);
++	fprintf(f, "\tdelete = %d\n", root->stats.delete);
++	fprintf(f, "\tmerge_prev = %d\n", root->stats.merge_prev);
++	fprintf(f, "\tmerge_next = %d\n", root->stats.merge_next);
++	fprintf(f, "\tbalance_prev = %d\n", root->stats.balance_prev);
++	fprintf(f, "\tbalance_next = %d\n", root->stats.balance_next);
++	fprintf(f, "\tdec_height = %d\n", root->stats.dec_height);
++}
++#endif
+Index: xfsprogs-dev/repair/btree.h
 ===================================================================
---- xfsprogs-dev.orig/repair/bmap.h	2009-08-20 02:32:34.000000000 +0000
-+++ xfsprogs-dev/repair/bmap.h	2009-08-20 02:32:45.000000000 +0000
-@@ -16,59 +16,41 @@
-  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-  */
- 
--/*
-- * Block mapping code taken from xfs_db.
-- */
-+#ifndef _XFS_REPAIR_BMAP_H
-+#define _XFS_REPAIR_BMAP_H
- 
- /*
-- * Block map entry.
-+ * Extent descriptor.
-  */
--typedef struct blkent {
-+typedef struct bmap_ext {
- 	xfs_dfiloff_t	startoff;
--	xfs_dfilblks_t	nblks;
--	xfs_dfsbno_t	blks[1];
--} blkent_t;
--#define	BLKENT_SIZE(n)	\
--	(offsetof(blkent_t, blks) + (sizeof(xfs_dfsbno_t) * (n)))
-+	xfs_dfsbno_t	startblock;
-+	xfs_dfilblks_t	blockcount;
-+} bmap_ext_t;
- 
- /*
-  * Block map.
-  */
- typedef	struct blkmap {
--	int		naents;
--	int		nents;
--	blkent_t	*ents[1];
-+	int		naexts;
-+	int		nexts;
-+	bmap_ext_t	exts[1];
- } blkmap_t;
--#define	BLKMAP_SIZE(n)	\
--	(offsetof(blkmap_t, ents) + (sizeof(blkent_t *) * (n)))
- 
--/*
-- * Extent descriptor.
-- */
--typedef struct bmap_ext {
--	xfs_dfiloff_t	startoff;
--	xfs_dfsbno_t	startblock;
--	xfs_dfilblks_t	blockcount;
--	int		flag;
--} bmap_ext_t;
-+#define	BLKMAP_SIZE(n)	\
-+	(offsetof(blkmap_t, exts) + (sizeof(bmap_ext_t) * (n)))
- 
--void		blkent_append(blkent_t **entp, xfs_dfsbno_t b,
--			      xfs_dfilblks_t c);
--blkent_t	*blkent_new(xfs_dfiloff_t o, xfs_dfsbno_t b, xfs_dfilblks_t c);
--void		blkent_prepend(blkent_t **entp, xfs_dfsbno_t b,
--			       xfs_dfilblks_t c);
--blkmap_t	*blkmap_alloc(xfs_extnum_t);
-+blkmap_t	*blkmap_alloc(xfs_extnum_t nex, int whichfork);
- void		blkmap_free(blkmap_t *blkmap);
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ xfsprogs-dev/repair/btree.h	2009-08-20 00:06:44.000000000 +0000
+@@ -0,0 +1,102 @@
++/*
++ * Copyright (c) 2007 Silicon Graphics, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
 +
-+void		blkmap_set_ext(blkmap_t **blkmapp, xfs_dfiloff_t o,
-+			       xfs_dfsbno_t b, xfs_dfilblks_t c);
++#ifndef _BTREE_H
++#define _BTREE_H
 +
- xfs_dfsbno_t	blkmap_get(blkmap_t *blkmap, xfs_dfiloff_t o);
- int		blkmap_getn(blkmap_t *blkmap, xfs_dfiloff_t o,
--			    xfs_dfilblks_t nb, bmap_ext_t **bmpp, 
-+			    xfs_dfilblks_t nb, bmap_ext_t **bmpp,
- 			    bmap_ext_t *bmpp_single);
--void		blkmap_grow(blkmap_t **blkmapp, blkent_t **entp,
--			    blkent_t *newent);
- xfs_dfiloff_t	blkmap_last_off(blkmap_t *blkmap);
- xfs_dfiloff_t	blkmap_next_off(blkmap_t *blkmap, xfs_dfiloff_t o, int *t);
--void		blkmap_set_blk(blkmap_t **blkmapp, xfs_dfiloff_t o,
--			       xfs_dfsbno_t b);
--void		blkmap_set_ext(blkmap_t **blkmapp, xfs_dfiloff_t o,
--			       xfs_dfsbno_t b, xfs_dfilblks_t c);
--void		blkmap_shrink(blkmap_t *blkmap, blkent_t **entp);
 +
-+#endif /* _XFS_REPAIR_BMAP_H */
-Index: xfsprogs-dev/repair/dinode.c
-===================================================================
---- xfsprogs-dev.orig/repair/dinode.c	2009-08-20 02:32:34.000000000 +0000
-+++ xfsprogs-dev/repair/dinode.c	2009-08-21 01:23:34.000000000 +0000
-@@ -2050,7 +2050,7 @@ process_inode_data_fork(
- 		*nextents = 1;
- 
- 	if (dinoc->di_format != XFS_DINODE_FMT_LOCAL && type != XR_INO_RTDATA)
--		*dblkmap = blkmap_alloc(*nextents);
-+		*dblkmap = blkmap_alloc(*nextents, XFS_DATA_FORK);
- 	*nextents = 0;
- 
- 	switch (dinoc->di_format) {
-@@ -2172,14 +2172,14 @@ process_inode_attr_fork(
- 		err = process_lclinode(mp, agno, ino, dino, XFS_ATTR_FORK);
- 		break;
- 	case XFS_DINODE_FMT_EXTENTS:
--		ablkmap = blkmap_alloc(*anextents);
-+		ablkmap = blkmap_alloc(*anextents, XFS_ATTR_FORK);
- 		*anextents = 0;
- 		err = process_exinode(mp, agno, ino, dino, type, dirty,
- 				atotblocks, anextents, &ablkmap,
- 				XFS_ATTR_FORK, check_dups);
- 		break;
- 	case XFS_DINODE_FMT_BTREE:
--		ablkmap = blkmap_alloc(*anextents);
-+		ablkmap = blkmap_alloc(*anextents, XFS_ATTR_FORK);
- 		*anextents = 0;
- 		err = process_btinode(mp, agno, ino, dino, type, dirty,
- 				atotblocks, anextents, &ablkmap,
++struct btree_root;
++
++void
++btree_init(
++	struct btree_root	**root);
++
++void
++btree_destroy(
++	struct btree_root	*root);
++
++int
++btree_is_empty(
++	struct btree_root	*root);
++
++void *
++btree_lookup(
++	struct btree_root	*root,
++	unsigned long		key);
++
++void *
++btree_find(
++	struct btree_root	*root,
++	unsigned long		key,
++	unsigned long		*actual_key);
++
++void *
++btree_peek_prev(
++	struct btree_root	*root,
++	unsigned long		*key);
++
++void *
++btree_peek_next(
++	struct btree_root	*root,
++	unsigned long		*key);
++
++void *
++btree_lookup_next(
++	struct btree_root	*root,
++	unsigned long		*key);
++
++void *
++btree_lookup_prev(
++	struct btree_root	*root,
++	unsigned long		*key);
++
++int
++btree_insert(
++	struct btree_root	*root,
++	unsigned long		key,
++	void			*value);
++
++void *
++btree_delete(
++	struct btree_root	*root,
++	unsigned long		key);
++
++int
++btree_update_key(
++	struct btree_root	*root,
++	unsigned long		old_key,
++	unsigned long		new_key);
++
++int
++btree_update_value(
++	struct btree_root	*root,
++	unsigned long		key,
++	void 			*new_value);
++
++void
++btree_clear(
++	struct btree_root	*root);
++
++#ifdef BTREE_STATS
++void
++btree_print_stats(
++	struct btree_root	*root,
++	FILE			*f);
++#endif
++
++#endif /* _BTREE_H */
 Index: xfsprogs-dev/repair/init.c
 ===================================================================
---- xfsprogs-dev.orig/repair/init.c	2009-08-20 02:32:34.000000000 +0000
-+++ xfsprogs-dev/repair/init.c	2009-08-20 02:32:45.000000000 +0000
-@@ -24,19 +24,24 @@
- #include "pthread.h"
- #include "avl.h"
+--- xfsprogs-dev.orig/repair/init.c	2009-08-20 00:01:58.000000000 +0000
++++ xfsprogs-dev/repair/init.c	2009-08-20 00:06:44.000000000 +0000
+@@ -26,7 +26,6 @@
  #include "dir.h"
-+#include "bmap.h"
  #include "incore.h"
  #include "prefetch.h"
+-#include "radix-tree.h"
  #include <sys/resource.h>
  
-+/* TODO: dirbuf/freemap key usage is completely b0rked - only used for dirv1 */
  static pthread_key_t dirbuf_key;
- static pthread_key_t dir_freemap_key;
- static pthread_key_t attr_freemap_key;
- 
-+extern pthread_key_t dblkmap_key;
-+extern pthread_key_t ablkmap_key;
-+
- static void
- ts_alloc(pthread_key_t key, unsigned n, size_t size)
- {
- 	void *voidp;
--	voidp = malloc((n)*(size));
-+	voidp = calloc(n, size);
- 	if (voidp == NULL) {
- 		do_error(_("ts_alloc: cannot allocate thread specific storage\n"));
- 		/* NO RETURN */
-@@ -52,6 +57,9 @@ ts_create(void)
- 	pthread_key_create(&dirbuf_key, NULL);
- 	pthread_key_create(&dir_freemap_key, NULL);
- 	pthread_key_create(&attr_freemap_key, NULL);
-+
-+	pthread_key_create(&dblkmap_key, NULL);
-+	pthread_key_create(&ablkmap_key, NULL);
+@@ -151,5 +150,4 @@
+ 	ts_create();
+ 	ts_init();
+ 	increase_rlimit();
+-	radix_tree_init();
  }
+Index: xfsprogs-dev/repair/prefetch.c
+===================================================================
+--- xfsprogs-dev.orig/repair/prefetch.c	2009-08-20 00:05:36.000000000 +0000
++++ xfsprogs-dev/repair/prefetch.c	2009-08-20 00:14:08.000000000 +0000
+@@ -1,6 +1,7 @@
+ #include <libxfs.h>
+ #include <pthread.h>
+ #include "avl.h"
++#include "btree.h"
+ #include "globals.h"
+ #include "agheader.h"
+ #include "incore.h"
+@@ -14,7 +15,6 @@
+ #include "threads.h"
+ #include "prefetch.h"
+ #include "progress.h"
+-#include "radix-tree.h"
  
- void
+ int do_prefetch = 1;
+ 
+@@ -129,10 +129,8 @@
+ 	pthread_mutex_lock(&args->lock);
+ 
+ 	if (fsbno > args->last_bno_read) {
+-		radix_tree_insert(&args->primary_io_queue, fsbno, bp);
+-		if (!B_IS_INODE(flag))
+-			radix_tree_tag_set(&args->primary_io_queue, fsbno, 0);
+-		else {
++		btree_insert(args->primary_io_queue, fsbno, bp);
++		if (B_IS_INODE(flag)) {
+ 			args->inode_bufs_queued++;
+ 			if (args->inode_bufs_queued == IO_THRESHOLD)
+ 				pf_start_io_workers(args);
+@@ -154,7 +152,7 @@
+ #endif
+ 		ASSERT(!B_IS_INODE(flag));
+ 		XFS_BUF_SET_PRIORITY(bp, B_DIR_META_2);
+-		radix_tree_insert(&args->secondary_io_queue, fsbno, bp);
++		btree_insert(args->secondary_io_queue, fsbno, bp);
+ 	}
+ 
+ 	pf_start_processing(args);
+@@ -407,7 +405,7 @@
+ 	pf_which_t		which,
+ 	void			*buf)
+ {
+-	struct radix_tree_root	*queue;
++	struct btree_root	*queue;
+ 	xfs_buf_t		*bplist[MAX_BUFS];
+ 	unsigned int		num;
+ 	off64_t			first_off, last_off, next_off;
+@@ -415,27 +413,25 @@
+ 	int			i;
+ 	int			inode_bufs;
+ 	unsigned long		fsbno;
++	unsigned long		max_fsbno;
+ 	char			*pbuf;
+ 
+-	queue = (which != PF_SECONDARY) ? &args->primary_io_queue
+-				: &args->secondary_io_queue;
++	queue = (which != PF_SECONDARY) ? args->primary_io_queue
++				: args->secondary_io_queue;
+ 
+-	while (radix_tree_lookup_first(queue, &fsbno) != NULL) {
+-
+-		if (which != PF_META_ONLY) {
+-			num = radix_tree_gang_lookup_ex(queue,
+-					(void**)&bplist[0], fsbno,
+-					fsbno + pf_max_fsbs, MAX_BUFS);
+-			ASSERT(num > 0);
+-			ASSERT(XFS_FSB_TO_DADDR(mp, fsbno) ==
+-				XFS_BUF_ADDR(bplist[0]));
+-		} else {
+-			num = radix_tree_gang_lookup_tag(queue,
+-					(void**)&bplist[0], fsbno,
+-					MAX_BUFS / 4, 0);
+-			if (num == 0)
+-				return;
++	while (btree_find(queue, 0, &fsbno) != NULL) {
++		max_fsbno = fsbno + pf_max_fsbs;
++		num = 0;
++
++		bplist[0] = btree_lookup(queue, fsbno);
++		while (bplist[num] && num < MAX_BUFS && fsbno < max_fsbno) {
++			if (which != PF_META_ONLY ||
++			    !B_IS_INODE(XFS_BUF_PRIORITY(bplist[num])))
++				num++;
++			bplist[num] = btree_lookup_next(queue, &fsbno);
+ 		}
++		if (!num)
++			return;
+ 
+ 		/*
+ 		 * do a big read if 25% of the potential buffer is useful,
+@@ -467,7 +463,7 @@
+ 		}
+ 
+ 		for (i = 0; i < num; i++) {
+-			if (radix_tree_delete(queue, XFS_DADDR_TO_FSB(mp,
++			if (btree_delete(queue, XFS_DADDR_TO_FSB(mp,
+ 					XFS_BUF_ADDR(bplist[i]))) == NULL)
+ 				do_error(_("prefetch corruption\n"));
+ 		}
+@@ -570,7 +566,7 @@
+ 		return NULL;
+ 
+ 	pthread_mutex_lock(&args->lock);
+-	while (!args->queuing_done || args->primary_io_queue.height) {
++	while (!args->queuing_done || btree_find(args->primary_io_queue, 0, NULL)) {
+ 
+ #ifdef XR_PF_TRACE
+ 		pftrace("waiting to start prefetch I/O for AG %d", args->agno);
+@@ -696,8 +692,8 @@
+ #endif
+ 	pthread_mutex_lock(&args->lock);
+ 
+-	ASSERT(args->primary_io_queue.height == 0);
+-	ASSERT(args->secondary_io_queue.height == 0);
++	ASSERT(btree_find(args->primary_io_queue, 0, NULL) == NULL);
++	ASSERT(btree_find(args->secondary_io_queue, 0, NULL) == NULL);
+ 
+ 	args->prefetch_done = 1;
+ 	if (args->next_args)
+@@ -755,8 +751,8 @@
+ 
+ 	args = calloc(1, sizeof(prefetch_args_t));
+ 
+-	INIT_RADIX_TREE(&args->primary_io_queue, 0);
+-	INIT_RADIX_TREE(&args->secondary_io_queue, 0);
++	btree_init(&args->primary_io_queue);
++	btree_init(&args->secondary_io_queue);
+ 	if (pthread_mutex_init(&args->lock, NULL) != 0)
+ 		do_error(_("failed to initialize prefetch mutex\n"));
+ 	if (pthread_cond_init(&args->start_reading, NULL) != 0)
+@@ -835,6 +831,8 @@
+ 	pthread_cond_destroy(&args->start_reading);
+ 	pthread_cond_destroy(&args->start_processing);
+ 	sem_destroy(&args->ra_count);
++	btree_destroy(args->primary_io_queue);
++	btree_destroy(args->secondary_io_queue);
+ 
+ 	free(args);
+ }
+Index: xfsprogs-dev/repair/prefetch.h
+===================================================================
+--- xfsprogs-dev.orig/repair/prefetch.h	2009-08-20 00:01:58.000000000 +0000
++++ xfsprogs-dev/repair/prefetch.h	2009-08-20 00:06:44.000000000 +0000
+@@ -3,7 +3,6 @@
+ 
+ #include <semaphore.h>
+ #include "incore.h"
+-#include "radix-tree.h"
+ 
+ 
+ extern int 	do_prefetch;
+@@ -14,8 +13,8 @@
+ 	pthread_mutex_t		lock;
+ 	pthread_t		queuing_thread;
+ 	pthread_t		io_threads[PF_THREAD_COUNT];
+-	struct radix_tree_root	primary_io_queue;
+-	struct radix_tree_root	secondary_io_queue;
++	struct btree_root	*primary_io_queue;
++	struct btree_root	*secondary_io_queue;
+ 	pthread_cond_t		start_reading;
+ 	pthread_cond_t		start_processing;
+ 	int			agno;
+Index: xfsprogs-dev/repair/radix-tree.c
+===================================================================
+--- xfsprogs-dev.orig/repair/radix-tree.c	2009-08-20 00:01:58.000000000 +0000
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+@@ -1,805 +0,0 @@
+-/*
+- * Copyright (C) 2001 Momchil Velikov
+- * Portions Copyright (C) 2001 Christoph Hellwig
+- * Copyright (C) 2005 SGI, Christoph Lameter <clameter@sgi.com>
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation; either version 2, or (at
+- * your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+- */
+-
+-#include <libxfs.h>
+-#include "radix-tree.h"
+-
+-#ifndef ARRAY_SIZE
+-#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+-#endif
+-
+-#define RADIX_TREE_MAP_SHIFT	6
+-#define RADIX_TREE_MAP_SIZE	(1UL << RADIX_TREE_MAP_SHIFT)
+-#define RADIX_TREE_MAP_MASK	(RADIX_TREE_MAP_SIZE-1)
+-
+-#ifdef RADIX_TREE_TAGS
+-#define RADIX_TREE_TAG_LONGS	\
+-	((RADIX_TREE_MAP_SIZE + BITS_PER_LONG - 1) / BITS_PER_LONG)
+-#endif
+-
+-struct radix_tree_node {
+-	unsigned int	count;
+-	void		*slots[RADIX_TREE_MAP_SIZE];
+-#ifdef RADIX_TREE_TAGS
+-	unsigned long	tags[RADIX_TREE_MAX_TAGS][RADIX_TREE_TAG_LONGS];
+-#endif
+-};
+-
+-struct radix_tree_path {
+-	struct radix_tree_node *node;
+-	int offset;
+-};
+-
+-#define RADIX_TREE_INDEX_BITS  (8 /* CHAR_BIT */ * sizeof(unsigned long))
+-#define RADIX_TREE_MAX_PATH (RADIX_TREE_INDEX_BITS/RADIX_TREE_MAP_SHIFT + 2)
+-
+-static unsigned long height_to_maxindex[RADIX_TREE_MAX_PATH];
+-
+-/*
+- * Radix tree node cache.
+- */
+-
+-#define radix_tree_node_alloc(r) 	((struct radix_tree_node *) \
+-		calloc(1, sizeof(struct radix_tree_node)))
+-#define radix_tree_node_free(n) 	free(n)
+-
+-#ifdef RADIX_TREE_TAGS
+-
+-static inline void tag_set(struct radix_tree_node *node, unsigned int tag,
+-		int offset)
+-{
+-	*((__uint32_t *)node->tags[tag] + (offset >> 5)) |= (1 << (offset & 31));
+-}
+-
+-static inline void tag_clear(struct radix_tree_node *node, unsigned int tag,
+-		int offset)
+-{
+-	__uint32_t 	*p = (__uint32_t*)node->tags[tag] + (offset >> 5);
+-	__uint32_t 	m = 1 << (offset & 31);
+-	*p &= ~m;
+-}
+-
+-static inline int tag_get(struct radix_tree_node *node, unsigned int tag,
+-		int offset)
+-{
+-	return 1 & (((const __uint32_t *)node->tags[tag])[offset >> 5] >> (offset & 31));
+-}
+-
+-/*
+- * Returns 1 if any slot in the node has this tag set.
+- * Otherwise returns 0.
+- */
+-static inline int any_tag_set(struct radix_tree_node *node, unsigned int tag)
+-{
+-	int idx;
+-	for (idx = 0; idx < RADIX_TREE_TAG_LONGS; idx++) {
+-		if (node->tags[tag][idx])
+-			return 1;
+-	}
+-	return 0;
+-}
+-
+-#endif
+-
+-/*
+- *	Return the maximum key which can be store into a
+- *	radix tree with height HEIGHT.
+- */
+-static inline unsigned long radix_tree_maxindex(unsigned int height)
+-{
+-	return height_to_maxindex[height];
+-}
+-
+-/*
+- *	Extend a radix tree so it can store key @index.
+- */
+-static int radix_tree_extend(struct radix_tree_root *root, unsigned long index)
+-{
+-	struct radix_tree_node *node;
+-	unsigned int height;
+-#ifdef RADIX_TREE_TAGS
+-	char tags[RADIX_TREE_MAX_TAGS];
+-	int tag;
+-#endif
+-
+-	/* Figure out what the height should be.  */
+-	height = root->height + 1;
+-	while (index > radix_tree_maxindex(height))
+-		height++;
+-
+-	if (root->rnode == NULL) {
+-		root->height = height;
+-		goto out;
+-	}
+-
+-#ifdef RADIX_TREE_TAGS
+-	/*
+-	 * Prepare the tag status of the top-level node for propagation
+-	 * into the newly-pushed top-level node(s)
+-	 */
+-	for (tag = 0; tag < RADIX_TREE_MAX_TAGS; tag++) {
+-		tags[tag] = 0;
+-		if (any_tag_set(root->rnode, tag))
+-			tags[tag] = 1;
+-	}
+-#endif
+-	do {
+-		if (!(node = radix_tree_node_alloc(root)))
+-			return -ENOMEM;
+-
+-		/* Increase the height.  */
+-		node->slots[0] = root->rnode;
+-
+-#ifdef RADIX_TREE_TAGS
+-		/* Propagate the aggregated tag info into the new root */
+-		for (tag = 0; tag < RADIX_TREE_MAX_TAGS; tag++) {
+-			if (tags[tag])
+-				tag_set(node, tag, 0);
+-		}
+-#endif
+-		node->count = 1;
+-		root->rnode = node;
+-		root->height++;
+-	} while (height > root->height);
+-out:
+-	return 0;
+-}
+-
+-/**
+- *	radix_tree_insert    -    insert into a radix tree
+- *	@root:		radix tree root
+- *	@index:		index key
+- *	@item:		item to insert
+- *
+- *	Insert an item into the radix tree at position @index.
+- */
+-int radix_tree_insert(struct radix_tree_root *root,
+-			unsigned long index, void *item)
+-{
+-	struct radix_tree_node *node = NULL, *slot;
+-	unsigned int height, shift;
+-	int offset;
+-	int error;
+-
+-	/* Make sure the tree is high enough.  */
+-	if ((!index && !root->rnode) ||
+-			index > radix_tree_maxindex(root->height)) {
+-		error = radix_tree_extend(root, index);
+-		if (error)
+-			return error;
+-	}
+-
+-	slot = root->rnode;
+-	height = root->height;
+-	shift = (height-1) * RADIX_TREE_MAP_SHIFT;
+-
+-	offset = 0;			/* uninitialised var warning */
+-	do {
+-		if (slot == NULL) {
+-			/* Have to add a child node.  */
+-			if (!(slot = radix_tree_node_alloc(root)))
+-				return -ENOMEM;
+-			if (node) {
+-				node->slots[offset] = slot;
+-				node->count++;
+-			} else
+-				root->rnode = slot;
+-		}
+-
+-		/* Go a level down */
+-		offset = (index >> shift) & RADIX_TREE_MAP_MASK;
+-		node = slot;
+-		slot = node->slots[offset];
+-		shift -= RADIX_TREE_MAP_SHIFT;
+-		height--;
+-	} while (height > 0);
+-
+-	if (slot != NULL)
+-		return -EEXIST;
+-
+-	ASSERT(node);
+-	node->count++;
+-	node->slots[offset] = item;
+-#ifdef RADIX_TREE_TAGS
+-	ASSERT(!tag_get(node, 0, offset));
+-	ASSERT(!tag_get(node, 1, offset));
+-#endif
+-	return 0;
+-}
+-
+-static inline void **__lookup_slot(struct radix_tree_root *root,
+-				   unsigned long index)
+-{
+-	unsigned int height, shift;
+-	struct radix_tree_node **slot;
+-
+-	height = root->height;
+-	if (index > radix_tree_maxindex(height))
+-		return NULL;
+-
+-	shift = (height-1) * RADIX_TREE_MAP_SHIFT;
+-	slot = &root->rnode;
+-
+-	while (height > 0) {
+-		if (*slot == NULL)
+-			return NULL;
+-
+-		slot = (struct radix_tree_node **)
+-			((*slot)->slots +
+-				((index >> shift) & RADIX_TREE_MAP_MASK));
+-		shift -= RADIX_TREE_MAP_SHIFT;
+-		height--;
+-	}
+-
+-	return (void **)slot;
+-}
+-
+-/**
+- *	radix_tree_lookup_slot    -    lookup a slot in a radix tree
+- *	@root:		radix tree root
+- *	@index:		index key
+- *
+- *	Lookup the slot corresponding to the position @index in the radix tree
+- *	@root. This is useful for update-if-exists operations.
+- */
+-void **radix_tree_lookup_slot(struct radix_tree_root *root, unsigned long index)
+-{
+-	return __lookup_slot(root, index);
+-}
+-
+-/**
+- *	radix_tree_lookup    -    perform lookup operation on a radix tree
+- *	@root:		radix tree root
+- *	@index:		index key
+- *
+- *	Lookup the item at the position @index in the radix tree @root.
+- */
+-void *radix_tree_lookup(struct radix_tree_root *root, unsigned long index)
+-{
+-	void **slot;
+-
+-	slot = __lookup_slot(root, index);
+-	return slot != NULL ? *slot : NULL;
+-}
+-
+-/**
+- *	raid_tree_first_key - find the first index key in the radix tree
+- *	@root:		radix tree root
+- *	@index:		where the first index will be placed
+- *
+- *	Returns the first entry and index key in the radix tree @root.
+- */
+-void *radix_tree_lookup_first(struct radix_tree_root *root, unsigned long *index)
+-{
+-	unsigned int height, shift;
+-	struct radix_tree_node *slot;
+-	unsigned long i;
+-
+-	height = root->height;
+-	*index = 0;
+-	if (height == 0)
+-		return NULL;
+-
+-	shift = (height-1) * RADIX_TREE_MAP_SHIFT;
+-	slot = root->rnode;
+-
+-	for (; height > 1; height--) {
+-		for (i = 0; i < RADIX_TREE_MAP_SIZE; i++) {
+-			if (slot->slots[i] != NULL)
+-				break;
+-		}
+-		ASSERT(i < RADIX_TREE_MAP_SIZE);
+-
+-		*index |= (i << shift);
+-		shift -= RADIX_TREE_MAP_SHIFT;
+-		slot = slot->slots[i];
+-	}
+-	for (i = 0; i < RADIX_TREE_MAP_SIZE; i++) {
+-		if (slot->slots[i] != NULL) {
+-			*index |= i;
+-			return slot->slots[i];
+-		}
+-	}
+-	return NULL;
+-}
+-
+-#ifdef RADIX_TREE_TAGS
+-
+-/**
+- *	radix_tree_tag_set - set a tag on a radix tree node
+- *	@root:		radix tree root
+- *	@index:		index key
+- *	@tag: 		tag index
+- *
+- *	Set the search tag (which must be < RADIX_TREE_MAX_TAGS)
+- *	corresponding to @index in the radix tree.  From
+- *	the root all the way down to the leaf node.
+- *
+- *	Returns the address of the tagged item.   Setting a tag on a not-present
+- *	item is a bug.
+- */
+-void *radix_tree_tag_set(struct radix_tree_root *root,
+-			unsigned long index, unsigned int tag)
+-{
+-	unsigned int height, shift;
+-	struct radix_tree_node *slot;
+-
+-	height = root->height;
+-	if (index > radix_tree_maxindex(height))
+-		return NULL;
+-
+-	shift = (height - 1) * RADIX_TREE_MAP_SHIFT;
+-	slot = root->rnode;
+-
+-	while (height > 0) {
+-		int offset;
+-
+-		offset = (index >> shift) & RADIX_TREE_MAP_MASK;
+-		if (!tag_get(slot, tag, offset))
+-			tag_set(slot, tag, offset);
+-		slot = slot->slots[offset];
+-		ASSERT(slot != NULL);
+-		shift -= RADIX_TREE_MAP_SHIFT;
+-		height--;
+-	}
+-
+-	return slot;
+-}
+-
+-/**
+- *	radix_tree_tag_clear - clear a tag on a radix tree node
+- *	@root:		radix tree root
+- *	@index:		index key
+- *	@tag: 		tag index
+- *
+- *	Clear the search tag (which must be < RADIX_TREE_MAX_TAGS)
+- *	corresponding to @index in the radix tree.  If
+- *	this causes the leaf node to have no tags set then clear the tag in the
+- *	next-to-leaf node, etc.
+- *
+- *	Returns the address of the tagged item on success, else NULL.  ie:
+- *	has the same return value and semantics as radix_tree_lookup().
+- */
+-void *radix_tree_tag_clear(struct radix_tree_root *root,
+-			unsigned long index, unsigned int tag)
+-{
+-	struct radix_tree_path path[RADIX_TREE_MAX_PATH], *pathp = path;
+-	struct radix_tree_node *slot;
+-	unsigned int height, shift;
+-	void *ret = NULL;
+-
+-	height = root->height;
+-	if (index > radix_tree_maxindex(height))
+-		goto out;
+-
+-	shift = (height - 1) * RADIX_TREE_MAP_SHIFT;
+-	pathp->node = NULL;
+-	slot = root->rnode;
+-
+-	while (height > 0) {
+-		int offset;
+-
+-		if (slot == NULL)
+-			goto out;
+-
+-		offset = (index >> shift) & RADIX_TREE_MAP_MASK;
+-		pathp[1].offset = offset;
+-		pathp[1].node = slot;
+-		slot = slot->slots[offset];
+-		pathp++;
+-		shift -= RADIX_TREE_MAP_SHIFT;
+-		height--;
+-	}
+-
+-	ret = slot;
+-	if (ret == NULL)
+-		goto out;
+-
+-	do {
+-		if (!tag_get(pathp->node, tag, pathp->offset))
+-			goto out;
+-		tag_clear(pathp->node, tag, pathp->offset);
+-		if (any_tag_set(pathp->node, tag))
+-			goto out;
+-		pathp--;
+-	} while (pathp->node);
+-out:
+-	return ret;
+-}
+-
+-#endif
+-
+-static unsigned int
+-__lookup(struct radix_tree_root *root, void **results, unsigned long index,
+-	unsigned int max_items, unsigned long *next_index)
+-{
+-	unsigned int nr_found = 0;
+-	unsigned int shift, height;
+-	struct radix_tree_node *slot;
+-	unsigned long i;
+-
+-	height = root->height;
+-	if (height == 0)
+-		goto out;
+-
+-	shift = (height-1) * RADIX_TREE_MAP_SHIFT;
+-	slot = root->rnode;
+-
+-	for ( ; height > 1; height--) {
+-
+-		for (i = (index >> shift) & RADIX_TREE_MAP_MASK ;
+-				i < RADIX_TREE_MAP_SIZE; i++) {
+-			if (slot->slots[i] != NULL)
+-				break;
+-			index &= ~((1UL << shift) - 1);
+-			index += 1UL << shift;
+-			if (index == 0)
+-				goto out;	/* 32-bit wraparound */
+-		}
+-		if (i == RADIX_TREE_MAP_SIZE)
+-			goto out;
+-
+-		shift -= RADIX_TREE_MAP_SHIFT;
+-		slot = slot->slots[i];
+-	}
+-
+-	/* Bottom level: grab some items */
+-	for (i = index & RADIX_TREE_MAP_MASK; i < RADIX_TREE_MAP_SIZE; i++) {
+-		index++;
+-		if (slot->slots[i]) {
+-			results[nr_found++] = slot->slots[i];
+-			if (nr_found == max_items)
+-				goto out;
+-		}
+-	}
+-out:
+-	*next_index = index;
+-	return nr_found;
+-}
+-
+-/**
+- *	radix_tree_gang_lookup - perform multiple lookup on a radix tree
+- *	@root:		radix tree root
+- *	@results:	where the results of the lookup are placed
+- *	@first_index:	start the lookup from this key
+- *	@max_items:	place up to this many items at *results
+- *
+- *	Performs an index-ascending scan of the tree for present items.  Places
+- *	them at *@results and returns the number of items which were placed at
+- *	*@results.
+- *
+- *	The implementation is naive.
+- */
+-unsigned int
+-radix_tree_gang_lookup(struct radix_tree_root *root, void **results,
+-			unsigned long first_index, unsigned int max_items)
+-{
+-	const unsigned long max_index = radix_tree_maxindex(root->height);
+-	unsigned long cur_index = first_index;
+-	unsigned int ret = 0;
+-
+-	while (ret < max_items) {
+-		unsigned int nr_found;
+-		unsigned long next_index;	/* Index of next search */
+-
+-		if (cur_index > max_index)
+-			break;
+-		nr_found = __lookup(root, results + ret, cur_index,
+-					max_items - ret, &next_index);
+-		ret += nr_found;
+-		if (next_index == 0)
+-			break;
+-		cur_index = next_index;
+-	}
+-	return ret;
+-}
+-
+-/**
+- *	radix_tree_gang_lookup_ex - perform multiple lookup on a radix tree
+- *	@root:		radix tree root
+- *	@results:	where the results of the lookup are placed
+- *	@first_index:	start the lookup from this key
+- *	@last_index:	don't lookup past this key
+- *	@max_items:	place up to this many items at *results
+- *
+- *	Performs an index-ascending scan of the tree for present items starting
+- *	@first_index until @last_index up to as many as @max_items.  Places
+- *	them at *@results and returns the number of items which were placed
+- *	at *@results.
+- *
+- *	The implementation is naive.
+- */
+-unsigned int
+-radix_tree_gang_lookup_ex(struct radix_tree_root *root, void **results,
+-			unsigned long first_index, unsigned long last_index,
+-			unsigned int max_items)
+-{
+-	const unsigned long max_index = radix_tree_maxindex(root->height);
+-	unsigned long cur_index = first_index;
+-	unsigned int ret = 0;
+-
+-	while (ret < max_items && cur_index < last_index) {
+-		unsigned int nr_found;
+-		unsigned long next_index;	/* Index of next search */
+-
+-		if (cur_index > max_index)
+-			break;
+-		nr_found = __lookup(root, results + ret, cur_index,
+-					max_items - ret, &next_index);
+-		ret += nr_found;
+-		if (next_index == 0)
+-			break;
+-		cur_index = next_index;
+-	}
+-	return ret;
+-}
+-
+-#ifdef RADIX_TREE_TAGS
+-
+-static unsigned int
+-__lookup_tag(struct radix_tree_root *root, void **results, unsigned long index,
+-	unsigned int max_items, unsigned long *next_index, unsigned int tag)
+-{
+-	unsigned int nr_found = 0;
+-	unsigned int shift;
+-	unsigned int height = root->height;
+-	struct radix_tree_node *slot;
+-
+-	shift = (height - 1) * RADIX_TREE_MAP_SHIFT;
+-	slot = root->rnode;
+-
+-	while (height > 0) {
+-		unsigned long i = (index >> shift) & RADIX_TREE_MAP_MASK;
+-
+-		for ( ; i < RADIX_TREE_MAP_SIZE; i++) {
+-			if (tag_get(slot, tag, i)) {
+-				ASSERT(slot->slots[i] != NULL);
+-				break;
+-			}
+-			index &= ~((1UL << shift) - 1);
+-			index += 1UL << shift;
+-			if (index == 0)
+-				goto out;	/* 32-bit wraparound */
+-		}
+-		if (i == RADIX_TREE_MAP_SIZE)
+-			goto out;
+-		height--;
+-		if (height == 0) {	/* Bottom level: grab some items */
+-			unsigned long j = index & RADIX_TREE_MAP_MASK;
+-
+-			for ( ; j < RADIX_TREE_MAP_SIZE; j++) {
+-				index++;
+-				if (tag_get(slot, tag, j)) {
+-					ASSERT(slot->slots[j] != NULL);
+-					results[nr_found++] = slot->slots[j];
+-					if (nr_found == max_items)
+-						goto out;
+-				}
+-			}
+-		}
+-		shift -= RADIX_TREE_MAP_SHIFT;
+-		slot = slot->slots[i];
+-	}
+-out:
+-	*next_index = index;
+-	return nr_found;
+-}
+-
+-/**
+- *	radix_tree_gang_lookup_tag - perform multiple lookup on a radix tree
+- *	                             based on a tag
+- *	@root:		radix tree root
+- *	@results:	where the results of the lookup are placed
+- *	@first_index:	start the lookup from this key
+- *	@max_items:	place up to this many items at *results
+- *	@tag:		the tag index (< RADIX_TREE_MAX_TAGS)
+- *
+- *	Performs an index-ascending scan of the tree for present items which
+- *	have the tag indexed by @tag set.  Places the items at *@results and
+- *	returns the number of items which were placed at *@results.
+- */
+-unsigned int
+-radix_tree_gang_lookup_tag(struct radix_tree_root *root, void **results,
+-		unsigned long first_index, unsigned int max_items,
+-		unsigned int tag)
+-{
+-	const unsigned long max_index = radix_tree_maxindex(root->height);
+-	unsigned long cur_index = first_index;
+-	unsigned int ret = 0;
+-
+-	while (ret < max_items) {
+-		unsigned int nr_found;
+-		unsigned long next_index;	/* Index of next search */
+-
+-		if (cur_index > max_index)
+-			break;
+-		nr_found = __lookup_tag(root, results + ret, cur_index,
+-					max_items - ret, &next_index, tag);
+-		ret += nr_found;
+-		if (next_index == 0)
+-			break;
+-		cur_index = next_index;
+-	}
+-	return ret;
+-}
+-
+-#endif
+-
+-/**
+- *	radix_tree_shrink    -    shrink height of a radix tree to minimal
+- *	@root		radix tree root
+- */
+-static inline void radix_tree_shrink(struct radix_tree_root *root)
+-{
+-	/* try to shrink tree height */
+-	while (root->height > 1 &&
+-			root->rnode->count == 1 &&
+-			root->rnode->slots[0]) {
+-		struct radix_tree_node *to_free = root->rnode;
+-
+-		root->rnode = to_free->slots[0];
+-		root->height--;
+-		/* must only free zeroed nodes into the slab */
+-#ifdef RADIX_TREE_TAGS
+-		tag_clear(to_free, 0, 0);
+-		tag_clear(to_free, 1, 0);
+-#endif
+-		to_free->slots[0] = NULL;
+-		to_free->count = 0;
+-		radix_tree_node_free(to_free);
+-	}
+-}
+-
+-/**
+- *	radix_tree_delete    -    delete an item from a radix tree
+- *	@root:		radix tree root
+- *	@index:		index key
+- *
+- *	Remove the item at @index from the radix tree rooted at @root.
+- *
+- *	Returns the address of the deleted item, or NULL if it was not present.
+- */
+-void *radix_tree_delete(struct radix_tree_root *root, unsigned long index)
+-{
+-	struct radix_tree_path path[RADIX_TREE_MAX_PATH], *pathp = path;
+-	struct radix_tree_path *orig_pathp;
+-	struct radix_tree_node *slot;
+-	unsigned int height, shift;
+-	void *ret = NULL;
+-#ifdef RADIX_TREE_TAGS
+-	char tags[RADIX_TREE_MAX_TAGS];
+-	int nr_cleared_tags;
+-	int tag;
+-#endif
+-	int offset;
+-
+-	height = root->height;
+-	if (index > radix_tree_maxindex(height))
+-		goto out;
+-
+-	shift = (height - 1) * RADIX_TREE_MAP_SHIFT;
+-	pathp->node = NULL;
+-	slot = root->rnode;
+-
+-	for ( ; height > 0; height--) {
+-		if (slot == NULL)
+-			goto out;
+-
+-		pathp++;
+-		offset = (index >> shift) & RADIX_TREE_MAP_MASK;
+-		pathp->offset = offset;
+-		pathp->node = slot;
+-		slot = slot->slots[offset];
+-		shift -= RADIX_TREE_MAP_SHIFT;
+-	}
+-
+-	ret = slot;
+-	if (ret == NULL)
+-		goto out;
+-
+-	orig_pathp = pathp;
+-
+-#ifdef RADIX_TREE_TAGS
+-	/*
+-	 * Clear all tags associated with the just-deleted item
+-	 */
+-	nr_cleared_tags = 0;
+-	for (tag = 0; tag < RADIX_TREE_MAX_TAGS; tag++) {
+-		tags[tag] = 1;
+-		if (tag_get(pathp->node, tag, pathp->offset)) {
+-			tag_clear(pathp->node, tag, pathp->offset);
+-			if (!any_tag_set(pathp->node, tag)) {
+-				tags[tag] = 0;
+-				nr_cleared_tags++;
+-			}
+-		}
+-	}
+-
+-	for (pathp--; nr_cleared_tags && pathp->node; pathp--) {
+-		for (tag = 0; tag < RADIX_TREE_MAX_TAGS; tag++) {
+-			if (tags[tag])
+-				continue;
+-
+-			tag_clear(pathp->node, tag, pathp->offset);
+-			if (any_tag_set(pathp->node, tag)) {
+-				tags[tag] = 1;
+-				nr_cleared_tags--;
+-			}
+-		}
+-	}
+-#endif
+-	/* Now free the nodes we do not need anymore */
+-	for (pathp = orig_pathp; pathp->node; pathp--) {
+-		pathp->node->slots[pathp->offset] = NULL;
+-		pathp->node->count--;
+-
+-		if (pathp->node->count) {
+-			if (pathp->node == root->rnode)
+-				radix_tree_shrink(root);
+-			goto out;
+-		}
+-
+-		/* Node with zero slots in use so free it */
+-		radix_tree_node_free(pathp->node);
+-	}
+-	root->rnode = NULL;
+-	root->height = 0;
+-out:
+-	return ret;
+-}
+-
+-#ifdef RADIX_TREE_TAGS
+-/**
+- *	radix_tree_tagged - test whether any items in the tree are tagged
+- *	@root:		radix tree root
+- *	@tag:		tag to test
+- */
+-int radix_tree_tagged(struct radix_tree_root *root, unsigned int tag)
+-{
+-  	struct radix_tree_node *rnode;
+-  	rnode = root->rnode;
+-  	if (!rnode)
+-  		return 0;
+-	return any_tag_set(rnode, tag);
+-}
+-#endif
+-
+-static unsigned long __maxindex(unsigned int height)
+-{
+-	unsigned int tmp = height * RADIX_TREE_MAP_SHIFT;
+-	unsigned long index = (~0UL >> (RADIX_TREE_INDEX_BITS - tmp - 1)) >> 1;
+-
+-	if (tmp >= RADIX_TREE_INDEX_BITS)
+-		index = ~0UL;
+-	return index;
+-}
+-
+-static void radix_tree_init_maxindex(void)
+-{
+-	unsigned int i;
+-
+-	for (i = 0; i < ARRAY_SIZE(height_to_maxindex); i++)
+-		height_to_maxindex[i] = __maxindex(i);
+-}
+-
+-void radix_tree_init(void)
+-{
+-	radix_tree_init_maxindex();
+-}
+Index: xfsprogs-dev/repair/radix-tree.h
+===================================================================
+--- xfsprogs-dev.orig/repair/radix-tree.h	2009-08-20 00:01:58.000000000 +0000
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+@@ -1,76 +0,0 @@
+-/*
+- * Copyright (C) 2001 Momchil Velikov
+- * Portions Copyright (C) 2001 Christoph Hellwig
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation; either version 2, or (at
+- * your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+- */
+-#ifndef __XFS_SUPPORT_RADIX_TREE_H__
+-#define __XFS_SUPPORT_RADIX_TREE_H__
+-
+-#define RADIX_TREE_TAGS
+-
+-struct radix_tree_root {
+-	unsigned int		height;
+-	struct radix_tree_node	*rnode;
+-};
+-
+-#define RADIX_TREE_INIT(mask)	{					\
+-	.height = 0,							\
+-	.rnode = NULL,							\
+-}
+-
+-#define RADIX_TREE(name, mask) \
+-	struct radix_tree_root name = RADIX_TREE_INIT(mask)
+-
+-#define INIT_RADIX_TREE(root, mask)					\
+-do {									\
+-	(root)->height = 0;						\
+-	(root)->rnode = NULL;						\
+-} while (0)
+-
+-#ifdef RADIX_TREE_TAGS
+-#define RADIX_TREE_MAX_TAGS 2
+-#endif
+-
+-int radix_tree_insert(struct radix_tree_root *, unsigned long, void *);
+-void *radix_tree_lookup(struct radix_tree_root *, unsigned long);
+-void **radix_tree_lookup_slot(struct radix_tree_root *, unsigned long);
+-void *radix_tree_lookup_first(struct radix_tree_root *, unsigned long *);
+-void *radix_tree_delete(struct radix_tree_root *, unsigned long);
+-unsigned int
+-radix_tree_gang_lookup(struct radix_tree_root *root, void **results,
+-			unsigned long first_index, unsigned int max_items);
+-unsigned int
+-radix_tree_gang_lookup_ex(struct radix_tree_root *root, void **results,
+-			unsigned long first_index, unsigned long last_index,
+-			unsigned int max_items);
+-
+-void radix_tree_init(void);
+-
+-#ifdef RADIX_TREE_TAGS
+-void *radix_tree_tag_set(struct radix_tree_root *root,
+-			unsigned long index, unsigned int tag);
+-void *radix_tree_tag_clear(struct radix_tree_root *root,
+-			unsigned long index, unsigned int tag);
+-int radix_tree_tag_get(struct radix_tree_root *root,
+-			unsigned long index, unsigned int tag);
+-unsigned int
+-radix_tree_gang_lookup_tag(struct radix_tree_root *root, void **results,
+-			unsigned long first_index, unsigned int max_items,
+-			unsigned int tag);
+-int radix_tree_tagged(struct radix_tree_root *root, unsigned int tag);
+-#endif
+-
+-#endif /* __XFS_SUPPORT_RADIX_TREE_H__ */
 
 _______________________________________________
 xfs mailing list
