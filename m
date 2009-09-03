@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n83GfJAA115065 for <xfs@oss.sgi.com>; Thu, 3 Sep 2009 11:41:34 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AE6F615C65BE
-	for <xfs@oss.sgi.com>; Thu,  3 Sep 2009 09:42:16 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id dEKeAjXvAKBQ1GPU for
-	<xfs@oss.sgi.com>; Thu, 03 Sep 2009 09:42:16 -0700 (PDT)
-Date: Thu, 3 Sep 2009 12:42:09 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: ext4 writepages is making tiny bios?
-Message-ID: <20090903164209.GA28384@infradead.org>
-References: <20090901184450.GB7885@think> <20090901205744.GE6996@mit.edu>
-	<20090901212740.GA9930@infradead.org>
-	<20090903055201.GA7146@discord.disaster>
+	n83KuB4a131539 for <xfs@oss.sgi.com>; Thu, 3 Sep 2009 15:56:21 -0500
+Received: from goalpost.americas.sgi.com (goalpost.americas.sgi.com
+	[128.162.232.54])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E36E58F8049
+	for <xfs@oss.sgi.com>; Thu,  3 Sep 2009 13:57:08 -0700 (PDT)
+Date: Thu, 3 Sep 2009 15:49:40 -0500
+From: Geoffrey Wehrman <gwehrman@sgi.com>
+Subject: Re: [PATCH 00/14] repair memory usage reductions
+Message-ID: <20090903204940.GB24510@sgi.com>
+References: <20090902175531.469184575@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20090903055201.GA7146@discord.disaster>
+In-Reply-To: <20090902175531.469184575@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,29 +26,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Theodore Tso <tytso@mit.edu>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Chris Mason <chris.mason@oracle.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Thu, Sep 03, 2009 at 03:52:01PM +1000, Dave Chinner wrote:
-> > XFS did the mistake of trusting the VM, while everyone more or less
-> > overrode it.  Removing all those checks and writing out much larger
-> > data fixes it with a relatively small patch:
-> > 
-> > 	http://verein.lst.de/~hch/xfs/xfs-writeback-scaling
-> 
-> Careful:
-> 
-> -	tloff = min(tlast, startpage->index + 64);
-> +	tloff = min(tlast, startpage->index + 8192);
-> 
-> That will cause 64k page machines to try to write back 512MB at a
-> time. This will re-introduce similar to the behaviour in sles9 where
-> writeback would only terminate at the end of an extent (because the
-> mapping end wasn't capped like above).
+On Wed, Sep 02, 2009 at 01:55:31PM -0400, Christoph Hellwig wrote:
+| This is a respin of the patches Barry Naujok wrote at SGI for reducing
+| the memory usage in repair.  I've split it up, fixed a few small bugs
+| and added two preparatory cleanups - but all the real work is Barry's.
+| There has been lots of heavy testing on large filesystems by Barry
+| on the original patches, and quite a lot of testing on slightly smaller
+| filesystems by me.  These were all ad-hoc tests as XFSQA coverage is
+| rather low on repair.  My plan is to add various additional testcase
+| for XFSQA both for intentional corruptions as well as reproducing past
+| reported bugs before we'll release these patches in xfsprogs.  But I think
+| it would be good if we could get them into the development git tree to
+| get wider coverage already.
 
-Pretty good point, any applies to all the different things we discussed
-recently.  Ted, should be maybe introduce a max_writeback_mb instead of
-the max_writeback_pages in the VM, too?
+How do these changes affect xfs_repair I/O performance?  Barry changes
+were previously withheld within SGI due to a regression in performance.
+
+
+-- 
+Geoffrey Wehrman  651-683-5496  gwehrman@sgi.com
 
 _______________________________________________
 xfs mailing list
