@@ -1,16 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n83FitGk111768 for <xfs@oss.sgi.com>; Thu, 3 Sep 2009 10:45:10 -0500
-Date: Thu, 3 Sep 2009 11:45:52 -0400
+	n83FoptX112119 for <xfs@oss.sgi.com>; Thu, 3 Sep 2009 10:51:06 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 47DAF15C0EE2
+	for <xfs@oss.sgi.com>; Thu,  3 Sep 2009 08:51:49 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id 2eRd6SaI86FzSQP2 for
+	<xfs@oss.sgi.com>; Thu, 03 Sep 2009 08:51:49 -0700 (PDT)
+Date: Thu, 3 Sep 2009 11:48:39 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/4] xfs: make sure xfs_sync_fsdata covers the log
-Message-ID: <20090903154551.GA16715@infradead.org>
-References: <20090827231558.057467775@bombadil.infradead.org>
-	<1AB9A794DBDDF54A8A81BE2296F7BDFE83ABF3@cf--amer001e--3.americas.sgi.com>
+Subject: Re: Mounted xfs slows down block device
+Message-ID: <20090903154839.GC16715@infradead.org>
+References: <alpine.LSU.2.00.0908251325410.9492@fbirervta.pbzchgretzou.qr>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1AB9A794DBDDF54A8A81BE2296F7BDFE83ABF3@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <alpine.LSU.2.00.0908251325410.9492@fbirervta.pbzchgretzou.qr>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,12 +28,16 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Jan Engelhardt <jengelh@medozas.de>
+Cc: xfs@oss.sgi.com
 
+Strange, as XFS doesn't actually use the block device mapping at all,
+so all the caching doesn't interact with each other.  Maybe some
+throtteling code in the VM doesn't like these parallel accesses.
 
-FYI: I found some nasty deadlock in this on a large machine, please
-hold back until I've sorted it out.
+But I need to add that reading the block device on a mounted filesystem
+is not a good idea anyay - you will not get any sort of concistency
+guarantee.
 
 _______________________________________________
 xfs mailing list
