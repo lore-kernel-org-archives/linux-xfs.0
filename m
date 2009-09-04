@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n84B85uF202182 for <xfs@oss.sgi.com>; Fri, 4 Sep 2009 06:08:15 -0500
-Received: from one.firstfloor.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 93B69428774
-	for <xfs@oss.sgi.com>; Fri,  4 Sep 2009 04:08:31 -0700 (PDT)
-Received: from one.firstfloor.org (one.firstfloor.org [213.235.205.2]) by
-	cuda.sgi.com with ESMTP id 6nD9mk7I7mNiIYbc for
-	<xfs@oss.sgi.com>; Fri, 04 Sep 2009 04:08:31 -0700 (PDT)
+	n84Bj3eJ204182 for <xfs@oss.sgi.com>; Fri, 4 Sep 2009 06:45:18 -0500
+Received: from mx1.empa.ch (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1AA2A1D68214
+	for <xfs@oss.sgi.com>; Fri,  4 Sep 2009 04:45:55 -0700 (PDT)
+Received: from mx1.empa.ch (mx1.empa.ch [152.88.7.31]) by cuda.sgi.com with
+	ESMTP id fUXphFPBvKP8bkGP for <xfs@oss.sgi.com>;
+	Fri, 04 Sep 2009 04:45:55 -0700 (PDT)
+Received: from eaw-exc-hub1.eawag.wroot.emp-eaw.ch (localhost [127.0.0.1])
+	by mx1.empa.ch (Spam & Virus Firewall) with ESMTP id E010BD5FE1
+	for <xfs@oss.sgi.com>; Fri,  4 Sep 2009 13:45:54 +0200 (CEST)
+Received: from eaw-exc-hub1.eawag.wroot.emp-eaw.ch (eaw-exc-hub1.emp-eaw.ch
+	[152.88.5.116]) by mx1.empa.ch with ESMTP id HsDkvChiYVU24MP7
+	for <xfs@oss.sgi.com>; Fri, 04 Sep 2009 13:45:54 +0200 (CEST)
+From: "Passerone, Daniele" <Daniele.Passerone@empa.ch>
+Date: Fri, 4 Sep 2009 13:45:53 +0200
 Subject: Re: xfs data loss
-From: Andi Kleen <andi@firstfloor.org>
-References: <B9A7B002C7FAFC469D4229539E909760308DA651DE@DU-EXC-MAIL.empa.emp-eaw.ch>
-	<4A975A35.3060809@sandeen.net>
-	<B9A7B002C7FAFC469D4229539E909760308DA65345@DU-EXC-MAIL.empa.emp-eaw.ch>
-	<4A981133.6060009@sandeen.net>
-	<B9A7B002C7FAFC469D4229539E909760308DA65408@DU-EXC-MAIL.empa.emp-eaw.ch>
-	<19101.5976.387292.614270@tree.ty.sabi.co.uk>
-Date: Fri, 04 Sep 2009 13:08:25 +0200
-In-Reply-To: <19101.5976.387292.614270@tree.ty.sabi.co.uk> (Peter Grandi's
-	message of "Tue, 1 Sep 2009 12:45:12 +0000")
-Message-ID: <87tyzjufva.fsf@basil.nowhere.org>
+Message-ID: <B9A7B002C7FAFC469D4229539E909760308DA6597B@DU-EXC-MAIL.empa.emp-eaw.ch>
+Content-Language: en-US
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -33,25 +32,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Peter Grandi <pg_xf2@xf2.to.sabi.co.UK>
-Cc: Linux XFS <xfs@oss.sgi.com>
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-pg_xf2@xf2.to.sabi.co.UK (Peter Grandi) writes:
->
-> Depends -- some people here are XFS salesmen, in that their career
-> and employability depend at least in part on widespread adoption
-> of XFS, and on support from other kernel subsystem guys, who may
-> be one day on an interview panel (the guild of Linux kernel
-> hackers is a pretty small and closed world in practice). These are
-> sell-side engineers, and they will be smooth and emollient even in
-> the face of outrageously ridiculous stuff. 
+Commenting further on my preceding message, I just would like to stress the fact that everybody here has tried to help - xfs and not-xfs people. So I have seen no emollient answers here, at least not to my query.
 
-The main thing that seems `outrageously ridiculous' is your cynical
-and totally unfair and in my experience incorrect description of the
-people who are doing great work on XFS and unlike you actually helping
-users on this mailing list and improving Linux.
 
--Andi
+Mr. Peter Grandi was harsh - very harsh at the  beginning, but I think he also spent time to think about my problem. For that I am grateful.
+
+I am less grateful for being defined "outraugeously ridicolous". But I can skip that in times of trouble...
+
+
+Daniele
 
 _______________________________________________
 xfs mailing list
