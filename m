@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n847JO1r183045 for <xfs@oss.sgi.com>; Fri, 4 Sep 2009 02:19:35 -0500
-Received: from kernel.dk (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7C72A427849
-	for <xfs@oss.sgi.com>; Fri,  4 Sep 2009 00:20:16 -0700 (PDT)
-Received: from kernel.dk (brick.kernel.dk [93.163.65.50]) by cuda.sgi.com with
-	ESMTP id Nx0WC8pNEZFjnNh0 for <xfs@oss.sgi.com>;
-	Fri, 04 Sep 2009 00:20:16 -0700 (PDT)
-Date: Fri, 4 Sep 2009 09:20:13 +0200
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: ext4 writepages is making tiny bios?
-Message-ID: <20090904072013.GR18599@kernel.dk>
-References: <20090901184450.GB7885@think> <20090901205744.GE6996@mit.edu>
-	<20090901212740.GA9930@infradead.org>
-	<20090903055201.GA7146@discord.disaster>
-	<20090903164209.GA28384@infradead.org>
-	<20090904001545.GA30759@mit.edu>
+	n84B85uF202182 for <xfs@oss.sgi.com>; Fri, 4 Sep 2009 06:08:15 -0500
+Received: from one.firstfloor.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 93B69428774
+	for <xfs@oss.sgi.com>; Fri,  4 Sep 2009 04:08:31 -0700 (PDT)
+Received: from one.firstfloor.org (one.firstfloor.org [213.235.205.2]) by
+	cuda.sgi.com with ESMTP id 6nD9mk7I7mNiIYbc for
+	<xfs@oss.sgi.com>; Fri, 04 Sep 2009 04:08:31 -0700 (PDT)
+Subject: Re: xfs data loss
+From: Andi Kleen <andi@firstfloor.org>
+References: <B9A7B002C7FAFC469D4229539E909760308DA651DE@DU-EXC-MAIL.empa.emp-eaw.ch>
+	<4A975A35.3060809@sandeen.net>
+	<B9A7B002C7FAFC469D4229539E909760308DA65345@DU-EXC-MAIL.empa.emp-eaw.ch>
+	<4A981133.6060009@sandeen.net>
+	<B9A7B002C7FAFC469D4229539E909760308DA65408@DU-EXC-MAIL.empa.emp-eaw.ch>
+	<19101.5976.387292.614270@tree.ty.sabi.co.uk>
+Date: Fri, 04 Sep 2009 13:08:25 +0200
+In-Reply-To: <19101.5976.387292.614270@tree.ty.sabi.co.uk> (Peter Grandi's
+	message of "Tue, 1 Sep 2009 12:45:12 +0000")
+Message-ID: <87tyzjufva.fsf@basil.nowhere.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20090904001545.GA30759@mit.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,34 +33,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Theodore Tso <tytso@mit.edu>
-Cc: xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Chris Mason <chris.mason@oracle.com>
+To: Peter Grandi <pg_xf2@xf2.to.sabi.co.UK>
+Cc: Linux XFS <xfs@oss.sgi.com>
 
-On Thu, Sep 03 2009, Theodore Tso wrote:
-> On Thu, Sep 03, 2009 at 12:42:09PM -0400, Christoph Hellwig wrote:
-> > > Careful:
-> > > 
-> > > -	tloff = min(tlast, startpage->index + 64);
-> > > +	tloff = min(tlast, startpage->index + 8192);
-> > > 
-> > > That will cause 64k page machines to try to write back 512MB at a
-> > > time. This will re-introduce similar to the behaviour in sles9 where
-> > > writeback would only terminate at the end of an extent (because the
-> > > mapping end wasn't capped like above).
-> > 
-> > Pretty good point, any applies to all the different things we discussed
-> > recently.  Ted, should be maybe introduce a max_writeback_mb instead of
-> > the max_writeback_pages in the VM, too?
-> 
-> Good point.
-> 
-> Jens, maybe we should replace my patch with this one, which makes the
-> tunable in terms of megabytes instead of pages?
+pg_xf2@xf2.to.sabi.co.UK (Peter Grandi) writes:
+>
+> Depends -- some people here are XFS salesmen, in that their career
+> and employability depend at least in part on widespread adoption
+> of XFS, and on support from other kernel subsystem guys, who may
+> be one day on an interview panel (the guild of Linux kernel
+> hackers is a pretty small and closed world in practice). These are
+> sell-side engineers, and they will be smooth and emollient even in
+> the face of outrageously ridiculous stuff. 
 
-That is probably a better metric than 'pages', lets update it.
+The main thing that seems `outrageously ridiculous' is your cynical
+and totally unfair and in my experience incorrect description of the
+people who are doing great work on XFS and unlike you actually helping
+users on this mailing list and improving Linux.
 
--- 
-Jens Axboe
+-Andi
 
 _______________________________________________
 xfs mailing list
