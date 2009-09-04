@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n84Bj3eJ204182 for <xfs@oss.sgi.com>; Fri, 4 Sep 2009 06:45:18 -0500
-Received: from mx1.empa.ch (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1AA2A1D68214
-	for <xfs@oss.sgi.com>; Fri,  4 Sep 2009 04:45:55 -0700 (PDT)
-Received: from mx1.empa.ch (mx1.empa.ch [152.88.7.31]) by cuda.sgi.com with
-	ESMTP id fUXphFPBvKP8bkGP for <xfs@oss.sgi.com>;
-	Fri, 04 Sep 2009 04:45:55 -0700 (PDT)
-Received: from eaw-exc-hub1.eawag.wroot.emp-eaw.ch (localhost [127.0.0.1])
-	by mx1.empa.ch (Spam & Virus Firewall) with ESMTP id E010BD5FE1
-	for <xfs@oss.sgi.com>; Fri,  4 Sep 2009 13:45:54 +0200 (CEST)
-Received: from eaw-exc-hub1.eawag.wroot.emp-eaw.ch (eaw-exc-hub1.emp-eaw.ch
-	[152.88.5.116]) by mx1.empa.ch with ESMTP id HsDkvChiYVU24MP7
-	for <xfs@oss.sgi.com>; Fri, 04 Sep 2009 13:45:54 +0200 (CEST)
-From: "Passerone, Daniele" <Daniele.Passerone@empa.ch>
-Date: Fri, 4 Sep 2009 13:45:53 +0200
-Subject: Re: xfs data loss
-Message-ID: <B9A7B002C7FAFC469D4229539E909760308DA6597B@DU-EXC-MAIL.empa.emp-eaw.ch>
-Content-Language: en-US
+	n84DkA98211688 for <xfs@oss.sgi.com>; Fri, 4 Sep 2009 08:46:21 -0500
+Received: from goalpost.americas.sgi.com (goalpost.americas.sgi.com
+	[128.162.232.54])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EAA65304064
+	for <xfs@oss.sgi.com>; Fri,  4 Sep 2009 06:47:08 -0700 (PDT)
+Date: Fri, 4 Sep 2009 08:37:37 -0500
+From: Geoffrey Wehrman <gwehrman@sgi.com>
+Subject: Re: [PATCH 00/14] repair memory usage reductions
+Message-ID: <20090904133737.GD12052@sgi.com>
+References: <20090902175531.469184575@bombadil.infradead.org>
+	<20090903204940.GB24510@sgi.com>
+	<20090904025753.GB7146@discord.disaster>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20090904025753.GB7146@discord.disaster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,17 +28,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-Commenting further on my preceding message, I just would like to stress the fact that everybody here has tried to help - xfs and not-xfs people. So I have seen no emollient answers here, at least not to my query.
+On Fri, Sep 04, 2009 at 12:57:53PM +1000, Dave Chinner wrote:
+| Christoph asked me to repeat what I said on #xfs w.r.t the regression.
+
+Thank you for the detailed description.  All I had was a statement from
+January 2008, "Barry has completed the memory optimization, but initial
+testing shows that performance has regressed."  That was the last update
+recorded on Barry's work.
+
+| With that in mind, I think the memory usage optimisation is far more
+| important to the majority of XFS users than the CPU usage regression
+| it causes as the majority of users don't have RAM-rich environments
+| to run repair in.
+
+I agree.
 
 
-Mr. Peter Grandi was harsh - very harsh at the  beginning, but I think he also spent time to think about my problem. For that I am grateful.
-
-I am less grateful for being defined "outraugeously ridicolous". But I can skip that in times of trouble...
-
-
-Daniele
+-- 
+Geoffrey Wehrman  651-683-5496  gwehrman@sgi.com
 
 _______________________________________________
 xfs mailing list
