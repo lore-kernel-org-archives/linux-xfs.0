@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n850KsGT253858 for <xfs@oss.sgi.com>; Fri, 4 Sep 2009 19:21:04 -0500
+	n850KlBI253849 for <xfs@oss.sgi.com>; Fri, 4 Sep 2009 19:20:57 -0500
 Received: from coco.kroah.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8065D42BEC9
-	for <xfs@oss.sgi.com>; Fri,  4 Sep 2009 17:21:21 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2D5BE42BEC7
+	for <xfs@oss.sgi.com>; Fri,  4 Sep 2009 17:21:19 -0700 (PDT)
 Received: from coco.kroah.org (kroah.org [198.145.64.141]) by cuda.sgi.com
-	with ESMTP id DEQR2KPjYbExrBt8 for <xfs@oss.sgi.com>;
-	Fri, 04 Sep 2009 17:21:21 -0700 (PDT)
-Message-Id: <20090905001455.522626105@mini.kroah.org>
-Date: Fri, 04 Sep 2009 17:14:28 -0700
+	with ESMTP id FqRHC31OShnAbn0g for <xfs@oss.sgi.com>;
+	Fri, 04 Sep 2009 17:21:19 -0700 (PDT)
+Message-Id: <20090905001455.221274331@mini.kroah.org>
+Date: Fri, 04 Sep 2009 17:14:26 -0700
 From: Greg KH <gregkh@suse.de>
-Subject: [patch 53/71] xfs: fix freeing of inodes not yet added to the inode
-	cache
+Subject: [patch 51/71] vfs: fix inode_init_always calling convention
 References: <20090905001335.106974681@mini.kroah.org>
 Content-Disposition: inline;
-	filename=xfs-fix-freeing-of-inodes-not-yet-added-to-the-inode-cache.patch
+	filename=vfs-fix-inode_init_always-calling-convention.patch
 In-Reply-To: <20090905001824.GA18171@kroah.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -38,218 +37,147 @@ Cc: stable-review@kernel.org, akpm@linux-foundation.org, xfs@oss.sgi.com, torval
 ------------------
 From: Christoph Hellwig <hch@infradead.org>
 
-upstream commit b36ec0428a06fcbdb67d61e9e664154e5dd9a8c7
+backport of upstream commit 54e346215e4fe2ca8c94c54e546cc61902060510
 
-When freeing an inode that lost race getting added to the inode cache we
-must not call into ->destroy_inode, because that would delete the inode
-that won the race from the inode cache radix tree.
+Currently inode_init_always calls into ->destroy_inode if the additional
+initialization fails.  That's not only counter-intuitive because
+inode_init_always did not allocate the inode structure, but in case of
+XFS it's actively harmful as ->destroy_inode might delete the inode from
+a radix-tree that has never been added.  This in turn might end up
+deleting the inode for the same inum that has been instanciated by
+another process and cause lots of cause subtile problems.
 
-This patch uses splits a new xfs_inode_free helper out of xfs_ireclaim
-and uses that plus __destroy_inode to make sure we really only free
-the memory allocted for the inode that lost the race, and not mess with
-the inode cache state.
+Also in the case of re-initializing a reclaimable inode in XFS it would
+free an inode we still want to keep alive.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
-Reported-by: Alex Samad <alex@samad.com.au>
-Reported-by: Andrew Randrianasulu <randrik@mail.ru>
-Reported-by: Stephane <sharnois@max-t.com>
-Reported-by: Tommy <tommy@news-service.com>
-Reported-by: Miah Gregory <mace@darksilence.net>
-Reported-by: Gabriel Barazer <gabriel@oxeva.fr>
-Reported-by: Leandro Lucarella <llucax@gmail.com>
-Reported-by: Daniel Burr <dburr@fami.com.au>
-Reported-by: Nickolay <newmail@spaces.ru>
-Reported-by: Michael Guntsche <mike@it-loops.com>
-Reported-by: Dan Carley <dan.carley+linuxkern-bugs@gmail.com>
-Reported-by: Michael Ole Olsen <gnu@gmx.net>
-Reported-by: Michael Weissenbacher <mw@dermichi.com>
-Reported-by: Martin Spott <Martin.Spott@mgras.net>
-Reported-by: Christian Kujau <lists@nerdbynature.de>
-Tested-by: Michael Guntsche <mike@it-loops.com>
-Tested-by: Dan Carley <dan.carley+linuxkern-bugs@gmail.com>
-Tested-by: Christian Kujau <lists@nerdbynature.de>
 Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 
 ---
- fs/xfs/xfs_iget.c  |  125 ++++++++++++++++++++++++++++-------------------------
- fs/xfs/xfs_inode.h |   17 -------
- 2 files changed, 68 insertions(+), 74 deletions(-)
+ fs/inode.c         |   30 +++++++++++++++++-------------
+ fs/xfs/xfs_iget.c  |   17 +++++------------
+ include/linux/fs.h |    2 +-
+ 3 files changed, 23 insertions(+), 26 deletions(-)
 
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -118,12 +118,11 @@ static void wake_up_inode(struct inode *
+  * These are initializations that need to be done on every inode
+  * allocation as the fields are not initialised by slab allocation.
+  */
+-struct inode *inode_init_always(struct super_block *sb, struct inode *inode)
++int inode_init_always(struct super_block *sb, struct inode *inode)
+ {
+ 	static const struct address_space_operations empty_aops;
+ 	static struct inode_operations empty_iops;
+ 	static const struct file_operations empty_fops;
+-
+ 	struct address_space *const mapping = &inode->i_data;
+ 
+ 	inode->i_sb = sb;
+@@ -150,7 +149,7 @@ struct inode *inode_init_always(struct s
+ 	inode->dirtied_when = 0;
+ 
+ 	if (security_inode_alloc(inode))
+-		goto out_free_inode;
++		goto out;
+ 
+ 	/* allocate and initialize an i_integrity */
+ 	if (ima_inode_alloc(inode))
+@@ -189,16 +188,12 @@ struct inode *inode_init_always(struct s
+ 	inode->i_private = NULL;
+ 	inode->i_mapping = mapping;
+ 
+-	return inode;
++	return 0;
+ 
+ out_free_security:
+ 	security_inode_free(inode);
+-out_free_inode:
+-	if (inode->i_sb->s_op->destroy_inode)
+-		inode->i_sb->s_op->destroy_inode(inode);
+-	else
+-		kmem_cache_free(inode_cachep, (inode));
+-	return NULL;
++out:
++	return -ENOMEM;
+ }
+ EXPORT_SYMBOL(inode_init_always);
+ 
+@@ -211,9 +206,18 @@ static struct inode *alloc_inode(struct 
+ 	else
+ 		inode = kmem_cache_alloc(inode_cachep, GFP_KERNEL);
+ 
+-	if (inode)
+-		return inode_init_always(sb, inode);
+-	return NULL;
++	if (!inode)
++		return NULL;
++
++	if (unlikely(inode_init_always(sb, inode))) {
++		if (inode->i_sb->s_op->destroy_inode)
++			inode->i_sb->s_op->destroy_inode(inode);
++		else
++			kmem_cache_free(inode_cachep, inode);
++		return NULL;
++	}
++
++	return inode;
+ }
+ 
+ void destroy_inode(struct inode *inode)
 --- a/fs/xfs/xfs_iget.c
 +++ b/fs/xfs/xfs_iget.c
-@@ -115,6 +115,71 @@ xfs_inode_alloc(
- 	return ip;
- }
- 
-+STATIC void
-+xfs_inode_free(
-+	struct xfs_inode	*ip)
-+{
-+	switch (ip->i_d.di_mode & S_IFMT) {
-+	case S_IFREG:
-+	case S_IFDIR:
-+	case S_IFLNK:
-+		xfs_idestroy_fork(ip, XFS_DATA_FORK);
-+		break;
+@@ -63,6 +63,10 @@ xfs_inode_alloc(
+ 	ip = kmem_zone_alloc(xfs_inode_zone, KM_SLEEP);
+ 	if (!ip)
+ 		return NULL;
++	if (inode_init_always(mp->m_super, VFS_I(ip))) {
++		kmem_zone_free(xfs_inode_zone, ip);
++		return NULL;
 +	}
-+
-+	if (ip->i_afp)
-+		xfs_idestroy_fork(ip, XFS_ATTR_FORK);
-+
-+#ifdef XFS_INODE_TRACE
-+	ktrace_free(ip->i_trace);
-+#endif
-+#ifdef XFS_BMAP_TRACE
-+	ktrace_free(ip->i_xtrace);
-+#endif
-+#ifdef XFS_BTREE_TRACE
-+	ktrace_free(ip->i_btrace);
-+#endif
-+#ifdef XFS_RW_TRACE
-+	ktrace_free(ip->i_rwtrace);
-+#endif
-+#ifdef XFS_ILOCK_TRACE
-+	ktrace_free(ip->i_lock_trace);
-+#endif
-+#ifdef XFS_DIR2_TRACE
-+	ktrace_free(ip->i_dir_trace);
-+#endif
-+
-+	if (ip->i_itemp) {
-+		/*
-+		 * Only if we are shutting down the fs will we see an
-+		 * inode still in the AIL. If it is there, we should remove
-+		 * it to prevent a use-after-free from occurring.
-+		 */
-+		xfs_log_item_t	*lip = &ip->i_itemp->ili_item;
-+		struct xfs_ail	*ailp = lip->li_ailp;
-+
-+		ASSERT(((lip->li_flags & XFS_LI_IN_AIL) == 0) ||
-+				       XFS_FORCED_SHUTDOWN(ip->i_mount));
-+		if (lip->li_flags & XFS_LI_IN_AIL) {
-+			spin_lock(&ailp->xa_lock);
-+			if (lip->li_flags & XFS_LI_IN_AIL)
-+				xfs_trans_ail_delete(ailp, lip);
-+			else
-+				spin_unlock(&ailp->xa_lock);
-+		}
-+		xfs_inode_item_destroy(ip);
-+		ip->i_itemp = NULL;
-+	}
-+
-+	/* asserts to verify all state is correct here */
-+	ASSERT(atomic_read(&ip->i_iocount) == 0);
-+	ASSERT(atomic_read(&ip->i_pincount) == 0);
-+	ASSERT(!spin_is_locked(&ip->i_flags_lock));
-+	ASSERT(completion_done(&ip->i_flush));
-+
-+	kmem_zone_free(xfs_inode_zone, ip);
-+}
-+
- /*
-  * Check the validity of the inode we just found it the cache
-  */
-@@ -291,7 +356,8 @@ out_preload_end:
- 	if (lock_flags)
- 		xfs_iunlock(ip, lock_flags);
- out_destroy:
--	xfs_destroy_inode(ip);
-+	__destroy_inode(VFS_I(ip));
-+	xfs_inode_free(ip);
- 	return error;
- }
  
-@@ -499,62 +565,7 @@ xfs_ireclaim(
- 	XFS_QM_DQDETACH(ip->i_mount, ip);
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
+ 	ASSERT(atomic_read(&ip->i_iocount) == 0);
+ 	ASSERT(atomic_read(&ip->i_pincount) == 0);
+@@ -104,17 +108,6 @@ xfs_inode_alloc(
+ #ifdef XFS_DIR2_TRACE
+ 	ip->i_dir_trace = ktrace_alloc(XFS_DIR2_KTRACE_SIZE, KM_NOFS);
+ #endif
+-	/*
+-	* Now initialise the VFS inode. We do this after the xfs_inode
+-	* initialisation as internal failures will result in ->destroy_inode
+-	* being called and that will pass down through the reclaim path and
+-	* free the XFS inode. This path requires the XFS inode to already be
+-	* initialised. Hence if this call fails, the xfs_inode has already
+-	* been freed and we should not reference it at all in the error
+-	* handling.
+-	*/
+-	if (!inode_init_always(mp->m_super, VFS_I(ip)))
+-		return NULL;
  
--	switch (ip->i_d.di_mode & S_IFMT) {
--	case S_IFREG:
--	case S_IFDIR:
--	case S_IFLNK:
--		xfs_idestroy_fork(ip, XFS_DATA_FORK);
--		break;
--	}
--
--	if (ip->i_afp)
--		xfs_idestroy_fork(ip, XFS_ATTR_FORK);
--
--#ifdef XFS_INODE_TRACE
--	ktrace_free(ip->i_trace);
--#endif
--#ifdef XFS_BMAP_TRACE
--	ktrace_free(ip->i_xtrace);
--#endif
--#ifdef XFS_BTREE_TRACE
--	ktrace_free(ip->i_btrace);
--#endif
--#ifdef XFS_RW_TRACE
--	ktrace_free(ip->i_rwtrace);
--#endif
--#ifdef XFS_ILOCK_TRACE
--	ktrace_free(ip->i_lock_trace);
--#endif
--#ifdef XFS_DIR2_TRACE
--	ktrace_free(ip->i_dir_trace);
--#endif
--	if (ip->i_itemp) {
--		/*
--		 * Only if we are shutting down the fs will we see an
--		 * inode still in the AIL. If it is there, we should remove
--		 * it to prevent a use-after-free from occurring.
--		 */
--		xfs_log_item_t	*lip = &ip->i_itemp->ili_item;
--		struct xfs_ail	*ailp = lip->li_ailp;
--
--		ASSERT(((lip->li_flags & XFS_LI_IN_AIL) == 0) ||
--				       XFS_FORCED_SHUTDOWN(ip->i_mount));
--		if (lip->li_flags & XFS_LI_IN_AIL) {
--			spin_lock(&ailp->xa_lock);
--			if (lip->li_flags & XFS_LI_IN_AIL)
--				xfs_trans_ail_delete(ailp, lip);
--			else
--				spin_unlock(&ailp->xa_lock);
--		}
--		xfs_inode_item_destroy(ip);
--		ip->i_itemp = NULL;
--	}
--	/* asserts to verify all state is correct here */
--	ASSERT(atomic_read(&ip->i_iocount) == 0);
--	ASSERT(atomic_read(&ip->i_pincount) == 0);
--	ASSERT(!spin_is_locked(&ip->i_flags_lock));
--	ASSERT(completion_done(&ip->i_flush));
--	kmem_zone_free(xfs_inode_zone, ip);
-+	xfs_inode_free(ip);
- }
+ 	/* prevent anyone from using this yet */
+ 	VFS_I(ip)->i_state = I_NEW|I_LOCK;
+@@ -166,7 +159,7 @@ xfs_iget_cache_hit(
+ 		 * errors cleanly, then tag it so it can be set up correctly
+ 		 * later.
+ 		 */
+-		if (!inode_init_always(mp->m_super, VFS_I(ip))) {
++		if (inode_init_always(mp->m_super, VFS_I(ip))) {
+ 			error = ENOMEM;
+ 			goto out_error;
+ 		}
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2135,7 +2135,7 @@ extern loff_t default_llseek(struct file
  
- /*
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -309,23 +309,6 @@ static inline struct inode *VFS_I(struct
- }
+ extern loff_t vfs_llseek(struct file *file, loff_t offset, int origin);
  
- /*
-- * Get rid of a partially initialized inode.
-- *
-- * We have to go through destroy_inode to make sure allocations
-- * from init_inode_always like the security data are undone.
-- *
-- * We mark the inode bad so that it takes the short cut in
-- * the reclaim path instead of going through the flush path
-- * which doesn't make sense for an inode that has never seen the
-- * light of day.
-- */
--static inline void xfs_destroy_inode(struct xfs_inode *ip)
--{
--	make_bad_inode(VFS_I(ip));
--	return destroy_inode(VFS_I(ip));
--}
--
--/*
-  * i_flags helper functions
-  */
- static inline void
+-extern struct inode * inode_init_always(struct super_block *, struct inode *);
++extern int inode_init_always(struct super_block *, struct inode *);
+ extern void inode_init_once(struct inode *);
+ extern void inode_add_to_lists(struct super_block *, struct inode *);
+ extern void iput(struct inode *);
 
 
 _______________________________________________
