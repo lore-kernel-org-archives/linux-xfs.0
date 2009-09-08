@@ -1,25 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n88BfJxV065934 for <xfs@oss.sgi.com>; Tue, 8 Sep 2009 06:41:34 -0500
-Received: from IX-MTA-02.mxsweep.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1707E16046FA
-	for <xfs@oss.sgi.com>; Tue,  8 Sep 2009 04:41:49 -0700 (PDT)
-Received: from IX-MTA-02.mxsweep.com (mail161.emailantidote.com
-	[89.167.219.161]) by cuda.sgi.com with ESMTP id
-	8YQ610rTLFLyHETf for <xfs@oss.sgi.com>;
-	Tue, 08 Sep 2009 04:41:49 -0700 (PDT)
-Message-ID: <4AA6402D.8040209@draigBrady.com>
-Date: Tue, 8 Sep 2009 12:29:49 +0100
-From: =?UTF-8?B?UMOhZHJhaWcgQnJhZHk=?= <P@draigBrady.com>
+	n88DpYnW072664 for <xfs@oss.sgi.com>; Tue, 8 Sep 2009 08:51:45 -0500
+Received: from ICIQEXC02.ICIQ.ES (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AE3521604A5F
+	for <xfs@oss.sgi.com>; Tue,  8 Sep 2009 06:52:01 -0700 (PDT)
+Received: from ICIQEXC02.ICIQ.ES (ns2.iciq.es [193.146.115.194]) by
+	cuda.sgi.com with ESMTP id cSciAloRM6LWGWki for
+	<xfs@oss.sgi.com>; Tue, 08 Sep 2009 06:52:01 -0700 (PDT)
+Subject: warn users soft quota exceeded
+From: Martin Gumbau <mgumbau@ICIQ.ES>
+Date: Tue, 8 Sep 2009 15:51:38 +0200
+Message-ID: <1252417898.2452.64.camel@p005>
 MIME-Version: 1.0
-Subject: fsetxattr() fails on a writable descriptor?
-References: <1251987642.3855.36.camel@dhcp-lab-219.englab.brq.redhat.com>	
-	<4AA1A3E6.2020606@draigBrady.com> <87k50den1e.fsf@meyering.net>	
-	<1252309787.3852.8.camel@dhcp-lab-219.englab.brq.redhat.com>	
-	<4AA4C950.3080303@draigBrady.com>
-	<1252318482.3852.18.camel@dhcp-lab-219.englab.brq.redhat.com>
-In-Reply-To: <1252318482.3852.18.camel@dhcp-lab-219.englab.brq.redhat.com>
+Reply-To: mgumbau@ICIQ.ES
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,26 +22,82 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: CoreutilsBugs <bug-coreutils@gnu.org>
 
-ZnNldHhhdHRyKCkgaXMgZmFpbGluZyBmb3IgbWUgd2hlbiB0aGUgcGVybWlzc2lvbnMgYXJlIHJl
-YWRvbmx5CmJ1dCB0aGUgZGVzY3JpcHRvciBpcyB3cml0YWJsZSBhcyBkZW1vbnN0cmF0ZWQgYnkg
-dGhlIHByb2dyYW0gYmVsb3cuCkkndmUgdHJpZWQgdGhpcyBvbiBleHQzIGFuZCBleHQ0IHdpdGgg
-bGliYXR0ci0yLjQuNDMtMy5mYzExLmk1ODYKYW5kIGxpbnV4LTIuNi4zMC41LTQzLmZjMTEuaTU4
-NgoKSXMgdGhpcyBleHBlY3RlZD8KCmNoZWVycywKUMOhZHJhaWcuCgojaW5jbHVkZSA8c3lzL3R5
-cGVzLmg+CiNpbmNsdWRlIDxzeXMvc3RhdC5oPgojaW5jbHVkZSA8ZmNudGwuaD4KI2luY2x1ZGUg
-PGF0dHIvbGliYXR0ci5oPgojaW5jbHVkZSA8c3RkaW8uaD4KI2luY2x1ZGUgPHVuaXN0ZC5oPgoK
-aW50IG1haW4odm9pZCkKewogICAgaW50IHdmZDsKICAgIGlmICgod2ZkPW9wZW4oIndyaXRhYmxl
-IiwgT19DUkVBVHxPX1dST05MWXxPX0VYQ0wsIFNfSVJVU1IpKSA9PSAtMSkKICAgICAgICBmcHJp
-bnRmKHN0ZGVyciwgIm9wZW4oJ3dyaXRhYmxlJykgZXJyb3IgWyVtXVxuIik7CiAgICBpZiAod3Jp
-dGUod2ZkLCAiZGF0YSIsIDEpID09IC0xKQogICAgICAgIGZwcmludGYoc3RkZXJyLCAid3JpdGUo
-KSBlcnJvciBbJW1dXG4iKTsKICAgIGlmIChmc2V0eGF0dHIod2ZkLCAidXNlci50ZXN0IiwgInRl
-c3QiLCA0LCAwKSA9PSAtMSkKICAgICAgICBmcHJpbnRmKHN0ZGVyciwgImZzZXR4YXR0cigpIGVy
-cm9yIFslbV1cbiIpOwp9CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5j
-b20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+Hi,
+I try o manage soft xfs_quota warning messages with:
+
+	xfs_quota -x -c 'warn 2 userA' /QUOTEDPARTITION
+
+and any warn message is sent to userA when user exceeded soft quota.
+How can I warn user when the user-disk-limit is coming?
+
+
+------------------------------------------------------------------------------
+$ xfs_info /QUOTEDPARTITION
+
+meta-data=/dev/sdb1              isize=256    agcount=16, agsize=7631000
+blks
+         =                       sectsz=512   attr=0
+data     =                       bsize=4096   blocks=122096000,
+imaxpct=25
+         =                       sunit=0      swidth=0 blks, unwritten=1
+naming   =version 2              bsize=4096
+log      =internal               bsize=4096   blocks=32768, version=1
+         =                       sectsz=512   sunit=0 blks, lazy-count=0
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+------------------------------------------------------------------------------
+$ xfs_quota -x -c 'state'
+
+User quota state on /QUOTEDPARTITION (/dev/sdb1)
+  Accounting: ON
+  Enforcement: ON
+  Inode: #40089640 (9 blocks, 7 extents)
+Group quota state on  /QUOTEDPARTITION(/dev/sdb1)
+  Accounting: OFF
+  Enforcement: OFF
+  Inode: #18446744073709551615 (0 blocks, 0 extents)
+Project quota state on /QUOTEDPARTITION (/dev/sdb1)
+  Accounting: OFF
+  Enforcement: OFF
+  Inode: #18446744073709551615 (0 blocks, 0 extents)
+Blocks grace time: [7 days 00:00:30]
+Inodes grace time: [7 days 00:00:30]
+Realtime Blocks grace time: [--------]
+
+
+------------------------------------------------------------------------------
+$ xfs_quota -x -c report /QUOTEDPARTITION
+
+User quota on /QUOTEDPARTITION (/dev/sdb1)
+                               Blocks
+User ID          Used       Soft       Hard    Warn/Grace
+---------- --------------------------------------------------
+...
+userA       2566056    2566056    2600100     02  [6 days]
+...
+
+
+
+
+
+
+
+-- 
+Martin Gumbau Gonzalez
+System Manager
+ICIQ - Theoretical chemistry computing groups
+mgumbau@iciq.es - http://www.iciq.es
+Tel. 977 920 200 - ext 308
+
+
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
