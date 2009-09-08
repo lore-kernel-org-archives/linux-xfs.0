@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n88DpYnW072664 for <xfs@oss.sgi.com>; Tue, 8 Sep 2009 08:51:45 -0500
-Received: from ICIQEXC02.ICIQ.ES (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AE3521604A5F
-	for <xfs@oss.sgi.com>; Tue,  8 Sep 2009 06:52:01 -0700 (PDT)
-Received: from ICIQEXC02.ICIQ.ES (ns2.iciq.es [193.146.115.194]) by
-	cuda.sgi.com with ESMTP id cSciAloRM6LWGWki for
-	<xfs@oss.sgi.com>; Tue, 08 Sep 2009 06:52:01 -0700 (PDT)
-Subject: warn users soft quota exceeded
-From: Martin Gumbau <mgumbau@ICIQ.ES>
-Date: Tue, 8 Sep 2009 15:51:38 +0200
-Message-ID: <1252417898.2452.64.camel@p005>
+	n88Eg5w6074952 for <xfs@oss.sgi.com>; Tue, 8 Sep 2009 09:42:20 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EFACD434323
+	for <xfs@oss.sgi.com>; Tue,  8 Sep 2009 07:43:05 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id mI9RVlKvHxg6u3AG for
+	<xfs@oss.sgi.com>; Tue, 08 Sep 2009 07:43:05 -0700 (PDT)
+Date: Tue, 8 Sep 2009 10:39:56 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfsprogs: fix up the noreturn annotations
+Message-ID: <20090908143956.GA15533@infradead.org>
+References: <4AA19639.6090208@sandeen.net>
 MIME-Version: 1.0
-Reply-To: mgumbau@ICIQ.ES
+Content-Disposition: inline
+In-Reply-To: <4AA19639.6090208@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,76 +28,116 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs mailing list <xfs@oss.sgi.com>
 
-Hi,
-I try o manage soft xfs_quota warning messages with:
-
-	xfs_quota -x -c 'warn 2 userA' /QUOTEDPARTITION
-
-and any warn message is sent to userA when user exceeded soft quota.
-How can I warn user when the user-disk-limit is coming?
-
-
-------------------------------------------------------------------------------
-$ xfs_info /QUOTEDPARTITION
-
-meta-data=/dev/sdb1              isize=256    agcount=16, agsize=7631000
-blks
-         =                       sectsz=512   attr=0
-data     =                       bsize=4096   blocks=122096000,
-imaxpct=25
-         =                       sunit=0      swidth=0 blks, unwritten=1
-naming   =version 2              bsize=4096
-log      =internal               bsize=4096   blocks=32768, version=1
-         =                       sectsz=512   sunit=0 blks, lazy-count=0
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-
-------------------------------------------------------------------------------
-$ xfs_quota -x -c 'state'
-
-User quota state on /QUOTEDPARTITION (/dev/sdb1)
-  Accounting: ON
-  Enforcement: ON
-  Inode: #40089640 (9 blocks, 7 extents)
-Group quota state on  /QUOTEDPARTITION(/dev/sdb1)
-  Accounting: OFF
-  Enforcement: OFF
-  Inode: #18446744073709551615 (0 blocks, 0 extents)
-Project quota state on /QUOTEDPARTITION (/dev/sdb1)
-  Accounting: OFF
-  Enforcement: OFF
-  Inode: #18446744073709551615 (0 blocks, 0 extents)
-Blocks grace time: [7 days 00:00:30]
-Inodes grace time: [7 days 00:00:30]
-Realtime Blocks grace time: [--------]
+The usage function in mkfs needs a noreturn annotation too, otherwise
+gcc will complain, similarly the do_msg function in repair would need
+it if do_abort is set, but because conditional annotations aren't
+possible just clean this area up an inline the do_msg function into
+it's callers.
 
 
-------------------------------------------------------------------------------
-$ xfs_quota -x -c report /QUOTEDPARTITION
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-User quota on /QUOTEDPARTITION (/dev/sdb1)
-                               Blocks
-User ID          Used       Soft       Hard    Warn/Grace
----------- --------------------------------------------------
-...
-userA       2566056    2566056    2600100     02  [6 days]
-...
-
-
-
-
-
-
-
--- 
-Martin Gumbau Gonzalez
-System Manager
-ICIQ - Theoretical chemistry computing groups
-mgumbau@iciq.es - http://www.iciq.es
-Tel. 977 920 200 - ext 308
-
-
+Index: xfsprogs-dev/mkfs/xfs_mkfs.c
+===================================================================
+--- xfsprogs-dev.orig/mkfs/xfs_mkfs.c	2009-09-08 11:33:17.892004074 -0300
++++ xfsprogs-dev/mkfs/xfs_mkfs.c	2009-09-08 11:33:26.993004077 -0300
+@@ -27,6 +27,7 @@
+  */
+ static void conflict(char opt, char *tab[], int oldidx, int newidx);
+ static void illegal(char *value, char *opt);
++static __attribute__((noreturn)) void usage (void);
+ static __attribute__((noreturn)) void reqval(char opt, char *tab[], int idx);
+ static void respec(char opt, char *tab[], int idx);
+ static void unknown(char opt, char *s);
+@@ -2554,7 +2555,7 @@ cvtnum(
+ 	return -1LL;
+ }
+ 
+-void
++static void __attribute__((noreturn))
+ usage( void )
+ {
+ 	fprintf(stderr, _("Usage: %s\n\
+Index: xfsprogs-dev/mkfs/xfs_mkfs.h
+===================================================================
+--- xfsprogs-dev.orig/mkfs/xfs_mkfs.h	2009-09-08 11:33:17.904015867 -0300
++++ xfsprogs-dev/mkfs/xfs_mkfs.h	2009-09-08 11:33:26.993004077 -0300
+@@ -68,7 +68,6 @@
+ 
+ 
+ /* xfs_mkfs.c */
+-extern void usage (void);
+ extern int isdigits (char *str);
+ extern long long cvtnum (unsigned int blocksize,
+ 			 unsigned int sectorsize, char *s);
+Index: xfsprogs-dev/repair/xfs_repair.c
+===================================================================
+--- xfsprogs-dev.orig/repair/xfs_repair.c	2009-09-08 11:33:31.211278768 -0300
++++ xfsprogs-dev/repair/xfs_repair.c	2009-09-08 11:34:30.158256533 -0300
+@@ -339,18 +339,6 @@ process_args(int argc, char **argv)
+ 		usage();
+ }
+ 
+-void
+-do_msg(int do_abort, char const *msg, va_list args)
+-{
+-	vfprintf(stderr, msg, args);
+-
+-	if (do_abort)  {
+-		if (dumpcore)
+-			abort();
+-		exit(1);
+-	}
+-}
+-
+ void __attribute__((noreturn))
+ do_error(char const *msg, ...)
+ {
+@@ -359,7 +347,10 @@ do_error(char const *msg, ...)
+ 	fprintf(stderr, _("\nfatal error -- "));
+ 
+ 	va_start(args, msg);
+-	do_msg(1, msg, args);
++	vfprintf(stderr, msg, args);
++	if (dumpcore)
++		abort();
++	exit(1);
+ }
+ 
+ /*
+@@ -372,7 +363,10 @@ do_abort(char const *msg, ...)
+ 	va_list args;
+ 
+ 	va_start(args, msg);
+-	do_msg(1, msg, args);
++	vfprintf(stderr, msg, args);
++	if (dumpcore)
++		abort();
++	exit(1);
+ }
+ 
+ void
+@@ -383,7 +377,7 @@ do_warn(char const *msg, ...)
+ 	fs_is_dirty = 1;
+ 
+ 	va_start(args, msg);
+-	do_msg(0, msg, args);
++	vfprintf(stderr, msg, args);
+ 	va_end(args);
+ }
+ 
+@@ -395,7 +389,7 @@ do_log(char const *msg, ...)
+ 	va_list args;
+ 
+ 	va_start(args, msg);
+-	do_msg(0, msg, args);
++	vfprintf(stderr, msg, args);
+ 	va_end(args);
+ }
+ 
 
 _______________________________________________
 xfs mailing list
