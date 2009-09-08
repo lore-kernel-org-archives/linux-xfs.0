@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n877PcBe221455 for <xfs@oss.sgi.com>; Mon, 7 Sep 2009 02:25:48 -0500
-Received: from peace.netnation.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 672571B2C2A2
-	for <xfs@oss.sgi.com>; Mon,  7 Sep 2009 00:26:34 -0700 (PDT)
-Received: from peace.netnation.com (newpeace.netnation.com [204.174.223.7]) by
-	cuda.sgi.com with ESMTP id WEgANDiLC6IFG3fD for
-	<xfs@oss.sgi.com>; Mon, 07 Sep 2009 00:26:34 -0700 (PDT)
-Received: from sim by peace.netnation.com with local (Exim 4.63)
-	(envelope-from <sim@netnation.com>) id 1MkYbW-0002Og-1Z
-	for xfs@oss.sgi.com; Mon, 07 Sep 2009 00:25:34 -0700
-Date: Mon, 7 Sep 2009 00:25:34 -0700
-From: Simon Kirby <sim@hostway.ca>
-Subject: Re: XFS corruption [2.6.30.5+patches.2.6.30.tgz]
-Message-ID: <20090907072534.GC4568@hostway.ca>
-References: <20090907063724.GB4568@hostway.ca>
+	n88BfJxV065934 for <xfs@oss.sgi.com>; Tue, 8 Sep 2009 06:41:34 -0500
+Received: from IX-MTA-02.mxsweep.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1707E16046FA
+	for <xfs@oss.sgi.com>; Tue,  8 Sep 2009 04:41:49 -0700 (PDT)
+Received: from IX-MTA-02.mxsweep.com (mail161.emailantidote.com
+	[89.167.219.161]) by cuda.sgi.com with ESMTP id
+	8YQ610rTLFLyHETf for <xfs@oss.sgi.com>;
+	Tue, 08 Sep 2009 04:41:49 -0700 (PDT)
+Message-ID: <4AA6402D.8040209@draigBrady.com>
+Date: Tue, 8 Sep 2009 12:29:49 +0100
+From: =?UTF-8?B?UMOhZHJhaWcgQnJhZHk=?= <P@draigBrady.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20090907063724.GB4568@hostway.ca>
+Subject: fsetxattr() fails on a writable descriptor?
+References: <1251987642.3855.36.camel@dhcp-lab-219.englab.brq.redhat.com>	
+	<4AA1A3E6.2020606@draigBrady.com> <87k50den1e.fsf@meyering.net>	
+	<1252309787.3852.8.camel@dhcp-lab-219.englab.brq.redhat.com>	
+	<4AA4C950.3080303@draigBrady.com>
+	<1252318482.3852.18.camel@dhcp-lab-219.englab.brq.redhat.com>
+In-Reply-To: <1252318482.3852.18.camel@dhcp-lab-219.englab.brq.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,30 +28,26 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: CoreutilsBugs <bug-coreutils@gnu.org>
 
-Hmm, I suspect the corruption here came from the RAID 6 implementation. 
-I see corruption on another volume on this volume group now.  We happened
-to test a two drive RAID 6 failure/rebuild shortly before this occurred.
-
-So, perhaps it's not worth looking at this further other than perhaps the
-part where the kernel hung. :)
-
-Simon-
-
-On Sun, Sep 06, 2009 at 11:37:24PM -0700, Simon Kirby wrote:
-
-> Hello!
-> 
-> In a backup server attached to a Coraid shelf via AOE and DM, we saw
-> 2.6.30.5+patches.2.6.30.tgz die with a corruption problem.  The kernel
-> logged many similar errors, and then stopped responding some time later.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+ZnNldHhhdHRyKCkgaXMgZmFpbGluZyBmb3IgbWUgd2hlbiB0aGUgcGVybWlzc2lvbnMgYXJlIHJl
+YWRvbmx5CmJ1dCB0aGUgZGVzY3JpcHRvciBpcyB3cml0YWJsZSBhcyBkZW1vbnN0cmF0ZWQgYnkg
+dGhlIHByb2dyYW0gYmVsb3cuCkkndmUgdHJpZWQgdGhpcyBvbiBleHQzIGFuZCBleHQ0IHdpdGgg
+bGliYXR0ci0yLjQuNDMtMy5mYzExLmk1ODYKYW5kIGxpbnV4LTIuNi4zMC41LTQzLmZjMTEuaTU4
+NgoKSXMgdGhpcyBleHBlY3RlZD8KCmNoZWVycywKUMOhZHJhaWcuCgojaW5jbHVkZSA8c3lzL3R5
+cGVzLmg+CiNpbmNsdWRlIDxzeXMvc3RhdC5oPgojaW5jbHVkZSA8ZmNudGwuaD4KI2luY2x1ZGUg
+PGF0dHIvbGliYXR0ci5oPgojaW5jbHVkZSA8c3RkaW8uaD4KI2luY2x1ZGUgPHVuaXN0ZC5oPgoK
+aW50IG1haW4odm9pZCkKewogICAgaW50IHdmZDsKICAgIGlmICgod2ZkPW9wZW4oIndyaXRhYmxl
+IiwgT19DUkVBVHxPX1dST05MWXxPX0VYQ0wsIFNfSVJVU1IpKSA9PSAtMSkKICAgICAgICBmcHJp
+bnRmKHN0ZGVyciwgIm9wZW4oJ3dyaXRhYmxlJykgZXJyb3IgWyVtXVxuIik7CiAgICBpZiAod3Jp
+dGUod2ZkLCAiZGF0YSIsIDEpID09IC0xKQogICAgICAgIGZwcmludGYoc3RkZXJyLCAid3JpdGUo
+KSBlcnJvciBbJW1dXG4iKTsKICAgIGlmIChmc2V0eGF0dHIod2ZkLCAidXNlci50ZXN0IiwgInRl
+c3QiLCA0LCAwKSA9PSAtMSkKICAgICAgICBmcHJpbnRmKHN0ZGVyciwgImZzZXR4YXR0cigpIGVy
+cm9yIFslbV1cbiIpOwp9CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5j
+b20vbWFpbG1hbi9saXN0aW5mby94ZnMK
