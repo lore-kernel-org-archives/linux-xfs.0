@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n89HFk2I172388 for <xfs@oss.sgi.com>; Wed, 9 Sep 2009 12:15:56 -0500
+	n89HN8a4172836 for <xfs@oss.sgi.com>; Wed, 9 Sep 2009 12:23:18 -0500
 Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 845731B8F709
-	for <xfs@oss.sgi.com>; Wed,  9 Sep 2009 10:16:16 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C713E1B8F685
+	for <xfs@oss.sgi.com>; Wed,  9 Sep 2009 10:23:57 -0700 (PDT)
 Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id 3Pasw6G57DdDGOQa for
-	<xfs@oss.sgi.com>; Wed, 09 Sep 2009 10:16:16 -0700 (PDT)
-Message-ID: <4AA7E2DE.9090402@sandeen.net>
-Date: Wed, 09 Sep 2009 12:16:14 -0500
+	cuda.sgi.com with ESMTP id Zf6SXmHuIjcn1PQg for
+	<xfs@oss.sgi.com>; Wed, 09 Sep 2009 10:23:57 -0700 (PDT)
+Message-ID: <4AA7E48E.5030100@sandeen.net>
+Date: Wed, 09 Sep 2009 12:23:26 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfsprogs: fix up the noreturn annotations
-References: <4AA19639.6090208@sandeen.net>
-	<20090908143956.GA15533@infradead.org>
-In-Reply-To: <20090908143956.GA15533@infradead.org>
+Subject: Re: xfsprogs: remove unused scripts
+References: <20090902174407.GA9759@infradead.org>
+In-Reply-To: <20090902174407.GA9759@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,118 +28,113 @@ Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs mailing list <xfs@oss.sgi.com>
+Cc: xfs@oss.sgi.com
 
 Christoph Hellwig wrote:
-> The usage function in mkfs needs a noreturn annotation too, otherwise
-> gcc will complain, similarly the do_msg function in repair would need
-> it if do_abort is set, but because conditional annotations aren't
-> possible just clean this area up an inline the do_msg function into
-> it's callers.
-> 
+> xfs_check64.sh and xfs_ncheck64.sh are outdated copies of xfs_check.sh
+> and xfs_ncheck.sh which call a non-existant xfs_db64 binary.  They
+> are never installed or otherwise used, so remove them.   They are
+> probably a leftover from IRIX
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
+OK with me, as long as sgi doesn't still have some secret xfs_db64 
+actually in use somewhere today that they still care about.
+
 Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
 
-> Index: xfsprogs-dev/mkfs/xfs_mkfs.c
+> Index: xfsprogs-dev/db/Makefile
 > ===================================================================
-> --- xfsprogs-dev.orig/mkfs/xfs_mkfs.c	2009-09-08 11:33:17.892004074 -0300
-> +++ xfsprogs-dev/mkfs/xfs_mkfs.c	2009-09-08 11:33:26.993004077 -0300
-> @@ -27,6 +27,7 @@
->   */
->  static void conflict(char opt, char *tab[], int oldidx, int newidx);
->  static void illegal(char *value, char *opt);
-> +static __attribute__((noreturn)) void usage (void);
->  static __attribute__((noreturn)) void reqval(char opt, char *tab[], int idx);
->  static void respec(char opt, char *tab[], int idx);
->  static void unknown(char opt, char *s);
-> @@ -2554,7 +2555,7 @@ cvtnum(
->  	return -1LL;
->  }
+> --- xfsprogs-dev.orig/db/Makefile	2009-09-02 14:35:19.413268749 -0300
+> +++ xfsprogs-dev/db/Makefile	2009-09-02 14:35:29.081614935 -0300
+> @@ -15,7 +15,6 @@ HFILES = addr.h agf.h agfl.h agi.h attr.
+>  	text.h type.h write.h attrset.h
+>  CFILES = $(HFILES:.h=.c)
+>  LSRCFILES = xfs_admin.sh xfs_check.sh xfs_ncheck.sh xfs_metadump.sh
+> -LSRCFILES += xfs_check64.sh xfs_ncheck64.sh
 >  
-> -void
-> +static void __attribute__((noreturn))
->  usage( void )
->  {
->  	fprintf(stderr, _("Usage: %s\n\
-> Index: xfsprogs-dev/mkfs/xfs_mkfs.h
+>  LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
+>  LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG)
+> Index: xfsprogs-dev/db/xfs_check64.sh
 > ===================================================================
-> --- xfsprogs-dev.orig/mkfs/xfs_mkfs.h	2009-09-08 11:33:17.904015867 -0300
-> +++ xfsprogs-dev/mkfs/xfs_mkfs.h	2009-09-08 11:33:26.993004077 -0300
-> @@ -68,7 +68,6 @@
->  
->  
->  /* xfs_mkfs.c */
-> -extern void usage (void);
->  extern int isdigits (char *str);
->  extern long long cvtnum (unsigned int blocksize,
->  			 unsigned int sectorsize, char *s);
-> Index: xfsprogs-dev/repair/xfs_repair.c
-> ===================================================================
-> --- xfsprogs-dev.orig/repair/xfs_repair.c	2009-09-08 11:33:31.211278768 -0300
-> +++ xfsprogs-dev/repair/xfs_repair.c	2009-09-08 11:34:30.158256533 -0300
-> @@ -339,18 +339,6 @@ process_args(int argc, char **argv)
->  		usage();
->  }
->  
-> -void
-> -do_msg(int do_abort, char const *msg, va_list args)
-> -{
-> -	vfprintf(stderr, msg, args);
+> --- xfsprogs-dev.orig/db/xfs_check64.sh	2009-09-02 14:35:39.477268924 -0300
+> +++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+> @@ -1,36 +0,0 @@
+> -#!/bin/sh -f
+> -#
+> -# Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
+> -#
 > -
-> -	if (do_abort)  {
-> -		if (dumpcore)
-> -			abort();
-> -		exit(1);
-> -	}
-> -}
+> -OPTS=" "
+> -DBOPTS=" "
+> -USAGE="Usage: xfs_check64 [-fsvV] [-l logdev] [-i ino]... [-b bno]... special"
 > -
->  void __attribute__((noreturn))
->  do_error(char const *msg, ...)
->  {
-> @@ -359,7 +347,10 @@ do_error(char const *msg, ...)
->  	fprintf(stderr, _("\nfatal error -- "));
->  
->  	va_start(args, msg);
-> -	do_msg(1, msg, args);
-> +	vfprintf(stderr, msg, args);
-> +	if (dumpcore)
-> +		abort();
-> +	exit(1);
->  }
->  
->  /*
-> @@ -372,7 +363,10 @@ do_abort(char const *msg, ...)
->  	va_list args;
->  
->  	va_start(args, msg);
-> -	do_msg(1, msg, args);
-> +	vfprintf(stderr, msg, args);
-> +	if (dumpcore)
-> +		abort();
-> +	exit(1);
->  }
->  
->  void
-> @@ -383,7 +377,7 @@ do_warn(char const *msg, ...)
->  	fs_is_dirty = 1;
->  
->  	va_start(args, msg);
-> -	do_msg(0, msg, args);
-> +	vfprintf(stderr, msg, args);
->  	va_end(args);
->  }
->  
-> @@ -395,7 +389,7 @@ do_log(char const *msg, ...)
->  	va_list args;
->  
->  	va_start(args, msg);
-> -	do_msg(0, msg, args);
-> +	vfprintf(stderr, msg, args);
->  	va_end(args);
->  }
->  
+> -while getopts "b:fi:l:stvV" c
+> -do
+> -	case $c in
+> -	s)	OPTS=$OPTS"-s ";;
+> -	t)	OPTS=$OPTS"-t ";;
+> -	v)	OPTS=$OPTS"-v ";;
+> -	V)	OPTS=$OPTS"-V ";;
+> -	i)	OPTS=$OPTS"-i "$OPTARG" ";;
+> -	b)	OPTS=$OPTS"-b "$OPTARG" ";;
+> -	f)	DBOPTS=" -f";;
+> -	l)	DBOPTS=$DBOPTS" -l "$OPTARG" ";;
+> -	\?)	echo $USAGE 1>&2
+> -		exit 2
+> -		;;
+> -	esac
+> -done
+> -set -- extra $@
+> -shift $OPTIND
+> -case $# in
+> -	1)	xfs_db64$DBOPTS -F -i -p xfs_check64 -c "check$OPTS" $1
+> -		status=$?
+> -		;;
+> -	*)	echo $USAGE 1>&2
+> -		exit 2
+> -		;;
+> -esac
+> -exit $status
+> Index: xfsprogs-dev/db/xfs_ncheck64.sh
+> ===================================================================
+> --- xfsprogs-dev.orig/db/xfs_ncheck64.sh	2009-09-02 14:35:33.717268763 -0300
+> +++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+> @@ -1,34 +0,0 @@
+> -#!/bin/sh -f
+> -#
+> -# Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+> -#
+> -
+> -OPTS=" "
+> -DBOPTS=" "
+> -USAGE="usage: xfs_ncheck64 [-sfvV] [-l logdev] [-i ino]... special"
+> -
+> -while getopts "b:fi:l:svV" c
+> -do
+> -	case $c in
+> -	s)	OPTS=$OPTS"-s ";;
+> -	i)	OPTS=$OPTS"-i "$OPTARG" ";;
+> -	v)	OPTS=$OPTS"-v ";;
+> -	V)	OPTS=$OPTS"-V ";;
+> -	f)	DBOPTS=" -f";;
+> -	l)	DBOPTS=$DBOPTS" -l "$OPTARG" ";;
+> -	\?)	echo $USAGE 1>&2
+> -		exit 2
+> -		;;
+> -	esac
+> -done
+> -set -- extra $@
+> -shift $OPTIND
+> -case $# in
+> -	1)	xfs_db64$DBOPTS -r -p xfs_ncheck64 -c "blockget -ns" -c "ncheck$OPTS" $1
+> -		status=$?
+> -		;;
+> -	*)	echo $USAGE 1>&2
+> -		exit 2
+> -		;;
+> -esac
+> -exit $status
 > 
 > _______________________________________________
 > xfs mailing list
