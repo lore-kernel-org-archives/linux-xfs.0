@@ -1,26 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n88IeBsR088610 for <xfs@oss.sgi.com>; Tue, 8 Sep 2009 13:40:27 -0500
+	n892EHO3119133 for <xfs@oss.sgi.com>; Tue, 8 Sep 2009 21:14:34 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 83F1F435960
-	for <xfs@oss.sgi.com>; Tue,  8 Sep 2009 11:40:51 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2471443746F
+	for <xfs@oss.sgi.com>; Tue,  8 Sep 2009 19:14:57 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id G5cm4kOHzz7yL1o2 for
-	<xfs@oss.sgi.com>; Tue, 08 Sep 2009 11:40:51 -0700 (PDT)
-Date: Tue, 8 Sep 2009 14:40:49 -0400
+	by cuda.sgi.com with ESMTP id KrBBXDa5Vgbv7G6d for
+	<xfs@oss.sgi.com>; Tue, 08 Sep 2009 19:14:57 -0700 (PDT)
+Date: Tue, 8 Sep 2009 22:14:53 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: fsetxattr() fails on a writable descriptor?
-Message-ID: <20090908184049.GA22050@infradead.org>
-References: <1251987642.3855.36.camel@dhcp-lab-219.englab.brq.redhat.com>
-	<4AA1A3E6.2020606@draigBrady.com> <87k50den1e.fsf@meyering.net>
-	<1252309787.3852.8.camel@dhcp-lab-219.englab.brq.redhat.com>
-	<4AA4C950.3080303@draigBrady.com>
-	<1252318482.3852.18.camel@dhcp-lab-219.englab.brq.redhat.com>
-	<4AA6402D.8040209@draigBrady.com>
+Subject: XFS status update for August 2009
+Message-ID: <20090909021453.GA24173@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4AA6402D.8040209@draigBrady.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,20 +26,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: P??draig Brady <P@draigBrady.com>
-Cc: linux-fsdevel@vger.kernel.org, CoreutilsBugs <bug-coreutils@gnu.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
-On Tue, Sep 08, 2009 at 12:29:49PM +0100, P??draig Brady wrote:
-> fsetxattr() is failing for me when the permissions are readonly
-> but the descriptor is writable as demonstrated by the program below.
-> I've tried this on ext3 and ext4 with libattr-2.4.43-3.fc11.i586
-> and linux-2.6.30.5-43.fc11.i586
 
-That's not XFS specifci behaviour.  For all xattr operations, fd-based
-or not we always do the full permission checks, and have done so since
-day one.  Check the routined xattr_permission in fs/xattr.c of the
-kernel tree.  It seems a bit unusual, but I'm not sure changing it now
-is a good idea - the xattr support has been around for a long time.
+In August the Linux 2.6.31 kernel has still been in the release candidate
+stage, but a couple of important XFS fixes made it in time for the release,
+including a fix for the inode cache races with NFS workloads that have
+plagued us for a long time.
+
+The list saw various patches destined for the Linux 2.6.32 merge window,
+including a merge of the fsync and O_SYNC handling code to address various
+issues with the latter, a workaround for deficits in the timestamp handling
+interface between the VFS and filesystems, a repost of the sync improvements
+patch series and various smaller patches. 
+
+August also saw the minor 3.0.3 release of xfsprogs which collects smaller
+fixes to the various tools and most importantly a fix to allow xfsprogs to
+work again on SPARC and other strict alignment handling which regressed a
+few releases ago.  The xfstests repository saw a few new test cases and a
+various small improvements.
 
 _______________________________________________
 xfs mailing list
