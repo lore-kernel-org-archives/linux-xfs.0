@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n8FCltdG162242 for <xfs@oss.sgi.com>; Tue, 15 Sep 2009 07:48:01 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 53DB51658D2A
-	for <xfs@oss.sgi.com>; Tue, 15 Sep 2009 05:49:09 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id EISk4anjjdC0ZoiH for
-	<xfs@oss.sgi.com>; Tue, 15 Sep 2009 05:49:09 -0700 (PDT)
-Date: Tue, 15 Sep 2009 08:49:08 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [xfstests]: add-reiserfs-specific-_check_reiserfs_filesystem patch
-Message-ID: <20090915124908.GA4070@infradead.org>
-References: <200909140846.52217.jbarton@redhat.com>
+	n8FFnk8n170630 for <xfs@oss.sgi.com>; Tue, 15 Sep 2009 10:49:46 -0500
+Received: from mail.jquigley.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A2580B3C020
+	for <xfs@oss.sgi.com>; Tue, 15 Sep 2009 08:50:59 -0700 (PDT)
+Received: from mail.jquigley.com (main.jquigley.com [67.23.32.156]) by
+	cuda.sgi.com with ESMTP id 8WFcinamOEnJNYqc for
+	<xfs@oss.sgi.com>; Tue, 15 Sep 2009 08:50:59 -0700 (PDT)
+Message-ID: <4AAFB7E2.9010902@jquigley.com>
+Date: Tue, 15 Sep 2009 10:50:58 -0500
+From: John Quigley <jquigley@jquigley.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <200909140846.52217.jbarton@redhat.com>
+Subject: Re: XFS corruption with power failure
+References: <606994882.2142291250648292843.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>	<4A8C1E6E.8020405@jquigley.com>
+	<4A9187C7.9010206@jquigley.com>	<4A9576F0.2060304@jquigley.com>
+	<20090901181341.GC26071@infradead.org>
+In-Reply-To: <20090901181341.GC26071@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,26 +25,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jaroslav Barton <jbarton@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: XFS Development <xfs@oss.sgi.com>
 
-On Mon, Sep 14, 2009 at 08:46:52AM +0200, Jaroslav Barton wrote:
-> Hi,
+Christoph Hellwig wrote:
+> On Wed, Aug 26, 2009 at 12:54:56PM -0500, John Quigley wrote:
+>> John Quigley wrote:
+>>> John Quigley wrote:
+>>>> We've distilled this into a reproducible environment with a stack of  
+>>>> NFS + XFS to a local disk + automated sysrq 'b' reboots.  We're  
+>>>> working on getting this bundled up into a nice little package as a  
+>>>> VirtualBox vm for your consumption.  Please tell me if this is not  
+>>>> desirable.
+>>> The self-contained and reproducible environment can be downloaded from  
+>>> the following location:
+>>>
+>>>  http://www.jquigley.com/tmp/xfsVM.tar.bz2
+>> Has anyone by chance had an opportunity to utilize this?  Any corruption reports?
 > 
-> I was on vacation last week.
-> 
-> I am using xfstests in my project and testing reiserfs filesystem. Reiserfsck 
-> waits for confirmation before fsck is runned. This patch runs reiserfsck with 
-> --yes parameter and confirmation is not needed.
+> Looked at it, but it turns virtualbox is a real big pile of junk
+> including it's own huge kernel module.  Qemu/kvm now has support for the
+> virtualbox disk images and I will give it a try next.
 
-I'd be much more happy if you would add a way to pass options to
-_check_generic_filesystem, e.g. by introducing a _fsck_opts machinery
-mirroring _mkfs_opts and _mount_opts.  That would also clean up what
-Ted did in 8b61ae6352b1f92cc004a7349b90f39609c77a8f.
+Ping ... sorry to be a bother.  I've finally gotten some time allocated 
+to look at this at the code level, but I'm unfamiliar with the XFS 
+implementation, and I believe this problem arises as an interaction 
+between XFS and NFS, which causes me heartburn.  I'll report here if I 
+discover anything meaningful.
+
+- John Quigley
 
 _______________________________________________
 xfs mailing list
