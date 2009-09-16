@@ -1,29 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n8G6wEl3019049 for <xfs@oss.sgi.com>; Wed, 16 Sep 2009 01:58:14 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AEF704569D9
-	for <xfs@oss.sgi.com>; Tue, 15 Sep 2009 23:59:27 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id HbH8g4c8lKrZIklb for
-	<xfs@oss.sgi.com>; Tue, 15 Sep 2009 23:59:27 -0700 (PDT)
-Received: from int-mx04.intmail.prod.int.phx2.redhat.com
-	(int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.17])
-	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id n8G6xQEN003924
-	for <xfs@oss.sgi.com>; Wed, 16 Sep 2009 02:59:26 -0400
-Received: from loki.usersys.redhat.com (dhcp-lab-108.englab.brq.redhat.com
-	[10.34.33.108])
-	by int-mx04.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id n8G6xOsh004108
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 16 Sep 2009 02:59:26 -0400
-From: Jaroslav Barton <jbarton@redhat.com>
-Subject: [PATCH] _check_generic_filesistem support for fsck parameters
-Date: Wed, 16 Sep 2009 08:24:05 +0200
-Message-Id: <1253082245-5333-1-git-send-email-jbarton@redhat.com>
-In-Reply-To: <20090915124908.GA4070@infradead.org>
-References: <20090915124908.GA4070@infradead.org>
+	n8GAQA90039632 for <xfs@oss.sgi.com>; Wed, 16 Sep 2009 05:26:10 -0500
+Received: from ey-out-1920.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D18084572B7
+	for <xfs@oss.sgi.com>; Wed, 16 Sep 2009 03:27:22 -0700 (PDT)
+Received: from ey-out-1920.google.com (ey-out-1920.google.com [74.125.78.145])
+	by cuda.sgi.com with ESMTP id FEikxcqGbyMG96UD for
+	<xfs@oss.sgi.com>; Wed, 16 Sep 2009 03:27:22 -0700 (PDT)
+Received: by ey-out-1920.google.com with SMTP id 5so881567eyb.22
+	for <xfs@oss.sgi.com>; Wed, 16 Sep 2009 03:27:22 -0700 (PDT)
+MIME-Version: 1.0
+Date: Wed, 16 Sep 2009 12:27:21 +0200
+Message-ID: <89c4f90c0909160327l1a1fdaa2g131cd7fa249ad529@mail.gmail.com>
+Subject: 2.6.31 xfs_fs_destroy_inode: cannot reclaim
+From: Tommy van Leeuwen <tommy@news-service.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,139 +23,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Jaroslav Barton <jbarton@redhat.com>
 
-_check_generic_filesystem now support fsck parameters. Fsck parameters
-can be passed by FSCK_OPTIONS environmental variable. Default values
-will be used if FSCK_OPTIONS is missing or empty (same mechanism as
-MOUNT_OPTIONS and MKFS_OPTIONS).
+Hello All,
 
-_check_extN_filesystem function is no longer needed, extN filesystem are
-properly handled by default values in _check_generic_filesystem.
----
- common.rc |   70 ++++++++++++++----------------------------------------------
- 1 files changed, 17 insertions(+), 53 deletions(-)
+We had this error reported on the list about 1 or 2 months ago. During
+that time a lot of fixes were applied. However, we still experience
+this problem with the recent 2.6.31 tree. We've also applied an extra
+log entry to aid in debugging.
 
-diff --git a/common.rc b/common.rc
-index da5f99e..761170d 100644
---- a/common.rc
-+++ b/common.rc
-@@ -91,9 +91,25 @@ _mkfs_opts()
-     esac
- }
- 
-+_fsck_opts()
-+{
-+    case $FSTYP in
-+    ext2|ext3|ext4)
-+	export FSCK_OPTIONS="-nf"
-+	;;
-+    reiserfs)
-+	export FSCK_OPTIONS="--yes"
-+	;;
-+    *)
-+	export FSCK_OPTIONS="-n"
-+	;;
-+    esac
-+}
-+
- [ -z "$FSTYP" ] && FSTYP=xfs
- [ -z "$MOUNT_OPTIONS" ] && _mount_opts
- [ -z "$MKFS_OPTIONS" ] && _mkfs_opts
-+[ -z "$FSCK_OPTIONS" ] && _fsck_opts
- 
- 
- # we need common.config
-@@ -835,7 +851,7 @@ _check_generic_filesystem()
-         mountpoint=`_umount_or_remount_ro $device`
-     fi
- 
--    fsck -t $FSTYP -n $device >$tmp.fsck 2>&1
-+    fsck -t $FSTYP $FSCK_OPTIONS $device >$tmp.fsck 2>&1
-     if [ $? -ne 0 ]
-     then
-         echo "_check_generic_filesystem: filesystem on $device is inconsistent (see $seq.full)"
-@@ -865,52 +881,6 @@ _check_generic_filesystem()
-     return 0
- }
- 
--# Check an ext2/3/4 filesystem
--#
--_check_extN_filesystem()
--{
--    device=$1
--
--    # If type is set, we're mounted
--    type=`_fs_type $device`
--    ok=1
--
--    if [ "$type" = "$FSTYP" ]
--    then
--        # mounted ...
--        mountpoint=`_umount_or_remount_ro $device`
--    fi
--
--    e2fsck -nf $device >$tmp.fsck 2>&1
--    if [ $? -ne 0 ]
--    then
--        echo "_check_extN_filesystem: filesystem on $device is inconsistent (see $seq.full)"
--
--        echo "_check_extN filesystem: filesystem on $device is inconsistent" >>$here/$seq.full
--        echo "*** e2fsck output ***"                          >>$here/$seq.full
--        cat $tmp.fsck                                         >>$here/$seq.full
--        echo "*** end e2fsck output"                          >>$here/$seq.full
--
--        ok=0
--    fi
--    rm -f $tmp.fsck
--
--    if [ $ok -eq 0 ]
--    then
--        echo "*** mount output ***"                           >>$here/$seq.full
--        _mount                                                >>$here/$seq.full
--        echo "*** end mount output"                           >>$here/$seq.full
--    elif [ "$type" = "$FSTYP" ]
--    then
--	# was mounted ...
--	_mount_or_remount_rw "$MOUNT_OPTIONS" $device $mountpoint
--	ok=$?
--    fi
--
--    [ $ok -eq 0 ] && exit 1
--    return 0
--}
--
- # run xfs_check and friends on a FS.
- 
- _check_xfs_filesystem()
-@@ -1079,9 +1049,6 @@ _check_test_fs()
-     udf)
- 	# do nothing for now
- 	;;
--    ext2|ext3|ext4)
--	_check_extN_filesystem $TEST_DEV
--	;;
-     *)
- 	_check_generic_filesystem $TEST_DEV
- 	;;
-@@ -1108,9 +1075,6 @@ _check_scratch_fs()
-     nfs*)
- 	# Don't know how to check an NFS filesystem, yet.
- 	;;
--    ext2|ext3|ext4)
--	_check_extN_filesystem $SCRATCH_DEV
--	;;
-     *)
- 	_check_generic_filesystem $SCRATCH_DEV
- 	;;
+printk("XFS: inode_init_always failed to re-initialize inode\n");
+
+However, we didn't see this logging!
+
+Here's a screenshot of our latest crash:
+http://www.news-service.com/tmp/sb06-20090916.jpg
+
+Here's the config used just in case:
+http://www.news-service.com/tmp/config-2.6.31.txt
+
+For now we've downgraded to 2.6.28 again. Please let me know if we can
+do something to better troubleshoot this. We have a set of 8 servers
+which can easily reproduce this. It mostly happens within a few days
+after a clean reboot.
+
+Kind Regards,
+Tommy van Leeuwen
+
 -- 
-1.6.2.5
+**Warning** New Addres from May 25th, 2009!
+News-Service.com - European Usenet Provider
+Pobox 12026, 1100 AA Amsterdam, Netherlands
+http://www.news-service.com - +3120-3981111
 
 _______________________________________________
 xfs mailing list
