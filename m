@@ -1,22 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n8GDIaOc056410 for <xfs@oss.sgi.com>; Wed, 16 Sep 2009 08:18:36 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CE9F81A72753
-	for <xfs@oss.sgi.com>; Wed, 16 Sep 2009 06:19:43 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id JkG0cTKdSYmeT6Lq for
-	<xfs@oss.sgi.com>; Wed, 16 Sep 2009 06:19:43 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1MnuQB-0007uz-Ay
-	for xfs@oss.sgi.com; Wed, 16 Sep 2009 13:19:43 +0000
-Message-Id: <20090916131943.056142506@bombadil.infradead.org>
-Date: Wed, 16 Sep 2009 09:18:21 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 3/4] [PATCH 2/5] xfs: cleanup ->sync_fs
-References: <20090916131818.939008605@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-cleanup-sync_fs
+	n8HG5BIK206962 for <xfs@oss.sgi.com>; Thu, 17 Sep 2009 11:05:12 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D4B241687694
+	for <xfs@oss.sgi.com>; Thu, 17 Sep 2009 09:06:25 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id GUDpImOIGP00GO1Q for
+	<xfs@oss.sgi.com>; Thu, 17 Sep 2009 09:06:25 -0700 (PDT)
+Message-ID: <4AB25E78.8050001@redhat.com>
+Date: Thu, 17 Sep 2009 11:06:16 -0500
+From: Eric Sandeen <sandeen@redhat.com>
+MIME-Version: 1.0
+Subject: [PATCH] libxfs: increase hash chain depth when we run out of slots
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,96 +21,84 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
+Cc: Tomek Kruszona <bloodyscarion@gmail.com>, Riku Paananen <riku.paananen@helsinki.fi>
 
-Sort out ->sync_fs to not perform a superblock writeback for the wait = 0 case
-as that is just an optional first pass and the superblock will be written back
-properly in the next call with wait = 1.  Instead perform an opportunistic
-quota writeback to have less work later.  Also remove the freeze special case
-as we do a proper wait = 1 call in the freeze code anyway.
+A couple people reported xfs_repair hangs after
+"Traversing filesystem ..." in xfs_repair.  This happens
+when all slots in the cache are full and referenced, and the
+loop in cache_node_get() which tries to shake unused entries
+fails to find any - it just keeps upping the priority and goes
+forever.
 
-Also rename the function to xfs_fs_sync_fs to match the normal naming
-convention, update comments and avoid calling into the laptop_mode logic on
-an error.
+This can be worked around by restarting xfs_repair with
+-P and/or "-o bhash=<largersize>" for older xfs_repair.
 
+I started down the path of increasing the number of hash buckets
+on the fly, but Barry suggested simply increasing the max allowed
+depth which is much simpler (thanks!)
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Resizing the hash lengths does mean that cache_report ends up with
+most things in the "greater-than" category:
 
-Index: linux-2.6/fs/xfs/linux-2.6/xfs_super.c
-===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_super.c	2009-08-26 20:13:54.609362865 -0300
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_super.c	2009-08-26 20:18:36.065357266 -0300
-@@ -1144,7 +1144,7 @@ xfs_fs_put_super(
+...
+Hash buckets with  23 entries      3 (  3%)
+Hash buckets with  24 entries      3 (  3%)
+Hash buckets with >24 entries     50 ( 85%)
+
+but I think I'll save that fix for another patch unless there's
+real concern right now.
+
+I tested this on the metadump image provided by Tomek.
+
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+Reported-by: Tomek Kruszona <bloodyscarion@gmail.com>
+Reported-by: Riku Paananen <riku.paananen@helsinki.fi>
+---
+
+diff --git a/libxfs/cache.c b/libxfs/cache.c
+index 48f91d7..56b24e7 100644
+--- a/libxfs/cache.c
++++ b/libxfs/cache.c
+@@ -83,6 +83,18 @@ cache_init(
  }
  
- STATIC int
--xfs_fs_sync_super(
-+xfs_fs_sync_fs(
- 	struct super_block	*sb,
- 	int			wait)
- {
-@@ -1152,23 +1152,23 @@ xfs_fs_sync_super(
- 	int			error;
- 
- 	/*
--	 * Treat a sync operation like a freeze.  This is to work
--	 * around a race in sync_inodes() which works in two phases
--	 * - an asynchronous flush, which can write out an inode
--	 * without waiting for file size updates to complete, and a
--	 * synchronous flush, which wont do anything because the
--	 * async flush removed the inode's dirty flag.  Also
--	 * sync_inodes() will not see any files that just have
--	 * outstanding transactions to be flushed because we don't
--	 * dirty the Linux inode until after the transaction I/O
--	 * completes.
-+	 * Not much we can do for the first async pass.  Writing out the
-+	 * superblock would be counter-productive as we are going to redirty
-+	 * when writing out other data and metadata (and writing out a single
-+	 * block is quite fast anyway).
-+	 *
-+	 * Try to asynchronously kick off quota syncing at least.
- 	 */
--	if (wait || unlikely(sb->s_frozen == SB_FREEZE_WRITE))
--		error = xfs_quiesce_data(mp);
--	else
--		error = xfs_sync_fsdata(mp, 0);
-+	if (!wait) {
-+		xfs_qm_sync(mp, SYNC_TRYLOCK);
-+		return 0;
-+	}
+ void
++cache_expand(
++	struct cache *		cache)
++{
++	pthread_mutex_lock(&cache->c_mutex);
++#ifdef CACHE_DEBUG
++	fprintf(stderr, "doubling cache size to %d\n", 2 * cache->c_maxcount);
++#endif
++	cache->c_maxcount *= 2;
++	pthread_mutex_unlock(&cache->c_mutex);
++}
 +
-+	error = xfs_quiesce_data(mp);
-+	if (error)
-+		return -error;
- 
--	if (unlikely(laptop_mode)) {
-+	if (laptop_mode) {
- 		int	prev_sync_seq = mp->m_sync_seq;
- 
- 		/*
-@@ -1187,7 +1187,7 @@ xfs_fs_sync_super(
- 				mp->m_sync_seq != prev_sync_seq);
++void
+ cache_walk(
+ 	struct cache *		cache,
+ 	cache_walk_t		visit)
+@@ -344,6 +356,15 @@ cache_node_get(
+ 		if (node)
+ 			break;
+ 		priority = cache_shake(cache, priority, 0);
++		/*
++		 * We start at 0; if we free CACHE_SHAKE_COUNT we get
++		 * back the same priority, if not we get back priority+1.
++		 * If we exceed CACHE_MAX_PRIORITY all slots are full; grow it.
++		 */
++		if (priority > CACHE_MAX_PRIORITY) {
++			priority = 0;
++			cache_expand(cache);
++		}
  	}
  
--	return -error;
-+	return 0;
- }
- 
- STATIC int
-@@ -1561,7 +1561,7 @@ static struct super_operations xfs_super
- 	.write_inode		= xfs_fs_write_inode,
- 	.clear_inode		= xfs_fs_clear_inode,
- 	.put_super		= xfs_fs_put_super,
--	.sync_fs		= xfs_fs_sync_super,
-+	.sync_fs		= xfs_fs_sync_fs,
- 	.freeze_fs		= xfs_fs_freeze,
- 	.statfs			= xfs_fs_statfs,
- 	.remount_fs		= xfs_fs_remount,
+ 	node->cn_hashidx = hashidx;
 
 _______________________________________________
 xfs mailing list
