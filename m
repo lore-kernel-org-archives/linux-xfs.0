@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n8I5IsJB012378 for <xfs@oss.sgi.com>; Fri, 18 Sep 2009 00:18:54 -0500
-Received: from josefsipek.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4E47D463803
-	for <xfs@oss.sgi.com>; Thu, 17 Sep 2009 22:19:45 -0700 (PDT)
-Received: from josefsipek.net (josefsipek.net [141.212.112.196]) by
-	cuda.sgi.com with ESMTP id yVN1ZBmzLOi4UZ4j for
-	<xfs@oss.sgi.com>; Thu, 17 Sep 2009 22:19:45 -0700 (PDT)
-Date: Fri, 18 Sep 2009 01:19:44 -0400
-From: "Josef 'Jeff' Sipek" <jeffpc@josefsipek.net>
-Subject: [PATCH] repair: replaced custom block allocation linked lists with
-	list_heads
-Message-ID: <20090918051944.GA12914@josefsipek.net>
-References: <4AB300CC.5020707@sandeen.net>
- <4AB312A3.6000403@sandeen.net>
+	n8IK4khb075088 for <xfs@oss.sgi.com>; Fri, 18 Sep 2009 15:04:47 -0500
+Received: from mail.lichtvoll.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1D12C114A72F
+	for <xfs@oss.sgi.com>; Fri, 18 Sep 2009 13:06:00 -0700 (PDT)
+Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
+	cuda.sgi.com with ESMTP id gcMCIfv793GoOnRU for
+	<xfs@oss.sgi.com>; Fri, 18 Sep 2009 13:06:00 -0700 (PDT)
+From: Martin Steigerwald <Martin@lichtvoll.de>
+Subject: Re: zero size file after power failure with kernel 2.6.30.5
+Date: Fri, 18 Sep 2009 22:05:56 +0200
+References: <200908292102.21710@zmi.at> (sfid-20090829_215558_810960_219D3757)
+In-Reply-To: <200908292102.21710@zmi.at>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4AB312A3.6000403@sandeen.net>
+Message-Id: <200909182205.56647.Martin@lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,183 +23,94 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============1423071597918967925=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com, Michael Monnerie <michael.monnerie@is.it-management.at>
 
-The previous implementation of the linked lists was buggy, and leaked memory.
+--===============1423071597918967925==
+Content-Type: multipart/signed;
+  boundary="nextPart1316324.QlQuTBvcQi";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-From: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
+--nextPart1316324.QlQuTBvcQi
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-Cc: sandeen@sandeen.net
-Signed-off-by: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
----
+Am Samstag 29 August 2009 schrieb Michael Monnerie:
+> I have /home mounted like this:
+> /dev/sda3 on /disks/work1 type xfs
+> (rw,noatime,logbufs=3D8,logbsize=3D256k,attr2,barrier,largeio,swalloc)
+>=20
+> Hardware: onboard SATA with a single WD VelociRaptor drive.
+>=20
+> My power supply melted and so I had a power fail and a sudden death
+> crash.
+> ( So please remember: even when you have a UPS, your power can fail ! )
 
-Yes, Eric, it wastes an extra pointer per node, but at least it works
-compared to the code it replaces :)
+[...]
 
- repair/incore.c     |   27 ---------------------------
- repair/incore.h     |   11 -----------
- repair/incore_ext.c |   27 ++++++++++++++++-----------
- 3 files changed, 16 insertions(+), 49 deletions(-)
+> But almost is not good enough: Exactly my kmail config file was 0 sized
+> - obviously: at least when I started kmail, it started fresh without
+>  any accounts or config, but once I exited kmail the config was created
+>  with the default values and about 12KB size, while my config has
+>  >200KB.
 
-diff --git a/repair/incore.c b/repair/incore.c
-index 84626c9..27604e2 100644
---- a/repair/incore.c
-+++ b/repair/incore.c
-@@ -25,33 +25,6 @@
- #include "err_protos.h"
- #include "threads.h"
- 
--/*
-- * push a block allocation record onto list.  assumes list
-- * if set to NULL if empty.
-- */
--void
--record_allocation(ba_rec_t *addr, ba_rec_t *list)
--{
--	addr->next = list;
--	list = addr;
--
--	return;
--}
--
--void
--free_allocations(ba_rec_t *list)
--{
--	ba_rec_t *current = list;
--
--	while (list != NULL)  {
--		list = list->next;
--		free(current);
--		current = list;
--	}
--
--	return;
--}
--
- /* ba bmap setupstuff.  setting/getting state is in incore.h  */
- 
- void
-diff --git a/repair/incore.h b/repair/incore.h
-index 1f0f45a..a22ef0f 100644
---- a/repair/incore.h
-+++ b/repair/incore.h
-@@ -26,17 +26,6 @@
-  */
- 
- /*
-- * block allocation lists
-- */
--typedef struct ba_rec  {
--	void		*addr;
--	struct ba_rec	*next;
--} ba_rec_t;
--
--void			record_allocation(ba_rec_t *addr, ba_rec_t *list);
--void			free_allocations(ba_rec_t *list);
--
--/*
-  * block bit map defs -- track state of each filesystem block.
-  * ba_bmap is an array of bitstrings declared in the globals.h file.
-  * the bitstrings are broken up into 64-bit chunks.  one bitstring per AG.
-diff --git a/repair/incore_ext.c b/repair/incore_ext.c
-index a2acbf4..d0b8cdc 100644
---- a/repair/incore_ext.c
-+++ b/repair/incore_ext.c
-@@ -31,12 +31,12 @@
-  * paranoia -- account for any weird padding, 64/32-bit alignment, etc.
-  */
- typedef struct extent_alloc_rec  {
--	ba_rec_t		alloc_rec;
-+	struct list_head	list;
- 	extent_tree_node_t	extents[ALLOC_NUM_EXTS];
- } extent_alloc_rec_t;
- 
- typedef struct rt_extent_alloc_rec  {
--	ba_rec_t		alloc_rec;
-+	struct list_head	list;
- 	rt_extent_tree_node_t	extents[ALLOC_NUM_EXTS];
- } rt_extent_alloc_rec_t;
- 
-@@ -89,8 +89,8 @@ static avltree_desc_t	**extent_bcnt_ptrs;	/*
- /*
-  * list of allocated "blocks" for easy freeing later
-  */
--static ba_rec_t		*ba_list;
--static ba_rec_t		*rt_ba_list;
-+static struct list_head	ba_list;
-+static struct list_head	rt_ba_list;
- 
- /*
-  * locks.
-@@ -120,7 +120,7 @@ mk_extent_tree_nodes(xfs_agblock_t new_startblock,
- 			do_error(
- 			_("couldn't allocate new extent descriptors.\n"));
- 
--		record_allocation(&rec->alloc_rec, ba_list);
-+		list_add(&rec->list, &ba_list);
- 
- 		new = &rec->extents[0];
- 
-@@ -678,7 +678,7 @@ mk_rt_extent_tree_nodes(xfs_drtbno_t new_startblock,
- 			do_error(
- 			_("couldn't allocate new extent descriptors.\n"));
- 
--		record_allocation(&rec->alloc_rec, rt_ba_list);
-+		list_add(&rec->list, &rt_ba_list);
- 
- 		new = &rec->extents[0];
- 
-@@ -755,12 +755,15 @@ release_rt_extent_tree()
- void
- free_rt_dup_extent_tree(xfs_mount_t *mp)
- {
-+	rt_extent_alloc_rec_t *cur, *tmp;
-+
- 	ASSERT(mp->m_sb.sb_rblocks != 0);
- 
--	free_allocations(rt_ba_list);
-+	list_for_each_entry_safe(cur, tmp, &rt_ba_list, list)
-+		free(cur);
-+
- 	free(rt_ext_tree_ptr);
- 
--	rt_ba_list = NULL;
- 	rt_ext_tree_ptr = NULL;
- 
- 	return;
-@@ -895,8 +898,8 @@ incore_ext_init(xfs_mount_t *mp)
- 	int i;
- 	xfs_agnumber_t agcount = mp->m_sb.sb_agcount;
- 
--	ba_list = NULL;
--	rt_ba_list = NULL;
-+	list_head_init(&ba_list);
-+	list_head_init(&rt_ba_list);
- 	pthread_mutex_init(&ext_flist_lock, NULL);
- 	pthread_mutex_init(&rt_ext_tree_lock, NULL);
- 	pthread_mutex_init(&rt_ext_flist_lock, NULL);
-@@ -954,9 +957,11 @@ incore_ext_init(xfs_mount_t *mp)
- void
- incore_ext_teardown(xfs_mount_t *mp)
- {
-+	extent_alloc_rec_t *cur, *tmp;
- 	xfs_agnumber_t i;
- 
--	free_allocations(ba_list);
-+	list_for_each_entry_safe(cur, tmp, &ba_list, list)
-+		free(cur);
- 
- 	for (i = 0; i < mp->m_sb.sb_agcount; i++)  {
- 		free(extent_tree_ptrs[i]);
--- 
-1.6.2.107.ge47ee
+Most likely missing-fsync() issue that still could happen with XFS. Thats=20
+a long discussion ;-).
+
+Try
+
+# KDE Sync
+# http://oss.sgi.com/pipermail/xfs/2009-March/040628.html
+export KDE_EXTRA_FSYNC=3D1
+
+This environment variable didn't have any effect with KDE 3 but should work=
+=20
+with recent KDE versions. See also:
+http://bugs.kde.org/187172
+
+I switched to Ext4 for my work notebook in the meantime, but my Amarok=20
+laptop is still using XFS. Ext4 skips delayed allocation for certain=20
+cases, AFAIR truncates and renames, since kernel 2.6.30 as Linus and=20
+others urged Theodore T'so to make Ext4 behave nicely with applications.=20
+XFS only does so for truncates and there is a little race still, AFAIK.
+
+In the meantime I tend to agree that the filesystem should play it safe -=20
+POSIX semantics or not. But I did not completely made up my mind yet.
+
+Ciao,
+=2D-=20
+Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
+GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
+
+--nextPart1316324.QlQuTBvcQi
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEABECAAYFAkqz6CQACgkQmRvqrKWZhMfsoQCgqw9FRiFrbEiaiMuq+ARbO3rj
+ET0AniGZJCzz65XS0NVcugY0z8ph5gmL
+=KF/j
+-----END PGP SIGNATURE-----
+
+--nextPart1316324.QlQuTBvcQi--
+
+
+--===============1423071597918967925==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============1423071597918967925==--
