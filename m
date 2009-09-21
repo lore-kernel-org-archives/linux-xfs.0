@@ -1,12 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n8LEYPEv098251 for <xfs@oss.sgi.com>; Mon, 21 Sep 2009 09:34:27 -0500
-Subject: List corruption with defective XFS image
-From: Eric Sesterhenn <eric.sesterhenn@lsexperts.de>
-Date: Mon, 21 Sep 2009 16:35:09 +0200
-Message-Id: <1253543709.3490.43.camel@queen>
-Mime-Version: 1.0
+	n8LIDTsL117934 for <xfs@oss.sgi.com>; Mon, 21 Sep 2009 13:13:29 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9AFF916ABEA4
+	for <xfs@oss.sgi.com>; Mon, 21 Sep 2009 11:14:45 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id o9vB02HjE9RaBOBl for
+	<xfs@oss.sgi.com>; Mon, 21 Sep 2009 11:14:45 -0700 (PDT)
+Message-ID: <4AB7C293.8050600@sandeen.net>
+Date: Mon, 21 Sep 2009 13:14:43 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: "XFS: Invalid block length (0x%x) given for buffer" log level
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,25 +25,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-masters@oss.sgi.com
-Cc: felixb@sgi.com, xfs@oss.sgi.com
+To: xfs mailing list <xfs@oss.sgi.com>, David Chinner <dgc@sgi.com>
 
-Hi,
+Hey, commit:
 
-The following XFS image http://www.cccmz.de/~snakebyte/xfs.76.img
-produces some linked list corruption warnings when a copy is issued
+commit 3228149ceb8b045e324cd268be9182bb26e6488b
+Author: Dave Chinner <david@fromorbit.com>
+Date:   Thu Jan 22 15:37:47 2009 +1100
 
-touch /media/test/filea
-mkdir /media/test/dir
-cp /media/test/filea /media/test/dir
+    xfs: Check buffer lengths in log recovery
 
-http://www.cccmz.de/~snakebyte/xfs.76.img.txt
+    Before trying to obtain, read or write a buffer,
+    check that the buffer length is actually valid. If
+    it is not valid, then something read in the recovery
+    process has been corrupted and we should abort
+    recovery.
 
-When I enable XFS Debugging it already oopses during filesystem mount:
+    Reported-by: Eric Sesterhenn <snakebyte@gmx.de>
+    Tested-by: Eric Sesterhenn <snakebyte@gmx.de>
+    Reviewed-by: Christoph Hellwig <hch@infradead.org>
+    Reviewed-by: Felix Blyakher <felixb@sgi.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
+    Signed-off-by: Felix Blyakher <felixb@sgi.com>
 
-http://www.cccmz.de/~snakebyte/xfs.76.img.debug.txt
+added some XFS_ERROR_REPORTs, but at _HIGH:
 
-Regards, Eric
++       if (nbblks <= 0 || nbblks > log->l_logBBsize) {
++               xlog_warn("XFS: Invalid block length (0x%x) given for
+buffer", nbblks);
++               XFS_ERROR_REPORT("xlog_get_bp(1)",
++                                XFS_ERRLEVEL_HIGH, log->l_mp);
++               return NULL;
++       }
+
+which means unless logging is turned up HIGH (higher than default), we
+won't see it.  Should this be HIGH?  Not sure what the original intent was.
+
+-Eric
 
 _______________________________________________
 xfs mailing list
