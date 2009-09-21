@@ -1,16 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n8JMKerE193751 for <xfs@oss.sgi.com>; Sat, 19 Sep 2009 17:20:42 -0500
-Date: Sat, 19 Sep 2009 18:21:55 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: event tracing support
-Message-ID: <20090919222155.GA1285@infradead.org>
-References: <20090909172204.GA22353@infradead.org>
-	<1AB9A794DBDDF54A8A81BE2296F7BDFE83AC84@cf--amer001e--3.americas.sgi.com>
+	n8L3exE8044680 for <xfs@oss.sgi.com>; Sun, 20 Sep 2009 22:40:59 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A84C414B2611
+	for <xfs@oss.sgi.com>; Sun, 20 Sep 2009 20:42:14 -0700 (PDT)
+Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
+	cuda.sgi.com with ESMTP id wUbpJ4UtSZFSLi06 for
+	<xfs@oss.sgi.com>; Sun, 20 Sep 2009 20:42:14 -0700 (PDT)
+Message-ID: <4AB6F614.3030101@sandeen.net>
+Date: Sun, 20 Sep 2009 22:42:12 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1AB9A794DBDDF54A8A81BE2296F7BDFE83AC84@cf--amer001e--3.americas.sgi.com>
+Subject: Re: 2.6.30-rc6: BUG at fs/xfs/support/debug.c:109!
+References: <a4423d670906010822l6e8e112dl3d6f7de9e2179850@mail.gmail.com>
+In-Reply-To: <a4423d670906010822l6e8e112dl3d6f7de9e2179850@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,295 +23,82 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Alexander Beregalov <a.beregalov@gmail.com>
+Cc: Kernel Testers List <kernel-testers@vger.kernel.org>, xfs@oss.sgi.com
 
-On Mon, Sep 14, 2009 at 04:40:57PM -0500, Alex Elder wrote:
-> >  	XFS_STATS_INC(xb_create);
-> > -	XB_TRACE(bp, "initialize", target);
-> > +	xfs_buftrace(bp, "initialize");
-> >  }
-> >  
-> >  /*
+Alexander Beregalov wrote:
+> Hi
 > 
-> Is "target" no longer useful information?  (Why not xfs_buftrace_val()?)
+> Assertion failed: *nmap >= 1, file: fs/xfs/xfs_bmap.c, line: 4846
 
-The target itself is not really useful information.  We still trace the
-device it's on inside the tracer which is the most important
-information.
+FWIW the same thing was just reported in oss bugzilla:
 
-> > @@ -859,7 +832,7 @@ xfs_buf_rele(
-> >  {
-> >  	xfs_bufhash_t		*hash = bp->b_hash;
-> >  
-> > -	XB_TRACE(bp, "rele", bp->b_relse);
-> > +	xfs_buftrace(bp, "rele");
-> >  
-> >  	if (unlikely(!hash)) {
-> >  		ASSERT(!bp->b_relse);
+http://oss.sgi.com/bugzilla/show_bug.cgi?id=850
+
+same backtrace more or less, and this time during install, so if it's 
+corruption, it's actually getting corrupted during the install, so 
+should have a testcase in there somewhere ...
+
+-Eric
+
+> ------------[ cut here ]------------
+> kernel BUG at fs/xfs/support/debug.c:109!
+> invalid opcode: 0000 [#1] PREEMPT SMP DEBUG_PAGEALLOC
+> last sysfs file: /sys/kernel/uevent_seqnum
+> CPU 0
+> Modules linked in:
+> Pid: 30665, comm: emerge Not tainted 2.6.30-rc6-00144-g5805977 #1 PowerEdge 1950
+> RIP: 0010:[<ffffffff8043abeb>]  [<ffffffff8043abeb>] assfail+0x2b/0x30
+> RSP: 0018:ffff8800303c1b98  EFLAGS: 00010246
+> RAX: 0000000000000054 RBX: 0000000000000000 RCX: 0000000000000301
+> RDX: 0000000000000000 RSI: 0000000000000001 RDI: 0000000000000001
+> RBP: ffff8800303c1ba8 R08: 0000000000000000 R09: 0000000000000000
+> R10: 0000000000000001 R11: 0000000000000001 R12: 0000000800000000
+> R13: ffff880078c0ccc0 R14: 0000000000000002 R15: ffff88007eb3f000
+> FS:  00007f7e92dbc6f0(0000) GS:ffff880005000000(0000) knlGS:0000000000000000
+> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> CR2: 0000000001b0a024 CR3: 0000000074cb0000 CR4: 00000000000006e0
+> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+> Process emerge (pid: 30665, threadinfo ffff8800303c0000, task ffff88007e335e10)
+> Stack:
+>  ffff8800051cefa0 00000000780d89a3 ffff8800303c1d88 ffffffff803d6bad
+>  ffffffff804c9ad8 ffffffff814497f8 ffff880045a72000 ffff880045a72aa8
+>  ffffffff81449800 0000000000000000 0000000000000000 00000000780d89a3
+> Call Trace:
+>  [<ffffffff803d6bad>] xfs_bmapi+0xad/0x1ad0
+>  [<ffffffff804c9ad8>] ? _atomic_dec_and_lock+0x88/0xb0
+>  [<ffffffff8042ef97>] ? xfs_buf_free+0xd7/0x130
+>  [<ffffffff806d987f>] ? _spin_unlock+0x3f/0x80
+>  [<ffffffff8042f114>] ? xfs_buf_rele+0x124/0x190
+>  [<ffffffff8042df2d>] ? xfs_buf_unlock+0x3d/0x80
+>  [<ffffffff80421e69>] ? xfs_trans_brelse+0x219/0x2e0
+>  [<ffffffff803e445f>] ? xfs_da_brelse+0x7f/0x150
+>  [<ffffffff803ee5c0>] xfs_dir2_leaf_getdents+0x640/0x7b0
+>  [<ffffffff802ec220>] ? filldir+0x0/0x100
+>  [<ffffffff802ec220>] ? filldir+0x0/0x100
+>  [<ffffffff803e975c>] xfs_readdir+0x12c/0x140
+>  [<ffffffff802ec220>] ? filldir+0x0/0x100
+>  [<ffffffff80430b57>] xfs_file_readdir+0x47/0x70
+>  [<ffffffff802ec500>] vfs_readdir+0xd0/0xf0
+>  [<ffffffff802ec6b6>] sys_getdents+0x96/0x110
+>  [<ffffffff8020ba6b>] system_call_fastpath+0x16/0x1b
+> Code: 55 89 d1 48 89 e5 48 89 f2 48 83 ec 10 48 89 fe 65 48 8b 04 25
+> 28 00 00 00 48 89 45 f8 31 c0 48 c7 c7 38 73 83 80 e8 25 a4 29 00 <0f>
+> 0b eb fe 90 55 48 89 e5 41 57 49 89 d7 41 56 41 55 49 89 cd
+> RIP  [<ffffffff8043abeb>] assfail+0x2b/0x30
+>  RSP <ffff8800303c1b98>
+> ---[ end trace bf7e45980908c8f7 ]---
 > 
-> Is "bp->b_relse" no longer useful information?  Always the same value
-> (it can be NULL for error paths)?
-
-The function pointer values aren't too useful information in a user
-trace, while previously they were a bit more useful using kdb.  If you
-really want it I can add it back using the in-kernel symbol lookup so
-that we'll actually get a useful name back.
-
-> > @@ -1035,7 +1009,7 @@ xfs_buf_iodone_work(
-> >  	 */
-> >  	if ((bp->b_error == EOPNOTSUPP) &&
-> >  	    (bp->b_flags & (XBF_ORDERED|XBF_ASYNC)) == (XBF_ORDERED|XBF_ASYNC)) {
-> > -		XB_TRACE(bp, "ordered_retry", bp->b_iodone);
-> > +		xfs_buftrace(bp, "ordered_retry");
-> >  		bp->b_flags &= ~XBF_ORDERED;
-> >  		bp->b_flags |= _XFS_BARRIER_FAILED;
-> >  		xfs_buf_iorequest(bp);
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 > 
-> Is "bp->b_iodone" no longer useful information?  Always the same
-> value?
-
-Same argument as above.
-
-> Index: xfs/fs/xfs/linux-2.6/xfs_lrw.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/linux-2.6/xfs_lrw.c	2009-09-09 12:33:56.410254105 -0300
-> +++ xfs/fs/xfs/linux-2.6/xfs_lrw.c	2009-09-09 12:49:11.187255959 -0300
-> > @@ -712,8 +651,6 @@ start:
-> >  	if ((ioflags & IO_ISDIRECT)) {
-> >  		if (mapping->nrpages) {
-> >  			WARN_ON(need_i_mutex == 0);
-> > -			xfs_inval_cached_trace(xip, pos, -1,
-> > -					(pos & PAGE_CACHE_MASK), -1);
-> >  			error = xfs_flushinval_pages(xip,
-> >  					(pos & PAGE_CACHE_MASK),
-> >  					-1, FI_REMAPF_LOCKED);
-> 
-> Why are you eliminating tracing of this event (here and elsewhere)?
-
-It's moved into xfs_flushinval_pages from the callers.
-
-> >  
-> > +
-> > +
-> >  static struct super_operations xfs_super_operations;
-> >  static kmem_zone_t *xfs_ioend_zone;
-> >  mempool_t *xfs_ioend_pool;
-> 
-> Pretty blanky.
-
-Fixed.
-
-> > +#define xfs_dqtrace_entry_ino(dqp, func, ip) \
-> > +	trace_xfs_dquot((dqp), (func), (ip));
-> > +#define xfs_dqtrace_entry(dqp, func) \
-> > +	trace_xfs_dquot((dqp), (func), NULL)
-> 
-> Get rid of these macros, just replace calls to them with the
-> "normally" spelled macros (trace_xfs_dquot(), trace_xfs_buf_item()).
-
-Yeah.  This will change a bit in the next repositing by switching to
-the per-callsite tracepoints already used elsewhere in the patch.
-
-> > +	), \
-> > +	TP_printk("dev %d:%d ino 0x%llx flags %s caller %pf", \
-> > +		  MAJOR(__entry->dev), MINOR(__entry->dev), \
-> > +		  __entry->ino, \
-> > +		  __print_flags(__entry->lock_flags, "|", XFS_LOCK_FLAGS), \
-> > +		  (void *)__entry->caller_ip) \
-> > +)
-> 
-> Incorporate _RET_IP_ here rather than passing in caller_ip in all call
-> sites.
-
-We can't.  We want the caller of the lock functions, not the caller of
-the tracing handler which is either the lock function itself or some
-garbage.  I hope to wotk with the trace infrastructure people to get
-some nicer way to catch the caller ip, though..
-
-> 
-> +/* XXX: make generic? */
-> +#define XFS_BUSY_STATES \
-> +	{ 0,	"found" }, \
-> +	{ 1,	"missing" }
-> 
-> How generic do you want to make it?  If the sense were inverted you
-> could use a Boolean value (i.e., __entry->found = true or false).
-
-Hmm, I could do it that way.  For now it's just found/missing, but we
-could change it to a found true/false
-
-> 
-> +#define xfs_trace_agf(mp, agf, flags) \
-> +	trace_xfs_agf(mp, agf, flags, _THIS_IP_)
-> 
-> Get rid of this macro, just replace calls to it with its "normal"
-> spelling (trace_xfs_agf()).  There's no reason you can't use _THIS_IP_
-> in the TRACE_EVENT() macro, right?
-
-I can use it, but it gives the wrong result.  TRACE_EVENT expends to
-an attachment point in the caller, and a function to do the tracing.
-We only binary patch a call to the tracing function onto the callsite
-if tracing is enabled - that way the overhead for tracing is low if
-not dynamically enabled.
-
-> > @@ -1849,7 +1844,7 @@ xfs_attr_node_list(xfs_attr_list_context
-> >  			node = bp->data;
-> >  			switch (be16_to_cpu(node->hdr.info.magic)) {
-> >  			case XFS_DA_NODE_MAGIC:
-> > -				xfs_attr_trace_l_cn("wrong blk", context, node);
-> > +				trace_xfs_attr_list_wrong_blk(context);
-> >  				xfs_da_brelse(NULL, bp);
-> >  				bp = NULL;
-> >  				break;
-> 
-> Is "node" no longer useful information?
-
-I don't think it ever was.  What we do here is to walk the attr btree
-to find our curosr position, and trace if we found a wrong entry in
-the btree.  I can't see how we need additional information about the
-exact node we ended up.  This trace point has been there since 1995 almost
-unmodified and I can't remember anyone needing it - it's mostly left in
-for completeness.
-
-> Is "leaf" no longer useful information?
-
-Same here.
-
-> > +#define	xfs_trace_bmap_post_update(d, ip, i, w)	\
-> > +	trace_xfs_bmap_post_update(ip, i, w, d)
-> > +#define	xfs_trace_bmap_pre_update(d, ip, i, w)	\
-> > +	trace_xfs_bmap_pre_update(ip, i, w, d)
-> > +
-> >  /*
-> >   * Bmap internal routines.
-> >   */
-> 
-> Get rid of these macros, just replace calls to them with their
-> "normal" spelling (i.e., trace_xfs_bmap_...).
-
-Yeah, this area also needs a bit more love anyway.
-
-> > Index: xfs/fs/xfs/xfs_dir2_block.c
-> > ===================================================================
-> > --- xfs.orig/fs/xfs/xfs_dir2_block.c	2009-09-09 12:33:56.559253457 -0300
-> > +++ xfs/fs/xfs/xfs_dir2_block.c	2009-09-09 12:49:11.305256255 -0300
-> > @@ -897,7 +901,8 @@ xfs_dir2_leaf_to_block(
-> >  	int			to;		/* block/leaf to index */
-> >  	xfs_trans_t		*tp;		/* transaction pointer */
-> >  
-> > -	xfs_dir2_trace_args_bb("leaf_to_block", args, lbp, dbp);
-> > +	trace_xfs_dir2_leaf_to_block(args);
-> > +
-> >  	dp = args->dp;
-> >  	tp = args->trans;
-> >  	mp = dp->i_mount;
-> 
-> Are the disk address buffer pointers in traces like this one no longer
-> useful information?
-
-We can't do anything with pointers to buffers in userspace - they are
-usually gone by the time we read the trace (same for kdb without an
-actualy crash).  Note that if you need them in a special case the
-tracepoints allow attaching manually written tracing code easily without
-modifying the xfs kernel module.  I will post some examples for that
-after the merge window stress is over.
-
-> > +++ xfs/fs/xfs/xfs_dir2_sf.c	2009-09-09 12:49:11.317273917 -0300
-> > @@ -654,7 +656,8 @@ xfs_dir2_sf_create(
-> >  	xfs_dir2_sf_t	*sfp;		/* shortform structure */
-> >  	int		size;		/* directory size */
-> >  
-> > -	xfs_dir2_trace_args_i("sf_create", args, pino);
-> > +	trace_xfs_dir2_sf_create(args);
-> > +
-> >  	dp = args->dp;
-> >  
-> >  	ASSERT(dp != NULL);
-> 
-> Is the parent inode number no longer useful information?
-
-I don't think it ever was. 
-
-> > Index: xfs/fs/xfs/xfs_error.c
-> > ===================================================================
-> > --- xfs.orig/fs/xfs/xfs_error.c	2009-09-09 12:33:56.585252928 -0300
-> > +++ xfs/fs/xfs/xfs_error.c	2009-09-09 12:49:11.322256465 -0300
-> > @@ -217,3 +217,19 @@ xfs_corruption_error(
-> >  		xfs_hex_dump(p, 16);
-> >  	xfs_error_report(tag, level, mp, fname, linenum, ra);
-> >  }
-> > +
-> > +/*
-> > + * Format fsblock number into a static buffer & return it.
-> > + */
-> > +char *xfs_fmtfsblock(xfs_fsblock_t bno)
-> > +{
-> > +	static char rval[50];
-> 
-> Why 50?  37 is enough for +/- 2^63, and 50 isn't really much better
-> than that for alignment or anything.  Not a big deal.
-
-This function was copied from xfsidbg.  No idea why it choses the magic
-number..
-
-> > Index: xfs/fs/xfs/xfs_rw.c
-> > ===================================================================
-> > --- xfs.orig/fs/xfs/xfs_rw.c	2009-09-09 12:33:56.670252999 -0300
-> > +++ xfs/fs/xfs/xfs_rw.c	2009-09-09 12:49:11.379255905 -0300
-> > @@ -171,7 +172,6 @@ xfs_bioerror(
-> >  	 * No need to wait until the buffer is unpinned.
-> >  	 * We aren't flushing it.
-> >  	 */
-> > -	xfs_buftrace("XFS IOERROR", bp);
-> >  	XFS_BUF_ERROR(bp, EIO);
-> >  	/*
-> >  	 * We're calling biodone, so delete B_DONE flag. Either way
-> > @@ -205,7 +205,6 @@ xfs_bioerror_relse(
-> >  	ASSERT(XFS_BUF_IODONE_FUNC(bp) != xfs_buf_iodone_callbacks);
-> >  	ASSERT(XFS_BUF_IODONE_FUNC(bp) != xlog_iodone);
-> >  
-> > -	xfs_buftrace("XFS IOERRELSE", bp);
-> >  	fl = XFS_BUF_BFLAGS(bp);
-> >  	/*
-> >  	 * No need to wait until the buffer is unpinned.
-> 
-> Why are you dropping tracing of these cases?
-
-> 
-> Why are you dropping tracing where xfs_itrace_ref() and
-> xfs_itrace_exit() was being called (here and elsewhere)?
-> Other than the spots where xfs_itrace_exit_tag() was used.
-
-These are replaced by the increased tracing in iget, instead of tracing
-inodes sometimes in iget and then in the callers we now make sure to
-trace all inodes in iget.
-
-
-> 
-> > Index: xfs/fs/xfs/xfs_attr_leaf.c
-> > ===================================================================
-> > --- xfs.orig/fs/xfs/xfs_attr_leaf.c	2009-09-09 12:33:56.691253788 -0300
-> > +++ xfs/fs/xfs/xfs_attr_leaf.c	2009-09-09 12:49:11.394257187 -0300
-> >  @@ -653,7 +654,6 @@ xfs_attr_shortform_list(xfs_attr_list_co
-> >  			XFS_CORRUPTION_ERROR("xfs_attr_shortform_list",
-> >  					     XFS_ERRLEVEL_LOW,
-> >  					     context->dp->i_mount, sfe);
-> > -			xfs_attr_trace_l_c("sf corrupted", context);
-> >  			kmem_free(sbuf);
-> >  			return XFS_ERROR(EFSCORRUPTED);
-> >  		}
-> 
-> Why are you dropping tracing of the returns from this function?  Too
-> much output?
-
-This and the others are dropped because I really couldn't find a use
-for it.  Many other attr tracepoints are pretty borderline, too - did
-anyone on hte list ever use the attr tracing in kdb, btw?
 
 _______________________________________________
 xfs mailing list
