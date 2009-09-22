@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n8LLNBNb132038 for <xfs@oss.sgi.com>; Mon, 21 Sep 2009 16:23:12 -0500
-Received: from peace.netnation.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3514716AF091
-	for <xfs@oss.sgi.com>; Mon, 21 Sep 2009 14:24:28 -0700 (PDT)
-Received: from peace.netnation.com (newpeace.netnation.com [204.174.223.7]) by
-	cuda.sgi.com with ESMTP id WGdfLmj5XJNDGB57 for
-	<xfs@oss.sgi.com>; Mon, 21 Sep 2009 14:24:28 -0700 (PDT)
-Received: from sim by peace.netnation.com with local (Exim 4.63)
-	(envelope-from <sim@netnation.com>) id 1MpqN2-0003n3-7o
-	for xfs@oss.sgi.com; Mon, 21 Sep 2009 14:24:28 -0700
-Date: Mon, 21 Sep 2009 14:24:28 -0700
-From: Simon Kirby <sim@hostway.ca>
-Subject: xfsprogs 3.0.3 seems to forget to increase nlinks in lost+found
-Message-ID: <20090921212428.GA12139@hostway.ca>
+	n8MC2ZLw188996 for <xfs@oss.sgi.com>; Tue, 22 Sep 2009 07:02:35 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AEF52470485
+	for <xfs@oss.sgi.com>; Tue, 22 Sep 2009 05:03:53 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id ReqmBbUZcCfePwPL for
+	<xfs@oss.sgi.com>; Tue, 22 Sep 2009 05:03:53 -0700 (PDT)
+Date: Tue, 22 Sep 2009 08:03:53 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs_fsr: fix test for short write
+Message-ID: <20090922120353.GC8143@infradead.org>
+References: <4AB307AD.9010904@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <4AB307AD.9010904@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,22 +28,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-After running xfs_repair on a 7 TB file system where the first 1 GB had
-been accidentally formatted with mkfs.ext3, a number of paths and files
-were found in lost+found, as expected.  However, nlinks of the directory
-itself was set to 2, causing "find" to become confused.  A subsequent run
-of xfs_progs found and repaired this error:
+On Thu, Sep 17, 2009 at 11:08:13PM -0500, Eric Sandeen wrote:
+> Clang found this one too, as a dead nested assignment.
+>
+> The point is to see if we write all the bytes; but the initial
+> assignment is backwards.  It's safe in the end, because if they
+> weren't already equal anyway, we'd have exited prior to this, but
+> it's worth fixing up for clarity.
+>
+> Signed-of-by: Eric Sandeen <sandeen@sandeen.net>
 
-Phase 7 - verify and correct link counts...
-resetting inode 265 nlinks from 2 to 11174
-done
+Looks good to me, 
 
-Perhaps it would be possible to remember to increment this while things
-are being linked to it?
 
-Simon-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
