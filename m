@@ -1,18 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n8NGmF3r021301 for <xfs@oss.sgi.com>; Wed, 23 Sep 2009 11:48:15 -0500
+	n8NIfdOO027561 for <xfs@oss.sgi.com>; Wed, 23 Sep 2009 13:41:39 -0500
 Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6211E476CA1
-	for <xfs@oss.sgi.com>; Wed, 23 Sep 2009 09:49:32 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 67F1947729F
+	for <xfs@oss.sgi.com>; Wed, 23 Sep 2009 11:42:56 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id BbFaTSVBddgWsgss for
-	<xfs@oss.sgi.com>; Wed, 23 Sep 2009 09:49:32 -0700 (PDT)
-Message-ID: <4ABA5192.80509@sandeen.net>
-Date: Wed, 23 Sep 2009 11:49:22 -0500
+	cuda.sgi.com with ESMTP id 15ETrDM7cmGlrou6 for
+	<xfs@oss.sgi.com>; Wed, 23 Sep 2009 11:42:56 -0700 (PDT)
+Received: from int-mx04.intmail.prod.int.phx2.redhat.com
+	(int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.17])
+	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id n8NIgus8015721
+	for <xfs@oss.sgi.com>; Wed, 23 Sep 2009 14:42:56 -0400
+Received: from neon.msp.redhat.com (neon.msp.redhat.com [10.15.80.10])
+	by int-mx04.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
+	id n8NIgsrG028544
+	for <xfs@oss.sgi.com>; Wed, 23 Sep 2009 14:42:54 -0400
+Message-ID: <4ABA6C2E.2080104@sandeen.net>
+Date: Wed, 23 Sep 2009 13:42:54 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] fix readahead calculations in xfs_dir2_leaf_getdents()
+Subject: Re: [PATCH] fix readahead calculations in xfs_dir2_leaf_getdents()
+References: <4ABA5192.80509@sandeen.net>
+In-Reply-To: <4ABA5192.80509@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,70 +36,66 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs mailing list <xfs@oss.sgi.com>
-Cc: tobias@lists.yoper.com
 
-This is for bug #850,
-http://oss.sgi.com/bugzilla/show_bug.cgi?id=850
-XFS file system segfaults , repeatedly and 100% reproducable in 2.6.30 , 2.6.31
+Eric Sandeen wrote:
+> This is for bug #850,
+> http://oss.sgi.com/bugzilla/show_bug.cgi?id=850
+> XFS file system segfaults , repeatedly and 100% reproducable in 2.6.30 , 2.6.31
 
-The above only showed up on a CONFIG_XFS_DEBUG=y kernel, because
-xfs_bmapi() ASSERTs that it has been asked for at least one map,
-and it was getting 0.
 
-The root cause is that our guesstimated "bufsize" from xfs_file_readdir
-was fairly small, and the
+Grr well this slowed things down a little, on about 200,000 entries in a
+~10MB directory on a single sata spindle.
 
-		bufsize -= length;
+stracing /bin/ls (no color/stats, output to /dev/null) 4x in a row with
+cache drops in between shows:
 
-in the loop was going negative - except bufsize is a size_t, so it 
-was wrapping to a very large number.
+stock:
 
-Then when we did
-		ra_want = howmany(bufsize + mp->m_dirblksize,
-				  mp->m_sb.sb_blocksize) - 1;
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+100.00    0.241378         414       583           getdents
+100.00    0.231012         396       583           getdents
+100.00    0.244977         420       583           getdents
+100.00    0.258624         444       583           getdents
 
-with that very large number, the (int) ra_want was coming out
-negative, and a subsequent compare:
+patched:
 
-		if (1 + ra_want > map_blocks ...
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+100.00    0.285928         769       372           getdents
+100.00    0.273747         736       372           getdents
+100.00    0.271060         729       372           getdents
+100.00    0.251360         676       372           getdents
 
-was coming out -true- (negative int compare w/ uint) and we went 
-back to xfs_bmapi() for more, even though we did not need more,
-and asked for 0 maps, and hit the ASSERT.
+so that's slowed down a bit.  Weird that more calls, originally, made it
+faster overall...?
 
-We have kind of a type mess here, but just keeping bufsize from 
-going negative is probably sufficient to avoid the problem.
+But one thing I noticed is that we choose readahead based on a guess at
+the readdir buffer size, and at least for glibc's readdir it has this:
 
-I'm open to more tidy or obvious solutions though.  :)
+const size_t default_allocation =
+  (4 * BUFSIZ < sizeof (struct dirent64) ?
+	sizeof (struct dirent64) : 4 * BUFSIZ);
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
+where BUFSIZ is a magical 8192.
 
-diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
-index fa913e4..946562d 100644
---- a/fs/xfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/xfs_dir2_leaf.c
-@@ -854,6 +854,7 @@ xfs_dir2_leaf_getdents(
- 			 */
- 			ra_want = howmany(bufsize + mp->m_dirblksize,
- 					  mp->m_sb.sb_blocksize) - 1;
-+			ASSERT(ra_want >= 0);
- 
- 			/*
- 			 * If we don't have as many as we want, and we haven't
-@@ -1088,7 +1089,11 @@ xfs_dir2_leaf_getdents(
- 		 */
- 		ptr += length;
- 		curoff += length;
--		bufsize -= length;
-+		/* bufsize may have just been a guess; don't go negative */
-+		if (bufsize >= length)
-+			bufsize -= length;
-+		else
-+			bufsize = 0;
- 	}
- 
- 	/*
+But we do at max PAGE_SIZE which gives us almost no readahead ...
+
+So bumping our "bufsize" up to 32k, things speed up nicely.  Wonder if
+the stock broken bufsize method led to more inadvertent readahead....
+
+32k:
+
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+100.00    0.176826         475       372           getdents
+100.00    0.177491         477       372           getdents
+100.00    0.176548         475       372           getdents
+100.00    0.139812         376       372           getdents
+
+Think it's worth it?
+
+-Eric
 
 _______________________________________________
 xfs mailing list
