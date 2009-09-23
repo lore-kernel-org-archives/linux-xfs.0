@@ -1,31 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n8NLkIoE037332 for <xfs@oss.sgi.com>; Wed, 23 Sep 2009 16:46:18 -0500
-Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EC856477FA7
-	for <xfs@oss.sgi.com>; Wed, 23 Sep 2009 14:47:36 -0700 (PDT)
-Received: from mailsrv1.zmi.at (mailsrv5.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id 2nGjQdoYBd5vyoQM for
-	<xfs@oss.sgi.com>; Wed, 23 Sep 2009 14:47:36 -0700 (PDT)
-Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv1.zmi.at (Postfix) with ESMTP id 380AC689
-	for <xfs@oss.sgi.com>; Wed, 23 Sep 2009 23:47:10 +0200 (CEST)
-Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id BAB8240016C
-	for <xfs@oss.sgi.com>; Wed, 23 Sep 2009 23:47:34 +0200 (CEST)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
+	n8NNK8Jd042935 for <xfs@oss.sgi.com>; Wed, 23 Sep 2009 18:20:09 -0500
+Received: from mail.phy.duke.edu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 847021185F5F
+	for <xfs@oss.sgi.com>; Wed, 23 Sep 2009 16:21:26 -0700 (PDT)
+Received: from mail.phy.duke.edu (mail.phy.duke.edu [152.3.182.2]) by
+	cuda.sgi.com with ESMTP id sXTSQmMbz8jgvd7D for
+	<xfs@oss.sgi.com>; Wed, 23 Sep 2009 16:21:26 -0700 (PDT)
+Date: Wed, 23 Sep 2009 19:21:21 -0400 (EDT)
+From: Jimmy Dorff <jdorff@phy.duke.edu>
 Subject: Re: problems with xfs_growfs after lvextend
-Date: Wed, 23 Sep 2009 23:47:05 +0200
-References: <4ABA8D56.2040101@phy.duke.edu>
-In-Reply-To: <4ABA8D56.2040101@phy.duke.edu>
+In-Reply-To: <4ABA9523.60909@thebarn.com>
+Message-ID: <Pine.LNX.4.64.0909231918400.14750@login2.phy.duke.edu>
+References: <4ABA8D56.2040101@phy.duke.edu> <4ABA9523.60909@thebarn.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-Message-Id: <200909232347.05945@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,29 +23,127 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Russell Cattelan <cattelan@thebarn.com>
+Cc: xfs@oss.sgi.com
 
-On Mittwoch 23 September 2009 Jimmy Dorff wrote:
-> Any suggestions ? Any help understanding why this didn't work ?
+On Wed, 23 Sep 2009, Russell Cattelan wrote:
+> The good new is you can easily restore the the values of the primary
+> super block from one of the other superblocks
+> using the xfs_db cmd.
+>
+> The bad news is that if you have run repair you may have messed things up.
+>
+> basically pull up xfs_db
+>> sb 0 p
+> ... output ..
+>> sb 1 p
+> ... output ...
+>
+> Send us the result of that and we can figure out which values need to
+> be restored.
 
-Hm, hasn't there been a problem with growing more than 2TB at once?
+Here you go. Thanks for your help!
 
-I search in my local box and found this, might help:
-May 09: [PATCH] fix overflow in xfs_growfs_data_privat
-
-Maybe kernel update?
-
-mfg zmi
--- 
-// Michael Monnerie, Ing.BSc    -----      http://it-management.at
-// Tel: 0660 / 415 65 31                      .network.your.ideas.
-// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
-// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
-// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
+xfs_db> sb 0
+xfs_db> p
+magicnum = 0x58465342
+blocksize = 4096
+dblocks = 8053063680
+rblocks = 0
+rextents = 0
+uuid = bada0c85-0739-4fdb-99fb-6bb7777eb4d0
+logstart = 1073741828
+rootino = 128
+rbmino = 129
+rsumino = 130
+rextsize = 1
+agblocks = 50331648
+agcount = 160
+rbmblocks = 0
+logblocks = 32768
+versionnum = 0x3084
+sectsize = 512
+inodesize = 256
+inopblock = 16
+fname = "DATA\000\000\000\000\000\000\000\000"
+blocklog = 12
+sectlog = 9
+inodelog = 8
+inopblog = 4
+agblklog = 26
+rextslog = 0
+inprogress = 0
+imax_pct = 25
+icount = 103936
+ifree = 269
+fdblocks = 6499724269
+frextents = 0
+uquotino = 0
+gquotino = 0
+qflags = 0
+flags = 0
+shared_vn = 0
+inoalignmt = 2
+unit = 0
+width = 0
+dirblklog = 0
+logsectlog = 0
+logsectsize = 0
+logsunit = 0
+features2 = 0
+bad_features2 = 0
+xfs_db> sb 1
+xfs_db> p
+magicnum = 0x58465342
+blocksize = 4096
+dblocks = 1610612736
+rblocks = 0
+rextents = 0
+uuid = bada0c85-0739-4fdb-99fb-6bb7777eb4d0
+logstart = 1073741828
+rootino = 128
+rbmino = 129
+rsumino = 130
+rextsize = 1
+agblocks = 50331648
+agcount = 32
+rbmblocks = 0
+logblocks = 32768
+versionnum = 0x3084
+sectsize = 512
+inodesize = 256
+inopblock = 16
+fname = "DATA\000\000\000\000\000\000\000\000"
+blocklog = 12
+sectlog = 9
+inodelog = 8
+inopblog = 4
+agblklog = 26
+rextslog = 0
+inprogress = 0
+imax_pct = 25
+icount = 103936
+ifree = 269
+fdblocks = 57273829
+frextents = 0
+uquotino = 0
+gquotino = 0
+qflags = 0
+flags = 0
+shared_vn = 0
+inoalignmt = 2
+unit = 0
+width = 0
+dirblklog = 0
+logsectlog = 0
+logsectsize = 0
+logsunit = 0
+features2 = 0
+bad_features2 = 0
 
 _______________________________________________
 xfs mailing list
