@@ -1,31 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n8NKSGHi033954 for <xfs@oss.sgi.com>; Wed, 23 Sep 2009 15:28:17 -0500
-Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BC45D477969
-	for <xfs@oss.sgi.com>; Wed, 23 Sep 2009 13:29:33 -0700 (PDT)
-Received: from mailsrv1.zmi.at (mailsrv5.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id LUMays0WIMhzYjaF for
-	<xfs@oss.sgi.com>; Wed, 23 Sep 2009 13:29:33 -0700 (PDT)
-Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv1.zmi.at (Postfix) with ESMTP id 498C4689
-	for <xfs@oss.sgi.com>; Wed, 23 Sep 2009 22:29:07 +0200 (CEST)
-Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id BEB0B40016C
-	for <xfs@oss.sgi.com>; Wed, 23 Sep 2009 22:29:31 +0200 (CEST)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: [PATCH] fix readahead calculations in xfs_dir2_leaf_getdents()
-Date: Wed, 23 Sep 2009 22:29:03 +0200
-References: <4ABA5192.80509@sandeen.net> <4ABA6C2E.2080104@sandeen.net>
-In-Reply-To: <4ABA6C2E.2080104@sandeen.net>
+	n8NL34XJ035604 for <xfs@oss.sgi.com>; Wed, 23 Sep 2009 16:03:05 -0500
+Received: from mail.phy.duke.edu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 84FF34777EF
+	for <xfs@oss.sgi.com>; Wed, 23 Sep 2009 14:04:23 -0700 (PDT)
+Received: from mail.phy.duke.edu (mail.phy.duke.edu [152.3.182.2]) by
+	cuda.sgi.com with ESMTP id r7uj9tB9pceyWMCT for
+	<xfs@oss.sgi.com>; Wed, 23 Sep 2009 14:04:23 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+	by mail.phy.duke.edu (Postfix) with ESMTP id E46EEBEDB5
+	for <xfs@oss.sgi.com>; Wed, 23 Sep 2009 17:03:16 -0400 (EDT)
+Received: from mail.phy.duke.edu ([127.0.0.1])
+	by localhost (mail.phy.duke.edu [127.0.0.1]) (amavisd-new, port 10026)
+	with LMTP id mGSvqVINlsDr for <xfs@oss.sgi.com>;
+	Wed, 23 Sep 2009 17:03:16 -0400 (EDT)
+Received: from phy92.phy.duke.edu (phy92.phy.duke.edu [152.3.183.92])
+	by mail.phy.duke.edu (Postfix) with ESMTP id BB5F6BEC4E
+	for <xfs@oss.sgi.com>; Wed, 23 Sep 2009 17:03:16 -0400 (EDT)
+Message-ID: <4ABA8D56.2040101@phy.duke.edu>
+Date: Wed, 23 Sep 2009 17:04:22 -0400
+From: Jimmy Dorff <jdorff@phy.duke.edu>
 MIME-Version: 1.0
-Content-Disposition: inline
-Message-Id: <200909232229.03395@zmi.at>
+Subject: problems with xfs_growfs after lvextend
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,60 +31,70 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On Mittwoch 23 September 2009 Eric Sandeen wrote:
-> so that's slowed down a bit. =A0Weird that more calls, originally, made
-> it faster overall...?
+Hello,
 
-You wrote in the patch description that bufsize went very large when it =
+I'm having a problem with a corrupt xfs filesystem after attempting to 
+grow the filesystem.
 
-got below zero. Could it mean that a that times a big readahead appeared =
+The problem is very similar to this post:
+http://www.redhat.com/archives/linux-lvm/2005-November/msg00026.html
+Except that xfs_repair never finds a secondary superblock.
 
-and that's why the speed improved?
+Details:
+CentOS Linux,
+kernel 2.6.18-128.1.16.el5.centos.plus x86_64
+lvm2-2.02.40-6.el5
+originally: xfsprogs-2.9.4-1.el5.centos.x86_64
 
-Why have there been more calls before that patch?
+This sever has been up and running for a few months w/o problems. Today 
+we added some disks to a 3ware controller. The disks were all tested 
+individually before installation.
 
-> But one thing I noticed is that we choose readahead based on a guess
-> at the readdir buffer size, and at least for glibc's readdir it has
-> this:
->
-> const size_t default_allocation =3D
-> =A0 (4 * BUFSIZ < sizeof (struct dirent64) ?
-> =A0=A0=A0=A0=A0=A0=A0=A0sizeof (struct dirent64) : 4 * BUFSIZ);
->
-> where BUFSIZ is a magical 8192.
->
-> But we do at max PAGE_SIZE which gives us almost no readahead ...
->
-> So bumping our "bufsize" up to 32k, things speed up nicely. =A0Wonder
-> if the stock broken bufsize method led to more inadvertent
-> readahead....
+Used "tw_cli" to configure a new RAID volume, which appeared in Linux as 
+normal (/dev/sdd).
 
-Is it possible to increase it more, to see if things still improve? =
+# pvcreate /dev/sdd
+# vgextend array_vg /dev/sdd
+# lvextend /dev/array_vg/data --size +12T
 
-Maybe that made the difference in the old version?
+This all worked w/o any errors. vgdisplay and lvdisplay all report the 
+correct info and sizes.
 
-In general, I'd opt for at least 64KB buffers, that's the smallest I/O =
+The 6TB xfs filesystem on /dev/array_vg/data was mounted as "/srv/data"
+# xfs_growfs /srv/data
 
-size to keep hard disks busy, and RAIDs usually have 64KB stripe sets or =
+The size of the filesystem didn't change. I unmounted it and tried 
+again, but no change. However, now I can't mount the filesystem at all.
 
-bigger. But I don't know how scattered dirs in XFS are, or if you can =
+xfs_check causes xfs_db to use so much memory as to hang up the system.
+xfs_repair reports:
+Phase 1 - find and verify superblock...
+superblock read failed, offset 19791209299968, size 2048, ag 96, rval 0
 
-expect them to be sequential.
+fatal error -- Invalid argument
 
-mfg zmi
--- =
+Also, I've noticed this in syslog:
+kernel: attempt to access beyond end of device
+kernel: dm-1: rw=0, want=64424509440, limit=38654705664
+kernel: I/O error in filesystem ("dm-1") meta-data dev dm-1 block 
+0xeffffffff       ("xfs_read_buf") error 5 buf count 512
+kernel: XFS: size check 2 failed
 
-// Michael Monnerie, Ing.BSc    -----      http://it-management.at
-// Tel: 0660 / 415 65 31                      .network.your.ideas.
-// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
-// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
-// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
+
+I've trying using xfs_repair from xfsprogs 3.0.3, but it made no 
+difference.
+
+Any suggestions ? Any help understanding why this didn't work ?
+
+
+Thanks,
+Jimmy Dorff
 
 _______________________________________________
 xfs mailing list
