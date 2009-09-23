@@ -1,28 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n8NIfdOO027561 for <xfs@oss.sgi.com>; Wed, 23 Sep 2009 13:41:39 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 67F1947729F
-	for <xfs@oss.sgi.com>; Wed, 23 Sep 2009 11:42:56 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 15ETrDM7cmGlrou6 for
-	<xfs@oss.sgi.com>; Wed, 23 Sep 2009 11:42:56 -0700 (PDT)
-Received: from int-mx04.intmail.prod.int.phx2.redhat.com
-	(int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.17])
-	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id n8NIgus8015721
-	for <xfs@oss.sgi.com>; Wed, 23 Sep 2009 14:42:56 -0400
-Received: from neon.msp.redhat.com (neon.msp.redhat.com [10.15.80.10])
-	by int-mx04.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id n8NIgsrG028544
-	for <xfs@oss.sgi.com>; Wed, 23 Sep 2009 14:42:54 -0400
-Message-ID: <4ABA6C2E.2080104@sandeen.net>
-Date: Wed, 23 Sep 2009 13:42:54 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+	n8NKSGHi033954 for <xfs@oss.sgi.com>; Wed, 23 Sep 2009 15:28:17 -0500
+Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BC45D477969
+	for <xfs@oss.sgi.com>; Wed, 23 Sep 2009 13:29:33 -0700 (PDT)
+Received: from mailsrv1.zmi.at (mailsrv5.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id LUMays0WIMhzYjaF for
+	<xfs@oss.sgi.com>; Wed, 23 Sep 2009 13:29:33 -0700 (PDT)
+Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv1.zmi.at (Postfix) with ESMTP id 498C4689
+	for <xfs@oss.sgi.com>; Wed, 23 Sep 2009 22:29:07 +0200 (CEST)
+Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id BEB0B40016C
+	for <xfs@oss.sgi.com>; Wed, 23 Sep 2009 22:29:31 +0200 (CEST)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
 Subject: Re: [PATCH] fix readahead calculations in xfs_dir2_leaf_getdents()
-References: <4ABA5192.80509@sandeen.net>
-In-Reply-To: <4ABA5192.80509@sandeen.net>
+Date: Wed, 23 Sep 2009 22:29:03 +0200
+References: <4ABA5192.80509@sandeen.net> <4ABA6C2E.2080104@sandeen.net>
+In-Reply-To: <4ABA6C2E.2080104@sandeen.net>
+MIME-Version: 1.0
+Content-Disposition: inline
+Message-Id: <200909232229.03395@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,71 +34,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs mailing list <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Eric Sandeen wrote:
-> This is for bug #850,
-> http://oss.sgi.com/bugzilla/show_bug.cgi?id=850
-> XFS file system segfaults , repeatedly and 100% reproducable in 2.6.30 , 2.6.31
+On Mittwoch 23 September 2009 Eric Sandeen wrote:
+> so that's slowed down a bit. =A0Weird that more calls, originally, made
+> it faster overall...?
 
+You wrote in the patch description that bufsize went very large when it =
 
-Grr well this slowed things down a little, on about 200,000 entries in a
-~10MB directory on a single sata spindle.
+got below zero. Could it mean that a that times a big readahead appeared =
 
-stracing /bin/ls (no color/stats, output to /dev/null) 4x in a row with
-cache drops in between shows:
+and that's why the speed improved?
 
-stock:
+Why have there been more calls before that patch?
 
-% time     seconds  usecs/call     calls    errors syscall
------- ----------- ----------- --------- --------- ----------------
-100.00    0.241378         414       583           getdents
-100.00    0.231012         396       583           getdents
-100.00    0.244977         420       583           getdents
-100.00    0.258624         444       583           getdents
+> But one thing I noticed is that we choose readahead based on a guess
+> at the readdir buffer size, and at least for glibc's readdir it has
+> this:
+>
+> const size_t default_allocation =3D
+> =A0 (4 * BUFSIZ < sizeof (struct dirent64) ?
+> =A0=A0=A0=A0=A0=A0=A0=A0sizeof (struct dirent64) : 4 * BUFSIZ);
+>
+> where BUFSIZ is a magical 8192.
+>
+> But we do at max PAGE_SIZE which gives us almost no readahead ...
+>
+> So bumping our "bufsize" up to 32k, things speed up nicely. =A0Wonder
+> if the stock broken bufsize method led to more inadvertent
+> readahead....
 
-patched:
+Is it possible to increase it more, to see if things still improve? =
 
-% time     seconds  usecs/call     calls    errors syscall
------- ----------- ----------- --------- --------- ----------------
-100.00    0.285928         769       372           getdents
-100.00    0.273747         736       372           getdents
-100.00    0.271060         729       372           getdents
-100.00    0.251360         676       372           getdents
+Maybe that made the difference in the old version?
 
-so that's slowed down a bit.  Weird that more calls, originally, made it
-faster overall...?
+In general, I'd opt for at least 64KB buffers, that's the smallest I/O =
 
-But one thing I noticed is that we choose readahead based on a guess at
-the readdir buffer size, and at least for glibc's readdir it has this:
+size to keep hard disks busy, and RAIDs usually have 64KB stripe sets or =
 
-const size_t default_allocation =
-  (4 * BUFSIZ < sizeof (struct dirent64) ?
-	sizeof (struct dirent64) : 4 * BUFSIZ);
+bigger. But I don't know how scattered dirs in XFS are, or if you can =
 
-where BUFSIZ is a magical 8192.
+expect them to be sequential.
 
-But we do at max PAGE_SIZE which gives us almost no readahead ...
+mfg zmi
+-- =
 
-So bumping our "bufsize" up to 32k, things speed up nicely.  Wonder if
-the stock broken bufsize method led to more inadvertent readahead....
-
-32k:
-
-% time     seconds  usecs/call     calls    errors syscall
------- ----------- ----------- --------- --------- ----------------
-100.00    0.176826         475       372           getdents
-100.00    0.177491         477       372           getdents
-100.00    0.176548         475       372           getdents
-100.00    0.139812         376       372           getdents
-
-Think it's worth it?
-
--Eric
+// Michael Monnerie, Ing.BSc    -----      http://it-management.at
+// Tel: 0660 / 415 65 31                      .network.your.ideas.
+// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
+// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
+// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
 
 _______________________________________________
 xfs mailing list
