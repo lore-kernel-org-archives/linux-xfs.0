@@ -1,20 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n8PJfDOH185887 for <xfs@oss.sgi.com>; Fri, 25 Sep 2009 14:41:13 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CC61C47FB8E
-	for <xfs@oss.sgi.com>; Fri, 25 Sep 2009 12:42:31 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id l8v084meaHOEK0NC for
-	<xfs@oss.sgi.com>; Fri, 25 Sep 2009 12:42:31 -0700 (PDT)
-Message-ID: <4ABD1D22.2030002@sandeen.net>
-Date: Fri, 25 Sep 2009 14:42:26 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	n8PKGh3l187510 for <xfs@oss.sgi.com>; Fri, 25 Sep 2009 15:16:43 -0500
+Content-class: urn:content-classes:message
 MIME-Version: 1.0
-Subject: [PATCH V2] fix readahead calculations in xfs_dir2_leaf_getdents()
-References: <4ABA5192.80509@sandeen.net>
-In-Reply-To: <4ABA5192.80509@sandeen.net>
+Subject: RE: [PATCH] xfs: fix spin_is_locked assert on uni-processor builds
+Date: Fri, 25 Sep 2009 15:17:59 -0500
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83ACE9@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <20090810140006.GA21521@infradead.org>
+From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,70 +21,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs mailing list <xfs@oss.sgi.com>
-Cc: tobias@lists.yoper.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-This is for bug #850,
-http://oss.sgi.com/bugzilla/show_bug.cgi?id=850
-XFS file system segfaults , repeatedly and 100% reproducable in 2.6.30 , 2.6.31
+Christoph Hellwig wrote:
+> Without SMP or preemption spin_is_locked always returns false,
+> so we can't do an assert with it.  Instead use assert_spin_locked,
+> which does the right thing on all builds.
+> 
+> This fixes kernel.org BZ #13621.
 
-The above only showed up on a CONFIG_XFS_DEBUG=y kernel, because
-xfs_bmapi() ASSERTs that it has been asked for at least one map,
+Looks good.
 
-and it was getting 0.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reported-by: Johannes Engel <jcnengel@googlemail.com>
+> Tested-by: Johannes Engel <jcnengel@googlemail.com>
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
-The root cause is that our guesstimated "bufsize" from xfs_file_readdir
-was fairly small, and the
-
-		bufsize -= length;
-
-in the loop was going negative - except bufsize is a size_t, so it 
-was wrapping to a very large number.
-
-Then when we did
-		ra_want = howmany(bufsize + mp->m_dirblksize,
-				  mp->m_sb.sb_blocksize) - 1;
-
-with that very large number, the (int) ra_want was coming out
-negative, and a subsequent compare:
-
-		if (1 + ra_want > map_blocks ...
-
-was coming out -true- (negative int compare w/ uint) and we went 
-back to xfs_bmapi() for more, even though we did not need more,
-and asked for 0 maps, and hit the ASSERT.
-
-We have kind of a type mess here, but just keeping bufsize from 
-going negative is probably sufficient to avoid the problem.
-
-
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
-
-V2: use min() as suggested by Jeff, it's tidier.
-
-diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
-index fa913e4..4467d61 100644
---- a/fs/xfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/xfs_dir2_leaf.c
-@@ -854,6 +854,7 @@ xfs_dir2_leaf_getdents(
- 			 */
- 			ra_want = howmany(bufsize + mp->m_dirblksize,
- 					  mp->m_sb.sb_blocksize) - 1;
-+			ASSERT(ra_want >= 0);
- 
- 			/*
- 			 * If we don't have as many as we want, and we haven't
-@@ -1088,7 +1089,8 @@ xfs_dir2_leaf_getdents(
- 		 */
- 		ptr += length;
- 		curoff += length;
--		bufsize -= length;
-+		/* bufsize may have just been a guess; don't go negative */
-+		bufsize = min((bufsize - length), (size_t)0);
- 	}
- 
- 	/*
+> Index: linux-2.6/fs/xfs/xfs_log.c
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/xfs_log.c	2009-08-09 23:27:07.889729629 -0300
+> +++ linux-2.6/fs/xfs/xfs_log.c	2009-08-09 23:27:24.092725926 -0300
+> @@ -3180,7 +3180,7 @@ try_again:
+>  STATIC void
+>  xlog_state_want_sync(xlog_t *log, xlog_in_core_t *iclog)
+>  {
+> -	ASSERT(spin_is_locked(&log->l_icloglock));
+> +	assert_spin_locked(&log->l_icloglock);
+> 
+>  	if (iclog->ic_state == XLOG_STATE_ACTIVE) {
+>  		xlog_state_switch_iclogs(log, iclog, 0);
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
