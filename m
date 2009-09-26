@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n8QI2O3P256816 for <xfs@oss.sgi.com>; Sat, 26 Sep 2009 13:02:24 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 782A016F1EFA
-	for <xfs@oss.sgi.com>; Sat, 26 Sep 2009 11:03:43 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id eT6IbuVrDilWjJn9 for
-	<xfs@oss.sgi.com>; Sat, 26 Sep 2009 11:03:43 -0700 (PDT)
-Message-ID: <4ABE577E.8060303@sandeen.net>
-Date: Sat, 26 Sep 2009 13:03:42 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	n8QJriYq261900 for <xfs@oss.sgi.com>; Sat, 26 Sep 2009 14:53:47 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 57EDD481B3D
+	for <xfs@oss.sgi.com>; Sat, 26 Sep 2009 12:55:05 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id lj08FP7eqqrOJreE for
+	<xfs@oss.sgi.com>; Sat, 26 Sep 2009 12:55:05 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1MrdMG-0004Xq-R4
+	for xfs@oss.sgi.com; Sat, 26 Sep 2009 19:55:04 +0000
+Date: Sat, 26 Sep 2009 15:55:04 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH] xfs: stop calling filemap_fdatawait inside ->fsync
+Message-ID: <20090926195504.GA11121@infradead.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH V2] fix readahead calculations in	xfs_dir2_leaf_getdents()
-References: <4ABA5192.80509@sandeen.net> <4ABD1D22.2030002@sandeen.net>
-	<20090926170423.GA28387@infradead.org>
-In-Reply-To: <20090926170423.GA28387@infradead.org>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,39 +25,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: tobias@lists.yoper.com, xfs mailing list <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> On Fri, Sep 25, 2009 at 02:42:26PM -0500, Eric Sandeen wrote:
->> V2: use min() as suggested by Jeff, it's tidier.
-> 
-> I disagree with that, with the cast it looks pretty horrible.
-> At least use min_t to avoid the case, but what's wrong with:
-> 
->> +		/* bufsize may have just been a guess; don't go negative */
->> +		bufsize = min((bufsize - length), (size_t)0);
-> 
-> 		bufsize = bufsize - length > 0 ? bufsize - length : 0;
+Now that the VFS actually waits for the data I/O to complete before
+calling into ->fsync we can stop doing it ourselves.
 
-ok, that's fine too.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-I'll pick one.
-
-> Anyway, takes this as a
-> 
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> for any variant.
-> 
-
-thanks,
--Eric
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_file.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_file.c	2009-09-26 14:09:24.933003650 -0300
++++ linux-2.6/fs/xfs/linux-2.6/xfs_file.c	2009-09-26 14:09:46.804256831 -0300
+@@ -176,14 +176,7 @@ xfs_file_fsync(
+ 	struct dentry		*dentry,
+ 	int			datasync)
+ {
+-	struct inode		*inode = dentry->d_inode;
+ 	struct xfs_inode	*ip = XFS_I(inode);
+-	int			error;
+-
+-	/* capture size updates in I/O completion before writing the inode. */
+-	error = filemap_fdatawait(inode->i_mapping);
+-	if (error)
+-		return error;
+ 
+ 	xfs_iflags_clear(ip, XFS_ITRUNCATED);
+ 	return -xfs_fsync(ip);
 
 _______________________________________________
 xfs mailing list
