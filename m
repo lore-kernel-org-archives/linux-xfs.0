@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n8QJriYq261900 for <xfs@oss.sgi.com>; Sat, 26 Sep 2009 14:53:47 -0500
+	n8SHKIm1137217 for <xfs@oss.sgi.com>; Mon, 28 Sep 2009 12:20:30 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 57EDD481B3D
-	for <xfs@oss.sgi.com>; Sat, 26 Sep 2009 12:55:05 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E528848591E
+	for <xfs@oss.sgi.com>; Mon, 28 Sep 2009 10:21:39 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id lj08FP7eqqrOJreE for
-	<xfs@oss.sgi.com>; Sat, 26 Sep 2009 12:55:05 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1MrdMG-0004Xq-R4
-	for xfs@oss.sgi.com; Sat, 26 Sep 2009 19:55:04 +0000
-Date: Sat, 26 Sep 2009 15:55:04 -0400
+	by cuda.sgi.com with ESMTP id dZwKWtflFLYT7bJK for
+	<xfs@oss.sgi.com>; Mon, 28 Sep 2009 10:21:39 -0700 (PDT)
+Date: Mon, 28 Sep 2009 13:21:37 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfs: stop calling filemap_fdatawait inside ->fsync
-Message-ID: <20090926195504.GA11121@infradead.org>
+Subject: Re: Possible small bug in xfsprogs-dev/db/metadump.c
+Message-ID: <20090928172137.GA21868@infradead.org>
+References: <46b8a8850909271220w372d60c3s18a543ed00825082@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <46b8a8850909271220w372d60c3s18a543ed00825082@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,32 +28,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Richard Sharpe <realrichardsharpe@gmail.com>
+Cc: xfs@oss.sgi.com
 
-Now that the VFS actually waits for the data I/O to complete before
-calling into ->fsync we can stop doing it ourselves.
+[Cc'ed to the list, where people including the most active person on the
+ userspace side hang out]
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Sun, Sep 27, 2009 at 12:20:33PM -0700, Richard Sharpe wrote:
+> Hi folks,
+> 
+> There seems to be a small bug in
+> xfsprogs-dev/db/metadump.c:scanfunc_freesp (although I think the same
+> problem exists in other functions).
+> 
+> It has a check to see if the number of records is invalid:
+> 
+>         numrecs = be16_to_cpu(block->bb_numrecs);
+>         if (numrecs > mp->m_alloc_mxr[1]) {
+>                 if (show_warnings)
+>                         print_warning("invalid numrecs (%u) in %s block %u/%u",
+>                                 numrecs, typtab[btype].name, agno, agbno);
+>                 return 1;
+>         }
+> 
+> However, it seems to me that you should pay attention to bb_level in
+> the node when using that test, because leaf nodes can appear at
+> multiple levels in the tree.
 
-Index: linux-2.6/fs/xfs/linux-2.6/xfs_file.c
-===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_file.c	2009-09-26 14:09:24.933003650 -0300
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_file.c	2009-09-26 14:09:46.804256831 -0300
-@@ -176,14 +176,7 @@ xfs_file_fsync(
- 	struct dentry		*dentry,
- 	int			datasync)
- {
--	struct inode		*inode = dentry->d_inode;
- 	struct xfs_inode	*ip = XFS_I(inode);
--	int			error;
--
--	/* capture size updates in I/O completion before writing the inode. */
--	error = filemap_fdatawait(inode->i_mapping);
--	if (error)
--		return error;
- 
- 	xfs_iflags_clear(ip, XFS_ITRUNCATED);
- 	return -xfs_fsync(ip);
+Before that code there is a
+
+	if (level == 0)
+		return 1;
+
+which should take care of the leaf nodes by exiting early.
 
 _______________________________________________
 xfs mailing list
