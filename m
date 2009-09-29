@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n8TCpfOn204834 for <xfs@oss.sgi.com>; Tue, 29 Sep 2009 07:51:41 -0500
-Received: from mail-pz0-f173.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 325CA1D731C9
-	for <xfs@oss.sgi.com>; Tue, 29 Sep 2009 05:53:01 -0700 (PDT)
-Received: from mail-pz0-f173.google.com (mail-pz0-f173.google.com
-	[209.85.222.173]) by cuda.sgi.com with ESMTP id
-	O8cyJ34y3SLNIm4w for <xfs@oss.sgi.com>;
-	Tue, 29 Sep 2009 05:53:01 -0700 (PDT)
-Received: by pzk3 with SMTP id 3so1440327pzk.20
-	for <xfs@oss.sgi.com>; Tue, 29 Sep 2009 05:53:00 -0700 (PDT)
+	n8TDlYpj207178 for <xfs@oss.sgi.com>; Tue, 29 Sep 2009 08:47:35 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E374148A39D
+	for <xfs@oss.sgi.com>; Tue, 29 Sep 2009 06:48:56 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id HitbwFqysDOVYnWU for
+	<xfs@oss.sgi.com>; Tue, 29 Sep 2009 06:48:56 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1Msd4a-0005k8-IX
+	for xfs@oss.sgi.com; Tue, 29 Sep 2009 13:48:56 +0000
+Date: Tue, 29 Sep 2009 09:48:56 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH] xfs: simplify inode teardown
+Message-ID: <20090929134856.GA17864@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <E87DB458899A9040ACD4D627073D9EF606028EAC@VFOHMLAO11.Enterprise.afmc.ds.af.mil>
-References: <E87DB458899A9040ACD4D627073D9EF606028EAC@VFOHMLAO11.Enterprise.afmc.ds.af.mil>
-Date: Tue, 29 Sep 2009 18:23:00 +0530
-Message-ID: <921ca19c0909290553x39e45366s1133173c033b6d34@mail.gmail.com>
-Subject: Re: XFS Question
-From: Sujit K M <sjt.kar@gmail.com>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,85 +25,206 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "Shue, David CTR USAF AFMC AFRL/RITB" <David.Shue.ctr@rl.af.mil>
-Cc: xfs@oss.sgi.com
-
-Hi,
-
-I donot think there will be any guarantee to the system unless base
-kernel is built to the RHEL 5.3 Distribution.
-I have an ubuntu 8.10 but when I had tried upgrading to ubuntu 9.04 I
-had Issues which I had to remain at 8.10.
-I think you will have to use an vanilla for the kernel on 5.3 and then
-upgrade.  Sorry will not be able to give
-you more details regarding the RedHat Distribution. Not been using
-RHEL for past 3 Years. Found Ubuntu much
-Cheaper.
-
-Thanks,
-Sujit
-
-On Tue, Sep 29, 2009 at 5:51 PM, Shue, David CTR USAF AFMC AFRL/RITB
-<David.Shue.ctr@rl.af.mil> wrote:
-> Hello,
->
->
->
-> I originally installed XFS on my RHEL 5.1 system.=A0 This system is on a
-> closed network. I would like to update the system to the latest RHEL
-> release(5.4).=A0 I=92m curious about what will happen to my XFS file syst=
-em(or
-> communication to it).=A0 When I originally set it up, I used three(3) RPM=
-=92s:
->
->
->
-> Kernel-module-xfs-#####
->
-> Xfsprogs-####
->
-> Xfsprogs-devel-####
->
->
->
-> My question is, I will perform the system update, but what will happen to=
- my
-> XFS system?=A0 Do I simply locate the above three RPM=92s for the latest =
-kernel
-> I am installing and be good to go?
->
->
->
-> I am continuing to read the helpful sites where I obtained this email.
->
->
->
-> Thank you in advance,
->
->
->
-> Dave
->
->
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
->
->
+To: xfs@oss.sgi.com
 
 
+Currently the reclaim code for the case where we don't reclaim the final
+reclaim is overly complicated.  We know that the inode is clean but instead
+of just directly reclaiming the clean inode we go through the whole
+process of marking the inode reclaimable just to directly reclaim it
+from the calling context.  Besides beeing overly complicated this introduces
+a race where iget could recycle an inode between marked reclaimable and
+actually beeing reclaimed leading to panics.
 
--- =
+This patch gets rid of the existing reclaim path, and replaces it with a
+simple call to xfs_ireclaim if the inode was clean.  While we're at it
+we also use the slightly more lax xfs_inode_clean check we'd use later
+to determine if we need to flush the inode here.
 
--- Sujit K M
+Finally get rid of xfs_reclaim function and place the remaining small
+bits of reclaim code directly into xfs_fs_destroy_inode.
 
-blog(http://kmsujit.blogspot.com/)
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reported-by: Patrick Schreurs <patrick@news-service.com>
+Reported-by: Tommy van Leeuwen <tommy@news-service.com>
+Tested-by: Patrick Schreurs <patrick@news-service.com>
+
+Index: xfs/fs/xfs/xfs_vnodeops.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_vnodeops.c	2009-09-18 09:06:33.595274598 -0300
++++ xfs/fs/xfs/xfs_vnodeops.c	2009-09-18 09:07:30.437255826 -0300
+@@ -2456,46 +2456,6 @@ xfs_set_dmattrs(
+ 	return error;
+ }
+ 
+-int
+-xfs_reclaim(
+-	xfs_inode_t	*ip)
+-{
+-
+-	xfs_itrace_entry(ip);
+-
+-	ASSERT(!VN_MAPPED(VFS_I(ip)));
+-
+-	/* bad inode, get out here ASAP */
+-	if (is_bad_inode(VFS_I(ip))) {
+-		xfs_ireclaim(ip);
+-		return 0;
+-	}
+-
+-	xfs_ioend_wait(ip);
+-
+-	ASSERT(XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0);
+-
+-	/*
+-	 * If we have nothing to flush with this inode then complete the
+-	 * teardown now, otherwise break the link between the xfs inode and the
+-	 * linux inode and clean up the xfs inode later. This avoids flushing
+-	 * the inode to disk during the delete operation itself.
+-	 *
+-	 * When breaking the link, we need to set the XFS_IRECLAIMABLE flag
+-	 * first to ensure that xfs_iunpin() will never see an xfs inode
+-	 * that has a linux inode being reclaimed. Synchronisation is provided
+-	 * by the i_flags_lock.
+-	 */
+-	if (!ip->i_update_core && (ip->i_itemp == NULL)) {
+-		xfs_ilock(ip, XFS_ILOCK_EXCL);
+-		xfs_iflock(ip);
+-		xfs_iflags_set(ip, XFS_IRECLAIMABLE);
+-		return xfs_reclaim_inode(ip, 1, XFS_IFLUSH_DELWRI_ELSE_SYNC);
+-	}
+-	xfs_inode_set_reclaim_tag(ip);
+-	return 0;
+-}
+-
+ /*
+  * xfs_alloc_file_space()
+  *      This routine allocates disk space for the given file.
+Index: xfs/fs/xfs/linux-2.6/xfs_super.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2009-09-18 09:07:15.869281043 -0300
++++ xfs/fs/xfs/linux-2.6/xfs_super.c	2009-09-18 09:12:39.301006661 -0300
+@@ -930,13 +930,39 @@ xfs_fs_alloc_inode(
+  */
+ STATIC void
+ xfs_fs_destroy_inode(
+-	struct inode	*inode)
++	struct inode		*inode)
+ {
+-	xfs_inode_t		*ip = XFS_I(inode);
++	struct xfs_inode	*ip = XFS_I(inode);
++
++	xfs_itrace_entry(ip);
+ 
+ 	XFS_STATS_INC(vn_reclaim);
+-	if (xfs_reclaim(ip))
+-		panic("%s: cannot reclaim 0x%p\n", __func__, inode);
++
++	/* bad inode, get out here ASAP */
++	if (is_bad_inode(inode))
++		goto out_reclaim;
++
++	xfs_ioend_wait(ip);
++
++	ASSERT(XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0);
++
++	/*
++	 * We should never get here with one of the reclaim flags already set.
++	 */
++	ASSERT_ALWAYS(!xfs_iflags_test(ip, XFS_IRECLAIMABLE));
++	ASSERT_ALWAYS(!xfs_iflags_test(ip, XFS_IRECLAIM));
++
++	/*
++	 * If we have nothing to flush with this inode then complete the
++	 * teardown now, otherwise delay the flush operation.
++	 */
++	if (!xfs_inode_clean(ip)) {
++		xfs_inode_set_reclaim_tag(ip);
++		return;
++	}
++
++out_reclaim:
++	xfs_ireclaim(ip);
+ }
+ 
+ /*
+Index: xfs/fs/xfs/xfs_vnodeops.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_vnodeops.h	2009-09-18 09:10:07.930003796 -0300
++++ xfs/fs/xfs/xfs_vnodeops.h	2009-09-18 09:10:11.789032549 -0300
+@@ -38,7 +38,6 @@ int xfs_symlink(struct xfs_inode *dp, st
+ 		const char *target_path, mode_t mode, struct xfs_inode **ipp,
+ 		cred_t *credp);
+ int xfs_set_dmattrs(struct xfs_inode *ip, u_int evmask, u_int16_t state);
+-int xfs_reclaim(struct xfs_inode *ip);
+ int xfs_change_file_space(struct xfs_inode *ip, int cmd,
+ 		xfs_flock64_t *bf, xfs_off_t offset, int attr_flags);
+ int xfs_rename(struct xfs_inode *src_dp, struct xfs_name *src_name,
+Index: xfs/fs/xfs/linux-2.6/xfs_sync.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_sync.c	2009-09-18 09:13:28.627003540 -0300
++++ xfs/fs/xfs/linux-2.6/xfs_sync.c	2009-09-18 09:22:33.861006462 -0300
+@@ -663,10 +663,9 @@ xfs_syncd_stop(
+ 	kthread_stop(mp->m_sync_task);
+ }
+ 
+-int
++STATIC int
+ xfs_reclaim_inode(
+ 	xfs_inode_t	*ip,
+-	int		locked,
+ 	int		sync_mode)
+ {
+ 	xfs_perag_t	*pag = xfs_get_perag(ip->i_mount, ip->i_ino);
+@@ -682,10 +681,6 @@ xfs_reclaim_inode(
+ 	    !__xfs_iflags_test(ip, XFS_IRECLAIMABLE)) {
+ 		spin_unlock(&ip->i_flags_lock);
+ 		write_unlock(&pag->pag_ici_lock);
+-		if (locked) {
+-			xfs_ifunlock(ip);
+-			xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-		}
+ 		return -EAGAIN;
+ 	}
+ 	__xfs_iflags_set(ip, XFS_IRECLAIM);
+@@ -704,10 +699,8 @@ xfs_reclaim_inode(
+ 	 * We get the flush lock regardless, though, just to make sure
+ 	 * we don't free it while it is being flushed.
+ 	 */
+-	if (!locked) {
+-		xfs_ilock(ip, XFS_ILOCK_EXCL);
+-		xfs_iflock(ip);
+-	}
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	xfs_iflock(ip);
+ 
+ 	/*
+ 	 * In the case of a forced shutdown we rely on xfs_iflush() to
+@@ -778,7 +771,7 @@ xfs_reclaim_inode_now(
+ 	}
+ 	read_unlock(&pag->pag_ici_lock);
+ 
+-	return xfs_reclaim_inode(ip, 0, flags);
++	return xfs_reclaim_inode(ip, flags);
+ }
+ 
+ int
+Index: xfs/fs/xfs/linux-2.6/xfs_sync.h
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_sync.h	2009-09-18 09:13:28.639004162 -0300
++++ xfs/fs/xfs/linux-2.6/xfs_sync.h	2009-09-18 09:13:38.354031011 -0300
+@@ -44,7 +44,6 @@ void xfs_quiesce_attr(struct xfs_mount *
+ 
+ void xfs_flush_inodes(struct xfs_inode *ip);
+ 
+-int xfs_reclaim_inode(struct xfs_inode *ip, int locked, int sync_mode);
+ int xfs_reclaim_inodes(struct xfs_mount *mp, int mode);
+ 
+ void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
 
 _______________________________________________
 xfs mailing list
