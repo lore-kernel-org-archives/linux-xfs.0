@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n8TDlYpj207178 for <xfs@oss.sgi.com>; Tue, 29 Sep 2009 08:47:35 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E374148A39D
-	for <xfs@oss.sgi.com>; Tue, 29 Sep 2009 06:48:56 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id HitbwFqysDOVYnWU for
-	<xfs@oss.sgi.com>; Tue, 29 Sep 2009 06:48:56 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1Msd4a-0005k8-IX
-	for xfs@oss.sgi.com; Tue, 29 Sep 2009 13:48:56 +0000
-Date: Tue, 29 Sep 2009 09:48:56 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfs: simplify inode teardown
-Message-ID: <20090929134856.GA17864@infradead.org>
+	n8TFiZUT213746 for <xfs@oss.sgi.com>; Tue, 29 Sep 2009 10:44:36 -0500
+Received: from qw-out-1920.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8720A1B3078A
+	for <xfs@oss.sgi.com>; Tue, 29 Sep 2009 08:45:57 -0700 (PDT)
+Received: from qw-out-1920.google.com (qw-out-1920.google.com [74.125.92.145])
+	by cuda.sgi.com with ESMTP id n2L3HpRVsmtEuRG4 for
+	<xfs@oss.sgi.com>; Tue, 29 Sep 2009 08:45:57 -0700 (PDT)
+Received: by qw-out-1920.google.com with SMTP id 5so1674880qwc.32
+	for <xfs@oss.sgi.com>; Tue, 29 Sep 2009 08:45:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
+In-Reply-To: <20090929130022.GD11375@infradead.org>
+References: <46b8a8850909271220w372d60c3s18a543ed00825082@mail.gmail.com>
+	<20090928172137.GA21868@infradead.org>
+	<46b8a8850909281036j1bdbf61h18b4134912735d92@mail.gmail.com>
+	<20090929130022.GD11375@infradead.org>
+Date: Tue, 29 Sep 2009 08:45:56 -0700
+Message-ID: <46b8a8850909290845o22589155ud1ab403b761e734c@mail.gmail.com>
+Subject: Re: Possible small bug in xfsprogs-dev/db/metadump.c
+From: Richard Sharpe <realrichardsharpe@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,206 +28,86 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
+On Tue, Sep 29, 2009 at 6:00 AM, Christoph Hellwig <hch@infradead.org> wrot=
+e:
+> On Mon, Sep 28, 2009 at 10:36:13AM -0700, Richard Sharpe wrote:
+>> Well, yes there is, but that is the problem I encountered. It is level
+>> as passed in when starting at the top of the tree, which is obtained
+>> from the levels value in the AGF, and is decremented by one on each
+>> recursion:
+>>
+>> =A0 =A0 =A0 =A0 if (!(*func)(iocur_top->data, agno, agbno, level - 1, bt=
+ype, arg))
+>>
+>> However, what should really be looked at is the value bb_level in the
+>> header in each free-space Btree node.
+>
+> I think bother are equally valid. =A0The one passed in fro mthe top should
+> always be right while the ondisk one might be corrupted.
 
-Currently the reclaim code for the case where we don't reclaim the final
-reclaim is overly complicated.  We know that the inode is clean but instead
-of just directly reclaiming the clean inode we go through the whole
-process of marking the inode reclaimable just to directly reclaim it
-from the calling context.  Besides beeing overly complicated this introduces
-a race where iget could recycle an inode between marked reclaimable and
-actually beeing reclaimed leading to panics.
+Well, yes, but then anything could be corrupted on disk, including the
+superblock and the pointers in interior nodes in the free space Btree.
 
-This patch gets rid of the existing reclaim path, and replaces it with a
-simple call to xfs_ireclaim if the inode was clean.  While we're at it
-we also use the slightly more lax xfs_inode_clean check we'd use later
-to determine if we need to flush the inode here.
+>> After I made that change to my changes, I started being able to
+>> properly count all leaf nodes and free extents, and the numbers came
+>> out where I expected them to be (instead of not seeing many leaf nodes
+>> and vastly undercounting free extents).
+>
+> Still not quite understanding your problem here. =A0Do you have a tool
+> of your own that doesn't start from the btree root but only walks
+> subtrees? =A0In that case you need to look at the on-disk level unless
+> you can find out easily what level you start at. =A0But I don't think we
+> need this for the existing tools that always walk from the root.
 
-Finally get rid of xfs_reclaim function and place the remaining small
-bits of reclaim code directly into xfs_fs_destroy_inode.
+No, I was walking down from the root of the tree.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reported-by: Patrick Schreurs <patrick@news-service.com>
-Reported-by: Tommy van Leeuwen <tommy@news-service.com>
-Tested-by: Patrick Schreurs <patrick@news-service.com>
+However, now I understand what is going on.
 
-Index: xfs/fs/xfs/xfs_vnodeops.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_vnodeops.c	2009-09-18 09:06:33.595274598 -0300
-+++ xfs/fs/xfs/xfs_vnodeops.c	2009-09-18 09:07:30.437255826 -0300
-@@ -2456,46 +2456,6 @@ xfs_set_dmattrs(
- 	return error;
- }
- 
--int
--xfs_reclaim(
--	xfs_inode_t	*ip)
--{
--
--	xfs_itrace_entry(ip);
--
--	ASSERT(!VN_MAPPED(VFS_I(ip)));
--
--	/* bad inode, get out here ASAP */
--	if (is_bad_inode(VFS_I(ip))) {
--		xfs_ireclaim(ip);
--		return 0;
--	}
--
--	xfs_ioend_wait(ip);
--
--	ASSERT(XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0);
--
--	/*
--	 * If we have nothing to flush with this inode then complete the
--	 * teardown now, otherwise break the link between the xfs inode and the
--	 * linux inode and clean up the xfs inode later. This avoids flushing
--	 * the inode to disk during the delete operation itself.
--	 *
--	 * When breaking the link, we need to set the XFS_IRECLAIMABLE flag
--	 * first to ensure that xfs_iunpin() will never see an xfs inode
--	 * that has a linux inode being reclaimed. Synchronisation is provided
--	 * by the i_flags_lock.
--	 */
--	if (!ip->i_update_core && (ip->i_itemp == NULL)) {
--		xfs_ilock(ip, XFS_ILOCK_EXCL);
--		xfs_iflock(ip);
--		xfs_iflags_set(ip, XFS_IRECLAIMABLE);
--		return xfs_reclaim_inode(ip, 1, XFS_IFLUSH_DELWRI_ELSE_SYNC);
--	}
--	xfs_inode_set_reclaim_tag(ip);
--	return 0;
--}
--
- /*
-  * xfs_alloc_file_space()
-  *      This routine allocates disk space for the given file.
-Index: xfs/fs/xfs/linux-2.6/xfs_super.c
-===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2009-09-18 09:07:15.869281043 -0300
-+++ xfs/fs/xfs/linux-2.6/xfs_super.c	2009-09-18 09:12:39.301006661 -0300
-@@ -930,13 +930,39 @@ xfs_fs_alloc_inode(
-  */
- STATIC void
- xfs_fs_destroy_inode(
--	struct inode	*inode)
-+	struct inode		*inode)
- {
--	xfs_inode_t		*ip = XFS_I(inode);
-+	struct xfs_inode	*ip = XFS_I(inode);
-+
-+	xfs_itrace_entry(ip);
- 
- 	XFS_STATS_INC(vn_reclaim);
--	if (xfs_reclaim(ip))
--		panic("%s: cannot reclaim 0x%p\n", __func__, inode);
-+
-+	/* bad inode, get out here ASAP */
-+	if (is_bad_inode(inode))
-+		goto out_reclaim;
-+
-+	xfs_ioend_wait(ip);
-+
-+	ASSERT(XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0);
-+
-+	/*
-+	 * We should never get here with one of the reclaim flags already set.
-+	 */
-+	ASSERT_ALWAYS(!xfs_iflags_test(ip, XFS_IRECLAIMABLE));
-+	ASSERT_ALWAYS(!xfs_iflags_test(ip, XFS_IRECLAIM));
-+
-+	/*
-+	 * If we have nothing to flush with this inode then complete the
-+	 * teardown now, otherwise delay the flush operation.
-+	 */
-+	if (!xfs_inode_clean(ip)) {
-+		xfs_inode_set_reclaim_tag(ip);
-+		return;
-+	}
-+
-+out_reclaim:
-+	xfs_ireclaim(ip);
- }
- 
- /*
-Index: xfs/fs/xfs/xfs_vnodeops.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_vnodeops.h	2009-09-18 09:10:07.930003796 -0300
-+++ xfs/fs/xfs/xfs_vnodeops.h	2009-09-18 09:10:11.789032549 -0300
-@@ -38,7 +38,6 @@ int xfs_symlink(struct xfs_inode *dp, st
- 		const char *target_path, mode_t mode, struct xfs_inode **ipp,
- 		cred_t *credp);
- int xfs_set_dmattrs(struct xfs_inode *ip, u_int evmask, u_int16_t state);
--int xfs_reclaim(struct xfs_inode *ip);
- int xfs_change_file_space(struct xfs_inode *ip, int cmd,
- 		xfs_flock64_t *bf, xfs_off_t offset, int attr_flags);
- int xfs_rename(struct xfs_inode *src_dp, struct xfs_name *src_name,
-Index: xfs/fs/xfs/linux-2.6/xfs_sync.c
-===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_sync.c	2009-09-18 09:13:28.627003540 -0300
-+++ xfs/fs/xfs/linux-2.6/xfs_sync.c	2009-09-18 09:22:33.861006462 -0300
-@@ -663,10 +663,9 @@ xfs_syncd_stop(
- 	kthread_stop(mp->m_sync_task);
- }
- 
--int
-+STATIC int
- xfs_reclaim_inode(
- 	xfs_inode_t	*ip,
--	int		locked,
- 	int		sync_mode)
- {
- 	xfs_perag_t	*pag = xfs_get_perag(ip->i_mount, ip->i_ino);
-@@ -682,10 +681,6 @@ xfs_reclaim_inode(
- 	    !__xfs_iflags_test(ip, XFS_IRECLAIMABLE)) {
- 		spin_unlock(&ip->i_flags_lock);
- 		write_unlock(&pag->pag_ici_lock);
--		if (locked) {
--			xfs_ifunlock(ip);
--			xfs_iunlock(ip, XFS_ILOCK_EXCL);
--		}
- 		return -EAGAIN;
- 	}
- 	__xfs_iflags_set(ip, XFS_IRECLAIM);
-@@ -704,10 +699,8 @@ xfs_reclaim_inode(
- 	 * We get the flush lock regardless, though, just to make sure
- 	 * we don't free it while it is being flushed.
- 	 */
--	if (!locked) {
--		xfs_ilock(ip, XFS_ILOCK_EXCL);
--		xfs_iflock(ip);
--	}
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+	xfs_iflock(ip);
- 
- 	/*
- 	 * In the case of a forced shutdown we rely on xfs_iflush() to
-@@ -778,7 +771,7 @@ xfs_reclaim_inode_now(
- 	}
- 	read_unlock(&pag->pag_ici_lock);
- 
--	return xfs_reclaim_inode(ip, 0, flags);
-+	return xfs_reclaim_inode(ip, flags);
- }
- 
- int
-Index: xfs/fs/xfs/linux-2.6/xfs_sync.h
-===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_sync.h	2009-09-18 09:13:28.639004162 -0300
-+++ xfs/fs/xfs/linux-2.6/xfs_sync.h	2009-09-18 09:13:38.354031011 -0300
-@@ -44,7 +44,6 @@ void xfs_quiesce_attr(struct xfs_mount *
- 
- void xfs_flush_inodes(struct xfs_inode *ip);
- 
--int xfs_reclaim_inode(struct xfs_inode *ip, int locked, int sync_mode);
- int xfs_reclaim_inodes(struct xfs_mount *mp, int mode);
- 
- void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
+Assume a free space tree with levels =3D 3 (from the AGF). However, not
+all leaf nodes will be at depth 3 in the tree, some will be at depth 2
+in the tree.
+
+However, in scanfunc_freesp we see:
+
+        if (level =3D=3D 0)
+                return 1;
+
+        numrecs =3D be16_to_cpu(block->bb_numrecs);
+        if (numrecs > mp->m_alloc_mxr[1]) {
+                if (show_warnings)
+                        print_warning("invalid numrecs (%u) in %s block %u/=
+%u",
+                                numrecs, typtab[btype].name, agno, agbno);
+                return 1;
+        }
+
+If we hit level =3D=3D 0 then we exit, however, for a leaf node that is at
+depth 2 (level 1, but bb_level =3D=3D 0) we will see numrecs >
+mp->m_alloc_mxr[1] and will also skip such records (ie, will not
+recurse into them).
+
+However, if the user does "metadump -w" they will see warnings that
+are bogus and suggests that the author was not really aware of the
+real structure of the tree.
+
+I do think it is a minor issue since it will not lead to dropping any
+records as I first feared.
+
+Since I wanted to count the number of free extents in the free-space
+trees I needed to actually see all leaf nodes, and thus it became a
+problem for me.
+
+-- =
+
+Regards,
+Richard Sharpe
 
 _______________________________________________
 xfs mailing list
