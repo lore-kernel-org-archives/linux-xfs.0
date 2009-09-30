@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n8UCdgl2019731 for <xfs@oss.sgi.com>; Wed, 30 Sep 2009 07:39:44 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8DC33490744
-	for <xfs@oss.sgi.com>; Wed, 30 Sep 2009 05:41:05 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 6Y0zsovbuwEDmCYK for
-	<xfs@oss.sgi.com>; Wed, 30 Sep 2009 05:41:05 -0700 (PDT)
-Date: Wed, 30 Sep 2009 08:41:04 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: 2.6.31 xfs_fs_destroy_inode: cannot reclaim
-Message-ID: <20090930124104.GA7463@infradead.org>
-References: <89c4f90c0909160327l1a1fdaa2g131cd7fa249ad529@mail.gmail.com>
-	<20090917185953.GA24590@infradead.org>
-	<4AC1DE4E.6060102@news-service.com>
-	<20090929125702.GC11375@infradead.org>
-	<4AC33797.9050607@news-service.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4AC33797.9050607@news-service.com>
+	n8UKevM2047982 for <xfs@oss.sgi.com>; Wed, 30 Sep 2009 15:40:57 -0500
+Received: from sj-iport-5.cisco.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CC586171D260
+	for <xfs@oss.sgi.com>; Wed, 30 Sep 2009 13:42:19 -0700 (PDT)
+Received: from sj-iport-5.cisco.com (sj-iport-5.cisco.com [171.68.10.87]) by
+	cuda.sgi.com with ESMTP id TCkKsxIW2skD0RUu for
+	<xfs@oss.sgi.com>; Wed, 30 Sep 2009 13:42:19 -0700 (PDT)
+Received: from sj-core-2.cisco.com (sj-core-2.cisco.com [171.71.177.254])
+	by sj-dkim-4.cisco.com (8.12.11/8.12.11) with ESMTP id n8UKgI38001764
+	for <xfs@oss.sgi.com>; Wed, 30 Sep 2009 13:42:18 -0700
+Received: from xbh-sjc-221.amer.cisco.com (xbh-sjc-221.cisco.com
+	[128.107.191.63])
+	by sj-core-2.cisco.com (8.13.8/8.14.3) with ESMTP id n8UKgIw7027429
+	for <xfs@oss.sgi.com>; Wed, 30 Sep 2009 20:42:18 GMT
+Subject: Extended attribute caching questions
+From: Richard <rtroxell@cisco.com>
+Date: Wed, 30 Sep 2009 13:42:03 -0700
+Message-Id: <1254343323.4670.3749.camel@rtroxell-laptop>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,25 +32,79 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Patrick Schreurs <patrick@news-service.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Tommy van Leeuwen <tommy@news-service.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Sep 30, 2009 at 12:48:55PM +0200, Patrick Schreurs wrote:
-> Christoph Hellwig wrote:
->> On Tue, Sep 29, 2009 at 12:15:42PM +0200, Patrick Schreurs wrote:
->>> Update: We've applied this patch on 2 servers. They didn't crash 
->>> until  now. Today we've applied the patch on 6 other servers.
->>
->> Thanks.  I'll prepare a patch for upstream as the patch is extremly
->> useful by itself.  IF other issues show up I'll fix it on top of it.
->
-> Unfortunately we had a crashing server last night. Please see  
-> attachment. Hope it helps. Please advice if there is anything we could  
-> do to assist you.
+Hello All,
 
-Can't really see much there except some common code.  Can you boot
-the machine with a larger console resolution (vga= kernel parameter)
-so a full backtrace can be captured?
+Terribly sorry for the long message. I have been digging for attribute
+caching details everywhere, but cant seem to find any complete answers.
+
+I am reading up on extended attributes, and see a great potential for
+reducing the complexity of managing metadata associated with a file. The
+approach I would be replacing uses a scheme where by meta files are
+stored in the same directory as the data file with fixed tags appended
+to the original file's name.
+
+foo/bar
+foo/bar.XXX
+foo/bar.YYY
+
+The idea, as expected, is to place the meta information beneath foo/bar,
+with large attributes XXX and YYY. 
+
+In my case, I have 2 - 3 meta file containing roughly 3k of packed data.
+For simplicity / syscall overhead sakes it will be most conveinient for
+me to simply stuff the existing formats within the attributes, treating
+them like forks. I also need to account for potentially large volumes of
+files (ex: 1 Million or greater) spread across the filesystem.
+
+In this scenario (small attribute count, large attribute size), the
+ideal solution would be to have a special short-form attribute type that
+directly references a standalone extent(s); again, much like a file
+fork. The benefit here, is that the single inode would be able to map
+the data of 3 different files, resulting in a 3:1 reduction in I/O
+lookup overhead and a 3:1 reduction of inode/dentry cache entries.
+
+While this would be ideal for my particular case, my understanding is
+that, in this scenario, XFS will create 'leaf attributes.' This is
+understandable given the N/V interface of attributes, however, I get the
+impression that the overall performance could be worse than the 3 file
+approach, as the leaf block will place an additional I/O between the
+inode and meta data.
+
+Though the I/O seems to be higher in this scenario, the simplcity of the
+attribute design might still outweigh the performance impact. Once more,
+given a mostly-read scenario, the effective I/O overhead could be
+greatly reduced depending on how the leaf block / attribute data are
+cached.
+
+In the typical 'file' scenario, dentries and inodes will be cached in
+their respective VFS caches, and file data will be cached in association
+with the inode's address space via the page cache. To my knowledge, none
+of these caches gel with the concept of extended attributes, and thus,
+if caching is happening, it would be up to the filesystem to implement
+it.
+
+That said, here are my basic questions...
+
+1) How are leaf blocks cached? What are the cached entries lifetimes,
+and when will the cache shrink?
+
+2) How will attribute data be cached, and what is its lifetime? Is there
+a XFS-maintained equivalent of a page cache?
+
+3) Does an extended attribute modification update the inode? This would
+imply 3 updates for adding an attribute: inode, leaf block, data
+block(s)... or more if the temporary state of leaf attribute while
+allocating external blocks?
+
+
+Also, I am happy to trace through the code, if someone can point me to
+the respective functions / files.
+
+Thanks,
+Richard
+
 
 _______________________________________________
 xfs mailing list
