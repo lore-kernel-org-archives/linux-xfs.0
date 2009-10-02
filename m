@@ -1,21 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9257Rn5146722 for <xfs@oss.sgi.com>; Fri, 2 Oct 2009 00:07:27 -0500
-Received: from mail-bw0-f216.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 931D3499FF6
-	for <xfs@oss.sgi.com>; Thu,  1 Oct 2009 22:08:49 -0700 (PDT)
-Received: from mail-bw0-f216.google.com (mail-bw0-f216.google.com
-	[209.85.218.216]) by cuda.sgi.com with ESMTP id
-	HaHxQuIkqqYDoZPT for <xfs@oss.sgi.com>;
-	Thu, 01 Oct 2009 22:08:49 -0700 (PDT)
-Received: by bwz12 with SMTP id 12so701083bwz.20
-	for <xfs@oss.sgi.com>; Thu, 01 Oct 2009 22:08:48 -0700 (PDT)
+	n9285hEf154515 for <xfs@oss.sgi.com>; Fri, 2 Oct 2009 03:05:44 -0500
+Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3367A14BE362
+	for <xfs@oss.sgi.com>; Fri,  2 Oct 2009 01:07:04 -0700 (PDT)
+Received: from mailsrv1.zmi.at (mailsrv5.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id SxLUZu32FppXayDx for
+	<xfs@oss.sgi.com>; Fri, 02 Oct 2009 01:07:04 -0700 (PDT)
+Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv1.zmi.at (Postfix) with ESMTP id 57628729
+	for <xfs@oss.sgi.com>; Fri,  2 Oct 2009 10:07:00 +0200 (CEST)
+Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id F3FA140016F
+	for <xfs@oss.sgi.com>; Fri,  2 Oct 2009 10:07:01 +0200 (CEST)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: XFS/driver bug or bad drive?
+Date: Fri, 2 Oct 2009 10:05:40 +0200
+References: <20091001232759.GA12832@opus.istwok.net>
+In-Reply-To: <20091001232759.GA12832@opus.istwok.net>
 MIME-Version: 1.0
-Date: Thu, 1 Oct 2009 22:08:48 -0700
-Message-ID: <46b8a8850910012208n789eeacfva03c0cf404201f0d@mail.gmail.com>
-Subject: Apology: Was: Re: Possible small bug in xfsprogs-dev/db/metadump.c
-From: Richard Sharpe <realrichardsharpe@gmail.com>
+Content-Disposition: inline
+Message-Id: <200910021005.40697@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,64 +38,27 @@ Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Sep 29, 2009 at 5:16 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Tue, Sep 29, 2009 at 08:45:56AM -0700, Richard Sharpe wrote:
->> However, now I understand what is going on.
->>
->> Assume a free space tree with levels =3D 3 (from the AGF). However, not
->> all leaf nodes will be at depth 3 in the tree, some will be at depth 2
->> in the tree.
->
-> No, that is not possible. By definition, a consistent filesystem
-> image has all leaf nodes at level zero.
+On Freitag 02 Oktober 2009 David Engel wrote:
+> The drive in question is a Samsung HD753LJ. =A0I have two of these
+> drives and have had to do three replacements for various reasons in
+> <10 months of use.
 
-I got back to this today and reproduced my test case, and you are correct.
+Yes, that Samsung crap. Of the very few drives we had (the 1TB version), =
 
-[some deletia]
+all got broken quickly, and we replaced them with Hitachis. It's a pity, =
 
-> This sounds to me like the log has not been replayed on this
-> filesystem. AFAICT, when looking at a raw disk image of an XFS
-> filesystem, the only way to get leaf nodes at non-zero levels is to
-> have a dirty log. i.e. the log contains allocation/free transactions
-> that have resulted in a multi-level rebalance of the tree
-> that have not been replayed and written to disk and hence on-disk
-> image of the tree is unbalanced. When the log is replayed, the
-> on disk image will get updated and the tree will appear balanced
-> with all leaves at level 0.
+as they had a nice price, but when they it your data, it's priceless.
 
-Dunno. I just umounted again ...
-
->> However, if the user does "metadump -w" they will see warnings that
->> are bogus and suggests that the author was not really aware of the
->> real structure of the tree.
->
-> I think he was aware of the structure. ;)
-
-It was, in fact, I who was confused ... I apologize for the statement I mad=
-e.
-
-> It seems to me that you are trying to use the wrong tool to walk
-> free space trees and interpret the number of extents. =A0xfs_metadump
-> is intended to capture the exact layout of the filesystem metadata
-> so that it can be reproduced exactly in a different environment. It
-> was not intended as a method of interpreting the potentially
-> inconsistent metadata that it records.
->
-> xfs_db does what you are trying to do. It already has commands that
-> walk the per AG free space trees and tells you the number of
-> extents, gives an extent size histogram, etc....
->
-> Cheers,
->
-> Dave.
-
+mfg zmi
 -- =
 
-Regards,
-Richard Sharpe
+// Michael Monnerie, Ing.BSc    -----      http://it-management.at
+// Tel: 0660 / 415 65 31                      .network.your.ideas.
+// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
+// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
+// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
 
 _______________________________________________
 xfs mailing list
