@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n92Gthmt192328 for <xfs@oss.sgi.com>; Fri, 2 Oct 2009 11:55:44 -0500
-Received: from cdptpa-omtalb.mail.rr.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 42FC111966BC
-	for <xfs@oss.sgi.com>; Fri,  2 Oct 2009 09:57:05 -0700 (PDT)
-Received: from cdptpa-omtalb.mail.rr.com (cdptpa-omtalb.mail.rr.com
-	[75.180.132.121]) by cuda.sgi.com with ESMTP id
-	aTayhVeiCHHOdyuU for <xfs@oss.sgi.com>;
-	Fri, 02 Oct 2009 09:57:05 -0700 (PDT)
-Date: Fri, 2 Oct 2009 11:57:04 -0500
-From: David Engel <david@istwok.net>
-Subject: Re: XFS/driver bug or bad drive?
-Message-ID: <20091002165704.GA17558@opus.istwok.net>
-References: <20091001232759.GA12832@opus.istwok.net>
-	<4AC54BDA.20806@sandeen.net>
+	n95BUXge197558 for <xfs@OSS.SGI.com>; Mon, 5 Oct 2009 06:30:34 -0500
+Received: from ty.sabi.co.UK (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4DCA71D782CA
+	for <xfs@OSS.SGI.com>; Mon,  5 Oct 2009 04:31:57 -0700 (PDT)
+Received: from ty.sabi.co.UK (82-69-39-138.dsl.in-addr.zen.co.uk
+	[82.69.39.138]) by cuda.sgi.com with ESMTP id UsK1I2PfslCezgKe
+	for <xfs@OSS.SGI.com>; Mon, 05 Oct 2009 04:31:57 -0700 (PDT)
+Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.uk)
+	by ty.sabi.co.UK with esmtp(Exim 4.63 #1) id 1Mule0-0003ay-Sl
+	for <xfs@OSS.SGI.com>; Mon, 05 Oct 2009 12:22:20 +0100
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4AC54BDA.20806@sandeen.net>
+Message-ID: <19145.55016.313563.304290@tree.ty.sabi.co.uk>
+Date: Mon, 5 Oct 2009 12:22:16 +0100
+Subject: Re: XFS Question
+In-Reply-To: <E87DB458899A9040ACD4D627073D9EF606028EAC@VFOHMLAO11.Enterprise.afmc.ds.af.mil>
+References: <E87DB458899A9040ACD4D627073D9EF606028EAC@VFOHMLAO11.Enterprise.afmc.ds.af.mil>
+From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,33 +30,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, Eric Sandeen <sandeen@sandeen.net>
+To: Linux XFS <xfs@oss.sgi.com>
 
-On Thu, Oct 01, 2009 at 07:39:54PM -0500, Eric Sandeen wrote:
-> These are all storage errors, not xfs.  I suppose it could be
-> differing IO patterns from one fs or the other that trips it up, but
-> nothing above is related to an xfs bug; any xfs problems are in
-> response to the above IO errors, maybe a hardware problem or a
-> driver problem, not sure - but most likely a hardware issue I think.
-> You might point smartctl at the drive and see what it says.
 
-I agree it shouldn't be an xfs bug.  I thought it was strange, though,
-that the problem only seemed to show up with xfs on 2.6.30.x.  IO
-pattern sensitivity wouldn't surprise me, but I wanted to check all my
-bases before giving up on the drive.
+> [ ... ]  XFS on my RHEL 5.1 system. [ ... ]  update the system
+> to the latest RHEL release(5.4). [ ... ] My question is, I
+> will perform the system update, but what will happen to my XFS
+> system?
 
-Michael Monnerie wrote:
-> Yes, that Samsung crap. Of the very few drives we had (the 1TB version), 
-> all got broken quickly, and we replaced them with Hitachis. It's a pity, 
-> as they had a nice price, but when they it your data, it's priceless.
+Your XFS system was not part of RHEL and will continue to be so.
+It will continue to work.
 
-I've used mostly Samsung drives for several years.  This particular
-750GB model is the only one that I consider a lemon.
+> Do I simply locate the above three RPM's for the latest kernel
+> I am installing and be good to go?
 
-David
--- 
-David Engel
-david@istwok.net
+RHEL5.1 and RHEL5.4 are just updates of the same OS, and RH sort
+of guarantees binary compatibility between various updates of
+the same OS. This actually works in practice as well as in
+theory, especially for the kernel (RH slip on other stuff) and
+its modules.
+
+RHEL5.4 kernels have an XFS kernel module included, but RH only
+supports XFS as an optional "layered product", that is an
+additional support license (like GFS, RHCS and others).
+
+If you are using RHEL because you want RH support, that is
+probably something you want to look into. RH presumably added
+XFS as a layered product precisely because so many customers
+like you were using it even if not supported.
+
+Otherwise consider using the new ElRepo repository, or the XFS
+packages from CentOS Plus or Scientific Linux (yes, they work
+with RHEL too, both kernel modules and userspace modules).
 
 _______________________________________________
 xfs mailing list
