@@ -1,13 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n96KZIvV091123 for <xfs@oss.sgi.com>; Tue, 6 Oct 2009 15:35:18 -0500
-Message-Id: <20091006203642.877846388@bombadil.infradead.org>
-Date: Tue, 06 Oct 2009 16:29:27 -0400
+	n96KZIdg091126 for <xfs@oss.sgi.com>; Tue, 6 Oct 2009 15:35:19 -0500
+Message-Id: <20091006203642.496121199@bombadil.infradead.org>
+Date: Tue, 06 Oct 2009 16:29:26 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 2/5] [PATCH 5/5] xfs: fix xfs_quiesce_data 
+Subject: [PATCH 1/5] xfs: implement ->dirty_inode to fix timestamp handling
 References: <20091006202925.459164320@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-fix-xfs_quiesce_data
+Content-Disposition: inline; filename=xfs-add-dirty-inode
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,45 +24,336 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: aelder@sgi.com, xfs@oss.sgi.com, akpm@linux-foundation.org, sfr@canb.auug.org.au
 Cc: linux-fsdevel@vger.kernel.org
 
-From: Dave Chinner <david@fromorbit.com>
+This is picking up on Felix's repost of Dave's patch to implement a
+.dirty_inode method.  We really need this notification because
+the VFS keeps writing directly into the inode structure instead
+of going through methods to update this state.  In addition to
+the long-known atime issue we now also have a caller in VM code
+that updates c/mtime that way for shared writeable mmaps.  And
+I found another one that no one has noticed in practice in the FIFO
+code.
 
-We need to do a synchronous xfs_sync_fsdata to make sure the superblock
-actually is on disk when we return.
+So implement ->dirty_inode to set i_update_core whenever the
+inode gets externally dirties, and switch the c/mtime handling to
+the same scheme we already use for atime (always picking up
+the value from the Linux inode).
 
-Also remove SYNC_BDFLUSH flag to xfs_sync_inodes because that particular
-flag is never checked.
+Note that this patch also removes the xfs_synchronize_atime call
+in xfs_reclaim it was superflous as we already synchronize the time
+when writing the inode via the log (xfs_inode_item_format) or the
+normal buffers (xfs_iflush_int).
 
-Move xfs_filestream_flush call later to only release inodes after they
-have been written out.
+In addition also remove the I_CLEAR check before copying the Linux
+timestamps - now that we always have the Linux inode available
+we can always use the timestampts in it.
+
+Also switch to just using file_update_time for regular reads/writes -
+that will get us all optimization done to it for free and make
+sure we notice early when it breaks.
 
 
-Signed-off-by: Dave Chinner <david@fromorbit.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Felix Blyakher <felixb@sgi.com>
 
-Index: linux-2.6/fs/xfs/linux-2.6/xfs_sync.c
+Index: xfs/fs/xfs/linux-2.6/xfs_iops.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_sync.c	2009-08-27 20:06:39.889355294 -0300
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_sync.c	2009-08-27 20:08:01.169357854 -0300
-@@ -426,14 +426,16 @@ xfs_quiesce_data(
- 	/* push non-blocking */
- 	xfs_sync_data(mp, 0);
- 	xfs_qm_sync(mp, SYNC_TRYLOCK);
--	xfs_filestream_flush(mp);
+--- xfs.orig/fs/xfs/linux-2.6/xfs_iops.c	2009-09-22 08:48:10.887003499 -0300
++++ xfs/fs/xfs/linux-2.6/xfs_iops.c	2009-09-22 19:52:52.755254281 -0300
+@@ -57,19 +57,22 @@
+ #include <linux/fiemap.h>
  
--	/* push and block */
-+	/* push and block till complete */
- 	xfs_sync_data(mp, SYNC_WAIT);
- 	xfs_qm_sync(mp, SYNC_WAIT);
+ /*
+- * Bring the atime in the XFS inode uptodate.
+- * Used before logging the inode to disk or when the Linux inode goes away.
++ * Bring the timestamps in the XFS inode uptodate.
++ *
++ * Used before writing the inode to disk.
+  */
+ void
+-xfs_synchronize_atime(
++xfs_synchronize_times(
+ 	xfs_inode_t	*ip)
+ {
+ 	struct inode	*inode = VFS_I(ip);
  
-+	/* drop inode references pinned by filestreams */
-+	xfs_filestream_flush(mp);
+-	if (!(inode->i_state & I_CLEAR)) {
+-		ip->i_d.di_atime.t_sec = (__int32_t)inode->i_atime.tv_sec;
+-		ip->i_d.di_atime.t_nsec = (__int32_t)inode->i_atime.tv_nsec;
+-	}
++	ip->i_d.di_atime.t_sec = (__int32_t)inode->i_atime.tv_sec;
++	ip->i_d.di_atime.t_nsec = (__int32_t)inode->i_atime.tv_nsec;
++	ip->i_d.di_ctime.t_sec = (__int32_t)inode->i_ctime.tv_sec;
++	ip->i_d.di_ctime.t_nsec = (__int32_t)inode->i_ctime.tv_nsec;
++	ip->i_d.di_mtime.t_sec = (__int32_t)inode->i_mtime.tv_sec;
++	ip->i_d.di_mtime.t_nsec = (__int32_t)inode->i_mtime.tv_nsec;
+ }
+ 
+ /*
+@@ -106,32 +109,20 @@ xfs_ichgtime(
+ 	if ((flags & XFS_ICHGTIME_MOD) &&
+ 	    !timespec_equal(&inode->i_mtime, &tv)) {
+ 		inode->i_mtime = tv;
+-		ip->i_d.di_mtime.t_sec = (__int32_t)tv.tv_sec;
+-		ip->i_d.di_mtime.t_nsec = (__int32_t)tv.tv_nsec;
+ 		sync_it = 1;
+ 	}
+ 	if ((flags & XFS_ICHGTIME_CHG) &&
+ 	    !timespec_equal(&inode->i_ctime, &tv)) {
+ 		inode->i_ctime = tv;
+-		ip->i_d.di_ctime.t_sec = (__int32_t)tv.tv_sec;
+-		ip->i_d.di_ctime.t_nsec = (__int32_t)tv.tv_nsec;
+ 		sync_it = 1;
+ 	}
+ 
+ 	/*
+-	 * We update the i_update_core field _after_ changing
+-	 * the timestamps in order to coordinate properly with
+-	 * xfs_iflush() so that we don't lose timestamp updates.
+-	 * This keeps us from having to hold the inode lock
+-	 * while doing this.  We use the SYNCHRONIZE macro to
+-	 * ensure that the compiler does not reorder the update
+-	 * of i_update_core above the timestamp updates above.
++	 * Update complete - now make sure everyone knows that the inode
++	 * is dirty.
+ 	 */
+-	if (sync_it) {
+-		SYNCHRONIZE();
+-		ip->i_update_core = 1;
++	if (sync_it)
+ 		xfs_mark_inode_dirty_sync(ip);
+-	}
+ }
+ 
+ /*
+@@ -514,10 +505,8 @@ xfs_vn_getattr(
+ 	stat->gid = ip->i_d.di_gid;
+ 	stat->ino = ip->i_ino;
+ 	stat->atime = inode->i_atime;
+-	stat->mtime.tv_sec = ip->i_d.di_mtime.t_sec;
+-	stat->mtime.tv_nsec = ip->i_d.di_mtime.t_nsec;
+-	stat->ctime.tv_sec = ip->i_d.di_ctime.t_sec;
+-	stat->ctime.tv_nsec = ip->i_d.di_ctime.t_nsec;
++	stat->mtime = inode->i_mtime;
++	stat->ctime = inode->i_ctime;
+ 	stat->blocks =
+ 		XFS_FSB_TO_BB(mp, ip->i_d.di_nblocks + ip->i_delayed_blks);
+ 
+Index: xfs/fs/xfs/linux-2.6/xfs_super.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2009-09-22 08:48:10.893009991 -0300
++++ xfs/fs/xfs/linux-2.6/xfs_super.c	2009-09-22 19:52:52.756254128 -0300
+@@ -977,6 +977,28 @@ xfs_fs_inode_init_once(
+ }
+ 
+ /*
++ * Dirty the XFS inode when mark_inode_dirty_sync() is called so that
++ * we catch unlogged VFS level updates to the inode. Care must be taken
++ * here - the transaction code calls mark_inode_dirty_sync() to mark the
++ * VFS inode dirty in a transaction and clears the i_update_core field;
++ * it must clear the field after calling mark_inode_dirty_sync() to
++ * correctly indicate that the dirty state has been propagated into the
++ * inode log item.
++ *
++ * We need the barrier() to maintain correct ordering between unlogged
++ * updates and the transaction commit code that clears the i_update_core
++ * field. This requires all updates to be completed before marking the
++ * inode dirty.
++ */
++STATIC void
++xfs_fs_dirty_inode(
++	struct inode	*inode)
++{
++	barrier();
++	XFS_I(inode)->i_update_core = 1;
++}
 +
- 	/* write superblock and hoover up shutdown errors */
--	error = xfs_sync_fsdata(mp, 0);
-+	error = xfs_sync_fsdata(mp, SYNC_WAIT);
++/*
+  * Attempt to flush the inode, this will actually fail
+  * if the inode is pinned, but we dirty the inode again
+  * at the point when it is unpinned after a log write,
+@@ -1539,6 +1561,7 @@ xfs_fs_get_sb(
+ static struct super_operations xfs_super_operations = {
+ 	.alloc_inode		= xfs_fs_alloc_inode,
+ 	.destroy_inode		= xfs_fs_destroy_inode,
++	.dirty_inode		= xfs_fs_dirty_inode,
+ 	.write_inode		= xfs_fs_write_inode,
+ 	.clear_inode		= xfs_fs_clear_inode,
+ 	.put_super		= xfs_fs_put_super,
+Index: xfs/fs/xfs/xfs_inode_item.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_inode_item.c	2009-09-22 08:48:10.911012564 -0300
++++ xfs/fs/xfs/xfs_inode_item.c	2009-09-22 19:52:52.758254104 -0300
+@@ -232,6 +232,15 @@ xfs_inode_item_format(
+ 	nvecs	     = 1;
  
- 	/* flush data-only devices */
- 	if (mp->m_rtdev_targp)
+ 	/*
++	 * Make sure the linux inode is dirty. We do this before
++	 * clearing i_update_core as the VFS will call back into
++	 * XFS here and set i_update_core, so we need to dirty the
++	 * inode first so that the ordering of i_update_core and
++	 * unlogged modifications still works as described below.
++	 */
++	xfs_mark_inode_dirty_sync(ip);
++
++	/*
+ 	 * Clear i_update_core if the timestamps (or any other
+ 	 * non-transactional modification) need flushing/logging
+ 	 * and we're about to log them with the rest of the core.
+@@ -263,14 +272,9 @@ xfs_inode_item_format(
+ 	}
+ 
+ 	/*
+-	 * Make sure to get the latest atime from the Linux inode.
++	 * Make sure to get the latest timestamps from the Linux inode.
+ 	 */
+-	xfs_synchronize_atime(ip);
+-
+-	/*
+-	 * make sure the linux inode is dirty
+-	 */
+-	xfs_mark_inode_dirty_sync(ip);
++	xfs_synchronize_times(ip);
+ 
+ 	vecp->i_addr = (xfs_caddr_t)&ip->i_d;
+ 	vecp->i_len  = sizeof(struct xfs_icdinode);
+Index: xfs/fs/xfs/linux-2.6/xfs_aops.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_aops.c	2009-09-22 08:48:10.898003853 -0300
++++ xfs/fs/xfs/linux-2.6/xfs_aops.c	2009-09-22 19:52:52.763276812 -0300
+@@ -215,7 +215,6 @@ xfs_setfilesize(
+ 
+ 	if (ip->i_d.di_size < isize) {
+ 		ip->i_d.di_size = isize;
+-		ip->i_update_core = 1;
+ 		xfs_mark_inode_dirty_sync(ip);
+ 	}
+ 
+Index: xfs/fs/xfs/xfs_dfrag.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dfrag.c	2009-09-22 08:48:10.921004479 -0300
++++ xfs/fs/xfs/xfs_dfrag.c	2009-09-22 19:52:52.766277264 -0300
+@@ -206,10 +206,10 @@ xfs_swap_extents(
+ 	 * process that the file was not changed out from
+ 	 * under it.
+ 	 */
+-	if ((sbp->bs_ctime.tv_sec != ip->i_d.di_ctime.t_sec) ||
+-	    (sbp->bs_ctime.tv_nsec != ip->i_d.di_ctime.t_nsec) ||
+-	    (sbp->bs_mtime.tv_sec != ip->i_d.di_mtime.t_sec) ||
+-	    (sbp->bs_mtime.tv_nsec != ip->i_d.di_mtime.t_nsec)) {
++	if ((sbp->bs_ctime.tv_sec != VFS_I(ip)->i_ctime.tv_sec) ||
++	    (sbp->bs_ctime.tv_nsec != VFS_I(ip)->i_ctime.tv_nsec) ||
++	    (sbp->bs_mtime.tv_sec != VFS_I(ip)->i_mtime.tv_sec) ||
++	    (sbp->bs_mtime.tv_nsec != VFS_I(ip)->i_mtime.tv_nsec)) {
+ 		error = XFS_ERROR(EBUSY);
+ 		goto out_unlock;
+ 	}
+Index: xfs/fs/xfs/xfs_itable.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_itable.c	2009-09-22 08:48:10.933025843 -0300
++++ xfs/fs/xfs/xfs_itable.c	2009-09-22 19:52:52.772267552 -0300
+@@ -59,6 +59,7 @@ xfs_bulkstat_one_iget(
+ {
+ 	xfs_icdinode_t	*dic;	/* dinode core info pointer */
+ 	xfs_inode_t	*ip;		/* incore inode pointer */
++	struct inode	*inode;
+ 	int		error;
+ 
+ 	error = xfs_iget(mp, NULL, ino,
+@@ -72,6 +73,7 @@ xfs_bulkstat_one_iget(
+ 	ASSERT(ip->i_imap.im_blkno != 0);
+ 
+ 	dic = &ip->i_d;
++	inode = VFS_I(ip);
+ 
+ 	/* xfs_iget returns the following without needing
+ 	 * further change.
+@@ -83,16 +85,19 @@ xfs_bulkstat_one_iget(
+ 	buf->bs_uid = dic->di_uid;
+ 	buf->bs_gid = dic->di_gid;
+ 	buf->bs_size = dic->di_size;
++
+ 	/*
+-	 * We are reading the atime from the Linux inode because the
+-	 * dinode might not be uptodate.
++	 * We need to read the timestamps from the Linux inode because
++	 * the VFS keeps writing directly into the inode structure instead
++	 * of telling us about the updates.
+ 	 */
+-	buf->bs_atime.tv_sec = VFS_I(ip)->i_atime.tv_sec;
+-	buf->bs_atime.tv_nsec = VFS_I(ip)->i_atime.tv_nsec;
+-	buf->bs_mtime.tv_sec = dic->di_mtime.t_sec;
+-	buf->bs_mtime.tv_nsec = dic->di_mtime.t_nsec;
+-	buf->bs_ctime.tv_sec = dic->di_ctime.t_sec;
+-	buf->bs_ctime.tv_nsec = dic->di_ctime.t_nsec;
++	buf->bs_atime.tv_sec = inode->i_atime.tv_sec;
++	buf->bs_atime.tv_nsec = inode->i_atime.tv_nsec;
++	buf->bs_mtime.tv_sec = inode->i_mtime.tv_sec;
++	buf->bs_mtime.tv_nsec = inode->i_mtime.tv_nsec;
++	buf->bs_ctime.tv_sec = inode->i_ctime.tv_sec;
++	buf->bs_ctime.tv_nsec = inode->i_ctime.tv_nsec;
++
+ 	buf->bs_xflags = xfs_ip2xflags(ip);
+ 	buf->bs_extsize = dic->di_extsize << mp->m_sb.sb_blocklog;
+ 	buf->bs_extents = dic->di_nextents;
+Index: xfs/fs/xfs/linux-2.6/xfs_lrw.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_lrw.c	2009-09-22 08:48:10.904004129 -0300
++++ xfs/fs/xfs/linux-2.6/xfs_lrw.c	2009-09-22 19:52:52.780033486 -0300
+@@ -667,7 +667,7 @@ start:
+ 		xip->i_new_size = new_size;
+ 
+ 	if (likely(!(ioflags & IO_INVIS)))
+-		xfs_ichgtime(xip, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
++		file_update_time(file);
+ 
+ 	/*
+ 	 * If the offset is beyond the size of the file, we have a couple
+Index: xfs/fs/xfs/xfs_inode.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_inode.c	2009-09-22 08:48:10.941020717 -0300
++++ xfs/fs/xfs/xfs_inode.c	2009-09-22 19:52:52.792033200 -0300
+@@ -3068,9 +3068,9 @@ xfs_iflush_int(
+ 	SYNCHRONIZE();
+ 
+ 	/*
+-	 * Make sure to get the latest atime from the Linux inode.
++	 * Make sure to get the latest timestamps from the Linux inode.
+ 	 */
+-	xfs_synchronize_atime(ip);
++	xfs_synchronize_times(ip);
+ 
+ 	if (XFS_TEST_ERROR(be16_to_cpu(dip->di_magic) != XFS_DINODE_MAGIC,
+ 			       mp, XFS_ERRTAG_IFLUSH_1, XFS_RANDOM_IFLUSH_1)) {
+Index: xfs/fs/xfs/xfs_inode.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_inode.h	2009-09-22 08:48:10.956024374 -0300
++++ xfs/fs/xfs/xfs_inode.h	2009-09-22 19:52:52.800020321 -0300
+@@ -504,7 +504,7 @@ void		xfs_ichgtime(xfs_inode_t *, int);
+ void		xfs_lock_inodes(xfs_inode_t **, int, uint);
+ void		xfs_lock_two_inodes(xfs_inode_t *, xfs_inode_t *, uint);
+ 
+-void		xfs_synchronize_atime(xfs_inode_t *);
++void		xfs_synchronize_times(xfs_inode_t *);
+ void		xfs_mark_inode_dirty_sync(xfs_inode_t *);
+ 
+ #if defined(XFS_INODE_TRACE)
+Index: xfs/fs/xfs/xfs_vnodeops.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_vnodeops.c	2009-09-22 08:48:10.968004392 -0300
++++ xfs/fs/xfs/xfs_vnodeops.c	2009-09-22 19:52:52.805256045 -0300
+@@ -2476,12 +2476,6 @@ xfs_reclaim(
+ 	ASSERT(XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0);
+ 
+ 	/*
+-	 * Make sure the atime in the XFS inode is correct before freeing the
+-	 * Linux inode.
+-	 */
+-	xfs_synchronize_atime(ip);
+-
+-	/*
+ 	 * If we have nothing to flush with this inode then complete the
+ 	 * teardown now, otherwise break the link between the xfs inode and the
+ 	 * linux inode and clean up the xfs inode later. This avoids flushing
 
 _______________________________________________
 xfs mailing list
