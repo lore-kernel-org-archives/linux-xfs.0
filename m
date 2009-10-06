@@ -1,22 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n96IkX39084762 for <xfs@oss.sgi.com>; Tue, 6 Oct 2009 13:46:33 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 789D14A7B94
-	for <xfs@oss.sgi.com>; Tue,  6 Oct 2009 11:47:58 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id wO6gi9GD51f4fpy0 for
-	<xfs@oss.sgi.com>; Tue, 06 Oct 2009 11:47:58 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1MvF4o-0001jd-Km
-	for xfs@oss.sgi.com; Tue, 06 Oct 2009 18:47:58 +0000
-Date: Tue, 6 Oct 2009 14:47:58 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] mkfs: add discard support
-Message-ID: <20091006184758.GA4780@infradead.org>
+	n96Ihund084604 for <xfs@oss.sgi.com>; Tue, 6 Oct 2009 13:43:56 -0500
+Received: from postoffice2.aconex.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EF09EBD61D0
+	for <xfs@oss.sgi.com>; Tue,  6 Oct 2009 11:45:20 -0700 (PDT)
+Received: from postoffice2.aconex.com (mail.aconex.com [203.89.202.182]) by
+	cuda.sgi.com with ESMTP id HMWuEh8qM8VzZahs for
+	<xfs@oss.sgi.com>; Tue, 06 Oct 2009 11:45:20 -0700 (PDT)
+Date: Wed, 7 Oct 2009 05:45:11 +1100 (EST)
+From: Nathan Scott <nscott@aconex.com>
+Message-ID: <1964191006.21461254854711239.JavaMail.root@mail-au.aconex.com>
+In-Reply-To: <4ACB6686.9080205@sandeen.net>
+Subject: Re: moving libhandle to /usr
 MIME-Version: 1.0
-Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,61 +26,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>, vapier@gentoo.org, xfs@oss.sgi.com
 
-Call the BLKDISCARD ioctl to mark the whole disk as unused before creating
-a new filesystem.  This will allow SSDs, Arrays with thin provisioning support
-and virtual machines to make smarter allocation decisions.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+----- "Eric Sandeen" <sandeen@sandeen.net> wrote:
 
-Index: xfsprogs-dev/mkfs/xfs_mkfs.c
-===================================================================
---- xfsprogs-dev.orig/mkfs/xfs_mkfs.c	2009-10-06 18:02:34.000000000 +0000
-+++ xfsprogs-dev/mkfs/xfs_mkfs.c	2009-10-06 18:03:55.000000000 +0000
-@@ -605,6 +605,29 @@ done:
- 	free(buf);
- }
- 
-+#ifdef __linux__
-+
-+#ifndef BLKDISCARD
-+#define BLKDISCARD	_IO(0x12,119)
-+#endif
-+
-+static void
-+discard_blocks(dev_t dev, __uint64_t nsectors)
-+{
-+	int fd = libxfs_device_to_fd(dev);
-+	__uint64_t range[2] = { 0, nsectors << 9 };
-+
-+	/*
-+	 * We intentionally ignore errors from the discard ioctl.  It is
-+	 * not nessecary for the mkfs functionality but just an optimization.
-+	 */
-+	if (fd > 0)
-+		ioctl(fd, BLKDISCARD, &range);
-+}
-+#else
-+#define discard_blocks(dev, nsectors)
-+#endif
-+
- int
- main(
- 	int			argc,
-@@ -1645,6 +1668,12 @@ main(
- 		}
- 	}
- 
-+	discard_blocks(xi.ddev, xi.dsize);
-+	if (xi.rtdev)
-+		discard_blocks(xi.rtdev, xi.rtsize);
-+	if (xi.logdev && xi.logdev != xi.ddev)
-+		discard_blocks(xi.logdev, xi.logBBsize);
-+
- 	if (!liflag && !ldflag)
- 		loginternal = xi.logdev == 0;
- 	if (xi.logname)
+> Christoph Hellwig wrote:
+> > Currently we install the versioned libhandle into /lib by default,
+> > and all other libraries into /usr.  Given that no program in /
+> actually
+> > uses libhandle this seems rather awkward to me.  From Mike's
+> comments
+> > in the past I think Gentoo already installs it into /usr anyway.
+> > 
+> > Is there anything speaking against moving all libraries to /usr and
+> > switching Debian/Fedora to that aswell? 
+> > 
+> 
+> Seems fine to me;
+
+*nod* - looks ok to me too.
+
+-- 
+Nathan
 
 _______________________________________________
 xfs mailing list
