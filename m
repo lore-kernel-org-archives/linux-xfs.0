@@ -1,22 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n96JPKti087035 for <xfs@oss.sgi.com>; Tue, 6 Oct 2009 14:25:21 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 173A84A7C61
-	for <xfs@oss.sgi.com>; Tue,  6 Oct 2009 12:26:46 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id xiui415TF7LawXYY for
-	<xfs@oss.sgi.com>; Tue, 06 Oct 2009 12:26:46 -0700 (PDT)
-Date: Tue, 6 Oct 2009 15:26:46 -0400
-From: Christoph Hellwig <hch@infradead.org>
+	n96JNFnB086894 for <xfs@oss.sgi.com>; Tue, 6 Oct 2009 14:23:15 -0500
+Received: from postoffice2.aconex.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BE6581747B64
+	for <xfs@oss.sgi.com>; Tue,  6 Oct 2009 12:24:40 -0700 (PDT)
+Received: from postoffice2.aconex.com (mail.aconex.com [203.89.202.182]) by
+	cuda.sgi.com with ESMTP id h7Tr0MwM5iIjdTl9 for
+	<xfs@oss.sgi.com>; Tue, 06 Oct 2009 12:24:40 -0700 (PDT)
+Date: Wed, 7 Oct 2009 06:24:33 +1100 (EST)
+From: Nathan Scott <nscott@aconex.com>
+Message-ID: <837780486.21741254857073773.JavaMail.root@mail-au.aconex.com>
+In-Reply-To: <1235789111.21721254856913943.JavaMail.root@mail-au.aconex.com>
 Subject: Re: [PATCH] mkfs: add discard support
-Message-ID: <20091006192646.GA30105@infradead.org>
-References: <1235789111.21721254856913943.JavaMail.root@mail-au.aconex.com>
-	<837780486.21741254857073773.JavaMail.root@mail-au.aconex.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <837780486.21741254857073773.JavaMail.root@mail-au.aconex.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,16 +26,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Nathan Scott <nscott@aconex.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Wed, Oct 07, 2009 at 06:24:33AM +1100, Nathan Scott wrote:
-> It might be a bit cleaner to add this in with the existing platform-
-> specific code in libxfs/linux.c (or perhaps include/platform_defs.h)
-> with wrappers for the other platforms, rather than putting it directly
-> in mkfs like this?  repair may want to use this someday too, I guess.
 
-Yeah, that might be better. 
+----- "Christoph Hellwig" <hch@infradead.org> wrote:
+
+> Index: xfsprogs-dev/mkfs/xfs_mkfs.c
+> ===================================================================
+> --- xfsprogs-dev.orig/mkfs/xfs_mkfs.c	2009-10-06 18:02:34.000000000
+> +0000
+> +++ xfsprogs-dev/mkfs/xfs_mkfs.c	2009-10-06 18:03:55.000000000 +0000
+> @@ -605,6 +605,29 @@ done:
+>  	free(buf);
+>  }
+>  
+> +#ifdef __linux__
+> +
+> +#ifndef BLKDISCARD
+> +#define BLKDISCARD	_IO(0x12,119)
+> +#endif
+
+It might be a bit cleaner to add this in with the existing platform-
+specific code in libxfs/linux.c (or perhaps include/platform_defs.h)
+with wrappers for the other platforms, rather than putting it directly
+in mkfs like this?  repair may want to use this someday too, I guess.
+
+cheers.
+
+-- 
+Nathan
 
 _______________________________________________
 xfs mailing list
