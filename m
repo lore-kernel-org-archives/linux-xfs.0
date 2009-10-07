@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n97KDPRS207644 for <xfs@oss.sgi.com>; Wed, 7 Oct 2009 15:13:26 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C445B4ACA63
-	for <xfs@oss.sgi.com>; Wed,  7 Oct 2009 13:14:52 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id ErihCHAgDmnlSMvQ for
-	<xfs@oss.sgi.com>; Wed, 07 Oct 2009 13:14:52 -0700 (PDT)
-Date: Wed, 7 Oct 2009 16:14:51 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfsprogs: allow using libblkid instead of libdisk
-Message-ID: <20091007201451.GA30192@infradead.org>
-References: <20091006185252.GA10250@infradead.org>
-	<4ACCE37F.4070006@sandeen.net>
+	n97KMj9m208358 for <xfs@oss.sgi.com>; Wed, 7 Oct 2009 15:22:46 -0500
+Received: from one.firstfloor.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 77579BD9945
+	for <xfs@oss.sgi.com>; Wed,  7 Oct 2009 13:24:10 -0700 (PDT)
+Received: from one.firstfloor.org (one.firstfloor.org [213.235.205.2]) by
+	cuda.sgi.com with ESMTP id HD3KcIEcKeSzYxir for
+	<xfs@oss.sgi.com>; Wed, 07 Oct 2009 13:24:10 -0700 (PDT)
+Subject: Re: [PATCH] mkfs: add discard support
+From: Andi Kleen <andi@firstfloor.org>
+References: <20091006184758.GA4780@infradead.org>
+	<20091007044215.GK9464@discord.disaster>
+Date: Wed, 07 Oct 2009 22:24:07 +0200
+In-Reply-To: <20091007044215.GK9464@discord.disaster> (Dave Chinner's message
+	of "Wed, 7 Oct 2009 15:42:16 +1100")
+Message-ID: <87iqerymu0.fsf@basil.nowhere.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4ACCE37F.4070006@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,28 +29,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@infradead.org>, util-linux-ng@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Wed, Oct 07, 2009 at 01:52:47PM -0500, Eric Sandeen wrote:
-> Christoph Hellwig wrote:
->> Add a new --enable-blkid switch to use libblkid from util-linux to detect
->> the device geometry and check for existing partitions or filesystem on a
->> device.  Note that this requires the latest blkid from util-linux-ng git
->> for the topology calls, odler ones won't work.  If I had a little more
->> autoconf fu we might be able to detect a too early one, but right now it
->> just fails if it's too old and --enable-blkid is specified.
+Dave Chinner <david@fromorbit.com> writes:
+
+> On Tue, Oct 06, 2009 at 02:47:58PM -0400, Christoph Hellwig wrote:
+>> Call the BLKDISCARD ioctl to mark the whole disk as unused before creating
+>> a new filesystem.  This will allow SSDs, Arrays with thin provisioning support
+>> and virtual machines to make smarter allocation decisions.
 >
-> Here's some autoconf fu to check for blkid topo support; this changes it to
-> default to using blkid, optionally disable-able, and disables it automatically
-> if the topo stuff isn't found (I think ;)
+> Good idea, but perhaps the discard should be optional rather than
+> unconditional.  My immediate thought was the SOP for setting up
+> encrypted devices - fill the empty disk with random data before
+> setting up the encrypted device. If you then send it a discard....
 
-Thanks, I've folded it into my patch.
+This actually doesn't really work for SSDs, because SSDs typically
+have more internal capacity than they advertise and when you fill
+it up then it will just allocate new blocks and leave some of the
+blocks with the existing data around. 
 
-Btw, something I forgot to ask with the original patch:  Does anyone
-have a use for the fstype binary that doesn't actually get installed?
-It would be a lot cleaner to just nuke it instead of building it
-conditionally.
+AFAIK there's no way to really reliably delete something physically
+on a SSD short of applying a hammer.
+
+For thin provisioning arrays you have similar problems.
+
+So I think Christoph's case of making it default is fine.
+
+-Andi
 
 _______________________________________________
 xfs mailing list
