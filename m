@@ -1,22 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n974esn6160969 for <xfs@oss.sgi.com>; Tue, 6 Oct 2009 23:40:55 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1FD464A9319
-	for <xfs@oss.sgi.com>; Tue,  6 Oct 2009 21:42:19 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	1Yee9rBYa7urPu34 for <xfs@oss.sgi.com>;
-	Tue, 06 Oct 2009 21:42:19 -0700 (PDT)
-Date: Wed, 7 Oct 2009 15:42:16 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] mkfs: add discard support
-Message-ID: <20091007044215.GK9464@discord.disaster>
-References: <20091006184758.GA4780@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20091006184758.GA4780@infradead.org>
+	n974iI2H161233 for <xfs@oss.sgi.com>; Tue, 6 Oct 2009 23:44:19 -0500
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 0/8] Add vsprintf extension %pU to print UUID/GUIDs and use it
+Date: Tue,  6 Oct 2009 21:45:33 -0700
+Message-Id: <1254890742-28245-1-git-send-email-joe@perches.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,29 +14,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+Cc: cluster-devel@redhat.com, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, Neil Brown <neilb@suse.de>, Alex Elder <aelder@sgi.com>, Mauro Carvalho Chehab <mchehab@infradead.org>, linux-raid@vger.kernel.org, Artem Bityutskiy <dedekind@infradead.org>, Laurent Pinchart <laurent.pinchart@skynet.be>, linux-mtd@lists.infradead.org, Matt Mackall <mpm@selenic.com>, linux-media@vger.kernel.org, Steven Whitehouse <swhiteho@redhat.com>, Adrian Hunter <adrian.hunter@nokia.com>
 
-On Tue, Oct 06, 2009 at 02:47:58PM -0400, Christoph Hellwig wrote:
-> Call the BLKDISCARD ioctl to mark the whole disk as unused before creating
-> a new filesystem.  This will allow SSDs, Arrays with thin provisioning support
-> and virtual machines to make smarter allocation decisions.
+Using %pU makes an x86 defconfig image a bit smaller
 
-Good idea, but perhaps the discard should be optional rather than
-unconditional.  My immediate thought was the SOP for setting up
-encrypted devices - fill the empty disk with random data before
-setting up the encrypted device. If you then send it a discard....
+before:	$ size vmlinux
+   text    data     bss     dec     hex filename
+6976022  679572 1359668 9015262  898fde vmlinux
 
-Cheers,
+after:	$ size vmlinux
+   text	   data	    bss	    dec	    hex	filename
+6975863	 679652	1359668	9015183	 898f8f	vmlinux
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Joe Perches (8):
+  lib/vsprintf.c: Add %pU to print UUID/GUIDs
+  random.c: Use %pU to print UUIDs
+  drivers/firmware/dmi_scan.c: Use %pUB to print UUIDs
+  drivers/md/md.c: Use %pU to print UUIDs
+  drivers/media/video/uvc: Use %pUl to print UUIDs
+  fs/gfs2/sys.c: Use %pUB to print UUIDs
+  fs/ubifs: Use %pUB to print UUIDs
+  fs/xfs/xfs_log_recover.c: Use %pU to print UUIDs
+
+ drivers/char/random.c                |   10 +---
+ drivers/firmware/dmi_scan.c          |    5 +--
+ drivers/md/md.c                      |   16 ++------
+ drivers/media/video/uvc/uvc_ctrl.c   |   69 ++++++++++++++++------------------
+ drivers/media/video/uvc/uvc_driver.c |    7 +--
+ drivers/media/video/uvc/uvcvideo.h   |   10 -----
+ fs/gfs2/sys.c                        |   16 +------
+ fs/ubifs/debug.c                     |    9 +---
+ fs/ubifs/super.c                     |    7 +---
+ fs/xfs/xfs_log_recover.c             |   14 ++-----
+ lib/vsprintf.c                       |   62 ++++++++++++++++++++++++++++++-
+ 11 files changed, 114 insertions(+), 111 deletions(-)
 
 _______________________________________________
 xfs mailing list
