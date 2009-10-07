@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n97K9qmC207415 for <xfs@oss.sgi.com>; Wed, 7 Oct 2009 15:09:54 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 806BC4AC896
-	for <xfs@oss.sgi.com>; Wed,  7 Oct 2009 13:11:18 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 8OaKdv1CrzCaNnA2 for
-	<xfs@oss.sgi.com>; Wed, 07 Oct 2009 13:11:18 -0700 (PDT)
-Date: Wed, 7 Oct 2009 16:11:18 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfsprogs: update configure defaults
-Message-ID: <20091007201118.GA25462@infradead.org>
-References: <20091006151458.GA2560@infradead.org>
-	<4ACCE594.3050207@sandeen.net>
+	n97M1ZnS214197 for <xfs@oss.sgi.com>; Wed, 7 Oct 2009 17:01:35 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EE273BDA634
+	for <xfs@oss.sgi.com>; Wed,  7 Oct 2009 15:03:00 -0700 (PDT)
+Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
+	cuda.sgi.com with ESMTP id FAMOcx1rXpF2thnC for
+	<xfs@oss.sgi.com>; Wed, 07 Oct 2009 15:03:00 -0700 (PDT)
+Message-ID: <4ACD1013.6000502@sandeen.net>
+Date: Wed, 07 Oct 2009 17:02:59 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4ACCE594.3050207@sandeen.net>
+Subject: Re: [PATCH] xfsprogs: add missing CHANGES entry
+References: <20091006151102.GA30964@infradead.org>
+In-Reply-To: <20091006151102.GA30964@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,22 +23,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Wed, Oct 07, 2009 at 02:01:40PM -0500, Eric Sandeen wrote:
-> This almost works for me in fedora, except that fedora's rpm uses a %configure
-> which sets --libdir=/usr/lib64 and then I end up with stuff installed in
-> /usr/lib6464 \o/
->
-> With this patch things are ok again if I add --disable-lib64 :
+Christoph Hellwig wrote:
+> The 3.0.4 release for debian actually had a few more changes than documented.
+> Add the missing entries so that they appear in the right spot for future
+> releases.
+> 
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Thanks, I've added it.  Need to think a bit more about the
-enable/disable-lib64 default, though.
+looks fine to me,
+
+Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
+
+> Index: xfsprogs-dev/doc/CHANGES
+> ===================================================================
+> --- xfsprogs-dev.orig/doc/CHANGES	2009-10-06 10:51:31.609004058 -0300
+> +++ xfsprogs-dev/doc/CHANGES	2009-10-06 10:54:13.695006442 -0300
+> @@ -1,4 +1,10 @@
+>  xfsprogs-3.0.4 (17 September 2009)
+> +	- Fix a memory leak in xfsprogs.
+> +	- Increase hash chain length in xfsprogs when running out of memory.
+> +	- Fix dmsetup invocation in libdisk to avoid warnings during mkfs
+> +	  on multipath devices.
+> +	- Fix the -V option to various installed tools.
+> +	- Small internal fixes to please the clang semantical analysis tool.
+>  	- Debian packaging updates.
+>  	- Rework Makepkgs and Makefiles to improve deb generation.
+>  
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
