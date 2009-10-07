@@ -1,27 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n97FIkVU197443 for <xfs@oss.sgi.com>; Wed, 7 Oct 2009 10:18:46 -0500
-Received: from cdptpa-omtalb.mail.rr.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DE3851751545
-	for <xfs@oss.sgi.com>; Wed,  7 Oct 2009 08:20:12 -0700 (PDT)
-Received: from cdptpa-omtalb.mail.rr.com (cdptpa-omtalb.mail.rr.com
-	[75.180.132.122]) by cuda.sgi.com with ESMTP id
-	umk68YrrWL6RcQpn for <xfs@oss.sgi.com>;
-	Wed, 07 Oct 2009 08:20:12 -0700 (PDT)
-Date: Wed, 7 Oct 2009 10:20:11 -0500
-From: David Engel <david@istwok.net>
-Subject: Re: XFS/driver bug or bad drive?
-Message-ID: <20091007152011.GA19915@opus.istwok.net>
-References: <20091001232759.GA12832@opus.istwok.net>
-	<4AC54BDA.20806@sandeen.net>
-	<20091002165704.GA17558@opus.istwok.net>
-	<20091007112959.GA17132@aurora.pimp.org.za>
-	<4ACC9699.70900@sandeen.net>
-	<20091007140431.GB29528@aurora.pimp.org.za>
+	n97J0F0Z204581 for <xfs@oss.sgi.com>; Wed, 7 Oct 2009 14:00:15 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8E9D9BD9BC6
+	for <xfs@oss.sgi.com>; Wed,  7 Oct 2009 12:01:41 -0700 (PDT)
+Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
+	cuda.sgi.com with ESMTP id NeEisWB5mB9Jhtqi for
+	<xfs@oss.sgi.com>; Wed, 07 Oct 2009 12:01:41 -0700 (PDT)
+Message-ID: <4ACCE594.3050207@sandeen.net>
+Date: Wed, 07 Oct 2009 14:01:40 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20091007140431.GB29528@aurora.pimp.org.za>
+Subject: Re: [PATCH] xfsprogs: update configure defaults
+References: <20091006151458.GA2560@infradead.org>
+In-Reply-To: <20091006151458.GA2560@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,46 +23,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael-John Turner <mj@mjturner.net>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Wed, Oct 07, 2009 at 03:04:31PM +0100, Michael-John Turner wrote:
-> On Wed, Oct 07, 2009 at 08:24:41AM -0500, Eric Sandeen wrote:
-> > Firmware bug?  I still think it can't be an xfs problem, and I'm not
-> > just trying to be protective of our turf ;)
-> 
-> Could very well be a firmware bug - FWIW, my drive has version 1AA01109.
+Christoph Hellwig wrote:
+> Currenly xfsprogs has two different sets for configurating it, those
+> in the configure.in template, and those passed to configure by the
+> toplevel Makefile when just running make.
+>
+> Those in the makefile make a lot more sense as they install xfsprogs
+> into the / vs /usr split used by most distributions, and enable multi-libs
+> when detected.
+>
+> This patch changes the build system to also use the same defaults when
+> running ./configure.  To do this we get rid of some of the hacky
+> autoconf abuse we had in the past in xfsprogs and just use the normal
+> default sbindir and libdir variables for /usr/sbin an /usr/lib respecticly
+> and define new root_sbindir and root_libdir variables for those few
+> binaries installed into /.  The installation to / is disabled if the
+> user chooses a non-default exex prefix.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+>   
 
-A firmware bug wouldn't surprise me.  FWIW, here are my firmware
-versions and latest information.
+This almost works for me in fedora, except that fedora's rpm uses a %configure
+which sets --libdir=/usr/lib64 and then I end up with stuff installed in
+/usr/lib6464 \o/
 
-The problematic drive has firmware version 1AA01110.  I don't trust
-that specific drive, don't really trust that model anymore, so I
-retired it and bought a new drive to replace it.
+With this patch things are ok again if I add --disable-lib64 :
 
-The other HD753LJ I have (also replacement) has firmware version
-1AA01110 too.  This drive hasn't shown any problems yet, but I will be
-testing it more after I finish moving some files around.
 
-> Some searching online suggests that others have solved similar problems by
-> replacing their SATA cables. I'll give that a try but, as my issue isn't
-> reproducible (subsequent cvs updates haven't given any problems), it'll be
-> difficult to know immediately if a faulty cable was the problem.
+diff --git a/configure.in b/configure.in
+index 35a1e6f..78ac522 100644
+--- a/configure.in
++++ b/configure.in
+@@ -58,7 +58,14 @@ NONE:NONE | NONE:/usr | /usr:*)
+   root_sbindir='/sbin'
+   AC_SUBST([root_sbindir])
+ 
+-  root_libdir='/lib'
++  case $libdir in
++  *64)
++    root_libdir='/lib64'
++    ;;
++  *)
++    root_libdir='/lib'
++    ;;
++   esac
+   AC_SUBST([root_libdir])
+ esac
 
-I probably ran across all of the same stuff.  I tried multiple cables,
-multiple SATA ports and multiple host systems.  The problem was nearly
-100% on the intended system.  I don't know how frequent the problem
-was on the second system since I stopped testing on it after the first
-failure confirmed the problem was not specific to the original system.
 
-David
--- 
-David Engel
-david@istwok.net
+ 
 
 _______________________________________________
 xfs mailing list
