@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n97J0F0Z204581 for <xfs@oss.sgi.com>; Wed, 7 Oct 2009 14:00:15 -0500
+	n97IpNbq204301 for <xfs@oss.sgi.com>; Wed, 7 Oct 2009 13:51:24 -0500
 Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8E9D9BD9BC6
-	for <xfs@oss.sgi.com>; Wed,  7 Oct 2009 12:01:41 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3C165BD8F57
+	for <xfs@oss.sgi.com>; Wed,  7 Oct 2009 11:52:48 -0700 (PDT)
 Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id NeEisWB5mB9Jhtqi for
-	<xfs@oss.sgi.com>; Wed, 07 Oct 2009 12:01:41 -0700 (PDT)
-Message-ID: <4ACCE594.3050207@sandeen.net>
-Date: Wed, 07 Oct 2009 14:01:40 -0500
+	cuda.sgi.com with ESMTP id j4p89F8x7Yp0AA5P for
+	<xfs@oss.sgi.com>; Wed, 07 Oct 2009 11:52:48 -0700 (PDT)
+Message-ID: <4ACCE37F.4070006@sandeen.net>
+Date: Wed, 07 Oct 2009 13:52:47 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfsprogs: update configure defaults
-References: <20091006151458.GA2560@infradead.org>
-In-Reply-To: <20091006151458.GA2560@infradead.org>
+Subject: Re: [PATCH] xfsprogs: allow using libblkid instead of libdisk
+References: <20091006185252.GA10250@infradead.org>
+In-Reply-To: <20091006185252.GA10250@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,57 +28,76 @@ Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+Cc: util-linux-ng@vger.kernel.org, xfs@oss.sgi.com
 
 Christoph Hellwig wrote:
-> Currenly xfsprogs has two different sets for configurating it, those
-> in the configure.in template, and those passed to configure by the
-> toplevel Makefile when just running make.
->
-> Those in the makefile make a lot more sense as they install xfsprogs
-> into the / vs /usr split used by most distributions, and enable multi-libs
-> when detected.
->
-> This patch changes the build system to also use the same defaults when
-> running ./configure.  To do this we get rid of some of the hacky
-> autoconf abuse we had in the past in xfsprogs and just use the normal
-> default sbindir and libdir variables for /usr/sbin an /usr/lib respecticly
-> and define new root_sbindir and root_libdir variables for those few
-> binaries installed into /.  The installation to / is disabled if the
-> user chooses a non-default exex prefix.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
->   
+> Add a new --enable-blkid switch to use libblkid from util-linux to detect
+> the device geometry and check for existing partitions or filesystem on a
+> device.  Note that this requires the latest blkid from util-linux-ng git
+> for the topology calls, odler ones won't work.  If I had a little more
+> autoconf fu we might be able to detect a too early one, but right now it
+> just fails if it's too old and --enable-blkid is specified.
 
-This almost works for me in fedora, except that fedora's rpm uses a %configure
-which sets --libdir=/usr/lib64 and then I end up with stuff installed in
-/usr/lib6464 \o/
+Here's some autoconf fu to check for blkid topo support; this changes it to
+default to using blkid, optionally disable-able, and disables it automatically
+if the topo stuff isn't found (I think ;)
 
-With this patch things are ok again if I add --disable-lib64 :
-
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
 
 diff --git a/configure.in b/configure.in
-index 35a1e6f..78ac522 100644
+index 78ac522..f75fad1 100644
 --- a/configure.in
 +++ b/configure.in
-@@ -58,7 +58,14 @@ NONE:NONE | NONE:/usr | /usr:*)
-   root_sbindir='/sbin'
-   AC_SUBST([root_sbindir])
+@@ -35,11 +35,10 @@ AC_ARG_ENABLE(termcap,
+ 	test $enable_termcap = yes && libtermcap="-ltermcap",)
+ AC_SUBST(libtermcap)
  
--  root_libdir='/lib'
-+  case $libdir in
-+  *64)
-+    root_libdir='/lib64'
-+    ;;
-+  *)
-+    root_libdir='/lib'
-+    ;;
-+   esac
-   AC_SUBST([root_libdir])
- esac
-
-
++# AC_HAVE_BLKID_TOPO below wil find the library & check for topo support
+ AC_ARG_ENABLE(blkid,
+-[ --enable-blkid=[yes/no] Enable block device id library [default=no]],
+-	test $enable_blkid = yes && libblkid="-lblkid",)
+-AC_SUBST(libblkid)
+-AC_SUBST(enable_blkid)
++[ --enable-blkid=[yes/no] Enable block device id library [default=yes]],,
++	enable_blkid=yes)
  
+ AC_ARG_ENABLE(lib64,
+ [ --enable-lib64=[yes/no] Enable lib64 support [default=yes]],,
+@@ -96,6 +95,7 @@ AC_HAVE_SENDFILE
+ AC_HAVE_GETMNTENT
+ AC_HAVE_GETMNTINFO
+ AC_HAVE_FALLOCATE
++AC_HAVE_BLKID_TOPO($enable_blkid)
+ 
+ AC_TYPE_PSINT
+ AC_TYPE_PSUNSIGNED
+diff --git a/m4/package_blkid.m4 b/m4/package_blkid.m4
+new file mode 100644
+index 0000000..44ca2cc
+--- /dev/null
++++ b/m4/package_blkid.m4
+@@ -0,0 +1,20 @@
++#
++# See if blkid has the topology bits
++#
++
++AC_DEFUN([AC_HAVE_BLKID_TOPO],
++[
++  enable_blkid="$1"
++  if test "$enable_blkid" = "yes"; then
++    AC_SEARCH_LIBS([blkid_probe_all], [blkid])
++    AC_CHECK_FUNCS(blkid_probe_get_topology)
++    if test $ac_cv_func_blkid_probe_get_topology = yes; then
++      libblkid="-lblkid"
++    else
++      libblkd=""
++      enable_blkid="no"
++      AC_SUBST(enable_blkid)
++    fi
++  fi
++  AC_SUBST(libblkid)
++])
 
 _______________________________________________
 xfs mailing list
