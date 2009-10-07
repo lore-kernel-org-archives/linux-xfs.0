@@ -1,13 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n97MLuPd215335 for <xfs@oss.sgi.com>; Wed, 7 Oct 2009 17:21:56 -0500
+	n97MMxY5215418 for <xfs@oss.sgi.com>; Wed, 7 Oct 2009 17:22:59 -0500
 Content-class: urn:content-classes:message
 MIME-Version: 1.0
-Subject: RE: [PATCH V2] fix readahead calculations in	xfs_dir2_leaf_getdents()
-Date: Wed, 7 Oct 2009 17:22:26 -0500
-Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83AD38@cf--amer001e--3.americas.sgi.com>
-In-Reply-To: <4ABE577E.8060303@sandeen.net>
+Subject: RE: [PATCH] xfs: stop calling filemap_fdatawait inside ->fsync
+Date: Wed, 7 Oct 2009 17:23:34 -0500
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83AD39@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <20090926195504.GA11121@infradead.org>
 From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -21,65 +21,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>, Christoph Hellwig <hch@infradead.org>
-Cc: xfs mailing list <xfs@oss.sgi.com>, tobias@lists.yoper.com
+To: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-Eric Sandeen wrote:
-> Christoph Hellwig wrote:
->> On Fri, Sep 25, 2009 at 02:42:26PM -0500, Eric Sandeen wrote:
->>> V2: use min() as suggested by Jeff, it's tidier.
->> 
->> I disagree with that, with the cast it looks pretty horrible.
->> At least use min_t to avoid the case, but what's wrong with:
->> 
->>> +		/* bufsize may have just been a guess; don't go negative */
->>> +		bufsize = min((bufsize - length), (size_t)0);
->> 
->> 		bufsize = bufsize - length > 0 ? bufsize - length : 0;
+Christoph Hellwig wrote:
+> Now that the VFS actually waits for the data I/O to complete before
+> calling into ->fsync we can stop doing it ourselves.
 > 
-> ok, that's fine too.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Looks good.
+
+Reviewed-by: Alex Elder <aelder@sgi.com>
+
+> Index: linux-2.6/fs/xfs/linux-2.6/xfs_file.c
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/linux-2.6/xfs_file.c	2009-09-26 14:09:24.933003650 -0300
+> +++ linux-2.6/fs/xfs/linux-2.6/xfs_file.c	2009-09-26 14:09:46.804256831 -0300
+> @@ -176,14 +176,7 @@ xfs_file_fsync(
+>  	struct dentry		*dentry,
+>  	int			datasync)
+>  {
+> -	struct inode		*inode = dentry->d_inode;
+>  	struct xfs_inode	*ip = XFS_I(inode);
+> -	int			error;
+> -
+> -	/* capture size updates in I/O completion before writing the inode. */
+> -	error = filemap_fdatawait(inode->i_mapping);
+> -	if (error)
+> -		return error;
 > 
-> I'll pick one.
+>  	xfs_iflags_clear(ip, XFS_ITRUNCATED);
+>  	return -xfs_fsync(ip);
 > 
->> Anyway, takes this as a
->> 
->> 
->> Reviewed-by: Christoph Hellwig <hch@lst.de>
->> 
->> for any variant.
->> 
-> 
-> thanks,
-> -Eric
-
-I'm going to put in this version:
-
-		bufsize = bufsize > length ? bufsize - length : 0;
-
-I.e.:
-
---- a/fs/xfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/xfs_dir2_leaf.c
-@@ -854,6 +854,7 @@ xfs_dir2_leaf_getdents(
- 			 */
- 			ra_want = howmany(bufsize + mp->m_dirblksize,
- 					  mp->m_sb.sb_blocksize) - 1;
-+			ASSERT(ra_want >= 0);
- 
- 			/*
- 			 * If we don't have as many as we want, and we haven't
-@@ -1088,7 +1089,8 @@ xfs_dir2_leaf_getdents(
- 		 */
- 		ptr += length;
- 		curoff += length;
--		bufsize -= length;
-+		/* bufsize may have just been a guess; don't go negative */
-+		bufsize = bufsize > length ? bufsize - length : 0;
- 	}
- 
- 	/*
-
-					-Alex
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
