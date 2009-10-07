@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n970ptkV147027 for <xfs@oss.sgi.com>; Tue, 6 Oct 2009 19:51:55 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8B0F2121E26D
-	for <xfs@oss.sgi.com>; Tue,  6 Oct 2009 17:53:19 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id Khwt3wjUOCcFFC75 for
-	<xfs@oss.sgi.com>; Tue, 06 Oct 2009 17:53:19 -0700 (PDT)
-Message-ID: <4ACBE67E.8010502@sandeen.net>
-Date: Tue, 06 Oct 2009 19:53:18 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	n971VZe4149490 for <xfs@oss.sgi.com>; Tue, 6 Oct 2009 20:31:36 -0500
+Received: from hera.kernel.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B0E3E1B9835D
+	for <xfs@oss.sgi.com>; Tue,  6 Oct 2009 18:33:01 -0700 (PDT)
+Received: from hera.kernel.org (hera.kernel.org [140.211.167.34]) by
+	cuda.sgi.com with ESMTP id IHtf0iyMGrKUugvC for
+	<xfs@oss.sgi.com>; Tue, 06 Oct 2009 18:33:01 -0700 (PDT)
+Message-ID: <4ACBEFC9.3020707@kernel.org>
+Date: Wed, 07 Oct 2009 10:32:57 +0900
+From: Tejun Heo <tj@kernel.org>
 MIME-Version: 1.0
-Subject: Re: moving libhandle to /usr
-References: <20091006154249.GA1411@infradead.org>	<200910061533.51365.vapier@gentoo.org>
-	<20091006234425.GA20561@infradead.org>
-In-Reply-To: <20091006234425.GA20561@infradead.org>
+Subject: Re: stack bloat after stackprotector changes
+References: <4ACA5EB0.4010707@sandeen.net> <4ACADB74.5090508@kernel.org>
+	<4ACB50C1.80702@sandeen.net>
+In-Reply-To: <4ACB50C1.80702@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,35 +24,67 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: nathans@debian.org, Mike Frysinger <vapier@gentoo.org>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs mailing list <xfs@oss.sgi.com>
 
-Christoph Hellwig wrote:
-> On Tue, Oct 06, 2009 at 03:33:46PM -0400, Mike Frysinger wrote:
->> On Tuesday 06 October 2009 11:42:49 Christoph Hellwig wrote:
->>> Currently we install the versioned libhandle into /lib by default,
->>> and all other libraries into /usr.  Given that no program in / actually
->>> uses libhandle this seems rather awkward to me.  From Mike's comments
->>> in the past I think Gentoo already installs it into /usr anyway.
+Hello,
+
+Eric Sandeen wrote:
+> Tejun Heo wrote:
+>> Eric Sandeen wrote:
+>>> It seems that after:
 >>>
->>> Is there anything speaking against moving all libraries to /usr and
->>> switching Debian/Fedora to that aswell?
->> xfsdump uses it and xfsdump is installed into / by default right ?  so 
->> libhandle needs to be in /lib so long as xfsdump is in /sbin.
+>>> commit 5d707e9c8ef2a3596ed5c975c6ff05cec890c2b4
+>>> Author: Tejun Heo <tj@kernel.org>
+>>> Date:   Mon Feb 9 22:17:39 2009 +0900
+>>>
+>>>     stackprotector: update make rules
+>>>
+>>> xfs stack usage jumped up a fair bit;
+>>>
+>>> Not a lot in each case but could be significant as it accumulates.
+>>>
+>>> I'm not familiar w/ the gcc stack protector feature; would this be an
+>>> expected result?
+>>
+>> Yeah, it adds a bit of stack usage per each function call and around
+>> arrays which seem like they could overflow, so the behavior is
+>> expected and I can see it can be a problem with function call depth
+>> that deep.  Has it caused actual stack overflow?
+>>
+>> Thanks.
+>>
 > 
-> Indeed, the makefile configuration currently builds it into /, while
-> the configure default uses /usr.  Yikes..
+> It's hard to point at one thing and say "that caused it" but I did
+> overflow (or come very close to it - this one was within 8 bytes).
+> 
+> Add 20 byte or so to each of 65 calls and it starts to matter I guess.
+> 
+> Granted, xfs is being piggy too (as are some of the more common
+> functions in the callchain - do_sync_write and write_cache_pages at 320
+> bytes each...)
+> 
+> -Eric
+> 
+>          Depth    Size   Location    (65 entries)
+>          -----    ----   --------
+>    0)     7280      80   check_object+0x6c/0x1d3
 
-argh I did rpm -ql xfsprogs xfsdump | grep bin ... on a box that didn't 
-have xfsdump installed.  Argh.
+Yeap, that's pretty darn close.
 
-Thanks for the catch Mike ;)
+But the thing is that stackprotector is a feature which consumes
+certain amount of stack space, so there I'm afraid really isn't a way
+around that other than trying to diet the piggies or enlarging the
+stack.  :-(
 
--Eric
+Thanks.
+
+-- 
+tejun
 
 _______________________________________________
 xfs mailing list
