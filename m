@@ -1,32 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n97656TL168614 for <xfs@oss.sgi.com>; Wed, 7 Oct 2009 01:05:06 -0500
-Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 436874A9568
-	for <xfs@oss.sgi.com>; Tue,  6 Oct 2009 23:06:30 -0700 (PDT)
-Received: from mailsrv1.zmi.at (mailsrv5.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id 0aG9Sb3scYMi66mz for
-	<xfs@oss.sgi.com>; Tue, 06 Oct 2009 23:06:30 -0700 (PDT)
-Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv1.zmi.at (Postfix) with ESMTP id E153A6A5
-	for <xfs@oss.sgi.com>; Wed,  7 Oct 2009 08:06:19 +0200 (CEST)
-Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id AD9C9400155
-	for <xfs@oss.sgi.com>; Wed,  7 Oct 2009 08:06:27 +0200 (CEST)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: [PATCH] mkfs: add discard support
-Date: Wed, 7 Oct 2009 08:05:46 +0200
-References: <20091006184758.GA4780@infradead.org>
-	<20091007044215.GK9464@discord.disaster>
-In-Reply-To: <20091007044215.GK9464@discord.disaster>
+	n97BSgY6187229 for <xfs@oss.sgi.com>; Wed, 7 Oct 2009 06:28:43 -0500
+Received: from zen.pimp.org.za (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6EB304AA266
+	for <xfs@oss.sgi.com>; Wed,  7 Oct 2009 04:30:07 -0700 (PDT)
+Received: from zen.pimp.org.za (zen.pimp.org.za [70.85.31.111]) by
+	cuda.sgi.com with ESMTP id ity9uV2DQA6fomPH for
+	<xfs@oss.sgi.com>; Wed, 07 Oct 2009 04:30:07 -0700 (PDT)
+Date: Wed, 7 Oct 2009 12:29:59 +0100
+From: Michael-John Turner <mj@mjturner.net>
+Subject: Re: XFS/driver bug or bad drive?
+Message-ID: <20091007112959.GA17132@aurora.pimp.org.za>
+References: <20091001232759.GA12832@opus.istwok.net>
+	<4AC54BDA.20806@sandeen.net>
+	<20091002165704.GA17558@opus.istwok.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-Message-Id: <200910070805.46767@zmi.at>
+In-Reply-To: <20091002165704.GA17558@opus.istwok.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,36 +26,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: David Engel <david@istwok.net>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On Mittwoch 07 Oktober 2009 Dave Chinner wrote:
-> Good idea, but perhaps the discard should be optional rather than
-> unconditional. =A0My immediate thought was the SOP for setting up
-> encrypted devices - fill the empty disk with random data before
-> setting up the encrypted device. If you then send it a discard....
+On Fri, Oct 02, 2009 at 11:57:04AM -0500, David Engel wrote:
+> I agree it shouldn't be an xfs bug.  I thought it was strange, though,
+> that the problem only seemed to show up with xfs on 2.6.30.x.  IO
+> pattern sensitivity wouldn't surprise me, but I wanted to check all my
+> bases before giving up on the drive.
 
-You could change the order to
-mkfs ; mount
-dd if=3D/dev/urandom of=3D/encrytped/fill.dd
-(one day the disk will be full)
-sync ; rm /encrytped/fill.dd
+Rather curiously, I had exactly the same issue with the same model drive
+this past weekend. Debian-patched 2.6.26 kernel, however, though also with
+XFS (on top of md/LVM). Interestingly, there were no SMART errors and a
+full SMART test passed. The error was triggered by doing a cvs update on my
+working copy of the NetBSD source tree - not a large copy, but a
+disk-intensive activity.
 
-That should fill the disk with random garbage too. Should be nearly the =
-
-same result, right?
-
-mfg zmi
--- =
-
-// Michael Monnerie, Ing.BSc    -----      http://it-management.at
-// Tel: 0660 / 415 65 31                      .network.your.ideas.
-// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
-// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
-// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
+-mj
+-- 
+ Michael-John Turner
+ mj@mjturner.net      <>     http://mjturner.net/
 
 _______________________________________________
 xfs mailing list
