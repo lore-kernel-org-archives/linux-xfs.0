@@ -1,20 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n973sOR5157694 for <xfs@oss.sgi.com>; Tue, 6 Oct 2009 22:54:25 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D1D09121E7ED
-	for <xfs@oss.sgi.com>; Tue,  6 Oct 2009 20:55:49 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id 9JAZHsqSbEwNVeWM for
-	<xfs@oss.sgi.com>; Tue, 06 Oct 2009 20:55:49 -0700 (PDT)
-Message-ID: <4ACC1144.5090504@sandeen.net>
-Date: Tue, 06 Oct 2009 22:55:48 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH] mkfs: add discard support
-References: <1157959921.9631254878431584.JavaMail.root@mail-au.aconex.com>
-In-Reply-To: <1157959921.9631254878431584.JavaMail.root@mail-au.aconex.com>
+	n974iLq8161245 for <xfs@oss.sgi.com>; Tue, 6 Oct 2009 23:44:21 -0500
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 8/8] fs/xfs/xfs_log_recover.c: Use %pU to print UUIDs
+Date: Tue,  6 Oct 2009 21:45:41 -0700
+Message-Id: <d3ce3dab424deedd43322990503af8944f751a73.1254884776.git.joe@perches.com>
+In-Reply-To: <1254890742-28245-1-git-send-email-joe@perches.com>
+References: <1254890742-28245-1-git-send-email-joe@perches.com>
+In-Reply-To: <cover.1254884776.git.joe@perches.com>
+References: <cover.1254884776.git.joe@perches.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,38 +18,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Nathan Scott <nscott@aconex.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+Cc: xfs-masters@oss.sgi.com, xfs@oss.sgi.com, Alex Elder <aelder@sgi.com>
 
-Nathan Scott wrote:
-> ----- "Christoph Hellwig" <hch@infradead.org> wrote:
-> 
->>> It might be a bit cleaner to add this in with the existing
->> platform-
->>> specific code in libxfs/linux.c (or perhaps
->> include/platform_defs.h)
->>> with wrappers for the other platforms, rather than putting it
->> directly
->>> in mkfs like this?  repair may want to use this someday too, I
->> guess.
->>
->> How about this one?
->>
-> 
-> Looks good to me.
-> 
-> cheers.
-> 
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ fs/xfs/xfs_log_recover.c |   14 ++++----------
+ 1 files changed, 4 insertions(+), 10 deletions(-)
 
-looks good to me too, thanks.
-
-need to get that vertex flashed w/ trim support some day...
-
--eric
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 1099395..3b8e3df 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -225,16 +225,10 @@ xlog_header_check_dump(
+ 	xfs_mount_t		*mp,
+ 	xlog_rec_header_t	*head)
+ {
+-	int			b;
+-
+-	cmn_err(CE_DEBUG, "%s:  SB : uuid = ", __func__);
+-	for (b = 0; b < 16; b++)
+-		cmn_err(CE_DEBUG, "%02x", ((__uint8_t *)&mp->m_sb.sb_uuid)[b]);
+-	cmn_err(CE_DEBUG, ", fmt = %d\n", XLOG_FMT);
+-	cmn_err(CE_DEBUG, "    log : uuid = ");
+-	for (b = 0; b < 16; b++)
+-		cmn_err(CE_DEBUG, "%02x", ((__uint8_t *)&head->h_fs_uuid)[b]);
+-	cmn_err(CE_DEBUG, ", fmt = %d\n", be32_to_cpu(head->h_fmt));
++	cmn_err(CE_DEBUG, "%s:  SB : uuid = %pU, fmt = %d\n",
++		__func__, &mp->m_sb.sb_uuid, XLOG_FMT);
++	cmn_err(CE_DEBUG, "    log : uuid = %pU, fmt = %d\n",
++		&head->h_fs_uuid, be32_to_cpu(head->h_fmt));
+ }
+ #else
+ #define xlog_header_check_dump(mp, head)
+-- 
+1.6.3.1.10.g659a0.dirty
 
 _______________________________________________
 xfs mailing list
