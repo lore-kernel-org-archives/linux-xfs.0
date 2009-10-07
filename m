@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n97E3C0v192824 for <xfs@oss.sgi.com>; Wed, 7 Oct 2009 09:03:13 -0500
-Received: from zen.pimp.org.za (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CCBB14AAF6A
-	for <xfs@oss.sgi.com>; Wed,  7 Oct 2009 07:04:38 -0700 (PDT)
-Received: from zen.pimp.org.za (zen.pimp.org.za [70.85.31.111]) by
-	cuda.sgi.com with ESMTP id syg19UGTGWYkaxR5 for
-	<xfs@oss.sgi.com>; Wed, 07 Oct 2009 07:04:38 -0700 (PDT)
-Date: Wed, 7 Oct 2009 15:04:31 +0100
-From: Michael-John Turner <mj@mjturner.net>
-Subject: Re: XFS/driver bug or bad drive?
-Message-ID: <20091007140431.GB29528@aurora.pimp.org.za>
-References: <20091001232759.GA12832@opus.istwok.net>
-	<4AC54BDA.20806@sandeen.net>
-	<20091002165704.GA17558@opus.istwok.net>
-	<20091007112959.GA17132@aurora.pimp.org.za>
-	<4ACC9699.70900@sandeen.net>
+	n97EAOlG193129 for <xfs@oss.sgi.com>; Wed, 7 Oct 2009 09:10:25 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3A4894AB05F
+	for <xfs@oss.sgi.com>; Wed,  7 Oct 2009 07:11:51 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id ljaXWz8u1AVmgNht for
+	<xfs@oss.sgi.com>; Wed, 07 Oct 2009 07:11:51 -0700 (PDT)
+Date: Wed, 7 Oct 2009 10:11:49 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] mkfs: add discard support
+Message-ID: <20091007141149.GA16020@infradead.org>
+References: <20091006184758.GA4780@infradead.org>
+	<20091007044215.GK9464@discord.disaster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4ACC9699.70900@sandeen.net>
+In-Reply-To: <20091007044215.GK9464@discord.disaster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,24 +29,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: David Engel <david@istwok.net>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Wed, Oct 07, 2009 at 08:24:41AM -0500, Eric Sandeen wrote:
-> Firmware bug?  I still think it can't be an xfs problem, and I'm not
-> just trying to be protective of our turf ;)
+On Wed, Oct 07, 2009 at 03:42:16PM +1100, Dave Chinner wrote:
+> On Tue, Oct 06, 2009 at 02:47:58PM -0400, Christoph Hellwig wrote:
+> > Call the BLKDISCARD ioctl to mark the whole disk as unused before creating
+> > a new filesystem.  This will allow SSDs, Arrays with thin provisioning support
+> > and virtual machines to make smarter allocation decisions.
+> 
+> Good idea, but perhaps the discard should be optional rather than
+> unconditional.  My immediate thought was the SOP for setting up
+> encrypted devices - fill the empty disk with random data before
+> setting up the encrypted device. If you then send it a discard....
 
-Could very well be a firmware bug - FWIW, my drive has version 1AA01109.
-
-Some searching online suggests that others have solved similar problems by
-replacing their SATA cables. I'll give that a try but, as my issue isn't
-reproducible (subsequent cvs updates haven't given any problems), it'll be
-difficult to know immediately if a faulty cable was the problem.
-
--mj
--- 
- Michael-John Turner
- mj@mjturner.net      <>     http://mjturner.net/
+Yeah.  I'm fine with making it the default but adding a option to
+disable it.
 
 _______________________________________________
 xfs mailing list
