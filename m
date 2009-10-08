@@ -1,28 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9873fbV247360
-	for <linux-xfs@oss.sgi.com>; Thu, 8 Oct 2009 02:03:44 -0500
-Received: from lo.gmane.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6797A4ADF03
-	for <linux-xfs@oss.sgi.com>; Thu,  8 Oct 2009 00:05:07 -0700 (PDT)
-Received: from lo.gmane.org (lo.gmane.org [80.91.229.12]) by cuda.sgi.com with
-	ESMTP id dyCQjCZDndUO0dsG for <linux-xfs@oss.sgi.com>;
-	Thu, 08 Oct 2009 00:05:07 -0700 (PDT)
-Received: from list by lo.gmane.org with local (Exim 4.50) id 1Mvn3i-0000PZ-17
-	for linux-xfs@oss.sgi.com; Thu, 08 Oct 2009 09:05:06 +0200
-Received: from c-76-22-14-176.hsd1.wa.comcast.net ([76.22.14.176])
-	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Thu, 08 Oct 2009 09:05:06 +0200
-Received: from tneumann by c-76-22-14-176.hsd1.wa.comcast.net with local
-	(Gmexim 0.1 (Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Thu, 08 Oct 2009 09:05:06 +0200
-From: Thomas Neumann <tneumann@users.sourceforge.net>
-Subject: deadlocks with fallocate
-Date: Thu, 08 Oct 2009 08:59:45 +0200
-Message-ID: <hak2l2$ko2$1@ger.gmane.org>
-Mime-Version: 1.0
+	n986rV3V246860 for <xfs@oss.sgi.com>; Thu, 8 Oct 2009 01:53:32 -0500
+Received: from tyo202.gate.nec.co.jp (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C79B5175B2E1
+	for <xfs@oss.sgi.com>; Wed,  7 Oct 2009 23:54:56 -0700 (PDT)
+Received: from tyo202.gate.nec.co.jp (TYO202.gate.nec.co.jp [202.32.8.206]) by
+	cuda.sgi.com with ESMTP id y0AZIIXayME3MvNX for
+	<xfs@oss.sgi.com>; Wed, 07 Oct 2009 23:54:56 -0700 (PDT)
+Received: from mailgate3.nec.co.jp ([10.7.69.192])
+	by tyo202.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id n986suvU018365
+	for <xfs@oss.sgi.com>; Thu, 8 Oct 2009 15:54:56 +0900 (JST)
+Received: (from root@localhost) by mailgate3.nec.co.jp
+	(8.11.7/3.7W-MAILGATE-NEC) id n986stY23537 for xfs@oss.sgi.com;
+	Thu, 8 Oct 2009 15:54:55 +0900 (JST)
+Received: from mail03.kamome.nec.co.jp (mail03.kamome.nec.co.jp [10.25.43.7])
+	by mailsv3.nec.co.jp (8.13.8/8.13.4) with ESMTP id n986stTs026080
+	for <xfs@oss.sgi.com>; Thu, 8 Oct 2009 15:54:55 +0900 (JST)
+Message-ID: <4ACD8C9B.5090701@wm.jp.nec.com>
+Date: Thu, 08 Oct 2009 15:54:19 +0900
+From: Utako Kusaka <u-kusaka@wm.jp.nec.com>
+MIME-Version: 1.0
+Subject: 2.6.32-rc3 kernel BUG when unmounting quota offed xfs
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,98 +34,119 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: xfs <xfs@oss.sgi.com>
 
 Hi,
 
-I currently observe frequent deadlocks in XFS on an I/O intensive workload 
-that uses posix_fallocate. This is very annoying, as I have to power down 
-the machine (in an unclean state) afterwards.
-I observed this with multiple kernel versions including 2.6.32rc1, the 
-symptoms are shown in the dmesg extract below.
+XFS file system segfaults in 2.6.32-rc3 and 2.6.31.2.
+This problem does not occur with 2.6.30-rc5.
+xfsprogs version is 3.0.3.
 
-I am willing to help to debug the problem, although it is probably a race 
-condition, as it does not occur all of the time. Is there anything I should 
-do to pinpoint the problem?
-It always seems to occur when the user space calls fallocate (100% of my log 
-entries contained this function call), but otherwise I am not sure what 
-triggers it.
-
-Thomas
+Testcase is:
+# mount -t xfs -o uquota /dev/sda7 mpnt2
+# xfs_quota -x -c off
+# umount /dev/sda7
+Segmentation fault
 
 
+Oct  8 09:56:58 g9517 kernel: ------------[ cut here ]------------
+Oct  8 09:56:58 g9517 kernel: kernel BUG at fs/inode.c:1343!
+Oct  8 09:56:58 g9517 kernel: invalid opcode: 0000 [#1]
+Oct  8 09:56:58 g9517 kernel: last sysfs file:
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_setspeed
+Oct  8 09:56:58 g9517 kernel: Modules linked in: snd_pcm_oss snd_pcm snd_timer
+snd_page_alloc snd_mixer_oss snd soundcore usbserial parport_pc lp parport edd
+nvram evdev joydev sg st sr_mod ide_cd_mod cdrom intel_agp agpgart ehci_hcd
+cpufreq_userspace acpi_cpufreq uhci_hcd i2c_i801 i2c_core speedstep_lib thermal
+processor fan thermal_sys button battery ac ipv6 e100 mii usbcore xfs exportfs
+dm_mod ext3 jbd ata_piix libata sd_mod scsi_mod
+Oct  8 09:56:58 g9517 kernel:
+Oct  8 09:56:58 g9517 kernel: Pid: 8437, comm: umount Not tainted (2.6.32-rc3
+#1) Endeavor AT955
+Oct  8 09:56:58 g9517 kernel: EIP: 0060:[<c10bd6c5>] EFLAGS: 00210246 CPU: 0
+Oct  8 09:56:58 g9517 kernel: EIP is at iput+0x45/0x60
+Oct  8 09:56:58 g9517 kernel: EAX: dce43410 EBX: dce43410 ECX: 00000000 EDX:
+00000000
+Oct  8 09:56:58 g9517 kernel: ESI: db664800 EDI: dce43080 EBP: de361ee8 ESP:
+de361ee4
+Oct  8 09:56:58 g9517 kernel:  DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 0068
+Oct  8 09:56:58 g9517 kernel: Process umount (pid: 8437, ti=de360000
+task=db54f4b0 task.ti=de360000)
+Oct  8 09:56:58 g9517 kernel: Stack:
+Oct  8 09:56:58 g9517 kernel:  db664800 de361ef4 e0752d2a db664800 de361f10
+e0795d25 de361efc de361efc
+Oct  8 09:56:58 g9517 kernel: <0> d980cc00 db664800 d980cc00 de361f30 e07ab629
+de361f30 c10bc7da de361f20
+Oct  8 09:56:58 g9517 kernel: <0> d980cc00 db54f4b0 e07ae7c0 de361f4c c10ac2ec
+de361f48 c10bfb86 deeae900
+Oct  8 09:56:58 g9517 kernel: Call Trace:
+Oct  8 09:56:58 g9517 kernel:  [<e0752d2a>] ? xfs_rtunmount_inodes+0x2a/0x50 [xfs]
+Oct  8 09:56:58 g9517 kernel:  [<e0795d25>] ? xfs_unmountfs+0x15/0x150 [xfs]
+Oct  8 09:56:58 g9517 kernel:  [<e07ab629>] ? xfs_fs_put_super+0x59/0xd0 [xfs]
+Oct  8 09:56:58 g9517 kernel:  [<c10bc7da>] ? invalidate_inodes+0x4a/0x60
+Oct  8 09:56:58 g9517 kernel:  [<c10ac2ec>] ? generic_shutdown_super+0xac/0xd0
+Oct  8 09:56:58 g9517 kernel:  [<c10bfb86>] ? mntput_no_expire+0x16/0x80
+Oct  8 09:56:58 g9517 kernel:  [<c10acd75>] ? kill_block_super+0x25/0x40
+Oct  8 09:56:58 g9517 kernel:  [<c10ac0c9>] ? deactivate_super+0x49/0x80
+Oct  8 09:56:58 g9517 kernel:  [<c10bfbb5>] ? mntput_no_expire+0x45/0x80
+Oct  8 09:56:58 g9517 kernel:  [<c10c0660>] ? sys_umount+0x80/0x90
+Oct  8 09:56:58 g9517 kernel:  [<c10c0687>] ? sys_oldumount+0x17/0x20
+Oct  8 09:56:58 g9517 kernel:  [<c1002e48>] ? sysenter_do_call+0x12/0x26
+Oct  8 09:56:58 g9517 kernel: Code: c1 e8 10 a5 0b 00 85 c0 74 1e 8b 83 90 00 00
+00 ba 60 d6 0b c1 8b 40 20 85 c0 74 08 8b 40 10 85 c0 0f 45 d0 89 d8 ff d2 5b 5d
+c3 <0f> 0b 89 f6 8d bc 27 00 00 00 00 eb fe 8d b4 26 00 00 00 00 8d
+Oct  8 09:56:58 g9517 kernel: EIP: [<c10bd6c5>] iput+0x45/0x60 SS:ESP 0068:de361ee4
+Oct  8 09:56:58 g9517 kernel: ---[ end trace 8a9a86591e230b04 ]---
+Oct  8 09:56:58 g9517 kernel: ------------[ cut here ]------------
+Oct  8 09:56:58 g9517 kernel: WARNING: at kernel/exit.c:897 do_exit+0x204/0x2c0()
+Oct  8 09:56:58 g9517 kernel: Hardware name: Endeavor AT955
+Oct  8 09:56:58 g9517 kernel: Modules linked in: snd_pcm_oss snd_pcm snd_timer
+snd_page_alloc snd_mixer_oss snd soundcore usbserial parport_pc lp parport edd
+nvram evdev joydev sg st sr_mod ide_cd_mod cdrom intel_agp agpgart ehci_hcd
+cpufreq_userspace acpi_cpufreq uhci_hcd i2c_i801 i2c_core speedstep_lib thermal
+processor fan thermal_sys button battery ac ipv6 e100 mii usbcore xfs exportfs
+dm_mod ext3 jbd ata_piix libata sd_mod scsi_mod
+Oct  8 09:56:58 g9517 kernel: Pid: 8437, comm: umount Tainted: G      D
+2.6.32-rc3 #1
+Oct  8 09:56:58 g9517 kernel: Call Trace:
+Oct  8 09:56:58 g9517 kernel:  [<c1031b00>] ? have_callable_console+0x0/0x30
+Oct  8 09:56:58 g9517 kernel:  [<c1033804>] ? do_exit+0x204/0x2c0
+Oct  8 09:56:58 g9517 kernel:  [<c10313cc>] warn_slowpath_common+0x7c/0xa0
+Oct  8 09:56:58 g9517 kernel:  [<c1033804>] ? do_exit+0x204/0x2c0
+Oct  8 09:56:58 g9517 kernel:  [<c1031435>] warn_slowpath_null+0x15/0x30
+Oct  8 09:56:58 g9517 kernel:  [<c1033804>] do_exit+0x204/0x2c0
+Oct  8 09:56:58 g9517 kernel:  [<c103133a>] ? print_oops_end_marker+0x2a/0x30
+Oct  8 09:56:58 g9517 kernel:  [<c100605d>] oops_end+0x7d/0x80
+Oct  8 09:56:58 g9517 kernel:  [<c100619b>] die+0x5b/0x80
+Oct  8 09:56:58 g9517 kernel:  [<c1003781>] do_trap+0x91/0xd0
+Oct  8 09:56:58 g9517 kernel:  [<c1003930>] ? do_invalid_op+0x0/0xa0
+Oct  8 09:56:58 g9517 kernel:  [<c10039b8>] do_invalid_op+0x88/0xa0
+Oct  8 09:56:58 g9517 kernel:  [<c10bd6c5>] ? iput+0x45/0x60
+Oct  8 09:56:58 g9517 kernel:  [<c106439d>] ? call_rcu_sched+0xd/0x10
+Oct  8 09:56:58 g9517 kernel:  [<c117bd7a>] ? radix_tree_delete+0xfa/0x1b0
+Oct  8 09:56:58 g9517 kernel:  [<c12ee4a6>] ? schedule_timeout+0x166/0x1a0
+Oct  8 09:56:58 g9517 kernel:  [<e07ac157>] ? xfs_inode_ag_lookup+0xe7/0x110 [xfs]
+Oct  8 09:56:58 g9517 kernel:  [<c12ef3de>] error_code+0x5e/0x64
+Oct  8 09:56:58 g9517 kernel:  [<e07a007b>] ? xfs_free_file_space+0x25b/0x640 [xfs]
+Oct  8 09:56:58 g9517 kernel:  [<c1003930>] ? do_invalid_op+0x0/0xa0
+Oct  8 09:56:58 g9517 kernel:  [<c10bd6c5>] ? iput+0x45/0x60
+Oct  8 09:56:58 g9517 kernel:  [<e0752d2a>] xfs_rtunmount_inodes+0x2a/0x50 [xfs]
+Oct  8 09:56:58 g9517 kernel:  [<e0795d25>] xfs_unmountfs+0x15/0x150 [xfs]
+Oct  8 09:56:58 g9517 kernel:  [<e07ab629>] xfs_fs_put_super+0x59/0xd0 [xfs]
+Oct  8 09:56:58 g9517 kernel:  [<c10bc7da>] ? invalidate_inodes+0x4a/0x60
+Oct  8 09:56:58 g9517 kernel:  [<c10ac2ec>] generic_shutdown_super+0xac/0xd0
+Oct  8 09:56:58 g9517 kernel:  [<c10bfb86>] ? mntput_no_expire+0x16/0x80
+Oct  8 09:56:58 g9517 kernel:  [<c10acd75>] kill_block_super+0x25/0x40
+Oct  8 09:56:58 g9517 kernel:  [<c10ac0c9>] deactivate_super+0x49/0x80
+Oct  8 09:56:58 g9517 kernel:  [<c10bfbb5>] mntput_no_expire+0x45/0x80
+Oct  8 09:56:58 g9517 kernel:  [<c10c0660>] sys_umount+0x80/0x90
+Oct  8 09:56:58 g9517 kernel:  [<c10c0687>] sys_oldumount+0x17/0x20
+Oct  8 09:56:58 g9517 kernel:  [<c1002e48>] sysenter_do_call+0x12/0x26
+Oct  8 09:56:58 g9517 kernel: ---[ end trace 8a9a86591e230b05 ]---
 
-INFO: task xfsconvertd/0:411 blocked for more than 120 seconds.
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-xfsconvertd/0 D 0000000000000000     0   411      2 0x00000000
- ffff88007b21d3e0 0000000000000046 ffff88007d4e8c40 ffff88007b21dfd8
- ffff88007adfdb40 0000000000015980 0000000000015980 ffff88007b21dfd8
- 0000000000015980 ffff88007b21dfd8 0000000000015980 ffff88007adfdf00
-Call Trace:
- [<ffffffff81526162>] io_schedule+0x42/0x60
- [<ffffffff810df6d5>] sync_page+0x35/0x50
- [<ffffffff815268e5>] __wait_on_bit+0x55/0x80
- [<ffffffff810df6a0>] ? sync_page+0x0/0x50
- [<ffffffff810df7f0>] wait_on_page_bit+0x70/0x80
- [<ffffffff8107afb0>] ? wake_bit_function+0x0/0x30
- [<ffffffff810ecce8>] shrink_page_list+0x3d8/0x550
- [<ffffffff8107b0de>] ? finish_wait+0x5e/0x80
- [<ffffffff810f85da>] ? congestion_wait+0x7a/0x90
- [<ffffffff8107af70>] ? autoremove_wake_function+0x0/0x40
- [<ffffffff810ed7e6>] shrink_inactive_list+0x6b6/0x700
- [<ffffffff81044250>] ? wake_affine+0x220/0x240
- [<ffffffff81048210>] ? __enqueue_entity+0x80/0x90
- [<ffffffff810ed881>] shrink_list+0x51/0xb0
- [<ffffffff810eddea>] shrink_zone+0x1ea/0x200
- [<ffffffff810ee823>] shrink_zones+0x63/0xf0
- [<ffffffff810ee920>] do_try_to_free_pages+0x70/0x280
- [<ffffffff810eec9c>] try_to_free_pages+0x9c/0xc0
- [<ffffffff810ed0e0>] ? isolate_pages_global+0x0/0x50
- [<ffffffff810e6342>] __alloc_pages_slowpath+0x232/0x520
- [<ffffffff810e6776>] __alloc_pages_nodemask+0x146/0x180
- [<ffffffff811143f7>] alloc_pages_current+0x87/0xd0
- [<ffffffff8111939c>] allocate_slab+0x11c/0x1b0
- [<ffffffff8111945b>] new_slab+0x2b/0x190
- [<ffffffff8111b641>] __slab_alloc+0x121/0x230
- [<ffffffffa009b57d>] ? kmem_zone_alloc+0x5d/0xd0 [xfs]
- [<ffffffffa009b57d>] ? kmem_zone_alloc+0x5d/0xd0 [xfs]
- [<ffffffff8111b980>] kmem_cache_alloc+0xf0/0x130
- [<ffffffffa009b57d>] kmem_zone_alloc+0x5d/0xd0 [xfs]
- [<ffffffffa009b609>] kmem_zone_zalloc+0x19/0x50 [xfs]
- [<ffffffffa009368f>] _xfs_trans_alloc+0x2f/0x70 [xfs]
- [<ffffffffa0093832>] xfs_trans_alloc+0x92/0xa0 [xfs]
- [<ffffffff810f7710>] ? __dec_zone_page_state+0x30/0x40
- [<ffffffffa0083691>] xfs_iomap_write_unwritten+0x71/0x200 [xfs]
- [<ffffffff810e1ad2>] ? mempool_free_slab+0x12/0x20
- [<ffffffff810e1b6a>] ? mempool_free+0x8a/0xa0
- [<ffffffffa009c3d0>] ? xfs_end_bio_unwritten+0x0/0x80 [xfs]
- [<ffffffffa009c435>] xfs_end_bio_unwritten+0x65/0x80 [xfs]
- [<ffffffff81075c47>] run_workqueue+0xb7/0x190
- [<ffffffff81076fa6>] worker_thread+0x96/0xf0
- [<ffffffff8107af70>] ? autoremove_wake_function+0x0/0x40
- [<ffffffff81076f10>] ? worker_thread+0x0/0xf0
- [<ffffffff8107ab8e>] kthread+0x8e/0xa0
- [<ffffffff81012f8a>] child_rip+0xa/0x20
- [<ffffffff8107ab00>] ? kthread+0x0/0xa0
- [<ffffffff81012f80>] ? child_rip+0x0/0x20
-INFO: task dataload:3947 blocked for more than 120 seconds.
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-dataload     D 0000000000000001     0  3947   2121 0x00000000
- ffff880074f37ce8 0000000000000082 0000000000000086 ffff880074f37fd8
- ffff88007b0316d0 0000000000015980 0000000000015980 ffff880074f37fd8
- 0000000000015980 ffff880074f37fd8 0000000000015980 ffff88007b031a90
-Call Trace:
- [<ffffffffa009c0e5>] xfs_ioend_wait+0x85/0xc0 [xfs]
- [<ffffffff8107af70>] ? autoremove_wake_function+0x0/0x40
- [<ffffffffa0097d1d>] xfs_setattr+0x85d/0xb20 [xfs]
- [<ffffffffa0094aa8>] ? xfs_trans_unlocked_item+0x38/0x50 [xfs]
- [<ffffffffa00a2ebd>] xfs_vn_fallocate+0xed/0x100 [xfs]
- [<ffffffff810334a9>] ? default_spin_lock_flags+0x9/0x10
- [<ffffffff81527ecf>] ? _spin_lock_irqsave+0x2f/0x50
- [<ffffffff8112556d>] do_fallocate+0xfd/0x110
- [<ffffffff811255c9>] sys_fallocate+0x49/0x70
- [<ffffffff81011f42>] system_call_fastpath+0x16/0x1b
 
+Regards,
+Utako
 
 _______________________________________________
 xfs mailing list
