@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n99JoO6x096089 for <xfs@oss.sgi.com>; Fri, 9 Oct 2009 14:50:24 -0500
-Received: from smtp5-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C807EBF6957
-	for <xfs@oss.sgi.com>; Fri,  9 Oct 2009 12:51:48 -0700 (PDT)
-Received: from smtp5-g21.free.fr (smtp5-g21.free.fr [212.27.42.5]) by
-	cuda.sgi.com with ESMTP id H0yweAKU1q5iNzTl for
-	<xfs@oss.sgi.com>; Fri, 09 Oct 2009 12:51:48 -0700 (PDT)
-Date: Fri, 9 Oct 2009 21:50:27 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: can't mount XFS from a read-only device
-Message-ID: <20091009215027.71cf86b9@galadriel.home>
-In-Reply-To: <4ACF8EEF.1040809@sandeen.net>
-References: <20091009170937.3938ff7b@harpe.intellique.com>
-	<4ACF8801.7070009@sandeen.net>
-	<20091009212150.2b54cb77@galadriel.home>
-	<4ACF8EEF.1040809@sandeen.net>
+	n9A4KxZ0125767 for <xfs@oss.sgi.com>; Fri, 9 Oct 2009 23:21:00 -0500
+Received: from one.firstfloor.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0E2D3175EBAA
+	for <xfs@oss.sgi.com>; Fri,  9 Oct 2009 21:22:26 -0700 (PDT)
+Received: from one.firstfloor.org (one.firstfloor.org [213.235.205.2]) by
+	cuda.sgi.com with ESMTP id iWwpPbdu6TthgJ9x for
+	<xfs@oss.sgi.com>; Fri, 09 Oct 2009 21:22:26 -0700 (PDT)
+Date: Sat, 10 Oct 2009 06:22:24 +0200
+From: Andi Kleen <andi@firstfloor.org>
+Subject: Re: [PATCH] mkfs: add discard support
+Message-ID: <20091010042224.GG1656@one.firstfloor.org>
+References: <20091006184758.GA4780@infradead.org>
+	<20091007044215.GK9464@discord.disaster>
+	<87iqerymu0.fsf@basil.nowhere.org>
+	<20091009023022.GL9464@discord.disaster>
 Mime-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20091009023022.GL9464@discord.disaster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,31 +27,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Andi Kleen <andi@firstfloor.org>, xfs@oss.sgi.com
 
-Le Fri, 09 Oct 2009 14:28:47 -0500 vous =E9criviez:
+On Fri, Oct 09, 2009 at 01:30:22PM +1100, Dave Chinner wrote:
+> On Wed, Oct 07, 2009 at 10:24:07PM +0200, Andi Kleen wrote:
+> > Dave Chinner <david@fromorbit.com> writes:
+> > > On Tue, Oct 06, 2009 at 02:47:58PM -0400, Christoph Hellwig wrote:
+> > >> Call the BLKDISCARD ioctl to mark the whole disk as unused before creating
+> > >> a new filesystem.  This will allow SSDs, Arrays with thin provisioning support
+> > >> and virtual machines to make smarter allocation decisions.
+> > >
+> > > Good idea, but perhaps the discard should be optional rather than
+> > > unconditional.  My immediate thought was the SOP for setting up
+> > > encrypted devices - fill the empty disk with random data before
+> > > setting up the encrypted device. If you then send it a discard....
+> >
+> > This actually doesn't really work for SSDs, because SSDs typically
+> > have more internal capacity than they advertise and when you fill
+> > it up then it will just allocate new blocks and leave some of the
+> > blocks with the existing data around.
+> 
+> Agreed, but initialisation with random data before encryption is not
+> to delete existing information on the drive - it is to prevent
+> simple side-channel attacks that can significantly reduce the
+> strength of the encryption (e.g. an observer can tell the difference
 
-> For a clean log I agree; what kernel was this?  I vaguely remember a
-> fix in this area.
+I see. That makes sense.
 
-It's a 2.6.24.7. I did a quick try with 2.6.27.25 and got exactly the
-same error.
+Although to be pedantic your description above is slightly
+wrong then -- you need to fill it up after setting up the encryption,
+not before. In this case it might be actually more reasonable
+to simply fill the file system with a random file (although on XFS
+might need to reset inode limits first to catch the metadata
+reservations)
 
-> Which option solved it?  (norecovery I'm guessing)
-
-Yes, norecovery was the missing part.
-
--- =
-
---------------------------------------------------
-Emmanuel Florac               www.intellique.com   =
-
---------------------------------------------------
+-Andi
+-- 
+ak@linux.intel.com -- Speaking for myself only.
 
 _______________________________________________
 xfs mailing list
