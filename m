@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9CK5DV9052881 for <xfs@oss.sgi.com>; Mon, 12 Oct 2009 15:05:13 -0500
+	n9CKg4pI054068 for <xfs@oss.sgi.com>; Mon, 12 Oct 2009 15:42:04 -0500
 Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 26C1F176D5E7
-	for <xfs@oss.sgi.com>; Mon, 12 Oct 2009 13:06:42 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EC2E3C14F57
+	for <xfs@oss.sgi.com>; Mon, 12 Oct 2009 13:43:32 -0700 (PDT)
 Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id qHJyevJytjtCV4mG for
-	<xfs@oss.sgi.com>; Mon, 12 Oct 2009 13:06:42 -0700 (PDT)
-Message-ID: <4AD38C50.2060403@sandeen.net>
-Date: Mon, 12 Oct 2009 15:06:40 -0500
+	cuda.sgi.com with ESMTP id fOepjffthG262AWD for
+	<xfs@oss.sgi.com>; Mon, 12 Oct 2009 13:43:32 -0700 (PDT)
+Message-ID: <4AD394F4.60809@sandeen.net>
+Date: Mon, 12 Oct 2009 15:43:32 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH 04/14] repair: split up scanfunc_ino
+Subject: Re: [PATCH 05/14] repair: reduce byte swapping in scan_freelist
 References: <20090902175531.469184575@bombadil.infradead.org>
-	<20090902175840.403232401@bombadil.infradead.org>
-In-Reply-To: <20090902175840.403232401@bombadil.infradead.org>
+	<20090902175840.573208011@bombadil.infradead.org>
+In-Reply-To: <20090902175840.573208011@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,80 +33,88 @@ Cc: xfs@oss.sgi.com
 
 Christoph Hellwig wrote:
 
-
-> Split out a helper to scan a single inode chunk for suspect inodes from
-> scanfunc_ino to make it more readable.
+> Store the ag number in a local native endian variable to avoid 
+> byteswapping
+> it over and over again.
 >
 >
 > Signed-off-by: Barry Naujok <bnaujok@sgi.com>
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 >
+
+Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
 > Index: xfsprogs-dev/repair/scan.c
 > ===================================================================
-> --- xfsprogs-dev.orig/repair/scan.c	2009-08-21 19:00:15.000000000 +0000
-> +++ xfsprogs-dev/repair/scan.c	2009-08-21 19:03:26.000000000 +0000
->
-...
-
-> +
-> +	/*
-> +	 * set state of each block containing inodes
-> +	 */
-> +	if (off == 0 && !suspect)  {
-> +		for (j = 0;
-> +		     j < XFS_INODES_PER_CHUNK;
-> +		     j += mp->m_sb.sb_inopblock)  {
-> +			agbno = XFS_AGINO_TO_AGBNO(mp, ino + j);
-> +			state = get_agbno_state(mp, agno, agbno);
-> +			if (state == XR_E_UNKNOWN)  {
-> +				set_agbno_state(mp, agno, agbno, XR_E_INO);
-> +			} else if (state == XR_E_INUSE_FS && agno == 0 &&
-> +				   ino + j >= first_prealloc_ino &&
-> +				   ino + j < last_prealloc_ino)  {
-> +				set_agbno_state(mp, agno, agbno, XR_E_INO);
-> +			} else  {
-> +				do_warn(
-> +_("inode chunk claims used block, inobt block - agno %d, bno %d, inopb %d\n"),
-> +					agno, agbno,
-> +				mp->m_sb.sb_inopblock);
-
-pretty weird indentation here can't you just merge w/ previous line?
-
-
-Also is the change from bno to agbno intentional in the message?
-I guess it's fine.
-
-...
-
-
-> +		for (i = 0; i < numrecs; i++)
-> +			suspect = scan_single_ino_chunk(agno, &rp[i], suspect);
+> --- xfsprogs-dev.orig/repair/scan.c	2009-08-21 19:03:26.000000000 +0000
+> +++ xfsprogs-dev/repair/scan.c	2009-08-21 19:05:32.000000000 +0000
+> @@ -943,23 +943,26 @@ scan_freelist(
+>  {
+>  	xfs_agfl_t	*agfl;
+>  	xfs_buf_t	*agflbuf;
+> +	xfs_agnumber_t	agno;
+>  	xfs_agblock_t	bno;
+>  	int		count;
+>  	int		i;
 >  
->  		if (suspect)
->  			bad_ino_btree = 1;
-It seems like it might be nicer to just do:
-
-
-+		for (i = 0; i < numrecs; i++)
-+			suspect += scan_single_ino_chunk(agno, &rp[i]);
-
-and let scan_single_ino_chunk return 0/1 instead of passing suspect in
-and returning an incremented value?
-
-Hm but I guess the sub-function tests it doesn't it:
-
-+       /*
-+        * set state of each block containing inodes
-+        */
-+       if (off == 0 && !suspect)  {
-
-so, seems fine as-is, though I'd just fix that indentation.
-
-Thanks,
--Eric
-
-
--Eric
+> +	agno = be32_to_cpu(agf->agf_seqno);
+> +
+>  	if (XFS_SB_BLOCK(mp) != XFS_AGFL_BLOCK(mp) &&
+> -			XFS_AGF_BLOCK(mp) != XFS_AGFL_BLOCK(mp) &&
+> -			XFS_AGI_BLOCK(mp) != XFS_AGFL_BLOCK(mp))
+> -		set_agbno_state(mp, be32_to_cpu(agf->agf_seqno),
+> -				XFS_AGFL_BLOCK(mp), XR_E_FS_MAP);
+> +	    XFS_AGF_BLOCK(mp) != XFS_AGFL_BLOCK(mp) &&
+> +	    XFS_AGI_BLOCK(mp) != XFS_AGFL_BLOCK(mp))
+> +		set_agbno_state(mp, agno, XFS_AGFL_BLOCK(mp), XR_E_FS_MAP);
+> +
+>  	if (be32_to_cpu(agf->agf_flcount) == 0)
+>  		return;
+> -	agflbuf = libxfs_readbuf(mp->m_dev, XFS_AG_DADDR(mp,
+> -				be32_to_cpu(agf->agf_seqno),
+> -				XFS_AGFL_DADDR(mp)), XFS_FSS_TO_BB(mp, 1), 0);
+> +
+> +	agflbuf = libxfs_readbuf(mp->m_dev,
+> +				 XFS_AG_DADDR(mp, agno, XFS_AGFL_DADDR(mp)),
+> +				 XFS_FSS_TO_BB(mp, 1), 0);
+>  	if (!agflbuf)  {
+> -		do_abort(_("can't read agfl block for ag %d\n"),
+> -			be32_to_cpu(agf->agf_seqno));
+> +		do_abort(_("can't read agfl block for ag %d\n"), agno);
+>  		return;
+>  	}
+>  	agfl = XFS_BUF_TO_AGFL(agflbuf);
+> @@ -967,12 +970,11 @@ scan_freelist(
+>  	count = 0;
+>  	for (;;) {
+>  		bno = be32_to_cpu(agfl->agfl_bno[i]);
+> -		if (verify_agbno(mp, be32_to_cpu(agf->agf_seqno), bno))
+> -			set_agbno_state(mp, be32_to_cpu(agf->agf_seqno),
+> -					bno, XR_E_FREE);
+> +		if (verify_agbno(mp, agno, bno))
+> +			set_agbno_state(mp, agno, bno, XR_E_FREE);
+>  		else
+>  			do_warn(_("bad agbno %u in agfl, agno %d\n"),
+> -				bno, be32_to_cpu(agf->agf_seqno));
+> +				bno, agno);
+>  		count++;
+>  		if (i == be32_to_cpu(agf->agf_fllast))
+>  			break;
+> @@ -981,8 +983,7 @@ scan_freelist(
+>  	}
+>  	if (count != be32_to_cpu(agf->agf_flcount)) {
+>  		do_warn(_("freeblk count %d != flcount %d in ag %d\n"), count,
+> -			be32_to_cpu(agf->agf_flcount),
+> -			be32_to_cpu(agf->agf_seqno));
+> +			be32_to_cpu(agf->agf_flcount), agno);
+>  	}
+>  	libxfs_putbuf(agflbuf);
+>  }
+>
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+>
 
 _______________________________________________
 xfs mailing list
