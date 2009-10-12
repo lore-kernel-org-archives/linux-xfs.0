@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9BCvdrH223332 for <xfs@oss.sgi.com>; Sun, 11 Oct 2009 07:57:40 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 964B3BFEE32
-	for <xfs@oss.sgi.com>; Sun, 11 Oct 2009 05:59:07 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id nSfvZS0V6oZ68ssg for
-	<xfs@oss.sgi.com>; Sun, 11 Oct 2009 05:59:07 -0700 (PDT)
-Date: Sun, 11 Oct 2009 08:59:07 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: 2.6.32-rc3 kernel BUG when unmounting quota offed xfs
-Message-ID: <20091011125907.GA11627@infradead.org>
-References: <4ACD8C9B.5090701@wm.jp.nec.com>
-MIME-Version: 1.0
+	n9C1VemK009572 for <xfs@oss.sgi.com>; Sun, 11 Oct 2009 20:31:42 -0500
+Received: from one.firstfloor.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8511DD6B8AC
+	for <xfs@oss.sgi.com>; Sun, 11 Oct 2009 18:33:08 -0700 (PDT)
+Received: from one.firstfloor.org (one.firstfloor.org [213.235.205.2]) by
+	cuda.sgi.com with ESMTP id DnelBlpBxHHKv4Qc for
+	<xfs@oss.sgi.com>; Sun, 11 Oct 2009 18:33:08 -0700 (PDT)
+Date: Mon, 12 Oct 2009 03:33:06 +0200
+From: Andi Kleen <andi@firstfloor.org>
+Subject: Re: [PATCH] mkfs: add discard support
+Message-ID: <20091012013306.GH1656@one.firstfloor.org>
+References: <20091006184758.GA4780@infradead.org>
+	<20091007044215.GK9464@discord.disaster>
+	<87iqerymu0.fsf@basil.nowhere.org>
+	<20091009023022.GL9464@discord.disaster>
+	<20091010162428.GA22720@infradead.org>
+Mime-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4ACD8C9B.5090701@wm.jp.nec.com>
+In-Reply-To: <20091010162428.GA22720@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,24 +32,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Utako Kusaka <u-kusaka@wm.jp.nec.com>
-Cc: xfs <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Andi Kleen <andi@firstfloor.org>, xfs@oss.sgi.com
 
-On Thu, Oct 08, 2009 at 03:54:19PM +0900, Utako Kusaka wrote:
-> Hi,
-> 
-> XFS file system segfaults in 2.6.32-rc3 and 2.6.31.2.
-> This problem does not occur with 2.6.30-rc5.
-> xfsprogs version is 3.0.3.
-> 
-> Testcase is:
-> # mount -t xfs -o uquota /dev/sda7 mpnt2
-> # xfs_quota -x -c off
-> # umount /dev/sda7
-> Segmentation fault
+On Sat, Oct 10, 2009 at 12:24:28PM -0400, Christoph Hellwig wrote:
+> So does any of these means a positive review for the full patch, or just
+> philosophical discussions?
 
-Thanks a lot Utako-san, I can reproduce the above testcase on latest
-mainline.  I'll come back to you with a patch soon.
+It was in principle positive, except for the request to add a option
+to turn it off to handle Dave's prefill use case.
+
+-Andi
+
+-- 
+ak@linux.intel.com -- Speaking for myself only.
 
 _______________________________________________
 xfs mailing list
