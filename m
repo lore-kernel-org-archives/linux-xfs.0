@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9DMC693156368 for <xfs@oss.sgi.com>; Tue, 13 Oct 2009 17:12:09 -0500
+	n9DMIH52156772 for <xfs@oss.sgi.com>; Tue, 13 Oct 2009 17:18:17 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B4CE589015B
-	for <xfs@oss.sgi.com>; Tue, 13 Oct 2009 15:13:35 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 68052C25FAA
+	for <xfs@oss.sgi.com>; Tue, 13 Oct 2009 15:19:47 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id IFnsgNE9B6GvSFTn for
-	<xfs@oss.sgi.com>; Tue, 13 Oct 2009 15:13:35 -0700 (PDT)
-Date: Tue, 13 Oct 2009 18:13:35 -0400
+	by cuda.sgi.com with ESMTP id i6ns5CT0rwPNAFDK for
+	<xfs@oss.sgi.com>; Tue, 13 Oct 2009 15:19:47 -0700 (PDT)
+Date: Tue, 13 Oct 2009 18:19:46 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 01/14] repair: merge scanfunc_bno and scanfunc_cnt
-Message-ID: <20091013221335.GA30832@infradead.org>
+Subject: Re: [PATCH 04/14] repair: split up scanfunc_ino
+Message-ID: <20091013221946.GB31385@infradead.org>
 References: <20090902175531.469184575@bombadil.infradead.org>
-	<20090902175839.915684396@bombadil.infradead.org>
-	<4AD35EEC.4080707@sandeen.net>
+	<20090902175840.403232401@bombadil.infradead.org>
+	<4AD38C50.2060403@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4AD35EEC.4080707@sandeen.net>
+In-Reply-To: <4AD38C50.2060403@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,29 +33,19 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Mon, Oct 12, 2009 at 11:53:00AM -0500, Eric Sandeen wrote:
+On Mon, Oct 12, 2009 at 03:06:40PM -0500, Eric Sandeen wrote:
+>> +					agno, agbno,
+>> +				mp->m_sb.sb_inopblock);
 >
-> Should we explicitly test that this is either XFS_ABTC_MAGIC or 
-> XFS_ABTB_MAGIC here to avoid any programming-error
-> type problems?
+> pretty weird indentation here can't you just merge w/ previous line?
 
-We really only have two freespace btrees.  But I'll add an assert
-just to be sure.
+XFS (especially userspace code) uses this in lots of places.  Gives
+more space to messages but keeps the normal arguments normally aligned.
 
->> -				else  {
->> +					break;
->> +				case XR_E_FREE1:
->> +					/*
->> +					 * no warning messages -- we'll catch
->> +					 * FREE1 blocks later
->> +					 */
->> +					if (magic != XFS_ABTB_MAGIC) {
->
-> Why not make this explicitly "if (magic == XFS_ABTC_MAGIC)" - I guess it seems potentially
-> more future-proof to me though I don't suppose we'll ever get a new type here.  :)
-> The positive test seems clearer to me but *shrug*.
+> Also is the change from bno to agbno intentional in the message?
+> I guess it's fine.
 
-Ok, changed.
+That version is more correct.  Don't remember how it got in, though.
 
 _______________________________________________
 xfs mailing list
