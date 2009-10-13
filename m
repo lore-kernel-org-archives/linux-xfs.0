@@ -1,14 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9DHt6xM138593 for <xfs@oss.sgi.com>; Tue, 13 Oct 2009 12:55:06 -0500
-Content-class: urn:content-classes:message
+	n9DJPAH8144817 for <xfs@oss.sgi.com>; Tue, 13 Oct 2009 14:25:11 -0500
+Received: from realbig.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 52962C2539B
+	for <xfs@oss.sgi.com>; Tue, 13 Oct 2009 12:26:39 -0700 (PDT)
+Received: from realbig.com (realbig.com [207.36.196.230]) by cuda.sgi.com with
+	ESMTP id zq7oYqI9B6DtZ8nR for <xfs@oss.sgi.com>;
+	Tue, 13 Oct 2009 12:26:39 -0700 (PDT)
+Date: Tue, 13 Oct 2009 14:26:23 -0500 (CDT)
+From: Andy Poling <andy@realbig.com>
+Subject: Wrapped journal record corruption on read at recovery - patch attached
+	(was Re: XFS corruption with failover)
+In-Reply-To: <mailman.0.1255458988.141519.xfs@oss.sgi.com>
+Message-ID: <alpine.DEB.2.00.0910131342440.11546@andydesk>
+References: <mailman.0.1255458988.141519.xfs@oss.sgi.com>
 MIME-Version: 1.0
-Subject: RE: [PATCH] xfstests: test 220: double inode free in xfs_dqrele_inode
-Date: Tue, 13 Oct 2009 12:55:55 -0500
-Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83AD9C@cf--amer001e--3.americas.sgi.com>
-In-Reply-To: <20091012235059.GA2318@infradead.org>
-From: "Alex Elder" <aelder@sgi.com>
+Content-Type: MULTIPART/MIXED; BOUNDARY="8323328-1068810406-1255461942=:11546"
+Content-ID: <alpine.DEB.2.00.0910131425540.11546@andydesk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,123 +26,90 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: John Quigley <jquigley@cleversafe.com>
 
-On , Christoph Hellwig wrote:
-> Trivial test case that mounts a filesystem with user quotas, then turns
-> quotas off an unmounts.  Based on a testcase in a bug report from
-> Utako Kusaka <u-kusaka@wm.jp.nec.com>.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Looks good.
+--8323328-1068810406-1255461942=:11546
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-ID: <alpine.DEB.2.00.0910131425541.11546@andydesk>
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
- 
-> Index: xfstests-dev/220
-> ===================================================================
-> --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-> +++ xfstests-dev/220	2009-10-12 23:49:43.000000000 +0000
-> @@ -0,0 +1,71 @@
-> +#! /bin/sh
-> +# FS QA Test No. 220
-> +#
-> +# Test that turning quotas off on a mounted filesystem doesn't crash
-> +# the system.
-> +#
-> +# Based on a bug report from Utako Kusaka <u-kusaka@wm.jp.nec.com>.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2009 Christoph Hellwig.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#
-> +#-----------------------------------------------------------------------
-> +#
-> +# creator
-> +owner=hch@lst.de
-> +
-> +seq=`basename $0`
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	umount $SCRATCH_DEV >/dev/null 2>&1
-> +}
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +# get standard environment, filters and checks
-> +. ./common.rc
-> +. ./common.filter
-> +. ./common.quota
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_supported_os Linux
-> +
-> +_require_scratch
-> +_require_quota
-> +
-> +echo "Silence is golden."
-> +
-> +# create scratch filesystem
-> +_scratch_mkfs_xfs >/dev/null 2>&1
-> +
-> +# mount  with quotas enabled
-> +_scratch_mount -o uquota
-> +
-> +# turn off quota
-> +xfs_quota -x -c off $SCRATCH_DEV
-> +
-> +# and unmount (this used to crash)
-> +umount $SCRATCH_DEV
-> +
-> +status=0
-> +exit $status
-> Index: xfstests-dev/220.out
-> ===================================================================
-> --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-> +++ xfstests-dev/220.out	2009-10-11 17:00:02.000000000 +0000
-> @@ -0,0 +1,2 @@
-> +QA output created by 220
-> +Silence is golden.
-> Index: xfstests-dev/group
-> ===================================================================
-> --- xfstests-dev.orig/group	2009-10-11 16:44:37.000000000 +0000
-> +++ xfstests-dev/group	2009-10-11 16:45:07.000000000 +0000
-> @@ -329,3 +329,4 @@ prealloc
->  217 log metadata auto
->  218 auto fsr quick
->  219 auto quota quick
-> +220 auto quota quick
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+At his request, I followed up on John Quigley's problem, and I believe I found
+a bug in xlog_do_recovery_pass() in handling of a wrapped journal record.  A
+patch against 2.6.28.10 is attached.  It looks like the patch will apply
+cleanly against any recent version.
+
+Summary of problem:
+
+If a journal record wraps at the physical end of the journal, it has to be
+read in two parts in xlog_do_recovery_pass(): a read at the physical end and a
+read at the physical beginning.  If xlog_bread() has to re-align the first
+read, the second read request does not take that re-alignment into account.
+If the first read was re-aligned, the second read over-writes the end of the
+data from the first read, effectively corrupting it.  This can happen either
+when reading the record header or reading the record data.
+
+The first sanity check in xlog_recover_process_data() is to check for a valid
+clientid, so that is the error reported.
+
+
+Summary of fix:
+
+If there was a first read at the physical end, XFS_BUF_PTR() returns where the
+data was requested to begin.  Conversely, because it is the result of
+xlog_align(), offset indicates where the requested data for the first read
+actually begins - whether or not xlog_bread() has re-aligned it.
+
+Using offset as the base for the calculation of where to place the second read
+data ensures that it will be correctly placed immediately following the data
+from the first read instead of sometimes over-writing the end of it.
+
+The attached patch has resolved the reported problem of occasional inability
+to recover the journal (reporting "bad clientid").
+
+-Andy
+
+It ain't what you don't know that gets you into trouble.
+It's what you know for sure that just ain't so. - Mark Twain
+--8323328-1068810406-1255461942=:11546
+Content-Type: IMAGE/X-CORELDRAWPATTERN; name=xfs_log_recover.pat
+Content-Transfer-Encoding: BASE64
+Content-ID: <alpine.DEB.2.00.0910131425420.11546@andydesk>
+Content-Description: xfs_log_recover.pat
+Content-Disposition: attachment; filename=xfs_log_recover.pat
+
+LS0tIGZzL3hmcy94ZnNfbG9nX3JlY292ZXIuYy5vcmlnCTIwMDktMTAtMTMg
+MDE6NTc6MzMuMDAwMDAwMDAwIC0wNTAwCisrKyBmcy94ZnMveGZzX2xvZ19y
+ZWNvdmVyLmMJMjAwOS0xMC0xMyAwMTo1Njo1MS4wMDAwMDAwMDAgLTA1MDAK
+QEAgLTM2MzgsNyArMzYzOCwxMCBAQAogCQkJCSAqICAgLSBvcmRlciBpcyBp
+bXBvcnRhbnQuCiAJCQkJICovCiAJCQkJd3JhcHBlZF9oYmxrcyA9IGhibGtz
+IC0gc3BsaXRfaGJsa3M7Ci0JCQkJYnVmYWRkciA9IFhGU19CVUZfUFRSKGhi
+cCk7CisJCQkJaWYgKG9mZnNldCkKKwkJCQkJYnVmYWRkciA9IG9mZnNldDsK
+KwkJCQllbHNlCisJCQkJCWJ1ZmFkZHIgPSBYRlNfQlVGX1BUUihoYnApOwog
+CQkJCWVycm9yID0gWEZTX0JVRl9TRVRfUFRSKGhicCwKIAkJCQkJCWJ1ZmFk
+ZHIgKyBCQlRPQihzcGxpdF9oYmxrcyksCiAJCQkJCQlCQlRPQihoYmxrcyAt
+IHNwbGl0X2hibGtzKSk7CkBAIC0zNzAwLDcgKzM3MDMsMTAgQEAKIAkJCQkg
+KiAgIF9maXJzdF8sIHRoZW4gdGhlIGxvZyBzdGFydCAoTFIgaGVhZGVyIGVu
+ZCkKIAkJCQkgKiAgIC0gb3JkZXIgaXMgaW1wb3J0YW50LgogCQkJCSAqLwot
+CQkJCWJ1ZmFkZHIgPSBYRlNfQlVGX1BUUihkYnApOworCQkJCWlmIChvZmZz
+ZXQpCisJCQkJCWJ1ZmFkZHIgPSBvZmZzZXQ7CisJCQkJZWxzZQorCQkJCQli
+dWZhZGRyID0gWEZTX0JVRl9QVFIoZGJwKTsKIAkJCQllcnJvciA9IFhGU19C
+VUZfU0VUX1BUUihkYnAsCiAJCQkJCQlidWZhZGRyICsgQkJUT0Ioc3BsaXRf
+YmJsa3MpLAogCQkJCQkJQkJUT0IoYmJsa3MgLSBzcGxpdF9iYmxrcykpOwo=
+
+--8323328-1068810406-1255461942=:11546
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--8323328-1068810406-1255461942=:11546--
