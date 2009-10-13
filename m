@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9DMIH52156772 for <xfs@oss.sgi.com>; Tue, 13 Oct 2009 17:18:17 -0500
+	n9DNVt42160330 for <xfs@oss.sgi.com>; Tue, 13 Oct 2009 18:31:59 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 68052C25FAA
-	for <xfs@oss.sgi.com>; Tue, 13 Oct 2009 15:19:47 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3CB6911A0C6B
+	for <xfs@oss.sgi.com>; Tue, 13 Oct 2009 16:33:26 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id i6ns5CT0rwPNAFDK for
-	<xfs@oss.sgi.com>; Tue, 13 Oct 2009 15:19:47 -0700 (PDT)
-Date: Tue, 13 Oct 2009 18:19:46 -0400
+	by cuda.sgi.com with ESMTP id wdAG98Fl9o3Kwcs7 for
+	<xfs@oss.sgi.com>; Tue, 13 Oct 2009 16:33:26 -0700 (PDT)
+Date: Tue, 13 Oct 2009 19:33:24 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 04/14] repair: split up scanfunc_ino
-Message-ID: <20091013221946.GB31385@infradead.org>
-References: <20090902175531.469184575@bombadil.infradead.org>
-	<20090902175840.403232401@bombadil.infradead.org>
-	<4AD38C50.2060403@sandeen.net>
+Subject: Re: Wrapped journal record corruption on read at recovery - patch
+	attached (was Re: XFS corruption with failover)
+Message-ID: <20091013233324.GA28942@infradead.org>
+References: <mailman.0.1255458988.141519.xfs@oss.sgi.com>
+	<alpine.DEB.2.00.0910131342440.11546@andydesk>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4AD38C50.2060403@sandeen.net>
+In-Reply-To: <alpine.DEB.2.00.0910131342440.11546@andydesk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,22 +30,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Andy Poling <andy@realbig.com>
+Cc: John Quigley <jquigley@cleversafe.com>, xfs@oss.sgi.com
 
-On Mon, Oct 12, 2009 at 03:06:40PM -0500, Eric Sandeen wrote:
->> +					agno, agbno,
->> +				mp->m_sb.sb_inopblock);
->
-> pretty weird indentation here can't you just merge w/ previous line?
+Thanks Andy,
 
-XFS (especially userspace code) uses this in lots of places.  Gives
-more space to messages but keeps the normal arguments normally aligned.
+after starting over the code for over half an hour I think both
+your analysis and the patch are correct.
 
-> Also is the change from bno to agbno intentional in the message?
-> I guess it's fine.
+-				bufaddr = XFS_BUF_PTR(hbp);
++				if (offset)
++					bufaddr = offset;
++				else
++					bufaddr = XFS_BUF_PTR(hbp);
 
-That version is more correct.  Don't remember how it got in, though.
+However the way this is written is a bit confusing.  Probably less
+confusing than some of the surrounding code,  but it adds up.
+
+We calculate the offset for one case above, and then after we're done
+with the reading that never touches offset we calculate it if we don't
+have it.
+
+So this at very least needs a big comment describing it, or even better
+moving up the xlog_align call so that we can simply always use
+offset directly, which could also get rid of the now superflous bufaddr
+variable by always using offset.
+
+Exactly the same also applies for the second use.
+
+Anyway, thanks a lot again and if you can fix this up I'd welcome it,
+otherwise I'll do it once I get some time.
+
+I suspect we might even be able to come up with a small enough testcase
+for this for xfsqa, we just need to make sure logs are aligned and then
+find a good enough heuristic to reproduce log wrapping.
 
 _______________________________________________
 xfs mailing list
