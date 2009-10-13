@@ -1,14 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9DNbJsE160550 for <xfs@oss.sgi.com>; Tue, 13 Oct 2009 18:37:19 -0500
-Content-class: urn:content-classes:message
+	n9DNuajT161476 for <xfs@oss.sgi.com>; Tue, 13 Oct 2009 18:56:36 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6879D178223E
+	for <xfs@oss.sgi.com>; Tue, 13 Oct 2009 16:58:05 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id aPHGL9VgWFGd6zOa for
+	<xfs@oss.sgi.com>; Tue, 13 Oct 2009 16:58:05 -0700 (PDT)
+Date: Tue, 13 Oct 2009 19:58:05 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: fsetxattr() fails on a writable descriptor?
+Message-ID: <20091013235805.GA18467@infradead.org>
+References: <1251987642.3855.36.camel@dhcp-lab-219.englab.brq.redhat.com>
+	<20090908184049.GA22050@infradead.org>
+	<4AA81CDB.8070509@draigBrady.com> <200909100014.10833@zmi.at>
 MIME-Version: 1.0
-Subject: RE: [PATCH 03/14] repair: kill B_IS_META flag
-Date: Tue, 13 Oct 2009 18:38:01 -0500
-Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83ADA6@cf--amer001e--3.americas.sgi.com>
-In-Reply-To: <4AD4FCDD.1060602@sandeen.net>
-From: "Alex Elder" <aelder@sgi.com>
+Content-Disposition: inline
+In-Reply-To: <200909100014.10833@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,38 +30,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>, Christoph Hellwig <hch@infradead.org>
+To: Michael Monnerie <michael.monnerie@is.it-management.at>
 Cc: xfs@oss.sgi.com
 
-On , Eric Sandeen wrote:
-> Christoph Hellwig wrote:
->> On Mon, Oct 12, 2009 at 02:45:08PM -0500, Eric Sandeen wrote:
->>> Christoph Hellwig wrote:
->>> 
->>>> B_IS_META is the inverse flag of B_IS_INODE which is not really obvious
->>>> from it's use.  So just use !B_IS_INODE to make it more clear.
->>>> 
->>> Logic-wise it's fine, but is this change really helpful?   The comment says:
->>> 
->>> /*
->>> * Test if bit 0 or 2 is set in the "priority tag" of the buffer to see if
->>> * the buffer is for an inode or other metadata.
->>> */
->>> 
->>> so basically it distinguishes inodes from other metadata right.
->> 
->> Yes, with the key on other.  In my books inodes are meta-data.
->> 
->>> B_IS_INODE is clear; B_IS_META is pretty clear, "!B_IS_INODE" seems muddy; so
->>> very many things are "not inodes" :)
->> 
->> In a buffercache (and in fact a whole application) that only deals with
->> metadata at all !B_IS_INODE meaning other metadata seems a lot more clear to me than B_IS_META.
->> 
+On Thu, Sep 10, 2009 at 12:14:10AM +0200, Michael Monnerie wrote:
+> On Mittwoch 09 September 2009 P?draig Brady wrote:
+> > The specific issue we have is that `cp --preserve=xattr` gets an
+> > error when copying xattrs from a read only file. Since this has been
+> > an xattr issue since the start, we'll have to work around it.
 > 
-> Ok, I'm fine with that I suppose.
+> In that context I would call it a bug - shouldn't it be fixed?
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+It seems pretty late for change behaviour that has been around
+since 2002.  But if this was a new interface I would agree with you
+that the behaviour is illogical.
 
 _______________________________________________
 xfs mailing list
