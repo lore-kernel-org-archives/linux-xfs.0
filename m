@@ -1,23 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9DNVt42160330 for <xfs@oss.sgi.com>; Tue, 13 Oct 2009 18:31:59 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3CB6911A0C6B
-	for <xfs@oss.sgi.com>; Tue, 13 Oct 2009 16:33:26 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id wdAG98Fl9o3Kwcs7 for
-	<xfs@oss.sgi.com>; Tue, 13 Oct 2009 16:33:26 -0700 (PDT)
-Date: Tue, 13 Oct 2009 19:33:24 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Wrapped journal record corruption on read at recovery - patch
-	attached (was Re: XFS corruption with failover)
-Message-ID: <20091013233324.GA28942@infradead.org>
-References: <mailman.0.1255458988.141519.xfs@oss.sgi.com>
-	<alpine.DEB.2.00.0910131342440.11546@andydesk>
+	n9DNbJY7160549 for <xfs@oss.sgi.com>; Tue, 13 Oct 2009 18:37:19 -0500
+Content-class: urn:content-classes:message
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.00.0910131342440.11546@andydesk>
+Subject: RE: [PATCH 02/14] repair: reduce byte swap operations
+	inscanfunc_allocbt
+Date: Tue, 13 Oct 2009 18:37:21 -0500
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83ADA5@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <4AD364D9.9090306@sandeen.net>
+From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,40 +22,106 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andy Poling <andy@realbig.com>
-Cc: John Quigley <jquigley@cleversafe.com>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>, Christoph Hellwig <hch@infradead.org>
+Cc: Barry Naujok <bnaujok@sgi.com>, xfs@oss.sgi.com
 
-Thanks Andy,
+On , Eric Sandeen wrote:
+> Christoph Hellwig wrote:
+> 
+>> Store native endian version of the extent startblock and length in
+>> local variables instead of converting them over and over again.
+>> 
+>> 
+>> Signed-off-by: Barry Naujok <bnaujok@sgi.com>
+>> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> I bet there's a lot more places where this could be done too :)
 
-after starting over the code for over half an hour I think both
-your analysis and the patch are correct.
+Lots more...
 
--				bufaddr = XFS_BUF_PTR(hbp);
-+				if (offset)
-+					bufaddr = offset;
-+				else
-+					bufaddr = XFS_BUF_PTR(hbp);
+> Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
-However the way this is written is a bit confusing.  Probably less
-confusing than some of the surrounding code,  but it adds up.
-
-We calculate the offset for one case above, and then after we're done
-with the reading that never touches offset we calculate it if we don't
-have it.
-
-So this at very least needs a big comment describing it, or even better
-moving up the xlog_align call so that we can simply always use
-offset directly, which could also get rid of the now superflous bufaddr
-variable by always using offset.
-
-Exactly the same also applies for the second use.
-
-Anyway, thanks a lot again and if you can fix this up I'd welcome it,
-otherwise I'll do it once I get some time.
-
-I suspect we might even be able to come up with a small enough testcase
-for this for xfsqa, we just need to make sure logs are aligned and then
-find a good enough heuristic to reproduce log wrapping.
+>> Index: xfsprogs-dev/repair/scan.c
+>> ===================================================================
+>> --- xfsprogs-dev.orig/repair/scan.c	2009-08-21 18:48:01.000000000 +0000
+>> +++ xfsprogs-dev/repair/scan.c	2009-08-21 18:54:29.000000000 +0000
+>> @@ -449,7 +449,6 @@ scanfunc_allocbt(
+>>  	__uint32_t		magic)
+>>  {
+>>  	const char 		*name;
+>> -	xfs_agblock_t		b, e;
+>>  	int			i;
+>>  	xfs_alloc_ptr_t		*pp;
+>>  	xfs_alloc_rec_t		*rp;
+>> @@ -509,20 +508,21 @@ _("%s freespace btree block claimed (sta
+>> 
+>>  		rp = XFS_ALLOC_REC_ADDR(mp, block, 1);
+>>  		for (i = 0; i < numrecs; i++) {
+>> -			if (be32_to_cpu(rp[i].ar_blockcount) == 0 ||
+>> -			    be32_to_cpu(rp[i].ar_startblock) == 0 ||
+>> -			    !verify_agbno(mp, agno,
+>> -				be32_to_cpu(rp[i].ar_startblock)) ||
+>> -			    be32_to_cpu(rp[i].ar_blockcount) >
+>> -					MAXEXTLEN)
+>> -				continue;
+>> +			xfs_agblock_t		b, end;
+>> +			xfs_extlen_t		len;
+>> +
+>> +			b = be32_to_cpu(rp[i].ar_startblock);
+>> +			len = be32_to_cpu(rp[i].ar_blockcount);
+>> +			end = b + len;
+>> 
+>> -			e = be32_to_cpu(rp[i].ar_startblock) +
+>> -				be32_to_cpu(rp[i].ar_blockcount);
+>> -			if (!verify_agbno(mp, agno, e - 1))
+>> +			if (b == 0 || !verify_agbno(mp, agno, b))
+>> +				continue;
+>> +			if (len == 0 || len > MAXEXTLEN)
+>>  				continue;
+>> -			for (b = be32_to_cpu(rp[i].ar_startblock);
+>> -			     b < e; b++)  {
+>> +			if (!verify_agbno(mp, agno, end - 1))
+>> +				continue;
+>> +
+>> +			for ( ; b < end; b++)  {
+>>  				state = get_agbno_state(mp, agno, b);
+>>  				switch (state) {
+>>  				case XR_E_UNKNOWN:
+>> @@ -579,6 +579,8 @@ _("%s freespace btree block claimed (sta  	}
+>> 
+>>  	for (i = 0; i < numrecs; i++)  {
+>> +		xfs_agblock_t		bno = be32_to_cpu(pp[i]);
+>> +
+>>  		/*
+>>  		 * XXX - put sibling detection right here.
+>>  		 * we know our sibling chain is good.  So as we go,
+>> @@ -588,11 +590,11 @@ _("%s freespace btree block claimed (sta
+>>  		 * pointer mismatch, try and extract as much data
+>>  		 * as possible.
+>>  		 */
+>> -		if (be32_to_cpu(pp[i]) != 0 && verify_agbno(mp, agno,
+>> -							be32_to_cpu(pp[i])))
+>> -			scan_sbtree(be32_to_cpu(pp[i]), level, agno, suspect,
+>> +		if (bno != 0 && verify_agbno(mp, agno, bno)) {
+>> +			scan_sbtree(bno, level, agno, suspect,
+>>  				    (magic == XFS_ABTB_MAGIC) ?
+>>  				    	scanfunc_bno : scanfunc_cnt, 0);
+>> +		}
+>>  	}
+>>  }
+>> 
+>> 
+>> _______________________________________________
+>> xfs mailing list
+>> xfs@oss.sgi.com
+>> http://oss.sgi.com/mailman/listinfo/xfs
+>> 
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
