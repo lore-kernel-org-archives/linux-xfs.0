@@ -1,30 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9DFcsfg124891 for <xfs@oss.sgi.com>; Tue, 13 Oct 2009 10:38:54 -0500
-Received: from cybersoft-vn.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CF3574C0F55
-	for <xfs@oss.sgi.com>; Tue, 13 Oct 2009 08:40:22 -0700 (PDT)
-Received: from cybersoft-vn.com (mail.cybersoft-vn.com [202.78.231.195]) by
-	cuda.sgi.com with ESMTP id sGdbSOIv6BgELZJh for
-	<xfs@oss.sgi.com>; Tue, 13 Oct 2009 08:40:22 -0700 (PDT)
-Received: from DAKLAK.cybersoft.vn ([172.17.1.7])
-	by temp.cybersoft-vn.com (cybersoft-vn.com) (MDaemon PRO v9.5.5)
-	with ESMTP id md50000007613.msg
-	for <xfs@oss.sgi.com>; Tue, 13 Oct 2009 22:39:45 +0700
+	n9DHt6xM138593 for <xfs@oss.sgi.com>; Tue, 13 Oct 2009 12:55:06 -0500
 Content-class: urn:content-classes:message
 MIME-Version: 1.0
-Subject: RE: xfs_force_shutdown
-Date: Tue, 13 Oct 2009 22:39:39 +0700
-Message-ID: <CEBA5E865263FA4D8848D53D92E6A9AE0416AC65@DAKLAK.cybersoft-vn.com>
-In-Reply-To: <4AD49D63.9030609@sandeen.net>
-References: <CEBA5E865263FA4D8848D53D92E6A9AE0412EC23@DAKLAK.cybersoft-vn.com>
-	<4AD32DED.4050402@sandeen.net>
-	<CEBA5E865263FA4D8848D53D92E6A9AE0416AB0B@DAKLAK.cybersoft-vn.com>
-	<4AD493FE.6000403@sandeen.net>
-	<CEBA5E865263FA4D8848D53D92E6A9AE0416AC5C@DAKLAK.cybersoft-vn.com>
-	<4AD49D63.9030609@sandeen.net>
-From: "Hieu Le Trung" <hieult@Cybersoft-VN.com>
+Subject: RE: [PATCH] xfstests: test 220: double inode free in xfs_dqrele_inode
+Date: Tue, 13 Oct 2009 12:55:55 -0500
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83AD9C@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <20091012235059.GA2318@infradead.org>
+From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,146 +21,117 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-Eric Sandeen wrote:
-> Hieu Le Trung wrote:
-> > Eric Sandeen wrote:
-> >> Hieu Le Trung wrote:
-> >>> Eric Sandeen wrote:
-> >>>> Hieu Le Trung wrote:
-> >>>>> Hi,
-> >>>>>
-> >>>>> What may cause metadata becomes bad? I got xfs_force_shutdown
-> >>>>> with
-> >>> 0x2
-> >>>>> parameter.
-> >>>> Software bugs or hardware problems.  If you provide the actual
-> > kernel
-> >>>> message we can offer more info on what xfs saw and why it shut
-> > down.
-> >>> I'm not sure which one is it but the issue is hard to reproduce.
-> >>> I have following in the dmesg but I'm not sure it's the right one
-> >>>  <1>I/O error in filesystem ("sda2") meta-data dev sda2 block
-> >> 0xf054f4
-> >>> ("xlog_iodone") error 5 buf count 32768
-> >> Were there IO errors from the storage before this?  i.e. did some
-> > lower
-> >> layer go bad.
-> >
-> > Before that is bunch of speed down request, maybe the real error has
-> > been truncated <3>ata1.00: speed down requested but no transfer mode
-> > left <3>ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x10c00000 action
-> > 0x2 <3>ata1.00: tag 0 cmd 0x30 Emask 0x10 stat 0x51 err 0x84 (ATA
-bus
-> >  error)
+On , Christoph Hellwig wrote:
+> Trivial test case that mounts a filesystem with user quotas, then turns
+> quotas off an unmounts.  Based on a testcase in a bug report from
+> Utako Kusaka <u-kusaka@wm.jp.nec.com>.
 > 
-> Ok, so you have a storage error, and XFS is just reacting to that
-> condition.
-> 
-> >
-> >>> <5>xfs_force_shutdown(sda2,0x2) called from line 956 of file
-> >>> fs/xfs/xfs_log.c.  Return address = 0x801288d8
-> >>>
-> >>> Furthermore, the driver's write cache is <5>SCSI device sda:
-> >>> drive cache: write back
-> >> That's fine...
-> >
-> > But in the XFS FAQ, they require to turn off the driver write cache
-> >
->
-http://xfs.org/index.php/XFS_FAQ#Q:_What_is_the_problem_with_the_write_c
-> >  ache_on_journaled_filesystems.3F
-> 
-> Either turning off write caches, or using barrier support is fine:
-> 
-> > With a single hard disk and barriers turned on (on=default), the
-> > drive write cache is flushed before an after a barrier is issued. A
-> > powerfail "only" loses data in the cache but no essential ordering
-is
-> > violated, and corruption will not occur.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-How to check if barrier is supported in my environment?
- 
-> >>> The xfs_logprint shows 'Bad log record header' xfs_logprint:
-> >>> /dev/sda2 contains a mounted and writable filesystem data device:
-> >>> 0x802 log device: 0x802 daddr: 15735648 length: 20480
-> >>>
-> >>> Header 0xa4 wanted 0xfeedbabe
-> >>>
-> >
-**********************************************************************
-> >
-> >>> * ERROR: header cycle=164         block=14634
-> > *
-> >
-**********************************************************************
-> >
-> >>> Bad log record header
-> >>>
-> >>> So I wonder what may cause bad record header?
-> >> Probably the IO errors when attempting to write to the log ...
-> >
-> > What can I do with the log? Can I debug the issue using the log?
-> 
-> No; your hardware failed to write a requested log item, resulting in
-an
-> inconsistent log.  This is not an xfs bug - you need to focus on
-fixing
-> the underlying hardware problem.  XFS cannot guarantee a consistent
-> filesystem if the underlying storage hardware does not complete
-> requested IOs....
-> 
-> >>>>> How can I analyze the metadata dump file?
-> >>>> the metadump file is just the metadata skeleton of the
-> >>>> filesystem;
-> >> you
-> >>>> can mount it, repair it, point xfs_db at it to debug it, etc.
-> >>> Is there any tutorials or guideline in using xfs_db to debug the
-> >> issue?
-> >>
-> >> xfs_db has a manpage, but I'm not sure the answer will be found by
-> > using
-> >> it.  It will only look at what data made it to the disk, and you
-> >> had
-> > an
-> >> IO error.
-> >
-> > Maybe I can use the log to find out what operation is failed and
-make
-> >  the log becomes bad then using xfs_db to analyze on the inode or
-> > block to find out the filename. After that I may know what's going
-> > with my code. Is it possible? How to do that? How to find out the
-> > inode or block from the log, and how to map the inode into filename
-> > using xfs_db?
-> 
-> What is your goal here?
-> 
-> All I see is "drive died, xfs stopped, filesystem was left in
-> inconsistent state due to hardware error" - I don't think there's
-> anything more to debug about what -happened-
+Looks good.
 
-Actually I'm implementing a filesystem which is extended from XFS. So
-maybe the error is inside my FS, or inside XFS, as well as inside the
-code to read/write into my FS.
-I want to find out the root cause so that I can fix it.
-If it is hardware related issue, it's fine to ignore. But currently
-there's no point to say that it is a hardware issue.
-My FS run well, and the issue maybe can occur when running the system
-for a long time and hard to reproduce.
+Reviewed-by: Alex Elder <aelder@sgi.com>
  
-> If your goal is trying to get the filesystem back online (i.e. if it
-is
-> currently failing to mount), I'd probably suggest clearing out the log
-> and repairing the resulting fs with xfs_repair -L, and see what's
-left.
- 
-Yes, the xfs_repair -L do well, but I need to find out what makes the
-disk become such state ;(
-
-Regards,
--Hieu
+> Index: xfstests-dev/220
+> ===================================================================
+> --- /dev/null	1970-01-01 00:00:00.000000000 +0000
+> +++ xfstests-dev/220	2009-10-12 23:49:43.000000000 +0000
+> @@ -0,0 +1,71 @@
+> +#! /bin/sh
+> +# FS QA Test No. 220
+> +#
+> +# Test that turning quotas off on a mounted filesystem doesn't crash
+> +# the system.
+> +#
+> +# Based on a bug report from Utako Kusaka <u-kusaka@wm.jp.nec.com>.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2009 Christoph Hellwig.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#
+> +#-----------------------------------------------------------------------
+> +#
+> +# creator
+> +owner=hch@lst.de
+> +
+> +seq=`basename $0`
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	umount $SCRATCH_DEV >/dev/null 2>&1
+> +}
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +# get standard environment, filters and checks
+> +. ./common.rc
+> +. ./common.filter
+> +. ./common.quota
+> +
+> +# real QA test starts here
+> +_supported_fs xfs
+> +_supported_os Linux
+> +
+> +_require_scratch
+> +_require_quota
+> +
+> +echo "Silence is golden."
+> +
+> +# create scratch filesystem
+> +_scratch_mkfs_xfs >/dev/null 2>&1
+> +
+> +# mount  with quotas enabled
+> +_scratch_mount -o uquota
+> +
+> +# turn off quota
+> +xfs_quota -x -c off $SCRATCH_DEV
+> +
+> +# and unmount (this used to crash)
+> +umount $SCRATCH_DEV
+> +
+> +status=0
+> +exit $status
+> Index: xfstests-dev/220.out
+> ===================================================================
+> --- /dev/null	1970-01-01 00:00:00.000000000 +0000
+> +++ xfstests-dev/220.out	2009-10-11 17:00:02.000000000 +0000
+> @@ -0,0 +1,2 @@
+> +QA output created by 220
+> +Silence is golden.
+> Index: xfstests-dev/group
+> ===================================================================
+> --- xfstests-dev.orig/group	2009-10-11 16:44:37.000000000 +0000
+> +++ xfstests-dev/group	2009-10-11 16:45:07.000000000 +0000
+> @@ -329,3 +329,4 @@ prealloc
+>  217 log metadata auto
+>  218 auto fsr quick
+>  219 auto quota quick
+> +220 auto quota quick
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
