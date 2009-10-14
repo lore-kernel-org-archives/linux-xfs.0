@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9E3rx8K170338 for <xfs@oss.sgi.com>; Tue, 13 Oct 2009 22:53:59 -0500
+	n9E3w5Dw170500 for <xfs@oss.sgi.com>; Tue, 13 Oct 2009 22:58:05 -0500
 Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DD22B255F
-	for <xfs@oss.sgi.com>; Tue, 13 Oct 2009 20:55:29 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C47BE17827F3
+	for <xfs@oss.sgi.com>; Tue, 13 Oct 2009 20:59:33 -0700 (PDT)
 Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id K6LrBxg8kEDNDhk6 for
-	<xfs@oss.sgi.com>; Tue, 13 Oct 2009 20:55:29 -0700 (PDT)
-Message-ID: <4AD54BAF.2050206@sandeen.net>
-Date: Tue, 13 Oct 2009 22:55:27 -0500
+	cuda.sgi.com with ESMTP id WrUoqH8lKJJzOvNK for
+	<xfs@oss.sgi.com>; Tue, 13 Oct 2009 20:59:33 -0700 (PDT)
+Message-ID: <4AD54CA4.6000301@sandeen.net>
+Date: Tue, 13 Oct 2009 22:59:32 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] free temporary cursor in xfs_dialloc
+Subject: [PATCH V2] free temporary cursor in xfs_dialloc
+References: <4AD54BAF.2050206@sandeen.net>
+In-Reply-To: <4AD54BAF.2050206@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,14 +33,14 @@ Cc: Christoph Hellwig <hch@infradead.org>, Alex Elder <aelder@sgi.com>
 Commit bd169565993b39b9b4b102cdac8b13e0a259ce2f seems
 to have a slight regression where this code path:
 
-	if (!--searchdistance) {
-		/*
-		 * Not in range - save last search
-		 * location and allocate a new inode
-		 */
-		...
-		goto newino;
-	}
+    if (!--searchdistance) {
+        /*
+         * Not in range - save last search
+         * location and allocate a new inode
+         */
+        ...
+        goto newino;
+    }
 
 doesn't free the temporary cursor (tcur) that got dup'd in
 this function.
@@ -55,7 +57,10 @@ be cleaner, but for now put a del_cursor right in this code block
 similar to the handling in the rest of the function.
 
 Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+
 ---
+
+(V2 w/o whitespace mangling, ugh)
 
 diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
 index ab64f3e..0785797 100644
