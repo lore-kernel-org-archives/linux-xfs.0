@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9F5uc7W244887
-	for <linux-xfs@oss.sgi.com>; Thu, 15 Oct 2009 00:56:38 -0500
-Received: from tneu02.synserver.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5CD52122853C
-	for <linux-xfs@oss.sgi.com>; Wed, 14 Oct 2009 22:58:08 -0700 (PDT)
-Received: from tneu02.synserver.de (tneu02.synserver.de [217.119.58.222]) by
-	cuda.sgi.com with ESMTP id Ci6g4Qb5RhCbCH36 for
-	<linux-xfs@oss.sgi.com>; Wed, 14 Oct 2009 22:58:08 -0700 (PDT)
-From: Thomas Neumann <tneumann@users.sourceforge.net>
+	n9FCCFYR009410
+	for <linux-xfs@oss.sgi.com>; Thu, 15 Oct 2009 07:12:18 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 691181D7F49B
+	for <linux-xfs@oss.sgi.com>; Thu, 15 Oct 2009 05:13:45 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id 4iLnexkkSKwNHWt2 for
+	<linux-xfs@oss.sgi.com>; Thu, 15 Oct 2009 05:13:45 -0700 (PDT)
+Date: Thu, 15 Oct 2009 08:13:45 -0400
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: deadlocks with fallocate
-Date: Thu, 15 Oct 2009 07:58:05 +0200
+Message-ID: <20091015121345.GA18234@infradead.org>
 References: <hak2l2$ko2$1@ger.gmane.org> <20091014150951.GA13123@infradead.org>
-In-Reply-To: <20091014150951.GA13123@infradead.org>
+	<200910150758.06003.tneumann@users.sourceforge.net>
 MIME-Version: 1.0
-Message-Id: <200910150758.06003.tneumann@users.sourceforge.net>
+Content-Disposition: inline
+In-Reply-To: <200910150758.06003.tneumann@users.sourceforge.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,33 +30,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@oss.sgi.com
+To: Thomas Neumann <tneumann@users.sourceforge.net>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@oss.sgi.com
 
-> Can you try if the hack below makes the problem go away?
-> 
-> 
-> Index: linux-2.6/fs/xfs/linux-2.6/xfs_aops.c
-> ===================================================================
-> --- linux-2.6.orig/fs/xfs/linux-2.6/xfs_aops.c	2009-10-14
->  17:06:50.489254023 +0200 +++
->  linux-2.6/fs/xfs/linux-2.6/xfs_aops.c	2009-10-14 17:07:54.055006445 +0200
->  @@ -278,6 +278,8 @@ xfs_end_bio_unwritten(
->  	xfs_off_t		offset = ioend->io_offset;
->  	size_t			size = ioend->io_size;
-> 
-> +	current->flags |= PF_FSTRANS;
-> +
->  	if (likely(!ioend->io_error)) {
->  		if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
->  			int error;
-> 
+On Thu, Oct 15, 2009 at 07:58:05AM +0200, Thomas Neumann wrote:
+> I did some more tests, and indeed the patch makes the deadlock go away. Your 
+> description of it as a hack makes me somewhat concerned about using it 
+> permanently, but hopefully you will find a proper solution ;)
 
-I did some more tests, and indeed the patch makes the deadlock go away. Your 
-description of it as a hack makes me somewhat concerned about using it 
-permanently, but hopefully you will find a proper solution ;)
-
-Thanks for looking at this.
+It's basically a flag to say all allocations from this thread should
+not recurse back into filesystem code.  I'll either need to change
+the allocations manually or keep this flag and write a comment
+documenting why.  I'll decide what to on my long airplane ride tomorrow
+and will make sure it goes off to Linus' tree ASAP after that.
 
 _______________________________________________
 xfs mailing list
