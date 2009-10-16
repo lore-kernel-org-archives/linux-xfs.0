@@ -1,31 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9G8HhVZ081526 for <xfs@oss.sgi.com>; Fri, 16 Oct 2009 03:17:45 -0500
-Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 82EB0F647
-	for <xfs@oss.sgi.com>; Fri, 16 Oct 2009 01:19:13 -0700 (PDT)
-Received: from mailsrv1.zmi.at (mailsrv5.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id EO19OwEo7ZJOZs0z for
-	<xfs@oss.sgi.com>; Fri, 16 Oct 2009 01:19:13 -0700 (PDT)
-Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv1.zmi.at (Postfix) with ESMTP id E5FC86E2
-	for <xfs@oss.sgi.com>; Fri, 16 Oct 2009 10:19:10 +0200 (CEST)
-Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id B4BA9400155
-	for <xfs@oss.sgi.com>; Fri, 16 Oct 2009 10:19:10 +0200 (CEST)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: XFS mount failuer on RAID5
-Date: Fri, 16 Oct 2009 10:19:09 +0200
-References: <389deec70910152009i7656aaf2s9d929b8b68e4e740@mail.gmail.com>
-In-Reply-To: <389deec70910152009i7656aaf2s9d929b8b68e4e740@mail.gmail.com>
+	n9GCZW22099281 for <xfs@oss.sgi.com>; Fri, 16 Oct 2009 07:35:32 -0500
+Received: from lucidpixels.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BE10C17971D3
+	for <xfs@oss.sgi.com>; Fri, 16 Oct 2009 05:37:03 -0700 (PDT)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by
+	cuda.sgi.com with ESMTP id IQWC6me64dgWbXVx for
+	<xfs@oss.sgi.com>; Fri, 16 Oct 2009 05:37:03 -0700 (PDT)
+Date: Fri, 16 Oct 2009 08:37:03 -0400 (EDT)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: 2.6.31: xfs or md/raid1 bug in 2.6.31?
+Message-ID: <alpine.DEB.2.00.0910160832290.31450@p34.internal.lan>
 MIME-Version: 1.0
-Content-Disposition: inline
-Message-Id: <200910161019.10286@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,25 +21,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Cc: Alan Piszcz <ap@solarrain.com>
 
-On Freitag 16 Oktober 2009 hank peng wrote:
-> I don't know when "-ssize=4k" option is added, what is difference?
+Hi all,
 
-You can set the *sector* size to 4k only when your drives have 4k sector 
-size. Normal disks so far always have 512 Bytes/sector.
+Does anyone recall if there was a serious xfs bug in 2.6.31?
 
-mfg zmi
--- 
-// Michael Monnerie, Ing.BSc    -----      http://it-management.at
-// Tel: 0660 / 415 65 31                      .network.your.ideas.
-// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
-// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
-// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
+I saw xfsbufd/pdflush etc locked up and local file system access hung 
+whenever I tried to write a file to the filesystem, I ran a sysrq-t but 
+could not capture the output nor did I see anything obvious.
+
+System runs a md/raid1+xfs.
+
+Upgraded to 2.6.31.4, will have to see if it happens again.
+
+Was curious though if anyone recalled problems with this kernel 
+release/combination?
+
+Thanks,
+
+Justin.
 
 _______________________________________________
 xfs mailing list
