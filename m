@@ -1,27 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9G0Z5mV048291 for <xfs@oss.sgi.com>; Thu, 15 Oct 2009 19:35:05 -0500
-Received: from realbig.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 160721B9FC5F
-	for <xfs@oss.sgi.com>; Thu, 15 Oct 2009 17:36:35 -0700 (PDT)
-Received: from realbig.com (realbig.com [207.36.196.230]) by cuda.sgi.com with
-	ESMTP id 8K8GuYdPc8samywG for <xfs@oss.sgi.com>;
-	Thu, 15 Oct 2009 17:36:35 -0700 (PDT)
-Date: Thu, 15 Oct 2009 19:36:33 -0500 (CDT)
-From: Andy Poling <andy@realbig.com>
-Subject: Re: Wrapped journal record corruption on read at recovery - patch
-	attached (was Re: XFS corruption with failover)
-In-Reply-To: <alpine.DEB.2.00.0910141053150.5504@andydesk>
-Message-ID: <alpine.DEB.2.00.0910151858340.5504@andydesk>
-References: <mailman.0.1255458988.141519.xfs@oss.sgi.com>
-	<alpine.DEB.2.00.0910131342440.11546@andydesk>
-	<20091013233324.GA28942@infradead.org>
-	<alpine.DEB.2.00.0910131853200.11546@andydesk>
-	<20091014132030.GB15001@infradead.org>
-	<alpine.DEB.2.00.0910141053150.5504@andydesk>
+	n9G37vxG057387 for <xfs@oss.sgi.com>; Thu, 15 Oct 2009 22:07:57 -0500
+Received: from mail-px0-f195.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3036CDD96
+	for <xfs@oss.sgi.com>; Thu, 15 Oct 2009 20:09:27 -0700 (PDT)
+Received: from mail-px0-f195.google.com (mail-px0-f195.google.com
+	[209.85.216.195]) by cuda.sgi.com with ESMTP id
+	wCubVuItwRJjQZ3n for <xfs@oss.sgi.com>;
+	Thu, 15 Oct 2009 20:09:27 -0700 (PDT)
+Received: by pxi33 with SMTP id 33so1301642pxi.20
+	for <xfs@oss.sgi.com>; Thu, 15 Oct 2009 20:09:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="8323328-207263922-1255653394=:5504"
+Date: Fri, 16 Oct 2009 11:09:27 +0800
+Message-ID: <389deec70910152009i7656aaf2s9d929b8b68e4e740@mail.gmail.com>
+Subject: XFS mount failuer on RAID5
+From: hank peng <pengxihan@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,115 +24,101 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: John Quigley <jquigley@cleversafe.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: linux-raid <linux-raid@vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Hi, all:
+I have a self-built board, cpu is MPC8548(PPC arch), kernel is based
+on MPC8548CDS demo board, version is 2.6.23.
+A SATA controller is conected to CPU via PCIX, and I have 3 disks
+attached to it.
 
---8323328-207263922-1255653394=:5504
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+root@Storage:~# mdadm -C /dev/md0 -l5 -n3 /dev/sd{b,c,d}
+root@Storage:~# cat /proc/mdstat
+Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5]
+[raid4] [multipath]
+md0 : active raid5 sdd[3] sdc[1] sdb[0]
+      490234624 blocks level 5, 64k chunk, algorithm 2 [3/2] [UU_]
+      [>....................]  recovery =  0.8% (1990404/245117312)
+finish=83.3min speed=48603K/sec
 
-On Wed, 14 Oct 2009, Christoph Hellwig wrote:
->> It seems like the more elegant approach would be to set offset before the
->> first read, and then update it if the first read takes place (in case it 
->> was
->> unaligned).  That also gets rid of bufaddr, and seems like it might read
->> better.
-> 
-> Yeah.  Note that in Linux 2.6.29 I did some changes in that are to
-> take the read and offset calculation into a common helper
+unused devices: <none>
+root@Storage:~# pvcreate /dev/md0
+  Physical volume "/dev/md0" successfully created
+root@Storage:~# vgcreate vg /dev/md0
+  Volume group "vg" successfully created
+root@Storage:~# lvcreate -L 100G -n lvtest vg
+  Logical volume "lvtest" created
+root@Storage:~# mkfs.xfs -f -ssize=4k /dev/vg/lvtest
+Warning - device mapper device, but no dmsetup(8) found
+Warning - device mapper device, but no dmsetup(8) found
+meta-data=/dev/vg/lvtest         isize=256    agcount=4, agsize=6553600 blks
+         =                       sectsz=4096  attr=2
+data     =                       bsize=4096   blocks=26214400, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096
+log      =internal log           bsize=4096   blocks=12800, version=2
+         =                       sectsz=4096  sunit=1 blks, lazy-count=0
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+root@Storage:~# mkdir tmp
+root@Storage:~# mount -t xfs /dev/vg/lvtest ./tmp/
+Filesystem "dm-0": Disabling barriers, not supported by the underlying device
+XFS mounting filesystem dm-0
+XFS: totally zeroed log
+Filesystem "dm-0": XFS internal error xlog_clear_stale_blocks(2) at
+line 1252 of file fs/xfs/xfs_log_recover.c.  Caller 0xc018ec88
+Call Trace:
+[e8ab9a60] [c00091ec] show_stack+0x3c/0x1a0 (unreliable)
+[e8ab9a90] [c017559c] xfs_error_report+0x50/0x60
+[e8ab9aa0] [c018e84c] xlog_clear_stale_blocks+0xe4/0x1c8
+[e8ab9ad0] [c018ec88] xlog_find_tail+0x358/0x494
+[e8ab9b20] [c0190ba0] xlog_recover+0x20/0xf4
+[e8ab9b40] [c018993c] xfs_log_mount+0x104/0x148
+[e8ab9b60] [c01930f0] xfs_mountfs+0x8d4/0xd14
+[e8ab9c00] [c0183f88] xfs_ioinit+0x38/0x4c
+[e8ab9c20] [c019bf24] xfs_mount+0x458/0x470
+[e8ab9c60] [c01b087c] vfs_mount+0x38/0x48
+[e8ab9c70] [c01b052c] xfs_fs_fill_super+0x98/0x1f8
+[e8ab9cf0] [c0076cec] get_sb_bdev+0x164/0x1a8
+[e8ab9d40] [c01af3bc] xfs_fs_get_sb+0x1c/0x2c
+[e8ab9d50] [c00769f8] vfs_kern_mount+0x58/0xe0
+[e8ab9d70] [c0076ad0] do_kern_mount+0x40/0xf8
+[e8ab9d90] [c008ee0c] do_mount+0x158/0x600
+[e8ab9f10] [c008f344] sys_mount+0x90/0xe8
+[e8ab9f40] [c0002320] ret_from_syscall+0x0/0x3c
+XFS: failed to locate log tail
+XFS: log mount/recovery failed: error 117
+XFS: log mount failed
+mount: mounting /dev/vg/lvtest on ./tmp/ failed: Structure needs cleaning
 
-Looking at the improved code since 2.6.29, and assuming that the beginning of
-the log will always be aligned, I have come up with the attached patch against
-2.6.31.4.  I think it's cleaner, and it passes my tests.
 
-The bufaddr variable is no longer needed.  I removed the xlog_align() after
-the second read for both headers and data since the second read will always be
-aligned (even if there was no first read) since it is always at the beginning
-of the log.
+Interestingly, if remove "-ssize=4k" option in mkfs.xfs command, it is OK
+root@Storage:~# mkfs.xfs -f  /dev/vg/lvtest
+Warning - device mapper device, but no dmsetup(8) found
+Warning - device mapper device, but no dmsetup(8) found
+meta-data=/dev/vg/lvtest         isize=256    agcount=4, agsize=6553600 blks
+         =                       sectsz=512   attr=2
+data     =                       bsize=4096   blocks=26214400, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096
+log      =internal log           bsize=4096   blocks=12800, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=0
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+root@Storage:~# mount -t xfs /dev/vg/lvtest ./tmp/
+Filesystem "dm-0": Disabling barriers, not supported by the underlying device
+XFS mounting filesystem dm-0
 
-It sets offset to the beginning of the buffer with XFS_BUF_PTR() before the
-first read, and then your improved xlog_bread() will update the offset if the
-first read had to be re-aligned.
+I don't know when "-ssize=4k" option is added, what is difference?
 
-What do you think?
 
--Andy
-
-It ain't what you don't know that gets you into trouble.
-It's what you know for sure that just ain't so. - Mark Twain
---8323328-207263922-1255653394=:5504
-Content-Type: IMAGE/x-coreldrawpattern; name=xfs_log_recover.pat
-Content-Transfer-Encoding: BASE64
-Content-ID: <alpine.DEB.2.00.0910151936330.5504@andydesk>
-Content-Description: xfs_log_recover.pat
-Content-Disposition: attachment; filename=xfs_log_recover.pat
-
-LS0tIGZzL3hmcy94ZnNfbG9nX3JlY292ZXIuYy5vcmlnCTIwMDktMTAtMTQg
-MjM6Mzk6NDkuNzUzNDk0ODc2IC0wNTAwCisrKyBmcy94ZnMveGZzX2xvZ19y
-ZWNvdmVyLmMJMjAwOS0xMC0xNSAxODoyNjoyMy43OTA4ODc3MDAgLTA1MDAK
-QEAgLTM1MTcsNyArMzUxNyw3IEBACiB7CiAJeGxvZ19yZWNfaGVhZGVyX3QJ
-KnJoZWFkOwogCXhmc19kYWRkcl90CQlibGtfbm87Ci0JeGZzX2NhZGRyX3QJ
-CWJ1ZmFkZHIsIG9mZnNldDsKKwl4ZnNfY2FkZHJfdAkJb2Zmc2V0OwogCXhm
-c19idWZfdAkJKmhicCwgKmRicDsKIAlpbnQJCQllcnJvciA9IDAsIGhfc2l6
-ZTsKIAlpbnQJCQliYmxrcywgc3BsaXRfYmJsa3M7CkBAIC0zNjEwLDcgKzM2
-MTAsNyBAQAogCQkJLyoKIAkJCSAqIENoZWNrIGZvciBoZWFkZXIgd3JhcHBp
-bmcgYXJvdW5kIHBoeXNpY2FsIGVuZC1vZi1sb2cKIAkJCSAqLwotCQkJb2Zm
-c2V0ID0gTlVMTDsKKwkJCW9mZnNldCA9IFhGU19CVUZfUFRSKGhicCk7CiAJ
-CQlzcGxpdF9oYmxrcyA9IDA7CiAJCQl3cmFwcGVkX2hibGtzID0gMDsKIAkJ
-CWlmIChibGtfbm8gKyBoYmxrcyA8PSBsb2ctPmxfbG9nQkJzaXplKSB7CkBA
-IC0zNjQ2LDkgKzM2NDYsOCBAQAogCQkJCSAqICAgLSBvcmRlciBpcyBpbXBv
-cnRhbnQuCiAJCQkJICovCiAJCQkJd3JhcHBlZF9oYmxrcyA9IGhibGtzIC0g
-c3BsaXRfaGJsa3M7Ci0JCQkJYnVmYWRkciA9IFhGU19CVUZfUFRSKGhicCk7
-CiAJCQkJZXJyb3IgPSBYRlNfQlVGX1NFVF9QVFIoaGJwLAotCQkJCQkJYnVm
-YWRkciArIEJCVE9CKHNwbGl0X2hibGtzKSwKKwkJCQkJCW9mZnNldCArIEJC
-VE9CKHNwbGl0X2hibGtzKSwKIAkJCQkJCUJCVE9CKGhibGtzIC0gc3BsaXRf
-aGJsa3MpKTsKIAkJCQlpZiAoZXJyb3IpCiAJCQkJCWdvdG8gYnJlYWRfZXJy
-MjsKQEAgLTM2NTgsMTQgKzM2NTcsMTAgQEAKIAkJCQlpZiAoZXJyb3IpCiAJ
-CQkJCWdvdG8gYnJlYWRfZXJyMjsKIAotCQkJCWVycm9yID0gWEZTX0JVRl9T
-RVRfUFRSKGhicCwgYnVmYWRkciwKKwkJCQllcnJvciA9IFhGU19CVUZfU0VU
-X1BUUihoYnAsIG9mZnNldCwKIAkJCQkJCQlCQlRPQihoYmxrcykpOwogCQkJ
-CWlmIChlcnJvcikKIAkJCQkJZ290byBicmVhZF9lcnIyOwotCi0JCQkJaWYg
-KCFvZmZzZXQpCi0JCQkJCW9mZnNldCA9IHhsb2dfYWxpZ24obG9nLCAwLAot
-CQkJCQkJCXdyYXBwZWRfaGJsa3MsIGhicCk7CiAJCQl9CiAJCQlyaGVhZCA9
-ICh4bG9nX3JlY19oZWFkZXJfdCAqKW9mZnNldDsKIAkJCWVycm9yID0geGxv
-Z192YWxpZF9yZWNfaGVhZGVyKGxvZywgcmhlYWQsCkBAIC0zNjg1LDcgKzM2
-ODAsNyBAQAogCQkJfSBlbHNlIHsKIAkJCQkvKiBUaGlzIGxvZyByZWNvcmQg
-aXMgc3BsaXQgYWNyb3NzIHRoZQogCQkJCSAqIHBoeXNpY2FsIGVuZCBvZiBs
-b2cgKi8KLQkJCQlvZmZzZXQgPSBOVUxMOworCQkJCW9mZnNldCA9IFhGU19C
-VUZfUFRSKGRicCk7CiAJCQkJc3BsaXRfYmJsa3MgPSAwOwogCQkJCWlmIChi
-bGtfbm8gIT0gbG9nLT5sX2xvZ0JCc2l6ZSkgewogCQkJCQkvKiBzb21lIGRh
-dGEgaXMgYmVmb3JlIHRoZSBwaHlzaWNhbApAQCAtMzcxNCw5ICszNzA5LDgg
-QEAKIAkJCQkgKiAgIF9maXJzdF8sIHRoZW4gdGhlIGxvZyBzdGFydCAoTFIg
-aGVhZGVyIGVuZCkKIAkJCQkgKiAgIC0gb3JkZXIgaXMgaW1wb3J0YW50Lgog
-CQkJCSAqLwotCQkJCWJ1ZmFkZHIgPSBYRlNfQlVGX1BUUihkYnApOwogCQkJ
-CWVycm9yID0gWEZTX0JVRl9TRVRfUFRSKGRicCwKLQkJCQkJCWJ1ZmFkZHIg
-KyBCQlRPQihzcGxpdF9iYmxrcyksCisJCQkJCQlvZmZzZXQgKyBCQlRPQihz
-cGxpdF9iYmxrcyksCiAJCQkJCQlCQlRPQihiYmxrcyAtIHNwbGl0X2JibGtz
-KSk7CiAJCQkJaWYgKGVycm9yKQogCQkJCQlnb3RvIGJyZWFkX2VycjI7CkBA
-IC0zNzI3LDEzICszNzIxLDkgQEAKIAkJCQlpZiAoZXJyb3IpCiAJCQkJCWdv
-dG8gYnJlYWRfZXJyMjsKIAotCQkJCWVycm9yID0gWEZTX0JVRl9TRVRfUFRS
-KGRicCwgYnVmYWRkciwgaF9zaXplKTsKKwkJCQllcnJvciA9IFhGU19CVUZf
-U0VUX1BUUihkYnAsIG9mZnNldCwgaF9zaXplKTsKIAkJCQlpZiAoZXJyb3Ip
-CiAJCQkJCWdvdG8gYnJlYWRfZXJyMjsKLQotCQkJCWlmICghb2Zmc2V0KQot
-CQkJCQlvZmZzZXQgPSB4bG9nX2FsaWduKGxvZywgd3JhcHBlZF9oYmxrcywK
-LQkJCQkJCWJibGtzIC0gc3BsaXRfYmJsa3MsIGRicCk7CiAJCQl9CiAJCQl4
-bG9nX3VucGFja19kYXRhKHJoZWFkLCBvZmZzZXQsIGxvZyk7CiAJCQlpZiAo
-KGVycm9yID0geGxvZ19yZWNvdmVyX3Byb2Nlc3NfZGF0YShsb2csIHJoYXNo
-LAo=
-
---8323328-207263922-1255653394=:5504
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+-- 
+The simplest is not all best but the best is surely the simplest!
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---8323328-207263922-1255653394=:5504--
