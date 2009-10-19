@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9J33Xui022771 for <xfs@oss.sgi.com>; Sun, 18 Oct 2009 22:03:33 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E5EE21BF8336
-	for <xfs@oss.sgi.com>; Sun, 18 Oct 2009 20:05:04 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	JdZ9B7Qfu2jt7tpj for <xfs@oss.sgi.com>;
-	Sun, 18 Oct 2009 20:05:04 -0700 (PDT)
-Date: Mon, 19 Oct 2009 14:04:56 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 2.6.31+2.6.31.4: XFS - All I/O locks up to D-state after 24-48
-	hours (sysrq-t+w available)
-Message-ID: <20091019030456.GS9464@discord.disaster>
-References: <alpine.DEB.2.00.0910171825270.16781@p34.internal.lan>
-	<alpine.DEB.2.00.0910181607040.27363@p34.internal.lan>
+	n9J42EVc026017 for <xfs@oss.sgi.com>; Sun, 18 Oct 2009 23:02:14 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8301F1BF84C2
+	for <xfs@oss.sgi.com>; Sun, 18 Oct 2009 21:03:46 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id IF66faeKxSMPNZFG for
+	<xfs@oss.sgi.com>; Sun, 18 Oct 2009 21:03:46 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1MzjTG-00069M-Po
+	for xfs@oss.sgi.com; Mon, 19 Oct 2009 04:03:46 +0000
+Date: Mon, 19 Oct 2009 00:03:46 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH] xfs: fix mmap_sem vs iolock lock order inversion in
+	xfs_free_eofblocks
+Message-ID: <20091019040346.GB21115@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.00.0910181607040.27363@p34.internal.lan>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,68 +30,121 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-raid@vger.kernel.org, Alan Piszcz <ap@solarrain.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Sun, Oct 18, 2009 at 04:17:42PM -0400, Justin Piszcz wrote:
-> It has happened again, all sysrq-X output was saved this time.
->
-> wget http://home.comcast.net/~jpiszcz/20091018/crash.txt
-> wget http://home.comcast.net/~jpiszcz/20091018/dmesg.txt
-> wget http://home.comcast.net/~jpiszcz/20091018/interrupts.txt
-> wget http://home.comcast.net/~jpiszcz/20091018/sysrq-l.txt
-> wget http://home.comcast.net/~jpiszcz/20091018/sysrq-m.txt
-> wget http://home.comcast.net/~jpiszcz/20091018/sysrq-p.txt
-> wget http://home.comcast.net/~jpiszcz/20091018/sysrq-q.txt
-> wget http://home.comcast.net/~jpiszcz/20091018/sysrq-t.txt
-> wget http://home.comcast.net/~jpiszcz/20091018/sysrq-w.txt
-.....
-> Again, some more D-state processes:
->
-> [76325.608073] pdflush       D 0000000000000001     0   362      2 0x00000000
-> [76325.608087] Call Trace:
-> [76325.608095]  [<ffffffff811ea1c0>] ? xfs_trans_brelse+0x30/0x130
-> [76325.608099]  [<ffffffff811dc44c>] ? xlog_state_sync+0x26c/0x2a0
-> [76325.608103]  [<ffffffff810513e0>] ? default_wake_function+0x0/0x10
-> [76325.608106]  [<ffffffff811dc4d1>] ? _xfs_log_force+0x51/0x80
-> [76325.608108]  [<ffffffff811dc50b>] ? xfs_log_force+0xb/0x40
->
-> [76325.608202] xfssyncd      D 0000000000000000     0   831      2 0x00000000
-> [76325.608214] Call Trace:
-> [76325.608216]  [<ffffffff811dc229>] ? xlog_state_sync+0x49/0x2a0
-> [76325.608220]  [<ffffffff811d3485>] ? __xfs_iunpin_wait+0x95/0xe0
-> [76325.608222]  [<ffffffff81069c20>] ? autoremove_wake_function+0x0/0x30
-> [76325.608225]  [<ffffffff811d566d>] ? xfs_iflush+0xdd/0x2f0
-> [76325.608228]  [<ffffffff811fbe28>] ? xfs_reclaim_inode+0x148/0x190
-> [76325.608231]  [<ffffffff811fbe70>] ? xfs_reclaim_inode_now+0x0/0xa0
-> [76325.608233]  [<ffffffff811fc8dc>] ? xfs_inode_ag_walk+0x6c/0xc0
-> [76325.608236]  [<ffffffff811fbe70>] ? xfs_reclaim_inode_now+0x0/0xa0
->
-> All of the D-state processes:
+When xfs_free_eofblocks is called from ->release the VM might already
+hold the mmap_sem, but in the write path we take the iolock before
+taking the mmap_sem in the generic write code.
 
-All pointing to log IO not completing.
+Switch xfs_free_eofblocks to only trylock the iolock if called from ->release
+and skip trimming the prellocated blocks in that case.  We'll still free
+them later on the final iput.
 
-That is, all of the D state processes are backed up on locks or
-waiting for IO completion processing. A lot of the processes are
-waiting for _xfs_log_force to complete, others are waiting for
-inodes to be unpinned or are backed up behind locked inodes that are
-waiting on log IO to complete before they can complete the
-transaction and unlock the inode, and so on.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Unfortunately, the xfslogd and xfsdatad kernel threads are not
-present in any of the output given, so I can't tell if these have
-deadlocked themselves and caused the problem. However, my experience
-with such pile-ups is that an I/O completion has not been run for
-some reason and that is the cause of the problem. I don't know if
-you can provide enough information to tell us if this happened or
-not. Instead, do you have a test case that you can share?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Index: xfs/fs/xfs/xfs_rw.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_rw.h	2009-10-14 17:30:02.396028076 +0200
++++ xfs/fs/xfs/xfs_rw.h	2009-10-14 17:30:20.472287472 +0200
+@@ -37,13 +37,6 @@ xfs_fsb_to_db(struct xfs_inode *ip, xfs_
+ }
+ 
+ /*
+- * Flags for xfs_free_eofblocks
+- */
+-#define XFS_FREE_EOF_LOCK	(1<<0)
+-#define XFS_FREE_EOF_NOLOCK	(1<<1)
+-
+-
+-/*
+  * helper function to extract extent size hint from inode
+  */
+ STATIC_INLINE xfs_extlen_t
+Index: xfs/fs/xfs/xfs_vnodeops.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_vnodeops.c	2009-10-14 17:30:13.363024201 +0200
++++ xfs/fs/xfs/xfs_vnodeops.c	2009-10-14 17:35:39.314256388 +0200
+@@ -709,6 +709,11 @@ xfs_fsync(
+ }
+ 
+ /*
++ * Flags for xfs_free_eofblocks
++ */
++#define XFS_FREE_EOF_TRYLOCK	(1<<0)
++
++/*
+  * This is called by xfs_inactive to free any blocks beyond eof
+  * when the link count isn't zero and by xfs_dm_punch_hole() when
+  * punching a hole to EOF.
+@@ -726,7 +731,6 @@ xfs_free_eofblocks(
+ 	xfs_filblks_t	map_len;
+ 	int		nimaps;
+ 	xfs_bmbt_irec_t	imap;
+-	int		use_iolock = (flags & XFS_FREE_EOF_LOCK);
+ 
+ 	/*
+ 	 * Figure out if there are any blocks beyond the end
+@@ -768,14 +772,19 @@ xfs_free_eofblocks(
+ 		 * cache and we can't
+ 		 * do that within a transaction.
+ 		 */
+-		if (use_iolock)
++		if (flags & XFS_FREE_EOF_TRYLOCK) {
++			if (!xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
++				xfs_trans_cancel(tp, 0);
++				return 0;
++			}
++		} else {
+ 			xfs_ilock(ip, XFS_IOLOCK_EXCL);
++		}
+ 		error = xfs_itruncate_start(ip, XFS_ITRUNC_DEFINITE,
+ 				    ip->i_size);
+ 		if (error) {
+ 			xfs_trans_cancel(tp, 0);
+-			if (use_iolock)
+-				xfs_iunlock(ip, XFS_IOLOCK_EXCL);
++			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+ 			return error;
+ 		}
+ 
+@@ -812,8 +821,7 @@ xfs_free_eofblocks(
+ 			error = xfs_trans_commit(tp,
+ 						XFS_TRANS_RELEASE_LOG_RES);
+ 		}
+-		xfs_iunlock(ip, (use_iolock ? (XFS_IOLOCK_EXCL|XFS_ILOCK_EXCL)
+-					    : XFS_ILOCK_EXCL));
++		xfs_iunlock(ip, XFS_IOLOCK_EXCL|XFS_ILOCK_EXCL);
+ 	}
+ 	return error;
+ }
+@@ -1113,7 +1121,17 @@ xfs_release(
+ 		     (ip->i_df.if_flags & XFS_IFEXTENTS))  &&
+ 		    (!(ip->i_d.di_flags &
+ 				(XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND)))) {
+-			error = xfs_free_eofblocks(mp, ip, XFS_FREE_EOF_LOCK);
++
++			/*
++			 * If we can't get the iolock just skip truncating
++			 * the blocks past EOF because we could deadlock
++			 * with the mmap_sem otherwise.  We'll get another
++			 * chance to drop them once the last reference to
++			 * the inode is dropped, so we'll never leak blocks
++			 * permanently.
++			 */
++			error = xfs_free_eofblocks(mp, ip,
++						   XFS_FREE_EOF_TRYLOCK);
+ 			if (error)
+ 				return error;
+ 		}
+@@ -1184,7 +1202,7 @@ xfs_inactive(
+ 		     (!(ip->i_d.di_flags &
+ 				(XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND)) ||
+ 		      (ip->i_delayed_blks != 0)))) {
+-			error = xfs_free_eofblocks(mp, ip, XFS_FREE_EOF_LOCK);
++			error = xfs_free_eofblocks(mp, ip, 0);
+ 			if (error)
+ 				return VN_INACTIVE_CACHE;
+ 		}
 
 _______________________________________________
 xfs mailing list
