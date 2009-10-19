@@ -1,24 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9J3s8gS025484 for <xfs@oss.sgi.com>; Sun, 18 Oct 2009 22:54:08 -0500
+	n9J43su7026092 for <xfs@oss.sgi.com>; Sun, 18 Oct 2009 23:03:54 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9C498A94553
-	for <xfs@oss.sgi.com>; Sun, 18 Oct 2009 20:55:41 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E411B1BF84D4
+	for <xfs@oss.sgi.com>; Sun, 18 Oct 2009 21:05:27 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id ewvjz8jYLO52hqgf for
-	<xfs@oss.sgi.com>; Sun, 18 Oct 2009 20:55:41 -0700 (PDT)
-Date: Sun, 18 Oct 2009 23:55:38 -0400
+	by cuda.sgi.com with ESMTP id 58x5NtWmSwQEE1Tk for
+	<xfs@oss.sgi.com>; Sun, 18 Oct 2009 21:05:27 -0700 (PDT)
+Date: Mon, 19 Oct 2009 00:05:26 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: XFS mount failuer on RAID5
-Message-ID: <20091019035538.GC18296@infradead.org>
-References: <389deec70910152009i7656aaf2s9d929b8b68e4e740@mail.gmail.com>
-	<200910161019.10286@zmi.at> <4AD890D1.4010208@sandeen.net>
-	<200910172327.05122@zmi.at>
-	<20091019013018.GQ9464@discord.disaster>
+Subject: [PATCH] xfs: reset the i_iolock lock class in the reclaim path
+Message-ID: <20091019040526.GC21115@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20091019013018.GQ9464@discord.disaster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,19 +26,83 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>
 
-On Mon, Oct 19, 2009 at 12:30:18PM +1100, Dave Chinner wrote:
-> 
-> IIRC, the main reason for 4k sectors on MD RAID5/6 is that changing
-> the IO alignment from 4k to 512 byte IOs (i.e. sub-page sized)
-> causes MD to flush and invalidate the stripe cache. Hence every
-> time XFS writes a super block, AGF, AGFL or AGI, things go much
-> slower because of this flush/invalidate. By setting the sector size
-> to 4k, the SB/AGF/AGFL/AGI are all 4k in size and hence IO alignment
+The iolock is used for protecting reads, writes and block truncates against
+each other.  We have two classes of callers, the first one is induced by
+a file operation and requires a reference to the inode be held and not
+dropped after the operation is done:
 
-This should not happen anymore with 2.6 series kernels.
+ - xfs_vm_vmap, xfs_vn_fallocate, xfs_read, xfs_write, xfs_splice_read,
+   xfs_splice_write and xfs_setattr are all implementations of VFS methods
+   that require a live inode
+ - xfs_getbmap and xfs_swap_extents are ioctl subcommand for which the
+   same is true
+ - xfs_truncate_file is only called on quota inodes just returned from xfs_iget
+ - xfs_sync_inode_data does the lock just after an igrab()
+ - xfs_filestream_associate and xfs_filestream_new_ag take the iolock on the
+   parent inode of an inode which by VFS rules must be referenced
+
+And we have various calls to truncate blocks past EOF or the whole file when
+dropping the last reference to an inode.   Unfortunately lockdep complains
+when we do memory allocations that can recurse into the filesystem in the
+first class because the second class happens to take the same lock.  To avoid
+this re-init the iolock in the beginning of xfs_fs_clear_inode to get
+a new lock class.
+
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: xfs/fs/xfs/linux-2.6/xfs_super.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2009-10-14 17:24:31.356278624 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_super.c	2009-10-19 06:03:05.771006625 +0200
+@@ -999,7 +999,6 @@ xfs_fs_inode_init_once(
+ 
+ 	mrlock_init(&ip->i_lock, MRLOCK_ALLOW_EQUAL_PRI|MRLOCK_BARRIER,
+ 		     "xfsino", ip->i_ino);
+-	mrlock_init(&ip->i_iolock, MRLOCK_BARRIER, "xfsio", ip->i_ino);
+ }
+ 
+ /*
+@@ -1101,6 +1100,22 @@ xfs_fs_clear_inode(
+ 	XFS_STATS_INC(vn_remove);
+ 	XFS_STATS_DEC(vn_active);
+ 
++	/*
++	 * The iolock is used for protecting reads, writes and block truncates
++	 * against each other.  We have two classes of callers, the first one
++	 * is induced by a file operation and requires a reference to the
++	 * inode be held and not dropped after the operation is done, and
++	 * second we have various calls to truncate blocks past EOF or for the
++	 * whole file when dropping the last reference to an inode.
++	 * Unfortunately lockdep complains when we do memory allocations that
++	 * can recurse into the filesystem in the first class because the
++	 * second class happens to take the same lock.  To avoid this
++	 * reinitialize the iolock in the beginning of xfs_fs_clear_inode to
++	 * get a new lock class.
++	 */
++	ASSERT(!rwsem_is_locked(&ip->i_iolock.mr_lock));
++	mrlock_init(&ip->i_iolock, MRLOCK_BARRIER, "xfsio", ip->i_ino);
++
+ 	xfs_inactive(ip);
+ }
+ 
+Index: xfs/fs/xfs/xfs_iget.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_iget.c	2009-10-14 17:25:26.733004131 +0200
++++ xfs/fs/xfs/xfs_iget.c	2009-10-14 17:28:26.272274357 +0200
+@@ -73,6 +73,9 @@ xfs_inode_alloc(
+ 	ASSERT(atomic_read(&ip->i_pincount) == 0);
+ 	ASSERT(!spin_is_locked(&ip->i_flags_lock));
+ 	ASSERT(completion_done(&ip->i_flush));
++	ASSERT(!rwsem_is_locked(&ip->i_iolock.mr_lock));
++
++	mrlock_init(&ip->i_iolock, MRLOCK_BARRIER, "xfsio", ip->i_ino);
+ 
+ 	/* initialise the xfs inode */
+ 	ip->i_ino = ino;
 
 _______________________________________________
 xfs mailing list
