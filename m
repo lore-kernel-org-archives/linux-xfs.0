@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9J0r4IE014634 for <xfs@oss.sgi.com>; Sun, 18 Oct 2009 19:53:04 -0500
-Received: from mail-px0-f195.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 10D3F1515C
-	for <xfs@oss.sgi.com>; Sun, 18 Oct 2009 17:54:36 -0700 (PDT)
-Received: from mail-px0-f195.google.com (mail-px0-f195.google.com
-	[209.85.216.195]) by cuda.sgi.com with ESMTP id
-	j6kmn9G01V4jNRkB for <xfs@oss.sgi.com>;
-	Sun, 18 Oct 2009 17:54:36 -0700 (PDT)
-Received: by pxi33 with SMTP id 33so3047362pxi.20
-	for <xfs@oss.sgi.com>; Sun, 18 Oct 2009 17:54:35 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4AD89128.2010206@sandeen.net>
-References: <389deec70910152009i7656aaf2s9d929b8b68e4e740@mail.gmail.com>
-	<4AD89128.2010206@sandeen.net>
-Date: Mon, 19 Oct 2009 08:54:35 +0800
-Message-ID: <389deec70910181754xf671441vbb481ea48b63316@mail.gmail.com>
+	n9J1Snid016920 for <xfs@oss.sgi.com>; Sun, 18 Oct 2009 20:28:50 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CBF9115238
+	for <xfs@oss.sgi.com>; Sun, 18 Oct 2009 18:30:21 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	eWVjeckjdSdHcJ5H for <xfs@oss.sgi.com>;
+	Sun, 18 Oct 2009 18:30:21 -0700 (PDT)
+Date: Mon, 19 Oct 2009 12:30:18 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: XFS mount failuer on RAID5
-From: hank peng <pengxihan@gmail.com>
+Message-ID: <20091019013018.GQ9464@discord.disaster>
+References: <389deec70910152009i7656aaf2s9d929b8b68e4e740@mail.gmail.com>
+	<200910161019.10286@zmi.at> <4AD890D1.4010208@sandeen.net>
+	<200910172327.05122@zmi.at>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <200910172327.05122@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,46 +27,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-raid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com
+To: Michael Monnerie <michael.monnerie@is.it-management.at>
+Cc: xfs@oss.sgi.com
 
-MjAwOS8xMC8xNiBFcmljIFNhbmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQ+Ogo+IGhhbmsgcGVu
-ZyB3cm90ZToKPj4KPj4gSGksIGFsbDoKPj4gSSBoYXZlIGEgc2VsZi1idWlsdCBib2FyZCwgY3B1
-IGlzIE1QQzg1NDgoUFBDIGFyY2gpLCBrZXJuZWwgaXMgYmFzZWQKPj4gb24gTVBDODU0OENEUyBk
-ZW1vIGJvYXJkLCB2ZXJzaW9uIGlzIDIuNi4yMy4KPj4gQSBTQVRBIGNvbnRyb2xsZXIgaXMgY29u
-ZWN0ZWQgdG8gQ1BVIHZpYSBQQ0lYLCBhbmQgSSBoYXZlIDMgZGlza3MKPj4gYXR0YWNoZWQgdG8g
-aXQuCj4+Cj4gLi4uCj4KPj4gcm9vdEBTdG9yYWdlOn4jIG1rZnMueGZzIC1mIC1zc2l6ZT00ayAv
-ZGV2L3ZnL2x2dGVzdAo+PiBXYXJuaW5nIC0gZGV2aWNlIG1hcHBlciBkZXZpY2UsIGJ1dCBubyBk
-bXNldHVwKDgpIGZvdW5kCj4+IFdhcm5pbmcgLSBkZXZpY2UgbWFwcGVyIGRldmljZSwgYnV0IG5v
-IGRtc2V0dXAoOCkgZm91bmQKPj4gbWV0YS1kYXRhPS9kZXYvdmcvbHZ0ZXN0IMKgIMKgIMKgIMKg
-IGlzaXplPTI1NiDCoCDCoGFnY291bnQ9NCwgYWdzaXplPTY1NTM2MDAKPj4gYmxrcwo+PiDCoCDC
-oCDCoCDCoCA9IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHNlY3Rzej00MDk2IMKg
-YXR0cj0yCj4+IGRhdGEgwqAgwqAgPSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBi
-c2l6ZT00MDk2IMKgIGJsb2Nrcz0yNjIxNDQwMCwgaW1heHBjdD0yNQo+PiDCoCDCoCDCoCDCoCA9
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHN1bml0PTAgwqAgwqAgwqBzd2lkdGg9
-MCBibGtzCj4+IG5hbWluZyDCoCA9dmVyc2lvbiAyIMKgIMKgIMKgIMKgIMKgIMKgIMKgYnNpemU9
-NDA5Ngo+PiBsb2cgwqAgwqAgwqA9aW50ZXJuYWwgbG9nIMKgIMKgIMKgIMKgIMKgIGJzaXplPTQw
-OTYgwqAgYmxvY2tzPTEyODAwLCB2ZXJzaW9uPTIKPj4gwqAgwqAgwqAgwqAgPSDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBzZWN0c3o9NDA5NiDCoHN1bml0PTEgYmxrcywgbGF6eS1j
-b3VudD0wCj4+IHJlYWx0aW1lID1ub25lIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGV4dHN6
-PTQwOTYgwqAgYmxvY2tzPTAsIHJ0ZXh0ZW50cz0wCj4+IHJvb3RAU3RvcmFnZTp+IyBta2RpciB0
-bXAKPj4gcm9vdEBTdG9yYWdlOn4jIG1vdW50IC10IHhmcyAvZGV2L3ZnL2x2dGVzdCAuL3RtcC8K
-Pj4gRmlsZXN5c3RlbSAiZG0tMCI6IERpc2FibGluZyBiYXJyaWVycywgbm90IHN1cHBvcnRlZCBi
-eSB0aGUgdW5kZXJseWluZwo+PiBkZXZpY2UKPj4gWEZTIG1vdW50aW5nIGZpbGVzeXN0ZW0gZG0t
-MAo+PiBYRlM6IHRvdGFsbHkgemVyb2VkIGxvZwo+PiBGaWxlc3lzdGVtICJkbS0wIjogWEZTIGlu
-dGVybmFsIGVycm9yIHhsb2dfY2xlYXJfc3RhbGVfYmxvY2tzKDIpIGF0Cj4+IGxpbmUgMTI1MiBv
-ZiBmaWxlIGZzL3hmcy94ZnNfbG9nX3JlY292ZXIuYy4gwqBDYWxsZXIgMHhjMDE4ZWM4OAo+Cj4K
-PiBDYW4geW91IHRyeSB0aGUgcGF0Y2ggdGhhdCBBbmR5IFBvbGluZyBwb3N0ZWQgdG8gdGhlIGxp
-c3QganVzdCB5ZXN0ZXJkYXk/Cj4gwqBTbGlnaHQgbG9uZ3Nob3QgYnV0IGl0IG1heSBiZSBpdC4K
-Pgo+IE90aGVyd2lzZSBJIHdpbGwgbG9vayBhdCB0aGlzIGluIGEgYml0OyBvbiB0aGUgcm9hZCB0
-b2RheSB0aG91Z2guCj4KUmVhc29uIGlzIGZvdW5kLCBpdCBpcyBiZWNhdXNlIHRoZXJlIGFyZSBz
-b21lIHByb2JsZW0gaW4gb3VyIGhhcmR3YXJlClhPUiBkcml2ZXIgZmlybXdhcmUuIEkgYW0gc3Vy
-ZSBub3cgaXQgaXMgbm90IHJlbGF0ZWQgd2l0aCBYRlMuClRoeCB0byBhbGwgeW91IGd1eXMsIHdl
-IHdpbGwgdHJ5IHRvIGZpeCBpdC4KCj4gLUVyaWMKPgoKCgotLSAKVGhlIHNpbXBsZXN0IGlzIG5v
-dCBhbGwgYmVzdCBidXQgdGhlIGJlc3QgaXMgc3VyZWx5IHRoZSBzaW1wbGVzdCEKCl9fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QK
-eGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Sat, Oct 17, 2009 at 11:27:04PM +0200, Michael Monnerie wrote:
+> On Freitag 16 Oktober 2009 Eric Sandeen wrote:
+> > Actually -ssize=4k is just fine even on 512 sector disks.
+> 
+> Oh funny. So what's the meaning of this argument then? Or why would one 
+> set it to 4k? What's the diff with 512b?
+
+A hardware sector is the atomic unit of IO. 4k sectors on 512b
+hardware sectors means that a single 4k filesystem sector write is
+not necessarily atomic. This can lead to problems with torn writes
+at power loss or sub-filesystem-sector data loss/corruption when a
+hardware sector goes bad. In general, these are detected no
+differently to the same sector loss on a 512b filesystem sector
+filesystem.
+
+IIRC, the main reason for 4k sectors on MD RAID5/6 is that changing
+the IO alignment from 4k to 512 byte IOs (i.e. sub-page sized)
+causes MD to flush and invalidate the stripe cache. Hence every
+time XFS writes a super block, AGF, AGFL or AGI, things go much
+slower because of this flush/invalidate. By setting the sector size
+to 4k, the SB/AGF/AGFL/AGI are all 4k in size and hence IO alignment
+never changes and hence performance remains good.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
