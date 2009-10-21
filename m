@@ -1,15 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9LHDK7q014815 for <xfs@oss.sgi.com>; Wed, 21 Oct 2009 12:13:20 -0500
-Content-class: urn:content-classes:message
+	n9LHUi3R016689 for <xfs@oss.sgi.com>; Wed, 21 Oct 2009 12:30:44 -0500
+Received: from mail-px0-f171.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7294B34B1D0
+	for <xfs@oss.sgi.com>; Wed, 21 Oct 2009 10:32:17 -0700 (PDT)
+Received: from mail-px0-f171.google.com (mail-px0-f171.google.com
+	[209.85.216.171]) by cuda.sgi.com with ESMTP id
+	qGArRMltCzBPnTuH for <xfs@oss.sgi.com>;
+	Wed, 21 Oct 2009 10:32:17 -0700 (PDT)
+Received: by pxi1 with SMTP id 1so2416955pxi.33
+	for <xfs@oss.sgi.com>; Wed, 21 Oct 2009 10:32:16 -0700 (PDT)
 MIME-Version: 1.0
-Subject: RE: [PATCH 06/14] repair: use a btree instead of a radix tree for
-	theprefetch queue
-Date: Wed, 21 Oct 2009 12:12:33 -0500
-Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83ADEB@cf--amer001e--3.americas.sgi.com>
-In-Reply-To: <20090902175840.740632507@bombadil.infradead.org>
-From: "Alex Elder" <aelder@sgi.com>
+In-Reply-To: <4ADF2EE8.6010700@sandeen.net>
+References: <c2dcdfa40910202307m77a9d7c5lf18e278a9ebae08e@mail.gmail.com>
+	<4ADF2EE8.6010700@sandeen.net>
+Date: Wed, 21 Oct 2009 23:02:16 +0530
+Message-ID: <c2dcdfa40910211032y5b1d2cd8l418491327d24b87b@mail.gmail.com>
+Subject: Re: XFS internal error xfs_da_do_buf(1) at line 1992 of file
+	fs/xfs/xfs_da_btree.c
+From: Amit Sahrawat <amit.sahrawat83@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,128 +28,251 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============0313618089775734209=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Barry Naujok <bnaujok@sgi.com>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "sandeen-xfs@sandeen.net" <sandeen-xfs@sandeen.net>, "p.mironchik@velesys.com" <p.mironchik@velesys.com>, "hch@xfs.org" <hch@xfs.org>, xfs@oss.sgi.com
 
-On , Christoph Hellwig wrote:
-> Currently the prefetch queue in xfs_repair uses a radix tree implementation
-> derived from the Linux kernel one to manage it's prefetch queue.
-> 
-> The radix tree implement is not very memory efficient for sparse indices,
-> so replace it with a btree implementation that is much more efficient.
-> This is not that important for the prefetch queue but will be very important
-> for the next memory optimization patches which need a tree to store things
-> like the block map which are very sparse, and we do not want to deal with
-> two tree implementations (or rather three given that we still have avl.c
-> around)
-> 
-> Signed-off-by: Barry Naujok <bnaujok@sgi.com>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+--===============0313618089775734209==
+Content-Type: multipart/alternative; boundary=000e0cd2960c3189750476755cbd
 
-I set up some code around this to test it, and ended up going
-on a wild goose chase for a bug that it turns out only happens
-if you happen to simplify things so that BTREE_KEY_MAX is 2.
+--000e0cd2960c3189750476755cbd
+Content-Type: text/plain; charset=ISO-8859-1
 
-So, well, don't do that, in case you were thinking of it...
+Thanks Eric,
 
-Beyond that the code btree code generally looks fine, but
-I'll probably have some suggested changes once it's in.
-I have a few comments below.  However...
+Yes, I am able to get this for the same Inode and Block number.
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+xfs_check reports error for dir inode 128 missing leaf entries..(exact
+string I m missing), will provide you the details.
 
-General comments/questions
-- Is this code worthy of putting into a library, so other
-  XFS user space can use it?
-- Is the radix tree code worth putting into a library and
-  saving, for similar reasons (I didn't look at that code).
-- I accept that this uses less memory for sparsely populated
-  key space than radix trees; but it would be nice if that
-  could be characterized a bit more precisely (i.e., what
-  will the range of values that'll be represented be, just
-  how sparse is it, and at what point does this really
-  pay off?).
-- Related to the previous one--it would be good to have
-  a little info about why the value 7 was chosen as the
-  number of keys per node.  Perhaps I just don't know
-  enough of the history (or content of the upcoming
-  patches).
-- A number of external interfaces defined are not used
-  in the (current) xfs_repair code.  (That's OK, but
-  they could be removed if they're never expected to
-  to be used--e.g. btree_peek_prev(), and btree_peek_next()).
+Using xfs_repair fixes the problem. But again the same operation leads to
+the crash.
+Even on a freshly formatted disk, I get this error.
+
+Please let me know from where I can get this patch to try whether it fixes
+for me or not.
+
+Thanks & Regards,
+Amit Sahrawat
+
+On Wed, Oct 21, 2009 at 9:25 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+
+> Amit Sahrawat wrote:
+> > Dear Eric,
+> >
+> >
+> > I am facing an issue with file deletion in XFS. Every time, I perform a
+> > remove operation the kernel crashes with the following prints.
+> >
+>
+> Old kernel I'm afraid.  Which ABI are you using?
+>
+> I'd have to remind what's gone in since then, but at least this:
+>
+> commit ae23a5e87dbbf4657a82e1ff8ebc52ab50361c14
+> Author: Eric Sandeen <sandeen@sandeen.net>
+> Date:   Mon Jun 23 13:23:32 2008 +1000
+>
+>    [XFS] Pack some shortform dir2 structures for the ARM old ABI
+>    architecture.
+>
+>    This should fix the longstanding issues with xfs and old ABI arm boxes,
+>    which lead to various asserts and xfs shutdowns, and for which an
+>    (incorrect) patch has been floating around for years.
+>
+>    I've verified this patch by comparing the on-disk structure layouts
+> using
+>    pahole from the dwarves package, as well as running through a bit of
+> xfsqa
+>    under qemu-arm, modified so that the check/repair phase after each test
+>    actually executes check/repair from the x86 host, on the filesystem
+>    populated by the arm emulator. Thus far it all looks good.
+>
+>    There are 2 other structures with extra padding at the end, but they
+> don't
+>    seem to cause trouble. I suppose they could be packed as well:
+>    xfs_dir2_data_unused_t and xfs_dir2_sf_t.
+>
+>    Note that userspace needs a similar treatment, and any filesystems which
+>    were running with the previous rogue "fix" will now see corruption
+> (either
+>    in the kernel, or during xfs_repair) with this fix properly in place; it
+>    may be worth teaching xfs_repair to identify and fix that specific
+> issue.
+>
+>    SGI-PV: 982930
+>
+>    SGI-Modid: xfs-linux-melb:xfs-kern:31280a
+>
+>    Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+>    Signed-off-by: Tim Shimmin <tes@sgi.com>
+>    Signed-off-by: Lachlan McIlroy <lachlan@sgi.com>
+>
+> comes to mind.
+>
+> But, do you always get an error on the same dir & block nr?  Does an
+> xfs_repair fix it?  Maybe it's just plain ol' corruption.
+>
+> -Eric
+>
+> > # rm -rf 1* 2* 3* 4*
+> > xfs_da_do_buf: bno 16777216
+> > dir: inode 128
+> > Filesystem "sda1": XFS internal error xfs_da_do_buf(1) at line 1992 of
+> > file fs/xfs/xfs_da_btree.c.  Caller 0xc011d2e4
+> > [<c0022618>] (dump_stack+0x0/0x14) from [<c0129b2c>]
+> > (xfs_error_report+0x54/0x64)
+> > [<c0129ad8>] (xfs_error_report+0x0/0x64) from [<c011cea0>]
+> > (xfs_da_do_buf+0x334/0x6ec)
+> > [<c011cb6c>] (xfs_da_do_buf+0x0/0x6ec) from [<c011d2e4>]
+> > (xfs_da_read_buf+0x34/0x3c)
+> > [<c011d2b0>] (xfs_da_read_buf+0x0/0x3c) from [<c0126030>]
+> > (xfs_dir2_node_removename+0x278/0x500)
+> > [<c0125db8>] (xfs_dir2_node_removename+0x0/0x500) from [<c0120760>]
+> > (xfs_dir_removename+0x100/0x10c)
+> > [<c0120660>] (xfs_dir_removename+0x0/0x10c) from [<c0151be0>]
+> > (xfs_remove+0x280/0x424)
+> >  r6 = 00000000  r5 = 00000000  r4 = 0000357C
+> > [<c0151960>] (xfs_remove+0x0/0x424) from [<c015c3a0>]
+> > (xfs_vn_unlink+0x30/0x60)
+> > [<c015c370>] (xfs_vn_unlink+0x0/0x60) from [<c0091c58>]
+> > (vfs_unlink+0x70/0xac)
+> >  r7 = C3E79000  r6 = C3E5AE58  r5 = C4122EB8  r4 = 00000000
+> > [<c0091be8>] (vfs_unlink+0x0/0xac) from [<c0093fbc>]
+> > (do_unlinkat+0xcc/0x14c)
+> >  r6 = C4123D78  r5 = C4122EB8  r4 = 00000000
+> > [<c0093ef0>] (do_unlinkat+0x0/0x14c) from [<c0094054>]
+> > (sys_unlink+0x18/0x1c)
+> >  r7 = 0000000A  r6 = 0000000C  r5 = 00000008  r4 = BECE6A2B
+> > [<c009403c>] (sys_unlink+0x0/0x1c) from [<c001de40>]
+> > (ret_fast_syscall+0x0/0x2c)
+> >
+> > *I am using kernel version - 2.6.18.1
+> > Platform - ARM
+> > *
+> > I have searched a lot on this issue, but no solution is available. In
+> > the FAQS it is mentioned that it's been fixed 2.6.17.7 onwards.
+> > But, i keep getting this issue frequently almost every time I do this
+> > operation .
+> >
+> > Please provide me any help to sort this issue.
+> >
+> > Thanks & Regards,
+> > Amit Sahrawat
+> >
+>
+>
+
+--000e0cd2960c3189750476755cbd
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+Thanks Eric,<br>=A0<br>Yes, I am able to get this for the same Inode and Bl=
+ock number.<br>=A0<br>xfs_check reports error for dir inode 128 missing lea=
+f entries..(exact string I m missing), will provide you the details.<br>=A0=
+<br>
+Using xfs_repair fixes the problem. But again the same operation leads to t=
+he crash.<br>Even on a freshly formatted disk, I get this error.<br>=A0<br>=
+Please let me know from where I can get this patch to try whether it fixes =
+for me or not.<br>
+=A0<br>Thanks &amp; Regards,<br>Amit Sahrawat<br><br>
+<div class=3D"gmail_quote">On Wed, Oct 21, 2009 at 9:25 PM, Eric Sandeen <s=
+pan dir=3D"ltr">&lt;<a href=3D"mailto:sandeen@sandeen.net">sandeen@sandeen.=
+net</a>&gt;</span> wrote:<br>
+<blockquote class=3D"gmail_quote" style=3D"PADDING-LEFT: 1ex; MARGIN: 0px 0=
+px 0px 0.8ex; BORDER-LEFT: #ccc 1px solid">
+<div class=3D"im">Amit Sahrawat wrote:<br>&gt; Dear Eric,<br>&gt;<br>&gt;<b=
+r>&gt; I am facing an issue with file deletion in XFS. Every time, I perfor=
+m a<br>&gt; remove operation the kernel crashes with the following prints.<=
+br>
+&gt;<br><br></div>Old kernel I&#39;m afraid. =A0Which ABI are you using?<br=
+><br>I&#39;d have to remind what&#39;s gone in since then, but at least thi=
+s:<br><br>commit ae23a5e87dbbf4657a82e1ff8ebc52ab50361c14<br>Author: Eric S=
+andeen &lt;<a href=3D"mailto:sandeen@sandeen.net">sandeen@sandeen.net</a>&g=
+t;<br>
+Date: =A0 Mon Jun 23 13:23:32 2008 +1000<br><br>=A0 =A0[XFS] Pack some shor=
+tform dir2 structures for the ARM old ABI<br>=A0 =A0architecture.<br><br>=
+=A0 =A0This should fix the longstanding issues with xfs and old ABI arm box=
+es,<br>=A0 =A0which lead to various asserts and xfs shutdowns, and for whic=
+h an<br>
+=A0 =A0(incorrect) patch has been floating around for years.<br><br>=A0 =A0=
+I&#39;ve verified this patch by comparing the on-disk structure layouts<br>=
+using<br>=A0 =A0pahole from the dwarves package, as well as running through=
+ a bit of<br>
+xfsqa<br>=A0 =A0under qemu-arm, modified so that the check/repair phase aft=
+er each test<br>=A0 =A0actually executes check/repair from the x86 host, on=
+ the filesystem<br>=A0 =A0populated by the arm emulator. Thus far it all lo=
+oks good.<br>
+<br>=A0 =A0There are 2 other structures with extra padding at the end, but =
+they<br>don&#39;t<br>=A0 =A0seem to cause trouble. I suppose they could be =
+packed as well:<br>=A0 =A0xfs_dir2_data_unused_t and xfs_dir2_sf_t.<br><br>=
+=A0 =A0Note that userspace needs a similar treatment, and any filesystems w=
+hich<br>
+=A0 =A0were running with the previous rogue &quot;fix&quot; will now see co=
+rruption<br>(either<br>=A0 =A0in the kernel, or during xfs_repair) with thi=
+s fix properly in place; it<br>=A0 =A0may be worth teaching xfs_repair to i=
+dentify and fix that specific<br>
+issue.<br><br>=A0 =A0SGI-PV: 982930<br><br>=A0 =A0SGI-Modid: xfs-linux-melb=
+:xfs-kern:31280a<br><br>=A0 =A0Signed-off-by: Eric Sandeen &lt;<a href=3D"m=
+ailto:sandeen@sandeen.net">sandeen@sandeen.net</a>&gt;<br>=A0 =A0Signed-off=
+-by: Tim Shimmin &lt;<a href=3D"mailto:tes@sgi.com">tes@sgi.com</a>&gt;<br>
+=A0 =A0Signed-off-by: Lachlan McIlroy &lt;<a href=3D"mailto:lachlan@sgi.com=
+">lachlan@sgi.com</a>&gt;<br><br>comes to mind.<br><br>But, do you always g=
+et an error on the same dir &amp; block nr? =A0Does an<br>xfs_repair fix it=
+? =A0Maybe it&#39;s just plain ol&#39; corruption.<br>
+<font color=3D"#888888"><br>-Eric<br></font>
+<div>
+<div></div>
+<div class=3D"h5"><br>&gt; # rm -rf 1* 2* 3* 4*<br>&gt; xfs_da_do_buf: bno =
+16777216<br>&gt; dir: inode 128<br>&gt; Filesystem &quot;sda1&quot;: XFS in=
+ternal error xfs_da_do_buf(1) at line 1992 of<br>&gt; file fs/xfs/xfs_da_bt=
+ree.c. =A0Caller 0xc011d2e4<br>
+&gt; [&lt;c0022618&gt;] (dump_stack+0x0/0x14) from [&lt;c0129b2c&gt;]<br>&g=
+t; (xfs_error_report+0x54/0x64)<br>&gt; [&lt;c0129ad8&gt;] (xfs_error_repor=
+t+0x0/0x64) from [&lt;c011cea0&gt;]<br>&gt; (xfs_da_do_buf+0x334/0x6ec)<br>
+&gt; [&lt;c011cb6c&gt;] (xfs_da_do_buf+0x0/0x6ec) from [&lt;c011d2e4&gt;]<b=
+r>&gt; (xfs_da_read_buf+0x34/0x3c)<br>&gt; [&lt;c011d2b0&gt;] (xfs_da_read_=
+buf+0x0/0x3c) from [&lt;c0126030&gt;]<br>&gt; (xfs_dir2_node_removename+0x2=
+78/0x500)<br>
+&gt; [&lt;c0125db8&gt;] (xfs_dir2_node_removename+0x0/0x500) from [&lt;c012=
+0760&gt;]<br>&gt; (xfs_dir_removename+0x100/0x10c)<br>&gt; [&lt;c0120660&gt=
+;] (xfs_dir_removename+0x0/0x10c) from [&lt;c0151be0&gt;]<br>&gt; (xfs_remo=
+ve+0x280/0x424)<br>
+&gt; =A0r6 =3D 00000000 =A0r5 =3D 00000000 =A0r4 =3D 0000357C<br>&gt; [&lt;=
+c0151960&gt;] (xfs_remove+0x0/0x424) from [&lt;c015c3a0&gt;]<br>&gt; (xfs_v=
+n_unlink+0x30/0x60)<br>&gt; [&lt;c015c370&gt;] (xfs_vn_unlink+0x0/0x60) fro=
+m [&lt;c0091c58&gt;]<br>
+&gt; (vfs_unlink+0x70/0xac)<br>&gt; =A0r7 =3D C3E79000 =A0r6 =3D C3E5AE58 =
+=A0r5 =3D C4122EB8 =A0r4 =3D 00000000<br>&gt; [&lt;c0091be8&gt;] (vfs_unlin=
+k+0x0/0xac) from [&lt;c0093fbc&gt;]<br>&gt; (do_unlinkat+0xcc/0x14c)<br>&gt=
+; =A0r6 =3D C4123D78 =A0r5 =3D C4122EB8 =A0r4 =3D 00000000<br>
+&gt; [&lt;c0093ef0&gt;] (do_unlinkat+0x0/0x14c) from [&lt;c0094054&gt;]<br>=
+&gt; (sys_unlink+0x18/0x1c)<br>&gt; =A0r7 =3D 0000000A =A0r6 =3D 0000000C =
+=A0r5 =3D 00000008 =A0r4 =3D BECE6A2B<br>&gt; [&lt;c009403c&gt;] (sys_unlin=
+k+0x0/0x1c) from [&lt;c001de40&gt;]<br>
+&gt; (ret_fast_syscall+0x0/0x2c)<br>&gt;<br>&gt; *I am using kernel version=
+ - 2.6.18.1<br>&gt; Platform - ARM<br>&gt; *<br>&gt; I have searched a lot =
+on this issue, but no solution is available. In<br>&gt; the FAQS it is ment=
+ioned that it&#39;s been fixed 2.6.17.7 onwards.<br>
+&gt; But, i keep getting this issue frequently almost every time I do this<=
+br>&gt; operation .<br>&gt;<br>&gt; Please provide me any help to sort this=
+ issue.<br>&gt;<br>&gt; Thanks &amp; Regards,<br>&gt; Amit Sahrawat<br>
+&gt;<br><br></div></div></blockquote></div><br>
+
+--000e0cd2960c3189750476755cbd--
 
 
-. . .
-
-> Index: xfsprogs-dev/repair/btree.c
-> ===================================================================
-> --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-> +++ xfsprogs-dev/repair/btree.c	2009-08-20 00:06:44.000000000 +0000
-> @@ -0,0 +1,1234 @@
-> +/*
-> + * Copyright (c) 2007, Silicon Graphics, Inc. Barry Naujok <bnaujok@sgi.com>
-> + * All Rights Reserved.
-
-. . .
-
-> +#include <libxfs.h>
-> +#include "btree.h"
-> +
-> +
-
-Note that the value of BTREE_KEY_MAX *must* be greater than 2, or
-this code will not work.  Maybe nobody should be trying to use 2
-here anyway, but I would like to see a comment, e.g., /* Must be 3 or more */
-
-> +#define BTREE_KEY_MAX		7
-> +#define BTREE_KEY_MIN		(BTREE_KEY_MAX / 2)
-> +
-> +#define BTREE_PTR_MAX		(BTREE_KEY_MAX + 1)
-
-. . .
-
-> Index: xfsprogs-dev/repair/prefetch.c
-> ===================================================================
-> --- xfsprogs-dev.orig/repair/prefetch.c	2009-08-20 00:05:36.000000000 +0000
-> +++ xfsprogs-dev/repair/prefetch.c	2009-08-20 00:14:08.000000000 +0000
-. . .
-
-> @@ -570,7 +566,7 @@
->  		return NULL;
-> 
->  	pthread_mutex_lock(&args->lock);
-> -	while (!args->queuing_done || args->primary_io_queue.height) {
-
-There is a btree_is_empty(btree_root) function, you might
-as well use it here (it is clearer what you're doing anyway).
-
-> +	while (!args->queuing_done || btree_find(args->primary_io_queue, 0, NULL)) {
-> 
->  #ifdef XR_PF_TRACE
->  		pftrace("waiting to start prefetch I/O for AG %d", args->agno);
-> @@ -696,8 +692,8 @@
->  #endif
->  	pthread_mutex_lock(&args->lock);
-> 
-> -	ASSERT(args->primary_io_queue.height == 0);
-> -	ASSERT(args->secondary_io_queue.height == 0);
-
-btree_is_empty() would be better here also.
-
-> +	ASSERT(btree_find(args->primary_io_queue, 0, NULL) == NULL);
-> +	ASSERT(btree_find(args->secondary_io_queue, 0, NULL) == NULL);
-> 
->  	args->prefetch_done = 1;
->  	if (args->next_args)
-
-. . .
+--===============0313618089775734209==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============0313618089775734209==--
