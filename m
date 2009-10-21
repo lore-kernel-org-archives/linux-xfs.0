@@ -1,14 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9LJ6rYZ025435 for <xfs@oss.sgi.com>; Wed, 21 Oct 2009 14:06:53 -0500
+	n9LJXDkS027407 for <xfs@oss.sgi.com>; Wed, 21 Oct 2009 14:33:13 -0500
 Content-class: urn:content-classes:message
 MIME-Version: 1.0
-Subject: RE: [PATCH 09/14] repair: track logical to physical block mapping
-	moreeffeciently
-Date: Wed, 21 Oct 2009 14:06:19 -0500
-Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83ADEE@cf--amer001e--3.americas.sgi.com>
-In-Reply-To: <20090902175841.284697389@bombadil.infradead.org>
+Subject: RE: [PATCH 10/14] repair: cleanup helpers for tracking block usage
+Date: Wed, 21 Oct 2009 14:33:05 -0500
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83ADF0@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <20090902175841.479553130@bombadil.infradead.org>
 From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -26,88 +25,59 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: Barry Naujok <bnaujok@sgi.com>, xfs@oss.sgi.com
 
 Christoph Hellwig wrote:
-> Currently we track the logical to physical block mapping by a structure which
-> contains an array of physicial blocks.  This is extremly efficient and is
+> Rename get_agbno_state/set_agbno_state to get_bmap/set_bmap because
+> those names are more self-descriptive.  Remove the superblous mount
+> argument to the as the current filesystem is a global in repair.
+> Remove the fsbno taking variant as they just complicated the code.
+> Bring all uses of them into the canonical form.
 
-Should this be "extremely inefficient?"
+Another big pile o' whitespace changes here, wish they were
+separated so it was clearer to see what *really* changed...
 
-> replaced with the normal starblock storage we use in the kernel and on disk
-> in this patch.
+One bad bug indicated in comments below, but easy to fix.
 
-While you're at fixing the above comment, maybe just re-word this
-sentence because I don't really grok it very well...
+But this looks good otherwise.
 
-. . .
-
-> [hch: added a small fix in blkmap_set_ext to not call memmove unless needed]
-> 
 > Signed-off-by: Barry Naujok <bnaujok@sgi.com>
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-A few minor nits mentioned above and below.  But
-overall this looks good.
-
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
-> Index: xfsprogs-dev/repair/bmap.c
+
+> Index: xfsprogs-dev/repair/scan.c
 > ===================================================================
-> --- xfsprogs-dev.orig/repair/bmap.c	2009-08-20 02:32:34.000000000 +0000
-> +++ xfsprogs-dev/repair/bmap.c	2009-08-20 02:32:45.000000000 +0000
-
-> @@ -21,106 +21,46 @@
->  #include "bmap.h"
-> 
+> --- xfsprogs-dev.orig/repair/scan.c	2009-08-21 19:05:32.000000000 +0000
+> +++ xfsprogs-dev/repair/scan.c	2009-08-21 19:06:51.000000000 +0000
 
 . . .
 
-> +	ASSERT(whichfork == XFS_DATA_FORK || whichfork == XFS_ATTR_FORK);
-> +
->  	if (nex < 1)
->  		nex = 1;
-> -	if ((blkmap = malloc(BLKMAP_SIZE(nex))) == NULL) {
-> -		do_warn(_("malloc failed in blkmap_alloc (%u bytes)\n"),
-> -			BLKMAP_SIZE(nex));
-> -		return blkmap;
-> +
-> +	key = whichfork ? ablkmap_key : dblkmap_key;
-> +	blkmap = pthread_getspecific(key);
-> +	if (!blkmap || blkmap->naexts < nex) {
-> +		blkmap = realloc(blkmap, BLKMAP_SIZE(nex));
-
-Does the above really have to be a realloc() call, or can
-it simply be a free()/malloc() instead?  Also, could the
-existing ts_alloc() function be adjusted to accomodate the
-usage here?
-
-> +		if (!blkmap) {
-> +			do_warn(_("malloc failed in blkmap_alloc (%u bytes)\n"),
-> +				BLKMAP_SIZE(nex));
-
-. . .
-
-> @@ -131,14 +71,7 @@ void
->  blkmap_free(
->  	blkmap_t	*blkmap)
->  {
-> -	blkent_t	**entp;
-> -	xfs_extnum_t	i;
+> @@ -476,19 +480,15 @@ scanfunc_allocbt(
+>  	/*
+>  	 * check for btree blocks multiply claimed
+>  	 */
+> -	state = get_agbno_state(mp, agno, bno);
 > -
-> -	if (blkmap == NULL)
-> -		return;
-> -	for (i = 0, entp = blkmap->ents; i < blkmap->nents; i++, entp++)
-> -		free(*entp);
-> -	free(blkmap);
-> +	/* nothing to do! - keep the memory around for the next inode */
+> -	switch (state)  {
+> -	case XR_E_UNKNOWN:
+> -		set_agbno_state(mp, agno, bno, XR_E_FS_MAP);
+> -		break;
+> -	default:
+> -		set_agbno_state(mp, agno, bno, XR_E_MULT);
+> +	state = get_bmap(agno, bno);
+> +	switch (state != XR_E_UNKNOWN)  {
 
-Nobody ever frees it though, either.  I guess it gets done at
-exit but I like things tidy (could arrange for a destructor
-function to be called, at pthread_key_create() time).
+BUG.      You mean "if (state != XR_E_UNKNOWN)"???
 
->  }
+> +		set_bmap(agno, bno, XR_E_MULT);
+>  		do_warn(
+>  _("%s freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
+>  				name, state, agno, bno, suspect);
+>  		return;
+>  	}
+> +	set_bmap(agno, bno, XR_E_FS_MAP);
 > 
->  /*
-
-. . .
+>  	numrecs = be16_to_cpu(block->bb_numrecs);
+> 
 
 _______________________________________________
 xfs mailing list
