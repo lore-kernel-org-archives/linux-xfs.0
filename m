@@ -1,13 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9LJXDkS027407 for <xfs@oss.sgi.com>; Wed, 21 Oct 2009 14:33:13 -0500
+	n9LKLAmU030652 for <xfs@oss.sgi.com>; Wed, 21 Oct 2009 15:21:10 -0500
 Content-class: urn:content-classes:message
 MIME-Version: 1.0
-Subject: RE: [PATCH 10/14] repair: cleanup helpers for tracking block usage
-Date: Wed, 21 Oct 2009 14:33:05 -0500
-Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83ADF0@cf--amer001e--3.americas.sgi.com>
-In-Reply-To: <20090902175841.479553130@bombadil.infradead.org>
+Subject: RE: [PATCH 11/14] repair: cleanup alloc/free/reset of the block
+	usagetracking
+Date: Wed, 21 Oct 2009 15:22:37 -0500
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83ADF7@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <20090902175841.711310240@bombadil.infradead.org>
 From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -25,18 +26,29 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: Barry Naujok <bnaujok@sgi.com>, xfs@oss.sgi.com
 
 Christoph Hellwig wrote:
-> Rename get_agbno_state/set_agbno_state to get_bmap/set_bmap because
-> those names are more self-descriptive.  Remove the superblous mount
-> argument to the as the current filesystem is a global in repair.
-> Remove the fsbno taking variant as they just complicated the code.
-> Bring all uses of them into the canonical form.
+> Currently the code to allocate, free and reset the block usage bitmaps
+> is a complete mess.  This patch reorganizes it into logical helpers.
+> 
+> Details:
+> 
+>  - the current incore_init code is called just before phase2 is called,
+>    which then marks the log and the AG headers used.
+>  - we get rid of incore_init init, and replace it with direct calls to the
+>    unchanched incore_ino_init/incore_ext_init functions and our new init_bmaps
+>    which does all the allocations for the block usage tracking, aswell
+>    as a call to reset_bmaps to initialize it to the default values.
+>  - reset_bmaps is also called from early phase4 code to reset all state
+>    instead of opencoding it.
+>  - there is a new free_bmaps helper which we call to free our block usage
+>    bitmaps when we don't need them anymore after phase5.  The current
+>    code frees some of it a bit early in phase5, but needs to take of it
+>    in phase6 in case we didn't call phase5 due to nomodify mode, and leaks
+>    it if we don't call phase 6, which might happen in case of a bad inode
+>    allocation btree.
 
-Another big pile o' whitespace changes here, wish they were
-separated so it was clearer to see what *really* changed...
 
-One bad bug indicated in comments below, but easy to fix.
+Looks good.		-Alex
 
-But this looks good otherwise.
 
 > Signed-off-by: Barry Naujok <bnaujok@sgi.com>
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
@@ -44,40 +56,13 @@ But this looks good otherwise.
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
 
-> Index: xfsprogs-dev/repair/scan.c
+> Index: xfsprogs-dev/repair/phase4.c
 > ===================================================================
-> --- xfsprogs-dev.orig/repair/scan.c	2009-08-21 19:05:32.000000000 +0000
-> +++ xfsprogs-dev/repair/scan.c	2009-08-21 19:06:51.000000000 +0000
+> --- xfsprogs-dev.orig/repair/phase4.c	2009-08-21 01:59:26.000000000 +0000
+> +++ xfsprogs-dev/repair/phase4.c	2009-08-21 02:41:44.000000000 +0000
+> @@ -355,19 +355,7 @@ phase4(xfs_mount_t *mp)
 
 . . .
-
-> @@ -476,19 +480,15 @@ scanfunc_allocbt(
->  	/*
->  	 * check for btree blocks multiply claimed
->  	 */
-> -	state = get_agbno_state(mp, agno, bno);
-> -
-> -	switch (state)  {
-> -	case XR_E_UNKNOWN:
-> -		set_agbno_state(mp, agno, bno, XR_E_FS_MAP);
-> -		break;
-> -	default:
-> -		set_agbno_state(mp, agno, bno, XR_E_MULT);
-> +	state = get_bmap(agno, bno);
-> +	switch (state != XR_E_UNKNOWN)  {
-
-BUG.      You mean "if (state != XR_E_UNKNOWN)"???
-
-> +		set_bmap(agno, bno, XR_E_MULT);
->  		do_warn(
->  _("%s freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
->  				name, state, agno, bno, suspect);
->  		return;
->  	}
-> +	set_bmap(agno, bno, XR_E_FS_MAP);
-> 
->  	numrecs = be16_to_cpu(block->bb_numrecs);
-> 
 
 _______________________________________________
 xfs mailing list
