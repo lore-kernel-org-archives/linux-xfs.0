@@ -1,23 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9LHh5As017831 for <xfs@oss.sgi.com>; Wed, 21 Oct 2009 12:43:05 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A3E6628585
-	for <xfs@oss.sgi.com>; Wed, 21 Oct 2009 10:44:36 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id JsjQwfxIfQ7DcDeY for
-	<xfs@oss.sgi.com>; Wed, 21 Oct 2009 10:44:36 -0700 (PDT)
-Message-ID: <4ADF4882.70106@sandeen.net>
-Date: Wed, 21 Oct 2009 12:44:34 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	n9LJ6rYZ025435 for <xfs@oss.sgi.com>; Wed, 21 Oct 2009 14:06:53 -0500
+Content-class: urn:content-classes:message
 MIME-Version: 1.0
-Subject: Re: XFS internal error xfs_da_do_buf(1) at line 1992 of file
-	fs/xfs/xfs_da_btree.c
-References: <c2dcdfa40910202307m77a9d7c5lf18e278a9ebae08e@mail.gmail.com>	
-	<4ADF2EE8.6010700@sandeen.net>
-	<c2dcdfa40910211032y5b1d2cd8l418491327d24b87b@mail.gmail.com>
-In-Reply-To: <c2dcdfa40910211032y5b1d2cd8l418491327d24b87b@mail.gmail.com>
+Subject: RE: [PATCH 09/14] repair: track logical to physical block mapping
+	moreeffeciently
+Date: Wed, 21 Oct 2009 14:06:19 -0500
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83ADEE@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <20090902175841.284697389@bombadil.infradead.org>
+From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,28 +22,92 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Amit Sahrawat <amit.sahrawat83@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Barry Naujok <bnaujok@sgi.com>, xfs@oss.sgi.com
 
-Amit Sahrawat wrote:
-> Thanks Eric,
->  
-> Yes, I am able to get this for the same Inode and Block number.
->  
-> xfs_check reports error for dir inode 128 missing leaf entries..(exact
-> string I m missing), will provide you the details.
->  
-> Using xfs_repair fixes the problem. But again the same operation leads
-> to the crash.
-> Even on a freshly formatted disk, I get this error.
->  
-> Please let me know from where I can get this patch to try whether it
-> fixes for me or not.
+Christoph Hellwig wrote:
+> Currently we track the logical to physical block mapping by a structure which
+> contains an array of physicial blocks.  This is extremly efficient and is
 
+Should this be "extremely inefficient?"
 
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff_plain;h=ae23a5e87dbbf4657a82e1ff8ebc52ab50361c14
+> replaced with the normal starblock storage we use in the kernel and on disk
+> in this patch.
 
--Eric
+While you're at fixing the above comment, maybe just re-word this
+sentence because I don't really grok it very well...
+
+. . .
+
+> [hch: added a small fix in blkmap_set_ext to not call memmove unless needed]
+> 
+> Signed-off-by: Barry Naujok <bnaujok@sgi.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+A few minor nits mentioned above and below.  But
+overall this looks good.
+
+Reviewed-by: Alex Elder <aelder@sgi.com>
+
+> Index: xfsprogs-dev/repair/bmap.c
+> ===================================================================
+> --- xfsprogs-dev.orig/repair/bmap.c	2009-08-20 02:32:34.000000000 +0000
+> +++ xfsprogs-dev/repair/bmap.c	2009-08-20 02:32:45.000000000 +0000
+
+> @@ -21,106 +21,46 @@
+>  #include "bmap.h"
+> 
+
+. . .
+
+> +	ASSERT(whichfork == XFS_DATA_FORK || whichfork == XFS_ATTR_FORK);
+> +
+>  	if (nex < 1)
+>  		nex = 1;
+> -	if ((blkmap = malloc(BLKMAP_SIZE(nex))) == NULL) {
+> -		do_warn(_("malloc failed in blkmap_alloc (%u bytes)\n"),
+> -			BLKMAP_SIZE(nex));
+> -		return blkmap;
+> +
+> +	key = whichfork ? ablkmap_key : dblkmap_key;
+> +	blkmap = pthread_getspecific(key);
+> +	if (!blkmap || blkmap->naexts < nex) {
+> +		blkmap = realloc(blkmap, BLKMAP_SIZE(nex));
+
+Does the above really have to be a realloc() call, or can
+it simply be a free()/malloc() instead?  Also, could the
+existing ts_alloc() function be adjusted to accomodate the
+usage here?
+
+> +		if (!blkmap) {
+> +			do_warn(_("malloc failed in blkmap_alloc (%u bytes)\n"),
+> +				BLKMAP_SIZE(nex));
+
+. . .
+
+> @@ -131,14 +71,7 @@ void
+>  blkmap_free(
+>  	blkmap_t	*blkmap)
+>  {
+> -	blkent_t	**entp;
+> -	xfs_extnum_t	i;
+> -
+> -	if (blkmap == NULL)
+> -		return;
+> -	for (i = 0, entp = blkmap->ents; i < blkmap->nents; i++, entp++)
+> -		free(*entp);
+> -	free(blkmap);
+> +	/* nothing to do! - keep the memory around for the next inode */
+
+Nobody ever frees it though, either.  I guess it gets done at
+exit but I like things tidy (could arrange for a destructor
+function to be called, at pthread_key_create() time).
+
+>  }
+> 
+>  /*
+
+. . .
 
 _______________________________________________
 xfs mailing list
