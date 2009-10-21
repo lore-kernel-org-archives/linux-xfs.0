@@ -1,22 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9L667jZ216958 for <xfs@oss.sgi.com>; Wed, 21 Oct 2009 01:06:07 -0500
-Received: from mail-px0-f193.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B24E824648
-	for <xfs@oss.sgi.com>; Tue, 20 Oct 2009 23:07:41 -0700 (PDT)
-Received: from mail-px0-f193.google.com (mail-px0-f193.google.com
-	[209.85.216.193]) by cuda.sgi.com with ESMTP id
-	9JNaRRI4kmKYNUB9 for <xfs@oss.sgi.com>;
-	Tue, 20 Oct 2009 23:07:41 -0700 (PDT)
-Received: by pxi31 with SMTP id 31so346284pxi.20
-	for <xfs@oss.sgi.com>; Tue, 20 Oct 2009 23:07:40 -0700 (PDT)
+	n9L9hdsi237578 for <xfs@oss.sgi.com>; Wed, 21 Oct 2009 04:43:39 -0500
+Received: from mail-ew0-f221.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2E8F41D81DB7
+	for <xfs@oss.sgi.com>; Wed, 21 Oct 2009 02:45:12 -0700 (PDT)
+Received: from mail-ew0-f221.google.com (mail-ew0-f221.google.com
+	[209.85.219.221]) by cuda.sgi.com with ESMTP id
+	AOAVKRJzHxnQaJbb for <xfs@oss.sgi.com>;
+	Wed, 21 Oct 2009 02:45:12 -0700 (PDT)
+Received: by ewy21 with SMTP id 21so5030537ewy.8
+	for <xfs@oss.sgi.com>; Wed, 21 Oct 2009 02:45:11 -0700 (PDT)
 MIME-Version: 1.0
-Date: Wed, 21 Oct 2009 11:37:38 +0530
-Message-ID: <c2dcdfa40910202307m77a9d7c5lf18e278a9ebae08e@mail.gmail.com>
-Subject: XFS internal error xfs_da_do_buf(1) at line 1992 of file
-	fs/xfs/xfs_da_btree.c
-From: Amit Sahrawat <amit.sahrawat83@gmail.com>
+In-Reply-To: <20091020034048.GA9464@discord.disaster>
+References: <20090930124104.GA7463@infradead.org>
+	<4AC60D27.9060703@news-service.com>
+	<20091005214348.GA15448@infradead.org>
+	<4ACB080D.3010708@news-service.com>
+	<20091007011926.GB32032@infradead.org>
+	<4AD18C8D.90808@news-service.com>
+	<20091012233854.GA29446@infradead.org>
+	<20091019011600.GO9464@discord.disaster>
+	<20091019035426.GB18296@infradead.org>
+	<20091020034048.GA9464@discord.disaster>
+Date: Wed, 21 Oct 2009 11:45:11 +0200
+Message-ID: <89c4f90c0910210245h4691cd82hd1d63f5ed72fb2e3@mail.gmail.com>
+Subject: Re: 2.6.31 xfs_fs_destroy_inode: cannot reclaim
+From: Tommy van Leeuwen <tommy@news-service.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,120 +35,320 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3611969978805709389=="
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, "sandeen-xfs@sandeen.net" <sandeen-xfs@sandeen.net>, "p.mironchik@velesys.com" <p.mironchik@velesys.com>, "hch@xfs.org" <hch@xfs.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Patrick Schreurs <patrick@news-service.com>, Bas Couwenberg <bas@news-service.com>, XFS List <xfs@oss.sgi.com>
 
---===============3611969978805709389==
-Content-Type: multipart/alternative; boundary=000e0cd24d9edbc11a04766bcb11
+On Tue, Oct 20, 2009 at 5:40 AM, Dave Chinner <david@fromorbit.com> wrote:
+> On Sun, Oct 18, 2009 at 11:54:26PM -0400, Christoph Hellwig wrote:
+>> On Mon, Oct 19, 2009 at 12:16:00PM +1100, Dave Chinner wrote:
+>> > > + =A0* The hash lock here protects a thread in xfs_iget from racing =
+with
+>> > > + =A0* us on recycling the inode. =A0Once we have the XFS_IRECLAIM f=
+lag set
+>> > > + =A0* it will not touch it.
+>> > > =A0 =A0*/
+>> > > - write_lock(&pag->pag_ici_lock);
+>> >
+>> > Did you mean to remove this write_lock? The patch does not remove
+>> > the unlocks....
+>>
+>> It's taken by the caller.
+>
+> Ah, I guess I need to see the whole patch series, then.
 
---000e0cd24d9edbc11a04766bcb11
-Content-Type: text/plain; charset=ISO-8859-1
+This is the full patch we're using now on 2.6.31.4. (Just running btw
+so no results yet).
 
-Dear Eric,
+diff -ru linux-2.6.31.4/fs/xfs/linux-2.6/xfs_sync.c
+linux-2.6.31.4-xfspatch/fs/xfs/linux-2.6/xfs_sync.c
+--- linux-2.6.31.4/fs/xfs/linux-2.6/xfs_sync.c  2009-09-10
+00:13:59.000000000 +0200
++++ linux-2.6.31.4-xfspatch/fs/xfs/linux-2.6/xfs_sync.c 2009-10-21
+11:24:56.000000000 +0200
+@@ -180,6 +180,11 @@
+                return EFSCORRUPTED;
+        }
 
++       if (xfs_iflags_test(ip, XFS_INEW | XFS_IRECLAIMABLE | XFS_IRECLAIM)=
+) {
++               read_unlock(&pag->pag_ici_lock);
++               return ENOENT;
++       }
++
+        /*
+         * If we can't get a reference on the inode, it must be in reclaim.
+         * Leave it for the reclaim code to flush. Also avoid inodes that
+@@ -191,7 +196,7 @@
+        }
+        read_unlock(&pag->pag_ici_lock);
 
-I am facing an issue with file deletion in XFS. Every time, I perform a
-remove operation the kernel crashes with the following prints.
+-       if (is_bad_inode(inode) || xfs_iflags_test(ip, XFS_INEW)) {
++       if (is_bad_inode(inode)) {
+                IRELE(ip);
+                return ENOENT;
+        }
+@@ -655,22 +660,21 @@
+ {
+        xfs_perag_t     *pag =3D xfs_get_perag(ip->i_mount, ip->i_ino);
 
+-       /* The hash lock here protects a thread in xfs_iget_core from
+-        * racing with us on linking the inode back with a vnode.
+-        * Once we have the XFS_IRECLAIM flag set it will not touch
+-        * us.
++       /*
++        * The hash lock here protects a thread in xfs_iget from racing with
++        * us on recycling the inode.  Once we have the XFS_IRECLAIM flag s=
+et
++        * it will not touch it.
+         */
+-       write_lock(&pag->pag_ici_lock);
+        spin_lock(&ip->i_flags_lock);
+-       if (__xfs_iflags_test(ip, XFS_IRECLAIM) ||
+-           !__xfs_iflags_test(ip, XFS_IRECLAIMABLE)) {
++       ASSERT_ALWAYS(__xfs_iflags_test(ip, XFS_IRECLAIMABLE));
++       if (__xfs_iflags_test(ip, XFS_IRECLAIM)) {
+                spin_unlock(&ip->i_flags_lock);
+                write_unlock(&pag->pag_ici_lock);
+                if (locked) {
+                        xfs_ifunlock(ip);
+                        xfs_iunlock(ip, XFS_ILOCK_EXCL);
+                }
+-               return -EAGAIN;
++               return 0;
+        }
+        __xfs_iflags_set(ip, XFS_IRECLAIM);
+        spin_unlock(&ip->i_flags_lock);
+@@ -764,6 +768,88 @@
+        xfs_put_perag(mp, pag);
+ }
 
-# rm -rf 1* 2* 3* 4*
-xfs_da_do_buf: bno 16777216
-dir: inode 128
-Filesystem "sda1": XFS internal error xfs_da_do_buf(1) at line 1992 of file
-fs/xfs/xfs_da_btree.c.  Caller 0xc011d2e4
-[<c0022618>] (dump_stack+0x0/0x14) from [<c0129b2c>]
-(xfs_error_report+0x54/0x64)
-[<c0129ad8>] (xfs_error_report+0x0/0x64) from [<c011cea0>]
-(xfs_da_do_buf+0x334/0x6ec)
-[<c011cb6c>] (xfs_da_do_buf+0x0/0x6ec) from [<c011d2e4>]
-(xfs_da_read_buf+0x34/0x3c)
-[<c011d2b0>] (xfs_da_read_buf+0x0/0x3c) from [<c0126030>]
-(xfs_dir2_node_removename+0x278/0x500)
-[<c0125db8>] (xfs_dir2_node_removename+0x0/0x500) from [<c0120760>]
-(xfs_dir_removename+0x100/0x10c)
-[<c0120660>] (xfs_dir_removename+0x0/0x10c) from [<c0151be0>]
-(xfs_remove+0x280/0x424)
- r6 = 00000000  r5 = 00000000  r4 = 0000357C
-[<c0151960>] (xfs_remove+0x0/0x424) from [<c015c3a0>]
-(xfs_vn_unlink+0x30/0x60)
-[<c015c370>] (xfs_vn_unlink+0x0/0x60) from [<c0091c58>]
-(vfs_unlink+0x70/0xac)
- r7 = C3E79000  r6 = C3E5AE58  r5 = C4122EB8  r4 = 00000000
-[<c0091be8>] (vfs_unlink+0x0/0xac) from [<c0093fbc>]
-(do_unlinkat+0xcc/0x14c)
- r6 = C4123D78  r5 = C4122EB8  r4 = 00000000
-[<c0093ef0>] (do_unlinkat+0x0/0x14c) from [<c0094054>]
-(sys_unlink+0x18/0x1c)
- r7 = 0000000A  r6 = 0000000C  r5 = 00000008  r4 = BECE6A2B
-[<c009403c>] (sys_unlink+0x0/0x1c) from [<c001de40>]
-(ret_fast_syscall+0x0/0x2c)
++STATIC xfs_inode_t *
++xfs_reclaim_ag_lookup(
++       struct xfs_mount        *mp,
++       struct xfs_perag        *pag,
++       uint32_t                *first_index)
++{
++       int                     nr_found;
++       struct xfs_inode        *ip;
++
++       /*
++        * use a gang lookup to find the next inode in the tree
++        * as the tree is sparse and a gang lookup walks to find
++        * the number of objects requested.
++        */
++       write_lock(&pag->pag_ici_lock);
++       nr_found =3D radix_tree_gang_lookup_tag(&pag->pag_ici_root,
++                       (void **)&ip, *first_index, 1, XFS_ICI_RECLAIM_TAG);
++       if (!nr_found)
++               goto unlock;
++
++       /*
++        * Update the index for the next lookup. Catch overflows
++        * into the next AG range which can occur if we have inodes
++        * in the last block of the AG and we are currently
++        * pointing to the last inode.
++        */
++       *first_index =3D XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
++       if (*first_index < XFS_INO_TO_AGINO(mp, ip->i_ino))
++               goto unlock;
++
++       return ip;
++
++unlock:
++       write_unlock(&pag->pag_ici_lock);
++       return NULL;
++}
++
++STATIC int
++xfs_reclaim_ag_walk(
++       struct xfs_mount        *mp,
++       xfs_agnumber_t          ag,
++       int                     flags)
++{
++       struct xfs_perag        *pag =3D &mp->m_perag[ag];
++       uint32_t                first_index;
++       int                     last_error =3D 0;
++       int                     skipped;
++
++restart:
++       skipped =3D 0;
++       first_index =3D 0;
++       do {
++               int             error =3D 0;
++               xfs_inode_t     *ip;
++
++               ip =3D xfs_reclaim_ag_lookup(mp, pag, &first_index);
++               if (!ip)
++                       break;
++
++               error =3D xfs_reclaim_inode(ip, 0, flags);
++               if (error =3D=3D EAGAIN) {
++                       skipped++;
++                       continue;
++               }
++               if (error)
++                       last_error =3D error;
++               /*
++                * bail out if the filesystem is corrupted.
++                */
++               if (error =3D=3D EFSCORRUPTED)
++                       break;
++
++       } while (1);
++
++       if (skipped) {
++               delay(1);
++               goto restart;
++       }
++       xfs_put_perag(mp, pag);
++       return last_error;
++}
++
+ STATIC int
+ xfs_reclaim_inode_now(
+        struct xfs_inode        *ip,
+@@ -785,6 +871,19 @@
+        xfs_mount_t     *mp,
+        int             mode)
+ {
+-       return xfs_inode_ag_iterator(mp, xfs_reclaim_inode_now, mode,
+-                                       XFS_ICI_RECLAIM_TAG);
++       int                     error =3D 0;
++       int                     last_error =3D 0;
++       xfs_agnumber_t          ag;
++
++       for (ag =3D 0; ag < mp->m_sb.sb_agcount; ag++) {
++               if (!mp->m_perag[ag].pag_ici_init)
++                       continue;
++               error =3D xfs_reclaim_ag_walk(mp, ag, mode);
++               if (error) {
++                       last_error =3D error;
++                       if (error =3D=3D EFSCORRUPTED)
++                               break;
++               }
++       }
++       return XFS_ERROR(last_error);
+ }
+diff -ru linux-2.6.31.4/fs/xfs/xfs_iget.c
+linux-2.6.31.4-xfspatch/fs/xfs/xfs_iget.c
+--- linux-2.6.31.4/fs/xfs/xfs_iget.c    2009-09-10 00:13:59.000000000 +0200
++++ linux-2.6.31.4-xfspatch/fs/xfs/xfs_iget.c   2009-10-14
+13:56:33.000000000 +0200
+@@ -242,6 +242,8 @@
 
-*I am using kernel version - 2.6.18.1
-Platform - ARM
-*
-I have searched a lot on this issue, but no solution is available. In the
-FAQS it is mentioned that it's been fixed 2.6.17.7 onwards.
-But, i keep getting this issue frequently almost every time I do this
-operation .
+                error =3D -inode_init_always(mp->m_super, inode);
+                if (error) {
++                       printk("XFS: inode_init_always failed to
+re-initialize inode\n");
++
+                        /*
+                         * Re-initializing the inode failed, and we are in =
+deep
+                         * trouble.  Try to re-add it to the reclaim list.
+@@ -538,17 +540,21 @@
+ {
+        struct xfs_mount        *mp =3D ip->i_mount;
+        struct xfs_perag        *pag;
++       xfs_agino_t             agino =3D XFS_INO_TO_AGINO(mp, ip->i_ino);
 
-Please provide me any help to sort this issue.
+        XFS_STATS_INC(xs_ig_reclaims);
 
-Thanks & Regards,
-Amit Sahrawat
+        /*
+-        * Remove the inode from the per-AG radix tree.  It doesn't matter
+-        * if it was never added to it because radix_tree_delete can deal
+-        * with that case just fine.
++        * Remove the inode from the per-AG radix tree.
++        *
++        * Because radix_tree_delete won't complain even if the item was ne=
+ver
++        * added to the tree assert that it's been there before to catch
++        * problems with the inode life time early on.
+         */
+        pag =3D xfs_get_perag(mp, ip->i_ino);
+        write_lock(&pag->pag_ici_lock);
+-       radix_tree_delete(&pag->pag_ici_root, XFS_INO_TO_AGINO(mp, ip->i_in=
+o));
++       ASSERT(radix_tree_lookup(&pag->pag_ici_root, agino));
++       radix_tree_delete(&pag->pag_ici_root, agino);
+        write_unlock(&pag->pag_ici_lock);
+        xfs_put_perag(mp, pag);
 
---000e0cd24d9edbc11a04766bcb11
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+diff -ru linux-2.6.31.4/fs/xfs/xfs_vnodeops.c
+linux-2.6.31.4-xfspatch/fs/xfs/xfs_vnodeops.c
+--- linux-2.6.31.4/fs/xfs/xfs_vnodeops.c        2009-09-10
+00:13:59.000000000 +0200
++++ linux-2.6.31.4-xfspatch/fs/xfs/xfs_vnodeops.c       2009-10-14
+13:56:33.000000000 +0200
+@@ -2465,45 +2465,36 @@
+ xfs_reclaim(
+        xfs_inode_t     *ip)
+ {
+-
+        xfs_itrace_entry(ip);
 
-Dear Eric,<br><br><br>I am facing an issue with file deletion in XFS. Every=
- time, I perform a remove operation the kernel crashes with the following p=
-rints.<br><br><br># rm -rf 1* 2* 3* 4*<br>xfs_da_do_buf: bno 16777216<br>
-dir: inode 128<br>Filesystem &quot;sda1&quot;: XFS internal error xfs_da_do=
-_buf(1) at line 1992 of file fs/xfs/xfs_da_btree.c.=A0 Caller 0xc011d2e4<br=
->[&lt;c0022618&gt;] (dump_stack+0x0/0x14) from [&lt;c0129b2c&gt;] (xfs_erro=
-r_report+0x54/0x64)<br>
-[&lt;c0129ad8&gt;] (xfs_error_report+0x0/0x64) from [&lt;c011cea0&gt;] (xfs=
-_da_do_buf+0x334/0x6ec)<br>[&lt;c011cb6c&gt;] (xfs_da_do_buf+0x0/0x6ec) fro=
-m [&lt;c011d2e4&gt;] (xfs_da_read_buf+0x34/0x3c)<br>[&lt;c011d2b0&gt;] (xfs=
-_da_read_buf+0x0/0x3c) from [&lt;c0126030&gt;] (xfs_dir2_node_removename+0x=
-278/0x500)<br>
-[&lt;c0125db8&gt;] (xfs_dir2_node_removename+0x0/0x500) from [&lt;c0120760&=
-gt;] (xfs_dir_removename+0x100/0x10c)<br>[&lt;c0120660&gt;] (xfs_dir_remove=
-name+0x0/0x10c) from [&lt;c0151be0&gt;] (xfs_remove+0x280/0x424)<br>=A0r6 =
-=3D 00000000=A0 r5 =3D 00000000=A0 r4 =3D 0000357C <br>
-[&lt;c0151960&gt;] (xfs_remove+0x0/0x424) from [&lt;c015c3a0&gt;] (xfs_vn_u=
-nlink+0x30/0x60)<br>[&lt;c015c370&gt;] (xfs_vn_unlink+0x0/0x60) from [&lt;c=
-0091c58&gt;] (vfs_unlink+0x70/0xac)<br>=A0r7 =3D C3E79000=A0 r6 =3D C3E5AE5=
-8=A0 r5 =3D C4122EB8=A0 r4 =3D 00000000<br>
-[&lt;c0091be8&gt;] (vfs_unlink+0x0/0xac) from [&lt;c0093fbc&gt;] (do_unlink=
-at+0xcc/0x14c)<br>=A0r6 =3D C4123D78=A0 r5 =3D C4122EB8=A0 r4 =3D 00000000 =
-<br>[&lt;c0093ef0&gt;] (do_unlinkat+0x0/0x14c) from [&lt;c0094054&gt;] (sys=
-_unlink+0x18/0x1c)<br>
-=A0r7 =3D 0000000A=A0 r6 =3D 0000000C=A0 r5 =3D 00000008=A0 r4 =3D BECE6A2B=
-<br>[&lt;c009403c&gt;] (sys_unlink+0x0/0x1c) from [&lt;c001de40&gt;] (ret_f=
-ast_syscall+0x0/0x2c)<br><br><b>I am using kernel version - 2.6.18.1<br>Pla=
-tform - ARM<br>
-</b><br>I have searched a lot on this issue, but no solution is available. =
-In the FAQS it is mentioned that it&#39;s been fixed 2.6.17.7 onwards. <br>=
-But, i keep getting this issue frequently almost every time I do this opera=
-tion .<br>
-<br>Please provide me any help to sort this issue.<br><br>Thanks &amp; Rega=
-rds,<br>Amit Sahrawat<br><br>
+        ASSERT(!VN_MAPPED(VFS_I(ip)));
 
---000e0cd24d9edbc11a04766bcb11--
+        /* bad inode, get out here ASAP */
+-       if (is_bad_inode(VFS_I(ip))) {
+-               xfs_ireclaim(ip);
+-               return 0;
+-       }
++       if (is_bad_inode(VFS_I(ip)))
++               goto out_reclaim;
 
+        xfs_ioend_wait(ip);
 
---===============3611969978805709389==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+        ASSERT(XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks =3D=
+=3D 0);
+
+        /*
+-        * Make sure the atime in the XFS inode is correct before freeing t=
+he
+-        * Linux inode.
++        * We should never get here with one of the reclaim flags already s=
+et.
+         */
+-       xfs_synchronize_atime(ip);
++       BUG_ON(xfs_iflags_test(ip, XFS_IRECLAIMABLE));
++       BUG_ON(xfs_iflags_test(ip, XFS_IRECLAIM));
+
+        /*
+         * If we have nothing to flush with this inode then complete the
+-        * teardown now, otherwise break the link between the xfs inode and=
+ the
+-        * linux inode and clean up the xfs inode later. This avoids flushi=
+ng
+-        * the inode to disk during the delete operation itself.
+-        *
+-        * When breaking the link, we need to set the XFS_IRECLAIMABLE flag
+-        * first to ensure that xfs_iunpin() will never see an xfs inode
+-        * that has a linux inode being reclaimed. Synchronisation is provi=
+ded
+-        * by the i_flags_lock.
++        * teardown now, otherwise delay the flush operation.
+         */
+-       if (!ip->i_update_core && (ip->i_itemp =3D=3D NULL)) {
+-               xfs_ilock(ip, XFS_ILOCK_EXCL);
+-               xfs_iflock(ip);
+-               xfs_iflags_set(ip, XFS_IRECLAIMABLE);
+-               return xfs_reclaim_inode(ip, 1, XFS_IFLUSH_DELWRI_ELSE_SYNC=
+);
++       if (ip->i_update_core || ip->i_itemp) {
++               xfs_inode_set_reclaim_tag(ip);
++               return 0;
+        }
+        xfs_inode_set_reclaim_tag(ip);
++
++out_reclaim:
++       xfs_ireclaim(ip);
+        return 0;
+ }
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3611969978805709389==--
