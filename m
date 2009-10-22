@@ -1,31 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9MGrj3h115316 for <xfs@oss.sgi.com>; Thu, 22 Oct 2009 11:53:46 -0500
-Received: from mail-pz0-f174.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 212FD17B023C
-	for <xfs@oss.sgi.com>; Thu, 22 Oct 2009 09:55:19 -0700 (PDT)
-Received: from mail-pz0-f174.google.com (mail-pz0-f174.google.com
-	[209.85.222.174]) by cuda.sgi.com with ESMTP id
-	EiHqeAgJ7YdA3y9o for <xfs@oss.sgi.com>;
-	Thu, 22 Oct 2009 09:55:19 -0700 (PDT)
-Received: by pzk4 with SMTP id 4so10299445pzk.32
-	for <xfs@oss.sgi.com>; Thu, 22 Oct 2009 09:55:19 -0700 (PDT)
+	n9MGomhp115085 for <xfs@oss.sgi.com>; Thu, 22 Oct 2009 11:50:48 -0500
+Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A04B58F8050
+	for <xfs@oss.sgi.com>; Thu, 22 Oct 2009 09:52:23 -0700 (PDT)
+Message-ID: <4AE08DC7.7000200@sgi.com>
+Date: Thu, 22 Oct 2009 11:52:23 -0500
+From: Bill Kendall <wkendall@sgi.com>
 MIME-Version: 1.0
-In-Reply-To: <4AE08AED.1020702@sandeen.net>
-References: <c2dcdfa40910202307m77a9d7c5lf18e278a9ebae08e@mail.gmail.com>
-	<4ADF2EE8.6010700@sandeen.net>
-	<c2dcdfa40910211032y5b1d2cd8l418491327d24b87b@mail.gmail.com>
-	<4ADF4882.70106@sandeen.net>
-	<c2dcdfa40910220209v781f6a76u31e349ea461bc10a@mail.gmail.com>
-	<4AE06BAE.8090706@sandeen.net>
-	<c2dcdfa40910220930l19a8dab0y88e80630a2453b39@mail.gmail.com>
-	<4AE08AED.1020702@sandeen.net>
-Date: Thu, 22 Oct 2009 22:25:18 +0530
-Message-ID: <c2dcdfa40910220955q586bdcabn268ddbc30d9b785d@mail.gmail.com>
-Subject: Re: XFS internal error xfs_da_do_buf(1) at line 1992 of file
-	fs/xfs/xfs_da_btree.c
-From: Amit Sahrawat <amit.sahrawat83@gmail.com>
+Subject: [PATCH 1/2]  add lpath_to_handle to libhandle
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,103 +18,84 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6334495468483992416=="
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
---===============6334495468483992416==
-Content-Type: multipart/alternative; boundary=000e0cd29a60d59009047688f585
+path_to_handle() is not reliable when called on a path which
+is a symlink. If the symlink is dangling, or if its points
+to a non-XFS filesystem then path_to_handle() will fail. The
+reason is that path_to_handle() must open the path in order
+to obtain an fd for the xfsctl call.
 
---000e0cd29a60d59009047688f585
-Content-Type: text/plain; charset=ISO-8859-1
+It's common during xfsrestore to have dangling symlinks since
+the target of the link may not be restored before the symlink.
 
-that means it highely unlikey to get a fix for this issue :(
+This patch adds a new function to libhandle, lpath_to_handle.
+It is just like path_to_handle, except it takes a filesystem
+path in addition to the path which you want convert to a
+handle.
 
-Yes, backporting just doest not suits for me.
+Alex Elder is going to take care of bumping the libhandle
+minor number, and adjusting the xfsdump/xfsprogs version numbers
+and dependencies to ensure a compatible libhandle is installed
+for xfsdump.
 
-I am trying to dig into the code, but really dont know if that's going to be
-that easy.
+Signed-off-by: Bill Kendall <wkendall@sgi.com>
 
-Thanks Eric for all the help.
-W'll you know if I am able to fix this.
+diff --git a/include/handle.h b/include/handle.h
+index b211a2f..3f1a137 100644
+--- a/include/handle.h
++++ b/include/handle.h
+@@ -27,6 +27,8 @@ struct attrlist_cursor;
+  struct parent;
 
-Thanks & Regards,
-Amit Sahrawat
+  extern int  path_to_handle (char *__path, void **__hanp, size_t *__hlen);
++extern int  lpath_to_handle (char *__fspath, char *__path,
++			     void **__hanp, size_t *__hlen);
+  extern int  path_to_fshandle (char *__path, void **__fshanp, size_t *__fshlen);
+  extern int  handle_to_fshandle (void *__hanp, size_t __hlen, void **__fshanp,
+  				size_t *__fshlen);
+diff --git a/libhandle/handle.c b/libhandle/handle.c
+index 6276797..6c9380d 100644
+--- a/libhandle/handle.c
++++ b/libhandle/handle.c
+@@ -111,16 +111,29 @@ path_to_handle(
+  	void		**hanp,		/* output, pointer to data */
+  	size_t		*hlen)		/* output, size of returned data */
+  {
++	return lpath_to_handle(path, path, hanp, hlen);
++}
++
++/* Like path_to_handle, but reliable for paths which are either dangling
++ * symlinks or symlinks whose targets are not in XFS filesystems.
++ */
++int
++lpath_to_handle(
++	char		*fspath,	/* input,  path in filesystem */
++	char		*path,		/* input,  path to convert */
++	void		**hanp,		/* output, pointer to data */
++	size_t		*hlen)		/* output, size of returned data */
++{
+  	int		fd;
+  	int		result;
+  	comarg_t	obj;
 
-On Thu, Oct 22, 2009 at 10:10 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+-	fd = open(path, O_RDONLY);
++	fd = open(fspath, O_RDONLY);
+  	if (fd < 0)
+  		return -1;
 
-> Amit Sahrawat wrote:
-> > I am already using that patch.
-> > Other than using higher XFS version, can I try any other thing?
-> >
-> > I cannot directly use higher XFS version, I will have to backport the
-> > changes for higher to the kernel I am using  because of dependencies.
-> >
->
-> backporting xfs would be hard; I was hoping that perhaps you could just
-> boot a newer kernel, though I know w/ vendor arm kernels that can be tough.
->
-> There are drawbacks to not getting machine support upstream... :)
->
-> I don't really have other things for you to try, and don't have a lot of
-> time to debug 3 year old kernels either...  :(
->
-> You could try your arm testcase in a qemu emulator on a new kernel; if
-> that shows the same problem I'll be much more interested & motivated...
->
-> -Eric
->
-
---000e0cd29a60d59009047688f585
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-<div>that means it highely unlikey to get a fix for this issue :(</div>
-<div>=A0</div>
-<div>Yes, backporting just doest not suits for me.</div>
-<div>=A0</div>
-<div>I am trying to dig into the code, but really dont know if that&#39;s g=
-oing to be that easy. </div>
-<div>=A0</div>
-<div>Thanks Eric for all the help.</div>
-<div>W&#39;ll you know if I am able to fix this.</div>
-<div>=A0</div>
-<div>Thanks &amp; Regards,</div>
-<div>Amit Sahrawat<br><br></div>
-<div class=3D"gmail_quote">On Thu, Oct 22, 2009 at 10:10 PM, Eric Sandeen <=
-span dir=3D"ltr">&lt;<a href=3D"mailto:sandeen@sandeen.net">sandeen@sandeen=
-.net</a>&gt;</span> wrote:<br>
-<blockquote class=3D"gmail_quote" style=3D"PADDING-LEFT: 1ex; MARGIN: 0px 0=
-px 0px 0.8ex; BORDER-LEFT: #ccc 1px solid">
-<div class=3D"im">Amit Sahrawat wrote:<br>&gt; I am already using that patc=
-h.<br>&gt; Other than using higher XFS version, can I try any other thing?<=
-br>&gt;<br>&gt; I cannot directly use higher XFS version, I will have to ba=
-ckport the<br>
-&gt; changes for higher to the kernel I am using =A0because of dependencies=
-.<br>&gt;<br><br></div>backporting xfs would be hard; I was hoping that per=
-haps you could just<br>boot a newer kernel, though I know w/ vendor arm ker=
-nels that can be tough.<br>
-<br>There are drawbacks to not getting machine support upstream... :)<br><b=
-r>I don&#39;t really have other things for you to try, and don&#39;t have a=
- lot of<br>time to debug 3 year old kernels either... =A0:(<br><br>You coul=
-d try your arm testcase in a qemu emulator on a new kernel; if<br>
-that shows the same problem I&#39;ll be much more interested &amp; motivate=
-d...<br><font color=3D"#888888"><br>-Eric<br></font></blockquote></div><br>
-
---000e0cd29a60d59009047688f585--
-
-
---===============6334495468483992416==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+  	obj.path = path;
+-	result = obj_to_handle(path, fd, XFS_IOC_PATH_TO_HANDLE,
++	result = obj_to_handle(fspath, fd, XFS_IOC_PATH_TO_HANDLE,
+  				obj, hanp, hlen);
+  	close(fd);
+  	return result;
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6334495468483992416==--
