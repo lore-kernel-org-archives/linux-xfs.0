@@ -1,14 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9MGhBVl114416 for <xfs@oss.sgi.com>; Thu, 22 Oct 2009 11:43:12 -0500
-Content-class: urn:content-classes:message
+	n9MGcg3Z114077 for <xfs@oss.sgi.com>; Thu, 22 Oct 2009 11:38:42 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EEB6C2DA79
+	for <xfs@oss.sgi.com>; Thu, 22 Oct 2009 09:40:17 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id P0DypntWquFUXwlS for
+	<xfs@oss.sgi.com>; Thu, 22 Oct 2009 09:40:17 -0700 (PDT)
+Message-ID: <4AE08AED.1020702@sandeen.net>
+Date: Thu, 22 Oct 2009 11:40:13 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: RE: [PATCH 14/14] repair: add missing locking in scanfunc_bmap
-Date: Thu, 22 Oct 2009 11:42:46 -0500
-Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83AE00@cf--amer001e--3.americas.sgi.com>
-In-Reply-To: <20090902175842.262611292@bombadil.infradead.org>
-From: "Alex Elder" <aelder@sgi.com>
+Subject: Re: XFS internal error xfs_da_do_buf(1) at line 1992 of file
+	fs/xfs/xfs_da_btree.c
+References: <c2dcdfa40910202307m77a9d7c5lf18e278a9ebae08e@mail.gmail.com>	
+	<4ADF2EE8.6010700@sandeen.net>	
+	<c2dcdfa40910211032y5b1d2cd8l418491327d24b87b@mail.gmail.com>	
+	<4ADF4882.70106@sandeen.net>	
+	<c2dcdfa40910220209v781f6a76u31e349ea461bc10a@mail.gmail.com>	
+	<4AE06BAE.8090706@sandeen.net>
+	<c2dcdfa40910220930l19a8dab0y88e80630a2453b39@mail.gmail.com>
+In-Reply-To: <c2dcdfa40910220930l19a8dab0y88e80630a2453b39@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,46 +34,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Barry Naujok <bnaujok@sgi.com>, xfs@oss.sgi.com
+To: Amit Sahrawat <amit.sahrawat83@gmail.com>
+Cc: xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> Make sure to protect access to the block usage tracking btree with
-> the ag_lock.
-
-
-Well that one was easy.  Looks good.	-Alex
-
-> Signed-off-by: Barry Naujok <bnaujok@sgi.com>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
-> Index: xfsprogs-dev/repair/scan.c
-> ===================================================================
-> --- xfsprogs-dev.orig/repair/scan.c	2009-08-20 03:16:13.000000000 +0000
-> +++ xfsprogs-dev/repair/scan.c	2009-08-20 03:18:17.000000000 +0000
-> @@ -235,6 +235,7 @@
->  		agno = XFS_FSB_TO_AGNO(mp, bno);
->  		agbno = XFS_FSB_TO_AGBNO(mp, bno);
+Amit Sahrawat wrote:
+> I am already using that patch.
+> Other than using higher XFS version, can I try any other thing?
+>  
+> I cannot directly use higher XFS version, I will have to backport the
+> changes for higher to the kernel I am using  because of dependencies.
 > 
-> +		pthread_mutex_lock(&ag_locks[agno]);
->  		state = get_bmap(agno, agbno);
->  		switch (state) {
->  		case XR_E_UNKNOWN:
-> @@ -280,6 +281,7 @@
->  				state, ino, (__uint64_t) bno);
->  			break;
->  		}
-> +		pthread_mutex_unlock(&ag_locks[agno]);
->  	} else  {
->  		/*
->  		 * attribute fork for realtime files is in the regular
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+
+backporting xfs would be hard; I was hoping that perhaps you could just
+boot a newer kernel, though I know w/ vendor arm kernels that can be tough.
+
+There are drawbacks to not getting machine support upstream... :)
+
+I don't really have other things for you to try, and don't have a lot of
+time to debug 3 year old kernels either...  :(
+
+You could try your arm testcase in a qemu emulator on a new kernel; if
+that shows the same problem I'll be much more interested & motivated...
+
+-Eric
 
 _______________________________________________
 xfs mailing list
