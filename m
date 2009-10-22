@@ -1,18 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9MGov6x115100 for <xfs@oss.sgi.com>; Thu, 22 Oct 2009 11:50:58 -0500
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 62B5A8F8078
-	for <xfs@oss.sgi.com>; Thu, 22 Oct 2009 09:52:33 -0700 (PDT)
-Received: from [128.162.233.117] (augusta.americas.sgi.com [128.162.233.117])
-	by estes.americas.sgi.com (Postfix) with ESMTP id 4419D7000103
-	for <xfs@oss.sgi.com>; Thu, 22 Oct 2009 11:52:33 -0500 (CDT)
-Message-ID: <4AE08DD0.50304@sgi.com>
-Date: Thu, 22 Oct 2009 11:52:32 -0500
-From: Bill Kendall <wkendall@sgi.com>
+	n9MGrj3h115316 for <xfs@oss.sgi.com>; Thu, 22 Oct 2009 11:53:46 -0500
+Received: from mail-pz0-f174.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 212FD17B023C
+	for <xfs@oss.sgi.com>; Thu, 22 Oct 2009 09:55:19 -0700 (PDT)
+Received: from mail-pz0-f174.google.com (mail-pz0-f174.google.com
+	[209.85.222.174]) by cuda.sgi.com with ESMTP id
+	EiHqeAgJ7YdA3y9o for <xfs@oss.sgi.com>;
+	Thu, 22 Oct 2009 09:55:19 -0700 (PDT)
+Received: by pzk4 with SMTP id 4so10299445pzk.32
+	for <xfs@oss.sgi.com>; Thu, 22 Oct 2009 09:55:19 -0700 (PDT)
 MIME-Version: 1.0
-Subject: [PATCH 2/2] use lpath_to_handle when restoring symlinks
+In-Reply-To: <4AE08AED.1020702@sandeen.net>
+References: <c2dcdfa40910202307m77a9d7c5lf18e278a9ebae08e@mail.gmail.com>
+	<4ADF2EE8.6010700@sandeen.net>
+	<c2dcdfa40910211032y5b1d2cd8l418491327d24b87b@mail.gmail.com>
+	<4ADF4882.70106@sandeen.net>
+	<c2dcdfa40910220209v781f6a76u31e349ea461bc10a@mail.gmail.com>
+	<4AE06BAE.8090706@sandeen.net>
+	<c2dcdfa40910220930l19a8dab0y88e80630a2453b39@mail.gmail.com>
+	<4AE08AED.1020702@sandeen.net>
+Date: Thu, 22 Oct 2009 22:25:18 +0530
+Message-ID: <c2dcdfa40910220955q586bdcabn268ddbc30d9b785d@mail.gmail.com>
+Subject: Re: XFS internal error xfs_da_do_buf(1) at line 1992 of file
+	fs/xfs/xfs_da_btree.c
+From: Amit Sahrawat <amit.sahrawat83@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,100 +34,103 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: multipart/mixed; boundary="===============6334495468483992416=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-Update xfsrestore to use the new lpath_to_handle function
-when dealing with symlinks.
+--===============6334495468483992416==
+Content-Type: multipart/alternative; boundary=000e0cd29a60d59009047688f585
 
-Signed-off-by: Bill Kendall <wkendall@sgi.com>
+--000e0cd29a60d59009047688f585
+Content-Type: text/plain; charset=ISO-8859-1
 
-diff --git a/restore/content.c b/restore/content.c
-index eb6e78c..99549a8 100644
---- a/restore/content.c
-+++ b/restore/content.c
-@@ -797,7 +797,6 @@ static void partial_reg(ix_t d_index, xfs_ino_t ino, off64_t fsize,
-                          off64_t offset, off64_t sz);
-  static bool_t partial_check (xfs_ino_t ino, off64_t fsize);
-  static bool_t partial_check2 (partial_rest_t *isptr, off64_t fsize);
--static int do_fssetdm_by_handle( char *path, fsdmidata_t *fdmp);
-  static int quotafilecheck(char *type, char *dstdir, char *quotafile);
+that means it highely unlikey to get a fix for this issue :(
 
-  /* definition of locally defined global variables ****************************/
-@@ -7895,14 +7894,28 @@ restore_symlink( drive_t *drivep,
-  		}
+Yes, backporting just doest not suits for me.
 
-  		if ( persp->a.restoredmpr) {
--		fsdmidata_t fssetdm;
--		
--		/*	Restore DMAPI fields. */
-+			fsdmidata_t fssetdm;
-+			void *hanp;
-+			size_t hlen=0;
+I am trying to dig into the code, but really dont know if that's going to be
+that easy.
 
--		fssetdm.fsd_dmevmask = bstatp->bs_dmevmask;
--		fssetdm.fsd_padding = 0;
--		fssetdm.fsd_dmstate = bstatp->bs_dmstate;
--		rval = do_fssetdm_by_handle(path, &fssetdm);
-+			/*	Restore DMAPI fields. */
-+			fssetdm.fsd_dmevmask = bstatp->bs_dmevmask;
-+			fssetdm.fsd_padding = 0;
-+			fssetdm.fsd_dmstate = bstatp->bs_dmstate;
-+
-+			if (lpath_to_handle(persp->a.dstdir, path, &hanp, &hlen)) {
-+				mlog( MLOG_NORMAL | MLOG_WARNING, _(
-+					"lpath_to_handle of %s failed: %s\n"),
-+					path, strerror( errno ));
-+			} else {
-+				if (fssetdm_by_handle(hanp, hlen, &fssetdm)) {
-+					mlog( MLOG_NORMAL | MLOG_WARNING,
-+						_("fssetdm_by_handle of %s "
-+						"failed: %s\n"),
-+						path, strerror( errno ));
-+				}
-+				free_handle(hanp, hlen);
-+			}
-  		}
-  	}
+Thanks Eric for all the help.
+W'll you know if I am able to fix this.
 
-@@ -9525,32 +9538,6 @@ display_needed_objects( purp_t purp,
-  }
+Thanks & Regards,
+Amit Sahrawat
 
-  static int
--do_fssetdm_by_handle(
--	char		*path,
--	fsdmidata_t	*fdmp)
--{
--	void		*hanp;
--	size_t		hlen=0;
--	int		rc;
--
--	if (path_to_handle(path, &hanp, &hlen)) {
--		mlog( MLOG_NORMAL | MLOG_WARNING, _(
--			"path_to_handle of %s failed:%s\n"),
--			path, strerror( errno ));
--		return -1;
--	}
--
--	rc = fssetdm_by_handle(hanp, hlen, fdmp);
--	free_handle(hanp, hlen);
--	if (rc) {
--		mlog( MLOG_NORMAL | MLOG_WARNING, _(
--			"fssetdm_by_handle of %s failed %s\n"),
--			path, strerror( errno ));
--	}
--	return rc;
--}
--
--static int
-  quotafilecheck(char *type, char *dstdir, char *quotafile)
-  {
-  	struct stat s;
+On Thu, Oct 22, 2009 at 10:10 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+
+> Amit Sahrawat wrote:
+> > I am already using that patch.
+> > Other than using higher XFS version, can I try any other thing?
+> >
+> > I cannot directly use higher XFS version, I will have to backport the
+> > changes for higher to the kernel I am using  because of dependencies.
+> >
+>
+> backporting xfs would be hard; I was hoping that perhaps you could just
+> boot a newer kernel, though I know w/ vendor arm kernels that can be tough.
+>
+> There are drawbacks to not getting machine support upstream... :)
+>
+> I don't really have other things for you to try, and don't have a lot of
+> time to debug 3 year old kernels either...  :(
+>
+> You could try your arm testcase in a qemu emulator on a new kernel; if
+> that shows the same problem I'll be much more interested & motivated...
+>
+> -Eric
+>
+
+--000e0cd29a60d59009047688f585
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+<div>that means it highely unlikey to get a fix for this issue :(</div>
+<div>=A0</div>
+<div>Yes, backporting just doest not suits for me.</div>
+<div>=A0</div>
+<div>I am trying to dig into the code, but really dont know if that&#39;s g=
+oing to be that easy. </div>
+<div>=A0</div>
+<div>Thanks Eric for all the help.</div>
+<div>W&#39;ll you know if I am able to fix this.</div>
+<div>=A0</div>
+<div>Thanks &amp; Regards,</div>
+<div>Amit Sahrawat<br><br></div>
+<div class=3D"gmail_quote">On Thu, Oct 22, 2009 at 10:10 PM, Eric Sandeen <=
+span dir=3D"ltr">&lt;<a href=3D"mailto:sandeen@sandeen.net">sandeen@sandeen=
+.net</a>&gt;</span> wrote:<br>
+<blockquote class=3D"gmail_quote" style=3D"PADDING-LEFT: 1ex; MARGIN: 0px 0=
+px 0px 0.8ex; BORDER-LEFT: #ccc 1px solid">
+<div class=3D"im">Amit Sahrawat wrote:<br>&gt; I am already using that patc=
+h.<br>&gt; Other than using higher XFS version, can I try any other thing?<=
+br>&gt;<br>&gt; I cannot directly use higher XFS version, I will have to ba=
+ckport the<br>
+&gt; changes for higher to the kernel I am using =A0because of dependencies=
+.<br>&gt;<br><br></div>backporting xfs would be hard; I was hoping that per=
+haps you could just<br>boot a newer kernel, though I know w/ vendor arm ker=
+nels that can be tough.<br>
+<br>There are drawbacks to not getting machine support upstream... :)<br><b=
+r>I don&#39;t really have other things for you to try, and don&#39;t have a=
+ lot of<br>time to debug 3 year old kernels either... =A0:(<br><br>You coul=
+d try your arm testcase in a qemu emulator on a new kernel; if<br>
+that shows the same problem I&#39;ll be much more interested &amp; motivate=
+d...<br><font color=3D"#888888"><br>-Eric<br></font></blockquote></div><br>
+
+--000e0cd29a60d59009047688f585--
+
+
+--===============6334495468483992416==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============6334495468483992416==--
