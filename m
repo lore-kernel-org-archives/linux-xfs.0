@@ -1,29 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9MGSm6Q113175 for <xfs@oss.sgi.com>; Thu, 22 Oct 2009 11:28:48 -0500
-Received: from mail-px0-f193.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3A8CBC3749D
-	for <xfs@oss.sgi.com>; Thu, 22 Oct 2009 09:30:21 -0700 (PDT)
-Received: from mail-px0-f193.google.com (mail-px0-f193.google.com
-	[209.85.216.193]) by cuda.sgi.com with ESMTP id
-	mql6a8cbigbfpw3L for <xfs@oss.sgi.com>;
-	Thu, 22 Oct 2009 09:30:21 -0700 (PDT)
-Received: by pxi31 with SMTP id 31so1420195pxi.20
-	for <xfs@oss.sgi.com>; Thu, 22 Oct 2009 09:30:20 -0700 (PDT)
+	n9MGLB3w112622 for <xfs@oss.sgi.com>; Thu, 22 Oct 2009 11:21:11 -0500
+Content-class: urn:content-classes:message
 MIME-Version: 1.0
-In-Reply-To: <4AE06BAE.8090706@sandeen.net>
-References: <c2dcdfa40910202307m77a9d7c5lf18e278a9ebae08e@mail.gmail.com>
-	<4ADF2EE8.6010700@sandeen.net>
-	<c2dcdfa40910211032y5b1d2cd8l418491327d24b87b@mail.gmail.com>
-	<4ADF4882.70106@sandeen.net>
-	<c2dcdfa40910220209v781f6a76u31e349ea461bc10a@mail.gmail.com>
-	<4AE06BAE.8090706@sandeen.net>
-Date: Thu, 22 Oct 2009 22:00:20 +0530
-Message-ID: <c2dcdfa40910220930l19a8dab0y88e80630a2453b39@mail.gmail.com>
-Subject: Re: XFS internal error xfs_da_do_buf(1) at line 1992 of file
-	fs/xfs/xfs_da_btree.c
-From: Amit Sahrawat <amit.sahrawat83@gmail.com>
+Subject: RE: [PATCH 12/14] repair: switch block usage bitmap to a btree
+Date: Thu, 22 Oct 2009 11:22:42 -0500
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83ADFE@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <20090902175841.875447973@bombadil.infradead.org>
+From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,308 +17,886 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0287570883975974612=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Barry Naujok <bnaujok@sgi.com>, xfs@oss.sgi.com
 
---===============0287570883975974612==
-Content-Type: multipart/alternative; boundary=000e0cd24d9e8a5cff0476889cb3
+Christoph Hellwig wrote:
+> Using a btree representing the extents is much more space efficient than
+> using a bitmap tracking every single block.  In addition it also allows
+> for more optimal algorithms checking range overlaps instead of walking
+> every block in various places.
+> 
+> Also move the RT tracking bitmap into incore.c instead of leaving it
+> a as macros - this keeps the implementation contained.
 
---000e0cd24d9e8a5cff0476889cb3
-Content-Type: text/plain; charset=ISO-8859-1
+This is a really good change, and I'm now seeing the benefit
+of the whole series.
 
-I am already using that patch.
-Other than using higher XFS version, can I try any other thing?
+I have a few minor things I would like to see changed at some
+point, but nothing looks obviously incorrect so I'll wait and
+post a patch against this once it's committed.
 
-I cannot directly use higher XFS version, I will have to backport the
-changes for higher to the kernel I am using  because of dependencies.
+Here are a couple other general thoughts:
+- One minor concern is that the btree code has cases in which
+  the peek routines don't work (when the keys_valid flag in the
+  btree root is zero) and this code doesn't check for that.
+  I'll just assume for now that never happens here.
+- The bitfield code used for the real-time volume map is
+  generally useful and could be separated into its own module.
 
-Thanks & Regards,
-Amit Sahrawat
-On Thu, Oct 22, 2009 at 7:56 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+					-Alex
 
-> Amit Sahrawat wrote:
->
->> Hi Eric,
->>
->> This seems related with the directory Inodes.
->>
->> I tried the changes mentioned in the patch, they didn't work for me.
->> As mine seems to be ARM with EABI.
->>
->
-> The other one you might check on is:
->
->
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=94a3f78566ef98a48814d82892f28bb741624cb8
->
-> Other than that, if you can try a newer kernel that'd be great, and if the
-> problem remains, let me know what the testcase is and I can try it out.
->
-> -Eric
->
->   When files are created at the Root . It reports Root Inode :128 at the
->> crash with bno:2
->>
->> While suppose if another directory is created and Inode is 137
->> And then, rm -rf * in that directory
->> Crash would report error With this inode
->>
->> xfs_da_do_buf: bno 8388631
->> dir: inode 137
->> Filesystem "sda4": XFS internal error xfs_da_do_buf(1) at line 1992 of
->> file fs/x
->> fs/xfs_da_btree.c.  Caller 0xc0118eb8
->> ry
->> rm: unable [<c0022618>] (dump_stack+0x0/0x14) from [<c0125700>]
->> (xfs_error_repor
->> t+0x54/0x64)
->> [<c01256ac>] (xfs_error_report+0x0/0x64) from [<c0118a74>]
->> (xfs_da_do_buf+0x334/
->> 0x6ec)
->> [<c0118740>] (xfs_da_do_buf+0x0/0x6ec) from [<c0118eb8>]
->> (xfs_da_read_buf+0x34/0
->> x3c)
->> [<c0118e84>] (xfs_da_read_buf+0x0/0x3c) from [<c011b5c8>]
->> (xfs_da_node_lookup_in
->> t+0x70/0x318)
->> [<c011b558>] (xfs_da_node_lookup_int+0x0/0x318) from [<c01219d4>]
->> (xfs_dir2_node
->> _removename+0x48/0x500)
->> [<c012198c>] (xfs_dir2_node_removename+0x0/0x500) from [<c011c334>]
->> (xfs_dir_rem
->> ovename+0x100/0x10c)
->> [<c011c234>] (xfs_dir_removename+0x0/0x10c) from [<c014cde4>]
->> (xfs_remove+0x280/
->> 0x424)
->>  r6 = 00000000  r5 = 00000000  r4 = 00003951
->> [<c014cb64>] (xfs_remove+0x0/0x424) from [<c0157044>]
->> (xfs_vn_unlink+0x30/0x60)
->> [<c0157014>] (xfs_vn_unlink+0x0/0x60) from [<c009175c>]
->> (vfs_unlink+0x70/0xac)
->>  r7 = C471C000  r6 = C43BF598  r5 = C395B3B8  r4 = 00000000
->> [<c00916ec>] (vfs_unlink+0x0/0xac) from [<c0093ac0>]
->> (do_unlinkat+0xcc/0x14c)
->>  r6 = C3968AD8  r5 = C395B3B8  r4 = 00000000
->> [<c00939f4>] (do_unlinkat+0x0/0x14c) from [<c0093b58>]
->> (sys_unlink+0x18/0x1c)
->>  r7 = 0000000A  r6 = 0000000C  r5 = 00000008  r4 = BEDCBC19
->> [<c0093b40>] (sys_unlink+0x0/0x1c) from [<c001de40>]
->> (ret_fast_syscall+0x0/0x2c)
->> to remove `5826'xfs_da_do_buf: bno 8388631
->> dir: inode 137
->>
->> Checking this through xfs_check will show:
->> ]# xfs_check /dev/sdb4
->> dir 128 block 8388609 extra leaf entry d5830 402
->> dir 128 block 8388609 extra leaf entry d5831 404
->> dir 128 block 8388609 extra leaf entry d5832 406
->> dir 128 block 8388609 extra leaf entry d5833 408
->> dir 128 block 8388609 extra leaf entry d5834 40a
->> dir 128 block 8388609 extra leaf entry d5835 40c
->> dir 128 block 8388609 extra leaf entry d5836 40e
->> dir 128 block 8388609 extra leaf entry d5837 410
->> ...
->> ...
->> dir 128 block 8388609 extra leaf entry ddab2 5fa
->> dir 128 block 8388609 extra leaf entry ddab3 5fc
->> dir 128 block 8388609 extra leaf entry ddab4 5fe
->> bad free block ent 1 is 65535 should be 0 for dir ino 128 block 16777216
->> bad free block ent 2 is 0 should be 65535 for dir ino 128 block 16777216
->> dir ino 128 missing leaf entry for d5a37/260
->> dir ino 128 missing leaf entry for d5a38/262
->> dir ino 128 missing leaf entry for d5a39/264
->> ...
->> ...
->>
->> I tried checking the inode before and after corruption using xfs_db and
->> xfs_check
->> When I create files and check using xfs_check, no corruption is showed and
->> also xfs_db shows correct results for the inode.
->> While after the crash is observed, xfs_check show the errors I mentioned
->> above.
->> Also, the values for Inode using xfs_db differ from the ones I get after i
->> do xfs_repair -L on the device.
->>
->>
->> Can u get anything from the above mentioned log.
->>
->> Thanks & Regards,
->> Amit Sahrawat
->>
->>
->> On Wed, Oct 21, 2009 at 11:14 PM, Eric Sandeen <sandeen@sandeen.net<mailto:
->> sandeen@sandeen.net>> wrote:
->>
->>    Amit Sahrawat wrote:
->>     > Thanks Eric,
->>     >
->>     > Yes, I am able to get this for the same Inode and Block number.
->>     >
->>     > xfs_check reports error for dir inode 128 missing leaf
->>    entries..(exact
->>     > string I m missing), will provide you the details.
->>     >
->>     > Using xfs_repair fixes the problem. But again the same operation
->>    leads
->>     > to the crash.
->>     > Even on a freshly formatted disk, I get this error.
->>     >
->>     > Please let me know from where I can get this patch to try whether it
->>     > fixes for me or not.
->>
->>
->>
->> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff_plain;h=ae23a5e87dbbf4657a82e1ff8ebc52ab50361c14
->>
->>    -Eric
->>
->>
->>
->> ------------------------------------------------------------------------
->>
->> _______________________________________________
->> xfs mailing list
->> xfs@oss.sgi.com
->> http://oss.sgi.com/mailman/listinfo/xfs
->>
->
->
+> Signed-off-by: Barry Naujok <bnaujok@sgi.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
---000e0cd24d9e8a5cff0476889cb3
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
-<div>I am already using that patch.</div>
-<div>Other than using higher XFS version, can I try any other thing?</div>
-<div>=A0</div>
-<div>I cannot directly use higher XFS version, I will have to backport the =
-changes for higher to the kernel I am using=A0 because of dependencies.</di=
-v>
-<div><br>Thanks &amp; Regards,</div>
-<div>Amit Sahrawat<br></div>
-<div class=3D"gmail_quote">On Thu, Oct 22, 2009 at 7:56 PM, Eric Sandeen <s=
-pan dir=3D"ltr">&lt;<a href=3D"mailto:sandeen@sandeen.net">sandeen@sandeen.=
-net</a>&gt;</span> wrote:<br>
-<blockquote class=3D"gmail_quote" style=3D"PADDING-LEFT: 1ex; MARGIN: 0px 0=
-px 0px 0.8ex; BORDER-LEFT: #ccc 1px solid">
-<div class=3D"im">Amit Sahrawat wrote:<br>
-<blockquote class=3D"gmail_quote" style=3D"PADDING-LEFT: 1ex; MARGIN: 0px 0=
-px 0px 0.8ex; BORDER-LEFT: #ccc 1px solid">Hi Eric,<br><br>This seems relat=
-ed with the directory Inodes.<br><br>I tried the changes mentioned in the p=
-atch, they didn&#39;t work for me.<br>
-As mine seems to be ARM with EABI.<br></blockquote><br></div>The other one =
-you might check on is:<br><br><a href=3D"http://git.kernel.org/?p=3Dlinux/k=
-ernel/git/torvalds/linux-2.6.git;a=3Dcommitdiff;h=3D94a3f78566ef98a48814d82=
-892f28bb741624cb8" target=3D"_blank">http://git.kernel.org/?p=3Dlinux/kerne=
-l/git/torvalds/linux-2.6.git;a=3Dcommitdiff;h=3D94a3f78566ef98a48814d82892f=
-28bb741624cb8</a><br>
-<br>Other than that, if you can try a newer kernel that&#39;d be great, and=
- if the problem remains, let me know what the testcase is and I can try it =
-out.<br><br>-Eric<br><br>
-<blockquote class=3D"gmail_quote" style=3D"PADDING-LEFT: 1ex; MARGIN: 0px 0=
-px 0px 0.8ex; BORDER-LEFT: #ccc 1px solid">
-<div>
-<div></div>
-<div class=3D"h5">When files are created at the Root . It reports Root Inod=
-e :128 at the crash with bno:2<br><br>While suppose if another directory is=
- created and Inode is 137<br>And then, rm -rf * in that directory<br>Crash =
-would report error With this inode<br>
-<br>xfs_da_do_buf: bno 8388631<br>dir: inode 137<br>Filesystem &quot;sda4&q=
-uot;: XFS internal error xfs_da_do_buf(1) at line 1992 of file fs/x<br>fs/x=
-fs_da_btree.c. =A0Caller 0xc0118eb8<br>ry<br>rm: unable [&lt;c0022618&gt;] =
-(dump_stack+0x0/0x14) from [&lt;c0125700&gt;] (xfs_error_repor<br>
-t+0x54/0x64)<br>[&lt;c01256ac&gt;] (xfs_error_report+0x0/0x64) from [&lt;c0=
-118a74&gt;] (xfs_da_do_buf+0x334/<br>0x6ec)<br>[&lt;c0118740&gt;] (xfs_da_d=
-o_buf+0x0/0x6ec) from [&lt;c0118eb8&gt;] (xfs_da_read_buf+0x34/0<br>x3c)<br=
->
-[&lt;c0118e84&gt;] (xfs_da_read_buf+0x0/0x3c) from [&lt;c011b5c8&gt;] (xfs_=
-da_node_lookup_in<br>t+0x70/0x318)<br>[&lt;c011b558&gt;] (xfs_da_node_looku=
-p_int+0x0/0x318) from [&lt;c01219d4&gt;] (xfs_dir2_node<br>_removename+0x48=
-/0x500)<br>
-[&lt;c012198c&gt;] (xfs_dir2_node_removename+0x0/0x500) from [&lt;c011c334&=
-gt;] (xfs_dir_rem<br>ovename+0x100/0x10c)<br>[&lt;c011c234&gt;] (xfs_dir_re=
-movename+0x0/0x10c) from [&lt;c014cde4&gt;] (xfs_remove+0x280/<br>0x424)<br=
->
-=A0r6 =3D 00000000 =A0r5 =3D 00000000 =A0r4 =3D 00003951<br>[&lt;c014cb64&g=
-t;] (xfs_remove+0x0/0x424) from [&lt;c0157044&gt;] (xfs_vn_unlink+0x30/0x60=
-)<br>[&lt;c0157014&gt;] (xfs_vn_unlink+0x0/0x60) from [&lt;c009175c&gt;] (v=
-fs_unlink+0x70/0xac)<br>
-=A0r7 =3D C471C000 =A0r6 =3D C43BF598 =A0r5 =3D C395B3B8 =A0r4 =3D 00000000=
-<br>[&lt;c00916ec&gt;] (vfs_unlink+0x0/0xac) from [&lt;c0093ac0&gt;] (do_un=
-linkat+0xcc/0x14c)<br>=A0r6 =3D C3968AD8 =A0r5 =3D C395B3B8 =A0r4 =3D 00000=
-000<br>[&lt;c00939f4&gt;] (do_unlinkat+0x0/0x14c) from [&lt;c0093b58&gt;] (=
-sys_unlink+0x18/0x1c)<br>
-=A0r7 =3D 0000000A =A0r6 =3D 0000000C =A0r5 =3D 00000008 =A0r4 =3D BEDCBC19=
-<br>[&lt;c0093b40&gt;] (sys_unlink+0x0/0x1c) from [&lt;c001de40&gt;] (ret_f=
-ast_syscall+0x0/0x2c)<br>to remove `5826&#39;xfs_da_do_buf: bno 8388631<br>=
-dir: inode 137<br>
-<br>Checking this through xfs_check will show:<br>]# xfs_check /dev/sdb4<br=
->dir 128 block 8388609 extra leaf entry d5830 402<br>dir 128 block 8388609 =
-extra leaf entry d5831 404<br>dir 128 block 8388609 extra leaf entry d5832 =
-406<br>
-dir 128 block 8388609 extra leaf entry d5833 408<br>dir 128 block 8388609 e=
-xtra leaf entry d5834 40a<br>dir 128 block 8388609 extra leaf entry d5835 4=
-0c<br>dir 128 block 8388609 extra leaf entry d5836 40e<br>dir 128 block 838=
-8609 extra leaf entry d5837 410<br>
-...<br>...<br>dir 128 block 8388609 extra leaf entry ddab2 5fa<br>dir 128 b=
-lock 8388609 extra leaf entry ddab3 5fc<br>dir 128 block 8388609 extra leaf=
- entry ddab4 5fe<br>bad free block ent 1 is 65535 should be 0 for dir ino 1=
-28 block 16777216<br>
-bad free block ent 2 is 0 should be 65535 for dir ino 128 block 16777216<br=
->dir ino 128 missing leaf entry for d5a37/260<br>dir ino 128 missing leaf e=
-ntry for d5a38/262<br>dir ino 128 missing leaf entry for d5a39/264<br>...<b=
-r>
-...<br><br>I tried checking the inode before and after corruption using xfs=
-_db and xfs_check<br>When I create files and check using xfs_check, no corr=
-uption is showed and also xfs_db shows correct results for the inode.<br>
-While after the crash is observed, xfs_check show the errors I mentioned ab=
-ove.<br>Also, the values for Inode using xfs_db differ from the ones I get =
-after i do xfs_repair -L on the device.<br><br><br>Can u get anything from =
-the above mentioned log.<br>
-<br>Thanks &amp; Regards,<br>Amit Sahrawat<br><br><br></div></div>
-<div class=3D"im">On Wed, Oct 21, 2009 at 11:14 PM, Eric Sandeen &lt;<a hre=
-f=3D"mailto:sandeen@sandeen.net" target=3D"_blank">sandeen@sandeen.net</a> =
-&lt;mailto:<a href=3D"mailto:sandeen@sandeen.net" target=3D"_blank">sandeen=
-@sandeen.net</a>&gt;&gt; wrote:<br>
-<br>=A0 =A0Amit Sahrawat wrote:<br>=A0 =A0 &gt; Thanks Eric,<br>=A0 =A0 &gt=
-;<br>=A0 =A0 &gt; Yes, I am able to get this for the same Inode and Block n=
-umber.<br>=A0 =A0 &gt;<br>=A0 =A0 &gt; xfs_check reports error for dir inod=
-e 128 missing leaf<br>
-=A0 =A0entries..(exact<br>=A0 =A0 &gt; string I m missing), will provide yo=
-u the details.<br>=A0 =A0 &gt;<br>=A0 =A0 &gt; Using xfs_repair fixes the p=
-roblem. But again the same operation<br>=A0 =A0leads<br>=A0 =A0 &gt; to the=
- crash.<br>=A0 =A0 &gt; Even on a freshly formatted disk, I get this error.=
-<br>
-=A0 =A0 &gt;<br>=A0 =A0 &gt; Please let me know from where I can get this p=
-atch to try whether it<br>=A0 =A0 &gt; fixes for me or not.<br><br><br>=A0 =
-=A0<a href=3D"http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux-2.=
-6.git;a=3Dcommitdiff_plain;h=3Dae23a5e87dbbf4657a82e1ff8ebc52ab50361c14" ta=
-rget=3D"_blank">http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux-=
-2.6.git;a=3Dcommitdiff_plain;h=3Dae23a5e87dbbf4657a82e1ff8ebc52ab50361c14</=
-a><br>
-<br>=A0 =A0-Eric<br><br><br><br></div>-------------------------------------=
------------------------------------<br><br>________________________________=
-_______________<br>xfs mailing list<br><a href=3D"mailto:xfs@oss.sgi.com" t=
-arget=3D"_blank">xfs@oss.sgi.com</a><br>
-<a href=3D"http://oss.sgi.com/mailman/listinfo/xfs" target=3D"_blank">http:=
-//oss.sgi.com/mailman/listinfo/xfs</a><br></blockquote><br></blockquote></d=
-iv><br>
-
---000e0cd24d9e8a5cff0476889cb3--
-
-
---===============0287570883975974612==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+> Index: xfsprogs-dev/repair/dino_chunks.c
+> ===================================================================
+> --- xfsprogs-dev.orig/repair/dino_chunks.c	2009-09-02 14:51:09.449268859 -0300
+> +++ xfsprogs-dev/repair/dino_chunks.c	2009-09-02 14:51:18.593298964 -0300
+> @@ -118,6 +118,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
+>  	int		i;
+>  	int		j;
+>  	int		state;
+> +	xfs_extlen_t	blen;
+> 
+>  	agno = XFS_INO_TO_AGNO(mp, ino);
+>  	agino = XFS_INO_TO_AGINO(mp, ino);
+> @@ -433,9 +434,10 @@ verify_inode_chunk(xfs_mount_t		*mp,
+>  	 * entry or an iunlinked pointer
+>  	 */
+>  	pthread_mutex_lock(&ag_locks[agno]);
+> -	for (j = 0, cur_agbno = chunk_start_agbno;
+> -			cur_agbno < chunk_stop_agbno; cur_agbno++)  {
+> -		state = get_bmap(agno, cur_agbno);
+> +	for (cur_agbno = chunk_start_agbno;
+> +	     cur_agbno < chunk_stop_agbno;
+> +	     cur_agbno += blen)  {
+> +		state = get_bmap_ext(agno, cur_agbno, chunk_stop_agbno, &blen);
+>  		switch (state) {
+>  		case XR_E_MULT:
+>  		case XR_E_INUSE:
+> @@ -444,9 +446,9 @@ verify_inode_chunk(xfs_mount_t		*mp,
+>  			do_warn(
+>  		_("inode block %d/%d multiply claimed, (state %d)\n"),
+>  				agno, cur_agbno, state);
+> -			set_bmap(agno, cur_agbno, XR_E_MULT);
+> -			j = 1;
+> -			break;
+> +			set_bmap_ext(agno, cur_agbno, blen, XR_E_MULT);
+> +			pthread_mutex_unlock(&ag_locks[agno]);
+> +			return 0;
+>  		case XR_E_INO:
+>  			do_error(
+>  		_("uncertain inode block overlap, agbno = %d, ino = %llu\n"),
+> @@ -455,11 +457,6 @@ verify_inode_chunk(xfs_mount_t		*mp,
+>  		default:
+>  			break;
+>  		}
+> -
+> -		if (j) {
+> -			pthread_mutex_unlock(&ag_locks[agno]);
+> -			return(0);
+> -		}
+>  	}
+>  	pthread_mutex_unlock(&ag_locks[agno]);
+> 
+> @@ -487,8 +484,9 @@ verify_inode_chunk(xfs_mount_t		*mp,
+>  	pthread_mutex_lock(&ag_locks[agno]);
+> 
+>  	for (cur_agbno = chunk_start_agbno;
+> -			cur_agbno < chunk_stop_agbno; cur_agbno++)  {
+> -		state = get_bmap(agno, cur_agbno);
+> +	     cur_agbno < chunk_stop_agbno;
+> +	     cur_agbno += blen)  {
+> +		state = get_bmap_ext(agno, cur_agbno, chunk_stop_agbno, &blen);
+>  		switch (state) {
+>  		case XR_E_INO:
+>  			do_error(
+> @@ -498,7 +496,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
+>  		case XR_E_UNKNOWN:
+>  		case XR_E_FREE1:
+>  		case XR_E_FREE:
+> -			set_bmap(agno, cur_agbno, XR_E_INO);
+> +			set_bmap_ext(agno, cur_agbno, blen, XR_E_INO);
+>  			break;
+>  		case XR_E_MULT:
+>  		case XR_E_INUSE:
+> @@ -512,7 +510,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
+>  			do_warn(
+>  		_("inode block %d/%d bad state, (state %d)\n"),
+>  				agno, cur_agbno, state);
+> -			set_bmap(agno, cur_agbno, XR_E_INO);
+> +			set_bmap_ext(agno, cur_agbno, blen, XR_E_INO);
+>  			break;
+>  		}
+>  	}
+> Index: xfsprogs-dev/repair/dinode.c
+> ===================================================================
+> --- xfsprogs-dev.orig/repair/dinode.c	2009-09-02 14:51:09.457268829 -0300
+> +++ xfsprogs-dev/repair/dinode.c	2009-09-02 14:51:18.593298964 -0300
+> @@ -524,6 +524,7 @@ process_rt_rec(
+> 
+>  	/*
+>  	 * set the appropriate number of extents
+> +	 * this iterates block by block, this can be optimised using extents
+>  	 */
+>  	for (b = irec->br_startblock; b < irec->br_startblock +
+>  			irec->br_blockcount; b += mp->m_sb.sb_rextsize)  {
+> @@ -614,9 +615,10 @@ process_bmbt_reclist_int(
+>  	char			*forkname;
+>  	int			i;
+>  	int			state;
+> -	xfs_dfsbno_t		e;
+>  	xfs_agnumber_t		agno;
+>  	xfs_agblock_t		agbno;
+> +	xfs_agblock_t		ebno;
+> +	xfs_extlen_t		blen;
+>  	xfs_agnumber_t		locked_agno = -1;
+>  	int			error = 1;
+> 
+> @@ -718,7 +720,7 @@ process_bmbt_reclist_int(
+>  		 */
+>  		agno = XFS_FSB_TO_AGNO(mp, irec.br_startblock);
+>  		agbno = XFS_FSB_TO_AGBNO(mp, irec.br_startblock);
+> -		e = irec.br_startblock + irec.br_blockcount;
+> +		ebno = agbno + irec.br_blockcount;
+>  		if (agno != locked_agno) {
+>  			if (locked_agno != -1)
+>  				pthread_mutex_unlock(&ag_locks[locked_agno]);
+> @@ -733,7 +735,9 @@ process_bmbt_reclist_int(
+>  			 * checking each entry without setting the
+>  			 * block bitmap
+>  			 */
+> -			for (b = irec.br_startblock; b < e; b++, agbno++)  {
+> +			for (b = irec.br_startblock;
+> +			     agbno < ebno;
+> +			     b++, agbno++)  {
+>  				if (search_dup_extent(mp, agno, agbno)) {
+>  					do_warn(_("%s fork in ino %llu claims "
+>  						"dup extent, off - %llu, "
+> @@ -748,22 +752,10 @@ process_bmbt_reclist_int(
+>  			continue;
+>  		}
+> 
+> -		for (b = irec.br_startblock; b < e; b++, agbno++)  {
+> -			/*
+> -			 * Process in chunks of 16 (XR_BB_UNIT/XR_BB)
+> -			 * for common XR_E_UNKNOWN to XR_E_INUSE transition
+> -			 */
+> -			if (((agbno & XR_BB_MASK) == 0) && ((irec.br_startblock + irec.br_blockcount - b) >=
+> (XR_BB_UNIT/XR_BB))) { 
+> -				if (ba_bmap[agno][agbno>>XR_BB] == XR_E_UNKNOWN_LL) {
+> -					ba_bmap[agno][agbno>>XR_BB] = XR_E_INUSE_LL;
+> -					agbno += (XR_BB_UNIT/XR_BB) - 1;
+> -					b += (XR_BB_UNIT/XR_BB) - 1;
+> -					continue;
+> -				}
+> -
+> -			}
+> -
+> -			state = get_bmap(agno, agbno);
+> +		for (b = irec.br_startblock;
+> +		     agbno < ebno;
+> +		     b += blen, agbno += blen) {
+> +			state = get_bmap_ext(agno, agbno, ebno, &blen);
+>  			switch (state)  {
+>  			case XR_E_FREE:
+>  			case XR_E_FREE1:
+> @@ -772,7 +764,7 @@ process_bmbt_reclist_int(
+>  					forkname, ino, (__uint64_t) b);
+>  				/* fall through ... */
+>  			case XR_E_UNKNOWN:
+> -				set_bmap(agno, agbno, XR_E_INUSE);
+> +				set_bmap_ext(agno, agbno, blen, XR_E_INUSE);
+>  				break;
+> 
+>  			case XR_E_BAD_STATE:
+> @@ -788,7 +780,7 @@ process_bmbt_reclist_int(
+> 
+>  			case XR_E_INUSE:
+>  			case XR_E_MULT:
+> -				set_bmap(agno, agbno, XR_E_MULT);
+> +				set_bmap_ext(agno, agbno, blen, XR_E_MULT);
+>  				do_warn(_("%s fork in %s inode %llu claims "
+>  					"used block %llu\n"),
+>  					forkname, ftype, ino, (__uint64_t) b);
+> Index: xfsprogs-dev/repair/globals.h
+> ===================================================================
+> --- xfsprogs-dev.orig/repair/globals.h	2009-09-02 14:51:09.461268919 -0300
+> +++ xfsprogs-dev/repair/globals.h	2009-09-02 14:51:18.597292070 -0300
+> @@ -156,11 +156,6 @@ EXTERN int		chunks_pblock;	/* # of 64-in
+>  EXTERN int		max_symlink_blocks;
+>  EXTERN __int64_t	fs_max_file_offset;
+> 
+> -/* block allocation bitmaps */
+> -
+> -EXTERN __uint64_t	**ba_bmap;	/* see incore.h */
+> -EXTERN __uint64_t	*rt_ba_bmap;	/* see incore.h */
+> -
+>  /* realtime info */
+> 
+>  EXTERN xfs_rtword_t	*btmcompute;
+> Index: xfsprogs-dev/repair/phase2.c
+> ===================================================================
+> --- xfsprogs-dev.orig/repair/phase2.c	2009-09-02 14:51:09.465298621 -0300
+> +++ xfsprogs-dev/repair/phase2.c	2009-09-02 14:51:18.605297206 -0300
+> @@ -109,7 +109,6 @@ void
+>  phase2(xfs_mount_t *mp)
+>  {
+>  	xfs_agnumber_t		i;
+> -	xfs_agblock_t		b;
+>  	int			j;
+>  	ino_tree_node_t		*ino_rec;
+> 
+> @@ -169,11 +168,8 @@ phase2(xfs_mount_t *mp)
+>  		/*
+>  		 * also mark blocks
+>  		 */
+> -		for (b = 0; b < mp->m_ialloc_blks; b++)  {
+> -			set_bmap(0,
+> -				b + XFS_INO_TO_AGBNO(mp, mp->m_sb.sb_rootino),
+> -				XR_E_INO);
+> -		}
+> +		set_bmap_ext(0, XFS_INO_TO_AGBNO(mp, mp->m_sb.sb_rootino),
+> +			     mp->m_ialloc_blks, XR_E_INO);
+>  	} else  {
+>  		do_log(_("        - found root inode chunk\n"));
+> 
+> Index: xfsprogs-dev/repair/phase4.c
+> ===================================================================
+> --- xfsprogs-dev.orig/repair/phase4.c	2009-09-02 14:51:09.533268366 -0300
+> +++ xfsprogs-dev/repair/phase4.c	2009-09-02 14:51:18.609296598 -0300
+> @@ -192,8 +192,7 @@ phase4(xfs_mount_t *mp)
+>  	xfs_agnumber_t		i;
+>  	xfs_agblock_t		j;
+>  	xfs_agblock_t		ag_end;
+> -	xfs_agblock_t		extent_start;
+> -	xfs_extlen_t		extent_len;
+> +	xfs_extlen_t		blen;
+>  	int			ag_hdr_len = 4 * mp->m_sb.sb_sectsize;
+>  	int			ag_hdr_block;
+>  	int			bstate;
+> @@ -226,29 +225,13 @@ phase4(xfs_mount_t *mp)
+>  		ag_end = (i < mp->m_sb.sb_agcount - 1) ? mp->m_sb.sb_agblocks :
+>  			mp->m_sb.sb_dblocks -
+>  				(xfs_drfsbno_t) mp->m_sb.sb_agblocks * i;
+> -		extent_start = extent_len = 0;
+> +
+>  		/*
+>  		 * set up duplicate extent list for this ag
+>  		 */
+> -		for (j = ag_hdr_block; j < ag_end; j++)  {
+> -
+> -			/* Process in chunks of 16 (XR_BB_UNIT/XR_BB) */
+> -			if ((extent_start == 0) && ((j & XR_BB_MASK) == 0)) {
+> -				switch(ba_bmap[i][j>>XR_BB]) {
+> -				case XR_E_UNKNOWN_LL:
+> -				case XR_E_FREE1_LL:
+> -				case XR_E_FREE_LL:
+> -				case XR_E_INUSE_LL:
+> -				case XR_E_INUSE_FS_LL:
+> -				case XR_E_INO_LL:
+> -				case XR_E_FS_MAP_LL:
+> -					j += (XR_BB_UNIT/XR_BB) - 1;
+> -					continue;
+> -				}
+> -			}
+> -
+> -			bstate = get_bmap(i, j);
+> -			switch (bstate)  {
+> +		for (j = ag_hdr_block; j < ag_end; j += blen)  {
+> +			bstate = get_bmap_ext(i, j, ag_end, &blen);
+> +			switch (bstate) {
+>  			case XR_E_BAD_STATE:
+>  			default:
+>  				do_warn(
+> @@ -262,37 +245,13 @@ phase4(xfs_mount_t *mp)
+>  			case XR_E_INUSE_FS:
+>  			case XR_E_INO:
+>  			case XR_E_FS_MAP:
+> -				if (extent_start == 0)
+> -					continue;
+> -				else  {
+> -					/*
+> -					 * add extent and reset extent state
+> -					 */
+> -					add_dup_extent(i, extent_start,
+> -							extent_len);
+> -					extent_start = 0;
+> -					extent_len = 0;
+> -				}
+>  				break;
+>  			case XR_E_MULT:
+> -				if (extent_start == 0)  {
+> -					extent_start = j;
+> -					extent_len = 1;
+> -				} else if (extent_len == MAXEXTLEN)  {
+> -					add_dup_extent(i, extent_start,
+> -							extent_len);
+> -					extent_start = j;
+> -					extent_len = 1;
+> -				} else
+> -					extent_len++;
+> +				add_dup_extent(i, j, blen);
+>  				break;
+>  			}
+>  		}
+> -		/*
+> -		 * catch tail-case, extent hitting the end of the ag
+> -		 */
+> -		if (extent_start != 0)
+> -			add_dup_extent(i, extent_start, extent_len);
+> +
+>  		PROG_RPT_INC(prog_rpt_done[i], 1);
+>  	}
+>  	print_final_rpt();
+> Index: xfsprogs-dev/repair/phase5.c
+> ===================================================================
+> --- xfsprogs-dev.orig/repair/phase5.c	2009-09-02 14:51:09.561269620 -0300
+> +++ xfsprogs-dev/repair/phase5.c	2009-09-02 14:51:18.613269588 -0300
+> @@ -88,10 +88,8 @@ mk_incore_fstree(xfs_mount_t *mp, xfs_ag
+>  	xfs_agblock_t		agbno;
+>  	xfs_agblock_t		ag_end;
+>  	uint			free_blocks;
+> -#ifdef XR_BLD_FREE_TRACE
+> -	int			old_state;
+> -	int			state = XR_E_BAD_STATE;
+> -#endif
+> +	xfs_extlen_t		blen;
+> +	int			bstate;
+> 
+>  	/*
+>  	 * scan the bitmap for the ag looking for continuous
+> @@ -120,30 +118,10 @@ mk_incore_fstree(xfs_mount_t *mp, xfs_ag
+>  	 * ok, now find the number of extents, keep track of the
+>  	 * largest extent.
+>  	 */
+> -	for (agbno = 0; agbno < ag_end; agbno++)  {
+> -#if 0
+> -		old_state = state;
+> -		state = get_bmap(agno, agbno);
+> -		if (state != old_state)  {
+> -			fprintf(stderr, "agbno %u - new state is %d\n",
+> -					agbno, state);
+> -		}
+> -#endif
+> -		/* Process in chunks of 16 (XR_BB_UNIT/XR_BB) */
+> -		if ((in_extent == 0) && ((agbno & XR_BB_MASK) == 0)) {
+> -			/* testing >= XR_E_INUSE */
+> -			switch (ba_bmap[agno][agbno>>XR_BB]) {
+> -			case XR_E_INUSE_LL:
+> -			case XR_E_INUSE_FS_LL:
+> -			case XR_E_INO_LL:
+> -			case XR_E_FS_MAP_LL:
+> -				agbno += (XR_BB_UNIT/XR_BB) - 1;
+> -				continue;
+> -			}
+> -
+> -		}
+> -		if (get_bmap(agno, agbno) < XR_E_INUSE)  {
+> -			free_blocks++;
+> +	for (agbno = 0; agbno < ag_end; agbno += blen) {
+> +		bstate = get_bmap_ext(agno, agbno, ag_end, &blen);
+> +		if (bstate < XR_E_INUSE)  {
+> +			free_blocks += blen;
+>  			if (in_extent == 0)  {
+>  				/*
+>  				 * found the start of a free extent
+> @@ -151,9 +129,9 @@ mk_incore_fstree(xfs_mount_t *mp, xfs_ag
+>  				in_extent = 1;
+>  				num_extents++;
+>  				extent_start = agbno;
+> -				extent_len = 1;
+> +				extent_len = blen;
+>  			} else  {
+> -				extent_len++;
+> +				extent_len += blen;
+>  			}
+>  		} else   {
+>  			if (in_extent)  {
+> Index: xfsprogs-dev/repair/incore.c
+> ===================================================================
+> --- xfsprogs-dev.orig/repair/incore.c	2009-09-02 14:51:09.565269570 -0300
+> +++ xfsprogs-dev/repair/incore.c	2009-09-02 14:51:29.072772399 -0300
+> @@ -18,6 +18,7 @@
+> 
+>  #include <libxfs.h>
+>  #include "avl.h"
+> +#include "btree.h"
+>  #include "globals.h"
+>  #include "incore.h"
+>  #include "agheader.h"
+> @@ -52,14 +53,192 @@ free_allocations(ba_rec_t *list)
+>  	return;
+>  }
+> 
+> +/*
+> + * The following manages the in-core bitmap of the entire filesystem
+> + * using extents in a btree.
+> + *
+> + * The btree items will point to one of the state values below,
+> + * rather than storing the value itself in the pointer.
+> + */
+> +static int states[16] =
+> +	{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+> +
+> +static struct btree_root	**ag_bmap;
+> +
+> +static void
+> +update_bmap(
+> +	struct btree_root	*bmap,
+> +	unsigned long		offset,
+> +	xfs_extlen_t		blen,
+> +	void			*new_state)
+> +{
+> +	unsigned long		end = offset + blen;
+> +	int			*cur_state;
+> +	unsigned long		cur_key;
+> +	int			*next_state;
+> +	unsigned long		next_key;
+> +	int			*prev_state;
+> +
+> +	cur_state = btree_find(bmap, offset, &cur_key);
+> +	if (!cur_state)
+> +		return;
+> +
+> +	if (offset == cur_key) {
+> +		/* if the start is the same as the "item" extent */
+> +		if (cur_state == new_state)
+> +			return;
+> +
+> +		/*
+> +		 * Note: this may be NULL if we are updating the map for
+> +		 * the superblock.
+> +		 */
+> +		prev_state = btree_peek_prev(bmap, NULL);
+> +
+> +		next_state = btree_peek_next(bmap, &next_key);
+> +		if (next_key > end) {
+> +			/* different end */
+> +			if (new_state == prev_state) {
+> +				/* #1: prev has same state, move offset up */
+> +				btree_update_key(bmap, offset, end);
+> +				return;
+> +			}
+> +
+> +			/* #4: insert new extent after, update current value */
+> +			btree_update_value(bmap, offset, new_state);
+> +			btree_insert(bmap, end, cur_state);
+> +			return;
+> +		}
+> +
+> +		/* same end (and same start) */
+> +		if (new_state == next_state) {
+> +			/* next has same state */
+> +			if (new_state == prev_state) {
+> +				/* #3: merge prev & next */
+> +				btree_delete(bmap, offset);
+> +				btree_delete(bmap, end);
+> +				return;
+> +			}
+> +
+> +			/* #8: merge next */
+> +			btree_update_value(bmap, offset, new_state);
+> +			btree_delete(bmap, end);
+> +			return;
+> +		}
+> +
+> +		/* same start, same end, next has different state */
+> +		if (new_state == prev_state) {
+> +			/* #5: prev has same state */
+> +			btree_delete(bmap, offset);
+> +			return;
+> +		}
+> +
+> +		/* #6: update value only */
+> +		btree_update_value(bmap, offset, new_state);
+> +		return;
+> +	}
+> +
+> +	/* different start, offset is in the middle of "cur" */
+> +	prev_state = btree_peek_prev(bmap, NULL);
+> +	ASSERT(prev_state != NULL);
+> +	if (prev_state == new_state)
+> +		return;
+> +
+> +	if (end == cur_key) {
+> +		/* end is at the same point as the current extent */
+> +		if (new_state == cur_state) {
+> +			/* #7: move next extent down */
+> +			btree_update_key(bmap, end, offset);
+> +			return;
+> +		}
+> +
+> +		/* #9: different start, same end, add new extent */
+> +		btree_insert(bmap, offset, new_state);
+> +		return;
+> +	}
+> +
+> +	/* #2: insert an extent into the middle of another extent */
+> +	btree_insert(bmap, offset, new_state);
+> +	btree_insert(bmap, end, prev_state);
+> +}
+> +
+> +void
+> +set_bmap_ext(
+> +	xfs_agnumber_t		agno,
+> +	xfs_agblock_t		agbno,
+> +	xfs_extlen_t		blen,
+> +	int			state)
+> +{
+> +	update_bmap(ag_bmap[agno], agbno, blen, &states[state]);
+> +}
+> +
+> +int
+> +get_bmap_ext(
+> +	xfs_agnumber_t		agno,
+> +	xfs_agblock_t		agbno,
+> +	xfs_agblock_t		maxbno,
+> +	xfs_extlen_t		*blen)
+> +{
+> +	int			*statep;
+> +	unsigned long		key;
+> +
+> +	statep = btree_find(ag_bmap[agno], agbno, &key);
+> +	if (!statep)
+> +		return -1;
+> +
+> +	if (key == agbno) {
+> +		if (blen) {
+> +			if (!btree_peek_next(ag_bmap[agno], &key))
+> +				return -1;
+> +			*blen = MIN(maxbno, key) - agbno;
+> +		}
+> +		return *statep;
+> +	}
+> +
+> +	statep = btree_peek_prev(ag_bmap[agno], NULL);
+> +	if (!statep)
+> +		return -1;
+> +	if (blen)
+> +		*blen = MIN(maxbno, key) - agbno;
+> +
+> +	return *statep;
+> +}
+> 
+> +static uint64_t		*rt_bmap;
+>  static size_t		rt_bmap_size;
+> 
+> +/* block records fit into __uint64_t's units */
+> +#define XR_BB_UNIT	64			/* number of bits/unit */
+> +#define XR_BB		4			/* bits per block record */
+> +#define XR_BB_NUM	(XR_BB_UNIT/XR_BB)	/* number of records per unit */
+> +#define XR_BB_MASK	0xF			/* block record mask */
+> +
+> +/*
+> + * these work in real-time extents (e.g. fsbno == rt extent number)
+> + */
+> +int
+> +get_rtbmap(
+> +	xfs_drtbno_t	bno)
+> +{
+> +	return (*(rt_bmap + bno /  XR_BB_NUM) >>
+> +		((bno % XR_BB_NUM) * XR_BB)) & XR_BB_MASK;
+> +}
+> +
+> +void
+> +set_rtbmap(
+> +	xfs_drtbno_t	bno,
+> +	int		state)
+> +{
+> +	*(rt_bmap + bno / XR_BB_NUM) =
+> +	 ((*(rt_bmap + bno / XR_BB_NUM) &
+> +	  (~((__uint64_t) XR_BB_MASK << ((bno % XR_BB_NUM) * XR_BB)))) |
+> +	 (((__uint64_t) state) << ((bno % XR_BB_NUM) * XR_BB)));
+> +}
+> +
+>  static void
+>  reset_rt_bmap(void)
+>  {
+> -	if (rt_ba_bmap)
+> -		memset(rt_ba_bmap, 0x22, rt_bmap_size);	/* XR_E_FREE */
+> +	if (rt_bmap)
+> +		memset(rt_bmap, 0x22, rt_bmap_size);	/* XR_E_FREE */
+>  }
+> 
+>  static void
+> @@ -72,8 +251,8 @@ init_rt_bmap(
+>  	rt_bmap_size = roundup(mp->m_sb.sb_rextents / (NBBY / XR_BB),
+>  			       sizeof(__uint64_t));
+> 
+> -	rt_ba_bmap = memalign(sizeof(__uint64_t), rt_bmap_size);
+> -	if (!rt_ba_bmap) {
+> +	rt_bmap = memalign(sizeof(__uint64_t), rt_bmap_size);
+> +	if (!rt_bmap) {
+>  		do_error(
+>  		_("couldn't allocate realtime block map, size = %llu\n"),
+>  			mp->m_sb.sb_rextents);
+> @@ -84,8 +263,8 @@ init_rt_bmap(
+>  static void
+>  free_rt_bmap(xfs_mount_t *mp)
+>  {
+> -	free(rt_ba_bmap);
+> -	rt_ba_bmap = NULL;
+> +	free(rt_bmap);
+> +	rt_bmap = NULL;
+>  }
+> 
+> 
+> @@ -93,28 +272,41 @@ void
+>  reset_bmaps(xfs_mount_t *mp)
+>  {
+>  	xfs_agnumber_t	agno;
+> +	xfs_agblock_t	ag_size;
+>  	int		ag_hdr_block;
+> -	int		i;
+> 
+>  	ag_hdr_block = howmany(4 * mp->m_sb.sb_sectsize, mp->m_sb.sb_blocksize);
+> +	ag_size = mp->m_sb.sb_agblocks;
+> 
+> -	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++)  {
+> -		memset(ba_bmap[agno], 0,
+> -		       roundup((mp->m_sb.sb_agblocks + (NBBY / XR_BB) - 1) /
+> -				(NBBY / XR_BB), sizeof(__uint64_t)));
+> -		for (i = 0; i < ag_hdr_block; i++)
+> -			set_bmap(agno, i, XR_E_INUSE_FS);
+> +	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
+> +		if (agno == mp->m_sb.sb_agcount - 1)
+> +			ag_size = (xfs_extlen_t)(mp->m_sb.sb_dblocks -
+> +				   (xfs_drfsbno_t)mp->m_sb.sb_agblocks * agno);
+> +#ifdef BTREE_STATS
+> +		if (btree_find(ag_bmap[agno], 0, NULL)) {
+> +			printf("ag_bmap[%d] btree stats:\n", i);
+> +			btree_print_stats(ag_bmap[agno], stdout);
+> +		}
+> +#endif
+> +		/*
+> +		 * We always insert an item for the first block having a
+> +		 * given state.  So the code below means:
+> +		 *
+> +		 *	block 0..ag_hdr_block-1:	XR_E_INUSE_FS
+> +		 *	ag_hdr_block..ag_size:		XR_E_UNKNOWN
+> +		 *	ag_size...			XR_E_BAD_STATE
+> +		 */
+> +		btree_clear(ag_bmap[agno]);
+> +		btree_insert(ag_bmap[agno], 0, &states[XR_E_INUSE_FS]);
+> +		btree_insert(ag_bmap[agno],
+> +				ag_hdr_block, &states[XR_E_UNKNOWN]);
+> +		btree_insert(ag_bmap[agno], ag_size, &states[XR_E_BAD_STATE]);
+>  	}
+> 
+>  	if (mp->m_sb.sb_logstart != 0) {
+> -		xfs_dfsbno_t	logend;
+> -
+> -		logend = mp->m_sb.sb_logstart + mp->m_sb.sb_logblocks;
+> -
+> -		for (i = mp->m_sb.sb_logstart; i < logend ; i++)  {
+> -			set_bmap(XFS_FSB_TO_AGNO(mp, i),
+> -				 XFS_FSB_TO_AGBNO(mp, i), XR_E_INUSE_FS);
+> -		}
+> +		set_bmap_ext(XFS_FSB_TO_AGNO(mp, mp->m_sb.sb_logstart),
+> +			     XFS_FSB_TO_AGBNO(mp, mp->m_sb.sb_logstart),
+> +			     mp->m_sb.sb_logblocks, XR_E_INUSE_FS);
+>  	}
+> 
+>  	reset_rt_bmap();
+> @@ -123,30 +315,18 @@ reset_bmaps(xfs_mount_t *mp)
+>  void
+>  init_bmaps(xfs_mount_t *mp)
+>  {
+> -	xfs_agblock_t numblocks = mp->m_sb.sb_agblocks;
+> -	int agcount = mp->m_sb.sb_agcount;
+> -	int i;
+> -	size_t size = 0;
+> -
+> -	ba_bmap = calloc(agcount, sizeof(__uint64_t *));
+> -	if (!ba_bmap)
+> -		do_error(_("couldn't allocate block map pointers\n"));
+> +	xfs_agnumber_t i;
+> 
+> -	ag_locks = calloc(agcount, sizeof(pthread_mutex_t));
+> +	ag_bmap = calloc(mp->m_sb.sb_agcount, sizeof(struct btree_root *));
+> +	if (!ag_bmap)
+> +		do_error(_("couldn't allocate block map btree roots\n"));
+> +
+> +	ag_locks = calloc(mp->m_sb.sb_agcount, sizeof(pthread_mutex_t));
+>  	if (!ag_locks)
+>  		do_error(_("couldn't allocate block map locks\n"));
+> 
+> -	for (i = 0; i < agcount; i++)  {
+> -		size = roundup((numblocks+(NBBY/XR_BB)-1) / (NBBY/XR_BB),
+> -		       		sizeof(__uint64_t));
+> -
+> -		ba_bmap[i] = memalign(sizeof(__uint64_t), size);
+> -		if (!ba_bmap[i]) {
+> -			do_error(_("couldn't allocate block map, size = %d\n"),
+> -				numblocks);
+> -			return;
+> -		}
+> -		memset(ba_bmap[i], 0, size);
+> +	for (i = 0; i < mp->m_sb.sb_agcount; i++)  {
+> +		btree_init(&ag_bmap[i]);
+>  		pthread_mutex_init(&ag_locks[i], NULL);
+>  	}
+> 
+> @@ -160,9 +340,9 @@ free_bmaps(xfs_mount_t *mp)
+>  	xfs_agnumber_t i;
+> 
+>  	for (i = 0; i < mp->m_sb.sb_agcount; i++)
+> -		free(ba_bmap[i]);
+> -	free(ba_bmap);
+> -	ba_bmap = NULL;
+> +		btree_destroy(ag_bmap[i]);
+> +	free(ag_bmap);
+> +	ag_bmap = NULL;
+> 
+>  	free_rt_bmap(mp);
+>  }
+> Index: xfsprogs-dev/repair/incore.h
+> ===================================================================
+> --- xfsprogs-dev.orig/repair/incore.h	2009-09-02 14:51:09.573269190 -0300
+> +++ xfsprogs-dev/repair/incore.h	2009-09-02 14:51:18.621298890 -0300
+> @@ -37,59 +37,32 @@ void			record_allocation(ba_rec_t *addr,
+>  void			free_allocations(ba_rec_t *list);
+> 
+>  /*
+> - * block bit map defs -- track state of each filesystem block.
+> - * ba_bmap is an array of bitstrings declared in the globals.h file.
+> - * the bitstrings are broken up into 64-bit chunks.  one bitstring per AG.
+> - */
+> -#define BA_BMAP_SIZE(x)		(howmany(x, 4))
+> -
+> -void			init_bmaps(xfs_mount_t *mp);
+> -void			reset_bmaps(xfs_mount_t *mp);
+> -void			free_bmaps(xfs_mount_t *mp);
+> -
+> -
+> -/* blocks are numbered from zero */
+> -
+> -/* block records fit into __uint64_t's units */
+> -
+> -#define XR_BB_UNIT	64			/* number of bits/unit */
+> -#define XR_BB		4			/* bits per block record */
+> -#define XR_BB_NUM	(XR_BB_UNIT/XR_BB)	/* number of records per unit */
+> -#define XR_BB_MASK	0xF			/* block record mask */
+> -
+> -/*
+> - * bitstring ops -- set/get block states, either in filesystem
+> - * bno's or in agbno's.  turns out that fsbno addressing is
+> - * more convenient when dealing with bmap extracted addresses
+> - * and agbno addressing is more convenient when dealing with
+> - * meta-data extracted addresses.  So the fsbno versions use
+> - * mtype (which can be one of the block map types above) to
+> - * set the correct block map while the agbno versions assume
+> - * you want to use the regular block map.
+> - */
+> -
+> -#define get_bmap(agno, ag_blockno) \
+> -			((int) (*(ba_bmap[(agno)] + (ag_blockno)/XR_BB_NUM) \
+> -				 >> (((ag_blockno)%XR_BB_NUM)*XR_BB)) \
+> -				& XR_BB_MASK)
+> -#define set_bmap(agno, ag_blockno, state) \
+> -	*(ba_bmap[(agno)] + (ag_blockno)/XR_BB_NUM) = \
+> -		((*(ba_bmap[(agno)] + (ag_blockno)/XR_BB_NUM) & \
+> -	  (~((__uint64_t) XR_BB_MASK << (((ag_blockno)%XR_BB_NUM)*XR_BB)))) | \
+> -	 (((__uint64_t) (state)) << (((ag_blockno)%XR_BB_NUM)*XR_BB)))
+> -
+> -/*
+> - * these work in real-time extents (e.g. fsbno == rt extent number)
+> - */
+> -#define get_rtbmap(fsbno) \
+> -			((*(rt_ba_bmap + (fsbno)/XR_BB_NUM) >> \
+> -			(((fsbno)%XR_BB_NUM)*XR_BB)) & XR_BB_MASK)
+> -#define set_rtbmap(fsbno, state) \
+> -	*(rt_ba_bmap + (fsbno)/XR_BB_NUM) = \
+> -	 ((*(rt_ba_bmap + (fsbno)/XR_BB_NUM) & \
+> -	  (~((__uint64_t) XR_BB_MASK << (((fsbno)%XR_BB_NUM)*XR_BB)))) | \
+> -	 (((__uint64_t) (state)) << (((fsbno)%XR_BB_NUM)*XR_BB)))
+> + * block map -- track state of each filesystem block.
+> + */
+> +
+> +void		init_bmaps(xfs_mount_t *mp);
+> +void		reset_bmaps(xfs_mount_t *mp);
+> +void		free_bmaps(xfs_mount_t *mp);
+> +
+> +void		set_bmap_ext(xfs_agnumber_t agno, xfs_agblock_t agbno,
+> +			     xfs_extlen_t blen, int state);
+> +int		get_bmap_ext(xfs_agnumber_t agno, xfs_agblock_t agbno,
+> +			     xfs_agblock_t maxbno, xfs_extlen_t *blen);
+> 
+> +void		set_rtbmap(xfs_drtbno_t bno, int state);
+> +int		get_rtbmap(xfs_drtbno_t bno);
+> +
+> +static inline void
+> +set_bmap(xfs_agnumber_t agno, xfs_agblock_t agbno, int state)
+> +{
+> +	set_bmap_ext(agno, agbno, 1, state);
+> +}
+> +
+> +static inline int
+> +get_bmap(xfs_agnumber_t agno, xfs_agblock_t agbno)
+> +{
+> +	return get_bmap_ext(agno, agbno, agbno + 1, NULL);
+> +}
+> 
+>  /*
+>   * extent tree definitions
+> Index: xfsprogs-dev/repair/scan.c
+> ===================================================================
+> --- xfsprogs-dev.orig/repair/scan.c	2009-09-02 14:51:09.577269000 -0300
+> +++ xfsprogs-dev/repair/scan.c	2009-09-02 14:51:18.629269735 -0300
+> @@ -509,7 +509,7 @@ _("%s freespace btree block claimed (sta
+>  		rp = XFS_ALLOC_REC_ADDR(mp, block, 1);
+>  		for (i = 0; i < numrecs; i++) {
+>  			xfs_agblock_t		b, end;
+> -			xfs_extlen_t		len;
+> +			xfs_extlen_t		len, blen;
+> 
+>  			b = be32_to_cpu(rp[i].ar_startblock);
+>  			len = be32_to_cpu(rp[i].ar_blockcount);
+> @@ -522,8 +522,8 @@ _("%s freespace btree block claimed (sta
+>  			if (!verify_agbno(mp, agno, end - 1))
+>  				continue;
+> 
+> -			for ( ; b < end; b++)  {
+> -				state = get_bmap(agno, b);
+> +			for ( ; b < end; b += blen)  {
+> +				state = get_bmap_ext(agno, b, end, &blen);
+>  				switch (state) {
+>  				case XR_E_UNKNOWN:
+>  					set_bmap(agno, b, XR_E_FREE1);
+> @@ -534,13 +534,15 @@ _("%s freespace btree block claimed (sta
+>  					 * FREE1 blocks later
+>  					 */
+>  					if (magic != XFS_ABTB_MAGIC) {
+> -						set_bmap(agno, b, XR_E_FREE);
+> +						set_bmap_ext(agno, b, blen,
+> +							     XR_E_FREE);
+>  						break;
+>  					}
+>  				default:
+>  					do_warn(
+> -	_("block (%d,%d) multiply claimed by %s space tree, state - %d\n"),
+> -						agno, b, name, state);
+> +	_("block (%d,%d-%d) multiply claimed by %s space tree, state - %d\n"),
+> +						agno, b, b + blen - 1,
+> +						name, state);
+>  					break;
+>  				}
+>  			}
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============0287570883975974612==--
