@@ -1,30 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9M8w69h075695 for <xfs@oss.sgi.com>; Thu, 22 Oct 2009 03:58:06 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9598711C768B
-	for <xfs@oss.sgi.com>; Thu, 22 Oct 2009 01:59:40 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id q8qRsSHb5BLJ1uYt for
-	<xfs@oss.sgi.com>; Thu, 22 Oct 2009 01:59:40 -0700 (PDT)
-Date: Thu, 22 Oct 2009 04:59:37 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: 2.6.31 xfs_fs_destroy_inode: cannot reclaim
-Message-ID: <20091022085937.GA2039@infradead.org>
-References: <4AC60D27.9060703@news-service.com>
-	<20091005214348.GA15448@infradead.org>
-	<4ACB080D.3010708@news-service.com>
-	<20091007011926.GB32032@infradead.org>
-	<4AD18C8D.90808@news-service.com>
-	<20091012233854.GA29446@infradead.org>
-	<20091019011600.GO9464@discord.disaster>
-	<20091019035426.GB18296@infradead.org>
-	<20091020034048.GA9464@discord.disaster>
-	<89c4f90c0910210245h4691cd82hd1d63f5ed72fb2e3@mail.gmail.com>
-MIME-Version: 1.0
+	n9M8SxF2073634 for <xfs@oss.sgi.com>; Thu, 22 Oct 2009 03:29:00 -0500
+Date: Thu, 22 Oct 2009 10:30:22 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [xfs-masters] Inconsistent {RECLAIM_FS-ON-R} -> {IN-RECLAIM_FS-W}
+	usage in XFS
+Message-ID: <20091022083022.GB27577@lst.de>
+References: <4ACB3AC5.4010603@vlnb.net> <20091006131020.GA12343@infradead.org>
+	<4ADF36E3.8080801@sandeen.net>
+Mime-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <89c4f90c0910210245h4691cd82hd1d63f5ed72fb2e3@mail.gmail.com>
+In-Reply-To: <4ADF36E3.8080801@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,14 +24,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Tommy van Leeuwen <tommy@news-service.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Patrick Schreurs <patrick@news-service.com>, Bas Couwenberg <bas@news-service.com>, XFS List <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, Vladislav Bolkhovitin <vst@vlnb.net>, xfs@oss.sgi.com
 
-> This is the full patch we're using now on 2.6.31.4. (Just running btw
-> so no results yet).
+On Wed, Oct 21, 2009 at 11:29:23AM -0500, Eric Sandeen wrote:
+> > The lockdep code to track this has been recently introduced.
+> > 
+> > I've sent some patches to fix it ages ago, but so far no one has
+> > bothered to review them.
+> 
+> Christoph, remind me again which patch and I'll try to find time now
+> that I'm getting Fedora bug reports.  :)
 
-Yes, that looks like what you should be testing with..  Thanks a lot
-again!
+I've recentlhy sent out some even simpler patches to sort this out, see
+here:
+
+	http://oss.sgi.com/pipermail/xfs/2009-October/042857.html
+	http://oss.sgi.com/pipermail/xfs/2009-October/042858.html
 
 _______________________________________________
 xfs mailing list
