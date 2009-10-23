@@ -1,14 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9NHxhpU225193 for <xfs@oss.sgi.com>; Fri, 23 Oct 2009 12:59:43 -0500
-Content-class: urn:content-classes:message
+	n9NI0bXe225261 for <xfs@oss.sgi.com>; Fri, 23 Oct 2009 13:00:40 -0500
+Received: from borg.medozas.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 520F5C477C3
+	for <xfs@oss.sgi.com>; Fri, 23 Oct 2009 11:02:12 -0700 (PDT)
+Received: from borg.medozas.de (borg.medozas.de [188.40.89.202]) by
+	cuda.sgi.com with ESMTP id PrnY0fIufJroUTXW for
+	<xfs@oss.sgi.com>; Fri, 23 Oct 2009 11:02:12 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+	by borg.medozas.de (Postfix) with ESMTP id BDBB07362
+	for <xfs@oss.sgi.com>; Fri, 23 Oct 2009 20:02:08 +0200 (CEST)
+Date: Fri, 23 Oct 2009 20:02:08 +0200 (CEST)
+From: Jan Engelhardt <jengelh@medozas.de>
+Subject: XFS in a XFS locks up in xfs_ilock
+Message-ID: <alpine.LSU.2.00.0910231957570.5688@obet.zrqbmnf.qr>
 MIME-Version: 1.0
-Subject: RE: [PATCH 8/8] fs/xfs/xfs_log_recover.c: Use %pU to print UUIDs
-Date: Fri, 23 Oct 2009 13:01:15 -0500
-Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83AE07@cf--amer001e--3.americas.sgi.com>
-In-Reply-To: <1AB9A794DBDDF54A8A81BE2296F7BDFE83AD41@cf--amer001e--3.americas.sgi.com>
-From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,57 +28,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Joe Perches <joe@perches.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Alex Elder wrote:
-> Joe Perches wrote:
->> Signed-off-by: Joe Perches <joe@perches.com>
->> ---
->>  fs/xfs/xfs_log_recover.c |   14 ++++----------
->>  1 files changed, 4 insertions(+), 10 deletions(-)
-> 
-> I think this looks OK, but I'm going to hold of until
-> I see the core support in lib/vsprintf.c committed
-> before I pull it into the XFS repository.
-> 
-> 					-Alex
+Hi,
 
-I just wanted to follow up on this.  Andrew Morton has
-agreed to integrate this patch along with the vsprintf.c
-one, so it will show up eventually.
 
-					-Alex
+it seems that somewhere, locking is afoul in XFS so that having a 
+loopback XFS on an XFS causes a deadlock, first on the subvolume, then 
+on the real one. Sometimes that happens within writing a few MB to the 
+subvolume (the loop one), sometimes nothing happens and it can be used 
+for many months.
 
->> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c index 1099395..3b8e3df 100644
->> --- a/fs/xfs/xfs_log_recover.c
->> +++ b/fs/xfs/xfs_log_recover.c
->> @@ -225,16 +225,10 @@ xlog_header_check_dump(
->>  	xfs_mount_t		*mp,
->>  	xlog_rec_header_t	*head)
->>  {
->> -	int			b;
->> -
->> -	cmn_err(CE_DEBUG, "%s:  SB : uuid = ", __func__);
->> -	for (b = 0; b < 16; b++)
->> -		cmn_err(CE_DEBUG, "%02x", ((__uint8_t *)&mp->m_sb.sb_uuid)[b]);
->> -	cmn_err(CE_DEBUG, ", fmt = %d\n", XLOG_FMT);
->> -	cmn_err(CE_DEBUG, "    log : uuid = ");
->> -	for (b = 0; b < 16; b++)
->> -		cmn_err(CE_DEBUG, "%02x", ((__uint8_t *)&head->h_fs_uuid)[b]);
->> -	cmn_err(CE_DEBUG, ", fmt = %d\n", be32_to_cpu(head->h_fmt));
->> +	cmn_err(CE_DEBUG, "%s:  SB : uuid = %pU, fmt = %d\n",
->> +		__func__, &mp->m_sb.sb_uuid, XLOG_FMT);
->> +	cmn_err(CE_DEBUG, "    log : uuid = %pU, fmt = %d\n",
->> +		&head->h_fs_uuid, be32_to_cpu(head->h_fmt));
->>  }
->>  #else
->>  #define xlog_header_check_dump(mp, head)
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Suggested testcase:
+
+Starting out with $HOME being on xfs (truncate is coreutils 7+):
+$ >disk
+$ truncate --size=$[3*1048576*1024] disk
+So it's actually sparse(!)
+$ mkfs.xfs disk
+# mount disk mnt -oloop
+
+Start filling it with data, preferably something like installing a bunch 
+of rpm/debs into mnt, and hopefully soon enough, the thing will lock up.
+xfs_ilock I got from `ps xaf -o wchan` while a box was shortly before 
+dying - processes were stuck in D state. Not sure if this is related to 
+the sparseness of the file, but I would bet it's part of the problem.
+
+This has been observed on 2.6.29-2.6.31.4, probably even earlier.
+
+
+thanks,
+Jan
 
 _______________________________________________
 xfs mailing list
