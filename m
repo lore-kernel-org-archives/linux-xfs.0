@@ -1,16 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9ODZtIK039848 for <xfs@oss.sgi.com>; Sat, 24 Oct 2009 08:35:57 -0500
-Date: Sat, 24 Oct 2009 09:37:29 -0400
+	n9ODbUmW039924 for <xfs@oss.sgi.com>; Sat, 24 Oct 2009 08:37:30 -0500
+Date: Sat, 24 Oct 2009 09:39:05 -0400
 From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH 1/2]  add lpath_to_handle to libhandle
-Message-ID: <20091024133729.GA23125@infradead.org>
+Message-ID: <20091024133904.GB23125@infradead.org>
 References: <4AE08DC7.7000200@sgi.com>
-	<1AB9A794DBDDF54A8A81BE2296F7BDFE83AE08@cf--amer001e--3.americas.sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1AB9A794DBDDF54A8A81BE2296F7BDFE83AE08@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <4AE08DC7.7000200@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,15 +22,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
+To: Bill Kendall <wkendall@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Oct 23, 2009 at 01:08:37PM -0500, Alex Elder wrote:
-> Looks good.  I will up the version number after get this pulled in.
-> I will publish this and get the version number/dependency stuff
-> straightened out before I take the change for xfsrestore.
+On Thu, Oct 22, 2009 at 11:52:23AM -0500, Bill Kendall wrote:
+> path_to_handle() is not reliable when called on a path which
+> is a symlink. If the symlink is dangling, or if its points
+> to a non-XFS filesystem then path_to_handle() will fail. The
+> reason is that path_to_handle() must open the path in order
+> to obtain an fd for the xfsctl call.
+>
+> It's common during xfsrestore to have dangling symlinks since
+> the target of the link may not be restored before the symlink.
+>
+> This patch adds a new function to libhandle, lpath_to_handle.
+> It is just like path_to_handle, except it takes a filesystem
+> path in addition to the path which you want convert to a
+> handle.
 
-Please hold back for a while with making a release.
+I'm not sure this is a good API.  We can derive a useful path for
+the ioctl by using basename on the filename if it is a link without
+needing to expose the details to the caller.
 
 _______________________________________________
 xfs mailing list
