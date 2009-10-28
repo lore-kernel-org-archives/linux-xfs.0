@@ -1,33 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9RIFpo3072024
-	for <linux-xfs@oss.sgi.com>; Tue, 27 Oct 2009 13:15:52 -0500
-Received: from lo.gmane.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 946B4C68FFB
-	for <linux-xfs@oss.sgi.com>; Tue, 27 Oct 2009 11:17:28 -0700 (PDT)
-Received: from lo.gmane.org (lo.gmane.org [80.91.229.12]) by cuda.sgi.com with
-	ESMTP id Do6uDnvEJSlgY9Dp for <linux-xfs@oss.sgi.com>;
-	Tue, 27 Oct 2009 11:17:28 -0700 (PDT)
-Received: from list by lo.gmane.org with local (Exim 4.50) id 1N2qbi-0004hO-47
-	for linux-xfs@oss.sgi.com; Tue, 27 Oct 2009 19:17:22 +0100
-Received: from 66-227-165-199.dhcp.klmz.mi.charter.com ([66.227.165.199])
-	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Tue, 27 Oct 2009 19:17:22 +0100
-Received: from mlueck by 66-227-165-199.dhcp.klmz.mi.charter.com with local
-	(Gmexim 0.1 (Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Tue, 27 Oct 2009 19:17:22 +0100
-From: Michael Lueck <mlueck@lueckdatasystems.com>
-Subject: Re: xfsrestore restoring MANY more files/dirs than expected, why?
-Date: Tue, 27 Oct 2009 14:16:51 -0400
-Message-ID: <hc7dei$bco$1@ger.gmane.org>
-References: <hc724t$tcn$1@ger.gmane.org>
-	<4AE717CF.5020308@sgi.com>	<hc79tr$t62$1@ger.gmane.org>
-	<4AE73365.7070206@sgi.com>
-Mime-Version: 1.0
-In-Reply-To: <4AE73365.7070206@sgi.com>
-Reply-To: mlueck@lueckdatasystems.com
+	n9S3WSfY112748 for <xfs@oss.sgi.com>; Tue, 27 Oct 2009 22:32:31 -0500
+Date: Tue, 27 Oct 2009 23:34:05 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/2] use lpath_to_handle when restoring symlinks
+Message-ID: <20091028033405.GA15502@infradead.org>
+References: <4AE08DD0.50304@sgi.com> <20091025070544.GA21462@infradead.org>
+	<4AE71364.7090102@sgi.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4AE71364.7090102@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,26 +19,32 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Bill Kendall <wkendall@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-Bill Kendall wrote:
-> From the sound of it, you could just wipe out the old state
-> directory ("xfsrestorehousekeepingdir") and start a fresh restore.
+On Tue, Oct 27, 2009 at 10:36:04AM -0500, Bill Kendall wrote:
+> On 10/25/2009 02:05 AM, Christoph Hellwig wrote:
+>> On Thu, Oct 22, 2009 at 11:52:32AM -0500, Bill Kendall wrote:
+>>> Update xfsrestore to use the new lpath_to_handle function
+>>> when dealing with symlinks.
+>>
+>> Requiring a simultanously released version of xfsprogs is a very bad
+>> idea.  The right fix is to add an autoconf check for the new function
+>> and use it when available, falling back to the inferior old version
+>> if it is not available.
+>
+> Good thought. However, there's also a run-time dependency since
+> xfsrestore uses libhandle.so rather than the .a. I can rework something
+> using dlsym - sound okay?
 
-Greetings Bill-
-
-Yes indeed. I finally found it. As /srv is its own partition, it was in that directory. "rm -rf" quickly took care of it, and xfsrestore was able to work once again.
-
-Thanks very much! A productive day of learning in xfs-land! :-)
-
--- 
-Michael Lueck
-Lueck Data Systems
-http://www.lueckdatasystems.com/
+That's why the minor version of a shared library needs to get bumped
+when adding a new symbol, see one of my replies to Alex.  Of course
+symbol versioning would be even better, I'll see if I can port it from
+acl/attr which use the same build system as xfsprogs.
 
 _______________________________________________
 xfs mailing list
