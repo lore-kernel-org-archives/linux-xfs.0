@@ -1,16 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9S3WSfY112748 for <xfs@oss.sgi.com>; Tue, 27 Oct 2009 22:32:31 -0500
-Date: Tue, 27 Oct 2009 23:34:05 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/2] use lpath_to_handle when restoring symlinks
-Message-ID: <20091028033405.GA15502@infradead.org>
-References: <4AE08DD0.50304@sgi.com> <20091025070544.GA21462@infradead.org>
-	<4AE71364.7090102@sgi.com>
+	n9TLjtTh118645 for <xfs@oss.sgi.com>; Thu, 29 Oct 2009 16:45:57 -0500
+Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9B186C8419F
+	for <xfs@oss.sgi.com>; Thu, 29 Oct 2009 14:46:03 -0700 (PDT)
+Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id FHv0ipEdBxiUEGbd for
+	<xfs@oss.sgi.com>; Thu, 29 Oct 2009 14:46:03 -0700 (PDT)
+Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv1.zmi.at (Postfix) with ESMTP id AAC96C0273B
+	for <xfs@oss.sgi.com>; Thu, 29 Oct 2009 22:46:00 +0100 (CET)
+Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id 731F740016F
+	for <xfs@oss.sgi.com>; Thu, 29 Oct 2009 22:46:00 +0100 (CET)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: problem growing disk with xfs_growfs 2.9.4
+Date: Thu, 29 Oct 2009 22:45:59 +0100
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4AE71364.7090102@sgi.com>
+Message-Id: <200910292245.59794@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,28 +36,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Bill Kendall <wkendall@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: XFS List <xfs@oss.sgi.com>
 
-On Tue, Oct 27, 2009 at 10:36:04AM -0500, Bill Kendall wrote:
-> On 10/25/2009 02:05 AM, Christoph Hellwig wrote:
->> On Thu, Oct 22, 2009 at 11:52:32AM -0500, Bill Kendall wrote:
->>> Update xfsrestore to use the new lpath_to_handle function
->>> when dealing with symlinks.
->>
->> Requiring a simultanously released version of xfsprogs is a very bad
->> idea.  The right fix is to add an autoconf check for the new function
->> and use it when available, falling back to the inferior old version
->> if it is not available.
->
-> Good thought. However, there's also a run-time dependency since
-> xfsrestore uses libhandle.so rather than the .a. I can rework something
-> using dlsym - sound okay?
+# xfs_growfs -V
+xfs_growfs version 2.9.4
+# xfs_growfs /disks/db/
+meta-data=/dev/xvdb1             isize=256    agcount=4, agsize=2621104 blks
+         =                       sectsz=512   attr=2
+data     =                       bsize=4096   blocks=10484412, imaxpct=25
+         =                       sunit=16     swidth=64 blks, unwritten=1
+naming   =version 2              bsize=4096
+log      =internal               bsize=4096   blocks=5120, version=2
+         =                       sectsz=512   sunit=16 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+data blocks changed from 10484412 to 577742125596490953
+inode max percent changed from 25 to 2
+log blocks changed from 5120 to 0
+realtime blocks changed from 0 to -579257957264110720
+realtime extent size changed from 1 to -134945223
 
-That's why the minor version of a shared library needs to get bumped
-when adding a new symbol, see one of my replies to Alex.  Of course
-symbol versioning would be even better, I'll see if I can port it from
-acl/attr which use the same build system as xfsprogs.
+I was very scared then, but obviously nothing happened. I had forgotten 
+to resize the partition before calling growfs, just wanted to report in case 
+that is still a bug. I resized the partition and used v3.0.3, works perfectly.
+I made a metadump of that partition in case this is interesting.
+
+mfg zmi
+-- 
+// Michael Monnerie, Ing.BSc    -----      http://it-management.at
+// Tel: 0660 / 415 65 31                      .network.your.ideas.
+// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
+// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
+// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
 
 _______________________________________________
 xfs mailing list
