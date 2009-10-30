@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9U9943V174319 for <xfs@oss.sgi.com>; Fri, 30 Oct 2009 04:09:04 -0500
+	n9U8t5vQ172419 for <xfs@oss.sgi.com>; Fri, 30 Oct 2009 03:55:05 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0E2A117FD6A0
-	for <xfs@oss.sgi.com>; Fri, 30 Oct 2009 02:09:15 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0273517FD4F1
+	for <xfs@oss.sgi.com>; Fri, 30 Oct 2009 01:55:16 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id QIF23siPteMXJfQb for
-	<xfs@oss.sgi.com>; Fri, 30 Oct 2009 02:09:15 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1N3nTv-00066O-Ln
-	for xfs@oss.sgi.com; Fri, 30 Oct 2009 09:09:15 +0000
-Date: Fri, 30 Oct 2009 05:09:15 -0400
+	by cuda.sgi.com with ESMTP id hEtdRMGes9waLEpi for
+	<xfs@oss.sgi.com>; Fri, 30 Oct 2009 01:55:16 -0700 (PDT)
+Date: Fri, 30 Oct 2009 04:55:16 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfs: use WRITE_SYNC_PLUG for synchronous writeout
-Message-ID: <20091030090915.GA23188@infradead.org>
+Subject: Re: [PATCH] xfs: I/O completion handlers must use NOFS allocations
+Message-ID: <20091030085516.GA30825@infradead.org>
+References: <20091019040003.GA21115@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20091019040003.GA21115@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,80 +29,116 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Thomas Neumann <tneumann@users.sourceforge.net>
 
-The VM and I/O schedulers now expect us to use WRITE_SYNC_PLUG for synchronous
-writeout. Right now I can't see any changes in performance numbers with this,
-but we're getting some beating for not using it, and the knowledge defintively
-could help the block code to make better decisions.
+Any chance to get a review for this one?
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Index: linux-2.6/fs/xfs/linux-2.6/xfs_aops.c
-===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_aops.c	2009-10-24 10:08:36.622254197 +0200
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_aops.c	2009-10-24 10:18:27.803006347 +0200
-@@ -412,8 +412,9 @@ xfs_end_bio(
- 
- STATIC void
- xfs_submit_ioend_bio(
--	xfs_ioend_t	*ioend,
--	struct bio	*bio)
-+	struct writeback_control *wbc,
-+	xfs_ioend_t		*ioend,
-+	struct bio		*bio)
- {
- 	atomic_inc(&ioend->io_remaining);
- 	bio->bi_private = ioend;
-@@ -426,7 +427,8 @@ xfs_submit_ioend_bio(
- 	if (xfs_ioend_new_eof(ioend))
- 		xfs_mark_inode_dirty_sync(XFS_I(ioend->io_inode));
- 
--	submit_bio(WRITE, bio);
-+	submit_bio(wbc->sync_mode == WB_SYNC_ALL ?
-+		   WRITE_SYNC_PLUG : WRITE, bio);
- 	ASSERT(!bio_flagged(bio, BIO_EOPNOTSUPP));
- 	bio_put(bio);
- }
-@@ -505,6 +507,7 @@ static inline int bio_add_buffer(struct 
-  */
- STATIC void
- xfs_submit_ioend(
-+	struct writeback_control *wbc,
- 	xfs_ioend_t		*ioend)
- {
- 	xfs_ioend_t		*head = ioend;
-@@ -533,19 +536,19 @@ xfs_submit_ioend(
-  retry:
- 				bio = xfs_alloc_ioend_bio(bh);
- 			} else if (bh->b_blocknr != lastblock + 1) {
--				xfs_submit_ioend_bio(ioend, bio);
-+				xfs_submit_ioend_bio(wbc, ioend, bio);
- 				goto retry;
- 			}
- 
- 			if (bio_add_buffer(bio, bh) != bh->b_size) {
--				xfs_submit_ioend_bio(ioend, bio);
-+				xfs_submit_ioend_bio(wbc, ioend, bio);
- 				goto retry;
- 			}
- 
- 			lastblock = bh->b_blocknr;
- 		}
- 		if (bio)
--			xfs_submit_ioend_bio(ioend, bio);
-+			xfs_submit_ioend_bio(wbc, ioend, bio);
- 		xfs_finish_ioend(ioend, 0);
- 	} while ((ioend = next) != NULL);
- }
-@@ -1198,7 +1201,7 @@ xfs_page_state_convert(
- 	}
- 
- 	if (iohead)
--		xfs_submit_ioend(iohead);
-+		xfs_submit_ioend(wbc, iohead);
- 
- 	return page_dirty;
- 
+On Mon, Oct 19, 2009 at 12:00:03AM -0400, Christoph Hellwig wrote:
+> When complention I/O requests we must not allow the memory allocator to
+> recurse into the filesystem, as we might deadlock on waiting for the
+> I/O completion otherwise.  The only thing currently allocting normal
+> GFP_KERNEL memory is the allocation of the transaction structure for the
+> unwritten extent conversion.  Add a memflags argument to _xfs_trans_alloc
+> to allow controlling the allocator behaviour.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reported-by: Thomas Neumann <tneumann@users.sourceforge.net>
+> Tested-by: Thomas Neumann <tneumann@users.sourceforge.net>
+> 
+> Index: linux-2.6/fs/xfs/xfs_fsops.c
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/xfs_fsops.c	2009-10-16 23:08:25.170027882 +0200
+> +++ linux-2.6/fs/xfs/xfs_fsops.c	2009-10-16 23:09:22.904256700 +0200
+> @@ -611,7 +611,7 @@ xfs_fs_log_dummy(
+>  	xfs_inode_t	*ip;
+>  	int		error;
+>  
+> -	tp = _xfs_trans_alloc(mp, XFS_TRANS_DUMMY1);
+> +	tp = _xfs_trans_alloc(mp, XFS_TRANS_DUMMY1, KM_SLEEP);
+>  	error = xfs_trans_reserve(tp, 0, XFS_ICHANGE_LOG_RES(mp), 0, 0, 0);
+>  	if (error) {
+>  		xfs_trans_cancel(tp, 0);
+> Index: linux-2.6/fs/xfs/xfs_iomap.c
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/xfs_iomap.c	2009-10-16 23:10:14.342278346 +0200
+> +++ linux-2.6/fs/xfs/xfs_iomap.c	2009-10-16 23:12:08.148004392 +0200
+> @@ -860,8 +860,15 @@ xfs_iomap_write_unwritten(
+>  		 * set up a transaction to convert the range of extents
+>  		 * from unwritten to real. Do allocations in a loop until
+>  		 * we have covered the range passed in.
+> +		 *
+> +		 * Note that we opencoding the transaction allocation here
+> +		 * to pass KM_NOFS - we can't risk to recurse back into
+> +		 * the filesystem here as we might be asked to write out
+> +		 * the same inode that we complete here and might deadlock
+> +		 * on the iolock.
+>  		 */
+> -		tp = xfs_trans_alloc(mp, XFS_TRANS_STRAT_WRITE);
+> +		xfs_wait_for_freeze(mp, SB_FREEZE_TRANS);
+> +		tp = _xfs_trans_alloc(mp, XFS_TRANS_STRAT_WRITE, KM_NOFS);
+>  		tp->t_flags |= XFS_TRANS_RESERVE;
+>  		error = xfs_trans_reserve(tp, resblks,
+>  				XFS_WRITE_LOG_RES(mp), 0,
+> Index: linux-2.6/fs/xfs/xfs_mount.c
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/xfs_mount.c	2009-10-16 23:08:25.147024815 +0200
+> +++ linux-2.6/fs/xfs/xfs_mount.c	2009-10-16 23:09:25.127005437 +0200
+> @@ -1471,7 +1471,7 @@ xfs_log_sbcount(
+>  	if (!xfs_sb_version_haslazysbcount(&mp->m_sb))
+>  		return 0;
+>  
+> -	tp = _xfs_trans_alloc(mp, XFS_TRANS_SB_COUNT);
+> +	tp = _xfs_trans_alloc(mp, XFS_TRANS_SB_COUNT, KM_SLEEP);
+>  	error = xfs_trans_reserve(tp, 0, mp->m_sb.sb_sectsize + 128, 0, 0,
+>  					XFS_DEFAULT_LOG_COUNT);
+>  	if (error) {
+> Index: linux-2.6/fs/xfs/xfs_trans.c
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/xfs_trans.c	2009-10-16 23:08:25.117003816 +0200
+> +++ linux-2.6/fs/xfs/xfs_trans.c	2009-10-16 23:08:58.202005942 +0200
+> @@ -236,19 +236,20 @@ xfs_trans_alloc(
+>  	uint		type)
+>  {
+>  	xfs_wait_for_freeze(mp, SB_FREEZE_TRANS);
+> -	return _xfs_trans_alloc(mp, type);
+> +	return _xfs_trans_alloc(mp, type, KM_SLEEP);
+>  }
+>  
+>  xfs_trans_t *
+>  _xfs_trans_alloc(
+>  	xfs_mount_t	*mp,
+> -	uint		type)
+> +	uint		type,
+> +	uint		memflags)
+>  {
+>  	xfs_trans_t	*tp;
+>  
+>  	atomic_inc(&mp->m_active_trans);
+>  
+> -	tp = kmem_zone_zalloc(xfs_trans_zone, KM_SLEEP);
+> +	tp = kmem_zone_zalloc(xfs_trans_zone, memflags);
+>  	tp->t_magic = XFS_TRANS_MAGIC;
+>  	tp->t_type = type;
+>  	tp->t_mountp = mp;
+> Index: linux-2.6/fs/xfs/xfs_trans.h
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/xfs_trans.h	2009-10-16 23:08:25.127003692 +0200
+> +++ linux-2.6/fs/xfs/xfs_trans.h	2009-10-16 23:09:04.726256000 +0200
+> @@ -924,7 +924,7 @@ typedef struct xfs_trans {
+>   * XFS transaction mechanism exported interfaces.
+>   */
+>  xfs_trans_t	*xfs_trans_alloc(struct xfs_mount *, uint);
+> -xfs_trans_t	*_xfs_trans_alloc(struct xfs_mount *, uint);
+> +xfs_trans_t	*_xfs_trans_alloc(struct xfs_mount *, uint, uint);
+>  xfs_trans_t	*xfs_trans_dup(xfs_trans_t *);
+>  int		xfs_trans_reserve(xfs_trans_t *, uint, uint, uint,
+>  				  uint, uint);
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+---end quoted text---
 
 _______________________________________________
 xfs mailing list
