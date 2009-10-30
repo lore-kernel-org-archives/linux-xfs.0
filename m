@@ -1,21 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9U5go8j151916 for <xfs@oss.sgi.com>; Fri, 30 Oct 2009 00:42:52 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0F175C8A1CF
-	for <xfs@oss.sgi.com>; Thu, 29 Oct 2009 22:43:01 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 2mD16awTo6IZiRyH for
-	<xfs@oss.sgi.com>; Thu, 29 Oct 2009 22:43:01 -0700 (PDT)
-Date: Fri, 30 Oct 2009 01:43:00 -0400
+	n9U8rkkG172243 for <xfs@oss.sgi.com>; Fri, 30 Oct 2009 03:53:47 -0500
+Date: Fri, 30 Oct 2009 04:53:56 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests: fix up have_xlog_assign_lsn config test
-Message-ID: <20091030054300.GA27680@infradead.org>
-References: <4ADE80D1.7080408@sandeen.net>
+Subject: [GIT PULL] two small xfs regression fixes
+Message-ID: <20091030085356.GA7539@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4ADE80D1.7080408@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,63 +20,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: aelder@sgi.com, torvalds@linux-foundation.org
+Cc: xfs@oss.sgi.com
 
-On Tue, Oct 20, 2009 at 10:32:33PM -0500, Eric Sandeen wrote:
-> Without this we weren't building src/loggen
+The two one-liner regression fixes have been reviewed and tested by the active
+XFS developers long time ago, but it seems Alex as the maintainer
+disappeared again.
 
-Looks good to me,
+If youre back Alex can you send this to Linus ASAP?  Alternatively Linus
+might aswell just take it himeself given how simple these fixes are,
+and especially Eric's patch is a bit of a show-stopper for people
+building xfs as module.
 
+The following changes since commit ba313e68facf190317d8db3afdc0f0028c963a96:
+  Alex Elder (1):
+        Merge branch 'master' of ssh://oss.sgi.com/oss/git/xfs/xfs into for-linus
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+are available in the git repository at:
 
->
-> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-> ---
->
-> diff --git a/aclocal.m4 b/aclocal.m4
-> index 8a61e39..6e1e672 100644
-> --- a/aclocal.m4
-> +++ b/aclocal.m4
-> @@ -422,10 +422,10 @@ AC_DEFUN([AC_PACKAGE_WANT_XFS_LIBXFS_H],
->   ])
->
-> AC_DEFUN([AC_PACKAGE_WANT_XLOG_ASSIGN_LSN],
-> -  [
-> -    AC_CHECK_DECL(xlog_assign_lsn,
-> +  [ AC_CHECK_DECL(xlog_assign_lsn,
->       [ have_xlog_assign_lsn=true ], [ have_xlog_assign_lsn=false ],
->       [[#include <xfs/libxfs.h>]])
-> +    AC_SUBST(have_xlog_assign_lsn)
->   ])
->
-> AC_DEFUN([AC_PACKAGE_NEED_XFS_XQM_H],
-> diff --git a/m4/package_xfslibs.m4 b/m4/package_xfslibs.m4
-> index 870882f..f5167a2 100644
-> --- a/m4/package_xfslibs.m4
-> +++ b/m4/package_xfslibs.m4
-> @@ -14,11 +14,10 @@ AC_DEFUN([AC_PACKAGE_WANT_LIBXFS_H],
->   ])
->
-> AC_DEFUN([AC_PACKAGE_WANT_XLOG_ASSIGN_LSN],
-> -  [
-> -    AC_CHECK_DECL(xlog_assign_lsn,
-> +  [ AC_CHECK_DECL(xlog_assign_lsn,
->       [ have_xlog_assign_lsn=true ], [ have_xlog_assign_lsn=false ],
->       [[#include <xfs/libxfs.h>]])
-> -    AC_SUBST(have_have_xlog_assign_lsn)
-> +    AC_SUBST(have_xlog_assign_lsn)
->   ])
->
-> AC_DEFUN([AC_PACKAGE_NEED_XFS_XQM_H],
->
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
----end quoted text---
+  git://git.kernel.org/pub/scm/fs/xfs/xfs.git for-linus
+
+Eric Sandeen (1):
+      xfs: free temporary cursor in xfs_dialloc
+
+Ryota Yamauchi (1):
+      xfs: fix xfs_quota remove error
+
+ fs/xfs/linux-2.6/xfs_quotaops.c |    2 +-
+ fs/xfs/xfs_ialloc.c             |    1 +
+ 2 files changed, 2 insertions(+), 1 deletions(-)
 
 _______________________________________________
 xfs mailing list
