@@ -1,22 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9UDC2SU205735 for <xfs@oss.sgi.com>; Fri, 30 Oct 2009 08:12:03 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 29C504C4D3
-	for <xfs@oss.sgi.com>; Fri, 30 Oct 2009 06:12:14 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id yQHrjjteV0kmqStj for
-	<xfs@oss.sgi.com>; Fri, 30 Oct 2009 06:12:14 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1N3rH3-0004pb-Rk
-	for xfs@oss.sgi.com; Fri, 30 Oct 2009 13:12:13 +0000
-Date: Fri, 30 Oct 2009 09:12:13 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] libhandle: add symbol versioning
-Message-ID: <20091030131213.GA18462@infradead.org>
+	n9UD0EFd204149 for <xfs@oss.sgi.com>; Fri, 30 Oct 2009 08:00:14 -0500
+Content-class: urn:content-classes:message
 MIME-Version: 1.0
-Content-Disposition: inline
+Subject: RE: [GIT PULL] two small xfs regression fixes
+Date: Fri, 30 Oct 2009 07:59:51 -0500
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83AE45@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <20091030085356.GA7539@infradead.org>
+From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,70 +21,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>, torvalds@linux-foundation.org
+Cc: xfs@oss.sgi.com
 
-Add symbol versioning for libhandle.  For now version 1.0.3 contains all
-pre-existing symbols, any new additions both needs a minor version bump
-and an entry in libhandle.sym.
+Christoph Hellwig wrote:
+> The two one-liner regression fixes have been reviewed and tested by the active
+> XFS developers long time ago, but it seems Alex as the maintainer
+> disappeared again.
+> 
+> If youre back Alex can you send this to Linus ASAP?  Alternatively Linus
+> might aswell just take it himeself given how simple these fixes are,
+> and especially Eric's patch is a bit of a show-stopper for people
+> building xfs as module.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfsprogs-dev/libhandle/Makefile
-===================================================================
---- xfsprogs-dev.orig/libhandle/Makefile	2009-10-30 13:00:51.000000000 +0000
-+++ xfsprogs-dev/libhandle/Makefile	2009-10-30 13:09:43.000000000 +0000
-@@ -10,7 +10,10 @@ LT_CURRENT = 1
- LT_REVISION = 3
- LT_AGE = 0
- 
-+LTLDFLAGS += -Wl,--version-script,libhandle.sym
-+
- CFILES = handle.c jdm.c
-+LSRCFILES = libhandle.sym
- 
- default:  $(LTLIBRARY)
- 
-Index: xfsprogs-dev/libhandle/libhandle.sym
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ xfsprogs-dev/libhandle/libhandle.sym	2009-10-30 13:00:45.000000000 +0000
-@@ -0,0 +1,36 @@
-+/*
-+ * The symbol versioning ensures that a new application requiring symbol foo()
-+ * can't run with old libhandle.so not providing foo() - the global SONAME
-+ * version info can't enforce this since we never change the SONAME.
-+ *
-+ * Older versions of libhandle (<= 1.0.3) do not to use symbol versioning --
-+ * all the original symbols are in LIBHANDLE_1.0.3 now.
-+ */
-+
-+LIBHANDLE_1.0.3 {
-+global:
-+	/* handle.h APIs */
-+	path_to_handle;
-+	path_to_fshandle;
-+	handle_to_fshandle;
-+	free_handle;
-+	open_by_fshandle;
-+	open_by_handle;
-+	readlink_by_handle;
-+	attr_multi_by_handle;
-+	attr_list_by_handle;
-+	parents_by_handle;
-+	parentpaths_by_handle;
-+	fssetdm_by_handle;
-+
-+	/* jdm.h APIs */
-+	jdm_getfshandle;
-+	jdm_new_filehandle;
-+	jdm_delete_filehandle;
-+	jdm_open;
-+	jdm_readlink;
-+	jdm_attr_multi;
-+	jdm_attr_list;
-+	jdm_parents;
-+	jdm_parentpaths;
-+};
+I'll post them on oss this morning, and will send a
+pull request to Linus thereafter.
+
+					-Alex
+
+
+
+> The following changes since commit ba313e68facf190317d8db3afdc0f0028c963a96:
+>   Alex Elder (1):
+>         Merge branch 'master' of ssh://oss.sgi.com/oss/git/xfs/xfs into for-linus
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/fs/xfs/xfs.git for-linus
+> 
+> Eric Sandeen (1):
+>       xfs: free temporary cursor in xfs_dialloc
+> 
+> Ryota Yamauchi (1):
+>       xfs: fix xfs_quota remove error
+> 
+>  fs/xfs/linux-2.6/xfs_quotaops.c |    2 +-
+>  fs/xfs/xfs_ialloc.c             |    1 +
+>  2 files changed, 2 insertions(+), 1 deletions(-)
 
 _______________________________________________
 xfs mailing list
