@@ -1,29 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9TLjtTh118645 for <xfs@oss.sgi.com>; Thu, 29 Oct 2009 16:45:57 -0500
-Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9B186C8419F
-	for <xfs@oss.sgi.com>; Thu, 29 Oct 2009 14:46:03 -0700 (PDT)
-Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id FHv0ipEdBxiUEGbd for
-	<xfs@oss.sgi.com>; Thu, 29 Oct 2009 14:46:03 -0700 (PDT)
-Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv1.zmi.at (Postfix) with ESMTP id AAC96C0273B
-	for <xfs@oss.sgi.com>; Thu, 29 Oct 2009 22:46:00 +0100 (CET)
-Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id 731F740016F
-	for <xfs@oss.sgi.com>; Thu, 29 Oct 2009 22:46:00 +0100 (CET)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: problem growing disk with xfs_growfs 2.9.4
-Date: Thu, 29 Oct 2009 22:45:59 +0100
+	n9U5go8j151916 for <xfs@oss.sgi.com>; Fri, 30 Oct 2009 00:42:52 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0F175C8A1CF
+	for <xfs@oss.sgi.com>; Thu, 29 Oct 2009 22:43:01 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id 2mD16awTo6IZiRyH for
+	<xfs@oss.sgi.com>; Thu, 29 Oct 2009 22:43:01 -0700 (PDT)
+Date: Fri, 30 Oct 2009 01:43:00 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfstests: fix up have_xlog_assign_lsn config test
+Message-ID: <20091030054300.GA27680@infradead.org>
+References: <4ADE80D1.7080408@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-Message-Id: <200910292245.59794@zmi.at>
+In-Reply-To: <4ADE80D1.7080408@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,37 +28,63 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: XFS List <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-# xfs_growfs -V
-xfs_growfs version 2.9.4
-# xfs_growfs /disks/db/
-meta-data=/dev/xvdb1             isize=256    agcount=4, agsize=2621104 blks
-         =                       sectsz=512   attr=2
-data     =                       bsize=4096   blocks=10484412, imaxpct=25
-         =                       sunit=16     swidth=64 blks, unwritten=1
-naming   =version 2              bsize=4096
-log      =internal               bsize=4096   blocks=5120, version=2
-         =                       sectsz=512   sunit=16 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-data blocks changed from 10484412 to 577742125596490953
-inode max percent changed from 25 to 2
-log blocks changed from 5120 to 0
-realtime blocks changed from 0 to -579257957264110720
-realtime extent size changed from 1 to -134945223
+On Tue, Oct 20, 2009 at 10:32:33PM -0500, Eric Sandeen wrote:
+> Without this we weren't building src/loggen
 
-I was very scared then, but obviously nothing happened. I had forgotten 
-to resize the partition before calling growfs, just wanted to report in case 
-that is still a bug. I resized the partition and used v3.0.3, works perfectly.
-I made a metadump of that partition in case this is interesting.
+Looks good to me,
 
-mfg zmi
--- 
-// Michael Monnerie, Ing.BSc    -----      http://it-management.at
-// Tel: 0660 / 415 65 31                      .network.your.ideas.
-// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
-// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
-// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+>
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+> ---
+>
+> diff --git a/aclocal.m4 b/aclocal.m4
+> index 8a61e39..6e1e672 100644
+> --- a/aclocal.m4
+> +++ b/aclocal.m4
+> @@ -422,10 +422,10 @@ AC_DEFUN([AC_PACKAGE_WANT_XFS_LIBXFS_H],
+>   ])
+>
+> AC_DEFUN([AC_PACKAGE_WANT_XLOG_ASSIGN_LSN],
+> -  [
+> -    AC_CHECK_DECL(xlog_assign_lsn,
+> +  [ AC_CHECK_DECL(xlog_assign_lsn,
+>       [ have_xlog_assign_lsn=true ], [ have_xlog_assign_lsn=false ],
+>       [[#include <xfs/libxfs.h>]])
+> +    AC_SUBST(have_xlog_assign_lsn)
+>   ])
+>
+> AC_DEFUN([AC_PACKAGE_NEED_XFS_XQM_H],
+> diff --git a/m4/package_xfslibs.m4 b/m4/package_xfslibs.m4
+> index 870882f..f5167a2 100644
+> --- a/m4/package_xfslibs.m4
+> +++ b/m4/package_xfslibs.m4
+> @@ -14,11 +14,10 @@ AC_DEFUN([AC_PACKAGE_WANT_LIBXFS_H],
+>   ])
+>
+> AC_DEFUN([AC_PACKAGE_WANT_XLOG_ASSIGN_LSN],
+> -  [
+> -    AC_CHECK_DECL(xlog_assign_lsn,
+> +  [ AC_CHECK_DECL(xlog_assign_lsn,
+>       [ have_xlog_assign_lsn=true ], [ have_xlog_assign_lsn=false ],
+>       [[#include <xfs/libxfs.h>]])
+> -    AC_SUBST(have_have_xlog_assign_lsn)
+> +    AC_SUBST(have_xlog_assign_lsn)
+>   ])
+>
+> AC_DEFUN([AC_PACKAGE_NEED_XFS_XQM_H],
+>
+>
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+---end quoted text---
 
 _______________________________________________
 xfs mailing list
