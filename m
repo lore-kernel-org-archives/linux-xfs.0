@@ -1,14 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9UD0EFd204149 for <xfs@oss.sgi.com>; Fri, 30 Oct 2009 08:00:14 -0500
-Content-class: urn:content-classes:message
+	n9UDFDkU206136 for <xfs@oss.sgi.com>; Fri, 30 Oct 2009 08:15:14 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 796B4C8F431
+	for <xfs@oss.sgi.com>; Fri, 30 Oct 2009 06:15:17 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id t7eLzhOb68jSB3In for
+	<xfs@oss.sgi.com>; Fri, 30 Oct 2009 06:15:17 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1N3rK1-0005c5-9D
+	for xfs@oss.sgi.com; Fri, 30 Oct 2009 13:15:17 +0000
+Date: Fri, 30 Oct 2009 09:15:17 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH] libdisk: do not install libdisk.a
+Message-ID: <20091030131517.GB18462@infradead.org>
 MIME-Version: 1.0
-Subject: RE: [GIT PULL] two small xfs regression fixes
-Date: Fri, 30 Oct 2009 07:59:51 -0500
-Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83AE45@cf--amer001e--3.americas.sgi.com>
-In-Reply-To: <20091030085356.GA7539@infradead.org>
-From: "Alex Elder" <aelder@sgi.com>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,44 +29,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>, torvalds@linux-foundation.org
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> The two one-liner regression fixes have been reviewed and tested by the active
-> XFS developers long time ago, but it seems Alex as the maintainer
-> disappeared again.
-> 
-> If youre back Alex can you send this to Linus ASAP?  Alternatively Linus
-> might aswell just take it himeself given how simple these fixes are,
-> and especially Eric's patch is a bit of a show-stopper for people
-> building xfs as module.
+Since xfsprogs 3.0 libdisk is intended to be private to xfsprogs and we do
+not install the headers anymore.  But we kept installing the static library,
+which doesn't make sense.
 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-I'll post them on oss this morning, and will send a
-pull request to Linus thereafter.
-
-					-Alex
-
-
-
-> The following changes since commit ba313e68facf190317d8db3afdc0f0028c963a96:
->   Alex Elder (1):
->         Merge branch 'master' of ssh://oss.sgi.com/oss/git/xfs/xfs into for-linus
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/fs/xfs/xfs.git for-linus
-> 
-> Eric Sandeen (1):
->       xfs: free temporary cursor in xfs_dialloc
-> 
-> Ryota Yamauchi (1):
->       xfs: fix xfs_quota remove error
-> 
->  fs/xfs/linux-2.6/xfs_quotaops.c |    2 +-
->  fs/xfs/xfs_ialloc.c             |    1 +
->  2 files changed, 2 insertions(+), 1 deletions(-)
+Index: xfsprogs-dev/libdisk/Makefile
+===================================================================
+--- xfsprogs-dev.orig/libdisk/Makefile	2009-10-30 13:12:03.000000000 +0000
++++ xfsprogs-dev/libdisk/Makefile	2009-10-30 13:12:08.000000000 +0000
+@@ -27,6 +27,5 @@ include $(BUILDRULES)
+ install: default
+ 
+ install-dev: default
+-	$(INSTALL_LTLIB_STATIC)
+ 
+ install-qa: install-dev
 
 _______________________________________________
 xfs mailing list
