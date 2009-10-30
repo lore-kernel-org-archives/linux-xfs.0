@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	n9U8tMuw172485 for <xfs@oss.sgi.com>; Fri, 30 Oct 2009 03:55:22 -0500
+	n9U9Baom174671 for <xfs@oss.sgi.com>; Fri, 30 Oct 2009 04:11:36 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 016FF17FD4F9
-	for <xfs@oss.sgi.com>; Fri, 30 Oct 2009 01:55:33 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 23DB717FD6E5
+	for <xfs@oss.sgi.com>; Fri, 30 Oct 2009 02:11:48 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id WmDYQbbHFd2nmpXG for
-	<xfs@oss.sgi.com>; Fri, 30 Oct 2009 01:55:33 -0700 (PDT)
-Date: Fri, 30 Oct 2009 04:55:33 -0400
+	by cuda.sgi.com with ESMTP id zBUedoEC6ZkNpDc3 for
+	<xfs@oss.sgi.com>; Fri, 30 Oct 2009 02:11:48 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1N3nWN-0006u2-Qo
+	for xfs@oss.sgi.com; Fri, 30 Oct 2009 09:11:47 +0000
+Date: Fri, 30 Oct 2009 05:11:47 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: reset the i_iolock lock class in the reclaim path
-Message-ID: <20091030085533.GC30825@infradead.org>
-References: <20091019040526.GC21115@infradead.org>
+Subject: [PATCH] xfs: cleanup data end I/O handlers
+Message-ID: <20091030091147.GB23188@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20091019040526.GC21115@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,91 +30,150 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>
 
-ping?
 
-On Mon, Oct 19, 2009 at 12:05:26AM -0400, Christoph Hellwig wrote:
-> The iolock is used for protecting reads, writes and block truncates against
-> each other.  We have two classes of callers, the first one is induced by
-> a file operation and requires a reference to the inode be held and not
-> dropped after the operation is done:
-> 
->  - xfs_vm_vmap, xfs_vn_fallocate, xfs_read, xfs_write, xfs_splice_read,
->    xfs_splice_write and xfs_setattr are all implementations of VFS methods
->    that require a live inode
->  - xfs_getbmap and xfs_swap_extents are ioctl subcommand for which the
->    same is true
->  - xfs_truncate_file is only called on quota inodes just returned from xfs_iget
->  - xfs_sync_inode_data does the lock just after an igrab()
->  - xfs_filestream_associate and xfs_filestream_new_ag take the iolock on the
->    parent inode of an inode which by VFS rules must be referenced
-> 
-> And we have various calls to truncate blocks past EOF or the whole file when
-> dropping the last reference to an inode.   Unfortunately lockdep complains
-> when we do memory allocations that can recurse into the filesystem in the
-> first class because the second class happens to take the same lock.  To avoid
-> this re-init the iolock in the beginning of xfs_fs_clear_inode to get
-> a new lock class.
-> 
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Index: xfs/fs/xfs/linux-2.6/xfs_super.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2009-10-14 17:24:31.356278624 +0200
-> +++ xfs/fs/xfs/linux-2.6/xfs_super.c	2009-10-19 06:03:05.771006625 +0200
-> @@ -999,7 +999,6 @@ xfs_fs_inode_init_once(
->  
->  	mrlock_init(&ip->i_lock, MRLOCK_ALLOW_EQUAL_PRI|MRLOCK_BARRIER,
->  		     "xfsino", ip->i_ino);
-> -	mrlock_init(&ip->i_iolock, MRLOCK_BARRIER, "xfsio", ip->i_ino);
->  }
->  
->  /*
-> @@ -1101,6 +1100,22 @@ xfs_fs_clear_inode(
->  	XFS_STATS_INC(vn_remove);
->  	XFS_STATS_DEC(vn_active);
->  
-> +	/*
-> +	 * The iolock is used for protecting reads, writes and block truncates
-> +	 * against each other.  We have two classes of callers, the first one
-> +	 * is induced by a file operation and requires a reference to the
-> +	 * inode be held and not dropped after the operation is done, and
-> +	 * second we have various calls to truncate blocks past EOF or for the
-> +	 * whole file when dropping the last reference to an inode.
-> +	 * Unfortunately lockdep complains when we do memory allocations that
-> +	 * can recurse into the filesystem in the first class because the
-> +	 * second class happens to take the same lock.  To avoid this
-> +	 * reinitialize the iolock in the beginning of xfs_fs_clear_inode to
-> +	 * get a new lock class.
-> +	 */
-> +	ASSERT(!rwsem_is_locked(&ip->i_iolock.mr_lock));
-> +	mrlock_init(&ip->i_iolock, MRLOCK_BARRIER, "xfsio", ip->i_ino);
-> +
->  	xfs_inactive(ip);
->  }
->  
-> Index: xfs/fs/xfs/xfs_iget.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/xfs_iget.c	2009-10-14 17:25:26.733004131 +0200
-> +++ xfs/fs/xfs/xfs_iget.c	2009-10-14 17:28:26.272274357 +0200
-> @@ -73,6 +73,9 @@ xfs_inode_alloc(
->  	ASSERT(atomic_read(&ip->i_pincount) == 0);
->  	ASSERT(!spin_is_locked(&ip->i_flags_lock));
->  	ASSERT(completion_done(&ip->i_flush));
-> +	ASSERT(!rwsem_is_locked(&ip->i_iolock.mr_lock));
-> +
-> +	mrlock_init(&ip->i_iolock, MRLOCK_BARRIER, "xfsio", ip->i_ino);
->  
->  	/* initialise the xfs inode */
->  	ip->i_ino = ino;
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
----end quoted text---
+Currently we have various different end I/O handler for read vs the different
+types of write I/O.  But they are all very similar so we could just use one
+with a few conditionals and reduce code size a lot.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_aops.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_aops.c	2009-10-30 10:05:46.680256053 +0100
++++ linux-2.6/fs/xfs/linux-2.6/xfs_aops.c	2009-10-30 10:08:54.235024030 +0100
+@@ -235,71 +235,36 @@ xfs_setfilesize(
+ }
+ 
+ /*
+- * Buffered IO write completion for delayed allocate extents.
++ * IO write completion.
+  */
+ STATIC void
+-xfs_end_bio_delalloc(
+-	struct work_struct	*work)
+-{
+-	xfs_ioend_t		*ioend =
+-		container_of(work, xfs_ioend_t, io_work);
+-
+-	xfs_setfilesize(ioend);
+-	xfs_destroy_ioend(ioend);
+-}
+-
+-/*
+- * Buffered IO write completion for regular, written extents.
+- */
+-STATIC void
+-xfs_end_bio_written(
+-	struct work_struct	*work)
+-{
+-	xfs_ioend_t		*ioend =
+-		container_of(work, xfs_ioend_t, io_work);
+-
+-	xfs_setfilesize(ioend);
+-	xfs_destroy_ioend(ioend);
+-}
+-
+-/*
+- * IO write completion for unwritten extents.
+- *
+- * Issue transactions to convert a buffer range from unwritten
+- * to written extents.
+- */
+-STATIC void
+-xfs_end_bio_unwritten(
++xfs_end_io(
+ 	struct work_struct	*work)
+ {
+ 	xfs_ioend_t		*ioend =
+ 		container_of(work, xfs_ioend_t, io_work);
+ 	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
+-	xfs_off_t		offset = ioend->io_offset;
+-	size_t			size = ioend->io_size;
+ 
+-	if (likely(!ioend->io_error)) {
+-		if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
+-			int error;
+-			error = xfs_iomap_write_unwritten(ip, offset, size);
+-			if (error)
+-				ioend->io_error = error;
+-		}
+-		xfs_setfilesize(ioend);
++	/*
++	 * For unwritten extents we need to issue transactions to convert a
++	 * range to normal written extens after the data I/O has finished.
++	 */
++	if (ioend->io_type == IOMAP_UNWRITTEN &&
++	    likely(!ioend->io_error && !XFS_FORCED_SHUTDOWN(ip->i_mount))) {
++		int error;
++
++		error = xfs_iomap_write_unwritten(ip, ioend->io_offset,
++						 ioend->io_size);
++		if (error)
++			ioend->io_error = error;
+ 	}
+-	xfs_destroy_ioend(ioend);
+-}
+-
+-/*
+- * IO read completion for regular, written extents.
+- */
+-STATIC void
+-xfs_end_bio_read(
+-	struct work_struct	*work)
+-{
+-	xfs_ioend_t		*ioend =
+-		container_of(work, xfs_ioend_t, io_work);
+ 
++	/*
++	 * We might have to update the on-disk file size after extending
++	 * writes.
++	 */
++	if (ioend->io_type != IOMAP_READ)
++		xfs_setfilesize(ioend);
+ 	xfs_destroy_ioend(ioend);
+ }
+ 
+@@ -314,10 +279,10 @@ xfs_finish_ioend(
+ 	int		wait)
+ {
+ 	if (atomic_dec_and_test(&ioend->io_remaining)) {
+-		struct workqueue_struct *wq = xfsdatad_workqueue;
+-		if (ioend->io_work.func == xfs_end_bio_unwritten)
+-			wq = xfsconvertd_workqueue;
++		struct workqueue_struct *wq;
+ 
++		wq = (ioend->io_type == IOMAP_UNWRITTEN) ?
++			xfsconvertd_workqueue : xfsdatad_workqueue;
+ 		queue_work(wq, &ioend->io_work);
+ 		if (wait)
+ 			flush_workqueue(wq);
+@@ -355,15 +320,7 @@ xfs_alloc_ioend(
+ 	ioend->io_offset = 0;
+ 	ioend->io_size = 0;
+ 
+-	if (type == IOMAP_UNWRITTEN)
+-		INIT_WORK(&ioend->io_work, xfs_end_bio_unwritten);
+-	else if (type == IOMAP_DELAY)
+-		INIT_WORK(&ioend->io_work, xfs_end_bio_delalloc);
+-	else if (type == IOMAP_READ)
+-		INIT_WORK(&ioend->io_work, xfs_end_bio_read);
+-	else
+-		INIT_WORK(&ioend->io_work, xfs_end_bio_written);
+-
++	INIT_WORK(&ioend->io_work, xfs_end_io);
+ 	return ioend;
+ }
+ 
+@@ -1538,7 +1495,7 @@ xfs_end_io_direct(
+ 		 * didn't map an unwritten extent so switch it's completion
+ 		 * handler.
+ 		 */
+-		INIT_WORK(&ioend->io_work, xfs_end_bio_written);
++		ioend->io_type = IOMAP_NEW;
+ 		xfs_finish_ioend(ioend, 0);
+ 	}
+ 
 
 _______________________________________________
 xfs mailing list
