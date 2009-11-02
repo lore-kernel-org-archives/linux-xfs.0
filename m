@@ -1,22 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nA2K2A6E088661 for <xfs@oss.sgi.com>; Mon, 2 Nov 2009 14:02:11 -0600
-Received: from mail-ew0-f221.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7072C14D0413
-	for <xfs@oss.sgi.com>; Mon,  2 Nov 2009 12:02:22 -0800 (PST)
-Received: from mail-ew0-f221.google.com (mail-ew0-f221.google.com
-	[209.85.219.221]) by cuda.sgi.com with ESMTP id
-	l2h0A7v1kGtcyPVm for <xfs@oss.sgi.com>;
-	Mon, 02 Nov 2009 12:02:22 -0800 (PST)
-Received: by ewy21 with SMTP id 21so5057057ewy.8
-	for <xfs@oss.sgi.com>; Mon, 02 Nov 2009 12:02:21 -0800 (PST)
+	nA2KXpGd091489 for <xfs@oss.sgi.com>; Mon, 2 Nov 2009 14:33:52 -0600
+Content-class: urn:content-classes:message
 MIME-Version: 1.0
-Date: Mon, 2 Nov 2009 20:02:20 +0000
-Message-ID: <7a12b48b0911021202l126e10a1pbc281f6922380f48@mail.gmail.com>
-Subject: 3ware hardware raid with battery backup and the impact on barrier and
-	no write cache options.
-From: William Lewis <william@netproteus.net>
+Subject: RE: [PATCH] xfs: I/O completion handlers must use NOFS allocations
+Date: Mon, 2 Nov 2009 14:34:01 -0600
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83AE5B@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <20091019040003.GA21115@infradead.org>
+From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,82 +17,140 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6493844947820155349=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Thomas Neumann <tneumann@users.sourceforge.net>, xfs@oss.sgi.com
 
---===============6493844947820155349==
-Content-Type: multipart/alternative; boundary=0016e6da7de3fb2da1047768daae
+Christoph Hellwig wrote:
+> When complention I/O requests we must not allow the memory allocator to
+> recurse into the filesystem, as we might deadlock on waiting for the
+> I/O completion otherwise.  The only thing currently allocting normal
+> GFP_KERNEL memory is the allocation of the transaction structure for the
+> unwritten extent conversion.  Add a memflags argument to _xfs_trans_alloc
+> to allow controlling the allocator behaviour.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reported-by: Thomas Neumann <tneumann@users.sourceforge.net>
+> Tested-by: Thomas Neumann <tneumann@users.sourceforge.net>
 
---0016e6da7de3fb2da1047768daae
-Content-Type: text/plain; charset=ISO-8859-1
+This looks good.  It's kind of too bad the GFP_ flag
+argument had to be added, but I can't think of a cleaner
+way than the way you did it.
 
-Hi,
+I have one minor suggestion on wording used in a comment,
+but the code looks correct to me.  I verified that--as you
+say--the only place we're doing an allocation in an I/O
+completion handler (i.e., a function called via
+io_end->io_work->func) is in xfs_iomap_write_unwritten(),
+so this fix should cover the only case.
 
-I am in the process of setting up an XFS file system on underlying hardware
-consisting of a 3ware 9550SXU (+ battery backup module) and 4 x Seagate
-ST31500341AS 1.5TB hard drives in Raid 5 configuration.
+Sorry it took so long to get to this.
 
-Reading your FAQ at http://xfs.org/index.php/XFS_FAQ I understand that it is
-advisable to mount the file system with nobarrier to improve performance.
-However going on to read about recommended settings for write cache, the
-advice for 3ware hardware doesn't seem to account for the fact that there
-are 2 levels of write cache in play, that in the 3ware card itself protected
-by the battery and the write cache of the disks themselves, which as far as
-I can understand is also protected by the battery backup (in the correct
-storage modes - balanced/protection) because the 3ware card uses write
-journaling to keep track of pending write operations in the disks' cache.
-Therefore unless I am misunderstanding something the most benefit is to be
-gained by mounting with nobarrier and having the write cache turned on?
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
-One thing I am not clear about is if nobarrier interacts with the page cache
-at all and if the lack of barrier leaves you with a situation in which
-pending writes can be lost from main memory on power failure?
-
-Thanks in advance for any clarification you can provide.
-
-Regards
-
-Will Lewis
-
---0016e6da7de3fb2da1047768daae
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-Hi,<br><br>I am in the process of setting up an XFS file system on underlyi=
-ng hardware consisting of a 3ware 9550SXU (+ battery backup module) and 4 x=
- Seagate ST31500341AS 1.5TB hard drives in Raid 5 configuration.<br><br>
-Reading your FAQ at <a href=3D"http://xfs.org/index.php/XFS_FAQ">http://xfs=
-.org/index.php/XFS_FAQ</a> I understand that it is advisable to mount the f=
-ile system with nobarrier to improve performance. However going on to read =
-about recommended settings for write cache, the advice for 3ware hardware d=
-oesn&#39;t seem to account for the fact that there are 2 levels of write ca=
-che in play, that in the 3ware card itself protected by the battery and the=
- write cache of the disks themselves, which as far as I can understand is a=
-lso protected by the battery backup (in the correct storage modes - balance=
-d/protection) because the 3ware card uses write journaling to keep track of=
- pending write operations in the disks&#39; cache. Therefore unless I am mi=
-sunderstanding something the most benefit is to be gained by mounting with =
-nobarrier and having the write cache turned on?<br>
-<br>One thing I am not clear about is if nobarrier interacts with the page =
-cache at all and if the lack of barrier leaves you with a situation in whic=
-h pending writes can be lost from main memory on power failure?<br><br>
-Thanks in advance for any clarification you can provide.<br><br>Regards<br>=
-<br>Will Lewis<br>
-
---0016e6da7de3fb2da1047768daae--
+> Index: linux-2.6/fs/xfs/xfs_fsops.c
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/xfs_fsops.c	2009-10-16 23:08:25.170027882 +0200
+> +++ linux-2.6/fs/xfs/xfs_fsops.c	2009-10-16 23:09:22.904256700 +0200
+> @@ -611,7 +611,7 @@ xfs_fs_log_dummy(
+>  	xfs_inode_t	*ip;
+>  	int		error;
+> 
+> -	tp = _xfs_trans_alloc(mp, XFS_TRANS_DUMMY1);
+> +	tp = _xfs_trans_alloc(mp, XFS_TRANS_DUMMY1, KM_SLEEP);
+>  	error = xfs_trans_reserve(tp, 0, XFS_ICHANGE_LOG_RES(mp), 0, 0, 0);
+>  	if (error) {
+>  		xfs_trans_cancel(tp, 0);
+> Index: linux-2.6/fs/xfs/xfs_iomap.c
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/xfs_iomap.c	2009-10-16 23:10:14.342278346 +0200
+> +++ linux-2.6/fs/xfs/xfs_iomap.c	2009-10-16 23:12:08.148004392 +0200
+> @@ -860,8 +860,15 @@ xfs_iomap_write_unwritten(
+>  		 * set up a transaction to convert the range of extents
+>  		 * from unwritten to real. Do allocations in a loop until
+>  		 * we have covered the range passed in.
+> +		 *
+> +		 * Note that we opencoding the transaction allocation here
+> +		 * to pass KM_NOFS - we can't risk to recurse back into
 
 
---===============6493844947820155349==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+How about, "we can't risk recursing back into"
+
+
+> +		 * the filesystem here as we might be asked to write out
+> +		 * the same inode that we complete here and might deadlock
+> +		 * on the iolock.
+>  		 */
+> -		tp = xfs_trans_alloc(mp, XFS_TRANS_STRAT_WRITE);
+> +		xfs_wait_for_freeze(mp, SB_FREEZE_TRANS);
+> +		tp = _xfs_trans_alloc(mp, XFS_TRANS_STRAT_WRITE, KM_NOFS);
+>  		tp->t_flags |= XFS_TRANS_RESERVE;
+>  		error = xfs_trans_reserve(tp, resblks,
+>  				XFS_WRITE_LOG_RES(mp), 0,
+> Index: linux-2.6/fs/xfs/xfs_mount.c
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/xfs_mount.c	2009-10-16 23:08:25.147024815 +0200
+> +++ linux-2.6/fs/xfs/xfs_mount.c	2009-10-16 23:09:25.127005437 +0200
+> @@ -1471,7 +1471,7 @@ xfs_log_sbcount(
+>  	if (!xfs_sb_version_haslazysbcount(&mp->m_sb))
+>  		return 0;
+> 
+> -	tp = _xfs_trans_alloc(mp, XFS_TRANS_SB_COUNT);
+> +	tp = _xfs_trans_alloc(mp, XFS_TRANS_SB_COUNT, KM_SLEEP);
+>  	error = xfs_trans_reserve(tp, 0, mp->m_sb.sb_sectsize + 128, 0, 0,
+>  					XFS_DEFAULT_LOG_COUNT);
+>  	if (error) {
+> Index: linux-2.6/fs/xfs/xfs_trans.c
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/xfs_trans.c	2009-10-16 23:08:25.117003816 +0200
+> +++ linux-2.6/fs/xfs/xfs_trans.c	2009-10-16 23:08:58.202005942 +0200
+> @@ -236,19 +236,20 @@ xfs_trans_alloc(
+>  	uint		type)
+>  {
+>  	xfs_wait_for_freeze(mp, SB_FREEZE_TRANS);
+> -	return _xfs_trans_alloc(mp, type);
+> +	return _xfs_trans_alloc(mp, type, KM_SLEEP);
+>  }
+> 
+>  xfs_trans_t *
+>  _xfs_trans_alloc(
+>  	xfs_mount_t	*mp,
+> -	uint		type)
+> +	uint		type,
+> +	uint		memflags)
+>  {
+>  	xfs_trans_t	*tp;
+> 
+>  	atomic_inc(&mp->m_active_trans);
+> 
+> -	tp = kmem_zone_zalloc(xfs_trans_zone, KM_SLEEP);
+> +	tp = kmem_zone_zalloc(xfs_trans_zone, memflags);
+>  	tp->t_magic = XFS_TRANS_MAGIC;
+>  	tp->t_type = type;
+>  	tp->t_mountp = mp;
+> Index: linux-2.6/fs/xfs/xfs_trans.h
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/xfs_trans.h	2009-10-16 23:08:25.127003692 +0200
+> +++ linux-2.6/fs/xfs/xfs_trans.h	2009-10-16 23:09:04.726256000 +0200
+> @@ -924,7 +924,7 @@ typedef struct xfs_trans {
+>   * XFS transaction mechanism exported interfaces.
+>   */
+>  xfs_trans_t	*xfs_trans_alloc(struct xfs_mount *, uint);
+> -xfs_trans_t	*_xfs_trans_alloc(struct xfs_mount *, uint);
+> +xfs_trans_t	*_xfs_trans_alloc(struct xfs_mount *, uint, uint);
+>  xfs_trans_t	*xfs_trans_dup(xfs_trans_t *);
+>  int		xfs_trans_reserve(xfs_trans_t *, uint, uint, uint,
+>  				  uint, uint);
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6493844947820155349==--
