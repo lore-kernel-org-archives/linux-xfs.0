@@ -1,15 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nA2LAM0c094004 for <xfs@oss.sgi.com>; Mon, 2 Nov 2009 15:10:22 -0600
-Content-class: urn:content-classes:message
+	nA2LSxZk095032 for <xfs@oss.sgi.com>; Mon, 2 Nov 2009 15:28:59 -0600
+Received: from lucidpixels.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 10D4B1B398CA
+	for <xfs@oss.sgi.com>; Mon,  2 Nov 2009 13:29:12 -0800 (PST)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by
+	cuda.sgi.com with ESMTP id CWvhHsoB5gVkyujH for
+	<xfs@oss.sgi.com>; Mon, 02 Nov 2009 13:29:12 -0800 (PST)
+Date: Mon, 2 Nov 2009 16:29:12 -0500 (EST)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: 3ware hardware raid with battery backup and the impact on barrier
+	and no write cache options.
+In-Reply-To: <7a12b48b0911021202l126e10a1pbc281f6922380f48@mail.gmail.com>
+Message-ID: <alpine.DEB.2.00.0911021628030.811@p34.internal.lan>
+References: <7a12b48b0911021202l126e10a1pbc281f6922380f48@mail.gmail.com>
 MIME-Version: 1.0
-Subject: RE: [PATCH] xfs: fix mmap_sem vs iolock lock order inversion
-	inxfs_free_eofblocks
-Date: Mon, 2 Nov 2009 15:10:33 -0600
-Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83AE5C@cf--amer001e--3.americas.sgi.com>
-In-Reply-To: <20091019040346.GB21115@infradead.org>
-From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,157 +24,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: William Lewis <william@netproteus.net>
 Cc: xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> When xfs_free_eofblocks is called from ->release the VM might already
-> hold the mmap_sem, but in the write path we take the iolock before
-> taking the mmap_sem in the generic write code.
-> 
-> Switch xfs_free_eofblocks to only trylock the iolock if called from ->release
-> and skip trimming the prellocated blocks in that case.  We'll still free
-> them later on the final iput.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-I have a minor suggestion below, but it looks correct to me.
-I tried to get a better idea of what the conditions were
-where mmap_sem would be held by VM when ->release gets
-called, but didn't get to the bottom of that.  If it is
-easily characterized you could mention it in comments.
-
-Reviewed-by: Alex Elder <aelder@sgi.com>
 
 
-> Index: xfs/fs/xfs/xfs_rw.h
-> ===================================================================
-> --- xfs.orig/fs/xfs/xfs_rw.h	2009-10-14 17:30:02.396028076 +0200
-> +++ xfs/fs/xfs/xfs_rw.h	2009-10-14 17:30:20.472287472 +0200
-> @@ -37,13 +37,6 @@ xfs_fsb_to_db(struct xfs_inode *ip, xfs_
->  }
-> 
->  /*
-> - * Flags for xfs_free_eofblocks
-> - */
-> -#define XFS_FREE_EOF_LOCK	(1<<0)
-> -#define XFS_FREE_EOF_NOLOCK	(1<<1)
-> -
-> -
-> -/*
->   * helper function to extract extent size hint from inode
->   */
->  STATIC_INLINE xfs_extlen_t
-> Index: xfs/fs/xfs/xfs_vnodeops.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/xfs_vnodeops.c	2009-10-14 17:30:13.363024201 +0200
-> +++ xfs/fs/xfs/xfs_vnodeops.c	2009-10-14 17:35:39.314256388 +0200
-> @@ -709,6 +709,11 @@ xfs_fsync(
->  }
-> 
->  /*
-> + * Flags for xfs_free_eofblocks
-> + */
-> +#define XFS_FREE_EOF_TRYLOCK	(1<<0)
+On Mon, 2 Nov 2009, William Lewis wrote:
 
-This is really a Boolean in the place it's used, rather
-than a flags mask.  Unless you have plans to add other
-flags, maybe just don't bother defining this, and pass
-a zero/non-zero for a renamed argument to xfs_free_eofblocks().
-(I mention this again below, in that context.)
+> Hi,
+>
+> I am in the process of setting up an XFS file system on underlying hardware
+> consisting of a 3ware 9550SXU (+ battery backup module) and 4 x Seagate
+> ST31500341AS 1.5TB hard drives in Raid 5 configuration.
+>
+> Reading your FAQ at http://xfs.org/index.php/XFS_FAQ I understand that it is
+> advisable to mount the file system with nobarrier to improve performance.
+> However going on to read about recommended settings for write cache, the
+> advice for 3ware hardware doesn't seem to account for the fact that there
+> are 2 levels of write cache in play, that in the 3ware card itself protected
+> by the battery and the write cache of the disks themselves, which as far as
+> I can understand is also protected by the battery backup (in the correct
+> storage modes - balanced/protection) because the 3ware card uses write
+> journaling to keep track of pending write operations in the disks' cache.
+> Therefore unless I am misunderstanding something the most benefit is to be
+> gained by mounting with nobarrier and having the write cache turned on?
+>
+> One thing I am not clear about is if nobarrier interacts with the page cache
+> at all and if the lack of barrier leaves you with a situation in which
+> pending writes can be lost from main memory on power failure?
+>
+> Thanks in advance for any clarification you can provide.
+>
+> Regards
+>
+> Will Lewis
+>
 
-> +/*
->   * This is called by xfs_inactive to free any blocks beyond eof
->   * when the link count isn't zero and by xfs_dm_punch_hole() when
->   * punching a hole to EOF.
-> @@ -726,7 +731,6 @@ xfs_free_eofblocks(
->  	xfs_filblks_t	map_len;
->  	int		nimaps;
->  	xfs_bmbt_irec_t	imap;
-> -	int		use_iolock = (flags & XFS_FREE_EOF_LOCK);
-> 
->  	/*
->  	 * Figure out if there are any blocks beyond the end
-> @@ -768,14 +772,19 @@ xfs_free_eofblocks(
->  		 * cache and we can't
->  		 * do that within a transaction.
->  		 */
-> -		if (use_iolock)
-> +		if (flags & XFS_FREE_EOF_TRYLOCK) {
+I am also curious, I have a 16 drive RAID-6 configuration on a 
+9650SE-16ML and using -o nobarrier or mounting normal the speed/benchmarks 
+seemed to be the same.  Either barriers are not enabled by default for 
+3ware RAID arrays or they make no difference in performance?
 
-If you rename "flag" to "skip_ok" (or maybe "try_lock":
-
-            if (skip_ok && ! xfs_ilock_nowait(...)) {
-                      xfs_trans_cancel();
-                      return 0;
-            } else
-                      xfs_ilock(...);
-
-             if (try_lock)
-> +			if (!xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
-> +				xfs_trans_cancel(tp, 0);
-> +				return 0;
-> +			}
-> +		} else {
->  			xfs_ilock(ip, XFS_IOLOCK_EXCL);
-> +		}
->  		error = xfs_itruncate_start(ip, XFS_ITRUNC_DEFINITE,
->  				    ip->i_size);
->  		if (error) {
->  			xfs_trans_cancel(tp, 0);
-> -			if (use_iolock)
-> -				xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-> +			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
->  			return error;
->  		}
-> 
-> @@ -812,8 +821,7 @@ xfs_free_eofblocks(
->  			error = xfs_trans_commit(tp,
->  						XFS_TRANS_RELEASE_LOG_RES);
->  		}
-> -		xfs_iunlock(ip, (use_iolock ? (XFS_IOLOCK_EXCL|XFS_ILOCK_EXCL)
-> -					    : XFS_ILOCK_EXCL));
-> +		xfs_iunlock(ip, XFS_IOLOCK_EXCL|XFS_ILOCK_EXCL);
->  	}
->  	return error;
->  }
-> @@ -1113,7 +1121,17 @@ xfs_release(
->  		     (ip->i_df.if_flags & XFS_IFEXTENTS))  &&
->  		    (!(ip->i_d.di_flags &
->  				(XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND)))) {
-> -			error = xfs_free_eofblocks(mp, ip, XFS_FREE_EOF_LOCK);
-> +
-> +			/*
-> +			 * If we can't get the iolock just skip truncating
-> +			 * the blocks past EOF because we could deadlock
-> +			 * with the mmap_sem otherwise.  We'll get another
-> +			 * chance to drop them once the last reference to
-> +			 * the inode is dropped, so we'll never leak blocks
-> +			 * permanently.
-> +			 */
-> +			error = xfs_free_eofblocks(mp, ip,
-> +						   XFS_FREE_EOF_TRYLOCK);
->  			if (error)
->  				return error;
->  		}
-> @@ -1184,7 +1202,7 @@ xfs_inactive(
->  		     (!(ip->i_d.di_flags &
->  				(XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND)) ||
->  		      (ip->i_delayed_blks != 0)))) {
-> -			error = xfs_free_eofblocks(mp, ip, XFS_FREE_EOF_LOCK);
-> +			error = xfs_free_eofblocks(mp, ip, 0);
->  			if (error)
->  				return VN_INACTIVE_CACHE;
->  		}
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Justin.
 
 _______________________________________________
 xfs mailing list
