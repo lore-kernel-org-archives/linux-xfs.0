@@ -1,32 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nA2B5MVZ035634 for <xfs@oss.sgi.com>; Mon, 2 Nov 2009 05:05:24 -0600
-Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 082BE14CD492
-	for <xfs@oss.sgi.com>; Mon,  2 Nov 2009 03:05:31 -0800 (PST)
-Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id dESBNfPtkuUiHIFw for
-	<xfs@oss.sgi.com>; Mon, 02 Nov 2009 03:05:31 -0800 (PST)
-Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv1.zmi.at (Postfix) with ESMTP id BD780C3AB09
-	for <xfs@oss.sgi.com>; Mon,  2 Nov 2009 12:05:28 +0100 (CET)
-Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id 7F71940016F
-	for <xfs@oss.sgi.com>; Mon,  2 Nov 2009 12:05:28 +0100 (CET)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: XFS and DPX files
-Date: Mon, 2 Nov 2009 12:05:27 +0100
-References: <4AEC2CF4.8040703@aol.com> <4AEC4BAA.20606@aol.com>
-	<20091031174836.3fc9505b@galadriel.home>
-In-Reply-To: <20091031174836.3fc9505b@galadriel.home>
+	nA2H3Sei072780
+	for <linux-xfs@oss.sgi.com>; Mon, 2 Nov 2009 11:03:28 -0600
+Received: from mail2.globalnetstore.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id 4961314CF4A8
+	for <linux-xfs@oss.sgi.com>; Mon,  2 Nov 2009 09:03:39 -0800 (PST)
+Received: from mail2.globalnetstore.com (mail2.globalnetstore.com
+	[208.53.152.59]) by cuda.sgi.com with SMTP id XCmzRQXozIjqR3hV
+	for <linux-xfs@oss.sgi.com>; Mon, 02 Nov 2009 09:03:39 -0800 (PST)
+From: "Stathmore's Who's Who" <info@globalnetstore.com>
+Subject: Jakob - Your Recent Nomination to Strathmore's Who's Who
+Date: Mon, 02 Nov 2009 12:03:39 -0500
 MIME-Version: 1.0
-Content-Disposition: inline
-Message-Id: <200911021205.28006@zmi.at>
+Message-Id: <20091102170339.4961314CF4A8@cuda.sgi.com>
+Reply-To: info@globalnetstore.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,47 +23,103 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============7131894550285111844=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: linux-xfs <linux-xfs@oss.sgi.com>
 
-On Samstag 31 Oktober 2009 Emmanuel Florac wrote:
-> Another trick is to mkfs the drive with su and sw matching the
-> underlying RAID, for instance for a 15 drives RAID6 with 64K stripe
-> use something like (beware, unverified syntax from memory):
->
-> mkfs -t xfs -d su=65536,sw=15 /dev/sdXX
 
-I believe for a 15 drive RAID-6, where 2 disks are used for redundancy, 
-the correct mkfs would be:
-mkfs -t xfs -d su=65536,sw=13 /dev/sdXX
+--===============7131894550285111844==
+Content-type: multipart/alternative; boundary="----------030700010607050800090606";
 
-That is, you tell XFS how many *data disks* there are, not how many 
-disks the RAID uses, because the important thing is that XFS should 
-distribute it's metadata over different disks.
 
-One thing you could try: Each 2 minutes, create a new dir and store new 
-files there. It could well be that XFS becomes slower when having a 
-certain amount of files in a dir. If you change the dir, and now 
-everything writes without drops, that should be the problem.
-If you can't change the dir for your application, start a small batch 
-job that moves the files to another dir, or removes them.
+------------030700010607050800090606
+Content-type: text/plain
 
-Another thing to try is if it would help to turn disk cache writes *on*, 
-despite all warnings if the FAQ. That could also give an idea where to 
-look at next time.
+Jakob,
 
-mfg zmi
--- 
-// Michael Monnerie, Ing.BSc    -----      http://it-management.at
-// Tel: 0660 / 415 65 31                      .network.your.ideas.
-// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
-// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
-// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
+It is my pleasure to inform you that on September 24th, 2009 your information was reviewed and accepted for inclusion in the 2009/2010 edition of our registry.
+
+Strathmore's Whos Who each year, recognizes and selects key executives, professionals and organizations in all disciplines and industries for outstanding business and professional achievements.
+
+This recognition is shared by those who have reached a distinguished level of success in their chosen profession.
+
+Please take a moment to complete the invitation by clicking on the link below.  We ask that you complete it carefully, as it will be reviewed by our editorial department.
+
+http://www.formdesk.com/pgn6/STR
+
+** Please complete the online link by October 10th.
+
+Strathmore's Whos Who is pleased to inform you that there are no fees or dues to be included in the publication.
+
+On behalf of the CEO and our esteemed staff, we wish you continued success.
+
+Sincerely,
+
+J. Edward Simmons
+Vice President, Research Division
+
+Strathmore's Whos Who
+26 Bond St.
+Westbury NY 11590
+
+ 
+
+Thanks
+
+
+------------030700010607050800090606
+Content-Type: text/html
+
+<html>
+<head>
+</head>
+<title></title>
+<body>
+
+ <p><span style="font-family: Verdana;"><span style="font-size: small;">Jakob, </span></span></p>
+<p><span style="font-family: Verdana;"><span style="font-size: small;">It is my pleasure to inform you that on September 24th, 2009 your information was reviewed and accepted for inclusion in the 2009/2010 edition of our registry. </span></span></p>
+<p><span style="font-family: Verdana;"><span style="font-size: small;"><b>Strathmore's Whos Who</b> each year, recognizes and selects key executives, professionals and organizations in all disciplines and industries for outstanding business and professional achievements. </span></span></p>
+<p><span style="font-family: Verdana;"><span style="font-size: small;">This recognition is shared by those who have reached a distinguished level of success in their chosen profession. </span></span></p>
+<p><span style="font-family: Verdana;"><span style="font-size: small;">Please take a moment to complete the invitation by clicking on the link below. We ask that you complete it carefully, as it will be reviewed by our editorial department. <br />
+</span></span></p>
+<p><span style="font-family: Verdana;"><span style="font-size: small;"><a href="http://dobla.globalnetstore.com/c/c/22327/4154/963629/">http://www.formdesk.com/pgn6/STR</a><br />
+</span></span></p>
+<p><span style="font-family: Verdana;"><span style="font-size: small;">** Please complete the online link by October 10th. </span></span></p>
+<p><span style="font-family: Verdana;"><span style="font-size: small;"><b>Strathmore's Whos Who</b> is pleased to inform you that there are no fees or dues to be included in the publication. </span></span></p>
+<p><span style="font-family: Verdana;"><span style="font-size: small;">On behalf of the CEO and our esteemed staff, we wish you continued success. </span></span></p>
+<p><span style="font-family: Verdana;"><span style="font-size: small;">Sincerely, </span></span></p>
+<p><span style="font-family: Verdana;"><span style="font-size: small;"><b>J. Edward Simmons</b><br />
+<i>Vice President, Research Division </i><br />
+<br />
+<b>Strathmore's Whos Who</b><br />
+26 Bond St.<br />
+Westbury NY 11590<br />
+</span></span></p>
+<p></p>
+<p><font face="Verdana, Arial, Helvetica, sans-serif" size="1"><img height="17" width="17" src="http://dobla.globalnetstore.com/V/1/4154/963629" alt="Thanks" /></font></p> <table width="600" border="0" align="center" cellpadding="0" cellspacing="0">
+  <tr>
+<td height="85" colspan="2"><font size="2" face="Verdana, Arial, Helvetica, sans-serif">We only support ethical email marketing. To remove yourself from future mailings, please <a href="http://dobla.globalnetstore.com/c/c/22328/4154/963629/">visit here</a> to use our automated removal system. You will be removed from our mailing database within seven (7) days. 10510</font></td>
+  </tr>
+  <tr>
+<td width="33"><div align="center"><img src="http://dobla.globalnetstore.com/V/1/4154/963629" width="17" height="17" alt="Thanks"/></div></td>
+<td width="567" valign="middle"></td>
+  </tr>
+</table>
+</body>
+</html> <br />
+------------030700010607050800090606--
+
+
+--===============7131894550285111844==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============7131894550285111844==--
