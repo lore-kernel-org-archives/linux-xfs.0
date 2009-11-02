@@ -1,13 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nA2KXpGd091489 for <xfs@oss.sgi.com>; Mon, 2 Nov 2009 14:33:52 -0600
+	nA2LAM0c094004 for <xfs@oss.sgi.com>; Mon, 2 Nov 2009 15:10:22 -0600
 Content-class: urn:content-classes:message
 MIME-Version: 1.0
-Subject: RE: [PATCH] xfs: I/O completion handlers must use NOFS allocations
-Date: Mon, 2 Nov 2009 14:34:01 -0600
-Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83AE5B@cf--amer001e--3.americas.sgi.com>
-In-Reply-To: <20091019040003.GA21115@infradead.org>
+Subject: RE: [PATCH] xfs: fix mmap_sem vs iolock lock order inversion
+	inxfs_free_eofblocks
+Date: Mon, 2 Nov 2009 15:10:33 -0600
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83AE5C@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <20091019040346.GB21115@infradead.org>
 From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -22,128 +23,147 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Thomas Neumann <tneumann@users.sourceforge.net>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
 Christoph Hellwig wrote:
-> When complention I/O requests we must not allow the memory allocator to
-> recurse into the filesystem, as we might deadlock on waiting for the
-> I/O completion otherwise.  The only thing currently allocting normal
-> GFP_KERNEL memory is the allocation of the transaction structure for the
-> unwritten extent conversion.  Add a memflags argument to _xfs_trans_alloc
-> to allow controlling the allocator behaviour.
+> When xfs_free_eofblocks is called from ->release the VM might already
+> hold the mmap_sem, but in the write path we take the iolock before
+> taking the mmap_sem in the generic write code.
+> 
+> Switch xfs_free_eofblocks to only trylock the iolock if called from ->release
+> and skip trimming the prellocated blocks in that case.  We'll still free
+> them later on the final iput.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reported-by: Thomas Neumann <tneumann@users.sourceforge.net>
-> Tested-by: Thomas Neumann <tneumann@users.sourceforge.net>
 
-This looks good.  It's kind of too bad the GFP_ flag
-argument had to be added, but I can't think of a cleaner
-way than the way you did it.
-
-I have one minor suggestion on wording used in a comment,
-but the code looks correct to me.  I verified that--as you
-say--the only place we're doing an allocation in an I/O
-completion handler (i.e., a function called via
-io_end->io_work->func) is in xfs_iomap_write_unwritten(),
-so this fix should cover the only case.
-
-Sorry it took so long to get to this.
+I have a minor suggestion below, but it looks correct to me.
+I tried to get a better idea of what the conditions were
+where mmap_sem would be held by VM when ->release gets
+called, but didn't get to the bottom of that.  If it is
+easily characterized you could mention it in comments.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
-> Index: linux-2.6/fs/xfs/xfs_fsops.c
-> ===================================================================
-> --- linux-2.6.orig/fs/xfs/xfs_fsops.c	2009-10-16 23:08:25.170027882 +0200
-> +++ linux-2.6/fs/xfs/xfs_fsops.c	2009-10-16 23:09:22.904256700 +0200
-> @@ -611,7 +611,7 @@ xfs_fs_log_dummy(
->  	xfs_inode_t	*ip;
->  	int		error;
-> 
-> -	tp = _xfs_trans_alloc(mp, XFS_TRANS_DUMMY1);
-> +	tp = _xfs_trans_alloc(mp, XFS_TRANS_DUMMY1, KM_SLEEP);
->  	error = xfs_trans_reserve(tp, 0, XFS_ICHANGE_LOG_RES(mp), 0, 0, 0);
->  	if (error) {
->  		xfs_trans_cancel(tp, 0);
-> Index: linux-2.6/fs/xfs/xfs_iomap.c
-> ===================================================================
-> --- linux-2.6.orig/fs/xfs/xfs_iomap.c	2009-10-16 23:10:14.342278346 +0200
-> +++ linux-2.6/fs/xfs/xfs_iomap.c	2009-10-16 23:12:08.148004392 +0200
-> @@ -860,8 +860,15 @@ xfs_iomap_write_unwritten(
->  		 * set up a transaction to convert the range of extents
->  		 * from unwritten to real. Do allocations in a loop until
->  		 * we have covered the range passed in.
-> +		 *
-> +		 * Note that we opencoding the transaction allocation here
-> +		 * to pass KM_NOFS - we can't risk to recurse back into
 
-
-How about, "we can't risk recursing back into"
-
-
-> +		 * the filesystem here as we might be asked to write out
-> +		 * the same inode that we complete here and might deadlock
-> +		 * on the iolock.
->  		 */
-> -		tp = xfs_trans_alloc(mp, XFS_TRANS_STRAT_WRITE);
-> +		xfs_wait_for_freeze(mp, SB_FREEZE_TRANS);
-> +		tp = _xfs_trans_alloc(mp, XFS_TRANS_STRAT_WRITE, KM_NOFS);
->  		tp->t_flags |= XFS_TRANS_RESERVE;
->  		error = xfs_trans_reserve(tp, resblks,
->  				XFS_WRITE_LOG_RES(mp), 0,
-> Index: linux-2.6/fs/xfs/xfs_mount.c
+> Index: xfs/fs/xfs/xfs_rw.h
 > ===================================================================
-> --- linux-2.6.orig/fs/xfs/xfs_mount.c	2009-10-16 23:08:25.147024815 +0200
-> +++ linux-2.6/fs/xfs/xfs_mount.c	2009-10-16 23:09:25.127005437 +0200
-> @@ -1471,7 +1471,7 @@ xfs_log_sbcount(
->  	if (!xfs_sb_version_haslazysbcount(&mp->m_sb))
->  		return 0;
-> 
-> -	tp = _xfs_trans_alloc(mp, XFS_TRANS_SB_COUNT);
-> +	tp = _xfs_trans_alloc(mp, XFS_TRANS_SB_COUNT, KM_SLEEP);
->  	error = xfs_trans_reserve(tp, 0, mp->m_sb.sb_sectsize + 128, 0, 0,
->  					XFS_DEFAULT_LOG_COUNT);
->  	if (error) {
-> Index: linux-2.6/fs/xfs/xfs_trans.c
-> ===================================================================
-> --- linux-2.6.orig/fs/xfs/xfs_trans.c	2009-10-16 23:08:25.117003816 +0200
-> +++ linux-2.6/fs/xfs/xfs_trans.c	2009-10-16 23:08:58.202005942 +0200
-> @@ -236,19 +236,20 @@ xfs_trans_alloc(
->  	uint		type)
->  {
->  	xfs_wait_for_freeze(mp, SB_FREEZE_TRANS);
-> -	return _xfs_trans_alloc(mp, type);
-> +	return _xfs_trans_alloc(mp, type, KM_SLEEP);
+> --- xfs.orig/fs/xfs/xfs_rw.h	2009-10-14 17:30:02.396028076 +0200
+> +++ xfs/fs/xfs/xfs_rw.h	2009-10-14 17:30:20.472287472 +0200
+> @@ -37,13 +37,6 @@ xfs_fsb_to_db(struct xfs_inode *ip, xfs_
 >  }
 > 
->  xfs_trans_t *
->  _xfs_trans_alloc(
->  	xfs_mount_t	*mp,
-> -	uint		type)
-> +	uint		type,
-> +	uint		memflags)
->  {
->  	xfs_trans_t	*tp;
-> 
->  	atomic_inc(&mp->m_active_trans);
-> 
-> -	tp = kmem_zone_zalloc(xfs_trans_zone, KM_SLEEP);
-> +	tp = kmem_zone_zalloc(xfs_trans_zone, memflags);
->  	tp->t_magic = XFS_TRANS_MAGIC;
->  	tp->t_type = type;
->  	tp->t_mountp = mp;
-> Index: linux-2.6/fs/xfs/xfs_trans.h
-> ===================================================================
-> --- linux-2.6.orig/fs/xfs/xfs_trans.h	2009-10-16 23:08:25.127003692 +0200
-> +++ linux-2.6/fs/xfs/xfs_trans.h	2009-10-16 23:09:04.726256000 +0200
-> @@ -924,7 +924,7 @@ typedef struct xfs_trans {
->   * XFS transaction mechanism exported interfaces.
+>  /*
+> - * Flags for xfs_free_eofblocks
+> - */
+> -#define XFS_FREE_EOF_LOCK	(1<<0)
+> -#define XFS_FREE_EOF_NOLOCK	(1<<1)
+> -
+> -
+> -/*
+>   * helper function to extract extent size hint from inode
 >   */
->  xfs_trans_t	*xfs_trans_alloc(struct xfs_mount *, uint);
-> -xfs_trans_t	*_xfs_trans_alloc(struct xfs_mount *, uint);
-> +xfs_trans_t	*_xfs_trans_alloc(struct xfs_mount *, uint, uint);
->  xfs_trans_t	*xfs_trans_dup(xfs_trans_t *);
->  int		xfs_trans_reserve(xfs_trans_t *, uint, uint, uint,
->  				  uint, uint);
+>  STATIC_INLINE xfs_extlen_t
+> Index: xfs/fs/xfs/xfs_vnodeops.c
+> ===================================================================
+> --- xfs.orig/fs/xfs/xfs_vnodeops.c	2009-10-14 17:30:13.363024201 +0200
+> +++ xfs/fs/xfs/xfs_vnodeops.c	2009-10-14 17:35:39.314256388 +0200
+> @@ -709,6 +709,11 @@ xfs_fsync(
+>  }
+> 
+>  /*
+> + * Flags for xfs_free_eofblocks
+> + */
+> +#define XFS_FREE_EOF_TRYLOCK	(1<<0)
+
+This is really a Boolean in the place it's used, rather
+than a flags mask.  Unless you have plans to add other
+flags, maybe just don't bother defining this, and pass
+a zero/non-zero for a renamed argument to xfs_free_eofblocks().
+(I mention this again below, in that context.)
+
+> +/*
+>   * This is called by xfs_inactive to free any blocks beyond eof
+>   * when the link count isn't zero and by xfs_dm_punch_hole() when
+>   * punching a hole to EOF.
+> @@ -726,7 +731,6 @@ xfs_free_eofblocks(
+>  	xfs_filblks_t	map_len;
+>  	int		nimaps;
+>  	xfs_bmbt_irec_t	imap;
+> -	int		use_iolock = (flags & XFS_FREE_EOF_LOCK);
+> 
+>  	/*
+>  	 * Figure out if there are any blocks beyond the end
+> @@ -768,14 +772,19 @@ xfs_free_eofblocks(
+>  		 * cache and we can't
+>  		 * do that within a transaction.
+>  		 */
+> -		if (use_iolock)
+> +		if (flags & XFS_FREE_EOF_TRYLOCK) {
+
+If you rename "flag" to "skip_ok" (or maybe "try_lock":
+
+            if (skip_ok && ! xfs_ilock_nowait(...)) {
+                      xfs_trans_cancel();
+                      return 0;
+            } else
+                      xfs_ilock(...);
+
+             if (try_lock)
+> +			if (!xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
+> +				xfs_trans_cancel(tp, 0);
+> +				return 0;
+> +			}
+> +		} else {
+>  			xfs_ilock(ip, XFS_IOLOCK_EXCL);
+> +		}
+>  		error = xfs_itruncate_start(ip, XFS_ITRUNC_DEFINITE,
+>  				    ip->i_size);
+>  		if (error) {
+>  			xfs_trans_cancel(tp, 0);
+> -			if (use_iolock)
+> -				xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+> +			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+>  			return error;
+>  		}
+> 
+> @@ -812,8 +821,7 @@ xfs_free_eofblocks(
+>  			error = xfs_trans_commit(tp,
+>  						XFS_TRANS_RELEASE_LOG_RES);
+>  		}
+> -		xfs_iunlock(ip, (use_iolock ? (XFS_IOLOCK_EXCL|XFS_ILOCK_EXCL)
+> -					    : XFS_ILOCK_EXCL));
+> +		xfs_iunlock(ip, XFS_IOLOCK_EXCL|XFS_ILOCK_EXCL);
+>  	}
+>  	return error;
+>  }
+> @@ -1113,7 +1121,17 @@ xfs_release(
+>  		     (ip->i_df.if_flags & XFS_IFEXTENTS))  &&
+>  		    (!(ip->i_d.di_flags &
+>  				(XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND)))) {
+> -			error = xfs_free_eofblocks(mp, ip, XFS_FREE_EOF_LOCK);
+> +
+> +			/*
+> +			 * If we can't get the iolock just skip truncating
+> +			 * the blocks past EOF because we could deadlock
+> +			 * with the mmap_sem otherwise.  We'll get another
+> +			 * chance to drop them once the last reference to
+> +			 * the inode is dropped, so we'll never leak blocks
+> +			 * permanently.
+> +			 */
+> +			error = xfs_free_eofblocks(mp, ip,
+> +						   XFS_FREE_EOF_TRYLOCK);
+>  			if (error)
+>  				return error;
+>  		}
+> @@ -1184,7 +1202,7 @@ xfs_inactive(
+>  		     (!(ip->i_d.di_flags &
+>  				(XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND)) ||
+>  		      (ip->i_delayed_blks != 0)))) {
+> -			error = xfs_free_eofblocks(mp, ip, XFS_FREE_EOF_LOCK);
+> +			error = xfs_free_eofblocks(mp, ip, 0);
+>  			if (error)
+>  				return VN_INACTIVE_CACHE;
+>  		}
 > 
 > _______________________________________________
 > xfs mailing list
