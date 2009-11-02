@@ -1,21 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nA2LVK7j095166 for <xfs@oss.sgi.com>; Mon, 2 Nov 2009 15:31:20 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 190F25653F
-	for <xfs@oss.sgi.com>; Mon,  2 Nov 2009 13:31:33 -0800 (PST)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id 7feg9qW21MG2aXPs for
-	<xfs@oss.sgi.com>; Mon, 02 Nov 2009 13:31:33 -0800 (PST)
-Message-ID: <4AEF4FB2.1050504@sandeen.net>
-Date: Mon, 02 Nov 2009 15:31:30 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	nA2Ljwt1095854 for <xfs@oss.sgi.com>; Mon, 2 Nov 2009 15:45:58 -0600
+Received: from lucidpixels.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8FCF41D8BF43
+	for <xfs@oss.sgi.com>; Mon,  2 Nov 2009 13:46:10 -0800 (PST)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by
+	cuda.sgi.com with ESMTP id WEj9GQz1DvfjSksc for
+	<xfs@oss.sgi.com>; Mon, 02 Nov 2009 13:46:10 -0800 (PST)
+Date: Mon, 2 Nov 2009 16:46:10 -0500 (EST)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: 2.6.31+2.6.31.4: XFS - All I/O locks up to D-state after 24-48
+	hours (sysrq-t+w available)
+In-Reply-To: <alpine.DEB.2.00.0910260723150.22950@p34.internal.lan>
+Message-ID: <alpine.DEB.2.00.0910281915400.29166@p34.internal.lan>
+References: <alpine.DEB.2.00.0910171825270.16781@p34.internal.lan>
+	<alpine.DEB.2.00.0910181607040.27363@p34.internal.lan>
+	<20091019030456.GS9464@discord.disaster>
+	<alpine.DEB.2.00.0910190431180.23395@p34.internal.lan>
+	<20091020003358.GW9464@discord.disaster>
+	<alpine.DEB.2.00.0910200431290.21878@p34.internal.lan>
+	<alpine.DEB.2.00.0910210618210.10288@p34.internal.lan>
+	<alpine.DEB.2.00.0910221849001.24576@p34.internal.lan>
+	<alpine.DEB.2.00.0910260723150.22950@p34.internal.lan>
 MIME-Version: 1.0
-Subject: Re: 3ware hardware raid with battery backup and the impact on barrier
-	and	no write cache options.
-References: <7a12b48b0911021202l126e10a1pbc281f6922380f48@mail.gmail.com>
-In-Reply-To: <7a12b48b0911021202l126e10a1pbc281f6922380f48@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,58 +36,51 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: William Lewis <william@netproteus.net>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-raid@vger.kernel.org, Alan Piszcz <ap@solarrain.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-William Lewis wrote:
-> Hi,
-> 
-> I am in the process of setting up an XFS file system on underlying 
-> hardware consisting of a 3ware 9550SXU (+ battery backup module) and 4 x 
-> Seagate ST31500341AS 1.5TB hard drives in Raid 5 configuration.
-> 
-> Reading your FAQ at http://xfs.org/index.php/XFS_FAQ I understand that 
-> it is advisable to mount the file system with nobarrier to improve 
-> performance. However going on to read about recommended settings for 
-> write cache, the advice for 3ware hardware doesn't seem to account for 
-> the fact that there are 2 levels of write cache in play, that in the 
-> 3ware card itself protected by the battery and the write cache of the 
-> disks themselves, which as far as I can understand is also protected by 
-> the battery backup (in the correct storage modes - balanced/protection) 
-> because the 3ware card uses write journaling to keep track of pending 
-> write operations in the disks' cache. Therefore unless I am 
-> misunderstanding something the most benefit is to be gained by mounting 
-> with nobarrier and having the write cache turned on?
 
-If the write caches won't go away - or will be fully/gracefully destaged 
-before they do, then nobarrier should be safe.
 
-> One thing I am not clear about is if nobarrier interacts with the page 
-> cache at all and if the lack of barrier leaves you with a situation in 
-> which pending writes can be lost from main memory on power failure?
+On Mon, 26 Oct 2009, Justin Piszcz wrote:
 
-nobarrier has no interaction with the OS page cache; all the "barrier" 
-option (the default) does is enforce ordering for journal IO*, and in 
-practice it does this by flushing the cache at points in time.
+>
+>
+> On Thu, 22 Oct 2009, Justin Piszcz wrote:
+>
+>> 
+>> Any other ideas?
+>> 
+>> Currently stuck on 2.6.30.9.. (no issues, no lockups)-- Box normally has no 
+>> load at all either.. Has anyone else reported similar problems?
+>> 
+>> Justin.
+>> 
+>
+> --
+>
+> Currently running 2.6.31-rc1 for 2 days now, no crashes, will go to -rc2 
+> later today and wait another 48 hours.
+>
+> Justin.
+>
+>
 
--Eric
+Kernel report:
 
-*well, I think it flushes the drive cache on fsync, too, for data 
-integrity (vs. the metadata integrity for the journal IO ordering)
+2.6.31-rc1: no crash - uptime 2+ days
+2.6.31-rc2: no crash - uptime 2+ days
+2.6.31-rc3: no crash - uptime 2+ days
+2.6.31-rc4: no crash but network kept dropping out
+2.6.31-rc5: cannot test, service owner needs host available
+2.6.31-rc6: cannot test, service owner needs host available
+2.6.31-rc7: cannot test, service owner needs host available
+2.6.31-rc8: cannot test, service owner needs host available
+2.6.31-rc9: cannot test, service owner needs host available
+   2.6.31.x: locks up D-state
 
-> Thanks in advance for any clarification you can provide.
-> 
-> Regards
-> 
-> Will Lewis
-> 
-> 
-> ------------------------------------------------------------------------
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+It would be somewhere between -rc4 and 2.6.31.x.
+
+Justin.
 
 _______________________________________________
 xfs mailing list
