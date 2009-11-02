@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nA2LSxZk095032 for <xfs@oss.sgi.com>; Mon, 2 Nov 2009 15:28:59 -0600
-Received: from lucidpixels.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 10D4B1B398CA
-	for <xfs@oss.sgi.com>; Mon,  2 Nov 2009 13:29:12 -0800 (PST)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by
-	cuda.sgi.com with ESMTP id CWvhHsoB5gVkyujH for
-	<xfs@oss.sgi.com>; Mon, 02 Nov 2009 13:29:12 -0800 (PST)
-Date: Mon, 2 Nov 2009 16:29:12 -0500 (EST)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 3ware hardware raid with battery backup and the impact on barrier
-	and no write cache options.
-In-Reply-To: <7a12b48b0911021202l126e10a1pbc281f6922380f48@mail.gmail.com>
-Message-ID: <alpine.DEB.2.00.0911021628030.811@p34.internal.lan>
-References: <7a12b48b0911021202l126e10a1pbc281f6922380f48@mail.gmail.com>
+	nA2LodUa096087 for <xfs@oss.sgi.com>; Mon, 2 Nov 2009 15:50:39 -0600
+Received: from mxout-08.mxes.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D5A95566D0
+	for <xfs@oss.sgi.com>; Mon,  2 Nov 2009 13:50:52 -0800 (PST)
+Received: from mxout-08.mxes.net (mxout-08.mxes.net [216.86.168.183]) by
+	cuda.sgi.com with ESMTP id m53XAiL6GFLuG3FF for
+	<xfs@oss.sgi.com>; Mon, 02 Nov 2009 13:50:52 -0800 (PST)
+Message-ID: <4AEF5438.5050801@aol.com>
+Date: Mon, 02 Nov 2009 16:50:48 -0500
+From: "AndrewL733@aol.com" <AndrewL733@aol.com>
 MIME-Version: 1.0
+Subject: Re: XFS and DPX files
+References: <4AEC2CF4.8040703@aol.com>
+	<4AEC4BAA.20606@aol.com>	<20091031174836.3fc9505b@galadriel.home>	<200911021205.28006@zmi.at>
+	<20091102185249.0da8e388@harpe.intellique.com>
+In-Reply-To: <20091102185249.0da8e388@harpe.intellique.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,48 +29,66 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: William Lewis <william@netproteus.net>
-Cc: xfs@oss.sgi.com
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, xfs@oss.sgi.com
 
 
+>> I believe for a 15 drive RAID-6, where 2 disks are used forredundancy, the correct mkfs would be:
+>> mkfs -t xfs -d su=65536,sw=13 /dev/sdXX
+>>     
+>
+> Yes you're right, I replied a bit too quickly :)
+>
+>
+>   
+>> Another thing to try is if it would help to turn disk cache writes
+>> *on*, despite all warnings if the FAQ. 
+>>     
 
-On Mon, 2 Nov 2009, William Lewis wrote:
+Thank you for your suggestions.  Yes I have write caching enabled. And I 
+have StorSave set to "Performance". And I have a UPS on the system at 
+all times!
 
-> Hi,
->
-> I am in the process of setting up an XFS file system on underlying hardware
-> consisting of a 3ware 9550SXU (+ battery backup module) and 4 x Seagate
-> ST31500341AS 1.5TB hard drives in Raid 5 configuration.
->
-> Reading your FAQ at http://xfs.org/index.php/XFS_FAQ I understand that it is
-> advisable to mount the file system with nobarrier to improve performance.
-> However going on to read about recommended settings for write cache, the
-> advice for 3ware hardware doesn't seem to account for the fact that there
-> are 2 levels of write cache in play, that in the 3ware card itself protected
-> by the battery and the write cache of the disks themselves, which as far as
-> I can understand is also protected by the battery backup (in the correct
-> storage modes - balanced/protection) because the 3ware card uses write
-> journaling to keep track of pending write operations in the disks' cache.
-> Therefore unless I am misunderstanding something the most benefit is to be
-> gained by mounting with nobarrier and having the write cache turned on?
->
-> One thing I am not clear about is if nobarrier interacts with the page cache
-> at all and if the lack of barrier leaves you with a situation in which
-> pending writes can be lost from main memory on power failure?
->
-> Thanks in advance for any clarification you can provide.
->
-> Regards
->
-> Will Lewis
->
+The information about barriers was useful.  In years past I was running 
+much older firmware for the 3ware 9650 cards and that did not support 
+barriers.  But it is true the current firmware does support barriers.  I 
+also believe the 3ware StorSave "Performance" setting will disable 
+barriers as well -- at least it makes the card ignore FUA commands.
 
-I am also curious, I have a 16 drive RAID-6 configuration on a 
-9650SE-16ML and using -o nobarrier or mounting normal the speed/benchmarks 
-seemed to be the same.  Either barriers are not enabled by default for 
-3ware RAID arrays or they make no difference in performance?
+Anyway, I have mounted the XFS filesystem with the "nobarrier" flag and 
+I'm still seeing the same behavior.  If you want to take a closer look 
+at what I mean, please go to this link:
 
-Justin.
+    http://sites.google.com/site/andrewl733info/xfs_and_dpx
+
+At this point, I have tried the following -- and none of these 
+approaches seems to fix the problem:
+
+    -- preallocation of DPX files
+    -- reservation of DXP files (Make 10,000 zero-byte files named
+    0000001.dpx through 0010000.dpx)
+    -- creating xfs filesystem with external log device (also a 16-drive
+    RAID array, because that's what I have available)
+    -- mounting with large logbsize
+    -- mounting with more logbufs
+    -- mounting with larger allocsize
+
+
+Again, I want to point out that I don't have any problem with the 
+underlying RAID device.  On Linux itself, I get Bonnie++ scores of 
+around 740 MB/sec reading and 650 MB/sec writing, minimum.  Over 10 
+Gigabit Ethernet, I can write uncompressed HD streams (160 MB/sec) and I 
+can read 2K DPX files (300+ MB/sec).  DD shows similar results.
+
+My gut feeling is that XFS is falling over after creating a certain 
+number of new files.  Because the DPX format creates one file for every 
+frame (30 files/sec), it's not really a video stream. It's really like 
+making 30 photoshop files per second. It seems as if some resource that 
+XFS needs is being used up after a certain number of files are created, 
+and that it is very disruptive and costly to get more of that resource. 
+Why ext3 and ext4 can keep going past 60,000 files and xfs falls over 
+after 4000 or 5000 files, I do not understand.
+
 
 _______________________________________________
 xfs mailing list
