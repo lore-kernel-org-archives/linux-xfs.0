@@ -1,22 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nA3Fo6GT170177 for <xfs@oss.sgi.com>; Tue, 3 Nov 2009 09:50:08 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E3FEC59D94
-	for <xfs@oss.sgi.com>; Tue,  3 Nov 2009 07:50:19 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id Baw8cy3xcR51oT1D for
-	<xfs@oss.sgi.com>; Tue, 03 Nov 2009 07:50:19 -0800 (PST)
-Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1N5LeF-0007t3-Iu
-	for xfs@oss.sgi.com; Tue, 03 Nov 2009 15:50:19 +0000
-Date: Tue, 3 Nov 2009 10:50:19 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] db: stop using xfs_bmbt_rec_32_t
-Message-ID: <20091103155019.GA28991@infradead.org>
+	nA3GIOX8171757 for <xfs@oss.sgi.com>; Tue, 3 Nov 2009 10:18:24 -0600
+Content-class: urn:content-classes:message
 MIME-Version: 1.0
-Content-Disposition: inline
+Subject: RE: [PATCH] xfs: cleanup data end I/O handlers
+Date: Tue, 3 Nov 2009 10:18:34 -0600
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83AE62@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <20091030091147.GB23188@infradead.org>
+From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,165 +21,183 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-xfs_db uses the xfs_bmbt_rec_32_t type to pass around extent information in a
-few places.  But everywhere where we actually use it we use the normal
-xfs_bmbt_rec_t just casting from/to xfs_bmbt_rec_32_t to pass it around.
+Christoph Hellwig wrote:
+> Currently we have various different end I/O handler for read vs the different
+> types of write I/O.  But they are all very similar so we could just use one
+> with a few conditionals and reduce code size a lot.
 
-Just pass the xfs_bmbt_rec_t directly and thus get rid of the last use
-of xfs_bmbt_rec_32_t in xfsprogs.
+When I was looking at the last patch I had the same
+thought, so I'm glad you did this.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+The patch is good--here are a few thoughts so you
+can correct me if I'm misunderstanding something...
 
-Index: xfsprogs-dev/db/check.c
-===================================================================
---- xfsprogs-dev.orig/db/check.c	2009-10-11 03:16:17.350004081 +0200
-+++ xfsprogs-dev/db/check.c	2009-11-03 16:46:56.067277983 +0100
-@@ -265,7 +265,7 @@ static int		ncheck_f(int argc, char **ar
- static char		*prepend_path(char *oldpath, char *parent);
- static xfs_ino_t	process_block_dir_v2(blkmap_t *blkmap, int *dot,
- 					     int *dotdot, inodata_t *id);
--static void		process_bmbt_reclist(xfs_bmbt_rec_32_t *rp, int numrecs,
-+static void		process_bmbt_reclist(xfs_bmbt_rec_t *rp, int numrecs,
- 					     dbm_t type, inodata_t *id,
- 					     xfs_drfsbno_t *tot,
- 					     blkmap_t **blkmapp);
-@@ -2012,7 +2012,7 @@ process_block_dir_v2(
- 
- static void
- process_bmbt_reclist(
--	xfs_bmbt_rec_32_t	*rp,
-+	xfs_bmbt_rec_t		*rp,
- 	int			numrecs,
- 	dbm_t			type,
- 	inodata_t		*id,
-@@ -2038,7 +2038,7 @@ process_bmbt_reclist(
- 	iagno = XFS_INO_TO_AGNO(mp, id->ino);
- 	iagbno = XFS_INO_TO_AGBNO(mp, id->ino);
- 	for (i = 0; i < numrecs; i++, rp++) {
--		convert_extent((xfs_bmbt_rec_64_t *)rp, &o, &s, &c, &f);
-+		convert_extent(rp, &o, &s, &c, &f);
- 		if (v)
- 			dbprintf(_("inode %lld extent [%lld,%lld,%lld,%d]\n"),
- 				id->ino, o, s, c, f);
-@@ -2120,7 +2120,6 @@ process_btinode(
- 	xfs_bmdr_block_t	*dib;
- 	int			i;
- 	xfs_bmbt_ptr_t		*pp;
--	xfs_bmbt_rec_32_t	*rp;
- 
- 	dib = (xfs_bmdr_block_t *)XFS_DFORK_PTR(dip, whichfork);
- 	if (be16_to_cpu(dib->bb_level) >= XFS_BM_MAXLEVELS(mp, whichfork)) {
-@@ -2146,7 +2145,7 @@ process_btinode(
- 		return;
- 	}
- 	if (be16_to_cpu(dib->bb_level) == 0) {
--		rp = (xfs_bmbt_rec_32_t *)XFS_BMDR_REC_ADDR(dib, 1);
-+		xfs_bmbt_rec_t	*rp = XFS_BMDR_REC_ADDR(dib, 1);
- 		process_bmbt_reclist(rp, be16_to_cpu(dib->bb_numrecs), type, 
- 							id, totd, blkmapp);
- 		*nex += be16_to_cpu(dib->bb_numrecs);
-@@ -2579,12 +2578,12 @@ process_exinode(
- 	blkmap_t		**blkmapp,
- 	int			whichfork)
- {
--	xfs_bmbt_rec_32_t	*rp;
-+	xfs_bmbt_rec_t		*rp;
- 
--	rp = (xfs_bmbt_rec_32_t *)XFS_DFORK_PTR(dip, whichfork);
-+	rp = (xfs_bmbt_rec_t *)XFS_DFORK_PTR(dip, whichfork);
- 	*nex = XFS_DFORK_NEXTENTS(dip, whichfork);
- 	if (*nex < 0 || *nex > XFS_DFORK_SIZE(dip, mp, whichfork) / 
--						sizeof(xfs_bmbt_rec_32_t)) {
-+						sizeof(xfs_bmbt_rec_t)) {
- 		if (!sflag || id->ilist)
- 			dbprintf(_("bad number of extents %d for inode %lld\n"),
- 				*nex, id->ino);
-@@ -4207,7 +4206,7 @@ scanfunc_bmap(
- 	xfs_agnumber_t		agno;
- 	int			i;
- 	xfs_bmbt_ptr_t		*pp;
--	xfs_bmbt_rec_32_t	*rp;
-+	xfs_bmbt_rec_t		*rp;
- 
- 	agno = XFS_FSB_TO_AGNO(mp, bno);
- 	agbno = XFS_FSB_TO_AGBNO(mp, bno);
-@@ -4240,7 +4239,7 @@ scanfunc_bmap(
- 			error++;
- 			return;
- 		}
--		rp = (xfs_bmbt_rec_32_t *)XFS_BMBT_REC_ADDR(mp, block, 1);
-+		rp = XFS_BMBT_REC_ADDR(mp, block, 1);
- 		*nex += be16_to_cpu(block->bb_numrecs);
- 		process_bmbt_reclist(rp, be16_to_cpu(block->bb_numrecs), type, id, totd,
- 			blkmapp);
-Index: xfsprogs-dev/db/frag.c
-===================================================================
---- xfsprogs-dev.orig/db/frag.c	2009-10-11 03:16:17.364007469 +0200
-+++ xfsprogs-dev/db/frag.c	2009-11-03 16:46:56.068277413 +0100
-@@ -66,7 +66,7 @@ static void		extmap_set_ext(extmap_t **e
- 				       xfs_extlen_t c);
- static int		frag_f(int argc, char **argv);
- static int		init(int argc, char **argv);
--static void		process_bmbt_reclist(xfs_bmbt_rec_32_t *rp, int numrecs,
-+static void		process_bmbt_reclist(xfs_bmbt_rec_t *rp, int numrecs,
- 					     extmap_t **extmapp);
- static void		process_btinode(xfs_dinode_t *dip, extmap_t **extmapp,
- 					int whichfork);
-@@ -223,7 +223,7 @@ init(
- 
- static void
- process_bmbt_reclist(
--	xfs_bmbt_rec_32_t	*rp,
-+	xfs_bmbt_rec_t		*rp,
- 	int			numrecs,
- 	extmap_t		**extmapp)
- {
-@@ -234,7 +234,7 @@ process_bmbt_reclist(
- 	xfs_dfsbno_t		s;
- 
- 	for (i = 0; i < numrecs; i++, rp++) {
--		convert_extent((xfs_bmbt_rec_64_t *)rp, &o, &s, &c, &f);
-+		convert_extent(rp, &o, &s, &c, &f);
- 		extmap_set_ext(extmapp, (xfs_fileoff_t)o, (xfs_extlen_t)c);
- 	}
- }
-@@ -248,11 +248,10 @@ process_btinode(
- 	xfs_bmdr_block_t	*dib;
- 	int			i;
- 	xfs_bmbt_ptr_t		*pp;
--	xfs_bmbt_rec_32_t	*rp;
- 
- 	dib = (xfs_bmdr_block_t *)XFS_DFORK_PTR(dip, whichfork);
- 	if (be16_to_cpu(dib->bb_level) == 0) {
--		rp = (xfs_bmbt_rec_32_t *)XFS_BMDR_REC_ADDR(dib, 1);
-+		xfs_bmbt_rec_t		*rp = XFS_BMDR_REC_ADDR(dib, 1);
- 		process_bmbt_reclist(rp, be16_to_cpu(dib->bb_numrecs), extmapp);
- 		return;
- 	}
-@@ -270,9 +269,9 @@ process_exinode(
- 	extmap_t		**extmapp,
- 	int			whichfork)
- {
--	xfs_bmbt_rec_32_t	*rp;
-+	xfs_bmbt_rec_t		*rp;
- 
--	rp = (xfs_bmbt_rec_32_t *)XFS_DFORK_PTR(dip, whichfork);
-+	rp = (xfs_bmbt_rec_t *)XFS_DFORK_PTR(dip, whichfork);
- 	process_bmbt_reclist(rp, XFS_DFORK_NEXTENTS(dip, whichfork), extmapp);
- }
- 
-@@ -448,8 +447,7 @@ scanfunc_bmap(
- 			return;
- 		}
- 		rp = XFS_BMBT_REC_ADDR(mp, block, 1);
--		process_bmbt_reclist((xfs_bmbt_rec_32_t *)rp, 
--				nrecs, extmapp);
-+		process_bmbt_reclist(rp, nrecs, extmapp);
- 		return;
- 	}
- 
+I note that you now call xfs_setfilesize() in the
+IOMAP_UNWRITTEN case even if there was an I/O error
+indicated, which is different from current code.
+But that's OK because xfs_setfilesize() checks for
+that condition, so the result is the same.
+
+I also note that you no longer init the work queue
+at the end of a non-extending direct I/O write.
+But that too is OK, because it looks like the only
+reason it was initialized there was so that the
+work function pointer would change, for the benefit
+of xfs_finish_ioend().  But you changed that to
+make use of the io_type, which is a better way of
+doing it anyway.
+
+In summary...  Looks good, I like it.
+
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Reviewed-by: Alex Elder <aelder@sgi.com>
+
+
+> Index: linux-2.6/fs/xfs/linux-2.6/xfs_aops.c
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/linux-2.6/xfs_aops.c	2009-10-30 10:05:46.680256053 +0100
+> +++ linux-2.6/fs/xfs/linux-2.6/xfs_aops.c	2009-10-30 10:08:54.235024030 +0100
+> @@ -235,71 +235,36 @@ xfs_setfilesize(
+>  }
+> 
+>  /*
+> - * Buffered IO write completion for delayed allocate extents.
+> + * IO write completion.
+>   */
+>  STATIC void
+> -xfs_end_bio_delalloc(
+> -	struct work_struct	*work)
+> -{
+> -	xfs_ioend_t		*ioend =
+> -		container_of(work, xfs_ioend_t, io_work);
+> -
+> -	xfs_setfilesize(ioend);
+> -	xfs_destroy_ioend(ioend);
+> -}
+> -
+> -/*
+> - * Buffered IO write completion for regular, written extents.
+> - */
+> -STATIC void
+> -xfs_end_bio_written(
+> -	struct work_struct	*work)
+> -{
+> -	xfs_ioend_t		*ioend =
+> -		container_of(work, xfs_ioend_t, io_work);
+> -
+> -	xfs_setfilesize(ioend);
+> -	xfs_destroy_ioend(ioend);
+> -}
+> -
+> -/*
+> - * IO write completion for unwritten extents.
+> - *
+> - * Issue transactions to convert a buffer range from unwritten
+> - * to written extents.
+> - */
+> -STATIC void
+> -xfs_end_bio_unwritten(
+> +xfs_end_io(
+>  	struct work_struct	*work)
+>  {
+>  	xfs_ioend_t		*ioend =
+>  		container_of(work, xfs_ioend_t, io_work);
+>  	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
+> -	xfs_off_t		offset = ioend->io_offset;
+> -	size_t			size = ioend->io_size;
+> 
+> -	if (likely(!ioend->io_error)) {
+> -		if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
+> -			int error;
+> -			error = xfs_iomap_write_unwritten(ip, offset, size);
+> -			if (error)
+> -				ioend->io_error = error;
+> -		}
+> -		xfs_setfilesize(ioend);
+> +	/*
+> +	 * For unwritten extents we need to issue transactions to convert a
+> +	 * range to normal written extens after the data I/O has finished.
+> +	 */
+> +	if (ioend->io_type == IOMAP_UNWRITTEN &&
+> +	    likely(!ioend->io_error && !XFS_FORCED_SHUTDOWN(ip->i_mount))) {
+> +		int error;
+> +
+> +		error = xfs_iomap_write_unwritten(ip, ioend->io_offset,
+> +						 ioend->io_size);
+> +		if (error)
+> +			ioend->io_error = error;
+>  	}
+> -	xfs_destroy_ioend(ioend);
+> -}
+> -
+> -/*
+> - * IO read completion for regular, written extents.
+> - */
+> -STATIC void
+> -xfs_end_bio_read(
+> -	struct work_struct	*work)
+> -{
+> -	xfs_ioend_t		*ioend =
+> -		container_of(work, xfs_ioend_t, io_work);
+> 
+> +	/*
+> +	 * We might have to update the on-disk file size after extending
+> +	 * writes.
+> +	 */
+> +	if (ioend->io_type != IOMAP_READ)
+> +		xfs_setfilesize(ioend);
+>  	xfs_destroy_ioend(ioend);
+>  }
+> 
+> @@ -314,10 +279,10 @@ xfs_finish_ioend(
+>  	int		wait)
+>  {
+>  	if (atomic_dec_and_test(&ioend->io_remaining)) {
+> -		struct workqueue_struct *wq = xfsdatad_workqueue;
+> -		if (ioend->io_work.func == xfs_end_bio_unwritten)
+> -			wq = xfsconvertd_workqueue;
+> +		struct workqueue_struct *wq;
+> 
+> +		wq = (ioend->io_type == IOMAP_UNWRITTEN) ?
+> +			xfsconvertd_workqueue : xfsdatad_workqueue;
+>  		queue_work(wq, &ioend->io_work);
+>  		if (wait)
+>  			flush_workqueue(wq);
+> @@ -355,15 +320,7 @@ xfs_alloc_ioend(
+>  	ioend->io_offset = 0;
+>  	ioend->io_size = 0;
+> 
+> -	if (type == IOMAP_UNWRITTEN)
+> -		INIT_WORK(&ioend->io_work, xfs_end_bio_unwritten);
+> -	else if (type == IOMAP_DELAY)
+> -		INIT_WORK(&ioend->io_work, xfs_end_bio_delalloc);
+> -	else if (type == IOMAP_READ)
+> -		INIT_WORK(&ioend->io_work, xfs_end_bio_read);
+> -	else
+> -		INIT_WORK(&ioend->io_work, xfs_end_bio_written);
+> -
+> +	INIT_WORK(&ioend->io_work, xfs_end_io);
+>  	return ioend;
+>  }
+> 
+> @@ -1538,7 +1495,7 @@ xfs_end_io_direct(
+>  		 * didn't map an unwritten extent so switch it's completion
+>  		 * handler.
+>  		 */
+> -		INIT_WORK(&ioend->io_work, xfs_end_bio_written);
+> +		ioend->io_type = IOMAP_NEW;
+>  		xfs_finish_ioend(ioend, 0);
+>  	}
+> 
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
