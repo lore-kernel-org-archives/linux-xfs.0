@@ -1,14 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nA2NL07Z102378 for <xfs@oss.sgi.com>; Mon, 2 Nov 2009 17:21:00 -0600
-Content-class: urn:content-classes:message
+	nA339MiM116340 for <xfs@oss.sgi.com>; Mon, 2 Nov 2009 21:09:22 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 80012180C93E
+	for <xfs@oss.sgi.com>; Mon,  2 Nov 2009 19:09:34 -0800 (PST)
+Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
+	cuda.sgi.com with ESMTP id z9AKXcun7JadZ8KN for
+	<xfs@oss.sgi.com>; Mon, 02 Nov 2009 19:09:34 -0800 (PST)
+Message-ID: <4AEF9EED.6080403@sandeen.net>
+Date: Mon, 02 Nov 2009 21:09:33 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: RE: [PATCH] xfs: use WRITE_SYNC_PLUG for synchronous writeout
-Date: Mon, 2 Nov 2009 17:20:44 -0600
-Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83AE5E@cf--amer001e--3.americas.sgi.com>
-In-Reply-To: <20091030090915.GA23188@infradead.org>
-From: "Alex Elder" <aelder@sgi.com>
+Subject: Re: XFS and DPX files
+References: <4AEC2CF4.8040703@aol.com>	<4AEC4BAA.20606@aol.com>	<20091031174836.3fc9505b@galadriel.home>	<200911021205.28006@zmi.at>	<20091102185249.0da8e388@harpe.intellique.com>
+	<4AEF5438.5050801@aol.com>
+In-Reply-To: <4AEF5438.5050801@aol.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,97 +24,87 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: "AndrewL733@aol.com" <AndrewL733@aol.com>
+Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> The VM and I/O schedulers now expect us to use WRITE_SYNC_PLUG for synchronous
-> writeout. Right now I can't see any changes in performance numbers with this,
-> but we're getting some beating for not using it, and the knowledge defintively
-> could help the block code to make better decisions.
+AndrewL733@aol.com wrote:
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+>>> I believe for a 15 drive RAID-6, where 2 disks are used 
+>>> forredundancy, the correct mkfs would be:
+>>> mkfs -t xfs -d su=65536,sw=13 /dev/sdXX
+>>>     
+>>
+>> Yes you're right, I replied a bit too quickly :)
+>>
+>>
+>>  
+>>> Another thing to try is if it would help to turn disk cache writes
+>>> *on*, despite all warnings if the FAQ.     
+> 
+> Thank you for your suggestions.  Yes I have write caching enabled. And I 
+> have StorSave set to "Performance". And I have a UPS on the system at 
+> all times!
+> 
+> The information about barriers was useful.  In years past I was running 
+> much older firmware for the 3ware 9650 cards and that did not support 
+> barriers.  But it is true the current firmware does support barriers.  I 
+> also believe the 3ware StorSave "Performance" setting will disable 
+> barriers as well -- at least it makes the card ignore FUA commands.
+> 
+> Anyway, I have mounted the XFS filesystem with the "nobarrier" flag and 
+> I'm still seeing the same behavior.  If you want to take a closer look 
+> at what I mean, please go to this link:
+> 
+>    http://sites.google.com/site/andrewl733info/xfs_and_dpx
+> 
+> At this point, I have tried the following -- and none of these 
+> approaches seems to fix the problem:
+> 
+>    -- preallocation of DPX files
+>    -- reservation of DXP files (Make 10,000 zero-byte files named
+>    0000001.dpx through 0010000.dpx)
+>    -- creating xfs filesystem with external log device (also a 16-drive
+>    RAID array, because that's what I have available)
+>    -- mounting with large logbsize
+>    -- mounting with more logbufs
+>    -- mounting with larger allocsize
 
-Looks good.
+Have you said how large the filesystem is?  If it's > 1T or 2T, and 
+you're on a 64-bit system, have you tried the inode64 to get nicer inode 
+vs. data allocation behavior?
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+Other suggestions might be to try blktrace/seekwatcher to see where your 
+IO is going, or maybe even oprofile to see if xfs is burning cpu 
+searching for allocations, or somesuch ...
 
+-Eric
 
-> Index: linux-2.6/fs/xfs/linux-2.6/xfs_aops.c
-> ===================================================================
-> --- linux-2.6.orig/fs/xfs/linux-2.6/xfs_aops.c	2009-10-24 10:08:36.622254197 +0200
-> +++ linux-2.6/fs/xfs/linux-2.6/xfs_aops.c	2009-10-24 10:18:27.803006347 +0200
-> @@ -412,8 +412,9 @@ xfs_end_bio(
 > 
->  STATIC void
->  xfs_submit_ioend_bio(
-> -	xfs_ioend_t	*ioend,
-> -	struct bio	*bio)
-> +	struct writeback_control *wbc,
-> +	xfs_ioend_t		*ioend,
-> +	struct bio		*bio)
->  {
->  	atomic_inc(&ioend->io_remaining);
->  	bio->bi_private = ioend;
-> @@ -426,7 +427,8 @@ xfs_submit_ioend_bio(
->  	if (xfs_ioend_new_eof(ioend))
->  		xfs_mark_inode_dirty_sync(XFS_I(ioend->io_inode));
+> Again, I want to point out that I don't have any problem with the 
+> underlying RAID device.  On Linux itself, I get Bonnie++ scores of 
+> around 740 MB/sec reading and 650 MB/sec writing, minimum.  Over 10 
+> Gigabit Ethernet, I can write uncompressed HD streams (160 MB/sec) and I 
+> can read 2K DPX files (300+ MB/sec).  DD shows similar results.
 > 
-> -	submit_bio(WRITE, bio);
-> +	submit_bio(wbc->sync_mode == WB_SYNC_ALL ?
-> +		   WRITE_SYNC_PLUG : WRITE, bio);
->  	ASSERT(!bio_flagged(bio, BIO_EOPNOTSUPP));
->  	bio_put(bio);
->  }
-> @@ -505,6 +507,7 @@ static inline int bio_add_buffer(struct
->   */
->  STATIC void
->  xfs_submit_ioend(
-> +	struct writeback_control *wbc,
->  	xfs_ioend_t		*ioend)
->  {
->  	xfs_ioend_t		*head = ioend;
-> @@ -533,19 +536,19 @@ xfs_submit_ioend(
->   retry:
->  				bio = xfs_alloc_ioend_bio(bh);
->  			} else if (bh->b_blocknr != lastblock + 1) {
-> -				xfs_submit_ioend_bio(ioend, bio);
-> +				xfs_submit_ioend_bio(wbc, ioend, bio);
->  				goto retry;
->  			}
-> 
->  			if (bio_add_buffer(bio, bh) != bh->b_size) {
-> -				xfs_submit_ioend_bio(ioend, bio);
-> +				xfs_submit_ioend_bio(wbc, ioend, bio);
->  				goto retry;
->  			}
-> 
->  			lastblock = bh->b_blocknr;
->  		}
->  		if (bio)
-> -			xfs_submit_ioend_bio(ioend, bio);
-> +			xfs_submit_ioend_bio(wbc, ioend, bio);
->  		xfs_finish_ioend(ioend, 0);
->  	} while ((ioend = next) != NULL);
->  }
-> @@ -1198,7 +1201,7 @@ xfs_page_state_convert(
->  	}
-> 
->  	if (iohead)
-> -		xfs_submit_ioend(iohead);
-> +		xfs_submit_ioend(wbc, iohead);
-> 
->  	return page_dirty;
+> My gut feeling is that XFS is falling over after creating a certain 
+> number of new files.  Because the DPX format creates one file for every 
+> frame (30 files/sec), it's not really a video stream. It's really like 
+> making 30 photoshop files per second. It seems as if some resource that 
+> XFS needs is being used up after a certain number of files are created, 
+> and that it is very disruptive and costly to get more of that resource. 
+> Why ext3 and ext4 can keep going past 60,000 files and xfs falls over 
+> after 4000 or 5000 files, I do not understand.
 > 
 > 
 > _______________________________________________
 > xfs mailing list
 > xfs@oss.sgi.com
 > http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
