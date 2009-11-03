@@ -1,21 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nA339MiM116340 for <xfs@oss.sgi.com>; Mon, 2 Nov 2009 21:09:22 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 80012180C93E
-	for <xfs@oss.sgi.com>; Mon,  2 Nov 2009 19:09:34 -0800 (PST)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id z9AKXcun7JadZ8KN for
-	<xfs@oss.sgi.com>; Mon, 02 Nov 2009 19:09:34 -0800 (PST)
-Message-ID: <4AEF9EED.6080403@sandeen.net>
-Date: Mon, 02 Nov 2009 21:09:33 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	nA38aGoE137942 for <xfs@oss.sgi.com>; Tue, 3 Nov 2009 02:36:17 -0600
+Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DB9B857C4C
+	for <xfs@oss.sgi.com>; Tue,  3 Nov 2009 00:36:27 -0800 (PST)
+Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id On5NVQ5Rjyz66Q8P for
+	<xfs@oss.sgi.com>; Tue, 03 Nov 2009 00:36:27 -0800 (PST)
+Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv1.zmi.at (Postfix) with ESMTP id 15F41C3AB07
+	for <xfs@oss.sgi.com>; Tue,  3 Nov 2009 09:36:26 +0100 (CET)
+Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id D81D340016F
+	for <xfs@oss.sgi.com>; Tue,  3 Nov 2009 09:36:25 +0100 (CET)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: 3ware hardware raid with battery backup and the impact on barrier
+	and no write cache options.
+Date: Tue, 3 Nov 2009 09:36:25 +0100
+References: <7a12b48b0911021202l126e10a1pbc281f6922380f48@mail.gmail.com>
+	<alpine.DEB.2.00.0911021628030.811@p34.internal.lan>
+In-Reply-To: <alpine.DEB.2.00.0911021628030.811@p34.internal.lan>
 MIME-Version: 1.0
-Subject: Re: XFS and DPX files
-References: <4AEC2CF4.8040703@aol.com>	<4AEC4BAA.20606@aol.com>	<20091031174836.3fc9505b@galadriel.home>	<200911021205.28006@zmi.at>	<20091102185249.0da8e388@harpe.intellique.com>
-	<4AEF5438.5050801@aol.com>
-In-Reply-To: <4AEF5438.5050801@aol.com>
+Content-Disposition: inline
+Message-Id: <200911030936.25442@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,87 +36,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "AndrewL733@aol.com" <AndrewL733@aol.com>
-Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-AndrewL733@aol.com wrote:
-> 
->>> I believe for a 15 drive RAID-6, where 2 disks are used 
->>> forredundancy, the correct mkfs would be:
->>> mkfs -t xfs -d su=65536,sw=13 /dev/sdXX
->>>     
->>
->> Yes you're right, I replied a bit too quickly :)
->>
->>
->>  
->>> Another thing to try is if it would help to turn disk cache writes
->>> *on*, despite all warnings if the FAQ.     
-> 
-> Thank you for your suggestions.  Yes I have write caching enabled. And I 
-> have StorSave set to "Performance". And I have a UPS on the system at 
-> all times!
-> 
-> The information about barriers was useful.  In years past I was running 
-> much older firmware for the 3ware 9650 cards and that did not support 
-> barriers.  But it is true the current firmware does support barriers.  I 
-> also believe the 3ware StorSave "Performance" setting will disable 
-> barriers as well -- at least it makes the card ignore FUA commands.
-> 
-> Anyway, I have mounted the XFS filesystem with the "nobarrier" flag and 
-> I'm still seeing the same behavior.  If you want to take a closer look 
-> at what I mean, please go to this link:
-> 
->    http://sites.google.com/site/andrewl733info/xfs_and_dpx
-> 
-> At this point, I have tried the following -- and none of these 
-> approaches seems to fix the problem:
-> 
->    -- preallocation of DPX files
->    -- reservation of DXP files (Make 10,000 zero-byte files named
->    0000001.dpx through 0010000.dpx)
->    -- creating xfs filesystem with external log device (also a 16-drive
->    RAID array, because that's what I have available)
->    -- mounting with large logbsize
->    -- mounting with more logbufs
->    -- mounting with larger allocsize
+On Montag 02 November 2009 Justin Piszcz wrote:
+> I am also curious, I have a 16 drive RAID-6 configuration on a
+> 9650SE-16ML and using -o nobarrier or mounting normal the
+> speed/benchmarks seemed to be the same. =A0Either barriers are not
+> enabled by default for 3ware RAID arrays or they make no difference
+> in performance?
 
-Have you said how large the filesystem is?  If it's > 1T or 2T, and 
-you're on a 64-bit system, have you tried the inode64 to get nicer inode 
-vs. data allocation behavior?
+I'd say a RAID controller with it's own write cache enabled + BBM will =
 
-Other suggestions might be to try blktrace/seekwatcher to see where your 
-IO is going, or maybe even oprofile to see if xfs is burning cpu 
-searching for allocations, or somesuch ...
+effectively turn barriers off, even if you can use them as a mount =
 
--Eric
+options. What happens with barriers, is that it writes =
 
-> 
-> Again, I want to point out that I don't have any problem with the 
-> underlying RAID device.  On Linux itself, I get Bonnie++ scores of 
-> around 740 MB/sec reading and 650 MB/sec writing, minimum.  Over 10 
-> Gigabit Ethernet, I can write uncompressed HD streams (160 MB/sec) and I 
-> can read 2K DPX files (300+ MB/sec).  DD shows similar results.
-> 
-> My gut feeling is that XFS is falling over after creating a certain 
-> number of new files.  Because the DPX format creates one file for every 
-> frame (30 files/sec), it's not really a video stream. It's really like 
-> making 30 photoshop files per second. It seems as if some resource that 
-> XFS needs is being used up after a certain number of files are created, 
-> and that it is very disruptive and costly to get more of that resource. 
-> Why ext3 and ext4 can keep going past 60,000 files and xfs falls over 
-> after 4000 or 5000 files, I do not understand.
-> 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+1,2,3,barrier,4,5,barrier,6 etc. so, that 123 are sure on disk before 45 =
+
+happen etc.
+The RAID controller will happily tell you it did flush everything, =
+
+because as soon as data is in it's cache, it's claimed sure that the =
+
+data gets written, and therefore it will tell that the barrier is =
+
+already done. And that's why it's a *must* to turn off disk cache =
+
+writes, because the filesystem got it's barrier ACK and believes it, the =
+
+controller has it's cache written to disk, powerfail.... all gone. That =
+
+will do a bigger damage than any single disk could have done.
+
+mfg zmi
+-- =
+
+// Michael Monnerie, Ing.BSc    -----      http://it-management.at
+// Tel: 0660 / 415 65 31                      .network.your.ideas.
+// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
+// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
+// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
 
 _______________________________________________
 xfs mailing list
