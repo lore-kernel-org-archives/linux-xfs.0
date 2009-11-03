@@ -1,14 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nA3JFTJG181000 for <xfs@oss.sgi.com>; Tue, 3 Nov 2009 13:15:29 -0600
-Content-class: urn:content-classes:message
+	nA3J3qJb180262 for <xfs@oss.sgi.com>; Tue, 3 Nov 2009 13:03:52 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9CF945A8D8
+	for <xfs@oss.sgi.com>; Tue,  3 Nov 2009 11:04:06 -0800 (PST)
+Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
+	cuda.sgi.com with ESMTP id rz5P0yuJCz14oBy1 for
+	<xfs@oss.sgi.com>; Tue, 03 Nov 2009 11:04:06 -0800 (PST)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail.sandeen.net (Postfix) with ESMTP id 06723AA60C4
+	for <xfs@oss.sgi.com>; Tue,  3 Nov 2009 13:04:05 -0600 (CST)
+Message-ID: <4AF07EA4.9000405@sandeen.net>
+Date: Tue, 03 Nov 2009 13:04:04 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: RE: [PATCH] xfs: Wrapped journal record corruption on read at recovery
-Date: Tue, 3 Nov 2009 13:15:39 -0600
-Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83AE66@cf--amer001e--3.americas.sgi.com>
-In-Reply-To: <1AB9A794DBDDF54A8A81BE2296F7BDFE83AE64@cf--amer001e--3.americas.sgi.com>
-From: "Alex Elder" <aelder@sgi.com>
+Subject: [PATCH] xfstests: include src/aio-dio-regress in install subdirs
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,38 +26,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andy Poling <andy@realbig.com>
-Cc: John Quigley <jquigley@cleversafe.com>, xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-Alex Elder wrote:
-> Andy Poling wrote:
->> On Wed, 14 Oct 2009, Christoph Hellwig wrote:
->>>> It seems like the more elegant approach would be to set offset before the
->>>> first read, and then update it if the first read takes place (in case it was
->>>> unaligned).  That also gets rid of bufaddr, and seems like it might read
-...
+From: Izidor Matusov <imatusov@redhat.com>
 
+Install src/aio-dio-regress tests on "make install"
 
-Andy, can you tell me the log sector
-size of a file system that exhibits
-this failure condition?
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
+---
 
-You can just send the output of:
-    xfs_info /dev/<whatever>
-if you like.  I have a suspicion
-that there may still be a problem,
-even with your proposed fix, and
-would like to rule that possibility
-out.  Basically, if log sectsz is
-is > 1024 your fix is probably OK.
+diff --git a/Makefile b/Makefile
+index b017580..4dcb779 100644
+--- a/Makefile
++++ b/Makefile
+@@ -17,7 +17,7 @@ LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
+ 	check.log check.time
+ 
+ LIB_SUBDIRS = include lib
+-TOOL_SUBDIRS = ltp src m4
++TOOL_SUBDIRS = ltp src src/aio-dio-regress m4
+ 
+ SUBDIRS = $(LIB_SUBDIRS) $(TOOL_SUBDIRS)
+ 
 
-Thanks.
-
-					-Alex
 
 _______________________________________________
 xfs mailing list
