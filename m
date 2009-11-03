@@ -1,13 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nA3GIOX8171757 for <xfs@oss.sgi.com>; Tue, 3 Nov 2009 10:18:24 -0600
+	nA3HQbTX175498 for <xfs@oss.sgi.com>; Tue, 3 Nov 2009 11:26:37 -0600
 Content-class: urn:content-classes:message
 MIME-Version: 1.0
-Subject: RE: [PATCH] xfs: cleanup data end I/O handlers
-Date: Tue, 3 Nov 2009 10:18:34 -0600
-Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83AE62@cf--amer001e--3.americas.sgi.com>
-In-Reply-To: <20091030091147.GB23188@infradead.org>
+Subject: [PATCH] xfs: Wrapped journal record corruption on read at recovery
+Date: Tue, 3 Nov 2009 11:26:47 -0600
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83AE64@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <alpine.DEB.2.00.0910151858340.5504@andydesk>
 From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -21,183 +21,154 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: John Quigley <jquigley@cleversafe.com>, Andy Poling <andy@realbig.com>
 
-Christoph Hellwig wrote:
-> Currently we have various different end I/O handler for read vs the different
-> types of write I/O.  But they are all very similar so we could just use one
-> with a few conditionals and reduce code size a lot.
-
-When I was looking at the last patch I had the same
-thought, so I'm glad you did this.
-
-The patch is good--here are a few thoughts so you
-can correct me if I'm misunderstanding something...
-
-I note that you now call xfs_setfilesize() in the
-IOMAP_UNWRITTEN case even if there was an I/O error
-indicated, which is different from current code.
-But that's OK because xfs_setfilesize() checks for
-that condition, so the result is the same.
-
-I also note that you no longer init the work queue
-at the end of a non-extending direct I/O write.
-But that too is OK, because it looks like the only
-reason it was initialized there was so that the
-work function pointer would change, for the benefit
-of xfs_finish_ioend().  But you changed that to
-make use of the io_type, which is a better way of
-doing it anyway.
-
-In summary...  Looks good, I like it.
-
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
-
-> Index: linux-2.6/fs/xfs/linux-2.6/xfs_aops.c
-> ===================================================================
-> --- linux-2.6.orig/fs/xfs/linux-2.6/xfs_aops.c	2009-10-30 10:05:46.680256053 +0100
-> +++ linux-2.6/fs/xfs/linux-2.6/xfs_aops.c	2009-10-30 10:08:54.235024030 +0100
-> @@ -235,71 +235,36 @@ xfs_setfilesize(
->  }
+Andy Poling wrote:
+> On Wed, 14 Oct 2009, Christoph Hellwig wrote:
+>>> It seems like the more elegant approach would be to set offset before the
+>>> first read, and then update it if the first read takes place (in case it was
+>>> unaligned).  That also gets rid of bufaddr, and seems like it might read
+>>> better.
+>> 
+>> Yeah.  Note that in Linux 2.6.29 I did some changes in that are to
+>> take the read and offset calculation into a common helper
 > 
->  /*
-> - * Buffered IO write completion for delayed allocate extents.
-> + * IO write completion.
->   */
->  STATIC void
-> -xfs_end_bio_delalloc(
-> -	struct work_struct	*work)
-> -{
-> -	xfs_ioend_t		*ioend =
-> -		container_of(work, xfs_ioend_t, io_work);
-> -
-> -	xfs_setfilesize(ioend);
-> -	xfs_destroy_ioend(ioend);
-> -}
-> -
-> -/*
-> - * Buffered IO write completion for regular, written extents.
-> - */
-> -STATIC void
-> -xfs_end_bio_written(
-> -	struct work_struct	*work)
-> -{
-> -	xfs_ioend_t		*ioend =
-> -		container_of(work, xfs_ioend_t, io_work);
-> -
-> -	xfs_setfilesize(ioend);
-> -	xfs_destroy_ioend(ioend);
-> -}
-> -
-> -/*
-> - * IO write completion for unwritten extents.
-> - *
-> - * Issue transactions to convert a buffer range from unwritten
-> - * to written extents.
-> - */
-> -STATIC void
-> -xfs_end_bio_unwritten(
-> +xfs_end_io(
->  	struct work_struct	*work)
->  {
->  	xfs_ioend_t		*ioend =
->  		container_of(work, xfs_ioend_t, io_work);
->  	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
-> -	xfs_off_t		offset = ioend->io_offset;
-> -	size_t			size = ioend->io_size;
+> Looking at the improved code since 2.6.29, and assuming that the beginning of
+> the log will always be aligned, I have come up with the attached patch against
+> 2.6.31.4.  I think it's cleaner, and it passes my tests.
 > 
-> -	if (likely(!ioend->io_error)) {
-> -		if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
-> -			int error;
-> -			error = xfs_iomap_write_unwritten(ip, offset, size);
-> -			if (error)
-> -				ioend->io_error = error;
-> -		}
-> -		xfs_setfilesize(ioend);
-> +	/*
-> +	 * For unwritten extents we need to issue transactions to convert a
-> +	 * range to normal written extens after the data I/O has finished.
-> +	 */
-> +	if (ioend->io_type == IOMAP_UNWRITTEN &&
-> +	    likely(!ioend->io_error && !XFS_FORCED_SHUTDOWN(ip->i_mount))) {
-> +		int error;
-> +
-> +		error = xfs_iomap_write_unwritten(ip, ioend->io_offset,
-> +						 ioend->io_size);
-> +		if (error)
-> +			ioend->io_error = error;
->  	}
-> -	xfs_destroy_ioend(ioend);
-> -}
-> -
-> -/*
-> - * IO read completion for regular, written extents.
-> - */
-> -STATIC void
-> -xfs_end_bio_read(
-> -	struct work_struct	*work)
-> -{
-> -	xfs_ioend_t		*ioend =
-> -		container_of(work, xfs_ioend_t, io_work);
+> The bufaddr variable is no longer needed.  I removed the xlog_align() after
+> the second read for both headers and data since the second read will always be
+> aligned (even if there was no first read) since it is always at the beginning
+> of the log.
 > 
-> +	/*
-> +	 * We might have to update the on-disk file size after extending
-> +	 * writes.
-> +	 */
-> +	if (ioend->io_type != IOMAP_READ)
-> +		xfs_setfilesize(ioend);
->  	xfs_destroy_ioend(ioend);
->  }
+> It sets offset to the beginning of the buffer with XFS_BUF_PTR() before the
+> first read, and then your improved xlog_bread() will update the offset if the
+> first read had to be re-aligned.
 > 
-> @@ -314,10 +279,10 @@ xfs_finish_ioend(
->  	int		wait)
->  {
->  	if (atomic_dec_and_test(&ioend->io_remaining)) {
-> -		struct workqueue_struct *wq = xfsdatad_workqueue;
-> -		if (ioend->io_work.func == xfs_end_bio_unwritten)
-> -			wq = xfsconvertd_workqueue;
-> +		struct workqueue_struct *wq;
+> What do you think?
 > 
-> +		wq = (ioend->io_type == IOMAP_UNWRITTEN) ?
-> +			xfsconvertd_workqueue : xfsdatad_workqueue;
->  		queue_work(wq, &ioend->io_work);
->  		if (wait)
->  			flush_workqueue(wq);
-> @@ -355,15 +320,7 @@ xfs_alloc_ioend(
->  	ioend->io_offset = 0;
->  	ioend->io_size = 0;
-> 
-> -	if (type == IOMAP_UNWRITTEN)
-> -		INIT_WORK(&ioend->io_work, xfs_end_bio_unwritten);
-> -	else if (type == IOMAP_DELAY)
-> -		INIT_WORK(&ioend->io_work, xfs_end_bio_delalloc);
-> -	else if (type == IOMAP_READ)
-> -		INIT_WORK(&ioend->io_work, xfs_end_bio_read);
-> -	else
-> -		INIT_WORK(&ioend->io_work, xfs_end_bio_written);
-> -
-> +	INIT_WORK(&ioend->io_work, xfs_end_io);
->  	return ioend;
->  }
-> 
-> @@ -1538,7 +1495,7 @@ xfs_end_io_direct(
->  		 * didn't map an unwritten extent so switch it's completion
->  		 * handler.
->  		 */
-> -		INIT_WORK(&ioend->io_work, xfs_end_bio_written);
-> +		ioend->io_type = IOMAP_NEW;
->  		xfs_finish_ioend(ioend, 0);
->  	}
-> 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> -Andy
+
+I am re-submitting Andy's patch using the conventions that
+(hopefully) Patchwork understands to facilitate tracking.
+
+					-Alex
+
+Author: Andy Poling <andy@realbig.com>
+
+Summary of problem:
+
+If a journal record wraps at the physical end of the journal, it has to be
+read in two parts in xlog_do_recovery_pass(): a read at the physical end and a
+read at the physical beginning.  If xlog_bread() has to re-align the first
+read, the second read request does not take that re-alignment into account.
+If the first read was re-aligned, the second read over-writes the end of the
+data from the first read, effectively corrupting it.  This can happen either
+when reading the record header or reading the record data.
+
+The first sanity check in xlog_recover_process_data() is to check for a valid
+clientid, so that is the error reported.
+
+
+Summary of fix:
+
+If there was a first read at the physical end, XFS_BUF_PTR() returns where the
+data was requested to begin.  Conversely, because it is the result of
+xlog_align(), offset indicates where the requested data for the first read
+actually begins - whether or not xlog_bread() has re-aligned it.
+
+Using offset as the base for the calculation of where to place the second read
+data ensures that it will be correctly placed immediately following the data
+from the first read instead of sometimes over-writing the end of it.
+
+The attached patch has resolved the reported problem of occasional inability
+to recover the journal (reporting "bad clientid").
+
+
+--- fs/xfs/xfs_log_recover.c.orig	2009-10-14 23:39:49.753494876 -0500
++++ fs/xfs/xfs_log_recover.c	2009-10-15 18:26:23.790887700 -0500
+@@ -3517,7 +3517,7 @@
+ {
+ 	xlog_rec_header_t	*rhead;
+ 	xfs_daddr_t		blk_no;
+-	xfs_caddr_t		bufaddr, offset;
++	xfs_caddr_t		offset;
+ 	xfs_buf_t		*hbp, *dbp;
+ 	int			error = 0, h_size;
+ 	int			bblks, split_bblks;
+@@ -3610,7 +3610,7 @@
+ 			/*
+ 			 * Check for header wrapping around physical end-of-log
+ 			 */
+-			offset = NULL;
++			offset = XFS_BUF_PTR(hbp);
+ 			split_hblks = 0;
+ 			wrapped_hblks = 0;
+ 			if (blk_no + hblks <= log->l_logBBsize) {
+@@ -3646,9 +3646,8 @@
+ 				 *   - order is important.
+ 				 */
+ 				wrapped_hblks = hblks - split_hblks;
+-				bufaddr = XFS_BUF_PTR(hbp);
+ 				error = XFS_BUF_SET_PTR(hbp,
+-						bufaddr + BBTOB(split_hblks),
++						offset + BBTOB(split_hblks),
+ 						BBTOB(hblks - split_hblks));
+ 				if (error)
+ 					goto bread_err2;
+@@ -3658,14 +3657,10 @@
+ 				if (error)
+ 					goto bread_err2;
+ 
+-				error = XFS_BUF_SET_PTR(hbp, bufaddr,
++				error = XFS_BUF_SET_PTR(hbp, offset,
+ 							BBTOB(hblks));
+ 				if (error)
+ 					goto bread_err2;
+-
+-				if (!offset)
+-					offset = xlog_align(log, 0,
+-							wrapped_hblks, hbp);
+ 			}
+ 			rhead = (xlog_rec_header_t *)offset;
+ 			error = xlog_valid_rec_header(log, rhead,
+@@ -3685,7 +3680,7 @@
+ 			} else {
+ 				/* This log record is split across the
+ 				 * physical end of log */
+-				offset = NULL;
++				offset = XFS_BUF_PTR(dbp);
+ 				split_bblks = 0;
+ 				if (blk_no != log->l_logBBsize) {
+ 					/* some data is before the physical
+@@ -3714,9 +3709,8 @@
+ 				 *   _first_, then the log start (LR header end)
+ 				 *   - order is important.
+ 				 */
+-				bufaddr = XFS_BUF_PTR(dbp);
+ 				error = XFS_BUF_SET_PTR(dbp,
+-						bufaddr + BBTOB(split_bblks),
++						offset + BBTOB(split_bblks),
+ 						BBTOB(bblks - split_bblks));
+ 				if (error)
+ 					goto bread_err2;
+@@ -3727,13 +3721,9 @@
+ 				if (error)
+ 					goto bread_err2;
+ 
+-				error = XFS_BUF_SET_PTR(dbp, bufaddr, h_size);
++				error = XFS_BUF_SET_PTR(dbp, offset, h_size);
+ 				if (error)
+ 					goto bread_err2;
+-
+-				if (!offset)
+-					offset = xlog_align(log, wrapped_hblks,
+-						bblks - split_bblks, dbp);
+ 			}
+ 			xlog_unpack_data(rhead, offset, log);
+ 			if ((error = xlog_recover_process_data(log, rhash,
 
 _______________________________________________
 xfs mailing list
