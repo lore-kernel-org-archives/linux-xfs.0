@@ -1,31 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nA50xPni045232 for <xfs@oss.sgi.com>; Wed, 4 Nov 2009 18:59:27 -0600
-Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 83FD3181F7E4
-	for <xfs@oss.sgi.com>; Wed,  4 Nov 2009 16:59:20 -0800 (PST)
-Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id EeUeKebDD9tJXJxr for
-	<xfs@oss.sgi.com>; Wed, 04 Nov 2009 16:59:20 -0800 (PST)
-Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv1.zmi.at (Postfix) with ESMTP id 02030C0272C
-	for <xfs@oss.sgi.com>; Thu,  5 Nov 2009 01:59:18 +0100 (CET)
-Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id AAE3B400155
-	for <xfs@oss.sgi.com>; Thu,  5 Nov 2009 01:59:18 +0100 (CET)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
+	nA5BM4kY087338 for <xfs@oss.sgi.com>; Thu, 5 Nov 2009 05:22:05 -0600
+Received: from mail.in-medias-res.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5D022122E62F
+	for <xfs@oss.sgi.com>; Thu,  5 Nov 2009 03:22:17 -0800 (PST)
+Received: from mail.in-medias-res.com (mail.in-medias-res.com [78.47.10.114])
+	by cuda.sgi.com with ESMTP id 39RM7gICycAru5WY for
+	<xfs@oss.sgi.com>; Thu, 05 Nov 2009 03:22:17 -0800 (PST)
+Received: from localhost (localhost [127.0.0.1])
+	by mail.in-medias-res.com (Postfix) with ESMTP id 2301224439F
+	for <xfs@oss.sgi.com>; Thu,  5 Nov 2009 12:22:17 +0100 (CET)
+Received: from mail.in-medias-res.com ([127.0.0.1])
+	by localhost (imr-web.in-medias-res.com [127.0.0.1]) (amavisd-new,
+	port 10024) with ESMTP id 87jXyGTI5j5Z for <xfs@oss.sgi.com>;
+	Thu,  5 Nov 2009 12:22:15 +0100 (CET)
+Received: from imr-mail.services.in-medias-res.com
+	(port-212-202-160-2.static.qsc.de [212.202.160.2])
+	by mail.in-medias-res.com (Postfix) with ESMTP id AD3AB2071A1
+	for <xfs@oss.sgi.com>; Thu,  5 Nov 2009 12:22:15 +0100 (CET)
+Received: from mytux.intra.in-medias-res.com ([192.168.2.128])
+	by imr-mail.services.in-medias-res.com with esmtp (Exim 4.69)
+	(envelope-from <mill@in-medias-res.com>) id 1N60Pv-0007Y7-Ib
+	for xfs@oss.sgi.com; Thu, 05 Nov 2009 12:22:15 +0100
+Date: Thu, 5 Nov 2009 12:22:15 +0100
+From: mill / in-medias-res <mill@in-medias-res.com>
 Subject: Re: xfs_repair breaks; xfs_metadump hangs
-Date: Thu, 5 Nov 2009 01:59:17 +0100
-References: <20091104152022.GA21347@mytux.intra.in-medias-res.com>
-In-Reply-To: <20091104152022.GA21347@mytux.intra.in-medias-res.com>
+Message-ID: <20091105112215.GA3469@mytux.intra.in-medias-res.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-Message-Id: <200911050159.18232@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -42,23 +45,23 @@ To: xfs@oss.sgi.com
 
 On Mittwoch 04 November 2009 mill / in-medias-res wrote:
 > a RAID-5 Array which "was broken"
+>
+> Sounds like you fucked up the filesys very hard, I hope the devs can 
+> help you. But there is information missing:
+> - how big is sdc2?
+The Partition is 2000GB with about 1400 GB used.
 
-Sounds like you fucked up the filesys very hard, I hope the devs can 
-help you. But there is information missing:
-- how big is sdc2?
-- any chance you put it on a ftp server for download? Because if there's 
-no metadump, no one can tell where metadump hangs, so they'd need your 
-data to analyze.
+> - any chance you put it on a ftp server for download? Because if there's 
+> no metadump, no one can tell where metadump hangs, so they'd need your 
+> data to analyze.
+Too big to upload and the data is too sensitive :(
 
-Good luck.
+FYI: im now subscribed to the list.
 
-mfg zmi
--- 
-// Michael Monnerie, Ing.BSc    -----      http://it-management.at
-// Tel: 0660 / 415 65 31                      .network.your.ideas.
-// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
-// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
-// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
+
+> Good luck.
+Thanks,
+Max
 
 _______________________________________________
 xfs mailing list
