@@ -1,36 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nA698sDB200042 for <xfs@oss.sgi.com>; Fri, 6 Nov 2009 03:08:54 -0600
-Received: from mail.in-medias-res.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B937566FD4
-	for <xfs@oss.sgi.com>; Fri,  6 Nov 2009 01:09:09 -0800 (PST)
-Received: from mail.in-medias-res.com (mail.in-medias-res.com [78.47.10.114])
-	by cuda.sgi.com with ESMTP id 0PGEKOXcfznQI9Nm for
-	<xfs@oss.sgi.com>; Fri, 06 Nov 2009 01:09:09 -0800 (PST)
-Received: from localhost (localhost [127.0.0.1])
-	by mail.in-medias-res.com (Postfix) with ESMTP id 471CC2071A1
-	for <xfs@oss.sgi.com>; Fri,  6 Nov 2009 10:09:08 +0100 (CET)
-Received: from mail.in-medias-res.com ([127.0.0.1])
-	by localhost (imr-web.in-medias-res.com [127.0.0.1]) (amavisd-new,
-	port 10024) with ESMTP id BGUSWpBUc+8u for <xfs@oss.sgi.com>;
-	Fri,  6 Nov 2009 10:09:06 +0100 (CET)
-Received: from imr-mail.services.in-medias-res.com
-	(port-212-202-160-2.static.qsc.de [212.202.160.2])
-	by mail.in-medias-res.com (Postfix) with ESMTP id 15C64164148
-	for <xfs@oss.sgi.com>; Fri,  6 Nov 2009 10:09:06 +0100 (CET)
-Received: from mytux.intra.in-medias-res.com ([192.168.2.128])
-	by imr-mail.services.in-medias-res.com with esmtp (Exim 4.69)
-	(envelope-from <mill@in-medias-res.com>) id 1N6Koc-0000t1-03
-	for xfs@oss.sgi.com; Fri, 06 Nov 2009 10:09:06 +0100
-Date: Fri, 6 Nov 2009 10:09:05 +0100
-From: mill / in-medias-res <mill@in-medias-res.com>
-Subject: Re: xfs_repair breaks; xfs_metadump hangs
-Message-ID: <20091106090905.GA4930@mytux.intra.in-medias-res.com>
-References: <20091104152022.GA21347@mytux.intra.in-medias-res.com>
+	nA69H0mk200831 for <xfs@oss.sgi.com>; Fri, 6 Nov 2009 03:17:02 -0600
+Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 632971D8ECF6
+	for <xfs@oss.sgi.com>; Fri,  6 Nov 2009 01:17:15 -0800 (PST)
+Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id OeGABRni0AjuIfTk for
+	<xfs@oss.sgi.com>; Fri, 06 Nov 2009 01:17:15 -0800 (PST)
+Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv1.zmi.at (Postfix) with ESMTP id C852FC02703
+	for <xfs@oss.sgi.com>; Fri,  6 Nov 2009 10:17:12 +0100 (CET)
+Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id 9AF8640016C
+	for <xfs@oss.sgi.com>; Fri,  6 Nov 2009 10:17:12 +0100 (CET)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: kernel crash with damaged XFS
+Date: Fri, 6 Nov 2009 10:17:11 +0100
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20091104152022.GA21347@mytux.intra.in-medias-res.com>
+Message-Id: <200911061017.12200@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -45,50 +38,47 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-I forgot to mention, that i actually have an metadump. But it is only written till xfs_db hangs.
-It's filesize is 399M, is that enough to work with that?
+I had that during the last days on my system. It kept on running despite
+this error. I xfs_repair'ed the fs again and now it's working.
+This is the same server I talked about with Eric last time, where he
+improved xfs_repair and that repaired my fs. I had to run
+xfs_repair several times again until all errors were solved,
+and now nothing is reported anymore.
+The server had no crash or whatever since the last repair, so I wonder
+where these corruptions come from.
 
-Best Regards,
-Max
+Nov  2 00:01:12 orion.i.zmi.at kernel: Filesystem "dm-0": corrupt inode 3858839593 ((a)extents = 7).  Unmount and run xfs_repair.
+Nov  2 00:01:12 orion.i.zmi.at kernel: Pid: 18910, comm: find Tainted: G          2.6.27.29-0.1-xen #1
+Nov  2 00:01:12 orion.i.zmi.at kernel:
+Nov  2 00:01:12 orion.i.zmi.at kernel: Call Trace:
+Nov  2 00:01:12 orion.i.zmi.at kernel:  [<ffffffff8020c597>] show_trace_log_lvl+0x41/0x58
+Nov  2 00:01:12 orion.i.zmi.at kernel:  [<ffffffff80464a12>] dump_stack+0x69/0x6f
+Nov  2 00:01:12 orion.i.zmi.at kernel:  [<ffffffffa033cbdb>] xfs_iformat_extents+0xc9/0x1c4 [xfs]
+Nov  2 00:01:12 orion.i.zmi.at kernel:  [<ffffffffa033d136>] xfs_iformat+0x2b0/0x3f7 [xfs]
+Nov  2 00:01:12 orion.i.zmi.at kernel:  [<ffffffffa033d364>] xfs_iread+0xe7/0x1eb [xfs]
+Nov  2 00:01:12 orion.i.zmi.at kernel:  [<ffffffffa0338910>] xfs_iget_core+0x3a5/0x63a [xfs]
+Nov  2 00:01:12 orion.i.zmi.at kernel:  [<ffffffffa0338c87>] xfs_iget+0xe2/0x187 [xfs]
+Nov  2 00:01:12 orion.i.zmi.at kernel:  [<ffffffffa0352912>] xfs_lookup+0x79/0xa5 [xfs]
+Nov  2 00:01:12 orion.i.zmi.at kernel:  [<ffffffffa035b53f>] xfs_vn_lookup+0x3c/0x78 [xfs]
+Nov  2 00:01:12 orion.i.zmi.at kernel:  [<ffffffff802a603b>] real_lookup+0x7e/0x10f
+Nov  2 00:01:12 orion.i.zmi.at kernel:  [<ffffffff802a612f>] do_lookup+0x63/0xb6
+Nov  2 00:01:12 orion.i.zmi.at kernel:  [<ffffffff802a87aa>] __link_path_walk+0x9f4/0xe58
+Nov  2 00:01:12 orion.i.zmi.at kernel:  [<ffffffff802a8dd9>] path_walk+0x5e/0xba
+Nov  2 00:01:12 orion.i.zmi.at kernel:  [<ffffffff802a8f97>] do_path_lookup+0x162/0x1b9
+Nov  2 00:01:12 orion.i.zmi.at kernel:  [<ffffffff802a9930>] user_path_at+0x48/0x79
+Nov  2 00:01:12 orion.i.zmi.at kernel:  [<ffffffff802a1e85>] vfs_lstat_fd+0x15/0x41
+Nov  2 00:01:12 orion.i.zmi.at kernel:  [<ffffffff802a1f88>] sys_newfstatat+0x22/0x43
+Nov  2 00:01:12 orion.i.zmi.at kernel:  [<ffffffff8020b3b8>] system_call_fastpath+0x16/0x1b
+Nov  2 00:01:12 orion.i.zmi.at kernel:  [<00007f265cb0f4de>] 0x7f265cb0f4de
 
-* mill / in-medias-res <mill@in-medias-res.com> [091104 16:20]:
-> Hello XFS-Community,
-> 
-> i have some real trouble with restoring/repairing my two XFS Partion's. These
-> Partion's are on a RAID-5 Array which "was broken". The first xfs_repair run
-> on /dev/sdc1 did restore 80 GB from ca. 300-400 GB. The Problem was that 99,9%
-> of the million files are in lost+found.
-> 
-> Because i was more interested in restoring /dev/sdc2, i did forget about sdc1
-> and run xfs_repair on the other Partion:
-> 
-> cmd: xfs_repair -t 1 -P /dev/sdc2
-> [...]
-> corrupt inode 3256930831 ((a)extents = 1).  This is a bug.
-> Please capture the filesystem metadata with xfs_metadump and
-> report it to xfs@oss.sgi.com.
-> cache_node_purge: refcount was 1, not zero (node=0x377d0008)
-> fatal error -- couldn't map inode 3256930831, err = 117
-> 
-> time: 67,27s user 10,09s system 10% cpu 12:05,31 total
-> 
-> I tried to run xfs_metadump serveral times and it hangs everytime on this position:
-> xfs_metadump  -g /dev/sdc2 metadump-sdc2-2
-> Copied 1411840 of 4835520 inodes (0 of 3 AGs)
-> 
-> It runs till 2 days on the same inode and xfs_db consumes 99% of CPU.
-> Should i wait here?
-> 
-> Versions:
-> dpkg -l |grep xfs
-> ii  xfsdump   3.0.2~bpo50+1       Administrative utilities for the XFS filesys
-> ii  xfsprogs  3.0.4~bpo50+1       Utilities for managing the XFS filesystem
-> Distribution: Debian lenny with xfsprogs, xfsdump backport from unstable.
-> 
-> The xfs_repair with stock Debian Lenny version also does crash at inode 3256930831.
-> 
-> Best Regards,
-> Maximilian Mill
+
+mfg zmi
+-- 
+// Michael Monnerie, Ing.BSc    -----      http://it-management.at
+// Tel: 0660 / 415 65 31                      .network.your.ideas.
+// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
+// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
+// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
 
 _______________________________________________
 xfs mailing list
