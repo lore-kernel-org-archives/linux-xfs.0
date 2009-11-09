@@ -1,14 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nA9I5qpV213928 for <xfs@oss.sgi.com>; Mon, 9 Nov 2009 12:05:52 -0600
-Content-class: urn:content-classes:message
-MIME-Version: 1.0
-Subject: RE: [PATCH] xfs: Wrapped journal record corruption on read at recovery
-Date: Mon, 9 Nov 2009 12:06:07 -0600
-Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83AE9F@cf--amer001e--3.americas.sgi.com>
-In-Reply-To: <1AB9A794DBDDF54A8A81BE2296F7BDFE83AE64@cf--amer001e--3.americas.sgi.com>
-From: "Alex Elder" <aelder@sgi.com>
+	nA9Kj5eA223245
+	for <linux-xfs@oss.sgi.com>; Mon, 9 Nov 2009 14:45:08 -0600
+Received: from lo.gmane.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 107C6CEAEA6
+	for <linux-xfs@oss.sgi.com>; Mon,  9 Nov 2009 12:45:14 -0800 (PST)
+Received: from lo.gmane.org (lo.gmane.org [80.91.229.12]) by cuda.sgi.com with
+	ESMTP id CRw0k1vXr1q7ih0u for <linux-xfs@oss.sgi.com>;
+	Mon, 09 Nov 2009 12:45:14 -0800 (PST)
+Received: from list by lo.gmane.org with local (Exim 4.50) id 1N7b6r-000773-Es
+	for linux-xfs@oss.sgi.com; Mon, 09 Nov 2009 21:45:09 +0100
+Received: from adsl-068-016-104-079.sip.asm.bellsouth.net ([68.16.104.79])
+	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+	id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Mon, 09 Nov 2009 21:45:09 +0100
+Received: from ecashin by adsl-068-016-104-079.sip.asm.bellsouth.net with
+	local (Gmexim 0.1 (Debian)) id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Mon, 09 Nov 2009 21:45:09 +0100
+From: Ed Cashin <ecashin@coraid.com>
+Subject: NULL mp->m_log in 2.6.31 xfs_log_move_tail
+Date: Mon, 09 Nov 2009 15:39:32 -0500
+Message-ID: <87ws1z8mbf.fsf@coraid.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,164 +35,146 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andy Poling <andy@realbig.com>
-Cc: John Quigley <jquigley@cleversafe.com>, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-Alex Elder wrote:
-> Andy Poling wrote:
->> On Wed, 14 Oct 2009, Christoph Hellwig wrote:
->>>> It seems like the more elegant approach would be to set offset before the
->>>> first read, and then update it if the first read takes place (in case it was
->>>> unaligned).  That also gets rid of bufaddr, and seems like it might read
->>>> better.
->>> 
->>> Yeah.  Note that in Linux 2.6.29 I did some changes in that are to
->>> take the read and offset calculation into a common helper
->> 
->> Looking at the improved code since 2.6.29, and assuming that the beginning of
->> the log will always be aligned, I have come up with the attached patch against
->> 2.6.31.4.  I think it's cleaner, and it passes my tests.
->> 
->> The bufaddr variable is no longer needed.  I removed the xlog_align() after
->> the second read for both headers and data since the second read will always be
->> aligned (even if there was no first read) since it is always at the beginning of the log.
->> 
->> It sets offset to the beginning of the buffer with XFS_BUF_PTR() before the
->> first read, and then your improved xlog_bread() will update the offset if the
->> first read had to be re-aligned.
->> 
->> What do you think?
+A colleague has seen oopses in 2.6.31 when an XFS is mounted on an AoE
+target that becomes unresponsive and is marked as "down" by the aoe
+driver.  The aoe driver starts failing all new I/O requests after
+failing all current requests when the device is down.
 
-The patch looks good.
+I looked at the trace (included below) and put in the following check:
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+--- linux-2.6.31/fs/xfs/xfs_log.c.20091009	2009-10-09 16:49:23.062989234 -0400
++++ linux-2.6.31/fs/xfs/xfs_log.c	2009-10-09 16:49:39.766738875 -0400
+@@ -822,6 +822,7 @@ xfs_log_move_tail(xfs_mount_t	*mp,
+ 	xlog_t		*log = mp->m_log;
+ 	int		need_bytes, free_bytes, cycle, bytes;
+ 
++	BUG_ON(!log);
+ 	if (XLOG_FORCED_SHUTDOWN(log))
+ 		return;
+ 
+... and subsequent tests showed the BUG_ON being triggered.  I meant
+to gather more information but have gotten sidetracked, so I'm posting
+this information now in the hopes that it is helpful.
 
+I/O error in filesystem ("etherd/e8.1") meta-data dev etherd/e8.1 block 
+0x1bf0862       ("xlog_iodone") error 5 buf count 1024
+xfs_force_shutdown(etherd/e8.1,0x2) called from line 1044 of file 
+fs/xfs/xfs_log.c.  Return address = 0xffffffffa03e79bf
+Filesystem "etherd/e8.1": Log I/O Error Detected.  Shutting down 
+filesystem: etherd/e8.1
+Please umount the filesystem, and rectify the problem(s)
+XFS: Unable to update superblock counters. Freespace may not be correct 
+on next mount.
+------------[ cut here ]------------
+kernel BUG at fs/xfs/xfs_log.c:825!
+invalid opcode: 0000 [#1] SMP
+last sysfs file: /sys/devices/virtual/block/etherd!e8.33/state
+CPU 1
+Modules linked in: aoe xfs exportfs bridge stp llc bnep sco l2cap 
+bluetooth rfkill sunrpc ip6t_REJECT nf_conntrack_ipv6 ip6table_filter 
+ip6_tables ipv6 p4_clockmod freq_table speedstep_lib dm_multipath uinput 
+ixgbe e1000e i5k_amb e1000 hwmon i5000_edac ppdev iTCO_wdt 
+iTCO_vendor_support edac_core parport_pc dca mdio i2c_i801 parport 
+floppy pcspkr shpchp ata_generic pata_acpi radeon ttm drm i2c_algo_bit 
+i2c_core [last unloaded: aoe]
+Pid: 21300, comm: umount Not tainted 2.6.31 #1 X7DB8
+RIP: 0010:[<ffffffffa03e823b>]  [<ffffffffa03e823b>] 
+xfs_log_move_tail+0x34/0x174 [xfs]
+RSP: 0018:ffff88006e985b08  EFLAGS: 00010246
+RAX: 0000000000000000 RBX: 0000000000000000 RCX: ffff88006e985ba8
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff88007542c540
+RBP: ffff88006e985b48 R08: ffff88007b101900 R09: ffffffff817a21d8
+R10: ffff880019379c00 R11: 00000000860c2753 R12: ffff88007542c180
+R13: 0000000000000000 R14: ffff88007b101900 R15: 0000000000000000
+FS:  00007f089e005740(0000) GS:ffff880001a6f000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+CR2: 00007f089d6d69ce CR3: 00000000765ae000 CR4: 00000000000006e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+Process umount (pid: 21300, threadinfo ffff88006e984000, task 
+ffff88006d8f0000)
+Stack:
+  0000000000000000 00000000860c2753 ffff88006e985b48 ffff88007b101900
+<0> ffff88007542c180 ffff88007b101900 ffff88007b101900 0000000000000000
+<0> ffff88006e985b88 ffffffffa03f4e9d ffff88006e985b88 00000000860c2753
+Call Trace:
+  [<ffffffffa03f4e9d>] xfs_trans_ail_delete+0x82/0xf4 [xfs]
+  [<ffffffffa03cc7fd>] xfs_buf_iodone+0x40/0x63 [xfs]
+  [<ffffffffa03cc759>] xfs_buf_do_callbacks+0x3c/0x5f [xfs]
+  [<ffffffffa03cca19>] xfs_buf_iodone_callbacks+0x136/0x175 [xfs]
+  [<ffffffffa04002a5>] xfs_buf_iodone_work+0x63/0x86 [xfs]
+  [<ffffffffa040035b>] xfs_buf_ioend+0x93/0xb7 [xfs]
+  [<ffffffffa03fb230>] xfs_bioerror+0x56/0x76 [xfs]
+  [<ffffffffa0404668>] xfs_bdstrat_cb+0x48/0x67 [xfs]
+  [<ffffffffa03fff3e>] xfs_buf_iostrategy+0x2a/0x47 [xfs]
+  [<ffffffffa03ffffc>] xfs_flush_buftarg+0xa1/0x125 [xfs]
+  [<ffffffffa04000b2>] xfs_free_buftarg+0x32/0x8f [xfs]
+  [<ffffffffa0406e61>] xfs_close_devices+0x77/0x94 [xfs]
+  [<ffffffffa0406f2f>] xfs_fs_put_super+0xb1/0xe8 [xfs]
+  [<ffffffff8112ccf6>] generic_shutdown_super+0x69/0xf2
+  [<ffffffff8112cdb9>] kill_block_super+0x3a/0x6a
+  [<ffffffff8112d6af>] deactivate_super+0x68/0x95
+  [<ffffffff81144420>] mntput_no_expire+0xc6/0x114
+  [<ffffffff81144aa6>] sys_umount+0x2f2/0x337
+  [<ffffffff81012f82>] system_call_fastpath+0x16/0x1b
+Code: 55 41 54 53 48 83 ec 18 0f 1f 44 00 00 65 48 8b 04 25 28 00 00 00 
+48 89 45 c8 31 c0 48 8b 9f 40 01 00 00 49 89 f5 48 85 db 75 04 <0f> 0b 
+eb fe f6 43 20 08 0f 85 0f 01 00 00 48 85 f6 75 19 48 8d
+RIP  [<ffffffffa03e823b>] xfs_log_move_tail+0x34/0x174 [xfs]
+  RSP <ffff88006e985b08>
+---[ end trace 838ac7bc7c8a18c8 ]---
+------------[ cut here ]------------
+WARNING: at kernel/exit.c:895 do_exit+0x54/0x6da()
+Hardware name: X7DB8
+Modules linked in: aoe xfs exportfs bridge stp llc bnep sco l2cap 
+bluetooth rfkill sunrpc ip6t_REJECT nf_conntrack_ipv6 ip6table_filter 
+ip6_tables ipv6 p4_clockmod freq_table speedstep_lib dm_multipath uinput 
+ixgbe e1000e i5k_amb e1000 hwmon i5000_edac ppdev iTCO_wdt 
+iTCO_vendor_support edac_core parport_pc dca mdio i2c_i801 parport 
+floppy pcspkr shpchp ata_generic pata_acpi radeon ttm drm i2c_algo_bit 
+i2c_core [last unloaded: aoe]
+Pid: 21300, comm: umount Tainted: G      D    2.6.31 #1
+Call Trace:
+  [<ffffffff810610ff>] warn_slowpath_common+0x8d/0xbb
+  [<ffffffff81061154>] warn_slowpath_null+0x27/0x3d
+  [<ffffffff8106516f>] do_exit+0x54/0x6da
+  [<ffffffff814d564f>] oops_end+0xc8/0xe7
+  [<ffffffff810171ad>] die+0x6d/0x8c
+  [<ffffffff814d4fdd>] do_trap+0x124/0x147
+  [<ffffffff814d705d>] ? atomic_notifier_call_chain+0x26/0x3c
+  [<ffffffff81014eb0>] do_invalid_op+0xa9/0xc9
+  [<ffffffffa03e823b>] ? xfs_log_move_tail+0x34/0x174 [xfs]
+  [<ffffffff814d3c6b>] ? trace_hardirqs_off_thunk+0x3a/0x6c
+  [<ffffffff81013e2b>] invalid_op+0x1b/0x20
+  [<ffffffffa03e823b>] ? xfs_log_move_tail+0x34/0x174 [xfs]
+  [<ffffffffa03f4e9d>] xfs_trans_ail_delete+0x82/0xf4 [xfs]
+  [<ffffffffa03cc7fd>] xfs_buf_iodone+0x40/0x63 [xfs]
+  [<ffffffffa03cc759>] xfs_buf_do_callbacks+0x3c/0x5f [xfs]
+  [<ffffffffa03cca19>] xfs_buf_iodone_callbacks+0x136/0x175 [xfs]
+  [<ffffffffa04002a5>] xfs_buf_iodone_work+0x63/0x86 [xfs]
+  [<ffffffffa040035b>] xfs_buf_ioend+0x93/0xb7 [xfs]
+  [<ffffffffa03fb230>] xfs_bioerror+0x56/0x76 [xfs]
+  [<ffffffffa0404668>] xfs_bdstrat_cb+0x48/0x67 [xfs]
+  [<ffffffffa03fff3e>] xfs_buf_iostrategy+0x2a/0x47 [xfs]
+  [<ffffffffa03ffffc>] xfs_flush_buftarg+0xa1/0x125 [xfs]
+  [<ffffffffa04000b2>] xfs_free_buftarg+0x32/0x8f [xfs]
+  [<ffffffffa0406e61>] xfs_close_devices+0x77/0x94 [xfs]
+  [<ffffffffa0406f2f>] xfs_fs_put_super+0xb1/0xe8 [xfs]
+  [<ffffffff8112ccf6>] generic_shutdown_super+0x69/0xf2
+  [<ffffffff8112cdb9>] kill_block_super+0x3a/0x6a
+  [<ffffffff8112d6af>] deactivate_super+0x68/0x95
+  [<ffffffff81144420>] mntput_no_expire+0xc6/0x114
+  [<ffffffff81144aa6>] sys_umount+0x2f2/0x337
+  [<ffffffff81012f82>] system_call_fastpath+0x16/0x1b
+---[ end trace 838ac7bc7c8a18c9 ]---
+[root@stuart srrd]#
 
->> -Andy
-> 
-> I am re-submitting Andy's patch using the conventions that
-> (hopefully) Patchwork understands to facilitate tracking.
-> 
-> 					-Alex
-> 
-> Author: Andy Poling <andy@realbig.com>
-> 
-> Summary of problem:
-> 
-> If a journal record wraps at the physical end of the journal, it has to be
-> read in two parts in xlog_do_recovery_pass(): a read at the physical end and a
-> read at the physical beginning.  If xlog_bread() has to re-align the first
-> read, the second read request does not take that re-alignment into account.
-> If the first read was re-aligned, the second read over-writes the end of the
-> data from the first read, effectively corrupting it.  This can happen either
-> when reading the record header or reading the record data.
-> 
-> The first sanity check in xlog_recover_process_data() is to check for a valid
-> clientid, so that is the error reported.
-> 
-> 
-> Summary of fix:
-> 
-> If there was a first read at the physical end, XFS_BUF_PTR() returns where the
-> data was requested to begin.  Conversely, because it is the result of
-> xlog_align(), offset indicates where the requested data for the first read
-> actually begins - whether or not xlog_bread() has re-aligned it.
-> 
-> Using offset as the base for the calculation of where to place the second read
-> data ensures that it will be correctly placed immediately following the data
-> from the first read instead of sometimes over-writing the end of it.
-> 
-> The attached patch has resolved the reported problem of occasional inability
-> to recover the journal (reporting "bad clientid").
-> 
-> 
-> --- fs/xfs/xfs_log_recover.c.orig	2009-10-14 23:39:49.753494876 -0500
-> +++ fs/xfs/xfs_log_recover.c	2009-10-15 18:26:23.790887700 -0500
-> @@ -3517,7 +3517,7 @@
->  {
->  	xlog_rec_header_t	*rhead;
->  	xfs_daddr_t		blk_no;
-> -	xfs_caddr_t		bufaddr, offset;
-> +	xfs_caddr_t		offset;
->  	xfs_buf_t		*hbp, *dbp;
->  	int			error = 0, h_size;
->  	int			bblks, split_bblks;
-> @@ -3610,7 +3610,7 @@
->  			/*
->  			 * Check for header wrapping around physical end-of-log
->  			 */
-> -			offset = NULL;
-> +			offset = XFS_BUF_PTR(hbp);
->  			split_hblks = 0;
->  			wrapped_hblks = 0;
->  			if (blk_no + hblks <= log->l_logBBsize) {
-> @@ -3646,9 +3646,8 @@
->  				 *   - order is important.
->  				 */
->  				wrapped_hblks = hblks - split_hblks;
-> -				bufaddr = XFS_BUF_PTR(hbp);
->  				error = XFS_BUF_SET_PTR(hbp,
-> -						bufaddr + BBTOB(split_hblks),
-> +						offset + BBTOB(split_hblks),
->  						BBTOB(hblks - split_hblks));
->  				if (error)
->  					goto bread_err2;
-> @@ -3658,14 +3657,10 @@
->  				if (error)
->  					goto bread_err2;
-> 
-> -				error = XFS_BUF_SET_PTR(hbp, bufaddr,
-> +				error = XFS_BUF_SET_PTR(hbp, offset,
->  							BBTOB(hblks));
->  				if (error)
->  					goto bread_err2;
-> -
-> -				if (!offset)
-> -					offset = xlog_align(log, 0,
-> -							wrapped_hblks, hbp);
->  			}
->  			rhead = (xlog_rec_header_t *)offset;
->  			error = xlog_valid_rec_header(log, rhead,
-> @@ -3685,7 +3680,7 @@
->  			} else {
->  				/* This log record is split across the
->  				 * physical end of log */
-> -				offset = NULL;
-> +				offset = XFS_BUF_PTR(dbp);
->  				split_bblks = 0;
->  				if (blk_no != log->l_logBBsize) {
->  					/* some data is before the physical
-> @@ -3714,9 +3709,8 @@
->  				 *   _first_, then the log start (LR header end)
->  				 *   - order is important.
->  				 */
-> -				bufaddr = XFS_BUF_PTR(dbp);
->  				error = XFS_BUF_SET_PTR(dbp,
-> -						bufaddr + BBTOB(split_bblks),
-> +						offset + BBTOB(split_bblks),
->  						BBTOB(bblks - split_bblks));
->  				if (error)
->  					goto bread_err2;
-> @@ -3727,13 +3721,9 @@
->  				if (error)
->  					goto bread_err2;
-> 
-> -				error = XFS_BUF_SET_PTR(dbp, bufaddr, h_size);
-> +				error = XFS_BUF_SET_PTR(dbp, offset, h_size);
->  				if (error)
->  					goto bread_err2;
-> -
-> -				if (!offset)
-> -					offset = xlog_align(log, wrapped_hblks,
-> -						bblks - split_bblks, dbp);
->  			}
->  			xlog_unpack_data(rhead, offset, log);
->  			if ((error = xlog_recover_process_data(log, rhash,
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+-- 
+  Ed Cashin <ecashin@coraid.com>
+  Find experimental aoe Linux driver patches at
+  http://coraid.typepad.com/aoe_linux_proving_grounds/
 
 _______________________________________________
 xfs mailing list
