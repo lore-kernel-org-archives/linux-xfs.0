@@ -1,29 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nA9LgBDS225565
-	for <linux-xfs@oss.sgi.com>; Mon, 9 Nov 2009 15:42:11 -0600
-Received: from lo.gmane.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 71F0F70BB6
-	for <linux-xfs@oss.sgi.com>; Mon,  9 Nov 2009 13:42:27 -0800 (PST)
-Received: from lo.gmane.org (lo.gmane.org [80.91.229.12]) by cuda.sgi.com with
-	ESMTP id PGzDOI9TOJ3Xmbet for <linux-xfs@oss.sgi.com>;
-	Mon, 09 Nov 2009 13:42:27 -0800 (PST)
-Received: from list by lo.gmane.org with local (Exim 4.50) id 1N7c0C-000808-VQ
-	for linux-xfs@oss.sgi.com; Mon, 09 Nov 2009 22:42:20 +0100
-Received: from adsl-068-016-104-079.sip.asm.bellsouth.net ([68.16.104.79])
-	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Mon, 09 Nov 2009 22:42:20 +0100
-Received: from ecashin by adsl-068-016-104-079.sip.asm.bellsouth.net with
-	local (Gmexim 0.1 (Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Mon, 09 Nov 2009 22:42:20 +0100
-From: Ed Cashin <ecashin@coraid.com>
-Subject: Re: NULL mp->m_log in 2.6.31 xfs_log_move_tail
-Date: Mon, 09 Nov 2009 16:41:58 -0500
-Message-ID: <87fx8n8jfd.fsf@coraid.com>
-References: <87ws1z8mbf.fsf@coraid.com> <20091109211620.GA22777@infradead.org>
-Mime-Version: 1.0
+	nAA1PZsh235304 for <xfs@oss.sgi.com>; Mon, 9 Nov 2009 19:25:35 -0600
+Received: from x.digitalelves.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D28DA71B06
+	for <xfs@oss.sgi.com>; Mon,  9 Nov 2009 17:25:51 -0800 (PST)
+Received: from x.digitalelves.com (v-209-98-77-55.ip.visi.com [209.98.77.55])
+	by cuda.sgi.com with ESMTP id zRJrlNYN6RFAscXU for
+	<xfs@oss.sgi.com>; Mon, 09 Nov 2009 17:25:51 -0800 (PST)
+Message-ID: <4AF8C118.5080903@thebarn.com>
+Date: Mon, 09 Nov 2009 19:25:44 -0600
+From: Russell Cattelan <cattelan@thebarn.com>
+MIME-Version: 1.0
+Subject: Re: xfs_repair breaks; xfs_metadump hangs
+References: <20091104152022.GA21347@mytux.intra.in-medias-res.com>
+	<4AF4A66B.8090906@digitalelves.com>
+	<20091109091915.GB3601@mytux.intra.in-medias-res.com>
+	<20091109095126.GA9727@mytux.intra.in-medias-res.com>
+In-Reply-To: <20091109095126.GA9727@mytux.intra.in-medias-res.com>
+Content-Type: multipart/mixed; boundary="------------010209000806090502080506"
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,51 +27,154 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
-Cc: ecashin@coraid.com
+To: mill / in-medias-res <mill@in-medias-res.com>
+Cc: xfs@oss.sgi.com
 
-Christoph Hellwig <hch@infradead.org> writes:
+This is a multi-part message in MIME format.
+--------------010209000806090502080506
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-> On Mon, Nov 09, 2009 at 03:39:32PM -0500, Ed Cashin wrote:
->> A colleague has seen oopses in 2.6.31 when an XFS is mounted on an AoE
->> target that becomes unresponsive and is marked as "down" by the aoe
->> driver.  The aoe driver starts failing all new I/O requests after
->> failing all current requests when the device is down.
->> 
->> I looked at the trace (included below) and put in the following check:
->
-> Given that you seem to be able to reproduce it can you see if the patch
-> below helps:
->
-> Index: linux-2.6/fs/xfs/xfs_log.c
-> ===================================================================
-> --- linux-2.6.orig/fs/xfs/xfs_log.c	2009-11-09 22:09:08.858026060 +0100
-> +++ linux-2.6/fs/xfs/xfs_log.c	2009-11-09 22:13:13.958255857 +0100
-> @@ -1602,6 +1602,8 @@ xlog_dealloc_log(xlog_t *log)
->  	xlog_in_core_t	*iclog, *next_iclog;
->  	int		i;
->  
-> +	xfs_flush_buftarg(log->l_mp->m_logdev_targp, 1);
-> +
->  	iclog = log->l_iclog;
->  	for (i=0; i<log->l_iclog_bufs; i++) {
->  		sv_destroy(&iclog->ic_force_wait);
->
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Thanks.  I am not sure when we'll be able to try it, because the one
-who discovered this issue is not currently available, but I'll try to
-fit it in one way or another.  A lot of folks using AoE use XFS.
+mill / in-medias-res wrote:
+> * mill / in-medias-res <mill@in-medias-res.com> [091109 10:28]:
+>>> Hmm interesting.
+>>> Can you go into xfs_db and print out the bad inode? send it to us?
+>>> I'm guessing the extents are corrupted somehow.
+>> Did you mean "xfs_db -x -c 'blockget inode 3256930831' /dev/sdc2" ?
+>> xfs_db consumes 99% of CPU and Virt 2510m RES 194m of RAM.
+>>
+>> How long should i wait?
+I was thinking just the inode
+xfs_db -x -c 'inode 3256930831' -c 'p' /dev/sdc2
 
--- 
-  Ed Cashin <ecashin@coraid.com>
-  http://www.coraid.com/
-  http://noserose.net/e/
+
+>>
+> Done now:
+> xfs_db -x -c 'blockget inode 3256930831' /dev/sdc2 > xfs_db.log            :(
+> exit code 3
+> 338,12s user 12,32s system 49% cpu 11:48,39 total
+> The first lines of output:
+> bad number of extents 1 for inode 3256930831
+> bad nblocks 1 for inode 3256930831, counted 0
+> block 9/2317591 type unknown not expected
+> link count mismatch for inode 1038934 (name ?), nlink 1, counted 2
+> link count mismatch for inode 128 (name ?), nlink 4672, counted 6
+> link count mismatch for inode 129 (name ?), nlink 36525, counted 1
+> link count mismatch for inode 130 (name ?), nlink 0, counted 1
+> link count mismatch for inode 131 (name ?), nlink 0, counted 1
+> link count mismatch for inode 132 (name ?), nlink 2, counted 1305238
+> link count mismatch for inode 133 (name ?), nlink 0, counted 2
+> link count mismatch for inode 134 (name ?), nlink 7144, counted 1
+> link count mismatch for inode 135 (name ?), nlink 42666, counted 1
+> link count mismatch for inode 136 (name ?), nlink 40424, counted 2
+> link count mismatch for inode 137 (name ?), nlink 37040, counted 2
+> link count mismatch for inode 138 (name ?), nlink 16, counted 2
+> link count mismatch for inode 139 (name ?), nlink 0, counted 2
+> link count mismatch for inode 140 (name ?), nlink 20, counted 2
+> link count mismatch for inode 141 (name ?), nlink 0, counted 2
+> link count mismatch for inode 142 (name ?), nlink 12, counted 2
+> link count mismatch for inode 143 (name ?), nlink 62336, counted 2
+> link count mismatch for inode 144 (name ?), nlink 3203, counted 2
+> link count mismatch for inode 146 (name ?), nlink 27224, counted 2
+> link count mismatch for inode 147 (name ?), nlink 41204, counted 2
+> link count mismatch for inode 148 (name ?), nlink 21, counted 2
+> link count mismatch for inode 149 (name ?), nlink 0, counted 2
+> link count mismatch for inode 150 (name ?), nlink 0, counted 2
+> link count mismatch for inode 151 (name ?), nlink 0, counted 2
+> link count mismatch for inode 152 (name ?), nlink 0, counted 2
+> link count mismatch for inode 153 (name ?), nlink 32768, counted 2
+> link count mismatch for inode 154 (name ?), nlink 58352, counted 2
+> link count mismatch for inode 155 (name ?), nlink 40290, counted 2
+> The output is 53 MB big. Tons of link count mismatch for inode ...
+Hmm that is not a good sign.
+That would suggest a big chunk of inodes go corrupted.
+I might be working looking at a few of the inodes and
+see if any pattern shows up.
+
+> 
+> 
+>>> One option to then flag the inode as deleted which will cause repair to
+>>> toss is hopefully clean up the mess.
+>>>
+>>> Here is a write up how to do that.
+>>> http://jijo.free.net.ph/19
+>> If i can't get that block i will try with deleting it, Thanks!
+>>
+>> Best regards,
+>> Maximilian Mill
+>>>> time: 67,27s user 10,09s system 10% cpu 12:05,31 total
+>>>>
+>>>> I tried to run xfs_metadump serveral times and it hangs everytime on this position:
+>>>> xfs_metadump  -g /dev/sdc2 metadump-sdc2-2
+>>>> Copied 1411840 of 4835520 inodes (0 of 3 AGs)
+>>>>
+>>>> It runs till 2 days on the same inode and xfs_db consumes 99% of CPU.
+>>>> Should i wait here?
+>>>>
+>>>> Versions:
+>>>> dpkg -l |grep xfs
+>>>> ii  xfsdump   3.0.2~bpo50+1       Administrative utilities for the XFS filesys
+>>>> ii  xfsprogs  3.0.4~bpo50+1       Utilities for managing the XFS filesystem
+>>>> Distribution: Debian lenny with xfsprogs, xfsdump backport from unstable.
+>>>>
+>>>> The xfs_repair with stock Debian Lenny version also does crash at inode 3256930831.
+>>>>
+>>>> Best Regards,
+>>>> Maximilian Mill
+>>>>
+>>>> _______________________________________________
+>>>> xfs mailing list
+>>>> xfs@oss.sgi.com
+>>>> http://oss.sgi.com/mailman/listinfo/xfs
+>>>>
+>>>>   
+>>>
+>> _______________________________________________
+>> xfs mailing list
+>> xfs@oss.sgi.com
+>> http://oss.sgi.com/mailman/listinfo/xfs
+>>
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (Darwin)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iEYEARECAAYFAkr4wRcACgkQNRmM+OaGhBiOEQCfTiGW5yBzo4mKL6LJlWMPhrCM
+F3gAn2MbX5E1RpO1wOQ08ZOxSFq3QoNi
+=fVoe
+-----END PGP SIGNATURE-----
+
+--------------010209000806090502080506
+Content-Type: text/x-vcard; charset=utf-8;
+ name="cattelan.vcf"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="cattelan.vcf"
+
+begin:vcard
+fn:Russell Cattelan
+n:Cattelan;Russell
+email;internet:cattelan@thebarn.com
+tel;cell:612 805 3144
+x-mozilla-html:FALSE
+version:2.1
+end:vcard
+
+
+--------------010209000806090502080506
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--------------010209000806090502080506--
