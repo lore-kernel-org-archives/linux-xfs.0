@@ -1,24 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nAA1PZsh235304 for <xfs@oss.sgi.com>; Mon, 9 Nov 2009 19:25:35 -0600
-Received: from x.digitalelves.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D28DA71B06
-	for <xfs@oss.sgi.com>; Mon,  9 Nov 2009 17:25:51 -0800 (PST)
-Received: from x.digitalelves.com (v-209-98-77-55.ip.visi.com [209.98.77.55])
-	by cuda.sgi.com with ESMTP id zRJrlNYN6RFAscXU for
-	<xfs@oss.sgi.com>; Mon, 09 Nov 2009 17:25:51 -0800 (PST)
-Message-ID: <4AF8C118.5080903@thebarn.com>
-Date: Mon, 09 Nov 2009 19:25:44 -0600
-From: Russell Cattelan <cattelan@thebarn.com>
+	nABFVisn149705
+	for <linux-xfs@oss.sgi.com>; Wed, 11 Nov 2009 09:31:46 -0600
+Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1673ED09183
+	for <linux-xfs@oss.sgi.com>; Wed, 11 Nov 2009 07:32:00 -0800 (PST)
+Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id xy9h38Y6d2gpKSVF for
+	<linux-xfs@oss.sgi.com>; Wed, 11 Nov 2009 07:32:00 -0800 (PST)
+Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv1.zmi.at (Postfix) with ESMTP id 9FE32C0047F
+	for <linux-xfs@oss.sgi.com>; Wed, 11 Nov 2009 16:31:57 +0100 (CET)
+Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id 70D63400178
+	for <linux-xfs@oss.sgi.com>; Wed, 11 Nov 2009 16:31:57 +0100 (CET)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: xfs_repair question: "wrong" order of AG checks OK?
+Date: Wed, 11 Nov 2009 16:31:56 +0100
 MIME-Version: 1.0
-Subject: Re: xfs_repair breaks; xfs_metadump hangs
-References: <20091104152022.GA21347@mytux.intra.in-medias-res.com>
-	<4AF4A66B.8090906@digitalelves.com>
-	<20091109091915.GB3601@mytux.intra.in-medias-res.com>
-	<20091109095126.GA9727@mytux.intra.in-medias-res.com>
-In-Reply-To: <20091109095126.GA9727@mytux.intra.in-medias-res.com>
-Content-Type: multipart/mixed; boundary="------------010209000806090502080506"
+Content-Disposition: inline
+Message-Id: <200911111631.56993@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,154 +33,32 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: mill / in-medias-res <mill@in-medias-res.com>
-Cc: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-This is a multi-part message in MIME format.
---------------010209000806090502080506
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+I did an xfs_repair now, and everything was OK. But strange was, in
+Phase 4 the AGs were not checked in order:
+AG 2
+AG 1
+AG 0
+AG 3
+AG 4
+AG 5
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Is that normal?
 
-mill / in-medias-res wrote:
-> * mill / in-medias-res <mill@in-medias-res.com> [091109 10:28]:
->>> Hmm interesting.
->>> Can you go into xfs_db and print out the bad inode? send it to us?
->>> I'm guessing the extents are corrupted somehow.
->> Did you mean "xfs_db -x -c 'blockget inode 3256930831' /dev/sdc2" ?
->> xfs_db consumes 99% of CPU and Virt 2510m RES 194m of RAM.
->>
->> How long should i wait?
-I was thinking just the inode
-xfs_db -x -c 'inode 3256930831' -c 'p' /dev/sdc2
-
-
->>
-> Done now:
-> xfs_db -x -c 'blockget inode 3256930831' /dev/sdc2 > xfs_db.log            :(
-> exit code 3
-> 338,12s user 12,32s system 49% cpu 11:48,39 total
-> The first lines of output:
-> bad number of extents 1 for inode 3256930831
-> bad nblocks 1 for inode 3256930831, counted 0
-> block 9/2317591 type unknown not expected
-> link count mismatch for inode 1038934 (name ?), nlink 1, counted 2
-> link count mismatch for inode 128 (name ?), nlink 4672, counted 6
-> link count mismatch for inode 129 (name ?), nlink 36525, counted 1
-> link count mismatch for inode 130 (name ?), nlink 0, counted 1
-> link count mismatch for inode 131 (name ?), nlink 0, counted 1
-> link count mismatch for inode 132 (name ?), nlink 2, counted 1305238
-> link count mismatch for inode 133 (name ?), nlink 0, counted 2
-> link count mismatch for inode 134 (name ?), nlink 7144, counted 1
-> link count mismatch for inode 135 (name ?), nlink 42666, counted 1
-> link count mismatch for inode 136 (name ?), nlink 40424, counted 2
-> link count mismatch for inode 137 (name ?), nlink 37040, counted 2
-> link count mismatch for inode 138 (name ?), nlink 16, counted 2
-> link count mismatch for inode 139 (name ?), nlink 0, counted 2
-> link count mismatch for inode 140 (name ?), nlink 20, counted 2
-> link count mismatch for inode 141 (name ?), nlink 0, counted 2
-> link count mismatch for inode 142 (name ?), nlink 12, counted 2
-> link count mismatch for inode 143 (name ?), nlink 62336, counted 2
-> link count mismatch for inode 144 (name ?), nlink 3203, counted 2
-> link count mismatch for inode 146 (name ?), nlink 27224, counted 2
-> link count mismatch for inode 147 (name ?), nlink 41204, counted 2
-> link count mismatch for inode 148 (name ?), nlink 21, counted 2
-> link count mismatch for inode 149 (name ?), nlink 0, counted 2
-> link count mismatch for inode 150 (name ?), nlink 0, counted 2
-> link count mismatch for inode 151 (name ?), nlink 0, counted 2
-> link count mismatch for inode 152 (name ?), nlink 0, counted 2
-> link count mismatch for inode 153 (name ?), nlink 32768, counted 2
-> link count mismatch for inode 154 (name ?), nlink 58352, counted 2
-> link count mismatch for inode 155 (name ?), nlink 40290, counted 2
-> The output is 53 MB big. Tons of link count mismatch for inode ...
-Hmm that is not a good sign.
-That would suggest a big chunk of inodes go corrupted.
-I might be working looking at a few of the inodes and
-see if any pattern shows up.
-
-> 
-> 
->>> One option to then flag the inode as deleted which will cause repair to
->>> toss is hopefully clean up the mess.
->>>
->>> Here is a write up how to do that.
->>> http://jijo.free.net.ph/19
->> If i can't get that block i will try with deleting it, Thanks!
->>
->> Best regards,
->> Maximilian Mill
->>>> time: 67,27s user 10,09s system 10% cpu 12:05,31 total
->>>>
->>>> I tried to run xfs_metadump serveral times and it hangs everytime on this position:
->>>> xfs_metadump  -g /dev/sdc2 metadump-sdc2-2
->>>> Copied 1411840 of 4835520 inodes (0 of 3 AGs)
->>>>
->>>> It runs till 2 days on the same inode and xfs_db consumes 99% of CPU.
->>>> Should i wait here?
->>>>
->>>> Versions:
->>>> dpkg -l |grep xfs
->>>> ii  xfsdump   3.0.2~bpo50+1       Administrative utilities for the XFS filesys
->>>> ii  xfsprogs  3.0.4~bpo50+1       Utilities for managing the XFS filesystem
->>>> Distribution: Debian lenny with xfsprogs, xfsdump backport from unstable.
->>>>
->>>> The xfs_repair with stock Debian Lenny version also does crash at inode 3256930831.
->>>>
->>>> Best Regards,
->>>> Maximilian Mill
->>>>
->>>> _______________________________________________
->>>> xfs mailing list
->>>> xfs@oss.sgi.com
->>>> http://oss.sgi.com/mailman/listinfo/xfs
->>>>
->>>>   
->>>
->> _______________________________________________
->> xfs mailing list
->> xfs@oss.sgi.com
->> http://oss.sgi.com/mailman/listinfo/xfs
->>
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (Darwin)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
-
-iEYEARECAAYFAkr4wRcACgkQNRmM+OaGhBiOEQCfTiGW5yBzo4mKL6LJlWMPhrCM
-F3gAn2MbX5E1RpO1wOQ08ZOxSFq3QoNi
-=fVoe
------END PGP SIGNATURE-----
-
---------------010209000806090502080506
-Content-Type: text/x-vcard; charset=utf-8;
- name="cattelan.vcf"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="cattelan.vcf"
-
-begin:vcard
-fn:Russell Cattelan
-n:Cattelan;Russell
-email;internet:cattelan@thebarn.com
-tel;cell:612 805 3144
-x-mozilla-html:FALSE
-version:2.1
-end:vcard
-
-
---------------010209000806090502080506
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+mfg zmi
+-- 
+// Michael Monnerie, Ing.BSc    -----      http://it-management.at
+// Tel: 0660 / 415 65 31                      .network.your.ideas.
+// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
+// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
+// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---------------010209000806090502080506--
