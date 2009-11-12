@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nACHsaSP010113 for <xfs@oss.sgi.com>; Thu, 12 Nov 2009 11:54:37 -0600
+	nACJ9Ds2015595 for <xfs@oss.sgi.com>; Thu, 12 Nov 2009 13:09:14 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 32D91D1958E
-	for <xfs@oss.sgi.com>; Thu, 12 Nov 2009 09:54:56 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 41B87D1DCC8
+	for <xfs@oss.sgi.com>; Thu, 12 Nov 2009 11:09:33 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id zVqxRyZIJb6gK0KY for
-	<xfs@oss.sgi.com>; Thu, 12 Nov 2009 09:54:56 -0800 (PST)
-Date: Thu, 12 Nov 2009 12:54:55 -0500
+	by cuda.sgi.com with ESMTP id t7yHJ8UZ23YNmfb5 for
+	<xfs@oss.sgi.com>; Thu, 12 Nov 2009 11:09:33 -0800 (PST)
+Date: Thu, 12 Nov 2009 14:09:31 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: XFS status update for October 2009
-Message-ID: <20091112175455.GA32539@infradead.org>
+Subject: [PATCH] xfs: improve metadata I/O merging in the elevator
+Message-ID: <20091112190930.GB32110@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -26,29 +26,86 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, linux-kernel@vger.kernel.org
+To: xfs@oss.sgi.com
 
-In October we saw the Linux 2.6.32 merge window with a major XFS update.
-This update includes a refactoring of the inode allocator which also
-allows for speedups for very large filesystems, major sync fixes, updates
-to the fsync and O_SYNC handling which merge the two code paths into a single
-and more efficient one, a workaround for the VFS time stamp behavior,
-and of course various smaller fixes.  A couple of additional fixes have been
-queued up for the next merge window.
+I had the patch below from Dave in my queue for a while, but previously
+couldn't really reproduce his numbers.  After some discussions of the
+bio types I've reteseted it again and can see constant improvements when
+using cfq on my large array box with it (5-10% for the sequential create
+workloads), but still nothing on deadline.  Given that people also want
+it for better marking in blktrace it might be time to put it in.
 
-On the userspace side there has been a healthy activity on xfsprogs:  mkfs can
-now discard unused sectors on SSDs and thinly provisioned storage devices and
-use the more generic libblkid for topology information and filesystems detection
-instead of the older libdisk, and the build system gained some updates to
-make the source package generation simpler and shared for different package
-types.  A patch has been out to the list but yet committed to add symbol
-versioning to the libhandle library to make future ABI additions easier.
-The xfstests package only saw some minor activity with a new test case
-and small build system fixes.
+Comments?
 
-New minor releases of xfsprogs and xfsdump were tagged but not formally
-released after additional discussion.  Instead a new major xfsprogs release
-is planned for next month.
+-- 
+
+From: Dave Chinner <dgc@sgi.com>
+Subject: xfs: improve metadata I/O merging in the elevator
+
+Change all async metadata buffers to use [READ|WRITE]_META I/O types
+so that the I/O doesn't get issued immediately. This allows merging
+of adjacent metadata requests but still prioritises them over bulk
+data. This shows a 10-15% improvement in sequential create speed of
+small files.
+
+Don't include the log buffers in this classification - leave them
+as sync types so they are issued immediately.
+
+Signed-off-by: Dave Chinner <dgc@sgi.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: xfs/fs/xfs/linux-2.6/xfs_buf.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_buf.c	2009-11-12 17:10:19.852253847 +0100
++++ xfs/fs/xfs/linux-2.6/xfs_buf.c	2009-11-12 17:13:55.334003777 +0100
+@@ -1177,10 +1177,14 @@ _xfs_buf_ioapply(
+ 	if (bp->b_flags & XBF_ORDERED) {
+ 		ASSERT(!(bp->b_flags & XBF_READ));
+ 		rw = WRITE_BARRIER;
+-	} else if (bp->b_flags & _XBF_RUN_QUEUES) {
++	} else if (bp->b_flags & XBF_LOG_BUFFER) {
+ 		ASSERT(!(bp->b_flags & XBF_READ_AHEAD));
+ 		bp->b_flags &= ~_XBF_RUN_QUEUES;
+ 		rw = (bp->b_flags & XBF_WRITE) ? WRITE_SYNC : READ_SYNC;
++	} else if (bp->b_flags & _XBF_RUN_QUEUES) {
++		ASSERT(!(bp->b_flags & XBF_READ_AHEAD));
++		bp->b_flags &= ~_XBF_RUN_QUEUES;
++		rw = (bp->b_flags & XBF_WRITE) ? WRITE : READ_META;
+ 	} else {
+ 		rw = (bp->b_flags & XBF_WRITE) ? WRITE :
+ 		     (bp->b_flags & XBF_READ_AHEAD) ? READA : READ;
+Index: xfs/fs/xfs/linux-2.6/xfs_buf.h
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_buf.h	2009-11-12 17:10:19.857278370 +0100
++++ xfs/fs/xfs/linux-2.6/xfs_buf.h	2009-11-12 17:13:55.334003777 +0100
+@@ -55,6 +55,7 @@ typedef enum {
+ 	XBF_FS_MANAGED = (1 << 8),  /* filesystem controls freeing memory  */
+  	XBF_ORDERED = (1 << 11),    /* use ordered writes		   */
+ 	XBF_READ_AHEAD = (1 << 12), /* asynchronous read-ahead		   */
++	XBF_LOG_BUFFER = (1 << 13), /* this is a buffer used for the log   */
+ 
+ 	/* flags used only as arguments to access routines */
+ 	XBF_LOCK = (1 << 14),       /* lock requested			   */
+Index: xfs/fs/xfs/xfs_log.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_log.c	2009-11-12 17:10:20.267254560 +0100
++++ xfs/fs/xfs/xfs_log.c	2009-11-12 17:13:55.335004184 +0100
+@@ -1524,6 +1524,7 @@ xlog_sync(xlog_t		*log,
+ 	XFS_BUF_ZEROFLAGS(bp);
+ 	XFS_BUF_BUSY(bp);
+ 	XFS_BUF_ASYNC(bp);
++	bp->b_flags |= XBF_LOG_BUFFER;
+ 	/*
+ 	 * Do an ordered write for the log block.
+ 	 * Its unnecessary to flush the first split block in the log wrap case.
+@@ -1561,6 +1562,7 @@ xlog_sync(xlog_t		*log,
+ 		XFS_BUF_ZEROFLAGS(bp);
+ 		XFS_BUF_BUSY(bp);
+ 		XFS_BUF_ASYNC(bp);
++		bp->b_flags |= XBF_LOG_BUFFER;
+ 		if (log->l_mp->m_flags & XFS_MOUNT_BARRIER)
+ 			XFS_BUF_ORDERED(bp);
+ 		dptr = XFS_BUF_PTR(bp);
 
 _______________________________________________
 xfs mailing list
