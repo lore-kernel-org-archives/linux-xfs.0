@@ -1,24 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nACFwKTK003231 for <xfs@oss.sgi.com>; Thu, 12 Nov 2009 09:58:22 -0600
+	nACHsaSP010113 for <xfs@oss.sgi.com>; Thu, 12 Nov 2009 11:54:37 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DC97D1862FE3
-	for <xfs@oss.sgi.com>; Thu, 12 Nov 2009 07:58:39 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 32D91D1958E
+	for <xfs@oss.sgi.com>; Thu, 12 Nov 2009 09:54:56 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id dzw9inNXmviakRGb for
-	<xfs@oss.sgi.com>; Thu, 12 Nov 2009 07:58:39 -0800 (PST)
-Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1N8c4F-0008D0-DP
-	for xfs@oss.sgi.com; Thu, 12 Nov 2009 15:58:39 +0000
-Date: Thu, 12 Nov 2009 10:58:39 -0500
+	by cuda.sgi.com with ESMTP id zVqxRyZIJb6gK0KY for
+	<xfs@oss.sgi.com>; Thu, 12 Nov 2009 09:54:56 -0800 (PST)
+Date: Thu, 12 Nov 2009 12:54:55 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 00/14] repair memory usage reductions
-Message-ID: <20091112155839.GA31050@infradead.org>
-References: <20090902175531.469184575@bombadil.infradead.org>
+Subject: XFS status update for October 2009
+Message-ID: <20091112175455.GA32539@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20090902175531.469184575@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,14 +26,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
-The remaining patches with the updates suggested by Alex are now
-available in the repair-speedup-20091112 branch of the kernel.org
-xfsprogs-dev git repository:
+In October we saw the Linux 2.6.32 merge window with a major XFS update.
+This update includes a refactoring of the inode allocator which also
+allows for speedups for very large filesystems, major sync fixes, updates
+to the fsync and O_SYNC handling which merge the two code paths into a single
+and more efficient one, a workaround for the VFS time stamp behavior,
+and of course various smaller fixes.  A couple of additional fixes have been
+queued up for the next merge window.
 
-	http://git.kernel.org/?p=fs/xfs/xfsprogs-dev.git
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+On the userspace side there has been a healthy activity on xfsprogs:  mkfs can
+now discard unused sectors on SSDs and thinly provisioned storage devices and
+use the more generic libblkid for topology information and filesystems detection
+instead of the older libdisk, and the build system gained some updates to
+make the source package generation simpler and shared for different package
+types.  A patch has been out to the list but yet committed to add symbol
+versioning to the libhandle library to make future ABI additions easier.
+The xfstests package only saw some minor activity with a new test case
+and small build system fixes.
+
+New minor releases of xfsprogs and xfsdump were tagged but not formally
+released after additional discussion.  Instead a new major xfsprogs release
+is planned for next month.
 
 _______________________________________________
 xfs mailing list
