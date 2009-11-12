@@ -1,19 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nAC0MpE2198263 for <xfs@oss.sgi.com>; Wed, 11 Nov 2009 18:22:51 -0600
-Received: from postoffice2.aconex.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 99B2E1860184
-	for <xfs@oss.sgi.com>; Wed, 11 Nov 2009 16:23:09 -0800 (PST)
-Received: from postoffice2.aconex.com (mail.aconex.com [203.89.202.182]) by
-	cuda.sgi.com with ESMTP id 7kY3G8IeRX4r7QRO for
-	<xfs@oss.sgi.com>; Wed, 11 Nov 2009 16:23:09 -0800 (PST)
-Date: Thu, 12 Nov 2009 11:23:03 +1100 (EST)
-From: Nathan Scott <nscott@aconex.com>
-Message-ID: <1047569616.363721257985383289.JavaMail.root@mail-au.aconex.com>
-In-Reply-To: <200911120029.21845@zmi.at>
-Subject: Re: xfs_repair question: "wrong" order of AG checks OK?
+	nACAPHxC242180 for <xfs@oss.sgi.com>; Thu, 12 Nov 2009 04:25:17 -0600
+Date: Thu, 12 Nov 2009 05:25:35 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 12/14] repair: switch block usage bitmap to a btree
+Message-ID: <20091112102535.GA5154@infradead.org>
+References: <20090902175841.875447973@bombadil.infradead.org>
+	<1AB9A794DBDDF54A8A81BE2296F7BDFE83ADFE@cf--amer001e--3.americas.sgi.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1AB9A794DBDDF54A8A81BE2296F7BDFE83ADFE@cf--amer001e--3.americas.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,27 +23,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Barry Naujok <bnaujok@sgi.com>, xfs@oss.sgi.com
 
-
------ "Michael Monnerie" <michael.monnerie@is.it-management.at> wrote:
-
-> On Mittwoch 11 November 2009 Nathan Scott wrote:
-> > Could be xfs_repair running with multiple threads in parallel?
+On Thu, Oct 22, 2009 at 11:22:42AM -0500, Alex Elder wrote:
+> I have a few minor things I would like to see changed at some
+> point, but nothing looks obviously incorrect so I'll wait and
+> post a patch against this once it's committed.
 > 
-> Would it ever do that? There's no performance advantage in that, as
-> that operation is disk I/O bound, isn't it?
+> Here are a couple other general thoughts:
+> - One minor concern is that the btree code has cases in which
+>   the peek routines don't work (when the keys_valid flag in the
+>   btree root is zero) and this code doesn't check for that.
+>   I'll just assume for now that never happens here.
 
-Be worth reading the paper here:
+It should not happen, but yes - making this explicit would be good.
 
-http://xfs.org/index.php/XFS_Papers_and_Documentation
-   -> "Fixing XFS Filesystems Faster"
+> - The bitfield code used for the real-time volume map is
+>   generally useful and could be separated into its own module.
 
-cheers.
-
--- 
-Nathan
+Not sure.  It's really a crufty leftover.  It should probably also use
+a btree instead, but I fear any effort spent on the RT subvolume is
+pretty much wasted anyway.
 
 _______________________________________________
 xfs mailing list
