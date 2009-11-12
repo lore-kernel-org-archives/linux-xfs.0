@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nACJ6cNO015218 for <xfs@oss.sgi.com>; Thu, 12 Nov 2009 13:06:41 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B5580D1DC3D
-	for <xfs@oss.sgi.com>; Thu, 12 Nov 2009 11:06:57 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id xUvBVaKMVWwjrbA8 for
-	<xfs@oss.sgi.com>; Thu, 12 Nov 2009 11:06:57 -0800 (PST)
-Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1N8f0T-0008Of-3P
-	for xfs@oss.sgi.com; Thu, 12 Nov 2009 19:06:57 +0000
-Date: Thu, 12 Nov 2009 14:06:57 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfs: check for not fully initialized inodes in xfs_ireclaim
-Message-ID: <20091112190657.GA32110@infradead.org>
+	nACNkTuT038653 for <xfs@oss.sgi.com>; Thu, 12 Nov 2009 17:46:30 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AD4BC82C68
+	for <xfs@oss.sgi.com>; Thu, 12 Nov 2009 15:46:47 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	u9DeByGqIVSNOMt1 for <xfs@oss.sgi.com>;
+	Thu, 12 Nov 2009 15:46:47 -0800 (PST)
+Date: Fri, 13 Nov 2009 10:46:43 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 06/14] repair: use a btree instead of a radix tree for
+	theprefetch queue
+Message-ID: <20091112234643.GJ25494@discord.disaster>
+References: <20090902175840.740632507@bombadil.infradead.org>
+	<1AB9A794DBDDF54A8A81BE2296F7BDFE83ADEB@cf--amer001e--3.americas.sgi.com>
+	<20091112100408.GA25058@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20091112100408.GA25058@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,44 +32,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com, Barry Naujok <bnaujok@optusnet.com.au>, Alex Elder <aelder@sgi.com>
 
-Add an assert for inodes not added to the inode cache in xfs_ireclaim, to make
-sure we're not going to introduce something like the famous nfsd inode cache
-bug again.
+On Thu, Nov 12, 2009 at 05:04:08AM -0500, Christoph Hellwig wrote:
+> On Wed, Oct 21, 2009 at 12:12:33PM -0500, Alex Elder wrote:
+> > - Related to the previous one--it would be good to have
+> >   a little info about why the value 7 was chosen as the
+> >   number of keys per node.  Perhaps I just don't know
+> >   enough of the history (or content of the upcoming
+> >   patches).
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+I think I can answer this one:
 
-Index: xfs/fs/xfs/xfs_iget.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_iget.c	2009-11-12 17:10:20.216276486 +0100
-+++ xfs/fs/xfs/xfs_iget.c	2009-11-12 17:13:27.565003964 +0100
-@@ -514,17 +514,21 @@ xfs_ireclaim(
- {
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct xfs_perag	*pag;
-+	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
- 
- 	XFS_STATS_INC(xs_ig_reclaims);
- 
- 	/*
--	 * Remove the inode from the per-AG radix tree.  It doesn't matter
--	 * if it was never added to it because radix_tree_delete can deal
--	 * with that case just fine.
-+	 * Remove the inode from the per-AG radix tree.
-+	 *
-+	 * Because radix_tree_delete won't complain even if the item was never
-+	 * added to the tree assert that it's been there before to catch
-+	 * problems with the inode life time early on.
- 	 */
- 	pag = xfs_get_perag(mp, ip->i_ino);
- 	write_lock(&pag->pag_ici_lock);
--	radix_tree_delete(&pag->pag_ici_root, XFS_INO_TO_AGINO(mp, ip->i_ino));
-+	ASSERT(radix_tree_lookup(&pag->pag_ici_root, agino));
-+	radix_tree_delete(&pag->pag_ici_root, agino);
- 	write_unlock(&pag->pag_ici_lock);
- 	xfs_put_perag(mp, pag);
- 
+> +/*
+> + * Maximum number of keys per node.  Must be greater than 2 for the code
+> + * to work.
+> + */
+> +#define BTREE_KEY_MAX		7
+> +#define BTREE_KEY_MIN		(BTREE_KEY_MAX / 2)
+> +
+> +#define BTREE_PTR_MAX		(BTREE_KEY_MAX + 1)
+> +
+> +struct btree_node {
+> +	unsigned long		num_keys;
+> +	unsigned long		keys[BTREE_KEY_MAX];
+> +	struct btree_node	*ptrs[BTREE_PTR_MAX];
+> +};
+
+BTREE_KEY_MAX = 7 results in a btree_node exactly filling
+a 64 byte cacheline on 32 bit, and 2 cachelines on 64 bit.
+Cacheline aligned and sized nodes minimises the number of cache
+misses when traversing/searching the btree....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
