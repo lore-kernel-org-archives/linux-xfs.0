@@ -1,17 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nACJ9Ds2015595 for <xfs@oss.sgi.com>; Thu, 12 Nov 2009 13:09:14 -0600
+	nACJ6cNO015218 for <xfs@oss.sgi.com>; Thu, 12 Nov 2009 13:06:41 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 41B87D1DCC8
-	for <xfs@oss.sgi.com>; Thu, 12 Nov 2009 11:09:33 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B5580D1DC3D
+	for <xfs@oss.sgi.com>; Thu, 12 Nov 2009 11:06:57 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id t7yHJ8UZ23YNmfb5 for
-	<xfs@oss.sgi.com>; Thu, 12 Nov 2009 11:09:33 -0800 (PST)
-Date: Thu, 12 Nov 2009 14:09:31 -0500
+	by cuda.sgi.com with ESMTP id xUvBVaKMVWwjrbA8 for
+	<xfs@oss.sgi.com>; Thu, 12 Nov 2009 11:06:57 -0800 (PST)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1N8f0T-0008Of-3P
+	for xfs@oss.sgi.com; Thu, 12 Nov 2009 19:06:57 +0000
+Date: Thu, 12 Nov 2009 14:06:57 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfs: improve metadata I/O merging in the elevator
-Message-ID: <20091112190930.GB32110@infradead.org>
+Subject: [PATCH] xfs: check for not fully initialized inodes in xfs_ireclaim
+Message-ID: <20091112190657.GA32110@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -28,84 +31,42 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-I had the patch below from Dave in my queue for a while, but previously
-couldn't really reproduce his numbers.  After some discussions of the
-bio types I've reteseted it again and can see constant improvements when
-using cfq on my large array box with it (5-10% for the sequential create
-workloads), but still nothing on deadline.  Given that people also want
-it for better marking in blktrace it might be time to put it in.
+Add an assert for inodes not added to the inode cache in xfs_ireclaim, to make
+sure we're not going to introduce something like the famous nfsd inode cache
+bug again.
 
-Comments?
-
--- 
-
-From: Dave Chinner <dgc@sgi.com>
-Subject: xfs: improve metadata I/O merging in the elevator
-
-Change all async metadata buffers to use [READ|WRITE]_META I/O types
-so that the I/O doesn't get issued immediately. This allows merging
-of adjacent metadata requests but still prioritises them over bulk
-data. This shows a 10-15% improvement in sequential create speed of
-small files.
-
-Don't include the log buffers in this classification - leave them
-as sync types so they are issued immediately.
-
-Signed-off-by: Dave Chinner <dgc@sgi.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs/fs/xfs/linux-2.6/xfs_buf.c
+Index: xfs/fs/xfs/xfs_iget.c
 ===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_buf.c	2009-11-12 17:10:19.852253847 +0100
-+++ xfs/fs/xfs/linux-2.6/xfs_buf.c	2009-11-12 17:13:55.334003777 +0100
-@@ -1177,10 +1177,14 @@ _xfs_buf_ioapply(
- 	if (bp->b_flags & XBF_ORDERED) {
- 		ASSERT(!(bp->b_flags & XBF_READ));
- 		rw = WRITE_BARRIER;
--	} else if (bp->b_flags & _XBF_RUN_QUEUES) {
-+	} else if (bp->b_flags & XBF_LOG_BUFFER) {
- 		ASSERT(!(bp->b_flags & XBF_READ_AHEAD));
- 		bp->b_flags &= ~_XBF_RUN_QUEUES;
- 		rw = (bp->b_flags & XBF_WRITE) ? WRITE_SYNC : READ_SYNC;
-+	} else if (bp->b_flags & _XBF_RUN_QUEUES) {
-+		ASSERT(!(bp->b_flags & XBF_READ_AHEAD));
-+		bp->b_flags &= ~_XBF_RUN_QUEUES;
-+		rw = (bp->b_flags & XBF_WRITE) ? WRITE : READ_META;
- 	} else {
- 		rw = (bp->b_flags & XBF_WRITE) ? WRITE :
- 		     (bp->b_flags & XBF_READ_AHEAD) ? READA : READ;
-Index: xfs/fs/xfs/linux-2.6/xfs_buf.h
-===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_buf.h	2009-11-12 17:10:19.857278370 +0100
-+++ xfs/fs/xfs/linux-2.6/xfs_buf.h	2009-11-12 17:13:55.334003777 +0100
-@@ -55,6 +55,7 @@ typedef enum {
- 	XBF_FS_MANAGED = (1 << 8),  /* filesystem controls freeing memory  */
-  	XBF_ORDERED = (1 << 11),    /* use ordered writes		   */
- 	XBF_READ_AHEAD = (1 << 12), /* asynchronous read-ahead		   */
-+	XBF_LOG_BUFFER = (1 << 13), /* this is a buffer used for the log   */
+--- xfs.orig/fs/xfs/xfs_iget.c	2009-11-12 17:10:20.216276486 +0100
++++ xfs/fs/xfs/xfs_iget.c	2009-11-12 17:13:27.565003964 +0100
+@@ -514,17 +514,21 @@ xfs_ireclaim(
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	struct xfs_perag	*pag;
++	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
  
- 	/* flags used only as arguments to access routines */
- 	XBF_LOCK = (1 << 14),       /* lock requested			   */
-Index: xfs/fs/xfs/xfs_log.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_log.c	2009-11-12 17:10:20.267254560 +0100
-+++ xfs/fs/xfs/xfs_log.c	2009-11-12 17:13:55.335004184 +0100
-@@ -1524,6 +1524,7 @@ xlog_sync(xlog_t		*log,
- 	XFS_BUF_ZEROFLAGS(bp);
- 	XFS_BUF_BUSY(bp);
- 	XFS_BUF_ASYNC(bp);
-+	bp->b_flags |= XBF_LOG_BUFFER;
+ 	XFS_STATS_INC(xs_ig_reclaims);
+ 
  	/*
- 	 * Do an ordered write for the log block.
- 	 * Its unnecessary to flush the first split block in the log wrap case.
-@@ -1561,6 +1562,7 @@ xlog_sync(xlog_t		*log,
- 		XFS_BUF_ZEROFLAGS(bp);
- 		XFS_BUF_BUSY(bp);
- 		XFS_BUF_ASYNC(bp);
-+		bp->b_flags |= XBF_LOG_BUFFER;
- 		if (log->l_mp->m_flags & XFS_MOUNT_BARRIER)
- 			XFS_BUF_ORDERED(bp);
- 		dptr = XFS_BUF_PTR(bp);
+-	 * Remove the inode from the per-AG radix tree.  It doesn't matter
+-	 * if it was never added to it because radix_tree_delete can deal
+-	 * with that case just fine.
++	 * Remove the inode from the per-AG radix tree.
++	 *
++	 * Because radix_tree_delete won't complain even if the item was never
++	 * added to the tree assert that it's been there before to catch
++	 * problems with the inode life time early on.
+ 	 */
+ 	pag = xfs_get_perag(mp, ip->i_ino);
+ 	write_lock(&pag->pag_ici_lock);
+-	radix_tree_delete(&pag->pag_ici_root, XFS_INO_TO_AGINO(mp, ip->i_ino));
++	ASSERT(radix_tree_lookup(&pag->pag_ici_root, agino));
++	radix_tree_delete(&pag->pag_ici_root, agino);
+ 	write_unlock(&pag->pag_ici_lock);
+ 	xfs_put_perag(mp, pag);
+ 
 
 _______________________________________________
 xfs mailing list
