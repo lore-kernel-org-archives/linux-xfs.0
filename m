@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nACG430L003610 for <xfs@oss.sgi.com>; Thu, 12 Nov 2009 10:04:03 -0600
+	nACFwKTK003231 for <xfs@oss.sgi.com>; Thu, 12 Nov 2009 09:58:22 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 65730D15BF3
-	for <xfs@oss.sgi.com>; Thu, 12 Nov 2009 08:04:21 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DC97D1862FE3
+	for <xfs@oss.sgi.com>; Thu, 12 Nov 2009 07:58:39 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 5sBAGZny7ofuTYNH for
-	<xfs@oss.sgi.com>; Thu, 12 Nov 2009 08:04:21 -0800 (PST)
-Date: Thu, 12 Nov 2009 11:04:20 -0500
+	by cuda.sgi.com with ESMTP id dzw9inNXmviakRGb for
+	<xfs@oss.sgi.com>; Thu, 12 Nov 2009 07:58:39 -0800 (PST)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1N8c4F-0008D0-DP
+	for xfs@oss.sgi.com; Thu, 12 Nov 2009 15:58:39 +0000
+Date: Thu, 12 Nov 2009 10:58:39 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] mkfs: add discard support
-Message-ID: <20091112160420.GB31050@infradead.org>
-References: <20091007011850.GA32032@infradead.org>
-	<1157959921.9631254878431584.JavaMail.root@mail-au.aconex.com>
+Subject: Re: [PATCH 00/14] repair memory usage reductions
+Message-ID: <20091112155839.GA31050@infradead.org>
+References: <20090902175531.469184575@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1157959921.9631254878431584.JavaMail.root@mail-au.aconex.com>
+In-Reply-To: <20090902175531.469184575@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,25 +31,14 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Nathan Scott <nscott@aconex.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
+The remaining patches with the updates suggested by Alex are now
+available in the repair-speedup-20091112 branch of the kernel.org
+xfsprogs-dev git repository:
 
-Adding the discard helper to the platform headers now causes the build
-to fail for some external users of the xfs headers because off64_t doesn't
-exist without the large file configure magic. E.g. for xfstests:
-
-checking xfs/xfs.h usability... no
-checking xfs/xfs.h presence... yes
-configure: WARNING: xfs/xfs.h: present but cannot be compiled
-configure: WARNING: xfs/xfs.h:     check for missing prerequisite headers?
-configure: WARNING: xfs/xfs.h: see the Autoconf documentation
-configure: WARNING: xfs/xfs.h:     section "Present But Cannot Be Compiled"
-configure: WARNING: xfs/xfs.h: proceeding with the compiler's result
-checking for xfs/xfs.h... no
-
-commenting out the discard helper fixes this.  We might be able to just
-switch to a int64_t or similar instead, even if that's a bit ugly.
+	http://git.kernel.org/?p=fs/xfs/xfsprogs-dev.git
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
 _______________________________________________
 xfs mailing list
