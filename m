@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nAEGHf9U193815 for <xfs@oss.sgi.com>; Sat, 14 Nov 2009 10:17:43 -0600
+	nAEGHf3r193821 for <xfs@oss.sgi.com>; Sat, 14 Nov 2009 10:17:43 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B265C1D976F2
-	for <xfs@oss.sgi.com>; Sat, 14 Nov 2009 08:18:01 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3CC9E1D976F2
+	for <xfs@oss.sgi.com>; Sat, 14 Nov 2009 08:18:02 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id oOheXPTJMnw97I4b for
-	<xfs@oss.sgi.com>; Sat, 14 Nov 2009 08:18:01 -0800 (PST)
+	by cuda.sgi.com with ESMTP id oNHHZyjUjttFLOxA for
+	<xfs@oss.sgi.com>; Sat, 14 Nov 2009 08:18:02 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1N9LK5-0004V4-BR
+	Linux)) id 1N9LK5-0004X7-T7
 	for xfs@oss.sgi.com; Sat, 14 Nov 2009 16:18:01 +0000
-Message-Id: <20091114161801.238873282@bombadil.infradead.org>
-Date: Sat, 14 Nov 2009 11:17:18 -0500
+Message-Id: <20091114161801.818601601@bombadil.infradead.org>
+Date: Sat, 14 Nov 2009 11:17:21 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 1/7] xfs: remove IO_ISAIO
+Subject: [PATCH 4/7] xfs: uninline xfs_get_extsz_hint
 References: <20091114161717.233372584@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-kill-IO_ISAIO
+Content-Disposition: inline; filename=xfs-uninline-xfs_get_extsz_hint
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,68 +32,79 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-We set this flag for all read/write I/O since early Linux 2.6.x.
-Remove it as it has lost it's purpose long ago.
+This function is too large to efficiently be inlined.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs/fs/xfs/linux-2.6/xfs_file.c
+Index: xfs/fs/xfs/xfs_rw.c
 ===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_file.c	2009-10-11 14:25:17.496003686 +0200
-+++ xfs/fs/xfs/linux-2.6/xfs_file.c	2009-11-12 17:14:06.160023109 +0100
-@@ -52,7 +52,7 @@ xfs_file_aio_read(
- 	loff_t			pos)
- {
- 	struct file		*file = iocb->ki_filp;
--	int			ioflags = IO_ISAIO;
-+	int			ioflags = 0;
- 
- 	BUG_ON(iocb->ki_pos != pos);
- 	if (unlikely(file->f_flags & O_DIRECT))
-@@ -71,7 +71,7 @@ xfs_file_aio_write(
- 	loff_t			pos)
- {
- 	struct file		*file = iocb->ki_filp;
--	int			ioflags = IO_ISAIO;
-+	int			ioflags = 0;
- 
- 	BUG_ON(iocb->ki_pos != pos);
- 	if (unlikely(file->f_flags & O_DIRECT))
-Index: xfs/fs/xfs/linux-2.6/xfs_lrw.c
+--- xfs.orig/fs/xfs/xfs_rw.c	2009-11-12 17:14:15.278004428 +0100
++++ xfs/fs/xfs/xfs_rw.c	2009-11-12 17:18:33.311004263 +0100
+@@ -336,3 +336,25 @@ xfs_bwrite(
+ 	}
+ 	return (error);
+ }
++
++/*
++ * helper function to extract extent size hint from inode
++ */
++xfs_extlen_t
++xfs_get_extsz_hint(
++	struct xfs_inode	*ip)
++{
++	xfs_extlen_t		extsz;
++
++	if (unlikely(XFS_IS_REALTIME_INODE(ip))) {
++		extsz = (ip->i_d.di_flags & XFS_DIFLAG_EXTSIZE)
++				? ip->i_d.di_extsize
++				: ip->i_mount->m_sb.sb_rextsize;
++		ASSERT(extsz);
++	} else {
++		extsz = (ip->i_d.di_flags & XFS_DIFLAG_EXTSIZE)
++				? ip->i_d.di_extsize : 0;
++	}
++
++	return extsz;
++}
+Index: xfs/fs/xfs/xfs_rw.h
 ===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_lrw.c	2009-11-12 17:10:19.909278501 +0100
-+++ xfs/fs/xfs/linux-2.6/xfs_lrw.c	2009-11-12 17:14:06.161003891 +0100
-@@ -255,8 +255,6 @@ xfs_read(
+--- xfs.orig/fs/xfs/xfs_rw.h	2009-11-09 17:06:46.116004228 +0100
++++ xfs/fs/xfs/xfs_rw.h	2009-11-12 17:18:33.311004263 +0100
+@@ -37,27 +37,6 @@ xfs_fsb_to_db(struct xfs_inode *ip, xfs_
+ }
  
- 	iocb->ki_pos = *offset;
- 	ret = generic_file_aio_read(iocb, iovp, segs, *offset);
--	if (ret == -EIOCBQUEUED && !(ioflags & IO_ISAIO))
--		ret = wait_on_sync_kiocb(iocb);
- 	if (ret > 0)
- 		XFS_STATS_ADD(xs_read_bytes, ret);
- 
-@@ -774,9 +772,6 @@ write_retry:
- 
- 	current->backing_dev_info = NULL;
- 
--	if (ret == -EIOCBQUEUED && !(ioflags & IO_ISAIO))
--		ret = wait_on_sync_kiocb(iocb);
--
- 	isize = i_size_read(inode);
- 	if (unlikely(ret < 0 && ret != -EFAULT && *offset > isize))
- 		*offset = isize;
-Index: xfs/fs/xfs/linux-2.6/xfs_vnode.h
-===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_vnode.h	2009-11-12 17:10:19.942276910 +0100
-+++ xfs/fs/xfs/linux-2.6/xfs_vnode.h	2009-11-12 17:14:06.161003891 +0100
-@@ -36,7 +36,6 @@ struct attrlist_cursor_kern;
  /*
-  * Flags for read/write calls - same values as IRIX
+- * helper function to extract extent size hint from inode
+- */
+-STATIC_INLINE xfs_extlen_t
+-xfs_get_extsz_hint(
+-	xfs_inode_t	*ip)
+-{
+-	xfs_extlen_t	extsz;
+-
+-	if (unlikely(XFS_IS_REALTIME_INODE(ip))) {
+-		extsz = (ip->i_d.di_flags & XFS_DIFLAG_EXTSIZE)
+-				? ip->i_d.di_extsize
+-				: ip->i_mount->m_sb.sb_rextsize;
+-		ASSERT(extsz);
+-	} else {
+-		extsz = (ip->i_d.di_flags & XFS_DIFLAG_EXTSIZE)
+-				? ip->i_d.di_extsize : 0;
+-	}
+-	return extsz;
+-}
+-
+-/*
+  * Prototypes for functions in xfs_rw.c.
   */
--#define IO_ISAIO	0x00001		/* don't wait for completion */
- #define IO_ISDIRECT	0x00004		/* bypass page cache */
- #define IO_INVIS	0x00020		/* don't update inode timestamps */
+ extern int xfs_write_clear_setuid(struct xfs_inode *ip);
+@@ -69,5 +48,6 @@ extern int xfs_read_buf(struct xfs_mount
+ 			struct xfs_buf **bpp);
+ extern void xfs_ioerror_alert(char *func, struct xfs_mount *mp,
+ 				xfs_buf_t *bp, xfs_daddr_t blkno);
++extern xfs_extlen_t xfs_get_extsz_hint(struct xfs_inode *ip);
  
+ #endif /* __XFS_RW_H__ */
 
 _______________________________________________
 xfs mailing list
