@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nAG3o4XW078518 for <xfs@oss.sgi.com>; Sun, 15 Nov 2009 21:50:05 -0600
+	nAG3TA8G076307 for <xfs@oss.sgi.com>; Sun, 15 Nov 2009 21:29:10 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CAAC68BF8B
-	for <xfs@oss.sgi.com>; Sun, 15 Nov 2009 19:50:23 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	NAz1AoZxMRilIpcm for <xfs@oss.sgi.com>;
-	Sun, 15 Nov 2009 19:50:23 -0800 (PST)
-Date: Mon, 16 Nov 2009 14:50:19 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 599FF1881368
+	for <xfs@oss.sgi.com>; Sun, 15 Nov 2009 19:29:30 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
+	[150.101.137.102]) by cuda.sgi.com with ESMTP id
+	tY99qfJcDDZV4ZmA for <xfs@oss.sgi.com>;
+	Sun, 15 Nov 2009 19:29:30 -0800 (PST)
+Date: Mon, 16 Nov 2009 14:29:27 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: improve metadata I/O merging in the elevator
-Message-ID: <20091116035019.GI9467@discord.disaster>
-References: <20091112190930.GB32110@infradead.org>
+Subject: Re: [PATCH 7/7] xfs: cleanup dmapi macros in the umount path
+Message-ID: <20091116032927.GH9467@discord.disaster>
+References: <20091114161717.233372584@bombadil.infradead.org>
+	<20091114161802.343652891@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20091112190930.GB32110@infradead.org>
+In-Reply-To: <20091114161802.343652891@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,50 +33,17 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Thu, Nov 12, 2009 at 02:09:31PM -0500, Christoph Hellwig wrote:
-> I had the patch below from Dave in my queue for a while, but previously
-> couldn't really reproduce his numbers.  After some discussions of the
-> bio types I've reteseted it again and can see constant improvements when
-> using cfq on my large array box with it (5-10% for the sequential create
-> workloads), but still nothing on deadline.  Given that people also want
-> it for better marking in blktrace it might be time to put it in.
+On Sat, Nov 14, 2009 at 11:17:24AM -0500, Christoph Hellwig wrote:
+> Stop the flag saving as we never mangle those in the unmount path, and hide all
+> the weird arguents to the dmapi code inside the XFS_SEND_PREUNMOUNT /
+> XFS_SEND_UNMOUNT macros.
 > 
-> Comments?
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Definitely should be done, but....
+Nice cleanup.
 
-It looks like the patch you posted isn't quite doing what was
-intended - async write buffers are being classified as WRITE, not
-WRITE_META. That means we get more write combining in the elevator
-(performance increase) like with WRITE_META, but don't get the
-faster dispatch (latency reduction) by using the META queue to keep
-the metadata writeback separate from the bulk data writeback.
-That may be why deadline is not showing any improvement...
+Reviewed-by: Dave Chinner <david@fromorbit.com>
 
-FWIW, the original patch here:
-
-http://oss.sgi.com/archives/xfs/2008-01/msg00630.html
-
-uses WRITE_META, but it looks like you've taken bits of this
-patch:
-
-http://oss.sgi.com/archives/xfs/2008-01/msg00653.html
-
-and added the log buffer marking to this patch and accidentally
-dropped the WRITE_META marking. i.e. this:
-
-> +	} else if (bp->b_flags & _XBF_RUN_QUEUES) {
-> +		ASSERT(!(bp->b_flags & XBF_READ_AHEAD));
-> +		bp->b_flags &= ~_XBF_RUN_QUEUES;
-> +		rw = (bp->b_flags & XBF_WRITE) ? WRITE : READ_META;
-
-I think should be:
-
-+		rw = (bp->b_flags & XBF_WRITE) ? WRITE_META : READ_META;
-
-Cheers,
-
-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
