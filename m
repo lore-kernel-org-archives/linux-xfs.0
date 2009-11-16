@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nAGB3DbG122839 for <xfs@oss.sgi.com>; Mon, 16 Nov 2009 05:03:15 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 48E3F1D980EE
-	for <xfs@oss.sgi.com>; Mon, 16 Nov 2009 03:03:33 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id nelqFc2HyBrdL7uW for
-	<xfs@oss.sgi.com>; Mon, 16 Nov 2009 03:03:33 -0800 (PST)
-Date: Mon, 16 Nov 2009 06:03:31 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/7] xfs: remove xfs_buf_get / xfs_buf_read
-Message-ID: <20091116110331.GA19835@infradead.org>
-References: <20091114161717.233372584@bombadil.infradead.org>
-	<20091114161801.411213050@bombadil.infradead.org>
-	<20091116031512.GC9467@discord.disaster>
+	nAGBuced127204 for <xfs@oss.sgi.com>; Mon, 16 Nov 2009 05:56:39 -0600
+Received: from sith.mimuw.edu.pl (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9D7B88CA5D
+	for <xfs@oss.sgi.com>; Mon, 16 Nov 2009 03:56:59 -0800 (PST)
+Received: from sith.mimuw.edu.pl (sith.mimuw.edu.pl [193.0.96.4]) by
+	cuda.sgi.com with ESMTP id ewUf4PLwKhwCtjHF for
+	<xfs@oss.sgi.com>; Mon, 16 Nov 2009 03:56:59 -0800 (PST)
+Date: Mon, 16 Nov 2009 12:57:02 +0100
+From: Jan Rekorajski <baggins@sith.mimuw.edu.pl>
+Subject: XFS bug in log recover with quota (bugzilla id 855)
+Message-ID: <20091116115702.GN23522@sith.mimuw.edu.pl>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20091116031512.GC9467@discord.disaster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,33 +26,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Mon, Nov 16, 2009 at 02:15:12PM +1100, Dave Chinner wrote:
-> On Sat, Nov 14, 2009 at 11:17:19AM -0500, Christoph Hellwig wrote:
-> > The two interfaces are highl confusing as they do have a flags argument
-> > which gets ignored and replaced with default flags.  Switch the few remaining
-> > callers to use xfs_buf_get_flags and xfs_buf_read_flags instead and remove
-> > these wrappers.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Personally I would have dropped the *_flags from the function names
-> as well (so everything calls xfs_buf_get() or xfs_buf_read()) but
-> it doesn't really matter....
+Hi,
+I was hit by a bug in linux 2.6.31 when XFS is not able to recover the
+log after a crash if fs was mounted with quotas. Gory details in XFS
+bugzilla: http://oss.sgi.com/bugzilla/show_bug.cgi?id=855.
 
-Maybe.  The issue would be if we forward-port some code that expects it
-can pass random crap in the flags field will get different behaviour
-now.  Then again it'll blow up fast enough to notice..
+It looks like wrong struct is used in buffer length check, and the following
+patch should fix the problem.
 
-> > +				XFS_AGB_TO_DADDR(mp, agno, XFS_BNO_BLOCK(mp)),
-> > +				BTOBB(mp->m_sb.sb_blocksize), XBF_LOCK | XBF_MAPPED);
-> 
-> That looks wider than 80 columns. Same for the other conversions,
-> too.
+xfs_dqblk_t has a size of 104+32 bytes, while xfs_disk_dquot_t is 104 bytes
+long, and this is exactly what I see in system logs - "XFS: dquot too small
+(104) in xlog_recover_do_dquot_trans."
 
-I'll fix it.
+--- linux-2.6.31.5/fs/xfs/xfs_log_recover.c.orig	2009-11-01 23:59:52.194846209 +0100
++++ linux-2.6.31.5/fs/xfs/xfs_log_recover.c	2009-11-16 12:47:11.601490963 +0100
+@@ -1980,7 +1980,7 @@
+ 					"XFS: NULL dquot in %s.", __func__);
+ 				goto next;
+ 			}
+-			if (item->ri_buf[i].i_len < sizeof(xfs_dqblk_t)) {
++			if (item->ri_buf[i].i_len < sizeof(xfs_disk_dquot_t)) {
+ 				cmn_err(CE_ALERT,
+ 					"XFS: dquot too small (%d) in %s.",
+ 					item->ri_buf[i].i_len, __func__);
+@@ -2636,7 +2636,7 @@
+ 			"XFS: NULL dquot in %s.", __func__);
+ 		return XFS_ERROR(EIO);
+ 	}
+-	if (item->ri_buf[1].i_len < sizeof(xfs_dqblk_t)) {
++	if (item->ri_buf[1].i_len < sizeof(xfs_disk_dquot_t)) {
+ 		cmn_err(CE_ALERT,
+ 			"XFS: dquot too small (%d) in %s.",
+ 			item->ri_buf[1].i_len, __func__);
+
+-- 
+Jan Rekorajski            |  ALL SUSPECTS ARE GUILTY. PERIOD!
+baggins<at>mimuw.edu.pl   |  OTHERWISE THEY WOULDN'T BE SUSPECTS, WOULD THEY?
+BOFH, MANIAC              |                   -- TROOPS by Kevin Rubio
 
 _______________________________________________
 xfs mailing list
