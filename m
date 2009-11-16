@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nAEH9RoF196912 for <xfs@oss.sgi.com>; Sat, 14 Nov 2009 11:09:27 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7C98B89E3B
-	for <xfs@oss.sgi.com>; Sat, 14 Nov 2009 09:09:47 -0800 (PST)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id OCa2pyGfRnYw3vXj for
-	<xfs@oss.sgi.com>; Sat, 14 Nov 2009 09:09:47 -0800 (PST)
-Message-ID: <4AFEE45D.1050709@sandeen.net>
-Date: Sat, 14 Nov 2009 11:09:49 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	nAG3EuSa074681 for <xfs@oss.sgi.com>; Sun, 15 Nov 2009 21:14:56 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9773881DCE
+	for <xfs@oss.sgi.com>; Sun, 15 Nov 2009 19:15:15 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	2OWdCLUuh5TCnv3b for <xfs@oss.sgi.com>;
+	Sun, 15 Nov 2009 19:15:15 -0800 (PST)
+Date: Mon, 16 Nov 2009 14:15:12 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/7] xfs: remove xfs_buf_get / xfs_buf_read
+Message-ID: <20091116031512.GC9467@discord.disaster>
+References: <20091114161717.233372584@bombadil.infradead.org>
+	<20091114161801.411213050@bombadil.infradead.org>
 MIME-Version: 1.0
-Subject: Re: install xfs
-References: <6fccb1d70911132005x43d02e39u9f161ecbce325c61@mail.gmail.com>	<20091114105417.29066860@galadriel.home>	<20091114161933.GA17658@infradead.org>
-	<20091114173819.6a23b654@galadriel.home>
-In-Reply-To: <20091114173819.6a23b654@galadriel.home>
+Content-Disposition: inline
+In-Reply-To: <20091114161801.411213050@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,36 +26,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Emmanuel Florac <eflorac@intellique.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-Emmanuel Florac wrote:
-> Le Sat, 14 Nov 2009 11:19:33 -0500 vous =E9criviez:
-> =
+On Sat, Nov 14, 2009 at 11:17:19AM -0500, Christoph Hellwig wrote:
+> The two interfaces are highl confusing as they do have a flags argument
+> which gets ignored and replaced with default flags.  Switch the few remaining
+> callers to use xfs_buf_get_flags and xfs_buf_read_flags instead and remove
+> these wrappers.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
->> Fedora comes with XFS included for a long time.  And even RHEL5 comes
->> with XFS kernel support, although on x86_64 and only supported if you
->> sign over your first born to Red Hat.
-> =
+Personally I would have dropped the *_flags from the function names
+as well (so everything calls xfs_buf_get() or xfs_buf_read()) but
+it doesn't really matter....
 
-> Wow, hell froze over. I never understood why redhat refused to include
-> XFS for so long, and simply decided to ditch redhat and derivatives
-> ages ago (no xfs? no mp3? grotesque rpm dependancies? you must be
-> friggin kidding).
+>  		/*
+>  		 * BNO btree root block
+>  		 */
+> -		bp = xfs_buf_get(mp->m_ddev_targp,
+> -			XFS_AGB_TO_DADDR(mp, agno, XFS_BNO_BLOCK(mp)),
+> -			BTOBB(mp->m_sb.sb_blocksize), 0);
+> +		bp = xfs_buf_get_flags(mp->m_ddev_targp,
+> +				XFS_AGB_TO_DADDR(mp, agno, XFS_BNO_BLOCK(mp)),
+> +				BTOBB(mp->m_sb.sb_blocksize), XBF_LOCK | XBF_MAPPED);
 
-Red Hat and Fedora can't ship the patented mp3 codec.  And enterprise =
+That looks wider than 80 columns. Same for the other conversions,
+too.
 
-distributions routinely choose a subset of kernel options that they can =
+Cheers,
 
-support well for their customers.
-
-But now I'm getting OT, so probably won't reply further.  :)
-
--Eric
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
