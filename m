@@ -1,17 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nAIMGQh8202320 for <xfs@oss.sgi.com>; Wed, 18 Nov 2009 16:16:27 -0600
-Date: Thu, 19 Nov 2009 09:16:42 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 7/7] xfs: Don't use PF_MEMALLOC
-Message-ID: <20091118221642.GN9467@discord.disaster>
-References: <20091117162235.3DEB.A69D9226@jp.fujitsu.com>
-	<20091117221108.GK9467@discord.disaster>
-	<20091118153302.3E20.A69D9226@jp.fujitsu.com>
+	nAJ47vS7231554 for <xfs@oss.sgi.com>; Wed, 18 Nov 2009 22:07:57 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A3B37D63EB8
+	for <xfs@oss.sgi.com>; Wed, 18 Nov 2009 20:08:18 -0800 (PST)
+Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
+	cuda.sgi.com with ESMTP id 6Ji0s6yNIhE6Kl3v for
+	<xfs@oss.sgi.com>; Wed, 18 Nov 2009 20:08:18 -0800 (PST)
+Message-ID: <4B04C4AF.50501@sandeen.net>
+Date: Wed, 18 Nov 2009 22:08:15 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20091118153302.3E20.A69D9226@jp.fujitsu.com>
+Subject: Re: [PATCH] libdisk: do not install libdisk.a
+References: <20091030131517.GB18462@infradead.org>
+In-Reply-To: <20091030131517.GB18462@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,46 +23,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
-Cc: xfs-masters@oss.sgi.com, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-mm <linux-mm@kvack.org>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-T24gV2VkLCBOb3YgMTgsIDIwMDkgYXQgMDU6NTY6NDZQTSArMDkwMCwgS09TQUtJIE1vdG9oaXJv
-IHdyb3RlOgo+ID4gT24gVHVlLCBOb3YgMTcsIDIwMDkgYXQgMDQ6MjM6NDNQTSArMDkwMCwgS09T
-QUtJIE1vdG9oaXJvIHdyb3RlOgo+ID4gPiAKPiA+ID4gTm9uIE1NIHN1YnN5c3RlbSBtdXN0IG5v
-dCB1c2UgUEZfTUVNQUxMT0MuIE1lbW9yeSByZWNsYWltIG5lZWQgZmV3Cj4gPiA+IG1lbW9yeSwg
-YW55b25lIG11c3Qgbm90IHByZXZlbnQgaXQuIE90aGVyd2lzZSB0aGUgc3lzdGVtIGNhdXNlCj4g
-PiA+IG15c3RlcmlvdXMgaGFuZy11cCBhbmQvb3IgT09NIEtpbGxlciBpbnZva2F0aW9uLgo+ID4g
-Cj4gPiBUaGUgeGZzYnVmZCBpcyBhIHdva2VuIHJ1biBieSBhIHJlZ2lzdGVyZWQgbWVtb3J5IHNo
-YWtlci4gaS5lLiBpdAo+ID4gcnVucyB3aGVuIHRoZSBzeXN0ZW0gbmVlZHMgdG8gcmVjbGFpbSBt
-ZW1vcnkuIEl0IGZvcmNl0ZUgdGhlCj4gPiBkZWxheWVkIHdyaXRlIG1ldGFkYXRhIGJ1ZmZlcnMg
-KG9mIHdoaWNoIHRoZXJlIGNhbiBiZSBhIGxvdCkgdG8gZGlzawo+ID4gc28gdGhhdCB0aGV5IGNh
-biBiZSByZWNsYWltZWQgb24gSU8gY29tcGxldGlvbi4gVGhpcyBJTyBzdWJtaXNzaW9uCj4gPiBt
-YXkgcmVxdWlyZSDRlW9tZSBtZW1vcnkgdG8gYmUgYWxsb2NhdGVkIHRvIGJlIGFibGUgdG8gZnJl
-ZSB0aGF0Cj4gPiBtZW1vcnkuCj4gPiAKPiA+IEhlbmNlLCBBRkFJQ1QgdGhlIHVzZSBvZiBQRl9N
-RU1BTExPQyBpcyB2YWxpZCBoZXJlLgo+IAo+IFRoYW5rcyBhIGxvdC4gCj4gSSBoYXZlIG9uZSBh
-ZGRpdGlvbmFsIHF1ZXN0aW9uLCBtYXkgSSBhc2sgeW91Pwo+IAo+IEhvdyBjYW4gd2UgY2FsY3Vs
-YXRlIG1heGltdW0gbWVtb3J5IHVzYWdlIGluIHhmc2J1ZmQ/CgpJdCBkb2Vzbid0IGdldCBjYWxj
-dWxhdGVkIGF0IHRoZSBtb21lbnQuIEl0IGlzIHZlcnkgZGlmZmljdWx0IHRvCmNhbGN1bGF0ZSBh
-IHVzYWJsZSBzaXplIG1ldHJpYyBmb3IgaXQgYmVjYXVzZSB0aGVyZSBhcmUgbXVsdGlwbGUKY2Fj
-aGVzICh1cCB0byAzIHBlciBmaWxlc3lzdGVtKSwgYW5kIGRlbnRyeS9pbm9kZSByZWNsYWltIGNh
-dXNlcyB0aGUKc2l6ZSBvZiB0aGUgY2FjaGUgdG8gZ3Jvdy4gIEhlbmNlIHRoZSBzaXplIG9mIHRo
-ZSBjYWNoZSBpcyBub3QKcmVhbGx5IHNvbWV0aGluZyB0aGF0IGNhbiBiZSBjb25zaWRlcmVkIGEg
-c3RhYmxlIG9yIHByZWRpY3RhYmxlCmlucHV0IGludG8gYSAicmVjbGFpbSBub3ciIGNhbGN1bGF0
-aW9uLiBBcyBzdWNoIHdlIHNpbXBseSBjYXVzZQp4ZnNidWZkIHJ1biBzaW11bHRhbmVvdXNseSB3
-aXRoIHRoZSBzaHJpbmtlcnMgdGhhdCBjYXVzZSBpdCB0bwpncm93Li4uLgoKPiBJJ20gYWZyYWlk
-IHRoYXQgVk0gYW5kIFhGUyB3b3JrcyBwcm9wZXJseSBidXQgYWRkaW5nIHR3byBtYWtlcyBtZW1v
-cnkgZXhoYXVzdC4KCkkgZG9uJ3QgdW5kZXJzdGFuZCB3aGF0IHlvdSBhcmUgdHJ5aW5nIHRvIHNh
-eSBoZXJlLgoKPiBBbmQsIEkgY29uY2x1ZGUgWEZTIGRvZXNuJ3QgbmVlZCBzaGFyaW5nIHJlc2Vy
-dmF0aW9uIG1lbW9yeSB3aXRoIFZNLAo+IGl0IG9ubHkgbmVlZCBub24gZmFpbGVkIGFsbG9jYXRp
-b24uIHJpZ2h0PyBJT1cgSSdtIHByZWZlciBwZXJ0ZXIncwo+IHN1Z2dlc3Rpb24uCgpSaWdodC4g
-SG93ZXZlciwgaXQgaXMgd29ydGgga2VlcGluZyBpbiBtaW5kIHRoYXQgdGhpcyBpcyBhCnBlcmZv
-cm1hbmNlIGNyaXRpY2FsIHBhdGggZm9yIGlub2RlIHJlY2xhaW0uICBIZW5jZSBhbnkgdGhyb3R0
-bGluZwpvZiBhbGxvY2F0aW9uIHdpbGwgc2xvdyBkb3duIHRoZSByYXRlIGF0IHdoaWNoIG1lbW9y
-eSBpcyBmcmVlZCBieQp0aGUgc3lzdGVtLi4uLgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hp
-bm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8v
-b3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+Christoph Hellwig wrote:
+> Since xfsprogs 3.0 libdisk is intended to be private to xfsprogs and we do
+> not install the headers anymore.  But we kept installing the static library,
+> which doesn't make sense.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
+
+> 
+> Index: xfsprogs-dev/libdisk/Makefile
+> ===================================================================
+> --- xfsprogs-dev.orig/libdisk/Makefile	2009-10-30 13:12:03.000000000 +0000
+> +++ xfsprogs-dev/libdisk/Makefile	2009-10-30 13:12:08.000000000 +0000
+> @@ -27,6 +27,5 @@ include $(BUILDRULES)
+>  install: default
+>  
+>  install-dev: default
+> -	$(INSTALL_LTLIB_STATIC)
+>  
+>  install-qa: install-dev
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
