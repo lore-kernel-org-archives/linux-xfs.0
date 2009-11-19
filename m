@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nAJ4oxC8235322 for <xfs@oss.sgi.com>; Wed, 18 Nov 2009 22:51:00 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 65442D64CB3
-	for <xfs@oss.sgi.com>; Wed, 18 Nov 2009 20:51:21 -0800 (PST)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id qADvS0kQ7peC3YIr for
-	<xfs@oss.sgi.com>; Wed, 18 Nov 2009 20:51:21 -0800 (PST)
-Message-ID: <4B04CEC8.1040603@sandeen.net>
-Date: Wed, 18 Nov 2009 22:51:20 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	nAJ8vjFa251757 for <xfs@oss.sgi.com>; Thu, 19 Nov 2009 02:57:46 -0600
+Received: from mail.gmx.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id 13F949A36A
+	for <xfs@oss.sgi.com>; Thu, 19 Nov 2009 00:58:07 -0800 (PST)
+Received: from mail.gmx.net (mail.gmx.net [213.165.64.20]) by cuda.sgi.com
+	with SMTP id guz9JPRATONaYHZw for <xfs@oss.sgi.com>;
+	Thu, 19 Nov 2009 00:58:07 -0800 (PST)
+From: Juergen Urban <JuergenUrban@gmx.de>
+Subject: BUG() in end_page_writeback(),
+	stack overflows and system speed decrease with XFS over USB
+Date: Thu, 19 Nov 2009 09:57:45 +0100
 MIME-Version: 1.0
-Subject: Re: [PATCH 4/7] xfs: uninline xfs_get_extsz_hint
-References: <20091114161717.233372584@bombadil.infradead.org>
-	<20091114161801.818601601@bombadil.infradead.org>
-In-Reply-To: <20091114161801.818601601@bombadil.infradead.org>
+Content-Disposition: inline
+Message-Id: <200911190957.45957.JuergenUrban@gmx.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,94 +27,63 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
+Hello,
 
-> This function is too large to efficiently be inlined.
+my machine is running very unstable since I use XFS on an external USB 
+harddisc (855 GByte XFS partition on 1TByte). One problem was the stack 
+overflows caused by the large stack use of XFS, USB, SCSI and VFS in Linux 
+2.6.23.13. NFS on XFS caused much more stack overflows. I think I got around 
+the stack overflows by disabling preemption, SMP and NFS in Linux, but I am not 
+sure about it. I think that I didn't got a message from the stack overflow 
+detection after this. I also tried a Live-CD (KNOPPIX), but there are the same 
+problems. I exchanged some of the hardware. XFS is decreasing system 
+performance.  I use the Linux VDR with DVB-S which seems to increase the 
+problems. I was able to record 3 high bandwidth streams in parallel before 
+using XFS. Now it has problems to record one high bandwidth stream.  The 
+system got a little bit usable after I changed the IO scheduler to deadline.
+It is difficult to get a good backtrace of the kernel crash, because the backlog 
+is not saved on the internal harddisc (reiserfs and ext3). I was able to find 
+out that XFS triggers a BUG() in end_page_writeback() at mm/filemap.c:552:
 
-Just out of curiosity; too how do you define too large?
+void end_page_writeback(struct page *page)
+{
+        if (!TestClearPageReclaim(page) || rotate_reclaimable_page(page)) {
+                if (!test_clear_page_writeback(page))
+                        BUG();
+        }
+        smp_mb__after_clear_bit();
+        wake_up_page(page, PG_writeback);
+}
 
--Eric
+The backtrace looks like this (Sorry, I needed to write it down from screen 
+and I don't have everything):
 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Index: xfs/fs/xfs/xfs_rw.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/xfs_rw.c	2009-11-12 17:14:15.278004428 +0100
-> +++ xfs/fs/xfs/xfs_rw.c	2009-11-12 17:18:33.311004263 +0100
-> @@ -336,3 +336,25 @@ xfs_bwrite(
->  	}
->  	return (error);
->  }
-> +
-> +/*
-> + * helper function to extract extent size hint from inode
-> + */
-> +xfs_extlen_t
-> +xfs_get_extsz_hint(
-> +	struct xfs_inode	*ip)
-> +{
-> +	xfs_extlen_t		extsz;
-> +
-> +	if (unlikely(XFS_IS_REALTIME_INODE(ip))) {
-> +		extsz = (ip->i_d.di_flags & XFS_DIFLAG_EXTSIZE)
-> +				? ip->i_d.di_extsize
-> +				: ip->i_mount->m_sb.sb_rextsize;
-> +		ASSERT(extsz);
-> +	} else {
-> +		extsz = (ip->i_d.di_flags & XFS_DIFLAG_EXTSIZE)
-> +				? ip->i_d.di_extsize : 0;
-> +	}
-> +
-> +	return extsz;
-> +}
-> Index: xfs/fs/xfs/xfs_rw.h
-> ===================================================================
-> --- xfs.orig/fs/xfs/xfs_rw.h	2009-11-09 17:06:46.116004228 +0100
-> +++ xfs/fs/xfs/xfs_rw.h	2009-11-12 17:18:33.311004263 +0100
-> @@ -37,27 +37,6 @@ xfs_fsb_to_db(struct xfs_inode *ip, xfs_
->  }
->  
->  /*
-> - * helper function to extract extent size hint from inode
-> - */
-> -STATIC_INLINE xfs_extlen_t
-> -xfs_get_extsz_hint(
-> -	xfs_inode_t	*ip)
-> -{
-> -	xfs_extlen_t	extsz;
-> -
-> -	if (unlikely(XFS_IS_REALTIME_INODE(ip))) {
-> -		extsz = (ip->i_d.di_flags & XFS_DIFLAG_EXTSIZE)
-> -				? ip->i_d.di_extsize
-> -				: ip->i_mount->m_sb.sb_rextsize;
-> -		ASSERT(extsz);
-> -	} else {
-> -		extsz = (ip->i_d.di_flags & XFS_DIFLAG_EXTSIZE)
-> -				? ip->i_d.di_extsize : 0;
-> -	}
-> -	return extsz;
-> -}
-> -
-> -/*
->   * Prototypes for functions in xfs_rw.c.
->   */
->  extern int xfs_write_clear_setuid(struct xfs_inode *ip);
-> @@ -69,5 +48,6 @@ extern int xfs_read_buf(struct xfs_mount
->  			struct xfs_buf **bpp);
->  extern void xfs_ioerror_alert(char *func, struct xfs_mount *mp,
->  				xfs_buf_t *bp, xfs_daddr_t blkno);
-> +extern xfs_extlen_t xfs_get_extsz_hint(struct xfs_inode *ip);
->  
->  #endif /* __XFS_RW_H__ */
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+end_page_writeback()
+end_buffer_async_write()
+update_stats_wait_end()
+xfs_setfilesize()
+xfs_???_dealloc()
+xfs_destroy_ioend()
+run_workqueue()
+
+After searching in the code I found:
+/* TODO: cleanup count and page_dirty */
+
+It seems that page_dirty may be handled wrong and could cause the problem, but 
+I don't know the purpose of this stuff. The same comment is in the latest 
+source code from GIT.
+After running the system for while, I was able to trigger the kernel crash by 
+starting "sync" in the command line.
+My stack traces includes often dvb_dmx_swfilter_packets(), do_IRQ()/tasklets 
+and sys_write()/vfs_write(). I can't scroll up in most situations.
+Can anyone help me?
+Is there an easy way to backup the data or replace the file system without 
+kernel crash in between?
+
+Best regards
+Juergen Urban
 
 _______________________________________________
 xfs mailing list
