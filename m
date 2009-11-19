@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nAJHxxY8045601 for <xfs@oss.sgi.com>; Thu, 19 Nov 2009 11:59:59 -0600
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C4DFFD68A60
-	for <xfs@oss.sgi.com>; Thu, 19 Nov 2009 10:00:21 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id LzTPIQvYTV4Ih4OA for
-	<xfs@oss.sgi.com>; Thu, 19 Nov 2009 10:00:21 -0800 (PST)
-Message-ID: <4B0587B0.3020702@sandeen.net>
-Date: Thu, 19 Nov 2009 12:00:16 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	nAJNDuIq078111 for <xfs@oss.sgi.com>; Thu, 19 Nov 2009 17:13:58 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CD1DCD6E0AB
+	for <xfs@oss.sgi.com>; Thu, 19 Nov 2009 15:14:19 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id X9FCk9XFAzZeYywD for
+	<xfs@oss.sgi.com>; Thu, 19 Nov 2009 15:14:19 -0800 (PST)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1NBGCg-0001t6-G3
+	for xfs@oss.sgi.com; Thu, 19 Nov 2009 23:14:18 +0000
+Date: Thu, 19 Nov 2009 18:14:18 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH] xfsprogs: stop using off64_t in platform headers
+Message-ID: <20091119231418.GA7161@infradead.org>
 MIME-Version: 1.0
-Subject: Re: BUG() in end_page_writeback(),	stack overflows and system speed
-	decrease with XFS over USB
-References: <200911190957.45957.JuergenUrban@gmx.de>
-In-Reply-To: <200911190957.45957.JuergenUrban@gmx.de>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,92 +29,73 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Juergen Urban <JuergenUrban@gmx.de>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Juergen Urban wrote:
-> Hello,
-> 
-> my machine is running very unstable since I use XFS on an external USB 
-> harddisc (855 GByte XFS partition on 1TByte). One problem was the stack 
-> overflows caused by the large stack use of XFS, USB, SCSI and VFS in Linux 
-> 2.6.23.13. NFS on XFS caused much more stack overflows. I think I got around 
-> the stack overflows by disabling preemption, SMP and NFS in Linux, but I am not 
-> sure about it. I think that I didn't got a message from the stack overflow 
-> detection after this. 
+Using off64_t may require special headers or compiler flags that aren't
+always available, e.g. in the configure check in xfstests.  Rever to a plain
+uint64_t to make apps compile as before.
 
-Are you on 4k stacks?  To be honest I'd still expect things to be mostly
-ok stack-wise even if so.
+While we're at it also rename the second argument of platform_discard_blocks
+from end to len as that's what the BLKDISCARD ioctl excepts - we currently
+always discard the whole device so it doesn't matter in practice.
 
-> I also tried a Live-CD (KNOPPIX), but there are the same 
-> problems. I exchanged some of the hardware. XFS is decreasing system 
-> performance.  I use the Linux VDR with DVB-S which seems to increase the 
-> problems. I was able to record 3 high bandwidth streams in parallel before 
-> using XFS. 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Really, you could record 3 parallel high-def TV streams to ext3 via USB?
-I guess I'm a little surprised...
-
-> Now it has problems to record one high bandwidth stream.  The 
-> system got a little bit usable after I changed the IO scheduler to deadline.
-> It is difficult to get a good backtrace of the kernel crash, because the backlog 
-> is not saved on the internal harddisc (reiserfs and ext3). I was able to find 
-> out that XFS triggers a BUG() in end_page_writeback() at mm/filemap.c:552:
-> 
-> void end_page_writeback(struct page *page)
-> {
->         if (!TestClearPageReclaim(page) || rotate_reclaimable_page(page)) {
->                 if (!test_clear_page_writeback(page))
->                         BUG();
->         }
->         smp_mb__after_clear_bit();
->         wake_up_page(page, PG_writeback);
-> }
-
-Regarding the bug, if there is any way to test a kernel newer than .23,
-I'd start there; I don't know offhand of a bug that was fixed here, but
-.23 was a long time ago...
-
-> The backtrace looks like this (Sorry, I needed to write it down from screen 
-> and I don't have everything):
-> 
-> end_page_writeback()
-> end_buffer_async_write()
-> update_stats_wait_end()
-> xfs_setfilesize()
-> xfs_???_dealloc()
-> xfs_destroy_ioend()
-> run_workqueue()
-> 
-> After searching in the code I found:
-> /* TODO: cleanup count and page_dirty */
-> 
-> It seems that page_dirty may be handled wrong and could cause the problem, but 
-> I don't know the purpose of this stuff. The same comment is in the latest 
-> source code from GIT.
-> After running the system for while, I was able to trigger the kernel crash by 
-> starting "sync" in the command line.
-> My stack traces includes often dvb_dmx_swfilter_packets(), do_IRQ()/tasklets 
-> and sys_write()/vfs_write(). I can't scroll up in most situations.
-> Can anyone help me?
-> Is there an easy way to backup the data or replace the file system without 
-> kernel crash in between?
-
-You should certainly be able to copy data off xfs via usb; if it's
-failing, I guess we'll need more info to find out why, but I'd suggest
-at least booting a newer livecd to do that copy and see if things fare
-better.
-
--Eric
-
-> Best regards
-> Juergen Urban
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+Index: xfsprogs-dev/include/darwin.h
+===================================================================
+--- xfsprogs-dev.orig/include/darwin.h	2009-11-19 23:12:05.000000000 +0000
++++ xfsprogs-dev/include/darwin.h	2009-11-19 23:12:30.000000000 +0000
+@@ -155,7 +155,7 @@ typedef unsigned char	uchar_t;
+ #define HAVE_FID	1
+ 
+ static __inline__ int
+-platform_discard_blocks(int fd, off64_t start, off64_t end)
++platform_discard_blocks(int fd, uint64_t start, uint64_t len)
+ {
+ 	return 0;
+ }
+Index: xfsprogs-dev/include/freebsd.h
+===================================================================
+--- xfsprogs-dev.orig/include/freebsd.h	2009-11-19 23:12:05.000000000 +0000
++++ xfsprogs-dev/include/freebsd.h	2009-11-19 23:12:30.000000000 +0000
+@@ -140,7 +140,7 @@ static __inline__ void platform_uuid_cop
+ }
+ 
+ static __inline__ int
+-platform_discard_blocks(int fd, off64_t start, off64_t end)
++platform_discard_blocks(int fd, uint64_t start, uint64_t len)
+ {
+ 	return 0;
+ }
+Index: xfsprogs-dev/include/irix.h
+===================================================================
+--- xfsprogs-dev.orig/include/irix.h	2009-11-19 23:12:05.000000000 +0000
++++ xfsprogs-dev/include/irix.h	2009-11-19 23:12:30.000000000 +0000
+@@ -338,7 +338,7 @@ static __inline__ void platform_uuid_cop
+ }
+ 
+ static __inline__ int
+-platform_discard_blocks(int fd, off64_t start, off64_t end)
++platform_discard_blocks(int fd, uint64_t start, uint64_t len)
+ {
+ 	return 0;
+ }
+Index: xfsprogs-dev/include/linux.h
+===================================================================
+--- xfsprogs-dev.orig/include/linux.h	2009-11-19 23:12:04.000000000 +0000
++++ xfsprogs-dev/include/linux.h	2009-11-19 23:12:40.000000000 +0000
+@@ -98,9 +98,9 @@ static __inline__ void platform_uuid_cop
+ #endif
+ 
+ static __inline__ int
+-platform_discard_blocks(int fd, off64_t start, off64_t end)
++platform_discard_blocks(int fd, uint64_t start, uint64_t len)
+ {
+-	__uint64_t range[2] = { start, end };
++	__uint64_t range[2] = { start, len };
+ 
+ 	if (ioctl(fd, BLKDISCARD, &range) < 0)
+ 		return errno;
 
 _______________________________________________
 xfs mailing list
