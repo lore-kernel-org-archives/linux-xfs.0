@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nAK7ariw130394 for <xfs@oss.sgi.com>; Fri, 20 Nov 2009 01:36:53 -0600
-Received: from mx1.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7CD1512359C5
-	for <xfs@oss.sgi.com>; Thu, 19 Nov 2009 23:37:16 -0800 (PST)
-Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
-	with ESMTP id xFsgQ4J5g7MXRU5c for <xfs@oss.sgi.com>;
-	Thu, 19 Nov 2009 23:37:16 -0800 (PST)
-Date: Thu, 19 Nov 2009 23:30:00 -0800
-From: Brandon Philips <bphilips@suse.de>
-Subject: [ANNOUNCE] acl v2.2.49 released
-Message-ID: <20091120072959.GA32542@jenkins.home.ifup.org>
+	nAKAQXDB144556 for <xfs@oss.sgi.com>; Fri, 20 Nov 2009 04:26:33 -0600
+Received: from vmta27.birthdayalarm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 673E31BFFBA7
+	for <xfs@oss.sgi.com>; Fri, 20 Nov 2009 02:26:56 -0800 (PST)
+Received: from vmta27.birthdayalarm.com (vmta27.birthdayalarm.com
+	[38.99.45.47]) by cuda.sgi.com with ESMTP id RMRoWQkXgh1dPIs4
+	for <xfs@oss.sgi.com>; Fri, 20 Nov 2009 02:26:56 -0800 (PST)
+Received: by vmta27.birthdayalarm.com id h0png20im3oi for <xfs@oss.sgi.com>;
+	Fri, 20 Nov 2009 10:27:10 +0000 (envelope-from
+	<press.club.international@gmail.com>)
+Date: Fri, 20 Nov 2009 10:27:36 +0000 (UTC)
+From: Birthday Alert <press.club.international@gmail.com>
+Message-ID: <1828123008.6096651258712856014.JavaMail.batch@lpc04>
+Subject: Birthday Calendar
 MIME-Version: 1.0
-Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,37 +28,16 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Hello All-
+Hi
 
-Version 2.2.49 of acl has been released. 
+I'm setting up a birthday calendar and need your help.  Just click on the link below and enter your birthday details.  (It's quick, easy, and you can keep your age a secret.)
 
-The Tarball can be found here:
- http://download.savannah.gnu.org/releases-noredirect/acl/acl-2.2.49.src.tar.gz
+http://www.birthdayalarm.com/bd2/85869367a320228207b1485560240c894944639d1386
 
-The git repository can be found here:
- http://git.savannah.gnu.org/cgit/acl.git/
-
-The CHANGES can be found here:
- http://git.savannah.gnu.org/cgit/acl.git/tree/doc/CHANGES?id=HEAD
-
-This release fixes two bugs in the tarball package of v2.2.48:
-- docs/CHANGES wasn't updated
-- tests/sort-getfacl-output and examples/copyperm.c didn't make it
-  into the tarball
-
-No code has changed but these fixes are important for distros looking
-to version bump[1].
-
-Also, for distros that like to test packages at build time try out 
-`make tests` which was added in v2.2.48.
-
-Thanks,
-
-	Brandon
-
-[1] http://bugs.gentoo.org/show_bug.cgi?id=292842
+Thanks
+Birthday
 
 _______________________________________________
 xfs mailing list
