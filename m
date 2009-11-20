@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nAK5T56t116181 for <xfs@oss.sgi.com>; Thu, 19 Nov 2009 23:29:05 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A087C9E8F9
-	for <xfs@oss.sgi.com>; Thu, 19 Nov 2009 21:29:27 -0800 (PST)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id O92kfia7L0H86E7l for
-	<xfs@oss.sgi.com>; Thu, 19 Nov 2009 21:29:27 -0800 (PST)
-Message-ID: <4B062936.30103@sandeen.net>
-Date: Thu, 19 Nov 2009 23:29:26 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	nAK6b1md125064 for <xfs@oss.sgi.com>; Fri, 20 Nov 2009 00:37:02 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 207129EA16
+	for <xfs@oss.sgi.com>; Thu, 19 Nov 2009 22:37:23 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	AKsFOuCqwzq6XMN7 for <xfs@oss.sgi.com>;
+	Thu, 19 Nov 2009 22:37:23 -0800 (PST)
+Date: Fri, 20 Nov 2009 17:37:20 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: make several more functions static
+Message-ID: <20091120063720.GA3804@discord.disaster>
+References: <4B0569A0.10405@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: Improving XFS desktop performance?
-References: <74fd948d0911191805m30c34b51m97c2a998dbe0bac3@mail.gmail.com>
-In-Reply-To: <74fd948d0911191805m30c34b51m97c2a998dbe0bac3@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <4B0569A0.10405@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,57 +29,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Pedro Ribeiro <pedrib@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Pedro Ribeiro wrote:
-> Hi all,
-> 
-> I've been using XFS since 2007 and I although I'm quite happy with its
-> performance, I am always looking at ways to improve it.
-> My usage is a regular desktop machine, for software development and
-> web browsing.
-> The main performance bottleneck I have is LUKS :-) However, I really
-> like my data encrypted, so dissing it is not an option. Actually, I'm
-> the xfs improvements discussed below I was able to get the performance
-> hit to something like 10% - negligible for me.
-> 
-> So what I do is specify a 128m log on filesystem creation:
-> mkfs.xfs -l size=128m /dev/mapper/target
-> 
-> And on /etc/fstab mount it as;
-> /dev/mapper/target      noatime,logbufs=8,logbsize=256k
+On Thu, Nov 19, 2009 at 09:52:00AM -0600, Eric Sandeen wrote:
+> Just minor housekeeping, a lot more functions can be trivially
+> made static; others could if we reordered things a bit...
 
-FWIW, 8 logbufs is default already.
+Only one minor comment:
 
-> After the above, my delete speed improved drastically.
-> 
-> Searching around the net I was able to find that using "lazy-count=1"
-> on mkfs would give a performance increase - how much would that be,
-> enough for me to do a full backup, format with that option + 128m log
-> and then restore all again?
+> -void
+> +STATIC_INLINE void
+>  xlog_put_bp(
+>  	xfs_buf_t	*bp)
+>  {
 
-You should be able to use xfs_admin to turn it on; see the man page
-for that.
+I'd change that as STATIC as Christoph's recent patch removed
+STATIC_INLINE. gcc will inline it for us if it's a win....
 
-> And anything else you recommend?
+Cheers,
 
-In general, the defaults are optimal for generic use; unless you have
-a specific use case that is suffering, it's hard to make recommendations
-beyond the defaults....
-
-...although we do keep talking about making lazy sb counters default.
-
--Eric
-
-> Thanks for your time,
-> Pedro
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
