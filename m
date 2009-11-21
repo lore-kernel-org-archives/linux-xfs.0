@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nAKNiZQp215818 for <xfs@oss.sgi.com>; Fri, 20 Nov 2009 17:44:36 -0600
-Received: from mx.tty.gr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3F239CD7B2F
-	for <xfs@oss.sgi.com>; Fri, 20 Nov 2009 15:44:58 -0800 (PST)
-Received: from mx.tty.gr (solitude.tty.gr [95.154.208.37]) by cuda.sgi.com
-	with ESMTP id J2xk2qiFEM8d7xr5 for <xfs@oss.sgi.com>;
-	Fri, 20 Nov 2009 15:44:58 -0800 (PST)
-Message-ID: <4B0729D8.3000105@debian.org>
-Date: Sat, 21 Nov 2009 01:44:24 +0200
-From: Faidon Liambotis <paravoid@debian.org>
+	nAL100Kw223087 for <xfs@oss.sgi.com>; Fri, 20 Nov 2009 19:00:01 -0600
+Received: from mail.gmx.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id B36EC9C4C0
+	for <xfs@oss.sgi.com>; Fri, 20 Nov 2009 17:00:24 -0800 (PST)
+Received: from mail.gmx.net (mail.gmx.net [213.165.64.20]) by cuda.sgi.com
+	with SMTP id S41eJGnmD0ghtZbt for <xfs@oss.sgi.com>;
+	Fri, 20 Nov 2009 17:00:24 -0800 (PST)
+From: Juergen Urban <JuergenUrban@gmx.de>
+Subject: Re: BUG() in end_page_writeback(),
+	stack overflows and system speed decrease with XFS over USB
+Date: Sat, 21 Nov 2009 02:00:12 +0100
+References: <200911190957.45957.JuergenUrban@gmx.de>
+	<4B06C58F.5070203@sandeen.net> <4B06CCFC.8030309@sandeen.net>
+In-Reply-To: <4B06CCFC.8030309@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: Bug#557262: 2.6.31+2.6.31.4: XFS - All I/O locks up to D-state
-	after	24-48 hours (sysrq-t+w available) - root cause found = asterisk
-References: <alpine.DEB.2.00.0910171825270.16781@p34.internal.lan>	<alpine.DEB.2.00.0910181607040.27363@p34.internal.lan>	<20091019030456.GS9464@discord.disaster>	<alpine.DEB.2.00.0910190431180.23395@p34.internal.lan>	<20091020003358.GW9464@discord.disaster>	<alpine.DEB.2.00.0910200431290.21878@p34.internal.lan>	<alpine.DEB.2.00.0910210618210.10288@p34.internal.lan>
-	<alpine.DEB.2.00.0911201530500.10757@p34.internal.lan>
-In-Reply-To: <alpine.DEB.2.00.0911201530500.10757@p34.internal.lan>
+Content-Disposition: inline
+Message-Id: <200911210200.13438.JuergenUrban@gmx.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,34 +30,56 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Justin Piszcz <jpiszcz@lucidpixels.com>, 557262@bugs.debian.org
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, submit@bugs.debian.org, asterisk-users@lists.digium.com, Alan Piszcz <ap@solarrain.com>
+To: xfs@oss.sgi.com
 
-Justin Piszcz wrote:
- > Found root cause-- root cause is asterisk PBX software.  I use an
-SPA3102.
-> When someone called me, they accidentally dropped the connection, I called
-> them back in a short period.  It is during this time (and the last time)
-> this happened that the box froze under multiple(!) kernels, always when
-> someone was calling.
-<snip>
-> I don't know what asterisk is doing but top did run before the crash
-> and asterisk was using 100% CPU and as I noted before all other processes
-> were in D-state.
-> 
-> When this bug occurs, it freezes I/O to all devices and the only way to
-> recover
-> is to reboot the system.
-That's obviously *not* the root cause.
+On Friday 20 November 2009 18:08:12 Eric Sandeen wrote:
+> Eric Sandeen wrote:
+> > Juergen Urban wrote:
+> >> On Thursday 19 November 2009 19:00:16 Eric Sandeen wrote:
+> >>> Juergen Urban wrote:
+> >>>> Hello,
+> >>>>
+> >>>> my machine is running very unstable since I use XFS on an external USB
+> >>>> harddisc (855 GByte XFS partition on 1TByte). One problem was the
+> >>>> stack overflows caused by the large stack use of XFS, USB, SCSI and
+> >>>> VFS in Linux 2.6.23.13. NFS on XFS caused much more stack overflows. I
+> >>>> think I got around the stack overflows by disabling preemption, SMP
+> >>>> and NFS in Linux, but I am not sure about it. I think that I didn't
+> >>>> got a message from the stack overflow detection after this.
+> >>>
+> >>> Are you on 4k stacks?  To be honest I'd still expect things to be
+> >>> mostly ok stack-wise even if so.
+> >>
+> >> No, I am using 8k stacks.
+> >
+> > Hmm.
+>
+> BTW if you are still seeing stack overflows when testing w/ the newer
+> kernel, we can use some tracing to see what the stack backtrace is:
+>
+> sysctl -w kernel.stack_tracer_enabled=1
+> mount -t debugfs none /sys/kernel/debug/
+>
+> and then look in:
+>
+> /sys/kernel/debug/tracing/stack_trace
+> /sys/kernel/debug/tracing/stack_max_size
+>
 
-It's not normal for an application that isn't even privileged to hang
-all I/O and, subsequently everything on a system.
+I don't think that I still get stack overflows in Linux 2.6.23.13.
 
-This is almost probably a kernel issue and asterisk just does something
-that triggers this bug.
+Now I downloaded the new KNOPPIX with Linux 2.6.31.6. I've got also crashes 
+with it, but this also could be a stack overflow, because the kernel 
+configuration includes SMP and preemption. The problem here is that I don't see 
+any kernel message. I just see the blinking keyboard or sometimes even 
+nothing. To get the error I just need to play video with mplayer and don't 
+need to write to the file system at all. I need to wait until I've got a good 
+backtrace, but this will be with Linux 2.6.23.13.
+The console tools of my installed Debian can't configure or use /dev/tty[0-9]* 
+of Linux 2.6.31.6. The ioctls are not supported. I installed a newer version 
+of the package, but this doesn't help. I copied the ".config" from Linux 
+2.6.23.13 to 2.6.31.6. Maybe this is not compatible.
 
-Regards,
-Faidon
 
 _______________________________________________
 xfs mailing list
