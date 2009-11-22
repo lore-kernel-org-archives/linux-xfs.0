@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nAMCUbiU140842 for <xfs@oss.sgi.com>; Sun, 22 Nov 2009 06:30:49 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9755D18C3010
-	for <xfs@oss.sgi.com>; Sun, 22 Nov 2009 04:31:02 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id UC6lloaSA4WlM7r0 for
-	<xfs@oss.sgi.com>; Sun, 22 Nov 2009 04:31:02 -0800 (PST)
-Date: Sun, 22 Nov 2009 07:31:01 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: XFS, NFS and inode64 on 2.6.27
-Message-ID: <20091122123101.GA30986@infradead.org>
-References: <200911201152.43809@zmi.at> <20091121131657.GA2095@infradead.org>
-	<200911212217.57407@zmi.at>
+	nAMGKlpg157405 for <xfs@oss.sgi.com>; Sun, 22 Nov 2009 10:20:47 -0600
+Received: from galiil.marvell.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8D442D71CF6
+	for <xfs@oss.sgi.com>; Sun, 22 Nov 2009 08:21:10 -0800 (PST)
+Received: from galiil.marvell.com (galiil.marvell.com [199.203.130.254]) by
+	cuda.sgi.com with ESMTP id HiZVdF99BCU73kkE for
+	<xfs@oss.sgi.com>; Sun, 22 Nov 2009 08:21:10 -0800 (PST)
+From: Ofer Heifetz <oferh@marvell.com>
+Date: Sun, 22 Nov 2009 18:20:56 +0200
+Subject: RE: XFS support for ARMv5
+Message-ID: <EE71107DF0D1F24FA2D95041E64AB9E8985A59F17F@IL-MB01.marvell.com>
+References: <14274282.01258546868484.JavaMail.root@wombat>
+	<4B041AEE.4040506@sandeen.net>
+In-Reply-To: <4B041AEE.4040506@sandeen.net>
+Content-Language: en-US
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <200911212217.57407@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,26 +29,74 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Sat, Nov 21, 2009 at 10:17:57PM +0100, Michael Monnerie wrote:
-> >  filehandles which have to encode the inode number of the export
-> >  root.  Your best option is to simplify switch to exporting a whole
-> >  filesystem, 
-> 
-> That's how it worked until NFSv3. I tried that also, didn't work either.
-> The whole thing worked before I reinstalled it (this server now runs 
-> virtualized within XENserver), and maybe that made some subdirs have 
-> inodes > 32bit.
-> 
-> >  alternatively you can try making sure NFSD uses the
-> >  16byte wide UUID style export.  
-> 
-> How'd I do that?
+Hi Eric,
 
-I'm not sure, haven't deal with nfs utils a lot recently.  I'd suggest
-you brings this up on linux-nfs@vger.kernel.org.
+I have tried the patch you advised and still get the same error using 2.6.31.6, xfs version 2.10.2 on Ubuntu 9.04.
+
+Any other suggestions you think that might help me with this?
+
+-Ofer
+
+-----Original Message-----
+From: Eric Sandeen [mailto:sandeen@sandeen.net] 
+Sent: Wednesday, November 18, 2009 6:04 PM
+To: Ofer Heifetz
+Cc: xfs@oss.sgi.com
+Subject: Re: XFS support for ARMv5
+
+oferh@marvell.com wrote:
+> Hi,
+> 
+> I have noticed that XFS on ARMv5TE with latest kernel (2.6.31.6)
+> fails to mount after copying some data and reboot the system.
+> 
+> I get "mount: /dev/sda1: can't read superblock", I understand that
+> there were some problems with virtual aliasing that was added to XFS
+> some time ago but ARM arch has not dealt with this properly.
+
+when you get that error from mount, look at dmesg to see what really went wrong ...
+
+> Is there any patch for this bug?
+
+This is a big-hammer approach for the aliasing problem:
+
+Index: linux-2.6.25-rc1/fs/xfs/linux-2.6/xfs_buf.c
+===================================================================
+--- linux-2.6.25-rc1.orig/fs/xfs/linux-2.6/xfs_buf.c
++++ linux-2.6.25-rc1/fs/xfs/linux-2.6/xfs_buf.c
+@@ -1172,6 +1172,7 @@ _xfs_buf_ioapply(
+ 		bio->bi_end_io = xfs_buf_bio_end_io;
+ 		bio->bi_private = bp;
+ 
++		flush_dcache_page(bp->b_pages[0]);
+ 		bio_add_page(bio, bp->b_pages[0], PAGE_CACHE_SIZE, 0);
+ 		size = 0;
+ 
+@@ -1198,6 +1199,7 @@ next_chunk:
+ 		if (nbytes > size)
+ 			nbytes = size;
+ 
++		flush_dcache_page(bp->b_pages[map_i]);
+ 		rbytes = bio_add_page(bio, bp->b_pages[map_i], nbytes, offset);
+ 		if (rbytes < nbytes)
+ 			break;
+
+
+ 
+> xfsprogs version used: 2.10.2
+> 
+> -Ofer
+> 
+> -- This message was sent on behalf of oferh@marvell.com at
+> openSubscriber.com 
+> http://www.opensubscriber.com/messages/xfs@oss.sgi.com/topic.html
+> 
+> _______________________________________________ xfs mailing list 
+> xfs@oss.sgi.com http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
