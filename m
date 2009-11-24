@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nAO31EoD079076 for <xfs@oss.sgi.com>; Mon, 23 Nov 2009 21:01:15 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B1495D564C1
-	for <xfs@oss.sgi.com>; Mon, 23 Nov 2009 19:01:38 -0800 (PST)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id mSEgA3ET6TENd2DX for
-	<xfs@oss.sgi.com>; Mon, 23 Nov 2009 19:01:38 -0800 (PST)
-Message-ID: <4B0B4C90.809@sandeen.net>
-Date: Mon, 23 Nov 2009 21:01:36 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	nAO5DUjX090860 for <xfs@oss.sgi.com>; Mon, 23 Nov 2009 23:13:31 -0600
+Received: from mail-vw0-f179.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BAC1418CC0E8
+	for <xfs@oss.sgi.com>; Mon, 23 Nov 2009 21:13:55 -0800 (PST)
+Received: from mail-vw0-f179.google.com (mail-vw0-f179.google.com
+	[209.85.212.179]) by cuda.sgi.com with ESMTP id
+	qQGxGur4UbZWxO7E for <xfs@oss.sgi.com>;
+	Mon, 23 Nov 2009 21:13:55 -0800 (PST)
+Received: by vws9 with SMTP id 9so1727186vws.20
+	for <xfs@oss.sgi.com>; Mon, 23 Nov 2009 21:13:55 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: can convert XFS log version from 1 to 2 ?
+In-Reply-To: <4B0B4C90.809@sandeen.net>
 References: <5335cda50911231138u45e828afn5c30da531fbb4c09@mail.gmail.com>
-In-Reply-To: <5335cda50911231138u45e828afn5c30da531fbb4c09@mail.gmail.com>
+	<4B0B4C90.809@sandeen.net>
+Date: Tue, 24 Nov 2009 14:13:55 +0900
+Message-ID: <5335cda50911232113h7c87f401waf060ada660d8219@mail.gmail.com>
+Subject: Re: can convert XFS log version from 1 to 2 ?
+From: akira matsumoto <ryo.mtmt@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,35 +27,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: akira matsumoto <ryo.mtmt@gmail.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-akira matsumoto wrote:
-> Hi. I'm using XFS on CentOS 5.4 now.
-> 
-> and I want to convert XFS log version from 1 to 2.(maybe default version is 1 )
+Hi Eric.
 
-xfs_admin -j:
+Thanks for your quickly reply.
 
-       -j     Enables version 2 log format (journal format supporting larger log buffers).
+I'll charange "xfs_admin" command  then check xfs log version .
 
-works since xfsprogs 2.8.0
+thanks.
 
-> XFS have any convert methods ? like "ext3 to XFS"
-> 
-> or Only could mkfs.xfs command ?
+-akira Matsumoto
 
-not within xfs; you could look at "convertfs" but dump & restore is probably better/safer.
- 
-> thanks.
-
-No problem!
-
--Eric
+2009/11/24 Eric Sandeen <sandeen@sandeen.net>:
+> akira matsumoto wrote:
+>> Hi. I'm using XFS on CentOS 5.4 now.
+>>
+>> and I want to convert XFS log version from 1 to 2.(maybe default version=
+ is 1 )
+>
+> xfs_admin -j:
+>
+> =A0 =A0 =A0 -j =A0 =A0 Enables version 2 log format (journal format suppo=
+rting larger log buffers).
+>
+> works since xfsprogs 2.8.0
+>
+>> XFS have any convert methods ? like "ext3 to XFS"
+>>
+>> or Only could mkfs.xfs command ?
+>
+> not within xfs; you could look at "convertfs" but dump & restore is proba=
+bly better/safer.
+>
+>> thanks.
+>
+> No problem!
+>
+> -Eric
+>
+>
 
 _______________________________________________
 xfs mailing list
