@@ -1,14 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nAONOxwk176475 for <xfs@oss.sgi.com>; Tue, 24 Nov 2009 17:24:59 -0600
-Message-ID: <4B0C6B5A.6080702@sandeen.net>
-Date: Tue, 24 Nov 2009 17:25:14 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	nAONnvuK178509 for <xfs@oss.sgi.com>; Tue, 24 Nov 2009 17:49:57 -0600
+Date: Wed, 25 Nov 2009 10:50:11 +1100
+From: =?iso-8859-1?Q?An=EDbal?= Monsalve Salazar <anibal@debian.org>
+Subject: Re: problems with XFS on armel
+Message-ID: <20091124235011.GA4570@master.debian.org>
+References: <200911241802.02718.msmall@eastlink.ca>
+	<20091124224131.GH23195@deprecation.cyrius.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH XFS] Fix error return for fallocate() on XFS
-References: <20091124215253.GA10693@obsidianresearch.com>
-In-Reply-To: <20091124215253.GA10693@obsidianresearch.com>
+Content-Disposition: inline
+In-Reply-To: <20091124224131.GH23195@deprecation.cyrius.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,51 +23,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: xfs-masters@oss.sgi.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: "Mark J. Small" <msmall@eastlink.ca>, debian-arm@lists.debian.org, Tobias Frost <tobi@frost.de>, Eric Sandeen <sandeen@sandeen.net>, Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, 423562@bugs.debian.org, Magnus Heinz <magnus@heinzigartig.de>, Martin Michlmayr <tbm@cyrius.com>
 
-Jason Gunthorpe wrote:
-> Noticed that through glibc fallocate would return 28 rather than -1
-> and errno = 28 for ENOSPC. The xfs routines uses XFS_ERROR format
-> positive return error codes while the syscalls use negative return codes.
-> Fixup the two cases in xfs_vn_fallocate syscall to convert to negative.
+On Tue, Nov 24, 2009 at 10:41:31PM +0000, Martin Michlmayr wrote:
+>On Tue, Nov 24, 2009 at 06:02:02PM -0400, Mark J. Small wrote:
+>>My kernel is linux-image-2.6.30-2-kirkwood_2.6.30-8+orion1_armel.deb
+>>from http://people.debian.org/~tbm/orion/.  I'll happily supply any
+>>other info that would help track this down. Please help me get
+>>reliable XFS on this armel box.
+>
+>I'm sorry but XFS is known to be broken on ARM.  A fix was proposed
+>recently but it doesn't seem to work:
+>http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=423562
 
-grumblegrumble xfs error signs grumble...
+Maybe the XFS folks could help.
 
-> Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-
-Thanks,
-
-Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
-
-> ---
->  fs/xfs/linux-2.6/xfs_iops.c |    6 +++---
->  1 files changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/linux-2.6/xfs_iops.c b/fs/xfs/linux-2.6/xfs_iops.c
-> index cd42ef7..1f3b4b8 100644
-> --- a/fs/xfs/linux-2.6/xfs_iops.c
-> +++ b/fs/xfs/linux-2.6/xfs_iops.c
-> @@ -573,8 +573,8 @@ xfs_vn_fallocate(
->  	bf.l_len = len;
->  
->  	xfs_ilock(ip, XFS_IOLOCK_EXCL);
-> -	error = xfs_change_file_space(ip, XFS_IOC_RESVSP, &bf,
-> -				      0, XFS_ATTR_NOLOCK);
-> +	error = -xfs_change_file_space(ip, XFS_IOC_RESVSP, &bf,
-> +				       0, XFS_ATTR_NOLOCK);
->  	if (!error && !(mode & FALLOC_FL_KEEP_SIZE) &&
->  	    offset + len > i_size_read(inode))
->  		new_size = offset + len;
-> @@ -585,7 +585,7 @@ xfs_vn_fallocate(
->  
->  		iattr.ia_valid = ATTR_SIZE;
->  		iattr.ia_size = new_size;
-> -		error = xfs_setattr(ip, &iattr, XFS_ATTR_NOLOCK);
-> +		error = -xfs_setattr(ip, &iattr, XFS_ATTR_NOLOCK);
->  	}
->  
->  	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+Mark's post is available at:
+http://lists.debian.org/debian-arm/2009/11/msg00103.html
 
 _______________________________________________
 xfs mailing list
