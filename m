@@ -1,20 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nAONM7LF176214 for <xfs@oss.sgi.com>; Tue, 24 Nov 2009 17:22:07 -0600
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 18659B26F7
-	for <xfs@oss.sgi.com>; Tue, 24 Nov 2009 15:22:33 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 3pcMhhrZCgXTOJuF for
-	<xfs@oss.sgi.com>; Tue, 24 Nov 2009 15:22:33 -0800 (PST)
-Message-ID: <4B0C6AB6.60900@sandeen.net>
-Date: Tue, 24 Nov 2009 17:22:30 -0600
+	nAONOxwk176475 for <xfs@oss.sgi.com>; Tue, 24 Nov 2009 17:24:59 -0600
+Message-ID: <4B0C6B5A.6080702@sandeen.net>
+Date: Tue, 24 Nov 2009 17:25:14 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: Any on-disk format changes recently?
-References: <4B0C2E46.1040509@shiftmail.org>
-In-Reply-To: <4B0C2E46.1040509@shiftmail.org>
+Subject: Re: [PATCH XFS] Fix error return for fallocate() on XFS
+References: <20091124215253.GA10693@obsidianresearch.com>
+In-Reply-To: <20091124215253.GA10693@obsidianresearch.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,27 +21,51 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Asdo <asdo@shiftmail.org>
-Cc: xfs@oss.sgi.com
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: xfs-masters@oss.sgi.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Asdo wrote:
-> Dear XFS people
-> I am tracking a nasty bug for which I would need to regress the kernel 
-> version from 2.6.31 down to 2.6.28 or maybe even 2.6.24.
-> I have to do this on an important fileserver full of important data on 
-> XFS filesystems which were created on 2.6.31.
-> I also need to *write* to the XFS filesystems after regressing the kernel.
-> Do you see any problems with this? Have there been on-disk format 
-> changes for XFS since 2.6.24 that could trigger data loss? (or with much 
-> minor concern, fail the mount?)
+Jason Gunthorpe wrote:
+> Noticed that through glibc fallocate would return 28 rather than -1
+> and errno = 28 for ENOSPC. The xfs routines uses XFS_ERROR format
+> positive return error codes while the syscalls use negative return codes.
+> Fixup the two cases in xfs_vn_fallocate syscall to convert to negative.
 
-Nothing about the xfs disk format should cause problems when bouncing
-between .24 and .31
+grumblegrumble xfs error signs grumble...
 
--Eric
+> Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
 
-> Thank you
-> Asdo
+Thanks,
+
+Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
+
+> ---
+>  fs/xfs/linux-2.6/xfs_iops.c |    6 +++---
+>  1 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/linux-2.6/xfs_iops.c b/fs/xfs/linux-2.6/xfs_iops.c
+> index cd42ef7..1f3b4b8 100644
+> --- a/fs/xfs/linux-2.6/xfs_iops.c
+> +++ b/fs/xfs/linux-2.6/xfs_iops.c
+> @@ -573,8 +573,8 @@ xfs_vn_fallocate(
+>  	bf.l_len = len;
+>  
+>  	xfs_ilock(ip, XFS_IOLOCK_EXCL);
+> -	error = xfs_change_file_space(ip, XFS_IOC_RESVSP, &bf,
+> -				      0, XFS_ATTR_NOLOCK);
+> +	error = -xfs_change_file_space(ip, XFS_IOC_RESVSP, &bf,
+> +				       0, XFS_ATTR_NOLOCK);
+>  	if (!error && !(mode & FALLOC_FL_KEEP_SIZE) &&
+>  	    offset + len > i_size_read(inode))
+>  		new_size = offset + len;
+> @@ -585,7 +585,7 @@ xfs_vn_fallocate(
+>  
+>  		iattr.ia_valid = ATTR_SIZE;
+>  		iattr.ia_size = new_size;
+> -		error = xfs_setattr(ip, &iattr, XFS_ATTR_NOLOCK);
+> +		error = -xfs_setattr(ip, &iattr, XFS_ATTR_NOLOCK);
+>  	}
+>  
+>  	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
 
 _______________________________________________
 xfs mailing list
