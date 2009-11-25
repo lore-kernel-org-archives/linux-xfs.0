@@ -1,20 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nAPMSjkq012372 for <xfs@oss.sgi.com>; Wed, 25 Nov 2009 16:28:45 -0600
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2D7B0B601F
-	for <xfs@oss.sgi.com>; Wed, 25 Nov 2009 14:29:11 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id mxqQScDmEUcgCv34 for
-	<xfs@oss.sgi.com>; Wed, 25 Nov 2009 14:29:11 -0800 (PST)
-Message-ID: <4B0DAFB5.3050003@sandeen.net>
-Date: Wed, 25 Nov 2009 16:29:09 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	nAPMSaq2012357 for <xfs@oss.sgi.com>; Wed, 25 Nov 2009 16:28:36 -0600
+Received: from mail-bw0-f217.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DBC6BD830B3
+	for <xfs@oss.sgi.com>; Wed, 25 Nov 2009 14:29:02 -0800 (PST)
+Received: from mail-bw0-f217.google.com (mail-bw0-f217.google.com
+	[209.85.218.217]) by cuda.sgi.com with ESMTP id
+	7Ab0DiAUBoGx3uwn for <xfs@oss.sgi.com>;
+	Wed, 25 Nov 2009 14:29:02 -0800 (PST)
+Received: by bwz9 with SMTP id 9so149999bwz.12
+	for <xfs@oss.sgi.com>; Wed, 25 Nov 2009 14:29:01 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: [PATCH] Prevent lookup from finding bad buffers
-References: <4990EAF9.9010607@sgi.com> <4B0D92EB.8030501@sandeen.net>
-In-Reply-To: <4B0D92EB.8030501@sandeen.net>
+In-Reply-To: <20091125210611.GA12150@infradead.org>
+References: <14274282.01258546868484.JavaMail.root@wombat>
+	<4B041AEE.4040506@sandeen.net>
+	<EE71107DF0D1F24FA2D95041E64AB9E8985A59F17F@IL-MB01.marvell.com>
+	<4B096C6E.8010508@sandeen.net>
+	<EE71107DF0D1F24FA2D95041E64AB9E8985A59F31F@IL-MB01.marvell.com>
+	<alpine.DEB.2.00.0911251025490.28890@andydesk>
+	<20091125210611.GA12150@infradead.org>
+Date: Wed, 25 Nov 2009 14:29:00 -0800
+Message-ID: <46b8a8850911251429g1fbd0036v129deb4f6cc7ab56@mail.gmail.com>
+Subject: Re: XFS support for ARMv5
+From: Richard Sharpe <realrichardsharpe@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,101 +32,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: lachlan@sgi.com
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Andy Poling <andy@realbig.com>, Ofer Heifetz <oferh@marvell.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Eric Sandeen wrote:
-> Lachlan McIlroy wrote:
->> There's a bug in _xfs_buf_find() that will cause it to return buffers
->> that failed to be initialised.
+On Wed, Nov 25, 2009 at 1:06 PM, Christoph Hellwig <hch@infradead.org> wrot=
+e:
+> On Wed, Nov 25, 2009 at 10:30:09AM -0600, Andy Poling wrote:
+>> On Mon, 23 Nov 2009, Ofer Heifetz wrote:
+>>> Here is the dmesg I got for mount /dev/sda3 /mnt/usb:
+>>> SGI XFS with ACLs, security attributes, large block/inode numbers, no d=
+ebug enabled
+>>> XFS mounting filesystem sda3
+>>> Starting XFS recovery on filesystem: sda3 (logdev: internal)
+>>> XFS: xlog_recover_process_data: bad clientid
+>>> XFS: log mount/recovery failed: error 5
+>>> XFS: log mount failed
 >>
->> If a thread has a buffer locked and is waiting for I/O to initialise
->> it and another thread wants the same buffer the second thread will
->> wait on the buffer lock in _xfs_buf_find().  If the initial thread
->> gets an I/O error it marks the buffer in error and releases the
->> buffer lock.  The second thread gets the buffer lock, assumes the
->> buffer has been successfully initialised, and then tries to use it.
+>> See this thread in the archives for a patch that may fix this:
 >>
->> Some callers of xfs_buf_get_flags() will check for B_DONE, and if
->> it's not set then re-issue the I/O, bust most callers assume the
->> buffer and it's contents are good and then use the uninitialised
->> data.
->>
->> The solution I've come up with is if we lookup a buffer and find
->> it's got b_error set or has been marked stale then unhash it from
->> the buffer hashtable and retry the lookup.  Also if we fail to setup
->> the buffer correctly in xfs_buf_get_flags() then mark the buffer in
->> error and unhash it.  If the buffer is marked stale then in
->> xfs_buf_free() inform the page cache that the contents of the pages
->> are no longer valid.
-> 
-> I managed to come up with a sorta-kinda testcase for this.
-> 
-> Fragmented freespace, many files in a dir, on raid5; simply doing
-> drop caches / ls in a loop triggered it.
-> 
-> I guess raid5 is bad in this respect; in it's make_request() we have:
-> 
->                 } else {
->                         /* cannot get stripe for read-ahead, just give-up */
->                         clear_bit(BIO_UPTODATE, &bi->bi_flags);
->                         finish_wait(&conf->wait_for_overlap, &w);
->                         break;
->                 }
-> 
-> and this happens fairly often.  This probably explains a large
-> percentage of our xfs_da_do_buf(2) errors we've seen on the list.
-> 
-> From my testing, I think this suffices - and interestingly, Lachlan's
-> original patch doesn't seem to help...
-> 
-> Comments?
-> 
-> Maybe could clean up the logic a bit... should this only be
-> tested for XBF_READ buffers as well ... or maybe an assert that
-> if !uptodate, error should be set ...
-> 
-> diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
-> index 965df12..cbc0541 100644
-> --- a/fs/xfs/linux-2.6/xfs_buf.c
-> +++ b/fs/xfs/linux-2.6/xfs_buf.c
-> @@ -1142,6 +1165,8 @@ xfs_buf_bio_end_io(
->  		if (unlikely(bp->b_error)) {
->  			if (bp->b_flags & XBF_READ)
->  				ClearPageUptodate(page);
-> +		} else if (!test_bit(BIO_UPTODATE, &bio->bi_flags)) {
-> +			ClearPageUptodate(bp);
->  		} else if (blocksize >= PAGE_CACHE_SIZE) {
->  			SetPageUptodate(page);
->  		} else if (!PagePrivate(page) &&
+>> =A0 =A0 =A0 http://oss.sgi.com/pipermail/xfs/2009-October/042805.html
+>
+> I don't think it's the case you found, although the symptoms are the
+> same. =A0I'd rather guess this is a case of an architecture with virtually
+> indexed caches (can anyone confirm the cache architecture?) which
 
-Ok, so that was shoot-from-the-hip, and actually it was tested on an
-older kernel; upstream didn't demonstrate the problem, thanks to:
+The Marvell 78xx series uses a VIVT cache. I will have to consult the
+documentation about the 6281 (I think that was it).
 
-commit c2b00852fbae4f8c45c2651530ded3bd01bde814
-Author: NeilBrown <neilb@suse.de>
-Date:   Sun Dec 10 02:20:51 2006 -0800
+> doesn't cope too well with the way we use vmap to write into a buffer
+> through virtually mapped linear addresses, but then do block I/O using
+> the physical addresses of the individual pages. =A0James Bottomley has a
+> patchset to fix this issue by introducing APIs that allow the
+> architecture specific memory management to cope with it. =A0He're a
+> version I could quickly find, although newer ones have been posted
+> since:
+>
+> =A0 =A0 =A0 =A0http://thread.gmane.org/gmane.linux.kernel.cross-arch/4364
+>
+> The patchset is planned to get merged into Linux 2.6.33.
+>
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+>
 
-[PATCH] md: return a non-zero error to bi_end_io as appropriate in raid5
 
-Currently raid5 depends on clearing the BIO_UPTODATE flag to signal an
-error
-to higher levels.  While this should be sufficient, it is safer to
-explicitly
-set the error code as well - less room for confusion.
 
-Signed-off-by: Neil Brown <neilb@suse.de>
-Signed-off-by: Andrew Morton <akpm@osdl.org>
-Signed-off-by: Linus Torvalds <torvalds@osdl.org>
+-- =
 
-As Neil says, xfs should probably cope too by checking uptodate itself
-as well, though...
-
--Eric
+Regards,
+Richard Sharpe
 
 _______________________________________________
 xfs mailing list
