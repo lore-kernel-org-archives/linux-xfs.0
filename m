@@ -1,16 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nAP0Cfi7180173 for <xfs@oss.sgi.com>; Tue, 24 Nov 2009 18:12:41 -0600
-References: <200911241802.02718.msmall@eastlink.ca>
-	<20091124224131.GH23195@deprecation.cyrius.com>
-	<20091124235011.GA4570@master.debian.org>
-Message-Id: <2795572F-205B-4B67-AB78-370CB202E922@sandeen.net>
-From: Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <20091124235011.GA4570@master.debian.org>
-Mime-Version: 1.0 (iPhone Mail 7D11)
-Subject: Re: problems with XFS on armel
-Date: Tue, 24 Nov 2009 18:12:58 -0600
+	nAP057Ca179692 for <xfs@oss.sgi.com>; Tue, 24 Nov 2009 18:05:08 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3FD7818D8D4E
+	for <xfs@oss.sgi.com>; Tue, 24 Nov 2009 16:05:32 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	8abXyqT3Fxuhi57p for <xfs@oss.sgi.com>;
+	Tue, 24 Nov 2009 16:05:32 -0800 (PST)
+Date: Wed, 25 Nov 2009 11:05:27 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: protecting per-ag access in the sync path
+Message-ID: <20091125000527.GL3804@discord.disaster>
+References: <20091124170455.GA9021@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20091124170455.GA9021@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,28 +25,81 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"; DelSp="yes"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: =?utf-8?Q?An=C3=ADbal_Monsalve_Salazar?= <anibal@debian.org>
-Cc: "Mark J. Small" <msmall@eastlink.ca>, "debian-arm@lists.debian.org" <debian-arm@lists.debian.org>, Tobias Frost <tobi@frost.de>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>, "423562@bugs.debian.org" <423562@bugs.debian.org>, Magnus Heinz <magnus@heinzigartig.de>, Martin Michlmayr <tbm@cyrius.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-T24gTm92IDI0LCAyMDA5LCBhdCA1OjUwIFBNLCBBbsOtYmFsIE1vbnNhbHZlIFNhbGF6YXIgIAo8
-YW5pYmFsQGRlYmlhbi5vcmc+IHdyb3RlOgoKPiBPbiBUdWUsIE5vdiAyNCwgMjAwOSBhdCAxMDo0
-MTozMVBNICswMDAwLCBNYXJ0aW4gTWljaGxtYXlyIHdyb3RlOgo+PiBPbiBUdWUsIE5vdiAyNCwg
-MjAwOSBhdCAwNjowMjowMlBNIC0wNDAwLCBNYXJrIEouIFNtYWxsIHdyb3RlOgo+Pj4gTXkga2Vy
-bmVsIGlzIGxpbnV4LWltYWdlLTIuNi4zMC0yLWtpcmt3b29kXzIuNi4zMC04K29yaW9uMV9hcm1l
-bC5kZWIKPj4+IGZyb20gaHR0cDovL3Blb3BsZS5kZWJpYW4ub3JnL350Ym0vb3Jpb24vLiAgSSds
-bCBoYXBwaWx5IHN1cHBseSBhbnkKPj4+IG90aGVyIGluZm8gdGhhdCB3b3VsZCBoZWxwIHRyYWNr
-IHRoaXMgZG93bi4gUGxlYXNlIGhlbHAgbWUgZ2V0Cj4+PiByZWxpYWJsZSBYRlMgb24gdGhpcyBh
-cm1lbCBib3guCj4+Cj4+IEknbSBzb3JyeSBidXQgWEZTIGlzIGtub3duIHRvIGJlIGJyb2tlbiBv
-biBBUk0uICBBIGZpeCB3YXMgcHJvcG9zZWQKPj4gcmVjZW50bHkgYnV0IGl0IGRvZXNuJ3Qgc2Vl
-bSB0byB3b3JrOgo+PiBodHRwOi8vYnVncy5kZWJpYW4ub3JnL2NnaS1iaW4vYnVncmVwb3J0LmNn
-aT9idWc9NDIzNTYyCj4KPiBNYXliZSB0aGUgWEZTIGZvbGtzIGNvdWxkIGhlbHAuCj4KPiBNYXJr
-J3MgcG9zdCBpcyBhdmFpbGFibGUgYXQ6Cj4gaHR0cDovL2xpc3RzLmRlYmlhbi5vcmcvZGViaWFu
-LWFybS8yMDA5LzExL21zZzAwMTAzLmh0bWwKPgpUaGUgbmV2ZXIgZW5kaW5nIGFybSB2cyB4ZnMg
-YmF0dGxlLi4uIEFuZCBhcm0ga2VlcHMgd2lubmluZyA6KQoKSSBob3BlIHRvIGJlIGFibGUgdG8g
-bG9vayBpbnRvIHRoaXMgbmV4dCB3ZWVrLi4uCgotRXJpYwpfX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNv
-bQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Tue, Nov 24, 2009 at 12:04:55PM -0500, Christoph Hellwig wrote:
+> Since Linux 2.6.29 we use the perag structures a lot in the sync path,
+> but we're not actually protecting against the re-allocation in growfs.
+
+Damn. My fault, I should have thought of that long ago.
+
+> I've recently received a new, fast SSD which allows me to hit those
+> races.  With it 104 reproducibly crashes the system, hitting the slab
+> redzoning for the old per-ag structure.  I experimentally put
+> synchronization using m_peraglock into xfs_inode_ag_walk which fixes the
+> issue at the cost of lock order reversals between the i_lock and the
+> m_peraglock in various places.
+
+It is worth noting that growfs can already deadlock on the m_peraglock
+in a busy filesystem - that is why qa test 104 was disabled for so
+long. IIRC, changing the locking mechanism was the only way around
+the problem and combined with the lack of real-life incidents of
+growfs hangs it has just been left to fester.
+
+My intention was with xfs_get_perag() and xfs_put_perag() was to
+slowly move all the places using mp->m_perag[agno] to this
+interface and then move the locking into these functions so that
+is is easy to modify the locking implementation. It also means
+that the implementation of the per-ag structure can easily be
+changed.
+
+Ultimately I wanted to move away from using a single great
+big array for the m_perag list as scaling to thousands of AGs
+requires a significant contiguous chunk of memory to be allocated
+for this structure. This would also allow for dynamic addition
+or removal of AGs from the list without affecting all the unchanged
+AGs. i.e. the m_peraglock would no longer be needed to protect
+against use-after-free.
+
+The m_peraglock then really becomes a lookup lock - it is gained
+in xfs_get_perag() to find the struct xfs_perag, which is then
+internally locked/reference counted, and then the m_peraglock is
+dropped. This means that there are no lock inversions against
+inodes or other objects because it only protects the tree/list
+of perag structures, not the perag structures themselves....
+
+> Any better idea how to protect the new sync path against growfs?
+
+I think a short term fix is to use a second lock only for the sync
+traversals.  i.e. growfs does:
+
+	mutex_lock(mp->m_perag_sync_lock);
+	write_lock(mp->m_peraglock);
+	//realloc
+	write_unlock(mp->m_peraglock);
+	mutex_unlock(mp->m_perag_sync_lock);
+
+and the sync code uses the lock order:
+
+	m_perag_sync_lock -> inode lock -> m_peraglock
+
+ISTM that this should avoid any new lock inversions and deadlocks
+whilst fixing the reported problem. Do that sound workable,
+Christoph?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
