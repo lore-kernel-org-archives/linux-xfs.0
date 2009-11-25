@@ -1,17 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nAPFln1W246645 for <xfs@oss.sgi.com>; Wed, 25 Nov 2009 09:47:49 -0600
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 780A8AC010
-	for <xfs@oss.sgi.com>; Wed, 25 Nov 2009 07:48:13 -0800 (PST)
-Message-ID: <4B0D51BC.5020806@sgi.com>
-Date: Wed, 25 Nov 2009 09:48:12 -0600
-From: Bill Kendall <wkendall@sgi.com>
+	nAPGTsoX249893 for <xfs@oss.sgi.com>; Wed, 25 Nov 2009 10:29:54 -0600
+Received: from realbig.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BE28918DE09B
+	for <xfs@oss.sgi.com>; Wed, 25 Nov 2009 08:30:20 -0800 (PST)
+Received: from realbig.com (realbig.com [207.36.196.230]) by cuda.sgi.com with
+	ESMTP id hQ5se5IsEZd9dH5H for <xfs@oss.sgi.com>;
+	Wed, 25 Nov 2009 08:30:20 -0800 (PST)
+Date: Wed, 25 Nov 2009 10:30:09 -0600 (CST)
+From: Andy Poling <andy@realbig.com>
+Subject: RE: XFS support for ARMv5
+In-Reply-To: <EE71107DF0D1F24FA2D95041E64AB9E8985A59F31F@IL-MB01.marvell.com>
+Message-ID: <alpine.DEB.2.00.0911251025490.28890@andydesk>
+References: <14274282.01258546868484.JavaMail.root@wombat>
+	<4B041AEE.4040506@sandeen.net>
+	<EE71107DF0D1F24FA2D95041E64AB9E8985A59F17F@IL-MB01.marvell.com>
+	<4B096C6E.8010508@sandeen.net>
+	<EE71107DF0D1F24FA2D95041E64AB9E8985A59F31F@IL-MB01.marvell.com>
 MIME-Version: 1.0
-Subject: Re: consistency checks
-References: <vmime.4b0c0e17.1df4.5b5ba8b45ea0c16c@mail.datux.nl>
-In-Reply-To: <vmime.4b0c0e17.1df4.5b5ba8b45ea0c16c@mail.datux.nl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,28 +31,26 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Rick Meertens <rick@datux.nl>
-Cc: xfs@oss.sgi.com
+To: Ofer Heifetz <oferh@marvell.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Rick Meertens wrote:
-> Does the xfs backup tools contain any backup media consistency checks? I 
-> want to verify if the old backup on a tape is corrupt, with a checksum orso.
-> 
->  
-> 
-> I have seen that the xfsdump inventory can be checked on consistency, 
-> but nothing found for the tapes
+On Mon, 23 Nov 2009, Ofer Heifetz wrote:
+> Here is the dmesg I got for mount /dev/sda3 /mnt/usb:
+> SGI XFS with ACLs, security attributes, large block/inode numbers, no debug enabled
+> XFS mounting filesystem sda3
+> Starting XFS recovery on filesystem: sda3 (logdev: internal)
+> XFS: xlog_recover_process_data: bad clientid
+> XFS: log mount/recovery failed: error 5
+> XFS: log mount failed
 
-Not really -- unfortunately most of the structures and data written
-by xfsdump are not checksummed.
+See this thread in the archives for a patch that may fix this:
 
-The closest thing is to use xfrestore -t. This will read the entire
-dump, listing all of the files it contains. So you'll at least know
-whether or not there are unreadable blocks on the media, and whether
-the structure of the dump is okay, but not whether your file data is
-consistent.
+ 	http://oss.sgi.com/pipermail/xfs/2009-October/042805.html
 
-Bill
+-Andy
+
+It ain't what you don't know that gets you into trouble.
+It's what you know for sure that just ain't so. - Mark Twain
 
 _______________________________________________
 xfs mailing list
