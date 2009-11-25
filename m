@@ -1,27 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nAPHINuW253971 for <xfs@oss.sgi.com>; Wed, 25 Nov 2009 11:18:23 -0600
+	nAPKPtfP005330 for <xfs@oss.sgi.com>; Wed, 25 Nov 2009 14:25:55 -0600
 Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0B7A54C70B6
-	for <xfs@oss.sgi.com>; Wed, 25 Nov 2009 09:18:48 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F18B9C9B0CE
+	for <xfs@oss.sgi.com>; Wed, 25 Nov 2009 12:26:21 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id mum1pifz7p0Yt7qH for
-	<xfs@oss.sgi.com>; Wed, 25 Nov 2009 09:18:48 -0800 (PST)
-Received: from int-mx03.intmail.prod.int.phx2.redhat.com
-	(int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id nAPHIl7v005489
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 25 Nov 2009 12:18:48 -0500
-Received: from neon.msp.redhat.com (neon.msp.redhat.com [10.15.80.10])
-	by int-mx03.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id nAPHIlol003303
-	for <xfs@oss.sgi.com>; Wed, 25 Nov 2009 12:18:47 -0500
-Message-ID: <4B0D66F7.5080704@redhat.com>
-Date: Wed, 25 Nov 2009 11:18:47 -0600
-From: Eric Sandeen <sandeen@redhat.com>
+	cuda.sgi.com with ESMTP id Ke3vTC2WwTuovFQ5 for
+	<xfs@oss.sgi.com>; Wed, 25 Nov 2009 12:26:21 -0800 (PST)
+Message-ID: <4B0D92EB.8030501@sandeen.net>
+Date: Wed, 25 Nov 2009 14:26:19 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] xfstests 213: Add enospc case to fallocate test
+Subject: Re: [PATCH] Prevent lookup from finding bad buffers
+References: <4990EAF9.9010607@sgi.com>
+In-Reply-To: <4990EAF9.9010607@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,66 +27,72 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs mailing list <xfs@oss.sgi.com>
+To: lachlan@sgi.com
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Add a test for ENOSPC when fallocating.
+Lachlan McIlroy wrote:
+> There's a bug in _xfs_buf_find() that will cause it to return buffers
+> that failed to be initialised.
+> 
+> If a thread has a buffer locked and is waiting for I/O to initialise
+> it and another thread wants the same buffer the second thread will
+> wait on the buffer lock in _xfs_buf_find().  If the initial thread
+> gets an I/O error it marks the buffer in error and releases the
+> buffer lock.  The second thread gets the buffer lock, assumes the
+> buffer has been successfully initialised, and then tries to use it.
+> 
+> Some callers of xfs_buf_get_flags() will check for B_DONE, and if
+> it's not set then re-issue the I/O, bust most callers assume the
+> buffer and it's contents are good and then use the uninitialised
+> data.
+> 
+> The solution I've come up with is if we lookup a buffer and find
+> it's got b_error set or has been marked stale then unhash it from
+> the buffer hashtable and retry the lookup.  Also if we fail to setup
+> the buffer correctly in xfs_buf_get_flags() then mark the buffer in
+> error and unhash it.  If the buffer is marked stale then in
+> xfs_buf_free() inform the page cache that the contents of the pages
+> are no longer valid.
 
-Also, add an expected output, not sure how that went missing!
+I managed to come up with a sorta-kinda testcase for this.
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
+Fragmented freespace, many files in a dir, on raid5; simply doing
+drop caches / ls in a loop triggered it.
 
-iff --git a/213 b/213
-index 3cd55f7..7d66338 100755
---- a/213
-+++ b/213
-@@ -61,8 +61,6 @@ _require_xfs_io_falloc
- avail=`df -P $TEST_DIR | awk 'END {print $4}'`
- [ "$avail" -ge 1049600 ] || _notrun "Test device is too small ($avail KiB)"
- 
--echo Silence is golden
--
- # reserve 1GiB, truncate at 100bytes
- $XFS_IO_PROG -F -f -c 'falloc 0 1g' -c 'truncate 100' $TEST_DIR/ouch
- rm -f $TEST_DIR/ouch
-@@ -79,6 +77,14 @@ rm -f $TEST_DIR/ouch
- $XFS_IO_PROG -F -f -c 'falloc 0 1g' -c 'falloc 2g 1m' -c 'truncate 3g' $TEST_DIR/ouch
- rm -f $TEST_DIR/ouch
- 
-+# Try to reserve more space than we have
-+echo "We should get: fallocate: No space left on device"
-+echo "Strangely, xfs_io sometimes says \"Success\" when something went wrong, FYI"
-+
-+let toobig=$avail*2
-+$XFS_IO_PROG -F -f -c "falloc 0 ${toobig}k" $TEST_DIR/ouch
-+rm -f $TEST_DIR/ouch
-+
- # success, all done
- status=0
- exit
-diff --git a/213.out b/213.out
-new file mode 100644
-index 0000000..521fca3
---- /dev/null
-+++ b/213.out
-@@ -0,0 +1,4 @@
-+QA output created by 213
-+We should get: fallocate: No space left on device
-+Strangely, xfs_io sometimes says "Success" when something went wrong, FYI
-+fallocate: No space left on device
-diff --git a/group b/group
-index b0254dd..8d055a2 100644
---- a/group
-+++ b/group
-@@ -322,7 +322,7 @@ prealloc
- 210 auto aio quick
- 211 auto aio quick
- 212 auto aio quick
--213 rw auto prealloc quick
-+213 rw auto prealloc quick enospc
- 214 rw auto prealloc quick
- 215 auto metadata quick
- 216 log metadata auto quick
+I guess raid5 is bad in this respect; in it's make_request() we have:
+
+                } else {
+                        /* cannot get stripe for read-ahead, just give-up */
+                        clear_bit(BIO_UPTODATE, &bi->bi_flags);
+                        finish_wait(&conf->wait_for_overlap, &w);
+                        break;
+                }
+
+and this happens fairly often.  This probably explains a large
+percentage of our xfs_da_do_buf(2) errors we've seen on the list.
+
+>From my testing, I think this suffices - and interestingly, Lachlan's
+original patch doesn't seem to help...
+
+Comments?
+
+Maybe could clean up the logic a bit... should this only be
+tested for XBF_READ buffers as well ... or maybe an assert that
+if !uptodate, error should be set ...
+
+diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
+index 965df12..cbc0541 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.c
++++ b/fs/xfs/linux-2.6/xfs_buf.c
+@@ -1142,6 +1165,8 @@ xfs_buf_bio_end_io(
+ 		if (unlikely(bp->b_error)) {
+ 			if (bp->b_flags & XBF_READ)
+ 				ClearPageUptodate(page);
++		} else if (!test_bit(BIO_UPTODATE, &bio->bi_flags)) {
++			ClearPageUptodate(bp);
+ 		} else if (blocksize >= PAGE_CACHE_SIZE) {
+ 			SetPageUptodate(page);
+ 		} else if (!PagePrivate(page) &&
 
 _______________________________________________
 xfs mailing list
