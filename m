@@ -1,24 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nAPGTsoX249893 for <xfs@oss.sgi.com>; Wed, 25 Nov 2009 10:29:54 -0600
-Received: from realbig.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BE28918DE09B
-	for <xfs@oss.sgi.com>; Wed, 25 Nov 2009 08:30:20 -0800 (PST)
-Received: from realbig.com (realbig.com [207.36.196.230]) by cuda.sgi.com with
-	ESMTP id hQ5se5IsEZd9dH5H for <xfs@oss.sgi.com>;
-	Wed, 25 Nov 2009 08:30:20 -0800 (PST)
-Date: Wed, 25 Nov 2009 10:30:09 -0600 (CST)
-From: Andy Poling <andy@realbig.com>
-Subject: RE: XFS support for ARMv5
-In-Reply-To: <EE71107DF0D1F24FA2D95041E64AB9E8985A59F31F@IL-MB01.marvell.com>
-Message-ID: <alpine.DEB.2.00.0911251025490.28890@andydesk>
-References: <14274282.01258546868484.JavaMail.root@wombat>
-	<4B041AEE.4040506@sandeen.net>
-	<EE71107DF0D1F24FA2D95041E64AB9E8985A59F17F@IL-MB01.marvell.com>
-	<4B096C6E.8010508@sandeen.net>
-	<EE71107DF0D1F24FA2D95041E64AB9E8985A59F31F@IL-MB01.marvell.com>
+	nAPHINuW253971 for <xfs@oss.sgi.com>; Wed, 25 Nov 2009 11:18:23 -0600
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0B7A54C70B6
+	for <xfs@oss.sgi.com>; Wed, 25 Nov 2009 09:18:48 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id mum1pifz7p0Yt7qH for
+	<xfs@oss.sgi.com>; Wed, 25 Nov 2009 09:18:48 -0800 (PST)
+Received: from int-mx03.intmail.prod.int.phx2.redhat.com
+	(int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id nAPHIl7v005489
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Wed, 25 Nov 2009 12:18:48 -0500
+Received: from neon.msp.redhat.com (neon.msp.redhat.com [10.15.80.10])
+	by int-mx03.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
+	id nAPHIlol003303
+	for <xfs@oss.sgi.com>; Wed, 25 Nov 2009 12:18:47 -0500
+Message-ID: <4B0D66F7.5080704@redhat.com>
+Date: Wed, 25 Nov 2009 11:18:47 -0600
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
+Subject: [PATCH] xfstests 213: Add enospc case to fallocate test
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,30 +30,70 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ofer Heifetz <oferh@marvell.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs mailing list <xfs@oss.sgi.com>
 
-On Mon, 23 Nov 2009, Ofer Heifetz wrote:
-> Here is the dmesg I got for mount /dev/sda3 /mnt/usb:
-> SGI XFS with ACLs, security attributes, large block/inode numbers, no debug enabled
-> XFS mounting filesystem sda3
-> Starting XFS recovery on filesystem: sda3 (logdev: internal)
-> XFS: xlog_recover_process_data: bad clientid
-> XFS: log mount/recovery failed: error 5
-> XFS: log mount failed
+Add a test for ENOSPC when fallocating.
 
-See this thread in the archives for a patch that may fix this:
+Also, add an expected output, not sure how that went missing!
 
- 	http://oss.sgi.com/pipermail/xfs/2009-October/042805.html
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
 
--Andy
-
-It ain't what you don't know that gets you into trouble.
-It's what you know for sure that just ain't so. - Mark Twain
+iff --git a/213 b/213
+index 3cd55f7..7d66338 100755
+--- a/213
++++ b/213
+@@ -61,8 +61,6 @@ _require_xfs_io_falloc
+ avail=`df -P $TEST_DIR | awk 'END {print $4}'`
+ [ "$avail" -ge 1049600 ] || _notrun "Test device is too small ($avail KiB)"
+ 
+-echo Silence is golden
+-
+ # reserve 1GiB, truncate at 100bytes
+ $XFS_IO_PROG -F -f -c 'falloc 0 1g' -c 'truncate 100' $TEST_DIR/ouch
+ rm -f $TEST_DIR/ouch
+@@ -79,6 +77,14 @@ rm -f $TEST_DIR/ouch
+ $XFS_IO_PROG -F -f -c 'falloc 0 1g' -c 'falloc 2g 1m' -c 'truncate 3g' $TEST_DIR/ouch
+ rm -f $TEST_DIR/ouch
+ 
++# Try to reserve more space than we have
++echo "We should get: fallocate: No space left on device"
++echo "Strangely, xfs_io sometimes says \"Success\" when something went wrong, FYI"
++
++let toobig=$avail*2
++$XFS_IO_PROG -F -f -c "falloc 0 ${toobig}k" $TEST_DIR/ouch
++rm -f $TEST_DIR/ouch
++
+ # success, all done
+ status=0
+ exit
+diff --git a/213.out b/213.out
+new file mode 100644
+index 0000000..521fca3
+--- /dev/null
++++ b/213.out
+@@ -0,0 +1,4 @@
++QA output created by 213
++We should get: fallocate: No space left on device
++Strangely, xfs_io sometimes says "Success" when something went wrong, FYI
++fallocate: No space left on device
+diff --git a/group b/group
+index b0254dd..8d055a2 100644
+--- a/group
++++ b/group
+@@ -322,7 +322,7 @@ prealloc
+ 210 auto aio quick
+ 211 auto aio quick
+ 212 auto aio quick
+-213 rw auto prealloc quick
++213 rw auto prealloc quick enospc
+ 214 rw auto prealloc quick
+ 215 auto metadata quick
+ 216 log metadata auto quick
 
 _______________________________________________
 xfs mailing list
