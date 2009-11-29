@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nASIgYuq260577 for <xfs@oss.sgi.com>; Sat, 28 Nov 2009 12:42:35 -0600
+	nAT9cqQ5058157 for <xfs@oss.sgi.com>; Sun, 29 Nov 2009 03:38:53 -0600
 Received: from enyo.dsw2k3.info (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A1C3ED94666
-	for <xfs@oss.sgi.com>; Sat, 28 Nov 2009 10:43:03 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1A9B9D96228
+	for <xfs@oss.sgi.com>; Sun, 29 Nov 2009 01:39:20 -0800 (PST)
 Received: from enyo.dsw2k3.info (enyo.dsw2k3.info [195.71.86.239]) by
-	cuda.sgi.com with ESMTP id cAxzppyUr5lXylgQ for
-	<xfs@oss.sgi.com>; Sat, 28 Nov 2009 10:43:03 -0800 (PST)
-Date: Sat, 28 Nov 2009 19:42:50 +0100
+	cuda.sgi.com with ESMTP id MJfnlGABGIEGo5aM for
+	<xfs@oss.sgi.com>; Sun, 29 Nov 2009 01:39:20 -0800 (PST)
+Date: Sun, 29 Nov 2009 10:39:03 +0100
 From: Matthias Schniedermeyer <ms@citd.de>
 Subject: Re: please help me! thanks
-Message-ID: <20091128184250.GA30986@citd.de>
+Message-ID: <20091129093903.GA3357@citd.de>
 References: <20091128033325.5032D5C121@mail3-144.sinamail.sina.com.cn>
+	<20091128184250.GA30986@citd.de>
+	<20091129020258.GA5168@puku.stupidest.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20091128033325.5032D5C121@mail3-144.sinamail.sina.com.cn>
+In-Reply-To: <20091129020258.GA5168@puku.stupidest.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,16 +30,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: givemefile@sina.com
-Cc: xfs@oss.sgi.com
+To: Chris Wedgwood <cw@f00f.org>
+Cc: givemefile@sina.com, xfs@oss.sgi.com
 
-On 28.11.2009 11:33, givemefile@sina.com wrote:
-> &nbsp;my OS: 
-> [root@DDD-1 ~]# uname -a
-> Linux DDD-1 2.6.18-128.el5 #1 SMP Wed Dec 17 11:42:39 EST 2008 i686 i686 i386 GNU/Linux
+On 28.11.2009 18:02, Chris Wedgwood wrote:
+> On Sat, Nov 28, 2009 at 07:42:50PM +0100, Matthias Schniedermeyer wrote:
+> 
+> > .el5 smells like Red Hat, Red Hat doesn't do XFS.
+> > At least in nothing that is currently released AFAIR.
+> 
+> 5.4 has XFS
 
-.el5 smells like Red Hat, Red Hat doesn't do XFS.
-At least in nothing that is currently released AFAIR.
+I googled 5.4 and found a CERT that mentions 2.6.18-164.
+So i guess minimum kernel for 5.4 is way more recent than -128.
+
+So OP appears that have a pre 5.4 release running.
 
 
 
