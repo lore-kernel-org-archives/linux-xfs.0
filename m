@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nATNQrPb113027 for <xfs@oss.sgi.com>; Sun, 29 Nov 2009 17:26:53 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 40EA318F55C1
-	for <xfs@oss.sgi.com>; Sun, 29 Nov 2009 15:27:20 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	Xeuf6CACb5NhXQwg for <xfs@oss.sgi.com>;
-	Sun, 29 Nov 2009 15:27:20 -0800 (PST)
-Date: Mon, 30 Nov 2009 10:27:16 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS & LVM: unexpected cp when issuing mv
-Message-ID: <20091129232716.GC30608@discord.disaster>
-References: <200911291452.20646@zmi.at>
+	nAU5HCwb188578 for <xfs@oss.sgi.com>; Sun, 29 Nov 2009 23:17:12 -0600
+Received: from mail-pw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C304EBE3DD
+	for <xfs@oss.sgi.com>; Sun, 29 Nov 2009 21:17:41 -0800 (PST)
+Received: from mail-pw0-f53.google.com (mail-pw0-f53.google.com
+	[209.85.160.53]) by cuda.sgi.com with ESMTP id IJM4P6uTC3lJJdHJ
+	for <xfs@oss.sgi.com>; Sun, 29 Nov 2009 21:17:41 -0800 (PST)
+Received: by pwj11 with SMTP id 11so1969607pwj.12
+	for <xfs@oss.sgi.com>; Sun, 29 Nov 2009 21:17:41 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <200911291452.20646@zmi.at>
+Date: Mon, 30 Nov 2009 10:47:41 +0530
+Message-ID: <409bd82b0911292117n5aa11961u86e787d20acbd2b3@mail.gmail.com>
+Subject: Writing journal only in Big Endian format
+From: Nitin Arora <nitin.arora.del@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,77 +23,114 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============3764827057090968491=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, "sandeen-xfs@sandeen.net" <sandeen-xfs@sandeen.net>, "p.mironchik@velesys.com" <p.mironchik@velesys.com>, "hch@xfs.org" <hch@xfs.org>
 
-On Sun, Nov 29, 2009 at 02:52:16PM +0100, Michael Monnerie wrote:
-> I have an unexpected behaviour and I hope someone can explain me the 
-> reasons:
-> 
-> This is an openSUSE 11.2 virtual machine within XENserver. XENserver can 
-> only create 2TB disks, but I needed more. So I create 2x 2TB disks for 
-> that VM. These disks have no partitions, but are straight LVM:
-> # pvscan
->   PV /dev/xvdb   VG sharestore   lvm2 [1,95 TB / 0    free]
->   PV /dev/xvdc   VG sharestore   lvm2 [1,95 TB / 0    free]
->   Total: 2 [3,91 TB] / in use: 2 [3,91 TB] / in no VG: 0 [0   ]
-> 
-> I created one VG, and then one LV:
-> # vgscan
->   Reading all physical volumes.  This may take a while...
->   Found volume group "sharestore" using metadata type lvm2
-> # lvscan
->   ACTIVE            '/dev/sharestore/public' [3,91 TB] inherit
-> 
-> On that LV, I created an XFS filesystem, mounted from /etc/fstab:
-> /dev/sharestore/public /disks/sharestore  xfs        
-> noatime,nodiratime,logbufs=8,logbsize=256k,attr2,nobarrier,largeio,swalloc,inode64,prjquota
+--===============3764827057090968491==
+Content-Type: multipart/alternative; boundary=0016e64b073eba9e5604798fc23f
 
-You are using project quotas.
+--0016e64b073eba9e5604798fc23f
+Content-Type: text/plain; charset=ISO-8859-1
 
-> Now when I move from one dir to another, example
-> mv /disks/sharestore/upload/* /disks/sharestore/download/
-> 
-> within some dirs it's a simple mv where only metadata is moved, but with 
-> some dirs it's a physical cp+rm of the files. You can easily see that by 
-> the speed of the mv, plus with iostat:
-> Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-
-> sz avgqu-sz   await  svctm  %util
-> xvdb              0,00     0,00    0,00  647,31     0,00 28424,75    
-> 87,82    18,46   29,71   0,24  15,65
-> xvdc              0,00     0,40  631,14    2,40 26928,54    76,65    
-> 85,25     5,56    8,69   1,56  98,84
-> 
-> Until now I believed that a mv within one filesystem is always just a 
-> metadata mv. But it seems I found a case now where even within the same 
-> filesystem a physical cp+rm is done. Can someone explain me
-> 
-> 1) why this happens
+Hello,
 
-It happens if you move from one project directory heirarchy to
-another - rename is not allowed across project quota boundaries as
-the moved data has to be correctly attributed to the new project.
-Hence it causes a mv to do a copy/unlink by returning a EXDEV error
-to the rename.
+We are using XFS (Kernel 2.6.18) and facing a problem.
+When any XFS partition is plugged out from a little endian machine and
+plugged in to a big endian machine,
+it cannot be mounted and gives the following error.
 
-> 2) how I can prevent this?
+FAT: utf8 is not a recommended IO charset for FAT filesystems, filesystem
+will be case sensitive!
 
-You can't if you are moving from one project to another. If you
-move within the project heirarchy, then it will be a rename as per
-normal.
+FAT: bogus number of FAT structure
 
-Cheers,
+VFS: Can't find a valid FAT filesystem on dev sda1.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+VFS: Can't find ext3 filesystem on dev sda1.
+
+XFS mounting filesystem sda1
+
+Starting XFS recovery on filesystem: sda1 (logdev: internal)
+
+XFS: dirty log written in incompatible format - can't recover
+
+XFS: log mount/recovery failed: error 5
+
+XFS: log mount failed
+
+
+Mounting problem goes away after doing *"xfs_repair -L /dev/sdb2"
+
+*The problem is that big endian machine cannot recognize the journal which
+was written in
+little endian format by the little endian machine and once the journal is
+zerod out it can be mouted.
+
+Now the solution to above problem seems writing journal always in big endian
+format.
+
+Please suggest me, Is there any design limitation in XFS for this.
+Is it okay and feasible to implement it if yes then please give some
+pointers so that it can be implemented, under some
+suitable compile time switch.
+
+Thanks in advance...
+
+Regards
+Nitin Arora
+
+--0016e64b073eba9e5604798fc23f
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+Hello,<br><br>We are using XFS (Kernel 2.6.18) and facing a problem.<br>Whe=
+n any XFS partition is plugged out from a little endian machine and plugged=
+ in to a big endian machine,<br>it cannot be mounted and gives the followin=
+g error.<br>
+<br><p><span lang=3D"EN-US">FAT: utf8 is not a recommended IO charset for F=
+AT=20
+filesystems, filesystem will be case sensitive!</span></p>
+<p><span lang=3D"EN-US">FAT: bogus number of FAT structure</span></p>
+<p><span lang=3D"EN-US">VFS: Can&#39;t find a valid FAT filesystem on dev=
+=20
+sda1.</span></p>
+<p><span lang=3D"EN-US">VFS: Can&#39;t find ext3 filesystem on dev=20
+sda1.</span></p>
+<p><span lang=3D"EN-US">XFS mounting filesystem sda1</span></p>
+<p><span lang=3D"EN-US">Starting XFS recovery on filesystem: sda1 (logdev:=
+=20
+internal)</span></p>
+<p><span style=3D"color: red;" lang=3D"EN-US">XFS: dirty log written in inc=
+ompatible=20
+format - can&#39;t recover</span></p>
+<p><span lang=3D"EN-US">XFS: log mount/recovery failed: error=20
+5</span></p>
+<p><span lang=3D"EN-US">XFS: log mount failed</span></p><br><br>Mounting pr=
+oblem goes away after doing <i>&quot;xfs_repair -L /dev/sdb2&quot;<br><br><=
+/i>The problem is that big endian machine cannot recognize the journal whic=
+h was written in <br>
+little endian format by the little endian machine and once the journal is z=
+erod out it can be mouted.<br><br>Now the solution to above problem seems w=
+riting journal always in big endian format.<br><br>Please suggest me, Is th=
+ere any design limitation in XFS for this.<br>
+Is it okay and feasible to implement it if yes then please give some pointe=
+rs so that it can be implemented, under some <br>suitable compile time swit=
+ch.<br><br>Thanks in advance...<br><br>Regards<br>Nitin Arora<br>
+
+--0016e64b073eba9e5604798fc23f--
+
+
+--===============3764827057090968491==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3764827057090968491==--
