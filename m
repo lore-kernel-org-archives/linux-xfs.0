@@ -1,20 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nAUFUs9j027132 for <xfs@oss.sgi.com>; Mon, 30 Nov 2009 09:30:54 -0600
-Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 438ACBF7B7
-	for <xfs@oss.sgi.com>; Mon, 30 Nov 2009 07:31:23 -0800 (PST)
-Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id 3fP3GE4Px1hhgKWa for
-	<xfs@oss.sgi.com>; Mon, 30 Nov 2009 07:31:23 -0800 (PST)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: XFS & LVM: unexpected cp when issuing mv
-Date: Mon, 30 Nov 2009 16:30:06 +0100
-References: <1AB9A794DBDDF54A8A81BE2296F7BDFE83AF3C@cf--amer001e--3.americas.sgi.com>
-In-Reply-To: <1AB9A794DBDDF54A8A81BE2296F7BDFE83AF3C@cf--amer001e--3.americas.sgi.com>
+	nAUK7EpI055235 for <xfs@oss.sgi.com>; Mon, 30 Nov 2009 14:07:14 -0600
+Content-class: urn:content-classes:message
 MIME-Version: 1.0
-Message-Id: <200911301630.06668@zmi.at>
+Subject: RE: [PATCH] xfs: check for not fully initialized inodes in
+	xfs_ireclaim
+Date: Mon, 30 Nov 2009 14:07:40 -0600
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE83AF45@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <20091112190657.GA32110@infradead.org>
+From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,64 +18,71 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0510985609695523321=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
---===============0510985609695523321==
-Content-Type: multipart/signed;
-  boundary="nextPart2975643.byuFnropyz";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+Christoph Hellwig wrote:
+> Add an assert for inodes not added to the inode cache in xfs_ireclaim, to make
+> sure we're not going to introduce something like the famous nfsd inode cache
+> bug again.
 
---nextPart2975643.byuFnropyz
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+I confess I have not looked at the radix tree
+code in detail yet, but radix_tree_delete()
+returns a value that is ignored here.  It reportedly
+will return a null pointer if the index has no
+corresponding item in the tree, so this could be
+used in the assertion rather than doing a separate
+lookup.
 
-On Montag, 30. November 2009 Alex Elder wrote:
-> The quota inheritance property Dave described only applies
-> to project quotas, not group or user quotas.
->=20
-Thanks. I thought about it but can't use them anyway, as I would have to=20
-change the owner of files on upload. But I want to keep that=20
-information. So turning off quota is our only chance by now :-(
+I think the change is fine, but would rather see
+it done without the extra lookup (though there may
+be a good reason for doing it anyway).
 
-mfg zmi
-=2D-=20
-// Michael Monnerie, Ing.BSc    -----      http://it-management.at
-// Tel: 0660 / 415 65 31                      .network.your.ideas.
-// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
-// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
-// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
+					-Alex
 
---nextPart2975643.byuFnropyz
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.12 (GNU/Linux)
-
-iEYEABECAAYFAksT5P4ACgkQzhSR9xwSCbQo+ACfW6dkzkVPrhm88DsTmph09wwV
-4Z8AoPXtWDp9EhtIGfD1lJPmnpsD+DlM
-=xM7e
------END PGP SIGNATURE-----
-
---nextPart2975643.byuFnropyz--
-
-
---===============0510985609695523321==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Index: xfs/fs/xfs/xfs_iget.c
+> ===================================================================
+> --- xfs.orig/fs/xfs/xfs_iget.c	2009-11-12 17:10:20.216276486 +0100
+> +++ xfs/fs/xfs/xfs_iget.c	2009-11-12 17:13:27.565003964 +0100
+> @@ -514,17 +514,21 @@ xfs_ireclaim(
+>  {
+>  	struct xfs_mount	*mp = ip->i_mount;
+>  	struct xfs_perag	*pag;
+> +	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
+> 
+>  	XFS_STATS_INC(xs_ig_reclaims);
+> 
+>  	/*
+> -	 * Remove the inode from the per-AG radix tree.  It doesn't matter
+> -	 * if it was never added to it because radix_tree_delete can deal
+> -	 * with that case just fine.
+> +	 * Remove the inode from the per-AG radix tree.
+> +	 *
+> +	 * Because radix_tree_delete won't complain even if the item was never
+> +	 * added to the tree assert that it's been there before to catch
+> +	 * problems with the inode life time early on.
+>  	 */
+>  	pag = xfs_get_perag(mp, ip->i_ino);
+>  	write_lock(&pag->pag_ici_lock);
+> -	radix_tree_delete(&pag->pag_ici_root, XFS_INO_TO_AGINO(mp, ip->i_ino));
+> +	ASSERT(radix_tree_lookup(&pag->pag_ici_root, agino));
+> +	radix_tree_delete(&pag->pag_ici_root, agino);
+>  	write_unlock(&pag->pag_ici_lock);
+>  	xfs_put_perag(mp, pag);
+> 
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============0510985609695523321==--
