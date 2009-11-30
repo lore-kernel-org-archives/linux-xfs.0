@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nAUDXjNk010739 for <xfs@oss.sgi.com>; Mon, 30 Nov 2009 07:33:45 -0600
-Received: from mailsrv1.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1E05014EAFC6
-	for <xfs@oss.sgi.com>; Mon, 30 Nov 2009 05:34:10 -0800 (PST)
-Received: from mailsrv1.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id MrGEWGR6fn8JGpMA for
-	<xfs@oss.sgi.com>; Mon, 30 Nov 2009 05:34:10 -0800 (PST)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: XFS & LVM: unexpected cp when issuing mv
-Date: Mon, 30 Nov 2009 14:32:53 +0100
-References: <200911291452.20646@zmi.at> <4B12881B.6080302@shiftmail.org>
-In-Reply-To: <4B12881B.6080302@shiftmail.org>
+	nAUEFTYr016981 for <xfs@oss.sgi.com>; Mon, 30 Nov 2009 08:15:29 -0600
+Received: from lucidpixels.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0795F4C7795
+	for <xfs@oss.sgi.com>; Mon, 30 Nov 2009 06:15:58 -0800 (PST)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by
+	cuda.sgi.com with ESMTP id J187r3IsXYF76FDB for
+	<xfs@oss.sgi.com>; Mon, 30 Nov 2009 06:15:58 -0800 (PST)
+Date: Mon, 30 Nov 2009 09:15:57 -0500 (EST)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: RE: 2.6.31.6: XFS DEBUG: Assertions cause kernel OOPS.
+In-Reply-To: <1AB9A794DBDDF54A8A81BE2296F7BDFE83AF3A@cf--amer001e--3.americas.sgi.com>
+Message-ID: <alpine.DEB.2.00.0911300915260.20343@p34.internal.lan>
+References: <1AB9A794DBDDF54A8A81BE2296F7BDFE83AF3A@cf--amer001e--3.americas.sgi.com>
 MIME-Version: 1.0
-Message-Id: <200911301432.53902@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,73 +23,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7022149743125325160=="
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Asdo <asdo@shiftmail.org>
+To: Alex Elder <aelder@sgi.com>
 Cc: xfs@oss.sgi.com
 
---===============7022149743125325160==
-Content-Type: multipart/signed;
-  boundary="nextPart3312842.6av6bN3YWe";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
-
---nextPart3312842.6av6bN3YWe
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Sonntag, 29. November 2009 Asdo wrote:
-> Please paste the output of the following 2 commands:
-=20
-# df  /disks/sharestore/upload/
-=46ilesystem           1K-blocks      Used Available Use% Mounted on
-/dev/mapper/sharestore-public
-                     4192254976 1956672968 2235582008  47%=20
-/disks/sharestore
-
-# df  /disks/sharestore/download/
-=46ilesystem           1K-blocks      Used Available Use% Mounted on
-/dev/mapper/sharestore-public
-                     4192254976 1956675156 2235579820  47%=20
-/disks/sharestore
-
-Yes, it really *is* the same filesystem.
-
-mfg zmi
-=2D-=20
-// Michael Monnerie, Ing.BSc    -----      http://it-management.at
-// Tel: 0660 / 415 65 31                      .network.your.ideas.
-// PGP Key:         "curl -s http://zmi.at/zmi.asc | gpg --import"
-// Fingerprint: AC19 F9D5 36ED CD8A EF38  500E CE14 91F7 1C12 09B4
-// Keyserver: wwwkeys.eu.pgp.net                  Key-ID: 1C1209B4
-
---nextPart3312842.6av6bN3YWe
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.12 (GNU/Linux)
-
-iEYEABECAAYFAksTyYUACgkQzhSR9xwSCbRYXgCfedZDG/1FP50rS3zfVVX5R2rL
-fYYAoPPKa5oMpnDv6PCww/dvfi/goChK
-=GnrC
------END PGP SIGNATURE-----
-
---nextPart3312842.6av6bN3YWe--
 
 
---===============7022149743125325160==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+On Mon, 30 Nov 2009, Alex Elder wrote:
+
+> Justin Piszcz wrote:
+>> Hi,
+>>
+>> I wanted to compile my kernel with DEBUG for XFS and also kernel frame pointers
+>> to catch any issues.
+>>
+>> However, DEBUG for XFS does more harm than good?
+>
+> It should not.  This simple patch would improve things
+> but I'll add to my to-do list a review of assertions
+> to find and fix things of this type.
+>
+> 					-Alex
+>
+> diff -Naur old/fs/xfs/xfs_bmap.c new/fs/xfs/xfs_bmap.c
+> --- old/fs/xfs/xfs_bmap.c       2009-11-30 07:55:59.000000000 -0600
+> +++ new/fs/xfs/xfs_bmap.c       2009-11-30 07:56:43.000000000 -0600
+> @@ -4843,6 +4843,7 @@
+>        orig_mval = mval;
+>        orig_nmap = *nmap;
+> #endif
+> +       ASSERT(nmap != NULL);
+>        ASSERT(*nmap >= 1);
+>        ASSERT(*nmap <= XFS_BMAP_MAX_NMAP || !(flags & XFS_BMAPI_WRITE));
+>        whichfork = (flags & XFS_BMAPI_ATTRFORK) ?
+>
+>
+
+The patch failed against 2.6.31.6 but I added that line at that point anyway,
+ok thanks will let you know if I see anything else with DEBUG enabled.
+
+Justin.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============7022149743125325160==--
