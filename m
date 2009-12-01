@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nB1FA7Th143652 for <xfs@oss.sgi.com>; Tue, 1 Dec 2009 09:10:08 -0600
+	nB1FA8ks143658 for <xfs@oss.sgi.com>; Tue, 1 Dec 2009 09:10:08 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 213072C34C1
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D14DF14EC4BF
 	for <xfs@oss.sgi.com>; Tue,  1 Dec 2009 07:10:37 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id L8ZwIciXEQPMscva for
+	by cuda.sgi.com with ESMTP id lu8M4Tv6rZl2Zkri for
 	<xfs@oss.sgi.com>; Tue, 01 Dec 2009 07:10:37 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1NFUNB-0005hH-AB
+	Linux)) id 1NFUNB-0005hr-Fj
 	for xfs@oss.sgi.com; Tue, 01 Dec 2009 15:10:37 +0000
-Message-Id: <20091201150503.958283878@bombadil.infradead.org>
-Date: Tue, 01 Dec 2009 10:05:03 -0500
+Message-Id: <20091201151037.381644480@bombadil.infradead.org>
+Date: Tue, 01 Dec 2009 10:05:04 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 0/3] repair btree validation improvements
+Subject: [PATCH 1/3] repair: fix freespace btree record validation
+References: <20091201150503.958283878@bombadil.infradead.org>
+Content-Disposition: inline; filename=repair-extlen
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,33 +32,40 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-This patchset contains some improvements to the allocation btree checking
-in xfs_repair.  Patches 2 / 3 are straight ports of code used for xfs_check
-in xfs_db and bring the level of btree-related checks up to the standard
-of xfs_check, making xfs_repair -n a fully suitable replacement for xfs_check.
+MAXEXTLEN is a limit for the bmap btree extent length, not for the freespace
+btrees which can fill out the whole u32.  Remove the check which makes
+repair skip too large freespace extents.  Also add warnings for freespace
+btree records that fail the remaining validations.
 
-Patch 1 is a bug fixes found while validating the other patches.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-With this code we could in theory start chaning xfs_check to use xfs_repair
-as backend instead of xfs_db, but there are two issues still preventing this
-for now:
-
- - xfs_check is supposed to not give any output when a filesystem is clean
-   while xfs_repair is quite noisy
- - xfs_check has a -s option to only complain about serious structural
-   issues while xfs_repair lacks the infrastructure for it.
- - xfs_check has -i and -b options to only examine specific blocks or inodes
-   in details, while xfs_repair lacks the infrastructure for this.
-
-While we could add support for this in xfs_repair I wonder if we should
-just leave xfs_check as-is and instead tie up xfs_repair -n to fsck.xfs
-if used with the -f option or the /forcefsck file.  Most fsck programs
-are a least a bit noisy to we would fit right in and there's not need
-to implement the additional check options.
-
-We can't really get rid of the check code in xfs_db anyway as it's also
-used for xfs_ncheck and useful db commands like blockuse.  A second codebase
-also provides a useful validation for xfs_repair.
+Index: xfsprogs-dev/repair/scan.c
+===================================================================
+--- xfsprogs-dev.orig/repair/scan.c	2009-12-01 13:02:49.000000000 +0000
++++ xfsprogs-dev/repair/scan.c	2009-12-01 14:45:14.000000000 +0000
+@@ -520,12 +520,18 @@ _("%s freespace btree block claimed (sta
+ 			len = be32_to_cpu(rp[i].ar_blockcount);
+ 			end = b + len;
+ 
+-			if (b == 0 || !verify_agbno(mp, agno, b))
+-				continue;
+-			if (len == 0 || len > MAXEXTLEN)
++			if (b == 0 || !verify_agbno(mp, agno, b)) {
++				do_warn(
++	_("invalid start block %u in record %u of %d btree block %u/%u"),
++					b, i, name, agno, bno);
+ 				continue;
+-			if (!verify_agbno(mp, agno, end - 1))
++			}
++			if (len == 0 || !verify_agbno(mp, agno, end - 1)) {
++				do_warn(
++	_("invalid length %u in record %u of %d btree block %u/%u"),
++					len, i, name, agno, bno);
+ 				continue;
++			}
+ 
+ 			for ( ; b < end; b += blen)  {
+ 				state = get_bmap_ext(agno, b, end, &blen);
 
 _______________________________________________
 xfs mailing list
