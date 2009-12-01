@@ -1,23 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nB15vmW2101269
-	for <linux-xfs@oss.sgi.com>; Mon, 30 Nov 2009 23:57:48 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7E6D5C20ED
-	for <linux-xfs@oss.sgi.com>; Mon, 30 Nov 2009 21:58:17 -0800 (PST)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id RGFtFCGTYqUyHcAe for
-	<linux-xfs@oss.sgi.com>; Mon, 30 Nov 2009 21:58:17 -0800 (PST)
-Message-ID: <4B14B077.5090500@sandeen.net>
-Date: Mon, 30 Nov 2009 23:58:15 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	nB16YQUm105871
+	for <linux-xfs@oss.sgi.com>; Tue, 1 Dec 2009 00:34:26 -0600
+Received: from mail-pz0-f173.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1A5C3DA4589
+	for <linux-xfs@oss.sgi.com>; Mon, 30 Nov 2009 22:34:56 -0800 (PST)
+Received: from mail-pz0-f173.google.com (mail-pz0-f173.google.com
+	[209.85.222.173]) by cuda.sgi.com with ESMTP id
+	f9MKhroKPKb396aG for <linux-xfs@oss.sgi.com>;
+	Mon, 30 Nov 2009 22:34:56 -0800 (PST)
+Received: by pzk3 with SMTP id 3so3255502pzk.20
+	for <linux-xfs@oss.sgi.com>; Mon, 30 Nov 2009 22:34:55 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: can xfs_repair guarantee a complete clean filesystem?
-References: <389deec70911301805j37df7397l1c3ddbbad7e91768@mail.gmail.com>	
+In-Reply-To: <4B14B077.5090500@sandeen.net>
+References: <389deec70911301805j37df7397l1c3ddbbad7e91768@mail.gmail.com>
 	<4B14936F.7040401@sandeen.net>
 	<389deec70911302037v19764c2cr7686b353c5e933fa@mail.gmail.com>
-In-Reply-To: <389deec70911302037v19764c2cr7686b353c5e933fa@mail.gmail.com>
+	<4B14B077.5090500@sandeen.net>
+Date: Tue, 1 Dec 2009 14:34:55 +0800
+Message-ID: <389deec70911302234v2fc792ddt54bf88f5200500be@mail.gmail.com>
+Subject: Re: can xfs_repair guarantee a complete clean filesystem?
+From: hank peng <pengxihan@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,57 +30,59 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: hank peng <pengxihan@gmail.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: linux-xfs@oss.sgi.com
 
-hank peng wrote:
-> 2009/12/1 Eric Sandeen <sandeen@sandeen.net>:
->> hank peng wrote:
->>> When using xfs_repair, I want my XFS filesystem complete clean and
->>> continue to work even if some files lost. Becase we use XFS in low-end
->>> NAS box, customers want a tool to repair the filesystem when it has
->>> problem and they allow some files be lost and don't want the whole
->>> system to stop.
->>> So, I wonder if xfs_repair or some other tools can satisfy this funciton?
->>>
->> Yes, that is exactly its purpose (any potential bugs notwithstanding...)
->>
-> Thanks for your reply.
-> Is there some points I should notice about when using xfs_repair? I
-> used to encounter some cases in which xfs_repair complete successfully
-> but some errors like "Corrupt in memory detected" occured when the
-> filesytem is put into online for short time.
-
-It's possible that you encountered a bug (in xfs or elsewhere), or
-bad hardware...
-
-> Should I reboot the machine and use xfs_repair before the damaged
-> filesystem is used, or some other options I should use?
-
-Just unmount the filesystem, run repair, and remount.
-
-> In addition, I googled some information and found that some people say
-> xfs_check should be used before xfs_repair, is it right?
-
-There's no need; xfs_check doesn't scale very well, and xfs_repair -n will do
-a check-only run if that's what you want.
-
-xfs_check checks a little more than xfs_repair, but xfs_repair simply
-rebuilds those things it doesn't check in any case.
-
--Eric
-
->> -Eric
->>
-> 
-> 
-> 
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+MjAwOS8xMi8xIEVyaWMgU2FuZGVlbiA8c2FuZGVlbkBzYW5kZWVuLm5ldD46Cj4gaGFuayBwZW5n
+IHdyb3RlOgo+PiAyMDA5LzEyLzEgRXJpYyBTYW5kZWVuIDxzYW5kZWVuQHNhbmRlZW4ubmV0PjoK
+Pj4+IGhhbmsgcGVuZyB3cm90ZToKPj4+PiBXaGVuIHVzaW5nIHhmc19yZXBhaXIsIEkgd2FudCBt
+eSBYRlMgZmlsZXN5c3RlbSBjb21wbGV0ZSBjbGVhbiBhbmQKPj4+PiBjb250aW51ZSB0byB3b3Jr
+IGV2ZW4gaWYgc29tZSBmaWxlcyBsb3N0LiBCZWNhc2Ugd2UgdXNlIFhGUyBpbiBsb3ctZW5kCj4+
+Pj4gTkFTIGJveCwgY3VzdG9tZXJzIHdhbnQgYSB0b29sIHRvIHJlcGFpciB0aGUgZmlsZXN5c3Rl
+bSB3aGVuIGl0IGhhcwo+Pj4+IHByb2JsZW0gYW5kIHRoZXkgYWxsb3cgc29tZSBmaWxlcyBiZSBs
+b3N0IGFuZCBkb24ndCB3YW50IHRoZSB3aG9sZQo+Pj4+IHN5c3RlbSB0byBzdG9wLgo+Pj4+IFNv
+LCBJIHdvbmRlciBpZiB4ZnNfcmVwYWlyIG9yIHNvbWUgb3RoZXIgdG9vbHMgY2FuIHNhdGlzZnkg
+dGhpcyBmdW5jaXRvbj8KPj4+Pgo+Pj4gWWVzLCB0aGF0IGlzIGV4YWN0bHkgaXRzIHB1cnBvc2Ug
+KGFueSBwb3RlbnRpYWwgYnVncyBub3R3aXRoc3RhbmRpbmcuLi4pCj4+Pgo+PiBUaGFua3MgZm9y
+IHlvdXIgcmVwbHkuCj4+IElzIHRoZXJlIHNvbWUgcG9pbnRzIEkgc2hvdWxkIG5vdGljZSBhYm91
+dCB3aGVuIHVzaW5nIHhmc19yZXBhaXI/IEkKPj4gdXNlZCB0byBlbmNvdW50ZXIgc29tZSBjYXNl
+cyBpbiB3aGljaCB4ZnNfcmVwYWlyIGNvbXBsZXRlIHN1Y2Nlc3NmdWxseQo+PiBidXQgc29tZSBl
+cnJvcnMgbGlrZSAiQ29ycnVwdCBpbiBtZW1vcnkgZGV0ZWN0ZWQiIG9jY3VyZWQgd2hlbiB0aGUK
+Pj4gZmlsZXN5dGVtIGlzIHB1dCBpbnRvIG9ubGluZSBmb3Igc2hvcnQgdGltZS4KPgo+IEl0J3Mg
+cG9zc2libGUgdGhhdCB5b3UgZW5jb3VudGVyZWQgYSBidWcgKGluIHhmcyBvciBlbHNld2hlcmUp
+LCBvcgo+IGJhZCBoYXJkd2FyZS4uLgo+Cj4+IFNob3VsZCBJIHJlYm9vdCB0aGUgbWFjaGluZSBh
+bmQgdXNlIHhmc19yZXBhaXIgYmVmb3JlIHRoZSBkYW1hZ2VkCj4+IGZpbGVzeXN0ZW0gaXMgdXNl
+ZCwgb3Igc29tZSBvdGhlciBvcHRpb25zIEkgc2hvdWxkIHVzZT8KPgo+IEp1c3QgdW5tb3VudCB0
+aGUgZmlsZXN5c3RlbSwgcnVuIHJlcGFpciwgYW5kIHJlbW91bnQuCj4KPj4gSW4gYWRkaXRpb24s
+IEkgZ29vZ2xlZCBzb21lIGluZm9ybWF0aW9uIGFuZCBmb3VuZCB0aGF0IHNvbWUgcGVvcGxlIHNh
+eQo+PiB4ZnNfY2hlY2sgc2hvdWxkIGJlIHVzZWQgYmVmb3JlIHhmc19yZXBhaXIsIGlzIGl0IHJp
+Z2h0Pwo+Cj4gVGhlcmUncyBubyBuZWVkOyB4ZnNfY2hlY2sgZG9lc24ndCBzY2FsZSB2ZXJ5IHdl
+bGwsIGFuZCB4ZnNfcmVwYWlyIC1uIHdpbGwgZG8KPiBhIGNoZWNrLW9ubHkgcnVuIGlmIHRoYXQn
+cyB3aGF0IHlvdSB3YW50Lgo+Cj4geGZzX2NoZWNrIGNoZWNrcyBhIGxpdHRsZSBtb3JlIHRoYW4g
+eGZzX3JlcGFpciwgYnV0IHhmc19yZXBhaXIgc2ltcGx5Cj4gcmVidWlsZHMgdGhvc2UgdGhpbmdz
+IGl0IGRvZXNuJ3QgY2hlY2sgaW4gYW55IGNhc2UuCj4KPiAtRXJpYwo+ClRvZGF5LCBJIGVuY291
+bnRlcmVkIGEgcHJvYmxlbToKSSB1c2UgInhmc19yZXBhaXIgLUwg4oCcIG9uIGEgZGFtYWdlZCBm
+aWxlc3lzdGVtIGFuZCBhIGxvdCBvZiBtZXNzYWdlcwpvdXRwdXQgd2hpY2ggaW5jbHVkZSAibW92
+aW5nIGRpc2Nvbm5lY3RlZCBpbm9kZXMgdG8gbG9zdCtmb3VuZCAuLi4iLgpUaGVuIEkgY2FuIHJl
+bW91bnQgdGhlIGZpbGVzeXN0ZW0gc3VjY2Vzc2Z1bGx5IGFuZCBkZWNpZGVkIHRvIHJlbW92ZQp0
+aG9zZSBmaWxlcyBpbiBsb3N0K2ZvdW5kIGRpcmVjdG9yeSwgYnV0IGl0IHByaW50ZWQgdGhlIGZv
+bGxvd2luZwptZXNzYWdlOgpyb290QDEyMzRkYWh1YTovbW50L1Bvb2xfbWQxL3NzMS9sb3N0K2Zv
+dW5kIyBybSAtcmYgKgpybTogY2Fubm90IHN0YXQgJzcxMCc6IFN0cnVjdHVyZSBuZWVkcyBjbGVh
+bmluZwpybTogY2Fubm90IHN0YXQgJzcyOCc6IFN0cnVjdHVyZSBuZWVkcyBjbGVhbmluZwpybTog
+Y2Fubm90IHN0YXQgJzcyOSc6IFN0cnVjdHVyZSBuZWVkcyBjbGVhbmluZwpybTogY2Fubm90IHN0
+YXQgJzczMCc6IFN0cnVjdHVyZSBuZWVkcyBjbGVhbmluZwpybTogY2Fubm90IHN0YXQgJzczMSc6
+IFN0cnVjdHVyZSBuZWVkcyBjbGVhbmluZwpybTogY2Fubm90IHN0YXQgJzczMic6IFN0cnVjdHVy
+ZSBuZWVkcyBjbGVhbmluZwpybTogY2Fubm90IHN0YXQgJzczMyc6IFN0cnVjdHVyZSBuZWVkcyBj
+bGVhbmluZwpybTogY2Fubm90IHN0YXQgJzczNCc6IFN0cnVjdHVyZSBuZWVkcyBjbGVhbmluZwpy
+bTogY2Fubm90IHN0YXQgJzczNSc6IFN0cnVjdHVyZSBuZWVkcyBjbGVhbmluZwoKT3RoZXIgZGly
+ZWN0b3JpZXMgYW5kIGZpbGVzIHNlZW1zIG5vcm1hbCB0byBhY2Nlc3MsIGlzIGl0IG5vdCBhbGxv
+d2VkCnRvIGRlbGV0ZSBmaWxlcyBpbiBsb3N0K2ZvdW5kIGRpcmVjdG9yeSBhZnRlciByZXBhaXIs
+IHRoZW4gd2hhdCBzaG91bGQKSSBkbz8KCj4+PiAtRXJpYwo+Pj4KPj4KPj4KPj4KPgo+CgoKCi0t
+IApUaGUgc2ltcGxlc3QgaXMgbm90IGFsbCBiZXN0IGJ1dCB0aGUgYmVzdCBpcyBzdXJlbHkgdGhl
+IHNpbXBsZXN0IQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21h
+aWxtYW4vbGlzdGluZm8veGZzCg==
