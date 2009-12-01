@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nB1IccOv156777 for <xfs@oss.sgi.com>; Tue, 1 Dec 2009 12:38:38 -0600
-Received: from lucidpixels.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AB7DA14ED7B8
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2009 10:39:07 -0800 (PST)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by
-	cuda.sgi.com with ESMTP id Xm1qG2ixCkkoyiQ3 for
-	<xfs@oss.sgi.com>; Tue, 01 Dec 2009 10:39:07 -0800 (PST)
-Date: Tue, 1 Dec 2009 13:39:06 -0500 (EST)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 2.6.31.6: XFS DEBUG: Assertions cause kernel OOPS.
-In-Reply-To: <20091130233818.GE30608@discord.disaster>
-Message-ID: <alpine.DEB.2.00.0912011338000.1185@p34.internal.lan>
-References: <alpine.DEB.2.00.0911300819010.20343@p34.internal.lan>
-	<20091130233818.GE30608@discord.disaster>
+	nB1JHdra159581 for <xfs@oss.sgi.com>; Tue, 1 Dec 2009 13:17:39 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id ABC264C8DD9
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2009 11:18:09 -0800 (PST)
+Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
+	cuda.sgi.com with ESMTP id FIAHEQW8t48EBzX4 for
+	<xfs@oss.sgi.com>; Tue, 01 Dec 2009 11:18:09 -0800 (PST)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail.sandeen.net (Postfix) with ESMTP id DE2A5AAE3B8
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2009 13:18:08 -0600 (CST)
+Message-ID: <4B156BE3.2080107@sandeen.net>
+Date: Tue, 01 Dec 2009 13:17:55 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
+Subject: [PATCH] xfs_db: modify bad_features2 when modifying features2
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,78 +26,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
+The "attr1" command in xfs_db, for example, only modifies the features2
+field; when mounted, the kernel will find a mismatch between features2
+and bad_features2, and attr2 gets turned back on.
 
+I think the simplest fix is to modify do_version to modify both fields,
+but not if there is an existing mismatch that should be investigated
+first.
 
-On Tue, 1 Dec 2009, Dave Chinner wrote:
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
 
-> On Mon, Nov 30, 2009 at 08:22:03AM -0500, Justin Piszcz wrote:
->> Hi,
->>
->> I wanted to compile my kernel with DEBUG for XFS and also kernel frame pointers
->> to catch any issues.
->>
->> However, DEBUG for XFS does more harm than good?
->
-> DEBUG is there for developers, not end users. Often the debug code
-> will assert fail or panic where the situation is not fatal but
-> indicative of some problem that should be looked into further.
-Dave,
-
-Recall that issue that I was having with asterisk installed? How should 
-one get more information on a filesystem lockup if we cannot have debug 
-enabled for the filesystem?  Should there be a user-debug option which it 
-will include more verbosity if/when the xfs kernel processes lockup?
-
->
->> I tried to install bonnie++:
->> # apt-get install -y bonnie++
->>
->> And then this happened:
->>
->> [ 1578.768558] Assertion failed: *nmap >= 1, file: fs/xfs/xfs_bmap.c, line: 4846
-> ....
->> [ 1578.769252]  [<ffffffff811eb916>] xfs_bmapi+0x66/0x1940
->> [ 1578.769252]  [<ffffffff81260c51>] ? __up_read+0x91/0xb0
->> [ 1578.769252]  [<ffffffff8123a0a7>] ? xfs_buf_free+0xc7/0x110
->> [ 1578.769252]  [<ffffffff8123a1e6>] ? xfs_buf_rele+0xf6/0x130
->> [ 1578.769252]  [<ffffffff8122e70a>] ? xfs_trans_brelse+0x19a/0x2a0
->> [ 1578.769252]  [<ffffffff811f7ac7>] ? xfs_da_brelse+0x77/0x120
->> [ 1578.769252]  [<ffffffff810bf63d>] ? filldir+0x9d/0xe0
->> [ 1578.769252]  [<ffffffff8120225a>] xfs_dir2_leaf_getdents+0x61a/0x780
->> [ 1578.769252]  [<ffffffff810bf5a0>] ? filldir+0x0/0xe0
->> [ 1578.769252]  [<ffffffff810bf5a0>] ? filldir+0x0/0xe0
->> [ 1578.769252]  [<ffffffff811fc6ec>] xfs_readdir+0x10c/0x110
->> [ 1578.769252]  [<ffffffff810bf5a0>] ? filldir+0x0/0xe0
->> [ 1578.769252]  [<ffffffff8123b4f4>] xfs_file_readdir+0x34/0x50
->> [ 1578.769252]  [<ffffffff810bf7f8>] vfs_readdir+0xa8/0xc0
->> [ 1578.769252]  [<ffffffff810bf963>] sys_getdents+0x83/0xe0
->> [ 1578.769252]  [<ffffffff8102d1ab>] system_call_fastpath+0x16/0x1b
->
-> That is indicative of trying to map more blocks that we can fit
-> in the block map array during directory leaf readahead. That is
-> definitely not a problem for production systems, but definitely
-> indicates that the readahead loop termination has a bug in it
-> somewhere.
->
-> Cheers,
->
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
->
+diff --git a/db/sb.c b/db/sb.c
+index 7c61b15..961a939 100644
+--- a/db/sb.c
++++ b/db/sb.c
+@@ -556,6 +556,12 @@ do_version(xfs_agnumber_t agno, __uint16_t version, __uint32_t features)
+ 	if (!get_sb(agno, &tsb))
+ 		return 0;
+ 
++	if (xfs_sb_has_mismatched_features2(&tsb)) {
++		dbprintf(_("Superblock has mismatched features2 fields, "
++			   "skipping modification\n"));
++		return 0;
++	}
++
+ 	if ((version & XFS_SB_VERSION_LOGV2BIT) &&
+ 					!xfs_sb_version_haslogv2(&tsb)) {
+ 		tsb.sb_logsunit = 1;
+@@ -564,7 +570,8 @@ do_version(xfs_agnumber_t agno, __uint16_t version, __uint32_t features)
+ 
+ 	tsb.sb_versionnum = version;
+ 	tsb.sb_features2 = features;
+-	fields |= XFS_SB_VERSIONNUM | XFS_SB_FEATURES2;
++	tsb.sb_bad_features2 = features;
++	fields |= XFS_SB_VERSIONNUM | XFS_SB_FEATURES2 | XFS_SB_BAD_FEATURES2;
+ 	libxfs_sb_to_disk(iocur_top->data, &tsb, fields);
+ 	write_cur();
+ 	return 1;
 
 _______________________________________________
 xfs mailing list
