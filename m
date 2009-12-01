@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nB1EhZIe141923
-	for <linux-xfs@oss.sgi.com>; Tue, 1 Dec 2009 08:43:35 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B452E14EC26A
-	for <linux-xfs@oss.sgi.com>; Tue,  1 Dec 2009 06:44:04 -0800 (PST)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id kjYZslGF7su2cB28 for
-	<linux-xfs@oss.sgi.com>; Tue, 01 Dec 2009 06:44:04 -0800 (PST)
-Message-ID: <4B152BAD.1000004@sandeen.net>
-Date: Tue, 01 Dec 2009 08:43:57 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: can xfs_repair guarantee a complete clean filesystem?
-References: <389deec70911301805j37df7397l1c3ddbbad7e91768@mail.gmail.com>	<4B14936F.7040401@sandeen.net>	<389deec70911302037v19764c2cr7686b353c5e933fa@mail.gmail.com>	<4B14B077.5090500@sandeen.net>
-	<389deec70911302234v2fc792ddt54bf88f5200500be@mail.gmail.com>
-In-Reply-To: <389deec70911302234v2fc792ddt54bf88f5200500be@mail.gmail.com>
+	nB1FA7m1143650 for <xfs@oss.sgi.com>; Tue, 1 Dec 2009 09:10:08 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 03DA81DA0978
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2009 07:10:37 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id SvA9OnSobVXhbTGl for
+	<xfs@oss.sgi.com>; Tue, 01 Dec 2009 07:10:37 -0800 (PST)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1NFUNB-0005iO-Kr
+	for xfs@oss.sgi.com; Tue, 01 Dec 2009 15:10:37 +0000
+Message-Id: <20091201151037.542119951@bombadil.infradead.org>
+Date: Tue, 01 Dec 2009 10:05:05 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH 2/3] repair: add more fresspace btree checks
+References: <20091201150503.958283878@bombadil.infradead.org>
+Content-Disposition: inline; filename=repair-freespace-warn
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,37 +25,97 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: hank peng <pengxihan@gmail.com>
-Cc: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-aGFuayBwZW5nIHdyb3RlOgoKPiBUb2RheSwgSSBlbmNvdW50ZXJlZCBhIHByb2JsZW06Cj4gSSB1
-c2UgInhmc19yZXBhaXIgLUwg4oCcIG9uIGEgZGFtYWdlZCBmaWxlc3lzdGVtIGFuZCBhIGxvdCBv
-ZiBtZXNzYWdlcwoKd2h5IGRpZCB5b3UgdXNlIC1MLCBkaWQgaXQgZmFpbCB0byBtb3VudCAmIHJl
-cGxheSB0aGUgbG9nIHByb3Blcmx5PwoKPiBvdXRwdXQgd2hpY2ggaW5jbHVkZSAibW92aW5nIGRp
-c2Nvbm5lY3RlZCBpbm9kZXMgdG8gbG9zdCtmb3VuZCAuLi4iLgo+IFRoZW4gSSBjYW4gcmVtb3Vu
-dCB0aGUgZmlsZXN5c3RlbSBzdWNjZXNzZnVsbHkgYW5kIGRlY2lkZWQgdG8gcmVtb3ZlCj4gdGhv
-c2UgZmlsZXMgaW4gbG9zdCtmb3VuZCBkaXJlY3RvcnksIGJ1dCBpdCBwcmludGVkIHRoZSBmb2xs
-b3dpbmcKPiBtZXNzYWdlOgo+IHJvb3RAMTIzNGRhaHVhOi9tbnQvUG9vbF9tZDEvc3MxL2xvc3Qr
-Zm91bmQjIHJtIC1yZiAqCj4gcm06IGNhbm5vdCBzdGF0ICc3MTAnOiBTdHJ1Y3R1cmUgbmVlZHMg
-Y2xlYW5pbmcKPiBybTogY2Fubm90IHN0YXQgJzcyOCc6IFN0cnVjdHVyZSBuZWVkcyBjbGVhbmlu
-Zwo+IHJtOiBjYW5ub3Qgc3RhdCAnNzI5JzogU3RydWN0dXJlIG5lZWRzIGNsZWFuaW5nCj4gcm06
-IGNhbm5vdCBzdGF0ICc3MzAnOiBTdHJ1Y3R1cmUgbmVlZHMgY2xlYW5pbmcKPiBybTogY2Fubm90
-IHN0YXQgJzczMSc6IFN0cnVjdHVyZSBuZWVkcyBjbGVhbmluZwo+IHJtOiBjYW5ub3Qgc3RhdCAn
-NzMyJzogU3RydWN0dXJlIG5lZWRzIGNsZWFuaW5nCj4gcm06IGNhbm5vdCBzdGF0ICc3MzMnOiBT
-dHJ1Y3R1cmUgbmVlZHMgY2xlYW5pbmcKPiBybTogY2Fubm90IHN0YXQgJzczNCc6IFN0cnVjdHVy
-ZSBuZWVkcyBjbGVhbmluZwo+IHJtOiBjYW5ub3Qgc3RhdCAnNzM1JzogU3RydWN0dXJlIG5lZWRz
-IGNsZWFuaW5nCgpMb29rIGF0IGRtZXNnIHRvIHNlZSB3aGF0J3MgZ29uZSB3cm9uZy4uLi4KCj4g
-T3RoZXIgZGlyZWN0b3JpZXMgYW5kIGZpbGVzIHNlZW1zIG5vcm1hbCB0byBhY2Nlc3MsIGlzIGl0
-IG5vdCBhbGxvd2VkCj4gdG8gZGVsZXRlIGZpbGVzIGluIGxvc3QrZm91bmQgZGlyZWN0b3J5IGFm
-dGVyIHJlcGFpciwgdGhlbiB3aGF0IHNob3VsZAo+IEkgZG8/CgpUaGlzIGlzIGluZGljYXRpdmUg
-b2YgYSBidWcgb3IgSU8gZXJyb3IgdGhhdCBjYXVzZWQgeGZzIHRvIHNodXQgZG93bi4KCllvdSBo
-YXZlbid0IG1lbnRpb25lZCB3aGljaCBrZXJuZWwgdmVyc2lvbiwgYXJjaGl0ZWN0dXJlLCBvcgp2
-ZXJzaW9uIG9mIHhmc3Byb2dzIHlvdSdyZSB1c2luZyB5ZXQgLi4uIHRoYXQgbWF5IG9mZmVyIHNv
-bWUgY2x1ZXMuCgpJJ20gZ3Vlc3NpbmcgYW4gb2xkZXIga2VybmVsIGFuZCB1c2Vyc3BhY2Ugb24g
-YXJtPyA6KQoKLUVyaWMKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNv
-bS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+Port over additional checks for the freespace btrees from xfs_db, to get
+the same btree checking coverage as in xfs_check.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: xfsprogs-dev/repair/scan.c
+===================================================================
+--- xfsprogs-dev.orig/repair/scan.c	2009-12-01 13:07:55.000000000 +0000
++++ xfsprogs-dev/repair/scan.c	2009-12-01 13:09:03.000000000 +0000
+@@ -462,6 +462,8 @@ scanfunc_allocbt(
+ 	int			hdr_errors = 0;
+ 	int			numrecs;
+ 	int			state;
++	xfs_extlen_t		lastcount = 0;
++	xfs_agblock_t		lastblock = 0;
+ 
+ 	assert(magic == XFS_ABTB_MAGIC || magic == XFS_ABTC_MAGIC);
+ 
+@@ -508,8 +510,14 @@ _("%s freespace btree block claimed (sta
+ 			hdr_errors++;
+ 		}
+ 
+-		if (hdr_errors)
++		if (hdr_errors) {
++			do_warn(
++	_("bad btree nrecs (%u, min=%u, max=%u) in bt%s block %u/%u\n"),
++				be16_to_cpu(block->bb_numrecs),
++				mp->m_alloc_mnr[0], mp->m_alloc_mxr[0],
++				name, agno, bno);
+ 			suspect++;
++		}
+ 
+ 		rp = XFS_ALLOC_REC_ADDR(mp, block, 1);
+ 		for (i = 0; i < numrecs; i++) {
+@@ -533,6 +541,24 @@ _("%s freespace btree block claimed (sta
+ 				continue;
+ 			}
+ 
++			if (magic == XFS_ABTB_MAGIC) {
++				if (b <= lastblock) {
++					do_warn(_(
++	"out-of-order bno btree record %d (%u %u) block %u/%u\n"),
++						i, b, len, agno, bno);
++				} else {
++					lastblock = b;
++				}
++			} else {
++				if (len < lastcount) {
++					do_warn(_(
++	"out-of-order cnt btree record %d (%u %u) block %u/%u\n"),
++						i, b, len, agno, bno);
++				} else {
++					lastcount = len;
++				}
++			}
++
+ 			for ( ; b < end; b += blen)  {
+ 				state = get_bmap_ext(agno, b, end, &blen);
+ 				switch (state) {
+@@ -579,14 +605,17 @@ _("%s freespace btree block claimed (sta
+ 	 * don't pass bogus tree flag down further if this block
+ 	 * looked ok.  bail out if two levels in a row look bad.
+ 	 */
+-
+-	if (suspect && !hdr_errors)
+-		suspect = 0;
+-
+ 	if (hdr_errors)  {
++		do_warn(
++	_("bad btree nrecs (%u, min=%u, max=%u) in bt%s block %u/%u\n"),
++			be16_to_cpu(block->bb_numrecs),
++			mp->m_alloc_mnr[1], mp->m_alloc_mxr[1],
++			name, agno, bno);
+ 		if (suspect)
+ 			return;
+-		else suspect++;
++		suspect++;
++	} else if (suspect) {
++		suspect = 0;
+ 	}
+ 
+ 	for (i = 0; i < numrecs; i++)  {
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
