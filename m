@@ -1,31 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nB26BAPn217322 for <xfs@oss.sgi.com>; Wed, 2 Dec 2009 00:11:10 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 567711DA2F81
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2009 22:11:38 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	1oC65OFOwevxJi4D for <xfs@oss.sgi.com>;
-	Tue, 01 Dec 2009 22:11:38 -0800 (PST)
-Received: from discord (unverified [121.44.201.81])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	9273418-1927428
-	for <xfs@oss.sgi.com>; Wed, 02 Dec 2009 16:41:36 +1030 (CDT)
-Received: from disturbed ([192.168.1.9]) by discord with esmtp (Exim 4.69)
-	(envelope-from <dave@fromorbit.com>) id 1NFiR5-0000gK-DN
-	for xfs@oss.sgi.com; Wed, 02 Dec 2009 17:11:35 +1100
-Received: from dave by disturbed with local (Exim 4.69)
-	(envelope-from <dave@disturbed.disaster>) id 1NFiRD-0005Kw-Dx
-	for xfs@oss.sgi.com; Wed, 02 Dec 2009 17:11:43 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/6] [XFS] Convert filestreams code to use per-ag get/put
-	routines
-Date: Wed,  2 Dec 2009 17:11:36 +1100
-Message-Id: <1259734299-20306-4-git-send-email-david@fromorbit.com>
-In-Reply-To: <1259734299-20306-1-git-send-email-david@fromorbit.com>
-References: <1259734299-20306-1-git-send-email-david@fromorbit.com>
+	nB2A1hCR241444 for <xfs@oss.sgi.com>; Wed, 2 Dec 2009 04:01:44 -0600
+Received: from kms.syseleven.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A0BB312DBD8F
+	for <xfs@oss.sgi.com>; Wed,  2 Dec 2009 02:02:11 -0800 (PST)
+Received: from kms.syseleven.de (kms.syseleven.de [193.164.134.106]) by
+	cuda.sgi.com with ESMTP id BkmtyHg0DLFqWgv6 for
+	<xfs@oss.sgi.com>; Wed, 02 Dec 2009 02:02:11 -0800 (PST)
+Received: from miniMac.local ([93.219.181.233])
+	(authenticated user j.rosenboom@syseleven.de) by kms.syseleven.de
+	for xfs@oss.sgi.com; Wed, 2 Dec 2009 11:02:09 +0100
+Message-ID: <4B163B20.6030808@syseleven.de>
+Date: Wed, 02 Dec 2009 11:02:08 +0100
+From: Jens Rosenboom <j.rosenboom@syseleven.de>
+MIME-Version: 1.0
+Subject: Performance problem with multiple parallel rm -rf's
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,154 +24,26 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Signed-off-by: Dave Chinner <david@fromorbit.com>
----
- fs/xfs/xfs_filestream.c |   19 ++++++++++++-------
- fs/xfs/xfs_filestream.h |   27 ++++++++++++++++++++++++---
- 2 files changed, 36 insertions(+), 10 deletions(-)
+On a large 13TB XFS volume that is being used for backups, I am seeing 
+bad performance if multiple "rm -rf" processes are running in parallel. 
+The backups are being done with rsnapshot and the first operation it 
+does is removing the oldest snapshot. A single rsnapshot does this in 
+reasonable time, but if four jobs are started at the same time, all 
+their rm processes run for hours without making much progress.
 
-diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
-index edf8bdf..08c27ba 100644
---- a/fs/xfs/xfs_filestream.c
-+++ b/fs/xfs/xfs_filestream.c
-@@ -139,6 +139,7 @@ _xfs_filestream_pick_ag(
- 	int		flags,
- 	xfs_extlen_t	minlen)
- {
-+	int		streams, max_streams;
- 	int		err, trylock, nscan;
- 	xfs_extlen_t	longest, free, minfree, maxfree = 0;
- 	xfs_agnumber_t	ag, max_ag = NULLAGNUMBER;
-@@ -154,15 +155,15 @@ _xfs_filestream_pick_ag(
- 	trylock = XFS_ALLOC_FLAG_TRYLOCK;
- 
- 	for (nscan = 0; 1; nscan++) {
--
--		TRACE_AG_SCAN(mp, ag, xfs_filestream_peek_ag(mp, ag));
--
--		pag = mp->m_perag + ag;
-+		pag = xfs_perag_get(mp, ag);
-+		TRACE_AG_SCAN(mp, ag, atomic_read(&pag->pagf_fstrms));
- 
- 		if (!pag->pagf_init) {
- 			err = xfs_alloc_pagf_init(mp, NULL, ag, trylock);
--			if (err && !trylock)
-+			if (err && !trylock) {
-+				xfs_perag_put(pag);
- 				return err;
-+			}
- 		}
- 
- 		/* Might fail sometimes during the 1st pass with trylock set. */
-@@ -172,6 +173,7 @@ _xfs_filestream_pick_ag(
- 		/* Keep track of the AG with the most free blocks. */
- 		if (pag->pagf_freeblks > maxfree) {
- 			maxfree = pag->pagf_freeblks;
-+			max_streams = atomic_read(&pag->pagf_fstrms);
- 			max_ag = ag;
- 		}
- 
-@@ -194,6 +196,8 @@ _xfs_filestream_pick_ag(
- 
- 			/* Break out, retaining the reference on the AG. */
- 			free = pag->pagf_freeblks;
-+			streams = atomic_read(&pag->pagf_fstrms);
-+			xfs_perag_put(pag);
- 			*agp = ag;
- 			break;
- 		}
-@@ -201,6 +205,7 @@ _xfs_filestream_pick_ag(
- 		/* Drop the reference on this AG, it's not usable. */
- 		xfs_filestream_put_ag(mp, ag);
- next_ag:
-+		xfs_perag_put(pag);
- 		/* Move to the next AG, wrapping to AG 0 if necessary. */
- 		if (++ag >= mp->m_sb.sb_agcount)
- 			ag = 0;
-@@ -228,6 +233,7 @@ next_ag:
- 		if (max_ag != NULLAGNUMBER) {
- 			xfs_filestream_get_ag(mp, max_ag);
- 			TRACE_AG_PICK1(mp, max_ag, maxfree);
-+			streams = max_streams;
- 			free = maxfree;
- 			*agp = max_ag;
- 			break;
-@@ -239,8 +245,7 @@ next_ag:
- 		return 0;
- 	}
- 
--	TRACE_AG_PICK2(mp, startag, *agp, xfs_filestream_peek_ag(mp, *agp),
--			free, nscan, flags);
-+	TRACE_AG_PICK2(mp, startag, *agp, streams, free, nscan, flags);
- 
- 	return 0;
- }
-diff --git a/fs/xfs/xfs_filestream.h b/fs/xfs/xfs_filestream.h
-index 4aba67c..58378b2 100644
---- a/fs/xfs/xfs_filestream.h
-+++ b/fs/xfs/xfs_filestream.h
-@@ -79,12 +79,21 @@ extern ktrace_t *xfs_filestreams_trace_buf;
-  * the cache that reference per-ag array elements that have since been
-  * reallocated.
-  */
-+/*
-+ * xfs_filestream_peek_ag is only used in tracing code
-+ */
- static inline int
- xfs_filestream_peek_ag(
- 	xfs_mount_t	*mp,
- 	xfs_agnumber_t	agno)
- {
--	return atomic_read(&mp->m_perag[agno].pagf_fstrms);
-+	struct xfs_perag *pag;
-+	int		ret;
-+
-+	pag = xfs_perag_get(mp, agno);
-+	ret = atomic_read(&pag->pagf_fstrms);
-+	xfs_perag_put(pag);
-+	return ret;
- }
- 
- static inline int
-@@ -92,7 +101,13 @@ xfs_filestream_get_ag(
- 	xfs_mount_t	*mp,
- 	xfs_agnumber_t	agno)
- {
--	return atomic_inc_return(&mp->m_perag[agno].pagf_fstrms);
-+	struct xfs_perag *pag;
-+	int		ret;
-+
-+	pag = xfs_perag_get(mp, agno);
-+	ret = atomic_inc_return(&pag->pagf_fstrms);
-+	xfs_perag_put(pag);
-+	return ret;
- }
- 
- static inline int
-@@ -100,7 +115,13 @@ xfs_filestream_put_ag(
- 	xfs_mount_t	*mp,
- 	xfs_agnumber_t	agno)
- {
--	return atomic_dec_return(&mp->m_perag[agno].pagf_fstrms);
-+	struct xfs_perag *pag;
-+	int		ret;
-+
-+	pag = xfs_perag_get(mp, agno);
-+	ret = atomic_dec_return(&pag->pagf_fstrms);
-+	xfs_perag_put(pag);
-+	return ret;
- }
- 
- /* allocation selection flags */
--- 
-1.6.5
+This seems to be related to the planned optimizations in
+
+http://xfs.org/index.php/Improving_Metadata_Performance_By_Reducing_Journal_Overhead
+
+Are there any other tuning options I might try? I'm already using 
+"noatime,nodiratime,nobarrier,logbufs=8,logbsize=256k" as mount options 
+and did enable lazy_counters for the fs.
 
 _______________________________________________
 xfs mailing list
