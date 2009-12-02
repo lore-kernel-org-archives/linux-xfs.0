@@ -1,21 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nB22dSq8193484
-	for <linux-xfs@oss.sgi.com>; Tue, 1 Dec 2009 20:39:28 -0600
-Received: from postoffice2.aconex.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9C80AC43AE
-	for <linux-xfs@oss.sgi.com>; Tue,  1 Dec 2009 18:39:57 -0800 (PST)
-Received: from postoffice2.aconex.com (mail.aconex.com [203.89.202.182]) by
-	cuda.sgi.com with ESMTP id F5vFw0AJ5CY0GNXH for
-	<linux-xfs@oss.sgi.com>; Tue, 01 Dec 2009 18:39:57 -0800 (PST)
-Date: Wed, 2 Dec 2009 13:39:51 +1100 (EST)
-From: Nathan Scott <nscott@aconex.com>
-Message-ID: <1930278763.848341259721591215.JavaMail.root@mail-au.aconex.com>
-In-Reply-To: <hf4hs7$1ks$1@ger.gmane.org>
-Subject: Re: Does xfs automatically support acl without needing a
-	mount/fstab option?
+	nB22dK1P193458
+	for <linux-xfs@oss.sgi.com>; Tue, 1 Dec 2009 20:39:21 -0600
+Received: from mail-px0-f180.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BD5F3DA5357
+	for <linux-xfs@oss.sgi.com>; Tue,  1 Dec 2009 18:39:50 -0800 (PST)
+Received: from mail-px0-f180.google.com (mail-px0-f180.google.com
+	[209.85.216.180]) by cuda.sgi.com with ESMTP id
+	BQs4cmmZTZZVl919 for <linux-xfs@oss.sgi.com>;
+	Tue, 01 Dec 2009 18:39:50 -0800 (PST)
+Received: by pxi10 with SMTP id 10so4559905pxi.33
+	for <linux-xfs@oss.sgi.com>; Tue, 01 Dec 2009 18:39:50 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <4B15BE1C.2030209@sandeen.net>
+References: <389deec70911301805j37df7397l1c3ddbbad7e91768@mail.gmail.com>
+	<4B14936F.7040401@sandeen.net>
+	<389deec70911302037v19764c2cr7686b353c5e933fa@mail.gmail.com>
+	<4B14B077.5090500@sandeen.net>
+	<389deec70911302234v2fc792ddt54bf88f5200500be@mail.gmail.com>
+	<4B152BAD.1000004@sandeen.net>
+	<389deec70912010732o72edd3c4q196088a1c01b801e@mail.gmail.com>
+	<4B1539C6.90000@sandeen.net>
+	<389deec70912011646y682a2cc2rd5d4ea8cfe78d2f5@mail.gmail.com>
+	<4B15BE1C.2030209@sandeen.net>
+Date: Wed, 2 Dec 2009 10:39:50 +0800
+Message-ID: <389deec70912011839y57cf5d84y2a50f8d2ea39ca29@mail.gmail.com>
+Subject: Re: can xfs_repair guarantee a complete clean filesystem?
+From: hank peng <pengxihan@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,37 +36,84 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: mlueck@lueckdatasystems.com
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: linux-xfs@oss.sgi.com
 
-
------ "Michael Lueck" <mlueck@lueckdatasystems.com> wrote:
-
-> Greetings-
-> 
-> I am seeing directories on xfs partitions with the + at the end of the
-> perms list indicating there is an ACL associated with that particular
-> directory.
-> 
-> With xfs, is it not necessary to specify in fstab that ACL support is
-> desired?
-
-Not necessary.
-
-> Is it automatically enabled?
-
-Yes, its always enabled.
-
-cheers.
-
--- 
-Nathan
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+SGksIEVyaWM6CkkgdGhpbmsgSSBoYXZlIHJlcHJvZHVjZWQgdGhlIHByb2JsZW0uCgojIHVuYW1l
+IC1hCkxpbnV4IDEyMzRkYWh1YSAyLjYuMjMgIzc0NyBNb24gTm92IDE2IDEwOjUyOjU4IENTVCAy
+MDA5IHBwYyB1bmtub3duCiNtZGFkbSAtQyAvZGV2L21kMSAtbDUgLW4zIC9kZXYvc2R7aCxjLGJ9
+CiMgY2F0IC9wcm9jL21kc3RhdApQZXJzb25hbGl0aWVzIDogW2xpbmVhcl0gW3JhaWQwXSBbcmFp
+ZDFdIFtyYWlkMTBdIFtyYWlkNl0gW3JhaWQ1XQpbcmFpZDRdIFttdWx0aXBhdGhdCm1kMSA6IGFj
+dGl2ZSByYWlkNSBzZGJbM10gc2RjWzFdIHNkaFswXQogICAgICA5NzY3NzI5OTIgYmxvY2tzIGxl
+dmVsIDUsIDY0ayBjaHVuaywgYWxnb3JpdGhtIDIgWzMvMl0gW1VVX10KICAgICAgWz09Pi4uLi4u
+Li4uLi4uLi4uLi4uLl0gIHJlY292ZXJ5ID0gMTMuMCUgKDYzODg0MDMyLzQ4ODM4NjQ5NikKZmlu
+aXNoPTEwMy44bWluIHNwZWVkPTY4MTI0Sy9zZWMKCnVudXNlZCBkZXZpY2VzOiA8bm9uZT4KI3B2
+Y3JlYXRlIC9kZXYvbWQxCiN2Z2NyZWF0ZSBQb29sX21kMSAvZGV2L21kMQojbHZjcmVhdGUgLUwg
+OTMxRyAtbiB0ZXN0bHYgUG9vbF9tZDEKI2x2ZGlzcGxheQojIGx2ZGlzcGxheQogIC0tLSBMb2dp
+Y2FsIHZvbHVtZSAtLS0KICBMViBOYW1lICAgICAgICAgICAgICAgIC9kZXYvUG9vbF9tZDEvdGVz
+dGx2CiAgVkcgTmFtZSAgICAgICAgICAgICAgICBQb29sX21kMQogIExWIFVVSUQgICAgICAgICAg
+ICAgICAgaldUZ2s1LVE2dGYtalNFVS1tOVZaLUsyS2ItMW9SVy1SN29QOTQKICBMViBXcml0ZSBB
+Y2Nlc3MgICAgICAgIHJlYWQvd3JpdGUKICBMViBTdGF0dXMgICAgICAgICAgICAgIGF2YWlsYWJs
+ZQogICMgb3BlbiAgICAgICAgICAgICAgICAgMQogIExWIFNpemUgICAgICAgICAgICAgICAgOTMx
+LjAwIEdCCiAgQ3VycmVudCBMRSAgICAgICAgICAgICAyMzgzMzYKICBTZWdtZW50cyAgICAgICAg
+ICAgICAgIDEKICBBbGxvY2F0aW9uICAgICAgICAgICAgIGluaGVyaXQKICBSZWFkIGFoZWFkIHNl
+Y3RvcnMgICAgIGF1dG8KICAtIGN1cnJlbnRseSBzZXQgdG8gICAgIDI1NgogIEJsb2NrIGRldmlj
+ZSAgICAgICAgICAgMjUzOjAKCiNta2ZzLnhmcyAtZiAtc3NpemU9NGsgL2Rldi9Qb29sX21kMS90
+ZXN0bHYKI21vdW50IC9kZXYvUG9vbF9tZDEvdGVzdGx2IC9tbnQvUG9vbF9tZDEvdGVzdGx2CkFs
+bCBpcyBPSyBhbmQgbW91bnQgdGhlIGZpbGVzeXN0ZW0gYW5kIGJlZ2FuIHRvIHdyaXRlIGZpbGVz
+IGludG8gaXQKdGhyb3VnaCBvdXIgYXBwbGljYXRpb24gc29mdHdhcmUuIEZvciBhIHNob3J0IHdo
+aWxlLCBwcm9ibGVtIG9jY3VyZWQuCiMgY2QgL21udC9Qb29sX21kMS90ZXN0bHYKY2Q6IGVycm9y
+IHJldHJpZXZpbmcgY3VycmVudCBkaXJlY3Rvcnk6IGdldGN3ZDogY2Fubm90IGFjY2VzcyBwYXJl
+bnQKZGlyZWN0b3JpZXM6IElucHV0L291dHB1dCBlcnJvcgojZG1lc2cgfCB0YWlsIC1uIDMwCi0t
+LSByZDozIHdkOjIKIGRpc2sgMCwgbzoxLCBkZXY6c2RoCiBkaXNrIDEsIG86MSwgZGV2OnNkYwpS
+QUlENSBjb25mIHByaW50b3V0OgogLS0tIHJkOjMgd2Q6MgogZGlzayAwLCBvOjEsIGRldjpzZGgK
+IGRpc2sgMSwgbzoxLCBkZXY6c2RjCiBkaXNrIDIsIG86MSwgZGV2OnNkYgptZDogcmVjb3Zlcnkg
+b2YgUkFJRCBhcnJheSBtZDEKbWQ6IG1pbmltdW0gX2d1YXJhbnRlZWRfICBzcGVlZDogMTAwMCBL
+Qi9zZWMvZGlzay4KbWQ6IHVzaW5nIG1heGltdW0gYXZhaWxhYmxlIGlkbGUgSU8gYmFuZHdpZHRo
+IChidXQgbm90IG1vcmUgdGhhbgoyMDAwMDAgS0Ivc2VjKSBmb3IgcmVjb3ZlcnkuCm1kOiB1c2lu
+ZyAxMjhrIHdpbmRvdywgb3ZlciBhIHRvdGFsIG9mIDQ4ODM4NjQ5NiBibG9ja3MuCkZpbGVzeXN0
+ZW0gImRtLTAiOiBEaXNhYmxpbmcgYmFycmllcnMsIG5vdCBzdXBwb3J0ZWQgYnkgdGhlIHVuZGVy
+bHlpbmcgZGV2aWNlClhGUyBtb3VudGluZyBmaWxlc3lzdGVtIGRtLTAKRW5kaW5nIGNsZWFuIFhG
+UyBtb3VudCBmb3IgZmlsZXN5c3RlbTogZG0tMApGaWxlc3lzdGVtICJkbS0wIjogWEZTIGludGVy
+bmFsIGVycm9yIHhmc190cmFuc19jYW5jZWwgYXQgbGluZSAxMTY5IG9mCmZpbGUgZnMveGZzL3hm
+c190cmFucy5jLiAgQ2FsbGVyIDB4YzAxOWZiZjAKQ2FsbCBUcmFjZToKW2U4ZTZkY2IwXSBbYzAw
+MDkxZWNdIHNob3dfc3RhY2srMHgzYy8weDFhMCAodW5yZWxpYWJsZSkKW2U4ZTZkY2UwXSBbYzAx
+NzU1OWNdIHhmc19lcnJvcl9yZXBvcnQrMHg1MC8weDYwCltlOGU2ZGNmMF0gW2MwMTk3MDU4XSB4
+ZnNfdHJhbnNfY2FuY2VsKzB4MTI0LzB4MTQwCltlOGU2ZGQxMF0gW2MwMTlmYmYwXSB4ZnNfY3Jl
+YXRlKzB4MWZjLzB4NjNjCltlOGU2ZGQ5MF0gW2MwMWFkNjkwXSB4ZnNfdm5fbWtub2QrMHgxYWMv
+MHgyMGMKW2U4ZTZkZTQwXSBbYzAwN2RlZDRdIHZmc19jcmVhdGUrMHhhOC8weGU0CltlOGU2ZGU2
+MF0gW2MwMDgxMzcwXSBvcGVuX25hbWVpKzB4NWYwLzB4Njg4CltlOGU2ZGViMF0gW2MwMDcyOWI4
+XSBkb19maWxwX29wZW4rMHgyYy8weDZjCltlOGU2ZGYyMF0gW2MwMDcyYTU0XSBkb19zeXNfb3Bl
+bisweDVjLzB4ZjgKW2U4ZTZkZjQwXSBbYzAwMDIzMjBdIHJldF9mcm9tX3N5c2NhbGwrMHgwLzB4
+M2MKeGZzX2ZvcmNlX3NodXRkb3duKGRtLTAsMHg4KSBjYWxsZWQgZnJvbSBsaW5lIDExNzAgb2Yg
+ZmlsZQpmcy94ZnMveGZzX3RyYW5zLmMuICBSZXR1cm4gYWRkcmVzcyA9IDB4YzAxYjBiNzQKRmls
+ZXN5c3RlbSAiZG0tMCI6IENvcnJ1cHRpb24gb2YgaW4tbWVtb3J5IGRhdGEgZGV0ZWN0ZWQuICBT
+aHV0dGluZwpkb3duIGZpbGVzeXN0ZW06IGRtLTAKUGxlYXNlIHVtb3VudCB0aGUgZmlsZXN5c3Rl
+bSwgYW5kIHJlY3RpZnkgdGhlIHByb2JsZW0ocykKCldoYXQgc2hvdWwgSSBkbyBub3c/IHVzZSB4
+ZnNfcmVwYWlyIG9yIHVzZSBuZXdlciBrZXJuZWwgPyBQbGVhc2UgbGV0Cm1lIGtub3cgaWYgeW91
+IG5lZWQgb3RoZXIgaW5mb3JtYXRpb24uCgoyMDA5LzEyLzIgRXJpYyBTYW5kZWVuIDxzYW5kZWVu
+QHNhbmRlZW4ubmV0PjoKPiBoYW5rIHBlbmcgd3JvdGU6Cj4+IDIwMDkvMTIvMSBFcmljIFNhbmRl
+ZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQ+Ogo+Cj4gLi4uCj4KPj4+PiBrZXJuZWwgdmVyc2lvbiBp
+cyAyLjYuMjMsIHhmc3Byb2dzIGlzIDIuOS43LCBDUFUgaXMgTVBDODU0OCwgcG93ZXJwYyBhcmNo
+Lgo+Pj4+IEkgYW0gYXQgaG9tZSBub3csIE1heWJlIEkgY2FuIHByb3ZpZGUgc29tZSBkZXRhaWxl
+ZCBpbmZvcm1hdGlvbiB0b21vcnJvdy4KPj4+IElmIHRoZXJlJ3MgYW55IHBvc3NpYmlsaXR5IHRv
+IHRlc3QgbmV3ZXIga2VybmVsICYgdXNlcnNwYWNlLCB0aGF0J2QKPj4+IGJlIGdyZWF0LiDCoE1h
+bnkgYnVncyBoYXZlIGJlZW4gZml4ZWQgc2luY2UgdGhvc2UgdmVyc2lvbnMuCj4+Pgo+PiBXZSBk
+aWQgaGF2ZSBwbGFuIHRvIHVwZ3JhZGUga2VybmVsIHRvIGxhdGVzdCAyLjYuMzEuCj4KPiBXZWxs
+LCBJJ20ganVzdCBzdWdnZXN0aW5nIHRlc3RpbmcgaXQgZm9yIG5vdywgbm90IG5lY2Vzc2FyaWx5
+Cj4gdXBncmFkaW5nIHlvdXIgcHJvZHVjdC4gwqBXb3VsZCBqdXN0IGJlIGdvb2QgdG8ga25vdyBp
+ZiB0aGUgYnVnIHlvdQo+IGFyZSBzZWVpbmcgcGVyc2lzdHMgdXBzdHJlYW0gb24gcHBjLgo+Cj4+
+IEJUVywgSXMgdGhlcmUgc29tZSBwbGFjZSB3aGVyZSBJIGNhbiBjaGVjayB0aG9zZSBmaXhlZCBi
+dWcgbGlzdCBhY3Jvc3MgdmVyc2lvbnM/Cj4KPiBZb3UgY2FuIGxvb2sgYXQgdGhlIGNoYW5nZWxv
+Z3Mgb24ga2VybmVsLm9yZywgZm9yIGluc3RhbmNlOgo+Cj4gaHR0cDovL3d3dy5rZXJuZWwub3Jn
+L3B1Yi9saW51eC9rZXJuZWwvdjIuNi9DaGFuZ2VMb2ctMi42LjMyCj4KPiBPciB3aXRoIGdpdCwg
+Z2l0IGxvZyAtLXByZXR0eS1vbmVsaW5lIGZzL3hmcwo+Cj4gVGhlcmUgaXNuJ3QgYSBncmVhdCBi
+dWcgPC0+IGNvbW1pdCA8LT4ga2VybmVsdmVyc2lvbiBtYXBwaW5nLCBJIGd1ZXNzLgo+Cj4gLUVy
+aWMKPgo+Pj4gLUVyaWMKPgo+CgoKCi0tIApUaGUgc2ltcGxlc3QgaXMgbm90IGFsbCBiZXN0IGJ1
+dCB0aGUgYmVzdCBpcyBzdXJlbHkgdGhlIHNpbXBsZXN0IQoKX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5j
+b20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
