@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nB26BAvj217321 for <xfs@oss.sgi.com>; Wed, 2 Dec 2009 00:11:10 -0600
+	nB26BbJo217476 for <xfs@oss.sgi.com>; Wed, 2 Dec 2009 00:11:37 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9A1E61DA2F83
-	for <xfs@oss.sgi.com>; Tue,  1 Dec 2009 22:11:39 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	jHk68dOeNOq937E2 for <xfs@oss.sgi.com>;
-	Tue, 01 Dec 2009 22:11:39 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 56AF312DADB8
+	for <xfs@oss.sgi.com>; Tue,  1 Dec 2009 22:12:07 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	v9xc248ZZx3ZsM23 for <xfs@oss.sgi.com>;
+	Tue, 01 Dec 2009 22:12:07 -0800 (PST)
 Received: from discord (unverified [121.44.201.81])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	9273423-1927428
-	for <xfs@oss.sgi.com>; Wed, 02 Dec 2009 16:41:38 +1030 (CDT)
+	9348997-1927428
+	for <xfs@oss.sgi.com>; Wed, 02 Dec 2009 16:42:06 +1030 (CDT)
 Received: from disturbed ([192.168.1.9]) by discord with esmtp (Exim 4.69)
-	(envelope-from <dave@fromorbit.com>) id 1NFiR5-0000gC-4A
-	for xfs@oss.sgi.com; Wed, 02 Dec 2009 17:11:35 +1100
+	(envelope-from <dave@fromorbit.com>) id 1NFiRZ-0000gl-4s
+	for xfs@oss.sgi.com; Wed, 02 Dec 2009 17:12:05 +1100
 Received: from dave by disturbed with local (Exim 4.69)
-	(envelope-from <dave@disturbed.disaster>) id 1NFiRD-0005Kn-3o
-	for xfs@oss.sgi.com; Wed, 02 Dec 2009 17:11:43 +1100
+	(envelope-from <dave@disturbed.disaster>) id 1NFiRh-0005MU-4w
+	for xfs@oss.sgi.com; Wed, 02 Dec 2009 17:12:13 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/6] [XFS] Fix growfs deadlocks and per-AG use after free
-Date: Wed,  2 Dec 2009 17:11:33 +1100
-Message-Id: <1259734299-20306-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH] [XFS] Free buffer pages array unconditionally
+Date: Wed,  2 Dec 2009 17:12:13 +1100
+Message-Id: <1259734333-20581-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,23 +38,47 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The use of an array for the xfs_perag structures results in growfs having
-to realocate the array. This requires exclusion to prevent use-after-free
-situations. The current locking is prone to deadlocks when growing under
-load, and the xfssyncd currently has no protection against the array being
-reallocated that can lead to panics.
+The code in xfs_free_buf() only attempts to free the b_pages array if the
+buffer is a page cache backed or page allocated buffer. The extra log buffer
+that is used when the log wraps uses pages that are allocated to a different
+log buffer, but it still has a b_pages array allocated when those pages
+are associated to with the extra buffer in xfs_buf_associate_memory.
 
-This series abstracts the per-ag structure access and then removes the array
-to replace it with individual xfs_perag structures indexed by a radix tree.
-The only locking required is for the radix tree, hence the deadlocks go away
-as the tree lock is always the innermost lock. The use after frees go away
-as well as growfs does not need to reallocate structures fo pre-existing
-allocation groups - it only needs to allocate the structures for the new
-AGs and insert them into the tree.
+Hence we need to always attempt to free the b_pages array when tearing
+down a buffer, not just on buffers that are explicitly marked as page bearing
+buffers. This fixes a leak detected by the kernel memory leak code.
 
-This series also adds reference counting to the xfs-perag structure to
-ensure that we balance get/put accesses to the structures and provide the
-infrastructure to determine if the structure is in use or not.
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+---
+ fs/xfs/linux-2.6/xfs_buf.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
+index 4ddc973..4b84bbc 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.c
++++ b/fs/xfs/linux-2.6/xfs_buf.c
+@@ -316,7 +316,7 @@ STATIC void
+ _xfs_buf_free_pages(
+ 	xfs_buf_t	*bp)
+ {
+-	if (bp->b_pages != bp->b_page_array) {
++	if (bp->b_pages && bp->b_pages != bp->b_page_array) {
+ 		kmem_free(bp->b_pages);
+ 	}
+ }
+@@ -349,9 +349,9 @@ xfs_buf_free(
+ 				ASSERT(!PagePrivate(page));
+ 			page_cache_release(page);
+ 		}
+-		_xfs_buf_free_pages(bp);
+ 	}
+ 
++	_xfs_buf_free_pages(bp);
+ 	xfs_buf_deallocate(bp);
+ }
+ 
+-- 
+1.6.5
 
 _______________________________________________
 xfs mailing list
