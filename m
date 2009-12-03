@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nB2MM23Z045777 for <xfs@oss.sgi.com>; Wed, 2 Dec 2009 16:22:04 -0600
+	nB31KXgC056981 for <xfs@oss.sgi.com>; Wed, 2 Dec 2009 19:20:33 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1C80F1911BCB
-	for <xfs@oss.sgi.com>; Wed,  2 Dec 2009 14:22:31 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	sIuvhToST0y2Ez2P for <xfs@oss.sgi.com>;
-	Wed, 02 Dec 2009 14:22:31 -0800 (PST)
-Date: Thu, 3 Dec 2009 09:22:28 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D791A1348DDB
+	for <xfs@oss.sgi.com>; Wed,  2 Dec 2009 17:21:02 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	ayPEsQEmk6tHnWHd for <xfs@oss.sgi.com>;
+	Wed, 02 Dec 2009 17:21:02 -0800 (PST)
+Date: Thu, 3 Dec 2009 12:05:26 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] [XFS] Free buffer pages array unconditionally
-Message-ID: <20091202222228.GN30608@discord.disaster>
-References: <1259734333-20581-1-git-send-email-david@fromorbit.com>
-	<20091202151742.GA1263@infradead.org>
+Subject: Re: Performance problem with multiple parallel rm -rf's
+Message-ID: <20091203010526.GR30608@discord.disaster>
+References: <4B163B20.6030808@syseleven.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20091202151742.GA1263@infradead.org>
+In-Reply-To: <4B163B20.6030808@syseleven.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,65 +25,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Jens Rosenboom <j.rosenboom@syseleven.de>
 Cc: xfs@oss.sgi.com
 
-On Wed, Dec 02, 2009 at 10:17:42AM -0500, Christoph Hellwig wrote:
-> On Wed, Dec 02, 2009 at 05:12:13PM +1100, Dave Chinner wrote:
-> > The code in xfs_free_buf() only attempts to free the b_pages array if t=
-he
-> > buffer is a page cache backed or page allocated buffer. The extra log b=
-uffer
-> > that is used when the log wraps uses pages that are allocated to a diff=
-erent
-> > log buffer, but it still has a b_pages array allocated when those pages
-> > are associated to with the extra buffer in xfs_buf_associate_memory.
-> > =
+On Wed, Dec 02, 2009 at 11:02:08AM +0100, Jens Rosenboom wrote:
+> On a large 13TB XFS volume that is being used for backups, I am seeing  
+> bad performance if multiple "rm -rf" processes are running in parallel.  
+> The backups are being done with rsnapshot and the first operation it  
+> does is removing the oldest snapshot. A single rsnapshot does this in  
+> reasonable time, but if four jobs are started at the same time, all  
+> their rm processes run for hours without making much progress.
+>
+> This seems to be related to the planned optimizations in
+>
+> http://xfs.org/index.php/Improving_Metadata_Performance_By_Reducing_Journal_Overhead
 
-> > Hence we need to always attempt to free the b_pages array when tearing
-> > down a buffer, not just on buffers that are explicitly marked as page b=
-earing
-> > buffers. This fixes a leak detected by the kernel memory leak code.
-> > =
+Not directly, I think. More likely is the effect of cold caches
+on the inode read rate.
 
-> > Signed-off-by: Dave Chinner <david@fromorbit.com>
-> > ---
-> >  fs/xfs/linux-2.6/xfs_buf.c |    4 ++--
-> >  1 files changed, 2 insertions(+), 2 deletions(-)
-> > =
+That is, if you are running cold-cache 'rm -rf' operations, there is
+a substantial amount of *read* IO executed to pull the inodes into
+memory before they are unlinked. (i.e. an unlink is roughly
+1 read IO and two write IOs).
 
-> > diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
-> > index 4ddc973..4b84bbc 100644
-> > --- a/fs/xfs/linux-2.6/xfs_buf.c
-> > +++ b/fs/xfs/linux-2.6/xfs_buf.c
-> > @@ -316,7 +316,7 @@ STATIC void
-> >  _xfs_buf_free_pages(
-> >  	xfs_buf_t	*bp)
-> >  {
-> > -	if (bp->b_pages !=3D bp->b_page_array) {
-> > +	if (bp->b_pages && bp->b_pages !=3D bp->b_page_array) {
-> >  		kmem_free(bp->b_pages);
-> =
+If you are doing multiple cold-cache 'rm -rf' in parallel, you
+will be causing more disk seeks for reading the inodes you are
+trying to unlink, and as such this will slow down the unlink rate
+as the unlink can only go as fast as the inodes can be read off
+disk.
 
-> kmem_free happily takes a NULL pointer, so this is unessecary.
-
-Yes, it does, but I wanted to make sure that b_pages had been
-assigned before doing the comparison because this is now
-called unconditionally. I=B4ll remove the check and retest.
-
-Hmmm - I suspect that this function needs to NULL b_pages
-in case it _xfs_buf_free_pages() is called prior to calling
-xfs_buf_free()...
+Effectively there is not much you can do about this - you could try
+doing a traversal of the old snapshot first (e.g
+ls -lR <snapshot> > /dev/null) to get the cache populated as fast as
+possible before doing the unlink traversal, but that requires you
+have plenty of memory available (i.e. to hold more inodes than
+multiple parallel snapshot traversals will read).
 
 Cheers,
 
 Dave.
--- =
-
+-- 
 Dave Chinner
 david@fromorbit.com
 
