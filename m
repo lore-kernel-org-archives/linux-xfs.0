@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nB92unmm201760
-	for <linux-xfs@oss.sgi.com>; Tue, 8 Dec 2009 20:56:49 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 396FD1762A56
-	for <linux-xfs@oss.sgi.com>; Tue,  8 Dec 2009 18:57:22 -0800 (PST)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id wQv172tvWkD4uhD7 for
-	<linux-xfs@oss.sgi.com>; Tue, 08 Dec 2009 18:57:22 -0800 (PST)
-Message-ID: <4B1F1211.90607@sandeen.net>
-Date: Tue, 08 Dec 2009 20:57:21 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	nB93IF2h203175
+	for <linux-xfs@oss.sgi.com>; Tue, 8 Dec 2009 21:18:15 -0600
+Received: from mail-pw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A4AE1DE52EC
+	for <linux-xfs@oss.sgi.com>; Tue,  8 Dec 2009 19:18:49 -0800 (PST)
+Received: from mail-pw0-f53.google.com (mail-pw0-f53.google.com
+	[209.85.160.53]) by cuda.sgi.com with ESMTP id qXI7gHMsonV5PLL3
+	for <linux-xfs@oss.sgi.com>; Tue, 08 Dec 2009 19:18:49 -0800 (PST)
+Received: by pwi11 with SMTP id 11so1335736pwi.12
+	for <linux-xfs@oss.sgi.com>; Tue, 08 Dec 2009 19:18:49 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: [BUG report]xfs_btree_make_block_unfull generated an OOPS
+In-Reply-To: <4B1F1211.90607@sandeen.net>
 References: <389deec70912081758x5af751b8pe3189aee6cb98e97@mail.gmail.com>
-In-Reply-To: <389deec70912081758x5af751b8pe3189aee6cb98e97@mail.gmail.com>
+	<4B1F1211.90607@sandeen.net>
+Date: Wed, 9 Dec 2009 11:18:49 +0800
+Message-ID: <389deec70912081918v24ccc5abi90c8fc7546c741d7@mail.gmail.com>
+Subject: Re: [BUG report]xfs_btree_make_block_unfull generated an OOPS
+From: hank peng <pengxihan@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,99 +27,132 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: hank peng <pengxihan@gmail.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: linux-xfs@oss.sgi.com
 
-hank peng wrote:
-> Hi, all:
-> I think it is a BUG, so I report it here.
-> root@1234dahua:~# uname -a
-> Linux 1234dahua 2.6.31.6 #14 Tue Dec 8 16:48:40 CST 2009 ppc unknown
-> 
-> Unable to handle kernel paging request for data at address 0x00000000
-> Faulting instruction address: 0xc019ea28
-> Oops: Kernel access of bad area, sig: 11 [#1]
-> MPC85xx CDS
-> Modules linked in:
-> NIP: c019ea28 LR: c019ea00 CTR: 00000000
-> REGS: e233baf0 TRAP: 0300   Not tainted  (2.6.31.6)
-> MSR: 00029000 <EE,ME,CE>  CR: 22008484  XER: 00000000
-> DEAR: 00000000, ESR: 00800000
-> TASK = e8add2c0[21249] 'SS_Server' THREAD: e233a000
-> GPR00: 000001a4 e233bba0 e8add2c0 00000000 00000000 00000000 00000001 00000000
-> GPR08: c0e22478 e20137b8 c0e2247c 000001a4 22008422 1016d410 3fff5400 100a0000
-> GPR16: 100ce108 00000000 006398bb e20137b8 c019c58c 00029000 e233bc5c c0186bd0
-> GPR24: c019c568 00000000 22008424 e233bc08 00000000 e233bc58 00000000 e20137b8
-> NIP [c019ea28] xfs_btree_make_block_unfull+0xc4/0x1b0
-
-huh, I don't think I've ever seen an oops here, nor has kerneloops.org.
-
-I wonder how you managed this ... :)
-
-> LR [c019ea00] xfs_btree_make_block_unfull+0x9c/0x1b0
-> Call Trace:
-> [e233bba0] [c019ea00] xfs_btree_make_block_unfull+0x9c/0x1b0 (unreliable)
-> [e233bbe0] [c019ee88] xfs_btree_insrec+0x374/0x4b0
-> [e233bc50] [c019f040] xfs_btree_insert+0x7c/0x1c0
-> [e233bcb0] [c0185ad0] xfs_free_ag_extent+0x34c/0x810
-
-so this is freeing blocks and adding them to the freespace btrees;
-it needs to move entries out of a block to make room for the new one.
-Not a terribly unusual operation, I think.
-
-> [e233bd20] [c0186668] xfs_free_extent+0xdc/0x104
-> [e233bdb0] [c018f350] xfs_bmap_finish+0x154/0x1a0
-> [e233bde0] [c01b5e34] xfs_itruncate_finish+0x254/0x3b8
-> [e233be60] [c01d033c] xfs_free_eofblocks+0x254/0x29c
-> [e233bee0] [c01d9ba8] xfs_file_release+0x14/0x28
-> [e233bef0] [c009574c] __fput+0xe8/0x1dc
-> [e233bf10] [c0092048] filp_close+0x70/0xb0
-> [e233bf30] [c009211c] sys_close+0x94/0xc0
-> [e233bf40] [c000f784] ret_from_syscall+0x0/0x3c
-> Instruction dump:
-> 7fa5eb78 4bffdf59 7c7c1b79 40a2ffd4 801d0000 2f800000 419e0064 57c9103a
-> 7f83e378 7d29fa14 80090050 90170000 <90190000> 80010044 bae1001c 38210040
-> ---[ end trace 069fbb7d042289d2 ]---
-> 
-> According to the above call trace, I checked the source code and found
-> that it may be invoked by xfs_btree_make_block_unfull function in
-> fs/xfs/xfs_btree.c:
-> 
-> 2641
-> 2642         if (*stat) {
-> 2643                 *oindex = *index = cur->bc_ptrs[level];
-> 2644                 return 0;
-> 2645         }
-> 
-> here, oindex is NULL so OOPs occured. I am not a xfs hacker, I hope
-> someone can help me fix this BUG, if you need more information, let me
-> know.
-
-Is the above from gdb?  You're quite certain that this is the case,
-or is this a guess?
-
-It seems a little unlikely because in the calling function:
-
-        int                     optr;   /* old key/record index */
-        int                     ptr;    /* key/record index */
-
-// .... code code code ...
-
-        if (numrecs == cur->bc_ops->get_maxrecs(cur, level)) {
-                error = xfs_btree_make_block_unfull(cur, level, numrecs,
-                                        &optr, &ptr, &nptr, &ncur, &nrec, stat);
-
-We're just sending in the addresses of these local variables;
-I don't see how these pointers could be NULL.
-
-Thanks,
--Eric
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+MjAwOS8xMi85IEVyaWMgU2FuZGVlbiA8c2FuZGVlbkBzYW5kZWVuLm5ldD46Cj4gaGFuayBwZW5n
+IHdyb3RlOgo+PiBIaSwgYWxsOgo+PiBJIHRoaW5rIGl0IGlzIGEgQlVHLCBzbyBJIHJlcG9ydCBp
+dCBoZXJlLgo+PiByb290QDEyMzRkYWh1YTp+IyB1bmFtZSAtYQo+PiBMaW51eCAxMjM0ZGFodWEg
+Mi42LjMxLjYgIzE0IFR1ZSBEZWMgOCAxNjo0ODo0MCBDU1QgMjAwOSBwcGMgdW5rbm93bgo+Pgo+
+PiBVbmFibGUgdG8gaGFuZGxlIGtlcm5lbCBwYWdpbmcgcmVxdWVzdCBmb3IgZGF0YSBhdCBhZGRy
+ZXNzIDB4MDAwMDAwMDAKPj4gRmF1bHRpbmcgaW5zdHJ1Y3Rpb24gYWRkcmVzczogMHhjMDE5ZWEy
+OAo+PiBPb3BzOiBLZXJuZWwgYWNjZXNzIG9mIGJhZCBhcmVhLCBzaWc6IDExIFsjMV0KPj4gTVBD
+ODV4eCBDRFMKPj4gTW9kdWxlcyBsaW5rZWQgaW46Cj4+IE5JUDogYzAxOWVhMjggTFI6IGMwMTll
+YTAwIENUUjogMDAwMDAwMDAKPj4gUkVHUzogZTIzM2JhZjAgVFJBUDogMDMwMCDCoCBOb3QgdGFp
+bnRlZCDCoCgyLjYuMzEuNikKPj4gTVNSOiAwMDAyOTAwMCA8RUUsTUUsQ0U+IMKgQ1I6IDIyMDA4
+NDg0IMKgWEVSOiAwMDAwMDAwMAo+PiBERUFSOiAwMDAwMDAwMCwgRVNSOiAwMDgwMDAwMAo+PiBU
+QVNLID0gZThhZGQyYzBbMjEyNDldICdTU19TZXJ2ZXInIFRIUkVBRDogZTIzM2EwMDAKPj4gR1BS
+MDA6IDAwMDAwMWE0IGUyMzNiYmEwIGU4YWRkMmMwIDAwMDAwMDAwIDAwMDAwMDAwIDAwMDAwMDAw
+IDAwMDAwMDAxIDAwMDAwMDAwCj4+IEdQUjA4OiBjMGUyMjQ3OCBlMjAxMzdiOCBjMGUyMjQ3YyAw
+MDAwMDFhNCAyMjAwODQyMiAxMDE2ZDQxMCAzZmZmNTQwMCAxMDBhMDAwMAo+PiBHUFIxNjogMTAw
+Y2UxMDggMDAwMDAwMDAgMDA2Mzk4YmIgZTIwMTM3YjggYzAxOWM1OGMgMDAwMjkwMDAgZTIzM2Jj
+NWMgYzAxODZiZDAKPj4gR1BSMjQ6IGMwMTljNTY4IDAwMDAwMDAwIDIyMDA4NDI0IGUyMzNiYzA4
+IDAwMDAwMDAwIGUyMzNiYzU4IDAwMDAwMDAwIGUyMDEzN2I4Cj4+IE5JUCBbYzAxOWVhMjhdIHhm
+c19idHJlZV9tYWtlX2Jsb2NrX3VuZnVsbCsweGM0LzB4MWIwCj4KPiBodWgsIEkgZG9uJ3QgdGhp
+bmsgSSd2ZSBldmVyIHNlZW4gYW4gb29wcyBoZXJlLCBub3IgaGFzIGtlcm5lbG9vcHMub3JnLgo+
+Cj4gSSB3b25kZXIgaG93IHlvdSBtYW5hZ2VkIHRoaXMgLi4uIDopCj4KPj4gTFIgW2MwMTllYTAw
+XSB4ZnNfYnRyZWVfbWFrZV9ibG9ja191bmZ1bGwrMHg5Yy8weDFiMAo+PiBDYWxsIFRyYWNlOgo+
+PiBbZTIzM2JiYTBdIFtjMDE5ZWEwMF0geGZzX2J0cmVlX21ha2VfYmxvY2tfdW5mdWxsKzB4OWMv
+MHgxYjAgKHVucmVsaWFibGUpCj4+IFtlMjMzYmJlMF0gW2MwMTllZTg4XSB4ZnNfYnRyZWVfaW5z
+cmVjKzB4Mzc0LzB4NGIwCj4+IFtlMjMzYmM1MF0gW2MwMTlmMDQwXSB4ZnNfYnRyZWVfaW5zZXJ0
+KzB4N2MvMHgxYzAKPj4gW2UyMzNiY2IwXSBbYzAxODVhZDBdIHhmc19mcmVlX2FnX2V4dGVudCsw
+eDM0Yy8weDgxMAo+Cj4gc28gdGhpcyBpcyBmcmVlaW5nIGJsb2NrcyBhbmQgYWRkaW5nIHRoZW0g
+dG8gdGhlIGZyZWVzcGFjZSBidHJlZXM7Cj4gaXQgbmVlZHMgdG8gbW92ZSBlbnRyaWVzIG91dCBv
+ZiBhIGJsb2NrIHRvIG1ha2Ugcm9vbSBmb3IgdGhlIG5ldyBvbmUuCj4gTm90IGEgdGVycmlibHkg
+dW51c3VhbCBvcGVyYXRpb24sIEkgdGhpbmsuCj4KPj4gW2UyMzNiZDIwXSBbYzAxODY2NjhdIHhm
+c19mcmVlX2V4dGVudCsweGRjLzB4MTA0Cj4+IFtlMjMzYmRiMF0gW2MwMThmMzUwXSB4ZnNfYm1h
+cF9maW5pc2grMHgxNTQvMHgxYTAKPj4gW2UyMzNiZGUwXSBbYzAxYjVlMzRdIHhmc19pdHJ1bmNh
+dGVfZmluaXNoKzB4MjU0LzB4M2I4Cj4+IFtlMjMzYmU2MF0gW2MwMWQwMzNjXSB4ZnNfZnJlZV9l
+b2ZibG9ja3MrMHgyNTQvMHgyOWMKPj4gW2UyMzNiZWUwXSBbYzAxZDliYThdIHhmc19maWxlX3Jl
+bGVhc2UrMHgxNC8weDI4Cj4+IFtlMjMzYmVmMF0gW2MwMDk1NzRjXSBfX2ZwdXQrMHhlOC8weDFk
+Ywo+PiBbZTIzM2JmMTBdIFtjMDA5MjA0OF0gZmlscF9jbG9zZSsweDcwLzB4YjAKPj4gW2UyMzNi
+ZjMwXSBbYzAwOTIxMWNdIHN5c19jbG9zZSsweDk0LzB4YzAKPj4gW2UyMzNiZjQwXSBbYzAwMGY3
+ODRdIHJldF9mcm9tX3N5c2NhbGwrMHgwLzB4M2MKPj4gSW5zdHJ1Y3Rpb24gZHVtcDoKPj4gN2Zh
+NWViNzggNGJmZmRmNTkgN2M3YzFiNzkgNDBhMmZmZDQgODAxZDAwMDAgMmY4MDAwMDAgNDE5ZTAw
+NjQgNTdjOTEwM2EKPj4gN2Y4M2UzNzggN2QyOWZhMTQgODAwOTAwNTAgOTAxNzAwMDAgPDkwMTkw
+MDAwPiA4MDAxMDA0NCBiYWUxMDAxYyAzODIxMDA0MAo+PiAtLS1bIGVuZCB0cmFjZSAwNjlmYmI3
+ZDA0MjI4OWQyIF0tLS0KPj4KPj4gQWNjb3JkaW5nIHRvIHRoZSBhYm92ZSBjYWxsIHRyYWNlLCBJ
+IGNoZWNrZWQgdGhlIHNvdXJjZSBjb2RlIGFuZCBmb3VuZAo+PiB0aGF0IGl0IG1heSBiZSBpbnZv
+a2VkIGJ5IHhmc19idHJlZV9tYWtlX2Jsb2NrX3VuZnVsbCBmdW5jdGlvbiBpbgo+PiBmcy94ZnMv
+eGZzX2J0cmVlLmM6Cj4+Cj4+IDI2NDEKPj4gMjY0MiDCoCDCoCDCoCDCoCBpZiAoKnN0YXQpIHsK
+Pj4gMjY0MyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAqb2luZGV4ID0gKmluZGV4ID0gY3VyLT5i
+Y19wdHJzW2xldmVsXTsKPj4gMjY0NCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCByZXR1cm4gMDsK
+Pj4gMjY0NSDCoCDCoCDCoCDCoCB9Cj4+Cj4+IGhlcmUsIG9pbmRleCBpcyBOVUxMIHNvIE9PUHMg
+b2NjdXJlZC4gSSBhbSBub3QgYSB4ZnMgaGFja2VyLCBJIGhvcGUKPj4gc29tZW9uZSBjYW4gaGVs
+cCBtZSBmaXggdGhpcyBCVUcsIGlmIHlvdSBuZWVkIG1vcmUgaW5mb3JtYXRpb24sIGxldCBtZQo+
+PiBrbm93Lgo+Cj4gSXMgdGhlIGFib3ZlIGZyb20gZ2RiPyDCoFlvdSdyZSBxdWl0ZSBjZXJ0YWlu
+IHRoYXQgdGhpcyBpcyB0aGUgY2FzZSwKPiBvciBpcyB0aGlzIGEgZ3Vlc3M/Cj4KPiBJdCBzZWVt
+cyBhIGxpdHRsZSB1bmxpa2VseSBiZWNhdXNlIGluIHRoZSBjYWxsaW5nIGZ1bmN0aW9uOgo+Cj4g
+wqAgwqAgwqAgwqBpbnQgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgb3B0cjsgwqAgLyog
+b2xkIGtleS9yZWNvcmQgaW5kZXggKi8KPiDCoCDCoCDCoCDCoGludCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCBwdHI7IMKgIMKgLyoga2V5L3JlY29yZCBpbmRleCAqLwo+Cj4gLy8gLi4u
+LiBjb2RlIGNvZGUgY29kZSAuLi4KPgo+IMKgIMKgIMKgIMKgaWYgKG51bXJlY3MgPT0gY3VyLT5i
+Y19vcHMtPmdldF9tYXhyZWNzKGN1ciwgbGV2ZWwpKSB7Cj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqBlcnJvciA9IHhmc19idHJlZV9tYWtlX2Jsb2NrX3VuZnVsbChjdXIsIGxldmVsLCBudW1yZWNz
+LAo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgJm9wdHIsICZwdHIsICZucHRyLCAmbmN1ciwgJm5yZWMsIHN0YXQpOwo+Cj4gV2UncmUg
+anVzdCBzZW5kaW5nIGluIHRoZSBhZGRyZXNzZXMgb2YgdGhlc2UgbG9jYWwgdmFyaWFibGVzOwo+
+IEkgZG9uJ3Qgc2VlIGhvdyB0aGVzZSBwb2ludGVycyBjb3VsZCBiZSBOVUxMLgo+ClRoYW5rcyBm
+b3IgeW91ciByZXBsYXkuCgpJIG1hZGUgdGhpcyBjb25jbHVzaW9uIGZyb20gYXNzZW1ibHkgY29k
+ZSwgY29ycmVjdCBtZSBpZiBJIGFtIHdyb25nLgojcG93ZXJwYy1saW51eC1nbnVzcGUtb2JqZHVt
+cCB2bWxpbnV4IHwgbGVzcwo8c25pcD4KYzAxOWU5NjQgPHhmc19idHJlZV9tYWtlX2Jsb2NrX3Vu
+ZnVsbD46CmMwMTllOTY0OiAgICAgICA5NCAyMSBmZiBjMCAgICAgc3R3dSAgICByMSwtNjQocjEp
+CmMwMTllOTY4OiAgICAgICA3YyAwOCAwMiBhNiAgICAgbWZsciAgICByMApjMDE5ZTk2YzogICAg
+ICAgYmUgZTEgMDAgMWMgICAgIHN0bXcgICAgcjIzLDI4KHIxKQpjMDE5ZTk3MDogICAgICAgN2Mg
+N2YgMWIgNzggICAgIG1yICAgICAgcjMxLHIzCmMwMTllOTc0OiAgICAgICA5MCAwMSAwMCA0NCAg
+ICAgc3R3ICAgICByMCw2OChyMSkKYzAxOWU5Nzg6ICAgICAgIDdjIGJjIDJiIDc4ICAgICBtciAg
+ICAgIHIyOCxyNQpjMDE5ZTk3YzogICAgICAgN2MgZDkgMzMgNzggICAgIG1yICAgICAgcjI1LHI2
+ICAgICAgICAgICAgICA8SSB0aGluawpoZXJlIHI2IHN0b3JlIHZhbHVlIG9mIG9pbmRleCA+CmMw
+MTllOTgwOiAgICAgICA4MyBhMSAwMCA0OCAgICAgbHd6ICAgICByMjksNzIocjEpCmMwMTllOTg0
+OiAgICAgICA3YyBmNyAzYiA3OCAgICAgbXIgICAgICByMjMscjcKYzAxOWU5ODg6ICAgICAgIDgw
+IDAzIDAwIDBjICAgICBsd3ogICAgIHIwLDEyKHIzKQpjMDE5ZTk4YzogICAgICAgN2QgMWIgNDMg
+NzggICAgIG1yICAgICAgcjI3LHI4CmMwMTllOTkwOiAgICAgICA3ZCAzYSA0YiA3OCAgICAgbXIg
+ICAgICByMjYscjkKYzAxOWU5OTQ6ICAgICAgIDdkIDU4IDUzIDc4ICAgICBtciAgICAgIHIyNCxy
+MTAKYzAxOWU5OTg6ICAgICAgIDdjIDllIDIzIDc4ICAgICBtciAgICAgIHIzMCxyNApjMDE5ZTk5
+YzogICAgICAgNzAgMGIgMDAgMDIgICAgIGFuZGkuICAgcjExLHIwLDIKYzAxOWU5YTA6ICAgICAg
+IDQxIDgyIDAwIDE0ICAgICBiZXEtICAgIGMwMTllOWI0Cjx4ZnNfYnRyZWVfbWFrZV9ibG9ja191
+bmZ1bGwrMHg1MD4KYzAxOWU5YTQ6ICAgICAgIDg5IDIzIDAwIDc4ICAgICBsYnogICAgIHI5LDEy
+MChyMykKYzAxOWU5YTg6ICAgICAgIDM5IDI5IGZmIGZmICAgICBhZGRpICAgIHI5LHI5LC0xCmMw
+MTllOWFjOiAgICAgICA3ZiA4NCA0OCAwMCAgICAgY21wdyAgICBjcjcscjQscjkKYzAxOWU5YjA6
+ICAgICAgIDQxIDllIDAwIDkwICAgICBiZXEtICAgIGNyNyxjMDE5ZWE0MAo8eGZzX2J0cmVlX21h
+a2VfYmxvY2tfdW5mdWxsKzB4ZGM+CmMwMTllOWI0OiAgICAgICA3ZiBlMyBmYiA3OCAgICAgbXIg
+ICAgICByMyxyMzEKYzAxOWU5Yjg6ICAgICAgIDdmIGM0IGYzIDc4ICAgICBtciAgICAgIHI0LHIz
+MApjMDE5ZTliYzogICAgICAgN2YgYTUgZWIgNzggICAgIG1yICAgICAgcjUscjI5CmMwMTllOWMw
+OiAgICAgICA0YiBmZiBkYiAzOSAgICAgYmwgICAgICBjMDE5YzRmOCA8eGZzX2J0cmVlX3JzaGlm
+dD4KYzAxOWU5YzQ6ICAgICAgIDdjIDdjIDFiIDc5ICAgICBtci4gICAgIHIyOCxyMwpjMDE5ZTlj
+ODogICAgICAgNDAgODIgMDAgMTAgICAgIGJuZS0gICAgYzAxOWU5ZDgKPHhmc19idHJlZV9tYWtl
+X2Jsb2NrX3VuZnVsbCsweDc0PgpjMDE5ZTljYzogICAgICAgODAgMWQgMDAgMDAgICAgIGx3eiAg
+ICAgcjAsMChyMjkpCmMwMTllOWQwOiAgICAgICAyZiA4MCAwMCAwMCAgICAgY21wd2kgICBjcjcs
+cjAsMApjMDE5ZTlkNDogICAgICAgNDEgOWUgMDAgMWMgICAgIGJlcS0gICAgY3I3LGMwMTllOWYw
+Cjx4ZnNfYnRyZWVfbWFrZV9ibG9ja191bmZ1bGwrMHg4Yz4KYzAxOWU5ZDg6ICAgICAgIDgwIDAx
+IDAwIDQ0ICAgICBsd3ogICAgIHIwLDY4KHIxKQpjMDE5ZTlkYzogICAgICAgN2YgODMgZTMgNzgg
+ICAgIG1yICAgICAgcjMscjI4CmMwMTllOWUwOiAgICAgICBiYSBlMSAwMCAxYyAgICAgbG13ICAg
+ICByMjMsMjgocjEpCmMwMTllOWU0OiAgICAgICAzOCAyMSAwMCA0MCAgICAgYWRkaSAgICByMSxy
+MSw2NApjMDE5ZTllODogICAgICAgN2MgMDggMDMgYTYgICAgIG10bHIgICAgcjAKYzAxOWU5ZWM6
+ICAgICAgIDRlIDgwIDAwIDIwICAgICBibHIKYzAxOWU5ZjA6ICAgICAgIDdmIGUzIGZiIDc4ICAg
+ICBtciAgICAgIHIzLHIzMQpjMDE5ZTlmNDogICAgICAgN2YgYzQgZjMgNzggICAgIG1yICAgICAg
+cjQscjMwCmMwMTllOWY4OiAgICAgICA3ZiBhNSBlYiA3OCAgICAgbXIgICAgICByNSxyMjkKYzAx
+OWU5ZmM6ICAgICAgIDRiIGZmIGRmIDU5ICAgICBibCAgICAgIGMwMTljOTU0IDx4ZnNfYnRyZWVf
+bHNoaWZ0PgpjMDE5ZWEwMDogICAgICAgN2MgN2MgMWIgNzkgICAgIG1yLiAgICAgcjI4LHIzCmMw
+MTllYTA0OiAgICAgICA0MCBhMiBmZiBkNCAgICAgYm5lLSAgICBjMDE5ZTlkOAo8eGZzX2J0cmVl
+X21ha2VfYmxvY2tfdW5mdWxsKzB4NzQ+CmMwMTllYTA4OiAgICAgICA4MCAxZCAwMCAwMCAgICAg
+bHd6ICAgICByMCwwKHIyOSkKYzAxOWVhMGM6ICAgICAgIDJmIDgwIDAwIDAwICAgICBjbXB3aSAg
+IGNyNyxyMCwwCmMwMTllYTEwOiAgICAgICA0MSA5ZSAwMCA2NCAgICAgYmVxLSAgICBjcjcsYzAx
+OWVhNzQKPHhmc19idHJlZV9tYWtlX2Jsb2NrX3VuZnVsbCsweDExMD4KYzAxOWVhMTQ6ICAgICAg
+IDU3IGM5IDEwIDNhICAgICBybHdpbm0gIHI5LHIzMCwyLDAsMjkKYzAxOWVhMTg6ICAgICAgIDdm
+IDgzIGUzIDc4ICAgICBtciAgICAgIHIzLHIyOApjMDE5ZWExYzogICAgICAgN2QgMjkgZmEgMTQg
+ICAgIGFkZCAgICAgcjkscjkscjMxCmMwMTllYTIwOiAgICAgICA4MCAwOSAwMCA1MCAgICAgbHd6
+ICAgICByMCw4MChyOSkKYzAxOWVhMjQ6ICAgICAgIDkwIDE3IDAwIDAwICAgICBzdHcgICAgIHIw
+LDAocjIzKQpjMDE5ZWEyODogICAgICAgOTAgMTkgMDAgMDAgICAgIHN0dyAgICAgcjAsMChyMjUp
+ICAgICAgICAgICAgICA8T09QcwpvY2N1cmVkIGhlcmU+CmMwMTllYTJjOiAgICAgICA4MCAwMSAw
+MCA0NCAgICAgbHd6ICAgICByMCw2OChyMSkKYzAxOWVhMzA6ICAgICAgIGJhIGUxIDAwIDFjICAg
+ICBsbXcgICAgIHIyMywyOChyMSkKYzAxOWVhMzQ6ICAgICAgIDM4IDIxIDAwIDQwICAgICBhZGRp
+ICAgIHIxLHIxLDY0CmMwMTllYTM4OiAgICAgICA3YyAwOCAwMyBhNiAgICAgbXRsciAgICByMAoK
+CgoKCj4gVGhhbmtzLAo+IC1FcmljCj4KCgoKLS0gClRoZSBzaW1wbGVzdCBpcyBub3QgYWxsIGJl
+c3QgYnV0IHRoZSBiZXN0IGlzIHN1cmVseSB0aGUgc2ltcGxlc3QhCgpfX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Mu
+c2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
