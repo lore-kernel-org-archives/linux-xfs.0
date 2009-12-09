@@ -1,29 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nB8IP098164370 for <xfs@oss.sgi.com>; Tue, 8 Dec 2009 12:25:00 -0600
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 97B78193A522
-	for <xfs@oss.sgi.com>; Tue,  8 Dec 2009 10:25:33 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Lqtz7BpKv5Y7YD7h for
-	<xfs@oss.sgi.com>; Tue, 08 Dec 2009 10:25:33 -0800 (PST)
-Received: from int-mx08.intmail.prod.int.phx2.redhat.com
-	(int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.21])
-	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id nB8IPXiW003669
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 8 Dec 2009 13:25:33 -0500
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx08.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id nB8IPTjs010964
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 8 Dec 2009 13:25:32 -0500
-Message-ID: <4B1E9A25.50108@redhat.com>
-Date: Tue, 08 Dec 2009 12:25:41 -0600
-From: Eric Sandeen <sandeen@redhat.com>
+	nB91wAFg197992
+	for <linux-xfs@oss.sgi.com>; Tue, 8 Dec 2009 19:58:11 -0600
+Received: from mail-pz0-f174.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7A88D193FD57
+	for <linux-xfs@oss.sgi.com>; Tue,  8 Dec 2009 17:58:44 -0800 (PST)
+Received: from mail-pz0-f174.google.com (mail-pz0-f174.google.com
+	[209.85.222.174]) by cuda.sgi.com with ESMTP id
+	qJyqexTtHmAI8j6S for <linux-xfs@oss.sgi.com>;
+	Tue, 08 Dec 2009 17:58:44 -0800 (PST)
+Received: by pzk4 with SMTP id 4so5148852pzk.32
+	for <linux-xfs@oss.sgi.com>; Tue, 08 Dec 2009 17:58:44 -0800 (PST)
 MIME-Version: 1.0
-Subject: [PATCH] mkfs: handle 4k sector devices more cleanly
+Date: Wed, 9 Dec 2009 09:58:44 +0800
+Message-ID: <389deec70912081758x5af751b8pe3189aee6cb98e97@mail.gmail.com>
+Subject: [BUG report]xfs_btree_make_block_unfull generated an OOPS
+From: hank peng <pengxihan@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,134 +29,64 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: linux-xfs@oss.sgi.com
 
-Trying to mkfs a 4k sector device today fails w/o manually specifying
-sector size:
+Hi, all:
+I think it is a BUG, so I report it here.
+root@1234dahua:~# uname -a
+Linux 1234dahua 2.6.31.6 #14 Tue Dec 8 16:48:40 CST 2009 ppc unknown
 
-# modprobe scsi_debug sector_size=4096 dev_size_mb=32
-# mkfs.xfs -f /dev/sdc
-mkfs.xfs: warning - cannot set blocksize on block device /dev/sdc: Invalid argument
-Warning: the data subvolume sector size 512 is less than the sector size 
-reported by the device (4096).
-... <fail>
+Unable to handle kernel paging request for data at address 0x00000000
+Faulting instruction address: 0xc019ea28
+Oops: Kernel access of bad area, sig: 11 [#1]
+MPC85xx CDS
+Modules linked in:
+NIP: c019ea28 LR: c019ea00 CTR: 00000000
+REGS: e233baf0 TRAP: 0300   Not tainted  (2.6.31.6)
+MSR: 00029000 <EE,ME,CE>  CR: 22008484  XER: 00000000
+DEAR: 00000000, ESR: 00800000
+TASK = e8add2c0[21249] 'SS_Server' THREAD: e233a000
+GPR00: 000001a4 e233bba0 e8add2c0 00000000 00000000 00000000 00000001 00000000
+GPR08: c0e22478 e20137b8 c0e2247c 000001a4 22008422 1016d410 3fff5400 100a0000
+GPR16: 100ce108 00000000 006398bb e20137b8 c019c58c 00029000 e233bc5c c0186bd0
+GPR24: c019c568 00000000 22008424 e233bc08 00000000 e233bc58 00000000 e20137b8
+NIP [c019ea28] xfs_btree_make_block_unfull+0xc4/0x1b0
+LR [c019ea00] xfs_btree_make_block_unfull+0x9c/0x1b0
+Call Trace:
+[e233bba0] [c019ea00] xfs_btree_make_block_unfull+0x9c/0x1b0 (unreliable)
+[e233bbe0] [c019ee88] xfs_btree_insrec+0x374/0x4b0
+[e233bc50] [c019f040] xfs_btree_insert+0x7c/0x1c0
+[e233bcb0] [c0185ad0] xfs_free_ag_extent+0x34c/0x810
+[e233bd20] [c0186668] xfs_free_extent+0xdc/0x104
+[e233bdb0] [c018f350] xfs_bmap_finish+0x154/0x1a0
+[e233bde0] [c01b5e34] xfs_itruncate_finish+0x254/0x3b8
+[e233be60] [c01d033c] xfs_free_eofblocks+0x254/0x29c
+[e233bee0] [c01d9ba8] xfs_file_release+0x14/0x28
+[e233bef0] [c009574c] __fput+0xe8/0x1dc
+[e233bf10] [c0092048] filp_close+0x70/0xb0
+[e233bf30] [c009211c] sys_close+0x94/0xc0
+[e233bf40] [c000f784] ret_from_syscall+0x0/0x3c
+Instruction dump:
+7fa5eb78 4bffdf59 7c7c1b79 40a2ffd4 801d0000 2f800000 419e0064 57c9103a
+7f83e378 7d29fa14 80090050 90170000 <90190000> 80010044 bae1001c 38210040
+---[ end trace 069fbb7d042289d2 ]---
 
-add sectorsize to the device topology info, and use that if present.
+According to the above call trace, I checked the source code and found
+that it may be invoked by xfs_btree_make_block_unfull function in
+fs/xfs/xfs_btree.c:
 
-Also check that explicitly requested sector sizes are not smaller
-than the hardware size.  This already fails today, but with the more
-cryptic "cannot set blocksize" ioctl error above.
+2641
+2642         if (*stat) {
+2643                 *oindex = *index = cur->bc_ptrs[level];
+2644                 return 0;
+2645         }
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+here, oindex is NULL so OOPs occured. I am not a xfs hacker, I hope
+someone can help me fix this BUG, if you need more information, let me
+know.
 
-diff --git a/libxfs/linux.c b/libxfs/linux.c
-index bc49903..2e07d54 100644
---- a/libxfs/linux.c
-+++ b/libxfs/linux.c
-@@ -112,9 +112,9 @@ platform_set_blocksize(int fd, char *path, dev_t device, int blocksize, int fata
- 	if (major(device) != RAMDISK_MAJOR) {
- 		if ((error = ioctl(fd, BLKBSZSET, &blocksize)) < 0) {
- 			fprintf(stderr, _("%s: %s - cannot set blocksize "
--					"on block device %s: %s\n"),
-+					"%d on block device %s: %s\n"),
- 				progname, fatal ? "error": "warning",
--				path, strerror(errno));
-+				blocksize, path, strerror(errno));
- 		}
- 	}
- 	return error;
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index bd92bc0..be8271e 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -33,6 +33,7 @@ struct fs_topology {
- 	int	dsunit;		/* stripe unit - data subvolume */
- 	int	dswidth;	/* stripe width - data subvolume */
- 	int	rtswidth;	/* stripe width - rt subvolume */
-+	int	sectorsize;
- 	int	sectoralign;
- };
- 
-@@ -320,7 +321,7 @@ out_free_probe:
- 	return ret;
- }
- 
--static void blkid_get_topology(const char *device, int *sunit, int *swidth)
-+static void blkid_get_topology(const char *device, int *sunit, int *swidth, int *sectorsize)
- {
- 	blkid_topology tp;
- 	blkid_probe pr;
-@@ -348,7 +349,9 @@ static void blkid_get_topology(const char *device, int *sunit, int *swidth)
- 	val = blkid_topology_get_optimal_io_size(tp) >> 9;
- 	if (val > 1)
- 		*swidth = val;
--
-+	val = blkid_probe_get_sectorsize(pr);
-+	if (val > 1)
-+		*sectorsize = val;
- 	if (blkid_topology_get_alignment_offset(tp) != 0) {
- 		fprintf(stderr,
- 			_("warning: device is not properly aligned %s\n"),
-@@ -370,13 +373,13 @@ static void get_topology(libxfs_init_t *xi, struct fs_topology *ft)
- 	if (!xi->disfile) {
- 		const char *dfile = xi->volname ? xi->volname : xi->dname;
- 
--		blkid_get_topology(dfile, &ft->dsunit, &ft->dswidth);
-+		blkid_get_topology(dfile, &ft->dsunit, &ft->dswidth, &ft->sectorsize);
- 	}
- 
- 	if (xi->rtname && !xi->risfile) {
- 		int dummy;
- 
--		blkid_get_topology(xi->rtname, &dummy, &ft->rtswidth);
-+		blkid_get_topology(xi->rtname, &dummy, &ft->rtswidth, &dummy);
- 	}
- }
- #else /* ENABLE_BLKID */
-@@ -1543,8 +1546,15 @@ main(
- 	memset(&ft, 0, sizeof(ft));
- 	get_topology(&xi, &ft);
- 
--	if (ft.sectoralign) {
--		sectorsize = blocksize;
-+	/*
-+	 * MD wants sector size set == block size to avoid switching.
-+	 * Otherwise, if not specfied via command, use device sectorsize
-+	 */
-+	if (ft.sectoralign || !ssflag) {
-+		if (ft.sectoralign)
-+			sectorsize = blocksize;
-+		else
-+			sectorsize = ft.sectorsize;
- 		sectorlog = libxfs_highbit32(sectorsize);
- 		if (loginternal) {
- 			lsectorsize = sectorsize;
-@@ -1556,6 +1566,11 @@ main(
- 		fprintf(stderr, _("illegal sector size %d\n"), sectorsize);
- 		usage();
- 	}
-+	if (sectorsize < ft.sectorsize) {
-+		fprintf(stderr, _("illegal sector size %d; hw sector is %d\n"),
-+			sectorsize, ft.sectorsize);
-+		usage();
-+	}
- 	if (lsectorsize < XFS_MIN_SECTORSIZE ||
- 	    lsectorsize > XFS_MAX_SECTORSIZE || lsectorsize > blocksize) {
- 		fprintf(stderr, _("illegal log sector size %d\n"), lsectorsize);
-@@ -1749,10 +1764,10 @@ main(
- 	calc_stripe_factors(dsu, dsw, sectorsize, lsu, lsectorsize,
- 				&dsunit, &dswidth, &lsunit);
- 
--	if (slflag || ssflag)
-+	if (slflag || ssflag || ft.setorsize)
- 		xi.setblksize = sectorsize;
- 	else
--		xi.setblksize = 1;
-+		xi.setblksize = 1; /* Use default sector size */
- 
- 	/*
- 	 * Initialize.  This will open the log and rt devices as well.
+-- 
+The simplest is not all best but the best is surely the simplest!
 
 _______________________________________________
 xfs mailing list
