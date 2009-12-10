@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nBAN2kUk123839 for <xfs@oss.sgi.com>; Thu, 10 Dec 2009 17:02:46 -0600
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B69A0E9779
-	for <xfs@oss.sgi.com>; Thu, 10 Dec 2009 15:03:21 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 13jLxs9RFLZzasFF for
-	<xfs@oss.sgi.com>; Thu, 10 Dec 2009 15:03:21 -0800 (PST)
-Message-ID: <4B217E31.70107@sandeen.net>
-Date: Thu, 10 Dec 2009 17:03:13 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	nBANOv0F125657 for <xfs@oss.sgi.com>; Thu, 10 Dec 2009 17:24:58 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B4D3DE969A
+	for <xfs@oss.sgi.com>; Thu, 10 Dec 2009 15:25:32 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	iNodp7tCiWmoUcyS for <xfs@oss.sgi.com>;
+	Thu, 10 Dec 2009 15:25:32 -0800 (PST)
+Date: Fri, 11 Dec 2009 10:25:29 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/6] [XFS] rename xfs_get_perag
+Message-ID: <20091210232529.GD30608@discord.disaster>
+References: <1259734299-20306-1-git-send-email-david@fromorbit.com>
+	<1259734299-20306-2-git-send-email-david@fromorbit.com>
+	<20091210231511.GA6389@infradead.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_io: update bmap help text
-References: <4B216FCF.5010108@sandeen.net>
-	<20091210224408.GB30608@discord.disaster>
-In-Reply-To: <20091210224408.GB30608@discord.disaster>
+Content-Disposition: inline
+In-Reply-To: <20091210231511.GA6389@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,37 +31,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs mailing list <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Dave Chinner wrote:
-> On Thu, Dec 10, 2009 at 04:01:51PM -0600, Eric Sandeen wrote:
->> Trivial addition of missing argument help text.
->>
->> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
->> ---
->>
->> iff --git a/io/bmap.c b/io/bmap.c
->> index f79cf8c..5c4cf48 100644
->> --- a/io/bmap.c
->> +++ b/io/bmap.c
->> @@ -43,6 +43,9 @@ bmap_help(void)
->>  " -a -- prints the attribute fork map instead of the data fork.\n"
->>  " -d -- suppresses a DMAPI read event, offline portions shown as holes.\n"
->>  " -l -- also displays the length of each extent in 512-byte blocks.\n"
->> +" -n -- query n extents.\n"
->> +" -p -- obtain all unwritten extents as well (w/ -v show which are unwritten.\n"
+On Thu, Dec 10, 2009 at 06:15:11PM -0500, Christoph Hellwig wrote:
+> On Wed, Dec 02, 2009 at 05:11:34PM +1100, Dave Chinner wrote:
+> > xfs_get_perag is really getting the perag that an inode
+> > belongs to based on it's inode number. Rename it appropriately
+> > so we can use xfs_perag_get() to get the perag from a
+> > provided ag number.
 > 
-> Closing ')"?
+> It does quite a bit more than the description suggests.  I also uses the
+> new xfs_get_perag in some places and passes the perag around a bit more.
 
-details details!  ;)  And with that I have your review? :)
+True - the patch grew beyond it's initial description...
 
-Thanks,
--Eric
+> Might be worth splitting or at least needs a better description.
 
-> Cheers,
-> 
-> Dave.
+Better description. ;)
+
+> Also I'm not sure the new xfs_perag_get_from_ino is actually all that useful,
+> opencoding it is more descriptive and barely longer.
+
+Ok, I'll redo it and open code all these as well.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
