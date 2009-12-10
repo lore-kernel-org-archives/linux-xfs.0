@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nBANjC6w127429 for <xfs@oss.sgi.com>; Thu, 10 Dec 2009 17:45:13 -0600
+	nBANm00t127599 for <xfs@oss.sgi.com>; Thu, 10 Dec 2009 17:48:01 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3E11ADFAB6D
-	for <xfs@oss.sgi.com>; Thu, 10 Dec 2009 15:45:48 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D86321956578
+	for <xfs@oss.sgi.com>; Thu, 10 Dec 2009 15:48:36 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id ojuGLcBs3ncoIOJG for
-	<xfs@oss.sgi.com>; Thu, 10 Dec 2009 15:45:48 -0800 (PST)
-Date: Thu, 10 Dec 2009 18:45:47 -0500
+	by cuda.sgi.com with ESMTP id UDB1TKDmO3BgEuJp for
+	<xfs@oss.sgi.com>; Thu, 10 Dec 2009 15:48:36 -0800 (PST)
+Date: Thu, 10 Dec 2009 18:48:36 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 5/6] [XFS] Replace per-ag array with a radix tree
-Message-ID: <20091210234547.GA28289@infradead.org>
+Subject: Re: [PATCH 6/6] [XFS] Reference count per-ag structures
+Message-ID: <20091210234836.GA4774@infradead.org>
 References: <1259734299-20306-1-git-send-email-david@fromorbit.com>
-	<1259734299-20306-6-git-send-email-david@fromorbit.com>
+	<1259734299-20306-7-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1259734299-20306-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <1259734299-20306-7-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,98 +32,96 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Dec 02, 2009 at 05:11:38PM +1100, Dave Chinner wrote:
-> -		down_read(&mp->m_peraglock);
-> +		pag = xfs_perag_get(mp, ag);
->  		while (blen < ap->alen) {
-> -			pag = xfs_perag_get(mp, ag);
->  			if (!pag->pagf_init &&
->  			    (error = xfs_alloc_pagf_init(mp, args.tp,
->  				    ag, XFS_ALLOC_FLAG_TRYLOCK))) {
->  				xfs_perag_put(pag);
-> -				up_read(&mp->m_peraglock);
->  				return error;
+On Wed, Dec 02, 2009 at 05:11:39PM +1100, Dave Chinner wrote:
+> Reference count the per-ag structures to ensure that we keep get/put
+> pairs balanced. Assert that the reference counts are zero at unmount
+> time to catch leaks. In future, reference counts will enable us to
+> safely remove perag structures by allowing us to detect when they
+> are no longer in use.
+> 
+> Signed-off-by: Dave Chinner <david@fromorbit.com>
+> ---
+>  fs/xfs/xfs_ag.h    |    4 ++--
+>  fs/xfs/xfs_alloc.c |    2 +-
+>  fs/xfs/xfs_inode.c |    5 ++++-
+>  fs/xfs/xfs_mount.c |    1 +
+>  fs/xfs/xfs_mount.h |   11 +++++++++--
+>  5 files changed, 17 insertions(+), 6 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_ag.h b/fs/xfs/xfs_ag.h
+> index a5d54bf..b384a3c 100644
+> --- a/fs/xfs/xfs_ag.h
+> +++ b/fs/xfs/xfs_ag.h
+
+> index 2d076e2..d1349b1 100644
+> --- a/fs/xfs/xfs_alloc.c
+> +++ b/fs/xfs/xfs_alloc.c
+> @@ -2545,7 +2545,6 @@ xfs_alloc_vextent(
 >  			}
->  			/*
-> @@ -2801,7 +2799,6 @@ xfs_bmap_btalloc(
->  			} else
->  				notinit = 1;
->  
-> -			xfs_perag_put(pag);
+>  			xfs_perag_put(args->pag);
+>  		}
+> -		xfs_perag_put(args->pag);
+>  		if (bump_rotor || (type == XFS_ALLOCTYPE_ANY_AG)) {
+>  			if (args->agno == sagno)
+>  				mp->m_agfrotor = (mp->m_agfrotor + 1) %
+> @@ -2571,6 +2570,7 @@ xfs_alloc_vextent(
+>  			args->len);
+>  #endif
+>  	}
+> +	xfs_perag_put(args->pag);
+>  	return 0;
+>  error0:
+>  	xfs_perag_put(args->pag);
 
-There's a lot of those xfs_perag_get/put moved around here.  Having
-those merged into the patch that adds them would be a lot cleaner.
-
-> +	/* allocate the new per-ag structures */
->  	if (nagcount > oagcount) {
-> +		/* XXX: (dgc) We don't need the filestream flush anymore? */
->  		xfs_filestream_flush(mp);
-
-What was the reason to have it in the first time?
-
-> index 3727104..d6de63d 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -207,13 +207,17 @@ STATIC void
->  xfs_free_perag(
->  	xfs_mount_t	*mp)
->  {
-> +	xfs_agnumber_t	agno;
-> +	struct xfs_perag *pag;
-> +
-> +	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
-> +		spin_lock(&mp->m_perag_lock);
-> +		pag = radix_tree_delete(&mp->m_perag_tree, agno);
-> +		spin_unlock(&mp->m_perag_lock);
-> +		if (!pag)
-> +			continue;
-
-Shouldn't this be a BUG_ON/ASSERT?
-
-> +	/*
-> +	 * Walk the current per-ag tree so we don't try to initialise AGs
-> +	 * that already exist (growfs case). Allocate and insert all the
-> +	 * AGs we don't find ready for initialisation.
-> +	 */
-> +	for (index = 0; index < agcount; index++) {
-> +		pag = xfs_perag_get(mp, index);
-> +		if (pag) {
-> +			xfs_perag_put(pag);
-> +			continue;
-> +		}
-> +		pag = kmem_zalloc(sizeof(*pag), KM_MAYFAIL);
-> +		if (!pag)
-> +			return -ENOMEM;
-> +		if (radix_tree_preload(GFP_NOFS))
-> +			return -ENOMEM;
-
-Leaks the pag object on failure.
-
->  	mp->m_maxagi = xfs_initialize_perag(mp, sbp->sb_agcount);
-> +	if ((int)mp->m_maxagi < 0) {
-> +		cmn_err(CE_WARN, "XFS: Failed per-ag initialisation: %d",
-> +				(int)mp->m_maxagi);
-> +		error = mp->m_maxagi;
+Should be folded into the earlier patches.
 >
-Just assign it to error first and then later to mp->m_maxagi to avoid
-the cast?
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 44a1168..e6c178e 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -2729,7 +2729,7 @@ xfs_iflush_cluster(
+>  	ilist_size = inodes_per_cluster * sizeof(xfs_inode_t *);
+>  	ilist = kmem_alloc(ilist_size, KM_MAYFAIL|KM_NOFS);
+>  	if (!ilist)
+> -		return 0;
+> +		goto out_put;
+>  
+>  	mask = ~(((XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_inodelog)) - 1);
+>  	first_index = XFS_INO_TO_AGINO(mp, ip->i_ino) & mask;
+> @@ -2798,6 +2798,8 @@ xfs_iflush_cluster(
+>  out_free:
+>  	read_unlock(&pag->pag_ici_lock);
+>  	kmem_free(ilist);
+> +out_put:
+> +	xfs_perag_put(pag);
+>  	return 0;
+>  
+>  
+> @@ -2841,6 +2843,7 @@ cluster_corrupt_out:
+>  	 */
+>  	xfs_iflush_abort(iq);
+>  	kmem_free(ilist);
+> +	xfs_perag_put(pag);
+>  	return XFS_ERROR(EFSCORRUPTED);
+
+Same here.
 
 >  static inline xfs_perag_t *
 >  xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t agno)
->  {
-> -	return &mp->m_perag[agno];
-> +	struct xfs_perag	*pag;
-> +
-> +	spin_lock(&mp->m_perag_lock);
-> +	pag = radix_tree_lookup(&mp->m_perag_tree, agno);
-> +	spin_unlock(&mp->m_perag_lock);
-> +	return pag;
+> @@ -393,6 +393,12 @@ xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t agno)
+>  
+>  	spin_lock(&mp->m_perag_lock);
+>  	pag = radix_tree_lookup(&mp->m_perag_tree, agno);
+> +	if (pag) {
+> +		ASSERT(atomic_read(&pag->pag_ref) >= 0);
+> +		/* catch leaks in the positive direction during testing */
+> +		ASSERT(atomic_read(&pag->pag_ref) < 1000);
 
-Can't we do this as a lock-less (at least for lookups) radix tree?
+Is there any good reason why we should not be able to hit this number?
 
-And btw, I think we should still have a global sleeping lock to
-serialize the whole growfs operation against other potentional growfs
-callers.
+
+Patch looks good, although I'm a bit worried about the performance
+overhead.
 
 _______________________________________________
 xfs mailing list
