@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nBA9iFtX068165 for <xfs@oss.sgi.com>; Thu, 10 Dec 2009 03:44:15 -0600
-Received: from qw-out-2122.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8D3AD1949013
-	for <xfs@oss.sgi.com>; Thu, 10 Dec 2009 01:44:49 -0800 (PST)
-Received: from qw-out-2122.google.com (qw-out-2122.google.com [74.125.92.25])
-	by cuda.sgi.com with ESMTP id c4CTQbhiaBkYDzN7 for
-	<xfs@oss.sgi.com>; Thu, 10 Dec 2009 01:44:49 -0800 (PST)
-Received: by qw-out-2122.google.com with SMTP id 9so1384527qwb.63
-	for <xfs@oss.sgi.com>; Thu, 10 Dec 2009 01:44:48 -0800 (PST)
+	nBAM1K26119155 for <xfs@oss.sgi.com>; Thu, 10 Dec 2009 16:01:20 -0600
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 01457194BA6A
+	for <xfs@oss.sgi.com>; Thu, 10 Dec 2009 14:01:54 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id AW6dELUAbrau9DXa for
+	<xfs@oss.sgi.com>; Thu, 10 Dec 2009 14:01:54 -0800 (PST)
+Received: from int-mx05.intmail.prod.int.phx2.redhat.com
+	(int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.18])
+	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id nBAM1rvc023298
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Thu, 10 Dec 2009 17:01:53 -0500
+Received: from neon.msp.redhat.com (neon.msp.redhat.com [10.15.80.10])
+	by int-mx05.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
+	id nBAM1paj028616
+	for <xfs@oss.sgi.com>; Thu, 10 Dec 2009 17:01:53 -0500
+Message-ID: <4B216FCF.5010108@sandeen.net>
+Date: Thu, 10 Dec 2009 16:01:51 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <4B204334.1000605@shiftmail.org>
-References: <4B204334.1000605@shiftmail.org>
-From: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
-Date: Thu, 10 Dec 2009 09:44:28 +0000
-Message-ID: <73e903670912100144k2675754n2ef688a944364b42@mail.gmail.com>
-Subject: Re: Disappointing performance of copy (MD raid + XFS)
+Subject: [PATCH] xfs_io: update bmap help text
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,27 +34,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Asdo <asdo@shiftmail.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com
+To: xfs mailing list <xfs@oss.sgi.com>
 
-On Thu, Dec 10, 2009 at 12:39 AM, Asdo <asdo@shiftmail.org> wrote:
-> Hi all,
->
-> I'm copying a bagzillion of files (14TB) from a 26disk MD-raid 6 array to a
-> 16disk MD-raid 6 array.
-> Filesystems are XFS for both arrays.
-> Kernel is 2.6.31 ubuntu generic-14
-> Performance is very disappointing, going from 150MB/sec to 22MB/sec
-> depending apparently to the size of files it encounters. 150MB/sec is when
-> files are 40-80MB in size, 22MB/sec is when files are 1MB in size on
-> average, and I think I have seen around 10MB/sec when they are of 500KB
-> (this transfer at 10MB/sec was in parallel with another faster one however).
+Trivial addition of missing argument help text.
 
-This may not be related, but I have had some general problems
-regarding transfer rates in Ubuntu. Using a vanilla kernel seemed to
-help: http://kernel.ubuntu.com/~kernel-ppa/mainline/
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
 
--- Kristleifur
+iff --git a/io/bmap.c b/io/bmap.c
+index f79cf8c..5c4cf48 100644
+--- a/io/bmap.c
++++ b/io/bmap.c
+@@ -43,6 +43,9 @@ bmap_help(void)
+ " -a -- prints the attribute fork map instead of the data fork.\n"
+ " -d -- suppresses a DMAPI read event, offline portions shown as holes.\n"
+ " -l -- also displays the length of each extent in 512-byte blocks.\n"
++" -n -- query n extents.\n"
++" -p -- obtain all unwritten extents as well (w/ -v show which are unwritten.\n"
++" -v -- Verbose information, specify ag info.  Show flags legend on 2nd -v\n"
+ " Note: the bmap for non-regular files can be obtained provided the file\n"
+ " was opened appropriately (in particular, must be opened read-only).\n"
+ "\n"));
 
 _______________________________________________
 xfs mailing list
