@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nBA98Jl3065212 for <xfs@oss.sgi.com>; Thu, 10 Dec 2009 03:08:21 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5717A1948CCD
-	for <xfs@oss.sgi.com>; Thu, 10 Dec 2009 01:08:54 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id DBc9ZNpgmqPwMqS1 for
-	<xfs@oss.sgi.com>; Thu, 10 Dec 2009 01:08:54 -0800 (PST)
-Date: Thu, 10 Dec 2009 04:08:54 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs_fsr: don't create ag temp subdirs with mode 0777
-Message-ID: <20091210090854.GA29653@infradead.org>
-References: <4B2073D1.1040809@sandeen.net>
+	nBA9iFtX068165 for <xfs@oss.sgi.com>; Thu, 10 Dec 2009 03:44:15 -0600
+Received: from qw-out-2122.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8D3AD1949013
+	for <xfs@oss.sgi.com>; Thu, 10 Dec 2009 01:44:49 -0800 (PST)
+Received: from qw-out-2122.google.com (qw-out-2122.google.com [74.125.92.25])
+	by cuda.sgi.com with ESMTP id c4CTQbhiaBkYDzN7 for
+	<xfs@oss.sgi.com>; Thu, 10 Dec 2009 01:44:49 -0800 (PST)
+Received: by qw-out-2122.google.com with SMTP id 9so1384527qwb.63
+	for <xfs@oss.sgi.com>; Thu, 10 Dec 2009 01:44:48 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4B2073D1.1040809@sandeen.net>
+In-Reply-To: <4B204334.1000605@shiftmail.org>
+References: <4B204334.1000605@shiftmail.org>
+From: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
+Date: Thu, 10 Dec 2009 09:44:28 +0000
+Message-ID: <73e903670912100144k2675754n2ef688a944364b42@mail.gmail.com>
+Subject: Re: Disappointing performance of copy (MD raid + XFS)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,23 +29,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Asdo <asdo@shiftmail.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com
 
-On Wed, Dec 09, 2009 at 10:06:41PM -0600, Eric Sandeen wrote:
-> This addresses Debian bug #559490 - xfsdump: fsr creates files mode 666
-> 
-> I think that this mode is left over from when xfs_fsr used to
-> fork into the uid of the file's owner, and so needed somewhere
-> it was guaranteed to be able to write.
-> 
-> This behavior was removed in commit d51b892411c8d33374a02e20c5888df280811549
-> (in the xfsdump tree, before xfs_fsr got moved) and so these
-> wide-open permissions should no longer be needed.
+On Thu, Dec 10, 2009 at 12:39 AM, Asdo <asdo@shiftmail.org> wrote:
+> Hi all,
+>
+> I'm copying a bagzillion of files (14TB) from a 26disk MD-raid 6 array to a
+> 16disk MD-raid 6 array.
+> Filesystems are XFS for both arrays.
+> Kernel is 2.6.31 ubuntu generic-14
+> Performance is very disappointing, going from 150MB/sec to 22MB/sec
+> depending apparently to the size of files it encounters. 150MB/sec is when
+> files are 40-80MB in size, 22MB/sec is when files are 1MB in size on
+> average, and I think I have seen around 10MB/sec when they are of 500KB
+> (this transfer at 10MB/sec was in parallel with another faster one however).
 
-Looks good to me,
+This may not be related, but I have had some general problems
+regarding transfer rates in Ubuntu. Using a vanilla kernel seemed to
+help: http://kernel.ubuntu.com/~kernel-ppa/mainline/
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+-- Kristleifur
 
 _______________________________________________
 xfs mailing list
