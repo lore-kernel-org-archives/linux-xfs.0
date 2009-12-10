@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nBA469Za038077 for <xfs@oss.sgi.com>; Wed, 9 Dec 2009 22:06:10 -0600
+	nBA4FxSf038673 for <xfs@oss.sgi.com>; Wed, 9 Dec 2009 22:15:59 -0600
 Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 93D5ADF1696
-	for <xfs@oss.sgi.com>; Wed,  9 Dec 2009 20:06:43 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 88D6119481C1
+	for <xfs@oss.sgi.com>; Wed,  9 Dec 2009 20:16:33 -0800 (PST)
 Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id PBEHzLhKJfk4EwuX for
-	<xfs@oss.sgi.com>; Wed, 09 Dec 2009 20:06:43 -0800 (PST)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail.sandeen.net (Postfix) with ESMTP id 4C2A7936E39
-	for <xfs@oss.sgi.com>; Wed,  9 Dec 2009 22:06:41 -0600 (CST)
-Message-ID: <4B2073D1.1040809@sandeen.net>
-Date: Wed, 09 Dec 2009 22:06:41 -0600
+	cuda.sgi.com with ESMTP id 28N89T5gwZjk7s1E for
+	<xfs@oss.sgi.com>; Wed, 09 Dec 2009 20:16:33 -0800 (PST)
+Message-ID: <4B207620.3060605@sandeen.net>
+Date: Wed, 09 Dec 2009 22:16:32 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] xfs_fsr: don't create ag temp subdirs with mode 0777
+Subject: Re: Disappointing performance of copy (MD raid + XFS)
+References: <4B204334.1000605@shiftmail.org>
+In-Reply-To: <4B204334.1000605@shiftmail.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,39 +27,80 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Asdo <asdo@shiftmail.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com
 
-This addresses Debian bug #559490 - xfsdump: fsr creates files mode 666
+Asdo wrote:
+> Hi all,
+> 
+> I'm copying a bagzillion of files (14TB) from a 26disk MD-raid 6 array
+> to a 16disk MD-raid 6 array.
+> Filesystems are XFS for both arrays.
+> Kernel is 2.6.31 ubuntu generic-14
+> Performance is very disappointing, going from 150MB/sec to 22MB/sec
+> depending apparently to the size of files it encounters. 150MB/sec is
+> when files are 40-80MB in size, 22MB/sec is when files are 1MB in size
+> on average, and I think I have seen around 10MB/sec when they are of
+> 500KB (this transfer at 10MB/sec was in parallel with another faster one
+> however).
+> Doing multiple rsync transfers simultaneously for different files of the
+> filesystem does increase the speed, up to a point however, and even
+> launching 5 of them I am not able to bring it above 150MB/sec (that's
+> the average: it's actually very unstable).
+> 
+> Already tried tweaking: stripe_cache_size, readahead, elevator type and
+> its parameters, increasing elevator queue length, some parameters in
+> /proc/sys/fs/xfs (randomly without understanding much of the xfs params
+> actually), and /proc/sys/vm/*dirty* parameters .
+> Mount options for destination initially were defaults, then I tried to
+> change them via remount to rw,nodiratime,relatime,largeio but without
+> much improvements.
 
-I think that this mode is left over from when xfs_fsr used to
-fork into the uid of the file's owner, and so needed somewhere
-it was guaranteed to be able to write.
+A few things come to mind.
 
-This behavior was removed in commit d51b892411c8d33374a02e20c5888df280811549
-(in the xfsdump tree, before xfs_fsr got moved) and so these
-wide-open permissions should no longer be needed.
+For large filesystems such as this, xfs restricts inode locations such that
+inode numbers will stay below 32 bits (the number reflects the disk location).
+This has the tendency to skew inodes & data away from each other, and copying
+a lot of little files will probably get plenty seeky for you.  This may explain
+why little files are so much slower than larger ones.
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-Reviewed-by: Nathan Scott <nscott@aconex.com>
----
+If you mount with -o inode64, new inodes are free to roam the filesystem, and
+stay nearer to their data blocks.  This won't help on the read side though
+if you've got an existing filesystem.  Note that not all 32-bit applications
+cope well with > 32-bit inode numbers, though.
 
-(Note: I already got a review from Nathan, so barring any complaint
-I'll push this to the xfsprogs-dev tree soon.)
+Also, you need to be sure that your filesystem geometry is well-aligned to
+the raid geometry, but if this is MD software raid, that should have happened
+automatically.
 
-diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-index 253a55d..21f08c3 100644
---- a/fsr/xfs_fsr.c
-+++ b/fsr/xfs_fsr.c
-@@ -1541,7 +1541,7 @@ tmp_init(char *mnt)
- 	}
- 	for (i=0; i < fsgeom.agcount; i++) {
- 		sprintf(buf, "%s/.fsr/ag%d", mnt, i);
--		if (mkdir(buf, 0777) < 0) {
-+		if (mkdir(buf, 0700) < 0) {
- 			if (errno == EEXIST) {
- 				if (dflag)
- 					fsrprintf(
+You might also want to see how fragmented your source files are; if they
+are highly fragmented, this would reduce performance as you seek around to
+get to the pieces.  xfs_bmap will tell you this info.
 
+You might try running blktrace on the source & target block devices to see
+what your IOs look like; you can use seekwatcher to graph the results
+(or just use seekwatcher to run the whole show).  Nasty IO patterns could
+certainly kill performance.
+
+You might also try each piece; see how fast your reads can go, and your
+writes, independently.
+
+-Eric
+
+> The above are the best results I could obtain.
+> 
+> Firstly I tried copying with cp and then with rsync. Not much difference
+> between the two.
+> 
+> Rsync is nicer to monitor because it splits in 2 processes, one reads
+> only, the other one only writes.
+> 
+> So I have repeatedly catted /proc/pid/stack for the reader and writer
+> processes: the *writer* is the bottleneck, and 90% of the times it is
+> stuck in one of the following stacktraces:
+> 
+
+...
 
 _______________________________________________
 xfs mailing list
