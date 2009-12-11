@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nBB0hMAt131210 for <xfs@oss.sgi.com>; Thu, 10 Dec 2009 18:43:23 -0600
+	nBB0nYu1131681 for <xfs@oss.sgi.com>; Thu, 10 Dec 2009 18:49:34 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D2E51DFB387
-	for <xfs@oss.sgi.com>; Thu, 10 Dec 2009 16:43:56 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	8HFSqufaYpGkMHFB for <xfs@oss.sgi.com>;
-	Thu, 10 Dec 2009 16:43:56 -0800 (PST)
-Date: Fri, 11 Dec 2009 11:43:53 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A40651956542
+	for <xfs@oss.sgi.com>; Thu, 10 Dec 2009 16:50:07 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	vaXNGVjUM9GZ8bF7 for <xfs@oss.sgi.com>;
+	Thu, 10 Dec 2009 16:50:07 -0800 (PST)
+Date: Fri, 11 Dec 2009 11:50:04 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 5/6] [XFS] Replace per-ag array with a radix tree
-Message-ID: <20091211004353.GF30608@discord.disaster>
+Subject: Re: [PATCH 6/6] [XFS] Reference count per-ag structures
+Message-ID: <20091211005004.GG30608@discord.disaster>
 References: <1259734299-20306-1-git-send-email-david@fromorbit.com>
-	<1259734299-20306-6-git-send-email-david@fromorbit.com>
-	<20091210234547.GA28289@infradead.org>
+	<1259734299-20306-7-git-send-email-david@fromorbit.com>
+	<20091210234836.GA4774@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20091210234547.GA28289@infradead.org>
+In-Reply-To: <20091210234836.GA4774@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,81 +27,66 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-T24gVGh1LCBEZWMgMTAsIDIwMDkgYXQgMDY6NDU6NDdQTSAtMDUwMCwgQ2hyaXN0b3BoIEhlbGx3
-aWcgd3JvdGU6Cj4gT24gV2VkLCBEZWMgMDIsIDIwMDkgYXQgMDU6MTE6MzhQTSArMTEwMCwgRGF2
-ZSBDaGlubmVyIHdyb3RlOgo+ID4gLQkJZG93bl9yZWFkKCZtcC0+bV9wZXJhZ2xvY2spOwo+ID4g
-KwkJcGFnID0geGZzX3BlcmFnX2dldChtcCwgYWcpOwo+ID4gIAkJd2hpbGUgKGJsZW4gPCBhcC0+
-YWxlbikgewo+ID4gLQkJCXBhZyA9IHhmc19wZXJhZ19nZXQobXAsIGFnKTsKPiA+ICAJCQlpZiAo
-IXBhZy0+cGFnZl9pbml0ICYmCj4gPiAgCQkJICAgIChlcnJvciA9IHhmc19hbGxvY19wYWdmX2lu
-aXQobXAsIGFyZ3MudHAsCj4gPiAgCQkJCSAgICBhZywgWEZTX0FMTE9DX0ZMQUdfVFJZTE9DSykp
-KSB7Cj4gPiAgCQkJCXhmc19wZXJhZ19wdXQocGFnKTsKPiA+IC0JCQkJdXBfcmVhZCgmbXAtPm1f
-cGVyYWdsb2NrKTsKPiA+ICAJCQkJcmV0dXJuIGVycm9yOwo+ID4gIAkJCX0KPiA+ICAJCQkvKgo+
-ID4gQEAgLTI4MDEsNyArMjc5OSw2IEBAIHhmc19ibWFwX2J0YWxsb2MoCj4gPiAgCQkJfSBlbHNl
-Cj4gPiAgCQkJCW5vdGluaXQgPSAxOwo+ID4gIAo+ID4gLQkJCXhmc19wZXJhZ19wdXQocGFnKTsK
-PiAKPiBUaGVyZSdzIGEgbG90IG9mIHRob3NlIHhmc19wZXJhZ19nZXQvcHV0IG1vdmVkIGFyb3Vu
-ZCBoZXJlLiAgSGF2aW5nCj4gdGhvc2UgbWVyZ2VkIGludG8gdGhlIHBhdGNoIHRoYXQgYWRkcyB0
-aGVtIHdvdWxkIGJlIGEgbG90IGNsZWFuZXIuCgpPSywgSSdsbCBjbGVhbiBhbGwgdGhvc2UgdXAg
-aW50byB0aGUgaW5pdGlhbCBjb3VwbGUgb2YgcGF0Y2hlcy4KCj4gPiArCS8qIGFsbG9jYXRlIHRo
-ZSBuZXcgcGVyLWFnIHN0cnVjdHVyZXMgKi8KPiA+ICAJaWYgKG5hZ2NvdW50ID4gb2FnY291bnQp
-IHsKPiA+ICsJCS8qIFhYWDogKGRnYykgV2UgZG9uJ3QgbmVlZCB0aGUgZmlsZXN0cmVhbSBmbHVz
-aCBhbnltb3JlPyAqLwo+ID4gIAkJeGZzX2ZpbGVzdHJlYW1fZmx1c2gobXApOwo+IAo+IFdoYXQg
-d2FzIHRoZSByZWFzb24gdG8gaGF2ZSBpdCBpbiB0aGUgZmlyc3QgdGltZT8KCkZpbGVzdHJlYW1z
-IGtlZXBzIHJlZmVyZW5jZSBjb3VudHMgYW5kIHN0YXRlIG9uIHRoZSBwZXItYWcKc3RydWN0dXJl
-LiBJZiBpdCB3YXMgdG8gYmUgcmUtYWxsb2NhdGVkLCB0aGVuIGFsbCB0aGUgcmVmZXJlbmNlcyBo
-YWQKdG8gYmUgZHJvcHBlZCBiZWZvcmUgcmVhbGxvY2F0aW9uLCBoZW5jZSB0aGUgZmx1c2guIE5v
-dyB0aGVyZSBpcwpubyByZWFsbG9jYXRpb24sIEkgZG9uJ3QgdGhpbmsgd2UgbmVlZCB0aGUgZmx1
-c2ggYW55bW9yZS4gUmVtb3ZpbmcKaXQgYWxzbyBtZWFucyB1cGRhdGluZyBjb21tZW50cyBpbiB0
-aGUgZmlsZXN0cmVhbSBjb2RlLCBzbyBJIHdhcwpnb2luZyB0byBkbyBhbGwgdGhhdCBpbiBhIHN1
-YnNlcXVlbnQgcGF0Y2guLi4uCgoKPiA+IGluZGV4IDM3MjcxMDQuLmQ2ZGU2M2QgMTAwNjQ0Cj4g
-PiAtLS0gYS9mcy94ZnMveGZzX21vdW50LmMKPiA+ICsrKyBiL2ZzL3hmcy94ZnNfbW91bnQuYwo+
-ID4gQEAgLTIwNywxMyArMjA3LDE3IEBAIFNUQVRJQyB2b2lkCj4gPiAgeGZzX2ZyZWVfcGVyYWco
-Cj4gPiAgCXhmc19tb3VudF90CSptcCkKPiA+ICB7Cj4gPiArCXhmc19hZ251bWJlcl90CWFnbm87
-Cj4gPiArCXN0cnVjdCB4ZnNfcGVyYWcgKnBhZzsKPiA+ICsKPiA+ICsJZm9yIChhZ25vID0gMDsg
-YWdubyA8IG1wLT5tX3NiLnNiX2FnY291bnQ7IGFnbm8rKykgewo+ID4gKwkJc3Bpbl9sb2NrKCZt
-cC0+bV9wZXJhZ19sb2NrKTsKPiA+ICsJCXBhZyA9IHJhZGl4X3RyZWVfZGVsZXRlKCZtcC0+bV9w
-ZXJhZ190cmVlLCBhZ25vKTsKPiA+ICsJCXNwaW5fdW5sb2NrKCZtcC0+bV9wZXJhZ19sb2NrKTsK
-PiA+ICsJCWlmICghcGFnKQo+ID4gKwkJCWNvbnRpbnVlOwo+IAo+IFNob3VsZG4ndCB0aGlzIGJl
-IGEgQlVHX09OL0FTU0VSVD8KClByb2JhYmx5IHNob3VsZCBiZS4gV2lsbCBjaGFuZ2UuCgo+ID4g
-KwkvKgo+ID4gKwkgKiBXYWxrIHRoZSBjdXJyZW50IHBlci1hZyB0cmVlIHNvIHdlIGRvbid0IHRy
-eSB0byBpbml0aWFsaXNlIEFHcwo+ID4gKwkgKiB0aGF0IGFscmVhZHkgZXhpc3QgKGdyb3dmcyBj
-YXNlKS4gQWxsb2NhdGUgYW5kIGluc2VydCBhbGwgdGhlCj4gPiArCSAqIEFHcyB3ZSBkb24ndCBm
-aW5kIHJlYWR5IGZvciBpbml0aWFsaXNhdGlvbi4KPiA+ICsJICovCj4gPiArCWZvciAoaW5kZXgg
-PSAwOyBpbmRleCA8IGFnY291bnQ7IGluZGV4KyspIHsKPiA+ICsJCXBhZyA9IHhmc19wZXJhZ19n
-ZXQobXAsIGluZGV4KTsKPiA+ICsJCWlmIChwYWcpIHsKPiA+ICsJCQl4ZnNfcGVyYWdfcHV0KHBh
-Zyk7Cj4gPiArCQkJY29udGludWU7Cj4gPiArCQl9Cj4gPiArCQlwYWcgPSBrbWVtX3phbGxvYyhz
-aXplb2YoKnBhZyksIEtNX01BWUZBSUwpOwo+ID4gKwkJaWYgKCFwYWcpCj4gPiArCQkJcmV0dXJu
-IC1FTk9NRU07Cj4gPiArCQlpZiAocmFkaXhfdHJlZV9wcmVsb2FkKEdGUF9OT0ZTKSkKPiA+ICsJ
-CQlyZXR1cm4gLUVOT01FTTsKPiAKPiBMZWFrcyB0aGUgcGFnIG9iamVjdCBvbiBmYWlsdXJlLgoK
-R29vZCBjYXRjaC4KCj4gCj4gPiAgCW1wLT5tX21heGFnaSA9IHhmc19pbml0aWFsaXplX3BlcmFn
-KG1wLCBzYnAtPnNiX2FnY291bnQpOwo+ID4gKwlpZiAoKGludCltcC0+bV9tYXhhZ2kgPCAwKSB7
-Cj4gPiArCQljbW5fZXJyKENFX1dBUk4sICJYRlM6IEZhaWxlZCBwZXItYWcgaW5pdGlhbGlzYXRp
-b246ICVkIiwKPiA+ICsJCQkJKGludCltcC0+bV9tYXhhZ2kpOwo+ID4gKwkJZXJyb3IgPSBtcC0+
-bV9tYXhhZ2k7Cj4gPgo+IEp1c3QgYXNzaWduIGl0IHRvIGVycm9yIGZpcnN0IGFuZCB0aGVuIGxh
-dGVyIHRvIG1wLT5tX21heGFnaSB0byBhdm9pZAo+IHRoZSBjYXN0PwoKQWN0dWFsbHksIHRvIGF2
-b2lkIGFsbCBzdWNoIHNpZ24gaXNzdWVzLCBJIHRoaW5rIHRoYXQgbXAtPm1fbWF4YWdpCnNob+KU
-mGxkIGJlIGFzc2lnbmVkIGluIHhmc19pbml0aWFsaXplX3BlcmFnKCkgYW5kIGl0IG9ubHkgcmV0
-dXJucwplcnJvciBvciBzdWNjZXNzLiBEb2VzIHRoYXQgbWFrZSBzZW5zZT8KCj4gPiAgc3RhdGlj
-IGlubGluZSB4ZnNfcGVyYWdfdCAqCj4gPiAgeGZzX3BlcmFnX2dldChzdHJ1Y3QgeGZzX21vdW50
-ICptcCwgeGZzX2FnbnVtYmVyX3QgYWdubykKPiA+ICB7Cj4gPiAtCXJldHVybiAmbXAtPm1fcGVy
-YWdbYWdub107Cj4gPiArCXN0cnVjdCB4ZnNfcGVyYWcJKnBhZzsKPiA+ICsKPiA+ICsJc3Bpbl9s
-b2NrKCZtcC0+bV9wZXJhZ19sb2NrKTsKPiA+ICsJcGFnID0gcmFkaXhfdHJlZV9sb29rdXAoJm1w
-LT5tX3BlcmFnX3RyZWUsIGFnbm8pOwo+ID4gKwlzcGluX3VubG9jaygmbXAtPm1fcGVyYWdfbG9j
-ayk7Cj4gPiArCXJldHVybiBwYWc7Cj4gCj4gQ2FuJ3Qgd2UgZG8gdGhpcyBhcyBhIGxvY2stbGVz
-cyAoYXQgbGVhc3QgZm9yIGxvb2t1cHMpIHJhZGl4IHRyZWU/CgpJIHRoaW5rIGl0IGNhbiBiZSAo
-UkNVLWJhc2VkPykgLCBidXQgSSB0aGluayB0aGF0IG1ha2VzIHNlbnNlIGFzIGEKZm9sbG93dXAg
-b3B0aW1pc2F0aW9uIG9uY2Ugd2UgaGF2ZSBjb25maWRlbmNlIHRoZSBjb2RlIGlzIHdvcmtpbmcK
-YXMgaXQgc2hvdWxkLgoKPiBBbmQgYnR3LCBJIHRoaW5rIHdlIHNob3VsZCBzdGlsbCBoYXZlIGEg
-Z2xvYmFsIHNsZWVwaW5nIGxvY2sgdG8KPiBzZXJpYWxpemUgdGhlIHdob2xlIGdyb3dmcyBvcGVy
-YXRpb24gYWdhaW5zdCBvdGhlciBwb3RlbnRpb25hbCBncm93ZnMKPiBjYWxsZXJzLgoKQWdyZWVk
-IC0gbXAtPm1fZ3Jvd2xvY2sgYWxyZWFkeSBkb2VzIHRoaXMgYW5kIHRoaXMgcGF0Y2ggc2VyaWVz
-IGRpZApub3QgdG91Y2ggaXQgYXQgYWxsIHNvIGl0IHNob3VsZCBzdGlsbCB3b3JrIDspCgpDaGVl
-cnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QK
-eGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Thu, Dec 10, 2009 at 06:48:36PM -0500, Christoph Hellwig wrote:
+> On Wed, Dec 02, 2009 at 05:11:39PM +1100, Dave Chinner wrote:
+> > -		xfs_perag_put(args->pag);
+> >  		if (bump_rotor || (type == XFS_ALLOCTYPE_ANY_AG)) {
+> >  			if (args->agno == sagno)
+> >  				mp->m_agfrotor = (mp->m_agfrotor + 1) %
+> > @@ -2571,6 +2570,7 @@ xfs_alloc_vextent(
+> >  			args->len);
+> >  #endif
+> >  	}
+> > +	xfs_perag_put(args->pag);
+> >  	return 0;
+> >  error0:
+> >  	xfs_perag_put(args->pag);
+> 
+> Should be folded into the earlier patches.
+
+Will do.
+
+> >  static inline xfs_perag_t *
+> >  xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t agno)
+> > @@ -393,6 +393,12 @@ xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t agno)
+> >  
+> >  	spin_lock(&mp->m_perag_lock);
+> >  	pag = radix_tree_lookup(&mp->m_perag_tree, agno);
+> > +	if (pag) {
+> > +		ASSERT(atomic_read(&pag->pag_ref) >= 0);
+> > +		/* catch leaks in the positive direction during testing */
+> > +		ASSERT(atomic_read(&pag->pag_ref) < 1000);
+> 
+> Is there any good reason why we should not be able to hit this number?
+
+that would require 1000 parallel accesses to the perag structure.
+Most accesses are serialised by the AGF/AGI buffer locks, and there
+are only a handful of traversal references that can be made, so I
+don't think that a reference count of more than 10 is going to be
+common in real life.
+
+> Patch looks good, although I'm a bit worried about the performance
+> overhead.
+
+None that I've been able to see so far - effectively we are
+replacing a rwsem with a spin lock and an atomic op, so I think
+the overhead is comparable, perhaps even lower than before.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
