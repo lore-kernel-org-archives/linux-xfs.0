@@ -1,14 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nBB6UH94158778 for <xfs@oss.sgi.com>; Fri, 11 Dec 2009 00:30:17 -0600
-Date: Thu, 10 Dec 2009 22:30:48 -0800 (PST)
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [GIT PULL] XFS update for 2.6.33-rc1
-In-Reply-To: <200912102219.nBAMJRr6028987@stout.americas.sgi.com>
-Message-ID: <alpine.LFD.2.00.0912102228180.3560@localhost.localdomain>
-References: <200912102219.nBAMJRr6028987@stout.americas.sgi.com>
+	nBBBgqvB181525 for <xfs@oss.sgi.com>; Fri, 11 Dec 2009 05:42:54 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C2C0DDFE353
+	for <xfs@oss.sgi.com>; Fri, 11 Dec 2009 03:43:27 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id japDkH5VvWkVmhr3 for
+	<xfs@oss.sgi.com>; Fri, 11 Dec 2009 03:43:27 -0800 (PST)
+Date: Fri, 11 Dec 2009 06:43:25 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 5/6] [XFS] Replace per-ag array with a radix tree
+Message-ID: <20091211114325.GA5436@infradead.org>
+References: <1259734299-20306-1-git-send-email-david@fromorbit.com>
+	<1259734299-20306-6-git-send-email-david@fromorbit.com>
+	<20091210234547.GA28289@infradead.org>
+	<20091211004353.GF30608@discord.disaster>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20091211004353.GF30608@discord.disaster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,53 +31,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
+On Fri, Dec 11, 2009 at 11:43:53AM +1100, Dave Chinner wrote:
+> Filestreams keeps reference counts and state on the per-ag
+> structure. If it was to be re-allocated, then all the references had
+> to be dropped before reallocation, hence the flush. Now there is
+> no reallocation, I don't think we need the flush anymore. Removing
+> it also means updating comments in the filestream code, so I was
+> going to do all that in a subsequent patch....
 
+Ok.
 
-On Thu, 10 Dec 2009, Alex Elder wrote:
+> > Just assign it to error first and then later to mp->m_maxagi to avoid
+> > the cast?
 > 
->   git://oss.sgi.com/xfs/xfs for-linus
+> Actually, to avoid all such sign issues, I think that mp->m_maxagi
+> sho???ld be assigned in xfs_initialize_perag() and it only returns
+> error or success. Does that make sense?
 
-Hmm. There seems to be a lot of duplicate commits there due to something 
-odd going on: rebasing _and_ then merging the rebased end result. IOW, 
-these are all duplicates:
+It does make sense.  Although in the growfs case we currently store the
+maxagi count in a local variable and only set it later.  That might need
+some auditing.
 
-      xfs: cleanup data end I/O handlers
-      xfs: cleanup data end I/O handlers
-      xfs: cleanup dmapi macros in the umount path
-      xfs: cleanup dmapi macros in the umount path
-      xfs: Fix error return for fallocate() on XFS
-      xfs: Fix error return for fallocate() on XFS
-      xfs: fix mmap_sem/iolock inversion in xfs_free_eofblocks
-      xfs: fix mmap_sem/iolock inversion in xfs_free_eofblocks
-      xfs: I/O completion handlers must use NOFS allocations
-      xfs: I/O completion handlers must use NOFS allocations
-      xfs: kill the STATIC_INLINE macro
-      xfs: kill the STATIC_INLINE macro
-      xfs: remove incorrect sparse annotation for xfs_iget_cache_miss
-      xfs: remove incorrect sparse annotation for xfs_iget_cache_miss
-      xfs: remove IO_ISAIO
-      xfs: remove IO_ISAIO
-      xfs: rename xfs_attr_fetch to xfs_attr_get_int
-      xfs: rename xfs_attr_fetch to xfs_attr_get_int
-      xfs: reset the i_iolock lock class in the reclaim path
-      xfs: reset the i_iolock lock class in the reclaim path
-      xfs: simplify inode teardown
-      xfs: simplify inode teardown
-      xfs: simplify xfs_buf_get / xfs_buf_read interfaces
-      xfs: simplify xfs_buf_get / xfs_buf_read interfaces
-      xfs: uninline xfs_get_extsz_hint
-      xfs: uninline xfs_get_extsz_hint
-      xfs: use WRITE_SYNC_PLUG for synchronous writeout
-      xfs: use WRITE_SYNC_PLUG for synchronous writeout
-      xfs: Wrapped journal record corruption on read at recovery
-      xfs: Wrapped journal record corruption on read at recovery
+> Agreed - mp->m_growlock already does this and this patch series did
+> not touch it at all so it should still work ;)
 
-What's up, doc?
-
-			Linus
+Doh, indeed.
 
 _______________________________________________
 xfs mailing list
