@@ -1,28 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nBEHnHll164127
-	for <linux-xfs@oss.sgi.com>; Mon, 14 Dec 2009 11:49:18 -0600
-Received: from firestarter.dermichi.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9255F1974955
-	for <linux-xfs@oss.sgi.com>; Mon, 14 Dec 2009 09:49:55 -0800 (PST)
-Received: from firestarter.dermichi.com (firestarter.dermichi.com
-	[78.41.115.230]) by cuda.sgi.com with ESMTP id dxn2Ik5sbZJ7q4BF
-	for <linux-xfs@oss.sgi.com>; Mon, 14 Dec 2009 09:49:55 -0800 (PST)
-Received: from [2001:15c0:6679:1:218:8bff:feb1:c9e8]
-	by firestarter.dermichi.com with esmtpsa
-	(TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32) (Exim 4.71)
-	(envelope-from <mw@dermichi.com>) id 1NKF3Q-0004Tw-75
-	for linux-xfs@oss.sgi.com; Mon, 14 Dec 2009 18:49:52 +0100
-Message-ID: <4B267ABF.6090706@dermichi.com>
-Date: Mon, 14 Dec 2009 18:49:51 +0100
-From: Michael Weissenbacher <mw@dermichi.com>
+	nBELoY5A179555 for <xfs@oss.sgi.com>; Mon, 14 Dec 2009 15:50:34 -0600
+Content-class: urn:content-classes:message
 MIME-Version: 1.0
-Subject: Re: XFS and DPX files
-References: <4AEC2CF4.8040703@aol.com>
-	<200911021205.28006@zmi.at>	<200911022258.35164@zmi.at>
-	<hg5oeo$bh2$1@osprey.mgras.de>
-In-Reply-To: <hg5oeo$bh2$1@osprey.mgras.de>
+Subject: RE: [PATCH 2/3] xfs: change the xfs_iext_insert / xfs_iext_remove
+Date: Mon, 14 Dec 2009 15:51:10 -0600
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A6848@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <20091125000021.GB25432@infradead.org>
+From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,23 +21,282 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Hi!
-> 
-> I've been under the impression that "modern disks" (TM), at minimum the
-> server-type products, are supposed to re-use the remaining spin-energy
-> for generating the required power and thus writing the content of their
-> on-disk write cache to the disks.
-> 
-Nope, they don't. All disks do is use the remaining spin energy to
-mechanically park the disk heads. Server-grade disks should always ship with
-their drive write cache turned off per default.
-The only thing possible imho would be a small ssd on disk for the cache, but
-no disk manufacturer does this either.
+Christoph Hellwig wrote:
+> Change the xfs_iext_insert / xfs_iext_remove prototypes to pass more
+> information which will allow pushing the trace points from the callers
+> into those functions.  This includes folding the whichfork information
+> into the state variable to minimize the addition stack footprint.
 
-cya,
-  Michael
+Looks good.
+
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Reviewed-by: Alex Elder <aelder@sgi.com>
+
+
+> Index: linux-2.6/fs/xfs/xfs_bmap.c
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/xfs_bmap.c	2009-11-22 15:51:48.909278905 +0100
+> +++ linux-2.6/fs/xfs/xfs_bmap.c	2009-11-22 15:57:44.358255697 +0100
+> @@ -592,7 +592,9 @@ xfs_bmap_add_extent(
+>  	if (nextents == 0) {
+>  		XFS_BMAP_TRACE_INSERT("insert empty", ip, 0, 1, new, NULL,
+>  			whichfork);
+> -		xfs_iext_insert(ifp, 0, 1, new);
+> +		xfs_iext_insert(ip, 0, 1, new,
+> +				whichfork == XFS_ATTR_FORK ? BMAP_ATTRFORK : 0);
+> +
+>  		ASSERT(cur == NULL);
+>  		ifp->if_lastex = 0;
+>  		if (!isnullstartblock(new->br_startblock)) {
+> @@ -849,7 +851,7 @@ xfs_bmap_add_extent_delay_real(
+>  		XFS_BMAP_TRACE_POST_UPDATE("LF|RF|LC|RC", ip, idx - 1,
+>  			XFS_DATA_FORK);
+>  		XFS_BMAP_TRACE_DELETE("LF|RF|LC|RC", ip, idx, 2, XFS_DATA_FORK);
+> -		xfs_iext_remove(ifp, idx, 2);
+> +		xfs_iext_remove(ip, idx, 2, state);
+>  		ip->i_df.if_lastex = idx - 1;
+>  		ip->i_d.di_nextents--;
+>  		if (cur == NULL)
+> @@ -895,7 +897,7 @@ xfs_bmap_add_extent_delay_real(
+>  			XFS_DATA_FORK);
+>  		ip->i_df.if_lastex = idx - 1;
+>  		XFS_BMAP_TRACE_DELETE("LF|RF|LC", ip, idx, 1, XFS_DATA_FORK);
+> -		xfs_iext_remove(ifp, idx, 1);
+> +		xfs_iext_remove(ip, idx, 1, state);
+>  		if (cur == NULL)
+>  			rval = XFS_ILOG_DEXT;
+>  		else {
+> @@ -930,7 +932,7 @@ xfs_bmap_add_extent_delay_real(
+>  		XFS_BMAP_TRACE_POST_UPDATE("LF|RF|RC", ip, idx, XFS_DATA_FORK);
+>  		ip->i_df.if_lastex = idx;
+>  		XFS_BMAP_TRACE_DELETE("LF|RF|RC", ip, idx + 1, 1, XFS_DATA_FORK);
+> -		xfs_iext_remove(ifp, idx + 1, 1);
+> +		xfs_iext_remove(ip, idx + 1, 1, state);
+>  		if (cur == NULL)
+>  			rval = XFS_ILOG_DEXT;
+>  		else {
+> @@ -1037,7 +1039,7 @@ xfs_bmap_add_extent_delay_real(
+>  		xfs_bmbt_set_blockcount(ep, temp);
+>  		XFS_BMAP_TRACE_INSERT("LF", ip, idx, 1, new, NULL,
+>  			XFS_DATA_FORK);
+> -		xfs_iext_insert(ifp, idx, 1, new);
+> +		xfs_iext_insert(ip, idx, 1, new, state);
+>  		ip->i_df.if_lastex = idx;
+>  		ip->i_d.di_nextents++;
+>  		if (cur == NULL)
+> @@ -1127,7 +1129,7 @@ xfs_bmap_add_extent_delay_real(
+>  		xfs_bmbt_set_blockcount(ep, temp);
+>  		XFS_BMAP_TRACE_INSERT("RF", ip, idx + 1, 1, new, NULL,
+>  			XFS_DATA_FORK);
+> -		xfs_iext_insert(ifp, idx + 1, 1, new);
+> +		xfs_iext_insert(ip, idx + 1, 1, new, state);
+>  		ip->i_df.if_lastex = idx + 1;
+>  		ip->i_d.di_nextents++;
+>  		if (cur == NULL)
+> @@ -1182,7 +1184,7 @@ xfs_bmap_add_extent_delay_real(
+>  		r[1].br_blockcount = temp2;
+>  		XFS_BMAP_TRACE_INSERT("0", ip, idx + 1, 2, &r[0], &r[1],
+>  			XFS_DATA_FORK);
+> -		xfs_iext_insert(ifp, idx + 1, 2, &r[0]);
+> +		xfs_iext_insert(ip, idx + 1, 2, &r[0], state);
+>  		ip->i_df.if_lastex = idx + 1;
+>  		ip->i_d.di_nextents++;
+>  		if (cur == NULL)
+> @@ -1397,7 +1399,7 @@ xfs_bmap_add_extent_unwritten_real(
+>  		XFS_BMAP_TRACE_POST_UPDATE("LF|RF|LC|RC", ip, idx - 1,
+>  			XFS_DATA_FORK);
+>  		XFS_BMAP_TRACE_DELETE("LF|RF|LC|RC", ip, idx, 2, XFS_DATA_FORK);
+> -		xfs_iext_remove(ifp, idx, 2);
+> +		xfs_iext_remove(ip, idx, 2, state);
+>  		ip->i_df.if_lastex = idx - 1;
+>  		ip->i_d.di_nextents -= 2;
+>  		if (cur == NULL)
+> @@ -1447,7 +1449,7 @@ xfs_bmap_add_extent_unwritten_real(
+>  			XFS_DATA_FORK);
+>  		ip->i_df.if_lastex = idx - 1;
+>  		XFS_BMAP_TRACE_DELETE("LF|RF|LC", ip, idx, 1, XFS_DATA_FORK);
+> -		xfs_iext_remove(ifp, idx, 1);
+> +		xfs_iext_remove(ip, idx, 1, state);
+>  		ip->i_d.di_nextents--;
+>  		if (cur == NULL)
+>  			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
+> @@ -1490,7 +1492,7 @@ xfs_bmap_add_extent_unwritten_real(
+>  			XFS_DATA_FORK);
+>  		ip->i_df.if_lastex = idx;
+>  		XFS_BMAP_TRACE_DELETE("LF|RF|RC", ip, idx + 1, 1, XFS_DATA_FORK);
+> -		xfs_iext_remove(ifp, idx + 1, 1);
+> +		xfs_iext_remove(ip, idx + 1, 1, state);
+>  		ip->i_d.di_nextents--;
+>  		if (cur == NULL)
+>  			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
+> @@ -1616,7 +1618,7 @@ xfs_bmap_add_extent_unwritten_real(
+>  		XFS_BMAP_TRACE_POST_UPDATE("LF", ip, idx, XFS_DATA_FORK);
+>  		XFS_BMAP_TRACE_INSERT("LF", ip, idx, 1, new, NULL,
+>  			XFS_DATA_FORK);
+> -		xfs_iext_insert(ifp, idx, 1, new);
+> +		xfs_iext_insert(ip, idx, 1, new, state);
+>  		ip->i_df.if_lastex = idx;
+>  		ip->i_d.di_nextents++;
+>  		if (cur == NULL)
+> @@ -1702,7 +1704,7 @@ xfs_bmap_add_extent_unwritten_real(
+>  		XFS_BMAP_TRACE_POST_UPDATE("RF", ip, idx, XFS_DATA_FORK);
+>  		XFS_BMAP_TRACE_INSERT("RF", ip, idx + 1, 1, new, NULL,
+>  			XFS_DATA_FORK);
+> -		xfs_iext_insert(ifp, idx + 1, 1, new);
+> +		xfs_iext_insert(ip, idx + 1, 1, new, state);
+>  		ip->i_df.if_lastex = idx + 1;
+>  		ip->i_d.di_nextents++;
+>  		if (cur == NULL)
+> @@ -1752,7 +1754,7 @@ xfs_bmap_add_extent_unwritten_real(
+>  		r[1].br_state = oldext;
+>  		XFS_BMAP_TRACE_INSERT("0", ip, idx + 1, 2, &r[0], &r[1],
+>  			XFS_DATA_FORK);
+> -		xfs_iext_insert(ifp, idx + 1, 2, &r[0]);
+> +		xfs_iext_insert(ip, idx + 1, 2, &r[0], state);
+>  		ip->i_df.if_lastex = idx + 1;
+>  		ip->i_d.di_nextents += 2;
+>  		if (cur == NULL)
+> @@ -1918,7 +1920,7 @@ xfs_bmap_add_extent_hole_delay(
+>  		XFS_BMAP_TRACE_POST_UPDATE("LC|RC", ip, idx - 1,
+>  			XFS_DATA_FORK);
+>  		XFS_BMAP_TRACE_DELETE("LC|RC", ip, idx, 1, XFS_DATA_FORK);
+> -		xfs_iext_remove(ifp, idx, 1);
+> +		xfs_iext_remove(ip, idx, 1, state);
+>  		ip->i_df.if_lastex = idx - 1;
+>  		/* DELTA: Two in-core extents were replaced by one. */
+>  		temp2 = temp;
+> @@ -1977,7 +1979,7 @@ xfs_bmap_add_extent_hole_delay(
+>  		oldlen = newlen = 0;
+>  		XFS_BMAP_TRACE_INSERT("0", ip, idx, 1, new, NULL,
+>  			XFS_DATA_FORK);
+> -		xfs_iext_insert(ifp, idx, 1, new);
+> +		xfs_iext_insert(ip, idx, 1, new, state);
+>  		ip->i_df.if_lastex = idx;
+>  		/* DELTA: A new in-core extent was added in a hole. */
+>  		temp2 = new->br_blockcount;
+> @@ -2033,6 +2035,9 @@ xfs_bmap_add_extent_hole_real(
+>  	ep = xfs_iext_get_ext(ifp, idx);
+>  	state = 0;
+> 
+> +	if (whichfork == XFS_ATTR_FORK)
+> +		state |= BMAP_ATTRFORK;
+> +
+>  	/*
+>  	 * Check and set flags if this segment has a left neighbor.
+>  	 */
+> @@ -2094,7 +2099,7 @@ xfs_bmap_add_extent_hole_real(
+>  		XFS_BMAP_TRACE_POST_UPDATE("LC|RC", ip, idx - 1,
+>  			whichfork);
+>  		XFS_BMAP_TRACE_DELETE("LC|RC", ip, idx, 1, whichfork);
+> -		xfs_iext_remove(ifp, idx, 1);
+> +		xfs_iext_remove(ip, idx, 1, state);
+>  		ifp->if_lastex = idx - 1;
+>  		XFS_IFORK_NEXT_SET(ip, whichfork,
+>  			XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
+> @@ -2205,7 +2210,7 @@ xfs_bmap_add_extent_hole_real(
+>  		 * Insert a new entry.
+>  		 */
+>  		XFS_BMAP_TRACE_INSERT("0", ip, idx, 1, new, NULL, whichfork);
+> -		xfs_iext_insert(ifp, idx, 1, new);
+> +		xfs_iext_insert(ip, idx, 1, new, state);
+>  		ifp->if_lastex = idx;
+>  		XFS_IFORK_NEXT_SET(ip, whichfork,
+>  			XFS_IFORK_NEXTENTS(ip, whichfork) + 1);
+> @@ -3147,7 +3152,8 @@ xfs_bmap_del_extent(
+>  		 * Matches the whole extent.  Delete the entry.
+>  		 */
+>  		XFS_BMAP_TRACE_DELETE("3", ip, idx, 1, whichfork);
+> -		xfs_iext_remove(ifp, idx, 1);
+> +		xfs_iext_remove(ip, idx, 1,
+> +				whichfork == XFS_ATTR_FORK ? BMAP_ATTRFORK : 0);
+>  		ifp->if_lastex = idx;
+>  		if (delay)
+>  			break;
+> @@ -3317,7 +3323,8 @@ xfs_bmap_del_extent(
+>  		XFS_BMAP_TRACE_POST_UPDATE("0", ip, idx, whichfork);
+>  		XFS_BMAP_TRACE_INSERT("0", ip, idx + 1, 1, &new, NULL,
+>  			whichfork);
+> -		xfs_iext_insert(ifp, idx + 1, 1, &new);
+> +		xfs_iext_insert(ip, idx + 1, 1, &new,
+> +				whichfork == XFS_ATTR_FORK ? BMAP_ATTRFORK : 0);
+>  		ifp->if_lastex = idx + 1;
+>  		break;
+>  	}
+> Index: linux-2.6/fs/xfs/xfs_inode.c
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/xfs_inode.c	2009-11-22 15:51:48.914278285 +0100
+> +++ linux-2.6/fs/xfs/xfs_inode.c	2009-11-22 15:59:32.268005938 +0100
+> @@ -3300,11 +3300,13 @@ xfs_iext_get_ext(
+>   */
+>  void
+>  xfs_iext_insert(
+> -	xfs_ifork_t	*ifp,		/* inode fork pointer */
+> +	xfs_inode_t	*ip,		/* incore inode pointer */
+>  	xfs_extnum_t	idx,		/* starting index of new items */
+>  	xfs_extnum_t	count,		/* number of inserted items */
+> -	xfs_bmbt_irec_t	*new)		/* items to insert */
+> +	xfs_bmbt_irec_t	*new,		/* items to insert */
+> +	int		state)		/* type of extent conversion */
+>  {
+> +	xfs_ifork_t	*ifp = (state & BMAP_ATTRFORK) ? ip->i_afp : &ip->i_df;
+>  	xfs_extnum_t	i;		/* extent record index */
+> 
+>  	ASSERT(ifp->if_flags & XFS_IFEXTENTS);
+> @@ -3549,10 +3551,12 @@ xfs_iext_add_indirect_multi(
+>   */
+>  void
+>  xfs_iext_remove(
+> -	xfs_ifork_t	*ifp,		/* inode fork pointer */
+> +	xfs_inode_t	*ip,		/* incore inode pointer */
+>  	xfs_extnum_t	idx,		/* index to begin removing exts */
+> -	int		ext_diff)	/* number of extents to remove */
+> +	int		ext_diff,	/* number of extents to remove */
+> +	int		state)		/* type of extent conversion */
+>  {
+> +	xfs_ifork_t	*ifp = (state & BMAP_ATTRFORK) ? ip->i_afp : &ip->i_df;
+>  	xfs_extnum_t	nextents;	/* number of extents in file */
+>  	int		new_size;	/* size of extents after removal */
+> 
+> Index: linux-2.6/fs/xfs/xfs_inode.h
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/xfs_inode.h	2009-11-22 15:51:48.921276942 +0100
+> +++ linux-2.6/fs/xfs/xfs_inode.h	2009-11-22 15:57:45.993323026 +0100
+> @@ -577,11 +577,11 @@ int		xfs_iread_extents(struct xfs_trans
+>  int		xfs_iextents_copy(struct xfs_inode *, xfs_bmbt_rec_t *, int);
+> 
+>  xfs_bmbt_rec_host_t *xfs_iext_get_ext(xfs_ifork_t *, xfs_extnum_t);
+> -void		xfs_iext_insert(xfs_ifork_t *, xfs_extnum_t, xfs_extnum_t,
+> -				xfs_bmbt_irec_t *);
+> +void		xfs_iext_insert(xfs_inode_t *, xfs_extnum_t, xfs_extnum_t,
+> +				xfs_bmbt_irec_t *, int);
+>  void		xfs_iext_add(xfs_ifork_t *, xfs_extnum_t, int);
+>  void		xfs_iext_add_indirect_multi(xfs_ifork_t *, int, xfs_extnum_t, int);
+> -void		xfs_iext_remove(xfs_ifork_t *, xfs_extnum_t, int);
+> +void		xfs_iext_remove(xfs_inode_t *, xfs_extnum_t, int, int);
+>  void		xfs_iext_remove_inline(xfs_ifork_t *, xfs_extnum_t, int);
+>  void		xfs_iext_remove_direct(xfs_ifork_t *, xfs_extnum_t, int);
+>  void		xfs_iext_remove_indirect(xfs_ifork_t *, xfs_extnum_t, int);
+> Index: linux-2.6/fs/xfs/xfs_bmap.h
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/xfs_bmap.h	2009-11-22 15:57:08.815003664 +0100
+> +++ linux-2.6/fs/xfs/xfs_bmap.h	2009-11-22 15:57:20.990282919 +0100
+> @@ -146,6 +146,7 @@ typedef struct xfs_bmalloca {
+>  #define BMAP_RIGHT_DELAY	(1 << 5)
+>  #define BMAP_LEFT_VALID		(1 << 6)
+>  #define BMAP_RIGHT_VALID	(1 << 7)
+> +#define BMAP_ATTRFORK		(1 << 8)
+> 
+>  #if defined(__KERNEL__) && defined(XFS_BMAP_TRACE)
+>  /*
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
