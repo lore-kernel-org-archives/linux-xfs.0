@@ -1,25 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nBFAnooj225257 for <xfs@oss.sgi.com>; Tue, 15 Dec 2009 04:49:50 -0600
-Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 49939F6EE9
-	for <xfs@oss.sgi.com>; Tue, 15 Dec 2009 02:50:26 -0800 (PST)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id TyFSRmD9mzYBiN6M for <xfs@oss.sgi.com>;
-	Tue, 15 Dec 2009 02:50:26 -0800 (PST)
-Date: Mon, 14 Dec 2009 15:16:16 +1100
-From: Nick Piggin <npiggin@suse.de>
-Subject: Re: [PATCH 5/6] [XFS] Replace per-ag array with a radix tree
-Message-ID: <20091214041615.GB9208@nick>
-References: <1259734299-20306-1-git-send-email-david@fromorbit.com>
-	<1259734299-20306-6-git-send-email-david@fromorbit.com>
-	<20091210234547.GA28289@infradead.org>
-	<20091211004353.GF30608@discord.disaster>
-	<20091211114627.GB5436@infradead.org>
+	nBFF0ZO4238792 for <xfs@oss.sgi.com>; Tue, 15 Dec 2009 09:00:36 -0600
+From: Alex Elder <aelder@sgi.com>
+Message-Id: <200912151501.nBFF12hv014517@stout.americas.sgi.com>
+Date: Tue, 15 Dec 2009 09:01:01 -0600
+Subject: [GIT PULL] XFS update for 2.6.33-rc1
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20091211114627.GB5436@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,63 +19,111 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Fri, Dec 11, 2009 at 06:46:27AM -0500, Christoph Hellwig wrote:
-> On Fri, Dec 11, 2009 at 11:43:53AM +1100, Dave Chinner wrote:
-> > > > +	spin_lock(&mp->m_perag_lock);
-> > > > +	pag = radix_tree_lookup(&mp->m_perag_tree, agno);
-> > > > +	spin_unlock(&mp->m_perag_lock);
-> > > > +	return pag;
-> > > 
-> > > Can't we do this as a lock-less (at least for lookups) radix tree?
-> > 
-> > I think it can be (RCU-based?) , but I think that makes sense as a
-> > followup optimisation once we have confidence the code is working
-> > as it should.
-> 
-> Nick, what are the rules for the lock-less radix tree reader side?
+This is a rather pervasive change to XFS code that switches it from
+using its own internal tracing mechanism to instead use the tracepoint
+support provided elsewhere in the kernel.
 
-OK, well basically we can do a radix_tree_lookup and get the pointer
-without locking. In order to be able to follow the pointer to the
-object of course the calling code needs to do its own synchronization
-(eg. objects might be RCU protected as well so it can be used or a
-refcount can be taken on it under rcu_read_lock).
+Please pull this in for 2.6.33.
 
-A single lookup basically has concurrency semantics as though it may
-have been performed before or after any concurrent modifications. This
-is really just the same as:
+I have a few other much smaller XFS changes for 2.6.33 but wanted to
+get past this hump first.
 
-spin_lock()
-ptr = radix_tree_lookup()
-spin_unlock()
-/* use the ptr */
-
-Because before the lock is taken and after it is released, we can get
-any kind of interleaving of modifications anyway, so by the time we
-use the pointer then regardless of whether we use lock or RCU, then the
-tree may have been modified anyway.
-
-This looks like the pattern used in Dave's patch.
-
-If you need any kind of atomic multiple lookups (including gang lookups)
-or atomic lookups and modifications, then you'll need a lock.
+					-Alex
 
 
-> Dave is introducing a radix tree in XFS which has the following access
-> pattern:
-> 
->  - lots of read side access during normal fs operations
->  - insertations currently only happen during mount before the fs is life
->    and during a very rare operation (filesystem resize)
->  - currently items are never deleted, but we might need that in the
->    future (for filesystem shrink support)
->  - the objects pointed to are kmalloced and refcounted structures,
->    but we don't even strictly need the refcounting until the filesystem
->    shrink support is implemented
+The following changes since commit 3ea6b3d0e6d0ffd91c0f8cadeb69b7133c038b32:
+  Linus Torvalds (1):
+        Merge branch 'for_linus' of git://git.kernel.org/.../jack/linux-udf-2.6
 
-This sounds like it would be perfectly suited to RCU lookups.
+are available in the git repository at:
+
+  git://oss.sgi.com/xfs/xfs for-linus
+
+Christoph Hellwig (3):
+      xfs: cleanup bmap extent state macros
+      xfs: change the xfs_iext_insert / xfs_iext_remove
+      xfs: event tracing support
+
+ fs/xfs/Makefile                |    8 +-
+ fs/xfs/linux-2.6/xfs_acl.c     |    1 +
+ fs/xfs/linux-2.6/xfs_aops.c    |   52 +--
+ fs/xfs/linux-2.6/xfs_aops.h    |    2 +
+ fs/xfs/linux-2.6/xfs_buf.c     |  117 ++---
+ fs/xfs/linux-2.6/xfs_buf.h     |   33 +-
+ fs/xfs/linux-2.6/xfs_fs_subr.c |    3 +
+ fs/xfs/linux-2.6/xfs_ioctl.c   |    1 +
+ fs/xfs/linux-2.6/xfs_ioctl32.c |    1 +
+ fs/xfs/linux-2.6/xfs_iops.c    |    1 +
+ fs/xfs/linux-2.6/xfs_linux.h   |    1 -
+ fs/xfs/linux-2.6/xfs_lrw.c     |   87 +---
+ fs/xfs/linux-2.6/xfs_lrw.h     |   45 --
+ fs/xfs/linux-2.6/xfs_super.c   |  104 +---
+ fs/xfs/linux-2.6/xfs_super.h   |    7 -
+ fs/xfs/linux-2.6/xfs_sync.c    |    1 +
+ fs/xfs/linux-2.6/xfs_trace.c   |   75 +++
+ fs/xfs/linux-2.6/xfs_trace.h   | 1369 ++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/linux-2.6/xfs_vnode.h   |    4 +
+ fs/xfs/quota/xfs_dquot.c       |  110 +---
+ fs/xfs/quota/xfs_dquot.h       |   21 -
+ fs/xfs/quota/xfs_qm.c          |   40 +-
+ fs/xfs/quota/xfs_qm_syscalls.c |    4 +-
+ fs/xfs/support/ktrace.c        |  323 ----------
+ fs/xfs/support/ktrace.h        |   85 ---
+ fs/xfs/xfs.h                   |   16 -
+ fs/xfs/xfs_ag.h                |   14 +
+ fs/xfs/xfs_alloc.c             |  230 ++------
+ fs/xfs/xfs_alloc.h             |   27 +-
+ fs/xfs/xfs_alloc_btree.c       |    1 +
+ fs/xfs/xfs_attr.c              |  107 +---
+ fs/xfs/xfs_attr.h              |   10 +
+ fs/xfs/xfs_attr_leaf.c         |   14 +-
+ fs/xfs/xfs_attr_sf.h           |   40 --
+ fs/xfs/xfs_bmap.c              |  942 +++++++++-------------------
+ fs/xfs/xfs_bmap.h              |   58 ++-
+ fs/xfs/xfs_bmap_btree.c        |    6 -
+ fs/xfs/xfs_btree.c             |    5 +-
+ fs/xfs/xfs_btree_trace.h       |   17 -
+ fs/xfs/xfs_buf_item.c          |   87 +--
+ fs/xfs/xfs_buf_item.h          |   20 +-
+ fs/xfs/xfs_da_btree.c          |    3 +-
+ fs/xfs/xfs_da_btree.h          |    7 +
+ fs/xfs/xfs_dfrag.c             |    2 +-
+ fs/xfs/xfs_dir2.c              |    8 +-
+ fs/xfs/xfs_dir2_block.c        |   20 +-
+ fs/xfs/xfs_dir2_leaf.c         |   21 +-
+ fs/xfs/xfs_dir2_node.c         |   27 +-
+ fs/xfs/xfs_dir2_sf.c           |   26 +-
+ fs/xfs/xfs_dir2_trace.c        |  216 -------
+ fs/xfs/xfs_dir2_trace.h        |   72 ---
+ fs/xfs/xfs_filestream.c        |    8 +-
+ fs/xfs/xfs_fsops.c             |    2 +
+ fs/xfs/xfs_iget.c              |  111 +---
+ fs/xfs/xfs_inode.c             |   79 +--
+ fs/xfs/xfs_inode.h             |   82 +--
+ fs/xfs/xfs_inode_item.c        |    5 +-
+ fs/xfs/xfs_iomap.c             |   85 +---
+ fs/xfs/xfs_iomap.h             |    8 +
+ fs/xfs/xfs_log.c               |  181 ++----
+ fs/xfs/xfs_log_priv.h          |   20 +-
+ fs/xfs/xfs_log_recover.c       |    1 +
+ fs/xfs/xfs_mount.c             |    2 +
+ fs/xfs/xfs_quota.h             |    8 +
+ fs/xfs/xfs_rename.c            |    1 +
+ fs/xfs/xfs_rtalloc.c           |    1 +
+ fs/xfs/xfs_rw.c                |    3 +-
+ fs/xfs/xfs_trans.h             |   47 ++
+ fs/xfs/xfs_trans_buf.c         |   62 +-
+ fs/xfs/xfs_vnodeops.c          |    8 +-
+ 70 files changed, 2369 insertions(+), 2836 deletions(-)
+ create mode 100644 fs/xfs/linux-2.6/xfs_trace.c
+ create mode 100644 fs/xfs/linux-2.6/xfs_trace.h
+ delete mode 100644 fs/xfs/support/ktrace.c
+ delete mode 100644 fs/xfs/support/ktrace.h
+ delete mode 100644 fs/xfs/xfs_dir2_trace.c
+ delete mode 100644 fs/xfs/xfs_dir2_trace.h
 
 _______________________________________________
 xfs mailing list
