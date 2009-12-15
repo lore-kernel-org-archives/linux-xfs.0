@@ -1,14 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nBFK4df4254928 for <xfs@oss.sgi.com>; Tue, 15 Dec 2009 14:04:39 -0600
+	nBFMouab003355 for <xfs@oss.sgi.com>; Tue, 15 Dec 2009 16:50:56 -0600
 Content-class: urn:content-classes:message
 MIME-Version: 1.0
-Subject: RE: [PATCH V2] xfs: check for not fully initialized inodes in
-	xfs_ireclaim
-Date: Tue, 15 Dec 2009 14:05:15 -0600
-Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A686B@cf--amer001e--3.americas.sgi.com>
-In-Reply-To: <20091201181229.GA11982@infradead.org>
+Subject: RE: [PATCH] XFS: Free buffer pages array unconditionally
+Date: Tue, 15 Dec 2009 16:51:31 -0600
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A686E@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <20091215223658.GD4850@discord.disaster>
 From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -22,58 +21,82 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> Add an assert for inodes not added to the inode cache in xfs_ireclaim, to make
-> sure we're not going to introduce something like the famous nfsd inode cache
-> bug again.
+Dave Chinner wrote:
+> On Tue, Dec 15, 2009 at 01:21:36PM -0600, Alex Elder wrote:
+>> Dave Chinner wrote:
+>>> The code in xfs_free_buf() only attempts to free the b_pages array if the
+>>> buffer is a page cache backed or page allocated buffer. The extra log buffer
+>>> that is used when the log wraps uses pages that are allocated to a different
+>>> log buffer, but it still has a b_pages array allocated when those pages
+>>> are associated to with the extra buffer in xfs_buf_associate_memory.
 
-It's a shame we can't do more than an ASSERT() here
-(for non-debug builds).
+I get it now.  You're right, I was confusing the array
+with the pages themselves.  And in hindsight the title
+of your patch and the explanation is abundantly clear
+on what's being freed...  Thank you for carefully
+explaining it to me (again).
 
-Looks good though.
+The patch looks good.
 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+					-Alex
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
-
-> Index: xfs/fs/xfs/xfs_iget.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/xfs_iget.c	2009-11-26 19:10:47.206253628 +0100
-> +++ xfs/fs/xfs/xfs_iget.c	2009-12-01 19:09:43.310004091 +0100
-> @@ -514,17 +514,21 @@ xfs_ireclaim(
->  {
->  	struct xfs_mount	*mp = ip->i_mount;
->  	struct xfs_perag	*pag;
-> +	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
+ 
+>>> Hence we need to always attempt to free the b_pages array when tearing
+>>> down a buffer, not just on buffers that are explicitly marked as page bearing
+>>> buffers. This fixes a leak detected by the kernel memory leak code.
+>> 
+>> Three places call xfs_buf_get_pages();
+>> - _xfs_buf_lookup_pages(), which sets the _XBF_PAGE_CACHE flag in the   buffer after the call
+>> - xfs_buf_associate_memory(), which sets no flag bit
+>> - xfs_buf_get_noaddr(), which sets the _XBF_PAGES flag.
+>> 
+>> The only place that checks for _XBF_PAGES is xfs_buf_free().
+>> 
+>> Given that, I have two comments:
+>> - You could just as easily have set the _XBF_PAGES flag in
+>>   xfs_buf_associate_memory, thereby making that flag indicate
+>>   consistently that the buffer has allocated pages
 > 
->  	XFS_STATS_INC(xs_ig_reclaims);
+> _XBF_PAGES is used to indicate that the buffer owns the
+> pages and must free them when the buffer is freed.
 > 
->  	/*
-> -	 * Remove the inode from the per-AG radix tree.  It doesn't matter
-> -	 * if it was never added to it because radix_tree_delete can deal
-> -	 * with that case just fine.
-> +	 * Remove the inode from the per-AG radix tree.
-> +	 *
-> +	 * Because radix_tree_delete won't complain even if the item was never
-> +	 * added to the tree assert that it's been there before to catch
-> +	 * problems with the inode life time early on.
->  	 */
->  	pag = xfs_get_perag(mp, ip->i_ino);
->  	write_lock(&pag->pag_ici_lock);
-> -	radix_tree_delete(&pag->pag_ici_root, XFS_INO_TO_AGINO(mp, ip->i_ino));
-> +	if (!radix_tree_delete(&pag->pag_ici_root, agino))
-> +		ASSERT(0);
->  	write_unlock(&pag->pag_ici_lock);
->  	xfs_put_perag(mp, pag);
+> _XBF_PAGE_CACHE indicates pages are allocated out of the buftarg
+> page cache and need to be released when the buffer is freed.
 > 
+> In both cases, xfs_buf_free() has to free the pages
+> associated with these buffers.
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> In the case of xfs_buf_associate_memory(), the memory attached to
+> the buffer is owned by an external entity and hence we are not
+> allowed to free it when we free the buffer. Therefore we can't set
+> _XBF_PAGES on the buffer.
+> 
+>> - Or, since you are proposing unconditionally freeing the
+>>   pages,
+> 
+> This change doesn't unconditionally free the pages attached
+> to the buffer - it unconditionally frees the array used to
+> index the pages on the buffer when the buffer is torn down.
+> i.e:
+> 
+>    +------+         +------+
+>    |  bp  |         |      |-------> page
+>    |      | b_pages |      |-------> page
+>    |      |-------->|      |.............
+>    |      |         |      |-------> page
+>    |      |         |      |-------> page
+>    +------+         +------+
+>                      ^^^^^^
+> 		This array is what we are
+> 		freeing unconditionally.
+> 
+> Cheers,
+> 
+> Dave.
 
 _______________________________________________
 xfs mailing list
