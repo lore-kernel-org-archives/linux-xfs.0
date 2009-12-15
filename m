@@ -1,29 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nBF3EOv5199557 for <xfs@oss.sgi.com>; Mon, 14 Dec 2009 21:14:24 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6A9A3E23AFB
-	for <xfs@oss.sgi.com>; Mon, 14 Dec 2009 19:15:00 -0800 (PST)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id lr1jWnoLpb3qfFvU for
-	<xfs@oss.sgi.com>; Mon, 14 Dec 2009 19:15:00 -0800 (PST)
-Message-ID: <4B26FF3D.2020500@sandeen.net>
-Date: Mon, 14 Dec 2009 21:15:09 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	nBF3MMkP199948 for <xfs@oss.sgi.com>; Mon, 14 Dec 2009 21:22:23 -0600
+Received: from mail-pw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6848BE23B51
+	for <xfs@oss.sgi.com>; Mon, 14 Dec 2009 19:23:00 -0800 (PST)
+Received: from mail-pw0-f53.google.com (mail-pw0-f53.google.com
+	[209.85.160.53]) by cuda.sgi.com with ESMTP id PhyMCPdwOI4zPcEb
+	for <xfs@oss.sgi.com>; Mon, 14 Dec 2009 19:23:00 -0800 (PST)
+Received: by pwi18 with SMTP id 18so2643187pwi.12
+	for <xfs@oss.sgi.com>; Mon, 14 Dec 2009 19:22:59 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: [BUG report]xfs_btree_make_block_unfull generated an OOPS
-References: <4B1F1211.90607@sandeen.net> <4B1F18C4.3060704@sandeen.net>	
-	<389deec70912082053v4310057dg479f6d4b6c4b46f7@mail.gmail.com>	
-	<4B1F31FD.3020705@sandeen.net>	
-	<389deec70912082220pcb3b5d1q516ac197d31502c5@mail.gmail.com>	
-	<389deec70912082230g38987576pc48d7699f23844c5@mail.gmail.com>	
-	<389deec70912140119q40ed91cao62fe9c9ebdf13601@mail.gmail.com>	
-	<4B26604B.3060901@sandeen.net>	
-	<389deec70912141649g767a1540hdeae66707c4c68fd@mail.gmail.com>	
+In-Reply-To: <4B26FF3D.2020500@sandeen.net>
+References: <4B1F1211.90607@sandeen.net> <4B1F31FD.3020705@sandeen.net>
+	<389deec70912082220pcb3b5d1q516ac197d31502c5@mail.gmail.com>
+	<389deec70912082230g38987576pc48d7699f23844c5@mail.gmail.com>
+	<389deec70912140119q40ed91cao62fe9c9ebdf13601@mail.gmail.com>
+	<4B26604B.3060901@sandeen.net>
+	<389deec70912141649g767a1540hdeae66707c4c68fd@mail.gmail.com>
 	<20091215012640.GA4850@discord.disaster>
 	<389deec70912141756k23776aajbc90c6d7e3fc8d4b@mail.gmail.com>
-In-Reply-To: <389deec70912141756k23776aajbc90c6d7e3fc8d4b@mail.gmail.com>
+	<4B26FF3D.2020500@sandeen.net>
+Date: Tue, 15 Dec 2009 11:22:59 +0800
+Message-ID: <389deec70912141922i7ddf55f6leea706655f6a8263@mail.gmail.com>
+Subject: Re: [BUG report]xfs_btree_make_block_unfull generated an OOPS
+From: hank peng <pengxihan@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,136 +33,115 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: hank peng <pengxihan@gmail.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-hank peng wrote:
-> 2009/12/15 Dave Chinner <david@fromorbit.com>:
->> On Tue, Dec 15, 2009 at 08:49:37AM +0800, hank peng wrote:
->>> Hi, Eric:
->>> I add some code like this:
->>> if (*stat) {
->>>                 printk("*stat = 0x%08x, oindex = %p, index = %p\n",
->>>                                 *stat, oindex, index);
->>>                 if (oindex == NULL || index == NULL) {
->> This won't catch bad non-NULL pointers like you are seeing.
->>
->>>                         printk("BUG occured!\n");
->>>                         printk("oindex = %p, index = %p\n", oindex, index);
->>>                         BUG();
->>>                 }
->>>                 *oindex = *index = cur->bc_ptrs[level];
->>>                 return 0;
->>>         }
->>>
->>> And the same OOPS happened again but a little different, kernel messages are:
->>>
->>> <snip>
->>> *stat = 0x00000001, oindex = e87d7bf8, index = e87d7bfc
->>> *stat = 0x00000001, oindex = e87d7bf8, index = e87d7bfc
->>> *stat = 0x00000001, oindex = e87d7bf8, index = e87d7bfc
->>> *stat = 0x00000001, oindex = e87d7bf8, index = e87d7bfc
->>> *stat = 0x00000001, oindex = 00000501, index = 22008424
->>> Unable to handle kernel paging request for data at address 0x22008424
-
-Are you using any of the xfs userspace prior to this error, or is it a
-fresh boot and just normal IO?
-
-I ask because libxfs calls sys_ustat() which at one point was corrupting
-userspace, at least, with 32-bit userspace on a 64-bit kernel:
-https://bugzilla.redhat.com/show_bug.cgi?id=472795
-
-Even with that fixed there were still some reports of odd behavior
-on ppc... I don't know if things might be going wrong in kernelspace
-as well...
-
-https://bugzilla.redhat.com/show_bug.cgi?id=517994
-and I haven't gotten to the bottom of that yet ...
-
-Very few things actually use sys_ustat, but xfs userspace does...
-just a random thought.
-
--eric
-
->> Given that oindex and index are stack varibles, this indicates some
->> thing is probably smashing the stack. Possibly a buffer overrun. To
->> narrow down the possible cause, can you add the debug:
->>
->>        printk("%s:%s: oindex = %p, index = %p\n",
->>                        __func__, __LINE__, oindex, index);
->>
->> throughout the xfs_btree_make_block_unfull() function? i.e. at
->> first entry, before the xfs_btree_rshift() call, before the
->> xfs_btree_lshift() call, etc, to see if any of the parameters
->> are being modified during execution of the function?
->>
->> If the variables being passed into xfs_btree_make_block_unfull() are
->> already bad, then do the same thing for the caller
->> xfs_btree_insert(). This may help narrow down where the problem
->> is coming from....
->>
-> Thanks for your reply!
-> As you said, I added some code like this:
-> /* First, try shifting an entry to the right neighbor. */
->         printk("%s: before xfs_btree_rshift, oindex = %p, index = %p\n",
->                         __func__, oindex, index);
->         error = xfs_btree_rshift(cur, level, stat);
->         if (error || *stat)
->                 return error;
-> 
->         /* Next, try shifting an entry to the left neighbor. */
->         printk("%s: before xfs_btree_lshift, oindex = %p, index = %p\n",
->                         __func__, oindex, index);
->         error = xfs_btree_lshift(cur, level, stat);
->         if (error)
->                 return error;
-> 
->         if (*stat) {
->                 printk("*stat = 0x%08x, oindex = %p, index = %p\n",
->                                 *stat, oindex, index);
->                 if (oindex == NULL || index == NULL) {
->                         printk("BUG occured!\n");
->                         printk("oindex = %p, index = %p\n", oindex, index);
->                         BUG();
->                 }
->                 *oindex = *index = cur->bc_ptrs[level];
->                 return 0;
->         }
-> 
-> 
-> xfs_btree_set_ptr_null(cur, &nptr);
->         if (numrecs == cur->bc_ops->get_maxrecs(cur, level)) {
->                 printk("%s: before calling
-> xfs_btree_make_block_unfull, &optr = %p, &ptr = %p\n",
->                                 __func__, &optr, &ptr);
->                 error = xfs_btree_make_block_unfull(cur, level, numrecs,
->                                         &optr, &ptr, &nptr, &ncur, &nrec, stat);
->                 if (error || *stat == 0)
->                         goto error0;
->         }
-> 
-> 
-> We are waiting for OOPS to happen.
-> 
-> I hope it will nerver be memory corrupt problem which is nightmare for
-> me to debug.
-> 
->> Cheers,
->>
->> Dave.
->> --
->> Dave Chinner
->> david@fromorbit.com
->>
-> 
-> 
-> 
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+MjAwOS8xMi8xNSBFcmljIFNhbmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQ+Ogo+IGhhbmsgcGVu
+ZyB3cm90ZToKPj4gMjAwOS8xMi8xNSBEYXZlIENoaW5uZXIgPGRhdmlkQGZyb21vcmJpdC5jb20+
+Ogo+Pj4gT24gVHVlLCBEZWMgMTUsIDIwMDkgYXQgMDg6NDk6MzdBTSArMDgwMCwgaGFuayBwZW5n
+IHdyb3RlOgo+Pj4+IEhpLCBFcmljOgo+Pj4+IEkgYWRkIHNvbWUgY29kZSBsaWtlIHRoaXM6Cj4+
+Pj4gaWYgKCpzdGF0KSB7Cj4+Pj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgcHJpbnRrKCIqc3Rh
+dCA9IDB4JTA4eCwgb2luZGV4ID0gJXAsIGluZGV4ID0gJXBcbiIsCj4+Pj4gwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgKnN0YXQsIG9pbmRleCwgaW5kZXgp
+Owo+Pj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGlmIChvaW5kZXggPT0gTlVMTCB8fCBpbmRl
+eCA9PSBOVUxMKSB7Cj4+PiBUaGlzIHdvbid0IGNhdGNoIGJhZCBub24tTlVMTCBwb2ludGVycyBs
+aWtlIHlvdSBhcmUgc2VlaW5nLgo+Pj4KPj4+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCBwcmludGsoIkJVRyBvY2N1cmVkIVxuIik7Cj4+Pj4gwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgcHJpbnRrKCJvaW5kZXggPSAlcCwgaW5kZXggPSAlcFxuIiwgb2lu
+ZGV4LCBpbmRleCk7Cj4+Pj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgQlVH
+KCk7Cj4+Pj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgfQo+Pj4+IMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgICpvaW5kZXggPSAqaW5kZXggPSBjdXItPmJjX3B0cnNbbGV2ZWxdOwo+Pj4+IMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIHJldHVybiAwOwo+Pj4+IMKgIMKgIMKgIMKgIH0KPj4+Pgo+Pj4+
+IEFuZCB0aGUgc2FtZSBPT1BTIGhhcHBlbmVkIGFnYWluIGJ1dCBhIGxpdHRsZSBkaWZmZXJlbnQs
+IGtlcm5lbCBtZXNzYWdlcyBhcmU6Cj4+Pj4KPj4+PiA8c25pcD4KPj4+PiAqc3RhdCA9IDB4MDAw
+MDAwMDEsIG9pbmRleCA9IGU4N2Q3YmY4LCBpbmRleCA9IGU4N2Q3YmZjCj4+Pj4gKnN0YXQgPSAw
+eDAwMDAwMDAxLCBvaW5kZXggPSBlODdkN2JmOCwgaW5kZXggPSBlODdkN2JmYwo+Pj4+ICpzdGF0
+ID0gMHgwMDAwMDAwMSwgb2luZGV4ID0gZTg3ZDdiZjgsIGluZGV4ID0gZTg3ZDdiZmMKPj4+PiAq
+c3RhdCA9IDB4MDAwMDAwMDEsIG9pbmRleCA9IGU4N2Q3YmY4LCBpbmRleCA9IGU4N2Q3YmZjCj4+
+Pj4gKnN0YXQgPSAweDAwMDAwMDAxLCBvaW5kZXggPSAwMDAwMDUwMSwgaW5kZXggPSAyMjAwODQy
+NAo+Pj4+IFVuYWJsZSB0byBoYW5kbGUga2VybmVsIHBhZ2luZyByZXF1ZXN0IGZvciBkYXRhIGF0
+IGFkZHJlc3MgMHgyMjAwODQyNAo+Cj4gQXJlIHlvdSB1c2luZyBhbnkgb2YgdGhlIHhmcyB1c2Vy
+c3BhY2UgcHJpb3IgdG8gdGhpcyBlcnJvciwgb3IgaXMgaXQgYQo+IGZyZXNoIGJvb3QgYW5kIGp1
+c3Qgbm9ybWFsIElPPwo+Cm5vIHhmcyB1c2Vyc3BhY2UgcHJpb3IgdG8gdGhpcyBlcnJvciwganVz
+dCBub3JtYWwgSU8uIEJlc2lkZXMsIGl0IG5lZWQKc29tZSB0aW1lIHRvIHByb2R1Y2UgdGhlIE9P
+UFMuCgo+IEkgYXNrIGJlY2F1c2UgbGlieGZzIGNhbGxzIHN5c191c3RhdCgpIHdoaWNoIGF0IG9u
+ZSBwb2ludCB3YXMgY29ycnVwdGluZwo+IHVzZXJzcGFjZSwgYXQgbGVhc3QsIHdpdGggMzItYml0
+IHVzZXJzcGFjZSBvbiBhIDY0LWJpdCBrZXJuZWw6Cj4gaHR0cHM6Ly9idWd6aWxsYS5yZWRoYXQu
+Y29tL3Nob3dfYnVnLmNnaT9pZD00NzI3OTUKPgpGb3Jnb3QgdG8gc2F5LCBJIHVzZSAiLW8gaW5v
+ZGU2NCIgd2hlbiBtb3VudC4KCiMgdW5hbWUgLWEKTGludXggU3RvcmFnZSAyLjYuMzEuNi1zdm40
+MCAjMzAgVHVlIERlYyAxNSAwOTo1MDowMiBDU1QgMjAwOSBwcGMgdW5rbm93bgojIG1vdW50CnJv
+b3RmcyBvbiAvIHR5cGUgcm9vdGZzIChydykKL2Rldi9yb290IG9uIC8gdHlwZSBleHQyIChydyxy
+ZWxhdGltZSxlcnJvcnM9Y29udGludWUpCi9kZXYvbXRkYmxvY2syIG9uIC9tbnQvc3lzX2RhdGEg
+dHlwZSBqZmZzMiAocncscmVsYXRpbWUpCnByb2Mgb24gL3Byb2MgdHlwZSBwcm9jIChydyxyZWxh
+dGltZSkKc3lzZnMgb24gL3N5cyB0eXBlIHN5c2ZzIChydyxyZWxhdGltZSkKdG1wZnMgb24gL29w
+dC91cGdyYWRlIHR5cGUgdG1wZnMgKHJ3LHJlbGF0aW1lKQpkZXZwdHMgb24gL2Rldi9wdHMgdHlw
+ZSBkZXZwdHMgKHJ3LHJlbGF0aW1lLGdpZD01LG1vZGU9NjIwKQovZGV2L1Bvb2xfbWQyL3NzMSBv
+biAvbW50L1Bvb2xfbWQyL3NzMSB0eXBlIHhmcwoocncscmVsYXRpbWUsYXR0cjIsaW5vZGU2NCxu
+b3F1b3RhKQoKCgo+IEV2ZW4gd2l0aCB0aGF0IGZpeGVkIHRoZXJlIHdlcmUgc3RpbGwgc29tZSBy
+ZXBvcnRzIG9mIG9kZCBiZWhhdmlvcgo+IG9uIHBwYy4uLiBJIGRvbid0IGtub3cgaWYgdGhpbmdz
+IG1pZ2h0IGJlIGdvaW5nIHdyb25nIGluIGtlcm5lbHNwYWNlCj4gYXMgd2VsbC4uLgo+Cj4gaHR0
+cHM6Ly9idWd6aWxsYS5yZWRoYXQuY29tL3Nob3dfYnVnLmNnaT9pZD01MTc5OTQKPiBhbmQgSSBo
+YXZlbid0IGdvdHRlbiB0byB0aGUgYm90dG9tIG9mIHRoYXQgeWV0IC4uLgo+Cj4gVmVyeSBmZXcg
+dGhpbmdzIGFjdHVhbGx5IHVzZSBzeXNfdXN0YXQsIGJ1dCB4ZnMgdXNlcnNwYWNlIGRvZXMuLi4K
+PiBqdXN0IGEgcmFuZG9tIHRob3VnaHQuCj4KPiAtZXJpYwo+Cj4+PiBHaXZlbiB0aGF0IG9pbmRl
+eCBhbmQgaW5kZXggYXJlIHN0YWNrIHZhcmlibGVzLCB0aGlzIGluZGljYXRlcyBzb21lCj4+PiB0
+aGluZyBpcyBwcm9iYWJseSBzbWFzaGluZyB0aGUgc3RhY2suIFBvc3NpYmx5IGEgYnVmZmVyIG92
+ZXJydW4uIFRvCj4+PiBuYXJyb3cgZG93biB0aGUgcG9zc2libGUgY2F1c2UsIGNhbiB5b3UgYWRk
+IHRoZSBkZWJ1ZzoKPj4+Cj4+PiDCoCDCoCDCoCDCoHByaW50aygiJXM6JXM6IG9pbmRleCA9ICVw
+LCBpbmRleCA9ICVwXG4iLAo+Pj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBf
+X2Z1bmNfXywgX19MSU5FX18sIG9pbmRleCwgaW5kZXgpOwo+Pj4KPj4+IHRocm91Z2hvdXQgdGhl
+IHhmc19idHJlZV9tYWtlX2Jsb2NrX3VuZnVsbCgpIGZ1bmN0aW9uPyBpLmUuIGF0Cj4+PiBmaXJz
+dCBlbnRyeSwgYmVmb3JlIHRoZSB4ZnNfYnRyZWVfcnNoaWZ0KCkgY2FsbCwgYmVmb3JlIHRoZQo+
+Pj4geGZzX2J0cmVlX2xzaGlmdCgpIGNhbGwsIGV0YywgdG8gc2VlIGlmIGFueSBvZiB0aGUgcGFy
+YW1ldGVycwo+Pj4gYXJlIGJlaW5nIG1vZGlmaWVkIGR1cmluZyBleGVjdXRpb24gb2YgdGhlIGZ1
+bmN0aW9uPwo+Pj4KPj4+IElmIHRoZSB2YXJpYWJsZXMgYmVpbmcgcGFzc2VkIGludG8geGZzX2J0
+cmVlX21ha2VfYmxvY2tfdW5mdWxsKCkgYXJlCj4+PiBhbHJlYWR5IGJhZCwgdGhlbiBkbyB0aGUg
+c2FtZSB0aGluZyBmb3IgdGhlIGNhbGxlcgo+Pj4geGZzX2J0cmVlX2luc2VydCgpLiBUaGlzIG1h
+eSBoZWxwIG5hcnJvdyBkb3duIHdoZXJlIHRoZSBwcm9ibGVtCj4+PiBpcyBjb21pbmcgZnJvbS4u
+Li4KPj4+Cj4+IFRoYW5rcyBmb3IgeW91ciByZXBseSEKPj4gQXMgeW91IHNhaWQsIEkgYWRkZWQg
+c29tZSBjb2RlIGxpa2UgdGhpczoKPj4gLyogRmlyc3QsIHRyeSBzaGlmdGluZyBhbiBlbnRyeSB0
+byB0aGUgcmlnaHQgbmVpZ2hib3IuICovCj4+IMKgIMKgIMKgIMKgIHByaW50aygiJXM6IGJlZm9y
+ZSB4ZnNfYnRyZWVfcnNoaWZ0LCBvaW5kZXggPSAlcCwgaW5kZXggPSAlcFxuIiwKPj4gwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgX19mdW5jX18sIG9pbmRleCwgaW5kZXgpOwo+
+PiDCoCDCoCDCoCDCoCBlcnJvciA9IHhmc19idHJlZV9yc2hpZnQoY3VyLCBsZXZlbCwgc3RhdCk7
+Cj4+IMKgIMKgIMKgIMKgIGlmIChlcnJvciB8fCAqc3RhdCkKPj4gwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgcmV0dXJuIGVycm9yOwo+Pgo+PiDCoCDCoCDCoCDCoCAvKiBOZXh0LCB0cnkgc2hpZnRp
+bmcgYW4gZW50cnkgdG8gdGhlIGxlZnQgbmVpZ2hib3IuICovCj4+IMKgIMKgIMKgIMKgIHByaW50
+aygiJXM6IGJlZm9yZSB4ZnNfYnRyZWVfbHNoaWZ0LCBvaW5kZXggPSAlcCwgaW5kZXggPSAlcFxu
+IiwKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgX19mdW5jX18sIG9pbmRl
+eCwgaW5kZXgpOwo+PiDCoCDCoCDCoCDCoCBlcnJvciA9IHhmc19idHJlZV9sc2hpZnQoY3VyLCBs
+ZXZlbCwgc3RhdCk7Cj4+IMKgIMKgIMKgIMKgIGlmIChlcnJvcikKPj4gwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgcmV0dXJuIGVycm9yOwo+Pgo+PiDCoCDCoCDCoCDCoCBpZiAoKnN0YXQpIHsKPj4g
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgcHJpbnRrKCIqc3RhdCA9IDB4JTA4eCwgb2luZGV4ID0g
+JXAsIGluZGV4ID0gJXBcbiIsCj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgICpzdGF0LCBvaW5kZXgsIGluZGV4KTsKPj4gwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgaWYgKG9pbmRleCA9PSBOVUxMIHx8IGluZGV4ID09IE5VTEwpIHsKPj4gwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgcHJpbnRrKCJCVUcgb2NjdXJlZCFcbiIpOwo+PiDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBwcmludGsoIm9pbmRleCA9ICVwLCBp
+bmRleCA9ICVwXG4iLCBvaW5kZXgsIGluZGV4KTsKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgQlVHKCk7Cj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIH0KPj4gwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgKm9pbmRleCA9ICppbmRleCA9IGN1ci0+YmNfcHRyc1tsZXZlbF07
+Cj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHJldHVybiAwOwo+PiDCoCDCoCDCoCDCoCB9Cj4+
+Cj4+Cj4+IHhmc19idHJlZV9zZXRfcHRyX251bGwoY3VyLCAmbnB0cik7Cj4+IMKgIMKgIMKgIMKg
+IGlmIChudW1yZWNzID09IGN1ci0+YmNfb3BzLT5nZXRfbWF4cmVjcyhjdXIsIGxldmVsKSkgewo+
+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBwcmludGsoIiVzOiBiZWZvcmUgY2FsbGluZwo+PiB4
+ZnNfYnRyZWVfbWFrZV9ibG9ja191bmZ1bGwsICZvcHRyID0gJXAsICZwdHIgPSAlcFxuIiwKPj4g
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgX19mdW5jX18s
+ICZvcHRyLCAmcHRyKTsKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgZXJyb3IgPSB4ZnNfYnRy
+ZWVfbWFrZV9ibG9ja191bmZ1bGwoY3VyLCBsZXZlbCwgbnVtcmVjcywKPj4gwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgJm9wdHIsICZw
+dHIsICZucHRyLCAmbmN1ciwgJm5yZWMsIHN0YXQpOwo+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCBpZiAoZXJyb3IgfHwgKnN0YXQgPT0gMCkKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgZ290byBlcnJvcjA7Cj4+IMKgIMKgIMKgIMKgIH0KPj4KPj4KPj4gV2UgYXJlIHdh
+aXRpbmcgZm9yIE9PUFMgdG8gaGFwcGVuLgo+Pgo+PiBJIGhvcGUgaXQgd2lsbCBuZXJ2ZXIgYmUg
+bWVtb3J5IGNvcnJ1cHQgcHJvYmxlbSB3aGljaCBpcyBuaWdodG1hcmUgZm9yCj4+IG1lIHRvIGRl
+YnVnLgo+Pgo+Pj4gQ2hlZXJzLAo+Pj4KPj4+IERhdmUuCj4+PiAtLQo+Pj4gRGF2ZSBDaGlubmVy
+Cj4+PiBkYXZpZEBmcm9tb3JiaXQuY29tCj4+Pgo+Pgo+Pgo+Pgo+Cj4KCgoKLS0gClRoZSBzaW1w
+bGVzdCBpcyBub3QgYWxsIGJlc3QgYnV0IHRoZSBiZXN0IGlzIHN1cmVseSB0aGUgc2ltcGxlc3Qh
+CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFp
+bGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0
+aW5mby94ZnMK
