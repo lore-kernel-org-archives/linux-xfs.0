@@ -1,29 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nBF6B5iD210809 for <xfs@oss.sgi.com>; Tue, 15 Dec 2009 00:11:05 -0600
+	nBF6BHxo210889 for <xfs@oss.sgi.com>; Tue, 15 Dec 2009 00:11:17 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DB0DFF65E2
-	for <xfs@oss.sgi.com>; Mon, 14 Dec 2009 22:11:42 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	PqBLsPUTSsQTICzB for <xfs@oss.sgi.com>;
-	Mon, 14 Dec 2009 22:11:42 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7F52DF65EF
+	for <xfs@oss.sgi.com>; Mon, 14 Dec 2009 22:11:54 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	GRV5YPLN6AjRtpxv for <xfs@oss.sgi.com>;
+	Mon, 14 Dec 2009 22:11:54 -0800 (PST)
 Received: from discord (unverified [121.44.201.81])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	10086294-1927428
-	for <xfs@oss.sgi.com>; Tue, 15 Dec 2009 16:41:40 +1030 (CDT)
+	10080027-1927428
+	for <xfs@oss.sgi.com>; Tue, 15 Dec 2009 16:41:51 +1030 (CDT)
 Received: from disturbed ([192.168.1.9]) by discord with esmtp (Exim 4.69)
-	(envelope-from <dave@fromorbit.com>) id 1NKQdH-0001lB-Fl
+	(envelope-from <dave@fromorbit.com>) id 1NKQdH-0001l7-AH
 	for xfs@oss.sgi.com; Tue, 15 Dec 2009 17:11:39 +1100
 Received: from dave by disturbed with local (Exim 4.69)
-	(envelope-from <dave@disturbed.disaster>) id 1NKQcy-0000cz-6j
+	(envelope-from <dave@disturbed.disaster>) id 1NKQcx-0000cu-Sz
 	for xfs@oss.sgi.com; Tue, 15 Dec 2009 17:11:20 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/6] XFS: Convert filestreams code to use per-ag get/put
-	routines
-Date: Tue, 15 Dec 2009 17:11:14 +1100
-Message-Id: <1260857477-2368-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/6] XFS: rename xfs_get_perag
+Date: Tue, 15 Dec 2009 17:11:12 +1100
+Message-Id: <1260857477-2368-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1260857477-2368-1-git-send-email-david@fromorbit.com>
 References: <1260857477-2368-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -41,145 +40,230 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
+xfs_get_perag is really getting the perag that an inode
+belongs to based on it's inode number. Convert the use of this
+function to just get the perag from a provided ag number.
+Use this new function to obtain the per-ag structure when
+traversing the per AG inode trees for sync and reclaim.
+
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/xfs_filestream.c |   19 ++++++++++++-------
- fs/xfs/xfs_filestream.h |   27 ++++++++++++++++++++++++---
- 2 files changed, 36 insertions(+), 10 deletions(-)
+ fs/xfs/linux-2.6/xfs_sync.c |   33 +++++++++++++++++++++------------
+ fs/xfs/xfs_iget.c           |   10 +++++-----
+ fs/xfs/xfs_inode.c          |    8 +++++---
+ fs/xfs/xfs_mount.h          |    8 ++++----
+ 4 files changed, 35 insertions(+), 24 deletions(-)
 
-diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
-index a631e14..e61f2aa 100644
---- a/fs/xfs/xfs_filestream.c
-+++ b/fs/xfs/xfs_filestream.c
-@@ -140,6 +140,7 @@ _xfs_filestream_pick_ag(
- 	int		flags,
- 	xfs_extlen_t	minlen)
+diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+index 6fed97a..0e17683 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.c
++++ b/fs/xfs/linux-2.6/xfs_sync.c
+@@ -96,13 +96,12 @@ unlock:
+ STATIC int
+ xfs_inode_ag_walk(
+ 	struct xfs_mount	*mp,
+-	xfs_agnumber_t		ag,
++	struct xfs_perag	*pag,
+ 	int			(*execute)(struct xfs_inode *ip,
+ 					   struct xfs_perag *pag, int flags),
+ 	int			flags,
+ 	int			tag)
  {
-+	int		streams, max_streams;
- 	int		err, trylock, nscan;
- 	xfs_extlen_t	longest, free, minfree, maxfree = 0;
- 	xfs_agnumber_t	ag, max_ag = NULLAGNUMBER;
-@@ -155,15 +156,15 @@ _xfs_filestream_pick_ag(
- 	trylock = XFS_ALLOC_FLAG_TRYLOCK;
+-	struct xfs_perag	*pag = &mp->m_perag[ag];
+ 	uint32_t		first_index;
+ 	int			last_error = 0;
+ 	int			skipped;
+@@ -137,8 +136,6 @@ restart:
+ 		delay(1);
+ 		goto restart;
+ 	}
+-
+-	xfs_put_perag(mp, pag);
+ 	return last_error;
+ }
  
- 	for (nscan = 0; 1; nscan++) {
--
--		TRACE_AG_SCAN(mp, ag, xfs_filestream_peek_ag(mp, ag));
--
--		pag = mp->m_perag + ag;
+@@ -155,9 +152,15 @@ xfs_inode_ag_iterator(
+ 	xfs_agnumber_t		ag;
+ 
+ 	for (ag = 0; ag < mp->m_sb.sb_agcount; ag++) {
+-		if (!mp->m_perag[ag].pag_ici_init)
++		struct xfs_perag	*pag;
++
 +		pag = xfs_perag_get(mp, ag);
-+		TRACE_AG_SCAN(mp, ag, atomic_read(&pag->pagf_fstrms));
- 
- 		if (!pag->pagf_init) {
- 			err = xfs_alloc_pagf_init(mp, NULL, ag, trylock);
--			if (err && !trylock)
-+			if (err && !trylock) {
-+				xfs_perag_put(pag);
- 				return err;
-+			}
- 		}
- 
- 		/* Might fail sometimes during the 1st pass with trylock set. */
-@@ -173,6 +174,7 @@ _xfs_filestream_pick_ag(
- 		/* Keep track of the AG with the most free blocks. */
- 		if (pag->pagf_freeblks > maxfree) {
- 			maxfree = pag->pagf_freeblks;
-+			max_streams = atomic_read(&pag->pagf_fstrms);
- 			max_ag = ag;
- 		}
- 
-@@ -195,6 +197,8 @@ _xfs_filestream_pick_ag(
- 
- 			/* Break out, retaining the reference on the AG. */
- 			free = pag->pagf_freeblks;
-+			streams = atomic_read(&pag->pagf_fstrms);
++		if (!pag->pag_ici_init) {
 +			xfs_perag_put(pag);
- 			*agp = ag;
- 			break;
- 		}
-@@ -202,6 +206,7 @@ _xfs_filestream_pick_ag(
- 		/* Drop the reference on this AG, it's not usable. */
- 		xfs_filestream_put_ag(mp, ag);
- next_ag:
+ 			continue;
+-		error = xfs_inode_ag_walk(mp, ag, execute, flags, tag);
++		}
++		error = xfs_inode_ag_walk(mp, pag, execute, flags, tag);
 +		xfs_perag_put(pag);
- 		/* Move to the next AG, wrapping to AG 0 if necessary. */
- 		if (++ag >= mp->m_sb.sb_agcount)
- 			ag = 0;
-@@ -229,6 +234,7 @@ next_ag:
- 		if (max_ag != NULLAGNUMBER) {
- 			xfs_filestream_get_ag(mp, max_ag);
- 			TRACE_AG_PICK1(mp, max_ag, maxfree);
-+			streams = max_streams;
- 			free = maxfree;
- 			*agp = max_ag;
- 			break;
-@@ -240,8 +246,7 @@ next_ag:
- 		return 0;
+ 		if (error) {
+ 			last_error = error;
+ 			if (error == EFSCORRUPTED)
+@@ -669,25 +672,30 @@ xfs_reclaim_inode(
+ 	xfs_inode_t	*ip,
+ 	int		sync_mode)
+ {
+-	xfs_perag_t	*pag = xfs_get_perag(ip->i_mount, ip->i_ino);
++	struct xfs_mount *mp = ip->i_mount;
++	struct xfs_perag *pag;
++
+ 
+-	/* The hash lock here protects a thread in xfs_iget_core from
++	/*
++	 * The radix tree lock here protects a thread in xfs_iget_core from
+ 	 * racing with us on linking the inode back with a vnode.
+ 	 * Once we have the XFS_IRECLAIM flag set it will not touch
+ 	 * us.
+ 	 */
++	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
+ 	write_lock(&pag->pag_ici_lock);
+ 	spin_lock(&ip->i_flags_lock);
+ 	if (__xfs_iflags_test(ip, XFS_IRECLAIM) ||
+ 	    !__xfs_iflags_test(ip, XFS_IRECLAIMABLE)) {
+ 		spin_unlock(&ip->i_flags_lock);
+ 		write_unlock(&pag->pag_ici_lock);
++		xfs_perag_put(pag);
+ 		return -EAGAIN;
+ 	}
+ 	__xfs_iflags_set(ip, XFS_IRECLAIM);
+ 	spin_unlock(&ip->i_flags_lock);
+ 	write_unlock(&pag->pag_ici_lock);
+-	xfs_put_perag(ip->i_mount, pag);
++	xfs_perag_put(pag);
+ 
+ 	/*
+ 	 * If the inode is still dirty, then flush it out.  If the inode
+@@ -737,16 +745,17 @@ void
+ xfs_inode_set_reclaim_tag(
+ 	xfs_inode_t	*ip)
+ {
+-	xfs_mount_t	*mp = ip->i_mount;
+-	xfs_perag_t	*pag = xfs_get_perag(mp, ip->i_ino);
++	struct xfs_mount *mp = ip->i_mount;
++	struct xfs_perag *pag;
+ 
++	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
+ 	read_lock(&pag->pag_ici_lock);
+ 	spin_lock(&ip->i_flags_lock);
+ 	__xfs_inode_set_reclaim_tag(pag, ip);
+ 	__xfs_iflags_set(ip, XFS_IRECLAIMABLE);
+ 	spin_unlock(&ip->i_flags_lock);
+ 	read_unlock(&pag->pag_ici_lock);
+-	xfs_put_perag(mp, pag);
++	xfs_perag_put(pag);
+ }
+ 
+ void
+diff --git a/fs/xfs/xfs_iget.c b/fs/xfs/xfs_iget.c
+index f5c904a..d1e7250 100644
+--- a/fs/xfs/xfs_iget.c
++++ b/fs/xfs/xfs_iget.c
+@@ -375,7 +375,7 @@ xfs_iget(
+ 		return EINVAL;
+ 
+ 	/* get the perag structure and ensure that it's inode capable */
+-	pag = xfs_get_perag(mp, ino);
++	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ino));
+ 	if (!pag->pagi_inodeok)
+ 		return EINVAL;
+ 	ASSERT(pag->pag_ici_init);
+@@ -399,7 +399,7 @@ again:
+ 		if (error)
+ 			goto out_error_or_again;
+ 	}
+-	xfs_put_perag(mp, pag);
++	xfs_perag_put(pag);
+ 
+ 	*ipp = ip;
+ 
+@@ -418,7 +418,7 @@ out_error_or_again:
+ 		delay(1);
+ 		goto again;
+ 	}
+-	xfs_put_perag(mp, pag);
++	xfs_perag_put(pag);
+ 	return error;
+ }
+ 
+@@ -486,11 +486,11 @@ xfs_ireclaim(
+ 	 * if it was never added to it because radix_tree_delete can deal
+ 	 * with that case just fine.
+ 	 */
+-	pag = xfs_get_perag(mp, ip->i_ino);
++	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
+ 	write_lock(&pag->pag_ici_lock);
+ 	radix_tree_delete(&pag->pag_ici_root, XFS_INO_TO_AGINO(mp, ip->i_ino));
+ 	write_unlock(&pag->pag_ici_lock);
+-	xfs_put_perag(mp, pag);
++	xfs_perag_put(pag);
+ 
+ 	/*
+ 	 * Here we do an (almost) spurious inode lock in order to coordinate
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index ce278b3..1f69dda 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1946,8 +1946,9 @@ xfs_ifree_cluster(
+ 	xfs_inode_t		*ip, **ip_found;
+ 	xfs_inode_log_item_t	*iip;
+ 	xfs_log_item_t		*lip;
+-	xfs_perag_t		*pag = xfs_get_perag(mp, inum);
++	struct xfs_perag	*pag;
+ 
++	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, inum));
+ 	if (mp->m_sb.sb_blocksize >= XFS_INODE_CLUSTER_SIZE(mp)) {
+ 		blks_per_cluster = 1;
+ 		ninodes = mp->m_sb.sb_inopblock;
+@@ -2088,7 +2089,7 @@ xfs_ifree_cluster(
  	}
  
--	TRACE_AG_PICK2(mp, startag, *agp, xfs_filestream_peek_ag(mp, *agp),
--			free, nscan, flags);
-+	TRACE_AG_PICK2(mp, startag, *agp, streams, free, nscan, flags);
- 
- 	return 0;
+ 	kmem_free(ip_found);
+-	xfs_put_perag(mp, pag);
++	xfs_perag_put(pag);
  }
-diff --git a/fs/xfs/xfs_filestream.h b/fs/xfs/xfs_filestream.h
-index 4aba67c..58378b2 100644
---- a/fs/xfs/xfs_filestream.h
-+++ b/fs/xfs/xfs_filestream.h
-@@ -79,12 +79,21 @@ extern ktrace_t *xfs_filestreams_trace_buf;
-  * the cache that reference per-ag array elements that have since been
-  * reallocated.
+ 
+ /*
+@@ -2675,7 +2676,7 @@ xfs_iflush_cluster(
+ 	xfs_buf_t	*bp)
+ {
+ 	xfs_mount_t		*mp = ip->i_mount;
+-	xfs_perag_t		*pag = xfs_get_perag(mp, ip->i_ino);
++	struct xfs_perag	*pag;
+ 	unsigned long		first_index, mask;
+ 	unsigned long		inodes_per_cluster;
+ 	int			ilist_size;
+@@ -2686,6 +2687,7 @@ xfs_iflush_cluster(
+ 	int			bufwasdelwri;
+ 	int			i;
+ 
++	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
+ 	ASSERT(pag->pagi_inodeok);
+ 	ASSERT(pag->pag_ici_init);
+ 
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 1df7e45..f8a68a2 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -386,14 +386,14 @@ xfs_daddr_to_agbno(struct xfs_mount *mp, xfs_daddr_t d)
+ /*
+  * perag get/put wrappers for eventual ref counting
   */
-+/*
-+ * xfs_filestream_peek_ag is only used in tracing code
-+ */
- static inline int
- xfs_filestream_peek_ag(
- 	xfs_mount_t	*mp,
- 	xfs_agnumber_t	agno)
+-static inline xfs_perag_t *
+-xfs_get_perag(struct xfs_mount *mp, xfs_ino_t ino)
++static inline struct xfs_perag *
++xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t agno)
  {
--	return atomic_read(&mp->m_perag[agno].pagf_fstrms);
-+	struct xfs_perag *pag;
-+	int		ret;
-+
-+	pag = xfs_perag_get(mp, agno);
-+	ret = atomic_read(&pag->pagf_fstrms);
-+	xfs_perag_put(pag);
-+	return ret;
+-	return &mp->m_perag[XFS_INO_TO_AGNO(mp, ino)];
++	return &mp->m_perag[agno];
  }
  
- static inline int
-@@ -92,7 +101,13 @@ xfs_filestream_get_ag(
- 	xfs_mount_t	*mp,
- 	xfs_agnumber_t	agno)
+ static inline void
+-xfs_put_perag(struct xfs_mount *mp, xfs_perag_t *pag)
++xfs_perag_put(struct xfs_perag *pag)
  {
--	return atomic_inc_return(&mp->m_perag[agno].pagf_fstrms);
-+	struct xfs_perag *pag;
-+	int		ret;
-+
-+	pag = xfs_perag_get(mp, agno);
-+	ret = atomic_inc_return(&pag->pagf_fstrms);
-+	xfs_perag_put(pag);
-+	return ret;
+ 	/* nothing to see here, move along */
  }
- 
- static inline int
-@@ -100,7 +115,13 @@ xfs_filestream_put_ag(
- 	xfs_mount_t	*mp,
- 	xfs_agnumber_t	agno)
- {
--	return atomic_dec_return(&mp->m_perag[agno].pagf_fstrms);
-+	struct xfs_perag *pag;
-+	int		ret;
-+
-+	pag = xfs_perag_get(mp, agno);
-+	ret = atomic_dec_return(&pag->pagf_fstrms);
-+	xfs_perag_put(pag);
-+	return ret;
- }
- 
- /* allocation selection flags */
 -- 
 1.6.5
 
