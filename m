@@ -1,23 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nBFGqa4E245619 for <xfs@oss.sgi.com>; Tue, 15 Dec 2009 10:52:36 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 14D3119845BA
-	for <xfs@oss.sgi.com>; Tue, 15 Dec 2009 08:53:14 -0800 (PST)
-Received: from mail.sandeen.net (sandeen.net [209.173.210.139]) by
-	cuda.sgi.com with ESMTP id 4BME9Zq02skqwgiA for
-	<xfs@oss.sgi.com>; Tue, 15 Dec 2009 08:53:14 -0800 (PST)
-Message-ID: <4B27BF03.6090602@sandeen.net>
-Date: Tue, 15 Dec 2009 10:53:23 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	nBFJL2I3252874 for <xfs@oss.sgi.com>; Tue, 15 Dec 2009 13:21:02 -0600
+Content-class: urn:content-classes:message
 MIME-Version: 1.0
-Subject: Re: Disappointing performance of copy (MD raid + XFS)
-References: <4B204334.1000605@shiftmail.org> <4B207620.3060605@sandeen.net>	
-	<4B21A34C.9090100@shiftmail.org>
-	<20091211032610.GH30608@discord.disaster>
-	<1260895872.7209.46.camel@localhost>
-In-Reply-To: <1260895872.7209.46.camel@localhost>
+Subject: RE: [PATCH] XFS: Free buffer pages array unconditionally
+Date: Tue, 15 Dec 2009 13:21:36 -0600
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A6866@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <1260832317-14977-1-git-send-email-david@fromorbit.com>
+From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,35 +21,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Kasper Sandberg <postmaster@metanurb.dk>
-Cc: Gabor Gombas <gombasg@sztaki.hu>, xfs@oss.sgi.com, linux-raid <linux-raid@vger.kernel.org>, =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>, Asdo <asdo@shiftmail.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Kasper Sandberg wrote:
-> On Fri, 2009-12-11 at 14:26 +1100, Dave Chinner wrote:
->> On Fri, Dec 11, 2009 at 02:41:32AM +0100, Asdo wrote:
->>> I have checked the other problem I had which I was mentioning, that I  
-> <snip>
->>> Also with noalign and rotorstep at 255 the stripe_cache_size stays  
->>> usually in the lower half (below 16000 out of 32000) while with defaults  
->>> it's stuck for most of the time at the maximum and processes are stuck  
->>> sleeping in MD locks for this reason.
->> That really does sound like a misaligned filesystem - the stripe
->> cache will grow larger the more RMW cycles that need to be
->> performed...
-> Sorry to interrupt, I would very much like to see if my array/xfs is
-> properly aligned and all that stuff which has been mentioned inhere,
-> could any of you please post the things required to check? filesystem is
-> straight on md raid6, debian lenny.
+Dave Chinner wrote:
+> The code in xfs_free_buf() only attempts to free the b_pages array if the
+> buffer is a page cache backed or page allocated buffer. The extra log buffer
+> that is used when the log wraps uses pages that are allocated to a different
+> log buffer, but it still has a b_pages array allocated when those pages
+> are associated to with the extra buffer in xfs_buf_associate_memory.
 > 
-> 
-> <snip>
-> 
+> Hence we need to always attempt to free the b_pages array when tearing
+> down a buffer, not just on buffers that are explicitly marked as page bearing
+> buffers. This fixes a leak detected by the kernel memory leak code.
 
-use xfs_info on your mountpoint, and compare the stripe unit and width
-to what md tells you.  xfs_info stripe unit/width output is in fs blocks
-units.
+Three places call xfs_buf_get_pages();
+- _xfs_buf_lookup_pages(), which sets the _XBF_PAGE_CACHE flag in the
+  buffer after the call
+- xfs_buf_associate_memory(), which sets no flag bit
+- xfs_buf_get_noaddr(), which sets the _XBF_PAGES flag.
 
--Eric
+The only place that checks for _XBF_PAGES is xfs_buf_free().
+
+Given that, I have two comments:
+- You could just as easily have set the _XBF_PAGES flag in
+  xfs_buf_associate_memory, thereby making that flag indicate
+  consistently that the buffer has allocated pages
+- Or, since you are proposing unconditionally freeing the
+  pages, we can perhaps drop the _XBF_PAGES flag altogether
+  since it no longer serves much purpose.  (I prefer this.)
+
+					-Alex
+
+> Signed-off-by: Dave Chinner <david@fromorbit.com>
+> ---
+>  fs/xfs/linux-2.6/xfs_buf.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
+> index 4ddc973..529d6a6 100644
+> --- a/fs/xfs/linux-2.6/xfs_buf.c
+> +++ b/fs/xfs/linux-2.6/xfs_buf.c
+> @@ -318,6 +318,7 @@ _xfs_buf_free_pages(
+>  {
+>  	if (bp->b_pages != bp->b_page_array) {
+>  		kmem_free(bp->b_pages);
+> +		bp->b_pages = NULL;
+>  	}
+>  }
+> 
+> @@ -349,9 +350,8 @@ xfs_buf_free(
+>  				ASSERT(!PagePrivate(page));
+>  			page_cache_release(page);
+>  		}
+> -		_xfs_buf_free_pages(bp);
+>  	}
+> -
+> +	_xfs_buf_free_pages(bp);
+>  	xfs_buf_deallocate(bp);
+>  }
 
 _______________________________________________
 xfs mailing list
