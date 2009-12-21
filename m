@@ -1,22 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nBLF4s1H050320 for <xfs@oss.sgi.com>; Mon, 21 Dec 2009 09:04:55 -0600
-Received: from mail.parknet.co.jp (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BD5C2E7D3E3
-	for <xfs@oss.sgi.com>; Mon, 21 Dec 2009 07:05:32 -0800 (PST)
-Received: from mail.parknet.co.jp (mail.parknet.co.jp [210.171.160.6]) by
-	cuda.sgi.com with ESMTP id r6zkX4wGoXh1JKX6 for
-	<xfs@oss.sgi.com>; Mon, 21 Dec 2009 07:05:32 -0800 (PST)
-From: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
-Subject: Re: utimensat fails to update ctime
-References: <4B2B156D.9040604@byu.net> <87aaxclr4q.fsf@devron.myhome.or.jp>
-	<4B2F7421.10005@byu.net> <4B2F7A95.3010708@byu.net>
-Date: Tue, 22 Dec 2009 00:05:27 +0900
-In-Reply-To: <4B2F7A95.3010708@byu.net> (Eric Blake's message of "Mon, 21 Dec
-	2009 06:39:33 -0700")
-Message-ID: <87hbrkjrk8.fsf@devron.myhome.or.jp>
+	nBLBljHm035086 for <xfs@oss.sgi.com>; Mon, 21 Dec 2009 05:47:45 -0600
+Message-ID: <4B2F6153.8010609@gmail.com>
+Date: Mon, 21 Dec 2009 19:51:47 +0800
+From: Liuwenyi <qingshenlwy@gmail.com>
 MIME-Version: 1.0
+Subject: [PATCHv2 00/12]posix_acl: Add the check items
+Reply-To: qingshenlwy@gmail.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,55 +20,53 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Blake <ebb9@byu.net>
-Cc: Christoph Hellwig <hch@lst.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: chris.mason@oracle.com, viro@zeniv.linux.org.uk, joel.becker@oracle.com, cjb@laptop.org, jmorris@namei.org, serue@us.ibm.com, hch@lst.de, akpm@linux-foundation.org, adilger@sun.com, jack@suse.cz, tytso@mit.edu, dwmw2@infradead.org, swhiteho@redhat.com, bfields@fieldses.org, neilb@suse.de, ffilzlnx@us.ibm.com, bharrosh@panasas.com, mfasheh@suse.com, tiger.yang@oracle.com, jeffm@suse.com, aelder@sgi.com, sandeen@sandeen.net, xfs-masters@oss.sgi.com, xfs@oss.sgi.com, reiserfs-devel@vger.kernel.org, ocfs2-devel@oss.oracle.com, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, cluster-devel@redhat.com, linux-mtd@lists.infradead.org, strongzgy@gmail.com, onlyflyer@gmail.com
 
-Eric Blake <ebb9@byu.net> writes:
+Hi all:
+This patch is moving the acl check(Null pointer and PTR_ERR) into
+fs/posix_acl.c.
 
-According to OGAWA Hirofumi on 12/21/2009 12:31 AM:
->>> This in turn caused a regression in coreutils 8.2, visible through 'touch -a':
->>> http://lists.gnu.org/archive/html/bug-coreutils/2009-12/msg00171.html
->>>
->>> GNU coreutils will end up working around the bug by calling fstat/[l]stat
->>> prior to futimens/utimensat, and populating the mtime field with the
->>> desired value rather than using UTIME_OMIT.  But this is a pointless stat
->>> call, which could be avoided if the kernel were fixed to comply with POSIX
->>> by updating ctime even when mtime is UTIME_OMIT.
->> 
->> I couldn't reproduce this with your test program on my machine (latest
->> linus tree). And that utime path looks like no problem, um..., can you
->> provide output of strace or something?
+Thanks for Matthew Wilcox's sguuestion.
 
-> According to Eric Blake on 12/21/2009 6:12 AM:
->
-> It may also be file-system dependent.  On the machine where I saw the
-> original failure:
->> $ uname -a
->> Linux fencepost 2.6.26-2-xen-amd64 #1 SMP Thu Nov 5 04:27:12 UTC 2009
->> x86_64 GNU/Linux
->
-> $ df -T .
-> Filesystem    Type   1K-blocks      Used Available Use% Mounted on
-> /dev/sdb1      xfs   419299328 269018656 150280672  65% /srv/data
-
-Thanks.
-
-This is good point. This would be xfs issue or design. xfs seems to have
-own special handling of ctime.
-
-Cc: to xfs peoples. Any idea?
-
-> But on the machine where the test case is working:
->> $ uname -a
->> Linux vladim 2.6.31.6-166.fc12.i686 #1 SMP Wed Dec 9 11:14:59 EST 2009
->> i686 GNU/Linux
->
-> $ df -T .
-> Filesystem    Type   1K-blocks      Used Available Use% Mounted on
-> /dev/sda3     ext3    34123236  25894932   6494892  80% /
+---
+Signed-off-by: Liuwenyi <qingshenlwy@gmail.com>
+Cc: Chris Mason <chris.mason@oracle.com>
+Cc: Al Viro <viro@zeniv.linux.org.uk>
+Cc: Joel Becker <joel.becker@oracle.com>
+Cc: Chris Ball <cjb@laptop.org>
+Cc: James Morris <jmorris@namei.org>
+Cc: Serge Hallyn <serue@us.ibm.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Andreas Dilger <adilger@sun.com>
+Cc: Jan Kara <jack@suse.cz>
+Cc: "Theodore Ts'o" <tytso@mit.edu>
+Cc: David Woodhouse <dwmw2@infradead.org>
+Cc: Steven Whitehouse <swhiteho@redhat.com>
+Cc: J. Bruce Fields <bfields@fieldses.org>
+Cc: Neil Brown <neilb@suse.de>
+Cc: Frank Filz <ffilzlnx@us.ibm.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Mark Fasheh <mfasheh@suse.com>
+Cc: Tiger Yang <tiger.yang@oracle.com>
+Cc: Jeff Mahoney <jeffm@suse.com>
+Cc: Alex Elder <aelder@sgi.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-masters@oss.sgi.com
+Cc: xfs@oss.sgi.com
+Cc: reiserfs-devel@vger.kernel.org
+Cc: ocfs2-devel@oss.oracle.com
+Cc: linux-nfs@vger.kernel.org
+Cc: linux-ext4@vger.kernel.org
+Cc: linux-btrfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: cluster-devel@redhat.com
+Cc: linux-mtd@lists.infradead.org
 
 -- 
-OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+Best Regards,
+Liuwenyi
 
 _______________________________________________
 xfs mailing list
