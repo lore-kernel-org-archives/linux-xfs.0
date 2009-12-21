@@ -1,13 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nBLBmGlq035165 for <xfs@oss.sgi.com>; Mon, 21 Dec 2009 05:48:16 -0600
-Message-ID: <4B2F6171.4090108@gmail.com>
-Date: Mon, 21 Dec 2009 19:52:17 +0800
-From: Liuwenyi <qingshenlwy@gmail.com>
+	nBLEEkt8046625 for <xfs@oss.sgi.com>; Mon, 21 Dec 2009 08:14:46 -0600
 MIME-Version: 1.0
-Subject: [PATCHv2 01/12]posix_acl: Add the check items
-Reply-To: qingshenlwy@gmail.com
+In-Reply-To: <20091221123654.GA9201@lst.de>
+References: <4B2F6153.8010609@gmail.com> <20091221123654.GA9201@lst.de>
+Date: Mon, 21 Dec 2009 22:15:26 +0800
+Message-ID: <b3657a100912210615q1d55c334g73667e1c3a97ce05@mail.gmail.com>
+Subject: Re: [PATCHv2 00/12]posix_acl: Add the check items
+From: liu weni <qingshenlwy@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -16,75 +17,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: chris.mason@oracle.com, viro@zeniv.linux.org.uk, joel.becker@oracle.com, cjb@laptop.org, jmorris@namei.org, serue@us.ibm.com, hch@lst.de, akpm@linux-foundation.org, adilger@sun.com, jack@suse.cz, tytso@mit.edu, dwmw2@infradead.org, swhiteho@redhat.com, bfields@fieldses.org, neilb@suse.de, ffilzlnx@us.ibm.com, bharrosh@panasas.com, mfasheh@suse.com, tiger.yang@oracle.com, jeffm@suse.com, aelder@sgi.com, sandeen@sandeen.net, xfs-masters@oss.sgi.com, xfs@oss.sgi.com, reiserfs-devel@vger.kernel.org, ocfs2-devel@oss.oracle.com, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, cluster-devel@redhat.com, linux-mtd@lists.infradead.org, strongzgy@gmail.com, onlyflyer@gmail.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: adilger@sun.com, jack@suse.cz, neilb@suse.de, jeffm@suse.com, joel.becker@oracle.com, bfields@fieldses.org, linux-mtd@lists.infradead.org, onlyflyer@gmail.com, tiger.yang@oracle.com, strongzgy@gmail.com, ffilzlnx@us.ibm.com, sandeen@sandeen.net, jmorris@namei.org, cluster-devel@redhat.com, bharrosh@panasas.com, cjb@laptop.org, mfasheh@suse.com, aelder@sgi.com, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, viro@zeniv.linux.org.uk, swhiteho@redhat.com, chris.mason@oracle.com, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, tytso@mit.edu, dwmw2@infradead.xn.org.cpa, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, serue@us.ibm.com, akpm@linux-foundation.org, ocfs2-devel@oss.oracle.com
 
-Add the acl validation check-items
-to fix the null pointer error and PTR_ERR error.
+Thanks for your suggestion.
 
-Thanks for Matthew Wilcox's sguuestion.
+In my opinion the null point is a incorrect state for the acl, then I
+return -EINVAL.
 
----
-Signed-off-by: Liuwenyi <qingshenlwy@gmail.com>
-Cc: Chris Mason <chris.mason@oracle.com>
-Cc: Al Viro <viro@zeniv.linux.org.uk>
-Cc: Joel Becker <joel.becker@oracle.com>
-Cc: Chris Ball <cjb@laptop.org>
-Cc: James Morris <jmorris@namei.org>
-Cc: Serge Hallyn <serue@us.ibm.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Andreas Dilger <adilger@sun.com>
-Cc: Jan Kara <jack@suse.cz>
-Cc: "Theodore Ts'o" <tytso@mit.edu>
-Cc: David Woodhouse <dwmw2@infradead.org>
-Cc: Steven Whitehouse <swhiteho@redhat.com>
-Cc: J. Bruce Fields <bfields@fieldses.org>
-Cc: Neil Brown <neilb@suse.de>
-Cc: Frank Filz <ffilzlnx@us.ibm.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Mark Fasheh <mfasheh@suse.com>
-Cc: Tiger Yang <tiger.yang@oracle.com>
-Cc: Jeff Mahoney <jeffm@suse.com>
-Cc: Alex Elder <aelder@sgi.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-masters@oss.sgi.com
-Cc: xfs@oss.sgi.com
-Cc: reiserfs-devel@vger.kernel.org
-Cc: ocfs2-devel@oss.oracle.com
-Cc: linux-nfs@vger.kernel.org
-Cc: linux-ext4@vger.kernel.org
-Cc: linux-btrfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: cluster-devel@redhat.com
-Cc: linux-mtd@lists.infradead.org
+I will check this state transition in XFS.
 
---
-diff --git a/fs/posix_acl.c b/fs/posix_acl.c
-index 39df95a..d4bacb9 100644
---- a/fs/posix_acl.c
-+++ b/fs/posix_acl.c
-@@ -76,6 +76,12 @@ posix_acl_valid(const struct posix_acl *acl)
-unsigned int id = 0; /* keep gcc happy */
-int needs_mask = 0;
-
-+ if (!acl)
-+ return -EINVAL;
-+
-+ if (IS_ERR(acl))
-+ return PTR_ERR(acl);
-+
-FOREACH_ACL_ENTRY(pa, acl, pe) {
-if (pa->e_perm & ~(ACL_READ|ACL_WRITE|ACL_EXECUTE))
-return -EINVAL;
-
--- 
-Best Regards,
-Liuwenyi
+2009/12/21 Christoph Hellwig <hch@lst.de>:
+> I like taking these checks into posix_acl_valid, but I think the patch
+> submission needs a bit more work.
+>
+> All the patches are extremly whitespace mangled. =A0And I don't think
+> splitting them up makes a whole lot of sense, when we do API changes
+> like this we usually fix up all callers. =A0So please try to fix your
+> mailer, merged them all into one, and maybe also chose a more
+> descriptive subject line, e.g.
+>
+> Subject: take checks for NULL and error pointers into posix_acl_valid()
+>
+>
+> And btw, at least the XFS change seems incorrect - previously we
+> returned NULL acl pointer and this patch changes it to -EINVAL.
+>
+>
 
 _______________________________________________
 xfs mailing list
