@@ -1,13 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nBLBljHm035086 for <xfs@oss.sgi.com>; Mon, 21 Dec 2009 05:47:45 -0600
-Message-ID: <4B2F6153.8010609@gmail.com>
-Date: Mon, 21 Dec 2009 19:51:47 +0800
-From: Liuwenyi <qingshenlwy@gmail.com>
-MIME-Version: 1.0
-Subject: [PATCHv2 00/12]posix_acl: Add the check items
-Reply-To: qingshenlwy@gmail.com
+	nBLCbLYL039196 for <xfs@oss.sgi.com>; Mon, 21 Dec 2009 06:37:21 -0600
+Date: Mon, 21 Dec 2009 13:36:54 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCHv2 00/12]posix_acl: Add the check items
+Message-ID: <20091221123654.GA9201@lst.de>
+References: <4B2F6153.8010609@gmail.com>
+Mime-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4B2F6153.8010609@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,53 +22,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: chris.mason@oracle.com, viro@zeniv.linux.org.uk, joel.becker@oracle.com, cjb@laptop.org, jmorris@namei.org, serue@us.ibm.com, hch@lst.de, akpm@linux-foundation.org, adilger@sun.com, jack@suse.cz, tytso@mit.edu, dwmw2@infradead.org, swhiteho@redhat.com, bfields@fieldses.org, neilb@suse.de, ffilzlnx@us.ibm.com, bharrosh@panasas.com, mfasheh@suse.com, tiger.yang@oracle.com, jeffm@suse.com, aelder@sgi.com, sandeen@sandeen.net, xfs-masters@oss.sgi.com, xfs@oss.sgi.com, reiserfs-devel@vger.kernel.org, ocfs2-devel@oss.oracle.com, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, cluster-devel@redhat.com, linux-mtd@lists.infradead.org, strongzgy@gmail.com, onlyflyer@gmail.com
+To: Liuwenyi <qingshenlwy@gmail.com>
+Cc: adilger@sun.com, jack@suse.cz, neilb@suse.de, jeffm@suse.com, joel.becker@oracle.com, bfields@fieldses.org, linux-mtd@lists.infradead.org, onlyflyer@gmail.com, hch@lst.de, tiger.yang@oracle.com, strongzgy@gmail.com, ffilzlnx@us.ibm.com, sandeen@sandeen.net, jmorris@namei.org, cluster-devel@redhat.com, aelder@sgi.com, cjb@laptop.org, mfasheh@suse.com, bharrosh@panasas.com, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, viro@zeniv.linux.org.uk, swhiteho@redhat.com, chris.mason@oracle.com, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, tytso@mit.edu, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, serue@us.ibm.com, dwmw2@infradead.org, ocfs2-devel@oss.oracle.com
 
-Hi all:
-This patch is moving the acl check(Null pointer and PTR_ERR) into
-fs/posix_acl.c.
+I like taking these checks into posix_acl_valid, but I think the patch
+submission needs a bit more work.
 
-Thanks for Matthew Wilcox's sguuestion.
+All the patches are extremly whitespace mangled.  And I don't think
+splitting them up makes a whole lot of sense, when we do API changes
+like this we usually fix up all callers.  So please try to fix your
+mailer, merged them all into one, and maybe also chose a more
+descriptive subject line, e.g.
 
----
-Signed-off-by: Liuwenyi <qingshenlwy@gmail.com>
-Cc: Chris Mason <chris.mason@oracle.com>
-Cc: Al Viro <viro@zeniv.linux.org.uk>
-Cc: Joel Becker <joel.becker@oracle.com>
-Cc: Chris Ball <cjb@laptop.org>
-Cc: James Morris <jmorris@namei.org>
-Cc: Serge Hallyn <serue@us.ibm.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Andreas Dilger <adilger@sun.com>
-Cc: Jan Kara <jack@suse.cz>
-Cc: "Theodore Ts'o" <tytso@mit.edu>
-Cc: David Woodhouse <dwmw2@infradead.org>
-Cc: Steven Whitehouse <swhiteho@redhat.com>
-Cc: J. Bruce Fields <bfields@fieldses.org>
-Cc: Neil Brown <neilb@suse.de>
-Cc: Frank Filz <ffilzlnx@us.ibm.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Mark Fasheh <mfasheh@suse.com>
-Cc: Tiger Yang <tiger.yang@oracle.com>
-Cc: Jeff Mahoney <jeffm@suse.com>
-Cc: Alex Elder <aelder@sgi.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-masters@oss.sgi.com
-Cc: xfs@oss.sgi.com
-Cc: reiserfs-devel@vger.kernel.org
-Cc: ocfs2-devel@oss.oracle.com
-Cc: linux-nfs@vger.kernel.org
-Cc: linux-ext4@vger.kernel.org
-Cc: linux-btrfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: cluster-devel@redhat.com
-Cc: linux-mtd@lists.infradead.org
+Subject: take checks for NULL and error pointers into posix_acl_valid()
 
--- 
-Best Regards,
-Liuwenyi
+
+And btw, at least the XFS change seems incorrect - previously we
+returned NULL acl pointer and this patch changes it to -EINVAL.
 
 _______________________________________________
 xfs mailing list
