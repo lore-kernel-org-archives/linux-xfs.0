@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nBLNNEg0082609 for <xfs@oss.sgi.com>; Mon, 21 Dec 2009 17:23:14 -0600
+	nBLNTZZX082955 for <xfs@oss.sgi.com>; Mon, 21 Dec 2009 17:29:35 -0600
 Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5057B8F806F
-	for <xfs@oss.sgi.com>; Mon, 21 Dec 2009 15:23:54 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BBCB330407F
+	for <xfs@oss.sgi.com>; Mon, 21 Dec 2009 15:30:15 -0800 (PST)
 Received: from [128.162.233.117] (augusta.americas.sgi.com [128.162.233.117])
-	by estes.americas.sgi.com (Postfix) with ESMTP id 1FCE570001C8
-	for <xfs@oss.sgi.com>; Mon, 21 Dec 2009 17:23:54 -0600 (CST)
-Message-ID: <4B300389.7020905@sgi.com>
-Date: Mon, 21 Dec 2009 17:23:53 -0600
+	by estes.americas.sgi.com (Postfix) with ESMTP id A110570001C8
+	for <xfs@oss.sgi.com>; Mon, 21 Dec 2009 17:30:15 -0600 (CST)
+Message-ID: <4B300507.1070502@sgi.com>
+Date: Mon, 21 Dec 2009 17:30:15 -0600
 From: Bill Kendall <wkendall@sgi.com>
 MIME-Version: 1.0
-Subject: [PATCH] use time32_t consistently in xfsdump tree
+Subject: [PATCH] improve xfsinvutil man page and argument processing
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,658 +27,398 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-xfsdump stores time_t as 32-bits in its dump and inventory
-structures for portability/historical reasons. xfsinvutil
-uses time_t directly, leading to some strange results on
-systems which have a 64-bit time_t.
+xfsinvtuil's man page is not clear about which options
+may be used together. The argument processing was
+not very complete either. Document and enforce the
+following:
 
-The 32-bit time-related functions were factored out into
-their own file since they are now used by xfsinvutil, and
-their original file (util.c) could not easily be linked
-with xfsinvutil due to dependencies on many other
-dump/restore modules.
+* -F and -i are mutually exclusive.
+* -u and -M are mutually exclusive.
+* -m requires -u or -M.
+* Date string can only be passed when using -u and -M.
+* -n is equivalent to -F. Remove it from the man page,
+   but still support it in case there are scripts out
+   there using it.
+
+Also fix an issue parsing time strings which occur during DST.
+
 
 Signed-off-by: Bill Kendall <wkendall@sgi.com>
 ---
-  .gitignore            |    3 +++
-  common/Makefile       |    2 +-
-  common/util.c         |   20 --------------------
-  common/util.h         |   11 -----------
-  dump/Makefile         |    2 ++
-  dump/content.c        |    1 +
-  inventory/inv_stobj.c |    2 +-
-  invutil/Makefile      |    5 ++++-
-  invutil/cmenu.c       |    4 ++--
-  invutil/cmenu.h       |    2 +-
-  invutil/fstab.c       |    2 +-
-  invutil/fstab.h       |    2 +-
-  invutil/invidx.c      |   32 ++++++--------------------------
-  invutil/invidx.h      |    3 +--
-  invutil/invutil.c     |   45 +++++++++++++++++++++++++++------------------
-  invutil/invutil.h     |   10 +++++-----
-  invutil/stobj.c       |    5 +++--
-  invutil/stobj.h       |    2 +-
-  restore/Makefile      |    2 ++
-  restore/content.c     |    4 ++--
-  20 files changed, 64 insertions(+), 95 deletions(-)
-
-Index: xfsdump-kernel.org/common/Makefile
-===================================================================
---- xfsdump-kernel.org.orig/common/Makefile
-+++ xfsdump-kernel.org/common/Makefile
-@@ -14,7 +14,7 @@ LSRCFILES = arch_xlate.c arch_xlate.h \
-  	main.c media.c media.h media_rmvtape.h mlog.c mlog.h \
-  	namreg.c namreg.h openutil.c openutil.h path.c path.h qlock.c qlock.h \
-  	rec_hdr.h ring.c ring.h sproc.c sproc.h stream.c \
--	stream.h ts_mtio.h types.h util.c util.h
-+	stream.h timeutil.h timeutil.c ts_mtio.h types.h util.c util.h
-
-  default install install-dev :
-
-Index: xfsdump-kernel.org/common/util.c
-===================================================================
---- xfsdump-kernel.org.orig/common/util.c
-+++ xfsdump-kernel.org/common/util.c
-@@ -22,7 +22,6 @@
-
-  #include <sys/stat.h>
-  #include <sys/ioctl.h>
--#include <time.h>
-  #include <fcntl.h>
-  #include <errno.h>
-  #include <dirent.h>
-@@ -508,25 +507,6 @@ diriter( jdm_fshandle_t *fshandlep,
-  	}
-  }
-
--char *
--ctime32(const time32_t *timep)
--{
--   time_t t = (time_t) *timep;
--   return ctime(&t);
--}
--
--char *
--ctimennl( const time32_t *clockp )
--{
--	char *p = ctime32( clockp );
--
--	if ( p && strlen( p ) > 0 ) {
--		p[ strlen( p ) - 1 ] = 0;
--	}
--
--	return p;
--}
--
-  int
-  cvtnum( int blocksize, char *s )
-  {
-Index: xfsdump-kernel.org/common/util.h
-===================================================================
---- xfsdump-kernel.org.orig/common/util.h
-+++ xfsdump-kernel.org/common/util.h
-@@ -146,17 +146,6 @@ extern intgen_t diriter( jdm_fshandle_t
-  			 size_t usrgdsz );
+  invutil/getopt.h      |    2
+  invutil/invutil.c     |  143 +++++++++++++++++++++++++-------------------------
+  man/man8/xfsinvutil.8 |   78 +++++----------------------
+  3 files changed, 89 insertions(+), 134 deletions(-)
 
 
--
--/* ctimennl - ctime(3C) with newline removed
-- */
--extern char *ctimennl( const time32_t *clockp );
--
--/* ctime32 - takes a time32_t instead of a time_t
-- */
--extern char *ctime32( const time32_t *timep );
--
--
--
-  /* fold_t - a character string made to look like a "fold here"
-   */
-  #define FOLD_LEN	79
-Index: xfsdump-kernel.org/dump/Makefile
-===================================================================
---- xfsdump-kernel.org.orig/dump/Makefile
-+++ xfsdump-kernel.org/dump/Makefile
-@@ -26,6 +26,7 @@ COMMINCL = \
-  	qlock.h \
-  	ring.h \
-  	stream.h \
-+	timeutil.h \
-  	ts_mtio.h \
-  	types.h \
-  	util.h \
-@@ -66,6 +67,7 @@ COMMON = \
-  	path.c \
-  	ring.c \
-  	stream.c \
-+	timeutil.c \
-  	util.c \
-  	sproc.c
-
-Index: xfsdump-kernel.org/dump/content.c
-===================================================================
---- xfsdump-kernel.org.orig/dump/content.c
-+++ xfsdump-kernel.org/dump/content.c
-@@ -42,6 +42,7 @@
-  #include "exit.h"
-  #include "types.h"
-  #include "path.h"
-+#include "timeutil.h"
-  #include "util.h"
-  #include "lock.h"
-  #include "qlock.h"
-Index: xfsdump-kernel.org/inventory/inv_stobj.c
-===================================================================
---- xfsdump-kernel.org.orig/inventory/inv_stobj.c
-+++ xfsdump-kernel.org/inventory/inv_stobj.c
-@@ -28,7 +28,7 @@
-  #include <sys/mman.h>
-
-  #include "types.h"
--#include "util.h"
-+#include "timeutil.h"
-  #include "mlog.h"
-  #include "inv_priv.h"
-  #include "arch_xlate.h"
-Index: xfsdump-kernel.org/invutil/Makefile
-===================================================================
---- xfsdump-kernel.org.orig/invutil/Makefile
-+++ xfsdump-kernel.org/invutil/Makefile
-@@ -8,7 +8,7 @@ include $(TOPDIR)/include/builddefs
-  COMMINCL = \
-  	global.h \
-  	mlog.h \
--	util.h \
-+	timeutil.h \
-  	types.h
-
-  INVINCL = \
-@@ -18,6 +18,9 @@ INVINCL = \
-  INVCOMMON = \
-  	inv_files.c
-
-+COMMON = \
-+	 timeutil.c
-+
-  CURSESCOMMON = \
-  	cmenu.c \
-  	fstab.c \
-Index: xfsdump-kernel.org/invutil/invidx.c
-===================================================================
---- xfsdump-kernel.org.orig/invutil/invidx.c
-+++ xfsdump-kernel.org/invutil/invidx.c
-@@ -32,6 +32,7 @@
-  #include "list.h"
-  #include "invidx.h"
-  #include "stobj.h"
-+#include "timeutil.h"
-
-  invidx_fileinfo_t *invidx_file;
-  int invidx_numfiles;
-@@ -418,27 +419,6 @@ delete_stobj_entries(int fd, int deletep
-  }
-
-  int
--find_invidx_insert_point(int fd, time_t sh_time)
--{
--    int i;
--    invt_counter_t cnt;
--    invt_entry_t tmpentry;
--
--    lseek(fd, 0, SEEK_SET);
--    read_n_bytes(fd, (char *)&cnt, sizeof(cnt), "invidx file");
--
--    for(i = 0; i < cnt.ic_curnum; i++) {
--	read_n_bytes(fd, (char *)&tmpentry, sizeof(tmpentry), "invidx file");
--	if(tmpentry.ie_timeperiod.tp_start <= sh_time
--	   && tmpentry.ie_timeperiod.tp_end >= sh_time) {
--	    break;
--	}
--    }
--
--    return i;
--}
--
--int
-  find_stobj_insert_point(int fd, invt_seshdr_t *hdr)
-  {
-      int i;
-@@ -462,8 +442,8 @@ int
-  update_invidx_entry(int fd, char *filename, int stobj_fd)
-  {
-      int i;
--    time_t start_time;
--    time_t end_time;
-+    time32_t start_time;
-+    time32_t end_time;
-      invt_counter_t cnt;
-      invt_seshdr_t hdr;
-      invt_sescounter_t sescnt;
-@@ -718,11 +698,11 @@ invidx_highlight(WINDOW *win, node_t *cu
-      snprintf(txt, sizeof(txt), "path:  %s", invtentry->ie_filename);
-      put_info_line(1, txt);
-
--    snprintf(txt, sizeof(txt), "start: %s", ctime((time_t*)&invtentry->ie_timeperiod.tp_start));
-+    snprintf(txt, sizeof(txt), "start: %s", ctime32(&invtentry->ie_timeperiod.tp_start));
-      txt[strlen(txt) - 1] = '\0';
-      put_info_line(2, txt);
-
--    snprintf(txt, sizeof(txt), "end:   %s", ctime((time_t*)&invtentry->ie_timeperiod.tp_end));
-+    snprintf(txt, sizeof(txt), "end:   %s", ctime32(&invtentry->ie_timeperiod.tp_end));
-      txt[strlen(txt) - 1] = '\0';
-      put_info_line(3, txt);
-
-@@ -757,7 +737,7 @@ invidx_undelete(WINDOW *win, node_t *cur
-
-  /*ARGSUSED*/
-  int
--invidx_prune(char *mountpt, uuid_t *uuidp, time_t prunetime, node_t *node, node_t *list)
-+invidx_prune(char *mountpt, uuid_t *uuidp, time32_t prunetime, node_t *node, node_t *list)
-  {
-      data_t *d;
-      invt_entry_t *invidx_entry;
 Index: xfsdump-kernel.org/invutil/invutil.c
 ===================================================================
 --- xfsdump-kernel.org.orig/invutil/invutil.c
 +++ xfsdump-kernel.org/invutil/invutil.c
-@@ -29,6 +29,7 @@
-  #include "mlog.h"
-  #include "inv_priv.h"
-  #include "getopt.h"
-+#include "timeutil.h"
-  #include "invutil.h"
+@@ -76,10 +76,23 @@ main(int argc, char *argv[])
+  	    debug = BOOL_TRUE;
+  	    break;
+  	case GETOPT_INTERACTIVE:
++	    if (force) {
++		fprintf( stderr, "%s: may not specify both -%c and -%c\n",
++			 g_programName,
++			 GETOPT_FORCE,
++			 c );
++		usage();
++	    }
+  	    interactive_option = BOOL_TRUE;
+  	    break;
+-	case GETOPT_NONINTERACTIVE:
+-	    interactive_option = BOOL_FALSE;
++	case GETOPT_NONINTERACTIVE: /* obsoleted by -F */
++	    if (interactive_option) {
++		fprintf( stderr, "%s: may not specify both -%c and -%c\n",
++			 g_programName,
++			 GETOPT_INTERACTIVE,
++			 c );
++		usage();
++	    }
+  	    force = BOOL_TRUE;
+  	    break;
+  	case GETOPT_UUID:
+@@ -90,6 +103,13 @@ main(int argc, char *argv[])
+  			 c );
+  		usage();
+  	    }
++	    if (mntpnt_option) {
++		fprintf( stderr, "%s: may not specify both -%c and -%c\n",
++			 g_programName,
++			 GETOPT_PRUNEMNT,
++			 c );
++		usage();
++	    }
+  	    uuid_option = BOOL_TRUE;
+  	    uuid_parse(optarg, uuid);
+  	    break;
+@@ -104,13 +124,6 @@ main(int argc, char *argv[])
+  			 c );
+  		usage();
+  	    }
+-	    if (r_mf_label) {
+-		fprintf( stderr, "%s: may not specify both -%c and -%c\n",
+-			 g_programName,
+-			 GETOPT_PRUNEMEDIALABEL,
+-			 c );
+-		usage();
+-	    }
+  	    if (uuid_option) {
+  		fprintf( stderr, "%s: may not specify both -%c and -%c\n",
+  			 g_programName,
+@@ -121,6 +134,13 @@ main(int argc, char *argv[])
+  	    check_option = BOOL_TRUE;
+  	    break;
+  	case GETOPT_FORCE:
++	    if (interactive_option) {
++		fprintf( stderr, "%s: may not specify both -%c and -%c\n",
++			 g_programName,
++			 GETOPT_INTERACTIVE,
++			 c );
++		usage();
++	    }
+  	    force = BOOL_TRUE;
+  	    break;
+  	case GETOPT_PRUNEMNT:
+@@ -131,17 +151,17 @@ main(int argc, char *argv[])
+  			 c );
+  		usage();
+  	    }
+-	    mntpnt_option = BOOL_TRUE;
+-	    mntPoint = optarg;
+-	    break;
+-	case GETOPT_PRUNEMEDIALABEL:
+-	    if (check_option) {
++	    if (uuid_option) {
+  		fprintf( stderr, "%s: may not specify both -%c and -%c\n",
+  			 g_programName,
+-			 GETOPT_CHECKPRUNEFSTAB,
++			 GETOPT_UUID,
+  			 c );
+  		usage();
+  	    }
++	    mntpnt_option = BOOL_TRUE;
++	    mntPoint = optarg;
++	    break;
++	case GETOPT_PRUNEMEDIALABEL:
+  	    r_mf_label = optarg;
+  	    break;
+  	default:
+@@ -150,6 +170,31 @@ main(int argc, char *argv[])
+  	}
+      }
 
-  char	*g_programName;
-@@ -43,7 +44,7 @@ bool_t	redraw_options = BOOL_FALSE;
-
-  #ifndef HAVE_CURSES
-  int
--invutil_interactive(char *path, char *mountpt, uuid_t *uuidp, time_t timeSecs)
-+invutil_interactive(char *path, char *mountpt, uuid_t *uuidp, time32_t timeSecs)
-  {
-  	fprintf(stderr, "%s: libcurses support not compiled in, "
-  			"interactive mode is unavailable.\n", g_programName);
-@@ -161,13 +162,13 @@ main(int argc, char *argv[])
-
-      if (check_option) {
-          char *tempstr = "test";
--        time_t temptime = 0;
-+        time32_t temptime = 0;
-          CheckAndPruneFstab(inventory_path, BOOL_TRUE, tempstr, &uuid,
++    if (r_mf_label != NULL && !(mntpnt_option || uuid_option)) {
++	    fprintf( stderr, "%s: -%c requires either -%c or -%c\n",
++			 g_programName,
++			 GETOPT_PRUNEMEDIALABEL,
++			 GETOPT_PRUNEMNT,
++			 GETOPT_UUID );
++	    usage();
++    }
++
++    /* date string only passed for -u and -M */
++    if (uuid_option || mntpnt_option) {
++	    if (optind != (argc - 1)) {
++		    fprintf(stderr, "%s: Date missing for -%c option\n",
++		    	 g_programName,
++			 uuid_option ? GETOPT_UUID : GETOPT_PRUNEMNT);
++		    usage();
++	    }
++    } else {
++	    if (optind != argc) {
++		    fprintf(stderr, "%s: Extra arguments specified\n",
++		    	 g_programName);
++		    usage();
++	    }
++    }
++
+      /* sanity check the inventory database directory, setup global paths
+       */
+      if (!inv_setup_base()) {
+@@ -167,16 +212,7 @@ main(int argc, char *argv[])
   		temptime, NULL);
       }
       else if (uuid_option || mntpnt_option) {
-          char *dateStr;
--        time_t timeSecs;
-+        time32_t timeSecs;
+-        char *dateStr;
+-        time32_t timeSecs;
+-
+-        if (optind != (argc - 1) ) {
+-            fprintf( stderr, "%s: Date missing for prune option\n",
+-		     g_programName );
+-            usage();
+-        }
+-        dateStr = argv[optind];
+-        timeSecs = ParseDate(dateStr);
++        time32_t timeSecs = ParseDate(argv[optind]);
 
-          if (optind != (argc - 1) ) {
-              fprintf( stderr, "%s: Date missing for prune option\n",
-@@ -189,7 +190,7 @@ main(int argc, char *argv[])
+  	if (interactive_option) {
+  	    invutil_interactive(inventory_path, mntPoint, &uuid, timeSecs);
+@@ -189,18 +225,7 @@ main(int argc, char *argv[])
+  	}
       }
       else if ( interactive_option ) {
-          char *dateStr;
--        time_t timeSecs;
-+        time32_t timeSecs;
+-        char *dateStr;
+-        time32_t timeSecs;
+-
+-        if (optind != (argc - 1) ) {
+-	    timeSecs = 0;
+-        }
+-	else {
+-	    dateStr = argv[optind];
+-	    timeSecs = ParseDate(dateStr);
+-	}
+-
+-	invutil_interactive(inventory_path, NULL, NULL, timeSecs);
++	invutil_interactive(inventory_path, mntPoint, &uuid, 0);
+  	printf("\n");
+      }
+      else {
+@@ -293,14 +318,15 @@ ParseDate(char *strDate)
+  #endif
 
-          if (optind != (argc - 1) ) {
-  	    timeSecs = 0;
-@@ -237,11 +238,12 @@ mntpnt_equal(char *s1, char *s2)
-  }
-
-
--time_t
-+time32_t
-  ParseDate(char *strDate)
-  {
-      struct tm tm;
-      time_t date = 0;
-+    time32_t date32;
-      char **fmt;
-      char *templateStr[] = {
-          "%m/%d/%Y %I:%M:%S %p",
-@@ -304,13 +306,21 @@ ParseDate(char *strDate)
-          date = mktime(&tm);
+      if (*fmt == NULL || (date = mktime(&tm)) < 0) {
+-        fprintf(stderr, "%s: bad date, \"%s\" for -M option\n",
+-                g_programName, strDate );
++        fprintf(stderr, "%s: bad date, \"%s\"\n", g_programName, strDate );
+          usage();
       }
 
-+    /* xfsdump inventory uses time32_t for portability.
-+     * make sure the given date did not overflow... */
-+    date32 = date;
-+    if (date32 != date) {
-+        fprintf(stderr, "%s: date out of range: \"%s\"\n", g_programName, strDate);
-+        usage();
-+    }
-+
-  #ifdef INV_DEBUG
-      printf("INV_DEBUG: the date entered is %s\n", strDate);
-      printf("INV_DEBUG: the hour parsed from string is %d\n", tm.tm_hour);
--    printf("INV_DEBUG: the date entered in secs is %ld\n", date);
-+    printf("INV_DEBUG: the date entered in secs is %d\n", date32);
-  #endif /* INV_DEBUG */
-
--    return date;
-+    return date32;
+      /* HACK to ensure tm_isdst is set BEFORE calling mktime(3) */
+      if (tm.tm_isdst) {
+          int dst = tm.tm_isdst;
++	memset (&tm, 0, sizeof (struct tm));
++	tm.tm_isdst = dst;
+          (void)strptime(strDate, *fmt, &tm);
+          tm.tm_isdst = dst;
+          date = mktime(&tm);
+@@ -1074,44 +1100,19 @@ mmap_n_bytes(int fd, size_t count, bool_
+      return temp;
   }
 
-  char *
-@@ -360,7 +370,7 @@ GetFstabFullPath(char *inv_path)
-
+-/* ULO and ULN are taken from dump/common/main.c */
+-
+-#define ULO( f, o )	fprintf( stderr,		\
+-				 "%*s[ -%c " f " ]\n",	\
+-				 ps,			\
+-				 ns,			\
+-				 o ),			\
+-			ps = pfxsz
+-
+-#define ULN( f )	fprintf( stderr,		\
+-				 "%*s[ " f " ]\n",	\
+-				 ps,			\
+-				 ns ),			\
+-			ps = pfxsz
+-
   void
-  CheckAndPruneFstab(char *inv_path, bool_t checkonly, char *mountPt,
--	uuid_t *uuidp, time_t prunetime, char *r_mf_label)
-+	uuid_t *uuidp, time32_t prunetime, char *r_mf_label)
+  usage (void)
   {
-      char	*fstabname;
-      char	*mapaddr;
-@@ -502,7 +512,7 @@ CheckAndPruneFstab(char *inv_path, bool_
-  int
-  CheckAndPruneInvIndexFile( bool_t checkonly,
-  			   char *idxFileName,
--			   time_t prunetime,
-+			   time32_t prunetime,
-  			   char *r_mf_label)
-  {
-      char	*temp;
-@@ -544,8 +554,8 @@ CheckAndPruneInvIndexFile( bool_t checko
-  	       "          %s\n", invIndexEntry[i].ie_filename);
-  	if (debug) {
-  	    printf("          Time:\tbegin  %s\t\tend    %s",
--		   ctime((time_t *)&(invIndexEntry[i].ie_timeperiod.tp_start)),
--		   ctime((time_t *)&(invIndexEntry[i].ie_timeperiod.tp_end)));
-+		   ctime32(&(invIndexEntry[i].ie_timeperiod.tp_start)),
-+		   ctime32(&(invIndexEntry[i].ie_timeperiod.tp_end)));
-  	}
+      int pfxsz;
+-    int ps = 0;
+-    char *ns = "";
 
-  	if (( access( invIndexEntry[i].ie_filename, R_OK | W_OK ) == -1)  &&
-@@ -620,7 +630,7 @@ CheckAndPruneInvIndexFile( bool_t checko
-  int
-  CheckAndPruneStObjFile( bool_t checkonly,
-  			char *StObjFileName,
--			time_t prunetime,
-+			time32_t prunetime,
-  		        char *r_mf_label)
-  {
-      char	response[GEN_STRLEN];
-@@ -672,7 +682,7 @@ CheckAndPruneStObjFile( bool_t checkonly
-  	    printf("            Session %d: %s %s",
-  		   sescount++,
-  		   StObjses->s_mountpt,
--		   ctime( (time_t *)&StObjhdr->sh_time ));
-+		   ctime32(&StObjhdr->sh_time));
-  	}
-  	if (debug) {
-  	    /* Note that the DMF people use some of this debug
-@@ -693,7 +703,7 @@ CheckAndPruneStObjFile( bool_t checkonly
-  	    if (StObjhdr->sh_pruned)
-  		printf("            Pruned Session: %s %s",
-  		       StObjses->s_mountpt,
--		       ctime( (time_t *)&StObjhdr->sh_time ));
-+		       ctime32(&StObjhdr->sh_time));
-  	    printf("\t\tdevice:\t\t%s\n", StObjses->s_devpath);
-  	    printf("\t\tsession label:\t\"%s\"\n", StObjses->s_label);
-  	    uuid_unparse( StObjses->s_sesid, str );
-@@ -733,7 +743,7 @@ CheckAndPruneStObjFile( bool_t checkonly
-  	}
-
-  #ifdef INV_DEBUG
--        printf("INV_DEBUG: sh_time = %ld, prunetime = %ld\n",
-+        printf("INV_DEBUG: sh_time = %d, prunetime = %d\n",
-  	       StObjhdr->sh_time, prunetime);
-          printf("INV_DEBUG: checkonly = %d, sh_pruned = %d\n",
-                 checkonly, StObjhdr->sh_pruned);
-@@ -755,7 +765,7 @@ CheckAndPruneStObjFile( bool_t checkonly
-  			"LABEL\t\t:\t%s\n"
-  			"TIME OF DUMP\t:\t%s",
-                          str, StObjses->s_mountpt, StObjses->s_devpath,
--                        StObjses->s_label, ctime( (time_t *)&StObjhdr->sh_time ));
-+                        StObjses->s_label, ctime32(&StObjhdr->sh_time));
-  		removeflag = BOOL_TRUE;
-  	    }
-  	    else {
-@@ -764,7 +774,7 @@ CheckAndPruneStObjFile( bool_t checkonly
-  		printf("UUID\t\t:\t%s\nMOUNT POINT\t:\t%s\n"
-  		       "DEV PATH\t:\t%s\nTIME OF DUMP\t:\t%s",
-  		       str, StObjses->s_mountpt, StObjses->s_devpath,
--		       ctime( (time_t *)&StObjhdr->sh_time ));
-+		       ctime32(&StObjhdr->sh_time));
-  		while ( GotResponse == BOOL_FALSE )
-  		{
-  		    char *chp;
-@@ -1105,4 +1115,3 @@ usage (void)
+      fprintf(stderr, "%s: %s\n", g_programName, g_programVersion);
+-    pfxsz = fprintf(stderr, "Usage: %s ", g_programName);
+-
+-#ifdef REVEAL
+-    ULO( "(output debug information)", GETOPT_DEBUG );
+-#endif /* REVEAL */
+-    ULO( "(interactive)", GETOPT_INTERACTIVE );
+-    ULO( "<uuid> (prune uuid)", GETOPT_UUID );
+-#ifdef REVEAL
+-    ULO( "(wait for locks)", GETOPT_WAITFORLOCKS );
+-#endif /* REVEAL */
+-    ULO( "(don't prompt)", GETOPT_FORCE );
+-    ULO( "<mountpoint> (prune mountpoint)", GETOPT_PRUNEMNT );
+-    ULO( "<medialabel> (prune specific media)", GETOPT_PRUNEMEDIALABEL );
+-    ULO( "(check inventory inconsistencies)", GETOPT_CHECKPRUNEFSTAB );
+-    ULN( "<mm/dd/yyyy> (date for mountpoint and uuid prune)" );
++    pfxsz = fprintf(stderr, "Usage: \n");
++    fprintf(stderr, "%*s%s [-F|-i] [-m media_label] -M mount_point mm/dd/yyyy\n",
++		    pfxsz, "", g_programName);
++    fprintf(stderr, "%*s%s [-F|-i] [-m media_label] -u UUID mm/dd/yyyy\n",
++		    pfxsz, "", g_programName);
++    fprintf(stderr, "%*s%s -i\n", pfxsz, "", g_programName);
++    fprintf(stderr, "%*s%s -C\n", pfxsz, "", g_programName);
 
       exit(1);
   }
--
-Index: xfsdump-kernel.org/invutil/stobj.c
+Index: xfsdump-kernel.org/invutil/getopt.h
 ===================================================================
---- xfsdump-kernel.org.orig/invutil/stobj.c
-+++ xfsdump-kernel.org/invutil/stobj.c
-@@ -27,6 +27,7 @@
-  #include "getopt.h"
+--- xfsdump-kernel.org.orig/invutil/getopt.h
++++ xfsdump-kernel.org/invutil/getopt.h
+@@ -22,7 +22,7 @@
 
-  #include "invutil.h"
-+#include "timeutil.h"
-  #include "cmenu.h"
-  #include "list.h"
-  #include "stobj.h"
-@@ -184,7 +185,7 @@ stobjsess_highlight(WINDOW *win, node_t
-      snprintf(txt, sizeof(txt), "pruned:  %s, flags: %#x, time: %s",
-  	    (stobjhdr->sh_pruned == BOOL_TRUE) ? "yes" : "no",
-  	    stobjhdr->sh_flag,
--	    ctime((time_t *)&(stobjhdr->sh_time)));
-+	    ctime32(&(stobjhdr->sh_time)));
-      txt[strlen(txt)-1] = '\0';
-      put_info_line(1, txt);
-
-@@ -291,7 +292,7 @@ stobj_select(WINDOW *win, node_t *curren
-
-  /*ARGSUSED*/
-  int
--stobj_prune(char *mountpt, uuid_t *uuidp, time_t prunetime, node_t *node, node_t *list)
-+stobj_prune(char *mountpt, uuid_t *uuidp, time32_t prunetime, node_t *node, node_t *list)
-  {
-      data_t *d;
-      stobjsess_t *stobj;
-Index: xfsdump-kernel.org/restore/Makefile
+  #define GETOPT_DEBUG		'd'	/* debug */
+  #define GETOPT_INTERACTIVE	'i'	/* interactive mode */
+-#define GETOPT_NONINTERACTIVE	'n'	/* non interactive mode (default) */
++#define GETOPT_NONINTERACTIVE	'n'	/* non interactive mode - obsoleted by -F */
+  #define GETOPT_UUID		'u'	/* prune uuid */
+  #define GETOPT_WAITFORLOCKS	'w'	/* wait for locks */
+  #define GETOPT_CHECKPRUNEFSTAB	'C'	/* check and prune fstab */
+Index: xfsdump-kernel.org/man/man8/xfsinvutil.8
 ===================================================================
---- xfsdump-kernel.org.orig/restore/Makefile
-+++ xfsdump-kernel.org/restore/Makefile
-@@ -27,6 +27,7 @@ COMMINCL = \
-  	ring.h \
-  	sproc.h \
-  	stream.h \
-+	timeutil.h \
-  	ts_mtio.h \
-  	types.h \
-  	util.h
-@@ -65,6 +66,7 @@ COMMON = \
-  	ring.c \
-  	sproc.c \
-  	stream.c \
-+	timeutil.c \
-  	util.c
-
-  LOCALS = \
-Index: xfsdump-kernel.org/restore/content.c
-===================================================================
---- xfsdump-kernel.org.orig/restore/content.c
-+++ xfsdump-kernel.org/restore/content.c
-@@ -37,6 +37,7 @@
-  #include <malloc.h>
-
-  #include "types.h"
-+#include "timeutil.h"
-  #include "util.h"
-  #include "cldmgr.h"
-  #include "qlock.h"
-@@ -9347,7 +9348,6 @@ display_dump_label( bool_t lockpr,
-  	char dump_string_uuid[UUID_STR_LEN + 1];
-  	char media_string_uuid[UUID_STR_LEN + 1];
-  	char fs_string_uuid[UUID_STR_LEN + 1];
--	time_t gh_timestamp = (time_t)grhdrp->gh_timestamp;
-
-  	ASSERT( scrhdrp->cih_level >= 0 );
-  	ASSERT( scrhdrp->cih_level < 10 );
-@@ -9376,7 +9376,7 @@ display_dump_label( bool_t lockpr,
-  	      crhdrp->ch_fsdevice );
-  	mlog( mllevel | MLOG_NOLOCK,
-  	      _("session time: %s"),
--	      ctime_r( &gh_timestamp, dateline ));
-+	      ctime32_r( &grhdrp->gh_timestamp, dateline ));
-  	mlog( mllevel | MLOG_NOLOCK,
-  	      _("level: %s%s\n"),
-  	      level_string,
-Index: xfsdump-kernel.org/.gitignore
-===================================================================
---- xfsdump-kernel.org.orig/.gitignore
-+++ xfsdump-kernel.org/.gitignore
-@@ -85,6 +85,7 @@ dump/rec_hdr.h
-  dump/ring.[ch]
-  dump/sproc.[ch]
-  dump/stream.[ch]
-+dump/timeutil.[ch]
-  dump/ts_mtio.h
-  dump/types.h
-  dump/util.[ch]
-@@ -94,6 +95,7 @@ invutil/inv_files.c
-  invutil/inv_priv.h
-  invutil/inventory.h
-  invutil/mlog.h
-+invutil/timeutil.[ch]
-  invutil/types.h
-  invutil/util.h
-
-@@ -131,6 +133,7 @@ restore/rec_hdr.h
-  restore/ring.[ch]
-  restore/sproc.[ch]
-  restore/stream.[ch]
-+restore/timeutil.[ch]
-  restore/ts_mtio.h
-  restore/types.h
-  restore/util.[ch]
-Index: xfsdump-kernel.org/invutil/cmenu.c
-===================================================================
---- xfsdump-kernel.org.orig/invutil/cmenu.c
-+++ xfsdump-kernel.org/invutil/cmenu.c
-@@ -470,7 +470,7 @@ list_undelete(node_t *current, node_t *l
-  }
-
-  int
--list_prune(node_t *menulist, char *mountpt, uuid_t *uuidp, time_t prunetime)
-+list_prune(node_t *menulist, char *mountpt, uuid_t *uuidp, time32_t prunetime)
-  {
-      node_t *n;
-      data_t *d;
-@@ -565,7 +565,7 @@ create_windows()
-  }
-
-  int
--invutil_interactive(char *inv_path, char *mountpt, uuid_t *uuidp, time_t timeSecs)
-+invutil_interactive(char *inv_path, char *mountpt, uuid_t *uuidp, time32_t timeSecs)
-  {
-      int		keyc;
-      node_t	*menulist;
-Index: xfsdump-kernel.org/invutil/cmenu.h
-===================================================================
---- xfsdump-kernel.org.orig/invutil/cmenu.h
-+++ xfsdump-kernel.org/invutil/cmenu.h
-@@ -55,7 +55,7 @@ typedef struct menu_ops_s {
-      int (* op_highlight		) (WINDOW *win, node_t *current, node_t *list);
-      int (* op_unhighlight	) (WINDOW *win, node_t *current, node_t *list);
-      int (* op_commit		) (WINDOW *win, node_t *current, node_t *list);
--    int (* op_prune		) (char *mountpt, uuid_t *uuidp, time_t prunetime, node_t *node, node_t *list);
-+    int (* op_prune		) (char *mountpt, uuid_t *uuidp, time32_t prunetime, node_t *node, node_t *list);
-  } menu_ops_t;
-
-  typedef struct {
-Index: xfsdump-kernel.org/invutil/fstab.c
-===================================================================
---- xfsdump-kernel.org.orig/invutil/fstab.c
-+++ xfsdump-kernel.org/invutil/fstab.c
-@@ -172,7 +172,7 @@ fstab_highlight(WINDOW *win, node_t *cur
-
-  /*ARGSUSED*/
-  int
--fstab_prune(char *mountpt, uuid_t *uuidp, time_t prunetime, node_t *node, node_t *list)
-+fstab_prune(char *mountpt, uuid_t *uuidp, time32_t prunetime, node_t *node, node_t *list)
-  {
-      data_t		*d;
-      invt_fstab_t	*fstabentry;
-Index: xfsdump-kernel.org/invutil/fstab.h
-===================================================================
---- xfsdump-kernel.org.orig/invutil/fstab.h
-+++ xfsdump-kernel.org/invutil/fstab.h
-@@ -33,6 +33,6 @@ int find_matching_fstab(int fidx, invt_f
-  int fstab_select(WINDOW *win, node_t *current, node_t *list);
-  int fstab_highlight(WINDOW *win, node_t *current, node_t *list);
-  int fstab_commit(WINDOW *win, node_t *current, node_t *list);
--int fstab_prune(char *mountpt, uuid_t *uuidp, time_t prunetime, node_t *node, node_t *list);
-+int fstab_prune(char *mountpt, uuid_t *uuidp, time32_t prunetime, node_t *node, node_t *list);
-
-  #endif /* FSTAB_H */
-Index: xfsdump-kernel.org/invutil/invidx.h
-===================================================================
---- xfsdump-kernel.org.orig/invutil/invidx.h
-+++ xfsdump-kernel.org/invutil/invidx.h
-@@ -33,7 +33,6 @@ void *remmap_invidx(int fidx, int num);
-  int find_matching_stobjfile(char *filename);
-  int find_matching_invidxfile(char *filename);
-  int find_overlapping_invidx(int fidx, invt_entry_t *inv_entry);
--int find_invidx_insert_point(int fd, time_t sh_time);
-  int find_invidx_insert_pos(int fidx, invt_entry_t *inv_entry);
-  char *get_inventry_stobjfile(data_t *d);
-  node_t *find_invidx_node(node_t *list, int inv_fileidx);
-@@ -47,6 +46,6 @@ int invidx_undelete(WINDOW *win, node_t
-  int invidx_select(WINDOW *win, node_t *current, node_t *list);
-  int invidx_highlight(WINDOW *win, node_t *current, node_t *list);
-  int invidx_commit(WINDOW *win, node_t *current, node_t *list);
--int invidx_prune(char *mountpt, uuid_t *uuidp, time_t prunetime, node_t *node, node_t *list);
-+int invidx_prune(char *mountpt, uuid_t *uuidp, time32_t prunetime, node_t *node, node_t *list);
-
-  #endif /* INVIDX_H */
-Index: xfsdump-kernel.org/invutil/invutil.h
-===================================================================
---- xfsdump-kernel.org.orig/invutil/invutil.h
-+++ xfsdump-kernel.org/invutil/invutil.h
-@@ -44,12 +44,12 @@ extern bool_t	wait_for_locks;
-  char *	GetFstabFullPath(char *);
-  char *	GetNameOfInvIndex (char *, uuid_t);
-  char *	GetNameOfStobj (char *inv_path, char *filename);
--void	CheckAndPruneFstab(char *, bool_t, char *, uuid_t *, time_t, char *);
--int	CheckAndPruneInvIndexFile( bool_t, char *, time_t, char *);
--int	CheckAndPruneStObjFile( bool_t, char *, time_t, char *);
-+void	CheckAndPruneFstab(char *, bool_t, char *, uuid_t *, time32_t, char *);
-+int	CheckAndPruneInvIndexFile( bool_t, char *, time32_t, char *);
-+int	CheckAndPruneStObjFile( bool_t, char *, time32_t, char *);
-  int	uses_specified_mf_label(
-  		invt_seshdr_t *, invt_session_t *, char	*, char *);
--time_t	ParseDate(char *);
-+time32_t ParseDate(char *);
-  void	usage (void);
-  int	open_and_lock(char *, Open_t, uint);
-  void	read_n_bytes(int, void *, size_t, char *);
-@@ -58,7 +58,7 @@ void *	mmap_n_bytes(int, size_t, bool_t,
-  void	ListFstab(void);
-  int	ListInvIndexFile( char *);
-  int	ListStObjFile(char *);
--int	invutil_interactive(char *, char *, uuid_t *, time_t timeSecs);
-+int	invutil_interactive(char *, char *, uuid_t *, time32_t timeSecs);
-  int	mntpnt_equal(char *s1, char *s2);
-
-  #endif /* INVUTIL_H */
-Index: xfsdump-kernel.org/invutil/stobj.h
-===================================================================
---- xfsdump-kernel.org.orig/invutil/stobj.h
-+++ xfsdump-kernel.org/invutil/stobj.h
-@@ -33,7 +33,7 @@ int stobjstrm_highlight(WINDOW *win, nod
-  int stobjmed_highlight(WINDOW *win, node_t *current, node_t *list);
-  int stobj_select(WINDOW *win, node_t *current, node_t *list);
-  int stobjsess_commit(WINDOW *win, node_t *current, node_t *list);
--int stobj_prune(char *mountpt, uuid_t *uuidp, time_t prunetime, node_t *node, node_t *list);
-+int stobj_prune(char *mountpt, uuid_t *uuidp, time32_t prunetime, node_t *node, node_t *list);
-  int stobj_undelete(WINDOW *win, node_t *current, node_t *list);
-  int stobjmed_commit(WINDOW *win, node_t *current, node_t *list);
-  int stobjstrm_commit(WINDOW *win, node_t *current, node_t *list);
+--- xfsdump-kernel.org.orig/man/man8/xfsinvutil.8
++++ xfsdump-kernel.org/man/man8/xfsinvutil.8
+@@ -3,8 +3,8 @@
+  xfsinvutil \- \&xfsdump inventory database checking and pruning utility
+  .SH SYNOPSIS
+  .nf
+-\f3xfsinvutil\f1 [\-F|\-i] [\-u \f2UUID\f1] [\-M \f2mount_point\f1]
+-		 [\-m \f2media_label\f1] \f2mm/dd/yyyy\f1
++\f3xfsinvutil\f1 [\-F|\-i] [\-m \f2media_label\f1] \-M \f2mount_point\f1 \f2mm/dd/yyyy\f1
++\f3xfsinvutil\f1 [\-F|\-i] [\-m \f2media_label\f1] \-u \f2UUID\f1 \f2mm/dd/yyyy\f1
+  \f3xfsinvutil\f1 \-i
+  \f3xfsinvutil\f1 \-C
+  .fi
+@@ -20,37 +20,12 @@ dump session,
+  stream, and
+  media file.
+  .P
+-Over time, this database may grow too large as
+-.I xfsdump (8)
+-and
+-.IR xfsrestore (8)
+-do not remove entries from the inventory. The database may also develop
+-inconsistencies for various reasons such as operator errors etc.,
+-that may cause
+-.I xfsdump
+-or
+-.I xfsrestore
+-to print error or warning messages.
+-.P
+  .I xfsinvutil
+-is an utility to check this inventory database for consistency,
++is a utility to check this inventory database for consistency,
+  to remove entries of dump sessions which may no longer be of
+  relevance, and to browse the contents of the inventory.
+  .P
+-.I xfsinvutil
+-may be used in three different modes.  In the first mode
+-.I xfsinvutil
+-steps over each dump session recorded in the inventory and prompts for
+-a yes or no response to whether each session should be pruned.  The
+-second is a batch mode in which
+-.I xfsinvutil
+-will prune every entry matching the supplied criteria.  The third mode
+-allows the user to browse the inventory in detail, to delete or
+-undelete records at will and also to import inventories from other
+-hosts.
+-.P
+  The following command line options are available:
+-.P
+  .TP 5
+  \f3\-F\f1
+  Don't prompt the operator.  When
+@@ -63,38 +38,23 @@ entry. With this option the deletion is
+  \f3\-i\f1
+  Interactive mode.  Causes
+  .I xfsinvutil
+-to run in a mode that will allow the operator to browse the contents of
+-the inventory. Please refer to the
++to run in a mode that will allow the operator to browse and modify the
++contents of the inventory. Please refer to the
+  .B "Interactive Mode"
+  section below for more information.
+  .TP 5
+  \f3\-M\f1 \f2mount_point mm/dd/yyyy\f1
+-Specifies the mount point and cut-off date of inventory entries to
+-be selected for pruning.
+-.I xfsinvutil
+-prompts the operator when a dump session in the inventory is
+-identified by the mount point and was created prior to the specified
+-date.
+-The operator can then select specific dump sessions for removal from
+-the inventory database.
+-This prompt will not happen if the \f3\-n\f1 option is used; it will
+-be assumed that the pruning is wanted.
+-.I xfsinvutil
+-also performs consistency checks on other inventory database entries when
+-invoked with this option.
+-.RS
+-.PP
+-The \f2mountpoint\f1 must match the mount point as specified in
+-the inventory shown using
+-.I xfsdump
+-with the \f3\-I\f1 option.
+-This includes the host name and the mount path.
+-.RE
+-.TP 5
+-\f3\-u\f1 \f2UUID\f1
+-Specifies the filesystem universally unique identifier (UUID) of
+-inventory entries to be selected for pruning.  This option is
+-equivalent to the \f3\-M\f1 option.
++Prunes dump sessions identified by the given mount point which were
++created prior to the specified date. Optionally \f3\-m\f1 may be
++be specified to further limit the matching dump sessions by media
++label.
++.I xfsinvutil
++will prompt the operator prior to pruning a dump session unless
++the \f3\-F\f1 or \f3\-i\f1 options are given.
++.TP 5
++\f3\-u\f1 \f2UUID mm/dd/yyyy\f1
++Like \f3\-M\f1, except the matching filesystem is specified
++using its universally unique identifier (UUID) instead of its mount point.
+  .TP 5
+  \f3\-m\f1 \f2media_label\f1
+  If specified, only sessions with at least one media file whose label
+@@ -104,12 +64,6 @@ in addition to those imposed by the date
+  references to media which may have been overwritten or lost. Note that
+  this option does not apply to sessions with no media files.
+  .TP 5
+-.B \-n
+-With this option,
+-.I xfsinvutil
+-will not ask any confirmation questions regarding sessions to prune.
+-(It is the "Nike" option).
+-.TP 5
+  .B \-C
+  With this option,
+  .I xfsinvutil
 
 _______________________________________________
 xfs mailing list
