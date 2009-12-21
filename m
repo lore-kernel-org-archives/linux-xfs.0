@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nBLNTZZX082955 for <xfs@oss.sgi.com>; Mon, 21 Dec 2009 17:29:35 -0600
+	nBLNtmsH084428 for <xfs@oss.sgi.com>; Mon, 21 Dec 2009 17:55:49 -0600
 Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BBCB330407F
-	for <xfs@oss.sgi.com>; Mon, 21 Dec 2009 15:30:15 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D360730407F
+	for <xfs@oss.sgi.com>; Mon, 21 Dec 2009 15:56:31 -0800 (PST)
 Received: from [128.162.233.117] (augusta.americas.sgi.com [128.162.233.117])
-	by estes.americas.sgi.com (Postfix) with ESMTP id A110570001C8
-	for <xfs@oss.sgi.com>; Mon, 21 Dec 2009 17:30:15 -0600 (CST)
-Message-ID: <4B300507.1070502@sgi.com>
-Date: Mon, 21 Dec 2009 17:30:15 -0600
+	by estes.americas.sgi.com (Postfix) with ESMTP id B3F0570001C8
+	for <xfs@oss.sgi.com>; Mon, 21 Dec 2009 17:56:31 -0600 (CST)
+Message-ID: <4B300B2F.7080305@sgi.com>
+Date: Mon, 21 Dec 2009 17:56:31 -0600
 From: Bill Kendall <wkendall@sgi.com>
 MIME-Version: 1.0
-Subject: [PATCH] improve xfsinvutil man page and argument processing
+Subject: Re: [PATCH 1/2]  add lpath_to_handle to libhandle
+References: <4AE08DC7.7000200@sgi.com> <20091024133904.GB23125@infradead.org>
+In-Reply-To: <20091024133904.GB23125@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,398 +29,132 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-xfsinvtuil's man page is not clear about which options
-may be used together. The argument processing was
-not very complete either. Document and enforce the
-following:
+On 10/24/2009 08:39 AM, Christoph Hellwig wrote:
+> On Thu, Oct 22, 2009 at 11:52:23AM -0500, Bill Kendall wrote:
+>> path_to_handle() is not reliable when called on a path which
+>> is a symlink. If the symlink is dangling, or if its points
+>> to a non-XFS filesystem then path_to_handle() will fail. The
+>> reason is that path_to_handle() must open the path in order
+>> to obtain an fd for the xfsctl call.
+>>
+>> It's common during xfsrestore to have dangling symlinks since
+>> the target of the link may not be restored before the symlink.
+>>
+>> This patch adds a new function to libhandle, lpath_to_handle.
+>> It is just like path_to_handle, except it takes a filesystem
+>> path in addition to the path which you want convert to a
+>> handle.
+> 
+> I'm not sure this is a good API.  We can derive a useful path for
+> the ioctl by using basename on the filename if it is a link without
+> needing to expose the details to the caller.
 
-* -F and -i are mutually exclusive.
-* -u and -M are mutually exclusive.
-* -m requires -u or -M.
-* Date string can only be passed when using -u and -M.
-* -n is equivalent to -F. Remove it from the man page,
-   but still support it in case there are scripts out
-   there using it.
-
-Also fix an issue parsing time strings which occur during DST.
+Based on Christoph's suggestion here's a rework of the patch
+(that I've been sitting on for a while). This requires no change
+to the libhandle API and no changes in xfsdump (and hence just
+this one patch. The previously posted patch 2/2 is dropped).
 
 
 Signed-off-by: Bill Kendall <wkendall@sgi.com>
----
-  invutil/getopt.h      |    2
-  invutil/invutil.c     |  143 +++++++++++++++++++++++++-------------------------
-  man/man8/xfsinvutil.8 |   78 +++++----------------------
-  3 files changed, 89 insertions(+), 134 deletions(-)
 
-
-Index: xfsdump-kernel.org/invutil/invutil.c
+Index: xfsprogs-kernel.org/libhandle/handle.c
 ===================================================================
---- xfsdump-kernel.org.orig/invutil/invutil.c
-+++ xfsdump-kernel.org/invutil/invutil.c
-@@ -76,10 +76,23 @@ main(int argc, char *argv[])
-  	    debug = BOOL_TRUE;
-  	    break;
-  	case GETOPT_INTERACTIVE:
-+	    if (force) {
-+		fprintf( stderr, "%s: may not specify both -%c and -%c\n",
-+			 g_programName,
-+			 GETOPT_FORCE,
-+			 c );
-+		usage();
-+	    }
-  	    interactive_option = BOOL_TRUE;
-  	    break;
--	case GETOPT_NONINTERACTIVE:
--	    interactive_option = BOOL_FALSE;
-+	case GETOPT_NONINTERACTIVE: /* obsoleted by -F */
-+	    if (interactive_option) {
-+		fprintf( stderr, "%s: may not specify both -%c and -%c\n",
-+			 g_programName,
-+			 GETOPT_INTERACTIVE,
-+			 c );
-+		usage();
-+	    }
-  	    force = BOOL_TRUE;
-  	    break;
-  	case GETOPT_UUID:
-@@ -90,6 +103,13 @@ main(int argc, char *argv[])
-  			 c );
-  		usage();
-  	    }
-+	    if (mntpnt_option) {
-+		fprintf( stderr, "%s: may not specify both -%c and -%c\n",
-+			 g_programName,
-+			 GETOPT_PRUNEMNT,
-+			 c );
-+		usage();
-+	    }
-  	    uuid_option = BOOL_TRUE;
-  	    uuid_parse(optarg, uuid);
-  	    break;
-@@ -104,13 +124,6 @@ main(int argc, char *argv[])
-  			 c );
-  		usage();
-  	    }
--	    if (r_mf_label) {
--		fprintf( stderr, "%s: may not specify both -%c and -%c\n",
--			 g_programName,
--			 GETOPT_PRUNEMEDIALABEL,
--			 c );
--		usage();
--	    }
-  	    if (uuid_option) {
-  		fprintf( stderr, "%s: may not specify both -%c and -%c\n",
-  			 g_programName,
-@@ -121,6 +134,13 @@ main(int argc, char *argv[])
-  	    check_option = BOOL_TRUE;
-  	    break;
-  	case GETOPT_FORCE:
-+	    if (interactive_option) {
-+		fprintf( stderr, "%s: may not specify both -%c and -%c\n",
-+			 g_programName,
-+			 GETOPT_INTERACTIVE,
-+			 c );
-+		usage();
-+	    }
-  	    force = BOOL_TRUE;
-  	    break;
-  	case GETOPT_PRUNEMNT:
-@@ -131,17 +151,17 @@ main(int argc, char *argv[])
-  			 c );
-  		usage();
-  	    }
--	    mntpnt_option = BOOL_TRUE;
--	    mntPoint = optarg;
--	    break;
--	case GETOPT_PRUNEMEDIALABEL:
--	    if (check_option) {
-+	    if (uuid_option) {
-  		fprintf( stderr, "%s: may not specify both -%c and -%c\n",
-  			 g_programName,
--			 GETOPT_CHECKPRUNEFSTAB,
-+			 GETOPT_UUID,
-  			 c );
-  		usage();
-  	    }
-+	    mntpnt_option = BOOL_TRUE;
-+	    mntPoint = optarg;
-+	    break;
-+	case GETOPT_PRUNEMEDIALABEL:
-  	    r_mf_label = optarg;
-  	    break;
-  	default:
-@@ -150,6 +170,31 @@ main(int argc, char *argv[])
-  	}
-      }
+--- xfsprogs-kernel.org.orig/libhandle/handle.c
++++ xfsprogs-kernel.org/libhandle/handle.c
+@@ -16,6 +16,7 @@
+   * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+   */
 
-+    if (r_mf_label != NULL && !(mntpnt_option || uuid_option)) {
-+	    fprintf( stderr, "%s: -%c requires either -%c or -%c\n",
-+			 g_programName,
-+			 GETOPT_PRUNEMEDIALABEL,
-+			 GETOPT_PRUNEMNT,
-+			 GETOPT_UUID );
-+	    usage();
-+    }
++#include <libgen.h>
+  #include <xfs/xfs.h>
+  #include <xfs/handle.h>
+  #include <xfs/parent.h>
+@@ -40,6 +41,7 @@ typedef union {
+
+  static int obj_to_handle(char *, int, unsigned int, comarg_t, void**, size_t*);
+  static int handle_to_fsfd(void *, char **);
++static char *path_to_fspath(char *path);
+
+
+  /*
+@@ -70,13 +72,18 @@ path_to_fshandle(
+  	comarg_t	obj;
+  	struct fdhash	*fdhp;
+  	char		*tmppath;
++	char		*fspath;
+
+-	fd = open(path, O_RDONLY);
++	fspath = path_to_fspath(path);
++	if (fspath == NULL)
++		return -1;
 +
-+    /* date string only passed for -u and -M */
-+    if (uuid_option || mntpnt_option) {
-+	    if (optind != (argc - 1)) {
-+		    fprintf(stderr, "%s: Date missing for -%c option\n",
-+		    	 g_programName,
-+			 uuid_option ? GETOPT_UUID : GETOPT_PRUNEMNT);
-+		    usage();
-+	    }
-+    } else {
-+	    if (optind != argc) {
-+		    fprintf(stderr, "%s: Extra arguments specified\n",
-+		    	 g_programName);
-+		    usage();
-+	    }
-+    }
++	fd = open(fspath, O_RDONLY);
+  	if (fd < 0)
+  		return -1;
+
+  	obj.path = path;
+-	result = obj_to_handle(path, fd, XFS_IOC_PATH_TO_FSHANDLE,
++	result = obj_to_handle(fspath, fd, XFS_IOC_PATH_TO_FSHANDLE,
+  				obj, fshanp, fshlen);
+  	if (result < 0) {
+  		close(fd);
+@@ -95,7 +102,7 @@ path_to_fshandle(
+  		}
+
+  		fdhp->fsfd = fd;
+-		strncpy(fdhp->fspath, path, sizeof(fdhp->fspath));
++		strncpy(fdhp->fspath, fspath, sizeof(fdhp->fspath));
+  		memcpy(fdhp->fsh, *fshanp, FSIDSIZE);
+
+  		fdhp->fnxt = fdhash_head;
+@@ -114,18 +121,45 @@ path_to_handle(
+  	int		fd;
+  	int		result;
+  	comarg_t	obj;
++	char		*fspath;
 +
-      /* sanity check the inventory database directory, setup global paths
-       */
-      if (!inv_setup_base()) {
-@@ -167,16 +212,7 @@ main(int argc, char *argv[])
-  		temptime, NULL);
-      }
-      else if (uuid_option || mntpnt_option) {
--        char *dateStr;
--        time32_t timeSecs;
--
--        if (optind != (argc - 1) ) {
--            fprintf( stderr, "%s: Date missing for prune option\n",
--		     g_programName );
--            usage();
--        }
--        dateStr = argv[optind];
--        timeSecs = ParseDate(dateStr);
-+        time32_t timeSecs = ParseDate(argv[optind]);
++	fspath = path_to_fspath(path);
++	if (fspath == NULL)
++		return -1;
 
-  	if (interactive_option) {
-  	    invutil_interactive(inventory_path, mntPoint, &uuid, timeSecs);
-@@ -189,18 +225,7 @@ main(int argc, char *argv[])
-  	}
-      }
-      else if ( interactive_option ) {
--        char *dateStr;
--        time32_t timeSecs;
--
--        if (optind != (argc - 1) ) {
--	    timeSecs = 0;
--        }
--	else {
--	    dateStr = argv[optind];
--	    timeSecs = ParseDate(dateStr);
--	}
--
--	invutil_interactive(inventory_path, NULL, NULL, timeSecs);
-+	invutil_interactive(inventory_path, mntPoint, &uuid, 0);
-  	printf("\n");
-      }
-      else {
-@@ -293,14 +318,15 @@ ParseDate(char *strDate)
-  #endif
+-	fd = open(path, O_RDONLY);
++	fd = open(fspath, O_RDONLY);
+  	if (fd < 0)
+  		return -1;
 
-      if (*fmt == NULL || (date = mktime(&tm)) < 0) {
--        fprintf(stderr, "%s: bad date, \"%s\" for -M option\n",
--                g_programName, strDate );
-+        fprintf(stderr, "%s: bad date, \"%s\"\n", g_programName, strDate );
-          usage();
-      }
-
-      /* HACK to ensure tm_isdst is set BEFORE calling mktime(3) */
-      if (tm.tm_isdst) {
-          int dst = tm.tm_isdst;
-+	memset (&tm, 0, sizeof (struct tm));
-+	tm.tm_isdst = dst;
-          (void)strptime(strDate, *fmt, &tm);
-          tm.tm_isdst = dst;
-          date = mktime(&tm);
-@@ -1074,44 +1100,19 @@ mmap_n_bytes(int fd, size_t count, bool_
-      return temp;
+  	obj.path = path;
+-	result = obj_to_handle(path, fd, XFS_IOC_PATH_TO_HANDLE,
++	result = obj_to_handle(fspath, fd, XFS_IOC_PATH_TO_HANDLE,
+  				obj, hanp, hlen);
+  	close(fd);
+  	return result;
   }
 
--/* ULO and ULN are taken from dump/common/main.c */
--
--#define ULO( f, o )	fprintf( stderr,		\
--				 "%*s[ -%c " f " ]\n",	\
--				 ps,			\
--				 ns,			\
--				 o ),			\
--			ps = pfxsz
--
--#define ULN( f )	fprintf( stderr,		\
--				 "%*s[ " f " ]\n",	\
--				 ps,			\
--				 ns ),			\
--			ps = pfxsz
--
-  void
-  usage (void)
-  {
-      int pfxsz;
--    int ps = 0;
--    char *ns = "";
++/* Given a path, return a suitable "fspath" for use in obtaining
++ * an fd for xfsctl calls. In most circumstances the input path is
++ * sufficient. However, if the input path is a sym link the
++ * parent directory is returned so as to avoid issues with
++ * dangling links and links pointing into other filesystems.
++ */
++static char *
++path_to_fspath(char *path)
++{
++	static char dirpath[MAXPATHLEN];
++	struct stat statbuf;
++
++	if (lstat(path, &statbuf) != 0)
++		return NULL;
++
++	if (S_ISLNK(statbuf.st_mode)) {
++		strcpy(dirpath, path);
++		return dirname(dirpath);
++	}
++
++	return path;
++}
 
-      fprintf(stderr, "%s: %s\n", g_programName, g_programVersion);
--    pfxsz = fprintf(stderr, "Usage: %s ", g_programName);
--
--#ifdef REVEAL
--    ULO( "(output debug information)", GETOPT_DEBUG );
--#endif /* REVEAL */
--    ULO( "(interactive)", GETOPT_INTERACTIVE );
--    ULO( "<uuid> (prune uuid)", GETOPT_UUID );
--#ifdef REVEAL
--    ULO( "(wait for locks)", GETOPT_WAITFORLOCKS );
--#endif /* REVEAL */
--    ULO( "(don't prompt)", GETOPT_FORCE );
--    ULO( "<mountpoint> (prune mountpoint)", GETOPT_PRUNEMNT );
--    ULO( "<medialabel> (prune specific media)", GETOPT_PRUNEMEDIALABEL );
--    ULO( "(check inventory inconsistencies)", GETOPT_CHECKPRUNEFSTAB );
--    ULN( "<mm/dd/yyyy> (date for mountpoint and uuid prune)" );
-+    pfxsz = fprintf(stderr, "Usage: \n");
-+    fprintf(stderr, "%*s%s [-F|-i] [-m media_label] -M mount_point mm/dd/yyyy\n",
-+		    pfxsz, "", g_programName);
-+    fprintf(stderr, "%*s%s [-F|-i] [-m media_label] -u UUID mm/dd/yyyy\n",
-+		    pfxsz, "", g_programName);
-+    fprintf(stderr, "%*s%s -i\n", pfxsz, "", g_programName);
-+    fprintf(stderr, "%*s%s -C\n", pfxsz, "", g_programName);
-
-      exit(1);
-  }
-Index: xfsdump-kernel.org/invutil/getopt.h
-===================================================================
---- xfsdump-kernel.org.orig/invutil/getopt.h
-+++ xfsdump-kernel.org/invutil/getopt.h
-@@ -22,7 +22,7 @@
-
-  #define GETOPT_DEBUG		'd'	/* debug */
-  #define GETOPT_INTERACTIVE	'i'	/* interactive mode */
--#define GETOPT_NONINTERACTIVE	'n'	/* non interactive mode (default) */
-+#define GETOPT_NONINTERACTIVE	'n'	/* non interactive mode - obsoleted by -F */
-  #define GETOPT_UUID		'u'	/* prune uuid */
-  #define GETOPT_WAITFORLOCKS	'w'	/* wait for locks */
-  #define GETOPT_CHECKPRUNEFSTAB	'C'	/* check and prune fstab */
-Index: xfsdump-kernel.org/man/man8/xfsinvutil.8
-===================================================================
---- xfsdump-kernel.org.orig/man/man8/xfsinvutil.8
-+++ xfsdump-kernel.org/man/man8/xfsinvutil.8
-@@ -3,8 +3,8 @@
-  xfsinvutil \- \&xfsdump inventory database checking and pruning utility
-  .SH SYNOPSIS
-  .nf
--\f3xfsinvutil\f1 [\-F|\-i] [\-u \f2UUID\f1] [\-M \f2mount_point\f1]
--		 [\-m \f2media_label\f1] \f2mm/dd/yyyy\f1
-+\f3xfsinvutil\f1 [\-F|\-i] [\-m \f2media_label\f1] \-M \f2mount_point\f1 \f2mm/dd/yyyy\f1
-+\f3xfsinvutil\f1 [\-F|\-i] [\-m \f2media_label\f1] \-u \f2UUID\f1 \f2mm/dd/yyyy\f1
-  \f3xfsinvutil\f1 \-i
-  \f3xfsinvutil\f1 \-C
-  .fi
-@@ -20,37 +20,12 @@ dump session,
-  stream, and
-  media file.
-  .P
--Over time, this database may grow too large as
--.I xfsdump (8)
--and
--.IR xfsrestore (8)
--do not remove entries from the inventory. The database may also develop
--inconsistencies for various reasons such as operator errors etc.,
--that may cause
--.I xfsdump
--or
--.I xfsrestore
--to print error or warning messages.
--.P
-  .I xfsinvutil
--is an utility to check this inventory database for consistency,
-+is a utility to check this inventory database for consistency,
-  to remove entries of dump sessions which may no longer be of
-  relevance, and to browse the contents of the inventory.
-  .P
--.I xfsinvutil
--may be used in three different modes.  In the first mode
--.I xfsinvutil
--steps over each dump session recorded in the inventory and prompts for
--a yes or no response to whether each session should be pruned.  The
--second is a batch mode in which
--.I xfsinvutil
--will prune every entry matching the supplied criteria.  The third mode
--allows the user to browse the inventory in detail, to delete or
--undelete records at will and also to import inventories from other
--hosts.
--.P
-  The following command line options are available:
--.P
-  .TP 5
-  \f3\-F\f1
-  Don't prompt the operator.  When
-@@ -63,38 +38,23 @@ entry. With this option the deletion is
-  \f3\-i\f1
-  Interactive mode.  Causes
-  .I xfsinvutil
--to run in a mode that will allow the operator to browse the contents of
--the inventory. Please refer to the
-+to run in a mode that will allow the operator to browse and modify the
-+contents of the inventory. Please refer to the
-  .B "Interactive Mode"
-  section below for more information.
-  .TP 5
-  \f3\-M\f1 \f2mount_point mm/dd/yyyy\f1
--Specifies the mount point and cut-off date of inventory entries to
--be selected for pruning.
--.I xfsinvutil
--prompts the operator when a dump session in the inventory is
--identified by the mount point and was created prior to the specified
--date.
--The operator can then select specific dump sessions for removal from
--the inventory database.
--This prompt will not happen if the \f3\-n\f1 option is used; it will
--be assumed that the pruning is wanted.
--.I xfsinvutil
--also performs consistency checks on other inventory database entries when
--invoked with this option.
--.RS
--.PP
--The \f2mountpoint\f1 must match the mount point as specified in
--the inventory shown using
--.I xfsdump
--with the \f3\-I\f1 option.
--This includes the host name and the mount path.
--.RE
--.TP 5
--\f3\-u\f1 \f2UUID\f1
--Specifies the filesystem universally unique identifier (UUID) of
--inventory entries to be selected for pruning.  This option is
--equivalent to the \f3\-M\f1 option.
-+Prunes dump sessions identified by the given mount point which were
-+created prior to the specified date. Optionally \f3\-m\f1 may be
-+be specified to further limit the matching dump sessions by media
-+label.
-+.I xfsinvutil
-+will prompt the operator prior to pruning a dump session unless
-+the \f3\-F\f1 or \f3\-i\f1 options are given.
-+.TP 5
-+\f3\-u\f1 \f2UUID mm/dd/yyyy\f1
-+Like \f3\-M\f1, except the matching filesystem is specified
-+using its universally unique identifier (UUID) instead of its mount point.
-  .TP 5
-  \f3\-m\f1 \f2media_label\f1
-  If specified, only sessions with at least one media file whose label
-@@ -104,12 +64,6 @@ in addition to those imposed by the date
-  references to media which may have been overwritten or lost. Note that
-  this option does not apply to sessions with no media files.
-  .TP 5
--.B \-n
--With this option,
--.I xfsinvutil
--will not ask any confirmation questions regarding sessions to prune.
--(It is the "Nike" option).
--.TP 5
-  .B \-C
-  With this option,
-  .I xfsinvutil
+  int
+  fd_to_handle (
 
 _______________________________________________
 xfs mailing list
