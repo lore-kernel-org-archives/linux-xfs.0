@@ -1,26 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nBMDTmU8134695 for <xfs@oss.sgi.com>; Tue, 22 Dec 2009 07:29:48 -0600
-Received: from mail.parknet.co.jp (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F198012E9970
-	for <xfs@oss.sgi.com>; Tue, 22 Dec 2009 05:30:30 -0800 (PST)
-Received: from mail.parknet.co.jp (mail.parknet.co.jp [210.171.160.6]) by
-	cuda.sgi.com with ESMTP id wCnQxcoYibCxwEDq for
-	<xfs@oss.sgi.com>; Tue, 22 Dec 2009 05:30:30 -0800 (PST)
-From: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
-Subject: Re: [fuse-devel] utimensat fails to update ctime
-References: <4B2B156D.9040604@byu.net> <87aaxclr4q.fsf@devron.myhome.or.jp>
-	<4B2F7421.10005@byu.net> <4B2F7A95.3010708@byu.net>
-	<87hbrkjrk8.fsf@devron.myhome.or.jp> <4B304D04.6040501@byu.net>
-	<87d427jscr.fsf@devron.myhome.or.jp> <4B3097C4.3060803@wanadoo.fr>
-	<874onjjnln.fsf@devron.myhome.or.jp> <4B30B67A.7080703@wanadoo.fr>
-Date: Tue, 22 Dec 2009 22:30:24 +0900
-In-Reply-To: <4B30B67A.7080703@wanadoo.fr> ("Jean-Pierre =?iso-8859-1?Q?An?=
-	=?iso-8859-1?Q?dr=E9=22's?= message of
-	"Tue, 22 Dec 2009 13:07:22 +0100")
-Message-ID: <87ljgvi1an.fsf@devron.myhome.or.jp>
+	nBMEHmZ2137172 for <xfs@oss.sgi.com>; Tue, 22 Dec 2009 08:17:48 -0600
+Content-class: urn:content-classes:message
 MIME-Version: 1.0
+Subject: RE: [PATCH 2/6] XFS: Don't directly reference m_perag in allocation
+	code
+Date: Tue, 22 Dec 2009 08:18:18 -0600
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A68B9@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <1260857477-2368-3-git-send-email-david@fromorbit.com>
+From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,91 +18,328 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jean-Pierre =?iso-8859-1?Q?Andr=E9?= <jean-pierre.andre@wanadoo.fr>
-Cc: Eric Blake <ebb9@byu.net>, Miklos Szeredi <miklos@szeredi.hu>, fuse-devel@lists.sourceforge.net, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@lst.de>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Jean-Pierre Andr=E9 <jean-pierre.andre@wanadoo.fr> writes:
+Dave Chinner wrote:
+> Start abstracting the perag references so that the indexing of the
+> structures is not directly coded into all the places that uses the
+> perag structures. This will allow us to separate the use of the
+> perag structure and the way it is indexed and hence avoid the known
+> deadlocks related to growing a busy filesystem.
 
-> Hi again,
+Looks good.  I think I would have preferred that you
+added the matching "put" calls at the time you converted
+the references to use "get" calls (mentioned on the last
+patch) because now I find myself ignoring the mismatches.
+No big deal.
 
-Hi,
+> Signed-off-by: Dave Chinner <david@fromorbit.com>
 
->> Well, the problem seems in fuse_lib_setattr() and ntfs_fuse_setattr()
->> (lowlevel op too).
->>
->> The both functions is requiring "ATIME | MTIME". Doesn't it mean the
->> ntfs-3g can't set only MTIME like above utimensat()?
->>    =
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
->
-> With ntfs-3g this is not directly possible, because
-> the interface does not provide flags telling which
-> timestamps should be updated. The only way would
-> be fuse feeding both values (even though unchanged)
-> before calling ntfs-3g. This is true for all versions of
-> ntfs-3g.
-
-Yes, with fuse_operations. It is why I'm saying the issue is libfuse or
-ntfs-3g.
-
-But I noticed ntfs-3g is including libfuse-lite sources and use it with
-static link (I might be wrong here, because I just looked ntfs-3g source
-slightly). AFAIK, the fuse of kernel part is passing the flags of some
-sort of detail always.
-
-[BTW, the code of that part in kernel may be the following,
-
-fs/fuse/dir.c:iattr_to_fattr(),
-
-	if (ivalid & ATTR_ATIME) {
-		arg->valid |=3D FATTR_ATIME;
-		arg->atime =3D iattr->ia_atime.tv_sec;
-		arg->atimensec =3D iattr->ia_atime.tv_nsec;
-		if (!(ivalid & ATTR_ATIME_SET))
-			arg->valid |=3D FATTR_ATIME_NOW;
-	}
-	if ((ivalid & ATTR_MTIME) && update_mtime(ivalid)) {
-		arg->valid |=3D FATTR_MTIME;
-		arg->mtime =3D iattr->ia_mtime.tv_sec;
-		arg->mtimensec =3D iattr->ia_mtime.tv_nsec;
-		if (!(ivalid & ATTR_MTIME_SET))
-			arg->valid |=3D FATTR_MTIME_NOW;
-	}
-]
-
-So, if libfuse-lite was fixed to supported that update request, it would
-be able to do even if fuse_operations.  I.e. in libfuse-lite, emulate
-"ATIME | MTIME" request if "MTIME" only (pass unchanged original atime),
-then call ->utime() callback. (or adds new utime2 callback with flags, or
-something other solutions)
-
-Or, if that request is known limitation of fuse_operations, I think it
-would be clear state and ok. The fs needs to use lowlevel op to support
-that.
-
-> With lowntfs-3g (release candidate only), this could
-> be possible.... but this is not implemented, as the
-> case was never found up to now. I can provide you
-> with a patch,... if fuse can feed in the flags selectively.
-
-Yes.  AFAIK, fuse of kernel part is passing FATTR_MTIME without
-FATTR_ATIME to userland (i.e. FUSE_SET_ATTR_ATIME and
-FUSE_SET_ATTR_MTIME in libfuse).
-
-I think it's good to implement if it's not design decision of ntfs-3g.
-
-[BTW, just my guess though, it would be good to use "if (vaild &
-ATTR_XXX)" style, not "switch()" to support various combinations of
-flags]
-
-Thanks.
--- =
-
-OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+> ---
+>  fs/xfs/xfs_alloc.c       |   81 +++++++++++++++++++++++++--------------------
+>  fs/xfs/xfs_alloc_btree.c |    9 ++++-
+>  2 files changed, 52 insertions(+), 38 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
+> index a1c65fc..3cb533c 100644
+> --- a/fs/xfs/xfs_alloc.c
+> +++ b/fs/xfs/xfs_alloc.c
+> @@ -1662,11 +1662,13 @@ xfs_free_ag_extent(
+>  		xfs_agf_t	*agf;
+>  		xfs_perag_t	*pag;		/* per allocation group data */
+> 
+> +		pag = xfs_perag_get(mp, agno);
+> +		pag->pagf_freeblks += len;
+> +		xfs_perag_put(pag);
+> +
+>  		agf = XFS_BUF_TO_AGF(agbp);
+> -		pag = &mp->m_perag[agno];
+>  		be32_add_cpu(&agf->agf_freeblks, len);
+>  		xfs_trans_agblocks_delta(tp, len);
+> -		pag->pagf_freeblks += len;
+>  		XFS_WANT_CORRUPTED_GOTO(
+>  			be32_to_cpu(agf->agf_freeblks) <=
+>  			be32_to_cpu(agf->agf_length),
+> @@ -1969,7 +1971,8 @@ xfs_alloc_get_freelist(
+>  	xfs_trans_brelse(tp, agflbp);
+>  	if (be32_to_cpu(agf->agf_flfirst) == XFS_AGFL_SIZE(mp))
+>  		agf->agf_flfirst = 0;
+> -	pag = &mp->m_perag[be32_to_cpu(agf->agf_seqno)];
+> +
+> +	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
+>  	be32_add_cpu(&agf->agf_flcount, -1);
+>  	xfs_trans_agflist_delta(tp, -1);
+>  	pag->pagf_flcount--;
+> @@ -2078,7 +2081,8 @@ xfs_alloc_put_freelist(
+>  	be32_add_cpu(&agf->agf_fllast, 1);
+>  	if (be32_to_cpu(agf->agf_fllast) == XFS_AGFL_SIZE(mp))
+>  		agf->agf_fllast = 0;
+> -	pag = &mp->m_perag[be32_to_cpu(agf->agf_seqno)];
+> +
+> +	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
+>  	be32_add_cpu(&agf->agf_flcount, 1);
+>  	xfs_trans_agflist_delta(tp, 1);
+>  	pag->pagf_flcount++;
+> @@ -2089,6 +2093,7 @@ xfs_alloc_put_freelist(
+>  		pag->pagf_btreeblks--;
+>  		logflags |= XFS_AGF_BTREEBLKS;
+>  	}
+> +	xfs_perag_put(pag);
+> 
+>  	xfs_alloc_log_agf(tp, agbp, logflags);
+> 
+> @@ -2152,7 +2157,6 @@ xfs_read_agf(
+>  		xfs_trans_brelse(tp, *bpp);
+>  		return XFS_ERROR(EFSCORRUPTED);
+>  	}
+> -
+>  	XFS_BUF_SET_VTYPE_REF(*bpp, B_FS_AGF, XFS_AGF_REF);
+>  	return 0;
+>  }
+> @@ -2184,7 +2188,7 @@ xfs_alloc_read_agf(
+>  	ASSERT(!XFS_BUF_GETERROR(*bpp));
+> 
+>  	agf = XFS_BUF_TO_AGF(*bpp);
+> -	pag = &mp->m_perag[agno];
+> +	pag = xfs_perag_get(mp, agno);
+>  	if (!pag->pagf_init) {
+>  		pag->pagf_freeblks = be32_to_cpu(agf->agf_freeblks);
+>  		pag->pagf_btreeblks = be32_to_cpu(agf->agf_btreeblks);
+> @@ -2211,6 +2215,7 @@ xfs_alloc_read_agf(
+>  		       be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNTi]));
+>  	}
+>  #endif
+> +	xfs_perag_put(pag);
+>  	return 0;
+>  }
+> 
+> @@ -2271,7 +2276,7 @@ xfs_alloc_vextent(
+>  		 */
+>  		args->agno = XFS_FSB_TO_AGNO(mp, args->fsbno);
+>  		down_read(&mp->m_peraglock);
+> -		args->pag = &mp->m_perag[args->agno];
+> +		args->pag = xfs_perag_get(mp, args->agno);
+>  		args->minleft = 0;
+>  		error = xfs_alloc_fix_freelist(args, 0);
+>  		args->minleft = minleft;
+> @@ -2341,7 +2346,7 @@ xfs_alloc_vextent(
+>  		 */
+>  		down_read(&mp->m_peraglock);
+>  		for (;;) {
+> -			args->pag = &mp->m_perag[args->agno];
+> +			args->pag = xfs_perag_get(mp, args->agno);
+>  			if (no_min) args->minleft = 0;
+>  			error = xfs_alloc_fix_freelist(args, flags);
+>  			args->minleft = minleft;
+> @@ -2400,6 +2405,7 @@ xfs_alloc_vextent(
+>  					}
+>  				}
+>  			}
+> +			xfs_perag_put(args->pag);
+>  		}
+>  		up_read(&mp->m_peraglock);
+>  		if (bump_rotor || (type == XFS_ALLOCTYPE_ANY_AG)) {
+> @@ -2427,8 +2433,10 @@ xfs_alloc_vextent(
+>  			args->len);
+>  #endif
+>  	}
+> +	xfs_perag_put(args->pag);
+>  	return 0;
+>  error0:
+> +	xfs_perag_put(args->pag);
+>  	up_read(&mp->m_peraglock);
+>  	return error;
+>  }
+> @@ -2455,7 +2463,7 @@ xfs_free_extent(
+>  	ASSERT(args.agno < args.mp->m_sb.sb_agcount);
+>  	args.agbno = XFS_FSB_TO_AGBNO(args.mp, bno);
+>  	down_read(&args.mp->m_peraglock);
+> -	args.pag = &args.mp->m_perag[args.agno];
+> +	args.pag = xfs_perag_get(args.mp, args.agno);
+>  	if ((error = xfs_alloc_fix_freelist(&args, XFS_ALLOC_FLAG_FREEING)))
+>  		goto error0;
+>  #ifdef DEBUG
+> @@ -2465,6 +2473,7 @@ xfs_free_extent(
+>  #endif
+>  	error = xfs_free_ag_extent(tp, args.agbp, args.agno, args.agbno, len, 0);
+>  error0:
+> +	xfs_perag_put(args.pag);
+>  	up_read(&args.mp->m_peraglock);
+>  	return error;
+>  }
+> @@ -2486,15 +2495,15 @@ xfs_alloc_mark_busy(xfs_trans_t *tp,
+>  		    xfs_agblock_t bno,
+>  		    xfs_extlen_t len)
+>  {
+> -	xfs_mount_t		*mp;
+>  	xfs_perag_busy_t	*bsy;
+> +	struct xfs_perag	*pag;
+>  	int			n;
+> 
+> -	mp = tp->t_mountp;
+> -	spin_lock(&mp->m_perag[agno].pagb_lock);
+> +	pag = xfs_perag_get(tp->t_mountp, agno);
+> +	spin_lock(&pag->pagb_lock);
+> 
+>  	/* search pagb_list for an open slot */
+> -	for (bsy = mp->m_perag[agno].pagb_list, n = 0;
+> +	for (bsy = pag->pagb_list, n = 0;
+>  	     n < XFS_PAGB_NUM_SLOTS;
+>  	     bsy++, n++) {
+>  		if (bsy->busy_tp == NULL) {
+> @@ -2502,11 +2511,11 @@ xfs_alloc_mark_busy(xfs_trans_t *tp,
+>  		}
+>  	}
+> 
+> -	trace_xfs_alloc_busy(mp, agno, bno, len, n);
+> +	trace_xfs_alloc_busy(tp->t_mountp, agno, bno, len, n);
+> 
+>  	if (n < XFS_PAGB_NUM_SLOTS) {
+> -		bsy = &mp->m_perag[agno].pagb_list[n];
+> -		mp->m_perag[agno].pagb_count++;
+> +		bsy = &pag->pagb_list[n];
+> +		pag->pagb_count++;
+>  		bsy->busy_start = bno;
+>  		bsy->busy_length = len;
+>  		bsy->busy_tp = tp;
+> @@ -2521,7 +2530,8 @@ xfs_alloc_mark_busy(xfs_trans_t *tp,
+>  		xfs_trans_set_sync(tp);
+>  	}
+> 
+> -	spin_unlock(&mp->m_perag[agno].pagb_lock);
+> +	spin_unlock(&pag->pagb_lock);
+> +	xfs_perag_put(pag);
+>  }
+> 
+>  void
+> @@ -2529,24 +2539,23 @@ xfs_alloc_clear_busy(xfs_trans_t *tp,
+>  		     xfs_agnumber_t agno,
+>  		     int idx)
+>  {
+> -	xfs_mount_t		*mp;
+> +	struct xfs_perag	*pag;
+>  	xfs_perag_busy_t	*list;
+> 
+> -	mp = tp->t_mountp;
+> -
+> -	spin_lock(&mp->m_perag[agno].pagb_lock);
+> -	list = mp->m_perag[agno].pagb_list;
+> -
+>  	ASSERT(idx < XFS_PAGB_NUM_SLOTS);
+> +	pag = xfs_perag_get(tp->t_mountp, agno);
+> +	spin_lock(&pag->pagb_lock);
+> +	list = pag->pagb_list;
+> 
+> -	trace_xfs_alloc_unbusy(mp, agno, idx, list[idx].busy_tp == tp);
+> +	trace_xfs_alloc_unbusy(tp->t_mountp, agno, idx, list[idx].busy_tp == tp);
+> 
+>  	if (list[idx].busy_tp == tp) {
+>  		list[idx].busy_tp = NULL;
+> -		mp->m_perag[agno].pagb_count--;
+> +		pag->pagb_count--;
+>  	}
+> 
+> -	spin_unlock(&mp->m_perag[agno].pagb_lock);
+> +	spin_unlock(&pag->pagb_lock);
+> +	xfs_perag_put(pag);
+>  }
+> 
+> 
+> @@ -2560,21 +2569,20 @@ xfs_alloc_search_busy(xfs_trans_t *tp,
+>  		    xfs_agblock_t bno,
+>  		    xfs_extlen_t len)
+>  {
+> -	xfs_mount_t		*mp;
+> +	struct xfs_perag	*pag;
+>  	xfs_perag_busy_t	*bsy;
+>  	xfs_agblock_t		uend, bend;
+>  	xfs_lsn_t		lsn;
+>  	int			cnt;
+> 
+> -	mp = tp->t_mountp;
+> -
+> -	spin_lock(&mp->m_perag[agno].pagb_lock);
+> -	cnt = mp->m_perag[agno].pagb_count;
+> +	pag = xfs_perag_get(tp->t_mountp, agno);
+> +	spin_lock(&pag->pagb_lock);
+> +	cnt = pag->pagb_count;
+> 
+>  	uend = bno + len - 1;
+> 
+>  	/* search pagb_list for this slot, skipping open slots */
+> -	for (bsy = mp->m_perag[agno].pagb_list; cnt; bsy++) {
+> +	for (bsy = pag->pagb_list; cnt; bsy++) {
+> 
+>  		/*
+>  		 * (start1,length1) within (start2, length2)
+> @@ -2589,7 +2597,7 @@ xfs_alloc_search_busy(xfs_trans_t *tp,
+>  		}
+>  	}
+> 
+> -	trace_xfs_alloc_busysearch(mp, agno, bno, len, !!cnt);
+> +	trace_xfs_alloc_busysearch(tp->t_mountp, agno, bno, len, !!cnt);
+> 
+>  	/*
+>  	 * If a block was found, force the log through the LSN of the
+> @@ -2597,9 +2605,10 @@ xfs_alloc_search_busy(xfs_trans_t *tp,
+>  	 */
+>  	if (cnt) {
+>  		lsn = bsy->busy_tp->t_commit_lsn;
+> -		spin_unlock(&mp->m_perag[agno].pagb_lock);
+> -		xfs_log_force(mp, lsn, XFS_LOG_FORCE|XFS_LOG_SYNC);
+> +		spin_unlock(&pag->pagb_lock);
+> +		xfs_log_force(tp->t_mountp, lsn, XFS_LOG_FORCE|XFS_LOG_SYNC);
+>  	} else {
+> -		spin_unlock(&mp->m_perag[agno].pagb_lock);
+> +		spin_unlock(&pag->pagb_lock);
+>  	}
+> +	xfs_perag_put(pag);
+>  }
+> diff --git a/fs/xfs/xfs_alloc_btree.c b/fs/xfs/xfs_alloc_btree.c
+> index adbd914..b726e10 100644
+> --- a/fs/xfs/xfs_alloc_btree.c
+> +++ b/fs/xfs/xfs_alloc_btree.c
+> @@ -61,12 +61,14 @@ xfs_allocbt_set_root(
+>  	struct xfs_agf		*agf = XFS_BUF_TO_AGF(agbp);
+>  	xfs_agnumber_t		seqno = be32_to_cpu(agf->agf_seqno);
+>  	int			btnum = cur->bc_btnum;
+> +	struct xfs_perag	*pag = xfs_perag_get(cur->bc_mp, seqno);
+> 
+>  	ASSERT(ptr->s != 0);
+> 
+>  	agf->agf_roots[btnum] = ptr->s;
+>  	be32_add_cpu(&agf->agf_levels[btnum], inc);
+> -	cur->bc_mp->m_perag[seqno].pagf_levels[btnum] += inc;
+> +	pag->pagf_levels[btnum] += inc;
+> +	xfs_perag_put(pag);
+> 
+>  	xfs_alloc_log_agf(cur->bc_tp, agbp, XFS_AGF_ROOTS | XFS_AGF_LEVELS);
+>  }
+> @@ -150,6 +152,7 @@ xfs_allocbt_update_lastrec(
+>  {
+>  	struct xfs_agf		*agf = XFS_BUF_TO_AGF(cur->bc_private.a.agbp);
+>  	xfs_agnumber_t		seqno = be32_to_cpu(agf->agf_seqno);
+> +	struct xfs_perag	*pag;
+>  	__be32			len;
+>  	int			numrecs;
+> 
+> @@ -193,7 +196,9 @@ xfs_allocbt_update_lastrec(
+>  	}
+> 
+>  	agf->agf_longest = len;
+> -	cur->bc_mp->m_perag[seqno].pagf_longest = be32_to_cpu(len);
+> +	pag = xfs_perag_get(cur->bc_mp, seqno);
+> +	pag->pagf_longest = be32_to_cpu(len);
+> +	xfs_perag_put(pag);
+>  	xfs_alloc_log_agf(cur->bc_tp, cur->bc_private.a.agbp, XFS_AGF_LONGEST);
+>  }
 
 _______________________________________________
 xfs mailing list
