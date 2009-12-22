@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nBMGFTGE142658 for <xfs@oss.sgi.com>; Tue, 22 Dec 2009 10:15:30 -0600
-Received: from smtp2b.orange.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4B6EF1C0D197
-	for <xfs@oss.sgi.com>; Tue, 22 Dec 2009 08:16:11 -0800 (PST)
-Received: from smtp2b.orange.fr (smtp2b.orange.fr [80.12.242.146]) by
-	cuda.sgi.com with ESMTP id ngRgDE73hw3gR0eZ for
-	<xfs@oss.sgi.com>; Tue, 22 Dec 2009 08:16:11 -0800 (PST)
-Message-ID: <4B30F0C9.2020702@wanadoo.fr>
-Date: Tue, 22 Dec 2009 17:16:09 +0100
-From: =?ISO-8859-1?Q?Jean-Pierre_Andr=E9?= <jean-pierre.andre@wanadoo.fr>
-MIME-Version: 1.0
-Subject: Re: [fuse-devel] utimensat fails to update ctime
-References: <4B2B156D.9040604@byu.net>
-	<87aaxclr4q.fsf@devron.myhome.or.jp>	<4B2F7421.10005@byu.net>
-	<4B2F7A95.3010708@byu.net>	<87hbrkjrk8.fsf@devron.myhome.or.jp>
-	<4B304D04.6040501@byu.net>	<87d427jscr.fsf@devron.myhome.or.jp>
-	<4B3097C4.3060803@wanadoo.fr>	<874onjjnln.fsf@devron.myhome.or.jp>
-	<4B30B67A.7080703@wanadoo.fr> <87ljgvi1an.fsf@devron.myhome.or.jp>
-In-Reply-To: <87ljgvi1an.fsf@devron.myhome.or.jp>
+	nBMHiUvZ145912 for <xfs@oss.sgi.com>; Tue, 22 Dec 2009 11:44:30 -0600
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9CD2D11F352
+	for <xfs@oss.sgi.com>; Tue, 22 Dec 2009 09:45:12 -0800 (PST)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com
+	with ESMTP id dIVtFmSYF42Ml4i0 for <xfs@oss.sgi.com>;
+	Tue, 22 Dec 2009 09:45:12 -0800 (PST)
+Date: Tue, 22 Dec 2009 18:45:00 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: utimensat fails to update ctime
+Message-ID: <20091222174500.GA7063@lst.de>
+References: <4B2B156D.9040604@byu.net> <87aaxclr4q.fsf@devron.myhome.or.jp>
+	<4B2F7421.10005@byu.net> <4B2F7A95.3010708@byu.net>
+	<87hbrkjrk8.fsf@devron.myhome.or.jp>
+Mime-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <87hbrkjrk8.fsf@devron.myhome.or.jp>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,134 +26,192 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
-Cc: Eric Blake <ebb9@byu.net>, Miklos Szeredi <miklos@szeredi.hu>, fuse-devel@lists.sourceforge.net, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com, Christoph Hellwig <hch@lst.de>, Eric Blake <ebb9@byu.net>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-Hi again,
-
-OGAWA Hirofumi wrote:
-> Jean-Pierre Andr=E9<jean-pierre.andre@wanadoo.fr>  writes:
->
->    =
-
->> Hi again,
->>      =
-
-> Hi,
->
->    =
-
->>> Well, the problem seems in fuse_lib_setattr() and ntfs_fuse_setattr()
->>> (lowlevel op too).
->>>
->>> The both functions is requiring "ATIME | MTIME". Doesn't it mean the
->>> ntfs-3g can't set only MTIME like above utimensat()?
->>>
->>>        =
-
->> With ntfs-3g this is not directly possible, because
->> the interface does not provide flags telling which
->> timestamps should be updated. The only way would
->> be fuse feeding both values (even though unchanged)
->> before calling ntfs-3g. This is true for all versions of
->> ntfs-3g.
->>      =
-
-> Yes, with fuse_operations. It is why I'm saying the issue is libfuse or
-> ntfs-3g.
->
-> But I noticed ntfs-3g is including libfuse-lite sources and use it with
-> static link (I might be wrong here, because I just looked ntfs-3g source
-> slightly). AFAIK, the fuse of kernel part is passing the flags of some
-> sort of detail always.
->    =
+This patch which I had in my QA queue for a while should fix all the
+timestamp update issues in XFS:
 
 
-Use of fuse-lite is optional, and static linking also
-(both depend on your configure options),
-
-> [BTW, the code of that part in kernel may be the following,
->
-> fs/fuse/dir.c:iattr_to_fattr(),
->
->    =
-
-[...]
-> So, if libfuse-lite was fixed to supported that update request, it would
-> be able to do even if fuse_operations.  I.e. in libfuse-lite, emulate
-> "ATIME | MTIME" request if "MTIME" only (pass unchanged original atime),
-> then call ->utime() callback. (or adds new utime2 callback with flags, or
-> something other solutions)
->    =
-
-
-I will port to fuse-lite the patch which Miklos has
-just sent.
-
-> Or, if that request is known limitation of fuse_operations, I think it
-> would be clear state and ok. The fs needs to use lowlevel op to support
-> that.
->
->    =
-
->> With lowntfs-3g (release candidate only), this could
->> be possible.... but this is not implemented, as the
->> case was never found up to now. I can provide you
->> with a patch,... if fuse can feed in the flags selectively.
->>      =
-
-> Yes.  AFAIK, fuse of kernel part is passing FATTR_MTIME without
-> FATTR_ATIME to userland (i.e. FUSE_SET_ATTR_ATIME and
-> FUSE_SET_ATTR_MTIME in libfuse).
->
-> I think it's good to implement if it's not design decision of ntfs-3g.
->
-> [BTW, just my guess though, it would be good to use "if (vaild&
-> ATTR_XXX)" style, not "switch()" to support various combinations of
-> flags]
->    =
-
-
-Might be better, ... or not. Setting both mtime
-and atime is much simpler than setting each one
-individually. So both methods will end up having
-to process three different situations.
-
-I suggest I port Miklos patch to fuse-lite soon,
-and delay the low-level case (and microsecond
-precision) until January. Does that suit your needs ?
-
-Also : there is a common case of mis-configuration
-in which gid is set in the mount options and uid
-is not. As a consequence files appear as owned
-by root and utime() is forbidden to plain users.
-
-So you should first check your mount options.
-And since ntfs-2009.11.14 standard ownership
-and permissions are fully supported provided a
-proper configuration file has been set.
-
-Regards
-
-Jean-Pierre
-
-
-
-> Thanks.
->    =
-
-
--- =
-
-JP Andr=E9
-email jean-pierre.andre@wanadoo.fr
-
-
-
+Index: linux-2.6/fs/xfs/xfs_vnodeops.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/xfs_vnodeops.c	2009-12-21 16:24:28.470990760 +0100
++++ linux-2.6/fs/xfs/xfs_vnodeops.c	2009-12-21 16:32:41.348990760 +0100
+@@ -70,7 +70,6 @@ xfs_setattr(
+ 	uint			commit_flags=0;
+ 	uid_t			uid=0, iuid=0;
+ 	gid_t			gid=0, igid=0;
+-	int			timeflags = 0;
+ 	struct xfs_dquot	*udqp, *gdqp, *olddquot1, *olddquot2;
+ 	int			need_iolock = 1;
+ 
+@@ -135,16 +134,13 @@ xfs_setattr(
+ 	if (flags & XFS_ATTR_NOLOCK)
+ 		need_iolock = 0;
+ 	if (!(mask & ATTR_SIZE)) {
+-		if ((mask != (ATTR_CTIME|ATTR_ATIME|ATTR_MTIME)) ||
+-		    (mp->m_flags & XFS_MOUNT_WSYNC)) {
+-			tp = xfs_trans_alloc(mp, XFS_TRANS_SETATTR_NOT_SIZE);
+-			commit_flags = 0;
+-			if ((code = xfs_trans_reserve(tp, 0,
+-						     XFS_ICHANGE_LOG_RES(mp), 0,
+-						     0, 0))) {
+-				lock_flags = 0;
+-				goto error_return;
+-			}
++		tp = xfs_trans_alloc(mp, XFS_TRANS_SETATTR_NOT_SIZE);
++		commit_flags = 0;
++		code = xfs_trans_reserve(tp, 0, XFS_ICHANGE_LOG_RES(mp),
++					 0, 0, 0);
++		if (code) {
++			lock_flags = 0;
++			goto error_return;
+ 		}
+ 	} else {
+ 		if (DM_EVENT_ENABLED(ip, DM_EVENT_TRUNCATE) &&
+@@ -295,15 +291,23 @@ xfs_setattr(
+ 		 * or we are explicitly asked to change it. This handles
+ 		 * the semantic difference between truncate() and ftruncate()
+ 		 * as implemented in the VFS.
+-		 */
+-		if (iattr->ia_size != ip->i_size || (mask & ATTR_CTIME))
+-			timeflags |= XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG;
++		 *
++		 * The regular truncate() case without ATTR_CTIME and ATTR_MTIME
++		 * is a special case where we need to update the times despite
++		 * not having these flags set.  For all other operations the
++		 * VFS set these flags explicitly if it wants a timestamp
++		 * update.
++		 */
++		if (iattr->ia_size != ip->i_size &&
++		    (!(mask & (ATTR_CTIME | ATTR_MTIME)))) {
++			iattr->ia_ctime = iattr->ia_mtime =
++				current_fs_time(inode->i_sb);
++			mask |= ATTR_CTIME | ATTR_MTIME;
++		}
+ 
+ 		if (iattr->ia_size > ip->i_size) {
+ 			ip->i_d.di_size = iattr->ia_size;
+ 			ip->i_size = iattr->ia_size;
+-			if (!(flags & XFS_ATTR_DMI))
+-				xfs_ichgtime(ip, XFS_ICHGTIME_CHG);
+ 			xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 		} else if (iattr->ia_size <= ip->i_size ||
+ 			   (iattr->ia_size == 0 && ip->i_d.di_nextents)) {
+@@ -374,9 +378,6 @@ xfs_setattr(
+ 			ip->i_d.di_gid = gid;
+ 			inode->i_gid = gid;
+ 		}
+-
+-		xfs_trans_log_inode (tp, ip, XFS_ILOG_CORE);
+-		timeflags |= XFS_ICHGTIME_CHG;
+ 	}
+ 
+ 	/*
+@@ -393,51 +394,37 @@ xfs_setattr(
+ 
+ 		inode->i_mode &= S_IFMT;
+ 		inode->i_mode |= mode & ~S_IFMT;
+-
+-		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-		timeflags |= XFS_ICHGTIME_CHG;
+ 	}
+ 
+ 	/*
+ 	 * Change file access or modified times.
+ 	 */
+-	if (mask & (ATTR_ATIME|ATTR_MTIME)) {
+-		if (mask & ATTR_ATIME) {
+-			inode->i_atime = iattr->ia_atime;
+-			ip->i_d.di_atime.t_sec = iattr->ia_atime.tv_sec;
+-			ip->i_d.di_atime.t_nsec = iattr->ia_atime.tv_nsec;
+-			ip->i_update_core = 1;
+-		}
+-		if (mask & ATTR_MTIME) {
+-			inode->i_mtime = iattr->ia_mtime;
+-			ip->i_d.di_mtime.t_sec = iattr->ia_mtime.tv_sec;
+-			ip->i_d.di_mtime.t_nsec = iattr->ia_mtime.tv_nsec;
+-			timeflags &= ~XFS_ICHGTIME_MOD;
+-			timeflags |= XFS_ICHGTIME_CHG;
+-		}
+-		if (tp && (mask & (ATTR_MTIME_SET|ATTR_ATIME_SET)))
+-			xfs_trans_log_inode (tp, ip, XFS_ILOG_CORE);
++	if (mask & ATTR_ATIME) {
++		inode->i_atime = iattr->ia_atime;
++		ip->i_d.di_atime.t_sec = iattr->ia_atime.tv_sec;
++		ip->i_d.di_atime.t_nsec = iattr->ia_atime.tv_nsec;
++		ip->i_update_core = 1;
+ 	}
+-
+-	/*
+-	 * Change file inode change time only if ATTR_CTIME set
+-	 * AND we have been called by a DMI function.
+-	 */
+-
+-	if ((flags & XFS_ATTR_DMI) && (mask & ATTR_CTIME)) {
++	if (mask & ATTR_CTIME) {
+ 		inode->i_ctime = iattr->ia_ctime;
+ 		ip->i_d.di_ctime.t_sec = iattr->ia_ctime.tv_sec;
+ 		ip->i_d.di_ctime.t_nsec = iattr->ia_ctime.tv_nsec;
+ 		ip->i_update_core = 1;
+-		timeflags &= ~XFS_ICHGTIME_CHG;
++	}
++	if (mask & ATTR_MTIME) {
++		inode->i_mtime = iattr->ia_mtime;
++		ip->i_d.di_mtime.t_sec = iattr->ia_mtime.tv_sec;
++		ip->i_d.di_mtime.t_nsec = iattr->ia_mtime.tv_nsec;
++		ip->i_update_core = 1;
+ 	}
+ 
+ 	/*
+-	 * Send out timestamp changes that need to be set to the
+-	 * current time.  Not done when called by a DMI function.
++	 * And finally, log the inode core if any attribute in it
++	 * has been changed.
+ 	 */
+-	if (timeflags && !(flags & XFS_ATTR_DMI))
+-		xfs_ichgtime(ip, timeflags);
++	if (mask & (ATTR_UID|ATTR_GID|ATTR_MODE|
++		    ATTR_ATIME|ATTR_CTIME|ATTR_MTIME))
++		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 
+ 	XFS_STATS_INC(xs_ig_attrchg);
+ 
+@@ -452,12 +439,10 @@ xfs_setattr(
+ 	 * mix so this probably isn't worth the trouble to optimize.
+ 	 */
+ 	code = 0;
+-	if (tp) {
+-		if (mp->m_flags & XFS_MOUNT_WSYNC)
+-			xfs_trans_set_sync(tp);
++	if (mp->m_flags & XFS_MOUNT_WSYNC)
++		xfs_trans_set_sync(tp);
+ 
+-		code = xfs_trans_commit(tp, commit_flags);
+-	}
++	code = xfs_trans_commit(tp, commit_flags);
+ 
+ 	xfs_iunlock(ip, lock_flags);
+ 
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_acl.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_acl.c	2009-12-21 16:31:51.838990759 +0100
++++ linux-2.6/fs/xfs/linux-2.6/xfs_acl.c	2009-12-21 16:32:17.471990759 +0100
+@@ -251,8 +251,9 @@ xfs_set_mode(struct inode *inode, mode_t
+ 	if (mode != inode->i_mode) {
+ 		struct iattr iattr;
+ 
+-		iattr.ia_valid = ATTR_MODE;
++		iattr.ia_valid = ATTR_MODE | ATTR_CTIME;
+ 		iattr.ia_mode = mode;
++		iattr.ia_ctime = current_fs_time(inode->i_sb);
+ 
+ 		error = -xfs_setattr(XFS_I(inode), &iattr, XFS_ATTR_NOACL);
+ 	}
 
 _______________________________________________
 xfs mailing list
