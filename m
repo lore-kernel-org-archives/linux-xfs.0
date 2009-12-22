@@ -1,15 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nBMF7lMF139500 for <xfs@oss.sgi.com>; Tue, 22 Dec 2009 09:07:47 -0600
-Content-class: urn:content-classes:message
+	nBMGFTGE142658 for <xfs@oss.sgi.com>; Tue, 22 Dec 2009 10:15:30 -0600
+Received: from smtp2b.orange.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4B6EF1C0D197
+	for <xfs@oss.sgi.com>; Tue, 22 Dec 2009 08:16:11 -0800 (PST)
+Received: from smtp2b.orange.fr (smtp2b.orange.fr [80.12.242.146]) by
+	cuda.sgi.com with ESMTP id ngRgDE73hw3gR0eZ for
+	<xfs@oss.sgi.com>; Tue, 22 Dec 2009 08:16:11 -0800 (PST)
+Message-ID: <4B30F0C9.2020702@wanadoo.fr>
+Date: Tue, 22 Dec 2009 17:16:09 +0100
+From: =?ISO-8859-1?Q?Jean-Pierre_Andr=E9?= <jean-pierre.andre@wanadoo.fr>
 MIME-Version: 1.0
-Subject: RE: [PATCH 3/6] XFS: Convert filestreams code to use per-ag
-	get/putroutines
-Date: Tue, 22 Dec 2009 09:08:13 -0600
-Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A68BC@cf--amer001e--3.americas.sgi.com>
-In-Reply-To: <1260857477-2368-4-git-send-email-david@fromorbit.com>
-From: "Alex Elder" <aelder@sgi.com>
+Subject: Re: [fuse-devel] utimensat fails to update ctime
+References: <4B2B156D.9040604@byu.net>
+	<87aaxclr4q.fsf@devron.myhome.or.jp>	<4B2F7421.10005@byu.net>
+	<4B2F7A95.3010708@byu.net>	<87hbrkjrk8.fsf@devron.myhome.or.jp>
+	<4B304D04.6040501@byu.net>	<87d427jscr.fsf@devron.myhome.or.jp>
+	<4B3097C4.3060803@wanadoo.fr>	<874onjjnln.fsf@devron.myhome.or.jp>
+	<4B30B67A.7080703@wanadoo.fr> <87ljgvi1an.fsf@devron.myhome.or.jp>
+In-Reply-To: <87ljgvi1an.fsf@devron.myhome.or.jp>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,133 +28,134 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+Cc: Eric Blake <ebb9@byu.net>, Miklos Szeredi <miklos@szeredi.hu>, fuse-devel@lists.sourceforge.net, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@lst.de>
 
-Dave Chinner wrote:
-> Signed-off-by: Dave Chinner <david@fromorbit.com>
+Hi again,
 
-Looks good.  I'll add a short one-line explanation at the
-top of the patch for you.
+OGAWA Hirofumi wrote:
+> Jean-Pierre Andr=E9<jean-pierre.andre@wanadoo.fr>  writes:
+>
+>    =
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+>> Hi again,
+>>      =
 
-> ---
->  fs/xfs/xfs_filestream.c |   19 ++++++++++++-------
->  fs/xfs/xfs_filestream.h |   27 ++++++++++++++++++++++++---
->  2 files changed, 36 insertions(+), 10 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
-> index a631e14..e61f2aa 100644
-> --- a/fs/xfs/xfs_filestream.c
-> +++ b/fs/xfs/xfs_filestream.c
+> Hi,
+>
+>    =
 
-. . .
+>>> Well, the problem seems in fuse_lib_setattr() and ntfs_fuse_setattr()
+>>> (lowlevel op too).
+>>>
+>>> The both functions is requiring "ATIME | MTIME". Doesn't it mean the
+>>> ntfs-3g can't set only MTIME like above utimensat()?
+>>>
+>>>        =
 
-> @@ -173,6 +174,7 @@ _xfs_filestream_pick_ag(
->  		/* Keep track of the AG with the most free blocks. */
->  		if (pag->pagf_freeblks > maxfree) {
->  			maxfree = pag->pagf_freeblks;
-> +			max_streams = atomic_read(&pag->pagf_fstrms);
->  			max_ag = ag;
->  		}
-> 
-> @@ -195,6 +197,8 @@ _xfs_filestream_pick_ag(
-> 
->  			/* Break out, retaining the reference on the AG. */
->  			free = pag->pagf_freeblks;
-> +			streams = atomic_read(&pag->pagf_fstrms);
-> +			xfs_perag_put(pag);
->  			*agp = ag;
->  			break;
->  		}
-> @@ -202,6 +206,7 @@ _xfs_filestream_pick_ag(
->  		/* Drop the reference on this AG, it's not usable. */
->  		xfs_filestream_put_ag(mp, ag);
->  next_ag:
-> +		xfs_perag_put(pag);
->  		/* Move to the next AG, wrapping to AG 0 if necessary. */
->  		if (++ag >= mp->m_sb.sb_agcount)
->  			ag = 0;
-> @@ -229,6 +234,7 @@ next_ag:
->  		if (max_ag != NULLAGNUMBER) {
->  			xfs_filestream_get_ag(mp, max_ag);
->  			TRACE_AG_PICK1(mp, max_ag, maxfree);
-> +			streams = max_streams;
->  			free = maxfree;
->  			*agp = max_ag;
->  			break;
-> @@ -240,8 +246,7 @@ next_ag:
->  		return 0;
->  	}
-> 
-> -	TRACE_AG_PICK2(mp, startag, *agp, xfs_filestream_peek_ag(mp, *agp),
-> -			free, nscan, flags);
-> +	TRACE_AG_PICK2(mp, startag, *agp, streams, free, nscan, flags);
-> 
->  	return 0;
->  }
-> diff --git a/fs/xfs/xfs_filestream.h b/fs/xfs/xfs_filestream.h
-> index 4aba67c..58378b2 100644
-> --- a/fs/xfs/xfs_filestream.h
-> +++ b/fs/xfs/xfs_filestream.h
-> @@ -79,12 +79,21 @@ extern ktrace_t *xfs_filestreams_trace_buf;
->   * the cache that reference per-ag array elements that have since been
->   * reallocated.
->   */
-> +/*
-> + * xfs_filestream_peek_ag is only used in tracing code
-> + */
->  static inline int
->  xfs_filestream_peek_ag(
->  	xfs_mount_t	*mp,
->  	xfs_agnumber_t	agno)
->  {
-> -	return atomic_read(&mp->m_perag[agno].pagf_fstrms);
-> +	struct xfs_perag *pag;
-> +	int		ret;
-> +
-> +	pag = xfs_perag_get(mp, agno);
-> +	ret = atomic_read(&pag->pagf_fstrms);
-> +	xfs_perag_put(pag);
-> +	return ret;
->  }
-> 
->  static inline int
-> @@ -92,7 +101,13 @@ xfs_filestream_get_ag(
->  	xfs_mount_t	*mp,
->  	xfs_agnumber_t	agno)
->  {
-> -	return atomic_inc_return(&mp->m_perag[agno].pagf_fstrms);
-> +	struct xfs_perag *pag;
-> +	int		ret;
-> +
-> +	pag = xfs_perag_get(mp, agno);
-> +	ret = atomic_inc_return(&pag->pagf_fstrms);
-> +	xfs_perag_put(pag);
-> +	return ret;
->  }
-> 
->  static inline int
-> @@ -100,7 +115,13 @@ xfs_filestream_put_ag(
->  	xfs_mount_t	*mp,
->  	xfs_agnumber_t	agno)
->  {
-> -	return atomic_dec_return(&mp->m_perag[agno].pagf_fstrms);
-> +	struct xfs_perag *pag;
-> +	int		ret;
-> +
-> +	pag = xfs_perag_get(mp, agno);
-> +	ret = atomic_dec_return(&pag->pagf_fstrms);
-> +	xfs_perag_put(pag);
-> +	return ret;
->  }
-> 
->  /* allocation selection flags */
+>> With ntfs-3g this is not directly possible, because
+>> the interface does not provide flags telling which
+>> timestamps should be updated. The only way would
+>> be fuse feeding both values (even though unchanged)
+>> before calling ntfs-3g. This is true for all versions of
+>> ntfs-3g.
+>>      =
+
+> Yes, with fuse_operations. It is why I'm saying the issue is libfuse or
+> ntfs-3g.
+>
+> But I noticed ntfs-3g is including libfuse-lite sources and use it with
+> static link (I might be wrong here, because I just looked ntfs-3g source
+> slightly). AFAIK, the fuse of kernel part is passing the flags of some
+> sort of detail always.
+>    =
+
+
+Use of fuse-lite is optional, and static linking also
+(both depend on your configure options),
+
+> [BTW, the code of that part in kernel may be the following,
+>
+> fs/fuse/dir.c:iattr_to_fattr(),
+>
+>    =
+
+[...]
+> So, if libfuse-lite was fixed to supported that update request, it would
+> be able to do even if fuse_operations.  I.e. in libfuse-lite, emulate
+> "ATIME | MTIME" request if "MTIME" only (pass unchanged original atime),
+> then call ->utime() callback. (or adds new utime2 callback with flags, or
+> something other solutions)
+>    =
+
+
+I will port to fuse-lite the patch which Miklos has
+just sent.
+
+> Or, if that request is known limitation of fuse_operations, I think it
+> would be clear state and ok. The fs needs to use lowlevel op to support
+> that.
+>
+>    =
+
+>> With lowntfs-3g (release candidate only), this could
+>> be possible.... but this is not implemented, as the
+>> case was never found up to now. I can provide you
+>> with a patch,... if fuse can feed in the flags selectively.
+>>      =
+
+> Yes.  AFAIK, fuse of kernel part is passing FATTR_MTIME without
+> FATTR_ATIME to userland (i.e. FUSE_SET_ATTR_ATIME and
+> FUSE_SET_ATTR_MTIME in libfuse).
+>
+> I think it's good to implement if it's not design decision of ntfs-3g.
+>
+> [BTW, just my guess though, it would be good to use "if (vaild&
+> ATTR_XXX)" style, not "switch()" to support various combinations of
+> flags]
+>    =
+
+
+Might be better, ... or not. Setting both mtime
+and atime is much simpler than setting each one
+individually. So both methods will end up having
+to process three different situations.
+
+I suggest I port Miklos patch to fuse-lite soon,
+and delay the low-level case (and microsecond
+precision) until January. Does that suit your needs ?
+
+Also : there is a common case of mis-configuration
+in which gid is set in the mount options and uid
+is not. As a consequence files appear as owned
+by root and utime() is forbidden to plain users.
+
+So you should first check your mount options.
+And since ntfs-2009.11.14 standard ownership
+and permissions are fully supported provided a
+proper configuration file has been set.
+
+Regards
+
+Jean-Pierre
+
+
+
+> Thanks.
+>    =
+
+
+-- =
+
+JP Andr=E9
+email jean-pierre.andre@wanadoo.fr
+
+
+
 
 _______________________________________________
 xfs mailing list
