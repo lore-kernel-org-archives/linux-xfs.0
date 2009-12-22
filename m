@@ -1,24 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nBMCfgdu131730 for <xfs@oss.sgi.com>; Tue, 22 Dec 2009 06:41:43 -0600
-Received: from QMTA14.emeryville.ca.mail.comcast.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 77A4211E16D
-	for <xfs@oss.sgi.com>; Tue, 22 Dec 2009 04:42:24 -0800 (PST)
-Received: from QMTA14.emeryville.ca.mail.comcast.net
-	(qmta14.emeryville.ca.mail.comcast.net [76.96.27.212]) by
-	cuda.sgi.com with ESMTP id JsmvY6WinRMfnyZv for
-	<xfs@oss.sgi.com>; Tue, 22 Dec 2009 04:42:24 -0800 (PST)
-Message-ID: <4B30BEC9.5030706@byu.net>
-Date: Tue, 22 Dec 2009 05:42:49 -0700
-From: Eric Blake <ebb9@byu.net>
-MIME-Version: 1.0
-Subject: Re: utimensat fails to update ctime
-References: <4B2B156D.9040604@byu.net> <87aaxclr4q.fsf@devron.myhome.or.jp>
-	<4B2F7421.10005@byu.net> <4B2F7A95.3010708@byu.net>
-	<87hbrkjrk8.fsf@devron.myhome.or.jp> <4B304D04.6040501@byu.net>
-	<20091222123436.GC9611@discord.disaster>
-In-Reply-To: <20091222123436.GC9611@discord.disaster>
+	nBMD0fu5132889 for <xfs@oss.sgi.com>; Tue, 22 Dec 2009 07:00:42 -0600
+Received: from pomaz-ex.szeredi.hu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D353514FEB7F
+	for <xfs@oss.sgi.com>; Tue, 22 Dec 2009 05:01:23 -0800 (PST)
+Received: from pomaz-ex.szeredi.hu (fxip-0047f.externet.hu [88.209.222.127])
+	by cuda.sgi.com with ESMTP id 6FtKIaotW39EIXTv for
+	<xfs@oss.sgi.com>; Tue, 22 Dec 2009 05:01:23 -0800 (PST)
+In-reply-to: <4B30B67A.7080703@wanadoo.fr> (message from
+	=?ISO-8859-1?Q?Jean-Pierre_Andr=E9?= on Tue, 22 Dec 2009 13:07:22
+	+0100)
+Subject: Re: [fuse-devel] utimensat fails to update ctime
+References: <4B2B156D.9040604@byu.net>
+	<87aaxclr4q.fsf@devron.myhome.or.jp>	<4B2F7421.10005@byu.net>
+	<4B2F7A95.3010708@byu.net>	<87hbrkjrk8.fsf@devron.myhome.or.jp>
+	<4B304D04.6040501@byu.net>	<87d427jscr.fsf@devron.myhome.or.jp>
+	<4B3097C4.3060803@wanadoo.fr> <874onjjnln.fsf@devron.myhome.or.jp>
+	<4B30B67A.7080703@wanadoo.fr>
+MIME-version: 1.0
+Message-Id: <E1NN4MD-0005ZG-7M@pomaz-ex.szeredi.hu>
+From: Miklos Szeredi <miklos@szeredi.hu>
+Date: Tue, 22 Dec 2009 14:00:57 +0100
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,43 +30,95 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, xfs@oss.sgi.com
+To: =?ISO-8859-1?Q?Jean-Pierre_Andr=E9?= <jean-pierre.andre@wanadoo.fr>
+Cc: ebb9@byu.net, miklos@szeredi.hu, fuse-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, hch@lst.de, hirofumi@mail.parknet.co.jp
 
-According to Dave Chinner on 12/22/2009 5:34 AM:
-> Yeah, it looks like the change to utimesat() back in 2.6.26 for
-> posix conformance made ATTR_CTIME appear outside inode truncation
-> and XFS wasn't updated for this change in behaviour at the VFS level.
-> Looks simple to fix, but I'm worried about introducing other
-> unintended ctime modifications - is there a test suite that checks
-> posix compliant atime/mtime/ctime behaviour around anywhere?
-
-Yes - the gnulib unit test, consisting of:
-
-http://git.savannah.gnu.org/cgit/gnulib.git/tree/tests/nap.h
-http://git.savannah.gnu.org/cgit/gnulib.git/tree/tests/test-utimens-common.h
-http://git.savannah.gnu.org/cgit/gnulib.git/tree/tests/test-utimens.h
-http://git.savannah.gnu.org/cgit/gnulib.git/tree/tests/test-lutimens.h
-http://git.savannah.gnu.org/cgit/gnulib.git/tree/tests/test-futimens.h
-http://git.savannah.gnu.org/cgit/gnulib.git/tree/tests/test-futimens.c
-http://git.savannah.gnu.org/cgit/gnulib.git/tree/tests/test-utimensat.c
-
-Taken together, these files produce the executables test-futimens and
-test-utimensat which can demonstrate compliance with POSIX.  They are also
-bundled as part of GNU coreutils (the version bundled with coreutils 8.2
-didn't test for ctime compliance, and coreutils 8.3 hasn't been released
-yet) if you use 'make -C gnulib-tests check'.
-
--- 
-Don't work too hard, make some time for fun as well!
-
-Eric Blake             ebb9@byu.net
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlLCAyMiBEZWMgMjAwOSwgSmVhbi1QaWVycmUgQW5kcsOpIHdyb3RlOgo+IFdpdGggbnRm
+cy0zZyB0aGlzIGlzIG5vdCBkaXJlY3RseSBwb3NzaWJsZSwgYmVjYXVzZQo+IHRoZSBpbnRlcmZh
+Y2UgZG9lcyBub3QgcHJvdmlkZSBmbGFncyB0ZWxsaW5nIHdoaWNoCj4gdGltZXN0YW1wcyBzaG91
+bGQgYmUgdXBkYXRlZC4gVGhlIG9ubHkgd2F5IHdvdWxkCj4gYmUgZnVzZSBmZWVkaW5nIGJvdGgg
+dmFsdWVzIChldmVuIHRob3VnaCB1bmNoYW5nZWQpCj4gYmVmb3JlIGNhbGxpbmcgbnRmcy0zZy4g
+VGhpcyBpcyB0cnVlIGZvciBhbGwgdmVyc2lvbnMgb2YKPiBudGZzLTNnLgoKSGVyZSdzIGEgcGF0
+Y2ggZm9yIHRoZSBoaWdoIGxldmVsIGxpYi4gIElmIHRoZSBmbGFnX3V0aW1lX29taXRfb2sgZmxh
+ZwppcyBzZXQgdGhlbiB0aGUgLT51dGltZXMoKSBtZXRob2Qgd2lsbCBiZSBzdXBwbGllZCB3aXRo
+IGFyZ3VtZW50cyB0aGF0CmNvcnJlc3BvbmQgdG8gdXRpbWVuc2F0IChpLmUuIGl0IGNhbiBoYXZl
+IFVUSU1FX05PVyBhbmQgVVRJTUVfT01JVAp2YWx1ZXMpLgoKVGhhbmtzLApNaWtsb3MKCkluZGV4
+OiBmdXNlL2NvbmZpZ3VyZS5pbgo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBmdXNlLm9yaWcvY29uZmlndXJlLmlu
+CTIwMDktMTItMjIgMTI6NDY6NDQuMDAwMDAwMDAwICswMTAwCisrKyBmdXNlL2NvbmZpZ3VyZS5p
+bgkyMDA5LTEyLTIyIDEzOjE2OjA3LjAwMDAwMDAwMCArMDEwMApAQCAtNTMsNyArNTMsNyBAQCBm
+aQogaWYgdGVzdCAiJGVuYWJsZV9tdGFiIiA9ICJubyI7IHRoZW4KIAlBQ19ERUZJTkUoSUdOT1JF
+X01UQUIsIDEsIFtEb24ndCB1cGRhdGUgL2V0Yy9tdGFiXSkKIGZpCi1BQ19DSEVDS19GVU5DUyhb
+Zm9yayBzZXR4YXR0ciBmZGF0YXN5bmNdKQorQUNfQ0hFQ0tfRlVOQ1MoW2Zvcmsgc2V0eGF0dHIg
+ZmRhdGFzeW5jIHV0aW1lbnNhdF0pCiBBQ19DSEVDS19NRU1CRVJTKFtzdHJ1Y3Qgc3RhdC5zdF9h
+dGltXSkKIEFDX0NIRUNLX01FTUJFUlMoW3N0cnVjdCBzdGF0LnN0X2F0aW1lc3BlY10pCiAKSW5k
+ZXg6IGZ1c2UvaW5jbHVkZS9mdXNlLmgKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gZnVzZS5vcmlnL2luY2x1ZGUv
+ZnVzZS5oCTIwMDktMTItMjIgMTI6NDY6NDQuMDAwMDAwMDAwICswMTAwCisrKyBmdXNlL2luY2x1
+ZGUvZnVzZS5oCTIwMDktMTItMjIgMTM6MTY6MDcuMDAwMDAwMDAwICswMTAwCkBAIC00NTgsOSAr
+NDU4LDE1IEBAIHN0cnVjdCBmdXNlX29wZXJhdGlvbnMgewogCXVuc2lnbmVkIGludCBmbGFnX251
+bGxwYXRoX29rIDogMTsKIAogCS8qKgorCSAqIEZsYWcgaW5kaWNhdGluZyB0aGF0IHRoZSBmaWxl
+c3lzdGVtIGFjY2VwdHMgc3BlY2lhbAorCSAqIFVUSU1FX05PVyBhbmQgVVRJTUVfT01JVCB2YWx1
+ZXMgaW4gaXRzIHV0aW1lbnMgb3BlcmF0aW9uLgorCSAqLworCXVuc2lnbmVkIGludCBmbGFnX3V0
+aW1lX29taXRfb2sgOiAxOworCisJLyoqCiAJICogUmVzZXJ2ZWQgZmxhZ3MsIGRvbid0IHNldAog
+CSAqLwotCXVuc2lnbmVkIGludCBmbGFnX3Jlc2VydmVkIDogMzE7CisJdW5zaWduZWQgaW50IGZs
+YWdfcmVzZXJ2ZWQgOiAzMDsKIAogCS8qKgogCSAqIElvY3RsCkluZGV4OiBmdXNlL2xpYi9mdXNl
+LmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PQotLS0gZnVzZS5vcmlnL2xpYi9mdXNlLmMJMjAwOS0xMi0yMiAxMjo0Njo0
+NC4wMDAwMDAwMDAgKzAxMDAKKysrIGZ1c2UvbGliL2Z1c2UuYwkyMDA5LTEyLTIyIDEzOjE2OjA3
+LjAwMDAwMDAwMCArMDEwMApAQCAtOTcsNiArOTcsNyBAQCBzdHJ1Y3QgZnVzZSB7CiAJaW50IGlu
+dHJfaW5zdGFsbGVkOwogCXN0cnVjdCBmdXNlX2ZzICpmczsKIAlpbnQgbnVsbHBhdGhfb2s7CisJ
+aW50IHV0aW1lX29taXRfb2s7CiAJaW50IGN1cnJfdGlja2V0OwogCXN0cnVjdCBsb2NrX3F1ZXVl
+X2VsZW1lbnQgKmxvY2txOwogfTsKQEAgLTIxMTksNiArMjEyMCwyOSBAQCBzdGF0aWMgdm9pZCBm
+dXNlX2xpYl9zZXRhdHRyKGZ1c2VfcmVxX3QKIAkJCQllcnIgPSBmdXNlX2ZzX3RydW5jYXRlKGYt
+PmZzLCBwYXRoLAogCQkJCQkJICAgICAgIGF0dHItPnN0X3NpemUpOwogCQl9CisjaWZkZWYgSEFW
+RV9VVElNRU5TQVQKKwkJaWYgKCFlcnIgJiYgZi0+dXRpbWVfb21pdF9vayAmJgorCQkgICAgKHZh
+bGlkICYgKEZVU0VfU0VUX0FUVFJfQVRJTUUgfCBGVVNFX1NFVF9BVFRSX01USU1FKSkpIHsKKwkJ
+CXN0cnVjdCB0aW1lc3BlYyB0dlsyXTsKKworCQkJdHZbMF0udHZfc2VjID0gMDsKKwkJCXR2WzFd
+LnR2X3NlYyA9IDA7CisJCQl0dlswXS50dl9uc2VjID0gVVRJTUVfT01JVDsKKwkJCXR2WzFdLnR2
+X25zZWMgPSBVVElNRV9PTUlUOworCisJCQlpZiAodmFsaWQgJiBGVVNFX1NFVF9BVFRSX0FUSU1F
+X05PVykKKwkJCQl0dlswXS50dl9uc2VjID0gVVRJTUVfTk9XOworCQkJZWxzZSBpZiAodmFsaWQg
+JiBGVVNFX1NFVF9BVFRSX0FUSU1FKQorCQkJCXR2WzBdID0gYXR0ci0+c3RfYXRpbTsKKworCQkJ
+aWYgKHZhbGlkICYgRlVTRV9TRVRfQVRUUl9NVElNRV9OT1cpCisJCQkJdHZbMV0udHZfbnNlYyA9
+IFVUSU1FX05PVzsKKwkJCWVsc2UgaWYgKHZhbGlkICYgRlVTRV9TRVRfQVRUUl9NVElNRSkKKwkJ
+CQl0dlsxXSA9IGF0dHItPnN0X210aW07CisKKwkJCWVyciA9IGZ1c2VfZnNfdXRpbWVucyhmLT5m
+cywgcGF0aCwgdHYpOworCQl9IGVsc2UKKyNlbmRpZgogCQlpZiAoIWVyciAmJgogCQkgICAgKHZh
+bGlkICYgKEZVU0VfU0VUX0FUVFJfQVRJTUUgfCBGVVNFX1NFVF9BVFRSX01USU1FKSkgPT0KIAkJ
+ICAgIChGVVNFX1NFVF9BVFRSX0FUSU1FIHwgRlVTRV9TRVRfQVRUUl9NVElNRSkpIHsKQEAgLTM2
+MzcsNiArMzY2MSw3IEBAIHN0YXRpYyBpbnQgZnVzZV9wdXNoX21vZHVsZShzdHJ1Y3QgZnVzZQog
+CW5ld2ZzLT5tID0gbTsKIAlmLT5mcyA9IG5ld2ZzOwogCWYtPm51bGxwYXRoX29rID0gbmV3ZnMt
+Pm9wLmZsYWdfbnVsbHBhdGhfb2sgJiYgZi0+bnVsbHBhdGhfb2s7CisJZi0+dXRpbWVfb21pdF9v
+ayA9IG5ld2ZzLT5vcC5mbGFnX3V0aW1lX29taXRfb2sgJiYgZi0+dXRpbWVfb21pdF9vazsKIAly
+ZXR1cm4gMDsKIH0KIApAQCAtMzY4Nyw2ICszNzEyLDcgQEAgc3RydWN0IGZ1c2UgKmZ1c2VfbmV3
+X2NvbW1vbihzdHJ1Y3QgZnVzZQogCWZzLT5jb21wYXQgPSBjb21wYXQ7CiAJZi0+ZnMgPSBmczsK
+IAlmLT5udWxscGF0aF9vayA9IGZzLT5vcC5mbGFnX251bGxwYXRoX29rOworCWYtPnV0aW1lX29t
+aXRfb2sgPSBmcy0+b3AuZmxhZ191dGltZV9vbWl0X29rOwogCiAJLyogT2ggZioqaywgdGhpcyBp
+cyB1Z2x5ISAqLwogCWlmICghZnMtPm9wLmxvY2spIHsKQEAgLTM3NDMsOCArMzc2OSwxMCBAQCBz
+dHJ1Y3QgZnVzZSAqZnVzZV9uZXdfY29tbW9uKHN0cnVjdCBmdXNlCiAKIAlmdXNlX3Nlc3Npb25f
+YWRkX2NoYW4oZi0+c2UsIGNoKTsKIAotCWlmIChmLT5jb25mLmRlYnVnKQorCWlmIChmLT5jb25m
+LmRlYnVnKSB7CiAJCWZwcmludGYoc3RkZXJyLCAibnVsbHBhdGhfb2s6ICVpXG4iLCBmLT5udWxs
+cGF0aF9vayk7CisJCWZwcmludGYoc3RkZXJyLCAidXRpbWVfb21pdF9vazogJWlcbiIsIGYtPnV0
+aW1lX29taXRfb2spOworCX0KIAogCS8qIFRyYWNlIHRvcG1vc3QgbGF5ZXIgYnkgZGVmYXVsdCAq
+LwogCWYtPmZzLT5kZWJ1ZyA9IGYtPmNvbmYuZGVidWc7CkluZGV4OiBmdXNlL2V4YW1wbGUvZnVz
+ZXhtcF9maC5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT0KLS0tIGZ1c2Uub3JpZy9leGFtcGxlL2Z1c2V4bXBfZmguYwky
+MDA5LTA2LTE5IDEyOjI0OjI1LjAwMDAwMDAwMCArMDIwMAorKysgZnVzZS9leGFtcGxlL2Z1c2V4
+bXBfZmguYwkyMDA5LTEyLTIyIDEzOjU1OjA0LjAwMDAwMDAwMCArMDEwMApAQCAtMjgzLDYgKzI4
+Myw5IEBAIHN0YXRpYyBpbnQgeG1wX2Z0cnVuY2F0ZShjb25zdCBjaGFyICpwYXQKIHN0YXRpYyBp
+bnQgeG1wX3V0aW1lbnMoY29uc3QgY2hhciAqcGF0aCwgY29uc3Qgc3RydWN0IHRpbWVzcGVjIHRz
+WzJdKQogewogCWludCByZXM7CisjaWZkZWYgSEFWRV9VVElNRU5TQVQKKwlyZXMgPSB1dGltZW5z
+YXQoQVRfRkRDV0QsIHBhdGgsIHRzLCBBVF9TWU1MSU5LX05PRk9MTE9XKTsKKyNlbHNlCiAJc3Ry
+dWN0IHRpbWV2YWwgdHZbMl07CiAKIAl0dlswXS50dl9zZWMgPSB0c1swXS50dl9zZWM7CkBAIC0y
+OTEsNiArMjk0LDcgQEAgc3RhdGljIGludCB4bXBfdXRpbWVucyhjb25zdCBjaGFyICpwYXRoLAog
+CXR2WzFdLnR2X3VzZWMgPSB0c1sxXS50dl9uc2VjIC8gMTAwMDsKIAogCXJlcyA9IHV0aW1lcyhw
+YXRoLCB0dik7CisjZW5kaWYKIAlpZiAocmVzID09IC0xKQogCQlyZXR1cm4gLWVycm5vOwogCkBA
+IC00ODYsNiArNDkwLDkgQEAgc3RhdGljIHN0cnVjdCBmdXNlX29wZXJhdGlvbnMgeG1wX29wZXIg
+PQogCS5sb2NrCQk9IHhtcF9sb2NrLAogCiAJLmZsYWdfbnVsbHBhdGhfb2sgPSAxLAorI2lmIEhB
+VkVfVVRJTUVOU0FUCisJLmZsYWdfdXRpbWVfb21pdF9vayA9IDEsCisjZW5kaWYKIH07CiAKIGlu
+dCBtYWluKGludCBhcmdjLCBjaGFyICphcmd2W10pCgpfX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpo
+dHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
