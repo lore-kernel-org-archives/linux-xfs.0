@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nBLNtmsH084428 for <xfs@oss.sgi.com>; Mon, 21 Dec 2009 17:55:49 -0600
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D360730407F
-	for <xfs@oss.sgi.com>; Mon, 21 Dec 2009 15:56:31 -0800 (PST)
-Received: from [128.162.233.117] (augusta.americas.sgi.com [128.162.233.117])
-	by estes.americas.sgi.com (Postfix) with ESMTP id B3F0570001C8
-	for <xfs@oss.sgi.com>; Mon, 21 Dec 2009 17:56:31 -0600 (CST)
-Message-ID: <4B300B2F.7080305@sgi.com>
-Date: Mon, 21 Dec 2009 17:56:31 -0600
-From: Bill Kendall <wkendall@sgi.com>
+	nBM4aJuh103258 for <xfs@oss.sgi.com>; Mon, 21 Dec 2009 22:36:20 -0600
+Received: from QMTA09.emeryville.ca.mail.comcast.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D25DEE89264
+	for <xfs@oss.sgi.com>; Mon, 21 Dec 2009 20:36:59 -0800 (PST)
+Received: from QMTA09.emeryville.ca.mail.comcast.net
+	(qmta09.emeryville.ca.mail.comcast.net [76.96.30.96]) by
+	cuda.sgi.com with ESMTP id KRw6RdCLNxPW3GBA for
+	<xfs@oss.sgi.com>; Mon, 21 Dec 2009 20:36:59 -0800 (PST)
+Message-ID: <4B304D04.6040501@byu.net>
+Date: Mon, 21 Dec 2009 21:37:24 -0700
+From: Eric Blake <ebb9@byu.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/2]  add lpath_to_handle to libhandle
-References: <4AE08DC7.7000200@sgi.com> <20091024133904.GB23125@infradead.org>
-In-Reply-To: <20091024133904.GB23125@infradead.org>
+Subject: Re: utimensat fails to update ctime
+References: <4B2B156D.9040604@byu.net>
+	<87aaxclr4q.fsf@devron.myhome.or.jp>	<4B2F7421.10005@byu.net>
+	<4B2F7A95.3010708@byu.net> <87hbrkjrk8.fsf@devron.myhome.or.jp>
+In-Reply-To: <87hbrkjrk8.fsf@devron.myhome.or.jp>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,138 +26,35 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+Cc: Christoph Hellwig <hch@lst.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-On 10/24/2009 08:39 AM, Christoph Hellwig wrote:
-> On Thu, Oct 22, 2009 at 11:52:23AM -0500, Bill Kendall wrote:
->> path_to_handle() is not reliable when called on a path which
->> is a symlink. If the symlink is dangling, or if its points
->> to a non-XFS filesystem then path_to_handle() will fail. The
->> reason is that path_to_handle() must open the path in order
->> to obtain an fd for the xfsctl call.
->>
->> It's common during xfsrestore to have dangling symlinks since
->> the target of the link may not be restored before the symlink.
->>
->> This patch adds a new function to libhandle, lpath_to_handle.
->> It is just like path_to_handle, except it takes a filesystem
->> path in addition to the path which you want convert to a
->> handle.
+According to OGAWA Hirofumi on 12/21/2009 8:05 AM:
+>> It may also be file-system dependent.  On the machine where I saw the
+>> original failure:
+>>> $ uname -a
+>>> Linux fencepost 2.6.26-2-xen-amd64 #1 SMP Thu Nov 5 04:27:12 UTC 2009
+>>> x86_64 GNU/Linux
+>> $ df -T .
+>> Filesystem    Type   1K-blocks      Used Available Use% Mounted on
+>> /dev/sdb1      xfs   419299328 269018656 150280672  65% /srv/data
 > 
-> I'm not sure this is a good API.  We can derive a useful path for
-> the ioctl by using basename on the filename if it is a link without
-> needing to expose the details to the caller.
+> Thanks.
+> 
+> This is good point. This would be xfs issue or design. xfs seems to have
+> own special handling of ctime.
 
-Based on Christoph's suggestion here's a rework of the patch
-(that I've been sitting on for a while). This requires no change
-to the libhandle API and no changes in xfsdump (and hence just
-this one patch. The previously posted patch 2/2 is dropped).
+Here's another report, this time about an mtime update not happening on
+ntfs-3g.  http://thread.gmane.org/gmane.comp.gnu.coreutils.bugs/19336
 
+-- 
+Don't work too hard, make some time for fun as well!
 
-Signed-off-by: Bill Kendall <wkendall@sgi.com>
-
-Index: xfsprogs-kernel.org/libhandle/handle.c
-===================================================================
---- xfsprogs-kernel.org.orig/libhandle/handle.c
-+++ xfsprogs-kernel.org/libhandle/handle.c
-@@ -16,6 +16,7 @@
-   * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-   */
-
-+#include <libgen.h>
-  #include <xfs/xfs.h>
-  #include <xfs/handle.h>
-  #include <xfs/parent.h>
-@@ -40,6 +41,7 @@ typedef union {
-
-  static int obj_to_handle(char *, int, unsigned int, comarg_t, void**, size_t*);
-  static int handle_to_fsfd(void *, char **);
-+static char *path_to_fspath(char *path);
-
-
-  /*
-@@ -70,13 +72,18 @@ path_to_fshandle(
-  	comarg_t	obj;
-  	struct fdhash	*fdhp;
-  	char		*tmppath;
-+	char		*fspath;
-
--	fd = open(path, O_RDONLY);
-+	fspath = path_to_fspath(path);
-+	if (fspath == NULL)
-+		return -1;
-+
-+	fd = open(fspath, O_RDONLY);
-  	if (fd < 0)
-  		return -1;
-
-  	obj.path = path;
--	result = obj_to_handle(path, fd, XFS_IOC_PATH_TO_FSHANDLE,
-+	result = obj_to_handle(fspath, fd, XFS_IOC_PATH_TO_FSHANDLE,
-  				obj, fshanp, fshlen);
-  	if (result < 0) {
-  		close(fd);
-@@ -95,7 +102,7 @@ path_to_fshandle(
-  		}
-
-  		fdhp->fsfd = fd;
--		strncpy(fdhp->fspath, path, sizeof(fdhp->fspath));
-+		strncpy(fdhp->fspath, fspath, sizeof(fdhp->fspath));
-  		memcpy(fdhp->fsh, *fshanp, FSIDSIZE);
-
-  		fdhp->fnxt = fdhash_head;
-@@ -114,18 +121,45 @@ path_to_handle(
-  	int		fd;
-  	int		result;
-  	comarg_t	obj;
-+	char		*fspath;
-+
-+	fspath = path_to_fspath(path);
-+	if (fspath == NULL)
-+		return -1;
-
--	fd = open(path, O_RDONLY);
-+	fd = open(fspath, O_RDONLY);
-  	if (fd < 0)
-  		return -1;
-
-  	obj.path = path;
--	result = obj_to_handle(path, fd, XFS_IOC_PATH_TO_HANDLE,
-+	result = obj_to_handle(fspath, fd, XFS_IOC_PATH_TO_HANDLE,
-  				obj, hanp, hlen);
-  	close(fd);
-  	return result;
-  }
-
-+/* Given a path, return a suitable "fspath" for use in obtaining
-+ * an fd for xfsctl calls. In most circumstances the input path is
-+ * sufficient. However, if the input path is a sym link the
-+ * parent directory is returned so as to avoid issues with
-+ * dangling links and links pointing into other filesystems.
-+ */
-+static char *
-+path_to_fspath(char *path)
-+{
-+	static char dirpath[MAXPATHLEN];
-+	struct stat statbuf;
-+
-+	if (lstat(path, &statbuf) != 0)
-+		return NULL;
-+
-+	if (S_ISLNK(statbuf.st_mode)) {
-+		strcpy(dirpath, path);
-+		return dirname(dirpath);
-+	}
-+
-+	return path;
-+}
-
-  int
-  fd_to_handle (
+Eric Blake             ebb9@byu.net
 
 _______________________________________________
 xfs mailing list
