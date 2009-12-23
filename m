@@ -1,19 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nBNJKOep259005 for <xfs@oss.sgi.com>; Wed, 23 Dec 2009 13:20:24 -0600
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C6B66AC014
-	for <xfs@oss.sgi.com>; Wed, 23 Dec 2009 11:21:04 -0800 (PST)
-Date: Wed, 23 Dec 2009 13:21:04 -0600
-From: Bill Kendall <wkendall@sgi.com>
-Subject: Re: [PATCH 1/2]  add lpath_to_handle to libhandle
-Message-ID: <20091223192101.GA3578@sgi.com>
-References: <4AE08DC7.7000200@sgi.com> <20091024133904.GB23125@infradead.org>
-	<4B300B2F.7080305@sgi.com> <20091223131535.GA23394@infradead.org>
+	nBNKocpE003767 for <xfs@oss.sgi.com>; Wed, 23 Dec 2009 14:50:38 -0600
+Content-class: urn:content-classes:message
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20091223131535.GA23394@infradead.org>
+Subject: RE: [PATCH 4/6] XFS: convert remaining direct references to m_perag
+Date: Wed, 23 Dec 2009 14:49:54 -0600
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A68D0@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <1260857477-2368-5-git-send-email-david@fromorbit.com>
+From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,127 +21,85 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Dec 23, 2009 at 08:15:35AM -0500, Christoph Hellwig wrote:
-> One thing that could be changes is to also do the fspath conversion for
-> block and chacater special files.  While we can open those they will not
-> end up in the xfs file operations and thus not provide the nessecary
-> ioctl.
+Dave Chinner wrote:
+> Convert the remaining direct lookups of the per ag structures
+> to use get/put accesses. Ensure that the loops across AGs and
+> prior users of the interface balance gets and puts correctly.
 
-Parent dir is now used for all types except regular files and directories.
-Special file conversions still fail, but at least it's XFS making that
-decision. Also this prevents calling open on named pipes, which could
-block.
+Generally looks good, but I have a question below.
 
-> Btw, it would be nice if you could write a testcase for xfstests that
-> fails with the old version on links but works with the new one.
+Also, it looks to me like you missed adding a matching
+xfs_perag_put() call in xfs_alloc_get_freelist().  I
+have otherwise satisfied myself that all the get/put
+calls are all matched up.  Furthermore, the only real
+references to the m_perag field in the mount structure
+is via xfs_perag_get().
 
-I'll take a look at this and post a separate patch.
+					-Alex
 
+> Signed-off-by: Dave Chinner <david@fromorbit.com>
+> ---
+>  fs/xfs/xfs_bmap.c   |    8 +++++++-
+>  fs/xfs/xfs_ialloc.c |   35 +++++++++++++++++++++++++----------
+>  fs/xfs/xfs_inode.c  |    5 ++++-
+>  fs/xfs/xfs_mount.c  |    9 ++++++---
+>  4 files changed, 42 insertions(+), 15 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+> index 98251cd..a9b95d9 100644
+> --- a/fs/xfs/xfs_bmap.c
+> +++ b/fs/xfs/xfs_bmap.c
+. . .
+> @@ -2667,6 +2668,7 @@ xfs_bmap_btalloc(
+>  						break;
+> 
+>  					error = xfs_filestream_new_ag(ap, &ag);
+> +					xfs_perag_put(pag);
 
-Signed-off-by: Bill Kendall <wkendall@sgi.com>
+Is there a reason you do the put operation *after* the call to
+xfs_filestream_new_ag()?  I only ask because I had a similar
+question (below) where xfs_ialloc_read_agi() was called, without
+passing pag, but before calling xfs_perag_put() and I wondered
+whether there was an implied requirement there.  If there is,
+I'd like to see that made more explicit.  If not, I prefer to
+see the put call done as early as possible.
 
-Index: xfsprogs-kernel.org/libhandle/handle.c
-===================================================================
---- xfsprogs-kernel.org.orig/libhandle/handle.c
-+++ xfsprogs-kernel.org/libhandle/handle.c
-@@ -16,6 +16,7 @@
-  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-  */
- 
-+#include <libgen.h>
- #include <xfs/xfs.h>
- #include <xfs/handle.h>
- #include <xfs/parent.h>
-@@ -40,6 +41,7 @@ typedef union {
- 
- static int obj_to_handle(char *, int, unsigned int, comarg_t, void**, size_t*);
- static int handle_to_fsfd(void *, char **);
-+static char *path_to_fspath(char *path);
- 
- 
- /*
-@@ -70,13 +72,18 @@ path_to_fshandle(
- 	comarg_t	obj;
- 	struct fdhash	*fdhp;
- 	char		*tmppath;
-+	char		*fspath;
- 
--	fd = open(path, O_RDONLY);
-+	fspath = path_to_fspath(path);
-+	if (fspath == NULL)
-+		return -1;
-+
-+	fd = open(fspath, O_RDONLY);
- 	if (fd < 0)
- 		return -1;
- 
- 	obj.path = path;
--	result = obj_to_handle(path, fd, XFS_IOC_PATH_TO_FSHANDLE,
-+	result = obj_to_handle(fspath, fd, XFS_IOC_PATH_TO_FSHANDLE,
- 				obj, fshanp, fshlen);
- 	if (result < 0) {
- 		close(fd);
-@@ -95,7 +102,7 @@ path_to_fshandle(
- 		}
- 
- 		fdhp->fsfd = fd;
--		strncpy(fdhp->fspath, path, sizeof(fdhp->fspath));
-+		strncpy(fdhp->fspath, fspath, sizeof(fdhp->fspath));
- 		memcpy(fdhp->fsh, *fshanp, FSIDSIZE);
- 
- 		fdhp->fnxt = fdhash_head;
-@@ -114,18 +121,46 @@ path_to_handle(
- 	int		fd;
- 	int		result;
- 	comarg_t	obj;
-+	char		*fspath;
- 
--	fd = open(path, O_RDONLY);
-+	fspath = path_to_fspath(path);
-+	if (fspath == NULL)
-+		return -1;
-+
-+	fd = open(fspath, O_RDONLY);
- 	if (fd < 0)
- 		return -1;
- 
- 	obj.path = path;
--	result = obj_to_handle(path, fd, XFS_IOC_PATH_TO_HANDLE,
-+	result = obj_to_handle(fspath, fd, XFS_IOC_PATH_TO_HANDLE,
- 				obj, hanp, hlen);
- 	close(fd);
- 	return result;
- }
- 
-+/* Given a path, return a suitable "fspath" for use in obtaining
-+ * an fd for xfsctl calls. For regular files and directories the
-+ * input path is sufficient. For other types the parent directory
-+ * is used to avoid issues with opening dangling symlinks and
-+ * potentially blocking in an open on a named pipe. Also
-+ * symlinks to files on other filesystems would be a problem,
-+ * since an fd would be obtained for the wrong fs.
-+ */
-+static char *
-+path_to_fspath(char *path)
-+{
-+	static char dirpath[MAXPATHLEN];
-+	struct stat statbuf;
-+
-+	if (lstat(path, &statbuf) != 0)
-+		return NULL;
-+
-+	if (S_ISREG(statbuf.st_mode) || S_ISDIR(statbuf.st_mode))
-+		return path;
-+
-+	strcpy(dirpath, path);
-+	return dirname(dirpath);
-+}
- 
- int
- fd_to_handle (
+>  					if (error) {
+>  						up_read(&mp->m_peraglock);
+>  						return error;
+. . .
+> diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
+> index cb907ba..884ee13 100644
+> --- a/fs/xfs/xfs_ialloc.c
+> +++ b/fs/xfs/xfs_ialloc.c
+. . .
+> @@ -772,11 +778,14 @@ nextag:
+>  			return noroom ? ENOSPC : 0;
+>  		}
+>  		down_read(&mp->m_peraglock);
+> -		if (mp->m_perag[tagno].pagi_inodeok == 0) {
+> +		pag = xfs_perag_get(mp, tagno);
+> +		if (pag->pagi_inodeok == 0) {
+> +			xfs_perag_put(pag);
+>  			up_read(&mp->m_peraglock);
+>  			goto nextag;
+>  		}
+>  		error = xfs_ialloc_read_agi(mp, tp, tagno, &agbp);
+> +		xfs_perag_put(pag);
+
+Here is the spot I wondered about--whether the pag needed to
+be held across the call to xfs_ialloc_read_agi().  If so,
+it isn't obvious from looking directly at this spot in the
+code so it should maybe be spelled out more clearly in a
+comment.
+
+>  		up_read(&mp->m_peraglock);
+>  		if (error)
+>  			goto nextag;
+. . .
 
 _______________________________________________
 xfs mailing list
