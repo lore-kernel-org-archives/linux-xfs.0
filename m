@@ -1,22 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nBNG8UJS248442 for <xfs@oss.sgi.com>; Wed, 23 Dec 2009 10:08:30 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D834BE944F6
-	for <xfs@oss.sgi.com>; Wed, 23 Dec 2009 08:09:13 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id Vgu2Ajci2o9Aldry for
-	<xfs@oss.sgi.com>; Wed, 23 Dec 2009 08:09:13 -0800 (PST)
-Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1NNTlx-0003Tn-5k
-	for xfs@oss.sgi.com; Wed, 23 Dec 2009 16:09:13 +0000
-Date: Wed, 23 Dec 2009 11:09:13 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfs: fix timestamp handling in xfs_setattr
-Message-ID: <20091223160913.GA13039@infradead.org>
+	nBNHEPkR252093 for <xfs@oss.sgi.com>; Wed, 23 Dec 2009 11:14:25 -0600
+Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E02EFAC019
+	for <xfs@oss.sgi.com>; Wed, 23 Dec 2009 09:15:05 -0800 (PST)
+Message-ID: <4B325018.4050708@sgi.com>
+Date: Wed, 23 Dec 2009 11:15:04 -0600
+From: Bill Kendall <wkendall@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
+Subject: Re: [PATCH] use time32_t consistently in xfsdump tree
+References: <4B300389.7020905@sgi.com> <20091223133136.GA10345@infradead.org>
+In-Reply-To: <20091223133136.GA10345@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,210 +20,65 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
+Christoph Hellwig wrote:
+>> On Wed, Dec 23, 2009 at 09:20:59AM -0600, Bill Kendall wrote:
+>>> Reposting to fix whitespace issues introduced by mailer.
+>> 
+>> The patch looks good and applies cleanly now,
+>> 
+>> Reviewed-by: Christoph Hellwig <hch@lst.de>
+>> 
+>> 
+>> Some notes to look into after this patch:
+>> 
+>>  - can you provide a testcase for the problems caused by the wrong
+>>    time_t usage?  A patch to xfstests would be perfect, but if you
+>>    have a raw testcase I'll vounteer to wire it up.
 
-We currently have some rather odd code in xfs_setattr for updating the
-a/c/mtime timestampts:
+The way I reproduced this was to do a subtree dump followed by
+a dump of the inventory. On systems with a 64-bit time_t, this
+will show a dump date far into the future.
 
- - first we do a non-transaction update if all three are updated together
- - second we implicitly update the ctime for various changes instead of
-   relying on the ATTR_CTIME flag
- - third we set the timestamps to the current time instead of the arguments
-   in the iattr structure in many cases.
+# xfsdump -F -s tmp -f /dev/null /
+# xfsinvutil -C | grep Session
+             Session 0: valor:/ Sat Jan 29 17:45:22 2146
 
-This patch makes sure we update it in a consistant way:
+The dump needs to be a subtree dump since that sets a flag in
+a field which is adjacent to a timestamp field in an inventory
+structure. When the time32_t field was cast to a time_t *,
+the flag's value was being read.
 
- - always transactional
- - ctime is only updated if ATTR_CTIME is set or we do a size update, which
-   is a special case
- - always to the times passed in from the caller instead of the current time
- 
-The only non-size caller of xfs_setattr that doesn't come from the VFS is
-updated to set ATTR_CTIME and pass in a valid ctime value.
+I don't know if this is worth writing a test for, however.
+It catches one specific call to ctime where ctime32 should
+have been used. The compiler will issue warnings for these
+cases, it's just that the code was explicitly casting to
+time_t * to silence the warnings.
 
-Reported-by: Eric Blake <ebb9@byu.net>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+>>  - why do we wrap both ctime and ctime_r?  Currently xfsdump isn't
+>>    multithreaded so we shouldn't need it.  But if the parallel
+>>    dump/restore ever gets merged from IRIX we need to get rid of the
+>>    plain ctime calls.  (Btw, are there any plans for the parallel
+>>    dump/restore port?)
 
-Index: linux-2.6/fs/xfs/xfs_vnodeops.c
-===================================================================
---- linux-2.6.orig/fs/xfs/xfs_vnodeops.c	2009-12-23 13:51:24.706170043 +0100
-+++ linux-2.6/fs/xfs/xfs_vnodeops.c	2009-12-23 13:51:30.774170044 +0100
-@@ -70,7 +70,6 @@ xfs_setattr(
- 	uint			commit_flags=0;
- 	uid_t			uid=0, iuid=0;
- 	gid_t			gid=0, igid=0;
--	int			timeflags = 0;
- 	struct xfs_dquot	*udqp, *gdqp, *olddquot1, *olddquot2;
- 	int			need_iolock = 1;
- 
-@@ -135,16 +134,13 @@ xfs_setattr(
- 	if (flags & XFS_ATTR_NOLOCK)
- 		need_iolock = 0;
- 	if (!(mask & ATTR_SIZE)) {
--		if ((mask != (ATTR_CTIME|ATTR_ATIME|ATTR_MTIME)) ||
--		    (mp->m_flags & XFS_MOUNT_WSYNC)) {
--			tp = xfs_trans_alloc(mp, XFS_TRANS_SETATTR_NOT_SIZE);
--			commit_flags = 0;
--			if ((code = xfs_trans_reserve(tp, 0,
--						     XFS_ICHANGE_LOG_RES(mp), 0,
--						     0, 0))) {
--				lock_flags = 0;
--				goto error_return;
--			}
-+		tp = xfs_trans_alloc(mp, XFS_TRANS_SETATTR_NOT_SIZE);
-+		commit_flags = 0;
-+		code = xfs_trans_reserve(tp, 0, XFS_ICHANGE_LOG_RES(mp),
-+					 0, 0, 0);
-+		if (code) {
-+			lock_flags = 0;
-+			goto error_return;
- 		}
- 	} else {
- 		if (DM_EVENT_ENABLED(ip, DM_EVENT_TRUNCATE) &&
-@@ -295,15 +291,23 @@ xfs_setattr(
- 		 * or we are explicitly asked to change it. This handles
- 		 * the semantic difference between truncate() and ftruncate()
- 		 * as implemented in the VFS.
--		 */
--		if (iattr->ia_size != ip->i_size || (mask & ATTR_CTIME))
--			timeflags |= XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG;
-+		 *
-+		 * The regular truncate() case without ATTR_CTIME and ATTR_MTIME
-+		 * is a special case where we need to update the times despite
-+		 * not having these flags set.  For all other operations the
-+		 * VFS set these flags explicitly if it wants a timestamp
-+		 * update.
-+		 */
-+		if (iattr->ia_size != ip->i_size &&
-+		    (!(mask & (ATTR_CTIME | ATTR_MTIME)))) {
-+			iattr->ia_ctime = iattr->ia_mtime =
-+				current_fs_time(inode->i_sb);
-+			mask |= ATTR_CTIME | ATTR_MTIME;
-+		}
- 
- 		if (iattr->ia_size > ip->i_size) {
- 			ip->i_d.di_size = iattr->ia_size;
- 			ip->i_size = iattr->ia_size;
--			if (!(flags & XFS_ATTR_DMI))
--				xfs_ichgtime(ip, XFS_ICHGTIME_CHG);
- 			xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 		} else if (iattr->ia_size <= ip->i_size ||
- 			   (iattr->ia_size == 0 && ip->i_d.di_nextents)) {
-@@ -374,9 +378,6 @@ xfs_setattr(
- 			ip->i_d.di_gid = gid;
- 			inode->i_gid = gid;
- 		}
--
--		xfs_trans_log_inode (tp, ip, XFS_ILOG_CORE);
--		timeflags |= XFS_ICHGTIME_CHG;
- 	}
- 
- 	/*
-@@ -393,51 +394,37 @@ xfs_setattr(
- 
- 		inode->i_mode &= S_IFMT;
- 		inode->i_mode |= mode & ~S_IFMT;
--
--		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--		timeflags |= XFS_ICHGTIME_CHG;
- 	}
- 
- 	/*
- 	 * Change file access or modified times.
- 	 */
--	if (mask & (ATTR_ATIME|ATTR_MTIME)) {
--		if (mask & ATTR_ATIME) {
--			inode->i_atime = iattr->ia_atime;
--			ip->i_d.di_atime.t_sec = iattr->ia_atime.tv_sec;
--			ip->i_d.di_atime.t_nsec = iattr->ia_atime.tv_nsec;
--			ip->i_update_core = 1;
--		}
--		if (mask & ATTR_MTIME) {
--			inode->i_mtime = iattr->ia_mtime;
--			ip->i_d.di_mtime.t_sec = iattr->ia_mtime.tv_sec;
--			ip->i_d.di_mtime.t_nsec = iattr->ia_mtime.tv_nsec;
--			timeflags &= ~XFS_ICHGTIME_MOD;
--			timeflags |= XFS_ICHGTIME_CHG;
--		}
--		if (tp && (mask & (ATTR_MTIME_SET|ATTR_ATIME_SET)))
--			xfs_trans_log_inode (tp, ip, XFS_ILOG_CORE);
-+	if (mask & ATTR_ATIME) {
-+		inode->i_atime = iattr->ia_atime;
-+		ip->i_d.di_atime.t_sec = iattr->ia_atime.tv_sec;
-+		ip->i_d.di_atime.t_nsec = iattr->ia_atime.tv_nsec;
-+		ip->i_update_core = 1;
- 	}
--
--	/*
--	 * Change file inode change time only if ATTR_CTIME set
--	 * AND we have been called by a DMI function.
--	 */
--
--	if ((flags & XFS_ATTR_DMI) && (mask & ATTR_CTIME)) {
-+	if (mask & ATTR_CTIME) {
- 		inode->i_ctime = iattr->ia_ctime;
- 		ip->i_d.di_ctime.t_sec = iattr->ia_ctime.tv_sec;
- 		ip->i_d.di_ctime.t_nsec = iattr->ia_ctime.tv_nsec;
- 		ip->i_update_core = 1;
--		timeflags &= ~XFS_ICHGTIME_CHG;
-+	}
-+	if (mask & ATTR_MTIME) {
-+		inode->i_mtime = iattr->ia_mtime;
-+		ip->i_d.di_mtime.t_sec = iattr->ia_mtime.tv_sec;
-+		ip->i_d.di_mtime.t_nsec = iattr->ia_mtime.tv_nsec;
-+		ip->i_update_core = 1;
- 	}
- 
- 	/*
--	 * Send out timestamp changes that need to be set to the
--	 * current time.  Not done when called by a DMI function.
-+	 * And finally, log the inode core if any attribute in it
-+	 * has been changed.
- 	 */
--	if (timeflags && !(flags & XFS_ATTR_DMI))
--		xfs_ichgtime(ip, timeflags);
-+	if (mask & (ATTR_UID|ATTR_GID|ATTR_MODE|
-+		    ATTR_ATIME|ATTR_CTIME|ATTR_MTIME))
-+		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 
- 	XFS_STATS_INC(xs_ig_attrchg);
- 
-@@ -452,12 +439,10 @@ xfs_setattr(
- 	 * mix so this probably isn't worth the trouble to optimize.
- 	 */
- 	code = 0;
--	if (tp) {
--		if (mp->m_flags & XFS_MOUNT_WSYNC)
--			xfs_trans_set_sync(tp);
-+	if (mp->m_flags & XFS_MOUNT_WSYNC)
-+		xfs_trans_set_sync(tp);
- 
--		code = xfs_trans_commit(tp, commit_flags);
--	}
-+	code = xfs_trans_commit(tp, commit_flags);
- 
- 	xfs_iunlock(ip, lock_flags);
- 
-Index: linux-2.6/fs/xfs/linux-2.6/xfs_acl.c
-===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_acl.c	2009-12-23 13:51:24.718170043 +0100
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_acl.c	2009-12-23 13:51:30.775170044 +0100
-@@ -251,8 +251,9 @@ xfs_set_mode(struct inode *inode, mode_t
- 	if (mode != inode->i_mode) {
- 		struct iattr iattr;
- 
--		iattr.ia_valid = ATTR_MODE;
-+		iattr.ia_valid = ATTR_MODE | ATTR_CTIME;
- 		iattr.ia_mode = mode;
-+		iattr.ia_ctime = current_fs_time(inode->i_sb);
- 
- 		error = -xfs_setattr(XFS_I(inode), &iattr, XFS_ATTR_NOACL);
- 	}
+There was an existing ctime_r call so I just blindly converted
+it to ctime32_r. The existing ctime32 calls all come from xfsinvutil,
+which will remain single-threaded even if xfsdump/restore is parallel.
+
+However, while looking at this I noticed there's at least one case
+where we do printf("...", ctime(), ctime()). That's not going to
+work right -- the same value will be printed for both times. I'll
+have to repost again...
+
+No plans for the parallel port.
+
+Bill
 
 _______________________________________________
 xfs mailing list
