@@ -1,16 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nBNFuURT247611 for <xfs@oss.sgi.com>; Wed, 23 Dec 2009 09:56:31 -0600
-Date: Wed, 23 Dec 2009 10:57:13 -0500
+	nBNG1Ilw248097 for <xfs@oss.sgi.com>; Wed, 23 Dec 2009 10:01:18 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 304EC11D2E3
+	for <xfs@oss.sgi.com>; Wed, 23 Dec 2009 08:02:02 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id 9CoaF6Dd4VnzdpDS for
+	<xfs@oss.sgi.com>; Wed, 23 Dec 2009 08:02:02 -0800 (PST)
+Date: Wed, 23 Dec 2009 11:02:01 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] improve xfsinvutil man page and argument processing
-Message-ID: <20091223155713.GB28192@infradead.org>
-References: <4B300507.1070502@sgi.com> <20091223133321.GA10982@infradead.org>
-	<20091223152057.GA21306@sgi.com>
+Subject: Re: [PATCH 5/6] XFS: Replace per-ag array with a radix tree
+Message-ID: <20091223160201.GA7227@infradead.org>
+References: <1260857477-2368-1-git-send-email-david@fromorbit.com>
+	<1260857477-2368-6-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20091223152057.GA21306@sgi.com>
+In-Reply-To: <1260857477-2368-6-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,27 +29,13 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Bill Kendall <wkendall@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
-
-On Wed, Dec 23, 2009 at 09:20:59AM -0600, Bill Kendall wrote:
-> Reposting to fix whitespace issues introduced by mailer.
-
-The patch looks good and applies cleanly now,
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
 
-Some notes to look into after this patch:
-
- - can you provide a testcase for the problems caused by the wrong
-   time_t usage?  A patch to xfstests would be perfect, but if you
-   have a raw testcase I'll vounteer to wire it up.
- - why do we wrap both ctime and ctime_r?  Currently xfsdump isn't
-   multithreaded so we shouldn't need it.  But if the parallel
-   dump/restore ever gets merged from IRIX we need to get rid of the
-   plain ctime calls.  (Btw, are there any plans for the parallel
-   dump/restore port?)
+Btw, after this we should switch pagb_list to a static array instead
+of the current individual allocation.  And maybe revisit the choise
+of the array size.
 
 _______________________________________________
 xfs mailing list
