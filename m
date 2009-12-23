@@ -1,16 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nBNDErMT236748 for <xfs@oss.sgi.com>; Wed, 23 Dec 2009 07:14:58 -0600
-Date: Wed, 23 Dec 2009 08:15:35 -0500
+	nBNDWbH0238142 for <xfs@oss.sgi.com>; Wed, 23 Dec 2009 07:32:38 -0600
+Date: Wed, 23 Dec 2009 08:33:21 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/2]  add lpath_to_handle to libhandle
-Message-ID: <20091223131535.GA23394@infradead.org>
-References: <4AE08DC7.7000200@sgi.com> <20091024133904.GB23125@infradead.org>
-	<4B300B2F.7080305@sgi.com>
+Subject: Re: [PATCH] improve xfsinvutil man page and argument processing
+Message-ID: <20091223133321.GA10982@infradead.org>
+References: <4B300507.1070502@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4B300B2F.7080305@sgi.com>
+In-Reply-To: <4B300507.1070502@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,25 +25,16 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Bill Kendall <wkendall@sgi.com>
 Cc: xfs@oss.sgi.com
 
-> Based on Christoph's suggestion here's a rework of the patch
-> (that I've been sitting on for a while). This requires no change
-> to the libhandle API and no changes in xfsdump (and hence just
-> this one patch. The previously posted patch 2/2 is dropped).
+On Mon, Dec 21, 2009 at 05:30:15PM -0600, Bill Kendall wrote:
+> xfsinvtuil's man page is not clear about which options
+> may be used together. The argument processing was
+> not very complete either. Document and enforce the
+> following:
 
-The patch looks good for me from review, but fails to apply probably due
-to whitespace damage in the mailer.
-
-One thing that could be changes is to also do the fspath conversion for
-block and chacater special files.  While we can open those they will not
-end up in the xfs file operations and thus not provide the nessecary
-ioctl.
+Looks good,
 
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-
-Btw, it would be nice if you could write a testcase for xfstests that
-fails with the old version on links but works with the new one.
 
 _______________________________________________
 xfs mailing list
