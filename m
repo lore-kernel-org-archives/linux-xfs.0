@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nBOD5prH076496 for <xfs@oss.sgi.com>; Thu, 24 Dec 2009 07:05:53 -0600
-Received: from ty.sabi.co.UK (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C8CAC12EB124
-	for <xfs@oss.sgi.com>; Thu, 24 Dec 2009 05:06:32 -0800 (PST)
-Received: from ty.sabi.co.UK (82-69-39-138.dsl.in-addr.zen.co.uk
-	[82.69.39.138]) by cuda.sgi.com with ESMTP id vO7xAqYvVUzoA431
-	for <xfs@oss.sgi.com>; Thu, 24 Dec 2009 05:06:32 -0800 (PST)
+	nBOCwdrY075968 for <xfs@oss.sgi.com>; Thu, 24 Dec 2009 06:58:39 -0600
+Received: from mail-bw0-f217.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 53DE11C14212
+	for <xfs@oss.sgi.com>; Thu, 24 Dec 2009 04:59:22 -0800 (PST)
+Received: from mail-bw0-f217.google.com (mail-bw0-f217.google.com
+	[209.85.218.217]) by cuda.sgi.com with ESMTP id
+	RlrN58lvfxRIF2Uk for <xfs@oss.sgi.com>;
+	Thu, 24 Dec 2009 04:59:22 -0800 (PST)
+Received: by bwz9 with SMTP id 9so5120167bwz.12
+	for <xfs@oss.sgi.com>; Thu, 24 Dec 2009 04:59:21 -0800 (PST)
 MIME-Version: 1.0
-Message-ID: <19251.26403.762180.228181@tree.ty.sabi.co.uk>
-Date: Thu, 24 Dec 2009 13:05:39 +0000
-Subject: Re: [Jfs-discussion] benchmark results
 In-Reply-To: <alpine.DEB.2.01.0912240205510.3483@bogon.housecafe.de>
 References: <alpine.DEB.2.01.0912240205510.3483@bogon.housecafe.de>
-From: pg_jf2@jf2.for.sabi.co.UK (Peter Grandi)
+Date: Thu, 24 Dec 2009 12:59:20 +0000
+Message-ID: <b245135e0912240459j3ca92827sc69bb4665f60d8c3@mail.gmail.com>
+Subject: Re: benchmark results
+From: Teran McKinney <sega01@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,73 +26,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, reiserfs-devel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, jfs-discussion@lists.sourceforge.net, ext-users <ext3-users@redhat.com>, linux-nilfs@vger.kernel.org
+To: Christian Kujau <lists@nerdbynature.de>
+Cc: jfs-discussion@lists.sourceforge.net, linux-nilfs@vger.kernel.org, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, ext-users <ext3-users@redhat.com>, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-> I've had the chance to use a testsystem here and couldn't
-> resist
-
-Unfortunately there seems to be an overproduction of rather
-meaningless file system "benchmarks"...
-
-> running a few benchmark programs on them: bonnie++, tiobench,
-> dbench and a few generic ones (cp/rm/tar/etc...) on ext{234},
-> btrfs, jfs, ufs, xfs, zfs. All with standard mkfs/mount options
-> and +noatime for all of them.
-
-> Here are the results, no graphs - sorry: [ ... ]
-
-After having a glance, I suspect that your tests could be
-enormously improved, and doing so would reduce the pointlessness of
-the results.
-
-A couple of hints:
-
-* In the "generic" test the 'tar' test bandwidth is exactly the
-  same ("276.68 MB/s") for nearly all filesystems.
-
-* There are read transfer rates higher than the one reported by
-  'hdparm' which is "66.23 MB/sec" (comically enough *all* the
-  read transfer rates your "benchmarks" report are higher).
-
-BTW the use of Bonnie++ is also usually a symptom of a poor
-misunderstanding of file system benchmarking.
-
-On the plus side, test setup context is provided in the "env"
-directory, which is rare enough to be commendable.
-
-> Short summary, AFAICT:
->     - btrfs, ext4 are the overall winners
->     - xfs to, but creating/deleting many files was *very* slow
-
-Maybe, and these conclusions are sort of plausible (but I prefer
-JFS and XFS for different reasons); however they are not supported
-by your results as they seem to me to lack much meaning, as what is
-being measured is far from clear, and in particular it does not
-seem to be the file system performance, or anyhow an aspect of
-filesystem performance that might relate to common usage.
-
-I think that it is rather better to run a few simple operations
-(like the "generic" test) properly (unlike the "generic" test), to
-give a feel for how well implemented are the basic operations of
-the file system design.
-
-Profiling a file system performance with a meaningful full scale
-benchmark is a rather difficult task requiring great intellectual
-fortitude and lots of time.
-
->     - if you need only fast but no cool features or
->       journaling, ext2 is still a good choice :)
-
-That is however a generally valid conclusion, but with a very,
-very important qualification: for freshly loaded filesystems.
-Also with several other important qualifications, but "freshly
-loaded" is a pet peeve of mine :-).
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+V2hpY2ggSS9PIHNjaGVkdWxlciBhcmUgeW91IHVzaW5nPyBQcmV0dHkgc3VyZSB0aGF0IFJlaXNl
+ckZTIGlzIGEKbGl0dGxlIGxlc3MgZGVhZGxvY2t5IHdpdGggQ0ZRIG9yIGFub3RoZXIgb3ZlciBk
+ZWFkbGluZSwgYnV0IHRoYXQKZGVhZGxpbmUgdXN1YWxseSBnaXZlcyB0aGUgYmVzdCByZXN1bHRz
+IGZvciBtZSAoZXNwZWNpYWxseSBmb3IgSkZTKS4KClRoYW5rcywKVGVyYW4KCk9uIFRodSwgRGVj
+IDI0LCAyMDA5IGF0IDEwOjMxLCBDaHJpc3RpYW4gS3VqYXUgPGxpc3RzQG5lcmRieW5hdHVyZS5k
+ZT4gd3JvdGU6Cj4gSSd2ZSBoYWQgdGhlIGNoYW5jZSB0byB1c2UgYSB0ZXN0c3lzdGVtIGhlcmUg
+YW5kIGNvdWxkbid0IHJlc2lzdCBydW5uaW5nIGEKPiBmZXcgYmVuY2htYXJrIHByb2dyYW1zIG9u
+IHRoZW06IGJvbm5pZSsrLCB0aW9iZW5jaCwgZGJlbmNoIGFuZCBhIGZldwo+IGdlbmVyaWMgb25l
+cyAoY3Avcm0vdGFyL2V0Yy4uLikgb24gZXh0ezIzNH0sIGJ0cmZzLCBqZnMsIHVmcywgeGZzLCB6
+ZnMuCj4KPiBBbGwgd2l0aCBzdGFuZGFyZCBta2ZzL21vdW50IG9wdGlvbnMgYW5kICtub2F0aW1l
+IGZvciBhbGwgb2YgdGhlbS4KPgo+IEhlcmUgYXJlIHRoZSByZXN1bHRzLCBubyBncmFwaHMgLSBz
+b3JyeToKPiDCoCBodHRwOi8vbmVyZGJ5bmF0dXJlLmRlL2JlbmNobWFya3MvdjQwei8yMDA5LTEy
+LTIyLwo+Cj4gUmVpc2VyZnMgaXMgbG9ja2luZyB1cCBkdXJpbmcgZGJlbmNoLCBzbyBJIHJlbW92
+ZWQgaXQgZnJvbSB0aGUKPiBjb25maWcsIGhlcmUgYXJlIHNvbWUgZWFybGllciByZXN1bHRzOgo+
+Cj4gwqAgaHR0cDovL25lcmRieW5hdHVyZS5kZS9iZW5jaG1hcmtzL3Y0MHovMjAwOS0xMi0yMS9i
+b25uaWUuaHRtbAo+Cj4gQm9ubmllKysgY291bGRuJ3QgY29tcGxldGUgb24gbmlsZnMyLCBvbmx5
+IHRoZSBnZW5lcmljIHRlc3RzCj4gYW5kIHRpb2JlbmNoIHdlcmUgcnVuLiBBcyBuaWxmczIsIHVm
+cywgemZzIGFyZW4ndCBzdXBwb3J0aW5nIHhhdHRyLCBkYmVuY2gKPiBjb3VsZCBub3QgYmUgcnVu
+IG9uIHRoZXNlIGZpbGVzeXN0ZW1zLgo+Cj4gU2hvcnQgc3VtbWFyeSwgQUZBSUNUOgo+IMKgIMKg
+LSBidHJmcywgZXh0NCBhcmUgdGhlIG92ZXJhbGwgd2lubmVycwo+IMKgIMKgLSB4ZnMgdG8sIGJ1
+dCBjcmVhdGluZy9kZWxldGluZyBtYW55IGZpbGVzIHdhcyAqdmVyeSogc2xvdwo+IMKgIMKgLSBp
+ZiB5b3UgbmVlZCBvbmx5IGZhc3QgYnV0IG5vIGNvb2wgZmVhdHVyZXMgb3Igam91cm5hbGluZywg
+ZXh0Mgo+IMKgIMKgIMKgaXMgc3RpbGwgYSBnb29kIGNob2ljZSA6KQo+Cj4gVGhhbmtzLAo+IENo
+cmlzdGlhbi4KPiAtLQo+IEJPRkggZXhjdXNlICM4NDoKPgo+IFNvbWVvbmUgaXMgc3RhbmRpbmcg
+b24gdGhlIGV0aGVybmV0IGNhYmxlLCBjYXVzaW5nIGEga2luayBpbiB0aGUgY2FibGUKPiAtLQo+
+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmli
+ZSByZWlzZXJmcy1kZXZlbCIgaW4KPiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21v
+QHZnZXIua2VybmVsLm9yZwo+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgwqBodHRwOi8vdmdlci5r
+ZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwKPgoKX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20K
+aHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
