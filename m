@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nBPDIcWs185817 for <xfs@oss.sgi.com>; Fri, 25 Dec 2009 07:18:39 -0600
-Received: from mail-pz0-f173.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E2BD2E9BB20
-	for <xfs@oss.sgi.com>; Fri, 25 Dec 2009 05:19:20 -0800 (PST)
-Received: from mail-pz0-f173.google.com (mail-pz0-f173.google.com
-	[209.85.222.173]) by cuda.sgi.com with ESMTP id
-	XPehIFh6Z2CEJx6v for <xfs@oss.sgi.com>;
-	Fri, 25 Dec 2009 05:19:20 -0800 (PST)
-Received: by pzk3 with SMTP id 3so2962430pzk.20
-	for <xfs@oss.sgi.com>; Fri, 25 Dec 2009 05:19:20 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.01.0912241739160.3483@bogon.housecafe.de>
+	nBPGLv3C197692 for <xfs@oss.sgi.com>; Fri, 25 Dec 2009 10:21:57 -0600
+Received: from mail.bitmover.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DCB0D1277CF
+	for <xfs@oss.sgi.com>; Fri, 25 Dec 2009 08:22:41 -0800 (PST)
+Received: from mail.bitmover.com (ipcop.bitmover.com [192.132.92.15]) by
+	cuda.sgi.com with ESMTP id FsOCIfh6J60c5BVv for
+	<xfs@oss.sgi.com>; Fri, 25 Dec 2009 08:22:41 -0800 (PST)
+Date: Fri, 25 Dec 2009 08:22:38 -0800
+From: Larry McVoy <lm@bitmover.com>
+Subject: Re: [Jfs-discussion] benchmark results
+Message-ID: <20091225162238.GB19303@bitmover.com>
 References: <alpine.DEB.2.01.0912240205510.3483@bogon.housecafe.de>
 	<19251.26403.762180.228181@tree.ty.sabi.co.uk>
 	<20091224212756.GM21594@thunk.org>
 	<alpine.DEB.2.01.0912241739160.3483@bogon.housecafe.de>
-Date: Fri, 25 Dec 2009 18:49:19 +0530
-Message-ID: <ae2f51270912250519p22aebc0di4faec9e96e8c1707@mail.gmail.com>
-Subject: Re: [Jfs-discussion] benchmark results
-From: lakshmi pathi <lakshmipathi.g@gmail.com>
+	<20091225161453.GD32757@thunk.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20091225161453.GD32757@thunk.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,26 +32,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christian Kujau <lists@nerdbynature.de>
-Cc: jfs-discussion@lists.sourceforge.net, linux-nilfs@vger.kernel.org, tytso@mit.edu, linux-ext4@vger.kernel.org, Peter Grandi <pg_jf2@jf2.for.sabi.co.uk>, reiserfs-devel@vger.kernel.org, ext-users <ext3-users@redhat.com>, xfs@oss.sgi.com, linux-btrfs@vger.kernel.org
+To: tytso@mit.edu
+Cc: jfs-discussion@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-ext4@vger.kernel.org, Peter Grandi <pg_jf2@jf2.for.sabi.co.UK>, reiserfs-devel@vger.kernel.org, ext-users <ext3-users@redhat.com>, xfs@oss.sgi.com, linux-btrfs@vger.kernel.org
 
-I'm a file system testing newbie, I have a  question/doubt,please let
-me know if i'm wrong.
+On Fri, Dec 25, 2009 at 11:14:53AM -0500, tytso@mit.edu wrote:
+> On Thu, Dec 24, 2009 at 05:52:34PM -0800, Christian Kujau wrote:
+> > 
+> > Well, I do "sync" after each operation, so the data should be on disk, but 
+> > that doesn't mean it'll clear the filesystem buffers - but this doesn't 
+> > happen that often in the real world too. Also, all filesystem were tested 
+> > equally (I hope), yet some filesystem perform better than another - even 
+> > if all the content copied/tar'ed/removed would perfectly well fit into the 
+> > machines RAM.
+> 
+> Did you include the "sync" in part of what you timed?  Peter was quite
+> right --- the fact that the measured bandwidth in your "cp" test is
+> five times faster than the disk bandwidth as measured by hdparm, and
+> many file systems had exactly the same bandwidth, makes me very
+> suspicious that what was being measured was primarily memory bandwidth
+> --- and not very useful when trying to measure file system
+> performance.
 
-Do you think a tool, which uses output from "hdparm" command,to get
-hard drives maximum  performance and compares it specific file system
-(say for example,"ext4 provides xx throughput against max. device
-throughput yy" ) would be more meaningful.
+Dudes, sync() doesn't flush the fs cache, you have to unmount for that.
+Once upon a time Linux had an ioctl() to flush the fs buffers, I used
+it in lmbench.  
 
-Does using hdparm (or other device throughput related tools) for
-benchmarking will be useful?
+	ioctl(fd, BLKFLSBUF, 0);
 
-Thanks.
-
+No idea if that is still supported, but sync() is a joke for benchmarking.
 -- 
-Cheers,
-Lakshmipathi.G
-www.giis.co.in
+---
+Larry McVoy                lm at bitmover.com           http://www.bitkeeper.com
 
 _______________________________________________
 xfs mailing list
