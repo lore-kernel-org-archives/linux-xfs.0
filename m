@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nBPGLv3C197692 for <xfs@oss.sgi.com>; Fri, 25 Dec 2009 10:21:57 -0600
-Received: from mail.bitmover.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DCB0D1277CF
-	for <xfs@oss.sgi.com>; Fri, 25 Dec 2009 08:22:41 -0800 (PST)
-Received: from mail.bitmover.com (ipcop.bitmover.com [192.132.92.15]) by
-	cuda.sgi.com with ESMTP id FsOCIfh6J60c5BVv for
-	<xfs@oss.sgi.com>; Fri, 25 Dec 2009 08:22:41 -0800 (PST)
-Date: Fri, 25 Dec 2009 08:22:38 -0800
-From: Larry McVoy <lm@bitmover.com>
+	nBPGB83X196959 for <xfs@oss.sgi.com>; Fri, 25 Dec 2009 10:11:08 -0600
+Received: from thunker.thunk.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BEA381C171CF
+	for <xfs@oss.sgi.com>; Fri, 25 Dec 2009 08:11:51 -0800 (PST)
+Received: from thunker.thunk.org (thunk.org [69.25.196.29]) by cuda.sgi.com
+	with ESMTP id pekLOZSiIwz7q5ez for <xfs@oss.sgi.com>;
+	Fri, 25 Dec 2009 08:11:51 -0800 (PST)
+Date: Fri, 25 Dec 2009 11:11:46 -0500
+From: tytso@mit.edu
 Subject: Re: [Jfs-discussion] benchmark results
-Message-ID: <20091225162238.GB19303@bitmover.com>
+Message-ID: <20091225161146.GC32757@thunk.org>
 References: <alpine.DEB.2.01.0912240205510.3483@bogon.housecafe.de>
 	<19251.26403.762180.228181@tree.ty.sabi.co.uk>
 	<20091224212756.GM21594@thunk.org>
-	<alpine.DEB.2.01.0912241739160.3483@bogon.housecafe.de>
-	<20091225161453.GD32757@thunk.org>
+	<20091224234631.GA1028@ioremap.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20091225161453.GD32757@thunk.org>
+In-Reply-To: <20091224234631.GA1028@ioremap.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,37 +31,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: tytso@mit.edu
-Cc: jfs-discussion@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-ext4@vger.kernel.org, Peter Grandi <pg_jf2@jf2.for.sabi.co.UK>, reiserfs-devel@vger.kernel.org, ext-users <ext3-users@redhat.com>, xfs@oss.sgi.com, linux-btrfs@vger.kernel.org
+To: Evgeniy Polyakov <zbr@ioremap.net>
+Cc: jfs-discussion@lists.sourceforge.net, linux-nilfs@vger.kernel.org, xfs@oss.sgi.com, reiserfs-devel@vger.kernel.org, Peter Grandi <pg_jf2@jf2.for.sabi.co.UK>, ext-users <ext3-users@redhat.com>, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-On Fri, Dec 25, 2009 at 11:14:53AM -0500, tytso@mit.edu wrote:
-> On Thu, Dec 24, 2009 at 05:52:34PM -0800, Christian Kujau wrote:
-> > 
-> > Well, I do "sync" after each operation, so the data should be on disk, but 
-> > that doesn't mean it'll clear the filesystem buffers - but this doesn't 
-> > happen that often in the real world too. Also, all filesystem were tested 
-> > equally (I hope), yet some filesystem perform better than another - even 
-> > if all the content copied/tar'ed/removed would perfectly well fit into the 
-> > machines RAM.
+On Fri, Dec 25, 2009 at 02:46:31AM +0300, Evgeniy Polyakov wrote:
+> > [1] http://samba.org/ftp/tridge/dbench/README
 > 
-> Did you include the "sync" in part of what you timed?  Peter was quite
-> right --- the fact that the measured bandwidth in your "cp" test is
-> five times faster than the disk bandwidth as measured by hdparm, and
-> many file systems had exactly the same bandwidth, makes me very
-> suspicious that what was being measured was primarily memory bandwidth
-> --- and not very useful when trying to measure file system
-> performance.
+> Was not able to resist to write a small notice, what no matter what, but
+> whatever benchmark is running, it _does_ show system behaviour in one
+> or another condition. And when system behaves rather badly, it is quite
+> a common comment, that benchmark was useless. But it did show that
+> system has a problem, even if rarely triggered one :)
 
-Dudes, sync() doesn't flush the fs cache, you have to unmount for that.
-Once upon a time Linux had an ioctl() to flush the fs buffers, I used
-it in lmbench.  
+If people are using benchmarks to improve file system, and a benchmark
+shows a problem, then trying to remedy the performance issue is a good
+thing to do, of course.  Sometimes, though the case which is
+demonstrated by a poor benchmark is an extremely rare corner case that
+doesn't accurately reflect common real-life workloads --- and if
+addressing it results in a tradeoff which degrades much more common
+real-life situations, then that would be a bad thing.
 
-	ioctl(fd, BLKFLSBUF, 0);
+In situations where benchmarks are used competitively, it's rare that
+it's actually a *problem*.  Instead it's much more common that a
+developer is trying to prove that their file system is *better* to
+gullible users who think that a single one-dimentional number is
+enough for them to chose file system X over file system Y.
 
-No idea if that is still supported, but sync() is a joke for benchmarking.
--- 
----
-Larry McVoy                lm at bitmover.com           http://www.bitkeeper.com
+For example, if I wanted to play that game and tell people that ext4
+is better, I'd might pick this graph:
+
+http://btrfs.boxacle.net/repository/single-disk/2.6.29-rc2/2.6.29-rc2/2.6.29-rc2_Mail_server_simulation._num_threads=32.html
+
+On the other hand, this one shows ext4 as the worst compared to all
+other file systems:
+
+http://btrfs.boxacle.net/repository/single-disk/2.6.29-rc2/2.6.29-rc2/2.6.29-rc2_Large_file_random_writes_odirect._num_threads=8.html
+
+Benchmarking, like statistics, can be extremely deceptive, and if
+people do things like carefully order a tar file so the files are
+optimal for a file system, it's fair to ask whether that's a common
+thing for people to be doing (either unpacking tarballs or unpacking
+tarballs whose files have been carefully ordered for a particular file
+systems).  When it's the only number used by a file system developer
+when trying to convince users they should use their file system, at
+least in my humble opinion it becomes murderously dishonest.
+
+						- Ted
 
 _______________________________________________
 xfs mailing list
