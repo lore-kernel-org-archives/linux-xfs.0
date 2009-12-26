@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	nBQG0K06057029 for <xfs@oss.sgi.com>; Sat, 26 Dec 2009 10:00:21 -0600
-Received: from g5t0008.atlanta.hp.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 717BF1C184BC
-	for <xfs@oss.sgi.com>; Sat, 26 Dec 2009 08:01:05 -0800 (PST)
-Received: from g5t0008.atlanta.hp.com (g5t0008.atlanta.hp.com [15.192.0.45])
-	by cuda.sgi.com with ESMTP id 9dd0sSSbxrz88GqJ for
-	<xfs@oss.sgi.com>; Sat, 26 Dec 2009 08:01:05 -0800 (PST)
-Message-ID: <4B36333B.3030600@hp.com>
-Date: Sat, 26 Dec 2009 11:00:59 -0500
-From: jim owens <jowens@hp.com>
+	nBQJ6eed074357 for <xfs@oss.sgi.com>; Sat, 26 Dec 2009 13:06:41 -0600
+Received: from moutng.kundenserver.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 23E5B12811A
+	for <xfs@oss.sgi.com>; Sat, 26 Dec 2009 11:07:25 -0800 (PST)
+Received: from moutng.kundenserver.de (moutng.kundenserver.de [212.227.17.10])
+	by cuda.sgi.com with ESMTP id fsODNoA5hjx2jSdE for
+	<xfs@oss.sgi.com>; Sat, 26 Dec 2009 11:07:25 -0800 (PST)
+Message-ID: <4B365EBE.5050804@nerdbynature.de>
+Date: Sat, 26 Dec 2009 11:06:38 -0800
+From: Christian Kujau <lists@nerdbynature.de>
 MIME-Version: 1.0
 Subject: Re: [Jfs-discussion] benchmark results
 References: <alpine.DEB.2.01.0912240205510.3483@bogon.housecafe.de>
@@ -20,7 +20,8 @@ References: <alpine.DEB.2.01.0912240205510.3483@bogon.housecafe.de>
 	<20091225161453.GD32757@thunk.org>
 	<20091225162238.GB19303@bitmover.com>
 	<alpine.DEB.2.01.0912251042540.3483@bogon.housecafe.de>
-In-Reply-To: <alpine.DEB.2.01.0912251042540.3483@bogon.housecafe.de>
+	<4B36333B.3030600@hp.com>
+In-Reply-To: <4B36333B.3030600@hp.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,33 +34,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christian Kujau <lists@nerdbynature.de>
+To: jim owens <jowens@hp.com>
 Cc: Peter Grandi <pg_jf2@jf2.for.sabi.co.UK>, jfs-discussion@lists.sourceforge.net, linux-nilfs@vger.kernel.org, tytso@mit.edu, linux-ext4@vger.kernel.org, Larry McVoy <lm@bitmover.com>, reiserfs-devel@vger.kernel.org, ext-users <ext3-users@redhat.com>, xfs@oss.sgi.com, linux-btrfs@vger.kernel.org
 
-Christian Kujau wrote:
- 
-> I was using "sync" to make sure that the data "should" be on the disks 
+On 26.12.09 08:00, jim owens wrote:
+>> I was using "sync" to make sure that the data "should" be on the disks 
+> 
+> Good, but not good enough for many tests... info sync
+[...]
+>        On Linux, sync is only guaranteed to  schedule  the  dirty  blocks  for
+>        writing;  it  can  actually take a short time before all the blocks are
+>        finally written.
 
-Good, but not good enough for many tests... info sync
+Noted, many times already. That's why I wrote "should be" - but in this
+special scenario (filesystem speed tests) I don't care for file
+integrity: if I pull the plug after "sync" and some data didn't make it
+to the disks, I'll only look if the testscript got all the timestamps
+and move on to the next test. I'm not testing for "filesystem integrity
+after someone pulls the plug" here. And remember, I'm doing "sync" for
+all the filesystems tested, so the comparison still stands.
 
-CONFORMING TO
-       POSIX.2
-
-NOTES
-       On Linux, sync is only guaranteed to  schedule  the  dirty  blocks  for
-       writing;  it  can  actually take a short time before all the blocks are
-       finally written.
-
-This is consistent with all the feels-like-unix OSes I have used.
-
-And to make it even more random, the hardware (drive/controller)
-write cache state needs to be accounted for, and what the filesystem
-does if anything to try to ensure device-cache-to-media consistency.
-
-That does not mean I'm saying the tests are invalid or not useful,
-only that people need to evaluate "what do they really tell me".
-
-jim
+Christian.
 
 _______________________________________________
 xfs mailing list
