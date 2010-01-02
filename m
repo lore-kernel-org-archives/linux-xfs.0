@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o02C4o6N104136 for <xfs@oss.sgi.com>; Sat, 2 Jan 2010 06:04:51 -0600
+	o02CNKCo106285 for <xfs@oss.sgi.com>; Sat, 2 Jan 2010 06:23:20 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9344D1DAB9B4
-	for <xfs@oss.sgi.com>; Sat,  2 Jan 2010 04:05:38 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	AmXxRmRAsxRRinIk for <xfs@oss.sgi.com>;
-	Sat, 02 Jan 2010 04:05:38 -0800 (PST)
-Date: Sat, 2 Jan 2010 23:05:34 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 48B001DAB8F8
+	for <xfs@oss.sgi.com>; Sat,  2 Jan 2010 04:24:08 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	ONBYLIySBVlEtlRO for <xfs@oss.sgi.com>;
+	Sat, 02 Jan 2010 04:24:08 -0800 (PST)
+Date: Sat, 2 Jan 2010 23:24:05 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] XFS: Ensure we force all busy extents in range to disk
-Message-ID: <20100102120534.GF13802@discord.disaster>
-References: <1262399936-19195-1-git-send-email-david@fromorbit.com>
-	<20100102112329.GA27329@infradead.org>
+Subject: Re: [PATCH] XFS: Don't flush stale inodes
+Message-ID: <20100102122405.GI13802@discord.disaster>
+References: <1262399980-19277-1-git-send-email-david@fromorbit.com>
+	<20100102120053.GB18502@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100102112329.GA27329@infradead.org>
+In-Reply-To: <20100102120053.GB18502@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,52 +33,67 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Sat, Jan 02, 2010 at 06:23:29AM -0500, Christoph Hellwig wrote:
-> Looks good, and quite interestin that we never could it before.
+On Sat, Jan 02, 2010 at 07:00:53AM -0500, Christoph Hellwig wrote:
+> On Sat, Jan 02, 2010 at 01:39:40PM +1100, Dave Chinner wrote:
+> > Because inodes remain in cache much longer than inode buffers do
+> > under memory pressure, we can get the situation where we have stale,
+> > dirty inodes being reclaimed but the backing storage has been freed.
+> > Hence we should never, ever flush XFS_ISTALE inodes to disk as
+> > there is no guarantee that the backing buffer is in cache and
+> > still marked stale when the flush occurs.
 > 
-> Some nipicks below:
-> 
-> > +	/*
-> > +	 * search pagb_list for this slot, skipping open slots. We have to
-> > +	 * search the entire array as there may be multiple overlaps and
-> > +	 * we have to get the most recent LSN for the log force to push out
-> > +	 * all the transactions that span the range.
-> > +	 */
-> > +	for (bsy = pag->pagb_list; cnt; bsy++, cnt--) {
-> 
-> Maybe you coult convert this to a more standard loop idiom while you're
-> at it:
-> 
-> 	for (cnt = 0; cnt < pag->pagb_count; cnt++) {
-> 		bsy = &pag->pagb_list[cnt];
+> We should not flush stale inodes.  But how do we even end up calling
+> xfs_iflush with a stale inode?
 
-Done.
+Actually, here's most of the failure trace (unlimited scrollback buffers are
+great):
 
-> > +		if (!bsy->busy_tp)
-> > +			continue;
-> >  
-> > +		bend = bsy->busy_start + bsy->busy_length - 1;
-> > +		if ((bno > bend) || (uend < bsy->busy_start))
-> 
-> no need for the inner braces here.
+[ 5703.683858] Device sdb2 - bad inode magic/vsn daddr 16129976 #0 (magic=0)
+[ 5703.690689] ------------[ cut here ]------------
+[ 5703.691665] kernel BUG at fs/xfs/support/debug.c:62!
+[ 5703.691665] invalid opcode: 0000 [#1] SMP
+[ 5703.691665] last sysfs file: /sys/devices/virtual/net/lo/operstate
+[ 5703.691665] CPU 1
+[ 5703.691665] Modules linked in:
+[ 5703.691665] Pid: 4017, comm: xfssyncd Not tainted 2.6.32-dgc #73 IBM eServer 326m -[796955M]-
+[ 5703.691665] RIP: 0010:[<ffffffff813925a1>]  [<ffffffff813925a1>] cmn_err+0x101/0x110
+[ 5703.691665] RSP: 0018:ffff8800a8cfdaa0  EFLAGS: 00010246
+[ 5703.691665] RAX: 0000000002deff6d RBX: ffffffff819102d0 RCX: 0000000000000006
+[ 5703.691665] RDX: ffffffff81fb5130 RSI: ffff8800ae2d9ba0 RDI: ffff8800ae2d9440
+[ 5703.691665] RBP: ffff8800a8cfdb90 R08: 0000000000000000 R09: 0000000000000001
+[ 5703.691665] R10: 0000000000000001 R11: 0000000000000001 R12: 0000000000000000
+[ 5703.691665] R13: 0000000000000282 R14: 0000000000000000 R15: ffff8800ae34ca88
+[ 5703.691665] FS:  00007f64efe476f0(0000) GS:ffff880007600000(0000) knlGS:0000000000000000
+[ 5703.691665] CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
+[ 5703.691665] CR2: 00007f64efe4b000 CR3: 00000000ad04f000 CR4: 00000000000006e0
+[ 5703.691665] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[ 5703.691665] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+[ 5703.691665] Process xfssyncd (pid: 4017, threadinfo ffff8800a8cfc000, task ffff8800ae2d9440)
+[ 5703.691665] Stack:
+[ 5703.691665]  0000003000000030 ffff8800a8cfdba0 ffff8800a8cfdac0 ffff8800ad585b24
+[ 5703.691665] <0> 0000000000000002 ffffffff8135e77d ffff8800a8cfdbe0 0000000000f61fb8
+[ 5703.691665] <0> 0000000000000000 0000000000000000 ffff8800a8cfdb10 ffffffff81388330
+[ 5703.691665] Call Trace:
+[ 5703.691665]  [<ffffffff8135e77d>] ? xfs_itobp+0x6d/0x100
+[ 5703.691665]  [<ffffffff81388330>] ? _xfs_buf_read+0x90/0xa0
+[ 5703.691665]  [<ffffffff81388a8c>] ? xfs_buf_read+0xdc/0x110
+[ 5703.691665]  [<ffffffff8137a9cf>] ? xfs_trans_read_buf+0x43f/0x680
+[ 5703.691665]  [<ffffffff8117b723>] ? disk_name+0x63/0xc0
+[ 5703.691665]  [<ffffffff8135e62a>] xfs_imap_to_bp+0x15a/0x240
+[ 5703.691665]  [<ffffffff8135e77d>] ? xfs_itobp+0x6d/0x100
+[ 5703.691665]  [<ffffffff8135e77d>] xfs_itobp+0x6d/0x100
+[ 5703.691665]  [<ffffffff81360397>] xfs_iflush+0x207/0x380
+[ 5703.691665]  [<ffffffff81390d7f>] xfs_reclaim_inode+0x15f/0x1b0
+[ 5703.691665]  [<ffffffff81390e38>] xfs_reclaim_inode_now+0x68/0x90
+[ 5703.691665]  [<ffffffff81390dd0>] ? xfs_reclaim_inode_now+0x0/0x90
+[ 5703.691665]  [<ffffffff81391744>] xfs_inode_ag_walk+0x64/0xc0
+[ 5703.691665]  [<ffffffff81373552>] ? xfs_perag_get+0xe2/0x110
+[ 5703.691665]  [<ffffffff81391817>] xfs_inode_ag_iterator+0x77/0xc0
+[ 5703.691665]  [<ffffffff81390dd0>] ? xfs_reclaim_inode_now+0x0/0x90
 
-And done. Patch below.
-
-> And btw, the standard subsystem prefix is all lower case, xfs:, not
-> XFS:.
-
-One of these days I'll get it right ;)
-
-> Also it seems like this patch requires your perag-lookup fixes first.
-
-Yes. I've kind of been assuming that they will go in after reviews
-and fixups are completed.
-
-> Time to get them into the for-2.6.34 git tree ASAP as a base to work
-> against.  That might also make it easier to work on the lockless patch
-> separately.
-
-Agreed.
+I was hitting this regularly with workloads creating then removing
+hundreds of thousands of small files, and the patch I sent stopped
+them from occurring...
 
 Cheers,
 
@@ -86,143 +101,6 @@ Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
-
-
-xfs: Ensure we force all busy extents in range to disk
-
-When we search for and find a busy extent during allocation we force
-the log out to ensure the extent free transaction is on disk before
-the allocation transaction. The curret implementation has a subtle
-bug in it - it does not handle multiple overlapping ranges.
-
-That is, if we free lots of little extents into a single contiguous
-extent, then allocate the contiguous extent, the busy search code
-stops searching at the first extent it finds that overlaps the
-allocated range. It then uses the commit LSN of the transaction to
-force the log out to.
-
-Unfortunately, the other busy ranges might have more recent commit
-LSNs than the first busy extent that is found, and this results in
-xfs_alloc_search_busy() returning before all the extent free
-transactions are on disk for the range being allocated. This can
-lead to potential metadata corruption or stale data exposure after
-a crash because log replay won't replay all the extent free
-transactions that cover the allocation range.
-
-Signed-off-by: Dave Chinner <david@fromorbit.com>
----
- fs/xfs/linux-2.6/xfs_trace.h |    9 +++++--
- fs/xfs/xfs_alloc.c           |   47 +++++++++++++++++++----------------------
- 2 files changed, 28 insertions(+), 28 deletions(-)
-
-diff --git a/fs/xfs/linux-2.6/xfs_trace.h b/fs/xfs/linux-2.6/xfs_trace.h
-index 5ec1475..2b0819a 100644
---- a/fs/xfs/linux-2.6/xfs_trace.h
-+++ b/fs/xfs/linux-2.6/xfs_trace.h
-@@ -1064,14 +1064,15 @@ TRACE_EVENT(xfs_alloc_unbusy,
- 
- TRACE_EVENT(xfs_alloc_busysearch,
- 	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t agbno,
--		 xfs_extlen_t len, int found),
--	TP_ARGS(mp, agno, agbno, len, found),
-+		 xfs_extlen_t len, int found, xfs_lsn_t lsn),
-+	TP_ARGS(mp, agno, agbno, len, found, lsn),
- 	TP_STRUCT__entry(
- 		__field(dev_t, dev)
- 		__field(xfs_agnumber_t, agno)
- 		__field(xfs_agblock_t, agbno)
- 		__field(xfs_extlen_t, len)
- 		__field(int, found)
-+		__field(xfs_lsn_t, lsn)
- 	),
- 	TP_fast_assign(
- 		__entry->dev = mp->m_super->s_dev;
-@@ -1079,12 +1080,14 @@ TRACE_EVENT(xfs_alloc_busysearch,
- 		__entry->agbno = agbno;
- 		__entry->len = len;
- 		__entry->found = found;
-+		__entry->lsn = lsn;
- 	),
--	TP_printk("dev %d:%d agno %u agbno %u len %u %s",
-+	TP_printk("dev %d:%d agno %u agbno %u len %u force lsn 0x%llx %s",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  __entry->agno,
- 		  __entry->agbno,
- 		  __entry->len,
-+		  __entry->lsn,
- 		  __print_symbolic(__entry->found, XFS_BUSY_STATES))
- );
- 
-diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
-index d58ca99..c9ee98d 100644
---- a/fs/xfs/xfs_alloc.c
-+++ b/fs/xfs/xfs_alloc.c
-@@ -2565,43 +2565,40 @@ xfs_alloc_search_busy(xfs_trans_t *tp,
- 	struct xfs_perag	*pag;
- 	xfs_perag_busy_t	*bsy;
- 	xfs_agblock_t		uend, bend;
--	xfs_lsn_t		lsn;
-+	xfs_lsn_t		lsn = 0;
- 	int			cnt;
- 
- 	pag = xfs_perag_get(tp->t_mountp, agno);
- 	spin_lock(&pag->pagb_lock);
--	cnt = pag->pagb_count;
--
- 	uend = bno + len - 1;
- 
--	/* search pagb_list for this slot, skipping open slots */
--	for (bsy = pag->pagb_list; cnt; bsy++) {
-+	/*
-+	 * search pagb_list for this slot, skipping open slots. We have to
-+	 * search the entire array as there may be multiple overlaps and
-+	 * we have to get the most recent LSN for the log force to push out
-+	 * all the transactions that span the range.
-+	 */
-+	for (cnt = 0; cnt < pag->pagb_count; cnt++) {
-+		bsy = &pag->pagb_list[cnt];
-+		if (!bsy->busy_tp)
-+			continue;
- 
--		/*
--		 * (start1,length1) within (start2, length2)
--		 */
--		if (bsy->busy_tp != NULL) {
--			bend = bsy->busy_start + bsy->busy_length - 1;
--			if ((bno > bend) || (uend < bsy->busy_start)) {
--				cnt--;
--			} else {
--				break;
--			}
--		}
--	}
-+		bend = bsy->busy_start + bsy->busy_length - 1;
-+		if (bno > bend || uend < bsy->busy_start)
-+			continue;
- 
--	trace_xfs_alloc_busysearch(tp->t_mountp, agno, bno, len, !!cnt);
-+		/* (start1,length1) within (start2, length2) */
-+		if (XFS_LSN_CMP(bsy->busy_tp->t_commit_lsn, lsn) > 0)
-+			lsn = bsy->busy_tp->t_commit_lsn;
-+	}
-+	spin_unlock(&pag->pagb_lock);
-+	xfs_perag_put(pag);
-+	trace_xfs_alloc_busysearch(tp->t_mountp, agno, bno, len, !!cnt, lsn);
- 
- 	/*
- 	 * If a block was found, force the log through the LSN of the
- 	 * transaction that freed the block
- 	 */
--	if (cnt) {
--		lsn = bsy->busy_tp->t_commit_lsn;
--		spin_unlock(&pag->pagb_lock);
-+	if (lsn)
- 		xfs_log_force(tp->t_mountp, lsn, XFS_LOG_FORCE|XFS_LOG_SYNC);
--	} else {
--		spin_unlock(&pag->pagb_lock);
--	}
--	xfs_perag_put(pag);
- }
 
 _______________________________________________
 xfs mailing list
