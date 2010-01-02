@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o02CBJVE104855 for <xfs@oss.sgi.com>; Sat, 2 Jan 2010 06:11:19 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 02C2715033D4
-	for <xfs@oss.sgi.com>; Sat,  2 Jan 2010 04:12:07 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	jOkaNyTZUwj6FlgD for <xfs@oss.sgi.com>;
-	Sat, 02 Jan 2010 04:12:07 -0800 (PST)
-Date: Sat, 2 Jan 2010 23:12:03 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] XFS: Kill filestreams cache flush
-Message-ID: <20100102121203.GG13802@discord.disaster>
-References: <1262399900-19110-1-git-send-email-david@fromorbit.com>
-	<20100102115338.GA18502@infradead.org>
+	o02C051p103628 for <xfs@oss.sgi.com>; Sat, 2 Jan 2010 06:00:05 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CDCC71503378
+	for <xfs@oss.sgi.com>; Sat,  2 Jan 2010 04:00:54 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id OIGeFDfYhgQnvgyJ for
+	<xfs@oss.sgi.com>; Sat, 02 Jan 2010 04:00:54 -0800 (PST)
+Date: Sat, 2 Jan 2010 07:00:53 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] XFS: Don't flush stale inodes
+Message-ID: <20100102120053.GB18502@infradead.org>
+References: <1262399980-19277-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100102115338.GA18502@infradead.org>
+In-Reply-To: <1262399980-19277-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,43 +28,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Sat, Jan 02, 2010 at 06:53:38AM -0500, Christoph Hellwig wrote:
-> On Sat, Jan 02, 2010 at 01:38:20PM +1100, Dave Chinner wrote:
-> > The filestreams cache flush is not needed in the sync code as it
-> > does not affect data writeback, and it is now not used by the
-> > growfs code, either, so kill it.
-> 
-> I have to admit I never understood the purpose of this call.
+On Sat, Jan 02, 2010 at 01:39:40PM +1100, Dave Chinner wrote:
+> Because inodes remain in cache much longer than inode buffers do
+> under memory pressure, we can get the situation where we have stale,
+> dirty inodes being reclaimed but the backing storage has been freed.
+> Hence we should never, ever flush XFS_ISTALE inodes to disk as
+> there is no guarantee that the backing buffer is in cache and
+> still marked stale when the flush occurs.
 
-I can't remember why it was put there, either. I may have even put
-it there when I was getting filestreams ready for merge but I can't remember
-at all...
-
-> What xfs_fstrm_free_func does is:
-> 
->  - clear the filesystems flag on the inode
->  - decrement pagf_fstrms
->  - drop references on the inode (and parent if known)
->  - free the filestream item
-> 
-> Nothing of that should matter for sync, although dropping inode
-> references during sync might generally be a good idea.
-
-Which means that sync destroys active filestreams associations and
-that seems more broken to me than anything an active reference will
-cause. I think just letting them time out is better than having them
-destroyed by external operations. I'm happy to leave it there if you
-want....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+We should not flush stale inodes.  But how do we even end up calling
+xfs_iflush with a stale inode?
 
 _______________________________________________
 xfs mailing list
