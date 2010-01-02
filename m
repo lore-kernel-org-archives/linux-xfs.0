@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o02DcI5A114596 for <xfs@oss.sgi.com>; Sat, 2 Jan 2010 07:38:19 -0600
+	o02EDejc117892 for <xfs@oss.sgi.com>; Sat, 2 Jan 2010 08:13:40 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6B57715034C7
-	for <xfs@oss.sgi.com>; Sat,  2 Jan 2010 05:39:06 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DE7671DABB03
+	for <xfs@oss.sgi.com>; Sat,  2 Jan 2010 06:14:28 -0800 (PST)
 Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
 	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	D41UDEJmgIymPGGg for <xfs@oss.sgi.com>;
-	Sat, 02 Jan 2010 05:39:06 -0800 (PST)
-Date: Sun, 3 Jan 2010 00:39:02 +1100
+	15G5mpVCEFj0hmVJ for <xfs@oss.sgi.com>;
+	Sat, 02 Jan 2010 06:14:28 -0800 (PST)
+Date: Sun, 3 Jan 2010 01:14:14 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] XFS: Don't flush stale inodes
-Message-ID: <20100102133902.GJ13802@discord.disaster>
-References: <1262399980-19277-1-git-send-email-david@fromorbit.com>
-	<20100102120053.GB18502@infradead.org>
-	<20100102122405.GI13802@discord.disaster>
-	<20100102131701.GA17320@infradead.org>
+Subject: Re: [PATCH 3/3] XFS: Sort delayed write buffers before dispatch
+Message-ID: <20100102141414.GK13802@discord.disaster>
+References: <1262401416-19546-1-git-send-email-david@fromorbit.com>
+	<1262401416-19546-4-git-send-email-david@fromorbit.com>
+	<87fx6o7iy3.fsf@basil.nowhere.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100102131701.GA17320@infradead.org>
+In-Reply-To: <87fx6o7iy3.fsf@basil.nowhere.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,29 +27,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Andi Kleen <andi@firstfloor.org>
+Cc: axboe@kernel.dk, xfs@oss.sgi.com
 
-On Sat, Jan 02, 2010 at 08:17:01AM -0500, Christoph Hellwig wrote:
-> This looks like a bigger problem to me.  We only mark inodes as stale
-> from xfs_ifree_cluster, which via xfs_ifree and xfs_inactive gets
-> called from xfs_fs_clear_inode.  Given that the inode has now been
-> deleted we should not mark it as reclaimable in xfs_fs_destroy_inode
-> but go on to reap it given that there is nothing to reclaim.
+On Sat, Jan 02, 2010 at 02:08:36PM +0100, Andi Kleen wrote:
+> Dave Chinner <david@fromorbit.com> writes:
+> =
 
-We can't reap it immediately as the inodes are usually dirty and
-pinned in memory at this point by transactions that have not yet
-been written to disk and completed. We need the inodes in core for
-log IO completion processing....
+> > Currently when the xfsbufd writes delayed write buffers, it pushes
+> > them to disk in the order they come off the delayed write list. If
+> > there are lots of buffers =D1=95pread widely over the disk, this results
+> > in overwhelming the elevator sort queues in the block layer and we
+> > end up losing the posibility of merging adjacent buffers to minimise
+> > the number of IOs.
+> >
+> > Add a sort array to the buftarg so that we can do high level sorting
+> > of the buffers once they are pulled off the delwri queue for
+> > writeback. Currently this array can hold 4096 buffers at a time
+> > which gives us a window 32 times larger than the default elevator
+> > maximums for ordering buffers.
+> =
+
+> At first look it seems a bit wasteful because the elevator
+> sorts again. Is your window that much bigger than the elevators?
+
+Easily - at currently limits we can log about 8000 inodes a megabyte
+of log space and we can write over 150MB/s to the log. That adds up
+to about 1.2million inodes dirtied a second, or 40,000 inode buffers
+a second needing to be written back.....
+
+We have much more of a clue about what is happening at the
+filesytem level, and can optimise far more efficiently at higher
+levels. The elevator can only merge IOs if the higher layer sends
+it adjacent blocks.
+
+I don't want to do buffer merging in XFS, but I want adjacent IOs
+merged and the elevator does that well. Rather than sending buffers
+down in random order and only getting a few merges, sorting all the
+buffers first guarantees that all possible merges are made by the
+elevator across the entire dispatch without needing to tweak the
+elevator at all.
+
+IOWs, being smart at the higher layers where you have the context to
+do a good job means we don't need to add heuristics or tweaks to try
+to guess the best thing to do at the lower layers.
+
+> Perhaps the sort queue in the elevator should be just enlarged?
+
+Which we used to do and that caused all sorts of latency and OOM
+issues by pinning huge amounts of dirty memory in the elevators.
+
+> > Ideally this should use a list sort rather than requiring an
+> > external buffer to sort the buffers in, but for simplicity
+> > just do it via sort function.
+> =
+
+> Doing merge sort on lists is relatively simple There are
+> plenty examples in a google search. An alternative is also
+> to construct a rbtree on the fly and then walk it.
+
+Already got it handled - there's a couple of copies of list_sort()
+already in the tree - I'll post an updated patch set in the next
+couple of days after I've had a chance to QA it.
 
 Cheers,
 
 Dave.
--- 
+-- =
+
 Dave Chinner
 david@fromorbit.com
 
