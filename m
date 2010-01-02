@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o02D7qmC111488 for <xfs@oss.sgi.com>; Sat, 2 Jan 2010 07:07:53 -0600
-Received: from one.firstfloor.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5D3211DAB926
-	for <xfs@oss.sgi.com>; Sat,  2 Jan 2010 05:08:39 -0800 (PST)
-Received: from one.firstfloor.org (one.firstfloor.org [213.235.205.2]) by
-	cuda.sgi.com with ESMTP id KOadd3aBettPZ41n for
-	<xfs@oss.sgi.com>; Sat, 02 Jan 2010 05:08:39 -0800 (PST)
-Subject: Re: [PATCH 3/3] XFS: Sort delayed write buffers before dispatch
-From: Andi Kleen <andi@firstfloor.org>
-References: <1262401416-19546-1-git-send-email-david@fromorbit.com>
-	<1262401416-19546-4-git-send-email-david@fromorbit.com>
-Date: Sat, 02 Jan 2010 14:08:36 +0100
-In-Reply-To: <1262401416-19546-4-git-send-email-david@fromorbit.com> (Dave
-	Chinner's message of "Sat, 2 Jan 2010 14:03:36 +1100")
-Message-ID: <87fx6o7iy3.fsf@basil.nowhere.org>
+	o02DGC7M112279 for <xfs@oss.sgi.com>; Sat, 2 Jan 2010 07:16:13 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C00A11376DE
+	for <xfs@oss.sgi.com>; Sat,  2 Jan 2010 05:17:02 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id kpfOY93CL1Rh24vf for
+	<xfs@oss.sgi.com>; Sat, 02 Jan 2010 05:17:02 -0800 (PST)
+Date: Sat, 2 Jan 2010 08:17:01 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] XFS: Don't flush stale inodes
+Message-ID: <20100102131701.GA17320@infradead.org>
+References: <1262399980-19277-1-git-send-email-david@fromorbit.com>
+	<20100102120053.GB18502@infradead.org>
+	<20100102122405.GI13802@discord.disaster>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20100102122405.GI13802@discord.disaster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,52 +26,18 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: axboe@kernel.dk, xfs@oss.sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-Dave Chinner <david@fromorbit.com> writes:
-
-> Currently when the xfsbufd writes delayed write buffers, it pushes
-> them to disk in the order they come off the delayed write list. If
-> there are lots of buffers =D1=95pread widely over the disk, this results
-> in overwhelming the elevator sort queues in the block layer and we
-> end up losing the posibility of merging adjacent buffers to minimise
-> the number of IOs.
->
-> Add a sort array to the buftarg so that we can do high level sorting
-> of the buffers once they are pulled off the delwri queue for
-> writeback. Currently this array can hold 4096 buffers at a time
-> which gives us a window 32 times larger than the default elevator
-> maximums for ordering buffers.
-
-At first look it seems a bit wasteful because the elevator
-sorts again. Is your window that much bigger than the elevators?
-Perhaps the sort queue in the elevator should be just enlarged?
-
->
-> Ideally this should use a list sort rather than requiring an
-> external buffer to sort the buffers in, but for simplicity
-> just do it via sort function.
-
-Doing merge sort on lists is relatively simple There are
-plenty examples in a google search. An alternative is also
-to construct a rbtree on the fly and then walk it.
-
-But if you use sort() this way you probably should at least
-add a u64 swap function to lib/sort.c, otherwise
-all the pointers will be exchanged byte-by-byte on 64bit
-systems which is rather slow.
-
--andi
-
-
--- =
-
-ak@linux.intel.com -- Speaking for myself only.
+This looks like a bigger problem to me.  We only mark inodes as stale
+from xfs_ifree_cluster, which via xfs_ifree and xfs_inactive gets
+called from xfs_fs_clear_inode.  Given that the inode has now been
+deleted we should not mark it as reclaimable in xfs_fs_destroy_inode
+but go on to reap it given that there is nothing to reclaim.
 
 _______________________________________________
 xfs mailing list
