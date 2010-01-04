@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o047QTQd079672 for <xfs@oss.sgi.com>; Mon, 4 Jan 2010 01:26:30 -0600
+	o047txhX082334 for <xfs@oss.sgi.com>; Mon, 4 Jan 2010 01:55:59 -0600
 Received: from moutng.kundenserver.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 311B31505920
-	for <xfs@oss.sgi.com>; Sun,  3 Jan 2010 23:27:18 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 565B11C27FB3
+	for <xfs@oss.sgi.com>; Sun,  3 Jan 2010 23:56:48 -0800 (PST)
 Received: from moutng.kundenserver.de (moutng.kundenserver.de
-	[212.227.126.187]) by cuda.sgi.com with ESMTP id
-	XVtbCwMI76DSLyv0 for <xfs@oss.sgi.com>;
-	Sun, 03 Jan 2010 23:27:18 -0800 (PST)
-Date: Sun, 3 Jan 2010 23:27:13 -0800 (PST)
+	[212.227.126.171]) by cuda.sgi.com with ESMTP id
+	Q2AcpCjZFvNWVt6S for <xfs@oss.sgi.com>;
+	Sun, 03 Jan 2010 23:56:48 -0800 (PST)
+Date: Sun, 3 Jan 2010 23:56:45 -0800 (PST)
 From: Christian Kujau <lists@nerdbynature.de>
 Subject: Re: [PATCH] remove bashisms from xfstests
-In-Reply-To: <87vdfjceke.fsf@basil.nowhere.org>
-Message-ID: <alpine.DEB.2.01.1001032307210.3483@bogon.housecafe.de>
+In-Reply-To: <alpine.DEB.2.01.1001032307210.3483@bogon.housecafe.de>
+Message-ID: <alpine.DEB.2.01.1001032348240.3483@bogon.housecafe.de>
 References: <alpine.DEB.2.01.1001030125040.3483@bogon.housecafe.de>
 	<87vdfjceke.fsf@basil.nowhere.org>
+	<alpine.DEB.2.01.1001032307210.3483@bogon.housecafe.de>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -32,611 +33,509 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Andi Kleen <andi@firstfloor.org>
 Cc: xfs@oss.sgi.com
 
-On Sun, 3 Jan 2010 at 17:56, Andi Kleen wrote:
-> The usual much easier and less riskier change is to just change the
-> first line in each script to #!/bin/bash
+On Sun, 3 Jan 2010 at 23:27, Christian Kujau wrote:
+> OK, here's one with only changing /bin/sh to /bin/bash, for all scripts 
+> carrying bashisms according to checkbashisms(1). With this patch applied, 
+> I can now run xfstests w/o changing my /bin/sh to something else.
 
-Hm, but it's less fun that way :-)
+Well, almost - I'm still getting errors, because some of the scripts are 
+not executed but sourced. Although the ./check script is /bin/bash now, 
+the sourced scripts seem to get executed via /bin/sh, at least that's what 
+I've experienced. Here's an additional patch, changing only the common.* 
+scripts, for they are being sourced. Right now xfstests is running test 
+013 and no errors so far.
 
-OK, here's one with only changing /bin/sh to /bin/bash, for all scripts 
-carrying bashisms according to checkbashisms(1). With this patch applied, 
-I can now run xfstests w/o changing my /bin/sh to something else.
-
-Thanks,
 Christian.
 
 Signed-off-by: Christian Kujau <lists@nerdbynature.de>
 
-diff -Nrup xfstests.orig/005 xfstests/005
---- xfstests.orig/005	2010-01-03 23:03:27.977265001 -0800
-+++ xfstests/005	2010-01-03 22:19:34.825575000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 005
+diff -Nrup xfstests.orig/common xfstests/common
+--- xfstests.orig/common	2010-01-03 23:03:32.029290001 -0800
++++ xfstests/common	2010-01-03 23:36:04.722433002 -0800
+@@ -1,4 +1,3 @@
+-##/bin/sh 
+ #
+ # Copyright (c) 2000-2005 Silicon Graphics, Inc.  All Rights Reserved.
+ #
+@@ -45,7 +44,7 @@ randomize=false
+ rm -f $tmp.list $tmp.tmp $tmp.sed
+ 
+ # Autodetect fs type based on what's on $TEST_DEV
+-if [ "$HOSTOS" == "Linux" ]
++if [ "$HOSTOS" = "Linux" ]
+ then
+     export FSTYP=`blkid -s TYPE -o value $TEST_DEV`
+ else
+diff -Nrup xfstests.orig/common.attr xfstests/common.attr
+--- xfstests.orig/common.attr	2010-01-03 23:03:32.039295001 -0800
++++ xfstests/common.attr	2010-01-03 23:36:27.602433002 -0800
+@@ -1,4 +1,3 @@
+-##/bin/sh
+ #-----------------------------------------------------------------------
+ #  Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
+ #  This program is free software; you can redistribute it and/or modify
+@@ -77,11 +76,11 @@ _acl_list()
+ #
+ _create_n_aces()
+ {
+-    let n=$1-4
++    n=$(($1 - 4))
+     acl='u::rwx,g::rwx,o::rwx,m::rwx' # 4 ace acl start
+     while [ $n -ne 0 ]; do
+ 	acl="$acl,u:$n:rwx"
+-	let n=$n-1
++	n=$((n - 1))
+     done
+     echo $acl
+ }
+diff -Nrup xfstests.orig/common.bonnie xfstests/common.bonnie
+--- xfstests.orig/common.bonnie	2010-01-03 23:03:32.049300001 -0800
++++ xfstests/common.bonnie	2010-01-03 23:36:48.682433002 -0800
+@@ -1,4 +1,3 @@
+-##/bin/sh
+ #
+ # Copyright (c) 2002-2004 Silicon Graphics, Inc.  All Rights Reserved.
+ #
+@@ -17,7 +16,7 @@
+ #
+ 
+ #check bonnie is installed
+-if [ "`whereis bonnie++`" == "bonnie++:"]; then
++if [ "`whereis bonnie++`" = "bonnie++:"]; then
+         echo $0 error bonnie not installed.
+         exit
+ fi
+diff -Nrup xfstests.orig/common.config xfstests/common.config
+--- xfstests.orig/common.config	2010-01-03 23:03:32.059305001 -0800
++++ xfstests/common.config	2010-01-03 23:33:46.432433002 -0800
+@@ -1,4 +1,3 @@
+-##/bin/sh
+ #
+ # Copyright (c) 2000-2003,2006 Silicon Graphics, Inc.  All Rights Reserved.
+ #
+diff -Nrup xfstests.orig/common.dbench xfstests/common.dbench
+--- xfstests.orig/common.dbench	2010-01-03 23:03:32.059305001 -0800
++++ xfstests/common.dbench	2010-01-03 23:37:14.602433002 -0800
+@@ -1,4 +1,3 @@
+-##/bin/sh
+ #
+ # Copyright (c) 2002-2005 Silicon Graphics, Inc.  All Rights Reserved.
+ #
+@@ -17,7 +16,7 @@
+ #
+ 
+ #check dbench is installed
+-if [ "`whereis dbench`" == "dbench:"]; then
++if [ "`whereis dbench`" = "dbench:"]; then
+         echo $0 error dbench not installed.
+         exit
+ fi
+diff -Nrup xfstests.orig/common.defrag xfstests/common.defrag
+--- xfstests.orig/common.defrag	2010-01-03 23:03:32.079315001 -0800
++++ xfstests/common.defrag	2010-01-03 23:33:49.662433002 -0800
+@@ -1,4 +1,3 @@
+-##/bin/sh
+ #
+ # Copyright (c) 2009 Eric Sandeen
+ # All Rights Reserved.
+diff -Nrup xfstests.orig/common.dmapi xfstests/common.dmapi
+--- xfstests.orig/common.dmapi	2010-01-03 23:03:32.079315001 -0800
++++ xfstests/common.dmapi	2010-01-03 23:33:51.212433002 -0800
+@@ -1,4 +1,3 @@
+-##/bin/sh
+ #
+ # Copyright (c) 2006 Silicon Graphics, Inc.  All Rights Reserved.
+ #
+diff -Nrup xfstests.orig/common.dump xfstests/common.dump
+--- xfstests.orig/common.dump	2010-01-03 23:03:32.099325001 -0800
++++ xfstests/common.dump	2010-01-03 23:38:42.102433002 -0800
+@@ -1,4 +1,3 @@
+-#/bin/sh
+ #
+ # Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.  All Rights Reserved.
+ #
+@@ -111,7 +110,7 @@ _check_onl()
+ 	else
+ 	    sleep 1
+ 	fi
+-	let i=$i+1
++	i=$((i + 1))
+     done
+ 
+ 
+@@ -149,7 +148,7 @@ _wait_tape()
+ 	else
+ 	    sleep 1
+ 	fi
+-	let i=$i+1
++	i=$((i + 1))
+     done
+ }
+ 
+@@ -208,7 +207,7 @@ _require_tape()
+ {
+     dumptape=$1
+ 
+-    if [ -z "$dumptape" -o "@" == "$dumptape" ]; then
++    if [ -z "$dumptape" -o "@" = "$dumptape" ]; then
+         echo "This test requires a dump tape - none was specified"
+ 	echo "No dump tape specified" >$seq.notrun
+ 	status=$NOTRUNSTS
+@@ -701,7 +700,7 @@ _create_hardlinks()
+ 	_hardlink=$_fname$_suffix
+ 	echo "creating hardlink $_hardlink to $_fname"
+ 	ln $_fname $_hardlink
+-	let _j=$_j+1
++	_j=$((_j + 1))
+     done
+ }
+ 
+@@ -717,7 +716,7 @@ _create_hardset()
+     _i=1
+     while [ $_i -le $_numsets ]; do
+ 	_create_hardlinks file$_i 5
+-	let _i=$_i+1
++	_i=$((_i + 1))
+     done
+ }
+ 
+@@ -993,7 +992,7 @@ _do_dump_multi_file()
+     while [ $i -lt $multi ]
+     do
+ 	multi_args="$multi_args -f $dump_file.$i -M $media_label.$i"
+-	let i=$i+1
++	i=$((i + 1))
+     done
+ 
+     echo "Dumping to files..."
+@@ -1113,7 +1112,7 @@ _do_restore_multi_file()
+     while [ $i -lt $multi ]
+     do
+ 	multi_args="$multi_args -f $dump_file.$i"
+-	let i=$i+1
++	i=$((i + 1))
+     done
+ 
+     echo "Restoring from file..."
+@@ -1384,7 +1383,7 @@ _check_quota_entries()
+ #
+ _check_quota_dumprestore()
+ {
+-    if [ "$HOSTOS" == "IRIX" ]; then
++    if [ "$HOSTOS" = "IRIX" ]; then
+ 	_check_quota 'user quota information' \
+ 		     'group quota information' \
+ 		     'project quota information' | \
+diff -Nrup xfstests.orig/common.filestreams xfstests/common.filestreams
+--- xfstests.orig/common.filestreams	2010-01-03 23:03:32.109330001 -0800
++++ xfstests/common.filestreams	2010-01-03 23:39:04.502433002 -0800
+@@ -1,4 +1,3 @@
+-##/bin/sh
+ #
+ # Copyright (c) 2007 Silicon Graphics, Inc.  All Rights Reserved.
+ #
+@@ -24,7 +23,7 @@ _check_filestreams_support()
+ 	local irix_timeout_sysvar="xfs_mfstream_timeout"
+ 	local linux_timeout_procvar="/proc/sys/fs/xfs/filestream_centisecs"
+ 	local streams_avail=""
+-	if [ "$HOSTOS" == "IRIX" ]; then
++	if [ "$HOSTOS" = "IRIX" ]; then
+ 		# check for the filestreams timeout systune variable in irix
+ 		streams_avail=`systune $irix_timeout_sysvar 2>&1 |
+ 			perl -ne 'if (/'$irix_timeout_sysvar'\s+=\s+\d+/) {print "true"}'`
+@@ -33,7 +32,7 @@ _check_filestreams_support()
+ 		[ -f $linux_timeout_procvar ] && streams_avail="true"
+ 	fi
+ 
+-	if [ "$streams_avail" == "true" ]; then
++	if [ "$streams_avail" = "true" ]; then
+ 		return 0
+ 	else
+ 		return 1
+@@ -45,7 +44,7 @@ _set_stream_timeout_centisecs()
+ 	local new_timeout_csecs=$1
+ 	local irix_timeout_sysvar="xfs_mfstream_timeout"
+ 	local linux_timeout_procvar="/proc/sys/fs/xfs/filestream_centisecs"
+-	if [ "$HOSTOS" == "IRIX" ]; then
++	if [ "$HOSTOS" = "IRIX" ]; then
+ 		echo y | systune -r $irix_timeout_sysvar $new_timeout_csecs >/dev/null
+ 	else
+ 		echo $new_timeout_csecs > $linux_timeout_procvar
+@@ -70,7 +69,7 @@ _do_stream()
+ 	cd $directory_name
+ 
+ 	local dd_cmd=""
+-	if [ "$HOSTOS" == "IRIX" ]; then
++	if [ "$HOSTOS" = "IRIX" ]; then
+ 		# for irix use lmdd
+ 		dd_cmd="lmdd"
+ 		[ "$dio" = "1" ] && dd_cmd="$dd_cmd odirect=1"
+@@ -114,7 +113,7 @@ _check_for_dupes()
+         local this_num_two
+         for this_num_one in $num_str_one; do
+                 for this_num_two in $num_str_two; do
+-                        if [ "$this_num_one" == "$this_num_two" ]; then
++                        if [ "$this_num_one" = "$this_num_two" ]; then
+ 				echo "duplicate AG $this_num_one found" \
+ 					>> $here/$seq.full
+ 				return 1
+@@ -140,7 +139,7 @@ _test_streams() {
+ 	_scratch_mkfs_xfs -dsize=$size,agcount=$agcount >/dev/null 2>&1 \
+ 		|| _fail "mkfs failed"
+ 
+-	if [ "$use_iflag" = "0" -o "$HOSTOS" == "IRIX" ]; then
++	if [ "$use_iflag" = "0" -o "$HOSTOS" = "IRIX" ]; then
+ 		# mount using filestreams mount option
+ 		_scratch_mount "-o filestreams" \
+ 			|| _fail "filestreams mount failed"
+diff -Nrup xfstests.orig/common.filter xfstests/common.filter
+--- xfstests.orig/common.filter	2010-01-03 23:03:32.119335001 -0800
++++ xfstests/common.filter	2010-01-03 23:33:56.372433002 -0800
+@@ -1,4 +1,3 @@
+-##/bin/sh
+ #
+ # Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+ #
+diff -Nrup xfstests.orig/common.log xfstests/common.log
+--- xfstests.orig/common.log	2010-01-03 23:03:32.119335001 -0800
++++ xfstests/common.log	2010-01-03 23:44:11.282433002 -0800
+@@ -1,4 +1,3 @@
+-##/bin/sh
+ #
+ # Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
+ #
+@@ -314,8 +313,12 @@ _create_log()
+     # generate some log traffic - but not too much - life gets a little
+     # more complicated if the log wraps around. This traffic is
+     # pretty much arbitary, but could probably be made better than this.
+-    touch $SCRATCH_MNT/{0,1,2,3,4,5,6,7,8,9}{0,1,2,3,4,5,6,7,8,9}
+-	
++    i=1
++    while [ $i -le 100 ]; do
++    	touch $SCRATCH_MNT/$i
++	i=$((i + 1))
++    done
++
+     # unmount the FS
+     _full "umount"
+     umount $SCRATCH_DEV >>$seq.full 2>&1
+@@ -342,9 +345,11 @@ _create_log_sync()
+ 
+     # generate some log traffic - but not too much
+     # add some syncs to get the log flushed to disk 
+-    for file in $SCRATCH_MNT/{0,1,2,3,4,5,6,7,8,9}{0,1,2,3,4,5,6,7,8,9}; do
+-	touch $file
++    i=1
++    while [ $i -le 100 ]; do
++    	touch $SCRATCH_MNT/$i
+ 	sync
++	i=$((i + 1))
+     done
+ 
+     # unmount the FS
+diff -Nrup xfstests.orig/common.metaperf xfstests/common.metaperf
+--- xfstests.orig/common.metaperf	2010-01-03 23:03:32.129340001 -0800
++++ xfstests/common.metaperf	2010-01-03 23:33:59.432433002 -0800
+@@ -1,4 +1,3 @@
+-##/bin/sh
+ #
+ # Copyright (c) 2003-2005 Silicon Graphics, Inc.  All Rights Reserved.
+ #
+diff -Nrup xfstests.orig/common.punch xfstests/common.punch
+--- xfstests.orig/common.punch	2010-01-03 23:03:32.139345001 -0800
++++ xfstests/common.punch	2010-01-03 23:39:55.132433002 -0800
+@@ -1,4 +1,3 @@
+-##/bin/sh
+ #
+ # Copyright (c) 2007 Silicon Graphics, Inc.  All Rights Reserved.
+ #
+@@ -40,7 +39,7 @@ _spawn_test_file() {
+ 	-c "extsize" \
+ 	$test_file
+ 
+-	if [ "$reserve_space" == "noresv" ]; then
++	if [ "$reserve_space" = "noresv" ]; then
+ 		echo "+ not using resvsp at file creation"
+ 		$XFS_IO_PROG -f \
+ 		-c "truncate $file_size" \
+@@ -62,13 +61,13 @@ _do_punch() {
+ 	local punch_type=$4		# u for unresvsp, d for dm_punch
+ 	local test_file=$5
+ 
+-	if [ "$punch_type" == "u" ]; then
++	if [ "$punch_type" = "u" ]; then
+ 		echo "+ hole punch using unresvsp"
+ 		$XFS_IO_PROG -f \
+ 		-c "unresvsp $punch_offset $punch_size" \
+ 		$test_file
+ 	fi
+-	if [ "$punch_type" == "d" ]; then
++	if [ "$punch_type" = "d" ]; then
+ 		echo "+ hole punch using dmapi punch_hole"
+ 		${DMAPI_QASUITE1_DIR}cmd/punch_hole -o $punch_offset -l $punch_size \
+ 			${SCRATCH_MNT}/$test_file
+@@ -123,7 +122,7 @@ _test_punch() {
+ 	local this_punch_type=""
+ 	local dmap_punch_used=0
+ 	for this_punch_type in "${punch_types[@]}"; do
+-		[ "$this_punch_type" == "d" ] && dmap_punch_used=1
++		[ "$this_punch_type" = "d" ] && dmap_punch_used=1
+ 	done
+ 	if [ $dmap_punch_used -ne 0 ]; then
+ 		# a punch type of dm_punch has been specified, do a dmapi mount
+@@ -161,13 +160,13 @@ _test_punch() {
+ 	local punch_index=0
+ 	local write_index=0
+ 	for operation in "${punch_write_order[@]}"; do
+-		if [ "$operation" == "p" ]; then
++		if [ "$operation" = "p" ]; then
+ 			_do_punch $blksize ${punch_points_blks[$punch_index]} \
+ 				${punch_sizes_blks[$punch_index]} ${punch_types[$punch_index]} \
+ 				$filename
+ 			punch_index=`expr $punch_index + 1`
+ 		fi
+-		if [ "$operation" == "w" ]; then
++		if [ "$operation" = "w" ]; then
+ 			_do_write $blksize ${write_points_blks[$write_index]} \
+ 				${write_sizes_blks[$write_index]} $filename
+ 			write_index=`expr $write_index + 1`
+diff -Nrup xfstests.orig/common.quota xfstests/common.quota
+--- xfstests.orig/common.quota	2010-01-03 23:03:32.149350001 -0800
++++ xfstests/common.quota	2010-01-03 23:40:10.632433002 -0800
+@@ -1,4 +1,3 @@
+-##/bin/sh
+ #
+ # Copyright (c) 2000-2001,2005 Silicon Graphics, Inc.
+ # All Rights Reserved.
+@@ -117,7 +116,7 @@ _choose_gid()
+ 
+ _choose_prid()
+ {
+-    if [ "X$projid_file" == "X" ]; then
++    if [ "X$projid_file" = "X" ]; then
+ 	projid_file=/etc/projid
+     fi
+     if [ ! -f $projid_file ]; then
+diff -Nrup xfstests.orig/common.rc xfstests/common.rc
+--- xfstests.orig/common.rc	2010-01-03 23:03:32.159355001 -0800
++++ xfstests/common.rc	2010-01-03 23:41:30.712433002 -0800
+@@ -1,5 +1,4 @@
+-##/bin/sh
+-#-----------------------------------------------------------------------
++#
+ #  Copyright (c) 2000-2006 Silicon Graphics, Inc.  All Rights Reserved.
+ #  This program is free software; you can redistribute it and/or modify
+ #  it under the terms of the GNU General Public License as published by
+@@ -18,11 +17,11 @@
+ #
+ #  Contact information: Silicon Graphics, Inc., 1500 Crittenden Lane,
+ #  Mountain View, CA 94043, USA, or: http://www.sgi.com
+-#-----------------------------------------------------------------------
++#
+ 
+ dd()
+ {
+-   if [ "$HOSTOS" == "Linux" ]
++   if [ "$HOSTOS" = "Linux" ]
+    then	
+ 	command dd --help | grep noxfer > /dev/null 2>&1
+ 	
+@@ -186,7 +185,7 @@ _mount_ops_filter()
+     params="$*"
+     
+     #get mount point to handle dmapi mtpt option correctly
+-    let last_index=$#-1
++    last_index=$(($# - 1))
+     [ $last_index -gt 0 ] && shift $last_index
+     FS_ESCAPED=$1
+     
+@@ -409,7 +408,7 @@ _df_device()
+     fi
+ 
+     $DF_PROG 2>/dev/null | $AWK_PROG -v what=$1 '
+-        match($1,what) && NF==1 {
++        match($1,what) && NF == 1 {
+             v=$1
+             getline
+             print v, $0
+@@ -439,7 +438,7 @@ _df_dir()
+     fi
+ 
+     $DF_PROG $1 2>/dev/null | $AWK_PROG -v what=$1 '
+-        NR == 2 && NF==1 {
++        NR == 2 && NF == 1 {
+             v=$1
+             getline
+             print v, $0;
+@@ -720,7 +719,7 @@ _require_user()
+ {
+     qa_user=fsgqa
+     cat /etc/passwd | grep -q $qa_user
+-    [ "$?" == "0" ] || _notrun "$qa_user user not defined."
++    [ "$?" = "0" ] || _notrun "$qa_user user not defined."
+ }
+ 
+ # check that xfs_io, glibc, kernel, and filesystem all (!) support
+@@ -983,7 +982,7 @@ _udf_test_known_error_filter()
+ 
+ _check_udf_filesystem()
+ {
+-    [ "$DISABLE_UDF_TEST" == "1" ] && return
++    [ "$DISABLE_UDF_TEST" = "1" ] && return
+ 
+     if [ $# -ne 1 -a $# -ne 2 ]
+     then
+@@ -1212,9 +1211,9 @@ _link_out_file()
+       exit
+    fi
+    rm -f $1
+-   if [ "`uname`" == "IRIX64" ] || [ "`uname`" == "IRIX" ]; then
++   if [ "`uname`" = "IRIX64" ] || [ "`uname`" = "IRIX" ]; then
+       ln -s $1.irix $1
+-   elif [ "`uname`" == "Linux" ]; then
++   elif [ "`uname`" = "Linux" ]; then
+       ln -s $1.linux $1
+    else
+       echo Error test $seq does not run on the operating system: `uname`
+@@ -1238,7 +1237,7 @@ _nfiles()
+                 if [ $size -gt 0 ]; then
+                     dd if=/dev/zero of=$file bs=1024 count=$size
+                 fi
+-		let f=$f+1
++		f=$((f + 1))
+         done
+ }
+ 
+@@ -1252,7 +1251,7 @@ _descend()
+         _nfiles $files           # files for this dir
+ 
+         [ $depth -eq 0 ] && return
+-	let deep=$depth-1 # go 1 down
++	deep=$((depth - 1))	# go 1 down
+ 
+         [ $verbose = true ] && echo "descending, depth from leaves = $deep"
+ 
+@@ -1260,7 +1259,7 @@ _descend()
+         while [ $d -lt $dirs ]
+         do
+                 _descend d$d $deep &
+-		let d=$d+1
++		d=$((d + 1))
+                 wait
+         done
+ }
+diff -Nrup xfstests.orig/common.repair xfstests/common.repair
+--- xfstests.orig/common.repair	2010-01-03 23:03:32.169360001 -0800
++++ xfstests/common.repair	2010-01-03 23:34:06.322433002 -0800
+@@ -1,4 +1,3 @@
+-##/bin/sh
+ #
+ # Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
  #
- # Test symlinks & ELOOP
-diff -Nrup xfstests.orig/007 xfstests/007
---- xfstests.orig/007	2010-01-03 23:03:27.987270001 -0800
-+++ xfstests/007	2010-01-03 22:21:42.535575000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 007
- #
- # drive the src/nametest program
-diff -Nrup xfstests.orig/010 xfstests/010
---- xfstests.orig/010	2010-01-03 23:03:28.017285001 -0800
-+++ xfstests/010	2010-01-03 22:28:35.308153000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 010
- #
- # dbtest
-diff -Nrup xfstests.orig/016 xfstests/016
---- xfstests.orig/016	2010-01-03 23:03:28.067310001 -0800
-+++ xfstests/016	2010-01-03 22:21:32.755575000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 016
- #
- # test end of log overwrite bug #796141
-diff -Nrup xfstests.orig/020 xfstests/020
---- xfstests.orig/020	2010-01-03 23:03:28.097325001 -0800
-+++ xfstests/020	2010-01-03 22:51:21.338153000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 020
- #
- # extended attributes
-diff -Nrup xfstests.orig/028 xfstests/028
---- xfstests.orig/028	2010-01-03 23:03:28.157355001 -0800
-+++ xfstests/028	2010-01-03 22:51:29.958153000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 028
- #
- # To test out xfsinvutil
-diff -Nrup xfstests.orig/031 xfstests/031
---- xfstests.orig/031	2010-01-03 23:03:28.187370001 -0800
-+++ xfstests/031	2010-01-03 22:51:43.908153000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 031
- #
- # exercise xfs_repair - ensure repeated use doesn't corrupt
-diff -Nrup xfstests.orig/043 xfstests/043
---- xfstests.orig/043	2010-01-03 23:03:28.277415001 -0800
-+++ xfstests/043	2010-01-03 22:23:42.965575000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 043
- #
- # Test out xfsdump/restore but rmv inventory prior to restore.
-diff -Nrup xfstests.orig/044 xfstests/044
---- xfstests.orig/044	2010-01-03 23:03:28.287420001 -0800
-+++ xfstests/044	2010-01-03 22:51:53.128153000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 044
- #
- # external log uuid/format tests (TODO - version 2 log format)
-diff -Nrup xfstests.orig/047 xfstests/047
---- xfstests.orig/047	2010-01-03 23:03:28.317435001 -0800
-+++ xfstests/047	2010-01-03 22:52:06.758153000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 047
- #
- # invutil with interactive responses
-diff -Nrup xfstests.orig/050 xfstests/050
---- xfstests.orig/050	2010-01-03 23:03:28.337445001 -0800
-+++ xfstests/050	2010-01-03 22:52:13.168153000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 050
- #
- # Exercises basic XFS quota functionality
-diff -Nrup xfstests.orig/051 xfstests/051
---- xfstests.orig/051	2010-01-03 23:03:28.347450001 -0800
-+++ xfstests/051	2010-01-03 22:21:07.435575000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 051
- #
- # Test out ACLs.
-diff -Nrup xfstests.orig/053 xfstests/053
---- xfstests.orig/053	2010-01-03 23:03:28.367460001 -0800
-+++ xfstests/053	2010-01-03 22:19:28.225575000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 053
- #
- # xfs_repair breaks acls
-diff -Nrup xfstests.orig/064 xfstests/064
---- xfstests.orig/064	2010-01-03 23:03:28.457505001 -0800
-+++ xfstests/064	2010-01-03 22:18:56.425575000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 064
- #
- # test multilevel dump and restores with hardlinks
-diff -Nrup xfstests.orig/065 xfstests/065
---- xfstests.orig/065	2010-01-03 23:03:28.457505001 -0800
-+++ xfstests/065	2010-01-03 22:20:08.665575000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 065
- #
- # Testing incremental dumps and cumulative restores with
-diff -Nrup xfstests.orig/067 xfstests/067
---- xfstests.orig/067	2010-01-03 23:03:28.477515001 -0800
-+++ xfstests/067	2010-01-03 22:27:51.538325001 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 067
- #
- # Test out acl/dacls which fit in shortform in the inode
-diff -Nrup xfstests.orig/068 xfstests/068
---- xfstests.orig/068	2010-01-03 23:03:28.487520001 -0800
-+++ xfstests/068	2010-01-03 22:52:31.798153000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FSQA Test No. 068
- #
- # Test case to reproduce xfs_freeze hang under filsystem load.
-diff -Nrup xfstests.orig/071 xfstests/071
---- xfstests.orig/071	2010-01-03 23:03:28.507530001 -0800
-+++ xfstests/071	2010-01-03 22:52:39.198153000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 071
- #
- # Exercise IO at large file offsets.
-diff -Nrup xfstests.orig/074 xfstests/074
---- xfstests.orig/074	2010-01-03 23:03:28.537545001 -0800
-+++ xfstests/074	2010-01-03 22:52:48.748153000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 074
- #
- # fstest
-diff -Nrup xfstests.orig/075 xfstests/075
---- xfstests.orig/075	2010-01-03 23:03:28.547550001 -0800
-+++ xfstests/075	2010-01-03 22:19:23.145575000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 075
- #
- # fsx (non-AIO variant)
-diff -Nrup xfstests.orig/076 xfstests/076
---- xfstests.orig/076	2010-01-03 23:03:28.547550001 -0800
-+++ xfstests/076	2010-01-03 22:53:01.758153000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 076
- #
- # Test blockdev reads in parallel with filesystem reads/writes
-diff -Nrup xfstests.orig/084 xfstests/084
---- xfstests.orig/084	2010-01-03 23:03:28.617585001 -0800
-+++ xfstests/084	2010-01-03 22:19:08.795575000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 084
- #
- # Exercises unwritten extent reads and writes, looking
-diff -Nrup xfstests.orig/085 xfstests/085
---- xfstests.orig/085	2010-01-03 23:03:28.627590001 -0800
-+++ xfstests/085	2010-01-03 22:53:11.388153000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 085
- #
- # To test log replay by shutdown of file system
-diff -Nrup xfstests.orig/086 xfstests/086
---- xfstests.orig/086	2010-01-03 23:03:28.627590001 -0800
-+++ xfstests/086	2010-01-03 22:19:45.175575000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 086
- #
- # To test log replay with version 2 logs
-diff -Nrup xfstests.orig/089 xfstests/089
---- xfstests.orig/089	2010-01-03 23:03:28.657605001 -0800
-+++ xfstests/089	2010-01-03 22:53:23.799048001 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 089
- #
- # Emulate the way Linux mount manipulates /etc/mtab to attempt to
-diff -Nrup xfstests.orig/091 xfstests/091
---- xfstests.orig/091	2010-01-03 23:03:28.677615001 -0800
-+++ xfstests/091	2010-01-03 22:53:32.133213001 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 091
- #
- # fsx exercising direct IO -- sub-block sizes and concurrent buffered IO
-diff -Nrup xfstests.orig/097 xfstests/097
---- xfstests.orig/097	2010-01-03 23:03:28.717635001 -0800
-+++ xfstests/097	2010-01-03 22:19:53.435575000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 097. Modifed from UDFQA test 033.
- #
- # simple attr tests for EAs:
-diff -Nrup xfstests.orig/099 xfstests/099
---- xfstests.orig/099	2010-01-03 23:03:28.737645001 -0800
-+++ xfstests/099	2010-01-03 22:23:16.295575000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 099. Modified from UDFQA test 036.
- #
- # ACL test
-diff -Nrup xfstests.orig/100 xfstests/100
---- xfstests.orig/100	2010-01-03 23:03:28.747650001 -0800
-+++ xfstests/100	2010-01-03 22:53:50.292288001 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 100. Modified from UDF QA test 030.
- #
- # Test whether a tarred directory structure can be untarred onto
-diff -Nrup xfstests.orig/105 xfstests/105
---- xfstests.orig/105	2010-01-03 23:03:28.787670001 -0800
-+++ xfstests/105	2010-01-03 22:53:58.046163001 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 105
- #
- # Test fix of bug:
-diff -Nrup xfstests.orig/108 xfstests/108
---- xfstests.orig/108	2010-01-03 23:03:28.807680001 -0800
-+++ xfstests/108	2010-01-03 22:54:07.030653001 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 108
- #
- # Simple quota accounting test for direct/buffered/mmap IO.
-diff -Nrup xfstests.orig/109 xfstests/109
---- xfstests.orig/109	2010-01-03 23:03:28.817685001 -0800
-+++ xfstests/109	2010-01-03 22:54:15.604938001 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 109
- #
- # ENOSPC deadlock case from Asano Masahiro.
-diff -Nrup xfstests.orig/110 xfstests/110
---- xfstests.orig/110	2010-01-03 23:03:28.827690001 -0800
-+++ xfstests/110	2010-01-03 22:21:15.615575000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 110
- #
- # Incorrect dir2 freetab warning case from Masanori Tsuda.
-diff -Nrup xfstests.orig/111 xfstests/111
---- xfstests.orig/111	2010-01-03 23:03:28.837695001 -0800
-+++ xfstests/111	2010-01-03 22:20:59.015575000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 111
- #
- # Infinite xfs_bulkstat bad-inode loop case from Roger Willcocks.
-diff -Nrup xfstests.orig/112 xfstests/112
---- xfstests.orig/112	2010-01-03 23:03:28.847700001 -0800
-+++ xfstests/112	2010-01-03 22:21:38.345575000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 112
- #
- # fsx (AIO variant, based on 075)
-diff -Nrup xfstests.orig/113 xfstests/113
---- xfstests.orig/113	2010-01-03 23:03:28.847700001 -0800
-+++ xfstests/113	2010-01-03 22:54:30.972618001 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 113
- #
- # aio-stress
-diff -Nrup xfstests.orig/114 xfstests/114
---- xfstests.orig/114	2010-01-03 23:03:28.857705001 -0800
-+++ xfstests/114	2010-01-03 22:54:38.706483001 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 114
- #
- # Test some parent ptr stuff
-diff -Nrup xfstests.orig/117 xfstests/117
---- xfstests.orig/117	2010-01-03 23:03:28.887720001 -0800
-+++ xfstests/117	2010-01-03 22:54:46.380318001 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 117
- #
- # Attempt to cause filesystem corruption with serial fsstresses doing
-diff -Nrup xfstests.orig/118 xfstests/118
---- xfstests.orig/118	2010-01-03 23:03:28.897725001 -0800
-+++ xfstests/118	2010-01-03 22:54:54.974613001 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 118
- #
- # To test out pv#940675 crash in xfs_trans_brelse + quotas
-diff -Nrup xfstests.orig/119 xfstests/119
---- xfstests.orig/119	2010-01-03 23:03:28.907730001 -0800
-+++ xfstests/119	2010-01-03 22:55:05.629938001 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 119
- #
- # Leaking reservation space in the GRH
-diff -Nrup xfstests.orig/122 xfstests/122
---- xfstests.orig/122	2010-01-03 23:03:28.927740001 -0800
-+++ xfstests/122	2010-01-03 22:55:29.822028001 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 122
- #
- # pv#952498
-diff -Nrup xfstests.orig/123 xfstests/123
---- xfstests.orig/123	2010-01-03 23:03:28.937745001 -0800
-+++ xfstests/123	2010-01-03 22:55:42.188208001 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FSQA Test No. 123
- #
- # Make sure user cannot overwrite, append, delete or move a file created by 
-diff -Nrup xfstests.orig/124 xfstests/124
---- xfstests.orig/124	2010-01-03 23:03:28.947750001 -0800
-+++ xfstests/124	2010-01-03 22:55:47.270748001 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FSQA Test No. 124
- #
- # Test preallocated_rw_pattern_test modified from CXFSQA test preallocated_rw_pattern_test
-diff -Nrup xfstests.orig/134 xfstests/134
---- xfstests.orig/134	2010-01-03 23:03:29.027790001 -0800
-+++ xfstests/134	2010-01-03 22:55:56.015118001 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 134
- #
- # test to reproduce PV951636:
-diff -Nrup xfstests.orig/136 xfstests/136
---- xfstests.orig/136	2010-01-03 23:03:29.037795001 -0800
-+++ xfstests/136	2010-01-03 22:56:06.480348001 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 136
- #
- # Test the attr2 code
-diff -Nrup xfstests.orig/137 xfstests/137
---- xfstests.orig/137	2010-01-03 23:03:29.047800001 -0800
-+++ xfstests/137	2010-01-03 22:20:52.045575000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FSQA Test No. 137
- #
- # Test for NULL files problem
-diff -Nrup xfstests.orig/138 xfstests/138
---- xfstests.orig/138	2010-01-03 23:03:29.057805001 -0800
-+++ xfstests/138	2010-01-03 22:23:54.535575000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FSQA Test No. 138
- #
- # Test for NULL files problem
-diff -Nrup xfstests.orig/139 xfstests/139
---- xfstests.orig/139	2010-01-03 23:03:29.067810001 -0800
-+++ xfstests/139	2010-01-03 22:23:48.345575000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FSQA Test No. 139
- #
- # Test for NULL files problem
-diff -Nrup xfstests.orig/140 xfstests/140
---- xfstests.orig/140	2010-01-03 23:03:29.077815001 -0800
-+++ xfstests/140	2010-01-03 22:56:17.856033001 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FSQA Test No. 140
- #
- # Test for NULL files problem
-diff -Nrup xfstests.orig/149 xfstests/149
---- xfstests.orig/149	2010-01-03 23:03:29.147850001 -0800
-+++ xfstests/149	2010-01-03 22:56:33.453828001 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 149
- #
- # Exercise xfs_prepair - ensure repeated use doesn't corrupt
-diff -Nrup xfstests.orig/158 xfstests/158
---- xfstests.orig/158	2010-01-03 23:03:29.217885001 -0800
-+++ xfstests/158	2010-01-03 22:56:45.079638001 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FSQA Test No. 158
- #
- # get/set file attributes
-diff -Nrup xfstests.orig/165 xfstests/165
---- xfstests.orig/165	2010-01-03 23:03:29.277915001 -0800
-+++ xfstests/165	2010-01-03 22:56:54.704448001 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 165
- #
- # Test out prealloc, direct writes and buffered read
-diff -Nrup xfstests.orig/178 xfstests/178
---- xfstests.orig/178	2010-01-03 23:03:29.387970001 -0800
-+++ xfstests/178	2010-01-03 22:19:15.625575000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 178
- #
- # Reproduce PV#:967665
-diff -Nrup xfstests.orig/179 xfstests/179
---- xfstests.orig/179	2010-01-03 23:03:29.397975001 -0800
-+++ xfstests/179	2010-01-03 22:21:22.735575000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FSQA Test No. 179
- #
- # Test for NULL files problem
-diff -Nrup xfstests.orig/180 xfstests/180
---- xfstests.orig/180	2010-01-03 23:03:29.397975001 -0800
-+++ xfstests/180	2010-01-03 22:57:06.130158001 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FSQA Test No. 180
- #
- # Test for NULL files problem
-diff -Nrup xfstests.orig/182 xfstests/182
---- xfstests.orig/182	2010-01-03 23:03:29.417985001 -0800
-+++ xfstests/182	2010-01-03 22:20:02.055575000 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FSQA Test No. 182
- #
- # Test for NULL files problem
-diff -Nrup xfstests.orig/190 xfstests/190
---- xfstests.orig/190	2010-01-03 23:03:29.478015001 -0800
-+++ xfstests/190	2010-01-03 22:57:13.493838001 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FSQA Test No. 190
- #
- # This test uses xfs_io to unreserve space in a file at various different
-diff -Nrup xfstests.orig/200 xfstests/200
---- xfstests.orig/200	2010-01-03 23:03:29.568060001 -0800
-+++ xfstests/200	2010-01-03 22:57:22.268223001 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 200
- #
- # Check out various mount/remount/unmount scenarious on a read-only blockdev.
-diff -Nrup xfstests.orig/203 xfstests/203
---- xfstests.orig/203	2010-01-03 23:03:29.588070001 -0800
-+++ xfstests/203	2010-01-03 22:57:30.112143001 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 203
- #
- # Test out reallocation of the extent array in xfs_io.
-diff -Nrup xfstests.orig/205 xfstests/205
---- xfstests.orig/205	2010-01-03 23:03:29.608080001 -0800
-+++ xfstests/205	2010-01-03 22:57:36.685428001 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 205
- #
- # Test out ENOSPC flushing on small filesystems.
-diff -Nrup xfstests.orig/213 xfstests/213
---- xfstests.orig/213	2010-01-03 23:03:29.678115001 -0800
-+++ xfstests/213	2010-01-03 22:57:46.330248001 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 213
- #
- # Check some unwritten extent boundary conditions, fallocate version.
-diff -Nrup xfstests.orig/215 xfstests/215
---- xfstests.orig/215	2010-01-03 23:03:29.688120001 -0800
-+++ xfstests/215	2010-01-03 22:57:52.063113001 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 215
- #
- # Test out c/mtime updates after mapped writes.
-diff -Nrup xfstests.orig/218 xfstests/218
---- xfstests.orig/218	2010-01-03 23:03:29.718135001 -0800
-+++ xfstests/218	2010-01-03 22:58:00.757458001 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 218
- #
- # Basic defragmentation sanity tests
-diff -Nrup xfstests.orig/219 xfstests/219
---- xfstests.orig/219	2010-01-03 23:03:29.718135001 -0800
-+++ xfstests/219	2010-01-03 22:58:09.541848001 -0800
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#! /bin/bash
- # FS QA Test No. 219
- #
- # Simple quota accounting test for direct/buffered/mmap IO.
-diff -Nrup xfstests.orig/check xfstests/check
---- xfstests.orig/check	2010-01-03 23:03:27.917235001 -0800
-+++ xfstests/check	2010-01-03 23:19:32.149110001 -0800
-@@ -1,4 +1,4 @@
--#!/bin/sh
-+#!/bin/bash
- #
- # Control script for QA
- #
-
 -- 
-BOFH excuse #36:
+BOFH excuse #306:
 
-dynamic software linking table corrupted
+CPU-angle has to be adjusted because of vibrations coming from the nearby road
 
 _______________________________________________
 xfs mailing list
