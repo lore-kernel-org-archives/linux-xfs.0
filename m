@@ -1,16 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o04AsNVP101542 for <xfs@oss.sgi.com>; Mon, 4 Jan 2010 04:54:24 -0600
-Received: from moutng.kundenserver.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 865131DAD6BD
-	for <xfs@oss.sgi.com>; Mon,  4 Jan 2010 02:55:12 -0800 (PST)
-Received: from moutng.kundenserver.de (moutng.kundenserver.de [212.227.17.10])
-	by cuda.sgi.com with ESMTP id jnknKmPEeD8ODxpw for
-	<xfs@oss.sgi.com>; Mon, 04 Jan 2010 02:55:12 -0800 (PST)
-Message-ID: <4B41D70E.4090205@open-e.com>
-Date: Mon, 04 Jan 2010 12:54:54 +0100
-From: Artur Piechocki <artur.piechocki@open-e.com>
+	o04AsjOV101603 for <xfs@oss.sgi.com>; Mon, 4 Jan 2010 04:54:45 -0600
+Received: from smtpout5.poczta.onet.pl (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5AB791DAD6BD
+	for <xfs@oss.sgi.com>; Mon,  4 Jan 2010 02:55:34 -0800 (PST)
+Received: from smtpout5.poczta.onet.pl (smtpout5.poczta.onet.pl
+	[213.180.147.165]) by cuda.sgi.com with ESMTP id
+	KY46hWacuCJR7U6u for <xfs@oss.sgi.com>;
+	Mon, 04 Jan 2010 02:55:34 -0800 (PST)
+Received: from ip-83-238-22-2.netia.com.pl ([83.238.22.2]:53059 "EHLO
+	[192.168.248.143]" rhost-flags-OK-FAIL-OK-FAIL) by ps1.m5r2.onet
+	with ESMTPSA id S50332326Ab0ADKzdNoqjv (ORCPT
+	<rfc822;xfs@oss.sgi.com>); Mon, 4 Jan 2010 11:55:33 +0100
+Message-ID: <4B41D724.1090805@poczta.onet.pl>
+Date: Mon, 04 Jan 2010 12:55:16 +0100
+From: aluno3 <aluno3@poczta.onet.pl>
 MIME-Version: 1.0
 Subject: Re: Call trace with 2.6.27.39
 References: <4B40E90D.4030409@poczta.onet.pl>
