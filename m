@@ -1,18 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o04NHMqn154674 for <xfs@oss.sgi.com>; Mon, 4 Jan 2010 17:17:23 -0600
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BEAF211EE87D
-	for <xfs@oss.sgi.com>; Mon,  4 Jan 2010 15:18:12 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id EqEVzEB3dCXGIbfe for
-	<xfs@oss.sgi.com>; Mon, 04 Jan 2010 15:18:12 -0800 (PST)
-Message-ID: <4B427731.9080801@redhat.com>
-Date: Mon, 04 Jan 2010 17:18:09 -0600
-From: Eric Sandeen <sandeen@redhat.com>
+	o04NRpvt155440 for <xfs@oss.sgi.com>; Mon, 4 Jan 2010 17:27:51 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9C4A61C2A89A
+	for <xfs@oss.sgi.com>; Mon,  4 Jan 2010 15:28:39 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	mBGIctfLJ1U1w6cb for <xfs@oss.sgi.com>;
+	Mon, 04 Jan 2010 15:28:39 -0800 (PST)
+Date: Tue, 5 Jan 2010 10:28:35 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/2] XFS: Don't wake the aild once per second
+Message-ID: <20100104232835.GM13802@discord.disaster>
+References: <1262400215-19443-1-git-send-email-david@fromorbit.com>
+	<1262400215-19443-2-git-send-email-david@fromorbit.com>
+	<20100104151616.GB24810@infradead.org>
 MIME-Version: 1.0
-Subject: [PATCH] xfstests: add another fallocate test to 214
+Content-Disposition: inline
+In-Reply-To: <20100104151616.GB24810@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,62 +31,225 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs mailing list <xfs@oss.sgi.com>, ext4 development <linux-ext4@vger.kernel.org>
-Cc: Theodore Tso <tytso@mit.edu>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-ext4 had a regression where it double-accounted used blocks
-if you fallocated on top of delalloc blocks.  Ted sent a
-c program to exploit it (see "fsstress-induced corruption reproduced"
-on linux-ext4 on 12/31/2009) and it's trivial to do the same thing
-within the xfstests framework using xfs_io.
+On Mon, Jan 04, 2010 at 10:16:16AM -0500, Christoph Hellwig wrote:
+> On Sat, Jan 02, 2010 at 01:43:34PM +1100, Dave Chinner wrote:
+> > Now that the AIL push algorithm is traversal safe, we don't need a
+> > watchdog function in the xfsaild to catch pushes that fail to make
+> > progress. Remove the watchdog timeout and make pushes purely driven
+> > by demand. This will remove the once-per-second wakeup that is seen
+> > when the filesystem is idle and make laptop power misers happy.
+> 
+> Looks good, but a few nitpicks below:
+> 
+> > -	long		tout = 0;
+> > +	long		tout = 1000; /* milliseconds */
+> 
+> Why do we use a timeout when starting up now?  If there's a good reason
+> for it the reason at least should be explained in a comment here.
 
-This also changes the handcrafted xfs_io tests to use the
-_require_xfs_io_falloc helper, not sure how that got missed.
+No good reason.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> >  	while (!kthread_should_stop()) {
+> > -		if (tout)
+> > -			schedule_timeout_interruptible(msecs_to_jiffies(tout));
+> > -		tout = 1000;
+> > +		tout = !tout ? MAX_SCHEDULE_TIMEOUT : msecs_to_jiffies(tout);
+> 
+> Why not just:
+> 
+> 		schedule_timeout_interruptible(tout ?
+> 				msecs_to_jiffies(tout) : MAX_SCHEDULE_TIMEOUT);
+> 
+> that avoids the assignment of different units to the same variable, and
+> also the negation.
+
+Much cleaner. Fixed.
+
+> > +	long		tout = 0;
+> >  	xfs_lsn_t	last_pushed_lsn = *last_lsn;
+> >  	xfs_lsn_t	target =  ailp->xa_target;
+> >  	xfs_lsn_t	lsn;
+> > @@ -279,7 +280,6 @@ xfsaild_push(
+> >  	 * prevents use from spinning when we can't do anything or there is
+> >  	 * lots of contention on the AIL lists.
+> >  	 */
+> > -	tout = 10;
+> >  	lsn = lip->li_lsn;
+> >  	flush_log = stuck = count = 0;
+> >  	while ((XFS_LSN_CMP(lip->li_lsn, target) < 0)) {
+> > @@ -376,14 +376,14 @@ xfsaild_push(
+> >  
+> >  	if (!count) {
+> >  		/* We're past our target or empty, so idle */
+> > -		tout = 1000;
+> > +		tout = 0;
+> 
+> tout always is 0 here already.
+
+Good catch. Hmm - I just noticed that we should be resetting the
+last_lsn when we idle. I've fixed that now.
+
+> >  	} else if (XFS_LSN_CMP(lsn, target) >= 0) {
+> >  		/*
+> >  		 * We reached the target so wait a bit longer for I/O to
+> >  		 * complete and remove pushed items from the AIL before we
+> >  		 * start the next scan from the start of the AIL.
+> >  		 */
+> > -		tout += 20;
+> > +		tout = 50;
+> >  		last_pushed_lsn = 0;
+> >  	} else if ((stuck * 100) / count > 90) {
+> >  		/*
+> > @@ -395,11 +395,14 @@ xfsaild_push(
+> >  		 * Backoff a bit more to allow some I/O to complete before
+> >  		 * continuing from where we were.
+> >  		 */
+> > -		tout += 10;
+> > +		tout = 20;
+> > +	} else {
+> > +		/* more to do, but wait a short while before continuing */
+> > +		tout = 10;
+> >  	}
+> >  	*last_lsn = last_pushed_lsn;
+> >  	return tout;
+> > -}	/* xfsaild_push */
+> > +}
+> 
+> All the += and co here is a bit confusing.  We always return 0 now
+> except for those last two cases that return 20 or 10.  So I'd just
+> change them to a tout = 10/20;
+
+I'm not sure what you mean - isn't that what this patch does? i.e.
+now looks like:
+
+	if idle
+		tout = 0
+	else if we reach the target
+		tout = 50
+	else if stuck
+		tout = 20
+	else
+		tout = 10
+
+Updated patch below.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+XFS: Don't wake the aild once per second
+
+Now that the AIL push algorithm is traversal safe, we don't need a
+watchdog function in the xfsaild to catch pushes that fail to make
+progress. Remove the watchdog timeout and make pushes purely driven
+by demand. This will remove the once-per-second wakeup that is seen
+when the filesystem is idle and make laptop power misers happy.
+
+Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
+ fs/xfs/linux-2.6/xfs_super.c |    7 +++----
+ fs/xfs/xfs_trans_ail.c       |   19 +++++++++++--------
+ 2 files changed, 14 insertions(+), 12 deletions(-)
 
-diff --git a/214 b/214
-index 98cfc3a..35ec2cb 100755
---- a/214
-+++ b/214
-@@ -52,14 +52,7 @@ _supported_os Linux
+diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
+index 09783cc..0a4fd0e 100644
+--- a/fs/xfs/linux-2.6/xfs_super.c
++++ b/fs/xfs/linux-2.6/xfs_super.c
+@@ -877,12 +877,11 @@ xfsaild(
+ {
+ 	struct xfs_ail	*ailp = data;
+ 	xfs_lsn_t	last_pushed_lsn = 0;
+-	long		tout = 0;
++	long		tout = 0; /* milliseconds */
  
- rm -f $seq.full
+ 	while (!kthread_should_stop()) {
+-		if (tout)
+-			schedule_timeout_interruptible(msecs_to_jiffies(tout));
+-		tout = 1000;
++		schedule_timeout_interruptible(tout ?
++				msecs_to_jiffies(tout) : MAX_SCHEDULE_TIMEOUT);
  
--testio=`$XFS_IO_PROG -F -f -c "falloc 0 1m" $TEST_DIR/$tmp.io 2>&1`
--
--# Old xfs_io doesn't have fallocate support
--echo $testio | grep -q "not found" && \
--	_notrun "xfs_io fallocate support is missing"
--# Old glibc, old kernels, and some filesystems don't have fallocate support
--echo $testio | grep -q "Operation not supported" && \
--	_notrun "xfs_io fallocate command failed (old kernel? wrong fs?)"
-+_require_xfs_io_falloc
+ 		/* swsusp */
+ 		try_to_freeze();
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index 2ffc570..063dfbd 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -237,14 +237,15 @@ out:
+ }
  
- # Ok, off we go.
+ /*
+- * Function that does the work of pushing on the AIL
++ * xfsaild_push does the work of pushing on the AIL.  Returning a timeout of
++ * zero indicates that the caller should sleep until woken.
+  */
+ long
+ xfsaild_push(
+ 	struct xfs_ail	*ailp,
+ 	xfs_lsn_t	*last_lsn)
+ {
+-	long		tout = 1000; /* milliseconds */
++	long		tout = 0;
+ 	xfs_lsn_t	last_pushed_lsn = *last_lsn;
+ 	xfs_lsn_t	target =  ailp->xa_target;
+ 	xfs_lsn_t	lsn;
+@@ -262,7 +263,7 @@ xfsaild_push(
+ 		 */
+ 		xfs_trans_ail_cursor_done(ailp, cur);
+ 		spin_unlock(&ailp->xa_lock);
+-		last_pushed_lsn = 0;
++		*last_lsn = 0;
+ 		return tout;
+ 	}
  
-@@ -126,6 +119,20 @@ $XFS_IO_PROG -F -f -d				\
+@@ -279,7 +280,6 @@ xfsaild_push(
+ 	 * prevents use from spinning when we can't do anything or there is
+ 	 * lots of contention on the AIL lists.
+ 	 */
+-	tout = 10;
+ 	lsn = lip->li_lsn;
+ 	flush_log = stuck = count = 0;
+ 	while ((XFS_LSN_CMP(lip->li_lsn, target) < 0)) {
+@@ -376,14 +376,14 @@ xfsaild_push(
  
- rm -f $TEST_DIR/ouch
+ 	if (!count) {
+ 		/* We're past our target or empty, so idle */
+-		tout = 1000;
++		last_pushed_lsn = 0;
+ 	} else if (XFS_LSN_CMP(lsn, target) >= 0) {
+ 		/*
+ 		 * We reached the target so wait a bit longer for I/O to
+ 		 * complete and remove pushed items from the AIL before we
+ 		 * start the next scan from the start of the AIL.
+ 		 */
+-		tout += 20;
++		tout = 50;
+ 		last_pushed_lsn = 0;
+ 	} else if ((stuck * 100) / count > 90) {
+ 		/*
+@@ -395,11 +395,14 @@ xfsaild_push(
+ 		 * Backoff a bit more to allow some I/O to complete before
+ 		 * continuing from where we were.
+ 		 */
+-		tout += 10;
++		tout = 20;
++	} else {
++		/* more to do, but wait a short while before continuing */
++		tout = 10;
+ 	}
+ 	*last_lsn = last_pushed_lsn;
+ 	return tout;
+-}	/* xfsaild_push */
++}
  
-+# Reported by Ted Ts'o on linux-ext4, 12/31/2009
-+# double-allocation on ext4 when fallocating over delalloc blocks
-+# Regression due to d21cd8f163ac44b15c465aab7306db931c606908
-+
-+echo "=== delalloc write 16k; fallocate same range ==="
-+# delalloc write 16k, fallocate same range.
-+# Should get caught on fsck when we're done.
-+
-+$XFS_IO_PROG -F -f				\
-+	-c "pwrite 0 16k"			\
-+	-c "falloc 0 16k"			\
-+	-c "fsync"				\
-+	$TEST_DIR/ouch2 | _filter_xfs_io_unique
-+
- # success, all done
- status=0
- exit
+ 
+ /*
 
 _______________________________________________
 xfs mailing list
