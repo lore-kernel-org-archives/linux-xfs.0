@@ -1,25 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o04GSm3U128750 for <xfs@oss.sgi.com>; Mon, 4 Jan 2010 10:28:49 -0600
-Received: from rcsinet12.oracle.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9081D1C283C3
-	for <xfs@oss.sgi.com>; Mon,  4 Jan 2010 08:29:30 -0800 (PST)
-Received: from rcsinet12.oracle.com (rcsinet12.oracle.com [148.87.113.124]) by
-	cuda.sgi.com with ESMTP id 8dXPa4XXXagT0Uyn for
-	<xfs@oss.sgi.com>; Mon, 04 Jan 2010 08:29:30 -0800 (PST)
-Date: Mon, 4 Jan 2010 11:27:48 -0500
-From: Chris Mason <chris.mason@oracle.com>
-Subject: Re: [Jfs-discussion] benchmark results
-Message-ID: <20100104162748.GA11932@think>
+	o04IvOB4137149 for <xfs@oss.sgi.com>; Mon, 4 Jan 2010 12:57:24 -0600
+Received: from smtp-out.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5EC4415081B8
+	for <xfs@oss.sgi.com>; Mon,  4 Jan 2010 10:58:12 -0800 (PST)
+Received: from smtp-out.google.com (smtp-out.google.com [216.239.33.17]) by
+	cuda.sgi.com with ESMTP id zg4uukkDDWrB0jVR for
+	<xfs@oss.sgi.com>; Mon, 04 Jan 2010 10:58:12 -0800 (PST)
+Received: from spaceape10.eur.corp.google.com (spaceape10.eur.corp.google.com
+	[172.28.16.144]) by smtp-out.google.com with ESMTP id o04IwATb003282
+	for <xfs@oss.sgi.com>; Mon, 4 Jan 2010 18:58:11 GMT
+Received: from pxi10 (pxi10.prod.google.com [10.243.27.10])
+	by spaceape10.eur.corp.google.com with ESMTP id o04ItWgu018562
+	for <xfs@oss.sgi.com>; Mon, 4 Jan 2010 10:58:09 -0800
+Received: by pxi10 with SMTP id 10so10981527pxi.13
+	for <xfs@oss.sgi.com>; Mon, 04 Jan 2010 10:58:09 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20100104162748.GA11932@think>
 References: <alpine.DEB.2.01.0912240205510.3483@bogon.housecafe.de>
 	<19251.26403.762180.228181@tree.ty.sabi.co.uk>
 	<20091224212756.GM21594@thunk.org>
-	<20091224234631.GA1028@ioremap.net>
-	<20091225161146.GC32757@thunk.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20091225161146.GC32757@thunk.org>
+	<20091224234631.GA1028@ioremap.net> <20091225161146.GC32757@thunk.org>
+	<20100104162748.GA11932@think>
+From: Michael Rubin <mrubin@google.com>
+Date: Mon, 4 Jan 2010 10:57:49 -0800
+Message-ID: <532480951001041057w3ad8d1dfy361ced0346ebaaa4@mail.gmail.com>
+Subject: Re: [Jfs-discussion] benchmark results
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,71 +39,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: tytso@mit.edu
-Cc: xfs@oss.sgi.com, linux-nilfs@vger.kernel.org, reiserfs-devel@vger.kernel.org, Peter Grandi <pg_jf2@jf2.for.sabi.co.UK>, ext-users <ext3-users@redhat.com>, jfs-discussion@lists.sourceforge.net, Evgeniy Polyakov <zbr@ioremap.net>, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: Chris Mason <chris.mason@oracle.com>, tytso@mit.edu, Evgeniy Polyakov <zbr@ioremap.net>, Peter Grandi <pg_jf2@jf2.for.sabi.co.uk>, xfs@oss.sgi.com, reiserfs-devel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, jfs-discussion@lists.sourceforge.net, ext-users <ext3-users@redhat.com>, linux-nilfs@vger.kernel.org
 
-On Fri, Dec 25, 2009 at 11:11:46AM -0500, tytso@mit.edu wrote:
-> On Fri, Dec 25, 2009 at 02:46:31AM +0300, Evgeniy Polyakov wrote:
-> > > [1] http://samba.org/ftp/tridge/dbench/README
-> > 
-> > Was not able to resist to write a small notice, what no matter what, but
-> > whatever benchmark is running, it _does_ show system behaviour in one
-> > or another condition. And when system behaves rather badly, it is quite
-> > a common comment, that benchmark was useless. But it did show that
-> > system has a problem, even if rarely triggered one :)
-> 
-> If people are using benchmarks to improve file system, and a benchmark
-> shows a problem, then trying to remedy the performance issue is a good
-> thing to do, of course.  Sometimes, though the case which is
-> demonstrated by a poor benchmark is an extremely rare corner case that
-> doesn't accurately reflect common real-life workloads --- and if
-> addressing it results in a tradeoff which degrades much more common
-> real-life situations, then that would be a bad thing.
-> 
-> In situations where benchmarks are used competitively, it's rare that
-> it's actually a *problem*.  Instead it's much more common that a
-> developer is trying to prove that their file system is *better* to
-> gullible users who think that a single one-dimentional number is
-> enough for them to chose file system X over file system Y.
+Google is currently in the middle of upgrading from ext2 to a more up
+to date file system. We ended up choosing ext4. This thread touches
+upon many of the issues we wrestled with, so I thought it would be
+interesting to share. We should be sending out more details soon.
 
-[ Look at all this email from my vacation...sorry for the delay ]
+The driving performance reason to upgrade is that while ext2 had been "good
+enough" for a very long time the metadata arrangement on a stale file
+system was leading to what we call "read inflation". This is where we
+end up doing many seeks to read one block of data. In general latency
+from poor block allocation was causing performance hiccups.
 
-It's important that people take benchmarks from filesystem developers
-with a big grain of salt, which is one reason the boxacle.net results
-are so nice.  Steve more than willing to take patches and experiment to
-improve a given FS results, but his business is a fair representation of
-performance and it shows.
+We spent a lot of time with unix standard benchmarks (dbench, compile
+bench, et al) on xfs, ext4, jfs to try to see which one was going to
+perform the best. In the end we mostly ended up using the benchmarks
+to validate our assumptions and do functional testing. Larry is
+completely right IMHO. These benchmarks were instrumental in helping
+us understand how the file systems worked in controlled situations and
+gain confidence from our customers.
 
-> 
-> For example, if I wanted to play that game and tell people that ext4
-> is better, I'd might pick this graph:
-> 
-> http://btrfs.boxacle.net/repository/single-disk/2.6.29-rc2/2.6.29-rc2/2.6.29-rc2_Mail_server_simulation._num_threads=32.html
-> 
-> On the other hand, this one shows ext4 as the worst compared to all
-> other file systems:
-> 
-> http://btrfs.boxacle.net/repository/single-disk/2.6.29-rc2/2.6.29-rc2/2.6.29-rc2_Large_file_random_writes_odirect._num_threads=8.html
-> 
-> Benchmarking, like statistics, can be extremely deceptive, and if
-> people do things like carefully order a tar file so the files are
-> optimal for a file system, it's fair to ask whether that's a common
-> thing for people to be doing (either unpacking tarballs or unpacking
-> tarballs whose files have been carefully ordered for a particular file
-> systems).
+For our workloads we saw ext4 and xfs as "close enough" in performance
+in the areas we cared about. The fact that we had a much smoother
+upgrade path with ext4 clinched the deal. The only upgrade option we
+have is online. ext4 is already moving the bottleneck away from the
+storage stack for some of our most intensive applications.
 
-I tend to use compilebench for testing the ability to create lots of
-small files, which puts the file names into FS native order (by
-unpacking and then readdiring the results) before it does any timings.
+It was not until we moved from benchmarks to customer workload that we
+were able to make detailed performance comparisons and find bugs in
+our implementation.
 
-I'd agree with Larry that benchmarking is most useful to test a theory.
-Here's a patch that is supposed to do xyz, is that actually true.  With
-that said we should also be trying to write benchmarks that show the
-worst case...we know some of our design weakness and should be able to
-show numbers for how bad it really is (see the random write
-btrfs.boxacle.net tests for that one).
+"Iterate often" seems to be the winning strategy for SW dev. But when
+it involves rebooting a cloud of systems and making a one way
+conversion of their data it can get messy. That said I see benchmarks
+as tools to build confidence before running traffic on redundant live
+systems.
 
--chris
+mrubin
+
+PS for some reason "dbench" holds mythical power over many folks I
+have met. They just believe it's the most trusted and standard
+benchmark for file systems. In my experience it often acts as a random
+number generator. It has found some bugs in our code as it exercises
+the VFS layer very well.
 
 _______________________________________________
 xfs mailing list
