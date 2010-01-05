@@ -1,31 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0507cVp158295 for <xfs@oss.sgi.com>; Mon, 4 Jan 2010 18:07:38 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6131013EEB7
-	for <xfs@oss.sgi.com>; Mon,  4 Jan 2010 16:08:27 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	pxzNUC0mib9KJOGN for <xfs@oss.sgi.com>;
-	Mon, 04 Jan 2010 16:08:27 -0800 (PST)
-Received: from discord (unverified [121.44.238.220])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	11051502-1927428
-	for <xfs@oss.sgi.com>; Tue, 05 Jan 2010 10:38:26 +1030 (CDT)
-Received: from [192.168.1.6] (helo=disturbed) by discord with esmtp (Exim 4.69)
-	(envelope-from <dave@fromorbit.com>) id 1NRwy7-00069W-Ku
-	for xfs@oss.sgi.com; Tue, 05 Jan 2010 11:08:15 +1100
-Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1NRwuQ-0007RC-3y
-	for xfs@oss.sgi.com; Tue, 05 Jan 2010 11:04:26 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/3] xfs: Sort delayed write buffers before dispatch
-Date: Tue,  5 Jan 2010 11:04:21 +1100
-Message-Id: <1262649861-28530-4-git-send-email-david@fromorbit.com>
-In-Reply-To: <1262649861-28530-1-git-send-email-david@fromorbit.com>
-References: <1262649861-28530-1-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
+	o050lXP9160693 for <xfs@oss.sgi.com>; Mon, 4 Jan 2010 18:47:33 -0600
+Received: from radon.netxsys.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DE8F7EC72D0
+	for <xfs@oss.sgi.com>; Mon,  4 Jan 2010 16:48:23 -0800 (PST)
+Received: from radon.netxsys.com (radon.netxsys.com [204.16.202.162]) by
+	cuda.sgi.com with ESMTP id PyfXqyV2LNNg9cbL for
+	<xfs@oss.sgi.com>; Mon, 04 Jan 2010 16:48:23 -0800 (PST)
+Received: from [205.233.151.7] (Oxygen.NetXSys.Com [205.233.151.7])
+	by radon.netxsys.com (Postfix) with ESMTP id 87F48C000091
+	for <xfs@oss.sgi.com>; Mon,  4 Jan 2010 19:48:22 -0500 (EST)
+Subject: NFS export broke with change from ext3 to xfs
+From: Krzysztof Adamski <k@adamski.org>
+Date: Mon, 04 Jan 2010 19:48:20 -0500
+Message-Id: <1262652500.24160.27.camel@oxygen.netxsys.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,99 +24,102 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/mixed; boundary="===============2490492035761663451=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Q3VycmVudGx5IHdoZW4gdGhlIHhmc2J1ZmQgd3JpdGVzIGRlbGF5ZWQgd3JpdGUgYnVmZmVycywg
-aXQgcHVzaGVzCnRoZW0gdG8gZGlzayBpbiB0aGUgb3JkZXIgdGhleSBjb21lIG9mZiB0aGUgZGVs
-YXllZCB3cml0ZSBsaXN0LiBJZgp0aGVyZSBhcmUgbG90cyBvZiBidWZmZXJzINGVcHJlYWQgd2lk
-ZWx5IG92ZXIgdGhlIGRpc2ssIHRoaXMgcmVzdWx0cwppbiBvdmVyd2hlbG1pbmcgdGhlIGVsZXZh
-dG9yIHNvcnQgcXVldWVzIGluIHRoZSBibG9jayBsYXllciBhbmQgd2UKZW5kIHVwIGxvc2luZyB0
-aGUgcG9zaWJpbGl0eSBvZiBtZXJnaW5nIGFkamFjZW50IGJ1ZmZlcnMgdG8gbWluaW1pc2UKdGhl
-IG51bWJlciBvZiBJT3MuCgpVc2UgdGhlIG5ldyBnZW5lcmljIGxpc3Rfc29ydCBmdW5jdGlvbiB0
-byBzb3J0IHRoZSBkZWx3cmkgZGlzcGF0Y2gKcXVldWUgYmVmb3JlIGlzc3VlIHRvIGVuc3VyZSB0
-aGF0IHRoZSBidWZmZXJzIGFyZSBwdXNoZWQgaW4gdGhlIG1vc3QKZnJpZW5kbHkgb3JkZXIgcG9z
-c2libGUgdG8gdGhlIGxvd2VyIGxheWVycy4KClNpZ25lZC1vZmYtYnk6IERhdmUgQ2hpbm5lciA8
-ZGF2aWRAZnJvbW9yYml0LmNvbT4KLS0tCiBmcy94ZnMvbGludXgtMi42L3hmc19idWYuYyB8ICAg
-OTAgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0tLS0tLS0tLS0tLQogMSBmaWxlcyBj
-aGFuZ2VkLCA2NSBpbnNlcnRpb25zKCspLCAyNSBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9m
-cy94ZnMvbGludXgtMi42L3hmc19idWYuYyBiL2ZzL3hmcy9saW51eC0yLjYveGZzX2J1Zi5jCmlu
-ZGV4IGFhZWZjMzMuLjE1YzBkZWEgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy9saW51eC0yLjYveGZzX2J1
-Zi5jCisrKyBiL2ZzL3hmcy9saW51eC0yLjYveGZzX2J1Zi5jCkBAIC0zMyw2ICszMyw3IEBACiAj
-aW5jbHVkZSA8bGludXgvbWlncmF0ZS5oPgogI2luY2x1ZGUgPGxpbnV4L2JhY2tpbmctZGV2Lmg+
-CiAjaW5jbHVkZSA8bGludXgvZnJlZXplci5oPgorI2luY2x1ZGUgPGxpbnV4L3NvcnQuaD4KIAog
-I2luY2x1ZGUgInhmc19zYi5oIgogI2luY2x1ZGUgInhmc19pbnVtLmgiCkBAIC0xNjQ0LDEyICsx
-NjQ1LDE4IEBAIHhmc19idWZfZGVsd3JpX3Byb21vdGUoCiAJc3BpbmxvY2tfdAkqZHdsayA9ICZi
-cC0+Yl90YXJnZXQtPmJ0X2RlbHdyaXRlX2xvY2s7CiAJbG9uZwkJYWdlID0geGZzX2J1Zl9hZ2Vf
-Y2VudGlzZWNzICogbXNlY3NfdG9famlmZmllcygxMCkgKyAxOwogCi0Jc3Bpbl9sb2NrKGR3bGsp
-OwogCUFTU0VSVChicC0+Yl9mbGFncyAmIFhCRl9ERUxXUkkpOwogCUFTU0VSVChicC0+Yl9mbGFn
-cyAmIF9YQkZfREVMV1JJX1EpOwotCWxpc3RfZGVsKCZicC0+Yl9saXN0KTsKLQlsaXN0X2FkZCgm
-YnAtPmJfbGlzdCwgZHdxKTsKKworCS8qCisJICogQ2hlY2sgdGhlIGJ1ZmZlciBhZ2UgYmVmb3Jl
-IGxvY2tpbmcgdGhlIGRlbGF5ZWQgd3JpdGUgcXVldWUgYXMgd2UKKwkgKiBkb24ndCBuZWVkIHRv
-IHByb21vdGUgYnVmZmVycyB0aGF0IGFyZSBhbHJlYWR5IHBhc3QgdGhlIGZsdXNoIGFnZS4KKwkg
-Ki8KKwlpZiAoYnAtPmJfcXVldWV0aW1lIDwgamlmZmllcyAtIGFnZSkKKwkJcmV0dXJuOwogCWJw
-LT5iX3F1ZXVldGltZSA9IGppZmZpZXMgLSBhZ2U7CisJc3Bpbl9sb2NrKGR3bGspOworCWxpc3Rf
-bW92ZSgmYnAtPmJfbGlzdCwgZHdxKTsKIAlzcGluX3VubG9jayhkd2xrKTsKIH0KIApAQCAtMTcy
-MywxNCArMTczMCw0MiBAQCB4ZnNfYnVmX2RlbHdyaV9zcGxpdCgKIAogfQogCisvKgorICogQ29t
-cGFyZSBmdW5jdGlvbiBpcyBtb3JlIGNvbXBsZXggdGhhbiBpdCBuZWVkcyB0byBiZSBiZWNhdXNl
-CisgKiB0aGUgcmV0dXJuIHZhbHVlIGlzIG9ubHkgMzIgYml0cyBhbmQgd2UgYXJlIGRvaW5nIGNv
-bXBhcmlzb25zCisgKiBvbiA2NCBiaXQgdmFsdWVzCisgKi8KK2ludAoreGZzX2J1Zl9jbXAoCisJ
-dm9pZAkJKnByaXYsCisJc3RydWN0IGxpc3RfaGVhZCAqYSwKKwlzdHJ1Y3QgbGlzdF9oZWFkICpi
-KQoreworCXN0cnVjdCB4ZnNfYnVmCSphcCA9IGNvbnRhaW5lcl9vZihhLCBzdHJ1Y3QgeGZzX2J1
-ZiwgYl9saXN0KTsKKwlzdHJ1Y3QgeGZzX2J1ZgkqYnAgPSBjb250YWluZXJfb2YoYiwgc3RydWN0
-IHhmc19idWYsIGJfbGlzdCk7CisJeGZzX2RhZGRyX3QJCWRpZmY7CisKKwlkaWZmID0gYXAtPmJf
-Ym4gLSBicC0+Yl9ibjsKKwlpZiAoZGlmZiA8IDApCisJCXJldHVybiAtMTsKKwlpZiAoZGlmZiA+
-IDApCisJCXJldHVybiAxOworCXJldHVybiAwOworfQorCit2b2lkCit4ZnNfYnVmX2RlbHdyaV9z
-b3J0KAorCXhmc19idWZ0YXJnX3QJKnRhcmdldCwKKwlzdHJ1Y3QgbGlzdF9oZWFkICpsaXN0KQor
-eworCWxpc3Rfc29ydChOVUxMLCBsaXN0LCB4ZnNfYnVmX2NtcCk7Cit9CisKIFNUQVRJQyBpbnQK
-IHhmc2J1ZmQoCiAJdm9pZAkJKmRhdGEpCiB7Ci0Jc3RydWN0IGxpc3RfaGVhZCB0bXA7Ci0JeGZz
-X2J1ZnRhcmdfdAkqdGFyZ2V0ID0gKHhmc19idWZ0YXJnX3QgKilkYXRhOwotCWludAkJY291bnQ7
-Ci0JeGZzX2J1Zl90CSpicDsKKwl4ZnNfYnVmdGFyZ190ICAgKnRhcmdldCA9ICh4ZnNfYnVmdGFy
-Z190ICopZGF0YTsKIAogCWN1cnJlbnQtPmZsYWdzIHw9IFBGX01FTUFMTE9DOwogCkBAIC0xNzM5
-LDYgKzE3NzQsOCBAQCB4ZnNidWZkKAogCWRvIHsKIAkJbG9uZwlhZ2UgPSB4ZnNfYnVmX2FnZV9j
-ZW50aXNlY3MgKiBtc2Vjc190b19qaWZmaWVzKDEwKTsKIAkJbG9uZwl0b3V0ID0gYWdlOworCQlp
-bnQJY291bnQgPSAwOworCQlzdHJ1Y3QgbGlzdF9oZWFkIHRtcDsKIAogCQlpZiAodW5saWtlbHko
-ZnJlZXppbmcoY3VycmVudCkpKSB7CiAJCQlzZXRfYml0KFhCVF9GT1JDRV9TTEVFUCwgJnRhcmdl
-dC0+YnRfZmxhZ3MpOwpAQCAtMTc1MywxMSArMTc5MCwxMCBAQCB4ZnNidWZkKAogCQlzY2hlZHVs
-ZV90aW1lb3V0X2ludGVycnVwdGlibGUodG91dCk7CiAKIAkJeGZzX2J1Zl9kZWx3cmlfc3BsaXQo
-dGFyZ2V0LCAmdG1wLCBhZ2UpOwotCQljb3VudCA9IDA7CisJCXhmc19idWZfZGVsd3JpX3NvcnQo
-dGFyZ2V0LCAmdG1wKTsKIAkJd2hpbGUgKCFsaXN0X2VtcHR5KCZ0bXApKSB7Ci0JCQlicCA9IGxp
-c3RfZW50cnkodG1wLm5leHQsIHhmc19idWZfdCwgYl9saXN0KTsKLQkJCUFTU0VSVCh0YXJnZXQg
-PT0gYnAtPmJfdGFyZ2V0KTsKLQorCQkJc3RydWN0IHhmc19idWYgKmJwOworCQkJYnAgPSBsaXN0
-X2ZpcnN0X2VudHJ5KCZ0bXAsIHN0cnVjdCB4ZnNfYnVmLCBiX2xpc3QpOwogCQkJbGlzdF9kZWxf
-aW5pdCgmYnAtPmJfbGlzdCk7CiAJCQl4ZnNfYnVmX2lvc3RyYXRlZ3koYnApOwogCQkJY291bnQr
-KzsKQEAgLTE3ODMsMzggKzE4MTksNDIgQEAgeGZzX2ZsdXNoX2J1ZnRhcmcoCiAJeGZzX2J1ZnRh
-cmdfdAkqdGFyZ2V0LAogCWludAkJd2FpdCkKIHsKLQlzdHJ1Y3QgbGlzdF9oZWFkIHRtcDsKLQl4
-ZnNfYnVmX3QJKmJwLCAqbjsKKwl4ZnNfYnVmX3QJKmJwOwogCWludAkJcGluY291bnQgPSAwOwor
-CUxJU1RfSEVBRCh0bXBfbGlzdCk7CisJTElTVF9IRUFEKHdhaXRfbGlzdCk7CiAKIAl4ZnNfYnVm
-X3J1bmFsbF9xdWV1ZXMoeGZzY29udmVydGRfd29ya3F1ZXVlKTsKIAl4ZnNfYnVmX3J1bmFsbF9x
-dWV1ZXMoeGZzZGF0YWRfd29ya3F1ZXVlKTsKIAl4ZnNfYnVmX3J1bmFsbF9xdWV1ZXMoeGZzbG9n
-ZF93b3JrcXVldWUpOwogCiAJc2V0X2JpdChYQlRfRk9SQ0VfRkxVU0gsICZ0YXJnZXQtPmJ0X2Zs
-YWdzKTsKLQlwaW5jb3VudCA9IHhmc19idWZfZGVsd3JpX3NwbGl0KHRhcmdldCwgJnRtcCwgMCk7
-CisJcGluY291bnQgPSB4ZnNfYnVmX2RlbHdyaV9zcGxpdCh0YXJnZXQsICZ0bXBfbGlzdCwgMCk7
-CiAKIAkvKgotCSAqIERyb3BwZWQgdGhlIGRlbGF5ZWQgd3JpdGUgbGlzdCBsb2NrLCBub3cgd2Fs
-ayB0aGUgdGVtcG9yYXJ5IGxpc3QKKwkgKiBEcm9wcGVkIHRoZSBkZWxheWVkIHdyaXRlIGxpc3Qg
-bG9jaywgbm93IHdhbGsgdGhlIHRlbXBvcmFyeSBsaXN0LgorCSAqIEFsbCBJL08gaXMgaXNzdWVk
-IGFzeW5jIGFuZCB0aGVuIGlmIHdlIG5lZWQgdG8gd2FpdCBmb3IgY29tcGxldGlvbgorCSAqIHdl
-IGRvIHRoYXQgYWZ0ZXIgaXNzdWluZyBhbGwgdGhlIElPLgogCSAqLwotCWxpc3RfZm9yX2VhY2hf
-ZW50cnlfc2FmZShicCwgbiwgJnRtcCwgYl9saXN0KSB7CisJeGZzX2J1Zl9kZWx3cmlfc29ydCh0
-YXJnZXQsICZ0bXBfbGlzdCk7CisJd2hpbGUgKCFsaXN0X2VtcHR5KCZ0bXBfbGlzdCkpIHsKKwkJ
-c3RydWN0IHhmc19idWYgKmJwOworCQlicCA9IGxpc3RfZmlyc3RfZW50cnkoJnRtcF9saXN0LCBz
-dHJ1Y3QgeGZzX2J1ZiwgYl9saXN0KTsKIAkJQVNTRVJUKHRhcmdldCA9PSBicC0+Yl90YXJnZXQp
-OwotCQlpZiAod2FpdCkKKwkJbGlzdF9kZWxfaW5pdCgmYnAtPmJfbGlzdCk7CisJCWlmICh3YWl0
-KSB7CiAJCQlicC0+Yl9mbGFncyAmPSB+WEJGX0FTWU5DOwotCQllbHNlCi0JCQlsaXN0X2RlbF9p
-bml0KCZicC0+Yl9saXN0KTsKLQorCQkJbGlzdF9hZGQoJmJwLT5iX2xpc3QsICZ3YWl0X2xpc3Qp
-OworCQl9CiAJCXhmc19idWZfaW9zdHJhdGVneShicCk7CiAJfQogCiAJaWYgKHdhaXQpCiAJCWJs
-a19ydW5fYWRkcmVzc19zcGFjZSh0YXJnZXQtPmJ0X21hcHBpbmcpOwogCi0JLyoKLQkgKiBSZW1h
-aW5pbmcgbGlzdCBpdGVtcyBtdXN0IGJlIGZsdXNoZWQgYmVmb3JlIHJldHVybmluZwotCSAqLwot
-CXdoaWxlICghbGlzdF9lbXB0eSgmdG1wKSkgewotCQlicCA9IGxpc3RfZW50cnkodG1wLm5leHQs
-IHhmc19idWZfdCwgYl9saXN0KTsKKwkvKiBOb3cgd2FpdCBmb3IgSU8gdG8gY29tcGxldGUgaWYg
-cmVxdWlyZWQuICovCisJd2hpbGUgKCFsaXN0X2VtcHR5KCZ3YWl0X2xpc3QpKSB7CisJCWJwID0g
-bGlzdF9maXJzdF9lbnRyeSgmd2FpdF9saXN0LCBzdHJ1Y3QgeGZzX2J1ZiwgYl9saXN0KTsKIAog
-CQlsaXN0X2RlbF9pbml0KCZicC0+Yl9saXN0KTsKIAkJeGZzX2lvd2FpdChicCk7Ci0tIAoxLjYu
-NQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1h
-aWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlz
-dGluZm8veGZzCg==
+
+--===============2490492035761663451==
+Content-Type: multipart/alternative; boundary="=-h5MnDdAbcldGztDVy+58"
+
+
+--=-h5MnDdAbcldGztDVy+58
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+
+Hi All,
+
+I just changed one filesystem on my mythbox from ext3 to xfs, and now I
+can't get a client machine to NFS mount from it.
+
+This is the export file on the server:
+/file-store/nfs-roots/f1/home
+f1(rw,no_root_squash,sync,no_subtree_check)
+/file-store/nfs-roots/f1/usr
+f1(rw,no_root_squash,sync,no_subtree_check)
+/file-store/nfs-roots/f1/var
+f1(rw,no_root_squash,sync,no_subtree_check)
+
+and on the client(f1) the three filesystems are mount on /home, /usr,
+and /var
+
+This worked fine when /file-store on the server was formatted with ext3,
+now that it is formatted with xfs I get this message on the client:
+mount.nfs: Stale NFS file handle
+I get this message 3 times.
+Nothing else changed, both systems are Debian Lenny with custom kernel.
+Server is 2.6.28, client is 2.6.29.6. NFS is version 3.
+The fstab on the server has this:
+/dev/mapper/big--raid-file--store       /file-store     xfs
+noatime,logbsize=256k,inode64   0       1
+
+The reason for the change of the filesystem was an upgrade of the drives
+in the RAID, now the filesystem is 7T instead of 2.4T, 
+nothing else was changed. Why did this work with ext3 and does not with
+XFS? What can I do to get this to work, short of reverting to ext3?
+
+K
+
+--=-h5MnDdAbcldGztDVy+58
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 TRANSITIONAL//EN">
+<HTML>
+<HEAD>
+  <META HTTP-EQUIV="Content-Type" CONTENT="text/html; CHARSET=UTF-8">
+  <META NAME="GENERATOR" CONTENT="GtkHTML/3.18.3">
+</HEAD>
+<BODY>
+Hi All,<BR>
+<BR>
+I just changed one filesystem on my mythbox from ext3 to xfs, and now I can't get a client machine to NFS mount from it.<BR>
+<BR>
+This is the export file on the server:<BR>
+/file-store/nfs-roots/f1/home&nbsp;&nbsp; f1(rw,no_root_squash,sync,no_subtree_check)<BR>
+/file-store/nfs-roots/f1/usr&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; f1(rw,no_root_squash,sync,no_subtree_check)<BR>
+/file-store/nfs-roots/f1/var&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; f1(rw,no_root_squash,sync,no_subtree_check)<BR>
+<BR>
+and on the client(f1) the three filesystems are mount on /home, /usr, and /var<BR>
+<BR>
+This worked fine when /file-store on the server was formatted with ext3, now that it is formatted with xfs I get this message on the client:<BR>
+mount.nfs: Stale NFS file handle<BR>
+I get this message 3 times.<BR>
+Nothing else changed, both systems are Debian Lenny with custom kernel.<BR>
+Server is 2.6.28, client is 2.6.29.6. NFS is version 3.<BR>
+The fstab on the server has this:<BR>
+/dev/mapper/big--raid-file--store&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /file-store&nbsp;&nbsp;&nbsp;&nbsp; xfs&nbsp;&nbsp;&nbsp;&nbsp; noatime,logbsize=256k,inode64&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1<BR>
+<BR>
+The reason for the change of the filesystem was an upgrade of the drives in the RAID, now the filesystem is 7T instead of 2.4T, <BR>
+nothing else was changed. Why did this work with ext3 and does not with XFS? What can I do to get this to work, short of reverting to ext3?<BR>
+<BR>
+K
+</BODY>
+</HTML>
+
+--=-h5MnDdAbcldGztDVy+58--
+
+
+--===============2490492035761663451==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============2490492035761663451==--
