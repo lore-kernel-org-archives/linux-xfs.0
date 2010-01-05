@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o056PYeq182176 for <xfs@oss.sgi.com>; Tue, 5 Jan 2010 00:25:34 -0600
-Received: from mgw-mx03.nokia.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4E7B21C2B9B3
-	for <xfs@oss.sgi.com>; Mon,  4 Jan 2010 22:26:23 -0800 (PST)
-Received: from mgw-mx03.nokia.com (smtp.nokia.com [192.100.122.230]) by
-	cuda.sgi.com with ESMTP id SpJOQfTUWfvtwrSr for
-	<xfs@oss.sgi.com>; Mon, 04 Jan 2010 22:26:23 -0800 (PST)
+	o059Xn8J194288 for <xfs@oss.sgi.com>; Tue, 5 Jan 2010 03:33:50 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7473713FF28
+	for <xfs@oss.sgi.com>; Tue,  5 Jan 2010 01:34:37 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	fSSnyeeLOkHQIrCx for <xfs@oss.sgi.com>;
+	Tue, 05 Jan 2010 01:34:37 -0800 (PST)
+Date: Tue, 5 Jan 2010 20:34:07 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH] sort: Introduce generic list_sort function
-From: Artem Bityutskiy <dedekind@infradead.org>
-In-Reply-To: <1262649295-28427-1-git-send-email-david@fromorbit.com>
+Message-ID: <20100105093407.GQ13802@discord.disaster>
 References: <1262649295-28427-1-git-send-email-david@fromorbit.com>
-Date: Tue, 05 Jan 2010 08:26:11 +0200
-Message-Id: <1262672771.4512.50.camel@localhost>
-Mime-Version: 1.0
-Reply-To: dedekind@infradead.org
+	<1262672771.4512.50.camel@localhost>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1262672771.4512.50.camel@localhost>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,163 +26,448 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Artem Bityutskiy <dedekind@infradead.org>
 Cc: Dave Airlie <airlied@redhat.com>, Adrian Hunter <adrian.hunter@nokia.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-T24gVHVlLCAyMDEwLTAxLTA1IGF0IDEwOjU0ICsxMTAwLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4g
-VGhlcmUgYXJlIHR3byBjb3BpZXMgb2YgbGlzdF9zb3J0KCkgaW4gdGhlIHRyZWUgYWxyZWFkeSwg
-b25lIGluIHRoZSBEUk0gY29kZSwKPiBhbm90aGVyIGluIHViaWZzLiBOb3cgWEZTIG5lZWRzIHRo
-aXMgYXMgd2VsbC4gQ3JlYXRlIGEgZ2VuZXJpYyBsaXN0X3NvcnQoKQo+IGZ1bmN0aW9uIGZyb20g
-dGhlIHViaWZzIHZlcnNpb24gYW5kIGNvbnZlcnQgZXhpc3RpbmcgdXNlcnMgdG8gaXQgc28gd2UK
-PiBkb24ndCBlbmQgdXAgd2l0aCB5ZXQgYW5vdGhlciBjb3B5IGluIHRoZSB0cmVlLgo+IAo+IEND
-OiBEYXZlIEFpcmxpZSA8YWlybGllZEByZWRoYXQuY29tPgo+IENDOiBBcnRlbSBCaXR5dXRza2l5
-IDxkZWRla2luZEBpbmZyYWRlYWQub3JnPgo+IENDOiBBZHJpYW4gSHVudGVyIDxhZHJpYW4uaHVu
-dGVyQG5va2lhLmNvbT4KPiAKPiBTaWduZWQtb2ZmLWJ5OiBEYXZlIENoaW5uZXIgPGRhdmlkQGZy
-b21vcmJpdC5jb20+Cj4gLS0tCj4gIGRyaXZlcnMvZ3B1L2RybS9kcm1fbW9kZXMuYyB8ICAgOTAg
-KystLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQo+ICBmcy91Ymlmcy9nYy5j
-ICAgICAgICAgICAgICAgfCAgIDk1IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLQo+ICBpbmNsdWRlL2xpbnV4L3NvcnQuaCAgICAgICAgfCAgICA1ICsrCj4gIGxpYi9z
-b3J0LmMgICAgICAgICAgICAgICAgICB8ICAgOTcgKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKwo+ICA0IGZpbGVzIGNoYW5nZWQsIDEwNiBpbnNlcnRpb25zKCspLCAx
-ODEgZGVsZXRpb25zKC0pCj4gCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvZ3B1L2RybS9kcm1fbW9k
-ZXMuYyBiL2RyaXZlcnMvZ3B1L2RybS9kcm1fbW9kZXMuYwo+IGluZGV4IDUxZjY3NzIuLjM4NDZl
-ZDQgMTAwNjQ0Cj4gLS0tIGEvZHJpdmVycy9ncHUvZHJtL2RybV9tb2Rlcy5jCj4gKysrIGIvZHJp
-dmVycy9ncHUvZHJtL2RybV9tb2Rlcy5jCj4gQEAgLTEsOSArMSw0IEBACj4gIC8qCj4gLSAqIFRo
-ZSBsaXN0X3NvcnQgZnVuY3Rpb24gaXMgKHByZXN1bWFibHkpIGxpY2Vuc2VkIHVuZGVyIHRoZSBH
-UEwgKHNlZSB0aGUKPiAtICogdG9wIGxldmVsICJDT1BZSU5HIiBmaWxlIGZvciBkZXRhaWxzKS4K
-PiAtICoKPiAtICogVGhlIHJlbWFpbmRlciBvZiB0aGlzIGZpbGUgaXM6Cj4gLSAqCj4gICAqIENv
-cHlyaWdodCDCqSAxOTk3LTIwMDMgYnkgVGhlIFhGcmVlODYgUHJvamVjdCwgSW5jLgo+ICAgKiBD
-b3B5cmlnaHQgwqkgMjAwNyBEYXZlIEFpcmxpZQo+ICAgKiBDb3B5cmlnaHQgwqkgMjAwNy0yMDA4
-IEludGVsIENvcnBvcmF0aW9uCj4gQEAgLTM2LDYgKzMxLDcgQEAKPiAgICovCj4gIAo+ICAjaW5j
-bHVkZSA8bGludXgvbGlzdC5oPgo+ICsjaW5jbHVkZSA8bGludXgvc29ydC5oPgo+ICAjaW5jbHVk
-ZSAiZHJtUC5oIgo+ICAjaW5jbHVkZSAiZHJtLmgiCj4gICNpbmNsdWRlICJkcm1fY3J0Yy5oIgo+
-IEBAIC04MjksNiArODI1LDcgQEAgRVhQT1JUX1NZTUJPTChkcm1fbW9kZV9wcnVuZV9pbnZhbGlk
-KTsKPiAgCj4gIC8qKgo+ICAgKiBkcm1fbW9kZV9jb21wYXJlIC0gY29tcGFyZSBtb2RlcyBmb3Ig
-ZmF2b3JhYmlsaXR5Cj4gKyAqIEBwcml2OiB1bnVzZWQKPiAgICogQGxoX2E6IGxpc3RfaGVhZCBm
-b3IgZmlyc3QgbW9kZQo+ICAgKiBAbGhfYjogbGlzdF9oZWFkIGZvciBzZWNvbmQgbW9kZQo+ICAg
-Kgo+IEBAIC04NDIsNyArODM5LDcgQEAgRVhQT1JUX1NZTUJPTChkcm1fbW9kZV9wcnVuZV9pbnZh
-bGlkKTsKPiAgICogTmVnYXRpdmUgaWYgQGxoX2EgaXMgYmV0dGVyIHRoYW4gQGxoX2IsIHplcm8g
-aWYgdGhleSdyZSBlcXVpdmFsZW50LCBvcgo+ICAgKiBwb3NpdGl2ZSBpZiBAbGhfYiBpcyBiZXR0
-ZXIgdGhhbiBAbGhfYS4KPiAgICovCj4gLXN0YXRpYyBpbnQgZHJtX21vZGVfY29tcGFyZShzdHJ1
-Y3QgbGlzdF9oZWFkICpsaF9hLCBzdHJ1Y3QgbGlzdF9oZWFkICpsaF9iKQo+ICtzdGF0aWMgaW50
-IGRybV9tb2RlX2NvbXBhcmUodm9pZCAqcHJpdiwgc3RydWN0IGxpc3RfaGVhZCAqbGhfYSwgc3Ry
-dWN0IGxpc3RfaGVhZCAqbGhfYikKPiAgewo+ICAJc3RydWN0IGRybV9kaXNwbGF5X21vZGUgKmEg
-PSBsaXN0X2VudHJ5KGxoX2EsIHN0cnVjdCBkcm1fZGlzcGxheV9tb2RlLCBoZWFkKTsKPiAgCXN0
-cnVjdCBkcm1fZGlzcGxheV9tb2RlICpiID0gbGlzdF9lbnRyeShsaF9iLCBzdHJ1Y3QgZHJtX2Rp
-c3BsYXlfbW9kZSwgaGVhZCk7Cj4gQEAgLTg1OSw4NSArODU2LDYgQEAgc3RhdGljIGludCBkcm1f
-bW9kZV9jb21wYXJlKHN0cnVjdCBsaXN0X2hlYWQgKmxoX2EsIHN0cnVjdCBsaXN0X2hlYWQgKmxo
-X2IpCj4gIAlyZXR1cm4gZGlmZjsKPiAgfQo+ICAKPiAtLyogRklYTUU6IHdoYXQgd2UgZG9uJ3Qg
-aGF2ZSBhIGxpc3Qgc29ydCBmdW5jdGlvbj8gKi8KPiAtLyogbGlzdCBzb3J0IGZyb20gTWFyayBK
-IFJvYmVydHMgKG1qckB6bmV4Lm9yZykgKi8KPiAtdm9pZCBsaXN0X3NvcnQoc3RydWN0IGxpc3Rf
-aGVhZCAqaGVhZCwKPiAtCSAgICAgICBpbnQgKCpjbXApKHN0cnVjdCBsaXN0X2hlYWQgKmEsIHN0
-cnVjdCBsaXN0X2hlYWQgKmIpKQo+IC17Cj4gLQlzdHJ1Y3QgbGlzdF9oZWFkICpwLCAqcSwgKmUs
-ICpsaXN0LCAqdGFpbCwgKm9sZGhlYWQ7Cj4gLQlpbnQgaW5zaXplLCBubWVyZ2VzLCBwc2l6ZSwg
-cXNpemUsIGk7Cj4gLQo+IC0JbGlzdCA9IGhlYWQtPm5leHQ7Cj4gLQlsaXN0X2RlbChoZWFkKTsK
-PiAtCWluc2l6ZSA9IDE7Cj4gLQlmb3IgKDs7KSB7Cj4gLQkJcCA9IG9sZGhlYWQgPSBsaXN0Owo+
-IC0JCWxpc3QgPSB0YWlsID0gTlVMTDsKPiAtCQlubWVyZ2VzID0gMDsKPiAtCj4gLQkJd2hpbGUg
-KHApIHsKPiAtCQkJbm1lcmdlcysrOwo+IC0JCQlxID0gcDsKPiAtCQkJcHNpemUgPSAwOwo+IC0J
-CQlmb3IgKGkgPSAwOyBpIDwgaW5zaXplOyBpKyspIHsKPiAtCQkJCXBzaXplKys7Cj4gLQkJCQlx
-ID0gcS0+bmV4dCA9PSBvbGRoZWFkID8gTlVMTCA6IHEtPm5leHQ7Cj4gLQkJCQlpZiAoIXEpCj4g
-LQkJCQkJYnJlYWs7Cj4gLQkJCX0KPiAtCj4gLQkJCXFzaXplID0gaW5zaXplOwo+IC0JCQl3aGls
-ZSAocHNpemUgPiAwIHx8IChxc2l6ZSA+IDAgJiYgcSkpIHsKPiAtCQkJCWlmICghcHNpemUpIHsK
-PiAtCQkJCQllID0gcTsKPiAtCQkJCQlxID0gcS0+bmV4dDsKPiAtCQkJCQlxc2l6ZS0tOwo+IC0J
-CQkJCWlmIChxID09IG9sZGhlYWQpCj4gLQkJCQkJCXEgPSBOVUxMOwo+IC0JCQkJfSBlbHNlIGlm
-ICghcXNpemUgfHwgIXEpIHsKPiAtCQkJCQllID0gcDsKPiAtCQkJCQlwID0gcC0+bmV4dDsKPiAt
-CQkJCQlwc2l6ZS0tOwo+IC0JCQkJCWlmIChwID09IG9sZGhlYWQpCj4gLQkJCQkJCXAgPSBOVUxM
-Owo+IC0JCQkJfSBlbHNlIGlmIChjbXAocCwgcSkgPD0gMCkgewo+IC0JCQkJCWUgPSBwOwo+IC0J
-CQkJCXAgPSBwLT5uZXh0Owo+IC0JCQkJCXBzaXplLS07Cj4gLQkJCQkJaWYgKHAgPT0gb2xkaGVh
-ZCkKPiAtCQkJCQkJcCA9IE5VTEw7Cj4gLQkJCQl9IGVsc2Ugewo+IC0JCQkJCWUgPSBxOwo+IC0J
-CQkJCXEgPSBxLT5uZXh0Owo+IC0JCQkJCXFzaXplLS07Cj4gLQkJCQkJaWYgKHEgPT0gb2xkaGVh
-ZCkKPiAtCQkJCQkJcSA9IE5VTEw7Cj4gLQkJCQl9Cj4gLQkJCQlpZiAodGFpbCkKPiAtCQkJCQl0
-YWlsLT5uZXh0ID0gZTsKPiAtCQkJCWVsc2UKPiAtCQkJCQlsaXN0ID0gZTsKPiAtCQkJCWUtPnBy
-ZXYgPSB0YWlsOwo+IC0JCQkJdGFpbCA9IGU7Cj4gLQkJCX0KPiAtCQkJcCA9IHE7Cj4gLQkJfQo+
-IC0KPiAtCQl0YWlsLT5uZXh0ID0gbGlzdDsKPiAtCQlsaXN0LT5wcmV2ID0gdGFpbDsKPiAtCj4g
-LQkJaWYgKG5tZXJnZXMgPD0gMSkKPiAtCQkJYnJlYWs7Cj4gLQo+IC0JCWluc2l6ZSAqPSAyOwo+
-IC0JfQo+IC0KPiAtCWhlYWQtPm5leHQgPSBsaXN0Owo+IC0JaGVhZC0+cHJldiA9IGxpc3QtPnBy
-ZXY7Cj4gLQlsaXN0LT5wcmV2LT5uZXh0ID0gaGVhZDsKPiAtCWxpc3QtPnByZXYgPSBoZWFkOwo+
-IC19Cj4gLQo+ICAvKioKPiAgICogZHJtX21vZGVfc29ydCAtIHNvcnQgbW9kZSBsaXN0Cj4gICAq
-IEBtb2RlX2xpc3Q6IGxpc3QgdG8gc29ydAo+IEBAIC05NDksNyArODY3LDcgQEAgdm9pZCBsaXN0
-X3NvcnQoc3RydWN0IGxpc3RfaGVhZCAqaGVhZCwKPiAgICovCj4gIHZvaWQgZHJtX21vZGVfc29y
-dChzdHJ1Y3QgbGlzdF9oZWFkICptb2RlX2xpc3QpCj4gIHsKPiAtCWxpc3Rfc29ydChtb2RlX2xp
-c3QsIGRybV9tb2RlX2NvbXBhcmUpOwo+ICsJbGlzdF9zb3J0KE5VTEwsIG1vZGVfbGlzdCwgZHJt
-X21vZGVfY29tcGFyZSk7Cj4gIH0KPiAgRVhQT1JUX1NZTUJPTChkcm1fbW9kZV9zb3J0KTsKPiAg
-Cj4gZGlmZiAtLWdpdCBhL2ZzL3ViaWZzL2djLmMgYi9mcy91Ymlmcy9nYy5jCj4gaW5kZXggNjE4
-YzI3MC4uNDk3NmUwNyAxMDA2NDQKPiAtLS0gYS9mcy91Ymlmcy9nYy5jCj4gKysrIGIvZnMvdWJp
-ZnMvZ2MuYwo+IEBAIC0xMDgsMTAxICsxMDgsNiBAQCBzdGF0aWMgaW50IHN3aXRjaF9nY19oZWFk
-KHN0cnVjdCB1Ymlmc19pbmZvICpjKQo+ICB9Cj4gIAo+ICAvKioKPiAtICogbGlzdF9zb3J0IC0g
-c29ydCBhIGxpc3QuCj4gLSAqIEBwcml2OiBwcml2YXRlIGRhdGEsIHBhc3NlZCB0byBAY21wCj4g
-LSAqIEBoZWFkOiB0aGUgbGlzdCB0byBzb3J0Cj4gLSAqIEBjbXA6IHRoZSBlbGVtZW50cyBjb21w
-YXJpc29uIGZ1bmN0aW9uCj4gLSAqCj4gLSAqIFRoaXMgZnVuY3Rpb24gaGFzIGJlZW4gaW1wbGVt
-ZW50ZWQgYnkgTWFyayBKIFJvYmVydHMgPG1qckB6bmV4Lm9yZz4uIEl0Cj4gLSAqIGltcGxlbWVu
-dHMgIm1lcmdlIHNvcnQiIHdoaWNoIGhhcyBPKG5sb2cobikpIGNvbXBsZXhpdHkuIFRoZSBsaXN0
-IGlzIHNvcnRlZAo+IC0gKiBpbiBhc2NlbmRpbmcgb3JkZXIuCj4gLSAqCj4gLSAqIFRoZSBjb21w
-YXJpc29uIGZ1bmN0aW9uIEBjbXAgaXMgc3VwcG9zZWQgdG8gcmV0dXJuIGEgbmVnYXRpdmUgdmFs
-dWUgaWYgQGEgaXMKPiAtICogdGhhbiBAYiwgYW5kIGEgcG9zaXRpdmUgdmFsdWUgaWYgQGEgaXMg
-Z3JlYXRlciB0aGFuIEBiLiBJZiBAYSBhbmQgQGIgYXJlCj4gLSAqIGVxdWl2YWxlbnQsIHRoZW4g
-aXQgZG9lcyBub3QgbWF0dGVyIHdoYXQgdGhpcyBmdW5jdGlvbiByZXR1cm5zLgo+IC0gKi8KPiAt
-c3RhdGljIHZvaWQgbGlzdF9zb3J0KHZvaWQgKnByaXYsIHN0cnVjdCBsaXN0X2hlYWQgKmhlYWQs
-Cj4gLQkJICAgICAgaW50ICgqY21wKSh2b2lkICpwcml2LCBzdHJ1Y3QgbGlzdF9oZWFkICphLAo+
-IC0JCQkJIHN0cnVjdCBsaXN0X2hlYWQgKmIpKQo+IC17Cj4gLQlzdHJ1Y3QgbGlzdF9oZWFkICpw
-LCAqcSwgKmUsICpsaXN0LCAqdGFpbCwgKm9sZGhlYWQ7Cj4gLQlpbnQgaW5zaXplLCBubWVyZ2Vz
-LCBwc2l6ZSwgcXNpemUsIGk7Cj4gLQo+IC0JaWYgKGxpc3RfZW1wdHkoaGVhZCkpCj4gLQkJcmV0
-dXJuOwo+IC0KPiAtCWxpc3QgPSBoZWFkLT5uZXh0Owo+IC0JbGlzdF9kZWwoaGVhZCk7Cj4gLQlp
-bnNpemUgPSAxOwo+IC0JZm9yICg7Oykgewo+IC0JCXAgPSBvbGRoZWFkID0gbGlzdDsKPiAtCQls
-aXN0ID0gdGFpbCA9IE5VTEw7Cj4gLQkJbm1lcmdlcyA9IDA7Cj4gLQo+IC0JCXdoaWxlIChwKSB7
-Cj4gLQkJCW5tZXJnZXMrKzsKPiAtCQkJcSA9IHA7Cj4gLQkJCXBzaXplID0gMDsKPiAtCQkJZm9y
-IChpID0gMDsgaSA8IGluc2l6ZTsgaSsrKSB7Cj4gLQkJCQlwc2l6ZSsrOwo+IC0JCQkJcSA9IHEt
-Pm5leHQgPT0gb2xkaGVhZCA/IE5VTEwgOiBxLT5uZXh0Owo+IC0JCQkJaWYgKCFxKQo+IC0JCQkJ
-CWJyZWFrOwo+IC0JCQl9Cj4gLQo+IC0JCQlxc2l6ZSA9IGluc2l6ZTsKPiAtCQkJd2hpbGUgKHBz
-aXplID4gMCB8fCAocXNpemUgPiAwICYmIHEpKSB7Cj4gLQkJCQlpZiAoIXBzaXplKSB7Cj4gLQkJ
-CQkJZSA9IHE7Cj4gLQkJCQkJcSA9IHEtPm5leHQ7Cj4gLQkJCQkJcXNpemUtLTsKPiAtCQkJCQlp
-ZiAocSA9PSBvbGRoZWFkKQo+IC0JCQkJCQlxID0gTlVMTDsKPiAtCQkJCX0gZWxzZSBpZiAoIXFz
-aXplIHx8ICFxKSB7Cj4gLQkJCQkJZSA9IHA7Cj4gLQkJCQkJcCA9IHAtPm5leHQ7Cj4gLQkJCQkJ
-cHNpemUtLTsKPiAtCQkJCQlpZiAocCA9PSBvbGRoZWFkKQo+IC0JCQkJCQlwID0gTlVMTDsKPiAt
-CQkJCX0gZWxzZSBpZiAoY21wKHByaXYsIHAsIHEpIDw9IDApIHsKPiAtCQkJCQllID0gcDsKPiAt
-CQkJCQlwID0gcC0+bmV4dDsKPiAtCQkJCQlwc2l6ZS0tOwo+IC0JCQkJCWlmIChwID09IG9sZGhl
-YWQpCj4gLQkJCQkJCXAgPSBOVUxMOwo+IC0JCQkJfSBlbHNlIHsKPiAtCQkJCQllID0gcTsKPiAt
-CQkJCQlxID0gcS0+bmV4dDsKPiAtCQkJCQlxc2l6ZS0tOwo+IC0JCQkJCWlmIChxID09IG9sZGhl
-YWQpCj4gLQkJCQkJCXEgPSBOVUxMOwo+IC0JCQkJfQo+IC0JCQkJaWYgKHRhaWwpCj4gLQkJCQkJ
-dGFpbC0+bmV4dCA9IGU7Cj4gLQkJCQllbHNlCj4gLQkJCQkJbGlzdCA9IGU7Cj4gLQkJCQllLT5w
-cmV2ID0gdGFpbDsKPiAtCQkJCXRhaWwgPSBlOwo+IC0JCQl9Cj4gLQkJCXAgPSBxOwo+IC0JCX0K
-PiAtCj4gLQkJdGFpbC0+bmV4dCA9IGxpc3Q7Cj4gLQkJbGlzdC0+cHJldiA9IHRhaWw7Cj4gLQo+
-IC0JCWlmIChubWVyZ2VzIDw9IDEpCj4gLQkJCWJyZWFrOwo+IC0KPiAtCQlpbnNpemUgKj0gMjsK
-PiAtCX0KPiAtCj4gLQloZWFkLT5uZXh0ID0gbGlzdDsKPiAtCWhlYWQtPnByZXYgPSBsaXN0LT5w
-cmV2Owo+IC0JbGlzdC0+cHJldi0+bmV4dCA9IGhlYWQ7Cj4gLQlsaXN0LT5wcmV2ID0gaGVhZDsK
-PiAtfQo+IC0KPiAtLyoqCj4gICAqIGRhdGFfbm9kZXNfY21wIC0gY29tcGFyZSAyIGRhdGEgbm9k
-ZXMuCj4gICAqIEBwcml2OiBVQklGUyBmaWxlLXN5c3RlbSBkZXNjcmlwdGlvbiBvYmplY3QKPiAg
-ICogQGE6IGZpcnN0IGRhdGEgbm9kZQo+IGRpZmYgLS1naXQgYS9pbmNsdWRlL2xpbnV4L3NvcnQu
-aCBiL2luY2x1ZGUvbGludXgvc29ydC5oCj4gaW5kZXggZDUzNGRhMi4uOTlhMmVkNSAxMDA2NDQK
-PiAtLS0gYS9pbmNsdWRlL2xpbnV4L3NvcnQuaAo+ICsrKyBiL2luY2x1ZGUvbGludXgvc29ydC5o
-Cj4gQEAgLTMsOCArMywxMyBAQAo+ICAKPiAgI2luY2x1ZGUgPGxpbnV4L3R5cGVzLmg+Cj4gIAo+
-ICtzdHJ1Y3QgbGlzdF9oZWFkOwo+ICsKPiAgdm9pZCBzb3J0KHZvaWQgKmJhc2UsIHNpemVfdCBu
-dW0sIHNpemVfdCBzaXplLAo+ICAJICBpbnQgKCpjbXApKGNvbnN0IHZvaWQgKiwgY29uc3Qgdm9p
-ZCAqKSwKPiAgCSAgdm9pZCAoKnN3YXApKHZvaWQgKiwgdm9pZCAqLCBpbnQpKTsKPiAgCj4gK3Zv
-aWQgbGlzdF9zb3J0KHZvaWQgKnByaXYsIHN0cnVjdCBsaXN0X2hlYWQgKmhlYWQsCj4gKwkgICAg
-ICAgaW50ICgqY21wKSh2b2lkICpwcml2LCBzdHJ1Y3QgbGlzdF9oZWFkICphLAo+ICsJCQkgIHN0
-cnVjdCBsaXN0X2hlYWQgKmIpKTsKPiAgI2VuZGlmCj4gZGlmZiAtLWdpdCBhL2xpYi9zb3J0LmMg
-Yi9saWIvc29ydC5jCj4gaW5kZXggOTI2ZDAwNC4uMTc3MmM0NSAxMDA2NDQKPiAtLS0gYS9saWIv
-c29ydC5jCj4gKysrIGIvbGliL3NvcnQuYwo+IEBAIC04LDYgKzgsNyBAQAo+ICAjaW5jbHVkZSA8
-bGludXgvbW9kdWxlLmg+Cj4gICNpbmNsdWRlIDxsaW51eC9zb3J0Lmg+Cj4gICNpbmNsdWRlIDxs
-aW51eC9zbGFiLmg+Cj4gKyNpbmNsdWRlIDxsaW51eC9saXN0Lmg+Cj4gIAo+ICBzdGF0aWMgdm9p
-ZCB1MzJfc3dhcCh2b2lkICphLCB2b2lkICpiLCBpbnQgc2l6ZSkKPiAgewo+IEBAIC0xMjEsMyAr
-MTIyLDk5IEBAIHN0YXRpYyBpbnQgc29ydF90ZXN0KHZvaWQpCj4gIAo+ICBtb2R1bGVfaW5pdChz
-b3J0X3Rlc3QpOwo+ICAjZW5kaWYKPiArCj4gKy8qKgo+ICsgKiBsaXN0X3NvcnQgLSBzb3J0IGEg
-bGlzdC4KPiArICogQHByaXY6IHByaXZhdGUgZGF0YSwgcGFzc2VkIHRvIEBjbXAKPiArICogQGhl
-YWQ6IHRoZSBsaXN0IHRvIHNvcnQKPiArICogQGNtcDogdGhlIGVsZW1lbnRzIGNvbXBhcmlzb24g
-ZnVuY3Rpb24KPiArICoKPiArICogVGhpcyBmdW5jdGlvbiBoYXMgYmVlbiBpbXBsZW1lbnRlZCBi
-eSBNYXJrIEogUm9iZXJ0cyA8bWpyQHpuZXgub3JnPi4gSXQKPiArICogaW1wbGVtZW50cyAibWVy
-Z2Ugc29ydCIgd2hpY2ggaGFzIE8obmxvZyhuKSkgY29tcGxleGl0eS4gVGhlIGxpc3QgaXMgc29y
-dGVkCj4gKyAqIGluIGFzY2VuZGluZyBvcmRlci4KPiArICoKPiArICogVGhlIGNvbXBhcmlzb24g
-ZnVuY3Rpb24gQGNtcCBpcyBzdXBwb3NlZCB0byByZXR1cm4gYSBuZWdhdGl2ZSB2YWx1ZSBpZiBA
-YSBpcwo+ICsgKiB0aGFuIEBiLCBhbmQgYSBwb3NpdGl2ZSB2YWx1ZSBpZiBAYSBpcyBncmVhdGVy
-IHRoYW4gQGIuIElmIEBhIGFuZCBAYiBhcmUKCldoaWxlIHlvdSBhcmUgb24gaXQsIGNvdWxkIHlv
-dSBhbHNvIHBsZWFzZSBmaXggdGhlIHR5cG86ICJpZiBAYSBpcyBsZXNzCnRoYW4gQGIiLgoKPiAr
-ICogZXF1aXZhbGVudCwgdGhlbiBpdCBkb2VzIG5vdCBtYXR0ZXIgd2hhdCB0aGlzIGZ1bmN0aW9u
-IHJldHVybnMuCj4gKyAqLwoKLS0gCkJlc3QgUmVnYXJkcywKQXJ0ZW0gQml0eXV0c2tpeSAo0JDR
-gNGC0ZHQvCDQkdC40YLRjtGG0LrQuNC5KQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDov
-L29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Tue, Jan 05, 2010 at 08:26:11AM +0200, Artem Bityutskiy wrote:
+> > + * implements "merge sort" which has O(nlog(n)) complexity. The list i=
+s sorted
+> > + * in ascending order.
+> > + *
+> > + * The comparison function @cmp is supposed to return a negative value=
+ if @a is
+> > + * than @b, and a positive value if @a is greater than @b. If @a and @=
+b are
+> =
+
+> While you are on it, could you also please fix the typo: "if @a is less
+> than @b".
+
+Fixed. New patch below.
+
+Cheers,
+
+Dave.
+-- =
+
+Dave Chinner
+david@fromorbit.com
+
+sort: Introduce generic list_sort function
+
+There are two copies of list_sort() in the tree already, one in the DRM cod=
+e,
+another in ubifs. Now XFS needs this as well. Create a generic list_sort()
+function from the ubifs version and convert existing users to it so we
+don't end up with yet another copy in the tree.
+
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+Acked-by: Dave Airlie <airlied@redhat.com>
+Acked-by: Artem Bityutskiy <dedekind@infradead.org>
+---
+ drivers/gpu/drm/drm_modes.c |   90 ++--------------------------------------
+ fs/ubifs/gc.c               |   95 ---------------------------------------=
+---
+ include/linux/sort.h        |    5 ++
+ lib/sort.c                  |   97 +++++++++++++++++++++++++++++++++++++++=
+++++
+ 4 files changed, 106 insertions(+), 181 deletions(-)
+
+diff --git a/drivers/gpu/drm/drm_modes.c b/drivers/gpu/drm/drm_modes.c
+index 51f6772..3846ed4 100644
+--- a/drivers/gpu/drm/drm_modes.c
++++ b/drivers/gpu/drm/drm_modes.c
+@@ -1,9 +1,4 @@
+ /*
+- * The list_sort function is (presumably) licensed under the GPL (see the
+- * top level "COPYING" file for details).
+- *
+- * The remainder of this file is:
+- *
+  * Copyright =A9 1997-2003 by The XFree86 Project, Inc.
+  * Copyright =A9 2007 Dave Airlie
+  * Copyright =A9 2007-2008 Intel Corporation
+@@ -36,6 +31,7 @@
+  */
+ =
+
+ #include <linux/list.h>
++#include <linux/sort.h>
+ #include "drmP.h"
+ #include "drm.h"
+ #include "drm_crtc.h"
+@@ -829,6 +825,7 @@ EXPORT_SYMBOL(drm_mode_prune_invalid);
+ =
+
+ /**
+  * drm_mode_compare - compare modes for favorability
++ * @priv: unused
+  * @lh_a: list_head for first mode
+  * @lh_b: list_head for second mode
+  *
+@@ -842,7 +839,7 @@ EXPORT_SYMBOL(drm_mode_prune_invalid);
+  * Negative if @lh_a is better than @lh_b, zero if they're equivalent, or
+  * positive if @lh_b is better than @lh_a.
+  */
+-static int drm_mode_compare(struct list_head *lh_a, struct list_head *lh_b)
++static int drm_mode_compare(void *priv, struct list_head *lh_a, struct lis=
+t_head *lh_b)
+ {
+ 	struct drm_display_mode *a =3D list_entry(lh_a, struct drm_display_mode, =
+head);
+ 	struct drm_display_mode *b =3D list_entry(lh_b, struct drm_display_mode, =
+head);
+@@ -859,85 +856,6 @@ static int drm_mode_compare(struct list_head *lh_a, st=
+ruct list_head *lh_b)
+ 	return diff;
+ }
+ =
+
+-/* FIXME: what we don't have a list sort function? */
+-/* list sort from Mark J Roberts (mjr@znex.org) */
+-void list_sort(struct list_head *head,
+-	       int (*cmp)(struct list_head *a, struct list_head *b))
+-{
+-	struct list_head *p, *q, *e, *list, *tail, *oldhead;
+-	int insize, nmerges, psize, qsize, i;
+-
+-	list =3D head->next;
+-	list_del(head);
+-	insize =3D 1;
+-	for (;;) {
+-		p =3D oldhead =3D list;
+-		list =3D tail =3D NULL;
+-		nmerges =3D 0;
+-
+-		while (p) {
+-			nmerges++;
+-			q =3D p;
+-			psize =3D 0;
+-			for (i =3D 0; i < insize; i++) {
+-				psize++;
+-				q =3D q->next =3D=3D oldhead ? NULL : q->next;
+-				if (!q)
+-					break;
+-			}
+-
+-			qsize =3D insize;
+-			while (psize > 0 || (qsize > 0 && q)) {
+-				if (!psize) {
+-					e =3D q;
+-					q =3D q->next;
+-					qsize--;
+-					if (q =3D=3D oldhead)
+-						q =3D NULL;
+-				} else if (!qsize || !q) {
+-					e =3D p;
+-					p =3D p->next;
+-					psize--;
+-					if (p =3D=3D oldhead)
+-						p =3D NULL;
+-				} else if (cmp(p, q) <=3D 0) {
+-					e =3D p;
+-					p =3D p->next;
+-					psize--;
+-					if (p =3D=3D oldhead)
+-						p =3D NULL;
+-				} else {
+-					e =3D q;
+-					q =3D q->next;
+-					qsize--;
+-					if (q =3D=3D oldhead)
+-						q =3D NULL;
+-				}
+-				if (tail)
+-					tail->next =3D e;
+-				else
+-					list =3D e;
+-				e->prev =3D tail;
+-				tail =3D e;
+-			}
+-			p =3D q;
+-		}
+-
+-		tail->next =3D list;
+-		list->prev =3D tail;
+-
+-		if (nmerges <=3D 1)
+-			break;
+-
+-		insize *=3D 2;
+-	}
+-
+-	head->next =3D list;
+-	head->prev =3D list->prev;
+-	list->prev->next =3D head;
+-	list->prev =3D head;
+-}
+-
+ /**
+  * drm_mode_sort - sort mode list
+  * @mode_list: list to sort
+@@ -949,7 +867,7 @@ void list_sort(struct list_head *head,
+  */
+ void drm_mode_sort(struct list_head *mode_list)
+ {
+-	list_sort(mode_list, drm_mode_compare);
++	list_sort(NULL, mode_list, drm_mode_compare);
+ }
+ EXPORT_SYMBOL(drm_mode_sort);
+ =
+
+diff --git a/fs/ubifs/gc.c b/fs/ubifs/gc.c
+index 618c270..4976e07 100644
+--- a/fs/ubifs/gc.c
++++ b/fs/ubifs/gc.c
+@@ -108,101 +108,6 @@ static int switch_gc_head(struct ubifs_info *c)
+ }
+ =
+
+ /**
+- * list_sort - sort a list.
+- * @priv: private data, passed to @cmp
+- * @head: the list to sort
+- * @cmp: the elements comparison function
+- *
+- * This function has been implemented by Mark J Roberts <mjr@znex.org>. It
+- * implements "merge sort" which has O(nlog(n)) complexity. The list is so=
+rted
+- * in ascending order.
+- *
+- * The comparison function @cmp is supposed to return a negative value if =
+@a is
+- * than @b, and a positive value if @a is greater than @b. If @a and @b are
+- * equivalent, then it does not matter what this function returns.
+- */
+-static void list_sort(void *priv, struct list_head *head,
+-		      int (*cmp)(void *priv, struct list_head *a,
+-				 struct list_head *b))
+-{
+-	struct list_head *p, *q, *e, *list, *tail, *oldhead;
+-	int insize, nmerges, psize, qsize, i;
+-
+-	if (list_empty(head))
+-		return;
+-
+-	list =3D head->next;
+-	list_del(head);
+-	insize =3D 1;
+-	for (;;) {
+-		p =3D oldhead =3D list;
+-		list =3D tail =3D NULL;
+-		nmerges =3D 0;
+-
+-		while (p) {
+-			nmerges++;
+-			q =3D p;
+-			psize =3D 0;
+-			for (i =3D 0; i < insize; i++) {
+-				psize++;
+-				q =3D q->next =3D=3D oldhead ? NULL : q->next;
+-				if (!q)
+-					break;
+-			}
+-
+-			qsize =3D insize;
+-			while (psize > 0 || (qsize > 0 && q)) {
+-				if (!psize) {
+-					e =3D q;
+-					q =3D q->next;
+-					qsize--;
+-					if (q =3D=3D oldhead)
+-						q =3D NULL;
+-				} else if (!qsize || !q) {
+-					e =3D p;
+-					p =3D p->next;
+-					psize--;
+-					if (p =3D=3D oldhead)
+-						p =3D NULL;
+-				} else if (cmp(priv, p, q) <=3D 0) {
+-					e =3D p;
+-					p =3D p->next;
+-					psize--;
+-					if (p =3D=3D oldhead)
+-						p =3D NULL;
+-				} else {
+-					e =3D q;
+-					q =3D q->next;
+-					qsize--;
+-					if (q =3D=3D oldhead)
+-						q =3D NULL;
+-				}
+-				if (tail)
+-					tail->next =3D e;
+-				else
+-					list =3D e;
+-				e->prev =3D tail;
+-				tail =3D e;
+-			}
+-			p =3D q;
+-		}
+-
+-		tail->next =3D list;
+-		list->prev =3D tail;
+-
+-		if (nmerges <=3D 1)
+-			break;
+-
+-		insize *=3D 2;
+-	}
+-
+-	head->next =3D list;
+-	head->prev =3D list->prev;
+-	list->prev->next =3D head;
+-	list->prev =3D head;
+-}
+-
+-/**
+  * data_nodes_cmp - compare 2 data nodes.
+  * @priv: UBIFS file-system description object
+  * @a: first data node
+diff --git a/include/linux/sort.h b/include/linux/sort.h
+index d534da2..99a2ed5 100644
+--- a/include/linux/sort.h
++++ b/include/linux/sort.h
+@@ -3,8 +3,13 @@
+ =
+
+ #include <linux/types.h>
+ =
+
++struct list_head;
++
+ void sort(void *base, size_t num, size_t size,
+ 	  int (*cmp)(const void *, const void *),
+ 	  void (*swap)(void *, void *, int));
+ =
+
++void list_sort(void *priv, struct list_head *head,
++	       int (*cmp)(void *priv, struct list_head *a,
++			  struct list_head *b));
+ #endif
+diff --git a/lib/sort.c b/lib/sort.c
+index 926d004..5bab8ff 100644
+--- a/lib/sort.c
++++ b/lib/sort.c
+@@ -8,6 +8,7 @@
+ #include <linux/module.h>
+ #include <linux/sort.h>
+ #include <linux/slab.h>
++#include <linux/list.h>
+ =
+
+ static void u32_swap(void *a, void *b, int size)
+ {
+@@ -121,3 +122,99 @@ static int sort_test(void)
+ =
+
+ module_init(sort_test);
+ #endif
++
++/**
++ * list_sort - sort a list.
++ * @priv: private data, passed to @cmp
++ * @head: the list to sort
++ * @cmp: the elements comparison function
++ *
++ * This function has been implemented by Mark J Roberts <mjr@znex.org>. It
++ * implements "merge sort" which has O(nlog(n)) complexity. The list is so=
+rted
++ * in ascending order.
++ *
++ * The comparison function @cmp is supposed to return a negative value if =
+@a is
++ * less than @b, and a positive value if @a is greater than @b. If @a and =
+@b
++ * are equivalent, then it does not matter what this function returns.
++ */
++void list_sort(void *priv, struct list_head *head,
++	       int (*cmp)(void *priv, struct list_head *a,
++			  struct list_head *b))
++{
++	struct list_head *p, *q, *e, *list, *tail, *oldhead;
++	int insize, nmerges, psize, qsize, i;
++
++	if (list_empty(head))
++		return;
++
++	list =3D head->next;
++	list_del(head);
++	insize =3D 1;
++	for (;;) {
++		p =3D oldhead =3D list;
++		list =3D tail =3D NULL;
++		nmerges =3D 0;
++
++		while (p) {
++			nmerges++;
++			q =3D p;
++			psize =3D 0;
++			for (i =3D 0; i < insize; i++) {
++				psize++;
++				q =3D q->next =3D=3D oldhead ? NULL : q->next;
++				if (!q)
++					break;
++			}
++
++			qsize =3D insize;
++			while (psize > 0 || (qsize > 0 && q)) {
++				if (!psize) {
++					e =3D q;
++					q =3D q->next;
++					qsize--;
++					if (q =3D=3D oldhead)
++						q =3D NULL;
++				} else if (!qsize || !q) {
++					e =3D p;
++					p =3D p->next;
++					psize--;
++					if (p =3D=3D oldhead)
++						p =3D NULL;
++				} else if (cmp(priv, p, q) <=3D 0) {
++					e =3D p;
++					p =3D p->next;
++					psize--;
++					if (p =3D=3D oldhead)
++						p =3D NULL;
++				} else {
++					e =3D q;
++					q =3D q->next;
++					qsize--;
++					if (q =3D=3D oldhead)
++						q =3D NULL;
++				}
++				if (tail)
++					tail->next =3D e;
++				else
++					list =3D e;
++				e->prev =3D tail;
++				tail =3D e;
++			}
++			p =3D q;
++		}
++
++		tail->next =3D list;
++		list->prev =3D tail;
++
++		if (nmerges <=3D 1)
++			break;
++
++		insize *=3D 2;
++	}
++
++	head->next =3D list;
++	head->prev =3D list->prev;
++	list->prev->next =3D head;
++	list->prev =3D head;
++}
++
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
