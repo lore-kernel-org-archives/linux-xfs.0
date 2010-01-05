@@ -1,34 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o05FUAtj216458 for <xfs@oss.sgi.com>; Tue, 5 Jan 2010 09:30:11 -0600
-Received: from e6.ny.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9B6901412D0
-	for <xfs@oss.sgi.com>; Tue,  5 Jan 2010 07:31:00 -0800 (PST)
-Received: from e6.ny.us.ibm.com (e6.ny.us.ibm.com [32.97.182.146]) by
-	cuda.sgi.com with ESMTP id Bq7tDsjieYDr1K9e for
-	<xfs@oss.sgi.com>; Tue, 05 Jan 2010 07:31:00 -0800 (PST)
-Received: from d01relay01.pok.ibm.com (d01relay01.pok.ibm.com [9.56.227.233])
-	by e6.ny.us.ibm.com (8.14.3/8.13.1) with ESMTP id o05FQufI013016
-	for <xfs@oss.sgi.com>; Tue, 5 Jan 2010 10:26:56 -0500
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay01.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	o05FUxG3103376 for <xfs@oss.sgi.com>; Tue, 5 Jan 2010 10:30:59 -0500
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id
-	o05FUw75007194 for <xfs@oss.sgi.com>; Tue, 5 Jan 2010 13:30:59 -0200
-Message-ID: <4B435B34.20003@austin.ibm.com>
-Date: Tue, 05 Jan 2010 09:31:00 -0600
-From: Steven Pratt <slpratt@austin.ibm.com>
+	o05HL0sn223501 for <xfs@oss.sgi.com>; Tue, 5 Jan 2010 11:21:00 -0600
+Received: from radon.netxsys.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 665551C2EF2F
+	for <xfs@oss.sgi.com>; Tue,  5 Jan 2010 09:21:50 -0800 (PST)
+Received: from radon.netxsys.com (radon.netxsys.com [204.16.202.162]) by
+	cuda.sgi.com with ESMTP id bt7HiNfcJJ7nDTFX for
+	<xfs@oss.sgi.com>; Tue, 05 Jan 2010 09:21:50 -0800 (PST)
+Message-ID: <43686.205.189.93.240.1262712109.squirrel@webmail.netxsys.com>
+In-Reply-To: <4B437240.3030902@sandeen.net>
+References: <1262652500.24160.27.camel@oxygen.netxsys.com>
+	<4B437240.3030902@sandeen.net>
+Date: Tue, 5 Jan 2010 12:21:49 -0500 (EST)
+Subject: Re: NFS export broke with change from ext3 to xfs
+From: "Krzysztof Adamski" <k@adamski.org>
 MIME-Version: 1.0
-Subject: Re: [Jfs-discussion] benchmark results
-References: <alpine.DEB.2.01.0912240205510.3483@bogon.housecafe.de>
-	<19251.26403.762180.228181@tree.ty.sabi.co.uk>
-	<20091224212756.GM21594@thunk.org>
-	<20091224234631.GA1028@ioremap.net>
-	<20091225161146.GC32757@thunk.org> <20100104162748.GA11932@think>
-	<20100105004117.GP13802@discord.disaster>
-In-Reply-To: <20100105004117.GP13802@discord.disaster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,91 +24,69 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: jfs-discussion@lists.sourceforge.net, linux-ext4@vger.kernel.org, tytso@mit.edu, reiserfs-devel@vger.kernel.org, Peter Grandi <pg_jf2@jf2.for.sabi.co.UK>, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, Evgeniy Polyakov <zbr@ioremap.net>, xfs@oss.sgi.com, Chris Mason <chris.mason@oracle.com>, ext-users <ext3-users@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-Dave Chinner wrote:
-> On Mon, Jan 04, 2010 at 11:27:48AM -0500, Chris Mason wrote:
->   
->> On Fri, Dec 25, 2009 at 11:11:46AM -0500, tytso@mit.edu wrote:
->>     
->>> On Fri, Dec 25, 2009 at 02:46:31AM +0300, Evgeniy Polyakov wrote:
->>>       
->>>>> [1] http://samba.org/ftp/tridge/dbench/README
->>>>>           
->>>> Was not able to resist to write a small notice, what no matter what, but
->>>> whatever benchmark is running, it _does_ show system behaviour in one
->>>> or another condition. And when system behaves rather badly, it is quite
->>>> a common comment, that benchmark was useless. But it did show that
->>>> system has a problem, even if rarely triggered one :)
->>>>         
->>> If people are using benchmarks to improve file system, and a benchmark
->>> shows a problem, then trying to remedy the performance issue is a good
->>> thing to do, of course.  Sometimes, though the case which is
->>> demonstrated by a poor benchmark is an extremely rare corner case that
->>> doesn't accurately reflect common real-life workloads --- and if
->>> addressing it results in a tradeoff which degrades much more common
->>> real-life situations, then that would be a bad thing.
->>>
->>> In situations where benchmarks are used competitively, it's rare that
->>> it's actually a *problem*.  Instead it's much more common that a
->>> developer is trying to prove that their file system is *better* to
->>> gullible users who think that a single one-dimentional number is
->>> enough for them to chose file system X over file system Y.
->>>       
->> [ Look at all this email from my vacation...sorry for the delay ]
+> Krzysztof Adamski wrote:
+>> Hi All,
 >>
->> It's important that people take benchmarks from filesystem developers
->> with a big grain of salt, which is one reason the boxacle.net results
->> are so nice.  Steve more than willing to take patches and experiment to
->> improve a given FS results, but his business is a fair representation of
->> performance and it shows.
->>     
+>> I just changed one filesystem on my mythbox from ext3 to xfs, and now I
+>> can't get a client machine to NFS mount from it.
+>>
+>> This is the export file on the server:
+>> /file-store/nfs-roots/f1/home
+>> f1(rw,no_root_squash,sync,no_subtree_check)
+>> /file-store/nfs-roots/f1/usr
+>> f1(rw,no_root_squash,sync,no_subtree_check)
+>> /file-store/nfs-roots/f1/var
+>> f1(rw,no_root_squash,sync,no_subtree_check)
+>>
+>> and on the client(f1) the three filesystems are mount on /home, /usr,
+>> and /var
+>>
+>> This worked fine when /file-store on the server was formatted with ext3,
+>> now that it is formatted with xfs I get this message on the client:
+>> mount.nfs: Stale NFS file handle
+>> I get this message 3 times.
 >
-> Just looking at the results there, I notice that the RAID system XFS
-> mailserver results dropped by an order of magnitude between
-> 2.6.29-rc2 and 2.6.31. The single disk results are pretty
-> much identical across the two kernels.
+> I dunno, this should work.  Anything in either of the system logs?
+
+On the server:
+Jan  4 19:27:03 Myth mountd[5342]: authenticated mount request from
+x.x.x.x:741 for /file-store/nfs-roots/f1/var
+(/file-store/nfs-roots/f1/var)
+Jan  4 19:27:03 Myth mountd[5342]: authenticated mount request from
+x.x.x.x:757 for /file-store/nfs-roots/f1/usr
+(/file-store/nfs-roots/f1/usr)
+Jan  4 19:27:03 Myth mountd[5342]: authenticated mount request from
+x.x.x.x:759 for /file-store/nfs-roots/f1/home
+(/file-store/nfs-roots/f1/home)
+but this is identical to when it worked.
+No logs on the client, /var is not yet mounted.
+
+Should I be asking on the NFS list?
+
+
+> -Eric
 >
-> IIRC, in 2.6.31 RAID0 started passing barriers through so I suspect
-> this is the issue. However, seeing as dmesg is not collected by
-> the scripts after the run and the output of the mounttab does
-> not show default options, I cannot tell if this is the case. 
-Well the dmesg collection is done by the actual benchmark run which 
-occurs after the mount command is issued, so if you are looking for 
-dmesg related to mounting the xfs volume, it should be in the dmesg we 
-did collect.  If dmesg actually formatted timestamps, this would be 
-easier to see.  It seems that nothing from xfs is ending up in dmesg 
-since we are running xfs with different threads counts in order without 
-reboot, so the dmesg for 16 thread xfs is run right after 1 thread xfs, 
-but the dmesg show ext3 as the last thing, so safe to say no output from 
-xfs is ending up in dmesg at all.
-
-
-> This
-> might be worth checking by running XFS with the "nobarrier" mount
-> option....
->   
-I could give that a try for you.
-
-> FWIW, is it possible to get these benchmarks run on each filesystem for
-> each kernel release so ext/xfs/btrfs all get some regular basic
-> performance regression test coverage?
->   
-Possible yes.  Just need to find the time to do the runs, and more 
-importantly postprocess the data in some meaningful way.  I'll see what 
-I can do.
-
-Steve
-
-> Cheers,
+>> Nothing else changed, both systems are Debian Lenny with custom kernel.
+>> Server is 2.6.28, client is 2.6.29.6. NFS is version 3.
+>> The fstab on the server has this:
+>> /dev/mapper/big--raid-file--store       /file-store     xfs
+>> noatime,logbsize=256k,inode64   0       1
+>>
+>> The reason for the change of the filesystem was an upgrade of the drives
+>> in the RAID, now the filesystem is 7T instead of 2.4T,
+>> nothing else was changed. Why did this work with ext3 and does not with
+>> XFS? What can I do to get this to work, short of reverting to ext3?
+>>
+>> K
+>>
 >
-> Dave.
->   
 
 _______________________________________________
 xfs mailing list
