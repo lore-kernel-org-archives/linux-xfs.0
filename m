@@ -1,26 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o050ff5l160343 for <xfs@oss.sgi.com>; Mon, 4 Jan 2010 18:41:41 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DF9F61C2AFCE
-	for <xfs@oss.sgi.com>; Mon,  4 Jan 2010 16:42:29 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	1oLV6LiOnHmOiMIU for <xfs@oss.sgi.com>;
-	Mon, 04 Jan 2010 16:42:29 -0800 (PST)
-Date: Tue, 5 Jan 2010 11:41:17 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [Jfs-discussion] benchmark results
-Message-ID: <20100105004117.GP13802@discord.disaster>
-References: <alpine.DEB.2.01.0912240205510.3483@bogon.housecafe.de>
-	<19251.26403.762180.228181@tree.ty.sabi.co.uk>
-	<20091224212756.GM21594@thunk.org>
-	<20091224234631.GA1028@ioremap.net>
-	<20091225161146.GC32757@thunk.org> <20100104162748.GA11932@think>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100104162748.GA11932@think>
+	o056Nnl9182029 for <xfs@oss.sgi.com>; Tue, 5 Jan 2010 00:23:49 -0600
+Received: from mgw-mx03.nokia.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D705D13EBF6
+	for <xfs@oss.sgi.com>; Mon,  4 Jan 2010 22:24:36 -0800 (PST)
+Received: from mgw-mx03.nokia.com (smtp.nokia.com [192.100.122.230]) by
+	cuda.sgi.com with ESMTP id MKtFEZkwyjBfa34c for
+	<xfs@oss.sgi.com>; Mon, 04 Jan 2010 22:24:36 -0800 (PST)
+Subject: Re: [PATCH] sort: Introduce generic list_sort function
+From: Artem Bityutskiy <dedekind@infradead.org>
+In-Reply-To: <1262649295-28427-1-git-send-email-david@fromorbit.com>
+References: <1262649295-28427-1-git-send-email-david@fromorbit.com>
+Date: Tue, 05 Jan 2010 08:23:58 +0200
+Message-Id: <1262672638.4512.48.camel@localhost>
+Mime-Version: 1.0
+Reply-To: dedekind@infradead.org
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,69 +24,25 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Chris Mason <chris.mason@oracle.com>, tytso@mit.edu, Evgeniy Polyakov <zbr@ioremap.net>, Peter Grandi <pg_jf2@jf2.for.sabi.co.UK>, xfs@oss.sgi.com, reiserfs-devel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, jfs-discussion@lists.sourceforge.net, ext-users <ext3-users@redhat.com>, linux-nilfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Dave Airlie <airlied@redhat.com>, Adrian Hunter <adrian.hunter@nokia.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, Jan 04, 2010 at 11:27:48AM -0500, Chris Mason wrote:
-> On Fri, Dec 25, 2009 at 11:11:46AM -0500, tytso@mit.edu wrote:
-> > On Fri, Dec 25, 2009 at 02:46:31AM +0300, Evgeniy Polyakov wrote:
-> > > > [1] http://samba.org/ftp/tridge/dbench/README
-> > > 
-> > > Was not able to resist to write a small notice, what no matter what, but
-> > > whatever benchmark is running, it _does_ show system behaviour in one
-> > > or another condition. And when system behaves rather badly, it is quite
-> > > a common comment, that benchmark was useless. But it did show that
-> > > system has a problem, even if rarely triggered one :)
-> > 
-> > If people are using benchmarks to improve file system, and a benchmark
-> > shows a problem, then trying to remedy the performance issue is a good
-> > thing to do, of course.  Sometimes, though the case which is
-> > demonstrated by a poor benchmark is an extremely rare corner case that
-> > doesn't accurately reflect common real-life workloads --- and if
-> > addressing it results in a tradeoff which degrades much more common
-> > real-life situations, then that would be a bad thing.
-> > 
-> > In situations where benchmarks are used competitively, it's rare that
-> > it's actually a *problem*.  Instead it's much more common that a
-> > developer is trying to prove that their file system is *better* to
-> > gullible users who think that a single one-dimentional number is
-> > enough for them to chose file system X over file system Y.
-> 
-> [ Look at all this email from my vacation...sorry for the delay ]
-> 
-> It's important that people take benchmarks from filesystem developers
-> with a big grain of salt, which is one reason the boxacle.net results
-> are so nice.  Steve more than willing to take patches and experiment to
-> improve a given FS results, but his business is a fair representation of
-> performance and it shows.
-
-Just looking at the results there, I notice that the RAID system XFS
-mailserver results dropped by an order of magnitude between
-2.6.29-rc2 and 2.6.31. The single disk results are pretty
-much identical across the two kernels.
-
-IIRC, in 2.6.31 RAID0 started passing barriers through so I suspect
-this is the issue. However, seeing as dmesg is not collected by
-the scripts after the run and the output of the mounttab does
-not show default options, I cannot tell if this is the case. This
-might be worth checking by running XFS with the "nobarrier" mount
-option....
-
-FWIW, is it possible to get these benchmarks run on each filesystem for
-each kernel release so ext/xfs/btrfs all get some regular basic
-performance regression test coverage?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlLCAyMDEwLTAxLTA1IGF0IDEwOjU0ICsxMTAwLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4g
+VGhlcmUgYXJlIHR3byBjb3BpZXMgb2YgbGlzdF9zb3J0KCkgaW4gdGhlIHRyZWUgYWxyZWFkeSwg
+b25lIGluIHRoZSBEUk0gY29kZSwKPiBhbm90aGVyIGluIHViaWZzLiBOb3cgWEZTIG5lZWRzIHRo
+aXMgYXMgd2VsbC4gQ3JlYXRlIGEgZ2VuZXJpYyBsaXN0X3NvcnQoKQo+IGZ1bmN0aW9uIGZyb20g
+dGhlIHViaWZzIHZlcnNpb24gYW5kIGNvbnZlcnQgZXhpc3RpbmcgdXNlcnMgdG8gaXQgc28gd2UK
+PiBkb24ndCBlbmQgdXAgd2l0aCB5ZXQgYW5vdGhlciBjb3B5IGluIHRoZSB0cmVlLgo+IAo+IEND
+OiBEYXZlIEFpcmxpZSA8YWlybGllZEByZWRoYXQuY29tPgo+IENDOiBBcnRlbSBCaXR5dXRza2l5
+IDxkZWRla2luZEBpbmZyYWRlYWQub3JnPgo+IENDOiBBZHJpYW4gSHVudGVyIDxhZHJpYW4uaHVu
+dGVyQG5va2lhLmNvbT4KPiAKPiBTaWduZWQtb2ZmLWJ5OiBEYXZlIENoaW5uZXIgPGRhdmlkQGZy
+b21vcmJpdC5jb20+CgpBY2tlZC1ieTogQXJ0ZW0gQml0eXV0c2tpeSA8ZGVkZWtpbmRAaW5mcmFk
+ZWFkLm9yZz4KClRoYW5rcywgdGhpcyBoYXMgYmVlbiBpbiBteSBUT0RPIGxpc3QgZm9yIGxvbmcg
+dGltZSBhcyB3ZWxsIDotKQoKLS0gCkJlc3QgUmVnYXJkcywKQXJ0ZW0gQml0eXV0c2tpeSAo0JDR
+gNGC0ZHQvCDQkdC40YLRjtGG0LrQuNC5KQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDov
+L29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
