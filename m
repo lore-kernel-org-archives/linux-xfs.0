@@ -1,24 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o06MZipI117026 for <xfs@oss.sgi.com>; Wed, 6 Jan 2010 16:35:44 -0600
+	o06N8V1h120045 for <xfs@oss.sgi.com>; Wed, 6 Jan 2010 17:08:31 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EAD14148BC7
-	for <xfs@oss.sgi.com>; Wed,  6 Jan 2010 14:36:34 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	okDQbSDsBzZ4GCH5 for <xfs@oss.sgi.com>;
-	Wed, 06 Jan 2010 14:36:34 -0800 (PST)
-Date: Thu, 7 Jan 2010 09:36:31 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A1C411C35D04
+	for <xfs@oss.sgi.com>; Wed,  6 Jan 2010 15:09:22 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
+	[150.101.137.104]) by cuda.sgi.com with ESMTP id
+	sWZ8JqoCf04na1dO for <xfs@oss.sgi.com>;
+	Wed, 06 Jan 2010 15:09:22 -0800 (PST)
+Received: from discord (unverified [121.44.238.220])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	11070984-1927428
+	for <xfs@oss.sgi.com>; Thu, 07 Jan 2010 09:39:20 +1030 (CDT)
+Received: from [192.168.1.6] (helo=disturbed) by discord with esmtp (Exim 4.69)
+	(envelope-from <dave@fromorbit.com>) id 1NSf0B-0000jT-Bk
+	for xfs@oss.sgi.com; Thu, 07 Jan 2010 10:09:19 +1100
+Received: from dave by disturbed with local (Exim 4.71)
+	(envelope-from <dave@disturbed.disaster>) id 1NSewT-00073u-0o
+	for xfs@oss.sgi.com; Thu, 07 Jan 2010 10:05:29 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] remove bashisms from xfstests
-Message-ID: <20100106223631.GV13802@discord.disaster>
-References: <alpine.DEB.2.01.1001030125040.3483@bogon.housecafe.de>
-	<20100106164844.GB4209@infradead.org>
-	<alpine.DEB.2.01.1001061114340.3483@bogon.housecafe.de>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.01.1001061114340.3483@bogon.housecafe.de>
+Subject: [PATCH 2/2] xfs: reclaim all inodes by background tree walks
+Date: Thu,  7 Jan 2010 10:05:25 +1100
+Message-Id: <1262819125-27083-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1262819125-27083-1-git-send-email-david@fromorbit.com>
+References: <1262819125-27083-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,60 +33,98 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christian Kujau <lists@nerdbynature.de>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Jan 06, 2010 at 11:24:10AM -0800, Christian Kujau wrote:
-> On Wed, 6 Jan 2010 at 11:48, Christoph Hellwig wrote:
-> > > 2) convert "let..." into something (hopefully) more portable
-> > 
-> > Dave converted these away from expr due to performance reasons.  I'd
-> > like too see a prove that performance hasn't regressed due to this
-> > change.
-> 
-> That's why I hesitated to just change all scripts to /bin/bash, but didn't 
-> dare to say so, because of the inevitable "but today's computers are fast 
-> enough" reactions :-)
+We cannot do direct inode reclaim without taking the flush lock to
+ensure that we do not reclaim an inode under IO. We check the inode
+is clean before doing direct reclaim, but this is not good enough
+because the inode flush code marks the inode clean once it has
+copied the in-core dirty state to the backing buffer.
 
-FYI - the problem I came across was to do with running xfsqa under UML,
-where forking a new process is an expensive operation (I measured it
-at about 300ms) and so using bash built-in expressions for
-incrementing variables is a major win in terms of test run time.
-IIRC, one test loops 100,000 times and the runtime went from half an
-hour to 10s just by using "let n=n+1" instead of expr...
+It is the flush lock that determines whether the inode is still
+under IO, even though it is marked clean, and the inode is still
+required at IO completion so we can't reclaim it even though it is
+clean in core. Hence the requirement that we need to take the
+flush lock even on clean inodes because this guarantees that the
+inode writeback IO has completed and it is safe to reclaim the
+inode.
 
-> 
-> > > 3) replace 'a == b' with 'a = b' in bourne shell scripts
-> > 
-> > This looks fine.  If you want feel free to submit these as a separate
-> > first patch so that we have the large pile sorted out.
-> 
-> OK, will do.
-> 
-> > I fear this might cause some overhead in the shell.  What about the
-> > following instead:
-> > 
-> > for i in `seq 0 39`; do
-> >     ln -s $o symlink_$i
-> >     o=symlink_$i
-> > done
-> 
-> I didn't go for seq(1), as I feared this wouldn't be available on every 
-> machine.
+With delayed write inode flushing, we coul dend up waiting a long
+time on the flush lock even for a clean inode. The background
+reclaim already handles this efficiently, so avoid all the problems
+by killing the direct reclaim path altogether.
 
-seq(1) is already used in several tests, so it is ok to use in
-more. :)
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+---
+ fs/xfs/linux-2.6/xfs_super.c |   14 ++++++--------
+ fs/xfs/linux-2.6/xfs_sync.c  |   11 ++++++++++-
+ 2 files changed, 16 insertions(+), 9 deletions(-)
 
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
+index f3dd67d..23768f4 100644
+--- a/fs/xfs/linux-2.6/xfs_super.c
++++ b/fs/xfs/linux-2.6/xfs_super.c
+@@ -953,16 +953,14 @@ xfs_fs_destroy_inode(
+ 	ASSERT_ALWAYS(!xfs_iflags_test(ip, XFS_IRECLAIM));
+ 
+ 	/*
+-	 * If we have nothing to flush with this inode then complete the
+-	 * teardown now, otherwise delay the flush operation.
++	 * we always use background reclaim here because even if the
++	 * inode is clean, it still may be under IO and hence we have
++	 * to take the flush lock. The background reclaim path handles
++	 * this more efficiently than we can here, so simply let background
++	 * reclaim tear down all inodes.
+ 	 */
+-	if (!xfs_inode_clean(ip)) {
+-		xfs_inode_set_reclaim_tag(ip);
+-		return;
+-	}
+-
+ out_reclaim:
+-	xfs_ireclaim(ip);
++	xfs_inode_set_reclaim_tag(ip);
+ }
+ 
+ /*
+diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+index 6d1cd6e..a1d7876 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.c
++++ b/fs/xfs/linux-2.6/xfs_sync.c
+@@ -700,6 +700,8 @@ xfs_reclaim_inode(
+ 	/*
+ 	 * In the case of a forced shutdown we rely on xfs_iflush() to
+ 	 * wait for the inode to be unpinned before returning an error.
++	 * Because we hold the flush lock, we know that the inode cannot
++	 * be under IO, so if it reports clean it can be reclaimed.
+ 	 */
+ 	if (!is_bad_inode(VFS_I(ip)) && !xfs_inode_clean(ip)) {
+ 		/*
+@@ -726,9 +728,16 @@ xfs_reclaim_inode(
+ 	return 0;
+ 
+ unlock_and_requeue:
++	/*
++	 * We could return EAGAIN here to make reclaim rescan the inode tree in
++	 * a short while. However, this just burns CPU time scanning the tree
++	 * waiting for IO to complete and xfssyncd never goes back to the idle
++	 * state. Instead, return 0 to let the next scheduled background reclaim
++	 * attempt to reclaim the inode again.
++	 */
+ 	xfs_iflags_clear(ip, XFS_IRECLAIM);
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-	return EAGAIN;
++	return 0;
+ }
+ 
+ void
 -- 
-Dave Chinner
-david@fromorbit.com
+1.6.5
 
 _______________________________________________
 xfs mailing list
