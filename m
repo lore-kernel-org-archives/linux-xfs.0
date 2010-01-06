@@ -1,16 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o06GrbVO095545 for <xfs@oss.sgi.com>; Wed, 6 Jan 2010 10:53:37 -0600
-Date: Wed, 6 Jan 2010 11:54:28 -0500
+	o06Gd3ts094279 for <xfs@oss.sgi.com>; Wed, 6 Jan 2010 10:39:05 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7B299ED7934
+	for <xfs@oss.sgi.com>; Wed,  6 Jan 2010 08:39:54 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id npyqBMEqHt6lMGMm for
+	<xfs@oss.sgi.com>; Wed, 06 Jan 2010 08:39:54 -0800 (PST)
+Date: Wed, 6 Jan 2010 11:39:53 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: fix timestamp handling in xfs_setattr
-Message-ID: <20100106165427.GD25393@infradead.org>
-References: <20091223160913.GA13039@infradead.org>
-	<1AB9A794DBDDF54A8A81BE2296F7BDFE012A6913@cf--amer001e--3.americas.sgi.com>
+Subject: Re: [PATCH] use CFLAGS in src/Makefile
+Message-ID: <20100106163953.GA4209@infradead.org>
+References: <alpine.DEB.2.01.1001021409290.3483@bogon.housecafe.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A6913@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <alpine.DEB.2.01.1001021409290.3483@bogon.housecafe.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,21 +28,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Christian Kujau <lists@nerdbynature.de>
+Cc: xfs@oss.sgi.com
 
-On Tue, Jan 05, 2010 at 07:02:02PM -0600, Alex Elder wrote:
-> This looks good to me, although I acknowledge I haven't worked through
-> it 100%.  Another reviewer would be good.  But even better, I really
-> want to see the gnulib timestamp unit tests into xfstests to verify
-> the behavior either way (which you indicated you'd work on...).  In
-> fact, if you've made any headway on it I'd like to run the tests against
-> this patch before committing it.
+On Sat, Jan 02, 2010 at 02:16:08PM -0800, Christian Kujau wrote:
+> Hi,
+> 
+> while compiling xfstests after configuring with a different CFLAGS value, 
+> gcc fails in ./src:
+> 
+> [...]
+> make[2]: Entering directory `/usr/local/src/xfstests-git/src'
+> gcc -g -O2 -DDEBUG  -I../include -DVERSION=\"1.0.0\" -L/opt/xfsprogs/lib  
+> -DREAD iopat.c -o preallo_rw_pattern_reader
+> iopat.c:21:21: error: xfs/xfs.h: No such file or directory
+> [...]
+> 
+> Somehow CFLAGS isn't passed to gcc, but "GCFLAGS" is. I'm not too savvy 
+> with the xfstests build system, but in include/builddefs.in we see:
+> 
+>    # Global, Platform, Local CFLAGS
+>    CFLAGS += $(GCFLAGS) $(PCFLAGS) $(LCFLAGS)
+> 
+> ...thus I'm proposing the following fix:
 
-I already have the original testcase wired up for xfstests, I just need
-to send out the patch after fixing some more bits.  I haven't looked
-at the whole gnulib timestamp tests yet.  Note that we'd need to look
-for an older GPLv2 version to not create even more licencing mess.
+This looks correct, or at least better than what we had before.
+But I really dislike how we defeat the abstraction used for compiling
+all the other tools.
+
+What might be better is to add a small
+preallo_rw_pattern_writer.c file that just contains:
+
+#define WRITE
+#include iopat.c
+
+and the same for the reader side and use the normal rules to compile
+the program.
 
 _______________________________________________
 xfs mailing list
