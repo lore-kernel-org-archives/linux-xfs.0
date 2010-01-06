@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o06923FM050775 for <xfs@oss.sgi.com>; Wed, 6 Jan 2010 03:02:04 -0600
-Received: from bob.dscon.sk (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5D158143F7F
-	for <xfs@oss.sgi.com>; Wed,  6 Jan 2010 01:02:54 -0800 (PST)
-Received: from bob.dscon.sk (bob.dscon.sk [88.86.113.10]) by cuda.sgi.com with
-	ESMTP id LjTLs4chjxghFfP2 for <xfs@oss.sgi.com>;
-	Wed, 06 Jan 2010 01:02:54 -0800 (PST)
-Date: Wed, 6 Jan 2010 10:02:53 +0100
-From: DS <xfs@bob.dscon.sk>
-Subject: Re: xfs 2.6.31.9 error - possibly SOLVED
-Message-ID: <20100106090253.GA19339@bob.dscon.sk>
-References: <20091228151048.GA24031@bob.dscon.sk>
-	<20091228232204.GB7613@discord.disaster>
+	o06GltNi095037 for <xfs@oss.sgi.com>; Wed, 6 Jan 2010 10:47:55 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 018EA146023
+	for <xfs@oss.sgi.com>; Wed,  6 Jan 2010 08:48:47 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id GTmrjpLEymOcSlVv for
+	<xfs@oss.sgi.com>; Wed, 06 Jan 2010 08:48:47 -0800 (PST)
+Date: Wed, 6 Jan 2010 11:48:44 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] remove bashisms from xfstests
+Message-ID: <20100106164844.GB4209@infradead.org>
+References: <alpine.DEB.2.01.1001030125040.3483@bogon.housecafe.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20091228232204.GB7613@discord.disaster>
+In-Reply-To: <alpine.DEB.2.01.1001030125040.3483@bogon.housecafe.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,53 +28,91 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christian Kujau <lists@nerdbynature.de>
+Cc: xfs@oss.sgi.com
 
-There was something wrong with the old FS and the kernel 2.6.31.9 (unable to replay log) has not been of much help.
-All works fine with kernel 2.6.27.42 and new clear FS  for a few days .
-
-Thanks.
-
-Dusan
-
-
-
-
-On Tue, Dec 29, 2009 at 10:22:04AM +1100, Dave Chinner wrote:
-> On Mon, Dec 28, 2009 at 04:10:48PM +0100, DS wrote:
-> > Hello,
-> > 
-> > after upgrade from Debian etch -> Debian lenny with custom kernel
-> > 2.6.31.9 (before 2.6.28.1) I see this error and server is
-> > resetting sometimes..
-> > 
-> > Filesystem was creating far far away (about 4years ago).
-> > 
-> > XFS internal error XFS_WANT_CORRUPTED_RETURN at line 366 of file fs/xfs/xfs_alloc.c.  Caller 0xffffffff81169ae3
+On Sun, Jan 03, 2010 at 02:30:05AM -0800, Christian Kujau wrote:
+> While trying to run xfstests, I encountered several errors due to the fact 
+> that my /bin/sh is not linked to /bin/bash but to dash(1), which can be 
+> made the default /bin/sh in Debian based systems. The patch below is 
+> rather large and is touching many files, but it's pretty straightfoward:
 > 
-> Any errors in the log before this (e.g. IO errors)?
-> 
-> > Pid: 4022, comm: procmail Not tainted 2.6.31.9 #3
-> > Call Trace:
-> >  [<ffffffff8118edfe>] xfs_error_report+0x3e/0x40
-> >  [<ffffffff811680fa>] xfs_alloc_fixup_trees+0x2ba/0x340
-> >  [<ffffffff81167de9>] ? xfs_alloc_get_rec+0x29/0x60
-> >  [<ffffffff81169ae3>] xfs_alloc_ag_vextent_near+0x3f3/0x940
-> >  [<ffffffff8116a105>] xfs_alloc_ag_vextent+0xd5/0x130
-> >  [<ffffffff8116aa68>] xfs_alloc_vextent+0x3a8/0x4f0
-> .....
-> 
-> Looks like a corrupted free space tree - that could have happened a
-> long time ago and only now are you tripping over it. I'd run
-> xfs_repair on the filesystem to fix up the problem. If it happens
-> again then we'll have to look deeper.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> 1) convert brace expansions (e.g. "rm -f symlink_{0,1,2,3}")
+
+I'll comment on these in detail below.
+
+> 2) convert "let..." into something (hopefully) more portable
+
+Dave converted these away from expr due to performance reasons.  I'd
+like too see a prove that performance hasn't regressed due to this
+change.
+
+> 3) replace 'a == b' with 'a = b' in bourne shell scripts
+
+This looks fine.  If you want feel free to submit these as a separate
+first patch so that we have the large pile sorted out.
+
+> -    rm -f symlink_{0,1,2,3}{0,1,2,3,4,5,6,7,8,9} symlink_self empty_file
+> +    rm -f symlink_* empty_file
+
+This kind of replacement looks fine.
+
+
+> -for f in symlink_{0,1,2,3}{0,1,2,3,4,5,6,7,8,9}
+> +f=1
+> +while [ $f -le 40 ]
+>  do
+> -    ln -s $o $f
+> +    ln -s $o symlink_$f
+>      o=$f
+> +    o=symlink_$f
+> +    f=$((f + 1))
+>  done
+
+I fear this might cause some overhead in the shell.  What about the
+following instead:
+
+for i in `seq 0 39`; do
+    ln -s $o symlink_$i
+    o=symlink_$i
+done
+
+Same applies to similar subsitutions.
+
+> diff -Nrup xfstests.orig/032 xfstests/032
+> --- xfstests.orig/032	2010-01-03 00:42:16.601617592 -0800
+> +++ xfstests/032	2010-01-03 00:43:56.321617592 -0800
+> @@ -66,6 +66,7 @@ do
+>  	[ $fs = ext3 ] && preargs="-F"
+>  	[ $fs = ext4 ] && preargs="-F"
+>  	[ $fs = ext4dev ] && preargs="-F"
+> +	[ $fs = nilfs2 ] && preargs="-q"
+
+This hunk is unrelated.  Please submit it with a trivial one-liner
+description and a signed-off-by line and I'll put it in.
+
+> -echo -e -n "\n\r*** XFS QA 044 - done\n\r\n\r" >/dev/console
+> +printf "\n\r*** XFS QA 044 - done\n\r\n\r" >/dev/console
+
+This looks okay, but should be mentioned in the patch description.
+
+>  echo "=== Recursive change ACL ==="
+>  rm -fr root
+> -mkdir root
+> -pushd root >/dev/null
+>  # create an arbitrary little tree
+>  for i in 1 2 3 4 5 6 7 8 9 0
+>  do
+> -	mkdir -p a/$i
+> -	mkdir -p b/c$i/$i
+> -	touch a/$i/mumble
+> +	mkdir -p root/a/$i
+> +	mkdir -p root/b/c$i/$i
+> +	touch root/a/$i/mumble
+>  done
+> -popd >/dev/null
+
+Same here.
 
 _______________________________________________
 xfs mailing list
