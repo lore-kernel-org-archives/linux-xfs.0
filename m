@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o06HMZN1098022 for <xfs@oss.sgi.com>; Wed, 6 Jan 2010 11:22:35 -0600
+	o06HZdtR098993 for <xfs@oss.sgi.com>; Wed, 6 Jan 2010 11:35:39 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CC1651DAF95C
-	for <xfs@oss.sgi.com>; Wed,  6 Jan 2010 09:23:27 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8D8BE146C2F
+	for <xfs@oss.sgi.com>; Wed,  6 Jan 2010 09:36:31 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id jp9OQB49MWssVoow for
-	<xfs@oss.sgi.com>; Wed, 06 Jan 2010 09:23:27 -0800 (PST)
-Date: Wed, 6 Jan 2010 12:23:19 -0500
+	by cuda.sgi.com with ESMTP id LOCfJSbhC8hAOG1i for
+	<xfs@oss.sgi.com>; Wed, 06 Jan 2010 09:36:31 -0800 (PST)
+Date: Wed, 6 Jan 2010 12:36:29 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH V3] sort: Introduce generic list_sort function
-Message-ID: <20100106172319.GA25046@infradead.org>
-References: <1262649295-28427-1-git-send-email-david__25057.2445955642$1262651404$gmane$org@fromorbit.com>
-	<87eim4dbzw.fsf@basil.nowhere.org>
-	<20100105122101.GR13802@discord.disaster>
-	<20100105125234.GD1778@basil.fritz.box>
+Subject: Re: lockdep: inconsistent lock state
+Message-ID: <20100106173628.GA14148@infradead.org>
+References: <alpine.DEB.2.01.0912261255380.3483@bogon.housecafe.de>
+	<20091227212700.GA7613@discord.disaster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100105125234.GD1778@basil.fritz.box>
+In-Reply-To: <20091227212700.GA7613@discord.disaster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,24 +29,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andi Kleen <andi@firstfloor.org>
-Cc: Artem Bityutskiy <dedekind@infradead.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Dave Airlie <airlied@redhat.com>, Adrian Hunter <adrian.hunter@nokia.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-On Tue, Jan 05, 2010 at 01:52:35PM +0100, Andi Kleen wrote:
-> > > Also it would seem cleaner to have it in a own file.
-> > 
-> > That might make sense if we had a large number of generic sort
-> > functions and it was difficult to tell the code apart, but we've
-> > only got 2 right now....
-> 
-> I was more thinking of the case that it can be easily made a lib-y
-> and then eliminated by the linker on non modular kernels if not needed
-> (unfortunately that would require putting the EXPORT_SYMBOL somewhere else)
+On Mon, Dec 28, 2009 at 08:27:00AM +1100, Dave Chinner wrote:
+> This is the usual false positive that is detected - XFS takes locks in
+> reclaim that it also takes in non-reclaim paths. The reclaim path
+> from kswapd inverts lock ordering and so we get this report. This
+> case has never been a deadlock case because an inode in reclaim
+> cannot be referenced by any other path, so once again it is a
+> false positive....
 
-lib-y doesn't work together with EXPORT_SYMBOL, having the export
-outside would also always pull it in.  These days the whole lib-y mess
-doesn't make sense anymore - if we really need an optional library
-symbol we can just pull it in through a Kconfig variable.
+This should be gone in 2.6.33-rc as we now tell lockdep about resetting
+the dependency graph for the iolock once entering the inode reclaim path.
 
 _______________________________________________
 xfs mailing list
