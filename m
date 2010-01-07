@@ -1,29 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o07AmaCW168063 for <xfs@oss.sgi.com>; Thu, 7 Jan 2010 04:48:36 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3B257150F9CD
-	for <xfs@oss.sgi.com>; Thu,  7 Jan 2010 02:49:26 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	pckkSS1jELQc0Hgn for <xfs@oss.sgi.com>;
-	Thu, 07 Jan 2010 02:49:26 -0800 (PST)
-Received: from discord (unverified [121.44.238.220])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	11302954-1927428
-	for <xfs@oss.sgi.com>; Thu, 07 Jan 2010 21:19:25 +1030 (CDT)
-Received: from dave by discord with local (Exim 4.69)
-	(envelope-from <david@fromorbit.com>) id 1NSpvf-0001RI-HQ
-	for xfs@oss.sgi.com; Thu, 07 Jan 2010 21:49:23 +1100
-Date: Thu, 7 Jan 2010 21:49:23 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/2] Fix inode reclaim problems (hopefully)
-Message-ID: <20100107104923.GZ13802@discord.disaster>
-References: <1262819125-27083-1-git-send-email-david@fromorbit.com>
+	o07GYPk0192995
+	for <linux-xfs@oss.sgi.com>; Thu, 7 Jan 2010 10:34:25 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 46FBA14B135
+	for <linux-xfs@oss.sgi.com>; Thu,  7 Jan 2010 08:35:17 -0800 (PST)
+Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
+	by cuda.sgi.com with ESMTP id vZyRGcAquGSk6k5R for
+	<linux-xfs@oss.sgi.com>; Thu, 07 Jan 2010 08:35:17 -0800 (PST)
+Message-ID: <26076.66.187.233.202.1262882117.squirrel@sandeen.net>
+In-Reply-To: <5d96567b1001062337w105194c8u8eff888444709925@mail.gmail.com>
+References: <5d96567b1001062337w105194c8u8eff888444709925@mail.gmail.com>
+Date: Thu, 7 Jan 2010 10:35:17 -0600 (CST)
+Subject: Re: how does sectsz is determined ?
+From: "Eric Sandeen" <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1262819125-27083-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,25 +28,73 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Raz <raziebe@gmail.com>
+Cc: linux-xfs@oss.sgi.com
 
-On Thu, Jan 07, 2010 at 10:05:23AM +1100, Dave Chinner wrote:
-> These two patches seem to fix the inode reclaim issues I've been
-> able to reproduce lately. The changes are still running xfsqa in a
-> loop to confirm this, but the directory/small file stress test I've
-> been running to trigger the problem has run for 10 hours with these
-> fixes instead of dying after 20-30 minutes.
+Raz wrote:
+> How does sectsz determined to be 512 or 4096 ?
+> I have an xfs file system over software raid , and sometimes I have
+> 1/2K sector size
+> and sometimes 4K . Problem is that direct io buffers are aligned to
+> 1/2k and not 4K.
+> kernel is 2.6.18-8.el5. thank you.
+> raz
+>
+>
+> meta-data=/dev/md5               isize=256    agcount=33, agsize=10992384
+> blks
+>          =                       sectsz=4096  attr=0
+> data     =                       bsize=4096   blocks=351780864, imaxpct=25
+>          =                       sunit=768    swidth=768 blks, unwritten=1
+> naming   =version 2              bsize=4096
+> log      =internal               bsize=4096   blocks=32768, version=2
+>          =                       sectsz=4096  sunit=1 blks
+> realtime =none                   extsz=3145728 blocks=0, rtextents=0
+>
 
-Still running xfsqa 11 hours later without any problem, so it looks
-like this series fixes the problem I was seeing. Score another win
-for the new tracing code :)
+for actual hardware sector size, see platform_findsizes(char *path, int
+fd, long long *sz, int *bsz) :
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+        if (ioctl(fd, BLKSSZGET, bsz) < 0) {
+                fprintf(stderr, _("%s: warning - cannot get sector size "
+                                "from block device %s: %s\n"),
+                        progname, path, strerror(errno));
+                *bsz = BBSIZE;
+        }
+
+but also for software raid, which is more relevant to your case:
+
+int
+md_get_subvol_stripe(
+        char            *dfile,
+        sv_type_t       type,
+        int             *sunit,
+        int             *swidth,
+        int             *sectalign,
+        struct stat64   *sb)
+{
+...
+                *sectalign = (md.level == 4 || md.level == 5 || md.level
+== 6);
+...
+}
+
+This sets ft->sectoralign,
+
+        if (ft.sectoralign) {
+                sectorsize = blocksize;
+                sectorlog = libxfs_highbit32(sectorsize);
+                if (loginternal) {
+                        lsectorsize = sectorsize;
+                        lsectorlog = sectorlog;
+                }
+        }
+
+IOW we set "sector size" to the block size to avoid md switching cache
+sizes...
+
+-Eric
 
 _______________________________________________
 xfs mailing list
