@@ -1,12 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o08Jk8WA068013 for <xfs@oss.sgi.com>; Fri, 8 Jan 2010 13:46:08 -0600
-From: Alex Elder <aelder@sgi.com>
-Message-Id: <201001081946.o08JksvX018976@stout.americas.sgi.com>
-Date: Fri, 08 Jan 2010 13:46:54 -0600
-Subject: [GIT PULL] XFS update 1 for 2.6.33-rc3
+	o08L10Hu072472 for <xfs@oss.sgi.com>; Fri, 8 Jan 2010 15:01:00 -0600
+Content-class: urn:content-classes:message
 MIME-Version: 1.0
+Subject: RE: [PATCH] XFS: Don't flush stale inodes
+Date: Fri, 8 Jan 2010 14:59:40 -0600
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A6936@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <1262399980-19277-1-git-send-email-david@fromorbit.com>
+From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,28 +21,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-I have a few other commits to send along but there's no sense
-in waiting for them.  I forgot to send this one before; it
-eliminates some i386 build warnings in certain environments.
+Dave Chinner wrote:
+> Because inodes remain in cache much longer than inode buffers do
+> under memory pressure, we can get the situation where we have stale,
+> dirty inodes being reclaimed but the backing storage has been freed.
+> Hence we should never, ever flush XFS_ISTALE inodes to disk as
+> there is no guarantee that the backing buffer is in cache and
+> still marked stale when the flush occurs.
 
-					-Alex
+Looks good.  Seems like this could be the source of
+some pretty gnarly problems.
 
-The following changes since commit 74d2e4f8d79ae0c4b6ec027958d5b18058662eea:
-  Linus Torvalds (1):
-        Linux 2.6.33-rc3
+> Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-are available in the git repository at:
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
-  git://oss.sgi.com/xfs/xfs for-linus
-
-Dave Chinner (1):
-      xfs: kill some warnings on i386 builds
-
- fs/xfs/linux-2.6/xfs_trace.h |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+> ---
+>  fs/xfs/xfs_inode.c |   10 +++++++---
+>  1 files changed, 7 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index c2618db..e5c9953 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -2846,10 +2846,14 @@ xfs_iflush(
+>  	mp = ip->i_mount;
+> 
+>  	/*
+> -	 * If the inode isn't dirty, then just release the inode
+> -	 * flush lock and do nothing.
+> +	 * If the inode isn't dirty, then just release the inode flush lock and
+> +	 * do nothing. Treat stale inodes the same; we cannot rely on the
+> +	 * backing buffer remaining stale in cache for the remaining life of
+> +	 * the stale inode and so xfs_itobp() below may give us a buffer that
+> +	 * no longer contains inodes below. Doing this stale check here also
+> +	 * avoids forcing the log on pinned, stale inodes.
+>  	 */
+> -	if (xfs_inode_clean(ip)) {
+> +	if (xfs_inode_clean(ip) || xfs_iflags_test(ip, XFS_ISTALE)) {
+>  		xfs_ifunlock(ip);
+>  		return 0;
+>  	}
 
 _______________________________________________
 xfs mailing list
