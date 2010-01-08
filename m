@@ -1,21 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o08Hh8Ip059783 for <xfs@oss.sgi.com>; Fri, 8 Jan 2010 11:43:08 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0B0FF1535DE
-	for <xfs@oss.sgi.com>; Fri,  8 Jan 2010 09:44:01 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id HcoFDSh1QdTmbjip for
-	<xfs@oss.sgi.com>; Fri, 08 Jan 2010 09:44:01 -0800 (PST)
-Date: Fri, 8 Jan 2010 12:44:00 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH V2] mkfs: handle 4k sector devices more cleanly
-Message-ID: <20100108174400.GA17634@infradead.org>
-References: <4B1E9A25.50108@redhat.com> <4B476171.4020701@sandeen.net>
+	o08IDq8a061864 for <xfs@oss.sgi.com>; Fri, 8 Jan 2010 12:13:52 -0600
+Received: from cf--amer001e--3.americas.sgi.com
+	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 713B7AC033
+	for <xfs@oss.sgi.com>; Fri,  8 Jan 2010 10:14:42 -0800 (PST)
+Content-class: urn:content-classes:message
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4B476171.4020701@sandeen.net>
+Subject: [PATCH 1/2] xfstests: 050: ignore duplicates reported by repquota
+Date: Fri, 8 Jan 2010 12:14:41 -0600
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A6933@cf--amer001e--3.americas.sgi.com>
+From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,85 +24,89 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Fri, Jan 08, 2010 at 10:46:41AM -0600, Eric Sandeen wrote:
-> +extern void platform_findsizes (char *path, int fd, long long *sz, int *bsz);
+Arrange to ignore duplicate entries reported by the "repquota"
+xfs_quota command.  This can happen if an id is used more than once
+(such as when two user names are assigned the same uid).
 
-Can you move the prototype from libxfs/init.h to include/libxfs.h
-instead of adding it to the .c file?
+Since we are already sorting the output we can accomplish this by
+adding the "-u" (unique) option to the sort command.  Shorten some
+long lines while we're at it.
 
-> +	/*
-> +	 * MD wants sector size set == block size to avoid switching.
-> +	 * Otherwise, if not specfied via command, use device sectorsize
-> +	 */
-> +	if (ft.sectoralign || !ssflag) {
-> +		if (ft.sectoralign)
-> +			sectorsize = blocksize;
-> +		else
-> +			sectorsize = ft.sectorsize;
+Signed-off-by: Alex Elder <aelder@sgi.com>
 
-This still confuses the heck out of me. What do you think about the
-incremental patch at the end of the mail?
+---
+ 050 |   24 ++++++++++++++++++------
+ 1 file changed, 18 insertions(+), 6 deletions(-)
 
->  	if (slflag || ssflag)
->  		xi.setblksize = sectorsize;
-> -	else
-> -		xi.setblksize = 1;
-
-So for the defaul case we now never set the sector size in the libxfs
-init.  This seems safe to me, but why did we do it before?  Could
-a previous user have left it set to a wrong value?
-
-Maye we should just do the xi.setblksize = sectorsize unconditionally?
-
-
-Index: xfsprogs-dev/mkfs/xfs_mkfs.c
+Index: b/050
 ===================================================================
---- xfsprogs-dev.orig/mkfs/xfs_mkfs.c	2010-01-08 18:33:53.619277529 +0100
-+++ xfsprogs-dev/mkfs/xfs_mkfs.c	2010-01-08 18:39:37.758005711 +0100
-@@ -1561,21 +1561,32 @@ main(
- 	memset(&ft, 0, sizeof(ft));
- 	get_topology(&xi, &ft);
+--- a/050
++++ b/050
+@@ -118,7 +118,9 @@
  
--	/*
--	 * MD wants sector size set == block size to avoid switching.
--	 * Otherwise, if not specfied via command, use device sectorsize
--	 */
-+	if (ft.sectoralign) {
-+		/*
-+		 * Older Linux software RAID versions want the sector size
-+		 * to match the block size to avoid switching I/O sizes.
-+		 * For the legacy libdisk case we thus set the sector size to
-+		 * match the block size.  For systems using libblkid we assume
-+		 * that the kernel is recent enough to not require this and
-+		 * ft.sectoralign will never be set.
-+		 */
-+		sectorsize = blocksize;
-+	} else if (!ssflag) {
-+		/*
-+		 * Unless specified manually on the command line use the
-+		 * advertised sector size of the device.
-+		 */
-+		sectorsize = ft.sectorsize;
-+	}
-+
- 	if (ft.sectoralign || !ssflag) {
--		if (ft.sectoralign)
--			sectorsize = blocksize;
--		else
--			sectorsize = ft.sectorsize;
- 		sectorlog = libxfs_highbit32(sectorsize);
- 		if (loginternal) {
- 			lsectorsize = sectorsize;
- 			lsectorlog = sectorlog;
- 		}
- 	}
-+
- 	if (sectorsize < XFS_MIN_SECTORSIZE ||
- 	    sectorsize > XFS_MAX_SECTORSIZE || sectorsize > blocksize) {
- 		fprintf(stderr, _("illegal sector size %d\n"), sectorsize);
+ 	echo
+ 	echo "*** report no quota settings" | tee -a $seq.full
+-	xfs_quota -D $tmp.projects -P $tmp.projid -x -c "repquota -birnN -$type" $SCRATCH_DEV | _filter_report | LC_COLLATE=POSIX sort -r
++	xfs_quota -D $tmp.projects -P $tmp.projid -x \
++		-c "repquota -birnN -$type" $SCRATCH_DEV |
++		_filter_report | LC_COLLATE=POSIX sort -ru
+ 
+ 	echo
+ 	echo "*** report initial settings" | tee -a $seq.full
+@@ -129,20 +131,26 @@
+ 		-c "limit -$type bsoft=${bsoft}k bhard=${bhard}k $id" \
+ 		-c "limit -$type isoft=$isoft ihard=$ihard $id" \
+ 		$SCRATCH_DEV
+-	xfs_quota -D $tmp.projects -P $tmp.projid -x -c "repquota -birnN -$type" $SCRATCH_DEV | _filter_report | LC_COLLATE=POSIX sort -r
++	xfs_quota -D $tmp.projects -P $tmp.projid -x \
++		-c "repquota -birnN -$type" $SCRATCH_DEV |
++		_filter_report | LC_COLLATE=POSIX sort -ru
+ 
+ 	echo
+ 	echo "*** push past the soft inode limit" | tee -a $seq.full
+ 	_file_as_id $SCRATCH_MNT/softie1 $id $type 1024 0
+ 	_file_as_id $SCRATCH_MNT/softie2 $id $type 1024 0
+ 	_qmount
+-	xfs_quota -D $tmp.projects -P $tmp.projid -x -c "repquota -birnN -$type" $SCRATCH_DEV | _filter_report | LC_COLLATE=POSIX sort -r
++	xfs_quota -D $tmp.projects -P $tmp.projid -x \
++		-c "repquota -birnN -$type" $SCRATCH_DEV |
++		_filter_report | LC_COLLATE=POSIX sort -ru
+ 
+ 	echo
+ 	echo "*** push past the soft block limit" | tee -a $seq.full
+ 	_file_as_id $SCRATCH_MNT/softie $id $type 1024 140
+ 	_qmount
+-	xfs_quota -D $tmp.projects -P $tmp.projid -x -c "repquota -birnN -$type" $SCRATCH_DEV | _filter_report | LC_COLLATE=POSIX sort -r
++	xfs_quota -D $tmp.projects -P $tmp.projid -x \
++		-c "repquota -birnN -$type" $SCRATCH_DEV |
++		_filter_report | LC_COLLATE=POSIX sort -ru
+ 
+ 	echo
+ 	# Note: for quota accounting (not enforcement), EDQUOT is not expected
+@@ -152,7 +160,9 @@
+ 		_file_as_id $SCRATCH_MNT/hard$i $id $type 1024 0
+ 	done
+ 	_qmount
+-	xfs_quota -D $tmp.projects -P $tmp.projid -x -c "repquota -birnN -$type" $SCRATCH_DEV | _filter_report | LC_COLLATE=POSIX sort -r
++	xfs_quota -D $tmp.projects -P $tmp.projid -x \
++		-c "repquota -birnN -$type" $SCRATCH_DEV |
++		_filter_report | LC_COLLATE=POSIX sort -ru
+ 
+ 	echo
+ 	# Note: for quota accounting (not enforcement), EDQUOT is not expected
+@@ -161,7 +171,9 @@
+ 	echo "ls -l $SCRATCH_MNT" >>$seq.full
+ 	ls -l $SCRATCH_MNT >>$seq.full
+ 	_qmount
+-	xfs_quota -D $tmp.projects -P $tmp.projid -x -c "repquota -birnN -$type" $SCRATCH_DEV | _filter_and_check_blks | LC_COLLATE=POSIX sort -r
++	xfs_quota -D $tmp.projects -P $tmp.projid -x \
++		-c "repquota -birnN -$type" $SCRATCH_DEV |
++		_filter_and_check_blks | LC_COLLATE=POSIX sort -ru
+ 
+ 	echo
+ 	echo "*** unmount"
 
 _______________________________________________
 xfs mailing list
