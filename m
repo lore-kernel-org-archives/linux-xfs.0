@@ -1,17 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o08IDq8a061864 for <xfs@oss.sgi.com>; Fri, 8 Jan 2010 12:13:52 -0600
-Received: from cf--amer001e--3.americas.sgi.com
-	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 713B7AC033
-	for <xfs@oss.sgi.com>; Fri,  8 Jan 2010 10:14:42 -0800 (PST)
-Content-class: urn:content-classes:message
+	o08Jk8WA068013 for <xfs@oss.sgi.com>; Fri, 8 Jan 2010 13:46:08 -0600
+From: Alex Elder <aelder@sgi.com>
+Message-Id: <201001081946.o08JksvX018976@stout.americas.sgi.com>
+Date: Fri, 08 Jan 2010 13:46:54 -0600
+Subject: [GIT PULL] XFS update 1 for 2.6.33-rc3
 MIME-Version: 1.0
-Subject: [PATCH 1/2] xfstests: 050: ignore duplicates reported by repquota
-Date: Fri, 8 Jan 2010 12:14:41 -0600
-Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A6933@cf--amer001e--3.americas.sgi.com>
-From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,89 +19,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Arrange to ignore duplicate entries reported by the "repquota"
-xfs_quota command.  This can happen if an id is used more than once
-(such as when two user names are assigned the same uid).
+I have a few other commits to send along but there's no sense
+in waiting for them.  I forgot to send this one before; it
+eliminates some i386 build warnings in certain environments.
 
-Since we are already sorting the output we can accomplish this by
-adding the "-u" (unique) option to the sort command.  Shorten some
-long lines while we're at it.
+					-Alex
 
-Signed-off-by: Alex Elder <aelder@sgi.com>
+The following changes since commit 74d2e4f8d79ae0c4b6ec027958d5b18058662eea:
+  Linus Torvalds (1):
+        Linux 2.6.33-rc3
 
----
- 050 |   24 ++++++++++++++++++------
- 1 file changed, 18 insertions(+), 6 deletions(-)
+are available in the git repository at:
 
-Index: b/050
-===================================================================
---- a/050
-+++ b/050
-@@ -118,7 +118,9 @@
- 
- 	echo
- 	echo "*** report no quota settings" | tee -a $seq.full
--	xfs_quota -D $tmp.projects -P $tmp.projid -x -c "repquota -birnN -$type" $SCRATCH_DEV | _filter_report | LC_COLLATE=POSIX sort -r
-+	xfs_quota -D $tmp.projects -P $tmp.projid -x \
-+		-c "repquota -birnN -$type" $SCRATCH_DEV |
-+		_filter_report | LC_COLLATE=POSIX sort -ru
- 
- 	echo
- 	echo "*** report initial settings" | tee -a $seq.full
-@@ -129,20 +131,26 @@
- 		-c "limit -$type bsoft=${bsoft}k bhard=${bhard}k $id" \
- 		-c "limit -$type isoft=$isoft ihard=$ihard $id" \
- 		$SCRATCH_DEV
--	xfs_quota -D $tmp.projects -P $tmp.projid -x -c "repquota -birnN -$type" $SCRATCH_DEV | _filter_report | LC_COLLATE=POSIX sort -r
-+	xfs_quota -D $tmp.projects -P $tmp.projid -x \
-+		-c "repquota -birnN -$type" $SCRATCH_DEV |
-+		_filter_report | LC_COLLATE=POSIX sort -ru
- 
- 	echo
- 	echo "*** push past the soft inode limit" | tee -a $seq.full
- 	_file_as_id $SCRATCH_MNT/softie1 $id $type 1024 0
- 	_file_as_id $SCRATCH_MNT/softie2 $id $type 1024 0
- 	_qmount
--	xfs_quota -D $tmp.projects -P $tmp.projid -x -c "repquota -birnN -$type" $SCRATCH_DEV | _filter_report | LC_COLLATE=POSIX sort -r
-+	xfs_quota -D $tmp.projects -P $tmp.projid -x \
-+		-c "repquota -birnN -$type" $SCRATCH_DEV |
-+		_filter_report | LC_COLLATE=POSIX sort -ru
- 
- 	echo
- 	echo "*** push past the soft block limit" | tee -a $seq.full
- 	_file_as_id $SCRATCH_MNT/softie $id $type 1024 140
- 	_qmount
--	xfs_quota -D $tmp.projects -P $tmp.projid -x -c "repquota -birnN -$type" $SCRATCH_DEV | _filter_report | LC_COLLATE=POSIX sort -r
-+	xfs_quota -D $tmp.projects -P $tmp.projid -x \
-+		-c "repquota -birnN -$type" $SCRATCH_DEV |
-+		_filter_report | LC_COLLATE=POSIX sort -ru
- 
- 	echo
- 	# Note: for quota accounting (not enforcement), EDQUOT is not expected
-@@ -152,7 +160,9 @@
- 		_file_as_id $SCRATCH_MNT/hard$i $id $type 1024 0
- 	done
- 	_qmount
--	xfs_quota -D $tmp.projects -P $tmp.projid -x -c "repquota -birnN -$type" $SCRATCH_DEV | _filter_report | LC_COLLATE=POSIX sort -r
-+	xfs_quota -D $tmp.projects -P $tmp.projid -x \
-+		-c "repquota -birnN -$type" $SCRATCH_DEV |
-+		_filter_report | LC_COLLATE=POSIX sort -ru
- 
- 	echo
- 	# Note: for quota accounting (not enforcement), EDQUOT is not expected
-@@ -161,7 +171,9 @@
- 	echo "ls -l $SCRATCH_MNT" >>$seq.full
- 	ls -l $SCRATCH_MNT >>$seq.full
- 	_qmount
--	xfs_quota -D $tmp.projects -P $tmp.projid -x -c "repquota -birnN -$type" $SCRATCH_DEV | _filter_and_check_blks | LC_COLLATE=POSIX sort -r
-+	xfs_quota -D $tmp.projects -P $tmp.projid -x \
-+		-c "repquota -birnN -$type" $SCRATCH_DEV |
-+		_filter_and_check_blks | LC_COLLATE=POSIX sort -ru
- 
- 	echo
- 	echo "*** unmount"
+  git://oss.sgi.com/xfs/xfs for-linus
+
+Dave Chinner (1):
+      xfs: kill some warnings on i386 builds
+
+ fs/xfs/linux-2.6/xfs_trace.h |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
 _______________________________________________
 xfs mailing list
