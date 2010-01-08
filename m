@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o08AJnn4029267 for <xfs@oss.sgi.com>; Fri, 8 Jan 2010 04:19:49 -0600
+	o08ADknQ028683 for <xfs@oss.sgi.com>; Fri, 8 Jan 2010 04:13:49 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A1BDC1C3B563
-	for <xfs@oss.sgi.com>; Fri,  8 Jan 2010 02:20:42 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 11FB21C3B430
+	for <xfs@oss.sgi.com>; Fri,  8 Jan 2010 02:14:39 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id f6O1qTH1552SyWFA for
-	<xfs@oss.sgi.com>; Fri, 08 Jan 2010 02:20:42 -0800 (PST)
-Date: Fri, 8 Jan 2010 05:20:42 -0500
+	by cuda.sgi.com with ESMTP id 5M0rCwXsxpQAsq8y for
+	<xfs@oss.sgi.com>; Fri, 08 Jan 2010 02:14:39 -0800 (PST)
+Date: Fri, 8 Jan 2010 05:14:37 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/2] xfs: reclaim inodes under a write lock
-Message-ID: <20100108102042.GA16640@infradead.org>
-References: <1262819125-27083-1-git-send-email-david@fromorbit.com>
-	<1262819125-27083-2-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 0/3] Kill async inode writeback V2
+Message-ID: <20100108101437.GA19491@infradead.org>
+References: <1262649861-28530-1-git-send-email-david@fromorbit.com>
+	<20100106180800.GA9613@infradead.org>
+	<20100106224944.GW13802@discord.disaster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1262819125-27083-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <20100106224944.GW13802@discord.disaster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,70 +31,36 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Thu, Jan 07, 2010 at 10:05:24AM +1100, Dave Chinner wrote:
-> Make the inode tree reclaim walk exclusive to avoid races with
-> concurrent sync walkers and lookups. This is a version of
-> a patch posted by Christoph Hellwig that avoids all the code
-> duplication.
+On Thu, Jan 07, 2010 at 09:49:44AM +1100, Dave Chinner wrote:
+> On Wed, Jan 06, 2010 at 01:08:00PM -0500, Christoph Hellwig wrote:
+> > Btw, after this series XFS_IFLUSH_DELWRI_ELSE_SYNC is also unused,
+> > might be worth to throw something like the patch below in to clean
+> > up xfs_iflush:
+> 
+> Yes, makes sense. I'll add the patch to my QA series after updating
+> it for the slight changes to the unmount reclaim I ahd in the
+> second posting of the patch. Can I get a signoff from you for this?
 
-I don't like the write_lock flag very much, but given that the other
-option is duplication we might have to live it.
 
-> -	/*
-> -	 * If we can't get a reference on the inode, it must be in reclaim.
-> -	 * Leave it for the reclaim code to flush. Also avoid inodes that
-> -	 * haven't been fully initialised.
-> -	 */
-> +	/* avoid new or reclaimable inodes. Leave for reclaim code to flush */
-> +	if (xfs_iflags_test(ip, XFS_INEW | XFS_IRECLAIMABLE | XFS_IRECLAIM)) {
-> +		read_unlock(&pag->pag_ici_lock);
-> +		return ENOENT;
-> +	}
-> +
-> +	/* If we can't get a reference on the inode, it must be in reclaim. */
->  	if (!igrab(inode)) {
->  		read_unlock(&pag->pag_ici_lock);
->  		return ENOENT;
->  	}
->  	read_unlock(&pag->pag_ici_lock);
->  
-> -	if (is_bad_inode(inode) || xfs_iflags_test(ip, XFS_INEW)) {
-> +	if (is_bad_inode(inode)) {
->  		IRELE(ip);
->  		return ENOENT;
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-That's an unrelated change and should be a separate patch.
+> 
+> > I'm also not sure we do enough of the noblock calls either with or
+> > without your series.  There seem to be a lot more non-blocking sync
+> > calls than iflush calls.
+> 
+> I don't quite follow - inode flushes from the bdi threads should be
+> the majority of flushes (i.e. from xfs_fs_write_inode()) and they
+> are non-blocking. the xfssyncd does delwri writeback (maybe that
+> should be non-blocking and then we can get rid of that flag, too),
+> so the only sync inode writeback path is from xfs_fs_write_inode()
+> for sync flushing, as well as the unmount reclaim path....
 
-> @@ -791,12 +779,22 @@ xfs_reclaim_inode_now(
->  	struct xfs_perag	*pag,
->  	int			flags)
->  {
-> +	/*
-> +	 * The radix tree lock here protects a thread in xfs_iget from racing
-> +	 * with us starting reclaim on the inode.  Once we have the
-> +	 * XFS_IRECLAIM flag set it will not touch us.
-> +	 */
-> +	spin_lock(&ip->i_flags_lock);
-> +	ASSERT_ALWAYS(__xfs_iflags_test(ip, XFS_IRECLAIMABLE));
-> +	if (__xfs_iflags_test(ip, XFS_IRECLAIM)) {
-> +		/* ignore as it is already under reclaim */
-> +		spin_unlock(&ip->i_flags_lock);
-> +		write_unlock(&pag->pag_ici_lock);
->  		return 0;
->  	}
-> +	__xfs_iflags_set(ip, XFS_IRECLAIM);
-> +	spin_unlock(&ip->i_flags_lock);
-> +	write_unlock(&pag->pag_ici_lock);
->  
->  	return xfs_reclaim_inode(ip, flags);
-
-Once you move things around please merge xfs_reclaim_inode_now and
-xfs_reclaim_inode into a single function.
-
-And yes, all this currently doesn't apply against the XFS tree or
-mainline, but you know that already.
+Sorry, I mean non-blocking delwri calls above.  xfs_sync_worker should
+certainly be non-blocking as the whole daemon is operating that way. And
+possibly xfs_sync_attr as well.
 
 _______________________________________________
 xfs mailing list
