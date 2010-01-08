@@ -1,20 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o08GjoeQ055771 for <xfs@oss.sgi.com>; Fri, 8 Jan 2010 10:45:50 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 28FF3153217
-	for <xfs@oss.sgi.com>; Fri,  8 Jan 2010 08:46:42 -0800 (PST)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id 5vsCA9HztnsoM18O for
-	<xfs@oss.sgi.com>; Fri, 08 Jan 2010 08:46:42 -0800 (PST)
-Message-ID: <4B476171.4020701@sandeen.net>
-Date: Fri, 08 Jan 2010 10:46:41 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: [PATCH V2] mkfs: handle 4k sector devices more cleanly
-References: <4B1E9A25.50108@redhat.com>
-In-Reply-To: <4B1E9A25.50108@redhat.com>
+	o08Hi6vI059871 for <xfs@oss.sgi.com>; Fri, 8 Jan 2010 11:44:06 -0600
+Date: Fri, 8 Jan 2010 09:44:28 -0800
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: [GIT PULL] XFS update for 2.6.33-rc1
+Message-Id: <20100108094428.ff03c720.randy.dunlap@oracle.com>
+In-Reply-To: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A687F@cf--amer001e--3.americas.sgi.com>
+References: <20091217002007.GF4850@discord.disaster>
+	<1AB9A794DBDDF54A8A81BE2296F7BDFE012A687F@cf--amer001e--3.americas.sgi.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,160 +22,58 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
+To: Alex Elder <aelder@sgi.com>
+Cc: torvalds@linux-foundation.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Trying to mkfs a 4k sector device today fails w/o manually specifying
-sector size:
+On Wed, 16 Dec 2009 21:41:12 -0600 Alex Elder wrote:
 
-# modprobe scsi_debug sector_size=4096 dev_size_mb=32
-# mkfs.xfs -f /dev/sdc
-mkfs.xfs: warning - cannot set blocksize on block device /dev/sdc: Invalid argument
-Warning: the data subvolume sector size 512 is less than the sector size 
-reported by the device (4096).
-... <fail>
+> Dave Chinner wrote:
+> > On Wed, Dec 16, 2009 at 01:55:12PM -0800, Randy Dunlap wrote:
+> >> On Wed, 16 Dec 2009 15:26:10 -0600 Alex Elder wrote:
+> >> 
+> >>> One more XFS update for -rc1, now that the new XFS tracing code has
+> >>> been committed.
+> >> 
+> >> Sorry if I have missed it, but have the printk format warnings
+> >> on i386 builds been fixed?
+> > 
+> > I don't see any here w/ gcc 4.3.4 x86-64 compiling i386 kernels....
+> 
+> I didn't get them either when I built in my environment.
+> 
+> Dave, your patch looks good to me, and Randy has acked it
+> so I'm going to pull it into our XFS top-of-tree.  I'll
+> hold off sending yet another pull request to Linus for
+> now.  Thanks for addressing it quickly.
+> 
+> 					-Alex
 
-add sectorsize to the device topology info, and use that if present.
+Hi Alex,
+Dave's patch is now needed in Linus's mainline kernel tree...
 
-Also check that explicitly requested sector sizes are not smaller
-than the hardware size.  This already fails today, but with the more
-cryptic "cannot set blocksize" ioctl error above.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> > /me hates gcc's warning inconsistencies with a passion.
+> > 
+> >> e.g.:
+> >> 
+> >> In file included from linux-next-20091216/include/trace/ftrace.h:398,
+> >>                  from linux-next-20091216/include/trace/define_trace.h:69,
+> >>                  from linux-next-20091216/fs/xfs/linux-2.6/xfs_trace.h:1369,
+> >>                  from linux-next-20091216/fs/xfs/linux-2.6/xfs_trace.c:75:
+> >> linux-next-20091216/fs/xfs/linux-2.6/./xfs_trace.h: In function
+> >> 'ftrace_raw_output_id_xfs_iomap_enter': linux-next-20091216/fs/xfs/linux-2.6/./xfs_trace.h:830:
+> >> warning: format '%llx' expects type 'long long unsigned int', but argument 12 has type
+> >> 'xfs_fsblock_t'  
+> > 
+> > Patch that should fix this below.
+> > 
+> > Cheers,
+> > 
+> > Dave.
+
+
 ---
-
-diff --git a/libxfs/linux.c b/libxfs/linux.c
-index bc49903..2e07d54 100644
---- a/libxfs/linux.c
-+++ b/libxfs/linux.c
-@@ -112,9 +112,9 @@ platform_set_blocksize(int fd, char *path, dev_t device, int blocksize, int fata
- 	if (major(device) != RAMDISK_MAJOR) {
- 		if ((error = ioctl(fd, BLKBSZSET, &blocksize)) < 0) {
- 			fprintf(stderr, _("%s: %s - cannot set blocksize "
--					"on block device %s: %s\n"),
-+					"%d on block device %s: %s\n"),
- 				progname, fatal ? "error": "warning",
--				path, strerror(errno));
-+				blocksize, path, strerror(errno));
- 		}
- 	}
- 	return error;
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index d3ed00a..356dcb4 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -33,6 +33,7 @@ struct fs_topology {
- 	int	dsunit;		/* stripe unit - data subvolume */
- 	int	dswidth;	/* stripe width - data subvolume */
- 	int	rtswidth;	/* stripe width - rt subvolume */
-+	int	sectorsize;
- 	int	sectoralign;
- };
- 
-@@ -320,7 +321,7 @@ out_free_probe:
- 	return ret;
- }
- 
--static void blkid_get_topology(const char *device, int *sunit, int *swidth)
-+static void blkid_get_topology(const char *device, int *sunit, int *swidth, int *sectorsize)
- {
- 	blkid_topology tp;
- 	blkid_probe pr;
-@@ -348,6 +349,8 @@ static void blkid_get_topology(const char *device, int *sunit, int *swidth)
- 	val = blkid_topology_get_optimal_io_size(tp) >> 9;
- 	if (val > 1)
- 		*swidth = val;
-+	val = blkid_probe_get_sectorsize(pr);
-+	*sectorsize = val;
- 
- 	if (blkid_topology_get_alignment_offset(tp) != 0) {
- 		fprintf(stderr,
-@@ -370,13 +373,14 @@ static void get_topology(libxfs_init_t *xi, struct fs_topology *ft)
- 	if (!xi->disfile) {
- 		const char *dfile = xi->volname ? xi->volname : xi->dname;
- 
--		blkid_get_topology(dfile, &ft->dsunit, &ft->dswidth);
-+		blkid_get_topology(dfile, &ft->dsunit, &ft->dswidth,
-+				   &ft->sectorsize);
- 	}
- 
- 	if (xi->rtname && !xi->risfile) {
- 		int dummy;
- 
--		blkid_get_topology(xi->rtname, &dummy, &ft->rtswidth);
-+		blkid_get_topology(xi->rtname, &dummy, &ft->rtswidth, &dummy);
- 	}
- }
- #else /* ENABLE_BLKID */
-@@ -403,15 +407,29 @@ check_overwrite(
- 	return 0;
- }
- 
-+extern void platform_findsizes (char *path, int fd, long long *sz, int *bsz);
-+
- static void get_topology(libxfs_init_t *xi, struct fs_topology *ft)
- {
- 	char *dfile = xi->volname ? xi->volname : xi->dname;
-+	int bsz = BBSIZE;
- 
- 	if (!xi->disfile) {
-+		int fd;
-+		long long dummy;
-+
- 		get_subvol_stripe_wrapper(dfile, SVTYPE_DATA,
- 				&ft->dsunit, &ft->dswidth, &ft->sectoralign);
-+		fd = open(dfile, O_RDONLY);
-+		/* If this fails we just fall back to BBSIZE */
-+		if (fd) {
-+			platform_findsizes(dfile, fd, &dummy, &bsz);
-+			close(fd);
-+		}
- 	}
- 
-+	ft->sectorsize = bsz;
-+
- 	if (xi->rtname && !xi->risfile) {
- 		int dummy1;
- 
-@@ -1543,8 +1561,15 @@ main(
- 	memset(&ft, 0, sizeof(ft));
- 	get_topology(&xi, &ft);
- 
--	if (ft.sectoralign) {
--		sectorsize = blocksize;
-+	/*
-+	 * MD wants sector size set == block size to avoid switching.
-+	 * Otherwise, if not specfied via command, use device sectorsize
-+	 */
-+	if (ft.sectoralign || !ssflag) {
-+		if (ft.sectoralign)
-+			sectorsize = blocksize;
-+		else
-+			sectorsize = ft.sectorsize;
- 		sectorlog = libxfs_highbit32(sectorsize);
- 		if (loginternal) {
- 			lsectorsize = sectorsize;
-@@ -1556,6 +1581,11 @@ main(
- 		fprintf(stderr, _("illegal sector size %d\n"), sectorsize);
- 		usage();
- 	}
-+	if (sectorsize < ft.sectorsize) {
-+		fprintf(stderr, _("illegal sector size %d; hw sector is %d\n"),
-+			sectorsize, ft.sectorsize);
-+		usage();
-+	}
- 	if (lsectorsize < XFS_MIN_SECTORSIZE ||
- 	    lsectorsize > XFS_MAX_SECTORSIZE || lsectorsize > blocksize) {
- 		fprintf(stderr, _("illegal log sector size %d\n"), lsectorsize);
-@@ -1751,8 +1781,6 @@ main(
- 
- 	if (slflag || ssflag)
- 		xi.setblksize = sectorsize;
--	else
--		xi.setblksize = 1;
- 
- 	/*
- 	 * Initialize.  This will open the log and rt devices as well.
+~Randy
 
 _______________________________________________
 xfs mailing list
