@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o09M25Sa204916 for <xfs@oss.sgi.com>; Sat, 9 Jan 2010 16:02:05 -0600
-Received: from mail.SerNet.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8577E1C3EA0E
-	for <xfs@oss.sgi.com>; Sat,  9 Jan 2010 14:02:57 -0800 (PST)
-Received: from mail.SerNet.de (mail.SerNet.de [193.175.80.2]) by cuda.sgi.com
-	with ESMTP id JOYbyyVb4pIHtjlh for <xfs@oss.sgi.com>;
-	Sat, 09 Jan 2010 14:02:57 -0800 (PST)
-Received: from intern.SerNet.DE by mail.SerNet.DE with esmtp (Exim 4.63 #1)
-	for xfs@oss.sgi.com
-	id 1NTjOZ-00045W-Sm; Sat, 09 Jan 2010 23:02:55 +0100
-Received: from bjacke by pell.sernet.de with local (Exim 4.69)
-	(envelope-from <bjacke@sernet.de>) id 1NTjOV-0004oI-H9
-	for xfs@oss.sgi.com; Sat, 09 Jan 2010 23:02:51 +0100
-Date: Sat, 9 Jan 2010 23:02:51 +0100
-From: =?iso-8859-1?Q?Bj=F6rn?= JACKE <bj@sernet.de>
-Subject: library to speed up posix_fallocate for XFS
+	o09McVwV207880 for <xfs@oss.sgi.com>; Sat, 9 Jan 2010 16:38:32 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7D2741C3EA99
+	for <xfs@oss.sgi.com>; Sat,  9 Jan 2010 14:39:24 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
+	[150.101.137.102]) by cuda.sgi.com with ESMTP id
+	71HkZ37tMwTn2LEX for <xfs@oss.sgi.com>;
+	Sat, 09 Jan 2010 14:39:24 -0800 (PST)
+Date: Sun, 10 Jan 2010 09:39:20 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Re: [PATCH v2] xfs: Don't flush stale inodes
+Message-ID: <20100109223920.GA4019@discord.disaster>
+References: <20100109000927.GE8654@discord.disaster>
+	<1AB9A794DBDDF54A8A81BE2296F7BDFE012A693B@cf--amer001e--3.americas.sgi.com>
 MIME-Version: 1.0
-Message-Id: <E1NTjOZ-001wx2-Iz@intern.SerNet.DE>
+Content-Disposition: inline
+In-Reply-To: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A693B@cf--amer001e--3.americas.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,65 +26,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============2085746635492730077=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: xfs@oss.sgi.com
 
+On Sat, Jan 09, 2010 at 10:22:14AM -0600, Alex Elder wrote:
+> Yes, I see that now.  I had marked your older one "Reviewed" and
+> didn't look further.  I will re-do the port and will re-submit.
+> BTW I also plan to port the perag radix tree patch(es) over this
+> for you after I get this one published.
 
---===============2085746635492730077==
-Content-Type: multipart/signed; micalg=pgp-ripemd160;
-	protocol="application/pgp-signature"; boundary="82I3+IH0IqGh5yIs"
-Content-Disposition: inline
+Don't make extra work for yourself that slows down the rate at which
+you can merge stuff. When the tree is updated with these patches,
+I'll fix any conflicts in my patches and retest them, then send them
+to the list again.
 
+As a maintainer, manually munging a bunch patches around to fit,
+then asking if they are correct, then finally merging them doesn't
+scale - push that work back out to the patch authors where it does
+scale and who have probably already done the work.... ;)
 
---82I3+IH0IqGh5yIs
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Cheers,
 
-Hi,
-
-some of you might be interested in this little LD_PRELOAD'able library, whi=
-ch
-makes posix_fallocate() use XFS' unwritten extents via xfsctl:
-
-http://repo.or.cz/w/libposix_fallocate_xfs.git
-
-You won't need this if you have Kernel 2.6.25 and glibc 2.10 - in that case
-kernel, glibc and filesystem work well together. If you don't have such an
-up-to-date system libposix_fallocate_xfs can help you to improve this call.=
- It
-works exactly like posix_fallocate() should do but it maps that funktion to
-much more efficient code adapted for XFS.
-
-Cheers
-Bj=F6rn
-
---82I3+IH0IqGh5yIs
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.13 (GNU/Linux)
-
-iEYEAREDAAYFAktI/QsACgkQdoo0s+hIejls/QCg21flioD5LfJWNneF5KkXoHRh
-m2gAnizx3zHhxstyIknBOhyGJx2aeVGX
-=pheo
------END PGP SIGNATURE-----
-
---82I3+IH0IqGh5yIs--
-
-
---===============2085746635492730077==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============2085746635492730077==--
