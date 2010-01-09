@@ -1,17 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o09JYmSe190328 for <xfs@oss.sgi.com>; Sat, 9 Jan 2010 13:34:50 -0600
-Date: Sat, 9 Jan 2010 14:35:14 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH, updated]  xfs: Ensure we force all busy extents in
-	range to disk
-Message-ID: <20100109193514.GA12372@infradead.org>
-References: <20100109000927.GE8654@discord.disaster>
-	<1AB9A794DBDDF54A8A81BE2296F7BDFE012A693C@cf--amer001e--3.americas.sgi.com>
+	o09M25Sa204916 for <xfs@oss.sgi.com>; Sat, 9 Jan 2010 16:02:05 -0600
+Received: from mail.SerNet.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8577E1C3EA0E
+	for <xfs@oss.sgi.com>; Sat,  9 Jan 2010 14:02:57 -0800 (PST)
+Received: from mail.SerNet.de (mail.SerNet.de [193.175.80.2]) by cuda.sgi.com
+	with ESMTP id JOYbyyVb4pIHtjlh for <xfs@oss.sgi.com>;
+	Sat, 09 Jan 2010 14:02:57 -0800 (PST)
+Received: from intern.SerNet.DE by mail.SerNet.DE with esmtp (Exim 4.63 #1)
+	for xfs@oss.sgi.com
+	id 1NTjOZ-00045W-Sm; Sat, 09 Jan 2010 23:02:55 +0100
+Received: from bjacke by pell.sernet.de with local (Exim 4.69)
+	(envelope-from <bjacke@sernet.de>) id 1NTjOV-0004oI-H9
+	for xfs@oss.sgi.com; Sat, 09 Jan 2010 23:02:51 +0100
+Date: Sat, 9 Jan 2010 23:02:51 +0100
+From: =?iso-8859-1?Q?Bj=F6rn?= JACKE <bj@sernet.de>
+Subject: library to speed up posix_fallocate for XFS
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A693C@cf--amer001e--3.americas.sgi.com>
+Message-Id: <E1NTjOZ-001wx2-Iz@intern.SerNet.DE>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,31 +27,65 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============2085746635492730077=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
 
-Looks good,
+--===============2085746635492730077==
+Content-Type: multipart/signed; micalg=pgp-ripemd160;
+	protocol="application/pgp-signature"; boundary="82I3+IH0IqGh5yIs"
+Content-Disposition: inline
 
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+--82I3+IH0IqGh5yIs
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
->  TRACE_EVENT(xfs_alloc_busysearch,
->  	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t agbno,
-> -		 xfs_extlen_t len, int found),
-> -	TP_ARGS(mp, agno, agbno, len, found),
-> +		 xfs_extlen_t len, int found, xfs_lsn_t lsn),
-> +	TP_ARGS(mp, agno, agbno, len, found, lsn),
+Hi,
 
-The found argument to this tracepoint can be dropped - with the new loop
-style it doesn't work anymore, and a non-zero lsn provides the same
-information.
+some of you might be interested in this little LD_PRELOAD'able library, whi=
+ch
+makes posix_fallocate() use XFS' unwritten extents via xfsctl:
+
+http://repo.or.cz/w/libposix_fallocate_xfs.git
+
+You won't need this if you have Kernel 2.6.25 and glibc 2.10 - in that case
+kernel, glibc and filesystem work well together. If you don't have such an
+up-to-date system libposix_fallocate_xfs can help you to improve this call.=
+ It
+works exactly like posix_fallocate() should do but it maps that funktion to
+much more efficient code adapted for XFS.
+
+Cheers
+Bj=F6rn
+
+--82I3+IH0IqGh5yIs
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.13 (GNU/Linux)
+
+iEYEAREDAAYFAktI/QsACgkQdoo0s+hIejls/QCg21flioD5LfJWNneF5KkXoHRh
+m2gAnizx3zHhxstyIknBOhyGJx2aeVGX
+=pheo
+-----END PGP SIGNATURE-----
+
+--82I3+IH0IqGh5yIs--
+
+
+--===============2085746635492730077==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============2085746635492730077==--
