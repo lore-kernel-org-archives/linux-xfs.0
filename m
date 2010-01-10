@@ -1,14 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0AIWa5s034371 for <xfs@oss.sgi.com>; Sun, 10 Jan 2010 12:32:37 -0600
+	o0AJPen8039469 for <xfs@oss.sgi.com>; Sun, 10 Jan 2010 13:25:40 -0600
+Received: from cf--amer001e--3.americas.sgi.com
+	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C3CB730405F
+	for <xfs@oss.sgi.com>; Sun, 10 Jan 2010 11:26:32 -0800 (PST)
 Content-class: urn:content-classes:message
 MIME-Version: 1.0
-Subject: RE: [PATCH,
-	updated]  xfs: Ensure we force all busy extents inrange to disk
-Date: Sun, 10 Jan 2010 12:28:08 -0600
-Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A6941@cf--amer001e--3.americas.sgi.com>
-In-Reply-To: <20100109193514.GA12372@infradead.org>
+Subject: [PATCH 2/2] xfstests: 219: ignore duplicates reported by repquota
+Date: Sun, 10 Jan 2010 13:26:32 -0600
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A6942@cf--amer001e--3.americas.sgi.com>
 From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -22,32 +24,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> Looks good,
+(Re-sending; I misaddressed it the first time.)
 
-Thanks, I will publish this today.
+Arrange to ignore duplicate entries reported by the repquota command.
+This can happen if an id is used more than once (such as when two user
+names are assigned the same uid).
 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
->>  TRACE_EVENT(xfs_alloc_busysearch,
->>  	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t agbno,
->> -		 xfs_extlen_t len, int found),
->> -	TP_ARGS(mp, agno, agbno, len, found),
->> +		 xfs_extlen_t len, int found, xfs_lsn_t lsn),
->> +	TP_ARGS(mp, agno, agbno, len, found, lsn),
-> 
-> The found argument to this tracepoint can be dropped - with the new loop
-> style it doesn't work anymore, and a non-zero lsn provides the same
-> information.
+Do this here by simply dropping any reported entries whose id number
+has already been seen in the output.
 
-I agree with that, and have now removed that argument
-from the tracepoint, with the net effect that the lsn
-argument simply replaces it.
+Signed-off-by: Alex Elder <aelder@sgi.com>
 
-					-Alex
+---
+ 219 |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+Index: b/219
+===================================================================
+--- a/219
++++ b/219
+@@ -85,7 +85,8 @@ test_accounting()
+ 		$here/src/lstat64 $file | head -3 | filter_scratch
+ 	done
+ 
+-	repquota -$type -s -n $SCRATCH_MNT  | grep -v "^#0" | filter_scratch
++	repquota -$type -s -n $SCRATCH_MNT  | grep -v "^#0" | filter_scratch |
++	awk '/^#/ { if (! seen[$1]) { seen[$1]++; next; } } { print }'
+ }
+ 
+ # real QA test starts here
 
 _______________________________________________
 xfs mailing list
