@@ -1,29 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0BBpDpa137801 for <xfs@oss.sgi.com>; Mon, 11 Jan 2010 05:51:14 -0600
+	o0BBpBnm137757 for <xfs@oss.sgi.com>; Mon, 11 Jan 2010 05:51:11 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EA3CA1C41138
-	for <xfs@oss.sgi.com>; Mon, 11 Jan 2010 03:52:07 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	Ir4NWHEBNDjG9lMm for <xfs@oss.sgi.com>;
-	Mon, 11 Jan 2010 03:52:07 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 99EF315885C
+	for <xfs@oss.sgi.com>; Mon, 11 Jan 2010 03:52:05 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	aNaijZecsHxPNMdy for <xfs@oss.sgi.com>;
+	Mon, 11 Jan 2010 03:52:05 -0800 (PST)
 Received: from discord (unverified [121.44.168.156])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	11397692-1927428
+	11537981-1927428
 	for <xfs@oss.sgi.com>; Mon, 11 Jan 2010 22:22:04 +1030 (CDT)
 Received: from [192.168.1.6] (helo=disturbed) by discord with esmtp (Exim 4.69)
-	(envelope-from <dave@fromorbit.com>) id 1NUIoU-0003em-TN
+	(envelope-from <dave@fromorbit.com>) id 1NUIoU-0003ep-VO
 	for xfs@oss.sgi.com; Mon, 11 Jan 2010 22:52:02 +1100
 Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1NUIkS-0006Fx-NU
+	(envelope-from <dave@disturbed.disaster>) id 1NUIkS-0006G0-PG
 	for xfs@oss.sgi.com; Mon, 11 Jan 2010 22:47:52 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 03/10] XFS: Convert filestreams code to use per-ag get/put
-	routines
-Date: Mon, 11 Jan 2010 22:47:42 +1100
-Message-Id: <1263210469-22171-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 04/10] XFS: convert remaining direct references to m_perag
+Date: Mon, 11 Jan 2010 22:47:43 +1100
+Message-Id: <1263210469-22171-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1263210469-22171-1-git-send-email-david@fromorbit.com>
 References: <1263210469-22171-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -41,145 +40,303 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
+Convert the remaining direct lookups of the per ag structures
+to use get/put accesses. Ensure that the loops across AGs and
+prior users of the interface balance gets and puts correctly.
+
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/xfs_filestream.c |   19 ++++++++++++-------
- fs/xfs/xfs_filestream.h |   27 ++++++++++++++++++++++++---
- 2 files changed, 36 insertions(+), 10 deletions(-)
+ fs/xfs/xfs_bmap.c   |    8 +++++++-
+ fs/xfs/xfs_ialloc.c |   35 +++++++++++++++++++++++++----------
+ fs/xfs/xfs_inode.c  |    5 ++++-
+ fs/xfs/xfs_mount.c  |    9 ++++++---
+ 4 files changed, 42 insertions(+), 15 deletions(-)
 
-diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
-index a631e14..e61f2aa 100644
---- a/fs/xfs/xfs_filestream.c
-+++ b/fs/xfs/xfs_filestream.c
-@@ -140,6 +140,7 @@ _xfs_filestream_pick_ag(
- 	int		flags,
- 	xfs_extlen_t	minlen)
- {
-+	int		streams, max_streams;
- 	int		err, trylock, nscan;
- 	xfs_extlen_t	longest, free, minfree, maxfree = 0;
- 	xfs_agnumber_t	ag, max_ag = NULLAGNUMBER;
-@@ -155,15 +156,15 @@ _xfs_filestream_pick_ag(
- 	trylock = XFS_ALLOC_FLAG_TRYLOCK;
- 
- 	for (nscan = 0; 1; nscan++) {
--
--		TRACE_AG_SCAN(mp, ag, xfs_filestream_peek_ag(mp, ag));
--
--		pag = mp->m_perag + ag;
+diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+index 98251cd..a9b95d9 100644
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -2630,11 +2630,12 @@ xfs_bmap_btalloc(
+ 			startag = ag = 0;
+ 		notinit = 0;
+ 		down_read(&mp->m_peraglock);
 +		pag = xfs_perag_get(mp, ag);
-+		TRACE_AG_SCAN(mp, ag, atomic_read(&pag->pagf_fstrms));
- 
- 		if (!pag->pagf_init) {
- 			err = xfs_alloc_pagf_init(mp, NULL, ag, trylock);
--			if (err && !trylock)
-+			if (err && !trylock) {
+ 		while (blen < ap->alen) {
+-			pag = &mp->m_perag[ag];
+ 			if (!pag->pagf_init &&
+ 			    (error = xfs_alloc_pagf_init(mp, args.tp,
+ 				    ag, XFS_ALLOC_FLAG_TRYLOCK))) {
 +				xfs_perag_put(pag);
- 				return err;
-+			}
- 		}
+ 				up_read(&mp->m_peraglock);
+ 				return error;
+ 			}
+@@ -2667,6 +2668,7 @@ xfs_bmap_btalloc(
+ 						break;
  
- 		/* Might fail sometimes during the 1st pass with trylock set. */
-@@ -173,6 +174,7 @@ _xfs_filestream_pick_ag(
- 		/* Keep track of the AG with the most free blocks. */
- 		if (pag->pagf_freeblks > maxfree) {
- 			maxfree = pag->pagf_freeblks;
-+			max_streams = atomic_read(&pag->pagf_fstrms);
- 			max_ag = ag;
- 		}
+ 					error = xfs_filestream_new_ag(ap, &ag);
++					xfs_perag_put(pag);
+ 					if (error) {
+ 						up_read(&mp->m_peraglock);
+ 						return error;
+@@ -2674,6 +2676,7 @@ xfs_bmap_btalloc(
  
-@@ -195,6 +197,8 @@ _xfs_filestream_pick_ag(
- 
- 			/* Break out, retaining the reference on the AG. */
- 			free = pag->pagf_freeblks;
-+			streams = atomic_read(&pag->pagf_fstrms);
+ 					/* loop again to set 'blen'*/
+ 					startag = NULLAGNUMBER;
++					pag = xfs_perag_get(mp, ag);
+ 					continue;
+ 				}
+ 			}
+@@ -2681,7 +2684,10 @@ xfs_bmap_btalloc(
+ 				ag = 0;
+ 			if (ag == startag)
+ 				break;
 +			xfs_perag_put(pag);
- 			*agp = ag;
- 			break;
++			pag = xfs_perag_get(mp, ag);
  		}
-@@ -202,6 +206,7 @@ _xfs_filestream_pick_ag(
- 		/* Drop the reference on this AG, it's not usable. */
- 		xfs_filestream_put_ag(mp, ag);
- next_ag:
 +		xfs_perag_put(pag);
- 		/* Move to the next AG, wrapping to AG 0 if necessary. */
- 		if (++ag >= mp->m_sb.sb_agcount)
- 			ag = 0;
-@@ -229,6 +234,7 @@ next_ag:
- 		if (max_ag != NULLAGNUMBER) {
- 			xfs_filestream_get_ag(mp, max_ag);
- 			TRACE_AG_PICK1(mp, max_ag, maxfree);
-+			streams = max_streams;
- 			free = maxfree;
- 			*agp = max_ag;
- 			break;
-@@ -240,8 +246,7 @@ next_ag:
- 		return 0;
+ 		up_read(&mp->m_peraglock);
+ 		/*
+ 		 * Since the above loop did a BUF_TRYLOCK, it is
+diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
+index cb907ba..884ee13 100644
+--- a/fs/xfs/xfs_ialloc.c
++++ b/fs/xfs/xfs_ialloc.c
+@@ -253,6 +253,7 @@ xfs_ialloc_ag_alloc(
+ 	xfs_agino_t	thisino;	/* current inode number, for loop */
+ 	int		isaligned = 0;	/* inode allocation at stripe unit */
+ 					/* boundary */
++	struct xfs_perag *pag;
+ 
+ 	args.tp = tp;
+ 	args.mp = tp->t_mountp;
+@@ -383,7 +384,9 @@ xfs_ialloc_ag_alloc(
+ 	be32_add_cpu(&agi->agi_count, newlen);
+ 	be32_add_cpu(&agi->agi_freecount, newlen);
+ 	down_read(&args.mp->m_peraglock);
+-	args.mp->m_perag[agno].pagi_freecount += newlen;
++	pag = xfs_perag_get(args.mp, agno);
++	pag->pagi_freecount += newlen;
++	xfs_perag_put(pag);
+ 	up_read(&args.mp->m_peraglock);
+ 	agi->agi_newino = cpu_to_be32(newino);
+ 
+@@ -488,7 +491,7 @@ xfs_ialloc_ag_select(
+ 	flags = XFS_ALLOC_FLAG_TRYLOCK;
+ 	down_read(&mp->m_peraglock);
+ 	for (;;) {
+-		pag = &mp->m_perag[agno];
++		pag = xfs_perag_get(mp, agno);
+ 		if (!pag->pagi_init) {
+ 			if (xfs_ialloc_read_agi(mp, tp, agno, &agbp)) {
+ 				agbp = NULL;
+@@ -527,6 +530,7 @@ xfs_ialloc_ag_select(
+ 					agbp = NULL;
+ 					goto nextag;
+ 				}
++				xfs_perag_put(pag);
+ 				up_read(&mp->m_peraglock);
+ 				return agbp;
+ 			}
+@@ -535,6 +539,7 @@ unlock_nextag:
+ 		if (agbp)
+ 			xfs_trans_brelse(tp, agbp);
+ nextag:
++		xfs_perag_put(pag);
+ 		/*
+ 		 * No point in iterating over the rest, if we're shutting
+ 		 * down.
+@@ -672,6 +677,7 @@ xfs_dialloc(
+ 	xfs_agnumber_t	tagno;		/* testing allocation group number */
+ 	xfs_btree_cur_t	*tcur;		/* temp cursor */
+ 	xfs_inobt_rec_incore_t trec;	/* temp inode allocation record */
++	struct xfs_perag *pag;
+ 
+ 
+ 	if (*IO_agbp == NULL) {
+@@ -772,11 +778,14 @@ nextag:
+ 			return noroom ? ENOSPC : 0;
+ 		}
+ 		down_read(&mp->m_peraglock);
+-		if (mp->m_perag[tagno].pagi_inodeok == 0) {
++		pag = xfs_perag_get(mp, tagno);
++		if (pag->pagi_inodeok == 0) {
++			xfs_perag_put(pag);
+ 			up_read(&mp->m_peraglock);
+ 			goto nextag;
+ 		}
+ 		error = xfs_ialloc_read_agi(mp, tp, tagno, &agbp);
++		xfs_perag_put(pag);
+ 		up_read(&mp->m_peraglock);
+ 		if (error)
+ 			goto nextag;
+@@ -790,6 +799,7 @@ nextag:
+ 	 */
+ 	agno = tagno;
+ 	*IO_agbp = NULL;
++	pag = xfs_perag_get(mp, agno);
+ 
+  restart_pagno:
+ 	cur = xfs_inobt_init_cursor(mp, tp, agbp, be32_to_cpu(agi->agi_seqno));
+@@ -808,7 +818,6 @@ nextag:
+ 	 * If in the same AG as the parent, try to get near the parent.
+ 	 */
+ 	if (pagno == agno) {
+-		xfs_perag_t	*pag = &mp->m_perag[agno];
+ 		int		doneleft;	/* done, to the left */
+ 		int		doneright;	/* done, to the right */
+ 		int		searchdistance = 10;
+@@ -1007,7 +1016,7 @@ alloc_inode:
+ 	be32_add_cpu(&agi->agi_freecount, -1);
+ 	xfs_ialloc_log_agi(tp, agbp, XFS_AGI_FREECOUNT);
+ 	down_read(&mp->m_peraglock);
+-	mp->m_perag[tagno].pagi_freecount--;
++	pag->pagi_freecount--;
+ 	up_read(&mp->m_peraglock);
+ 
+ 	error = xfs_check_agi_freecount(cur, agi);
+@@ -1016,12 +1025,14 @@ alloc_inode:
+ 
+ 	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
+ 	xfs_trans_mod_sb(tp, XFS_TRANS_SB_IFREE, -1);
++	xfs_perag_put(pag);
+ 	*inop = ino;
+ 	return 0;
+ error1:
+ 	xfs_btree_del_cursor(tcur, XFS_BTREE_ERROR);
+ error0:
+ 	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
++	xfs_perag_put(pag);
+ 	return error;
+ }
+ 
+@@ -1052,6 +1063,7 @@ xfs_difree(
+ 	xfs_mount_t	*mp;	/* mount structure for filesystem */
+ 	int		off;	/* offset of inode in inode chunk */
+ 	xfs_inobt_rec_incore_t rec;	/* btree record */
++	struct xfs_perag *pag;
+ 
+ 	mp = tp->t_mountp;
+ 
+@@ -1158,7 +1170,9 @@ xfs_difree(
+ 		be32_add_cpu(&agi->agi_freecount, -(ilen - 1));
+ 		xfs_ialloc_log_agi(tp, agbp, XFS_AGI_COUNT | XFS_AGI_FREECOUNT);
+ 		down_read(&mp->m_peraglock);
+-		mp->m_perag[agno].pagi_freecount -= ilen - 1;
++		pag = xfs_perag_get(mp, agno);
++		pag->pagi_freecount -= ilen - 1;
++		xfs_perag_put(pag);
+ 		up_read(&mp->m_peraglock);
+ 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_ICOUNT, -ilen);
+ 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_IFREE, -(ilen - 1));
+@@ -1189,7 +1203,9 @@ xfs_difree(
+ 		be32_add_cpu(&agi->agi_freecount, 1);
+ 		xfs_ialloc_log_agi(tp, agbp, XFS_AGI_FREECOUNT);
+ 		down_read(&mp->m_peraglock);
+-		mp->m_perag[agno].pagi_freecount++;
++		pag = xfs_perag_get(mp, agno);
++		pag->pagi_freecount++;
++		xfs_perag_put(pag);
+ 		up_read(&mp->m_peraglock);
+ 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_IFREE, 1);
  	}
- 
--	TRACE_AG_PICK2(mp, startag, *agp, xfs_filestream_peek_ag(mp, *agp),
--			free, nscan, flags);
-+	TRACE_AG_PICK2(mp, startag, *agp, streams, free, nscan, flags);
- 
+@@ -1379,7 +1395,6 @@ xfs_imap(
+ 			XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks));
+ 		return XFS_ERROR(EINVAL);
+ 	}
+-
  	return 0;
  }
-diff --git a/fs/xfs/xfs_filestream.h b/fs/xfs/xfs_filestream.h
-index 4aba67c..58378b2 100644
---- a/fs/xfs/xfs_filestream.h
-+++ b/fs/xfs/xfs_filestream.h
-@@ -79,12 +79,21 @@ extern ktrace_t *xfs_filestreams_trace_buf;
-  * the cache that reference per-ag array elements that have since been
-  * reallocated.
-  */
-+/*
-+ * xfs_filestream_peek_ag is only used in tracing code
-+ */
- static inline int
- xfs_filestream_peek_ag(
- 	xfs_mount_t	*mp,
- 	xfs_agnumber_t	agno)
- {
--	return atomic_read(&mp->m_perag[agno].pagf_fstrms);
-+	struct xfs_perag *pag;
-+	int		ret;
-+
+ 
+@@ -1523,8 +1538,7 @@ xfs_ialloc_read_agi(
+ 		return error;
+ 
+ 	agi = XFS_BUF_TO_AGI(*bpp);
+-	pag = &mp->m_perag[agno];
+-
 +	pag = xfs_perag_get(mp, agno);
-+	ret = atomic_read(&pag->pagf_fstrms);
+ 	if (!pag->pagi_init) {
+ 		pag->pagi_freecount = be32_to_cpu(agi->agi_freecount);
+ 		pag->pagi_count = be32_to_cpu(agi->agi_count);
+@@ -1537,6 +1551,7 @@ xfs_ialloc_read_agi(
+ 	 */
+ 	ASSERT(pag->pagi_freecount == be32_to_cpu(agi->agi_freecount) ||
+ 		XFS_FORCED_SHUTDOWN(mp));
 +	xfs_perag_put(pag);
-+	return ret;
+ 	return 0;
  }
  
- static inline int
-@@ -92,7 +101,13 @@ xfs_filestream_get_ag(
- 	xfs_mount_t	*mp,
- 	xfs_agnumber_t	agno)
- {
--	return atomic_inc_return(&mp->m_perag[agno].pagf_fstrms);
-+	struct xfs_perag *pag;
-+	int		ret;
-+
-+	pag = xfs_perag_get(mp, agno);
-+	ret = atomic_inc_return(&pag->pagf_fstrms);
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index bd3d816..0317b00 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2695,7 +2695,7 @@ xfs_iflush_cluster(
+ 	ilist_size = inodes_per_cluster * sizeof(xfs_inode_t *);
+ 	ilist = kmem_alloc(ilist_size, KM_MAYFAIL|KM_NOFS);
+ 	if (!ilist)
+-		return 0;
++		goto out_put;
+ 
+ 	mask = ~(((XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_inodelog)) - 1);
+ 	first_index = XFS_INO_TO_AGINO(mp, ip->i_ino) & mask;
+@@ -2764,6 +2764,8 @@ xfs_iflush_cluster(
+ out_free:
+ 	read_unlock(&pag->pag_ici_lock);
+ 	kmem_free(ilist);
++out_put:
 +	xfs_perag_put(pag);
-+	return ret;
+ 	return 0;
+ 
+ 
+@@ -2807,6 +2809,7 @@ cluster_corrupt_out:
+ 	 */
+ 	xfs_iflush_abort(iq);
+ 	kmem_free(ilist);
++	xfs_perag_put(pag);
+ 	return XFS_ERROR(EFSCORRUPTED);
  }
  
- static inline int
-@@ -100,7 +115,13 @@ xfs_filestream_put_ag(
- 	xfs_mount_t	*mp,
- 	xfs_agnumber_t	agno)
- {
--	return atomic_dec_return(&mp->m_perag[agno].pagf_fstrms);
-+	struct xfs_perag *pag;
-+	int		ret;
-+
-+	pag = xfs_perag_get(mp, agno);
-+	ret = atomic_dec_return(&pag->pagf_fstrms);
-+	xfs_perag_put(pag);
-+	return ret;
- }
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index eb403b4..9055b60 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -438,18 +438,20 @@ xfs_initialize_perag(
+ 			}
  
- /* allocation selection flags */
+ 			/* This ag is preferred for inodes */
+-			pag = &mp->m_perag[index];
++			pag = xfs_perag_get(mp, index);
+ 			pag->pagi_inodeok = 1;
+ 			if (index < max_metadata)
+ 				pag->pagf_metadata = 1;
+ 			xfs_initialize_perag_icache(pag);
++			xfs_perag_put(pag);
+ 		}
+ 	} else {
+ 		/* Setup default behavior for smaller filesystems */
+ 		for (index = 0; index < agcount; index++) {
+-			pag = &mp->m_perag[index];
++			pag = xfs_perag_get(mp, index);
+ 			pag->pagi_inodeok = 1;
+ 			xfs_initialize_perag_icache(pag);
++			xfs_perag_put(pag);
+ 		}
+ 	}
+ 	return index;
+@@ -731,12 +733,13 @@ xfs_initialize_perag_data(xfs_mount_t *mp, xfs_agnumber_t agcount)
+ 		error = xfs_ialloc_pagi_init(mp, NULL, index);
+ 		if (error)
+ 			return error;
+-		pag = &mp->m_perag[index];
++		pag = xfs_perag_get(mp, index);
+ 		ifree += pag->pagi_freecount;
+ 		ialloc += pag->pagi_count;
+ 		bfree += pag->pagf_freeblks;
+ 		bfreelst += pag->pagf_flcount;
+ 		btree += pag->pagf_btreeblks;
++		xfs_perag_put(pag);
+ 	}
+ 	/*
+ 	 * Overwrite incore superblock counters with just-read data
 -- 
 1.6.5
 
