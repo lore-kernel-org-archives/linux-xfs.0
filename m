@@ -1,30 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0BBpBnm137757 for <xfs@oss.sgi.com>; Mon, 11 Jan 2010 05:51:11 -0600
+	o0BBrOwl138174 for <xfs@oss.sgi.com>; Mon, 11 Jan 2010 05:53:25 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 99EF315885C
-	for <xfs@oss.sgi.com>; Mon, 11 Jan 2010 03:52:05 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	aNaijZecsHxPNMdy for <xfs@oss.sgi.com>;
-	Mon, 11 Jan 2010 03:52:05 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8F6001357F87
+	for <xfs@oss.sgi.com>; Mon, 11 Jan 2010 03:54:18 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	Jka2aAaFFhrBjOzn for <xfs@oss.sgi.com>;
+	Mon, 11 Jan 2010 03:54:18 -0800 (PST)
 Received: from discord (unverified [121.44.168.156])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	11537981-1927428
-	for <xfs@oss.sgi.com>; Mon, 11 Jan 2010 22:22:04 +1030 (CDT)
+	11397741-1927428
+	for <xfs@oss.sgi.com>; Mon, 11 Jan 2010 22:24:17 +1030 (CDT)
 Received: from [192.168.1.6] (helo=disturbed) by discord with esmtp (Exim 4.69)
-	(envelope-from <dave@fromorbit.com>) id 1NUIoU-0003ep-VO
-	for xfs@oss.sgi.com; Mon, 11 Jan 2010 22:52:02 +1100
+	(envelope-from <dave@fromorbit.com>) id 1NUIqd-0003fl-CV
+	for xfs@oss.sgi.com; Mon, 11 Jan 2010 22:54:15 +1100
 Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1NUIkS-0006G0-PG
-	for xfs@oss.sgi.com; Mon, 11 Jan 2010 22:47:52 +1100
+	(envelope-from <dave@disturbed.disaster>) id 1NUImb-0006qV-5C
+	for xfs@oss.sgi.com; Mon, 11 Jan 2010 22:50:05 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 04/10] XFS: convert remaining direct references to m_perag
-Date: Mon, 11 Jan 2010 22:47:43 +1100
-Message-Id: <1263210469-22171-5-git-send-email-david@fromorbit.com>
-In-Reply-To: <1263210469-22171-1-git-send-email-david@fromorbit.com>
-References: <1263210469-22171-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/3] XFS: Use list_heads for log recovery item lists
+Date: Mon, 11 Jan 2010 22:49:57 +1100
+Message-Id: <1263210599-25067-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1263210599-25067-1-git-send-email-david@fromorbit.com>
+References: <1263210599-25067-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,303 +40,418 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Convert the remaining direct lookups of the per ag structures
-to use get/put accesses. Ensure that the loops across AGs and
-prior users of the interface balance gets and puts correctly.
+Remove the roll-your-own linked list operations.
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/xfs_bmap.c   |    8 +++++++-
- fs/xfs/xfs_ialloc.c |   35 +++++++++++++++++++++++++----------
- fs/xfs/xfs_inode.c  |    5 ++++-
- fs/xfs/xfs_mount.c  |    9 ++++++---
- 4 files changed, 42 insertions(+), 15 deletions(-)
+ fs/xfs/xfs_log_recover.c |  205 ++++++++++++++++------------------------------
+ fs/xfs/xfs_log_recover.h |   23 +++---
+ 2 files changed, 81 insertions(+), 147 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index 98251cd..a9b95d9 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -2630,11 +2630,12 @@ xfs_bmap_btalloc(
- 			startag = ag = 0;
- 		notinit = 0;
- 		down_read(&mp->m_peraglock);
-+		pag = xfs_perag_get(mp, ag);
- 		while (blen < ap->alen) {
--			pag = &mp->m_perag[ag];
- 			if (!pag->pagf_init &&
- 			    (error = xfs_alloc_pagf_init(mp, args.tp,
- 				    ag, XFS_ALLOC_FLAG_TRYLOCK))) {
-+				xfs_perag_put(pag);
- 				up_read(&mp->m_peraglock);
- 				return error;
- 			}
-@@ -2667,6 +2668,7 @@ xfs_bmap_btalloc(
- 						break;
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 69ac2e5..cd55e1c 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -50,8 +50,6 @@
  
- 					error = xfs_filestream_new_ag(ap, &ag);
-+					xfs_perag_put(pag);
- 					if (error) {
- 						up_read(&mp->m_peraglock);
- 						return error;
-@@ -2674,6 +2676,7 @@ xfs_bmap_btalloc(
+ STATIC int	xlog_find_zeroed(xlog_t *, xfs_daddr_t *);
+ STATIC int	xlog_clear_stale_blocks(xlog_t *, xfs_lsn_t);
+-STATIC void	xlog_recover_insert_item_backq(xlog_recover_item_t **q,
+-					       xlog_recover_item_t *item);
+ #if defined(DEBUG)
+ STATIC void	xlog_recover_check_summary(xlog_t *);
+ #else
+@@ -1367,36 +1365,45 @@ xlog_clear_stale_blocks(
  
- 					/* loop again to set 'blen'*/
- 					startag = NULLAGNUMBER;
-+					pag = xfs_perag_get(mp, ag);
- 					continue;
- 				}
- 			}
-@@ -2681,7 +2684,10 @@ xfs_bmap_btalloc(
- 				ag = 0;
- 			if (ag == startag)
- 				break;
-+			xfs_perag_put(pag);
-+			pag = xfs_perag_get(mp, ag);
- 		}
-+		xfs_perag_put(pag);
- 		up_read(&mp->m_peraglock);
- 		/*
- 		 * Since the above loop did a BUF_TRYLOCK, it is
-diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
-index cb907ba..884ee13 100644
---- a/fs/xfs/xfs_ialloc.c
-+++ b/fs/xfs/xfs_ialloc.c
-@@ -253,6 +253,7 @@ xfs_ialloc_ag_alloc(
- 	xfs_agino_t	thisino;	/* current inode number, for loop */
- 	int		isaligned = 0;	/* inode allocation at stripe unit */
- 					/* boundary */
-+	struct xfs_perag *pag;
+ STATIC xlog_recover_t *
+ xlog_recover_find_tid(
+-	xlog_recover_t		*q,
++	struct hlist_head	*head,
+ 	xlog_tid_t		tid)
+ {
+-	xlog_recover_t		*p = q;
++	xlog_recover_t		*trans;
++	struct hlist_node	*n;
  
- 	args.tp = tp;
- 	args.mp = tp->t_mountp;
-@@ -383,7 +384,9 @@ xfs_ialloc_ag_alloc(
- 	be32_add_cpu(&agi->agi_count, newlen);
- 	be32_add_cpu(&agi->agi_freecount, newlen);
- 	down_read(&args.mp->m_peraglock);
--	args.mp->m_perag[agno].pagi_freecount += newlen;
-+	pag = xfs_perag_get(args.mp, agno);
-+	pag->pagi_freecount += newlen;
-+	xfs_perag_put(pag);
- 	up_read(&args.mp->m_peraglock);
- 	agi->agi_newino = cpu_to_be32(newino);
- 
-@@ -488,7 +491,7 @@ xfs_ialloc_ag_select(
- 	flags = XFS_ALLOC_FLAG_TRYLOCK;
- 	down_read(&mp->m_peraglock);
- 	for (;;) {
--		pag = &mp->m_perag[agno];
-+		pag = xfs_perag_get(mp, agno);
- 		if (!pag->pagi_init) {
- 			if (xfs_ialloc_read_agi(mp, tp, agno, &agbp)) {
- 				agbp = NULL;
-@@ -527,6 +530,7 @@ xfs_ialloc_ag_select(
- 					agbp = NULL;
- 					goto nextag;
- 				}
-+				xfs_perag_put(pag);
- 				up_read(&mp->m_peraglock);
- 				return agbp;
- 			}
-@@ -535,6 +539,7 @@ unlock_nextag:
- 		if (agbp)
- 			xfs_trans_brelse(tp, agbp);
- nextag:
-+		xfs_perag_put(pag);
- 		/*
- 		 * No point in iterating over the rest, if we're shutting
- 		 * down.
-@@ -672,6 +677,7 @@ xfs_dialloc(
- 	xfs_agnumber_t	tagno;		/* testing allocation group number */
- 	xfs_btree_cur_t	*tcur;		/* temp cursor */
- 	xfs_inobt_rec_incore_t trec;	/* temp inode allocation record */
-+	struct xfs_perag *pag;
- 
- 
- 	if (*IO_agbp == NULL) {
-@@ -772,11 +778,14 @@ nextag:
- 			return noroom ? ENOSPC : 0;
- 		}
- 		down_read(&mp->m_peraglock);
--		if (mp->m_perag[tagno].pagi_inodeok == 0) {
-+		pag = xfs_perag_get(mp, tagno);
-+		if (pag->pagi_inodeok == 0) {
-+			xfs_perag_put(pag);
- 			up_read(&mp->m_peraglock);
- 			goto nextag;
- 		}
- 		error = xfs_ialloc_read_agi(mp, tp, tagno, &agbp);
-+		xfs_perag_put(pag);
- 		up_read(&mp->m_peraglock);
- 		if (error)
- 			goto nextag;
-@@ -790,6 +799,7 @@ nextag:
- 	 */
- 	agno = tagno;
- 	*IO_agbp = NULL;
-+	pag = xfs_perag_get(mp, agno);
- 
-  restart_pagno:
- 	cur = xfs_inobt_init_cursor(mp, tp, agbp, be32_to_cpu(agi->agi_seqno));
-@@ -808,7 +818,6 @@ nextag:
- 	 * If in the same AG as the parent, try to get near the parent.
- 	 */
- 	if (pagno == agno) {
--		xfs_perag_t	*pag = &mp->m_perag[agno];
- 		int		doneleft;	/* done, to the left */
- 		int		doneright;	/* done, to the right */
- 		int		searchdistance = 10;
-@@ -1007,7 +1016,7 @@ alloc_inode:
- 	be32_add_cpu(&agi->agi_freecount, -1);
- 	xfs_ialloc_log_agi(tp, agbp, XFS_AGI_FREECOUNT);
- 	down_read(&mp->m_peraglock);
--	mp->m_perag[tagno].pagi_freecount--;
-+	pag->pagi_freecount--;
- 	up_read(&mp->m_peraglock);
- 
- 	error = xfs_check_agi_freecount(cur, agi);
-@@ -1016,12 +1025,14 @@ alloc_inode:
- 
- 	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
- 	xfs_trans_mod_sb(tp, XFS_TRANS_SB_IFREE, -1);
-+	xfs_perag_put(pag);
- 	*inop = ino;
- 	return 0;
- error1:
- 	xfs_btree_del_cursor(tcur, XFS_BTREE_ERROR);
- error0:
- 	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
-+	xfs_perag_put(pag);
- 	return error;
+-	while (p != NULL) {
+-		if (p->r_log_tid == tid)
+-		    break;
+-		p = p->r_next;
++	hlist_for_each_entry(trans, n, head, r_list) {
++		if (trans->r_log_tid == tid)
++			return trans;
+ 	}
+-	return p;
++	return NULL;
  }
  
-@@ -1052,6 +1063,7 @@ xfs_difree(
- 	xfs_mount_t	*mp;	/* mount structure for filesystem */
- 	int		off;	/* offset of inode in inode chunk */
- 	xfs_inobt_rec_incore_t rec;	/* btree record */
-+	struct xfs_perag *pag;
+ STATIC void
+-xlog_recover_put_hashq(
+-	xlog_recover_t		**q,
+-	xlog_recover_t		*trans)
++xlog_recover_new_tid(
++	struct hlist_head	*head,
++	xlog_tid_t		tid,
++	xfs_lsn_t		lsn)
+ {
+-	trans->r_next = *q;
+-	*q = trans;
++	xlog_recover_t		*trans;
++
++	trans = kmem_zalloc(sizeof(xlog_recover_t), KM_SLEEP);
++	trans->r_log_tid   = tid;
++	trans->r_lsn	   = lsn;
++	INIT_LIST_HEAD(&trans->r_itemq);
++
++	INIT_HLIST_NODE(&trans->r_list);
++	hlist_add_head(&trans->r_list, head);
+ }
  
- 	mp = tp->t_mountp;
+ STATIC void
+ xlog_recover_add_item(
+-	xlog_recover_item_t	**itemq)
++	struct list_head	*head)
+ {
+ 	xlog_recover_item_t	*item;
  
-@@ -1158,7 +1170,9 @@ xfs_difree(
- 		be32_add_cpu(&agi->agi_freecount, -(ilen - 1));
- 		xfs_ialloc_log_agi(tp, agbp, XFS_AGI_COUNT | XFS_AGI_FREECOUNT);
- 		down_read(&mp->m_peraglock);
--		mp->m_perag[agno].pagi_freecount -= ilen - 1;
-+		pag = xfs_perag_get(mp, agno);
-+		pag->pagi_freecount -= ilen - 1;
-+		xfs_perag_put(pag);
- 		up_read(&mp->m_peraglock);
- 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_ICOUNT, -ilen);
- 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_IFREE, -(ilen - 1));
-@@ -1189,7 +1203,9 @@ xfs_difree(
- 		be32_add_cpu(&agi->agi_freecount, 1);
- 		xfs_ialloc_log_agi(tp, agbp, XFS_AGI_FREECOUNT);
- 		down_read(&mp->m_peraglock);
--		mp->m_perag[agno].pagi_freecount++;
-+		pag = xfs_perag_get(mp, agno);
-+		pag->pagi_freecount++;
-+		xfs_perag_put(pag);
- 		up_read(&mp->m_peraglock);
- 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_IFREE, 1);
+ 	item = kmem_zalloc(sizeof(xlog_recover_item_t), KM_SLEEP);
+-	xlog_recover_insert_item_backq(itemq, item);
++	INIT_LIST_HEAD(&item->ri_list);
++	list_add_tail(&item->ri_list, head);
+ }
+ 
+ STATIC int
+@@ -1409,8 +1416,7 @@ xlog_recover_add_to_cont_trans(
+ 	xfs_caddr_t		ptr, old_ptr;
+ 	int			old_len;
+ 
+-	item = trans->r_itemq;
+-	if (item == NULL) {
++	if (list_empty(&trans->r_itemq)) {
+ 		/* finish copying rest of trans header */
+ 		xlog_recover_add_item(&trans->r_itemq);
+ 		ptr = (xfs_caddr_t) &trans->r_theader +
+@@ -1418,7 +1424,8 @@ xlog_recover_add_to_cont_trans(
+ 		memcpy(ptr, dp, len); /* d, s, l */
+ 		return 0;
  	}
-@@ -1379,7 +1395,6 @@ xfs_imap(
- 			XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks));
- 		return XFS_ERROR(EINVAL);
+-	item = item->ri_prev;
++	/* take the tail entry */
++	item = list_entry(trans->r_itemq.prev, xlog_recover_item_t, ri_list);
+ 
+ 	old_ptr = item->ri_buf[item->ri_cnt-1].i_addr;
+ 	old_len = item->ri_buf[item->ri_cnt-1].i_len;
+@@ -1455,8 +1462,7 @@ xlog_recover_add_to_trans(
+ 
+ 	if (!len)
+ 		return 0;
+-	item = trans->r_itemq;
+-	if (item == NULL) {
++	if (list_empty(&trans->r_itemq)) {
+ 		/* we need to catch log corruptions here */
+ 		if (*(uint *)dp != XFS_TRANS_HEADER_MAGIC) {
+ 			xlog_warn("XFS: xlog_recover_add_to_trans: "
+@@ -1474,12 +1480,15 @@ xlog_recover_add_to_trans(
+ 	memcpy(ptr, dp, len);
+ 	in_f = (xfs_inode_log_format_t *)ptr;
+ 
+-	if (item->ri_prev->ri_total != 0 &&
+-	     item->ri_prev->ri_total == item->ri_prev->ri_cnt) {
++	/* take the tail entry */
++	item = list_entry(trans->r_itemq.prev, xlog_recover_item_t, ri_list);
++	if (item->ri_total != 0 &&
++	     item->ri_total == item->ri_cnt) {
++		/* tail item is in use, get a new one */
+ 		xlog_recover_add_item(&trans->r_itemq);
++		item = list_entry(trans->r_itemq.prev,
++					xlog_recover_item_t, ri_list);
  	}
+-	item = trans->r_itemq;
+-	item = item->ri_prev;
+ 
+ 	if (item->ri_total == 0) {		/* first region to be added */
+ 		if (in_f->ilf_size == 0 ||
+@@ -1504,96 +1513,29 @@ xlog_recover_add_to_trans(
+ 	return 0;
+ }
+ 
+-STATIC void
+-xlog_recover_new_tid(
+-	xlog_recover_t		**q,
+-	xlog_tid_t		tid,
+-	xfs_lsn_t		lsn)
+-{
+-	xlog_recover_t		*trans;
 -
+-	trans = kmem_zalloc(sizeof(xlog_recover_t), KM_SLEEP);
+-	trans->r_log_tid   = tid;
+-	trans->r_lsn	   = lsn;
+-	xlog_recover_put_hashq(q, trans);
+-}
+-
+-STATIC int
+-xlog_recover_unlink_tid(
+-	xlog_recover_t		**q,
+-	xlog_recover_t		*trans)
+-{
+-	xlog_recover_t		*tp;
+-	int			found = 0;
+-
+-	ASSERT(trans != NULL);
+-	if (trans == *q) {
+-		*q = (*q)->r_next;
+-	} else {
+-		tp = *q;
+-		while (tp) {
+-			if (tp->r_next == trans) {
+-				found = 1;
+-				break;
+-			}
+-			tp = tp->r_next;
+-		}
+-		if (!found) {
+-			xlog_warn(
+-			     "XFS: xlog_recover_unlink_tid: trans not found");
+-			ASSERT(0);
+-			return XFS_ERROR(EIO);
+-		}
+-		tp->r_next = tp->r_next->r_next;
+-	}
+-	return 0;
+-}
+-
+-STATIC void
+-xlog_recover_insert_item_backq(
+-	xlog_recover_item_t	**q,
+-	xlog_recover_item_t	*item)
+-{
+-	if (*q == NULL) {
+-		item->ri_prev = item->ri_next = item;
+-		*q = item;
+-	} else {
+-		item->ri_next		= *q;
+-		item->ri_prev		= (*q)->ri_prev;
+-		(*q)->ri_prev		= item;
+-		item->ri_prev->ri_next	= item;
+-	}
+-}
+-
+-STATIC void
+-xlog_recover_insert_item_frontq(
+-	xlog_recover_item_t	**q,
+-	xlog_recover_item_t	*item)
+-{
+-	xlog_recover_insert_item_backq(q, item);
+-	*q = item;
+-}
+-
++/*
++ * Sort the log items in the transaction. Cancelled buffers need
++ * to be put first so they are processed before any items that might
++ * modify the buffers. If they are cancelled, then the modifications
++ * don't need to be replayed.
++ */
+ STATIC int
+ xlog_recover_reorder_trans(
+ 	xlog_recover_t		*trans)
+ {
+-	xlog_recover_item_t	*first_item, *itemq, *itemq_next;
+-	xfs_buf_log_format_t	*buf_f;
+-	ushort			flags = 0;
++	xlog_recover_item_t	*item, *n;
++	LIST_HEAD(sort_list);
++
++	list_splice_init(&trans->r_itemq, &sort_list);
++	list_for_each_entry_safe(item, n, &sort_list, ri_list) {
++		xfs_buf_log_format_t	*buf_f;
+ 
+-	first_item = itemq = trans->r_itemq;
+-	trans->r_itemq = NULL;
+-	do {
+-		itemq_next = itemq->ri_next;
+-		buf_f = (xfs_buf_log_format_t *)itemq->ri_buf[0].i_addr;
++		buf_f = (xfs_buf_log_format_t *)item->ri_buf[0].i_addr;
+ 
+-		switch (ITEM_TYPE(itemq)) {
++		switch (ITEM_TYPE(item)) {
+ 		case XFS_LI_BUF:
+-			flags = buf_f->blf_flags;
+-			if (!(flags & XFS_BLI_CANCEL)) {
+-				xlog_recover_insert_item_frontq(&trans->r_itemq,
+-								itemq);
++			if (!(buf_f->blf_flags & XFS_BLI_CANCEL)) {
++				list_move(&item->ri_list, &trans->r_itemq);
+ 				break;
+ 			}
+ 		case XFS_LI_INODE:
+@@ -1601,7 +1543,7 @@ xlog_recover_reorder_trans(
+ 		case XFS_LI_QUOTAOFF:
+ 		case XFS_LI_EFD:
+ 		case XFS_LI_EFI:
+-			xlog_recover_insert_item_backq(&trans->r_itemq, itemq);
++			list_move_tail(&item->ri_list, &trans->r_itemq);
+ 			break;
+ 		default:
+ 			xlog_warn(
+@@ -1609,8 +1551,8 @@ xlog_recover_reorder_trans(
+ 			ASSERT(0);
+ 			return XFS_ERROR(EIO);
+ 		}
+-		itemq = itemq_next;
+-	} while (first_item != itemq);
++	}
++	ASSERT(list_empty(&sort_list));
  	return 0;
  }
  
-@@ -1523,8 +1538,7 @@ xfs_ialloc_read_agi(
+@@ -2814,14 +2756,13 @@ xlog_recover_do_trans(
+ 	int			pass)
+ {
+ 	int			error = 0;
+-	xlog_recover_item_t	*item, *first_item;
++	xlog_recover_item_t	*item;
+ 
+ 	error = xlog_recover_reorder_trans(trans);
+ 	if (error)
  		return error;
  
- 	agi = XFS_BUF_TO_AGI(*bpp);
--	pag = &mp->m_perag[agno];
--
-+	pag = xfs_perag_get(mp, agno);
- 	if (!pag->pagi_init) {
- 		pag->pagi_freecount = be32_to_cpu(agi->agi_freecount);
- 		pag->pagi_count = be32_to_cpu(agi->agi_count);
-@@ -1537,6 +1551,7 @@ xfs_ialloc_read_agi(
- 	 */
- 	ASSERT(pag->pagi_freecount == be32_to_cpu(agi->agi_freecount) ||
- 		XFS_FORCED_SHUTDOWN(mp));
-+	xfs_perag_put(pag);
- 	return 0;
- }
+-	first_item = item = trans->r_itemq;
+-	do {
++	list_for_each_entry(item, &trans->r_itemq, ri_list) {
+ 		switch (ITEM_TYPE(item)) {
+ 		case XFS_LI_BUF:
+ 			error = xlog_recover_do_buffer_trans(log, item, pass);
+@@ -2854,8 +2795,7 @@ xlog_recover_do_trans(
  
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index bd3d816..0317b00 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2695,7 +2695,7 @@ xfs_iflush_cluster(
- 	ilist_size = inodes_per_cluster * sizeof(xfs_inode_t *);
- 	ilist = kmem_alloc(ilist_size, KM_MAYFAIL|KM_NOFS);
- 	if (!ilist)
--		return 0;
-+		goto out_put;
- 
- 	mask = ~(((XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_inodelog)) - 1);
- 	first_index = XFS_INO_TO_AGINO(mp, ip->i_ino) & mask;
-@@ -2764,6 +2764,8 @@ xfs_iflush_cluster(
- out_free:
- 	read_unlock(&pag->pag_ici_lock);
- 	kmem_free(ilist);
-+out_put:
-+	xfs_perag_put(pag);
- 	return 0;
- 
- 
-@@ -2807,6 +2809,7 @@ cluster_corrupt_out:
- 	 */
- 	xfs_iflush_abort(iq);
- 	kmem_free(ilist);
-+	xfs_perag_put(pag);
- 	return XFS_ERROR(EFSCORRUPTED);
- }
- 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index eb403b4..9055b60 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -438,18 +438,20 @@ xfs_initialize_perag(
- 			}
- 
- 			/* This ag is preferred for inodes */
--			pag = &mp->m_perag[index];
-+			pag = xfs_perag_get(mp, index);
- 			pag->pagi_inodeok = 1;
- 			if (index < max_metadata)
- 				pag->pagf_metadata = 1;
- 			xfs_initialize_perag_icache(pag);
-+			xfs_perag_put(pag);
- 		}
- 	} else {
- 		/* Setup default behavior for smaller filesystems */
- 		for (index = 0; index < agcount; index++) {
--			pag = &mp->m_perag[index];
-+			pag = xfs_perag_get(mp, index);
- 			pag->pagi_inodeok = 1;
- 			xfs_initialize_perag_icache(pag);
-+			xfs_perag_put(pag);
- 		}
- 	}
- 	return index;
-@@ -731,12 +733,13 @@ xfs_initialize_perag_data(xfs_mount_t *mp, xfs_agnumber_t agcount)
- 		error = xfs_ialloc_pagi_init(mp, NULL, index);
  		if (error)
  			return error;
--		pag = &mp->m_perag[index];
-+		pag = xfs_perag_get(mp, index);
- 		ifree += pag->pagi_freecount;
- 		ialloc += pag->pagi_count;
- 		bfree += pag->pagf_freeblks;
- 		bfreelst += pag->pagf_flcount;
- 		btree += pag->pagf_btreeblks;
-+		xfs_perag_put(pag);
- 	}
- 	/*
- 	 * Overwrite incore superblock counters with just-read data
+-		item = item->ri_next;
+-	} while (first_item != item);
++	}
+ 
+ 	return 0;
+ }
+@@ -2869,21 +2809,18 @@ STATIC void
+ xlog_recover_free_trans(
+ 	xlog_recover_t		*trans)
+ {
+-	xlog_recover_item_t	*first_item, *item, *free_item;
++	xlog_recover_item_t	*item, *n;
+ 	int			i;
+ 
+-	item = first_item = trans->r_itemq;
+-	do {
+-		free_item = item;
+-		item = item->ri_next;
+-		 /* Free the regions in the item. */
+-		for (i = 0; i < free_item->ri_cnt; i++) {
+-			kmem_free(free_item->ri_buf[i].i_addr);
+-		}
++	list_for_each_entry_safe(item, n, &trans->r_itemq, ri_list) {
++		/* Free the regions in the item. */
++		list_del(&item->ri_list);
++		for (i = 0; i < item->ri_cnt; i++)
++			kmem_free(item->ri_buf[i].i_addr);
+ 		/* Free the item itself */
+-		kmem_free(free_item->ri_buf);
+-		kmem_free(free_item);
+-	} while (first_item != item);
++		kmem_free(item->ri_buf);
++		kmem_free(item);
++	}
+ 	/* Free the transaction recover structure */
+ 	kmem_free(trans);
+ }
+@@ -2891,14 +2828,12 @@ xlog_recover_free_trans(
+ STATIC int
+ xlog_recover_commit_trans(
+ 	xlog_t			*log,
+-	xlog_recover_t		**q,
+ 	xlog_recover_t		*trans,
+ 	int			pass)
+ {
+ 	int			error;
+ 
+-	if ((error = xlog_recover_unlink_tid(q, trans)))
+-		return error;
++	hlist_del(&trans->r_list);
+ 	if ((error = xlog_recover_do_trans(log, trans, pass)))
+ 		return error;
+ 	xlog_recover_free_trans(trans);			/* no error */
+@@ -2926,7 +2861,7 @@ xlog_recover_unmount_trans(
+ STATIC int
+ xlog_recover_process_data(
+ 	xlog_t			*log,
+-	xlog_recover_t		*rhash[],
++	struct hlist_head	rhash[],
+ 	xlog_rec_header_t	*rhead,
+ 	xfs_caddr_t		dp,
+ 	int			pass)
+@@ -2960,7 +2895,7 @@ xlog_recover_process_data(
+ 		}
+ 		tid = be32_to_cpu(ohead->oh_tid);
+ 		hash = XLOG_RHASH(tid);
+-		trans = xlog_recover_find_tid(rhash[hash], tid);
++		trans = xlog_recover_find_tid(&rhash[hash], tid);
+ 		if (trans == NULL) {		   /* not found; add new tid */
+ 			if (ohead->oh_flags & XLOG_START_TRANS)
+ 				xlog_recover_new_tid(&rhash[hash], tid,
+@@ -2978,7 +2913,7 @@ xlog_recover_process_data(
+ 			switch (flags) {
+ 			case XLOG_COMMIT_TRANS:
+ 				error = xlog_recover_commit_trans(log,
+-						&rhash[hash], trans, pass);
++								trans, pass);
+ 				break;
+ 			case XLOG_UNMOUNT_TRANS:
+ 				error = xlog_recover_unmount_trans(trans);
+@@ -3517,7 +3452,7 @@ xlog_do_recovery_pass(
+ 	int			error = 0, h_size;
+ 	int			bblks, split_bblks;
+ 	int			hblks, split_hblks, wrapped_hblks;
+-	xlog_recover_t		*rhash[XLOG_RHASH_SIZE];
++	struct hlist_head	rhash[XLOG_RHASH_SIZE];
+ 
+ 	ASSERT(head_blk != tail_blk);
+ 
+diff --git a/fs/xfs/xfs_log_recover.h b/fs/xfs/xfs_log_recover.h
+index b225455..75d7492 100644
+--- a/fs/xfs/xfs_log_recover.h
++++ b/fs/xfs/xfs_log_recover.h
+@@ -35,22 +35,21 @@
+  * item headers are in ri_buf[0].  Additional buffers follow.
+  */
+ typedef struct xlog_recover_item {
+-	struct xlog_recover_item *ri_next;
+-	struct xlog_recover_item *ri_prev;
+-	int			 ri_type;
+-	int			 ri_cnt;	/* count of regions found */
+-	int			 ri_total;	/* total regions */
+-	xfs_log_iovec_t		 *ri_buf;	/* ptr to regions buffer */
++	struct list_head	ri_list;
++	int			ri_type;
++	int			ri_cnt;	/* count of regions found */
++	int			ri_total;	/* total regions */
++	xfs_log_iovec_t		*ri_buf;	/* ptr to regions buffer */
+ } xlog_recover_item_t;
+ 
+ struct xlog_tid;
+ typedef struct xlog_recover {
+-	struct xlog_recover *r_next;
+-	xlog_tid_t	    r_log_tid;		/* log's transaction id */
+-	xfs_trans_header_t  r_theader;		/* trans header for partial */
+-	int		    r_state;		/* not needed */
+-	xfs_lsn_t	    r_lsn;		/* xact lsn */
+-	xlog_recover_item_t *r_itemq;		/* q for items */
++	struct hlist_node	r_list;
++	xlog_tid_t		r_log_tid;	/* log's transaction id */
++	xfs_trans_header_t	r_theader;	/* trans header for partial */
++	int			r_state;	/* not needed */
++	xfs_lsn_t		r_lsn;		/* xact lsn */
++	struct list_head	r_itemq;	/* q for items */
+ } xlog_recover_t;
+ 
+ #define ITEM_TYPE(i)	(*(ushort *)(i)->ri_buf[0].i_addr)
 -- 
 1.6.5
 
