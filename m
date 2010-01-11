@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0BMXwIL185523 for <xfs@oss.sgi.com>; Mon, 11 Jan 2010 16:33:59 -0600
+	o0BMWw6Y185450 for <xfs@oss.sgi.com>; Mon, 11 Jan 2010 16:32:59 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 89ADCEF7940
-	for <xfs@oss.sgi.com>; Mon, 11 Jan 2010 14:34:54 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 83E821C42DB6
+	for <xfs@oss.sgi.com>; Mon, 11 Jan 2010 14:33:54 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id HrpG871umx4Xjxba for
-	<xfs@oss.sgi.com>; Mon, 11 Jan 2010 14:34:54 -0800 (PST)
-Date: Mon, 11 Jan 2010 17:34:54 -0500
+	by cuda.sgi.com with ESMTP id TAgH93c1rHyNmCfi for
+	<xfs@oss.sgi.com>; Mon, 11 Jan 2010 14:33:54 -0800 (PST)
+Date: Mon, 11 Jan 2010 17:33:54 -0500
 From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH 0/10] Perag lookup rework
-Message-ID: <20100111223453.GA28532@infradead.org>
+Message-ID: <20100111223354.GA23551@infradead.org>
 References: <1263210469-22171-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
@@ -31,7 +31,17 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-Oh, btw subjects are still a mixup between XFS: and xfs: 
+On Mon, Jan 11, 2010 at 10:47:39PM +1100, Dave Chinner wrote:
+> This is the previous set of patches all put together in the one series
+> for the current xfs-dev tree.
+> 
+> Patch 10 is a new patch - it embeds the busy extent list into the perag
+> structure rather than leaving as a separate allocation.
+
+All patches, including the new last one look good to me,
+
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
