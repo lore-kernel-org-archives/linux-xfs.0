@@ -1,18 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0CFVBh7031939 for <xfs@oss.sgi.com>; Tue, 12 Jan 2010 09:31:11 -0600
-Received: from mail.gmx.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id 42DE81C470E4
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2010 07:32:05 -0800 (PST)
-Received: from mail.gmx.net (mail.gmx.net [213.165.64.20]) by cuda.sgi.com
-	with SMTP id HByJrUwUsA4pGD3V for <xfs@oss.sgi.com>;
-	Tue, 12 Jan 2010 07:32:05 -0800 (PST)
-Message-ID: <4B4C95F1.20106@gmx.net>
-Date: Tue, 12 Jan 2010 17:32:01 +0200
-From: Alexandru Coman <ghost_3k@gmx.net>
+	o0CGgbBD040347 for <xfs@oss.sgi.com>; Tue, 12 Jan 2010 10:42:37 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 890E51C478A7
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2010 08:43:33 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id BiESJAMHqOGJb91y for
+	<xfs@oss.sgi.com>; Tue, 12 Jan 2010 08:43:33 -0800 (PST)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1NUjq8-00062b-RX
+	for xfs@oss.sgi.com; Tue, 12 Jan 2010 16:43:32 +0000
+Date: Tue, 12 Jan 2010 11:43:32 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH v3] xfsprogs: bump version and update changelog
+Message-ID: <20100112164332.GA22988@infradead.org>
+References: <20091223135718.GA29975@infradead.org>
+	<20100108122639.GA17229@infradead.org>
 MIME-Version: 1.0
-Subject: help investigating some xfs errors
+Content-Disposition: inline
+In-Reply-To: <20100108122639.GA17229@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,66 +34,61 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hello,
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-I'm having some problems with an XFS filesystem, and I'm wondering if
-anyone can point me in the right direction, it would be greatly appreciated.
-
-I have several XFS filesystems on top of LVM in a RAID-1 (mdadm) created
-on a pair of 1TB SATA drives. Running on Linux (Debian, amd64). One of
-the XFS filesystems is 600GB in size (65% used), storing ~19 mil files
-under 100KB (jpeg), usually under high load (read+write). There are also
-a few other smaller XFS partitions on the same drives. It has been
-running like this for 11 months, until a few days ago when I started to
-get a lot of errors.
-
-On Jan 10, I got a few lines with "ata3: hard resetting link", after
-which the partition could not be accessed, I couldn't umount/mount it.
-All other partitions were fine. I rebooted the server, but that
-filesystem still wouldn't mount (it said "Structure needs cleaning"), I
-then ran xfs_repair on it, which reported that I needed to use the "-L"
-option to destroy the log. I then ran "xfs_repair -L" which appeared to
-fix a lot of errors, and then I was able to mount the filesystem again.
-Everything appeared to be ok at that point.
-
-Jan 10 night: a lot of xfs call traces start to appear in the log
-
-Jan 11: xfs call traces along with
-- xfs_force_shutdown(dm-4,0x8) called from line 1164 of file
-fs/xfs/xfs_trans.c.  Return address = 0xffffffffa01999ff
-- xfs_imap_to_bp: xfs_trans_read_buf()returned an error 5 on dm-4. 
-Returning error.
-- lots of "Filesystem "dm-4": xfs_log_force: error 5 returned."
-The filesystem disappeared, but I could unmount and mount it again with
-no errors. At this point I've also decided to update the kernel, and
-switched from 2.6.26 to 2.6.30 Then ran xfs_repair which again found a
-few errors.
-
-Jan 12:  xfs call traces along with:
-- Filesystem "dm-4": corrupt dinode 1293803384, extent total = 1,
-nblocks = 0.  Unmount and run xfs_repair.
-- Filesystem "dm-4": corrupt dinode 665458404, extent total = 1, nblocks
-= 0.  Unmount and run xfs_repair.
-- Filesystem "dm-4": corrupt dinode 225720890, extent total = 1, nblocks
-= 0.  Unmount and run xfs_repair.
-I then unmounted the fs and ran xfs_repair again. This time the output
-was massive compared to the previous runs, and it put around ~ 100.000
-files in lost+found.
-
-Beside 3 lines on Jan 10 with "ata3: hard resetting link", there have
-been no sign of possible hardware problems. The raid and the hdd's
-appear to be fine, no errors. What's curious is that I'm experiencing
-problems only with the large XFS filesystem, and there hasn't been not
-even a single error in the logs about the other xfs partitions.
-
-So, if anyone has any ideea what I can research next, to help me find
-out more information about what's happening here...
-
-I've uploaded some detailed logs at  http://ghost3k.net/xfs1/
-
-
-Thanks,
-Alexandru Coman
+Index: xfsprogs-dev/VERSION
+===================================================================
+--- xfsprogs-dev.orig/VERSION	2010-01-02 12:11:42.871003354 +0100
++++ xfsprogs-dev/VERSION	2010-01-06 18:49:38.221274008 +0100
+@@ -2,6 +2,6 @@
+ # This file is used by configure to get version information
+ #
+ PKG_MAJOR=3
+-PKG_MINOR=0
+-PKG_REVISION=4
++PKG_MINOR=1
++PKG_REVISION=0
+ PKG_BUILD=1
+Index: xfsprogs-dev/doc/CHANGES
+===================================================================
+--- xfsprogs-dev.orig/doc/CHANGES	2010-01-02 12:11:42.873010034 +0100
++++ xfsprogs-dev/doc/CHANGES	2010-01-08 13:24:09.150268999 +0100
+@@ -1,3 +1,23 @@
++xfsprogs-3.1.0
++	- Reduce memory usage in xfs_repair by using better data structures.
++	- Add additional checks in xfs_repair to detect freespace btree
++	  corruption instead of only rebuilding the btrees.  Useful for the
++	  no-modify mode.
++	- Fix libhandle to use the right path to issue by-handle ioctls for
++	  symbolic links and special files.
++	- Use lazy superblock counters by default.  At least kernel 2.6.22 is
++	  needed for this feature.
++	- Add a German translation, thanks to Chris Leick.
++	- Enable the madvise and mincor commands in xfs_io.
++	- Fix unsafe temporary file creation in xfs_fsr.
++	- Add support for discarding unused space on SSDs or thing provionen
++	  arrays in mkfs.xfs.
++	- Allow linking against libblkid for topology information.
++	- Add symbol versioning for libhandle.
++	- Remove the included RPM and binary tarball built infrastructure.
++	- Various build system improvements.
++	- Small fixes to xfs_db and xfs_io.
++
+ xfsprogs-3.0.4 (17 September 2009)
+ 	- Fix a memory leak in xfsprogs.
+ 	- Increase hash chain length in xfsprogs when running out of memory.
+Index: xfsprogs-dev/debian/changelog
+===================================================================
+--- xfsprogs-dev.orig/debian/changelog	2010-01-02 12:11:42.872012141 +0100
++++ xfsprogs-dev/debian/changelog	2010-01-06 18:49:38.224273412 +0100
+@@ -1,6 +1,6 @@
+ xfsprogs (3.1.0) unstable; urgency=low
+ 
+-  * New bugfix release
++  * New upstream release
+   * Merged German translation (closes: #521389)
+   * Merged German translation update (closes: #557100)
+   * Uptodate po file is provided now (closes: #538962)
 
 _______________________________________________
 xfs mailing list
