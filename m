@@ -1,21 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0CD8SEH015782 for <xfs@oss.sgi.com>; Tue, 12 Jan 2010 07:08:29 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 52B0415D763
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2010 05:09:24 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 9nsaVG3pYYuUVtLj for
-	<xfs@oss.sgi.com>; Tue, 12 Jan 2010 05:09:24 -0800 (PST)
-Date: Tue, 12 Jan 2010 08:09:22 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: xfs_swap_extents needs to handle dynamic fork offsets
-Message-ID: <20100112130922.GA30985@infradead.org>
-References: <1263272506-15085-1-git-send-email-david@fromorbit.com>
+	o0CFVBh7031939 for <xfs@oss.sgi.com>; Tue, 12 Jan 2010 09:31:11 -0600
+Received: from mail.gmx.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id 42DE81C470E4
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2010 07:32:05 -0800 (PST)
+Received: from mail.gmx.net (mail.gmx.net [213.165.64.20]) by cuda.sgi.com
+	with SMTP id HByJrUwUsA4pGD3V for <xfs@oss.sgi.com>;
+	Tue, 12 Jan 2010 07:32:05 -0800 (PST)
+Message-ID: <4B4C95F1.20106@gmx.net>
+Date: Tue, 12 Jan 2010 17:32:01 +0200
+From: Alexandru Coman <ghost_3k@gmx.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1263272506-15085-1-git-send-email-david@fromorbit.com>
+Subject: help investigating some xfs errors
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,99 +25,68 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-> +	TP_printk("dev %d:%d %s inode 0x%llx, %s format, num_extents %d, "
-> +		  "Max in-fork extents %d, broot size %d, fork offset %d",
+Hello,
 
-It would be nice to keep the
+I'm having some problems with an XFS filesystem, and I'm wondering if
+anyone can point me in the right direction, it would be greatly appreciated.
 
-	"dev %d:%d ino 0x%llx"
+I have several XFS filesystems on top of LVM in a RAID-1 (mdadm) created
+on a pair of 1TB SATA drives. Running on Linux (Debian, amd64). One of
+the XFS filesystems is 600GB in size (65% used), storing ~19 mil files
+under 100KB (jpeg), usually under high load (read+write). There are also
+a few other smaller XFS partitions on the same drives. It has been
+running like this for 11 months, until a few days ago when I started to
+get a lot of errors.
 
-prefix as a convention so that all trace records are similar at their
-beginning.
+On Jan 10, I got a few lines with "ata3: hard resetting link", after
+which the partition could not be accessed, I couldn't umount/mount it.
+All other partitions were fine. I rebooted the server, but that
+filesystem still wouldn't mount (it said "Structure needs cleaning"), I
+then ran xfs_repair on it, which reported that I needed to use the "-L"
+option to destroy the log. I then ran "xfs_repair -L" which appeared to
+fix a lot of errors, and then I was able to mount the filesystem again.
+Everything appeared to be ok at that point.
 
->  #undef TRACE_INCLUDE_PATH
-> diff --git a/fs/xfs/xfs_dfrag.c b/fs/xfs/xfs_dfrag.c
-> @@ -53,7 +53,7 @@ xfs_swapext(
->  	xfs_swapext_t	*sxp)
->  {
->  	xfs_inode_t     *ip, *tip;
-> -	struct file	*file, *target_file;
-> +	struct file	*file, *tmp_file;
+Jan 10 night: a lot of xfs call traces start to appear in the log
 
-I think these xfs_swapext belong into a separate patch.  While they
-make the code quite a bit more redable they're purely cleanups and
-can wait for 2.6.34.  And while you're at it you might also want to
-merge xfs_swap_extents into xfs_swapext - there's no need for that
-split at all.
+Jan 11: xfs call traces along with
+- xfs_force_shutdown(dm-4,0x8) called from line 1164 of file
+fs/xfs/xfs_trans.c.  Return address = 0xffffffffa01999ff
+- xfs_imap_to_bp: xfs_trans_read_buf()returned an error 5 on dm-4. 
+Returning error.
+- lots of "Filesystem "dm-4": xfs_log_force: error 5 returned."
+The filesystem disappeared, but I could unmount and mount it again with
+no errors. At this point I've also decided to update the kernel, and
+switched from 2.6.26 to 2.6.30 Then ran xfs_repair which again found a
+few errors.
 
-> +static int
-> +xfs_swap_extents_check_format(
-> +	xfs_inode_t	*ip,	/* target inode */
-> +	xfs_inode_t	*tip)	/* tmp inode */
+Jan 12:  xfs call traces along with:
+- Filesystem "dm-4": corrupt dinode 1293803384, extent total = 1,
+nblocks = 0.  Unmount and run xfs_repair.
+- Filesystem "dm-4": corrupt dinode 665458404, extent total = 1, nblocks
+= 0.  Unmount and run xfs_repair.
+- Filesystem "dm-4": corrupt dinode 225720890, extent total = 1, nblocks
+= 0.  Unmount and run xfs_repair.
+I then unmounted the fs and ran xfs_repair again. This time the output
+was massive compared to the previous runs, and it put around ~ 100.000
+files in lost+found.
 
-What about just using struct xfs_inode * for new code?
+Beside 3 lines on Jan 10 with "ata3: hard resetting link", there have
+been no sign of possible hardware problems. The raid and the hdd's
+appear to be fine, no errors. What's curious is that I'm experiencing
+problems only with the large XFS filesystem, and there hasn't been not
+even a single error in the logs about the other xfs partitions.
 
-> +	/* Should never get a local format */
-> +	if (ip->i_d.di_format == XFS_DINODE_FMT_LOCAL ||
-> +	    tip->i_d.di_format == XFS_DINODE_FMT_LOCAL)
-> +		return EINVAL;
+So, if anyone has any ideea what I can research next, to help me find
+out more information about what's happening here...
 
-Ok, same check as in the old code.  Any reason we drop the XFS_ERROR
-here?
-
-> +	/*
-> +	 * if the target inode has less extents that then temporary inode then
-> +	 * why did userspace call us?
-> +	 */
-> +	if (ip->i_d.di_nextents < tip->i_d.di_nextents)
-> +		return EINVAL;
-
-Ok.
-> +	/*
-> +	 * if the target inode is in extent form and the temp inode is in btree
-> +	 * form then we will end up with the target inode in the wrong format
-> +	 * as we already know there are less extents in the temp inode.
-> +	 */
-> +	if (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
-> +	    tip->i_d.di_format == XFS_DINODE_FMT_BTREE)
-> +		return EINVAL;
-
-Ok.
-
-> +	/* Check temp in extent form to max in target */
-> +	if (tip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
-> +	    XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) > ip->i_df.if_ext_max)
-> +		return EINVAL;
-> +
-> +	/* Check target in extent form to max in temp */
-> +	if (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
-> +	    XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) > tip->i_df.if_ext_max)
-> +		return EINVAL;
-
-So we check this either way just to be sure, ok.
-
-> +	/* Check root block of temp in btree form to max in target */
-> +	if (tip->i_d.di_format == XFS_DINODE_FMT_BTREE &&
-> +	    XFS_IFORK_BOFF(ip) &&
-> +	    tip->i_df.if_broot_bytes > XFS_IFORK_BOFF(ip))
-> +		return EINVAL;
-> +
-> +	/* Check root block of target in btree form to max in temp */
-> +	if (ip->i_d.di_format == XFS_DINODE_FMT_BTREE &&
-> +	    XFS_IFORK_BOFF(tip) &&
-> +	    ip->i_df.if_broot_bytes > XFS_IFORK_BOFF(tip))
-> +		return EINVAL;
-
-Same here.
+I've uploaded some detailed logs at  http://ghost3k.net/xfs1/
 
 
-Patch looks good,
-
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Thanks,
+Alexandru Coman
 
 _______________________________________________
 xfs mailing list
