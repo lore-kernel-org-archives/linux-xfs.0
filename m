@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0C4ijmN217443 for <xfs@oss.sgi.com>; Mon, 11 Jan 2010 22:44:46 -0600
+	o0C4ij5i217442 for <xfs@oss.sgi.com>; Mon, 11 Jan 2010 22:44:46 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 71B1A1C44455
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 810981C44458
 	for <xfs@oss.sgi.com>; Mon, 11 Jan 2010 20:45:39 -0800 (PST)
 Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
 	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	Z9UTXNuvV7XjLPFz for <xfs@oss.sgi.com>;
+	OaMoCcEqHkVuZ7ZZ for <xfs@oss.sgi.com>;
 	Mon, 11 Jan 2010 20:45:39 -0800 (PST)
 Received: from discord (unverified [121.44.168.156])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	11326441-1927428
+	11326442-1927428
 	for <xfs@oss.sgi.com>; Tue, 12 Jan 2010 15:15:37 +1030 (CDT)
 Received: from [192.168.1.6] (helo=disturbed) by discord with esmtp (Exim 4.69)
-	(envelope-from <dave@fromorbit.com>) id 1NUYdL-0004g6-OA
+	(envelope-from <dave@fromorbit.com>) id 1NUYdL-0004g5-MV
 	for xfs@oss.sgi.com; Tue, 12 Jan 2010 15:45:35 +1100
 Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1NUYZJ-0005za-8j
+	(envelope-from <dave@disturbed.disaster>) id 1NUYZJ-0005zX-5d
 	for xfs@oss.sgi.com; Tue, 12 Jan 2010 15:41:25 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/4] xfsqa: make unmounting loop devices in 073 work again
-Date: Tue, 12 Jan 2010 15:41:07 +1100
-Message-Id: <1263271269-18997-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/4] xfsqa: filter the fsstress seed output in 104
+Date: Tue, 12 Jan 2010 15:41:06 +1100
+Message-Id: <1263271269-18997-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1263271269-18997-1-git-send-email-david@fromorbit.com>
 References: <1263271269-18997-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,45 +40,42 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Loop devices are now created and destroyed on demand, and
-the existing hacks to do this no longer work. Remove them.
+Otherwise it fails to match the golden output. Also add
+the test to the auto group so that it is run regularly now
+that the growfs problems are fixed.
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- 073 |   13 +------------
- 1 files changed, 1 insertions(+), 12 deletions(-)
+ 104   |    2 +-
+ group |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/073 b/073
-index 5059448..ac4c64f 100755
---- a/073
-+++ b/073
-@@ -3,15 +3,6 @@
- #
- # Test xfs_copy
- #
--# HACK WARNING:
--#
--# Due to the severe brokenness of mount's handling of loopback devices, we
--# hardcode the loop devices we use for this test. This enables us to clean up
--# the pieces when we remount the loop device because mount loses all trace of
--# the fact this is a loop device. Hence to enable us to unmount the hosting
--# filesystem, we need to manually tear down the relevant loop device. If
--# mount ever gets fixed then this hack can be removed.
--#
- #-----------------------------------------------------------------------
- # Copyright (c) 2000-2003,2008 Silicon Graphics, Inc.  All Rights Reserved.
- #
-@@ -127,9 +118,7 @@ _verify_copy()
- 	diff -u $tmp.geometry1 $tmp.geometry2
- 
- 	echo unmounting and removing new image
--	loop=`mount | grep $target | grep -o -e 'loop=.*[^),]' | grep -o -e '/.*$'`
--	umount $source $target
--	losetup -d $loop > /dev/null 2>&1
-+	umount $source_dir $target_dir
- 	rm -f $target
+diff --git a/104 b/104
+index 6dea1d3..5f18d08 100755
+--- a/104
++++ b/104
+@@ -60,7 +60,7 @@ _stress_scratch()
+ 	procs=3
+ 	nops=1000
+ 	# -w ensures that the only ops are ones which cause write I/O
+-	$FSSTRESS_PROG -d $SCRATCH_MNT -w -p $procs -n $nops $FSSTRESS_AVOID &
++	$FSSTRESS_PROG -d $SCRATCH_MNT -w -p $procs -n $nops $FSSTRESS_AVOID > /dev/null &
  }
  
+ # real QA test starts here
+diff --git a/group b/group
+index 8d055a2..2c2e293 100644
+--- a/group
++++ b/group
+@@ -210,7 +210,7 @@ prealloc
+ 101 udf
+ 102 udf
+ 103 metadata dir ioctl auto quick
+-104 growfs ioctl prealloc
++104 growfs ioctl prealloc auto
+ 105 acl auto quick
+ 106 quota
+ 107 quota
 -- 
 1.6.5
 
