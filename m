@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0C4itwX217514 for <xfs@oss.sgi.com>; Mon, 11 Jan 2010 22:44:55 -0600
+	o0C4ijmN217443 for <xfs@oss.sgi.com>; Mon, 11 Jan 2010 22:44:46 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6E1DCEFE5BB
-	for <xfs@oss.sgi.com>; Mon, 11 Jan 2010 20:45:48 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
-	[150.101.137.103]) by cuda.sgi.com with ESMTP id
-	AeQ1ahyavgq2jByC for <xfs@oss.sgi.com>;
-	Mon, 11 Jan 2010 20:45:48 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 71B1A1C44455
+	for <xfs@oss.sgi.com>; Mon, 11 Jan 2010 20:45:39 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
+	[150.101.137.104]) by cuda.sgi.com with ESMTP id
+	Z9UTXNuvV7XjLPFz for <xfs@oss.sgi.com>;
+	Mon, 11 Jan 2010 20:45:39 -0800 (PST)
 Received: from discord (unverified [121.44.168.156])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	11406828-1927428
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2010 15:15:47 +1030 (CDT)
+	11326441-1927428
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2010 15:15:37 +1030 (CDT)
 Received: from [192.168.1.6] (helo=disturbed) by discord with esmtp (Exim 4.69)
-	(envelope-from <dave@fromorbit.com>) id 1NUYdV-0004gA-Qa
-	for xfs@oss.sgi.com; Tue, 12 Jan 2010 15:45:45 +1100
+	(envelope-from <dave@fromorbit.com>) id 1NUYdL-0004g6-OA
+	for xfs@oss.sgi.com; Tue, 12 Jan 2010 15:45:35 +1100
 Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1NUYZJ-0005zj-CD
+	(envelope-from <dave@disturbed.disaster>) id 1NUYZJ-0005za-8j
 	for xfs@oss.sgi.com; Tue, 12 Jan 2010 15:41:25 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 4/4] xfsqa: add simple xfs_fsr test
-Date: Tue, 12 Jan 2010 15:41:09 +1100
-Message-Id: <1263271269-18997-5-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/4] xfsqa: make unmounting loop devices in 073 work again
+Date: Tue, 12 Jan 2010 15:41:07 +1100
+Message-Id: <1263271269-18997-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1263271269-18997-1-git-send-email-david@fromorbit.com>
 References: <1263271269-18997-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,106 +40,45 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-We have very little fsr test coverage in the test suite right now.
-042 is the only test that runs it, and it only defragments a single
-file.
-
-Improve the coverage by simply running xfs_fsr of the test
-filesystem. This gives xfs_fsr a wide variety of inodes to try to
-defragment. A simple test like this would have tripped over the
-attr2 fork offset problems in the swap extents ioctl long ago
-thanks to the varied nature of inodes the test suite leaves around
-in this filesystem.
+Loop devices are now created and destroyed on demand, and
+the existing hacks to do this no longer work. Remove them.
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- 221     |   57 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 221.out |    2 ++
- group   |    1 +
- 3 files changed, 60 insertions(+), 0 deletions(-)
- create mode 100644 221
- create mode 100644 221.out
+ 073 |   13 +------------
+ 1 files changed, 1 insertions(+), 12 deletions(-)
 
-diff --git a/221 b/221
-new file mode 100644
-index 0000000..5fe5583
---- /dev/null
-+++ b/221
-@@ -0,0 +1,57 @@
-+#! /bin/sh
-+# FS QA Test No. 221
-+#
-+# xfs_fsr QA tests
-+# run xfs_fsr over the test filesystem to give it a wide and varied set of
-+# inodes to try to defragment. This is effectively a crash/assert failure
-+# test looking for corruption induced by xfs_fsr runs.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2010 Dave Chinner.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=david@fromorbit.com
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+
-+_cleanup()
-+{
-+    rm -f $tmp.*
-+}
-+
-+trap "_cleanup ; exit \$status" 0 1 2 3 15
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_supported_os Linux
-+
-+[ "$XFS_FSR_PROG" = "" ] && _notrun "xfs_fsr not found"
-+
-+xfs_fsr $TEST_MNT > /dev/null 2>&1
-+
-+echo "--- silence is golden ---"
-+status=0 ; exit
-diff --git a/221.out b/221.out
-new file mode 100644
-index 0000000..34b5d1b
---- /dev/null
-+++ b/221.out
-@@ -0,0 +1,2 @@
-+QA output created by 221
-+--- silence is golden ---
-diff --git a/group b/group
-index 2c2e293..528f5e9 100644
---- a/group
-+++ b/group
-@@ -330,3 +330,4 @@ prealloc
- 218 auto fsr quick
- 219 auto quota quick
- 220 auto quota quick
-+221 fsr ioctl auto quick
+diff --git a/073 b/073
+index 5059448..ac4c64f 100755
+--- a/073
++++ b/073
+@@ -3,15 +3,6 @@
+ #
+ # Test xfs_copy
+ #
+-# HACK WARNING:
+-#
+-# Due to the severe brokenness of mount's handling of loopback devices, we
+-# hardcode the loop devices we use for this test. This enables us to clean up
+-# the pieces when we remount the loop device because mount loses all trace of
+-# the fact this is a loop device. Hence to enable us to unmount the hosting
+-# filesystem, we need to manually tear down the relevant loop device. If
+-# mount ever gets fixed then this hack can be removed.
+-#
+ #-----------------------------------------------------------------------
+ # Copyright (c) 2000-2003,2008 Silicon Graphics, Inc.  All Rights Reserved.
+ #
+@@ -127,9 +118,7 @@ _verify_copy()
+ 	diff -u $tmp.geometry1 $tmp.geometry2
+ 
+ 	echo unmounting and removing new image
+-	loop=`mount | grep $target | grep -o -e 'loop=.*[^),]' | grep -o -e '/.*$'`
+-	umount $source $target
+-	losetup -d $loop > /dev/null 2>&1
++	umount $source_dir $target_dir
+ 	rm -f $target
+ }
+ 
 -- 
 1.6.5
 
