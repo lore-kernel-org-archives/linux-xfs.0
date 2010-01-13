@@ -1,30 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0D1A8xc098858 for <xfs@oss.sgi.com>; Tue, 12 Jan 2010 19:10:08 -0600
-Received: from mail-pw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B90A1160707
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2010 17:11:03 -0800 (PST)
-Received: from mail-pw0-f53.google.com (mail-pw0-f53.google.com
-	[209.85.160.53]) by cuda.sgi.com with ESMTP id GrM1HgYFlT4MUYK3
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2010 17:11:03 -0800 (PST)
-Received: by pwj3 with SMTP id 3so890908pwj.12
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2010 17:11:02 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20091215012640.GA4850@discord.disaster>
-References: <4B1F1211.90607@sandeen.net> <4B1F18C4.3060704@sandeen.net>
-	<389deec70912082053v4310057dg479f6d4b6c4b46f7@mail.gmail.com>
-	<4B1F31FD.3020705@sandeen.net>
-	<389deec70912082220pcb3b5d1q516ac197d31502c5@mail.gmail.com>
-	<389deec70912082230g38987576pc48d7699f23844c5@mail.gmail.com>
-	<389deec70912140119q40ed91cao62fe9c9ebdf13601@mail.gmail.com>
-	<4B26604B.3060901@sandeen.net>
-	<389deec70912141649g767a1540hdeae66707c4c68fd@mail.gmail.com>
-	<20091215012640.GA4850@discord.disaster>
-Date: Wed, 13 Jan 2010 09:11:02 +0800
-Message-ID: <389deec71001121711n53aa8837y5e6d6299f71efbd6@mail.gmail.com>
-Subject: Re: [BUG report]xfs_btree_make_block_unfull generated an OOPS
-From: hank peng <pengxihan@gmail.com>
+	o0D2b2XN105953 for <xfs@oss.sgi.com>; Tue, 12 Jan 2010 20:37:03 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6EDA91C492D6
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2010 18:37:55 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	NilLJtAFd0i9BLVX for <xfs@oss.sgi.com>;
+	Tue, 12 Jan 2010 18:37:55 -0800 (PST)
+Received: from discord (unverified [121.44.168.156])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	11579427-1927428
+	for <xfs@oss.sgi.com>; Wed, 13 Jan 2010 13:07:54 +1030 (CDT)
+Received: from [192.168.1.6] (helo=disturbed) by discord with esmtp (Exim 4.69)
+	(envelope-from <dave@fromorbit.com>) id 1NUt7I-0005uC-TZ
+	for xfs@oss.sgi.com; Wed, 13 Jan 2010 13:37:52 +1100
+Received: from dave by disturbed with local (Exim 4.71)
+	(envelope-from <dave@disturbed.disaster>) id 1NUt3G-0001VT-0B
+	for xfs@oss.sgi.com; Wed, 13 Jan 2010 13:33:42 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] xfsprogs: Make the compile output cleaner
+Date: Wed, 13 Jan 2010 13:33:41 +1100
+Message-Id: <1263350021-5733-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,146 +31,239 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-MjAwOS8xMi8xNSBEYXZlIENoaW5uZXIgPGRhdmlkQGZyb21vcmJpdC5jb20+Ogo+IE9uIFR1ZSwg
-RGVjIDE1LCAyMDA5IGF0IDA4OjQ5OjM3QU0gKzA4MDAsIGhhbmsgcGVuZyB3cm90ZToKPj4gSGks
-IEVyaWM6Cj4+IEkgYWRkIHNvbWUgY29kZSBsaWtlIHRoaXM6Cj4+IGlmICgqc3RhdCkgewo+PiDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBwcmludGsoIipzdGF0ID0gMHglMDh4LCBvaW5kZXggPSAl
-cCwgaW5kZXggPSAlcFxuIiwKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgKnN0YXQsIG9pbmRleCwgaW5kZXgpOwo+PiDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCBpZiAob2luZGV4ID09IE5VTEwgfHwgaW5kZXggPT0gTlVMTCkgewo+Cj4gVGhpcyB3b24n
-dCBjYXRjaCBiYWQgbm9uLU5VTEwgcG9pbnRlcnMgbGlrZSB5b3UgYXJlIHNlZWluZy4KPgo+PiDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBwcmludGsoIkJVRyBvY2N1cmVkIVxu
-Iik7Cj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHByaW50aygib2luZGV4
-ID0gJXAsIGluZGV4ID0gJXBcbiIsIG9pbmRleCwgaW5kZXgpOwo+PiDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCBCVUcoKTsKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgfQo+
-PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAqb2luZGV4ID0gKmluZGV4ID0gY3VyLT5iY19wdHJz
-W2xldmVsXTsKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgcmV0dXJuIDA7Cj4+IMKgIMKgIMKg
-IMKgIH0KPj4KPj4gQW5kIHRoZSBzYW1lIE9PUFMgaGFwcGVuZWQgYWdhaW4gYnV0IGEgbGl0dGxl
-IGRpZmZlcmVudCwga2VybmVsIG1lc3NhZ2VzIGFyZToKPj4KPj4gPHNuaXA+Cj4+ICpzdGF0ID0g
-MHgwMDAwMDAwMSwgb2luZGV4ID0gZTg3ZDdiZjgsIGluZGV4ID0gZTg3ZDdiZmMKPj4gKnN0YXQg
-PSAweDAwMDAwMDAxLCBvaW5kZXggPSBlODdkN2JmOCwgaW5kZXggPSBlODdkN2JmYwo+PiAqc3Rh
-dCA9IDB4MDAwMDAwMDEsIG9pbmRleCA9IGU4N2Q3YmY4LCBpbmRleCA9IGU4N2Q3YmZjCj4+ICpz
-dGF0ID0gMHgwMDAwMDAwMSwgb2luZGV4ID0gZTg3ZDdiZjgsIGluZGV4ID0gZTg3ZDdiZmMKPj4g
-KnN0YXQgPSAweDAwMDAwMDAxLCBvaW5kZXggPSAwMDAwMDUwMSwgaW5kZXggPSAyMjAwODQyNAo+
-PiBVbmFibGUgdG8gaGFuZGxlIGtlcm5lbCBwYWdpbmcgcmVxdWVzdCBmb3IgZGF0YSBhdCBhZGRy
-ZXNzIDB4MjIwMDg0MjQKPgo+IEdpdmVuIHRoYXQgb2luZGV4IGFuZCBpbmRleCBhcmUgc3RhY2sg
-dmFyaWJsZXMsIHRoaXMgaW5kaWNhdGVzIHNvbWUKPiB0aGluZyBpcyBwcm9iYWJseSBzbWFzaGlu
-ZyB0aGUgc3RhY2suIFBvc3NpYmx5IGEgYnVmZmVyIG92ZXJydW4uIFRvCj4gbmFycm93IGRvd24g
-dGhlIHBvc3NpYmxlIGNhdXNlLCBjYW4geW91IGFkZCB0aGUgZGVidWc6Cj4KPiDCoCDCoCDCoCDC
-oHByaW50aygiJXM6JXM6IG9pbmRleCA9ICVwLCBpbmRleCA9ICVwXG4iLAo+IMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgX19mdW5jX18sIF9fTElORV9fLCBvaW5kZXgsIGluZGV4
-KTsKPgo+IHRocm91Z2hvdXQgdGhlIHhmc19idHJlZV9tYWtlX2Jsb2NrX3VuZnVsbCgpIGZ1bmN0
-aW9uPyBpLmUuIGF0Cj4gZmlyc3QgZW50cnksIGJlZm9yZSB0aGUgeGZzX2J0cmVlX3JzaGlmdCgp
-IGNhbGwsIGJlZm9yZSB0aGUKPiB4ZnNfYnRyZWVfbHNoaWZ0KCkgY2FsbCwgZXRjLCB0byBzZWUg
-aWYgYW55IG9mIHRoZSBwYXJhbWV0ZXJzCj4gYXJlIGJlaW5nIG1vZGlmaWVkIGR1cmluZyBleGVj
-dXRpb24gb2YgdGhlIGZ1bmN0aW9uPwo+Cj4gSWYgdGhlIHZhcmlhYmxlcyBiZWluZyBwYXNzZWQg
-aW50byB4ZnNfYnRyZWVfbWFrZV9ibG9ja191bmZ1bGwoKSBhcmUKPiBhbHJlYWR5IGJhZCwgdGhl
-biBkbyB0aGUgc2FtZSB0aGluZyBmb3IgdGhlIGNhbGxlcgo+IHhmc19idHJlZV9pbnNlcnQoKS4g
-VGhpcyBtYXkgaGVscCBuYXJyb3cgZG93biB3aGVyZSB0aGUgcHJvYmxlbQo+IGlzIGNvbWluZyBm
-cm9tLi4uLgo+CkkgYWRkZWQgdGhlIGZvbGxvd2luZyBkZWJ1ZyBjb2RlIGFzIHlvdSBzYWlkOgo8
-Y29kZT4KcHJpbnRrKCIlczogYmVmb3JlIHhmc19idHJlZV9yc2hpZnQsIG9pbmRleCA9ICVwLCBp
-bmRleCA9ICVwXG4iLAogICAgICAgICAgICAgICAgICAgICAgICBfX2Z1bmNfXywgb2luZGV4LCBp
-bmRleCk7CiAgICAgICAgZXJyb3IgPSB4ZnNfYnRyZWVfcnNoaWZ0KGN1ciwgbGV2ZWwsIHN0YXQp
-OwogICAgICAgIGlmIChlcnJvciB8fCAqc3RhdCkKICAgICAgICAgICAgICAgIHJldHVybiBlcnJv
-cjsKCiAgICAgICAgLyogTmV4dCwgdHJ5IHNoaWZ0aW5nIGFuIGVudHJ5IHRvIHRoZSBsZWZ0IG5l
-aWdoYm9yLiAqLwogICAgICAgIHByaW50aygiJXM6IGJlZm9yZSB4ZnNfYnRyZWVfbHNoaWZ0LCBv
-aW5kZXggPSAlcCwgaW5kZXggPSAlcFxuIiwKICAgICAgICAgICAgICAgICAgICAgICAgX19mdW5j
-X18sIG9pbmRleCwgaW5kZXgpOwogICAgICAgIGVycm9yID0geGZzX2J0cmVlX2xzaGlmdChjdXIs
-IGxldmVsLCBzdGF0KTsKICAgICAgICBpZiAoZXJyb3IpCiAgICAgICAgICAgICAgICByZXR1cm4g
-ZXJyb3I7CgogICAgICAgIGlmICgqc3RhdCkgewogICAgICAgICAgICAgICAgcHJpbnRrKCIlczog
-b2luZGV4ID0gJXAsIGluZGV4ID0gJXAsICpzdGF0ID0gJWRcbiIsCl9fZnVuY19fLCBvaW5kZXgs
-IGluZGV4LCAqc3RhdCk7CiAgICAgICAgICAgICAgICAqb2luZGV4ID0gKmluZGV4ID0gY3VyLT5i
-Y19wdHJzW2xldmVsXTsKICAgICAgICAgICAgICAgIHJldHVybiAwOwogICAgICAgIH0KPC9jb2Rl
-PgoKSXQgaGFzIGJlZW4gd29ya2luZyBmaW5lIGZvciBhYm91dCAzNiBob3VycyB3aXRob3V0IHBy
-b2JsZW0sIGJ1dCBpbgp0b2RheSdzIG1vcm5pbmcsIG9kZCBPT1BTIGFwcGVhcmVkOgoKeGZzX2J0
-cmVlX21ha2VfYmxvY2tfdW5mdWxsOiBiZWZvcmUgeGZzX2J0cmVlX3JzaGlmdCwgb2luZGV4ID0K
-ZDNhMjdiZDgsIGluZGV4ID0gZDNhMjdiZGMKeGZzX2J0cmVlX21ha2VfYmxvY2tfdW5mdWxsOiBi
-ZWZvcmUgeGZzX2J0cmVlX2xzaGlmdCwgb2luZGV4ID0KZDNhMjdiZDgsIGluZGV4ID0gZDNhMjdi
-ZGMKeGZzX2J0cmVlX21ha2VfYmxvY2tfdW5mdWxsOiBvaW5kZXggPSBkM2EyN2JkOCwgaW5kZXgg
-PSBkM2EyN2JkYywgKnN0YXQgPSAxCnhmc19idHJlZV9tYWtlX2Jsb2NrX3VuZnVsbDogYmVmb3Jl
-IHhmc19idHJlZV9yc2hpZnQsIG9pbmRleCA9CmQzYTI3YmQ4LCBpbmRleCA9IGQzYTI3YmRjClVu
-YWJsZSB0byBoYW5kbGUga2VybmVsIHBhZ2luZyByZXF1ZXN0IGZvciBkYXRhIGF0IGFkZHJlc3Mg
-MHgwMDAwMDUwMQpGYXVsdGluZyBpbnN0cnVjdGlvbiBhZGRyZXNzOiAweGMwMTlmNGYwCk9vcHM6
-IEtlcm5lbCBhY2Nlc3Mgb2YgYmFkIGFyZWEsIHNpZzogMTEgWyMyXQpNUEM4NXh4IENEUwpNb2R1
-bGVzIGxpbmtlZCBpbjoKTklQOiBjMDE5ZjRmMCBMUjogYzAxOWY0ZTggQ1RSOiBjMDIzZmFiYwpS
-RUdTOiBkM2EyN2FkMCBUUkFQOiAwMzAwICAgVGFpbnRlZDogRyAgICAgIEQgICAgICgyLjYuMzEu
-Ni1zdm40NSkKTVNSOiAwMDAyOTAwMCA8RUUsTUUsQ0U+ICBDUjogMjIwMDg0MjQgIFhFUjogMjAw
-MDAwMDAKREVBUjogMDAwMDA1MDEsIEVTUjogMDAwMDAwMDAKVEFTSyA9IGVmYjQ2YTMwWzIwMjcz
-XSAnY3AnIFRIUkVBRDogZDNhMjYwMDAKR1BSMDA6IGMwMTlmNGU4IGQzYTI3YjgwIGVmYjQ2YTMw
-IDAwMDAwMDAwIGQzYTI3YjM4IGQzYTI3YjM4IDAwMDAwMDEwIDAwN2YwZjI2CkdQUjA4OiBjMDRh
-N2M0MCBmZmZmZmZmZiBlODUxNzg1MCBkM2EyN2I4MCAyMDAwODQyMiAxMDBlYjM5YyAzZmZmNTQw
-MCAxMDBhMDAwMApHUFIxNjogMTAwZDVhYzggMDAwMDAwMDAgMDE2ZDMwZjMgZTg1MTc4NTAgYzAx
-OWQwOGMgMDAwMjkwMDAgZDNhMjdiZjAgYzAyM2ZhYmMKR1BSMjQ6IGMwMTlkMDY4IDAwMDAwMDAw
-IDIyMDA4NDI0IGQzYTI3YmRjIDAwMDAwNTAxIGQzYTI3YmQ4IDAwMDAwMDAwIGU4NTE3ODUwCk5J
-UCBbYzAxOWY0ZjBdIHhmc19idHJlZV9tYWtlX2Jsb2NrX3VuZnVsbCsweDhjLzB4MWY4CkxSIFtj
-MDE5ZjRlOF0geGZzX2J0cmVlX21ha2VfYmxvY2tfdW5mdWxsKzB4ODQvMHgxZjgKQ2FsbCBUcmFj
-ZToKW2QzYTI3YjgwXSBbYzAxOWY0ZThdIHhmc19idHJlZV9tYWtlX2Jsb2NrX3VuZnVsbCsweDg0
-LzB4MWY4ICh1bnJlbGlhYmxlKQpbZDNhMjdiYzBdIFtjMDE5ZjlkMF0geGZzX2J0cmVlX2luc3Jl
-YysweDM3NC8weDRiMApbZDNhMjdjMzBdIFtjMDE5ZmI4OF0geGZzX2J0cmVlX2luc2VydCsweDdj
-LzB4MWMwCltkM2EyN2M5MF0gW2MwMTg2NWQwXSB4ZnNfZnJlZV9hZ19leHRlbnQrMHgzNGMvMHg4
-MTAKW2QzYTI3ZDAwXSBbYzAxODcxNjhdIHhmc19mcmVlX2V4dGVudCsweGRjLzB4MTA0CltkM2Ey
-N2Q5MF0gW2MwMThmZTUwXSB4ZnNfYm1hcF9maW5pc2grMHgxNTQvMHgxYTAKW2QzYTI3ZGMwXSBb
-YzAxYjY5N2NdIHhmc19pdHJ1bmNhdGVfZmluaXNoKzB4MjU0LzB4M2I4CltkM2EyN2U0MF0gW2Mw
-MWQyMTM0XSB4ZnNfaW5hY3RpdmUrMHgyYzQvMHg0NTAKW2QzYTI3ZTgwXSBbYzAxZTE5M2NdIHhm
-c19mc19jbGVhcl9pbm9kZSsweDQwLzB4NTAKW2QzYTI3ZTkwXSBbYzAwYTg0YmNdIGNsZWFyX2lu
-b2RlKzB4NmMvMHgxMDgKW2QzYTI3ZWEwXSBbYzAwYTg3ZDBdIGdlbmVyaWNfZGVsZXRlX2lub2Rl
-KzB4MTE0LzB4MTE4CltkM2EyN2ViMF0gW2MwMGE3ZmY4XSBpcHV0KzB4NzQvMHg5NApbZDNhMjdl
-YzBdIFtjMDBhMDAzY10gZG9fdW5saW5rYXQrMHgxMTQvMHgxOTgKW2QzYTI3ZjQwXSBbYzAwMGY3
-YWNdIHJldF9mcm9tX3N5c2NhbGwrMHgwLzB4M2MKSW5zdHJ1Y3Rpb24gZHVtcDoKN2Y2NmRiNzgg
-N2Y0NGQzNzggN2ZhNWViNzggMzg2M2VjYTQgNGNjNjMxODIgNGJlOTdlZjUgN2ZlM2ZiNzggN2Zj
-NGYzNzgKN2Y4NWUzNzggNGJmZmRiMTUgN2M3OTFiNzkgNDA4MjAwMTAgPDgwMWMwMDAwPiAyZjgw
-MDAwMCA0MTllMDAxYyA4MDAxMDA0NAotLS1bIGVuZCB0cmFjZSA5NWUyYzQ5ZWI1YTM0ZjlhIF0t
-LS0KCihnZGIpIGxpc3QgKih4ZnNfYnRyZWVfbWFrZV9ibG9ja191bmZ1bGwrMHg4YykKMHhjMDE5
-ZjRmMCBpcyBpbiB4ZnNfYnRyZWVfbWFrZV9ibG9ja191bmZ1bGwgKGZzL3hmcy94ZnNfYnRyZWUu
-YzoyNjM2KS4KMjYzMQoyNjMyICAgICAgICAgICAgLyogRmlyc3QsIHRyeSBzaGlmdGluZyBhbiBl
-bnRyeSB0byB0aGUgcmlnaHQgbmVpZ2hib3IuICovCjI2MzMgICAgICAgICAgICBwcmludGsoIiVz
-OiBiZWZvcmUgeGZzX2J0cmVlX3JzaGlmdCwgb2luZGV4ID0gJXAsIGluZGV4ID0gJXBcbiIsCjI2
-MzQgICAgICAgICAgICAgICAgICAgICAgICAgICAgX19mdW5jX18sIG9pbmRleCwgaW5kZXgpOwoy
-NjM1ICAgICAgICAgICAgZXJyb3IgPSB4ZnNfYnRyZWVfcnNoaWZ0KGN1ciwgbGV2ZWwsIHN0YXQp
-OwoyNjM2ICAgICAgICAgICAgaWYgKGVycm9yIHx8ICpzdGF0KQoyNjM3ICAgICAgICAgICAgICAg
-ICAgICByZXR1cm4gZXJyb3I7CjI2MzgKMjYzOSAgICAgICAgICAgIC8qIE5leHQsIHRyeSBzaGlm
-dGluZyBhbiBlbnRyeSB0byB0aGUgbGVmdCBuZWlnaGJvci4gKi8KMjY0MCAgICAgICAgICAgIHBy
-aW50aygiJXM6IGJlZm9yZSB4ZnNfYnRyZWVfbHNoaWZ0LCBvaW5kZXggPSAlcCwgaW5kZXggPSAl
-cFxuIiwKCkl0IHNlZW1zIHRoYXQgYWZ0ZXIgY2FsbCB4ZnNfYnRyZWVfcnNoaWZ0LCB0aGUgdmFs
-dWUgb2YgJ3N0YXQnIGhhcwpiZWVuIGNoYW5nZWQsIGhvdyBjb3VsZCBpdCBiZSBwb3NzaWJsZSBz
-aW5jZSBpdCBpcyBsb2NhbCB2YXJpYWJsZT8KCiMgdW5hbWUgLWEKTGludXggU3RvcmFnZSAyLjYu
-MzEuNi1zdm40NSAjODcgTW9uIEphbiAxMSAxMzoyMjoxNCBDU1QgMjAxMCBwcGMgdW5rbm93bgoj
-IG1vdW50CnJvb3RmcyBvbiAvIHR5cGUgcm9vdGZzIChydykKL2Rldi9yb290IG9uIC8gdHlwZSBl
-eHQyIChydyxyZWxhdGltZSxlcnJvcnM9Y29udGludWUpCi9kZXYvbXRkYmxvY2syIG9uIC9tbnQv
-c3lzX2RhdGEgdHlwZSBqZmZzMiAocncscmVsYXRpbWUpCnByb2Mgb24gL3Byb2MgdHlwZSBwcm9j
-IChydyxyZWxhdGltZSkKc3lzZnMgb24gL3N5cyB0eXBlIHN5c2ZzIChydyxyZWxhdGltZSkKdG1w
-ZnMgb24gL29wdC91cGdyYWRlIHR5cGUgdG1wZnMgKHJ3LHJlbGF0aW1lKQpkZXZwdHMgb24gL2Rl
-di9wdHMgdHlwZSBkZXZwdHMgKHJ3LHJlbGF0aW1lLGdpZD01LG1vZGU9NjIwKQovZGV2L3ZnX2xv
-Zy9sdl9sb2cgb24gL3Zhci9sb2cgdHlwZSByZWlzZXJmcyAocncscmVsYXRpbWUpCi9kZXYvUG9v
-bF9tZDEvU1MxIG9uIC9tbnQvUG9vbF9tZDEvU1MxIHR5cGUgeGZzCihydyxyZWxhdGltZSxhdHRy
-Mixpbm9kZTY0LG5vcXVvdGEpCi9kZXYvUG9vbF9tZDIvU1MyIG9uIC9tbnQvUG9vbF9tZDIvU1My
-IHR5cGUgeGZzCihydyxyZWxhdGltZSxhdHRyMixpbm9kZTY0LG5vcXVvdGEpCnJvb3RAU3RvcmFn
-ZTovdmFyL2xvZyMgZGYgLWgKRmlsZXN5c3RlbSAgICAgICAgICAgICAgICBTaXplICAgICAgVXNl
-ZCBBdmFpbGFibGUgVXNlJSBNb3VudGVkIG9uCi9kZXYvcm9vdCAgICAgICAgICAgICAgIDEyNC4w
-TSAgICAgNzIuNk0gICAgIDUxLjRNICA1OSUgLwovZGV2L210ZGJsb2NrMiAgICAgICAgICAgIDEu
-ME0gICAgNDA4LjBLICAgIDYxNi4wSyAgNDAlIC9tbnQvc3lzX2RhdGEKdG1wZnMgICAgICAgICAg
-ICAgICAgICAgNTA1LjNNICAgICAgICAgMCAgICA1MDUuM00gICAwJSAvb3B0L3VwZ3JhZGUKL2Rl
-di92Z19sb2cvbHZfbG9nICAgICAgIDEwLjBHICAgICAzMi40TSAgICAgMTAuMEcgICAwJSAvdmFy
-L2xvZwovZGV2L1Bvb2xfbWQxL1NTMSAgICAgICAgIDIuN1QgICAgMjcwLjJHICAgICAgMi41VCAg
-MTAlIC9tbnQvUG9vbF9tZDEvU1MxCi9kZXYvUG9vbF9tZDIvU1MyICAgICAgICAgMi43VCAgICAz
-NDQuMEcgICAgICAyLjRUICAxMiUgL21udC9Qb29sX21kMi9TUzIKCkZyb20gYXNzZW1ibHkgY29k
-ZSwgSSBub3RpY2VkIHRoYXQgdGhlIGxvY2FsIHZhcmlhYmxlICdzdGF0JyBkaWRuJ3QKaGF2ZSBy
-ZWFsIHNwYWNlIGluIHN0YWNrLiBJdCBpcyBvcHRpbWlzZWQgdG8gYmUgYSByZWdpc3RlcihyMjgp
-LgpBY2NvcmRpbmcgdG8gcG93ZXJwYyBBQkksIGJlZm9yZSBjYWxsIHhmc19idHJlZV9yc2hpZnQs
-IHNvbWUgcmVnaXN0ZXJzCndpbGwgYmUgc2F2ZWQgYXQgc3RhY2sgYW5kIGJlZm9yZSByZXR1cm4g
-ZnJvbSB4ZnNfYnRyZWVfcnNoaWZ0LCB0aGVzZQpyZWdpc3RlcnMgd2lsbCBiZSByZXN0b3JlZC4g
-SXMgaXQgcG9zc2libGUgdGhhdCBhIHNtYXNoIG9jY3VyZWQgYXQKdGhpcyB0aW1lPwoKQlRXLCBJ
-IG5vdGljZWQgdGhhdCBteSBjcm9zcy1jb21waWxlciAicG93ZXJwYy1saW51eC1nbnVzcGUtZ2Nj
-IgpkaWRuJ3QgaGF2ZSBkZWZhdWx0IDQgYnl0ZXMgYWxpZ25tZW50IGJ1dCA4IGJ5dGVzIGFsaWdu
-bWVudC4KCgoKPiBDaGVlcnMsCj4KPiBEYXZlLgo+IC0tCj4gRGF2ZSBDaGlubmVyCj4gZGF2aWRA
-ZnJvbW9yYml0LmNvbQo+CgoKCi0tIApUaGUgc2ltcGxlc3QgaXMgbm90IGFsbCBiZXN0IGJ1dCB0
-aGUgYmVzdCBpcyBzdXJlbHkgdGhlIHNpbXBsZXN0IQoKX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20K
-aHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+We don't need to see every compiler command line for every file that
+is compiled. This makes it hard to see warnings and errors during
+compile. For progress notification, we really only need to see the
+diretory/file being operated on.
+
+Turn down the verbosity of output by suppressing various make output
+and provide better overall visibility of which directory is being
+operated on, what the operation is and what is being done to the
+files by the build/clean process.
+
+Sample output from a build:
+
+....
+Building libxlog
+    [CC] xfs_log_recover.c
+    [CC] util.c
+    [LD] libxlog.la
+Building libxcmd
+    [CC] command.c
+    [CC] input.c
+    [CC] paths.c
+    [CC] projects.c
+    [CC] help.c
+    [CC] quit.c
+    [LD] libxcmd.la
+....
+
+Sample output from cleaning:
+
+$ make clean
+Cleaning include
+Cleaning libxfs
+Cleaning libxlog
+Cleaning libxcmd
+Cleaning libhandle
+Cleaning libdisk
+Cleaning copy
+Cleaning db
+....
+
+If you want to see a noisy build (i.e. every command), use:
+
+$ make Q=
+
+and that will output all the commands that are now suppressed by
+default.
+
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+---
+ Makefile            |   24 +++++++++++++-----------
+ include/buildmacros |   10 +++++-----
+ include/buildrules  |   24 +++++++++++++++++-------
+ mkfs/Makefile       |    3 ++-
+ 4 files changed, 37 insertions(+), 24 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 2d394e4..2fbfb51 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,6 +1,8 @@
+ #
+ # Copyright (c) 2000-2006 Silicon Graphics, Inc.  All Rights Reserved.
+ #
++Q ?= @
++MAKEOPTS = --no-print-directory Q=$(Q)
+ 
+ TOPDIR = .
+ HAVE_BUILDDEFS = $(shell test -f $(TOPDIR)/include/builddefs && echo yes || echo no)
+@@ -36,9 +38,9 @@ SUBDIRS = include $(LIB_SUBDIRS) $(TOOL_SUBDIRS)
+ 
+ default: include/builddefs include/platform_defs.h
+ ifeq ($(HAVE_BUILDDEFS), no)
+-	$(MAKE) -C . $@
++	$(Q)$(MAKE) $(MAKEOPTS) -C . $@
+ else
+-	$(MAKE) $(SUBDIRS)
++	$(Q)$(MAKE) $(MAKEOPTS) $(SUBDIRS)
+ endif
+ 
+ # tool/lib dependencies
+@@ -80,7 +82,7 @@ include/platform_defs.h: include/builddefs
+ ## Recover from the removal of $@
+ 	@if test -f $@; then :; else \
+ 		rm -f include/builddefs; \
+-		$(MAKE) $(AM_MAKEFLAGS) include/builddefs; \
++		$(MAKE) $(MAKEOPTS) $(AM_MAKEFLAGS) include/builddefs; \
+ 	fi
+ 
+ install: default $(addsuffix -install,$(SUBDIRS))
+@@ -111,19 +113,19 @@ realclean: distclean
+ #
+ dist: include/builddefs include/platform_defs.h default
+ ifeq ($(HAVE_BUILDDEFS), no)
+-	$(MAKE) -C . $@
++	$(Q)$(MAKE) $(MAKEOPTS) -C . $@
+ else
+-	$(MAKE) $(SRCTAR)
++	$(Q)$(MAKE) $(MAKEOPTS) $(SRCTAR)
+ endif
+ 
+ deb: include/builddefs include/platform_defs.h
+ ifeq ($(HAVE_BUILDDEFS), no)
+-	$(MAKE) -C . $@
++	$(Q)$(MAKE) $(MAKEOPTS) -C . $@
+ else
+-	$(MAKE) $(SRCDIR)
+-	$(MAKE) -C po
+-	$(MAKE) source-link
+-	cd $(SRCDIR) && dpkg-buildpackage
++	$(Q)$(MAKE) $(MAKEOPTS) $(SRCDIR)
++	$(Q)$(MAKE) $(MAKEOPTS) -C po
++	$(Q)$(MAKE) $(MAKEOPTS) source-link
++	$(Q)cd $(SRCDIR) && dpkg-buildpackage
+ endif
+ 
+ $(SRCDIR) : $(_FORCE)
+@@ -131,6 +133,6 @@ $(SRCDIR) : $(_FORCE)
+ 	mkdir -p $@
+ 
+ $(SRCTAR) : default $(SRCDIR)
+-	$(MAKE) source-link
++	$(Q)$(MAKE) $(MAKEOPTS) source-link
+ 	unset TAPE; $(TAR) -cf - $(SRCDIR) | $(ZIP) --best > $@ && \
+ 	echo Wrote: $@
+diff --git a/include/buildmacros b/include/buildmacros
+index 099570f..62babca 100644
+--- a/include/buildmacros
++++ b/include/buildmacros
+@@ -13,7 +13,7 @@ LDFLAGS += $(LOADERFLAGS) $(LLDFLAGS)
+ LTLDFLAGS += $(LOADERFLAGS)
+ LDLIBS = $(LLDLIBS) $(PLDLIBS) $(MALLOCLIB)
+ 
+-MAKEOPTS = --no-print-directory
++MAKEOPTS = --no-print-directory Q=$(Q)
+ SRCFILES = Makefile $(HFILES) $(CFILES) $(LSRCFILES) $(LFILES) $(YFILES)
+ SRCFILES += $(QAHFILES)
+ 
+@@ -45,10 +45,10 @@ LIBNAME = $(basename $(LTLIBRARY))
+ LTOBJECTS = $(OBJECTS:.o=.lo)
+ LTVERSION = $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
+ 
+-LTLINK = $(LIBTOOL) --tag=CC --mode=link $(CC)
+-LTEXEC = $(LIBTOOL) --mode=execute
+-LTINSTALL = $(LIBTOOL) --mode=install $(INSTALL)
+-LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CCF)
++LTLINK = $(LIBTOOL) --quiet --tag=CC --mode=link $(CC)
++LTEXEC = $(LIBTOOL) --quiet --mode=execute
++LTINSTALL = $(LIBTOOL) --quiet --mode=install $(INSTALL)
++LTCOMPILE = $(LIBTOOL) --quiet --tag=CC --mode=compile $(CCF)
+ 
+ ifeq ($(ENABLE_SHARED),yes)
+ LTLDFLAGS += -rpath $(PKG_ROOT_LIB_DIR)
+diff --git a/include/buildrules b/include/buildrules
+index a06d480..a0c77a9 100644
+--- a/include/buildrules
++++ b/include/buildrules
+@@ -7,10 +7,11 @@ _BUILDRULES_INCLUDED_ = 1
+ include $(TOPDIR)/include/builddefs
+ 
+ clean clobber : $(addsuffix -clean,$(SUBDIRS))
+-	rm -f $(DIRT)
+-	rm -fr $(DIRDIRT)
++	$(Q)rm -f $(DIRT)
++	$(Q)rm -fr $(DIRDIRT)
+ %-clean:
+-	$(MAKE) -C $* clean
++	@echo "Cleaning $*"
++	$(Q)$(MAKE) $(MAKEOPTS) -C $* clean
+ 
+ # Never blow away subdirs
+ ifdef SUBDIRS
+@@ -18,7 +19,8 @@ ifdef SUBDIRS
+ .PHONY: $(SUBDIRS)
+ 
+ $(SUBDIRS):
+-	$(MAKE) -C $@
++	@echo "Building $@"
++	$(Q)$(MAKE) $(MAKEOPTS) -C $@
+ endif
+ 
+ source-link: 
+@@ -38,15 +40,23 @@ source-link:
+ 
+ ifdef LTCOMMAND
+ $(LTCOMMAND) : $(SUBDIRS) $(OBJECTS) $(LTDEPENDENCIES)
+-	$(LTLINK) -o $@ $(LDFLAGS) $(OBJECTS) $(LDLIBS)
++	@echo "    [LD] $@"
++	$(Q)$(LTLINK) -o $@ $(LDFLAGS) $(OBJECTS) $(LDLIBS)
+ endif
+ 
+ ifdef LTLIBRARY
+ $(LTLIBRARY) : $(SUBDIRS) $(LTOBJECTS)
+-	$(LTLINK) $(LTLDFLAGS) -o $(LTLIBRARY) $(LTOBJECTS) $(LTLIBS)
++	@echo "    [LD] $@"
++	$(Q)$(LTLINK) $(LTLDFLAGS) -o $(LTLIBRARY) $(LTOBJECTS) $(LTLIBS)
+ 
+ %.lo: %.c
+-	$(LTCOMPILE) -c $<
++	@echo "    [CC] $<"
++	$(Q)$(LTCOMPILE) -c $<
++else
++%.o: %.c
++	@echo "    [CC] $<"
++	$(Q)$(CC) $(CFLAGS) -c $<
++
+ endif
+ 
+ ifdef POTHEAD
+diff --git a/mkfs/Makefile b/mkfs/Makefile
+index 9fcadf2..7065f24 100644
+--- a/mkfs/Makefile
++++ b/mkfs/Makefile
+@@ -36,7 +36,8 @@ endif
+ include $(BUILDRULES)
+ 
+ $(FSTYP):
+-	$(LTLINK) $@.c -o $@ $(CFLAGS) $(LDFLAGS) $(LIBDISK) $(PLDLIBS)
++	@echo "    [CC] $@"
++	$(Q)$(LTLINK) $@.c -o $@ $(CFLAGS) $(LDFLAGS) $(LIBDISK) $(PLDLIBS)
+ 
+ install: default
+ 	$(INSTALL) -m 755 -d $(PKG_ROOT_SBIN_DIR)
+-- 
+1.6.5
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
