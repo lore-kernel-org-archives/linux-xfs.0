@@ -1,13 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0DMw8eg197802 for <xfs@oss.sgi.com>; Wed, 13 Jan 2010 16:58:08 -0600
+	o0DMgdOv197016 for <xfs@oss.sgi.com>; Wed, 13 Jan 2010 16:42:40 -0600
 Content-class: urn:content-classes:message
 MIME-Version: 1.0
-Subject: Re: xfstests: Clean up build output
-Date: Wed, 13 Jan 2010 16:59:04 -0600
-Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A6967@cf--amer001e--3.americas.sgi.com>
-In-Reply-To: <20100113105018.GP17483@discord.disaster>
+Subject: RE: [PATCH] xfsprogs: Make the compile output cleaner V2
+Date: Wed, 13 Jan 2010 16:43:33 -0600
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A6966@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <20100113220814.GA17310@infradead.org>
 From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -21,32 +21,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-> We don't need to see every compiler command line for every file that
-> is compiled. This makes it hard to see warnings and errors during
-> compile. For progress notification, we really only need to see the
-> directory/file being operated on.
+Christoph Hellwig wrote:
+> On Wed, Jan 13, 2010 at 09:03:27PM +1100, Dave Chinner wrote:
+>> -LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
+>> +DISTDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
+>>  	built .census install.* install-dev.* *.gz autom4te.cache/* libtool \
+>>  	include/builddefs include/platform_defs.h
 > 
-> Turn down the verbosity of output by suppressing various make output
-> and provide better overall visibility of which directory is being
-> operated on, what the operation is and what is being done to the
-> files by the build/clean process.
+>>  distclean: clean
+>> -	rm -f $(LDIRT)
+>> +	$(Q)rm -f $(DISTDIRT)
 > 
-> While doing this, remove explicit target-per-file rules in the
-> subdirectories being built and replace them with target based rules
-> using the buildrules hooks for doing this.  This results in the
-> makefiles being simpler, smaller and more consistent.
+> What does this have to do with the rest?
 > 
-> This patch does not address the dmapi subdirectory of the xfstests
-> build system.
-> 
-> The old style verbose builds can still be run via "make V=1 ..."
-> 
-> Signed-off-by: Dave Chinner <david@fromorbit.com>
+> Otherwise looks good,
 
-Didn't get this in my mail box but it looks good to me.
+I didn't get the original in my e-mail or I would have
+responded to it directly.  I like this change a lot.
+
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> Any chance you could also port it to xfsdump?
+
+And dmapi and xfstests, for that matter...
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
