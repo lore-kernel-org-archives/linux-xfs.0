@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0DM57ac194021 for <xfs@oss.sgi.com>; Wed, 13 Jan 2010 16:05:07 -0600
+	o0DM56Op194002 for <xfs@oss.sgi.com>; Wed, 13 Jan 2010 16:05:06 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C758F10C6DD2
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3DD951C4CFDC
 	for <xfs@oss.sgi.com>; Wed, 13 Jan 2010 14:06:03 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id fIq94B67RCavGqfi for
+	by cuda.sgi.com with ESMTP id klOCfGOmdVu3JfIm for
 	<xfs@oss.sgi.com>; Wed, 13 Jan 2010 14:06:03 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1NVBLn-0004UW-4V
-	for xfs@oss.sgi.com; Wed, 13 Jan 2010 22:06:03 +0000
-Message-Id: <20100113220602.928911019@bombadil.infradead.org>
-Date: Wed, 13 Jan 2010 17:05:49 -0500
+	Linux)) id 1NVBLm-0004Ty-QR
+	for xfs@oss.sgi.com; Wed, 13 Jan 2010 22:06:02 +0000
+Message-Id: <20100113220602.632551077@bombadil.infradead.org>
+Date: Wed, 13 Jan 2010 17:05:48 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 2/3] xfs: clean up error handling in xfs_trans_dqresv
+Subject: [PATCH 1/3] xfs: kill XFS_QMOPT_ASYNC
 References: <20100113220547.846700560@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-cleanup-xfs_trans_dqresv
+Content-Disposition: inline; filename=xfs-kill-XFS_QMOPT_ASYNC
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,110 +32,36 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Move the error code selection after the goto label and fold the
-xfs_quota_error helper into it.
+The option is unused and one of the few remaining users of xfs_bawrite,
+so let's get rid of it.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs/fs/xfs/quota/xfs_trans_dquot.c
+Index: linux-2.6/fs/xfs/quota/xfs_dquot.c
 ===================================================================
---- xfs.orig/fs/xfs/quota/xfs_trans_dquot.c	2010-01-13 13:37:38.652253919 +0100
-+++ xfs/fs/xfs/quota/xfs_trans_dquot.c	2010-01-13 13:50:50.132006544 +0100
-@@ -589,14 +589,6 @@ xfs_trans_unreserve_and_mod_dquots(
- 	}
- }
+--- linux-2.6.orig/fs/xfs/quota/xfs_dquot.c	2010-01-08 15:10:07.694006652 +0100
++++ linux-2.6/fs/xfs/quota/xfs_dquot.c	2010-01-08 15:10:26.227006460 +0100
+@@ -1253,8 +1253,6 @@ xfs_qm_dqflush(
  
--STATIC int
--xfs_quota_error(uint flags)
--{
--	if (flags & XFS_QMOPT_ENOSPC)
--		return ENOSPC;
--	return EDQUOT;
--}
--
+ 	if (flags & XFS_QMOPT_DELWRI) {
+ 		xfs_bdwrite(mp, bp);
+-	} else if (flags & XFS_QMOPT_ASYNC) {
+-		error = xfs_bawrite(mp, bp);
+ 	} else {
+ 		error = xfs_bwrite(mp, bp);
+ 	}
+Index: linux-2.6/fs/xfs/xfs_quota.h
+===================================================================
+--- linux-2.6.orig/fs/xfs/xfs_quota.h	2010-01-08 15:10:07.729006360 +0100
++++ linux-2.6/fs/xfs/xfs_quota.h	2010-01-08 15:10:12.062005658 +0100
+@@ -226,7 +226,6 @@ typedef struct xfs_qoff_logformat {
+  * flags for dqflush and dqflush_all.
+  */
+ #define XFS_QMOPT_SYNC		0x1000000
+-#define XFS_QMOPT_ASYNC		0x2000000
+ #define XFS_QMOPT_DELWRI	0x4000000
+ 
  /*
-  * This reserves disk blocks and inodes against a dquot.
-  * Flags indicate if the dquot is to be locked here and also
-@@ -612,7 +604,6 @@ xfs_trans_dqresv(
- 	long		ninos,
- 	uint		flags)
- {
--	int		error;
- 	xfs_qcnt_t	hardlimit;
- 	xfs_qcnt_t	softlimit;
- 	time_t		timer;
-@@ -649,7 +640,6 @@ xfs_trans_dqresv(
- 		warnlimit = XFS_QI_RTBWARNLIMIT(dqp->q_mount);
- 		resbcountp = &dqp->q_res_rtbcount;
- 	}
--	error = 0;
- 
- 	if ((flags & XFS_QMOPT_FORCE_RES) == 0 &&
- 	    dqp->q_core.d_id &&
-@@ -667,19 +657,13 @@ xfs_trans_dqresv(
- 			 * nblks.
- 			 */
- 			if (hardlimit > 0ULL &&
--			     (hardlimit <= nblks + *resbcountp)) {
--				error = xfs_quota_error(flags);
-+			    hardlimit <= nblks + *resbcountp)
- 				goto error_return;
--			}
--
- 			if (softlimit > 0ULL &&
--			     (softlimit <= nblks + *resbcountp)) {
--				if ((timer != 0 && get_seconds() > timer) ||
--				    (warns != 0 && warns >= warnlimit)) {
--					error = xfs_quota_error(flags);
--					goto error_return;
--				}
--			}
-+			    softlimit <= nblks + *resbcountp &&
-+			    ((timer != 0 && get_seconds() > timer) ||
-+			     (warns != 0 && warns >= warnlimit)))
-+				goto error_return;
- 		}
- 		if (ninos > 0) {
- 			count = be64_to_cpu(dqp->q_core.d_icount);
-@@ -692,16 +676,13 @@ xfs_trans_dqresv(
- 			softlimit = be64_to_cpu(dqp->q_core.d_ino_softlimit);
- 			if (!softlimit)
- 				softlimit = q->qi_isoftlimit;
--			if (hardlimit > 0ULL && count >= hardlimit) {
--				error = xfs_quota_error(flags);
-+
-+			if (hardlimit > 0ULL && count >= hardlimit)
-+				goto error_return;
-+			if (softlimit > 0ULL && count >= softlimit &&
-+			    ((timer != 0 && get_seconds() > timer) ||
-+			     (warns != 0 && warns >= warnlimit)))
- 				goto error_return;
--			} else if (softlimit > 0ULL && count >= softlimit) {
--				if ((timer != 0 && get_seconds() > timer) ||
--				     (warns != 0 && warns >= warnlimit)) {
--					error = xfs_quota_error(flags);
--					goto error_return;
--				}
--			}
- 		}
- 	}
- 
-@@ -736,9 +717,14 @@ xfs_trans_dqresv(
- 	ASSERT(dqp->q_res_rtbcount >= be64_to_cpu(dqp->q_core.d_rtbcount));
- 	ASSERT(dqp->q_res_icount >= be64_to_cpu(dqp->q_core.d_icount));
- 
-+	xfs_dqunlock(dqp);
-+	return 0;
-+
- error_return:
- 	xfs_dqunlock(dqp);
--	return error;
-+	if (flags & XFS_QMOPT_ENOSPC)
-+		return ENOSPC;
-+	return EDQUOT;
- }
- 
- 
 
 _______________________________________________
 xfs mailing list
