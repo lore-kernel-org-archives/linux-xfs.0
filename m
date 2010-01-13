@@ -1,28 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0DA6lps142961 for <xfs@oss.sgi.com>; Wed, 13 Jan 2010 04:06:48 -0600
+	o0DAnRsb145995 for <xfs@oss.sgi.com>; Wed, 13 Jan 2010 04:49:27 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1554316148D
-	for <xfs@oss.sgi.com>; Wed, 13 Jan 2010 02:07:41 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 061EA12484ED
+	for <xfs@oss.sgi.com>; Wed, 13 Jan 2010 02:50:21 -0800 (PST)
 Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
 	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	zXFuIIs0KoE7ARRt for <xfs@oss.sgi.com>;
-	Wed, 13 Jan 2010 02:07:41 -0800 (PST)
-Received: from discord (unverified [121.44.168.156])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	11361509-1927428
-	for <xfs@oss.sgi.com>; Wed, 13 Jan 2010 20:37:40 +1030 (CDT)
-Received: from [192.168.1.6] (helo=disturbed) by discord with esmtp (Exim 4.69)
-	(envelope-from <dave@fromorbit.com>) id 1NV08Y-0006Kp-J8
-	for xfs@oss.sgi.com; Wed, 13 Jan 2010 21:07:38 +1100
-Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1NV04V-0001BQ-Gc
-	for xfs@oss.sgi.com; Wed, 13 Jan 2010 21:03:27 +1100
+	Pq8ClJXPWJDczpKg for <xfs@oss.sgi.com>;
+	Wed, 13 Jan 2010 02:50:21 -0800 (PST)
+Date: Wed, 13 Jan 2010 21:50:18 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfsprogs: Make the compile output cleaner V2
-Date: Wed, 13 Jan 2010 21:03:27 +1100
-Message-Id: <1263377007-4500-1-git-send-email-david@fromorbit.com>
+Subject: Re: allocsize mount option
+Message-ID: <20100113105018.GP17483@discord.disaster>
+References: <348821.11898.qm@web76206.mail.sg1.yahoo.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <348821.11898.qm@web76206.mail.sg1.yahoo.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,322 +25,117 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Gim Leong Chin <chingimleong@yahoo.com.sg>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-We don't need to see every compiler command line for every file that
-is compiled. This makes it hard to see warnings and errors during
-compile. For progress notification, we really only need to see the
-diretory/file being operated on.
+On Wed, Jan 13, 2010 at 05:42:16PM +0800, Gim Leong Chin wrote:
+> Hi,
+> =
 
-Turn down the verbosity of output by suppressing various make output
-and provide better overall visibility of which directory is being
-operated on, what the operation is and what is being done to the
-files by the build/clean process. Also fix the top level clean rule
-so that we don't run configure scripts after a make clean, only after
-a make distclean.
+> =
 
-Sample output from a build:
+> The application is ANSYS, which writes 128 GB files.=A0 The existing
+> computer with SUSE Linux Enterprise Desktop 11 which is used for
+> running ANSYS, has two software RAID 0 devices made up of five 1
+> TB drives.=A0 The /home partition is 4.5 T, and it is now 4 TB
+> full.=A0 I see a fragmentation > 19%.
 
-....
-Building libxlog
-    [CC] xfs_log_recover.c
-    [CC] util.c
-    [LD] libxlog.la
-Building libxcmd
-    [CC] command.c
-    [CC] input.c
-    [CC] paths.c
-    [CC] projects.c
-    [CC] help.c
-    [CC] quit.c
-    [LD] libxcmd.la
-....
+XFS will start to fragment when the filesystem gets beyond 85%
+full - it seems that you are very close to that threshold.
 
-Sample output from cleaning:
+That being said, if you've pulled the figure of 19% from the xfs_db
+measure of fragmentation, that doesn't mean the filesystem is badly
+fragmented, it just means that that there are 19% more fragments
+than the ideal. In 4TB of data with 1GB sized files, that would mean
+there are 4800 extents (average length ~800MB, which is excellent)
+instead of the perfect 4000 extents (@1GB each). Hence you can see
+how misleading this "19% fragmentation" number can be on an extent
+based filesystem...
 
-$ make clean
-Cleaning include
-Cleaning libxfs
-Cleaning libxlog
-Cleaning libxcmd
-Cleaning libhandle
-Cleaning libdisk
-Cleaning copy
-Cleaning db
-....
+> I have just set up a new computer with 16 WD Cavair Black 1 TB
+> drives connected to an Areca 1680ix-16 RAID with 4 GB cache.=A0 14
+> of these drives are in RAID 6 with 128 kB stripes.  The OS is also
+> SLED 11.  The system has 16 GB memory, and AMD Phenom II X4 965
+> CPU.
+> =
 
-If you want to see a noisy build (i.e. every command), use:
+> I have done tests writing 100 30 MB files and 1 GB, 10 GB and 20
+> GB files, with single instance and multiple instances.
+> =
 
-$ make Q=
+> There is a big difference in writing speed when=A0writing 20 GB
+> files when using allocsize=3D1g and not using the option.  That is
+> without the inode64 option, which gives further speed gains.
 
-and that will output all the commands that are now suppressed by
-default.
+> I use dd for writing the 1 GB, 10 GB and 20 GB files.
+> =
 
-Portions of this patch were contributed by Eric Sandeen.
+> mkfs.xfs -f -b size=3D4k -d agcount=3D32,su=3D128k,sw=3D12 -i size=3D256,=
+align=3D1,attr=3D2 -l version=3D2,su=3D128k,lazy-count=3D1 -n version=3D2 -=
+s size=3D512 -L /data /dev/sdb1
+> =
 
-Signed-off-by: Dave Chinner <david@fromorbit.com>
----
- Makefile            |   43 +++++++++++++++++++++++++++++--------------
- doc/Makefile        |    3 ++-
- include/Makefile    |    3 ++-
- include/buildmacros |   10 +++++-----
- include/buildrules  |   30 +++++++++++++++++++++---------
- mkfs/Makefile       |    3 ++-
- 6 files changed, 61 insertions(+), 31 deletions(-)
+> =
 
-diff --git a/Makefile b/Makefile
-index 2d394e4..62c4258 100644
---- a/Makefile
-+++ b/Makefile
-@@ -2,6 +2,21 @@
- # Copyright (c) 2000-2006 Silicon Graphics, Inc.  All Rights Reserved.
- #
- 
-+ifeq ("$(origin V)", "command line")
-+  BUILD_VERBOSE = $(V)
-+endif
-+ifndef BUILD_VERBOSE
-+  BUILD_VERBOSE = 0
-+endif
-+
-+ifeq ($(BUILD_VERBOSE),1)
-+  Q =
-+else
-+  Q = @
-+endif
-+
-+MAKEOPTS = --no-print-directory Q=$(Q)
-+
- TOPDIR = .
- HAVE_BUILDDEFS = $(shell test -f $(TOPDIR)/include/builddefs && echo yes || echo no)
- 
-@@ -15,7 +30,7 @@ SRCTAR = $(PKG_NAME)-$(PKG_VERSION).tar.gz
- CONFIGURE = aclocal.m4 configure config.guess config.sub install-sh ltmain.sh
- LSRCFILES = configure.in release.sh README VERSION $(CONFIGURE)
- 
--LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
-+DISTDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
- 	built .census install.* install-dev.* *.gz autom4te.cache/* libtool \
- 	include/builddefs include/platform_defs.h
- 
-@@ -36,9 +51,9 @@ SUBDIRS = include $(LIB_SUBDIRS) $(TOOL_SUBDIRS)
- 
- default: include/builddefs include/platform_defs.h
- ifeq ($(HAVE_BUILDDEFS), no)
--	$(MAKE) -C . $@
-+	$(Q)$(MAKE) $(MAKEOPTS) -C . $@
- else
--	$(MAKE) $(SUBDIRS)
-+	$(Q)$(MAKE) $(MAKEOPTS) $(SUBDIRS)
- endif
- 
- # tool/lib dependencies
-@@ -80,7 +95,7 @@ include/platform_defs.h: include/builddefs
- ## Recover from the removal of $@
- 	@if test -f $@; then :; else \
- 		rm -f include/builddefs; \
--		$(MAKE) $(AM_MAKEFLAGS) include/builddefs; \
-+		$(MAKE) $(MAKEOPTS) $(AM_MAKEFLAGS) include/builddefs; \
- 	fi
- 
- install: default $(addsuffix -install,$(SUBDIRS))
-@@ -101,29 +116,29 @@ install-qa: install $(addsuffix -install-qa,$(SUBDIRS))
- 	$(MAKE) -C $* install-qa
- 
- distclean: clean
--	rm -f $(LDIRT)
-+	$(Q)rm -f $(DISTDIRT)
- 
- realclean: distclean
--	rm -f $(CONFIGURE)
-+	$(Q)rm -f $(CONFIGURE)
- 
- #
- # All this gunk is to allow for a make dist on an unconfigured tree
- #
- dist: include/builddefs include/platform_defs.h default
- ifeq ($(HAVE_BUILDDEFS), no)
--	$(MAKE) -C . $@
-+	$(Q)$(MAKE) $(MAKEOPTS) -C . $@
- else
--	$(MAKE) $(SRCTAR)
-+	$(Q)$(MAKE) $(MAKEOPTS) $(SRCTAR)
- endif
- 
- deb: include/builddefs include/platform_defs.h
- ifeq ($(HAVE_BUILDDEFS), no)
--	$(MAKE) -C . $@
-+	$(Q)$(MAKE) $(MAKEOPTS) -C . $@
- else
--	$(MAKE) $(SRCDIR)
--	$(MAKE) -C po
--	$(MAKE) source-link
--	cd $(SRCDIR) && dpkg-buildpackage
-+	$(Q)$(MAKE) $(MAKEOPTS) $(SRCDIR)
-+	$(Q)$(MAKE) $(MAKEOPTS) -C po
-+	$(Q)$(MAKE) $(MAKEOPTS) source-link
-+	$(Q)cd $(SRCDIR) && dpkg-buildpackage
- endif
- 
- $(SRCDIR) : $(_FORCE)
-@@ -131,6 +146,6 @@ $(SRCDIR) : $(_FORCE)
- 	mkdir -p $@
- 
- $(SRCTAR) : default $(SRCDIR)
--	$(MAKE) source-link
-+	$(Q)$(MAKE) $(MAKEOPTS) source-link
- 	unset TAPE; $(TAR) -cf - $(SRCDIR) | $(ZIP) --best > $@ && \
- 	echo Wrote: $@
-diff --git a/doc/Makefile b/doc/Makefile
-index 8f65b66..86ac2ca 100644
---- a/doc/Makefile
-+++ b/doc/Makefile
-@@ -13,7 +13,8 @@ default: CHANGES.gz
- include $(BUILDRULES)
- 
- CHANGES.gz:
--	$(ZIP) --best -c < CHANGES > $@
-+	@echo "    [ZIP]    $@"
-+	$(Q)$(ZIP) --best -c < CHANGES > $@
- 
- install: default
- 	$(INSTALL) -m 755 -d $(PKG_DOC_DIR)
-diff --git a/include/Makefile b/include/Makefile
-index d89480e..bc787db 100644
---- a/include/Makefile
-+++ b/include/Makefile
-@@ -43,7 +43,8 @@ LDIRT = xfs disk
- default install: xfs disk
- 
- xfs disk:
--	$(LN_S) . $@
-+	@echo "    [LN]     $@"
-+	$(Q)$(LN_S) . $@
- 
- include $(BUILDRULES)
- 
-diff --git a/include/buildmacros b/include/buildmacros
-index 099570f..62babca 100644
---- a/include/buildmacros
-+++ b/include/buildmacros
-@@ -13,7 +13,7 @@ LDFLAGS += $(LOADERFLAGS) $(LLDFLAGS)
- LTLDFLAGS += $(LOADERFLAGS)
- LDLIBS = $(LLDLIBS) $(PLDLIBS) $(MALLOCLIB)
- 
--MAKEOPTS = --no-print-directory
-+MAKEOPTS = --no-print-directory Q=$(Q)
- SRCFILES = Makefile $(HFILES) $(CFILES) $(LSRCFILES) $(LFILES) $(YFILES)
- SRCFILES += $(QAHFILES)
- 
-@@ -45,10 +45,10 @@ LIBNAME = $(basename $(LTLIBRARY))
- LTOBJECTS = $(OBJECTS:.o=.lo)
- LTVERSION = $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
- 
--LTLINK = $(LIBTOOL) --tag=CC --mode=link $(CC)
--LTEXEC = $(LIBTOOL) --mode=execute
--LTINSTALL = $(LIBTOOL) --mode=install $(INSTALL)
--LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CCF)
-+LTLINK = $(LIBTOOL) --quiet --tag=CC --mode=link $(CC)
-+LTEXEC = $(LIBTOOL) --quiet --mode=execute
-+LTINSTALL = $(LIBTOOL) --quiet --mode=install $(INSTALL)
-+LTCOMPILE = $(LIBTOOL) --quiet --tag=CC --mode=compile $(CCF)
- 
- ifeq ($(ENABLE_SHARED),yes)
- LTLDFLAGS += -rpath $(PKG_ROOT_LIB_DIR)
-diff --git a/include/buildrules b/include/buildrules
-index a06d480..464dfe3 100644
---- a/include/buildrules
-+++ b/include/buildrules
-@@ -7,10 +7,11 @@ _BUILDRULES_INCLUDED_ = 1
- include $(TOPDIR)/include/builddefs
- 
- clean clobber : $(addsuffix -clean,$(SUBDIRS))
--	rm -f $(DIRT)
--	rm -fr $(DIRDIRT)
-+	$(Q)rm -f $(DIRT)
-+	$(Q)rm -fr $(DIRDIRT)
- %-clean:
--	$(MAKE) -C $* clean
-+	@echo "Cleaning $*"
-+	$(Q)$(MAKE) $(MAKEOPTS) -C $* clean
- 
- # Never blow away subdirs
- ifdef SUBDIRS
-@@ -18,7 +19,8 @@ ifdef SUBDIRS
- .PHONY: $(SUBDIRS)
- 
- $(SUBDIRS):
--	$(MAKE) -C $@
-+	@echo "Building $@"
-+	$(Q)$(MAKE) $(MAKEOPTS) -q -C $@ || $(MAKE) $(MAKEOPTS) -C $@
- endif
- 
- source-link: 
-@@ -38,20 +40,29 @@ source-link:
- 
- ifdef LTCOMMAND
- $(LTCOMMAND) : $(SUBDIRS) $(OBJECTS) $(LTDEPENDENCIES)
--	$(LTLINK) -o $@ $(LDFLAGS) $(OBJECTS) $(LDLIBS)
-+	@echo "    [LD]     $@"
-+	$(Q)$(LTLINK) -o $@ $(LDFLAGS) $(OBJECTS) $(LDLIBS)
- endif
- 
- ifdef LTLIBRARY
- $(LTLIBRARY) : $(SUBDIRS) $(LTOBJECTS)
--	$(LTLINK) $(LTLDFLAGS) -o $(LTLIBRARY) $(LTOBJECTS) $(LTLIBS)
-+	@echo "    [LD]     $@"
-+	$(Q)$(LTLINK) $(LTLDFLAGS) -o $(LTLIBRARY) $(LTOBJECTS) $(LTLIBS)
- 
- %.lo: %.c
--	$(LTCOMPILE) -c $<
-+	@echo "    [CC]     $@"
-+	$(Q)$(LTCOMPILE) -c $<
-+else
-+%.o: %.c
-+	@echo "    [CC]     $@"
-+	$(Q)$(CC) $(CFLAGS) -c $<
-+
- endif
- 
- ifdef POTHEAD
- $(POTHEAD): $(XGETTEXTFILES)
--	$(XGETTEXT) --language=C --keyword=_ --keyword=N_ -o $@ $(XGETTEXTFILES)
-+	@echo "    [GETTXT] $@"
-+	$(Q)$(XGETTEXT) --language=C --keyword=_ --keyword=N_ -o $@ $(XGETTEXTFILES)
- 
- # Update translations
- update-po: $(POTHEAD) $(wildcard $(TOPDIR)/po/*.po)
-@@ -70,7 +81,8 @@ update-po: $(POTHEAD) $(wildcard $(TOPDIR)/po/*.po)
- 	done
- 
- %.mo: %.po
--	$(MSGFMT) -c --statistics -o $@ $<
-+	@echo "    [MSGFMT] $@"
-+	$(Q)$(MSGFMT) -c --statistics -o $@ $<
- endif
- 
- endif # _BUILDRULES_INCLUDED_
-diff --git a/mkfs/Makefile b/mkfs/Makefile
-index 9fcadf2..a749262 100644
---- a/mkfs/Makefile
-+++ b/mkfs/Makefile
-@@ -36,7 +36,8 @@ endif
- include $(BUILDRULES)
- 
- $(FSTYP):
--	$(LTLINK) $@.c -o $@ $(CFLAGS) $(LDFLAGS) $(LIBDISK) $(PLDLIBS)
-+	@echo "    [CC]     $@"
-+	$(Q)$(LTLINK) $@.c -o $@ $(CFLAGS) $(LDFLAGS) $(LIBDISK) $(PLDLIBS)
- 
- install: default
- 	$(INSTALL) -m 755 -d $(PKG_ROOT_SBIN_DIR)
--- 
-1.6.5
+> defaults,nobarrier,usrquota,grpquota,noatime,nodiratime,allocsize=3D1g,lo=
+gbufs=3D8,logbsize=3D256k,largeio,swalloc
+> =
+
+> The start of the partition has been set to LBA 3072 using GPT Fdisk to al=
+ign the stripes.
+
+This all looks good - it certainly seems that you have done your
+research. ;) The only thing I'd do differently is that if you have
+only one partition on the drives, I wouldn't even put a partition on it.
+
+> The dd command is:
+> =
+
+> chingl@tsunami:/data/test/t2> dd if=3D/dev/zero of=3Dbigfile20GB bs=3D107=
+3741824 count=3D20
+
+I'd significantly reduce the size of that buffer - too large a
+buffer can slow down IO due to the memory it consumes and TLB misses
+it causes. I'd typically use something like:
+
+$ dd if=3D/dev/zero of=3Dbigfile bs=3D1024k count=3D20k
+
+Which does 20,000 writes of 1MB each and ensures the dd process
+doesn't consume over a GB of RAM.
+
+> Single instance of 20 GB dd repeats were 214, 221, 123 MB/s with
+> allocsize=3D1g, compared to 94, 126 MB/s without.
+
+This seems rather low for a buffered write on hardware that can
+clearly go faster. SLED11 is based on 2.6.27, right? I suspect that
+many of the buffered writeback issues that have been fixed since
+2.6.30 are present in the SLED11 kernel, and if that is the case I
+can see why the allocsize mount option makes such a big
+difference.
+
+It might be worth checking how well direct IO writes run to take
+buffered writeback issues out ofthe equation. In that case, I'd use
+stripe width multiple sized buffers like:
+
+$ dd if=3D/dev/zero of=3Dbigfile bs=3D3072k count=3D7k oflag=3Ddirect
+
+I'd suggest that you might need to look at increasing the maximum IO
+size for the block device (/sys/block/sdb/queue/max_sectors_kb),
+maybe the request queue depth as well to get larger IOs to be pushed
+to the raid controller. if you can, at least get it to the stripe
+width of 1536k....
+
+Cheers,
+
+Dave.
+-- =
+
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
