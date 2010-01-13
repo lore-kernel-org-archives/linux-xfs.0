@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0D38QTi108153 for <xfs@oss.sgi.com>; Tue, 12 Jan 2010 21:08:26 -0600
-Received: from postoffice2.aconex.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0B5AA1C49B55
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2010 19:09:20 -0800 (PST)
-Received: from postoffice2.aconex.com (mail.aconex.com [203.89.202.182]) by
-	cuda.sgi.com with ESMTP id 3wNo2oUgFnic6u5S for
-	<xfs@oss.sgi.com>; Tue, 12 Jan 2010 19:09:20 -0800 (PST)
-Date: Wed, 13 Jan 2010 14:09:14 +1100 (EST)
-From: Nathan Scott <nscott@aconex.com>
-Message-ID: <643097034.1721341263352154340.JavaMail.root@mail-au.aconex.com>
-In-Reply-To: <2097834991.1721031263351861134.JavaMail.root@mail-au.aconex.com>
-Subject: Re: [TuxOnIce-devel] Latest updates.
+	o0D3oUXW112059 for <xfs@oss.sgi.com>; Tue, 12 Jan 2010 21:50:30 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D39D91246F9C
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2010 19:51:25 -0800 (PST)
+Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
+	by cuda.sgi.com with ESMTP id 9yY1PTdFDLnDzSLp for
+	<xfs@oss.sgi.com>; Tue, 12 Jan 2010 19:51:25 -0800 (PST)
+Message-ID: <4B4D433C.7080501@sandeen.net>
+Date: Tue, 12 Jan 2010 21:51:24 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
+Subject: Re: [PATCH] xfsprogs: Make the compile output cleaner
+References: <1263350021-5733-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1263350021-5733-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,43 +27,89 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Martin Steigerwald <Martin@lichtvoll.de>
-Cc: TuxOnIce Devel List <tuxonice-devel@lists.tuxonice.net>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
+
+Dave Chinner wrote:
+> We don't need to see every compiler command line for every file that
+> is compiled. This makes it hard to see warnings and errors during
+> compile. For progress notification, we really only need to see the
+> diretory/file being operated on.
+>
+> Turn down the verbosity of output by suppressing various make output
+> and provide better overall visibility of which directory is being
+> operated on, what the operation is and what is being done to the
+> files by the build/clean process.
+>
+> Sample output from a build:
+>
+> ....
+> Building libxlog
+>     [CC] xfs_log_recover.c
+>     [CC] util.c
+>     [LD] libxlog.la
+>   
+
+...
+
+swanky!
+
+What would you think of this on top of it, ripped straight from
+kbuild - that way "make V=1" works the same way as kbuild, but
+the default is still to be quiet.
+
+Also, just to show my kbuild bias, maybe consider outputting the target
+on the quiet line, instead of the source?  :)  But no biggie.
+
+-Eric
 
 
------ "Martin Steigerwald" <Martin@lichtvoll.de> wrote:
 
-> Please keep CC to TuxOnIce devel list.
-> 
-> 
-> Hi!
-> 
-> Nigel, who develops the alternative TuxOnIce hibernation / snapshot 
-> infrastructure, implemented checking last mount time of filesystem as
-> a 
-> safety feature for Ext 2, 3 and 4.
-> 
-> He would like this also for XFS. Does XFS record the last mount time 
-> somewhere?
+diff --git a/Makefile b/Makefile
+index 2fbfb51..46e6a3e 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,7 +1,20 @@
+ #
+ # Copyright (c) 2000-2006 Silicon Graphics, Inc.  All Rights Reserved.
+ #
+-Q ?= @
++
++ifeq ("$(origin V)", "command line")
++  BUILD_VERBOSE = $(V)
++endif
++ifndef BUILD_VERBOSE
++  BUILD_VERBOSE = 0
++endif
++
++ifeq ($(BUILD_VERBOSE),1)
++  Q =
++else
++  Q = @
++endif
++
+ MAKEOPTS = --no-print-directory Q=$(Q)
+ 
+ TOPDIR = .
+diff --git a/include/buildrules b/include/buildrules
+index a0c77a9..72edc69 100644
+--- a/include/buildrules
++++ b/include/buildrules
+@@ -50,11 +50,11 @@ $(LTLIBRARY) : $(SUBDIRS) $(LTOBJECTS)
+ 	$(Q)$(LTLINK) $(LTLDFLAGS) -o $(LTLIBRARY) $(LTOBJECTS) $(LTLIBS)
+ 
+ %.lo: %.c
+-	@echo "    [CC] $<"
++	@echo "    [CC] $@"
+ 	$(Q)$(LTCOMPILE) -c $<
+ else
+ %.o: %.c
+-	@echo "    [CC] $<"
++	@echo "    [CC] $@"
+ 	$(Q)$(CC) $(CFLAGS) -c $<
+ 
+ endif
 
-Nope.
-
-> If not, could this be added?
-
-Anythings possible ... its a relatively trivial change, and there's room
-in the superblock.  Could probably even be done without a superblock version
-bump - if you were prepared to live with the possibility of finding zero in
-the ondisk location & dealing with it appropriately (i.e. last mount time
-unknown).
-
-Guess you'd have to convince the XFS folks doing most of the work these
-days, but really it'd be quite trivial to implement.  xfs_mount_log_sb()
-would be the place to start looking...
-
-cheers.
-
--- 
-Nathan
 
 _______________________________________________
 xfs mailing list
