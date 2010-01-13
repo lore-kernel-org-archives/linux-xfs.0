@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0D4NoFG115384 for <xfs@oss.sgi.com>; Tue, 12 Jan 2010 22:23:50 -0600
-Received: from mail-yw0-f191.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7D0C51247632
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2010 20:24:45 -0800 (PST)
-Received: from mail-yw0-f191.google.com (mail-yw0-f191.google.com
-	[209.85.211.191]) by cuda.sgi.com with ESMTP id
-	G90Q0GGwGlIzHJAG for <xfs@oss.sgi.com>;
-	Tue, 12 Jan 2010 20:24:45 -0800 (PST)
-Received: by ywh29 with SMTP id 29so1118220ywh.32
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2010 20:24:45 -0800 (PST)
-From: Ian MacColl <imaccoll@gmail.com>
-Subject: broken XFS filesystem?
-Date: Wed, 13 Jan 2010 14:24:38 +1000
-Message-Id: <A668A7CF-103A-4C95-9CF1-12544A31E7FD@gmail.com>
-Mime-Version: 1.0 (Apple Message framework v1077)
+	o0D4SUFb115864 for <xfs@oss.sgi.com>; Tue, 12 Jan 2010 22:28:30 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 44A2C160C2F
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2010 20:29:24 -0800 (PST)
+Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
+	by cuda.sgi.com with ESMTP id YwtUiS2JKMrFlZwL for
+	<xfs@oss.sgi.com>; Tue, 12 Jan 2010 20:29:24 -0800 (PST)
+Message-ID: <4B4D4C24.9060309@sandeen.net>
+Date: Tue, 12 Jan 2010 22:29:24 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: [PATCH] xfsprogs: Make the compile output cleaner
+References: <1263350021-5733-1-git-send-email-david@fromorbit.com>
+	<4B4D433C.7080501@sandeen.net>
+In-Reply-To: <4B4D433C.7080501@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,56 +28,104 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Ian MacColl <imaccoll@gmail.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Hello
+Eric Sandeen wrote:
 
-I'm hoping for some suggestions for sorting out a problem with an XFS filesystem running on top of an mdadm-based linear array.
+> Dave Chinner wrote:
+>   
+>> We don't need to see every compiler command line for every file that
+>> is compiled. This makes it hard to see warnings and errors during
+>> compile. For progress notification, we really only need to see the
+>> diretory/file being operated on.
+>>
+>> Turn down the verbosity of output by suppressing various make output
+>> and provide better overall visibility of which directory is being
+>> operated on, what the operation is and what is being done to the
+>> files by the build/clean process.
+>>
+>> Sample output from a build:
+>>
+>> ....
+>> Building libxlog
+>>     [CC] xfs_log_recover.c
+>>     [CC] util.c
+>>     [LD] libxlog.la
+>>   
+>>     
+>
+> ...
+>
+> swanky!
+>
+> What would you think of this on top of it, ripped straight from
+> kbuild - that way "make V=1" works the same way as kbuild, but
+> the default is still to be quiet.
+>
+> Also, just to show my kbuild bias, maybe consider outputting the target
+> on the quiet line, instead of the source?  :)  But no biggie.
+>
+> -Eric
+>
+>   
+ok now I'm being a make junkie, but a couple more things are "noisy"
 
-The original hardware was a lacie Ethernet Big Disk (ARM-based Marvell CPU, I think) with two seagate 500GB disks. The power supply died and I'm trying to retrieve the files. The array is a backup of a readynas RAID that has also died (with a more complex setup, so I decided to start with the lacie).
+Building include
+    [LN] xfs
+    [LN] disk
+...
+Building doc
+   [ZIP] CHANGES.gz
+Building po
+[GETTXT] xfsprogs.pot
 
-One disk (originally sda) has several partitions including linux root (sda8) and about half of the main storage (sda2). The other disk (originally sdb) is unpartitioned and provides the other half of the main storage.
+-Eric
 
-Both disks have been copied without errors to img files which I'm mounting as loop devices on an Intel Macbook running Debian over vmware.
+diff --git a/include/Makefile b/include/Makefile
+index d89480e..42e7233 100644
+--- a/include/Makefile
++++ b/include/Makefile
+@@ -43,7 +43,8 @@ LDIRT = xfs disk
+ default install: xfs disk
+ 
+ xfs disk:
+-	$(LN_S) . $@
++	@echo "    [LN]" $@
++	$(Q)$(LN_S) . $@
+ 
+ include $(BUILDRULES)
+ diff --git a/doc/Makefile b/doc/Makefile
+index 8f65b66..0a6de15 100644
+--- a/doc/Makefile
++++ b/doc/Makefile
+@@ -13,7 +13,8 @@ default: CHANGES.gz
+ include $(BUILDRULES)
+ 
+ CHANGES.gz:
+-	$(ZIP) --best -c < CHANGES > $@
++	@echo "   [ZIP] $@"
++	$(Q)$(ZIP) --best -c < CHANGES > $@
+ 
+ install: default
 
-Surprisingly (to me, at least), mdadm --examine reveals an md superblock on sdb but not sda2, even though sda2 is listed before sdb in mdadm.conf. The array (md0) can be started via --create with assume-clean if the underlying volumes are read-write, or via --build if not. The array can be mounted but much of the directory hierarchy isn't accessible, giving "Structure needs cleaning" messages.
+ 	$(INSTALL) -m 755 -d $(PKG_DOC_DIR)
 
-xfs_repair -n reveals many errors, apparently stemming from problems with superblocks 16 through 31 inclusive (bad magic number, conflicting geometry, bad sizes, bad flags, and so on). xfs_repair recovers about 100GB of 700GB, including some parts of the original directory hierarchy plus a large number of orphaned directories in lost+found, named by inode.
+diff --git a/include/buildrules b/include/buildrules
+index 72edc69..ba004e6 100644
+--- a/include/buildrules
++++ b/include/buildrules
+@@ -61,7 +61,8 @@ endif
+ 
+ ifdef POTHEAD
+ $(POTHEAD): $(XGETTEXTFILES)
+-	$(XGETTEXT) --language=C --keyword=_ --keyword=N_ -o $@ $(XGETTEXTFILES)
++	@echo "[GETTXT] $@"
++	$(Q)$(XGETTEXT) --language=C --keyword=_ --keyword=N_ -o $@ $(XGETTEXTFILES)
+ 
+ # Update translations
+ update-po: $(POTHEAD) $(wildcard $(TOPDIR)/po/*.po)
 
-The array comprised of sda2 and sdb (md0) has xfs superblocks, apparently 0 through 15 from sda2 and 16 through 31 from sdb
-
-+ sb0 seems sensible
-+ sb1-15 differ from sb0 in that:
-	+ rootino, rbmino, rsumino are null (except sb15.rootino is 128)
-	+ inprogress is 1 rather than 0
-	+ icount is 0 rather than 324032
-	+ ifree is 0 rather than 854
-	+ fdblocks is 243908608 rather than 71789361
-+ sb16-23 contain 0s
-+ sb24 contains rubbish
-+ sb25 contains 0s
-+ sb26-31 contain rubbish
-
-I'm not sure whether the sb1-15 differences with sb0 are a problem since I understand sb0 is used operationally and the others are only used for recovery. 
-
-For the underlying volumes, xfs_db reveals an xfs superblock on sda2 but not sdb. On sda2, the superblocks look to be the same as sb0-15 for md0 (including sb15.rootino value of 128). On sdb, there appears to be an xfs superblock at offset 0x1EB80000, preceded by 0s. xfs_db gives sensible results for sb0-15  on a loop device set up at the offset . 
-
-I'm naively wondering whether this might somehow be related to the offset and the composition of the array but starting the array with offset loop device instead of sdb doesn't give anything useful. Also, nothing in the original config suggests sdb was mounted with a(similar to sb1-15 on md0) n offset.
-
-Walking the inode tree of md0 from the root seems to quickly fall off the end of the world at the point where traversing the directory fails. For example:
-
-	128 (rootino)
-		131 share
-			2281701564 xxx (all 0s/needs cleaning)
-		132 lacie
-			...
-
-Basically, I'm unsure whether the problem lies with mdadm or xfs. Either way, I'm after suggestions as to how to proceed (possibly including advice that I should give up and start on the readynas)
-
-regards
-
-Ian
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
