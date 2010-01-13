@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0D4SUFb115864 for <xfs@oss.sgi.com>; Tue, 12 Jan 2010 22:28:30 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 44A2C160C2F
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2010 20:29:24 -0800 (PST)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id YwtUiS2JKMrFlZwL for
-	<xfs@oss.sgi.com>; Tue, 12 Jan 2010 20:29:24 -0800 (PST)
-Message-ID: <4B4D4C24.9060309@sandeen.net>
-Date: Tue, 12 Jan 2010 22:29:24 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	o0D64VHP125104 for <xfs@oss.sgi.com>; Wed, 13 Jan 2010 00:04:31 -0600
+Received: from postoffice2.aconex.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 18CD61C49DFF
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2010 22:05:25 -0800 (PST)
+Received: from postoffice2.aconex.com (mail.aconex.com [203.89.202.182]) by
+	cuda.sgi.com with ESMTP id xTYWGKVxApoOjPBW for
+	<xfs@oss.sgi.com>; Tue, 12 Jan 2010 22:05:25 -0800 (PST)
+Date: Wed, 13 Jan 2010 17:05:18 +1100 (EST)
+From: Nathan Scott <nscott@aconex.com>
+Message-ID: <99724068.1731191263362718752.JavaMail.root@mail-au.aconex.com>
+In-Reply-To: <20100113054152.GL17483@discord.disaster>
+Subject: Re: [TuxOnIce-devel] Latest updates.
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfsprogs: Make the compile output cleaner
-References: <1263350021-5733-1-git-send-email-david@fromorbit.com>
-	<4B4D433C.7080501@sandeen.net>
-In-Reply-To: <4B4D433C.7080501@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,102 +27,42 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+Cc: TuxOnIce Devel List <tuxonice-devel@lists.tuxonice.net>, xfs@oss.sgi.com
 
-Eric Sandeen wrote:
+[Looks like tuxonice is a subscriber-only list...]
 
-> Dave Chinner wrote:
->   
->> We don't need to see every compiler command line for every file that
->> is compiled. This makes it hard to see warnings and errors during
->> compile. For progress notification, we really only need to see the
->> diretory/file being operated on.
->>
->> Turn down the verbosity of output by suppressing various make output
->> and provide better overall visibility of which directory is being
->> operated on, what the operation is and what is being done to the
->> files by the build/clean process.
->>
->> Sample output from a build:
->>
->> ....
->> Building libxlog
->>     [CC] xfs_log_recover.c
->>     [CC] util.c
->>     [LD] libxlog.la
->>   
->>     
->
-> ...
->
-> swanky!
->
-> What would you think of this on top of it, ripped straight from
-> kbuild - that way "make V=1" works the same way as kbuild, but
-> the default is still to be quiet.
->
-> Also, just to show my kbuild bias, maybe consider outputting the target
-> on the quiet line, instead of the source?  :)  But no biggie.
->
-> -Eric
->
->   
-ok now I'm being a make junkie, but a couple more things are "noisy"
+----- "Dave Chinner" <david@fromorbit.com> wrote:
 
-Building include
-    [LN] xfs
-    [LN] disk
-...
-Building doc
-   [ZIP] CHANGES.gz
-Building po
-[GETTXT] xfsprogs.pot
+> On Wed, Jan 13, 2010 at 02:09:14PM +1100, Nathan Scott wrote:
+> > > 
+> Agreed that it is trivial to implement but there are still some
+> definite traps - like the fact the sb change transaction may be
+> logged
+> immediately but the physical superblock may not get written for some
+> time after the mount.
 
--Eric
+*nod* ... it will be written when unmounted though...
 
-diff --git a/include/Makefile b/include/Makefile
-index d89480e..42e7233 100644
---- a/include/Makefile
-+++ b/include/Makefile
-@@ -43,7 +43,8 @@ LDIRT = xfs disk
- default install: xfs disk
- 
- xfs disk:
--	$(LN_S) . $@
-+	@echo "    [LN]" $@
-+	$(Q)$(LN_S) . $@
- 
- include $(BUILDRULES)
- diff --git a/doc/Makefile b/doc/Makefile
-index 8f65b66..0a6de15 100644
---- a/doc/Makefile
-+++ b/doc/Makefile
-@@ -13,7 +13,8 @@ default: CHANGES.gz
- include $(BUILDRULES)
- 
- CHANGES.gz:
--	$(ZIP) --best -c < CHANGES > $@
-+	@echo "   [ZIP] $@"
-+	$(Q)$(ZIP) --best -c < CHANGES > $@
- 
- install: default
+> 
+> Really it comes down to the interface used to read the mount time
+> fromt eh superblock at suspend and resume - can anyone tell me what
+> that is or point me at the code?
 
- 	$(INSTALL) -m 755 -d $(PKG_DOC_DIR)
+(not me!)
 
-diff --git a/include/buildrules b/include/buildrules
-index 72edc69..ba004e6 100644
---- a/include/buildrules
-+++ b/include/buildrules
-@@ -61,7 +61,8 @@ endif
- 
- ifdef POTHEAD
- $(POTHEAD): $(XGETTEXTFILES)
--	$(XGETTEXT) --language=C --keyword=_ --keyword=N_ -o $@ $(XGETTEXTFILES)
-+	@echo "[GETTXT] $@"
-+	$(Q)$(XGETTEXT) --language=C --keyword=_ --keyword=N_ -o $@ $(XGETTEXTFILES)
- 
- # Update translations
- update-po: $(POTHEAD) $(wildcard $(TOPDIR)/po/*.po)
+> Personally I don't see why this needs to be in the superblock - an
+> extended attribute on the root directory of the root filesystem that
+> is written:
+
+Yeah, that was my first thought too, but I suspect they want to be
+able to query this when the filesystem is unmounted; in which case
+the interface is probably "read a fs-specific magic spot ondisk".
+For this not-mounted query, the EA route would be incredibly painful.
+
+cheers.
+
+-- 
+Nathan
 
 _______________________________________________
 xfs mailing list
