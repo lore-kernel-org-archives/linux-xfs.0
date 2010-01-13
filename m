@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0D6uo5Y128954 for <xfs@oss.sgi.com>; Wed, 13 Jan 2010 00:56:50 -0600
+	o0D6Z9e4127464 for <xfs@oss.sgi.com>; Wed, 13 Jan 2010 00:35:09 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0BD02124783F
-	for <xfs@oss.sgi.com>; Tue, 12 Jan 2010 22:57:43 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	WGZbHPirmEZJUZ19 for <xfs@oss.sgi.com>;
-	Tue, 12 Jan 2010 22:57:43 -0800 (PST)
-Date: Wed, 13 Jan 2010 17:57:40 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C0030160ED3
+	for <xfs@oss.sgi.com>; Tue, 12 Jan 2010 22:36:04 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	g2MHvEGAirgK8L5Z for <xfs@oss.sgi.com>;
+	Tue, 12 Jan 2010 22:36:04 -0800 (PST)
+Date: Wed, 13 Jan 2010 17:36:01 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [TuxOnIce-devel] Latest updates.
-Message-ID: <20100113065740.GN17483@discord.disaster>
-References: <20100113054152.GL17483@discord.disaster>
-	<99724068.1731191263362718752.JavaMail.root@mail-au.aconex.com>
+Subject: Re: broken XFS filesystem?
+Message-ID: <20100113063601.GM17483@discord.disaster>
+References: <A668A7CF-103A-4C95-9CF1-12544A31E7FD@gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <99724068.1731191263362718752.JavaMail.root@mail-au.aconex.com>
+In-Reply-To: <A668A7CF-103A-4C95-9CF1-12544A31E7FD@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,69 +25,107 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Nathan Scott <nscott@aconex.com>
-Cc: TuxOnIce Devel List <tuxonice-devel@lists.tuxonice.net>, xfs@oss.sgi.com
+To: Ian MacColl <imaccoll@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Jan 13, 2010 at 05:05:18PM +1100, Nathan Scott wrote:
-> [Looks like tuxonice is a subscriber-only list...]
-> 
-> ----- "Dave Chinner" <david@fromorbit.com> wrote:
-> 
-> > On Wed, Jan 13, 2010 at 02:09:14PM +1100, Nathan Scott wrote:
-> > > > 
-> > Agreed that it is trivial to implement but there are still some
-> > definite traps - like the fact the sb change transaction may be
-> > logged
-> > immediately but the physical superblock may not get written for some
-> > time after the mount.
-> 
-> *nod* ... it will be written when unmounted though...
-
-suspend in the kernel doesn't unmount filesystems. I have no idea
-what tuxonice does these days, but last time I heard it left them
-mounted but frozen over the suspend/resume cycle.
-
-> > Really it comes down to the interface used to read the mount time
-> > fromt eh superblock at suspend and resume - can anyone tell me what
-> > that is or point me at the code?
-> 
-> (not me!)
-> 
-> > Personally I don't see why this needs to be in the superblock - an
-> > extended attribute on the root directory of the root filesystem that
-> > is written:
-> 
-> Yeah, that was my first thought too, but I suspect they want to be
-> able to query this when the filesystem is unmounted; in which case
-> the interface is probably "read a fs-specific magic spot ondisk".
-> For this not-mounted query, the EA route would be incredibly painful.
-
-I know, but it's the "read from the magic spot on disk" approach
-that I'm most concerned about. It's so easy to implement, but oh so
-easy get wrong because block device access is not coherent with the
-filesystem. Not to mention that if we change the format of the
-"magic spot" then the application breaks, whereas that will not
-happen if access is via extended attributes.
-
-Essentially, I don't want to see another boot related, filesystem
-interacting application having random problems with XFS and then
-doing stupid stuff to try to work around problems caused by
-fundamentally broken assumptions made by the application. IMO,
-learning from the mistakes the world's most screwed up bootlader
-(grub) made is a good idea....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gV2VkLCBKYW4gMTMsIDIwMTAgYXQgMDI6MjQ6MzhQTSArMTAwMCwgSWFuIE1hY0NvbGwgd3Jv
+dGU6Cj4gSGVsbG8KPiAKPiBJJ20gaG9waW5nIGZvciBzb21lIHN1Z2dlc3Rpb25zIGZvciBzb3J0
+aW5nIG91dCBhIHByb2JsZW0gd2l0aCBhbgo+IFhGUyBmaWxlc3lzdGVtIHJ1bm5pbmcgb24gdG9w
+IG9mIGFuIG1kYWRtLWJhc2VkIGxpbmVhciBhcnJheS4KPiAKPiBUaGUgb3JpZ2luYWwgaGFyZHdh
+cmUgd2FzIGEgbGFjaWUgRXRoZXJuZXQgQmlnIERpc2sgKEFSTS1iYXNlZAo+IE1hcnZlbGwgQ1BV
+LCBJIHRoaW5rKSB3aXRoIHR3byBzZWFnYXRlIDUwMEdCIGRpc2tzLiBUaGUgcG93ZXIKPiBzdXBw
+bHkgZGllZCBhbmQgSSdtIHRyeWluZyB0byByZXRyaWV2ZSB0aGUgZmlsZXMuIFRoZSBhcnJheSBp
+cyBhCj4gYmFja3VwIG9mIGEgcmVhZHluYXMgUkFJRCB0aGF0IGhhcyBhbHNvIGRpZWQgKHdpdGgg
+YSBtb3JlIGNvbXBsZXgKPiBzZXR1cCwgc28gSSBkZWNpZGVkIHRvIHN0YXJ0IHdpdGggdGhlIGxh
+Y2llKS4KPiAKPiBPbmUgZGlzayAob3JpZ2luYWxseSBzZGEpIGhhcyBzZXZlcmFsIHBhcnRpdGlv
+bnMgaW5jbHVkaW5nIGxpbnV4Cj4gcm9vdCAoc2RhOCkgYW5kIGFib3V0IGhhbGYgb2YgdGhlIG1h
+aW4gc3RvcmFnZSAoc2RhMikuIFRoZSBvdGhlcgo+IGRpc2sgKG9yaWdpbmFsbHkgc2RiKSBpcyB1
+bnBhcnRpdGlvbmVkIGFuZCBwcm92aWRlcyB0aGUgb3RoZXIgaGFsZgo+IG9mIHRoZSBtYWluIHN0
+b3JhZ2UuCj4gCj4gQm90aCBkaXNrcyBoYXZlIGJlZW4gY29waWVkIHdpdGhvdXQgZXJyb3JzIHRv
+IGltZyBmaWxlcyB3aGljaCBJJ20KPiBtb3VudGluZyBhcyBsb29wIGRldmljZXMgb24gYW4gSW50
+ZWwgTWFjYm9vayBydW5uaW5nIERlYmlhbiBvdmVyCj4gdm13YXJlLgo+IAo+IFN1cnByaXNpbmds
+eSAodG8gbWUsIGF0IGxlYXN0KSwgbWRhZG0gLS1leGFtaW5lIHJldmVhbHMgYW4gbWQKPiBzdXBl
+cmJsb2NrIG9uIHNkYiBidXQgbm90IHNkYTIsIGV2ZW4gdGhvdWdoIHNkYTIgaXMgbGlzdGVkIGJl
+Zm9yZQo+IHNkYiBpbiBtZGFkbS5jb25mLiBUaGUgYXJyYXkgKG1kMCkgY2FuIGJlIHN0YXJ0ZWQg
+dmlhIC0tY3JlYXRlCj4gd2l0aCBhc3N1bWUtY2xlYW4gaWYgdGhlIHVuZGVybHlpbmcgdm9sdW1l
+cyBhcmUgcmVhZC13cml0ZSwgb3IgdmlhCj4gLS1idWlsZCBpZiBub3QuIFRoZSBhcnJheSBjYW4g
+YmUgbW91bnRlZCBidXQgbXVjaCBvZiB0aGUgZGlyZWN0b3J5Cj4gaGllcmFyY2h5IGlzbid0IGFj
+Y2Vzc2libGUsIGdpdmluZyAiU3RydWN0dXJlIG5lZWRzIGNsZWFuaW5nIgo+IG1lc3NhZ2VzLgoK
+T0ssIHRvIHN1bW1hcmlzZSB1cCB0byB0aGlzIHBvaW50IC0geW91IGhhdmUgYSBtZCBhcnJheSBv
+ZiBzb21lIGtpbmQKZnJvbSBhbiBBUk0gc3lzdGVtIHRoYXQgeW91IGFyZSBub3Qgc3VyZSBoYXMg
+YXNzZW1ibGVkIGNvcnJlY3RseSwKYW5kIHlvdSBhcmUgdHJ5aW5nIHRvIHJlY292ZXIgaXQgb24g
+YW4geDg2L3g4Nl82NCBtYWNoaW5lPwoKRmlyc3QgaXNzdWU6IHVwIHVudGlsIGEgMi42LjI3IEFS
+TSBrZXJuZWxzIGhhZCBhIGRpZmZlcmVudApkaXJlY3Rvcnkgc3RydWN0dXJlIG9uIGRpc2sgdG8g
+YWxsIG90aGVyIHBsYXRmb3JtcyB3aGljaCBtZWFudCBpdApjYW4ndCBlYXNpbHkgYmUgcmVjb3Zl
+cmVkIG9uIHg4Ni4gV2hhdCB2ZXJzaW9uIG9mIHRoZSBrZXJuZWwgd2FzIHRoZQpib3ggcnVubmlu
+Zz8KClNlY29uZCBpc3N1ZSAtIHdoYXQgdHlwZSBvZiBtZCBhcnJheSB3YXMgaXQ/IFJBSUQwLCBS
+QUlEMSwgZXRjPwpBcmUgeW91IHN1cmUgdGhhdCBpdCBoYWQgTUQgaW4gdXNlIC0gbWF5YmUgaXQg
+dXNlZCBETSB0byBjb25zdHJ1Y3QKYSBsaW5lYXIgY29uY2F0ZW5hdGlvbiBvZiB0aGUgdHdvIGRy
+aXZlcywgYW5kIHRoZSBtZCBzdXBlcmJsb2NrCmlzIHN0YWxlPwoKPiB4ZnNfcmVwYWlyIC1uIHJl
+dmVhbHMgbWFueSBlcnJvcnMsIGFwcGFyZW50bHkgc3RlbW1pbmcgZnJvbQo+IHByb2JsZW1zIHdp
+dGggc3VwZXJibG9ja3MgMTYgdGhyb3VnaCAzMSBpbmNsdXNpdmUgKGJhZCBtYWdpYwo+IG51bWJl
+ciwgY29uZmxpY3RpbmcgZ2VvbWV0cnksIGJhZCBzaXplcywgYmFkIGZsYWdzLCBhbmQgc28gb24p
+Lgo+IHhmc19yZXBhaXIgcmVjb3ZlcnMgYWJvdXQgMTAwR0Igb2YgNzAwR0IsIGluY2x1ZGluZyBz
+b21lIHBhcnRzIG9mCj4gdGhlIG9yaWdpbmFsIGRpcmVjdG9yeSBoaWVyYXJjaHkgcGx1cyBhIGxh
+cmdlIG51bWJlciBvZiBvcnBoYW5lZAo+IGRpcmVjdG9yaWVzIGluIGxvc3QrZm91bmQsIG5hbWVk
+IGJ5IGlub2RlLgo+IAo+IFRoZSBhcnJheSBjb21wcmlzZWQgb2Ygc2RhMiBhbmQgc2RiIChtZDAp
+IGhhcyB4ZnMgc3VwZXJibG9ja3MsCj4gYXBwYXJlbnRseSAwIHRocm91Z2ggMTUgZnJvbSBzZGEy
+IGFuZCAxNiB0aHJvdWdoIDMxIGZyb20gc2RiCj4gCj4gKyBzYjAgc2VlbXMgc2Vuc2libGUKPiAr
+IHNiMS0xNSBkaWZmZXIgZnJvbSBzYjAgaW4gdGhhdDoKPiAJKyByb290aW5vLCByYm1pbm8sIHJz
+dW1pbm8gYXJlIG51bGwgKGV4Y2VwdCBzYjE1LnJvb3Rpbm8gaXMgMTI4KQo+IAkrIGlucHJvZ3Jl
+c3MgaXMgMSByYXRoZXIgdGhhbiAwCj4gCSsgaWNvdW50IGlzIDAgcmF0aGVyIHRoYW4gMzI0MDMy
+Cj4gCSsgaWZyZWUgaXMgMCByYXRoZXIgdGhhbiA4NTQKPiAJKyBmZGJsb2NrcyBpcyAyNDM5MDg2
+MDggcmF0aGVyIHRoYW4gNzE3ODkzNjEKClRoaXMgbG9va3Mgbm9ybWFsIC0gbWtmcyB3cml0ZXMg
+bW9yZSBpbmZvcm1hdGlvbiB0byB0aGUgbWlkZGxlIFNCCigxNSBpbiB0aGlzIGNhc2UpIGFuZCB0
+aGUgbGFzdCBvbmUgZm9yIHJlY292ZXJ5LCBhbmQgYWxsIHRoZQpzZWNvbmRhcnkgc3VwZXJibG9j
+a3MgZG9uJ3QgZ2V0IGljb3VudC9pZnJlZSB1cGRhdGVkLiBUaGUgZGlmZmVyZW5jZQppbiBmZGJs
+b2NrcyBpcyBjdXJpb3VzLCB0aG91Z2ggLSBkaWQgeW91IGdyb3cgdGhlIGZpbGVzeXN0ZW0gYXQg
+c29tZQpwb2ludD8KCj4gKyBzYjE2LTIzIGNvbnRhaW4gMHMKPiArIHNiMjQgY29udGFpbnMgcnVi
+YmlzaAo+ICsgc2IyNSBjb250YWlucyAwcwo+ICsgc2IyNi0zMSBjb250YWluIHJ1YmJpc2gKClRo
+aXMgaW5kaWNhdGVzIHRoZSBzZWNvbmQgaGFsZiBvZiB0aGUgZmlsZXN5c3RlbSBoYXMgbm90IGJl
+ZW4KcmVjb25zdHJ1Y3RlZCBwcm9wZXJseS4gVGhhdCBwb2ludHMgdG8gdGhpcyBub3QgYmVpbmcg
+YSBtaXJyb3IKYnV0IGEgbGluZWFyIGNvbmNhdGVuYXRpb24gb2YgdHdvIGRldmljZXMgKGkuZS4g
+bW9yZSBjYXBhY2l0eQphdmFpbGFibGUgaW4gdGhlIHNpbmdsZSBmaWxlc3l0ZW0gdGhhdCBhIHNp
+bmdsZSBkaXNrIGluIHRoZSBtYWNoaW5lCnByb3ZpZGVzKS4KCj4gSSdtIG5vdCBzdXJlIHdoZXRo
+ZXIgdGhlIHNiMS0xNSBkaWZmZXJlbmNlcyB3aXRoIHNiMCBhcmUgYSBwcm9ibGVtCj4gc2luY2Ug
+SSB1bmRlcnN0YW5kIHNiMCBpcyB1c2VkIG9wZXJhdGlvbmFsbHkgYW5kIHRoZSBvdGhlcnMgYXJl
+Cj4gb25seSB1c2VkIGZvciByZWNvdmVyeS4gCj4gCj4gRm9yIHRoZSB1bmRlcmx5aW5nIHZvbHVt
+ZXMsIHhmc19kYiByZXZlYWxzIGFuIHhmcyBzdXBlcmJsb2NrIG9uCj4gc2RhMiBidXQgbm90IHNk
+Yi4gT24gc2RhMiwgdGhlIHN1cGVyYmxvY2tzIGxvb2sgdG8gYmUgdGhlIHNhbWUgYXMKPiBzYjAt
+MTUgZm9yIG1kMCAoaW5jbHVkaW5nIHNiMTUucm9vdGlubyB2YWx1ZSBvZiAxMjgpLiBPbiBzZGIs
+Cj4gdGhlcmUgYXBwZWFycyB0byBiZSBhbiB4ZnMgc3VwZXJibG9jayBhdCBvZmZzZXQgMHgxRUI4
+MDAwMCwKPiBwcmVjZWRlZCBieSAwcy4geGZzX2RiIGdpdmVzIHNlbnNpYmxlIHJlc3VsdHMgZm9y
+IHNiMC0xNSAgb24gYQo+IGxvb3AgZGV2aWNlIHNldCB1cCBhdCB0aGUgb2Zmc2V0LiAKCk9rLCB0
+aGF0J3MgMHhmNWMwMCAoMSwwMDYsNTkyKSBzZWN0b3JzIG9mZnNldCBpbnRvIHRoZSBkaXNrLgpB
+biBvZmZzZXQgb2YgYWJvdXQgNTAway4uCgpBbmQgdGhpcyByZWFsbHkgZG9lcyBwb2ludCB0byBh
+IHNldHVwIHVzaW5nIGEgRE0gbGluZWFyCmNvbmNhdGVuYXRpb24gdG8gam9pbiB0aGUgdHdvIGRp
+c2tzIHRvZ2V0aGVyLiBXb3JrIG91dApob3cgYmlnIHNkYTIgaXMgaW4gNTEyIGJ5dGUgc2VjdG9y
+cywgYW5kIHdvcmsgb3V0IGhvdyBiaWcKKHNkYiBpbiA1MTIgYnl0ZSBzZWN0b3JzKSAtIDB4ZjVj
+MDAgaXMsIGFuZCBidWlsZCBhIGRtdGFibGUKZmlsZSBsaWtlIHJlcGxhY2luZyB0aGUgb2J2aW91
+cyB2YXJpYWJsZXMgd2l0aCB0aGUgcmVhbCB2YWx1ZXM6CgojIHN0YXJ0IG9mZnNldO6AmiBzaXpl
+LCBqb2luIG1vZGUsIGRldmljZSwgZGV2aWNlIG9mZnNldAowIHNpemVvZl9zZGEyIGxpbmVhciAv
+ZGV2L3NkYTIgMApzaXplb2Zfc2RhMiBzaXplb2Zfc2RhMitzaXplb2Zfc2RiIGxpbmVhciAvZGV2
+L3NkYiAxMDA2NTkyCgpBbmQgdGhlIHVzZSBkbXNldHVwIHRvIGNyZWF0ZSBpdC4gZG1zZXR1cCBk
+b2Vzbid0IHdyaXRlIGFueXRoaW5nIHRvCnRoZSBkaXNrcyBzbyBpdCBzaG91bGQgYmUgc2FmZSB0
+byBkby4KCklmIHlvdSBhcmUgYWN0dWFsbHkgdXNpbmcgbWlycm9yaW5nIChSQUlEMSksIHRoZW4K
+ZG9uJ3QgYnVpbGQgYSBsaW5lYXIgY29uY2F0ZW5hdGlvbiBidXQgdXNlIGEgc2ltaWxhciB0cmlj
+ayB0bwpidWlsZCBhIG1hcHBlZCBkZXZpY2Ugc3RhcnRpbmcgYXQgdGhlIG9mZnNldCAweGZjNTAw
+IGFuZCB0aGVtIHBvaW50Cm1kIGF0IHRoZSBtYXBwZWQgZGV2aWNlIGFuZCBzZGEyLgoKSUlSQywg
+bWRhZG0gcHV0cyBzdXBlcmJsb2NrcyBhdCB0aGUgZW5kIG9mIHRoZSBkZXZpY2UsIHNvIHlvdSBt
+aWdodApiZSBhYmxlIHRvIGNhbGN1bGF0ZSB0aGUgZW5kIG9mZnNldCBvZiBzZGIgZnJvbSB0aGUg
+bG9jYXRpb24gb2YKdGhhdCBzdXBlcmJsb2NrIG9uIGRpc2suLi4uCgpPbmNlIHRoYXQgaXMgZG9u
+ZSwgeW91IGNhbiBzdGFydCB0byBsb29rIGF0IHdoZXRoZXIgc2IxNiBpbiB0aGUKZG0gdm9sdW1l
+IGlzIGF0IHRoZSByaWdodCBvZmZzZXQuIGhvcGVmdWxseSBpdCB3aWxsIGJlIHJpZ2h0IG9mZnNl
+dCwKYnV0IHlvdSBjYW4gdmFyeSBpdCBieSBtb2RpZnlpbmcgdGhlIHNpemUgb2Ygc2RhMiBpbiB0
+aGUgZG10YWJsZQpmaWxlIGFuZCByZWNvbnN0cnVjdGluZyB0aGUgZGV2aWNlLgoKSWYgdGhpcyB3
+b3JrcywgeW91IG1pZ2h0IGJlIGFibGUgdG8gYWNjZXNzIHRoZSBlbnRpcmUgZmlsZXN5c3RlbQph
+Z2FpbiwgYW5kIGRlcGVuZGluZyBvbiB0aGUgQVJNIGtlcm5lbCB2ZXJzaW9uIHlvdXIgZGV2aWNl
+IHdhcwpydW5uaW5nLCB5b3UgbWlnaHQgZXZlbiBiZSBhYmxlIHRvIHJlYWQgdGhlIGVudGlyZSBm
+aWxlc3lzdGVtLgoKSG9wZSB0aGlzIGhlbHBzLi4uCgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBD
+aGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6
+Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
