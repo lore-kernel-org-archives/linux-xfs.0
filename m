@@ -1,25 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0EAAZxt250267 for <xfs@oss.sgi.com>; Thu, 14 Jan 2010 04:10:36 -0600
+	o0EACYON250399 for <xfs@oss.sgi.com>; Thu, 14 Jan 2010 04:12:34 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2A61E1DB111A
-	for <xfs@oss.sgi.com>; Thu, 14 Jan 2010 02:11:31 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id ACA951DB112A
+	for <xfs@oss.sgi.com>; Thu, 14 Jan 2010 02:13:29 -0800 (PST)
 Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
 	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	IsyRoUF3MLTcR1Jo for <xfs@oss.sgi.com>;
-	Thu, 14 Jan 2010 02:11:31 -0800 (PST)
-Date: Thu, 14 Jan 2010 21:11:28 +1100
+	kcJH1yEErCv1kAmR for <xfs@oss.sgi.com>;
+	Thu, 14 Jan 2010 02:13:29 -0800 (PST)
+Received: from discord (unverified [121.44.236.168])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	11632755-1927428
+	for <xfs@oss.sgi.com>; Thu, 14 Jan 2010 20:43:28 +1030 (CDT)
+Received: from [192.168.1.6] (helo=disturbed) by discord with esmtp (Exim 4.69)
+	(envelope-from <dave@fromorbit.com>) id 1NVMhj-0007rW-Pw
+	for xfs@oss.sgi.com; Thu, 14 Jan 2010 21:13:27 +1100
+Received: from dave by disturbed with local (Exim 4.71)
+	(envelope-from <dave@disturbed.disaster>) id 1NVMdg-0001LO-BW
+	for xfs@oss.sgi.com; Thu, 14 Jan 2010 21:09:16 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfsprogs: Make the compile output cleaner V2
-Message-ID: <20100114101128.GX17483@discord.disaster>
-References: <1263377007-4500-1-git-send-email-david@fromorbit.com>
-	<20100113220814.GA17310@infradead.org>
-	<20100113223001.GR17483@discord.disaster>
-	<20100114065123.GA32559@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100114065123.GA32559@infradead.org>
+Subject: [PATCH 5/9] xfsprogs: fix some trivial warnings in xfs_db
+Date: Thu, 14 Jan 2010 21:09:08 +1100
+Message-Id: <1263463752-5052-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <1263463752-5052-1-git-send-email-david@fromorbit.com>
+References: <1263463752-5052-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,47 +33,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Jan 14, 2010 at 01:51:23AM -0500, Christoph Hellwig wrote:
-> On Thu, Jan 14, 2010 at 09:30:01AM +1100, Dave Chinner wrote:
-> > > >  	include/builddefs include/platform_defs.h
-> > > 
-> > > >  distclean: clean
-> > > > -	rm -f $(LDIRT)
-> > > > +	$(Q)rm -f $(DISTDIRT)
-> > > 
-> > > What does this have to do with the rest?
-> > 
-> > That's the "make clean doesn't cause configure to run again" fix.
-> 
-> Which is not related to the clean output build system..
-> 
-> I'm pretty sure we did this intentionally, but I'm open to a discussion
-> about changing it.
+Three warnings, none harmful - one dir2 name sign warning and
+two cases where gcc can't work out if a variable is initialised
+correctly in a child function or not.
 
-It seems completely spurious to me - normal practice is to blow away
-the config on a distclean, not a plain clean. And seeing as the
-patch is about removing noise during the normal build, I figured
-this qualified as a bug causing noise.
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+---
+ db/check.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-I can separate it out into another patch, but I'd really prefer that
-make clean doesn't result in running configure again. Especially
-considering the build dependencies are very broken so the only way
-to guarantee a build catches all changes is to do 'make clean;
-make'.
-
-Cheers,
-
-Dave.
+diff --git a/db/check.c b/db/check.c
+index 7620d9c..f94a16b 100644
+--- a/db/check.c
++++ b/db/check.c
+@@ -2317,7 +2317,7 @@ process_data_dir_v2(
+ 		tag_err += be16_to_cpu(*tagp) != (char *)dep - (char *)data;
+ 		addr = xfs_dir2_db_off_to_dataptr(mp, db,
+ 			(char *)dep - (char *)data);
+-		xname.name = (char *)dep->name;
++		xname.name = (uchar_t *)dep->name;
+ 		xname.len = dep->namelen;
+ 		dir_hash_add(mp->m_dirnameops->hashname(&xname), addr);
+ 		ptr += xfs_dir2_data_entsize(dep->namelen);
+@@ -3059,7 +3059,7 @@ process_leaf_node_dir_v2(
+ 	xfs_ino_t		lino;
+ 	int			nex;
+ 	xfs_ino_t		parent;
+-	int			t;
++	int			t = 0;
+ 	int			v;
+ 	int			v2;
+ 	int			x;
+@@ -3403,7 +3403,7 @@ process_quota(
+ 	xfs_fileoff_t	qbno;
+ 	char		*s = NULL;
+ 	int		scicb;
+-	int		t;
++	int		t = 0;
+ 
+ 	switch (qtype) {
+ 	case IS_USER_QUOTA:
 -- 
-Dave Chinner
-david@fromorbit.com
+1.6.5
 
 _______________________________________________
 xfs mailing list
