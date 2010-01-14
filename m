@@ -1,30 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0E1bO4x208886 for <xfs@oss.sgi.com>; Wed, 13 Jan 2010 19:37:24 -0600
+	o0E2NHeF212783 for <xfs@oss.sgi.com>; Wed, 13 Jan 2010 20:23:18 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B758A1C4D8C6
-	for <xfs@oss.sgi.com>; Wed, 13 Jan 2010 17:38:19 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	EkGapq98YLGLsxSS for <xfs@oss.sgi.com>;
-	Wed, 13 Jan 2010 17:38:19 -0800 (PST)
-Received: from discord (unverified [121.44.236.168])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	11630447-1927428
-	for <xfs@oss.sgi.com>; Thu, 14 Jan 2010 12:08:17 +1030 (CDT)
-Received: from [192.168.1.6] (helo=disturbed) by discord with esmtp (Exim 4.69)
-	(envelope-from <dave@fromorbit.com>) id 1NVEf8-0007MX-S5
-	for xfs@oss.sgi.com; Thu, 14 Jan 2010 12:38:14 +1100
-Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1NVEb5-0003UI-Hw
-	for xfs@oss.sgi.com; Thu, 14 Jan 2010 12:34:03 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4C508164707
+	for <xfs@oss.sgi.com>; Wed, 13 Jan 2010 18:24:12 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	OS91Don3jl3gCYyC for <xfs@oss.sgi.com>;
+	Wed, 13 Jan 2010 18:24:12 -0800 (PST)
+Date: Thu, 14 Jan 2010 13:24:09 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/3] xfs: xfs_swap_extents needs to handle dynamic fork offsets
-Date: Thu, 14 Jan 2010 12:33:54 +1100
-Message-Id: <1263432836-13368-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1263432836-13368-1-git-send-email-david@fromorbit.com>
-References: <1263432836-13368-1-git-send-email-david@fromorbit.com>
+Subject: Re: XFS data corruption with high I/O even on hardware raid
+Message-ID: <20100114022409.GW17483@discord.disaster>
+References: <4B4E6F3F.1090901@chaven.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4B4E6F3F.1090901@chaven.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,186 +25,100 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Steve Costaras <stevecs@chaven.com>
+Cc: xfs@oss.sgi.com
 
-When swapping extents, we can corrupt inodes by swapping data forks
-that are in incompatible formats.  This is caused by the two indoes
-having different fork offsets due to the presence of an attribute
-fork on an attr2 filesystem.  xfs_fsr tries to be smart about
-setting the fork offset, but the trick it plays only works on attr1
-(old fixed format attribute fork) filesystems.
+On Wed, Jan 13, 2010 at 07:11:27PM -0600, Steve Costaras wrote:
+> Ok, I've been seeing a problem here since had to move over to XFS from  
+> JFS due to file system size issues.   I am seeing XFS Data corruption  
+> under ?heavy io?   Basically, what happens is that under heavy load  
+> (i.e. if I'm doing say a xfs_fsr (which nearly always triggers the  
+> freeze issue) on a volume the system hovers around 90% utilization for  
+> the dm device for a while (sometimes an hour+, sometimes minutes) the  
+> subsystem goes into 100% utilization and then freezes solid forcing me  
+> to do a hard reboot of the box.
 
-Changing the way xfs_fsr sets up the attribute fork will prevent
-this situation from ever occurring, so in the kernel code we can get
-by with a preventative fix - check that the data fork in the
-defragmented inode is in a format valid for the inode it is being
-swapped into.  This will lead to files that will silently and
-potentially repeatedly fail defragmentation, so issue a warning to
-the log when this particular failure occurs to let us know that
-xfs_fsr needs updating/fixing.
+xfs_fsr can cause a *large* amount of IO to be done, so it is no
+surprise that it can trigger high load bugs in hardware and
+software. XFS can trigger high load problems on hardware more
+readily than other filesystems because using direct IO (like xfs_fsr
+does) it can push far, far higher throughput to the starge subsystem
+than any other linux filesystem can.
 
-To help identify how to improve xfs_fsr to avoid this issue, add
-trace points for the inodes being swapped so that we can determine
-why the swap was rejected and to confirm that the code is making the
-right decisions and modifications when swapping forks.
+The fact that the IO subsystem is freezing at 100% elevator queue
+utilisation points to an IO never completing. This immediately makes
+me point a finger at either the RAID hardware or the driver - a bug
+in XFS is highly unlikely to cause this symptom as those stats are
+generated at layers lower than XFS.
 
-A further complication is even when the swap is allowed to proceed
-when the fork offset is different between the two inodes then value
-for the maximum number of extents the data fork can hold can be
-wrong. Make sure these are also set correctly after the swap occurs.
+Next time you get a freeze, the output of:
 
-Signed-off-by: Dave Chinner <david@fromorbit.com>
----
- fs/xfs/xfs_dfrag.c |  106 ++++++++++++++++++++++++++++++++++++++++++++--------
- 1 files changed, 90 insertions(+), 16 deletions(-)
+# echo w > /proc/sysrq-trigger
 
-diff --git a/fs/xfs/xfs_dfrag.c b/fs/xfs/xfs_dfrag.c
-index d1483a4..97711d8 100644
---- a/fs/xfs/xfs_dfrag.c
-+++ b/fs/xfs/xfs_dfrag.c
-@@ -114,10 +114,82 @@ xfs_swapext(
- 	return error;
- }
- 
-+/*
-+ * We need to check that the format of the data fork in the temporary inode is
-+ * valid for the target inode before doing the swap. This is not a problem with
-+ * attr1 because of the fixed fok offset, but attr2 has a dynamically sized
-+ * data fork depending on the space the attribute fork is taking so we can get
-+ * invalid formats on the target inode.
-+ *
-+ * e.g. target has space for 7 extents in extent format, temp inode only has
-+ * space for 6.  If we defragment down to 7 extents, then the tmp format is a
-+ * btree, but when swapped it needs to be in extent format. Hence we can't just
-+ * blindly swap data forks on attr2 filesystems.
-+ *
-+ * Note that we check the swap in both directions so that we don't end up with
-+ * a corrupt temporary inode, either.
-+ *
-+ * Note that fixing the way xfs_fsr sets up the attribute fork in the source
-+ * inode will prevent this situation from occurring, so all we do here is
-+ * reject and log the attempt. basically we are putting the responsibility on
-+ * userspace to get this right.
-+ */
-+static int
-+xfs_swap_extents_check_format(
-+	xfs_inode_t	*ip,	/* target inode */
-+	xfs_inode_t	*tip)	/* tmp inode */
-+{
-+
-+	/* Should never get a local format */
-+	if (ip->i_d.di_format == XFS_DINODE_FMT_LOCAL ||
-+	    tip->i_d.di_format == XFS_DINODE_FMT_LOCAL)
-+		return EINVAL;
-+
-+	/*
-+	 * if the target inode has less extents that then temporary inode then
-+	 * why did userspace call us?
-+	 */
-+	if (ip->i_d.di_nextents < tip->i_d.di_nextents)
-+		return EINVAL;
-+
-+	/*
-+	 * if the target inode is in extent form and the temp inode is in btree
-+	 * form then we will end up with the target inode in the wrong format
-+	 * as we already know there are less extents in the temp inode.
-+	 */
-+	if (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
-+	    tip->i_d.di_format == XFS_DINODE_FMT_BTREE)
-+		return EINVAL;
-+
-+	/* Check temp in extent form to max in target */
-+	if (tip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
-+	    XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) > ip->i_df.if_ext_max)
-+		return EINVAL;
-+
-+	/* Check target in extent form to max in temp */
-+	if (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
-+	    XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) > tip->i_df.if_ext_max)
-+		return EINVAL;
-+
-+	/* Check root block of temp in btree form to max in target */
-+	if (tip->i_d.di_format == XFS_DINODE_FMT_BTREE &&
-+	    XFS_IFORK_BOFF(ip) &&
-+	    tip->i_df.if_broot_bytes > XFS_IFORK_BOFF(ip))
-+		return EINVAL;
-+
-+	/* Check root block of target in btree form to max in temp */
-+	if (ip->i_d.di_format == XFS_DINODE_FMT_BTREE &&
-+	    XFS_IFORK_BOFF(tip) &&
-+	    ip->i_df.if_broot_bytes > XFS_IFORK_BOFF(tip))
-+		return EINVAL;
-+
-+	return 0;
-+}
-+
- int
- xfs_swap_extents(
--	xfs_inode_t	*ip,
--	xfs_inode_t	*tip,
-+	xfs_inode_t	*ip,	/* target inode */
-+	xfs_inode_t	*tip,	/* tmp inode */
- 	xfs_swapext_t	*sxp)
- {
- 	xfs_mount_t	*mp;
-@@ -161,13 +233,6 @@ xfs_swap_extents(
- 		goto out_unlock;
- 	}
- 
--	/* Should never get a local format */
--	if (ip->i_d.di_format == XFS_DINODE_FMT_LOCAL ||
--	    tip->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
--		error = XFS_ERROR(EINVAL);
--		goto out_unlock;
--	}
--
- 	if (VN_CACHED(VFS_I(tip)) != 0) {
- 		error = xfs_flushinval_pages(tip, 0, -1,
- 				FI_REMAPF_LOCKED);
-@@ -189,13 +254,12 @@ xfs_swap_extents(
- 		goto out_unlock;
- 	}
- 
--	/*
--	 * If the target has extended attributes, the tmp file
--	 * must also in order to ensure the correct data fork
--	 * format.
--	 */
--	if ( XFS_IFORK_Q(ip) != XFS_IFORK_Q(tip) ) {
--		error = XFS_ERROR(EINVAL);
-+	/* check inode formats now that data is flushed */
-+	error = xfs_swap_extents_check_format(ip, tip);
-+	if (error) {
-+		xfs_fs_cmn_err(CE_NOTE, mp,
-+		    "%s: inode 0x%llx format is incompatible for exchanging.",
-+				__FILE__, ip->i_ino);
- 		goto out_unlock;
- 	}
- 
-@@ -276,6 +340,16 @@ xfs_swap_extents(
- 	*tifp = *tempifp;	/* struct copy */
- 
- 	/*
-+	 * Fix the in-memory data fork values that are dependent on the fork
-+	 * offset in the inode. We can't assume they remain the same as attr2
-+	 * has dynamic fork offsets.
-+	 */
-+	ifp->if_ext_max = XFS_IFORK_SIZE(ip, XFS_DATA_FORK) /
-+					(uint)sizeof(xfs_bmbt_rec_t);
-+	tifp->if_ext_max = XFS_IFORK_SIZE(tip, XFS_DATA_FORK) /
-+					(uint)sizeof(xfs_bmbt_rec_t);
-+
-+	/*
- 	 * Fix the on-disk inode values
- 	 */
- 	tmp = (__uint64_t)ip->i_d.di_nblocks;
+will tell use what the system is waiting on (i.e. why it is stuck)
+
+...
+
+
+> Since I'm using hardware raid w/ BBU when I reboot and it comes back up  
+> the raid controller writes out to the drives any outstanding data in  
+> it's cache and from the hardware point of view (as well as lvm's point  
+> of view) the array is ok.    The file system however generally can't be  
+> mounted (about 4 out of 5 times, some times it does get auto-mounted but  
+> when I then run an xfs_repair -n -v in those cases there are pages of  
+> errors (badly aligned inode rec, bad starting inode #'s, dubious inode  
+> btree block headers among others).    When I let a repair actually run  
+> in one case out of 4,500,000 files it linked about 2,000,000 or so but  
+> there was no way to identify and verify file integrity.  The others were  
+> just lost.
+>
+> This is not limited to large volume sizes I have seen similar on small  
+> ~2TiB file systems as well.  Also when it happened in a couple cases the  
+> file system that was taking the I/O (say xfs_fsr -v /home ) another XFS  
+> filesystem on the same system which was NOT taking much if any I/O gets  
+> badly corrupted (say /var/test ).   Both would be using the same areca  
+> controllers and same physical discs (same PV's and same VG's but  
+> different LV's).
+
+These symptoms really point to a problem outside XFS - the only time
+I've seen this sort of behaviour is on buggy hardware. The
+cross-volume corruption is the smoking gun, but proving it is damn
+near impossible without expensive lab equipment and a lot of time.
+
+> Any suggestions on how to isolate or eliminate this would be greatly  
+> appreciated.
+
+I'd start by not running xfs_fsr as a short term workaround to keep
+the load below the problem threshold.
+
+Looking at the iostat output - the volumes sd[f-i] all lock up at
+100% utilisation at the same time. Then looking at this:
+
+> ==============
+> LVM is using as it's base physical volumes 8 hardware raids  
+> (MediaVol00-70 inclusive):
+> [  175.320738] ARECA RAID ADAPTER4: FIRMWARE VERSION V1.47 2009-07-16
+> [  175.336238] scsi4 : Areca SAS Host Adapter RAID Controller( RAID6  
+> capable)
+....
+> [  175.356231] ARECA RAID ADAPTER5: FIRMWARE VERSION V1.47 2009-10-22
+> [  175.376144] scsi5 : Areca SAS Host Adapter RAID Controller( RAID6  
+> capable)
+
+You've got 4 luns on each controller, and it looks like all the luns
+on one controller have locked up. Everything is pointing at the
+raid controller as being the problem....
+
+Cheers,
+
+Dave.
 -- 
-1.6.5
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
