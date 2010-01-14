@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0E1bMAe208859 for <xfs@oss.sgi.com>; Wed, 13 Jan 2010 19:37:22 -0600
+	o0E1bO4x208886 for <xfs@oss.sgi.com>; Wed, 13 Jan 2010 19:37:24 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2040D1C4D8C4
-	for <xfs@oss.sgi.com>; Wed, 13 Jan 2010 17:38:18 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B758A1C4D8C6
+	for <xfs@oss.sgi.com>; Wed, 13 Jan 2010 17:38:19 -0800 (PST)
 Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
 	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	GEwMI4GkB5y5hFMw for <xfs@oss.sgi.com>;
-	Wed, 13 Jan 2010 17:38:18 -0800 (PST)
+	EkGapq98YLGLsxSS for <xfs@oss.sgi.com>;
+	Wed, 13 Jan 2010 17:38:19 -0800 (PST)
 Received: from discord (unverified [121.44.236.168])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	11630446-1927428
+	11630447-1927428
 	for <xfs@oss.sgi.com>; Thu, 14 Jan 2010 12:08:17 +1030 (CDT)
 Received: from [192.168.1.6] (helo=disturbed) by discord with esmtp (Exim 4.69)
-	(envelope-from <dave@fromorbit.com>) id 1NVEf8-0007MY-TX
+	(envelope-from <dave@fromorbit.com>) id 1NVEf8-0007MX-S5
 	for xfs@oss.sgi.com; Thu, 14 Jan 2010 12:38:14 +1100
 Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1NVEb5-0003UK-Kr
+	(envelope-from <dave@disturbed.disaster>) id 1NVEb5-0003UI-Hw
 	for xfs@oss.sgi.com; Thu, 14 Jan 2010 12:34:03 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/3] xfs: add tracing to xfs_swap_extents
-Date: Thu, 14 Jan 2010 12:33:55 +1100
-Message-Id: <1263432836-13368-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/3] xfs: xfs_swap_extents needs to handle dynamic fork offsets
+Date: Thu, 14 Jan 2010 12:33:54 +1100
+Message-Id: <1263432836-13368-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1263432836-13368-1-git-send-email-david@fromorbit.com>
 References: <1263432836-13368-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,104 +40,177 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-TO be able to diagnose whether the swap extents function is detecting
-compatible inode data fork configurations for swapping extents, add
-tracing points to the code to allow us to see the format of the
-inode forks before and after the swap.
+When swapping extents, we can corrupt inodes by swapping data forks
+that are in incompatible formats.  This is caused by the two indoes
+having different fork offsets due to the presence of an attribute
+fork on an attr2 filesystem.  xfs_fsr tries to be smart about
+setting the fork offset, but the trick it plays only works on attr1
+(old fixed format attribute fork) filesystems.
+
+Changing the way xfs_fsr sets up the attribute fork will prevent
+this situation from ever occurring, so in the kernel code we can get
+by with a preventative fix - check that the data fork in the
+defragmented inode is in a format valid for the inode it is being
+swapped into.  This will lead to files that will silently and
+potentially repeatedly fail defragmentation, so issue a warning to
+the log when this particular failure occurs to let us know that
+xfs_fsr needs updating/fixing.
+
+To help identify how to improve xfs_fsr to avoid this issue, add
+trace points for the inodes being swapped so that we can determine
+why the swap was rejected and to confirm that the code is making the
+right decisions and modifications when swapping forks.
+
+A further complication is even when the swap is allowed to proceed
+when the fork offset is different between the two inodes then value
+for the maximum number of extents the data fork can hold can be
+wrong. Make sure these are also set correctly after the swap occurs.
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/linux-2.6/xfs_trace.h |   53 ++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_dfrag.c           |    5 ++++
- 2 files changed, 58 insertions(+), 0 deletions(-)
+ fs/xfs/xfs_dfrag.c |  106 ++++++++++++++++++++++++++++++++++++++++++++--------
+ 1 files changed, 90 insertions(+), 16 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_trace.h b/fs/xfs/linux-2.6/xfs_trace.h
-index 058fff1..1bb09e7 100644
---- a/fs/xfs/linux-2.6/xfs_trace.h
-+++ b/fs/xfs/linux-2.6/xfs_trace.h
-@@ -1441,6 +1441,59 @@ TRACE_EVENT(xfs_dir2_leafn_moveents,
- 		  __entry->count)
- );
- 
-+#define XFS_SWAPEXT_INODES \
-+	{ 0,	"target" }, \
-+	{ 1,	"temp" }
-+
-+#define XFS_INODE_FORMAT_STR \
-+	{ 0,	"invalid" }, \
-+	{ 1,	"local" }, \
-+	{ 2,	"extent" }, \
-+	{ 3,	"btree" }
-+
-+DECLARE_EVENT_CLASS(xfs_swap_extent_class,
-+	TP_PROTO(struct xfs_inode *ip, int which),
-+	TP_ARGS(ip, which),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(int, which)
-+		__field(xfs_ino_t, ino)
-+		__field(int, format)
-+		__field(int, nex)
-+		__field(int, max_nex)
-+		__field(int, broot_size)
-+		__field(int, fork_off)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = VFS_I(ip)->i_sb->s_dev;
-+		__entry->which = which;
-+		__entry->ino = ip->i_ino;
-+		__entry->format = ip->i_d.di_format;
-+		__entry->nex = ip->i_d.di_nextents;
-+		__entry->max_nex = ip->i_df.if_ext_max;
-+		__entry->broot_size = ip->i_df.if_broot_bytes;
-+		__entry->fork_off = XFS_IFORK_BOFF(ip);
-+	),
-+	TP_printk("dev %d:%d ino 0x%llx (%s), %s format, num_extents %d, "
-+		  "Max in-fork extents %d, broot size %d, fork offset %d",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino,
-+		  __print_symbolic(__entry->which, XFS_SWAPEXT_INODES),
-+		  __print_symbolic(__entry->format, XFS_INODE_FORMAT_STR),
-+		  __entry->nex,
-+		  __entry->max_nex,
-+		  __entry->broot_size,
-+		  __entry->fork_off)
-+)
-+
-+#define DEFINE_SWAPEXT_EVENT(name) \
-+DEFINE_EVENT(xfs_swap_extent_class, name, \
-+	TP_PROTO(struct xfs_inode *ip, int which), \
-+	TP_ARGS(ip, which))
-+
-+DEFINE_SWAPEXT_EVENT(xfs_swap_extent_before);
-+DEFINE_SWAPEXT_EVENT(xfs_swap_extent_after);
-+
- #endif /* _TRACE_XFS_H */
- 
- #undef TRACE_INCLUDE_PATH
 diff --git a/fs/xfs/xfs_dfrag.c b/fs/xfs/xfs_dfrag.c
-index 97711d8..eb4e404 100644
+index d1483a4..97711d8 100644
 --- a/fs/xfs/xfs_dfrag.c
 +++ b/fs/xfs/xfs_dfrag.c
-@@ -254,6 +254,9 @@ xfs_swap_extents(
+@@ -114,10 +114,82 @@ xfs_swapext(
+ 	return error;
+ }
+ 
++/*
++ * We need to check that the format of the data fork in the temporary inode is
++ * valid for the target inode before doing the swap. This is not a problem with
++ * attr1 because of the fixed fok offset, but attr2 has a dynamically sized
++ * data fork depending on the space the attribute fork is taking so we can get
++ * invalid formats on the target inode.
++ *
++ * e.g. target has space for 7 extents in extent format, temp inode only has
++ * space for 6.  If we defragment down to 7 extents, then the tmp format is a
++ * btree, but when swapped it needs to be in extent format. Hence we can't just
++ * blindly swap data forks on attr2 filesystems.
++ *
++ * Note that we check the swap in both directions so that we don't end up with
++ * a corrupt temporary inode, either.
++ *
++ * Note that fixing the way xfs_fsr sets up the attribute fork in the source
++ * inode will prevent this situation from occurring, so all we do here is
++ * reject and log the attempt. basically we are putting the responsibility on
++ * userspace to get this right.
++ */
++static int
++xfs_swap_extents_check_format(
++	xfs_inode_t	*ip,	/* target inode */
++	xfs_inode_t	*tip)	/* tmp inode */
++{
++
++	/* Should never get a local format */
++	if (ip->i_d.di_format == XFS_DINODE_FMT_LOCAL ||
++	    tip->i_d.di_format == XFS_DINODE_FMT_LOCAL)
++		return EINVAL;
++
++	/*
++	 * if the target inode has less extents that then temporary inode then
++	 * why did userspace call us?
++	 */
++	if (ip->i_d.di_nextents < tip->i_d.di_nextents)
++		return EINVAL;
++
++	/*
++	 * if the target inode is in extent form and the temp inode is in btree
++	 * form then we will end up with the target inode in the wrong format
++	 * as we already know there are less extents in the temp inode.
++	 */
++	if (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
++	    tip->i_d.di_format == XFS_DINODE_FMT_BTREE)
++		return EINVAL;
++
++	/* Check temp in extent form to max in target */
++	if (tip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
++	    XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) > ip->i_df.if_ext_max)
++		return EINVAL;
++
++	/* Check target in extent form to max in temp */
++	if (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
++	    XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) > tip->i_df.if_ext_max)
++		return EINVAL;
++
++	/* Check root block of temp in btree form to max in target */
++	if (tip->i_d.di_format == XFS_DINODE_FMT_BTREE &&
++	    XFS_IFORK_BOFF(ip) &&
++	    tip->i_df.if_broot_bytes > XFS_IFORK_BOFF(ip))
++		return EINVAL;
++
++	/* Check root block of target in btree form to max in temp */
++	if (ip->i_d.di_format == XFS_DINODE_FMT_BTREE &&
++	    XFS_IFORK_BOFF(tip) &&
++	    ip->i_df.if_broot_bytes > XFS_IFORK_BOFF(tip))
++		return EINVAL;
++
++	return 0;
++}
++
+ int
+ xfs_swap_extents(
+-	xfs_inode_t	*ip,
+-	xfs_inode_t	*tip,
++	xfs_inode_t	*ip,	/* target inode */
++	xfs_inode_t	*tip,	/* tmp inode */
+ 	xfs_swapext_t	*sxp)
+ {
+ 	xfs_mount_t	*mp;
+@@ -161,13 +233,6 @@ xfs_swap_extents(
  		goto out_unlock;
  	}
  
-+	trace_xfs_swap_extent_before(ip, 0);
-+	trace_xfs_swap_extent_before(tip, 1);
+-	/* Should never get a local format */
+-	if (ip->i_d.di_format == XFS_DINODE_FMT_LOCAL ||
+-	    tip->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
+-		error = XFS_ERROR(EINVAL);
+-		goto out_unlock;
+-	}
+-
+ 	if (VN_CACHED(VFS_I(tip)) != 0) {
+ 		error = xfs_flushinval_pages(tip, 0, -1,
+ 				FI_REMAPF_LOCKED);
+@@ -189,13 +254,12 @@ xfs_swap_extents(
+ 		goto out_unlock;
+ 	}
+ 
+-	/*
+-	 * If the target has extended attributes, the tmp file
+-	 * must also in order to ensure the correct data fork
+-	 * format.
+-	 */
+-	if ( XFS_IFORK_Q(ip) != XFS_IFORK_Q(tip) ) {
+-		error = XFS_ERROR(EINVAL);
++	/* check inode formats now that data is flushed */
++	error = xfs_swap_extents_check_format(ip, tip);
++	if (error) {
++		xfs_fs_cmn_err(CE_NOTE, mp,
++		    "%s: inode 0x%llx format is incompatible for exchanging.",
++				__FILE__, ip->i_ino);
+ 		goto out_unlock;
+ 	}
+ 
+@@ -276,6 +340,16 @@ xfs_swap_extents(
+ 	*tifp = *tempifp;	/* struct copy */
+ 
+ 	/*
++	 * Fix the in-memory data fork values that are dependent on the fork
++	 * offset in the inode. We can't assume they remain the same as attr2
++	 * has dynamic fork offsets.
++	 */
++	ifp->if_ext_max = XFS_IFORK_SIZE(ip, XFS_DATA_FORK) /
++					(uint)sizeof(xfs_bmbt_rec_t);
++	tifp->if_ext_max = XFS_IFORK_SIZE(tip, XFS_DATA_FORK) /
++					(uint)sizeof(xfs_bmbt_rec_t);
 +
- 	/* check inode formats now that data is flushed */
- 	error = xfs_swap_extents_check_format(ip, tip);
- 	if (error) {
-@@ -421,6 +424,8 @@ xfs_swap_extents(
- 
- 	error = xfs_trans_commit(tp, XFS_TRANS_SWAPEXT);
- 
-+	trace_xfs_swap_extent_after(ip, 0);
-+	trace_xfs_swap_extent_after(tip, 1);
- out:
- 	kmem_free(tempifp);
- 	return error;
++	/*
+ 	 * Fix the on-disk inode values
+ 	 */
+ 	tmp = (__uint64_t)ip->i_d.di_nblocks;
 -- 
 1.6.5
 
