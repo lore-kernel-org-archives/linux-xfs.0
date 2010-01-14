@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0ELqwlB039251 for <xfs@oss.sgi.com>; Thu, 14 Jan 2010 15:52:58 -0600
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9BC20167116
-	for <xfs@oss.sgi.com>; Thu, 14 Jan 2010 13:53:55 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id RCRo2nYDeiJ6Y8B6 for
-	<xfs@oss.sgi.com>; Thu, 14 Jan 2010 13:53:55 -0800 (PST)
-Received: from int-mx01.intmail.prod.int.phx2.redhat.com
-	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id o0ELrs92021737
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 14 Jan 2010 16:53:54 -0500
-Received: from neon.msp.redhat.com (neon.msp.redhat.com [10.15.80.10])
-	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id o0ELrrbh012369
-	for <xfs@oss.sgi.com>; Thu, 14 Jan 2010 16:53:53 -0500
-Message-ID: <4B4F9270.4070006@sandeen.net>
-Date: Thu, 14 Jan 2010 15:53:52 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	o0EMaXeA042616 for <xfs@oss.sgi.com>; Thu, 14 Jan 2010 16:36:33 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6E8F61676D7
+	for <xfs@oss.sgi.com>; Thu, 14 Jan 2010 14:37:29 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	QzDxmwUnPASuKFxn for <xfs@oss.sgi.com>;
+	Thu, 14 Jan 2010 14:37:29 -0800 (PST)
+Date: Fri, 15 Jan 2010 09:37:25 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 0/10] Perag lookup rework
+Message-ID: <20100114223725.GY17483@discord.disaster>
+References: <1263210469-22171-1-git-send-email-david@fromorbit.com>
+	<1AB9A794DBDDF54A8A81BE2296F7BDFE012A696E@cf--amer001e--3.americas.sgi.com>
 MIME-Version: 1.0
-Subject: [PATCH] mkfs: fix mkfs.xfs -dfile,name=$NAME for new files
+Content-Disposition: inline
+In-Reply-To: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A696E@cf--amer001e--3.americas.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,37 +30,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs mailing list <xfs@oss.sgi.com>
+To: Alex Elder <aelder@sgi.com>
+Cc: xfs@oss.sgi.com
 
-# /sbin/mkfs.xfs -dfile,name=grrr,size=100g
-mkfs.xfs: Use the -f option to force overwrite.
+On Thu, Jan 14, 2010 at 12:42:12PM -0600, Alex Elder wrote:
+> Dave Chinner wrote:
+> > This is the previous set of patches all put together in the one series
+> > for the current xfs-dev tree.
+> > 
+> > Patch 10 is a new patch - it embeds the busy extent list into the perag
+> > structure rather than leaving as a separate allocation.
+> 
+> All 10 patches look good.  I am adding the following descriptions
+> to these patches which lacked them:
+> 
+> http://patchwork.xfs.org/patch/429/
+> [03/10] XFS: Convert filestreams code to use per-ag get/put routines
+> 
+> Description:
+> Use xfs_perag_get() and xfs_perag_put() in the filestreams code.
 
-check_overwrite is failing, because  blkid_new_probe_from_filename()
-is failing, because the (new) image file is 0 length.
+I'd consier that redundant and therefore unnecssary. I don't put
+a descriptio in if the subject line describes the patch
+sufficiently. It seems to be a pretty common practise, actually.
 
-We already return 0 (carry on!) for other internal failures,
-and nobody tests for a -1 return.  So let's just let this
-one pass too.
+> http://patchwork.xfs.org/patch/417/
+> [09/10] xfs: handle ENOMEM correctly during initialisation of perag structures
+> 
+> Description:
+> Add proper error handling in case an error occurs while initializing
+> new perag structures for a mount point.  The mount structure is
+> restored to its previous state by deleting and freeing any perag
+> structures added during the call.
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
+That describes what the code does, which I'd also consider
+redundant... ;)
 
-(note, i'm open to comments if we want to differentiate
-1/0/-1 in a cleaner fashion...)
+Cheers,
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 9a8eff3..53568bc 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -296,7 +296,7 @@ check_overwrite(
- 
- 	pr = blkid_new_probe_from_filename(device);
- 	if (!pr)
--		return -1;
-+		return 0;
- 
- 	if (blkid_probe_enable_partitions(pr, 1))
- 		goto out_free_probe;
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
