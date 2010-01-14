@@ -1,13 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0EIrrTk026618 for <xfs@oss.sgi.com>; Thu, 14 Jan 2010 12:53:53 -0600
+	o0EIfIPt025655 for <xfs@oss.sgi.com>; Thu, 14 Jan 2010 12:41:18 -0600
 Content-class: urn:content-classes:message
 MIME-Version: 1.0
-Subject: RE: [PATCH] xfs: fix missing error check in xfs_rtfree_range
-Date: Thu, 14 Jan 2010 12:54:47 -0600
-Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A696F@cf--amer001e--3.americas.sgi.com>
-In-Reply-To: <1263458686-21308-1-git-send-email-david@fromorbit.com>
+Subject: RE: [PATCH 0/10] Perag lookup rework
+Date: Thu, 14 Jan 2010 12:42:12 -0600
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A696E@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <1263210469-22171-1-git-send-email-david@fromorbit.com>
 From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -25,40 +25,32 @@ To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
 Dave Chinner wrote:
-> When xfs_rtfind_forw() returns an error, the block is returned
-> uninitialised.  xfs_rtfree_range() is not checking the error return,
-> so could be using an uninitialised block number for modifying bitmap
-> summary info.
+> This is the previous set of patches all put together in the one series
+> for the current xfs-dev tree.
 > 
-> The problem was found by gcc when compiling the *userspace* libxfs
-> code - it is an copy of the kernel code with the exact same bug.
-> gcc gives an uninitialised variable warning on the userspace code
-> but not on the kernel code. You gotta love the consistency (Mmmm,
-> slightly chewy today!).
+> Patch 10 is a new patch - it embeds the busy extent list into the perag
+> structure rather than leaving as a separate allocation.
 
-Looks good.  I'll send this for 2.6.33-rc4.
+All 10 patches look good.  I am adding the following descriptions
+to these patches which lacked them:
 
-> Signed-off-by: Dave Chinner <david@fromorbit.com>
+http://patchwork.xfs.org/patch/429/
+[03/10] XFS: Convert filestreams code to use per-ag get/put routines
+
+Description:
+Use xfs_perag_get() and xfs_perag_put() in the filestreams code.
+
+
+http://patchwork.xfs.org/patch/417/
+[09/10] xfs: handle ENOMEM correctly during initialisation of perag structures
+
+Description:
+Add proper error handling in case an error occurs while initializing
+new perag structures for a mount point.  The mount structure is
+restored to its previous state by deleting and freeing any perag
+structures added during the call.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
-
-
->  fs/xfs/xfs_rtalloc.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-> index 9e15a11..6be05f7 100644
-> --- a/fs/xfs/xfs_rtalloc.c
-> +++ b/fs/xfs/xfs_rtalloc.c
-> @@ -1517,6 +1517,8 @@ xfs_rtfree_range(
->  	 */
->  	error = xfs_rtfind_forw(mp, tp, end, mp->m_sb.sb_rextents - 1,
->  		&postblock);
-> +	if (error)
-> +		return error;
->  	/*
->  	 * If there are blocks not being freed at the front of the
->  	 * old extent, add summary data for them to be allocated.
 
 _______________________________________________
 xfs mailing list
