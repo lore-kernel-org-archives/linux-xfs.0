@@ -1,16 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0E6YFox233570 for <xfs@oss.sgi.com>; Thu, 14 Jan 2010 00:34:18 -0600
-Date: Thu, 14 Jan 2010 01:35:10 -0500
+	o0E6fVGu234070 for <xfs@oss.sgi.com>; Thu, 14 Jan 2010 00:41:31 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 76460164FE6
+	for <xfs@oss.sgi.com>; Wed, 13 Jan 2010 22:42:28 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id QL0PCE4LYNr3Kssa for
+	<xfs@oss.sgi.com>; Wed, 13 Jan 2010 22:42:28 -0800 (PST)
+Date: Thu, 14 Jan 2010 01:42:28 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: xfs_swap_extents needs to handle dynamic fork offsets
-Message-ID: <20100114063510.GA20445@infradead.org>
-References: <20100112130922.GA30985@infradead.org>
-	<1AB9A794DBDDF54A8A81BE2296F7BDFE012A6965@cf--amer001e--3.americas.sgi.com>
+Subject: Re: [PATCH 3/3] xfs: implement quota warnings via netlink
+Message-ID: <20100114064228.GA29458@infradead.org>
+References: <20100113220547.846700560@bombadil.infradead.org>
+	<20100113220603.251930871@bombadil.infradead.org>
+	<20100114011948.GV17483@discord.disaster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A6965@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <20100114011948.GV17483@discord.disaster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,27 +30,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Wed, Jan 13, 2010 at 04:32:12PM -0600, Alex Elder wrote:
-> Christoph Hellwig wrote:
-> >> +	TP_printk("dev %d:%d %s inode 0x%llx, %s format, num_extents %d, "
-> >> +		  "Max in-fork extents %d, broot size %d, fork offset %d",
-> > 
-> > It would be nice to keep the
-> > 
-> > 	"dev %d:%d ino 0x%llx"
-> > 
-> > prefix as a convention so that all trace records are similar at their
-> > beginning.
+On Thu, Jan 14, 2010 at 12:19:48PM +1100, Dave Chinner wrote:
+> > Tested by running the quota_nld daemon while running the xfstest quota
+> > tests and observing the warnings.  I'll see how I can get a more formal
+> > testcase for it written.
 > 
-> Perhaps:
->     +	TP_printk("dev %d:%d inode 0x%llx (%s), %s format, num_extents %d, " 
->                                           ^
->                                           +--- symbolic entry->which
+> Sounds like it needs something similar to the dmapi event listeners
+> we use for testing that the dmapi events are generated correctly....
 
-Sounds fine, except s/inode/ino/ above to stay consistant.
+That's what quota_nld does, just need to tie it up properly.
+
+> This appears to send "over block quota" warnings even when
+> the error is caused by the number of inodes going over limit.
+> For inode count warnings we should be sending QUOTA_NL_IHARDWARN or
+> QUOTA_NL_ISOFTWARN. That could be easily done if the "hard"
+> parameter is changed to the type of warning which is set up
+> in the calling function.
+> 
+> We could probably even return the grace limit expired versions
+> as well when over the soft limits with a slight change to the
+> soft limit warning logic as well...
+
+Indeed, I did copy this from gfs2 which only does the block quotas
+and no differciated soft warnings.  I'll respin it.
 
 _______________________________________________
 xfs mailing list
