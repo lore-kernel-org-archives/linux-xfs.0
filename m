@@ -1,23 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0E6oQHY234683 for <xfs@oss.sgi.com>; Thu, 14 Jan 2010 00:50:27 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D2A6E15F6D5
-	for <xfs@oss.sgi.com>; Wed, 13 Jan 2010 22:51:23 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id lRJSKrqELkK8aKdb for
-	<xfs@oss.sgi.com>; Wed, 13 Jan 2010 22:51:23 -0800 (PST)
-Date: Thu, 14 Jan 2010 01:51:23 -0500
+	o0E6YFox233570 for <xfs@oss.sgi.com>; Thu, 14 Jan 2010 00:34:18 -0600
+Date: Thu, 14 Jan 2010 01:35:10 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfsprogs: Make the compile output cleaner V2
-Message-ID: <20100114065123.GA32559@infradead.org>
-References: <1263377007-4500-1-git-send-email-david@fromorbit.com>
-	<20100113220814.GA17310@infradead.org>
-	<20100113223001.GR17483@discord.disaster>
+Subject: Re: [PATCH] xfs: xfs_swap_extents needs to handle dynamic fork offsets
+Message-ID: <20100114063510.GA20445@infradead.org>
+References: <20100112130922.GA30985@infradead.org>
+	<1AB9A794DBDDF54A8A81BE2296F7BDFE012A6965@cf--amer001e--3.americas.sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100113223001.GR17483@discord.disaster>
+In-Reply-To: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A6965@cf--amer001e--3.americas.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,24 +23,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Alex Elder <aelder@sgi.com>
 Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Thu, Jan 14, 2010 at 09:30:01AM +1100, Dave Chinner wrote:
-> > >  	include/builddefs include/platform_defs.h
+On Wed, Jan 13, 2010 at 04:32:12PM -0600, Alex Elder wrote:
+> Christoph Hellwig wrote:
+> >> +	TP_printk("dev %d:%d %s inode 0x%llx, %s format, num_extents %d, "
+> >> +		  "Max in-fork extents %d, broot size %d, fork offset %d",
 > > 
-> > >  distclean: clean
-> > > -	rm -f $(LDIRT)
-> > > +	$(Q)rm -f $(DISTDIRT)
+> > It would be nice to keep the
 > > 
-> > What does this have to do with the rest?
+> > 	"dev %d:%d ino 0x%llx"
+> > 
+> > prefix as a convention so that all trace records are similar at their
+> > beginning.
 > 
-> That's the "make clean doesn't cause configure to run again" fix.
+> Perhaps:
+>     +	TP_printk("dev %d:%d inode 0x%llx (%s), %s format, num_extents %d, " 
+>                                           ^
+>                                           +--- symbolic entry->which
 
-Which is not related to the clean output build system..
-
-I'm pretty sure we did this intentionally, but I'm open to a discussion
-about changing it.
+Sounds fine, except s/inode/ino/ above to stay consistant.
 
 _______________________________________________
 xfs mailing list
