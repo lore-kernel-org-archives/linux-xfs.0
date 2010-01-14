@@ -1,27 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0EKiYjk034576 for <xfs@oss.sgi.com>; Thu, 14 Jan 2010 14:44:34 -0600
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3FC15F0B315
-	for <xfs@oss.sgi.com>; Thu, 14 Jan 2010 12:45:30 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id PQBfhMsi4KQT2yF4 for
-	<xfs@oss.sgi.com>; Thu, 14 Jan 2010 12:45:30 -0800 (PST)
-Received: from int-mx01.intmail.prod.int.phx2.redhat.com
-	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id o0EKjUWe031625
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 14 Jan 2010 15:45:30 -0500
-Received: from neon.msp.redhat.com (neon.msp.redhat.com [10.15.80.10])
-	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id o0EKjTBS026300
-	for <xfs@oss.sgi.com>; Thu, 14 Jan 2010 15:45:29 -0500
-Message-ID: <4B4F8269.50305@sandeen.net>
-Date: Thu, 14 Jan 2010 14:45:29 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	o0EL5NJt036012 for <xfs@oss.sgi.com>; Thu, 14 Jan 2010 15:05:23 -0600
+Content-class: urn:content-classes:message
 MIME-Version: 1.0
-Subject: [PATCH] xfstests: fix up mkfs.gfs2 args for test 032
+Subject: RE: [PATCH] mkfs: fix mkfs when blkid fails
+Date: Thu, 14 Jan 2010 15:06:15 -0600
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A6974@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <4B4F7C0F.9010004@sandeen.net>
+From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,27 +21,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs mailing list <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs mailing list <xfs@oss.sgi.com>
 
-Looks like gfs2 (recently?) needs more arguments for the
-mkfs overwrite test.
+Eric Sandeen wrote:
+> When trying to mkfs something that blkid doesn't grok:
+> 
+> # mkfs.xfs fsfile
+> warning: unable to probe device toplology for device fsfile
+> illegal sector size 0
+> Usage: mkfs.xfs
+> ...
+> 
+> mkfs fails.  :(
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
+The fix looks good.
 
-diff --git a/032 b/032
-index f81196c..5db89ad 100755
---- a/032
-+++ b/032
-@@ -58,7 +58,7 @@ do
- 	# these folks prompt before writing
- 	[ $fs = jfs ] && preop="echo Y |"
- 	[ $fs = gfs ] && preop="echo y |" && preargs="-p lock_nolock -j 1"
--	[ $fs = gfs2 ] && preop="echo y |"
-+	[ $fs = gfs2 ] && preop="echo y |" && preargs="-p lock_nolock -j 1"
- 	[ $fs = reiserfs ] && preop="echo y |" && preargs="-f"
- 	# cramfs mkfs requires a directory argument
- 	[ $fs = cramfs ] && preargs=/proc/fs/xfs
+> Brown-paper-bag: Eric Sandeen <sandeen@sandeen.net>
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+> ---
+
+Reviewed-by: Alex Elder <aelder@sgi.com>
+
+
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 9a8eff3..faaafed 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -1574,7 +1574,7 @@ main(
+>  		 * Unless specified manually on the command line use the
+>  		 * advertised sector size of the device.
+>  		 */
+> -		sectorsize = ft.sectorsize;
+> +		sectorsize = ft.sectorsize ? ft.sectorsize : XFS_MIN_SECTORSIZE;
+>  	}
+> 
+>  	if (ft.sectoralign || !ssflag) {
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
