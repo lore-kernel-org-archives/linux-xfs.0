@@ -1,19 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0F37TRl060264 for <xfs@oss.sgi.com>; Thu, 14 Jan 2010 21:07:29 -0600
-Received: from web76202.mail.sg1.yahoo.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id F16F1F088DC
-	for <xfs@oss.sgi.com>; Thu, 14 Jan 2010 19:08:24 -0800 (PST)
-Received: from web76202.mail.sg1.yahoo.com (web76202.mail.sg1.yahoo.com
-	[124.108.115.114]) by cuda.sgi.com with SMTP id
-	pnKJgdlNE0llACDT for <xfs@oss.sgi.com>;
-	Thu, 14 Jan 2010 19:08:24 -0800 (PST)
-Message-ID: <436901.69970.qm@web76202.mail.sg1.yahoo.com>
-Date: Fri, 15 Jan 2010 11:08:22 +0800 (SGT)
-From: Gim Leong Chin <chingimleong@yahoo.com.sg>
-Subject: Re: allocsize mount option
+	o0F3pVn5062868 for <xfs@oss.sgi.com>; Thu, 14 Jan 2010 21:51:31 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1F0BC1C51655
+	for <xfs@oss.sgi.com>; Thu, 14 Jan 2010 19:52:26 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	RMBNcCLEq7HWAdR9 for <xfs@oss.sgi.com>;
+	Thu, 14 Jan 2010 19:52:26 -0800 (PST)
+Date: Fri, 15 Jan 2010 14:52:22 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfsprogs 3.1.0 repair problems?
+Message-ID: <20100115035222.GC28498@discord.disaster>
+References: <4B4FDC3E.6030205@sandeen.net>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4B4FDC3E.6030205@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,75 +25,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-SGkgRGF2ZSwKClRoYW5rIHlvdSBmb3IgdGhlIGFkdmljZSEKCkkgaGF2ZSBkb25lIERpcmVjdCBJ
-TyBkZCB0ZXN0cyB3cml0aW5nIHRoZSBzYW1lIDIwIEdCIGZpbGVzLsKgIFRoZSByZXN1bHRzIGFy
-ZSBhbiBleWUgb3BlbmVyIcKgIGJzPTFHQiwgY291bnQ9MgoKU2luZ2xlIGluc3RhbmNlIHJlcGVh
-dHMgb2YgODMwLCA4MDAgTUIvcywgY29tcGFyZWQgdG8gPjEwMCB0byB1bmRlciAzMDAgTUIvcyBm
-b3IgYnVmZmVyZWQuCgpUd28gaW5zdGFuY2VzIGFnZ3JlZ2F0ZSBvZiAzMDQgTUIvcywgc2l4IGlu
-c3RhbmNlcyBhZ2dyZWdhdGUgb2YgNTg3IE1CL3MuCgpTeXN0ZW0gZHJpdmUgL2hvbWUgUkFJRCAx
-IG9mIDEzMCBNQi9zIGNvbXBhcmVkIHRvIDUxIE1CL3MgYnVmZmVyZWQuCgpTbyB0aGUgcHJvYmxl
-bSBpcyB3aXRoIHRoZSBidWZmZXJlZCB3cml0ZXMuCgoKPiBZb3XhvIBkIGhhdmUgdG8gZ2V0IGFs
-bCB0aGUgZml4ZXMgZnJvbSAyLjYuMzAgdG8gMi42LjMyLAo+IGFuZCB0aGUKPiBiYWNrcG9ydCB3
-b3VsZCBiZSB2ZXJ5IGRpZmZpY3VsdCB0byBnZXQgcmlnaHQuIEJldHRlcgo+IHdvdWxkCj4gYmUg
-2Ld1c3QgdG8gdXBncmFkZSB0aGUga2VybmVsIHRvIDIuNi4zMiA7KQoKCklmIEkgY2hhbmdlIHRo
-ZSBrZXJuZWwsIEkgd291bGQgaGF2ZSBubyBzdXBwb3J0IGZyb20gTm92ZWxsLsKgIEkgd291bGQg
-dHJ5IG15IGx1Y2sgYW5kIGNvbnZpbmNlIHRoZW0uCgo+ID4gPiBJJ2Qgc3VnZ2VzdCB0aGF0IHlv
-dSBtaWdodCBuZWVkIHRvIGxvb2sgYXQKPiBpbmNyZWFzaW5nIHRoZQo+ID4gPiBtYXhpbXVtIElP
-Cj4gPiA+IHNpemUgZm9yIHRoZSBibG9jayBkZXZpY2UKPiA+ID4gKC9zeXMvYmxvY2svc2RiL3F1
-ZXVlL21heF9zZWN0b3JzX2tiKSwKPiA+ID4gbWF5YmUgdGhlIHJlcXVlc3QgcXVldWUgZGVwdGgg
-YXMgd2VsbCB0byBnZXQKPiBsYXJnZXIgSU9zIHRvCj4gPiA+IGJlIHB1c2hlZAo+ID4gPiB0byB0
-aGUgcmFpZCBjb250cm9sbGVyLiBpZiB5b3UgY2FuLCBhdCBsZWFzdCBnZXQKPiBpdCB0byB0aGUK
-PiA+ID4gc3RyaXBlCj4gPiA+IHdpZHRoIG9mIDE1MzZrLi4uLgo+ID4gCj4gPiBDb3VsZCB5b3Ug
-Z2l2ZSBhIGdvb2QgcmVmZXJlbmNlIGZvciBwZXJmb3JtYW5jZSB0dW5pbmcKPiBvZiB0aGVzZQo+
-ID4gcGFyYW1ldGVycz/CoCBJIGFtIGF0IGEgdG90YWwgbG9zcyBoZXJlLgo+IAo+IFdlbGNvbWUg
-dG8gdGhlIGJsYWNrIGFydCBvZiBzdG9yYWdlIHN1YnN5c3RlbSB0dW5pbmcgOykKPiAKPiBJJ20g
-bm90IHN1cmUgdGhlcmUgaXMgYSBnb29kIHJlZmVyZW5jZSBmb3IgdHVuaW5nIHRoZSBibG9jawo+
-IGRldmljZQo+IHBhcmFtZXRlcnMgLSBtb3N0IG9mIHdoYXQgSSBrbm93IHdhcyBoYW5kZWQgZG93
-biBieSB3b3JkIG9mCj4gbW91dGgKPiBmcm9tIGd1cnVzIG9uIGhpZ2ggbW91bnRhaW5zLgo+IAo+
-IFRoZSBvdmVycmlkaW5nIHByaW5jaXBsZSwgdGhvdWdoLCBpcyB0byB0cnkgdG8gZW5zdXJlIHRo
-YXQKPiB0aGUKPiBzdHJpcGUgd2lkdGggc2l6ZWQgSU9zIGNhbiBiZSBpc3N1ZWQgcmlnaHQgdGhy
-b3VnaCB0aGUgSU8KPiBzdGFjayB0bwo+IHRoZSBoYXJkd2FyZSwgYW5kIHRoYXQgdGhvc2UgSU9z
-IGFyZSBjb3JyZWN0bHkgYWxpZ25lZCB0bwo+IHRoZQo+IHN0cmlwZXMuIFlvdSd2ZSBnb3QgdGhl
-IGZpbGVzeXN0ZW0gY29uZmlndXJhdGlvbiBhbmQgbGF5b3V0Cj4gcGFydAo+IGNvcnJlY3QsIG5v
-dyBpdCdzIGp1c3QgdHVuaW5nIHRoZSBibG9jayBsYXllciB0byBwYXNzIHRoZQo+IElPJ3MKPiB0
-aHJvdWdoLgoKQ2FuIEkgY29uZmlybSB0aGF0Cigvc3lzL2Jsb2NrL3NkYi9xdWV1ZS9tYXhfc2Vj
-dG9yc19rYik9c3RyaXBlIHdpZHRoIDE1MzYga0IKCldoaWNoIHBhcmFtZXRlciBpcyAicmVxdWVz
-dCBxdWV1ZSBkZXB0aCI/wqAgV2hhdCBzaG91bGQgYmUgdGhlIHZhbHVlPwoKCiAKPiBGV0lXLCB5
-b3VyIHRlc3RzIGFyZSBub3QgdGltaW5nIGhvdyBsb25naXQgdGFrZXMgZm9yIGFsbAo+IHRoZQo+
-IGRhdGEgdG8gaGl0IHRoZSBkaXNrLCBvbmx5IGhvdyBsb25nIGl0IHRha2VzIHRvIGdldCBpbnRv
-Cj4gY2FjaGUuCgoKVGhhbmsgeW91ISAgSSBkbyBrbm93IHRoYXQgWEZTIGJ1ZmZlcnMgd3JpdGVz
-IGV4dGVuc2l2ZWx5LiAgVGhlIGRyaXZlIExFRHMgcmVtYWluIGxpZ2h0ZWQgbG9uZyBhZnRlciB0
-aGUgT1Mgc2F5cyB0aGUgd3JpdGVzIGFyZSBjb21wbGV0ZWQuICBQbHVzIHNvbWUgdGltaW5ncyBh
-cmUgcGh5c2ljYWxseSBpbXBvc3NpYmxlLgoKIAo+IFRoYXQgc291bmRzIHdyb25nIC0gaXQgc291
-bmRzIGxpa2UgTkNRIGlzIG5vdCBmdW5jdGlvbmluZwo+IHByb3Blcmx5Cj4gYXMgd2l0aCBOQ1Eg
-ZW5hYmxlZCwgZGlzYWJsaW5nIHRoZSBkcml2ZSBjYWNoZSBzaG91bGQgbm90Cj4gaW1wYWN0Cj4g
-dGhyb3VnaHB1dCBhdCBhbGwuLi4uCgpJIGRvIG5vdCByZW1lbWJlciBjbGVhcmx5IGlmIE5DUSBp
-cyBhdmFpbGFibGUgZm9yIHRoYXQgbW90aGVyYm9hcmQsIGl0IGlzIGFuIFVidW50dSAzMi1iaXQs
-IGJ1dCBJIGRvIHJlbWVtYmVyIHNlZWluZyBxdWV1ZSBkZXB0aCBpbiB0aGUga2VybmVsLiAgSSB3
-aWxsIGNoZWNrIGl0IG91dCBuZXh0IHdlZWsuCgpCdXQgd2hhdCBJIHJlYWQgaXMgdGhhdCBOQ1Eg
-aHVydHMgc2luZ2xlIHdyaXRlIHBlcmZvcm1hbmNlLiAgVGhhdCBpcyBhbHNvIHdoYXQgSSBmb3Vu
-ZCB3aXRoIGFub3RoZXIgQXJlY2EgU0FUQSBSQUlEIGluIFdpbmRvd3MgWFAuCgpXaGF0IEkgZm91
-bmQgd2l0aCBhbGwgdGhlIGRyaXZlcyB3ZSB0ZXN0ZWQgd2FzIHRoYXQgZGlzYWJsaW5nIHRoZSBj
-YWNoZSBiYWRseSBodXJ0IHNlcXVlbnRpYWwgd3JpdGUgcGVyZm9ybWFuY2UgKG5vIGZpbGUgc3lz
-dGVtLCB3cml0ZSBkYXRhIGRpcmVjdGx5IHRvIGRlc2lnbmF0ZWQgTEJBKS4KCgoKPiBJJ2Qgc3Vn
-Z2VzdCB0cnlpbmcgdG8gZmluZCBhbm90aGVyIGRpc3RyaWJ1dG9yIHRoYXQgd2lsbAo+IGJyaW5n
-IHRoZW0KPiBpbiBmb3IgeW91LiBQdXR0aW5nIHRoYXQgbWFueSBkcml2ZXMgaW4gYSBzaW5nbGUg
-Y2hhc3NpcyBpcwo+IGFsbW9zdAo+IGNlcnRhaW5seSBnb2luZyB0byBjYXVzZSB2aWJyYXRpb24g
-cHJvYmxlbXMsIGVzcGVjaWFsbHkgaWYKPiB5b3UgZ2V0Cj4gYWxsIHRoZSBkaXNrIGhlYWRzIG1v
-dmluZyBpbiBjbG9zZSBzeW5jaHJvbmlzYXRpb24gKHdoaWNoCj4gaXMgd2hhdAo+IGhhcHBlbnMg
-d2hlbiB5b3UgZ2V0IGFsbCB5b3VyIElPIHNpemluZyBhbmQgYWxpZ25tZW50Cj4gcmlnaHQpLgoK
-SSBhbSB3b3JraW5nIG9uIGNoYW5naW5nIHRvIHRoZSBXRCBDYXZpYXIgUkU0IGRyaXZlcy4gIE5v
-dCBzdXJlIGlmIEkgY2FuIHB1bGwgaXQgb2ZmLgoKCgpDaGluIEdpbSBMZW9uZwoKCiAgICAgIE5l
-dyBFbWFpbCBuYW1lcyBmb3IgeW91ISAKR2V0IHRoZSBFbWFpbCBuYW1lIHlvdSYjMzk7dmUgYWx3
-YXlzIHdhbnRlZCBvbiB0aGUgbmV3IEB5bWFpbCBhbmQgQHJvY2tldG1haWwuIApIdXJyeSBiZWZv
-cmUgc29tZW9uZSBlbHNlIGRvZXMhCmh0dHA6Ly9tYWlsLnByb21vdGlvbnMueWFob28uY29tL25l
-d2RvbWFpbnMvc2cvCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20v
-bWFpbG1hbi9saXN0aW5mby94ZnMK
+On Thu, Jan 14, 2010 at 09:08:46PM -0600, Eric Sandeen wrote:
+> It looks like maybe the freespace checking isn't quite up to par:
+> 
+> test 073 is dying with:
+> 
+> _check_xfs_filesystem: filesystem on /mnt/test/14309.image is inconsistent
+> *** xfs_repair -n output ***
+> Phase 1 - find and verify superblock...
+> Phase 2 - using internal log
+>         - scan filesystem freespace and inode maps...
+> sb_fdblocks 26156829, counted 26157853
+
+Actually, that looks like it is out by exactly 1024 blocks, which is
+the default amount of reserved space in the filesystem. Perhaps
+there is something else wrong with the unmount code that
+is not unreserving this space before the superblock is
+written to disk?
+
+I'm about to see if I can reproduce it....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
