@@ -1,29 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0FLiCge132999 for <xfs@oss.sgi.com>; Fri, 15 Jan 2010 15:44:22 -0600
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A220F1C54C3F
-	for <xfs@oss.sgi.com>; Fri, 15 Jan 2010 13:44:36 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id bUvFQ55x3RpqhwL9 for
-	<xfs@oss.sgi.com>; Fri, 15 Jan 2010 13:44:36 -0800 (PST)
-Message-ID: <4B50E14E.5050204@gmail.com>
-Date: Fri, 15 Jan 2010 22:42:38 +0100
-From: Edward Shishkin <edward.shishkin@gmail.com>
+	o0FMj6pd137167 for <xfs@oss.sgi.com>; Fri, 15 Jan 2010 16:45:16 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BDBD116B873
+	for <xfs@oss.sgi.com>; Fri, 15 Jan 2010 14:45:29 -0800 (PST)
+Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
+	by cuda.sgi.com with ESMTP id ZQuq2Ypy4Tcpg9tV for
+	<xfs@oss.sgi.com>; Fri, 15 Jan 2010 14:45:29 -0800 (PST)
+Message-ID: <4B50EFC6.6050804@sandeen.net>
+Date: Fri, 15 Jan 2010 16:44:22 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [Jfs-discussion] benchmark results
-References: <20091224212756.GM21594@thunk.org>
-	<alpine.DEB.2.01.0912241739160.3483@bogon.housecafe.de>
-	<20091225161453.GD32757@thunk.org>
-	<20091225162238.GB19303@bitmover.com>
-	<alpine.DEB.2.01.0912251042540.3483@bogon.housecafe.de>
-	<4B36333B.3030600@hp.com> <4B365EBE.5050804@nerdbynature.de>
-	<4B37BA76.7050403@hp.com>
-	<alpine.DEB.2.01.0912271346240.3483@bogon.housecafe.de>
-	<20091227223307.GA4429@thunk.org>
-	<20091228140855.GD10982@bitmover.com>
-In-Reply-To: <20091228140855.GD10982@bitmover.com>
+Subject: Re: [PATCH V2] mkfs: fix mkfs.xfs -dfile,name=$NAME for new files
+References: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A697D@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A697D@cf--amer001e--3.americas.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,63 +23,130 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Larry McVoy <lm@bitmover.com>, tytso@mit.edu, Christian Kujau <lists@nerdbynature.de>, jim owens <jowens@hp.com>, jfs-discussion@lists.sourceforge.net, linux-nilfs@vger.kernel.org, xfs@oss.sgi.com, reiserfs-devel@vger.kernel.org, Peter Grandi <pg_jf2@jf2.for.sabi.co.UK>, ext-users <ext3-users@redhat.com>, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: Alex Elder <aelder@sgi.com>
+Cc: xfs mailing list <xfs@oss.sgi.com>
 
+Alex Elder wrote:
+> Eric Sandeen wrote:
+>> # /sbin/mkfs.xfs -dfile,name=grrr,size=100g
+>> mkfs.xfs: Use the -f option to force overwrite.
+>>
+>> check_overwrite is failing, because  blkid_new_probe_from_filename()
+>> is failing, because the (new) image file is 0 length.
+>>
+>> It's easy to test for 0 length, and if found, there is
+>> nothing to overwrite so return 0.
+>>
+>> Also, if testing itself failed for some reason, print
+>> a message to that effect:
+>>
+>> # mkfs/mkfs.xfs -dfile,name=newfile,size=1g
+>> mkfs.xfs: probe of newfile failed, cannot detect existing filesystem.
+>> mkfs.xfs: Use the -f option to force overwrite.
+> 
+> This looks good.
 
-> When things didn't match up that was a clue that either
->
->     - the benchmark was broken
->     - the code was broken
->   
-[...]
+except of course that st_size for devices is 0.
 
-I would carry out an object-oriented dualism here.
+Oh, I suck lately :/
 
+Ok, will send fixup patch later.  And then I'm gonna stop ;)
 
-[1] methods (kernel module) ---- [2] objects (formatted partition)
+-Eric
 
- |                                |
- |                                |
-
-[3] benchmarks ----------------- [4] user-space utilities (fsck)
-
-
-User-space utilities investigate "object corruptions",
-whereas benchmarks investigate "software corruptions"
-(including bugs in source code, broken design, etc, etc..)
-
-It is clear that "software" can be "corrupted" by a larger
-number of ways than "objects". Indeed, it is known that
-dual space V* (of all linear functions over V) is a much
-more complex object than V.
-
-So benchmark is a process which takes a set of methods
-(we consider only "software" benchmarks) and puts numerical
-values populated with a special (the worst) value CRASH.
-
-Three main categories of benchmarks using:
-
-1) Internal testing
-
-An engineer makes optimizations in a file system (e.g. for a
-customer) via choosing functions or plugins as winners in
-a set of internal (local) "nominations".
-
-2) Business plans
-
-A system administrator chooses a "winner" in some (global)
-"nomination" of file systems in accordance with internal
-business-plans.
-
-3) Flame and politics
-
-Someone presents a "nomination" (usually with the "winner"
-among restricted number of nominated members) to the public
-while nobody asked him to do it.
+>> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+>> ---
+> 
+> Reviewed-by: Alex Elder <aelder@sgi.com>
+> 
+>> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+>> index faaafed..b6801dd 100644
+>> --- a/mkfs/xfs_mkfs.c
+>> +++ b/mkfs/xfs_mkfs.c
+>> @@ -283,27 +283,47 @@ calc_stripe_factors(
+>>  }
+>>
+>>  #ifdef ENABLE_BLKID
+>> +/*
+>> + * Check for existing filesystem or partition table on device.
+>> + * Returns:
+>> + *	 1 for existing fs or partition
+>> + *	 0 for nothing found
+>> + *	-1 for internal error
+>> + */
+>>  static int
+>>  check_overwrite(
+>>  	char		*device)
+>>  {
+>>  	const char	*type;
+>> -	blkid_probe	pr;
+>> -	int		ret = 0;
+>> +	blkid_probe	pr = NULL;
+>> +	int		ret;
+>> +	struct stat	statbuf;
+>>
+>>  	if (!device || !*device)
+>>  		return 0;
+>>
+>> +	ret = -1; /* will reset on success of all setup calls */
+>> +
+>> +	if (stat(device, &statbuf) < 0)
+>> +		goto out;
+>> +
+>> +	/* nothing to overwrite on a 0-length device */
+>> +	if (statbuf.st_size == 0) {
+>> +		ret = 0;
+>> +		goto out;
+>> +	}
+>> +
+>>  	pr = blkid_new_probe_from_filename(device);
+>>  	if (!pr)
+>> -		return -1;
+>> +		goto out;
+>>
+>>  	if (blkid_probe_enable_partitions(pr, 1))
+>> -		goto out_free_probe;
+>> +		goto out;
+>>
+>>  	if (blkid_do_fullprobe(pr))
+>> -		goto out_free_probe;
+>> +		goto out;
+>>
+>> +	ret = 0;
+>>  	if (!blkid_probe_lookup_value(pr, "TYPE", &type, NULL)) {
+>>  		fprintf(stderr,
+>>  			_("%s: %s appears to contain an existing "
+>> @@ -316,8 +336,13 @@ check_overwrite(
+>>  		ret = 1;
+>>  	}
+>>
+>> -out_free_probe:
+>> -	blkid_free_probe(pr);
+>> +out:
+>> +	if (pr)
+>> +		blkid_free_probe(pr);
+>> +	if (ret == -1)
+>> +		fprintf(stderr,
+>> +			_("%s: probe of %s failed, cannot detect "
+>> +			  "existing filesystem.\n"), progname, device);
+>>  	return ret;
+>>  }
+>>
+>>
+>> _______________________________________________
+>> xfs mailing list
+>> xfs@oss.sgi.com
+>> http://oss.sgi.com/mailman/listinfo/xfs
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
