@@ -1,22 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0F5tbUV070554 for <xfs@oss.sgi.com>; Thu, 14 Jan 2010 23:55:37 -0600
+	o0F78U7L076803 for <xfs@oss.sgi.com>; Fri, 15 Jan 2010 01:08:31 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E897311F29DE
-	for <xfs@oss.sgi.com>; Thu, 14 Jan 2010 21:56:31 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	TvCMKb9vCCsgfFM1 for <xfs@oss.sgi.com>;
-	Thu, 14 Jan 2010 21:56:31 -0800 (PST)
-Date: Fri, 15 Jan 2010 16:56:28 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2C81111F2DE0
+	for <xfs@oss.sgi.com>; Thu, 14 Jan 2010 23:09:25 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	R7a6P3a9sd7dcKat for <xfs@oss.sgi.com>;
+	Thu, 14 Jan 2010 23:09:25 -0800 (PST)
+Received: from discord (unverified [121.44.236.168])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	11551597-1927428
+	for <xfs@oss.sgi.com>; Fri, 15 Jan 2010 17:39:24 +1030 (CDT)
+Received: from dave by discord with local (Exim 4.69)
+	(envelope-from <david@fromorbit.com>) id 1NVgJ9-0000js-Di
+	for xfs@oss.sgi.com; Fri, 15 Jan 2010 18:09:23 +1100
+Date: Fri, 15 Jan 2010 18:09:23 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfsprogs 3.1.0 repair problems?
-Message-ID: <20100115055628.GD28498@discord.disaster>
-References: <4B4FDC3E.6030205@sandeen.net>
+Subject: Re: [PATCH 9/9] xfsprogs: fix build warnings in repair
+Message-ID: <20100115070923.GE28498@discord.disaster>
+References: <1263463752-5052-1-git-send-email-david@fromorbit.com>
+	<1263463752-5052-10-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4B4FDC3E.6030205@sandeen.net>
+In-Reply-To: <1263463752-5052-10-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,28 +37,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Thu, Jan 14, 2010 at 09:08:46PM -0600, Eric Sandeen wrote:
-> It looks like maybe the freespace checking isn't quite up to par:
+On Thu, Jan 14, 2010 at 09:09:12PM +1100, Dave Chinner wrote:
+> Rewrite the loop in btree_get_prev() so that the compiler
+> can see that it returns if the cur->index is zero so it
+> doesn't complain about possible array bound underflows
+> when getting the key out of the buffer.
 > 
-> test 073 is dying with:
+> Fix the directory name sign warnings by casting to (uchar_t *)
+> appropriately.
 > 
-> _check_xfs_filesystem: filesystem on /mnt/test/14309.image is inconsistent
-> *** xfs_repair -n output ***
-> Phase 1 - find and verify superblock...
-> Phase 2 - using internal log
->         - scan filesystem freespace and inode maps...
-> sb_fdblocks 26156829, counted 26157853
->         - found root inode chunk
+> Signed-off-by: Dave Chinner <david@fromorbit.com>
+> ---
+>  repair/btree.c  |    9 +++++----
+>  repair/phase6.c |   10 +++++-----
+>  2 files changed, 10 insertions(+), 9 deletions(-)
+> 
+> diff --git a/repair/btree.c b/repair/btree.c
+> index 3141388..b53b4e4 100644
+> --- a/repair/btree.c
+> +++ b/repair/btree.c
+> @@ -194,12 +194,13 @@ btree_get_prev(
+>  	}
+>  
+>  	/* else need to go up and back down the tree to find the previous */
+> -
+> -	while (cur->index == 0) {
+> -		if (++level == root->height)
+> -			return NULL;
+> +	while (++level < root->height) {
+> +		if (cur->index)
+> +			break;
+>  		cur++;
+>  	}
+> +	if (cur->index == 0)
+> +		return NULL;
 
-This is caused by the remount,ro done in the test - the superblock
-is written to disk with the reserved blocks considered used. At
-unmount time those reserve blocks are "freed" before the superblock
-is written and so the total is correct at that time.
-
-I'm going to go look at the kernel code now...
+This is broken - causes a segv. i have a fixed patch, which I'll
+send out once I've got xfstests running again on my test box (using
+dash as /bin/sh breaks *lots* of stuff in xfstests).
 
 Cheers,
 
