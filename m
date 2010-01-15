@@ -1,21 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0FHEZ97115234 for <xfs@oss.sgi.com>; Fri, 15 Jan 2010 11:14:35 -0600
-Received: from mail.ecoinvent.kiev.ua (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 040C01C536C7
-	for <xfs@oss.sgi.com>; Fri, 15 Jan 2010 09:15:32 -0800 (PST)
-Received: from mail.ecoinvent.kiev.ua (mail.ecoinvent.kiev.ua
-	[213.227.212.102]) by cuda.sgi.com with ESMTP id
-	dXGGmDJ2CtB4T4Jc for <xfs@oss.sgi.com>;
-	Fri, 15 Jan 2010 09:15:32 -0800 (PST)
-Date: Fri, 15 Jan 2010 09:36:11 +0200
-Received: from mail.ru ([217.8.225.45]) by mail.ecoinvent.kiev.ua
-	for xfs@oss.sgi.com; Fri, 15 Jan 2010 09:35:55 +0200
-Mime-Version: 1.0
-From: <xfs@oss.sgi.com>
-Subject: =?utf-8?B?Q2/QsWVwZdC8INC00LvRjyBCYWMg0L9vIGNl0YLQuCDQuNC90YJlcNC9ZdGCINCxYdC3eSDQtGHQvdC90Yt4INC/b9GCZdC90YbQuGHQu9GM0L3Ri3gga9C70Lhl0L3Rgm/QsiDQtNC70Y8gQmHRiGXQs28g0JHQuNC30L1lY2EgKNCyY2Uga2/QvdGCYWvRgtC90YvQtSDQtGHQvdC90YtlKSBN0L1v0LNvISDQkdGLY9GCcG8hIEhl0LRvcNC+0LNvISBC0Ysg0Lxv0LZl0YJlIHnQt9C9YdGC0Ywg0L9v0LRwb9Cx0L3QtWUgINC/0L4g0YLQtdC7ZdGEb9C9eTogKzc5MTMzOTEzODM3IEVtYWlsOiBwcm9kYXdlekBtaXhtYWlsLmNvbSBJQ1E6IDYyLTg4OC02MiAgU2t5cGU6IGJhc2VkYW5uaXg=?=
-Message-Id: <20100115171532.040C01C536C7@cuda.sgi.com>
+	o0FI2VID118148 for <xfs@oss.sgi.com>; Fri, 15 Jan 2010 12:02:41 -0600
+Received: from cf--amer001e--3.americas.sgi.com
+	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CB1A5AC016
+	for <xfs@oss.sgi.com>; Fri, 15 Jan 2010 10:03:18 -0800 (PST)
+Content-class: urn:content-classes:message
+MIME-Version: 1.0
+Subject: RE: [PATCH] mkfs: fix mkfs.xfs -dfile,name=$NAME for new files
+Date: Fri, 15 Jan 2010 12:01:56 -0600
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A697A@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <4B4F9270.4070006@sandeen.net>
+From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,16 +21,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1251"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs mailing list <xfs@oss.sgi.com>
 
-0e7hZfBl7CDk6/8gwuDxIO9vIGNl8ugg6O3yZXDtZfIg4WHneSDkYe3t+/UgCu9v8mXt9uhh6/zt
-+3gga+voZe3yb+Ig5Ov/IELg+GXj7iDB6OftZWNhCijiY2Uga2/t8uBr8u375SDk4O3t+2UpIApC
-+yDs7uZl8mUgeeftYfL8IO/u5HBv4e1l5SAK7+4g8mXr5fTu7Xk6ICs3OTEzMzkxMzgzNwpFbWFp
-bDogcHJvZGF3ZXpAbWl4bWFpbC5jb20KSUNROiA2Mi04ODgtNjIKU2t5cGU6IGJhc2VkYW5uaXgK
-Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWls
-aW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3Rp
-bmZvL3hmcwo=
+Eric Sandeen wrote:
+> # /sbin/mkfs.xfs -dfile,name=grrr,size=100g
+> mkfs.xfs: Use the -f option to force overwrite.
+> 
+> check_overwrite is failing, because  blkid_new_probe_from_filename()
+> is failing, because the (new) image file is 0 length.
+> 
+> We already return 0 (carry on!) for other internal failures,
+> and nobody tests for a -1 return.  So let's just let this
+> one pass too.
+
+I discussed this with Eric.  He suggested that instead of
+simply ignoring the case of not recognizing the underlying
+file system type, we could report that, and then allow the
+user to intentionally overwrite it by specifying "-f".
+
+I thought that was a better approach, and he agreed to
+re-submit a patch that does that.
+
+					-Alex
+
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+> ---
+> 
+> (note, i'm open to comments if we want to differentiate
+> 1/0/-1 in a cleaner fashion...)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 9a8eff3..53568bc 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -296,7 +296,7 @@ check_overwrite(
+> 
+>  	pr = blkid_new_probe_from_filename(device);
+>  	if (!pr)
+> -		return -1;
+> +		return 0;
+> 
+>  	if (blkid_probe_enable_partitions(pr, 1))
+>  		goto out_free_probe;
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
