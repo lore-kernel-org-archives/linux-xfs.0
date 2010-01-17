@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0HBsHhx009861 for <xfs@oss.sgi.com>; Sun, 17 Jan 2010 05:54:17 -0600
+	o0HBxE9U010184 for <xfs@oss.sgi.com>; Sun, 17 Jan 2010 05:59:14 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 46F8B1C57698
-	for <xfs@oss.sgi.com>; Sun, 17 Jan 2010 03:55:16 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3607A16DEAB
+	for <xfs@oss.sgi.com>; Sun, 17 Jan 2010 04:00:13 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 8E88L7Qy1cmincO0 for
-	<xfs@oss.sgi.com>; Sun, 17 Jan 2010 03:55:16 -0800 (PST)
-Date: Sun, 17 Jan 2010 06:55:15 -0500
+	by cuda.sgi.com with ESMTP id GvjvI26BGzOualZc for
+	<xfs@oss.sgi.com>; Sun, 17 Jan 2010 04:00:13 -0800 (PST)
+Date: Sun, 17 Jan 2010 07:00:12 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfsprogs: Make the compile output cleaner V2
-Message-ID: <20100117115515.GA16856@infradead.org>
-References: <1263377007-4500-1-git-send-email-david@fromorbit.com>
-	<20100113220814.GA17310@infradead.org>
-	<20100113223001.GR17483@discord.disaster>
-	<20100114065123.GA32559@infradead.org>
-	<20100114101128.GX17483@discord.disaster>
+Subject: Re: [PATCH] xfsdump: Clean up build output
+Message-ID: <20100117120012.GC16856@infradead.org>
+References: <1263429589-12896-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100114101128.GX17483@discord.disaster>
+In-Reply-To: <1263429589-12896-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,29 +29,31 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Thu, Jan 14, 2010 at 09:11:28PM +1100, Dave Chinner wrote:
-> It seems completely spurious to me - normal practice is to blow away
-> the config on a distclean, not a plain clean. And seeing as the
-> patch is about removing noise during the normal build, I figured
-> this qualified as a bug causing noise.
+On Thu, Jan 14, 2010 at 11:39:49AM +1100, Dave Chinner wrote:
+> We don't need to see every compiler command line for every file that
+> is compiled. This makes it hard to see warnings and errors during
+> compile. For progress notification, we really only need to see the
+> directory/file being operated on.
 > 
-> I can separate it out into another patch, but I'd really prefer that
-> make clean doesn't result in running configure again. Especially
-> considering the build dependencies are very broken so the only way
-> to guarantee a build catches all changes is to do 'make clean;
-> make'.
+> Turn down the verbosity of output by suppressing various make output
+> and provide better overall visibility of which directory is being
+> operated on, what the operation is and what is being done to the
+> files by the build/clean process. Also fix the top level clean rule
+> so that we don't run configure scripts after a make clean, only
+> after a make distclean.
+> 
+> The old style verbose builds can still be run via "make V=1 ..."
 
-Looking at various other packages it seems like configure output
-usually survives make clean indeed.  With that I agree with the change,
-but it really should be a separate patch.
+
+Looks good except that the make clean changes really should be separate
+as in xfsprogs.
 
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-For this one without that change, and I'll also approve the make clean
-change when you send it.
+For the both bits, although they should be separate.
 
 _______________________________________________
 xfs mailing list
