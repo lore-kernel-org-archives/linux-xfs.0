@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0HBofg3009593 for <xfs@oss.sgi.com>; Sun, 17 Jan 2010 05:50:42 -0600
+	o0HBeXiQ008960 for <xfs@oss.sgi.com>; Sun, 17 Jan 2010 05:40:33 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CD0D0F18D3B
-	for <xfs@oss.sgi.com>; Sun, 17 Jan 2010 03:51:40 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6AF741C57647
+	for <xfs@oss.sgi.com>; Sun, 17 Jan 2010 03:41:32 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id htYmtPZEeYUOneFP for
-	<xfs@oss.sgi.com>; Sun, 17 Jan 2010 03:51:40 -0800 (PST)
-Date: Sun, 17 Jan 2010 06:51:40 -0500
+	by cuda.sgi.com with ESMTP id nq6mUdmCqDrAu75v for
+	<xfs@oss.sgi.com>; Sun, 17 Jan 2010 03:41:32 -0800 (PST)
+Date: Sun, 17 Jan 2010 06:41:31 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 7/9] xfsprogs: fix print format warnings in xfs_io
-Message-ID: <20100117115140.GC10994@infradead.org>
-References: <1263463752-5052-1-git-send-email-david@fromorbit.com>
-	<1263463752-5052-8-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] xfstests 073: unmount source image in cleanup
+Message-ID: <20100117114131.GB7813@infradead.org>
+References: <4B510B41.3070904@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1263463752-5052-8-git-send-email-david@fromorbit.com>
+In-Reply-To: <4B510B41.3070904@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,18 +28,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Jan 14, 2010 at 09:09:10PM +1100, Dave Chinner wrote:
-> Signed-off-by: Dave Chinner <david@fromorbit.com>
+On Fri, Jan 15, 2010 at 06:41:37PM -0600, Eric Sandeen wrote:
+> Test 073 is currently failing w/ xfs_repair problems, and when
+> it does, the whole series stops because the test dir still has
+> a loopback mounted filesystem on it, and it can't unmount.
+> 
+> Fix that.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 > ---
->  io/madvise.c |    2 +-
->  io/mincore.c |    2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/073 b/073
+> index 0ef9287..756c1c8 100755
+> --- a/073
+> +++ b/073
+> @@ -44,6 +44,7 @@ _cleanup()
+>  	umount $SCRATCH_MNT 2>/dev/null
+>  	umount -d $imgs.loop 2>/dev/null
+>  	[ -d $imgs.loop ] && rmdir $imgs.loop
+> +	umount -d $imgs.source_dir 2>/dev/null
+>  	[ -d $imgs.source_dir ] && rm -rf $imgs.source_dir
+>  	rm -f $imgs.* $tmp.* /var/tmp/xfs_copy.log.*
 
-Looks good,
-
+Yes, we should always unmount everything in the cleanup handler.
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 
