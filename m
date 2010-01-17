@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0G2I0tU150661 for <xfs@oss.sgi.com>; Fri, 15 Jan 2010 20:18:00 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E4B25F14667
-	for <xfs@oss.sgi.com>; Fri, 15 Jan 2010 18:18:56 -0800 (PST)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id SGo9naIBb0EUyS3w for
-	<xfs@oss.sgi.com>; Fri, 15 Jan 2010 18:18:56 -0800 (PST)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail.sandeen.net (Postfix) with ESMTP id BFEF496E28C
-	for <xfs@oss.sgi.com>; Fri, 15 Jan 2010 20:18:55 -0600 (CST)
-Message-ID: <4B51220F.7020703@sandeen.net>
-Date: Fri, 15 Jan 2010 20:18:55 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	o0HBdd8A008886 for <xfs@oss.sgi.com>; Sun, 17 Jan 2010 05:39:40 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9F15AF18C2F
+	for <xfs@oss.sgi.com>; Sun, 17 Jan 2010 03:40:37 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id ntBLSeOXkdv57zQh for
+	<xfs@oss.sgi.com>; Sun, 17 Jan 2010 03:40:37 -0800 (PST)
+Date: Sun, 17 Jan 2010 06:40:36 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] mkfs: get size of device properly
+Message-ID: <20100117114036.GA7813@infradead.org>
+References: <4B50F2F0.4050909@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] xfstests 131: kill locktest process in cleanup & better error
-	msgs
+Content-Disposition: inline
+In-Reply-To: <4B50F2F0.4050909@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,76 +28,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-I occasionally get failures in 131 like:
+On Fri, Jan 15, 2010 at 04:57:52PM -0600, Eric Sandeen wrote:
+> Ok, one more.
+> 
+> I've been having too many problems w/ xfstests today to have run
+> the last patch through xfstests but should have at least run
+> 032.  :(
+> 
+> Anyway, last change wasn't valid to test the size of a device
+> node; total brain fart.  After this I'm testing the hell out
+> of the next patch I send, I promise!
+> 
+> --------
+> 
+> Test device node size properly in check_overwrite, st_size
+> is only valid for regular files.
 
-gethostbyname: Success
+The patch looks correct to me, but it also means we now open the device
+twice in check_overwrite.  We might aswell use it just once and keep the
+fd for the blkid probe.  Anyway, probably better to put this one in
+ASAP, so:
 
-1) perror is the wrong thing for gethostbyname errors, so this
-is confusing
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-2) the locktest thread doesn't get killed, so the fs
-is busy and the next test fails when it can't unmount
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/src/locktest.c b/src/locktest.c
-index e35f6a6..7552ace 100644
---- a/src/locktest.c
-+++ b/src/locktest.c
-@@ -44,6 +44,8 @@
- #define PLATFORM_CLEANUP()  /*no-op*/
- #define LL                  "ll"
- 
-+extern int h_errno;
-+
- #define inet_aton(STRING, INADDRP) \
-     (((INADDRP)->s_addr = inet_addr(STRING)) == -1 ? 0 : 1)
- 
-@@ -937,7 +939,10 @@ main(int argc, char *argv[])
-         struct hostent  *servInfo;
- 
-         if ((servInfo = gethostbyname(host)) == NULL) {
--            perror("gethostbyname");
-+	    printf("Couldn't get hostbyname for %s", host);
-+	    if (h_errno == HOST_NOT_FOUND)
-+		printf(": host not found");
-+	    printf("\n");
-             exit(1);
-             /*NOTREACHED*/
-         }
-
-
-
-diff --git a/131 b/131
-index b095c2f..de83fe2 100755
---- a/131
-+++ b/131
-@@ -34,6 +34,8 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
- 
- _cleanup()
- {
-+    kill $locktest_pid2
-+    kill $locktest_pid1
-     _cleanup_testdir
- }
- 
-@@ -60,11 +62,13 @@ fi
- 
- # Start the server
- src/locktest -p $PORT $TESTFILE > $testdir/server.out 2>&1 &
-+locktest_pid1=$!
- 
- sleep 1
- 
- # Start the client
- src/locktest -p $PORT -h localhost $TESTFILE > $testdir/client.out 2>&1
-+locktest_pid2=$!
- result=$?
- if [ $result -eq 0 ]; then
-     echo success!
+Any chance you could create a xfstests regression test for this?
 
 _______________________________________________
 xfs mailing list
