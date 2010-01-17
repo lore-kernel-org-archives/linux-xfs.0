@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0HBxE9U010184 for <xfs@oss.sgi.com>; Sun, 17 Jan 2010 05:59:14 -0600
+	o0HBpEA3009642 for <xfs@oss.sgi.com>; Sun, 17 Jan 2010 05:51:14 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3607A16DEAB
-	for <xfs@oss.sgi.com>; Sun, 17 Jan 2010 04:00:13 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 42B481C57662
+	for <xfs@oss.sgi.com>; Sun, 17 Jan 2010 03:52:13 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id GvjvI26BGzOualZc for
-	<xfs@oss.sgi.com>; Sun, 17 Jan 2010 04:00:13 -0800 (PST)
-Date: Sun, 17 Jan 2010 07:00:12 -0500
+	by cuda.sgi.com with ESMTP id 8kZmYcWDYMuxoqra for
+	<xfs@oss.sgi.com>; Sun, 17 Jan 2010 03:52:13 -0800 (PST)
+Date: Sun, 17 Jan 2010 06:52:12 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfsdump: Clean up build output
-Message-ID: <20100117120012.GC16856@infradead.org>
-References: <1263429589-12896-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 3/9] xfsprogs: fix missing error check in
+	xfs_rtfree_range in libxfs
+Message-ID: <20100117115212.GD10994@infradead.org>
+References: <1263463752-5052-1-git-send-email-david@fromorbit.com>
+	<1263463752-5052-4-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1263429589-12896-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1263463752-5052-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,29 +33,16 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Jan 14, 2010 at 11:39:49AM +1100, Dave Chinner wrote:
-> We don't need to see every compiler command line for every file that
-> is compiled. This makes it hard to see warnings and errors during
-> compile. For progress notification, we really only need to see the
-> directory/file being operated on.
-> 
-> Turn down the verbosity of output by suppressing various make output
-> and provide better overall visibility of which directory is being
-> operated on, what the operation is and what is being done to the
-> files by the build/clean process. Also fix the top level clean rule
-> so that we don't run configure scripts after a make clean, only
-> after a make distclean.
-> 
-> The old style verbose builds can still be run via "make V=1 ..."
+On Thu, Jan 14, 2010 at 09:09:06PM +1100, Dave Chinner wrote:
+> When xfs_rtfind_forw() returns an error, the block is returned
+> uninitialised.  xfs_rtfree_range() is not checking the error return,
+> so could be using an uninitialised block number for modifying bitmap
+> summary info.
 
-
-Looks good except that the make clean changes really should be separate
-as in xfsprogs.
+Looks good, (actually a merge of the kernel side fix that just went in)
 
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-For the both bits, although they should be separate.
 
 _______________________________________________
 xfs mailing list
