@@ -1,12 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0I1BfgR061460 for <xfs@oss.sgi.com>; Sun, 17 Jan 2010 19:11:41 -0600
-From: Alex Elder <aelder@sgi.com>
-Message-Id: <201001180112.o0I1CaCH001417@stout.americas.sgi.com>
-Date: Sun, 17 Jan 2010 19:12:36 -0600
-Subject: [GIT PULL] XFS update for 2.6.33-rc4
+	o0IB2eqE099100 for <xfs@oss.sgi.com>; Mon, 18 Jan 2010 05:02:41 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D0DED1C592E6
+	for <xfs@oss.sgi.com>; Mon, 18 Jan 2010 03:03:38 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	gbJPFxONUtExCGtT for <xfs@oss.sgi.com>;
+	Mon, 18 Jan 2010 03:03:38 -0800 (PST)
+Date: Mon, 18 Jan 2010 22:03:34 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/3 v2] xfs: implement quota warnings via netlink
+Message-ID: <20100118110334.GE7264@discord.disaster>
+References: <20100113220547.846700560@bombadil.infradead.org>
+	<20100113220603.251930871@bombadil.infradead.org>
+	<20100117223619.GA16102@infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20100117223619.GA16102@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,35 +31,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-The following changes since commit 7284ce6c9f6153d1777df5f310c959724d1bd446:
-  Linus Torvalds (1):
-        Linux 2.6.33-rc4
+On Sun, Jan 17, 2010 at 05:36:19PM -0500, Christoph Hellwig wrote:
+> Wire up quota_send_warning to send quota warnings over netlink.  This is
+> used by various desktops to show user quota warnings.
+> 
+> Tested by running the quota_nld daemon while running the xfstest quota
+> tests and observing the warnings.  I'll see how I can get a more formal
+> testcase for it written.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-are available in the git repository at:
+Looks good.
 
-  git://oss.sgi.com/xfs/xfs for-linus
+Reviewed-by: Dave Chinner <david@fromorbit.com>
 
-Dave Chinner (7):
-      xfs: reclaim inodes under a write lock
-      xfs: Avoid inodes in reclaim when flushing from inode cache
-      xfs: reclaim all inodes by background tree walks
-      xfs: Remove inode iolock held check during allocation
-      xfs: fix stale inode flush avoidance
-      xfs: fix missing error check in xfs_rtfree_range
-      xfs: xfs_swap_extents needs to handle dynamic fork offsets
-
- fs/xfs/linux-2.6/xfs_super.c   |   14 ++--
- fs/xfs/linux-2.6/xfs_sync.c    |  183 +++++++++++++++++++---------------------
- fs/xfs/linux-2.6/xfs_sync.h    |    2 +-
- fs/xfs/quota/xfs_qm_syscalls.c |    2 +-
- fs/xfs/xfs_dfrag.c             |  106 ++++++++++++++++++++----
- fs/xfs/xfs_iget.c              |    1 -
- fs/xfs/xfs_inode.c             |   21 ++++--
- fs/xfs/xfs_rtalloc.c           |    2 +
- 8 files changed, 201 insertions(+), 130 deletions(-)
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
