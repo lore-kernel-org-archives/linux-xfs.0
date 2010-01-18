@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0IJKvn9124380 for <xfs@oss.sgi.com>; Mon, 18 Jan 2010 13:20:57 -0600
+	o0IKjbLs128848 for <xfs@oss.sgi.com>; Mon, 18 Jan 2010 14:45:37 -0600
 Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 631E111F7B06
-	for <xfs@oss.sgi.com>; Mon, 18 Jan 2010 11:21:54 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1ED01171D3D
+	for <xfs@oss.sgi.com>; Mon, 18 Jan 2010 12:46:36 -0800 (PST)
 Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id sYqOESFrmuQyhzwS for
-	<xfs@oss.sgi.com>; Mon, 18 Jan 2010 11:21:54 -0800 (PST)
+	by cuda.sgi.com with ESMTP id tFT9RsZ9rqluYaML for
+	<xfs@oss.sgi.com>; Mon, 18 Jan 2010 12:46:36 -0800 (PST)
 Received: from Liberator.local (liberator.sandeen.net [10.0.0.4])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by mail.sandeen.net (Postfix) with ESMTP id 22390AAE3BE
-	for <xfs@oss.sgi.com>; Mon, 18 Jan 2010 13:21:53 -0600 (CST)
-Message-ID: <4B54B4D1.7020500@sandeen.net>
-Date: Mon, 18 Jan 2010 13:21:53 -0600
+	by mail.sandeen.net (Postfix) with ESMTP id 9F3E8AAE3B2
+	for <xfs@oss.sgi.com>; Mon, 18 Jan 2010 14:46:35 -0600 (CST)
+Message-ID: <4B54C8AB.6080607@sandeen.net>
+Date: Mon, 18 Jan 2010 14:46:35 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] mkfs: don't warn about topology when mkfsing a file
+Subject: [PATCH] xfsteststs: get fsstress DIO working on non-xfs filesystems
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,38 +32,50 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs-oss <xfs@oss.sgi.com>
 
-Some tests were failing for me like:
+Pretty sure all DIO IO fails in fsstress today since XFS_IOC_DIOINFO
+fails.  If so, rather than just bailing out on the op, assign
+some sane default DIO parameters.
 
- QA output created by 206
- === truncate file ===
- === mkfs.xfs ===
-+warning: unable to probe device toplology for device /mnt/test/fsfile.21615
-...
+This falls down for 4k sector devices but not really sure how to get
+the underlying sector size easily from here; I think we can live
+with this for now.
 
-I thought about filtering the tests, but ...
-
-It seems that we shouldn't even be trying to get topology for a
-plain file, should we?  And then we won't warn about failure.
-
+hch suggested moving XFS_IOC_DIOINFO up higher in the vfs, that's
+probably a good idea in the long run.
 
 Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 ---
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 689425d..8896035 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -356,6 +356,10 @@ static void blkid_get_topology(const char *device, int *sunit, int *swidth, int
- 	blkid_topology tp;
- 	blkid_probe pr;
- 	unsigned long val;
-+	struct stat statbuf;
-+
-+	if (!stat(device, &statbuf) && S_ISREG(statbuf.st_mode))
-+		return;
- 
- 	pr = blkid_new_probe_from_filename(device);
- 	if (!pr)
+diff --git a/ltp/fsstress.c b/ltp/fsstress.c
+index 6978381..dab6bf7 100644
+--- a/ltp/fsstress.c
++++ b/ltp/fsstress.c
+@@ -1818,9 +1818,9 @@ dread_f(int opno, long r)
+ 			printf(
+ 			"%d/%d: dread - xfsctl(XFS_IOC_DIOINFO) %s failed %d\n",
+ 				procid, opno, f.path, errno);
+-		free_pathname(&f);
+-		close(fd);
+-		return;
++		diob.d_maxiosz = -1U;
++		diob.d_miniosz = 512;
++		diob.d_mem = 512;
+ 	}
+ 	align = (__int64_t)diob.d_miniosz;
+ 	lr = ((__int64_t)random() << 32) + random();
+@@ -1888,9 +1888,9 @@ dwrite_f(int opno, long r)
+ 			printf("%d/%d: dwrite - xfsctl(XFS_IOC_DIOINFO)"
+ 				" %s failed %d\n",
+ 				procid, opno, f.path, errno);
+-		free_pathname(&f);
+-		close(fd);
+-		return;
++		diob.d_maxiosz = -1U;
++		diob.d_miniosz = 512;
++		diob.d_mem = 512;
+ 	}
+ 	align = (__int64_t)diob.d_miniosz;
+ 	lr = ((__int64_t)random() << 32) + random();
 
 _______________________________________________
 xfs mailing list
