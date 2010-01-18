@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0IB2eqE099100 for <xfs@oss.sgi.com>; Mon, 18 Jan 2010 05:02:41 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D0DED1C592E6
-	for <xfs@oss.sgi.com>; Mon, 18 Jan 2010 03:03:38 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	gbJPFxONUtExCGtT for <xfs@oss.sgi.com>;
-	Mon, 18 Jan 2010 03:03:38 -0800 (PST)
-Date: Mon, 18 Jan 2010 22:03:34 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/3 v2] xfs: implement quota warnings via netlink
-Message-ID: <20100118110334.GE7264@discord.disaster>
-References: <20100113220547.846700560@bombadil.infradead.org>
-	<20100113220603.251930871@bombadil.infradead.org>
-	<20100117223619.GA16102@infradead.org>
+	o0IJKvn9124380 for <xfs@oss.sgi.com>; Mon, 18 Jan 2010 13:20:57 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 631E111F7B06
+	for <xfs@oss.sgi.com>; Mon, 18 Jan 2010 11:21:54 -0800 (PST)
+Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
+	by cuda.sgi.com with ESMTP id sYqOESFrmuQyhzwS for
+	<xfs@oss.sgi.com>; Mon, 18 Jan 2010 11:21:54 -0800 (PST)
+Received: from Liberator.local (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail.sandeen.net (Postfix) with ESMTP id 22390AAE3BE
+	for <xfs@oss.sgi.com>; Mon, 18 Jan 2010 13:21:53 -0600 (CST)
+Message-ID: <4B54B4D1.7020500@sandeen.net>
+Date: Mon, 18 Jan 2010 13:21:53 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100117223619.GA16102@infradead.org>
+Subject: [PATCH] mkfs: don't warn about topology when mkfsing a file
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,26 +30,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Sun, Jan 17, 2010 at 05:36:19PM -0500, Christoph Hellwig wrote:
-> Wire up quota_send_warning to send quota warnings over netlink.  This is
-> used by various desktops to show user quota warnings.
-> 
-> Tested by running the quota_nld daemon while running the xfstest quota
-> tests and observing the warnings.  I'll see how I can get a more formal
-> testcase for it written.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Some tests were failing for me like:
 
-Looks good.
+ QA output created by 206
+ === truncate file ===
+ === mkfs.xfs ===
++warning: unable to probe device toplology for device /mnt/test/fsfile.21615
+...
 
-Reviewed-by: Dave Chinner <david@fromorbit.com>
+I thought about filtering the tests, but ...
 
--- 
-Dave Chinner
-david@fromorbit.com
+It seems that we shouldn't even be trying to get topology for a
+plain file, should we?  And then we won't warn about failure.
+
+
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
+
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 689425d..8896035 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -356,6 +356,10 @@ static void blkid_get_topology(const char *device, int *sunit, int *swidth, int
+ 	blkid_topology tp;
+ 	blkid_probe pr;
+ 	unsigned long val;
++	struct stat statbuf;
++
++	if (!stat(device, &statbuf) && S_ISREG(statbuf.st_mode))
++		return;
+ 
+ 	pr = blkid_new_probe_from_filename(device);
+ 	if (!pr)
 
 _______________________________________________
 xfs mailing list
