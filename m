@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0J9XfNm181015 for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 03:33:42 -0600
+	o0J98sfG179512 for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 03:08:55 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8187A124D0F9
-	for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 01:34:41 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D0ACF1734F0
+	for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 01:09:54 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id ppFXd4HhkAaSiXbF for
-	<xfs@oss.sgi.com>; Tue, 19 Jan 2010 01:34:41 -0800 (PST)
-Date: Tue, 19 Jan 2010 04:34:40 -0500
+	by cuda.sgi.com with ESMTP id cKPlZNkbT7nx1X1D for
+	<xfs@oss.sgi.com>; Tue, 19 Jan 2010 01:09:54 -0800 (PST)
+Date: Tue, 19 Jan 2010 04:09:54 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/7] xfsprogs: fix some trivial warnings in xfs_db
-Message-ID: <20100119093440.GA15482@infradead.org>
-References: <1263861413-13729-1-git-send-email-david@fromorbit.com>
-	<1263861413-13729-4-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] mkfs: don't warn about topology when mkfsing a file
+Message-ID: <20100119090953.GA24737@infradead.org>
+References: <4B54B4D1.7020500@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1263861413-13729-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <4B54B4D1.7020500@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,35 +28,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Jan 19, 2010 at 11:36:49AM +1100, Dave Chinner wrote:
-> Three warnings, none harmful - one dir2 name sign warning and
-> two cases where gcc can't work out if a variable is initialised
-> correctly in a child function or not.
+On Mon, Jan 18, 2010 at 01:21:53PM -0600, Eric Sandeen wrote:
+> Some tests were failing for me like:
 > 
-> Signed-off-by: Dave Chinner <david@fromorbit.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> ---
->  db/check.c |    6 +++---
->  1 files changed, 3 insertions(+), 3 deletions(-)
+>  QA output created by 206
+>  === truncate file ===
+>  === mkfs.xfs ===
+> +warning: unable to probe device toplology for device /mnt/test/fsfile.21615
+> ...
 > 
-> diff --git a/db/check.c b/db/check.c
-> index 7620d9c..f94a16b 100644
-> --- a/db/check.c
-> +++ b/db/check.c
-> @@ -2317,7 +2317,7 @@ process_data_dir_v2(
->  		tag_err += be16_to_cpu(*tagp) != (char *)dep - (char *)data;
->  		addr = xfs_dir2_db_off_to_dataptr(mp, db,
->  			(char *)dep - (char *)data);
-> -		xname.name = (char *)dep->name;
-> +		xname.name = (uchar_t *)dep->name;
+> I thought about filtering the tests, but ...
+> 
+> It seems that we shouldn't even be trying to get topology for a
+> plain file, should we?  And then we won't warn about failure.
 
-Aren't hese now both unsigned after the kernel changes are sycned over?
+Looks good to me.  Would be even nicer if libblkid handled that case,
+but let's fix it where we can easily do it.
 
-And btw, please also avoid uchar_t in xfsprogs, it will be gone with
-next full libxfs resync.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
