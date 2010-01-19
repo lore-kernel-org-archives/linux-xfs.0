@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0J9FbXA179989 for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 03:15:37 -0600
+	o0J9EwF3179921 for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 03:14:58 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CE9E417362A
-	for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 01:16:37 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 591F01C5E0A9
+	for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 01:15:58 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 2S0EEQE0iRLqq82Y for
-	<xfs@oss.sgi.com>; Tue, 19 Jan 2010 01:16:37 -0800 (PST)
-Date: Tue, 19 Jan 2010 04:16:37 -0500
+	by cuda.sgi.com with ESMTP id pC14ONkjflPoyOaq for
+	<xfs@oss.sgi.com>; Tue, 19 Jan 2010 01:15:58 -0800 (PST)
+Date: Tue, 19 Jan 2010 04:15:58 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/2] xfstests: Clean up build output
-Message-ID: <20100119091637.GC29269@infradead.org>
-References: <1263891574-30762-1-git-send-email-david@fromorbit.com>
-	<1263891574-30762-2-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 2/2] xfsprogs: Make the compile output cleaner V3
+Message-ID: <20100119091558.GB29269@infradead.org>
+References: <1263861186-13589-1-git-send-email-david@fromorbit.com>
+	<1263861186-13589-3-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1263891574-30762-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1263861186-13589-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
