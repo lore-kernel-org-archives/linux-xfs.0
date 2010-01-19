@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0J9tuaC182597 for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 03:55:56 -0600
+	o0J9ttG1182574 for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 03:55:55 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4500C124D00C
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 891F71C5E160
 	for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 01:56:55 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id XwUomllColD3cXNy for
+	by cuda.sgi.com with ESMTP id MYUVh7dZIPOn7eRe for
 	<xfs@oss.sgi.com>; Tue, 19 Jan 2010 01:56:55 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1NXApT-0001H6-Hb
-	for xfs@oss.sgi.com; Tue, 19 Jan 2010 09:56:55 +0000
-Message-Id: <20100119095655.363711060@bombadil.infradead.org>
-Date: Tue, 19 Jan 2010 04:56:46 -0500
+	Linux)) id 1NXApS-0001G1-TD
+	for xfs@oss.sgi.com; Tue, 19 Jan 2010 09:56:54 +0000
+Message-Id: <20100119095654.708720933@bombadil.infradead.org>
+Date: Tue, 19 Jan 2010 04:56:44 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 3/3] xfs: cleanup up xfs_log_force calling conventions
+Subject: [PATCH 1/3] [PATCH] xfs: remove duplicate buffer flags
 References: <20100119095643.378866749@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-cleanup-xfs_log_force
+Content-Disposition: inline; filename=xfs-buf-flags-cleanup
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,753 +32,522 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Remove the XFS_LOG_FORCE argument which was always set, and the XFS_LOG_URGE
-define, which was never used.
+Currently we define aliases for the buffer flags in various namespaces,
+which only adds confusion.  Remove all but the XBF_ flags to clean this
+up a bit.
 
-Split xfs_log_force into a two helpers - xfs_log_force which forces the
-whole log, and xfs_log_force_lsn which forces up to the specified LSN.
-The underlying implementations already were entirely separate, as were
-the users.
-
-Also re-indent the new _xfs_log_force/_xfs_log_force which previously had
-a weird coding style.
+Note that we still abuse XFS_B_ASYNC/XBF_ASYNC for some non-buffer uses,
+but I'll clean that up later.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-
+Index: xfs/fs/xfs/linux-2.6/xfs_buf.h
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_buf.h	2010-01-17 11:13:28.899262696 +0100
++++ xfs/fs/xfs/linux-2.6/xfs_buf.h	2010-01-17 11:14:36.978275990 +0100
+@@ -275,33 +275,19 @@ extern void xfs_buf_terminate(void);
+ 	({ char __b[BDEVNAME_SIZE]; bdevname((target)->bt_bdev, __b); __b; })
+ 
+ 
+-#define XFS_B_ASYNC		XBF_ASYNC
+-#define XFS_B_DELWRI		XBF_DELWRI
+-#define XFS_B_READ		XBF_READ
+-#define XFS_B_WRITE		XBF_WRITE
+-#define XFS_B_STALE		XBF_STALE
+-
+-#define XFS_BUF_TRYLOCK		XBF_TRYLOCK
+-#define XFS_INCORE_TRYLOCK	XBF_TRYLOCK
+-#define XFS_BUF_LOCK		XBF_LOCK
+-#define XFS_BUF_MAPPED		XBF_MAPPED
+-
+-#define BUF_BUSY		XBF_DONT_BLOCK
+-
+ #define XFS_BUF_BFLAGS(bp)	((bp)->b_flags)
+ #define XFS_BUF_ZEROFLAGS(bp)	((bp)->b_flags &= \
+ 		~(XBF_READ|XBF_WRITE|XBF_ASYNC|XBF_DELWRI|XBF_ORDERED))
+ 
+-#define XFS_BUF_STALE(bp)	((bp)->b_flags |= XFS_B_STALE)
+-#define XFS_BUF_UNSTALE(bp)	((bp)->b_flags &= ~XFS_B_STALE)
+-#define XFS_BUF_ISSTALE(bp)	((bp)->b_flags & XFS_B_STALE)
++#define XFS_BUF_STALE(bp)	((bp)->b_flags |= XBF_STALE)
++#define XFS_BUF_UNSTALE(bp)	((bp)->b_flags &= ~XBF_STALE)
++#define XFS_BUF_ISSTALE(bp)	((bp)->b_flags & XBF_STALE)
+ #define XFS_BUF_SUPER_STALE(bp)	do {				\
+ 					XFS_BUF_STALE(bp);	\
+ 					xfs_buf_delwri_dequeue(bp);	\
+ 					XFS_BUF_DONE(bp);	\
+ 				} while (0)
+ 
+-#define XFS_BUF_MANAGE		XBF_FS_MANAGED
+ #define XFS_BUF_UNMANAGE(bp)	((bp)->b_flags &= ~XBF_FS_MANAGED)
+ 
+ #define XFS_BUF_DELAYWRITE(bp)		((bp)->b_flags |= XBF_DELWRI)
+@@ -390,7 +376,7 @@ static inline void xfs_buf_relse(xfs_buf
+ 
+ #define xfs_biomove(bp, off, len, data, rw) \
+ 	    xfs_buf_iomove((bp), (off), (len), (data), \
+-		((rw) == XFS_B_WRITE) ? XBRW_WRITE : XBRW_READ)
++		((rw) == XBF_WRITE) ? XBRW_WRITE : XBRW_READ)
+ 
+ #define xfs_biozero(bp, off, len) \
+ 	    xfs_buf_iomove((bp), (off), (len), NULL, XBRW_ZERO)
+Index: xfs/fs/xfs/linux-2.6/xfs_fs_subr.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_fs_subr.c	2010-01-17 11:13:28.905253682 +0100
++++ xfs/fs/xfs/linux-2.6/xfs_fs_subr.c	2010-01-17 11:14:36.979254745 +0100
+@@ -79,7 +79,7 @@ xfs_flush_pages(
+ 		xfs_iflags_clear(ip, XFS_ITRUNCATED);
+ 		ret = -filemap_fdatawrite(mapping);
+ 	}
+-	if (flags & XFS_B_ASYNC)
++	if (flags & XBF_ASYNC)
+ 		return ret;
+ 	ret2 = xfs_wait_on_pages(ip, first, last);
+ 	if (!ret)
 Index: xfs/fs/xfs/linux-2.6/xfs_sync.c
 ===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_sync.c	2010-01-19 10:49:11.258004245 +0100
-+++ xfs/fs/xfs/linux-2.6/xfs_sync.c	2010-01-19 10:49:33.500272635 +0100
-@@ -296,10 +296,7 @@ xfs_sync_data(
- 	if (error)
- 		return XFS_ERROR(error);
- 
--	xfs_log_force(mp, 0,
--		      (flags & SYNC_WAIT) ?
--		       XFS_LOG_FORCE | XFS_LOG_SYNC :
--		       XFS_LOG_FORCE);
-+	xfs_log_force(mp, (flags & SYNC_WAIT) ? XFS_LOG_SYNC : 0);
- 	return 0;
- }
- 
-@@ -325,10 +322,6 @@ xfs_commit_dummy_trans(
- 	struct xfs_inode	*ip = mp->m_rootip;
- 	struct xfs_trans	*tp;
- 	int			error;
--	int			log_flags = XFS_LOG_FORCE;
--
--	if (flags & SYNC_WAIT)
--		log_flags |= XFS_LOG_SYNC;
- 
- 	/*
- 	 * Put a dummy transaction in the log to tell recovery
-@@ -350,7 +343,7 @@ xfs_commit_dummy_trans(
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 
- 	/* the log force ensures this transaction is pushed to disk */
--	xfs_log_force(mp, 0, log_flags);
-+	xfs_log_force(mp, (flags & SYNC_WAIT) ? XFS_LOG_SYNC : 0);
- 	return error;
- }
- 
-@@ -390,7 +383,7 @@ xfs_sync_fsdata(
- 		 * become pinned in between there and here.
- 		 */
- 		if (XFS_BUF_ISPINNED(bp))
--			xfs_log_force(mp, 0, XFS_LOG_FORCE);
-+			xfs_log_force(mp, 0);
+--- xfs.orig/fs/xfs/linux-2.6/xfs_sync.c	2010-01-17 11:13:28.910254109 +0100
++++ xfs/fs/xfs/linux-2.6/xfs_sync.c	2010-01-17 11:14:36.980004841 +0100
+@@ -234,7 +234,7 @@ xfs_sync_inode_data(
  	}
  
+ 	error = xfs_flush_pages(ip, 0, -1, (flags & SYNC_WAIT) ?
+-				0 : XFS_B_ASYNC, FI_NONE);
++				0 : XBF_ASYNC, FI_NONE);
+ 	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
  
-@@ -575,7 +568,7 @@ xfs_flush_inodes(
- 	igrab(inode);
- 	xfs_syncd_queue_work(ip->i_mount, inode, xfs_flush_inodes_work, &completion);
- 	wait_for_completion(&completion);
--	xfs_log_force(ip->i_mount, (xfs_lsn_t)0, XFS_LOG_FORCE|XFS_LOG_SYNC);
-+	xfs_log_force(ip->i_mount, XFS_LOG_SYNC);
- }
+  out_wait:
+@@ -370,7 +370,7 @@ xfs_sync_fsdata(
+ 	if (flags & SYNC_TRYLOCK) {
+ 		ASSERT(!(flags & SYNC_WAIT));
  
- /*
-@@ -591,7 +584,7 @@ xfs_sync_worker(
- 	int		error;
+-		bp = xfs_getsb(mp, XFS_BUF_TRYLOCK);
++		bp = xfs_getsb(mp, XBF_TRYLOCK);
+ 		if (!bp)
+ 			goto out;
  
- 	if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
--		xfs_log_force(mp, (xfs_lsn_t)0, XFS_LOG_FORCE);
-+		xfs_log_force(mp, 0);
- 		xfs_reclaim_inodes(mp, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
- 		/* dgc: errors ignored here */
- 		error = xfs_qm_sync(mp, SYNC_TRYLOCK);
 Index: xfs/fs/xfs/quota/xfs_dquot.c
 ===================================================================
---- xfs.orig/fs/xfs/quota/xfs_dquot.c	2010-01-19 10:49:11.259003604 +0100
-+++ xfs/fs/xfs/quota/xfs_dquot.c	2010-01-19 10:49:33.501273601 +0100
-@@ -1248,7 +1248,7 @@ xfs_qm_dqflush(
+--- xfs.orig/fs/xfs/quota/xfs_dquot.c	2010-01-17 11:13:28.922253750 +0100
++++ xfs/fs/xfs/quota/xfs_dquot.c	2010-01-17 11:14:36.982004327 +0100
+@@ -1527,8 +1527,7 @@ xfs_qm_dqflock_pushbuf_wait(
+ 	 * the flush lock when the I/O completes.
  	 */
- 	if (XFS_BUF_ISPINNED(bp)) {
- 		trace_xfs_dqflush_force(dqp);
--		xfs_log_force(mp, (xfs_lsn_t)0, XFS_LOG_FORCE);
-+		xfs_log_force(mp, 0);
- 	}
- 
- 	if (flags & XFS_QMOPT_DELWRI) {
-@@ -1531,11 +1531,9 @@ xfs_qm_dqflock_pushbuf_wait(
+ 	bp = xfs_incore(dqp->q_mount->m_ddev_targp, dqp->q_blkno,
+-		    XFS_QI_DQCHUNKLEN(dqp->q_mount),
+-		    XFS_INCORE_TRYLOCK);
++		    XFS_QI_DQCHUNKLEN(dqp->q_mount), XBF_TRYLOCK);
  	if (bp != NULL) {
  		if (XFS_BUF_ISDELAYWRITE(bp)) {
  			int	error;
--			if (XFS_BUF_ISPINNED(bp)) {
--				xfs_log_force(dqp->q_mount,
--					      (xfs_lsn_t)0,
--					      XFS_LOG_FORCE);
--			}
-+
-+			if (XFS_BUF_ISPINNED(bp))
-+				xfs_log_force(dqp->q_mount, 0);
- 			error = xfs_bawrite(dqp->q_mount, bp);
- 			if (error)
- 				xfs_fs_cmn_err(CE_WARN, dqp->q_mount,
 Index: xfs/fs/xfs/quota/xfs_dquot_item.c
 ===================================================================
---- xfs.orig/fs/xfs/quota/xfs_dquot_item.c	2010-01-19 10:49:18.096003841 +0100
-+++ xfs/fs/xfs/quota/xfs_dquot_item.c	2010-01-19 10:49:33.502274007 +0100
-@@ -190,7 +190,7 @@ xfs_qm_dqunpin_wait(
- 	/*
- 	 * Give the log a push so we don't wait here too long.
- 	 */
--	xfs_log_force(dqp->q_mount, (xfs_lsn_t)0, XFS_LOG_FORCE);
-+	xfs_log_force(dqp->q_mount, 0);
- 	wait_event(dqp->q_pinwait, (atomic_read(&dqp->q_pincount) == 0));
- }
- 
-@@ -245,10 +245,9 @@ xfs_qm_dquot_logitem_pushbuf(
- 			qip->qli_pushbuf_flag = 0;
- 			xfs_dqunlock(dqp);
- 
--			if (XFS_BUF_ISPINNED(bp)) {
--				xfs_log_force(mp, (xfs_lsn_t)0,
--					      XFS_LOG_FORCE);
--			}
-+			if (XFS_BUF_ISPINNED(bp))
-+				xfs_log_force(mp, 0);
-+
- 			if (dopush) {
- 				int	error;
- #ifdef XFSRACEDEBUG
-Index: xfs/fs/xfs/quota/xfs_qm_syscalls.c
-===================================================================
---- xfs.orig/fs/xfs/quota/xfs_qm_syscalls.c	2010-01-17 23:33:04.517003350 +0100
-+++ xfs/fs/xfs/quota/xfs_qm_syscalls.c	2010-01-19 10:49:33.503004548 +0100
-@@ -1192,9 +1192,9 @@ xfs_qm_internalqcheck(
- 	if (! XFS_IS_QUOTA_ON(mp))
- 		return XFS_ERROR(ESRCH);
- 
--	xfs_log_force(mp, (xfs_lsn_t)0, XFS_LOG_FORCE | XFS_LOG_SYNC);
-+	xfs_log_force(mp, XFS_LOG_SYNC);
- 	XFS_bflush(mp->m_ddev_targp);
--	xfs_log_force(mp, (xfs_lsn_t)0, XFS_LOG_FORCE | XFS_LOG_SYNC);
-+	xfs_log_force(mp, XFS_LOG_SYNC);
- 	XFS_bflush(mp->m_ddev_targp);
- 
- 	mutex_lock(&qcheck_lock);
+--- xfs.orig/fs/xfs/quota/xfs_dquot_item.c	2010-01-17 11:13:28.929273219 +0100
++++ xfs/fs/xfs/quota/xfs_dquot_item.c	2010-01-17 11:14:36.983004314 +0100
+@@ -237,8 +237,7 @@ xfs_qm_dquot_logitem_pushbuf(
+ 	}
+ 	mp = dqp->q_mount;
+ 	bp = xfs_incore(mp->m_ddev_targp, qip->qli_format.qlf_blkno,
+-		    XFS_QI_DQCHUNKLEN(mp),
+-		    XFS_INCORE_TRYLOCK);
++		    XFS_QI_DQCHUNKLEN(mp), XBF_TRYLOCK);
+ 	if (bp != NULL) {
+ 		if (XFS_BUF_ISDELAYWRITE(bp)) {
+ 			dopush = ((qip->qli_item.li_flags & XFS_LI_IN_AIL) &&
 Index: xfs/fs/xfs/xfs_alloc.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_alloc.c	2010-01-19 10:49:11.262004266 +0100
-+++ xfs/fs/xfs/xfs_alloc.c	2010-01-19 10:49:33.504003976 +0100
-@@ -2601,5 +2601,5 @@ xfs_alloc_search_busy(xfs_trans_t *tp,
- 	 * transaction that freed the block
- 	 */
- 	if (lsn)
--		xfs_log_force(tp->t_mountp, lsn, XFS_LOG_FORCE|XFS_LOG_SYNC);
-+		xfs_log_force_lsn(tp->t_mountp, lsn, XFS_LOG_SYNC);
- }
+--- xfs.orig/fs/xfs/xfs_alloc.c	2010-01-17 11:13:28.936023938 +0100
++++ xfs/fs/xfs/xfs_alloc.c	2010-01-17 11:14:36.984004512 +0100
+@@ -2180,7 +2180,7 @@ xfs_alloc_read_agf(
+ 	ASSERT(agno != NULLAGNUMBER);
+ 
+ 	error = xfs_read_agf(mp, tp, agno,
+-			(flags & XFS_ALLOC_FLAG_TRYLOCK) ? XFS_BUF_TRYLOCK : 0,
++			(flags & XFS_ALLOC_FLAG_TRYLOCK) ? XBF_TRYLOCK : 0,
+ 			bpp);
+ 	if (error)
+ 		return error;
+Index: xfs/fs/xfs/xfs_attr.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_attr.c	2010-01-17 11:13:28.944004633 +0100
++++ xfs/fs/xfs/xfs_attr.c	2010-01-17 11:14:36.986004697 +0100
+@@ -2007,15 +2007,14 @@ xfs_attr_rmtval_get(xfs_da_args_t *args)
+ 			dblkno = XFS_FSB_TO_DADDR(mp, map[i].br_startblock);
+ 			blkcnt = XFS_FSB_TO_BB(mp, map[i].br_blockcount);
+ 			error = xfs_read_buf(mp, mp->m_ddev_targp, dblkno,
+-					     blkcnt,
+-					     XFS_BUF_LOCK | XBF_DONT_BLOCK,
++					     blkcnt, XBF_LOCK | XBF_DONT_BLOCK,
+ 					     &bp);
+ 			if (error)
+ 				return(error);
+ 
+ 			tmp = (valuelen < XFS_BUF_SIZE(bp))
+ 				? valuelen : XFS_BUF_SIZE(bp);
+-			xfs_biomove(bp, 0, tmp, dst, XFS_B_READ);
++			xfs_biomove(bp, 0, tmp, dst, XBF_READ);
+ 			xfs_buf_relse(bp);
+ 			dst += tmp;
+ 			valuelen -= tmp;
+@@ -2141,13 +2140,13 @@ xfs_attr_rmtval_set(xfs_da_args_t *args)
+ 		blkcnt = XFS_FSB_TO_BB(mp, map.br_blockcount);
+ 
+ 		bp = xfs_buf_get(mp->m_ddev_targp, dblkno, blkcnt,
+-				 XFS_BUF_LOCK | XBF_DONT_BLOCK);
++				 XBF_LOCK | XBF_DONT_BLOCK);
+ 		ASSERT(bp);
+ 		ASSERT(!XFS_BUF_GETERROR(bp));
+ 
+ 		tmp = (valuelen < XFS_BUF_SIZE(bp)) ? valuelen :
+ 							XFS_BUF_SIZE(bp);
+-		xfs_biomove(bp, 0, tmp, src, XFS_B_WRITE);
++		xfs_biomove(bp, 0, tmp, src, XBF_WRITE);
+ 		if (tmp < XFS_BUF_SIZE(bp))
+ 			xfs_biozero(bp, tmp, XFS_BUF_SIZE(bp) - tmp);
+ 		if ((error = xfs_bwrite(mp, bp))) {/* GROT: NOTE: synchronous write */
+@@ -2208,8 +2207,7 @@ xfs_attr_rmtval_remove(xfs_da_args_t *ar
+ 		/*
+ 		 * If the "remote" value is in the cache, remove it.
+ 		 */
+-		bp = xfs_incore(mp->m_ddev_targp, dblkno, blkcnt,
+-				XFS_INCORE_TRYLOCK);
++		bp = xfs_incore(mp->m_ddev_targp, dblkno, blkcnt, XBF_TRYLOCK);
+ 		if (bp) {
+ 			XFS_BUF_STALE(bp);
+ 			XFS_BUF_UNDELAYWRITE(bp);
+Index: xfs/fs/xfs/xfs_attr_leaf.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_attr_leaf.c	2010-01-17 11:13:28.953004730 +0100
++++ xfs/fs/xfs/xfs_attr_leaf.c	2010-01-17 11:14:36.988005370 +0100
+@@ -2950,7 +2950,7 @@ xfs_attr_leaf_freextent(xfs_trans_t **tr
+ 						map.br_blockcount);
+ 			bp = xfs_trans_get_buf(*trans,
+ 					dp->i_mount->m_ddev_targp,
+-					dblkno, dblkcnt, XFS_BUF_LOCK);
++					dblkno, dblkcnt, XBF_LOCK);
+ 			xfs_trans_binval(*trans, bp);
+ 			/*
+ 			 * Roll to next transaction.
+Index: xfs/fs/xfs/xfs_btree.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_btree.c	2010-01-17 11:13:28.963004676 +0100
++++ xfs/fs/xfs/xfs_btree.c	2010-01-17 11:14:36.991003726 +0100
+@@ -977,7 +977,7 @@ xfs_btree_get_buf_block(
+ 	xfs_daddr_t		d;
+ 
+ 	/* need to sort out how callers deal with failures first */
+-	ASSERT(!(flags & XFS_BUF_TRYLOCK));
++	ASSERT(!(flags & XBF_TRYLOCK));
+ 
+ 	d = xfs_btree_ptr_to_daddr(cur, ptr);
+ 	*bpp = xfs_trans_get_buf(cur->bc_tp, mp->m_ddev_targp, d,
+@@ -1008,7 +1008,7 @@ xfs_btree_read_buf_block(
+ 	int			error;
+ 
+ 	/* need to sort out how callers deal with failures first */
+-	ASSERT(!(flags & XFS_BUF_TRYLOCK));
++	ASSERT(!(flags & XBF_TRYLOCK));
+ 
+ 	d = xfs_btree_ptr_to_daddr(cur, ptr);
+ 	error = xfs_trans_read_buf(mp, cur->bc_tp, mp->m_ddev_targp, d,
+Index: xfs/fs/xfs/xfs_ialloc.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_ialloc.c	2010-01-17 11:13:28.972004564 +0100
++++ xfs/fs/xfs/xfs_ialloc.c	2010-01-17 11:14:36.993004399 +0100
+@@ -205,7 +205,7 @@ xfs_ialloc_inode_init(
+ 		d = XFS_AGB_TO_DADDR(mp, agno, agbno + (j * blks_per_cluster));
+ 		fbuf = xfs_trans_get_buf(tp, mp->m_ddev_targp, d,
+ 					 mp->m_bsize * blks_per_cluster,
+-					 XFS_BUF_LOCK);
++					 XBF_LOCK);
+ 		ASSERT(fbuf);
+ 		ASSERT(!XFS_BUF_GETERROR(fbuf));
+ 
 Index: xfs/fs/xfs/xfs_inode.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_inode.c	2010-01-19 10:49:11.270004307 +0100
-+++ xfs/fs/xfs/xfs_inode.c	2010-01-19 10:49:33.506010936 +0100
-@@ -2484,8 +2484,11 @@ __xfs_iunpin_wait(
- 		return;
+--- xfs.orig/fs/xfs/xfs_inode.c	2010-01-17 11:13:28.981004243 +0100
++++ xfs/fs/xfs/xfs_inode.c	2010-01-17 11:14:36.997004559 +0100
+@@ -151,7 +151,7 @@ xfs_imap_to_bp(
+ 				"an error %d on %s.  Returning error.",
+ 				error, mp->m_fsname);
+ 		} else {
+-			ASSERT(buf_flags & XFS_BUF_TRYLOCK);
++			ASSERT(buf_flags & XBF_TRYLOCK);
+ 		}
+ 		return error;
+ 	}
+@@ -239,7 +239,7 @@ xfs_inotobp(
+ 	if (error)
+ 		return error;
  
- 	/* Give the log a push to start the unpinning I/O */
--	xfs_log_force(ip->i_mount, (iip && iip->ili_last_lsn) ?
--				iip->ili_last_lsn : 0, XFS_LOG_FORCE);
-+	if (iip && iip->ili_last_lsn)
-+		xfs_log_force_lsn(ip->i_mount, iip->ili_last_lsn, 0);
-+	else
-+		xfs_log_force(ip->i_mount, 0);
-+
- 	if (wait)
- 		wait_event(ip->i_ipin_wait, (atomic_read(&ip->i_pincount) == 0));
- }
-@@ -2970,7 +2973,7 @@ xfs_iflush(
- 	 * get stuck waiting in the write for too long.
+-	error = xfs_imap_to_bp(mp, tp, &imap, &bp, XFS_BUF_LOCK, imap_flags);
++	error = xfs_imap_to_bp(mp, tp, &imap, &bp, XBF_LOCK, imap_flags);
+ 	if (error)
+ 		return error;
+ 
+@@ -285,7 +285,7 @@ xfs_itobp(
+ 		return error;
+ 
+ 	if (!bp) {
+-		ASSERT(buf_flags & XFS_BUF_TRYLOCK);
++		ASSERT(buf_flags & XBF_TRYLOCK);
+ 		ASSERT(tp == NULL);
+ 		*bpp = NULL;
+ 		return EAGAIN;
+@@ -807,7 +807,7 @@ xfs_iread(
+ 	 * Get pointers to the on-disk inode and the buffer containing it.
  	 */
- 	if (XFS_BUF_ISPINNED(bp))
--		xfs_log_force(mp, (xfs_lsn_t)0, XFS_LOG_FORCE);
-+		xfs_log_force(mp, 0);
+ 	error = xfs_imap_to_bp(mp, tp, &ip->i_imap, &bp,
+-			       XFS_BUF_LOCK, iget_flags);
++			       XBF_LOCK, iget_flags);
+ 	if (error)
+ 		return error;
+ 	dip = (xfs_dinode_t *)xfs_buf_offset(bp, ip->i_imap.im_boffset);
+@@ -1751,7 +1751,7 @@ xfs_iunlink(
+ 		 * Here we put the head pointer into our next pointer,
+ 		 * and then we fall through to point the head at us.
+ 		 */
+-		error = xfs_itobp(mp, tp, ip, &dip, &ibp, XFS_BUF_LOCK);
++		error = xfs_itobp(mp, tp, ip, &dip, &ibp, XBF_LOCK);
+ 		if (error)
+ 			return error;
  
- 	/*
- 	 * inode clustering:
+@@ -1833,7 +1833,7 @@ xfs_iunlink_remove(
+ 		 * of dealing with the buffer when there is no need to
+ 		 * change it.
+ 		 */
+-		error = xfs_itobp(mp, tp, ip, &dip, &ibp, XFS_BUF_LOCK);
++		error = xfs_itobp(mp, tp, ip, &dip, &ibp, XBF_LOCK);
+ 		if (error) {
+ 			cmn_err(CE_WARN,
+ 				"xfs_iunlink_remove: xfs_itobp()  returned an error %d on %s.  Returning error.",
+@@ -1895,7 +1895,7 @@ xfs_iunlink_remove(
+ 		 * Now last_ibp points to the buffer previous to us on
+ 		 * the unlinked list.  Pull us from the list.
+ 		 */
+-		error = xfs_itobp(mp, tp, ip, &dip, &ibp, XFS_BUF_LOCK);
++		error = xfs_itobp(mp, tp, ip, &dip, &ibp, XBF_LOCK);
+ 		if (error) {
+ 			cmn_err(CE_WARN,
+ 				"xfs_iunlink_remove: xfs_itobp()  returned an error %d on %s.  Returning error.",
+@@ -2040,7 +2040,7 @@ xfs_ifree_cluster(
+ 
+ 		bp = xfs_trans_get_buf(tp, mp->m_ddev_targp, blkno, 
+ 					mp->m_bsize * blks_per_cluster,
+-					XFS_BUF_LOCK);
++					XBF_LOCK);
+ 
+ 		pre_flushed = 0;
+ 		lip = XFS_BUF_FSPRIVATE(bp, xfs_log_item_t *);
+@@ -2151,7 +2151,7 @@ xfs_ifree(
+ 
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 
+-	error = xfs_itobp(ip->i_mount, tp, ip, &dip, &ibp, XFS_BUF_LOCK);
++	error = xfs_itobp(ip->i_mount, tp, ip, &dip, &ibp, XBF_LOCK);
+ 	if (error)
+ 		return error;
+ 
+@@ -2952,7 +2952,7 @@ xfs_iflush(
+ 	 * Get the buffer containing the on-disk inode.
+ 	 */
+ 	error = xfs_itobp(mp, NULL, ip, &dip, &bp,
+-				noblock ? XFS_BUF_TRYLOCK : XFS_BUF_LOCK);
++				noblock ? XBF_TRYLOCK : XBF_LOCK);
+ 	if (error || !bp) {
+ 		xfs_ifunlock(ip);
+ 		return error;
 Index: xfs/fs/xfs/xfs_inode_item.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_inode_item.c	2010-01-19 10:49:18.098003398 +0100
-+++ xfs/fs/xfs/xfs_inode_item.c	2010-01-19 10:49:33.507004429 +0100
-@@ -804,10 +804,9 @@ xfs_inode_item_pushbuf(
+--- xfs.orig/fs/xfs/xfs_inode_item.c	2010-01-17 11:13:28.986004320 +0100
++++ xfs/fs/xfs/xfs_inode_item.c	2010-01-17 11:14:36.998003569 +0100
+@@ -785,7 +785,7 @@ xfs_inode_item_pushbuf(
  
- 			trace_xfs_inode_item_push(bp, _RET_IP_);
+ 	mp = ip->i_mount;
+ 	bp = xfs_incore(mp->m_ddev_targp, iip->ili_format.ilf_blkno,
+-		    iip->ili_format.ilf_len, XFS_INCORE_TRYLOCK);
++		    iip->ili_format.ilf_len, XBF_TRYLOCK);
  
--			if (XFS_BUF_ISPINNED(bp)) {
--				xfs_log_force(mp, (xfs_lsn_t)0,
--					      XFS_LOG_FORCE);
--			}
-+			if (XFS_BUF_ISPINNED(bp))
-+				xfs_log_force(mp, 0);
-+
- 			if (dopush) {
- 				int	error;
- 				error = xfs_bawrite(mp, bp);
-Index: xfs/fs/xfs/xfs_log.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_log.c	2010-01-19 10:49:18.100003304 +0100
-+++ xfs/fs/xfs/xfs_log.c	2010-01-19 10:49:33.510003623 +0100
-@@ -79,11 +79,6 @@ STATIC int  xlog_state_release_iclog(xlo
- STATIC void xlog_state_switch_iclogs(xlog_t		*log,
- 				     xlog_in_core_t *iclog,
- 				     int		eventual_size);
--STATIC int  xlog_state_sync(xlog_t			*log,
--			    xfs_lsn_t 			lsn,
--			    uint			flags,
--			    int				*log_flushed);
--STATIC int  xlog_state_sync_all(xlog_t *log, uint flags, int *log_flushed);
- STATIC void xlog_state_want_sync(xlog_t	*log, xlog_in_core_t *iclog);
- 
- /* local functions to manipulate grant head */
-@@ -296,65 +291,6 @@ xfs_log_done(xfs_mount_t	*mp,
- 	return lsn;
- }	/* xfs_log_done */
- 
--
--/*
-- * Force the in-core log to disk.  If flags == XFS_LOG_SYNC,
-- *	the force is done synchronously.
-- *
-- * Asynchronous forces are implemented by setting the WANT_SYNC
-- * bit in the appropriate in-core log and then returning.
-- *
-- * Synchronous forces are implemented with a signal variable. All callers
-- * to force a given lsn to disk will wait on a the sv attached to the
-- * specific in-core log.  When given in-core log finally completes its
-- * write to disk, that thread will wake up all threads waiting on the
-- * sv.
-- */
--int
--_xfs_log_force(
--	xfs_mount_t	*mp,
--	xfs_lsn_t	lsn,
--	uint		flags,
--	int		*log_flushed)
--{
--	xlog_t		*log = mp->m_log;
--	int		dummy;
--
--	if (!log_flushed)
--		log_flushed = &dummy;
--
--	ASSERT(flags & XFS_LOG_FORCE);
--
--	XFS_STATS_INC(xs_log_force);
--
--	if (log->l_flags & XLOG_IO_ERROR)
--		return XFS_ERROR(EIO);
--	if (lsn == 0)
--		return xlog_state_sync_all(log, flags, log_flushed);
--	else
--		return xlog_state_sync(log, lsn, flags, log_flushed);
--}	/* _xfs_log_force */
--
--/*
-- * Wrapper for _xfs_log_force(), to be used when caller doesn't care
-- * about errors or whether the log was flushed or not. This is the normal
-- * interface to use when trying to unpin items or move the log forward.
-- */
--void
--xfs_log_force(
--	xfs_mount_t	*mp,
--	xfs_lsn_t	lsn,
--	uint		flags)
--{
--	int	error;
--	error = _xfs_log_force(mp, lsn, flags, NULL);
--	if (error) {
--		xfs_fs_cmn_err(CE_WARN, mp, "xfs_log_force: "
--			"error %d returned.", error);
--	}
--}
--
--
- /*
-  * Attaches a new iclog I/O completion callback routine during
-  * transaction commit.  If the log is in error state, a non-zero
-@@ -601,7 +537,7 @@ xfs_log_unmount_write(xfs_mount_t *mp)
- 	if (mp->m_flags & XFS_MOUNT_RDONLY)
- 		return 0;
- 
--	error = _xfs_log_force(mp, 0, XFS_LOG_FORCE|XFS_LOG_SYNC, NULL);
-+	error = _xfs_log_force(mp, XFS_LOG_SYNC, NULL);
- 	ASSERT(error || !(XLOG_FORCED_SHUTDOWN(log)));
- 
- #ifdef DEBUG
-@@ -2853,7 +2789,6 @@ xlog_state_switch_iclogs(xlog_t		*log,
- 	log->l_iclog = iclog->ic_next;
- }	/* xlog_state_switch_iclogs */
- 
--
- /*
-  * Write out all data in the in-core log as of this exact moment in time.
-  *
-@@ -2881,11 +2816,17 @@ xlog_state_switch_iclogs(xlog_t		*log,
-  *	   b) when we return from flushing out this iclog, it is still
-  *		not in the active nor dirty state.
-  */
--STATIC int
--xlog_state_sync_all(xlog_t *log, uint flags, int *log_flushed)
-+int
-+_xfs_log_force(
-+	struct xfs_mount	*mp,
-+	uint			flags,
-+	int			*log_flushed)
- {
--	xlog_in_core_t	*iclog;
--	xfs_lsn_t	lsn;
-+	struct log		*log = mp->m_log;
-+	struct xlog_in_core	*iclog;
-+	xfs_lsn_t		lsn;
-+
-+	XFS_STATS_INC(xs_log_force);
- 
- 	spin_lock(&log->l_icloglock);
- 
-@@ -2931,7 +2872,9 @@ xlog_state_sync_all(xlog_t *log, uint fl
- 
- 				if (xlog_state_release_iclog(log, iclog))
- 					return XFS_ERROR(EIO);
--				*log_flushed = 1;
-+
-+				if (log_flushed)
-+					*log_flushed = 1;
- 				spin_lock(&log->l_icloglock);
- 				if (be64_to_cpu(iclog->ic_header.h_lsn) == lsn &&
- 				    iclog->ic_state != XLOG_STATE_DIRTY)
-@@ -2975,19 +2918,37 @@ maybe_sleep:
- 		 */
- 		if (iclog->ic_state & XLOG_STATE_IOERROR)
- 			return XFS_ERROR(EIO);
--		*log_flushed = 1;
--
-+		if (log_flushed)
-+			*log_flushed = 1;
- 	} else {
- 
- no_sleep:
- 		spin_unlock(&log->l_icloglock);
- 	}
- 	return 0;
--}	/* xlog_state_sync_all */
-+}
- 
-+/*
-+ * Wrapper for _xfs_log_force(), to be used when caller doesn't care
-+ * about errors or whether the log was flushed or not. This is the normal
-+ * interface to use when trying to unpin items or move the log forward.
-+ */
-+void
-+xfs_log_force(
-+	xfs_mount_t	*mp,
-+	uint		flags)
-+{
-+	int	error;
-+
-+	error = _xfs_log_force(mp, flags, NULL);
-+	if (error) {
-+		xfs_fs_cmn_err(CE_WARN, mp, "xfs_log_force: "
-+			"error %d returned.", error);
-+	}
-+}
- 
- /*
-- * Used by code which implements synchronous log forces.
-+ * Force the in-core log to disk for a specific LSN.
-  *
-  * Find in-core log with lsn.
-  *	If it is in the DIRTY state, just return.
-@@ -2995,109 +2956,142 @@ no_sleep:
-  *		state and go to sleep or return.
-  *	If it is in any other state, go to sleep or return.
-  *
-- * If filesystem activity goes to zero, the iclog will get flushed only by
-- * bdflush().
-+ * Synchronous forces are implemented with a signal variable. All callers
-+ * to force a given lsn to disk will wait on a the sv attached to the
-+ * specific in-core log.  When given in-core log finally completes its
-+ * write to disk, that thread will wake up all threads waiting on the
-+ * sv.
-  */
--STATIC int
--xlog_state_sync(xlog_t	  *log,
--		xfs_lsn_t lsn,
--		uint	  flags,
--		int	  *log_flushed)
-+int
-+_xfs_log_force_lsn(
-+	struct xfs_mount	*mp,
-+	xfs_lsn_t		lsn,
-+	uint			flags,
-+	int			*log_flushed)
- {
--    xlog_in_core_t	*iclog;
--    int			already_slept = 0;
--
--try_again:
--    spin_lock(&log->l_icloglock);
--    iclog = log->l_iclog;
-+	struct log		*log = mp->m_log;
-+	struct xlog_in_core	*iclog;
-+	int			already_slept = 0;
- 
--    if (iclog->ic_state & XLOG_STATE_IOERROR) {
--	    spin_unlock(&log->l_icloglock);
--	    return XFS_ERROR(EIO);
--    }
-+	ASSERT(lsn != 0);
- 
--    do {
--	if (be64_to_cpu(iclog->ic_header.h_lsn) != lsn) {
--		iclog = iclog->ic_next;
--		continue;
--	}
-+	XFS_STATS_INC(xs_log_force);
- 
--	if (iclog->ic_state == XLOG_STATE_DIRTY) {
-+try_again:
-+	spin_lock(&log->l_icloglock);
-+	iclog = log->l_iclog;
-+	if (iclog->ic_state & XLOG_STATE_IOERROR) {
- 		spin_unlock(&log->l_icloglock);
--		return 0;
-+		return XFS_ERROR(EIO);
- 	}
- 
--	if (iclog->ic_state == XLOG_STATE_ACTIVE) {
--		/*
--		 * We sleep here if we haven't already slept (e.g.
--		 * this is the first time we've looked at the correct
--		 * iclog buf) and the buffer before us is going to
--		 * be sync'ed. The reason for this is that if we
--		 * are doing sync transactions here, by waiting for
--		 * the previous I/O to complete, we can allow a few
--		 * more transactions into this iclog before we close
--		 * it down.
--		 *
--		 * Otherwise, we mark the buffer WANT_SYNC, and bump
--		 * up the refcnt so we can release the log (which drops
--		 * the ref count).  The state switch keeps new transaction
--		 * commits from using this buffer.  When the current commits
--		 * finish writing into the buffer, the refcount will drop to
--		 * zero and the buffer will go out then.
--		 */
--		if (!already_slept &&
--		    (iclog->ic_prev->ic_state & (XLOG_STATE_WANT_SYNC |
--						 XLOG_STATE_SYNCING))) {
--			ASSERT(!(iclog->ic_state & XLOG_STATE_IOERROR));
--			XFS_STATS_INC(xs_log_force_sleep);
--			sv_wait(&iclog->ic_prev->ic_write_wait, PSWP,
--				&log->l_icloglock, s);
--			*log_flushed = 1;
--			already_slept = 1;
--			goto try_again;
--		} else {
-+	do {
-+		if (be64_to_cpu(iclog->ic_header.h_lsn) != lsn) {
-+			iclog = iclog->ic_next;
-+			continue;
-+		}
-+
-+		if (iclog->ic_state == XLOG_STATE_DIRTY) {
-+			spin_unlock(&log->l_icloglock);
-+			return 0;
-+		}
-+
-+		if (iclog->ic_state == XLOG_STATE_ACTIVE) {
-+			/*
-+			 * We sleep here if we haven't already slept (e.g.
-+			 * this is the first time we've looked at the correct
-+			 * iclog buf) and the buffer before us is going to
-+			 * be sync'ed. The reason for this is that if we
-+			 * are doing sync transactions here, by waiting for
-+			 * the previous I/O to complete, we can allow a few
-+			 * more transactions into this iclog before we close
-+			 * it down.
-+			 *
-+			 * Otherwise, we mark the buffer WANT_SYNC, and bump
-+			 * up the refcnt so we can release the log (which
-+			 * drops the ref count).  The state switch keeps new
-+			 * transaction commits from using this buffer.  When
-+			 * the current commits finish writing into the buffer,
-+			 * the refcount will drop to zero and the buffer will
-+			 * go out then.
-+			 */
-+			if (!already_slept &&
-+			    (iclog->ic_prev->ic_state &
-+			     (XLOG_STATE_WANT_SYNC | XLOG_STATE_SYNCING))) {
-+				ASSERT(!(iclog->ic_state & XLOG_STATE_IOERROR));
-+
-+				XFS_STATS_INC(xs_log_force_sleep);
-+
-+				sv_wait(&iclog->ic_prev->ic_write_wait,
-+					PSWP, &log->l_icloglock, s);
-+				if (log_flushed)
-+					*log_flushed = 1;
-+				already_slept = 1;
-+				goto try_again;
-+			}
- 			atomic_inc(&iclog->ic_refcnt);
- 			xlog_state_switch_iclogs(log, iclog, 0);
- 			spin_unlock(&log->l_icloglock);
- 			if (xlog_state_release_iclog(log, iclog))
- 				return XFS_ERROR(EIO);
--			*log_flushed = 1;
-+			if (log_flushed)
-+				*log_flushed = 1;
- 			spin_lock(&log->l_icloglock);
- 		}
--	}
- 
--	if ((flags & XFS_LOG_SYNC) && /* sleep */
--	    !(iclog->ic_state & (XLOG_STATE_ACTIVE | XLOG_STATE_DIRTY))) {
-+		if ((flags & XFS_LOG_SYNC) && /* sleep */
-+	    	    !(iclog->ic_state &
-+		      (XLOG_STATE_ACTIVE | XLOG_STATE_DIRTY))) {
-+			/*
-+			 * Don't wait on completion if we know that we've
-+			 * gotten a log write error.
-+			 */
-+			if (iclog->ic_state & XLOG_STATE_IOERROR) {
-+				spin_unlock(&log->l_icloglock);
-+				return XFS_ERROR(EIO);
-+			}
-+			XFS_STATS_INC(xs_log_force_sleep);
-+			sv_wait(&iclog->ic_force_wait, PSWP, &log->l_icloglock, s);
-+			/*
-+			 * No need to grab the log lock here since we're
-+			 * only deciding whether or not to return EIO
-+			 * and the memory read should be atomic.
-+			 */
-+			if (iclog->ic_state & XLOG_STATE_IOERROR)
-+				return XFS_ERROR(EIO);
- 
--		/*
--		 * Don't wait on completion if we know that we've
--		 * gotten a log write error.
--		 */
--		if (iclog->ic_state & XLOG_STATE_IOERROR) {
-+			if (log_flushed)
-+				*log_flushed = 1;
-+		} else {		/* just return */
- 			spin_unlock(&log->l_icloglock);
--			return XFS_ERROR(EIO);
- 		}
--		XFS_STATS_INC(xs_log_force_sleep);
--		sv_wait(&iclog->ic_force_wait, PSWP, &log->l_icloglock, s);
--		/*
--		 * No need to grab the log lock here since we're
--		 * only deciding whether or not to return EIO
--		 * and the memory read should be atomic.
--		 */
--		if (iclog->ic_state & XLOG_STATE_IOERROR)
--			return XFS_ERROR(EIO);
--		*log_flushed = 1;
--	} else {		/* just return */
--		spin_unlock(&log->l_icloglock);
--	}
--	return 0;
- 
--    } while (iclog != log->l_iclog);
-+		return 0;
-+	} while (iclog != log->l_iclog);
- 
--    spin_unlock(&log->l_icloglock);
--    return 0;
--}	/* xlog_state_sync */
-+	spin_unlock(&log->l_icloglock);
-+	return 0;
-+}
-+
-+/*
-+ * Wrapper for _xfs_log_force_lsn(), to be used when caller doesn't care
-+ * about errors or whether the log was flushed or not. This is the normal
-+ * interface to use when trying to unpin items or move the log forward.
-+ */
-+void
-+xfs_log_force_lsn(
-+	xfs_mount_t	*mp,
-+	xfs_lsn_t	lsn,
-+	uint		flags)
-+{
-+	int	error;
- 
-+	error = _xfs_log_force_lsn(mp, lsn, flags, NULL);
-+	if (error) {
-+		xfs_fs_cmn_err(CE_WARN, mp, "xfs_log_force: "
-+			"error %d returned.", error);
-+	}
-+}
- 
- /*
-  * Called when we want to mark the current iclog as being ready to sync to
-@@ -3462,7 +3456,6 @@ xfs_log_force_umount(
- 	xlog_ticket_t	*tic;
- 	xlog_t		*log;
- 	int		retval;
--	int		dummy;
- 
- 	log = mp->m_log;
- 
-@@ -3536,13 +3529,14 @@ xfs_log_force_umount(
- 	}
- 	spin_unlock(&log->l_grant_lock);
- 
--	if (! (log->l_iclog->ic_state & XLOG_STATE_IOERROR)) {
-+	if (!(log->l_iclog->ic_state & XLOG_STATE_IOERROR)) {
- 		ASSERT(!logerror);
- 		/*
- 		 * Force the incore logs to disk before shutting the
- 		 * log down completely.
- 		 */
--		xlog_state_sync_all(log, XFS_LOG_FORCE|XFS_LOG_SYNC, &dummy);
-+		_xfs_log_force(mp, XFS_LOG_SYNC, NULL);
-+
- 		spin_lock(&log->l_icloglock);
- 		retval = xlog_state_ioerror(log);
- 		spin_unlock(&log->l_icloglock);
-Index: xfs/fs/xfs/xfs_log.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_log.h	2010-01-19 10:49:18.100003304 +0100
-+++ xfs/fs/xfs/xfs_log.h	2010-01-19 10:49:33.511025262 +0100
-@@ -70,14 +70,8 @@ static inline xfs_lsn_t	_lsn_cmp(xfs_lsn
-  * Flags to xfs_log_force()
-  *
-  *	XFS_LOG_SYNC:	Synchronous force in-core log to disk
-- *	XFS_LOG_FORCE:	Start in-core log write now.
-- *	XFS_LOG_URGE:	Start write within some window of time.
-- *
-- * Note: Either XFS_LOG_FORCE or XFS_LOG_URGE must be set.
-  */
- #define XFS_LOG_SYNC		0x1
--#define XFS_LOG_FORCE		0x2
--#define XFS_LOG_URGE		0x4
- 
- #endif	/* __KERNEL__ */
- 
-@@ -138,12 +132,17 @@ xfs_lsn_t xfs_log_done(struct xfs_mount 
- 		       void		**iclog,
- 		       uint		flags);
- int	  _xfs_log_force(struct xfs_mount *mp,
--			 xfs_lsn_t	lsn,
- 			 uint		flags,
- 			 int		*log_forced);
- void	  xfs_log_force(struct xfs_mount	*mp,
--			xfs_lsn_t		lsn,
- 			uint			flags);
-+int	  _xfs_log_force_lsn(struct xfs_mount *mp,
-+			     xfs_lsn_t		lsn,
-+			     uint		flags,
-+			     int		*log_forced);
-+void	  xfs_log_force_lsn(struct xfs_mount	*mp,
-+			    xfs_lsn_t		lsn,
-+			    uint		flags);
- int	  xfs_log_mount(struct xfs_mount	*mp,
- 			struct xfs_buftarg	*log_target,
- 			xfs_daddr_t		start_block,
+ 	if (bp != NULL) {
+ 		if (XFS_BUF_ISDELAYWRITE(bp)) {
 Index: xfs/fs/xfs/xfs_log_recover.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_log_recover.c	2010-01-19 10:49:11.274010893 +0100
-+++ xfs/fs/xfs/xfs_log_recover.c	2010-01-19 10:49:33.513003936 +0100
-@@ -3913,8 +3913,7 @@ xlog_recover_finish(
- 		 * case the unlink transactions would have problems
- 		 * pushing the EFIs out of the way.
- 		 */
--		xfs_log_force(log->l_mp, (xfs_lsn_t)0,
--			      (XFS_LOG_FORCE | XFS_LOG_SYNC));
-+		xfs_log_force(log->l_mp, XFS_LOG_SYNC);
+--- xfs.orig/fs/xfs/xfs_log_recover.c	2010-01-17 11:13:28.992003548 +0100
++++ xfs/fs/xfs/xfs_log_recover.c	2010-01-17 11:14:37.000007106 +0100
+@@ -2184,9 +2184,9 @@ xlog_recover_do_buffer_trans(
+ 	}
  
- 		xlog_recover_process_iunlinks(log);
+ 	mp = log->l_mp;
+-	buf_flags = XFS_BUF_LOCK;
++	buf_flags = XBF_LOCK;
+ 	if (!(flags & XFS_BLI_INODE_BUF))
+-		buf_flags |= XFS_BUF_MAPPED;
++		buf_flags |= XBF_MAPPED;
+ 
+ 	bp = xfs_buf_read(mp->m_ddev_targp, blkno, len, buf_flags);
+ 	if (XFS_BUF_ISERROR(bp)) {
+@@ -2288,7 +2288,7 @@ xlog_recover_do_inode_trans(
+ 	}
+ 
+ 	bp = xfs_buf_read(mp->m_ddev_targp, in_f->ilf_blkno, in_f->ilf_len,
+-			  XFS_BUF_LOCK);
++			  XBF_LOCK);
+ 	if (XFS_BUF_ISERROR(bp)) {
+ 		xfs_ioerror_alert("xlog_recover_do..(read#2)", mp,
+ 				  bp, in_f->ilf_blkno);
+@@ -3146,7 +3146,7 @@ xlog_recover_process_one_iunlink(
+ 	/*
+ 	 * Get the on disk inode to find the next inode in the bucket.
+ 	 */
+-	error = xfs_itobp(mp, NULL, ip, &dip, &ibp, XFS_BUF_LOCK);
++	error = xfs_itobp(mp, NULL, ip, &dip, &ibp, XBF_LOCK);
+ 	if (error)
+ 		goto fail_iput;
  
 Index: xfs/fs/xfs/xfs_mount.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_mount.c	2010-01-19 10:49:11.275004245 +0100
-+++ xfs/fs/xfs/xfs_mount.c	2010-01-19 10:49:33.515003771 +0100
-@@ -1455,7 +1455,7 @@ xfs_unmountfs(
- 	 * push out the iclog we will never get that unlocked. hence we
- 	 * need to force the log first.
+--- xfs.orig/fs/xfs/xfs_mount.c	2010-01-17 11:13:28.998011086 +0100
++++ xfs/fs/xfs/xfs_mount.c	2010-01-17 11:14:37.003004344 +0100
+@@ -665,7 +665,7 @@ xfs_readsb(xfs_mount_t *mp, int flags)
+ 	 * access to the superblock.
  	 */
--	xfs_log_force(mp, (xfs_lsn_t)0, XFS_LOG_FORCE | XFS_LOG_SYNC);
-+	xfs_log_force(mp, XFS_LOG_SYNC);
- 	xfs_reclaim_inodes(mp, XFS_IFLUSH_ASYNC);
+ 	sector_size = xfs_getsize_buftarg(mp->m_ddev_targp);
+-	extra_flags = XFS_BUF_LOCK | XFS_BUF_MANAGE | XFS_BUF_MAPPED;
++	extra_flags = XBF_LOCK | XBF_FS_MANAGED | XBF_MAPPED;
  
- 	xfs_qm_unmount(mp);
-@@ -1465,7 +1465,7 @@ xfs_unmountfs(
- 	 * that nothing is pinned.  This is important because bflush()
- 	 * will skip pinned buffers.
- 	 */
--	xfs_log_force(mp, (xfs_lsn_t)0, XFS_LOG_FORCE | XFS_LOG_SYNC);
-+	xfs_log_force(mp, XFS_LOG_SYNC);
+ 	bp = xfs_buf_read(mp->m_ddev_targp, XFS_SB_DADDR, BTOBB(sector_size),
+ 			  extra_flags);
+@@ -1970,7 +1970,7 @@ xfs_getsb(
  
- 	xfs_binval(mp->m_ddev_targp);
- 	if (mp->m_rtdev_targp) {
-Index: xfs/fs/xfs/xfs_trans.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_trans.c	2010-01-19 10:49:18.101004269 +0100
-+++ xfs/fs/xfs/xfs_trans.c	2010-01-19 10:49:33.515003771 +0100
-@@ -981,9 +981,8 @@ shut_us_down:
- 	 */
- 	if (sync) {
- 		if (!error) {
--			error = _xfs_log_force(mp, commit_lsn,
--				      XFS_LOG_FORCE | XFS_LOG_SYNC,
--				      log_flushed);
-+			error = _xfs_log_force_lsn(mp, commit_lsn,
-+				      XFS_LOG_SYNC, log_flushed);
+ 	ASSERT(mp->m_sb_bp != NULL);
+ 	bp = mp->m_sb_bp;
+-	if (flags & XFS_BUF_TRYLOCK) {
++	if (flags & XBF_TRYLOCK) {
+ 		if (!XFS_BUF_CPSEMA(bp)) {
+ 			return NULL;
  		}
- 		XFS_STATS_INC(xs_trans_sync);
- 	} else {
-Index: xfs/fs/xfs/xfs_trans_ail.c
+Index: xfs/fs/xfs/xfs_trans_buf.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_trans_ail.c	2010-01-17 23:33:04.576253340 +0100
-+++ xfs/fs/xfs/xfs_trans_ail.c	2010-01-19 10:49:33.516004248 +0100
-@@ -371,7 +371,7 @@ xfsaild_push(
- 		 * move forward in the AIL.
- 		 */
- 		XFS_STATS_INC(xs_push_ail_flush);
--		xfs_log_force(mp, (xfs_lsn_t)0, XFS_LOG_FORCE);
-+		xfs_log_force(mp, 0);
+--- xfs.orig/fs/xfs/xfs_trans_buf.c	2010-01-17 11:13:29.004006961 +0100
++++ xfs/fs/xfs/xfs_trans_buf.c	2010-01-17 11:14:37.004004332 +0100
+@@ -75,13 +75,14 @@ xfs_trans_get_buf(xfs_trans_t	*tp,
+ 	xfs_buf_log_item_t	*bip;
+ 
+ 	if (flags == 0)
+-		flags = XFS_BUF_LOCK | XFS_BUF_MAPPED;
++		flags = XBF_LOCK | XBF_MAPPED;
+ 
+ 	/*
+ 	 * Default to a normal get_buf() call if the tp is NULL.
+ 	 */
+ 	if (tp == NULL)
+-		return xfs_buf_get(target_dev, blkno, len, flags | BUF_BUSY);
++		return xfs_buf_get(target_dev, blkno, len,
++				   flags | XBF_DONT_BLOCK);
+ 
+ 	/*
+ 	 * If we find the buffer in the cache with this transaction
+@@ -117,14 +118,14 @@ xfs_trans_get_buf(xfs_trans_t	*tp,
  	}
  
- 	if (!count) {
+ 	/*
+-	 * We always specify the BUF_BUSY flag within a transaction so
+-	 * that get_buf does not try to push out a delayed write buffer
++	 * We always specify the XBF_DONT_BLOCK flag within a transaction
++	 * so that get_buf does not try to push out a delayed write buffer
+ 	 * which might cause another transaction to take place (if the
+ 	 * buffer was delayed alloc).  Such recursive transactions can
+ 	 * easily deadlock with our current transaction as well as cause
+ 	 * us to run out of stack space.
+ 	 */
+-	bp = xfs_buf_get(target_dev, blkno, len, flags | BUF_BUSY);
++	bp = xfs_buf_get(target_dev, blkno, len, flags | XBF_DONT_BLOCK);
+ 	if (bp == NULL) {
+ 		return NULL;
+ 	}
+@@ -290,15 +291,15 @@ xfs_trans_read_buf(
+ 	int			error;
+ 
+ 	if (flags == 0)
+-		flags = XFS_BUF_LOCK | XFS_BUF_MAPPED;
++		flags = XBF_LOCK | XBF_MAPPED;
+ 
+ 	/*
+ 	 * Default to a normal get_buf() call if the tp is NULL.
+ 	 */
+ 	if (tp == NULL) {
+-		bp = xfs_buf_read(target, blkno, len, flags | BUF_BUSY);
++		bp = xfs_buf_read(target, blkno, len, flags | XBF_DONT_BLOCK);
+ 		if (!bp)
+-			return (flags & XFS_BUF_TRYLOCK) ?
++			return (flags & XBF_TRYLOCK) ?
+ 					EAGAIN : XFS_ERROR(ENOMEM);
+ 
+ 		if (XFS_BUF_GETERROR(bp) != 0) {
+@@ -385,14 +386,14 @@ xfs_trans_read_buf(
+ 	}
+ 
+ 	/*
+-	 * We always specify the BUF_BUSY flag within a transaction so
+-	 * that get_buf does not try to push out a delayed write buffer
++	 * We always specify the XBF_DONT_BLOCK flag within a transaction
++	 * so that get_buf does not try to push out a delayed write buffer
+ 	 * which might cause another transaction to take place (if the
+ 	 * buffer was delayed alloc).  Such recursive transactions can
+ 	 * easily deadlock with our current transaction as well as cause
+ 	 * us to run out of stack space.
+ 	 */
+-	bp = xfs_buf_read(target, blkno, len, flags | BUF_BUSY);
++	bp = xfs_buf_read(target, blkno, len, flags | XBF_DONT_BLOCK);
+ 	if (bp == NULL) {
+ 		*bpp = NULL;
+ 		return 0;
+@@ -472,8 +473,8 @@ shutdown_abort:
+ 	if (XFS_BUF_ISSTALE(bp) && XFS_BUF_ISDELAYWRITE(bp))
+ 		cmn_err(CE_NOTE, "about to pop assert, bp == 0x%p", bp);
+ #endif
+-	ASSERT((XFS_BUF_BFLAGS(bp) & (XFS_B_STALE|XFS_B_DELWRI)) !=
+-						(XFS_B_STALE|XFS_B_DELWRI));
++	ASSERT((XFS_BUF_BFLAGS(bp) & (XBF_STALE|XBF_DELWRI)) !=
++				     (XBF_STALE|XBF_DELWRI));
+ 
+ 	trace_xfs_trans_read_buf_shut(bp, _RET_IP_);
+ 	xfs_buf_relse(bp);
 Index: xfs/fs/xfs/xfs_vnodeops.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_vnodeops.c	2010-01-19 10:49:11.278003231 +0100
-+++ xfs/fs/xfs/xfs_vnodeops.c	2010-01-19 10:49:33.518003874 +0100
-@@ -631,9 +631,8 @@ xfs_fsync(
- 		xfs_iunlock(ip, XFS_ILOCK_SHARED);
+--- xfs.orig/fs/xfs/xfs_vnodeops.c	2010-01-17 11:13:29.013028221 +0100
++++ xfs/fs/xfs/xfs_vnodeops.c	2010-01-17 11:14:37.006004587 +0100
+@@ -256,7 +256,7 @@ xfs_setattr(
+ 		    iattr->ia_size > ip->i_d.di_size) {
+ 			code = xfs_flush_pages(ip,
+ 					ip->i_d.di_size, iattr->ia_size,
+-					XFS_B_ASYNC, FI_NONE);
++					XBF_ASYNC, FI_NONE);
+ 		}
  
- 		if (xfs_ipincount(ip)) {
--			error = _xfs_log_force(ip->i_mount, (xfs_lsn_t)0,
--				      XFS_LOG_FORCE | XFS_LOG_SYNC,
--				      &log_flushed);
-+			error = _xfs_log_force(ip->i_mount, XFS_LOG_SYNC,
-+					       &log_flushed);
- 		} else {
- 			/*
- 			 * If the inode is not pinned and nothing has changed
+ 		/* wait for all I/O to complete */
+@@ -1096,7 +1096,7 @@ xfs_release(
+ 		 */
+ 		truncated = xfs_iflags_test_and_clear(ip, XFS_ITRUNCATED);
+ 		if (truncated && VN_DIRTY(VFS_I(ip)) && ip->i_delayed_blks > 0)
+-			xfs_flush_pages(ip, 0, -1, XFS_B_ASYNC, FI_NONE);
++			xfs_flush_pages(ip, 0, -1, XBF_ASYNC, FI_NONE);
+ 	}
+ 
+ 	if (ip->i_d.di_nlink != 0) {
+Index: xfs/fs/xfs/linux-2.6/xfs_buf.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_buf.c	2010-01-17 11:13:28.917253952 +0100
++++ xfs/fs/xfs/linux-2.6/xfs_buf.c	2010-01-17 11:14:37.008004213 +0100
+@@ -1169,7 +1169,7 @@ xfs_bioerror_relse(
+ 	XFS_BUF_STALE(bp);
+ 	XFS_BUF_CLR_IODONE_FUNC(bp);
+ 	XFS_BUF_CLR_BDSTRAT_FUNC(bp);
+-	if (!(fl & XFS_B_ASYNC)) {
++	if (!(fl & XBF_ASYNC)) {
+ 		/*
+ 		 * Mark b_error and B_ERROR _both_.
+ 		 * Lot's of chunkcache code assumes that.
 
 _______________________________________________
 xfs mailing list
