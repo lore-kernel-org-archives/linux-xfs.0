@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0J9O8rD180451 for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 03:24:08 -0600
+	o0J9FbXA179989 for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 03:15:37 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2D5C51C5DDDE
-	for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 01:25:08 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CE9E417362A
+	for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 01:16:37 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id nTJqOrK1R900gJu2 for
-	<xfs@oss.sgi.com>; Tue, 19 Jan 2010 01:25:08 -0800 (PST)
-Date: Tue, 19 Jan 2010 04:25:07 -0500
+	by cuda.sgi.com with ESMTP id 2S0EEQE0iRLqq82Y for
+	<xfs@oss.sgi.com>; Tue, 19 Jan 2010 01:16:37 -0800 (PST)
+Date: Tue, 19 Jan 2010 04:16:37 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/8] xfs: convert DM ops to use unsigned char names
-Message-ID: <20100119092507.GB7168@infradead.org>
-References: <1263861026-13448-1-git-send-email-david@fromorbit.com>
-	<1263861026-13448-3-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 1/2] xfstests: Clean up build output
+Message-ID: <20100119091637.GC29269@infradead.org>
+References: <1263891574-30762-1-git-send-email-david@fromorbit.com>
+	<1263891574-30762-2-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1263861026-13448-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1263891574-30762-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,18 +32,10 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Jan 19, 2010 at 11:30:20AM +1100, Dave Chinner wrote:
-> dmops uses a signed char for it's namespace event. To be consistent
-> with the rest of the code, convert them to unsigned char for the
-> namespace string.
-
 Looks good,
 
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-possibly we should just get rid of the dm hooks now that they've been
-dead for years..
 
 _______________________________________________
 xfs mailing list
