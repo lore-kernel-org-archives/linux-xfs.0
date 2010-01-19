@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0J9I8Ki180134 for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 03:18:08 -0600
+	o0J9QnjG180625 for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 03:26:50 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1F1AE1C5E0D0
-	for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 01:19:08 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 132F91735C8
+	for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 01:27:49 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id p4WAdmFqLzIiCL0z for
-	<xfs@oss.sgi.com>; Tue, 19 Jan 2010 01:19:08 -0800 (PST)
-Date: Tue, 19 Jan 2010 04:19:07 -0500
+	by cuda.sgi.com with ESMTP id bMGGQH0srfviRnqA for
+	<xfs@oss.sgi.com>; Tue, 19 Jan 2010 01:27:49 -0800 (PST)
+Date: Tue, 19 Jan 2010 04:27:49 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/3] xfsqa: xfs_check can see stale cached blocks
-Message-ID: <20100119091907.GG29269@infradead.org>
-References: <1263891792-30952-1-git-send-email-david@fromorbit.com>
-	<1263891792-30952-4-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 7/8] xfs: clean up sign warnings in dir2 code
+Message-ID: <20100119092749.GF7168@infradead.org>
+References: <1263861026-13448-1-git-send-email-david@fromorbit.com>
+	<1263861026-13448-8-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1263891792-30952-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1263861026-13448-8-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,22 +32,14 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Jan 19, 2010 at 08:03:12PM +1100, Dave Chinner wrote:
-> Test 017 is consistently failing now because the xfs_check uses
-> buffered IO to read the block device and 017 runs xfs_check ona
-> remount,ro filesystem. Hence the block device cache is never
-> invalidated (the unmount path does this) and so xfs_check can see
-> stale blocks from previous invocations instead of what is really on
-> disk at the time it is run.
-> 
-> Manually trash the page cache before running xfs_check to ensure
-> that the blockdev cache is clean and we don't get false errors
-> from stale blocks.
+On Tue, Jan 19, 2010 at 11:30:25AM +1100, Dave Chinner wrote:
+> We are now consistently using unsigned char strings for names
+> so fix up the remaining warnings in the dir2 code to complete
+> the cleanup.
 
-I don't think this is correct.  We need to provide this synchronization
-from kernel land.  IIRC Al even has a patch towards this in his tree,
-can't point you to it to try it because his tree on kernel.org seems
-messed up right now.
+The cast in the initializers looks a bit ugly, but I don't know a better
+way either.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
