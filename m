@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0JBAxxo187443 for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 05:10:59 -0600
+	o0JBEDE1187614 for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 05:14:13 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 72A1E173E8F
-	for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 03:11:57 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	D5JCkrqCKbrkTAf7 for <xfs@oss.sgi.com>;
-	Tue, 19 Jan 2010 03:11:57 -0800 (PST)
-Date: Tue, 19 Jan 2010 22:11:55 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2ECF4151745B
+	for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 03:15:12 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
+	[150.101.137.102]) by cuda.sgi.com with ESMTP id
+	GBg5kt4v2dtTd5dW for <xfs@oss.sgi.com>;
+	Tue, 19 Jan 2010 03:15:12 -0800 (PST)
+Date: Tue, 19 Jan 2010 22:15:09 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfs: rearrange xfs_mod_sb() to avoid array
-	subscript warning
-Message-ID: <20100119111155.GB14035@discord.disaster>
-References: <1263861711-13900-1-git-send-email-david@fromorbit.com>
-	<1263861711-13900-3-git-send-email-david@fromorbit.com>
-	<20100119092320.GD1784@infradead.org>
+Subject: Re: [PATCH 8/8] xfs: make compile warn about char sign mismatches
+	again
+Message-ID: <20100119111509.GC14035@discord.disaster>
+References: <1263861026-13448-1-git-send-email-david@fromorbit.com>
+	<1263861026-13448-9-git-send-email-david@fromorbit.com>
+	<20100119092939.GG7168@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100119092320.GD1784@infradead.org>
+In-Reply-To: <20100119092939.GG7168@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,17 +35,45 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Tue, Jan 19, 2010 at 04:23:20AM -0500, Christoph Hellwig wrote:
-> On Tue, Jan 19, 2010 at 11:41:51AM +1100, Dave Chinner wrote:
-> > gcc warns of an array subscript out of bounds in xfs_mod_sb().
-> > The code is written in such a way that if the array subscript is
-> > out of bounds, then it will assert fail. Rearrange the code to
-> > avoid the bounds check warning.
+On Tue, Jan 19, 2010 at 04:29:39AM -0500, Christoph Hellwig wrote:
+> On Tue, Jan 19, 2010 at 11:30:26AM +1100, Dave Chinner wrote:
+> > The -fno-unsigned-char directive has no effect anymore as the
+> > XFs build is clean. However, the kernel build hides pointer sign
+> > differences so turn that back on so that we can clean up all the
+> > mismatches prior to a userspace code resync.
 > 
-> Does it avoid the warning also for non-debug builds where the assert
-> goes away?  Anyway, the reordering is correct, so:
+> Not so happy about turning the warning on so we have local compiler
+> warning differences from the rest of the kernel again, but it's not
+> that bad, so
+> 
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> > index 6f26875..9f7c001 100644
+> > --- a/fs/xfs/xfs_vnodeops.c
+> > +++ b/fs/xfs/xfs_vnodeops.c
+> > @@ -2199,7 +2199,8 @@ xfs_symlink(
+> >  	if (DM_EVENT_ENABLED(dp, DM_EVENT_SYMLINK)) {
+> >  		error = XFS_SEND_NAMESP(mp, DM_EVENT_SYMLINK, dp,
+> >  					DM_RIGHT_NULL, NULL, DM_RIGHT_NULL,
+> > -					link_name->name, target_path, 0, 0, 0);
+> > +					link_name->name,
+> > +					(unsigned char *)target_path, 0, 0, 0);
+> >  		if (error)
+> >  			return error;
+> >  	}
+> > @@ -2395,7 +2396,8 @@ std_return:
+> >  					dp, DM_RIGHT_NULL,
+> >  					error ? NULL : ip,
+> >  					DM_RIGHT_NULL, link_name->name,
+> > -					target_path, 0, error, 0);
+> > +					(unsigned char *)target_path,
+> > +					0, error, 0);
+> 
+> These changes are nowhere mentioned in the changelog.  And they probably
+> belong into the patch changing the dmapi events to take unsigned chars.
 
-Yes.
+I though I fixed that. Oh well, I'll fix it up again....
 
 Cheers,
 
