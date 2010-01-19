@@ -1,28 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0J0Tbjw141344 for <xfs@oss.sgi.com>; Mon, 18 Jan 2010 18:29:37 -0600
+	o0J13lec143936 for <xfs@oss.sgi.com>; Mon, 18 Jan 2010 19:03:47 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F1C0611F8B45
-	for <xfs@oss.sgi.com>; Mon, 18 Jan 2010 16:30:35 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	55Ww7r7EsoXXIF8w for <xfs@oss.sgi.com>;
-	Mon, 18 Jan 2010 16:30:35 -0800 (PST)
-Received: from discord (unverified [121.44.156.64])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	11561538-1927428
-	for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 11:00:34 +1030 (CDT)
-Received: from [192.168.1.6] (helo=disturbed) by discord with esmtp (Exim 4.69)
-	(envelope-from <dave@fromorbit.com>) id 1NX1zM-0003DJ-AI
-	for xfs@oss.sgi.com; Tue, 19 Jan 2010 11:30:32 +1100
-Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1NX1zL-0003Vw-KY
-	for xfs@oss.sgi.com; Tue, 19 Jan 2010 11:30:31 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7F6A211F8D1E
+	for <xfs@oss.sgi.com>; Mon, 18 Jan 2010 17:04:46 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	mk8S1cyHOYwNDQry for <xfs@oss.sgi.com>;
+	Mon, 18 Jan 2010 17:04:46 -0800 (PST)
+Date: Tue, 19 Jan 2010 12:04:43 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/8] xfs: clean up pointer sign differences
-Date: Tue, 19 Jan 2010 11:30:18 +1100
-Message-Id: <1263861026-13448-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] mkfs: don't warn about topology when mkfsing a file
+Message-ID: <20100119010443.GK7264@discord.disaster>
+References: <4B54B4D1.7020500@sandeen.net>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4B54B4D1.7020500@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,34 +25,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-This patch series cleans up all the pointer sign warnings when they
-are turned back on in the XFS build. These are the kernel
-equivalents of the libxfs changes I posted a last week. On
-Christoph's suggestion, I've made the changes for the kernel code so
-that we can fix the libxfs warnings simply by resyncing the userspce
-code with the kernel code.
+On Mon, Jan 18, 2010 at 01:21:53PM -0600, Eric Sandeen wrote:
+> Some tests were failing for me like:
+> 
+>  QA output created by 206
+>  === truncate file ===
+>  === mkfs.xfs ===
+> +warning: unable to probe device toplology for device /mnt/test/fsfile.21615
+> ...
+> 
+> I thought about filtering the tests, but ...
+> 
+> It seems that we shouldn't even be trying to get topology for a
+> plain file, should we?  And then we won't warn about failure.
+> 
+> 
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-Hence this makes all of the directory and attribute names and values
-unsigned chars and uses that consistently within XFS. The on disk
-formats are all unsigned, but the VFS is a mix of signed and
-unsigned interfaces. 
+Sound pretty sane to me.
 
-The series converts all the names and values at the highest
-level to unsigned so the rest of the code doesn't need to juggle
-different signedness. It cleans up all the places where we have
-cast pointers, makes all functions take unsigned strings and so on.
+Reviewed-by: Dave Chinner <david@fromorbit.com>
 
-Finally, it turns on the pointer sign warnings again (which are
-actually turned off globally in the build) so that we don't
-reintroduce new problems due to a lack of warnings being produced by
-the compiler.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
