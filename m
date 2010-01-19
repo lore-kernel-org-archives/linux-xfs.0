@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0JBEDE1187614 for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 05:14:13 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2ECF4151745B
-	for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 03:15:12 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	GBg5kt4v2dtTd5dW for <xfs@oss.sgi.com>;
-	Tue, 19 Jan 2010 03:15:12 -0800 (PST)
-Date: Tue, 19 Jan 2010 22:15:09 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 8/8] xfs: make compile warn about char sign mismatches
-	again
-Message-ID: <20100119111509.GC14035@discord.disaster>
-References: <1263861026-13448-1-git-send-email-david@fromorbit.com>
-	<1263861026-13448-9-git-send-email-david@fromorbit.com>
-	<20100119092939.GG7168@infradead.org>
+	o0JCE5pe190847 for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 06:14:06 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0F1FB1C5EB1D
+	for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 04:15:05 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id 5BNdNOB17EYV0eWB for
+	<xfs@oss.sgi.com>; Tue, 19 Jan 2010 04:15:05 -0800 (PST)
+Date: Tue, 19 Jan 2010 07:15:05 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [patch 2/2] xfs: use scalable vmap API
+Message-ID: <20100119121505.GA9428@infradead.org>
+References: <20081021082542.GA6974@wotan.suse.de>
+	<20081021082735.GB6974@wotan.suse.de>
+	<20081021120932.GB13348@infradead.org>
+	<20081022093018.GD4359@wotan.suse.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100119092939.GG7168@infradead.org>
+In-Reply-To: <20081022093018.GD4359@wotan.suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,55 +31,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Nick Piggin <npiggin@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, xfs@oss.sgi.com
 
-On Tue, Jan 19, 2010 at 04:29:39AM -0500, Christoph Hellwig wrote:
-> On Tue, Jan 19, 2010 at 11:30:26AM +1100, Dave Chinner wrote:
-> > The -fno-unsigned-char directive has no effect anymore as the
-> > XFs build is clean. However, the kernel build hides pointer sign
-> > differences so turn that back on so that we can clean up all the
-> > mismatches prior to a userspace code resync.
-> 
-> Not so happy about turning the warning on so we have local compiler
-> warning differences from the rest of the kernel again, but it's not
-> that bad, so
-> 
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> > index 6f26875..9f7c001 100644
-> > --- a/fs/xfs/xfs_vnodeops.c
-> > +++ b/fs/xfs/xfs_vnodeops.c
-> > @@ -2199,7 +2199,8 @@ xfs_symlink(
-> >  	if (DM_EVENT_ENABLED(dp, DM_EVENT_SYMLINK)) {
-> >  		error = XFS_SEND_NAMESP(mp, DM_EVENT_SYMLINK, dp,
-> >  					DM_RIGHT_NULL, NULL, DM_RIGHT_NULL,
-> > -					link_name->name, target_path, 0, 0, 0);
-> > +					link_name->name,
-> > +					(unsigned char *)target_path, 0, 0, 0);
-> >  		if (error)
-> >  			return error;
-> >  	}
-> > @@ -2395,7 +2396,8 @@ std_return:
-> >  					dp, DM_RIGHT_NULL,
-> >  					error ? NULL : ip,
-> >  					DM_RIGHT_NULL, link_name->name,
-> > -					target_path, 0, error, 0);
-> > +					(unsigned char *)target_path,
-> > +					0, error, 0);
-> 
-> These changes are nowhere mentioned in the changelog.  And they probably
-> belong into the patch changing the dmapi events to take unsigned chars.
+Hi Nick,
 
-I though I fixed that. Oh well, I'll fix it up again....
+I've looked into retesting and re-enabling the swithc to your
+scalabale vmap API (original commit 95f8e302c04c0b0c6de35ab399a5551605eeb006).
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+The good thing is that I can't reproduce the original regressions in
+xfstests I've seen.  The bad news is that starting from the second
+consequitive xfstests run we're not able to vmalloc the log buffers
+anymore.  It seems the use of this API introduces some leak of vmalloc
+space.  Any idea how to debug this further?
 
 _______________________________________________
 xfs mailing list
