@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0J9VlfW180897 for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 03:31:48 -0600
+	o0J9OYrM180487 for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 03:24:34 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 11C68173669
-	for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 01:32:47 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BD6891C5DF21
+	for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 01:25:34 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id zESIiHBo8BAXG2Pz for
-	<xfs@oss.sgi.com>; Tue, 19 Jan 2010 01:32:47 -0800 (PST)
-Date: Tue, 19 Jan 2010 04:32:47 -0500
+	by cuda.sgi.com with ESMTP id rDzv65e5oPrfQz9w for
+	<xfs@oss.sgi.com>; Tue, 19 Jan 2010 01:25:34 -0800 (PST)
+Date: Tue, 19 Jan 2010 04:25:34 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 6/8] xfs: convert attr to use unsigned names
-Message-ID: <20100119093247.GH7168@infradead.org>
+Subject: Re: [PATCH 3/8] xfs: convert dirnameops to unsigned char names
+Message-ID: <20100119092534.GC7168@infradead.org>
 References: <1263861026-13448-1-git-send-email-david@fromorbit.com>
-	<1263861026-13448-7-git-send-email-david@fromorbit.com>
+	<1263861026-13448-4-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1263861026-13448-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1263861026-13448-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,33 +32,13 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Jan 19, 2010 at 11:30:24AM +1100, Dave Chinner wrote:
-> To be consistent with the directory code, the attr code should use
-> unsigned names. Convert the names from the vfs at the highest level
-> to unsigned, and ??nsure they are consistenly used as unsigned down
-> to disk.
+On Tue, Jan 19, 2010 at 11:30:21AM +1100, Dave Chinner wrote:
+> To be consistent across the codebase, convert the dirnameops to pass
+> the directory names by unsigned char strings.
 > 
 > Signed-off-by: Dave Chinner <david@fromorbit.com>
-> ---
->  fs/xfs/linux-2.6/xfs_acl.c     |   11 ++++++-----
->  fs/xfs/linux-2.6/xfs_ioctl.c   |   18 +++++++++---------
->  fs/xfs/linux-2.6/xfs_ioctl.h   |   12 ++++++------
->  fs/xfs/linux-2.6/xfs_ioctl32.c |    4 ++--
->  fs/xfs/linux-2.6/xfs_iops.c    |    4 ++--
->  fs/xfs/linux-2.6/xfs_xattr.c   |   27 +++++++++++++++++++--------
->  fs/xfs/xfs_acl.h               |    4 ++--
->  fs/xfs/xfs_attr.c              |   38 +++++++++++++++++++++++---------------
->  fs/xfs/xfs_attr.h              |    2 +-
->  fs/xfs/xfs_attr_leaf.c         |   28 ++++++++++++++--------------
->  fs/xfs/xfs_attr_sf.h           |    2 +-
->  fs/xfs/xfs_vnodeops.h          |   10 +++++-----
->  12 files changed, 90 insertions(+), 70 deletions(-)
-> 
-> diff --git a/fs/xfs/linux-2.6/xfs_acl.c b/fs/xfs/linux-2.6/xfs_acl.c
 
-It's a bit unfortunate that the highlevel xattr code gets char froms the
-VFS, but better convert them at the highest level and keep the lower
-ones clean, so:
+Looks good,
 
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
