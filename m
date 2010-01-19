@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0J9KXfp180231 for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 03:20:34 -0600
+	o0J9VlfW180897 for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 03:31:48 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D3A46F1EC96
-	for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 01:21:33 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 11C68173669
+	for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 01:32:47 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id Ggjf2kZyAXLTE3Xy for
-	<xfs@oss.sgi.com>; Tue, 19 Jan 2010 01:21:33 -0800 (PST)
-Date: Tue, 19 Jan 2010 04:21:33 -0500
+	by cuda.sgi.com with ESMTP id zESIiHBo8BAXG2Pz for
+	<xfs@oss.sgi.com>; Tue, 19 Jan 2010 01:32:47 -0800 (PST)
+Date: Tue, 19 Jan 2010 04:32:47 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/7] xfsprogs: fix some trivial warnings in xfs_db
-Message-ID: <20100119092133.GB1784@infradead.org>
-References: <1263861413-13729-1-git-send-email-david@fromorbit.com>
-	<1263861413-13729-4-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 6/8] xfs: convert attr to use unsigned names
+Message-ID: <20100119093247.GH7168@infradead.org>
+References: <1263861026-13448-1-git-send-email-david@fromorbit.com>
+	<1263861026-13448-7-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1263861413-13729-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1263861026-13448-7-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,14 +32,36 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Jan 19, 2010 at 11:36:49AM +1100, Dave Chinner wrote:
-> -		xname.name = (char *)dep->name;
-> +		xname.name = (uchar_t *)dep->name;
+On Tue, Jan 19, 2010 at 11:30:24AM +1100, Dave Chinner wrote:
+> To be consistent with the directory code, the attr code should use
+> unsigned names. Convert the names from the vfs at the highest level
+> to unsigned, and ??nsure they are consistenly used as unsigned down
+> to disk.
+> 
+> Signed-off-by: Dave Chinner <david@fromorbit.com>
+> ---
+>  fs/xfs/linux-2.6/xfs_acl.c     |   11 ++++++-----
+>  fs/xfs/linux-2.6/xfs_ioctl.c   |   18 +++++++++---------
+>  fs/xfs/linux-2.6/xfs_ioctl.h   |   12 ++++++------
+>  fs/xfs/linux-2.6/xfs_ioctl32.c |    4 ++--
+>  fs/xfs/linux-2.6/xfs_iops.c    |    4 ++--
+>  fs/xfs/linux-2.6/xfs_xattr.c   |   27 +++++++++++++++++++--------
+>  fs/xfs/xfs_acl.h               |    4 ++--
+>  fs/xfs/xfs_attr.c              |   38 +++++++++++++++++++++++---------------
+>  fs/xfs/xfs_attr.h              |    2 +-
+>  fs/xfs/xfs_attr_leaf.c         |   28 ++++++++++++++--------------
+>  fs/xfs/xfs_attr_sf.h           |    2 +-
+>  fs/xfs/xfs_vnodeops.h          |   10 +++++-----
+>  12 files changed, 90 insertions(+), 70 deletions(-)
+> 
+> diff --git a/fs/xfs/linux-2.6/xfs_acl.c b/fs/xfs/linux-2.6/xfs_acl.c
 
-Aren't these both unsigned after the latest version of the signedness
-patches are in?
+It's a bit unfortunate that the highlevel xattr code gets char froms the
+VFS, but better convert them at the highest level and keep the lower
+ones clean, so:
 
-Maybe just put the other one in for now.
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
