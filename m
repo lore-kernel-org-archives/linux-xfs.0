@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0JCE5pe190847 for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 06:14:06 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0F1FB1C5EB1D
-	for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 04:15:05 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 5BNdNOB17EYV0eWB for
-	<xfs@oss.sgi.com>; Tue, 19 Jan 2010 04:15:05 -0800 (PST)
-Date: Tue, 19 Jan 2010 07:15:05 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [patch 2/2] xfs: use scalable vmap API
-Message-ID: <20100119121505.GA9428@infradead.org>
-References: <20081021082542.GA6974@wotan.suse.de>
-	<20081021082735.GB6974@wotan.suse.de>
-	<20081021120932.GB13348@infradead.org>
-	<20081022093018.GD4359@wotan.suse.de>
+	o0JNOj5u224762 for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 17:24:46 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 10399176B80
+	for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 15:25:45 -0800 (PST)
+Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
+	by cuda.sgi.com with ESMTP id bnh06vAF3AMkkfFQ for
+	<xfs@oss.sgi.com>; Tue, 19 Jan 2010 15:25:45 -0800 (PST)
+Message-ID: <4B563F78.9060203@sandeen.net>
+Date: Tue, 19 Jan 2010 17:25:44 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20081022093018.GD4359@wotan.suse.de>
+Subject: Re: [PATCH] xfstests: Convert all tests to use /bin/bash
+References: <1263891633-30868-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1263891633-30868-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,19 +27,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Nick Piggin <npiggin@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Hi Nick,
+Dave Chinner wrote:
+> While most tests use /bin/sh, they are dependent on /bin/sh being a
+> bash shell.  Convert all the tests to execute via /bin/bash as it is
+> much, much simpler than trying to debug and remove all the bashisms
+> throughout the test code.
+> 
+> Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-I've looked into retesting and re-enabling the swithc to your
-scalabale vmap API (original commit 95f8e302c04c0b0c6de35ab399a5551605eeb006).
+Seems fine,
 
-The good thing is that I can't reproduce the original regressions in
-xfstests I've seen.  The bad news is that starting from the second
-consequitive xfstests run we're not able to vmalloc the log buffers
-anymore.  It seems the use of this API introduces some leak of vmalloc
-space.  Any idea how to debug this further?
+Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
 
 _______________________________________________
 xfs mailing list
