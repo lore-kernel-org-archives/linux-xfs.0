@@ -1,30 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0J0a6Bv142247 for <xfs@oss.sgi.com>; Mon, 18 Jan 2010 18:36:07 -0600
+	o0J0WG6S141602 for <xfs@oss.sgi.com>; Mon, 18 Jan 2010 18:32:17 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B7C21F1C57D
-	for <xfs@oss.sgi.com>; Mon, 18 Jan 2010 16:37:04 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	Zd2mzlhdS6toe3Dl for <xfs@oss.sgi.com>;
-	Mon, 18 Jan 2010 16:37:04 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EC1E411F8B89
+	for <xfs@oss.sgi.com>; Mon, 18 Jan 2010 16:33:14 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	A1vDLLjSlK3vpXEA for <xfs@oss.sgi.com>;
+	Mon, 18 Jan 2010 16:33:14 -0800 (PST)
 Received: from discord (unverified [121.44.156.64])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	11561590-1927428
-	for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 11:07:03 +1030 (CDT)
+	11542991-1927428
+	for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 11:03:13 +1030 (CDT)
 Received: from [192.168.1.6] (helo=disturbed) by discord with esmtp (Exim 4.69)
-	(envelope-from <dave@fromorbit.com>) id 1NX25e-0003El-9J
-	for xfs@oss.sgi.com; Tue, 19 Jan 2010 11:37:02 +1100
+	(envelope-from <dave@fromorbit.com>) id 1NX21v-0003E8-Ol
+	for xfs@oss.sgi.com; Tue, 19 Jan 2010 11:33:11 +1100
 Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1NX25d-0003ad-Kd
-	for xfs@oss.sgi.com; Tue, 19 Jan 2010 11:37:01 +1100
+	(envelope-from <dave@disturbed.disaster>) id 1NX21v-0003Xr-4n
+	for xfs@oss.sgi.com; Tue, 19 Jan 2010 11:33:11 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 7/7] xfsprogs: fix build warnings in repair V2
-Date: Tue, 19 Jan 2010 11:36:53 +1100
-Message-Id: <1263861413-13729-8-git-send-email-david@fromorbit.com>
-In-Reply-To: <1263861413-13729-1-git-send-email-david@fromorbit.com>
-References: <1263861413-13729-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/2] xfsprogs: Make the compile output cleaner V3
+Date: Tue, 19 Jan 2010 11:33:06 +1100
+Message-Id: <1263861186-13589-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1263861186-13589-1-git-send-email-david@fromorbit.com>
+References: <1263861186-13589-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,94 +40,303 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Rewrite the loop in btree_get_prev() so that the compiler
-can see that it returns if the cur->index is zero so it
-doesn't complain about possible array bound underflows
-when getting the key out of the buffer. Version 2 fixes
-a height overflow in the reworked loop.
+We don't need to see every compiler command line for every file that
+is compiled. This makes it hard to see warnings and errors during
+compile. For progress notification, we really only need to see the
+diretory/file being operated on.
 
-Fix the directory name sign warnings by casting to (uchar_t *)
-appropriately.
+Turn down the verbosity of output by suppressing various make output
+and provide better overall visibility of which directory is being
+operated on, what the operation is and what is being done to the
+files by the build/clean process.
+
+Sample output from a build:
+
+....
+Building libxlog
+    [CC] xfs_log_recover.c
+    [CC] util.c
+    [LD] libxlog.la
+Building libxcmd
+    [CC] command.c
+    [CC] input.c
+    [CC] paths.c
+    [CC] projects.c
+    [CC] help.c
+    [CC] quit.c
+    [LD] libxcmd.la
+....
+
+Sample output from cleaning:
+
+$ make clean
+Cleaning include
+Cleaning libxfs
+Cleaning libxlog
+Cleaning libxcmd
+Cleaning libhandle
+Cleaning libdisk
+Cleaning copy
+Cleaning db
+....
+
+If you want to see a noisy build (i.e. every command), use:
+
+$ make V=1
+
+and that will output all the commands that are now suppressed by
+default.
+
+Portions of this patch were contributed by Eric Sandeen.
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- repair/btree.c  |   12 +++++++-----
- repair/phase6.c |   10 +++++-----
- 2 files changed, 12 insertions(+), 10 deletions(-)
+ Makefile            |   41 ++++++++++++++++++++++++++++-------------
+ doc/Makefile        |    3 ++-
+ include/Makefile    |    3 ++-
+ include/buildmacros |   10 +++++-----
+ include/buildrules  |   30 +++++++++++++++++++++---------
+ mkfs/Makefile       |    3 ++-
+ 6 files changed, 60 insertions(+), 30 deletions(-)
 
-diff --git a/repair/btree.c b/repair/btree.c
-index 3141388..22ab4d9 100644
---- a/repair/btree.c
-+++ b/repair/btree.c
-@@ -194,12 +194,14 @@ btree_get_prev(
- 	}
+diff --git a/Makefile b/Makefile
+index a7615ca..62c4258 100644
+--- a/Makefile
++++ b/Makefile
+@@ -2,6 +2,21 @@
+ # Copyright (c) 2000-2006 Silicon Graphics, Inc.  All Rights Reserved.
+ #
  
- 	/* else need to go up and back down the tree to find the previous */
--
--	while (cur->index == 0) {
--		if (++level == root->height)
--			return NULL;
-+	do {
-+		if (cur->index)
-+			break;
- 		cur++;
--	}
-+	} while (++level < root->height);
++ifeq ("$(origin V)", "command line")
++  BUILD_VERBOSE = $(V)
++endif
++ifndef BUILD_VERBOSE
++  BUILD_VERBOSE = 0
++endif
 +
-+	if (level == root->height)
-+		return NULL;
++ifeq ($(BUILD_VERBOSE),1)
++  Q =
++else
++  Q = @
++endif
++
++MAKEOPTS = --no-print-directory Q=$(Q)
++
+ TOPDIR = .
+ HAVE_BUILDDEFS = $(shell test -f $(TOPDIR)/include/builddefs && echo yes || echo no)
  
- 	/* the key is in the current level */
- 	if (key)
-diff --git a/repair/phase6.c b/repair/phase6.c
-index d056063..884ad62 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -35,7 +35,7 @@ static struct cred		zerocr;
- static struct fsxattr 		zerofsx;
- static xfs_ino_t		orphanage_ino;
+@@ -36,9 +51,9 @@ SUBDIRS = include $(LIB_SUBDIRS) $(TOOL_SUBDIRS)
  
--static struct xfs_name 		xfs_name_dot = {".", 1};
-+static struct xfs_name 		xfs_name_dot = {(uchar_t *)".", 1};
+ default: include/builddefs include/platform_defs.h
+ ifeq ($(HAVE_BUILDDEFS), no)
+-	$(MAKE) -C . $@
++	$(Q)$(MAKE) $(MAKEOPTS) -C . $@
+ else
+-	$(MAKE) $(SUBDIRS)
++	$(Q)$(MAKE) $(MAKEOPTS) $(SUBDIRS)
+ endif
  
- /*
-  * Data structures used to keep track of directories where the ".."
-@@ -145,7 +145,7 @@ dir_hash_add(
+ # tool/lib dependencies
+@@ -80,7 +95,7 @@ include/platform_defs.h: include/builddefs
+ ## Recover from the removal of $@
+ 	@if test -f $@; then :; else \
+ 		rm -f include/builddefs; \
+-		$(MAKE) $(AM_MAKEFLAGS) include/builddefs; \
++		$(MAKE) $(MAKEOPTS) $(AM_MAKEFLAGS) include/builddefs; \
+ 	fi
  
- 	ASSERT(!hashtab->names_duped);
+ install: default $(addsuffix -install,$(SUBDIRS))
+@@ -101,29 +116,29 @@ install-qa: install $(addsuffix -install-qa,$(SUBDIRS))
+ 	$(MAKE) -C $* install-qa
  
--	xname.name = name;
-+	xname.name = (uchar_t *)name;
- 	xname.len = namelen;
+ distclean: clean
+-	rm -f $(DISTDIRT)
++	$(Q)rm -f $(DISTDIRT)
  
- 	junk = name[0] == '/';
-@@ -355,7 +355,7 @@ dir_hash_dup_names(dir_hash_tab_t *hashtab)
- 	for (p = hashtab->first; p; p = p->nextbyorder) {
- 		name = malloc(p->name.len);
- 		memcpy(name, p->name.name, p->name.len);
--		p->name.name = name;
-+		p->name.name = (uchar_t *)name;
- 	}
- 	hashtab->names_duped = 1;
- }
-@@ -843,7 +843,7 @@ mk_orphanage(xfs_mount_t *mp)
- 		do_error(_("%d - couldn't iget root inode to obtain %s\n"),
- 			i, ORPHANAGE);
+ realclean: distclean
+-	rm -f $(CONFIGURE)
++	$(Q)rm -f $(CONFIGURE)
  
--	xname.name = ORPHANAGE;
-+	xname.name = (uchar_t *)ORPHANAGE;
- 	xname.len = strlen(ORPHANAGE);
- 	if (libxfs_dir_lookup(NULL, pip, &xname, &ino, NULL) == 0)
- 		return ino;
-@@ -944,7 +944,7 @@ mv_orphanage(
+ #
+ # All this gunk is to allow for a make dist on an unconfigured tree
+ #
+ dist: include/builddefs include/platform_defs.h default
+ ifeq ($(HAVE_BUILDDEFS), no)
+-	$(MAKE) -C . $@
++	$(Q)$(MAKE) $(MAKEOPTS) -C . $@
+ else
+-	$(MAKE) $(SRCTAR)
++	$(Q)$(MAKE) $(MAKEOPTS) $(SRCTAR)
+ endif
  
- 	ASSERT(xfs_sb_version_hasdirv2(&mp->m_sb));
+ deb: include/builddefs include/platform_defs.h
+ ifeq ($(HAVE_BUILDDEFS), no)
+-	$(MAKE) -C . $@
++	$(Q)$(MAKE) $(MAKEOPTS) -C . $@
+ else
+-	$(MAKE) $(SRCDIR)
+-	$(MAKE) -C po
+-	$(MAKE) source-link
+-	cd $(SRCDIR) && dpkg-buildpackage
++	$(Q)$(MAKE) $(MAKEOPTS) $(SRCDIR)
++	$(Q)$(MAKE) $(MAKEOPTS) -C po
++	$(Q)$(MAKE) $(MAKEOPTS) source-link
++	$(Q)cd $(SRCDIR) && dpkg-buildpackage
+ endif
  
--	xname.name = fname;
-+	xname.name = (uchar_t *)fname;
- 	xname.len = snprintf(fname, sizeof(fname), "%llu",
- 				(unsigned long long)ino);
+ $(SRCDIR) : $(_FORCE)
+@@ -131,6 +146,6 @@ $(SRCDIR) : $(_FORCE)
+ 	mkdir -p $@
  
+ $(SRCTAR) : default $(SRCDIR)
+-	$(MAKE) source-link
++	$(Q)$(MAKE) $(MAKEOPTS) source-link
+ 	unset TAPE; $(TAR) -cf - $(SRCDIR) | $(ZIP) --best > $@ && \
+ 	echo Wrote: $@
+diff --git a/doc/Makefile b/doc/Makefile
+index 8f65b66..86ac2ca 100644
+--- a/doc/Makefile
++++ b/doc/Makefile
+@@ -13,7 +13,8 @@ default: CHANGES.gz
+ include $(BUILDRULES)
+ 
+ CHANGES.gz:
+-	$(ZIP) --best -c < CHANGES > $@
++	@echo "    [ZIP]    $@"
++	$(Q)$(ZIP) --best -c < CHANGES > $@
+ 
+ install: default
+ 	$(INSTALL) -m 755 -d $(PKG_DOC_DIR)
+diff --git a/include/Makefile b/include/Makefile
+index d89480e..bc787db 100644
+--- a/include/Makefile
++++ b/include/Makefile
+@@ -43,7 +43,8 @@ LDIRT = xfs disk
+ default install: xfs disk
+ 
+ xfs disk:
+-	$(LN_S) . $@
++	@echo "    [LN]     $@"
++	$(Q)$(LN_S) . $@
+ 
+ include $(BUILDRULES)
+ 
+diff --git a/include/buildmacros b/include/buildmacros
+index 099570f..62babca 100644
+--- a/include/buildmacros
++++ b/include/buildmacros
+@@ -13,7 +13,7 @@ LDFLAGS += $(LOADERFLAGS) $(LLDFLAGS)
+ LTLDFLAGS += $(LOADERFLAGS)
+ LDLIBS = $(LLDLIBS) $(PLDLIBS) $(MALLOCLIB)
+ 
+-MAKEOPTS = --no-print-directory
++MAKEOPTS = --no-print-directory Q=$(Q)
+ SRCFILES = Makefile $(HFILES) $(CFILES) $(LSRCFILES) $(LFILES) $(YFILES)
+ SRCFILES += $(QAHFILES)
+ 
+@@ -45,10 +45,10 @@ LIBNAME = $(basename $(LTLIBRARY))
+ LTOBJECTS = $(OBJECTS:.o=.lo)
+ LTVERSION = $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
+ 
+-LTLINK = $(LIBTOOL) --tag=CC --mode=link $(CC)
+-LTEXEC = $(LIBTOOL) --mode=execute
+-LTINSTALL = $(LIBTOOL) --mode=install $(INSTALL)
+-LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CCF)
++LTLINK = $(LIBTOOL) --quiet --tag=CC --mode=link $(CC)
++LTEXEC = $(LIBTOOL) --quiet --mode=execute
++LTINSTALL = $(LIBTOOL) --quiet --mode=install $(INSTALL)
++LTCOMPILE = $(LIBTOOL) --quiet --tag=CC --mode=compile $(CCF)
+ 
+ ifeq ($(ENABLE_SHARED),yes)
+ LTLDFLAGS += -rpath $(PKG_ROOT_LIB_DIR)
+diff --git a/include/buildrules b/include/buildrules
+index a06d480..fdc60e6 100644
+--- a/include/buildrules
++++ b/include/buildrules
+@@ -7,10 +7,11 @@ _BUILDRULES_INCLUDED_ = 1
+ include $(TOPDIR)/include/builddefs
+ 
+ clean clobber : $(addsuffix -clean,$(SUBDIRS))
+-	rm -f $(DIRT)
+-	rm -fr $(DIRDIRT)
++	@rm -f $(DIRT)
++	@rm -fr $(DIRDIRT)
+ %-clean:
+-	$(MAKE) -C $* clean
++	@echo "Cleaning $*"
++	$(Q)$(MAKE) $(MAKEOPTS) -C $* clean
+ 
+ # Never blow away subdirs
+ ifdef SUBDIRS
+@@ -18,7 +19,8 @@ ifdef SUBDIRS
+ .PHONY: $(SUBDIRS)
+ 
+ $(SUBDIRS):
+-	$(MAKE) -C $@
++	@echo "Building $@"
++	$(Q)$(MAKE) $(MAKEOPTS) -q -C $@ || $(MAKE) $(MAKEOPTS) -C $@
+ endif
+ 
+ source-link: 
+@@ -38,20 +40,29 @@ source-link:
+ 
+ ifdef LTCOMMAND
+ $(LTCOMMAND) : $(SUBDIRS) $(OBJECTS) $(LTDEPENDENCIES)
+-	$(LTLINK) -o $@ $(LDFLAGS) $(OBJECTS) $(LDLIBS)
++	@echo "    [LD]     $@"
++	$(Q)$(LTLINK) -o $@ $(LDFLAGS) $(OBJECTS) $(LDLIBS)
+ endif
+ 
+ ifdef LTLIBRARY
+ $(LTLIBRARY) : $(SUBDIRS) $(LTOBJECTS)
+-	$(LTLINK) $(LTLDFLAGS) -o $(LTLIBRARY) $(LTOBJECTS) $(LTLIBS)
++	@echo "    [LD]     $@"
++	$(Q)$(LTLINK) $(LTLDFLAGS) -o $(LTLIBRARY) $(LTOBJECTS) $(LTLIBS)
+ 
+ %.lo: %.c
+-	$(LTCOMPILE) -c $<
++	@echo "    [CC]     $@"
++	$(Q)$(LTCOMPILE) -c $<
++else
++%.o: %.c
++	@echo "    [CC]     $@"
++	$(Q)$(CC) $(CFLAGS) -c $<
++
+ endif
+ 
+ ifdef POTHEAD
+ $(POTHEAD): $(XGETTEXTFILES)
+-	$(XGETTEXT) --language=C --keyword=_ --keyword=N_ -o $@ $(XGETTEXTFILES)
++	@echo "    [GETTXT] $@"
++	$(Q)$(XGETTEXT) --language=C --keyword=_ --keyword=N_ -o $@ $(XGETTEXTFILES)
+ 
+ # Update translations
+ update-po: $(POTHEAD) $(wildcard $(TOPDIR)/po/*.po)
+@@ -70,7 +81,8 @@ update-po: $(POTHEAD) $(wildcard $(TOPDIR)/po/*.po)
+ 	done
+ 
+ %.mo: %.po
+-	$(MSGFMT) -c --statistics -o $@ $<
++	@echo "    [MSGFMT] $@"
++	$(Q)$(MSGFMT) -c --statistics -o $@ $<
+ endif
+ 
+ endif # _BUILDRULES_INCLUDED_
+diff --git a/mkfs/Makefile b/mkfs/Makefile
+index 9fcadf2..a749262 100644
+--- a/mkfs/Makefile
++++ b/mkfs/Makefile
+@@ -36,7 +36,8 @@ endif
+ include $(BUILDRULES)
+ 
+ $(FSTYP):
+-	$(LTLINK) $@.c -o $@ $(CFLAGS) $(LDFLAGS) $(LIBDISK) $(PLDLIBS)
++	@echo "    [CC]     $@"
++	$(Q)$(LTLINK) $@.c -o $@ $(CFLAGS) $(LDFLAGS) $(LIBDISK) $(PLDLIBS)
+ 
+ install: default
+ 	$(INSTALL) -m 755 -d $(PKG_ROOT_SBIN_DIR)
 -- 
 1.6.5
 
