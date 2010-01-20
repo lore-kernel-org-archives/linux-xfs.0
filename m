@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0K8VHrW254270 for <xfs@oss.sgi.com>; Wed, 20 Jan 2010 02:31:17 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C6F96177C8A
-	for <xfs@oss.sgi.com>; Wed, 20 Jan 2010 00:32:17 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 8PvraYaG0hJMIVpT for
-	<xfs@oss.sgi.com>; Wed, 20 Jan 2010 00:32:17 -0800 (PST)
-Date: Wed, 20 Jan 2010 03:32:17 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 6/8] xfstests: fix printf format warnings in looptest.c
-Message-ID: <20100120083217.GF6721@infradead.org>
-References: <1263958688-435-1-git-send-email-david@fromorbit.com>
-	<1263958688-435-7-git-send-email-david@fromorbit.com>
+	o0KASKVZ000458 for <xfs@oss.sgi.com>; Wed, 20 Jan 2010 04:28:20 -0600
+Received: from mail-ew0-f227.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 111651781F5
+	for <xfs@oss.sgi.com>; Wed, 20 Jan 2010 02:29:18 -0800 (PST)
+Received: from mail-ew0-f227.google.com (mail-ew0-f227.google.com
+	[209.85.219.227]) by cuda.sgi.com with ESMTP id
+	li32kq59nGQEWete for <xfs@oss.sgi.com>;
+	Wed, 20 Jan 2010 02:29:18 -0800 (PST)
+Received: by ewy27 with SMTP id 27so6103879ewy.36
+	for <xfs@oss.sgi.com>; Wed, 20 Jan 2010 02:29:17 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1263958688-435-7-git-send-email-david@fromorbit.com>
+From: =?UTF-8?B?VXRrYW4gR8O8bmfDtnJkw7w=?= <salviati@freeconsole.org>
+Date: Wed, 20 Jan 2010 12:28:57 +0200
+Message-ID: <6e2cff861001200228y6ba1186dmb105f046c5eac328@mail.gmail.com>
+Subject: xfsr: a tool to save stuff from crippled XFS partition
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,35 +28,15 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Jan 20, 2010 at 02:38:06PM +1100, Dave Chinner wrote:
-> Signed-off-by: Dave Chinner <david@fromorbit.com>
-> ---
->  src/looptest.c |    8 ++++----
->  1 files changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/src/looptest.c b/src/looptest.c
-> index d951f2b..3d99f38 100755
-> --- a/src/looptest.c
-> +++ b/src/looptest.c
-> @@ -202,7 +202,7 @@ main(int argc, char *argv[])
->          
->          if ((flags & FLAG_OPENCLOSE) && (flags & FLAG_SEQUENTIAL)) {
->              if (flags & FLAG_VERBOSE)
-> -                printf("seek %" LL "d\n", seek_to);
-> +                printf("seek %" LL "d\n", (long long)seek_to);
->              if (SEEK(f, seek_to, FILE_BEGIN) < 0)
->  	        PERROR("SEEK", GET_LAST_ERROR);
->  	    seek_to += bufsize;
-
-Ok.
-
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-What an ugly code in this file, urggg.
+Here's a dirty, incomplete tool I wrote awhile ago for those who
+crippled their XFS partition, either by running mkfs or writing random
+stuff on the device file:
+http://freeconsole.org/crew/salviati/#sec-stuff-comp-xfsr
+The source uses only some headers from xfsprogs, considering the FS
+could fail the sanity of the official tools. The whole thing is ugly,
+but it's better than saying goodbye to whole data, I guess :)
 
 _______________________________________________
 xfs mailing list
