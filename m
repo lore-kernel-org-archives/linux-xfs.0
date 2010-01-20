@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0K5vrfv242656 for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 23:57:53 -0600
+	o0K5wNNd242681 for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 23:58:23 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 97ACA124DFDF
-	for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 21:58:51 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	wr9LXwSkfPtleFyR for <xfs@oss.sgi.com>;
-	Tue, 19 Jan 2010 21:58:51 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8120D124DFE1
+	for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 21:59:22 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	cm2O147xIQTslCEX for <xfs@oss.sgi.com>;
+	Tue, 19 Jan 2010 21:59:22 -0800 (PST)
 Received: from discord (unverified [121.44.156.64])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	11455416-1927428
-	for <xfs@oss.sgi.com>; Wed, 20 Jan 2010 16:28:49 +1030 (CDT)
+	11533700-1927428
+	for <xfs@oss.sgi.com>; Wed, 20 Jan 2010 16:29:21 +1030 (CDT)
 Received: from [192.168.1.6] (helo=disturbed) by discord with esmtp (Exim 4.69)
-	(envelope-from <dave@fromorbit.com>) id 1NXTaa-0005AY-4t
-	for xfs@oss.sgi.com; Wed, 20 Jan 2010 16:58:48 +1100
+	(envelope-from <dave@fromorbit.com>) id 1NXTb5-0005Ad-IU
+	for xfs@oss.sgi.com; Wed, 20 Jan 2010 16:59:19 +1100
 Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1NXTaY-0001z9-VV
-	for xfs@oss.sgi.com; Wed, 20 Jan 2010 16:58:46 +1100
+	(envelope-from <dave@disturbed.disaster>) id 1NXTb4-00020T-Cx
+	for xfs@oss.sgi.com; Wed, 20 Jan 2010 16:59:18 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfstests: kill in 131 needs to be quiet
-Date: Wed, 20 Jan 2010 16:58:46 +1100
-Message-Id: <1263967126-7603-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH] [RFC] xfstests: deprecate busted log printing tests
+Date: Wed, 20 Jan 2010 16:59:18 +1100
+Message-Id: <1263967158-7685-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,30 +38,79 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-If the kill fails because the processes have already terminates,
-the output from kill (no such process) will cause the test to
-fail. Make sure kill doesn't output anything.
+Tests 018, 081 and 082 read the contents of the log and assume that the
+contents will always be the same. They are trying to ensure that the
+contents of the log don't change for a given fixed load.
+
+This has several problems - high level changes to the filesystem and
+VFS code can change the order and contents of the log. Changes to
+the way we sync the filesystem will change the contents of the log.
+background writeback occurring in the middle of the test will change
+the contents of the log by allowing the tail to move. Even changes
+to the default mkfs parameters can break them!
+
+The tests also assume that unmount leaves a dirty log behind. We've
+fixed lots of problems in sync and the unmount paths over recent
+times, so now a clean unmount leaves a clean log behind. That is,
+there is nothing left in the log print output for these tests to
+check. IOWs, major surgery is required for these tests to be
+returned to their former break-when-something-changes behaviour.
+
+However, these tests are a maintenance nightmare. They spend more
+time broken and failing than they do passing, and then it's not long
+before they get broken again. They have to cover all sorts of
+different permutations of log configurations and that will continue
+to grow and increase the complexity of making these tests continue
+to work. And to top it all off, I can't remember a bug actually ever
+being found by these tests. Hence I think we should just stop using
+them altogether.
+
+So this patch deprecates 018, 081 and 082 rather than fixes them.
+It introduces a "deprecated" test group and puts them in it. That
+means the tests can still be run on older systems where they may
+have some use, but will not be run automatically any more, nor
+will any attempt be made to keep them up to date or working.
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- 131 |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ group |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/131 b/131
-index 9be0a14..783765e 100755
---- a/131
-+++ b/131
-@@ -34,8 +34,8 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
+diff --git a/group b/group
+index 3de9354..342ac89 100644
+--- a/group
++++ b/group
+@@ -104,6 +104,10 @@ atime
+ # Test preallocation calls
+ prealloc
  
- _cleanup()
- {
--    kill $locktest_pid2
--    kill $locktest_pid1
-+    kill $locktest_pid2 2&>1 /dev/null
-+    kill $locktest_pid1 2&>1 /dev/null
-     _cleanup_testdir
- }
- 
++# Old tests that we won't spend any effort trying to run and make work
++# on current systems
++deprecated
++
+ #
+ # test-group association ... one line per test
+ #
+@@ -124,7 +128,7 @@ prealloc
+ 015 other auto quick
+ 016 rw auto quick
+ 017 mount auto quick
+-018 log logprint v2log auto quick
++018 deprecated # log logprint v2log
+ 019 mkfs auto quick
+ 020 metadata attr udf auto quick
+ 021 db attr auto quick
+@@ -187,8 +191,8 @@ prealloc
+ 078 growfs auto quick
+ 079 acl attr ioctl metadata auto quick
+ 080 rw ioctl
+-081 log logprint quota auto quick
+-082 log logprint v2log auto quick
++081 deprecated # log logprint quota
++082 deprecated # log logprint v2log
+ 083 rw auto
+ 084 ioctl rw auto
+ 085 log auto quick
 -- 
 1.6.5
 
