@@ -1,21 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0KASKVZ000458 for <xfs@oss.sgi.com>; Wed, 20 Jan 2010 04:28:20 -0600
-Received: from mail-ew0-f227.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 111651781F5
-	for <xfs@oss.sgi.com>; Wed, 20 Jan 2010 02:29:18 -0800 (PST)
-Received: from mail-ew0-f227.google.com (mail-ew0-f227.google.com
-	[209.85.219.227]) by cuda.sgi.com with ESMTP id
-	li32kq59nGQEWete for <xfs@oss.sgi.com>;
-	Wed, 20 Jan 2010 02:29:18 -0800 (PST)
-Received: by ewy27 with SMTP id 27so6103879ewy.36
-	for <xfs@oss.sgi.com>; Wed, 20 Jan 2010 02:29:17 -0800 (PST)
+	o0KCvZ7J008800 for <xfs@oss.sgi.com>; Wed, 20 Jan 2010 06:57:36 -0600
+Date: Wed, 20 Jan 2010 07:57:23 -0500 (EST)
+From: "Robert P. J. Day" <rpjday@crashcourse.ca>
+Subject: Re: Obsolete config in kernel build system (XFS_TRACE)
+In-Reply-To: <20100120125249.GC3580@faui49.informatik.uni-erlangen.de>
+Message-ID: <alpine.LFD.2.00.1001200756490.19226@localhost>
+References: <20100120125249.GC3580@faui49.informatik.uni-erlangen.de>
 MIME-Version: 1.0
-From: =?UTF-8?B?VXRrYW4gR8O8bmfDtnJkw7w=?= <salviati@freeconsole.org>
-Date: Wed, 20 Jan 2010 12:28:57 +0200
-Message-ID: <6e2cff861001200228y6ba1186dmb105f046c5eac328@mail.gmail.com>
-Subject: xfsr: a tool to save stuff from crippled XFS partition
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,15 +21,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Egger <siccegge@stud.informatik.uni-erlangen.de>
+Cc: hch@infradead.org, xfs-masters@oss.sgi.com, Reinhard.Tartler@informatik.uni-erlangen.de, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Here's a dirty, incomplete tool I wrote awhile ago for those who
-crippled their XFS partition, either by running mkfs or writing random
-stuff on the device file:
-http://freeconsole.org/crew/salviati/#sec-stuff-comp-xfsr
-The source uses only some headers from xfsprogs, considering the FS
-could fail the sanity of the official tools. The whole thing is ugly,
-but it's better than saying goodbye to whole data, I guess :)
+On Wed, 20 Jan 2010, Christoph Egger wrote:
+
+> Hi all!
+>
+> 	As part of the VAMOS[0] research project at the University of
+> Erlangen we're checking referential integrity between kernel KConfig
+> options and in-code Conditional blocks.
+>
+> 	Git commit 0b1b213fcf3a8486ada99a2bab84ab8c6f51b264 by
+> Christoph Hellwig removed all References to CONFIG_XFS_TRACE, which is
+> unreferenced from KConfig side from the linux source code so there's
+> only a small bit of it left in KBuild. Mayee remove it as well?
+>
+> ./fs/xfs/Makefile:95
+> +++>
+>
+> xfs-$(CONFIG_XFS_TRACE)         += xfs_btree_trace.o
+>
+> <+++
+
+  if the reference is being removed from the Makefile, wouldn't it
+also make sense to delete the corresponding source file as well?
+
+rday
+--
+
+========================================================================
+Robert P. J. Day                               Waterloo, Ontario, CANADA
+
+            Linux Consulting, Training and Kernel Pedantry.
+
+Web page:                                          http://crashcourse.ca
+Twitter:                                       http://twitter.com/rpjday
+========================================================================
 
 _______________________________________________
 xfs mailing list
