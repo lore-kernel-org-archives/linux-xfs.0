@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0JNaPiF225284 for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 17:36:26 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E1998176C29
-	for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 15:37:25 -0800 (PST)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id 9ytNw8XY6k2AwCDi for
-	<xfs@oss.sgi.com>; Tue, 19 Jan 2010 15:37:25 -0800 (PST)
-Message-ID: <4B564235.60403@sandeen.net>
-Date: Tue, 19 Jan 2010 17:37:25 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	o0K0e0Iu227875 for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 18:40:00 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8BD7B176F5A
+	for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 16:40:59 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	DRYDalwx2zZbDxoG for <xfs@oss.sgi.com>;
+	Tue, 19 Jan 2010 16:40:59 -0800 (PST)
+Date: Wed, 20 Jan 2010 11:40:56 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [GIT PULL] xfs: Warning fixes for 2.6.34
+Message-ID: <20100120004056.GG14035@discord.disaster>
+References: <20100120003350.GF14035@discord.disaster>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: Convert all tests to use /bin/bash
-References: <1263891633-30868-1-git-send-email-david@fromorbit.com>
-In-Reply-To: <1263891633-30868-1-git-send-email-david@fromorbit.com>
+Content-Disposition: inline
+In-Reply-To: <20100120003350.GF14035@discord.disaster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,32 +29,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: aelder@sgi.com
 Cc: xfs@oss.sgi.com
 
-Dave Chinner wrote:
-> While most tests use /bin/sh, they are dependent on /bin/sh being a
-> bash shell.  Convert all the tests to execute via /bin/bash as it is
-> much, much simpler than trying to debug and remove all the bashisms
-> throughout the test code.
+On Wed, Jan 20, 2010 at 11:33:50AM +1100, Dave Chinner wrote:
+> Alex,
 > 
-> Signed-off-by: Dave Chinner <david@fromorbit.com>
+> This is the series that Christoph reviewed this morning. I've fixed
+> up the hunks that were in the wrong patch. Please pull.
+> 
+> ----
+> 
+> The following changes since commit 4e23471a3f3aba885ea70100db47ccacb5f069f6:
+>   Christoph Hellwig (1):
+>         xfs: move more buffer helpers into xfs_buf.c
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/dgc/xfs.git warnings
 
-well, spoke a little too soon.
+Looks like something has gone wrong when I pushed the warnings
+branch - I can't pull this tree right now. I'll get back to you...
 
-OK as far as it goes, but not quite far enough :)
+Cheers,
 
-the "new" file still contains sh and I guess it could be used
-as a template so maybe fix that up.
-
-and do you care about things like:
-
-        | tee -a $here/$seq.full | sh
-
-
-in 001?
-
--Eric
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
