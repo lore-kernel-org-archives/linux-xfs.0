@@ -1,28 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0K5wNNd242681 for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 23:58:23 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8120D124DFE1
-	for <xfs@oss.sgi.com>; Tue, 19 Jan 2010 21:59:22 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
-	[150.101.137.103]) by cuda.sgi.com with ESMTP id
-	cm2O147xIQTslCEX for <xfs@oss.sgi.com>;
-	Tue, 19 Jan 2010 21:59:22 -0800 (PST)
-Received: from discord (unverified [121.44.156.64])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	11533700-1927428
-	for <xfs@oss.sgi.com>; Wed, 20 Jan 2010 16:29:21 +1030 (CDT)
-Received: from [192.168.1.6] (helo=disturbed) by discord with esmtp (Exim 4.69)
-	(envelope-from <dave@fromorbit.com>) id 1NXTb5-0005Ad-IU
-	for xfs@oss.sgi.com; Wed, 20 Jan 2010 16:59:19 +1100
-Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1NXTb4-00020T-Cx
-	for xfs@oss.sgi.com; Wed, 20 Jan 2010 16:59:18 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] [RFC] xfstests: deprecate busted log printing tests
-Date: Wed, 20 Jan 2010 16:59:18 +1100
-Message-Id: <1263967158-7685-1-git-send-email-david@fromorbit.com>
+	o0K8THGw254123 for <xfs@oss.sgi.com>; Wed, 20 Jan 2010 02:29:18 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B2C5E1C64CAC
+	for <xfs@oss.sgi.com>; Wed, 20 Jan 2010 00:30:18 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id aNjq9CrAfstpAX27 for
+	<xfs@oss.sgi.com>; Wed, 20 Jan 2010 00:30:18 -0800 (PST)
+Date: Wed, 20 Jan 2010 03:30:18 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 4/8] xfstests: fix printf format warnings in aio-stress.c
+Message-ID: <20100120083018.GD6721@infradead.org>
+References: <1263958688-435-1-git-send-email-david@fromorbit.com>
+	<1263958688-435-5-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1263958688-435-5-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,88 +25,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Tests 018, 081 and 082 read the contents of the log and assume that the
-contents will always be the same. They are trying to ensure that the
-contents of the log don't change for a given fixed load.
+> diff --git a/ltp/aio-stress.c b/ltp/aio-stress.c
+> index ab9e006..57a2158 100644
+> --- a/ltp/aio-stress.c
+> +++ b/ltp/aio-stress.c
+> @@ -1167,9 +1167,9 @@ restart:
+>  
+>      if (t->stage_mb_trans && t->num_files > 0) {
+>          double seconds = time_since_now(&stage_time);
+> -	fprintf(stderr, "thread %d %s totals (%.2f MB/s) %.2f MB in %.2fs\n", 
+> -	        t - global_thread_info, this_stage, t->stage_mb_trans/seconds, 
+> -		t->stage_mb_trans, seconds);
+> +	fprintf(stderr, "thread %llu %s totals (%.2f MB/s) %.2f MB in %.2fs\n",
+> +	        (unsigned long long)(t - global_thread_info), this_stage,
+> +		t->stage_mb_trans/seconds, t->stage_mb_trans, seconds);
 
-This has several problems - high level changes to the filesystem and
-VFS code can change the order and contents of the log. Changes to
-the way we sync the filesystem will change the contents of the log.
-background writeback occurring in the middle of the test will change
-the contents of the log by allowing the tail to move. Even changes
-to the default mkfs parameters can break them!
+Differences between two pointers in C99 is a ptrdiff_t.  Probably not
+worth searching the printf sepcifier for it and just casting it up, so
+ok.
 
-The tests also assume that unmount leaves a dirty log behind. We've
-fixed lots of problems in sync and the unmount paths over recent
-times, so now a clean unmount leaves a clean log behind. That is,
-there is nothing left in the log print output for these tests to
-check. IOWs, major surgery is required for these tests to be
-returned to their former break-when-something-changes behaviour.
 
-However, these tests are a maintenance nightmare. They spend more
-time broken and failing than they do passing, and then it's not long
-before they get broken again. They have to cover all sorts of
-different permutations of log configurations and that will continue
-to grow and increase the complexity of making these tests continue
-to work. And to top it all off, I can't remember a bug actually ever
-being found by these tests. Hence I think we should just stop using
-them altogether.
-
-So this patch deprecates 018, 081 and 082 rather than fixes them.
-It introduces a "deprecated" test group and puts them in it. That
-means the tests can still be run on older systems where they may
-have some use, but will not be run automatically any more, nor
-will any attempt be made to keep them up to date or working.
-
-Signed-off-by: Dave Chinner <david@fromorbit.com>
----
- group |   10 +++++++---
- 1 files changed, 7 insertions(+), 3 deletions(-)
-
-diff --git a/group b/group
-index 3de9354..342ac89 100644
---- a/group
-+++ b/group
-@@ -104,6 +104,10 @@ atime
- # Test preallocation calls
- prealloc
- 
-+# Old tests that we won't spend any effort trying to run and make work
-+# on current systems
-+deprecated
-+
- #
- # test-group association ... one line per test
- #
-@@ -124,7 +128,7 @@ prealloc
- 015 other auto quick
- 016 rw auto quick
- 017 mount auto quick
--018 log logprint v2log auto quick
-+018 deprecated # log logprint v2log
- 019 mkfs auto quick
- 020 metadata attr udf auto quick
- 021 db attr auto quick
-@@ -187,8 +191,8 @@ prealloc
- 078 growfs auto quick
- 079 acl attr ioctl metadata auto quick
- 080 rw ioctl
--081 log logprint quota auto quick
--082 log logprint v2log auto quick
-+081 deprecated # log logprint quota
-+082 deprecated # log logprint v2log
- 083 rw auto
- 084 ioctl rw auto
- 085 log auto quick
--- 
-1.6.5
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
