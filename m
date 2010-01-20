@@ -1,13 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0KCpVEX008515 for <xfs@oss.sgi.com>; Wed, 20 Jan 2010 06:51:33 -0600
-Date: Wed, 20 Jan 2010 13:52:49 +0100
-From: Christoph Egger <siccegge@stud.informatik.uni-erlangen.de>
-Subject: Obsolete config in kernel build system (XFS_TRACE)
-Message-ID: <20100120125249.GC3580@faui49.informatik.uni-erlangen.de>
+	o0KESj5t013387 for <xfs@oss.sgi.com>; Wed, 20 Jan 2010 08:28:45 -0600
+Received: from mail-ew0-f222.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BBB3617B237
+	for <xfs@oss.sgi.com>; Wed, 20 Jan 2010 06:29:44 -0800 (PST)
+Received: from mail-ew0-f222.google.com (mail-ew0-f222.google.com
+	[209.85.219.222]) by cuda.sgi.com with ESMTP id
+	QXATW6OaMva0YY8p for <xfs@oss.sgi.com>;
+	Wed, 20 Jan 2010 06:29:44 -0800 (PST)
+Received: by ewy22 with SMTP id 22so6128786ewy.19
+	for <xfs@oss.sgi.com>; Wed, 20 Jan 2010 06:29:43 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
+In-Reply-To: <1067945374.1918531263959691412.JavaMail.root@mail-au.aconex.com>
+References: <4B5578E0.5000201@gmail.com>
+	<1067945374.1918531263959691412.JavaMail.root@mail-au.aconex.com>
+Date: Wed, 20 Jan 2010 09:29:43 -0500
+Message-ID: <9cf823c61001200629x5be69ea3t6fca943a9b0844f3@mail.gmail.com>
+Subject: Re: acl build failure on x86_64
+From: Jon Grosshart <jgrosshart@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -16,37 +27,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-kernel@vger.kernel.org, hch@infradead.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com
-Cc: Reinhard.Tartler@informatik.uni-erlangen.de, siccegge@stud.informatik.uni-erlangen.de
+To: Nathan Scott <nscott@aconex.com>
+Cc: xfs@oss.sgi.com
 
-Hi all!
+On Tue, Jan 19, 2010 at 10:54 PM, Nathan Scott <nscott@aconex.com> wrote:
+>
+> ----- "Jon" <jgrosshart@gmail.com> wrote:
+>
+>> Brandon and anyone else who might be able to shed some light on this
+>> issue... I'm stumped.
+>>
+>> > /usr/bin/make -C chacl
+>> > make[2]: Entering directory `/tmp/acl-2.2.49/chacl'
+>> > gcc -g -O2 -DDEBUG -funsigned-char -fno-strict-aliasing -Wall
+>> > -DVERSION=3D\"2.2.49\" -DLOCALEDIR=3D\"/usr/share/locale\"
+>> > -DPACKAGE=3D\"acl\" -I../include =A0 =A0 -c -o chacl.o chacl.c
+>> > chacl.c: In function 'walk_dir':
+>> > chacl.c:335: warning: implicit declaration of function 'readdir64'
+>
+> Your compile line is missing "-D_GNU_SOURCE -D_FILE_OFFSET_BITS=3D64"
+> I think - see include/builddefs.in which shows how this is meant to
+> be pulled into your cc line for a Linux build.
+>
+> cheers.
+>
+> --
+> Nathan
+>
 
-	As part of the VAMOS[0] research project at the University of
-Erlangen we're checking referential integrity between kernel KConfig
-options and in-code Conditional blocks.
+Right you are. This line in configure was the culprit:
 
-	Git commit 0b1b213fcf3a8486ada99a2bab84ab8c6f51b264 by
-Christoph Hellwig removed all References to CONFIG_XFS_TRACE, which is
-unreferenced from KConfig side from the linux source code so there's
-only a small bit of it left in KBuild. Mayee remove it as well?
+test -z "$PLATFORM" || pkg_platform=3D"$PLATFORM"
 
-./fs/xfs/Makefile:95
-+++>
+In my /etc/bashrc I set this variable for all my build script to use:
 
-xfs-$(CONFIG_XFS_TRACE)         += xfs_btree_trace.o
+export PLATFORM=3D$(arch)
 
-<+++
+Apparently, $pkg_platform shouldn't be "x86_64" as far as acl is concerned.=
+...
 
-	Please keep me informed of this patch getting confirmed /
-merged so we can keep track of it.
+Thanks Nathan.
 
-Regards
-
-	Christoph Egger
+Jon
 
 _______________________________________________
 xfs mailing list
