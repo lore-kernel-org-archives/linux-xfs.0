@@ -1,26 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0KEn5Tu014426 for <xfs@oss.sgi.com>; Wed, 20 Jan 2010 08:49:05 -0600
-Received: from mail-ew0-f222.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0939C17AAE6
-	for <xfs@oss.sgi.com>; Wed, 20 Jan 2010 06:50:05 -0800 (PST)
-Received: from mail-ew0-f222.google.com (mail-ew0-f222.google.com
-	[209.85.219.222]) by cuda.sgi.com with ESMTP id
-	TEySxDdAUwuyENv8 for <xfs@oss.sgi.com>;
-	Wed, 20 Jan 2010 06:50:05 -0800 (PST)
-Received: by ewy22 with SMTP id 22so6151889ewy.19
-	for <xfs@oss.sgi.com>; Wed, 20 Jan 2010 06:50:04 -0800 (PST)
+	o0KFqbEZ017396 for <xfs@oss.sgi.com>; Wed, 20 Jan 2010 09:52:37 -0600
+Content-class: urn:content-classes:message
 MIME-Version: 1.0
-In-Reply-To: <9cf823c61001200629x5be69ea3t6fca943a9b0844f3@mail.gmail.com>
-References: <4B5578E0.5000201@gmail.com>
-	<1067945374.1918531263959691412.JavaMail.root@mail-au.aconex.com>
-	<9cf823c61001200629x5be69ea3t6fca943a9b0844f3@mail.gmail.com>
-Date: Wed, 20 Jan 2010 09:50:04 -0500
-Message-ID: <9cf823c61001200650w3fc7502fi13cd828bb2d8d3d5@mail.gmail.com>
-Subject: Re: acl build failure on x86_64
-From: Jon Grosshart <jgrosshart@gmail.com>
-Content-Type: multipart/mixed; boundary=0016e6d77e32a4a64a047d99b3b3
+Subject: RE: [PATCH] [RFC] xfstests: deprecate busted log printing tests
+Date: Wed, 20 Jan 2010 09:53:27 -0600
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A69A1@cf--amer001e--3.americas.sgi.com>
+In-Reply-To: <1263967158-7685-1-git-send-email-david@fromorbit.com>
+From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,59 +17,104 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
---0016e6d77e32a4a64a047d99b3b3
-Content-Type: text/plain; charset=ISO-8859-1
+Dave Chinner wrote:
+> Tests 018, 081 and 082 read the contents of the log and assume that the
+> contents will always be the same. They are trying to ensure that the
+> contents of the log don't change for a given fixed load.
+> 
+> This has several problems - high level changes to the filesystem and
+> VFS code can change the order and contents of the log. Changes to
+> the way we sync the filesystem will change the contents of the log.
+> background writeback occurring in the middle of the test will change
+> the contents of the log by allowing the tail to move. Even changes
+> to the default mkfs parameters can break them!
+> 
+> The tests also assume that unmount leaves a dirty log behind. We've
+> fixed lots of problems in sync and the unmount paths over recent
+> times, so now a clean unmount leaves a clean log behind. That is,
+> there is nothing left in the log print output for these tests to
+> check. IOWs, major surgery is required for these tests to be
+> returned to their former break-when-something-changes behaviour.
+> 
+> However, these tests are a maintenance nightmare. They spend more
+> time broken and failing than they do passing, and then it's not long
+> before they get broken again. They have to cover all sorts of
+> different permutations of log configurations and that will continue
+> to grow and increase the complexity of making these tests continue
+> to work. And to top it all off, I can't remember a bug actually ever
+> being found by these tests. Hence I think we should just stop using
+> them altogether.
+> 
+> So this patch deprecates 018, 081 and 082 rather than fixes them.
+> It introduces a "deprecated" test group and puts them in it. That
+> means the tests can still be run on older systems where they may
+> have some use, but will not be run automatically any more, nor
+> will any attempt be made to keep them up to date or working.
 
-Also, on a side note, would be nice from a packagers stand point to
-have the attached DESTDIR patch applied to both acl and attr......
+I think this is a reasonable thing to do.  My only thought
+is that it might be good to somehow indicate *when* or *why*
+something got deprecated.  I.e., suppose a new feature BLAH_ASYNC
+makes a test no longer produce output in a well-defined order.
+It might be nice if, along with "deprecated" it was somehow
+indicated that the absense of BLAH_ASYNC allows the test to
+still function.
 
-Thanks again Nathan.
+Having said that, it sounds too complicated to me.  If it
+becomes a real issue we can address it, for starters by just
+documenting it in the comments or something.
 
---0016e6d77e32a4a64a047d99b3b3
-Content-Type: application/octet-stream; name="acl-destdir.patch"
-Content-Disposition: attachment; filename="acl-destdir.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_g4oiztkl0
+					-Alex
 
-ZGlmZiAtdXJOIGFjbC0yLjIuNDktb3JpZy9pbmNsdWRlL2J1aWxkZGVmcy5pbiBhY2wtMi4yLjQ5
-L2luY2x1ZGUvYnVpbGRkZWZzLmluCi0tLSBhY2wtMi4yLjQ5LW9yaWcvaW5jbHVkZS9idWlsZGRl
-ZnMuaW4JMjAwOS0wNi0yMiAxNDozNzozMS4wMDAwMDAwMDAgLTA0MDAKKysrIGFjbC0yLjIuNDkv
-aW5jbHVkZS9idWlsZGRlZnMuaW4JMjAxMC0wMS0yMCAwOTo0NDoxMy4wMDAwMDAwMDAgLTA1MDAK
-QEAgLTI4LDE0ICsyOCwxNCBAQAogUEtHX1ZFUlNJT04JPSBAcGtnX3ZlcnNpb25ACiBQS0dfUExB
-VEZPUk0JPSBAcGtnX3BsYXRmb3JtQAogUEtHX0RJU1RSSUJVVElPTj0gQHBrZ19kaXN0cmlidXRp
-b25ACi1QS0dfQklOX0RJUgk9IEBiaW5kaXJACi1QS0dfU0JJTl9ESVIJPSBAc2JpbmRpckAKLVBL
-R19MSUJfRElSCT0gQGxpYmRpckBAbGliZGlyc3VmZml4QAotUEtHX0RFVkxJQl9ESVIJPSBAbGli
-ZXhlY2RpckBAbGliZGlyc3VmZml4QAotUEtHX0lOQ19ESVIJPSBAaW5jbHVkZWRpckAKLVBLR19N
-QU5fRElSCT0gQG1hbmRpckAKLVBLR19ET0NfRElSCT0gQGRhdGFkaXJAL2RvYy9AcGtnX25hbWVA
-Ci1QS0dfTE9DQUxFX0RJUgk9IEBkYXRhZGlyQC9sb2NhbGUKK1BLR19CSU5fRElSCT0gJChERVNU
-RElSKUBiaW5kaXJACitQS0dfU0JJTl9ESVIJPSAkKERFU1RESVIpQHNiaW5kaXJACitQS0dfTElC
-X0RJUgk9ICQoREVTVERJUilAbGliZGlyQEBsaWJkaXJzdWZmaXhACitQS0dfREVWTElCX0RJUgk9
-ICQoREVTVERJUilAbGliZXhlY2RpckBAbGliZGlyc3VmZml4QAorUEtHX0lOQ19ESVIJPSAkKERF
-U1RESVIpQGluY2x1ZGVkaXJACitQS0dfTUFOX0RJUgk9ICQoREVTVERJUilAbWFuZGlyQAorUEtH
-X0RPQ19ESVIJPSAkKERFU1RESVIpQGRhdGFkaXJAL2RvYy9AcGtnX25hbWVACitQS0dfTE9DQUxF
-X0RJUgk9ICQoREVTVERJUilAZGF0YWRpckAvbG9jYWxlCiAKIENDCQk9IEBjY0AKIEFXSwkJPSBA
-YXdrQApkaWZmIC11ck4gYWNsLTIuMi40OS1vcmlnL2luY2x1ZGUvYnVpbGRtYWNyb3MgYWNsLTIu
-Mi40OS9pbmNsdWRlL2J1aWxkbWFjcm9zCi0tLSBhY2wtMi4yLjQ5LW9yaWcvaW5jbHVkZS9idWls
-ZG1hY3JvcwkyMDA5LTA2LTIyIDE0OjM3OjMxLjAwMDAwMDAwMCAtMDQwMAorKysgYWNsLTIuMi40
-OS9pbmNsdWRlL2J1aWxkbWFjcm9zCTIwMTAtMDEtMjAgMDk6NDI6MjEuMDAwMDAwMDAwIC0wNTAw
-CkBAIC00MCw3ICs0MCw3IEBACiAJICAkKExGSUxFUzoubD0ubykgXAogCSAgJChZRklMRVM6JS55
-PSUudGFiLm8pCiAKLUlOU1RBTEwJPSAkKFRPUERJUikvaW5jbHVkZS9pbnN0YWxsLXNoIC1vICQo
-UEtHX1VTRVIpIC1nICQoUEtHX0dST1VQKQorSU5TVEFMTAk9ICQoVE9QRElSKS9pbmNsdWRlL2lu
-c3RhbGwtc2ggCiAKIFNIRUxMID0gL2Jpbi9zaAogSU1BR0VTX0RJUiA9ICQoVE9QRElSKS9hbGwt
-aW1hZ2VzCg==
---0016e6d77e32a4a64a047d99b3b3
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+
+> Signed-off-by: Dave Chinner <david@fromorbit.com>
+> ---
+>  group |   10 +++++++---
+>  1 files changed, 7 insertions(+), 3 deletions(-)
+> 
+> diff --git a/group b/group
+> index 3de9354..342ac89 100644
+> --- a/group
+> +++ b/group
+> @@ -104,6 +104,10 @@ atime
+>  # Test preallocation calls
+>  prealloc
+> 
+> +# Old tests that we won't spend any effort trying to run and make work
+> +# on current systems
+> +deprecated
+> +
+>  #
+>  # test-group association ... one line per test
+>  #
+> @@ -124,7 +128,7 @@ prealloc
+>  015 other auto quick
+>  016 rw auto quick
+>  017 mount auto quick
+> -018 log logprint v2log auto quick
+> +018 deprecated # log logprint v2log
+>  019 mkfs auto quick
+>  020 metadata attr udf auto quick
+>  021 db attr auto quick
+> @@ -187,8 +191,8 @@ prealloc
+>  078 growfs auto quick
+>  079 acl attr ioctl metadata auto quick
+>  080 rw ioctl
+> -081 log logprint quota auto quick
+> -082 log logprint v2log auto quick
+> +081 deprecated # log logprint quota
+> +082 deprecated # log logprint v2log
+>  083 rw auto
+>  084 ioctl rw auto
+>  085 log auto quick
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---0016e6d77e32a4a64a047d99b3b3--
