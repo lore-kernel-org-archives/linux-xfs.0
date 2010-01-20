@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0K8Ud5e254220 for <xfs@oss.sgi.com>; Wed, 20 Jan 2010 02:30:40 -0600
+	o0K8W9mp254335 for <xfs@oss.sgi.com>; Wed, 20 Jan 2010 02:32:09 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BA8CA177C86
-	for <xfs@oss.sgi.com>; Wed, 20 Jan 2010 00:31:40 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A2BC4F26188
+	for <xfs@oss.sgi.com>; Wed, 20 Jan 2010 00:33:09 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id FgzjMqq7gPGg63OC for
-	<xfs@oss.sgi.com>; Wed, 20 Jan 2010 00:31:40 -0800 (PST)
-Date: Wed, 20 Jan 2010 03:31:40 -0500
+	by cuda.sgi.com with ESMTP id vhnIOaQFn3mt7Hjs for
+	<xfs@oss.sgi.com>; Wed, 20 Jan 2010 00:33:09 -0800 (PST)
+Date: Wed, 20 Jan 2010 03:33:09 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 5/8] xfstests: fix compile warnings in iopat.c
-Message-ID: <20100120083140.GE6721@infradead.org>
+Subject: Re: [PATCH 8/8] xfstests: don't redefine _GNU_SOURCE in aio tests
+Message-ID: <20100120083308.GH6721@infradead.org>
 References: <1263958688-435-1-git-send-email-david@fromorbit.com>
-	<1263958688-435-6-git-send-email-david@fromorbit.com>
+	<1263958688-435-9-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1263958688-435-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <1263958688-435-9-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,28 +32,10 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Jan 20, 2010 at 02:38:05PM +1100, Dave Chinner wrote:
-> Printf format warnings and return value warnings need fixing.
-> 
+On Wed, Jan 20, 2010 at 02:38:08PM +1100, Dave Chinner wrote:
 > Signed-off-by: Dave Chinner <david@fromorbit.com>
-> ---
->  src/iopat.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
-> 
-> diff --git a/src/iopat.c b/src/iopat.c
-> index c06071f..f34de19 100644
-> --- a/src/iopat.c
-> +++ b/src/iopat.c
-> @@ -47,12 +47,13 @@ int main(int argc, char **argv)
->     read(fd, &x, 1048576);
->     for (i = 0; i < 131072; i++) {
->        if (x[i] != i) {
-> -         printf("error: %d %d %d\n",i,8*i,x[i]);
-> +         printf("error: %d %d %lld\n", i ,8 * i, (long long)x[i]);
->  	 exit(1);
 
-Instead of the casting we could also use the C99 macro for the uin64_t
-format.  But either way good enough for the tests,
+Yes, I think Eric fixed this in most others earlier already.
 
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
