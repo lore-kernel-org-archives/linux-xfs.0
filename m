@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0LBKFAf068548 for <xfs@oss.sgi.com>; Thu, 21 Jan 2010 05:20:16 -0600
+	o0LBX1Dh069044 for <xfs@oss.sgi.com>; Thu, 21 Jan 2010 05:33:01 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 593761C6A525
-	for <xfs@oss.sgi.com>; Thu, 21 Jan 2010 03:21:17 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B5EC017F65B
+	for <xfs@oss.sgi.com>; Thu, 21 Jan 2010 03:34:02 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id FPZEOED5c1Hl2Kgx for
-	<xfs@oss.sgi.com>; Thu, 21 Jan 2010 03:21:17 -0800 (PST)
-Date: Thu, 21 Jan 2010 06:21:15 -0500
+	by cuda.sgi.com with ESMTP id k2DA2Mp3XiLyDTF8 for
+	<xfs@oss.sgi.com>; Thu, 21 Jan 2010 03:34:02 -0800 (PST)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1NXvIY-00010j-E7
+	for xfs@oss.sgi.com; Thu, 21 Jan 2010 11:34:02 +0000
+Date: Thu, 21 Jan 2010 06:34:02 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/2] xfstests: rebuild aclocal.m4
-Message-ID: <20100121112115.GA27634@infradead.org>
-References: <1264053773-6054-1-git-send-email-david@fromorbit.com>
-	<1264053773-6054-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH] xfstests: fix format string warnings in locktest.c
+Message-ID: <20100121113402.GB3580@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1264053773-6054-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,22 +29,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Jan 21, 2010 at 05:02:52PM +1100, Dave Chinner wrote:
-> The local m4 configuration has not been built in a long time.
-> Trying to rebuild it results in failures with dmapi library
-> detection and libxfs.h detection macros. Fix the errors and rebuild
-> it.
-> 
-> Note: the new format for the aclocal.m4 file uses m4_include
-> directives which means it is much smaller th an before and won't
-> need updating unless we include new m4 macro files.
 
-Looks good, but shouldn't we create aclocal.m4 automocatically as part
-of make configure which generates the rest of the auto* stuff and stop
-having it checked into the git repository?
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: xfstests-dev/src/locktest.c
+===================================================================
+--- xfstests-dev.orig/src/locktest.c	2010-01-21 11:26:53.000000000 +0000
++++ xfstests-dev/src/locktest.c	2010-01-21 11:27:13.000000000 +0000
+@@ -741,7 +741,7 @@ send_ctl(void)
+         if (nwrite < 0)
+             perror("send_ctl: write");
+         else
+-            fprintf(stderr, "send_ctl[%d]: write() returns %d, not %lu as expected\n", 
++            fprintf(stderr, "send_ctl[%d]: write() returns %d, not %zu as expected\n", 
+                     ctl.test, nwrite, sizeof(ctl));
+         exit(1);
+         /*NOTREACHED*/
+@@ -756,7 +756,7 @@ void recv_ctl(void)
+         if (nread < 0)
+             perror("recv_ctl: read");
+         else {
+-            fprintf(stderr, "recv_ctl[%d]: read() returns %d, not %lu as expected\n", 
++            fprintf(stderr, "recv_ctl[%d]: read() returns %d, not %zu as expected\n", 
+                     ctl.test, nread, sizeof(ctl));
+ 	    fprintf(stderr, "socket might has been closed by other locktest\n");
+ 	} 
 
 _______________________________________________
 xfs mailing list
