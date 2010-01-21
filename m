@@ -1,30 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0L6289A056239 for <xfs@oss.sgi.com>; Thu, 21 Jan 2010 00:02:09 -0600
+	o0L7gNC2059913 for <xfs@oss.sgi.com>; Thu, 21 Jan 2010 01:42:24 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 503EFF2F531
-	for <xfs@oss.sgi.com>; Wed, 20 Jan 2010 22:03:07 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	D8Suvw4R3CI4Bb7Z for <xfs@oss.sgi.com>;
-	Wed, 20 Jan 2010 22:03:07 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1CEBFBCB4FC
+	for <xfs@oss.sgi.com>; Wed, 20 Jan 2010 23:43:22 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	HgWhl2rjGs5RknMn for <xfs@oss.sgi.com>;
+	Wed, 20 Jan 2010 23:43:22 -0800 (PST)
 Received: from discord (unverified [121.44.156.64])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	11416006-1927428
-	for <xfs@oss.sgi.com>; Thu, 21 Jan 2010 16:33:06 +1030 (CDT)
+	11575089-1927428
+	for <xfs@oss.sgi.com>; Thu, 21 Jan 2010 18:13:21 +1030 (CDT)
 Received: from [192.168.1.6] (helo=disturbed) by discord with esmtp (Exim 4.69)
-	(envelope-from <dave@fromorbit.com>) id 1NXq8B-0006cP-VM
-	for xfs@oss.sgi.com; Thu, 21 Jan 2010 17:03:00 +1100
+	(envelope-from <dave@fromorbit.com>) id 1NXrhH-0006k5-QD
+	for xfs@oss.sgi.com; Thu, 21 Jan 2010 18:43:19 +1100
 Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1NXq8A-0001aS-Dg
-	for xfs@oss.sgi.com; Thu, 21 Jan 2010 17:02:58 +1100
+	(envelope-from <dave@disturbed.disaster>) id 1NXrhG-0006X7-66
+	for xfs@oss.sgi.com; Thu, 21 Jan 2010 18:43:18 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/2] xfstests: Automatic build dependency calculations
-Date: Thu, 21 Jan 2010 17:02:53 +1100
-Message-Id: <1264053773-6054-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1264053773-6054-1-git-send-email-david@fromorbit.com>
-References: <1264053773-6054-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH] xfsprogs: Automatic build dependency calculations
+Date: Thu, 21 Jan 2010 18:43:18 +1100
+Message-Id: <1264059798-25085-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,7 +38,7 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Currently the xfstest builds do not have any automatic dependency
+Currently the xfsprogs builds do not have any automatic dependency
 calculations. It relies on a separate make depend run to build or
 update dependency information. It also relies on an external
 makedepend binary. If that binary does not exist, the dependencies
@@ -67,79 +65,137 @@ dependencies up to date without dependence on any external tools.
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- .gitignore                   |    3 +++
- include/builddefs.in         |    4 ----
- include/buildrules           |   36 ++++++++++--------------------------
- lib/Makefile                 |    4 +++-
- ltp/Makefile                 |    3 ++-
- m4/package_utilies.m4        |   27 +++++++++++++++++++++++----
- src/Makefile                 |   19 ++++++++++---------
- src/aio-dio-regress/Makefile |    4 +++-
- 8 files changed, 54 insertions(+), 46 deletions(-)
+ copy/Makefile         |    4 +++-
+ db/Makefile           |    4 +++-
+ estimate/Makefile     |    4 +++-
+ fsr/Makefile          |    4 +++-
+ growfs/Makefile       |    4 +++-
+ include/buildrules    |   36 +++++++++++-------------------------
+ io/Makefile           |    4 +++-
+ libdisk/Makefile      |    4 +++-
+ libhandle/Makefile    |    4 +++-
+ libxcmd/Makefile      |    4 +++-
+ libxfs/Makefile       |    4 +++-
+ libxlog/Makefile      |    4 +++-
+ logprint/Makefile     |    4 +++-
+ m4/package_utilies.m4 |   24 +++++++++++++++++++++---
+ mdrestore/Makefile    |    4 +++-
+ mkfs/Makefile         |    4 +++-
+ quota/Makefile        |    4 +++-
+ repair/Makefile       |    4 +++-
+ rtcp/Makefile         |    4 +++-
+ 19 files changed, 83 insertions(+), 45 deletions(-)
 
-diff --git a/.gitignore b/.gitignore
-index d7cbab1..563c30a 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -1,9 +1,12 @@
- *.lo
- *.o
- *.la
-+.dep
+diff --git a/copy/Makefile b/copy/Makefile
+index 3bdc72b..54f6dfb 100644
+--- a/copy/Makefile
++++ b/copy/Makefile
+@@ -13,7 +13,7 @@ LLDLIBS = $(LIBXFS) $(LIBUUID) $(LIBPTHREAD) $(LIBRT)
+ LTDEPENDENCIES = $(LIBXFS)
+ LLDFLAGS = -static
  
- autom4te.cache
- configure
-+config.log
-+config.status
- include/builddefs
- include/config.h
- include/config.h.in
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 7827ed5..23a4991 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -65,18 +65,14 @@ GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
+-default: $(LTCOMMAND)
++default: depend $(LTCOMMAND)
  
- ifeq ($(PKG_PLATFORM),linux)
- PCFLAGS = -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 $(GCCFLAGS)
--DEPENDFLAGS = -D__linux__
- endif
- ifeq ($(PKG_PLATFORM),darwin)
- PCFLAGS = -traditional-cpp $(GCCFLAGS)
--DEPENDFLAGS = -D__APPLE__
- endif
- ifeq ($(PKG_PLATFORM),irix)
- PCFLAGS = -nostdinc -I$(ROOT)/usr/include -I$(TOPDIR)/../irix/include
--DEPENDFLAGS = -D__sgi__
- endif
- ifeq ($(PKG_PLATFORM),freebsd)
--DEPENDFLAGS = -D__FreeBSD__
+ include $(BUILDRULES)
+ 
+@@ -21,3 +21,5 @@ install: default
+ 	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
+ 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
+ install-dev:
++
++-include .dep
+diff --git a/db/Makefile b/db/Makefile
+index 69a85d7..5c7d054 100644
+--- a/db/Makefile
++++ b/db/Makefile
+@@ -30,7 +30,7 @@ LLDLIBS += $(LIBEDITLINE) $(LIBTERMCAP)
+ CFLAGS += -DENABLE_EDITLINE
  endif
  
- GCFLAGS = $(OPTIMIZER) $(DEBUG) $(CPPFLAGS) \
+-default: $(LTCOMMAND)
++default: depend $(LTCOMMAND)
+ 
+ include $(BUILDRULES)
+ 
+@@ -42,3 +42,5 @@ install: default
+ 	$(INSTALL) -m 755 xfs_ncheck.sh $(PKG_SBIN_DIR)/xfs_ncheck
+ 	$(INSTALL) -m 755 xfs_metadump.sh $(PKG_SBIN_DIR)/xfs_metadump
+ install-dev:
++
++-include .dep
+diff --git a/estimate/Makefile b/estimate/Makefile
+index c972403..18971e4 100644
+--- a/estimate/Makefile
++++ b/estimate/Makefile
+@@ -8,7 +8,7 @@ include $(TOPDIR)/include/builddefs
+ LTCOMMAND = xfs_estimate
+ CFILES = xfs_estimate.c
+ 
+-default: $(LTCOMMAND)
++default: depend $(LTCOMMAND)
+ 
+ include $(BUILDRULES)
+ 
+@@ -16,3 +16,5 @@ install: default
+ 	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
+ 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
+ install-dev:
++
++-include .dep
+diff --git a/fsr/Makefile b/fsr/Makefile
+index b7b0ab8..a9d1bf6 100644
+--- a/fsr/Makefile
++++ b/fsr/Makefile
+@@ -9,7 +9,7 @@ LTCOMMAND = xfs_fsr
+ CFILES = xfs_fsr.c
+ LLDLIBS = $(LIBHANDLE)
+ 
+-default: $(LTCOMMAND)
++default: depend $(LTCOMMAND)
+ 
+ include $(BUILDRULES)
+ 
+@@ -17,3 +17,5 @@ install: default
+ 	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
+ 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
+ install-dev:
++
++-include .dep
+diff --git a/growfs/Makefile b/growfs/Makefile
+index 2bab89f..88cbf4f 100644
+--- a/growfs/Makefile
++++ b/growfs/Makefile
+@@ -22,7 +22,7 @@ LTDEPENDENCIES = $(LIBXFS) $(LIBXCMD)
+ LLDFLAGS = -static
+ LSRCFILES = xfs_info.sh
+ 
+-default: $(LTCOMMAND)
++default: depend $(LTCOMMAND)
+ 
+ include $(BUILDRULES)
+ 
+@@ -31,3 +31,5 @@ install: default
+ 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
+ 	$(INSTALL) -m 755 xfs_info.sh $(PKG_SBIN_DIR)/xfs_info
+ install-dev:
++
++-include .dep
 diff --git a/include/buildrules b/include/buildrules
-index 5428391..5388210 100644
+index fdc60e6..d1a3a6f 100644
 --- a/include/buildrules
 +++ b/include/buildrules
-@@ -8,7 +8,7 @@ include $(TOPDIR)/include/builddefs
- 
- clean clobber : $(addsuffix -clean,$(SUBDIRS))
- 	$(Q)rm -f $(DIRT)
--	$(Q)rm -fr .libs
-+	$(Q)rm -fr .libs .dep
- 
- %-clean:
- 	@echo "Cleaning $*"
-@@ -70,32 +70,16 @@ endif # _BUILDRULES_INCLUDED_
+@@ -89,33 +89,19 @@ endif # _BUILDRULES_INCLUDED_
  
  $(_FORCE):
  
--.PHONY : depend
+-.PHONY : depend install-qa
 +# dependency build is automatic, relies on gcc -MM to generate.
-+.PHONY : depend ltdepend
++.PHONY : depend ltdepend install-qa
  
 -DEPENDSCRIPT := $(MAKEDEPEND) $(DEPENDFLAGS) -f - -- $(CFLAGS) -- $(CFILES) | \
--	$(SED) -e 's,`pwd`,$(TOPDIR),g' \
+-	$(SED) \
+-	    -e 's,`pwd`,$(TOPDIR),g' \
 -	    -e 's,  */[^ ]*,,g' \
 -	    -e '/^[^ ]*: *$$/d' \
 -	    -e '/^ *$$/d'
@@ -157,11 +213,11 @@ index 5428391..5388210 100644
 -	test -s .dep || rm -f .dep
 +depend: $(CFILES) $(HFILES)
 +	@echo "    [DEP]"
-+	$(Q)$(MAKEDEP) $(CFILES) | $(SED) -e 's,^\([^:]*\)\.o,\1,' > .dep
++	$(Q)$(MAKEDEP) $(CFILES) > .dep
  
 -%-depend:
 -	$(MAKE) -C $* depend
--
+ 
 -# Include dep, but only if it exists
 -ifeq ($(shell test -f .dep && echo .dep), .dep)
 -include .dep
@@ -172,45 +228,140 @@ index 5428391..5388210 100644
 -$(OBJECTS): $(HFILES)
 -endif
 -endif
-diff --git a/lib/Makefile b/lib/Makefile
-index 435c38c..43fb0a0 100644
---- a/lib/Makefile
-+++ b/lib/Makefile
-@@ -19,8 +19,10 @@ CFILES = dataascii.c databin.c datapid.c file_lock.c forker.c \
- 	str_to_bytes.c tlibio.c write_log.c \
- 	random.c
++#	$(Q)$(MAKEDEP) $(CFILES) | $(SED) -e 's,^\([^:]*\)\.o,\1,' > .dep
++
+diff --git a/io/Makefile b/io/Makefile
+index 59c2860..fc98166 100644
+--- a/io/Makefile
++++ b/io/Makefile
+@@ -63,7 +63,7 @@ ifeq ($(HAVE_FALLOCATE),yes)
+ LCFLAGS += -DHAVE_FALLOCATE
+ endif
+ 
+-default: $(LTCOMMAND)
++default: depend $(LTCOMMAND)
+ 
+ include $(BUILDRULES)
+ 
+@@ -74,3 +74,5 @@ install: default
+ 	$(LTINSTALL) -m 755 xfs_freeze.sh $(PKG_SBIN_DIR)/xfs_freeze
+ 	$(LTINSTALL) -m 755 xfs_mkfile.sh $(PKG_SBIN_DIR)/xfs_mkfile
+ install-dev:
++
++-include .dep
+diff --git a/libdisk/Makefile b/libdisk/Makefile
+index 4c0dacb..32416a5 100644
+--- a/libdisk/Makefile
++++ b/libdisk/Makefile
+@@ -20,7 +20,7 @@ else
+ LSRCFILES = $(LINUX_DRIVERS)
+ endif
  
 -default: $(LTLIBRARY)
 +default: ltdepend $(LTLIBRARY)
  
  include $(BUILDRULES)
  
- install install-dev: default
+@@ -29,3 +29,5 @@ install: default
+ install-dev: default
+ 
+ install-qa: install-dev
 +
 +-include .dep
-diff --git a/ltp/Makefile b/ltp/Makefile
-index fee10f5..d74a9df 100644
---- a/ltp/Makefile
-+++ b/ltp/Makefile
-@@ -27,7 +27,7 @@ LCFLAGS += -DAIO
- LLDLIBS += -laio -lpthread
- endif
+diff --git a/libhandle/Makefile b/libhandle/Makefile
+index 4ce0878..9422c34 100644
+--- a/libhandle/Makefile
++++ b/libhandle/Makefile
+@@ -15,7 +15,7 @@ LTLDFLAGS += -Wl,--version-script,libhandle.sym
+ CFILES = handle.c jdm.c
+ LSRCFILES = libhandle.sym
  
--default: $(TARGETS)
-+default: depend $(TARGETS)
+-default:  $(LTLIBRARY)
++default: ltdepend $(LTLIBRARY)
  
  include $(BUILDRULES)
  
-@@ -39,3 +39,4 @@ install: default
- 	$(INSTALL) -m 755 -d $(PKG_LIB_DIR)/ltp
- 	$(INSTALL) -m 755 $(TARGETS) $(PKG_LIB_DIR)/ltp
+@@ -26,3 +26,5 @@ install-dev: default
+ 	$(INSTALL_LTLIB_DEV)
  
+ install-qa: install-dev
++
++-include .dep
+diff --git a/libxcmd/Makefile b/libxcmd/Makefile
+index 53922b7..60b6f9e 100644
+--- a/libxcmd/Makefile
++++ b/libxcmd/Makefile
+@@ -28,8 +28,10 @@ ifeq ($(ENABLE_EDITLINE),yes)
+ LCFLAGS += -DENABLE_EDITLINE
+ endif
+ 
+-default: $(LTLIBRARY)
++default: ltdepend $(LTLIBRARY)
+ 
+ include $(BUILDRULES)
+ 
+ install install-dev install-qa: default
++
++-include .dep
+diff --git a/libxfs/Makefile b/libxfs/Makefile
+index 1914927..8f80cdc 100644
+--- a/libxfs/Makefile
++++ b/libxfs/Makefile
+@@ -36,7 +36,7 @@ FCFLAGS = -I.
+ # don't try linking xfs_repair with a debug libxfs.
+ DEBUG = -DNDEBUG
+ 
+-default:  $(LTLIBRARY)
++default: ltdepend $(LTLIBRARY)
+ 
+ include $(BUILDRULES)
+ 
+@@ -45,3 +45,5 @@ install: default
+ install-dev: default
+ 
+ install-qa: default
++
++-include .dep
+diff --git a/libxlog/Makefile b/libxlog/Makefile
+index 988d01c..7358fb1 100644
+--- a/libxlog/Makefile
++++ b/libxlog/Makefile
+@@ -15,8 +15,10 @@ CFILES = xfs_log_recover.c util.c
+ # don't want to link xfs_repair with a debug libxlog.
+ DEBUG = -DNDEBUG
+ 
+-default:  $(LTLIBRARY)
++default: ltdepend $(LTLIBRARY)
+ 
+ include $(BUILDRULES)
+ 
+ install install-dev install-qa: default
++
++-include .dep
+diff --git a/logprint/Makefile b/logprint/Makefile
+index 1c7d997..2d656a4 100644
+--- a/logprint/Makefile
++++ b/logprint/Makefile
+@@ -16,7 +16,7 @@ LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
+ LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG)
+ LLDFLAGS = -static
+ 
+-default: $(LTCOMMAND)
++default: depend $(LTCOMMAND)
+ 
+ include $(BUILDRULES)
+ 
+@@ -24,3 +24,5 @@ install: default
+ 	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
+ 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
+ install-dev:
++
 +-include .dep
 diff --git a/m4/package_utilies.m4 b/m4/package_utilies.m4
-index c034a7c..726406c 100644
+index f42bd6b..475ce0b 100644
 --- a/m4/package_utilies.m4
 +++ b/m4/package_utilies.m4
-@@ -11,9 +11,27 @@ AC_DEFUN([AC_PACKAGE_NEED_UTILITY],
+@@ -11,6 +11,23 @@ AC_DEFUN([AC_PACKAGE_NEED_UTILITY],
    ])
  
  #
@@ -230,16 +381,11 @@ index c034a7c..726406c 100644
 +                  rm -f conftest.c a.out
 +                  ])
 +  ])
-+
 +#
  # Generic macro, sets up all of the global build variables.
  # The following environment variables may be set to override defaults:
--#  CC MAKE LIBTOOL TAR ZIP MAKEDEPEND AWK SED ECHO SORT
-+#  CC MAKE LIBTOOL TAR ZIP eMAKEDEPEND AWK SED ECHO SORT
- #  MSGFMT MSGMERGE RPM
- #
- AC_DEFUN([AC_PACKAGE_UTILITIES],
-@@ -54,10 +72,11 @@ AC_DEFUN([AC_PACKAGE_UTILITIES],
+ #  CC MAKE LIBTOOL TAR ZIP MAKEDEPEND AWK SED ECHO SORT
+@@ -44,10 +61,11 @@ AC_DEFUN([AC_PACKAGE_UTILITIES],
      zip=$ZIP
      AC_SUBST(zip)
  
@@ -254,82 +400,99 @@ index c034a7c..726406c 100644
      AC_SUBST(makedepend)
  
      if test -z "$AWK"; then
-diff --git a/src/Makefile b/src/Makefile
-index e2a42ce..398b9dc 100644
---- a/src/Makefile
-+++ b/src/Makefile
-@@ -13,11 +13,12 @@ TARGETS = dirstress fill fill2 getpagesize holes lstat64 \
- 	multi_open_unlink dmiperf unwritten_sync genhashnames
+diff --git a/mdrestore/Makefile b/mdrestore/Makefile
+index 6dc6cd4..fd35d80 100644
+--- a/mdrestore/Makefile
++++ b/mdrestore/Makefile
+@@ -12,7 +12,7 @@ LLDLIBS = $(LIBXFS) $(LIBRT) $(LIBPTHREAD)
+ LTDEPENDENCIES = $(LIBXFS)
+ LLDFLAGS = -static
  
- LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize \
--	preallo_rw_pattern_reader preallo_rw_pattern_writer ftrunc trunc \
--	fs_perms testx looptest locktest unwritten_mmap \
-+	ftrunc trunc fs_perms testx looptest locktest unwritten_mmap \
- 	bulkstat_unlink_test bulkstat_unlink_test_modified t_dir_offset \
- 	t_futimens
- 
-+SUBDIRS =
-+
- LLDLIBS = $(LIBATTR) $(LIBHANDLE) $(LIBACL)
- 
- ifeq ($(HAVE_XLOG_ASSIGN_LSN), true)
-@@ -27,6 +28,7 @@ endif
- IRIX_TARGETS = open_unlink
- 
- ifeq ($(PKG_PLATFORM),linux)
-+PREALLO_TARGETS = preallo_rw_pattern_reader
- TARGETS += $(LINUX_TARGETS)
- TARGETS += t_immutable
- endif
-@@ -45,13 +47,10 @@ ifeq ($(HAVE_AIO), true)
- SUBDIRS += aio-dio-regress
- endif
- 
--CFILES = $(TARGETS:=.c)
--LDIRT = $(TARGETS)
--
-+CFILES := $(TARGETS:=.c)
-+LDIRT := $(TARGETS) $(PREALLO_TARGETS)
- 
--default: $(TARGETS) $(SUBDIRS)
--
--PREALLO_TARGETS = preallo_rw_pattern_reader preallo_rw_pattern_writer
-+default: depend $(TARGETS) $(PREALLO_TARGETS) $(SUBDIRS)
+-default: $(LTCOMMAND)
++default: depend $(LTCOMMAND)
  
  include $(BUILDRULES)
  
-@@ -63,7 +62,7 @@ preallo_rw_pattern_writer:
- 	@echo "    [CC]    $@"
- 	$(Q)$(LTLINK) iopat.c -DWRITE -o $@ $(CFLAGS) $(LDFLAGS) $(LDLIBS) $(LIBTEST)
- 
--$(filter-out $(PREALLO_TARGETS), $(TARGETS)): $(LIBTEST)
-+$(TARGETS): $(LIBTEST)
- 	@echo "    [CC]    $@"
- 	$(Q)$(LTLINK) $@.c -o $@ $(CFLAGS) $(LDFLAGS) $(LDLIBS) $(LIBTEST)
- 
-@@ -77,3 +76,5 @@ install: default $(addsuffix -install,$(SUBDIRS))
- 
- %-install:
- 	$(MAKE) -C $* install
+@@ -20,3 +20,5 @@ install:
+ 	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
+ 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
+ install-dev:
 +
 +-include .dep
-diff --git a/src/aio-dio-regress/Makefile b/src/aio-dio-regress/Makefile
-index f0e4d15..3f9d1c2 100644
---- a/src/aio-dio-regress/Makefile
-+++ b/src/aio-dio-regress/Makefile
-@@ -8,7 +8,7 @@ LDIRT = $(TARGETS)
+diff --git a/mkfs/Makefile b/mkfs/Makefile
+index a749262..8b61c2f 100644
+--- a/mkfs/Makefile
++++ b/mkfs/Makefile
+@@ -27,7 +27,7 @@ endif
+ LSRCFILES = $(FSTYP).c
+ LDIRT = $(FSTYP)
  
- LLDLIBS = -laio -lpthread
+-default: $(LTCOMMAND)
++default: depend $(LTCOMMAND)
  
--default: $(TARGETS)
-+default: depend $(TARGETS)
+ ifneq ($(ENABLE_BLKID),yes)
+ default: $(FSTYP)
+@@ -43,3 +43,5 @@ install: default
+ 	$(INSTALL) -m 755 -d $(PKG_ROOT_SBIN_DIR)
+ 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_ROOT_SBIN_DIR)
+ install-dev:
++
++-include .dep
+diff --git a/quota/Makefile b/quota/Makefile
+index 7aedd56..9c6411e 100644
+--- a/quota/Makefile
++++ b/quota/Makefile
+@@ -28,7 +28,7 @@ LLDLIBS += $(LIBEDITLINE) $(LIBTERMCAP)
+ CFLAGS += -DENABLE_EDITLINE
+ endif
+ 
+-default: $(LTCOMMAND)
++default: depend $(LTCOMMAND)
  
  include $(BUILDRULES)
  
-@@ -19,3 +19,5 @@ $(TARGETS):
- install:
- 	$(INSTALL) -m 755 -d $(PKG_LIB_DIR)/src/aio-dio-regress
- 	$(INSTALL) -m 755 $(TARGETS) $(PKG_LIB_DIR)/src/aio-dio-regress
+@@ -36,3 +36,5 @@ install: default
+ 	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
+ 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
+ install-dev:
++
++-include .dep
+diff --git a/repair/Makefile b/repair/Makefile
+index fa96df5..b0e03f8 100644
+--- a/repair/Makefile
++++ b/repair/Makefile
+@@ -24,7 +24,7 @@ LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
+ LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG)
+ LLDFLAGS = -static
+ 
+-default: $(LTCOMMAND)
++default: depend $(LTCOMMAND)
+ 
+ globals.o: globals.h
+ 
+@@ -48,3 +48,5 @@ install: default
+ 	$(INSTALL) -m 755 -d $(PKG_ROOT_SBIN_DIR)
+ 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_ROOT_SBIN_DIR)
+ install-dev:
++
++-include .dep
+diff --git a/rtcp/Makefile b/rtcp/Makefile
+index 5f1a803..9a5b66f 100644
+--- a/rtcp/Makefile
++++ b/rtcp/Makefile
+@@ -9,7 +9,7 @@ LTCOMMAND = xfs_rtcp
+ CFILES = xfs_rtcp.c
+ LLDFLAGS = -static
+ 
+-default: $(LTCOMMAND)
++default: depend $(LTCOMMAND)
+ 
+ include $(BUILDRULES)
+ 
+@@ -17,3 +17,5 @@ install: default
+ 	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
+ 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
+ install-dev:
 +
 +-include .dep
 -- 
