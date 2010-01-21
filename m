@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0LBNPk7068668 for <xfs@oss.sgi.com>; Thu, 21 Jan 2010 05:23:25 -0600
+	o0LBKFAf068548 for <xfs@oss.sgi.com>; Thu, 21 Jan 2010 05:20:16 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F3DB91C6A5F6
-	for <xfs@oss.sgi.com>; Thu, 21 Jan 2010 03:24:26 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 593761C6A525
+	for <xfs@oss.sgi.com>; Thu, 21 Jan 2010 03:21:17 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id FATX9QUY27l3y5i6 for
-	<xfs@oss.sgi.com>; Thu, 21 Jan 2010 03:24:26 -0800 (PST)
-Date: Thu, 21 Jan 2010 06:24:26 -0500
+	by cuda.sgi.com with ESMTP id FPZEOED5c1Hl2Kgx for
+	<xfs@oss.sgi.com>; Thu, 21 Jan 2010 03:21:17 -0800 (PST)
+Date: Thu, 21 Jan 2010 06:21:15 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/2] xfstests: Automatic build dependency calculations
-Message-ID: <20100121112426.GB27634@infradead.org>
+Subject: Re: [PATCH 1/2] xfstests: rebuild aclocal.m4
+Message-ID: <20100121112115.GA27634@infradead.org>
 References: <1264053773-6054-1-git-send-email-david@fromorbit.com>
-	<1264053773-6054-3-git-send-email-david@fromorbit.com>
+	<1264053773-6054-2-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1264053773-6054-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1264053773-6054-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,29 +32,19 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
->  LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize \
-> -	preallo_rw_pattern_reader preallo_rw_pattern_writer ftrunc trunc \
-> -	fs_perms testx looptest locktest unwritten_mmap \
-> +	ftrunc trunc fs_perms testx looptest locktest unwritten_mmap \
->  	bulkstat_unlink_test bulkstat_unlink_test_modified t_dir_offset \
->  	t_futimens
->  
-> +SUBDIRS =
-> +
->  LLDLIBS = $(LIBATTR) $(LIBHANDLE) $(LIBACL)
->  
->  ifeq ($(HAVE_XLOG_ASSIGN_LSN), true)
-> @@ -27,6 +28,7 @@ endif
->  IRIX_TARGETS = open_unlink
->  
->  ifeq ($(PKG_PLATFORM),linux)
-> +PREALLO_TARGETS = preallo_rw_pattern_reader
+On Thu, Jan 21, 2010 at 05:02:52PM +1100, Dave Chinner wrote:
+> The local m4 configuration has not been built in a long time.
+> Trying to rebuild it results in failures with dmapi library
+> detection and libxfs.h detection macros. Fix the errors and rebuild
+> it.
+> 
+> Note: the new format for the aclocal.m4 file uses m4_include
+> directives which means it is much smaller th an before and won't
+> need updating unless we include new m4 macro files.
 
-What happens to the writer here?  Before introducing more special cases
-for this duplicates let me post my patch to make the file compiled more
-normal, will send it out ASAP.
-
-Otherwise looks good to me.
+Looks good, but shouldn't we create aclocal.m4 automocatically as part
+of make configure which generates the rest of the auto* stuff and stop
+having it checked into the git repository?
 
 _______________________________________________
 xfs mailing list
