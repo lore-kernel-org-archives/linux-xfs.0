@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0MFl9U2130287 for <xfs@oss.sgi.com>; Fri, 22 Jan 2010 09:47:10 -0600
-Received: from mail-ew0-f213.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 98497F3B237
-	for <xfs@oss.sgi.com>; Fri, 22 Jan 2010 07:48:10 -0800 (PST)
-Received: from mail-ew0-f213.google.com (mail-ew0-f213.google.com
-	[209.85.219.213]) by cuda.sgi.com with ESMTP id
-	QWdM9o1rHIS8lHad for <xfs@oss.sgi.com>;
-	Fri, 22 Jan 2010 07:48:10 -0800 (PST)
-Received: by ewy5 with SMTP id 5so1408293ewy.12
-	for <xfs@oss.sgi.com>; Fri, 22 Jan 2010 07:48:09 -0800 (PST)
-MIME-Version: 1.0
-Date: Fri, 22 Jan 2010 10:48:08 -0500
-Message-ID: <f4da9efd1001220748i140ec49jddbb7098dddf4960@mail.gmail.com>
-Subject: Assistance needed mounting XFS version 1 filesystem
-From: Jordan <nerovid@gmail.com>
-Reply-To: nerovid@gmail.com
+	o0MHlwEc133250 for <xfs@oss.sgi.com>; Fri, 22 Jan 2010 11:47:58 -0600
+Received: from smtp2-g21.free.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 412561C7009F
+	for <xfs@oss.sgi.com>; Fri, 22 Jan 2010 09:48:58 -0800 (PST)
+Received: from smtp2-g21.free.fr (smtp2-g21.free.fr [212.27.42.2]) by
+	cuda.sgi.com with ESMTP id rXsVq7t3aNrAWPNA for
+	<xfs@oss.sgi.com>; Fri, 22 Jan 2010 09:48:58 -0800 (PST)
+Received: from smtp2-g21.free.fr (localhost [127.0.0.1])
+	by smtp2-g21.free.fr (Postfix) with ESMTP id E8B484B025A
+	for <xfs@oss.sgi.com>; Fri, 22 Jan 2010 18:48:52 +0100 (CET)
+Received: from harpe.intellique.com (labo.djinux.com [82.225.196.72])
+	by smtp2-g21.free.fr (Postfix) with ESMTP id 0CBB24B0246
+	for <xfs@oss.sgi.com>; Fri, 22 Jan 2010 18:48:49 +0100 (CET)
+Date: Fri, 22 Jan 2010 18:54:19 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: nfs performance delta between filesystems
+Message-ID: <20100122185419.63ae6430@harpe.intellique.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,106 +33,65 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hello,
-I have been trying to mount an old Maxoptix optical drive with
-XFS-formatted media for a week now without success.=A0 From what I can
-tell, the media were formatted using XFS version 1, support for which
-was removed from the Linux kernel a few years back.
 
-Here is the output of fdisk -l:
-Disk /dev/sda (SGI disk label): 64 heads, 32 sectors, 1096 cylinders
-Units =3D cylinders of 2048 * 512 bytes
+Here is an interesting mystery to solve : XFS is always much faster
+locally than all other FSs, but quite slower through NFS.
 
------ partitions -----
-Pt#     Device  Info     Start       End   Sectors  Id  System
- 1:  /dev/sda1  boot         2       986   2018340   a  SGI xfs
- 2:  /dev/sda2  swap       987      1096    224490   3  SGI raw
- 9:  /dev/sda3               0         1      2100   0  SGI volhdr
-11:  /dev/sda4               0      1096   2244930   6  SGI volume
------ Bootinfo -----
-Bootfile: /unix
------ Directory Entries -----
- 0: sgilabel   sector    2 size     512
+I'm benchmarking a RAID-10 setup with various filesystems, ext3, reiser
+(3.6), jfs and xfs. I'm strictly and only interested in continuous
+sequential write (data recording) through NFS (basic 1G Eth), so I'm
+benchmarking with =
 
-When I try to mount the /dev/sda1 partition, I get the following error:
 
-# mount -t xfs /dev/sda1 /optical
-mount: block device /dev/sda1 is write-protected, mounting read-only
-mount: /dev/sda1: can't read superblock
+dd if=3D/dev/zero of=3D/mnt/whatever/file bs=3D1M
 
-# dmesg | tail
-Current sda: sense key Data Protect
-Additional sense: Write protected
-end_request: I/O error, dev sda, sector 1017642
-xfs_force_shutdown(sda1,0x1) called from line 353 of file
-fs/xfs/xfs_rw.c.  Return address =3D 0x44ff9bfa
-Filesystem "sda1": I/O Error Detected.  Shutting down filesystem: sda1
-Please umount the filesystem, and rectify the problem(s)
-I/O error in filesystem ("sda1") meta-data dev sda1 block 0xf7dfe
- ("xlog_bwrite") error 5 buf count 131072
-XFS: failed to locate log tail
-XFS: log mount/recovery failed
-XFS: log mount failed
+following the throughput with iostat.
 
-xfs_check comes back with no errors.
+Setup : linux 2.6.27.21, software RAID 10 (64K stripe), 1GB RAM, 64
+bits kernel, 4 Savvio 500GB disks, Phenom II, Intel Pro1000 network.
 
-# xfs_db /dev/sda1
-xfs_db> sb 0
-xfs_db> p
-magicnum =3D 0x58465342
-blocksize =3D 4096
-dblocks =3D 252292
-rblocks =3D 0
-rextents =3D 0
-uuid =3D d4bc0c01-b21d-1001-866b-0800690a794d
-logstart =3D 131076
-rootino =3D 128
-rbmino =3D 129
-rsumino =3D 130
-rextsize =3D 16
-agblocks =3D 31537
-agcount =3D 8
-rbmblocks =3D 0
-logblocks =3D 1000
-versionnum =3D 0x1
-sectsize =3D 512
-inodesize =3D 256
-inopblock =3D 16
-fname =3D "\000\000\000\000\000\000\000\000\000\000\000\000"
-blocklog =3D 12
-sectlog =3D 9
-inodelog =3D 8
-inopblog =3D 4
-agblklog =3D 15
-rextslog =3D 0
-inprogress =3D 0
-imax_pct =3D 25
-icount =3D 704
-ifree =3D 322
-fdblocks =3D 122918
-frextents =3D 0
-uquotino =3D 0
-gquotino =3D 0
-qflags =3D 0
-flags =3D 0
-shared_vn =3D 0
-inoalignmt =3D 0
-unit =3D 0
-width =3D 0
-dirblklog =3D 0
-logsectlog =3D 0
-logsectsize =3D 0
-logsunit =3D 0
-features2 =3D 0
-xfs_db>
+All the following tests have been run several times each, to even
+results.
 
-My running kernel is 2.6.5-1.358 on Fedora Core 2.  I went with an old
-distribution to try to find a kernel that still has XFS version 1
-support built in.
+Locally, xfs mounted this way =
 
-Any help or advice you could provide would be great.
 
-Jordan
+/dev/md2 on /mnt/raid type xfs (rw,noatime,nobarrier)
+
+is wayyyyy better than all other filesystems :
+
+~# dd if=3D/dev/zero of=3D/mnt/raid/testdd bs=3D1M count=3D4096
+4096+0 records in
+4096+0 records out
+4294967296 bytes (4.3 GB) copied, 23.0655 s, 186 MB/s
+
+ext3, jfs and reiser score the same around 150 MB/s.
+
+I'm exporting the mountpoint through NFS :
+
+/mnt/raid    *(fsid=3D0,rw,async,no_root_squash,no_subtree_check)
+
+And mount with no options (or just "tcp") on the client. Then the
+results are quite different. XFS gives a bit less than 90 MB/s (not
+bad):
+
+ ~$ sudo dd if=3D/dev/zero of=3D/mnt/temp/testnfsdd1 bs=3D1M count=3D2048
+2048+0 enregistrements lus
+2048+0 enregistrements =E9crits
+2147483648 octets (2,1 GB) copi=E9s, 24,1755 s, 88,8 MB/s
+
+But... reiserfs gives ~ 92 MB/s, and ext3 95 MB/s. Results are
+consistently better with both through NFS, while they're constantly
+much worse locally... How come???
+
+-- =
+
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
 
 _______________________________________________
 xfs mailing list
