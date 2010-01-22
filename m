@@ -1,15 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0MIbOX1134466 for <xfs@oss.sgi.com>; Fri, 22 Jan 2010 12:37:25 -0600
-Date: Fri, 22 Jan 2010 12:38:48 -0600
-From: bpm@sgi.com
+	o0MKjhol139929 for <xfs@oss.sgi.com>; Fri, 22 Jan 2010 14:45:43 -0600
+Received: from smtp5-g21.free.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 90ECA1848E6
+	for <xfs@oss.sgi.com>; Fri, 22 Jan 2010 12:46:42 -0800 (PST)
+Received: from smtp5-g21.free.fr (smtp5-g21.free.fr [212.27.42.5]) by
+	cuda.sgi.com with ESMTP id KzlanlZOQmbIrbY0 for
+	<xfs@oss.sgi.com>; Fri, 22 Jan 2010 12:46:42 -0800 (PST)
+Date: Fri, 22 Jan 2010 21:46:24 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
 Subject: Re: nfs performance delta between filesystems
-Message-ID: <20100122183848.GB28561@sgi.com>
+Message-ID: <20100122214624.7095a9c4@galadriel.home>
+In-Reply-To: <20100122183848.GB28561@sgi.com>
 References: <20100122185419.63ae6430@harpe.intellique.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100122185419.63ae6430@harpe.intellique.com>
+	<20100122183848.GB28561@sgi.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,38 +24,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Emmanuel Florac <eflorac@intellique.com>
+To: bpm@sgi.com
 Cc: xfs@oss.sgi.com
 
-Hey Emmanuel,
+Le Fri, 22 Jan 2010 12:38:48 -0600 vous =E9criviez:
 
-I did some research on this in April last year on an old, old kernel.
-One of the codepaths I flagged:
+> There were small gains to be had by reordering the sync of the parent
+> and child syncs where the two inodes were in the same cluster.  The
+> larger problem seemed to be that we're not treating the log as stable
+> storage. By calling write_inode_now we've written the changes to the
+> log first and then gone and also written them out to the inode.  =
 
-nfsd_create
-  write_inode_now
-    __sync_single_inode
-      write_inode
-        xfs_fs_write_inode
-	  xfs_inode_flush
-	    xfs_iflush
 
-There were small gains to be had by reordering the sync of the parent and
-child syncs where the two inodes were in the same cluster.  The larger
-problem seemed to be that we're not treating the log as stable storage.
-By calling write_inode_now we've written the changes to the log first
-and then gone and also written them out to the inode.  
+I thought that using nobarrier would prevent the log operations to be
+sync'd to disk too quickly? Could I possibly enhance this behaviour by
+using an external log on a very fast storage (ramdisk...)?
 
-nfsd_create, nfsd_link, and nfsd_setattr all do this (or do in the old
-kernel I'm looking at).  I have a patchset that changes
-this to an fsync so we force the log and call it good.  I'll be happy to
-dust it off if someone hasn't already addressed this situation.
+> nfsd_create, nfsd_link, and nfsd_setattr all do this (or do in the old
+> kernel I'm looking at).  I have a patchset that changes
+> this to an fsync so we force the log and call it good.  I'll be happy
+> to dust it off if someone hasn't already addressed this situation.
 
--Ben
+Well, if you think this patchset can be applied to a current kernel
+without too much hacking I'm ready to give it a try :)
+
+-- =
+
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
 
 _______________________________________________
 xfs mailing list
