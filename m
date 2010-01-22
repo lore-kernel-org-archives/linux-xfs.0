@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0M9rrlI120436 for <xfs@oss.sgi.com>; Fri, 22 Jan 2010 03:53:53 -0600
-Received: from mail-gx0-f221.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 88C1F1C6E5D1
-	for <xfs@oss.sgi.com>; Fri, 22 Jan 2010 01:54:54 -0800 (PST)
-Received: from mail-gx0-f221.google.com (mail-gx0-f221.google.com
-	[209.85.217.221]) by cuda.sgi.com with ESMTP id
-	TGOZvpLGhMEbl6UX for <xfs@oss.sgi.com>;
-	Fri, 22 Jan 2010 01:54:54 -0800 (PST)
-Received: by gxk21 with SMTP id 21so848915gxk.19
-	for <xfs@oss.sgi.com>; Fri, 22 Jan 2010 01:54:53 -0800 (PST)
+	o0MFl9U2130287 for <xfs@oss.sgi.com>; Fri, 22 Jan 2010 09:47:10 -0600
+Received: from mail-ew0-f213.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 98497F3B237
+	for <xfs@oss.sgi.com>; Fri, 22 Jan 2010 07:48:10 -0800 (PST)
+Received: from mail-ew0-f213.google.com (mail-ew0-f213.google.com
+	[209.85.219.213]) by cuda.sgi.com with ESMTP id
+	QWdM9o1rHIS8lHad for <xfs@oss.sgi.com>;
+	Fri, 22 Jan 2010 07:48:10 -0800 (PST)
+Received: by ewy5 with SMTP id 5so1408293ewy.12
+	for <xfs@oss.sgi.com>; Fri, 22 Jan 2010 07:48:09 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A69B3@cf--amer001e--3.americas.sgi.com>
-References: <20100121111720.GA20641@infradead.org>
-	<1AB9A794DBDDF54A8A81BE2296F7BDFE012A69B3@cf--amer001e--3.americas.sgi.com>
-From: "Guk-Bong, Kwon" <gbkwon@gmail.com>
-Date: Fri, 22 Jan 2010 18:54:32 +0900
-Message-ID: <77cc6e171001220154w7445caf9o7ec3a62c5bdfd5b5@mail.gmail.com>
-Subject: Re: [help] project quota information incorrect over nfs ...
+Date: Fri, 22 Jan 2010 10:48:08 -0500
+Message-ID: <f4da9efd1001220748i140ec49jddbb7098dddf4960@mail.gmail.com>
+Subject: Assistance needed mounting XFS version 1 filesystem
+From: Jordan <nerovid@gmail.com>
+Reply-To: nerovid@gmail.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,50 +25,114 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="euc-kr"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com, Alex Elder <aelder@sgi.com>
+To: xfs@oss.sgi.com
 
-Zmlyc3QuLiB0aGFua3MgZm9yIHlvdXIgaW50ZXJlc3QKCnlvdXIgcGF0Y2hlcyBpcyBjb3JyZWN0
-Li4KCjIwMTAvMS8yMiBBbGV4IEVsZGVyIDxhZWxkZXJAc2dpLmNvbT46Cj4gQ2hyaXN0b3BoIEhl
-bGx3aWcgd3JvdGU6Cj4+IE9uIFRodSwgSmFuIDIxLCAyMDEwIGF0IDAxOjEyOjA2UE0gKzA5MDAs
-IEd1ay1Cb25nLCBLd29uIHdyb3RlOgo+Pj4gbmZzIGNsaWVudCAibmZzX3NlcnZlcjovdGVzdC8x
-MTEiIFNpemUgaXMgY29ycmVjdC4uKDEwME0pCj4+Pgo+Pj4gYnV0IG5mcyBjbGllbnQgIm5mc19z
-ZXJ2ZXI6L3Rlc3QvMTExIiBBdmFpbCBpcyBpbmNvcnJlY3QuLiAoNTAwTSkKPj4+Cj4+PiAiQXZh
-aWwiIGlzIGJpZyB0aGFuICJTaXplIiAuLi4KPj4+Cj4+PiB0aGlzIHN0YXQgaXMgbm9ybWFsPz8K
-Pj4KPj4gTm8sIGl0J3Mgbm90LiAgVGhlIHBhdGNoIGJlbG93IHNob3VsZCBmaXggaXQsIGJ1dCBJ
-J20gbm90IHN1cmUgaG93Cj4+IGVhc2lseSBiYWNrcG9ydGFibGUgaXQgaXMgdG8gMi42LjI3Ogo+
-Cj4gSSdtIGdvaW5nIHRvIHRha2UgdGhpcyBhcyBhIFtQQVRDSF0gYW5kIHNheSBpdCBsb29rcyBn
-b29kIHRvIG1lLgo+IEl0IHdpbGwgcHJvYmFibHkgbm90IGJlIGRpZmZpY3VsdCBmb3Igc29tZW9u
-ZSB0byBwb3J0IGl0IGJhY2sKPiB0byAyLjYuMjcuCj4KPj4gU2lnbmVkLW9mZi1ieTogQ2hyaXN0
-b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+Cj4KPiBSZXZpZXdlZC1ieTogQWxleCBFbGRlciA8YWVs
-ZGVyQHNnaS5jb20+Cj4KPj4gSW5kZXg6IGxpbnV4LTIuNi9mcy94ZnMvcXVvdGEveGZzX3FtX2Jo
-di5jCj4+ID09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT0KPj4gLS0tIGxpbnV4LTIuNi5vcmlnL2ZzL3hmcy9xdW90YS94ZnNf
-cW1fYmh2LmMgIDIwMTAtMDEtMjEgMTI6MTM6NTEuMzk3MDAzOTY5ICswMTAwCj4+ICsrKyBsaW51
-eC0yLjYvZnMveGZzL3F1b3RhL3hmc19xbV9iaHYuYyAgICAgICAyMDEwLTAxLTIxIDEyOjE0OjE0
-LjI5MDAwOTU3MSArMDEwMAo+PiBAQCAtNTksNyArNTksNyBAQCB4ZnNfZmlsbF9zdGF0dmZzX2Zy
-b21fZHF1b3QoCj4+ICAgICAgICAgICAgICAgYmU2NF90b19jcHUoZHAtPmRfYmxrX2hhcmRsaW1p
-dCk7Cj4+ICAgICAgIGlmIChsaW1pdCAmJiBzdGF0cC0+Zl9ibG9ja3MgPiBsaW1pdCkgewo+PiAg
-ICAgICAgICAgICAgIHN0YXRwLT5mX2Jsb2NrcyA9IGxpbWl0Owo+PiAtICAgICAgICAgICAgIHN0
-YXRwLT5mX2JmcmVlID0KPj4gKyAgICAgICAgICAgICBzdGF0cC0+Zl9iZnJlZSA9IHN0YXRwLT5m
-X2JhdmFpbCA9Cj4+ICAgICAgICAgICAgICAgICAgICAgICAoc3RhdHAtPmZfYmxvY2tzID4gYmU2
-NF90b19jcHUoZHAtPmRfYmNvdW50KSkgPwo+PiAgICAgICAgICAgICAgICAgICAgICAgIChzdGF0
-cC0+Zl9ibG9ja3MgLSBiZTY0X3RvX2NwdShkcC0+ZF9iY291bnQpKSA6IDA7Cj4+ICAgICAgIH0K
-Pj4KPj4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KPj4g
-eGZzIG1haWxpbmcgbGlzdAo+PiB4ZnNAb3NzLnNnaS5jb20KPj4gaHR0cDovL29zcy5zZ2kuY29t
-L21haWxtYW4vbGlzdGluZm8veGZzCj4KPgoKCgotLSAKsKi75yDH1bTPtNkuCgqxx7G5usAuCgo9
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09CiAgU2VuaW9y
-IFJlc2VhcmNoZXIgR3VrLUJvbmcsIEt3b24KICBHTFVFU1lTIENvLiwgTHRkLiwgUmVzZWFyY2gg
-Q2VudGVyCiAgNzA1IEhvLCBBbnlhbmcgSy1jZW50ZXIgQnVpbGRpbmcgLCAxNTkxLTksCiAgQnVy
-aW0tZG9uZywgRG9uZ2FuLWd1LCBBbnlhbmctc2ksIEd5ZW9uZ2dpLWRvLAogIDQzMS04MTUsIFJl
-cHVibGljIG9mIEtvcmVhCiAgVGVsIDogKzgyLTMxLTM4OC0zMjYwKDQwMSkKICBGYXggOiArODIt
-MzEtMzg4LTMyNjEKICBNb2JpbGUgOiArODItMTAtMjU4NC0xOTc2CiAgRS1tYWlsIDogZ2Jrd29u
-QGdsdWVzeXMuY29tLCBnYmt3b25AZ21haWwuY29tCiAgSG9tZXBhZ2UgOiBodHRwOi8vd3d3Lmds
-dWVzeXMuY29tLwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMg
-bWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9s
-aXN0aW5mby94ZnMK
+Hello,
+I have been trying to mount an old Maxoptix optical drive with
+XFS-formatted media for a week now without success.=A0 From what I can
+tell, the media were formatted using XFS version 1, support for which
+was removed from the Linux kernel a few years back.
+
+Here is the output of fdisk -l:
+Disk /dev/sda (SGI disk label): 64 heads, 32 sectors, 1096 cylinders
+Units =3D cylinders of 2048 * 512 bytes
+
+----- partitions -----
+Pt#     Device  Info     Start       End   Sectors  Id  System
+ 1:  /dev/sda1  boot         2       986   2018340   a  SGI xfs
+ 2:  /dev/sda2  swap       987      1096    224490   3  SGI raw
+ 9:  /dev/sda3               0         1      2100   0  SGI volhdr
+11:  /dev/sda4               0      1096   2244930   6  SGI volume
+----- Bootinfo -----
+Bootfile: /unix
+----- Directory Entries -----
+ 0: sgilabel   sector    2 size     512
+
+When I try to mount the /dev/sda1 partition, I get the following error:
+
+# mount -t xfs /dev/sda1 /optical
+mount: block device /dev/sda1 is write-protected, mounting read-only
+mount: /dev/sda1: can't read superblock
+
+# dmesg | tail
+Current sda: sense key Data Protect
+Additional sense: Write protected
+end_request: I/O error, dev sda, sector 1017642
+xfs_force_shutdown(sda1,0x1) called from line 353 of file
+fs/xfs/xfs_rw.c.  Return address =3D 0x44ff9bfa
+Filesystem "sda1": I/O Error Detected.  Shutting down filesystem: sda1
+Please umount the filesystem, and rectify the problem(s)
+I/O error in filesystem ("sda1") meta-data dev sda1 block 0xf7dfe
+ ("xlog_bwrite") error 5 buf count 131072
+XFS: failed to locate log tail
+XFS: log mount/recovery failed
+XFS: log mount failed
+
+xfs_check comes back with no errors.
+
+# xfs_db /dev/sda1
+xfs_db> sb 0
+xfs_db> p
+magicnum =3D 0x58465342
+blocksize =3D 4096
+dblocks =3D 252292
+rblocks =3D 0
+rextents =3D 0
+uuid =3D d4bc0c01-b21d-1001-866b-0800690a794d
+logstart =3D 131076
+rootino =3D 128
+rbmino =3D 129
+rsumino =3D 130
+rextsize =3D 16
+agblocks =3D 31537
+agcount =3D 8
+rbmblocks =3D 0
+logblocks =3D 1000
+versionnum =3D 0x1
+sectsize =3D 512
+inodesize =3D 256
+inopblock =3D 16
+fname =3D "\000\000\000\000\000\000\000\000\000\000\000\000"
+blocklog =3D 12
+sectlog =3D 9
+inodelog =3D 8
+inopblog =3D 4
+agblklog =3D 15
+rextslog =3D 0
+inprogress =3D 0
+imax_pct =3D 25
+icount =3D 704
+ifree =3D 322
+fdblocks =3D 122918
+frextents =3D 0
+uquotino =3D 0
+gquotino =3D 0
+qflags =3D 0
+flags =3D 0
+shared_vn =3D 0
+inoalignmt =3D 0
+unit =3D 0
+width =3D 0
+dirblklog =3D 0
+logsectlog =3D 0
+logsectsize =3D 0
+logsunit =3D 0
+features2 =3D 0
+xfs_db>
+
+My running kernel is 2.6.5-1.358 on Fedora Core 2.  I went with an old
+distribution to try to find a kernel that still has XFS version 1
+support built in.
+
+Any help or advice you could provide would be great.
+
+Jordan
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
