@@ -1,19 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0O6hAXq233594 for <xfs@oss.sgi.com>; Sun, 24 Jan 2010 00:43:10 -0600
-Received: from web76215.mail.sg1.yahoo.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id ACD4CF4225F
-	for <xfs@oss.sgi.com>; Sat, 23 Jan 2010 22:44:10 -0800 (PST)
-Received: from web76215.mail.sg1.yahoo.com (web76215.mail.sg1.yahoo.com
-	[124.108.115.166]) by cuda.sgi.com with SMTP id
-	HODPOAQKVW2YcO6A for <xfs@oss.sgi.com>;
-	Sat, 23 Jan 2010 22:44:10 -0800 (PST)
-Message-ID: <48356.21588.qm@web76215.mail.sg1.yahoo.com>
-Date: Sun, 24 Jan 2010 14:44:08 +0800 (SGT)
-From: Gim Leong Chin <chingimleong@yahoo.com.sg>
-Subject: Re: allocsize mount option
+	o0O7Grfa234832 for <xfs@oss.sgi.com>; Sun, 24 Jan 2010 01:16:54 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E86831C73DDA
+	for <xfs@oss.sgi.com>; Sat, 23 Jan 2010 23:17:55 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	tfrpVYCMl4BMdh41 for <xfs@oss.sgi.com>;
+	Sat, 23 Jan 2010 23:17:55 -0800 (PST)
+Date: Sun, 24 Jan 2010 18:17:52 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/2] xfstests: Automatic build dependency calculations
+Message-ID: <20100124071752.GI25842@discord.disaster>
+References: <1264053773-6054-1-git-send-email-david@fromorbit.com>
+	<1264053773-6054-3-git-send-email-david@fromorbit.com>
+	<20100121112426.GB27634@infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20100121112426.GB27634@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,103 +27,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-SGkgR3V5cywKCgpBbiB1cGRhdGU6CgpTVVNFIExpbnV4IEVudGVycHJpc2UgMTEgU1AxIHdpbGwg
-YmUgYmFzZWQgb24ga2VybmVsIDIuNi4zMiwgYWNjb3JkaW5nIHRvIE5vdmVsbCBzdXBwb3J0LCB3
-aGVuIEkgYXNrZWQgZm9yIGJhY2twb3J0aW5nLiAgVGhhdCB3aWxsIHNvbHZlIG15IHByb2JsZW1z
-LgoKSSBkbyBjb25maXJtIHRoYXQgYWxsIHRoZSBkcml2ZXMgKG5vIGZpbGUgc3lzdGVtIHRlc3Rp
-bmcpIHdlcmUgdGVzdGVkIHdpdGggTkNRIGVuYWJsZWQgb24gdGhlIFR5YW4gT3B0ZXJvbiBtb3Ro
-ZXJib2FyZC4gIFdoYXQgSSBkaWQgbGVhcm4gd2FzIHRoYXQgdGhlIG5vdGUgYm9vayBkcml2ZXMg
-bm93YWRheXMgY29tZSB3aXRoIE5DUSwgYW5kIHRoYXQgYWxsIHRoZSBTQVRBIGRlc2t0b3AgYW5k
-IG5vdGUgYm9vayBkcml2ZXMgc2hvd2VkIHZlcnkgcG9vciBzZXF1ZW50aWFsIHdyaXRlIHBlcmZv
-cm1hbmNlIHdpdGggY2FjaGUgZGlzYWJsZWQuCgpPbiBhbm90aGVyIG5vdGUsIHRoZXJlIHdhcyBh
-IHBvc3QgYnkgTWljaGFlbCBNb25uZXJpZSBvbiAyMCBOT1YgMjAwOSBhYm91dCBrZXJuZWwgMi42
-LjI3LCBYRlMsIGlub2RlNjQgYW5kIE5GUy4KSSBoYXZlIHRoZSAxMC45IFRCIGlub2RlNjQgWEZT
-IGZpbGUgc3lzdGVtIGV4cG9ydGVkIHZpYSBORlMgNCBieSBTTEVEIDExLCBhbmQgbW91bnRlZCBi
-eSBTTEVTIDEwIFNQMiwgYW5kIEkgaGF2ZSBubyBwcm9ibGVtcyB3aXRoIGl0LgoKRmluYWxseSwg
-QSBiaWcgVGhhbmsgWW91IHRvIERhdmUgQ2hpbm5lciBhbmQgRXJpYyBTYW5kZWVuIGZvciB5b3Vy
-IGtpbmQgYXNzaXN0YW5jZSEKCgpHTAoKLS0tIE9uIEZyaSwgMTUvMS8xMCwgR2ltIExlb25nIENo
-aW4gPGNoaW5naW1sZW9uZ0B5YWhvby5jb20uc2c+IHdyb3RlOgoKPiBGcm9tOiBHaW0gTGVvbmcg
-Q2hpbiA8Y2hpbmdpbWxlb25nQHlhaG9vLmNvbS5zZz4KPiBTdWJqZWN0OiBSZTogYWxsb2NzaXpl
-IG1vdW50IG9wdGlvbgo+IFRvOiAiRGF2ZSBDaGlubmVyIiA8ZGF2aWRAZnJvbW9yYml0LmNvbT4K
-PiBDYzogIkVyaWMgU2FuZGVlbiIgPHNhbmRlZW5Ac2FuZGVlbi5uZXQ+LCB4ZnNAb3NzLnNnaS5j
-b20KPiBEYXRlOiBGcmlkYXksIDE1IEphbnVhcnksIDIwMTAsIDExOjA4IEFNCj4gSGkgRGF2ZSwK
-PiAKPiBUaGFuayB5b3UgZm9yIHRoZSBhZHZpY2UhCj4gCj4gSSBoYXZlIGRvbmUgRGlyZWN0IElP
-IGRkIHRlc3RzIHdyaXRpbmcgdGhlIHNhbWUgMjAgR0IKPiBmaWxlcy7CoCBUaGUgcmVzdWx0cyBh
-cmUgYW4gZXllIG9wZW5lciHCoCBicz0xR0IsIGNvdW50PTIKPiAKPiBTaW5nbGUgaW5zdGFuY2Ug
-cmVwZWF0cyBvZiA4MzAsIDgwMCBNQi9zLCBjb21wYXJlZCB0bwo+ID4xMDAgdG8gdW5kZXIgMzAw
-IE1CL3MgZm9yIGJ1ZmZlcmVkLgo+IAo+IFR3byBpbnN0YW5jZXMgYWdncmVnYXRlIG9mIDMwNCBN
-Qi9zLCBzaXggaW5zdGFuY2VzCj4gYWdncmVnYXRlIG9mIDU4NyBNQi9zLgo+IAo+IFN5c3RlbSBk
-cml2ZSAvaG9tZSBSQUlEIDEgb2YgMTMwIE1CL3MgY29tcGFyZWQgdG8gNTEgTUIvcwo+IGJ1ZmZl
-cmVkLgo+IAo+IFNvIHRoZSBwcm9ibGVtIGlzIHdpdGggdGhlIGJ1ZmZlcmVkIHdyaXRlcy4KPiAK
-PiAKPiA+IFlvdeG8gGQgaGF2ZSB0byBnZXQgYWxsIHRoZSBmaXhlcyBmcm9tIDIuNi4zMCB0bwo+
-IDIuNi4zMiwKPiA+IGFuZCB0aGUKPiA+IGJhY2twb3J0IHdvdWxkIGJlIHZlcnkgZGlmZmljdWx0
-IHRvIGdldCByaWdodC4gQmV0dGVyCj4gPiB3b3VsZAo+ID4gYmUg2Ld1c3QgdG8gdXBncmFkZSB0
-aGUga2VybmVsIHRvIDIuNi4zMiA7KQo+IAo+IAo+IElmIEkgY2hhbmdlIHRoZSBrZXJuZWwsIEkg
-d291bGQgaGF2ZSBubyBzdXBwb3J0IGZyb20KPiBOb3ZlbGwuwqAgSSB3b3VsZCB0cnkgbXkgbHVj
-ayBhbmQgY29udmluY2UgdGhlbS4KPiAKPiA+ID4gPiBJJ2Qgc3VnZ2VzdCB0aGF0IHlvdSBtaWdo
-dCBuZWVkIHRvIGxvb2sgYXQKPiA+IGluY3JlYXNpbmcgdGhlCj4gPiA+ID4gbWF4aW11bSBJTwo+
-ID4gPiA+IHNpemUgZm9yIHRoZSBibG9jayBkZXZpY2UKPiA+ID4gPiAoL3N5cy9ibG9jay9zZGIv
-cXVldWUvbWF4X3NlY3RvcnNfa2IpLAo+ID4gPiA+IG1heWJlIHRoZSByZXF1ZXN0IHF1ZXVlIGRl
-cHRoIGFzIHdlbGwgdG8KPiBnZXQKPiA+IGxhcmdlciBJT3MgdG8KPiA+ID4gPiBiZSBwdXNoZWQK
-PiA+ID4gPiB0byB0aGUgcmFpZCBjb250cm9sbGVyLiBpZiB5b3UgY2FuLCBhdCBsZWFzdAo+IGdl
-dAo+ID4gaXQgdG8gdGhlCj4gPiA+ID4gc3RyaXBlCj4gPiA+ID4gd2lkdGggb2YgMTUzNmsuLi4u
-Cj4gPiA+IAo+ID4gPiBDb3VsZCB5b3UgZ2l2ZSBhIGdvb2QgcmVmZXJlbmNlIGZvciBwZXJmb3Jt
-YW5jZQo+IHR1bmluZwo+ID4gb2YgdGhlc2UKPiA+ID4gcGFyYW1ldGVycz/CoCBJIGFtIGF0IGEg
-dG90YWwgbG9zcyBoZXJlLgo+ID4gCj4gPiBXZWxjb21lIHRvIHRoZSBibGFjayBhcnQgb2Ygc3Rv
-cmFnZSBzdWJzeXN0ZW0gdHVuaW5nCj4gOykKPiA+IAo+ID4gSSdtIG5vdCBzdXJlIHRoZXJlIGlz
-IGEgZ29vZCByZWZlcmVuY2UgZm9yIHR1bmluZyB0aGUKPiBibG9jawo+ID4gZGV2aWNlCj4gPiBw
-YXJhbWV0ZXJzIC0gbW9zdCBvZiB3aGF0IEkga25vdyB3YXMgaGFuZGVkIGRvd24gYnkKPiB3b3Jk
-IG9mCj4gPiBtb3V0aAo+ID4gZnJvbSBndXJ1cyBvbiBoaWdoIG1vdW50YWlucy4KPiA+IAo+ID4g
-VGhlIG92ZXJyaWRpbmcgcHJpbmNpcGxlLCB0aG91Z2gsIGlzIHRvIHRyeSB0byBlbnN1cmUKPiB0
-aGF0Cj4gPiB0aGUKPiA+IHN0cmlwZSB3aWR0aCBzaXplZCBJT3MgY2FuIGJlIGlzc3VlZCByaWdo
-dCB0aHJvdWdoIHRoZQo+IElPCj4gPiBzdGFjayB0bwo+ID4gdGhlIGhhcmR3YXJlLCBhbmQgdGhh
-dCB0aG9zZSBJT3MgYXJlIGNvcnJlY3RseSBhbGlnbmVkCj4gdG8KPiA+IHRoZQo+ID4gc3RyaXBl
-cy4gWW91J3ZlIGdvdCB0aGUgZmlsZXN5c3RlbSBjb25maWd1cmF0aW9uIGFuZAo+IGxheW91dAo+
-ID4gcGFydAo+ID4gY29ycmVjdCwgbm93IGl0J3MganVzdCB0dW5pbmcgdGhlIGJsb2NrIGxheWVy
-IHRvIHBhc3MKPiB0aGUKPiA+IElPJ3MKPiA+IHRocm91Z2guCj4gCj4gQ2FuIEkgY29uZmlybSB0
-aGF0Cj4gKC9zeXMvYmxvY2svc2RiL3F1ZXVlL21heF9zZWN0b3JzX2tiKT1zdHJpcGUgd2lkdGgg
-MTUzNiBrQgo+IAo+IFdoaWNoIHBhcmFtZXRlciBpcyAicmVxdWVzdCBxdWV1ZSBkZXB0aCI/wqAg
-V2hhdCBzaG91bGQgYmUKPiB0aGUgdmFsdWU/Cj4gCj4gCj4gIAo+ID4gRldJVywgeW91ciB0ZXN0
-cyBhcmUgbm90IHRpbWluZyBob3cgbG9uZ2l0IHRha2VzIGZvcgo+IGFsbAo+ID4gdGhlCj4gPiBk
-YXRhIHRvIGhpdCB0aGUgZGlzaywgb25seSBob3cgbG9uZyBpdCB0YWtlcyB0byBnZXQKPiBpbnRv
-Cj4gPiBjYWNoZS4KPiAKPiAKPiBUaGFuayB5b3UhwqAgSSBkbyBrbm93IHRoYXQgWEZTIGJ1ZmZl
-cnMgd3JpdGVzCj4gZXh0ZW5zaXZlbHkuwqAgVGhlIGRyaXZlIExFRHMgcmVtYWluIGxpZ2h0ZWQg
-bG9uZyBhZnRlcgo+IHRoZSBPUyBzYXlzIHRoZSB3cml0ZXMgYXJlIGNvbXBsZXRlZC7CoCBQbHVz
-IHNvbWUKPiB0aW1pbmdzIGFyZSBwaHlzaWNhbGx5IGltcG9zc2libGUuCj4gCj4gIAo+ID4gVGhh
-dCBzb3VuZHMgd3JvbmcgLSBpdCBzb3VuZHMgbGlrZSBOQ1EgaXMgbm90Cj4gZnVuY3Rpb25pbmcK
-PiA+IHByb3Blcmx5Cj4gPiBhcyB3aXRoIE5DUSBlbmFibGVkLCBkaXNhYmxpbmcgdGhlIGRyaXZl
-IGNhY2hlIHNob3VsZAo+IG5vdAo+ID4gaW1wYWN0Cj4gPiB0aHJvdWdocHV0IGF0IGFsbC4uLi4K
-PiAKPiBJIGRvIG5vdCByZW1lbWJlciBjbGVhcmx5IGlmIE5DUSBpcyBhdmFpbGFibGUgZm9yIHRo
-YXQKPiBtb3RoZXJib2FyZCwgaXQgaXMgYW4gVWJ1bnR1IDMyLWJpdCwgYnV0IEkgZG8gcmVtZW1i
-ZXIKPiBzZWVpbmcgcXVldWUgZGVwdGggaW4gdGhlIGtlcm5lbC7CoCBJIHdpbGwgY2hlY2sgaXQg
-b3V0Cj4gbmV4dCB3ZWVrLgo+IAo+IEJ1dCB3aGF0IEkgcmVhZCBpcyB0aGF0IE5DUSBodXJ0cyBz
-aW5nbGUgd3JpdGUKPiBwZXJmb3JtYW5jZS7CoCBUaGF0IGlzIGFsc28gd2hhdCBJIGZvdW5kIHdp
-dGggYW5vdGhlcgo+IEFyZWNhIFNBVEEgUkFJRCBpbiBXaW5kb3dzIFhQLgo+IAo+IFdoYXQgSSBm
-b3VuZCB3aXRoIGFsbCB0aGUgZHJpdmVzIHdlIHRlc3RlZCB3YXMgdGhhdAo+IGRpc2FibGluZyB0
-aGUgY2FjaGUgYmFkbHkgaHVydCBzZXF1ZW50aWFsIHdyaXRlIHBlcmZvcm1hbmNlCj4gKG5vIGZp
-bGUgc3lzdGVtLCB3cml0ZSBkYXRhIGRpcmVjdGx5IHRvIGRlc2lnbmF0ZWQgTEJBKS4KPiAKPiAK
-PiAKPiA+IEknZCBzdWdnZXN0IHRyeWluZyB0byBmaW5kIGFub3RoZXIgZGlzdHJpYnV0b3IgdGhh
-dAo+IHdpbGwKPiA+IGJyaW5nIHRoZW0KPiA+IGluIGZvciB5b3UuIFB1dHRpbmcgdGhhdCBtYW55
-IGRyaXZlcyBpbiBhIHNpbmdsZQo+IGNoYXNzaXMgaXMKPiA+IGFsbW9zdAo+ID4gY2VydGFpbmx5
-IGdvaW5nIHRvIGNhdXNlIHZpYnJhdGlvbiBwcm9ibGVtcywKPiBlc3BlY2lhbGx5IGlmCj4gPiB5
-b3UgZ2V0Cj4gPiBhbGwgdGhlIGRpc2sgaGVhZHMgbW92aW5nIGluIGNsb3NlIHN5bmNocm9uaXNh
-dGlvbgo+ICh3aGljaAo+ID4gaXMgd2hhdAo+ID4gaGFwcGVucyB3aGVuIHlvdSBnZXQgYWxsIHlv
-dXIgSU8gc2l6aW5nIGFuZCBhbGlnbm1lbnQKPiA+IHJpZ2h0KS4KPiAKPiBJIGFtIHdvcmtpbmcg
-b24gY2hhbmdpbmcgdG8gdGhlIFdEIENhdmlhciBSRTQgZHJpdmVzLsKgCj4gTm90IHN1cmUgaWYg
-SSBjYW4gcHVsbCBpdCBvZmYuCj4gCj4gCj4gCj4gQ2hpbiBHaW0gTGVvbmcKPiAKPiAKPiDCoCDC
-oCDCoCBOZXcgRW1haWwgbmFtZXMgZm9yIHlvdSEgCj4gR2V0IHRoZSBFbWFpbCBuYW1lIHlvdSd2
-ZSBhbHdheXMgd2FudGVkIG9uIHRoZSBuZXcKPiBAeW1haWwgYW5kIEByb2NrZXRtYWlsLiAKPiBI
-dXJyeSBiZWZvcmUgc29tZW9uZSBlbHNlIGRvZXMhCgo+IGh0dHA6Ly9tYWlsLnByb21vdGlvbnMu
-eWFob28uY29tL25ld2RvbWFpbnMvc2cvCj4gCgoKICAgICAgX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpTZWFyY2gs
-IGJyb3dzZSBhbmQgYm9vayB5b3VyIGhvdGVscyBhbmQgZmxpZ2h0cyB0aHJvdWdoIFlhaG9vISBU
-cmF2ZWwuCmh0dHA6Ly9zZy50cmF2ZWwueWFob28uY29tCgpfX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNv
-bQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Thu, Jan 21, 2010 at 06:24:26AM -0500, Christoph Hellwig wrote:
+> >  LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize \
+> > -	preallo_rw_pattern_reader preallo_rw_pattern_writer ftrunc trunc \
+> > -	fs_perms testx looptest locktest unwritten_mmap \
+> > +	ftrunc trunc fs_perms testx looptest locktest unwritten_mmap \
+> >  	bulkstat_unlink_test bulkstat_unlink_test_modified t_dir_offset \
+> >  	t_futimens
+> >  
+> > +SUBDIRS =
+> > +
+> >  LLDLIBS = $(LIBATTR) $(LIBHANDLE) $(LIBACL)
+> >  
+> >  ifeq ($(HAVE_XLOG_ASSIGN_LSN), true)
+> > @@ -27,6 +28,7 @@ endif
+> >  IRIX_TARGETS = open_unlink
+> >  
+> >  ifeq ($(PKG_PLATFORM),linux)
+> > +PREALLO_TARGETS = preallo_rw_pattern_reader
+> 
+> What happens to the writer here?
+
+Oops, missed it.
+>
+> Before introducing more special cases
+> for this duplicates let me post my patch to make the file compiled more
+> normal, will send it out ASAP.
+
+OK, I'll pull your patch into my series and rebase my change on it
+before pushing the lot of them.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
