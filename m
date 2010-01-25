@@ -1,28 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0P5Vs9q033113 for <xfs@oss.sgi.com>; Sun, 24 Jan 2010 23:31:54 -0600
+	o0P6LwD4037528 for <xfs@oss.sgi.com>; Mon, 25 Jan 2010 00:21:58 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5B081184F33
-	for <xfs@oss.sgi.com>; Sun, 24 Jan 2010 21:32:56 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
-	[150.101.137.103]) by cuda.sgi.com with ESMTP id
-	ZEOixBFpcRLzWJOH for <xfs@oss.sgi.com>;
-	Sun, 24 Jan 2010 21:32:56 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AB2A31C767A7
+	for <xfs@oss.sgi.com>; Sun, 24 Jan 2010 22:23:00 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	r9wBg5HaAT7ANqaN for <xfs@oss.sgi.com>;
+	Sun, 24 Jan 2010 22:23:00 -0800 (PST)
 Received: from discord (unverified [121.44.156.64])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	11549003-1927428
-	for <xfs@oss.sgi.com>; Mon, 25 Jan 2010 16:02:55 +1030 (CDT)
+	11565360-1927428
+	for <xfs@oss.sgi.com>; Mon, 25 Jan 2010 16:52:59 +1030 (CDT)
 Received: from [192.168.1.6] (helo=disturbed) by discord with esmtp (Exim 4.69)
-	(envelope-from <dave@fromorbit.com>) id 1NZHZF-0002uf-IB
-	for xfs@oss.sgi.com; Mon, 25 Jan 2010 16:32:53 +1100
+	(envelope-from <dave@fromorbit.com>) id 1NZILi-0002xZ-HL
+	for xfs@oss.sgi.com; Mon, 25 Jan 2010 17:22:58 +1100
 Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1NZHZE-0004lD-CH
-	for xfs@oss.sgi.com; Mon, 25 Jan 2010 16:32:52 +1100
+	(envelope-from <dave@disturbed.disaster>) id 1NZILX-0003oD-Gx
+	for xfs@oss.sgi.com; Mon, 25 Jan 2010 17:22:47 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: don't hold onto reserved blocks on remount,ro
-Date: Mon, 25 Jan 2010 16:32:52 +1100
-Message-Id: <1264397572-18230-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 7/7] xfs: xfs_fs_write_inode() can fail to write inodes
+	synchronously
+Date: Mon, 25 Jan 2010 17:22:44 +1100
+Message-Id: <1264400564-19704-8-git-send-email-david@fromorbit.com>
+In-Reply-To: <1264400564-19704-1-git-send-email-david@fromorbit.com>
+References: <1264400564-19704-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,89 +41,99 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-If we hold onto reserved blocks when doing a remount,ro we end
-up writing the blocks used count to disk that includes the reserved
-blocks. Reserved blocks are not actually used, so this results in
-the values in the superblock being incorrect.
+When an inode has already be flushed delayed write,
+xfs_inode_clean() returns true and hence xfs_fs_write_inode() can
+return on a synchronous inode write without having written the
+inode. Currently these sycnhronous writes only come from the unmount
+path or the nfsd on a synchronous export so should be fairly rare.
 
-Hence if we run xfs_check or xfs_repair -n while the filesystem is
-mounted remount,ro we end up with an inconsistent filesystem being
-reported. Also, running xfs_copy on the remount,ro filesystem will
-result in an inconsistent image being generated.
+Realistically, a synchronous inode write is not necessary here; we
+can treat this like fsync where we either force the log if there are
+no unlogged changes, or do a sync transaction if there are unlogged
+changes. The will result real synchronous semantics as the fsync
+will issue barriers, but may slow down the above two configurations
+as a result. However, if the inode is not pinned and has no unlogged
+changes, then the fsync code is a no-op and hence it may be faster
+than the existing code.
 
-To fix this, unreserve the blocks when doing the remount,ro, and
-reserved them again on remount,rw. This way a remount,ro filesystem
-will appear consistent on disk to all utilities.
+For the asynchronous write, move the clean check until after we have
+locked up the inode. With the inode locked and the flush lock held,
+we know that if the inodis clean there are no pending changes in the
+log and there are no current outstanding delayed writes or IO in
+progress, so if it reports clean now it really is clean. This matches
+the order of locking and checks in xfs_sync_inode_attr().
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/linux-2.6/xfs_super.c |   28 ++++++++++++++++++++++++++++
- fs/xfs/xfs_mount.h           |    1 +
- 2 files changed, 29 insertions(+), 0 deletions(-)
+ fs/xfs/linux-2.6/xfs_super.c |   44 ++++++++++++++++++++++++-----------------
+ 1 files changed, 26 insertions(+), 18 deletions(-)
 
 diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
-index 9f2e398..67001ec 100644
+index 5ed0468..4cfc82a 100644
 --- a/fs/xfs/linux-2.6/xfs_super.c
 +++ b/fs/xfs/linux-2.6/xfs_super.c
-@@ -1318,6 +1318,8 @@ xfs_fs_remount(
- 
- 	/* ro -> rw */
- 	if ((mp->m_flags & XFS_MOUNT_RDONLY) && !(*flags & MS_RDONLY)) {
-+		__uint64_t resblks;
-+
- 		mp->m_flags &= ~XFS_MOUNT_RDONLY;
- 		if (mp->m_flags & XFS_MOUNT_BARRIER)
- 			xfs_mountfs_check_barriers(mp);
-@@ -1335,11 +1337,37 @@ xfs_fs_remount(
- 			}
- 			mp->m_update_flags = 0;
- 		}
-+
+@@ -1045,14 +1045,18 @@ xfs_fs_write_inode(
+ 		error = xfs_wait_on_pages(ip, 0, -1);
+ 		if (error)
+ 			goto out;
 +		/*
-+		 * Fill out the reserve pool if it is empty. Use the stashed
-+		 * value if it is non-zero, otherwise go with the default.
++		 * The fsync operation makes inode changes stable and it
++		 * reduces the IOs we have to do here from two (log and inode)
++		 * to just the log. We still need to do a delwri write of the
++		 * inode after this to flush it to the bacing buffer so that
++		 * bulkstat works properly.
 +		 */
-+		if (mp->m_resblks_ro) {
-+			resblks = mp->m_resblks_ro;
-+			mp->m_resblks_ro = 0;
-+		} else {
-+			resblks = mp->m_sb.sb_dblocks;
-+			do_div(resblks, 20);
-+			resblks = min_t(__uint64_t, resblks, 1024);
-+		}
-+		xfs_reserve_blocks(mp, &resblks, NULL);
++		error = xfs_fsync(ip);
++		if (error)
++			goto out;
  	}
  
- 	/* rw -> ro */
- 	if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (*flags & MS_RDONLY)) {
-+		/*
-+		 * After we have synced the data but before we sync the
-+		 * metadata, we need to free up the reserve block pool so that
-+		 * the used block count in the superblock on disk is correct at
-+		 * the end of the remount. Stash the current reserve pool size
-+		 * so that if we get remounted rw, we can return it to the same
-+		 * size.
-+		 */
-+		__uint64_t resblks = 0;
-+
- 		xfs_quiesce_data(mp);
-+		mp->m_resblks_ro = mp->m_resblks;
-+		xfs_reserve_blocks(mp, &resblks, NULL);
- 		xfs_quiesce_attr(mp);
- 		mp->m_flags |= XFS_MOUNT_RDONLY;
+-	/*
+-	 * Bypass inodes which have already been cleaned by
+-	 * the inode flush clustering code inside xfs_iflush
+-	 */
+-	if (xfs_inode_clean(ip))
+-		goto out;
+ 
+ 	/*
+ 	 * We make this non-blocking if the inode is contended, return
+@@ -1060,20 +1064,24 @@ xfs_fs_write_inode(
+ 	 * This prevents the flush path from blocking on inodes inside
+ 	 * another operation right now, they get caught later by xfs_sync.
+ 	 */
+-	if (sync) {
+-		xfs_ilock(ip, XFS_ILOCK_SHARED);
+-		xfs_iflock(ip);
+-
+-		error = xfs_iflush(ip, SYNC_WAIT);
+-	} else {
+-		error = EAGAIN;
+-		if (!xfs_ilock_nowait(ip, XFS_ILOCK_SHARED))
+-			goto out;
+-		if (xfs_ipincount(ip) || !xfs_iflock_nowait(ip))
+-			goto out_unlock;
++	error = EAGAIN;
++	if (!xfs_ilock_nowait(ip, XFS_ILOCK_SHARED))
++		goto out;
++	if (xfs_ipincount(ip) || !xfs_iflock_nowait(ip))
++		goto out_unlock;
+ 
+-		error = xfs_iflush(ip, 0);
++	/*
++	 * Now we have the flush lock and the inode is not pinned, we can check
++	 * if the inode is really clean as we know that there are no pending
++	 * transaction completions, it is not waiting on the delayed write
++	 * queue and there is no IO in progress.
++	 */
++	error = 0;
++	if (xfs_inode_clean(ip)) {
++		xfs_ifunlock(ip);
++		goto out_unlock;
  	}
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index f4d1441..a3de553 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -225,6 +225,7 @@ typedef struct xfs_mount {
- 	__uint64_t		m_maxioffset;	/* maximum inode offset */
- 	__uint64_t		m_resblks;	/* total reserved blocks */
- 	__uint64_t		m_resblks_avail;/* available reserved blocks */
-+	__uint64_t		m_resblks_ro;	/* reserved blks @ remount,ro */
- 	int			m_dalign;	/* stripe unit */
- 	int			m_swidth;	/* stripe width */
- 	int			m_sinoalign;	/* stripe unit inode alignment */
++	error = xfs_iflush(ip, 0);
+ 
+  out_unlock:
+ 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
 -- 
 1.6.5
 
