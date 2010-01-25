@@ -1,28 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0PCaoEx054278 for <xfs@oss.sgi.com>; Mon, 25 Jan 2010 06:36:50 -0600
-Received: from mx1.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E7D944D0833
-	for <xfs@oss.sgi.com>; Mon, 25 Jan 2010 04:37:53 -0800 (PST)
-Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
-	with ESMTP id gYw7eTtWyvzRm6ZL for <xfs@oss.sgi.com>;
-	Mon, 25 Jan 2010 04:37:53 -0800 (PST)
-Date: Mon, 25 Jan 2010 23:37:46 +1100
-From: Nick Piggin <npiggin@suse.de>
-Subject: Re: [patch 2/2] xfs: use scalable vmap API
-Message-ID: <20100125123746.GA24406@laptop>
-References: <20081021082542.GA6974@wotan.suse.de>
-	<20081021082735.GB6974@wotan.suse.de>
-	<20081021120932.GB13348@infradead.org>
-	<20081022093018.GD4359@wotan.suse.de>
-	<20100119121505.GA9428@infradead.org>
-	<20100125075445.GD19664@laptop>
-	<20100125081750.GA20012@infradead.org>
-	<20100125083309.GF19664@laptop>
+	o0PF37Er060708 for <xfs@oss.sgi.com>; Mon, 25 Jan 2010 09:03:08 -0600
+Date: Mon, 25 Jan 2010 10:04:10 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: nfs performance delta between filesystems
+Message-ID: <20100125150410.GA25699@infradead.org>
+References: <20100122185419.63ae6430@harpe.intellique.com>
+	<20100122183848.GB28561@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100125083309.GF19664@laptop>
+In-Reply-To: <20100122183848.GB28561@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,226 +23,56 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-mm@kvack.org, xfs@oss.sgi.com
+To: bpm@sgi.com
+Cc: xfs@oss.sgi.com
 
-On Mon, Jan 25, 2010 at 07:33:09PM +1100, Nick Piggin wrote:
-> > Any easy way to get them?  Sorry, not uptodate on your new vmalloc
-> > implementation anymore.
+On Fri, Jan 22, 2010 at 12:38:48PM -0600, bpm@sgi.com wrote:
+> Hey Emmanuel,
 > 
-> Let me try writing a few (tested) patches here first that I can send you.
+> I did some research on this in April last year on an old, old kernel.
+> One of the codepaths I flagged:
+> 
+> nfsd_create
+>   write_inode_now
+>     __sync_single_inode
+>       write_inode
+>         xfs_fs_write_inode
+> 	  xfs_inode_flush
+> 	    xfs_iflush
+> 
+> There were small gains to be had by reordering the sync of the parent and
+> child syncs where the two inodes were in the same cluster.  The larger
+> problem seemed to be that we're not treating the log as stable storage.
+> By calling write_inode_now we've written the changes to the log first
+> and then gone and also written them out to the inode.  
+> 
+> nfsd_create, nfsd_link, and nfsd_setattr all do this (or do in the old
+> kernel I'm looking at).  I have a patchset that changes
+> this to an fsync so we force the log and call it good.  I'll be happy to
+> dust it off if someone hasn't already addressed this situation.
 
-Well is it easy to reproduce the vmap failure? Here is a better tested
-patch if you can try it. It fixes a couple of bugs and does some purging
-of fragmented blocks.
+Dave and I had had some discussion about this when going through his
+inode writeback changes.  Changing to ->fsync might indeed be the
+easiest option, but on the other hand I'm really trying to get rid of
+the special case of ->fsync without a file argument in the VFS as it
+complicates stackable filesystem layers and also creates a rather
+annoying and under/un documented assumtion that filesystem that need
+the file pointer can't be NFS exported.  One option if we want to
+keep these semantics is to add a new export operation just for
+synchronizations things in NFS.
 
-If it does not help, can you tell me how many CPUs in your system?
+But given that the current use case in NFS is to pair one write_inode
+call with one actual VFS operation it might be better to just
+automatically turn on the wsync mount option in XFS, we'd need a hook
+from NFSD into the filesystem to implement this, but I've been looking
+into adding this anyway to allow for checking other paramters like the
+file handle size against filesystem limitations.  Any chance you
+could run your tests against a wsync filesystem?
 
-Thanks,
-Nick
-
---
-
-Index: linux-2.6/mm/vmalloc.c
-===================================================================
---- linux-2.6.orig/mm/vmalloc.c	2010-01-25 23:35:03.000000000 +1100
-+++ linux-2.6/mm/vmalloc.c	2010-01-25 23:35:15.000000000 +1100
-@@ -509,6 +509,9 @@ static unsigned long lazy_max_pages(void
- 
- static atomic_t vmap_lazy_nr = ATOMIC_INIT(0);
- 
-+/* for per-CPU blocks */
-+static void purge_fragmented_blocks_allcpus(void);
-+
- /*
-  * Purges all lazily-freed vmap areas.
-  *
-@@ -539,6 +542,9 @@ static void __purge_vmap_area_lazy(unsig
- 	} else
- 		spin_lock(&purge_lock);
- 
-+	if (sync)
-+		purge_fragmented_blocks_allcpus();
-+
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(va, &vmap_area_list, list) {
- 		if (va->flags & VM_LAZY_FREE) {
-@@ -667,8 +673,6 @@ static bool vmap_initialized __read_most
- struct vmap_block_queue {
- 	spinlock_t lock;
- 	struct list_head free;
--	struct list_head dirty;
--	unsigned int nr_dirty;
- };
- 
- struct vmap_block {
-@@ -678,10 +682,9 @@ struct vmap_block {
- 	unsigned long free, dirty;
- 	DECLARE_BITMAP(alloc_map, VMAP_BBMAP_BITS);
- 	DECLARE_BITMAP(dirty_map, VMAP_BBMAP_BITS);
--	union {
--		struct list_head free_list;
--		struct rcu_head rcu_head;
--	};
-+	struct list_head free_list;
-+	struct rcu_head rcu_head;
-+	struct list_head purge;
- };
- 
- /* Queue of free and dirty vmap blocks, for allocation and flushing purposes */
-@@ -757,7 +760,7 @@ static struct vmap_block *new_vmap_block
- 	vbq = &get_cpu_var(vmap_block_queue);
- 	vb->vbq = vbq;
- 	spin_lock(&vbq->lock);
--	list_add(&vb->free_list, &vbq->free);
-+	list_add_rcu(&vb->free_list, &vbq->free);
- 	spin_unlock(&vbq->lock);
- 	put_cpu_var(vmap_block_queue);
- 
-@@ -776,8 +779,6 @@ static void free_vmap_block(struct vmap_
- 	struct vmap_block *tmp;
- 	unsigned long vb_idx;
- 
--	BUG_ON(!list_empty(&vb->free_list));
--
- 	vb_idx = addr_to_vb_idx(vb->va->va_start);
- 	spin_lock(&vmap_block_tree_lock);
- 	tmp = radix_tree_delete(&vmap_block_tree, vb_idx);
-@@ -788,12 +789,61 @@ static void free_vmap_block(struct vmap_
- 	call_rcu(&vb->rcu_head, rcu_free_vb);
- }
- 
-+static void purge_fragmented_blocks(int cpu)
-+{
-+	LIST_HEAD(purge);
-+	struct vmap_block *vb;
-+	struct vmap_block *n_vb;
-+	struct vmap_block_queue *vbq = &per_cpu(vmap_block_queue, cpu);
-+
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(vb, &vbq->free, free_list) {
-+
-+		if (!(vb->free + vb->dirty == VMAP_BBMAP_BITS && vb->dirty != VMAP_BBMAP_BITS))
-+			continue;
-+
-+		spin_lock(&vb->lock);
-+		if (vb->free + vb->dirty == VMAP_BBMAP_BITS && vb->dirty != VMAP_BBMAP_BITS) {
-+			vb->free = 0; /* prevent further allocs after releasing lock */
-+			vb->dirty = VMAP_BBMAP_BITS; /* prevent purging it again */
-+			bitmap_fill(vb->alloc_map, VMAP_BBMAP_BITS);
-+			bitmap_fill(vb->dirty_map, VMAP_BBMAP_BITS);
-+			spin_lock(&vbq->lock);
-+			list_del_rcu(&vb->free_list);
-+			spin_unlock(&vbq->lock);
-+			spin_unlock(&vb->lock);
-+			list_add_tail(&vb->purge, &purge);
-+		} else
-+			spin_unlock(&vb->lock);
-+	}
-+	rcu_read_unlock();
-+
-+	list_for_each_entry_safe(vb, n_vb, &purge, purge) {
-+		list_del(&vb->purge);
-+		free_vmap_block(vb);
-+	}
-+}
-+
-+static void purge_fragmented_blocks_thiscpu(void)
-+{
-+	purge_fragmented_blocks(smp_processor_id());
-+}
-+
-+static void purge_fragmented_blocks_allcpus(void)
-+{
-+	int cpu;
-+
-+	for_each_possible_cpu(cpu)
-+		purge_fragmented_blocks(cpu);
-+}
-+
- static void *vb_alloc(unsigned long size, gfp_t gfp_mask)
- {
- 	struct vmap_block_queue *vbq;
- 	struct vmap_block *vb;
- 	unsigned long addr = 0;
- 	unsigned int order;
-+	int purge = 0;
- 
- 	BUG_ON(size & ~PAGE_MASK);
- 	BUG_ON(size > PAGE_SIZE*VMAP_MAX_ALLOC);
-@@ -806,24 +856,38 @@ again:
- 		int i;
- 
- 		spin_lock(&vb->lock);
-+		if (vb->free < 1UL << order)
-+			goto next;
-+
- 		i = bitmap_find_free_region(vb->alloc_map,
- 						VMAP_BBMAP_BITS, order);
- 
--		if (i >= 0) {
--			addr = vb->va->va_start + (i << PAGE_SHIFT);
--			BUG_ON(addr_to_vb_idx(addr) !=
--					addr_to_vb_idx(vb->va->va_start));
--			vb->free -= 1UL << order;
--			if (vb->free == 0) {
--				spin_lock(&vbq->lock);
--				list_del_init(&vb->free_list);
--				spin_unlock(&vbq->lock);
-+		if (i < 0) {
-+			if (vb->free + vb->dirty == VMAP_BBMAP_BITS) {
-+				/* fragmented and no outstanding allocations */
-+				BUG_ON(vb->dirty != VMAP_BBMAP_BITS);
-+				purge = 1;
- 			}
--			spin_unlock(&vb->lock);
--			break;
-+			goto next;
- 		}
-+		addr = vb->va->va_start + (i << PAGE_SHIFT);
-+		BUG_ON(addr_to_vb_idx(addr) !=
-+				addr_to_vb_idx(vb->va->va_start));
-+		vb->free -= 1UL << order;
-+		if (vb->free == 0) {
-+			spin_lock(&vbq->lock);
-+			list_del_rcu(&vb->free_list);
-+			spin_unlock(&vbq->lock);
-+		}
-+		spin_unlock(&vb->lock);
-+		break;
-+next:
- 		spin_unlock(&vb->lock);
- 	}
-+
-+	if (purge)
-+		purge_fragmented_blocks_thiscpu();
-+
- 	put_cpu_var(vmap_block_queue);
- 	rcu_read_unlock();
- 
-@@ -860,11 +924,11 @@ static void vb_free(const void *addr, un
- 	BUG_ON(!vb);
- 
- 	spin_lock(&vb->lock);
--	bitmap_allocate_region(vb->dirty_map, offset >> PAGE_SHIFT, order);
-+	BUG_ON(bitmap_allocate_region(vb->dirty_map, offset >> PAGE_SHIFT, order));
- 
- 	vb->dirty += 1UL << order;
- 	if (vb->dirty == VMAP_BBMAP_BITS) {
--		BUG_ON(vb->free || !list_empty(&vb->free_list));
-+		BUG_ON(vb->free);
- 		spin_unlock(&vb->lock);
- 		free_vmap_block(vb);
- 	} else
-@@ -1033,8 +1097,6 @@ void __init vmalloc_init(void)
- 		vbq = &per_cpu(vmap_block_queue, i);
- 		spin_lock_init(&vbq->lock);
- 		INIT_LIST_HEAD(&vbq->free);
--		INIT_LIST_HEAD(&vbq->dirty);
--		vbq->nr_dirty = 0;
- 	}
- 
- 	/* Import existing vmlist entries. */
+But all this affects metadata performance, and only for sync exports,
+while the OP does a simple dd which is streaming data I/O and uses the
+(extremly unsafe) async export operation that disables the write_inode
+calls.
 
 _______________________________________________
 xfs mailing list
