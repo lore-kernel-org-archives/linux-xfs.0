@@ -1,30 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0P6Lnw4037472 for <xfs@oss.sgi.com>; Mon, 25 Jan 2010 00:21:49 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9B9691888FE
-	for <xfs@oss.sgi.com>; Sun, 24 Jan 2010 22:22:51 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	YNxtGI1BKeP60wlP for <xfs@oss.sgi.com>;
-	Sun, 24 Jan 2010 22:22:51 -0800 (PST)
-Received: from discord (unverified [121.44.156.64])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	11427982-1927428
-	for <xfs@oss.sgi.com>; Mon, 25 Jan 2010 16:52:50 +1030 (CDT)
-Received: from [192.168.1.6] (helo=disturbed) by discord with esmtp (Exim 4.69)
-	(envelope-from <dave@fromorbit.com>) id 1NZILY-0002xI-7B
-	for xfs@oss.sgi.com; Mon, 25 Jan 2010 17:22:48 +1100
-Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1NZILX-0003nr-3R
-	for xfs@oss.sgi.com; Mon, 25 Jan 2010 17:22:47 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/7] xfs: Make inode reclaim states explicit
-Date: Mon, 25 Jan 2010 17:22:38 +1100
-Message-Id: <1264400564-19704-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1264400564-19704-1-git-send-email-david@fromorbit.com>
-References: <1264400564-19704-1-git-send-email-david@fromorbit.com>
+	o0P7rmwL042108 for <xfs@oss.sgi.com>; Mon, 25 Jan 2010 01:53:49 -0600
+Received: from mx2.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A6B03F48618
+	for <xfs@oss.sgi.com>; Sun, 24 Jan 2010 23:54:50 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id 1BmxZaE6WXNS8m5k for <xfs@oss.sgi.com>;
+	Sun, 24 Jan 2010 23:54:50 -0800 (PST)
+Date: Mon, 25 Jan 2010 18:54:45 +1100
+From: Nick Piggin <npiggin@suse.de>
+Subject: Re: [patch 2/2] xfs: use scalable vmap API
+Message-ID: <20100125075445.GD19664@laptop>
+References: <20081021082542.GA6974@wotan.suse.de>
+	<20081021082735.GB6974@wotan.suse.de>
+	<20081021120932.GB13348@infradead.org>
+	<20081022093018.GD4359@wotan.suse.de>
+	<20100119121505.GA9428@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20100119121505.GA9428@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,194 +28,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-mm@kvack.org, xfs@oss.sgi.com
 
-A.K.A.: don't rely on xfs_iflush() return value in reclaim
+On Tue, Jan 19, 2010 at 07:15:05AM -0500, Christoph Hellwig wrote:
+> Hi Nick,
+> 
+> I've looked into retesting and re-enabling the swithc to your
+> scalabale vmap API (original commit 95f8e302c04c0b0c6de35ab399a5551605eeb006).
+> 
+> The good thing is that I can't reproduce the original regressions in
+> xfstests I've seen.  The bad news is that starting from the second
+> consequitive xfstests run we're not able to vmalloc the log buffers
+> anymore.  It seems the use of this API introduces some leak of vmalloc
+> space.  Any idea how to debug this further?
 
-We have gradually been moving checks out of the reclaim code because
-they are duplicated in xfs_iflush(). We've had a history of problems
-in this area, and many of them stem from the overloading of the
-return values from xfs_iflush() and interaction with inode flush
-locking to determine if the inode is safe to reclaim.
+Hi Christoph,
 
-With the desire to move to delayed write flushing of inodes and
-non-blocking inode tree reclaim walks, the overloading of the
-return value of xfs_iflush makes it very difficult to determine
-the correct thing to do next.
+OK, that's worrying. It's silly have all that vmap layer work in the
+tree and no users, not surprised to have a bug there.
 
-This patch explicitly re-adds the checks to the inode reclaim code,
-removing the reliance on the return value of xfs_iflush() to
-determine what to do next. It also means that we can clearly
-document all the inode states that reclaim must handle and hence
-we can easily see that we handled all the necessary cases.
+Is this on a 32-bit system with small vmalloc area?
 
-This also removes the need for the xfs_inode_clean() check in
-xfs_iflush() as all callers now check this first (safely).
+Basically in the scalable API implementation, we allocate per-CPU vmap
+chunks (struct vmap_block) from the normal global allocator, and then
+subsequently do allocations from those chunks using the simple bitmap
+allocator.
 
-Signed-off-by: Dave Chinner <david@fromorbit.com>
----
- fs/xfs/linux-2.6/xfs_sync.c |   80 ++++++++++++++++++++++++++++++++----------
- fs/xfs/xfs_inode.c          |   11 +-----
- fs/xfs/xfs_inode.h          |    1 +
- 3 files changed, 63 insertions(+), 29 deletions(-)
+Now there is more room for fragmentation with this approach, and a few
+problems that I should really fix: firstly, a chunk with say a 1 page
+hole left in it that is never used will never get freed. So it will be
+good to free those chunks. Secondly, one CPU should be able to steal
+from others if it can't find more memory.
 
-diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index c9b863e..98b8937 100644
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -706,12 +706,43 @@ __xfs_inode_clear_reclaim_tag(
- 			XFS_INO_TO_AGINO(mp, ip->i_ino), XFS_ICI_RECLAIM_TAG);
- }
- 
-+/*
-+ * Inodes in different states need to be treated differently, and the return
-+ * value of xfs_iflush is not sufficient to get this right. The following table
-+ * lists the inode states and the reclaim actions necessary for non-blocking
-+ * reclaim:
-+ *
-+ *
-+ *	inode state	     iflush ret		required action
-+ *      ---------------      ----------         ---------------
-+ *	bad			-		reclaim
-+ *	shutdown		EIO		unpin and reclaim
-+ *	clean, unpinned		0		reclaim
-+ *	stale, unpinned		0		reclaim
-+ *	clean, pinned(*)	0		unpin and reclaim
-+ *	stale, pinned		0		unpin and reclaim
-+ *	dirty, async		0		block on flush lock, reclaim
-+ *	dirty, sync flush	0		block on flush lock, reclaim
-+ *
-+ * (*) dgc: I don't think the clean, pinned state is possible but it gets
-+ * handled anyway given the order of checks implemented.
-+ *
-+ * Hence the order of actions after gaining the locks should be:
-+ *	bad		=> reclaim
-+ *	shutdown	=> unpin and reclaim
-+ *	pinned		=> unpin
-+ *	stale		=> reclaim
-+ *	clean		=> reclaim
-+ *	dirty		=> flush, wait and reclaim
-+ */
- STATIC int
- xfs_reclaim_inode(
- 	struct xfs_inode	*ip,
- 	struct xfs_perag	*pag,
- 	int			sync_mode)
- {
-+	int	error;
-+
- 	/*
- 	 * The radix tree lock here protects a thread in xfs_iget from racing
- 	 * with us starting reclaim on the inode.  Once we have the
-@@ -729,30 +760,41 @@ xfs_reclaim_inode(
- 	spin_unlock(&ip->i_flags_lock);
- 	write_unlock(&pag->pag_ici_lock);
- 
--	/*
--	 * If the inode is still dirty, then flush it out.  If the inode
--	 * is not in the AIL, then it will be OK to flush it delwri as
--	 * long as xfs_iflush() does not keep any references to the inode.
--	 * We leave that decision up to xfs_iflush() since it has the
--	 * knowledge of whether it's OK to simply do a delwri flush of
--	 * the inode or whether we need to wait until the inode is
--	 * pulled from the AIL.
--	 * We get the flush lock regardless, though, just to make sure
--	 * we don't free it while it is being flushed.
--	 */
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	xfs_iflock(ip);
- 
--	/*
--	 * In the case of a forced shutdown we rely on xfs_iflush() to
--	 * wait for the inode to be unpinned before returning an error.
--	 */
--	if (!is_bad_inode(VFS_I(ip)) && xfs_iflush(ip, sync_mode) == 0) {
--		/* synchronize with xfs_iflush_done */
--		xfs_iflock(ip);
--		xfs_ifunlock(ip);
-+	if (is_bad_inode(VFS_I(ip)))
-+		goto reclaim;
-+	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
-+		xfs_iunpin_wait(ip);
-+		goto reclaim;
-+	}
-+	if (xfs_ipincount(ip))
-+		xfs_iunpin_wait(ip);
-+	if (xfs_iflags_test(ip, XFS_ISTALE))
-+		goto reclaim;
-+	if (xfs_inode_clean(ip))
-+		goto reclaim;
-+
-+	/* Now we have an inode that needs flushing */
-+	error = xfs_iflush(ip, sync_mode);
-+	if (!error) {
-+		switch(sync_mode) {
-+		case XFS_IFLUSH_DELWRI_ELSE_ASYNC:
-+		case XFS_IFLUSH_DELWRI:
-+		case XFS_IFLUSH_ASYNC:
-+		case XFS_IFLUSH_DELWRI_ELSE_SYNC:
-+		case XFS_IFLUSH_SYNC:
-+			/* IO issued, synchronise with IO completion */
-+			xfs_iflock(ip);
-+		default:
-+			ASSERT(0);
-+			break;
-+		}
- 	}
- 
-+reclaim:
-+	xfs_ifunlock(ip);
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	xfs_ireclaim(ip);
- 	return 0;
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index d0d1b5a..8d0666d 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2493,7 +2493,7 @@ __xfs_iunpin_wait(
- 		wait_event(ip->i_ipin_wait, (atomic_read(&ip->i_pincount) == 0));
- }
- 
--static inline void
-+void
- xfs_iunpin_wait(
- 	xfs_inode_t	*ip)
- {
-@@ -2849,15 +2849,6 @@ xfs_iflush(
- 	mp = ip->i_mount;
- 
- 	/*
--	 * If the inode isn't dirty, then just release the inode flush lock and
--	 * do nothing.
--	 */
--	if (xfs_inode_clean(ip)) {
--		xfs_ifunlock(ip);
--		return 0;
--	}
--
--	/*
- 	 * We can't flush the inode until it is unpinned, so wait for it if we
- 	 * are allowed to block.  We know noone new can pin it, because we are
- 	 * holding the inode lock shared and you need to hold it exclusively to
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index ec1f28c..8b618ea 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -483,6 +483,7 @@ int		xfs_iunlink(struct xfs_trans *, xfs_inode_t *);
- void		xfs_iext_realloc(xfs_inode_t *, int, int);
- void		xfs_ipin(xfs_inode_t *);
- void		xfs_iunpin(xfs_inode_t *);
-+void		xfs_iunpin_wait(xfs_inode_t *);
- int		xfs_iflush(xfs_inode_t *, uint);
- void		xfs_ichgtime(xfs_inode_t *, int);
- void		xfs_lock_inodes(xfs_inode_t **, int, uint);
--- 
-1.6.5
+So if you have small vmalloc space, it could be just these issues making
+vmalloc consumption worse. Otherwise yes there could be a real leak there
+unrelated to fragmentation.
+
+When the vmap allocation fails, it would be good to basically see the
+alloc_map and dirty_map for each of the vmap_blocks. This is going to be
+a lot of information. Basically for all blocks with
+free+dirty == VMAP_BBMAP_BITS are ones that could be released and you
+could try the alloc again.
+
+Thanks,
+Nick
 
 _______________________________________________
 xfs mailing list
