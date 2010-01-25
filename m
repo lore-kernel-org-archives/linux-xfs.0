@@ -1,31 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0P6LwD4037528 for <xfs@oss.sgi.com>; Mon, 25 Jan 2010 00:21:58 -0600
+	o0P6Lw8L037529 for <xfs@oss.sgi.com>; Mon, 25 Jan 2010 00:21:58 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AB2A31C767A7
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B74BA188907
 	for <xfs@oss.sgi.com>; Sun, 24 Jan 2010 22:23:00 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	r9wBg5HaAT7ANqaN for <xfs@oss.sgi.com>;
+Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
+	[150.101.137.102]) by cuda.sgi.com with ESMTP id
+	k3ZyGZANwwJkCj7o for <xfs@oss.sgi.com>;
 	Sun, 24 Jan 2010 22:23:00 -0800 (PST)
 Received: from discord (unverified [121.44.156.64])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	11565360-1927428
+	11427985-1927428
 	for <xfs@oss.sgi.com>; Mon, 25 Jan 2010 16:52:59 +1030 (CDT)
 Received: from [192.168.1.6] (helo=disturbed) by discord with esmtp (Exim 4.69)
-	(envelope-from <dave@fromorbit.com>) id 1NZILi-0002xZ-HL
+	(envelope-from <dave@fromorbit.com>) id 1NZILi-0002xQ-CC
 	for xfs@oss.sgi.com; Mon, 25 Jan 2010 17:22:58 +1100
 Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1NZILX-0003oD-Gx
+	(envelope-from <dave@disturbed.disaster>) id 1NZILX-0003o1-Bn
 	for xfs@oss.sgi.com; Mon, 25 Jan 2010 17:22:47 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 7/7] xfs: xfs_fs_write_inode() can fail to write inodes
-	synchronously
-Date: Mon, 25 Jan 2010 17:22:44 +1100
-Message-Id: <1264400564-19704-8-git-send-email-david@fromorbit.com>
+Subject: [PATCH 4/7] xfs: Sort delayed write buffers before dispatch
+Date: Mon, 25 Jan 2010 17:22:41 +1100
+Message-Id: <1264400564-19704-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1264400564-19704-1-git-send-email-david@fromorbit.com>
 References: <1264400564-19704-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,110 +34,91 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-When an inode has already be flushed delayed write,
-xfs_inode_clean() returns true and hence xfs_fs_write_inode() can
-return on a synchronous inode write without having written the
-inode. Currently these sycnhronous writes only come from the unmount
-path or the nfsd on a synchronous export so should be fairly rare.
-
-Realistically, a synchronous inode write is not necessary here; we
-can treat this like fsync where we either force the log if there are
-no unlogged changes, or do a sync transaction if there are unlogged
-changes. The will result real synchronous semantics as the fsync
-will issue barriers, but may slow down the above two configurations
-as a result. However, if the inode is not pinned and has no unlogged
-changes, then the fsync code is a no-op and hence it may be faster
-than the existing code.
-
-For the asynchronous write, move the clean check until after we have
-locked up the inode. With the inode locked and the flush lock held,
-we know that if the inodis clean there are no pending changes in the
-log and there are no current outstanding delayed writes or IO in
-progress, so if it reports clean now it really is clean. This matches
-the order of locking and checks in xfs_sync_inode_attr().
-
-Signed-off-by: Dave Chinner <david@fromorbit.com>
----
- fs/xfs/linux-2.6/xfs_super.c |   44 ++++++++++++++++++++++++-----------------
- 1 files changed, 26 insertions(+), 18 deletions(-)
-
-diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
-index 5ed0468..4cfc82a 100644
---- a/fs/xfs/linux-2.6/xfs_super.c
-+++ b/fs/xfs/linux-2.6/xfs_super.c
-@@ -1045,14 +1045,18 @@ xfs_fs_write_inode(
- 		error = xfs_wait_on_pages(ip, 0, -1);
- 		if (error)
- 			goto out;
-+		/*
-+		 * The fsync operation makes inode changes stable and it
-+		 * reduces the IOs we have to do here from two (log and inode)
-+		 * to just the log. We still need to do a delwri write of the
-+		 * inode after this to flush it to the bacing buffer so that
-+		 * bulkstat works properly.
-+		 */
-+		error = xfs_fsync(ip);
-+		if (error)
-+			goto out;
- 	}
- 
--	/*
--	 * Bypass inodes which have already been cleaned by
--	 * the inode flush clustering code inside xfs_iflush
--	 */
--	if (xfs_inode_clean(ip))
--		goto out;
- 
- 	/*
- 	 * We make this non-blocking if the inode is contended, return
-@@ -1060,20 +1064,24 @@ xfs_fs_write_inode(
- 	 * This prevents the flush path from blocking on inodes inside
- 	 * another operation right now, they get caught later by xfs_sync.
- 	 */
--	if (sync) {
--		xfs_ilock(ip, XFS_ILOCK_SHARED);
--		xfs_iflock(ip);
--
--		error = xfs_iflush(ip, SYNC_WAIT);
--	} else {
--		error = EAGAIN;
--		if (!xfs_ilock_nowait(ip, XFS_ILOCK_SHARED))
--			goto out;
--		if (xfs_ipincount(ip) || !xfs_iflock_nowait(ip))
--			goto out_unlock;
-+	error = EAGAIN;
-+	if (!xfs_ilock_nowait(ip, XFS_ILOCK_SHARED))
-+		goto out;
-+	if (xfs_ipincount(ip) || !xfs_iflock_nowait(ip))
-+		goto out_unlock;
- 
--		error = xfs_iflush(ip, 0);
-+	/*
-+	 * Now we have the flush lock and the inode is not pinned, we can check
-+	 * if the inode is really clean as we know that there are no pending
-+	 * transaction completions, it is not waiting on the delayed write
-+	 * queue and there is no IO in progress.
-+	 */
-+	error = 0;
-+	if (xfs_inode_clean(ip)) {
-+		xfs_ifunlock(ip);
-+		goto out_unlock;
- 	}
-+	error = xfs_iflush(ip, 0);
- 
-  out_unlock:
- 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
--- 
-1.6.5
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+Q3VycmVudGx5IHdoZW4gdGhlIHhmc2J1ZmQgd3JpdGVzIGRlbGF5ZWQgd3JpdGUgYnVmZmVycywg
+aXQgcHVzaGVzCnRoZW0gdG8gZGlzayBpbiB0aGUgb3JkZXIgdGhleSBjb21lIG9mZiB0aGUgZGVs
+YXllZCB3cml0ZSBsaXN0LiBJZgp0aGVyZSBhcmUgbG90cyBvZiBidWZmZXJzINGVcHJlYWQgd2lk
+ZWx5IG92ZXIgdGhlIGRpc2ssIHRoaXMgcmVzdWx0cwppbiBvdmVyd2hlbG1pbmcgdGhlIGVsZXZh
+dG9yIHNvcnQgcXVldWVzIGluIHRoZSBibG9jayBsYXllciBhbmQgd2UKZW5kIHVwIGxvc2luZyB0
+aGUgcG9zaWJpbGl0eSBvZiBtZXJnaW5nIGFkamFjZW50IGJ1ZmZlcnMgdG8gbWluaW1pc2UKdGhl
+IG51bWJlciBvZiBJT3MuCgpVc2UgdGhlIG5ldyBnZW5lcmljIGxpc3Rfc29ydCBmdW5jdGlvbiB0
+byBzb3J0IHRoZSBkZWx3cmkgZGlzcGF0Y2gKcXVldWUgYmVmb3JlIGlzc3VlIHRvIGVuc3VyZSB0
+aGF0IHRoZSBidWZmZXJzIGFyZSBwdXNoZWQgaW4gdGhlIG1vc3QKZnJpZW5kbHkgb3JkZXIgcG9z
+c2libGUgdG8gdGhlIGxvd2VyIGxheWVycy4KClNpZ25lZC1vZmYtYnk6IERhdmUgQ2hpbm5lciA8
+ZGF2aWRAZnJvbW9yYml0LmNvbT4KLS0tCiBmcy94ZnMvbGludXgtMi42L3hmc19idWYuYyB8ICAg
+ODggKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrLS0tLS0tLS0tLS0tLQogMSBmaWxlcyBj
+aGFuZ2VkLCA2MSBpbnNlcnRpb25zKCspLCAyNyBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9m
+cy94ZnMvbGludXgtMi42L3hmc19idWYuYyBiL2ZzL3hmcy9saW51eC0yLjYveGZzX2J1Zi5jCmlu
+ZGV4IGIzMDYyNjUuLmE1M2FmYjMgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy9saW51eC0yLjYveGZzX2J1
+Zi5jCisrKyBiL2ZzL3hmcy9saW51eC0yLjYveGZzX2J1Zi5jCkBAIC0zMyw2ICszMyw3IEBACiAj
+aW5jbHVkZSA8bGludXgvbWlncmF0ZS5oPgogI2luY2x1ZGUgPGxpbnV4L2JhY2tpbmctZGV2Lmg+
+CiAjaW5jbHVkZSA8bGludXgvZnJlZXplci5oPgorI2luY2x1ZGUgPGxpbnV4L2xpc3Rfc29ydC5o
+PgogCiAjaW5jbHVkZSAieGZzX3NiLmgiCiAjaW5jbHVkZSAieGZzX2ludW0uaCIKQEAgLTE4Nzcs
+MTQgKzE4NzgsNDIgQEAgeGZzX2J1Zl9kZWx3cmlfc3BsaXQoCiAKIH0KIAorLyoKKyAqIENvbXBh
+cmUgZnVuY3Rpb24gaXMgbW9yZSBjb21wbGV4IHRoYW4gaXQgbmVlZHMgdG8gYmUgYmVjYXVzZQor
+ICogdGhlIHJldHVybiB2YWx1ZSBpcyBvbmx5IDMyIGJpdHMgYW5kIHdlIGFyZSBkb2luZyBjb21w
+YXJpc29ucworICogb24gNjQgYml0IHZhbHVlcworICovCitzdGF0aWMgaW50Cit4ZnNfYnVmX2Nt
+cCgKKwl2b2lkCQkqcHJpdiwKKwlzdHJ1Y3QgbGlzdF9oZWFkICphLAorCXN0cnVjdCBsaXN0X2hl
+YWQgKmIpCit7CisJc3RydWN0IHhmc19idWYJKmFwID0gY29udGFpbmVyX29mKGEsIHN0cnVjdCB4
+ZnNfYnVmLCBiX2xpc3QpOworCXN0cnVjdCB4ZnNfYnVmCSpicCA9IGNvbnRhaW5lcl9vZihiLCBz
+dHJ1Y3QgeGZzX2J1ZiwgYl9saXN0KTsKKwl4ZnNfZGFkZHJfdAkJZGlmZjsKKworCWRpZmYgPSBh
+cC0+Yl9ibiAtIGJwLT5iX2JuOworCWlmIChkaWZmIDwgMCkKKwkJcmV0dXJuIC0xOworCWlmIChk
+aWZmID4gMCkKKwkJcmV0dXJuIDE7CisJcmV0dXJuIDA7Cit9CisKK3ZvaWQKK3hmc19idWZfZGVs
+d3JpX3NvcnQoCisJeGZzX2J1ZnRhcmdfdAkqdGFyZ2V0LAorCXN0cnVjdCBsaXN0X2hlYWQgKmxp
+c3QpCit7CisJbGlzdF9zb3J0KE5VTEwsIGxpc3QsIHhmc19idWZfY21wKTsKK30KKwogU1RBVElD
+IGludAogeGZzYnVmZCgKIAl2b2lkCQkqZGF0YSkKIHsKLQlzdHJ1Y3QgbGlzdF9oZWFkIHRtcDsK
+LQl4ZnNfYnVmdGFyZ190CSp0YXJnZXQgPSAoeGZzX2J1ZnRhcmdfdCAqKWRhdGE7Ci0JaW50CQlj
+b3VudDsKLQl4ZnNfYnVmX3QJKmJwOworCXhmc19idWZ0YXJnX3QgICAqdGFyZ2V0ID0gKHhmc19i
+dWZ0YXJnX3QgKilkYXRhOwogCiAJY3VycmVudC0+ZmxhZ3MgfD0gUEZfTUVNQUxMT0M7CiAKQEAg
+LTE4OTMsNiArMTkyMiw4IEBAIHhmc2J1ZmQoCiAJZG8gewogCQlsb25nCWFnZSA9IHhmc19idWZf
+YWdlX2NlbnRpc2VjcyAqIG1zZWNzX3RvX2ppZmZpZXMoMTApOwogCQlsb25nCXRvdXQgPSB4ZnNf
+YnVmX3RpbWVyX2NlbnRpc2VjcyAqIG1zZWNzX3RvX2ppZmZpZXMoMTApOworCQlpbnQJY291bnQg
+PSAwOworCQlzdHJ1Y3QgbGlzdF9oZWFkIHRtcDsKIAogCQlpZiAodW5saWtlbHkoZnJlZXppbmco
+Y3VycmVudCkpKSB7CiAJCQlzZXRfYml0KFhCVF9GT1JDRV9TTEVFUCwgJnRhcmdldC0+YnRfZmxh
+Z3MpOwpAQCAtMTkwNywxMSArMTkzOCwxMCBAQCB4ZnNidWZkKAogCQlzY2hlZHVsZV90aW1lb3V0
+X2ludGVycnVwdGlibGUodG91dCk7CiAKIAkJeGZzX2J1Zl9kZWx3cmlfc3BsaXQodGFyZ2V0LCAm
+dG1wLCBhZ2UpOwotCQljb3VudCA9IDA7CisJCWxpc3Rfc29ydChOVUxMLCAmdG1wLCB4ZnNfYnVm
+X2NtcCk7CiAJCXdoaWxlICghbGlzdF9lbXB0eSgmdG1wKSkgewotCQkJYnAgPSBsaXN0X2VudHJ5
+KHRtcC5uZXh0LCB4ZnNfYnVmX3QsIGJfbGlzdCk7Ci0JCQlBU1NFUlQodGFyZ2V0ID09IGJwLT5i
+X3RhcmdldCk7Ci0KKwkJCXN0cnVjdCB4ZnNfYnVmICpicDsKKwkJCWJwID0gbGlzdF9maXJzdF9l
+bnRyeSgmdG1wLCBzdHJ1Y3QgeGZzX2J1ZiwgYl9saXN0KTsKIAkJCWxpc3RfZGVsX2luaXQoJmJw
+LT5iX2xpc3QpOwogCQkJeGZzX2J1Zl9pb3N0cmF0ZWd5KGJwKTsKIAkJCWNvdW50Kys7CkBAIC0x
+OTM3LDQyICsxOTY3LDQ2IEBAIHhmc19mbHVzaF9idWZ0YXJnKAogCXhmc19idWZ0YXJnX3QJKnRh
+cmdldCwKIAlpbnQJCXdhaXQpCiB7Ci0Jc3RydWN0IGxpc3RfaGVhZCB0bXA7Ci0JeGZzX2J1Zl90
+CSpicCwgKm47CisJeGZzX2J1Zl90CSpicDsKIAlpbnQJCXBpbmNvdW50ID0gMDsKKwlMSVNUX0hF
+QUQodG1wX2xpc3QpOworCUxJU1RfSEVBRCh3YWl0X2xpc3QpOwogCiAJeGZzX2J1Zl9ydW5hbGxf
+cXVldWVzKHhmc2NvbnZlcnRkX3dvcmtxdWV1ZSk7CiAJeGZzX2J1Zl9ydW5hbGxfcXVldWVzKHhm
+c2RhdGFkX3dvcmtxdWV1ZSk7CiAJeGZzX2J1Zl9ydW5hbGxfcXVldWVzKHhmc2xvZ2Rfd29ya3F1
+ZXVlKTsKIAogCXNldF9iaXQoWEJUX0ZPUkNFX0ZMVVNILCAmdGFyZ2V0LT5idF9mbGFncyk7Ci0J
+cGluY291bnQgPSB4ZnNfYnVmX2RlbHdyaV9zcGxpdCh0YXJnZXQsICZ0bXAsIDApOworCXBpbmNv
+dW50ID0geGZzX2J1Zl9kZWx3cmlfc3BsaXQodGFyZ2V0LCAmdG1wX2xpc3QsIDApOwogCiAJLyoK
+LQkgKiBEcm9wcGVkIHRoZSBkZWxheWVkIHdyaXRlIGxpc3QgbG9jaywgbm93IHdhbGsgdGhlIHRl
+bXBvcmFyeSBsaXN0CisJICogRHJvcHBlZCB0aGUgZGVsYXllZCB3cml0ZSBsaXN0IGxvY2ssIG5v
+dyB3YWxrIHRoZSB0ZW1wb3JhcnkgbGlzdC4KKwkgKiBBbGwgSS9PIGlzIGlzc3VlZCBhc3luYyBh
+bmQgdGhlbiBpZiB3ZSBuZWVkIHRvIHdhaXQgZm9yIGNvbXBsZXRpb24KKwkgKiB3ZSBkbyB0aGF0
+IGFmdGVyIGlzc3VpbmcgYWxsIHRoZSBJTy4KIAkgKi8KLQlsaXN0X2Zvcl9lYWNoX2VudHJ5X3Nh
+ZmUoYnAsIG4sICZ0bXAsIGJfbGlzdCkgeworCWxpc3Rfc29ydChOVUxMLCAmdG1wX2xpc3QsIHhm
+c19idWZfY21wKTsKKwl3aGlsZSAoIWxpc3RfZW1wdHkoJnRtcF9saXN0KSkgeworCQlzdHJ1Y3Qg
+eGZzX2J1ZiAqYnA7CisJCWJwID0gbGlzdF9maXJzdF9lbnRyeSgmdG1wX2xpc3QsIHN0cnVjdCB4
+ZnNfYnVmLCBiX2xpc3QpOwogCQlBU1NFUlQodGFyZ2V0ID09IGJwLT5iX3RhcmdldCk7Ci0JCWlm
+ICh3YWl0KQorCQlsaXN0X2RlbF9pbml0KCZicC0+Yl9saXN0KTsKKwkJaWYgKHdhaXQpIHsKIAkJ
+CWJwLT5iX2ZsYWdzICY9IH5YQkZfQVNZTkM7Ci0JCWVsc2UKLQkJCWxpc3RfZGVsX2luaXQoJmJw
+LT5iX2xpc3QpOwotCisJCQlsaXN0X2FkZCgmYnAtPmJfbGlzdCwgJndhaXRfbGlzdCk7CisJCX0K
+IAkJeGZzX2J1Zl9pb3N0cmF0ZWd5KGJwKTsKIAl9CiAKLQlpZiAod2FpdCkKKwlpZiAod2FpdCkg
+eworCQkvKiBFeHBlZGl0ZSBhbmQgd2FpdCBmb3IgSU8gdG8gY29tcGxldGUuICovCiAJCWJsa19y
+dW5fYWRkcmVzc19zcGFjZSh0YXJnZXQtPmJ0X21hcHBpbmcpOworCQl3aGlsZSAoIWxpc3RfZW1w
+dHkoJndhaXRfbGlzdCkpIHsKKwkJCWJwID0gbGlzdF9maXJzdF9lbnRyeSgmd2FpdF9saXN0LCBz
+dHJ1Y3QgeGZzX2J1ZiwgYl9saXN0KTsKIAotCS8qCi0JICogUmVtYWluaW5nIGxpc3QgaXRlbXMg
+bXVzdCBiZSBmbHVzaGVkIGJlZm9yZSByZXR1cm5pbmcKLQkgKi8KLQl3aGlsZSAoIWxpc3RfZW1w
+dHkoJnRtcCkpIHsKLQkJYnAgPSBsaXN0X2VudHJ5KHRtcC5uZXh0LCB4ZnNfYnVmX3QsIGJfbGlz
+dCk7Ci0KLQkJbGlzdF9kZWxfaW5pdCgmYnAtPmJfbGlzdCk7Ci0JCXhmc19pb3dhaXQoYnApOwot
+CQl4ZnNfYnVmX3JlbHNlKGJwKTsKKwkJCWxpc3RfZGVsX2luaXQoJmJwLT5iX2xpc3QpOworCQkJ
+eGZzX2lvd2FpdChicCk7CisJCQl4ZnNfYnVmX3JlbHNlKGJwKTsKKwkJfQogCX0KIAogCXJldHVy
+biBwaW5jb3VudDsKLS0gCjEuNi41CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3Nz
+LnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
