@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0O7FW8w234757 for <xfs@oss.sgi.com>; Sun, 24 Jan 2010 01:15:33 -0600
+	o0P4SRmh029759 for <xfs@oss.sgi.com>; Sun, 24 Jan 2010 22:28:27 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C9D84F42897
-	for <xfs@oss.sgi.com>; Sat, 23 Jan 2010 23:16:34 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	7lK7dL5vaeb1DihF for <xfs@oss.sgi.com>;
-	Sat, 23 Jan 2010 23:16:34 -0800 (PST)
-Date: Sun, 24 Jan 2010 18:16:31 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 319EB11FD2C1
+	for <xfs@oss.sgi.com>; Sun, 24 Jan 2010 20:29:28 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	EIjVhaZ0HwFLvBuA for <xfs@oss.sgi.com>;
+	Sun, 24 Jan 2010 20:29:28 -0800 (PST)
+Date: Mon, 25 Jan 2010 15:29:25 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/2] xfstests: rebuild aclocal.m4
-Message-ID: <20100124071631.GH25842@discord.disaster>
-References: <1264053773-6054-1-git-send-email-david@fromorbit.com>
-	<1264053773-6054-2-git-send-email-david@fromorbit.com>
-	<20100121112115.GA27634@infradead.org>
+Subject: Re: linux-next: vfs/fsnotify trees build warning
+Message-ID: <20100125042925.GM25842@discord.disaster>
+References: <20100125150456.c796f0b0.sfr@canb.auug.org.au>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100121112115.GA27634@infradead.org>
+In-Reply-To: <20100125150456.c796f0b0.sfr@canb.auug.org.au>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,27 +29,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: xfs@oss.sgi.com, linux-next@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, Eric Paris <eparis@redhat.com>, linux-kernel@vger.kernel.org
 
-On Thu, Jan 21, 2010 at 06:21:15AM -0500, Christoph Hellwig wrote:
-> On Thu, Jan 21, 2010 at 05:02:52PM +1100, Dave Chinner wrote:
-> > The local m4 configuration has not been built in a long time.
-> > Trying to rebuild it results in failures with dmapi library
-> > detection and libxfs.h detection macros. Fix the errors and rebuild
-> > it.
-> > 
-> > Note: the new format for the aclocal.m4 file uses m4_include
-> > directives which means it is much smaller th an before and won't
-> > need updating unless we include new m4 macro files.
+On Mon, Jan 25, 2010 at 03:04:56PM +1100, Stephen Rothwell wrote:
+> Hi Eric, Al,
 > 
-> Looks good, but shouldn't we create aclocal.m4 automocatically as part
-> of make configure which generates the rest of the auto* stuff and stop
-> having it checked into the git repository?
+> Today's linux-next build (x86_64 allmodconfig) produced these warnings:
+> 
+> In file included from include/linux/security.h:26,
+>                  from fs/xfs/linux-2.6/xfs_iops.c:56:
+> include/linux/fsnotify.h: In function 'fsnotify_move':
+> include/linux/fsnotify.h:87: warning: pointer targets in initialization differ in signedness
+> include/linux/fsnotify.h: In function 'fsnotify_create':
+> include/linux/fsnotify.h:154: warning: pointer targets in passing argument 5 of 'fsnotify' differ in signedness
+> include/linux/fsnotify_backend.h:300: note: expected 'const char *' but argument is of type 'const unsigned char *'
+> include/linux/fsnotify.h: In function 'fsnotify_link':
+> include/linux/fsnotify.h:167: warning: pointer targets in passing argument 5 of 'fsnotify' differ in signedness
+> include/linux/fsnotify_backend.h:300: note: expected 'const char *' but argument is of type 'const unsigned char *'
+> include/linux/fsnotify.h: In function 'fsnotify_mkdir':
+> include/linux/fsnotify.h:180: warning: pointer targets in passing argument 5 of 'fsnotify' differ in signedness
+> include/linux/fsnotify_backend.h:300: note: expected 'const char *' but argument is of type 'const unsigned char *'
+> 
+> I am not sure why these started turning up (they were there on Friday as
+> well and I may have missed them earlier).
 
-I'll do that as a separate patch - I'm not sure what is involved in
-doing this yet. No need to hold up the automatic dependency changes
-for this....
+I cleaned up the all the sign warnings in the XFS code because
+we mirror the kernel code into userspace for tool building (libxfs)
+and that results in lots of sign warnings. I left the kernel
+warnings switched on in the XFS makefile so we wouldn't re-introduce
+the same problems.
+
+Don't know why this isn't showing up in my build though, because:
+
+CONFIG_FSNOTIFY=y
+
+is set and it is obvious the fsnotify wrappers are passing an
+unsigned char * (dentry name) to fsnotify() which takes a const char
+* for the file name. There's mismatches like this all over the VFS,
+so I'm not going to try to fix them....
+
+The patch below should silence the warnings, though.
 
 Cheers,
 
@@ -59,6 +77,30 @@ Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
+
+xfs: turn off sign warnings
+
+Because they cause warnings in static inline functions conditionally
+compiled into XFS from the VFS (e.g. fsnotify).
+
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+---
+ fs/xfs/Makefile |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index 1926701..5c5a366 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -16,7 +16,7 @@
+ # Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ #
+ 
+-EXTRA_CFLAGS +=	 -I$(src) -I$(src)/linux-2.6 -Wpointer-sign
++EXTRA_CFLAGS +=	 -I$(src) -I$(src)/linux-2.6
+ 
+ XFS_LINUX := linux-2.6
+ 
 
 _______________________________________________
 xfs mailing list
