@@ -1,28 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0PLX0Wf077408 for <xfs@oss.sgi.com>; Mon, 25 Jan 2010 15:33:00 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4BAE511FF35A
-	for <xfs@oss.sgi.com>; Mon, 25 Jan 2010 13:34:04 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id xDeK9RQOdV9uICbi for
-	<xfs@oss.sgi.com>; Mon, 25 Jan 2010 13:34:04 -0800 (PST)
-Date: Mon, 25 Jan 2010 16:34:03 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [patch 2/2] xfs: use scalable vmap API
-Message-ID: <20100125213403.GA1309@infradead.org>
-References: <20081021082542.GA6974@wotan.suse.de>
-	<20081021082735.GB6974@wotan.suse.de>
-	<20081021120932.GB13348@infradead.org>
-	<20081022093018.GD4359@wotan.suse.de>
-	<20100119121505.GA9428@infradead.org>
-	<20100125075445.GD19664@laptop>
-	<20100125081750.GA20012@infradead.org>
-	<20100125083309.GF19664@laptop> <20100125123746.GA24406@laptop>
+	o0PMUgVE080829 for <xfs@oss.sgi.com>; Mon, 25 Jan 2010 16:30:43 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2210C1C760A2
+	for <xfs@oss.sgi.com>; Mon, 25 Jan 2010 14:31:44 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
+	[150.101.137.104]) by cuda.sgi.com with ESMTP id
+	zoFDHturZKGTmukZ for <xfs@oss.sgi.com>;
+	Mon, 25 Jan 2010 14:31:44 -0800 (PST)
+Date: Tue, 26 Jan 2010 09:31:40 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/7] xfs: Use delayed write for inodes rather than async
+Message-ID: <20100125223140.GN25842@discord.disaster>
+References: <1264400564-19704-1-git-send-email-david@fromorbit.com>
+	<1264400564-19704-3-git-send-email-david@fromorbit.com>
+	<20100125115308.GC8595@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100125123746.GA24406@laptop>
+In-Reply-To: <20100125115308.GC8595@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,24 +31,56 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Nick Piggin <npiggin@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Mon, Jan 25, 2010 at 11:37:46PM +1100, Nick Piggin wrote:
-> On Mon, Jan 25, 2010 at 07:33:09PM +1100, Nick Piggin wrote:
-> > > Any easy way to get them?  Sorry, not uptodate on your new vmalloc
-> > > implementation anymore.
-> > 
-> > Let me try writing a few (tested) patches here first that I can send you.
+On Mon, Jan 25, 2010 at 06:53:08AM -0500, Christoph Hellwig wrote:
+> > diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+> > index 98b8937..ca0cc59 100644
+> > --- a/fs/xfs/linux-2.6/xfs_sync.c
+> > +++ b/fs/xfs/linux-2.6/xfs_sync.c
+> > @@ -270,8 +270,7 @@ xfs_sync_inode_attr(
+> >  		goto out_unlock;
+> >  	}
+> >  
+> > -	error = xfs_iflush(ip, (flags & SYNC_WAIT) ?
+> > -			   XFS_IFLUSH_SYNC : XFS_IFLUSH_DELWRI);
+> > +	error = xfs_iflush(ip, (flags & SYNC_WAIT));
 > 
-> Well is it easy to reproduce the vmap failure? Here is a better tested
-> patch if you can try it. It fixes a couple of bugs and does some purging
-> of fragmented blocks.
+> No need for the masking here, as xfs_iflush simply ignores SYNC_TRYLOCK.
 
-So far I've not run out of vmalloc space yet with quite a few xfstests
-iterations and not encountered any other problems either.
+OK.
 
-Thanks for looking into this!
+> >  	/* Now we have an inode that needs flushing */
+> >  	error = xfs_iflush(ip, sync_mode);
+> > +	if (!(sync_mode & SYNC_WAIT))
+> > +		goto requeue_no_flock;
+> 
+> So for the !wait case we entirely ignore the return value?  We should
+> at least check for an I/O error here I think.
+
+I'm not sure we can get an error on a delayed write that we
+need to take action on. We don't actually issue the IO from this
+call, so the only error case is on reading the buffer. If we get
+an error there, what should be do?
+
+My thinking was that if we can't write back the inode, we can't
+reclaim it, and if the error is from a transient read error (e.g. FC
+path failover) we should be retrying anyway as we do in
+xfs_buf_iodone_callbacks()...
+
+> Also in this context
+> the requeue label name doesn't fit too well, even if it's the same
+> action as the requeue.
+
+I'm open to suggestions for a better name ;)
+
+Cheers,
+
+Dave
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
