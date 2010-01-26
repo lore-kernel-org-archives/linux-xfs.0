@@ -1,24 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0PMUgVE080829 for <xfs@oss.sgi.com>; Mon, 25 Jan 2010 16:30:43 -0600
+	o0Q3OM8K096432 for <xfs@oss.sgi.com>; Mon, 25 Jan 2010 21:24:22 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2210C1C760A2
-	for <xfs@oss.sgi.com>; Mon, 25 Jan 2010 14:31:44 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	zoFDHturZKGTmukZ for <xfs@oss.sgi.com>;
-	Mon, 25 Jan 2010 14:31:44 -0800 (PST)
-Date: Tue, 26 Jan 2010 09:31:40 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 16A571C62635
+	for <xfs@oss.sgi.com>; Mon, 25 Jan 2010 19:25:24 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	FhNwglht76BgAxw5 for <xfs@oss.sgi.com>;
+	Mon, 25 Jan 2010 19:25:24 -0800 (PST)
+Received: from discord (unverified [121.44.156.64])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	11731313-1927428
+	for <xfs@oss.sgi.com>; Tue, 26 Jan 2010 13:55:23 +1030 (CDT)
+Received: from [192.168.1.6] (helo=disturbed) by discord with esmtp (Exim 4.69)
+	(envelope-from <dave@fromorbit.com>) id 1NZc3O-00047w-9F
+	for xfs@oss.sgi.com; Tue, 26 Jan 2010 14:25:22 +1100
+Received: from dave by disturbed with local (Exim 4.71)
+	(envelope-from <dave@disturbed.disaster>) id 1NZc3C-0004zK-Qb
+	for xfs@oss.sgi.com; Tue, 26 Jan 2010 14:25:10 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/7] xfs: Use delayed write for inodes rather than async
-Message-ID: <20100125223140.GN25842@discord.disaster>
-References: <1264400564-19704-1-git-send-email-david@fromorbit.com>
-	<1264400564-19704-3-git-send-email-david@fromorbit.com>
-	<20100125115308.GC8595@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100125115308.GC8595@infradead.org>
+Subject: [PATCH] xfsprogs: clean up .dep files on make clean
+Date: Tue, 26 Jan 2010 14:25:10 +1100
+Message-Id: <1264476310-19127-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,60 +31,47 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Jan 25, 2010 at 06:53:08AM -0500, Christoph Hellwig wrote:
-> > diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-> > index 98b8937..ca0cc59 100644
-> > --- a/fs/xfs/linux-2.6/xfs_sync.c
-> > +++ b/fs/xfs/linux-2.6/xfs_sync.c
-> > @@ -270,8 +270,7 @@ xfs_sync_inode_attr(
-> >  		goto out_unlock;
-> >  	}
-> >  
-> > -	error = xfs_iflush(ip, (flags & SYNC_WAIT) ?
-> > -			   XFS_IFLUSH_SYNC : XFS_IFLUSH_DELWRI);
-> > +	error = xfs_iflush(ip, (flags & SYNC_WAIT));
-> 
-> No need for the masking here, as xfs_iflush simply ignores SYNC_TRYLOCK.
+And make git ignore them, too.
 
-OK.
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+---
+ .gitignore         |    1 +
+ include/buildrules |    2 +-
+ 2 files changed, 2 insertions(+), 1 deletions(-)
 
-> >  	/* Now we have an inode that needs flushing */
-> >  	error = xfs_iflush(ip, sync_mode);
-> > +	if (!(sync_mode & SYNC_WAIT))
-> > +		goto requeue_no_flock;
-> 
-> So for the !wait case we entirely ignore the return value?  We should
-> at least check for an I/O error here I think.
-
-I'm not sure we can get an error on a delayed write that we
-need to take action on. We don't actually issue the IO from this
-call, so the only error case is on reading the buffer. If we get
-an error there, what should be do?
-
-My thinking was that if we can't write back the inode, we can't
-reclaim it, and if the error is from a transient read error (e.g. FC
-path failover) we should be retrying anyway as we do in
-xfs_buf_iodone_callbacks()...
-
-> Also in this context
-> the requeue label name doesn't fit too well, even if it's the same
-> action as the requeue.
-
-I'm open to suggestions for a better name ;)
-
-Cheers,
-
-Dave
+diff --git a/.gitignore b/.gitignore
+index b06e074..aa6cd35 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1,5 +1,6 @@
+ # object files
+ *.o
++.dep
+ 
+ # build system
+ .census
+diff --git a/include/buildrules b/include/buildrules
+index d1a3a6f..1695e23 100644
+--- a/include/buildrules
++++ b/include/buildrules
+@@ -7,7 +7,7 @@ _BUILDRULES_INCLUDED_ = 1
+ include $(TOPDIR)/include/builddefs
+ 
+ clean clobber : $(addsuffix -clean,$(SUBDIRS))
+-	@rm -f $(DIRT)
++	@rm -f $(DIRT) .dep
+ 	@rm -fr $(DIRDIRT)
+ %-clean:
+ 	@echo "Cleaning $*"
 -- 
-Dave Chinner
-david@fromorbit.com
+1.6.5
 
 _______________________________________________
 xfs mailing list
