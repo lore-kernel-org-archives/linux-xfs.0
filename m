@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0QG9fDE132645 for <xfs@oss.sgi.com>; Tue, 26 Jan 2010 10:09:41 -0600
+	o0QLblnU148005 for <xfs@oss.sgi.com>; Tue, 26 Jan 2010 15:37:53 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 59763151E86D
-	for <xfs@oss.sgi.com>; Tue, 26 Jan 2010 08:10:46 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 83AC81C7EEC5
+	for <xfs@oss.sgi.com>; Tue, 26 Jan 2010 13:38:52 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 7s23QXrXYvM0jH5V for
-	<xfs@oss.sgi.com>; Tue, 26 Jan 2010 08:10:46 -0800 (PST)
-Date: Tue, 26 Jan 2010 11:10:45 -0500
+	by cuda.sgi.com with ESMTP id jDW0EzRBAedwqewj for
+	<xfs@oss.sgi.com>; Tue, 26 Jan 2010 13:38:52 -0800 (PST)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1NZt7b-0003wY-JR
+	for xfs@oss.sgi.com; Tue, 26 Jan 2010 21:38:51 +0000
+Date: Tue, 26 Jan 2010 16:38:51 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/7] xfs: Use delayed write for inodes rather than async
-Message-ID: <20100126161045.GB24152@infradead.org>
-References: <1264400564-19704-1-git-send-email-david@fromorbit.com>
-	<1264400564-19704-3-git-send-email-david@fromorbit.com>
-	<20100125115308.GC8595@infradead.org>
-	<20100125223140.GN25842@discord.disaster>
+Subject: [PATCH] xfs: remove invalid barrier optimization from xfs_fsync
+Message-ID: <20100126213851.GA14927@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100125223140.GN25842@discord.disaster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,87 +29,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-> > Also in this context
-> > the requeue label name doesn't fit too well, even if it's the same
-> > action as the requeue.
-> 
-> I'm open to suggestions for a better name ;)
+We always need to flush the disk write cache and can't skip it just because
+the no inode attributes have changed.
 
-What do you think about this version?
 
-Index: xfs/fs/xfs/linux-2.6/xfs_sync.c
-===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_sync.c	2010-01-26 17:01:49.610012226 +0100
-+++ xfs/fs/xfs/linux-2.6/xfs_sync.c	2010-01-26 17:06:50.533006103 +0100
-@@ -785,7 +785,7 @@ xfs_reclaim_inode(
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	if (!xfs_iflock_nowait(ip)) {
- 		if (!(sync_mode & SYNC_WAIT))
--			goto requeue_no_flock;
-+			goto out;
- 		xfs_iflock(ip);
- 	}
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+index fd108b7..43241e2 100644
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -597,7 +597,7 @@ xfs_fsync(
+ {
+ 	xfs_trans_t	*tp;
+ 	int		error = 0;
+-	int		log_flushed = 0, changed = 1;
++	int		log_flushed = 0;
  
-@@ -796,8 +796,10 @@ xfs_reclaim_inode(
- 		goto reclaim;
- 	}
- 	if (xfs_ipincount(ip)) {
--		if (!(sync_mode & SYNC_WAIT))
--			goto requeue;
-+		if (!(sync_mode & SYNC_WAIT)) {
-+			xfs_ifunlock(ip);
-+			goto out;
-+		}
- 		xfs_iunpin_wait(ip);
- 	}
- 	if (xfs_iflags_test(ip, XFS_ISTALE))
-@@ -807,19 +809,18 @@ xfs_reclaim_inode(
+ 	xfs_itrace_entry(ip);
  
- 	/* Now we have an inode that needs flushing */
- 	error = xfs_iflush(ip, sync_mode);
--	if (!(sync_mode & SYNC_WAIT))
--		goto requeue_no_flock;
--	xfs_iflock(ip);
+@@ -627,18 +627,10 @@ xfs_fsync(
+ 		 * disk yet, the inode will be still be pinned.  If it is,
+ 		 * force the log.
+ 		 */
 -
--reclaim:
--	xfs_ifunlock(ip);
--	xfs_iunlock(ip, XFS_ILOCK_EXCL);
--	xfs_ireclaim(ip);
--	return error;
-+	if (sync_mode & SYNC_WAIT) {
-+		xfs_iflock(ip);
-+		goto reclaim;
-+	}
+ 		xfs_iunlock(ip, XFS_ILOCK_SHARED);
+-
+ 		if (xfs_ipincount(ip)) {
+ 			error = _xfs_log_force(ip->i_mount, XFS_LOG_SYNC,
+ 					       &log_flushed);
+-		} else {
+-			/*
+-			 * If the inode is not pinned and nothing has changed
+-			 * we don't need to flush the cache.
+-			 */
+-			changed = 0;
+ 		}
+ 	} else	{
+ 		/*
+@@ -673,7 +665,7 @@ xfs_fsync(
+ 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	}
  
--requeue:
--	xfs_ifunlock(ip);
--requeue_no_flock:
-+	/*
-+	 * When we have to flush an inode but don't have SYNC_WAIT set, we
-+	 * flush the inode out with using a delwri buffer and wait for
-+	 * the next call into the reclaim to find it in a clean state
-+	 * instead of doing it now.
-+	 */
-+out:
- 	xfs_iflags_clear(ip, XFS_IRECLAIM);
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	/*
-@@ -830,6 +831,12 @@ requeue_no_flock:
- 	 * attempt to reclaim the inode again.
- 	 */
- 	return 0;
-+
-+reclaim:
-+	xfs_ifunlock(ip);
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	xfs_ireclaim(ip);
-+	return error;
- }
- 
- int
+-	if ((ip->i_mount->m_flags & XFS_MOUNT_BARRIER) && changed) {
++	if (ip->i_mount->m_flags & XFS_MOUNT_BARRIER) {
+ 		/*
+ 		 * If the log write didn't issue an ordered tag we need
+ 		 * to flush the disk cache for the data device now.
 
 _______________________________________________
 xfs mailing list
