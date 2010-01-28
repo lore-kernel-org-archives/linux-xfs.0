@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0S1w3Gd254327 for <xfs@oss.sgi.com>; Wed, 27 Jan 2010 19:58:04 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 990CA1953FA
-	for <xfs@oss.sgi.com>; Wed, 27 Jan 2010 17:58:41 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	TnXAfbiOK80GGuVy for <xfs@oss.sgi.com>;
-	Wed, 27 Jan 2010 17:58:41 -0800 (PST)
-Date: Thu, 28 Jan 2010 12:58:17 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH, RFC] more reserved blocks fixups
-Message-ID: <20100128015817.GH15853@discord.disaster>
-References: <4B60C8EE.5080700@sandeen.net>
+	o0SGtNXM038860 for <xfs@oss.sgi.com>; Thu, 28 Jan 2010 10:55:24 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5776FF63E0E
+	for <xfs@oss.sgi.com>; Thu, 28 Jan 2010 08:56:28 -0800 (PST)
+Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
+	by cuda.sgi.com with ESMTP id B1wevdv9j1CQ4Nc6 for
+	<xfs@oss.sgi.com>; Thu, 28 Jan 2010 08:56:28 -0800 (PST)
+Received: from Liberator.local (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail.sandeen.net (Postfix) with ESMTP id 5B76C9E7274
+	for <xfs@oss.sgi.com>; Thu, 28 Jan 2010 10:56:28 -0600 (CST)
+Message-ID: <4B61C1BC.4050800@sandeen.net>
+Date: Thu, 28 Jan 2010 10:56:28 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4B60C8EE.5080700@sandeen.net>
+Subject: [PATCH] xfstests: filter selinux output in _acl_ls
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,35 +30,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs mailing list <xfs@oss.sgi.com>
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Jan 27, 2010 at 05:14:54PM -0600, Eric Sandeen wrote:
-> This mangles the reserved blocks counts a little more.
-> 
-> 1) add a helper function for the default reserved count
-> 2) add helper functions to save/restore counts on ro/rw
-> 3) save/restore reserved blocks on freeze/thaw
-> 4) disallow changing reserved count while readonly
-> 
-> for 2) - maybe better names (save_and_clear?)
-> for 4) - maybe allow, but change the _ro field instead?
-> 
-> (TBH not tested yet but wondered if this seems sane)
+When selinux is on, ls -l gives us a "." to indicate selinux
+attrs, which breaks some tests:
 
-I was wondering if the save/restore could be encapsualted entirely
-within xfs_quiesce_attr(). i.e. save before the superblock write,
-restore directly after. That removes the need for a variable in
-the xfs_mount structure, and catches both remount,ro and freeze.
+ === Test minimal ACE ===
+ Setup file
+--rwxrw-r-- id1 id2 file1
++-rwxrw-r--. id1 id2 file1
 
-What do you think?
+so filter that out.
 
-Cheers,
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Index: xfstests/common.attr
+===================================================================
+--- xfstests.orig/common.attr
++++ xfstests/common.attr
+@@ -58,7 +58,10 @@ _acl_filter_id()
+ #
+ _acl_ls()
+ {
+-    ls -ln $* | awk '{ print $1, $3, $4, $NF }' | _acl_filter_id
++    ls -ln $* |	\
++    sed "s/\(.*\)\. /\1 /" | \
++    awk '{ print $1, $3, $4, $NF }' | \
++    _acl_filter_id
+ } 
+ 
+ #
 
 _______________________________________________
 xfs mailing list
