@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0SNTJhJ060204 for <xfs@oss.sgi.com>; Thu, 28 Jan 2010 17:29:19 -0600
+	o0T4cjSW091326 for <xfs@oss.sgi.com>; Thu, 28 Jan 2010 22:38:45 -0600
 Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6060B1C87CAA
-	for <xfs@oss.sgi.com>; Thu, 28 Jan 2010 15:30:25 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 94DD41999DE
+	for <xfs@oss.sgi.com>; Thu, 28 Jan 2010 20:39:50 -0800 (PST)
 Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id MBJKg1VHurFaA7WZ for
-	<xfs@oss.sgi.com>; Thu, 28 Jan 2010 15:30:25 -0800 (PST)
+	by cuda.sgi.com with ESMTP id gJlpxOLdNK0e0qNh for
+	<xfs@oss.sgi.com>; Thu, 28 Jan 2010 20:39:50 -0800 (PST)
 Received: from Liberator.local (liberator.sandeen.net [10.0.0.4])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by mail.sandeen.net (Postfix) with ESMTP id EF8C69E7269
-	for <xfs@oss.sgi.com>; Thu, 28 Jan 2010 17:30:24 -0600 (CST)
-Message-ID: <4B621E11.4050609@sandeen.net>
-Date: Thu, 28 Jan 2010 17:30:25 -0600
+	by mail.sandeen.net (Postfix) with ESMTP id 5C3909E7268
+	for <xfs@oss.sgi.com>; Thu, 28 Jan 2010 22:39:50 -0600 (CST)
+Message-ID: <4B626697.3080006@sandeen.net>
+Date: Thu, 28 Jan 2010 22:39:51 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] xfstests: make 053 and 077 generic
+Subject: [PATCH V2] xfstests: filter selinux output in _acl_ls etc
+References: <4B61C1BC.4050800@sandeen.net>
+In-Reply-To: <4B61C1BC.4050800@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,105 +34,73 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs-oss <xfs@oss.sgi.com>
 
-053 and 077 can be generic w/ a little tweaking.
+When selinux is on, ls -l gives us a "." to indicate selinux
+attrs, which breaks some tests:
 
-Also change 077's filler to something more likely
-to be on a random system under test, and add it
-to the enospc group.
+ === Test minimal ACE ===
+ Setup file
+--rwxrw-r-- id1 id2 file1
++-rwxrw-r--. id1 id2 file1
+
+so make an _ls_l helper to filter that out.
 
 Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 ---
 
-diff --git a/053 b/053
-index 98644a7..5542885 100755
---- a/053
-+++ b/053
-@@ -38,18 +38,19 @@ trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
- . ./common.attr
+diff --git a/105 b/105
+index e3163fd..9544c66 100755
+--- a/105
++++ b/105
+@@ -76,7 +76,7 @@ chown $acl1 subdir
  
- # real QA test starts here
--_supported_fs xfs
-+_supported_fs generic
- _supported_os Linux
+ # put a file in the directory
+ echo data > subdir/file
+-ls -l subdir/file | awk '{ print $1, $3 }'
++_ls_l subdir/file | awk '{ print $1, $3 }'
  
- [ ! -x /bin/chacl -a ! -x /usr/bin/chacl ] && _notrun "chacl command not found"
+ # add an ACL with a user ACE which has no exec permission 
+ if [ "$HOSTOS" == "Linux" ]; then
+@@ -91,7 +91,7 @@ fi
+ # With the bug this gives: `ls: subdir/file: Permission denied'
+ # because one needs at least an exec perm somewhere in acl
+ # However, this should not hold true for directories.
+-ls -l subdir/file | awk '{ print $1, $3 }'
++_ls_l subdir/file | awk '{ print $1, $3 }'
  
- _require_scratch
-+_acl_requirements
- _acl_setup_ids
- _do_die_on_error=y
- test=$SCRATCH_MNT/test
- 
- # make filesystem on scratch using the defaults
--_do 'make filesystem on $SCRATCH_DEV' '_scratch_mkfs_xfs'
-+_do 'make filesystem on $SCRATCH_DEV' '_scratch_mkfs'
- _do 'mount filesytem' '_scratch_mount'
- 
- # create test files and set acls
-@@ -84,7 +85,7 @@ list_acls()
- echo "acls before repair:"
- list_acls
- _do 'unmount $SCRATCH_DEV' 'umount $SCRATCH_DEV'
--_do 'repair filesystem' '_scratch_xfs_repair'
-+_do 'repair filesystem' '_check_scratch_fs'
- _do 'mount filesytem' '_scratch_mount'
- echo "acls after repair: "
- list_acls
-diff --git a/077 b/077
-index cdee8da..d23305f 100755
---- a/077
-+++ b/077
-@@ -31,7 +31,8 @@ here=`pwd`
- tmp=/tmp/$$
- status=1
- #filler=$here/../../linux
--filler=/home/fsgqa/isms/2.4.x-xfs
-+#filler=/home/fsgqa/isms/2.4.x-xfs
-+filler=/lib/modules/`uname -r`/
- 
- _cleanup()
+ # With the bug this gives: `subdir/file2: Permission denied'.
+ echo data2 > subdir/file2
+diff --git a/common.attr b/common.attr
+index a6b9b3b..d12cc02 100644
+--- a/common.attr
++++ b/common.attr
+@@ -58,7 +58,7 @@ _acl_filter_id()
+ #
+ _acl_ls()
  {
-@@ -44,14 +45,16 @@ trap "_cleanup; rm -f $tmp.*; exit \$status" 0 1 2 3 15
- # get standard environment, filters and checks
- . ./common.rc
- . ./common.filter
-+. ./common.attr
+-    ls -ln $* | awk '{ print $1, $3, $4, $NF }' | _acl_filter_id
++    _ls_l -n $* | awk '{ print $1, $3, $4, $NF }' | _acl_filter_id
+ } 
  
- # real QA test starts here
--_supported_fs xfs
-+_supported_fs generic
- _supported_os Linux
+ #
+diff --git a/common.rc b/common.rc
+index cf2662a..237f3aa 100644
+--- a/common.rc
++++ b/common.rc
+@@ -37,6 +37,14 @@ dd()
+    fi
+ }
  
- [ ! -d $filler ] && _notrun "No linux directory to source files from"
- 
- _require_scratch
-+_acl_requirements
- 
- echo "*** create filesystem"
- 
-@@ -59,7 +62,8 @@ rm -f $seq.full
- umount $SCRATCH_DEV >/dev/null 2>&1
- echo "*** MKFS ***"                         >>$seq.full
- echo ""                                     >>$seq.full
--_scratch_mkfs_xfs -dsize=50m                >>$seq.full 2>&1 \
-+let SIZE=50*1024*1024
-+_scratch_mkfs_sized $SIZE                   >>$seq.full 2>&1 \
- 	|| _fail "mkfs failed"
- _scratch_mount                              >>$seq.full 2>&1 \
- 	|| _fail "mount failed"
-diff --git a/group b/group
-index 6b8528f..c66d965 100644
---- a/group
-+++ b/group
-@@ -187,7 +187,7 @@ deprecated
- 074 rw udf auto
- 075 rw udf auto quick
- 076 metadata rw udf auto quick
--077 acl attr auto
-+077 acl attr auto enospc
- 078 growfs auto quick
- 079 acl attr ioctl metadata auto quick
- 080 rw ioctl
++# ls -l w/ selinux sometimes puts a dot at the end:
++# -rwxrw-r--. id1 id2 file1
++
++_ls_l()
++{
++	ls -l $* | sed "s/\(.*\)\. /\1 /"
++}
++
+ _mount_opts()
+ {
+     case $FSTYP in
 
 _______________________________________________
 xfs mailing list
