@@ -1,20 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0T58Fc8093027 for <xfs@oss.sgi.com>; Thu, 28 Jan 2010 23:08:15 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E0D4712F8F2A
-	for <xfs@oss.sgi.com>; Thu, 28 Jan 2010 21:09:19 -0800 (PST)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id AQeKAaHXegawFa32 for
-	<xfs@oss.sgi.com>; Thu, 28 Jan 2010 21:09:19 -0800 (PST)
-Message-ID: <4B626D80.3010601@sandeen.net>
-Date: Thu, 28 Jan 2010 23:09:20 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH 2/2] xfstests: 219: ignore duplicates reported by repquota
-References: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A6942@cf--amer001e--3.americas.sgi.com>
-In-Reply-To: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A6942@cf--amer001e--3.americas.sgi.com>
+	o0TF91xF125373
+	for <linux-xfs@oss.sgi.com>; Fri, 29 Jan 2010 09:09:02 -0600
+Received: from lo.gmane.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 391A319AFE6
+	for <linux-xfs@oss.sgi.com>; Fri, 29 Jan 2010 07:10:06 -0800 (PST)
+Received: from lo.gmane.org (lo.gmane.org [80.91.229.12]) by cuda.sgi.com with
+	ESMTP id OLuF2W9PZom04ng4 for <linux-xfs@oss.sgi.com>;
+	Fri, 29 Jan 2010 07:10:06 -0800 (PST)
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1NasU0-00070T-63
+	for linux-xfs@oss.sgi.com; Fri, 29 Jan 2010 16:10:04 +0100
+Received: from c-24-60-200-235.hsd1.ma.comcast.net ([24.60.200.235])
+	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+	id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Fri, 29 Jan 2010 16:10:04 +0100
+Received: from Nico by c-24-60-200-235.hsd1.ma.comcast.net with local (Gmexim
+	0.1 (Debian)) id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Fri, 29 Jan 2010 16:10:04 +0100
+From: Nicolas STRANSKY <Nico@stransky.cx>
+Subject: Filesystem corrupted: "Sorry,
+	could not find valid secondary superblock"
+Date: Fri, 29 Jan 2010 09:42:49 -0500
+Message-ID: <hjus58$6oi$1@ger.gmane.org>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,73 +37,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-Alex Elder wrote:
-> (Re-sending; I misaddressed it the first time.)
-> 
-> Arrange to ignore duplicate entries reported by the repquota command.
-> This can happen if an id is used more than once (such as when two user
-> names are assigned the same uid).
-> 
-> Do this here by simply dropping any reported entries whose id number
-> has already been seen in the output.
-> 
-> Signed-off-by: Alex Elder <aelder@sgi.com>
+Hi,
 
-again with the late review ;)
+I'm using Debian Lenny with xfsprogs 2.9.8-1lenny1 and a kernel
+2.6.26-2-amd64. Recently I had some disk failures on a 1.5TB RAID 5
+array, which is now running in a degraded mode but the xfs filesystem on
+this array is inconsistent. I can mount it with -o ro,norecovery and
+read some files, but I can't read most of them.
+Using xfs_repair, I tried to repair the filesystem. It went for 12
+hours, displaying these messages:
+"found candidate secondary superblock...
+unable to verify superblock, continuing..."
+and finally:
+"Sorry, could not find valid secondary superblock
+Exiting now."
 
-This is causing failures for me:
+Is there anything else I could do to repair the filesystem? Upgrade to a
+newer version of xfsprogs? Is it possible that there is no valid
+secondary superblock on the whole disk or are they just not found?
 
---- 219.out	2009-11-12 17:27:40.209152659 -0600
-+++ 219.out.bad	2010-01-28 23:03:05.933323333 -0600
-@@ -27,7 +27,6 @@
-                         Block limits                File limits
- User            used    soft    hard  grace    used  soft  hard  grace
- ----------------------------------------------------------------------
--#1        --     144       0       0              3     0     0       
-
-raw output looks like:
-
-                        Block limits                File limits
-User            used    soft    hard  grace    used  soft  hard  grace
-----------------------------------------------------------------------
-#0        --       0       0       0              3     0     0       
-#1        --     144       0       0              3     0     0       
-
-there's probably better awk to be written than this, but I think this
-fixes it:
-
-Alex, you look like an awk-master, can you fix it?
-
--Eric
-
-
-> ---
->  219 |    3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> Index: b/219
-> ===================================================================
-> --- a/219
-> +++ b/219
-> @@ -85,7 +85,8 @@ test_accounting()
->  		$here/src/lstat64 $file | head -3 | filter_scratch
->  	done
->  
-> -	repquota -$type -s -n $SCRATCH_MNT  | grep -v "^#0" | filter_scratch
-> +	repquota -$type -s -n $SCRATCH_MNT  | grep -v "^#0" | filter_scratch |
-> +	awk '/^#/ { if (! seen[$1]) { seen[$1]++; next; } } { print }'
->  }
->  
->  # real QA test starts here
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+Thanks a lot for any help,
+NS.
 
 _______________________________________________
 xfs mailing list
