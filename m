@@ -1,33 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0TJvLvJ150425
-	for <linux-xfs@oss.sgi.com>; Fri, 29 Jan 2010 13:57:24 -0600
-Received: from lo.gmane.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2E66B136404B
-	for <linux-xfs@oss.sgi.com>; Fri, 29 Jan 2010 11:58:25 -0800 (PST)
-Received: from lo.gmane.org (lo.gmane.org [80.91.229.12]) by cuda.sgi.com with
-	ESMTP id IGKeswRBYjWYLIOr for <linux-xfs@oss.sgi.com>;
-	Fri, 29 Jan 2010 11:58:25 -0800 (PST)
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1Nawz1-0005eu-Il
-	for linux-xfs@oss.sgi.com; Fri, 29 Jan 2010 20:58:23 +0100
-Received: from vm15c-113.broadinstitute.org ([69.173.114.122])
-	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Fri, 29 Jan 2010 20:58:23 +0100
-Received: from nico by vm15c-113.broadinstitute.org with local (Gmexim 0.1
-	(Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Fri, 29 Jan 2010 20:58:23 +0100
-From: Nicolas Stransky <nico@stransky.cx>
-Subject: Re: Filesystem corrupted: "Sorry, could not find valid secondary
-	superblock"
-Date: Fri, 29 Jan 2010 14:58:02 -0500
-Message-ID: <hjvek9$jas$1@ger.gmane.org>
-References: <hjus58$6oi$1@ger.gmane.org>	<4B63010D.1080608@sandeen.net>	<hjv12n$r2o$1@ger.gmane.org>	<4B631704.8080902@sandeen.net>	<hjv6l0$j2g$1@ger.gmane.org>
-	<4B6325E2.2040703@sandeen.net>
-Mime-Version: 1.0
-In-Reply-To: <4B6325E2.2040703@sandeen.net>
+	o0TK4eAO150789 for <xfs@oss.sgi.com>; Fri, 29 Jan 2010 14:04:40 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 690FA19C4EB
+	for <xfs@oss.sgi.com>; Fri, 29 Jan 2010 12:05:45 -0800 (PST)
+Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
+	by cuda.sgi.com with ESMTP id eQdQtV3Zy3cthJQz for
+	<xfs@oss.sgi.com>; Fri, 29 Jan 2010 12:05:45 -0800 (PST)
+Message-ID: <4B633F9A.8000404@sandeen.net>
+Date: Fri, 29 Jan 2010 14:05:46 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: [PATCH] xfstests 224: test aio hole-fill at 4g
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,89 +25,323 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: ext4 development <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+Cc: Giel de Nijs <giel@vectorwise.com>
 
-Hi Eric,
+Testcase from Giel de Nijs <giel@vectorwise.com>
+on linux-ext4 list, ""Possible ext4 data corruption
+with large files and async I/O," on 29 Jan 2010
 
-Thanks so much for your help,
+ext4 put byte offsets in a block offset u32 container
+in the endio struct, so 4g wrapped to 0 leading to
+data corruption when the unwritten extent did not
+get converted.
 
-On 1/29/10 1:16 PM, Eric Sandeen wrote:
->> # mount/ dev/sda1 mount: Structure needs cleaning
-> 
-> dmesg at this point would be good
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
 
-This particular command does not produce any output in dmesg, but
-previous commands did, especially when I mounted the filesystem with
-no-recovery.
-
-[205411.967412] XFS: log mount/recovery failed: error 117
-[205411.972696] XFS: log mount failed
-[205469.205586] Mounting filesystem "sda1" in no-recovery mode.
-Filesystem will be inconsistent.
-[205483.946417] XFS mounting filesystem sda1
-[205484.136159] Starting XFS recovery on filesystem: sda1 (logdev: internal)
-[205484.488176] Filesystem "sda1": xfs_inode_recover: Bad inode magic
-number, dino ptr = 0xffff81004d109f00, dino bp = 0xffff81002e85be80, ino
-= 2954558655
-[205484.493476] Filesystem "sda1": XFS internal error
-xlog_recover_do_inode_trans(1) at line 2326 of file
-fs/xfs/xfs_log_recover.c.  Caller 0xffffffffa018553a
-[205484.498909] Pid: 27800, comm: mount Not tainted 2.6.26-2-amd64 #1
-[205484.506907]
-[205484.506908] Call Trace:
-[205484.516417]  [<ffffffffa018553a>] :xfs:xlog_recover_do_trans+0x64/0xfd
-[205484.523162]  [<ffffffffa0184e33>]
-:xfs:xlog_recover_do_inode_trans+0x23c/0x766
-[205484.528729]  [<ffffffffa01966b0>] :xfs:xfs_buf_iostart+0x29/0x86
-[205484.534304]  [<ffffffffa018553a>] :xfs:xlog_recover_do_trans+0x64/0xfd
-[205484.539907]  [<ffffffffa0185605>]
-:xfs:xlog_recover_commit_trans+0x32/0x4b
-[205484.545489]  [<ffffffffa018576b>]
-:xfs:xlog_recover_process_data+0x14d/0x1c9
-[205484.551117]  [<ffffffffa0185a2f>] :xfs:xlog_do_recovery_pass+0x248/0x661
-[205484.556736]  [<ffffffffa0185e9a>] :xfs:xlog_do_log_recovery+0x52/0x75
-[205484.564000]  [<ffffffffa0185ec9>] :xfs:xlog_do_recover+0xc/0xf3
-[205484.568026]  [<ffffffffa018602a>] :xfs:xlog_recover+0x7a/0x84
-[205484.573631]  [<ffffffffa0180460>] :xfs:xfs_log_mount+0xb1/0x105
-[205484.579270]  [<ffffffffa01880dc>] :xfs:xfs_mountfs+0x25a/0x5ac
-[205484.584866]  [<ffffffffa0193311>] :xfs:kmem_alloc+0x60/0xc4
-[205484.590483]  [<ffffffffa01933d1>] :xfs:kmem_zalloc+0x9/0x21
-[205484.596066]  [<ffffffffa018deb4>] :xfs:xfs_mount+0x29b/0x347
-[205484.601625]  [<ffffffffa019c3ea>] :xfs:xfs_fs_fill_super+0x0/0x1ee
-[205484.607231]  [<ffffffffa019c49f>] :xfs:xfs_fs_fill_super+0xb5/0x1ee
-[205484.612727]  [<ffffffff8029d290>] get_sb_bdev+0xf8/0x145
-[205484.618174]  [<ffffffff8029ccb4>] vfs_kern_mount+0x93/0x11b
-[205484.623745]  [<ffffffff8029cd8f>] do_kern_mount+0x43/0xe3
-[205484.629183]  [<ffffffff802b1805>] do_new_mount+0x5b/0x95
-[205484.634627]  [<ffffffff802b19fc>] do_mount+0x1bd/0x1e7
-[205484.639990]  [<ffffffff80276909>] __alloc_pages_internal+0xd6/0x3bf
-[205484.645219]  [<ffffffff802b1ab0>] sys_mount+0x8a/0xce
-[205484.650275]  [<ffffffff8020beca>] system_call_after_swapgs+0x8a/0x8f
-
->> Is the use of -L the only way to go? I wonder, since it will cause
->> data loss...
-> 
-> if you can't mount it, yeah
-
-I'm going ahead and doing that.
-There is an awful lot of output but at least it's doing something.
-
->> Also here is the output of xfs_db:
->> 
->> # xfs_db /dev/sda1 xfs_db> sb 0 xfs_db> p magicnum = 0x58465342
-> 
-> ok, odd; you got:
-> 
->>> # xfs_repair /dev/sda Phase 1 - find and verify superblock... bad
->>> primary superblock - bad magic number !!!
-> 
-> but this magic number is fine ...
-
-Yes, I figured that I had used /dev/sda instead of /dev/sda1, my bad :(
-So now the magic number is ok...
-
--- 
-Nico
+diff --git a/224 b/224
+new file mode 100755
+index 0000000..47e614c
+--- /dev/null
++++ b/224
+@@ -0,0 +1,68 @@
++#! /bin/bash
++# FS QA Test No. 224
++#
++# Test aio hole-filling past 2^32 bytes
++#
++# Testcase from Giel de Nijs <giel@vectorwise.com>
++# on linux-ext4 list, ""Possible ext4 data corruption
++# with large files and async I/O," on 29 Jan 2010
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2010 Eric Sandeen.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++# creator
++owner=sandeen@sandeen.net
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++
++_cleanup()
++{
++    rm -f $tmp.*
++}
++
++trap "_cleanup ; exit \$status" 0 1 2 3 15
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++
++[ ! -x $here/src/aio-write ] && _notrun "aio-write not built"
++
++TESTFILE=$TEST_DIR/$seq-aio-write-testfile
++
++rm -f $TESTFILE
++$here/src/aio-write -v -s 0xab -o 6g -l 512k $TESTFILE
++$here/src/aio-write -v -s 0xcd -o 4g -l 512k $TESTFILE
++
++# Bug in ext4 caused the 4g offset to wrap and io
++# completion happened at 0, leaving extent unwritten,
++# and 0s returned
++
++$XFS_IO_PROG -F -c "pread -v 4g 512k" -c "pread -v 6g 512k" $TESTFILE | \
++	_filter_xfs_io_unique
++
++status=0 ; exit
+diff --git a/224.out b/224.out
+new file mode 100644
+index 0000000..4bb51d5
+--- /dev/null
++++ b/224.out
+@@ -0,0 +1,19 @@
++QA output created by 224
++opening file /mnt/test/224-aio-write-testfile
++submitting write of 524288 bytes at offset 6442450944
++waiting for write to be finished
++got 1 events
++written 524288 bytes
++opening file /mnt/test/224-aio-write-testfile
++submitting write of 524288 bytes at offset 4294967296
++waiting for write to be finished
++got 1 events
++written 524288 bytes
++100000000:  cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
++*
++read 524288/524288 bytes at offset 4294967296
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++180000000:  ab ab ab ab ab ab ab ab ab ab ab ab ab ab ab ab  ................
++*
++read 524288/524288 bytes at offset 6442450944
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+diff --git a/group b/group
+index c66d965..46acc2b 100644
+--- a/group
++++ b/group
+@@ -336,4 +336,5 @@ deprecated
+ 220 auto quota quick
+ 221 auto metadata quick
+ 222 auto fsr ioctl quick
++224 auto aio quick
+ 223 auto quick
+diff --git a/src/Makefile b/src/Makefile
+index 619a752..2ac7041 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -42,6 +42,8 @@ LLDLIBS += $(LIBGDBM)
+ endif
+ 
+ ifeq ($(HAVE_AIO), true)
++LINUX_TARGETS += aio-write
++LLDLIBS += -laio
+ SUBDIRS += aio-dio-regress
+ endif
+ 
+diff --git a/src/aio-write.c b/src/aio-write.c
+new file mode 100644
+index 0000000..59fbb24
+--- /dev/null
++++ b/src/aio-write.c
+@@ -0,0 +1,174 @@
++/*
++ *  Author: Giel de Nijs, VectorWise B.V. <giel@vectorwise.com>
++ *
++ * perform an AIO write to a file at a given length & offset
++ * Compile with -laio
++ *
++ * Copyright (c) 2010 Giel de Nijs, VectorWise B.V. <giel@vectorwise.com>
++ * Modifications Copyright (c) Eric Sandeen <sandeen@sandeen.net>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2, or (at your option)
++ * any later version.
++
++ */
++
++#ifndef _GNU_SOURCE
++#define _GNU_SOURCE
++#endif
++#define _LARGEFILE64_SOURCE
++#define _FILE_OFFSET_BITS 64
++#include <features.h>
++#include <libaio.h>
++#include <stdio.h>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <fcntl.h>
++#include <error.h>
++#include <errno.h>
++#include <unistd.h>
++#include <stdlib.h>
++#include <ctype.h>
++#include <limits.h>
++
++void usage(void)
++{
++	fprintf(stderr, "usage: aio_write [-v] [-s seed]"
++		" -o offset -l length filename\n");
++	exit(1);
++}
++
++/*
++ * Scale value by kilo, mega, or giga.
++ */
++loff_t scale_by_kmg(long long value, char scale)
++{
++switch (scale) {
++	case 'g':
++	case 'G':
++		value *= 1024;
++		/* fallthrough */
++	case 'm':
++	case 'M':
++		value *= 1024;
++		/* fallthrough */
++	case 'k':
++	case 'K':
++		value *= 1024;
++		break;
++	case '\0':
++		break;
++	default:
++		usage();
++		break;
++	}
++	return value;
++}
++
++int main(int argc, char ** argv)
++{
++	char filename[PATH_MAX];
++	loff_t offset = 0;
++	size_t length = 0;
++	int seed = 0xFF;
++	int queue_depth = 8;
++	int err;
++	char *buf;
++	io_context_t io_ctx;
++	struct iocb iocb;
++	struct iocb *iocblist[1];
++	struct io_event events[1];
++	int fd;
++	int c;
++	int verbose = 0;
++	extern char *optarg;
++	extern int optind, optopt, opterr;
++
++	if (argc < 4)
++		usage();
++
++	while ((c = getopt(argc, argv, "s:o:l:v")) != -1) {
++		char *endp;
++		switch (c) {
++		case 's':
++			seed = (int)strtol(optarg, &endp, 0);
++			break;
++		case 'o':
++			offset = strtol(optarg, &endp, 0);
++			offset = scale_by_kmg((long long)offset, *endp);
++			break;
++		case 'l':
++			length = strtol(optarg, &endp, 0);
++			length = scale_by_kmg((long long)length, *endp);
++			break;
++		case 'v':
++			verbose++;
++			break;
++		case '?':
++			usage();
++			break;
++		}
++	}
++
++	strncpy(filename, argv[argc-1], PATH_MAX);
++
++	/* allocate aligned memory (for direct i/o) */
++	err = posix_memalign((void **)&buf, getpagesize(), length);
++	if (err) {
++		printf("error allocating memory: %s\n", strerror(err));
++		return(err);
++	}
++	memset(buf, seed, length);
++
++	/* initialize async i/o */
++	err = io_queue_init(queue_depth, &io_ctx);
++	if (err < 0) {
++		printf("error initializing I/O queue: %s\n", strerror(-err));
++		return(-err);
++	}
++
++	/* create file */
++	if (verbose)
++		printf("opening file %s\n", filename);
++	fd = open(filename, O_DIRECT|O_RDWR|O_LARGEFILE|O_CREAT, 0666);
++	if (fd < 0) {
++		perror("error opening file");
++		return(errno);
++	}
++
++	/* write buf at offset */
++	io_prep_pwrite(&iocb, fd, buf, length, offset);
++	iocblist[0] = &iocb;
++	if (verbose)
++		printf("submitting write of %zd bytes at offset %zd\n", length, offset);
++	err = io_submit(io_ctx, 1, iocblist);
++	if (err < 0) {
++		printf("error submitting I/O requests: %s\n", strerror(-err));
++		return(-err);
++	}
++
++	if (verbose)
++		printf("waiting for write to be finished\n");
++	err = io_getevents(io_ctx, 1, 1, events, NULL);
++	if (err < 0) {
++		printf("error getting I/O events: %s\n", strerror(-err));
++		return(-err);
++	}
++	if (verbose)
++		printf("got %d events\n", err);
++	err = events[0].res;
++	if (err < 0) {
++		printf("error writing buffer: %s\n", strerror(-err));
++		return(-err);
++	}
++	if (verbose)
++		printf("written %ld bytes\n", events[0].res);
++
++	close(fd);
++	io_destroy(io_ctx);
++
++	free(buf);
++	return 0;
++}
++
 
 _______________________________________________
 xfs mailing list
