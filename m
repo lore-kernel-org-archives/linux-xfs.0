@@ -1,22 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0TFblD1126804
-	for <linux-xfs@oss.sgi.com>; Fri, 29 Jan 2010 09:37:47 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D5A411C8B320
-	for <linux-xfs@oss.sgi.com>; Fri, 29 Jan 2010 07:38:53 -0800 (PST)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id hvcxEwyMmDtHKlVM for
-	<linux-xfs@oss.sgi.com>; Fri, 29 Jan 2010 07:38:53 -0800 (PST)
-Message-ID: <4B63010D.1080608@sandeen.net>
-Date: Fri, 29 Jan 2010 09:38:53 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: Filesystem corrupted: "Sorry,	could not find valid secondary
+	o0TG68YC128321
+	for <linux-xfs@oss.sgi.com>; Fri, 29 Jan 2010 10:06:08 -0600
+Received: from lo.gmane.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4F61B1363101
+	for <linux-xfs@oss.sgi.com>; Fri, 29 Jan 2010 08:07:13 -0800 (PST)
+Received: from lo.gmane.org (lo.gmane.org [80.91.229.12]) by cuda.sgi.com with
+	ESMTP id FYbZDtlcUcFLzpkZ for <linux-xfs@oss.sgi.com>;
+	Fri, 29 Jan 2010 08:07:13 -0800 (PST)
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1NatNH-0004Ew-PK
+	for linux-xfs@oss.sgi.com; Fri, 29 Jan 2010 17:07:11 +0100
+Received: from vm15c-113.broadinstitute.org ([69.173.114.122])
+	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+	id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Fri, 29 Jan 2010 17:07:11 +0100
+Received: from nico by vm15c-113.broadinstitute.org with local (Gmexim 0.1
+	(Debian)) id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Fri, 29 Jan 2010 17:07:11 +0100
+From: Nicolas Stransky <nico@stransky.cx>
+Subject: Re: Filesystem corrupted: "Sorry, could not find valid secondary
 	superblock"
-References: <hjus58$6oi$1@ger.gmane.org>
-In-Reply-To: <hjus58$6oi$1@ger.gmane.org>
+Date: Fri, 29 Jan 2010 11:06:48 -0500
+Message-ID: <hjv12n$r2o$1@ger.gmane.org>
+References: <hjus58$6oi$1@ger.gmane.org> <4B63010D.1080608@sandeen.net>
+Mime-Version: 1.0
+In-Reply-To: <4B63010D.1080608@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,41 +39,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Nicolas STRANSKY <Nico@stransky.cx>
-Cc: linux-xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-Nicolas STRANSKY wrote:
-> Hi,
+On 1/29/10 10:38 AM, Eric Sandeen wrote:
+> xfs_repair needs to be smarter about this; I at least wish it'd say 
+> -why- the candidate was not valid.
 > 
-> I'm using Debian Lenny with xfsprogs 2.9.8-1lenny1 and a kernel
-> 2.6.26-2-amd64. Recently I had some disk failures on a 1.5TB RAID 5
-> array, which is now running in a degraded mode but the xfs filesystem on
-> this array is inconsistent. I can mount it with -o ro,norecovery and
-> read some files, but I can't read most of them.
-> Using xfs_repair, I tried to repair the filesystem. It went for 12
-> hours, displaying these messages:
-> "found candidate secondary superblock...
-> unable to verify superblock, continuing..."
-> and finally:
-> "Sorry, could not find valid secondary superblock
-> Exiting now."
+> Can you include the whole repair output?  Then maybe we can direct 
+> you to some xfs_db jujitsu to examine the fs.
 > 
-> Is there anything else I could do to repair the filesystem? Upgrade to a
-> newer version of xfsprogs? Is it possible that there is no valid
-> secondary superblock on the whole disk or are they just not found?
+> Trying newer xfsprogs would not be a -bad- idea...
 > 
-> Thanks a lot for any help,
-> NS.
+> -Eric
 
-xfs_repair needs to be smarter about this; I at least wish it'd say
--why- the candidate was not valid.
+The output is as follows:
 
-Can you include the whole repair output?  Then maybe we can direct
-you to some xfs_db jujitsu to examine the fs.
+# xfs_repair /dev/sda
+Phase 1 - find and verify superblock...
+bad primary superblock - bad magic number !!!
 
-Trying newer xfsprogs would not be a -bad- idea...
+attempting to find secondary superblock...
+......................
+found candidate secondary superblock...
+unable to verify superblock, continuing...
+......................
+found candidate secondary superblock...
+unable to verify superblock, continuing...
+......................
+[The previous one repeats hundreds of times over many hours]
+......................
+Sorry, could not find valid secondary superblock
+Exiting now.
 
--Eric
+
+I am trying right now xfsprogs 3.1.0 from Debian testing, will see what
+it gives...
+
+Thanks!
+NS
 
 _______________________________________________
 xfs mailing list
