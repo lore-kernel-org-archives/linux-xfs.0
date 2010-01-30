@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0UAwujk203397 for <xfs@oss.sgi.com>; Sat, 30 Jan 2010 04:58:56 -0600
+	o0UApVqn201870 for <xfs@oss.sgi.com>; Sat, 30 Jan 2010 04:51:31 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 50C4F19D461
-	for <xfs@oss.sgi.com>; Sat, 30 Jan 2010 02:55:03 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 03936136599A
+	for <xfs@oss.sgi.com>; Sat, 30 Jan 2010 02:52:37 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id YxlcpEA0fPFoPUsC for
-	<xfs@oss.sgi.com>; Sat, 30 Jan 2010 02:55:03 -0800 (PST)
-Date: Sat, 30 Jan 2010 05:55:01 -0500
+	by cuda.sgi.com with ESMTP id FN0OzQnhu2CHNGFN for
+	<xfs@oss.sgi.com>; Sat, 30 Jan 2010 02:52:37 -0800 (PST)
+Date: Sat, 30 Jan 2010 05:52:36 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests 224: test aio hole-fill at 4g
-Message-ID: <20100130105501.GA22909@infradead.org>
-References: <4B633F9A.8000404@sandeen.net>
+Subject: Re: [PATCH] xfstests: 223 - test file alignment on stripe geometry
+Message-ID: <20100130105236.GA18286@infradead.org>
+References: <4B621529.20708@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4B633F9A.8000404@sandeen.net>
+In-Reply-To: <4B621529.20708@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,71 +29,41 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
-Cc: ext4 development <linux-ext4@vger.kernel.org>, Giel de Nijs <giel@vectorwise.com>, xfs-oss <xfs@oss.sgi.com>
+Cc: ext4 development <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Jan 29, 2010 at 02:05:46PM -0600, Eric Sandeen wrote:
-> Testcase from Giel de Nijs <giel@vectorwise.com>
-> on linux-ext4 list, ""Possible ext4 data corruption
-> with large files and async I/O," on 29 Jan 2010
-> 
-> ext4 put byte offsets in a block offset u32 container
-> in the endio struct, so 4g wrapped to 0 leading to
-> data corruption when the unwritten extent did not
-> get converted.
+> +# real QA test starts here
+> +_supported_fs xfs ext4
 
-There's various type messups in the test program that make it fail for
-me on a 32-bit machine.  The patch below fixes it up, but it seems like
-we should rather add a variant of that code as aio_read/write commands
-to xfs_io instead of adding a new test program.
+I'd make this generic and just do the notrun in scratch_mkfs_geom for
+non-supported filesystems.
 
-Index: xfstests-dev/src/aio-write.c
-===================================================================
---- xfstests-dev.orig/src/aio-write.c	2010-01-30 10:42:24.000000000 +0000
-+++ xfstests-dev/src/aio-write.c	2010-01-30 10:45:30.000000000 +0000
-@@ -42,7 +42,7 @@ void usage(void)
- /*
-  * Scale value by kilo, mega, or giga.
-  */
--loff_t scale_by_kmg(long long value, char scale)
-+long long scale_by_kmg(long long value, char scale)
- {
- switch (scale) {
- 	case 'g':
-@@ -69,7 +69,7 @@ switch (scale) {
- int main(int argc, char ** argv)
- {
- 	char filename[PATH_MAX];
--	loff_t offset = 0;
-+	long long offset = 0;
- 	size_t length = 0;
- 	int seed = 0xFF;
- 	int queue_depth = 8;
-@@ -95,12 +95,12 @@ int main(int argc, char ** argv)
- 			seed = (int)strtol(optarg, &endp, 0);
- 			break;
- 		case 'o':
--			offset = strtol(optarg, &endp, 0);
--			offset = scale_by_kmg((long long)offset, *endp);
-+			offset = strtoll(optarg, &endp, 0);
-+			offset = scale_by_kmg(offset, *endp);
- 			break;
- 		case 'l':
- 			length = strtol(optarg, &endp, 0);
--			length = scale_by_kmg((long long)length, *endp);
-+			length = scale_by_kmg(length, *endp);
- 			break;
- 		case 'v':
- 			verbose++;
-@@ -141,7 +141,8 @@ int main(int argc, char ** argv)
- 	io_prep_pwrite(&iocb, fd, buf, length, offset);
- 	iocblist[0] = &iocb;
- 	if (verbose)
--		printf("submitting write of %zd bytes at offset %zd\n", length, offset);
-+		printf("submitting write of %zd bytes at offset %lld\n",
-+			length, offset);
- 	err = io_submit(io_ctx, 1, iocblist);
- 	if (err < 0) {
- 		printf("error submitting I/O requests: %s\n", strerror(-err));
+> +scratch_mkfs_geom()
+> +{
+
+And I'd throw this one into common.rc.
+
+> +=== Testing size 1073745920 falloc on 128k stripe ===
+> +SCRATCH_MNT/file-1073745920-falloc: well-aligned
+> diff --git a/common.rc b/common.rc
+> index 6424871..97513cc 100644
+> --- a/common.rc
+> +++ b/common.rc
+> @@ -292,7 +292,7 @@ _scratch_mkfs()
+>          $MKFS_UDF_PROG $MKFS_OPTIONS $* $SCRATCH_DEV > /dev/null
+>  	;;
+>      *)
+> -	/sbin/mkfs -t $FSTYP -- $MKFS_OPTIONS $* $SCRATCH_DEV > /dev/null
+> +	/sbin/mkfs -t $FSTYP -- $MKFS_OPTIONS $* $SCRATCH_DEV
+
+Hmm, doesn't this change break other testcase?  Anyway needs some
+rationale in the changelog.
+
+> index 0000000..fa005b2
+> --- /dev/null
+> +++ b/src/fibmap.c
+
+This is a bit misnamed as it's not a generic fibmap tool but rather
+a specific tool comparing the bmap to the sunit alignment.
 
 _______________________________________________
 xfs mailing list
