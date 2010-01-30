@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0UAPXVs200059 for <xfs@oss.sgi.com>; Sat, 30 Jan 2010 04:25:33 -0600
+	o0UAIs35199328 for <xfs@oss.sgi.com>; Sat, 30 Jan 2010 04:18:56 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1C28F1C91AF6
-	for <xfs@oss.sgi.com>; Sat, 30 Jan 2010 02:26:39 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7535019D91E
+	for <xfs@oss.sgi.com>; Sat, 30 Jan 2010 02:19:51 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 9jBplHsQR6ELt4WC for
-	<xfs@oss.sgi.com>; Sat, 30 Jan 2010 02:26:39 -0800 (PST)
-Date: Sat, 30 Jan 2010 05:26:39 -0500
+	by cuda.sgi.com with ESMTP id tq1JrBJL7VUGZEV0 for
+	<xfs@oss.sgi.com>; Sat, 30 Jan 2010 02:19:51 -0800 (PST)
+Date: Sat, 30 Jan 2010 05:19:51 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests: make 053 and 077 generic
-Message-ID: <20100130102639.GC32695@infradead.org>
-References: <4B621E11.4050609@sandeen.net>
+Subject: Re: [PATCH] xfstests: routine to create scratch of certain size
+Message-ID: <20100130101951.GA32695@infradead.org>
+References: <4B621D89.8070800@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4B621E11.4050609@sandeen.net>
+In-Reply-To: <4B621D89.8070800@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,59 +31,43 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Jan 28, 2010 at 05:30:25PM -0600, Eric Sandeen wrote:
-> 053 and 077 can be generic w/ a little tweaking.
-> 
-> Also change 077's filler to something more likely
-> to be on a random system under test, and add it
-> to the enospc group.
+On Thu, Jan 28, 2010 at 05:28:09PM -0600, Eric Sandeen wrote:
+> This is needed for later enospc tests to be generic
 > 
 > Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 > ---
 > 
-> diff --git a/053 b/053
-> index 98644a7..5542885 100755
-> --- a/053
-> +++ b/053
-> @@ -38,18 +38,19 @@ trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
->  . ./common.attr
+> diff --git a/common.rc b/common.rc
+> index 97513cc..cf2662a 100644
+> --- a/common.rc
+> +++ b/common.rc
+> @@ -237,6 +237,27 @@ _scratch_mkfs_options()
+>      echo $SCRATCH_OPTIONS $MKFS_OPTIONS $* $SCRATCH_DEV
+>  }
 >  
->  # real QA test starts here
-> -_supported_fs xfs
-> +_supported_fs generic
->  _supported_os Linux
->  
->  [ ! -x /bin/chacl -a ! -x /usr/bin/chacl ] && _notrun "chacl command not found"
->  
->  _require_scratch
-> +_acl_requirements
+> +# arg 1 is size in bytes, arg 2 is (optional) blocksize
+> +_scratch_mkfs_sized()
+> +{
+> +    fssz=$1
+> +    bsz=$2
+> +    [ -z "$bsz" ] && bsz=4096
+> +    let blocks=$fssz/$bsz
+> +
+> +    case $FSTYP in
+> +    xfs)
+> +        _scratch_mkfs_xfs -d size=$fssz -b size=$bsz 2>&1 >>$here/$seq.full
+> +    ;;
+> +    ext2|ext3|ext4)
+> +        /sbin/mkfs -t $FSTYP -- $MKFS_OPTIONS -b $bsz $SCRATCH_DEV $blocks  2>&1>>$here/$seq.full
+> +    ;;
+> +    *)
+> +    _notrun "Filesystem $FSTYP not supported in _scratch_mkfs_sized"
+> +    ;;
+> +    esac
+> +}
 
-_acl_requirements includes the chacl check, so it can be removed.
-
-Btw, any reason _acl_requirements isn't called _require_acl?
-
-> diff --git a/077 b/077
-> index cdee8da..d23305f 100755
-> --- a/077
-> +++ b/077
-> @@ -31,7 +31,8 @@ here=`pwd`
->  tmp=/tmp/$$
->  status=1
->  #filler=$here/../../linux
-> -filler=/home/fsgqa/isms/2.4.x-xfs
-> +#filler=/home/fsgqa/isms/2.4.x-xfs
-> +filler=/lib/modules/`uname -r`/
-
-Oooops.  Maybe just use /lib/modules/ to get as much as possible.
-And no need to let the other bits comment out there.  Maybe we need
-to generate the data instead to really be safe - at least for my
-tests under qemu I don't have any modules installed.  But that should
-be left for another patch.
-
-Anyway, patch looks good enough to go in for now, so
-
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Looks good, the only questions is why you're using $MKFS_OPTIONS for
+extN, but not for xfs?
 
 _______________________________________________
 xfs mailing list
