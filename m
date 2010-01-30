@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0UG7x9R220564 for <xfs@oss.sgi.com>; Sat, 30 Jan 2010 10:07:59 -0600
+	o0UGE22O220935 for <xfs@oss.sgi.com>; Sat, 30 Jan 2010 10:14:02 -0600
 Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 23C1C19DEBE
-	for <xfs@oss.sgi.com>; Sat, 30 Jan 2010 08:09:05 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7E8AD19DF73
+	for <xfs@oss.sgi.com>; Sat, 30 Jan 2010 08:15:09 -0800 (PST)
 Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id pa85dGa3YcTmNWJB for
-	<xfs@oss.sgi.com>; Sat, 30 Jan 2010 08:09:05 -0800 (PST)
-Message-ID: <4B6459A1.4060900@sandeen.net>
-Date: Sat, 30 Jan 2010 10:09:05 -0600
+	by cuda.sgi.com with ESMTP id ayW3Hnrc2FTUBAVU for
+	<xfs@oss.sgi.com>; Sat, 30 Jan 2010 08:15:09 -0800 (PST)
+Message-ID: <4B645B0D.205@sandeen.net>
+Date: Sat, 30 Jan 2010 10:15:09 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: make 053 and 077 generic
-References: <4B621E11.4050609@sandeen.net>
-	<20100130102639.GC32695@infradead.org>
-In-Reply-To: <20100130102639.GC32695@infradead.org>
+Subject: Re: [PATCH] xfstests 224: test aio hole-fill at 4g
+References: <4B633F9A.8000404@sandeen.net>
+	<20100130105501.GA22909@infradead.org>
+In-Reply-To: <20100130105501.GA22909@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,75 +29,81 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs-oss <xfs@oss.sgi.com>
+Cc: ext4 development <linux-ext4@vger.kernel.org>, Giel de Nijs <giel@vectorwise.com>, xfs-oss <xfs@oss.sgi.com>
 
 Christoph Hellwig wrote:
-> On Thu, Jan 28, 2010 at 05:30:25PM -0600, Eric Sandeen wrote:
->> 053 and 077 can be generic w/ a little tweaking.
+> On Fri, Jan 29, 2010 at 02:05:46PM -0600, Eric Sandeen wrote:
+>> Testcase from Giel de Nijs <giel@vectorwise.com>
+>> on linux-ext4 list, ""Possible ext4 data corruption
+>> with large files and async I/O," on 29 Jan 2010
 >>
->> Also change 077's filler to something more likely
->> to be on a random system under test, and add it
->> to the enospc group.
->>
->> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
->> ---
->>
->> diff --git a/053 b/053
->> index 98644a7..5542885 100755
->> --- a/053
->> +++ b/053
->> @@ -38,18 +38,19 @@ trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
->>  . ./common.attr
->>  
->>  # real QA test starts here
->> -_supported_fs xfs
->> +_supported_fs generic
->>  _supported_os Linux
->>  
->>  [ ! -x /bin/chacl -a ! -x /usr/bin/chacl ] && _notrun "chacl command not found"
->>  
->>  _require_scratch
->> +_acl_requirements
+>> ext4 put byte offsets in a block offset u32 container
+>> in the endio struct, so 4g wrapped to 0 leading to
+>> data corruption when the unwritten extent did not
+>> get converted.
 > 
-> _acl_requirements includes the chacl check, so it can be removed.
+> There's various type messups in the test program that make it fail for
 
-oh good point :)
- 
-> Btw, any reason _acl_requirements isn't called _require_acl?
+oops, thanks for checking.
 
-It already existed, I just used it ... renaming is probably a good idea.
+> me on a 32-bit machine.  The patch below fixes it up, but it seems like
+> we should rather add a variant of that code as aio_read/write commands
+> to xfs_io instead of adding a new test program.
 
->> diff --git a/077 b/077
->> index cdee8da..d23305f 100755
->> --- a/077
->> +++ b/077
->> @@ -31,7 +31,8 @@ here=`pwd`
->>  tmp=/tmp/$$
->>  status=1
->>  #filler=$here/../../linux
->> -filler=/home/fsgqa/isms/2.4.x-xfs
->> +#filler=/home/fsgqa/isms/2.4.x-xfs
->> +filler=/lib/modules/`uname -r`/
-> 
-> Oooops.  Maybe just use /lib/modules/ to get as much as possible.
-> And no need to let the other bits comment out there.  Maybe we need
-> to generate the data instead to really be safe - at least for my
-> tests under qemu I don't have any modules installed.  But that should
-> be left for another patch.
-
-hm, on the other hand some of my machines have so many kernels installed,
-picking up all of /lib/modules might slow it down a lot.
-
-So generating might be better, yeah.
-
-> Anyway, patch looks good enough to go in for now, so
-
-thanks, I'll pull the chacl test & the commented lines before that.
+ok, that's probably better - again, though, it takes at least a release
+cycle before most folks can test it.  But I guess that's not the end of
+the world.
 
 -Eric
- 
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+> Index: xfstests-dev/src/aio-write.c
+> ===================================================================
+> --- xfstests-dev.orig/src/aio-write.c	2010-01-30 10:42:24.000000000 +0000
+> +++ xfstests-dev/src/aio-write.c	2010-01-30 10:45:30.000000000 +0000
+> @@ -42,7 +42,7 @@ void usage(void)
+>  /*
+>   * Scale value by kilo, mega, or giga.
+>   */
+> -loff_t scale_by_kmg(long long value, char scale)
+> +long long scale_by_kmg(long long value, char scale)
+>  {
+>  switch (scale) {
+>  	case 'g':
+> @@ -69,7 +69,7 @@ switch (scale) {
+>  int main(int argc, char ** argv)
+>  {
+>  	char filename[PATH_MAX];
+> -	loff_t offset = 0;
+> +	long long offset = 0;
+>  	size_t length = 0;
+>  	int seed = 0xFF;
+>  	int queue_depth = 8;
+> @@ -95,12 +95,12 @@ int main(int argc, char ** argv)
+>  			seed = (int)strtol(optarg, &endp, 0);
+>  			break;
+>  		case 'o':
+> -			offset = strtol(optarg, &endp, 0);
+> -			offset = scale_by_kmg((long long)offset, *endp);
+> +			offset = strtoll(optarg, &endp, 0);
+> +			offset = scale_by_kmg(offset, *endp);
+>  			break;
+>  		case 'l':
+>  			length = strtol(optarg, &endp, 0);
+> -			length = scale_by_kmg((long long)length, *endp);
+> +			length = scale_by_kmg(length, *endp);
+>  			break;
+>  		case 'v':
+>  			verbose++;
+> @@ -141,7 +141,8 @@ int main(int argc, char ** argv)
+>  	io_prep_pwrite(&iocb, fd, buf, length, offset);
+>  	iocblist[0] = &iocb;
+>  	if (verbose)
+> -		printf("submitting write of %zd bytes at offset %zd\n", length, offset);
+> +		printf("submitting write of %zd bytes at offset %lld\n",
+> +			length, offset);
+>  	err = io_submit(io_ctx, 1, iocblist);
+>  	if (err < 0) {
+>  		printf("error submitting I/O requests: %s\n", strerror(-err));
 > 
 
 _______________________________________________
