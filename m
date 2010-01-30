@@ -1,16 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o0UATbHb200551 for <xfs@oss.sgi.com>; Sat, 30 Jan 2010 04:29:37 -0600
-Date: Sat, 30 Jan 2010 05:30:42 -0500
+	o0UAJaJr199392 for <xfs@oss.sgi.com>; Sat, 30 Jan 2010 04:19:36 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3D2DD19D998
+	for <xfs@oss.sgi.com>; Sat, 30 Jan 2010 02:20:43 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id I4Sb2oF4o2MECDe6 for
+	<xfs@oss.sgi.com>; Sat, 30 Jan 2010 02:20:43 -0800 (PST)
+Date: Sat, 30 Jan 2010 05:20:42 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/2] xfstests: 219: ignore duplicates reported by repquota
-Message-ID: <20100130103042.GA10337@infradead.org>
-References: <1AB9A794DBDDF54A8A81BE2296F7BDFE012A6942@cf--amer001e--3.americas.sgi.com>
-	<4B626D80.3010601@sandeen.net>
+Subject: Re: [PATCH] xfstests: helper to detect fs free space
+Message-ID: <20100130102042.GB32695@infradead.org>
+References: <4B626748.3070601@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4B626D80.3010601@sandeen.net>
+In-Reply-To: <4B626748.3070601@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,15 +29,18 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com, Alex Elder <aelder@sgi.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Jan 28, 2010 at 11:09:20PM -0600, Eric Sandeen wrote:
-> there's probably better awk to be written than this, but I think this
-> fixes it:
+On Thu, Jan 28, 2010 at 10:42:48PM -0600, Eric Sandeen wrote:
+> Make a common helper to skip a test if there's not enough
+> free space on the target fs.
 > 
-> Alex, you look like an awk-master, can you fix it?
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-No fix included..
+Looks good,
+
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
