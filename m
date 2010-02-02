@@ -1,21 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o131l8Po203348 for <xfs@oss.sgi.com>; Tue, 2 Feb 2010 19:47:08 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7D22A1371DC7
-	for <xfs@oss.sgi.com>; Tue,  2 Feb 2010 17:48:15 -0800 (PST)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id cDgahNvP9qqvwxcC for
-	<xfs@oss.sgi.com>; Tue, 02 Feb 2010 17:48:15 -0800 (PST)
-Message-ID: <4B68D5DF.20808@sandeen.net>
-Date: Tue, 02 Feb 2010 19:48:15 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: [PATCH V3] xfstests: 223 - test file alignment on stripe geometry
-References: <4B621529.20708@sandeen.net> <20100130105236.GA18286@infradead.org>
-	<4B68B532.9000103@sandeen.net>
-In-Reply-To: <4B68B532.9000103@sandeen.net>
+	o1329V6g204081 for <xfs@oss.sgi.com>; Tue, 2 Feb 2010 20:09:31 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 48B591371DC4
+	for <xfs@oss.sgi.com>; Tue,  2 Feb 2010 18:10:39 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
+	[150.101.137.102]) by cuda.sgi.com with ESMTP id
+	pfGB9etN4N5IBim6 for <xfs@oss.sgi.com>;
+	Tue, 02 Feb 2010 18:10:39 -0800 (PST)
+Received: from discord (unverified [121.44.103.80])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	12207830-1927428
+	for <xfs@oss.sgi.com>; Wed, 03 Feb 2010 12:40:38 +1030 (CDT)
+Received: from disturbed ([192.168.1.9]) by discord with esmtp (Exim 4.69)
+	(envelope-from <dave@fromorbit.com>) id 1NcS7X-0003nr-KP
+	for xfs@oss.sgi.com; Wed, 03 Feb 2010 10:25:23 +1100
+Received: from dave by disturbed with local (Exim 4.71)
+	(envelope-from <dave@disturbed.disaster>) id 1NcS7W-0006j9-I7
+	for xfs@oss.sgi.com; Wed, 03 Feb 2010 10:25:22 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 09/10] xfs: xfs_fs_write_inode() can fail to write inodes
+	synchronously V2
+Date: Wed,  3 Feb 2010 10:25:03 +1100
+Message-Id: <1265153104-29680-10-git-send-email-david@fromorbit.com>
+In-Reply-To: <1265153104-29680-1-git-send-email-david@fromorbit.com>
+References: <1265153104-29680-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,537 +34,127 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-A first-cut test to ensure that files are well-aligned on filesystems
-with stripe geometry.
+When an inode has already be flushed delayed write,
+xfs_inode_clean() returns true and hence xfs_fs_write_inode() can
+return on a synchronous inode write without having written the
+inode. Currently these sycnhronous writes only come sync(1),
+unmount, a sycnhronous NFS export and cachefiles so should be
+relatively rare and out of common performance paths.
 
-Several sizes of stripe units are mkfs'd, and then files are written
-and fallocated in various multiples of those stripe sizes.
-Each file is checked to ensure that the first block is
-stripe-aligned.
+Realistically, a synchronous inode write is not necessary here; we
+can treat this like fsync where we either force the log if there are
+no unlogged changes, or do a sync transaction if there are unlogged
+changes. The will result real synchronous semantics as the fsync
+will issue barriers, but may slow down the above two configurations
+as a result. However, if the inode is not pinned and has no unlogged
+changes, then the fsync code is a no-op and hence it may be faster
+than the existing code.
 
-(Ideally, for any fragmented files, we should ensure that each
-fragment start is well-aligned, but this does not do that yet)
+The only thing we need tobe careful of here is if the inode has not
+yet been flushed to the inode buffer bulkstat scans will fail to see
+it. Hence even on a sync write, we should try to flush the inode to
+the backing buffer. This is only a best-effort delwri flush - it
+doesn't guarantee that the flush happens but races with other inode
+operations should not happen as the inode lock is not dropped
+between the fsync operation and the flush.
 
-(slightly unrelated: don't send scratch mkfs output to /dev/null,
-we'd like to see mkfs output and direct it to $seq.full - this
-more or less matches _scratch_mkfs_xfs behavior and doesn't
-break any tests that I can see)
+For the asynchronous write, move the clean check until after we have
+locked up the inode. With the inode locked and the flush lock held,
+we know that if the inodis clean there are no pending changes in the
+log and there are no current outstanding delayed writes or IO in
+progress, so if it reports clean now it really is clean. This matches
+the order of locking and checks in xfs_sync_inode_attr().
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+Version 2:
+- ilock is now held external to the fsync call to close race windows
+  between the fsync and delwri flush to the backing buffer.
+
+Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
+ fs/xfs/linux-2.6/xfs_super.c |   54 ++++++++++++++++++++++++-----------------
+ 1 files changed, 32 insertions(+), 22 deletions(-)
 
-V2: Address Christoph's review comments
-V3: add missing _ to the helper function, minor cleanups
-    to the common.rc file
-
-(sorry for all the versions) :)
-
-diff --git a/223 b/223
-new file mode 100755
-index 0000000..a605b6d
---- /dev/null
-+++ b/223
-@@ -0,0 +1,96 @@
-+#! /bin/bash
-+# FS QA Test No. 223
-+#
-+# File alignment tests
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2010 Eric Sandeen.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=sandeen@sandeen.net
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+
-+_cleanup()
-+{
-+    rm -f $tmp.*
-+}
-+
-+trap "_cleanup ; exit \$status" 0 1 2 3 15
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+
-+_require_scratch
-+_require_xfs_io_falloc
-+
-+rm -f $seq.full
-+
-+_filter_scratch()
-+{
-+	sed -e "s,$SCRATCH_MNT,SCRATCH_MNT,g"
-+}
-+
-+BLOCKSIZE=4096
-+
-+for SUNIT_K in 8 16 32 64 128; do
-+	let SUNIT_BYTES=$SUNIT_K*1024
-+	let SUNIT_BLOCKS=$SUNIT_BYTES/$BLOCKSIZE
-+
-+	echo "=== mkfs with su $SUNIT_BLOCKS blocks x 4 ==="
-+	_scratch_mkfs_geom $BLOCKSIZE $SUNIT_BYTES 4 &>> $seq.full
-+	_scratch_mount
-+
-+	for SIZE_MULT in 1 2 8 64 256; do
-+		let SIZE=$SIZE_MULT*$SUNIT_BYTES
-+
-+		echo "=== Testing size ${SIZE_MULT}*${SUNIT_K}k on ${SUNIT_K}k stripe ==="
-+		for FILE in 1 2 3 4; do
-+			xfs_io -F -f -c "falloc 0 $SIZE" $SCRATCH_MNT/file-$FILE-$SIZE-falloc &>> $seq.full
-+			xfs_io -F -f -c "pwrite 0 $SIZE" $SCRATCH_MNT/file-$FILE-$SIZE-write &>> $seq.full
-+			src/fibmap $SCRATCH_MNT/file-$FILE-$SIZE-falloc $SUNIT_BLOCKS | \
-+				_filter_scratch
-+			src/fibmap $SCRATCH_MNT/file-$FILE-$SIZE-write $SUNIT_BLOCKS | \
-+				_filter_scratch
-+		done
-+	done
-+
-+	echo "=== Testing size 1g falloc on ${SUNIT_K}k stripe ==="
-+	xfs_io -F -f -c "falloc 0 1g" $SCRATCH_MNT/file-1g-falloc &>> $seq.full
-+	src/fibmap $SCRATCH_MNT/file-1g-falloc $SUNIT_BLOCKS
-+
-+	rm -f $SCRATCH_MNT/file-1g-falloc | _filter_scratch
-+
-+	echo "=== Testing size 1073745920 falloc on ${SUNIT_K}k stripe ==="
-+	xfs_io -F -f -c "falloc 0 1073745920" $SCRATCH_MNT/file-1073745920-falloc &>> $seq.full
-+	src/fibmap $SCRATCH_MNT/file-1073745920-falloc $SUNIT_BLOCKS | _filter_scratch
-+
-+	_scratch_unmount
-+done
-+
-+status=0 ; exit
-diff --git a/223.out b/223.out
-new file mode 100644
-index 0000000..c9588ef
---- /dev/null
-+++ b/223.out
-@@ -0,0 +1,251 @@
-+QA output created by 223
-+=== mkfs with su 2 blocks x 4 ===
-+=== Testing size 1*8k on 8k stripe ===
-+SCRATCH_MNT/file-1-8192-falloc: well-aligned
-+SCRATCH_MNT/file-1-8192-write: well-aligned
-+SCRATCH_MNT/file-2-8192-falloc: well-aligned
-+SCRATCH_MNT/file-2-8192-write: well-aligned
-+SCRATCH_MNT/file-3-8192-falloc: well-aligned
-+SCRATCH_MNT/file-3-8192-write: well-aligned
-+SCRATCH_MNT/file-4-8192-falloc: well-aligned
-+SCRATCH_MNT/file-4-8192-write: well-aligned
-+=== Testing size 2*8k on 8k stripe ===
-+SCRATCH_MNT/file-1-16384-falloc: well-aligned
-+SCRATCH_MNT/file-1-16384-write: well-aligned
-+SCRATCH_MNT/file-2-16384-falloc: well-aligned
-+SCRATCH_MNT/file-2-16384-write: well-aligned
-+SCRATCH_MNT/file-3-16384-falloc: well-aligned
-+SCRATCH_MNT/file-3-16384-write: well-aligned
-+SCRATCH_MNT/file-4-16384-falloc: well-aligned
-+SCRATCH_MNT/file-4-16384-write: well-aligned
-+=== Testing size 8*8k on 8k stripe ===
-+SCRATCH_MNT/file-1-65536-falloc: well-aligned
-+SCRATCH_MNT/file-1-65536-write: well-aligned
-+SCRATCH_MNT/file-2-65536-falloc: well-aligned
-+SCRATCH_MNT/file-2-65536-write: well-aligned
-+SCRATCH_MNT/file-3-65536-falloc: well-aligned
-+SCRATCH_MNT/file-3-65536-write: well-aligned
-+SCRATCH_MNT/file-4-65536-falloc: well-aligned
-+SCRATCH_MNT/file-4-65536-write: well-aligned
-+=== Testing size 64*8k on 8k stripe ===
-+SCRATCH_MNT/file-1-524288-falloc: well-aligned
-+SCRATCH_MNT/file-1-524288-write: well-aligned
-+SCRATCH_MNT/file-2-524288-falloc: well-aligned
-+SCRATCH_MNT/file-2-524288-write: well-aligned
-+SCRATCH_MNT/file-3-524288-falloc: well-aligned
-+SCRATCH_MNT/file-3-524288-write: well-aligned
-+SCRATCH_MNT/file-4-524288-falloc: well-aligned
-+SCRATCH_MNT/file-4-524288-write: well-aligned
-+=== Testing size 256*8k on 8k stripe ===
-+SCRATCH_MNT/file-1-2097152-falloc: well-aligned
-+SCRATCH_MNT/file-1-2097152-write: well-aligned
-+SCRATCH_MNT/file-2-2097152-falloc: well-aligned
-+SCRATCH_MNT/file-2-2097152-write: well-aligned
-+SCRATCH_MNT/file-3-2097152-falloc: well-aligned
-+SCRATCH_MNT/file-3-2097152-write: well-aligned
-+SCRATCH_MNT/file-4-2097152-falloc: well-aligned
-+SCRATCH_MNT/file-4-2097152-write: well-aligned
-+=== Testing size 1g falloc on 8k stripe ===
-+/mnt/scratch/file-1g-falloc: well-aligned
-+=== Testing size 1073745920 falloc on 8k stripe ===
-+SCRATCH_MNT/file-1073745920-falloc: well-aligned
-+=== mkfs with su 4 blocks x 4 ===
-+=== Testing size 1*16k on 16k stripe ===
-+SCRATCH_MNT/file-1-16384-falloc: well-aligned
-+SCRATCH_MNT/file-1-16384-write: well-aligned
-+SCRATCH_MNT/file-2-16384-falloc: well-aligned
-+SCRATCH_MNT/file-2-16384-write: well-aligned
-+SCRATCH_MNT/file-3-16384-falloc: well-aligned
-+SCRATCH_MNT/file-3-16384-write: well-aligned
-+SCRATCH_MNT/file-4-16384-falloc: well-aligned
-+SCRATCH_MNT/file-4-16384-write: well-aligned
-+=== Testing size 2*16k on 16k stripe ===
-+SCRATCH_MNT/file-1-32768-falloc: well-aligned
-+SCRATCH_MNT/file-1-32768-write: well-aligned
-+SCRATCH_MNT/file-2-32768-falloc: well-aligned
-+SCRATCH_MNT/file-2-32768-write: well-aligned
-+SCRATCH_MNT/file-3-32768-falloc: well-aligned
-+SCRATCH_MNT/file-3-32768-write: well-aligned
-+SCRATCH_MNT/file-4-32768-falloc: well-aligned
-+SCRATCH_MNT/file-4-32768-write: well-aligned
-+=== Testing size 8*16k on 16k stripe ===
-+SCRATCH_MNT/file-1-131072-falloc: well-aligned
-+SCRATCH_MNT/file-1-131072-write: well-aligned
-+SCRATCH_MNT/file-2-131072-falloc: well-aligned
-+SCRATCH_MNT/file-2-131072-write: well-aligned
-+SCRATCH_MNT/file-3-131072-falloc: well-aligned
-+SCRATCH_MNT/file-3-131072-write: well-aligned
-+SCRATCH_MNT/file-4-131072-falloc: well-aligned
-+SCRATCH_MNT/file-4-131072-write: well-aligned
-+=== Testing size 64*16k on 16k stripe ===
-+SCRATCH_MNT/file-1-1048576-falloc: well-aligned
-+SCRATCH_MNT/file-1-1048576-write: well-aligned
-+SCRATCH_MNT/file-2-1048576-falloc: well-aligned
-+SCRATCH_MNT/file-2-1048576-write: well-aligned
-+SCRATCH_MNT/file-3-1048576-falloc: well-aligned
-+SCRATCH_MNT/file-3-1048576-write: well-aligned
-+SCRATCH_MNT/file-4-1048576-falloc: well-aligned
-+SCRATCH_MNT/file-4-1048576-write: well-aligned
-+=== Testing size 256*16k on 16k stripe ===
-+SCRATCH_MNT/file-1-4194304-falloc: well-aligned
-+SCRATCH_MNT/file-1-4194304-write: well-aligned
-+SCRATCH_MNT/file-2-4194304-falloc: well-aligned
-+SCRATCH_MNT/file-2-4194304-write: well-aligned
-+SCRATCH_MNT/file-3-4194304-falloc: well-aligned
-+SCRATCH_MNT/file-3-4194304-write: well-aligned
-+SCRATCH_MNT/file-4-4194304-falloc: well-aligned
-+SCRATCH_MNT/file-4-4194304-write: well-aligned
-+=== Testing size 1g falloc on 16k stripe ===
-+/mnt/scratch/file-1g-falloc: well-aligned
-+=== Testing size 1073745920 falloc on 16k stripe ===
-+SCRATCH_MNT/file-1073745920-falloc: well-aligned
-+=== mkfs with su 8 blocks x 4 ===
-+=== Testing size 1*32k on 32k stripe ===
-+SCRATCH_MNT/file-1-32768-falloc: well-aligned
-+SCRATCH_MNT/file-1-32768-write: well-aligned
-+SCRATCH_MNT/file-2-32768-falloc: well-aligned
-+SCRATCH_MNT/file-2-32768-write: well-aligned
-+SCRATCH_MNT/file-3-32768-falloc: well-aligned
-+SCRATCH_MNT/file-3-32768-write: well-aligned
-+SCRATCH_MNT/file-4-32768-falloc: well-aligned
-+SCRATCH_MNT/file-4-32768-write: well-aligned
-+=== Testing size 2*32k on 32k stripe ===
-+SCRATCH_MNT/file-1-65536-falloc: well-aligned
-+SCRATCH_MNT/file-1-65536-write: well-aligned
-+SCRATCH_MNT/file-2-65536-falloc: well-aligned
-+SCRATCH_MNT/file-2-65536-write: well-aligned
-+SCRATCH_MNT/file-3-65536-falloc: well-aligned
-+SCRATCH_MNT/file-3-65536-write: well-aligned
-+SCRATCH_MNT/file-4-65536-falloc: well-aligned
-+SCRATCH_MNT/file-4-65536-write: well-aligned
-+=== Testing size 8*32k on 32k stripe ===
-+SCRATCH_MNT/file-1-262144-falloc: well-aligned
-+SCRATCH_MNT/file-1-262144-write: well-aligned
-+SCRATCH_MNT/file-2-262144-falloc: well-aligned
-+SCRATCH_MNT/file-2-262144-write: well-aligned
-+SCRATCH_MNT/file-3-262144-falloc: well-aligned
-+SCRATCH_MNT/file-3-262144-write: well-aligned
-+SCRATCH_MNT/file-4-262144-falloc: well-aligned
-+SCRATCH_MNT/file-4-262144-write: well-aligned
-+=== Testing size 64*32k on 32k stripe ===
-+SCRATCH_MNT/file-1-2097152-falloc: well-aligned
-+SCRATCH_MNT/file-1-2097152-write: well-aligned
-+SCRATCH_MNT/file-2-2097152-falloc: well-aligned
-+SCRATCH_MNT/file-2-2097152-write: well-aligned
-+SCRATCH_MNT/file-3-2097152-falloc: well-aligned
-+SCRATCH_MNT/file-3-2097152-write: well-aligned
-+SCRATCH_MNT/file-4-2097152-falloc: well-aligned
-+SCRATCH_MNT/file-4-2097152-write: well-aligned
-+=== Testing size 256*32k on 32k stripe ===
-+SCRATCH_MNT/file-1-8388608-falloc: well-aligned
-+SCRATCH_MNT/file-1-8388608-write: well-aligned
-+SCRATCH_MNT/file-2-8388608-falloc: well-aligned
-+SCRATCH_MNT/file-2-8388608-write: well-aligned
-+SCRATCH_MNT/file-3-8388608-falloc: well-aligned
-+SCRATCH_MNT/file-3-8388608-write: well-aligned
-+SCRATCH_MNT/file-4-8388608-falloc: well-aligned
-+SCRATCH_MNT/file-4-8388608-write: well-aligned
-+=== Testing size 1g falloc on 32k stripe ===
-+/mnt/scratch/file-1g-falloc: well-aligned
-+=== Testing size 1073745920 falloc on 32k stripe ===
-+SCRATCH_MNT/file-1073745920-falloc: well-aligned
-+=== mkfs with su 16 blocks x 4 ===
-+=== Testing size 1*64k on 64k stripe ===
-+SCRATCH_MNT/file-1-65536-falloc: well-aligned
-+SCRATCH_MNT/file-1-65536-write: well-aligned
-+SCRATCH_MNT/file-2-65536-falloc: well-aligned
-+SCRATCH_MNT/file-2-65536-write: well-aligned
-+SCRATCH_MNT/file-3-65536-falloc: well-aligned
-+SCRATCH_MNT/file-3-65536-write: well-aligned
-+SCRATCH_MNT/file-4-65536-falloc: well-aligned
-+SCRATCH_MNT/file-4-65536-write: well-aligned
-+=== Testing size 2*64k on 64k stripe ===
-+SCRATCH_MNT/file-1-131072-falloc: well-aligned
-+SCRATCH_MNT/file-1-131072-write: well-aligned
-+SCRATCH_MNT/file-2-131072-falloc: well-aligned
-+SCRATCH_MNT/file-2-131072-write: well-aligned
-+SCRATCH_MNT/file-3-131072-falloc: well-aligned
-+SCRATCH_MNT/file-3-131072-write: well-aligned
-+SCRATCH_MNT/file-4-131072-falloc: well-aligned
-+SCRATCH_MNT/file-4-131072-write: well-aligned
-+=== Testing size 8*64k on 64k stripe ===
-+SCRATCH_MNT/file-1-524288-falloc: well-aligned
-+SCRATCH_MNT/file-1-524288-write: well-aligned
-+SCRATCH_MNT/file-2-524288-falloc: well-aligned
-+SCRATCH_MNT/file-2-524288-write: well-aligned
-+SCRATCH_MNT/file-3-524288-falloc: well-aligned
-+SCRATCH_MNT/file-3-524288-write: well-aligned
-+SCRATCH_MNT/file-4-524288-falloc: well-aligned
-+SCRATCH_MNT/file-4-524288-write: well-aligned
-+=== Testing size 64*64k on 64k stripe ===
-+SCRATCH_MNT/file-1-4194304-falloc: well-aligned
-+SCRATCH_MNT/file-1-4194304-write: well-aligned
-+SCRATCH_MNT/file-2-4194304-falloc: well-aligned
-+SCRATCH_MNT/file-2-4194304-write: well-aligned
-+SCRATCH_MNT/file-3-4194304-falloc: well-aligned
-+SCRATCH_MNT/file-3-4194304-write: well-aligned
-+SCRATCH_MNT/file-4-4194304-falloc: well-aligned
-+SCRATCH_MNT/file-4-4194304-write: well-aligned
-+=== Testing size 256*64k on 64k stripe ===
-+SCRATCH_MNT/file-1-16777216-falloc: well-aligned
-+SCRATCH_MNT/file-1-16777216-write: well-aligned
-+SCRATCH_MNT/file-2-16777216-falloc: well-aligned
-+SCRATCH_MNT/file-2-16777216-write: well-aligned
-+SCRATCH_MNT/file-3-16777216-falloc: well-aligned
-+SCRATCH_MNT/file-3-16777216-write: well-aligned
-+SCRATCH_MNT/file-4-16777216-falloc: well-aligned
-+SCRATCH_MNT/file-4-16777216-write: well-aligned
-+=== Testing size 1g falloc on 64k stripe ===
-+/mnt/scratch/file-1g-falloc: well-aligned
-+=== Testing size 1073745920 falloc on 64k stripe ===
-+SCRATCH_MNT/file-1073745920-falloc: well-aligned
-+=== mkfs with su 32 blocks x 4 ===
-+=== Testing size 1*128k on 128k stripe ===
-+SCRATCH_MNT/file-1-131072-falloc: well-aligned
-+SCRATCH_MNT/file-1-131072-write: well-aligned
-+SCRATCH_MNT/file-2-131072-falloc: well-aligned
-+SCRATCH_MNT/file-2-131072-write: well-aligned
-+SCRATCH_MNT/file-3-131072-falloc: well-aligned
-+SCRATCH_MNT/file-3-131072-write: well-aligned
-+SCRATCH_MNT/file-4-131072-falloc: well-aligned
-+SCRATCH_MNT/file-4-131072-write: well-aligned
-+=== Testing size 2*128k on 128k stripe ===
-+SCRATCH_MNT/file-1-262144-falloc: well-aligned
-+SCRATCH_MNT/file-1-262144-write: well-aligned
-+SCRATCH_MNT/file-2-262144-falloc: well-aligned
-+SCRATCH_MNT/file-2-262144-write: well-aligned
-+SCRATCH_MNT/file-3-262144-falloc: well-aligned
-+SCRATCH_MNT/file-3-262144-write: well-aligned
-+SCRATCH_MNT/file-4-262144-falloc: well-aligned
-+SCRATCH_MNT/file-4-262144-write: well-aligned
-+=== Testing size 8*128k on 128k stripe ===
-+SCRATCH_MNT/file-1-1048576-falloc: well-aligned
-+SCRATCH_MNT/file-1-1048576-write: well-aligned
-+SCRATCH_MNT/file-2-1048576-falloc: well-aligned
-+SCRATCH_MNT/file-2-1048576-write: well-aligned
-+SCRATCH_MNT/file-3-1048576-falloc: well-aligned
-+SCRATCH_MNT/file-3-1048576-write: well-aligned
-+SCRATCH_MNT/file-4-1048576-falloc: well-aligned
-+SCRATCH_MNT/file-4-1048576-write: well-aligned
-+=== Testing size 64*128k on 128k stripe ===
-+SCRATCH_MNT/file-1-8388608-falloc: well-aligned
-+SCRATCH_MNT/file-1-8388608-write: well-aligned
-+SCRATCH_MNT/file-2-8388608-falloc: well-aligned
-+SCRATCH_MNT/file-2-8388608-write: well-aligned
-+SCRATCH_MNT/file-3-8388608-falloc: well-aligned
-+SCRATCH_MNT/file-3-8388608-write: well-aligned
-+SCRATCH_MNT/file-4-8388608-falloc: well-aligned
-+SCRATCH_MNT/file-4-8388608-write: well-aligned
-+=== Testing size 256*128k on 128k stripe ===
-+SCRATCH_MNT/file-1-33554432-falloc: well-aligned
-+SCRATCH_MNT/file-1-33554432-write: well-aligned
-+SCRATCH_MNT/file-2-33554432-falloc: well-aligned
-+SCRATCH_MNT/file-2-33554432-write: well-aligned
-+SCRATCH_MNT/file-3-33554432-falloc: well-aligned
-+SCRATCH_MNT/file-3-33554432-write: well-aligned
-+SCRATCH_MNT/file-4-33554432-falloc: well-aligned
-+SCRATCH_MNT/file-4-33554432-write: well-aligned
-+=== Testing size 1g falloc on 128k stripe ===
-+/mnt/scratch/file-1g-falloc: well-aligned
-+=== Testing size 1073745920 falloc on 128k stripe ===
-+SCRATCH_MNT/file-1073745920-falloc: well-aligned
-diff --git a/common.rc b/common.rc
-index 1685514..9c375dc 100644
---- a/common.rc
-+++ b/common.rc
-@@ -292,11 +292,37 @@ _scratch_mkfs()
-         $MKFS_UDF_PROG $MKFS_OPTIONS $* $SCRATCH_DEV > /dev/null
- 	;;
-     *)
--	/sbin/mkfs -t $FSTYP -- $MKFS_OPTIONS $* $SCRATCH_DEV > /dev/null
-+	/sbin/mkfs -t $FSTYP -- $MKFS_OPTIONS $* $SCRATCH_DEV
- 	;;
-     esac
- }
- 
-+# Emulate an N-data-disk stripe w/ various stripe units
-+# _scratch_mkfs_geom <sunit bytes> <swidth multiplier> [optional blocksize]
-+_scratch_mkfs_geom()
-+{
-+    sunit_bytes=$1
-+    swidth_mult=$2
-+    blocksize=$3
-+    [ -z "$blocksize" ] && blocksize=4096
-+
-+    let sunit_blocks=$sunit_bytes/$blocksize
-+    let swidth_blocks=$sunit_blocks*$swidth_mult
-+
-+    case $FSTYP in
-+    xfs)
-+	MKFS_OPTIONS="-b size=$blocksize, -d su=$sunit_bytes,sw=$swidth_mult"
-+	;;
-+    ext4)
-+	MKFS_OPTIONS="-b $blocksize -E stride=$sunit_blocks,stripe_width=$swidth_blocks"
-+	;;
-+    *)
-+	_notrun "can't mkfs $FSTYP with geometry"
-+	;;
-+    esac
-+    _scratch_mkfs
-+}
-+
- _scratch_xfs_db_options()
- {
-     SCRATCH_OPTIONS=""
-diff --git a/group b/group
-index 342ac89..6b8528f 100644
---- a/group
-+++ b/group
-@@ -336,3 +336,4 @@ deprecated
- 220 auto quota quick
- 221 auto metadata quick
- 222 auto fsr ioctl quick
-+223 auto quick
-diff --git a/src/Makefile b/src/Makefile
-index baa2e94..d86d50a 100644
---- a/src/Makefile
-+++ b/src/Makefile
-@@ -14,7 +14,7 @@ TARGETS = dirstress fill fill2 getpagesize holes lstat64 \
- 
- LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
- 	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
--	locktest unwritten_mmap bulkstat_unlink_test \
-+	locktest unwritten_mmap bulkstat_unlink_test t_stripealign \
- 	bulkstat_unlink_test_modified t_dir_offset t_futimens t_immutable
- 
- SUBDIRS =
-diff --git a/src/t_stripealign.c b/src/t_stripealign.c
-new file mode 100644
-index 0000000..e6b0925
---- /dev/null
-+++ b/src/t_stripealign.c
-@@ -0,0 +1,68 @@
-+/*
-+ * t_stripealign.c
-+ *
-+ * Print whether the file start block is stripe-aligned.
-+ *
-+ * Copyright (c) 2010 Eric Sandeen <sandeen@sandeen.net>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2, or (at your option)
-+ * any later version.
-+ */
-+#include <unistd.h>
-+#include <stdlib.h>
-+#include <sys/types.h>
-+#include <sys/stat.h>
-+#include <fcntl.h>
-+#include <stdio.h>
-+#include <sys/ioctl.h>
-+
-+#define FIBMAP          _IO(0x00, 1)    /* bmap access */
-+
-+/*
-+ * If only filename given, print first block.
-+ *
-+ * If filename & sunit (in blocks) given, print whether we are well-aligned
-+ */
-+
-+int main(int argc, char ** argv)
-+{
-+	int	fd;
-+	int	ret;
-+	int	sunit = 0;	/* in blocks */
-+	char	*filename;
-+	unsigned int	block = 0;
-+
-+        if (argc < 3) {
-+                printf("Usage: %s <filename> <sunit in blocks>\n", argv[0]);
-+                return 1;
-+        }
-+
-+        filename = argv[1];
-+	sunit = atoi(argv[2]);
-+
-+        fd = open(filename, O_RDONLY);
-+        if (fd < 0) {
-+                perror("can't open file\n");
-+                return 1;
-+        }
-+
-+	ret = ioctl(fd, FIBMAP, &block);
-+	if (ret < 0) {
-+		close(fd);
-+		perror("fibmap");
-+		return 1;
+diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
+index 226fe20..1257a5f 100644
+--- a/fs/xfs/linux-2.6/xfs_super.c
++++ b/fs/xfs/linux-2.6/xfs_super.c
+@@ -1045,35 +1045,45 @@ xfs_fs_write_inode(
+ 		error = xfs_wait_on_pages(ip, 0, -1);
+ 		if (error)
+ 			goto out;
+-	}
+-
+-	/*
+-	 * Bypass inodes which have already been cleaned by
+-	 * the inode flush clustering code inside xfs_iflush
+-	 */
+-	if (xfs_inode_clean(ip))
+-		goto out;
+-
+-	/*
+-	 * We make this non-blocking if the inode is contended, return
+-	 * EAGAIN to indicate to the caller that they did not succeed.
+-	 * This prevents the flush path from blocking on inodes inside
+-	 * another operation right now, they get caught later by xfs_sync.
+-	 */
+-	if (sync) {
++		/*
++		 * The fsync operation makes inode changes stable and it
++		 * reduces the IOs we have to do here from two (log and inode)
++		 * to just the log. We still need to do a delwri write of the
++		 * inode after this to flush it to the bacing buffer so that
++		 * bulkstat works properly.
++		 */
+ 		xfs_ilock(ip, XFS_ILOCK_SHARED);
+-		xfs_iflock(ip);
+-
+-		error = xfs_iflush(ip, SYNC_WAIT);
++		error = xfs_fsync(ip, XFS_ILOCK_SHARED);
++		if (error)
++			goto out_unlock;
++		error = EAGAIN;
+ 	} else {
++		/*
++		 * We make this non-blocking if the inode is contended, return
++		 * EAGAIN to indicate to the caller that they did not succeed.
++		 * This prevents the flush path from blocking on inodes inside
++		 * another operation right now, they get caught later by xfs_sync.
++		 */
+ 		error = EAGAIN;
+ 		if (!xfs_ilock_nowait(ip, XFS_ILOCK_SHARED))
+ 			goto out;
+-		if (xfs_ipincount(ip) || !xfs_iflock_nowait(ip))
+-			goto out_unlock;
 +	}
 +
-+	close(fd);
-+
-+	if (block % sunit) {
-+		printf("%s: Start block %u not multiple of sunit %u\n",
-+			filename, block, sunit);
-+		return 1;
-+	} else
-+		printf("%s: well-aligned\n", filename);
-+
-+	return 0;
-+}
-
++	if (xfs_ipincount(ip) || !xfs_iflock_nowait(ip))
++		goto out_unlock;
+ 
+-		error = xfs_iflush(ip, 0);
++	/*
++	 * Now we have the flush lock and the inode is not pinned, we can check
++	 * if the inode is really clean as we know that there are no pending
++	 * transaction completions, it is not waiting on the delayed write
++	 * queue and there is no IO in progress.
++	 */
++	error = 0;
++	if (xfs_inode_clean(ip)) {
++		xfs_ifunlock(ip);
++		goto out_unlock;
+ 	}
++	error = xfs_iflush(ip, 0);
+ 
+  out_unlock:
+ 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+-- 
+1.6.5
 
 _______________________________________________
 xfs mailing list
