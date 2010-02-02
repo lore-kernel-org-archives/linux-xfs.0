@@ -1,26 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1329f7I204182 for <xfs@oss.sgi.com>; Tue, 2 Feb 2010 20:09:42 -0600
+	o1329SLg204047 for <xfs@oss.sgi.com>; Tue, 2 Feb 2010 20:09:28 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E73881C9B823
-	for <xfs@oss.sgi.com>; Tue,  2 Feb 2010 18:10:49 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8131D1A72E3
+	for <xfs@oss.sgi.com>; Tue,  2 Feb 2010 18:10:36 -0800 (PST)
 Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
 	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	sbNWRmucSSRvzwA7 for <xfs@oss.sgi.com>;
-	Tue, 02 Feb 2010 18:10:49 -0800 (PST)
-Date: Tue, 2 Feb 2010 09:59:11 +1100
+	1nfxv8mqiJXH0weA for <xfs@oss.sgi.com>;
+	Tue, 02 Feb 2010 18:10:36 -0800 (PST)
+Received: from discord (unverified [121.44.103.80])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	12207811-1927428
+	for <xfs@oss.sgi.com>; Wed, 03 Feb 2010 12:40:34 +1030 (CDT)
+Received: from disturbed ([192.168.1.9]) by discord with esmtp (Exim 4.69)
+	(envelope-from <dave@fromorbit.com>) id 1NcS7h-0003nl-Du
+	for xfs@oss.sgi.com; Wed, 03 Feb 2010 10:25:33 +1100
+Received: from dave by disturbed with local (Exim 4.71)
+	(envelope-from <dave@disturbed.disaster>) id 1NcS7W-0006j0-Cv
+	for xfs@oss.sgi.com; Wed, 03 Feb 2010 10:25:22 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/7] xfs: Use delayed write for inodes rather than async
-Message-ID: <20100201225911.GA26252@discord.disaster>
-References: <1264400564-19704-1-git-send-email-david@fromorbit.com>
-	<1264400564-19704-3-git-send-email-david@fromorbit.com>
-	<20100125115308.GC8595@infradead.org>
-	<20100125223140.GN25842@discord.disaster>
-	<20100126161045.GB24152@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100126161045.GB24152@infradead.org>
+Subject: [PATCH 06/10] xfs: kill the unused XFS_QMOPT_* flush flags V2
+Date: Wed,  3 Feb 2010 10:25:00 +1100
+Message-Id: <1265153104-29680-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1265153104-29680-1-git-send-email-david@fromorbit.com>
+References: <1265153104-29680-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,31 +33,183 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Jan 26, 2010 at 11:10:45AM -0500, Christoph Hellwig wrote:
-> > > Also in this context
-> > > the requeue label name doesn't fit too well, even if it's the same
-> > > action as the requeue.
-> > 
-> > I'm open to suggestions for a better name ;)
-> 
-> What do you think about this version?
+dquots are never flushed asynchronously. Remove the flag and the
+async write support from the flush function. Make the default flush
+a delwri flush to make the inode flush code, which leaves the
+XFS_QMOPT_SYNC the only flag remaining.  Convert that to use
+SYNC_WAIT instead, just like the inode flush code.
 
-Yeah, that looks a lot better. I'll incorporate that into the
-patch. Thanks.
+V2:
+- just pass flush flags straight through
 
-Cheers,
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+---
+ fs/xfs/quota/xfs_dquot.c      |   13 ++++++-------
+ fs/xfs/quota/xfs_dquot_item.c |    2 +-
+ fs/xfs/quota/xfs_qm.c         |   14 ++++++--------
+ fs/xfs/xfs_quota.h            |    8 +-------
+ 4 files changed, 14 insertions(+), 23 deletions(-)
 
-Dave.
+diff --git a/fs/xfs/quota/xfs_dquot.c b/fs/xfs/quota/xfs_dquot.c
+index 1620a56..5f79dd7 100644
+--- a/fs/xfs/quota/xfs_dquot.c
++++ b/fs/xfs/quota/xfs_dquot.c
+@@ -1187,7 +1187,7 @@ xfs_qm_dqflush(
+ 	 * block, nada.
+ 	 */
+ 	if (!XFS_DQ_IS_DIRTY(dqp) ||
+-	    (!(flags & XFS_QMOPT_SYNC) && atomic_read(&dqp->q_pincount) > 0)) {
++	    (!(flags & SYNC_WAIT) && atomic_read(&dqp->q_pincount) > 0)) {
+ 		xfs_dqfunlock(dqp);
+ 		return 0;
+ 	}
+@@ -1251,18 +1251,17 @@ xfs_qm_dqflush(
+ 		xfs_log_force(mp, 0);
+ 	}
+ 
+-	if (flags & XFS_QMOPT_DELWRI) {
+-		xfs_bdwrite(mp, bp);
+-	} else {
++	if (flags & SYNC_WAIT)
+ 		error = xfs_bwrite(mp, bp);
+-	}
++	else
++		xfs_bdwrite(mp, bp);
+ 
+ 	trace_xfs_dqflush_done(dqp);
+ 
+ 	/*
+ 	 * dqp is still locked, but caller is free to unlock it now.
+ 	 */
+-	return (error);
++	return error;
+ 
+ }
+ 
+@@ -1443,7 +1442,7 @@ xfs_qm_dqpurge(
+ 		 * We don't care about getting disk errors here. We need
+ 		 * to purge this dquot anyway, so we go ahead regardless.
+ 		 */
+-		error = xfs_qm_dqflush(dqp, XFS_QMOPT_SYNC);
++		error = xfs_qm_dqflush(dqp, SYNC_WAIT);
+ 		if (error)
+ 			xfs_fs_cmn_err(CE_WARN, mp,
+ 				"xfs_qm_dqpurge: dquot %p flush failed", dqp);
+diff --git a/fs/xfs/quota/xfs_dquot_item.c b/fs/xfs/quota/xfs_dquot_item.c
+index dda0fb0..4e4ee9a 100644
+--- a/fs/xfs/quota/xfs_dquot_item.c
++++ b/fs/xfs/quota/xfs_dquot_item.c
+@@ -153,7 +153,7 @@ xfs_qm_dquot_logitem_push(
+ 	 * lock without sleeping, then there must not have been
+ 	 * anyone in the process of flushing the dquot.
+ 	 */
+-	error = xfs_qm_dqflush(dqp, XFS_QMOPT_DELWRI);
++	error = xfs_qm_dqflush(dqp, 0);
+ 	if (error)
+ 		xfs_fs_cmn_err(CE_WARN, dqp->q_mount,
+ 			"xfs_qm_dquot_logitem_push: push error %d on dqp %p",
+diff --git a/fs/xfs/quota/xfs_qm.c b/fs/xfs/quota/xfs_qm.c
+index 11cfd82..8699e51 100644
+--- a/fs/xfs/quota/xfs_qm.c
++++ b/fs/xfs/quota/xfs_qm.c
+@@ -450,7 +450,7 @@ xfs_qm_unmount_quotas(
+ STATIC int
+ xfs_qm_dqflush_all(
+ 	xfs_mount_t	*mp,
+-	int		flags)
++	int		sync_mode)
+ {
+ 	int		recl;
+ 	xfs_dquot_t	*dqp;
+@@ -486,7 +486,7 @@ again:
+ 		 * across a disk write.
+ 		 */
+ 		xfs_qm_mplist_unlock(mp);
+-		error = xfs_qm_dqflush(dqp, flags);
++		error = xfs_qm_dqflush(dqp, sync_mode);
+ 		xfs_dqunlock(dqp);
+ 		if (error)
+ 			return error;
+@@ -926,13 +926,11 @@ xfs_qm_sync(
+ {
+ 	int		recl, restarts;
+ 	xfs_dquot_t	*dqp;
+-	uint		flush_flags;
+ 	int		error;
+ 
+ 	if (!XFS_IS_QUOTA_RUNNING(mp) || !XFS_IS_QUOTA_ON(mp))
+ 		return 0;
+ 
+-	flush_flags = (flags & SYNC_WAIT) ? XFS_QMOPT_SYNC : XFS_QMOPT_DELWRI;
+ 	restarts = 0;
+ 
+   again:
+@@ -992,7 +990,7 @@ xfs_qm_sync(
+ 		 * across a disk write
+ 		 */
+ 		xfs_qm_mplist_unlock(mp);
+-		error = xfs_qm_dqflush(dqp, flush_flags);
++		error = xfs_qm_dqflush(dqp, flags);
+ 		xfs_dqunlock(dqp);
+ 		if (error && XFS_FORCED_SHUTDOWN(mp))
+ 			return 0;	/* Need to prevent umount failure */
+@@ -1796,7 +1794,7 @@ xfs_qm_quotacheck(
+ 	 * successfully.
+ 	 */
+ 	if (!error)
+-		error = xfs_qm_dqflush_all(mp, XFS_QMOPT_DELWRI);
++		error = xfs_qm_dqflush_all(mp, 0);
+ 
+ 	/*
+ 	 * We can get this error if we couldn't do a dquot allocation inside
+@@ -2018,7 +2016,7 @@ xfs_qm_shake_freelist(
+ 			 * We flush it delayed write, so don't bother
+ 			 * releasing the mplock.
+ 			 */
+-			error = xfs_qm_dqflush(dqp, XFS_QMOPT_DELWRI);
++			error = xfs_qm_dqflush(dqp, 0);
+ 			if (error) {
+ 				xfs_fs_cmn_err(CE_WARN, dqp->q_mount,
+ 			"xfs_qm_dqflush_all: dquot %p flush failed", dqp);
+@@ -2201,7 +2199,7 @@ xfs_qm_dqreclaim_one(void)
+ 			 * We flush it delayed write, so don't bother
+ 			 * releasing the freelist lock.
+ 			 */
+-			error = xfs_qm_dqflush(dqp, XFS_QMOPT_DELWRI);
++			error = xfs_qm_dqflush(dqp, 0);
+ 			if (error) {
+ 				xfs_fs_cmn_err(CE_WARN, dqp->q_mount,
+ 			"xfs_qm_dqreclaim: dquot %p flush failed", dqp);
+diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
+index 21d11d9..fdcab3f 100644
+--- a/fs/xfs/xfs_quota.h
++++ b/fs/xfs/xfs_quota.h
+@@ -223,15 +223,9 @@ typedef struct xfs_qoff_logformat {
+ #define XFS_QMOPT_RES_INOS	0x0800000
+ 
+ /*
+- * flags for dqflush and dqflush_all.
+- */
+-#define XFS_QMOPT_SYNC		0x1000000
+-#define XFS_QMOPT_DELWRI	0x4000000
+-
+-/*
+  * flags for dqalloc.
+  */
+-#define XFS_QMOPT_INHERIT	0x8000000
++#define XFS_QMOPT_INHERIT	0x1000000
+ 
+ /*
+  * flags to xfs_trans_mod_dquot.
 -- 
-Dave Chinner
-david@fromorbit.com
+1.6.5
 
 _______________________________________________
 xfs mailing list
