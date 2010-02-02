@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o121cwVQ147614 for <xfs@oss.sgi.com>; Mon, 1 Feb 2010 19:39:09 -0600
-Received: from ey-out-1920.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0FA221A3FE6
-	for <xfs@oss.sgi.com>; Mon,  1 Feb 2010 17:39:43 -0800 (PST)
-Received: from ey-out-1920.google.com (ey-out-1920.google.com [74.125.78.145])
-	by cuda.sgi.com with ESMTP id IEEgjKxGlXpjBfrn for
-	<xfs@oss.sgi.com>; Mon, 01 Feb 2010 17:39:43 -0800 (PST)
-Received: by ey-out-1920.google.com with SMTP id 26so1474966eyw.22
-	for <xfs@oss.sgi.com>; Mon, 01 Feb 2010 17:39:42 -0800 (PST)
-From: Edward Shishkin <edward.shishkin@gmail.com>
-Subject: [patch 0/7] per-bdi flushing model improvements. reiser4
-Date: Tue, 2 Feb 2010 02:39:27 +0100
+	o123NxmH150879 for <xfs@oss.sgi.com>; Mon, 1 Feb 2010 21:24:09 -0600
+Received: from mail-ww0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B458A1A3842
+	for <xfs@oss.sgi.com>; Mon,  1 Feb 2010 19:24:34 -0800 (PST)
+Received: from mail-ww0-f53.google.com (mail-ww0-f53.google.com
+	[74.125.82.53]) by cuda.sgi.com with ESMTP id 66fyaAi4vqPORNeu
+	for <xfs@oss.sgi.com>; Mon, 01 Feb 2010 19:24:34 -0800 (PST)
+Received: by wwc33 with SMTP id 33so173485wwc.26
+	for <xfs@oss.sgi.com>; Mon, 01 Feb 2010 19:24:33 -0800 (PST)
 MIME-Version: 1.0
-Message-Id: <201002020239.27368.edward.shishkin@gmail.com>
+Date: Mon, 1 Feb 2010 21:24:33 -0600
+Message-ID: <13bb8ce11002011924h611099feh4955eedcc6e588a6@mail.gmail.com>
+Subject: State of XFS on ARM
+From: Daniel Goller <morfic@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,52 +27,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andrew Morton <akpm@linux-foundation.org>, ReiserFS Development List <reiserfs-devel@vger.kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Hello.
+Dear Sir or Madam,
 
-Andrew Morton wrote:
-> reiser4 is currently disabled in -mm (via reiser4-disable.patch)
-> because recent changes to fs/fs/writeback.c wrecked the build.  I fixed
-> it about ten times as the underlying code was churning, then gave up.  It
-> would be nice if you take a look at that sometime please.
->
->
+I Would like to find out about the current state of XFS on ARM.
+I have been using XFS for a while successfully on my laptop, and was
+using XFS on a ARM device (little endian) since it would hold the same
+data i had on the laptop.
+It seems i have not been able to unmount it and then mounting it
+cleanly once, always required xfs_repair -L   /dev/sdc3
+I Could understand power issues or lockups causing this, but on clean
+umount and followed mount to see it fail is surprising.
+When mounting fails on the headless arm machine i move the drive to a
+x86_64 and run xfs_repair there when mounting there fails too (so log
+can't be replayed, making -L necessary).
+All of this leads me to ask:  "Is XFS as well maintained on ARM as it
+is on x86/x86_64?"
 
-I have taken a look at fs/fs-writeback.c and found that per-superblock
-flushing interface is eliminated. However migrating to per-bdi flushing
-model doesn't necessarily means that such interface doesn't exist or is
-not needed anymore. Flushing in accordance with the scheme "data-inode-
-data-inode-..." would be very suboptimal for reiser4. Also xfs people
-were unhappy with such flushing model:
-http://article.gmane.org/gmane.linux.file-systems/30153
+Thank you in advance for any info you can provide,
 
-Moreover, the current stuff looks rather ugly. Why do we pin/unpin
-superblock for every inode? It would be more reasonable to pin it for the
-whole group of inodes and call a flushing handler for them. The patch 4
-introduces such handler writeback_sb_inodes (which resembles dropped
-sync_sb_inodes, the difference is that the newer version doesn't flush
-necessarily all inodes of the superblock). Please, consider pushing this
-patch to mainline.
-
-The patch 5 adds super operation .writeback_inodes (former .sync_inodes)
-which allows a file system to make optimizations. It can happen that
-reiser4 will flush a bit more inodes then generic implementation suggests.
-"a bit more" doesn't mean "all dirty inodes of the superblock" (see a
-comment about atoms in the header of patch 6).
-
-Finally, some file systems have its own means for periodical writeout
-of dirty data. Since b_io contains inodes of many superblocks we need
-to evict our inodes back to dirty list when flushing is going on with
-for_kupdate flag installed. The new library function
-writeback_skip_sb_inodes() provides such possibility.
-
-Patch 7 fixes a race in checkin-checkout jnodes for entd task (reiser4).
-Please, apply.
-
-Thanks,
-Edward.
+Daniel Goller
 
 _______________________________________________
 xfs mailing list
