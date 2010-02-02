@@ -1,25 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o132mFs6205613 for <xfs@oss.sgi.com>; Tue, 2 Feb 2010 20:48:15 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 72BB31C9B883
-	for <xfs@oss.sgi.com>; Tue,  2 Feb 2010 18:49:24 -0800 (PST)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id yH9rD321Jl0XDePx for
-	<xfs@oss.sgi.com>; Tue, 02 Feb 2010 18:49:24 -0800 (PST)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail.sandeen.net (Postfix) with ESMTP id A3780109E852
-	for <xfs@oss.sgi.com>; Tue,  2 Feb 2010 20:49:23 -0600 (CST)
-Message-ID: <4B68E433.9050309@sandeen.net>
-Date: Tue, 02 Feb 2010 20:49:23 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	o1329Tp8204061 for <xfs@oss.sgi.com>; Tue, 2 Feb 2010 20:09:30 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7FCAB1371D5E
+	for <xfs@oss.sgi.com>; Tue,  2 Feb 2010 18:10:37 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
+	[150.101.137.102]) by cuda.sgi.com with ESMTP id
+	sFjwDCzyGoheCGyn for <xfs@oss.sgi.com>;
+	Tue, 02 Feb 2010 18:10:37 -0800 (PST)
+Received: from discord (unverified [121.44.103.80])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	12207822-1927428
+	for <xfs@oss.sgi.com>; Wed, 03 Feb 2010 12:40:36 +1030 (CDT)
+Received: from disturbed ([192.168.1.9]) by discord with esmtp (Exim 4.69)
+	(envelope-from <dave@fromorbit.com>) id 1NcS7h-0003pr-BW
+	for xfs@oss.sgi.com; Wed, 03 Feb 2010 10:25:33 +1100
+Received: from dave by disturbed with local (Exim 4.71)
+	(envelope-from <dave@disturbed.disaster>) id 1NcS7W-0006iu-9c
+	for xfs@oss.sgi.com; Wed, 03 Feb 2010 10:25:22 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 04/10] xfs: Sort delayed write buffers before dispatch
+Date: Wed,  3 Feb 2010 10:24:58 +1100
+Message-Id: <1265153104-29680-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1265153104-29680-1-git-send-email-david@fromorbit.com>
+References: <1265153104-29680-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH V2] xfstests: routine to create scratch of certain size
-References: <4B621D89.8070800@sandeen.net> <4B68D75A.9020105@sandeen.net>
-In-Reply-To: <4B68D75A.9020105@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,38 +34,91 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Eric Sandeen wrote:
-> This is needed for later enospc tests to be generic
-> 
-> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-> ---
-> 
-> V2: Address Christoph's comment about use of MKFS_OPTIONS;
-> just do it like the other geom helper and explicitly -set-
-> MKFS_OPTIONS for scratch, to set the size, then just call
-> _scratch_mkfs
-> 
-> (this would override any global MKFS_OPTIONS setting, but
-> I think that's ok for now, and not sure how these options might
-> interact w/ previously set MKFS_OPTIONS anyway)
-
-Scratch that, I'm not being diligent enough and didn't test
-this :/  (yay for "simple" changes)
-
-mke2fs takes the size arg at the end, after the device, so
-we cannot just set up MKFS_OPTIONS
-
-Sorry for the noise.
-
--Eric (who will try to be more dilient now...)
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+Q3VycmVudGx5IHdoZW4gdGhlIHhmc2J1ZmQgd3JpdGVzIGRlbGF5ZWQgd3JpdGUgYnVmZmVycywg
+aXQgcHVzaGVzCnRoZW0gdG8gZGlzayBpbiB0aGUgb3JkZXIgdGhleSBjb21lIG9mZiB0aGUgZGVs
+YXllZCB3cml0ZSBsaXN0LiBJZgp0aGVyZSBhcmUgbG90cyBvZiBidWZmZXJzINGVcHJlYWQgd2lk
+ZWx5IG92ZXIgdGhlIGRpc2ssIHRoaXMgcmVzdWx0cwppbiBvdmVyd2hlbG1pbmcgdGhlIGVsZXZh
+dG9yIHNvcnQgcXVldWVzIGluIHRoZSBibG9jayBsYXllciBhbmQgd2UKZW5kIHVwIGxvc2luZyB0
+aGUgcG9zaWJpbGl0eSBvZiBtZXJnaW5nIGFkamFjZW50IGJ1ZmZlcnMgdG8gbWluaW1pc2UKdGhl
+IG51bWJlciBvZiBJT3MuCgpVc2UgdGhlIG5ldyBnZW5lcmljIGxpc3Rfc29ydCBmdW5jdGlvbiB0
+byBzb3J0IHRoZSBkZWx3cmkgZGlzcGF0Y2gKcXVldWUgYmVmb3JlIGlzc3VlIHRvIGVuc3VyZSB0
+aGF0IHRoZSBidWZmZXJzIGFyZSBwdXNoZWQgaW4gdGhlIG1vc3QKZnJpZW5kbHkgb3JkZXIgcG9z
+c2libGUgdG8gdGhlIGxvd2VyIGxheWVycy4KClNpZ25lZC1vZmYtYnk6IERhdmUgQ2hpbm5lciA8
+ZGF2aWRAZnJvbW9yYml0LmNvbT4KUmV2aWV3ZWQtYnk6IENocmlzdG9waCBIZWxsd2lnIDxoY2hA
+bHN0LmRlPgotLS0KIGZzL3hmcy9saW51eC0yLjYveGZzX2J1Zi5jIHwgICA4NyArKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKystLS0tLS0tLS0tLS0tLQogMSBmaWxlcyBjaGFuZ2VkLCA2MCBp
+bnNlcnRpb25zKCspLCAyNyBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9mcy94ZnMvbGludXgt
+Mi42L3hmc19idWYuYyBiL2ZzL3hmcy9saW51eC0yLjYveGZzX2J1Zi5jCmluZGV4IGIzMDYyNjUu
+LjQ1NTZhNGMgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy9saW51eC0yLjYveGZzX2J1Zi5jCisrKyBiL2Zz
+L3hmcy9saW51eC0yLjYveGZzX2J1Zi5jCkBAIC0zMyw2ICszMyw3IEBACiAjaW5jbHVkZSA8bGlu
+dXgvbWlncmF0ZS5oPgogI2luY2x1ZGUgPGxpbnV4L2JhY2tpbmctZGV2Lmg+CiAjaW5jbHVkZSA8
+bGludXgvZnJlZXplci5oPgorI2luY2x1ZGUgPGxpbnV4L2xpc3Rfc29ydC5oPgogCiAjaW5jbHVk
+ZSAieGZzX3NiLmgiCiAjaW5jbHVkZSAieGZzX2ludW0uaCIKQEAgLTE4NzcsMTQgKzE4NzgsNDIg
+QEAgeGZzX2J1Zl9kZWx3cmlfc3BsaXQoCiAKIH0KIAorLyoKKyAqIENvbXBhcmUgZnVuY3Rpb24g
+aXMgbW9yZSBjb21wbGV4IHRoYW4gaXQgbmVlZHMgdG8gYmUgYmVjYXVzZQorICogdGhlIHJldHVy
+biB2YWx1ZSBpcyBvbmx5IDMyIGJpdHMgYW5kIHdlIGFyZSBkb2luZyBjb21wYXJpc29ucworICog
+b24gNjQgYml0IHZhbHVlcworICovCitzdGF0aWMgaW50Cit4ZnNfYnVmX2NtcCgKKwl2b2lkCQkq
+cHJpdiwKKwlzdHJ1Y3QgbGlzdF9oZWFkICphLAorCXN0cnVjdCBsaXN0X2hlYWQgKmIpCit7CisJ
+c3RydWN0IHhmc19idWYJKmFwID0gY29udGFpbmVyX29mKGEsIHN0cnVjdCB4ZnNfYnVmLCBiX2xp
+c3QpOworCXN0cnVjdCB4ZnNfYnVmCSpicCA9IGNvbnRhaW5lcl9vZihiLCBzdHJ1Y3QgeGZzX2J1
+ZiwgYl9saXN0KTsKKwl4ZnNfZGFkZHJfdAkJZGlmZjsKKworCWRpZmYgPSBhcC0+Yl9ibiAtIGJw
+LT5iX2JuOworCWlmIChkaWZmIDwgMCkKKwkJcmV0dXJuIC0xOworCWlmIChkaWZmID4gMCkKKwkJ
+cmV0dXJuIDE7CisJcmV0dXJuIDA7Cit9CisKK3ZvaWQKK3hmc19idWZfZGVsd3JpX3NvcnQoCisJ
+eGZzX2J1ZnRhcmdfdAkqdGFyZ2V0LAorCXN0cnVjdCBsaXN0X2hlYWQgKmxpc3QpCit7CisJbGlz
+dF9zb3J0KE5VTEwsIGxpc3QsIHhmc19idWZfY21wKTsKK30KKwogU1RBVElDIGludAogeGZzYnVm
+ZCgKIAl2b2lkCQkqZGF0YSkKIHsKLQlzdHJ1Y3QgbGlzdF9oZWFkIHRtcDsKLQl4ZnNfYnVmdGFy
+Z190CSp0YXJnZXQgPSAoeGZzX2J1ZnRhcmdfdCAqKWRhdGE7Ci0JaW50CQljb3VudDsKLQl4ZnNf
+YnVmX3QJKmJwOworCXhmc19idWZ0YXJnX3QgICAqdGFyZ2V0ID0gKHhmc19idWZ0YXJnX3QgKilk
+YXRhOwogCiAJY3VycmVudC0+ZmxhZ3MgfD0gUEZfTUVNQUxMT0M7CiAKQEAgLTE4OTMsNiArMTky
+Miw4IEBAIHhmc2J1ZmQoCiAJZG8gewogCQlsb25nCWFnZSA9IHhmc19idWZfYWdlX2NlbnRpc2Vj
+cyAqIG1zZWNzX3RvX2ppZmZpZXMoMTApOwogCQlsb25nCXRvdXQgPSB4ZnNfYnVmX3RpbWVyX2Nl
+bnRpc2VjcyAqIG1zZWNzX3RvX2ppZmZpZXMoMTApOworCQlpbnQJY291bnQgPSAwOworCQlzdHJ1
+Y3QgbGlzdF9oZWFkIHRtcDsKIAogCQlpZiAodW5saWtlbHkoZnJlZXppbmcoY3VycmVudCkpKSB7
+CiAJCQlzZXRfYml0KFhCVF9GT1JDRV9TTEVFUCwgJnRhcmdldC0+YnRfZmxhZ3MpOwpAQCAtMTkw
+NywxMSArMTkzOCwxMCBAQCB4ZnNidWZkKAogCQlzY2hlZHVsZV90aW1lb3V0X2ludGVycnVwdGli
+bGUodG91dCk7CiAKIAkJeGZzX2J1Zl9kZWx3cmlfc3BsaXQodGFyZ2V0LCAmdG1wLCBhZ2UpOwot
+CQljb3VudCA9IDA7CisJCWxpc3Rfc29ydChOVUxMLCAmdG1wLCB4ZnNfYnVmX2NtcCk7CiAJCXdo
+aWxlICghbGlzdF9lbXB0eSgmdG1wKSkgewotCQkJYnAgPSBsaXN0X2VudHJ5KHRtcC5uZXh0LCB4
+ZnNfYnVmX3QsIGJfbGlzdCk7Ci0JCQlBU1NFUlQodGFyZ2V0ID09IGJwLT5iX3RhcmdldCk7Ci0K
+KwkJCXN0cnVjdCB4ZnNfYnVmICpicDsKKwkJCWJwID0gbGlzdF9maXJzdF9lbnRyeSgmdG1wLCBz
+dHJ1Y3QgeGZzX2J1ZiwgYl9saXN0KTsKIAkJCWxpc3RfZGVsX2luaXQoJmJwLT5iX2xpc3QpOwog
+CQkJeGZzX2J1Zl9pb3N0cmF0ZWd5KGJwKTsKIAkJCWNvdW50Kys7CkBAIC0xOTM3LDQyICsxOTY3
+LDQ1IEBAIHhmc19mbHVzaF9idWZ0YXJnKAogCXhmc19idWZ0YXJnX3QJKnRhcmdldCwKIAlpbnQJ
+CXdhaXQpCiB7Ci0Jc3RydWN0IGxpc3RfaGVhZCB0bXA7Ci0JeGZzX2J1Zl90CSpicCwgKm47CisJ
+eGZzX2J1Zl90CSpicDsKIAlpbnQJCXBpbmNvdW50ID0gMDsKKwlMSVNUX0hFQUQodG1wX2xpc3Qp
+OworCUxJU1RfSEVBRCh3YWl0X2xpc3QpOwogCiAJeGZzX2J1Zl9ydW5hbGxfcXVldWVzKHhmc2Nv
+bnZlcnRkX3dvcmtxdWV1ZSk7CiAJeGZzX2J1Zl9ydW5hbGxfcXVldWVzKHhmc2RhdGFkX3dvcmtx
+dWV1ZSk7CiAJeGZzX2J1Zl9ydW5hbGxfcXVldWVzKHhmc2xvZ2Rfd29ya3F1ZXVlKTsKIAogCXNl
+dF9iaXQoWEJUX0ZPUkNFX0ZMVVNILCAmdGFyZ2V0LT5idF9mbGFncyk7Ci0JcGluY291bnQgPSB4
+ZnNfYnVmX2RlbHdyaV9zcGxpdCh0YXJnZXQsICZ0bXAsIDApOworCXBpbmNvdW50ID0geGZzX2J1
+Zl9kZWx3cmlfc3BsaXQodGFyZ2V0LCAmdG1wX2xpc3QsIDApOwogCiAJLyoKLQkgKiBEcm9wcGVk
+IHRoZSBkZWxheWVkIHdyaXRlIGxpc3QgbG9jaywgbm93IHdhbGsgdGhlIHRlbXBvcmFyeSBsaXN0
+CisJICogRHJvcHBlZCB0aGUgZGVsYXllZCB3cml0ZSBsaXN0IGxvY2ssIG5vdyB3YWxrIHRoZSB0
+ZW1wb3JhcnkgbGlzdC4KKwkgKiBBbGwgSS9PIGlzIGlzc3VlZCBhc3luYyBhbmQgdGhlbiBpZiB3
+ZSBuZWVkIHRvIHdhaXQgZm9yIGNvbXBsZXRpb24KKwkgKiB3ZSBkbyB0aGF0IGFmdGVyIGlzc3Vp
+bmcgYWxsIHRoZSBJTy4KIAkgKi8KLQlsaXN0X2Zvcl9lYWNoX2VudHJ5X3NhZmUoYnAsIG4sICZ0
+bXAsIGJfbGlzdCkgeworCWxpc3Rfc29ydChOVUxMLCAmdG1wX2xpc3QsIHhmc19idWZfY21wKTsK
+Kwl3aGlsZSAoIWxpc3RfZW1wdHkoJnRtcF9saXN0KSkgeworCQlicCA9IGxpc3RfZmlyc3RfZW50
+cnkoJnRtcF9saXN0LCBzdHJ1Y3QgeGZzX2J1ZiwgYl9saXN0KTsKIAkJQVNTRVJUKHRhcmdldCA9
+PSBicC0+Yl90YXJnZXQpOwotCQlpZiAod2FpdCkKKwkJbGlzdF9kZWxfaW5pdCgmYnAtPmJfbGlz
+dCk7CisJCWlmICh3YWl0KSB7CiAJCQlicC0+Yl9mbGFncyAmPSB+WEJGX0FTWU5DOwotCQllbHNl
+Ci0JCQlsaXN0X2RlbF9pbml0KCZicC0+Yl9saXN0KTsKLQorCQkJbGlzdF9hZGQoJmJwLT5iX2xp
+c3QsICZ3YWl0X2xpc3QpOworCQl9CiAJCXhmc19idWZfaW9zdHJhdGVneShicCk7CiAJfQogCi0J
+aWYgKHdhaXQpCisJaWYgKHdhaXQpIHsKKwkJLyogRXhwZWRpdGUgYW5kIHdhaXQgZm9yIElPIHRv
+IGNvbXBsZXRlLiAqLwogCQlibGtfcnVuX2FkZHJlc3Nfc3BhY2UodGFyZ2V0LT5idF9tYXBwaW5n
+KTsKKwkJd2hpbGUgKCFsaXN0X2VtcHR5KCZ3YWl0X2xpc3QpKSB7CisJCQlicCA9IGxpc3RfZmly
+c3RfZW50cnkoJndhaXRfbGlzdCwgc3RydWN0IHhmc19idWYsIGJfbGlzdCk7CiAKLQkvKgotCSAq
+IFJlbWFpbmluZyBsaXN0IGl0ZW1zIG11c3QgYmUgZmx1c2hlZCBiZWZvcmUgcmV0dXJuaW5nCi0J
+ICovCi0Jd2hpbGUgKCFsaXN0X2VtcHR5KCZ0bXApKSB7Ci0JCWJwID0gbGlzdF9lbnRyeSh0bXAu
+bmV4dCwgeGZzX2J1Zl90LCBiX2xpc3QpOwotCi0JCWxpc3RfZGVsX2luaXQoJmJwLT5iX2xpc3Qp
+OwotCQl4ZnNfaW93YWl0KGJwKTsKLQkJeGZzX2J1Zl9yZWxzZShicCk7CisJCQlsaXN0X2RlbF9p
+bml0KCZicC0+Yl9saXN0KTsKKwkJCXhmc19pb3dhaXQoYnApOworCQkJeGZzX2J1Zl9yZWxzZShi
+cCk7CisJCX0KIAl9CiAKIAlyZXR1cm4gcGluY291bnQ7Ci0tIAoxLjYuNQoKX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNA
+b3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
