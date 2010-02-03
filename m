@@ -1,18 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o13I5QiP238437 for <xfs@oss.sgi.com>; Wed, 3 Feb 2010 12:05:26 -0600
-Date: Wed, 3 Feb 2010 12:07:06 -0600
-From: bpm@sgi.com
-Subject: Re: [PATCH 09/10] xfs: xfs_fs_write_inode() can fail to write
-	inodes synchronously V2
-Message-ID: <20100203180706.GH5702@sgi.com>
-References: <1265153104-29680-1-git-send-email-david@fromorbit.com>
-	<1265153104-29680-10-git-send-email-david@fromorbit.com>
-	<20100203112753.GA19996@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100203112753.GA19996@infradead.org>
+	o13Jqw0t241543 for <xfs@oss.sgi.com>; Wed, 3 Feb 2010 13:52:58 -0600
+Received: from cf--amer001e--3.americas.sgi.com
+	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B27E83040B2
+	for <xfs@oss.sgi.com>; Wed,  3 Feb 2010 11:54:05 -0800 (PST)
+Subject: xfstests: 219: fix awk filter for duplicate users
+From: Alex Elder <aelder@sgi.com>
+Date: Wed, 03 Feb 2010 13:54:04 -0600
+Message-ID: <1265226844.2848.27.camel@doink1>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,26 +24,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Hey Christoph,
+The filter I added for removing duplicate users from the
+output of repquota didn't do the job very well.  This
+fixes that, making it so the first time a user is seen
+its line is printed, not thereafter.
 
-On Wed, Feb 03, 2010 at 06:27:53AM -0500, Christoph Hellwig wrote:
-> That leaves open the NFSD case thought.  I'd prefer to have that fixed
-> if possibly.  Ben, any chance you could send your patch to use fsync
-> to the nfs list ASAP?
+Signed-off-by: Alex Elder <aelder@sgi.com>
 
-I'll make some time to work on it.
+---
+ 219 |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> I think we'd be even better off to just force
-> -o wsync and disable ->write_inode entirely for NFS, any chance you
-> could test such a patch on your setup?
+Index: b/219
+===================================================================
+--- a/219
++++ b/219
+@@ -86,7 +86,7 @@ test_accounting()
+        done
 
-Sure.  IIRC, previous tests were w/ -o wsync and write_inode switched to
-fsync passing 1 for fdatasync.  I'll try this too.
+        repquota -$type -s -n $SCRATCH_MNT  | grep -v "^#0" |
+filter_scratch |
+-       awk '/^#/ { if (! seen[$1]) { seen[$1]++; next; } } { print }'
++       awk '/^#/ { if (seen[$1]) next; seen[$1]++; } } { print; }'
+ }
 
--Ben
+ # real QA test starts here
+
+
 
 _______________________________________________
 xfs mailing list
