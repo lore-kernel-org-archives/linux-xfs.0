@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o13KXZEt243219 for <xfs@oss.sgi.com>; Wed, 3 Feb 2010 14:33:35 -0600
-Received: from mail-ew0-f227.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4309A1AA2F8
-	for <xfs@oss.sgi.com>; Wed,  3 Feb 2010 12:34:44 -0800 (PST)
-Received: from mail-ew0-f227.google.com (mail-ew0-f227.google.com
-	[209.85.219.227]) by cuda.sgi.com with ESMTP id
-	Z014WhiIZ6ReOME3 for <xfs@oss.sgi.com>;
-	Wed, 03 Feb 2010 12:34:44 -0800 (PST)
-Received: by ewy27 with SMTP id 27so1810776ewy.18
-	for <xfs@oss.sgi.com>; Wed, 03 Feb 2010 12:34:43 -0800 (PST)
+	o13KU1D6243100 for <xfs@oss.sgi.com>; Wed, 3 Feb 2010 14:30:01 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 199451C9E986
+	for <xfs@oss.sgi.com>; Wed,  3 Feb 2010 12:31:10 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id 824A2RNaoDysYjru for
+	<xfs@oss.sgi.com>; Wed, 03 Feb 2010 12:31:10 -0800 (PST)
+Date: Wed, 3 Feb 2010 15:31:10 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] increase readdir buffer size
+Message-ID: <20100203203110.GA24818@infradead.org>
+References: <4B69B755.2030008@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <13bb8ce11002021819l7e17dac4n5f58a9887a16fae2@mail.gmail.com>
-References: <13bb8ce11002011924h611099feh4955eedcc6e588a6@mail.gmail.com>
-	<20100202112300.GA23809@infradead.org>
-	<13bb8ce11002021819l7e17dac4n5f58a9887a16fae2@mail.gmail.com>
-Date: Wed, 3 Feb 2010 14:34:43 -0600
-Message-ID: <13bb8ce11002031234t4b02b199g5b8dfd65ea48aa13@mail.gmail.com>
-Subject: Re: State of XFS on ARM
-From: Daniel Goller <morfic@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <4B69B755.2030008@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,15 +28,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs mailing list <xfs@oss.sgi.com>
 
-Any particular stress test you can suggest, to use once i try git for
-xfs on this Marvell box?
-To try to help bringing up issues faster than through normal use of this box?
+On Wed, Feb 03, 2010 at 11:50:13AM -0600, Eric Sandeen wrote:
+> so the default buffer is 4 * 8192 = 32768
+> (except in the unlikely case of blocks > 32k....)
+> 
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-Thanks in advance for any suggestions,
+Looks good,
 
-Daniel
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
