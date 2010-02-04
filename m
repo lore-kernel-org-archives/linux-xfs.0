@@ -1,17 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o14Ibws3083137 for <xfs@oss.sgi.com>; Thu, 4 Feb 2010 12:38:00 -0600
-Date: Thu, 4 Feb 2010 13:39:08 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC PATCH 0/4] wsync export option
-Message-ID: <20100204183908.GB9329@infradead.org>
-References: <20100203233755.17677.96582.stgit@case>
-	<20100204153006.GC22014@infradead.org>
-	<20100204181529.GK5702@sgi.com>
+	o14JgGsv086471 for <xfs@oss.sgi.com>; Thu, 4 Feb 2010 13:42:17 -0600
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 08457137C1DF
+	for <xfs@oss.sgi.com>; Thu,  4 Feb 2010 11:43:26 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id o0wdCG5IOO4qKR84 for
+	<xfs@oss.sgi.com>; Thu, 04 Feb 2010 11:43:26 -0800 (PST)
+Received: from int-mx02.intmail.prod.int.phx2.redhat.com
+	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id o14JhQoE014427
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Thu, 4 Feb 2010 14:43:26 -0500
+Message-ID: <4B6B235D.5060903@sandeen.net>
+Date: Thu, 04 Feb 2010 13:43:25 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100204181529.GK5702@sgi.com>
+Subject: Re: [PATCH V2] mkfs: don't try to detect filesystems on regular files
+	via	blkid
+References: <4B6AF6FC.6030101@redhat.com> <4B6B087F.80901@sandeen.net>
+In-Reply-To: <4B6B087F.80901@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,52 +33,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: bpm@sgi.com
-Cc: linux-nfs@vger.kernel.org, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: Jim Meyering <meyering@redhat.com>, xfs mailing list <xfs@oss.sgi.com>
 
-On Thu, Feb 04, 2010 at 12:15:29PM -0600, bpm@sgi.com wrote:
-> Rather than having X number of synchronous log transactions written
-> separately as with wsync you have X number of log transactions written
-> out together in one go by vfs_fsync (if datasync==0).  That should be
-> faster than wsync.
+Eric Sandeen wrote:
+> from RH bug 
+> https://bugzilla.redhat.com/show_bug.cgi?id=561870
+> 
+> # dd if=/dev/zero of=k bs=1MB count=2 seek=20; mkfs.xfs k 
+> # mkfs.xfs: probe of k failed, cannot detect existing filesystem.
+> # mkfs.xfs: Use the -f option to force overwrite.
+> 
+> blkid fails to do a probe of a regular file.
+> 
+> I wish blkid would cope with this, but for now it might
+> be better to just turn it off.
+> 
+> I kept the size==0 check just in case we stumble on a 0-sized
+> device, blkid doesn't like that either...
+> 
+> Reported-by: Jim Meyering <meyering@redhat.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
 
-Indeed, except that there aren't a lot of different transactions
-usually.
+OK NAK on that, hch has a better patch, we were driving blkid wrong.
 
- - nfsd_setattr is one SETATTR transaction
- - nfsd_create might be multiple transactions, indeed - especially
-   the nfsv3 variant that also adds a setattr transaction
- - nfsd_link should be a single one
-
-but yes, doing the log force from nfsd should be a benefit for
-the create side at least.  The additional benefit is that we can
-just drive it from NFSD and don't need to force mount options on
-the fs.  So yes, let's do it from nfsd.
-
-> Trond also suggested an export_operation and I think it's a good idea.
-> I'll explore that and repost.
-
-Indeed.  For XFS that export_operation could probably be a lot
-simpler than xfs_fsync.  I don't think we need to catch the
-non-transactional timestamp and size updates at all, and we're
-guaranteed the transaction has already commited.  So the
-method might be as simple as:
-
-static int xfs_nfs_force_inode(struct inode *inode)
-{
-	struct xfs_inode *ip = XFS_I(inode);
-
-	xfs_ilock(ip, XFS_ILOCK_SHARED);
-	if (xfs_ipincount(ip)) {
-		xfs_lsn_t force_lsn = ip->i_itemp->ili_last_lsn;
-
-		ASSERT(force_lsn);
-		xfs_log_force_lsn(ip->i_mount, force_lsn, XFS_LOG_SYNC);
-	}
-	xfs_iunlock(ip, XFS_ILOCK_SHARED);
-
-	return 0;
-}
+-Eric
 
 _______________________________________________
 xfs mailing list
