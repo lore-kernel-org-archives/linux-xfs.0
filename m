@@ -1,26 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o14Hldw4080167 for <xfs@oss.sgi.com>; Thu, 4 Feb 2010 11:47:40 -0600
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D6977137B519
-	for <xfs@oss.sgi.com>; Thu,  4 Feb 2010 09:48:49 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 96Cd6tqr4zVqOTj9 for
-	<xfs@oss.sgi.com>; Thu, 04 Feb 2010 09:48:49 -0800 (PST)
-Received: from int-mx01.intmail.prod.int.phx2.redhat.com
-	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id o14Hmn25023698
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 4 Feb 2010 12:48:49 -0500
-Message-ID: <4B6B087F.80901@sandeen.net>
-Date: Thu, 04 Feb 2010 11:48:47 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	o14IDk9M081747 for <xfs@oss.sgi.com>; Thu, 4 Feb 2010 12:13:47 -0600
+Date: Thu, 4 Feb 2010 12:15:29 -0600
+From: bpm@sgi.com
+Subject: Re: [RFC PATCH 0/4] wsync export option
+Message-ID: <20100204181529.GK5702@sgi.com>
+References: <20100203233755.17677.96582.stgit@case>
+	<20100204153006.GC22014@infradead.org>
 MIME-Version: 1.0
-Subject: [PATCH V2] mkfs: don't try to detect filesystems on regular files
-	via	blkid
-References: <4B6AF6FC.6030101@redhat.com>
-In-Reply-To: <4B6AF6FC.6030101@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20100204153006.GC22014@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,58 +23,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Jim Meyering <meyering@redhat.com>, xfs mailing list <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-nfs@vger.kernel.org, xfs@oss.sgi.com
 
-from RH bug 
-https://bugzilla.redhat.com/show_bug.cgi?id=561870
+On Thu, Feb 04, 2010 at 10:30:06AM -0500, Christoph Hellwig wrote:
+> On Wed, Feb 03, 2010 at 05:44:24PM -0600, Ben Myers wrote:
+> > The following series is adds a 'wsync' export option to nfsd.  It is intended
+> > to be used on XFS with the wsync mount option.  When you already have a
+> > synchronous log there is no need to sync metadata separately.
+>
+> You don't need the xfs wsync option, as the existing write_inode calls
+> or your new fsync calls are doing the same as the wsync mount option,
+> just from a higher layer.
 
-# dd if=/dev/zero of=k bs=1MB count=2 seek=20; mkfs.xfs k 
-# mkfs.xfs: probe of k failed, cannot detect existing filesystem.
-# mkfs.xfs: Use the -f option to force overwrite.
+Ok, I see that now.  write_inode_now is basically a superset of what we
+need.  The important thing is to force the log (which
+xfs_file_operations.xfs_file_fsync does do) but not to call
+xfs_super_operations.write_inode (via write_inode_now) which eventually
+gets into xfs_iflush and takes forever.  We can take forever later-- when
+the log is full.  ;)
 
-blkid fails to do a probe of a regular file.
+> The wsync option causes the log to be synchronously forced up to the
+> log sequence number of the commit for the metadata operation, that is
+> make all the operations affected by it synchronous.  That's exactly
+> what we'll do using fsync (actually right now we force the whole log,
+> but I have a patch to optimize it to only force nuntil the last commit
+> lsn), and approqimately the same as we do using write_inode, just a
+> lot less efficiently.
 
-I wish blkid would cope with this, but for now it might
-be better to just turn it off.
-
-I kept the size==0 check just in case we stumble on a 0-sized
-device, blkid doesn't like that either...
-
-Reported-by: Jim Meyering <meyering@redhat.com>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-V2: use fstat after the open
-
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 9baf116..219c81e 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -300,6 +300,7 @@ check_overwrite(
- 	int		fd;
- 	long long	size;
- 	int		bsz;
-+	struct stat	statbuf;
+Rather than having X number of synchronous log transactions written
+separately as with wsync you have X number of log transactions written
+out together in one go by vfs_fsync (if datasync==0).  That should be
+faster than wsync.
  
- 	if (!device || !*device)
- 		return 0;
-@@ -309,6 +310,14 @@ check_overwrite(
- 	fd = open(device, O_RDONLY);
- 	if (fd < 0)
- 		goto out;
-+
-+	/* blkid can't get info from a regular file */
-+	if (!fstat(fd, &statbuf) && S_ISREG(statbuf.st_mode)) {
-+		close(fd);
-+		ret = 0;
-+		goto out;
-+	}
-+
- 	platform_findsizes(device, fd, &size, &bsz);
- 	close(fd);
- 
+> > Curious to hear if this is a reasonable thing to do.  Suggestions
+> > welcome.
+> 
+> I think it's reasonable.  What might be even better it to have an
+> export operation call out into the filesystem so that we can force
+> wsync and not let nfsd deal with it at all.  There is a fair chance
+> that the filesystem can do the sync more efficiently.
 
+Trond also suggested an export_operation and I think it's a good idea.
+I'll explore that and repost.
+
+Thanks,
+	Ben
 
 _______________________________________________
 xfs mailing list
