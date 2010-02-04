@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o14G6iYF072847 for <xfs@oss.sgi.com>; Thu, 4 Feb 2010 10:06:44 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 906621AF2D3
-	for <xfs@oss.sgi.com>; Thu,  4 Feb 2010 08:07:54 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id jtDSlDS9nnuxAr23 for
-	<xfs@oss.sgi.com>; Thu, 04 Feb 2010 08:07:54 -0800 (PST)
-Date: Thu, 4 Feb 2010 11:07:52 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 08/10] xfs: move the inode locking outside xfs_fsync()
-Message-ID: <20100204160752.GA11206@infradead.org>
-References: <1265153104-29680-1-git-send-email-david@fromorbit.com>
-	<1265153104-29680-9-git-send-email-david@fromorbit.com>
-	<20100203112917.GB19996@infradead.org>
-	<20100203230833.GC5332@discord.disaster>
+	o14GjFs5075961 for <xfs@oss.sgi.com>; Thu, 4 Feb 2010 10:45:16 -0600
+Received: from mx.meyering.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9BBC41AF551
+	for <xfs@oss.sgi.com>; Thu,  4 Feb 2010 08:46:25 -0800 (PST)
+Received: from mx.meyering.net (mx.meyering.net [82.230.74.64]) by
+	cuda.sgi.com with ESMTP id irAlCiC5iTYgdhIx for
+	<xfs@oss.sgi.com>; Thu, 04 Feb 2010 08:46:25 -0800 (PST)
+From: Jim Meyering <jim@meyering.net>
+Subject: Re: [PATCH] mkfs: don't try to detect filesystems on regular files
+	via blkid
+In-Reply-To: <4B6AF6FC.6030101@redhat.com> (Eric Sandeen's message of "Thu, 04
+	Feb 2010 10:34:04 -0600")
+References: <4B6AF6FC.6030101@redhat.com>
+Date: Thu, 04 Feb 2010 17:46:23 +0100
+Message-ID: <878wb9j6e8.fsf@meyering.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100203230833.GC5332@discord.disaster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,50 +29,60 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs mailing list <xfs@oss.sgi.com>
 
-On Thu, Feb 04, 2010 at 10:08:33AM +1100, Dave Chinner wrote:
-> On Wed, Feb 03, 2010 at 06:29:17AM -0500, Christoph Hellwig wrote:
-> > On Wed, Feb 03, 2010 at 10:25:02AM +1100, Dave Chinner wrote:
-> > > We have a need for a delayed write inode flush operation
-> > > to be made atomically with an fsync to avoid physically
-> > > writing inodes but still keeping inode buffer information
-> > > up to date for bulkstat.
-> > > 
-> > > Move the inode locking outside xfs_fsync() to allow this to
-> > > be done.
-> > 
-> > What's the point of the lock_flags argument?  It should always
-> > be IOLOCK_SHARED, so instead of passing it in as an argument
-> > I'd rather add an assert to enforce it.
-> 
-> Fair enough. Updated patch below.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> xfs: move the inode locking outside xfs_fsync() V2
-> 
-> We have a need for a delayed write inode flush operation
-> to be made atomically with an fsync to avoid physically
-> writing inodes but still keeping inode buffer information
-> up to date for bulkstat.
-> 
-> Move the inode locking outside xfs_fsync() to allow this to
-> be done.
-> 
-> Version 2
-> - kill the lock_flags argument and simply assert XFS_IOLOCK_SHARED
->   in xfs_fsync().
+Eric Sandeen wrote:
+> https://bugzilla.redhat.com/show_bug.cgi?id=561870
+>
+> # dd if=/dev/zero of=k bs=1MB count=2 seek=20; mkfs.xfs k
+> # mkfs.xfs: probe of k failed, cannot detect existing filesystem.
+> # mkfs.xfs: Use the -f option to force overwrite.
+>
+> blkid fails to do a probe of a regular file.
+>
+> I wish blkid would cope with this, but for now it might
+> be better to just turn it off.
+>
+> Reported-by: Jim Meyering <meyering@redhat.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+>
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 9baf116..de87647 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -300,10 +300,15 @@ check_overwrite(
+>  	int		fd;
+>  	long long	size;
+>  	int		bsz;
+> +	struct stat	statbuf;
+>
+>  	if (!device || !*device)
+>  		return 0;
+>
+> +	/* blkid can't get info from a regular file */
+> +	if (!stat(device, &statbuf) && S_ISREG(statbuf.st_mode))
+> +		return 0;
+> +
+>  	ret = -1; /* will reset on success of all setup calls */
+>
+>  	fd = open(device, O_RDONLY);
 
-Looks good,
+Hi Eric,
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Did you consider calling fstat after opening,
+rather than "stat" before?
+
+        /* blkid can't get info from a regular file */
+        if (!fstat(fd, &statbuf) && S_ISREG(statbuf.st_mode)) {
+                close(fd);
+                return 0;
+        }
+
+That's slightly more efficient, and not prone to confusion
+in the unlikely event that "device" changes inode between
+the stat and the open calls.
 
 _______________________________________________
 xfs mailing list
