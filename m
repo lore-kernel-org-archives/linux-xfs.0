@@ -1,25 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o15MwjJn168246 for <xfs@oss.sgi.com>; Fri, 5 Feb 2010 16:58:45 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E84361382293
-	for <xfs@oss.sgi.com>; Fri,  5 Feb 2010 14:59:54 -0800 (PST)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id wVYW4gmAk2NO1Ux7 for
-	<xfs@oss.sgi.com>; Fri, 05 Feb 2010 14:59:54 -0800 (PST)
-Received: from Liberator.local (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail.sandeen.net (Postfix) with ESMTP id 2120F97FB47
-	for <xfs@oss.sgi.com>; Fri,  5 Feb 2010 16:59:54 -0600 (CST)
-Message-ID: <4B6CA2E9.7020803@sandeen.net>
-Date: Fri, 05 Feb 2010 16:59:53 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: PATCH V2] more reserved blocks fixups
-References: <4B60C8EE.5080700@sandeen.net>
-In-Reply-To: <4B60C8EE.5080700@sandeen.net>
+	o15NuHWf172455 for <xfs@oss.sgi.com>; Fri, 5 Feb 2010 17:56:17 -0600
+Subject: Re: [PATCH 05/10] xfs: Use delay write promotion for dquot flushing
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <1265153104-29680-6-git-send-email-david@fromorbit.com>
+References: <1265153104-29680-1-git-send-email-david@fromorbit.com>
+	<1265153104-29680-6-git-send-email-david@fromorbit.com>
+Date: Fri, 05 Feb 2010 17:55:55 -0600
+Message-ID: <1265414155.2714.155.camel@doink1>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,203 +23,67 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs mailing list <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-This mangles the reserved blocks counts a little more.
+On Wed, 2010-02-03 at 10:24 +1100, Dave Chinner wrote:
+> xfs_qm_dqflock_pushbuf_wait() does a very similar trick to item
+> pushing used to do to flush out delayed write dquot buffers. Change
+> it to use the new promotion method rather than an async flush.
+> 
+> Also, xfs_qm_dqflock_pushbuf_wait() can return without the flush lock
+> held, yet the callers make the assumption that after this call the
+> flush lock is held. Always return with the flush lock held.
 
-1) add a helper function for the default reserved count
-2) add helper functions to save/restore counts on ro/rw
-3) save/restore reserved blocks on freeze/thaw
-4) disallow changing reserved count while readonly
+Looks good.
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
+> Signed-off-by: Dave Chinner <david@fromorbit.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-V2: changed field name to match Dave's changes
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
-diff --git a/fs/xfs/linux-2.6/xfs_ioctl.c b/fs/xfs/linux-2.6/xfs_ioctl.c
-index a034cf6..883929b 100644
---- a/fs/xfs/linux-2.6/xfs_ioctl.c
-+++ b/fs/xfs/linux-2.6/xfs_ioctl.c
-@@ -1431,6 +1431,9 @@ xfs_file_ioctl(
- 		if (!capable(CAP_SYS_ADMIN))
- 			return -EPERM;
- 
-+		if (mp->m_flags & XFS_MOUNT_RDONLY)
-+			return -XFS_ERROR(EROFS);
-+
- 		if (copy_from_user(&inout, arg, sizeof(inout)))
- 			return -XFS_ERROR(EFAULT);
- 
-diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
-index 8884f26..97c0f5a 100644
---- a/fs/xfs/linux-2.6/xfs_super.c
-+++ b/fs/xfs/linux-2.6/xfs_super.c
-@@ -1257,6 +1257,29 @@ xfs_fs_statfs(
- 	return 0;
- }
- 
-+STATIC void
-+xfs_save_resvblks(struct xfs_mount *mp)
-+{
-+	__uint64_t resblks = 0;
-+
-+	mp->m_resblks_save = mp->m_resblks;
-+	xfs_reserve_blocks(mp, &resblks, NULL);
-+}
-+
-+STATIC void
-+xfs_restore_resvblks(struct xfs_mount *mp)
-+{
-+	__uint64_t resblks;
-+
-+	if (mp->m_resblks_save) {
-+		resblks = mp->m_resblks_save;
-+		mp->m_resblks_save = 0;
-+	} else
-+		resblks = xfs_default_resblks(mp);
-+
-+	xfs_reserve_blocks(mp, &resblks, NULL);
-+}
-+
- STATIC int
- xfs_fs_remount(
- 	struct super_block	*sb,
-@@ -1319,8 +1342,6 @@ xfs_fs_remount(
- 
- 	/* ro -> rw */
- 	if ((mp->m_flags & XFS_MOUNT_RDONLY) && !(*flags & MS_RDONLY)) {
--		__uint64_t resblks;
--
- 		mp->m_flags &= ~XFS_MOUNT_RDONLY;
- 		if (mp->m_flags & XFS_MOUNT_BARRIER)
- 			xfs_mountfs_check_barriers(mp);
-@@ -1343,15 +1364,7 @@ xfs_fs_remount(
- 		 * Fill out the reserve pool if it is empty. Use the stashed
- 		 * value if it is non-zero, otherwise go with the default.
- 		 */
--		if (mp->m_resblks_save) {
--			resblks = mp->m_resblks_save;
--			mp->m_resblks_save = 0;
--		} else {
--			resblks = mp->m_sb.sb_dblocks;
--			do_div(resblks, 20);
--			resblks = min_t(__uint64_t, resblks, 1024);
--		}
--		xfs_reserve_blocks(mp, &resblks, NULL);
-+		xfs_restore_resvblks(mp);
- 	}
- 
- 	/* rw -> ro */
-@@ -1364,11 +1377,9 @@ xfs_fs_remount(
- 		 * so that if we get remounted rw, we can return it to the same
- 		 * size.
- 		 */
--		__uint64_t resblks = 0;
- 
- 		xfs_quiesce_data(mp);
--		mp->m_resblks_save = mp->m_resblks;
--		xfs_reserve_blocks(mp, &resblks, NULL);
-+		xfs_save_resvblks(mp);
- 		xfs_quiesce_attr(mp);
- 		mp->m_flags |= XFS_MOUNT_RDONLY;
- 	}
-@@ -1387,11 +1398,22 @@ xfs_fs_freeze(
- {
- 	struct xfs_mount	*mp = XFS_M(sb);
- 
-+	xfs_save_resvblks(mp);
- 	xfs_quiesce_attr(mp);
- 	return -xfs_fs_log_dummy(mp);
- }
- 
- STATIC int
-+xfs_fs_unfreeze(
-+	struct super_block	*sb)
-+{
-+	struct xfs_mount	*mp = XFS_M(sb);
-+
-+	xfs_restore_resvblks(mp);
-+	return 0;
-+}
-+
-+STATIC int
- xfs_fs_show_options(
- 	struct seq_file		*m,
- 	struct vfsmount		*mnt)
-@@ -1613,6 +1635,7 @@ static const struct super_operations xfs_super_operations = {
- 	.put_super		= xfs_fs_put_super,
- 	.sync_fs		= xfs_fs_sync_fs,
- 	.freeze_fs		= xfs_fs_freeze,
-+	.unfreeze_fs		= xfs_fs_unfreeze,
- 	.statfs			= xfs_fs_statfs,
- 	.remount_fs		= xfs_fs_remount,
- 	.show_options		= xfs_fs_show_options,
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index eb403b4..48e1ee7 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1008,6 +1008,22 @@ xfs_mount_reset_sbqflags(
- 	return xfs_trans_commit(tp, 0);
- }
- 
-+__uint64_t
-+xfs_default_resblks(xfs_mount_t *mp)
-+{
-+	__uint64_t resblks;
-+
-+	/*
-+	 * We default to 5% or 1024 fsbs of space reserved, whichever is smaller.
-+	 * This may drive us straight to ENOSPC on mount, but that implies
-+	 * we were already there on the last unmount. Warn if this occurs.
-+	 */
-+	resblks = mp->m_sb.sb_dblocks;
-+	do_div(resblks, 20);
-+	resblks = min_t(__uint64_t, resblks, 1024);
-+	return resblks;
-+}
-+
- /*
-  * This function does the following on an initial mount of a file system:
-  *	- reads the superblock from disk and init the mount struct
-@@ -1318,18 +1334,14 @@ xfs_mountfs(
- 	 * when at ENOSPC. This is needed for operations like create with
- 	 * attr, unwritten extent conversion at ENOSPC, etc. Data allocations
- 	 * are not allowed to use this reserved space.
--	 *
--	 * We default to 5% or 1024 fsbs of space reserved, whichever is smaller.
--	 * This may drive us straight to ENOSPC on mount, but that implies
--	 * we were already there on the last unmount. Warn if this occurs.
- 	 */
--	resblks = mp->m_sb.sb_dblocks;
--	do_div(resblks, 20);
--	resblks = min_t(__uint64_t, resblks, 1024);
--	error = xfs_reserve_blocks(mp, &resblks, NULL);
--	if (error)
--		cmn_err(CE_WARN, "XFS: Unable to allocate reserve blocks. "
--				"Continuing without a reserve pool.");
-+	if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
-+		resblks = xfs_default_resblks(mp);
-+		error = xfs_reserve_blocks(mp, &resblks, NULL);
-+		if (error)
-+			cmn_err(CE_WARN, "XFS: Unable to allocate reserve "
-+				"blocks. Continuing without a reserve pool.");
-+	}
- 
- 	return 0;
- 
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 996273d..c8f880d 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -429,6 +429,7 @@ typedef struct xfs_mod_sb {
- } xfs_mod_sb_t;
- 
- extern int	xfs_log_sbcount(xfs_mount_t *, uint);
-+extern __uint64_t xfs_default_resblks(xfs_mount_t *mp);
- extern int	xfs_mountfs(xfs_mount_t *mp);
- 
- extern void	xfs_unmountfs(xfs_mount_t *);
+> ---
+>  fs/xfs/quota/xfs_dquot.c |   25 ++++++++++---------------
+>  1 files changed, 10 insertions(+), 15 deletions(-)
+> 
+> diff --git a/fs/xfs/quota/xfs_dquot.c b/fs/xfs/quota/xfs_dquot.c
+> index f9baeed..1620a56 100644
+> --- a/fs/xfs/quota/xfs_dquot.c
+> +++ b/fs/xfs/quota/xfs_dquot.c
+> @@ -1528,21 +1528,16 @@ xfs_qm_dqflock_pushbuf_wait(
+>  	 */
+>  	bp = xfs_incore(dqp->q_mount->m_ddev_targp, dqp->q_blkno,
+>  		    XFS_QI_DQCHUNKLEN(dqp->q_mount), XBF_TRYLOCK);
+> -	if (bp != NULL) {
+> -		if (XFS_BUF_ISDELAYWRITE(bp)) {
+> -			int	error;
+> -
+> -			if (XFS_BUF_ISPINNED(bp))
+> -				xfs_log_force(dqp->q_mount, 0);
+> -			error = xfs_bawrite(dqp->q_mount, bp);
+> -			if (error)
+> -				xfs_fs_cmn_err(CE_WARN, dqp->q_mount,
+> -					"xfs_qm_dqflock_pushbuf_wait: "
+> -					"pushbuf error %d on dqp %p, bp %p",
+> -					error, dqp, bp);
+> -		} else {
+> -			xfs_buf_relse(bp);
+> -		}
+> +	if (!bp)
+> +		goto out_lock;
+> +
+> +	if (XFS_BUF_ISDELAYWRITE(bp)) {
+> +		if (XFS_BUF_ISPINNED(bp))
+> +			xfs_log_force(dqp->q_mount, 0);
+> +		xfs_buf_delwri_promote(bp);
+> +		wake_up_process(bp->b_target->bt_task);
+>  	}
+> +	xfs_buf_relse(bp);
+> +out_lock:
+>  	xfs_dqflock(dqp);
+>  }
+
+
 
 _______________________________________________
 xfs mailing list
