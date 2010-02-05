@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o153eIAW108469 for <xfs@oss.sgi.com>; Thu, 4 Feb 2010 21:40:18 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 445661CA5A70
-	for <xfs@oss.sgi.com>; Thu,  4 Feb 2010 19:41:27 -0800 (PST)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id 03voz1jwDRmyac2I for
-	<xfs@oss.sgi.com>; Thu, 04 Feb 2010 19:41:27 -0800 (PST)
-Message-ID: <4B6B9366.6020600@sandeen.net>
-Date: Thu, 04 Feb 2010 21:41:26 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	o159LKCj125074 for <xfs@oss.sgi.com>; Fri, 5 Feb 2010 03:21:22 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1E2B51CA0265
+	for <xfs@oss.sgi.com>; Fri,  5 Feb 2010 01:22:31 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id HhIA1QpyNAqQXt2u for
+	<xfs@oss.sgi.com>; Fri, 05 Feb 2010 01:22:31 -0800 (PST)
+Date: Fri, 5 Feb 2010 04:22:29 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: make install in the brave new build system world
+Message-ID: <20100205092229.GA32454@infradead.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2] mkfs.xfs fix detection of empty devices
-References: <4B6AF6FC.6030101@redhat.com> <20100204194000.GA7229@infradead.org>
-	<20100204221822.GA26670@infradead.org>
-In-Reply-To: <20100204221822.GA26670@infradead.org>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,84 +26,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jim Meyering <meyering@redhat.com>, Eric Sandeen <sandeen@redhat.com>, xfs mailing list <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> We currently fail to detect that a device does indeed not contain any
-> signature and we are indeed fine to proceed with it due to mishandling
-> the return value of blkid_do_fullprobe.  Fix that up and add some
-> better diagnostics of the blkid detection.
-> 
-> from RH bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=561870
-> 
-> # dd if=/dev/zero of=k bs=1MB count=2 seek=20; mkfs.xfs k 
-> # mkfs.xfs: probe of k failed, cannot detect existing filesystem.
-> # mkfs.xfs: Use the -f option to force overwrite
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+When doing make install in xfsprogs I get a lot of spew like this:
 
-we discussed keeping the 0-size check until libblkid copes better;
-also the absense of ret = !ret looks more readable, thanks.
+/usr/bin/make -C include install
+make[1]: Entering directory `/root/xfsprogs-dev/include'
+make[1]: Nothing to be done for `install'.
+make[1]: Leaving directory `/root/xfsprogs-dev/include'
+/usr/bin/make -C libxfs install
+make[1]: Entering directory `/root/xfsprogs-dev/libxfs'
+    [DEP]
+gcc -MM -I. -g -O2 -DNDEBUG -DVERSION=\"3.1.1\" -DLOCALEDIR=\"/usr/share/locale\" -DPACKAGE=\"xfsprogs\" -I../include -DENABLE_GETTEXT -D_GNU_SOURCE -D_XOPEN_SOURCE=500 -D_FILE_OFFSET_BITS=64 -funsigned-char -fno-strict-aliasing -Wall cache.c init.c kmem.c logitem.c rdwr.c trans.c util.c xfs_alloc.c xfs_ialloc.c xfs_inode.c xfs_btree.c xfs_alloc_btree.c xfs_ialloc_btree.c xfs_bmap_btree.c xfs_da_btree.c xfs_dir2.c xfs_dir2_leaf.c xfs_attr_leaf.c xfs_dir2_block.c xfs_dir2_node.c xfs_dir2_data.c xfs_dir2_sf.c xfs_bmap.c xfs_mount.c xfs_rtalloc.c xfs_trans.c xfs_attr.c linux.c | /bin/sed -e 's,^\([^:]*\)\.o,\1.lo,' > .dep
+make[1]: Leaving directory `/root/xfsprogs-dev/libxfs'
 
-Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
 
-> Index: xfsprogs-dev/mkfs/xfs_mkfs.c
-> ===================================================================
-> --- xfsprogs-dev.orig/mkfs/xfs_mkfs.c	2010-02-04 20:30:26.000000000 +0000
-> +++ xfsprogs-dev/mkfs/xfs_mkfs.c	2010-02-04 20:43:41.000000000 +0000
-> @@ -322,24 +322,40 @@ check_overwrite(
->  	if (!pr)
->  		goto out;
->  
-> -	if (blkid_probe_enable_partitions(pr, 1))
-> +	ret = blkid_probe_enable_partitions(pr, 1);
-> +	if (ret < 0)
->  		goto out;
->  
-> -	if (blkid_do_fullprobe(pr))
-> +	ret = blkid_do_fullprobe(pr);
-> +	if (ret < 0)
->  		goto out;
->  
-> -	ret = 0;
-> +	/*
-> +	 * Blkid returns 1 for nothing found and 0 when it finds a signature,
-> +	 * but we want the exact opposite, so reverse the return value here.
-> +	 *
-> +	 * In addition print some useful diagnostics about what actually is
-> +	 * on the device.
-> +	 */
-> +	if (ret) {
-> +		ret = 0;
-> +		goto out;
-> +	}
-> +
->  	if (!blkid_probe_lookup_value(pr, "TYPE", &type, NULL)) {
->  		fprintf(stderr,
->  			_("%s: %s appears to contain an existing "
->  			"filesystem (%s).\n"), progname, device, type);
-> -		ret = 1;
->  	} else if (!blkid_probe_lookup_value(pr, "PTTYPE", &type, NULL)) {
->  		fprintf(stderr,
->  			_("%s: %s appears to contain a partition "
->  			"table (%s).\n"), progname, device, type);
-> -		ret = 1;
-> +	} else {
-> +		fprintf(stderr,
-> +			_("%s: %s appears to contain something weird "
-> +			"according to blkid\n"), progname, device);
->  	}
-> +	ret = 1;
->  
->  out:
->  	if (pr)
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+So it seems like for some reason we do
+
+ a) regenerate the dependencies in the install target (we already re-did
+    them once before as part of the all target implied by make install)
+ b) for some reason the new silent make rules don't apply to this.
+
+Any idea why?
 
 _______________________________________________
 xfs mailing list
