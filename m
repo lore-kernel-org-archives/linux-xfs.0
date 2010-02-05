@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o14MHCNK094794 for <xfs@oss.sgi.com>; Thu, 4 Feb 2010 16:17:14 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2CD801CA4D17
-	for <xfs@oss.sgi.com>; Thu,  4 Feb 2010 14:18:22 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id UXD2StiEXwT20KFm for
-	<xfs@oss.sgi.com>; Thu, 04 Feb 2010 14:18:22 -0800 (PST)
-Date: Thu, 4 Feb 2010 17:18:22 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2] mkfs.xfs fix detection of empty devices
-Message-ID: <20100204221822.GA26670@infradead.org>
-References: <4B6AF6FC.6030101@redhat.com> <20100204194000.GA7229@infradead.org>
+	o152UTBx106048 for <xfs@oss.sgi.com>; Thu, 4 Feb 2010 20:30:29 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E73491B1906
+	for <xfs@oss.sgi.com>; Thu,  4 Feb 2010 18:31:37 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	1NclDPbYEYggCNwB for <xfs@oss.sgi.com>;
+	Thu, 04 Feb 2010 18:31:37 -0800 (PST)
+Date: Fri, 5 Feb 2010 13:31:34 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfsprogs: to -DDEBUG or not to -DDEBUG?
+Message-ID: <20100205023134.GA11483@discord.disaster>
+References: <4B6AFB83.1070309@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100204194000.GA7229@infradead.org>
+In-Reply-To: <4B6AFB83.1070309@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,72 +29,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Jim Meyering <meyering@redhat.com>, xfs mailing list <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs mailing list <xfs@oss.sgi.com>
 
-We currently fail to detect that a device does indeed not contain any
-signature and we are indeed fine to proceed with it due to mishandling
-the return value of blkid_do_fullprobe.  Fix that up and add some
-better diagnostics of the blkid detection.
+On Thu, Feb 04, 2010 at 10:53:23AM -0600, Eric Sandeen wrote:
+> Fedora, long ago, disabled debug in the xfsprogs specfile:
+> 
+> http://cvs.fedoraproject.org/viewvc/F-12/xfsprogs/xfsprogs.spec?r1=1.5&r2=1.6
+> 
+> * Wed Apr 20 2005 Dave Jones <davej@redhat.com>
+> - Disable debug. (#151438)
+> 
+> per this bug:  https://bugzilla.redhat.com/show_bug.cgi?id=151438
+> 
+> referencing this email thread:
+> 
+> http://oss.sgi.com/archives/linux-xfs/2005-03/msg00038.html
+> which no longer exists (grrrr) but is probably now here:
+> 
+> http://oss.sgi.com/archives/xfs/2005-03/msg00416.html
+> 
+> Fedora still builds with -DNDEBUG, but the upstream tarball has
+> it on by default.  I have seen several occasions where other
+> distros had failing xfs_repairs which were "fixed" by disabling
+> debug.  I'd like to make a decision on whether DEBUG should be
+> on or off by default for upstream releases.  Any thoughts?
 
-from RH bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=561870
+Personally I'd prefer the repair process to stop if it comes across
+inconsistencies it can't handle. Ignoring them is as likely to "fix"
+the crash as it is to corrupt the filesystem more.
 
-# dd if=/dev/zero of=k bs=1MB count=2 seek=20; mkfs.xfs k 
-# mkfs.xfs: probe of k failed, cannot detect existing filesystem.
-# mkfs.xfs: Use the -f option to force overwrite
+On top of that we get bug reports when those problems are hit so
+we can look into what caused the problem. We don't really have a
+repair test suite that covers all the possible corruptions that
+can occur, so we are kind of reliant on users reporting conditions
+we've never had to handle before so we can fix them...
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Cheers,
 
-Index: xfsprogs-dev/mkfs/xfs_mkfs.c
-===================================================================
---- xfsprogs-dev.orig/mkfs/xfs_mkfs.c	2010-02-04 20:30:26.000000000 +0000
-+++ xfsprogs-dev/mkfs/xfs_mkfs.c	2010-02-04 20:43:41.000000000 +0000
-@@ -322,24 +322,40 @@ check_overwrite(
- 	if (!pr)
- 		goto out;
- 
--	if (blkid_probe_enable_partitions(pr, 1))
-+	ret = blkid_probe_enable_partitions(pr, 1);
-+	if (ret < 0)
- 		goto out;
- 
--	if (blkid_do_fullprobe(pr))
-+	ret = blkid_do_fullprobe(pr);
-+	if (ret < 0)
- 		goto out;
- 
--	ret = 0;
-+	/*
-+	 * Blkid returns 1 for nothing found and 0 when it finds a signature,
-+	 * but we want the exact opposite, so reverse the return value here.
-+	 *
-+	 * In addition print some useful diagnostics about what actually is
-+	 * on the device.
-+	 */
-+	if (ret) {
-+		ret = 0;
-+		goto out;
-+	}
-+
- 	if (!blkid_probe_lookup_value(pr, "TYPE", &type, NULL)) {
- 		fprintf(stderr,
- 			_("%s: %s appears to contain an existing "
- 			"filesystem (%s).\n"), progname, device, type);
--		ret = 1;
- 	} else if (!blkid_probe_lookup_value(pr, "PTTYPE", &type, NULL)) {
- 		fprintf(stderr,
- 			_("%s: %s appears to contain a partition "
- 			"table (%s).\n"), progname, device, type);
--		ret = 1;
-+	} else {
-+		fprintf(stderr,
-+			_("%s: %s appears to contain something weird "
-+			"according to blkid\n"), progname, device);
- 	}
-+	ret = 1;
- 
- out:
- 	if (pr)
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
