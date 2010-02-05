@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o152v5SY106759 for <xfs@oss.sgi.com>; Thu, 4 Feb 2010 20:57:06 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 13992137DFB5
-	for <xfs@oss.sgi.com>; Thu,  4 Feb 2010 18:58:14 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	pU4cs6qm0Hs1YGUo for <xfs@oss.sgi.com>;
-	Thu, 04 Feb 2010 18:58:14 -0800 (PST)
-Date: Fri, 5 Feb 2010 13:58:11 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH for-2.6.33] xfs: flush all log buffers in xlog_dealloc_log
-Message-ID: <20100205025811.GB11483@discord.disaster>
-References: <20100201220813.GA3519@infradead.org>
-	<20100203105545.GA1047@infradead.org>
-	<20100204081422.GF5332@discord.disaster>
-	<20100204161050.GB11206@infradead.org>
+	o153eIAW108469 for <xfs@oss.sgi.com>; Thu, 4 Feb 2010 21:40:18 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 445661CA5A70
+	for <xfs@oss.sgi.com>; Thu,  4 Feb 2010 19:41:27 -0800 (PST)
+Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
+	by cuda.sgi.com with ESMTP id 03voz1jwDRmyac2I for
+	<xfs@oss.sgi.com>; Thu, 04 Feb 2010 19:41:27 -0800 (PST)
+Message-ID: <4B6B9366.6020600@sandeen.net>
+Date: Thu, 04 Feb 2010 21:41:26 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100204161050.GB11206@infradead.org>
+Subject: Re: [PATCH v2] mkfs.xfs fix detection of empty devices
+References: <4B6AF6FC.6030101@redhat.com> <20100204194000.GA7229@infradead.org>
+	<20100204221822.GA26670@infradead.org>
+In-Reply-To: <20100204221822.GA26670@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,58 +29,83 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+Cc: Jim Meyering <meyering@redhat.com>, Eric Sandeen <sandeen@redhat.com>, xfs mailing list <xfs@oss.sgi.com>
 
-On Thu, Feb 04, 2010 at 11:10:50AM -0500, Christoph Hellwig wrote:
-> On Thu, Feb 04, 2010 at 07:14:22PM +1100, Dave Chinner wrote:
-> > On Wed, Feb 03, 2010 at 05:55:45AM -0500, Christoph Hellwig wrote:
-> > > Actually I'll take this one back - the log buffers aren't delwri
-> > > so xfs_flush_buftarg probably only helped by timing or the
-> > > xfs_buf_runall_queues on xfslogd_workqueue.  Need to think about
-> > > this a bit more.
-> > 
-> > Can you point me at the bug report? IIRC I've seen this in the
-> > past where we freed the log before we've done all the correct
-> > shutdown processing and they got fixed by correcting the
-> > order of shutdown to ensure the log is idle before freeing
-> > it...
+Christoph Hellwig wrote:
+> We currently fail to detect that a device does indeed not contain any
+> signature and we are indeed fine to proceed with it due to mishandling
+> the return value of blkid_do_fullprobe.  Fix that up and add some
+> better diagnostics of the blkid detection.
 > 
-> Yes, that I was going to look into next.  The recent report
-> is http://bugzilla.kernel.org/show_bug.cgi?id=15150
+> from RH bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=561870
+> 
+> # dd if=/dev/zero of=k bs=1MB count=2 seek=20; mkfs.xfs k 
+> # mkfs.xfs: probe of k failed, cannot detect existing filesystem.
+> # mkfs.xfs: Use the -f option to force overwrite
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-That was from 2.6.27. I didn't think that we finished the
-mount/unmount path cleanup that fixed all those problems until
-2.6.28 or .29...
+we discussed keeping the 0-size check until libblkid copes better;
+also the absense of ret = !ret looks more readable, thanks.
 
-> and there's
-> also a very similar one from Ed Cashin <ecashin@coraid.com> in
-> mail archives from November.
+Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
 
-Yeah, that's clearly IO completion after the call to
-xfs_unmountfs_wait(). That does a xfs_wait_buftarg() call
-which waits for all hashed buffers on the buftarg except for
-those that are XBF_FS_MANAGED - the superblock.
-
-Looking at xfs_fs_put_super(), the superblock buffer is freed after
-xfs_unmountfs() frees the log, so if the superblock was logged
-and is undergoing IO then xfs_unmountfs_wait() would not have
-blocked on it and it could leak past the "no more IO should
-bein progress" barrier that xfs_unmountfs_wait() is supposed to
-provide.
-
-Does this look like a plausible cause of the problem?
-
-Is so, given that the superblock is the only buffer that is marked
-XBF_FS_MANAGED now and it seems to me that xfs_wait_buftarg()
-should be waiting on it, maybe the fix needed is to
-xfs_wait_buftarg()....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Index: xfsprogs-dev/mkfs/xfs_mkfs.c
+> ===================================================================
+> --- xfsprogs-dev.orig/mkfs/xfs_mkfs.c	2010-02-04 20:30:26.000000000 +0000
+> +++ xfsprogs-dev/mkfs/xfs_mkfs.c	2010-02-04 20:43:41.000000000 +0000
+> @@ -322,24 +322,40 @@ check_overwrite(
+>  	if (!pr)
+>  		goto out;
+>  
+> -	if (blkid_probe_enable_partitions(pr, 1))
+> +	ret = blkid_probe_enable_partitions(pr, 1);
+> +	if (ret < 0)
+>  		goto out;
+>  
+> -	if (blkid_do_fullprobe(pr))
+> +	ret = blkid_do_fullprobe(pr);
+> +	if (ret < 0)
+>  		goto out;
+>  
+> -	ret = 0;
+> +	/*
+> +	 * Blkid returns 1 for nothing found and 0 when it finds a signature,
+> +	 * but we want the exact opposite, so reverse the return value here.
+> +	 *
+> +	 * In addition print some useful diagnostics about what actually is
+> +	 * on the device.
+> +	 */
+> +	if (ret) {
+> +		ret = 0;
+> +		goto out;
+> +	}
+> +
+>  	if (!blkid_probe_lookup_value(pr, "TYPE", &type, NULL)) {
+>  		fprintf(stderr,
+>  			_("%s: %s appears to contain an existing "
+>  			"filesystem (%s).\n"), progname, device, type);
+> -		ret = 1;
+>  	} else if (!blkid_probe_lookup_value(pr, "PTTYPE", &type, NULL)) {
+>  		fprintf(stderr,
+>  			_("%s: %s appears to contain a partition "
+>  			"table (%s).\n"), progname, device, type);
+> -		ret = 1;
+> +	} else {
+> +		fprintf(stderr,
+> +			_("%s: %s appears to contain something weird "
+> +			"according to blkid\n"), progname, device);
+>  	}
+> +	ret = 1;
+>  
+>  out:
+>  	if (pr)
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
