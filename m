@@ -1,21 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o15LDlAT161896 for <xfs@oss.sgi.com>; Fri, 5 Feb 2010 15:13:47 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 870891C8D607
-	for <xfs@oss.sgi.com>; Fri,  5 Feb 2010 13:14:57 -0800 (PST)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id 0VBlrhgJjtOsyToy for
-	<xfs@oss.sgi.com>; Fri, 05 Feb 2010 13:14:57 -0800 (PST)
-Message-ID: <4B6C8A50.6090108@sandeen.net>
-Date: Fri, 05 Feb 2010 15:14:56 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: xfsprogs: to -DDEBUG or not to -DDEBUG?
-References: <4B6AFB83.1070309@sandeen.net>
-	<20100205023134.GA11483@discord.disaster>
-In-Reply-To: <20100205023134.GA11483@discord.disaster>
+	o15Lf9sP164056 for <xfs@oss.sgi.com>; Fri, 5 Feb 2010 15:41:09 -0600
+Subject: Re: [PATCH 02/10] xfs: Use delayed write for inodes rather than
+	async V2
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <1265153104-29680-3-git-send-email-david@fromorbit.com>
+References: <1265153104-29680-1-git-send-email-david@fromorbit.com>
+	<1265153104-29680-3-git-send-email-david@fromorbit.com>
+Date: Fri, 05 Feb 2010 15:38:44 -0600
+Message-ID: <1265405924.2714.117.camel@doink1>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,73 +25,155 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs mailing list <xfs@oss.sgi.com>
+Cc: xfs@oss.sgi.com
 
-Dave Chinner wrote:
-> On Thu, Feb 04, 2010 at 10:53:23AM -0600, Eric Sandeen wrote:
->> Fedora, long ago, disabled debug in the xfsprogs specfile:
->>
->> http://cvs.fedoraproject.org/viewvc/F-12/xfsprogs/xfsprogs.spec?r1=1.5&r2=1.6
->>
->> * Wed Apr 20 2005 Dave Jones <davej@redhat.com>
->> - Disable debug. (#151438)
->>
->> per this bug:  https://bugzilla.redhat.com/show_bug.cgi?id=151438
->>
->> referencing this email thread:
->>
->> http://oss.sgi.com/archives/linux-xfs/2005-03/msg00038.html
->> which no longer exists (grrrr) but is probably now here:
->>
->> http://oss.sgi.com/archives/xfs/2005-03/msg00416.html
->>
->> Fedora still builds with -DNDEBUG, but the upstream tarball has
->> it on by default.  I have seen several occasions where other
->> distros had failing xfs_repairs which were "fixed" by disabling
->> debug.  I'd like to make a decision on whether DEBUG should be
->> on or off by default for upstream releases.  Any thoughts?
+On Wed, 2010-02-03 at 10:24 +1100, Dave Chinner wrote:
+> We currently do background inode flush asynchronously, resulting in
+> inodes being written in whatever order the background writeback
+> issues them. Not only that, there are also blocking and non-blocking
+> asynchronous inode flushes, depending on where the flush comes from.
 > 
-> Personally I'd prefer the repair process to stop if it comes across
-> inconsistencies it can't handle. Ignoring them is as likely to "fix"
-> the crash as it is to corrupt the filesystem more.
+> This patch completely removes asynchronous inode writeback. It
+> removes all the strange writeback modes and replaces them with
+> either a synchronous flush or a non-blocking delayed write flush.
+> That is, inode flushes will only issue IO directly if they are
+> synchronous, and background flushing may do nothing if the operation
+> would block (e.g. on a pinned inode or buffer lock).
 > 
-> On top of that we get bug reports when those problems are hit so
-> we can look into what caused the problem. We don't really have a
-> repair test suite that covers all the possible corruptions that
-> can occur, so we are kind of reliant on users reporting conditions
-> we've never had to handle before so we can fix them...
+> Delayed write flushes will now result in the inode buffer sitting in
+> the delwri queue of the buffer cache to be flushed by either an AIL
+> push or by the xfsbufd timing out the buffer. This will allow
+> accumulation of dirty inode buffers in memory and allow optimisation
+> of inode cluster writeback at the xfsbufd level where we have much
+> greater queue depths than the block layer elevators. We will also
+> get adjacent inode cluster buffer IO merging for free when a later
+> patch in the series allows sorting of the delayed write buffers
+> before dispatch.
 > 
-> Cheers,
+> This effectively means that any inode that is written back by
+> background writeback will be seen as flush locked during AIL
+> pushing, and will result in the buffers being pushed from there.
+> This writeback path is currently non-optimal, but the next patch
+> in the series will fix that problem.
 > 
-> Dave.
+> A side effect of this delayed write mechanism is that background
+> inode reclaim will no longer directly flush inodes, nor can it wait
+> on the flush lock. The result is that inode reclaim must leave the
+> inode in the reclaimable state until it is clean. Hence attempts to
+> reclaim a dirty inode in the background will simply skip the inode
+> until it is clean and this allows other mechanisms (i.e. xfsbufd) to
+> do more optimal writeback of the dirty buffers. As a result, the
+> inode reclaim code has been rewritten so that it no longer relies on
+> the ambiguous return values of xfs_iflush() to determine whether it
+> is safe to reclaim an inode.
+> 
+> Portions of this patch are derived from patches by Christoph
+> Hellwig.
+> 
+> Version 2:
+> - cleanup reclaim code as suggested by Christoph
+> - log background reclaim inode flush errors
+> - just pass sync flags to xfs_iflush
 
-Hrm.  Well, that makes sense.
+I now see that the missing "break;" in the previous patch
+doesn't matter as long as this patch is also applied...
 
-OTOH, Debian turns it off too:
+This change looks right to me, and it's pretty cool
+to see where you're headed with it.  I wasn't quite
+following a few weeks back when you and Christoph
+were discussing this.
 
-$ grep DEBUG debian/rules 
-options = export DEBUG=-DNDEBUG DISTRIBUTION=debian \
+I have a few comments on the comments, below.  Maybe
+you could either confirm or correct what I say below.
 
-and for some reason when I take this out of the Fedora specfile,
-it fails to build because:
+> Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-xfs_bmap.c:23: warning: 'xfs_bmap_check_leaf_extents' used but never defined
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
-and indeed there is a forward declaration:
+> ---
+>  fs/xfs/linux-2.6/xfs_super.c |    4 +-
+>  fs/xfs/linux-2.6/xfs_sync.c  |  104 ++++++++++++++++++++++++++++++-----------
+>  fs/xfs/xfs_inode.c           |   75 ++----------------------------
+>  fs/xfs/xfs_inode.h           |   10 ----
+>  fs/xfs/xfs_inode_item.c      |   10 +++-
+>  fs/xfs/xfs_mount.c           |   13 +++++-
+>  6 files changed, 102 insertions(+), 114 deletions(-)
+> 
 
-#ifdef DEBUG
-STATIC void
-xfs_bmap_check_leaf_extents(xfs_btree_cur_t *cur, xfs_inode_t *ip, int whichfork);
-#endif
+. . .
 
-but no definition that I can find ....
+> diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+> index 98b8937..a9f6d20 100644
+> --- a/fs/xfs/linux-2.6/xfs_sync.c
+> +++ b/fs/xfs/linux-2.6/xfs_sync.c
 
-Something must be odd w/ the way this flag works though because a simple "make"
-in the git tree, w/o any -DNDEBUG, works fine for me ...
+. . .
 
-Meanwhile I'm leaving DEBUG=-DNDEBUG on in Fedora just for now :)
+> @@ -719,21 +720,42 @@ __xfs_inode_clear_reclaim_tag(
 
--Eric
+Regardless of the state, if the inode has a flush underway
+we requeue.
+
+>   *	shutdown		EIO		unpin and reclaim
+>   *	clean, unpinned		0		reclaim
+>   *	stale, unpinned		0		reclaim
+> - *	clean, pinned(*)	0		unpin and reclaim
+> - *	stale, pinned		0		unpin and reclaim
+> - *	dirty, async		0		block on flush lock, reclaim
+> - *	dirty, sync flush	0		block on flush lock, reclaim
+> + *	clean, pinned(*)	0		requeue
+> + *	stale, pinned		EAGAIN		requeue
+
+Actually, if it's pinned (clean or stale) then we either
+unpin and reclaim (if synchronous) or requeue (otherwise),
+i.e.:
+
+*    clean, pinned, async(*)    N/A       requeue
+*    stale, pinned, async(*)    N/A       requeue
+*    clean, pinned, sync flush  0         unpin and reclaim
+*    stale, pinned, sync flush  EAGAIN    unpin and reclaim 
+
+> + *	dirty, delwri ok	0		requeue
+> + *	dirty, delwri blocked	EAGAIN		requeue
+> + *	dirty, sync flush	0		reclaim
+>   *
+>   * (*) dgc: I don't think the clean, pinned state is possible but it gets
+>   * handled anyway given the order of checks implemented.
+>   *
+> + * As can be seen from the table, the return value of xfs_iflush() is not
+> + * sufficient to correctly decide the reclaim action here. The checks in
+> + * xfs_iflush() might look like duplicates, but they are not.
+> + *
+> + * Also, because we get the flush lock first, we know that any inode that has
+> + * been flushed delwri has had the flush completed by the time we check that
+> + * the inode is clean. The clean inode check needs to be done before flushing
+> + * the inode delwri otherwise we would loop forever requeuing clean inodes as
+> + * we cannot tell apart a successful delwri flush and a clean inode from the
+> + * return value of xfs_iflush().
+> + *
+> + * Note that because the inode is flushed delayed write by background
+> + * writeback, the flush lock may already be held here and waiting on it can
+> + * result in very long latencies. Hence for sync reclaims, where we wait on the
+> + * flush lock, the caller should push out delayed write inodes first before
+> + * trying to reclaim them to minimise the amount of time spent waiting. For
+> + * background relaim, we just requeue the inode for the next pass.
+> + *
+>   * Hence the order of actions after gaining the locks should be:
+>   *	bad		=> reclaim
+>   *	shutdown	=> unpin and reclaim
+> - *	pinned		=> unpin
+> + *	pinned, delwri	=> requeue
+> + *	pinned, sync	=> unpin
+>   *	stale		=> reclaim
+>   *	clean		=> reclaim
+> - *	dirty		=> flush, wait and reclaim
+> + *	dirty, delwri	=> flush and requeue
+> + *	dirty, sync	=> flush, wait and reclaim
+>   */
+>  STATIC int
+>  xfs_reclaim_inode(
+
+. . .
 
 _______________________________________________
 xfs mailing list
