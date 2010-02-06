@@ -1,24 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1606lrs173131 for <xfs@oss.sgi.com>; Fri, 5 Feb 2010 18:06:47 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C55E41B4C37
-	for <xfs@oss.sgi.com>; Fri,  5 Feb 2010 16:07:56 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	u2wMpEjSyPOE0suS for <xfs@oss.sgi.com>;
-	Fri, 05 Feb 2010 16:07:56 -0800 (PST)
-Date: Sat, 6 Feb 2010 11:07:52 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 01/10] xfs: Make inode reclaim states explicit
-Message-ID: <20100206000752.GF11483@discord.disaster>
-References: <1265153104-29680-1-git-send-email-david@fromorbit.com>
-	<1265153104-29680-2-git-send-email-david@fromorbit.com>
-	<1265396780.2714.23.camel@doink1>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1265396780.2714.23.camel@doink1>
+	o161euPR178328 for <xfs@oss.sgi.com>; Fri, 5 Feb 2010 19:40:56 -0600
+Subject: Re: PATCH V2] more reserved blocks fixups
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <4B6CA2E9.7020803@sandeen.net>
+References: <4B60C8EE.5080700@sandeen.net>  <4B6CA2E9.7020803@sandeen.net>
+Date: Fri, 05 Feb 2010 19:41:15 -0600
+Message-ID: <1265420475.2714.162.camel@doink1>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,79 +22,217 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs mailing list <xfs@oss.sgi.com>
 
-On Fri, Feb 05, 2010 at 01:06:20PM -0600, Alex Elder wrote:
-> On Wed, 2010-02-03 at 10:24 +1100, Dave Chinner wrote:
-> > A.K.A.: don't rely on xfs_iflush() return value in reclaim
-> > 
-> > We have gradually been moving checks out of the reclaim code because
-> > they are duplicated in xfs_iflush(). We've had a history of problems
-> > in this area, and many of them stem from the overloading of the
-> > return values from xfs_iflush() and interaction with inode flush
-> > locking to determine if the inode is safe to reclaim.
-> > 
-> > With the desire to move to delayed write flushing of inodes and
-> > non-blocking inode tree reclaim walks, the overloading of the
-> > return value of xfs_iflush makes it very difficult to determine
-> > the correct thing to do next.
-> > 
-> > This patch explicitly re-adds the checks to the inode reclaim code,
-> > removing the reliance on the return value of xfs_iflush() to
-> > determine what to do next. It also means that we can clearly
-> > document all the inode states that reclaim must handle and hence
-> > we can easily see that we handled all the necessary cases.
-> > 
-> > This also removes the need for the xfs_inode_clean() check in
-> > xfs_iflush() as all callers now check this first (safely).
+On Fri, 2010-02-05 at 16:59 -0600, Eric Sandeen wrote:
+> This mangles the reserved blocks counts a little more.
 > 
-> I have a few comments, below.  One is a real bug.  At this
-> point I'm trusting that your enumeration of all the possible
-> inode states is correct.  Other than what I indicate below,
-> this change looks good.
+> 1) add a helper function for the default reserved count
+> 2) add helper functions to save/restore counts on ro/rw
+> 3) save/restore reserved blocks on freeze/thaw
+> 4) disallow changing reserved count while readonly
 
-...
+Looks good.  Thanks for updating it.
 
-> It looks to me like your code adds a call to xfs_ifunlock(ip)
-> in the bad inode case that was not there before.  My guess is
-> that your way is correct, but I'd like to know whether you
-> agree this differs.  Is this intentional?  Regardless, is
-> the new xfs_ifunlock() call correct?
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-Yes, it is correct - the code before was broken.
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
-> > +	if (xfs_iflags_test(ip, XFS_ISTALE))
-> > +		goto reclaim;
-> > +	if (xfs_inode_clean(ip))
-> > +		goto reclaim;
-> > +
-> > +	/* Now we have an inode that needs flushing */
-> > +	error = xfs_iflush(ip, sync_mode);
-> > +	if (!error) {
-> > +		switch(sync_mode) {
-> > +		case XFS_IFLUSH_DELWRI_ELSE_ASYNC:
-> > +		case XFS_IFLUSH_DELWRI:
-> > +		case XFS_IFLUSH_ASYNC:
-> > +		case XFS_IFLUSH_DELWRI_ELSE_SYNC:
-> > +		case XFS_IFLUSH_SYNC:
-> > +			/* IO issued, synchronise with IO completion */
-> > +			xfs_iflock(ip);
+> ---
 > 
-> You must not have run this with DEBUG enabled.
-> You need a "break;" here.
+> V2: changed field name to match Dave's changes
+> 
+> diff --git a/fs/xfs/linux-2.6/xfs_ioctl.c b/fs/xfs/linux-2.6/xfs_ioctl.c
+> index a034cf6..883929b 100644
+> --- a/fs/xfs/linux-2.6/xfs_ioctl.c
+> +++ b/fs/xfs/linux-2.6/xfs_ioctl.c
+> @@ -1431,6 +1431,9 @@ xfs_file_ioctl(
+>  		if (!capable(CAP_SYS_ADMIN))
+>  			return -EPERM;
+>  
+> +		if (mp->m_flags & XFS_MOUNT_RDONLY)
+> +			return -XFS_ERROR(EROFS);
+> +
+>  		if (copy_from_user(&inout, arg, sizeof(inout)))
+>  			return -XFS_ERROR(EFAULT);
+>  
+> diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
+> index 8884f26..97c0f5a 100644
+> --- a/fs/xfs/linux-2.6/xfs_super.c
+> +++ b/fs/xfs/linux-2.6/xfs_super.c
+> @@ -1257,6 +1257,29 @@ xfs_fs_statfs(
+>  	return 0;
+>  }
+>  
+> +STATIC void
+> +xfs_save_resvblks(struct xfs_mount *mp)
+> +{
+> +	__uint64_t resblks = 0;
+> +
+> +	mp->m_resblks_save = mp->m_resblks;
+> +	xfs_reserve_blocks(mp, &resblks, NULL);
+> +}
+> +
+> +STATIC void
+> +xfs_restore_resvblks(struct xfs_mount *mp)
+> +{
+> +	__uint64_t resblks;
+> +
+> +	if (mp->m_resblks_save) {
+> +		resblks = mp->m_resblks_save;
+> +		mp->m_resblks_save = 0;
+> +	} else
+> +		resblks = xfs_default_resblks(mp);
+> +
+> +	xfs_reserve_blocks(mp, &resblks, NULL);
+> +}
+> +
+>  STATIC int
+>  xfs_fs_remount(
+>  	struct super_block	*sb,
+> @@ -1319,8 +1342,6 @@ xfs_fs_remount(
+>  
+>  	/* ro -> rw */
+>  	if ((mp->m_flags & XFS_MOUNT_RDONLY) && !(*flags & MS_RDONLY)) {
+> -		__uint64_t resblks;
+> -
+>  		mp->m_flags &= ~XFS_MOUNT_RDONLY;
+>  		if (mp->m_flags & XFS_MOUNT_BARRIER)
+>  			xfs_mountfs_check_barriers(mp);
+> @@ -1343,15 +1364,7 @@ xfs_fs_remount(
+>  		 * Fill out the reserve pool if it is empty. Use the stashed
+>  		 * value if it is non-zero, otherwise go with the default.
+>  		 */
+> -		if (mp->m_resblks_save) {
+> -			resblks = mp->m_resblks_save;
+> -			mp->m_resblks_save = 0;
+> -		} else {
+> -			resblks = mp->m_sb.sb_dblocks;
+> -			do_div(resblks, 20);
+> -			resblks = min_t(__uint64_t, resblks, 1024);
+> -		}
+> -		xfs_reserve_blocks(mp, &resblks, NULL);
+> +		xfs_restore_resvblks(mp);
+>  	}
+>  
+>  	/* rw -> ro */
+> @@ -1364,11 +1377,9 @@ xfs_fs_remount(
+>  		 * so that if we get remounted rw, we can return it to the same
+>  		 * size.
+>  		 */
+> -		__uint64_t resblks = 0;
+>  
+>  		xfs_quiesce_data(mp);
+> -		mp->m_resblks_save = mp->m_resblks;
+> -		xfs_reserve_blocks(mp, &resblks, NULL);
+> +		xfs_save_resvblks(mp);
+>  		xfs_quiesce_attr(mp);
+>  		mp->m_flags |= XFS_MOUNT_RDONLY;
+>  	}
+> @@ -1387,11 +1398,22 @@ xfs_fs_freeze(
+>  {
+>  	struct xfs_mount	*mp = XFS_M(sb);
+>  
+> +	xfs_save_resvblks(mp);
+>  	xfs_quiesce_attr(mp);
+>  	return -xfs_fs_log_dummy(mp);
+>  }
+>  
+>  STATIC int
+> +xfs_fs_unfreeze(
+> +	struct super_block	*sb)
+> +{
+> +	struct xfs_mount	*mp = XFS_M(sb);
+> +
+> +	xfs_restore_resvblks(mp);
+> +	return 0;
+> +}
+> +
+> +STATIC int
+>  xfs_fs_show_options(
+>  	struct seq_file		*m,
+>  	struct vfsmount		*mnt)
+> @@ -1613,6 +1635,7 @@ static const struct super_operations xfs_super_operations = {
+>  	.put_super		= xfs_fs_put_super,
+>  	.sync_fs		= xfs_fs_sync_fs,
+>  	.freeze_fs		= xfs_fs_freeze,
+> +	.unfreeze_fs		= xfs_fs_unfreeze,
+>  	.statfs			= xfs_fs_statfs,
+>  	.remount_fs		= xfs_fs_remount,
+>  	.show_options		= xfs_fs_show_options,
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index eb403b4..48e1ee7 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -1008,6 +1008,22 @@ xfs_mount_reset_sbqflags(
+>  	return xfs_trans_commit(tp, 0);
+>  }
+>  
+> +__uint64_t
+> +xfs_default_resblks(xfs_mount_t *mp)
+> +{
+> +	__uint64_t resblks;
+> +
+> +	/*
+> +	 * We default to 5% or 1024 fsbs of space reserved, whichever is smaller.
+> +	 * This may drive us straight to ENOSPC on mount, but that implies
+> +	 * we were already there on the last unmount. Warn if this occurs.
+> +	 */
+> +	resblks = mp->m_sb.sb_dblocks;
+> +	do_div(resblks, 20);
+> +	resblks = min_t(__uint64_t, resblks, 1024);
+> +	return resblks;
+> +}
+> +
+>  /*
+>   * This function does the following on an initial mount of a file system:
+>   *	- reads the superblock from disk and init the mount struct
+> @@ -1318,18 +1334,14 @@ xfs_mountfs(
+>  	 * when at ENOSPC. This is needed for operations like create with
+>  	 * attr, unwritten extent conversion at ENOSPC, etc. Data allocations
+>  	 * are not allowed to use this reserved space.
+> -	 *
+> -	 * We default to 5% or 1024 fsbs of space reserved, whichever is smaller.
+> -	 * This may drive us straight to ENOSPC on mount, but that implies
+> -	 * we were already there on the last unmount. Warn if this occurs.
+>  	 */
+> -	resblks = mp->m_sb.sb_dblocks;
+> -	do_div(resblks, 20);
+> -	resblks = min_t(__uint64_t, resblks, 1024);
+> -	error = xfs_reserve_blocks(mp, &resblks, NULL);
+> -	if (error)
+> -		cmn_err(CE_WARN, "XFS: Unable to allocate reserve blocks. "
+> -				"Continuing without a reserve pool.");
+> +	if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
+> +		resblks = xfs_default_resblks(mp);
+> +		error = xfs_reserve_blocks(mp, &resblks, NULL);
+> +		if (error)
+> +			cmn_err(CE_WARN, "XFS: Unable to allocate reserve "
+> +				"blocks. Continuing without a reserve pool.");
+> +	}
+>  
+>  	return 0;
+>  
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index 996273d..c8f880d 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -429,6 +429,7 @@ typedef struct xfs_mod_sb {
+>  } xfs_mod_sb_t;
+>  
+>  extern int	xfs_log_sbcount(xfs_mount_t *, uint);
+> +extern __uint64_t xfs_default_resblks(xfs_mount_t *mp);
+>  extern int	xfs_mountfs(xfs_mount_t *mp);
+>  
+>  extern void	xfs_unmountfs(xfs_mount_t *);
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
-I always run with DEBUG enabled, but I probably didn't
-test this patch by iteself in the last iteration because
-i don't have unlimited test cycles. This code gets removed
-by the next patch, so the fact that it was broken would
-not have been picked up by testing. I'll update it
-and re-push it to the for-2.6.34 branch.
 
-Cheers,
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
