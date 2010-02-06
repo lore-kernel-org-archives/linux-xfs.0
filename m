@@ -1,16 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o15NqYld172299 for <xfs@oss.sgi.com>; Fri, 5 Feb 2010 17:52:34 -0600
-Subject: Re: [PATCH 04/10] xfs: Sort delayed write buffers before dispatch
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1265153104-29680-5-git-send-email-david@fromorbit.com>
+	o1606lrs173131 for <xfs@oss.sgi.com>; Fri, 5 Feb 2010 18:06:47 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C55E41B4C37
+	for <xfs@oss.sgi.com>; Fri,  5 Feb 2010 16:07:56 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
+	[150.101.137.102]) by cuda.sgi.com with ESMTP id
+	u2wMpEjSyPOE0suS for <xfs@oss.sgi.com>;
+	Fri, 05 Feb 2010 16:07:56 -0800 (PST)
+Date: Sat, 6 Feb 2010 11:07:52 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 01/10] xfs: Make inode reclaim states explicit
+Message-ID: <20100206000752.GF11483@discord.disaster>
 References: <1265153104-29680-1-git-send-email-david@fromorbit.com>
-	<1265153104-29680-5-git-send-email-david@fromorbit.com>
-Date: Fri, 05 Feb 2010 17:53:34 -0600
-Message-ID: <1265414014.2714.154.camel@doink1>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	<1265153104-29680-2-git-send-email-david@fromorbit.com>
+	<1265396780.2714.23.camel@doink1>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1265396780.2714.23.camel@doink1>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,100 +27,85 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Alex Elder <aelder@sgi.com>
 Cc: xfs@oss.sgi.com
 
-T24gV2VkLCAyMDEwLTAyLTAzIGF0IDEwOjI0ICsxMTAwLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4g
-Q3VycmVudGx5IHdoZW4gdGhlIHhmc2J1ZmQgd3JpdGVzIGRlbGF5ZWQgd3JpdGUgYnVmZmVycywg
-aXQgcHVzaGVzCj4gdGhlbSB0byBkaXNrIGluIHRoZSBvcmRlciB0aGV5IGNvbWUgb2ZmIHRoZSBk
-ZWxheWVkIHdyaXRlIGxpc3QuIElmCj4gdGhlcmUgYXJlIGxvdHMgb2YgYnVmZmVycyDRlXByZWFk
-IHdpZGVseSBvdmVyIHRoZSBkaXNrLCB0aGlzIHJlc3VsdHMKPiBpbiBvdmVyd2hlbG1pbmcgdGhl
-IGVsZXZhdG9yIHNvcnQgcXVldWVzIGluIHRoZSBibG9jayBsYXllciBhbmQgd2UKPiBlbmQgdXAg
-bG9zaW5nIHRoZSBwb3NpYmlsaXR5IG9mIG1lcmdpbmcgYWRqYWNlbnQgYnVmZmVycyB0byBtaW5p
-bWlzZQo+IHRoZSBudW1iZXIgb2YgSU9zLgo+IAo+IFVzZSB0aGUgbmV3IGdlbmVyaWMgbGlzdF9z
-b3J0IGZ1bmN0aW9uIHRvIHNvcnQgdGhlIGRlbHdyaSBkaXNwYXRjaAo+IHF1ZXVlIGJlZm9yZSBp
-c3N1ZSB0byBlbnN1cmUgdGhhdCB0aGUgYnVmZmVycyBhcmUgcHVzaGVkIGluIHRoZSBtb3N0Cj4g
-ZnJpZW5kbHkgb3JkZXIgcG9zc2libGUgdG8gdGhlIGxvd2VyIGxheWVycy4KCkxvb2tzIGdvb2Qu
-Cgo+IFNpZ25lZC1vZmYtYnk6IERhdmUgQ2hpbm5lciA8ZGF2aWRAZnJvbW9yYml0LmNvbT4KPiBS
-ZXZpZXdlZC1ieTogQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+CgpSZXZpZXdlZC1ieTog
-QWxleCBFbGRlciA8YWVsZGVyQHNnaS5jb20+Cgo+IC0tLQo+ICBmcy94ZnMvbGludXgtMi42L3hm
-c19idWYuYyB8ICAgODcgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrLS0tLS0tLS0tLS0t
-LS0KPiAgMSBmaWxlcyBjaGFuZ2VkLCA2MCBpbnNlcnRpb25zKCspLCAyNyBkZWxldGlvbnMoLSkK
-PiAKPiBkaWZmIC0tZ2l0IGEvZnMveGZzL2xpbnV4LTIuNi94ZnNfYnVmLmMgYi9mcy94ZnMvbGlu
-dXgtMi42L3hmc19idWYuYwo+IGluZGV4IGIzMDYyNjUuLjQ1NTZhNGMgMTAwNjQ0Cj4gLS0tIGEv
-ZnMveGZzL2xpbnV4LTIuNi94ZnNfYnVmLmMKPiArKysgYi9mcy94ZnMvbGludXgtMi42L3hmc19i
-dWYuYwo+IEBAIC0zMyw2ICszMyw3IEBACj4gICNpbmNsdWRlIDxsaW51eC9taWdyYXRlLmg+Cj4g
-ICNpbmNsdWRlIDxsaW51eC9iYWNraW5nLWRldi5oPgo+ICAjaW5jbHVkZSA8bGludXgvZnJlZXpl
-ci5oPgo+ICsjaW5jbHVkZSA8bGludXgvbGlzdF9zb3J0Lmg+Cj4gIAo+ICAjaW5jbHVkZSAieGZz
-X3NiLmgiCj4gICNpbmNsdWRlICJ4ZnNfaW51bS5oIgo+IEBAIC0xODc3LDE0ICsxODc4LDQyIEBA
-IHhmc19idWZfZGVsd3JpX3NwbGl0KAo+ICAKPiAgfQo+ICAKPiArLyoKPiArICogQ29tcGFyZSBm
-dW5jdGlvbiBpcyBtb3JlIGNvbXBsZXggdGhhbiBpdCBuZWVkcyB0byBiZSBiZWNhdXNlCj4gKyAq
-IHRoZSByZXR1cm4gdmFsdWUgaXMgb25seSAzMiBiaXRzIGFuZCB3ZSBhcmUgZG9pbmcgY29tcGFy
-aXNvbnMKPiArICogb24gNjQgYml0IHZhbHVlcwo+ICsgKi8KPiArc3RhdGljIGludAo+ICt4ZnNf
-YnVmX2NtcCgKPiArCXZvaWQJCSpwcml2LAo+ICsJc3RydWN0IGxpc3RfaGVhZCAqYSwKPiArCXN0
-cnVjdCBsaXN0X2hlYWQgKmIpCj4gK3sKPiArCXN0cnVjdCB4ZnNfYnVmCSphcCA9IGNvbnRhaW5l
-cl9vZihhLCBzdHJ1Y3QgeGZzX2J1ZiwgYl9saXN0KTsKPiArCXN0cnVjdCB4ZnNfYnVmCSpicCA9
-IGNvbnRhaW5lcl9vZihiLCBzdHJ1Y3QgeGZzX2J1ZiwgYl9saXN0KTsKPiArCXhmc19kYWRkcl90
-CQlkaWZmOwo+ICsKPiArCWRpZmYgPSBhcC0+Yl9ibiAtIGJwLT5iX2JuOwo+ICsJaWYgKGRpZmYg
-PCAwKQo+ICsJCXJldHVybiAtMTsKPiArCWlmIChkaWZmID4gMCkKPiArCQlyZXR1cm4gMTsKPiAr
-CXJldHVybiAwOwo+ICt9Cj4gKwo+ICt2b2lkCj4gK3hmc19idWZfZGVsd3JpX3NvcnQoCj4gKwl4
-ZnNfYnVmdGFyZ190CSp0YXJnZXQsCj4gKwlzdHJ1Y3QgbGlzdF9oZWFkICpsaXN0KQo+ICt7Cj4g
-KwlsaXN0X3NvcnQoTlVMTCwgbGlzdCwgeGZzX2J1Zl9jbXApOwo+ICt9Cj4gKwo+ICBTVEFUSUMg
-aW50Cj4gIHhmc2J1ZmQoCj4gIAl2b2lkCQkqZGF0YSkKPiAgewo+IC0Jc3RydWN0IGxpc3RfaGVh
-ZCB0bXA7Cj4gLQl4ZnNfYnVmdGFyZ190CSp0YXJnZXQgPSAoeGZzX2J1ZnRhcmdfdCAqKWRhdGE7
-Cj4gLQlpbnQJCWNvdW50Owo+IC0JeGZzX2J1Zl90CSpicDsKPiArCXhmc19idWZ0YXJnX3QgICAq
-dGFyZ2V0ID0gKHhmc19idWZ0YXJnX3QgKilkYXRhOwo+ICAKPiAgCWN1cnJlbnQtPmZsYWdzIHw9
-IFBGX01FTUFMTE9DOwo+ICAKPiBAQCAtMTg5Myw2ICsxOTIyLDggQEAgeGZzYnVmZCgKPiAgCWRv
-IHsKPiAgCQlsb25nCWFnZSA9IHhmc19idWZfYWdlX2NlbnRpc2VjcyAqIG1zZWNzX3RvX2ppZmZp
-ZXMoMTApOwo+ICAJCWxvbmcJdG91dCA9IHhmc19idWZfdGltZXJfY2VudGlzZWNzICogbXNlY3Nf
-dG9famlmZmllcygxMCk7Cj4gKwkJaW50CWNvdW50ID0gMDsKPiArCQlzdHJ1Y3QgbGlzdF9oZWFk
-IHRtcDsKPiAgCj4gIAkJaWYgKHVubGlrZWx5KGZyZWV6aW5nKGN1cnJlbnQpKSkgewo+ICAJCQlz
-ZXRfYml0KFhCVF9GT1JDRV9TTEVFUCwgJnRhcmdldC0+YnRfZmxhZ3MpOwo+IEBAIC0xOTA3LDEx
-ICsxOTM4LDEwIEBAIHhmc2J1ZmQoCj4gIAkJc2NoZWR1bGVfdGltZW91dF9pbnRlcnJ1cHRpYmxl
-KHRvdXQpOwo+ICAKPiAgCQl4ZnNfYnVmX2RlbHdyaV9zcGxpdCh0YXJnZXQsICZ0bXAsIGFnZSk7
-Cj4gLQkJY291bnQgPSAwOwo+ICsJCWxpc3Rfc29ydChOVUxMLCAmdG1wLCB4ZnNfYnVmX2NtcCk7
-Cj4gIAkJd2hpbGUgKCFsaXN0X2VtcHR5KCZ0bXApKSB7Cj4gLQkJCWJwID0gbGlzdF9lbnRyeSh0
-bXAubmV4dCwgeGZzX2J1Zl90LCBiX2xpc3QpOwo+IC0JCQlBU1NFUlQodGFyZ2V0ID09IGJwLT5i
-X3RhcmdldCk7Cj4gLQo+ICsJCQlzdHJ1Y3QgeGZzX2J1ZiAqYnA7Cj4gKwkJCWJwID0gbGlzdF9m
-aXJzdF9lbnRyeSgmdG1wLCBzdHJ1Y3QgeGZzX2J1ZiwgYl9saXN0KTsKPiAgCQkJbGlzdF9kZWxf
-aW5pdCgmYnAtPmJfbGlzdCk7Cj4gIAkJCXhmc19idWZfaW9zdHJhdGVneShicCk7Cj4gIAkJCWNv
-dW50Kys7Cj4gQEAgLTE5MzcsNDIgKzE5NjcsNDUgQEAgeGZzX2ZsdXNoX2J1ZnRhcmcoCj4gIAl4
-ZnNfYnVmdGFyZ190CSp0YXJnZXQsCj4gIAlpbnQJCXdhaXQpCj4gIHsKPiAtCXN0cnVjdCBsaXN0
-X2hlYWQgdG1wOwo+IC0JeGZzX2J1Zl90CSpicCwgKm47Cj4gKwl4ZnNfYnVmX3QJKmJwOwo+ICAJ
-aW50CQlwaW5jb3VudCA9IDA7Cj4gKwlMSVNUX0hFQUQodG1wX2xpc3QpOwo+ICsJTElTVF9IRUFE
-KHdhaXRfbGlzdCk7Cj4gIAo+ICAJeGZzX2J1Zl9ydW5hbGxfcXVldWVzKHhmc2NvbnZlcnRkX3dv
-cmtxdWV1ZSk7Cj4gIAl4ZnNfYnVmX3J1bmFsbF9xdWV1ZXMoeGZzZGF0YWRfd29ya3F1ZXVlKTsK
-PiAgCXhmc19idWZfcnVuYWxsX3F1ZXVlcyh4ZnNsb2dkX3dvcmtxdWV1ZSk7Cj4gIAo+ICAJc2V0
-X2JpdChYQlRfRk9SQ0VfRkxVU0gsICZ0YXJnZXQtPmJ0X2ZsYWdzKTsKPiAtCXBpbmNvdW50ID0g
-eGZzX2J1Zl9kZWx3cmlfc3BsaXQodGFyZ2V0LCAmdG1wLCAwKTsKPiArCXBpbmNvdW50ID0geGZz
-X2J1Zl9kZWx3cmlfc3BsaXQodGFyZ2V0LCAmdG1wX2xpc3QsIDApOwo+ICAKPiAgCS8qCj4gLQkg
-KiBEcm9wcGVkIHRoZSBkZWxheWVkIHdyaXRlIGxpc3QgbG9jaywgbm93IHdhbGsgdGhlIHRlbXBv
-cmFyeSBsaXN0Cj4gKwkgKiBEcm9wcGVkIHRoZSBkZWxheWVkIHdyaXRlIGxpc3QgbG9jaywgbm93
-IHdhbGsgdGhlIHRlbXBvcmFyeSBsaXN0Lgo+ICsJICogQWxsIEkvTyBpcyBpc3N1ZWQgYXN5bmMg
-YW5kIHRoZW4gaWYgd2UgbmVlZCB0byB3YWl0IGZvciBjb21wbGV0aW9uCj4gKwkgKiB3ZSBkbyB0
-aGF0IGFmdGVyIGlzc3VpbmcgYWxsIHRoZSBJTy4KPiAgCSAqLwo+IC0JbGlzdF9mb3JfZWFjaF9l
-bnRyeV9zYWZlKGJwLCBuLCAmdG1wLCBiX2xpc3QpIHsKPiArCWxpc3Rfc29ydChOVUxMLCAmdG1w
-X2xpc3QsIHhmc19idWZfY21wKTsKPiArCXdoaWxlICghbGlzdF9lbXB0eSgmdG1wX2xpc3QpKSB7
-Cj4gKwkJYnAgPSBsaXN0X2ZpcnN0X2VudHJ5KCZ0bXBfbGlzdCwgc3RydWN0IHhmc19idWYsIGJf
-bGlzdCk7Cj4gIAkJQVNTRVJUKHRhcmdldCA9PSBicC0+Yl90YXJnZXQpOwo+IC0JCWlmICh3YWl0
-KQo+ICsJCWxpc3RfZGVsX2luaXQoJmJwLT5iX2xpc3QpOwo+ICsJCWlmICh3YWl0KSB7Cj4gIAkJ
-CWJwLT5iX2ZsYWdzICY9IH5YQkZfQVNZTkM7Cj4gLQkJZWxzZQo+IC0JCQlsaXN0X2RlbF9pbml0
-KCZicC0+Yl9saXN0KTsKPiAtCj4gKwkJCWxpc3RfYWRkKCZicC0+Yl9saXN0LCAmd2FpdF9saXN0
-KTsKPiArCQl9Cj4gIAkJeGZzX2J1Zl9pb3N0cmF0ZWd5KGJwKTsKPiAgCX0KPiAgCj4gLQlpZiAo
-d2FpdCkKPiArCWlmICh3YWl0KSB7Cj4gKwkJLyogRXhwZWRpdGUgYW5kIHdhaXQgZm9yIElPIHRv
-IGNvbXBsZXRlLiAqLwo+ICAJCWJsa19ydW5fYWRkcmVzc19zcGFjZSh0YXJnZXQtPmJ0X21hcHBp
-bmcpOwo+ICsJCXdoaWxlICghbGlzdF9lbXB0eSgmd2FpdF9saXN0KSkgewo+ICsJCQlicCA9IGxp
-c3RfZmlyc3RfZW50cnkoJndhaXRfbGlzdCwgc3RydWN0IHhmc19idWYsIGJfbGlzdCk7Cj4gIAo+
-IC0JLyoKPiAtCSAqIFJlbWFpbmluZyBsaXN0IGl0ZW1zIG11c3QgYmUgZmx1c2hlZCBiZWZvcmUg
-cmV0dXJuaW5nCj4gLQkgKi8KPiAtCXdoaWxlICghbGlzdF9lbXB0eSgmdG1wKSkgewo+IC0JCWJw
-ID0gbGlzdF9lbnRyeSh0bXAubmV4dCwgeGZzX2J1Zl90LCBiX2xpc3QpOwo+IC0KPiAtCQlsaXN0
-X2RlbF9pbml0KCZicC0+Yl9saXN0KTsKPiAtCQl4ZnNfaW93YWl0KGJwKTsKPiAtCQl4ZnNfYnVm
-X3JlbHNlKGJwKTsKPiArCQkJbGlzdF9kZWxfaW5pdCgmYnAtPmJfbGlzdCk7Cj4gKwkJCXhmc19p
-b3dhaXQoYnApOwo+ICsJCQl4ZnNfYnVmX3JlbHNlKGJwKTsKPiArCQl9Cj4gIAl9Cj4gIAo+ICAJ
-cmV0dXJuIHBpbmNvdW50OwoKCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNn
-aS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Fri, Feb 05, 2010 at 01:06:20PM -0600, Alex Elder wrote:
+> On Wed, 2010-02-03 at 10:24 +1100, Dave Chinner wrote:
+> > A.K.A.: don't rely on xfs_iflush() return value in reclaim
+> > 
+> > We have gradually been moving checks out of the reclaim code because
+> > they are duplicated in xfs_iflush(). We've had a history of problems
+> > in this area, and many of them stem from the overloading of the
+> > return values from xfs_iflush() and interaction with inode flush
+> > locking to determine if the inode is safe to reclaim.
+> > 
+> > With the desire to move to delayed write flushing of inodes and
+> > non-blocking inode tree reclaim walks, the overloading of the
+> > return value of xfs_iflush makes it very difficult to determine
+> > the correct thing to do next.
+> > 
+> > This patch explicitly re-adds the checks to the inode reclaim code,
+> > removing the reliance on the return value of xfs_iflush() to
+> > determine what to do next. It also means that we can clearly
+> > document all the inode states that reclaim must handle and hence
+> > we can easily see that we handled all the necessary cases.
+> > 
+> > This also removes the need for the xfs_inode_clean() check in
+> > xfs_iflush() as all callers now check this first (safely).
+> 
+> I have a few comments, below.  One is a real bug.  At this
+> point I'm trusting that your enumeration of all the possible
+> inode states is correct.  Other than what I indicate below,
+> this change looks good.
+
+...
+
+> It looks to me like your code adds a call to xfs_ifunlock(ip)
+> in the bad inode case that was not there before.  My guess is
+> that your way is correct, but I'd like to know whether you
+> agree this differs.  Is this intentional?  Regardless, is
+> the new xfs_ifunlock() call correct?
+
+Yes, it is correct - the code before was broken.
+
+> > +	if (xfs_iflags_test(ip, XFS_ISTALE))
+> > +		goto reclaim;
+> > +	if (xfs_inode_clean(ip))
+> > +		goto reclaim;
+> > +
+> > +	/* Now we have an inode that needs flushing */
+> > +	error = xfs_iflush(ip, sync_mode);
+> > +	if (!error) {
+> > +		switch(sync_mode) {
+> > +		case XFS_IFLUSH_DELWRI_ELSE_ASYNC:
+> > +		case XFS_IFLUSH_DELWRI:
+> > +		case XFS_IFLUSH_ASYNC:
+> > +		case XFS_IFLUSH_DELWRI_ELSE_SYNC:
+> > +		case XFS_IFLUSH_SYNC:
+> > +			/* IO issued, synchronise with IO completion */
+> > +			xfs_iflock(ip);
+> 
+> You must not have run this with DEBUG enabled.
+> You need a "break;" here.
+
+I always run with DEBUG enabled, but I probably didn't
+test this patch by iteself in the last iteration because
+i don't have unlimited test cycles. This code gets removed
+by the next patch, so the fact that it was broken would
+not have been picked up by testing. I'll update it
+and re-push it to the for-2.6.34 branch.
+
+Cheers,
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
