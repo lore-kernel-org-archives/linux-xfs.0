@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o18I0ZEn150687 for <xfs@oss.sgi.com>; Mon, 8 Feb 2010 12:00:35 -0600
-Received: from mail-vw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 46E3C1CB1484
-	for <xfs@oss.sgi.com>; Mon,  8 Feb 2010 10:01:47 -0800 (PST)
-Received: from mail-vw0-f53.google.com (mail-vw0-f53.google.com
-	[209.85.212.53]) by cuda.sgi.com with ESMTP id LfUuInnnulTtWEvc
-	for <xfs@oss.sgi.com>; Mon, 08 Feb 2010 10:01:47 -0800 (PST)
-Received: by vws10 with SMTP id 10so1569798vws.26
-	for <xfs@oss.sgi.com>; Mon, 08 Feb 2010 10:01:47 -0800 (PST)
+	o18JHLlp154663 for <xfs@oss.sgi.com>; Mon, 8 Feb 2010 13:17:21 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 08EAF138886F
+	for <xfs@oss.sgi.com>; Mon,  8 Feb 2010 11:18:33 -0800 (PST)
+Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
+	by cuda.sgi.com with ESMTP id H0MyYQpQGDHOJQKB for
+	<xfs@oss.sgi.com>; Mon, 08 Feb 2010 11:18:33 -0800 (PST)
+Message-ID: <4B706388.7080309@sandeen.net>
+Date: Mon, 08 Feb 2010 13:18:32 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20100125042925.GM25842@discord.disaster>
-References: <20100125150456.c796f0b0.sfr@canb.auug.org.au>
-	<20100125042925.GM25842@discord.disaster>
-Date: Mon, 8 Feb 2010 13:01:46 -0500
-Message-ID: <7e0fb38c1002081001y111bd0a2p40a8a896b0668d13@mail.gmail.com>
-Subject: Re: linux-next: vfs/fsnotify trees build warning
-From: Eric Paris <eparis@parisplace.org>
+Subject: Re: format and xfs_info don't match
+References: <20100208144035.GA12922@erebus.underworld.local>
+In-Reply-To: <20100208144035.GA12922@erebus.underworld.local>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,19 +27,73 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linux-kernel@vger.kernel.org, Eric Paris <eparis@redhat.com>, xfs@oss.sgi.com, linux-next@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>
+To: Cory Coager <ccoager@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Sun, Jan 24, 2010 at 11:29 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Mon, Jan 25, 2010 at 03:04:56PM +1100, Stephen Rothwell wrote:
->> Hi Eric, Al,
->>
->> Today's linux-next build (x86_64 allmodconfig) produced these warnings:
+Cory Coager wrote:
+> For some reason the format attributes don't match the mounted 
+> attributes.  If you look below, lazy-count and attr aren't getting set.  
+> Why is this happening?
 
-I just switched fsnotify to use const unsigned char * so hopefully
-they will shut up tomorrow....
+which xfsprogs version?
+
+# /sbin/mkfs.xfs -f -i size=1024,attr=2 -l version=2,size=128m,lazy-count=1 -bsize=4096 -dsize=268439808b,file,name=testfile
+meta-data=testfile               isize=1024   agcount=4, agsize=67109952 blks
+         =                       sectsz=512   attr=2
+data     =                       bsize=4096   blocks=268439808, imaxpct=5
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal log           bsize=4096   blocks=32768, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+# mount -o loop testfile mnt/
+
+# xfs_info mnt/
+meta-data=/dev/loop0             isize=1024   agcount=4, agsize=67109952 blks
+         =                       sectsz=512   attr=2
+data     =                       bsize=4096   blocks=268439808, imaxpct=5
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal               bsize=4096   blocks=32768, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+# mkfs.xfs -V
+mkfs.xfs version 3.0.1
 
 -Eric
+
+> # mkfs.xfs -f -i size=1024,attr=2 -l version=2,size=128m,lazy-count=1 /dev/mapper/360a9800050334c59543455596d625a77
+> meta-data=/dev/mapper/360a9800050334c59543455596d625a77 isize=1024   
+> agcount=32, agsize=8388744 blks
+>         =                       sectsz=512   attr=2
+> data     =                       bsize=4096   blocks=268439808, imaxpct=25
+>         =                       sunit=0      swidth=0 blks, unwritten=1
+> naming   =version 2              bsize=4096  
+> log      =internal log           bsize=4096   blocks=32768, version=2
+>         =                       sectsz=512   sunit=0 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> 
+> # mount -t xfs -o noatime,nodiratime,nobarrier 
+> /dev/mapper/360a9800050334c59543455596d625a77 /mnt/new-homes/
+> 
+> # xfs_info /mnt/new-homes/
+> meta-data=/dev/mapper/360a9800050334c59543455596d625a77 isize=1024   
+> agcount=32, agsize=8388744 blks
+>         =                       sectsz=512   attr=0
+> data     =                       bsize=4096   blocks=268439808, imaxpct=25
+>         =                       sunit=0      swidth=0 blks, unwritten=1
+> naming   =version 2              bsize=4096  
+> log      =internal               bsize=4096   blocks=32768, version=2
+>         =                       sectsz=512   sunit=0 blks, lazy-count=0
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
