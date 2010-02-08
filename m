@@ -1,23 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o18Ja1FJ155626 for <xfs@oss.sgi.com>; Mon, 8 Feb 2010 13:36:02 -0600
+	o18JfF31155939 for <xfs@oss.sgi.com>; Mon, 8 Feb 2010 13:41:15 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9412E1CB1932
-	for <xfs@oss.sgi.com>; Mon,  8 Feb 2010 11:37:14 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E9E9D1388AA2
+	for <xfs@oss.sgi.com>; Mon,  8 Feb 2010 11:42:27 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id KR08t0C6XKyARgeN for
-	<xfs@oss.sgi.com>; Mon, 08 Feb 2010 11:37:14 -0800 (PST)
-Date: Mon, 8 Feb 2010 14:36:58 -0500
+	by cuda.sgi.com with ESMTP id Uu0wuNsPLFp9FWca for
+	<xfs@oss.sgi.com>; Mon, 08 Feb 2010 11:42:27 -0800 (PST)
+Date: Mon, 8 Feb 2010 14:42:26 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: linux-next: vfs/fsnotify trees build warning
-Message-ID: <20100208193658.GA9527@infradead.org>
-References: <20100125150456.c796f0b0.sfr@canb.auug.org.au>
-	<20100125042925.GM25842@discord.disaster>
-	<7e0fb38c1002081001y111bd0a2p40a8a896b0668d13@mail.gmail.com>
+Subject: Re: [PATCH] Inode reclaim fixes (was Re: 2.6.31
+	xfs_fs_destroy_inode: cannot reclaim)
+Message-ID: <20100208194226.GD9527@infradead.org>
+References: <4AF0422D.1070104@news-service.com>
+	<20091114162126.GB17658@infradead.org>
+	<4B0A8075.8080008@news-service.com>
+	<20091211115932.GA20632@infradead.org>
+	<4B3F9F88.9030307@news-service.com>
+	<20100107110446.GA13802@discord.disaster>
+	<4B45CFAC.4000607@news-service.com>
+	<20100108113114.GA8654@discord.disaster>
+	<4B504B03.7050604@news-service.com>
+	<4B6706CE.1020207@news-service.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <7e0fb38c1002081001y111bd0a2p40a8a896b0668d13@mail.gmail.com>
+In-Reply-To: <4B6706CE.1020207@news-service.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,23 +38,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Paris <eparis@parisplace.org>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linux-kernel@vger.kernel.org, Eric Paris <eparis@redhat.com>, xfs@oss.sgi.com, linux-next@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>
+To: Patrick Schreurs <patrick@news-service.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Tommy van Leeuwen <tommy@news-service.com>, xfs@oss.sgi.com
 
-On Mon, Feb 08, 2010 at 01:01:46PM -0500, Eric Paris wrote:
-> On Sun, Jan 24, 2010 at 11:29 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Mon, Jan 25, 2010 at 03:04:56PM +1100, Stephen Rothwell wrote:
-> >> Hi Eric, Al,
-> >>
-> >> Today's linux-next build (x86_64 allmodconfig) produced these warnings:
-> 
-> I just switched fsnotify to use const unsigned char * so hopefully
-> they will shut up tomorrow....
+On Mon, Feb 01, 2010 at 05:52:30PM +0100, Patrick Schreurs wrote:
+> Hello Dave,
+>
+> I'm afraid we had another crash a few days ago. Have a look at the  
+> screenshot. Can you make anything out of it? This server is running  
+> 2.6.32.3 with your inode-reclaim patch applied and XFS_DEBUG still 
+> enabled.
 
-The xfs tree is also about to get a patch to turn off -Wpointer-sign
-again.  If it was up to me we should turn it on for the whole build,
-we'll just need good way to deal with static initializers and strlen,
-but some simple wrappers might do it for those.
+Just wondering, which set of patches is this exactly?
 
 _______________________________________________
 xfs mailing list
