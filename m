@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o18Jk4XN156158 for <xfs@oss.sgi.com>; Mon, 8 Feb 2010 13:46:04 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 513CF1CB1F60
-	for <xfs@oss.sgi.com>; Mon,  8 Feb 2010 11:47:17 -0800 (PST)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id GuW9fyaRImZsJRMb for
-	<xfs@oss.sgi.com>; Mon, 08 Feb 2010 11:47:17 -0800 (PST)
-Message-ID: <4B706A44.4000804@sandeen.net>
-Date: Mon, 08 Feb 2010 13:47:16 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	o18Ja1FJ155626 for <xfs@oss.sgi.com>; Mon, 8 Feb 2010 13:36:02 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9412E1CB1932
+	for <xfs@oss.sgi.com>; Mon,  8 Feb 2010 11:37:14 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id KR08t0C6XKyARgeN for
+	<xfs@oss.sgi.com>; Mon, 08 Feb 2010 11:37:14 -0800 (PST)
+Date: Mon, 8 Feb 2010 14:36:58 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: linux-next: vfs/fsnotify trees build warning
+Message-ID: <20100208193658.GA9527@infradead.org>
+References: <20100125150456.c796f0b0.sfr@canb.auug.org.au>
+	<20100125042925.GM25842@discord.disaster>
+	<7e0fb38c1002081001y111bd0a2p40a8a896b0668d13@mail.gmail.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: fix up fs_perms test used by 126
-References: <4B6C4E81.6060201@sandeen.net>
-	<20100208194058.GC9527@infradead.org>
-In-Reply-To: <20100208194058.GC9527@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <7e0fb38c1002081001y111bd0a2p40a8a896b0668d13@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,35 +30,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Theodore Tso <tytso@mit.edu>, xfs-oss <xfs@oss.sgi.com>
+To: Eric Paris <eparis@parisplace.org>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linux-kernel@vger.kernel.org, Eric Paris <eparis@redhat.com>, xfs@oss.sgi.com, linux-next@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>
 
-Christoph Hellwig wrote:
-> On Fri, Feb 05, 2010 at 10:59:45AM -0600, Eric Sandeen wrote:
->> @@ -53,7 +53,8 @@ int main( int argc, char *argv[]) {
->>                cgroupId = atoi(argv[3]);
->>                userId = atoi(argv[4]);
->>                groupId = atoi(argv[5]);
->> -              fperm[0] = *argv[6];
->> +              strncpy(fperm, argv[6], 3);
->> +              fperm[2] = '\0';
+On Mon, Feb 08, 2010 at 01:01:46PM -0500, Eric Paris wrote:
+> On Sun, Jan 24, 2010 at 11:29 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Mon, Jan 25, 2010 at 03:04:56PM +1100, Stephen Rothwell wrote:
+> >> Hi Eric, Al,
+> >>
+> >> Today's linux-next build (x86_64 allmodconfig) produced these warnings:
 > 
-> This still looks rather weird to me.  What's the reason for copying
-> the string into a fixed length buffer?  Why not leave fperm as a pointer
-> to the original argument?
+> I just switched fsnotify to use const unsigned char * so hopefully
+> they will shut up tomorrow....
 
-eh that's probably better, I guess I was just thinking copy
-based on how it was before.  (which copied the char, right, it
-didn't assign a pointer, unless I'm short on coffee today...)
-
-OTOH fopen only takes 2 chars anyway.  But probably no reason to
-truncate what was given, just fail if it's something that's wrong...
-
--Eric
- 
-> The rest of the patch looks fine, but a clean up pass on the whole
-> file wouldn't hurt either, it's a grotty mess..
-> 
+The xfs tree is also about to get a patch to turn off -Wpointer-sign
+again.  If it was up to me we should turn it on for the whole build,
+we'll just need good way to deal with static initializers and strlen,
+but some simple wrappers might do it for those.
 
 _______________________________________________
 xfs mailing list
