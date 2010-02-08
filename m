@@ -1,23 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o18AF9FZ123766 for <xfs@oss.sgi.com>; Mon, 8 Feb 2010 04:15:10 -0600
-Received: from pu01.news-service.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E39A21CADBD3
-	for <xfs@oss.sgi.com>; Mon,  8 Feb 2010 02:16:20 -0800 (PST)
-Received: from pu01.news-service.com (ns1.news-service.com [195.114.240.3]) by
-	cuda.sgi.com with ESMTP id YJpdCase28lZYDp5 for
-	<xfs@oss.sgi.com>; Mon, 08 Feb 2010 02:16:20 -0800 (PST)
-Message-ID: <4B6FE47A.7070208@news-service.com>
-Date: Mon, 08 Feb 2010 11:16:26 +0100
-From: Patrick Schreurs <patrick@news-service.com>
+	o18EdcZO138762 for <xfs@oss.sgi.com>; Mon, 8 Feb 2010 08:39:38 -0600
+Received: from cdptpa-omtalb.mail.rr.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CC9611B92BA
+	for <xfs@oss.sgi.com>; Mon,  8 Feb 2010 06:40:50 -0800 (PST)
+Received: from cdptpa-omtalb.mail.rr.com (cdptpa-omtalb.mail.rr.com
+	[75.180.132.121]) by cuda.sgi.com with ESMTP id
+	purgZyHZ1iOKCD2g for <xfs@oss.sgi.com>;
+	Mon, 08 Feb 2010 06:40:50 -0800 (PST)
+Received: from localhost (localhost [127.0.0.1])
+	by erebus.underworld.local (Postfix) with ESMTP id 522AD1FD58
+	for <xfs@oss.sgi.com>; Mon,  8 Feb 2010 09:40:48 -0500 (EST)
+Received: from erebus.underworld.local ([127.0.0.1])
+	by localhost (erebus.underworld.local [127.0.0.1]) (amavisd-maia,
+	port 10024) with ESMTP id 12634-04 for <xfs@oss.sgi.com>;
+	Mon,  8 Feb 2010 09:40:38 -0500 (EST)
+Received: from erebus.underworld.local (erebus.underworld.local [192.168.0.4])
+	by erebus.underworld.local (Postfix) with ESMTPS id B161D1FD43
+	for <xfs@oss.sgi.com>; Mon,  8 Feb 2010 09:40:37 -0500 (EST)
+Date: Mon, 8 Feb 2010 09:40:35 -0500
+From: Cory Coager <ccoager@gmail.com>
+Subject: format and xfs_info don't match
+Message-ID: <20100208144035.GA12922@erebus.underworld.local>
 MIME-Version: 1.0
-Subject: Re: [PATCH] Inode reclaim fixes (was Re: 2.6.31 xfs_fs_destroy_inode:
-	cannot reclaim)
-References: <89c4f90c0910270341r7833f490g60810f2817eb0950@mail.gmail.com>	<89c4f90c0910280519k759230c1r7b1586932ac792f7@mail.gmail.com>	<20091030101601.GA11142@infradead.org>	<4AF0422D.1070104@news-service.com>	<20091114162126.GB17658@infradead.org>	<4B0A8075.8080008@news-service.com>	<20091211115932.GA20632@infradead.org>	<4B3F9F88.9030307@news-service.com>	<20100107110446.GA13802@discord.disaster>	<4B45CFAC.4000607@news-service.com>	<20100108113114.GA8654@discord.disaster>	<4B504B03.7050604@news-service.com>
-	<4B6706CE.1020207@news-service.com>
-In-Reply-To: <4B6706CE.1020207@news-service.com>
-Content-Type: multipart/mixed; boundary="------------020806050006070405000203"
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,99 +33,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Tommy van Leeuwen <tommy@news-service.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-This is a multi-part message in MIME format.
---------------020806050006070405000203
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+For some reason the format attributes don't match the mounted 
+attributes.  If you look below, lazy-count and attr aren't getting set.  
+Why is this happening?
 
-We had another crash on the same server last weekend. Looks the same to me.
+# mkfs.xfs -f -i size=1024,attr=2 -l version=2,size=128m,lazy-count=1 /dev/mapper/360a9800050334c59543455596d625a77
+meta-data=/dev/mapper/360a9800050334c59543455596d625a77 isize=1024   
+agcount=32, agsize=8388744 blks
+        =                       sectsz=512   attr=2
+data     =                       bsize=4096   blocks=268439808, imaxpct=25
+        =                       sunit=0      swidth=0 blks, unwritten=1
+naming   =version 2              bsize=4096  
+log      =internal log           bsize=4096   blocks=32768, version=2
+        =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
-Thanks for looking into this.
+# mount -t xfs -o noatime,nodiratime,nobarrier 
+/dev/mapper/360a9800050334c59543455596d625a77 /mnt/new-homes/
 
--Patrick
-
-On 1-2-2010 17:52, Patrick Schreurs wrote:
-> Hello Dave,
->
-> I'm afraid we had another crash a few days ago. Have a look at the
-> screenshot. Can you make anything out of it? This server is running
-> 2.6.32.3 with your inode-reclaim patch applied and XFS_DEBUG still enabled.
->
-> Thanks for looking into this.
->
-> -Patrick
->
-> On 15-1-2010 12:01, Patrick Schreurs wrote:
->> Hi Dave,
->>
->> I think it's save to consider this issue fixed. We have currently 9
->> servers operational with these patches and they have been stable so far.
->> For a 100% certainty we'll have to test/wait a little bit longer, but
->> considering the frequency of crashes we saw earlier i think it's save to
->> come to a conclusion.
->>
->> I hope these patches will be included in 2.6.33 and will be back ported
->> to at least 2.6.32.
->>
->> Many thanks to Dave and to Christoph for fixing this apparently rare and
->> seldom triggered condition.
->>
->> -Patrick
->>
->> Dave Chinner wrote:
->>> Hi Patrick,
->>>
->>> I've attached two compendium patches that will hopefully fix
->>> the inode reclaim problems you've been seeing - one is for 2.6.31,
->>> the other is for 2.6.32. I've cc'd this to the XFS list ѕo that
->>> anyone else who has been seeing crashes, assert failures and
->>> general nastiness around inode reclaim can test them as well.
->>>
->>> These are not final patches - there's a few changes that Christoph
->>> has picked up on during review - so there'll be another round of
->>> patches before checkins and -stable backports can be requested.
->>>
->>> I'm hoping that these patches fix your problem, because with them
->>> I can't make my machines fall over anymore....
->>>
->>> Cheers,
->>>
->>> Dave.
->>>
->>>
->>> ------------------------------------------------------------------------
->>>
->>> _______________________________________________
->>> xfs mailing list
->>> xfs@oss.sgi.com
->>> http://oss.sgi.com/mailman/listinfo/xfs
->>
->> _______________________________________________
->> xfs mailing list
->> xfs@oss.sgi.com
->> http://oss.sgi.com/mailman/listinfo/xfs
->
->
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
---------------020806050006070405000203
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+# xfs_info /mnt/new-homes/
+meta-data=/dev/mapper/360a9800050334c59543455596d625a77 isize=1024   
+agcount=32, agsize=8388744 blks
+        =                       sectsz=512   attr=0
+data     =                       bsize=4096   blocks=268439808, imaxpct=25
+        =                       sunit=0      swidth=0 blks, unwritten=1
+naming   =version 2              bsize=4096  
+log      =internal               bsize=4096   blocks=32768, version=2
+        =                       sectsz=512   sunit=0 blks, lazy-count=0
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---------------020806050006070405000203--
