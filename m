@@ -1,31 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o193tcH6182489 for <xfs@oss.sgi.com>; Mon, 8 Feb 2010 21:55:38 -0600
+	o193tbMJ182485 for <xfs@oss.sgi.com>; Mon, 8 Feb 2010 21:55:37 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EEF01138A717
-	for <xfs@oss.sgi.com>; Mon,  8 Feb 2010 19:56:49 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6248A1CB5F52
+	for <xfs@oss.sgi.com>; Mon,  8 Feb 2010 19:56:48 -0800 (PST)
 Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
 	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	WkMEdYDE1bcw4UOG for <xfs@oss.sgi.com>;
-	Mon, 08 Feb 2010 19:56:49 -0800 (PST)
+	Td93y6E8GVye24vs for <xfs@oss.sgi.com>;
+	Mon, 08 Feb 2010 19:56:48 -0800 (PST)
 Received: from discord (unverified [121.44.103.80])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	12912039-1927428
-	for <xfs@oss.sgi.com>; Tue, 09 Feb 2010 14:26:48 +1030 (CDT)
+	12912035-1927428
+	for <xfs@oss.sgi.com>; Tue, 09 Feb 2010 14:26:47 +1030 (CDT)
 Received: from disturbed ([192.168.1.9]) by discord with esmtp (Exim 4.69)
-	(envelope-from <dave@fromorbit.com>) id 1NehDS-0000O3-5b
+	(envelope-from <dave@fromorbit.com>) id 1NehDS-0000O0-0t
 	for xfs@oss.sgi.com; Tue, 09 Feb 2010 14:56:46 +1100
 Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1NehDR-0002SL-FI
+	(envelope-from <dave@disturbed.disaster>) id 1NehDR-0002SC-9K
 	for xfs@oss.sgi.com; Tue, 09 Feb 2010 14:56:45 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 4/9] xfs: Sort delayed write buffers before dispatch
-Date: Tue,  9 Feb 2010 14:56:37 +1100
-Message-Id: <1265687802-23043-5-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/9] xfs: Make inode reclaim states explicit
+Date: Tue,  9 Feb 2010 14:56:34 +1100
+Message-Id: <1265687802-23043-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1265687802-23043-1-git-send-email-david@fromorbit.com>
 References: <1265687802-23043-1-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,91 +33,198 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Q3VycmVudGx5IHdoZW4gdGhlIHhmc2J1ZmQgd3JpdGVzIGRlbGF5ZWQgd3JpdGUgYnVmZmVycywg
-aXQgcHVzaGVzCnRoZW0gdG8gZGlzayBpbiB0aGUgb3JkZXIgdGhleSBjb21lIG9mZiB0aGUgZGVs
-YXllZCB3cml0ZSBsaXN0LiBJZgp0aGVyZSBhcmUgbG90cyBvZiBidWZmZXJzINGVcHJlYWQgd2lk
-ZWx5IG92ZXIgdGhlIGRpc2ssIHRoaXMgcmVzdWx0cwppbiBvdmVyd2hlbG1pbmcgdGhlIGVsZXZh
-dG9yIHNvcnQgcXVldWVzIGluIHRoZSBibG9jayBsYXllciBhbmQgd2UKZW5kIHVwIGxvc2luZyB0
-aGUgcG9zaWJpbGl0eSBvZiBtZXJnaW5nIGFkamFjZW50IGJ1ZmZlcnMgdG8gbWluaW1pc2UKdGhl
-IG51bWJlciBvZiBJT3MuCgpVc2UgdGhlIG5ldyBnZW5lcmljIGxpc3Rfc29ydCBmdW5jdGlvbiB0
-byBzb3J0IHRoZSBkZWx3cmkgZGlzcGF0Y2gKcXVldWUgYmVmb3JlIGlzc3VlIHRvIGVuc3VyZSB0
-aGF0IHRoZSBidWZmZXJzIGFyZSBwdXNoZWQgaW4gdGhlIG1vc3QKZnJpZW5kbHkgb3JkZXIgcG9z
-c2libGUgdG8gdGhlIGxvd2VyIGxheWVycy4KClNpZ25lZC1vZmYtYnk6IERhdmUgQ2hpbm5lciA8
-ZGF2aWRAZnJvbW9yYml0LmNvbT4KUmV2aWV3ZWQtYnk6IENocmlzdG9waCBIZWxsd2lnIDxoY2hA
-bHN0LmRlPgotLS0KIGZzL3hmcy9saW51eC0yLjYveGZzX2J1Zi5jIHwgICA4NyArKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKystLS0tLS0tLS0tLS0tLQogMSBmaWxlcyBjaGFuZ2VkLCA2MCBp
-bnNlcnRpb25zKCspLCAyNyBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9mcy94ZnMvbGludXgt
-Mi42L3hmc19idWYuYyBiL2ZzL3hmcy9saW51eC0yLjYveGZzX2J1Zi5jCmluZGV4IGIzMDYyNjUu
-LjQ1NTZhNGMgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy9saW51eC0yLjYveGZzX2J1Zi5jCisrKyBiL2Zz
-L3hmcy9saW51eC0yLjYveGZzX2J1Zi5jCkBAIC0zMyw2ICszMyw3IEBACiAjaW5jbHVkZSA8bGlu
-dXgvbWlncmF0ZS5oPgogI2luY2x1ZGUgPGxpbnV4L2JhY2tpbmctZGV2Lmg+CiAjaW5jbHVkZSA8
-bGludXgvZnJlZXplci5oPgorI2luY2x1ZGUgPGxpbnV4L2xpc3Rfc29ydC5oPgogCiAjaW5jbHVk
-ZSAieGZzX3NiLmgiCiAjaW5jbHVkZSAieGZzX2ludW0uaCIKQEAgLTE4NzcsMTQgKzE4NzgsNDIg
-QEAgeGZzX2J1Zl9kZWx3cmlfc3BsaXQoCiAKIH0KIAorLyoKKyAqIENvbXBhcmUgZnVuY3Rpb24g
-aXMgbW9yZSBjb21wbGV4IHRoYW4gaXQgbmVlZHMgdG8gYmUgYmVjYXVzZQorICogdGhlIHJldHVy
-biB2YWx1ZSBpcyBvbmx5IDMyIGJpdHMgYW5kIHdlIGFyZSBkb2luZyBjb21wYXJpc29ucworICog
-b24gNjQgYml0IHZhbHVlcworICovCitzdGF0aWMgaW50Cit4ZnNfYnVmX2NtcCgKKwl2b2lkCQkq
-cHJpdiwKKwlzdHJ1Y3QgbGlzdF9oZWFkICphLAorCXN0cnVjdCBsaXN0X2hlYWQgKmIpCit7CisJ
-c3RydWN0IHhmc19idWYJKmFwID0gY29udGFpbmVyX29mKGEsIHN0cnVjdCB4ZnNfYnVmLCBiX2xp
-c3QpOworCXN0cnVjdCB4ZnNfYnVmCSpicCA9IGNvbnRhaW5lcl9vZihiLCBzdHJ1Y3QgeGZzX2J1
-ZiwgYl9saXN0KTsKKwl4ZnNfZGFkZHJfdAkJZGlmZjsKKworCWRpZmYgPSBhcC0+Yl9ibiAtIGJw
-LT5iX2JuOworCWlmIChkaWZmIDwgMCkKKwkJcmV0dXJuIC0xOworCWlmIChkaWZmID4gMCkKKwkJ
-cmV0dXJuIDE7CisJcmV0dXJuIDA7Cit9CisKK3ZvaWQKK3hmc19idWZfZGVsd3JpX3NvcnQoCisJ
-eGZzX2J1ZnRhcmdfdAkqdGFyZ2V0LAorCXN0cnVjdCBsaXN0X2hlYWQgKmxpc3QpCit7CisJbGlz
-dF9zb3J0KE5VTEwsIGxpc3QsIHhmc19idWZfY21wKTsKK30KKwogU1RBVElDIGludAogeGZzYnVm
-ZCgKIAl2b2lkCQkqZGF0YSkKIHsKLQlzdHJ1Y3QgbGlzdF9oZWFkIHRtcDsKLQl4ZnNfYnVmdGFy
-Z190CSp0YXJnZXQgPSAoeGZzX2J1ZnRhcmdfdCAqKWRhdGE7Ci0JaW50CQljb3VudDsKLQl4ZnNf
-YnVmX3QJKmJwOworCXhmc19idWZ0YXJnX3QgICAqdGFyZ2V0ID0gKHhmc19idWZ0YXJnX3QgKilk
-YXRhOwogCiAJY3VycmVudC0+ZmxhZ3MgfD0gUEZfTUVNQUxMT0M7CiAKQEAgLTE4OTMsNiArMTky
-Miw4IEBAIHhmc2J1ZmQoCiAJZG8gewogCQlsb25nCWFnZSA9IHhmc19idWZfYWdlX2NlbnRpc2Vj
-cyAqIG1zZWNzX3RvX2ppZmZpZXMoMTApOwogCQlsb25nCXRvdXQgPSB4ZnNfYnVmX3RpbWVyX2Nl
-bnRpc2VjcyAqIG1zZWNzX3RvX2ppZmZpZXMoMTApOworCQlpbnQJY291bnQgPSAwOworCQlzdHJ1
-Y3QgbGlzdF9oZWFkIHRtcDsKIAogCQlpZiAodW5saWtlbHkoZnJlZXppbmcoY3VycmVudCkpKSB7
-CiAJCQlzZXRfYml0KFhCVF9GT1JDRV9TTEVFUCwgJnRhcmdldC0+YnRfZmxhZ3MpOwpAQCAtMTkw
-NywxMSArMTkzOCwxMCBAQCB4ZnNidWZkKAogCQlzY2hlZHVsZV90aW1lb3V0X2ludGVycnVwdGli
-bGUodG91dCk7CiAKIAkJeGZzX2J1Zl9kZWx3cmlfc3BsaXQodGFyZ2V0LCAmdG1wLCBhZ2UpOwot
-CQljb3VudCA9IDA7CisJCWxpc3Rfc29ydChOVUxMLCAmdG1wLCB4ZnNfYnVmX2NtcCk7CiAJCXdo
-aWxlICghbGlzdF9lbXB0eSgmdG1wKSkgewotCQkJYnAgPSBsaXN0X2VudHJ5KHRtcC5uZXh0LCB4
-ZnNfYnVmX3QsIGJfbGlzdCk7Ci0JCQlBU1NFUlQodGFyZ2V0ID09IGJwLT5iX3RhcmdldCk7Ci0K
-KwkJCXN0cnVjdCB4ZnNfYnVmICpicDsKKwkJCWJwID0gbGlzdF9maXJzdF9lbnRyeSgmdG1wLCBz
-dHJ1Y3QgeGZzX2J1ZiwgYl9saXN0KTsKIAkJCWxpc3RfZGVsX2luaXQoJmJwLT5iX2xpc3QpOwog
-CQkJeGZzX2J1Zl9pb3N0cmF0ZWd5KGJwKTsKIAkJCWNvdW50Kys7CkBAIC0xOTM3LDQyICsxOTY3
-LDQ1IEBAIHhmc19mbHVzaF9idWZ0YXJnKAogCXhmc19idWZ0YXJnX3QJKnRhcmdldCwKIAlpbnQJ
-CXdhaXQpCiB7Ci0Jc3RydWN0IGxpc3RfaGVhZCB0bXA7Ci0JeGZzX2J1Zl90CSpicCwgKm47CisJ
-eGZzX2J1Zl90CSpicDsKIAlpbnQJCXBpbmNvdW50ID0gMDsKKwlMSVNUX0hFQUQodG1wX2xpc3Qp
-OworCUxJU1RfSEVBRCh3YWl0X2xpc3QpOwogCiAJeGZzX2J1Zl9ydW5hbGxfcXVldWVzKHhmc2Nv
-bnZlcnRkX3dvcmtxdWV1ZSk7CiAJeGZzX2J1Zl9ydW5hbGxfcXVldWVzKHhmc2RhdGFkX3dvcmtx
-dWV1ZSk7CiAJeGZzX2J1Zl9ydW5hbGxfcXVldWVzKHhmc2xvZ2Rfd29ya3F1ZXVlKTsKIAogCXNl
-dF9iaXQoWEJUX0ZPUkNFX0ZMVVNILCAmdGFyZ2V0LT5idF9mbGFncyk7Ci0JcGluY291bnQgPSB4
-ZnNfYnVmX2RlbHdyaV9zcGxpdCh0YXJnZXQsICZ0bXAsIDApOworCXBpbmNvdW50ID0geGZzX2J1
-Zl9kZWx3cmlfc3BsaXQodGFyZ2V0LCAmdG1wX2xpc3QsIDApOwogCiAJLyoKLQkgKiBEcm9wcGVk
-IHRoZSBkZWxheWVkIHdyaXRlIGxpc3QgbG9jaywgbm93IHdhbGsgdGhlIHRlbXBvcmFyeSBsaXN0
-CisJICogRHJvcHBlZCB0aGUgZGVsYXllZCB3cml0ZSBsaXN0IGxvY2ssIG5vdyB3YWxrIHRoZSB0
-ZW1wb3JhcnkgbGlzdC4KKwkgKiBBbGwgSS9PIGlzIGlzc3VlZCBhc3luYyBhbmQgdGhlbiBpZiB3
-ZSBuZWVkIHRvIHdhaXQgZm9yIGNvbXBsZXRpb24KKwkgKiB3ZSBkbyB0aGF0IGFmdGVyIGlzc3Vp
-bmcgYWxsIHRoZSBJTy4KIAkgKi8KLQlsaXN0X2Zvcl9lYWNoX2VudHJ5X3NhZmUoYnAsIG4sICZ0
-bXAsIGJfbGlzdCkgeworCWxpc3Rfc29ydChOVUxMLCAmdG1wX2xpc3QsIHhmc19idWZfY21wKTsK
-Kwl3aGlsZSAoIWxpc3RfZW1wdHkoJnRtcF9saXN0KSkgeworCQlicCA9IGxpc3RfZmlyc3RfZW50
-cnkoJnRtcF9saXN0LCBzdHJ1Y3QgeGZzX2J1ZiwgYl9saXN0KTsKIAkJQVNTRVJUKHRhcmdldCA9
-PSBicC0+Yl90YXJnZXQpOwotCQlpZiAod2FpdCkKKwkJbGlzdF9kZWxfaW5pdCgmYnAtPmJfbGlz
-dCk7CisJCWlmICh3YWl0KSB7CiAJCQlicC0+Yl9mbGFncyAmPSB+WEJGX0FTWU5DOwotCQllbHNl
-Ci0JCQlsaXN0X2RlbF9pbml0KCZicC0+Yl9saXN0KTsKLQorCQkJbGlzdF9hZGQoJmJwLT5iX2xp
-c3QsICZ3YWl0X2xpc3QpOworCQl9CiAJCXhmc19idWZfaW9zdHJhdGVneShicCk7CiAJfQogCi0J
-aWYgKHdhaXQpCisJaWYgKHdhaXQpIHsKKwkJLyogRXhwZWRpdGUgYW5kIHdhaXQgZm9yIElPIHRv
-IGNvbXBsZXRlLiAqLwogCQlibGtfcnVuX2FkZHJlc3Nfc3BhY2UodGFyZ2V0LT5idF9tYXBwaW5n
-KTsKKwkJd2hpbGUgKCFsaXN0X2VtcHR5KCZ3YWl0X2xpc3QpKSB7CisJCQlicCA9IGxpc3RfZmly
-c3RfZW50cnkoJndhaXRfbGlzdCwgc3RydWN0IHhmc19idWYsIGJfbGlzdCk7CiAKLQkvKgotCSAq
-IFJlbWFpbmluZyBsaXN0IGl0ZW1zIG11c3QgYmUgZmx1c2hlZCBiZWZvcmUgcmV0dXJuaW5nCi0J
-ICovCi0Jd2hpbGUgKCFsaXN0X2VtcHR5KCZ0bXApKSB7Ci0JCWJwID0gbGlzdF9lbnRyeSh0bXAu
-bmV4dCwgeGZzX2J1Zl90LCBiX2xpc3QpOwotCi0JCWxpc3RfZGVsX2luaXQoJmJwLT5iX2xpc3Qp
-OwotCQl4ZnNfaW93YWl0KGJwKTsKLQkJeGZzX2J1Zl9yZWxzZShicCk7CisJCQlsaXN0X2RlbF9p
-bml0KCZicC0+Yl9saXN0KTsKKwkJCXhmc19pb3dhaXQoYnApOworCQkJeGZzX2J1Zl9yZWxzZShi
-cCk7CisJCX0KIAl9CiAKIAlyZXR1cm4gcGluY291bnQ7Ci0tIAoxLjYuNQoKX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNA
-b3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+A.K.A.: don't rely on xfs_iflush() return value in reclaim
+
+We have gradually been moving checks out of the reclaim code because
+they are duplicated in xfs_iflush(). We've had a history of problems
+in this area, and many of them stem from the overloading of the
+return values from xfs_iflush() and interaction with inode flush
+locking to determine if the inode is safe to reclaim.
+
+With the desire to move to delayed write flushing of inodes and
+non-blocking inode tree reclaim walks, the overloading of the
+return value of xfs_iflush makes it very difficult to determine
+the correct thing to do next.
+
+This patch explicitly re-adds the checks to the inode reclaim code,
+removing the reliance on the return value of xfs_iflush() to
+determine what to do next. It also means that we can clearly
+document all the inode states that reclaim must handle and hence
+we can easily see that we handled all the necessary cases.
+
+This also removes the need for the xfs_inode_clean() check in
+xfs_iflush() as all callers now check this first (safely).
+
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/linux-2.6/xfs_sync.c |   81 +++++++++++++++++++++++++++++++++----------
+ fs/xfs/xfs_inode.c          |   11 +-----
+ fs/xfs/xfs_inode.h          |    1 +
+ 3 files changed, 64 insertions(+), 29 deletions(-)
+
+diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+index c9b863e..525260c 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.c
++++ b/fs/xfs/linux-2.6/xfs_sync.c
+@@ -706,12 +706,43 @@ __xfs_inode_clear_reclaim_tag(
+ 			XFS_INO_TO_AGINO(mp, ip->i_ino), XFS_ICI_RECLAIM_TAG);
+ }
+ 
++/*
++ * Inodes in different states need to be treated differently, and the return
++ * value of xfs_iflush is not sufficient to get this right. The following table
++ * lists the inode states and the reclaim actions necessary for non-blocking
++ * reclaim:
++ *
++ *
++ *	inode state	     iflush ret		required action
++ *      ---------------      ----------         ---------------
++ *	bad			-		reclaim
++ *	shutdown		EIO		unpin and reclaim
++ *	clean, unpinned		0		reclaim
++ *	stale, unpinned		0		reclaim
++ *	clean, pinned(*)	0		unpin and reclaim
++ *	stale, pinned		0		unpin and reclaim
++ *	dirty, async		0		block on flush lock, reclaim
++ *	dirty, sync flush	0		block on flush lock, reclaim
++ *
++ * (*) dgc: I don't think the clean, pinned state is possible but it gets
++ * handled anyway given the order of checks implemented.
++ *
++ * Hence the order of actions after gaining the locks should be:
++ *	bad		=> reclaim
++ *	shutdown	=> unpin and reclaim
++ *	pinned		=> unpin
++ *	stale		=> reclaim
++ *	clean		=> reclaim
++ *	dirty		=> flush, wait and reclaim
++ */
+ STATIC int
+ xfs_reclaim_inode(
+ 	struct xfs_inode	*ip,
+ 	struct xfs_perag	*pag,
+ 	int			sync_mode)
+ {
++	int	error;
++
+ 	/*
+ 	 * The radix tree lock here protects a thread in xfs_iget from racing
+ 	 * with us starting reclaim on the inode.  Once we have the
+@@ -729,30 +760,42 @@ xfs_reclaim_inode(
+ 	spin_unlock(&ip->i_flags_lock);
+ 	write_unlock(&pag->pag_ici_lock);
+ 
+-	/*
+-	 * If the inode is still dirty, then flush it out.  If the inode
+-	 * is not in the AIL, then it will be OK to flush it delwri as
+-	 * long as xfs_iflush() does not keep any references to the inode.
+-	 * We leave that decision up to xfs_iflush() since it has the
+-	 * knowledge of whether it's OK to simply do a delwri flush of
+-	 * the inode or whether we need to wait until the inode is
+-	 * pulled from the AIL.
+-	 * We get the flush lock regardless, though, just to make sure
+-	 * we don't free it while it is being flushed.
+-	 */
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	xfs_iflock(ip);
+ 
+-	/*
+-	 * In the case of a forced shutdown we rely on xfs_iflush() to
+-	 * wait for the inode to be unpinned before returning an error.
+-	 */
+-	if (!is_bad_inode(VFS_I(ip)) && xfs_iflush(ip, sync_mode) == 0) {
+-		/* synchronize with xfs_iflush_done */
+-		xfs_iflock(ip);
+-		xfs_ifunlock(ip);
++	if (is_bad_inode(VFS_I(ip)))
++		goto reclaim;
++	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
++		xfs_iunpin_wait(ip);
++		goto reclaim;
++	}
++	if (xfs_ipincount(ip))
++		xfs_iunpin_wait(ip);
++	if (xfs_iflags_test(ip, XFS_ISTALE))
++		goto reclaim;
++	if (xfs_inode_clean(ip))
++		goto reclaim;
++
++	/* Now we have an inode that needs flushing */
++	error = xfs_iflush(ip, sync_mode);
++	if (!error) {
++		switch(sync_mode) {
++		case XFS_IFLUSH_DELWRI_ELSE_ASYNC:
++		case XFS_IFLUSH_DELWRI:
++		case XFS_IFLUSH_ASYNC:
++		case XFS_IFLUSH_DELWRI_ELSE_SYNC:
++		case XFS_IFLUSH_SYNC:
++			/* IO issued, synchronise with IO completion */
++			xfs_iflock(ip);
++			break;
++		default:
++			ASSERT(0);
++			break;
++		}
+ 	}
+ 
++reclaim:
++	xfs_ifunlock(ip);
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	xfs_ireclaim(ip);
+ 	return 0;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index d0d1b5a..8d0666d 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2493,7 +2493,7 @@ __xfs_iunpin_wait(
+ 		wait_event(ip->i_ipin_wait, (atomic_read(&ip->i_pincount) == 0));
+ }
+ 
+-static inline void
++void
+ xfs_iunpin_wait(
+ 	xfs_inode_t	*ip)
+ {
+@@ -2849,15 +2849,6 @@ xfs_iflush(
+ 	mp = ip->i_mount;
+ 
+ 	/*
+-	 * If the inode isn't dirty, then just release the inode flush lock and
+-	 * do nothing.
+-	 */
+-	if (xfs_inode_clean(ip)) {
+-		xfs_ifunlock(ip);
+-		return 0;
+-	}
+-
+-	/*
+ 	 * We can't flush the inode until it is unpinned, so wait for it if we
+ 	 * are allowed to block.  We know noone new can pin it, because we are
+ 	 * holding the inode lock shared and you need to hold it exclusively to
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index ec1f28c..8b618ea 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -483,6 +483,7 @@ int		xfs_iunlink(struct xfs_trans *, xfs_inode_t *);
+ void		xfs_iext_realloc(xfs_inode_t *, int, int);
+ void		xfs_ipin(xfs_inode_t *);
+ void		xfs_iunpin(xfs_inode_t *);
++void		xfs_iunpin_wait(xfs_inode_t *);
+ int		xfs_iflush(xfs_inode_t *, uint);
+ void		xfs_ichgtime(xfs_inode_t *, int);
+ void		xfs_lock_inodes(xfs_inode_t **, int, uint);
+-- 
+1.6.5
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
