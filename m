@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o19M3sN7255107 for <xfs@oss.sgi.com>; Tue, 9 Feb 2010 16:03:54 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A494B1BF22A
-	for <xfs@oss.sgi.com>; Tue,  9 Feb 2010 14:05:07 -0800 (PST)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id 2tkeFz5zzTkhnX5X for
-	<xfs@oss.sgi.com>; Tue, 09 Feb 2010 14:05:07 -0800 (PST)
-Message-ID: <4B71DC12.9010408@sandeen.net>
-Date: Tue, 09 Feb 2010 16:05:06 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+	o19M1k0Y254972 for <xfs@oss.sgi.com>; Tue, 9 Feb 2010 16:01:48 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A4F0D139276C
+	for <xfs@oss.sgi.com>; Tue,  9 Feb 2010 14:02:59 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id uIWOKpio10amOcas for
+	<xfs@oss.sgi.com>; Tue, 09 Feb 2010 14:02:59 -0800 (PST)
+Date: Tue, 9 Feb 2010 17:02:58 -0500
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH] xfstests: make 204 generic
+Message-ID: <20100209220258.GA20187@infradead.org>
 References: <4B71C8DF.1090909@sandeen.net>
-	<20100209220258.GA20187@infradead.org>
-In-Reply-To: <20100209220258.GA20187@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4B71C8DF.1090909@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,29 +28,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-Christoph Hellwig wrote:
-> On Tue, Feb 09, 2010 at 02:43:11PM -0600, Eric Sandeen wrote:
->> 204 can be generic.
-> 
-> Looks good.
-> 
->> Also remove a stray _scratch_mkfs that snuck into
->> _scratch_mkfs_sized :/
-> 
-> Heh, that might have made the ENOSPC tests pass rather easily before..
+On Tue, Feb 09, 2010 at 02:43:11PM -0600, Eric Sandeen wrote:
+> 204 can be generic.
 
-Yeah :/
+Looks good.
 
->> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
+> Also remove a stray _scratch_mkfs that snuck into
+> _scratch_mkfs_sized :/
 
-Thanks,
--eric
+Heh, that might have made the ENOSPC tests pass rather easily before..
+
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
