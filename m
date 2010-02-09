@@ -1,28 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o193tlmq182551 for <xfs@oss.sgi.com>; Mon, 8 Feb 2010 21:55:47 -0600
+	o193tcH6182489 for <xfs@oss.sgi.com>; Mon, 8 Feb 2010 21:55:38 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 33C77138A720
-	for <xfs@oss.sgi.com>; Mon,  8 Feb 2010 19:56:58 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	tJy2r5H0OjyOXaht for <xfs@oss.sgi.com>;
-	Mon, 08 Feb 2010 19:56:58 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EEF01138A717
+	for <xfs@oss.sgi.com>; Mon,  8 Feb 2010 19:56:49 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
+	[150.101.137.102]) by cuda.sgi.com with ESMTP id
+	WkMEdYDE1bcw4UOG for <xfs@oss.sgi.com>;
+	Mon, 08 Feb 2010 19:56:49 -0800 (PST)
 Received: from discord (unverified [121.44.103.80])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	13074392-1927428
-	for <xfs@oss.sgi.com>; Tue, 09 Feb 2010 14:26:57 +1030 (CDT)
+	12912039-1927428
+	for <xfs@oss.sgi.com>; Tue, 09 Feb 2010 14:26:48 +1030 (CDT)
 Received: from disturbed ([192.168.1.9]) by discord with esmtp (Exim 4.69)
-	(envelope-from <dave@fromorbit.com>) id 1NehDb-0000Nz-Tk
-	for xfs@oss.sgi.com; Tue, 09 Feb 2010 14:56:55 +1100
+	(envelope-from <dave@fromorbit.com>) id 1NehDS-0000O3-5b
+	for xfs@oss.sgi.com; Tue, 09 Feb 2010 14:56:46 +1100
 Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1NehDR-0002S9-7Q
+	(envelope-from <dave@disturbed.disaster>) id 1NehDR-0002SL-FI
 	for xfs@oss.sgi.com; Tue, 09 Feb 2010 14:56:45 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/9] Delayed write metadata writeback V5
-Date: Tue,  9 Feb 2010 14:56:33 +1100
-Message-Id: <1265687802-23043-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 4/9] xfs: Sort delayed write buffers before dispatch
+Date: Tue,  9 Feb 2010 14:56:37 +1100
+Message-Id: <1265687802-23043-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1265687802-23043-1-git-send-email-david@fromorbit.com>
+References: <1265687802-23043-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,119 +34,91 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-While I started with killing async inode writeback, the series has
-grown. It's not really limited to inode writeback - it touches dquot
-flushing, changes the way the AIL pushes on buffers, adds xfsbufd
-sorting for delayed write buffers, adds a real non-blocking mode to
-inode reclaim and avoids physical inode writeback from the VFS while
-fixing bugs in handling delayed write inodes.  Hence this is more
-about enabling efficient delayed write metadata than it is able
-killing async inode writeback.
-
-The idea behind this series is to make metadata buffers get
-written from xfsbufd via the delayed write queue rather than being
-issued asynchronously from all over the place. To do this, async
-buffer writeback is almost entirely removed from XFS, replaced
-instead by delayed writes and a method to expedite flushing of
-delayed write buffers when required.
-
-The result of funnelling all the buffer IO into a single place
-is that we can more tightly control and therefore optimise the
-submission of metadata IO. Aggregating the buffers before dispatch
-allows much better sort efficiency of the buffers as the sort window
-is not limited to the size of the elevator congestion hysteresis
-limit. Hence we can approach 100% merge effeciency on large numbers
-of buffers when dispatched for IO and greatly reduce the amount
-of seeking metadata writeback causes.
-
-The major change is to the inode flushing and reclaim code. Delayed
-write inodes hold the flush lock for much longer than for async
-writeback, and hence blocking on the flush lock can cause extremely
-long latencies without other mechanisms to expedite the release of
-the flush locks. To prevent needing to flush inodes immediately,
-all operations are done non-blocking unless synchronous. This
-required a significant rework of the inode reclaim code, but it
-greatly simplified other pieces of code (e.g. log item pushing).
-
-Version 5
-- drop the fsync changes to xfs_fs_write_inode() and the associated
-  locking changes, replace them with a targeted inode logging
-  function from Christoph Hellwig to fix a performance regression on
-  fs_mark -S4 workloads on an SSD.
-
-Version 4
-- rework inode reclaim checks for better legibility
-- add warning to reclaim code when delwri flush errors occur
-- kill XFS_ITEM_FLUSHING now it is not used
-- clean up sync_mode flags being pushed into xfs_iflush()
-- kill the now unused xfs_bawrite() function
-- include Christoph's fsync cache flush fix
-- rework the inode locking and call to xfs_fsync() when doing
-  synchronous inode writes to close races between the fsync and
-  the background delwri flush afterwards.
-
-Version 3
-- rework inode reclaim to:
-	- separate it from xfs_iflush return values
-	- provide a non-blocking mode for background operation
-- apply delwri buffer promotion tricks to dquot flushing
-- kill unneeded dquot flushing flags, similar to inode flushing flag
-  removal
-- fix sync inode flush bug when trying to flush delwri inodes
-
-Version 2:
-- use generic list sort function
-- when unmounting, push the delwri buffers first, then do sync inode
-  reclaim so that reclaim doesn't block for 15 seconds waiting for
-  delwri inode buffers to be aged and written before the inodes can
-  be reclaimed.
-
-Alex, the patch series is available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/dgc/xfs for-2.6.34
-
-Christoph Hellwig (2):
-      xfs: remove invalid barrier optimization from xfs_fsync
-      xfs: log changed inodes instead of writing them synchronously
-
-Dave Chinner (7):
-      xfs: Make inode reclaim states explicit
-      xfs: Use delayed write for inodes rather than async V2
-      xfs: Don't issue buffer IO direct from AIL push V2
-      xfs: Sort delayed write buffers before dispatch
-      xfs: Use delay write promotion for dquot flushing
-      xfs: kill the unused XFS_QMOPT_* flush flags V2
-      xfs: kill xfs_bawrite
-
- fs/xfs/linux-2.6/xfs_buf.c    |  135 ++++++++++++++++++++++++++--------------
- fs/xfs/linux-2.6/xfs_buf.h    |    3 +-
- fs/xfs/linux-2.6/xfs_super.c  |  111 ++++++++++++++++++++++++---------
- fs/xfs/linux-2.6/xfs_sync.c   |  138 +++++++++++++++++++++++++++++++++-------
- fs/xfs/linux-2.6/xfs_trace.h  |    1 +
- fs/xfs/quota/xfs_dquot.c      |   38 +++++-------
- fs/xfs/quota/xfs_dquot_item.c |   87 ++++----------------------
- fs/xfs/quota/xfs_dquot_item.h |    4 -
- fs/xfs/quota/xfs_qm.c         |   14 ++---
- fs/xfs/xfs_buf_item.c         |   64 ++++++++++---------
- fs/xfs/xfs_inode.c            |   86 ++------------------------
- fs/xfs/xfs_inode.h            |   11 +---
- fs/xfs/xfs_inode_item.c       |  108 +++++++-------------------------
- fs/xfs/xfs_inode_item.h       |    6 --
- fs/xfs/xfs_mount.c            |   13 ++++-
- fs/xfs/xfs_quota.h            |    8 +--
- fs/xfs/xfs_trans.h            |    3 +-
- fs/xfs/xfs_trans_ail.c        |   13 ++--
- fs/xfs/xfs_vnodeops.c         |   12 +---
- 19 files changed, 410 insertions(+), 445 deletions(-)
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+Q3VycmVudGx5IHdoZW4gdGhlIHhmc2J1ZmQgd3JpdGVzIGRlbGF5ZWQgd3JpdGUgYnVmZmVycywg
+aXQgcHVzaGVzCnRoZW0gdG8gZGlzayBpbiB0aGUgb3JkZXIgdGhleSBjb21lIG9mZiB0aGUgZGVs
+YXllZCB3cml0ZSBsaXN0LiBJZgp0aGVyZSBhcmUgbG90cyBvZiBidWZmZXJzINGVcHJlYWQgd2lk
+ZWx5IG92ZXIgdGhlIGRpc2ssIHRoaXMgcmVzdWx0cwppbiBvdmVyd2hlbG1pbmcgdGhlIGVsZXZh
+dG9yIHNvcnQgcXVldWVzIGluIHRoZSBibG9jayBsYXllciBhbmQgd2UKZW5kIHVwIGxvc2luZyB0
+aGUgcG9zaWJpbGl0eSBvZiBtZXJnaW5nIGFkamFjZW50IGJ1ZmZlcnMgdG8gbWluaW1pc2UKdGhl
+IG51bWJlciBvZiBJT3MuCgpVc2UgdGhlIG5ldyBnZW5lcmljIGxpc3Rfc29ydCBmdW5jdGlvbiB0
+byBzb3J0IHRoZSBkZWx3cmkgZGlzcGF0Y2gKcXVldWUgYmVmb3JlIGlzc3VlIHRvIGVuc3VyZSB0
+aGF0IHRoZSBidWZmZXJzIGFyZSBwdXNoZWQgaW4gdGhlIG1vc3QKZnJpZW5kbHkgb3JkZXIgcG9z
+c2libGUgdG8gdGhlIGxvd2VyIGxheWVycy4KClNpZ25lZC1vZmYtYnk6IERhdmUgQ2hpbm5lciA8
+ZGF2aWRAZnJvbW9yYml0LmNvbT4KUmV2aWV3ZWQtYnk6IENocmlzdG9waCBIZWxsd2lnIDxoY2hA
+bHN0LmRlPgotLS0KIGZzL3hmcy9saW51eC0yLjYveGZzX2J1Zi5jIHwgICA4NyArKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKystLS0tLS0tLS0tLS0tLQogMSBmaWxlcyBjaGFuZ2VkLCA2MCBp
+bnNlcnRpb25zKCspLCAyNyBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9mcy94ZnMvbGludXgt
+Mi42L3hmc19idWYuYyBiL2ZzL3hmcy9saW51eC0yLjYveGZzX2J1Zi5jCmluZGV4IGIzMDYyNjUu
+LjQ1NTZhNGMgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy9saW51eC0yLjYveGZzX2J1Zi5jCisrKyBiL2Zz
+L3hmcy9saW51eC0yLjYveGZzX2J1Zi5jCkBAIC0zMyw2ICszMyw3IEBACiAjaW5jbHVkZSA8bGlu
+dXgvbWlncmF0ZS5oPgogI2luY2x1ZGUgPGxpbnV4L2JhY2tpbmctZGV2Lmg+CiAjaW5jbHVkZSA8
+bGludXgvZnJlZXplci5oPgorI2luY2x1ZGUgPGxpbnV4L2xpc3Rfc29ydC5oPgogCiAjaW5jbHVk
+ZSAieGZzX3NiLmgiCiAjaW5jbHVkZSAieGZzX2ludW0uaCIKQEAgLTE4NzcsMTQgKzE4NzgsNDIg
+QEAgeGZzX2J1Zl9kZWx3cmlfc3BsaXQoCiAKIH0KIAorLyoKKyAqIENvbXBhcmUgZnVuY3Rpb24g
+aXMgbW9yZSBjb21wbGV4IHRoYW4gaXQgbmVlZHMgdG8gYmUgYmVjYXVzZQorICogdGhlIHJldHVy
+biB2YWx1ZSBpcyBvbmx5IDMyIGJpdHMgYW5kIHdlIGFyZSBkb2luZyBjb21wYXJpc29ucworICog
+b24gNjQgYml0IHZhbHVlcworICovCitzdGF0aWMgaW50Cit4ZnNfYnVmX2NtcCgKKwl2b2lkCQkq
+cHJpdiwKKwlzdHJ1Y3QgbGlzdF9oZWFkICphLAorCXN0cnVjdCBsaXN0X2hlYWQgKmIpCit7CisJ
+c3RydWN0IHhmc19idWYJKmFwID0gY29udGFpbmVyX29mKGEsIHN0cnVjdCB4ZnNfYnVmLCBiX2xp
+c3QpOworCXN0cnVjdCB4ZnNfYnVmCSpicCA9IGNvbnRhaW5lcl9vZihiLCBzdHJ1Y3QgeGZzX2J1
+ZiwgYl9saXN0KTsKKwl4ZnNfZGFkZHJfdAkJZGlmZjsKKworCWRpZmYgPSBhcC0+Yl9ibiAtIGJw
+LT5iX2JuOworCWlmIChkaWZmIDwgMCkKKwkJcmV0dXJuIC0xOworCWlmIChkaWZmID4gMCkKKwkJ
+cmV0dXJuIDE7CisJcmV0dXJuIDA7Cit9CisKK3ZvaWQKK3hmc19idWZfZGVsd3JpX3NvcnQoCisJ
+eGZzX2J1ZnRhcmdfdAkqdGFyZ2V0LAorCXN0cnVjdCBsaXN0X2hlYWQgKmxpc3QpCit7CisJbGlz
+dF9zb3J0KE5VTEwsIGxpc3QsIHhmc19idWZfY21wKTsKK30KKwogU1RBVElDIGludAogeGZzYnVm
+ZCgKIAl2b2lkCQkqZGF0YSkKIHsKLQlzdHJ1Y3QgbGlzdF9oZWFkIHRtcDsKLQl4ZnNfYnVmdGFy
+Z190CSp0YXJnZXQgPSAoeGZzX2J1ZnRhcmdfdCAqKWRhdGE7Ci0JaW50CQljb3VudDsKLQl4ZnNf
+YnVmX3QJKmJwOworCXhmc19idWZ0YXJnX3QgICAqdGFyZ2V0ID0gKHhmc19idWZ0YXJnX3QgKilk
+YXRhOwogCiAJY3VycmVudC0+ZmxhZ3MgfD0gUEZfTUVNQUxMT0M7CiAKQEAgLTE4OTMsNiArMTky
+Miw4IEBAIHhmc2J1ZmQoCiAJZG8gewogCQlsb25nCWFnZSA9IHhmc19idWZfYWdlX2NlbnRpc2Vj
+cyAqIG1zZWNzX3RvX2ppZmZpZXMoMTApOwogCQlsb25nCXRvdXQgPSB4ZnNfYnVmX3RpbWVyX2Nl
+bnRpc2VjcyAqIG1zZWNzX3RvX2ppZmZpZXMoMTApOworCQlpbnQJY291bnQgPSAwOworCQlzdHJ1
+Y3QgbGlzdF9oZWFkIHRtcDsKIAogCQlpZiAodW5saWtlbHkoZnJlZXppbmcoY3VycmVudCkpKSB7
+CiAJCQlzZXRfYml0KFhCVF9GT1JDRV9TTEVFUCwgJnRhcmdldC0+YnRfZmxhZ3MpOwpAQCAtMTkw
+NywxMSArMTkzOCwxMCBAQCB4ZnNidWZkKAogCQlzY2hlZHVsZV90aW1lb3V0X2ludGVycnVwdGli
+bGUodG91dCk7CiAKIAkJeGZzX2J1Zl9kZWx3cmlfc3BsaXQodGFyZ2V0LCAmdG1wLCBhZ2UpOwot
+CQljb3VudCA9IDA7CisJCWxpc3Rfc29ydChOVUxMLCAmdG1wLCB4ZnNfYnVmX2NtcCk7CiAJCXdo
+aWxlICghbGlzdF9lbXB0eSgmdG1wKSkgewotCQkJYnAgPSBsaXN0X2VudHJ5KHRtcC5uZXh0LCB4
+ZnNfYnVmX3QsIGJfbGlzdCk7Ci0JCQlBU1NFUlQodGFyZ2V0ID09IGJwLT5iX3RhcmdldCk7Ci0K
+KwkJCXN0cnVjdCB4ZnNfYnVmICpicDsKKwkJCWJwID0gbGlzdF9maXJzdF9lbnRyeSgmdG1wLCBz
+dHJ1Y3QgeGZzX2J1ZiwgYl9saXN0KTsKIAkJCWxpc3RfZGVsX2luaXQoJmJwLT5iX2xpc3QpOwog
+CQkJeGZzX2J1Zl9pb3N0cmF0ZWd5KGJwKTsKIAkJCWNvdW50Kys7CkBAIC0xOTM3LDQyICsxOTY3
+LDQ1IEBAIHhmc19mbHVzaF9idWZ0YXJnKAogCXhmc19idWZ0YXJnX3QJKnRhcmdldCwKIAlpbnQJ
+CXdhaXQpCiB7Ci0Jc3RydWN0IGxpc3RfaGVhZCB0bXA7Ci0JeGZzX2J1Zl90CSpicCwgKm47CisJ
+eGZzX2J1Zl90CSpicDsKIAlpbnQJCXBpbmNvdW50ID0gMDsKKwlMSVNUX0hFQUQodG1wX2xpc3Qp
+OworCUxJU1RfSEVBRCh3YWl0X2xpc3QpOwogCiAJeGZzX2J1Zl9ydW5hbGxfcXVldWVzKHhmc2Nv
+bnZlcnRkX3dvcmtxdWV1ZSk7CiAJeGZzX2J1Zl9ydW5hbGxfcXVldWVzKHhmc2RhdGFkX3dvcmtx
+dWV1ZSk7CiAJeGZzX2J1Zl9ydW5hbGxfcXVldWVzKHhmc2xvZ2Rfd29ya3F1ZXVlKTsKIAogCXNl
+dF9iaXQoWEJUX0ZPUkNFX0ZMVVNILCAmdGFyZ2V0LT5idF9mbGFncyk7Ci0JcGluY291bnQgPSB4
+ZnNfYnVmX2RlbHdyaV9zcGxpdCh0YXJnZXQsICZ0bXAsIDApOworCXBpbmNvdW50ID0geGZzX2J1
+Zl9kZWx3cmlfc3BsaXQodGFyZ2V0LCAmdG1wX2xpc3QsIDApOwogCiAJLyoKLQkgKiBEcm9wcGVk
+IHRoZSBkZWxheWVkIHdyaXRlIGxpc3QgbG9jaywgbm93IHdhbGsgdGhlIHRlbXBvcmFyeSBsaXN0
+CisJICogRHJvcHBlZCB0aGUgZGVsYXllZCB3cml0ZSBsaXN0IGxvY2ssIG5vdyB3YWxrIHRoZSB0
+ZW1wb3JhcnkgbGlzdC4KKwkgKiBBbGwgSS9PIGlzIGlzc3VlZCBhc3luYyBhbmQgdGhlbiBpZiB3
+ZSBuZWVkIHRvIHdhaXQgZm9yIGNvbXBsZXRpb24KKwkgKiB3ZSBkbyB0aGF0IGFmdGVyIGlzc3Vp
+bmcgYWxsIHRoZSBJTy4KIAkgKi8KLQlsaXN0X2Zvcl9lYWNoX2VudHJ5X3NhZmUoYnAsIG4sICZ0
+bXAsIGJfbGlzdCkgeworCWxpc3Rfc29ydChOVUxMLCAmdG1wX2xpc3QsIHhmc19idWZfY21wKTsK
+Kwl3aGlsZSAoIWxpc3RfZW1wdHkoJnRtcF9saXN0KSkgeworCQlicCA9IGxpc3RfZmlyc3RfZW50
+cnkoJnRtcF9saXN0LCBzdHJ1Y3QgeGZzX2J1ZiwgYl9saXN0KTsKIAkJQVNTRVJUKHRhcmdldCA9
+PSBicC0+Yl90YXJnZXQpOwotCQlpZiAod2FpdCkKKwkJbGlzdF9kZWxfaW5pdCgmYnAtPmJfbGlz
+dCk7CisJCWlmICh3YWl0KSB7CiAJCQlicC0+Yl9mbGFncyAmPSB+WEJGX0FTWU5DOwotCQllbHNl
+Ci0JCQlsaXN0X2RlbF9pbml0KCZicC0+Yl9saXN0KTsKLQorCQkJbGlzdF9hZGQoJmJwLT5iX2xp
+c3QsICZ3YWl0X2xpc3QpOworCQl9CiAJCXhmc19idWZfaW9zdHJhdGVneShicCk7CiAJfQogCi0J
+aWYgKHdhaXQpCisJaWYgKHdhaXQpIHsKKwkJLyogRXhwZWRpdGUgYW5kIHdhaXQgZm9yIElPIHRv
+IGNvbXBsZXRlLiAqLwogCQlibGtfcnVuX2FkZHJlc3Nfc3BhY2UodGFyZ2V0LT5idF9tYXBwaW5n
+KTsKKwkJd2hpbGUgKCFsaXN0X2VtcHR5KCZ3YWl0X2xpc3QpKSB7CisJCQlicCA9IGxpc3RfZmly
+c3RfZW50cnkoJndhaXRfbGlzdCwgc3RydWN0IHhmc19idWYsIGJfbGlzdCk7CiAKLQkvKgotCSAq
+IFJlbWFpbmluZyBsaXN0IGl0ZW1zIG11c3QgYmUgZmx1c2hlZCBiZWZvcmUgcmV0dXJuaW5nCi0J
+ICovCi0Jd2hpbGUgKCFsaXN0X2VtcHR5KCZ0bXApKSB7Ci0JCWJwID0gbGlzdF9lbnRyeSh0bXAu
+bmV4dCwgeGZzX2J1Zl90LCBiX2xpc3QpOwotCi0JCWxpc3RfZGVsX2luaXQoJmJwLT5iX2xpc3Qp
+OwotCQl4ZnNfaW93YWl0KGJwKTsKLQkJeGZzX2J1Zl9yZWxzZShicCk7CisJCQlsaXN0X2RlbF9p
+bml0KCZicC0+Yl9saXN0KTsKKwkJCXhmc19pb3dhaXQoYnApOworCQkJeGZzX2J1Zl9yZWxzZShi
+cCk7CisJCX0KIAl9CiAKIAlyZXR1cm4gcGluY291bnQ7Ci0tIAoxLjYuNQoKX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNA
+b3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
