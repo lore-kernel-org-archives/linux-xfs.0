@@ -1,23 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o19Hpr3u238557 for <xfs@oss.sgi.com>; Tue, 9 Feb 2010 11:51:54 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5AC2E1BE0B1
-	for <xfs@oss.sgi.com>; Tue,  9 Feb 2010 09:53:07 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 1qvGhlM5Y1zF4JvW for
-	<xfs@oss.sgi.com>; Tue, 09 Feb 2010 09:53:07 -0800 (PST)
-Date: Tue, 9 Feb 2010 12:53:05 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH V2] xfstests: fix up fs_perms test used by 126
-Message-ID: <20100209175305.GA10833@infradead.org>
-References: <4B6C4E81.6060201@sandeen.net>
-	<20100208194058.GC9527@infradead.org>
-	<4B71935E.7090907@sandeen.net>
+	o19JPLA8244488 for <xfs@oss.sgi.com>; Tue, 9 Feb 2010 13:25:22 -0600
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2F4311390AED
+	for <xfs@oss.sgi.com>; Tue,  9 Feb 2010 11:26:34 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id LT4z6YojEhjL1Hg9 for
+	<xfs@oss.sgi.com>; Tue, 09 Feb 2010 11:26:34 -0800 (PST)
+Message-ID: <4B71B6E7.1000203@redhat.com>
+Date: Tue, 09 Feb 2010 13:26:31 -0600
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4B71935E.7090907@sandeen.net>
+Subject: [PATCH] xfstests: optionally run all tests under quota
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,26 +25,87 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@infradead.org>, Theodore Tso <tytso@mit.edu>, xfs-oss <xfs@oss.sgi.com>
+To: xfs-oss <xfs@oss.sgi.com>
+Cc: ext4 development <linux-ext4@vger.kernel.org>
 
-On Tue, Feb 09, 2010 at 10:54:54AM -0600, Eric Sandeen wrote:
-> Test 126 was failing intermittently for Ted & I; it seems that
-> this is because we were passing an unterminated string to
-> fopen for the mode; I'm not certain why this made it fail,
-> but it's pretty clearly not a good thing to do, and fixing
-> it fixes the test.
-> 
-> Rather than passing around characters, do things string-wise,
-> since that is what is ultimately used in fopen().
-> 
-> Reported-by: Theodore Tso <tytso@mit.edu>
-> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+This patch might be a little heavy handed, but it seems to
+work; if you set USE_QUOTA=1 in your environment, all
+tests should be run with quota on and enabled.
 
-Looks good,
+This will hopefully help shake out some of the ext4
+quota problems, although one needs to keep an eye
+on the console to see whether warnings scroll by.
 
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+diff --git a/common.rc b/common.rc
+index 6424871..4fde921 100644
+--- a/common.rc
++++ b/common.rc
+@@ -64,6 +64,9 @@ _mount_opts()
+     *)
+ 	;;
+     esac
++    if [ ! -z "$USE_QUOTA" ]; then
++	export MOUNT_OPTIONS="$MOUNT_OPTIONS -o usrquota,grpquota"
++    fi
+ }
+ 
+ _mkfs_opts()
+@@ -161,6 +164,10 @@ _test_options()
+     type=$1
+     TEST_OPTIONS=""
+ 
++    if [ ! -z "$USE_QUOTA" ]; then
++	TEST_OPTIONS="-o usrquota,grpquota"
++    fi
++
+     if [ "$FSTYP" != "xfs" ]; then
+         return
+     fi
+@@ -202,6 +209,25 @@ _mount_ops_filter()
+ 
+ }
+ 
++_setup_quota()
++{
++    mountpoint=$1
++    if [ ! -z "$USE_QUOTA" ]; then
++	case $FSTYP in
++	xfs)
++	    ;;
++	ext*|reiserfs)
++	    quotaoff $mountpoint &>/dev/null
++	    quotacheck -u -g $mountpoint
++	    quotaon $mountpoint
++	    ;;
++	*)
++	    _fail "Don't know how to turn on quota on $FSTYP"
++	    ;;
++	esac
++    fi
++}
++
+ _scratch_mount_options()
+ {
+     _scratch_options mount
+@@ -212,6 +238,7 @@ _scratch_mount_options()
+ _scratch_mount()
+ {
+     _mount -t $FSTYP `_scratch_mount_options $*`
++    _setup_quota $SCRATCH_MNT
+ }
+ 
+ _scratch_unmount()
+@@ -229,6 +256,7 @@ _test_mount()
+ {
+     _test_options mount
+     _mount -t $FSTYP $TEST_OPTIONS $TEST_FS_MOUNT_OPTS $* $TEST_DEV $TEST_DIR
++    _setup_quota $TEST_DIR
+ }
+ 
+ _scratch_mkfs_options()
 
 _______________________________________________
 xfs mailing list
