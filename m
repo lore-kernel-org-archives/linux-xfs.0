@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o19M1k0Y254972 for <xfs@oss.sgi.com>; Tue, 9 Feb 2010 16:01:48 -0600
+	o19M3UsU255071 for <xfs@oss.sgi.com>; Tue, 9 Feb 2010 16:03:30 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A4F0D139276C
-	for <xfs@oss.sgi.com>; Tue,  9 Feb 2010 14:02:59 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 201DF139278A
+	for <xfs@oss.sgi.com>; Tue,  9 Feb 2010 14:04:43 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id uIWOKpio10amOcas for
-	<xfs@oss.sgi.com>; Tue, 09 Feb 2010 14:02:59 -0800 (PST)
-Date: Tue, 9 Feb 2010 17:02:58 -0500
+	by cuda.sgi.com with ESMTP id TkfZl2eMiq8oLhd3 for
+	<xfs@oss.sgi.com>; Tue, 09 Feb 2010 14:04:43 -0800 (PST)
+Date: Tue, 9 Feb 2010 17:04:43 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests: make 204 generic
-Message-ID: <20100209220258.GA20187@infradead.org>
-References: <4B71C8DF.1090909@sandeen.net>
+Subject: Re: [PATCH] xfstests: optionally run all tests under quota
+Message-ID: <20100209220443.GB20187@infradead.org>
+References: <4B71B6E7.1000203@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4B71C8DF.1090909@sandeen.net>
+In-Reply-To: <4B71B6E7.1000203@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,22 +28,16 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: ext4 development <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Feb 09, 2010 at 02:43:11PM -0600, Eric Sandeen wrote:
-> 204 can be generic.
+On Tue, Feb 09, 2010 at 01:26:31PM -0600, Eric Sandeen wrote:
+> This patch might be a little heavy handed, but it seems to
+> work; if you set USE_QUOTA=1 in your environment, all
+> tests should be run with quota on and enabled.
 
-Looks good.
-
-> Also remove a stray _scratch_mkfs that snuck into
-> _scratch_mkfs_sized :/
-
-Heh, that might have made the ENOSPC tests pass rather easily before..
-
-> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+I'd rather prefer a -quota option to ./check than a magic
+environment variable.
 
 _______________________________________________
 xfs mailing list
