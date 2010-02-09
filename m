@@ -1,15 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o19KLhGW247951 for <xfs@oss.sgi.com>; Tue, 9 Feb 2010 14:21:43 -0600
-Subject: Re: [PATCH] xfs: only clear the suid bit once in xfs_write
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20100203194331.GA20199@infradead.org>
-References: <20100203194331.GA20199@infradead.org>
-Date: Tue, 09 Feb 2010 14:22:53 -0600
-Message-ID: <1265746973.26394.9.camel@doink1>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	o19Kg0Vh249343 for <xfs@oss.sgi.com>; Tue, 9 Feb 2010 14:42:00 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1E1861391828
+	for <xfs@oss.sgi.com>; Tue,  9 Feb 2010 12:43:12 -0800 (PST)
+Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
+	by cuda.sgi.com with ESMTP id YcUfyIAEwBRwMyVD for
+	<xfs@oss.sgi.com>; Tue, 09 Feb 2010 12:43:12 -0800 (PST)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail.sandeen.net (Postfix) with ESMTP id B3C31127664A
+	for <xfs@oss.sgi.com>; Tue,  9 Feb 2010 14:43:11 -0600 (CST)
+Message-ID: <4B71C8DF.1090909@sandeen.net>
+Date: Tue, 09 Feb 2010 14:43:11 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: [PATCH] xfstests: make 204 generic
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,122 +30,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Wed, 2010-02-03 at 14:43 -0500, Christoph Hellwig wrote:
-> file_remove_suid already calls into ->setattr to clear the suid and sgid
-> bits if needed, no need to start a second transaction to do it ourselves.
-> 
-> Note that xfs_write_clear_setuid issues a sync transaction while the
-> path through ->setattr doesn't, but that is consistant with the other
-> filesystems.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+204 can be generic.
 
-Looks good.  Those S*ID bits sure get checked and
-cleared in a lot of places...
+Also remove a stray _scratch_mkfs that snuck into
+_scratch_mkfs_sized :/
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
 
-> Index: xfs/fs/xfs/linux-2.6/xfs_lrw.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/linux-2.6/xfs_lrw.c	2010-02-03 20:37:45.956003749 +0100
-> +++ xfs/fs/xfs/linux-2.6/xfs_lrw.c	2010-02-03 20:37:49.348003520 +0100
-> @@ -630,18 +630,9 @@ start:
->  	 * by root.  This keeps people from modifying setuid and
->  	 * setgid binaries.
->  	 */
-> -
-> -	if (((xip->i_d.di_mode & S_ISUID) ||
-> -	    ((xip->i_d.di_mode & (S_ISGID | S_IXGRP)) ==
-> -		(S_ISGID | S_IXGRP))) &&
-> -	     !capable(CAP_FSETID)) {
-> -		error = xfs_write_clear_setuid(xip);
-> -		if (likely(!error))
-> -			error = -file_remove_suid(file);
-> -		if (unlikely(error)) {
-> -			goto out_unlock_internal;
-> -		}
-> -	}
-> +	error = -file_remove_suid(file);
-> +	if (unlikely(error))
-> +		goto out_unlock_internal;
->  
->  	/* We can write back this queue in page reclaim */
->  	current->backing_dev_info = mapping->backing_dev_info;
-> Index: xfs/fs/xfs/xfs_rw.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/xfs_rw.c	2010-02-03 20:37:45.965004126 +0100
-> +++ xfs/fs/xfs/xfs_rw.c	2010-02-03 20:37:49.349010212 +0100
-> @@ -47,48 +47,6 @@
->  #include "xfs_trace.h"
->  
->  /*
-> - * This is a subroutine for xfs_write() and other writers (xfs_ioctl)
-> - * which clears the setuid and setgid bits when a file is written.
-> - */
-> -int
-> -xfs_write_clear_setuid(
-> -	xfs_inode_t	*ip)
-> -{
-> -	xfs_mount_t	*mp;
-> -	xfs_trans_t	*tp;
-> -	int		error;
-> -
-> -	mp = ip->i_mount;
-> -	tp = xfs_trans_alloc(mp, XFS_TRANS_WRITEID);
-> -	if ((error = xfs_trans_reserve(tp, 0,
-> -				      XFS_WRITEID_LOG_RES(mp),
-> -				      0, 0, 0))) {
-> -		xfs_trans_cancel(tp, 0);
-> -		return error;
-> -	}
-> -	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> -	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
-> -	xfs_trans_ihold(tp, ip);
-> -	ip->i_d.di_mode &= ~S_ISUID;
-> -
-> -	/*
-> -	 * Note that we don't have to worry about mandatory
-> -	 * file locking being disabled here because we only
-> -	 * clear the S_ISGID bit if the Group execute bit is
-> -	 * on, but if it was on then mandatory locking wouldn't
-> -	 * have been enabled.
-> -	 */
-> -	if (ip->i_d.di_mode & S_IXGRP) {
-> -		ip->i_d.di_mode &= ~S_ISGID;
-> -	}
-> -	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-> -	xfs_trans_set_sync(tp);
-> -	error = xfs_trans_commit(tp, 0);
-> -	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> -	return 0;
-> -}
-> -
-> -/*
->   * Force a shutdown of the filesystem instantly while keeping
->   * the filesystem consistent. We don't do an unmount here; just shutdown
->   * the shop, make sure that absolutely nothing persistent happens to
-> Index: xfs/fs/xfs/xfs_rw.h
-> ===================================================================
-> --- xfs.orig/fs/xfs/xfs_rw.h	2010-02-03 20:37:53.085003394 +0100
-> +++ xfs/fs/xfs/xfs_rw.h	2010-02-03 20:37:57.946033654 +0100
-> @@ -39,7 +39,6 @@ xfs_fsb_to_db(struct xfs_inode *ip, xfs_
->  /*
->   * Prototypes for functions in xfs_rw.c.
->   */
-> -extern int xfs_write_clear_setuid(struct xfs_inode *ip);
->  extern int xfs_read_buf(struct xfs_mount *mp, xfs_buftarg_t *btp,
->  			xfs_daddr_t blkno, int len, uint flags,
->  			struct xfs_buf **bpp);
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
-
+diff --git a/204 b/204
+index 1ac9ebf..14ebcdc 100755
+--- a/204
++++ b/204
+@@ -35,12 +35,13 @@ status=1	# failure is the default!
+ . ./common.filter
+ 
+ # real QA test starts here
+-_supported_fs xfs
++_supported_fs generic
+ _supported_os Linux
+ 
+ _require_scratch
+ 
+-_scratch_mkfs_xfs -d size=104m >/dev/null
++SIZE=104*1024*1024
++_scratch_mkfs_sized $SIZE  &> /dev/null
+ _scratch_mount
+ 
+ for i in `seq 1 22500`; do
+diff --git a/common.rc b/common.rc
+index 0a02a2b..c76bcde 100644
+--- a/common.rc
++++ b/common.rc
+@@ -325,7 +325,6 @@ _scratch_mkfs_sized()
+ 	_notrun "Filesystem $FSTYP not supported in _scratch_mkfs_sized"
+ 	;;
+     esac
+-    _scratch_mkfs
+ }
+ 
+ # Emulate an N-data-disk stripe w/ various stripe units
 
 _______________________________________________
 xfs mailing list
