@@ -1,30 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o193thNK182530 for <xfs@oss.sgi.com>; Mon, 8 Feb 2010 21:55:43 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 85B851CB5F56
-	for <xfs@oss.sgi.com>; Mon,  8 Feb 2010 19:56:54 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	1l8JYxSBGdWAbbVR for <xfs@oss.sgi.com>;
-	Mon, 08 Feb 2010 19:56:54 -0800 (PST)
-Received: from discord (unverified [121.44.103.80])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	13074385-1927428
-	for <xfs@oss.sgi.com>; Tue, 09 Feb 2010 14:26:52 +1030 (CDT)
-Received: from disturbed ([192.168.1.9]) by discord with esmtp (Exim 4.69)
-	(envelope-from <dave@fromorbit.com>) id 1NehDX-0000O2-4f
-	for xfs@oss.sgi.com; Tue, 09 Feb 2010 14:56:51 +1100
-Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1NehDR-0002SI-DT
-	for xfs@oss.sgi.com; Tue, 09 Feb 2010 14:56:45 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/9] xfs: Don't issue buffer IO direct from AIL push V2
-Date: Tue,  9 Feb 2010 14:56:36 +1100
-Message-Id: <1265687802-23043-4-git-send-email-david@fromorbit.com>
-In-Reply-To: <1265687802-23043-1-git-send-email-david@fromorbit.com>
-References: <1265687802-23043-1-git-send-email-david@fromorbit.com>
+	o198lVEP202585 for <xfs@oss.sgi.com>; Tue, 9 Feb 2010 02:47:32 -0600
+Received: from pu01.news-service.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 62A00138B50C
+	for <xfs@oss.sgi.com>; Tue,  9 Feb 2010 00:48:42 -0800 (PST)
+Received: from pu01.news-service.com (ns1.news-service.com [195.114.240.3]) by
+	cuda.sgi.com with ESMTP id qkyP3e4f78DIrjyB for
+	<xfs@oss.sgi.com>; Tue, 09 Feb 2010 00:48:42 -0800 (PST)
+Message-ID: <4B712166.9010701@news-service.com>
+Date: Tue, 09 Feb 2010 09:48:38 +0100
+From: Patrick Schreurs <patrick@news-service.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH] Inode reclaim fixes (was Re: 2.6.31	xfs_fs_destroy_inode:
+	cannot reclaim)
+References: <4AF0422D.1070104@news-service.com>
+	<20091114162126.GB17658@infradead.org>
+	<4B0A8075.8080008@news-service.com>
+	<20091211115932.GA20632@infradead.org>
+	<4B3F9F88.9030307@news-service.com>
+	<20100107110446.GA13802@discord.disaster>
+	<4B45CFAC.4000607@news-service.com>
+	<20100108113114.GA8654@discord.disaster>
+	<4B504B03.7050604@news-service.com>
+	<4B6706CE.1020207@news-service.com>
+	<20100208194226.GD9527@infradead.org>
+In-Reply-To: <20100208194226.GD9527@infradead.org>
+Content-Type: multipart/mixed; boundary="------------090506040001040402060507"
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,614 +35,462 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Tommy van Leeuwen <tommy@news-service.com>, xfs@oss.sgi.com
 
-All buffers logged into the AIL are marked as delayed write.
-When the AIL needs to push the buffer out, it issues an async write of the
-buffer. This means that IO patterns are dependent on the order of
-buffers in the AIL.
+This is a multi-part message in MIME format.
+--------------090506040001040402060507
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Instead of flushing the buffer, promote the buffer in the delayed
-write list so that the next time the xfsbufd is run the buffer will
-be flushed by the xfsbufd. Return the state to the xfsaild that the
-buffer was promoted so that the xfsaild knows that it needs to cause
-the xfsbufd to run to flush the buffers that were promoted.
+On 8-2-2010 20:42, Christoph Hellwig wrote:
+> On Mon, Feb 01, 2010 at 05:52:30PM +0100, Patrick Schreurs wrote:
+>> Hello Dave,
+>>
+>> I'm afraid we had another crash a few days ago. Have a look at the
+>> screenshot. Can you make anything out of it? This server is running
+>> 2.6.32.3 with your inode-reclaim patch applied and XFS_DEBUG still
+>> enabled.
+>
+> Just wondering, which set of patches is this exactly?
 
-Using the xfsbufd for issuing the IO allows us to dispatch all
-buffer IO from the one queue. This means that we can make much more
-enlightened decisions on what order to flush buffers to disk as
-we don't have multiple places issuing IO. Optimisations to xfsbufd
-will be in a future patch.
+This is a clean 2.6.32.3 with the xfs-inode-reclaim-2.6.32 patch i 
+received from Dave on January 8th (see attachment).
 
-Version 2
-- kill XFS_ITEM_FLUSHING as it is now unused.
+Thanks,
 
-Signed-off-by: Dave Chinner <david@fromorbit.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/linux-2.6/xfs_buf.c    |   29 ++++++++++++
- fs/xfs/linux-2.6/xfs_buf.h    |    2 +
- fs/xfs/linux-2.6/xfs_trace.h  |    1 +
- fs/xfs/quota/xfs_dquot_item.c |   85 +++++------------------------------
- fs/xfs/quota/xfs_dquot_item.h |    4 --
- fs/xfs/xfs_buf_item.c         |   64 +++++++++++++++------------
- fs/xfs/xfs_inode_item.c       |   98 ++++++----------------------------------
- fs/xfs/xfs_inode_item.h       |    6 ---
- fs/xfs/xfs_trans.h            |    3 +-
- fs/xfs/xfs_trans_ail.c        |   13 +++---
- 10 files changed, 102 insertions(+), 203 deletions(-)
+-Patrick
 
-diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
-index 44e20e5..b306265 100644
---- a/fs/xfs/linux-2.6/xfs_buf.c
-+++ b/fs/xfs/linux-2.6/xfs_buf.c
-@@ -1778,6 +1778,35 @@ xfs_buf_delwri_dequeue(
- 	trace_xfs_buf_delwri_dequeue(bp, _RET_IP_);
- }
- 
-+/*
-+ * If a delwri buffer needs to be pushed before it has aged out, then promote
-+ * it to the head of the delwri queue so that it will be flushed on the next
-+ * xfsbufd run. We do this by resetting the queuetime of the buffer to be older
-+ * than the age currently needed to flush the buffer. Hence the next time the
-+ * xfsbufd sees it is guaranteed to be considered old enough to flush.
-+ */
-+void
-+xfs_buf_delwri_promote(
-+	struct xfs_buf	*bp)
-+{
-+	struct xfs_buftarg *btp = bp->b_target;
-+	long		age = xfs_buf_age_centisecs * msecs_to_jiffies(10) + 1;
+--------------090506040001040402060507
+Content-Type: text/plain;
+ name="xfs-inode-reclaim-2.6.32"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="xfs-inode-reclaim-2.6.32"
+
+diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
+index 18a4b8e..f3c622a 100644
+--- a/fs/xfs/linux-2.6/xfs_super.c
++++ b/fs/xfs/linux-2.6/xfs_super.c
+@@ -930,13 +930,37 @@ xfs_fs_alloc_inode(
+  */
+ STATIC void
+ xfs_fs_destroy_inode(
+-	struct inode	*inode)
++	struct inode		*inode)
+ {
+-	xfs_inode_t		*ip = XFS_I(inode);
++	struct xfs_inode	*ip = XFS_I(inode);
 +
-+	ASSERT(bp->b_flags & XBF_DELWRI);
-+	ASSERT(bp->b_flags & _XBF_DELWRI_Q);
++	xfs_itrace_entry(ip);
+ 
+ 	XFS_STATS_INC(vn_reclaim);
+-	if (xfs_reclaim(ip))
+-		panic("%s: cannot reclaim 0x%p\n", __func__, inode);
++
++	/* bad inode, get out here ASAP */
++	if (is_bad_inode(inode))
++		goto out_reclaim;
++
++	xfs_ioend_wait(ip);
++
++	ASSERT(XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0);
 +
 +	/*
-+	 * Check the buffer age before locking the delayed write queue as we
-+	 * don't need to promote buffers that are already past the flush age.
++	 * We should never get here with one of the reclaim flags already set.
 +	 */
-+	if (bp->b_queuetime < jiffies - age)
-+		return;
-+	bp->b_queuetime = jiffies - age;
-+	spin_lock(&btp->bt_delwrite_lock);
-+	list_move(&bp->b_list, &btp->bt_delwrite_queue);
-+	spin_unlock(&btp->bt_delwrite_lock);
-+}
++	ASSERT_ALWAYS(!xfs_iflags_test(ip, XFS_IRECLAIMABLE));
++	ASSERT_ALWAYS(!xfs_iflags_test(ip, XFS_IRECLAIM));
 +
- STATIC void
- xfs_buf_runall_queues(
- 	struct workqueue_struct	*queue)
-diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
-index ea8c198..be45e8c 100644
---- a/fs/xfs/linux-2.6/xfs_buf.h
-+++ b/fs/xfs/linux-2.6/xfs_buf.h
-@@ -266,6 +266,7 @@ extern int xfs_buf_ispin(xfs_buf_t *);
- 
- /* Delayed Write Buffer Routines */
- extern void xfs_buf_delwri_dequeue(xfs_buf_t *);
-+extern void xfs_buf_delwri_promote(xfs_buf_t *);
- 
- /* Buffer Daemon Setup Routines */
- extern int xfs_buf_init(void);
-@@ -395,6 +396,7 @@ extern void xfs_free_buftarg(struct xfs_mount *, struct xfs_buftarg *);
- extern void xfs_wait_buftarg(xfs_buftarg_t *);
- extern int xfs_setsize_buftarg(xfs_buftarg_t *, unsigned int, unsigned int);
- extern int xfs_flush_buftarg(xfs_buftarg_t *, int);
-+
- #ifdef CONFIG_KDB_MODULES
- extern struct list_head *xfs_get_buftarg_list(void);
- #endif
-diff --git a/fs/xfs/linux-2.6/xfs_trace.h b/fs/xfs/linux-2.6/xfs_trace.h
-index 1bb09e7..a4574dc 100644
---- a/fs/xfs/linux-2.6/xfs_trace.h
-+++ b/fs/xfs/linux-2.6/xfs_trace.h
-@@ -483,6 +483,7 @@ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_unlock);
- DEFINE_BUF_ITEM_EVENT(xfs_buf_item_unlock_stale);
- DEFINE_BUF_ITEM_EVENT(xfs_buf_item_committed);
- DEFINE_BUF_ITEM_EVENT(xfs_buf_item_push);
-+DEFINE_BUF_ITEM_EVENT(xfs_buf_item_pushbuf);
- DEFINE_BUF_ITEM_EVENT(xfs_trans_get_buf);
- DEFINE_BUF_ITEM_EVENT(xfs_trans_get_buf_recur);
- DEFINE_BUF_ITEM_EVENT(xfs_trans_getsb);
-diff --git a/fs/xfs/quota/xfs_dquot_item.c b/fs/xfs/quota/xfs_dquot_item.c
-index 1b56437..dda0fb0 100644
---- a/fs/xfs/quota/xfs_dquot_item.c
-+++ b/fs/xfs/quota/xfs_dquot_item.c
-@@ -212,66 +212,31 @@ xfs_qm_dquot_logitem_pushbuf(
- 	xfs_dquot_t	*dqp;
- 	xfs_mount_t	*mp;
- 	xfs_buf_t	*bp;
--	uint		dopush;
- 
- 	dqp = qip->qli_dquot;
- 	ASSERT(XFS_DQ_IS_LOCKED(dqp));
- 
- 	/*
--	 * The qli_pushbuf_flag keeps others from
--	 * trying to duplicate our effort.
--	 */
--	ASSERT(qip->qli_pushbuf_flag != 0);
--	ASSERT(qip->qli_push_owner == current_pid());
--
--	/*
- 	 * If flushlock isn't locked anymore, chances are that the
- 	 * inode flush completed and the inode was taken off the AIL.
- 	 * So, just get out.
- 	 */
- 	if (completion_done(&dqp->q_flush)  ||
- 	    ((qip->qli_item.li_flags & XFS_LI_IN_AIL) == 0)) {
--		qip->qli_pushbuf_flag = 0;
- 		xfs_dqunlock(dqp);
- 		return;
- 	}
- 	mp = dqp->q_mount;
- 	bp = xfs_incore(mp->m_ddev_targp, qip->qli_format.qlf_blkno,
- 		    XFS_QI_DQCHUNKLEN(mp), XBF_TRYLOCK);
--	if (bp != NULL) {
--		if (XFS_BUF_ISDELAYWRITE(bp)) {
--			dopush = ((qip->qli_item.li_flags & XFS_LI_IN_AIL) &&
--				  !completion_done(&dqp->q_flush));
--			qip->qli_pushbuf_flag = 0;
--			xfs_dqunlock(dqp);
--
--			if (XFS_BUF_ISPINNED(bp))
--				xfs_log_force(mp, 0);
--
--			if (dopush) {
--				int	error;
--#ifdef XFSRACEDEBUG
--				delay_for_intr();
--				delay(300);
--#endif
--				error = xfs_bawrite(mp, bp);
--				if (error)
--					xfs_fs_cmn_err(CE_WARN, mp,
--	"xfs_qm_dquot_logitem_pushbuf: pushbuf error %d on qip %p, bp %p",
--							error, qip, bp);
--			} else {
--				xfs_buf_relse(bp);
--			}
--		} else {
--			qip->qli_pushbuf_flag = 0;
--			xfs_dqunlock(dqp);
--			xfs_buf_relse(bp);
--		}
-+	xfs_dqunlock(dqp);
-+	if (!bp)
- 		return;
--	}
-+	if (XFS_BUF_ISDELAYWRITE(bp))
-+		xfs_buf_delwri_promote(bp);
-+	xfs_buf_relse(bp);
-+	return;
- 
--	qip->qli_pushbuf_flag = 0;
--	xfs_dqunlock(dqp);
++	/*
++	 * we always use background reclaim here because even if the
++	 * inode is clean, it still may be under IO and hence we have
++	 * to take the flush lock. The background reclaim path handles
++	 * this more efficiently than we can here, so simply let background
++	 * reclaim tear down all inodes.
++	 */
++out_reclaim:
++	xfs_inode_set_reclaim_tag(ip);
  }
  
  /*
-@@ -289,50 +254,24 @@ xfs_qm_dquot_logitem_trylock(
- 	xfs_dq_logitem_t	*qip)
+diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+index 961df0a..897fcb5 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.c
++++ b/fs/xfs/linux-2.6/xfs_sync.c
+@@ -54,7 +54,8 @@ xfs_inode_ag_lookup(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_perag	*pag,
+ 	uint32_t		*first_index,
+-	int			tag)
++	int			tag,
++	int			write_lock)
  {
- 	xfs_dquot_t		*dqp;
--	uint			retval;
- 
- 	dqp = qip->qli_dquot;
- 	if (atomic_read(&dqp->q_pincount) > 0)
--		return (XFS_ITEM_PINNED);
-+		return XFS_ITEM_PINNED;
- 
- 	if (! xfs_qm_dqlock_nowait(dqp))
--		return (XFS_ITEM_LOCKED);
-+		return XFS_ITEM_LOCKED;
- 
--	retval = XFS_ITEM_SUCCESS;
- 	if (!xfs_dqflock_nowait(dqp)) {
- 		/*
--		 * The dquot is already being flushed.	It may have been
--		 * flushed delayed write, however, and we don't want to
--		 * get stuck waiting for that to complete.  So, we want to check
--		 * to see if we can lock the dquot's buffer without sleeping.
--		 * If we can and it is marked for delayed write, then we
--		 * hold it and send it out from the push routine.  We don't
--		 * want to do that now since we might sleep in the device
--		 * strategy routine.  We also don't want to grab the buffer lock
--		 * here because we'd like not to call into the buffer cache
--		 * while holding the AIL lock.
--		 * Make sure to only return PUSHBUF if we set pushbuf_flag
--		 * ourselves.  If someone else is doing it then we don't
--		 * want to go to the push routine and duplicate their efforts.
-+		 * dquot has already been flushed to the backing buffer,
-+		 * leave it locked, pushbuf routine will unlock it.
- 		 */
--		if (qip->qli_pushbuf_flag == 0) {
--			qip->qli_pushbuf_flag = 1;
--			ASSERT(qip->qli_format.qlf_blkno == dqp->q_blkno);
--#ifdef DEBUG
--			qip->qli_push_owner = current_pid();
--#endif
--			/*
--			 * The dquot is left locked.
--			 */
--			retval = XFS_ITEM_PUSHBUF;
--		} else {
--			retval = XFS_ITEM_FLUSHING;
--			xfs_dqunlock_nonotify(dqp);
--		}
-+		return XFS_ITEM_PUSHBUF;
- 	}
- 
- 	ASSERT(qip->qli_item.li_flags & XFS_LI_IN_AIL);
--	return (retval);
-+	return XFS_ITEM_SUCCESS;
- }
- 
- 
-diff --git a/fs/xfs/quota/xfs_dquot_item.h b/fs/xfs/quota/xfs_dquot_item.h
-index 5a63253..5acae2a 100644
---- a/fs/xfs/quota/xfs_dquot_item.h
-+++ b/fs/xfs/quota/xfs_dquot_item.h
-@@ -27,10 +27,6 @@ typedef struct xfs_dq_logitem {
- 	xfs_log_item_t		 qli_item;	   /* common portion */
- 	struct xfs_dquot	*qli_dquot;	   /* dquot ptr */
- 	xfs_lsn_t		 qli_flush_lsn;	   /* lsn at last flush */
--	unsigned short		 qli_pushbuf_flag; /* 1 bit used in push_ail */
--#ifdef DEBUG
--	uint64_t		 qli_push_owner;
--#endif
- 	xfs_dq_logformat_t	 qli_format;	   /* logged structure */
- } xfs_dq_logitem_t;
- 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index e0a1158..f3c49e6 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -467,8 +467,10 @@ xfs_buf_item_unpin_remove(
- /*
-  * This is called to attempt to lock the buffer associated with this
-  * buf log item.  Don't sleep on the buffer lock.  If we can't get
-- * the lock right away, return 0.  If we can get the lock, pull the
-- * buffer from the free list, mark it busy, and return 1.
-+ * the lock right away, return 0.  If we can get the lock, take a
-+ * reference to the buffer. If this is a delayed write buffer that
-+ * needs AIL help to be written back, invoke the pushbuf routine
-+ * rather than the normal success path.
-  */
- STATIC uint
- xfs_buf_item_trylock(
-@@ -477,24 +479,18 @@ xfs_buf_item_trylock(
- 	xfs_buf_t	*bp;
- 
- 	bp = bip->bli_buf;
--
--	if (XFS_BUF_ISPINNED(bp)) {
-+	if (XFS_BUF_ISPINNED(bp))
- 		return XFS_ITEM_PINNED;
--	}
--
--	if (!XFS_BUF_CPSEMA(bp)) {
-+	if (!XFS_BUF_CPSEMA(bp))
- 		return XFS_ITEM_LOCKED;
--	}
- 
--	/*
--	 * Remove the buffer from the free list.  Only do this
--	 * if it's on the free list.  Private buffers like the
--	 * superblock buffer are not.
--	 */
-+	/* take a reference to the buffer.  */
- 	XFS_BUF_HOLD(bp);
- 
- 	ASSERT(!(bip->bli_flags & XFS_BLI_STALE));
- 	trace_xfs_buf_item_trylock(bip);
-+	if (XFS_BUF_ISDELAYWRITE(bp))
-+		return XFS_ITEM_PUSHBUF;
- 	return XFS_ITEM_SUCCESS;
- }
- 
-@@ -626,11 +622,9 @@ xfs_buf_item_committed(
- }
- 
- /*
-- * This is called to asynchronously write the buffer associated with this
-- * buf log item out to disk. The buffer will already have been locked by
-- * a successful call to xfs_buf_item_trylock().  If the buffer still has
-- * B_DELWRI set, then get it going out to disk with a call to bawrite().
-- * If not, then just release the buffer.
-+ * The buffer is locked, but is not a delayed write buffer. This happens
-+ * if we race with IO completion and hence we don't want to try to write it
-+ * again. Just release the buffer.
-  */
- STATIC void
- xfs_buf_item_push(
-@@ -642,17 +636,29 @@ xfs_buf_item_push(
- 	trace_xfs_buf_item_push(bip);
- 
- 	bp = bip->bli_buf;
-+	ASSERT(!XFS_BUF_ISDELAYWRITE(bp));
-+	xfs_buf_relse(bp);
-+}
- 
--	if (XFS_BUF_ISDELAYWRITE(bp)) {
--		int	error;
--		error = xfs_bawrite(bip->bli_item.li_mountp, bp);
--		if (error)
--			xfs_fs_cmn_err(CE_WARN, bip->bli_item.li_mountp,
--			"xfs_buf_item_push: pushbuf error %d on bip %p, bp %p",
--					error, bip, bp);
--	} else {
--		xfs_buf_relse(bp);
--	}
-+/*
-+ * The buffer is locked and is a delayed write buffer. Promote the buffer
-+ * in the delayed write queue as the caller knows that they must invoke
-+ * the xfsbufd to get this buffer written. We have to unlock the buffer
-+ * to allow the xfsbufd to write it, too.
-+ */
-+STATIC void
-+xfs_buf_item_pushbuf(
-+	xfs_buf_log_item_t	*bip)
-+{
-+	xfs_buf_t	*bp;
-+
-+	ASSERT(!(bip->bli_flags & XFS_BLI_STALE));
-+	trace_xfs_buf_item_pushbuf(bip);
-+
-+	bp = bip->bli_buf;
-+	ASSERT(XFS_BUF_ISDELAYWRITE(bp));
-+	xfs_buf_delwri_promote(bp);
-+	xfs_buf_relse(bp);
- }
- 
- /* ARGSUSED */
-@@ -677,7 +683,7 @@ static struct xfs_item_ops xfs_buf_item_ops = {
- 	.iop_committed	= (xfs_lsn_t(*)(xfs_log_item_t*, xfs_lsn_t))
- 					xfs_buf_item_committed,
- 	.iop_push	= (void(*)(xfs_log_item_t*))xfs_buf_item_push,
--	.iop_pushbuf	= NULL,
-+	.iop_pushbuf	= (void(*)(xfs_log_item_t*))xfs_buf_item_pushbuf,
- 	.iop_committing = (void(*)(xfs_log_item_t*, xfs_lsn_t))
- 					xfs_buf_item_committing
- };
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 207553e..d4dc063 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -602,33 +602,20 @@ xfs_inode_item_trylock(
- 
- 	if (!xfs_iflock_nowait(ip)) {
- 		/*
--		 * If someone else isn't already trying to push the inode
--		 * buffer, we get to do it.
-+		 * inode has already been flushed to the backing buffer,
-+		 * leave it locked in shared mode, pushbuf routine will
-+		 * unlock it.
- 		 */
--		if (iip->ili_pushbuf_flag == 0) {
--			iip->ili_pushbuf_flag = 1;
--#ifdef DEBUG
--			iip->ili_push_owner = current_pid();
--#endif
--			/*
--			 * Inode is left locked in shared mode.
--			 * Pushbuf routine gets to unlock it.
--			 */
--			return XFS_ITEM_PUSHBUF;
--		} else {
--			/*
--			 * We hold the AIL lock, so we must specify the
--			 * NONOTIFY flag so that we won't double trip.
--			 */
--			xfs_iunlock(ip, XFS_ILOCK_SHARED|XFS_IUNLOCK_NONOTIFY);
--			return XFS_ITEM_FLUSHING;
--		}
--		/* NOTREACHED */
-+		return XFS_ITEM_PUSHBUF;
- 	}
- 
- 	/* Stale items should force out the iclog */
- 	if (ip->i_flags & XFS_ISTALE) {
- 		xfs_ifunlock(ip);
-+		/*
-+		 * we hold the AIL lock - notify the unlock routine of this
-+		 * so it doesn't try to get the lock again.
-+		 */
- 		xfs_iunlock(ip, XFS_ILOCK_SHARED|XFS_IUNLOCK_NONOTIFY);
- 		return XFS_ITEM_PINNED;
- 	}
-@@ -746,11 +733,8 @@ xfs_inode_item_committed(
-  * This gets called by xfs_trans_push_ail(), when IOP_TRYLOCK
-  * failed to get the inode flush lock but did get the inode locked SHARED.
-  * Here we're trying to see if the inode buffer is incore, and if so whether it's
-- * marked delayed write. If that's the case, we'll initiate a bawrite on that
-- * buffer to expedite the process.
-- *
-- * We aren't holding the AIL lock (or the flush lock) when this gets called,
-- * so it is inherently race-y.
-+ * marked delayed write. If that's the case, we'll promote it and that will
-+ * allow the caller to write the buffer by triggering the xfsbufd to run.
-  */
- STATIC void
- xfs_inode_item_pushbuf(
-@@ -759,26 +743,16 @@ xfs_inode_item_pushbuf(
- 	xfs_inode_t	*ip;
- 	xfs_mount_t	*mp;
- 	xfs_buf_t	*bp;
--	uint		dopush;
- 
- 	ip = iip->ili_inode;
--
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_SHARED));
- 
- 	/*
--	 * The ili_pushbuf_flag keeps others from
--	 * trying to duplicate our effort.
--	 */
--	ASSERT(iip->ili_pushbuf_flag != 0);
--	ASSERT(iip->ili_push_owner == current_pid());
--
--	/*
- 	 * If a flush is not in progress anymore, chances are that the
- 	 * inode was taken off the AIL. So, just get out.
+ 	int			nr_found;
+ 	struct xfs_inode	*ip;
+@@ -64,7 +65,10 @@ xfs_inode_ag_lookup(
+ 	 * as the tree is sparse and a gang lookup walks to find
+ 	 * the number of objects requested.
  	 */
- 	if (completion_done(&ip->i_flush) ||
- 	    ((iip->ili_item.li_flags & XFS_LI_IN_AIL) == 0)) {
--		iip->ili_pushbuf_flag = 0;
- 		xfs_iunlock(ip, XFS_ILOCK_SHARED);
- 		return;
- 	}
-@@ -787,53 +761,12 @@ xfs_inode_item_pushbuf(
- 	bp = xfs_incore(mp->m_ddev_targp, iip->ili_format.ilf_blkno,
- 		    iip->ili_format.ilf_len, XBF_TRYLOCK);
+-	read_lock(&pag->pag_ici_lock);
++	if (write_lock)
++		write_lock(&pag->pag_ici_lock);
++	else
++		read_lock(&pag->pag_ici_lock);
+ 	if (tag == XFS_ICI_NO_TAG) {
+ 		nr_found = radix_tree_gang_lookup(&pag->pag_ici_root,
+ 				(void **)&ip, *first_index, 1);
+@@ -88,7 +92,10 @@ xfs_inode_ag_lookup(
+ 	return ip;
  
--	if (bp != NULL) {
--		if (XFS_BUF_ISDELAYWRITE(bp)) {
--			/*
--			 * We were racing with iflush because we don't hold
--			 * the AIL lock or the flush lock. However, at this point,
--			 * we have the buffer, and we know that it's dirty.
--			 * So, it's possible that iflush raced with us, and
--			 * this item is already taken off the AIL.
--			 * If not, we can flush it async.
--			 */
--			dopush = ((iip->ili_item.li_flags & XFS_LI_IN_AIL) &&
--				  !completion_done(&ip->i_flush));
--			iip->ili_pushbuf_flag = 0;
--			xfs_iunlock(ip, XFS_ILOCK_SHARED);
--
--			trace_xfs_inode_item_push(bp, _RET_IP_);
--
--			if (XFS_BUF_ISPINNED(bp))
--				xfs_log_force(mp, 0);
--
--			if (dopush) {
--				int	error;
--				error = xfs_bawrite(mp, bp);
--				if (error)
--					xfs_fs_cmn_err(CE_WARN, mp,
--		"xfs_inode_item_pushbuf: pushbuf error %d on iip %p, bp %p",
--							error, iip, bp);
--			} else {
--				xfs_buf_relse(bp);
--			}
--		} else {
--			iip->ili_pushbuf_flag = 0;
--			xfs_iunlock(ip, XFS_ILOCK_SHARED);
--			xfs_buf_relse(bp);
--		}
--		return;
--	}
--	/*
--	 * We have to be careful about resetting pushbuf flag too early (above).
--	 * Even though in theory we can do it as soon as we have the buflock,
--	 * we don't want others to be doing work needlessly. They'll come to
--	 * this function thinking that pushing the buffer is their
--	 * responsibility only to find that the buffer is still locked by
--	 * another doing the same thing
--	 */
--	iip->ili_pushbuf_flag = 0;
- 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
-+	if (!bp)
-+		return;
-+	if (XFS_BUF_ISDELAYWRITE(bp))
-+		xfs_buf_delwri_promote(bp);
-+	xfs_buf_relse(bp);
- 	return;
+ unlock:
+-	read_unlock(&pag->pag_ici_lock);
++	if (write_lock)
++		write_unlock(&pag->pag_ici_lock);
++	else
++		read_unlock(&pag->pag_ici_lock);
+ 	return NULL;
  }
  
-@@ -937,7 +870,6 @@ xfs_inode_item_init(
- 	/*
- 	   We have zeroed memory. No need ...
- 	   iip->ili_extents_buf = NULL;
--	   iip->ili_pushbuf_flag = 0;
- 	 */
+@@ -99,7 +106,8 @@ xfs_inode_ag_walk(
+ 	int			(*execute)(struct xfs_inode *ip,
+ 					   struct xfs_perag *pag, int flags),
+ 	int			flags,
+-	int			tag)
++	int			tag,
++	int			write_lock)
+ {
+ 	struct xfs_perag	*pag = &mp->m_perag[ag];
+ 	uint32_t		first_index;
+@@ -113,7 +121,8 @@ restart:
+ 		int		error = 0;
+ 		xfs_inode_t	*ip;
  
- 	iip->ili_format.ilf_type = XFS_LI_INODE;
-diff --git a/fs/xfs/xfs_inode_item.h b/fs/xfs/xfs_inode_item.h
-index cc8df1a..9a46795 100644
---- a/fs/xfs/xfs_inode_item.h
-+++ b/fs/xfs/xfs_inode_item.h
-@@ -144,12 +144,6 @@ typedef struct xfs_inode_log_item {
- 						      data exts */
- 	struct xfs_bmbt_rec	*ili_aextents_buf; /* array of logged
- 						      attr exts */
--	unsigned int            ili_pushbuf_flag;  /* one bit used in push_ail */
--
--#ifdef DEBUG
--	uint64_t                ili_push_owner;    /* one who sets pushbuf_flag
--						      above gets to push the buf */
--#endif
- #ifdef XFS_TRANS_DEBUG
- 	int			ili_root_size;
- 	char			*ili_orig_root;
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index ca64f33..c93e3a1 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -861,8 +861,7 @@ typedef struct xfs_item_ops {
- #define	XFS_ITEM_SUCCESS	0
- #define	XFS_ITEM_PINNED		1
- #define	XFS_ITEM_LOCKED		2
--#define	XFS_ITEM_FLUSHING	3
--#define XFS_ITEM_PUSHBUF	4
-+#define XFS_ITEM_PUSHBUF	3
- 
- /*
-  * This structure is used to maintain a list of block ranges that have been
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index d7b1af8..e799824 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -253,6 +253,7 @@ xfsaild_push(
- 	int		flush_log, count, stuck;
- 	xfs_mount_t	*mp = ailp->xa_mount;
- 	struct xfs_ail_cursor	*cur = &ailp->xa_cursors;
-+	int		push_xfsbufd = 0;
- 
- 	spin_lock(&ailp->xa_lock);
- 	xfs_trans_ail_cursor_init(ailp, cur);
-@@ -308,6 +309,7 @@ xfsaild_push(
- 			XFS_STATS_INC(xs_push_ail_pushbuf);
- 			IOP_PUSHBUF(lip);
- 			last_pushed_lsn = lsn;
-+			push_xfsbufd = 1;
+-		ip = xfs_inode_ag_lookup(mp, pag, &first_index, tag);
++		ip = xfs_inode_ag_lookup(mp, pag, &first_index, tag,
++						write_lock);
+ 		if (!ip)
  			break;
  
- 		case XFS_ITEM_PINNED:
-@@ -322,12 +324,6 @@ xfsaild_push(
- 			stuck++;
- 			break;
- 
--		case XFS_ITEM_FLUSHING:
--			XFS_STATS_INC(xs_push_ail_flushing);
--			last_pushed_lsn = lsn;
--			stuck++;
--			break;
--
- 		default:
- 			ASSERT(0);
- 			break;
-@@ -374,6 +370,11 @@ xfsaild_push(
- 		xfs_log_force(mp, 0);
+@@ -147,7 +156,8 @@ xfs_inode_ag_iterator(
+ 	int			(*execute)(struct xfs_inode *ip,
+ 					   struct xfs_perag *pag, int flags),
+ 	int			flags,
+-	int			tag)
++	int			tag,
++	int			write_lock)
+ {
+ 	int			error = 0;
+ 	int			last_error = 0;
+@@ -156,7 +166,8 @@ xfs_inode_ag_iterator(
+ 	for (ag = 0; ag < mp->m_sb.sb_agcount; ag++) {
+ 		if (!mp->m_perag[ag].pag_ici_init)
+ 			continue;
+-		error = xfs_inode_ag_walk(mp, ag, execute, flags, tag);
++		error = xfs_inode_ag_walk(mp, ag, execute, flags, tag,
++					write_lock);
+ 		if (error) {
+ 			last_error = error;
+ 			if (error == EFSCORRUPTED)
+@@ -180,18 +191,20 @@ xfs_sync_inode_valid(
+ 		return EFSCORRUPTED;
  	}
  
-+	if (push_xfsbufd) {
-+		/* we've got delayed write buffers to flush */
-+		wake_up_process(mp->m_ddev_targp->bt_task);
+-	/*
+-	 * If we can't get a reference on the inode, it must be in reclaim.
+-	 * Leave it for the reclaim code to flush. Also avoid inodes that
+-	 * haven't been fully initialised.
+-	 */
++	/* avoid new or reclaimable inodes. Leave for reclaim code to flush */
++	if (xfs_iflags_test(ip, XFS_INEW | XFS_IRECLAIMABLE | XFS_IRECLAIM)) {
++		read_unlock(&pag->pag_ici_lock);
++		return ENOENT;
 +	}
 +
- 	if (!count) {
- 		/* We're past our target or empty, so idle */
- 		last_pushed_lsn = 0;
--- 
-1.6.5
++	/* If we can't get a reference on the inode, it must be in reclaim. */
+ 	if (!igrab(inode)) {
+ 		read_unlock(&pag->pag_ici_lock);
+ 		return ENOENT;
+ 	}
+ 	read_unlock(&pag->pag_ici_lock);
+ 
+-	if (is_bad_inode(inode) || xfs_iflags_test(ip, XFS_INEW)) {
++	if (is_bad_inode(inode)) {
+ 		IRELE(ip);
+ 		return ENOENT;
+ 	}
+@@ -281,7 +294,7 @@ xfs_sync_data(
+ 	ASSERT((flags & ~(SYNC_TRYLOCK|SYNC_WAIT)) == 0);
+ 
+ 	error = xfs_inode_ag_iterator(mp, xfs_sync_inode_data, flags,
+-				      XFS_ICI_NO_TAG);
++				      XFS_ICI_NO_TAG, 0);
+ 	if (error)
+ 		return XFS_ERROR(error);
+ 
+@@ -303,7 +316,7 @@ xfs_sync_attr(
+ 	ASSERT((flags & ~SYNC_WAIT) == 0);
+ 
+ 	return xfs_inode_ag_iterator(mp, xfs_sync_inode_attr, flags,
+-				     XFS_ICI_NO_TAG);
++				     XFS_ICI_NO_TAG, 0);
+ }
+ 
+ STATIC int
+@@ -663,36 +676,11 @@ xfs_syncd_stop(
+ 	kthread_stop(mp->m_sync_task);
+ }
+ 
+-int
++STATIC int
+ xfs_reclaim_inode(
+ 	xfs_inode_t	*ip,
+-	int		locked,
+ 	int		sync_mode)
+ {
+-	xfs_perag_t	*pag = xfs_get_perag(ip->i_mount, ip->i_ino);
+-
+-	/* The hash lock here protects a thread in xfs_iget_core from
+-	 * racing with us on linking the inode back with a vnode.
+-	 * Once we have the XFS_IRECLAIM flag set it will not touch
+-	 * us.
+-	 */
+-	write_lock(&pag->pag_ici_lock);
+-	spin_lock(&ip->i_flags_lock);
+-	if (__xfs_iflags_test(ip, XFS_IRECLAIM) ||
+-	    !__xfs_iflags_test(ip, XFS_IRECLAIMABLE)) {
+-		spin_unlock(&ip->i_flags_lock);
+-		write_unlock(&pag->pag_ici_lock);
+-		if (locked) {
+-			xfs_ifunlock(ip);
+-			xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-		}
+-		return -EAGAIN;
+-	}
+-	__xfs_iflags_set(ip, XFS_IRECLAIM);
+-	spin_unlock(&ip->i_flags_lock);
+-	write_unlock(&pag->pag_ici_lock);
+-	xfs_put_perag(ip->i_mount, pag);
+-
+ 	/*
+ 	 * If the inode is still dirty, then flush it out.  If the inode
+ 	 * is not in the AIL, then it will be OK to flush it delwri as
+@@ -704,14 +692,14 @@ xfs_reclaim_inode(
+ 	 * We get the flush lock regardless, though, just to make sure
+ 	 * we don't free it while it is being flushed.
+ 	 */
+-	if (!locked) {
+-		xfs_ilock(ip, XFS_ILOCK_EXCL);
+-		xfs_iflock(ip);
+-	}
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	xfs_iflock(ip);
+ 
+ 	/*
+ 	 * In the case of a forced shutdown we rely on xfs_iflush() to
+ 	 * wait for the inode to be unpinned before returning an error.
++	 * Because we hold the flush lock, we know that the inode cannot
++	 * be under IO, so if it reports clean it can be reclaimed.
+ 	 */
+ 	if (!is_bad_inode(VFS_I(ip)) && xfs_iflush(ip, sync_mode) == 0) {
+ 		/* synchronize with xfs_iflush_done */
+@@ -771,14 +759,24 @@ xfs_reclaim_inode_now(
+ 	struct xfs_perag	*pag,
+ 	int			flags)
+ {
+-	/* ignore if already under reclaim */
+-	if (xfs_iflags_test(ip, XFS_IRECLAIM)) {
+-		read_unlock(&pag->pag_ici_lock);
++	/*
++	 * The radix tree lock here protects a thread in xfs_iget from racing
++	 * with us starting reclaim on the inode.  Once we have the
++	 * XFS_IRECLAIM flag set it will not touch us.
++	 */
++	spin_lock(&ip->i_flags_lock);
++	ASSERT_ALWAYS(__xfs_iflags_test(ip, XFS_IRECLAIMABLE));
++	if (__xfs_iflags_test(ip, XFS_IRECLAIM)) {
++		/* ignore as it is already under reclaim */
++		spin_unlock(&ip->i_flags_lock);
++		write_unlock(&pag->pag_ici_lock);
+ 		return 0;
+ 	}
+-	read_unlock(&pag->pag_ici_lock);
++	__xfs_iflags_set(ip, XFS_IRECLAIM);
++	spin_unlock(&ip->i_flags_lock);
++	write_unlock(&pag->pag_ici_lock);
+ 
+-	return xfs_reclaim_inode(ip, 0, flags);
++	return xfs_reclaim_inode(ip, flags);
+ }
+ 
+ int
+@@ -787,5 +785,5 @@ xfs_reclaim_inodes(
+ 	int		mode)
+ {
+ 	return xfs_inode_ag_iterator(mp, xfs_reclaim_inode_now, mode,
+-					XFS_ICI_RECLAIM_TAG);
++					XFS_ICI_RECLAIM_TAG, 1);
+ }
+diff --git a/fs/xfs/linux-2.6/xfs_sync.h b/fs/xfs/linux-2.6/xfs_sync.h
+index 27920eb..ea932b4 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.h
++++ b/fs/xfs/linux-2.6/xfs_sync.h
+@@ -44,7 +44,6 @@ void xfs_quiesce_attr(struct xfs_mount *mp);
+ 
+ void xfs_flush_inodes(struct xfs_inode *ip);
+ 
+-int xfs_reclaim_inode(struct xfs_inode *ip, int locked, int sync_mode);
+ int xfs_reclaim_inodes(struct xfs_mount *mp, int mode);
+ 
+ void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
+@@ -55,6 +54,6 @@ void __xfs_inode_clear_reclaim_tag(struct xfs_mount *mp, struct xfs_perag *pag,
+ int xfs_sync_inode_valid(struct xfs_inode *ip, struct xfs_perag *pag);
+ int xfs_inode_ag_iterator(struct xfs_mount *mp,
+ 	int (*execute)(struct xfs_inode *ip, struct xfs_perag *pag, int flags),
+-	int flags, int tag);
++	int flags, int tag, int write_lock);
+ 
+ #endif
+diff --git a/fs/xfs/quota/xfs_qm_syscalls.c b/fs/xfs/quota/xfs_qm_syscalls.c
+index 5d1a3b9..f99cfa4 100644
+--- a/fs/xfs/quota/xfs_qm_syscalls.c
++++ b/fs/xfs/quota/xfs_qm_syscalls.c
+@@ -893,7 +893,7 @@ xfs_qm_dqrele_all_inodes(
+ 	uint		 flags)
+ {
+ 	ASSERT(mp->m_quotainfo);
+-	xfs_inode_ag_iterator(mp, xfs_dqrele_inode, flags, XFS_ICI_NO_TAG);
++	xfs_inode_ag_iterator(mp, xfs_dqrele_inode, flags, XFS_ICI_NO_TAG, 0);
+ }
+ 
+ /*------------------------------------------------------------------------*/
+diff --git a/fs/xfs/xfs_iget.c b/fs/xfs/xfs_iget.c
+index 80e5264..40e8775 100644
+--- a/fs/xfs/xfs_iget.c
++++ b/fs/xfs/xfs_iget.c
+@@ -511,17 +511,21 @@ xfs_ireclaim(
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	struct xfs_perag	*pag;
++	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
+ 
+ 	XFS_STATS_INC(xs_ig_reclaims);
+ 
+ 	/*
+-	 * Remove the inode from the per-AG radix tree.  It doesn't matter
+-	 * if it was never added to it because radix_tree_delete can deal
+-	 * with that case just fine.
++	 * Remove the inode from the per-AG radix tree.
++	 *
++	 * Because radix_tree_delete won't complain even if the item was never
++	 * added to the tree assert that it's been there before to catch
++	 * problems with the inode life time early on.
+ 	 */
+ 	pag = xfs_get_perag(mp, ip->i_ino);
+ 	write_lock(&pag->pag_ici_lock);
+-	radix_tree_delete(&pag->pag_ici_root, XFS_INO_TO_AGINO(mp, ip->i_ino));
++	if (!radix_tree_delete(&pag->pag_ici_root, agino))
++		ASSERT(0);
+ 	write_unlock(&pag->pag_ici_lock);
+ 	xfs_put_perag(mp, pag);
+ 
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index b92a4fa..13d7d21 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2877,10 +2877,14 @@ xfs_iflush(
+ 	mp = ip->i_mount;
+ 
+ 	/*
+-	 * If the inode isn't dirty, then just release the inode
+-	 * flush lock and do nothing.
++	 * If the inode isn't dirty, then just release the inode flush lock and
++	 * do nothing. Treat stale inodes the same; we cannot rely on the
++	 * backing buffer remaining stale in cache for the remaining life of
++	 * the stale inode and so xfs_itobp() below may give us a buffer that
++	 * no longer contains inodes below. Doing this stale check here also
++	 * avoids forcing the log on pinned, stale inodes.
+ 	 */
+-	if (xfs_inode_clean(ip)) {
++	if (xfs_inode_clean(ip) || xfs_iflags_test(ip, XFS_ISTALE)) {
+ 		xfs_ifunlock(ip);
+ 		return 0;
+ 	}
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+index b572f7e..3fac146 100644
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -2456,46 +2456,6 @@ xfs_set_dmattrs(
+ 	return error;
+ }
+ 
+-int
+-xfs_reclaim(
+-	xfs_inode_t	*ip)
+-{
+-
+-	xfs_itrace_entry(ip);
+-
+-	ASSERT(!VN_MAPPED(VFS_I(ip)));
+-
+-	/* bad inode, get out here ASAP */
+-	if (is_bad_inode(VFS_I(ip))) {
+-		xfs_ireclaim(ip);
+-		return 0;
+-	}
+-
+-	xfs_ioend_wait(ip);
+-
+-	ASSERT(XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0);
+-
+-	/*
+-	 * If we have nothing to flush with this inode then complete the
+-	 * teardown now, otherwise break the link between the xfs inode and the
+-	 * linux inode and clean up the xfs inode later. This avoids flushing
+-	 * the inode to disk during the delete operation itself.
+-	 *
+-	 * When breaking the link, we need to set the XFS_IRECLAIMABLE flag
+-	 * first to ensure that xfs_iunpin() will never see an xfs inode
+-	 * that has a linux inode being reclaimed. Synchronisation is provided
+-	 * by the i_flags_lock.
+-	 */
+-	if (!ip->i_update_core && (ip->i_itemp == NULL)) {
+-		xfs_ilock(ip, XFS_ILOCK_EXCL);
+-		xfs_iflock(ip);
+-		xfs_iflags_set(ip, XFS_IRECLAIMABLE);
+-		return xfs_reclaim_inode(ip, 1, XFS_IFLUSH_DELWRI_ELSE_SYNC);
+-	}
+-	xfs_inode_set_reclaim_tag(ip);
+-	return 0;
+-}
+-
+ /*
+  * xfs_alloc_file_space()
+  *      This routine allocates disk space for the given file.
+diff --git a/fs/xfs/xfs_vnodeops.h b/fs/xfs/xfs_vnodeops.h
+index a9e102d..167a467 100644
+--- a/fs/xfs/xfs_vnodeops.h
++++ b/fs/xfs/xfs_vnodeops.h
+@@ -38,7 +38,6 @@ int xfs_symlink(struct xfs_inode *dp, struct xfs_name *link_name,
+ 		const char *target_path, mode_t mode, struct xfs_inode **ipp,
+ 		cred_t *credp);
+ int xfs_set_dmattrs(struct xfs_inode *ip, u_int evmask, u_int16_t state);
+-int xfs_reclaim(struct xfs_inode *ip);
+ int xfs_change_file_space(struct xfs_inode *ip, int cmd,
+ 		xfs_flock64_t *bf, xfs_off_t offset, int attr_flags);
+ int xfs_rename(struct xfs_inode *src_dp, struct xfs_name *src_name,
+
+--------------090506040001040402060507
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--------------090506040001040402060507--
