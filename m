@@ -1,17 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1AKDaDw076447 for <xfs@oss.sgi.com>; Wed, 10 Feb 2010 14:13:36 -0600
-Date: Wed, 10 Feb 2010 14:15:27 -0600
-From: bpm@sgi.com
-Subject: Re: [RFC PATCH 2/2] xfs_export_operations.commit_metadata
-Message-ID: <20100210201527.GJ23654@sgi.com>
-References: <20100210003220.6021.74943.stgit@case>
-	<20100210003337.6021.10942.stgit@case>
-	<20100210090750.GB21875@infradead.org>
+	o1AKE9eu076507 for <xfs@oss.sgi.com>; Wed, 10 Feb 2010 14:14:09 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 238D81396BB6
+	for <xfs@oss.sgi.com>; Wed, 10 Feb 2010 12:15:21 -0800 (PST)
+Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
+	by cuda.sgi.com with ESMTP id VGFhwAzeGfOri3aC for
+	<xfs@oss.sgi.com>; Wed, 10 Feb 2010 12:15:21 -0800 (PST)
+Message-ID: <4B7313D9.9020603@sandeen.net>
+Date: Wed, 10 Feb 2010 14:15:21 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100210090750.GB21875@infradead.org>
+Subject: Re: [PATCH] enable inode64 by default when possible
+References: <4B7309D7.5090800@sandeen.net>
+	<20100210210448.36f16aba@galadriel.home>
+In-Reply-To: <20100210210448.36f16aba@galadriel.home>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,85 +24,49 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-nfs@vger.kernel.org, xfs@oss.sgi.com
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: xfs@oss.sgi.com
 
-Howdy,
+Emmanuel Florac wrote:
+> Le Wed, 10 Feb 2010 13:32:39 -0600 vous =E9criviez:
+> =
 
-On Wed, Feb 10, 2010 at 04:07:50AM -0500, Christoph Hellwig wrote:
-> On Tue, Feb 09, 2010 at 06:33:37PM -0600, Ben Myers wrote:
-> > hopefully
-> > the XFS gurus can continue to provide guidance.
-> 
-> Ccing the xfs list would help with that :) 
+>> As such, this patch changes the default to inode64 whenever
+>> XFS_BIG_INUMS is set, which in turn depends on either
+>> CONFIG_LBDAF or 64-bit longs.
+> =
 
-I'll cross-post the next rev.  ;)
+> But doesn't it cause problems specially for NFS sharing ?
+> =
 
-> > +		if (xfs_ipincount(c_xip)) {
-> > +			/*
-> > +			 * AFAICS the child is always modified after the parent
-> > +			 * in nfsd so should always have a larger lsn.
-> > +			 */
-> > +			if (c_xip->i_itemp->ili_last_lsn > force_lsn) {
-> > +				force_lsn = c_xip->i_itemp->ili_last_lsn;
-> > +			} else {
-> > +				force_lsn = 0; /* whole thing */
-> > +			}
-> 
-> I wouldn't rely on that and always take the larger one.
 
-I am concerned that ili_last_lsn will roll over at some point.  I
-haven't figured out how to detect that yet.
- 
-> Now with the simplification of always having a non-zero first argument
-> suggested in the previous mail this might be simplified down to:
-> 
-> STATIC int
-> xfs_fs_nfs_commit_metadata(
-> 	struct dentry		*parent,
-> 	struct dentry		*child)
-> {
-> 	struct xfs_inode	*dp = XFS_I(parent->d_inode);
-> 	struct xfs_inode	*ip = NULL;
-> 	struct xfs_mount	*mp = dp->i_mount;
-> 	xfs_lsn_t		force_lsn = 0;
-> 	int			error = 0;
-> 
-> 	if (child) {
-> 		ip = XFS_I(child->d_inode);
-> 		xfs_lock_two_inodes(dp, ip, XFS_ILOCK_SHARED);
-> 	} else {
-> 		xfs_ilock(dp, XFS_ILOCK_SHARED);
-> 	}
-> 
-> 	if (xfs_ipincount(dp))
-> 		force_lsn = dp->i_itemp->ili_last_lsn;
-> 	if (ip && xfs_ipincount(ip))
-> 		force_lsn = max(force_lsn, ip->i_itemp->ili_last_lsn);
-> 
-+	if (force_lsn)
->	 	error = _xfs_log_force_lsn(mp, force_lsn, NULL);
-> 
-> 	if (ip)
-> 		xfs_iunlock(ip, XFS_ILOCK_SHARED);
-> 	xfs_iunlock(dp, XFS_ILOCK_SHARED);
-> 
-> 	return error;
-> }
+For some clients, yes - as do other NFS servers.
 
-That's nice!
+That's what noinode64 is for...
 
-> Note that _xfs_log_force_lsn is new in the XFS tree, mainline still
-> has _xfs_log_force with an lsn argument.
+Also, newer nfs clients have an option:
 
-I've been working with Bruce's tree.  Not sure how best to handle that.
+        nfs.enable_ino64=3D
+                        [NFS] enable 64-bit inode numbers.
+                        If zero, the NFS client will fake up a 32-bit inode
+                        number for the readdir() and stat() syscalls instead
+                        of returning the full 64-bit number.
+                        The default is to return 64-bit inode numbers.
 
-Thanks,
-	Ben
+(see Documentation/kernel-parameters.txt)
+
+At some point we have to drag people kicking and screaming
+out of 1988, I think! :)
+
+(I am mindful that this may manifest itself as "xfs is incompatible"
+but if we document this and advertise it a bit, I hope we can avoid
+that.  At some point, apps just need to be fixed.)
+
+-Eric
 
 _______________________________________________
 xfs mailing list
