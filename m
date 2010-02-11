@@ -1,14 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1BJgBs2173646 for <xfs@oss.sgi.com>; Thu, 11 Feb 2010 13:42:12 -0600
-Subject: Re: [PATCH 0/2] commit_metadata export operation v3
-From: Trond Myklebust <trond.myklebust@fys.uio.no>
-In-Reply-To: <20100211192611.12949.65493.stgit@case>
-References: <20100211192611.12949.65493.stgit@case>
-Date: Thu, 11 Feb 2010 14:43:19 -0500
-Message-ID: <1265917399.478.37.camel@localhost>
-Mime-Version: 1.0
+	o1BM3hhl183569 for <xfs@oss.sgi.com>; Thu, 11 Feb 2010 16:03:43 -0600
+Subject: [PATCH 0/2] commit_metadata export operation v4
+From: Ben Myers <bpm@sgi.com>
+Date: Thu, 11 Feb 2010 16:04:55 -0600
+Message-ID: <20100211220454.26466.37578.stgit@case>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,29 +19,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
+To: bfields@fieldses.org
 Cc: linux-nfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, 2010-02-11 at 13:26 -0600, Ben Myers wrote: 
-> Here is the latest version of the knfsd sync changes.  I have addressed the
-> suggestions provided by Christoph, Trond, and Dave.
-> 
-> Thanks,
-> 	Ben
+Hey Bruce,
 
-Hi Ben,
+Here is the latest version of the knfsd sync changes.  I have addressed the
+suggestions provided by Christoph, Trond, and Dave.  This time rebased atop
+for-2.6.34 (I hope).  Sorry for the extra noise.
 
-This looks good to me, but before you send it on to Bruce, you might
-want to try rebasing this against his for-2.6.34 branch. That branch
-contains the stuff that is queued up for the next merge window, and
-includes Christoph's vfs_fsync() changes and my vfs_fsync_range() change
-to nfsd_commit().
+Thanks,
+	Ben
 
-See
-http://git.linux-nfs.org/?p=bfields/linux.git;a=shortlog;h=refs/heads/for-2.6.34
+---
 
-Cheers
-  Trond
+Ben Myers (2):
+      commit_metadata export operation replacing nfsd_sync_dir
+      xfs_export_operations.commit_metadata
+
+
+ fs/nfsd/nfs3proc.c            |    2 -
+ fs/nfsd/nfs4proc.c            |    2 -
+ fs/nfsd/nfs4recover.c         |    4 -
+ fs/nfsd/nfs4state.c           |    2 -
+ fs/nfsd/nfsproc.c             |    4 +
+ fs/nfsd/vfs.c                 |  116 +++++++++++++++++++----------------------
+ fs/nfsd/vfs.h                 |    3 -
+ fs/xfs/linux-2.6/xfs_export.c |   43 +++++++++++++++
+ include/linux/exportfs.h      |    6 ++
+ 9 files changed, 111 insertions(+), 71 deletions(-)
+
+-- 
 
 _______________________________________________
 xfs mailing list
