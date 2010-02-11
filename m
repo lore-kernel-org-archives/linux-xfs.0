@@ -1,21 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1BEoAJG154488 for <xfs@oss.sgi.com>; Thu, 11 Feb 2010 08:50:11 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BF4EC1CC1129
-	for <xfs@oss.sgi.com>; Thu, 11 Feb 2010 06:51:25 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id FCGbmaLLVYGo2pA6 for
-	<xfs@oss.sgi.com>; Thu, 11 Feb 2010 06:51:25 -0800 (PST)
-Date: Thu, 11 Feb 2010 09:51:23 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: 2.6.32.3 x86_64 - XFS hangs, all I/O to D-state bug (again)
-Message-ID: <20100211145123.GA13114@infradead.org>
-References: <alpine.DEB.2.00.1002110903080.25392@p34.internal.lan>
+	o1BJP1ge172387 for <xfs@oss.sgi.com>; Thu, 11 Feb 2010 13:25:01 -0600
+Subject: [PATCH 0/2] commit_metadata export operation v3
+From: Ben Myers <bpm@sgi.com>
+Date: Thu, 11 Feb 2010 13:26:12 -0600
+Message-ID: <20100211192611.12949.65493.stgit@case>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.00.1002110903080.25392@p34.internal.lan>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,26 +19,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-raid@vger.kernl.org, Alan Piszcz <ap@solarrain.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: linux-nfs@vger.kernel.org
+Cc: xfs@oss.sgi.com
 
-Can you check if this still happens with the patch below?
+Here is the latest version of the knfsd sync changes.  I have addressed the
+suggestions provided by Christoph, Trond, and Dave.
+
+Thanks,
+	Ben
+
+---
+
+Ben Myers (2):
+      commit_metadata export operation replacing nfsd_sync_dir
+      xfs_export_operations.commit_metadata
 
 
-Index: linux-2.6/fs/xfs/linux-2.6/xfs_buf.c
-===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_buf.c	2010-02-11 15:47:49.677253958 +0100
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_buf.c	2010-02-11 15:48:03.630005040 +0100
-@@ -1158,8 +1158,7 @@ _xfs_buf_ioapply(
- 		bp->b_flags &= ~_XBF_RUN_QUEUES;
- 		rw = (bp->b_flags & XBF_WRITE) ? WRITE_META : READ_META;
- 	} else {
--		rw = (bp->b_flags & XBF_WRITE) ? WRITE :
--		     (bp->b_flags & XBF_READ_AHEAD) ? READA : READ;
-+		rw = (bp->b_flags & XBF_WRITE) ? WRITE : READ;
- 	}
- 
- 	/* Special code path for reading a sub page size buffer in --
+ fs/nfsd/nfs3proc.c            |    2 -
+ fs/nfsd/nfs4proc.c            |    2 -
+ fs/nfsd/nfs4recover.c         |    4 -
+ fs/nfsd/nfs4state.c           |    2 -
+ fs/nfsd/nfsproc.c             |    4 +
+ fs/nfsd/vfs.c                 |  116 +++++++++++++++++++----------------------
+ fs/nfsd/vfs.h                 |    3 -
+ fs/xfs/linux-2.6/xfs_export.c |   43 +++++++++++++++
+ include/linux/exportfs.h      |    6 ++
+ 9 files changed, 111 insertions(+), 71 deletions(-)
+
+-- 
 
 _______________________________________________
 xfs mailing list
