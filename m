@@ -1,21 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1CKvHYA027523 for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 14:57:17 -0600
-Received: from stout.americas.sgi.com (stout.americas.sgi.com [128.162.232.50])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id F2640304098
-	for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 12:58:29 -0800 (PST)
-Received: from stout.americas.sgi.com (localhost6.localdomain6 [127.0.0.1])
-	by stout.americas.sgi.com (8.14.3/8.14.2) with ESMTP id o1CKwTSm025740
-	for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 14:58:29 -0600
-Received: (from aelder@localhost)
-	by stout.americas.sgi.com (8.14.3/8.14.3/Submit) id o1CKwTq6025739
-	for xfs@oss.sgi.com; Fri, 12 Feb 2010 14:58:29 -0600
-From: Alex Elder <aelder@sgi.com>
-Message-Id: <201002122058.o1CKwTq6025739@stout.americas.sgi.com>
-Date: Fri, 12 Feb 2010 14:58:29 -0600
-Subject: [PATCH] dmapi: digitally sign release tags
+	o1CLMEaD030844 for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 15:22:14 -0600
+Date: Fri, 12 Feb 2010 16:23:29 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfsprogs: fix some warnings
+Message-ID: <20100212212329.GA6084@infradead.org>
+References: <201002122049.o1CKnjAf024589@stout.americas.sgi.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <201002122049.o1CKnjAf024589@stout.americas.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,35 +22,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Arrange for the commit marking a new release to include a
-"Signed-off-by" line, and have the corresponding tag include
-a digital signature.
+On Fri, Feb 12, 2010 at 02:49:45PM -0600, Alex Elder wrote:
+> Fix a couple of build warnings.
+> 
+> Signed-off-by: Alex Elder <aelder@sgi.com>
+> 
+> ---
+>  ltp/fsx.c    |    2 +-
+>  src/loggen.c |    1 +
+>  2 files changed, 2 insertions(+), 1 deletion(-)
 
-Signed-off-by: Alex Elder <aelder@sgi.com>
+Looks good, but it's actually for xfstests, not xfsdump as said in
+the subject line.
 
----
- release.sh |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-Index: b/release.sh
-===================================================================
---- a/release.sh
-+++ b/release.sh
-@@ -13,10 +13,10 @@ sed -e "s/${version}.*/${version} (${dat
- 	mv doc/CHANGES.tmp doc/CHANGES
- 
- echo "Commiting CHANGES update to git"
--git-commit -a -m "${version} release"
-+git-commit -s -a -m "${version} release"
- 
- echo "Tagging git repository"
--git-tag v${version}
-+git tag -s -a -m "${version} release" v${version}
- 
- echo "Creating source tarball in build/tar/"
- ./Makepkgs
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
