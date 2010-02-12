@@ -1,21 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1CLSMH6031530 for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 15:28:23 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4B0171CC174
-	for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 13:29:37 -0800 (PST)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id 3wStXrvqiG6xDcXq for
-	<xfs@oss.sgi.com>; Fri, 12 Feb 2010 13:29:37 -0800 (PST)
-Message-ID: <4B75C841.3010105@sandeen.net>
-Date: Fri, 12 Feb 2010 15:29:37 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	o1CLMiAI030907 for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 15:22:44 -0600
+Date: Fri, 12 Feb 2010 16:23:59 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] dmapi: Fix a build warning
+Message-ID: <20100212212359.GB6084@infradead.org>
+References: <201002122056.o1CKuruK025550@stout.americas.sgi.com>
 MIME-Version: 1.0
-Subject: Re: xfs_repair doesn't fix sb versionnum missing attr
-References: <1265996674.7755.7.camel@lh10.linush.net>	<4B75BA12.1060704@sandeen.net>
-	<1266007649.7755.12.camel@lh10.linush.net>
-In-Reply-To: <1266007649.7755.12.camel@lh10.linush.net>
+Content-Disposition: inline
+In-Reply-To: <201002122056.o1CKuruK025550@stout.americas.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,89 +22,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: C Linus Hicks <linush@verizon.net>
+To: Alex Elder <aelder@sgi.com>
 Cc: xfs@oss.sgi.com
 
-C Linus Hicks wrote:
-> On Fri, 2010-02-12 at 14:29 -0600, Eric Sandeen wrote:
->> C Linus Hicks wrote:
->>> I run:
->>>
->>> xfs_check /dev/sdc10
->>>
->>> And it reports:
->>>
->>> sb versionnum missing attr bit 10
->>>
->>> Then I run:
->>>
->>> xfs_repair /dev/sdc10
->>>
->>> And it reports output from 7 phases and "done".
->>>
->>> Again I run:
->>>
->>> xfs_check /dev/sdc10
->>>
->>> And it reports:
->>>
->>> sb versionnum missing attr bit 10
->>>
->>> Is this how it's supposed to work?
->>> Thanks for any help.
->>> Linus
->>>
->> I've never seen that before.
->>
->> This might be interesting to see:
->>
->> # xfs_db /dev/sdc10
->> xfs_db> sb 0
->> xfs_db> version
->>
->> If you want to send me a zipped-up, obfuscated metadump of the filesystem
->> I could take a quick look.
->>
->> -Eric
+On Fri, Feb 12, 2010 at 02:56:53PM -0600, Alex Elder wrote:
+> Fix a build warning.
 > 
-> The output from the "version" command:
+> Signed-off-by: Alex Elder <aelder@sgi.com>
 > 
-> versionnum [0x3084+0x0] = V4,ALIGN,DIRV2,EXTFLG
+> ---
+>  libdm/getdents.c |    4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
 > 
-> I'll email the metadump directly to you so as not to pollute the list.
+> Index: dmapi/libdm/getdents.c
+> ===================================================================
+> --- dmapi.orig/libdm/getdents.c
+> +++ dmapi/libdm/getdents.c
+> @@ -72,7 +72,9 @@ extern int __have_no_getdents64;
+>  # endif
+>  #endif
+>  
+> -#define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
+> +#ifndef offsetof
+> +# define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
+> +#endif /* ! offsetof */
 
-Ok so a little less mystery here; I was concerned about how we got here,
-but Linus had to manually reconstruct his superblock, hence the missing
-flags.
+Looks fine, but as we really should have offsetoff we might just
+kill it entirely.
 
-Looks like there are selinux attributes on all the files, so of course
-the sb should have the attr flags set.
-
-This does look like one test that check has and repair doesn't.
-
-<checking upstream for sure>
-
-yep!
-
-Linus, FWIW simply creating a new file on the fs with xattrs (any
-old file works if selinux is on) will set the flags as if it were
-the first file created w/ an attr...
-
-[root@host Linus-repair-bug]# xfs_check sdc10-md.log.img 
-sb versionnum missing attr bit 10
-[root@host Linus-repair-bug]# mount -o loop sdc10-md.log.img mnt/
-[root@host Linus-repair-bug]# echo foobar > mnt/blah
-[root@host Linus-repair-bug]# ls -Z mnt/blah
--rw-r--r--  root root root:object_r:file_t             mnt/blah
-[root@host Linus-repair-bug]# umount mnt
-[root@host Linus-repair-bug]# xfs_check sdc10-md.log.img 
-[root@host Linus-repair-bug]#
-
-I suppose that check should get added to repair though.
-
-Care to file a bug so it doesn't get lost?
-
--Eric
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
