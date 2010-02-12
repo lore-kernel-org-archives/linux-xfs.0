@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1CGi6g0005532 for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 10:44:06 -0600
+	o1CH1lCQ006789 for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 11:01:47 -0600
 Received: from mail-ew0-f227.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2017A13A2E04
-	for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 08:45:20 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6CBE61CC76B7
+	for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 09:03:00 -0800 (PST)
 Received: from mail-ew0-f227.google.com (mail-ew0-f227.google.com
 	[209.85.219.227]) by cuda.sgi.com with ESMTP id
-	032xZutwcvXZnUXH for <xfs@oss.sgi.com>;
-	Fri, 12 Feb 2010 08:45:20 -0800 (PST)
-Received: by ewy27 with SMTP id 27so2782437ewy.18
-	for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 08:45:19 -0800 (PST)
+	N3nrzPaglmOrosuC for <xfs@oss.sgi.com>;
+	Fri, 12 Feb 2010 09:03:00 -0800 (PST)
+Received: by ewy27 with SMTP id 27so2802137ewy.18
+	for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 09:02:59 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <4B75738D.80108@sandeen.net>
+In-Reply-To: <2d460de71002120845ue5b127ex1033b37ae5ff6ba2@mail.gmail.com>
 References: <2d460de71002120607g763afc2bt2167fcfbf4664b56@mail.gmail.com>
 	<4B75738D.80108@sandeen.net>
-Date: Fri, 12 Feb 2010 17:45:08 +0100
-Message-ID: <2d460de71002120845ue5b127ex1033b37ae5ff6ba2@mail.gmail.com>
+	<2d460de71002120845ue5b127ex1033b37ae5ff6ba2@mail.gmail.com>
+Date: Fri, 12 Feb 2010 18:02:59 +0100
+Message-ID: <2d460de71002120902g3bda548t4e202dfe43a0c742@mail.gmail.com>
 Subject: Re: xfs_repair on a 1.5 TiB image has been hanging for about an hour,
 	now
 From: Richard Hartmann <richih.mailinglist@gmail.com>
@@ -35,29 +36,22 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-On Fri, Feb 12, 2010 at 16:28, Eric Sandeen <sandeen@sandeen.net> wrote:
+On Fri, Feb 12, 2010 at 17:45, Richard Hartmann
+<richih.mailinglist@gmail.com> wrote:
 
-> to see if it's moving, I'd try stracing the process or examining it
-> with gdb if you are able.
+> I thought about that, but I fear that I will flood my terminal off with crap
+> and/or that I somehow impair xfs_repair while doing so.
 
-I thought about that, but I fear that I will flood my terminal off with crap
-and/or that I somehow impair xfs_repair while doing so.
+Running it for ten minutes gives me:
 
-
-> You didn't say which version of xfsprogs you have; IIRC at least one known
-> problem with hanging has been fixed upstream.
-
-root@grml ~ # xfs_repair -V
-xfs_repair version 3.0.4
+root@grml ~ # strace -p13629
+Process 13629 attached - interrupt to quit
+futex(0xa381b4cc, FUTEX_WAIT_PRIVATE, 2, NULL^C <unfinished ...>
+Process 13629 detached
 root@grml ~ #
 
-I seriously do hope that I am not affected...
 
-
-Thanks,
 Richard
-
-PS: If you need any other debug info, please tell me
 
 _______________________________________________
 xfs mailing list
