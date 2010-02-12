@@ -1,19 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1CK2EJC020796 for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 14:02:14 -0600
-Date: Fri, 12 Feb 2010 15:03:59 -0500
-From: "J. Bruce Fields" <bfields@fieldses.org>
-Subject: Re: [PATCH 2/2] xfs_export_operations.commit_metadata
-Message-ID: <20100212200359.GA23361@fieldses.org>
-References: <20100211220454.26466.37578.stgit@case>
-	<20100211220505.26466.99037.stgit@case>
-	<1265986006.3201.112.camel@doink1>
-	<20100212174706.GB22633@infradead.org>
-	<20100212195647.GQ23654@sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100212195647.GQ23654@sgi.com>
+	o1CKU2no024066
+	for <linux-xfs@oss.sgi.com>; Fri, 12 Feb 2010 14:30:03 -0600
+Received: from lo.gmane.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C00A313A48CE
+	for <linux-xfs@oss.sgi.com>; Fri, 12 Feb 2010 12:31:16 -0800 (PST)
+Received: from lo.gmane.org (lo.gmane.org [80.91.229.12]) by cuda.sgi.com with
+	ESMTP id OHn6k7JE8ia2xQL0 for <linux-xfs@oss.sgi.com>;
+	Fri, 12 Feb 2010 12:31:16 -0800 (PST)
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1Ng2AV-0008OA-N3
+	for linux-xfs@oss.sgi.com; Fri, 12 Feb 2010 21:31:15 +0100
+Received: from vm15c-113.broadinstitute.org ([69.173.114.122])
+	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+	id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Fri, 12 Feb 2010 21:31:15 +0100
+Received: from nico by vm15c-113.broadinstitute.org with local (Gmexim 0.1
+	(Debian)) id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Fri, 12 Feb 2010 21:31:15 +0100
+From: Nicolas Stransky <nico@stransky.cx>
+Subject: Re: xfs_repair on a 1.5 TiB image has been hanging for about an hour,
+	now
+Date: Fri, 12 Feb 2010 15:30:54 -0500
+Message-ID: <hl4dpt$fq2$1@ger.gmane.org>
+References: <2d460de71002120607g763afc2bt2167fcfbf4664b56@mail.gmail.com>	<4B75738D.80108@sandeen.net>	<2d460de71002120845ue5b127ex1033b37ae5ff6ba2@mail.gmail.com>	<2d460de71002120902g3bda548t4e202dfe43a0c742@mail.gmail.com>	<hl438l$bhm$1@ger.gmane.org>	<4B7594D3.6040304@sandeen.net>
+	<hl45te$kjs$1@ger.gmane.org>
+Mime-Version: 1.0
+In-Reply-To: <hl45te$kjs$1@ger.gmane.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,26 +40,79 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: bpm@sgi.com
-Cc: Christoph Hellwig <hch@infradead.org>, linux-nfs@vger.kernel.org, xfs@oss.sgi.com, Alex Elder <aelder@sgi.com>
+To: linux-xfs@oss.sgi.com
 
-On Fri, Feb 12, 2010 at 01:56:47PM -0600, bpm@sgi.com wrote:
-> On Fri, Feb 12, 2010 at 12:47:07PM -0500, Christoph Hellwig wrote:
-> > if we care enough about the returned error.  But Ben is working against
-> > the NFS tree which doesn't have that change yet.
-> > 
-> > We can deal with that by either commiting the old variant to the nfs
-> > tree and then leaving sending Stephen a patch to fix it up in -next,
-> > or just not apply the xfs commit_metadata implementation yet, and wait
-> > for it until both the xfs and nfs trees have hit mainline.
+The -P option allowed me to complete xfs_repair successfully, but it
+also deleted almost everything on the filesystem... A directory that I
+could mount -o ro,norecovery before, with tens of GB of data in it, is
+now empty... That is really too bad.
 
-Assuming the xfs tree's something stable, I could also just go ahead and
-pull it into the nfsd tree.
+Thanks for your help.
 
-(Or we could do it the other way around--as long as when the merge
-window opens we try to send the pull requests in the same order.)
+On 2/12/10 1:16 PM, Nicolas Stransky wrote:
+> Right :)
+> I'm using xfsprogs 3.1.0, on Debian Lenny, because 3.1.1 fails to build
+> for some reason.
+> I've been trying to repair a 1.4TB filesystem for more than a week,
+> without success. xfs_repair never completes. I straced the stuck process
+> today and got:
+> Process 28510 attached - interrupt to quit
+> futex(0x429cb58, FUTEX_WAIT_PRIVATE, 2, NULL
+> 
+> I'm running xfs_repair -P -t5 -m500 /dev/sda1 because the machine only
+> has 2GB of RAM and was swapping like crazy. I'll see how it goes with
+> the -P option.
+> 
+> I'm happy to provide xfs_metadump if this still hangs!
+> 
+> Thanks,
+>     Nico
+> 
+> On 2/12/10 12:50 PM, Eric Sandeen wrote:
+>> Nicolas Stransky wrote:
+>>> I'm running into the same problem exactly, except that it's not 10
+>>> minutes, but DAYS.
+>>>
+>>> What is the version that fixes this?
+>>
+>> hard to say without knowing for sure what version you're using, and
+>> what exactly "this" is that you're seeing :)
+>>
+>> Providing an xfs_metadump of the corrupted fs that hangs repair
+>> is also about the best thing you could do for investigation,
+>> if you've already determined that the latest release doesn't help.
+>>
+>> -Eric
+>>
+>>> Thanks
+>>>
+>>> On 2/12/10 12:02 PM, Richard Hartmann wrote:
+>>>> On Fri, Feb 12, 2010 at 17:45, Richard Hartmann
+>>>> <richih.mailinglist@gmail.com> wrote:
+>>>>
+>>>>> I thought about that, but I fear that I will flood my terminal off with crap
+>>>>> and/or that I somehow impair xfs_repair while doing so.
+>>>> Running it for ten minutes gives me:
+>>>>
+>>>> root@grml ~ # strace -p13629
+>>>> Process 13629 attached - interrupt to quit
+>>>> futex(0xa381b4cc, FUTEX_WAIT_PRIVATE, 2, NULL^C <unfinished ...>
+>>>> Process 13629 detached
+>>>> root@grml ~ #
+>>>
+>>>
+>>
+>> _______________________________________________
+>> xfs mailing list
+>> xfs@oss.sgi.com
+>> http://oss.sgi.com/mailman/listinfo/xfs
+>>
+> 
+> 
 
---b.
+
+-- 
+Nico
 
 _______________________________________________
 xfs mailing list
