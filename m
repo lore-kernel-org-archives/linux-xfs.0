@@ -1,33 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1CHUHfP008966
-	for <linux-xfs@oss.sgi.com>; Fri, 12 Feb 2010 11:30:17 -0600
-Received: from lo.gmane.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6DCAB1CB089
-	for <linux-xfs@oss.sgi.com>; Fri, 12 Feb 2010 09:31:31 -0800 (PST)
-Received: from lo.gmane.org (lo.gmane.org [80.91.229.12]) by cuda.sgi.com with
-	ESMTP id jgPApfDF0NNDPNeW for <linux-xfs@oss.sgi.com>;
-	Fri, 12 Feb 2010 09:31:31 -0800 (PST)
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1NfzMW-0001DB-OB
-	for linux-xfs@oss.sgi.com; Fri, 12 Feb 2010 18:31:28 +0100
-Received: from vm15c-113.broadinstitute.org ([69.173.114.122])
-	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Fri, 12 Feb 2010 18:31:28 +0100
-Received: from nico by vm15c-113.broadinstitute.org with local (Gmexim 0.1
-	(Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Fri, 12 Feb 2010 18:31:28 +0100
-From: Nicolas Stransky <nico@stransky.cx>
+	o1CH5I5j007188 for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 11:05:19 -0600
+Received: from mail-ew0-f227.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 10C3B1CC76F8
+	for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 09:06:33 -0800 (PST)
+Received: from mail-ew0-f227.google.com (mail-ew0-f227.google.com
+	[209.85.219.227]) by cuda.sgi.com with ESMTP id
+	JADd1s1QHF1rj3vz for <xfs@oss.sgi.com>;
+	Fri, 12 Feb 2010 09:06:33 -0800 (PST)
+Received: by ewy27 with SMTP id 27so2805984ewy.18
+	for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 09:06:32 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <2d460de71002120904n346b1b1n307a07a3dd4d9@mail.gmail.com>
+References: <2d460de71002120607g763afc2bt2167fcfbf4664b56@mail.gmail.com>
+	<20100212165801.GA7323@puku.stupidest.org>
+	<2d460de71002120904n346b1b1n307a07a3dd4d9@mail.gmail.com>
+Date: Fri, 12 Feb 2010 18:06:32 +0100
+Message-ID: <2d460de71002120906g5d0ba253g9e843a7a1f0e1647@mail.gmail.com>
 Subject: Re: xfs_repair on a 1.5 TiB image has been hanging for about an hour,
 	now
-Date: Fri, 12 Feb 2010 12:31:03 -0500
-Message-ID: <hl438l$bhm$1@ger.gmane.org>
-References: <2d460de71002120607g763afc2bt2167fcfbf4664b56@mail.gmail.com>	<4B75738D.80108@sandeen.net>	<2d460de71002120845ue5b127ex1033b37ae5ff6ba2@mail.gmail.com>
-	<2d460de71002120902g3bda548t4e202dfe43a0c742@mail.gmail.com>
-Mime-Version: 1.0
-In-Reply-To: <2d460de71002120902g3bda548t4e202dfe43a0c742@mail.gmail.com>
+From: Richard Hartmann <richih.mailinglist@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,33 +33,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Chris Wedgwood <cw@f00f.org>
+Cc: xfs@oss.sgi.com
 
-I'm running into the same problem exactly, except that it's not 10
-minutes, but DAYS.
+On Fri, Feb 12, 2010 at 18:04, Richard Hartmann
+<richih.mailinglist@gmail.com> wrote:
+> On Fri, Feb 12, 2010 at 17:58, Chris Wedgwood <cw@f00f.org> wrote:
+>
+>> try adding -P
+>
+> Which leads me to the question if it would be save to just CTRL-C a
+> running xfs_repair (or if there is a different graceful shutdown function).
 
-What is the version that fixes this?
-
-Thanks
-
-On 2/12/10 12:02 PM, Richard Hartmann wrote:
-> On Fri, Feb 12, 2010 at 17:45, Richard Hartmann
-> <richih.mailinglist@gmail.com> wrote:
-> 
->> I thought about that, but I fear that I will flood my terminal off with crap
->> and/or that I somehow impair xfs_repair while doing so.
-> 
-> Running it for ten minutes gives me:
-> 
-> root@grml ~ # strace -p13629
-> Process 13629 attached - interrupt to quit
-> futex(0xa381b4cc, FUTEX_WAIT_PRIVATE, 2, NULL^C <unfinished ...>
-> Process 13629 detached
-> root@grml ~ #
+-P     Disable prefetching of inode and directory blocks. Use this
+option if you find xfs_repair gets stuck and stops proceeding.
+Interrupting a stuck xfs_repair is safe.
 
 
--- 
-Nico
+Well, OK :)
+
+
+Thanks,
+Richard
 
 _______________________________________________
 xfs mailing list
