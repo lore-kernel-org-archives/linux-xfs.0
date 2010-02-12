@@ -1,25 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1CH3b3D006914 for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 11:03:37 -0600
-Received: from mail-ew0-f227.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 180AB1CC76D8
-	for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 09:04:52 -0800 (PST)
-Received: from mail-ew0-f227.google.com (mail-ew0-f227.google.com
-	[209.85.219.227]) by cuda.sgi.com with ESMTP id
-	6OUt3If1EbdKTZNm for <xfs@oss.sgi.com>;
-	Fri, 12 Feb 2010 09:04:52 -0800 (PST)
-Received: by ewy27 with SMTP id 27so2804080ewy.18
-	for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 09:04:52 -0800 (PST)
+	o1CHTrDj008906 for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 11:29:54 -0600
+Date: Fri, 12 Feb 2010 12:31:06 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/2] commit_metadata export operation replacing
+	nfsd_sync_dir
+Message-ID: <20100212173106.GA22633@infradead.org>
+References: <20100211220454.26466.37578.stgit@case>
+	<20100211220500.26466.24169.stgit@case>
+	<1265984620.3201.73.camel@doink1>
 MIME-Version: 1.0
-In-Reply-To: <20100212165801.GA7323@puku.stupidest.org>
-References: <2d460de71002120607g763afc2bt2167fcfbf4664b56@mail.gmail.com>
-	<20100212165801.GA7323@puku.stupidest.org>
-Date: Fri, 12 Feb 2010 18:04:51 +0100
-Message-ID: <2d460de71002120904n346b1b1n307a07a3dd4d9@mail.gmail.com>
-Subject: Re: xfs_repair on a 1.5 TiB image has been hanging for about an hour,
-	now
-From: Richard Hartmann <richih.mailinglist@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <1265984620.3201.73.camel@doink1>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,21 +25,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Chris Wedgwood <cw@f00f.org>
-Cc: xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: bfields@fieldses.org, Ben Myers <bpm@sgi.com>, linux-nfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Fri, Feb 12, 2010 at 17:58, Chris Wedgwood <cw@f00f.org> wrote:
+> In the cases you pass the child dentry, you will now be syncing
+> things to disk in a slightly different way/order from before.
+> I think this way is actually much better, but I thought I'd ask
+> anyway:  are you sure that it's OK to sync them at the same time,
+> rather than directory first, then child (or the other way around,
+> depending on the case)?
 
-> try adding -P
+The order is defined by when we commit the transactions, if we do
+the log force on the later one first we already write out the first
+transaction.  Note that in any transaction filesystems the changes
+that create/mkdir/link/unlink do to parent and child will be in
+the same transaction anyway, which is kinda the point of adding
+the transactions to start with.  Only for the case where we do
+a setattr in addition to the primary transaction we'll actually
+have another transaction to deal with and the above applies.
 
-Which leads me to the question if it would be save to just CTRL-C a
-running xfs_repair (or if there is a different graceful shutdown function).
+> >  nfsd4_sync_rec_dir(void)
+> >  {
+> > -	mutex_lock(&rec_dir.dentry->d_inode->i_mutex);
+> > -	nfsd_sync_dir(rec_dir.dentry);
+> > -	mutex_unlock(&rec_dir.dentry->d_inode->i_mutex);
+> > +	vfs_fsync(NULL, rec_dir.dentry, 0);
+> 
+> Why do you no longer need to acquire the mutex here?
+> I see it gets acquired during the ->fsync() call
+> inside vfs_fsync_range(), but is there a reason
+> that it needed to be held during the filemap_write_and_wait()
+> (as is done in the nfsd_sync_dir() code) also?
 
-In any case, I would then retry with 3.1.0/3.1.1.
+We don't need i_mutex for filemap_write_and_wait, it's just held
+because someone used the nfsd_sync_dir helper where it doesn't
+fit very well.
 
+> > @@ -415,9 +449,8 @@ nfsd_setattr(struct svc_rqst *rqstp, struct svc_fh *fhp, struct iattr *iap,
+> >  	}
+> >  	if (size_change)
+> >  		put_write_access(inode);
+> > -	if (!err)
+> > -		if (EX_ISSYNC(fhp->fh_export))
+> > -			write_inode_now(inode, 1);
+> > +	if (!err && !delay_commit)
+> > +		err = nfserrno(commit_metadata(fhp, NULL));
+> 
+> Is this sufficient even if the size has changed?
 
-Thanks,
-Richard
+Yes.
 
 _______________________________________________
 xfs mailing list
