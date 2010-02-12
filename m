@@ -1,33 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1CIFPbl012334
-	for <linux-xfs@oss.sgi.com>; Fri, 12 Feb 2010 12:15:26 -0600
-Received: from lo.gmane.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EDC621CB5D7
-	for <linux-xfs@oss.sgi.com>; Fri, 12 Feb 2010 10:16:40 -0800 (PST)
-Received: from lo.gmane.org (lo.gmane.org [80.91.229.12]) by cuda.sgi.com with
-	ESMTP id TdxeeK2xGqlVJMYQ for <linux-xfs@oss.sgi.com>;
-	Fri, 12 Feb 2010 10:16:40 -0800 (PST)
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1Ng04F-0005Py-It
-	for linux-xfs@oss.sgi.com; Fri, 12 Feb 2010 19:16:39 +0100
-Received: from vm15c-113.broadinstitute.org ([69.173.114.122])
-	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Fri, 12 Feb 2010 19:16:39 +0100
-Received: from nico by vm15c-113.broadinstitute.org with local (Gmexim 0.1
-	(Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Fri, 12 Feb 2010 19:16:39 +0100
-From: Nicolas Stransky <nico@stransky.cx>
-Subject: Re: xfs_repair on a 1.5 TiB image has been hanging for about an hour,
-	now
-Date: Fri, 12 Feb 2010 13:16:16 -0500
-Message-ID: <hl45te$kjs$1@ger.gmane.org>
-References: <2d460de71002120607g763afc2bt2167fcfbf4664b56@mail.gmail.com>	<4B75738D.80108@sandeen.net>	<2d460de71002120845ue5b127ex1033b37ae5ff6ba2@mail.gmail.com>	<2d460de71002120902g3bda548t4e202dfe43a0c742@mail.gmail.com>	<hl438l$bhm$1@ger.gmane.org>
-	<4B7594D3.6040304@sandeen.net>
-Mime-Version: 1.0
-In-Reply-To: <4B7594D3.6040304@sandeen.net>
+	o1CJste1019824 for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 13:54:55 -0600
+Date: Fri, 12 Feb 2010 13:56:47 -0600
+From: bpm@sgi.com
+Subject: Re: [PATCH 2/2] xfs_export_operations.commit_metadata
+Message-ID: <20100212195647.GQ23654@sgi.com>
+References: <20100211220454.26466.37578.stgit@case>
+	<20100211220505.26466.99037.stgit@case>
+	<1265986006.3201.112.camel@doink1>
+	<20100212174706.GB22633@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20100212174706.GB22633@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,69 +25,75 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: bfields@fieldses.org, linux-nfs@vger.kernel.org, xfs@oss.sgi.com, Alex Elder <aelder@sgi.com>
 
-Right :)
-I'm using xfsprogs 3.1.0, on Debian Lenny, because 3.1.1 fails to build
-for some reason.
-I've been trying to repair a 1.4TB filesystem for more than a week,
-without success. xfs_repair never completes. I straced the stuck process
-today and got:
-Process 28510 attached - interrupt to quit
-futex(0x429cb58, FUTEX_WAIT_PRIVATE, 2, NULL
+On Fri, Feb 12, 2010 at 12:47:07PM -0500, Christoph Hellwig wrote:
+> On Fri, Feb 12, 2010 at 08:46:46AM -0600, Alex Elder wrote:
+> > On Thu, 2010-02-11 at 16:05 -0600, Ben Myers wrote:
+> > > This is the commit_metadata export operation for XFS, including the changes
+> > > suggested by hch and dgc:
+> > > 
+> > > - Takes two two inodes instead of dentries and can assume the parent is
+> > > always set.
+> > 
+> > I alluded to this in my review of the first patch.
+> > This could be changed considered in a more generic
+> > sense, "sync one or two inodes' metadata" rather
+> > than presupposing the two inodes have a parent/child
+> > relationship.
+> 
+> Or just implement my later suggestion to only pass one inode to the
+> method and cal in on both inodes.   For the non-create case where
+> we have only one transaction to deal with fhr first call will take
+> care of it and unpin the second inode by forcing the log buffer out.
+> For the create case we need to make sure to call it on the child first
+> so that we force out the setattr transaction which also forced out the
+> earlier one.
 
-I'm running xfs_repair -P -t5 -m500 /dev/sda1 because the machine only
-has 2GB of RAM and was swapping like crazy. I'll see how it goes with
-the -P option.
+I chose not implement that suggestion because I prefer not to rely upon
+the coincidence that the child be modified last and synced first in
+knfsd.  It is better that the intent of the patch be clear, and that
+filesystems other than xfs also have enough information to sort out how
+to sync more efficiently.  knfsd shouldn't be forced to sync in a
+specific order just because that's what works best for xfs.  Or, mebbe
+it should and I'm being thick.  ;)
 
-I'm happy to provide xfs_metadump if this still hangs!
+Alex's suggestion that ->commit_metadata be more generic about the
+relationship of the two inodes seems reasonable, not sure what that
+means for vfs.c:commit_metadata.  This will help with the rename case.
+
+> This keeps the calling convention quite a bit simpler,
+> and also means we don't have to bother with locking two inodes or lsn
+> comparisms.
+
+Don't need the ilock to check pincount?
+
+> > > +		error = _xfs_log_force(mp, force_lsn,
+> > > +				XFS_LOG_FORCE | XFS_LOG_SYNC, NULL);
+> > 
+> > You want this here:
+> >  error = xfs_log_force_lsn(mp, force_lsn, XFS_LOG_FORCE | XFS_LOG_SYNC);
+> 
+> In the XFS tree we do want either
+> 
+> 	xfs_log_force_lsn(mp, force_lsn, XFS_LOG_SYNC);
+> 
+> or
+> 	error = _xfs_log_force_lsn(mp, force_lsn, XFS_LOG_SYNC, NULL);
+> 
+> if we care enough about the returned error.  But Ben is working against
+> the NFS tree which doesn't have that change yet.
+> 
+> We can deal with that by either commiting the old variant to the nfs
+> tree and then leaving sending Stephen a patch to fix it up in -next,
+> or just not apply the xfs commit_metadata implementation yet, and wait
+> for it until both the xfs and nfs trees have hit mainline.
+
+Yeah.  I don't know who Stephen is.
 
 Thanks,
-    Nico
-
-On 2/12/10 12:50 PM, Eric Sandeen wrote:
-> Nicolas Stransky wrote:
->> I'm running into the same problem exactly, except that it's not 10
->> minutes, but DAYS.
->>
->> What is the version that fixes this?
-> 
-> hard to say without knowing for sure what version you're using, and
-> what exactly "this" is that you're seeing :)
-> 
-> Providing an xfs_metadump of the corrupted fs that hangs repair
-> is also about the best thing you could do for investigation,
-> if you've already determined that the latest release doesn't help.
-> 
-> -Eric
-> 
->> Thanks
->>
->> On 2/12/10 12:02 PM, Richard Hartmann wrote:
->>> On Fri, Feb 12, 2010 at 17:45, Richard Hartmann
->>> <richih.mailinglist@gmail.com> wrote:
->>>
->>>> I thought about that, but I fear that I will flood my terminal off with crap
->>>> and/or that I somehow impair xfs_repair while doing so.
->>> Running it for ten minutes gives me:
->>>
->>> root@grml ~ # strace -p13629
->>> Process 13629 attached - interrupt to quit
->>> futex(0xa381b4cc, FUTEX_WAIT_PRIVATE, 2, NULL^C <unfinished ...>
->>> Process 13629 detached
->>> root@grml ~ #
->>
->>
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
-
-
--- 
-Nico
+	Ben
 
 _______________________________________________
 xfs mailing list
