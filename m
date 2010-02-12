@@ -1,16 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1CEjZRZ258827 for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 08:45:35 -0600
-Subject: Re: [PATCH 2/2] xfs_export_operations.commit_metadata
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20100211220505.26466.99037.stgit@case>
-References: <20100211220454.26466.37578.stgit@case>
-	<20100211220505.26466.99037.stgit@case>
-Date: Fri, 12 Feb 2010 08:46:46 -0600
-Message-ID: <1265986006.3201.112.camel@doink1>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	o1CFR1vC261772 for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 09:27:01 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 64DFA1B9103
+	for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 07:28:15 -0800 (PST)
+Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
+	by cuda.sgi.com with ESMTP id 6Bnx6Pho7Hl2lilh for
+	<xfs@oss.sgi.com>; Fri, 12 Feb 2010 07:28:15 -0800 (PST)
+Message-ID: <4B75738D.80108@sandeen.net>
+Date: Fri, 12 Feb 2010 09:28:13 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: xfs_repair on a 1.5 TiB image has been hanging for about an hour,
+	now
+References: <2d460de71002120607g763afc2bt2167fcfbf4664b56@mail.gmail.com>
+In-Reply-To: <2d460de71002120607g763afc2bt2167fcfbf4664b56@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,115 +28,84 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: bfields@fieldses.org, linux-nfs@vger.kernel.org, xfs@oss.sgi.com
+To: Richard Hartmann <richih.mailinglist@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, 2010-02-11 at 16:05 -0600, Ben Myers wrote:
-> This is the commit_metadata export operation for XFS, including the changes
-> suggested by hch and dgc:
+Richard Hartmann wrote:
+> Hi all,
 > 
-> - Takes two two inodes instead of dentries and can assume the parent is
-> always set.
-
-I alluded to this in my review of the first patch.
-This could be changed considered in a more generic
-sense, "sync one or two inodes' metadata" rather
-than presupposing the two inodes have a parent/child
-relationship.
-
-> - Uses xfs_lock_two_inodes for the ilock.
+> one of our RAIDs recovered into an inconsistant state and I need to get
+> back what data I can.
 > 
-> - Forces the log up to the larger lsn of parent and child.
+> All steps taken happened and will continue to happen under Linux with
+> either Debian and/or grml.
 > 
-> - Uses XFS_LSN_CMP for lsn comparison.
+> The XFS file system that can not be mounted is in a partition which is
+> 1.5 TiB in size.
+> I put an additional 2 TiB drive and used dd_rescue to copy over what the
+> RAID presents as one large block device.
 > 
-> - Doesn't force the log if nobody had a pincount.
-
-So if the log doesn't get forced, what causes the
-desired metadata sync expected as a result of this
-call?  (Maybe this is a dumb question.)
-
-> Signed-off-by: Ben Myers <bpm@sgi.com>
-> ---
->  fs/xfs/linux-2.6/xfs_export.c |   43 +++++++++++++++++++++++++++++++++++++++++
->  1 files changed, 43 insertions(+), 0 deletions(-)
+> I then ran kpartx on the image to create the appropriate devices in
+> /dev/mapper.
 > 
-> diff --git a/fs/xfs/linux-2.6/xfs_export.c b/fs/xfs/linux-2.6/xfs_export.c
-> index 87b8cbd..d37ced1 100644
-> --- a/fs/xfs/linux-2.6/xfs_export.c
-> +++ b/fs/xfs/linux-2.6/xfs_export.c
-> @@ -29,6 +29,7 @@
->  #include "xfs_vnodeops.h"
->  #include "xfs_bmap_btree.h"
->  #include "xfs_inode.h"
-> +#include "xfs_inode_item.h"
->  
->  /*
->   * Note that we only accept fileids which are long enough rather than allow
-> @@ -215,9 +216,51 @@ xfs_fs_get_parent(
->  	return d_obtain_alias(VFS_I(cip));
->  }
->  
-> +STATIC int
-> +xfs_fs_nfs_commit_metadata(
-> +	struct inode		*parent,
-> +	struct inode		*child)
-> +{
-> +	struct xfs_inode	*dp = XFS_I(parent);
-> +	struct xfs_inode	*ip = NULL;
-> +	struct xfs_mount	*mp = dp->i_mount;
-> +	xfs_lsn_t		force_lsn = NULLCOMMITLSN;
-> +	int			error = 0;
-> +
-> +	if (child) {
-> +		ip = XFS_I(child);
-> +		xfs_lock_two_inodes(dp, ip, XFS_ILOCK_SHARED);
-> +	} else {
-> +		xfs_ilock(dp, XFS_ILOCK_SHARED);
-> +	}
-> +
-> +	if (xfs_ipincount(dp)) {
-> +		force_lsn = dp->i_itemp->ili_last_lsn;
-> +		if (ip && xfs_ipincount(ip) &&
-> +		    XFS_LSN_CMP(force_lsn, ip->i_itemp->ili_last_lsn) < 0) {
-> +			force_lsn = ip->i_itemp->ili_last_lsn;
-> +		}
-> +	} else if (ip && xfs_ipincount(ip)) {
-> +		force_lsn = ip->i_itemp->ili_last_lsn;
-> +	}
-> +
-> +	if (force_lsn != NULLCOMMITLSN) {
-> +		error = _xfs_log_force(mp, force_lsn,
-> +				XFS_LOG_FORCE | XFS_LOG_SYNC, NULL);
-
-You want this here:
- error = xfs_log_force_lsn(mp, force_lsn, XFS_LOG_FORCE | XFS_LOG_SYNC);
-
-
-> +	}
-> +
-> +	if (child)
-> +		xfs_iunlock(ip, XFS_ILOCK_SHARED);
-> +	if (parent)
-> +		xfs_iunlock(dp, XFS_ILOCK_SHARED);
-> +
-> +	return error;
-> +}
-> +
->  const struct export_operations xfs_export_operations = {
->  	.encode_fh		= xfs_fs_encode_fh,
->  	.fh_to_dentry		= xfs_fs_fh_to_dentry,
->  	.fh_to_parent		= xfs_fs_fh_to_parent,
->  	.get_parent		= xfs_fs_get_parent,
-> +	.commit_metadata	= xfs_fs_nfs_commit_metadata,
->  };
+> As the metadata was corrupt, I ran xfs_metadump -g and -go to have a
+> personal backup and one I could give out if needed.
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> I then ran xfs_repair -L /dev/mapper/loop1p3 which has not been making
+> any progress for the last hour.
+> I don't see much load in ways of CPU or i/o, yet there is literally no
+> progress at all. I am hanging at:
+> 
+> 
+> no . entry for directory 39756
+> no .. entry for directory 39756
+> problem with directory contents in inode 39756
+> cleared inode 39756
+> data fork in ino 39771 claims free block 8391321
+> bad directory block magic # 0x58443242 in block 0 for directory inode 39771
+> corrupt block 0 in directory inode 39771
+>         will junk block
+> no . entry for directory 39771
+> no .. entry for directory 39771
+> problem with directory contents in inode 39771
+> cleared inode 39771
+> data fork in ino 39774 claims free block 44122
+> data fork in ino 39774 claims free block 8432730
+> bad directory block magic # 0x1f1f1f1f in block 0 for directory inode 39774
+> corrupt block 0 in directory inode 39774
+>         will junk block
+> no . entry for directory 39774
+> no .. entry for directory 39774
+> problem with directory contents in inode 39774
+> cleared inode 39774
+> multiple . entries in directory inode 39816: clearing entry
+> multiple .. entries in directory inode 39816: clearing entry
+> bad directory block magic # 0x58443244 in block 0 for directory inode 39840
+> corrupt block 0 in directory inode 39840
+>         will junk block
+> no . entry for directory 39840
+> no .. entry for directory 39840
+> problem with directory contents in inode 39840
+> cleared inode 39840
+> bad . entry in directory inode 39909, was 45188: correcting
+> data fork in ino 40102 claims free block 8400946
+> ab3e1b90: Badness in key lookup (length)
+> bp=(bno 258176, len 8192 bytes) key=(bno 258176, len 4096 bytes)
+> ab3e1b90: Badness in key lookup (length)
+> bp=(bno 258224, len 8192 bytes) key=(bno 258224, len 4096 bytes)
+> 
+> 
+> Is there any way to read out the current state of xfs_repair and tell
+> what it is doing and when it will finish? I am aware that the end time
+> is impossible to predict, I am just looking for ballpark figures.
 
+to see if it's moving, I'd try stracing the process or examining it
+with gdb if you are able.
 
+You didn't say which version of xfsprogs you have; IIRC at least one known
+problem with hanging has been fixed upstream.
+
+-Eric
 
 _______________________________________________
 xfs mailing list
