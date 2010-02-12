@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1CH5I5j007188 for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 11:05:19 -0600
-Received: from mail-ew0-f227.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 10C3B1CC76F8
-	for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 09:06:33 -0800 (PST)
-Received: from mail-ew0-f227.google.com (mail-ew0-f227.google.com
-	[209.85.219.227]) by cuda.sgi.com with ESMTP id
-	JADd1s1QHF1rj3vz for <xfs@oss.sgi.com>;
-	Fri, 12 Feb 2010 09:06:33 -0800 (PST)
-Received: by ewy27 with SMTP id 27so2805984ewy.18
-	for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 09:06:32 -0800 (PST)
+	o1CHBqxA007668 for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 11:11:52 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2FADD13A3514
+	for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 09:13:06 -0800 (PST)
+Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
+	by cuda.sgi.com with ESMTP id KWyPHcnDFTbz0fxc for
+	<xfs@oss.sgi.com>; Fri, 12 Feb 2010 09:13:06 -0800 (PST)
+Message-ID: <4B758C22.5050102@sandeen.net>
+Date: Fri, 12 Feb 2010 11:13:06 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <2d460de71002120904n346b1b1n307a07a3dd4d9@mail.gmail.com>
-References: <2d460de71002120607g763afc2bt2167fcfbf4664b56@mail.gmail.com>
-	<20100212165801.GA7323@puku.stupidest.org>
-	<2d460de71002120904n346b1b1n307a07a3dd4d9@mail.gmail.com>
-Date: Fri, 12 Feb 2010 18:06:32 +0100
-Message-ID: <2d460de71002120906g5d0ba253g9e843a7a1f0e1647@mail.gmail.com>
 Subject: Re: xfs_repair on a 1.5 TiB image has been hanging for about an hour,
 	now
-From: Richard Hartmann <richih.mailinglist@gmail.com>
+References: <2d460de71002120607g763afc2bt2167fcfbf4664b56@mail.gmail.com>	<20100212165801.GA7323@puku.stupidest.org>
+	<2d460de71002120904n346b1b1n307a07a3dd4d9@mail.gmail.com>
+In-Reply-To: <2d460de71002120904n346b1b1n307a07a3dd4d9@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,28 +29,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Chris Wedgwood <cw@f00f.org>
-Cc: xfs@oss.sgi.com
+To: Richard Hartmann <richih.mailinglist@gmail.com>
+Cc: Chris Wedgwood <cw@f00f.org>, xfs@oss.sgi.com
 
-On Fri, Feb 12, 2010 at 18:04, Richard Hartmann
-<richih.mailinglist@gmail.com> wrote:
+Richard Hartmann wrote:
 > On Fri, Feb 12, 2010 at 17:58, Chris Wedgwood <cw@f00f.org> wrote:
->
+> 
 >> try adding -P
->
+> 
 > Which leads me to the question if it would be save to just CTRL-C a
 > running xfs_repair (or if there is a different graceful shutdown function).
 
--P     Disable prefetching of inode and directory blocks. Use this
-option if you find xfs_repair gets stuck and stops proceeding.
-Interrupting a stuck xfs_repair is safe.
+It is safe, as the manpage says right there by the -P option ;)
 
+-Eric
 
-Well, OK :)
-
-
-Thanks,
-Richard
+> In any case, I would then retry with 3.1.0/3.1.1.
+> 
+> 
+> Thanks,
+> Richard
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
