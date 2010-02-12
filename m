@@ -1,30 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1CKbtPo025130
-	for <linux-xfs@oss.sgi.com>; Fri, 12 Feb 2010 14:37:55 -0600
-Received: from mail-ew0-f227.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 55D9D1CBE8F
-	for <linux-xfs@oss.sgi.com>; Fri, 12 Feb 2010 12:39:10 -0800 (PST)
-Received: from mail-ew0-f227.google.com (mail-ew0-f227.google.com
-	[209.85.219.227]) by cuda.sgi.com with ESMTP id
-	xtBE02iUSljCdro9 for <linux-xfs@oss.sgi.com>;
-	Fri, 12 Feb 2010 12:39:10 -0800 (PST)
-Received: by ewy27 with SMTP id 27so3041666ewy.18
-	for <linux-xfs@oss.sgi.com>; Fri, 12 Feb 2010 12:39:09 -0800 (PST)
+	o1CLSMH6031530 for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 15:28:23 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4B0171CC174
+	for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 13:29:37 -0800 (PST)
+Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
+	by cuda.sgi.com with ESMTP id 3wStXrvqiG6xDcXq for
+	<xfs@oss.sgi.com>; Fri, 12 Feb 2010 13:29:37 -0800 (PST)
+Message-ID: <4B75C841.3010105@sandeen.net>
+Date: Fri, 12 Feb 2010 15:29:37 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <hl4dpt$fq2$1@ger.gmane.org>
-References: <2d460de71002120607g763afc2bt2167fcfbf4664b56@mail.gmail.com>
-	<4B75738D.80108@sandeen.net>
-	<2d460de71002120845ue5b127ex1033b37ae5ff6ba2@mail.gmail.com>
-	<2d460de71002120902g3bda548t4e202dfe43a0c742@mail.gmail.com>
-	<hl438l$bhm$1@ger.gmane.org> <4B7594D3.6040304@sandeen.net>
-	<hl45te$kjs$1@ger.gmane.org> <hl4dpt$fq2$1@ger.gmane.org>
-Date: Fri, 12 Feb 2010 21:39:09 +0100
-Message-ID: <2d460de71002121239y42ec9671id5e147e9709e42ac@mail.gmail.com>
-Subject: Re: xfs_repair on a 1.5 TiB image has been hanging for about an hour,
-	now
-From: Richard Hartmann <richih.mailinglist@gmail.com>
+Subject: Re: xfs_repair doesn't fix sb versionnum missing attr
+References: <1265996674.7755.7.camel@lh10.linush.net>	<4B75BA12.1060704@sandeen.net>
+	<1266007649.7755.12.camel@lh10.linush.net>
+In-Reply-To: <1266007649.7755.12.camel@lh10.linush.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,19 +28,89 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Nicolas Stransky <nico@stransky.cx>
-Cc: linux-xfs@oss.sgi.com
+To: C Linus Hicks <linush@verizon.net>
+Cc: xfs@oss.sgi.com
 
-On Fri, Feb 12, 2010 at 21:30, Nicolas Stransky <nico@stransky.cx> wrote:
-> The -P option allowed me to complete xfs_repair successfully, but it
-> also deleted almost everything on the filesystem... A directory that I
-> could mount -o ro,norecovery before, with tens of GB of data in it, is
-> now empty... That is really too bad.
+C Linus Hicks wrote:
+> On Fri, 2010-02-12 at 14:29 -0600, Eric Sandeen wrote:
+>> C Linus Hicks wrote:
+>>> I run:
+>>>
+>>> xfs_check /dev/sdc10
+>>>
+>>> And it reports:
+>>>
+>>> sb versionnum missing attr bit 10
+>>>
+>>> Then I run:
+>>>
+>>> xfs_repair /dev/sdc10
+>>>
+>>> And it reports output from 7 phases and "done".
+>>>
+>>> Again I run:
+>>>
+>>> xfs_check /dev/sdc10
+>>>
+>>> And it reports:
+>>>
+>>> sb versionnum missing attr bit 10
+>>>
+>>> Is this how it's supposed to work?
+>>> Thanks for any help.
+>>> Linus
+>>>
+>> I've never seen that before.
+>>
+>> This might be interesting to see:
+>>
+>> # xfs_db /dev/sdc10
+>> xfs_db> sb 0
+>> xfs_db> version
+>>
+>> If you want to send me a zipped-up, obfuscated metadump of the filesystem
+>> I could take a quick look.
+>>
+>> -Eric
+> 
+> The output from the "version" command:
+> 
+> versionnum [0x3084+0x0] = V4,ALIGN,DIRV2,EXTFLG
+> 
+> I'll email the metadump directly to you so as not to pollute the list.
 
-Do you still have a backup of the raw disk?
+Ok so a little less mystery here; I was concerned about how we got here,
+but Linus had to manually reconstruct his superblock, hence the missing
+flags.
 
+Looks like there are selinux attributes on all the files, so of course
+the sb should have the attr flags set.
 
-Richard
+This does look like one test that check has and repair doesn't.
+
+<checking upstream for sure>
+
+yep!
+
+Linus, FWIW simply creating a new file on the fs with xattrs (any
+old file works if selinux is on) will set the flags as if it were
+the first file created w/ an attr...
+
+[root@host Linus-repair-bug]# xfs_check sdc10-md.log.img 
+sb versionnum missing attr bit 10
+[root@host Linus-repair-bug]# mount -o loop sdc10-md.log.img mnt/
+[root@host Linus-repair-bug]# echo foobar > mnt/blah
+[root@host Linus-repair-bug]# ls -Z mnt/blah
+-rw-r--r--  root root root:object_r:file_t             mnt/blah
+[root@host Linus-repair-bug]# umount mnt
+[root@host Linus-repair-bug]# xfs_check sdc10-md.log.img 
+[root@host Linus-repair-bug]#
+
+I suppose that check should get added to repair though.
+
+Care to file a bug so it doesn't get lost?
+
+-Eric
 
 _______________________________________________
 xfs mailing list
