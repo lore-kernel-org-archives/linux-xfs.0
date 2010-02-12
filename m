@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1CH1lCQ006789 for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 11:01:47 -0600
+	o1CH3b3D006914 for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 11:03:37 -0600
 Received: from mail-ew0-f227.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6CBE61CC76B7
-	for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 09:03:00 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 180AB1CC76D8
+	for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 09:04:52 -0800 (PST)
 Received: from mail-ew0-f227.google.com (mail-ew0-f227.google.com
 	[209.85.219.227]) by cuda.sgi.com with ESMTP id
-	N3nrzPaglmOrosuC for <xfs@oss.sgi.com>;
-	Fri, 12 Feb 2010 09:03:00 -0800 (PST)
-Received: by ewy27 with SMTP id 27so2802137ewy.18
-	for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 09:02:59 -0800 (PST)
+	6OUt3If1EbdKTZNm for <xfs@oss.sgi.com>;
+	Fri, 12 Feb 2010 09:04:52 -0800 (PST)
+Received: by ewy27 with SMTP id 27so2804080ewy.18
+	for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 09:04:52 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <2d460de71002120845ue5b127ex1033b37ae5ff6ba2@mail.gmail.com>
+In-Reply-To: <20100212165801.GA7323@puku.stupidest.org>
 References: <2d460de71002120607g763afc2bt2167fcfbf4664b56@mail.gmail.com>
-	<4B75738D.80108@sandeen.net>
-	<2d460de71002120845ue5b127ex1033b37ae5ff6ba2@mail.gmail.com>
-Date: Fri, 12 Feb 2010 18:02:59 +0100
-Message-ID: <2d460de71002120902g3bda548t4e202dfe43a0c742@mail.gmail.com>
+	<20100212165801.GA7323@puku.stupidest.org>
+Date: Fri, 12 Feb 2010 18:04:51 +0100
+Message-ID: <2d460de71002120904n346b1b1n307a07a3dd4d9@mail.gmail.com>
 Subject: Re: xfs_repair on a 1.5 TiB image has been hanging for about an hour,
 	now
 From: Richard Hartmann <richih.mailinglist@gmail.com>
@@ -33,24 +32,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
+To: Chris Wedgwood <cw@f00f.org>
 Cc: xfs@oss.sgi.com
 
-On Fri, Feb 12, 2010 at 17:45, Richard Hartmann
-<richih.mailinglist@gmail.com> wrote:
+On Fri, Feb 12, 2010 at 17:58, Chris Wedgwood <cw@f00f.org> wrote:
 
-> I thought about that, but I fear that I will flood my terminal off with crap
-> and/or that I somehow impair xfs_repair while doing so.
+> try adding -P
 
-Running it for ten minutes gives me:
+Which leads me to the question if it would be save to just CTRL-C a
+running xfs_repair (or if there is a different graceful shutdown function).
 
-root@grml ~ # strace -p13629
-Process 13629 attached - interrupt to quit
-futex(0xa381b4cc, FUTEX_WAIT_PRIVATE, 2, NULL^C <unfinished ...>
-Process 13629 detached
-root@grml ~ #
+In any case, I would then retry with 3.1.0/3.1.1.
 
 
+Thanks,
 Richard
 
 _______________________________________________
