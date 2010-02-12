@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1CKlNkI026326
-	for <linux-xfs@oss.sgi.com>; Fri, 12 Feb 2010 14:47:23 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DCD041CC0D1
-	for <linux-xfs@oss.sgi.com>; Fri, 12 Feb 2010 12:48:38 -0800 (PST)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id H1xLKrkdKed8doCh for
-	<linux-xfs@oss.sgi.com>; Fri, 12 Feb 2010 12:48:38 -0800 (PST)
-Message-ID: <4B75BEA6.70403@sandeen.net>
-Date: Fri, 12 Feb 2010 14:48:38 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	o1CKYing024757 for <xfs@oss.sgi.com>; Fri, 12 Feb 2010 14:34:45 -0600
+Date: Fri, 12 Feb 2010 15:35:59 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/2] xfs_export_operations.commit_metadata
+Message-ID: <20100212203559.GA28731@infradead.org>
+References: <20100211220454.26466.37578.stgit@case>
+	<20100211220505.26466.99037.stgit@case>
+	<1265986006.3201.112.camel@doink1>
+	<20100212174706.GB22633@infradead.org>
+	<20100212195647.GQ23654@sgi.com>
 MIME-Version: 1.0
-Subject: Re: xfs_repair on a 1.5 TiB image has been hanging for about an hour,
-	now
-References: <2d460de71002120607g763afc2bt2167fcfbf4664b56@mail.gmail.com>	<4B75738D.80108@sandeen.net>	<2d460de71002120845ue5b127ex1033b37ae5ff6ba2@mail.gmail.com>	<2d460de71002120902g3bda548t4e202dfe43a0c742@mail.gmail.com>	<hl438l$bhm$1@ger.gmane.org>	<4B7594D3.6040304@sandeen.net>	<hl45te$kjs$1@ger.gmane.org>
-	<hl4dpt$fq2$1@ger.gmane.org>
-In-Reply-To: <hl4dpt$fq2$1@ger.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20100212195647.GQ23654@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,27 +26,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Nicolas Stransky <nico@stransky.cx>
-Cc: linux-xfs@oss.sgi.com
+To: bpm@sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, bfields@fieldses.org, linux-nfs@vger.kernel.org, xfs@oss.sgi.com, Alex Elder <aelder@sgi.com>
 
-Nicolas Stransky wrote:
-> The -P option allowed me to complete xfs_repair successfully, but it
-> also deleted almost everything on the filesystem... A directory that I
-> could mount -o ro,norecovery before, with tens of GB of data in it, is
-> now empty... That is really too bad.
+On Fri, Feb 12, 2010 at 01:56:47PM -0600, bpm@sgi.com wrote:
+> I chose not implement that suggestion because I prefer not to rely upon
+> the coincidence that the child be modified last and synced first in
+> knfsd.
 
-Any idea what happened to the fs - what prompted the repair?
+It does ot rely on that coincidence for correctness, just for a small
+performance optimization.
 
-Did you save the logs, or a preliminary metadump?
+> It is better that the intent of the patch be clear, and that
+> filesystems other than xfs also have enough information to sort out how
+> to sync more efficiently.  knfsd shouldn't be forced to sync in a
+> specific order just because that's what works best for xfs.  Or, mebbe
+> it should and I'm being thick.  ;)
 
-I wonder what it found.  The files aren't in lost+found/ ?
+The order of parent and child only happens in the create case where
+NFS does a separate ->setattr call.  For all the operations handled
+by the filesystem parent and child are in the same transaction for
+every transactional filesystem.
 
- 
-> Thanks for your help.
+> > This keeps the calling convention quite a bit simpler,
+> > and also means we don't have to bother with locking two inodes or lsn
+> > comparisms.
+> 
+> Don't need the ilock to check pincount?
 
-Such as it was, I guess...
+Ah sorry, that should have read not bothering with locking two inodes
+at the same time, which always is a bit troublesome.  We do need to lock
+the inode for looking at the pincount.
 
--Eric
+> > We can deal with that by either commiting the old variant to the nfs
+> > tree and then leaving sending Stephen a patch to fix it up in -next,
+> > or just not apply the xfs commit_metadata implementation yet, and wait
+> > for it until both the xfs and nfs trees have hit mainline.
+> 
+> Yeah.  I don't know who Stephen is.
+
+Stephen Rothwell is the maintainer of the linux-next tree.
 
 _______________________________________________
 xfs mailing list
