@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1DKMgYl153313 for <xfs@oss.sgi.com>; Sat, 13 Feb 2010 14:22:42 -0600
+	o1DKN7eg153377 for <xfs@oss.sgi.com>; Sat, 13 Feb 2010 14:23:07 -0600
 Received: from stout.americas.sgi.com (stout.americas.sgi.com [128.162.232.50])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A007B8F80F1
-	for <xfs@oss.sgi.com>; Sat, 13 Feb 2010 12:23:55 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7F12B8F80F1
+	for <xfs@oss.sgi.com>; Sat, 13 Feb 2010 12:24:23 -0800 (PST)
 Received: from stout.americas.sgi.com (localhost6.localdomain6 [127.0.0.1])
-	by stout.americas.sgi.com (8.14.3/8.14.2) with ESMTP id o1DKNtbm000700
-	for <xfs@oss.sgi.com>; Sat, 13 Feb 2010 14:23:55 -0600
+	by stout.americas.sgi.com (8.14.3/8.14.2) with ESMTP id o1DKONxw000726
+	for <xfs@oss.sgi.com>; Sat, 13 Feb 2010 14:24:23 -0600
 Received: (from aelder@localhost)
-	by stout.americas.sgi.com (8.14.3/8.14.3/Submit) id o1DKNtoC000699
-	for xfs@oss.sgi.com; Sat, 13 Feb 2010 14:23:55 -0600
+	by stout.americas.sgi.com (8.14.3/8.14.3/Submit) id o1DKONX4000725
+	for xfs@oss.sgi.com; Sat, 13 Feb 2010 14:24:23 -0600
 From: Alex Elder <aelder@sgi.com>
-Message-Id: <201002132023.o1DKNtoC000699@stout.americas.sgi.com>
-Date: Sat, 13 Feb 2010 14:23:54 -0600
-Subject: [PATCH] xfstests: remake dependencies only when necessary
+Message-Id: <201002132024.o1DKONX4000725@stout.americas.sgi.com>
+Date: Sat, 13 Feb 2010 14:24:23 -0600
+Subject: [PATCH] dmapi: remake dependencies only when necessary
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -32,32 +32,13 @@ To: xfs@oss.sgi.com
 
 There's no need to re-make the dependency file all the time.  Make
 it so the "depend" target rebuilds the ".dep" file only if necessary.
-Also change the name of the dependency file created for "ltdepend"
-to be ".ltdep".
 
 Signed-off-by: Alex Elder <aelder@sgi.com>
 
 ---
- Makefile           |    4 ++--
- include/buildrules |   16 +++++++++++-----
- lib/Makefile       |    2 +-
- 3 files changed, 14 insertions(+), 8 deletions(-)
+ include/buildrules |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-Index: b/Makefile
-===================================================================
---- a/Makefile
-+++ b/Makefile
-@@ -27,8 +27,8 @@ endif
- TESTS = $(shell sed -n -e '/^[0-9][0-9][0-9]*/s/ .*//p' group)
- CONFIGURE = configure include/builddefs include/config.h
- LSRCFILES = configure configure.in aclocal.m4 README VERSION
--LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
--	check.log check.time
-+LDIRT = config.log .ltdep .dep config.status config.cache confdefs.h \
-+	conftest* check.log check.time
- 
- ifeq ($(HAVE_DMAPI), true)
- DMAPI_MAKEFILE = dmapi/Makefile
 Index: b/include/buildrules
 ===================================================================
 --- a/include/buildrules
@@ -65,44 +46,25 @@ Index: b/include/buildrules
 @@ -8,7 +8,7 @@ include $(TOPDIR)/include/builddefs
  
  clean clobber : $(addsuffix -clean,$(SUBDIRS))
- 	$(Q)rm -f $(DIRT)
--	$(Q)rm -fr .libs .dep
-+	$(Q)rm -fr .libs .ltdep .dep
+ 	rm -f $(DIRT)
+-	@rm -fr .libs
++	@rm -fr .libs .dep
  
  %-clean:
- 	@echo "Cleaning $*"
-@@ -75,11 +75,17 @@ $(_FORCE):
+ 	$(MAKE) -C $* clean
+@@ -72,9 +72,10 @@ ifdef LTLIBRARY
+ DEPENDSCRIPT := $(DEPENDSCRIPT) | $(SED) -e 's,^\([^:]*\)\.o,\1.lo,'
+ endif
  
- MAKEDEP := $(MAKEDEPEND) $(CFLAGS)
- 
--ltdepend: $(CFILES) $(HFILES)
-+ltdepend: .ltdep
+-depend : $(CFILES) $(HFILES) $(addsuffix -depend,$(SUBDIRS))
++depend : .dep $(addsuffix -depend,$(SUBDIRS))
 +
-+.ltdep: $(CFILES) $(HFILES)
- 	@echo "    [DEP]"
--	$(Q)$(MAKEDEP) $(CFILES) | $(SED) -e 's,^\([^:]*\)\.o,\1.lo,' > .dep
-+	$(Q)[ -n "$(CFILES)" ] && \
-+	    $(MAKEDEP) $(CFILES) | $(SED) -e 's,^\([^:]*\)\.o,\1.lo,' > .ltdep
-+
-+depend: .dep
++.dep : $(CFILES) $(HFILES)
+ 	$(DEPENDSCRIPT) > .dep
+-	test -s .dep || rm -f .dep
  
--depend: $(CFILES) $(HFILES)
-+.dep: $(CFILES) $(HFILES)
- 	@echo "    [DEP]"
--	$(Q)$(MAKEDEP) $(CFILES) | $(SED) -e 's,^\([^:]*\)\.o,\1,' > .dep
-+	$(Q)[ -n "$(CFILES)" ] && \
-+	    $(MAKEDEP) $(CFILES) | $(SED) -e 's,^\([^:]*\)\.o,\1,' > .dep
- 
-Index: b/lib/Makefile
-===================================================================
---- a/lib/Makefile
-+++ b/lib/Makefile
-@@ -25,4 +25,4 @@ include $(BUILDRULES)
- 
- install install-dev: default
- 
---include .dep
-+-include .ltdep
+ %-depend:
+ 	$(MAKE) -C $* depend
 
 _______________________________________________
 xfs mailing list
