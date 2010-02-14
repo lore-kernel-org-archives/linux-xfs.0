@@ -1,21 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1DKMulx153357 for <xfs@oss.sgi.com>; Sat, 13 Feb 2010 14:22:56 -0600
-Received: from stout.americas.sgi.com (stout.americas.sgi.com [128.162.232.50])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D421E8F80F1
-	for <xfs@oss.sgi.com>; Sat, 13 Feb 2010 12:24:12 -0800 (PST)
-Received: from stout.americas.sgi.com (localhost6.localdomain6 [127.0.0.1])
-	by stout.americas.sgi.com (8.14.3/8.14.2) with ESMTP id o1DKOCAo000713
-	for <xfs@oss.sgi.com>; Sat, 13 Feb 2010 14:24:12 -0600
-Received: (from aelder@localhost)
-	by stout.americas.sgi.com (8.14.3/8.14.3/Submit) id o1DKOCDF000711
-	for xfs@oss.sgi.com; Sat, 13 Feb 2010 14:24:12 -0600
-From: Alex Elder <aelder@sgi.com>
-Message-Id: <201002132024.o1DKOCDF000711@stout.americas.sgi.com>
-Date: Sat, 13 Feb 2010 14:24:12 -0600
-Subject: [PATCH] xfsdump: remake dependencies only when necessary
+	o1ELhjlm260431 for <xfs@oss.sgi.com>; Sun, 14 Feb 2010 15:43:45 -0600
+Date: Sun, 14 Feb 2010 16:45:00 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfstests: clean up dmapi Makefile
+Message-ID: <20100214214500.GB21311@infradead.org>
+References: <201002122145.o1CLjMRf028235@stout.americas.sgi.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <201002122145.o1CLjMRf028235@stout.americas.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,108 +22,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: xfs@oss.sgi.com
 
-There's no need to re-make the dependency file all the time.  Make
-it so the "depend" target rebuilds the ".dep" file only if necessary.
-Also change the name of the dependency file created for "ltdepend"
-to be ".ltdep".
+> Index: b/Makefile
+> ===================================================================
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -99,3 +99,7 @@ install-dev install-lib:
+>  realclean distclean: clean
+>  	rm -f $(LDIRT) $(CONFIGURE)
+>  	rm -rf autom4te.cache Logs
+> +ifeq ($(HAVE_DMAPI), true)
+> +	rm -f $(DMAPI_MAKEFILE)
+> +endif
 
-Signed-off-by: Alex Elder <aelder@sgi.com>
-
----
- Makefile           |    6 +++---
- dump/Makefile      |    2 +-
- include/buildrules |   14 +++++++++-----
- librmt/Makefile    |    2 +-
- restore/Makefile   |    2 +-
- 5 files changed, 15 insertions(+), 11 deletions(-)
-
-Index: b/Makefile
-===================================================================
---- a/Makefile
-+++ b/Makefile
-@@ -30,9 +30,9 @@ SRCTAR = $(PKG_NAME)-$(PKG_VERSION).tar.
- CONFIGURE = aclocal.m4 configure config.guess config.sub install-sh ltmain.sh
- LSRCFILES = configure.in release.sh README VERSION $(CONFIGURE)
- 
--LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
--	built .census install.* install-dev.* *.gz autom4te.cache/* libtool \
--	include/builddefs include/config.h
-+LDIRT = config.log .ltdep .dep config.status config.cache confdefs.h \
-+	conftest* built .census install.* install-dev.* *.gz \
-+	autom4te.cache/* libtool include/builddefs include/config.h
- 
- ifeq ($(HAVE_BUILDDEFS), yes)
- LDIRDIRT = $(SRCDIR)
-Index: b/dump/Makefile
-===================================================================
---- a/dump/Makefile
-+++ b/dump/Makefile
-@@ -105,7 +105,7 @@ install: default
- 	$(INSTALL) -S $(PKG_ROOT_SBIN_DIR)/$(LTCOMMAND) $(PKG_SBIN_DIR)/$(LTCOMMAND)
- install-dev:
- 
--depend: $(COMMINCL) $(COMMON) $(INVINCL) $(INVCOMMON)
-+.dep: $(COMMINCL) $(COMMON) $(INVINCL) $(INVCOMMON)
- 
- $(COMMINCL) $(COMMON):
- 	@echo "    [LN]     $@"
-Index: b/include/buildrules
-===================================================================
---- a/include/buildrules
-+++ b/include/buildrules
-@@ -7,7 +7,7 @@ _BUILDRULES_INCLUDED_ = 1
- include $(TOPDIR)/include/builddefs
- 
- clean clobber : $(addsuffix -clean,$(SUBDIRS))
--	@rm -f $(DIRT) .dep
-+	@rm -f $(DIRT) .ltdep .dep
- 	@rm -fr $(DIRDIRT)
- %-clean:
- 	@echo "Cleaning $*"
-@@ -94,10 +94,14 @@ $(_FORCE):
- 
- MAKEDEP := $(MAKEDEPEND) $(CFLAGS)
- 
--ltdepend: $(CFILES) $(HFILES)
-+ltdepend: .ltdep
-+
-+.ltdep: $(CFILES) $(HFILES)
- 	@echo "    [DEP]"
--	$(Q)$(MAKEDEP) $(CFILES) | $(SED) -e 's,^\([^:]*\)\.o,\1.lo,' > .dep
-+	$(Q)$(MAKEDEP) $(CFILES) | $(SED) -e 's,^\([^:]*\)\.o,\1.lo,' > .ltdep
-+
-+depend: .dep
- 
--depend: $(CFILES) $(HFILES)
-+.dep: $(CFILES) $(HFILES)
- 	@echo "    [DEP]"
--	$(Q)$(MAKEDEP) $(CFILES) > .dep
-+	$(Q)[ -n "$(CFILES)" ] && $(MAKEDEP) $(CFILES) > .dep
-Index: b/librmt/Makefile
-===================================================================
---- a/librmt/Makefile
-+++ b/librmt/Makefile
-@@ -21,4 +21,4 @@ include $(BUILDRULES)
- 
- install install-dev: default
- 
---include .dep
-+-include .ltdep
-Index: b/restore/Makefile
-===================================================================
---- a/restore/Makefile
-+++ b/restore/Makefile
-@@ -117,7 +117,7 @@ install: default
- 	$(INSTALL) -S $(PKG_ROOT_SBIN_DIR)/$(LTCOMMAND) $(PKG_SBIN_DIR)/$(LTCOMMAND)
- install-dev:
- 
--depend: $(COMMINCL) $(COMMON) $(INVINCL) $(INVCOMMON)
-+.dep: $(COMMINCL) $(COMMON) $(INVINCL) $(INVCOMMON)
- 
- $(COMMINCL) $(COMMON):
- 	@echo "    [LN]     $@"
+Why not just remove it uncondtionally?
 
 _______________________________________________
 xfs mailing list
