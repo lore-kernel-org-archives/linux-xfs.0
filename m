@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1ELhjlm260431 for <xfs@oss.sgi.com>; Sun, 14 Feb 2010 15:43:45 -0600
-Date: Sun, 14 Feb 2010 16:45:00 -0500
+	o1ELh0DD260373 for <xfs@oss.sgi.com>; Sun, 14 Feb 2010 15:43:03 -0600
+Date: Sun, 14 Feb 2010 16:44:16 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests: clean up dmapi Makefile
-Message-ID: <20100214214500.GB21311@infradead.org>
-References: <201002122145.o1CLjMRf028235@stout.americas.sgi.com>
+Subject: Re: [PATCH v2] xfsprogs: eliminate some build warnings
+Message-ID: <20100214214416.GA21311@infradead.org>
+References: <201002122258.o1CMwjrG020023@stout.americas.sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201002122145.o1CLjMRf028235@stout.americas.sgi.com>
+In-Reply-To: <201002122258.o1CMwjrG020023@stout.americas.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,19 +25,15 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Alex Elder <aelder@sgi.com>
 Cc: xfs@oss.sgi.com
 
-> Index: b/Makefile
-> ===================================================================
-> --- a/Makefile
-> +++ b/Makefile
-> @@ -99,3 +99,7 @@ install-dev install-lib:
->  realclean distclean: clean
->  	rm -f $(LDIRT) $(CONFIGURE)
->  	rm -rf autom4te.cache Logs
-> +ifeq ($(HAVE_DMAPI), true)
-> +	rm -f $(DMAPI_MAKEFILE)
-> +endif
+On Fri, Feb 12, 2010 at 04:58:44PM -0600, Alex Elder wrote:
+> A few minor changes to get rid of some build warnings.
+> 
+> Signed-off-by: Alex Elder <aelder@sgi.com>
 
-Why not just remove it uncondtionally?
+Looks good,
+
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
