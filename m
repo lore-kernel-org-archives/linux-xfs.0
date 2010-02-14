@@ -1,15 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1ELh0DD260373 for <xfs@oss.sgi.com>; Sun, 14 Feb 2010 15:43:03 -0600
-Date: Sun, 14 Feb 2010 16:44:16 -0500
+	o1EM6bBs000683 for <xfs@oss.sgi.com>; Sun, 14 Feb 2010 16:06:37 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2F2AD1CF4F7
+	for <xfs@oss.sgi.com>; Sun, 14 Feb 2010 14:07:53 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id JvcZItIQ0oPJpRlJ for
+	<xfs@oss.sgi.com>; Sun, 14 Feb 2010 14:07:53 -0800 (PST)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1Ngmd7-00041G-IE
+	for xfs@oss.sgi.com; Sun, 14 Feb 2010 22:07:53 +0000
+Date: Sun, 14 Feb 2010 17:07:53 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2] xfsprogs: eliminate some build warnings
-Message-ID: <20100214214416.GA21311@infradead.org>
-References: <201002122258.o1CMwjrG020023@stout.americas.sgi.com>
+Subject: [PATCH] xfstests: use blkid raw mode
+Message-ID: <20100214220753.GB14927@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201002122258.o1CMwjrG020023@stout.americas.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,18 +29,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Feb 12, 2010 at 04:58:44PM -0600, Alex Elder wrote:
-> A few minor changes to get rid of some build warnings.
-> 
-> Signed-off-by: Alex Elder <aelder@sgi.com>
+blkid without options usually gets no probe results at all just after
+creating a filesystem.  This problem is due to the cache that blkid
+uses in it's default mode, and is unlikely to get fixed.  Use the -p
+option to bypass the cache layer.
 
-Looks good,
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Index: xfstests-dev/common
+===================================================================
+--- xfstests-dev.orig/common	2010-02-11 16:08:58.000000000 +0000
++++ xfstests-dev/common	2010-02-11 16:09:03.000000000 +0000
+@@ -47,7 +47,7 @@ rm -f $tmp.list $tmp.tmp $tmp.sed
+ # Autodetect fs type based on what's on $TEST_DEV
+ if [ "$HOSTOS" == "Linux" ]
+ then
+-    export FSTYP=`blkid -s TYPE -o value $TEST_DEV`
++    export FSTYP=`blkid -p -s TYPE -o value $TEST_DEV`
+ else
+     export FSTYP=xfs
+ fi
 
 _______________________________________________
 xfs mailing list
