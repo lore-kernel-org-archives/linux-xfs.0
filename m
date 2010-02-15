@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1FNXqXm097963 for <xfs@oss.sgi.com>; Mon, 15 Feb 2010 17:33:52 -0600
+	o1FNXPjT097901 for <xfs@oss.sgi.com>; Mon, 15 Feb 2010 17:33:25 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 286061D27D1
-	for <xfs@oss.sgi.com>; Mon, 15 Feb 2010 15:35:09 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C787F13ABC04
+	for <xfs@oss.sgi.com>; Mon, 15 Feb 2010 15:34:42 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id FTXt3CeXXkNKFOsB for
-	<xfs@oss.sgi.com>; Mon, 15 Feb 2010 15:35:09 -0800 (PST)
+	by cuda.sgi.com with ESMTP id N7DmpjKAwjeGVRny for
+	<xfs@oss.sgi.com>; Mon, 15 Feb 2010 15:34:42 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1NhAT7-00083Z-HI
-	for xfs@oss.sgi.com; Mon, 15 Feb 2010 23:35:09 +0000
-Date: Mon, 15 Feb 2010 18:35:09 -0500
+	Linux)) id 1NhASg-0007VZ-55
+	for xfs@oss.sgi.com; Mon, 15 Feb 2010 23:34:42 +0000
+Date: Mon, 15 Feb 2010 18:34:42 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfs: factor common xfs_trans_bjoin code
-Message-ID: <20100215233509.GC28817@infradead.org>
+Subject: [PATCH] xfs: split xfs_bmap_btalloc
+Message-ID: <20100215233442.GA28817@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,270 +31,261 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Most of xfs_trans_bjoin is duplicated in xfs_trans_get_buf, xfs_trans_getsb
-and xfs_trans_read_buf.  Add a new _xfs_trans_bjoin which can be called
-by all four functions.
+Split out the nullfb case into a separate function to reduce the stack
+footprint and make the code more readable.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs/fs/xfs/xfs_trans_buf.c
+Index: xfs/fs/xfs/xfs_bmap.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_trans_buf.c	2010-02-15 16:38:55.996025054 +0100
-+++ xfs/fs/xfs/xfs_trans_buf.c	2010-02-16 00:31:57.930031479 +0100
-@@ -46,6 +46,65 @@ STATIC xfs_buf_t *xfs_trans_buf_item_mat
- STATIC xfs_buf_t *xfs_trans_buf_item_match_all(xfs_trans_t *, xfs_buftarg_t *,
- 		xfs_daddr_t, int);
+--- xfs.orig/fs/xfs/xfs_bmap.c	2010-01-17 14:46:43.326254284 +0100
++++ xfs/fs/xfs/xfs_bmap.c	2010-01-17 15:04:47.016005768 +0100
+@@ -2550,22 +2550,134 @@ xfs_bmap_rtalloc(
+ }
  
-+/*
-+ * Add the locked buffer to the transaction.
-+ *
-+ * The buffer must be locked, and it cannot be associated with any
-+ * transaction.
-+ *
-+ * If the buffer does not yet have a buf log item associated with it,
-+ * then allocate one for it.  Then add the buf item to the transaction.
-+ */
-+STATIC void
-+_xfs_trans_bjoin(
-+	struct xfs_trans	*tp,
-+	struct xfs_buf		*bp,
-+	int			reset_recur)
+ STATIC int
++xfs_bmap_btalloc_nullfb(
++	struct xfs_bmalloca	*ap,
++	struct xfs_alloc_arg	*args,
++	xfs_extlen_t		*blen)
 +{
-+	struct xfs_buf_log_item	*bip;
++	struct xfs_mount	*mp = ap->ip->i_mount;
++	struct xfs_perag	*pag;
++	xfs_agnumber_t		ag, startag;
++	int			notinit = 0;
++	int			error;
 +
-+	ASSERT(XFS_BUF_ISBUSY(bp));
-+	ASSERT(XFS_BUF_FSPRIVATE2(bp, void *) == NULL);
-+
-+	/*
-+	 * The xfs_buf_log_item pointer is stored in b_fsprivate.  If
-+	 * it doesn't have one yet, then allocate one and initialize it.
-+	 * The checks to see if one is there are in xfs_buf_item_init().
-+	 */
-+	xfs_buf_item_init(bp, tp->t_mountp);
-+	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
-+	ASSERT(!(bip->bli_flags & XFS_BLI_STALE));
-+	ASSERT(!(bip->bli_format.blf_flags & XFS_BLI_CANCEL));
-+	ASSERT(!(bip->bli_flags & XFS_BLI_LOGGED));
-+	if (reset_recur)
-+		bip->bli_recur = 0;
++	if (ap->userdata && xfs_inode_is_filestream(ap->ip))
++		args->type = XFS_ALLOCTYPE_NEAR_BNO;
++	else
++		args->type = XFS_ALLOCTYPE_START_BNO;
++	args->total = ap->total;
 +
 +	/*
-+	 * Take a reference for this transaction on the buf item.
++	 * Search for an allocation group with a single extent large enough
++	 * for the request.  If one isn't found, then adjust the minimum
++	 * allocation size to the largest space found.
 +	 */
-+	atomic_inc(&bip->bli_refcount);
++	startag = ag = XFS_FSB_TO_AGNO(mp, args->fsbno);
++	if (startag == NULLAGNUMBER)
++		startag = ag = 0;
++
++	pag = xfs_perag_get(mp, ag);
++	while (*blen < ap->alen) {
++		if (!pag->pagf_init) {
++			error = xfs_alloc_pagf_init(mp, args->tp, ag,
++						    XFS_ALLOC_FLAG_TRYLOCK);
++			if (error) {
++				xfs_perag_put(pag);
++				return error;
++			}
++		}
++
++		/*
++		 * See xfs_alloc_fix_freelist...
++		 */
++		if (pag->pagf_init) {
++			xfs_extlen_t	longest;
++			longest = xfs_alloc_longest_free_extent(mp, pag);
++			if (*blen < longest)
++				*blen = longest;
++		} else
++			notinit = 1;
++
++		if (xfs_inode_is_filestream(ap->ip)) {
++			if (*blen >= ap->alen)
++				break;
++
++			if (ap->userdata) {
++				/*
++				 * If startag is an invalid AG, we've
++				 * come here once before and
++				 * xfs_filestream_new_ag picked the
++				 * best currently available.
++				 *
++				 * Don't continue looping, since we
++				 * could loop forever.
++				 */
++				if (startag == NULLAGNUMBER)
++					break;
++
++				error = xfs_filestream_new_ag(ap, &ag);
++				xfs_perag_put(pag);
++				if (error)
++					return error;
++
++				/* loop again to set 'blen'*/
++				startag = NULLAGNUMBER;
++				pag = xfs_perag_get(mp, ag);
++				continue;
++			}
++		}
++		if (++ag == mp->m_sb.sb_agcount)
++			ag = 0;
++		if (ag == startag)
++			break;
++		xfs_perag_put(pag);
++		pag = xfs_perag_get(mp, ag);
++	}
++	xfs_perag_put(pag);
 +
 +	/*
-+	 * Get a log_item_desc to point at the new item.
++	 * Since the above loop did a BUF_TRYLOCK, it is
++	 * possible that there is space for this request.
 +	 */
-+	(void) xfs_trans_add_item(tp, (xfs_log_item_t *)bip);
++	if (notinit || *blen < ap->minlen)
++		args->minlen = ap->minlen;
++	/*
++	 * If the best seen length is less than the request
++	 * length, use the best as the minimum.
++	 */
++	else if (*blen < ap->alen)
++		args->minlen = *blen;
++	/*
++	 * Otherwise we've seen an extent as big as alen,
++	 * use that as the minimum.
++	 */
++	else
++		args->minlen = ap->alen;
 +
 +	/*
-+	 * Initialize b_fsprivate2 so we can find it with incore_match()
-+	 * in xfs_trans_get_buf() and friends above.
++	 * set the failure fallback case to look in the selected
++	 * AG as the stream may have moved.
 +	 */
-+	XFS_BUF_SET_FSPRIVATE2(bp, tp);
++	if (xfs_inode_is_filestream(ap->ip))
++		ap->rval = args->fsbno = XFS_AGB_TO_FSB(mp, ag, 0);
 +
++	return 0;
 +}
 +
-+void
-+xfs_trans_bjoin(
-+	struct xfs_trans	*tp,
-+	struct xfs_buf		*bp)
-+{
-+	_xfs_trans_bjoin(tp, bp, 0);
-+	trace_xfs_trans_bjoin(bp->b_fspriv);
-+}
++STATIC int
+ xfs_bmap_btalloc(
+ 	xfs_bmalloca_t	*ap)		/* bmap alloc argument struct */
+ {
+ 	xfs_mount_t	*mp;		/* mount point structure */
+ 	xfs_alloctype_t	atype = 0;	/* type for allocation routines */
+ 	xfs_extlen_t	align;		/* minimum allocation alignment */
+-	xfs_agnumber_t	ag;
+ 	xfs_agnumber_t	fb_agno;	/* ag number of ap->firstblock */
+-	xfs_agnumber_t	startag;
++	xfs_agnumber_t	ag;
+ 	xfs_alloc_arg_t	args;
+ 	xfs_extlen_t	blen;
+ 	xfs_extlen_t	nextminlen = 0;
+-	xfs_perag_t	*pag;
+ 	int		nullfb;		/* true if ap->firstblock isn't set */
+ 	int		isaligned;
+-	int		notinit;
+ 	int		tryagain;
+ 	int		error;
  
- /*
-  * Get and lock the buffer for the caller if it is not already
-@@ -132,40 +191,8 @@ xfs_trans_get_buf(xfs_trans_t	*tp,
- 
- 	ASSERT(!XFS_BUF_GETERROR(bp));
- 
--	/*
--	 * The xfs_buf_log_item pointer is stored in b_fsprivate.  If
--	 * it doesn't have one yet, then allocate one and initialize it.
--	 * The checks to see if one is there are in xfs_buf_item_init().
--	 */
--	xfs_buf_item_init(bp, tp->t_mountp);
+@@ -2612,103 +2724,9 @@ xfs_bmap_btalloc(
+ 	args.firstblock = ap->firstblock;
+ 	blen = 0;
+ 	if (nullfb) {
+-		if (ap->userdata && xfs_inode_is_filestream(ap->ip))
+-			args.type = XFS_ALLOCTYPE_NEAR_BNO;
+-		else
+-			args.type = XFS_ALLOCTYPE_START_BNO;
+-		args.total = ap->total;
 -
--	/*
--	 * Set the recursion count for the buffer within this transaction
--	 * to 0.
--	 */
--	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t*);
--	ASSERT(!(bip->bli_flags & XFS_BLI_STALE));
--	ASSERT(!(bip->bli_format.blf_flags & XFS_BLI_CANCEL));
--	ASSERT(!(bip->bli_flags & XFS_BLI_LOGGED));
--	bip->bli_recur = 0;
+-		/*
+-		 * Search for an allocation group with a single extent
+-		 * large enough for the request.
+-		 *
+-		 * If one isn't found, then adjust the minimum allocation
+-		 * size to the largest space found.
+-		 */
+-		startag = ag = XFS_FSB_TO_AGNO(mp, args.fsbno);
+-		if (startag == NULLAGNUMBER)
+-			startag = ag = 0;
+-		notinit = 0;
+-		pag = xfs_perag_get(mp, ag);
+-		while (blen < ap->alen) {
+-			if (!pag->pagf_init &&
+-			    (error = xfs_alloc_pagf_init(mp, args.tp,
+-				    ag, XFS_ALLOC_FLAG_TRYLOCK))) {
+-				xfs_perag_put(pag);
+-				return error;
+-			}
+-			/*
+-			 * See xfs_alloc_fix_freelist...
+-			 */
+-			if (pag->pagf_init) {
+-				xfs_extlen_t	longest;
+-				longest = xfs_alloc_longest_free_extent(mp, pag);
+-				if (blen < longest)
+-					blen = longest;
+-			} else
+-				notinit = 1;
 -
--	/*
--	 * Take a reference for this transaction on the buf item.
--	 */
--	atomic_inc(&bip->bli_refcount);
+-			if (xfs_inode_is_filestream(ap->ip)) {
+-				if (blen >= ap->alen)
+-					break;
 -
--	/*
--	 * Get a log_item_desc to point at the new item.
--	 */
--	(void) xfs_trans_add_item(tp, (xfs_log_item_t*)bip);
+-				if (ap->userdata) {
+-					/*
+-					 * If startag is an invalid AG, we've
+-					 * come here once before and
+-					 * xfs_filestream_new_ag picked the
+-					 * best currently available.
+-					 *
+-					 * Don't continue looping, since we
+-					 * could loop forever.
+-					 */
+-					if (startag == NULLAGNUMBER)
+-						break;
 -
--	/*
--	 * Initialize b_fsprivate2 so we can find it with incore_match()
--	 * above.
--	 */
--	XFS_BUF_SET_FSPRIVATE2(bp, tp);
+-					error = xfs_filestream_new_ag(ap, &ag);
+-					xfs_perag_put(pag);
+-					if (error)
+-						return error;
 -
--	trace_xfs_trans_get_buf(bip);
-+	_xfs_trans_bjoin(tp, bp, 1);
-+	trace_xfs_trans_get_buf(bp->b_fspriv);
- 	return (bp);
- }
- 
-@@ -210,44 +237,11 @@ xfs_trans_getsb(xfs_trans_t	*tp,
- 	}
- 
- 	bp = xfs_getsb(mp, flags);
--	if (bp == NULL) {
-+	if (bp == NULL)
- 		return NULL;
--	}
+-					/* loop again to set 'blen'*/
+-					startag = NULLAGNUMBER;
+-					pag = xfs_perag_get(mp, ag);
+-					continue;
+-				}
+-			}
+-			if (++ag == mp->m_sb.sb_agcount)
+-				ag = 0;
+-			if (ag == startag)
+-				break;
+-			xfs_perag_put(pag);
+-			pag = xfs_perag_get(mp, ag);
+-		}
+-		xfs_perag_put(pag);
+-		/*
+-		 * Since the above loop did a BUF_TRYLOCK, it is
+-		 * possible that there is space for this request.
+-		 */
+-		if (notinit || blen < ap->minlen)
+-			args.minlen = ap->minlen;
+-		/*
+-		 * If the best seen length is less than the request
+-		 * length, use the best as the minimum.
+-		 */
+-		else if (blen < ap->alen)
+-			args.minlen = blen;
+-		/*
+-		 * Otherwise we've seen an extent as big as alen,
+-		 * use that as the minimum.
+-		 */
+-		else
+-			args.minlen = ap->alen;
 -
--	/*
--	 * The xfs_buf_log_item pointer is stored in b_fsprivate.  If
--	 * it doesn't have one yet, then allocate one and initialize it.
--	 * The checks to see if one is there are in xfs_buf_item_init().
--	 */
--	xfs_buf_item_init(bp, mp);
--
--	/*
--	 * Set the recursion count for the buffer within this transaction
--	 * to 0.
--	 */
--	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t*);
--	ASSERT(!(bip->bli_flags & XFS_BLI_STALE));
--	ASSERT(!(bip->bli_format.blf_flags & XFS_BLI_CANCEL));
--	ASSERT(!(bip->bli_flags & XFS_BLI_LOGGED));
--	bip->bli_recur = 0;
--
--	/*
--	 * Take a reference for this transaction on the buf item.
--	 */
--	atomic_inc(&bip->bli_refcount);
--
--	/*
--	 * Get a log_item_desc to point at the new item.
--	 */
--	(void) xfs_trans_add_item(tp, (xfs_log_item_t*)bip);
--
--	/*
--	 * Initialize b_fsprivate2 so we can find it with incore_match()
--	 * above.
--	 */
--	XFS_BUF_SET_FSPRIVATE2(bp, tp);
- 
--	trace_xfs_trans_getsb(bip);
-+	_xfs_trans_bjoin(tp, bp, 1);
-+	trace_xfs_trans_getsb(bp->b_fspriv);
- 	return (bp);
- }
- 
-@@ -425,40 +419,9 @@ xfs_trans_read_buf(
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		goto shutdown_abort;
- 
--	/*
--	 * The xfs_buf_log_item pointer is stored in b_fsprivate.  If
--	 * it doesn't have one yet, then allocate one and initialize it.
--	 * The checks to see if one is there are in xfs_buf_item_init().
--	 */
--	xfs_buf_item_init(bp, tp->t_mountp);
-+	_xfs_trans_bjoin(tp, bp, 1);
-+	trace_xfs_trans_read_buf(bp->b_fspriv);
- 
--	/*
--	 * Set the recursion count for the buffer within this transaction
--	 * to 0.
--	 */
--	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t*);
--	ASSERT(!(bip->bli_flags & XFS_BLI_STALE));
--	ASSERT(!(bip->bli_format.blf_flags & XFS_BLI_CANCEL));
--	ASSERT(!(bip->bli_flags & XFS_BLI_LOGGED));
--	bip->bli_recur = 0;
--
--	/*
--	 * Take a reference for this transaction on the buf item.
--	 */
--	atomic_inc(&bip->bli_refcount);
--
--	/*
--	 * Get a log_item_desc to point at the new item.
--	 */
--	(void) xfs_trans_add_item(tp, (xfs_log_item_t*)bip);
--
--	/*
--	 * Initialize b_fsprivate2 so we can find it with incore_match()
--	 * above.
--	 */
--	XFS_BUF_SET_FSPRIVATE2(bp, tp);
--
--	trace_xfs_trans_read_buf(bip);
- 	*bpp = bp;
- 	return 0;
- 
-@@ -623,53 +586,6 @@ xfs_trans_brelse(xfs_trans_t	*tp,
- }
- 
- /*
-- * Add the locked buffer to the transaction.
-- * The buffer must be locked, and it cannot be associated with any
-- * transaction.
-- *
-- * If the buffer does not yet have a buf log item associated with it,
-- * then allocate one for it.  Then add the buf item to the transaction.
-- */
--void
--xfs_trans_bjoin(xfs_trans_t	*tp,
--		xfs_buf_t	*bp)
--{
--	xfs_buf_log_item_t	*bip;
--
--	ASSERT(XFS_BUF_ISBUSY(bp));
--	ASSERT(XFS_BUF_FSPRIVATE2(bp, void *) == NULL);
--
--	/*
--	 * The xfs_buf_log_item pointer is stored in b_fsprivate.  If
--	 * it doesn't have one yet, then allocate one and initialize it.
--	 * The checks to see if one is there are in xfs_buf_item_init().
--	 */
--	xfs_buf_item_init(bp, tp->t_mountp);
--	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
--	ASSERT(!(bip->bli_flags & XFS_BLI_STALE));
--	ASSERT(!(bip->bli_format.blf_flags & XFS_BLI_CANCEL));
--	ASSERT(!(bip->bli_flags & XFS_BLI_LOGGED));
--
--	/*
--	 * Take a reference for this transaction on the buf item.
--	 */
--	atomic_inc(&bip->bli_refcount);
--
--	/*
--	 * Get a log_item_desc to point at the new item.
--	 */
--	(void) xfs_trans_add_item(tp, (xfs_log_item_t *)bip);
--
--	/*
--	 * Initialize b_fsprivate2 so we can find it with incore_match()
--	 * in xfs_trans_get_buf() and friends above.
--	 */
--	XFS_BUF_SET_FSPRIVATE2(bp, tp);
--
--	trace_xfs_trans_bjoin(bip);
--}
--
--/*
-  * Mark the buffer as not needing to be unlocked when the buf item's
-  * IOP_UNLOCK() routine is called.  The buffer must already be locked
-  * and associated with the given transaction.
+-		/*
+-		 * set the failure fallback case to look in the selected
+-		 * AG as the stream may have moved.
+-		 */
+-		if (xfs_inode_is_filestream(ap->ip))
+-			ap->rval = args.fsbno = XFS_AGB_TO_FSB(mp, ag, 0);
++		error = xfs_bmap_btalloc_nullfb(ap, &args, &blen);
++		if (error)
++			return error;
+ 	} else if (ap->low) {
+ 		if (xfs_inode_is_filestream(ap->ip))
+ 			args.type = XFS_ALLOCTYPE_FIRST_AG;
 
 _______________________________________________
 xfs mailing list
