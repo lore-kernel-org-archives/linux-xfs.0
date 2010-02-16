@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1GIZ14j172951 for <xfs@oss.sgi.com>; Tue, 16 Feb 2010 12:35:02 -0600
-Received: from mx1.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 353291D5E00
-	for <xfs@oss.sgi.com>; Tue, 16 Feb 2010 10:36:19 -0800 (PST)
-Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
-	with ESMTP id hwyZmGMmptt124sc for <xfs@oss.sgi.com>;
-	Tue, 16 Feb 2010 10:36:19 -0800 (PST)
-Date: Tue, 16 Feb 2010 19:36:28 +0100
-From: Jan Kara <jack@suse.cz>
+	o1GJArR2174931 for <xfs@oss.sgi.com>; Tue, 16 Feb 2010 13:10:53 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4D3F91CD69AA
+	for <xfs@oss.sgi.com>; Tue, 16 Feb 2010 11:12:10 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id szLI9HHtrIkLDA85 for
+	<xfs@oss.sgi.com>; Tue, 16 Feb 2010 11:12:10 -0800 (PST)
+Date: Tue, 16 Feb 2010 14:12:07 -0500
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH 00/10] quotactl fixed and cleanups
-Message-ID: <20100216183627.GC3153@quack.suse.cz>
+Message-ID: <20100216191207.GA3856@infradead.org>
 References: <20100216084446.377980079@bombadil.infradead.org>
+	<20100216183627.GC3153@quack.suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100216084446.377980079@bombadil.infradead.org>
+In-Reply-To: <20100216183627.GC3153@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,27 +29,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, jack@suse.cz, swhiteho@redhat.com, xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, swhiteho@redhat.com, xfs@oss.sgi.com
 
-On Tue 16-02-10 03:44:46, Christoph Hellwig wrote:
-> This is a first large batch of refactoring the generic quotactl code.
-> I started looking at this for merging the FS interfaces for "VFS" and "XFS"
-> style quotas now that we grow more filesystems wanting to support quota
-> in a more advanced way than the generic implementation can, e.g. GFS2
-> and cifs.  There will be another couple of patches do do the actual
-> work which are not quite ready, but this is a large and useful enough batch
-> to get review and possibly included first.
-  Thanks for the cleanups. Upto a few fixed typos and whitespace errors
-I've merged your patchset into my tree.
-  As a side note, OCFS2 implements XFS-style clustered quotas using current
-VFS quota subsystem (and quota file format) so my naive feeling is that at
-least GFS2 should fit in there as well. But maybe I'm wrong.
+On Tue, Feb 16, 2010 at 07:36:28PM +0100, Jan Kara wrote:
+>   Thanks for the cleanups. Upto a few fixed typos and whitespace errors
+> I've merged your patchset into my tree.
+>   As a side note, OCFS2 implements XFS-style clustered quotas using current
+> VFS quota subsystem (and quota file format) so my naive feeling is that at
+> least GFS2 should fit in there as well. But maybe I'm wrong.
 
-									Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+The file format is one big difference.  The other is that having the
+quota code in the filesystem allows much nicer integration with the
+transaction code.  Anyway, my next step is to support both the
+current "VFS" and the "XFS" quota interface independent of the
+underlying implementation, at least for the runtime calls.  The
+quota on/off bits are a bit too different, but it might be a good
+idea to handle those everywhere primarily via mount options and
+deprecate most of the old calls, but keep supporting them for a long
+time.  After that I plan to look a bit more in the quota implementation
+and look for sharing opportunities, but it might take a while until I
+get to that.
 
 _______________________________________________
 xfs mailing list
