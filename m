@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1G8jcmq132016 for <xfs@oss.sgi.com>; Tue, 16 Feb 2010 02:45:38 -0600
+	o1G8jbWd132014 for <xfs@oss.sgi.com>; Tue, 16 Feb 2010 02:45:40 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 38B5813ACA25
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 917871D3895
 	for <xfs@oss.sgi.com>; Tue, 16 Feb 2010 00:46:55 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id yLdDaW3TpyyzBXxw for
+	by cuda.sgi.com with ESMTP id 41yQygPHsLFmZoaZ for
 	<xfs@oss.sgi.com>; Tue, 16 Feb 2010 00:46:55 -0800 (PST)
-Message-Id: <20100216084652.729908437@bombadil.infradead.org>
-Date: Tue, 16 Feb 2010 03:44:55 -0500
+Message-Id: <20100216084651.956101538@bombadil.infradead.org>
+Date: Tue, 16 Feb 2010 03:44:52 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 09/10] quota: split out compat_sys_quotactl support from
-	quota.c
+Subject: [PATCH 06/10] quota: move code from sync_quota_sb into vfs_quota_sync
 References: <20100216084446.377980079@bombadil.infradead.org>
-Content-Disposition: inline; filename=split-compat
+Content-Disposition: inline; filename=quota-cleanup-sync
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,288 +30,222 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: jack@suse.cz
 Cc: linux-fsdevel@vger.kernel.org, swhiteho@redhat.com, xfs@oss.sgi.com
 
-Instead of adding ifdefs just split it into a new file.
+Currenly sync_quota_sb does a lot of sync and truncate action that only
+applies to "VFS" style quotas and is actively harmful for the sync
+performance in XFS.  Move it into vfs_quota_sync and add a wait paramter
+to ->quota_sync to tell if we need it or not.
+
+My audit of the GFS2 code says it's also not needed given the way GFS2
+implements quotas, but I'd be happy if this can get a detailed review.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6/fs/quota/Kconfig
+Index: linux-2.6/fs/quota/dquot.c
 ===================================================================
---- linux-2.6.orig/fs/quota/Kconfig	2010-02-11 16:54:42.891004202 +0100
-+++ linux-2.6/fs/quota/Kconfig	2010-02-16 00:25:09.291253507 +0100
-@@ -59,3 +59,8 @@ config QUOTACTL
- 	bool
- 	depends on XFS_QUOTA || QUOTA
- 	default y
+--- linux-2.6.orig/fs/quota/dquot.c	2010-02-16 00:13:43.000000000 +0100
++++ linux-2.6/fs/quota/dquot.c	2010-02-16 00:19:51.642255742 +0100
+@@ -564,7 +564,7 @@ out:
+ }
+ EXPORT_SYMBOL(dquot_scan_active);
+ 
+-int vfs_quota_sync(struct super_block *sb, int type)
++int vfs_quota_sync(struct super_block *sb, int type, int wait)
+ {
+ 	struct list_head *dirty;
+ 	struct dquot *dquot;
+@@ -609,6 +609,33 @@ int vfs_quota_sync(struct super_block *s
+ 	spin_unlock(&dq_list_lock);
+ 	mutex_unlock(&dqopt->dqonoff_mutex);
+ 
++	if (!wait || (sb_dqopt(sb)->flags & DQUOT_QUOTA_SYS_FILE))
++		return 0;
 +
-+config QUOTACTL_COMPAT
-+	bool
-+	depends on QUOTACTL && COMPAT_FOR_U64_ALIGNMENT
-+	default y
-Index: linux-2.6/fs/quota/Makefile
-===================================================================
---- linux-2.6.orig/fs/quota/Makefile	2010-02-16 00:25:05.970004101 +0100
-+++ linux-2.6/fs/quota/Makefile	2010-02-16 00:25:09.292297927 +0100
-@@ -3,4 +3,5 @@ obj-$(CONFIG_QFMT_V1)		+= quota_v1.o
- obj-$(CONFIG_QFMT_V2)		+= quota_v2.o
- obj-$(CONFIG_QUOTA_TREE)	+= quota_tree.o
- obj-$(CONFIG_QUOTACTL)		+= quota.o
-+obj-$(CONFIG_QUOTACTL_COMPAT)	+= compat.o
- obj-$(CONFIG_QUOTA_NETLINK_INTERFACE)	+= netlink.o
-Index: linux-2.6/fs/quota/compat.c
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ linux-2.6/fs/quota/compat.c	2010-02-16 00:25:09.301004031 +0100
-@@ -0,0 +1,118 @@
++	/* This is not very clever (and fast) but currently I don't know about
++	 * any other simple way of getting quota data to disk and we must get
++	 * them there for userspace to be visible... */
++	if (sb->s_op->sync_fs)
++		sb->s_op->sync_fs(sb, 1);
++	sync_blockdev(sb->s_bdev);
 +
-+#include <linux/syscalls.h>
-+#include <linux/compat.h>
-+#include <linux/quotaops.h>
-+
-+/*
-+ * This code works only for 32 bit quota tools over 64 bit OS (x86_64, ia64)
-+ * and is necessary due to alignment problems.
-+ */
-+struct compat_if_dqblk {
-+	compat_u64 dqb_bhardlimit;
-+	compat_u64 dqb_bsoftlimit;
-+	compat_u64 dqb_curspace;
-+	compat_u64 dqb_ihardlimit;
-+	compat_u64 dqb_isoftlimit;
-+	compat_u64 dqb_curinodes;
-+	compat_u64 dqb_btime;
-+	compat_u64 dqb_itime;
-+	compat_uint_t dqb_valid;
-+};
-+
-+/* XFS structures */
-+struct compat_fs_qfilestat {
-+	compat_u64 dqb_bhardlimit;
-+	compat_u64 qfs_nblks;
-+	compat_uint_t qfs_nextents;
-+};
-+
-+struct compat_fs_quota_stat {
-+	__s8		qs_version;
-+	__u16		qs_flags;
-+	__s8		qs_pad;
-+	struct compat_fs_qfilestat	qs_uquota;
-+	struct compat_fs_qfilestat	qs_gquota;
-+	compat_uint_t	qs_incoredqs;
-+	compat_int_t	qs_btimelimit;
-+	compat_int_t	qs_itimelimit;
-+	compat_int_t	qs_rtbtimelimit;
-+	__u16		qs_bwarnlimit;
-+	__u16		qs_iwarnlimit;
-+};
-+
-+asmlinkage long sys32_quotactl(unsigned int cmd, const char __user *special,
-+						qid_t id, void __user *addr)
-+{
-+	unsigned int cmds;
-+	struct if_dqblk __user *dqblk;
-+	struct compat_if_dqblk __user *compat_dqblk;
-+	struct fs_quota_stat __user *fsqstat;
-+	struct compat_fs_quota_stat __user *compat_fsqstat;
-+	compat_uint_t data;
-+	u16 xdata;
-+	long ret;
-+
-+	cmds = cmd >> SUBCMDSHIFT;
-+
-+	switch (cmds) {
-+	case Q_GETQUOTA:
-+		dqblk = compat_alloc_user_space(sizeof(struct if_dqblk));
-+		compat_dqblk = addr;
-+		ret = sys_quotactl(cmd, special, id, dqblk);
-+		if (ret)
-+			break;
-+		if (copy_in_user(compat_dqblk, dqblk, sizeof(*compat_dqblk)) ||
-+			get_user(data, &dqblk->dqb_valid) ||
-+			put_user(data, &compat_dqblk->dqb_valid))
-+			ret = -EFAULT;
-+		break;
-+	case Q_SETQUOTA:
-+		dqblk = compat_alloc_user_space(sizeof(struct if_dqblk));
-+		compat_dqblk = addr;
-+		ret = -EFAULT;
-+		if (copy_in_user(dqblk, compat_dqblk, sizeof(*compat_dqblk)) ||
-+			get_user(data, &compat_dqblk->dqb_valid) ||
-+			put_user(data, &dqblk->dqb_valid))
-+			break;
-+		ret = sys_quotactl(cmd, special, id, dqblk);
-+		break;
-+	case Q_XGETQSTAT:
-+		fsqstat = compat_alloc_user_space(sizeof(struct fs_quota_stat));
-+		compat_fsqstat = addr;
-+		ret = sys_quotactl(cmd, special, id, fsqstat);
-+		if (ret)
-+			break;
-+		ret = -EFAULT;
-+		/* Copying qs_version, qs_flags, qs_pad */
-+		if (copy_in_user(compat_fsqstat, fsqstat,
-+			offsetof(struct compat_fs_quota_stat, qs_uquota)))
-+			break;
-+		/* Copying qs_uquota */
-+		if (copy_in_user(&compat_fsqstat->qs_uquota,
-+			&fsqstat->qs_uquota,
-+			sizeof(compat_fsqstat->qs_uquota)) ||
-+			get_user(data, &fsqstat->qs_uquota.qfs_nextents) ||
-+			put_user(data, &compat_fsqstat->qs_uquota.qfs_nextents))
-+			break;
-+		/* Copying qs_gquota */
-+		if (copy_in_user(&compat_fsqstat->qs_gquota,
-+			&fsqstat->qs_gquota,
-+			sizeof(compat_fsqstat->qs_gquota)) ||
-+			get_user(data, &fsqstat->qs_gquota.qfs_nextents) ||
-+			put_user(data, &compat_fsqstat->qs_gquota.qfs_nextents))
-+			break;
-+		/* Copying the rest */
-+		if (copy_in_user(&compat_fsqstat->qs_incoredqs,
-+			&fsqstat->qs_incoredqs,
-+			sizeof(struct compat_fs_quota_stat) -
-+			offsetof(struct compat_fs_quota_stat, qs_incoredqs)) ||
-+			get_user(xdata, &fsqstat->qs_iwarnlimit) ||
-+			put_user(xdata, &compat_fsqstat->qs_iwarnlimit))
-+			break;
-+		ret = 0;
-+		break;
-+	default:
-+		ret = sys_quotactl(cmd, special, id, addr);
++	/*
++	 * Now when everything is written we can discard the pagecache so
++	 * that userspace sees the changes.
++	 */
++	mutex_lock(&sb_dqopt(sb)->dqonoff_mutex);
++	for (cnt = 0; cnt < MAXQUOTAS; cnt++) {
++		if (type != -1 && cnt != type)
++			continue;
++		if (!sb_has_quota_active(sb, cnt))
++			continue;
++		mutex_lock_nested(&sb_dqopt(sb)->files[cnt]->i_mutex,
++				  I_MUTEX_QUOTA);
++		truncate_inode_pages(&sb_dqopt(sb)->files[cnt]->i_data, 0);
++		mutex_unlock(&sb_dqopt(sb)->files[cnt]->i_mutex);
 +	}
-+	return ret;
-+}
++	mutex_unlock(&sb_dqopt(sb)->dqonoff_mutex);
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL(vfs_quota_sync);
 Index: linux-2.6/fs/quota/quota.c
 ===================================================================
---- linux-2.6.orig/fs/quota/quota.c	2010-02-16 00:25:05.979006127 +0100
-+++ linux-2.6/fs/quota/quota.c	2010-02-16 00:25:09.312256301 +0100
-@@ -10,7 +10,6 @@
- #include <linux/slab.h>
- #include <asm/current.h>
- #include <asm/uaccess.h>
--#include <linux/compat.h>
- #include <linux/kernel.h>
- #include <linux/security.h>
- #include <linux/syscalls.h>
-@@ -340,119 +339,3 @@ SYSCALL_DEFINE4(quotactl, unsigned int, 
- 	drop_super(sb);
- 	return ret;
+--- linux-2.6.orig/fs/quota/quota.c	2010-02-16 00:16:29.030004171 +0100
++++ linux-2.6/fs/quota/quota.c	2010-02-16 00:23:57.795005847 +0100
+@@ -48,44 +48,6 @@ static int check_quotactl_permission(str
+ 	return security_quotactl(cmd, type, id, sb);
  }
--
--#if defined(CONFIG_COMPAT_FOR_U64_ALIGNMENT)
--/*
-- * This code works only for 32 bit quota tools over 64 bit OS (x86_64, ia64)
-- * and is necessary due to alignment problems.
-- */
--struct compat_if_dqblk {
--	compat_u64 dqb_bhardlimit;
--	compat_u64 dqb_bsoftlimit;
--	compat_u64 dqb_curspace;
--	compat_u64 dqb_ihardlimit;
--	compat_u64 dqb_isoftlimit;
--	compat_u64 dqb_curinodes;
--	compat_u64 dqb_btime;
--	compat_u64 dqb_itime;
--	compat_uint_t dqb_valid;
--};
--
--/* XFS structures */
--struct compat_fs_qfilestat {
--	compat_u64 dqb_bhardlimit;
--	compat_u64 qfs_nblks;
--	compat_uint_t qfs_nextents;
--};
--
--struct compat_fs_quota_stat {
--	__s8		qs_version;
--	__u16		qs_flags;
--	__s8		qs_pad;
--	struct compat_fs_qfilestat	qs_uquota;
--	struct compat_fs_qfilestat	qs_gquota;
--	compat_uint_t	qs_incoredqs;
--	compat_int_t	qs_btimelimit;
--	compat_int_t	qs_itimelimit;
--	compat_int_t	qs_rtbtimelimit;
--	__u16		qs_bwarnlimit;
--	__u16		qs_iwarnlimit;
--};
--
--asmlinkage long sys32_quotactl(unsigned int cmd, const char __user *special,
--						qid_t id, void __user *addr)
+ 
+-#ifdef CONFIG_QUOTA
+-void sync_quota_sb(struct super_block *sb, int type)
 -{
--	unsigned int cmds;
--	struct if_dqblk __user *dqblk;
--	struct compat_if_dqblk __user *compat_dqblk;
--	struct fs_quota_stat __user *fsqstat;
--	struct compat_fs_quota_stat __user *compat_fsqstat;
--	compat_uint_t data;
--	u16 xdata;
--	long ret;
+-	int cnt;
 -
--	cmds = cmd >> SUBCMDSHIFT;
+-	if (!sb->s_qcop || !sb->s_qcop->quota_sync)
+-		return;
 -
--	switch (cmds) {
--	case Q_GETQUOTA:
--		dqblk = compat_alloc_user_space(sizeof(struct if_dqblk));
--		compat_dqblk = addr;
--		ret = sys_quotactl(cmd, special, id, dqblk);
--		if (ret)
--			break;
--		if (copy_in_user(compat_dqblk, dqblk, sizeof(*compat_dqblk)) ||
--			get_user(data, &dqblk->dqb_valid) ||
--			put_user(data, &compat_dqblk->dqb_valid))
--			ret = -EFAULT;
--		break;
--	case Q_SETQUOTA:
--		dqblk = compat_alloc_user_space(sizeof(struct if_dqblk));
--		compat_dqblk = addr;
--		ret = -EFAULT;
--		if (copy_in_user(dqblk, compat_dqblk, sizeof(*compat_dqblk)) ||
--			get_user(data, &compat_dqblk->dqb_valid) ||
--			put_user(data, &dqblk->dqb_valid))
--			break;
--		ret = sys_quotactl(cmd, special, id, dqblk);
--		break;
--	case Q_XGETQSTAT:
--		fsqstat = compat_alloc_user_space(sizeof(struct fs_quota_stat));
--		compat_fsqstat = addr;
--		ret = sys_quotactl(cmd, special, id, fsqstat);
--		if (ret)
--			break;
--		ret = -EFAULT;
--		/* Copying qs_version, qs_flags, qs_pad */
--		if (copy_in_user(compat_fsqstat, fsqstat,
--			offsetof(struct compat_fs_quota_stat, qs_uquota)))
--			break;
--		/* Copying qs_uquota */
--		if (copy_in_user(&compat_fsqstat->qs_uquota,
--			&fsqstat->qs_uquota,
--			sizeof(compat_fsqstat->qs_uquota)) ||
--			get_user(data, &fsqstat->qs_uquota.qfs_nextents) ||
--			put_user(data, &compat_fsqstat->qs_uquota.qfs_nextents))
--			break;
--		/* Copying qs_gquota */
--		if (copy_in_user(&compat_fsqstat->qs_gquota,
--			&fsqstat->qs_gquota,
--			sizeof(compat_fsqstat->qs_gquota)) ||
--			get_user(data, &fsqstat->qs_gquota.qfs_nextents) ||
--			put_user(data, &compat_fsqstat->qs_gquota.qfs_nextents))
--			break;
--		/* Copying the rest */
--		if (copy_in_user(&compat_fsqstat->qs_incoredqs,
--			&fsqstat->qs_incoredqs,
--			sizeof(struct compat_fs_quota_stat) -
--			offsetof(struct compat_fs_quota_stat, qs_incoredqs)) ||
--			get_user(xdata, &fsqstat->qs_iwarnlimit) ||
--			put_user(xdata, &compat_fsqstat->qs_iwarnlimit))
--			break;
--		ret = 0;
--		break;
--	default:
--		ret = sys_quotactl(cmd, special, id, addr);
+-	sb->s_qcop->quota_sync(sb, type);
+-
+-	if (sb_dqopt(sb)->flags & DQUOT_QUOTA_SYS_FILE)
+-		return;
+-	/* This is not very clever (and fast) but currently I don't know about
+-	 * any other simple way of getting quota data to disk and we must get
+-	 * them there for userspace to be visible... */
+-	if (sb->s_op->sync_fs)
+-		sb->s_op->sync_fs(sb, 1);
+-	sync_blockdev(sb->s_bdev);
+-
+-	/*
+-	 * Now when everything is written we can discard the pagecache so
+-	 * that userspace sees the changes.
+-	 */
+-	mutex_lock(&sb_dqopt(sb)->dqonoff_mutex);
+-	for (cnt = 0; cnt < MAXQUOTAS; cnt++) {
+-		if (type != -1 && cnt != type)
+-			continue;
+-		if (!sb_has_quota_active(sb, cnt))
+-			continue;
+-		mutex_lock_nested(&sb_dqopt(sb)->files[cnt]->i_mutex,
+-				  I_MUTEX_QUOTA);
+-		truncate_inode_pages(&sb_dqopt(sb)->files[cnt]->i_data, 0);
+-		mutex_unlock(&sb_dqopt(sb)->files[cnt]->i_mutex);
 -	}
--	return ret;
+-	mutex_unlock(&sb_dqopt(sb)->dqonoff_mutex);
 -}
 -#endif
+-
+ static int quota_sync_all(int type)
+ {
+ 	struct super_block *sb;
+@@ -101,6 +63,9 @@ static int quota_sync_all(int type)
+ 	spin_lock(&sb_lock);
+ restart:
+ 	list_for_each_entry(sb, &super_blocks, s_list) {
++		if (!sb->s_qcop || !sb->s_qcop->quota_sync)
++			continue;
++
+ 		/* This test just improves performance so it needn't be
+ 		 * reliable... */
+ 		for (cnt = 0; cnt < MAXQUOTAS; cnt++) {
+@@ -119,7 +84,7 @@ restart:
+ 		spin_unlock(&sb_lock);
+ 		down_read(&sb->s_umount);
+ 		if (sb->s_root)
+-			sync_quota_sb(sb, type);
++			sb->s_qcop->quota_sync(sb, type, 1);
+ 		up_read(&sb->s_umount);
+ 		spin_lock(&sb_lock);
+ 		if (__put_super_and_need_restart(sb))
+@@ -306,8 +271,7 @@ static int do_quotactl(struct super_bloc
+ 	case Q_SYNC:
+ 		if (!sb->s_qcop->quota_sync)
+ 			return -ENOSYS;
+-		sync_quota_sb(sb, type);
+-		return 0;
++		return sb->s_qcop->quota_sync(sb, type, 1);
+ 	case Q_XQUOTAON:
+ 	case Q_XQUOTAOFF:
+ 	case Q_XQUOTARM:
+Index: linux-2.6/fs/sync.c
+===================================================================
+--- linux-2.6.orig/fs/sync.c	2010-02-16 00:13:43.000000000 +0100
++++ linux-2.6/fs/sync.c	2010-02-16 00:21:32.283004241 +0100
+@@ -34,14 +34,14 @@ static int __sync_filesystem(struct supe
+ 	if (!sb->s_bdi)
+ 		return 0;
+ 
+-	/* Avoid doing twice syncing and cache pruning for quota sync */
+-	if (!wait) {
+-		writeout_quota_sb(sb, -1);
+-		writeback_inodes_sb(sb);
+-	} else {
+-		sync_quota_sb(sb, -1);
++	if (sb->s_qcop && sb->s_qcop->quota_sync)
++		sb->s_qcop->quota_sync(sb, -1, wait);
++
++	if (wait)
+ 		sync_inodes_sb(sb);
+-	}
++	else
++		writeback_inodes_sb(sb);
++
+ 	if (sb->s_op->sync_fs)
+ 		sb->s_op->sync_fs(sb, wait);
+ 	return __sync_blockdev(sb->s_bdev, wait);
+Index: linux-2.6/include/linux/quotaops.h
+===================================================================
+--- linux-2.6.orig/include/linux/quotaops.h	2010-02-16 00:16:15.361004730 +0100
++++ linux-2.6/include/linux/quotaops.h	2010-02-16 00:19:15.186253926 +0100
+@@ -19,13 +19,6 @@ static inline struct quota_info *sb_dqop
+ /*
+  * declaration of quota_function calls in kernel.
+  */
+-void sync_quota_sb(struct super_block *sb, int type);
+-static inline void writeout_quota_sb(struct super_block *sb, int type)
+-{
+-	if (sb->s_qcop && sb->s_qcop->quota_sync)
+-		sb->s_qcop->quota_sync(sb, type);
+-}
+-
+ int dquot_initialize(struct inode *inode, int type);
+ int dquot_drop(struct inode *inode);
+ struct dquot *dqget(struct super_block *sb, unsigned int id, int type);
+@@ -64,7 +57,7 @@ int vfs_quota_on_mount(struct super_bloc
+  	int format_id, int type);
+ int vfs_quota_off(struct super_block *sb, int type, int remount);
+ int vfs_quota_disable(struct super_block *sb, int type, unsigned int flags);
+-int vfs_quota_sync(struct super_block *sb, int type);
++int vfs_quota_sync(struct super_block *sb, int type, int wait);
+ int vfs_get_dqinfo(struct super_block *sb, int type, struct if_dqinfo *ii);
+ int vfs_set_dqinfo(struct super_block *sb, int type, struct if_dqinfo *ii);
+ int vfs_get_dqblk(struct super_block *sb, int type, qid_t id, struct if_dqblk *di);
+@@ -333,14 +326,6 @@ static inline void vfs_dq_free_inode(str
+ {
+ }
+ 
+-static inline void sync_quota_sb(struct super_block *sb, int type)
+-{
+-}
+-
+-static inline void writeout_quota_sb(struct super_block *sb, int type)
+-{
+-}
+-
+ static inline int vfs_dq_off(struct super_block *sb, int remount)
+ {
+ 	return 0;
+Index: linux-2.6/include/linux/quota.h
+===================================================================
+--- linux-2.6.orig/include/linux/quota.h	2010-02-16 00:19:54.595004101 +0100
++++ linux-2.6/include/linux/quota.h	2010-02-16 00:20:00.855004381 +0100
+@@ -324,7 +324,7 @@ struct dquot_operations {
+ struct quotactl_ops {
+ 	int (*quota_on)(struct super_block *, int, int, char *, int);
+ 	int (*quota_off)(struct super_block *, int, int);
+-	int (*quota_sync)(struct super_block *, int);
++	int (*quota_sync)(struct super_block *, int, int);
+ 	int (*get_info)(struct super_block *, int, struct if_dqinfo *);
+ 	int (*set_info)(struct super_block *, int, struct if_dqinfo *);
+ 	int (*get_dqblk)(struct super_block *, int, qid_t, struct if_dqblk *);
 
 _______________________________________________
 xfs mailing list
