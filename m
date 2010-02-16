@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1G8jaia132005 for <xfs@oss.sgi.com>; Tue, 16 Feb 2010 02:45:39 -0600
+	o1G8jcTc132018 for <xfs@oss.sgi.com>; Tue, 16 Feb 2010 02:45:38 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C592813ACA25
-	for <xfs@oss.sgi.com>; Tue, 16 Feb 2010 00:46:54 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 430A21CD31F5
+	for <xfs@oss.sgi.com>; Tue, 16 Feb 2010 00:46:56 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id qWodOkUQzHs9bQwi for
-	<xfs@oss.sgi.com>; Tue, 16 Feb 2010 00:46:54 -0800 (PST)
-Message-Id: <20100216084651.315955655@bombadil.infradead.org>
-Date: Tue, 16 Feb 2010 03:44:49 -0500
+	by cuda.sgi.com with ESMTP id ofqlUItUAt8SChHO for
+	<xfs@oss.sgi.com>; Tue, 16 Feb 2010 00:46:56 -0800 (PST)
+Message-Id: <20100216084652.945507392@bombadil.infradead.org>
+Date: Tue, 16 Feb 2010 03:44:56 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 03/10] quota: special case Q_SYNC without device name
+Subject: [PATCH 10/10] quota: drop permission checks from
+	xfs_fs_set_xstate/xfs_fs_set_xquota
 References: <20100216084446.377980079@bombadil.infradead.org>
-Content-Disposition: inline; filename=quotactl-cleanup-3
+Content-Disposition: inline; filename=xfs-quota-drop-permission-checks
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,94 +31,32 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: jack@suse.cz
 Cc: linux-fsdevel@vger.kernel.org, swhiteho@redhat.com, xfs@oss.sgi.com
 
-The Q_SYNC command can be called without the path to a device, in which case
-it iterates over all superblocks.  Special case this variant directly in
-sys_quotactl so that the other code always gets a superblock and doesn't
-need to deal with this case.
+We already do these checks in the generic code.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6/fs/quota/quota.c
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_quotaops.c
 ===================================================================
---- linux-2.6.orig/fs/quota/quota.c	2010-02-10 13:19:42.247004063 +0100
-+++ linux-2.6/fs/quota/quota.c	2010-02-10 13:21:01.300003435 +0100
-@@ -124,10 +124,17 @@ void sync_quota_sb(struct super_block *s
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_quotaops.c	2010-02-16 00:15:27.709004380 +0100
++++ linux-2.6/fs/xfs/linux-2.6/xfs_quotaops.c	2010-02-16 00:25:10.992007173 +0100
+@@ -68,8 +68,6 @@ xfs_fs_set_xstate(
+ 		return -EROFS;
+ 	if (op != Q_XQUOTARM && !XFS_IS_QUOTA_RUNNING(mp))
+ 		return -ENOSYS;
+-	if (!capable(CAP_SYS_ADMIN))
+-		return -EPERM;
+ 
+ 	if (uflags & XFS_QUOTA_UDQ_ACCT)
+ 		flags |= XFS_UQUOTA_ACCT;
+@@ -130,8 +128,6 @@ xfs_fs_set_xquota(
+ 		return -ENOSYS;
+ 	if (!XFS_IS_QUOTA_ON(mp))
+ 		return -ESRCH;
+-	if (!capable(CAP_SYS_ADMIN))
+-		return -EPERM;
+ 
+ 	return -xfs_qm_scall_setqlim(mp, id, xfs_quota_type(type), fdq);
  }
- #endif
- 
--static void sync_dquots(int type)
-+static int quota_sync_all(int type)
- {
- 	struct super_block *sb;
- 	int cnt;
-+	int ret;
-+
-+	if (type >= MAXQUOTAS)
-+		return -EINVAL;
-+	ret = security_quotactl(Q_SYNC, type, 0, NULL);
-+	if (ret)
-+		return ret;
- 
- 	spin_lock(&sb_lock);
- restart:
-@@ -157,6 +164,8 @@ restart:
- 			goto restart;
- 	}
- 	spin_unlock(&sb_lock);
-+
-+	return 0;
- }
- 
- static int quota_quotaon(struct super_block *sb, int type, int cmd, qid_t id,
-@@ -322,12 +331,9 @@ static int do_quotactl(struct super_bloc
- 	case Q_SETQUOTA:
- 		return quota_setquota(sb, type, id, addr);
- 	case Q_SYNC:
--		if (sb) {
--			if (!sb->s_qcop->quota_sync)
--				return -ENOSYS;
--			sync_quota_sb(sb, type);
--		} else
--			sync_dquots(type);
-+		if (!sb->s_qcop->quota_sync)
-+			return -ENOSYS;
-+		sync_quota_sb(sb, type);
- 		return 0;
- 	case Q_XQUOTAON:
- 	case Q_XQUOTAOFF:
-@@ -392,18 +398,26 @@ SYSCALL_DEFINE4(quotactl, unsigned int, 
- 	cmds = cmd >> SUBCMDSHIFT;
- 	type = cmd & SUBCMDMASK;
- 
--	if (cmds != Q_SYNC || special) {
--		sb = quotactl_block(special);
--		if (IS_ERR(sb))
--			return PTR_ERR(sb);
-+	/*
-+	 * As a special case Q_SYNC can be called without a specific device.
-+	 * It will iterate all superblocks that have quota enabled and call
-+	 * the sync action on each of them.
-+	 */
-+	if (!special) {
-+		if (cmds == Q_SYNC)
-+			return quota_sync_all(type);
-+		return -ENODEV;
- 	}
- 
-+	sb = quotactl_block(special);
-+	if (IS_ERR(sb))
-+		return PTR_ERR(sb);
-+
- 	ret = check_quotactl_valid(sb, type, cmds, id);
- 	if (ret >= 0)
- 		ret = do_quotactl(sb, type, cmds, id, addr);
--	if (sb)
--		drop_super(sb);
- 
-+	drop_super(sb);
- 	return ret;
- }
- 
 
 _______________________________________________
 xfs mailing list
