@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1G8ja5V131998 for <xfs@oss.sgi.com>; Tue, 16 Feb 2010 02:45:39 -0600
+	o1G8jbIT132009 for <xfs@oss.sgi.com>; Tue, 16 Feb 2010 02:45:38 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8142F1D3898
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2C28013ACA25
 	for <xfs@oss.sgi.com>; Tue, 16 Feb 2010 00:46:54 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id YqMNTbmHek3HCPhy for
+	by cuda.sgi.com with ESMTP id wkjDyDGTkYsU7h44 for
 	<xfs@oss.sgi.com>; Tue, 16 Feb 2010 00:46:54 -0800 (PST)
-Message-Id: <20100216084650.910278747@bombadil.infradead.org>
-Date: Tue, 16 Feb 2010 03:44:47 -0500
+Message-Id: <20100216084651.741574957@bombadil.infradead.org>
+Date: Tue, 16 Feb 2010 03:44:51 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 01/10] quota: split do_quotactl
+Subject: [PATCH 05/10] quota: clean up Q_XQUOTASYNC
 References: <20100216084446.377980079@bombadil.infradead.org>
-Content-Disposition: inline; filename=quotactl-cleanup
+Content-Disposition: inline; filename=cleanup-Q_XQUOTASYNC
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,287 +30,103 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: jack@suse.cz
 Cc: linux-fsdevel@vger.kernel.org, swhiteho@redhat.com, xfs@oss.sgi.com
 
-Split out a helper for each non-trivial command from do_quotactl.
+Currently Q_XQUOTASYNC calls into the quota_sync method, but XFS does something
+entirely different in it than the rest of the filesystems.  xfs_quota which
+calls Q_XQUOTASYNC expects an asynchronous data writeout to flush delayed
+allocations, while the "VFS" quota support wants to flush changes to the quota
+file.
+
+So make Q_XQUOTASYNC call into the writeback code directly and make the
+quota_sync method optional as XFS doesn't need in the sense expected by the
+rest of the quota code.
+
+GFS2 was using limited XFS-style quota and has a quota_sync method fitting
+neither the style used by vfs_quota_sync nor xfs_fs_quota_sync.  I left it
+in for now as per discussion with Steve it expects to be called from the
+sync path this way.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 Index: linux-2.6/fs/quota/quota.c
 ===================================================================
---- linux-2.6.orig/fs/quota/quota.c	2010-02-08 19:26:09.316003867 +0100
-+++ linux-2.6/fs/quota/quota.c	2010-02-08 19:28:14.176005193 +0100
-@@ -234,122 +234,164 @@ restart:
- 	spin_unlock(&sb_lock);
+--- linux-2.6.orig/fs/quota/quota.c	2010-02-16 00:15:27.136003612 +0100
++++ linux-2.6/fs/quota/quota.c	2010-02-16 00:16:03.263004031 +0100
+@@ -18,6 +18,7 @@
+ #include <linux/capability.h>
+ #include <linux/quotaops.h>
+ #include <linux/types.h>
++#include <linux/writeback.h>
+ #include <net/netlink.h>
+ #include <net/genetlink.h>
+ 
+@@ -52,7 +53,7 @@ void sync_quota_sb(struct super_block *s
+ {
+ 	int cnt;
+ 
+-	if (!sb->s_qcop->quota_sync)
++	if (!sb->s_qcop || !sb->s_qcop->quota_sync)
+ 		return;
+ 
+ 	sb->s_qcop->quota_sync(sb, type);
+@@ -318,9 +319,11 @@ static int do_quotactl(struct super_bloc
+ 	case Q_XGETQUOTA:
+ 		return quota_getxquota(sb, type, id, addr);
+ 	case Q_XQUOTASYNC:
+-		if (!sb->s_qcop->quota_sync)
+-			return -ENOSYS;
+-		return sb->s_qcop->quota_sync(sb, type);
++		/* caller already holds s_umount */
++		if (sb->s_flags & MS_RDONLY)
++			return -EROFS;
++		writeback_inodes_sb(sb);
++		return 0;
+ 	default:
+ 		return -EINVAL;
+ 	}
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_quotaops.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_quotaops.c	2010-02-16 00:13:44.399004869 +0100
++++ linux-2.6/fs/xfs/linux-2.6/xfs_quotaops.c	2010-02-16 00:15:27.709004380 +0100
+@@ -44,20 +44,6 @@ xfs_quota_type(int type)
  }
  
--/* Copy parameters and call proper function */
--static int do_quotactl(struct super_block *sb, int type, int cmd, qid_t id,
--		       void __user *addr)
-+static int quota_quotaon(struct super_block *sb, int type, int cmd, qid_t id,
-+		         void __user *addr)
+ STATIC int
+-xfs_fs_quota_sync(
+-	struct super_block	*sb,
+-	int			type)
+-{
+-	struct xfs_mount	*mp = XFS_M(sb);
+-
+-	if (sb->s_flags & MS_RDONLY)
+-		return -EROFS;
+-	if (!XFS_IS_QUOTA_RUNNING(mp))
+-		return -ENOSYS;
+-	return -xfs_sync_data(mp, 0);
+-}
+-
+-STATIC int
+ xfs_fs_get_xstate(
+ 	struct super_block	*sb,
+ 	struct fs_quota_stat	*fqs)
+@@ -151,7 +137,6 @@ xfs_fs_set_xquota(
+ }
+ 
+ const struct quotactl_ops xfs_quotactl_operations = {
+-	.quota_sync		= xfs_fs_quota_sync,
+ 	.get_xstate		= xfs_fs_get_xstate,
+ 	.set_xstate		= xfs_fs_set_xstate,
+ 	.get_xquota		= xfs_fs_get_xquota,
+Index: linux-2.6/include/linux/quotaops.h
+===================================================================
+--- linux-2.6.orig/include/linux/quotaops.h	2010-02-16 00:16:06.788003612 +0100
++++ linux-2.6/include/linux/quotaops.h	2010-02-16 00:16:15.361004730 +0100
+@@ -22,7 +22,7 @@ static inline struct quota_info *sb_dqop
+ void sync_quota_sb(struct super_block *sb, int type);
+ static inline void writeout_quota_sb(struct super_block *sb, int type)
  {
-+	char *pathname;
- 	int ret;
- 
--	switch (cmd) {
--		case Q_QUOTAON: {
--			char *pathname;
-+	pathname = getname(addr);
-+	if (IS_ERR(pathname))
-+		return PTR_ERR(pathname);
-+	ret = sb->s_qcop->quota_on(sb, type, id, pathname, 0);
-+	putname(pathname);
-+	return ret;
-+}
-+
-+static int quota_getfmt(struct super_block *sb, int type, void __user *addr)
-+{
-+	__u32 fmt;
-+
-+	down_read(&sb_dqopt(sb)->dqptr_sem);
-+	if (!sb_has_quota_active(sb, type)) {
-+		up_read(&sb_dqopt(sb)->dqptr_sem);
-+		return -ESRCH;
-+	}
-+	fmt = sb_dqopt(sb)->info[type].dqi_format->qf_fmt_id;
-+	up_read(&sb_dqopt(sb)->dqptr_sem);
-+	if (copy_to_user(addr, &fmt, sizeof(fmt)))
-+		return -EFAULT;
-+	return 0;
-+}
-+
-+static int quota_getinfo(struct super_block *sb, int type, void __user *addr)
-+{
-+	struct if_dqinfo info;
-+	int ret;
-+
-+	ret = sb->s_qcop->get_info(sb, type, &info);
-+	if (!ret && copy_to_user(addr, &info, sizeof(info)))
-+		return -EFAULT;
-+	return ret;
-+}
-+
-+static int quota_setinfo(struct super_block *sb, int type, void __user *addr)
-+{
-+	struct if_dqinfo info;
-+
-+	if (copy_from_user(&info, addr, sizeof(info)))
-+		return -EFAULT;
-+	return sb->s_qcop->set_info(sb, type, &info);
-+}
-+
-+static int quota_getquota(struct super_block *sb, int type, qid_t id,
-+			  void __user *addr)
-+{
-+	struct if_dqblk idq;
-+	int ret;
-+
-+	ret = sb->s_qcop->get_dqblk(sb, type, id, &idq);
-+	if (ret)
-+		return ret;
-+	if (copy_to_user(addr, &idq, sizeof(idq)))
-+		return -EFAULT;
-+	return 0;
-+}
-+
-+static int quota_setquota(struct super_block *sb, int type, qid_t id,
-+			  void __user *addr)
-+{
-+	struct if_dqblk idq;
- 
--			pathname = getname(addr);
--			if (IS_ERR(pathname))
--				return PTR_ERR(pathname);
--			ret = sb->s_qcop->quota_on(sb, type, id, pathname, 0);
--			putname(pathname);
--			return ret;
--		}
--		case Q_QUOTAOFF:
--			return sb->s_qcop->quota_off(sb, type, 0);
--
--		case Q_GETFMT: {
--			__u32 fmt;
--
--			down_read(&sb_dqopt(sb)->dqptr_sem);
--			if (!sb_has_quota_active(sb, type)) {
--				up_read(&sb_dqopt(sb)->dqptr_sem);
--				return -ESRCH;
--			}
--			fmt = sb_dqopt(sb)->info[type].dqi_format->qf_fmt_id;
--			up_read(&sb_dqopt(sb)->dqptr_sem);
--			if (copy_to_user(addr, &fmt, sizeof(fmt)))
--				return -EFAULT;
--			return 0;
--		}
--		case Q_GETINFO: {
--			struct if_dqinfo info;
--
--			ret = sb->s_qcop->get_info(sb, type, &info);
--			if (ret)
--				return ret;
--			if (copy_to_user(addr, &info, sizeof(info)))
--				return -EFAULT;
--			return 0;
--		}
--		case Q_SETINFO: {
--			struct if_dqinfo info;
--
--			if (copy_from_user(&info, addr, sizeof(info)))
--				return -EFAULT;
--			return sb->s_qcop->set_info(sb, type, &info);
--		}
--		case Q_GETQUOTA: {
--			struct if_dqblk idq;
--
--			ret = sb->s_qcop->get_dqblk(sb, type, id, &idq);
--			if (ret)
--				return ret;
--			if (copy_to_user(addr, &idq, sizeof(idq)))
--				return -EFAULT;
--			return 0;
--		}
--		case Q_SETQUOTA: {
--			struct if_dqblk idq;
--
--			if (copy_from_user(&idq, addr, sizeof(idq)))
--				return -EFAULT;
--			return sb->s_qcop->set_dqblk(sb, type, id, &idq);
--		}
--		case Q_SYNC:
--			if (sb)
--				sync_quota_sb(sb, type);
--			else
--				sync_dquots(type);
--			return 0;
--
--		case Q_XQUOTAON:
--		case Q_XQUOTAOFF:
--		case Q_XQUOTARM: {
--			__u32 flags;
--
--			if (copy_from_user(&flags, addr, sizeof(flags)))
--				return -EFAULT;
--			return sb->s_qcop->set_xstate(sb, flags, cmd);
--		}
--		case Q_XGETQSTAT: {
--			struct fs_quota_stat fqs;
-+	if (copy_from_user(&idq, addr, sizeof(idq)))
-+		return -EFAULT;
-+	return sb->s_qcop->set_dqblk(sb, type, id, &idq);
-+}
-+
-+static int quota_setxstate(struct super_block *sb, int cmd, void __user *addr)
-+{
-+	__u32 flags;
-+
-+	if (copy_from_user(&flags, addr, sizeof(flags)))
-+		return -EFAULT;
-+	return sb->s_qcop->set_xstate(sb, flags, cmd);
-+}
-+
-+static int quota_getxstate(struct super_block *sb, void __user *addr)
-+{
-+	struct fs_quota_stat fqs;
-+	int ret;
- 		
--			if ((ret = sb->s_qcop->get_xstate(sb, &fqs)))
--				return ret;
--			if (copy_to_user(addr, &fqs, sizeof(fqs)))
--				return -EFAULT;
--			return 0;
--		}
--		case Q_XSETQLIM: {
--			struct fs_disk_quota fdq;
--
--			if (copy_from_user(&fdq, addr, sizeof(fdq)))
--				return -EFAULT;
--		       return sb->s_qcop->set_xquota(sb, type, id, &fdq);
--		}
--		case Q_XGETQUOTA: {
--			struct fs_disk_quota fdq;
--
--			ret = sb->s_qcop->get_xquota(sb, type, id, &fdq);
--			if (ret)
--				return ret;
--			if (copy_to_user(addr, &fdq, sizeof(fdq)))
--				return -EFAULT;
--			return 0;
--		}
--		case Q_XQUOTASYNC:
--			return sb->s_qcop->quota_sync(sb, type);
--		/* We never reach here unless validity check is broken */
--		default:
--			BUG();
-+	ret = sb->s_qcop->get_xstate(sb, &fqs);
-+	if (!ret && copy_to_user(addr, &fqs, sizeof(fqs)))
-+		return -EFAULT;
-+	return ret;
-+}
-+
-+static int quota_setxquota(struct super_block *sb, int type, qid_t id,
-+			   void __user *addr)
-+{
-+	struct fs_disk_quota fdq;
-+
-+	if (copy_from_user(&fdq, addr, sizeof(fdq)))
-+		return -EFAULT;
-+	return sb->s_qcop->set_xquota(sb, type, id, &fdq);
-+}
-+
-+static int quota_getxquota(struct super_block *sb, int type, qid_t id,
-+			   void __user *addr)
-+{
-+	struct fs_disk_quota fdq;
-+	int ret;
-+
-+	ret = sb->s_qcop->get_xquota(sb, type, id, &fdq);
-+	if (!ret && copy_to_user(addr, &fdq, sizeof(fdq)))
-+		return -EFAULT;
-+	return ret;
-+}
-+
-+/* Copy parameters and call proper function */
-+static int do_quotactl(struct super_block *sb, int type, int cmd, qid_t id,
-+		       void __user *addr)
-+{
-+	switch (cmd) {
-+	case Q_QUOTAON:
-+		return quota_quotaon(sb, type, cmd, id, addr);
-+	case Q_QUOTAOFF:
-+		return sb->s_qcop->quota_off(sb, type, 0);
-+	case Q_GETFMT:
-+		return quota_getfmt(sb, type, addr);
-+	case Q_GETINFO:
-+		return quota_getinfo(sb, type, addr);
-+	case Q_SETINFO:
-+		return quota_setinfo(sb, type, addr);
-+	case Q_GETQUOTA:
-+		return quota_getquota(sb, type, id, addr);
-+	case Q_SETQUOTA:
-+		return quota_setquota(sb, type, id, addr);
-+	case Q_SYNC:
-+		if (sb)
-+			sync_quota_sb(sb, type);
-+		else
-+			sync_dquots(type);
-+		return 0;
-+	case Q_XQUOTAON:
-+	case Q_XQUOTAOFF:
-+	case Q_XQUOTARM:
-+		return quota_setxstate(sb, cmd, addr);
-+	case Q_XGETQSTAT:
-+		return quota_getxstate(sb, addr);
-+	case Q_XSETQLIM:
-+		return quota_setxquota(sb, type, id, addr);
-+	case Q_XGETQUOTA:
-+		return quota_getxquota(sb, type, id, addr);
-+	case Q_XQUOTASYNC:
-+		return sb->s_qcop->quota_sync(sb, type);
-+	/* We never reach here unless validity check is broken */
-+	default:
-+		BUG();
- 	}
-+
- 	return 0;
+-	if (sb->s_qcop->quota_sync)
++	if (sb->s_qcop && sb->s_qcop->quota_sync)
+ 		sb->s_qcop->quota_sync(sb, type);
  }
  
 
