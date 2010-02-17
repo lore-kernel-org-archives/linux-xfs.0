@@ -1,28 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1H5ZQuv208335 for <xfs@oss.sgi.com>; Tue, 16 Feb 2010 23:35:27 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E013513B0A66
-	for <xfs@oss.sgi.com>; Tue, 16 Feb 2010 21:36:43 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
-	[150.101.137.103]) by cuda.sgi.com with ESMTP id
-	AQ8nqAllGJB6Y6cA for <xfs@oss.sgi.com>;
-	Tue, 16 Feb 2010 21:36:43 -0800 (PST)
-Received: from discord (unverified [121.44.103.80])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	14010713-1927428
-	for <xfs@oss.sgi.com>; Wed, 17 Feb 2010 16:06:42 +1030 (CDT)
-Received: from disturbed ([192.168.1.9]) by discord with esmtp (Exim 4.69)
-	(envelope-from <dave@fromorbit.com>) id 1NhcaM-000246-M7
-	for xfs@oss.sgi.com; Wed, 17 Feb 2010 16:36:30 +1100
-Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1NhcaL-0007X8-8Q
-	for xfs@oss.sgi.com; Wed, 17 Feb 2010 16:36:29 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: Non-blocking inode locking in IO completion
-Date: Wed, 17 Feb 2010 16:36:29 +1100
-Message-Id: <1266384989-28928-1-git-send-email-david@fromorbit.com>
+	o1H8WGH0219771 for <xfs@oss.sgi.com>; Wed, 17 Feb 2010 02:32:16 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EC9551D7FFF
+	for <xfs@oss.sgi.com>; Wed, 17 Feb 2010 00:33:34 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id 4KsBqZNboC2vOUuf for
+	<xfs@oss.sgi.com>; Wed, 17 Feb 2010 00:33:34 -0800 (PST)
+Date: Wed, 17 Feb 2010 03:33:34 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 3/4] [PATCH 3/4] xfs: remove wrapper for the fsync file
+	operation
+Message-ID: <20100217083334.GC19943@infradead.org>
+References: <20100215094445.528696829@bombadil.infradead.org>
+	<20100215094604.640912740@bombadil.infradead.org>
+	<20100217040944.GK28392@discord.disaster>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20100217040944.GK28392@discord.disaster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,183 +27,49 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-The introduction of barriers to DM loop devices (e.g. dm-crypt) has
-created a new IO order completion dependency that XFS does not
-handle. That is, the completion of log IOs (which have barriers) in
-the loop filesystem are now dependent on completion of data IO in
-the backing filesystem.
+On Wed, Feb 17, 2010 at 03:09:44PM +1100, Dave Chinner wrote:
+> > +		xfs_iunlock(ip, XFS_ILOCK_SHARED);
+> > +		if (xfs_ipincount(ip)) {
+> > +			if (ip->i_itemp->ili_last_lsn) {
+> > +				error = _xfs_log_force_lsn(ip->i_mount,
+> > +						ip->i_itemp->ili_last_lsn,
+> > +						XFS_LOG_SYNC, &log_flushed);
+> > +			} else {
+> > +				error = _xfs_log_force(ip->i_mount,
+> > +						XFS_LOG_SYNC, &log_flushed);
+> > +			}
+> > +		}
+> 
+> To be technically correct, the ilock should be held over the
+> pincount check and log force, as is done in xfs_iunpin_wait().
+> That way we can guarantee the inode was correctly forced and not
+> unpinned between the unlock/check/log force being issued. I know
+> this is just a copy of the existing fsync code, but I think that
+> the existing code is wrong, too. ;)
 
-This can cause deadlocks when a flush daemon issues a log force with
-an inode locked because the IO completion of IO on the inode is
-blocked by the inode lock. This in turn prevents further data IO
-completion from occuring, which prevents the log IO from completing
-because DM is waiting for data Io completion as well.
+Yes, no changes to the code semantics here.  But that ipincount check
+is a relatively recent addition from me, too - so thanks for the
+slightly delayed review as the comment is absolutely correct.  I'll
+prepare a patch for it
 
-The fix for this new completion order dependency issue is to make
-the IO completion inode locking non-blocking. If the inode lock
-can't be grabbed, simply requeue the IO completion back to the work
-queue so that it can be processed later. This prevents the
-completion queue from being blocked and allows data IO completion on
-other inodes to proceed, hence avoiding completion order dependent
-deadlocks.
+> Also, if the inode is pinned while we have it locked, then
+> ip->i_itemp->ili_last_lsn is guaranteed to be set as it is updated
+> in IOP_COMMITTING() which is called during transaction commit.
+> 
+> As it is, ili_last_lsn is never reset to zero after a transaction,
+> so i think the _xfs_log_force() branch will never be executed,
+> either.
 
-Signed-off-by: Dave Chinner <david@fromorbit.com>
----
- fs/xfs/linux-2.6/xfs_aops.c |   93 ++++++++++++++++++++++++++-----------------
- 1 files changed, 56 insertions(+), 37 deletions(-)
-
-diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
-index 66abe36..1c65a2b 100644
---- a/fs/xfs/linux-2.6/xfs_aops.c
-+++ b/fs/xfs/linux-2.6/xfs_aops.c
-@@ -163,14 +163,17 @@ xfs_ioend_new_eof(
- }
- 
- /*
-- * Update on-disk file size now that data has been written to disk.
-- * The current in-memory file size is i_size.  If a write is beyond
-- * eof i_new_size will be the intended file size until i_size is
-- * updated.  If this write does not extend all the way to the valid
-- * file size then restrict this update to the end of the write.
-+ * Update on-disk file size now that data has been written to disk.  The
-+ * current in-memory file size is i_size.  If a write is beyond eof i_new_size
-+ * will be the intended file size until i_size is updated.  If this write does
-+ * not extend all the way to the valid file size then restrict this update to
-+ * the end of the write.
-+ *
-+ * This function does not block as blocking on the inode lock in IO completion
-+ * can lead to IO completion order dependency deadlocks.. If it can't get the
-+ * inode ilock it will return EAGAIN. Callers must handle this.
-  */
--
--STATIC void
-+STATIC int
- xfs_setfilesize(
- 	xfs_ioend_t		*ioend)
- {
-@@ -181,9 +184,11 @@ xfs_setfilesize(
- 	ASSERT(ioend->io_type != IOMAP_READ);
- 
- 	if (unlikely(ioend->io_error))
--		return;
-+		return 0;
-+
-+	if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
-+		return EAGAIN;
- 
--	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	isize = xfs_ioend_new_eof(ioend);
- 	if (isize) {
- 		ip->i_d.di_size = isize;
-@@ -191,6 +196,28 @@ xfs_setfilesize(
- 	}
- 
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	return 0;
-+}
-+
-+/*
-+ * Schedule IO completion handling on a xfsdatad if this was
-+ * the final hold on this ioend. If we are asked to wait,
-+ * flush the workqueue.
-+ */
-+STATIC void
-+xfs_finish_ioend(
-+	xfs_ioend_t	*ioend,
-+	int		wait)
-+{
-+	if (atomic_dec_and_test(&ioend->io_remaining)) {
-+		struct workqueue_struct *wq;
-+
-+		wq = (ioend->io_type == IOMAP_UNWRITTEN) ?
-+			xfsconvertd_workqueue : xfsdatad_workqueue;
-+		queue_work(wq, &ioend->io_work);
-+		if (wait)
-+			flush_workqueue(wq);
-+	}
- }
- 
- /*
-@@ -198,11 +225,11 @@ xfs_setfilesize(
-  */
- STATIC void
- xfs_end_io(
--	struct work_struct	*work)
-+	struct work_struct *work)
- {
--	xfs_ioend_t		*ioend =
--		container_of(work, xfs_ioend_t, io_work);
--	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
-+	xfs_ioend_t	*ioend = container_of(work, xfs_ioend_t, io_work);
-+	struct xfs_inode *ip = XFS_I(ioend->io_inode);
-+	int		error;
- 
- 	/*
- 	 * For unwritten extents we need to issue transactions to convert a
-@@ -210,7 +237,6 @@ xfs_end_io(
- 	 */
- 	if (ioend->io_type == IOMAP_UNWRITTEN &&
- 	    likely(!ioend->io_error && !XFS_FORCED_SHUTDOWN(ip->i_mount))) {
--		int error;
- 
- 		error = xfs_iomap_write_unwritten(ip, ioend->io_offset,
- 						 ioend->io_size);
-@@ -222,30 +248,23 @@ xfs_end_io(
- 	 * We might have to update the on-disk file size after extending
- 	 * writes.
- 	 */
--	if (ioend->io_type != IOMAP_READ)
--		xfs_setfilesize(ioend);
--	xfs_destroy_ioend(ioend);
--}
--
--/*
-- * Schedule IO completion handling on a xfsdatad if this was
-- * the final hold on this ioend. If we are asked to wait,
-- * flush the workqueue.
-- */
--STATIC void
--xfs_finish_ioend(
--	xfs_ioend_t	*ioend,
--	int		wait)
--{
--	if (atomic_dec_and_test(&ioend->io_remaining)) {
--		struct workqueue_struct *wq;
--
--		wq = (ioend->io_type == IOMAP_UNWRITTEN) ?
--			xfsconvertd_workqueue : xfsdatad_workqueue;
--		queue_work(wq, &ioend->io_work);
--		if (wait)
--			flush_workqueue(wq);
-+	if (ioend->io_type != IOMAP_READ) {
-+		error = xfs_setfilesize(ioend);
-+		ASSERT(!error || error == EAGAIN);
- 	}
-+
-+	/*
-+	 * If we didn't complete processing of the ioend, requeue it to the
-+	 * tail of the workqueue for another attempt later. Otherwise destroy
-+	 * it.
-+	 */
-+	if (error == EAGAIN) {
-+		atomic_inc(&ioend->io_remaining);
-+		xfs_finish_ioend(ioend, 0);
-+		/* ensure we don't spin on blocked ioends */
-+		delay(1);
-+	} else
-+		xfs_destroy_ioend(ioend);
- }
- 
- /*
--- 
-1.6.5
+True, the same also applies to __xfs_iunpit_wait, I'll look into
+that in another patch.  This will also apply to Ben's nfsd
+commit_metadata patch.
 
 _______________________________________________
 xfs mailing list
