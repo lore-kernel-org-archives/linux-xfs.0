@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1HKSMxK258959 for <xfs@oss.sgi.com>; Wed, 17 Feb 2010 14:28:23 -0600
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 68A5E13B46ED
-	for <xfs@oss.sgi.com>; Wed, 17 Feb 2010 12:29:41 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Ui1r4HekrWWY3Aur for
-	<xfs@oss.sgi.com>; Wed, 17 Feb 2010 12:29:41 -0800 (PST)
-Received: from int-mx08.intmail.prod.int.phx2.redhat.com
-	(int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.21])
-	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id o1HKTehs011639
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 17 Feb 2010 15:29:40 -0500
-Received: from neon.msp.redhat.com (neon.msp.redhat.com [10.15.80.10])
-	by int-mx08.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id o1HKTc6c022692
-	for <xfs@oss.sgi.com>; Wed, 17 Feb 2010 15:29:39 -0500
-Message-ID: <4B7C51B2.9080908@sandeen.net>
-Date: Wed, 17 Feb 2010 14:29:38 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	o1HLBwxt261909 for <xfs@oss.sgi.com>; Wed, 17 Feb 2010 15:11:58 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D247E1DAC0F
+	for <xfs@oss.sgi.com>; Wed, 17 Feb 2010 13:13:15 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	m8pTAJH0o0kmflj2 for <xfs@oss.sgi.com>;
+	Wed, 17 Feb 2010 13:13:15 -0800 (PST)
+Date: Thu, 18 Feb 2010 08:13:12 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: Non-blocking inode locking in IO completion
+Message-ID: <20100217211312.GQ28392@discord.disaster>
+References: <1266384989-28928-1-git-send-email-david@fromorbit.com>
+	<20100217192938.GA14015@infradead.org>
 MIME-Version: 1.0
-Subject: [PATCH] xfstests: don't delete scratch loop device w/ umount -d
+Content-Disposition: inline
+In-Reply-To: <20100217192938.GA14015@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,30 +30,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs mailing list <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Recent fixes to 073 added umount -d, but if we happen
-to be using a scratch device on loopback, subsequent
-tests get very, very unhappy when their loopback block
-device goes away!
+On Wed, Feb 17, 2010 at 02:29:38PM -0500, Christoph Hellwig wrote:
+> On Wed, Feb 17, 2010 at 04:36:29PM +1100, Dave Chinner wrote:
+> > The introduction of barriers to DM loop devices (e.g. dm-crypt) has
+> > created a new IO order completion dependency that XFS does not
+> > handle. That is, the completion of log IOs (which have barriers) in
+> > the loop filesystem are now dependent on completion of data IO in
+> > the backing filesystem.
+> 
+> I don't think dm belongs into the picture here at all.  The problem
+> is simply with the loop device, which sits below dm-crypt in the
+> bugzilla reports.  The loop device in SuSE (and for a short time in
+> mainline until we saw unexplainable XFS lockups) implements barriers
+> using fsync.  Now that fsync turns a log I/O that issues a barrier
+> in the XFS filesystem inside the loop device into a data I/O the
+> backing filesystem.  With this the rest of your description applies
+> again.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Fair point. I'll change the description to be more accurate.
 
-diff --git a/073 b/073
-index 90fa1f0..7ce6efb 100755
---- a/073
-+++ b/073
-@@ -119,7 +119,8 @@ _verify_copy()
- 	diff -u $tmp.geometry1 $tmp.geometry2
- 
- 	echo unmounting and removing new image
--	umount -d $source_dir $target_dir
-+	umount $source_dir
-+	umount -d $target_dir
- 	rm -f $target
- }
- 
+> The patch looks good to me - while I hate introducing random delay()
+> calls I don't really see a way around this. 
+
+I thought about using queue_delayed_work(), but then the change
+became much bigger and has other side effects like increasing the
+size of the ioend structure.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
