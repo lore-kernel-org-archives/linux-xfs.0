@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1INVVFP084859 for <xfs@oss.sgi.com>; Thu, 18 Feb 2010 17:31:32 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EEDA61DFD04
-	for <xfs@oss.sgi.com>; Thu, 18 Feb 2010 15:32:49 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
-	[150.101.137.103]) by cuda.sgi.com with ESMTP id
-	1MO7uDHRuG90HsQh for <xfs@oss.sgi.com>;
-	Thu, 18 Feb 2010 15:32:49 -0800 (PST)
-Date: Fri, 19 Feb 2010 10:32:46 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests: mount xfs with a context when selinux is on
-Message-ID: <20100218233246.GC28392@discord.disaster>
-References: <4B7C3F98.50303@sandeen.net>
-	<20100217230358.GX28392@discord.disaster>
-	<4B7DB95B.4060506@sandeen.net> <4B7DC50D.7070507@sandeen.net>
+	o1J6fblX114869 for <xfs@oss.sgi.com>; Fri, 19 Feb 2010 00:41:38 -0600
+Received: from srv.cyf-kr.edu.pl (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A7D611CDC255
+	for <xfs@oss.sgi.com>; Thu, 18 Feb 2010 22:42:55 -0800 (PST)
+Received: from srv.cyf-kr.edu.pl (srv.cyf-kr.edu.pl [149.156.2.11]) by
+	cuda.sgi.com with ESMTP id KhkFYBr5AgzAzLsr for
+	<xfs@oss.sgi.com>; Thu, 18 Feb 2010 22:42:55 -0800 (PST)
+From: Patryk Lason <p.lason@cyfronet.pl>
+Subject: Re: XFS + LVM + quota = disk quota exceeded
+Date: Fri, 19 Feb 2010 07:42:38 +0100
+References: <201002181106.36672.p.lason@cyfronet.pl>
+	<4B7DBADB.5020409@sandeen.net>
+In-Reply-To: <4B7DBADB.5020409@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4B7DC50D.7070507@sandeen.net>
+Message-Id: <201002190742.39041.p.lason@cyfronet.pl>
+Reply-To: p.lason@cyfronet.pl
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,52 +30,52 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs mailing list <xfs@oss.sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Feb 18, 2010 at 04:54:05PM -0600, Eric Sandeen wrote:
-> Eric Sandeen wrote:
-> > Dave Chinner wrote:
-> >> On Wed, Feb 17, 2010 at 01:12:24PM -0600, Eric Sandeen wrote:
-> >>> When selinux is on, we get tons of new xattrs, which messes
-> >>> up all kinds of output.
-> >>>
-> >>> The simplest way out of this, for now, seems to be to just mount
-> >>> with a global context instead and skip writing the extra xattrs.
-> >>>
-> >>> I've been using this internally on Fedora and RHEL for a while now.
-> >>>
-> >>> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-> >> I know very little about selinux, so while the code changes look OK
-> >> I have no idea if the context change is All Goodness.
-> >>
-> >>> --- a/common.rc
-> >>> +++ b/common.rc
-> >>> @@ -47,8 +47,16 @@ _ls_l()
-> >>>  
-> >>>  _mount_opts()
-> >>>  {
-> >>> +    # SELinux adds extra xattrs which can mess up our expected output.
-> >>> +    # So, mount with a context, and they won't be created
-> >>> +    # nfs_t is a "liberal" context so we can use it.
-> >>> +    if [ -x /usr/sbin/selinuxenabled ] && /usr/sbin/selinuxenabled; then
-> >>> +	SELINUX_MOUNT_OPTIONS="-o context=system_u:object_r:nfs_t:s0"
-> >>> +    fi
-> >>> +
-> >> i.e. is t_nfs a context specific to a RHEL/Fedora setup, or is it a
-> >> generic context that other distro's also define?
-> > 
-> > I'll ask; I think this is what they told me to use last time, but I
-> > didn't ask if it was policy-specific...
+On Thursday 18 of February 2010, Eric Sandeen wrote:
+> Patryk Lason wrote:
+> > Hello,
+> >
+> > I'm not able to touch a file on an XFS filesystem with quotas created on
+> > an LVM volume.
+> > Even if I set limits to 10TB on 2TB device.
 > 
-> our selinux guys still recommend this context as suitably generic.
+> ...
+> 
+> > From xfs_quota:
+> > Disk quotas for User xxx (1111)
+> > Filesystem              Blocks      Quota      Limit  Warn/Time     
+> > Mounted on
+> > /dev/mapper/lvm--people-people
+> >                         742740 10737418240 10737418240   00 [--------]
+> > /people
+> >
+> >
+> > # su - xxx
+> > $ pwd
+> > /people/xxx
+> > $ touch a
+> > touch: cannot touch `a': Disk quota exceeded
+> >
+> >
+> > What may be wrong and where?
+> 
+> file quota maybe, not block quota; quota -i ?
 
-OK. Consider it:
+Looks like I've found it.
+I played with "-d" parameter for "limit" in xfs_quota.
+I wanted to set default quota for users, but using the following
+command:
 
-Reviewed-by: Dave Chinner <david@fromorbit.com>
+limit -u bsoft=5g bhard=7g isoft=0 ihard=0 -d
 
--- 
-Dave Chinner
-david@fromorbit.com
+the limit is set also for groups.
+That's why I couldn't created any file.
+
+I have xfsprogs-2.9.4.
+
+Regards,
+Patryk
 
 _______________________________________________
 xfs mailing list
