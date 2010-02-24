@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1OBr2vU022669 for <xfs@oss.sgi.com>; Wed, 24 Feb 2010 05:53:02 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DF6731F0BAF
-	for <xfs@oss.sgi.com>; Wed, 24 Feb 2010 03:54:23 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	VasPI3vmdJbZhuSP for <xfs@oss.sgi.com>;
-	Wed, 24 Feb 2010 03:54:23 -0800 (PST)
-Date: Wed, 24 Feb 2010 22:54:20 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs_growfs failure....
-Message-ID: <20100224115420.GK16175@discord.disaster>
-References: <E51793F9F4FAD54A8C1774933D8E500006B64A2687@sbapexch05>
+	o1OH9Y82036890 for <xfs@OSS.SGI.com>; Wed, 24 Feb 2010 11:09:35 -0600
+Received: from ty.sabi.co.UK (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C3D5B1523A9B
+	for <xfs@OSS.SGI.com>; Wed, 24 Feb 2010 09:10:54 -0800 (PST)
+Received: from ty.sabi.co.UK (82-69-39-138.dsl.in-addr.zen.co.uk
+	[82.69.39.138]) by cuda.sgi.com with ESMTP id L35Gu4yseTlBHj7M
+	for <xfs@OSS.SGI.com>; Wed, 24 Feb 2010 09:10:54 -0800 (PST)
+Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.uk)
+	by ty.sabi.co.UK with esmtp(Exim 4.63 #1) id 1NkKkn-0001bX-Nx
+	for <xfs@OSS.SGI.com>; Wed, 24 Feb 2010 17:10:29 +0000
 MIME-Version: 1.0
-Content-Disposition: inline
+Message-ID: <19333.23937.956036.716@tree.ty.sabi.co.uk>
+Date: Wed, 24 Feb 2010 17:10:25 +0000
+Subject: Re: xfs_growfs failure....
 In-Reply-To: <E51793F9F4FAD54A8C1774933D8E500006B64A2687@sbapexch05>
+References: <E51793F9F4FAD54A8C1774933D8E500006B64A2687@sbapexch05>
+From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,74 +26,80 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Joe Allen <Joe.Allen@citrix.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Linux XFS <xfs@oss.sgi.com>
 
-T24gV2VkLCBGZWIgMjQsIDIwMTAgYXQgMDI6NDQ6MzdBTSAtMDgwMCwgSm9lIEFsbGVuIHdyb3Rl
-Ogo+IEkgYW0gaW4gc29tZSBkaWZmaWN1bHR5IGhlcmUgb3ZlciBhIDEwMFRCIGZpbGVzeXN0ZW0g
-dGhhdAo+IElzIG5vdyB1bnVzYWJsZSBhZnRlciBhIHhmc19ncm93ZnMgY29tbWFuZC4KPiAKPiBJ
-cyB0aGVyZSBzb21lb25lIHRoYXQgbWlnaHQgaGVscCBhc3Npc3Q/Cj4gCj4gI21vdW50OiAvZGV2
-L2xvZ2ZzLXNlc3Npb25zL3Nlc3Npb25zOiBjYW4ndCByZWFkIHN1cGVyYmxvY2sKPiAKPiBGaWxl
-c3lzdGVtICJkbS02MSI6IERpc2FibGluZyBiYXJyaWVycywgbm90IHN1cHBvcnRlZCB3aXRoIGV4
-dGVybmFsIGxvZyBkZXZpY2UKPiBhdHRlbXB0IHRvIGFjY2VzcyBiZXlvbmQgZW5kIG9mIGRldmlj
-ZQo+IGRtLTYxOiBydz0wLCB3YW50PTIzODk5NTAzODIwOCwgbGltaXQ9MjE1OTQzMTkyNTc2CgpZ
-b3UndmUgZ3Jvd24gdGhlIGZpbGVzeXN0ZW0gdG8gMjM4OTk1MDM4MjA4INGVZWN0b3JzICgxMTEu
-M1RpQiksCmJ1dCB0aGUgdW5kZXJseWluZyBkZXZpY2UgaXMgb25seSAyMTU5NDMxOTI1NzYgc2Vj
-dG9ycyAoMTAwLjVUaUIpCmluIHNpemUuCgpJJ20gYXNzdW1pbmcgdGhhdCB5b3UncmUgdHJ5aW5n
-IHRvIG1vdW50IHRoZSBmaWxlc3lzdGVtIGFmdGVyIGEKcmVib290PyBJIG1ha2UgdGhpcyBhc3N1
-bXB0aW9uIGFzIGdyb3dmcyBpcyBhbiBvbmxpbmUgb3BlcmF0aW9uIGFuZAp3b24ndCBncm93IGlm
-IHRoZSB1bmRlcmx5aW5nIGJsb2NrIGRldmljZSBoYXMgbm90IGFscmVhZHkgYmVlbgpncm93bi4g
-Rm9yIGEgc3Vic2VxdWVudCBtb3VudCB0byBmYWlsIHdpdGggdGhlIHVuZGVybHlpbmcgZGV2aWNl
-CmJlaW5nIHRvbyBzbWFsbCwgc29tZXRoaW5nIGFib3V0IHRoZSB1bmRlcmx5aW5nIGJsb2NrCmRl
-dmljZSBoYWQgdG8gY2hhbmdlLi4uLgoKV2hhdCBrZXJuZWwgdmVyc2lvbiBhbmQgeGZzcHJvZ3Mg
-dmVyc2lvbiBhcmUgeW91IHVzaW5nPwoKPiB4ZnNfcmVwYWlyIC1uIDxkZXZpY2U+IGJhc2ljYWxs
-eSBsb29rcyBmb3Igc3VwZXJibG9ja3MgKHBoYXNlIDEgSQo+IGd1ZXNzICkgZm9yIGEgbG9uZyB0
-aW1lLiBJJ20gbGV0dGluZyBpdCBydW4sIGJ1dCBub3QgbXVjaCBob3BlLgoKRG9uJ3QgcmVwYWly
-IHRoZSBmaWxlc3lzdGVtIC0gdGhlcmUgaXMgbm90aGluZyB3cm9uZyB3aXRoIGl0CnVubGVzcyB5
-b3Ugc3RhcnQgbW9kaWZ5aW5nIHN0dWZmLiBXaGF0IHlvdSBuZWVkIHRvIGRvIGlzIGZpeCB0aGUK
-dW5kZXJseWluZyBkZXZpY2UgdG8gYnJpbmcgaXQgYmFjayB0byB0aGUgc2l6ZSBpdCB3YXMgc3Vw
-cG9zZWQgdG8KYmUgYXQgd2hlbiB0aGUgZ3JvdyBvcGVyYXRpb24gd2FzIHJ1bi4KCldoYXQgZG9l
-cyAvcHJvYy9wYXJ0aXRpb25zIHRlbGwgeW91IGFib3V0IHRoZSBzaXplIG9mIGRtLTYxPyBkb2Vz
-CnRoYXQgcmVwb3J0IHRoZSBjb3JyZWN0IHNpemUsIGFuZCBpZiBpdCBkb2VzLCB3aGF0IGlzIGl0
-PwoKPiBJJ20gaGVzaXRhbnQgdG8gcnVuIHhmc19yZXBhaXIgLUwgIG9yIHdpdGhvdXQgdGhlIC1u
-IGZsYWcgZm9yIGZlYXIgb2YgbWFraW5nIGl0IHdvcnNlLgoKR29vZCAtIGRvbid0IHJ1biBhbnl0
-aGluZyBsaWtlIHRoYXQgdW50aWwgeW91IHNvcnQgb3V0IHdoZXRoZXIgdGhlCnVuZGVybHlpbmcg
-ZGV2aWNlIGlzIGNvcnJlY3RseSBzaXplZCBvciBub3QuCgo+IC1iYXNoLTMuMSMgeGZzX2RiIC1y
-IC1jICdzYiAwJyAtYyBwIC9kZXYvbG9nZnMtc2Vzc2lvbnMvc2Vzc2lvbnMKPiBtYWdpY251bSA9
-IDB4NTg0NjUzNDIKPiBibG9ja3NpemUgPSA0MDk2Cj4gZGJsb2NrcyA9IDI5ODc0Mzc5Nzc2CgpY
-RlMgZGVmaW5pdGVseSB0aGlua3MgaXQgaXMgMTExLjNUaUIgaW4gc2l6ZS4KCj4gcmJsb2NrcyA9
-IDAKPiByZXh0ZW50cyA9IDAKPiB1dWlkID0gZmM4YmRmNzYtZDk2Mi00M2MxLWFlNjAtYjg1ZjM3
-ODk3OGE2Cj4gbG9nc3RhcnQgPSAwCj4gcm9vdGlubyA9IDIwNDgKPiByYm1pbm8gPSAyMDQ5Cj4g
-cnN1bWlubyA9IDIwNTAKPiByZXh0c2l6ZSA9IDM4NAo+IGFnYmxvY2tzID0gMjY4NDM1MzI4Cj4g
-YWdjb3VudCA9IDExMgoKMTEyIEFHcyBvZiAxVGlCIGVhY2ggLSB0aGF0IGNvbmZpcm1zIHRoZSBn
-cm93IHN1Y2NlZWRlZCBhbmQgaXQgd2FzCmFibGUgdG8gd3JpdGUgbWV0YWRhdGEgdG8gZGlzayBi
-ZXR3ZWVuIDEwMCBhbmQgMTExIFRpQiB3aXRob3V0CmVycm9ycyBiZWluZyByZXBvcnRlZC4gVGhh
-dCBpbXBsaWVzIHRoZSBibG9jayBkZXZpY2UgbXVzdCBoYXZlIGJlZW4KdGhhdCBiaWcgYXQgc29t
-ZSBwb2ludC4uLgoKPiByYm1ibG9ja3MgPSAwCj4gbG9nYmxvY2tzID0gMzIwMDAKPiB2ZXJzaW9u
-bnVtID0gMHgzMTg0Cj4gc2VjdHNpemUgPSA1MTIKPiBpbm9kZXNpemUgPSAyNTYKPiBpbm9wYmxv
-Y2sgPSAxNgo+IGZuYW1lID0gIlwwMDBcMDAwXDAwMFwwMDBcMDAwXDAwMFwwMDBcMDAwXDAwMFww
-MDBcMDAwXDAwMCIKPiBibG9ja2xvZyA9IDEyCj4gc2VjdGxvZyA9IDkKPiBpbm9kZWxvZyA9IDgK
-PiBpbm9wYmxvZyA9IDQKPiBhZ2Jsa2xvZyA9IDI4Cj4gcmV4dHNsb2cgPSAwCj4gaW5wcm9ncmVz
-cyA9IDAKPiBpbWF4X3BjdCA9IDI1Cj4gaWNvdW50ID0gNzI5MTUyMAo+IGlmcmVlID0gODUxNAo+
-IGZkYmxvY2tzID0gNjYyMzE4NTU5NwoKV2l0aCAyNC41VGlCIG9mIGZyZWUgc3BhY2UKCj4gLWJh
-c2gtMy4xIyB4ZnNfZGIgLXIgLWMgJ3NiIDInIC1jIHAgL2Rldi9sb2dmcy1zZXNzaW9ucy9zZXNz
-aW9ucwo+IG1hZ2ljbnVtID0gMHg1ODQ2NTM0Mgo+IGJsb2Nrc2l6ZSA9IDQwOTYKPiBkYmxvY2tz
-ID0gMjQxMTE0MTgzNjgKClRoYXQncyA4OS45VGlCLi4uCgo+IHJibG9ja3MgPSAwCj4gcmV4dGVu
-dHMgPSAwCj4gdXVpZCA9IGZjOGJkZjc2LWQ5NjItNDNjMS1hZTYwLWI4NWYzNzg5NzhhNgo+IGxv
-Z3N0YXJ0ID0gMAo+IHJvb3Rpbm8gPSAyMDQ4Cj4gcmJtaW5vID0gMjA0OQo+IHJzdW1pbm8gPSAy
-MDUwCj4gcmV4dHNpemUgPSAzODQKPiBhZ2Jsb2NrcyA9IDI2ODQzNTMyOAo+IGFnY291bnQgPSA5
-MAoKQW5kIDkwIEFHcy4gVGhhdCB0ZWxscyBtZSB0aGUgZmlsZXN5c3RlbSB3YXMgY3JlYXRlZCBh
-cyBhIDkwVGlCCmZpbGVzeXN0ZW0uIENhbiB5b3UgdGVsbCBtZSBpZiB5b3UgYXR0ZW1wdGVkIHRv
-IGdyb3cgZnJvbSA5MFRpQiB0bwoxMDBUaUIgb3IgZnJvbSAxMDBUaUIgdG8gMTEwVGlCPyAgVGhl
-cmUgd2VyZSBidWdzIGF0IG9uZSBwb2ludCBpbgpib3RoIHRoZSB1c2Vyc3BhY2UgZ3JvdyBjb2Rl
-IGFuZCB0aGUga2VybmVsIGNvZGUgdGhhdCByZXN1bHRlZCBpbgpiYWQgZ3Jvd3MgKGhlbmNlIHRo
-ZSBuZWVkIHRvIGtub3cgdGhlIHZlcnNpb25zIHRoaXMgb2NjdXJyZWQgb24KYW5kIHdoYXQgeW91
-IHdlcmUgYWN0dWFsbHkgYXR0ZW1wdGluZyB0byBkbyksIGJ1dCB0aGVzZSBwcm9ibGVtcwpjYW4g
-dXN1YWxseSBiZSBmaXhlZCB1cCB3aXRoIHNvbWUgeGZzX2RiIG1hZ2ljLgoKQ2hlZXJzLAoKRGF2
-ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Mu
-c2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+> I am in some difficulty here over a 100TB filesystem
+
+Shrewd idea! Because 'fsck' takes no time and memory, so the
+bigger the filesystem the better! ;-).
+
+> that Is now unusable after a xfs_growfs command. [ ... ] 
+
+Wondering how long it took to backup 100TB; but of course doing
+a 'grow' is guaranteed to be error free, so there :-).
+
+> attempt to access beyond end of device dm-61: rw=0,
+> want=238995038208, limit=215943192576
+
+It looks like the underlying DM logical volume is smaller than
+the new size of the filesystem, which is strange as 'xfs_growfs'
+is supposed to fetch the size of the underlying block device if
+none is specified explicitly on the command line. The different
+is about 10% or 10TB, so it is far from trivial.
+
+Looking at the superblock dumps there are some pretty huge
+discrepancies, 
+
+  -bash-3.1# xfs_db -r -c 'sb 0' -c p /dev/logfs-sessions/sessions
+  magicnum = 0x58465342
+  blocksize = 4096
+  dblocks = 29874379776
+  rblocks = 0
+  rextents = 0
+  uuid = fc8bdf76-d962-43c1-ae60-b85f378978a6
+  logstart = 0
+  rootino = 2048
+  rbmino = 2049
+  rsumino = 2050
+  rextsize = 384
+  agblocks = 268435328
+  agcount = 112
+  [ ... ]
+  -bash-3.1# xfs_db -r -c 'sb 2' -c p /dev/logfs-sessions/sessions
+  magicnum = 0x58465342
+  blocksize = 4096
+  dblocks = 24111418368
+  rblocks = 0
+  rextents = 0
+  uuid = fc8bdf76-d962-43c1-ae60-b85f378978a6
+  logstart = 0
+  rootino = 2048
+  rbmino = 2049
+  rsumino = 2050
+  rextsize = 384
+  agblocks = 268435328
+  agcount = 90
+  [ ... ]
+
+The 'dblocks' field is rather different, even if the 'uuid' and
+'agblocks' is the same, and 'agcount' is also rather different.
+In SB 0 'dblocks' 29874379776 means size 238995038208, which is
+value of 'want' above. The products of 'agcount' and 'agblocks'
+fit with the sizes.
+
+It looks like that the filesystem was "grown" from ~92TiB to
+~114TiB on a storage device that is reported as ~103TiB
+long. Again, very strange.
+
+My impression is that not enough history/context has been
+provided to enable a good guess at what has happened and how to
+undo the consequent damage.
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
