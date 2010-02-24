@@ -1,17 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1N1CARt170471 for <xfs@oss.sgi.com>; Mon, 22 Feb 2010 19:12:11 -0600
-Date: Mon, 22 Feb 2010 20:14:25 -0500
-From: "J. Bruce Fields" <bfields@fieldses.org>
-Subject: Re: [PATCH 0/2] commit_metadata export operation v6
-Message-ID: <20100223011425.GD17409@fieldses.org>
-References: <20100217200426.13409.32688.stgit@case>
-	<20100220233804.GA15015@fieldses.org>
-	<20100222195353.GD10942@sgi.com>
+	o1O7BafJ009688 for <xfs@oss.sgi.com>; Wed, 24 Feb 2010 01:11:36 -0600
+Received: from moutng.kundenserver.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B62081CF4217
+	for <xfs@oss.sgi.com>; Tue, 23 Feb 2010 23:12:56 -0800 (PST)
+Received: from moutng.kundenserver.de (moutng.kundenserver.de
+	[212.227.126.186]) by cuda.sgi.com with ESMTP id
+	E3SEMh6wrgPOswKq for <xfs@oss.sgi.com>;
+	Tue, 23 Feb 2010 23:12:56 -0800 (PST)
+Date: Tue, 23 Feb 2010 23:12:40 -0800 (PST)
+From: Christian Kujau <lists@nerdbynature.de>
+Subject: Re: [patch 0/7] per-bdi flushing model improvements. reiser4
+In-Reply-To: <20100222084753.0a5d613c.buchner.johannes@gmx.at>
+Message-ID: <alpine.DEB.2.01.1002232307380.28195@bogon.housecafe.de>
+References: <201002020255.46920.edward.shishkin@gmail.com>
+	<20100202081728.GA2384@infradead.org>
+	<4B6843E9.9070600@gmail.com> <20100202194208.GD5733@kernel.dk>
+	<5e2ec5ac1002021345g569c743dtc5ccf77cde6738ae@mail.gmail.com>
+	<4B68A68C.6030001@gmail.com>
+	<20100222084753.0a5d613c.buchner.johannes@gmx.at>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100222195353.GD10942@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,32 +33,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: bpm@sgi.com
-Cc: linux-nfs@vger.kernel.org, aelder@sgi.com, xfs@oss.sgi.com
+To: Johannes Buchner <buchner.johannes@gmx.at>
+Cc: Artem Bityutskiy <Artem.Bityutskiy@nokia.com>, ReiserFS Development List <reiserfs-devel@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, Ronni Holm-Nielsen <theronni@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, xfs@oss.sgi.com, Edward Shishkin <edward.shishkin@gmail.com>
 
-On Mon, Feb 22, 2010 at 01:53:53PM -0600, bpm@sgi.com wrote:
-> Hey Bruce,
-> 
-> On Sat, Feb 20, 2010 at 06:38:04PM -0500, J. Bruce Fields wrote:
-> > On Wed, Feb 17, 2010 at 02:05:05PM -0600, Ben Myers wrote:
-> > > Hey Bruce,
-> > > 
-> > > Here is the latest version of the knfsd sync changes.  I have addressed the
-> > > suggestions provided by Christoph, Trond, Dave, and Alex.
-> > > 
-> > > In this latest version I have fixed up the few nits in the nfsd patch that
-> > > Christoph pointed out yesterday.  I also have simplified the xfs patch as
-> > > suggested by Dave.
-> > 
-> > Thanks, applying.
-> > 
-> > (Do you the second (xfs) patch to go in through the nfsd tree as well,
-> > or should that go in through xfs maintainers after the nfsd merge?)
-> 
-> I chatted with Alex.  It sounds like the best thing is for both patches
-> to go in through the nfsd tree since they need to go in order.
+On Mon, 22 Feb 2010 at 08:47, Johannes Buchner wrote:
+> It'd be great if someone could solve this, as the reiser4 patch is
+> not usable in its current state, with or without my illfated attempts
+> to fix it.
 
-OK, thanks, committed.--b.
+FWIW, I'm running Linus' latest -git with refs/heads/reiser4 on top[0], no 
+issues during 2.6.33-git so far. Try it, if you don't like 
+manually applying patches either :-)
+
+Christian.
+
+[0] http://git.zen-kernel.org/?p=kernel/zen.git;a=shortlog;h=refs/heads/reiser4
+-- 
+BOFH excuse #275:
+
+Bit rot
 
 _______________________________________________
 xfs mailing list
