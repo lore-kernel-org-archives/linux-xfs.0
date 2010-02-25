@@ -1,25 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1P8QEim087845 for <xfs@oss.sgi.com>; Thu, 25 Feb 2010 02:26:15 -0600
-Received: from SBAPEXCH05.ad.corp.expertcity.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 009AF1CF8852
-	for <xfs@oss.sgi.com>; Thu, 25 Feb 2010 00:27:37 -0800 (PST)
-Received: from SBAPEXCH05.ad.corp.expertcity.com
-	(sbapexch05.ad.corp.expertcity.com [216.219.126.165]) by
-	cuda.sgi.com with ESMTP id 5dJYJToBvd11P0eB for
-	<xfs@oss.sgi.com>; Thu, 25 Feb 2010 00:27:37 -0800 (PST)
-From: Joe Allen <Joe.Allen@citrix.com>
-Date: Thu, 25 Feb 2010 00:27:28 -0800
-Subject: RE: xfs_growfs failure....
-Message-ID: <E51793F9F4FAD54A8C1774933D8E500006B64A29E2@sbapexch05>
-References: <E51793F9F4FAD54A8C1774933D8E500006B64A2687@sbapexch05>
-	<19333.23937.956036.716@tree.ty.sabi.co.uk>
-	<E51793F9F4FAD54A8C1774933D8E500006B64A2793@sbapexch05>
-	<20100224230211.GL16175@discord.disaster>
-In-Reply-To: <20100224230211.GL16175@discord.disaster>
-Content-Language: en-US
-MIME-Version: 1.0
+	o1PK5RSp126084 for <xfs@oss.sgi.com>; Thu, 25 Feb 2010 14:05:27 -0600
+Subject: Re: [PATCH] xfs: Non-blocking inode locking in IO completion
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <1266384989-28928-1-git-send-email-david@fromorbit.com>
+References: <1266384989-28928-1-git-send-email-david@fromorbit.com>
+Date: Thu, 25 Feb 2010 14:06:46 -0600
+Message-ID: <1267128406.1905.18.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,122 +23,56 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Peter Grandi <pg_xf2@xf2.for.sabi.co.UK>, Linux XFS <xfs@oss.sgi.com>
+Cc: xfs@oss.sgi.com
 
-Dave & Peter 
+On Wed, 2010-02-17 at 16:36 +1100, Dave Chinner wrote:
+> The introduction of barriers to DM loop devices (e.g. dm-crypt) has
+> created a new IO order completion dependency that XFS does not
+> handle. That is, the completion of log IOs (which have barriers) in
+> the loop filesystem are now dependent on completion of data IO in
+> the backing filesystem.
 
-We were successfully able to get the FS back on line using the approach you outlined below. 
-Thank you very much for your invaluable assistance. As long as we are in DR, 
-We'll upgrade along the lines suggested. 
+One comment, below
 
-Thanks again!
+. . .
+
+> +	if (ioend->io_type != IOMAP_READ) {
+> +		error = xfs_setfilesize(ioend);
+> +		ASSERT(!error || error == EAGAIN);
+>  	}
+> +
+> +	/*
+> +	 * If we didn't complete processing of the ioend, requeue it to the
+> +	 * tail of the workqueue for another attempt later. Otherwise destroy
+> +	 * it.
+> +	 */
+> +	if (error == EAGAIN) {
+
+It's not a problem now (and may never be), but it's
+conceivable error could have been set to the return
+value from xfs_iomap_write_unwritten() to have value
+EAGAIN.  It might have been better to include this
+block inside the if (ioend->io_type != IOMAP_READ) {
+block, above.
+
+(I'll take it as is, however...)
+
+					-Alex
 
 
 
-On Wed, Feb 24, 2010 at 10:37:30AM -0800, Joe Allen wrote:
-> Thanks so much for the help interpreting. 
-> We are extremely grateful for your help. 
-> I have tried to include some more information you all suggest might help:
-> 
-> 
-> >> It looks like that the filesystem was "grown" from ~92TiB to
-> ~114TiB on a storage device that is reported as ~103TiB
-> long. Again, very strange.
-> 
-> cat /proc/partitions
-> [snip]
-> 253    61 107971596288 dm-61
-> 
-> = ~100TB. 
 
-OK.
-
-> >>112 AGs of 1TiB each - that confirms the grow succeeded and it was able to write metadata to disk 
-> >>between 100 and 111 TiB without errors being reported. That
-> >>implies the block device must have been that big at some
-> >>point...
-> 
-> There were never 110 TB; only 100 were ever there...so I am not clear on this point. 
-
-Well, XFS writes the new AG header metadata synchronously to the
-expanded region before making the superblock changes. If they didn't
-error out, either:
-
-	a. the block device was large enough
-	b. the writes were silently ignored by the block device
-	   (buggy block device)
-	c. the block device wrapped them back around to the front of
-	   the device (buggy block device) and overwrote stuff => fs
-	   corruption.
-
-SO regardless of what actually happened, you're going to need to
-run xfs_repair after the main superblock is fixed up.
-
-> >>My impression is that not enough history/context has been
-> >>provided to enable a good guess at what has happened and how to
-> >>undo the consequent damage.You suggested more context might help: 
-> 
-> 
-> These were the commands run: 
+> +		atomic_inc(&ioend->io_remaining);
+> +		xfs_finish_ioend(ioend, 0);
+> +		/* ensure we don't spin on blocked ioends */
+> +		delay(1);
+> +	} else
+> +		xfs_destroy_ioend(ioend);
+>  }
 >  
-> pvcreate /dev/dm-50 /dev/dm-51 /dev/dm-52 /dev/dm-53 /dev/dm-54 /dev/dm-55
-> vgextend logfs-sessions /dev/dm-50 /dev/dm-51 /dev/dm-52 /dev/dm-53 /dev/dm-54 /dev/dm-55
-> lvextend -i 3 -I 512 -l +1406973 /dev/logfs-sessions/sessions /dev/dm-50 /dev/dm-51 /dev/dm-52
-> lvextend -i 3 -I 512 -l +1406973 /dev/logfs-sessions/sessions /dev/dm-53 /dev/dm-54 /dev/dm-55
-> xfs_growfs  /u01 (which failed)
-> xfs_growfs -d /u01 (which did not error out)
-> touch /u01/a
+>  /*
 
-Ok, 2.8.20 is old enough to have the userspace growfs bugs, and I'd
-say the kernel is old enough to have the growfs bugs as well. It is
-entirely possible that executing it twice was the cause of this.
 
-> I am sorry I don't have the output of the xfs_growfs command any longer. 
-> Very shortly after someone noticed the filesystem was essentially offline -- input output error. 
-> Tried unmounting but couldn't... got out of memory errors even when doing ls.  
-> Tried rebooting and now FS is off line. 
-> 
-> The FS was 90TB, the purpose of the exercise was to grow it to 100TB. 
-> 
-> This is:
-> 
-> -bash-3.1# uname -a
-> Linux xx.com 2.6.18-53.1.19.el5 #1 SMP Tue Apr 22 03:01:10 EDT 2008 x86_64 x86_64 x86_64 GNU/Linux
-> 
-> rpm -qa | grep xfs
-> kmod-xfs-0.4-1.2.6.18_8.1.1.el5.centos.plus.1
-> xfsprogs-2.8.20-1.el5.centos
-
-> I've read about a case where Mr Chinner used xfd_db to set agcount
-> and in some cases fix things up.
-> Don't know if I am a candidate for that approach... 
-
-That's exactly what is has to be done to get the superblock back
-into the correct shape to enable a repair run to occur.
-
-First, upgrade your userspace tools to the latest so you pick up all
-the xfs_repair speedups and memory usage reductions. Then
-calculate the correct block count for 100AGs (dblocks = agcount *
-agblocks), modify the agcount and dblocks fields using xfs_db, then 
-xfs_repair -n to confirm that it finds the superblock valid.
-
-If the superblock is valid, you can then probably mount the
-filesystem to replay the log. Unmount immediately afterwards. Note
-that this may replay the bad growfs transaction, so you might need
-to use xfs_db to reset the superblock again. Once this is done you
-can run repair for real after which you should have a usable
-filesytem.
-
-This won't have restored the filesystem to the exact size of the
-underlying block device - a subsequent grow would be needed to
-extend the fs to include a partial AG at the end to use the
-remaining space.
-
-Good luck!
-
-Cheers,
-
-Dave.
 
 _______________________________________________
 xfs mailing list
