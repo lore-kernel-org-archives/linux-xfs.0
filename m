@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1ON0sx6055279 for <xfs@oss.sgi.com>; Wed, 24 Feb 2010 17:00:55 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 41B0C1CF6FA8
-	for <xfs@oss.sgi.com>; Wed, 24 Feb 2010 15:02:15 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	r8MmBVi7EnfgPhVO for <xfs@oss.sgi.com>;
-	Wed, 24 Feb 2010 15:02:15 -0800 (PST)
-Date: Thu, 25 Feb 2010 10:02:11 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs_growfs failure....
-Message-ID: <20100224230211.GL16175@discord.disaster>
+	o1P8QEim087845 for <xfs@oss.sgi.com>; Thu, 25 Feb 2010 02:26:15 -0600
+Received: from SBAPEXCH05.ad.corp.expertcity.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 009AF1CF8852
+	for <xfs@oss.sgi.com>; Thu, 25 Feb 2010 00:27:37 -0800 (PST)
+Received: from SBAPEXCH05.ad.corp.expertcity.com
+	(sbapexch05.ad.corp.expertcity.com [216.219.126.165]) by
+	cuda.sgi.com with ESMTP id 5dJYJToBvd11P0eB for
+	<xfs@oss.sgi.com>; Thu, 25 Feb 2010 00:27:37 -0800 (PST)
+From: Joe Allen <Joe.Allen@citrix.com>
+Date: Thu, 25 Feb 2010 00:27:28 -0800
+Subject: RE: xfs_growfs failure....
+Message-ID: <E51793F9F4FAD54A8C1774933D8E500006B64A29E2@sbapexch05>
 References: <E51793F9F4FAD54A8C1774933D8E500006B64A2687@sbapexch05>
 	<19333.23937.956036.716@tree.ty.sabi.co.uk>
 	<E51793F9F4FAD54A8C1774933D8E500006B64A2793@sbapexch05>
+	<20100224230211.GL16175@discord.disaster>
+In-Reply-To: <20100224230211.GL16175@discord.disaster>
+Content-Language: en-US
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <E51793F9F4FAD54A8C1774933D8E500006B64A2793@sbapexch05>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,8 +32,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Joe Allen <Joe.Allen@citrix.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: Peter Grandi <pg_xf2@xf2.for.sabi.co.UK>, Linux XFS <xfs@oss.sgi.com>
+
+Dave & Peter 
+
+We were successfully able to get the FS back on line using the approach you outlined below. 
+Thank you very much for your invaluable assistance. As long as we are in DR, 
+We'll upgrade along the lines suggested. 
+
+Thanks again!
+
+
 
 On Wed, Feb 24, 2010 at 10:37:30AM -0800, Joe Allen wrote:
 > Thanks so much for the help interpreting. 
@@ -138,9 +149,6 @@ Good luck!
 Cheers,
 
 Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
