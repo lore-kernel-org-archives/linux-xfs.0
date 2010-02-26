@@ -1,17 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o1QHukgZ199093 for <xfs@oss.sgi.com>; Fri, 26 Feb 2010 11:56:46 -0600
-Subject: Re: [PATCH V2] xfs: Non-blocking inode locking in IO completion
+	o1QIRkld200519 for <xfs@oss.sgi.com>; Fri, 26 Feb 2010 12:27:46 -0600
+Received: from cf--amer001e--3.americas.sgi.com
+	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0C524AC042
+	for <xfs@oss.sgi.com>; Fri, 26 Feb 2010 10:29:07 -0800 (PST)
+Subject: xfstests: honor comments in the test group file
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20100225230628.GB18369@discord.disaster>
-References: <1266384989-28928-1-git-send-email-david@fromorbit.com>
-	<20100217192938.GA14015@infradead.org>
-	<20100217211312.GQ28392@discord.disaster>
-	<20100218123512.GA6016@infradead.org>
-	<20100225230628.GB18369@discord.disaster>
-Date: Fri, 26 Feb 2010 11:58:06 -0600
-Message-ID: <1267207086.2756.7.camel@doink>
+Date: Fri, 26 Feb 2010 12:29:07 -0600
+Message-ID: <1267208947.2756.11.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -26,46 +24,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, 2010-02-26 at 10:06 +1100, Dave Chinner wrote:
-> On Thu, Feb 18, 2010 at 07:35:13AM -0500, Christoph Hellwig wrote:
-> > On Thu, Feb 18, 2010 at 08:13:12AM +1100, Dave Chinner wrote:
-> > > > The patch looks good to me - while I hate introducing random delay()
-> > > > calls I don't really see a way around this. 
-> > > 
-> > > I thought about using queue_delayed_work(), but then the change
-> > > became much bigger and has other side effects like increasing the
-> > > size of the ioend structure.
-> > 
-> > Yes, now that the normal work struct and the delayed work struct are
-> > different it would be a pain, agreed.
-> 
-> Version with updated commit message below.
+There are some spots in the "group" file where test numbers have
+groups listed after a '#' character, clearly intending for those
+groups to be commented out.  But the way the group list gets
+generated that commenting doesn't work, and in fact these tests
+explicitly *are* included in such commented-out groups.
 
-This looks good and I'll be incorporating this version.
-Thanks for updating it.
+This patch fixes that, stripping out all comments (which start with
+a '#' character and end with a newline) from the file before
+building the set of test numbers for a group.
 
-					-Alex
+Signed-off-by: Alex Elder <aelder@sgi.com>
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> xfs: Non-blocking inode locking in IO completion
-> 
-> The introduction of barriers to loop devices has created a new IO
-> order completion dependency that XFS does not handle. The loop
-> device implements barriers using fsync and so turns a log IO in the
-> XFS filesystem on the loop device into a data IO in the backing
-> filesystem. That is, the completion of log IOs in the loop
-> filesystem are now dependent on completion of data IO in the backing
-> filesystem.
-. . .
+---
+ common |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+Index: b/common
+===================================================================
+--- a/common
++++ b/common
+@@ -58,9 +58,10 @@ do
+     if $group
+     then
+        # arg after -g
+-       group_list=`sed -n <group -e 's/$/ /' -e "/^[0-9][0-9][0-9].*
+$r /"'{
+-s/ .*//p
+-}'`
++       group_list=$(sed -n < group \
++                       -e 's/#.*//' \
++                       -e 's/$/ /' \
++                       -e "/^[0-9][0-9][0-9].* $r /"'{ s/ .*//p }')
+        if [ -z "$group_list" ]
+        then
+            echo "Group \"$r\" is empty or not defined?"
+
 
 _______________________________________________
 xfs mailing list
