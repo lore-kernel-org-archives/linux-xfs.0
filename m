@@ -1,20 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o22HLV2I001633 for <xfs@oss.sgi.com>; Tue, 2 Mar 2010 11:21:32 -0600
-Received: from SBAPEXCH05.ad.corp.expertcity.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A68FF13E9DD6
-	for <xfs@oss.sgi.com>; Tue,  2 Mar 2010 09:22:57 -0800 (PST)
-Received: from SBAPEXCH05.ad.corp.expertcity.com
-	(sbapexch05.ad.corp.expertcity.com [216.219.126.165]) by
-	cuda.sgi.com with ESMTP id zwqar3etJKsfaPkB for
-	<xfs@oss.sgi.com>; Tue, 02 Mar 2010 09:22:57 -0800 (PST)
-From: Jason Vagalatos <Jason.Vagalatos@citrixonline.com>
-Date: Tue, 2 Mar 2010 09:22:34 -0800
-Subject: Stalled xfs_repair on 100TB filesystem
-Message-ID: <DD534F7C25BFA14FB18E6D603135D7EA0A11E82ECB@sbapexch05>
-Content-Language: en-US
-MIME-Version: 1.0
+	o22K9PVk011132 for <xfs@oss.sgi.com>; Tue, 2 Mar 2010 14:09:25 -0600
+Received: from vms173011pub.verizon.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 36CFA13EACAD
+	for <xfs@oss.sgi.com>; Tue,  2 Mar 2010 12:10:50 -0800 (PST)
+Received: from vms173011pub.verizon.net (vms173011pub.verizon.net
+	[206.46.173.11]) by cuda.sgi.com with ESMTP id UFroIFiUXRo3DYS0
+	for <xfs@oss.sgi.com>; Tue, 02 Mar 2010 12:10:50 -0800 (PST)
+Received: from [192.168.10.2] ([unknown] [98.114.168.230])
+	by vms173011.mailsrvcs.net
+	(Sun Java(tm) System Messaging Server 7u2-7.02 32bit (built Apr 16
+	2009)) with ESMTPA id <0KYO00KGQ81M2SSC@vms173011.mailsrvcs.net> for
+	xfs@oss.sgi.com; Tue, 02 Mar 2010 14:10:34 -0600 (CST)
+Subject: Re: Proposed patch for xfsprogs
+From: C Linus Hicks <linush@verizon.net>
+In-reply-to: <1267454279.28691.45.camel@lh10.linush.net>
+References: <1267311250.28691.40.camel@lh10.linush.net>
+	<20100301031642.GG22370@discord.disaster>
+	<1267454279.28691.45.camel@lh10.linush.net>
+Date: Tue, 02 Mar 2010 15:10:33 -0500
+Message-id: <1267560633.28691.67.camel@lh10.linush.net>
+MIME-version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,77 +30,138 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Hello,
-On Friday 2/26 I started an xfs_repair on a 100TB filesystem:
+This patch is for reducing the verbosity of the xfs_db "blockget"
+command especially when using "-v" by listing only start and end block
+numbers for a range, rather than listing all individual blocks. For a
+sample 50gb filesystem with around 50% free space and about 20 corrupted
+sectors, the logfile size drops from 900mb to 3mb.
 
-#> nohup xfs_repair -v -l /dev/logfs-sessions/logdev /dev/logfs-sessions/se=
-ssions > /root/xfs_repair.out.logfs1.sjc.02262010 &
+Here's my fixed patch:
 
-I've been monitoring the process with 'top' and tailing the output file fro=
-m the redirect above.=A0 I believe the repair has "stalled".=A0 When the pr=
-ocess was running 'top' showed almost all physical memory consumed and 12.6=
-G of virt memory consumed by xfs_repair.=A0 It made it all the way to Phase=
- 6 and has been sitting at agno =3D 14 for almost 48 hours.=A0 The memory c=
-onsumption of xfs_repair has ceased but the process is still "running" and =
-consuming 100% CPU:
+--- a/xfsprogs-3.1.1/db/check.c	2010-01-29 14:46:13.000000000 -0500
++++ b/xfsprogs-3.1.1/db/check.c	2010-03-01 17:47:01.000000000 -0500
+@@ -1509,6 +1509,8 @@
+ {
+ 	xfs_extlen_t	i;
+ 	int		mayprint;
++	int		pcnt = 0;
++	int		first_prnt = -1;
+ 	char		*p;
+ 
+ 	if (!check_range(agno, agbno, len))  {
+@@ -1520,10 +1522,25 @@
+ 	mayprint = verbose | blist_size;
+ 	for (i = 0, p = &dbmap[agno][agbno]; i < len; i++, p++) {
+ 		*p = (char)type2;
+-		if (mayprint && (verbose || CHECK_BLISTA(agno, agbno + i)))
+-			dbprintf(_("setting block %u/%u to %s\n"), agno, agbno + i,
+-				typename[type2]);
++		if (mayprint && (verbose || CHECK_BLISTA(agno, agbno + i))) {
++			if (first_prnt == -1) {
++				dbprintf(_("setting block %u/%u to %s\n"),
++					 agno, agbno + i, typename[type2]);
++				first_prnt = i;
++			}
++			else if ((first_prnt + pcnt + 1) == i) {
++				pcnt++;
++			}
++			else {
++				dbprintf(_("    ... until %u/%u\n"),
++					agno, agbno + first_prnt + pcnt);
++				first_prnt = -1;
++				pcnt = 0;
++			}
++		}
+ 	}
++	if (pcnt > 0)
++		dbprintf(_("    ... until %u/%u\n"), agno, agbno + len - 1);
+ }
+ 
+ static void
+@@ -4544,6 +4561,8 @@
+ {
+ 	xfs_extlen_t	i;
+ 	inodata_t	**idp;
++	int		pcnt = 0;
++	int		first_prnt = -1;
+ 	int		mayprint;
+ 
+ 	if (!check_inomap(agno, agbno, len, id->ino))
+@@ -4552,10 +4571,26 @@
+ 	for (i = 0, idp = &inomap[agno][agbno]; i < len; i++, idp++) {
+ 		*idp = id;
+ 		if (mayprint &&
+-		    (verbose || id->ilist || CHECK_BLISTA(agno, agbno + i)))
+-			dbprintf(_("setting inode to %lld for block %u/%u\n"),
+-				id->ino, agno, agbno + i);
++		    (verbose || id->ilist || CHECK_BLISTA(agno, agbno + i))) {
++			if (first_prnt == -1) {
++				dbprintf(_("setting inode to %#llx for block "
++					   "%u/%u\n"),
++					id->ino, agno, agbno + i);
++				first_prnt = i;
++			}
++			else if ((first_prnt + pcnt + 1) == i) {
++				pcnt++;
++			}
++			else {
++				dbprintf(_("\t\t      ... until %u/%u\n"),
++					agno, agbno + first_prnt + pcnt);
++				first_prnt = -1;
++				pcnt = 0;
++			}
++		}
+ 	}
++	if (pcnt > 0)
++		dbprintf(_("\t\t      ... until %u/%u\n"), agno, agbno + len - 1);
+ }
+ 
+ static void
+@@ -4575,6 +4610,8 @@
+ {
+ 	xfs_extlen_t	i;
+ 	inodata_t	**idp;
++	int		pcnt = 0;
++	int		first_prnt = -1;
+ 	int		mayprint;
+ 
+ 	if (!check_rinomap(bno, len, id->ino))
+@@ -4584,10 +4621,26 @@
+ 	     i < len;
+ 	     i++, idp++) {
+ 		*idp = id;
+-		if (mayprint && (verbose || id->ilist || CHECK_BLIST(bno + i)))
+-			dbprintf(_("setting inode to %lld for rtblock %llu\n"),
++		if (mayprint &&
++		    (verbose || id->ilist || CHECK_BLIST(bno + i))) {
++		    if (first_prnt == -1) {
++			dbprintf(_("setting inode to %#llx for rtblock %llu\n"),
+ 				id->ino, bno + i);
++			first_prnt = i;
++		    }
++		    else if ((first_prnt + pcnt + 1) == i) {
++			pcnt++;
++		    }
++		    else {
++			dbprintf(_("\t\t      ... until %llu\n"),
++				bno + first_prnt + pcnt);
++			first_prnt = -1;
++			pcnt = 0;
++		    }
++		}
+ 	}
++	if (pcnt > 0)
++		dbprintf(_("\t\t      ... until %llu\n"), bno + len - 1);
+ }
+ 
+ static void
 
-top - 10:10:37 up 3 days, 21:06,=A0 1 user,=A0 load average: 1.20, 1.13, 1.=
-09
-Tasks:=A0=A0 1 total,=A0=A0 1 running,=A0=A0 0 sleeping,=A0=A0 0 stopped,=
-=A0=A0 0 zombie
-Cpu(s): 12.5%us,=A0 0.0%sy,=A0 0.0%ni, 87.5%id,=A0 0.0%wa,=A0 0.0%hi,=A0 0.=
-0%si,=A0 0.0%st
-Mem:=A0=A0 8177380k total,=A0=A0 896668k used,=A0 7280712k free,=A0=A0 2471=
-00k buffers
-Swap: 56525356k total,=A0=A0 173852k used, 56351504k free,=A0=A0 304588k ca=
-ched
-
-=A0 PID =A0=A0=A0USER=A0=A0 PR=A0 NI=A0 VIRT=A0 RES=A0 SHR S =A0=A0%CPU %ME=
-M=A0=A0=A0 TIME+=A0 COMMAND=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0
-32705 =A0root=A0=A0=A0=A0 25=A0=A0 0=A0 160m=A0 95m=A0 704 R=A0 =A0=A0100=
-=A0 =A0=A0=A0=A0=A0=A01.2=A0=A0 =A0=A0=A02629:53 =A0=A0=A0xfs_repair
-
-#> tail -f -n1000 xfs_repair.out.logfs1.sjc.02262010
-........
-=A0=A0=A0=A0=A0=A0=A0 - agno =3D 98
-=A0=A0=A0=A0=A0=A0=A0 - agno =3D 99
-=A0=A0=A0=A0=A0=A0=A0 - reset superblock...
-Phase 6 - check inode connectivity...
-=A0=A0=A0=A0=A0=A0=A0 - resetting contents of realtime bitmap and summary i=
-nodes
-=A0=A0=A0=A0=A0=A0=A0 - traversing filesystem ...
-=A0=A0=A0=A0=A0=A0=A0 - agno =3D 0
-=A0=A0=A0=A0=A0=A0=A0 - agno =3D 1
-=A0=A0=A0=A0=A0=A0=A0 - agno =3D 2
-=A0=A0=A0=A0=A0=A0=A0 - agno =3D 3
-=A0=A0=A0=A0=A0=A0=A0 - agno =3D 4
-=A0=A0=A0=A0=A0=A0=A0 - agno =3D 5
-=A0=A0=A0=A0=A0=A0=A0 - agno =3D 6
-=A0=A0=A0=A0=A0=A0=A0 - agno =3D 7
-=A0=A0=A0=A0=A0=A0=A0 - agno =3D 8
-=A0=A0=A0=A0=A0 =A0=A0- agno =3D 9
-=A0=A0=A0=A0=A0=A0=A0 - agno =3D 10
-=A0=A0=A0=A0=A0=A0=A0 - agno =3D 11
-=A0=A0=A0=A0=A0=A0=A0 - agno =3D 12
-=A0=A0=A0=A0=A0=A0=A0 - agno =3D 13
-=A0=A0=A0=A0=A0=A0=A0 - agno =3D 14
-<stopped here, fs has 99 ag's>
-
-Is there anything I can do at this point to salvage the repair?=A0 I do not=
- want to kill the repair process based on the amount of time it takes to ru=
-n.=A0 If I do kill it, is there any risk of damaging the filesystem?
-
-Any help would be greatly appreciated.
-
-Thank you
 
 _______________________________________________
 xfs mailing list
