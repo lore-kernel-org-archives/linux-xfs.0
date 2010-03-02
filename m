@@ -1,26 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o21EaoCC175976 for <xfs@oss.sgi.com>; Mon, 1 Mar 2010 08:36:51 -0600
-Received: from vms173019pub.verizon.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2574E205DEE
-	for <xfs@oss.sgi.com>; Mon,  1 Mar 2010 06:38:15 -0800 (PST)
-Received: from vms173019pub.verizon.net (vms173019pub.verizon.net
-	[206.46.173.19]) by cuda.sgi.com with ESMTP id wo8mrzIeef8CWe2X
-	for <xfs@oss.sgi.com>; Mon, 01 Mar 2010 06:38:15 -0800 (PST)
-Received: from [192.168.10.2] ([unknown] [98.114.168.230])
-	by vms173019.mailsrvcs.net
-	(Sun Java(tm) System Messaging Server 7u2-7.02 32bit (built Apr 16
-	2009)) with ESMTPA id <0KYL007U9XZBYCZ0@vms173019.mailsrvcs.net> for
-	xfs@oss.sgi.com; Mon, 01 Mar 2010 08:37:59 -0600 (CST)
-Subject: Re: Proposed patch for xfsprogs
-From: C Linus Hicks <linush@verizon.net>
-In-reply-to: <20100301031642.GG22370@discord.disaster>
-References: <1267311250.28691.40.camel@lh10.linush.net>
-	<20100301031642.GG22370@discord.disaster>
-Date: Mon, 01 Mar 2010 09:37:59 -0500
-Message-id: <1267454279.28691.45.camel@lh10.linush.net>
-MIME-version: 1.0
+	o22HLV2I001633 for <xfs@oss.sgi.com>; Tue, 2 Mar 2010 11:21:32 -0600
+Received: from SBAPEXCH05.ad.corp.expertcity.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A68FF13E9DD6
+	for <xfs@oss.sgi.com>; Tue,  2 Mar 2010 09:22:57 -0800 (PST)
+Received: from SBAPEXCH05.ad.corp.expertcity.com
+	(sbapexch05.ad.corp.expertcity.com [216.219.126.165]) by
+	cuda.sgi.com with ESMTP id zwqar3etJKsfaPkB for
+	<xfs@oss.sgi.com>; Tue, 02 Mar 2010 09:22:57 -0800 (PST)
+From: Jason Vagalatos <Jason.Vagalatos@citrixonline.com>
+Date: Tue, 2 Mar 2010 09:22:34 -0800
+Subject: Stalled xfs_repair on 100TB filesystem
+Message-ID: <DD534F7C25BFA14FB18E6D603135D7EA0A11E82ECB@sbapexch05>
+Content-Language: en-US
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,96 +23,77 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Mon, 2010-03-01 at 14:16 +1100, Dave Chinner wrote:
-> On Sat, Feb 27, 2010 at 05:54:10PM -0500, C. Linus Hicks wrote:
-> > During my recent experience with having to reconstruct parts of an XFS
-> > filesystem that got corrupted as a result of several bad blocks, I found
-> > that some of the information displayed using "blockget -v" was pretty
-> > useless, and I am proposing the following code change to introduce a
-> > slight summarization.
-> > 
-> > Repeating lines of "setting block <foo> to <bar>" and "setting inode to
-> > <foo> for {,rt}block <bar>" will be summarized down to two lines.
-> 
-> Agreed, that would certainly help reduce the verbosity of the output.
-> However, I don't think the patch is correct.
-> 
-> > --- a/xfsprogs-3.1.1/db/check.c	2010-01-29 14:46:13.000000000 -0500
-> > +++ b/xfsprogs-3.1.1/db/check.c	2010-02-27 17:02:14.111418960 -0500
-> > @@ -1509,6 +1509,7 @@
-> >  {
-> >  	xfs_extlen_t	i;
-> >  	int		mayprint;
-> > +	int		isfirst = 1;
-> >  	char		*p;
-> >  
-> >  	if (!check_range(agno, agbno, len))  {
-> > @@ -1520,10 +1521,15 @@
-> >  	mayprint = verbose | blist_size;
-> >  	for (i = 0, p = &dbmap[agno][agbno]; i < len; i++, p++) {
-> >  		*p = (char)type2;
-> > -		if (mayprint && (verbose || CHECK_BLISTA(agno, agbno + i)))
-> > +		if (isfirst && mayprint && (verbose || CHECK_BLISTA(agno, agbno + i))) {
-> >  			dbprintf(_("setting block %u/%u to %s\n"), agno, agbno + i,
-> >  				typename[type2]);
-> > +			isfirst = 0;
-> > +		}
-> >  	}
-> > +	if ((len > 1) && mayprint && (verbose || CHECK_BLISTA(agno, agbno + i)))
-> > +		dbprintf(_("    ... until %u/%u\n"),
-> > +				agno, agbno + len - 1);
-> >  }
-> 
-> This doesn't take into account that not all blocks in the extent
-> range might be bad and the change is actually doing something. i.e.
-> only is CHECK_BLISTA() evaluating as true is there a printout
-> occurring (unless you specify verbose mode). Hence if only interior
-> portions are being changed or there are multiple ranges being
-> changed, this output won't reflect the errors being detected
-> accurately.
-> 
-> The other sections of the patch have the same issue.
-> 
-> I think that changing it to something like:
-> 
-> 	int	last_print == -1;
-> .....
-> 		if (mayprint && (verbose || CHECK_BLISTA(agno, agbno + i))) {
-> 			if (i > 0 && last_print == i - 1) {
-> 				last_print = i;
-> 				continue;
-> 			}
-> 			if (last_print != i - 1) {
-> 				dbprintf(_("    ... until %u/%u\n"),
-> 					agno, agbno + last_print);
-> 				last_print == -1;
-> 			}
-> 			if (last_print == -1) {
-> 				dbprintf(_("setting block %u/%u to %s\n"),
-> 					agno, agbno + i, typename[type2]);
-> 				last_print = i;
-> 			}
-> 		}
-> 	}
-> 	if (len > 1 && last_print != -1)
-> 		dbprintf(_("    ... until %u/%u\n"), agno, agbno + last_print);
-> 
-> would do the trick. What do you think?
+Hello,
+On Friday 2/26 I started an xfs_repair on a 100TB filesystem:
 
-You're quite right, I'm glad you looked close enough to spot that. Sorry
-I missed it. There's one case your code doesn't handle correctly, where
-len > 0 and last_print == -1 and i == len - 1. Let me rework the code
-and do some testing then I will re-submit.
+#> nohup xfs_repair -v -l /dev/logfs-sessions/logdev /dev/logfs-sessions/se=
+ssions > /root/xfs_repair.out.logfs1.sjc.02262010 &
 
-Linus
+I've been monitoring the process with 'top' and tailing the output file fro=
+m the redirect above.=A0 I believe the repair has "stalled".=A0 When the pr=
+ocess was running 'top' showed almost all physical memory consumed and 12.6=
+G of virt memory consumed by xfs_repair.=A0 It made it all the way to Phase=
+ 6 and has been sitting at agno =3D 14 for almost 48 hours.=A0 The memory c=
+onsumption of xfs_repair has ceased but the process is still "running" and =
+consuming 100% CPU:
 
+top - 10:10:37 up 3 days, 21:06,=A0 1 user,=A0 load average: 1.20, 1.13, 1.=
+09
+Tasks:=A0=A0 1 total,=A0=A0 1 running,=A0=A0 0 sleeping,=A0=A0 0 stopped,=
+=A0=A0 0 zombie
+Cpu(s): 12.5%us,=A0 0.0%sy,=A0 0.0%ni, 87.5%id,=A0 0.0%wa,=A0 0.0%hi,=A0 0.=
+0%si,=A0 0.0%st
+Mem:=A0=A0 8177380k total,=A0=A0 896668k used,=A0 7280712k free,=A0=A0 2471=
+00k buffers
+Swap: 56525356k total,=A0=A0 173852k used, 56351504k free,=A0=A0 304588k ca=
+ched
+
+=A0 PID =A0=A0=A0USER=A0=A0 PR=A0 NI=A0 VIRT=A0 RES=A0 SHR S =A0=A0%CPU %ME=
+M=A0=A0=A0 TIME+=A0 COMMAND=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0
+32705 =A0root=A0=A0=A0=A0 25=A0=A0 0=A0 160m=A0 95m=A0 704 R=A0 =A0=A0100=
+=A0 =A0=A0=A0=A0=A0=A01.2=A0=A0 =A0=A0=A02629:53 =A0=A0=A0xfs_repair
+
+#> tail -f -n1000 xfs_repair.out.logfs1.sjc.02262010
+........
+=A0=A0=A0=A0=A0=A0=A0 - agno =3D 98
+=A0=A0=A0=A0=A0=A0=A0 - agno =3D 99
+=A0=A0=A0=A0=A0=A0=A0 - reset superblock...
+Phase 6 - check inode connectivity...
+=A0=A0=A0=A0=A0=A0=A0 - resetting contents of realtime bitmap and summary i=
+nodes
+=A0=A0=A0=A0=A0=A0=A0 - traversing filesystem ...
+=A0=A0=A0=A0=A0=A0=A0 - agno =3D 0
+=A0=A0=A0=A0=A0=A0=A0 - agno =3D 1
+=A0=A0=A0=A0=A0=A0=A0 - agno =3D 2
+=A0=A0=A0=A0=A0=A0=A0 - agno =3D 3
+=A0=A0=A0=A0=A0=A0=A0 - agno =3D 4
+=A0=A0=A0=A0=A0=A0=A0 - agno =3D 5
+=A0=A0=A0=A0=A0=A0=A0 - agno =3D 6
+=A0=A0=A0=A0=A0=A0=A0 - agno =3D 7
+=A0=A0=A0=A0=A0=A0=A0 - agno =3D 8
+=A0=A0=A0=A0=A0 =A0=A0- agno =3D 9
+=A0=A0=A0=A0=A0=A0=A0 - agno =3D 10
+=A0=A0=A0=A0=A0=A0=A0 - agno =3D 11
+=A0=A0=A0=A0=A0=A0=A0 - agno =3D 12
+=A0=A0=A0=A0=A0=A0=A0 - agno =3D 13
+=A0=A0=A0=A0=A0=A0=A0 - agno =3D 14
+<stopped here, fs has 99 ag's>
+
+Is there anything I can do at this point to salvage the repair?=A0 I do not=
+ want to kill the repair process based on the amount of time it takes to ru=
+n.=A0 If I do kill it, is there any risk of damaging the filesystem?
+
+Any help would be greatly appreciated.
+
+Thank you
 
 _______________________________________________
 xfs mailing list
