@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o230h2A7027452 for <xfs@oss.sgi.com>; Tue, 2 Mar 2010 18:43:02 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2D93D1D0CE6C
-	for <xfs@oss.sgi.com>; Tue,  2 Mar 2010 16:44:29 -0800 (PST)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id V8aKEAYFr5oFmdXr for
-	<xfs@oss.sgi.com>; Tue, 02 Mar 2010 16:44:29 -0800 (PST)
-Message-ID: <4B8DB0ED.5040109@sandeen.net>
-Date: Tue, 02 Mar 2010 18:44:29 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: Stalled xfs_repair on 100TB filesystem
+	o231E759029366 for <xfs@oss.sgi.com>; Tue, 2 Mar 2010 19:14:07 -0600
+Received: from SBAPEXCH05.ad.corp.expertcity.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B12F81D0CAC1
+	for <xfs@oss.sgi.com>; Tue,  2 Mar 2010 17:15:34 -0800 (PST)
+Received: from SBAPEXCH05.ad.corp.expertcity.com
+	(sbapexch05.ad.corp.expertcity.com [216.219.126.165]) by
+	cuda.sgi.com with ESMTP id J3p46KHEb9AUPdsR for
+	<xfs@oss.sgi.com>; Tue, 02 Mar 2010 17:15:34 -0800 (PST)
+From: Jason Vagalatos <Jason.Vagalatos@citrixonline.com>
+Date: Tue, 2 Mar 2010 17:15:09 -0800
+Subject: RE: Stalled xfs_repair on 100TB filesystem
+Message-ID: <DD534F7C25BFA14FB18E6D603135D7EA0A11F91318@sbapexch05>
 References: <DD534F7C25BFA14FB18E6D603135D7EA0A11E82ECB@sbapexch05>
-	<4B8DAECA.50701@hardwarefreak.com>
-In-Reply-To: <4B8DAECA.50701@hardwarefreak.com>
+	<4B8DAECA.50701@hardwarefreak.com> <4B8DB0ED.5040109@sandeen.net>
+In-Reply-To: <4B8DB0ED.5040109@sandeen.net>
+Content-Language: en-US
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,8 +30,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>
+To: Eric Sandeen <sandeen@sandeen.net>, Stan Hoeppner <stan@hardwarefreak.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+
+We are running xfs_repair v2.9.4.  Will just the -P flag suffice for this version?  What is the best way to calculate the bhash size value needed if we need to use that option too?
+
+Thanks,
+
+Jason Vagalatos
+
+-----Original Message-----
+From: xfs-bounces@oss.sgi.com [mailto:xfs-bounces@oss.sgi.com] On Behalf Of Eric Sandeen
+Sent: Tuesday, March 02, 2010 4:44 PM
+To: Stan Hoeppner
 Cc: xfs@oss.sgi.com
+Subject: Re: Stalled xfs_repair on 100TB filesystem
 
 Stan Hoeppner wrote:
 > Jason Vagalatos put forth on 3/2/2010 11:22 AM:
@@ -93,6 +108,11 @@ FWIW, Jason - which xfsprogs version are you running?  This patch went in a whil
 
 
 -Eric
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
