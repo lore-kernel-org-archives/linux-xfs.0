@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o236IC2o048424 for <xfs@oss.sgi.com>; Wed, 3 Mar 2010 00:18:13 -0600
+	o236ILi0048463 for <xfs@oss.sgi.com>; Wed, 3 Mar 2010 00:18:21 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 29FA1212C75
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 63C9E1D0B915
 	for <xfs@oss.sgi.com>; Tue,  2 Mar 2010 22:19:37 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	mReGXC0dWIeeII6u for <xfs@oss.sgi.com>;
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	Lbu5qfBT9mok7Aml for <xfs@oss.sgi.com>;
 	Tue, 02 Mar 2010 22:19:37 -0800 (PST)
 Received: from discord (unverified [121.44.103.80])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	15685366-1927428
+	15740699-1927428
 	for <xfs@oss.sgi.com>; Wed, 03 Mar 2010 16:49:36 +1030 (CDT)
 Received: from disturbed ([192.168.1.9]) by discord with esmtp (Exim 4.69)
-	(envelope-from <dave@fromorbit.com>) id 1Nmhvi-0003N8-Ap
+	(envelope-from <dave@fromorbit.com>) id 1Nmhvi-0003N5-6p
 	for xfs@oss.sgi.com; Wed, 03 Mar 2010 17:19:34 +1100
 Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1Nmhvb-00039q-1F
-	for xfs@oss.sgi.com; Wed, 03 Mar 2010 17:19:27 +1100
+	(envelope-from <dave@disturbed.disaster>) id 1Nmhva-00039l-SR
+	for xfs@oss.sgi.com; Wed, 03 Mar 2010 17:19:26 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/3] xfsqa: Add fiemap exerciser
-Date: Wed,  3 Mar 2010 17:19:22 +1100
-Message-Id: <1267597162-12092-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/3] xfsqa: add delayed allocation @ ENOSPC exerciser
+Date: Wed,  3 Mar 2010 17:19:20 +1100
+Message-Id: <1267597162-12092-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1267597162-12092-1-git-send-email-david@fromorbit.com>
 References: <1267597162-12092-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,46 +40,48 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Eric Sandeen <sandeen@redhat.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-Preliminary fiemap testing support based on a test util written by
-Josef Bacik.
+When we deplete the reserve block pool or receive an error during
+delayed allocation, we currently toss the page away. If that page
+has delayed allocation extents on it, we can fail to remove them and
+leave stale delayed llocation extents lying around on the inode.
+This can, in certain circumstances, trigger errors later on when the
+stale delalloc extent it found again, including tripping a BUG().
 
-For now it's only run with preallocation disabled, because xfs has a
-tendency to fill in holes with data blocks (EOF prealloc stuff I
-think) and similar for explicit preallocation, so this is breaking
-the preallocation tests for now, when it finds a "data" block where
-it expects a preallocated block.
+Exercise this failure path so that we get code coverage of the fix
+that prevents stale delalloc mappings from being left on the inode
+when pages are tossed.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+This is based on a test case supplied by Lachlan McIlroy.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- 225                  |   62 +++++
- 225.out              |    2 +
- aclocal.m4           |   19 ++
- configure.in         |    2 +
- group                |    1 +
- include/builddefs.in |    2 +
- src/Makefile         |    8 +
- src/fiemap-tester.c  |  638 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 8 files changed, 734 insertions(+), 0 deletions(-)
- create mode 100644 225
- create mode 100644 225.out
- create mode 100644 src/fiemap-tester.c
+ 224     |   88 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 224.out |    2 +
+ group   |    1 +
+ 3 files changed, 91 insertions(+), 0 deletions(-)
+ create mode 100644 224
+ create mode 100644 224.out
 
-diff --git a/225 b/225
+diff --git a/224 b/224
 new file mode 100644
-index 0000000..673e93e
+index 0000000..ee01c41
 --- /dev/null
-+++ b/225
-@@ -0,0 +1,62 @@
-+#! /bin/sh
-+# FS QA Test No. 225
++++ b/224
+@@ -0,0 +1,88 @@
++#! /bin/bash
++# FS QA Test No. 224
 +#
-+# Run the fiemap (file extent mapping) tester
++# Delayed allocation at ENOSPC test
++#
++# Derived from a test case from Lachlan McIlroy and improved to
++# reliably trigger a BUG in xfs_get_blocks(). Despite this XFS
++# focus, the test can to run on any filesystem to exercise ENOSPC
++# behaviour.
 +#
 +#-----------------------------------------------------------------------
-+# Copyright (c) 2009 Eric Sandeen.  All Rights Reserved.
++# Copyright (c) 2010 Dave Chinner.  All Rights Reserved.
 +#
 +# This program is free software; you can redistribute it and/or
 +# modify it under the terms of the GNU General Public License as
@@ -93,25 +95,27 @@ index 0000000..673e93e
 +# You should have received a copy of the GNU General Public License
 +# along with this program; if not, write the Free Software Foundation,
 +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
 +#-----------------------------------------------------------------------
 +#
 +# creator
-+owner=sandeen@sandeen.net
++owner=david@fromorbit.com
 +
 +seq=`basename $0`
 +echo "QA output created by $seq"
 +
 +here=`pwd`
-+tmp=tmp/$$
-+status=1  # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
++tmp=/tmp/$$
++status=1	# failure is the default!
 +
 +_cleanup()
 +{
-+	cd /
++	killall -9 dd > /dev/null 2>&1
 +	rm -f $tmp.*
-+	_cleanup_testdir
++	rm -f $SCRATCH_MNT/testfile.*
 +}
++
++trap "_cleanup ; exit \$status" 0 1 2 3 15
 +
 +# get standard environment, filters and checks
 +. ./common.rc
@@ -121,756 +125,56 @@ index 0000000..673e93e
 +_supported_fs generic
 +_supported_os Linux
 +
-+_setup_testdir
++_require_scratch
 +
-+fiemapfile=$TEST_DIR/fiemap.$$
++# make a 1GB filesystem
++_scratch_mkfs_sized `expr 1024 \* 1024 \* 1024` > $seq.full 2>&1
++_scratch_mount >> $seq.full 2>&1
 +
-+[ -x $here/src/fiemap-tester ] || _notrun "fiemap-tester not built"
++# set the reserved block pool to almost empty for XFS
++if [ "$FSTYP" = "xfs" ]; then
++	xfs_io -x -c "resblks 4" /mnt/scratch/ >> $seq.full 2>&1
++fi
 +
-+echo "fiemap run without preallocation"
-+$here/src/fiemap-tester -q -p 0 -r 200 /mnt/test/fiemapfile
++FILES=1000
++for i in `seq 0 1 $FILES`; do
 +
-+rm -f $fiemapfile
-+rm -f $seq.full
++	# set the file size to be 10MB - that way the direct IO will always try
++	# to read at least 10MB even if only 4k was written. This allows
++	# discarded delalloc pages that would have been beyond EOF to be
++	# tripped over.
++        (
++		sleep 5
++		xfs_io -f -c "truncate 10485760" $SCRATCH_MNT/testfile.$i
++		dd if=/dev/zero of=$SCRATCH_MNT/testfile.$i bs=4k conv=notrunc
++	) > /dev/null 2>&1 &
++done
++wait
 +
++for i in `seq 0 1 $FILES`; do
++        dd of=/dev/null if=$SCRATCH_MNT/testfile.$i bs=512k iflag=direct > /dev/null 2>&1 &
++done
++wait
++echo "*** Silence is golden ***"
 +status=0
 +exit
-diff --git a/225.out b/225.out
+diff --git a/224.out b/224.out
 new file mode 100644
-index 0000000..7bc9312
+index 0000000..cf4fd9c
 --- /dev/null
-+++ b/225.out
++++ b/224.out
 @@ -0,0 +1,2 @@
-+QA output created by 225
-+fiemap run without preallocation
-diff --git a/aclocal.m4 b/aclocal.m4
-index 02f56f2..6457d39 100644
---- a/aclocal.m4
-+++ b/aclocal.m4
-@@ -11,6 +11,25 @@
- # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
- # PARTICULAR PURPOSE.
- 
-+AC_DEFUN([AC_PACKAGE_WANT_LINUX_FIEMAP_H],
-+  [ AC_CHECK_HEADERS([linux/fiemap.h], [ have_fiemap=true ], [ have_fiemap=false ])
-+    AC_SUBST(have_fiemap)
-+  ])
-+
-+AC_DEFUN([AC_PACKAGE_WANT_FALLOCATE],
-+  [ AC_MSG_CHECKING([for fallocate])
-+    AC_TRY_LINK([
-+#define _GNU_SOURCE
-+#define _FILE_OFFSET_BITS 64
-+#include <fcntl.h>
-+#include <linux/falloc.h>
-+    ], [
-+         fallocate(0, 0, 0, 0);
-+    ], have_fallocate=yes
-+       AC_MSG_RESULT(yes),
-+       AC_MSG_RESULT(no))
-+    AC_SUBST(have_fallocate)
-+  ])
- m4_include([m4/multilib.m4])
- m4_include([m4/package_acldev.m4])
- m4_include([m4/package_aiodev.m4])
-diff --git a/configure.in b/configure.in
-index 0d6f153..45b7fd1 100644
---- a/configure.in
-+++ b/configure.in
-@@ -64,6 +64,8 @@ in
- 		AC_PACKAGE_WANT_GDBM
- 		AC_PACKAGE_WANT_AIO
- 		AC_PACKAGE_WANT_DMAPI
-+		AC_PACKAGE_WANT_LINUX_FIEMAP_H
-+		AC_PACKAGE_WANT_FALLOCATE
- 		;;
- esac
- 
++QA output created by 224
++*** Silence is golden ***
 diff --git a/group b/group
-index 5d675f0..8d4a83a 100644
+index c66d965..5d675f0 100644
 --- a/group
 +++ b/group
-@@ -338,3 +338,4 @@ deprecated
+@@ -337,3 +337,4 @@ deprecated
+ 221 auto metadata quick
  222 auto fsr ioctl quick
  223 auto quick
- 224 auto
-+225 auto quick
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 23a4991..3bea050 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -60,6 +60,8 @@ HAVE_DB = @have_db@
- HAVE_AIO = @have_aio@
- HAVE_DMAPI = @have_dmapi@
- HAVE_ATTR_LIST = @have_attr_list@
-+HAVE_FIEMAP = @have_fiemap@
-+HAVE_FALLOCATE = @have_fallocate@
- 
- GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
- 
-diff --git a/src/Makefile b/src/Makefile
-index d86d50a..2f95fe2 100644
---- a/src/Makefile
-+++ b/src/Makefile
-@@ -25,6 +25,14 @@ ifeq ($(HAVE_XLOG_ASSIGN_LSN), true)
- LINUX_TARGETS += loggen
- endif
- 
-+ifeq ($(HAVE_FIEMAP), true)
-+LINUX_TARGETS += fiemap-tester
-+endif
-+
-+ifeq ($(HAVE_FALLOCATE),yes)
-+LCFLAGS += -DHAVE_FALLOCATE
-+endif
-+
- IRIX_TARGETS = open_unlink
- 
- ifeq ($(PKG_PLATFORM),linux)
-diff --git a/src/fiemap-tester.c b/src/fiemap-tester.c
-new file mode 100644
-index 0000000..69016a9
---- /dev/null
-+++ b/src/fiemap-tester.c
-@@ -0,0 +1,638 @@
-+/*
-+ * Copyright (c) 2009 Josef Bacik
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License V2
-+ * as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+
-+#include <stdio.h>
-+#include <stdlib.h>
-+#include <unistd.h>
-+#include <fcntl.h>
-+#include <string.h>
-+#include <ctype.h>
-+#include <sys/ioctl.h>
-+#include <sys/types.h>
-+#include <sys/stat.h>
-+#include <sys/vfs.h>
-+#include <linux/fs.h>
-+#include <linux/types.h>
-+#include <linux/fiemap.h>
-+
-+/* Global for non-critical message suppression */
-+int quiet;
-+
-+static void
-+usage(void)
-+{
-+	printf("Usage: fiemap-tester [-m map] [-r number of runs] [-s seed] [-q]");
-+#ifdef HAVE_FALLOCATE
-+	printf("[-p preallocate (1/0)] ");
-+#endif
-+	printf("filename\n");
-+	printf("  -m map    : generate a file with the map given and test\n");
-+#ifdef HAVE_FALLOCATE
-+	printf("  -p 0/1    : turn block preallocation on or off\n");
-+#endif
-+	printf("  -r count  : number of runs to execute (default infinity)\n");
-+	printf("  -s seed   : seed for random map generator (default 1)\n");
-+	printf("  -q        : be quiet about non-errors\n");
-+	printf("-m and -r cannot be used together\n");
-+	exit(EXIT_FAILURE);
-+}
-+
-+static char *
-+generate_file_mapping(int blocks, int prealloc)
-+{
-+	char *map;
-+	int num_types = 2, cur_block = 0;
-+	int i = 0;
-+
-+	map = malloc(sizeof(char) * blocks);
-+	if (!map)
-+		return NULL;
-+
-+	if (prealloc)
-+		num_types++;
-+
-+
-+	for (i = 0; i < blocks; i++) {
-+		long num = random() % num_types;
-+		switch (num) {
-+		case 0:
-+			map[cur_block] = 'D';
-+			break;
-+		case 1:
-+			map[cur_block] = 'H';
-+			break;
-+		case 2:
-+			map[cur_block] = 'P';
-+			break;
-+		}
-+		cur_block++;
-+	}
-+
-+	return map;
-+}
-+
-+static int
-+create_file_from_mapping(int fd, char *map, int blocks, int blocksize)
-+{
-+	int cur_offset = 0, ret = 0, bufsize;
-+	char *buf;
-+	int i = 0;
-+
-+	bufsize = sizeof(char) * blocksize;
-+	buf = malloc(bufsize);
-+	if (!buf)
-+		return -1;
-+
-+	memset(buf, 'a', bufsize);
-+
-+	for (i = 0; i < blocks; i++) {
-+		switch (map[i]) {
-+		case 'D':
-+			ret = write(fd, buf, bufsize);
-+			if (ret < bufsize) {
-+				printf("Short write\n");
-+				ret = -1;
-+				goto out;
-+			}
-+			break;
-+#ifdef HAVE_FALLOCATE
-+		case 'P':
-+			ret = fallocate(fd, 0, cur_offset, blocksize);
-+			if (ret < 0) {
-+				printf("Error fallocating\n");
-+				goto out;
-+			}
-+			/* fallthrough; seek to end of prealloc space */
-+#endif
-+		case 'H':
-+			ret = lseek(fd, blocksize, SEEK_CUR);
-+			if (ret == (off_t)-1) {
-+				printf("Error lseeking\n");
-+				ret = -1;
-+				goto out;
-+			}
-+			break;
-+		default:
-+			printf("Hrm, unrecognized flag in map\n");
-+			ret = -1;
-+			goto out;
-+		}
-+		cur_offset += blocksize;
-+	}
-+
-+	ret = 0;
-+out:
-+	return ret;
-+}
-+
-+static void
-+show_extent_block(struct fiemap_extent *extent, int blocksize)
-+{
-+	__u64	logical = extent->fe_logical;
-+	__u64	phys = extent->fe_physical;
-+	__u64	length = extent->fe_length;
-+	int	flags = extent->fe_flags;
-+
-+	printf("logical: [%8llu..%8llu] phys: %8llu..%8llu "
-+	       "flags: 0x%03X tot: %llu\n",
-+		logical / blocksize, (logical + length - 1) / blocksize,
-+		phys / blocksize, (phys + length - 1) / blocksize,
-+		flags,
-+		(length / blocksize));
-+}
-+
-+static void
-+show_extents(struct fiemap *fiemap, int blocksize)
-+{
-+	unsigned int i;
-+
-+	for (i = 0; i < fiemap->fm_mapped_extents; i++)
-+		show_extent_block(&fiemap->fm_extents[i], blocksize);
-+}
-+
-+static int
-+check_flags(struct fiemap *fiemap, int blocksize)
-+{
-+	struct fiemap_extent *extent;
-+	__u64 aligned_offset, aligned_length;
-+	int c;
-+
-+	for (c = 0; c < fiemap->fm_mapped_extents; c++) {
-+		extent = &fiemap->fm_extents[c];
-+
-+		aligned_offset = extent->fe_physical & ~((__u64)blocksize - 1);
-+		aligned_length = extent->fe_length & ~((__u64)blocksize - 1);
-+
-+		if ((aligned_offset != extent->fe_physical ||
-+		     aligned_length != extent->fe_length) &&
-+		    !(extent->fe_flags & FIEMAP_EXTENT_NOT_ALIGNED)) {
-+			printf("ERROR: FIEMAP_EXTENT_NOT_ALIGNED is not set "
-+			       "but the extent is unaligned: %llu\n",
-+			       (unsigned long long)
-+			       (extent->fe_logical / blocksize));
-+			return -1;
-+		}
-+
-+		if (extent->fe_flags & FIEMAP_EXTENT_DATA_ENCRYPTED &&
-+		    !(extent->fe_flags & FIEMAP_EXTENT_ENCODED)) {
-+			printf("ERROR: FIEMAP_EXTENT_DATA_ENCRYPTED is set, "
-+			       "but FIEMAP_EXTENT_ENCODED is not set: %llu\n",
-+			       (unsigned long long)
-+			       (extent->fe_logical / blocksize));
-+			return -1;
-+		}
-+
-+		if (extent->fe_flags & FIEMAP_EXTENT_NOT_ALIGNED &&
-+		    aligned_offset == extent->fe_physical &&
-+		    aligned_length == extent->fe_length) {
-+			printf("ERROR: FIEMAP_EXTENT_NOT_ALIGNED is set but "
-+			       "offset and length is blocksize aligned: "
-+			       "%llu\n",
-+			       (unsigned long long)
-+			       (extent->fe_logical / blocksize));
-+			return -1;
-+		}
-+
-+		if (extent->fe_flags & FIEMAP_EXTENT_LAST &&
-+		    c + 1 < fiemap->fm_mapped_extents) {
-+			printf("ERROR: FIEMAP_EXTENT_LAST is set but there are"
-+			       " more extents left: %llu\n",
-+			       (unsigned long long)
-+			       (extent->fe_logical / blocksize));
-+			return -1;
-+		}
-+
-+		if (extent->fe_flags & FIEMAP_EXTENT_DELALLOC &&
-+		    !(extent->fe_flags & FIEMAP_EXTENT_UNKNOWN)) {
-+			printf("ERROR: FIEMAP_EXTENT_DELALLOC is set but "
-+			       "FIEMAP_EXTENT_UNKNOWN is not set: %llu\n",
-+			       (unsigned long long)
-+			       (extent->fe_logical / blocksize));
-+			return -1;
-+		}
-+
-+		if (extent->fe_flags & FIEMAP_EXTENT_DATA_INLINE &&
-+		    !(extent->fe_flags & FIEMAP_EXTENT_NOT_ALIGNED)) {
-+			printf("ERROR: FIEMAP_EXTENT_DATA_INLINE is set but "
-+			       "FIEMAP_EXTENT_NOT_ALIGNED is not set: %llu\n",
-+			       (unsigned long long)
-+			       (extent->fe_logical / blocksize));
-+			return -1;
-+		}
-+
-+		if (extent->fe_flags & FIEMAP_EXTENT_DATA_TAIL &&
-+		    !(extent->fe_flags & FIEMAP_EXTENT_NOT_ALIGNED)) {
-+			printf("ERROR: FIEMAP_EXTENT_DATA_TAIL is set but "
-+			       "FIEMAP_EXTENT_NOT_ALIGNED is not set: %llu\n",
-+			       (unsigned long long)
-+			       (extent->fe_logical / blocksize));
-+			return -1;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+static int
-+check_data(struct fiemap *fiemap, __u64 logical_offset, int blocksize,
-+	   int last, int prealloc)
-+{
-+	struct fiemap_extent *extent;
-+	__u64 orig_offset = logical_offset;
-+	int c, found = 0;
-+
-+	for (c = 0; c < fiemap->fm_mapped_extents; c++) {
-+		__u64 start, end;
-+		extent = &fiemap->fm_extents[c];
-+
-+		start = extent->fe_logical;
-+		end = extent->fe_logical + extent->fe_length;
-+
-+		if (logical_offset > end)
-+			continue;
-+
-+		if (logical_offset + blocksize < start)
-+			break;
-+
-+		if (logical_offset >= start &&
-+		    logical_offset < end) {
-+			if (prealloc &&
-+			    !(extent->fe_flags & FIEMAP_EXTENT_UNWRITTEN)) {
-+				printf("ERROR: preallocated extent is not "
-+				       "marked with FIEMAP_EXTENT_UNWRITTEN: "
-+				       "%llu\n",
-+				       (unsigned long long)
-+				       (start / blocksize));
-+				return -1;
-+			}
-+
-+			if (logical_offset + blocksize > end) {
-+				logical_offset = end+1;
-+				continue;
-+			} else {
-+				found = 1;
-+				break;
-+			}
-+		}
-+	}
-+
-+	if (!found) {
-+		printf("ERROR: couldn't find extent at %llu\n",
-+		       (unsigned long long)(orig_offset / blocksize));
-+	} else if (last &&
-+		   !(fiemap->fm_extents[c].fe_flags & FIEMAP_EXTENT_LAST)) {
-+		printf("ERROR: last extent not marked as last: %llu\n",
-+		       (unsigned long long)(orig_offset / blocksize));
-+		found = 0;
-+	}
-+
-+	return (!found) ? -1 : 0;
-+}
-+
-+static int
-+check_weird_fs_hole(int fd, __u64 logical_offset, int blocksize)
-+{
-+	static int warning_printed = 0;
-+	int block, i;
-+	size_t buf_len = sizeof(char) * blocksize;
-+	char *buf;
-+
-+	block = (int)(logical_offset / blocksize);
-+	if (ioctl(fd, FIBMAP, &block) < 0) {
-+		perror("Can't fibmap file");
-+		return -1;
-+	}
-+
-+	if (!block) {
-+		printf("ERROR: FIEMAP claimed there was data at a block "
-+		       "which should be a hole, and FIBMAP confirmend that "
-+		       "it is in fact a hole, so FIEMAP is wrong: %llu\n",
-+		       (unsigned long long)(logical_offset / blocksize));
-+		return -1;
-+	}
-+
-+	buf = malloc(buf_len);
-+	if (!buf) {
-+		perror("Could not allocate temporary buffer");
-+		return -1;
-+	}
-+
-+	if (pread(fd, buf, buf_len, (off_t)logical_offset) < 0) {
-+		perror("Error reading from file");
-+		free(buf);
-+		return -1;
-+	}
-+
-+	for (i = 0; i < buf_len; i++) {
-+		if (buf[i] != 0) {
-+			printf("ERROR: FIEMAP claimed there was data (%c) at "
-+			       "block %llu that should have been a hole, and "
-+			       "FIBMAP confirmed that it was allocated, but "
-+			       "it should be filled with 0's, but it was not "
-+			       "so you have a big problem!\n",
-+			       buf[i],
-+			       (unsigned long long)(logical_offset / blocksize));
-+			free(buf);
-+			return -1;
-+		}
-+	}
-+
-+	if (warning_printed || quiet) {
-+		free(buf);
-+		return 0;
-+	}
-+
-+	printf("HEY FS PERSON: your fs is weird.  I specifically wanted a\n"
-+	       "hole and you allocated a block anyway.  FIBMAP confirms that\n"
-+	       "you allocated a block, and the block is filled with 0's so\n"
-+	       "everything is kosher, but you still allocated a block when\n"
-+	       "didn't need to.  This may or may not be what you wanted,\n"
-+	       "which is why I'm only printing this message once, in case\n"
-+	       "you didn't do it on purpose. This was at block %llu.\n",
-+	       (unsigned long long)(logical_offset / blocksize));
-+	warning_printed = 1;
-+	free(buf);
-+
-+	return 0;
-+}
-+
-+static int
-+check_hole(struct fiemap *fiemap, int fd, __u64 logical_offset, int blocksize)
-+{
-+	struct fiemap_extent *extent;
-+	int c;
-+
-+	for (c = 0; c < fiemap->fm_mapped_extents; c++) {
-+		__u64 start, end;
-+		extent = &fiemap->fm_extents[c];
-+
-+		start = extent->fe_logical;
-+		end = extent->fe_logical + extent->fe_length;
-+
-+		if (logical_offset > end)
-+			continue;
-+		if (logical_offset + blocksize < start)
-+			break;
-+
-+		if (logical_offset >= start &&
-+		    logical_offset < end) {
-+
-+			if (check_weird_fs_hole(fd, logical_offset,
-+						blocksize) == 0)
-+				break;
-+
-+			printf("ERROR: found an allocated extent where a hole "
-+			       "should be: %llu\n",
-+			       (unsigned long long)(start / blocksize));
-+			return -1;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+static int
-+compare_fiemap_and_map(int fd, char *map, int blocks, int blocksize)
-+{
-+	struct fiemap *fiemap;
-+	char *fiebuf;
-+	int blocks_to_map, ret, cur_extent = 0, last_data;
-+	__u64 map_start, map_length;
-+	int i, c;
-+
-+	blocks_to_map = (random() % blocks) + 1;
-+	fiebuf = malloc(sizeof(struct fiemap) +
-+			(blocks_to_map * sizeof(struct fiemap_extent)));
-+	if (!fiebuf) {
-+		perror("Could not allocate fiemap buffers");
-+		return -1;
-+	}
-+
-+	fiemap = (struct fiemap *)fiebuf;
-+	map_start = 0;
-+	map_length = blocks_to_map * blocksize;
-+
-+	for (i = 0; i < blocks; i++) {
-+		if (map[i] != 'H')
-+			last_data = i;
-+	}
-+
-+	fiemap->fm_flags = FIEMAP_FLAG_SYNC;
-+	fiemap->fm_extent_count = blocks_to_map;
-+	fiemap->fm_mapped_extents = 0;
-+
-+	do {
-+		fiemap->fm_start = map_start;
-+		fiemap->fm_length = map_length;
-+
-+		ret = ioctl(fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
-+		if (ret < 0) {
-+			perror("FIEMAP ioctl failed");
-+			free(fiemap);
-+			return -1;
-+		}
-+
-+		if (check_flags(fiemap, blocksize))
-+			goto error;
-+
-+		for (i = cur_extent, c = 1; i < blocks; i++, c++) {
-+			__u64 logical_offset = i * blocksize;
-+
-+			if (c > blocks_to_map)
-+				break;
-+
-+			switch (map[i]) {
-+			case 'D':
-+				if (check_data(fiemap, logical_offset,
-+					       blocksize, last_data == i, 0))
-+					goto error;
-+				break;
-+			case 'H':
-+				if (check_hole(fiemap, fd, logical_offset,
-+					       blocksize))
-+					goto error;
-+				break;
-+			case 'P':
-+				if (check_data(fiemap, logical_offset,
-+					       blocksize, last_data == i, 1))
-+					goto error;
-+				break;
-+			default:
-+				printf("ERROR: weird value in map: %c\n",
-+				       map[i]);
-+				goto error;
-+			}
-+		}
-+		cur_extent = i;
-+		map_start = i * blocksize;
-+	} while (cur_extent < blocks);
-+
-+	ret = 0;
-+	return ret;
-+error:
-+	printf("map is '%s'\n", map);
-+	show_extents(fiemap, blocksize);
-+	return -1;
-+}
-+
-+int
-+main(int argc, char **argv)
-+{
-+	int	blocksize = 0;	/* filesystem blocksize */
-+	int	fd;		/* file descriptor */
-+	int	opt;
-+	int	rc;
-+	char	*fname;		/* filename to map */
-+	char	*map = NULL;	/* file map to generate */
-+	int	runs = -1;	/* the number of runs to have */
-+	int	blocks = 0;	/* the number of blocks to generate */
-+	int	maxblocks = 0;	/* max # of blocks to create */
-+	int	prealloc = 1;	/* whether or not to do preallocation */
-+	int	seed = 1;
-+
-+	while ((opt = getopt(argc, argv, "m:r:s:p:q")) != -1) {
-+		switch(opt) {
-+		case 'm':
-+			map = strdup(optarg);
-+			break;
-+		case 'p':
-+			prealloc = atoi(optarg);;
-+#ifndef HAVE_FALLOCATE
-+			if (prealloc)
-+				printf("Not built with preallocation support\n");
-+			usage();
-+#endif
-+			break;
-+		case 'q':
-+			quiet = 1;
-+			break;
-+		/* sync file before mapping */
-+		case 'r':
-+			runs = atoi(optarg);
-+			break;
-+		case 's':
-+			seed = atoi(optarg);
-+			break;
-+		default:
-+			usage();
-+		}
-+	}
-+
-+	if (runs != -1 && map)
-+		usage();
-+
-+	fname = argv[optind++];
-+	if (!fname)
-+		usage();
-+
-+	fd = open(fname, O_RDWR|O_CREAT|O_TRUNC, 0644);
-+	if (fd < 0) {
-+		perror("Can't open file");
-+		exit(1);
-+	}
-+
-+	if (ioctl(fd, FIGETBSZ, &blocksize) < 0) {
-+		perror("Can't get filesystem block size");
-+		close(fd);
-+		exit(1);
-+	}
-+
-+#ifdef HAVE_FALLOCATE
-+	/* if fallocate passes, then we can do preallocation, else not */
-+	if (prealloc) {
-+		prealloc = !((int)fallocate(fd, 0, 0, blocksize));
-+		if (!prealloc)
-+			printf("preallocation not supported, disabling\n");
-+	}
-+#else
-+	prealloc = 0;
-+#endif
-+
-+	if (ftruncate(fd, 0)) {
-+		perror("Can't truncate file");
-+		close(fd);
-+		exit(1);
-+	}
-+
-+	if (map) {
-+		blocks = strlen(map);
-+		runs = 0;
-+	}
-+
-+	srandom(seed);
-+
-+	/* max file size 2mb / block size */
-+	maxblocks = (2 * 1024 * 1024) / blocksize;
-+
-+	if (runs == -1)
-+		printf("Starting infinite run, if you don't see any output "
-+		       "then its working properly.\n");
-+	do {
-+		if (!map) {
-+			blocks = random() % maxblocks;
-+			if (blocks == 0) {
-+				if (!quiet)
-+					printf("Skipping 0 length file\n");
-+				continue;
-+			}
-+
-+			map = generate_file_mapping(blocks, prealloc);
-+			if (!map) {
-+				printf("Could not create map\n");
-+				exit(1);
-+			}
-+		}
-+
-+		rc = create_file_from_mapping(fd, map, blocks, blocksize);
-+		if (rc) {
-+			perror("Could not create file\n");
-+			free(map);
-+			close(fd);
-+			exit(1);
-+		}
-+
-+		rc = compare_fiemap_and_map(fd, map, blocks, blocksize);
-+		if (rc) {
-+			printf("Problem comparing fiemap and map\n");
-+			free(map);
-+			close(fd);
-+			exit(1);
-+		}
-+
-+		free(map);
-+		map = NULL;
-+
-+		if (ftruncate(fd, 0)) {
-+			perror("Could not truncate file\n");
-+			close(fd);
-+			exit(1);
-+		}
-+
-+		if (lseek(fd, 0, SEEK_SET)) {
-+			perror("Could not seek set\n");
-+			close(fd);
-+			exit(1);
-+		}
-+
-+		if (runs) runs--;
-+	} while (runs != 0);
-+
-+	close(fd);
-+
-+	return 0;
-+}
++224 auto
 -- 
 1.6.5
 
