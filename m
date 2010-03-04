@@ -1,15 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o240tp1X123833 for <xfs@oss.sgi.com>; Wed, 3 Mar 2010 18:55:51 -0600
-Date: Thu, 4 Mar 2010 11:57:09 +1100
+	o241jGnQ126534 for <xfs@oss.sgi.com>; Wed, 3 Mar 2010 19:45:16 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0B563215BE0
+	for <xfs@oss.sgi.com>; Wed,  3 Mar 2010 17:46:42 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	VI85JMuqbHPfnAe7 for <xfs@oss.sgi.com>;
+	Wed, 03 Mar 2010 17:46:42 -0800 (PST)
+Received: from discord (unverified [121.44.103.80])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	15909981-1927428
+	for <xfs@oss.sgi.com>; Thu, 04 Mar 2010 12:16:41 +1030 (CDT)
+Received: from disturbed ([192.168.1.9]) by discord with esmtp (Exim 4.69)
+	(envelope-from <dave@fromorbit.com>) id 1Nn095-0004aT-M9
+	for xfs@oss.sgi.com; Thu, 04 Mar 2010 12:46:35 +1100
+Received: from dave by disturbed with local (Exim 4.71)
+	(envelope-from <dave@disturbed.disaster>) id 1Nn08y-000230-1m
+	for xfs@oss.sgi.com; Thu, 04 Mar 2010 12:46:28 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] Re: linux-next: build warning after merge of the xfs tree
-Message-ID: <20100304005709.GE14317@discord.disaster>
-References: <20100304111930.86f7cc62.sfr@canb.auug.org.au>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100304111930.86f7cc62.sfr@canb.auug.org.au>
+Subject: [PATCH 1/3] xfs: check for more work before sleeping in xfssyncd
+Date: Thu,  4 Mar 2010 12:46:23 +1100
+Message-Id: <1267667185-7736-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1267667185-7736-1-git-send-email-david@fromorbit.com>
+References: <1267667185-7736-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,71 +33,53 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: aelder@sgi.com, xfs-masters@oss.sgi.com, linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Mar 04, 2010 at 11:19:30AM +1100, Stephen Rothwell wrote:
-> Hi Dave,
-> 
-> After merging the xfs tree, today's linux-next build (x86_64 allmodconfig)
-> produced this warning:
-> 
-> fs/xfs/linux-2.6/xfs_aops.c: In function 'xfs_end_io':
-> fs/xfs/linux-2.6/xfs_aops.c:232: warning: 'error' may be used uninitialized in this function
-> 
-> Introduced by commit 77d7a0c2eeb285c9069e15396703d0cb9690ac50 ("xfs:
-> Non-blocking inode locking in IO completion").
-> 
-> I can't tell if this is a false positive.  If the first two "if"
-> statement bodies are skipped, then error is tested uninitialised.  It is
-> possible that at least one of them has to be executed.
+xfssyncd processes a queue of work by detaching the queue and
+then iterating over all the work items. It then sleeps for a
+time period or until new work comes in. If new work is queued
+while xfssyncd is actively processing the detached work queue,
+it will not process that new work until after a sleep timeout
+or the next work event queued wakes it.
 
-Right, there is a warning being generated there - I thought I fixed
-that immediately after posting the first version of the patch. The
-second version:
-
-http://oss.sgi.com/archives/xfs/2010-02/msg00340.html
-
-definitely had it fixed.
-
-Alex, can you make sure you take the entire patch rather than
-cutting and pasting bits from one patch version to another?  That
-way you don't miss small changes to the patch that might have been
-forgotten about....
-
-Stephen, the patch below should fix the warning.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-xfs: fix uninitialised variable warning in xfs_end_io
+Fix this by checking the work queue again before going to sleep.
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/linux-2.6/xfs_aops.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ fs/xfs/linux-2.6/xfs_sync.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
-index f41a2d8..8989c16 100644
---- a/fs/xfs/linux-2.6/xfs_aops.c
-+++ b/fs/xfs/linux-2.6/xfs_aops.c
-@@ -230,7 +230,7 @@ xfs_end_io(
- {
- 	xfs_ioend_t	*ioend = container_of(work, xfs_ioend_t, io_work);
- 	struct xfs_inode *ip = XFS_I(ioend->io_inode);
--	int		error;
-+	int		error = 0;
+diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+index f9fc154..05cd853 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.c
++++ b/fs/xfs/linux-2.6/xfs_sync.c
+@@ -607,7 +607,8 @@ xfssyncd(
+ 	set_freezable();
+ 	timeleft = xfs_syncd_centisecs * msecs_to_jiffies(10);
+ 	for (;;) {
+-		timeleft = schedule_timeout_interruptible(timeleft);
++		if (list_empty(&mp->m_sync_list))
++			timeleft = schedule_timeout_interruptible(timeleft);
+ 		/* swsusp */
+ 		try_to_freeze();
+ 		if (kthread_should_stop() && list_empty(&mp->m_sync_list))
+@@ -627,8 +628,7 @@ xfssyncd(
+ 			list_add_tail(&mp->m_sync_work.w_list,
+ 					&mp->m_sync_list);
+ 		}
+-		list_for_each_entry_safe(work, n, &mp->m_sync_list, w_list)
+-			list_move(&work->w_list, &tmp);
++		list_splice_init(&mp->m_sync_list, &tmp);
+ 		spin_unlock(&mp->m_sync_lock);
  
- 	/*
- 	 * For unwritten extents we need to issue transactions to convert a
+ 		list_for_each_entry_safe(work, n, &tmp, w_list) {
+-- 
+1.6.5
 
 _______________________________________________
 xfs mailing list
