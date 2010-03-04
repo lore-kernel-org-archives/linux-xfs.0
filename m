@@ -1,30 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o241jL6N126561 for <xfs@oss.sgi.com>; Wed, 3 Mar 2010 19:45:21 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 612F413F180C
-	for <xfs@oss.sgi.com>; Wed,  3 Mar 2010 17:46:48 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	OVsFdLsvYAjDjFWA for <xfs@oss.sgi.com>;
-	Wed, 03 Mar 2010 17:46:48 -0800 (PST)
-Received: from discord (unverified [121.44.103.80])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	16018852-1927428
-	for <xfs@oss.sgi.com>; Thu, 04 Mar 2010 12:16:47 +1030 (CDT)
-Received: from disturbed ([192.168.1.9]) by discord with esmtp (Exim 4.69)
-	(envelope-from <dave@fromorbit.com>) id 1Nn09F-0004ai-Qv
-	for xfs@oss.sgi.com; Thu, 04 Mar 2010 12:46:45 +1100
-Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1Nn08y-000236-73
-	for xfs@oss.sgi.com; Thu, 04 Mar 2010 12:46:28 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/3] xfs: Increase the default size of the reserved blocks pool
-Date: Thu,  4 Mar 2010 12:46:25 +1100
-Message-Id: <1267667185-7736-4-git-send-email-david@fromorbit.com>
-In-Reply-To: <1267667185-7736-1-git-send-email-david@fromorbit.com>
-References: <1267667185-7736-1-git-send-email-david@fromorbit.com>
+Content-class: urn:content-classes:message
+MIME-Version: 1.0
+Subject: RE: [PATCH] Re: linux-next: build warning after merge of the xfs tree
+Date: Wed, 3 Mar 2010 22:54:05 -0600
+Message-ID: <1AB9A794DBDDF54A8A81BE2296F7BDFE8D0410@cf--amer001e--3.americas.sgi.com>
+References: <20100304111930.86f7cc62.sfr@canb.auug.org.au>
+	<20100304005709.GE14317@discord.disaster>
+From: "Alex Elder" <aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,112 +15,227 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============8684731430972473130=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>, Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: xfs-masters@oss.sgi.com, linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-The current default size of the reserved blocks pool is easy to deplete
-with certain workloads, in particular workloads that do lots of concurrent
-delayed allocation extent conversions.  If enough transactions are running
-in parallel and the entire pool is consumed then subsequent calls to
-xfs_trans_reserve() will fail with ENOSPC.  Also add a rate limited
-warning so we know if this starts happening again.
+This is a multi-part message in MIME format.
 
-This is an updated version of an old patch from Lachlan McIlroy.
+--===============8684731430972473130==
+Content-class: urn:content-classes:message
+Content-Type: multipart/alternative;
+	boundary="----_=_NextPart_001_01CABB57.5BA9278B"
 
-Signed-off-by: Dave Chinner <david@fromorbit.com>
----
- fs/xfs/xfs_mount.c |   49 +++++++++++++++++++++++++++++--------------------
- 1 files changed, 29 insertions(+), 20 deletions(-)
+This is a multi-part message in MIME format.
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index c207fef..e79b56b 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1097,13 +1097,15 @@ xfs_default_resblks(xfs_mount_t *mp)
- 	__uint64_t resblks;
- 
- 	/*
--	 * We default to 5% or 1024 fsbs of space reserved, whichever is smaller.
--	 * This may drive us straight to ENOSPC on mount, but that implies
--	 * we were already there on the last unmount. Warn if this occurs.
-+	 * We default to 5% or 8192 fsbs of space reserved, whichever is
-+	 * smaller.  This is intended to cover concurrent allocation
-+	 * transactions when we initially hit enospc. These each require a 4
-+	 * block reservation. Hence by default we cover roughly 2000 concurrent
-+	 * allocation reservations.
- 	 */
- 	resblks = mp->m_sb.sb_dblocks;
- 	do_div(resblks, 20);
--	resblks = min_t(__uint64_t, resblks, 1024);
-+	resblks = min_t(__uint64_t, resblks, 8192);
- 	return resblks;
- }
- 
-@@ -1417,6 +1419,9 @@ xfs_mountfs(
- 	 * when at ENOSPC. This is needed for operations like create with
- 	 * attr, unwritten extent conversion at ENOSPC, etc. Data allocations
- 	 * are not allowed to use this reserved space.
-+	 *
-+	 * This may drive us straight to ENOSPC on mount, but that implies
-+	 * we were already there on the last unmount. Warn if this occurs.
- 	 */
- 	if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
- 		resblks = xfs_default_resblks(mp);
-@@ -1725,26 +1730,30 @@ xfs_mod_incore_sb_unlocked(
- 				lcounter += rem;
- 			}
- 		} else {				/* Taking blocks away */
--
- 			lcounter += delta;
-+			if (lcounter >= 0) {
-+				mp->m_sb.sb_fdblocks = lcounter +
-+							XFS_ALLOC_SET_ASIDE(mp);
-+				return 0;
-+			}
- 
--		/*
--		 * If were out of blocks, use any available reserved blocks if
--		 * were allowed to.
--		 */
-+			/*
-+			 * We are out of blocks, use any available reserved
-+			 * blocks if were allowed to.
-+			 */
-+			if (!rsvd)
-+				return XFS_ERROR(ENOSPC);
- 
--			if (lcounter < 0) {
--				if (rsvd) {
--					lcounter = (long long)mp->m_resblks_avail + delta;
--					if (lcounter < 0) {
--						return XFS_ERROR(ENOSPC);
--					}
--					mp->m_resblks_avail = lcounter;
--					return 0;
--				} else {	/* not reserved */
--					return XFS_ERROR(ENOSPC);
--				}
-+			lcounter = (long long)mp->m_resblks_avail + delta;
-+			if (lcounter >= 0) {
-+				mp->m_resblks_avail = lcounter;
-+				return 0;
- 			}
-+			printk_once(KERN_WARNING
-+				"Filesystem \"%s\": reserve blocks depleted! "
-+				"Consider increasing reserve pool size.",
-+				mp->m_fsname);
-+			return XFS_ERROR(ENOSPC);
- 		}
- 
- 		mp->m_sb.sb_fdblocks = lcounter + XFS_ALLOC_SET_ASIDE(mp);
--- 
-1.6.5
+------_=_NextPart_001_01CABB57.5BA9278B
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+> Dave Chinner <mailto:david@fromorbit.com> wrote:
+> On Thu, Mar 04, 2010 at 11:19:30AM +1100, Stephen Rothwell wrote:
+> > Hi Dave,
+> >=20
+> > After merging the xfs tree, today's linux-next build (x86_64 =
+allmodconfig)
+> > produced this warning:
+> >=20
+> > fs/xfs/linux-2.6/xfs_aops.c: In function 'xfs_end_io':
+> > fs/xfs/linux-2.6/xfs_aops.c:232: warning: 'error' may be used =
+uninitialized in this function
+> >=20
+> > Introduced by commit 77d7a0c2eeb285c9069e15396703d0cb9690ac50 ("xfs:
+> > Non-blocking inode locking in IO completion").
+> >=20
+> > I can't tell if this is a false positive.  If the first two "if"
+> > statement bodies are skipped, then error is tested uninitialised.  =
+It is
+> > possible that at least one of them has to be executed.
+>=20
+> Right, there is a warning being generated there - I thought I fixed
+> that immediately after posting the first version of the patch. The
+> second version:
+>=20
+> http://oss.sgi.com/archives/xfs/2010-02/msg00340.html
+>=20
+> definitely had it fixed.
+>=20
+> Alex, can you make sure you take the entire patch rather than
+> cutting and pasting bits from one patch version to another?  That
+> way you don't miss small changes to the patch that might have been
+> forgotten about....
+
+I didn't expect you would change the patch content, only
+the description.  I had already tested the previous code
+so just grabbed the new description when you re-posted.
+Sorry about the warning slipping through.  I'll incorporate
+your fix below (tomorrow).
+
+                               -Alex
+
+
+> Stephen, the patch below should fix the warning.
+>=20
+> Cheers,
+>=20
+> Dave.
+> --=20
+> Dave Chinner
+> david@fromorbit.com
+>=20
+> xfs: fix uninitialised variable warning in xfs_end_io
+>=20
+> Signed-off-by: Dave Chinner <david@fromorbit.com>
+> ---
+>  fs/xfs/linux-2.6/xfs_aops.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
+> index f41a2d8..8989c16 100644
+> --- a/fs/xfs/linux-2.6/xfs_aops.c
+> +++ b/fs/xfs/linux-2.6/xfs_aops.c
+> @@ -230,7 +230,7 @@ xfs_end_io(
+>  {
+>  	xfs_ioend_t	*ioend =3D container_of(work, xfs_ioend_t, io_work);
+>  	struct xfs_inode *ip =3D XFS_I(ioend->io_inode);
+> -	int		error;
+> +	int		error =3D 0;
+> =20
+>  	/*
+>  	 * For unwritten extents we need to issue transactions to convert a
+>=20
+>=20
+
+------_=_NextPart_001_01CABB57.5BA9278B
+Content-Type: text/html;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV=3D"Content-Type" CONTENT=3D"text/html; =
+charset=3Diso-8859-1">
+<META NAME=3D"Generator" CONTENT=3D"MS Exchange Server version =
+6.5.7654.12">
+<TITLE>RE: [PATCH] Re: linux-next: build warning after merge of the xfs =
+tree</TITLE>
+</HEAD>
+<BODY>
+<!-- Converted from text/plain format -->
+
+<P><FONT SIZE=3D2>&gt; Dave Chinner &lt;<A =
+HREF=3D"mailto:david@fromorbit.com">mailto:david@fromorbit.com</A>&gt; =
+wrote:<BR>
+&gt; On Thu, Mar 04, 2010 at 11:19:30AM +1100, Stephen Rothwell =
+wrote:<BR>
+&gt; &gt; Hi Dave,<BR>
+&gt; &gt;<BR>
+&gt; &gt; After merging the xfs tree, today's linux-next build (x86_64 =
+allmodconfig)<BR>
+&gt; &gt; produced this warning:<BR>
+&gt; &gt;<BR>
+&gt; &gt; fs/xfs/linux-2.6/xfs_aops.c: In function 'xfs_end_io':<BR>
+&gt; &gt; fs/xfs/linux-2.6/xfs_aops.c:232: warning: 'error' may be used =
+uninitialized in this function<BR>
+&gt; &gt;<BR>
+&gt; &gt; Introduced by commit 77d7a0c2eeb285c9069e15396703d0cb9690ac50 =
+(&quot;xfs:<BR>
+&gt; &gt; Non-blocking inode locking in IO completion&quot;).<BR>
+&gt; &gt;<BR>
+&gt; &gt; I can't tell if this is a false positive.&nbsp; If the first =
+two &quot;if&quot;<BR>
+&gt; &gt; statement bodies are skipped, then error is tested =
+uninitialised.&nbsp; It is<BR>
+&gt; &gt; possible that at least one of them has to be executed.<BR>
+&gt;<BR>
+&gt; Right, there is a warning being generated there - I thought I =
+fixed<BR>
+&gt; that immediately after posting the first version of the patch. =
+The<BR>
+&gt; second version:<BR>
+&gt;<BR>
+&gt; <A =
+HREF=3D"http://oss.sgi.com/archives/xfs/2010-02/msg00340.html">http://oss=
+.sgi.com/archives/xfs/2010-02/msg00340.html</A><BR>
+&gt;<BR>
+&gt; definitely had it fixed.<BR>
+&gt;<BR>
+&gt; Alex, can you make sure you take the entire patch rather than<BR>
+&gt; cutting and pasting bits from one patch version to another?&nbsp; =
+That<BR>
+&gt; way you don't miss small changes to the patch that might have =
+been<BR>
+&gt; forgotten about....<BR>
+<BR>
+I didn't expect you would change the patch content, only<BR>
+the description.&nbsp; I had already tested the previous code<BR>
+so just grabbed the new description when you re-posted.<BR>
+Sorry about the warning slipping through.&nbsp; I'll incorporate<BR>
+your fix below (tomorrow).<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
+nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
+bsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -Alex<BR>
+<BR>
+<BR>
+&gt; Stephen, the patch below should fix the warning.<BR>
+&gt;<BR>
+&gt; Cheers,<BR>
+&gt;<BR>
+&gt; Dave.<BR>
+&gt; --<BR>
+&gt; Dave Chinner<BR>
+&gt; david@fromorbit.com<BR>
+&gt;<BR>
+&gt; xfs: fix uninitialised variable warning in xfs_end_io<BR>
+&gt;<BR>
+&gt; Signed-off-by: Dave Chinner &lt;david@fromorbit.com&gt;<BR>
+&gt; ---<BR>
+&gt;&nbsp; fs/xfs/linux-2.6/xfs_aops.c |&nbsp;&nbsp;&nbsp; 2 +-<BR>
+&gt;&nbsp; 1 files changed, 1 insertions(+), 1 deletions(-)<BR>
+&gt;<BR>
+&gt; diff --git a/fs/xfs/linux-2.6/xfs_aops.c =
+b/fs/xfs/linux-2.6/xfs_aops.c<BR>
+&gt; index f41a2d8..8989c16 100644<BR>
+&gt; --- a/fs/xfs/linux-2.6/xfs_aops.c<BR>
+&gt; +++ b/fs/xfs/linux-2.6/xfs_aops.c<BR>
+&gt; @@ -230,7 +230,7 @@ xfs_end_io(<BR>
+&gt;&nbsp; {<BR>
+&gt;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; xfs_ioend_t&nbsp;&nbsp;&nbsp;&nbsp; =
+*ioend =3D container_of(work, xfs_ioend_t, io_work);<BR>
+&gt;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; struct xfs_inode *ip =3D =
+XFS_I(ioend-&gt;io_inode);<BR>
+&gt; -&nbsp;&nbsp;&nbsp;&nbsp; int&nbsp;&nbsp;&nbsp;&nbsp; =
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; error;<BR>
+&gt; +&nbsp;&nbsp;&nbsp;&nbsp; int&nbsp;&nbsp;&nbsp;&nbsp; =
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; error =3D 0;<BR>
+&gt;&nbsp;<BR>
+&gt;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; /*<BR>
+&gt;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * For unwritten extents we =
+need to issue transactions to convert a<BR>
+&gt;<BR>
+&gt;<BR>
+</FONT>
+</P>
+
+</BODY>
+</HTML>
+------_=_NextPart_001_01CABB57.5BA9278B--
+
+
+--===============8684731430972473130==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============8684731430972473130==--
