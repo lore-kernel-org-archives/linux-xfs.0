@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o24DnMXx171013 for <xfs@oss.sgi.com>; Thu, 4 Mar 2010 07:49:22 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2A83D21837B
-	for <xfs@oss.sgi.com>; Thu,  4 Mar 2010 05:50:51 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id ChxOjGxKFNFLT663 for
-	<xfs@oss.sgi.com>; Thu, 04 Mar 2010 05:50:51 -0800 (PST)
-Date: Thu, 4 Mar 2010 08:50:50 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/3] xfs: check for more work before sleeping in xfssyncd
-Message-ID: <20100304135050.GA31753@infradead.org>
-References: <1267667185-7736-1-git-send-email-david@fromorbit.com>
-	<1267667185-7736-2-git-send-email-david@fromorbit.com>
+	o24EJOth172656 for <xfs@oss.sgi.com>; Thu, 4 Mar 2010 08:19:24 -0600
+Received: from firestarter.dermichi.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 65B64218461
+	for <xfs@oss.sgi.com>; Thu,  4 Mar 2010 06:20:51 -0800 (PST)
+Received: from firestarter.dermichi.com (firestarter.dermichi.com
+	[78.41.115.230]) by cuda.sgi.com with ESMTP id zT0QrEg795CBSRP7
+	for <xfs@oss.sgi.com>; Thu, 04 Mar 2010 06:20:51 -0800 (PST)
+Message-ID: <4B8FC1B7.3070505@dermichi.com>
+Date: Thu, 04 Mar 2010 15:20:39 +0100
+From: Michael Weissenbacher <mw@dermichi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1267667185-7736-2-git-send-email-david@fromorbit.com>
+Subject: Re: XFS hang during xfs_fsr run
+References: <4B8F871C.60802@dermichi.com>
+	<20100304112018.GG14317@discord.disaster>
+	<4B8FA2CD.6010904@dermichi.com>
+	<20100304131511.GH14317@discord.disaster>
+	<20100304134641.GA26871@infradead.org>
+In-Reply-To: <20100304134641.GA26871@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,33 +27,35 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Thu, Mar 04, 2010 at 12:46:23PM +1100, Dave Chinner wrote:
-> xfssyncd processes a queue of work by detaching the queue and
-> then iterating over all the work items. It then sleeps for a
-> time period or until new work comes in. If new work is queued
-> while xfssyncd is actively processing the detached work queue,
-> it will not process that new work until after a sleep timeout
-> or the next work event queued wakes it.
-> 
-> Fix this by checking the work queue again before going to sleep.
+Hi Christoph/Dave!
+> Also when you next rebuilt the kernel please make sure to include
+> CONFIG_KALLSYMS in the configuration, possibly CONFIG_KALLSYMS_ALL too.
+> This will help greatly with decoding any kind of warning / oops.
+Thanks for this information. Unfortunately my current kernel was built 
+without CONFIG_KALLSYMS. I'm now recompiling with CONFIG_KALLSYMS and 
+CONFIG_KALLSYMS_ALL set. I reckon that my old traces can't be 
+ksymoops'ed even if i enable that kernel option now? I will see if i can 
+get a fresh trace then (even though i hope it won't happen again).
 
-Looks good, as does the list_splice cleanup not mentioned in the
-changelog.  But I really wonder if we shouldn't just call the
-flushing routine directly instead of going through xfssyncd.
+> Was there anything else in the logs prior to the oops messages
+> that might indicate errors were occurring?
+Unfortunately everything in the logs is dandy until the error happens. 
+It seems that xfs_fsr randomly stops at some files and then locks up the 
+whole /var partition. I searched for the inode numbers where xfs_fsr 
+stopped and one time it was "/var/log/xfs_fsr.log" and the other time it 
+was "/var/spool/imap/x/user/xxxx/cyrus.cache" (username obfuscated). 
+Whats's interesting is that i have the no-defrag flag set on the whole 
+/var/log directory and still it seemed to hang on that log file.
 
-The xfssyncd queueing infrastructure is quite a lot of hairy code
-just to save a bit of stack space in two places rather high
-up in the callchain.
-
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+cheers,
+Michael
 
 _______________________________________________
 xfs mailing list
