@@ -1,24 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o23MsmJd116610 for <xfs@oss.sgi.com>; Wed, 3 Mar 2010 16:54:48 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8E3B92163CE
-	for <xfs@oss.sgi.com>; Wed,  3 Mar 2010 14:56:15 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	tlDdkEAZnvJBPOeZ for <xfs@oss.sgi.com>;
-	Wed, 03 Mar 2010 14:56:15 -0800 (PST)
-Date: Thu, 4 Mar 2010 09:56:12 +1100
+	o240tp1X123833 for <xfs@oss.sgi.com>; Wed, 3 Mar 2010 18:55:51 -0600
+Date: Thu, 4 Mar 2010 11:57:09 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/3] xfsqa: fix size specification for scratch mkfs
-Message-ID: <20100303225612.GB14317@discord.disaster>
-References: <1267597162-12092-1-git-send-email-david@fromorbit.com>
-	<1267597162-12092-3-git-send-email-david@fromorbit.com>
-	<20100303125809.GB26672@infradead.org>
+Subject: [PATCH] Re: linux-next: build warning after merge of the xfs tree
+Message-ID: <20100304005709.GE14317@discord.disaster>
+References: <20100304111930.86f7cc62.sfr@canb.auug.org.au>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100303125809.GB26672@infradead.org>
+In-Reply-To: <20100304111930.86f7cc62.sfr@canb.auug.org.au>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,40 +22,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: aelder@sgi.com, xfs-masters@oss.sgi.com, linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, Mar 03, 2010 at 07:58:09AM -0500, Christoph Hellwig wrote:
-> On Wed, Mar 03, 2010 at 05:19:21PM +1100, Dave Chinner wrote:
-> > When making a specifically sized scratch filesystem, we need to
-> > calculate the size rather than assigning the caclculation expression
-> > to a variable and passing that into the _scratch_mkfs_sized
-> > function. Currently sized filesystems are failing to be made and the
-> > code is falling back to full sized filesystems so we are not testing
-> > enospc issues correctly.
+On Thu, Mar 04, 2010 at 11:19:30AM +1100, Stephen Rothwell wrote:
+> Hi Dave,
 > 
-> This seems rather fragile.  Maybe instead of calculating the bignums
-> which I suspect are the problem could we pass symbolic values like 104M
-> in and parse them in _scratch_mkfs_sized?
+> After merging the xfs tree, today's linux-next build (x86_64 allmodconfig)
+> produced this warning:
+> 
+> fs/xfs/linux-2.6/xfs_aops.c: In function 'xfs_end_io':
+> fs/xfs/linux-2.6/xfs_aops.c:232: warning: 'error' may be used uninitialized in this function
+> 
+> Introduced by commit 77d7a0c2eeb285c9069e15396703d0cb9690ac50 ("xfs:
+> Non-blocking inode locking in IO completion").
+> 
+> I can't tell if this is a false positive.  If the first two "if"
+> statement bodies are skipped, then error is tested uninitialised.  It is
+> possible that at least one of them has to be executed.
 
-The problem was that "mkfs.xfs -d size=104*1024*1024 ..." fails
-because $fssize was not a numeric value.
+Right, there is a warning being generated there - I thought I fixed
+that immediately after posting the first version of the patch. The
+second version:
 
-There's no problem with 64 bit numbers with expr:
+http://oss.sgi.com/archives/xfs/2010-02/msg00340.html
 
-$ expr 5 \* 1024 \* 1024 \* 1024 \* 1024
-5497558138880
+definitely had it fixed.
 
-So specifying large sizes by a byte count like this is not an
-issue. Lots of other tests use expr in this way.
+Alex, can you make sure you take the entire patch rather than
+cutting and pasting bits from one patch version to another?  That
+way you don't miss small changes to the patch that might have been
+forgotten about....
 
-If we change the calculations in _scratch_mkfs_sized() to use expr
-then there's no 32 bit overflow issues, either. This seems like a
-simpler way to go to introduce the complexity of symbolic values
-and parsing, esp. as we'd still have to handle 64 bit values
-correctly...
-
-The updated patch below uses expr in _scratch_mkfs_sized as well.
+Stephen, the patch below should fix the warning.
 
 Cheers,
 
@@ -73,61 +63,26 @@ Dave.
 Dave Chinner
 david@fromorbit.com
 
-xfsqa: fix size specification for scratch mkfs
-
-When making a specifically sized scratch filesystem, we need to
-calculate the size rather than assigning the caclculation expression
-to a variable and passing that into the _scratch_mkfs_sized
-function. Currently sized filesystems are failing to be made and the
-code is falling back to full sized filesystems so we are not testing
-enospc issues correctly.
+xfs: fix uninitialised variable warning in xfs_end_io
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- 077       |    2 +-
- 204       |    2 +-
- common.rc |    2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+ fs/xfs/linux-2.6/xfs_aops.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/077 b/077
-index 72f1b2a..4e12163 100755
---- a/077
-+++ b/077
-@@ -62,7 +62,7 @@ rm -f $seq.full
- umount $SCRATCH_DEV >/dev/null 2>&1
- echo "*** MKFS ***"                         >>$seq.full
- echo ""                                     >>$seq.full
--let SIZE=50*1024*1024
-+SIZE=`expr 50 \* 1024 \* 1024`
- _scratch_mkfs_sized $SIZE                   >>$seq.full 2>&1 \
- 	|| _fail "mkfs failed"
- _scratch_mount                              >>$seq.full 2>&1 \
-diff --git a/204 b/204
-index 14ebcdc..8b94f60 100755
---- a/204
-+++ b/204
-@@ -40,7 +40,7 @@ _supported_os Linux
+diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
+index f41a2d8..8989c16 100644
+--- a/fs/xfs/linux-2.6/xfs_aops.c
++++ b/fs/xfs/linux-2.6/xfs_aops.c
+@@ -230,7 +230,7 @@ xfs_end_io(
+ {
+ 	xfs_ioend_t	*ioend = container_of(work, xfs_ioend_t, io_work);
+ 	struct xfs_inode *ip = XFS_I(ioend->io_inode);
+-	int		error;
++	int		error = 0;
  
- _require_scratch
- 
--SIZE=104*1024*1024
-+SIZE=`expr 104 \* 1024 \* 1024`
- _scratch_mkfs_sized $SIZE  &> /dev/null
- _scratch_mount
- 
-diff --git a/common.rc b/common.rc
-index ca2cd2c..d71e0a2 100644
---- a/common.rc
-+++ b/common.rc
-@@ -320,7 +320,7 @@ _scratch_mkfs_sized()
-     fssize=$1
-     blocksize=$2
-     [ -z "$blocksize" ] && blocksize=4096
--    let blocks=$fssize/$blocksize
-+    blocks=`expr $fssize / $blocksize`
- 
-     case $FSTYP in
-     xfs)
+ 	/*
+ 	 * For unwritten extents we need to issue transactions to convert a
 
 _______________________________________________
 xfs mailing list
