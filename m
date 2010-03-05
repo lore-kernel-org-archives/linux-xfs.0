@@ -1,12 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o25KcsZ0012205 for <xfs@oss.sgi.com>; Fri, 5 Mar 2010 14:38:55 -0600
-From: Alex Elder <aelder@sgi.com>
-Message-Id: <201003052040.o25KeH1g013314@stout.americas.sgi.com>
-Date: Fri, 05 Mar 2010 14:40:17 -0600
-Subject: [GIT PULL] XFS update for 2.6.34-rc1
+	o25NP0Qp030782 for <xfs@oss.sgi.com>; Fri, 5 Mar 2010 17:25:01 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D248313FE347
+	for <xfs@oss.sgi.com>; Fri,  5 Mar 2010 15:26:27 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
+	[150.101.137.104]) by cuda.sgi.com with ESMTP id
+	krIx15d0sTu18YA7 for <xfs@oss.sgi.com>;
+	Fri, 05 Mar 2010 15:26:27 -0800 (PST)
+Date: Sat, 6 Mar 2010 10:26:24 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/3] xfs: Increase the default size of the reserved
+	blocks pool
+Message-ID: <20100305232624.GA28189@discord.disaster>
+References: <1267667185-7736-1-git-send-email-david@fromorbit.com>
+	<1267667185-7736-4-git-send-email-david@fromorbit.com>
+	<1267803953.2478.13.camel@doink>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1267803953.2478.13.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,82 +32,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: xfs@oss.sgi.com
 
-As I mentioned in my first pull request, this is the second
-set of XFS commits for 2.6.34-rc1.  A little later than I'd
-hoped (sorry).
+On Fri, Mar 05, 2010 at 09:45:53AM -0600, Alex Elder wrote:
+> On Thu, 2010-03-04 at 12:46 +1100, Dave Chinner wrote:
+> > The current default size of the reserved blocks pool is easy to deplete
+> > with certain workloads, in particular workloads that do lots of concurrent
+> > delayed allocation extent conversions.  If enough transactions are running
+> > in parallel and the entire pool is consumed then subsequent calls to
+> > xfs_trans_reserve() will fail with ENOSPC.  Also add a rate limited
+> > warning so we know if this starts happening again.
+> > 
+> > This is an updated version of an old patch from Lachlan McIlroy.
+> 
+> Looks good.  The comment and code rearrangements are an
+> improvement.
+> 
+> I have also reviewed the other two patches in the series
+> (including the updated patch 2) and they too look good.
+> 
+> > Signed-off-by: Dave Chinner <david@fromorbit.com>
+>          So is it got to be fromorbit or redhat?
+>          (You used both in this series.)
 
-					-Alex
+What each individual patch says.
 
-The following changes since commit 9467c4fdd66f6810cecef0f1173330f3c6e67d45:
-  Linus Torvalds (1):
-        Merge branch 'write_inode2' of git://git.kernel.org/.../viro/vfs-2.6
+It depends on the history of the patch to what the sign-off I'll use
+on it. This one I pulled from a patch series I had locally that
+hadn't been touched for months (i.e. not new work). I simply updated
+it for the recent resblks changes....
 
-are available in the git repository at:
+Cheers,
 
-  git://oss.sgi.com/xfs/xfs for-linus
-
-Alex Elder (1):
-      Merge branch 'for-2.6.34-rc1-batch2' into for-linus
-
-Christoph Hellwig (14):
-      xfs: fix dquota trace format
-      xfs: merge xfs_lrw.c into xfs_file.c
-      xfs: remove wrappers for read/write file operations
-      xfs: remove wrapper for the fsync file operation
-      xfs: implement optimized fdatasync
-      xfs: fix inode pincount check in fsync
-      xfs: fix xfs_fsblock_t tracing
-      xfs: split xfs_bmap_btalloc
-      xfs: stop passing opaque handles to xfs_log.c routines
-      xfs: factor common xfs_trans_bjoin code
-      xfs: kill xfs_lrw.h
-      xfs: cleanup xfs_iunpin_wait/xfs_iunpin_nowait
-      xfs: remove xfs_ipin/xfs_iunpin
-      xfs: fix locking for inode cache radix tree tag updates
-
-Dave Chinner (6):
-      xfs: Non-blocking inode locking in IO completion
-      xfs: Fix a build warning in xfs_aops.c
-      xfs: check for more work before sleeping in xfssyncd
-      xfs: truncate delalloc extents when IO fails in writeback
-      xfs: Increase the default size of the reserved blocks pool
-      xfs: return inode fork offset in bulkstat for fsr
-
-Eric Sandeen (1):
-      xfs: increase readdir buffer size
-
- fs/xfs/Makefile              |    1 -
- fs/xfs/linux-2.6/xfs_aops.c  |  221 +++++++++---
- fs/xfs/linux-2.6/xfs_file.c  |  854 +++++++++++++++++++++++++++++++++++++++---
- fs/xfs/linux-2.6/xfs_iops.c  |   10 +
- fs/xfs/linux-2.6/xfs_linux.h |    1 -
- fs/xfs/linux-2.6/xfs_lrw.c   |  796 ---------------------------------------
- fs/xfs/linux-2.6/xfs_lrw.h   |   29 --
- fs/xfs/linux-2.6/xfs_sync.c  |   10 +-
- fs/xfs/linux-2.6/xfs_trace.c |   16 -
- fs/xfs/linux-2.6/xfs_trace.h |   22 +-
- fs/xfs/xfs_bmap.c            |  220 ++++++-----
- fs/xfs/xfs_fs.h              |    3 +-
- fs/xfs/xfs_iget.c            |   19 +-
- fs/xfs/xfs_inode.c           |   68 +---
- fs/xfs/xfs_inode.h           |    3 +-
- fs/xfs/xfs_inode_item.c      |   18 +-
- fs/xfs/xfs_itable.c          |    2 +
- fs/xfs/xfs_log.c             |  106 +++---
- fs/xfs/xfs_log.h             |   16 +-
- fs/xfs/xfs_mount.c           |   69 +++-
- fs/xfs/xfs_mount.h           |    2 +
- fs/xfs/xfs_trans.c           |    2 +-
- fs/xfs/xfs_trans.h           |    2 +-
- fs/xfs/xfs_trans_buf.c       |  216 ++++--------
- fs/xfs/xfs_vnodeops.c        |  107 ------
- fs/xfs/xfs_vnodeops.h        |   15 +-
- 26 files changed, 1344 insertions(+), 1484 deletions(-)
- delete mode 100644 fs/xfs/linux-2.6/xfs_lrw.c
- delete mode 100644 fs/xfs/linux-2.6/xfs_lrw.h
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
