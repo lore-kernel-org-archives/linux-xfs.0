@@ -1,17 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o25FiRUk256800 for <xfs@oss.sgi.com>; Fri, 5 Mar 2010 09:44:27 -0600
-Subject: Re: [PATCH 3/3] xfs: Increase the default size of the reserved
-	blocks pool
+	o25KcsZ0012205 for <xfs@oss.sgi.com>; Fri, 5 Mar 2010 14:38:55 -0600
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1267667185-7736-4-git-send-email-david@fromorbit.com>
-References: <1267667185-7736-1-git-send-email-david@fromorbit.com>
-	<1267667185-7736-4-git-send-email-david@fromorbit.com>
-Date: Fri, 05 Mar 2010 09:45:53 -0600
-Message-ID: <1267803953.2478.13.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+Message-Id: <201003052040.o25KeH1g013314@stout.americas.sgi.com>
+Date: Fri, 05 Mar 2010 14:40:17 -0600
+Subject: [GIT PULL] XFS update for 2.6.34-rc1
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,123 +19,82 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, 2010-03-04 at 12:46 +1100, Dave Chinner wrote:
-> The current default size of the reserved blocks pool is easy to deplete
-> with certain workloads, in particular workloads that do lots of concurrent
-> delayed allocation extent conversions.  If enough transactions are running
-> in parallel and the entire pool is consumed then subsequent calls to
-> xfs_trans_reserve() will fail with ENOSPC.  Also add a rate limited
-> warning so we know if this starts happening again.
-> 
-> This is an updated version of an old patch from Lachlan McIlroy.
+As I mentioned in my first pull request, this is the second
+set of XFS commits for 2.6.34-rc1.  A little later than I'd
+hoped (sorry).
 
-Looks good.  The comment and code rearrangements are an
-improvement.
+					-Alex
 
-I have also reviewed the other two patches in the series
-(including the updated patch 2) and they too look good.
+The following changes since commit 9467c4fdd66f6810cecef0f1173330f3c6e67d45:
+  Linus Torvalds (1):
+        Merge branch 'write_inode2' of git://git.kernel.org/.../viro/vfs-2.6
 
-> Signed-off-by: Dave Chinner <david@fromorbit.com>
-         So is it got to be fromorbit or redhat?
-         (You used both in this series.)
+are available in the git repository at:
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+  git://oss.sgi.com/xfs/xfs for-linus
 
-> ---
->  fs/xfs/xfs_mount.c |   49 +++++++++++++++++++++++++++++--------------------
->  1 files changed, 29 insertions(+), 20 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index c207fef..e79b56b 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -1097,13 +1097,15 @@ xfs_default_resblks(xfs_mount_t *mp)
->  	__uint64_t resblks;
->  
->  	/*
-> -	 * We default to 5% or 1024 fsbs of space reserved, whichever is smaller.
-> -	 * This may drive us straight to ENOSPC on mount, but that implies
-> -	 * we were already there on the last unmount. Warn if this occurs.
-> +	 * We default to 5% or 8192 fsbs of space reserved, whichever is
-> +	 * smaller.  This is intended to cover concurrent allocation
-> +	 * transactions when we initially hit enospc. These each require a 4
-> +	 * block reservation. Hence by default we cover roughly 2000 concurrent
-> +	 * allocation reservations.
->  	 */
->  	resblks = mp->m_sb.sb_dblocks;
->  	do_div(resblks, 20);
-> -	resblks = min_t(__uint64_t, resblks, 1024);
-> +	resblks = min_t(__uint64_t, resblks, 8192);
->  	return resblks;
->  }
->  
-> @@ -1417,6 +1419,9 @@ xfs_mountfs(
->  	 * when at ENOSPC. This is needed for operations like create with
->  	 * attr, unwritten extent conversion at ENOSPC, etc. Data allocations
->  	 * are not allowed to use this reserved space.
-> +	 *
-> +	 * This may drive us straight to ENOSPC on mount, but that implies
-> +	 * we were already there on the last unmount. Warn if this occurs.
->  	 */
->  	if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
->  		resblks = xfs_default_resblks(mp);
-> @@ -1725,26 +1730,30 @@ xfs_mod_incore_sb_unlocked(
->  				lcounter += rem;
->  			}
->  		} else {				/* Taking blocks away */
-> -
->  			lcounter += delta;
-> +			if (lcounter >= 0) {
-> +				mp->m_sb.sb_fdblocks = lcounter +
-> +							XFS_ALLOC_SET_ASIDE(mp);
-> +				return 0;
-> +			}
->  
-> -		/*
-> -		 * If were out of blocks, use any available reserved blocks if
-> -		 * were allowed to.
-> -		 */
+Alex Elder (1):
+      Merge branch 'for-2.6.34-rc1-batch2' into for-linus
 
-I was just looking at this code yesterday, and got confused
-by the indentation of this comment.  You beat me to fixing it.
-I also think your rearranging of the logic below is an improvement.
+Christoph Hellwig (14):
+      xfs: fix dquota trace format
+      xfs: merge xfs_lrw.c into xfs_file.c
+      xfs: remove wrappers for read/write file operations
+      xfs: remove wrapper for the fsync file operation
+      xfs: implement optimized fdatasync
+      xfs: fix inode pincount check in fsync
+      xfs: fix xfs_fsblock_t tracing
+      xfs: split xfs_bmap_btalloc
+      xfs: stop passing opaque handles to xfs_log.c routines
+      xfs: factor common xfs_trans_bjoin code
+      xfs: kill xfs_lrw.h
+      xfs: cleanup xfs_iunpin_wait/xfs_iunpin_nowait
+      xfs: remove xfs_ipin/xfs_iunpin
+      xfs: fix locking for inode cache radix tree tag updates
 
-> +			/*
-> +			 * We are out of blocks, use any available reserved
-> +			 * blocks if were allowed to.
-> +			 */
-> +			if (!rsvd)
-> +				return XFS_ERROR(ENOSPC);
->  
-> -			if (lcounter < 0) {
-> -				if (rsvd) {
-> -					lcounter = (long long)mp->m_resblks_avail + delta;
-> -					if (lcounter < 0) {
-> -						return XFS_ERROR(ENOSPC);
-> -					}
-> -					mp->m_resblks_avail = lcounter;
-> -					return 0;
-> -				} else {	/* not reserved */
-> -					return XFS_ERROR(ENOSPC);
-> -				}
-> +			lcounter = (long long)mp->m_resblks_avail + delta;
-> +			if (lcounter >= 0) {
-> +				mp->m_resblks_avail = lcounter;
-> +				return 0;
->  			}
-> +			printk_once(KERN_WARNING
-> +				"Filesystem \"%s\": reserve blocks depleted! "
-> +				"Consider increasing reserve pool size.",
-> +				mp->m_fsname);
-> +			return XFS_ERROR(ENOSPC);
->  		}
->  
->  		mp->m_sb.sb_fdblocks = lcounter + XFS_ALLOC_SET_ASIDE(mp);
+Dave Chinner (6):
+      xfs: Non-blocking inode locking in IO completion
+      xfs: Fix a build warning in xfs_aops.c
+      xfs: check for more work before sleeping in xfssyncd
+      xfs: truncate delalloc extents when IO fails in writeback
+      xfs: Increase the default size of the reserved blocks pool
+      xfs: return inode fork offset in bulkstat for fsr
 
+Eric Sandeen (1):
+      xfs: increase readdir buffer size
 
+ fs/xfs/Makefile              |    1 -
+ fs/xfs/linux-2.6/xfs_aops.c  |  221 +++++++++---
+ fs/xfs/linux-2.6/xfs_file.c  |  854 +++++++++++++++++++++++++++++++++++++++---
+ fs/xfs/linux-2.6/xfs_iops.c  |   10 +
+ fs/xfs/linux-2.6/xfs_linux.h |    1 -
+ fs/xfs/linux-2.6/xfs_lrw.c   |  796 ---------------------------------------
+ fs/xfs/linux-2.6/xfs_lrw.h   |   29 --
+ fs/xfs/linux-2.6/xfs_sync.c  |   10 +-
+ fs/xfs/linux-2.6/xfs_trace.c |   16 -
+ fs/xfs/linux-2.6/xfs_trace.h |   22 +-
+ fs/xfs/xfs_bmap.c            |  220 ++++++-----
+ fs/xfs/xfs_fs.h              |    3 +-
+ fs/xfs/xfs_iget.c            |   19 +-
+ fs/xfs/xfs_inode.c           |   68 +---
+ fs/xfs/xfs_inode.h           |    3 +-
+ fs/xfs/xfs_inode_item.c      |   18 +-
+ fs/xfs/xfs_itable.c          |    2 +
+ fs/xfs/xfs_log.c             |  106 +++---
+ fs/xfs/xfs_log.h             |   16 +-
+ fs/xfs/xfs_mount.c           |   69 +++-
+ fs/xfs/xfs_mount.h           |    2 +
+ fs/xfs/xfs_trans.c           |    2 +-
+ fs/xfs/xfs_trans.h           |    2 +-
+ fs/xfs/xfs_trans_buf.c       |  216 ++++--------
+ fs/xfs/xfs_vnodeops.c        |  107 ------
+ fs/xfs/xfs_vnodeops.h        |   15 +-
+ 26 files changed, 1344 insertions(+), 1484 deletions(-)
+ delete mode 100644 fs/xfs/linux-2.6/xfs_lrw.c
+ delete mode 100644 fs/xfs/linux-2.6/xfs_lrw.h
 
 _______________________________________________
 xfs mailing list
