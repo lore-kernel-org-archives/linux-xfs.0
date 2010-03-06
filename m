@@ -1,31 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o261oKxY041811 for <xfs@oss.sgi.com>; Fri, 5 Mar 2010 19:50:26 -0600
+	o261oGOP041818 for <xfs@oss.sgi.com>; Fri, 5 Mar 2010 19:50:16 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8D5331D1A7EA
-	for <xfs@oss.sgi.com>; Fri,  5 Mar 2010 17:51:42 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 26FF113FE7DB
+	for <xfs@oss.sgi.com>; Fri,  5 Mar 2010 17:51:40 -0800 (PST)
 Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
 	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	tZiJf5UjaLle0GGU for <xfs@oss.sgi.com>;
-	Fri, 05 Mar 2010 17:51:42 -0800 (PST)
+	iKxFB6GiMBorF7k6 for <xfs@oss.sgi.com>;
+	Fri, 05 Mar 2010 17:51:40 -0800 (PST)
 Received: from discord (unverified [121.44.103.80])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	4462092-1927428
-	for <xfs@oss.sgi.com>; Sat, 06 Mar 2010 12:21:41 +1030 (CDT)
+	4462088-1927428
+	for <xfs@oss.sgi.com>; Sat, 06 Mar 2010 12:21:38 +1030 (CDT)
 Received: from disturbed ([192.168.1.9]) by discord with esmtp (Exim 4.69)
-	(envelope-from <dave@fromorbit.com>) id 1NnjB3-0007Rr-Fg
+	(envelope-from <dave@fromorbit.com>) id 1NnjB3-0007Ru-Kg
 	for xfs@oss.sgi.com; Sat, 06 Mar 2010 12:51:37 +1100
 Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1NnjAu-0001EK-TH
-	for xfs@oss.sgi.com; Sat, 06 Mar 2010 12:51:28 +1100
+	(envelope-from <dave@disturbed.disaster>) id 1NnjAv-0001ES-3o
+	for xfs@oss.sgi.com; Sat, 06 Mar 2010 12:51:29 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/9] xfs: factor log item initialisation
-Date: Sat,  6 Mar 2010 12:51:16 +1100
-Message-Id: <1267840284-4652-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 4/9] xfs: fix reservation release commit flag in
+	xfs_bmap_add_attrfork()
+Date: Sat,  6 Mar 2010 12:51:19 +1100
+Message-Id: <1267840284-4652-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1267840284-4652-1-git-send-email-david@fromorbit.com>
 References: <1267840284-4652-1-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,104 +34,45 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKRWFjaCBsb2cgaXRlbSB0
-eXBlIGRvZXMgbWFudWFsIGluaXRpYWxpc2F0aW9uIG9mIHRoZSBsb2cgaXRlbS4KRGVsYXllZCBs
-b2dnaW5nIGludHJvZHVjZdGVIG5ldyBmaWVsZHMgdGhhdCBuZWVkIGluaXRpYWxpc2F0aW9uLCBz
-bwpmYWN0b3IgYWxsIHRoZSBvcGVuIGNvZGVkIGluaXRpYWxpc2F0aW9uIGludG8gYSBjb21tb24g
-ZnVuY3Rpb24KZmlyc3QuCgpTaWduZWQtb2ZmLWJ5OiBEYXZlIENoaW5uZXIgPGRjaGlubmVyQHJl
-ZGhhdC5jb20+Ci0tLQogZnMveGZzL3F1b3RhL3hmc19kcXVvdF9pdGVtLmMgfCAgIDEyICsrKyst
-LS0tLS0tLQogZnMveGZzL3hmc19idWZfaXRlbS5jICAgICAgICAgfCAgICA1ICstLS0tCiBmcy94
-ZnMveGZzX2V4dGZyZWVfaXRlbS5jICAgICB8ICAgMTAgKystLS0tLS0tLQogZnMveGZzL3hmc19p
-bm9kZV9pdGVtLmMgICAgICAgfCAgIDEyICsrLS0tLS0tLS0tLQogZnMveGZzL3hmc19sb2cuYyAg
-ICAgICAgICAgICAgfCAgIDEzICsrKysrKysrKysrKysKIGZzL3hmcy94ZnNfbG9nLmggICAgICAg
-ICAgICAgIHwgICAgNyArKysrKysrCiA2IGZpbGVzIGNoYW5nZWQsIDI5IGluc2VydGlvbnMoKyks
-IDMwIGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2ZzL3hmcy9xdW90YS94ZnNfZHF1b3RfaXRl
-bS5jIGIvZnMveGZzL3F1b3RhL3hmc19kcXVvdF9pdGVtLmMKaW5kZXggNGU0ZWU5YS4uNjM5ZDk2
-NSAxMDA2NDQKLS0tIGEvZnMveGZzL3F1b3RhL3hmc19kcXVvdF9pdGVtLmMKKysrIGIvZnMveGZz
-L3F1b3RhL3hmc19kcXVvdF9pdGVtLmMKQEAgLTM1Nyw5ICszNTcsOCBAQCB4ZnNfcW1fZHF1b3Rf
-bG9naXRlbV9pbml0KAogCXhmc19kcV9sb2dpdGVtX3QgICpscDsKIAlscCA9ICZkcXAtPnFfbG9n
-aXRlbTsKIAotCWxwLT5xbGlfaXRlbS5saV90eXBlID0gWEZTX0xJX0RRVU9UOwotCWxwLT5xbGlf
-aXRlbS5saV9vcHMgPSAmeGZzX2RxdW90X2l0ZW1fb3BzOwotCWxwLT5xbGlfaXRlbS5saV9tb3Vu
-dHAgPSBkcXAtPnFfbW91bnQ7CisJeGZzX2xvZ19pdGVtX2luaXQoZHFwLT5xX21vdW50LCAmbHAt
-PnFsaV9pdGVtLCBYRlNfTElfRFFVT1QsCisJCQkJCSZ4ZnNfZHF1b3RfaXRlbV9vcHMpOwogCWxw
-LT5xbGlfZHF1b3QgPSBkcXA7CiAJbHAtPnFsaV9mb3JtYXQucWxmX3R5cGUgPSBYRlNfTElfRFFV
-T1Q7CiAJbHAtPnFsaV9mb3JtYXQucWxmX2lkID0gYmUzMl90b19jcHUoZHFwLT5xX2NvcmUuZF9p
-ZCk7CkBAIC01ODYsMTEgKzU4NSw4IEBAIHhmc19xbV9xb2ZmX2xvZ2l0ZW1faW5pdCgKIAogCXFm
-ID0gKHhmc19xb2ZmX2xvZ2l0ZW1fdCopIGttZW1femFsbG9jKHNpemVvZih4ZnNfcW9mZl9sb2dp
-dGVtX3QpLCBLTV9TTEVFUCk7CiAKLQlxZi0+cXFsX2l0ZW0ubGlfdHlwZSA9IFhGU19MSV9RVU9U
-QU9GRjsKLQlpZiAoc3RhcnQpCi0JCXFmLT5xcWxfaXRlbS5saV9vcHMgPSAmeGZzX3FtX3FvZmZl
-bmRfbG9naXRlbV9vcHM7Ci0JZWxzZQotCQlxZi0+cXFsX2l0ZW0ubGlfb3BzID0gJnhmc19xbV9x
-b2ZmX2xvZ2l0ZW1fb3BzOworCXhmc19sb2dfaXRlbV9pbml0KG1wLCAmcWYtPnFxbF9pdGVtLCBY
-RlNfTElfUVVPVEFPRkYsIHN0YXJ0ID8KKwkJCSZ4ZnNfcW1fcW9mZmVuZF9sb2dpdGVtX29wcyA6
-ICZ4ZnNfcW1fcW9mZl9sb2dpdGVtX29wcyk7CiAJcWYtPnFxbF9pdGVtLmxpX21vdW50cCA9IG1w
-OwogCXFmLT5xcWxfZm9ybWF0LnFmX3R5cGUgPSBYRlNfTElfUVVPVEFPRkY7CiAJcWYtPnFxbF9m
-b3JtYXQucWZfZmxhZ3MgPSBmbGFnczsKZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNfYnVmX2l0ZW0u
-YyBiL2ZzL3hmcy94ZnNfYnVmX2l0ZW0uYwppbmRleCBmM2M0OWU2Li5hYWNlMjM3IDEwMDY0NAot
-LS0gYS9mcy94ZnMveGZzX2J1Zl9pdGVtLmMKKysrIGIvZnMveGZzL3hmc19idWZfaXRlbS5jCkBA
-IC03MzMsMTAgKzczMyw3IEBAIHhmc19idWZfaXRlbV9pbml0KAogCiAJYmlwID0gKHhmc19idWZf
-bG9nX2l0ZW1fdCopa21lbV96b25lX3phbGxvYyh4ZnNfYnVmX2l0ZW1fem9uZSwKIAkJCQkJCSAg
-ICBLTV9TTEVFUCk7Ci0JYmlwLT5ibGlfaXRlbS5saV90eXBlID0gWEZTX0xJX0JVRjsKLQliaXAt
-PmJsaV9pdGVtLmxpX29wcyA9ICZ4ZnNfYnVmX2l0ZW1fb3BzOwotCWJpcC0+YmxpX2l0ZW0ubGlf
-bW91bnRwID0gbXA7Ci0JYmlwLT5ibGlfaXRlbS5saV9haWxwID0gbXAtPm1fYWlsOworCXhmc19s
-b2dfaXRlbV9pbml0KG1wLCAmYmlwLT5ibGlfaXRlbSwgWEZTX0xJX0JVRiwgJnhmc19idWZfaXRl
-bV9vcHMpOwogCWJpcC0+YmxpX2J1ZiA9IGJwOwogCXhmc19idWZfaG9sZChicCk7CiAJYmlwLT5i
-bGlfZm9ybWF0LmJsZl90eXBlID0gWEZTX0xJX0JVRjsKZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNf
-ZXh0ZnJlZV9pdGVtLmMgYi9mcy94ZnMveGZzX2V4dGZyZWVfaXRlbS5jCmluZGV4IDZmMzVlZDEu
-LmU0NjFlOTMgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy94ZnNfZXh0ZnJlZV9pdGVtLmMKKysrIGIvZnMv
-eGZzL3hmc19leHRmcmVlX2l0ZW0uYwpAQCAtMjU5LDEwICsyNTksNyBAQCB4ZnNfZWZpX2luaXQo
-eGZzX21vdW50X3QJKm1wLAogCQkJCQkJCSAgICAgS01fU0xFRVApOwogCX0KIAotCWVmaXAtPmVm
-aV9pdGVtLmxpX3R5cGUgPSBYRlNfTElfRUZJOwotCWVmaXAtPmVmaV9pdGVtLmxpX29wcyA9ICZ4
-ZnNfZWZpX2l0ZW1fb3BzOwotCWVmaXAtPmVmaV9pdGVtLmxpX21vdW50cCA9IG1wOwotCWVmaXAt
-PmVmaV9pdGVtLmxpX2FpbHAgPSBtcC0+bV9haWw7CisJeGZzX2xvZ19pdGVtX2luaXQobXAsICZl
-ZmlwLT5lZmlfaXRlbSwgWEZTX0xJX0VGSSwgJnhmc19lZmlfaXRlbV9vcHMpOwogCWVmaXAtPmVm
-aV9mb3JtYXQuZWZpX25leHRlbnRzID0gbmV4dGVudHM7CiAJZWZpcC0+ZWZpX2Zvcm1hdC5lZmlf
-aWQgPSAoX19wc2ludF90KSh2b2lkKillZmlwOwogCkBAIC01NTQsMTAgKzU1MSw3IEBAIHhmc19l
-ZmRfaW5pdCh4ZnNfbW91bnRfdAkqbXAsCiAJCQkJCQkJICAgICBLTV9TTEVFUCk7CiAJfQogCi0J
-ZWZkcC0+ZWZkX2l0ZW0ubGlfdHlwZSA9IFhGU19MSV9FRkQ7Ci0JZWZkcC0+ZWZkX2l0ZW0ubGlf
-b3BzID0gJnhmc19lZmRfaXRlbV9vcHM7Ci0JZWZkcC0+ZWZkX2l0ZW0ubGlfbW91bnRwID0gbXA7
-Ci0JZWZkcC0+ZWZkX2l0ZW0ubGlfYWlscCA9IG1wLT5tX2FpbDsKKwl4ZnNfbG9nX2l0ZW1faW5p
-dChtcCwgJmVmZHAtPmVmZF9pdGVtLCBYRlNfTElfRUZELCAmeGZzX2VmZF9pdGVtX29wcyk7CiAJ
-ZWZkcC0+ZWZkX2VmaXAgPSBlZmlwOwogCWVmZHAtPmVmZF9mb3JtYXQuZWZkX25leHRlbnRzID0g
-bmV4dGVudHM7CiAJZWZkcC0+ZWZkX2Zvcm1hdC5lZmRfZWZpX2lkID0gZWZpcC0+ZWZpX2Zvcm1h
-dC5lZmlfaWQ7CmRpZmYgLS1naXQgYS9mcy94ZnMveGZzX2lub2RlX2l0ZW0uYyBiL2ZzL3hmcy94
-ZnNfaW5vZGVfaXRlbS5jCmluZGV4IDdiZmVhODUuLjMyZTQxODggMTAwNjQ0Ci0tLSBhL2ZzL3hm
-cy94ZnNfaW5vZGVfaXRlbS5jCisrKyBiL2ZzL3hmcy94ZnNfaW5vZGVfaXRlbS5jCkBAIC04NjUs
-MTcgKzg2NSw5IEBAIHhmc19pbm9kZV9pdGVtX2luaXQoCiAJQVNTRVJUKGlwLT5pX2l0ZW1wID09
-IE5VTEwpOwogCWlpcCA9IGlwLT5pX2l0ZW1wID0ga21lbV96b25lX3phbGxvYyh4ZnNfaWxpX3pv
-bmUsIEtNX1NMRUVQKTsKIAotCWlpcC0+aWxpX2l0ZW0ubGlfdHlwZSA9IFhGU19MSV9JTk9ERTsK
-LQlpaXAtPmlsaV9pdGVtLmxpX29wcyA9ICZ4ZnNfaW5vZGVfaXRlbV9vcHM7Ci0JaWlwLT5pbGlf
-aXRlbS5saV9tb3VudHAgPSBtcDsKLQlpaXAtPmlsaV9pdGVtLmxpX2FpbHAgPSBtcC0+bV9haWw7
-CiAJaWlwLT5pbGlfaW5vZGUgPSBpcDsKLQotCS8qCi0JICAgV2UgaGF2ZSB6ZXJvZWQgbWVtb3J5
-LiBObyBuZWVkIC4uLgotCSAgIGlpcC0+aWxpX2V4dGVudHNfYnVmID0gTlVMTDsKLQkgKi8KLQor
-CXhmc19sb2dfaXRlbV9pbml0KG1wLCAmaWlwLT5pbGlfaXRlbSwgWEZTX0xJX0lOT0RFLAorCQkJ
-CQkJJnhmc19pbm9kZV9pdGVtX29wcyk7CiAJaWlwLT5pbGlfZm9ybWF0LmlsZl90eXBlID0gWEZT
-X0xJX0lOT0RFOwogCWlpcC0+aWxpX2Zvcm1hdC5pbGZfaW5vID0gaXAtPmlfaW5vOwogCWlpcC0+
-aWxpX2Zvcm1hdC5pbGZfYmxrbm8gPSBpcC0+aV9pbWFwLmltX2Jsa25vOwpkaWZmIC0tZ2l0IGEv
-ZnMveGZzL3hmc19sb2cuYyBiL2ZzL3hmcy94ZnNfbG9nLmMKaW5kZXggZThmYmE5Mi4uMWYyNmE5
-NyAxMDA2NDQKLS0tIGEvZnMveGZzL3hmc19sb2cuYworKysgYi9mcy94ZnMveGZzX2xvZy5jCkBA
-IC02NDgsNiArNjQ4LDE5IEBAIHhmc19sb2dfdW5tb3VudCh4ZnNfbW91bnRfdCAqbXApCiAJeGxv
-Z19kZWFsbG9jX2xvZyhtcC0+bV9sb2cpOwogfQogCit2b2lkCit4ZnNfbG9nX2l0ZW1faW5pdCgK
-KwlzdHJ1Y3QgeGZzX21vdW50CSptcCwKKwlzdHJ1Y3QgeGZzX2xvZ19pdGVtCSppdGVtLAorCWlu
-dAkJCXR5cGUsCisJc3RydWN0IHhmc19pdGVtX29wcwkqb3BzKQoreworCWl0ZW0tPmxpX21vdW50
-cCA9IG1wOworCWl0ZW0tPmxpX2FpbHAgPSBtcC0+bV9haWw7CisJaXRlbS0+bGlfdHlwZSA9IHR5
-cGU7CisJaXRlbS0+bGlfb3BzID0gb3BzOworfQorCiAvKgogICogV3JpdGUgcmVnaW9uIHZlY3Rv
-cnMgdG8gbG9nLiAgVGhlIHdyaXRlIGhhcHBlbnMgdXNpbmcgdGhlIHNwYWNlIHJlc2VydmF0aW9u
-CiAgKiBvZiB0aGUgdGlja2V0ICh0aWMpLiAgSXQgaXMgbm90IGEgcmVxdWlyZW1lbnQgdGhhdCBh
-bGwgd3JpdGVzIGZvciBhIGdpdmVuCmRpZmYgLS1naXQgYS9mcy94ZnMveGZzX2xvZy5oIGIvZnMv
-eGZzL3hmc19sb2cuaAppbmRleCA5N2EyNGM3Li5mM2E1NjRkIDEwMDY0NAotLS0gYS9mcy94ZnMv
-eGZzX2xvZy5oCisrKyBiL2ZzL3hmcy94ZnNfbG9nLmgKQEAgLTEyNiw2ICsxMjYsMTMgQEAgdHlw
-ZWRlZiBzdHJ1Y3QgeGZzX2xvZ19jYWxsYmFjayB7CiBzdHJ1Y3QgeGZzX21vdW50Owogc3RydWN0
-IHhsb2dfaW5fY29yZTsKIHN0cnVjdCB4bG9nX3RpY2tldDsKK3N0cnVjdCB4ZnNfbG9nX2l0ZW07
-CitzdHJ1Y3QgeGZzX2l0ZW1fb3BzOworCit2b2lkCXhmc19sb2dfaXRlbV9pbml0KHN0cnVjdCB4
-ZnNfbW91bnQJKm1wLAorCQkJc3RydWN0IHhmc19sb2dfaXRlbQkqaXRlbSwKKwkJCWludAkJCXR5
-cGUsCisJCQlzdHJ1Y3QgeGZzX2l0ZW1fb3BzCSpvcHMpOwogCiB4ZnNfbHNuX3QgeGZzX2xvZ19k
-b25lKHN0cnVjdCB4ZnNfbW91bnQgKm1wLAogCQkgICAgICAgc3RydWN0IHhsb2dfdGlja2V0ICp0
-aWNrZXQsCi0tIAoxLjYuNQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2ku
-Y29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+From: Dave Chinner <dchinner@redhat.com>
+
+xfs_bmap_add_attrfork() passes XFS_TRANS_PERM_LOG_RES to xfs_trans_commit()
+to indicate that the commit should release the permanent log reservation
+as part of the commit. This is wrong - the correct flag is
+XFS_TRANS_RELEASE_LOG_RES - and it is only by the chance that both these
+flags have the value of 0x4 that the code is doing the right thing.
+
+Fix it by changing to use the correct flag.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_bmap.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+index 95a4813..528a3b4 100644
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -3834,7 +3834,7 @@ xfs_bmap_add_attrfork(
+ 	}
+ 	if ((error = xfs_bmap_finish(&tp, &flist, &committed)))
+ 		goto error2;
+-	error = xfs_trans_commit(tp, XFS_TRANS_PERM_LOG_RES);
++	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
+ 	ASSERT(ip->i_df.if_ext_max ==
+ 	       XFS_IFORK_DSIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t));
+ 	return error;
+-- 
+1.6.5
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
