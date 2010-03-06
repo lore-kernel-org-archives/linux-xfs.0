@@ -1,28 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o261oNr8041873 for <xfs@oss.sgi.com>; Fri, 5 Mar 2010 19:50:23 -0600
+	o261oCFW041801 for <xfs@oss.sgi.com>; Fri, 5 Mar 2010 19:50:13 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 524ED1D1A7F3
-	for <xfs@oss.sgi.com>; Fri,  5 Mar 2010 17:51:51 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	AGpVeTnglABv51s6 for <xfs@oss.sgi.com>;
-	Fri, 05 Mar 2010 17:51:51 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A648B1D1A7EA
+	for <xfs@oss.sgi.com>; Fri,  5 Mar 2010 17:51:40 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
+	[150.101.137.100]) by cuda.sgi.com with ESMTP id
+	HPnhy2mlzeQBMIml for <xfs@oss.sgi.com>;
+	Fri, 05 Mar 2010 17:51:40 -0800 (PST)
 Received: from discord (unverified [121.44.103.80])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	16043133-1927428
-	for <xfs@oss.sgi.com>; Sat, 06 Mar 2010 12:21:50 +1030 (CDT)
+	4462089-1927428
+	for <xfs@oss.sgi.com>; Sat, 06 Mar 2010 12:21:39 +1030 (CDT)
 Received: from disturbed ([192.168.1.9]) by discord with esmtp (Exim 4.69)
-	(envelope-from <dave@fromorbit.com>) id 1NnjBD-0007SC-V2
-	for xfs@oss.sgi.com; Sat, 06 Mar 2010 12:51:47 +1100
+	(envelope-from <dave@fromorbit.com>) id 1NnjB3-0007SB-UY
+	for xfs@oss.sgi.com; Sat, 06 Mar 2010 12:51:37 +1100
 Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1NnjAv-0001Ee-Eo
+	(envelope-from <dave@disturbed.disaster>) id 1NnjAv-0001Ec-CP
 	for xfs@oss.sgi.com; Sat, 06 Mar 2010 12:51:29 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 8/9] xfs: introduce new internal log vector structure
-Date: Sat,  6 Mar 2010 12:51:23 +1100
-Message-Id: <1267840284-4652-9-git-send-email-david@fromorbit.com>
+Subject: [PATCH 7/9] xfs: log ticket reservation underestimates the number of
+	iclogs
+Date: Sat,  6 Mar 2010 12:51:22 +1100
+Message-Id: <1267840284-4652-8-git-send-email-david@fromorbit.com>
 In-Reply-To: <1267840284-4652-1-git-send-email-david@fromorbit.com>
 References: <1267840284-4652-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -42,261 +43,136 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The current log IO vector structure is a flat array and not
-extensible. To make it possible to keep separate log IO vectors for
-individual log items, we need a method of chaining log IO vectors
-together.
+When allocation a ticket for a transaction, the ticket is initialised with the
+worst case log space usage based on the number of bytes the transaction may
+consume. Part of this calculation is the number of log headers required for the
+iclog space used up by the transaction.
 
-Introduce a new log vector type that can be used to wrap the
-existing log IO vectors on use that internally to the log. This
-means that the existing external interface (xfs_log_write) does not
-change and hence no changes to the transaction commit code are
-required.
+This calculation makes an undocumented assumption that if the transaction uses
+the log header space reservation on an iclog, then it consumes either the
+entire iclog or it completes. That is - the transaction that is first in an
+iclog is the transaction that the log header reservation is accounted to. If
+the transaction is larger than the iclog, then it will use the entire iclog
+itself. Document this assumption.
 
-This initial use of the new log vectors does not use the chaining
-capability of the new log vector structure - it is not needed to
-implement the flat vector array the current transaction commit path
-creates.
+Further, the current calculation uses the rule that we can fit iclog_size bytes
+of transaction data into an iclog. This is in correct - the amount of space
+available in an iclog for transaction data is the size of the iclog minus the
+space used for log record headers. This means that the calculation is out by
+512 bytes per 32k of log space the transaction can consume. This is rarely an
+issue because maximally sized transactions are extremely uncommon, and for 4k
+block size filesystems maximal transaction reservations are about 400kb. Hence
+the error in this case is less than the size of an iclog, so that makes it even
+harder to hit.
+
+However, anyone using larger directory blocks (16k directory blocks push the
+maximum transaction size to approx. 900k on a 4k block size filesystem) or
+larger block size (e.g. 64k blocks push transactions to the 3-4MB size) could
+see the error grow to more than an iclog and at this point the transaction is
+guaranteed to get a reservation underrun and shutdown the filesystem.
+
+Fix this by adjusting the calculation to calculate the correct number of iclogs
+required and account for them all up front.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_log.c |  106 +++++++++++++++++++++++++++++++-----------------------
- fs/xfs/xfs_log.h |    6 +++
- 2 files changed, 67 insertions(+), 45 deletions(-)
+ fs/xfs/xfs_log.c |   55 +++++++++++++++++++++++++++++++++++++++++------------
+ 1 files changed, 42 insertions(+), 13 deletions(-)
 
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 7c6b0cd..afb27cf 100644
+index 1f26a97..7c6b0cd 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -50,7 +50,7 @@ kmem_zone_t	*xfs_log_ticket_zone;
- 	  (off) += (bytes);}
- 
- /* Local miscellaneous function prototypes */
--STATIC int	 xlog_commit_record(xfs_mount_t *mp, xlog_ticket_t *ticket,
-+STATIC int	 xlog_commit_record(struct log *log, struct xlog_ticket *ticket,
- 				    xlog_in_core_t **, xfs_lsn_t *);
- STATIC xlog_t *  xlog_alloc_log(xfs_mount_t	*mp,
- 				xfs_buftarg_t	*log_target,
-@@ -59,11 +59,9 @@ STATIC xlog_t *  xlog_alloc_log(xfs_mount_t	*mp,
- STATIC int	 xlog_space_left(xlog_t *log, int cycle, int bytes);
- STATIC int	 xlog_sync(xlog_t *log, xlog_in_core_t *iclog);
- STATIC void	 xlog_dealloc_log(xlog_t *log);
--STATIC int	 xlog_write(xfs_mount_t *mp, xfs_log_iovec_t region[],
--			    int nentries, struct xlog_ticket *tic,
--			    xfs_lsn_t *start_lsn,
--			    xlog_in_core_t **commit_iclog,
--			    uint flags);
-+STATIC int	 xlog_write(struct log *log, struct xfs_log_vec *log_vector,
-+			    struct xlog_ticket *tic, xfs_lsn_t *start_lsn,
-+			    xlog_in_core_t **commit_iclog, uint flags);
- 
- /* local state machine functions */
- STATIC void xlog_state_done_syncing(xlog_in_core_t *iclog, int);
-@@ -258,7 +256,7 @@ xfs_log_done(
- 	     * If we get an error, just continue and give back the log ticket.
- 	     */
- 	    (((ticket->t_flags & XLOG_TIC_INITED) == 0) &&
--	     (xlog_commit_record(mp, ticket, iclog, &lsn)))) {
-+	     (xlog_commit_record(log, ticket, iclog, &lsn)))) {
- 		lsn = (xfs_lsn_t) -1;
- 		if (ticket->t_flags & XLOG_TIC_PERM_RESERV) {
- 			flags |= XFS_LOG_REL_PERM_RESERV;
-@@ -516,18 +514,10 @@ xfs_log_unmount_write(xfs_mount_t *mp)
- #ifdef DEBUG
- 	xlog_in_core_t	 *first_iclog;
- #endif
--	xfs_log_iovec_t  reg[1];
- 	xlog_ticket_t	*tic = NULL;
- 	xfs_lsn_t	 lsn;
- 	int		 error;
- 
--	/* the data section must be 32 bit size aligned */
--	struct {
--	    __uint16_t magic;
--	    __uint16_t pad1;
--	    __uint32_t pad2; /* may as well make it 64 bits */
--	} magic = { XLOG_UNMOUNT_TYPE, 0, 0 };
--
- 	/*
- 	 * Don't write out unmount record on read-only mounts.
- 	 * Or, if we are doing a forced umount (typically because of IO errors).
-@@ -549,16 +539,31 @@ xfs_log_unmount_write(xfs_mount_t *mp)
- 	} while (iclog != first_iclog);
- #endif
- 	if (! (XLOG_FORCED_SHUTDOWN(log))) {
--		reg[0].i_addr = (void*)&magic;
--		reg[0].i_len  = sizeof(magic);
--		reg[0].i_type = XLOG_REG_TYPE_UNMOUNT;
--
- 		error = xfs_log_reserve(mp, 600, 1, &tic,
- 					XFS_LOG, 0, XLOG_UNMOUNT_REC_TYPE);
- 		if (!error) {
-+			/* the data section must be 32 bit size aligned */
-+			struct {
-+			    __uint16_t magic;
-+			    __uint16_t pad1;
-+			    __uint32_t pad2; /* may as well make it 64 bits */
-+			} magic = {
-+				.magic = XLOG_UNMOUNT_TYPE,
-+			};
-+			struct xfs_log_iovec reg = {
-+				.i_addr = (void *)&magic,
-+				.i_len = sizeof(magic),
-+				.i_type = XLOG_REG_TYPE_UNMOUNT,
-+			};
-+			struct xfs_log_vec vec = {
-+				.lv_niovecs = 1,
-+			};
-+			/* sigh. c99 initialisers don't work on anon unions */
-+			vec.lv_iovecp = &reg;
-+
- 			/* remove inited flag */
--			((xlog_ticket_t *)tic)->t_flags = 0;
--			error = xlog_write(mp, reg, 1, tic, &lsn,
-+			tic->t_flags = 0;
-+			error = xlog_write(log, &vec, tic, &lsn,
- 					   NULL, XLOG_UNMOUNT_TRANS);
- 			/*
- 			 * At this point, we're umounting anyway,
-@@ -679,11 +684,16 @@ xfs_log_write(
- {
- 	struct log		*log = mp->m_log;
- 	int			error;
-+	struct xfs_log_vec	vec = {
-+		.lv_niovecs = nentries,
-+	};
-+	/* sigh. c99 initialisers don't work on anon unions */
-+	vec.lv_iovecp = reg;
- 
- 	if (XLOG_FORCED_SHUTDOWN(log))
- 		return XFS_ERROR(EIO);
- 
--	error = xlog_write(mp, reg, nentries, tic, start_lsn, NULL, 0);
-+	error = xlog_write(log, &vec, tic, start_lsn, NULL, 0);
- 	if (error)
- 		xfs_force_shutdown(mp, SHUTDOWN_LOG_IO_ERROR);
- 	return error;
-@@ -1176,26 +1186,32 @@ out:
-  * ticket.  Return the lsn of the commit record.
-  */
- STATIC int
--xlog_commit_record(xfs_mount_t  *mp,
--		   xlog_ticket_t *ticket,
--		   xlog_in_core_t **iclog,
--		   xfs_lsn_t	*commitlsnp)
-+xlog_commit_record(
-+	struct log		*log,
-+	struct xlog_ticket	*ticket,
-+	struct xlog_in_core	**iclog,
-+	xfs_lsn_t		*commitlsnp)
- {
--	int		error;
--	xfs_log_iovec_t	reg[1];
--
--	reg[0].i_addr = NULL;
--	reg[0].i_len = 0;
--	reg[0].i_type = XLOG_REG_TYPE_COMMIT;
-+	struct xfs_mount *mp = log->l_mp;
-+	int	error;
-+	struct xfs_log_iovec reg = {
-+		.i_addr = NULL,
-+		.i_len = 0,
-+		.i_type = XLOG_REG_TYPE_COMMIT,
-+	};
-+	struct xfs_log_vec vec = {
-+		.lv_niovecs = 1,
-+	};
-+	/* sigh. c99 initialisers don't work on anon unions */
-+	vec.lv_iovecp = &reg;
- 
- 	ASSERT_ALWAYS(iclog);
--	if ((error = xlog_write(mp, reg, 1, ticket, commitlsnp,
--			       iclog, XLOG_COMMIT_TRANS))) {
-+	error = xlog_write(log, &vec, ticket, commitlsnp, iclog,
-+					XLOG_COMMIT_TRANS);
-+	if (error)
- 		xfs_force_shutdown(mp, SHUTDOWN_LOG_IO_ERROR);
--	}
- 	return error;
--}	/* xlog_commit_record */
--
-+}
- 
+@@ -664,7 +664,10 @@ xfs_log_item_init(
  /*
-  * Push on the buffer cache code if we ever use more than 75% of the on-disk
-@@ -1657,15 +1673,13 @@ xlog_print_tic_res(xfs_mount_t *mp, xlog_ticket_t *ticket)
+  * Write region vectors to log.  The write happens using the space reservation
+  * of the ticket (tic).  It is not a requirement that all writes for a given
+- * transaction occur with one call to xfs_log_write().
++ * transaction occur with one call to xfs_log_write(). However, it is important
++ * to note that the transaction reservation code makes an assumption about the
++ * number of log headers a transaction requires that may be violated if you
++ * don't pass all the transaction vectors in one call....
   */
- STATIC int
- xlog_write(
--	struct xfs_mount	*mp,
--	struct xfs_log_iovec	reg[],
--	int			nentries,
-+	struct log		*log,
-+	struct xfs_log_vec	*log_vector,
- 	struct xlog_ticket	*ticket,
- 	xfs_lsn_t		*start_lsn,
- 	struct xlog_in_core	**commit_iclog,
- 	uint			flags)
+ int
+ xfs_log_write(
+@@ -3156,14 +3159,16 @@ xfs_log_ticket_get(
+  * Allocate and initialise a new log ticket.
+  */
+ STATIC xlog_ticket_t *
+-xlog_ticket_alloc(xlog_t		*log,
+-		int		unit_bytes,
+-		int		cnt,
+-		char		client,
+-		uint		xflags)
++xlog_ticket_alloc(
++	struct log	*log,
++	int		unit_bytes,
++	int		cnt,
++	char		client,
++	uint		xflags)
  {
--    xlog_t	     *log = mp->m_log;
-     xlog_in_core_t   *iclog = NULL;  /* ptr to current in-core log */
-     xlog_op_header_t *logop_head;    /* ptr to log operation header */
-     __psint_t	     ptr;	     /* copy address into data region */
-@@ -1681,6 +1695,8 @@ xlog_write(
-     int		     contwr;	     /* continued write of in-core log? */
-     int		     error;
-     int		     record_cnt = 0, data_cnt = 0;
-+    struct xfs_log_iovec *reg = log_vector->lv_iovecp;
-+    int		     nentries = log_vector->lv_niovecs;
+-	xlog_ticket_t	*tic;
++	struct xlog_ticket *tic;
+ 	uint		num_headers;
++	int		iclog_space;
  
-     partial_copy_len = partial_copy = 0;
+ 	tic = kmem_zone_zalloc(xfs_log_ticket_zone, KM_SLEEP|KM_MAYFAIL);
+ 	if (!tic)
+@@ -3207,16 +3212,40 @@ xlog_ticket_alloc(xlog_t		*log,
+ 	/* for start-rec */
+ 	unit_bytes += sizeof(xlog_op_header_t);
  
-@@ -1702,16 +1718,16 @@ xlog_write(
-     contwr = *start_lsn = 0;
- 
-     if (ticket->t_curr_res < len) {
--	xlog_print_tic_res(mp, ticket);
-+	xlog_print_tic_res(log->l_mp, ticket);
- #ifdef DEBUG
- 	xlog_panic(
- 		"xfs_log_write: reservation ran out. Need to up reservation");
- #else
- 	/* Customer configurable panic */
--	xfs_cmn_err(XFS_PTAG_LOGRES, CE_ALERT, mp,
-+	xfs_cmn_err(XFS_PTAG_LOGRES, CE_ALERT, log->l_mp,
- 		"xfs_log_write: reservation ran out. Need to up reservation");
- 	/* If we did not panic, shutdown the filesystem */
--	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-+	xfs_force_shutdown(log->l_mp, SHUTDOWN_CORRUPT_INCORE);
- #endif
-     } else
- 	ticket->t_curr_res -= len;
-@@ -1777,7 +1793,7 @@ xlog_write(
- 	    case XFS_LOG:
- 		break;
- 	    default:
--		xfs_fs_cmn_err(CE_WARN, mp,
-+		xfs_fs_cmn_err(CE_WARN, log->l_mp,
- 		    "Bad XFS transaction clientid 0x%x in ticket 0x%p",
- 		    logop_head->oh_clientid, ticket);
- 		return XFS_ERROR(EIO);
-diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
-index f3a564d..229d1f3 100644
---- a/fs/xfs/xfs_log.h
-+++ b/fs/xfs/xfs_log.h
-@@ -110,6 +110,12 @@ typedef struct xfs_log_iovec {
- 	uint		i_type;		/* type of region */
- } xfs_log_iovec_t;
- 
-+struct xfs_log_vec {
-+	struct xfs_log_vec	*lv_next;	/* next lv in build list */
-+	int			lv_niovecs;	/* number of iovecs in lv */
-+	struct xfs_log_iovec	*lv_iovecp;	/* iovec array */
-+};
+-	/* for LR headers */
+-	num_headers = ((unit_bytes + log->l_iclog_size-1) >> log->l_iclog_size_log);
++	/*
++	 * for LR headers - the space for data in an iclog is the size minus
++	 * the space used for the headers. If we use the iclog size, then we
++	 * undercalculate the number of headers required.
++	 *
++	 * Furthermore - the addition of op headers for split-recs might
++	 * increase the space required enough to require more log and op
++	 * headers, so take that into account too.
++	 *
++	 * IMPORTANT: This reservation makes the assumption that if this
++	 * transaction is the first in an iclog and hence has the LR headers
++	 * accounted to it, then the remaining space in the iclog is
++	 * exclusively for this transaction.  i.e. if the transaction is larger
++	 * than the iclog, it will be the only thing in that iclog.
++	 * Fundamentally, this means we must pass the entire log vector to
++	 * xlog_write to guarantee this.
++	 */
++	iclog_space = log->l_iclog_size - log->l_iclog_hsize;
++	num_headers = (unit_bytes + iclog_space - 1) / iclog_space;
 +
- /*
-  * Structure used to pass callback function and the function's argument
-  * to the log manager.
++	/* for split-recs - ophdrs added when data split over LRs */
++	unit_bytes += sizeof(xlog_op_header_t) * num_headers;
++
++	/* add extra header reservations if we overrun */
++	while (!num_headers ||
++	       ((unit_bytes + iclog_space - 1) / iclog_space) > num_headers) {
++		unit_bytes += sizeof(xlog_op_header_t);
++		num_headers++;
++	}
+ 	unit_bytes += log->l_iclog_hsize * num_headers;
+ 
+ 	/* for commit-rec LR header - note: padding will subsume the ophdr */
+ 	unit_bytes += log->l_iclog_hsize;
+ 
+-	/* for split-recs - ophdrs added when data split over LRs */
+-	unit_bytes += sizeof(xlog_op_header_t) * num_headers;
+-
+ 	/* for roundoff padding for transaction data and one for commit record */
+ 	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb) &&
+ 	    log->l_mp->m_sb.sb_logsunit > 1) {
+@@ -3238,7 +3267,7 @@ xlog_ticket_alloc(xlog_t		*log,
+ 	tic->t_trans_type	= 0;
+ 	if (xflags & XFS_LOG_PERM_RESERV)
+ 		tic->t_flags |= XLOG_TIC_PERM_RESERV;
+-	sv_init(&(tic->t_wait), SV_DEFAULT, "logtick");
++	sv_init(&tic->t_wait, SV_DEFAULT, "logtick");
+ 
+ 	xlog_tic_reset_res(tic);
+ 
 -- 
 1.6.5
 
