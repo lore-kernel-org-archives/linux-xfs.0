@@ -1,29 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o261oCFW041801 for <xfs@oss.sgi.com>; Fri, 5 Mar 2010 19:50:13 -0600
+	o261oILt041841 for <xfs@oss.sgi.com>; Fri, 5 Mar 2010 19:50:18 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A648B1D1A7EA
-	for <xfs@oss.sgi.com>; Fri,  5 Mar 2010 17:51:40 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 37E451D1A7F1
+	for <xfs@oss.sgi.com>; Fri,  5 Mar 2010 17:51:46 -0800 (PST)
 Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
 	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	HPnhy2mlzeQBMIml for <xfs@oss.sgi.com>;
-	Fri, 05 Mar 2010 17:51:40 -0800 (PST)
+	NdUOeVE6eUm1DD09 for <xfs@oss.sgi.com>;
+	Fri, 05 Mar 2010 17:51:46 -0800 (PST)
 Received: from discord (unverified [121.44.103.80])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	4462089-1927428
+	4462090-1927428
 	for <xfs@oss.sgi.com>; Sat, 06 Mar 2010 12:21:39 +1030 (CDT)
 Received: from disturbed ([192.168.1.9]) by discord with esmtp (Exim 4.69)
-	(envelope-from <dave@fromorbit.com>) id 1NnjB3-0007SB-UY
+	(envelope-from <dave@fromorbit.com>) id 1NnjB3-0007Rs-IA
 	for xfs@oss.sgi.com; Sat, 06 Mar 2010 12:51:37 +1100
 Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1NnjAv-0001Ec-CP
-	for xfs@oss.sgi.com; Sat, 06 Mar 2010 12:51:29 +1100
+	(envelope-from <dave@disturbed.disaster>) id 1NnjAu-0001EM-W2
+	for xfs@oss.sgi.com; Sat, 06 Mar 2010 12:51:28 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 7/9] xfs: log ticket reservation underestimates the number of
-	iclogs
-Date: Sat,  6 Mar 2010 12:51:22 +1100
-Message-Id: <1267840284-4652-8-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/9] xfs: Add inode pin counts to traces
+Date: Sat,  6 Mar 2010 12:51:17 +1100
+Message-Id: <1267840284-4652-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1267840284-4652-1-git-send-email-david@fromorbit.com>
 References: <1267840284-4652-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -43,136 +42,89 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When allocation a ticket for a transaction, the ticket is initialised with the
-worst case log space usage based on the number of bytes the transaction may
-consume. Part of this calculation is the number of log headers required for the
-iclog space used up by the transaction.
-
-This calculation makes an undocumented assumption that if the transaction uses
-the log header space reservation on an iclog, then it consumes either the
-entire iclog or it completes. That is - the transaction that is first in an
-iclog is the transaction that the log header reservation is accounted to. If
-the transaction is larger than the iclog, then it will use the entire iclog
-itself. Document this assumption.
-
-Further, the current calculation uses the rule that we can fit iclog_size bytes
-of transaction data into an iclog. This is in correct - the amount of space
-available in an iclog for transaction data is the size of the iclog minus the
-space used for log record headers. This means that the calculation is out by
-512 bytes per 32k of log space the transaction can consume. This is rarely an
-issue because maximally sized transactions are extremely uncommon, and for 4k
-block size filesystems maximal transaction reservations are about 400kb. Hence
-the error in this case is less than the size of an iclog, so that makes it even
-harder to hit.
-
-However, anyone using larger directory blocks (16k directory blocks push the
-maximum transaction size to approx. 900k on a 4k block size filesystem) or
-larger block size (e.g. 64k blocks push transactions to the 3-4MB size) could
-see the error grow to more than an iclog and at this point the transaction is
-guaranteed to get a reservation underrun and shutdown the filesystem.
-
-Fix this by adjusting the calculation to calculate the correct number of iclogs
-required and account for them all up front.
+We don't record pin counts in inode events right now, and this makes
+it difficult to track down problems related to pinning inodes. Add
+the pin count to the inode trace class and add trace events for
+pinning and unpinning inodes.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_log.c |   55 +++++++++++++++++++++++++++++++++++++++++------------
- 1 files changed, 42 insertions(+), 13 deletions(-)
+ fs/xfs/linux-2.6/xfs_trace.h |    9 ++++++++-
+ fs/xfs/xfs_inode.c           |    2 ++
+ fs/xfs/xfs_inode_item.c      |    2 ++
+ 3 files changed, 12 insertions(+), 1 deletions(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 1f26a97..7c6b0cd 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -664,7 +664,10 @@ xfs_log_item_init(
- /*
-  * Write region vectors to log.  The write happens using the space reservation
-  * of the ticket (tic).  It is not a requirement that all writes for a given
-- * transaction occur with one call to xfs_log_write().
-+ * transaction occur with one call to xfs_log_write(). However, it is important
-+ * to note that the transaction reservation code makes an assumption about the
-+ * number of log headers a transaction requires that may be violated if you
-+ * don't pass all the transaction vectors in one call....
-  */
- int
- xfs_log_write(
-@@ -3156,14 +3159,16 @@ xfs_log_ticket_get(
-  * Allocate and initialise a new log ticket.
-  */
- STATIC xlog_ticket_t *
--xlog_ticket_alloc(xlog_t		*log,
--		int		unit_bytes,
--		int		cnt,
--		char		client,
--		uint		xflags)
-+xlog_ticket_alloc(
-+	struct log	*log,
-+	int		unit_bytes,
-+	int		cnt,
-+	char		client,
-+	uint		xflags)
+diff --git a/fs/xfs/linux-2.6/xfs_trace.h b/fs/xfs/linux-2.6/xfs_trace.h
+index fcaa62f..6537185 100644
+--- a/fs/xfs/linux-2.6/xfs_trace.h
++++ b/fs/xfs/linux-2.6/xfs_trace.h
+@@ -562,18 +562,21 @@ DECLARE_EVENT_CLASS(xfs_inode_class,
+ 		__field(dev_t, dev)
+ 		__field(xfs_ino_t, ino)
+ 		__field(int, count)
++		__field(int, pincount)
+ 		__field(unsigned long, caller_ip)
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = VFS_I(ip)->i_sb->s_dev;
+ 		__entry->ino = ip->i_ino;
+ 		__entry->count = atomic_read(&VFS_I(ip)->i_count);
++		__entry->pincount = atomic_read(&ip->i_pincount);
+ 		__entry->caller_ip = caller_ip;
+ 	),
+-	TP_printk("dev %d:%d ino 0x%llx count %d caller %pf",
++	TP_printk("dev %d:%d ino 0x%llx count %d pincount %d caller %pf",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->ino,
+ 		  __entry->count,
++		  __entry->pincount,
+ 		  (char *)__entry->caller_ip)
+ )
+ 
+@@ -583,6 +586,10 @@ DEFINE_EVENT(xfs_inode_class, name, \
+ 	TP_ARGS(ip, caller_ip))
+ DEFINE_INODE_EVENT(xfs_ihold);
+ DEFINE_INODE_EVENT(xfs_irele);
++DEFINE_INODE_EVENT(xfs_inode_pin);
++DEFINE_INODE_EVENT(xfs_inode_unpin);
++DEFINE_INODE_EVENT(xfs_inode_unpin_nowait);
++
+ /* the old xfs_itrace_entry tracer - to be replaced by s.th. in the VFS */
+ DEFINE_INODE_EVENT(xfs_inode);
+ #define xfs_itrace_entry(ip)    \
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 0ffd564..8cd6e8d 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2449,6 +2449,8 @@ xfs_iunpin_nowait(
  {
--	xlog_ticket_t	*tic;
-+	struct xlog_ticket *tic;
- 	uint		num_headers;
-+	int		iclog_space;
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
  
- 	tic = kmem_zone_zalloc(xfs_log_ticket_zone, KM_SLEEP|KM_MAYFAIL);
- 	if (!tic)
-@@ -3207,16 +3212,40 @@ xlog_ticket_alloc(xlog_t		*log,
- 	/* for start-rec */
- 	unit_bytes += sizeof(xlog_op_header_t);
- 
--	/* for LR headers */
--	num_headers = ((unit_bytes + log->l_iclog_size-1) >> log->l_iclog_size_log);
-+	/*
-+	 * for LR headers - the space for data in an iclog is the size minus
-+	 * the space used for the headers. If we use the iclog size, then we
-+	 * undercalculate the number of headers required.
-+	 *
-+	 * Furthermore - the addition of op headers for split-recs might
-+	 * increase the space required enough to require more log and op
-+	 * headers, so take that into account too.
-+	 *
-+	 * IMPORTANT: This reservation makes the assumption that if this
-+	 * transaction is the first in an iclog and hence has the LR headers
-+	 * accounted to it, then the remaining space in the iclog is
-+	 * exclusively for this transaction.  i.e. if the transaction is larger
-+	 * than the iclog, it will be the only thing in that iclog.
-+	 * Fundamentally, this means we must pass the entire log vector to
-+	 * xlog_write to guarantee this.
-+	 */
-+	iclog_space = log->l_iclog_size - log->l_iclog_hsize;
-+	num_headers = (unit_bytes + iclog_space - 1) / iclog_space;
++	trace_xfs_inode_unpin_nowait(ip, _RET_IP_);
 +
-+	/* for split-recs - ophdrs added when data split over LRs */
-+	unit_bytes += sizeof(xlog_op_header_t) * num_headers;
-+
-+	/* add extra header reservations if we overrun */
-+	while (!num_headers ||
-+	       ((unit_bytes + iclog_space - 1) / iclog_space) > num_headers) {
-+		unit_bytes += sizeof(xlog_op_header_t);
-+		num_headers++;
-+	}
- 	unit_bytes += log->l_iclog_hsize * num_headers;
+ 	/* Give the log a push to start the unpinning I/O */
+ 	xfs_log_force_lsn(ip->i_mount, ip->i_itemp->ili_last_lsn, 0);
  
- 	/* for commit-rec LR header - note: padding will subsume the ophdr */
- 	unit_bytes += log->l_iclog_hsize;
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 32e4188..0347175 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -543,6 +543,7 @@ xfs_inode_item_pin(
+ {
+ 	ASSERT(xfs_isilocked(iip->ili_inode, XFS_ILOCK_EXCL));
  
--	/* for split-recs - ophdrs added when data split over LRs */
--	unit_bytes += sizeof(xlog_op_header_t) * num_headers;
--
- 	/* for roundoff padding for transaction data and one for commit record */
- 	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb) &&
- 	    log->l_mp->m_sb.sb_logsunit > 1) {
-@@ -3238,7 +3267,7 @@ xlog_ticket_alloc(xlog_t		*log,
- 	tic->t_trans_type	= 0;
- 	if (xflags & XFS_LOG_PERM_RESERV)
- 		tic->t_flags |= XLOG_TIC_PERM_RESERV;
--	sv_init(&(tic->t_wait), SV_DEFAULT, "logtick");
-+	sv_init(&tic->t_wait, SV_DEFAULT, "logtick");
++	trace_xfs_inode_pin(iip->ili_inode, _RET_IP_);
+ 	atomic_inc(&iip->ili_inode->i_pincount);
+ }
  
- 	xlog_tic_reset_res(tic);
+@@ -561,6 +562,7 @@ xfs_inode_item_unpin(
+ {
+ 	struct xfs_inode	*ip = iip->ili_inode;
  
++	trace_xfs_inode_unpin(ip, _RET_IP_);
+ 	ASSERT(atomic_read(&ip->i_pincount) > 0);
+ 	if (atomic_dec_and_test(&ip->i_pincount))
+ 		wake_up(&ip->i_ipin_wait);
 -- 
 1.6.5
 
