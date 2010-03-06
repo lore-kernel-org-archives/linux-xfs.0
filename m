@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o26At24g079998 for <xfs@oss.sgi.com>; Sat, 6 Mar 2010 04:55:03 -0600
+	o26AoOwT079643 for <xfs@oss.sgi.com>; Sat, 6 Mar 2010 04:50:26 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 997DE1D1AFA6
-	for <xfs@oss.sgi.com>; Sat,  6 Mar 2010 02:56:32 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9D82521FC3F
+	for <xfs@oss.sgi.com>; Sat,  6 Mar 2010 02:51:54 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id YMEbKERrKr5fhSkW for
-	<xfs@oss.sgi.com>; Sat, 06 Mar 2010 02:56:32 -0800 (PST)
-Date: Sat, 6 Mar 2010 05:56:32 -0500
+	by cuda.sgi.com with ESMTP id 8KVijUAdwCHi1jgN for
+	<xfs@oss.sgi.com>; Sat, 06 Mar 2010 02:51:54 -0800 (PST)
+Date: Sat, 6 Mar 2010 05:51:54 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/9] Log and transaction cleanups, factoring and bug fixes
-Message-ID: <20100306105632.GE30376@infradead.org>
+Subject: Re: [PATCH 2/9] xfs: Add inode pin counts to traces
+Message-ID: <20100306105154.GB30376@infradead.org>
 References: <1267840284-4652-1-git-send-email-david@fromorbit.com>
+	<1267840284-4652-3-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1267840284-4652-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1267840284-4652-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,8 +32,20 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-I went through the simpler ones, and at least 2 and 4, if not 1-4 is
-something I'd like to see in 2.6.34 still.
+On Sat, Mar 06, 2010 at 12:51:17PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> We don't record pin counts in inode events right now, and this makes
+> it difficult to track down problems related to pinning inodes. Add
+> the pin count to the inode trace class and add trace events for
+> pinning and unpinning inodes.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+
+Looks good.
+
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
