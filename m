@@ -1,30 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o261oODn041889 for <xfs@oss.sgi.com>; Fri, 5 Mar 2010 19:50:25 -0600
+	o261oKxY041811 for <xfs@oss.sgi.com>; Fri, 5 Mar 2010 19:50:26 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E894313FE7FD
-	for <xfs@oss.sgi.com>; Fri,  5 Mar 2010 17:51:45 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8D5331D1A7EA
+	for <xfs@oss.sgi.com>; Fri,  5 Mar 2010 17:51:42 -0800 (PST)
 Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
 	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	8bxVdGXACo0SVu5A for <xfs@oss.sgi.com>;
-	Fri, 05 Mar 2010 17:51:45 -0800 (PST)
+	tZiJf5UjaLle0GGU for <xfs@oss.sgi.com>;
+	Fri, 05 Mar 2010 17:51:42 -0800 (PST)
 Received: from discord (unverified [121.44.103.80])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	4462091-1927428
-	for <xfs@oss.sgi.com>; Sat, 06 Mar 2010 12:21:40 +1030 (CDT)
+	4462092-1927428
+	for <xfs@oss.sgi.com>; Sat, 06 Mar 2010 12:21:41 +1030 (CDT)
 Received: from disturbed ([192.168.1.9]) by discord with esmtp (Exim 4.69)
-	(envelope-from <dave@fromorbit.com>) id 1NnjB3-0007Rt-Ii
+	(envelope-from <dave@fromorbit.com>) id 1NnjB3-0007Rr-Fg
 	for xfs@oss.sgi.com; Sat, 06 Mar 2010 12:51:37 +1100
 Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1NnjAv-0001EP-1j
-	for xfs@oss.sgi.com; Sat, 06 Mar 2010 12:51:29 +1100
+	(envelope-from <dave@disturbed.disaster>) id 1NnjAu-0001EK-TH
+	for xfs@oss.sgi.com; Sat, 06 Mar 2010 12:51:28 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/9] xfs: remove stale parameter from ->iop_unpin method
-Date: Sat,  6 Mar 2010 12:51:18 +1100
-Message-Id: <1267840284-4652-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/9] xfs: factor log item initialisation
+Date: Sat,  6 Mar 2010 12:51:16 +1100
+Message-Id: <1267840284-4652-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1267840284-4652-1-git-send-email-david@fromorbit.com>
 References: <1267840284-4652-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,319 +34,104 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
-
-The staleness of a object being unpinned can be directly derived
-from the object itself - there is no need to extract it from the
-object then pass it as a parameter into IOP_UNPIN().
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/quota/xfs_dquot_item.c |   16 +++++--------
- fs/xfs/xfs_buf_item.c         |   50 ++++++++++++++++++-----------------------
- fs/xfs/xfs_extfree_item.c     |    8 +++---
- fs/xfs/xfs_inode_item.c       |    7 ++---
- fs/xfs/xfs_trans.c            |    2 +-
- fs/xfs/xfs_trans.h            |    5 +--
- fs/xfs/xfs_trans_buf.c        |    3 +-
- 7 files changed, 39 insertions(+), 52 deletions(-)
-
-diff --git a/fs/xfs/quota/xfs_dquot_item.c b/fs/xfs/quota/xfs_dquot_item.c
-index 639d965..165bbdf 100644
---- a/fs/xfs/quota/xfs_dquot_item.c
-+++ b/fs/xfs/quota/xfs_dquot_item.c
-@@ -107,8 +107,7 @@ xfs_qm_dquot_logitem_pin(
- /* ARGSUSED */
- STATIC void
- xfs_qm_dquot_logitem_unpin(
--	xfs_dq_logitem_t *logitem,
--	int		  stale)
-+	xfs_dq_logitem_t *logitem)
- {
- 	xfs_dquot_t *dqp = logitem->qli_dquot;
- 
-@@ -123,7 +122,7 @@ xfs_qm_dquot_logitem_unpin_remove(
- 	xfs_dq_logitem_t *logitem,
- 	xfs_trans_t	 *tp)
- {
--	xfs_qm_dquot_logitem_unpin(logitem, 0);
-+	xfs_qm_dquot_logitem_unpin(logitem);
- }
- 
- /*
-@@ -329,8 +328,7 @@ static struct xfs_item_ops xfs_dquot_item_ops = {
- 	.iop_format	= (void(*)(xfs_log_item_t*, xfs_log_iovec_t*))
- 					xfs_qm_dquot_logitem_format,
- 	.iop_pin	= (void(*)(xfs_log_item_t*))xfs_qm_dquot_logitem_pin,
--	.iop_unpin	= (void(*)(xfs_log_item_t*, int))
--					xfs_qm_dquot_logitem_unpin,
-+	.iop_unpin	= (void(*)(xfs_log_item_t*))xfs_qm_dquot_logitem_unpin,
- 	.iop_unpin_remove = (void(*)(xfs_log_item_t*, xfs_trans_t*))
- 					xfs_qm_dquot_logitem_unpin_remove,
- 	.iop_trylock	= (uint(*)(xfs_log_item_t*))
-@@ -425,7 +423,7 @@ xfs_qm_qoff_logitem_pin(xfs_qoff_logitem_t *qf)
-  */
- /*ARGSUSED*/
- STATIC void
--xfs_qm_qoff_logitem_unpin(xfs_qoff_logitem_t *qf, int stale)
-+xfs_qm_qoff_logitem_unpin(xfs_qoff_logitem_t *qf)
- {
- 	return;
- }
-@@ -536,8 +534,7 @@ static struct xfs_item_ops xfs_qm_qoffend_logitem_ops = {
- 	.iop_format	= (void(*)(xfs_log_item_t*, xfs_log_iovec_t*))
- 					xfs_qm_qoff_logitem_format,
- 	.iop_pin	= (void(*)(xfs_log_item_t*))xfs_qm_qoff_logitem_pin,
--	.iop_unpin	= (void(*)(xfs_log_item_t* ,int))
--					xfs_qm_qoff_logitem_unpin,
-+	.iop_unpin	= (void(*)(xfs_log_item_t*))xfs_qm_qoff_logitem_unpin,
- 	.iop_unpin_remove = (void(*)(xfs_log_item_t*,xfs_trans_t*))
- 					xfs_qm_qoff_logitem_unpin_remove,
- 	.iop_trylock	= (uint(*)(xfs_log_item_t*))xfs_qm_qoff_logitem_trylock,
-@@ -558,8 +555,7 @@ static struct xfs_item_ops xfs_qm_qoff_logitem_ops = {
- 	.iop_format	= (void(*)(xfs_log_item_t*, xfs_log_iovec_t*))
- 					xfs_qm_qoff_logitem_format,
- 	.iop_pin	= (void(*)(xfs_log_item_t*))xfs_qm_qoff_logitem_pin,
--	.iop_unpin	= (void(*)(xfs_log_item_t*, int))
--					xfs_qm_qoff_logitem_unpin,
-+	.iop_unpin	= (void(*)(xfs_log_item_t*))xfs_qm_qoff_logitem_unpin,
- 	.iop_unpin_remove = (void(*)(xfs_log_item_t*,xfs_trans_t*))
- 					xfs_qm_qoff_logitem_unpin_remove,
- 	.iop_trylock	= (uint(*)(xfs_log_item_t*))xfs_qm_qoff_logitem_trylock,
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index aace237..240340a 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -372,12 +372,12 @@ xfs_buf_item_pin(
-  */
- STATIC void
- xfs_buf_item_unpin(
--	xfs_buf_log_item_t	*bip,
--	int			stale)
-+	xfs_buf_log_item_t	*bip)
- {
- 	struct xfs_ail	*ailp;
- 	xfs_buf_t	*bp;
- 	int		freed;
-+	int		stale = bip->bli_flags & XFS_BLI_STALE;
- 
- 	bp = bip->bli_buf;
- 	ASSERT(bp != NULL);
-@@ -428,40 +428,34 @@ xfs_buf_item_unpin_remove(
- 	xfs_buf_log_item_t	*bip,
- 	xfs_trans_t		*tp)
- {
--	xfs_buf_t		*bp;
--	xfs_log_item_desc_t	*lidp;
--	int			stale = 0;
--
--	bp = bip->bli_buf;
--	/*
--	 * will xfs_buf_item_unpin() call xfs_buf_item_relse()?
--	 */
-+	/* will xfs_buf_item_unpin() call xfs_buf_item_relse()? */
- 	if ((atomic_read(&bip->bli_refcount) == 1) &&
- 	    (bip->bli_flags & XFS_BLI_STALE)) {
-+		/*
-+		 * yes -- We can safely do some work here and then call
-+		 * buf_item_unpin to do the rest because we are
-+		 * are holding the buffer locked so no one else will be
-+		 * able to bump up the refcount. We have to remove the
-+		 * log item from the transaction as we are about to release
-+		 * our reference to the buffer. If we don't, the unlock that
-+		 * occurs later in the xfs_trans_uncommit() will try to
-+		 * reference the buffer which we no longer have a hold on.
-+		 */
-+		struct xfs_log_item_desc *lidp;
-+
- 		ASSERT(XFS_BUF_VALUSEMA(bip->bli_buf) <= 0);
- 		trace_xfs_buf_item_unpin_stale(bip);
- 
--		/*
--		 * yes -- clear the xaction descriptor in-use flag
--		 * and free the chunk if required.  We can safely
--		 * do some work here and then call buf_item_unpin
--		 * to do the rest because if the if is true, then
--		 * we are holding the buffer locked so no one else
--		 * will be able to bump up the refcount.
--		 */
--		lidp = xfs_trans_find_item(tp, (xfs_log_item_t *) bip);
--		stale = lidp->lid_flags & XFS_LID_BUF_STALE;
-+		lidp = xfs_trans_find_item(tp, (xfs_log_item_t *)bip);
- 		xfs_trans_free_item(tp, lidp);
-+
- 		/*
--		 * Since the transaction no longer refers to the buffer,
--		 * the buffer should no longer refer to the transaction.
-+		 * Since the transaction no longer refers to the buffer, the
-+		 * buffer should no longer refer to the transaction.
- 		 */
--		XFS_BUF_SET_FSPRIVATE2(bp, NULL);
-+		XFS_BUF_SET_FSPRIVATE2(bip->bli_buf, NULL);
- 	}
--
--	xfs_buf_item_unpin(bip, stale);
--
--	return;
-+	xfs_buf_item_unpin(bip);
- }
- 
- /*
-@@ -675,7 +669,7 @@ static struct xfs_item_ops xfs_buf_item_ops = {
- 	.iop_format	= (void(*)(xfs_log_item_t*, xfs_log_iovec_t*))
- 					xfs_buf_item_format,
- 	.iop_pin	= (void(*)(xfs_log_item_t*))xfs_buf_item_pin,
--	.iop_unpin	= (void(*)(xfs_log_item_t*, int))xfs_buf_item_unpin,
-+	.iop_unpin	= (void(*)(xfs_log_item_t*))xfs_buf_item_unpin,
- 	.iop_unpin_remove = (void(*)(xfs_log_item_t*, xfs_trans_t *))
- 					xfs_buf_item_unpin_remove,
- 	.iop_trylock	= (uint(*)(xfs_log_item_t*))xfs_buf_item_trylock,
-diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index e461e93..409fe81 100644
---- a/fs/xfs/xfs_extfree_item.c
-+++ b/fs/xfs/xfs_extfree_item.c
-@@ -106,7 +106,7 @@ xfs_efi_item_pin(xfs_efi_log_item_t *efip)
-  */
- /*ARGSUSED*/
- STATIC void
--xfs_efi_item_unpin(xfs_efi_log_item_t *efip, int stale)
-+xfs_efi_item_unpin(xfs_efi_log_item_t *efip)
- {
- 	struct xfs_ail		*ailp = efip->efi_item.li_ailp;
- 
-@@ -224,7 +224,7 @@ static struct xfs_item_ops xfs_efi_item_ops = {
- 	.iop_format	= (void(*)(xfs_log_item_t*, xfs_log_iovec_t*))
- 					xfs_efi_item_format,
- 	.iop_pin	= (void(*)(xfs_log_item_t*))xfs_efi_item_pin,
--	.iop_unpin	= (void(*)(xfs_log_item_t*, int))xfs_efi_item_unpin,
-+	.iop_unpin	= (void(*)(xfs_log_item_t*))xfs_efi_item_unpin,
- 	.iop_unpin_remove = (void(*)(xfs_log_item_t*, xfs_trans_t *))
- 					xfs_efi_item_unpin_remove,
- 	.iop_trylock	= (uint(*)(xfs_log_item_t*))xfs_efi_item_trylock,
-@@ -425,7 +425,7 @@ xfs_efd_item_pin(xfs_efd_log_item_t *efdp)
-  */
- /*ARGSUSED*/
- STATIC void
--xfs_efd_item_unpin(xfs_efd_log_item_t *efdp, int stale)
-+xfs_efd_item_unpin(xfs_efd_log_item_t *efdp)
- {
- 	return;
- }
-@@ -515,7 +515,7 @@ static struct xfs_item_ops xfs_efd_item_ops = {
- 	.iop_format	= (void(*)(xfs_log_item_t*, xfs_log_iovec_t*))
- 					xfs_efd_item_format,
- 	.iop_pin	= (void(*)(xfs_log_item_t*))xfs_efd_item_pin,
--	.iop_unpin	= (void(*)(xfs_log_item_t*, int))xfs_efd_item_unpin,
-+	.iop_unpin	= (void(*)(xfs_log_item_t*))xfs_efd_item_unpin,
- 	.iop_unpin_remove = (void(*)(xfs_log_item_t*, xfs_trans_t*))
- 					xfs_efd_item_unpin_remove,
- 	.iop_trylock	= (uint(*)(xfs_log_item_t*))xfs_efd_item_trylock,
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 0347175..cf8249a 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -557,8 +557,7 @@ xfs_inode_item_pin(
- /* ARGSUSED */
- STATIC void
- xfs_inode_item_unpin(
--	xfs_inode_log_item_t	*iip,
--	int			stale)
-+	xfs_inode_log_item_t	*iip)
- {
- 	struct xfs_inode	*ip = iip->ili_inode;
- 
-@@ -574,7 +573,7 @@ xfs_inode_item_unpin_remove(
- 	xfs_inode_log_item_t	*iip,
- 	xfs_trans_t		*tp)
- {
--	xfs_inode_item_unpin(iip, 0);
-+	xfs_inode_item_unpin(iip);
- }
- 
- /*
-@@ -840,7 +839,7 @@ static struct xfs_item_ops xfs_inode_item_ops = {
- 	.iop_format	= (void(*)(xfs_log_item_t*, xfs_log_iovec_t*))
- 					xfs_inode_item_format,
- 	.iop_pin	= (void(*)(xfs_log_item_t*))xfs_inode_item_pin,
--	.iop_unpin	= (void(*)(xfs_log_item_t*, int))xfs_inode_item_unpin,
-+	.iop_unpin	= (void(*)(xfs_log_item_t*))xfs_inode_item_unpin,
- 	.iop_unpin_remove = (void(*)(xfs_log_item_t*, xfs_trans_t*))
- 					xfs_inode_item_unpin_remove,
- 	.iop_trylock	= (uint(*)(xfs_log_item_t*))xfs_inode_item_trylock,
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index f73e358..6962f2b 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -1451,6 +1451,6 @@ xfs_trans_chunk_committed(
- 		 * flags, if anyone else stales the buffer we do not
- 		 * want to pay any attention to it.
- 		 */
--		IOP_UNPIN(lip, lidp->lid_flags & XFS_LID_BUF_STALE);
-+		IOP_UNPIN(lip);
- 	}
- }
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 79c8bab..82574ef 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -159,7 +159,6 @@ typedef struct xfs_log_item_desc {
- 
- #define XFS_LID_DIRTY		0x1
- #define XFS_LID_PINNED		0x2
--#define XFS_LID_BUF_STALE	0x8
- 
- /*
-  * This structure is used to maintain a chunk list of log_item_desc
-@@ -833,7 +832,7 @@ typedef struct xfs_item_ops {
- 	uint (*iop_size)(xfs_log_item_t *);
- 	void (*iop_format)(xfs_log_item_t *, struct xfs_log_iovec *);
- 	void (*iop_pin)(xfs_log_item_t *);
--	void (*iop_unpin)(xfs_log_item_t *, int);
-+	void (*iop_unpin)(xfs_log_item_t *);
- 	void (*iop_unpin_remove)(xfs_log_item_t *, struct xfs_trans *);
- 	uint (*iop_trylock)(xfs_log_item_t *);
- 	void (*iop_unlock)(xfs_log_item_t *);
-@@ -846,7 +845,7 @@ typedef struct xfs_item_ops {
- #define IOP_SIZE(ip)		(*(ip)->li_ops->iop_size)(ip)
- #define IOP_FORMAT(ip,vp)	(*(ip)->li_ops->iop_format)(ip, vp)
- #define IOP_PIN(ip)		(*(ip)->li_ops->iop_pin)(ip)
--#define IOP_UNPIN(ip, flags)	(*(ip)->li_ops->iop_unpin)(ip, flags)
-+#define IOP_UNPIN(ip)		(*(ip)->li_ops->iop_unpin)(ip)
- #define IOP_UNPIN_REMOVE(ip,tp) (*(ip)->li_ops->iop_unpin_remove)(ip, tp)
- #define IOP_TRYLOCK(ip)		(*(ip)->li_ops->iop_trylock)(ip)
- #define IOP_UNLOCK(ip)		(*(ip)->li_ops->iop_unlock)(ip)
-diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-index fb58636..4e1b689 100644
---- a/fs/xfs/xfs_trans_buf.c
-+++ b/fs/xfs/xfs_trans_buf.c
-@@ -696,7 +696,6 @@ xfs_trans_log_buf(xfs_trans_t	*tp,
- 
- 	tp->t_flags |= XFS_TRANS_DIRTY;
- 	lidp->lid_flags |= XFS_LID_DIRTY;
--	lidp->lid_flags &= ~XFS_LID_BUF_STALE;
- 	bip->bli_flags |= XFS_BLI_LOGGED;
- 	xfs_buf_item_log(bip, first, last);
- }
-@@ -782,7 +781,7 @@ xfs_trans_binval(
- 	bip->bli_format.blf_flags |= XFS_BLI_CANCEL;
- 	memset((char *)(bip->bli_format.blf_data_map), 0,
- 	      (bip->bli_format.blf_map_size * sizeof(uint)));
--	lidp->lid_flags |= XFS_LID_DIRTY|XFS_LID_BUF_STALE;
-+	lidp->lid_flags |= XFS_LID_DIRTY;
- 	tp->t_flags |= XFS_TRANS_DIRTY;
- }
- 
--- 
-1.6.5
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKRWFjaCBsb2cgaXRlbSB0
+eXBlIGRvZXMgbWFudWFsIGluaXRpYWxpc2F0aW9uIG9mIHRoZSBsb2cgaXRlbS4KRGVsYXllZCBs
+b2dnaW5nIGludHJvZHVjZdGVIG5ldyBmaWVsZHMgdGhhdCBuZWVkIGluaXRpYWxpc2F0aW9uLCBz
+bwpmYWN0b3IgYWxsIHRoZSBvcGVuIGNvZGVkIGluaXRpYWxpc2F0aW9uIGludG8gYSBjb21tb24g
+ZnVuY3Rpb24KZmlyc3QuCgpTaWduZWQtb2ZmLWJ5OiBEYXZlIENoaW5uZXIgPGRjaGlubmVyQHJl
+ZGhhdC5jb20+Ci0tLQogZnMveGZzL3F1b3RhL3hmc19kcXVvdF9pdGVtLmMgfCAgIDEyICsrKyst
+LS0tLS0tLQogZnMveGZzL3hmc19idWZfaXRlbS5jICAgICAgICAgfCAgICA1ICstLS0tCiBmcy94
+ZnMveGZzX2V4dGZyZWVfaXRlbS5jICAgICB8ICAgMTAgKystLS0tLS0tLQogZnMveGZzL3hmc19p
+bm9kZV9pdGVtLmMgICAgICAgfCAgIDEyICsrLS0tLS0tLS0tLQogZnMveGZzL3hmc19sb2cuYyAg
+ICAgICAgICAgICAgfCAgIDEzICsrKysrKysrKysrKysKIGZzL3hmcy94ZnNfbG9nLmggICAgICAg
+ICAgICAgIHwgICAgNyArKysrKysrCiA2IGZpbGVzIGNoYW5nZWQsIDI5IGluc2VydGlvbnMoKyks
+IDMwIGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2ZzL3hmcy9xdW90YS94ZnNfZHF1b3RfaXRl
+bS5jIGIvZnMveGZzL3F1b3RhL3hmc19kcXVvdF9pdGVtLmMKaW5kZXggNGU0ZWU5YS4uNjM5ZDk2
+NSAxMDA2NDQKLS0tIGEvZnMveGZzL3F1b3RhL3hmc19kcXVvdF9pdGVtLmMKKysrIGIvZnMveGZz
+L3F1b3RhL3hmc19kcXVvdF9pdGVtLmMKQEAgLTM1Nyw5ICszNTcsOCBAQCB4ZnNfcW1fZHF1b3Rf
+bG9naXRlbV9pbml0KAogCXhmc19kcV9sb2dpdGVtX3QgICpscDsKIAlscCA9ICZkcXAtPnFfbG9n
+aXRlbTsKIAotCWxwLT5xbGlfaXRlbS5saV90eXBlID0gWEZTX0xJX0RRVU9UOwotCWxwLT5xbGlf
+aXRlbS5saV9vcHMgPSAmeGZzX2RxdW90X2l0ZW1fb3BzOwotCWxwLT5xbGlfaXRlbS5saV9tb3Vu
+dHAgPSBkcXAtPnFfbW91bnQ7CisJeGZzX2xvZ19pdGVtX2luaXQoZHFwLT5xX21vdW50LCAmbHAt
+PnFsaV9pdGVtLCBYRlNfTElfRFFVT1QsCisJCQkJCSZ4ZnNfZHF1b3RfaXRlbV9vcHMpOwogCWxw
+LT5xbGlfZHF1b3QgPSBkcXA7CiAJbHAtPnFsaV9mb3JtYXQucWxmX3R5cGUgPSBYRlNfTElfRFFV
+T1Q7CiAJbHAtPnFsaV9mb3JtYXQucWxmX2lkID0gYmUzMl90b19jcHUoZHFwLT5xX2NvcmUuZF9p
+ZCk7CkBAIC01ODYsMTEgKzU4NSw4IEBAIHhmc19xbV9xb2ZmX2xvZ2l0ZW1faW5pdCgKIAogCXFm
+ID0gKHhmc19xb2ZmX2xvZ2l0ZW1fdCopIGttZW1femFsbG9jKHNpemVvZih4ZnNfcW9mZl9sb2dp
+dGVtX3QpLCBLTV9TTEVFUCk7CiAKLQlxZi0+cXFsX2l0ZW0ubGlfdHlwZSA9IFhGU19MSV9RVU9U
+QU9GRjsKLQlpZiAoc3RhcnQpCi0JCXFmLT5xcWxfaXRlbS5saV9vcHMgPSAmeGZzX3FtX3FvZmZl
+bmRfbG9naXRlbV9vcHM7Ci0JZWxzZQotCQlxZi0+cXFsX2l0ZW0ubGlfb3BzID0gJnhmc19xbV9x
+b2ZmX2xvZ2l0ZW1fb3BzOworCXhmc19sb2dfaXRlbV9pbml0KG1wLCAmcWYtPnFxbF9pdGVtLCBY
+RlNfTElfUVVPVEFPRkYsIHN0YXJ0ID8KKwkJCSZ4ZnNfcW1fcW9mZmVuZF9sb2dpdGVtX29wcyA6
+ICZ4ZnNfcW1fcW9mZl9sb2dpdGVtX29wcyk7CiAJcWYtPnFxbF9pdGVtLmxpX21vdW50cCA9IG1w
+OwogCXFmLT5xcWxfZm9ybWF0LnFmX3R5cGUgPSBYRlNfTElfUVVPVEFPRkY7CiAJcWYtPnFxbF9m
+b3JtYXQucWZfZmxhZ3MgPSBmbGFnczsKZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNfYnVmX2l0ZW0u
+YyBiL2ZzL3hmcy94ZnNfYnVmX2l0ZW0uYwppbmRleCBmM2M0OWU2Li5hYWNlMjM3IDEwMDY0NAot
+LS0gYS9mcy94ZnMveGZzX2J1Zl9pdGVtLmMKKysrIGIvZnMveGZzL3hmc19idWZfaXRlbS5jCkBA
+IC03MzMsMTAgKzczMyw3IEBAIHhmc19idWZfaXRlbV9pbml0KAogCiAJYmlwID0gKHhmc19idWZf
+bG9nX2l0ZW1fdCopa21lbV96b25lX3phbGxvYyh4ZnNfYnVmX2l0ZW1fem9uZSwKIAkJCQkJCSAg
+ICBLTV9TTEVFUCk7Ci0JYmlwLT5ibGlfaXRlbS5saV90eXBlID0gWEZTX0xJX0JVRjsKLQliaXAt
+PmJsaV9pdGVtLmxpX29wcyA9ICZ4ZnNfYnVmX2l0ZW1fb3BzOwotCWJpcC0+YmxpX2l0ZW0ubGlf
+bW91bnRwID0gbXA7Ci0JYmlwLT5ibGlfaXRlbS5saV9haWxwID0gbXAtPm1fYWlsOworCXhmc19s
+b2dfaXRlbV9pbml0KG1wLCAmYmlwLT5ibGlfaXRlbSwgWEZTX0xJX0JVRiwgJnhmc19idWZfaXRl
+bV9vcHMpOwogCWJpcC0+YmxpX2J1ZiA9IGJwOwogCXhmc19idWZfaG9sZChicCk7CiAJYmlwLT5i
+bGlfZm9ybWF0LmJsZl90eXBlID0gWEZTX0xJX0JVRjsKZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNf
+ZXh0ZnJlZV9pdGVtLmMgYi9mcy94ZnMveGZzX2V4dGZyZWVfaXRlbS5jCmluZGV4IDZmMzVlZDEu
+LmU0NjFlOTMgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy94ZnNfZXh0ZnJlZV9pdGVtLmMKKysrIGIvZnMv
+eGZzL3hmc19leHRmcmVlX2l0ZW0uYwpAQCAtMjU5LDEwICsyNTksNyBAQCB4ZnNfZWZpX2luaXQo
+eGZzX21vdW50X3QJKm1wLAogCQkJCQkJCSAgICAgS01fU0xFRVApOwogCX0KIAotCWVmaXAtPmVm
+aV9pdGVtLmxpX3R5cGUgPSBYRlNfTElfRUZJOwotCWVmaXAtPmVmaV9pdGVtLmxpX29wcyA9ICZ4
+ZnNfZWZpX2l0ZW1fb3BzOwotCWVmaXAtPmVmaV9pdGVtLmxpX21vdW50cCA9IG1wOwotCWVmaXAt
+PmVmaV9pdGVtLmxpX2FpbHAgPSBtcC0+bV9haWw7CisJeGZzX2xvZ19pdGVtX2luaXQobXAsICZl
+ZmlwLT5lZmlfaXRlbSwgWEZTX0xJX0VGSSwgJnhmc19lZmlfaXRlbV9vcHMpOwogCWVmaXAtPmVm
+aV9mb3JtYXQuZWZpX25leHRlbnRzID0gbmV4dGVudHM7CiAJZWZpcC0+ZWZpX2Zvcm1hdC5lZmlf
+aWQgPSAoX19wc2ludF90KSh2b2lkKillZmlwOwogCkBAIC01NTQsMTAgKzU1MSw3IEBAIHhmc19l
+ZmRfaW5pdCh4ZnNfbW91bnRfdAkqbXAsCiAJCQkJCQkJICAgICBLTV9TTEVFUCk7CiAJfQogCi0J
+ZWZkcC0+ZWZkX2l0ZW0ubGlfdHlwZSA9IFhGU19MSV9FRkQ7Ci0JZWZkcC0+ZWZkX2l0ZW0ubGlf
+b3BzID0gJnhmc19lZmRfaXRlbV9vcHM7Ci0JZWZkcC0+ZWZkX2l0ZW0ubGlfbW91bnRwID0gbXA7
+Ci0JZWZkcC0+ZWZkX2l0ZW0ubGlfYWlscCA9IG1wLT5tX2FpbDsKKwl4ZnNfbG9nX2l0ZW1faW5p
+dChtcCwgJmVmZHAtPmVmZF9pdGVtLCBYRlNfTElfRUZELCAmeGZzX2VmZF9pdGVtX29wcyk7CiAJ
+ZWZkcC0+ZWZkX2VmaXAgPSBlZmlwOwogCWVmZHAtPmVmZF9mb3JtYXQuZWZkX25leHRlbnRzID0g
+bmV4dGVudHM7CiAJZWZkcC0+ZWZkX2Zvcm1hdC5lZmRfZWZpX2lkID0gZWZpcC0+ZWZpX2Zvcm1h
+dC5lZmlfaWQ7CmRpZmYgLS1naXQgYS9mcy94ZnMveGZzX2lub2RlX2l0ZW0uYyBiL2ZzL3hmcy94
+ZnNfaW5vZGVfaXRlbS5jCmluZGV4IDdiZmVhODUuLjMyZTQxODggMTAwNjQ0Ci0tLSBhL2ZzL3hm
+cy94ZnNfaW5vZGVfaXRlbS5jCisrKyBiL2ZzL3hmcy94ZnNfaW5vZGVfaXRlbS5jCkBAIC04NjUs
+MTcgKzg2NSw5IEBAIHhmc19pbm9kZV9pdGVtX2luaXQoCiAJQVNTRVJUKGlwLT5pX2l0ZW1wID09
+IE5VTEwpOwogCWlpcCA9IGlwLT5pX2l0ZW1wID0ga21lbV96b25lX3phbGxvYyh4ZnNfaWxpX3pv
+bmUsIEtNX1NMRUVQKTsKIAotCWlpcC0+aWxpX2l0ZW0ubGlfdHlwZSA9IFhGU19MSV9JTk9ERTsK
+LQlpaXAtPmlsaV9pdGVtLmxpX29wcyA9ICZ4ZnNfaW5vZGVfaXRlbV9vcHM7Ci0JaWlwLT5pbGlf
+aXRlbS5saV9tb3VudHAgPSBtcDsKLQlpaXAtPmlsaV9pdGVtLmxpX2FpbHAgPSBtcC0+bV9haWw7
+CiAJaWlwLT5pbGlfaW5vZGUgPSBpcDsKLQotCS8qCi0JICAgV2UgaGF2ZSB6ZXJvZWQgbWVtb3J5
+LiBObyBuZWVkIC4uLgotCSAgIGlpcC0+aWxpX2V4dGVudHNfYnVmID0gTlVMTDsKLQkgKi8KLQor
+CXhmc19sb2dfaXRlbV9pbml0KG1wLCAmaWlwLT5pbGlfaXRlbSwgWEZTX0xJX0lOT0RFLAorCQkJ
+CQkJJnhmc19pbm9kZV9pdGVtX29wcyk7CiAJaWlwLT5pbGlfZm9ybWF0LmlsZl90eXBlID0gWEZT
+X0xJX0lOT0RFOwogCWlpcC0+aWxpX2Zvcm1hdC5pbGZfaW5vID0gaXAtPmlfaW5vOwogCWlpcC0+
+aWxpX2Zvcm1hdC5pbGZfYmxrbm8gPSBpcC0+aV9pbWFwLmltX2Jsa25vOwpkaWZmIC0tZ2l0IGEv
+ZnMveGZzL3hmc19sb2cuYyBiL2ZzL3hmcy94ZnNfbG9nLmMKaW5kZXggZThmYmE5Mi4uMWYyNmE5
+NyAxMDA2NDQKLS0tIGEvZnMveGZzL3hmc19sb2cuYworKysgYi9mcy94ZnMveGZzX2xvZy5jCkBA
+IC02NDgsNiArNjQ4LDE5IEBAIHhmc19sb2dfdW5tb3VudCh4ZnNfbW91bnRfdCAqbXApCiAJeGxv
+Z19kZWFsbG9jX2xvZyhtcC0+bV9sb2cpOwogfQogCit2b2lkCit4ZnNfbG9nX2l0ZW1faW5pdCgK
+KwlzdHJ1Y3QgeGZzX21vdW50CSptcCwKKwlzdHJ1Y3QgeGZzX2xvZ19pdGVtCSppdGVtLAorCWlu
+dAkJCXR5cGUsCisJc3RydWN0IHhmc19pdGVtX29wcwkqb3BzKQoreworCWl0ZW0tPmxpX21vdW50
+cCA9IG1wOworCWl0ZW0tPmxpX2FpbHAgPSBtcC0+bV9haWw7CisJaXRlbS0+bGlfdHlwZSA9IHR5
+cGU7CisJaXRlbS0+bGlfb3BzID0gb3BzOworfQorCiAvKgogICogV3JpdGUgcmVnaW9uIHZlY3Rv
+cnMgdG8gbG9nLiAgVGhlIHdyaXRlIGhhcHBlbnMgdXNpbmcgdGhlIHNwYWNlIHJlc2VydmF0aW9u
+CiAgKiBvZiB0aGUgdGlja2V0ICh0aWMpLiAgSXQgaXMgbm90IGEgcmVxdWlyZW1lbnQgdGhhdCBh
+bGwgd3JpdGVzIGZvciBhIGdpdmVuCmRpZmYgLS1naXQgYS9mcy94ZnMveGZzX2xvZy5oIGIvZnMv
+eGZzL3hmc19sb2cuaAppbmRleCA5N2EyNGM3Li5mM2E1NjRkIDEwMDY0NAotLS0gYS9mcy94ZnMv
+eGZzX2xvZy5oCisrKyBiL2ZzL3hmcy94ZnNfbG9nLmgKQEAgLTEyNiw2ICsxMjYsMTMgQEAgdHlw
+ZWRlZiBzdHJ1Y3QgeGZzX2xvZ19jYWxsYmFjayB7CiBzdHJ1Y3QgeGZzX21vdW50Owogc3RydWN0
+IHhsb2dfaW5fY29yZTsKIHN0cnVjdCB4bG9nX3RpY2tldDsKK3N0cnVjdCB4ZnNfbG9nX2l0ZW07
+CitzdHJ1Y3QgeGZzX2l0ZW1fb3BzOworCit2b2lkCXhmc19sb2dfaXRlbV9pbml0KHN0cnVjdCB4
+ZnNfbW91bnQJKm1wLAorCQkJc3RydWN0IHhmc19sb2dfaXRlbQkqaXRlbSwKKwkJCWludAkJCXR5
+cGUsCisJCQlzdHJ1Y3QgeGZzX2l0ZW1fb3BzCSpvcHMpOwogCiB4ZnNfbHNuX3QgeGZzX2xvZ19k
+b25lKHN0cnVjdCB4ZnNfbW91bnQgKm1wLAogCQkgICAgICAgc3RydWN0IHhsb2dfdGlja2V0ICp0
+aWNrZXQsCi0tIAoxLjYuNQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2ku
+Y29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
