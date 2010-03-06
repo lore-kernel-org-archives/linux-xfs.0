@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o26AgTMw079118 for <xfs@oss.sgi.com>; Sat, 6 Mar 2010 04:42:29 -0600
+	o26BToc6082389 for <xfs@oss.sgi.com>; Sat, 6 Mar 2010 05:29:50 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 32B231D1B07F
-	for <xfs@oss.sgi.com>; Sat,  6 Mar 2010 02:43:58 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6468C13FF220
+	for <xfs@oss.sgi.com>; Sat,  6 Mar 2010 03:31:20 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id a0uHlKribBz68F1T for
-	<xfs@oss.sgi.com>; Sat, 06 Mar 2010 02:43:58 -0800 (PST)
-Date: Sat, 6 Mar 2010 05:43:57 -0500
+	by cuda.sgi.com with ESMTP id skmTEwklIzSBRllr for
+	<xfs@oss.sgi.com>; Sat, 06 Mar 2010 03:31:20 -0800 (PST)
+Date: Sat, 6 Mar 2010 06:31:19 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] [RFC] xfs_fsr: Improve handling of attribute forks
-Message-ID: <20100306104357.GA22520@infradead.org>
-References: <1267764049-30650-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 8/9] xfs: introduce new internal log vector structure
+Message-ID: <20100306113119.GA25863@infradead.org>
+References: <1267840284-4652-1-git-send-email-david@fromorbit.com>
+	<1267840284-4652-9-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1267764049-30650-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1267840284-4652-9-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,39 +32,30 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Mar 05, 2010 at 03:40:49PM +1100, Dave Chinner wrote:
+On Sat, Mar 06, 2010 at 12:51:23PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> If the file being defragmented has attributes, then fsr puts a dummy
-> attribute on the temporary file to try to ensure that the inode
-> attribute fork offset is set correctly. This works perfectly well
-> for the old style of attributes that use a fixed fork offset - the
-> presence of any attribute of any size or shape will result in fsr
-> doing the correct thing.
+> The current log IO vector structure is a flat array and not
+> extensible. To make it possible to keep separate log IO vectors for
+> individual log items, we need a method of chaining log IO vectors
+> together.
 > 
-> However, for attr2 filesystems, the attribute fork offset is
-> dependent on the size and shape of both the data and attribute
-> forks. Hence setting a small attribute on the file does not
-> guarantee that the two inodes have the same fork offset and
-> therefore compatible for a data fork swap.
+> Introduce a new log vector type that can be used to wrap the
+> existing log IO vectors on use that internally to the log. This
+> means that the existing external interface (xfs_log_write) does not
+> change and hence no changes to the transaction commit code are
+> required.
 > 
-> This patch improves the attribute fork handling of fsr. It checks
-> the filesystem version to see if the old style attributes are in
-> use, and if so uses the current method.
-> 
-> If attr2 is in use, fsr uses bulkstat output to determine what the
-> fork offset is. If the attribute fork offsets differ then fsr will
-> try to create attributes that will result in the correct offset. If
-> that fails, or the attribute fork is too large, it will give up and just
-> attempt the swap.
-> 
-> This fork offset value in bulkstat new functionality in the kernel,
-> so if there are attributes and a zero fork offset, then the kernel
-> does not support this feature and we simply fall back to the existing,
-> less effective code.
+> This initial use of the new log vectors does not use the chaining
+> capability of the new log vector structure - it is not needed to
+> implement the flat vector array the current transaction commit path
+> creates.
 
-Looks reasonable.  It would be good to have a testcase for this in
-xfsqa to verify this works.
+Given that we don't need it yet I wonder if it would be a better idea
+to postponed it to the start of the actual delayed logging series?
+
+patch 9 would be nice to have before, but that might be a bit too much
+rebase work.  Anyway, looking into a real review soon.
 
 _______________________________________________
 xfs mailing list
