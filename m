@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o26AsO7f079948 for <xfs@oss.sgi.com>; Sat, 6 Mar 2010 04:54:24 -0600
+	o26Aodr3079670 for <xfs@oss.sgi.com>; Sat, 6 Mar 2010 04:50:39 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D404713FF1BF
-	for <xfs@oss.sgi.com>; Sat,  6 Mar 2010 02:55:53 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D7F3D1D1B0C7
+	for <xfs@oss.sgi.com>; Sat,  6 Mar 2010 02:52:07 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 3WOcVZpaByit4HHe for
-	<xfs@oss.sgi.com>; Sat, 06 Mar 2010 02:55:53 -0800 (PST)
-Date: Sat, 6 Mar 2010 05:55:53 -0500
+	by cuda.sgi.com with ESMTP id diQlHEKHicdAkxHt for
+	<xfs@oss.sgi.com>; Sat, 06 Mar 2010 02:52:07 -0800 (PST)
+Date: Sat, 6 Mar 2010 05:52:07 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/9] xfs: remove stale parameter from ->iop_unpin method
-Message-ID: <20100306105553.GD30376@infradead.org>
+Subject: Re: [PATCH 4/9] xfs: fix reservation release commit flag in
+	xfs_bmap_add_attrfork()
+Message-ID: <20100306105207.GC30376@infradead.org>
 References: <1267840284-4652-1-git-send-email-david@fromorbit.com>
-	<1267840284-4652-4-git-send-email-david@fromorbit.com>
+	<1267840284-4652-5-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1267840284-4652-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1267840284-4652-5-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,20 +33,23 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Sat, Mar 06, 2010 at 12:51:18PM +1100, Dave Chinner wrote:
-> The staleness of a object being unpinned can be directly derived
-> from the object itself - there is no need to extract it from the
-> object then pass it as a parameter into IOP_UNPIN().
+On Sat, Mar 06, 2010 at 12:51:19PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> xfs_bmap_add_attrfork() passes XFS_TRANS_PERM_LOG_RES to xfs_trans_commit()
+> to indicate that the commit should release the permanent log reservation
+> as part of the commit. This is wrong - the correct flag is
+> XFS_TRANS_RELEASE_LOG_RES - and it is only by the chance that both these
+> flags have the value of 0x4 that the code is doing the right thing.
+> 
+> Fix it by changing to use the correct flag.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Not quite as obvious as the description makes it sounds, as
-we're removing the XFS_LID_BUF_STALE flag, and the buf item
-which was the only place actually checking it is now switched
-to the XFS_BLI_STALE flag in the xfs_buf_log_item, but as
-these are set and cleared in exactly the same places it's fine
-and a great cleanups.
+Looks good,
 
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
