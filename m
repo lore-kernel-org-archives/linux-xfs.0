@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o26BtrVr084285 for <xfs@oss.sgi.com>; Sat, 6 Mar 2010 05:55:53 -0600
+	o26BcZv1083149 for <xfs@oss.sgi.com>; Sat, 6 Mar 2010 05:38:36 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A202021FD46
-	for <xfs@oss.sgi.com>; Sat,  6 Mar 2010 03:57:21 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	QgOFBD82kiZQmmPe for <xfs@oss.sgi.com>;
-	Sat, 06 Mar 2010 03:57:21 -0800 (PST)
-Date: Sat, 6 Mar 2010 22:57:18 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1419821FD97
+	for <xfs@oss.sgi.com>; Sat,  6 Mar 2010 03:40:04 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	ADo6v7oMRExrkMjE for <xfs@oss.sgi.com>;
+	Sat, 06 Mar 2010 03:40:03 -0800 (PST)
+Date: Sat, 6 Mar 2010 22:40:00 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 5/9] xfs: split out iclog writing from xfs_trans_commit()
-Message-ID: <20100306115718.GC28189@discord.disaster>
-References: <1267840284-4652-1-git-send-email-david@fromorbit.com>
-	<1267840284-4652-6-git-send-email-david@fromorbit.com>
-	<20100306110833.GF30376@infradead.org>
+Subject: Re: [PATCH] [RFC] xfs_fsr: Improve handling of attribute forks
+Message-ID: <20100306114000.GB28189@discord.disaster>
+References: <1267764049-30650-1-git-send-email-david@fromorbit.com>
+	<20100306104357.GA22520@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100306110833.GF30376@infradead.org>
+In-Reply-To: <20100306104357.GA22520@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,44 +33,92 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Sat, Mar 06, 2010 at 06:08:33AM -0500, Christoph Hellwig wrote:
-> On Sat, Mar 06, 2010 at 12:51:20PM +1100, Dave Chinner wrote:
+On Sat, Mar 06, 2010 at 05:43:57AM -0500, Christoph Hellwig wrote:
+> On Fri, Mar 05, 2010 at 03:40:49PM +1100, Dave Chinner wrote:
 > > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > Split the the part of xfs_trans_commit() that deals with writing the
-> > transaction into the iclog into a separate function. This isolates the
-> > physical commit process from the logical commit operation and makes
-> > it easier to insert different transaction commit paths without affecting
-> > the existing algorithm adversely.
+> > If the file being defragmented has attributes, then fsr puts a dummy
+> > attribute on the temporary file to try to ensure that the inode
+> > attribute fork offset is set correctly. This works perfectly well
+> > for the old style of attributes that use a fixed fork offset - the
+> > presence of any attribute of any size or shape will result in fsr
+> > doing the correct thing.
 > > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > However, for attr2 filesystems, the attribute fork offset is
+> > dependent on the size and shape of both the data and attribute
+> > forks. Hence setting a small attribute on the file does not
+> > guarantee that the two inodes have the same fork offset and
+> > therefore compatible for a data fork swap.
+> > 
+> > This patch improves the attribute fork handling of fsr. It checks
+> > the filesystem version to see if the old style attributes are in
+> > use, and if so uses the current method.
+> > 
+> > If attr2 is in use, fsr uses bulkstat output to determine what the
+> > fork offset is. If the attribute fork offsets differ then fsr will
+> > try to create attributes that will result in the correct offset. If
+> > that fails, or the attribute fork is too large, it will give up and just
+> > attempt the swap.
+> > 
+> > This fork offset value in bulkstat new functionality in the kernel,
+> > so if there are attributes and a zero fork offset, then the kernel
+> > does not support this feature and we simply fall back to the existing,
+> > less effective code.
 > 
-> Looks good, but some comments below:
-> 
-> > +        if (nvec > XFS_TRANS_LOGVEC_COUNT)
-> > +                kmem_free(log_vector);
-> 
-> These two lines are indented with whitespaces instead of tabs.
+> Looks reasonable.  It would be good to have a testcase for this in
+> xfsqa to verify this works.
 
-Oops. Looks like I need to update my whitespace damage highlighting
-rule...
+Yeah, so far I've tested by running './check -g auto' and finding
+the inodes that failed with the standard fsr, then running the fixed
+fsr on them. It's not particularly efficient....
 
-> > +shut_us_down:
-> > +	shutdown = XFS_FORCED_SHUTDOWN(mp) ? EIO : 0;
-> > +	if (!(tp->t_flags & XFS_TRANS_DIRTY) || shutdown) {
-> > +		xfs_trans_unreserve_and_mod_sb(tp);
-> > +		/*
-> 
-> This whole area in _xfs_trans_commit is still a complete mess.
+FWIW, there's enough information from fsr and xfs_db to be able to
+recreate the failure scenario. e.g. from 'xfs_fsr -d -v ...' on a
+failed inode:
 
-Yes, it is I didn't touch that part of the function, even though the
-diff moves the whole thing about. Actually, the diff makes the
-change look for more complex than it really is because it doesn't
-keep it as three separate chunks of code that got moved....
+ino=149
+ino=149 extents=21 can_save=2 tmp=/mnt/test/.fsr/ag0/tmp18175
+set temp attr
+DEBUG: fsize=2873344 blsz_dio=2873344 d_min=512 d_max=2147483136
+pgsz=4096
+Temporary file has 18 extents (21 in original)
+XFS_IOC_SWAPEXT failed: ino=149: Invalid argument
 
-> What about throwing the patch below in once you're rewriting it anyway?
+That inode:
 
-I'll add it to the series and see how it goes.
+$ sudo xfs_db -r -c "inode 149" -c "p" /dev/sdb1
+core.magic = 0x494e                                                                      
+core.mode = 0100666                                                                      
+core.version = 2
+core.format = 3 (btree)
+....
+core.size = 2873344
+core.nblocks = 194
+core.extsize = 0
+core.nextents = 12
+core.naextents = 3
+core.forkoff = 15
+core.aformat = 3 (btree)
+....
+
+has 12 data extents and 3 attribute extents. I should be able to
+create this with xfs_io without too much trouble.
+
+Actaully the patch I posted fails on this inode - the previous ones
+that were created were btree data fork and extent attribute fork,
+so there's more work on this to be done.
+
+More importantly, I discovered a neat option to xfs_fsr yesterday:
+
+$ export FSRXFSTEST=true
+$ xfs_fsr -C 18 ....
+
+which allows you to control the number of extents in the temporary
+file, so I should be able to recreate the exact conditions that
+triggered a failure as well....
+
+I'll see what I can come up with and do some more rigorous testing
+of the patch before moving forward with it.
 
 Cheers,
 
