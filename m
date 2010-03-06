@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o26DImCI089709 for <xfs@oss.sgi.com>; Sat, 6 Mar 2010 07:18:49 -0600
+	o26FihPD099071 for <xfs@oss.sgi.com>; Sat, 6 Mar 2010 09:44:44 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8ACD41D1B241
-	for <xfs@oss.sgi.com>; Sat,  6 Mar 2010 05:20:18 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 169F9220137
+	for <xfs@oss.sgi.com>; Sat,  6 Mar 2010 07:46:12 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id N1MHif6AYnczDWoq for
-	<xfs@oss.sgi.com>; Sat, 06 Mar 2010 05:20:18 -0800 (PST)
-Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1NntvW-0008AN-3O
-	for xfs@oss.sgi.com; Sat, 06 Mar 2010 13:20:18 +0000
-Date: Sat, 6 Mar 2010 08:20:18 -0500
+	by cuda.sgi.com with ESMTP id fnQ80HjQiVVwphcA for
+	<xfs@oss.sgi.com>; Sat, 06 Mar 2010 07:46:12 -0800 (PST)
+Date: Sat, 6 Mar 2010 10:46:10 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfs: wait for direct I/O to complete in fsync and write_inode
-Message-ID: <20100306132018.GA31360@infradead.org>
+Subject: Re: [PATCH 8/9] xfs: introduce new internal log vector structure
+Message-ID: <20100306154610.GA29590@infradead.org>
+References: <1267840284-4652-1-git-send-email-david@fromorbit.com>
+	<1267840284-4652-9-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <1267840284-4652-9-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,43 +29,94 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
+
+On Sat, Mar 06, 2010 at 12:51:23PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> The current log IO vector structure is a flat array and not
+> extensible. To make it possible to keep separate log IO vectors for
+> individual log items, we need a method of chaining log IO vectors
+> together.
+> 
+> Introduce a new log vector type that can be used to wrap the
+> existing log IO vectors on use that internally to the log. This
+> means that the existing external interface (xfs_log_write) does not
+> change and hence no changes to the transaction commit code are
+> required.
+> 
+> This initial use of the new log vectors does not use the chaining
+> capability of the new log vector structure - it is not needed to
+> implement the flat vector array the current transaction commit path
+> creates.
+
+Looks good to me,
 
 
-We need to wait for all pending direct I/O requests before taking care of
-metadata in fsync and write_inode.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Note that the write_inode hunk will causes conflicts when merging with
-mainline, I'm not sure how to best deal with that.
+A few comments below:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+> +			/* the data section must be 32 bit size aligned */
+> +			struct {
+> +			    __uint16_t magic;
+> +			    __uint16_t pad1;
+> +			    __uint32_t pad2; /* may as well make it 64 bits */
+> +			} magic = {
+> +				.magic = XLOG_UNMOUNT_TYPE,
+> +			};
+> +			struct xfs_log_iovec reg = {
+> +				.i_addr = (void *)&magic,
+> +				.i_len = sizeof(magic),
+> +				.i_type = XLOG_REG_TYPE_UNMOUNT,
+> +			};
+> +			struct xfs_log_vec vec = {
+> +				.lv_niovecs = 1,
+> +			};
+> +			/* sigh. c99 initialisers don't work on anon unions */
+> +			vec.lv_iovecp = &reg;
 
-Index: xfs/fs/xfs/linux-2.6/xfs_file.c
+I can't see an anonymous union involved anywhere here, and initializing
+these normally works just fine (see patch below).
+
+Index: xfs/fs/xfs/xfs_log.c
 ===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_file.c	2010-03-06 14:10:12.247004588 +0100
-+++ xfs/fs/xfs/linux-2.6/xfs_file.c	2010-03-06 14:16:48.460003752 +0100
-@@ -115,6 +115,8 @@ xfs_file_fsync(
+--- xfs.orig/fs/xfs/xfs_log.c	2010-03-06 16:40:35.817021839 +0100
++++ xfs/fs/xfs/xfs_log.c	2010-03-06 16:41:49.873004518 +0100
+@@ -557,9 +557,8 @@ xfs_log_unmount_write(xfs_mount_t *mp)
+ 			};
+ 			struct xfs_log_vec vec = {
+ 				.lv_niovecs = 1,
++				.lv_iovecp = &reg,
+ 			};
+-			/* sigh. c99 initialisers don't work on anon unions */
+-			vec.lv_iovecp = &reg;
  
- 	xfs_iflags_clear(ip, XFS_ITRUNCATED);
+ 			/* remove inited flag */
+ 			tic->t_flags = 0;
+@@ -686,9 +685,8 @@ xfs_log_write(
+ 	int			error;
+ 	struct xfs_log_vec	vec = {
+ 		.lv_niovecs = nentries,
++		.lv_iovecp = reg,
+ 	};
+-	/* sigh. c99 initialisers don't work on anon unions */
+-	vec.lv_iovecp = reg;
  
-+	xfs_ioend_wait(ip);
-+
- 	/*
- 	 * We always need to make sure that the required inode state is safe on
- 	 * disk.  The inode might be clean but we still might need to force the
-Index: xfs/fs/xfs/linux-2.6/xfs_super.c
-===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2010-03-06 14:10:12.259026379 +0100
-+++ xfs/fs/xfs/linux-2.6/xfs_super.c	2010-03-06 14:16:48.461003193 +0100
-@@ -1079,6 +1079,8 @@ xfs_fs_write_inode(
- 		if (error)
- 			goto out;
+ 	if (XLOG_FORCED_SHUTDOWN(log))
+ 		return XFS_ERROR(EIO);
+@@ -1201,9 +1199,8 @@ xlog_commit_record(
+ 	};
+ 	struct xfs_log_vec vec = {
+ 		.lv_niovecs = 1,
++		.lv_iovecp = &reg,
+ 	};
+-	/* sigh. c99 initialisers don't work on anon unions */
+-	vec.lv_iovecp = &reg;
  
-+		xfs_ioend_wait(ip);
-+
- 		/*
- 		 * Make sure the inode has hit stable storage.  By using the
- 		 * log and the fsync transactions we reduce the IOs we have
+ 	ASSERT_ALWAYS(iclog);
+ 	error = xlog_write(log, &vec, ticket, commitlsnp, iclog,
 
 _______________________________________________
 xfs mailing list
