@@ -1,31 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o28M9Wue074945 for <xfs@oss.sgi.com>; Mon, 8 Mar 2010 16:09:33 -0600
-Received: from enyo.dsw2k3.info (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1DA6F18F22CD
-	for <xfs@oss.sgi.com>; Mon,  8 Mar 2010 14:11:03 -0800 (PST)
-Received: from enyo.dsw2k3.info (enyo.dsw2k3.info [195.71.86.239]) by
-	cuda.sgi.com with ESMTP id OA2uNZMJzwVl6jwX for
-	<xfs@oss.sgi.com>; Mon, 08 Mar 2010 14:11:03 -0800 (PST)
-Received: from localhost (localhost [127.0.0.1])
-	by enyo.dsw2k3.info (Postfix) with ESMTP id 4D9D098C3B4
-	for <xfs@oss.sgi.com>; Mon,  8 Mar 2010 23:11:04 +0100 (CET)
-Received: from enyo.dsw2k3.info ([127.0.0.1])
-	by localhost (enyo.dsw2k3.info [127.0.0.1]) (amavisd-new, port 10024)
-	with LMTP id 8c8OXPuuIoyO for <xfs@oss.sgi.com>;
-	Mon,  8 Mar 2010 23:10:55 +0100 (CET)
-Received: from citd.de (p4FC4C439.dip.t-dialin.net [79.196.196.57])
-	(using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(Client did not present a certificate)
-	by enyo.dsw2k3.info (Postfix) with ESMTPSA id 8153898C3A4
-	for <xfs@oss.sgi.com>; Mon,  8 Mar 2010 23:10:54 +0100 (CET)
-Date: Mon, 8 Mar 2010 23:10:44 +0100
-From: Matthias Schniedermeyer <ms@citd.de>
-Subject: What are the correct mkfs.xfs parameters for a lying WD-EARS HDD?
-Message-ID: <20100308221044.GA17830@citd.de>
+	o28Mhskr077484 for <xfs@oss.sgi.com>; Mon, 8 Mar 2010 16:43:54 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9E8131D2009C
+	for <xfs@oss.sgi.com>; Mon,  8 Mar 2010 14:45:25 -0800 (PST)
+Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
+	by cuda.sgi.com with ESMTP id M0N7FVAZrbXik2ht for
+	<xfs@oss.sgi.com>; Mon, 08 Mar 2010 14:45:25 -0800 (PST)
+Message-ID: <4B957E03.9090000@sandeen.net>
+Date: Mon, 08 Mar 2010 16:45:23 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
+Subject: Re: What are the correct mkfs.xfs parameters for a lying WD-EARS HDD?
+References: <20100308221044.GA17830@citd.de>
+In-Reply-To: <20100308221044.GA17830@citd.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,36 +27,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Matthias Schniedermeyer <ms@citd.de>
+Cc: xfs@oss.sgi.com
 
-Hi
+Matthias Schniedermeyer wrote:
+> Hi
+> 
+> 
+> More than a month ago i bought 4 Western Digital WD15EARS (1.5 TB) which 
+> are (AFAIK) the first general/commercial available 4k sector SATA-HDDs.
+> 
+> Unfortunatly the HDDs lie about the 4k physical sector size and the most 
+> prominent drawback is a worse than abysmal delete performance.
+> ("Normal" Read & Write-performance is OK)
+> 
+> So if i wanted to (re-)mkfs the filesystems what would the correct 
+> parameters be?
+> 
+> Kernel/Userspace is pretty recent (Debian-SID):
+> mkfs.xfs version 3.1.1, kernel v2.6.33, util-linux 2.16.0
+> Not that that should matter when the HDDs lies.
 
+Recent kernel+util-linux-ng++fdisk+parted+xfsprogs -should- do the right thing for you....
+Oh, but this was maybe the drive that didn't output the right stuff when queried.
 
-More than a month ago i bought 4 Western Digital WD15EARS (1.5 TB) which 
-are (AFAIK) the first general/commercial available 4k sector SATA-HDDs.
+Make sure your partitions, if any, are on 4k boundaries.(*)  older fdisk at least
+won't do this by default, not sure about parted.
 
-Unfortunatly the HDDs lie about the 4k physical sector size and the most 
-prominent drawback is a worse than abysmal delete performance.
-("Normal" Read & Write-performance is OK)
+once that is done, tell mkfs.xfs "-s size=4096" to set the 4k sector size
+(again, all-upstream should do this magically for sane drives)
 
-So if i wanted to (re-)mkfs the filesystems what would the correct 
-parameters be?
+-Eric
 
-Kernel/Userspace is pretty recent (Debian-SID):
-mkfs.xfs version 3.1.1, kernel v2.6.33, util-linux 2.16.0
-Not that that should matter when the HDDs lies.
+(*)unless the drive has an offset to make 512-sector 63 line up on a nice
+boundary... in which case I guess you could experiment with perf both
+ways to be sure...
 
-
-
-
-
-Bis denn
-
--- 
-Real Programmers consider "what you see is what you get" to be just as 
-bad a concept in Text Editors as it is in women. No, the Real Programmer
-wants a "you asked for it, you got it" text editor -- complicated, 
-cryptic, powerful, unforgiving, dangerous.
+> 
+> Bis denn
+> 
 
 _______________________________________________
 xfs mailing list
