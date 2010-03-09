@@ -1,30 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o29BatFe135455 for <xfs@oss.sgi.com>; Tue, 9 Mar 2010 05:36:56 -0600
+	o29Bkogl136131 for <xfs@oss.sgi.com>; Tue, 9 Mar 2010 05:46:50 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 00D7F22746F
-	for <xfs@oss.sgi.com>; Tue,  9 Mar 2010 03:38:25 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	zSczBE2WFywLJTHH for <xfs@oss.sgi.com>;
-	Tue, 09 Mar 2010 03:38:25 -0800 (PST)
-Date: Tue, 9 Mar 2010 22:38:21 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3020514094ED
+	for <xfs@oss.sgi.com>; Tue,  9 Mar 2010 03:48:21 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
+	[150.101.137.100]) by cuda.sgi.com with ESMTP id
+	uK0KAyljwybdafPG for <xfs@oss.sgi.com>;
+	Tue, 09 Mar 2010 03:48:21 -0800 (PST)
+Date: Tue, 9 Mar 2010 22:48:18 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS hang during xfs_fsr run
-Message-ID: <20100309113821.GM28189@discord.disaster>
-References: <4B8FA2CD.6010904@dermichi.com>
-	<20100304131511.GH14317@discord.disaster>
-	<20100304134641.GA26871@infradead.org>
-	<4B8FC1B7.3070505@dermichi.com>
-	<20100304222611.GK14317@discord.disaster>
-	<4B92C71C.5010003@dermichi.com>
-	<20100308000601.GF28189@discord.disaster>
-	<4B94EADD.2080108@dermichi.com> <4B953D3F.3090002@sandeen.net>
-	<4B96118C.6080906@dermichi.com>
+Subject: Re: [PATCH 0/9] Log and transaction cleanups, factoring and bug fixes
+Message-ID: <20100309114818.GN28189@discord.disaster>
+References: <1267840284-4652-1-git-send-email-david@fromorbit.com>
+	<20100309113919.GA5479@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4B96118C.6080906@dermichi.com>
+In-Reply-To: <20100309113919.GA5479@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,28 +30,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Weissenbacher <mw@dermichi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Tue, Mar 09, 2010 at 10:14:52AM +0100, Michael Weissenbacher wrote:
->> Odds are you'll still oops, just earlier.  Send anything interesting
->> you see in the dmesg if/when it happens...
-> Oops is attached. This time the system kept working but hat a constant  
-> load of >2.0 after the incident. So i rebooted it afterwards.
+On Tue, Mar 09, 2010 at 06:39:19AM -0500, Christoph Hellwig wrote:
+> With the whole series (and my posted cleanups) applied I get the
+> following XFSQA 113 failure (and a similar one before):
+> 
+> [ 2064.763171] Assertion failed: xfs_lic_are_all_free(licp), file: fs/xfs/xfs_trans.c, line: 1432
 
-Not an oops - it's an assertion fail which causes a deliberate trap
-for debugging.
+Yeah, that's a bogus assert. I found it yesterday on test 113 ;)
 
+The issue is that test 113 is the first QA test that is
+semi-reliably creating a transaction with more than one chunk of log
+item descriptors. The original assert was:
 
-> Mar  8 22:53:54 email kernel: [52982.051367] Assertion failed: ip->i_delayed_blks == 0, file: fs/xfs/xfs_bmap.c, line: 5657
+	ASSERT(!xfs_lic_are_all_free(licp));
 
-That's not what I expected to see. Are you running out of space on
-your filesystem?
+before it called xfs_trans_chunk_committed() and ran the commit
+processing on all the items in the chunk. It then freed the chunk.
+This makes sense - there should be items in the chunk being freed.
+
+I made the bogus assumption when cleaning up the code that after
+committed processing on all the items that all the items in the
+chunk would be marked as freed. However, nothing cleans up the log
+item descriptors in the committed item processing, so the items in
+the chunk are all still marked as used.
+
+The fix is to either remove the assert or invert the condition....
 
 Cheers,
 
 Dave.
-
 -- 
 Dave Chinner
 david@fromorbit.com
