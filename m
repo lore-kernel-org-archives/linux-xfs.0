@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o2BMf3rt194364 for <xfs@oss.sgi.com>; Thu, 11 Mar 2010 16:41:03 -0600
+	o2BMf405194391 for <xfs@oss.sgi.com>; Thu, 11 Mar 2010 16:41:04 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A544B233ABD
-	for <xfs@oss.sgi.com>; Thu, 11 Mar 2010 14:42:35 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	RV6DxnKQhnATLKUW for <xfs@oss.sgi.com>;
-	Thu, 11 Mar 2010 14:42:35 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5B1261D2DEB3
+	for <xfs@oss.sgi.com>; Thu, 11 Mar 2010 14:42:36 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	S8AIQT0BgnFGM81f for <xfs@oss.sgi.com>;
+	Thu, 11 Mar 2010 14:42:36 -0800 (PST)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 04/19] xfs: Wrapped journal record corruption on read at
-	recovery
-Date: Fri, 12 Mar 2010 09:42:02 +1100
-Message-Id: <1268347337-7160-5-git-send-email-david@fromorbit.com>
+Subject: [PATCH 14/19] xfs: xfs_swap_extents needs to handle dynamic fork
+	offsets
+Date: Fri, 12 Mar 2010 09:42:12 +1100
+Message-Id: <1268347337-7160-15-git-send-email-david@fromorbit.com>
 In-Reply-To: <1268347337-7160-1-git-send-email-david@fromorbit.com>
 References: <1268347337-7160-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -32,128 +32,181 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: stable@kernel.org
 Cc: xfs@oss.sgi.com
 
-From: Andy Poling <andy@realbig.com>
+>From e09f98606dcc156de1146c209d45a0d6d5f51c3f
+Date: Thu, 14 Jan 2010 01:33:54 +0000
+When swapping extents, we can corrupt inodes by swapping data forks
+that are in incompatible formats.  This is caused by the two indoes
+having different fork offsets due to the presence of an attribute
+fork on an attr2 filesystem.  xfs_fsr tries to be smart about
+setting the fork offset, but the trick it plays only works on attr1
+(old fixed format attribute fork) filesystems.
 
->From fc5bc4c85c45f0bf854404e5736aa8b65720a18d
-Date: Tue, 3 Nov 2009 17:26:47 +0000
-Summary of problem:
+Changing the way xfs_fsr sets up the attribute fork will prevent
+this situation from ever occurring, so in the kernel code we can get
+by with a preventative fix - check that the data fork in the
+defragmented inode is in a format valid for the inode it is being
+swapped into.  This will lead to files that will silently and
+potentially repeatedly fail defragmentation, so issue a warning to
+the log when this particular failure occurs to let us know that
+xfs_fsr needs updating/fixing.
 
-If a journal record wraps at the physical end of the journal, it has to be
-read in two parts in xlog_do_recovery_pass(): a read at the physical end and a
-read at the physical beginning.  If xlog_bread() has to re-align the first
-read, the second read request does not take that re-alignment into account.
-If the first read was re-aligned, the second read over-writes the end of the
-data from the first read, effectively corrupting it.  This can happen either
-when reading the record header or reading the record data.
+To help identify how to improve xfs_fsr to avoid this issue, add
+trace points for the inodes being swapped so that we can determine
+why the swap was rejected and to confirm that the code is making the
+right decisions and modifications when swapping forks.
 
-The first sanity check in xlog_recover_process_data() is to check for a valid
-clientid, so that is the error reported.
+A further complication is even when the swap is allowed to proceed
+when the fork offset is different between the two inodes then value
+for the maximum number of extents the data fork can hold can be
+wrong. Make sure these are also set correctly after the swap occurs.
 
-Summary of fix:
-
-If there was a first read at the physical end, XFS_BUF_PTR() returns where the
-data was requested to begin.  Conversely, because it is the result of
-xlog_align(), offset indicates where the requested data for the first read
-actually begins - whether or not xlog_bread() has re-aligned it.
-
-Using offset as the base for the calculation of where to place the second read
-data ensures that it will be correctly placed immediately following the data
-from the first read instead of sometimes over-writing the end of it.
-
-The attached patch has resolved the reported problem of occasional inability
-to recover the journal (reporting "bad clientid").
-
-Signed-off-by: Andy Poling <andy@realbig.com>
-Reviewed-by: Alex Elder <aelder@sgi.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Alex Elder <aelder@sgi.com>
 ---
- fs/xfs/xfs_log_recover.c |   24 +++++++-----------------
- 1 files changed, 7 insertions(+), 17 deletions(-)
+ fs/xfs/xfs_dfrag.c |  106 ++++++++++++++++++++++++++++++++++++++++++++--------
+ 1 files changed, 90 insertions(+), 16 deletions(-)
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index fb17f82..b5b0d80 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -3517,7 +3517,7 @@ xlog_do_recovery_pass(
+diff --git a/fs/xfs/xfs_dfrag.c b/fs/xfs/xfs_dfrag.c
+index ab89a7e..73c2227 100644
+--- a/fs/xfs/xfs_dfrag.c
++++ b/fs/xfs/xfs_dfrag.c
+@@ -113,10 +113,82 @@ xfs_swapext(
+ 	return error;
+ }
+ 
++/*
++ * We need to check that the format of the data fork in the temporary inode is
++ * valid for the target inode before doing the swap. This is not a problem with
++ * attr1 because of the fixed fork offset, but attr2 has a dynamically sized
++ * data fork depending on the space the attribute fork is taking so we can get
++ * invalid formats on the target inode.
++ *
++ * E.g. target has space for 7 extents in extent format, temp inode only has
++ * space for 6.  If we defragment down to 7 extents, then the tmp format is a
++ * btree, but when swapped it needs to be in extent format. Hence we can't just
++ * blindly swap data forks on attr2 filesystems.
++ *
++ * Note that we check the swap in both directions so that we don't end up with
++ * a corrupt temporary inode, either.
++ *
++ * Note that fixing the way xfs_fsr sets up the attribute fork in the source
++ * inode will prevent this situation from occurring, so all we do here is
++ * reject and log the attempt. basically we are putting the responsibility on
++ * userspace to get this right.
++ */
++static int
++xfs_swap_extents_check_format(
++	xfs_inode_t	*ip,	/* target inode */
++	xfs_inode_t	*tip)	/* tmp inode */
++{
++
++	/* Should never get a local format */
++	if (ip->i_d.di_format == XFS_DINODE_FMT_LOCAL ||
++	    tip->i_d.di_format == XFS_DINODE_FMT_LOCAL)
++		return EINVAL;
++
++	/*
++	 * if the target inode has less extents that then temporary inode then
++	 * why did userspace call us?
++	 */
++	if (ip->i_d.di_nextents < tip->i_d.di_nextents)
++		return EINVAL;
++
++	/*
++	 * if the target inode is in extent form and the temp inode is in btree
++	 * form then we will end up with the target inode in the wrong format
++	 * as we already know there are less extents in the temp inode.
++	 */
++	if (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
++	    tip->i_d.di_format == XFS_DINODE_FMT_BTREE)
++		return EINVAL;
++
++	/* Check temp in extent form to max in target */
++	if (tip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
++	    XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) > ip->i_df.if_ext_max)
++		return EINVAL;
++
++	/* Check target in extent form to max in temp */
++	if (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
++	    XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) > tip->i_df.if_ext_max)
++		return EINVAL;
++
++	/* Check root block of temp in btree form to max in target */
++	if (tip->i_d.di_format == XFS_DINODE_FMT_BTREE &&
++	    XFS_IFORK_BOFF(ip) &&
++	    tip->i_df.if_broot_bytes > XFS_IFORK_BOFF(ip))
++		return EINVAL;
++
++	/* Check root block of target in btree form to max in temp */
++	if (ip->i_d.di_format == XFS_DINODE_FMT_BTREE &&
++	    XFS_IFORK_BOFF(tip) &&
++	    ip->i_df.if_broot_bytes > XFS_IFORK_BOFF(tip))
++		return EINVAL;
++
++	return 0;
++}
++
+ int
+ xfs_swap_extents(
+-	xfs_inode_t	*ip,
+-	xfs_inode_t	*tip,
++	xfs_inode_t	*ip,	/* target inode */
++	xfs_inode_t	*tip,	/* tmp inode */
+ 	xfs_swapext_t	*sxp)
  {
- 	xlog_rec_header_t	*rhead;
- 	xfs_daddr_t		blk_no;
--	xfs_caddr_t		bufaddr, offset;
-+	xfs_caddr_t		offset;
- 	xfs_buf_t		*hbp, *dbp;
- 	int			error = 0, h_size;
- 	int			bblks, split_bblks;
-@@ -3610,7 +3610,7 @@ xlog_do_recovery_pass(
- 			/*
- 			 * Check for header wrapping around physical end-of-log
- 			 */
--			offset = NULL;
-+			offset = XFS_BUF_PTR(hbp);
- 			split_hblks = 0;
- 			wrapped_hblks = 0;
- 			if (blk_no + hblks <= log->l_logBBsize) {
-@@ -3646,9 +3646,8 @@ xlog_do_recovery_pass(
- 				 *   - order is important.
- 				 */
- 				wrapped_hblks = hblks - split_hblks;
--				bufaddr = XFS_BUF_PTR(hbp);
- 				error = XFS_BUF_SET_PTR(hbp,
--						bufaddr + BBTOB(split_hblks),
-+						offset + BBTOB(split_hblks),
- 						BBTOB(hblks - split_hblks));
- 				if (error)
- 					goto bread_err2;
-@@ -3658,14 +3657,10 @@ xlog_do_recovery_pass(
- 				if (error)
- 					goto bread_err2;
+ 	xfs_mount_t	*mp;
+@@ -160,13 +232,6 @@ xfs_swap_extents(
+ 		goto out_unlock;
+ 	}
  
--				error = XFS_BUF_SET_PTR(hbp, bufaddr,
-+				error = XFS_BUF_SET_PTR(hbp, offset,
- 							BBTOB(hblks));
- 				if (error)
- 					goto bread_err2;
+-	/* Should never get a local format */
+-	if (ip->i_d.di_format == XFS_DINODE_FMT_LOCAL ||
+-	    tip->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
+-		error = XFS_ERROR(EINVAL);
+-		goto out_unlock;
+-	}
 -
--				if (!offset)
--					offset = xlog_align(log, 0,
--							wrapped_hblks, hbp);
- 			}
- 			rhead = (xlog_rec_header_t *)offset;
- 			error = xlog_valid_rec_header(log, rhead,
-@@ -3685,7 +3680,7 @@ xlog_do_recovery_pass(
- 			} else {
- 				/* This log record is split across the
- 				 * physical end of log */
--				offset = NULL;
-+				offset = XFS_BUF_PTR(dbp);
- 				split_bblks = 0;
- 				if (blk_no != log->l_logBBsize) {
- 					/* some data is before the physical
-@@ -3714,9 +3709,8 @@ xlog_do_recovery_pass(
- 				 *   _first_, then the log start (LR header end)
- 				 *   - order is important.
- 				 */
--				bufaddr = XFS_BUF_PTR(dbp);
- 				error = XFS_BUF_SET_PTR(dbp,
--						bufaddr + BBTOB(split_bblks),
-+						offset + BBTOB(split_bblks),
- 						BBTOB(bblks - split_bblks));
- 				if (error)
- 					goto bread_err2;
-@@ -3727,13 +3721,9 @@ xlog_do_recovery_pass(
- 				if (error)
- 					goto bread_err2;
+ 	if (VN_CACHED(VFS_I(tip)) != 0) {
+ 		xfs_inval_cached_trace(tip, 0, -1, 0, -1);
+ 		error = xfs_flushinval_pages(tip, 0, -1,
+@@ -189,13 +254,12 @@ xfs_swap_extents(
+ 		goto out_unlock;
+ 	}
  
--				error = XFS_BUF_SET_PTR(dbp, bufaddr, h_size);
-+				error = XFS_BUF_SET_PTR(dbp, offset, h_size);
- 				if (error)
- 					goto bread_err2;
--
--				if (!offset)
--					offset = xlog_align(log, wrapped_hblks,
--						bblks - split_bblks, dbp);
- 			}
- 			xlog_unpack_data(rhead, offset, log);
- 			if ((error = xlog_recover_process_data(log, rhash,
+-	/*
+-	 * If the target has extended attributes, the tmp file
+-	 * must also in order to ensure the correct data fork
+-	 * format.
+-	 */
+-	if ( XFS_IFORK_Q(ip) != XFS_IFORK_Q(tip) ) {
+-		error = XFS_ERROR(EINVAL);
++	/* check inode formats now that data is flushed */
++	error = xfs_swap_extents_check_format(ip, tip);
++	if (error) {
++		xfs_fs_cmn_err(CE_NOTE, mp,
++		    "%s: inode 0x%llx format is incompatible for exchanging.",
++				__FILE__, ip->i_ino);
+ 		goto out_unlock;
+ 	}
+ 
+@@ -276,6 +340,16 @@ xfs_swap_extents(
+ 	*tifp = *tempifp;	/* struct copy */
+ 
+ 	/*
++	 * Fix the in-memory data fork values that are dependent on the fork
++	 * offset in the inode. We can't assume they remain the same as attr2
++	 * has dynamic fork offsets.
++	 */
++	ifp->if_ext_max = XFS_IFORK_SIZE(ip, XFS_DATA_FORK) /
++					(uint)sizeof(xfs_bmbt_rec_t);
++	tifp->if_ext_max = XFS_IFORK_SIZE(tip, XFS_DATA_FORK) /
++					(uint)sizeof(xfs_bmbt_rec_t);
++
++	/*
+ 	 * Fix the on-disk inode values
+ 	 */
+ 	tmp = (__uint64_t)ip->i_d.di_nblocks;
 -- 
 1.6.5
 
