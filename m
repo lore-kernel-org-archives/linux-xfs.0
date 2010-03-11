@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o2BMf5Cq194424 for <xfs@oss.sgi.com>; Thu, 11 Mar 2010 16:41:06 -0600
+	o2BMesep194278 for <xfs@oss.sgi.com>; Thu, 11 Mar 2010 16:40:54 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 99705141F781
-	for <xfs@oss.sgi.com>; Thu, 11 Mar 2010 14:42:37 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0A4C51D2DEA5
+	for <xfs@oss.sgi.com>; Thu, 11 Mar 2010 14:42:25 -0800 (PST)
 Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
 	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	FDPBHvJgOvrWPkla for <xfs@oss.sgi.com>;
-	Thu, 11 Mar 2010 14:42:37 -0800 (PST)
+	96xjr7G8SX307qQa for <xfs@oss.sgi.com>;
+	Thu, 11 Mar 2010 14:42:25 -0800 (PST)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 09/19] xfs: Ensure we force all busy extents in range to disk
-Date: Fri, 12 Mar 2010 09:42:07 +1100
-Message-Id: <1268347337-7160-10-git-send-email-david@fromorbit.com>
+Subject: [PATCH 02/19] xfs: fix mmap_sem/iolock inversion in xfs_free_eofblocks
+Date: Fri, 12 Mar 2010 09:42:00 +1100
+Message-Id: <1268347337-7160-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1268347337-7160-1-git-send-email-david@fromorbit.com>
 References: <1268347337-7160-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,111 +31,129 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: stable@kernel.org
 Cc: xfs@oss.sgi.com
 
->From fd45e4784164d1017521086524e3442318c67370
-Date: Sat, 2 Jan 2010 02:38:56 +0000
-When we search for and find a busy extent during allocation we
-force the log out to ensure the extent free transaction is on
-disk before the allocation transaction. The current implementation
-has a subtle bug in it--it does not handle multiple overlapping
-ranges.
+From: Christoph Hellwig <hch@infradead.org>
 
-That is, if we free lots of little extents into a single
-contiguous extent, then allocate the contiguous extent, the busy
-search code stops searching at the first extent it finds that
-overlaps the allocated range. It then uses the commit LSN of the
-transaction to force the log out to.
+>From c56c9631cbe88f08854a56ff9776c1f310916830
+Date: Mon, 19 Oct 2009 04:03:46 +0000
+When xfs_free_eofblocks is called from ->release the VM might already
+hold the mmap_sem, but in the write path we take the iolock before
+taking the mmap_sem in the generic write code.
 
-Unfortunately, the other busy ranges might have more recent
-commit LSNs than the first busy extent that is found, and this
-results in xfs_alloc_search_busy() returning before all the
-extent free transactions are on disk for the range being
-allocated. This can lead to potential metadata corruption or
-stale data exposure after a crash because log replay won't replay
-all the extent free transactions that cover the allocation range.
+Switch xfs_free_eofblocks to only trylock the iolock if called from
+->release and skip trimming the prellocated blocks in that case.
+We'll still free them later on the final iput.
 
-Modified-by: Alex Elder <aelder@sgi.com>
-
-(Dropped the "found" argument from the xfs_alloc_busysearch trace
-event.)
-
-Signed-off-by: Dave Chinner <david@fromorbit.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Alex Elder <aelder@sgi.com>
 Signed-off-by: Alex Elder <aelder@sgi.com>
 ---
- fs/xfs/xfs_alloc.c |   52 +++++++++++++++++++++-------------------------------
- 1 files changed, 21 insertions(+), 31 deletions(-)
+ fs/xfs/xfs_rw.h       |    7 -------
+ fs/xfs/xfs_vnodeops.c |   34 ++++++++++++++++++++++++++--------
+ 2 files changed, 26 insertions(+), 15 deletions(-)
 
-diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
-index 2cf944e..4cd1c23 100644
---- a/fs/xfs/xfs_alloc.c
-+++ b/fs/xfs/xfs_alloc.c
-@@ -2703,45 +2703,35 @@ xfs_alloc_search_busy(xfs_trans_t *tp,
- 	xfs_mount_t		*mp;
- 	xfs_perag_busy_t	*bsy;
- 	xfs_agblock_t		uend, bend;
--	xfs_lsn_t		lsn;
-+	xfs_lsn_t		lsn = 0;
- 	int			cnt;
- 
- 	mp = tp->t_mountp;
- 
- 	spin_lock(&mp->m_perag[agno].pagb_lock);
--	cnt = mp->m_perag[agno].pagb_count;
--
- 	uend = bno + len - 1;
- 
--	/* search pagb_list for this slot, skipping open slots */
--	for (bsy = mp->m_perag[agno].pagb_list; cnt; bsy++) {
--
--		/*
--		 * (start1,length1) within (start2, length2)
--		 */
--		if (bsy->busy_tp != NULL) {
--			bend = bsy->busy_start + bsy->busy_length - 1;
--			if ((bno > bend) || (uend < bsy->busy_start)) {
--				cnt--;
--			} else {
--				TRACE_BUSYSEARCH("xfs_alloc_search_busy",
--					 "found1", agno, bno, len, tp);
--				break;
--			}
--		}
--	}
--
- 	/*
--	 * If a block was found, force the log through the LSN of the
--	 * transaction that freed the block
-+	 * search pagb_list for this slot, skipping open slots. We have to
-+	 * search the entire array as there may be multiple overlaps and
-+	 * we have to get the most recent LSN for the log force to push out
-+	 * all the transactions that span the range.
- 	 */
--	if (cnt) {
--		TRACE_BUSYSEARCH("xfs_alloc_search_busy", "found", agno, bno, len, tp);
--		lsn = bsy->busy_tp->t_commit_lsn;
--		spin_unlock(&mp->m_perag[agno].pagb_lock);
--		xfs_log_force(mp, lsn, XFS_LOG_FORCE|XFS_LOG_SYNC);
--	} else {
--		TRACE_BUSYSEARCH("xfs_alloc_search_busy", "not-found", agno, bno, len, tp);
--		spin_unlock(&mp->m_perag[agno].pagb_lock);
-+	for (cnt = 0; cnt < mp->m_perag[agno].pagb_count; cnt++) {
-+		bsy = &mp->m_perag[agno].pagb_list[cnt];
-+		if (!bsy->busy_tp)
-+			continue;
-+		bend = bsy->busy_start + bsy->busy_length - 1;
-+		if (bno > bend || uend < bsy->busy_start)
-+			continue;
-+
-+		/* (start1,length1) within (start2, length2) */
-+		if (XFS_LSN_CMP(bsy->busy_tp->t_commit_lsn, lsn) > 0)
-+			lsn = bsy->busy_tp->t_commit_lsn;
- 	}
-+	spin_unlock(&mp->m_perag[agno].pagb_lock);
-+	TRACE_BUSYSEARCH("xfs_alloc_search_busy", lsn ? "found" : "not-found",
-+						agno, bno, len, tp);
-+	if (lsn)
-+		xfs_log_force(mp, lsn, XFS_LOG_FORCE|XFS_LOG_SYNC);
+diff --git a/fs/xfs/xfs_rw.h b/fs/xfs/xfs_rw.h
+index f5e4874..726014d 100644
+--- a/fs/xfs/xfs_rw.h
++++ b/fs/xfs/xfs_rw.h
+@@ -37,13 +37,6 @@ xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb)
  }
+ 
+ /*
+- * Flags for xfs_free_eofblocks
+- */
+-#define XFS_FREE_EOF_LOCK	(1<<0)
+-#define XFS_FREE_EOF_NOLOCK	(1<<1)
+-
+-
+-/*
+  * helper function to extract extent size hint from inode
+  */
+ STATIC_INLINE xfs_extlen_t
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+index 3fac146..d984014 100644
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -709,6 +709,11 @@ xfs_fsync(
+ }
+ 
+ /*
++ * Flags for xfs_free_eofblocks
++ */
++#define XFS_FREE_EOF_TRYLOCK	(1<<0)
++
++/*
+  * This is called by xfs_inactive to free any blocks beyond eof
+  * when the link count isn't zero and by xfs_dm_punch_hole() when
+  * punching a hole to EOF.
+@@ -726,7 +731,6 @@ xfs_free_eofblocks(
+ 	xfs_filblks_t	map_len;
+ 	int		nimaps;
+ 	xfs_bmbt_irec_t	imap;
+-	int		use_iolock = (flags & XFS_FREE_EOF_LOCK);
+ 
+ 	/*
+ 	 * Figure out if there are any blocks beyond the end
+@@ -768,14 +772,19 @@ xfs_free_eofblocks(
+ 		 * cache and we can't
+ 		 * do that within a transaction.
+ 		 */
+-		if (use_iolock)
++		if (flags & XFS_FREE_EOF_TRYLOCK) {
++			if (!xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
++				xfs_trans_cancel(tp, 0);
++				return 0;
++			}
++		} else {
+ 			xfs_ilock(ip, XFS_IOLOCK_EXCL);
++		}
+ 		error = xfs_itruncate_start(ip, XFS_ITRUNC_DEFINITE,
+ 				    ip->i_size);
+ 		if (error) {
+ 			xfs_trans_cancel(tp, 0);
+-			if (use_iolock)
+-				xfs_iunlock(ip, XFS_IOLOCK_EXCL);
++			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+ 			return error;
+ 		}
+ 
+@@ -812,8 +821,7 @@ xfs_free_eofblocks(
+ 			error = xfs_trans_commit(tp,
+ 						XFS_TRANS_RELEASE_LOG_RES);
+ 		}
+-		xfs_iunlock(ip, (use_iolock ? (XFS_IOLOCK_EXCL|XFS_ILOCK_EXCL)
+-					    : XFS_ILOCK_EXCL));
++		xfs_iunlock(ip, XFS_IOLOCK_EXCL|XFS_ILOCK_EXCL);
+ 	}
+ 	return error;
+ }
+@@ -1113,7 +1121,17 @@ xfs_release(
+ 		     (ip->i_df.if_flags & XFS_IFEXTENTS))  &&
+ 		    (!(ip->i_d.di_flags &
+ 				(XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND)))) {
+-			error = xfs_free_eofblocks(mp, ip, XFS_FREE_EOF_LOCK);
++
++			/*
++			 * If we can't get the iolock just skip truncating
++			 * the blocks past EOF because we could deadlock
++			 * with the mmap_sem otherwise.  We'll get another
++			 * chance to drop them once the last reference to
++			 * the inode is dropped, so we'll never leak blocks
++			 * permanently.
++			 */
++			error = xfs_free_eofblocks(mp, ip,
++						   XFS_FREE_EOF_TRYLOCK);
+ 			if (error)
+ 				return error;
+ 		}
+@@ -1184,7 +1202,7 @@ xfs_inactive(
+ 		     (!(ip->i_d.di_flags &
+ 				(XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND)) ||
+ 		      (ip->i_delayed_blks != 0)))) {
+-			error = xfs_free_eofblocks(mp, ip, XFS_FREE_EOF_LOCK);
++			error = xfs_free_eofblocks(mp, ip, 0);
+ 			if (error)
+ 				return VN_INACTIVE_CACHE;
+ 		}
 -- 
 1.6.5
 
