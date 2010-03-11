@@ -1,20 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o2BMf5q4194427 for <xfs@oss.sgi.com>; Thu, 11 Mar 2010 16:41:06 -0600
+	o2BNc6Vg200262 for <xfs@oss.sgi.com>; Thu, 11 Mar 2010 17:38:06 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 03D4A1D2DEB4
-	for <xfs@oss.sgi.com>; Thu, 11 Mar 2010 14:42:37 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	eQkpPI5l3uLuaZVq for <xfs@oss.sgi.com>;
-	Thu, 11 Mar 2010 14:42:37 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8B7DB141FC3C
+	for <xfs@oss.sgi.com>; Thu, 11 Mar 2010 15:39:37 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
+	[150.101.137.104]) by cuda.sgi.com with ESMTP id
+	3IMDfzihSv105hfh for <xfs@oss.sgi.com>;
+	Thu, 11 Mar 2010 15:39:37 -0800 (PST)
+Date: Fri, 12 Mar 2010 10:39:34 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 05/19] xfs: Fix error return for fallocate() on XFS
-Date: Fri, 12 Mar 2010 09:42:03 +1100
-Message-Id: <1268347337-7160-6-git-send-email-david@fromorbit.com>
-In-Reply-To: <1268347337-7160-1-git-send-email-david@fromorbit.com>
-References: <1268347337-7160-1-git-send-email-david@fromorbit.com>
+Subject: Re: XFS hang during xfs_fsr run
+Message-ID: <20100311233934.GB4732@dastard>
+References: <4B8FA2CD.6010904@dermichi.com>
+	<20100304131511.GH14317@discord.disaster>
+	<20100304134641.GA26871@infradead.org>
+	<4B8FC1B7.3070505@dermichi.com>
+	<20100304222611.GK14317@discord.disaster>
+	<4B92C71C.5010003@dermichi.com>
+	<20100308000601.GF28189@discord.disaster>
+	<4B94EADD.2080108@dermichi.com> <4B953D3F.3090002@sandeen.net>
+	<4B975C5C.5090806@dermichi.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4B975C5C.5090806@dermichi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,57 +33,38 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: stable@kernel.org
-Cc: xfs@oss.sgi.com
+To: Michael Weissenbacher <mw@dermichi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+On Wed, Mar 10, 2010 at 09:46:20AM +0100, Michael Weissenbacher wrote:
+> >Odds are you'll still oops, just earlier.  Send anything interesting
+> >you see in the dmesg if/when it happens...
+> >
+> Those are the assertion failures i saw during yesterday's run. The
+> process xfs_fsr hung on inode 536898141 and i couldn't kill it, even
+> with "kill -9". I had to reboot to get everything back to normal.
 
->From 44a743f68705c681439f264deb05f8f38e9048d3
-Date: Tue, 24 Nov 2009 21:52:53 +0000
-Noticed that through glibc fallocate would return 28 rather than -1
-and errno = 28 for ENOSPC. The xfs routines uses XFS_ERROR format
-positive return error codes while the syscalls use negative return
-codes.  Fixup the two cases in xfs_vn_fallocate syscall to convert to
-negative.
+> Mar  9 22:32:43 email kernel: [57269.991906] Assertion failed: ip->i_delayed_blks == 0, file: fs/xfs/xfs_bmap.c, line: 5657
 
-Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
-Signed-off-by: Alex Elder <aelder@sgi.com>
----
- fs/xfs/linux-2.6/xfs_iops.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+Hi Michael - have you got any idea what the files are that are
+hitting this? This failure is implying that the inode is still dirty
+after syncing all the data. Is something trying to modify it while
+XFS is trying to map it?
 
-diff --git a/fs/xfs/linux-2.6/xfs_iops.c b/fs/xfs/linux-2.6/xfs_iops.c
-index cd42ef7..1f3b4b8 100644
---- a/fs/xfs/linux-2.6/xfs_iops.c
-+++ b/fs/xfs/linux-2.6/xfs_iops.c
-@@ -573,8 +573,8 @@ xfs_vn_fallocate(
- 	bf.l_len = len;
- 
- 	xfs_ilock(ip, XFS_IOLOCK_EXCL);
--	error = xfs_change_file_space(ip, XFS_IOC_RESVSP, &bf,
--				      0, XFS_ATTR_NOLOCK);
-+	error = -xfs_change_file_space(ip, XFS_IOC_RESVSP, &bf,
-+				       0, XFS_ATTR_NOLOCK);
- 	if (!error && !(mode & FALLOC_FL_KEEP_SIZE) &&
- 	    offset + len > i_size_read(inode))
- 		new_size = offset + len;
-@@ -585,7 +585,7 @@ xfs_vn_fallocate(
- 
- 		iattr.ia_valid = ATTR_SIZE;
- 		iattr.ia_size = new_size;
--		error = xfs_setattr(ip, &iattr, XFS_ATTR_NOLOCK);
-+		error = -xfs_setattr(ip, &iattr, XFS_ATTR_NOLOCK);
- 	}
- 
- 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+We've seen this occasionally in the past, but we've never been able
+to reproduce it with any reliability.  Hence any information you can
+extract would certainly help us here.
+
+Cheers,
+
+Dave.
 -- 
-1.6.5
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
