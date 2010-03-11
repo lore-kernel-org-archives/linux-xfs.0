@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o2BMf5um194423 for <xfs@oss.sgi.com>; Thu, 11 Mar 2010 16:41:06 -0600
+	o2BMfDQk194488 for <xfs@oss.sgi.com>; Thu, 11 Mar 2010 16:41:14 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A4C39233ABF
-	for <xfs@oss.sgi.com>; Thu, 11 Mar 2010 14:42:37 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	aS5agsDl2lqePLtr for <xfs@oss.sgi.com>;
-	Thu, 11 Mar 2010 14:42:37 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EDB86233AC1
+	for <xfs@oss.sgi.com>; Thu, 11 Mar 2010 14:42:45 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
+	[150.101.137.100]) by cuda.sgi.com with ESMTP id
+	cHJEt8C3oDZ442AT for <xfs@oss.sgi.com>;
+	Thu, 11 Mar 2010 14:42:45 -0800 (PST)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 03/19] xfs: I/O completion handlers must use NOFS allocations
-Date: Fri, 12 Mar 2010 09:42:01 +1100
-Message-Id: <1268347337-7160-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 18/19] xfs: Non-blocking inode locking in IO completion
+Date: Fri, 12 Mar 2010 09:42:16 +1100
+Message-Id: <1268347337-7160-19-git-send-email-david@fromorbit.com>
 In-Reply-To: <1268347337-7160-1-git-send-email-david@fromorbit.com>
 References: <1268347337-7160-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,118 +31,219 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: stable@kernel.org
 Cc: xfs@oss.sgi.com
 
-From: Christoph Hellwig <hch@infradead.org>
+>From 77d7a0c2eeb285c9069e15396703d0cb9690ac50
+Date: Wed, 17 Feb 2010 05:36:29 +0000
+The introduction of barriers to loop devices has created a new IO
+order completion dependency that XFS does not handle. The loop
+device implements barriers using fsync and so turns a log IO in the
+XFS filesystem on the loop device into a data IO in the backing
+filesystem. That is, the completion of log IOs in the loop
+filesystem are now dependent on completion of data IO in the backing
+filesystem.
 
->From 80641dc66a2d6dfb22af4413227a92b8ab84c7bb
-Date: Mon, 19 Oct 2009 04:00:03 +0000
-When completing I/O requests we must not allow the memory allocator to
-recurse into the filesystem, as we might deadlock on waiting for the
-I/O completion otherwise.  The only thing currently allocating normal
-GFP_KERNEL memory is the allocation of the transaction structure for
-the unwritten extent conversion.  Add a memflags argument to
-_xfs_trans_alloc to allow controlling the allocator behaviour.
+This can cause deadlocks when a flush daemon issues a log force with
+an inode locked because the IO completion of IO on the inode is
+blocked by the inode lock. This in turn prevents further data IO
+completion from occuring on all XFS filesystems on that CPU (due to
+the shared nature of the completion queues). This then prevents the
+log IO from completing because the log is waiting for data IO
+completion as well.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reported-by: Thomas Neumann <tneumann@users.sourceforge.net>
-Tested-by: Thomas Neumann <tneumann@users.sourceforge.net>
-Reviewed-by: Alex Elder <aelder@sgi.com>
+The fix for this new completion order dependency issue is to make
+the IO completion inode locking non-blocking. If the inode lock
+can't be grabbed, simply requeue the IO completion back to the work
+queue so that it can be processed later. This prevents the
+completion queue from being blocked and allows data IO completion on
+other inodes to proceed, hence avoiding completion order dependent
+deadlocks.
+
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Alex Elder <aelder@sgi.com>
 ---
- fs/xfs/xfs_fsops.c |    2 +-
- fs/xfs/xfs_iomap.c |    9 ++++++++-
- fs/xfs/xfs_mount.c |    2 +-
- fs/xfs/xfs_trans.c |    7 ++++---
- fs/xfs/xfs_trans.h |    2 +-
- 5 files changed, 15 insertions(+), 7 deletions(-)
+ fs/xfs/linux-2.6/xfs_aops.c |  118 ++++++++++++++++++++++++++++++-------------
+ 1 files changed, 82 insertions(+), 36 deletions(-)
 
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 2d0b3e1..6f83f58 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -611,7 +611,7 @@ xfs_fs_log_dummy(
- 	xfs_inode_t	*ip;
- 	int		error;
- 
--	tp = _xfs_trans_alloc(mp, XFS_TRANS_DUMMY1);
-+	tp = _xfs_trans_alloc(mp, XFS_TRANS_DUMMY1, KM_SLEEP);
- 	error = xfs_trans_reserve(tp, 0, XFS_ICHANGE_LOG_RES(mp), 0, 0, 0);
- 	if (error) {
- 		xfs_trans_cancel(tp, 0);
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 67ae555..7294abc 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -860,8 +860,15 @@ xfs_iomap_write_unwritten(
- 		 * set up a transaction to convert the range of extents
- 		 * from unwritten to real. Do allocations in a loop until
- 		 * we have covered the range passed in.
-+		 *
-+		 * Note that we open code the transaction allocation here
-+		 * to pass KM_NOFS--we can't risk to recursing back into
-+		 * the filesystem here as we might be asked to write out
-+		 * the same inode that we complete here and might deadlock
-+		 * on the iolock.
- 		 */
--		tp = xfs_trans_alloc(mp, XFS_TRANS_STRAT_WRITE);
-+		xfs_wait_for_freeze(mp, SB_FREEZE_TRANS);
-+		tp = _xfs_trans_alloc(mp, XFS_TRANS_STRAT_WRITE, KM_NOFS);
- 		tp->t_flags |= XFS_TRANS_RESERVE;
- 		error = xfs_trans_reserve(tp, resblks,
- 				XFS_WRITE_LOG_RES(mp), 0,
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 8b6c9e8..4d509f7 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1471,7 +1471,7 @@ xfs_log_sbcount(
- 	if (!xfs_sb_version_haslazysbcount(&mp->m_sb))
- 		return 0;
- 
--	tp = _xfs_trans_alloc(mp, XFS_TRANS_SB_COUNT);
-+	tp = _xfs_trans_alloc(mp, XFS_TRANS_SB_COUNT, KM_SLEEP);
- 	error = xfs_trans_reserve(tp, 0, mp->m_sb.sb_sectsize + 128, 0, 0,
- 					XFS_DEFAULT_LOG_COUNT);
- 	if (error) {
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 66b8493..237badc 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -236,19 +236,20 @@ xfs_trans_alloc(
- 	uint		type)
- {
- 	xfs_wait_for_freeze(mp, SB_FREEZE_TRANS);
--	return _xfs_trans_alloc(mp, type);
-+	return _xfs_trans_alloc(mp, type, KM_SLEEP);
+diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
+index c2e30ee..7263002 100644
+--- a/fs/xfs/linux-2.6/xfs_aops.c
++++ b/fs/xfs/linux-2.6/xfs_aops.c
+@@ -204,14 +204,17 @@ xfs_ioend_new_eof(
  }
  
- xfs_trans_t *
- _xfs_trans_alloc(
- 	xfs_mount_t	*mp,
--	uint		type)
-+	uint		type,
-+	uint		memflags)
- {
- 	xfs_trans_t	*tp;
- 
- 	atomic_inc(&mp->m_active_trans);
- 
--	tp = kmem_zone_zalloc(xfs_trans_zone, KM_SLEEP);
-+	tp = kmem_zone_zalloc(xfs_trans_zone, memflags);
- 	tp->t_magic = XFS_TRANS_MAGIC;
- 	tp->t_type = type;
- 	tp->t_mountp = mp;
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index ed47fc7..a0574f5 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -924,7 +924,7 @@ typedef struct xfs_trans {
-  * XFS transaction mechanism exported interfaces.
+ /*
+- * Update on-disk file size now that data has been written to disk.
+- * The current in-memory file size is i_size.  If a write is beyond
+- * eof i_new_size will be the intended file size until i_size is
+- * updated.  If this write does not extend all the way to the valid
+- * file size then restrict this update to the end of the write.
++ * Update on-disk file size now that data has been written to disk.  The
++ * current in-memory file size is i_size.  If a write is beyond eof i_new_size
++ * will be the intended file size until i_size is updated.  If this write does
++ * not extend all the way to the valid file size then restrict this update to
++ * the end of the write.
++ *
++ * This function does not block as blocking on the inode lock in IO completion
++ * can lead to IO completion order dependency deadlocks.. If it can't get the
++ * inode ilock it will return EAGAIN. Callers must handle this.
   */
- xfs_trans_t	*xfs_trans_alloc(struct xfs_mount *, uint);
--xfs_trans_t	*_xfs_trans_alloc(struct xfs_mount *, uint);
-+xfs_trans_t	*_xfs_trans_alloc(struct xfs_mount *, uint, uint);
- xfs_trans_t	*xfs_trans_dup(xfs_trans_t *);
- int		xfs_trans_reserve(xfs_trans_t *, uint, uint, uint,
- 				  uint, uint);
+-
+-STATIC void
++STATIC int
+ xfs_setfilesize(
+ 	xfs_ioend_t		*ioend)
+ {
+@@ -222,9 +225,11 @@ xfs_setfilesize(
+ 	ASSERT(ioend->io_type != IOMAP_READ);
+ 
+ 	if (unlikely(ioend->io_error))
+-		return;
++		return 0;
++
++	if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
++		return EAGAIN;
+ 
+-	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	isize = xfs_ioend_new_eof(ioend);
+ 	if (isize) {
+ 		ip->i_d.di_size = isize;
+@@ -232,6 +237,28 @@ xfs_setfilesize(
+ 	}
+ 
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	return 0;
++}
++
++/*
++ * Schedule IO completion handling on a xfsdatad if this was
++ * the final hold on this ioend. If we are asked to wait,
++ * flush the workqueue.
++ */
++STATIC void
++xfs_finish_ioend(
++	xfs_ioend_t	*ioend,
++	int		wait)
++{
++	if (atomic_dec_and_test(&ioend->io_remaining)) {
++		struct workqueue_struct *wq;
++
++		wq = (ioend->io_type == IOMAP_UNWRITTEN) ?
++			xfsconvertd_workqueue : xfsdatad_workqueue;
++		queue_work(wq, &ioend->io_work);
++		if (wait)
++			flush_workqueue(wq);
++	}
+ }
+ 
+ /*
+@@ -243,9 +270,23 @@ xfs_end_bio_delalloc(
+ {
+ 	xfs_ioend_t		*ioend =
+ 		container_of(work, xfs_ioend_t, io_work);
++	int			error;
+ 
+-	xfs_setfilesize(ioend);
+-	xfs_destroy_ioend(ioend);
++	/*
++	 * If we didn't complete processing of the ioend, requeue it to the
++	 * tail of the workqueue for another attempt later. Otherwise destroy
++	 * it.
++	 */
++	error = xfs_setfilesize(ioend);
++	if (error == EAGAIN) {
++		atomic_inc(&ioend->io_remaining);
++		xfs_finish_ioend(ioend, 0);
++		/* ensure we don't spin on blocked ioends */
++		delay(1);
++	} else {
++		ASSERT(!error);
++		xfs_destroy_ioend(ioend);
++	}
+ }
+ 
+ /*
+@@ -257,9 +298,23 @@ xfs_end_bio_written(
+ {
+ 	xfs_ioend_t		*ioend =
+ 		container_of(work, xfs_ioend_t, io_work);
++	int			error;
+ 
+-	xfs_setfilesize(ioend);
+-	xfs_destroy_ioend(ioend);
++	/*
++	 * If we didn't complete processing of the ioend, requeue it to the
++	 * tail of the workqueue for another attempt later. Otherwise destroy
++	 * it.
++	 */
++	error = xfs_setfilesize(ioend);
++	if (error == EAGAIN) {
++		atomic_inc(&ioend->io_remaining);
++		xfs_finish_ioend(ioend, 0);
++		/* ensure we don't spin on blocked ioends */
++		delay(1);
++	} else {
++		ASSERT(!error);
++		xfs_destroy_ioend(ioend);
++	}
+ }
+ 
+ /*
+@@ -279,13 +334,25 @@ xfs_end_bio_unwritten(
+ 	size_t			size = ioend->io_size;
+ 
+ 	if (likely(!ioend->io_error)) {
++		int	error;
+ 		if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
+-			int error;
+ 			error = xfs_iomap_write_unwritten(ip, offset, size);
+ 			if (error)
+ 				ioend->io_error = error;
+ 		}
+-		xfs_setfilesize(ioend);
++		/*
++		 * If we didn't complete processing of the ioend, requeue it to the
++		 * tail of the workqueue for another attempt later. Otherwise destroy
++		 * it.
++		 */
++		error = xfs_setfilesize(ioend);
++		if (error == EAGAIN) {
++			atomic_inc(&ioend->io_remaining);
++			xfs_finish_ioend(ioend, 0);
++			/* ensure we don't spin on blocked ioends */
++			delay(1);
++			return;
++		}
+ 	}
+ 	xfs_destroy_ioend(ioend);
+ }
+@@ -304,27 +371,6 @@ xfs_end_bio_read(
+ }
+ 
+ /*
+- * Schedule IO completion handling on a xfsdatad if this was
+- * the final hold on this ioend. If we are asked to wait,
+- * flush the workqueue.
+- */
+-STATIC void
+-xfs_finish_ioend(
+-	xfs_ioend_t	*ioend,
+-	int		wait)
+-{
+-	if (atomic_dec_and_test(&ioend->io_remaining)) {
+-		struct workqueue_struct *wq = xfsdatad_workqueue;
+-		if (ioend->io_work.func == xfs_end_bio_unwritten)
+-			wq = xfsconvertd_workqueue;
+-
+-		queue_work(wq, &ioend->io_work);
+-		if (wait)
+-			flush_workqueue(wq);
+-	}
+-}
+-
+-/*
+  * Allocate and initialise an IO completion structure.
+  * We need to track unwritten extent write completion here initially.
+  * We'll need to extend this for updating the ondisk inode size later
 -- 
 1.6.5
 
