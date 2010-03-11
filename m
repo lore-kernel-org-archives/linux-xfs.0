@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o2BMetRA194283 for <xfs@oss.sgi.com>; Thu, 11 Mar 2010 16:40:55 -0600
+	o2BMf0DH194330 for <xfs@oss.sgi.com>; Thu, 11 Mar 2010 16:41:00 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C4BEB233ABB
-	for <xfs@oss.sgi.com>; Thu, 11 Mar 2010 14:42:26 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 798381D2DEAD
+	for <xfs@oss.sgi.com>; Thu, 11 Mar 2010 14:42:32 -0800 (PST)
 Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
 	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	EQ6dyU6VnDeQAXgT for <xfs@oss.sgi.com>;
-	Thu, 11 Mar 2010 14:42:26 -0800 (PST)
+	asPtrSXQb5Qos8Jv for <xfs@oss.sgi.com>;
+	Thu, 11 Mar 2010 14:42:32 -0800 (PST)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 10/19] xfs: reclaim inodes under a write lock
-Date: Fri, 12 Mar 2010 09:42:08 +1100
-Message-Id: <1268347337-7160-11-git-send-email-david@fromorbit.com>
+Subject: [PATCH 07/19] xfs: fix timestamp handling in xfs_setattr
+Date: Fri, 12 Mar 2010 09:42:05 +1100
+Message-Id: <1268347337-7160-8-git-send-email-david@fromorbit.com>
 In-Reply-To: <1268347337-7160-1-git-send-email-david@fromorbit.com>
 References: <1268347337-7160-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,310 +31,214 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: stable@kernel.org
 Cc: xfs@oss.sgi.com
 
->From c8e20be020f234c8d492927a424a7d8bbefd5b5d
-Date: Sun, 10 Jan 2010 23:51:45 +0000
-Make the inode tree reclaim walk exclusive to avoid races with
-concurrent sync walkers and lookups. This is a version of a patch
-posted by Christoph Hellwig that avoids all the code duplication.
+From: Christoph Hellwig <hch@infradead.org>
 
-Signed-off-by: Dave Chinner <david@fromorbit.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+>From d6d59bada372bcf8bd36c3bbc71c485c29dd2a4b
+Date: Wed, 23 Dec 2009 16:09:13 +0000
+We currently have some rather odd code in xfs_setattr for
+updating the a/c/mtime timestamps:
+
+ - first we do a non-transaction update if all three are updated
+   together
+ - second we implicitly update the ctime for various changes
+   instead of relying on the ATTR_CTIME flag
+ - third we set the timestamps to the current time instead of the
+   arguments in the iattr structure in many cases.
+
+This patch makes sure we update it in a consistent way:
+
+ - always transactional
+ - ctime is only updated if ATTR_CTIME is set or we do a size
+   update, which is a special case
+ - always to the times passed in from the caller instead of the
+   current time
+
+The only non-size caller of xfs_setattr that doesn't come from
+the VFS is updated to set ATTR_CTIME and pass in a valid ctime
+value.
+
+Reported-by: Eric Blake <ebb9@byu.net>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Alex Elder <aelder@sgi.com>
 ---
- fs/xfs/linux-2.6/xfs_sync.c    |  154 ++++++++++++++++++----------------------
- fs/xfs/linux-2.6/xfs_sync.h    |    2 +-
- fs/xfs/quota/xfs_qm_syscalls.c |    2 +-
- 3 files changed, 71 insertions(+), 87 deletions(-)
+ fs/xfs/linux-2.6/xfs_acl.c |    3 +-
+ fs/xfs/xfs_vnodeops.c      |   93 ++++++++++++++++++-------------------------
+ 2 files changed, 41 insertions(+), 55 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index d895a3a..63c585e 100644
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -64,7 +64,6 @@ xfs_inode_ag_lookup(
- 	 * as the tree is sparse and a gang lookup walks to find
- 	 * the number of objects requested.
- 	 */
--	read_lock(&pag->pag_ici_lock);
- 	if (tag == XFS_ICI_NO_TAG) {
- 		nr_found = radix_tree_gang_lookup(&pag->pag_ici_root,
- 				(void **)&ip, *first_index, 1);
-@@ -73,7 +72,7 @@ xfs_inode_ag_lookup(
- 				(void **)&ip, *first_index, 1, tag);
+diff --git a/fs/xfs/linux-2.6/xfs_acl.c b/fs/xfs/linux-2.6/xfs_acl.c
+index b23a545..4c7b145 100644
+--- a/fs/xfs/linux-2.6/xfs_acl.c
++++ b/fs/xfs/linux-2.6/xfs_acl.c
+@@ -250,8 +250,9 @@ xfs_set_mode(struct inode *inode, mode_t mode)
+ 	if (mode != inode->i_mode) {
+ 		struct iattr iattr;
+ 
+-		iattr.ia_valid = ATTR_MODE;
++		iattr.ia_valid = ATTR_MODE | ATTR_CTIME;
+ 		iattr.ia_mode = mode;
++		iattr.ia_ctime = current_fs_time(inode->i_sb);
+ 
+ 		error = -xfs_setattr(XFS_I(inode), &iattr, XFS_ATTR_NOACL);
  	}
- 	if (!nr_found)
--		goto unlock;
-+		return NULL;
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+index d984014..ae2e44f 100644
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -69,7 +69,6 @@ xfs_setattr(
+ 	uint			commit_flags=0;
+ 	uid_t			uid=0, iuid=0;
+ 	gid_t			gid=0, igid=0;
+-	int			timeflags = 0;
+ 	struct xfs_dquot	*udqp, *gdqp, *olddquot1, *olddquot2;
+ 	int			need_iolock = 1;
  
- 	/*
- 	 * Update the index for the next lookup. Catch overflows
-@@ -83,13 +82,8 @@ xfs_inode_ag_lookup(
- 	 */
- 	*first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
- 	if (*first_index < XFS_INO_TO_AGINO(mp, ip->i_ino))
--		goto unlock;
--
-+		return NULL;
- 	return ip;
--
--unlock:
--	read_unlock(&pag->pag_ici_lock);
--	return NULL;
- }
- 
- STATIC int
-@@ -99,7 +93,8 @@ xfs_inode_ag_walk(
- 	int			(*execute)(struct xfs_inode *ip,
- 					   struct xfs_perag *pag, int flags),
- 	int			flags,
--	int			tag)
-+	int			tag,
-+	int			exclusive)
- {
- 	struct xfs_perag	*pag = &mp->m_perag[ag];
- 	uint32_t		first_index;
-@@ -113,10 +108,20 @@ restart:
- 		int		error = 0;
- 		xfs_inode_t	*ip;
- 
-+		if (exclusive)
-+			write_lock(&pag->pag_ici_lock);
-+		else
-+			read_lock(&pag->pag_ici_lock);
- 		ip = xfs_inode_ag_lookup(mp, pag, &first_index, tag);
--		if (!ip)
-+		if (!ip) {
-+			if (exclusive)
-+				write_unlock(&pag->pag_ici_lock);
-+			else
-+				read_unlock(&pag->pag_ici_lock);
- 			break;
+@@ -134,16 +133,13 @@ xfs_setattr(
+ 	if (flags & XFS_ATTR_NOLOCK)
+ 		need_iolock = 0;
+ 	if (!(mask & ATTR_SIZE)) {
+-		if ((mask != (ATTR_CTIME|ATTR_ATIME|ATTR_MTIME)) ||
+-		    (mp->m_flags & XFS_MOUNT_WSYNC)) {
+-			tp = xfs_trans_alloc(mp, XFS_TRANS_SETATTR_NOT_SIZE);
+-			commit_flags = 0;
+-			if ((code = xfs_trans_reserve(tp, 0,
+-						     XFS_ICHANGE_LOG_RES(mp), 0,
+-						     0, 0))) {
+-				lock_flags = 0;
+-				goto error_return;
+-			}
++		tp = xfs_trans_alloc(mp, XFS_TRANS_SETATTR_NOT_SIZE);
++		commit_flags = 0;
++		code = xfs_trans_reserve(tp, 0, XFS_ICHANGE_LOG_RES(mp),
++					 0, 0, 0);
++		if (code) {
++			lock_flags = 0;
++			goto error_return;
+ 		}
+ 	} else {
+ 		if (DM_EVENT_ENABLED(ip, DM_EVENT_TRUNCATE) &&
+@@ -294,15 +290,23 @@ xfs_setattr(
+ 		 * or we are explicitly asked to change it. This handles
+ 		 * the semantic difference between truncate() and ftruncate()
+ 		 * as implemented in the VFS.
++		 *
++		 * The regular truncate() case without ATTR_CTIME and ATTR_MTIME
++		 * is a special case where we need to update the times despite
++		 * not having these flags set.  For all other operations the
++		 * VFS set these flags explicitly if it wants a timestamp
++		 * update.
+ 		 */
+-		if (iattr->ia_size != ip->i_size || (mask & ATTR_CTIME))
+-			timeflags |= XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG;
++		if (iattr->ia_size != ip->i_size &&
++		    (!(mask & (ATTR_CTIME | ATTR_MTIME)))) {
++			iattr->ia_ctime = iattr->ia_mtime =
++				current_fs_time(inode->i_sb);
++			mask |= ATTR_CTIME | ATTR_MTIME;
 +		}
  
-+		/* execute releases pag->pag_ici_lock */
- 		error = execute(ip, pag, flags);
- 		if (error == EAGAIN) {
- 			skipped++;
-@@ -124,9 +129,8 @@ restart:
+ 		if (iattr->ia_size > ip->i_size) {
+ 			ip->i_d.di_size = iattr->ia_size;
+ 			ip->i_size = iattr->ia_size;
+-			if (!(flags & XFS_ATTR_DMI))
+-				xfs_ichgtime(ip, XFS_ICHGTIME_CHG);
+ 			xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 		} else if (iattr->ia_size <= ip->i_size ||
+ 			   (iattr->ia_size == 0 && ip->i_d.di_nextents)) {
+@@ -373,9 +377,6 @@ xfs_setattr(
+ 			ip->i_d.di_gid = gid;
+ 			inode->i_gid = gid;
  		}
- 		if (error)
- 			last_error = error;
--		/*
--		 * bail out if the filesystem is corrupted.
--		 */
-+
-+		/* bail out if the filesystem is corrupted.  */
- 		if (error == EFSCORRUPTED)
- 			break;
- 
-@@ -147,7 +151,8 @@ xfs_inode_ag_iterator(
- 	int			(*execute)(struct xfs_inode *ip,
- 					   struct xfs_perag *pag, int flags),
- 	int			flags,
--	int			tag)
-+	int			tag,
-+	int			exclusive)
- {
- 	int			error = 0;
- 	int			last_error = 0;
-@@ -156,7 +161,8 @@ xfs_inode_ag_iterator(
- 	for (ag = 0; ag < mp->m_sb.sb_agcount; ag++) {
- 		if (!mp->m_perag[ag].pag_ici_init)
- 			continue;
--		error = xfs_inode_ag_walk(mp, ag, execute, flags, tag);
-+		error = xfs_inode_ag_walk(mp, ag, execute, flags, tag,
-+						exclusive);
- 		if (error) {
- 			last_error = error;
- 			if (error == EFSCORRUPTED)
-@@ -180,11 +186,7 @@ xfs_sync_inode_valid(
- 		return EFSCORRUPTED;
+-
+-		xfs_trans_log_inode (tp, ip, XFS_ILOG_CORE);
+-		timeflags |= XFS_ICHGTIME_CHG;
  	}
  
--	/*
--	 * If we can't get a reference on the inode, it must be in reclaim.
--	 * Leave it for the reclaim code to flush. Also avoid inodes that
--	 * haven't been fully initialised.
--	 */
-+	/* If we can't get a reference on the inode, it must be in reclaim. */
- 	if (!igrab(inode)) {
- 		read_unlock(&pag->pag_ici_lock);
- 		return ENOENT;
-@@ -281,7 +283,7 @@ xfs_sync_data(
- 	ASSERT((flags & ~(SYNC_TRYLOCK|SYNC_WAIT)) == 0);
+ 	/*
+@@ -392,51 +393,37 @@ xfs_setattr(
  
- 	error = xfs_inode_ag_iterator(mp, xfs_sync_inode_data, flags,
--				      XFS_ICI_NO_TAG);
-+				      XFS_ICI_NO_TAG, 0);
- 	if (error)
- 		return XFS_ERROR(error);
- 
-@@ -303,7 +305,7 @@ xfs_sync_attr(
- 	ASSERT((flags & ~SYNC_WAIT) == 0);
- 
- 	return xfs_inode_ag_iterator(mp, xfs_sync_inode_attr, flags,
--				     XFS_ICI_NO_TAG);
-+				     XFS_ICI_NO_TAG, 0);
- }
- 
- STATIC int
-@@ -663,60 +665,6 @@ xfs_syncd_stop(
- 	kthread_stop(mp->m_sync_task);
- }
- 
--STATIC int
--xfs_reclaim_inode(
--	xfs_inode_t	*ip,
--	int		sync_mode)
--{
--	xfs_perag_t	*pag = xfs_get_perag(ip->i_mount, ip->i_ino);
+ 		inode->i_mode &= S_IFMT;
+ 		inode->i_mode |= mode & ~S_IFMT;
 -
--	/* The hash lock here protects a thread in xfs_iget_core from
--	 * racing with us on linking the inode back with a vnode.
--	 * Once we have the XFS_IRECLAIM flag set it will not touch
--	 * us.
--	 */
--	write_lock(&pag->pag_ici_lock);
--	spin_lock(&ip->i_flags_lock);
--	if (__xfs_iflags_test(ip, XFS_IRECLAIM) ||
--	    !__xfs_iflags_test(ip, XFS_IRECLAIMABLE)) {
--		spin_unlock(&ip->i_flags_lock);
--		write_unlock(&pag->pag_ici_lock);
--		return -EAGAIN;
--	}
--	__xfs_iflags_set(ip, XFS_IRECLAIM);
--	spin_unlock(&ip->i_flags_lock);
--	write_unlock(&pag->pag_ici_lock);
--	xfs_put_perag(ip->i_mount, pag);
--
--	/*
--	 * If the inode is still dirty, then flush it out.  If the inode
--	 * is not in the AIL, then it will be OK to flush it delwri as
--	 * long as xfs_iflush() does not keep any references to the inode.
--	 * We leave that decision up to xfs_iflush() since it has the
--	 * knowledge of whether it's OK to simply do a delwri flush of
--	 * the inode or whether we need to wait until the inode is
--	 * pulled from the AIL.
--	 * We get the flush lock regardless, though, just to make sure
--	 * we don't free it while it is being flushed.
--	 */
--	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	xfs_iflock(ip);
--
--	/*
--	 * In the case of a forced shutdown we rely on xfs_iflush() to
--	 * wait for the inode to be unpinned before returning an error.
--	 */
--	if (!is_bad_inode(VFS_I(ip)) && xfs_iflush(ip, sync_mode) == 0) {
--		/* synchronize with xfs_iflush_done */
--		xfs_iflock(ip);
--		xfs_ifunlock(ip);
--	}
--
--	xfs_iunlock(ip, XFS_ILOCK_EXCL);
--	xfs_ireclaim(ip);
--	return 0;
--}
--
- void
- __xfs_inode_set_reclaim_tag(
- 	struct xfs_perag	*pag,
-@@ -759,19 +707,55 @@ __xfs_inode_clear_reclaim_tag(
- }
- 
- STATIC int
--xfs_reclaim_inode_now(
-+xfs_reclaim_inode(
- 	struct xfs_inode	*ip,
- 	struct xfs_perag	*pag,
--	int			flags)
-+	int			sync_mode)
- {
--	/* ignore if already under reclaim */
--	if (xfs_iflags_test(ip, XFS_IRECLAIM)) {
--		read_unlock(&pag->pag_ici_lock);
-+	/*
-+	 * The radix tree lock here protects a thread in xfs_iget from racing
-+	 * with us starting reclaim on the inode.  Once we have the
-+	 * XFS_IRECLAIM flag set it will not touch us.
-+	 */
-+	spin_lock(&ip->i_flags_lock);
-+	ASSERT_ALWAYS(__xfs_iflags_test(ip, XFS_IRECLAIMABLE));
-+	if (__xfs_iflags_test(ip, XFS_IRECLAIM)) {
-+		/* ignore as it is already under reclaim */
-+		spin_unlock(&ip->i_flags_lock);
-+		write_unlock(&pag->pag_ici_lock);
- 		return 0;
+-		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-		timeflags |= XFS_ICHGTIME_CHG;
  	}
--	read_unlock(&pag->pag_ici_lock);
-+	__xfs_iflags_set(ip, XFS_IRECLAIM);
-+	spin_unlock(&ip->i_flags_lock);
-+	write_unlock(&pag->pag_ici_lock);
-+
-+	/*
-+	 * If the inode is still dirty, then flush it out.  If the inode
-+	 * is not in the AIL, then it will be OK to flush it delwri as
-+	 * long as xfs_iflush() does not keep any references to the inode.
-+	 * We leave that decision up to xfs_iflush() since it has the
-+	 * knowledge of whether it's OK to simply do a delwri flush of
-+	 * the inode or whether we need to wait until the inode is
-+	 * pulled from the AIL.
-+	 * We get the flush lock regardless, though, just to make sure
-+	 * we don't free it while it is being flushed.
-+	 */
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+	xfs_iflock(ip);
  
--	return xfs_reclaim_inode(ip, flags);
-+	/*
-+	 * In the case of a forced shutdown we rely on xfs_iflush() to
-+	 * wait for the inode to be unpinned before returning an error.
-+	 */
-+	if (!is_bad_inode(VFS_I(ip)) && xfs_iflush(ip, sync_mode) == 0) {
-+		/* synchronize with xfs_iflush_done */
-+		xfs_iflock(ip);
-+		xfs_ifunlock(ip);
+ 	/*
+ 	 * Change file access or modified times.
+ 	 */
+-	if (mask & (ATTR_ATIME|ATTR_MTIME)) {
+-		if (mask & ATTR_ATIME) {
+-			inode->i_atime = iattr->ia_atime;
+-			ip->i_d.di_atime.t_sec = iattr->ia_atime.tv_sec;
+-			ip->i_d.di_atime.t_nsec = iattr->ia_atime.tv_nsec;
+-			ip->i_update_core = 1;
+-		}
+-		if (mask & ATTR_MTIME) {
+-			inode->i_mtime = iattr->ia_mtime;
+-			ip->i_d.di_mtime.t_sec = iattr->ia_mtime.tv_sec;
+-			ip->i_d.di_mtime.t_nsec = iattr->ia_mtime.tv_nsec;
+-			timeflags &= ~XFS_ICHGTIME_MOD;
+-			timeflags |= XFS_ICHGTIME_CHG;
+-		}
+-		if (tp && (mask & (ATTR_MTIME_SET|ATTR_ATIME_SET)))
+-			xfs_trans_log_inode (tp, ip, XFS_ILOG_CORE);
++	if (mask & ATTR_ATIME) {
++		inode->i_atime = iattr->ia_atime;
++		ip->i_d.di_atime.t_sec = iattr->ia_atime.tv_sec;
++		ip->i_d.di_atime.t_nsec = iattr->ia_atime.tv_nsec;
++		ip->i_update_core = 1;
+ 	}
+-
+-	/*
+-	 * Change file inode change time only if ATTR_CTIME set
+-	 * AND we have been called by a DMI function.
+-	 */
+-
+-	if ((flags & XFS_ATTR_DMI) && (mask & ATTR_CTIME)) {
++	if (mask & ATTR_CTIME) {
+ 		inode->i_ctime = iattr->ia_ctime;
+ 		ip->i_d.di_ctime.t_sec = iattr->ia_ctime.tv_sec;
+ 		ip->i_d.di_ctime.t_nsec = iattr->ia_ctime.tv_nsec;
+ 		ip->i_update_core = 1;
+-		timeflags &= ~XFS_ICHGTIME_CHG;
 +	}
-+
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	xfs_ireclaim(ip);
-+	return 0;
- }
++	if (mask & ATTR_MTIME) {
++		inode->i_mtime = iattr->ia_mtime;
++		ip->i_d.di_mtime.t_sec = iattr->ia_mtime.tv_sec;
++		ip->i_d.di_mtime.t_nsec = iattr->ia_mtime.tv_nsec;
++		ip->i_update_core = 1;
+ 	}
  
- int
-@@ -779,6 +763,6 @@ xfs_reclaim_inodes(
- 	xfs_mount_t	*mp,
- 	int		mode)
- {
--	return xfs_inode_ag_iterator(mp, xfs_reclaim_inode_now, mode,
--					XFS_ICI_RECLAIM_TAG);
-+	return xfs_inode_ag_iterator(mp, xfs_reclaim_inode, mode,
-+					XFS_ICI_RECLAIM_TAG, 1);
- }
-diff --git a/fs/xfs/linux-2.6/xfs_sync.h b/fs/xfs/linux-2.6/xfs_sync.h
-index a500b4d..ea932b4 100644
---- a/fs/xfs/linux-2.6/xfs_sync.h
-+++ b/fs/xfs/linux-2.6/xfs_sync.h
-@@ -54,6 +54,6 @@ void __xfs_inode_clear_reclaim_tag(struct xfs_mount *mp, struct xfs_perag *pag,
- int xfs_sync_inode_valid(struct xfs_inode *ip, struct xfs_perag *pag);
- int xfs_inode_ag_iterator(struct xfs_mount *mp,
- 	int (*execute)(struct xfs_inode *ip, struct xfs_perag *pag, int flags),
--	int flags, int tag);
-+	int flags, int tag, int write_lock);
+ 	/*
+-	 * Send out timestamp changes that need to be set to the
+-	 * current time.  Not done when called by a DMI function.
++	 * And finally, log the inode core if any attribute in it
++	 * has been changed.
+ 	 */
+-	if (timeflags && !(flags & XFS_ATTR_DMI))
+-		xfs_ichgtime(ip, timeflags);
++	if (mask & (ATTR_UID|ATTR_GID|ATTR_MODE|
++		    ATTR_ATIME|ATTR_CTIME|ATTR_MTIME))
++		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
  
- #endif
-diff --git a/fs/xfs/quota/xfs_qm_syscalls.c b/fs/xfs/quota/xfs_qm_syscalls.c
-index 5d1a3b9..f99cfa4 100644
---- a/fs/xfs/quota/xfs_qm_syscalls.c
-+++ b/fs/xfs/quota/xfs_qm_syscalls.c
-@@ -893,7 +893,7 @@ xfs_qm_dqrele_all_inodes(
- 	uint		 flags)
- {
- 	ASSERT(mp->m_quotainfo);
--	xfs_inode_ag_iterator(mp, xfs_dqrele_inode, flags, XFS_ICI_NO_TAG);
-+	xfs_inode_ag_iterator(mp, xfs_dqrele_inode, flags, XFS_ICI_NO_TAG, 0);
- }
+ 	XFS_STATS_INC(xs_ig_attrchg);
  
- /*------------------------------------------------------------------------*/
+@@ -451,12 +438,10 @@ xfs_setattr(
+ 	 * mix so this probably isn't worth the trouble to optimize.
+ 	 */
+ 	code = 0;
+-	if (tp) {
+-		if (mp->m_flags & XFS_MOUNT_WSYNC)
+-			xfs_trans_set_sync(tp);
++	if (mp->m_flags & XFS_MOUNT_WSYNC)
++		xfs_trans_set_sync(tp);
+ 
+-		code = xfs_trans_commit(tp, commit_flags);
+-	}
++	code = xfs_trans_commit(tp, commit_flags);
+ 
+ 	xfs_iunlock(ip, lock_flags);
+ 
 -- 
 1.6.5
 
