@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o2BMf4uj194381 for <xfs@oss.sgi.com>; Thu, 11 Mar 2010 16:41:04 -0600
+	o2BMfESu194492 for <xfs@oss.sgi.com>; Thu, 11 Mar 2010 16:41:14 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 29439141F77C
-	for <xfs@oss.sgi.com>; Thu, 11 Mar 2010 14:42:35 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	Q7brBGzC0pB76Cb5 for <xfs@oss.sgi.com>;
-	Thu, 11 Mar 2010 14:42:35 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4CFA2233AC3
+	for <xfs@oss.sgi.com>; Thu, 11 Mar 2010 14:42:46 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
+	[150.101.137.100]) by cuda.sgi.com with ESMTP id
+	hER3AT24Q6zMJFGo for <xfs@oss.sgi.com>;
+	Thu, 11 Mar 2010 14:42:46 -0800 (PST)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 06/19] xfs: check for not fully initialized inodes in
-	xfs_ireclaim
-Date: Fri, 12 Mar 2010 09:42:04 +1100
-Message-Id: <1268347337-7160-7-git-send-email-david@fromorbit.com>
+Subject: [PATCH 17/19] xfs: remove invalid barrier optimization from xfs_fsync
+Date: Fri, 12 Mar 2010 09:42:15 +1100
+Message-Id: <1268347337-7160-18-git-send-email-david@fromorbit.com>
 In-Reply-To: <1268347337-7160-1-git-send-email-david@fromorbit.com>
 References: <1268347337-7160-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -32,50 +31,61 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: stable@kernel.org
 Cc: xfs@oss.sgi.com
 
-From: Christoph Hellwig <hch@infradead.org>
+From: Christoph Hellwig <hch@lst.de>
 
->From b44b1126279b60597f96bbe77507b1650f88a969
-Date: Tue, 1 Dec 2009 18:12:29 +0000
-Add an assert for inodes not added to the inode cache in xfs_ireclaim,
-to make sure we're not going to introduce something like the
-famous nfsd inode cache bug again.
+>From e8b217e7530c6a073ac69f1c85b922d93fdf5647
+Date: Tue, 2 Feb 2010 10:16:26 +1100
+We always need to flush the disk write cache and can't skip it just because
+the no inode attributes have changed.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Alex Elder <aelder@sgi.com>
+Reviewed-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/xfs_iget.c |   12 ++++++++----
- 1 files changed, 8 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_vnodeops.c |   12 ++----------
+ 1 files changed, 2 insertions(+), 10 deletions(-)
 
-diff --git a/fs/xfs/xfs_iget.c b/fs/xfs/xfs_iget.c
-index 80e5264..40e8775 100644
---- a/fs/xfs/xfs_iget.c
-+++ b/fs/xfs/xfs_iget.c
-@@ -511,17 +511,21 @@ xfs_ireclaim(
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+index ae2e44f..38a6324 100644
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -597,7 +597,7 @@ xfs_fsync(
  {
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct xfs_perag	*pag;
-+	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
+ 	xfs_trans_t	*tp;
+ 	int		error = 0;
+-	int		log_flushed = 0, changed = 1;
++	int		log_flushed = 0;
  
- 	XFS_STATS_INC(xs_ig_reclaims);
+ 	xfs_itrace_entry(ip);
  
- 	/*
--	 * Remove the inode from the per-AG radix tree.  It doesn't matter
--	 * if it was never added to it because radix_tree_delete can deal
--	 * with that case just fine.
-+	 * Remove the inode from the per-AG radix tree.
-+	 *
-+	 * Because radix_tree_delete won't complain even if the item was never
-+	 * added to the tree assert that it's been there before to catch
-+	 * problems with the inode life time early on.
- 	 */
- 	pag = xfs_get_perag(mp, ip->i_ino);
- 	write_lock(&pag->pag_ici_lock);
--	radix_tree_delete(&pag->pag_ici_root, XFS_INO_TO_AGINO(mp, ip->i_ino));
-+	if (!radix_tree_delete(&pag->pag_ici_root, agino))
-+		ASSERT(0);
- 	write_unlock(&pag->pag_ici_lock);
- 	xfs_put_perag(mp, pag);
+@@ -627,19 +627,11 @@ xfs_fsync(
+ 		 * disk yet, the inode will be still be pinned.  If it is,
+ 		 * force the log.
+ 		 */
+-
+ 		xfs_iunlock(ip, XFS_ILOCK_SHARED);
+-
+ 		if (xfs_ipincount(ip)) {
+ 			error = _xfs_log_force(ip->i_mount, (xfs_lsn_t)0,
+ 				      XFS_LOG_FORCE | XFS_LOG_SYNC,
+ 				      &log_flushed);
+-		} else {
+-			/*
+-			 * If the inode is not pinned and nothing has changed
+-			 * we don't need to flush the cache.
+-			 */
+-			changed = 0;
+ 		}
+ 	} else	{
+ 		/*
+@@ -674,7 +666,7 @@ xfs_fsync(
+ 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	}
  
+-	if ((ip->i_mount->m_flags & XFS_MOUNT_BARRIER) && changed) {
++	if (ip->i_mount->m_flags & XFS_MOUNT_BARRIER) {
+ 		/*
+ 		 * If the log write didn't issue an ordered tag we need
+ 		 * to flush the disk cache for the data device now.
 -- 
 1.6.5
 
