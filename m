@@ -1,28 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o2C9wr2L241547 for <xfs@oss.sgi.com>; Fri, 12 Mar 2010 03:58:55 -0600
+	o2CABU5D242518 for <xfs@oss.sgi.com>; Fri, 12 Mar 2010 04:11:31 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 29E741D2F4D5
-	for <xfs@oss.sgi.com>; Fri, 12 Mar 2010 02:00:26 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9926A1D2F58C
+	for <xfs@oss.sgi.com>; Fri, 12 Mar 2010 02:13:04 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id HSWLWWCvZZebTNOV for
-	<xfs@oss.sgi.com>; Fri, 12 Mar 2010 02:00:26 -0800 (PST)
-Date: Fri, 12 Mar 2010 05:00:19 -0500
+	by cuda.sgi.com with ESMTP id VmRTQs5JGT1KOByW for
+	<xfs@oss.sgi.com>; Fri, 12 Mar 2010 02:13:04 -0800 (PST)
+Date: Fri, 12 Mar 2010 05:13:04 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: XFS hang during xfs_fsr run
-Message-ID: <20100312100019.GA13230@infradead.org>
-References: <20100304134641.GA26871@infradead.org>
-	<4B8FC1B7.3070505@dermichi.com>
-	<20100304222611.GK14317@discord.disaster>
-	<4B92C71C.5010003@dermichi.com>
-	<20100308000601.GF28189@discord.disaster>
-	<4B94EADD.2080108@dermichi.com> <4B953D3F.3090002@sandeen.net>
-	<4B975C5C.5090806@dermichi.com> <20100311233934.GB4732@dastard>
-	<4B9A0D2F.30506@dermichi.com>
+Subject: Re: [PATCH] xfsprogs: duplicate extent btrees in xfs_repair need
+	locking
+Message-ID: <20100312101304.GB15922@infradead.org>
+References: <1268298930-20809-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4B9A0D2F.30506@dermichi.com>
+In-Reply-To: <1268298930-20809-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,28 +29,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Weissenbacher <mw@dermichi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Mar 12, 2010 at 10:45:19AM +0100, Michael Weissenbacher wrote:
-> Hi Dave!
->> Hi Michael - have you got any idea what the files are that are
->> hitting this? This failure is implying that the inode is still dirty
->> after syncing all the data. Is something trying to modify it while
->> XFS is trying to map it?
-> Yes, as far as i can tell it's always a file that some process is  
-> currently modifying. It happens ofter with some file unter /var/log  
-> which syslog is currently modifying. I tried setting the "no-defrag"  
-> flag via xfs_io's chattr on all log files but that didn't seem to help.  
-> It seems that cyrus imapd is triggering this problem far more likely  
-> than any other program. Some examples of files where it usually hangs:
-> /var/spool/imap/x/user/xxxx/cyrus.cache (lsof -> cyrus)
-> /var/imap/db/log.xxxxxxx (lsof -> cyrus)
-> /var/log/xxx.log (lsof -> syslog)
+On Thu, Mar 11, 2010 at 08:15:30PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> The per-ag duplicate extent btrees can be search concurrently from multiple
+> threads. This occurs when inode extent lists are being processed and inodes
+> with extents in the same AG are checked concurrently. The btrees have an
+> internal traversal cursor, so doing concurrent searches can result in the
+> cursor being corrupted for both searches.
+> 
+> Add an external lock for each duplicate extent tree and use it for searches,
+> inserts and deletes to ensure that we don't trash the state of any operation.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-So what's interesting is that cyrus uses mmapp access to files, which
-might be an indicator that we have problems with excluding fsr on mmaped
-files.
+Note that all actual content modifications to the tree are done from
+single threaded code, so strictly speaking we'd only need to lock in
+search_dup_extent.  Anyway, the locking shouldn't add enough overhead
+to worry about this, so:
+
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
