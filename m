@@ -1,22 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o2CAw8s3245560 for <xfs@oss.sgi.com>; Fri, 12 Mar 2010 04:58:08 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EF8F31D2F674
-	for <xfs@oss.sgi.com>; Fri, 12 Mar 2010 02:59:40 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 4wHmJ4WkoKBmeLmj for
-	<xfs@oss.sgi.com>; Fri, 12 Mar 2010 02:59:40 -0800 (PST)
-Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1Nq2ai-0002Ig-Lr
-	for xfs@oss.sgi.com; Fri, 12 Mar 2010 10:59:40 +0000
-Date: Fri, 12 Mar 2010 05:59:40 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 2/2] xfs: enforce synchronous writes in xfs_bwrite
-Message-ID: <20100312105940.GB8643@infradead.org>
+	o2CBtGJW249386 for <xfs@oss.sgi.com>; Fri, 12 Mar 2010 05:55:17 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 05D281D2F811
+	for <xfs@oss.sgi.com>; Fri, 12 Mar 2010 03:56:48 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
+	[150.101.137.104]) by cuda.sgi.com with ESMTP id
+	sTPYDaE3BRqDmHSW for <xfs@oss.sgi.com>;
+	Fri, 12 Mar 2010 03:56:48 -0800 (PST)
+Date: Fri, 12 Mar 2010 22:56:45 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS hang during xfs_fsr run
+Message-ID: <20100312115645.GD4732@dastard>
+References: <4B8FC1B7.3070505@dermichi.com>
+	<20100304222611.GK14317@discord.disaster>
+	<4B92C71C.5010003@dermichi.com>
+	<20100308000601.GF28189@discord.disaster>
+	<4B94EADD.2080108@dermichi.com> <4B953D3F.3090002@sandeen.net>
+	<4B975C5C.5090806@dermichi.com> <20100311233934.GB4732@dastard>
+	<4B9A0D2F.30506@dermichi.com>
+	<20100312100019.GA13230@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20100312100019.GA13230@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,65 +36,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Michael Weissenbacher <mw@dermichi.com>, xfs@oss.sgi.com
 
-xfs_bwrite is used with the intention of synchronously writing out buffers,
-but currently it does not actually clear the async flag if that's left
-from previous writes but instead implements async behaviour if it finds it.
-Remove the code handling asynchronous writes as we've got rid of those
-entirely outside of the log and delwri buffers, and make sure that we
-clear the async and read flags before writing the buffer.
+On Fri, Mar 12, 2010 at 05:00:19AM -0500, Christoph Hellwig wrote:
+> On Fri, Mar 12, 2010 at 10:45:19AM +0100, Michael Weissenbacher wrote:
+> > Hi Dave!
+> >> Hi Michael - have you got any idea what the files are that are
+> >> hitting this? This failure is implying that the inode is still dirty
+> >> after syncing all the data. Is something trying to modify it while
+> >> XFS is trying to map it?
+> > Yes, as far as i can tell it's always a file that some process is  
+> > currently modifying. It happens ofter with some file unter /var/log  
+> > which syslog is currently modifying. I tried setting the "no-defrag"  
+> > flag via xfs_io's chattr on all log files but that didn't seem to help.  
+> > It seems that cyrus imapd is triggering this problem far more likely  
+> > than any other program. Some examples of files where it usually hangs:
+> > /var/spool/imap/x/user/xxxx/cyrus.cache (lsof -> cyrus)
+> > /var/imap/db/log.xxxxxxx (lsof -> cyrus)
+> > /var/log/xxx.log (lsof -> syslog)
+> 
+> So what's interesting is that cyrus uses mmapp access to files, which
+> might be an indicator that we have problems with excluding fsr on mmaped
+> files.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Ah, yeah.
 
-Index: xfs/fs/xfs/linux-2.6/xfs_buf.c
-===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_buf.c	2010-03-11 11:42:41.596003157 +0100
-+++ xfs/fs/xfs/linux-2.6/xfs_buf.c	2010-03-11 11:44:34.473008395 +0100
-@@ -1056,25 +1056,20 @@ xfs_bwrite(
- 	struct xfs_mount	*mp,
- 	struct xfs_buf		*bp)
- {
--	int			iowait = (bp->b_flags & XBF_ASYNC) == 0;
--	int			error = 0;
-+	int			error;
- 
- 	bp->b_strat = xfs_bdstrat_cb;
- 	bp->b_mount = mp;
- 	bp->b_flags |= XBF_WRITE;
--	if (!iowait)
--		bp->b_flags |= _XBF_RUN_QUEUES;
-+	bp->b_flags &= ~(XBF_ASYNC | XBF_READ);
- 
- 	xfs_buf_delwri_dequeue(bp);
- 	xfs_buf_iostrategy(bp);
- 
--	if (iowait) {
--		error = xfs_buf_iowait(bp);
--		if (error)
--			xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
--		xfs_buf_relse(bp);
--	}
--
-+	error = xfs_buf_iowait(bp);
-+	if (error)
-+		xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
-+	xfs_buf_relse(bp);
- 	return error;
- }
- 
-Index: xfs/fs/xfs/linux-2.6/xfs_sync.c
-===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_sync.c	2010-03-11 11:44:58.473010700 +0100
-+++ xfs/fs/xfs/linux-2.6/xfs_sync.c	2010-03-11 11:45:03.199256475 +0100
-@@ -364,7 +364,6 @@ xfs_sync_fsdata(
- 	if (XFS_BUF_ISPINNED(bp))
- 		xfs_log_force(mp, 0);
- 
--	XFS_BUF_UNASYNC(bp);
- 	return xfs_bwrite(mp, bp);
- }
- 
+->page_mkwrite executes without the inode iolock held, so we can't
+lock it out from creating new delalloc pages by holding the iolock
+like the bmap code does.
+
+I don't think we're allowed to take the iolock in ->page_mkwrite, so
+effectively that leaves us with the situation where we can't do an
+atomic flush and map in the bmap code.
+
+Christoph, I guess that means we need to make the bmap code
+handle/ignore delalloc extents rather than assume they never occur
+after the flush.  What do you think?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
