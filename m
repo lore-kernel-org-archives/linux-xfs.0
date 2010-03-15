@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o2FEdNcU056116 for <xfs@oss.sgi.com>; Mon, 15 Mar 2010 09:39:24 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F3E0424A03C
-	for <xfs@oss.sgi.com>; Mon, 15 Mar 2010 07:40:58 -0700 (PDT)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id wF7DKyH61nJNoq3t for
-	<xfs@oss.sgi.com>; Mon, 15 Mar 2010 07:40:58 -0700 (PDT)
-Message-ID: <4B9E46F9.8090209@sandeen.net>
-Date: Mon, 15 Mar 2010 09:40:57 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	o2FFHreD058827 for <xfs@oss.sgi.com>; Mon, 15 Mar 2010 10:17:53 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5D6CF142E4B5
+	for <xfs@oss.sgi.com>; Mon, 15 Mar 2010 08:19:28 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id JJdzFmxY7LSbFE9Z for
+	<xfs@oss.sgi.com>; Mon, 15 Mar 2010 08:19:28 -0700 (PDT)
+Date: Mon, 15 Mar 2010 11:19:27 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs: don't warn about page discards on shutdown
+Message-ID: <20100315151927.GA6974@infradead.org>
+References: <1268620595-11389-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: Re: 2.6.33 crash: invalid opcode: 0000 [#1] SMP: EIP: [<c11a018b>]
-	assfail+0x1b/0x20 SS:ESP 0068:f687bf14
-References: <alpine.DEB.2.00.1003150528060.6999@p34.internal.lan>
-In-Reply-To: <alpine.DEB.2.00.1003150528060.6999@p34.internal.lan>
+Content-Disposition: inline
+In-Reply-To: <1268620595-11389-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,53 +28,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Justin Piszcz wrote:
-> Specifications:
+On Mon, Mar 15, 2010 at 01:36:35PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> 2.6.33
-> 32bit
-> Debian Testing
+> If we are doing a forced shutdown, we can get lots of noise about
+> delalloc pages being discarded. This is happens by design during a
+> forced shutdown, so don't spam the logs with these messages.
 > 
-> On Mar 14th, my server hung up:
-> 
-> Mar 14 00:00:22 server1 kernel: [488470.189675] ------------[ cut here
-> ]------------
-> Mar 14 00:00:22 server1 kernel: [488470.189679] invalid opcode: 0000
-> [#1] SMP
-> Mar 14 00:00:22 server1 kernel: [488470.189681] last sysfs file:
-> /sys/devices/pci0000:00/0000:00:0e.0/host0/target0:0:0/0:0:0:0/block/sda/uevent
-> 
-> Mar 14 00:00:22 server1 kernel: [488470.189704] Process xfssyncd (pid:
-> 584, ti=f687a000 task=f70fa400 task.ti=f687a000)
-> Mar 14 00:00:22 server1 kernel: [488470.189705] Stack:
-> Mar 14 00:00:22 server1 kernel: [488470.189721] Call Trace:
-> Mar 14 00:00:22 server1 kernel: [488470.189739] Code: 00 e8 ea e5 01 00
-> 83 c4 14 c3 8d b6 00 00 00 00 83 ec 10 89 4c 24 0c 89 54 24 08 89 44 24
-> 04 c7 04 24 30 ab 42 c1 e8 7c 11 1c 00 <0f> 0b eb fe 90 55 57 89 cf 56
-> 89 c6 b8 80 b0 52 c1 83 e6 07 53
-> Mar 14 00:00:22 server1 kernel: [488470.189739] EIP: [<c11a018b>]
-> assfail+0x1b/0x20 SS:ESP 0068:f687bf14
-> 
-> Is this a bug related to AMD (CPU) or XFS?
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Hard to know without seeing the rest of the stack trace, is this all you got?
+Looks good, probably still a candiate for 2.6.34-rc.
 
-You hit an assertion failure in xfs.
 
-Are you running with CONFIG_XFS_DEBUG?
-
--Eric
-
-> Justin.
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
