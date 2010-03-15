@@ -1,30 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o2F2Xwwm004816 for <xfs@oss.sgi.com>; Sun, 14 Mar 2010 21:33:58 -0500
+	o2F4SUJR011355 for <xfs@oss.sgi.com>; Sun, 14 Mar 2010 23:28:31 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2562B142D329
-	for <xfs@oss.sgi.com>; Sun, 14 Mar 2010 19:35:32 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	ehG7fFFzCvHLFnNc for <xfs@oss.sgi.com>;
-	Sun, 14 Mar 2010 19:35:32 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A83221428A88
+	for <xfs@oss.sgi.com>; Sun, 14 Mar 2010 21:30:03 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	DJEjSx0g01GslKn3 for <xfs@oss.sgi.com>;
+	Sun, 14 Mar 2010 21:30:03 -0700 (PDT)
 Received: from dastard (unverified [121.44.103.80])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	16864291-1927428
-	for <xfs@oss.sgi.com>; Mon, 15 Mar 2010 13:05:28 +1030 (CDT)
-Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1Nr09M-00016O-Go
-	for xfs@oss.sgi.com; Mon, 15 Mar 2010 13:35:24 +1100
-Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1Nr09B-0002pc-OL
-	for xfs@oss.sgi.com; Mon, 15 Mar 2010 13:35:13 +1100
+	17021705-1927428
+	for <xfs@oss.sgi.com>; Mon, 15 Mar 2010 15:00:01 +1030 (CDT)
+Received: from dave by dastard with local (Exim 4.71)
+	(envelope-from <david@fromorbit.com>) id 1Nr1wG-0001Hz-3Y
+	for xfs@oss.sgi.com; Mon, 15 Mar 2010 15:30:00 +1100
+Date: Mon, 15 Mar 2010 15:30:00 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5/9] xfs: split out iclog writing from xfs_trans_commit()
-Date: Mon, 15 Mar 2010 13:35:02 +1100
-Message-Id: <1268620506-10799-6-git-send-email-david@fromorbit.com>
-In-Reply-To: <1268620506-10799-1-git-send-email-david@fromorbit.com>
-References: <1268620506-10799-1-git-send-email-david@fromorbit.com>
+Subject: [RFC] Delayed logging
+Message-ID: <20100315043000.GK4732@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,513 +30,224 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi Folks,
 
-Split the the part of xfs_trans_commit() that deals with writing the
-transaction into the iclog into a separate function. This isolates the
-physical commit process from the logical commit operation and makes
-it easier to insert different transaction commit paths without affecting
-the existing algorithm adversely.
+You've all heard me talking about delayed logging, but there hasn't
+been any code yet. Well, here's the first code drop - see the git
+tree reference at the end of the email to get it.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_trans.c |  387 +++++++++++++++++++++++++++-------------------------
- 1 files changed, 199 insertions(+), 188 deletions(-)
+If you want to know what delayed logging is and how it works, pull
+the tree and read the documentation in:
 
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 6962f2b..e07b329 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -47,8 +47,6 @@
- 
- 
- STATIC void	xfs_trans_apply_sb_deltas(xfs_trans_t *);
--STATIC uint	xfs_trans_count_vecs(xfs_trans_t *);
--STATIC void	xfs_trans_fill_vecs(xfs_trans_t *, xfs_log_iovec_t *);
- STATIC void	xfs_trans_uncommit(xfs_trans_t *, uint);
- STATIC void	xfs_trans_committed(xfs_trans_t *, int);
- STATIC void	xfs_trans_chunk_committed(xfs_log_item_chunk_t *, xfs_lsn_t, int);
-@@ -764,94 +762,126 @@ xfs_trans_unreserve_and_mod_sb(
- 	}
- }
- 
--
- /*
-- * xfs_trans_commit
-- *
-- * Commit the given transaction to the log a/synchronously.
-- *
-- * XFS disk error handling mechanism is not based on a typical
-- * transaction abort mechanism. Logically after the filesystem
-- * gets marked 'SHUTDOWN', we can't let any new transactions
-- * be durable - ie. committed to disk - because some metadata might
-- * be inconsistent. In such cases, this returns an error, and the
-- * caller may assume that all locked objects joined to the transaction
-- * have already been unlocked as if the commit had succeeded.
-- * Do not reference the transaction structure after this call.
-+ * Total up the number of log iovecs needed to commit this
-+ * transaction.  The transaction itself needs one for the
-+ * transaction header.  Ask each dirty item in turn how many
-+ * it needs to get the total.
-  */
-- /*ARGSUSED*/
--int
--_xfs_trans_commit(
--	xfs_trans_t	*tp,
--	uint		flags,
--	int		*log_flushed)
-+static uint
-+xfs_trans_count_vecs(
-+	xfs_trans_t	*tp)
- {
--	xfs_log_iovec_t		*log_vector;
--	int			nvec;
--	xfs_mount_t		*mp;
--	xfs_lsn_t		commit_lsn;
--	/* REFERENCED */
--	int			error;
--	int			log_flags;
--	int			sync;
--#define	XFS_TRANS_LOGVEC_COUNT	16
--	xfs_log_iovec_t		log_vector_fast[XFS_TRANS_LOGVEC_COUNT];
--	struct xlog_in_core	*commit_iclog;
--	int			shutdown;
-+	int			nvecs;
-+	xfs_log_item_desc_t	*lidp;
- 
--	commit_lsn = -1;
-+	nvecs = 1;
-+	lidp = xfs_trans_first_item(tp);
-+	ASSERT(lidp != NULL);
- 
--	/*
--	 * Determine whether this commit is releasing a permanent
--	 * log reservation or not.
-+	/* In the non-debug case we need to start bailing out if we
-+	 * didn't find a log_item here, return zero and let trans_commit
-+	 * deal with it.
- 	 */
--	if (flags & XFS_TRANS_RELEASE_LOG_RES) {
--		ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
--		log_flags = XFS_LOG_REL_PERM_RESERV;
--	} else {
--		log_flags = 0;
-+	if (lidp == NULL)
-+		return 0;
-+
-+	while (lidp != NULL) {
-+		/*
-+		 * Skip items which aren't dirty in this transaction.
-+		 */
-+		if (!(lidp->lid_flags & XFS_LID_DIRTY)) {
-+			lidp = xfs_trans_next_item(tp, lidp);
-+			continue;
-+		}
-+		lidp->lid_size = IOP_SIZE(lidp->lid_item);
-+		nvecs += lidp->lid_size;
-+		lidp = xfs_trans_next_item(tp, lidp);
- 	}
--	mp = tp->t_mountp;
-+
-+	return nvecs;
-+}
-+
-+/*
-+ * Fill in the vector with pointers to data to be logged
-+ * by this transaction.  The transaction header takes
-+ * the first vector, and then each dirty item takes the
-+ * number of vectors it indicated it needed in xfs_trans_count_vecs().
-+ *
-+ * As each item fills in the entries it needs, also pin the item
-+ * so that it cannot be flushed out until the log write completes.
-+ */
-+static void
-+xfs_trans_fill_vecs(
-+	struct xfs_trans	*tp,
-+	struct xfs_log_iovec	*log_vector)
-+{
-+	xfs_log_item_desc_t	*lidp;
-+	struct xfs_log_iovec	*vecp;
-+	uint			nitems;
- 
- 	/*
--	 * If there is nothing to be logged by the transaction,
--	 * then unlock all of the items associated with the
--	 * transaction and free the transaction structure.
--	 * Also make sure to return any reserved blocks to
--	 * the free pool.
-+	 * Skip over the entry for the transaction header, we'll
-+	 * fill that in at the end.
- 	 */
--shut_us_down:
--	shutdown = XFS_FORCED_SHUTDOWN(mp) ? EIO : 0;
--	if (!(tp->t_flags & XFS_TRANS_DIRTY) || shutdown) {
--		xfs_trans_unreserve_and_mod_sb(tp);
-+	vecp = log_vector + 1;
-+
-+	nitems = 0;
-+	lidp = xfs_trans_first_item(tp);
-+	ASSERT(lidp);
-+	while (lidp) {
-+		/* Skip items which aren't dirty in this transaction. */
-+		if (!(lidp->lid_flags & XFS_LID_DIRTY)) {
-+			lidp = xfs_trans_next_item(tp, lidp);
-+			continue;
-+		}
-+
- 		/*
--		 * It is indeed possible for the transaction to be
--		 * not dirty but the dqinfo portion to be. All that
--		 * means is that we have some (non-persistent) quota
--		 * reservations that need to be unreserved.
-+		 * The item may be marked dirty but not log anything.  This can
-+		 * be used to get called when a transaction is committed.
- 		 */
--		xfs_trans_unreserve_and_mod_dquots(tp);
--		if (tp->t_ticket) {
--			commit_lsn = xfs_log_done(mp, tp->t_ticket,
--							NULL, log_flags);
--			if (commit_lsn == -1 && !shutdown)
--				shutdown = XFS_ERROR(EIO);
--		}
--		current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
--		xfs_trans_free_items(tp, shutdown? XFS_TRANS_ABORT : 0);
--		xfs_trans_free_busy(tp);
--		xfs_trans_free(tp);
--		XFS_STATS_INC(xs_trans_empty);
--		return (shutdown);
-+		if (lidp->lid_size)
-+			nitems++;
-+		IOP_FORMAT(lidp->lid_item, vecp);
-+		vecp += lidp->lid_size;
-+		IOP_PIN(lidp->lid_item);
-+		lidp = xfs_trans_next_item(tp, lidp);
- 	}
--	ASSERT(tp->t_ticket != NULL);
- 
- 	/*
--	 * If we need to update the superblock, then do it now.
-+	 * Now that we've counted the number of items in this transaction, fill
-+	 * in the transaction header. Note that the transaction header does not
-+	 * have a log item.
- 	 */
--	if (tp->t_flags & XFS_TRANS_SB_DIRTY)
--		xfs_trans_apply_sb_deltas(tp);
--	xfs_trans_apply_dquot_deltas(tp);
-+	tp->t_header.th_magic = XFS_TRANS_HEADER_MAGIC;
-+	tp->t_header.th_type = tp->t_type;
-+	tp->t_header.th_num_items = nitems;
-+	log_vector->i_addr = (xfs_caddr_t)&tp->t_header;
-+	log_vector->i_len = sizeof(xfs_trans_header_t);
-+	log_vector->i_type = XLOG_REG_TYPE_TRANSHDR;
-+}
-+
-+/*
-+ * Format the transaction direct to the iclog. This isolates the physical
-+ * transaction commit operation from the logical operation and hence allows
-+ * other methods to be introduced without affecting the existing commit path.
-+ */
-+static int
-+xfs_trans_commit_iclog(
-+	struct xfs_mount	*mp,
-+	struct xfs_trans	*tp,
-+	xfs_lsn_t		*commit_lsn,
-+	int			flags)
-+{
-+	int			shutdown;
-+	int			error;
-+	int			log_flags = 0;
-+	struct xlog_in_core	*commit_iclog;
-+#define XFS_TRANS_LOGVEC_COUNT  16
-+	struct xfs_log_iovec	log_vector_fast[XFS_TRANS_LOGVEC_COUNT];
-+	struct xfs_log_iovec	*log_vector;
-+	uint			nvec;
-+
- 
- 	/*
- 	 * Ask each log item how many log_vector entries it will
-@@ -861,8 +891,7 @@ shut_us_down:
- 	 */
- 	nvec = xfs_trans_count_vecs(tp);
- 	if (nvec == 0) {
--		xfs_force_shutdown(mp, SHUTDOWN_LOG_IO_ERROR);
--		goto shut_us_down;
-+		return ENOMEM;	/* triggers a shutdown! */
- 	} else if (nvec <= XFS_TRANS_LOGVEC_COUNT) {
- 		log_vector = log_vector_fast;
- 	} else {
-@@ -877,6 +906,9 @@ shut_us_down:
- 	 */
- 	xfs_trans_fill_vecs(tp, log_vector);
- 
-+	if (flags & XFS_TRANS_RELEASE_LOG_RES)
-+		log_flags = XFS_LOG_REL_PERM_RESERV;
-+
- 	error = xfs_log_write(mp, log_vector, nvec, tp->t_ticket, &(tp->t_lsn));
- 
- 	/*
-@@ -884,18 +916,17 @@ shut_us_down:
- 	 * at any time after this call.  However, all the items associated
- 	 * with the transaction are still locked and pinned in memory.
- 	 */
--	commit_lsn = xfs_log_done(mp, tp->t_ticket, &commit_iclog, log_flags);
-+	*commit_lsn = xfs_log_done(mp, tp->t_ticket, &commit_iclog, log_flags);
- 
--	tp->t_commit_lsn = commit_lsn;
--	if (nvec > XFS_TRANS_LOGVEC_COUNT) {
-+	tp->t_commit_lsn = *commit_lsn;
-+	if (nvec > XFS_TRANS_LOGVEC_COUNT)
- 		kmem_free(log_vector);
--	}
- 
- 	/*
- 	 * If we got a log write error. Unpin the logitems that we
- 	 * had pinned, clean up, free trans structure, and return error.
- 	 */
--	if (error || commit_lsn == -1) {
-+	if (error || *commit_lsn == -1) {
- 		current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
- 		xfs_trans_uncommit(tp, flags|XFS_TRANS_ABORT);
- 		return XFS_ERROR(EIO);
-@@ -909,8 +940,6 @@ shut_us_down:
- 	 */
- 	xfs_trans_unreserve_and_mod_sb(tp);
- 
--	sync = tp->t_flags & XFS_TRANS_SYNC;
--
- 	/*
- 	 * Tell the LM to call the transaction completion routine
- 	 * when the log write with LSN commit_lsn completes (e.g.
-@@ -953,7 +982,7 @@ shut_us_down:
- 	 * the commit lsn of this transaction for dependency tracking
- 	 * purposes.
- 	 */
--	xfs_trans_unlock_items(tp, commit_lsn);
-+	xfs_trans_unlock_items(tp, *commit_lsn);
- 
- 	/*
- 	 * If we detected a log error earlier, finish committing
-@@ -973,7 +1002,92 @@ shut_us_down:
- 	 * and the items are released we can finally allow the iclog to
- 	 * go to disk.
- 	 */
--	error = xfs_log_release_iclog(mp, commit_iclog);
-+	return xfs_log_release_iclog(mp, commit_iclog);
-+}
-+
-+
-+/*
-+ * xfs_trans_commit
-+ *
-+ * Commit the given transaction to the log a/synchronously.
-+ *
-+ * XFS disk error handling mechanism is not based on a typical
-+ * transaction abort mechanism. Logically after the filesystem
-+ * gets marked 'SHUTDOWN', we can't let any new transactions
-+ * be durable - ie. committed to disk - because some metadata might
-+ * be inconsistent. In such cases, this returns an error, and the
-+ * caller may assume that all locked objects joined to the transaction
-+ * have already been unlocked as if the commit had succeeded.
-+ * Do not reference the transaction structure after this call.
-+ */
-+ /*ARGSUSED*/
-+int
-+_xfs_trans_commit(
-+	xfs_trans_t	*tp,
-+	uint		flags,
-+	int		*log_flushed)
-+{
-+	xfs_mount_t		*mp = tp->t_mountp;
-+	xfs_lsn_t		commit_lsn = -1;
-+	int			error;
-+	int			log_flags = 0;
-+	int			sync = tp->t_flags & XFS_TRANS_SYNC;
-+	int			shutdown;
-+
-+	/*
-+	 * Determine whether this commit is releasing a permanent
-+	 * log reservation or not.
-+	 */
-+	if (flags & XFS_TRANS_RELEASE_LOG_RES) {
-+		ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
-+		log_flags = XFS_LOG_REL_PERM_RESERV;
-+	}
-+
-+	/*
-+	 * If there is nothing to be logged by the transaction,
-+	 * then unlock all of the items associated with the
-+	 * transaction and free the transaction structure.
-+	 * Also make sure to return any reserved blocks to
-+	 * the free pool.
-+	 */
-+shut_us_down:
-+	shutdown = XFS_FORCED_SHUTDOWN(mp) ? EIO : 0;
-+	if (!(tp->t_flags & XFS_TRANS_DIRTY) || shutdown) {
-+		xfs_trans_unreserve_and_mod_sb(tp);
-+		/*
-+		 * It is indeed possible for the transaction to be
-+		 * not dirty but the dqinfo portion to be. All that
-+		 * means is that we have some (non-persistent) quota
-+		 * reservations that need to be unreserved.
-+		 */
-+		xfs_trans_unreserve_and_mod_dquots(tp);
-+		if (tp->t_ticket) {
-+			commit_lsn = xfs_log_done(mp, tp->t_ticket,
-+							NULL, log_flags);
-+			if (commit_lsn == -1 && !shutdown)
-+				shutdown = XFS_ERROR(EIO);
-+		}
-+		current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
-+		xfs_trans_free_items(tp, shutdown? XFS_TRANS_ABORT : 0);
-+		xfs_trans_free_busy(tp);
-+		xfs_trans_free(tp);
-+		XFS_STATS_INC(xs_trans_empty);
-+		return (shutdown);
-+	}
-+	ASSERT(tp->t_ticket != NULL);
-+
-+	/*
-+	 * If we need to update the superblock, then do it now.
-+	 */
-+	if (tp->t_flags & XFS_TRANS_SB_DIRTY)
-+		xfs_trans_apply_sb_deltas(tp);
-+	xfs_trans_apply_dquot_deltas(tp);
-+
-+	error = xfs_trans_commit_iclog(mp, tp, &commit_lsn, flags);
-+	if (error == ENOMEM) {
-+		xfs_force_shutdown(mp, SHUTDOWN_LOG_IO_ERROR);
-+		goto shut_us_down;
-+	}
- 
- 	/*
- 	 * If the transaction needs to be synchronous, then force the
-@@ -992,47 +1106,6 @@ shut_us_down:
- 	return (error);
- }
- 
--
--/*
-- * Total up the number of log iovecs needed to commit this
-- * transaction.  The transaction itself needs one for the
-- * transaction header.  Ask each dirty item in turn how many
-- * it needs to get the total.
-- */
--STATIC uint
--xfs_trans_count_vecs(
--	xfs_trans_t	*tp)
--{
--	int			nvecs;
--	xfs_log_item_desc_t	*lidp;
--
--	nvecs = 1;
--	lidp = xfs_trans_first_item(tp);
--	ASSERT(lidp != NULL);
--
--	/* In the non-debug case we need to start bailing out if we
--	 * didn't find a log_item here, return zero and let trans_commit
--	 * deal with it.
--	 */
--	if (lidp == NULL)
--		return 0;
--
--	while (lidp != NULL) {
--		/*
--		 * Skip items which aren't dirty in this transaction.
--		 */
--		if (!(lidp->lid_flags & XFS_LID_DIRTY)) {
--			lidp = xfs_trans_next_item(tp, lidp);
--			continue;
--		}
--		lidp->lid_size = IOP_SIZE(lidp->lid_item);
--		nvecs += lidp->lid_size;
--		lidp = xfs_trans_next_item(tp, lidp);
--	}
--
--	return nvecs;
--}
--
- /*
-  * Called from the trans_commit code when we notice that
-  * the filesystem is in the middle of a forced shutdown.
-@@ -1063,68 +1136,6 @@ xfs_trans_uncommit(
- }
- 
- /*
-- * Fill in the vector with pointers to data to be logged
-- * by this transaction.  The transaction header takes
-- * the first vector, and then each dirty item takes the
-- * number of vectors it indicated it needed in xfs_trans_count_vecs().
-- *
-- * As each item fills in the entries it needs, also pin the item
-- * so that it cannot be flushed out until the log write completes.
-- */
--STATIC void
--xfs_trans_fill_vecs(
--	xfs_trans_t		*tp,
--	xfs_log_iovec_t		*log_vector)
--{
--	xfs_log_item_desc_t	*lidp;
--	xfs_log_iovec_t		*vecp;
--	uint			nitems;
--
--	/*
--	 * Skip over the entry for the transaction header, we'll
--	 * fill that in at the end.
--	 */
--	vecp = log_vector + 1;		/* pointer arithmetic */
--
--	nitems = 0;
--	lidp = xfs_trans_first_item(tp);
--	ASSERT(lidp != NULL);
--	while (lidp != NULL) {
--		/*
--		 * Skip items which aren't dirty in this transaction.
--		 */
--		if (!(lidp->lid_flags & XFS_LID_DIRTY)) {
--			lidp = xfs_trans_next_item(tp, lidp);
--			continue;
--		}
--		/*
--		 * The item may be marked dirty but not log anything.
--		 * This can be used to get called when a transaction
--		 * is committed.
--		 */
--		if (lidp->lid_size) {
--			nitems++;
--		}
--		IOP_FORMAT(lidp->lid_item, vecp);
--		vecp += lidp->lid_size;		/* pointer arithmetic */
--		IOP_PIN(lidp->lid_item);
--		lidp = xfs_trans_next_item(tp, lidp);
--	}
--
--	/*
--	 * Now that we've counted the number of items in this
--	 * transaction, fill in the transaction header.
--	 */
--	tp->t_header.th_magic = XFS_TRANS_HEADER_MAGIC;
--	tp->t_header.th_type = tp->t_type;
--	tp->t_header.th_num_items = nitems;
--	log_vector->i_addr = (xfs_caddr_t)&tp->t_header;
--	log_vector->i_len = sizeof(xfs_trans_header_t);
--	log_vector->i_type = XLOG_REG_TYPE_TRANSHDR;
--}
--
--
--/*
-  * Unlock all of the transaction's items and free the transaction.
-  * The transaction must not have modified any of its items, because
-  * there is no way to restore them to their previous state.
+	Documentation/filesystems/xfs-delayed-logging-design.txt
+
+or navigate to it via gitweb from here:
+
+	http://git.kernel.org/?p=linux/kernel/git/dgc/xfs.git
+
+The delayed-logging branch that the code lives in may be rebased at
+any time, hence I'm not going to point you at commits because they
+won't be stable. It also means any time you want to update, you need
+to need to pull into a clean new branch.
+
+Overall, it's not a huge change:
+
+ 19 files changed, 2594 insertions(+), 580 deletions(-)
+
+Especially when you take away the 819 lines of design documentation.
+It's still a large change, though, when you consider how critical
+this code is. :/
+
+Now you know what it is, the code in the tree implements the
+documented design. While the code passes XFSQA on my test systems,
+there are still occassional failures that have not been resolved and
+there has been almost no stress testing of the code been
+done. Hence:
+
+*** USE THIS CODE AT YOUR OWN RISK ***
+
+At present, I have done no performance testing on production kernel
+configurations - all my testing has been done with CONFIG_XFS_DEBUG
+enabled along with various other kernel debugging features as well.
+Hence I've really only been looking at significant deviations in
+performance (up or down) to determine whether the code is meeting
+design goals or not.
+
+The following results are from a synthetic test designed to show
+just the impact of delayed logging on the amount of metadata
+written to the log.
+
+load:	Sequential create 100k zero-length files in a directory per
+	thread, no fsync between create and unlink.
+	(./fs_mark -S0 -n 100000 -s 0 -d ....)
+
+measurement: via PCP. XFS specific metrics:
+
+	xfs.log.blocks
+	xfs.log.writes
+	xfs.log.noiclogs
+	xfs.log.force
+	xfs.transactions.*
+	xfs.dir_ops.create
+	xfs.dir_ops.remove
+
+
+machine:
+
+2GHz Dual core opteron, 3GB RAM
+single 36GB 15krpm scsi drive w/ CTQ depth=32
+mkfs.xfs -f -l size=128m /dev/sdb2
+
+Current code:
+
+mount -o "logbsize=262144" /dev/sdb2 /mnt/scratch
+
+threads:	 fs_mark	CPU	create log	unlink log
+		throughput		bandwidth	bandwidth
+1		  2900/s         75%       34MB/s	 34MB/s
+2		  2850/s	 75%	   33MB/s	 33MB/s
+4		  2800/s	 80%	   30MB/s        30MB/s
+
+Delayed logging:
+
+mount -o "delaylog,logbsize=262144" /dev/sdb2 /mnt/scratch
+
+threads:	 fs_mark	CPU	create log	unlink log
+		throughput		bandwidth	bandwidth
+1		  4300/s        110%       1.5MB/s	 <1MB/s
+2		  7900/s	195%	   <4MB/s	 <1MB/s
+4		  7500/s	200%	   <5MB/s        <1.5MB/s
+
+I think it pretty clear that the design goal of "an order of
+magnitude less log IO bandwidth" is being met here. Scalability is
+looking promising, but a 2p machine is not large enough to make any
+definitive statements about that. Hence from these results the
+implementation is at or exceeding design levels.
+
+Known issues that need to be resolved:
+
+	- xfslogd can effectively lock up spinning for 10s of
+	  seconds at a time under heavy load. Cause unknown,
+	  needs analysis and fixing.
+	- leaks memory in some error paths.
+	- occasional recovery failure with recovery reading an inode
+	  buffer that does not contain inodes. Cause unknown, tends
+	  to be reproduced by xfsqa test 121 semi-reliably. Needs
+	  further analysis and fixing. May already be fixed with a
+	  recent fix to commit record synchronisation.
+	- Checkpoint log ticket allocation is less than ideal - can
+	  also trigger lockdep warnings if we re-enter the FS. =>
+	  needs KM_NOFS and a cleanup.
+	- stress will probably break it. Need to run a variety of
+	  workloads/benchmarks and sort out issues that are
+	  uncovered.
+	- scalability, while improved, is still largely an unknown.
+	  Will need to run tests on big machines to find where new
+	  contention points have been introduced.
+	- impact on sync/fsync heavy workloads largely unknown. It
+	  should not be significant, but needs testing and analysis.
+	- determine if the current checkpoint sizing is appropriate,
+	  or whether further dynamic sizing (e.g. based on log size)
+	  needs investigation.
+
+Further algorithmic optimisations:
+
+	- busy extent tracking is still not ideal - we can get lots
+	  (thousands) of adjacent single extents in the same
+	  transaction so combining them at transaction commit would
+	  be advantageous.
+	- Don't need barriers on every single log IO. Indeed,
+	  funnelling 8MB of IO through 8x256k buffers is not really
+	  ideal. Only really need barrier on first IO of checkpoint
+	  (to ensure all the changes we are about to overwrite are on
+	  disk already) and last IO (to ensure commit record hits
+	  the disk).
+	- commit record synchronisation is simplistic and can cause
+	  too many wakeups. needs to be smarter about finding
+	  previous sequences to wait on.
+	- AIL pushing can trigger far too many log forces in a short
+	  period of time.
+	- start looking at areas where CPU usage is excessive and
+	  try to trim it.
+
+There's still a lot of work to do before this is production ready,
+but I think it's stable enough now that the code is not going to
+change significantly as a result of trying to fix bugs that are
+lurking.  Currently I'm aiming for experimental inclusion into
+mainline for 2.6.35, with the aim for it to be production ready by
+2.6.37 and the default for 2.6.39.
+
+Anyway, here's the details of the tree. Note that this branch
+includes a merge of the trans-cleanup branch as it is dependent on
+those changes.
+
+The following changes since commit 5077f72749e6a78eb57211caf337cda8297bf882:
+  Dave Chinner (1):
+        xfs: don't warn about page discards on shutdown
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/xfs.git delayed-logging
+
+Dave Chinner (19):
+      xfs: introduce new internal log vector structure
+      xfs: factor xlog_write and make use of new log vector structure
+      xfs: Delayed logging design documentation
+      xfs: introduce delayed logging mount option
+      xfs: extend the log item to support delayed logging
+      xfs: Introduce the Committed Item List
+      xfs: Add delayed logging checkpoint context infrastructure
+      xfs: introduce new chained log vector transaction formatting code
+      xfs: format and insert log vectors into the CIL
+      xfs: attach transactions to the checkpoint context
+      xfs: checkpoint transaction infrastructure
+      xfs: Allow multiple in-flight checkpoints
+      xfs: forced unmounts need to push the CIL
+      xfs: enable background pushing of the CIL
+      xfs: modify buffer item reference counting for delayed logging
+      XFS: replace fixed size busy extent array with an rbtree
+      XFS: Don't use log forces when busy extents are allocated
+      XFS: Simplify transaction busy extent tracking
+      xfs: cluster fsync transaction
+
+ .../filesystems/xfs-delayed-logging-design.txt     |  819 ++++++++++++++++++++
+ fs/xfs/Makefile                                    |    1 +
+ fs/xfs/linux-2.6/xfs_buf.c                         |    9 +
+ fs/xfs/linux-2.6/xfs_file.c                        |   65 ++-
+ fs/xfs/linux-2.6/xfs_super.c                       |    9 +
+ fs/xfs/linux-2.6/xfs_trace.h                       |   80 ++-
+ fs/xfs/xfs_ag.h                                    |   21 +-
+ fs/xfs/xfs_alloc.c                                 |  257 ++++---
+ fs/xfs/xfs_alloc.h                                 |    5 +-
+ fs/xfs/xfs_buf_item.c                              |   33 +-
+ fs/xfs/xfs_log.c                                   |  679 +++++++++++------
+ fs/xfs/xfs_log.h                                   |   15 +-
+ fs/xfs/xfs_log_cil.c                               |  698 +++++++++++++++++
+ fs/xfs/xfs_log_priv.h                              |  117 +++-
+ fs/xfs/xfs_mount.h                                 |    1 +
+ fs/xfs/xfs_trans.c                                 |  193 ++++-
+ fs/xfs/xfs_trans.h                                 |   53 +-
+ fs/xfs/xfs_trans_item.c                            |  109 ---
+ fs/xfs/xfs_trans_priv.h                            |   10 +-
+ 19 files changed, 2594 insertions(+), 580 deletions(-)
+ create mode 100644 Documentation/filesystems/xfs-delayed-logging-design.txt
+ create mode 100644 fs/xfs/xfs_log_cil.c
+
+Anyway that's it for now - comments, thoughts, bug fixes, etc are
+welcome. :)
+
+Cheers,
+
+Dave.
 -- 
-1.6.5
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
