@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o2FGO10W064038 for <xfs@oss.sgi.com>; Mon, 15 Mar 2010 11:24:02 -0500
+	o2FGVneg064566 for <xfs@oss.sgi.com>; Mon, 15 Mar 2010 11:31:49 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8C9B91D337A2
-	for <xfs@oss.sgi.com>; Mon, 15 Mar 2010 09:08:02 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8C61F24AA09
+	for <xfs@oss.sgi.com>; Mon, 15 Mar 2010 09:33:25 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id DBGgqkMCVrLiKLlY for
-	<xfs@oss.sgi.com>; Mon, 15 Mar 2010 09:08:02 -0700 (PDT)
-Date: Mon, 15 Mar 2010 12:08:01 -0400
+	by cuda.sgi.com with ESMTP id FEm0LVIWUuqlIG0n for
+	<xfs@oss.sgi.com>; Mon, 15 Mar 2010 09:33:25 -0700 (PDT)
+Date: Mon, 15 Mar 2010 12:33:24 -0400
 From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [RFC] Delayed logging
-Message-ID: <20100315160801.GB10406@infradead.org>
+Message-ID: <20100315163324.GA26379@infradead.org>
 References: <20100315043000.GK4732@dastard>
+	<20100315160154.GA10406@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100315043000.GK4732@dastard>
+In-Reply-To: <20100315160154.GA10406@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,24 +32,19 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-Some comments on the patches:
+On Mon, Mar 15, 2010 at 12:01:54PM -0400, Christoph Hellwig wrote:
+> Running the series on my KVM testbox trips out this assert in
+> xfstests 013, which suggests we might be calling iput one too
+> much somewhere (e.g. IOP_UNLOCK)):
+> 
+> [  132.174780] Assertion failed: atomic_read(&VFS_I(dp)->i_count) > 0, file: fs/xfs/xfs_vnodeops.c, line: 1430
 
- - "xfs: cluster fsync transaction" seems like something that can stand
-   on it's own and go into the tree now.  Despite the comments it
-   currently only clusters in fsync and not write_inode which might
-   lead to higher benefits, btw.
-
- - the busy extent tracking might be worth to be reordered before the
-   delayed logging series.  In itself it might also want some reordering
-   as there's a lot churn in the patches there.  Making
-   "XFS: Simplify transaction busy extent tracking" first in that
-   subseries might help quite a bit to reduce that churn
-
- - The actual CIL implementation seems to be split into too small
-   patches IMHO.  E.g. "xfs: extend the log item to support delayed
-   logging" and "xfs: Introduce the Committed Item List" are two
-   sides of the same coin and splitting it might not make too much
-   sense.
+Turns out this was due to the fsync clustering patch, which adds inodes
+to a transaction without first grabbing a reference to them.
+Unofrtunately grabbing the reference is not a easy as it sounds, as
+inodes in the cluster might be on the unused list or even not have
+valid VFS state anymore, so we can't simply call IHOLD here.  I've
+reverted the patch in my local tree for now.
 
 _______________________________________________
 xfs mailing list
