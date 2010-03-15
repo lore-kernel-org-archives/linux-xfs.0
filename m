@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o2FFHreD058827 for <xfs@oss.sgi.com>; Mon, 15 Mar 2010 10:17:53 -0500
+	o2FFIuYv058941 for <xfs@oss.sgi.com>; Mon, 15 Mar 2010 10:18:56 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5D6CF142E4B5
-	for <xfs@oss.sgi.com>; Mon, 15 Mar 2010 08:19:28 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4420D142E4DE
+	for <xfs@oss.sgi.com>; Mon, 15 Mar 2010 08:20:32 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id JJdzFmxY7LSbFE9Z for
-	<xfs@oss.sgi.com>; Mon, 15 Mar 2010 08:19:28 -0700 (PDT)
-Date: Mon, 15 Mar 2010 11:19:27 -0400
+	by cuda.sgi.com with ESMTP id 7P819q6fyFq5GG6d for
+	<xfs@oss.sgi.com>; Mon, 15 Mar 2010 08:20:32 -0700 (PDT)
+Date: Mon, 15 Mar 2010 11:20:31 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: don't warn about page discards on shutdown
-Message-ID: <20100315151927.GA6974@infradead.org>
-References: <1268620595-11389-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 8/9] xfs: Clean up xfs_trans_committed code after factoring
+Message-ID: <20100315152031.GB6974@infradead.org>
+References: <1268620506-10799-1-git-send-email-david@fromorbit.com>
+	<1268620506-10799-9-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1268620595-11389-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1268620506-10799-9-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,16 +32,18 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Mar 15, 2010 at 01:36:35PM +1100, Dave Chinner wrote:
+On Mon, Mar 15, 2010 at 01:35:05PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> If we are doing a forced shutdown, we can get lots of noise about
-> delalloc pages being discarded. This is happens by design during a
-> forced shutdown, so don't spam the logs with these messages.
+> Now that the code has been factored, clean up all the remaining
+> style cruft, simplify the code and re-order functions so that it
+> doesn't need forward declarations.
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Also move the remaining functions that require forward declarations
+> (xfs_trans_uncommit, xfs_trans_free) so that all the forward
+> declarations can be removed from the file.
 
-Looks good, probably still a candiate for 2.6.34-rc.
+Looks good,
 
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
