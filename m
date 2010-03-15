@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o2FFIuYv058941 for <xfs@oss.sgi.com>; Mon, 15 Mar 2010 10:18:56 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4420D142E4DE
-	for <xfs@oss.sgi.com>; Mon, 15 Mar 2010 08:20:32 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 7P819q6fyFq5GG6d for
-	<xfs@oss.sgi.com>; Mon, 15 Mar 2010 08:20:32 -0700 (PDT)
-Date: Mon, 15 Mar 2010 11:20:31 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 8/9] xfs: Clean up xfs_trans_committed code after factoring
-Message-ID: <20100315152031.GB6974@infradead.org>
-References: <1268620506-10799-1-git-send-email-david@fromorbit.com>
-	<1268620506-10799-9-git-send-email-david@fromorbit.com>
+	o2FFK7BH059002 for <xfs@oss.sgi.com>; Mon, 15 Mar 2010 10:20:08 -0500
+Received: from lucidpixels.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DDEFE1D335DC
+	for <xfs@oss.sgi.com>; Mon, 15 Mar 2010 08:21:42 -0700 (PDT)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by
+	cuda.sgi.com with ESMTP id L7vtnSbr2BxlBlul for
+	<xfs@oss.sgi.com>; Mon, 15 Mar 2010 08:21:42 -0700 (PDT)
+Date: Mon, 15 Mar 2010 11:21:42 -0400 (EDT)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: 2.6.33 crash: invalid opcode: 0000 [#1] SMP: EIP: [<c11a018b>]
+	assfail+0x1b/0x20 SS:ESP 0068:f687bf14
+In-Reply-To: <20100315151136.GA1401@infradead.org>
+Message-ID: <alpine.DEB.2.00.1003151112330.22155@p34.internal.lan>
+References: <alpine.DEB.2.00.1003150528060.6999@p34.internal.lan>
+	<4B9E46F9.8090209@sandeen.net>
+	<alpine.DEB.2.00.1003151042390.9496@p34.internal.lan>
+	<4B9E4863.80905@sandeen.net> <20100315151136.GA1401@infradead.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1268620506-10799-9-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,28 +27,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
-
-On Mon, Mar 15, 2010 at 01:35:05PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Now that the code has been factored, clean up all the remaining
-> style cruft, simplify the code and re-order functions so that it
-> doesn't need forward declarations.
-> 
-> Also move the remaining functions that require forward declarations
-> (xfs_trans_uncommit, xfs_trans_free) so that all the forward
-> declarations can be removed from the file.
-
-Looks good,
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Eric Sandeen <sandeen@sandeen.net>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+On Mon, 15 Mar 2010, Christoph Hellwig wrote:
+
+> On Mon, Mar 15, 2010 at 09:46:59AM -0500, Eric Sandeen wrote:
+>> Ok, then you hit an ASSERT_ALWAYS
+>>
+>> There are only a few:
+>
+> If the box is a nfs server I suspect it's a reclaimable state one and
+> the patch below should help:
+
+Hello,
+
+The host is not running an NFS server actively, the option may be 
+compiled in but it is not 'acting' as an NFS server/has shares exported. I
+need stability for this specific host, I cannot run netconsole due to
+restrictions etc/will switch to ext4 since, if it recurs again, all I/O to 
+the disk stops and I will not be able to assist in reporting the 
+bug/giving the full output.  If I could reproduce the bug in another 
+environment, I would be able to troubleshoot the problem more..  This bug 
+is very similar to the one I reported in the past (that host was an active 
+NFS server):
+http://lists.openwall.net/linux-kernel/2009/10/19/118
+
+Justin.
 
 _______________________________________________
 xfs mailing list
