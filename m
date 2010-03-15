@@ -1,31 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o2F2XlaF004713 for <xfs@oss.sgi.com>; Sun, 14 Mar 2010 21:33:47 -0500
+	o2F2XrXd004751 for <xfs@oss.sgi.com>; Sun, 14 Mar 2010 21:33:53 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7BCFC19D2E26
-	for <xfs@oss.sgi.com>; Sun, 14 Mar 2010 19:35:21 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	0cgANb2GyovvCPzH for <xfs@oss.sgi.com>;
-	Sun, 14 Mar 2010 19:35:21 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 40F052402BC
+	for <xfs@oss.sgi.com>; Sun, 14 Mar 2010 19:35:27 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	Efsm1md9R8yEOMmf for <xfs@oss.sgi.com>;
+	Sun, 14 Mar 2010 19:35:27 -0700 (PDT)
 Received: from dastard (unverified [121.44.103.80])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	16902521-1927428
-	for <xfs@oss.sgi.com>; Mon, 15 Mar 2010 13:05:19 +1030 (CDT)
+	17049942-1927428
+	for <xfs@oss.sgi.com>; Mon, 15 Mar 2010 13:05:25 +1030 (CDT)
 Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1Nr09E-00015r-4w
-	for xfs@oss.sgi.com; Mon, 15 Mar 2010 13:35:16 +1100
+	(envelope-from <dave@fromorbit.com>) id 1Nr09M-00016K-CA
+	for xfs@oss.sgi.com; Mon, 15 Mar 2010 13:35:24 +1100
 Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1Nr09B-0002pR-GZ
+	(envelope-from <dave@disturbed.disaster>) id 1Nr09B-0002pi-SR
 	for xfs@oss.sgi.com; Mon, 15 Mar 2010 13:35:13 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/9] xfs: factor log item initialisation
-Date: Mon, 15 Mar 2010 13:34:58 +1100
-Message-Id: <1268620506-10799-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 7/9] xfs: update and factor xfs_trans_committed()
+Date: Mon, 15 Mar 2010 13:35:04 +1100
+Message-Id: <1268620506-10799-8-git-send-email-david@fromorbit.com>
 In-Reply-To: <1268620506-10799-1-git-send-email-david@fromorbit.com>
 References: <1268620506-10799-1-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,105 +33,310 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKRWFjaCBsb2cgaXRlbSB0
-eXBlIGRvZXMgbWFudWFsIGluaXRpYWxpc2F0aW9uIG9mIHRoZSBsb2cgaXRlbS4KRGVsYXllZCBs
-b2dnaW5nIGludHJvZHVjZdGVIG5ldyBmaWVsZHMgdGhhdCBuZWVkIGluaXRpYWxpc2F0aW9uLCBz
-bwpmYWN0b3IgYWxsIHRoZSBvcGVuIGNvZGVkIGluaXRpYWxpc2F0aW9uIGludG8gYSBjb21tb24g
-ZnVuY3Rpb24KZmlyc3QuCgpTaWduZWQtb2ZmLWJ5OiBEYXZlIENoaW5uZXIgPGRjaGlubmVyQHJl
-ZGhhdC5jb20+ClJldmlld2VkLWJ5OiBDaHJpc3RvcGggSGVsbHdpZyA8aGNoQGxzdC5kZT4KLS0t
-CiBmcy94ZnMvcXVvdGEveGZzX2RxdW90X2l0ZW0uYyB8ICAgMTIgKysrKy0tLS0tLS0tCiBmcy94
-ZnMveGZzX2J1Zl9pdGVtLmMgICAgICAgICB8ICAgIDUgKy0tLS0KIGZzL3hmcy94ZnNfZXh0ZnJl
-ZV9pdGVtLmMgICAgIHwgICAxMCArKy0tLS0tLS0tCiBmcy94ZnMveGZzX2lub2RlX2l0ZW0uYyAg
-ICAgICB8ICAgMTIgKystLS0tLS0tLS0tCiBmcy94ZnMveGZzX2xvZy5jICAgICAgICAgICAgICB8
-ICAgMTMgKysrKysrKysrKysrKwogZnMveGZzL3hmc19sb2cuaCAgICAgICAgICAgICAgfCAgICA3
-ICsrKysrKysKIDYgZmlsZXMgY2hhbmdlZCwgMjkgaW5zZXJ0aW9ucygrKSwgMzAgZGVsZXRpb25z
-KC0pCgpkaWZmIC0tZ2l0IGEvZnMveGZzL3F1b3RhL3hmc19kcXVvdF9pdGVtLmMgYi9mcy94ZnMv
-cXVvdGEveGZzX2RxdW90X2l0ZW0uYwppbmRleCA0ZTRlZTlhLi42MzlkOTY1IDEwMDY0NAotLS0g
-YS9mcy94ZnMvcXVvdGEveGZzX2RxdW90X2l0ZW0uYworKysgYi9mcy94ZnMvcXVvdGEveGZzX2Rx
-dW90X2l0ZW0uYwpAQCAtMzU3LDkgKzM1Nyw4IEBAIHhmc19xbV9kcXVvdF9sb2dpdGVtX2luaXQo
-CiAJeGZzX2RxX2xvZ2l0ZW1fdCAgKmxwOwogCWxwID0gJmRxcC0+cV9sb2dpdGVtOwogCi0JbHAt
-PnFsaV9pdGVtLmxpX3R5cGUgPSBYRlNfTElfRFFVT1Q7Ci0JbHAtPnFsaV9pdGVtLmxpX29wcyA9
-ICZ4ZnNfZHF1b3RfaXRlbV9vcHM7Ci0JbHAtPnFsaV9pdGVtLmxpX21vdW50cCA9IGRxcC0+cV9t
-b3VudDsKKwl4ZnNfbG9nX2l0ZW1faW5pdChkcXAtPnFfbW91bnQsICZscC0+cWxpX2l0ZW0sIFhG
-U19MSV9EUVVPVCwKKwkJCQkJJnhmc19kcXVvdF9pdGVtX29wcyk7CiAJbHAtPnFsaV9kcXVvdCA9
-IGRxcDsKIAlscC0+cWxpX2Zvcm1hdC5xbGZfdHlwZSA9IFhGU19MSV9EUVVPVDsKIAlscC0+cWxp
-X2Zvcm1hdC5xbGZfaWQgPSBiZTMyX3RvX2NwdShkcXAtPnFfY29yZS5kX2lkKTsKQEAgLTU4Niwx
-MSArNTg1LDggQEAgeGZzX3FtX3FvZmZfbG9naXRlbV9pbml0KAogCiAJcWYgPSAoeGZzX3FvZmZf
-bG9naXRlbV90Kikga21lbV96YWxsb2Moc2l6ZW9mKHhmc19xb2ZmX2xvZ2l0ZW1fdCksIEtNX1NM
-RUVQKTsKIAotCXFmLT5xcWxfaXRlbS5saV90eXBlID0gWEZTX0xJX1FVT1RBT0ZGOwotCWlmIChz
-dGFydCkKLQkJcWYtPnFxbF9pdGVtLmxpX29wcyA9ICZ4ZnNfcW1fcW9mZmVuZF9sb2dpdGVtX29w
-czsKLQllbHNlCi0JCXFmLT5xcWxfaXRlbS5saV9vcHMgPSAmeGZzX3FtX3FvZmZfbG9naXRlbV9v
-cHM7CisJeGZzX2xvZ19pdGVtX2luaXQobXAsICZxZi0+cXFsX2l0ZW0sIFhGU19MSV9RVU9UQU9G
-Riwgc3RhcnQgPworCQkJJnhmc19xbV9xb2ZmZW5kX2xvZ2l0ZW1fb3BzIDogJnhmc19xbV9xb2Zm
-X2xvZ2l0ZW1fb3BzKTsKIAlxZi0+cXFsX2l0ZW0ubGlfbW91bnRwID0gbXA7CiAJcWYtPnFxbF9m
-b3JtYXQucWZfdHlwZSA9IFhGU19MSV9RVU9UQU9GRjsKIAlxZi0+cXFsX2Zvcm1hdC5xZl9mbGFn
-cyA9IGZsYWdzOwpkaWZmIC0tZ2l0IGEvZnMveGZzL3hmc19idWZfaXRlbS5jIGIvZnMveGZzL3hm
-c19idWZfaXRlbS5jCmluZGV4IGYzYzQ5ZTYuLmFhY2UyMzcgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy94
-ZnNfYnVmX2l0ZW0uYworKysgYi9mcy94ZnMveGZzX2J1Zl9pdGVtLmMKQEAgLTczMywxMCArNzMz
-LDcgQEAgeGZzX2J1Zl9pdGVtX2luaXQoCiAKIAliaXAgPSAoeGZzX2J1Zl9sb2dfaXRlbV90Kilr
-bWVtX3pvbmVfemFsbG9jKHhmc19idWZfaXRlbV96b25lLAogCQkJCQkJICAgIEtNX1NMRUVQKTsK
-LQliaXAtPmJsaV9pdGVtLmxpX3R5cGUgPSBYRlNfTElfQlVGOwotCWJpcC0+YmxpX2l0ZW0ubGlf
-b3BzID0gJnhmc19idWZfaXRlbV9vcHM7Ci0JYmlwLT5ibGlfaXRlbS5saV9tb3VudHAgPSBtcDsK
-LQliaXAtPmJsaV9pdGVtLmxpX2FpbHAgPSBtcC0+bV9haWw7CisJeGZzX2xvZ19pdGVtX2luaXQo
-bXAsICZiaXAtPmJsaV9pdGVtLCBYRlNfTElfQlVGLCAmeGZzX2J1Zl9pdGVtX29wcyk7CiAJYmlw
-LT5ibGlfYnVmID0gYnA7CiAJeGZzX2J1Zl9ob2xkKGJwKTsKIAliaXAtPmJsaV9mb3JtYXQuYmxm
-X3R5cGUgPSBYRlNfTElfQlVGOwpkaWZmIC0tZ2l0IGEvZnMveGZzL3hmc19leHRmcmVlX2l0ZW0u
-YyBiL2ZzL3hmcy94ZnNfZXh0ZnJlZV9pdGVtLmMKaW5kZXggNmYzNWVkMS4uZTQ2MWU5MyAxMDA2
-NDQKLS0tIGEvZnMveGZzL3hmc19leHRmcmVlX2l0ZW0uYworKysgYi9mcy94ZnMveGZzX2V4dGZy
-ZWVfaXRlbS5jCkBAIC0yNTksMTAgKzI1OSw3IEBAIHhmc19lZmlfaW5pdCh4ZnNfbW91bnRfdAkq
-bXAsCiAJCQkJCQkJICAgICBLTV9TTEVFUCk7CiAJfQogCi0JZWZpcC0+ZWZpX2l0ZW0ubGlfdHlw
-ZSA9IFhGU19MSV9FRkk7Ci0JZWZpcC0+ZWZpX2l0ZW0ubGlfb3BzID0gJnhmc19lZmlfaXRlbV9v
-cHM7Ci0JZWZpcC0+ZWZpX2l0ZW0ubGlfbW91bnRwID0gbXA7Ci0JZWZpcC0+ZWZpX2l0ZW0ubGlf
-YWlscCA9IG1wLT5tX2FpbDsKKwl4ZnNfbG9nX2l0ZW1faW5pdChtcCwgJmVmaXAtPmVmaV9pdGVt
-LCBYRlNfTElfRUZJLCAmeGZzX2VmaV9pdGVtX29wcyk7CiAJZWZpcC0+ZWZpX2Zvcm1hdC5lZmlf
-bmV4dGVudHMgPSBuZXh0ZW50czsKIAllZmlwLT5lZmlfZm9ybWF0LmVmaV9pZCA9IChfX3BzaW50
-X3QpKHZvaWQqKWVmaXA7CiAKQEAgLTU1NCwxMCArNTUxLDcgQEAgeGZzX2VmZF9pbml0KHhmc19t
-b3VudF90CSptcCwKIAkJCQkJCQkgICAgIEtNX1NMRUVQKTsKIAl9CiAKLQllZmRwLT5lZmRfaXRl
-bS5saV90eXBlID0gWEZTX0xJX0VGRDsKLQllZmRwLT5lZmRfaXRlbS5saV9vcHMgPSAmeGZzX2Vm
-ZF9pdGVtX29wczsKLQllZmRwLT5lZmRfaXRlbS5saV9tb3VudHAgPSBtcDsKLQllZmRwLT5lZmRf
-aXRlbS5saV9haWxwID0gbXAtPm1fYWlsOworCXhmc19sb2dfaXRlbV9pbml0KG1wLCAmZWZkcC0+
-ZWZkX2l0ZW0sIFhGU19MSV9FRkQsICZ4ZnNfZWZkX2l0ZW1fb3BzKTsKIAllZmRwLT5lZmRfZWZp
-cCA9IGVmaXA7CiAJZWZkcC0+ZWZkX2Zvcm1hdC5lZmRfbmV4dGVudHMgPSBuZXh0ZW50czsKIAll
-ZmRwLT5lZmRfZm9ybWF0LmVmZF9lZmlfaWQgPSBlZmlwLT5lZmlfZm9ybWF0LmVmaV9pZDsKZGlm
-ZiAtLWdpdCBhL2ZzL3hmcy94ZnNfaW5vZGVfaXRlbS5jIGIvZnMveGZzL3hmc19pbm9kZV9pdGVt
-LmMKaW5kZXggN2JmZWE4NS4uMzJlNDE4OCAxMDA2NDQKLS0tIGEvZnMveGZzL3hmc19pbm9kZV9p
-dGVtLmMKKysrIGIvZnMveGZzL3hmc19pbm9kZV9pdGVtLmMKQEAgLTg2NSwxNyArODY1LDkgQEAg
-eGZzX2lub2RlX2l0ZW1faW5pdCgKIAlBU1NFUlQoaXAtPmlfaXRlbXAgPT0gTlVMTCk7CiAJaWlw
-ID0gaXAtPmlfaXRlbXAgPSBrbWVtX3pvbmVfemFsbG9jKHhmc19pbGlfem9uZSwgS01fU0xFRVAp
-OwogCi0JaWlwLT5pbGlfaXRlbS5saV90eXBlID0gWEZTX0xJX0lOT0RFOwotCWlpcC0+aWxpX2l0
-ZW0ubGlfb3BzID0gJnhmc19pbm9kZV9pdGVtX29wczsKLQlpaXAtPmlsaV9pdGVtLmxpX21vdW50
-cCA9IG1wOwotCWlpcC0+aWxpX2l0ZW0ubGlfYWlscCA9IG1wLT5tX2FpbDsKIAlpaXAtPmlsaV9p
-bm9kZSA9IGlwOwotCi0JLyoKLQkgICBXZSBoYXZlIHplcm9lZCBtZW1vcnkuIE5vIG5lZWQgLi4u
-Ci0JICAgaWlwLT5pbGlfZXh0ZW50c19idWYgPSBOVUxMOwotCSAqLwotCisJeGZzX2xvZ19pdGVt
-X2luaXQobXAsICZpaXAtPmlsaV9pdGVtLCBYRlNfTElfSU5PREUsCisJCQkJCQkmeGZzX2lub2Rl
-X2l0ZW1fb3BzKTsKIAlpaXAtPmlsaV9mb3JtYXQuaWxmX3R5cGUgPSBYRlNfTElfSU5PREU7CiAJ
-aWlwLT5pbGlfZm9ybWF0LmlsZl9pbm8gPSBpcC0+aV9pbm87CiAJaWlwLT5pbGlfZm9ybWF0Lmls
-Zl9ibGtubyA9IGlwLT5pX2ltYXAuaW1fYmxrbm87CmRpZmYgLS1naXQgYS9mcy94ZnMveGZzX2xv
-Zy5jIGIvZnMveGZzL3hmc19sb2cuYwppbmRleCBlOGZiYTkyLi4xZjI2YTk3IDEwMDY0NAotLS0g
-YS9mcy94ZnMveGZzX2xvZy5jCisrKyBiL2ZzL3hmcy94ZnNfbG9nLmMKQEAgLTY0OCw2ICs2NDgs
-MTkgQEAgeGZzX2xvZ191bm1vdW50KHhmc19tb3VudF90ICptcCkKIAl4bG9nX2RlYWxsb2NfbG9n
-KG1wLT5tX2xvZyk7CiB9CiAKK3ZvaWQKK3hmc19sb2dfaXRlbV9pbml0KAorCXN0cnVjdCB4ZnNf
-bW91bnQJKm1wLAorCXN0cnVjdCB4ZnNfbG9nX2l0ZW0JKml0ZW0sCisJaW50CQkJdHlwZSwKKwlz
-dHJ1Y3QgeGZzX2l0ZW1fb3BzCSpvcHMpCit7CisJaXRlbS0+bGlfbW91bnRwID0gbXA7CisJaXRl
-bS0+bGlfYWlscCA9IG1wLT5tX2FpbDsKKwlpdGVtLT5saV90eXBlID0gdHlwZTsKKwlpdGVtLT5s
-aV9vcHMgPSBvcHM7Cit9CisKIC8qCiAgKiBXcml0ZSByZWdpb24gdmVjdG9ycyB0byBsb2cuICBU
-aGUgd3JpdGUgaGFwcGVucyB1c2luZyB0aGUgc3BhY2UgcmVzZXJ2YXRpb24KICAqIG9mIHRoZSB0
-aWNrZXQgKHRpYykuICBJdCBpcyBub3QgYSByZXF1aXJlbWVudCB0aGF0IGFsbCB3cml0ZXMgZm9y
-IGEgZ2l2ZW4KZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNfbG9nLmggYi9mcy94ZnMveGZzX2xvZy5o
-CmluZGV4IDk3YTI0YzcuLmYzYTU2NGQgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy94ZnNfbG9nLmgKKysr
-IGIvZnMveGZzL3hmc19sb2cuaApAQCAtMTI2LDYgKzEyNiwxMyBAQCB0eXBlZGVmIHN0cnVjdCB4
-ZnNfbG9nX2NhbGxiYWNrIHsKIHN0cnVjdCB4ZnNfbW91bnQ7CiBzdHJ1Y3QgeGxvZ19pbl9jb3Jl
-Owogc3RydWN0IHhsb2dfdGlja2V0Oworc3RydWN0IHhmc19sb2dfaXRlbTsKK3N0cnVjdCB4ZnNf
-aXRlbV9vcHM7CisKK3ZvaWQJeGZzX2xvZ19pdGVtX2luaXQoc3RydWN0IHhmc19tb3VudAkqbXAs
-CisJCQlzdHJ1Y3QgeGZzX2xvZ19pdGVtCSppdGVtLAorCQkJaW50CQkJdHlwZSwKKwkJCXN0cnVj
-dCB4ZnNfaXRlbV9vcHMJKm9wcyk7CiAKIHhmc19sc25fdCB4ZnNfbG9nX2RvbmUoc3RydWN0IHhm
-c19tb3VudCAqbXAsCiAJCSAgICAgICBzdHJ1Y3QgeGxvZ190aWNrZXQgKnRpY2tldCwKLS0gCjEu
-Ni41CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMg
-bWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9s
-aXN0aW5mby94ZnMK
+From: Dave Chinner <dchinner@redhat.com>
+
+The function header to xfs-trans_committed has long had this
+comment:
+
+ * THIS SHOULD BE REWRITTEN TO USE xfs_trans_next_item()
+
+To prepare for different methods of committing items, convert the
+code to use xfs_trans_next_item() and factor the code into smaller,
+more digestible chunks.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_trans.c |  224 ++++++++++++++++++++++------------------------------
+ 1 files changed, 95 insertions(+), 129 deletions(-)
+
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 2bff229..084bd3a 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -49,7 +49,6 @@
+ STATIC void	xfs_trans_apply_sb_deltas(xfs_trans_t *);
+ STATIC void	xfs_trans_uncommit(xfs_trans_t *, uint);
+ STATIC void	xfs_trans_committed(xfs_trans_t *, int);
+-STATIC void	xfs_trans_chunk_committed(xfs_log_item_chunk_t *, xfs_lsn_t, int);
+ STATIC void	xfs_trans_free(xfs_trans_t *);
+ 
+ kmem_zone_t	*xfs_trans_zone;
+@@ -1301,60 +1300,86 @@ xfs_trans_roll(
+ }
+ 
+ /*
+- * THIS SHOULD BE REWRITTEN TO USE xfs_trans_next_item().
++ * The committed item processing consists of calling the committed routine of
++ * each logged item, updating the item's position in the AIL if necessary, and
++ * unpinning each item.  If the committed routine returns -1, then do nothing
++ * further with the item because it may have been freed.
+  *
+- * This is typically called by the LM when a transaction has been fully
+- * committed to disk.  It needs to unpin the items which have
+- * been logged by the transaction and update their positions
+- * in the AIL if necessary.
+- * This also gets called when the transactions didn't get written out
+- * because of an I/O error. Abortflag & XFS_LI_ABORTED is set then.
++ * Since items are unlocked when they are copied to the incore log, it is
++ * possible for two transactions to be completing and manipulating the same
++ * item simultaneously.  The AIL lock will protect the lsn field of each item.
++ * The value of this field can never go backwards.
+  *
+- * Call xfs_trans_chunk_committed() to process the items in
+- * each chunk.
++ * We unpin the items after repositioning them in the AIL, because otherwise
++ * they could be immediately flushed and we'd have to race with the flusher
++ * trying to pull the item from the AIL as we add it.
+  */
+-STATIC void
+-xfs_trans_committed(
+-	xfs_trans_t	*tp,
+-	int		abortflag)
++static void
++xfs_trans_item_committed(
++	xfs_log_item_t	*lip,
++	xfs_lsn_t	commit_lsn,
++	int		aborted)
+ {
+-	xfs_log_item_chunk_t	*licp;
+-	xfs_log_item_chunk_t	*next_licp;
+-	xfs_log_busy_chunk_t	*lbcp;
+-	xfs_log_busy_slot_t	*lbsp;
+-	int			i;
++	xfs_lsn_t	item_lsn;
++	struct xfs_ail	*ailp;
++
++	if (aborted)
++		lip->li_flags |= XFS_LI_ABORTED;
+ 
+ 	/*
+-	 * Call the transaction's completion callback if there
+-	 * is one.
++	 * Send in the ABORTED flag to the COMMITTED routine so that it knows
++	 * whether the transaction was aborted or not.
+ 	 */
+-	if (tp->t_callback != NULL) {
+-		tp->t_callback(tp, tp->t_callarg);
+-	}
++	item_lsn = IOP_COMMITTED(lip, commit_lsn);
+ 
+ 	/*
+-	 * Special case the chunk embedded in the transaction.
++	 * If the committed routine returns -1, item has been freed.
+ 	 */
+-	licp = &(tp->t_items);
+-	if (!(xfs_lic_are_all_free(licp))) {
+-		xfs_trans_chunk_committed(licp, tp->t_lsn, abortflag);
+-	}
++	if (XFS_LSN_CMP(item_lsn, (xfs_lsn_t)-1) == 0)
++		return;
+ 
+ 	/*
+-	 * Process the items in each chunk in turn.
++	 * If the returned lsn is greater than what it contained before, update
++	 * the location of the item in the AIL.  If it is not, then do nothing.
++	 * Items can never move backwards in the AIL.
++	 *
++	 * While the new lsn should usually be greater, it is possible that a
++	 * later transaction completing simultaneously with an earlier one
++	 * using the same item could complete first with a higher lsn.  This
++	 * would cause the earlier transaction to fail the test below.
+ 	 */
+-	licp = licp->lic_next;
+-	while (licp != NULL) {
+-		ASSERT(!xfs_lic_are_all_free(licp));
+-		xfs_trans_chunk_committed(licp, tp->t_lsn, abortflag);
+-		next_licp = licp->lic_next;
+-		kmem_free(licp);
+-		licp = next_licp;
++	ailp = lip->li_ailp;
++	spin_lock(&ailp->xa_lock);
++	if (XFS_LSN_CMP(item_lsn, lip->li_lsn) > 0) {
++		/*
++		 * This will set the item's lsn to item_lsn and update the
++		 * position of the item in the AIL.
++		 *
++		 * xfs_trans_ail_update() drops the AIL lock.
++		 */
++		xfs_trans_ail_update(ailp, lip, item_lsn);
++	} else {
++		spin_unlock(&ailp->xa_lock);
+ 	}
+ 
+ 	/*
+-	 * Clear all the per-AG busy list items listed in this transaction
++	 * Now that we've repositioned the item in the AIL, unpin it so it can
++	 * be flushed. Pass information about buffer stale state down from the
++	 * log item flags, if anyone else stales the buffer we do not want to
++	 * pay any attention to it.
+ 	 */
++	IOP_UNPIN(lip);
++}
++
++/* Clear all the per-AG busy list items listed in this transaction */
++static void
++xfs_trans_clear_busy_extents(
++	struct xfs_trans	*tp)
++{
++	xfs_log_busy_chunk_t	*lbcp;
++	xfs_log_busy_slot_t	*lbsp;
++	int			i;
++
+ 	lbcp = &tp->t_busy;
+ 	while (lbcp != NULL) {
+ 		for (i = 0, lbsp = lbcp->lbc_busy; i < lbcp->lbc_unused; i++, lbsp++) {
+@@ -1366,107 +1391,48 @@ xfs_trans_committed(
+ 		lbcp = lbcp->lbc_next;
+ 	}
+ 	xfs_trans_free_busy(tp);
+-
+-	/*
+-	 * That's it for the transaction structure.  Free it.
+-	 */
+-	xfs_trans_free(tp);
+ }
+ 
+ /*
+- * This is called to perform the commit processing for each
+- * item described by the given chunk.
+- *
+- * The commit processing consists of unlocking items which were
+- * held locked with the SYNC_UNLOCK attribute, calling the committed
+- * routine of each logged item, updating the item's position in the AIL
+- * if necessary, and unpinning each item.  If the committed routine
+- * returns -1, then do nothing further with the item because it
+- * may have been freed.
+- *
+- * Since items are unlocked when they are copied to the incore
+- * log, it is possible for two transactions to be completing
+- * and manipulating the same item simultaneously.  The AIL lock
+- * will protect the lsn field of each item.  The value of this
+- * field can never go backwards.
++ * This is typically called by the LM when a transaction has been fully
++ * committed to disk.  It needs to unpin the items which have
++ * been logged by the transaction and update their positions
++ * in the AIL if necessary.
+  *
+- * We unpin the items after repositioning them in the AIL, because
+- * otherwise they could be immediately flushed and we'd have to race
+- * with the flusher trying to pull the item from the AIL as we add it.
++ * This also gets called when the transactions didn't get written out
++ * because of an I/O error. Abortflag & XFS_LI_ABORTED is set then.
+  */
+ STATIC void
+-xfs_trans_chunk_committed(
+-	xfs_log_item_chunk_t	*licp,
+-	xfs_lsn_t		lsn,
+-	int			aborted)
++xfs_trans_committed(
++	xfs_trans_t	*tp,
++	int		abortflag)
+ {
+ 	xfs_log_item_desc_t	*lidp;
+-	xfs_log_item_t		*lip;
+-	xfs_lsn_t		item_lsn;
+-	int			i;
+-
+-	lidp = licp->lic_descs;
+-	for (i = 0; i < licp->lic_unused; i++, lidp++) {
+-		struct xfs_ail		*ailp;
+-
+-		if (xfs_lic_isfree(licp, i)) {
+-			continue;
+-		}
+-
+-		lip = lidp->lid_item;
+-		if (aborted)
+-			lip->li_flags |= XFS_LI_ABORTED;
+-
+-		/*
+-		 * Send in the ABORTED flag to the COMMITTED routine
+-		 * so that it knows whether the transaction was aborted
+-		 * or not.
+-		 */
+-		item_lsn = IOP_COMMITTED(lip, lsn);
++	xfs_log_item_chunk_t	*licp;
++	xfs_log_item_chunk_t	*next_licp;
+ 
+-		/*
+-		 * If the committed routine returns -1, make
+-		 * no more references to the item.
+-		 */
+-		if (XFS_LSN_CMP(item_lsn, (xfs_lsn_t)-1) == 0) {
+-			continue;
+-		}
++	/*
++	 * Call the transaction's completion callback if there
++	 * is one.
++	 */
++	if (tp->t_callback != NULL) {
++		tp->t_callback(tp, tp->t_callarg);
++	}
+ 
+-		/*
+-		 * If the returned lsn is greater than what it
+-		 * contained before, update the location of the
+-		 * item in the AIL.  If it is not, then do nothing.
+-		 * Items can never move backwards in the AIL.
+-		 *
+-		 * While the new lsn should usually be greater, it
+-		 * is possible that a later transaction completing
+-		 * simultaneously with an earlier one using the
+-		 * same item could complete first with a higher lsn.
+-		 * This would cause the earlier transaction to fail
+-		 * the test below.
+-		 */
+-		ailp = lip->li_ailp;
+-		spin_lock(&ailp->xa_lock);
+-		if (XFS_LSN_CMP(item_lsn, lip->li_lsn) > 0) {
+-			/*
+-			 * This will set the item's lsn to item_lsn
+-			 * and update the position of the item in
+-			 * the AIL.
+-			 *
+-			 * xfs_trans_ail_update() drops the AIL lock.
+-			 */
+-			xfs_trans_ail_update(ailp, lip, item_lsn);
+-		} else {
+-			spin_unlock(&ailp->xa_lock);
+-		}
++	for (lidp = xfs_trans_first_item(tp);
++	     lidp != NULL;
++	     lidp = xfs_trans_next_item(tp, lidp)) {
++		xfs_trans_item_committed(lidp->lid_item, tp->t_lsn, abortflag);
++	}
+ 
+-		/*
+-		 * Now that we've repositioned the item in the AIL,
+-		 * unpin it so it can be flushed. Pass information
+-		 * about buffer stale state down from the log item
+-		 * flags, if anyone else stales the buffer we do not
+-		 * want to pay any attention to it.
+-		 */
+-		IOP_UNPIN(lip);
++	/* free the item chunks, ignoring the embedded chunk */
++	licp = tp->t_items.lic_next;
++	while (licp != NULL) {
++		next_licp = licp->lic_next;
++		kmem_free(licp);
++		licp = next_licp;
+ 	}
++
++	xfs_trans_clear_busy_extents(tp);
++	xfs_trans_free(tp);
+ }
+-- 
+1.6.5
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
