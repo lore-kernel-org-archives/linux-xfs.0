@@ -1,28 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o2F2Z6V1005196 for <xfs@oss.sgi.com>; Sun, 14 Mar 2010 21:35:06 -0500
+	o2F2XtnV004779 for <xfs@oss.sgi.com>; Sun, 14 Mar 2010 21:33:55 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B0D6D19D2E38
-	for <xfs@oss.sgi.com>; Sun, 14 Mar 2010 19:36:40 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	McKzSP0xOtCIYNiC for <xfs@oss.sgi.com>;
-	Sun, 14 Mar 2010 19:36:40 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6F1E32402C2
+	for <xfs@oss.sgi.com>; Sun, 14 Mar 2010 19:35:29 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	hZb3J0zpeOcjEtth for <xfs@oss.sgi.com>;
+	Sun, 14 Mar 2010 19:35:29 -0700 (PDT)
 Received: from dastard (unverified [121.44.103.80])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	16902647-1927428
-	for <xfs@oss.sgi.com>; Mon, 15 Mar 2010 13:06:39 +1030 (CDT)
+	17049944-1927428
+	for <xfs@oss.sgi.com>; Mon, 15 Mar 2010 13:05:27 +1030 (CDT)
 Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1Nr0AX-00016n-W2
-	for xfs@oss.sgi.com; Mon, 15 Mar 2010 13:36:37 +1100
+	(envelope-from <dave@fromorbit.com>) id 1Nr09O-00016X-EL
+	for xfs@oss.sgi.com; Mon, 15 Mar 2010 13:35:26 +1100
 Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1Nr0AV-0002yG-Av
-	for xfs@oss.sgi.com; Mon, 15 Mar 2010 13:36:35 +1100
+	(envelope-from <dave@disturbed.disaster>) id 1Nr09B-0002pf-Qa
+	for xfs@oss.sgi.com; Mon, 15 Mar 2010 13:35:13 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: don't warn about page discards on shutdown
-Date: Mon, 15 Mar 2010 13:36:35 +1100
-Message-Id: <1268620595-11389-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 6/9] xfs: clean up xfs_trans_commit logic even more
+Date: Mon, 15 Mar 2010 13:35:03 +1100
+Message-Id: <1268620506-10799-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1268620506-10799-1-git-send-email-david@fromorbit.com>
+References: <1268620506-10799-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,56 +40,133 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Christoph Hellwig <hch@infradead.org>
 
-If we are doing a forced shutdown, we can get lots of noise about
-delalloc pages being discarded. This is happens by design during a
-forced shutdown, so don't spam the logs with these messages.
+> +shut_us_down:
+> +	shutdown = XFS_FORCED_SHUTDOWN(mp) ? EIO : 0;
+> +	if (!(tp->t_flags & XFS_TRANS_DIRTY) || shutdown) {
+> +		xfs_trans_unreserve_and_mod_sb(tp);
+> +		/*
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+This whole area in _xfs_trans_commit is still a complete mess.
+
+So while touching this code, unravel this mess as well to make the
+whole flow of the function simpler and clearer.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/linux-2.6/xfs_aops.c |   13 ++++++++++---
- 1 files changed, 10 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_trans.c |   69 ++++++++++++++++++++++++++++------------------------
+ 1 files changed, 37 insertions(+), 32 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
-index 9083357..9962850 100644
---- a/fs/xfs/linux-2.6/xfs_aops.c
-+++ b/fs/xfs/linux-2.6/xfs_aops.c
-@@ -932,6 +932,9 @@ xfs_aops_discard_page(
- 	if (!xfs_is_delayed_page(page, IOMAP_DELAY))
- 		goto out_invalidate;
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index e07b329..2bff229 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -1020,19 +1020,17 @@ xfs_trans_commit_iclog(
+  * have already been unlocked as if the commit had succeeded.
+  * Do not reference the transaction structure after this call.
+  */
+- /*ARGSUSED*/
+ int
+ _xfs_trans_commit(
+-	xfs_trans_t	*tp,
+-	uint		flags,
+-	int		*log_flushed)
++	struct xfs_trans	*tp,
++	uint			flags,
++	int			*log_flushed)
+ {
+-	xfs_mount_t		*mp = tp->t_mountp;
++	struct xfs_mount	*mp = tp->t_mountp;
+ 	xfs_lsn_t		commit_lsn = -1;
+-	int			error;
++	int			error = 0;
+ 	int			log_flags = 0;
+ 	int			sync = tp->t_flags & XFS_TRANS_SYNC;
+-	int			shutdown;
  
-+	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
-+		goto out_invalidate;
+ 	/*
+ 	 * Determine whether this commit is releasing a permanent
+@@ -1050,30 +1048,14 @@ _xfs_trans_commit(
+ 	 * Also make sure to return any reserved blocks to
+ 	 * the free pool.
+ 	 */
+-shut_us_down:
+-	shutdown = XFS_FORCED_SHUTDOWN(mp) ? EIO : 0;
+-	if (!(tp->t_flags & XFS_TRANS_DIRTY) || shutdown) {
+-		xfs_trans_unreserve_and_mod_sb(tp);
+-		/*
+-		 * It is indeed possible for the transaction to be
+-		 * not dirty but the dqinfo portion to be. All that
+-		 * means is that we have some (non-persistent) quota
+-		 * reservations that need to be unreserved.
+-		 */
+-		xfs_trans_unreserve_and_mod_dquots(tp);
+-		if (tp->t_ticket) {
+-			commit_lsn = xfs_log_done(mp, tp->t_ticket,
+-							NULL, log_flags);
+-			if (commit_lsn == -1 && !shutdown)
+-				shutdown = XFS_ERROR(EIO);
+-		}
+-		current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
+-		xfs_trans_free_items(tp, shutdown? XFS_TRANS_ABORT : 0);
+-		xfs_trans_free_busy(tp);
+-		xfs_trans_free(tp);
+-		XFS_STATS_INC(xs_trans_empty);
+-		return (shutdown);
++	if (!(tp->t_flags & XFS_TRANS_DIRTY))
++		goto out_unreserve;
 +
- 	xfs_fs_cmn_err(CE_ALERT, ip->i_mount,
- 		"page discard on page %p, inode 0x%llx, offset %llu.",
- 			page, ip->i_ino, offset);
-@@ -964,8 +967,10 @@ xfs_aops_discard_page(
++	if (XFS_FORCED_SHUTDOWN(mp)) {
++		error = XFS_ERROR(EIO);
++		goto out_unreserve;
+ 	}
++
+ 	ASSERT(tp->t_ticket != NULL);
  
- 		if (error) {
- 			/* something screwed, just bail */
--			xfs_fs_cmn_err(CE_ALERT, ip->i_mount,
--			"page discard failed delalloc mapping lookup.");
-+			if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
-+				xfs_fs_cmn_err(CE_ALERT, ip->i_mount,
-+				"page discard failed delalloc mapping lookup.");
-+			}
- 			break;
- 		}
- 		if (!nimaps) {
-@@ -991,8 +996,10 @@ xfs_aops_discard_page(
- 		ASSERT(!flist.xbf_count && !flist.xbf_first);
- 		if (error) {
- 			/* something screwed, just bail */
--			xfs_fs_cmn_err(CE_ALERT, ip->i_mount,
-+			if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
-+				xfs_fs_cmn_err(CE_ALERT, ip->i_mount,
- 			"page discard unable to remove delalloc mapping.");
-+			}
- 			break;
- 		}
- next_buffer:
+ 	/*
+@@ -1086,7 +1068,8 @@ shut_us_down:
+ 	error = xfs_trans_commit_iclog(mp, tp, &commit_lsn, flags);
+ 	if (error == ENOMEM) {
+ 		xfs_force_shutdown(mp, SHUTDOWN_LOG_IO_ERROR);
+-		goto shut_us_down;
++		error = XFS_ERROR(EIO);
++		goto out_unreserve;
+ 	}
+ 
+ 	/*
+@@ -1103,7 +1086,29 @@ shut_us_down:
+ 		XFS_STATS_INC(xs_trans_async);
+ 	}
+ 
+-	return (error);
++	return error;
++
++out_unreserve:
++	xfs_trans_unreserve_and_mod_sb(tp);
++
++	/*
++	 * It is indeed possible for the transaction to be not dirty but
++	 * the dqinfo portion to be.  All that means is that we have some
++	 * (non-persistent) quota reservations that need to be unreserved.
++	 */
++	xfs_trans_unreserve_and_mod_dquots(tp);
++	if (tp->t_ticket) {
++		commit_lsn = xfs_log_done(mp, tp->t_ticket, NULL, log_flags);
++		if (commit_lsn == -1 && !error)
++			error = XFS_ERROR(EIO);
++	}
++	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
++	xfs_trans_free_items(tp, error ? XFS_TRANS_ABORT : 0);
++	xfs_trans_free_busy(tp);
++	xfs_trans_free(tp);
++
++	XFS_STATS_INC(xs_trans_empty);
++	return error;
+ }
+ 
+ /*
 -- 
 1.6.5
 
