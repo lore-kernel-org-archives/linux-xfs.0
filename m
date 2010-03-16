@@ -1,13 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o2G7rX2F139219 for <xfs@oss.sgi.com>; Tue, 16 Mar 2010 02:53:34 -0500
-Date: Tue, 16 Mar 2010 23:53:50 +0800
-From: wzt.wzt@gmail.com
-Subject: [PATCH] xfs: Fix integer overflow in fs/xfs/linux-2.6/xfs_ioctl*.c
-Message-ID: <20100316155350.GB18579@localhost.localdomain>
+	o2GIsOjL192318 for <xfs@oss.sgi.com>; Tue, 16 Mar 2010 13:54:24 -0500
+Subject: [PATCH 2/2] xfs: use scalable vmap API
+From: Alex Elder <aelder@sgi.com>
+Date: Tue, 16 Mar 2010 13:55:56 -0500
+Message-ID: <1268765756.1951.27.camel@doink>
 Mime-Version: 1.0
-Content-Disposition: inline
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,69 +20,59 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-kernel@vger.kernel.org
-Cc: xfs-masters@oss.sgi.com, aelder@sgi.com, xfs@oss.sgi.com
+To: XFS Mailing List <xfs@oss.sgi.com>
+Cc: hch@lst.de
 
-STATIC int
-xfs_compat_attrmulti_by_handle(
-        struct file                             *parfilp,
-        void                                    __user *arg)
-{
-...
-        if (copy_from_user(&am_hreq, arg,
-                           sizeof(compat_xfs_fsop_attrmulti_handlereq_t)))
-                return -XFS_ERROR(EFAULT);
-...
-        error = E2BIG;
-        /* Not check the am_hreq.opcount max value from userspace, 
-        m_hreq.opcount * sizeof(compat_xfs_attr_multiop_t) can make
-        integer overflow, and the if condition can be bypass. Though,
-        it can not make security problem, but fix it maybe better. */
-        size = am_hreq.opcount * sizeof(compat_xfs_attr_multiop_t);
-        if (!size || size > 16 * PAGE_SIZE)
-                goto out_dput;
-...
-}
+Re-apply a commit that had been reverted due to regressions
+that have since been fixed.
 
-Signed-off-by: Zhitong Wang <zhitong.wangzt@alibaba-inc.com>
+    From 95f8e302c04c0b0c6de35ab399a5551605eeb006 Mon Sep 17 00:00:00 2001
+    From: Nick Piggin <npiggin@suse.de>
+    Date: Tue, 6 Jan 2009 14:43:09 +1100
+
+    Implement XFS's large buffer support with the new vmap APIs. See the vmap
+    rewrite (db64fe02) for some numbers. The biggest improvement that comes from
+    using the new APIs is avoiding the global KVA allocation lock on every call.
+
+    Signed-off-by: Nick Piggin <npiggin@suse.de>
+    Reviewed-by: Christoph Hellwig <hch@infradead.org>
+    Signed-off-by: Lachlan McIlroy <lachlan@sgi.com>
+
+Only modifications here were a minor reformat, plus making the patch
+apply given the new use of xfs_buf_is_vmapped().
+
+Modified-by: Alex Elder <aelder@sgi.com>
 
 ---
- fs/xfs/linux-2.6/xfs_ioctl.c   |    4 ++++
- fs/xfs/linux-2.6/xfs_ioctl32.c |    4 ++++
- 2 files changed, 8 insertions(+), 0 deletions(-)
+ fs/xfs/linux-2.6/xfs_buf.c |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_ioctl.c b/fs/xfs/linux-2.6/xfs_ioctl.c
-index 4ea1ee1..b05b3b7 100644
---- a/fs/xfs/linux-2.6/xfs_ioctl.c
-+++ b/fs/xfs/linux-2.6/xfs_ioctl.c
-@@ -526,6 +526,10 @@ xfs_attrmulti_by_handle(
- 	if (copy_from_user(&am_hreq, arg, sizeof(xfs_fsop_attrmulti_handlereq_t)))
- 		return -XFS_ERROR(EFAULT);
+Index: b/fs/xfs/linux-2.6/xfs_buf.c
+===================================================================
+--- a/fs/xfs/linux-2.6/xfs_buf.c
++++ b/fs/xfs/linux-2.6/xfs_buf.c
+@@ -268,7 +268,8 @@ xfs_buf_free(
+ 		uint		i;
  
-+	/* overflow check */
-+	if (am_hreq.opcount >= INT_MAX / sizeof(xfs_attr_multiop_t))
-+		return -ENOMEM;
-+
- 	dentry = xfs_handlereq_to_dentry(parfilp, &am_hreq.hreq);
- 	if (IS_ERR(dentry))
- 		return PTR_ERR(dentry);
-diff --git a/fs/xfs/linux-2.6/xfs_ioctl32.c b/fs/xfs/linux-2.6/xfs_ioctl32.c
-index 0bf6d61..7b8673e 100644
---- a/fs/xfs/linux-2.6/xfs_ioctl32.c
-+++ b/fs/xfs/linux-2.6/xfs_ioctl32.c
-@@ -419,6 +419,10 @@ xfs_compat_attrmulti_by_handle(
- 			   sizeof(compat_xfs_fsop_attrmulti_handlereq_t)))
- 		return -XFS_ERROR(EFAULT);
+ 		if (xfs_buf_is_vmapped(bp))
+-			vunmap(bp->b_addr - bp->b_offset);
++			vm_unmap_ram(bp->b_addr - bp->b_offset,
++					bp->b_page_count);
  
-+	/* overflow check */
-+	if (am_hreq.opcount >= INT_MAX / sizeof(compat_xfs_attr_multiop_t))
-+		return -ENOMEM;
-+
- 	dentry = xfs_compat_handlereq_to_dentry(parfilp, &am_hreq.hreq);
- 	if (IS_ERR(dentry))
- 		return PTR_ERR(dentry);
--- 
-1.6.5.3
+ 		for (i = 0; i < bp->b_page_count; i++) {
+ 			struct page	*page = bp->b_pages[i];
+@@ -388,8 +389,8 @@ _xfs_buf_map_pages(
+ 		bp->b_addr = page_address(bp->b_pages[0]) + bp->b_offset;
+ 		bp->b_flags |= XBF_MAPPED;
+ 	} else if (flags & XBF_MAPPED) {
+-		bp->b_addr = vmap(bp->b_pages, bp->b_page_count,
+-					VM_MAP, PAGE_KERNEL);
++		bp->b_addr = vm_map_ram(bp->b_pages, bp->b_page_count,
++					-1, PAGE_KERNEL);
+ 		if (unlikely(bp->b_addr == NULL))
+ 			return -ENOMEM;
+ 		bp->b_addr += bp->b_offset;
+
 
 _______________________________________________
 xfs mailing list
