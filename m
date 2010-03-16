@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o2G1EDmN105546 for <xfs@oss.sgi.com>; Mon, 15 Mar 2010 20:14:13 -0500
+	o2G1CVlI105399 for <xfs@oss.sgi.com>; Mon, 15 Mar 2010 20:12:31 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7EEB2142FE99
-	for <xfs@oss.sgi.com>; Mon, 15 Mar 2010 18:15:47 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	ifLj19GGuNHHJujP for <xfs@oss.sgi.com>;
-	Mon, 15 Mar 2010 18:15:47 -0700 (PDT)
-Date: Tue, 16 Mar 2010 12:15:45 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 314F624C945
+	for <xfs@oss.sgi.com>; Mon, 15 Mar 2010 18:14:05 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
+	[150.101.137.100]) by cuda.sgi.com with ESMTP id
+	ipFOEeNKEPHZBHjx for <xfs@oss.sgi.com>;
+	Mon, 15 Mar 2010 18:14:05 -0700 (PDT)
+Date: Tue, 16 Mar 2010 12:14:03 +1100
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [RFC] Delayed logging
-Message-ID: <20100316011545.GC12369@dastard>
+Message-ID: <20100316011403.GB12369@dastard>
 References: <20100315043000.GK4732@dastard>
-	<20100315163818.GA30402@infradead.org>
+	<20100315160801.GB10406@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100315163818.GA30402@infradead.org>
+In-Reply-To: <20100315160801.GB10406@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,22 +26,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-T24gTW9uLCBNYXIgMTUsIDIwMTAgYXQgMTI6Mzg6MThQTSAtMDQwMCwgQ2hyaXN0b3BoIEhlbGx3
-aWcgd3JvdGU6Cj4gTmV4dCB4ZnN0ZXN0cyBmYWlsdXJlIGluIDAxNCAobm90ZSB0aGF0IHRoaXMg
-aXMgYWxsIHdpdGhvdXQgZXZlbgo+IGVuYWJsaW5nIHRoZSBkZWxheWxvZyBtb3VudCBvcHRpb24p
-Ogo+IAo+IFsgIDM5Mi41NzYwMTNdIEFzc2VydGlvbiBmYWlsZWQ6IHhmc19hbGxvY19idXN5X3Nl
-YXJjaChtcCwgYnVzeXAtPmFnbm8sCj4gYnVzeXAtPmJubywgYnVzeXAtPmxlbmd0aCkgPT0gYnVz
-eXAsIGZpbGU6IGZzL3hmcy94ZnNfYWxsb2MuYywgbGluZToKPiAyNjUzCgpPaywgdGhhdCBpbXBs
-aWVzIGEgY29ycnVwdGVkIHJidHJlZS4gSSBkaWRuJ3QgYWN0dWFsbHkgcnVuIHhmc3FhIG9uCnRo
-xZNzZSBwYXRjaGVzIHdpdGhvdXQgdGhlICItbyBkZWxheWxvZyIgb3B0aW9uLCBzbyBJJ2xsIHNl
-ZSBpZiBJIGNhbgpyZXByb2R1Y2UgaXQgaGVyZS4KCkNoZWVycywKCkRhdmUuCi0tIApEYXZlIENo
-aW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDov
-L29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Mon, Mar 15, 2010 at 12:08:01PM -0400, Christoph Hellwig wrote:
+> Some comments on the patches:
+> 
+>  - "xfs: cluster fsync transaction" seems like something that can stand
+>    on it's own and go into the tree now.  Despite the comments it
+>    currently only clusters in fsync and not write_inode which might
+>    lead to higher benefits, btw.
+
+As I said, I'll have a bit more of a think about this one...
+
+>  - the busy extent tracking might be worth to be reordered before the
+>    delayed logging series.  In itself it might also want some reordering
+>    as there's a lot churn in the patches there.  Making
+>    "XFS: Simplify transaction busy extent tracking" first in that
+>    subseries might help quite a bit to reduce that churn
+
+Agreed. They were ordered this way because I only added the extent
+tracking after doing the delayed logging and tracking down one of
+the sources of log forces that was limiting performance was
+overflowing the per-ag busy extent array. I'll rework it....
+
+>  - The actual CIL implementation seems to be split into too small
+>    patches IMHO.  E.g. "xfs: extend the log item to support delayed
+>    logging" and "xfs: Introduce the Committed Item List" are two
+>    sides of the same coin and splitting it might not make too much
+>    sense.
+
+True, it might be a bit fine grained. Really, what I wanted to do is
+split the changes that affected the non-delayed logging from those
+that are only executed when delayed logging is active. That way I
+could confirm that the non-delayed path was still operating
+correctly before adding all the delayed logging code that used
+it. I can combine them together again if you want.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
