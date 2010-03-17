@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o2H2dYDo233176 for <xfs@oss.sgi.com>; Tue, 16 Mar 2010 21:39:34 -0500
-Date: Wed, 17 Mar 2010 13:41:01 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: Fix integer overflow in fs/xfs/linux-2.6/xfs_ioctl*.c
-Message-ID: <20100317024101.GH12369@dastard>
-References: <20100316155350.GB18579@localhost.localdomain>
+	o2H2xJiv234748 for <xfs@oss.sgi.com>; Tue, 16 Mar 2010 21:59:20 -0500
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100316155350.GB18579@localhost.localdomain>
+In-Reply-To: <20100317024101.GH12369@dastard>
+References: <20100316155350.GB18579@localhost.localdomain>
+	<20100317024101.GH12369@dastard>
+Date: Wed, 17 Mar 2010 11:00:54 +0800
+Message-ID: <628d1651003162000u537790b4k697a0112375649ef@mail.gmail.com>
+Subject: Re: [PATCH] xfs: Fix integer overflow in fs/xfs/linux-2.6/xfs_ioctl*.c
+From: wzt wzt <wzt.wzt@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,80 +18,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: wzt.wzt@gmail.com
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs-masters@oss.sgi.com, aelder@sgi.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Mar 16, 2010 at 11:53:50PM +0800, wzt.wzt@gmail.com wrote:
-> STATIC int
-> xfs_compat_attrmulti_by_handle(
->         struct file                             *parfilp,
->         void                                    __user *arg)
-> {
-> ...
->         if (copy_from_user(&am_hreq, arg,
->                            sizeof(compat_xfs_fsop_attrmulti_handlereq_t)))
->                 return -XFS_ERROR(EFAULT);
-> ...
->         error = E2BIG;
->         /* Not check the am_hreq.opcount max value from userspace, 
->         m_hreq.opcount * sizeof(compat_xfs_attr_multiop_t) can make
->         integer overflow, and the if condition can be bypass. Though,
->         it can not make security problem, but fix it maybe better. */
->         size = am_hreq.opcount * sizeof(compat_xfs_attr_multiop_t);
->         if (!size || size > 16 * PAGE_SIZE)
->                 goto out_dput;
-> ...
-> }
-
-This description could use a little work. ;)
-
-Perhaps something like:
-
-The am_hreq.opcount field in the xfs_attrmulti_by_handle() interface
-is not bounded correctly. The opcount is used to determine the size
-of the buffer required. The size is bounded, but can overflow and so
-the size checks may not be sufficient to catch invalid opcounts.
-Fix it by catching opcount values that would cause overflows before
-calculating the size.
-
-
-> 
-> Signed-off-by: Zhitong Wang <zhitong.wangzt@alibaba-inc.com>
-> 
-> ---
->  fs/xfs/linux-2.6/xfs_ioctl.c   |    4 ++++
->  fs/xfs/linux-2.6/xfs_ioctl32.c |    4 ++++
->  2 files changed, 8 insertions(+), 0 deletions(-)
-> 
-> diff --git a/fs/xfs/linux-2.6/xfs_ioctl.c b/fs/xfs/linux-2.6/xfs_ioctl.c
-> index 4ea1ee1..b05b3b7 100644
-> --- a/fs/xfs/linux-2.6/xfs_ioctl.c
-> +++ b/fs/xfs/linux-2.6/xfs_ioctl.c
-> @@ -526,6 +526,10 @@ xfs_attrmulti_by_handle(
->  	if (copy_from_user(&am_hreq, arg, sizeof(xfs_fsop_attrmulti_handlereq_t)))
->  		return -XFS_ERROR(EFAULT);
->  
-> +	/* overflow check */
-> +	if (am_hreq.opcount >= INT_MAX / sizeof(xfs_attr_multiop_t))
-> +		return -ENOMEM;
-> +
-
-The code currently return E2BIG for an opcount that is too large.
-I think this should also return E2BIG rather then ENOMEM. Does that
-seem reasonable?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+VGhhbmtzIGZvciB5b3VyIGhlbHAsIGknbGwgc2VuZCBhIG5ldyBwYXRjaCBzb29uLgoKT24gV2Vk
+LCBNYXIgMTcsIDIwMTAgYXQgMTA6NDEgQU0sIERhdmUgQ2hpbm5lciA8ZGF2aWRAZnJvbW9yYml0
+LmNvbT4gd3JvdGU6Cj4gT24gVHVlLCBNYXIgMTYsIDIwMTAgYXQgMTE6NTM6NTBQTSArMDgwMCwg
+d3p0Lnd6dEBnbWFpbC5jb20gd3JvdGU6Cj4+IFNUQVRJQyBpbnQKPj4geGZzX2NvbXBhdF9hdHRy
+bXVsdGlfYnlfaGFuZGxlKAo+PiDCoCDCoCDCoCDCoCBzdHJ1Y3QgZmlsZSDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAqcGFyZmlscCwKPj4gwqAgwqAgwqAgwqAgdm9p
+ZCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoF9f
+dXNlciAqYXJnKQo+PiB7Cj4+IC4uLgo+PiDCoCDCoCDCoCDCoCBpZiAoY29weV9mcm9tX3VzZXIo
+JmFtX2hyZXEsIGFyZywKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqBzaXplb2YoY29tcGF0X3hmc19mc29wX2F0dHJtdWx0aV9oYW5kbGVyZXFfdCkpKQo+PiDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCByZXR1cm4gLVhGU19FUlJPUihFRkFVTFQpOwo+PiAuLi4KPj4g
+wqAgwqAgwqAgwqAgZXJyb3IgPSBFMkJJRzsKPj4gwqAgwqAgwqAgwqAgLyogTm90IGNoZWNrIHRo
+ZSBhbV9ocmVxLm9wY291bnQgbWF4IHZhbHVlIGZyb20gdXNlcnNwYWNlLAo+PiDCoCDCoCDCoCDC
+oCBtX2hyZXEub3Bjb3VudCAqIHNpemVvZihjb21wYXRfeGZzX2F0dHJfbXVsdGlvcF90KSBjYW4g
+bWFrZQo+PiDCoCDCoCDCoCDCoCBpbnRlZ2VyIG92ZXJmbG93LCBhbmQgdGhlIGlmIGNvbmRpdGlv
+biBjYW4gYmUgYnlwYXNzLiBUaG91Z2gsCj4+IMKgIMKgIMKgIMKgIGl0IGNhbiBub3QgbWFrZSBz
+ZWN1cml0eSBwcm9ibGVtLCBidXQgZml4IGl0IG1heWJlIGJldHRlci4gKi8KPj4gwqAgwqAgwqAg
+wqAgc2l6ZSA9IGFtX2hyZXEub3Bjb3VudCAqIHNpemVvZihjb21wYXRfeGZzX2F0dHJfbXVsdGlv
+cF90KTsKPj4gwqAgwqAgwqAgwqAgaWYgKCFzaXplIHx8IHNpemUgPiAxNiAqIFBBR0VfU0laRSkK
+Pj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgZ290byBvdXRfZHB1dDsKPj4gLi4uCj4+IH0KPgo+
+IFRoaXMgZGVzY3JpcHRpb24gY291bGQgdXNlIGEgbGl0dGxlIHdvcmsuIDspCj4KPiBQZXJoYXBz
+IHNvbWV0aGluZyBsaWtlOgo+Cj4gVGhlIGFtX2hyZXEub3Bjb3VudCBmaWVsZCBpbiB0aGUgeGZz
+X2F0dHJtdWx0aV9ieV9oYW5kbGUoKSBpbnRlcmZhY2UKPiBpcyBub3QgYm91bmRlZCBjb3JyZWN0
+bHkuIFRoZSBvcGNvdW50IGlzIHVzZWQgdG8gZGV0ZXJtaW5lIHRoZSBzaXplCj4gb2YgdGhlIGJ1
+ZmZlciByZXF1aXJlZC4gVGhlIHNpemUgaXMgYm91bmRlZCwgYnV0IGNhbiBvdmVyZmxvdyBhbmQg
+c28KPiB0aGUgc2l6ZSBjaGVja3MgbWF5IG5vdCBiZSBzdWZmaWNpZW50IHRvIGNhdGNoIGludmFs
+aWQgb3Bjb3VudHMuCj4gRml4IGl0IGJ5IGNhdGNoaW5nIG9wY291bnQgdmFsdWVzIHRoYXQgd291
+bGQgY2F1c2Ugb3ZlcmZsb3dzIGJlZm9yZQo+IGNhbGN1bGF0aW5nIHRoZSBzaXplLgo+Cj4KPj4K
+Pj4gU2lnbmVkLW9mZi1ieTogWmhpdG9uZyBXYW5nIDx6aGl0b25nLndhbmd6dEBhbGliYWJhLWlu
+Yy5jb20+Cj4+Cj4+IC0tLQo+PiDCoGZzL3hmcy9saW51eC0yLjYveGZzX2lvY3RsLmMgwqAgfCDC
+oCDCoDQgKysrKwo+PiDCoGZzL3hmcy9saW51eC0yLjYveGZzX2lvY3RsMzIuYyB8IMKgIMKgNCAr
+KysrCj4+IMKgMiBmaWxlcyBjaGFuZ2VkLCA4IGluc2VydGlvbnMoKyksIDAgZGVsZXRpb25zKC0p
+Cj4+Cj4+IGRpZmYgLS1naXQgYS9mcy94ZnMvbGludXgtMi42L3hmc19pb2N0bC5jIGIvZnMveGZz
+L2xpbnV4LTIuNi94ZnNfaW9jdGwuYwo+PiBpbmRleCA0ZWExZWUxLi5iMDViM2I3IDEwMDY0NAo+
+PiAtLS0gYS9mcy94ZnMvbGludXgtMi42L3hmc19pb2N0bC5jCj4+ICsrKyBiL2ZzL3hmcy9saW51
+eC0yLjYveGZzX2lvY3RsLmMKPj4gQEAgLTUyNiw2ICs1MjYsMTAgQEAgeGZzX2F0dHJtdWx0aV9i
+eV9oYW5kbGUoCj4+IMKgIMKgIMKgIGlmIChjb3B5X2Zyb21fdXNlcigmYW1faHJlcSwgYXJnLCBz
+aXplb2YoeGZzX2Zzb3BfYXR0cm11bHRpX2hhbmRsZXJlcV90KSkpCj4+IMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIHJldHVybiAtWEZTX0VSUk9SKEVGQVVMVCk7Cj4+Cj4+ICsgwqAgwqAgLyogb3ZlcmZs
+b3cgY2hlY2sgKi8KPj4gKyDCoCDCoCBpZiAoYW1faHJlcS5vcGNvdW50ID49IElOVF9NQVggLyBz
+aXplb2YoeGZzX2F0dHJfbXVsdGlvcF90KSkKPj4gKyDCoCDCoCDCoCDCoCDCoCDCoCByZXR1cm4g
+LUVOT01FTTsKPj4gKwo+Cj4gVGhlIGNvZGUgY3VycmVudGx5IHJldHVybiBFMkJJRyBmb3IgYW4g
+b3Bjb3VudCB0aGF0IGlzIHRvbyBsYXJnZS4KPiBJIHRoaW5rIHRoaXMgc2hvdWxkIGFsc28gcmV0
+dXJuIEUyQklHIHJhdGhlciB0aGVuIEVOT01FTS4gRG9lcyB0aGF0Cj4gc2VlbSByZWFzb25hYmxl
+Pwo+Cj4gQ2hlZXJzLAo+Cj4gRGF2ZS4KPiAtLQo+IERhdmUgQ2hpbm5lcgo+IGRhdmlkQGZyb21v
+cmJpdC5jb20KPgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21h
+aWxtYW4vbGlzdGluZm8veGZzCg==
