@@ -1,28 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o2II8oVb158102 for <xfs@oss.sgi.com>; Thu, 18 Mar 2010 13:08:57 -0500
-Received: from mail.phy.duke.edu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DE5F325E829
-	for <xfs@oss.sgi.com>; Thu, 18 Mar 2010 11:10:20 -0700 (PDT)
-Received: from mail.phy.duke.edu (mail.phy.duke.edu [152.3.182.2]) by
-	cuda.sgi.com with ESMTP id z86BQ0GxniWQvihC for
-	<xfs@oss.sgi.com>; Thu, 18 Mar 2010 11:10:20 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-	by mail.phy.duke.edu (Postfix) with ESMTP id 977B8780B6
-	for <xfs@oss.sgi.com>; Thu, 18 Mar 2010 14:10:00 -0400 (EDT)
-Received: from mail.phy.duke.edu ([127.0.0.1])
-	by localhost (mail.phy.duke.edu [127.0.0.1]) (amavisd-new, port 10026)
-	with LMTP id Mdvzg6uefCpu for <xfs@oss.sgi.com>;
-	Thu, 18 Mar 2010 14:10:00 -0400 (EDT)
-Received: from [152.3.182.165] (grads-74.phy.duke.edu [152.3.182.165])
-	by mail.phy.duke.edu (Postfix) with ESMTP id 7ACEE780B5
-	for <xfs@oss.sgi.com>; Thu, 18 Mar 2010 14:10:00 -0400 (EDT)
-Subject: xfsrestore very slow
-From: Jimmy Dorff <jdorff@phy.duke.edu>
-Date: Thu, 18 Mar 2010 14:10:20 -0400
-Message-ID: <1268935820.3074.16.camel@grads-74.phy.duke.edu>
-Mime-Version: 1.0
+	o2IMqXJA198442 for <xfs@oss.sgi.com>; Thu, 18 Mar 2010 17:52:33 -0500
+Received: from stout.americas.sgi.com (stout.americas.sgi.com [128.162.232.50])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 145B5304071
+	for <xfs@oss.sgi.com>; Thu, 18 Mar 2010 15:54:12 -0700 (PDT)
+Received: from stout.americas.sgi.com (localhost6.localdomain6 [127.0.0.1])
+	by stout.americas.sgi.com (8.14.3/8.14.2) with ESMTP id o2IMsBuO001889
+	for <xfs@oss.sgi.com>; Thu, 18 Mar 2010 17:54:11 -0500
+Received: (from aelder@localhost)
+	by stout.americas.sgi.com (8.14.3/8.14.3/Submit) id o2IMsBck001887
+	for xfs@oss.sgi.com; Thu, 18 Mar 2010 17:54:11 -0500
+From: Alex Elder <aelder@sgi.com>
+Message-Id: <201003182254.o2IMsBck001887@stout.americas.sgi.com>
+Date: Thu, 18 Mar 2010 17:54:11 -0500
+Subject: [PATCH 6/7] xfs: nothing special about 1-block log sector
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,32 +30,91 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi Folks,
+There are a number of places where a log sector size of 1 uses
+special case code.  The round_up() and round_down() macros
+produce the correct result even when the log sector size is 1, and
+this eliminates the need for treating this as a special case.
 
-I have a xfsdump on a hard drive. I would like to restore some files
-from the dump, but it seems to take a very long time to get past the
-"xfsrestore: reading directories" step.
+Signed-off-by: Alex Elder <aelder@sgi.com>
 
-I'm currently running:
-xfsrestore -i -p 15 -J -f /mnt/external/xfsdumpfile /home/restore/
-...
-xfsrestore: session time: Mon Feb 22 07:24:37 2010
-xfsrestore: level: 0
-xfsrestore: session label: "FEB222010"
-xfsrestore: media label: "TAPE1"
-xfsrestore: file system id: 7f1772b4-b84f-4dda-9aaa-50171958e3be
-xfsrestore: session id: 2e475d74-ea50-415b-8ac4-0d1aa1755a08
-xfsrestore: media id: 30f4a884-0986-4720-b1cc-5f4b9429ec09
-xfsrestore: searching media for directory dump
-xfsrestore: reading directories
-xfsrestore: status at 13:38:19: 24390/137035 directories reconstructed,
-17.8% complete, 250561 directory entries processed, 7348 seconds elapsed
+---
+ fs/xfs/xfs_log_recover.c |   42 +++++++++++++++++++++++++++++-------------
+ 1 file changed, 29 insertions(+), 13 deletions(-)
 
-The dump file isn't that big (132G) and didn't take this long to create.
-Is this normal or is something wrong ?
-
-Thanks,
-Jimmy
+Index: b/fs/xfs/xfs_log_recover.c
+===================================================================
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -89,6 +89,11 @@ _xlog_buf_bbcount_valid(
+ 	return 0;	/* Basic block count out of log's range */
+ }
+ 
++/*
++ * Allocate a buffer to hold log data.  The buffer needs to be able
++ * to map to a range of nbblks basic blocks at any valid (basic
++ * block) offset within the log.
++ */
+ STATIC xfs_buf_t *
+ xlog_get_bp(
+ 	xlog_t		*log,
+@@ -97,11 +102,26 @@ xlog_get_bp(
+ 	if (!xlog_buf_bbcount_valid(log, nbblks))
+ 		return NULL;
+ 
+-	if (log->l_sectbb_log) {
+-		if (nbblks > 1)
+-			nbblks += xlog_sectbb(log);
+-		nbblks = round_up(nbblks, xlog_sectbb(log));
+-	}
++	/*
++	 * We do log I/O in units of log sectors (a power-of-2
++	 * multiple of the basic block size), so we round up the
++	 * requested size to acommodate the basic blocks required
++	 * for complete log sectors.
++	 *
++	 * In addition, the buffer may be used for a non-sector-
++	 * aligned block offset, in which case an I/O of the
++	 * requested size could extend beyond the end of the
++	 * buffer.  If the requested size is only 1 basic block it
++	 * will never straddle a sector boundary, so this won't be
++	 * an issue.  Nor will this be a problem if the log I/O is
++	 * done in basic blocks (sector size 1).  But otherwise we
++	 * extend the buffer by one extra log sector to ensure
++	 * there's space to accomodate this possiblility.
++	 */
++	if (nbblks > 1 && log->l_sectbb_log)
++		nbblks += xlog_sectbb(log);
++	nbblks = round_up(nbblks, xlog_sectbb(log));
++
+ 	return xfs_buf_get_noaddr(BBTOB(nbblks), log->l_mp->m_logdev_targp);
+ }
+ 
+@@ -146,10 +166,8 @@ xlog_bread_noalign(
+ 	if (!xlog_buf_bbcount_valid(log, nbblks))
+ 		return EFSCORRUPTED;
+ 
+-	if (log->l_sectbb_log) {
+-		blk_no = round_down(blk_no, xlog_sectbb(log));
+-		nbblks = round_up(nbblks, xlog_sectbb(log));
+-	}
++	blk_no = round_down(blk_no, xlog_sectbb(log));
++	nbblks = round_up(nbblks, xlog_sectbb(log));
+ 
+ 	ASSERT(nbblks > 0);
+ 	ASSERT(BBTOB(nbblks) <= XFS_BUF_SIZE(bp));
+@@ -204,10 +222,8 @@ xlog_bwrite(
+ 	if (!xlog_buf_bbcount_valid(log, nbblks))
+ 		return EFSCORRUPTED;
+ 
+-	if (log->l_sectbb_log) {
+-		blk_no = round_down(blk_no, xlog_sectbb(log));
+-		nbblks = round_up(nbblks, xlog_sectbb(log));
+-	}
++	blk_no = round_down(blk_no, xlog_sectbb(log));
++	nbblks = round_up(nbblks, xlog_sectbb(log));
+ 
+ 	ASSERT(nbblks > 0);
+ 	ASSERT(BBTOB(nbblks) <= XFS_BUF_SIZE(bp));
 
 _______________________________________________
 xfs mailing list
