@@ -1,20 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o2IMqBWh198023 for <xfs@oss.sgi.com>; Thu, 18 Mar 2010 17:52:11 -0500
-Received: from stout.americas.sgi.com (stout.americas.sgi.com [128.162.232.50])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0781D8F808E
-	for <xfs@oss.sgi.com>; Thu, 18 Mar 2010 15:53:46 -0700 (PDT)
-Received: from stout.americas.sgi.com (localhost6.localdomain6 [127.0.0.1])
-	by stout.americas.sgi.com (8.14.3/8.14.2) with ESMTP id o2IMrkUZ001845
-	for <xfs@oss.sgi.com>; Thu, 18 Mar 2010 17:53:46 -0500
-Received: (from aelder@localhost)
-	by stout.americas.sgi.com (8.14.3/8.14.3/Submit) id o2IMrkx6001843
-	for xfs@oss.sgi.com; Thu, 18 Mar 2010 17:53:46 -0500
-From: Alex Elder <aelder@sgi.com>
-Message-Id: <201003182253.o2IMrkx6001843@stout.americas.sgi.com>
-Date: Thu, 18 Mar 2010 17:53:46 -0500
-Subject: [PATCH 1/7] xfs: add const qualifiers to xfs error function args
+	o2JHJ9MK212457 for <xfs@oss.sgi.com>; Fri, 19 Mar 2010 12:19:09 -0500
+Received: from mailout3.echostar.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CE92D2623A2
+	for <xfs@oss.sgi.com>; Fri, 19 Mar 2010 10:20:47 -0700 (PDT)
+Received: from mailout3.echostar.com (mailout3.echostar.com [204.76.128.104])
+	by cuda.sgi.com with ESMTP id aSCiOJfvsKGlei0J for
+	<xfs@oss.sgi.com>; Fri, 19 Mar 2010 10:20:47 -0700 (PDT)
+From: "Agarwal, Amit" <Amit.Agarwal@echostar.com>
+Date: Fri, 19 Mar 2010 11:20:39 -0600
+Subject: xfs_repair deletes file
+Message-ID: <FF09DFEC8ECE664A856A5010EAF760BD0AF56074B4@ECHOEXCC1.SATS.CORP>
+Content-Language: en-US
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -28,92 +26,66 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Change the tag and file name arguments to xfs_error_report() and
-xfs_corruption_error() to use a const qualifier.
+Hi 
 
-Signed-off-by: Alex Elder <aelder@sgi.com>
+I need some help related to xfs repair. 
 
----
- fs/xfs/xfs_error.c |   30 +++++++++++++++---------------
- fs/xfs/xfs_error.h |    9 +++++----
- 2 files changed, 20 insertions(+), 19 deletions(-)
+xfs_repair is deleting files which are more than ~10G from the real time partition.  This is happening quite frequently.
 
-Index: b/fs/xfs/xfs_error.c
-===================================================================
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -186,18 +186,18 @@ xfs_cmn_err(int panic_tag, int level, xf
- 
- void
- xfs_error_report(
--	char		*tag,
--	int		level,
--	xfs_mount_t	*mp,
--	char		*fname,
--	int		linenum,
--	inst_t		*ra)
-+	const char		*tag,
-+	int			level,
-+	struct xfs_mount	*mp,
-+	const char		*filename,
-+	int			linenum,
-+	inst_t			*ra)
- {
- 	if (level <= xfs_error_level) {
- 		xfs_cmn_err(XFS_PTAG_ERROR_REPORT,
- 			    CE_ALERT, mp,
- 		"XFS internal error %s at line %d of file %s.  Caller 0x%p\n",
--			    tag, linenum, fname, ra);
-+			    tag, linenum, filename, ra);
- 
- 		xfs_stack_trace();
- 	}
-@@ -205,15 +205,15 @@ xfs_error_report(
- 
- void
- xfs_corruption_error(
--	char		*tag,
--	int		level,
--	xfs_mount_t	*mp,
--	void		*p,
--	char		*fname,
--	int		linenum,
--	inst_t		*ra)
-+	const char		*tag,
-+	int			level,
-+	struct xfs_mount	*mp,
-+	void			*p,
-+	const char		*filename,
-+	int			linenum,
-+	inst_t			*ra)
- {
- 	if (level <= xfs_error_level)
- 		xfs_hex_dump(p, 16);
--	xfs_error_report(tag, level, mp, fname, linenum, ra);
-+	xfs_error_report(tag, level, mp, filename, linenum, ra);
- }
-Index: b/fs/xfs/xfs_error.h
-===================================================================
---- a/fs/xfs/xfs_error.h
-+++ b/fs/xfs/xfs_error.h
-@@ -29,10 +29,11 @@ extern int	xfs_error_trap(int);
- 
- struct xfs_mount;
- 
--extern void xfs_error_report(char *tag, int level, struct xfs_mount *mp,
--				char *fname, int linenum, inst_t *ra);
--extern void xfs_corruption_error(char *tag, int level, struct xfs_mount *mp,
--				void *p, char *fname, int linenum, inst_t *ra);
-+extern void xfs_error_report(const char *tag, int level, struct xfs_mount *mp,
-+			const char *filename, int linenum, inst_t *ra);
-+extern void xfs_corruption_error(const char *tag, int level,
-+			struct xfs_mount *mp, void *p, const char *filename,
-+			int linenum, inst_t *ra);
- 
- #define	XFS_ERROR_REPORT(e, lvl, mp)	\
- 	xfs_error_report(e, lvl, mp, __FILE__, __LINE__, __return_address)
+xfs_repair version 3.0.0
+Linux ->  2.6.18.8
+
+Following is the output of xfs_repair
+
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+        - zero log...
+        - scan filesystem freespace and inode maps...
+        - found root inode chunk
+Phase 3 - for each AG...
+        - scan and clear agi unlinked lists...
+        - process known inodes and perform inode discovery...
+        - agno = 0
+        - agno = 1
+data fork in rt inode 16779171 claims used rt block 16538
+bad data fork in inode 16779171
+cleared inode 16779171
+data fork in rt inode 16779185 claims used rt block 24441
+bad data fork in inode 16779185
+cleared inode 16779185
+        - agno = 2
+        - agno = 3
+        - process newly discovered inodes...
+Phase 4 - check for duplicate blocks...
+        - setting up duplicate extent list...
+        - check for inodes claiming duplicate blocks...
+        - agno = 0
+        - agno = 1
+entry "es33554469.tsp" at block 0 offset 4040 in directory inode 16777344 references free inode 16779171
+        clearing inode number in entry at offset 4040...
+entry "es33554472.tsp" at block 1 offset 432 in directory inode 16777344 references free inode 16779185
+        clearing inode number in entry at offset 432...
+        - agno = 2
+        - agno = 3
+Phase 5 - rebuild AG headers and trees...
+        - generate realtime summary info and bitmap...
+        - reset superblock...
+Phase 6 - check inode connectivity...
+        - resetting contents of realtime bitmap and summary inodes
+        - traversing filesystem ...
+bad hash table for directory inode 16777344 (no data entry): rebuilding
+rebuilding directory inode 16777344
+        - traversal finished ...
+        - moving disconnected inodes to lost+found ...
+Phase 7 - verify and correct link counts...
+done
+
+Thanks for your time
+
+Amit Agarwal
+
 
 _______________________________________________
 xfs mailing list
