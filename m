@@ -1,18 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o2LE7C4X151751 for <xfs@oss.sgi.com>; Sun, 21 Mar 2010 09:07:12 -0500
-Received: from smtp.plastictree.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 75DA1265301
-	for <xfs@oss.sgi.com>; Sun, 21 Mar 2010 07:08:50 -0700 (PDT)
-Received: from smtp.plastictree.net (h1283867.stratoserver.net [85.214.127.6])
-	by cuda.sgi.com with ESMTP id 0EylxrYCIUVMwJz9 for
-	<xfs@oss.sgi.com>; Sun, 21 Mar 2010 07:08:50 -0700 (PDT)
-Date: Sun, 21 Mar 2010 15:13:50 +0100
-From: Lasse Kliemann <lasse-private-2010@mail.plastictree.net>
-Subject: builddefs.in
-Message-ID: <20100321141349.GE1827@lasse.mail.plastictre.net>
+	o2MFVlBW016554 for <xfs@oss.sgi.com>; Mon, 22 Mar 2010 10:31:50 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0EBBC1451988
+	for <xfs@oss.sgi.com>; Mon, 22 Mar 2010 08:33:27 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id PRqZydxPltASMKeC for
+	<xfs@oss.sgi.com>; Mon, 22 Mar 2010 08:33:27 -0700 (PDT)
+Date: Mon, 22 Mar 2010 11:33:25 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: builddefs.in
+Message-ID: <20100322153325.GA29823@infradead.org>
+References: <20100321141349.GE1827@lasse.mail.plastictre.net>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20100321141349.GE1827@lasse.mail.plastictre.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,105 +24,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6338297734058103298=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Lasse Kliemann <lasse-private-2010@mail.plastictree.net>
+Cc: xfs@oss.sgi.com
 
+On Sun, Mar 21, 2010 at 03:13:50PM +0100, Lasse Kliemann wrote:
+> Using 3.1.1.
+> 
+> When configured with a '--prefix', the build fails:
+> 
+> [...]
+>     [CC]     linux.lo
+>     [LD]     libxfs.la
+> libtool: link: only absolute run-paths are allowed
+> gmake[2]: *** [libxfs.la] Error 1
+> gmake[1]: *** [libxfs] Error 2
+> make: *** [default] Error 2
+> 
+> Calling 'make' in 'libxfs' reveals that '-rpath' option is used 
+> with no argument. The attached patch remedies this. Indeed, with 
+> this patch the correct argument is given to '-rpath', at least in 
+> 'libxfs' subdirectory. 
+> 
+> It also remedies a similar problem when installing executables 
+> into '.../sbin' directory.
 
---===============6338297734058103298==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="NOl3kBTBh+CNLogO"
-Content-Disposition: inline
+> diff --git a/include/builddefs.in b/include/builddefs.in
+> index cc75b5d..801b09e 100644
+> --- a/include/builddefs.in
+> +++ b/include/builddefs.in
+> @@ -52,8 +52,8 @@ datarootdir	= @datarootdir@
+>  top_builddir	= @top_builddir@
+>  
+>  PKG_SBIN_DIR	= @sbindir@
+> -PKG_ROOT_SBIN_DIR = @root_sbindir@
+> -PKG_ROOT_LIB_DIR= @root_libdir@@libdirsuffix@
+> +PKG_ROOT_SBIN_DIR = @sbindir@
+> +PKG_ROOT_LIB_DIR= @libdir@@libdirsuffix@
 
-
---NOl3kBTBh+CNLogO
-Content-Type: multipart/mixed; boundary="yEbVe0JFHWhrOjGA"
-Content-Disposition: inline
-
-
---yEbVe0JFHWhrOjGA
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-Using 3.1.1.
-
-When configured with a '--prefix', the build fails:
-
-[...]
-    [CC]     linux.lo
-    [LD]     libxfs.la
-libtool: link: only absolute run-paths are allowed
-gmake[2]: *** [libxfs.la] Error 1
-gmake[1]: *** [libxfs] Error 2
-make: *** [default] Error 2
-
-Calling 'make' in 'libxfs' reveals that '-rpath' option is used=20
-with no argument. The attached patch remedies this. Indeed, with=20
-this patch the correct argument is given to '-rpath', at least in=20
-'libxfs' subdirectory.=20
-
-It also remedies a similar problem when installing executables=20
-into '.../sbin' directory.
-
---yEbVe0JFHWhrOjGA
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="builddefs.in-patch"
-Content-Transfer-Encoding: quoted-printable
-
-diff --git a/include/builddefs.in b/include/builddefs.in
-index cc75b5d..801b09e 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -52,8 +52,8 @@ datarootdir	=3D @datarootdir@
- top_builddir	=3D @top_builddir@
-=20
- PKG_SBIN_DIR	=3D @sbindir@
--PKG_ROOT_SBIN_DIR =3D @root_sbindir@
--PKG_ROOT_LIB_DIR=3D @root_libdir@@libdirsuffix@
-+PKG_ROOT_SBIN_DIR =3D @sbindir@
-+PKG_ROOT_LIB_DIR=3D @libdir@@libdirsuffix@
- PKG_LIB_DIR	=3D @libdir@@libdirsuffix@
- PKG_INC_DIR	=3D @includedir@/xfs
- DK_INC_DIR	=3D @includedir@/disk
-
---yEbVe0JFHWhrOjGA--
-
---NOl3kBTBh+CNLogO
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iQIcBAEBAgAGBQJLpimdAAoJEFYll6N4nhdvNlcP/28cecgsrGhmvCXSihc9P1L3
-todqTUL6XTyI1DUrubpm6vqsI0G0jdoaZW9Arsk8ryXbNrPHkomjQ7CPDrwjLzc7
-da4culR2yLgfl/zVkEg974vMdtMg8pMJCKP83j2Q2XuzNmhVrfkJ5o8K2X+sYgX6
-T3rIjIPhMivxDSefpOeUtKSpLivhqPKPYGoPEv4cvF2dvdx8mwKL4XWvCrVlAECX
-VMhPT4iw4zdnN5YqWqvEgLtw9DKZqs3h1K4XcAb1/smmurb6jLWfSLpbgwg3Loy6
-JZNXwxXvhAnz58iarLxblE14kTunU/vgTTWEmBlX2KrRsyF/7FSirfcxJwtvywnz
-vTzNnAygRJAWN2skYcMFQOv0DkiIdzkANTcARKS+fFC3lfMMsPKqLejku9/baLqk
-UxZjWR3zuxKD1/8RQIrNrJMd6k5LYulcAJTK/jVgPxhFsTEoleeUa18vlF3eaISE
-EuUJ/aZK7zSuF2w31tOi5dIlv4K6VwcM8Sy4yt2PFKvKaND1v4lccFZdfSJsDLwg
-AaO5GvoT55Y2L8kgOyZ3pegMkIc1vd+40f/n6IXXniPb/ES/DRe8bjFnn/4wxA7H
-sBmO5d3U9WMYZJlJAwhUYf/PeXZJxFXPW+gAp+vZCD4ta1RptWTMLazz93N92t9A
-D6uZO9aEwmV0zEYfqs7s
-=sKLD
------END PGP SIGNATURE-----
-
---NOl3kBTBh+CNLogO--
-
-
---===============6338297734058103298==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+This is against the intent of the whole ROOT_LIB/SBIN_DIR
+mechnism as it makes them equivalent to the normal ones.
+It seems we have some problem generatin the correct @root_sbindir@ /
+@root_libdir@ paths in the autoconf macros for your use case, I'll
+look into that once I get a bit of time.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6338297734058103298==--
