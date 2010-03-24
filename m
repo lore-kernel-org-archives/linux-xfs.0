@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o2OFhdZB003782 for <xfs@oss.sgi.com>; Wed, 24 Mar 2010 10:43:41 -0500
+	o2OFiQpK003893 for <xfs@oss.sgi.com>; Wed, 24 Mar 2010 10:44:26 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 66F511A3D3F0
-	for <xfs@oss.sgi.com>; Wed, 24 Mar 2010 08:45:21 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5DD082723A9
+	for <xfs@oss.sgi.com>; Wed, 24 Mar 2010 08:46:08 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id PzqusX79YFMpaZvz for
-	<xfs@oss.sgi.com>; Wed, 24 Mar 2010 08:45:21 -0700 (PDT)
-Date: Wed, 24 Mar 2010 11:45:20 -0400
+	by cuda.sgi.com with ESMTP id KuApblEnIP71nFoL for
+	<xfs@oss.sgi.com>; Wed, 24 Mar 2010 08:46:08 -0700 (PDT)
+Date: Wed, 24 Mar 2010 11:46:08 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests: filter 203 mount point
-Message-ID: <20100324154520.GA9168@infradead.org>
-References: <4BA98694.2070506@sandeen.net>
+Subject: Re: [PATCH] xfstests: use $TEST_DIR in 225
+Message-ID: <20100324154608.GC9168@infradead.org>
+References: <4BA9883F.9010101@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4BA98694.2070506@sandeen.net>
+In-Reply-To: <4BA9883F.9010101@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,15 +31,14 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Mar 23, 2010 at 10:27:16PM -0500, Eric Sandeen wrote:
-> Right now this only works if TEST_DIR == /mnt/test
+On Tue, Mar 23, 2010 at 10:34:23PM -0500, Eric Sandeen wrote:
+> Oops, another hard-coded /mnt/test
+> 
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
 Looks good,
 
-
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-btw, this was missing a signoff.
 
 _______________________________________________
 xfs mailing list
