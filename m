@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o2MFVlBW016554 for <xfs@oss.sgi.com>; Mon, 22 Mar 2010 10:31:50 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0EBBC1451988
-	for <xfs@oss.sgi.com>; Mon, 22 Mar 2010 08:33:27 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id PRqZydxPltASMKeC for
-	<xfs@oss.sgi.com>; Mon, 22 Mar 2010 08:33:27 -0700 (PDT)
-Date: Mon, 22 Mar 2010 11:33:25 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: builddefs.in
-Message-ID: <20100322153325.GA29823@infradead.org>
-References: <20100321141349.GE1827@lasse.mail.plastictre.net>
+	o2O3W9EJ184468 for <xfs@oss.sgi.com>; Tue, 23 Mar 2010 22:32:10 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3810C26FB36
+	for <xfs@oss.sgi.com>; Tue, 23 Mar 2010 20:28:50 -0700 (PDT)
+Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
+	by cuda.sgi.com with ESMTP id LTHDys79EcgRP2oI for
+	<xfs@oss.sgi.com>; Tue, 23 Mar 2010 20:28:50 -0700 (PDT)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail.sandeen.net (Postfix) with ESMTP id 1ACC99E847E
+	for <xfs@oss.sgi.com>; Tue, 23 Mar 2010 22:28:50 -0500 (CDT)
+Message-ID: <4BA986F1.4080407@sandeen.net>
+Date: Tue, 23 Mar 2010 22:28:49 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100321141349.GE1827@lasse.mail.plastictre.net>
+Subject: [PATCH] xfstests: drop readlink of test devices
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,48 +30,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Lasse Kliemann <lasse-private-2010@mail.plastictree.net>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Sun, Mar 21, 2010 at 03:13:50PM +0100, Lasse Kliemann wrote:
-> Using 3.1.1.
-> 
-> When configured with a '--prefix', the build fails:
-> 
-> [...]
->     [CC]     linux.lo
->     [LD]     libxfs.la
-> libtool: link: only absolute run-paths are allowed
-> gmake[2]: *** [libxfs.la] Error 1
-> gmake[1]: *** [libxfs] Error 2
-> make: *** [default] Error 2
-> 
-> Calling 'make' in 'libxfs' reveals that '-rpath' option is used 
-> with no argument. The attached patch remedies this. Indeed, with 
-> this patch the correct argument is given to '-rpath', at least in 
-> 'libxfs' subdirectory. 
-> 
-> It also remedies a similar problem when installing executables 
-> into '.../sbin' directory.
+Comments say it's for devfs; it's actually breaking lvm devices, now.
+I think we can just drop it.
 
-> diff --git a/include/builddefs.in b/include/builddefs.in
-> index cc75b5d..801b09e 100644
-> --- a/include/builddefs.in
-> +++ b/include/builddefs.in
-> @@ -52,8 +52,8 @@ datarootdir	= @datarootdir@
->  top_builddir	= @top_builddir@
->  
->  PKG_SBIN_DIR	= @sbindir@
-> -PKG_ROOT_SBIN_DIR = @root_sbindir@
-> -PKG_ROOT_LIB_DIR= @root_libdir@@libdirsuffix@
-> +PKG_ROOT_SBIN_DIR = @sbindir@
-> +PKG_ROOT_LIB_DIR= @libdir@@libdirsuffix@
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
 
-This is against the intent of the whole ROOT_LIB/SBIN_DIR
-mechnism as it makes them equivalent to the normal ones.
-It seems we have some problem generatin the correct @root_sbindir@ /
-@root_libdir@ paths in the autoconf macros for your use case, I'll
-look into that once I get a bit of time.
+diff --git a/common.config b/common.config
+index 26906aa..926846b 100644
+--- a/common.config
++++ b/common.config
+@@ -230,30 +230,5 @@ if [ ! -z "$SCRATCH_MNT" -a ! -d "$SCRATCH_MNT" ]; then
+     exit 1
+ fi
+ 
+-_readlink()
+-{
+-    if [ $# -ne 1 ]; then
+-        echo "Usage: _readlink filename" 1>&2
+-        exit 1
+-    fi
+-
+-    perl -e "\$in=\"$1\";" -e '
+-    $lnk = readlink($in);
+-    if ($lnk =~ m!^/.*!) {
+-        print "$lnk\n";
+-    }
+-    else {
+-        chomp($dir = `dirname $in`);
+-        print "$dir/$lnk\n";
+-    }'
+-}
+-
+-# if devfs is running expand the full /dev/.. pathname - this is what will be
+-# returned by utilities such as mount
+-[ -L "$TEST_DEV" ] && TEST_DEV=`_readlink $TEST_DEV`
+-[ -L "$SCRATCH_DEV" ] && SCRATCH_DEV=`_readlink $SCRATCH_DEV`
+-[ -L "$SCRATCH_LOGDEV" ] && SCRATCH_LOGDEV=`_readlink $SCRATCH_LOGDEV`
+-[ -L "$SCRATCH_RTDEV" ] && SCRATCH_RTDEV=`_readlink $SCRATCH_LOGDEV`
+-
+ # make sure this script returns success
+ /bin/true
 
 _______________________________________________
 xfs mailing list
