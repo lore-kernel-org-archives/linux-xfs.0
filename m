@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o2OG7K1n006081 for <xfs@oss.sgi.com>; Wed, 24 Mar 2010 11:07:20 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 50CBF145E8BB
-	for <xfs@oss.sgi.com>; Wed, 24 Mar 2010 09:09:01 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 0ei5o8VyEdzzbOwG for
-	<xfs@oss.sgi.com>; Wed, 24 Mar 2010 09:09:01 -0700 (PDT)
-Message-ID: <4BAA3916.5060604@sandeen.net>
-Date: Wed, 24 Mar 2010 11:08:54 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	o2OLpkCr036218 for <xfs@oss.sgi.com>; Wed, 24 Mar 2010 16:51:47 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2E5252741BF
+	for <xfs@oss.sgi.com>; Wed, 24 Mar 2010 14:53:26 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	L2NVAFHRuKPpyAb6 for <xfs@oss.sgi.com>;
+	Wed, 24 Mar 2010 14:53:26 -0700 (PDT)
+Date: Thu, 25 Mar 2010 08:53:24 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs: add fs name to kthreads
+Message-ID: <20100324215324.GB7671@dastard>
+References: <alpine.LSU.2.01.1003062033100.16438@obet.zrqbmnf.qr>
+	<20100308012824.GH28189@discord.disaster>
+	<alpine.LSU.2.01.1003181510240.30506@obet.zrqbmnf.qr>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: filter 203 mount point
-References: <4BA98694.2070506@sandeen.net>
-	<20100324154520.GA9168@infradead.org>
-In-Reply-To: <20100324154520.GA9168@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.LSU.2.01.1003181510240.30506@obet.zrqbmnf.qr>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,25 +31,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Jan Engelhardt <jengelh@medozas.de>
+Cc: xfs@oss.sgi.com
 
-On 03/24/2010 10:45 AM, Christoph Hellwig wrote:
-> On Tue, Mar 23, 2010 at 10:27:16PM -0500, Eric Sandeen wrote:
->> Right now this only works if TEST_DIR == /mnt/test
+On Thu, Mar 18, 2010 at 03:13:10PM +0100, Jan Engelhardt wrote:
 > 
-> Looks good,
+> On Monday 2010-03-08 02:28, Dave Chinner wrote:
+> >
+> >Looks ok, but a couple of things. First, it would be good if you
+> >supplied a reason/justification for the patch so the commit message
+> >will tell us why this change was made.
+> >
+> >Please keep the same indent style as the rest of the functions. i.e
 > 
+> >>  xfsaild_start(
+> >> -	struct xfs_ail	*ailp)
+> >> +	struct xfs_ail	*ailp,
+> >> +	const char *fsname)
+> >>  {
+> >>  	ailp->xa_target = 0;
+> >> -	ailp->xa_task = kthread_run(xfsaild, ailp, "xfsaild");
+> >> +	ailp->xa_task = kthread_run(xfsaild, ailp, "xfsaild/%s", fsname);
+> >
+> >No need to pass the name into this function. It can be retrieved
+> >from ailp->xa_mount->m_fsname.
 > 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> I think I've got that now.
 > 
-> btw, this was missing a signoff.
-> 
+> N.B.: The xfslogd/N threads are obvious (percpu workqueue, or
+> whatever the tech is currently called), but at one time in the
+> past it struck me that I had lots of xfsbufd/aild/syncd without
+> the /n suffix.
 
-yep was too late last night ;)  will add it.
+Looks good now, I'll queue it up with all the other pending changes
+I have.
 
-Thanks,
--Eric
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
