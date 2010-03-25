@@ -1,29 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o2P56EwE075556 for <xfs@oss.sgi.com>; Thu, 25 Mar 2010 00:06:15 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7E57E26FC46
-	for <xfs@oss.sgi.com>; Wed, 24 Mar 2010 22:07:55 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	dpLSUiETrowpqKn8 for <xfs@oss.sgi.com>;
-	Wed, 24 Mar 2010 22:07:55 -0700 (PDT)
-Received: from dastard (unverified [121.44.103.80])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	18273552-1927428
-	for <xfs@oss.sgi.com>; Thu, 25 Mar 2010 15:37:53 +1030 (CDT)
-Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1NufIO-0002dw-B1
-	for xfs@oss.sgi.com; Thu, 25 Mar 2010 16:07:52 +1100
-Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1NufIN-0002tA-V6
-	for xfs@oss.sgi.com; Thu, 25 Mar 2010 16:07:51 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: Always update the log tail on disk in sync
-Date: Thu, 25 Mar 2010 16:07:51 +1100
-Message-Id: <1269493671-11034-1-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
+	o2PEM1AX130346 for <xfs@oss.sgi.com>; Thu, 25 Mar 2010 09:22:02 -0500
+Subject: Re: [PATCH 2/7] xfs: fix min bufsize bugs in two places
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20100320164249.GB31444@infradead.org>
+References: <201003182253.o2IMrp54001850@stout.americas.sgi.com>
+	<20100320164249.GB31444@infradead.org>
+Date: Thu, 25 Mar 2010 09:23:34 -0500
+Message-ID: <1269527014.2523.5.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,86 +19,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKVXBkYXRlcyB0byB0aGUg
-VkZTIGxheWVyIHJlbW92ZWQgYW4gZXh0cmEgLT5zeW5jX2ZzIGNhbGwgaW50byB0aGUKZmlsZXN5
-c3RlbSBkdXJpbmcgdGhlIHN5bmMgcHJvY2VzcyAoZnJvbSB0aGUgcXVvdGEgY29kZSkuClVuZm9y
-dHVuYXRlbHkgdGhlIHN5bmMgY29kZSB3YXMgdW5rbm93aW5nbHkgcmVseWluZyBvbiB0aGlzIGNh
-bGwgdG8KbWFrZSBzdXJlIG1ldGFkYXRhIGJ1ZmZlcnMgd2VyZSBmbHVzaGVkIHZpYSBhIHhmc19i
-dWZ0YXJnX2ZsdXNoKCkKY2FsbCB0byBtb3ZlIHRoZSB0YWlsIG9mIHRoZSBsb2cgZm9yd2FyZCBp
-biBtZW1vcnkgYmVmb3JlIHRoZSBmaW5hbAp0cmFuc2FjdGlvbnMgb2YgdGhlIHN5bmMgcHJvY2Vz
-cyB3ZXJlIGlzc3VlZC4KCkFzIGEgcmVzdWx0LCB0aGUgb2xkIGNvZGUgd291bGQgd3JpdGUgYSB2
-ZXJ5IHJlY2VudCBsb2cgdGFpbCB2YWx1ZQp0byB0aGUgbG9nIGJ5IHRoZSBlbmQgb2YgdGhlIHN5
-bmMgcHJvY2VzcywgYW5kIHNvIGEgc3Vic2VxdWVudCBjcmFzaAp3b3VsZCBsZWF2ZSBub3RoaW5n
-IGZvciBsb2cgcmVjb3ZlcnkgdG8gZG8uIEhlbmNlIGluIHFhIHRlc3QgMTgyLApsb2cgcmVjb3Zl
-cnkgb25seSByZXBsYXllZCBhIHNtYWxsIGhhbmRsZSBmb3IgaW5vZGUgZnN5bmMKdHJhbnNhY3Rp
-b25zIGluIHRoaXMgY2FzZS4KCkhvd2V2ZXIsIHdpdGggdGhlIHJlbW92YWwgb2YgdGhlIGV4dHJh
-IC0+c3luY19mcyBjYWxsLCB0aGUgbG9nIHRhaWwKd2FzIG5vdyBub3QgbW92ZWQgZm9yd2FyZCB3
-aXRoIHRoZSBpbm9kZSBmc3luYyB0cmFuc2FjdGlvbnMgbmVhciB0aGUKZW5kIG9mIHRoZSBzeW5j
-IHByb2Nlc2UgdGhlIGZpcnN0IChhbmQgb25seSkgYnVmdGFyZyBmbHVzaCBvY2N1cnJlZAphZnRl
-ciB0aGVzZSB0cmFuc2FjdGlvbnMgd2VudCB0byBkaXNrLiBUaGUgcmVzdWx0IGlzIHRoYXQgbG9n
-CnJlY292ZXJ5IG5vdyBzZWVzIGEgbGFyZ2UgbnVtYmVyIG9mIHRyYW5zYWN0aW9ucyBmb3IgbWV0
-YWRhdGEgdGhhdAppcyBhbHJlYWR5IG9uIGRpc2suCgpUaGlzIHVzdWFsbHkgaXNuJ3QgYSBwcm9i
-bGVtLCBidXQgd2hlbiB0aGUgdHJhbnNhY3Rpb25zIGluY2x1ZGUKaW5vZGUgY2h1bmsgYWxsb2Nh
-dGlvbiwgdGhlIGlub2RlIGNyZWF0ZSB0cmFuc2FjdGlvbnMgYW5kIGFsbApzdWJzZXF1ZW50IGNo
-YW5nZXMgYXJlIHJlcGxheWVkIGFzIHdlIGNhbm50IHJlbHkgb24gd2hhdCBpcyBvbiBkaXNrCmlz
-IHZhbGlkLiBBcyBhIHJlc3VsdCwgaWYgdGhlIGlub2RlIHdhcyB3cml0dGVuIGFuZCBjb250YWlu
-cwp1bmxvZ2dlZCBjaGFuZ2VzLCB0aGUgdW5sb2dnZWQgY2hhbmdlcyBhcmUgbG9zdCwgdGhlcmVi
-eSB2aW9sYXRpbmcKc3luYyBzZW1hbnRpY3MuCgpUaGUgZml4IGlzIHRvIGFsd2F5cyBpc3N1ZSBh
-IHRyYW5zYWN0aW9uIGFmdGVyIHRoZSBidWZ0YXJnIGZsdXNoCm9jY3VycyBpcyB0aGUgbG9nIGnR
-lSBub3QgaWRsZSBvciBjb3ZlcmVkLiBUaGlzIHJlc3VsdHMgaW4gYSBkdW1teQp0cmFuc2FjdGlv
-biBiZWluZyB3cml0dGVuIHRoYXQgY29udGFpbnMgdGhlIHVwLXRvLWRhdGUgbG9nIHRhaWwKdmFs
-dWUsIHdoaWNoIHdpbGwgYmUgdmVyeSByZWNlbnQuIEluZGVlZCwgaXQgd2lsbCBiZSBhdCBsZWFz
-dCBhcwpyZWNlbnQgYXMgdGhlIG9sZCBjb2RlIHdvdWxkIGhhdmUgbGVmdCBvbiBkaXNrLCBzbyBs
-b2cgcmVjb3ZlcnkKd2lsbCBiZWhhdmUgZXhhY3RseSBhcyBpdCB1c2VkIHRvIGluIHRoaXMgc2l0
-dWF0aW9uLgoKU2lnbmVkLW9mZi1ieTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29t
-PgotLS0KIGZzL3hmcy94ZnNfbG9nLmMgfCAgIDQxICsrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrLS0tLS0tLS0tLS0tCiAxIGZpbGVzIGNoYW5nZWQsIDI5IGluc2VydGlvbnMoKyksIDEyIGRl
-bGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNfbG9nLmMgYi9mcy94ZnMveGZzX2xv
-Zy5jCmluZGV4IGFjNjNkNjMuLmQ4NThhM2YgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy94ZnNfbG9nLmMK
-KysrIGIvZnMveGZzL3hmc19sb2cuYwpAQCAtNzY0LDkgKzc2NCwxNiBAQCB4ZnNfbG9nX21vdmVf
-dGFpbCh4ZnNfbW91bnRfdAkqbXAsCiAKIC8qCiAgKiBEZXRlcm1pbmUgaWYgd2UgaGF2ZSBhIHRy
-YW5zYWN0aW9uIHRoYXQgaGFzIGdvbmUgdG8gZGlzawotICogdGhhdCBuZWVkcyB0byBiZSBjb3Zl
-cmVkLiBMb2cgYWN0aXZpdHkgbmVlZHMgdG8gYmUgaWRsZSAobm8gQUlMIGFuZAotICogbm90aGlu
-ZyBpbiB0aGUgaWNsb2dzKS4gQW5kLCB3ZSBuZWVkIHRvIGJlIGluIHRoZSByaWdodCBzdGF0ZSBp
-bmRpY2F0aW5nCi0gKiBzb21ldGhpbmcgaGFzIGdvbmUgb3V0LgorICogdGhhdCBuZWVkcyB0byBi
-ZSBjb3ZlcmVkLiBUbyBiZWdpbiB0aGUgdHJhbnNpdGlvbiB0byB0aGUgaWRsZSBzdGF0ZQorICog
-Zmlyc3RseSB0aGUgbG9nIG5lZWRzIHRvIGJlIGlkbGUgKG5vIEFJTCBhbmQgbm90aGluZyBpbiB0
-aGUgaWNsb2dzKS4KKyAqIElmIHdlIGFyZSB0aGVuIGluIGEgc3RhdGUgd2hlcmUgY292ZXJpbmcg
-aXMgbmVlZGVkLCB0aGUgY2FsbGVyIGlzIGluZm9ybWVkCisgKiB0aGF0IGR1bW15IHRyYW5zYWN0
-aW9ucyBhcmUgcmVxdWlyZWQgdG8gbW92ZSB0aGUgbG9nIGludG8gdGhlIGlkbGUgc3RhdGUuCisg
-KgorICogQmVjYXVzZSB0aGlzIGlzIGNhbGxlZCBhcyBwYXJ0IG9mIHRoZSBzeW5jIHByb2Nlc3Ms
-IHdlIHNob3VsZCBhbHNvIGluZGljYXRlCisgKiB0aGF0IGR1bW15IHRyYW5zYWN0aW9ucyBzaG91
-bGQgYmUgaXNzdWVkIGluIGFueXRoaW5nIGJ1dCB0aGUgY292ZXJlZCBvcgorICogaWRsZSBzdGF0
-ZXMuIFRoaXMgZW5zdXJlcyB0aGF0IHRoZSBsb2cgdGFpbCBpcyBhY2N1cmF0ZWx5IHJlZmxlY3Rl
-ZCBpbgorICogdGhlIGxvZyBhdCB0aGUgZW5kIG9mIHRoZSBzeW5jLCBoZW5jZSBpZiBhIGNyYXNo
-IG9jY3VycnMgYXZvaWRzIHJlcGxheQorICogb2YgdHJhbnNhY3Rpb25zIHdoZXJlIHRoZSBtZXRh
-ZGF0YSBpcyBhbHJlYWR5IG9uIGRpc2suCiAgKi8KIGludAogeGZzX2xvZ19uZWVkX2NvdmVyZWQo
-eGZzX21vdW50X3QgKm1wKQpAQCAtNzc4LDE3ICs3ODUsMjcgQEAgeGZzX2xvZ19uZWVkX2NvdmVy
-ZWQoeGZzX21vdW50X3QgKm1wKQogCQlyZXR1cm4gMDsKIAogCXNwaW5fbG9jaygmbG9nLT5sX2lj
-bG9nbG9jayk7Ci0JaWYgKCgobG9nLT5sX2NvdmVyZWRfc3RhdGUgPT0gWExPR19TVEFURV9DT1ZF
-Ul9ORUVEKSB8fAotCQkobG9nLT5sX2NvdmVyZWRfc3RhdGUgPT0gWExPR19TVEFURV9DT1ZFUl9O
-RUVEMikpCi0JCQkmJiAheGZzX3RyYW5zX2FpbF90YWlsKGxvZy0+bF9haWxwKQotCQkJJiYgeGxv
-Z19pY2xvZ3NfZW1wdHkobG9nKSkgewotCQlpZiAobG9nLT5sX2NvdmVyZWRfc3RhdGUgPT0gWExP
-R19TVEFURV9DT1ZFUl9ORUVEKQotCQkJbG9nLT5sX2NvdmVyZWRfc3RhdGUgPSBYTE9HX1NUQVRF
-X0NPVkVSX0RPTkU7Ci0JCWVsc2UgewotCQkJQVNTRVJUKGxvZy0+bF9jb3ZlcmVkX3N0YXRlID09
-IFhMT0dfU1RBVEVfQ09WRVJfTkVFRDIpOwotCQkJbG9nLT5sX2NvdmVyZWRfc3RhdGUgPSBYTE9H
-X1NUQVRFX0NPVkVSX0RPTkUyOworCXN3aXRjaCAobG9nLT5sX2NvdmVyZWRfc3RhdGUpIHsKKwlj
-YXNlIFhMT0dfU1RBVEVfQ09WRVJfTkVFRDoKKwljYXNlIFhMT0dfU1RBVEVfQ09WRVJfTkVFRDI6
-CisJCWlmICgheGZzX3RyYW5zX2FpbF90YWlsKGxvZy0+bF9haWxwKSAmJgorCQkgICAgeGxvZ19p
-Y2xvZ3NfZW1wdHkobG9nKSkgeworCQkJaWYgKGxvZy0+bF9jb3ZlcmVkX3N0YXRlID09IFhMT0df
-U1RBVEVfQ09WRVJfTkVFRCkKKwkJCQlsb2ctPmxfY292ZXJlZF9zdGF0ZSA9IFhMT0dfU1RBVEVf
-Q09WRVJfRE9ORTsKKwkJCWVsc2UgeworCQkJCUFTU0VSVChsb2ctPmxfY292ZXJlZF9zdGF0ZSA9
-PSBYTE9HX1NUQVRFX0NPVkVSX05FRUQyKTsKKwkJCQlsb2ctPmxfY292ZXJlZF9zdGF0ZSA9IFhM
-T0dfU1RBVEVfQ09WRVJfRE9ORTI7CisJCQl9CiAJCX0KIAkJbmVlZGVkID0gMTsKKwkJYnJlYWs7
-CisJY2FzZSBYTE9HX1NUQVRFX0NPVkVSX0RPTkU6CisJY2FzZSBYTE9HX1NUQVRFX0NPVkVSX0RP
-TkUyOgorCWNhc2UgWExPR19TVEFURV9DT1ZFUl9JRExFOgorCQlicmVhazsKKwlkZWZhdWx0Ogor
-CQluZWVkZWQgPSAxOworCQlicmVhazsKIAl9CiAJc3Bpbl91bmxvY2soJmxvZy0+bF9pY2xvZ2xv
-Y2spOwogCXJldHVybiBuZWVkZWQ7Ci0tIAoxLjYuNQoKX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20K
-aHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Sat, 2010-03-20 at 12:42 -0400, Christoph Hellwig wrote:
+> > +/* Number of basic blocks in a log sector */
+> > +#define xlog_sectbb(log) (1 << (log)->l_sectbb_log)
+> 
+> Looking at all uses of (log)->l_sectbb_log I wonder if we should
+> bother storing this in the log structure in this form, or rather
+> as the multipler of the basic block size, ala l_sectsize.  All the
+
+I agree, and I was sort of headed in that direction.  I have
+more work in this file that eventually will lead to some larger
+scale (algorithmic) simplification.  But for now I'm starting
+small.
+
+> 	if (log->l_sectbb_log) {
+> 
+> checks would just become
+> 
+> 	if (log->l_sectsize > 1) {
+> 
+> and the xlog_find_verify_cycle/xlog_write_log_records checks
+> would also be a natural
+> 
+> 	if (bufblks < log->l_sectsize)
+
+I'll attack this in a later patch.
+
+> The comments added are defintively useful, btw.
+
+Thanks, I felt they were necessary.  More to come.
+
+I got "looks good" from you on all but this patch,
+and numbers 5 and 7 in the series.  Is this one OK,
+and do you plan to review those other two?
+
+					-Alex
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
