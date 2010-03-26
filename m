@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o2PNr1fF173249 for <xfs@oss.sgi.com>; Thu, 25 Mar 2010 18:53:02 -0500
+	o2Q0XXq9174884 for <xfs@oss.sgi.com>; Thu, 25 Mar 2010 19:33:33 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AD1D927917A
-	for <xfs@oss.sgi.com>; Thu, 25 Mar 2010 16:54:37 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	k5im9C1vlGRmqfEP for <xfs@oss.sgi.com>;
-	Thu, 25 Mar 2010 16:54:37 -0700 (PDT)
-Date: Fri, 26 Mar 2010 10:54:33 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F11851A57B35
+	for <xfs@oss.sgi.com>; Thu, 25 Mar 2010 17:35:14 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	oBU6jCT9C8LteXoT for <xfs@oss.sgi.com>;
+	Thu, 25 Mar 2010 17:35:14 -0700 (PDT)
+Date: Fri, 26 Mar 2010 11:35:11 +1100
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: 128TB filesystem limit?
-Message-ID: <20100325235433.GM3335@dastard>
+Message-ID: <20100326003511.GN3335@dastard>
 References: <alpine.DEB.2.00.1003251609160.12435@asgard.lang.hm>
+	<20100325235433.GM3335@dastard>
+	<alpine.DEB.2.00.1003251702190.12435@asgard.lang.hm>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.00.1003251609160.12435@asgard.lang.hm>
+In-Reply-To: <alpine.DEB.2.00.1003251702190.12435@asgard.lang.hm>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,50 +34,57 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: david@lang.hm
 Cc: xfs@oss.sgi.com
 
-On Thu, Mar 25, 2010 at 04:15:42PM -0700, david@lang.hm wrote:
-> I'm working with a raid 0 (md) array on top of 10 16x1TB raid 6
-> hardware arrays.
+On Thu, Mar 25, 2010 at 05:03:52PM -0700, david@lang.hm wrote:
+> On Fri, 26 Mar 2010, Dave Chinner wrote:
 > 
-> fdisk -l shows me 10 drives like
+> >On Thu, Mar 25, 2010 at 04:15:42PM -0700, david@lang.hm wrote:
+> >>I'm working with a raid 0 (md) array on top of 10 16x1TB raid 6
+> >>hardware arrays.
+....
+> >>I then did mkfs.xfs /dev/md0
+> >>
+> >>but a df is showing me 128TB
+> >
+> >What is in /proc/partitions?
 > 
-> WARNING: GPT (GUID Partition Table) detected on '/dev/sdk'! The util
-> fdisk doesn't support GPT. Use GNU Parted.
+> # cat /proc/partitions
+> major minor  #blocks  name
 > 
-> 
-> Disk /dev/sdk: 13999.9 GB, 13999999025152 bytes
-> 255 heads, 63 sectors/track, 1702069 cylinders
-> Units = cylinders of 16065 * 512 = 8225280 bytes
-> Disk identifier: 0x00000000
-> 
->    Device Boot      Start         End      Blocks   Id  System
-> /dev/sdk1               1      267350  2147483647+  ee  EFI GPT
-> 
-> and then the md0 device as
-> 
-> Disk /dev/md0: 139999.9 GB, 139999989596160 bytes
-> 2 heads, 4 sectors/track, -1 cylinders
-> Units = cylinders of 8 * 512 = 4096 bytes
-> Disk identifier: 0x00000000
-> 
-> Disk /dev/md0 doesn't contain a valid partition table
-> 
-> 
-> I then did mkfs.xfs /dev/md0
-> 
-> but a df is showing me 128TB
+>    8        0  292542464 sda
+>    8        1    2048287 sda1
+>    8        2    2048287 sda2
+>    8        3    2048287 sda3
+>    8        4  286390755 sda4
+>    8       16 13671874048 sdb
+>    8       17 13671874014 sdb1
+>    8       32 13671874048 sdc
+>    8       33 13671874014 sdc1
+....
+>    8      160 13671874048 sdk
+>    8      161 13671874014 sdk1
+>    9        0 136718739840 md0
 
-What is in /proc/partitions?
+Is there any reason for putting partitions on these block devices?
+You could just use the block devices without partitions, and that
+will avoid alignment potential problems....
 
-> is this just rounding error combined with the 1000=1k vs 1024=1k
-> marketing stuff,
+> >>is this just rounding error combined with the 1000=1k vs 1024=1k
+> >>marketing stuff,
+> >
+> >Probably.
+> >
+> >>or is there some limit I am bumping into here.
+> >
+> >Unlikely to be an XFS limit - I was doing some "what happens if"
+> >testing on multi-PB sized XFS filesystems hosted on sparse files
+> >a couple of days ago....
+> 
+> Ok, 128TB is a suspiciously round (in computer terms) number,
+> especially when the math is 10 sets of 14 drives (each 1TB), so I
+> figured I'd double check.
 
-Probably.
-
-> or is there some limit I am bumping into here.
-
-Unlikely to be an XFS limit - I was doing some "what happens if"
-testing on multi-PB sized XFS filesystems hosted on sparse files
-a couple of days ago....
+136718739840 / 10^9 = 136.72TB    <==== marketing number
+136718739840 / 2^30 = 127.33TiB   <==== what df shows
 
 Cheers,
 
