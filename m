@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o2U0WDZ6138174 for <xfs@oss.sgi.com>; Mon, 29 Mar 2010 19:32:13 -0500
-Received: from Ishtar.sc.tlinx.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9385128AFE4
-	for <xfs@oss.sgi.com>; Mon, 29 Mar 2010 17:33:57 -0700 (PDT)
-Received: from Ishtar.sc.tlinx.org
-	(173-164-175-65-SFBA.hfc.comcastbusiness.net [173.164.175.65])
-	by cuda.sgi.com with ESMTP id uFr1Txh9XGEBWb6o for
-	<xfs@oss.sgi.com>; Mon, 29 Mar 2010 17:33:57 -0700 (PDT)
-Received: from [192.168.3.12] (Athenae [192.168.3.12])
-	by Ishtar.sc.tlinx.org (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o2U0XtJH020601 for <xfs@oss.sgi.com>; Mon, 29 Mar 2010 17:33:57 -0700
-Message-ID: <4BB146F3.3090806@tlinx.org>
-Date: Mon, 29 Mar 2010 17:33:55 -0700
-From: "Linda A. Walsh" <xfs@tlinx.org>
-MIME-Version: 1.0
-Subject: various disk probs...dump: structure needs cleaning (on home),
+	o2U1XnSw140061 for <xfs@oss.sgi.com>; Mon, 29 Mar 2010 20:33:49 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1DF491216864
+	for <xfs@oss.sgi.com>; Mon, 29 Mar 2010 18:35:32 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	sB0cHH8FVUBuo4vo for <xfs@oss.sgi.com>;
+	Mon, 29 Mar 2010 18:35:32 -0700 (PDT)
+Date: Tue, 30 Mar 2010 12:35:28 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: various disk probs...dump: structure needs cleaning (on home),
 	on root: invalid arguments (still)
+Message-ID: <20100330013528.GR3335@dastard>
+References: <4BB146F3.3090806@tlinx.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4BB146F3.3090806@tlinx.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,144 +26,77 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: "Linda A. Walsh" <xfs@tlinx.org>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-This morning I got email from my dump job telling me it had a problem on my home
-partition.
-
-It said some files had "problems". (see below).  Any idea how this might have ha
-ppened?
-
-The system has been up for "some time"
-  1:07pm  up 29 days  8:07,  5 users,  load average: 0.15, 0.13, 0.15,
-so it hasn't been any recent power fail or such or reconfig.
-
-Running kernel:
-Linux Ishtar 2.6.27.29-0.1-vanilla #1 SMP 2009-08-15 17:53:59 +0200 x86_64 x86_6
-(Suse 11.0).
-
-Known probs? Fixed in later kerns?
-messages at bottom as output from xfsdump
-
-----------------
-
-Also, I _believe_ some of my stability problems have increased since I started
-trying to use "lvm" to maintain "snapshots" for enabling "previous versions" under
-windows-clients with samba..
-
-Seems like with only a few snapshots performance goes way down as each snapshot
-needs to have duplicate data.  Since the Data doesn't change in the snapshots,
-wouldn't the only change need to be the new file material written and the old 
-snapshots would share the old files -- with the only writes being that which is
-writing out the new material?
-
-Wouldn't this work on xfs (or most filesystems), since all the "old" copies of the
-files (which wouldn't be changing) could be the same inode (requiring no copies)
-to be made?)  Seems like it would save alot of space in these snapshots -- there
-*should* be no changes made to snapshots, as they are supposed to be read-only, 
-static snapshots, though I suppose that isn't their only use.
-
-Anyway -- the error below -- xfs_repair?
-Solved in some newer kernel?"
-
-Same for this error that I still get (it ISN'T related to busy or locked files --
-too many on non-busy disks). -- only happens with xfs_fsr (and never used to before
-about 6 months ago)....
-
-Note -- only happens on root which is relatively static:
-Mar 28 02:17:05 Ishtar fsr[19203]: / start inode=0
-Mar 28 02:17:05 Ishtar fsr[19203]: XFS_IOC_SWAPEXT failed: ino=5982243: Invalid argument
-Mar 28 02:17:05 Ishtar fsr[19203]: XFS_IOC_SWAPEXT failed: ino=7584775: Invalid argument
-Mar 28 02:17:05 Ishtar fsr[19203]: XFS_IOC_SWAPEXT failed: ino=16784218: Invalid argument
-Mar 28 02:17:05 Ishtar fsr[19203]: XFS_IOC_SWAPEXT failed: ino=16784980: Invalid argument
-Mar 28 02:17:05 Ishtar fsr[19203]: XFS_IOC_SWAPEXT failed: ino=16789184: Invalid argument
-Mar 28 02:17:05 Ishtar fsr[19203]: XFS_IOC_SWAPEXT failed: ino=16792500: Invalid argument
-Mar 28 02:17:05 Ishtar fsr[19203]: XFS_IOC_SWAPEXT failed: ino=16792601: Invalid argument
-Mar 28 02:17:05 Ishtar fsr[19203]: XFS_IOC_SWAPEXT failed: ino=17181156: Invalid argument
-Mar 28 02:17:05 Ishtar fsr[19203]: XFS_IOC_SWAPEXT failed: ino=24019080: Invalid argument
-Mar 28 02:17:05 Ishtar fsr[19203]: XFS_IOC_SWAPEXT failed: ino=25978039: Invalid argument
-Mar 28 02:17:05 Ishtar fsr[19203]: XFS_IOC_SWAPEXT failed: ino=50337960: Invalid argument
-Mar 28 02:17:05 Ishtar fsr[19203]: XFS_IOC_SWAPEXT failed: ino=50349588: Invalid argument
-Mar 28 02:17:05 Ishtar fsr[19204]: /usr start inode=0
-Mar 28 02:17:06 Ishtar fsr[19207]: /var start inode=0
-Mar 28 02:17:06 Ishtar fsr[19208]: /boot start inode=0
-Mar 28 02:17:06 Ishtar fsr[19209]: /var/cache start inode=0
-Mar 28 02:17:06 Ishtar fsr[19210]: /home start inode=0
-Mar 28 02:17:07 Ishtar fsr[19213]: /Share start inode=0
-Mar 28 02:17:07 Ishtar fsr[19214]: /backups start inode=0
-Mar 28 02:17:08 Ishtar fsr[19215]: / start inode=0
-Mar 28 02:17:08 Ishtar fsr[19215]: XFS_IOC_SWAPEXT failed: ino=5982243: Invalid argument
-Mar 28 02:17:08 Ishtar fsr[19215]: XFS_IOC_SWAPEXT failed: ino=7584775: Invalid argument
-Mar 28 02:17:08 Ishtar fsr[19215]: XFS_IOC_SWAPEXT failed: ino=16784218: Invalid argument
-Mar 28 02:17:08 Ishtar fsr[19215]: XFS_IOC_SWAPEXT failed: ino=16784980: Invalid argument
-Mar 28 02:17:08 Ishtar fsr[19215]: XFS_IOC_SWAPEXT failed: ino=16789184: Invalid argument
-Mar 28 02:17:08 Ishtar fsr[19215]: XFS_IOC_SWAPEXT failed: ino=16792500: Invalid argument
-Mar 28 02:17:08 Ishtar fsr[19215]: XFS_IOC_SWAPEXT failed: ino=16792601: Invalid argument
-Mar 28 02:17:08 Ishtar fsr[19215]: XFS_IOC_SWAPEXT failed: ino=17181156: Invalid argument
-Mar 28 02:17:08 Ishtar fsr[19215]: XFS_IOC_SWAPEXT failed: ino=24019080: Invalid argument
-Mar 28 02:17:08 Ishtar fsr[19215]: XFS_IOC_SWAPEXT failed: ino=25978039: Invalid argument
-Mar 28 02:17:08 Ishtar fsr[19215]: XFS_IOC_SWAPEXT failed: ino=50337960: Invalid argument
-Mar 28 02:17:08 Ishtar fsr[19215]: XFS_IOC_SWAPEXT failed: ino=50349588: Invalid argument
-Mar 28 02:17:08 Ishtar fsr[19216]: /usr start inode=0
----
-Unfortunately, I haven't been able to figure out how to run xfs_db on a live
-partition -- keeps telling me there is a log to be replayed and I should mount
-the partition...(BUT IT IS mounted!)...
-Sigh...
-
-
-
----------------------
-XFSDUMP messages
-=========================
-
-
-
-
-
-dump home failed
-****
-Dump fsname home, Mountpoint /home, Dumplevel=6
-Notice: "-e" used in Xfsdump_options to allow exclusions
-xfsdump -b 1m -l 6 -L home -e - /home | ( su -f -m backup -c " umask 027;nice -1
-9 ionice -c3 gzip > home/home-100329-6-0431.dump.gz  " )
-xfsdump: using file dump (drive_simple) strategy
-xfsdump: version 2.2.48 (dump format 3.0) - Running single-threaded
-xfsdump: level 6 incremental dump of Ishtar:/home based on level 4 dump begun Sa
-t Mar 27 04:31:30 2010
-xfsdump: dump date: Mon Mar 29 04:31:41 2010
-xfsdump: session id: d32fbafe-32d3-4246-9dd0-3d286812494f
-xfsdump: session label: "home"
-xfsdump: ino map phase 1: constructing initial dump list
-xfsdump: ino map phase 2: pruning unneeded subtrees
-xfsdump: ino map phase 3: skipping (only one dump stream)
-xfsdump: ino map construction complete
-xfsdump: estimated dump size: 19705400640 bytes
-xfsdump: creating dump session media file 0 (media 0, file 0)
-xfsdump: dumping ino map
-xfsdump: dumping directories
-xfsdump: dumping non-directory files
-xfsdump: WARNING: could not open regular file ino 2148055983 mode 0x000081f8: St
-ructure needs cleaning: not dumped
-xfsdump: WARNING: could not get list of non-root attributes for nondir ino 21480
-55983: Structure needs cleaning (117)
-xfsdump: WARNING: could not get list of root attributes for nondir ino 214805598
-3: Structure needs cleaning (117)
-xfsdump: WARNING: could not get list of secure attributes for nondir ino 2148055
-983: Structure needs cleaning (117)
-/root/bin/dump1fs: line 81:  1416 Killed                  $xfsdump ${Blocksize:+
-"-b"} $Blocksize ${Dumplevel:+"-l"} $Dumplevel ${Label:+"-L"} $Label ${Xfsdump_o
-ptions:-} ${Destination:-"-"} $Mountpoint
-      1417 Done                    | ( ${nice} --10 ${mbuffer} -q -b $nbuffs -s
-$bsize 2> /dev/null )
-      1418 Done                    | ( su -f -m backup -c "$umask $um;${Compress
-:-} ${Compress_ops:-}                   >${Dmpfile}${Compress_ext}" )
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gTW9uLCBNYXIgMjksIDIwMTAgYXQgMDU6MzM6NTVQTSAtMDcwMCwgTGluZGEgQS4gV2Fsc2gg
+d3JvdGU6Cj4gVGhpcyBtb3JuaW5nIEkgZ290IGVtYWlsIGZyb20gbXkgZHVtcCBqb2IgdGVsbGlu
+ZyBtZSBpdCBoYWQgYSBwcm9ibGVtIG9uIG15IGhvbWUKPiBwYXJ0aXRpb24uCi4uLi4KCkxpbmRh
+LCBpbiBmdXR1cmUgY2FuIHlvdSByZXBvcnQgYSBzaW5nbGUgaXNzdWUgcGVyIGVtYWlsPyBJdCdz
+CmV4dHJlbWVseSBjb25mdXNpbmcgcmVwb3J0aW5nIDMgb3IgNCBpc3N1ZXMgaW4gb25lIGVtYWls
+IGFuZCB0aGVuCmp1bXBpbmcgYmFja3dhcmRzIGFuZCBmb3J3YXJkcyBiZXR3ZWVuIHRoZW0gcmFu
+ZG9tbHkgd2l0aG91dCBjbGVhcgpyZWZlcmVuY2UgdG8gd2hhdCBzZXQgb2YgZXJyb3IgbWVzc2Fn
+ZXMgeW91IGFyZSByZWZlcmluZyB0by4uLi4uCgo+IC0tLS0tLS0tLS0tLS0tLS0KPiAKPiBBbHNv
+LCBJIF9iZWxpZXZlXyBzb21lIG9mIG15IHN0YWJpbGl0eSBwcm9ibGVtcyBoYXZlIGluY3JlYXNl
+ZCBzaW5jZSBJIHN0YXJ0ZWQKPiB0cnlpbmcgdG8gdXNlICJsdm0iIHRvIG1haW50YWluICJzbmFw
+c2hvdHMiIGZvciBlbmFibGluZyAicHJldmlvdXMgdmVyc2lvbnMiIHVuZGVyCj4gd2luZG93cy1j
+bGllbnRzIHdpdGggc2FtYmEuLgoKTWFrZSBzdXJlIHlvdSBtb3VudCBzbmFwc2hvdCBpbWFnZXMg
+d2l0aCAiLW8gcm8sbm9yZWNvdmVyeSIgLSB5b3UgZG8Kbm90IHdhbnQgdGhlIHNuYXBzaG90IGJl
+aW5nIHdyaXR0ZW4gdG8uCgo+IFNlZW1zIGxpa2Ugd2l0aCBvbmx5IGEgZmV3IHNuYXBzaG90cyBw
+ZXJmb3JtYW5jZSBnb2VzIHdheSBkb3duIGFzIGVhY2ggc25hcHNob3QKPiBuZWVkcyB0byBoYXZl
+IGR1cGxpY2F0ZSBkYXRhLgoKTm8sIHRoZSBzbmFwc2hvdHMgZG8gbm90IGhhdmUgZHVwbGljYXRl
+IGRhdGEgLSBMVk0gc25hcHNob3RzIHVzZQpjb3B5LW9uLXdyaXRlIHNvIHRoYXQgZWFjaCBzbmFw
+c2hvdCBpcyBhbiBvdmVybGF5IG9mICJvcmlnaW5hbCIgZGF0YQpmcm9tIHRoZSBibG9jayBkZXZp
+Y2UuIFRvIHJlYWQgZnJvbSBhIGdpdmVuIHNuYXBzaG90LCBhbGwgdGhlCm92ZXJsYXlzIGZyb20g
+dGhlIGN1cnJlbnQgaW1hZ2Ugb2YgdGhlIGJsb2NrIGRldmljZSB0byB0aGUgc25hcHN0aG8KeW91
+IGFyZSByZWFkaW5nIGZyb20gbmVlZCB0byBiZSBwcm9jZXNzZWQgdG8gZGV0ZXJtaW5lIHdoZXJl
+IHRoZQpjb3JyZWN0IHZlcnNpb24gb2YgdGhlIGRhdGEgaXMuIEFzIHlvdSBtYWtlIG1vcmUgc25h
+cHNob3RzLCB0aGVyZQphcmUgbW9yZSBvdmVybGF5cyBhZGRlZCB0byB0aGUgc25hcHNob3Qg0ZV0
+YWNrLiBIZW5jZSBhcyB5b3UgcmVhZApmcm9tIGEgc25hcHNob3QsIHRoZSBzbmFwc2hvdCBjb2Rl
+IGhhcyB0byBwcm9jZXNzIG1vcmUgb3ZlcmxheXMgdG8KZGV0ZXJtaW5lIHdoZXJlIHRvIGdldCB0
+aGUgZGF0YSBmcm9tLiBIZW5jZSB0aGUgbW9yZSBzbmFwc2hvdHMgeW91CmhhdmUsIHRoZSBzbG93
+ZXIgdGhleSBnby4uLi4KCj4gU2FtZSBmb3IgdGhpcyBlcnJvciB0aGF0IEkgc3RpbGwgZ2V0IChp
+dCBJU04nVCByZWxhdGVkIHRvIGJ1c3kgb3IgbG9ja2VkIGZpbGVzIC0tCj4gdG9vIG1hbnkgb24g
+bm9uLWJ1c3kgZGlza3MpLiAtLSBvbmx5IGhhcHBlbnMgd2l0aCB4ZnNfZnNyIChhbmQgbmV2ZXIg
+dXNlZCB0byBiZWZvcmUKPiBhYm91dCA2IG1vbnRocyBhZ28pLi4uLgo+IAo+IE5vdGUgLS0gb25s
+eSBoYXBwZW5zIG9uIHJvb3Qgd2hpY2ggaXMgcmVsYXRpdmVseSBzdGF0aWM6Cj4gTWFyIDI4IDAy
+OjE3OjA1IElzaHRhciBmc3JbMTkyMDNdOiAvIHN0YXJ0IGlub2RlPTAKPiBNYXIgMjggMDI6MTc6
+MDUgSXNodGFyIGZzclsxOTIwM106IFhGU19JT0NfU1dBUEVYVCBmYWlsZWQ6IGlubz01OTgyMjQz
+OiBJbnZhbGlkIGFyZ3VtZW50Cj4gTWFyIDI4IDAyOjE3OjA1IElzaHRhciBmc3JbMTkyMDNdOiBY
+RlNfSU9DX1NXQVBFWFQgZmFpbGVkOiBpbm89NzU4NDc3NTogSW52YWxpZCBhcmd1bWVudAo+IE1h
+ciAyOCAwMjoxNzowNSBJc2h0YXIgZnNyWzE5MjAzXTogWEZTX0lPQ19TV0FQRVhUIGZhaWxlZDog
+aW5vPTE2Nzg0MjE4OiBJbnZhbGlkIGFyZ3VtZW50Cj4gTWFyIDI4IDAyOjE3OjA1IElzaHRhciBm
+c3JbMTkyMDNdOiBYRlNfSU9DX1NXQVBFWFQgZmFpbGVkOiBpbm89MTY3ODQ5ODA6IEludmFsaWQg
+YXJndW1lbnQKPiBNYXIgMjggMDI6MTc6MDUgSXNodGFyIGZzclsxOTIwM106IFhGU19JT0NfU1dB
+UEVYVCBmYWlsZWQ6IGlubz0xNjc4OTE4NDogSW52YWxpZCBhcmd1bWVudAo+IE1hciAyOCAwMjox
+NzowNSBJc2h0YXIgZnNyWzE5MjAzXTogWEZTX0lPQ19TV0FQRVhUIGZhaWxlZDogaW5vPTE2Nzky
+NTAwOiBJbnZhbGlkIGFyZ3VtZW50Cj4gTWFyIDI4IDAyOjE3OjA1IElzaHRhciBmc3JbMTkyMDNd
+OiBYRlNfSU9DX1NXQVBFWFQgZmFpbGVkOiBpbm89MTY3OTI2MDE6IEludmFsaWQgYXJndW1lbnQK
+PiBNYXIgMjggMDI6MTc6MDUgSXNodGFyIGZzclsxOTIwM106IFhGU19JT0NfU1dBUEVYVCBmYWls
+ZWQ6IGlubz0xNzE4MTE1NjogSW52YWxpZCBhcmd1bWVudAo+IE1hciAyOCAwMjoxNzowNSBJc2h0
+YXIgZnNyWzE5MjAzXTogWEZTX0lPQ19TV0FQRVhUIGZhaWxlZDogaW5vPTI0MDE5MDgwOiBJbnZh
+bGlkIGFyZ3VtZW50Cj4gTWFyIDI4IDAyOjE3OjA1IElzaHRhciBmc3JbMTkyMDNdOiBYRlNfSU9D
+X1NXQVBFWFQgZmFpbGVkOiBpbm89MjU5NzgwMzk6IEludmFsaWQgYXJndW1lbnQKPiBNYXIgMjgg
+MDI6MTc6MDUgSXNodGFyIGZzclsxOTIwM106IFhGU19JT0NfU1dBUEVYVCBmYWlsZWQ6IGlubz01
+MDMzNzk2MDogSW52YWxpZCBhcmd1bWVudAo+IE1hciAyOCAwMjoxNzowNSBJc2h0YXIgZnNyWzE5
+MjAzXTogWEZTX0lPQ19TV0FQRVhUIGZhaWxlZDogaW5vPTUwMzQ5NTg4OiBJbnZhbGlkIGFyZ3Vt
+ZW50CgpJdCdzIHNvbWUga2luZCBvZiBmaWxlIHRoYXQgdGhlIGtlcm5lbCBpcyBub3QgYWxsb3dp
+bmcgdGhlIGV4dGVudHMKdG8gYmUgc3dhcHBlZCBvbi4gSGFwcGVucyBhbGwgdGhlIHRpbWUgLSBw
+cm9iYWJseSBhIGZpbGUgdGhhdCBoYXMKYmVlbiBtb2RpZmllZCB3aGlsZSBkZWZyYWdtZW50YXRp
+b24gaXMgYmVpbmcgYXR0ZW1wdGVkLgoKPiAtLS0KPiBVbmZvcnR1bmF0ZWx5LCBJIGhhdmVuJ3Qg
+YmVlbiBhYmxlIHRvIGZpZ3VyZSBvdXQgaG93IHRvIHJ1biB4ZnNfZGIgb24gYSBsaXZlCj4gcGFy
+dGl0aW9uIC0tIGtlZXBzIHRlbGxpbmcgbWUgdGhlcmUgaXMgYSBsb2cgdG8gYmUgcmVwbGF5ZWQg
+YW5kIEkgc2hvdWxkIG1vdW50Cj4gdGhlIHBhcnRpdGlvbi4uLihCVVQgSVQgSVMgbW91bnRlZCEp
+Li4uCj4gU2lnaC4uLgoKJCBzdWRvIHhmc19kYiAtciA8ZGV2aWNlPgoKPiB4ZnNkdW1wOiBkdW1w
+aW5nIGRpcmVjdG9yaWVzCj4geGZzZHVtcDogZHVtcGluZyBub24tZGlyZWN0b3J5IGZpbGVzCj4g
+eGZzZHVtcDogV0FSTklORzogY291bGQgbm90IG9wZW4gcmVndWxhciBmaWxlIGlubyAyMTQ4MDU1
+OTgzIG1vZGUgMHgwMDAwODFmODogU3QKPiBydWN0dXJlIG5lZWRzIGNsZWFuaW5nOiBub3QgZHVt
+cGVkCgpXaGF0IGlzIGluIGRtZXNnPyBUaGUgZmlsZXN5c3RlbSBzaHV0IGRvd24gYmVjYXVzZSBv
+ZiBhCmNvcnJ1cHRpb24gLSB0aGUga2VybmVsIGxvZyB3aWxsIHRlbGwgdXMgd2h5LgoKQ2hlZXJz
+LAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhm
+c0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
