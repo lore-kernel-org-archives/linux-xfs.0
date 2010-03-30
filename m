@@ -1,15 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o2UITSuI194421 for <xfs@oss.sgi.com>; Tue, 30 Mar 2010 13:29:28 -0500
-Subject: Re: [PATCH] xfs: don't warn on EAGAIN in inode reclaim
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1269930010-19174-1-git-send-email-david@fromorbit.com>
-References: <1269930010-19174-1-git-send-email-david@fromorbit.com>
-Date: Tue, 30 Mar 2010 13:30:34 -0500
-Message-ID: <1269973834.2738.46.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	o2UMQqoj212264 for <xfs@oss.sgi.com>; Tue, 30 Mar 2010 17:26:54 -0500
+Received: from mail.andcycle.idv.tw (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A4D9128ECF9
+	for <xfs@oss.sgi.com>; Tue, 30 Mar 2010 15:28:36 -0700 (PDT)
+Received: from mail.andcycle.idv.tw (andcycle.idv.tw [122.116.40.15]) by
+	cuda.sgi.com with ESMTP id VBTxzCLKEQd9GGWk for
+	<xfs@oss.sgi.com>; Tue, 30 Mar 2010 15:28:36 -0700 (PDT)
+Message-ID: <4BB27AFE.2030205@andcycle.idv.tw>
+Date: Wed, 31 Mar 2010 06:28:14 +0800
+From: AndCycle <andcycle@andcycle.idv.tw>
+MIME-Version: 1.0
+Subject: xfs_fsr defrag top 10% that have the largest number of extents??
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,47 +21,27 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, 2010-03-30 at 17:20 +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Any inode reclaim flush that returns EAGAIN will result in the inode
-> reclaim being attempted again later. There is no need to issue a
-> warning into the logs about this situation.
+my xfs_fsr version is xfsdump_2.2.48-1,
 
-Looks good.
+there is a description in xfs_fsr man said
+"
+When invoked with no arguments xfs_fsr reorganizes all regular files in 
+all mounted filesystems.
+(...)
+Each pass goes through and selects files that have the largest number of 
+extents.  It attempts to defragment the top 10% of these files on each pass.
+"
+but xfs_fsr -d telling me it defrags in inode ascending order,
 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+http://pastebin.com/h0RyZkwA
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
-> ---
->  fs/xfs/linux-2.6/xfs_sync.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-> index 97813e7..5a4731e 100644
-> --- a/fs/xfs/linux-2.6/xfs_sync.c
-> +++ b/fs/xfs/linux-2.6/xfs_sync.c
-> @@ -820,10 +820,10 @@ xfs_reclaim_inode(
->  	 * call into reclaim to find it in a clean state instead of waiting for
->  	 * it now. We also don't return errors here - if the error is transient
->  	 * then the next reclaim pass will flush the inode, and if the error
-> -	 * is permanent then the next sync reclaim will relcaim the inode and
-> +	 * is permanent then the next sync reclaim will reclaim the inode and
->  	 * pass on the error.
->  	 */
-> -	if (error && !XFS_FORCED_SHUTDOWN(ip->i_mount)) {
-> +	if (error && error != EAGAIN && !XFS_FORCED_SHUTDOWN(ip->i_mount)) {
->  		xfs_fs_cmn_err(CE_WARN, ip->i_mount,
->  			"inode 0x%llx background reclaim flush failed with %d",
->  			(long long)ip->i_ino, error);
+is this a normal behavior?
 
 
 
