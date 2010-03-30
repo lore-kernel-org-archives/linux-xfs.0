@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o2U1XnSw140061 for <xfs@oss.sgi.com>; Mon, 29 Mar 2010 20:33:49 -0500
+	o2U6IWqT156013 for <xfs@oss.sgi.com>; Tue, 30 Mar 2010 01:18:33 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1DF491216864
-	for <xfs@oss.sgi.com>; Mon, 29 Mar 2010 18:35:32 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	sB0cHH8FVUBuo4vo for <xfs@oss.sgi.com>;
-	Mon, 29 Mar 2010 18:35:32 -0700 (PDT)
-Date: Tue, 30 Mar 2010 12:35:28 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 705C1121E62A
+	for <xfs@oss.sgi.com>; Mon, 29 Mar 2010 23:20:16 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
+	[150.101.137.102]) by cuda.sgi.com with ESMTP id
+	HL2UVEiG16GDsIaF for <xfs@oss.sgi.com>;
+	Mon, 29 Mar 2010 23:20:16 -0700 (PDT)
+Received: from dastard (unverified [121.44.229.111])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	18664350-1927428
+	for <xfs@oss.sgi.com>; Tue, 30 Mar 2010 16:50:15 +1030 (CDT)
+Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
+	(envelope-from <dave@fromorbit.com>) id 1NwUo9-000526-DT
+	for xfs@oss.sgi.com; Tue, 30 Mar 2010 17:20:13 +1100
+Received: from dave by disturbed with local (Exim 4.71)
+	(envelope-from <dave@disturbed.disaster>) id 1NwUo6-00050F-JE
+	for xfs@oss.sgi.com; Tue, 30 Mar 2010 17:20:10 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: various disk probs...dump: structure needs cleaning (on home),
-	on root: invalid arguments (still)
-Message-ID: <20100330013528.GR3335@dastard>
-References: <4BB146F3.3090806@tlinx.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4BB146F3.3090806@tlinx.org>
+Subject: [PATCH] xfs: don't warn on EAGAIN in inode reclaim
+Date: Tue, 30 Mar 2010 17:20:10 +1100
+Message-Id: <1269930010-19174-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,77 +31,45 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "Linda A. Walsh" <xfs@tlinx.org>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-T24gTW9uLCBNYXIgMjksIDIwMTAgYXQgMDU6MzM6NTVQTSAtMDcwMCwgTGluZGEgQS4gV2Fsc2gg
-d3JvdGU6Cj4gVGhpcyBtb3JuaW5nIEkgZ290IGVtYWlsIGZyb20gbXkgZHVtcCBqb2IgdGVsbGlu
-ZyBtZSBpdCBoYWQgYSBwcm9ibGVtIG9uIG15IGhvbWUKPiBwYXJ0aXRpb24uCi4uLi4KCkxpbmRh
-LCBpbiBmdXR1cmUgY2FuIHlvdSByZXBvcnQgYSBzaW5nbGUgaXNzdWUgcGVyIGVtYWlsPyBJdCdz
-CmV4dHJlbWVseSBjb25mdXNpbmcgcmVwb3J0aW5nIDMgb3IgNCBpc3N1ZXMgaW4gb25lIGVtYWls
-IGFuZCB0aGVuCmp1bXBpbmcgYmFja3dhcmRzIGFuZCBmb3J3YXJkcyBiZXR3ZWVuIHRoZW0gcmFu
-ZG9tbHkgd2l0aG91dCBjbGVhcgpyZWZlcmVuY2UgdG8gd2hhdCBzZXQgb2YgZXJyb3IgbWVzc2Fn
-ZXMgeW91IGFyZSByZWZlcmluZyB0by4uLi4uCgo+IC0tLS0tLS0tLS0tLS0tLS0KPiAKPiBBbHNv
-LCBJIF9iZWxpZXZlXyBzb21lIG9mIG15IHN0YWJpbGl0eSBwcm9ibGVtcyBoYXZlIGluY3JlYXNl
-ZCBzaW5jZSBJIHN0YXJ0ZWQKPiB0cnlpbmcgdG8gdXNlICJsdm0iIHRvIG1haW50YWluICJzbmFw
-c2hvdHMiIGZvciBlbmFibGluZyAicHJldmlvdXMgdmVyc2lvbnMiIHVuZGVyCj4gd2luZG93cy1j
-bGllbnRzIHdpdGggc2FtYmEuLgoKTWFrZSBzdXJlIHlvdSBtb3VudCBzbmFwc2hvdCBpbWFnZXMg
-d2l0aCAiLW8gcm8sbm9yZWNvdmVyeSIgLSB5b3UgZG8Kbm90IHdhbnQgdGhlIHNuYXBzaG90IGJl
-aW5nIHdyaXR0ZW4gdG8uCgo+IFNlZW1zIGxpa2Ugd2l0aCBvbmx5IGEgZmV3IHNuYXBzaG90cyBw
-ZXJmb3JtYW5jZSBnb2VzIHdheSBkb3duIGFzIGVhY2ggc25hcHNob3QKPiBuZWVkcyB0byBoYXZl
-IGR1cGxpY2F0ZSBkYXRhLgoKTm8sIHRoZSBzbmFwc2hvdHMgZG8gbm90IGhhdmUgZHVwbGljYXRl
-IGRhdGEgLSBMVk0gc25hcHNob3RzIHVzZQpjb3B5LW9uLXdyaXRlIHNvIHRoYXQgZWFjaCBzbmFw
-c2hvdCBpcyBhbiBvdmVybGF5IG9mICJvcmlnaW5hbCIgZGF0YQpmcm9tIHRoZSBibG9jayBkZXZp
-Y2UuIFRvIHJlYWQgZnJvbSBhIGdpdmVuIHNuYXBzaG90LCBhbGwgdGhlCm92ZXJsYXlzIGZyb20g
-dGhlIGN1cnJlbnQgaW1hZ2Ugb2YgdGhlIGJsb2NrIGRldmljZSB0byB0aGUgc25hcHN0aG8KeW91
-IGFyZSByZWFkaW5nIGZyb20gbmVlZCB0byBiZSBwcm9jZXNzZWQgdG8gZGV0ZXJtaW5lIHdoZXJl
-IHRoZQpjb3JyZWN0IHZlcnNpb24gb2YgdGhlIGRhdGEgaXMuIEFzIHlvdSBtYWtlIG1vcmUgc25h
-cHNob3RzLCB0aGVyZQphcmUgbW9yZSBvdmVybGF5cyBhZGRlZCB0byB0aGUgc25hcHNob3Qg0ZV0
-YWNrLiBIZW5jZSBhcyB5b3UgcmVhZApmcm9tIGEgc25hcHNob3QsIHRoZSBzbmFwc2hvdCBjb2Rl
-IGhhcyB0byBwcm9jZXNzIG1vcmUgb3ZlcmxheXMgdG8KZGV0ZXJtaW5lIHdoZXJlIHRvIGdldCB0
-aGUgZGF0YSBmcm9tLiBIZW5jZSB0aGUgbW9yZSBzbmFwc2hvdHMgeW91CmhhdmUsIHRoZSBzbG93
-ZXIgdGhleSBnby4uLi4KCj4gU2FtZSBmb3IgdGhpcyBlcnJvciB0aGF0IEkgc3RpbGwgZ2V0IChp
-dCBJU04nVCByZWxhdGVkIHRvIGJ1c3kgb3IgbG9ja2VkIGZpbGVzIC0tCj4gdG9vIG1hbnkgb24g
-bm9uLWJ1c3kgZGlza3MpLiAtLSBvbmx5IGhhcHBlbnMgd2l0aCB4ZnNfZnNyIChhbmQgbmV2ZXIg
-dXNlZCB0byBiZWZvcmUKPiBhYm91dCA2IG1vbnRocyBhZ28pLi4uLgo+IAo+IE5vdGUgLS0gb25s
-eSBoYXBwZW5zIG9uIHJvb3Qgd2hpY2ggaXMgcmVsYXRpdmVseSBzdGF0aWM6Cj4gTWFyIDI4IDAy
-OjE3OjA1IElzaHRhciBmc3JbMTkyMDNdOiAvIHN0YXJ0IGlub2RlPTAKPiBNYXIgMjggMDI6MTc6
-MDUgSXNodGFyIGZzclsxOTIwM106IFhGU19JT0NfU1dBUEVYVCBmYWlsZWQ6IGlubz01OTgyMjQz
-OiBJbnZhbGlkIGFyZ3VtZW50Cj4gTWFyIDI4IDAyOjE3OjA1IElzaHRhciBmc3JbMTkyMDNdOiBY
-RlNfSU9DX1NXQVBFWFQgZmFpbGVkOiBpbm89NzU4NDc3NTogSW52YWxpZCBhcmd1bWVudAo+IE1h
-ciAyOCAwMjoxNzowNSBJc2h0YXIgZnNyWzE5MjAzXTogWEZTX0lPQ19TV0FQRVhUIGZhaWxlZDog
-aW5vPTE2Nzg0MjE4OiBJbnZhbGlkIGFyZ3VtZW50Cj4gTWFyIDI4IDAyOjE3OjA1IElzaHRhciBm
-c3JbMTkyMDNdOiBYRlNfSU9DX1NXQVBFWFQgZmFpbGVkOiBpbm89MTY3ODQ5ODA6IEludmFsaWQg
-YXJndW1lbnQKPiBNYXIgMjggMDI6MTc6MDUgSXNodGFyIGZzclsxOTIwM106IFhGU19JT0NfU1dB
-UEVYVCBmYWlsZWQ6IGlubz0xNjc4OTE4NDogSW52YWxpZCBhcmd1bWVudAo+IE1hciAyOCAwMjox
-NzowNSBJc2h0YXIgZnNyWzE5MjAzXTogWEZTX0lPQ19TV0FQRVhUIGZhaWxlZDogaW5vPTE2Nzky
-NTAwOiBJbnZhbGlkIGFyZ3VtZW50Cj4gTWFyIDI4IDAyOjE3OjA1IElzaHRhciBmc3JbMTkyMDNd
-OiBYRlNfSU9DX1NXQVBFWFQgZmFpbGVkOiBpbm89MTY3OTI2MDE6IEludmFsaWQgYXJndW1lbnQK
-PiBNYXIgMjggMDI6MTc6MDUgSXNodGFyIGZzclsxOTIwM106IFhGU19JT0NfU1dBUEVYVCBmYWls
-ZWQ6IGlubz0xNzE4MTE1NjogSW52YWxpZCBhcmd1bWVudAo+IE1hciAyOCAwMjoxNzowNSBJc2h0
-YXIgZnNyWzE5MjAzXTogWEZTX0lPQ19TV0FQRVhUIGZhaWxlZDogaW5vPTI0MDE5MDgwOiBJbnZh
-bGlkIGFyZ3VtZW50Cj4gTWFyIDI4IDAyOjE3OjA1IElzaHRhciBmc3JbMTkyMDNdOiBYRlNfSU9D
-X1NXQVBFWFQgZmFpbGVkOiBpbm89MjU5NzgwMzk6IEludmFsaWQgYXJndW1lbnQKPiBNYXIgMjgg
-MDI6MTc6MDUgSXNodGFyIGZzclsxOTIwM106IFhGU19JT0NfU1dBUEVYVCBmYWlsZWQ6IGlubz01
-MDMzNzk2MDogSW52YWxpZCBhcmd1bWVudAo+IE1hciAyOCAwMjoxNzowNSBJc2h0YXIgZnNyWzE5
-MjAzXTogWEZTX0lPQ19TV0FQRVhUIGZhaWxlZDogaW5vPTUwMzQ5NTg4OiBJbnZhbGlkIGFyZ3Vt
-ZW50CgpJdCdzIHNvbWUga2luZCBvZiBmaWxlIHRoYXQgdGhlIGtlcm5lbCBpcyBub3QgYWxsb3dp
-bmcgdGhlIGV4dGVudHMKdG8gYmUgc3dhcHBlZCBvbi4gSGFwcGVucyBhbGwgdGhlIHRpbWUgLSBw
-cm9iYWJseSBhIGZpbGUgdGhhdCBoYXMKYmVlbiBtb2RpZmllZCB3aGlsZSBkZWZyYWdtZW50YXRp
-b24gaXMgYmVpbmcgYXR0ZW1wdGVkLgoKPiAtLS0KPiBVbmZvcnR1bmF0ZWx5LCBJIGhhdmVuJ3Qg
-YmVlbiBhYmxlIHRvIGZpZ3VyZSBvdXQgaG93IHRvIHJ1biB4ZnNfZGIgb24gYSBsaXZlCj4gcGFy
-dGl0aW9uIC0tIGtlZXBzIHRlbGxpbmcgbWUgdGhlcmUgaXMgYSBsb2cgdG8gYmUgcmVwbGF5ZWQg
-YW5kIEkgc2hvdWxkIG1vdW50Cj4gdGhlIHBhcnRpdGlvbi4uLihCVVQgSVQgSVMgbW91bnRlZCEp
-Li4uCj4gU2lnaC4uLgoKJCBzdWRvIHhmc19kYiAtciA8ZGV2aWNlPgoKPiB4ZnNkdW1wOiBkdW1w
-aW5nIGRpcmVjdG9yaWVzCj4geGZzZHVtcDogZHVtcGluZyBub24tZGlyZWN0b3J5IGZpbGVzCj4g
-eGZzZHVtcDogV0FSTklORzogY291bGQgbm90IG9wZW4gcmVndWxhciBmaWxlIGlubyAyMTQ4MDU1
-OTgzIG1vZGUgMHgwMDAwODFmODogU3QKPiBydWN0dXJlIG5lZWRzIGNsZWFuaW5nOiBub3QgZHVt
-cGVkCgpXaGF0IGlzIGluIGRtZXNnPyBUaGUgZmlsZXN5c3RlbSBzaHV0IGRvd24gYmVjYXVzZSBv
-ZiBhCmNvcnJ1cHRpb24gLSB0aGUga2VybmVsIGxvZyB3aWxsIHRlbGwgdXMgd2h5LgoKQ2hlZXJz
-LAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhm
-c0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+From: Dave Chinner <dchinner@redhat.com>
+
+Any inode reclaim flush that returns EAGAIN will result in the inode
+reclaim being attempted again later. There is no need to issue a
+warning into the logs about this situation.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/linux-2.6/xfs_sync.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+index 97813e7..5a4731e 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.c
++++ b/fs/xfs/linux-2.6/xfs_sync.c
+@@ -820,10 +820,10 @@ xfs_reclaim_inode(
+ 	 * call into reclaim to find it in a clean state instead of waiting for
+ 	 * it now. We also don't return errors here - if the error is transient
+ 	 * then the next reclaim pass will flush the inode, and if the error
+-	 * is permanent then the next sync reclaim will relcaim the inode and
++	 * is permanent then the next sync reclaim will reclaim the inode and
+ 	 * pass on the error.
+ 	 */
+-	if (error && !XFS_FORCED_SHUTDOWN(ip->i_mount)) {
++	if (error && error != EAGAIN && !XFS_FORCED_SHUTDOWN(ip->i_mount)) {
+ 		xfs_fs_cmn_err(CE_WARN, ip->i_mount,
+ 			"inode 0x%llx background reclaim flush failed with %d",
+ 			(long long)ip->i_ino, error);
+-- 
+1.6.5
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
