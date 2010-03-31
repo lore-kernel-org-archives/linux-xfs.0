@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o2VJ5Fc9049851 for <xfs@oss.sgi.com>; Wed, 31 Mar 2010 14:05:15 -0500
-Received: from smtp-out.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0684727FD8B
-	for <xfs@oss.sgi.com>; Wed, 31 Mar 2010 12:07:01 -0700 (PDT)
-Received: from smtp-out.google.com (smtp-out.google.com [216.239.44.51]) by
-	cuda.sgi.com with ESMTP id xgPiZ44lViHWhqyH for
-	<xfs@oss.sgi.com>; Wed, 31 Mar 2010 12:07:01 -0700 (PDT)
-Received: from hpaq7.eem.corp.google.com (hpaq7.eem.corp.google.com
-	[10.3.21.7]) by smtp-out.google.com with ESMTP id o2VJ708e030351
-	for <xfs@oss.sgi.com>; Wed, 31 Mar 2010 12:07:00 -0700
-From: Akshay Lal <akshaylal@google.com>
-Subject: [PATCH] xfstests: made test 215 backwards compatible with older
-	version of bash.
-Date: Wed, 31 Mar 2010 12:06:33 -0700
-Message-Id: <1270062393-5233-1-git-send-email-akshaylal@google.com>
-In-Reply-To: <Fix for test 215>
-References: <Fix for test 215>
+	o2VMVdQq062030 for <xfs@oss.sgi.com>; Wed, 31 Mar 2010 17:31:40 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A79BBF7CE69
+	for <xfs@oss.sgi.com>; Wed, 31 Mar 2010 15:33:24 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	dgrocU9TP4i5yENF for <xfs@oss.sgi.com>;
+	Wed, 31 Mar 2010 15:33:24 -0700 (PDT)
+Date: Thu, 1 Apr 2010 09:33:21 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfstests: made test 215 backwards compatible with
+	older version of bash.
+Message-ID: <20100331223321.GJ7671@dastard>
+References: <1270062393-5233-1-git-send-email-akshaylal@google.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1270062393-5233-1-git-send-email-akshaylal@google.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,59 +26,32 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Akshay Lal <akshaylal@google.com>
+To: Akshay Lal <akshaylal@google.com>
+Cc: xfs@oss.sgi.com
 
-Test 215 fails on older versions of bash (2.x), mainly due to the use of
-'let' for arithemetic operations. Changed to 'expr'.
+On Wed, Mar 31, 2010 at 12:06:33PM -0700, Akshay Lal wrote:
+> Test 215 fails on older versions of bash (2.x), mainly due to the use of
+> 'let' for arithemetic operations. Changed to 'expr'.
 
-Signed-off-by: Akshay Lal <akshaylal@google.com>
+If that is a problem for older bash versions, then there's going
+systemic problems throughout the xfstests suite. The let expression
+is used about 80 different places, and I don't see anything special
+about test 215 that makes it any different from other uses. i might
+be missing something, but there's not much context to go on from
+your changelog....
 
-On branch fix-test-215
-Changes to be committed:
-diff --git a/215 b/215
-index c61f7a5..08aa212 100644
---- a/215
-+++ b/215
-@@ -68,8 +68,9 @@ $XFS_IO_PROG -F -f            \
- mtime2=`stat --printf="%Y" $testfile`
- ctime2=`stat --printf="%Z" $testfile`
+Perhaps upgrading your version of bash might be a better approach?
 
--let mtime_diff=$mtime2-$mtime1
--let ctime_diff=$ctime2-$ctime1
-+# Allow support for older bash versions.
-+mtime_diff=`expr $mtime2 - $mtime1`
-+ctime_diff=`expr $ctime2 - $ctime1`
+Cheers,
 
- if [ "$mtime_diff" -eq "0" ]; then
-    echo "FAIL: mtime not update after mapped write"
----
- 215 |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/215 b/215
-index c61f7a5..24424c2 100644
---- a/215
-+++ b/215
-@@ -68,8 +68,9 @@ $XFS_IO_PROG -F -f 		\
- mtime2=`stat --printf="%Y" $testfile`
- ctime2=`stat --printf="%Z" $testfile`
- 
--let mtime_diff=$mtime2-$mtime1
--let ctime_diff=$ctime2-$ctime1
-+# Allow support for older bash versions.
-+mtime_diff=`expr $mtime2 - $mtime1`
-+ctime_diff=`expr $ctime2 - $ctime1`
- 
- if [ "$mtime_diff" -eq "0" ]; then
-    echo "FAIL: mtime not update after mapped write"
+Dave.
 -- 
-1.7.0.1
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
