@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o311O3Ku073094 for <xfs@oss.sgi.com>; Wed, 31 Mar 2010 20:24:03 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 19059293BA0
-	for <xfs@oss.sgi.com>; Wed, 31 Mar 2010 18:25:49 -0700 (PDT)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id d0tlmEEnxNNy2urj for
-	<xfs@oss.sgi.com>; Wed, 31 Mar 2010 18:25:49 -0700 (PDT)
-Message-ID: <4BB3F61D.3020507@sandeen.net>
-Date: Wed, 31 Mar 2010 20:25:49 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	o316xqEc098989 for <xfs@oss.sgi.com>; Thu, 1 Apr 2010 01:59:52 -0500
+Received: from moutng.kundenserver.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3A3FE294626
+	for <xfs@oss.sgi.com>; Thu,  1 Apr 2010 00:01:38 -0700 (PDT)
+Received: from moutng.kundenserver.de (moutng.kundenserver.de [212.227.17.9])
+	by cuda.sgi.com with ESMTP id ehMEymlfK26SgWeB for
+	<xfs@oss.sgi.com>; Thu, 01 Apr 2010 00:01:38 -0700 (PDT)
+Received: from localhost ([127.0.0.1])
+	by bogon.housecafe.de with esmtp (Exim 4.69)
+	(envelope-from <lists@nerdbynature.de>) id 1NxEPI-0004Oy-P4
+	for xfs@oss.sgi.com; Thu, 01 Apr 2010 09:01:36 +0200
+Date: Thu, 1 Apr 2010 00:01:36 -0700 (PDT)
+From: Christian Kujau <lists@nerdbynature.de>
+Subject: Re: 2.6.32: dirty log written in incompatible format
+In-Reply-To: <alpine.DEB.2.01.1003312325110.5493@bogon.housecafe.de>
+Message-ID: <alpine.DEB.2.01.1003312359490.5493@bogon.housecafe.de>
+References: <alpine.DEB.2.01.1003312325110.5493@bogon.housecafe.de>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: exit non-0 if fs check fails
-References: <4BB3DCEF.8040704@redhat.com> <20100401001956.GL7671@dastard>
-In-Reply-To: <20100401001956.GL7671@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,47 +31,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Dave Chinner wrote:
-> On Wed, Mar 31, 2010 at 06:38:23PM -0500, Eric Sandeen wrote:
->> Right now if any of the _check_scratch_fs tests etc fail,
->> the check script exits but with 0 status.
->>
->> This change will cause the status to be non-0 so we can detect
->> the error.
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> 
-> Wouldn't it be better to do:
-> 
-> -   [ $ok -eq 0 ] && exit 1
-> +    if [ $ok -eq 0 ]; then
-> +	status=1
-> +	exit 1
-> +    fi
-> 
-> To catch all failures rather than just the fsck failure?
+On Wed, 31 Mar 2010 at 23:45, Christian Kujau wrote:
+> recently I had some hardware-related trouble with this external dual disk 
+> enclosure, which is usually connected vua USB to a powerpc32 machine 
+> running mostly vanilla kernels. I think the USB port is dead so I 
+> had to take the the enclosure into another box - this time via Firewire to 
+> a Intel Mac (2.6.32-18 ubuntu kernel)
 
-sure, that sounds better.  I'll check that version in w/ your SOB
-unless I hear otherwise :)
+Oh, it seems to be an endianness issue indeed:
 
-Thanks,
--Eric
+   http://oss.sgi.com/pipermail/xfs/2009-November/043183.html
 
->> ---
->>
->> (aside - we could make it 2 instead of 1, so that a calling script
->> could fsck and continue ... thoughts?)
+If only I had found this one /before/ writing to the list :-)
+
+Christian.
+
+> One of the disks (same model, same GPT partitioning) is formatted with 
+> ext4 (which is fine), the other one with xfs - and I can't mount the xfs 
+> disk (partition) any more:
 > 
-> I think if a test corrupts a filesystem, the test run should stop
-> so the failure can be analysed without needing to reproduce it
-> again...
+> disko# mount -t xfs /dev/mapper/wdc1 /mnt/wdc1
+> mount: /dev/mapper/wdc1: can't read superblock
 > 
-> Cheers,
+> SGI XFS with ACLs, security attributes, realtime, large block/inode numbers, no debug enabled
+> SGI XFS Quota Management subsystem
+> XFS mounting filesystem dm-0
+> Starting XFS recovery on filesystem: dm-0 (logdev: internal)
+> XFS: dirty log written in incompatible format - can't recover
+> XFS: log mount/recovery failed: error 5
+> XFS: log mount failed
 > 
-> Dave.
+> When the disk was mounted the last time (usb, powerpc32) an rsync process 
+> was busy copying data between directories and "rm" was also involved - 
+> then the disk issues kicked in again (USB disconnect, etc) and XFS was 
+> shutting down, of course.
+> 
+> However, the powerpc32 machine already was on 2.6.34-rc2 (I'm tracking
+> -rc versions, so it was running -rc1 before ...and so on) - could it be 
+> that the 2.6.32 Ubuntu kernel doesn't understand the dirty log from 
+> 2.6.34-rc2? Or is it arch related?
+> 
+> FWIW, xfs_check advises to mount the filesystem first, xfs_repair *would* 
+> do quite a few operations on the filesystem. I've put a few more details 
+> here: http://nerdbynature.de/bits/2.6.32/xfs/
+> 
+> Oh, and the whole xfs (resp. ext4) stuff is on top of dm-crypt/LUKS, but 
+> it's not a keying issue, as I can clearly see the XFS partition.
+> 
+> Thanks for reading (and replying!)
+> Christian.
+> -- 
+> BOFH excuse #315:
+> 
+> The recent proliferation of Nuclear Testing
+-- 
+BOFH excuse #92:
+
+Stale file handle (next time use Tupperware(tm)!)
 
 _______________________________________________
 xfs mailing list
