@@ -1,27 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o31AZIbG114455 for <xfs@oss.sgi.com>; Thu, 1 Apr 2010 05:35:18 -0500
-Received: from mail-qy0-f183.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8BBA0F80835
-	for <xfs@oss.sgi.com>; Thu,  1 Apr 2010 03:37:03 -0700 (PDT)
-Received: from mail-qy0-f183.google.com (mail-qy0-f183.google.com
-	[209.85.221.183]) by cuda.sgi.com with ESMTP id
-	zZHNFm2aSP4eLULz for <xfs@oss.sgi.com>;
-	Thu, 01 Apr 2010 03:37:03 -0700 (PDT)
-Received: by qyk13 with SMTP id 13so208670qyk.18
-	for <xfs@oss.sgi.com>; Thu, 01 Apr 2010 03:37:02 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <179901cad182$5f87f620$0400a8c0@dcccs>
-References: <03ca01cacb92$195adf50$0400a8c0@dcccs>
-	<2375c9f91003242029p1efbbea1v8e313e460b118f14@mail.gmail.com>
-	<20100325153110.6be9a3df.kamezawa.hiroyu@jp.fujitsu.com>
-	<02c101cacbf8$d21d1650$0400a8c0@dcccs>
-	<179901cad182$5f87f620$0400a8c0@dcccs>
-Date: Thu, 1 Apr 2010 18:37:00 +0800
-Message-ID: <t2h2375c9f91004010337p618c4d5yc739fa25b5f842fa@mail.gmail.com>
-Subject: Re: Somebody take a look please! (some kind of kernel bug?)
-From: =?UTF-8?Q?Am=C3=A9rico_Wang?= <xiyou.wangcong@gmail.com>
+	o31CdtnQ120125 for <xfs@oss.sgi.com>; Thu, 1 Apr 2010 07:39:55 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 649D81DCA1F4
+	for <xfs@oss.sgi.com>; Thu,  1 Apr 2010 05:41:41 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	6OgheyeCzc3ECcgq for <xfs@oss.sgi.com>;
+	Thu, 01 Apr 2010 05:41:41 -0700 (PDT)
+Received: from dastard (unverified [121.44.229.111])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	19158697-1927428
+	for <xfs@oss.sgi.com>; Thu, 01 Apr 2010 23:11:39 +1030 (CDT)
+Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
+	(envelope-from <dave@fromorbit.com>) id 1NxJiK-0002HV-Bg
+	for xfs@oss.sgi.com; Thu, 01 Apr 2010 23:41:36 +1100
+Received: from dave by disturbed with local (Exim 4.71)
+	(envelope-from <dave@disturbed.disaster>) id 1NxJiJ-0001nQ-WE
+	for xfs@oss.sgi.com; Thu, 01 Apr 2010 23:41:36 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 0/8] xfs: bug fixes, cleanups and tracing
+Date: Thu,  1 Apr 2010 23:41:23 +1100
+Message-Id: <1270125691-29266-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,104 +31,68 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Janos Haar <janos.haar@netcenter.hu>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-T24gVGh1LCBBcHIgMSwgMjAxMCBhdCA2OjAxIFBNLCBKYW5vcyBIYWFyIDxqYW5vcy5oYWFyQG5l
-dGNlbnRlci5odT4gd3JvdGU6Cj4gSGVsbG8sCj4KCkhpLApUaGlzIGlzIGEgdG90YWxseSBkaWZm
-ZXJlbnQgYnVnIGZyb20gdGhlIHByZXZpb3VzIG9uZSByZXBvcnRlZCBieSB5b3UuIDopCgo+IEFu
-b3RoZXIgaXNzdWUgd2l0aCB0aGlzIHByb2R1Y3RpdmUgc2VydmVyOgo+IENhbiBzb21lYm9keSBw
-b2ludCBtZSB0byB0aGUgcmlndGggZGlyZWN0aW9uPwo+IE9yIHN1cHBvcnQgdGhhdCB0aGlzIGlz
-IGEgaHcgcHJvYmxlbSBvciBub3Q/CgoKUHJvYmFibHkgbm8sIGl0IGxvb2tzIGxpa2UgYW4gWEZT
-IGJ1ZyBvciBhIHdyaXRlLWJhY2sgYnVnLgoKVGhhbmtzIGZvciB5b3VyIHJlcG9ydC4gQ2MnaW5n
-IHJlbGF0ZWQgcGVvcGxlLi4uCgoKPgo+IFRoZSBtZXNzYWdlcyBmaWxlIGFyZSBoZXJlOgo+IGh0
-dHA6Ly9kb3dubG9hZC5uZXRjZW50ZXIuaHUvYnVnaHVudC8yMDEwMDMyNC9tYXJjMzAKPgo+IFRo
-YW5rcywKPiBKYW5vcyBIYWFyCj4KPiBNYXIgMzAgMTg6NTE6NDMgYWxmYSBrZXJuZWw6IEJVRzog
-dW5hYmxlIHRvIGhhbmRsZSBrZXJuZWwgcGFnaW5nIHJlcXVlc3QgYXQKPiAwMDAwMDAzMjAwMDAw
-MDhjCj4gTWFyIDMwIDE4OjUxOjQzIGFsZmEga2VybmVsOiBJUDogWzxmZmZmZmZmZjgxMWQ3NTVi
-Pl0KPiB4ZnNfaWZsdXNoX2NsdXN0ZXIrMHgxNDgvMHgzNWEKPiBNYXIgMzAgMTg6NTE6NDMgYWxm
-YSBrZXJuZWw6IFBHRCAxMDJkN2EwNjcgUFVEIDAKPiBNYXIgMzAgMTg6NTE6NDMgYWxmYSBrZXJu
-ZWw6IE9vcHM6IDAwMDAgWyMxXSBTTVAKPiBNYXIgMzAgMTg6NTE6NDMgYWxmYSBrZXJuZWw6IGxh
-c3Qgc3lzZnMgZmlsZTogL3N5cy9jbGFzcy9taXNjL3Jma2lsbC9kZXYKPiBNYXIgMzAgMTg6NTE6
-NDMgYWxmYSBrZXJuZWw6IENQVSAwCj4gTWFyIDMwIDE4OjUxOjQzIGFsZmEga2VybmVsOiBNb2R1
-bGVzIGxpbmtlZCBpbjogaGlkcCBsMmNhcCBjcmMxNiBibHVldG9vdGgKPiByZmtpbGwgaXB2NiB2
-aWRlbyBvdXRwdXQgc2JzIHNic2hjIGJhdHRlcnkgYWMgcGFycG9ydF9wYyBscCBwYXJwb3J0Cj4g
-c2VyaW9fcmF3IDgyNTBfCj4gcG5wIDgyNTAgc2VyaWFsX2NvcmUgc2hwY2hwIGJ1dHRvbiBpMmNf
-aTgwMSBpMmNfY29yZSBwY3Nwa3IKPiBNYXIgMzAgMTg6NTE6NDMgYWxmYSBrZXJuZWw6IFBpZDog
-MzI0MiwgY29tbTogZmx1c2gtODoxNiBOb3QgdGFpbnRlZAo+IDIuNi4zMi4xMCAjMgo+IE1hciAz
-MCAxODo1MTo0MyBhbGZhIGtlcm5lbDogUklQOiAwMDEwOls8ZmZmZmZmZmY4MTFkNzU1Yj5dCj4g
-WzxmZmZmZmZmZjgxMWQ3NTViPl0geGZzX2lmbHVzaF9jbHVzdGVyKzB4MTQ4LzB4MzVhCj4gTWFy
-IDMwIDE4OjUxOjQzIGFsZmEga2VybmVsOiBSU1A6IDAwMDA6ZmZmZjg4MDIyOGNlNWI2MCDCoEVG
-TEFHUzogMDAwMTAyMDYKPiBNYXIgMzAgMTg6NTE6NDMgYWxmYSBrZXJuZWw6IFJBWDogMDAwMDAw
-MzIwMDAwMDAwMCBSQlg6IGZmZmY4ODAxNTM3OTQ3ZDAKPiBSQ1g6IDAwMDAwMDAwMDAwMDAwMWEK
-PiBNYXIgMzAgMTg6NTE6NDMgYWxmYSBrZXJuZWw6IFJEWDogMDAwMDAwMDAwMDAwMDAyMCBSU0k6
-IDAwMDAwMDAwMDAwYzZjYzIKPiBSREk6IDAwMDAwMDAwMDAwMDAwMDEKPiBNYXIgMzAgMTg6NTE6
-NDMgYWxmYSBrZXJuZWw6IFJCUDogZmZmZjg4MDIyOGNlNWJkMCBSMDg6IGZmZmY4ODAyMjhjZTVi
-MjAKPiBSMDk6IGZmZmY4ODAxZWE0MzY5MjgKPiBNYXIgMzAgMTg6NTE6NDMgYWxmYSBrZXJuZWw6
-IFIxMDogMDAwMDAwMDAwMDBjNmNjMiBSMTE6IDAwMDAwMDAwMDAwMDAwMDEKPiBSMTI6IGZmZmY4
-ODAwYjYzMGIxMWEKPiBNYXIgMzAgMTg6NTE6NDMgYWxmYSBrZXJuZWw6IFIxMzogZmZmZjg4MDFi
-ZDU0YWIzMCBSMTQ6IGZmZmY4ODAyMjk2MmQyYjgKPiBSMTU6IDAwMDAwMDAwMDAwYzZjYTAKPiBN
-YXIgMzAgMTg6NTE6NDMgYWxmYSBrZXJuZWw6IEZTOiDCoDAwMDAwMDAwMDAwMDAwMDAoMDAwMCkK
-PiBHUzpmZmZmODgwMDI4MjAwMDAwKDAwMDApIGtubEdTOjAwMDAwMDAwMDAwMDAwMDAKPiBNYXIg
-MzAgMTg6NTE6NDMgYWxmYSBrZXJuZWw6IENTOiDCoDAwMTAgRFM6IDAwMTggRVM6IDAwMTggQ1Iw
-Ogo+IDAwMDAwMDAwODAwNTAwM2IKPiBNYXIgMzAgMTg6NTE6NDMgYWxmYSBrZXJuZWw6IENSMjog
-MDAwMDAwMzIwMDAwMDA4YyBDUjM6IDAwMDAwMDAxNjhlNzUwMDAKPiBDUjQ6IDAwMDAwMDAwMDAw
-MDA2ZjAKPiBNYXIgMzAgMTg6NTE6NDMgYWxmYSBrZXJuZWw6IERSMDogMDAwMDAwMDAwMDAwMDAw
-MCBEUjE6IDAwMDAwMDAwMDAwMDAwMDAKPiBEUjI6IDAwMDAwMDAwMDAwMDAwMDAKPiBNYXIgMzAg
-MTg6NTE6NDMgYWxmYSBrZXJuZWw6IERSMzogMDAwMDAwMDAwMDAwMDAwMCBEUjY6IDAwMDAwMDAw
-ZmZmZjBmZjAKPiBEUjc6IDAwMDAwMDAwMDAwMDA0MDAKPiBNYXIgMzAgMTg6NTE6NDMgYWxmYSBr
-ZXJuZWw6IFByb2Nlc3MgZmx1c2gtODoxNiAocGlkOiAzMjQyLCB0aHJlYWRpbmZvCj4gZmZmZjg4
-MDIyOGNlNDAwMCwgdGFzayBmZmZmODgwMjI4ZWE0MDQwKQo+IE1hciAzMCAxODo1MTo0MyBhbGZh
-IGtlcm5lbDogU3RhY2s6Cj4gTWFyIDMwIDE4OjUxOjQzIGFsZmEga2VybmVsOiDCoGZmZmY4ODAx
-YmQ1NGFiMzAgZmZmZjg4MDBiNjMwYjE0MAo+IGZmZmY4ODAyMmEyZDk5ZDAgZmZmZmZmZmZmZmZm
-ZmZlMAo+IE1hciAzMCAxODo1MTo0MyBhbGZhIGtlcm5lbDogPDA+IDAwMDAwMDAwMDAwMDAwMjAg
-ZmZmZjg4MDIxOGUzZGI2MAo+IDAwMDAwMDIwMjhjZTViZDAgMDAwMDAwMDIwMDAwMDAwMAo+IE1h
-ciAzMCAxODo1MTo0MyBhbGZhIGtlcm5lbDogPDA+IGZmZmY4ODAyMThlM2RiNzAgZmZmZjg4MDFi
-ZDU0YWIzMAo+IGZmZmY4ODAwYjYzMGIxNDAgMDAwMDAwMDAwMDAwMDAwMgo+IE1hciAzMCAxODo1
-MTo0MyBhbGZhIGtlcm5lbDogQ2FsbCBUcmFjZToKPiBNYXIgMzAgMTg6NTE6NDMgYWxmYSBrZXJu
-ZWw6IMKgWzxmZmZmZmZmZjgxMWQ3OTMxPl0geGZzX2lmbHVzaCsweDFjNC8weDI3Mgo+IE1hciAz
-MCAxODo1MTo0MyBhbGZhIGtlcm5lbDogwqBbPGZmZmZmZmZmODEwMzQ1OGU+XSA/Cj4gdHJ5X3dh
-aXRfZm9yX2NvbXBsZXRpb24rMHgyNC8weDQ1Cj4gTWFyIDMwIDE4OjUxOjQzIGFsZmEga2VybmVs
-OiDCoFs8ZmZmZmZmZmY4MTFmODE5Yz5dCj4geGZzX2ZzX3dyaXRlX2lub2RlKzB4ZTAvMHgxMWUK
-PiBNYXIgMzAgMTg6NTE6NDMgYWxmYSBrZXJuZWw6IMKgWzxmZmZmZmZmZjgxMGY3YmNmPl0KPiB3
-cml0ZWJhY2tfc2luZ2xlX2lub2RlKzB4MTA5LzB4MjE1Cj4gTWFyIDMwIDE4OjUxOjQzIGFsZmEg
-a2VybmVsOiDCoFs8ZmZmZmZmZmY4MTBmODRiZD5dCj4gd3JpdGViYWNrX2lub2Rlc193YisweDMz
-YS8weDNjYwo+IE1hciAzMCAxODo1MTo0MyBhbGZhIGtlcm5lbDogwqBbPGZmZmZmZmZmODEwZjg2
-ODY+XSB3Yl93cml0ZWJhY2srMHgxMzcvMHgxYzcKPiBNYXIgMzAgMTg6NTE6NDMgYWxmYSBrZXJu
-ZWw6IMKgWzxmZmZmZmZmZjgxMGY4ODMwPl0gPwo+IHdiX2RvX3dyaXRlYmFjaysweDdkLzB4MWFl
-Cj4gTWFyIDMwIDE4OjUxOjQzIGFsZmEga2VybmVsOiDCoFs8ZmZmZmZmZmY4MTBmODkyYz5dCj4g
-d2JfZG9fd3JpdGViYWNrKzB4MTc5LzB4MWFlCj4gTWFyIDMwIDE4OjUxOjQzIGFsZmEga2VybmVs
-OiDCoFs8ZmZmZmZmZmY4MTBmODgzMD5dID8KPiB3Yl9kb193cml0ZWJhY2srMHg3ZC8weDFhZQo+
-IE1hciAzMCAxODo1MTo0MyBhbGZhIGtlcm5lbDogwqBbPGZmZmZmZmZmODEwNTA2NGM+XSA/Cj4g
-cHJvY2Vzc190aW1lb3V0KzB4MC8weDEwCj4gTWFyIDMwIDE4OjUxOjQzIGFsZmEga2VybmVsOiDC
-oFs8ZmZmZmZmZmY4MTBjMTBlZD5dID8gYmRpX3N0YXJ0X2ZuKzB4MC8weGQxCj4gTWFyIDMwIDE4
-OjUxOjQzIGFsZmEga2VybmVsOiDCoFs8ZmZmZmZmZmY4MTBmODk4ZD5dCj4gYmRpX3dyaXRlYmFj
-a190YXNrKzB4MmMvMHhhMgo+IE1hciAzMCAxODo1MTo0MyBhbGZhIGtlcm5lbDogwqBbPGZmZmZm
-ZmZmODEwYzExNjM+XSBiZGlfc3RhcnRfZm4rMHg3Ni8weGQxCj4gTWFyIDMwIDE4OjUxOjQzIGFs
-ZmEga2VybmVsOiDCoFs8ZmZmZmZmZmY4MTBjMTBlZD5dID8gYmRpX3N0YXJ0X2ZuKzB4MC8weGQx
-Cj4gTWFyIDMwIDE4OjUxOjQzIGFsZmEga2VybmVsOiDCoFs8ZmZmZmZmZmY4MTA1ZGRhMT5dIGt0
-aHJlYWQrMHg4Mi8weDhkCj4gTWFyIDMwIDE4OjUxOjQzIGFsZmEga2VybmVsOiDCoFs8ZmZmZmZm
-ZmY4MTAwYzE1YT5dIGNoaWxkX3JpcCsweGEvMHgyMAo+IE1hciAzMCAxODo1MTo0MyBhbGZhIGtl
-cm5lbDogwqBbPGZmZmZmZmZmODEwMGJhZmM+XSA/IHJlc3RvcmVfYXJncysweDAvMHgzMAo+IE1h
-ciAzMCAxODo1MTo0MyBhbGZhIGtlcm5lbDogwqBbPGZmZmZmZmZmODEwMzg1OTY+XSA/Cj4gZmlu
-aXNoX3Rhc2tfc3dpdGNoKzB4MC8weGJjCj4gTWFyIDMwIDE4OjUxOjQzIGFsZmEga2VybmVsOiDC
-oFs8ZmZmZmZmZmY4MTA1ZGQxZj5dID8ga3RocmVhZCsweDAvMHg4ZAo+IE1hciAzMCAxODo1MTo0
-MyBhbGZhIGtlcm5lbDogwqBbPGZmZmZmZmZmODEwMGMxNTA+XSA/IGNoaWxkX3JpcCsweDAvMHgy
-MAo+IE1hciAzMCAxODo1MTo0MyBhbGZhIGtlcm5lbDogQ29kZTogOGUgZWIgMDEgMDAgMDAgYjgg
-MDEgMDAgMDAgMDAgNDggZDMgZTAgZmYKPiBjOCAyMyA0MyAxOCA0OCAyMyA0NSBhOCA0YyAzOSBm
-OCAwZiA4NSBhZSAwMCAwMCAwMCA0OCA4YiA4MyA4MCAwMCAwMCAwMCA0OAo+IDg1IGMwCj4gNzQg
-MGIgPDY2PiBmNyA4MCA4YyAwMCAwMCAwMCBmZiAwMSA3NSAxMyA4MCBiYiAwYSAwMiAwMCAwMCAw
-MCA3NSAwYSA4Ygo+IE1hciAzMCAxODo1MTo0MyBhbGZhIGtlcm5lbDogUklQIMKgWzxmZmZmZmZm
-ZjgxMWQ3NTViPl0KPiB4ZnNfaWZsdXNoX2NsdXN0ZXIrMHgxNDgvMHgzNWEKPiBNYXIgMzAgMTg6
-NTE6NDMgYWxmYSBrZXJuZWw6IMKgUlNQIDxmZmZmODgwMjI4Y2U1YjYwPgo+IE1hciAzMCAxODo1
-MTo0MyBhbGZhIGtlcm5lbDogQ1IyOiAwMDAwMDAzMjAwMDAwMDhjCj4gTWFyIDMwIDE4OjUxOjQz
-IGFsZmEga2VybmVsOiAtLS1bIGVuZCB0cmFjZSBlNmM4MzkxZWE3NjYwMmY0IF0tLS0KPiBNYXIg
-MzAgMTg6NTE6NDMgYWxmYSBrZXJuZWw6IGZsdXNoLTg6MTYgdXNlZCBncmVhdGVzdCBzdGFjayBk
-ZXB0aDogMjQ2NAo+IGJ5dGVzIGxlZnQKPiBNYXIgMzAgMTk6MDk6MzkgYWxmYSBzeXNsb2dkIDEu
-NC4xOiByZXN0YXJ0Lgo+CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5j
-b20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+The first two patches are reposts of reviewed patches not yet in the
+dev tree.  Christoph, the sync fix has been cleaned up like you
+suggested, you might want to pass an eye over it again.
+
+The next two are log changes - the first is making the transaction
+ID that identifies transactions on disk really unique. The second is
+a bunch of tracing additions to log recovery that I wrote recently
+to track down an issue with delayed logging causing corruptions
+during recovery.
+
+The last four are the start of cleaning up some of the dquot code.
+They basicaly remove all the hand coded linked list operations and
+obfuscated locking macros for all the lists that the dquots can
+exist on. One patch also removes a duplicated reclaim algorithm
+and uses the common function to implement both reclaim and shaking
+of dquots. I haven't done a huge amount of testing on these yet, but
+they've passed several runs of xfsqa on both single and quad
+processor VMs so far.
+
+As usual, the series can also be found in my git tree...
+
+The following changes since commit 68a2ac777cca40ccc993512bcf457999be71cc36:
+  Christoph Hellwig (1):
+        xfs: clean up xlog_write_adv_cnt
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/xfs.git working
+
+Dave Chinner (8):
+      xfs: ensure that sync updates the log tail correctly
+      xfs: don't warn on EAGAIN in inode reclaim
+      xfs: make the log ticket transaction id random
+      xfs: add log item recovery tracing
+      xfs: convert the per-mount dquot list to use list heads
+      xfs: remove duplicate code from dquot reclaim
+      xfs: convert the dquot hash list to use list heads
+      xfs: convert the dquot free list to use list heads
+
+ fs/xfs/linux-2.6/xfs_sync.c    |    4 +-
+ fs/xfs/linux-2.6/xfs_trace.c   |    3 +
+ fs/xfs/linux-2.6/xfs_trace.h   |  150 +++++++++++-
+ fs/xfs/quota/xfs_dquot.c       |  120 ++++------
+ fs/xfs/quota/xfs_dquot.h       |   14 +-
+ fs/xfs/quota/xfs_qm.c          |  520 ++++++++++++++--------------------------
+ fs/xfs/quota/xfs_qm.h          |   23 +--
+ fs/xfs/quota/xfs_qm_stats.c    |    2 +-
+ fs/xfs/quota/xfs_qm_syscalls.c |   36 +--
+ fs/xfs/quota/xfs_quota_priv.h  |   75 ------
+ fs/xfs/xfs_buf_item.h          |    2 +-
+ fs/xfs/xfs_log.c               |   40 ++-
+ fs/xfs/xfs_log_recover.c       |   44 +++-
+ 13 files changed, 472 insertions(+), 561 deletions(-)
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
