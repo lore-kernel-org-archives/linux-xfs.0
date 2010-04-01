@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o316hQre098155 for <xfs@oss.sgi.com>; Thu, 1 Apr 2010 01:43:27 -0500
-Received: from moutng.kundenserver.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DCD0B2947C8
-	for <xfs@oss.sgi.com>; Wed, 31 Mar 2010 23:45:12 -0700 (PDT)
-Received: from moutng.kundenserver.de (moutng.kundenserver.de [212.227.17.9])
-	by cuda.sgi.com with ESMTP id N22SIxXNFGP39pBD for
-	<xfs@oss.sgi.com>; Wed, 31 Mar 2010 23:45:12 -0700 (PDT)
-Received: from localhost ([127.0.0.1])
-	by bogon.housecafe.de with esmtp (Exim 4.69)
-	(envelope-from <lists@nerdbynature.de>) id 1NxE9M-0003zm-K2
-	for xfs@oss.sgi.com; Thu, 01 Apr 2010 08:45:09 +0200
-Date: Wed, 31 Mar 2010 23:45:08 -0700 (PDT)
-From: Christian Kujau <lists@nerdbynature.de>
-Subject: 2.6.32: dirty log written in incompatible format
-Message-ID: <alpine.DEB.2.01.1003312325110.5493@bogon.housecafe.de>
+	o31AZIbG114455 for <xfs@oss.sgi.com>; Thu, 1 Apr 2010 05:35:18 -0500
+Received: from mail-qy0-f183.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8BBA0F80835
+	for <xfs@oss.sgi.com>; Thu,  1 Apr 2010 03:37:03 -0700 (PDT)
+Received: from mail-qy0-f183.google.com (mail-qy0-f183.google.com
+	[209.85.221.183]) by cuda.sgi.com with ESMTP id
+	zZHNFm2aSP4eLULz for <xfs@oss.sgi.com>;
+	Thu, 01 Apr 2010 03:37:03 -0700 (PDT)
+Received: by qyk13 with SMTP id 13so208670qyk.18
+	for <xfs@oss.sgi.com>; Thu, 01 Apr 2010 03:37:02 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <179901cad182$5f87f620$0400a8c0@dcccs>
+References: <03ca01cacb92$195adf50$0400a8c0@dcccs>
+	<2375c9f91003242029p1efbbea1v8e313e460b118f14@mail.gmail.com>
+	<20100325153110.6be9a3df.kamezawa.hiroyu@jp.fujitsu.com>
+	<02c101cacbf8$d21d1650$0400a8c0@dcccs>
+	<179901cad182$5f87f620$0400a8c0@dcccs>
+Date: Thu, 1 Apr 2010 18:37:00 +0800
+Message-ID: <t2h2375c9f91004010337p618c4d5yc739fa25b5f842fa@mail.gmail.com>
+Subject: Re: Somebody take a look please! (some kind of kernel bug?)
+From: =?UTF-8?Q?Am=C3=A9rico_Wang?= <xiyou.wangcong@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,60 +30,104 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Janos Haar <janos.haar@netcenter.hu>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, xfs@oss.sgi.com
 
-Hi folks,
-
-recently I had some hardware-related trouble with this external dual disk 
-enclosure, which is usually connected vua USB to a powerpc32 machine 
-running mostly vanilla kernels. I think the USB port is dead so I 
-had to take the the enclosure into another box - this time via Firewire to 
-a Intel Mac (2.6.32-18 ubuntu kernel)
-
-One of the disks (same model, same GPT partitioning) is formatted with 
-ext4 (which is fine), the other one with xfs - and I can't mount the xfs 
-disk (partition) any more:
-
-disko# mount -t xfs /dev/mapper/wdc1 /mnt/wdc1
-mount: /dev/mapper/wdc1: can't read superblock
-
-SGI XFS with ACLs, security attributes, realtime, large block/inode numbers, no debug enabled
-SGI XFS Quota Management subsystem
-XFS mounting filesystem dm-0
-Starting XFS recovery on filesystem: dm-0 (logdev: internal)
-XFS: dirty log written in incompatible format - can't recover
-XFS: log mount/recovery failed: error 5
-XFS: log mount failed
-
-When the disk was mounted the last time (usb, powerpc32) an rsync process 
-was busy copying data between directories and "rm" was also involved - 
-then the disk issues kicked in again (USB disconnect, etc) and XFS was 
-shutting down, of course.
-
-However, the powerpc32 machine already was on 2.6.34-rc2 (I'm tracking
--rc versions, so it was running -rc1 before ...and so on) - could it be 
-that the 2.6.32 Ubuntu kernel doesn't understand the dirty log from 
-2.6.34-rc2? Or is it arch related?
-
-FWIW, xfs_check advises to mount the filesystem first, xfs_repair *would* 
-do quite a few operations on the filesystem. I've put a few more details 
-here: http://nerdbynature.de/bits/2.6.32/xfs/
-
-Oh, and the whole xfs (resp. ext4) stuff is on top of dm-crypt/LUKS, but 
-it's not a keying issue, as I can clearly see the XFS partition.
-
-Thanks for reading (and replying!)
-Christian.
--- 
-BOFH excuse #315:
-
-The recent proliferation of Nuclear Testing
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCBBcHIgMSwgMjAxMCBhdCA2OjAxIFBNLCBKYW5vcyBIYWFyIDxqYW5vcy5oYWFyQG5l
+dGNlbnRlci5odT4gd3JvdGU6Cj4gSGVsbG8sCj4KCkhpLApUaGlzIGlzIGEgdG90YWxseSBkaWZm
+ZXJlbnQgYnVnIGZyb20gdGhlIHByZXZpb3VzIG9uZSByZXBvcnRlZCBieSB5b3UuIDopCgo+IEFu
+b3RoZXIgaXNzdWUgd2l0aCB0aGlzIHByb2R1Y3RpdmUgc2VydmVyOgo+IENhbiBzb21lYm9keSBw
+b2ludCBtZSB0byB0aGUgcmlndGggZGlyZWN0aW9uPwo+IE9yIHN1cHBvcnQgdGhhdCB0aGlzIGlz
+IGEgaHcgcHJvYmxlbSBvciBub3Q/CgoKUHJvYmFibHkgbm8sIGl0IGxvb2tzIGxpa2UgYW4gWEZT
+IGJ1ZyBvciBhIHdyaXRlLWJhY2sgYnVnLgoKVGhhbmtzIGZvciB5b3VyIHJlcG9ydC4gQ2MnaW5n
+IHJlbGF0ZWQgcGVvcGxlLi4uCgoKPgo+IFRoZSBtZXNzYWdlcyBmaWxlIGFyZSBoZXJlOgo+IGh0
+dHA6Ly9kb3dubG9hZC5uZXRjZW50ZXIuaHUvYnVnaHVudC8yMDEwMDMyNC9tYXJjMzAKPgo+IFRo
+YW5rcywKPiBKYW5vcyBIYWFyCj4KPiBNYXIgMzAgMTg6NTE6NDMgYWxmYSBrZXJuZWw6IEJVRzog
+dW5hYmxlIHRvIGhhbmRsZSBrZXJuZWwgcGFnaW5nIHJlcXVlc3QgYXQKPiAwMDAwMDAzMjAwMDAw
+MDhjCj4gTWFyIDMwIDE4OjUxOjQzIGFsZmEga2VybmVsOiBJUDogWzxmZmZmZmZmZjgxMWQ3NTVi
+Pl0KPiB4ZnNfaWZsdXNoX2NsdXN0ZXIrMHgxNDgvMHgzNWEKPiBNYXIgMzAgMTg6NTE6NDMgYWxm
+YSBrZXJuZWw6IFBHRCAxMDJkN2EwNjcgUFVEIDAKPiBNYXIgMzAgMTg6NTE6NDMgYWxmYSBrZXJu
+ZWw6IE9vcHM6IDAwMDAgWyMxXSBTTVAKPiBNYXIgMzAgMTg6NTE6NDMgYWxmYSBrZXJuZWw6IGxh
+c3Qgc3lzZnMgZmlsZTogL3N5cy9jbGFzcy9taXNjL3Jma2lsbC9kZXYKPiBNYXIgMzAgMTg6NTE6
+NDMgYWxmYSBrZXJuZWw6IENQVSAwCj4gTWFyIDMwIDE4OjUxOjQzIGFsZmEga2VybmVsOiBNb2R1
+bGVzIGxpbmtlZCBpbjogaGlkcCBsMmNhcCBjcmMxNiBibHVldG9vdGgKPiByZmtpbGwgaXB2NiB2
+aWRlbyBvdXRwdXQgc2JzIHNic2hjIGJhdHRlcnkgYWMgcGFycG9ydF9wYyBscCBwYXJwb3J0Cj4g
+c2VyaW9fcmF3IDgyNTBfCj4gcG5wIDgyNTAgc2VyaWFsX2NvcmUgc2hwY2hwIGJ1dHRvbiBpMmNf
+aTgwMSBpMmNfY29yZSBwY3Nwa3IKPiBNYXIgMzAgMTg6NTE6NDMgYWxmYSBrZXJuZWw6IFBpZDog
+MzI0MiwgY29tbTogZmx1c2gtODoxNiBOb3QgdGFpbnRlZAo+IDIuNi4zMi4xMCAjMgo+IE1hciAz
+MCAxODo1MTo0MyBhbGZhIGtlcm5lbDogUklQOiAwMDEwOls8ZmZmZmZmZmY4MTFkNzU1Yj5dCj4g
+WzxmZmZmZmZmZjgxMWQ3NTViPl0geGZzX2lmbHVzaF9jbHVzdGVyKzB4MTQ4LzB4MzVhCj4gTWFy
+IDMwIDE4OjUxOjQzIGFsZmEga2VybmVsOiBSU1A6IDAwMDA6ZmZmZjg4MDIyOGNlNWI2MCDCoEVG
+TEFHUzogMDAwMTAyMDYKPiBNYXIgMzAgMTg6NTE6NDMgYWxmYSBrZXJuZWw6IFJBWDogMDAwMDAw
+MzIwMDAwMDAwMCBSQlg6IGZmZmY4ODAxNTM3OTQ3ZDAKPiBSQ1g6IDAwMDAwMDAwMDAwMDAwMWEK
+PiBNYXIgMzAgMTg6NTE6NDMgYWxmYSBrZXJuZWw6IFJEWDogMDAwMDAwMDAwMDAwMDAyMCBSU0k6
+IDAwMDAwMDAwMDAwYzZjYzIKPiBSREk6IDAwMDAwMDAwMDAwMDAwMDEKPiBNYXIgMzAgMTg6NTE6
+NDMgYWxmYSBrZXJuZWw6IFJCUDogZmZmZjg4MDIyOGNlNWJkMCBSMDg6IGZmZmY4ODAyMjhjZTVi
+MjAKPiBSMDk6IGZmZmY4ODAxZWE0MzY5MjgKPiBNYXIgMzAgMTg6NTE6NDMgYWxmYSBrZXJuZWw6
+IFIxMDogMDAwMDAwMDAwMDBjNmNjMiBSMTE6IDAwMDAwMDAwMDAwMDAwMDEKPiBSMTI6IGZmZmY4
+ODAwYjYzMGIxMWEKPiBNYXIgMzAgMTg6NTE6NDMgYWxmYSBrZXJuZWw6IFIxMzogZmZmZjg4MDFi
+ZDU0YWIzMCBSMTQ6IGZmZmY4ODAyMjk2MmQyYjgKPiBSMTU6IDAwMDAwMDAwMDAwYzZjYTAKPiBN
+YXIgMzAgMTg6NTE6NDMgYWxmYSBrZXJuZWw6IEZTOiDCoDAwMDAwMDAwMDAwMDAwMDAoMDAwMCkK
+PiBHUzpmZmZmODgwMDI4MjAwMDAwKDAwMDApIGtubEdTOjAwMDAwMDAwMDAwMDAwMDAKPiBNYXIg
+MzAgMTg6NTE6NDMgYWxmYSBrZXJuZWw6IENTOiDCoDAwMTAgRFM6IDAwMTggRVM6IDAwMTggQ1Iw
+Ogo+IDAwMDAwMDAwODAwNTAwM2IKPiBNYXIgMzAgMTg6NTE6NDMgYWxmYSBrZXJuZWw6IENSMjog
+MDAwMDAwMzIwMDAwMDA4YyBDUjM6IDAwMDAwMDAxNjhlNzUwMDAKPiBDUjQ6IDAwMDAwMDAwMDAw
+MDA2ZjAKPiBNYXIgMzAgMTg6NTE6NDMgYWxmYSBrZXJuZWw6IERSMDogMDAwMDAwMDAwMDAwMDAw
+MCBEUjE6IDAwMDAwMDAwMDAwMDAwMDAKPiBEUjI6IDAwMDAwMDAwMDAwMDAwMDAKPiBNYXIgMzAg
+MTg6NTE6NDMgYWxmYSBrZXJuZWw6IERSMzogMDAwMDAwMDAwMDAwMDAwMCBEUjY6IDAwMDAwMDAw
+ZmZmZjBmZjAKPiBEUjc6IDAwMDAwMDAwMDAwMDA0MDAKPiBNYXIgMzAgMTg6NTE6NDMgYWxmYSBr
+ZXJuZWw6IFByb2Nlc3MgZmx1c2gtODoxNiAocGlkOiAzMjQyLCB0aHJlYWRpbmZvCj4gZmZmZjg4
+MDIyOGNlNDAwMCwgdGFzayBmZmZmODgwMjI4ZWE0MDQwKQo+IE1hciAzMCAxODo1MTo0MyBhbGZh
+IGtlcm5lbDogU3RhY2s6Cj4gTWFyIDMwIDE4OjUxOjQzIGFsZmEga2VybmVsOiDCoGZmZmY4ODAx
+YmQ1NGFiMzAgZmZmZjg4MDBiNjMwYjE0MAo+IGZmZmY4ODAyMmEyZDk5ZDAgZmZmZmZmZmZmZmZm
+ZmZlMAo+IE1hciAzMCAxODo1MTo0MyBhbGZhIGtlcm5lbDogPDA+IDAwMDAwMDAwMDAwMDAwMjAg
+ZmZmZjg4MDIxOGUzZGI2MAo+IDAwMDAwMDIwMjhjZTViZDAgMDAwMDAwMDIwMDAwMDAwMAo+IE1h
+ciAzMCAxODo1MTo0MyBhbGZhIGtlcm5lbDogPDA+IGZmZmY4ODAyMThlM2RiNzAgZmZmZjg4MDFi
+ZDU0YWIzMAo+IGZmZmY4ODAwYjYzMGIxNDAgMDAwMDAwMDAwMDAwMDAwMgo+IE1hciAzMCAxODo1
+MTo0MyBhbGZhIGtlcm5lbDogQ2FsbCBUcmFjZToKPiBNYXIgMzAgMTg6NTE6NDMgYWxmYSBrZXJu
+ZWw6IMKgWzxmZmZmZmZmZjgxMWQ3OTMxPl0geGZzX2lmbHVzaCsweDFjNC8weDI3Mgo+IE1hciAz
+MCAxODo1MTo0MyBhbGZhIGtlcm5lbDogwqBbPGZmZmZmZmZmODEwMzQ1OGU+XSA/Cj4gdHJ5X3dh
+aXRfZm9yX2NvbXBsZXRpb24rMHgyNC8weDQ1Cj4gTWFyIDMwIDE4OjUxOjQzIGFsZmEga2VybmVs
+OiDCoFs8ZmZmZmZmZmY4MTFmODE5Yz5dCj4geGZzX2ZzX3dyaXRlX2lub2RlKzB4ZTAvMHgxMWUK
+PiBNYXIgMzAgMTg6NTE6NDMgYWxmYSBrZXJuZWw6IMKgWzxmZmZmZmZmZjgxMGY3YmNmPl0KPiB3
+cml0ZWJhY2tfc2luZ2xlX2lub2RlKzB4MTA5LzB4MjE1Cj4gTWFyIDMwIDE4OjUxOjQzIGFsZmEg
+a2VybmVsOiDCoFs8ZmZmZmZmZmY4MTBmODRiZD5dCj4gd3JpdGViYWNrX2lub2Rlc193YisweDMz
+YS8weDNjYwo+IE1hciAzMCAxODo1MTo0MyBhbGZhIGtlcm5lbDogwqBbPGZmZmZmZmZmODEwZjg2
+ODY+XSB3Yl93cml0ZWJhY2srMHgxMzcvMHgxYzcKPiBNYXIgMzAgMTg6NTE6NDMgYWxmYSBrZXJu
+ZWw6IMKgWzxmZmZmZmZmZjgxMGY4ODMwPl0gPwo+IHdiX2RvX3dyaXRlYmFjaysweDdkLzB4MWFl
+Cj4gTWFyIDMwIDE4OjUxOjQzIGFsZmEga2VybmVsOiDCoFs8ZmZmZmZmZmY4MTBmODkyYz5dCj4g
+d2JfZG9fd3JpdGViYWNrKzB4MTc5LzB4MWFlCj4gTWFyIDMwIDE4OjUxOjQzIGFsZmEga2VybmVs
+OiDCoFs8ZmZmZmZmZmY4MTBmODgzMD5dID8KPiB3Yl9kb193cml0ZWJhY2srMHg3ZC8weDFhZQo+
+IE1hciAzMCAxODo1MTo0MyBhbGZhIGtlcm5lbDogwqBbPGZmZmZmZmZmODEwNTA2NGM+XSA/Cj4g
+cHJvY2Vzc190aW1lb3V0KzB4MC8weDEwCj4gTWFyIDMwIDE4OjUxOjQzIGFsZmEga2VybmVsOiDC
+oFs8ZmZmZmZmZmY4MTBjMTBlZD5dID8gYmRpX3N0YXJ0X2ZuKzB4MC8weGQxCj4gTWFyIDMwIDE4
+OjUxOjQzIGFsZmEga2VybmVsOiDCoFs8ZmZmZmZmZmY4MTBmODk4ZD5dCj4gYmRpX3dyaXRlYmFj
+a190YXNrKzB4MmMvMHhhMgo+IE1hciAzMCAxODo1MTo0MyBhbGZhIGtlcm5lbDogwqBbPGZmZmZm
+ZmZmODEwYzExNjM+XSBiZGlfc3RhcnRfZm4rMHg3Ni8weGQxCj4gTWFyIDMwIDE4OjUxOjQzIGFs
+ZmEga2VybmVsOiDCoFs8ZmZmZmZmZmY4MTBjMTBlZD5dID8gYmRpX3N0YXJ0X2ZuKzB4MC8weGQx
+Cj4gTWFyIDMwIDE4OjUxOjQzIGFsZmEga2VybmVsOiDCoFs8ZmZmZmZmZmY4MTA1ZGRhMT5dIGt0
+aHJlYWQrMHg4Mi8weDhkCj4gTWFyIDMwIDE4OjUxOjQzIGFsZmEga2VybmVsOiDCoFs8ZmZmZmZm
+ZmY4MTAwYzE1YT5dIGNoaWxkX3JpcCsweGEvMHgyMAo+IE1hciAzMCAxODo1MTo0MyBhbGZhIGtl
+cm5lbDogwqBbPGZmZmZmZmZmODEwMGJhZmM+XSA/IHJlc3RvcmVfYXJncysweDAvMHgzMAo+IE1h
+ciAzMCAxODo1MTo0MyBhbGZhIGtlcm5lbDogwqBbPGZmZmZmZmZmODEwMzg1OTY+XSA/Cj4gZmlu
+aXNoX3Rhc2tfc3dpdGNoKzB4MC8weGJjCj4gTWFyIDMwIDE4OjUxOjQzIGFsZmEga2VybmVsOiDC
+oFs8ZmZmZmZmZmY4MTA1ZGQxZj5dID8ga3RocmVhZCsweDAvMHg4ZAo+IE1hciAzMCAxODo1MTo0
+MyBhbGZhIGtlcm5lbDogwqBbPGZmZmZmZmZmODEwMGMxNTA+XSA/IGNoaWxkX3JpcCsweDAvMHgy
+MAo+IE1hciAzMCAxODo1MTo0MyBhbGZhIGtlcm5lbDogQ29kZTogOGUgZWIgMDEgMDAgMDAgYjgg
+MDEgMDAgMDAgMDAgNDggZDMgZTAgZmYKPiBjOCAyMyA0MyAxOCA0OCAyMyA0NSBhOCA0YyAzOSBm
+OCAwZiA4NSBhZSAwMCAwMCAwMCA0OCA4YiA4MyA4MCAwMCAwMCAwMCA0OAo+IDg1IGMwCj4gNzQg
+MGIgPDY2PiBmNyA4MCA4YyAwMCAwMCAwMCBmZiAwMSA3NSAxMyA4MCBiYiAwYSAwMiAwMCAwMCAw
+MCA3NSAwYSA4Ygo+IE1hciAzMCAxODo1MTo0MyBhbGZhIGtlcm5lbDogUklQIMKgWzxmZmZmZmZm
+ZjgxMWQ3NTViPl0KPiB4ZnNfaWZsdXNoX2NsdXN0ZXIrMHgxNDgvMHgzNWEKPiBNYXIgMzAgMTg6
+NTE6NDMgYWxmYSBrZXJuZWw6IMKgUlNQIDxmZmZmODgwMjI4Y2U1YjYwPgo+IE1hciAzMCAxODo1
+MTo0MyBhbGZhIGtlcm5lbDogQ1IyOiAwMDAwMDAzMjAwMDAwMDhjCj4gTWFyIDMwIDE4OjUxOjQz
+IGFsZmEga2VybmVsOiAtLS1bIGVuZCB0cmFjZSBlNmM4MzkxZWE3NjYwMmY0IF0tLS0KPiBNYXIg
+MzAgMTg6NTE6NDMgYWxmYSBrZXJuZWw6IGZsdXNoLTg6MTYgdXNlZCBncmVhdGVzdCBzdGFjayBk
+ZXB0aDogMjQ2NAo+IGJ5dGVzIGxlZnQKPiBNYXIgMzAgMTk6MDk6MzkgYWxmYSBzeXNsb2dkIDEu
+NC4xOiByZXN0YXJ0Lgo+CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5j
+b20vbWFpbG1hbi9saXN0aW5mby94ZnMK
