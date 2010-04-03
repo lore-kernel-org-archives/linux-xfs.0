@@ -1,15 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o339LBu8033685 for <xfs@oss.sgi.com>; Sat, 3 Apr 2010 04:21:14 -0500
-Date: Sat, 3 Apr 2010 05:22:58 -0400
+	o339NaOK033875 for <xfs@oss.sgi.com>; Sat, 3 Apr 2010 04:23:37 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EB5CCF9A25D
+	for <xfs@oss.sgi.com>; Sat,  3 Apr 2010 02:25:24 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id bdNC3unno7XfI5qz for
+	<xfs@oss.sgi.com>; Sat, 03 Apr 2010 02:25:24 -0700 (PDT)
+Date: Sat, 3 Apr 2010 05:25:23 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfsdump: exempt quota files from filesize checks
-Message-ID: <20100403092258.GA20166@infradead.org>
-References: <20100401203956.GA28295@sgi.com>
+Subject: Re: [PATCH 2/8] xfs: don't warn on EAGAIN in inode reclaim
+Message-ID: <20100403092523.GC20166@infradead.org>
+References: <1270125691-29266-1-git-send-email-david@fromorbit.com>
+	<1270125691-29266-3-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100401203956.GA28295@sgi.com>
+In-Reply-To: <1270125691-29266-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,44 +29,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Bill Kendall <wkendall@sgi.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Apr 01, 2010 at 03:39:56PM -0500, Bill Kendall wrote:
-> xfsdump backs up quota information by generating quota dump files
-> ("xfs_quota -c dump") in the root of the filesystem being dumped.  If the
-> user filters files from the dump based on max file size (-z option) the
-> quota files may not be dumped. The following patch makes the quota files
-> exempt from the max filesize checks.
+On Thu, Apr 01, 2010 at 11:41:25PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Signed-off-by: Bill Kendall <wkendall@sgi.com>
+> Any inode reclaim flush that returns EAGAIN will result in the inode
+> reclaim being attempted again later. There is no need to issue a
+> warning into the logs about this situation.
 > 
-> diff --git a/common/content.h b/common/content.h
-> index e21f38e..03b72f0 100644
-> --- a/common/content.h
-> +++ b/common/content.h
-> @@ -65,6 +65,8 @@ typedef struct content_hdr content_hdr_t;
->  #define CONTENT_PQUOTAFILE	"xfsdump_quotas_proj"
->  #define CONTENT_GQUOTAFILE	"xfsdump_quotas_group"
->  
-> +#ifdef DUMP
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Reviewed-by: Alex Elder <aelder@sgi.com>
 
-How is this related to the rest of the patch?
-
->  /* save quota information in dump
->   */
->  static quota_info_t quotas[] = {
-> -	{ "user quota",		BOOL_TRUE,	CONTENT_QUOTAFILE,	"", "-uf", XFS_QUOTA_UDQ_ACCT },
-> -	{ "project quota",	BOOL_TRUE,	CONTENT_PQUOTAFILE,	"", "-pf", XFS_QUOTA_PDQ_ACCT },
-> -	{ "group quota",	BOOL_TRUE,	CONTENT_GQUOTAFILE,	"", "-gf", XFS_QUOTA_GDQ_ACCT }
-> +	{ "user quota",		BOOL_TRUE,	CONTENT_QUOTAFILE,	"", "-uf", XFS_QUOTA_UDQ_ACCT, 0 },
-> +	{ "project quota",	BOOL_TRUE,	CONTENT_PQUOTAFILE,	"", "-pf", XFS_QUOTA_PDQ_ACCT, 0 },
-> +	{ "group quota",	BOOL_TRUE,	CONTENT_GQUOTAFILE,	"", "-gf", XFS_QUOTA_GDQ_ACCT, 0 }
->  };
-
-trailing fields in static structures are implicitly filled with zeroes.
-
-
+Looks good,
 
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
