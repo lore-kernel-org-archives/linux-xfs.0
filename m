@@ -1,22 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o339U8Bt034349 for <xfs@oss.sgi.com>; Sat, 3 Apr 2010 04:30:08 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BB6DE2987B7
-	for <xfs@oss.sgi.com>; Sat,  3 Apr 2010 02:31:56 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id Gg6TsirewhWWPvPS for
-	<xfs@oss.sgi.com>; Sat, 03 Apr 2010 02:31:56 -0700 (PDT)
-Date: Sat, 3 Apr 2010 05:31:56 -0400
+	o339LBu8033685 for <xfs@oss.sgi.com>; Sat, 3 Apr 2010 04:21:14 -0500
+Date: Sat, 3 Apr 2010 05:22:58 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/8] xfs: make the log ticket transaction id random
-Message-ID: <20100403093156.GD20166@infradead.org>
-References: <1270125691-29266-1-git-send-email-david@fromorbit.com>
-	<1270125691-29266-4-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] xfsdump: exempt quota files from filesize checks
+Message-ID: <20100403092258.GA20166@infradead.org>
+References: <20100401203956.GA28295@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1270125691-29266-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <20100401203956.GA28295@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,29 +22,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Bill Kendall <wkendall@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Apr 01, 2010 at 11:41:26PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Thu, Apr 01, 2010 at 03:39:56PM -0500, Bill Kendall wrote:
+> xfsdump backs up quota information by generating quota dump files
+> ("xfs_quota -c dump") in the root of the filesystem being dumped.  If the
+> user filters files from the dump based on max file size (-z option) the
+> quota files may not be dumped. The following patch makes the quota files
+> exempt from the max filesize checks.
 > 
-> The transaction ID that is written to the log for a transaction is
-> currently set by taking the lower 32 bits of the memory address of
-> the ticket structure.  This is not guaranteed to be unique as
-> tickets comes from a slab and slots can be reallocated immediately
-> after being freed. As a result, there is no guarantee of uniqueness
-> in the ticket ID value.
+> Signed-off-by: Bill Kendall <wkendall@sgi.com>
 > 
-> Fix this by assigning a random number to the ticket ID field so that
-> it is extremely unlikely that duplicates will occur and remove the
-> possibility of transactions being mixed up during recovery due to
-> duplicate IDs.
+> diff --git a/common/content.h b/common/content.h
+> index e21f38e..03b72f0 100644
+> --- a/common/content.h
+> +++ b/common/content.h
+> @@ -65,6 +65,8 @@ typedef struct content_hdr content_hdr_t;
+>  #define CONTENT_PQUOTAFILE	"xfsdump_quotas_proj"
+>  #define CONTENT_GQUOTAFILE	"xfsdump_quotas_group"
+>  
+> +#ifdef DUMP
 
-I already noticed that you uses a random tid in your delayed logging
-patches.  But even a random number means we can get duplicate tids.
-If we assign tids from a wrapping counter instead we can guarantee
-that they are unique as long as we don't have more than UINT_MAX
-transactions in the log, which is a limitation we could easily enforce.
+How is this related to the rest of the patch?
+
+>  /* save quota information in dump
+>   */
+>  static quota_info_t quotas[] = {
+> -	{ "user quota",		BOOL_TRUE,	CONTENT_QUOTAFILE,	"", "-uf", XFS_QUOTA_UDQ_ACCT },
+> -	{ "project quota",	BOOL_TRUE,	CONTENT_PQUOTAFILE,	"", "-pf", XFS_QUOTA_PDQ_ACCT },
+> -	{ "group quota",	BOOL_TRUE,	CONTENT_GQUOTAFILE,	"", "-gf", XFS_QUOTA_GDQ_ACCT }
+> +	{ "user quota",		BOOL_TRUE,	CONTENT_QUOTAFILE,	"", "-uf", XFS_QUOTA_UDQ_ACCT, 0 },
+> +	{ "project quota",	BOOL_TRUE,	CONTENT_PQUOTAFILE,	"", "-pf", XFS_QUOTA_PDQ_ACCT, 0 },
+> +	{ "group quota",	BOOL_TRUE,	CONTENT_GQUOTAFILE,	"", "-gf", XFS_QUOTA_GDQ_ACCT, 0 }
+>  };
+
+trailing fields in static structures are implicitly filled with zeroes.
+
+
+
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
