@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o35J2dDM012697 for <xfs@oss.sgi.com>; Mon, 5 Apr 2010 14:02:41 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B44601DCC2F0
-	for <xfs@oss.sgi.com>; Mon,  5 Apr 2010 12:04:29 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 9tuCIlRLBR8eV9rG for
-	<xfs@oss.sgi.com>; Mon, 05 Apr 2010 12:04:29 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1Nyrb3-00010t-1n
-	for xfs@oss.sgi.com; Mon, 05 Apr 2010 19:04:29 +0000
-Date: Mon, 5 Apr 2010 15:04:29 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfstests: don't use -s option to repquota
-Message-ID: <20100405190428.GA3807@infradead.org>
+	o35Ji3q9015031 for <xfs@oss.sgi.com>; Mon, 5 Apr 2010 14:44:03 -0500
+Received: from thunker.thunk.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7071C29C702
+	for <xfs@oss.sgi.com>; Mon,  5 Apr 2010 12:45:53 -0700 (PDT)
+Received: from thunker.thunk.org (thunk.org [69.25.196.29]) by cuda.sgi.com
+	with ESMTP id tXz1ejyaHHB0Pvu1 for <xfs@oss.sgi.com>;
+	Mon, 05 Apr 2010 12:45:53 -0700 (PDT)
+Date: Mon, 5 Apr 2010 15:45:47 -0400
+From: tytso@mit.edu
+Subject: Re: [PATCH] xfstests: don't use -s option to repquota
+Message-ID: <20100405194547.GA23670@thunk.org>
+References: <20100405190428.GA3807@infradead.org>
+	<4BBA3CA7.8000206@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <4BBA3CA7.8000206@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,27 +29,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-The -s option to repquota used to be a no-op, but actually changes
-output to different units in quota tools 4.0.  Remove it from the
-repquota invocation in test 219.
+On Mon, Apr 05, 2010 at 02:40:23PM -0500, Eric Sandeen wrote:
+> Christoph Hellwig wrote:
+> > The -s option to repquota used to be a no-op, but actually changes
+> > output to different units in quota tools 4.0.  Remove it from the
+> > repquota invocation in test 219.
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Thanks, Ted was hitting this too.
+> 
+> Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Thanks, I had submitting the patch on my todo list, and you just saved
+me the effort of sending it.  :-)
 
-Index: xfstests-dev/219
-===================================================================
---- xfstests-dev.orig/219	2010-04-05 18:55:09.000000000 +0000
-+++ xfstests-dev/219	2010-04-05 18:55:16.000000000 +0000
-@@ -85,7 +85,7 @@ test_accounting()
- 		$here/src/lstat64 $file | head -3 | filter_scratch
- 	done
- 
--	repquota -$type -s -n $SCRATCH_MNT  | grep -v "^#0" | filter_scratch |
-+	repquota -$type -n $SCRATCH_MNT  | grep -v "^#0" | filter_scratch |
- 	awk '/^#/ { if (seen[$1]) next; seen[$1]++; } { print; }'
- }
- 
+I already had this change in my tree, and it works fine for me.
+
+Tested-by: "Theodore Ts'o" <tytso@mit.edu>
+
+							- Ted
 
 _______________________________________________
 xfs mailing list
