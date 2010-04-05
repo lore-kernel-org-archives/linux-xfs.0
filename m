@@ -1,30 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o35N4Q8R028483 for <xfs@oss.sgi.com>; Mon, 5 Apr 2010 18:04:27 -0500
-Received: from mail.netcenter.hu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 77345FA4204
-	for <xfs@oss.sgi.com>; Mon,  5 Apr 2010 16:06:14 -0700 (PDT)
-Received: from mail.netcenter.hu (ns.netcenter.hu [195.228.254.57]) by
-	cuda.sgi.com with ESMTP id Ic0Yg64zXs5tAHPo for
-	<xfs@oss.sgi.com>; Mon, 05 Apr 2010 16:06:14 -0700 (PDT)
-Message-ID: <2e1a01cad513$b242fd30$0400a8c0@dcccs>
-From: "Janos Haar" <janos.haar@netcenter.hu>
-References: <2375c9f91003242029p1efbbea1v8e313e460b118f14@mail.gmail.com>
-	<20100325153110.6be9a3df.kamezawa.hiroyu@jp.fujitsu.com>
-	<02c101cacbf8$d21d1650$0400a8c0@dcccs>
-	<179901cad182$5f87f620$0400a8c0@dcccs>
-	<t2h2375c9f91004010337p618c4d5yc739fa25b5f842fa@mail.gmail.com>
-	<1fe901cad2b0$d39d0300$0400a8c0@dcccs>
-	<20100402230905.GW3335@dastard>
-	<22c901cad333$7a67db60$0400a8c0@dcccs>
-	<20100404103701.GX3335@dastard>
-	<2bd101cad4ec$5a425f30$0400a8c0@dcccs>
-	<20100405224522.GZ3335@dastard>
-Subject: Re: Kernel crash in xfs_iflush_cluster (was Somebody take a look
-	please!...)
-Date: Tue, 6 Apr 2010 00:59:48 +0200
+	o35N4Frn028459 for <xfs@oss.sgi.com>; Mon, 5 Apr 2010 18:04:15 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 11B1D1A7414D
+	for <xfs@oss.sgi.com>; Mon,  5 Apr 2010 16:06:03 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	17WAUNjZOBXUsqfi for <xfs@oss.sgi.com>;
+	Mon, 05 Apr 2010 16:06:03 -0700 (PDT)
+Date: Tue, 6 Apr 2010 09:06:00 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: 2.6.34-rc3: simple du (on a big xfs tree) triggers oom killer
+Message-ID: <20100405230600.GA3335@dastard>
+References: <201004050049.17952.hpj@urpla.net> <20100405004906.GY3335@dastard>
+	<201004051335.41857.hpj@urpla.net>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <201004051335.41857.hpj@urpla.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,58 +26,86 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, xiyou.wangcong@gmail.com, kamezawa.hiroyu@jp.fujitsu.com
+To: Hans-Peter Jansen <hpj@urpla.net>
+Cc: opensuse-kernel@opensuse.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
+On Mon, Apr 05, 2010 at 01:35:41PM +0200, Hans-Peter Jansen wrote:
+> On Monday 05 April 2010, 02:49:06 Dave Chinner wrote:
+> > On Mon, Apr 05, 2010 at 12:49:17AM +0200, Hans-Peter Jansen wrote:
+> > > [Sorry for the cross post, but I don't know where to start to tackle this 
+> > >  issue]
+> > > 
+> > > Hi,
+> > > 
+> > > on an attempt to get to a current kernel, I suffer from an issue, where a 
+> > > simple du on a reasonably big xfs tree leads to invoking the oom killer: 
+> > 
+> > How big is the directory tree (how many inodes, etc)?
+> 
+> It's 1.1 TB system backup tree, let's say: many..
 
------ Original Message ----- 
-From: "Dave Chinner" <david@fromorbit.com>
-To: "Janos Haar" <janos.haar@netcenter.hu>
-Cc: <xiyou.wangcong@gmail.com>; <linux-kernel@vger.kernel.org>; 
-<kamezawa.hiroyu@jp.fujitsu.com>; <linux-mm@kvack.org>; <xfs@oss.sgi.com>; 
-<axboe@kernel.dk>
-Sent: Tuesday, April 06, 2010 12:45 AM
-Subject: Re: Kernel crash in xfs_iflush_cluster (was Somebody take a look 
-please!...)
+1.1TB isn't big anymore. ;)
 
+> > > Apr  4 23:26:02 tyrex kernel: [  488.161105] lowmem_reserve[]: 0 0 0 0
+> > > Apr  4 23:26:02 tyrex kernel: [  488.161107] DMA: 18*4kB 53*8kB 31*16kB 20*32kB 14*64kB 8*128kB 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 3552kB
+> > > Apr  4 23:26:02 tyrex kernel: [  488.161112] Normal: 32*4kB 1*8kB 1*16kB 1*32kB 1*64kB 1*128kB 1*256kB 0*512kB 1*1024kB 1*2048kB 0*4096kB = 3704kB
+> > > Apr  4 23:26:02 tyrex kernel: [  488.161117] HighMem: 17*4kB 29*8kB 47*16kB 16*32kB 6*64kB 30*128kB 53*256kB 27*512kB 14*1024kB 7*2048kB 377*4096kB = 1606044kB
+> > > Apr  4 23:26:02 tyrex kernel: [  488.161122] 29947 total pagecache pages
+> > > Apr  4 23:26:02 tyrex kernel: [  488.161123] 0 pages in swap cache
+> > > Apr  4 23:26:02 tyrex kernel: [  488.161124] Swap cache stats: add 0, delete 0, find 0/0
+> > > Apr  4 23:26:02 tyrex kernel: [  488.161125] Free swap  = 2104476kB
+> > > Apr  4 23:26:02 tyrex kernel: [  488.161126] Total swap = 2104476kB
+> > > Apr  4 23:26:02 tyrex kernel: [  488.165523] 784224 pages RAM
+> > > Apr  4 23:26:02 tyrex kernel: [  488.165524] 556914 pages HighMem
+> > > Apr  4 23:26:02 tyrex kernel: [  488.165525] 12060 pages reserved
+> > > Apr  4 23:26:02 tyrex kernel: [  488.165526] 82604 pages shared
+> > > Apr  4 23:26:02 tyrex kernel: [  488.165527] 328045 pages non-shared
+> > > Apr  4 23:26:02 tyrex kernel: [  488.165529] Out of memory: kill process 4788 (mysqld-max) score 326208 or a child
+> > > Apr  4 23:26:02 tyrex kernel: [  488.165531] Killed process 4788 (mysqld-max) vsz:1304832kB, anon-rss:121428kB, file-rss:4336kB
+> > > [...]
+> > 
+> > Oh, this is a highmem box. You ran out of low memory, I think, which
+> > is where all the inodes are cached. Seems like a VM problem or a
+> > highmem/lowmem split config problem to me, not anything to do with
+> > XFS...
+> 
+> Might be, I don't have a chance to test this on a different FS. Thanks
+> for the answer anyway, Dave. I hope, you don't mind, that I keep you 
+> copied on this thread.. 
+> 
+> This matter is, I cannot locate the problem from the syslog output. Might
+> be a "can't see the forest because all the trees" syndrome.
 
-> On Mon, Apr 05, 2010 at 08:17:27PM +0200, Janos Haar wrote:
->> Dave,
->>
->> Thank you for your answer.
->> Like i sad before, this is a productive server with important service.
->> Can you please send the fix for me as soon as it is done even for
->> testing it....
->> Or point me to the right direction to get it?
->
-> It's in 2.6.33 if you want to upgrade the kernel, or you if don't
-> want to wait for the next 2.6.32.x kernel, you can apply this series
-> of 19 patches yourself:
+Well, I have to ask why you are running a 32bit PAE kernel when your
+CPU is:
 
-Generally, for this system, i am much more prefer the extra-stable series, 
-but in this case i will try out the 2.6.33 because these 2 versions is close 
-to each other, and i don't want to add 19 patches manually. :-)
-I will try it, and i will reply about the result in this week.
+<6>[    0.085062] CPU0: Intel(R) Xeon(R) CPU           X3460  @ 2.80GHz stepping 05
 
-Thanks for You and for all the people, who works on XFS and Linux. :-)
+64bit capable.  Use a 64 bit kernel and this problem should go away.
 
-Best Regards,
-Janos Haar
+> It's hard to believe, that a current kernel on a current system with 12 GB, 
+> even if using the insane pae on i586 is not able to cope with an du on a 
+> 1.1 TB file tree. Since du is invokable by users, this creates a pretty 
+> ugly DOS attack for local users.
 
+Agreed. And FWIW, don't let your filesystems get near ENOSPC on
+2.6.34-rc, either....
 
->
-> http://oss.sgi.com/archives/xfs/2010-03/msg00125.html
->
-> Cheers,
->
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com 
+(i.e. under sustained write load, 2.6.34-rc will hit the OOM killer
+on page cache allocation before the filesystem can report ENOSPC to
+the user application.  Test 224 in the xfsqa suite on a VM w/ 1GB
+RAM will trigger this with > 90% reliability....)
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
