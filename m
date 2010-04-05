@@ -1,20 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o35JcZAY014725 for <xfs@oss.sgi.com>; Mon, 5 Apr 2010 14:38:35 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2755BFA497A
-	for <xfs@oss.sgi.com>; Mon,  5 Apr 2010 12:40:24 -0700 (PDT)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id MAz7CN88Ns2NNU4e for
-	<xfs@oss.sgi.com>; Mon, 05 Apr 2010 12:40:24 -0700 (PDT)
-Message-ID: <4BBA3CA7.8000206@sandeen.net>
-Date: Mon, 05 Apr 2010 14:40:23 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	o35MhpXC026454 for <xfs@oss.sgi.com>; Mon, 5 Apr 2010 17:43:52 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5CA4D29D12E
+	for <xfs@oss.sgi.com>; Mon,  5 Apr 2010 15:45:39 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	vuvGynu1TugQrwzY for <xfs@oss.sgi.com>;
+	Mon, 05 Apr 2010 15:45:39 -0700 (PDT)
+Date: Tue, 6 Apr 2010 08:45:22 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Kernel crash in xfs_iflush_cluster (was Somebody take a look
+	please!...)
+Message-ID: <20100405224522.GZ3335@dastard>
+References: <2375c9f91003242029p1efbbea1v8e313e460b118f14@mail.gmail.com>
+	<20100325153110.6be9a3df.kamezawa.hiroyu@jp.fujitsu.com>
+	<02c101cacbf8$d21d1650$0400a8c0@dcccs>
+	<179901cad182$5f87f620$0400a8c0@dcccs>
+	<t2h2375c9f91004010337p618c4d5yc739fa25b5f842fa@mail.gmail.com>
+	<1fe901cad2b0$d39d0300$0400a8c0@dcccs>
+	<20100402230905.GW3335@dastard>
+	<22c901cad333$7a67db60$0400a8c0@dcccs>
+	<20100404103701.GX3335@dastard>
+	<2bd101cad4ec$5a425f30$0400a8c0@dcccs>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: don't use -s option to repquota
-References: <20100405190428.GA3807@infradead.org>
-In-Reply-To: <20100405190428.GA3807@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <2bd101cad4ec$5a425f30$0400a8c0@dcccs>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,39 +39,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Theodore Tso <tytso@mit.edu>, xfs@oss.sgi.com
+To: Janos Haar <janos.haar@netcenter.hu>
+Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, xiyou.wangcong@gmail.com, kamezawa.hiroyu@jp.fujitsu.com
 
-Christoph Hellwig wrote:
-> The -s option to repquota used to be a no-op, but actually changes
-> output to different units in quota tools 4.0.  Remove it from the
-> repquota invocation in test 219.
+On Mon, Apr 05, 2010 at 08:17:27PM +0200, Janos Haar wrote:
+> Dave,
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Thank you for your answer.
+> Like i sad before, this is a productive server with important service.
+> Can you please send the fix for me as soon as it is done even for
+> testing it....
+> Or point me to the right direction to get it?
 
-Thanks, Ted was hitting this too.
+It's in 2.6.33 if you want to upgrade the kernel, or you if don't
+want to wait for the next 2.6.32.x kernel, you can apply this series
+of 19 patches yourself:
 
-Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
+http://oss.sgi.com/archives/xfs/2010-03/msg00125.html
 
-> Index: xfstests-dev/219
-> ===================================================================
-> --- xfstests-dev.orig/219	2010-04-05 18:55:09.000000000 +0000
-> +++ xfstests-dev/219	2010-04-05 18:55:16.000000000 +0000
-> @@ -85,7 +85,7 @@ test_accounting()
->  		$here/src/lstat64 $file | head -3 | filter_scratch
->  	done
->  
-> -	repquota -$type -s -n $SCRATCH_MNT  | grep -v "^#0" | filter_scratch |
-> +	repquota -$type -n $SCRATCH_MNT  | grep -v "^#0" | filter_scratch |
->  	awk '/^#/ { if (seen[$1]) next; seen[$1]++; } { print; }'
->  }
->  
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
