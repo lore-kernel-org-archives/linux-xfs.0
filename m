@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o368u2XG076968 for <xfs@oss.sgi.com>; Tue, 6 Apr 2010 03:56:02 -0500
+	o368pKB5076217 for <xfs@oss.sgi.com>; Tue, 6 Apr 2010 03:51:20 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4706229E1AC
-	for <xfs@oss.sgi.com>; Tue,  6 Apr 2010 01:52:23 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	f3zoCMrkk6nyLC47 for <xfs@oss.sgi.com>;
-	Tue, 06 Apr 2010 01:52:23 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B86E829E1AF
+	for <xfs@oss.sgi.com>; Tue,  6 Apr 2010 01:53:08 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	YhnbRUvTFFr0pDQx for <xfs@oss.sgi.com>;
+	Tue, 06 Apr 2010 01:53:08 -0700 (PDT)
 Received: from dastard (unverified [121.44.229.111])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	19457908-1927428
-	for <xfs@oss.sgi.com>; Tue, 06 Apr 2010 18:22:22 +1030 (CDT)
-Received: from [192.168.1.9] (helo=disturbed) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1Nz4WC-0003io-DK
-	for xfs@oss.sgi.com; Tue, 06 Apr 2010 18:52:20 +1000
+	19573468-1927428
+	for <xfs@oss.sgi.com>; Tue, 06 Apr 2010 18:23:07 +1030 (CDT)
+Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
+	(envelope-from <dave@fromorbit.com>) id 1Nz4Ww-0003iu-Id
+	for xfs@oss.sgi.com; Tue, 06 Apr 2010 18:53:06 +1000
 Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1Nz4W0-0004Vl-1P
-	for xfs@oss.sgi.com; Tue, 06 Apr 2010 18:52:08 +1000
+	(envelope-from <dave@disturbed.disaster>) id 1Nz4Wu-0005TO-45
+	for xfs@oss.sgi.com; Tue, 06 Apr 2010 18:53:04 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfsqa: new fsr defragmentation test
-Date: Tue,  6 Apr 2010 18:52:07 +1000
-Message-Id: <1270543927-17129-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH] xfs: more swap extent fixes for dynamic fork offsets
+Date: Tue,  6 Apr 2010 18:53:04 +1000
+Message-Id: <1270543984-20598-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,251 +40,69 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-This test aims to recreate the conditions that caused xfs_fsr to
-corrupt inode forks. The problem was that the data forks between the
-two inodes were in different formats due to different inode fork
-offsets, so when they swapped the data forks the formats were
-invalid.
+A new xfsqa test (226) with a prototype xfs_fsr change to try to
+handle dynamic fork offsets better triggers an assertion failure
+where the inode data fork is in btree format, yet there is room in
+the inode for it to be in extent format. The two inodes look like:
 
-This test generates a filesystem with a known fragmented freespace pattern and
-then abuses known "behaviours" of the allocator to generate files
-with a known number of extents. It creates attributes to generate a
-known inode fork offset, then uses a debug feature of xfs_fsr to
-attempt to defrag the inode to a known number of extents.
+before: ino 0x101 (target), num_extents 11, Max in-fork extents 6, broot size 40, fork offset 96
+before: ino 0x115 (temp),  num_extents 5, Max in-fork extents 3, broot size 40, fork offset 56
+after: ino 0x101 (target), num_extents 5, Max in-fork extents 6, broot size 40, fork offset 96
+after: ino 0x115 (temp), num_extents 11, Max in-fork extents 3, broot size 40, fork offset 56
 
-By using these features, we can pretty much cover the entire matrix of inode
-fork configurations, hence reproducing the conditions that lead to corruptions.
-This test has already uncovered one bug in the current kernel code, and the
-current fsr (with it's naive attribute fork handling) is aborted on a couple of
-hundred of the files created by this test.
+Basically the target inode ends up with 5 extents in btree format,
+but it had space for 6 extents in extent format, so ends up
+incorrect. Notably here the broot size is the same, and that is
+where the kernel code is going wrong - the btree root will fit, so
+it lets the swap go ahead.
+
+The check should not allow the swap to take place if the number of
+extents while in btree format is less than the number of extents
+that can fit in the inode in extent format. Adding that check will
+prevent this swap and corruption from occurring.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- 226     |  192 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 226.out |    2 +
- group   |    3 +-
- 3 files changed, 196 insertions(+), 1 deletions(-)
- create mode 100644 226
- create mode 100644 226.out
+ fs/xfs/xfs_dfrag.c |   22 ++++++++++++++++------
+ 1 files changed, 16 insertions(+), 6 deletions(-)
 
-diff --git a/226 b/226
-new file mode 100644
-index 0000000..b92292a
---- /dev/null
-+++ b/226
-@@ -0,0 +1,192 @@
-+#! /bin/bash
-+# FS QA Test No. 222
-+#
-+# xfs_fsr QA tests
-+# run xfs_fsr over the test filesystem to give it a wide and varied set of
-+# inodes to try to defragment. This is effectively a crash/assert failure
-+# test looking for corruption induced by the kernel inadequately checking
-+# the indoes to be swapped. It also is good for validating fsr's attribute fork
-+# generation code.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2010 Dave Chinner.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=david@fromorbit.com
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+
-+_cleanup()
-+{
-+    rm -f $tmp.*
-+}
-+
-+trap "_cleanup ; exit \$status" 0 1 2 3 15
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_supported_os Linux
-+
-+[ "$XFS_FSR_PROG" = "" ] && _notrun "xfs_fsr not found"
-+
-+# create freespace holes of 1-3 blocks in length
-+#
-+# This is done to ensure that defragmented files have roughly 1/3 the
-+# number of extents they started with. This will ensure we get
-+# transistions from btree format (say 15 extents) to extent format
-+# (say 5 extents) and lots of variations around that dependent on the
-+# number of attributes in the files being defragmented.
-+#
-+fragment_freespace()
-+{
-+	_file="$SCRATCH_MNT/not_free"
-+
-+	for i in `seq 0 1 10000`; do
-+		echo foo > $_file.$i
-+	done
-+	sync
-+
-+	for i in `seq 0 2 10000`; do
-+		rm -f $_file.$i
-+	done
-+	for i in `seq 0 7 10000`; do
-+		rm -f $_file.$i
-+	done
-+	sync
-+
-+	# and now use up all the remaining extents larger than 3 blocks
-+	dd if=/dev/zero of=$_file.large bs=4k count=1024 > /dev/null 2>&1
-+	sync
-+}
-+
-+create_attrs()
-+{
-+	for foo in `seq 0 1 $1`; do
-+		setfattr -n user.$foo -v 0xbabe $2
-+	done
-+}
-+
-+create_data()
-+{
-+	for foo in `seq $1 -1 0`; do
-+		let offset=$foo*4096
-+		$XFS_IO_PROG -f -c "pwrite $offset 4096" -c "fsync" $2 > /dev/null 2>&1
-+	done
-+	xfs_bmap -vp $2
-+}
-+
-+# create the designated file with a certain number of attributes and a certain
-+# number of data extents. Reverse order synchronous data writes are used to
-+# create fragmented files, though with the way the filesystem freespace is
-+# fragmented, this is probably not necessary. Create the attributes first so
-+# that they cause the initial fork offset pressure to move it about.
-+#
-+create_target_attr_first()
-+{
-+	nattrs=$1
-+	file_blocks=$2
-+	target=$3
-+
-+	rm -f $target
-+	echo > $target
-+	create_attrs $nattrs $target
-+	create_data $file_blocks $target
-+}
-+
-+# Same as create_target_attr_first, but this time put the attributes on after
-+# the data extents have been created. This puts different pressure on the
-+# inode fork offset, so should exercise the kernel code differently and give us
-+# a different pattern of fork offsets to work with compared to creating the
-+# attrs first.
-+#
-+create_target_attr_last()
-+{
-+	nattrs=$1
-+	file_blocks=$2
-+	target=$3
-+
-+	rm -f $target
-+	echo > $target
-+	create_data $file_blocks $target
-+	create_attrs $nattrs $target
-+}
-+
-+rm -f $seq.full
-+umount $SCRATCH_MNT
-+
-+# use a small filesystem so we can control freespace easily
-+_scratch_mkfs_sized $((50 * 1024 * 1024)) >> $seq.full 2>&1
-+_scratch_mount
-+fragment_freespace
-+
-+# unmount and remount to reset all allocator indexes
-+umount $SCRATCH_MNT
-+_scratch_mount
-+
-+# create a range of source files, then fsr them to a known size
-+#
-+# This assumes 256 byte inodes.
-+#
-+# n = number of target fragments for xfs_fsr
-+#	- only a guideline, but forces multiple fragments via sync writes
-+#	- start at 4 as that typically covers all extent format situations
-+#	- end at 12 as that is beyond the maximum that canbe fit in extent
-+#	  format
-+# i = number of 2 byte attributes on the file
-+#	- it takes 6 attributes to change the fork offset from the start value
-+#	  of 120 bytes to 112 bytes, so we start at 5.
-+#	- 15 is enough to push to btree format, so we stop there.
-+# j = number of data extents on the file
-+#	- start in extent format, but we also want btree format as well, so
-+#	  start at 5 so that the number of attributes determines the starting
-+#	  format.
-+#	- need enough extents that if they are all 3 blocks in length the final
-+#	  format will be dependent on the number of attributes on the inode. 20
-+#	  initial single block extents gives us 6-8 extents after defrag which
-+#	  puts us right on the threshold of what the extent format can hold.
-+
-+targ=$SCRATCH_MNT/fsr_test_file.$$
-+for n in `seq 4 1 12`; do
-+	echo "*** n == $n ***" >> $seq.full
-+	for i in `seq 5 1 15`; do
-+		for j in `seq 5 1 20`; do
-+			create_target_attr_first $i $j $targ.$i.$j >> $seq.full 2>&1
-+		done
-+		FSRXFSTEST=true xfs_fsr -d -v -C $n $targ.$i.* >> $seq.full 2>&1
-+		xfs_bmap -vp $targ.$i.* >> $seq.full 2>&1
-+		for j in `seq 5 1 20`; do
-+			create_target_attr_last $i $j $targ.$i.$j >> $seq.full 2>&1
-+		done
-+		FSRXFSTEST=true xfs_fsr -d -v -C $n $targ.$i.* >> $seq.full 2>&1
-+		xfs_bmap -vp $targ.$i.* >> $seq.full 2>&1
-+	done
-+done
-+
-+umount $SCRATCH_MNT
-+_check_scratch_fs
-+echo "--- silence is golden ---"
-+status=0 ; exit
-diff --git a/226.out b/226.out
-new file mode 100644
-index 0000000..52c0c1f
---- /dev/null
-+++ b/226.out
-@@ -0,0 +1,2 @@
-+QA output created by 226
-+--- silence is golden ---
-diff --git a/group b/group
-index 3164c37..2386c41 100644
---- a/group
-+++ b/group
-@@ -339,4 +339,5 @@ deprecated
- 223 auto quick
- 224 auto
- 225 auto quick
--500 auto quota
-\ No newline at end of file
-+226 auto fsr
-+500 auto quota
+diff --git a/fs/xfs/xfs_dfrag.c b/fs/xfs/xfs_dfrag.c
+index cd27c9d..5bba29a 100644
+--- a/fs/xfs/xfs_dfrag.c
++++ b/fs/xfs/xfs_dfrag.c
+@@ -177,16 +177,26 @@ xfs_swap_extents_check_format(
+ 	    XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) > tip->i_df.if_ext_max)
+ 		return EINVAL;
+ 
+-	/* Check root block of temp in btree form to max in target */
++	/*
++	 * If we are in a btree format, check that the temp root block will fit
++	 * in the target and that it has enough extents to be in btree format
++	 * in the target.
++	 *
++	 * Note that we have to be careful to allow btree->extent conversions
++	 * (a common defrag case) which will occur when the temp inode is in
++	 * extent format...
++	 */
+ 	if (tip->i_d.di_format == XFS_DINODE_FMT_BTREE &&
+-	    XFS_IFORK_BOFF(ip) &&
+-	    tip->i_df.if_broot_bytes > XFS_IFORK_BOFF(ip))
++	    ((XFS_IFORK_BOFF(ip) &&
++	      tip->i_df.if_broot_bytes > XFS_IFORK_BOFF(ip)) ||
++	     XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) <= ip->i_df.if_ext_max))
+ 		return EINVAL;
+ 
+-	/* Check root block of target in btree form to max in temp */
++	/* Reciprocal target->temp btree format checks */
+ 	if (ip->i_d.di_format == XFS_DINODE_FMT_BTREE &&
+-	    XFS_IFORK_BOFF(tip) &&
+-	    ip->i_df.if_broot_bytes > XFS_IFORK_BOFF(tip))
++	    ((XFS_IFORK_BOFF(tip) &&
++	      ip->i_df.if_broot_bytes > XFS_IFORK_BOFF(tip)) ||
++	     XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) <= tip->i_df.if_ext_max))
+ 		return EINVAL;
+ 
+ 	return 0;
 -- 
 1.6.5
 
