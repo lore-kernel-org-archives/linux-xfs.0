@@ -1,28 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o369I5d3080609 for <xfs@oss.sgi.com>; Tue, 6 Apr 2010 04:18:05 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5F62629E1A2
-	for <xfs@oss.sgi.com>; Tue,  6 Apr 2010 02:19:44 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	iO0b75yf2h2oDfjh for <xfs@oss.sgi.com>;
-	Tue, 06 Apr 2010 02:19:44 -0700 (PDT)
-Received: from dastard (unverified [121.44.229.111])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	19575914-1927428
-	for <xfs@oss.sgi.com>; Tue, 06 Apr 2010 18:49:43 +1030 (CDT)
-Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1Nz4wf-0003lt-LA
-	for xfs@oss.sgi.com; Tue, 06 Apr 2010 19:19:41 +1000
-Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1Nz4wd-0006Ul-6P
-	for xfs@oss.sgi.com; Tue, 06 Apr 2010 19:19:39 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs_fsr: Improve handling of attribute forks V2
-Date: Tue,  6 Apr 2010 19:19:39 +1000
-Message-Id: <1270545579-24835-1-git-send-email-david@fromorbit.com>
+	o36Epagr109152 for <xfs@oss.sgi.com>; Tue, 6 Apr 2010 09:51:37 -0500
+Received: from moutng.kundenserver.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 622CE29F5A5
+	for <xfs@oss.sgi.com>; Tue,  6 Apr 2010 07:53:24 -0700 (PDT)
+Received: from moutng.kundenserver.de (moutng.kundenserver.de
+	[212.227.126.187]) by cuda.sgi.com with ESMTP id
+	51oomffbmHTAJCXp for <xfs@oss.sgi.com>;
+	Tue, 06 Apr 2010 07:53:24 -0700 (PDT)
+From: "Hans-Peter Jansen" <hpj@urpla.net>
+Subject: Re: 2.6.34-rc3: simple du (on a big xfs tree) triggers oom killer
+	[bisected: 57817c68229984818fea9e614d6f95249c3fb098]
+References: <201004050049.17952.hpj@urpla.net>
+	<201004051335.41857.hpj@urpla.net> <20100405230600.GA3335@dastard>
+In-Reply-To: <20100405230600.GA3335@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+Date: Tue, 6 Apr 2010 16:52:57 +0200
+Message-Id: <201004061652.58189.hpj@urpla.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,258 +27,146 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: opensuse-kernel@opensuse.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi Dave,
 
-If the file being defragmented has attributes, then fsr puts a dummy
-attribute on the temporary file to try to ensure that the inode
-attribute fork offset is set correctly. This works perfectly well
-for the old style of attributes that use a fixed fork offset - the
-presence of any attribute of any size or shape will result in fsr
-doing the correct thing.
+On Tuesday 06 April 2010, 01:06:00 Dave Chinner wrote:
+> On Mon, Apr 05, 2010 at 01:35:41PM +0200, Hans-Peter Jansen wrote:
+> > >
+> > > Oh, this is a highmem box. You ran out of low memory, I think, which
+> > > is where all the inodes are cached. Seems like a VM problem or a
+> > > highmem/lowmem split config problem to me, not anything to do with
+> > > XFS...
 
-However, for attr2 filesystems, the attribute fork offset is
-dependent on the size and shape of both the data and attribute
-forks. Hence setting a small attribute on the file does not
-guarantee that the two inodes have the same fork offset and
-therefore compatible for a data fork swap.
+With all due respect, I disagree. See below.
 
-This patch improves the attribute fork handling of fsr. It checks
-the filesystem version to see if the old style attributes are in
-use, and if so uses the current method.
+> > Might be, I don't have a chance to test this on a different FS. Thanks
+> > for the answer anyway, Dave. I hope, you don't mind, that I keep you
+> > copied on this thread..
+> >
+> > This matter is, I cannot locate the problem from the syslog output.
+> > Might be a "can't see the forest because all the trees" syndrome.
+>
+> Well, I have to ask why you are running a 32bit PAE kernel when your
+> CPU is:
+>
+> <6>[    0.085062] CPU0: Intel(R) Xeon(R) CPU           X3460  @ 2.80GHz
+> stepping 05
+>
+> 64bit capable.  Use a 64 bit kernel and this problem should go away.
 
-If attr2 is in use, fsr uses bulkstat output to determine what the
-fork offset is. If the attribute fork offsets differ then fsr will
-try to create attributes that will result in the correct offset. If
-that fails, or the attribute fork is too large, it will give up and just
-attempt the swap.
+Sure, but for compatibility reasons with a customer setup, that I'm fully 
+responsible for and we strongly depend on, it is i586 still. (and it's a 
+system, that I've full access on only for a few hours on sundays, which 
+punishes my family..).
 
-This fork offset value in bulkstat new functionality in the kernel,
-so if there are attributes and a zero fork offset, then the kernel
-does not support this feature and we simply fall back to the existing,
-less effective code.
+Dave, I really don't want to disappoint you, but a lengthy bisection session 
+points to:
 
-Version 2:
-- simplify the attribute creation to use a small fixed size attribute
-- handle the fork offset not changing as attributes are added - it can take a
-  few attributes to move it from one offset to another
-- comment the code better
-- passes test 226 and reduces the number of unswappable inode pairs passed to
-  the (fixed) kernel to zero
+57817c68229984818fea9e614d6f95249c3fb098 is the first bad commit
+commit 57817c68229984818fea9e614d6f95249c3fb098
+Author: Dave Chinner <david@fromorbit.com>
+Date:   Sun Jan 10 23:51:47 2010 +0000
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+    xfs: reclaim all inodes by background tree walks
+    
+    We cannot do direct inode reclaim without taking the flush lock to
+    ensure that we do not reclaim an inode under IO. We check the inode
+    is clean before doing direct reclaim, but this is not good enough
+    because the inode flush code marks the inode clean once it has
+    copied the in-core dirty state to the backing buffer.
+    
+    It is the flush lock that determines whether the inode is still
+    under IO, even though it is marked clean, and the inode is still
+    required at IO completion so we can't reclaim it even though it is
+    clean in core. Hence the requirement that we need to take the flush
+    lock even on clean inodes because this guarantees that the inode
+    writeback IO has completed and it is safe to reclaim the inode.
+    
+    With delayed write inode flushing, we coul dend up waiting a long
+    time on the flush lock even for a clean inode. The background
+    reclaim already handles this efficiently, so avoid all the problems
+    by killing the direct reclaim path altogether.
+    
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
+    Reviewed-by: Christoph Hellwig <hch@lst.de>
+    Signed-off-by: Alex Elder <aelder@sgi.com>
+
+:040000 040000 9cada5739037ecd59afb358cf5ed6186b82d5236 
+8e6b6febccba69bc4cdbfd1886d545c369d64c41 M      fs
+
+I will try to prove this by reverting this commit on a 2.6.33.2 build, but
+that's going to take another day, or so.
+
+> > It's hard to believe, that a current kernel on a current system with 12
+> > GB, even if using the insane pae on i586 is not able to cope with an du
+> > on a 1.1 TB file tree. Since du is invokable by users, this creates a
+> > pretty ugly DOS attack for local users.
+>
+> Agreed. And FWIW, don't let your filesystems get near ENOSPC on
+> 2.6.34-rc, either....
+>
+> (i.e. under sustained write load, 2.6.34-rc will hit the OOM killer
+> on page cache allocation before the filesystem can report ENOSPC to
+> the user application.  Test 224 in the xfsqa suite on a VM w/ 1GB
+> RAM will trigger this with > 90% reliability....)
+
+Hmm, thanks for the warning. Will resort to 2.6.33.2 for now on my servers
+and keep an eye on the xfs commit logs...
+
+Cheers && greetings to the orbit ;-),
+Pete
+
+For the sake of completeness, here's the revert:
+
 ---
- fsr/xfs_fsr.c    |  158 +++++++++++++++++++++++++++++++++++++++++++++++++++---
- include/xfs_fs.h |    3 +-
- 2 files changed, 152 insertions(+), 9 deletions(-)
+commit dfe0d292280ad21c9cf3f240bb415913715d8980
+Author: Hans-Peter Jansen <hpj@urpla.net>
+Date:   Tue Apr 6 16:05:47 2010 +0200
 
-diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-index 1f933c7..5619676 100644
---- a/fsr/xfs_fsr.c
-+++ b/fsr/xfs_fsr.c
-@@ -17,8 +17,13 @@
-  */
+    Revert "xfs: reclaim all inodes by background tree walks"
+    
+    This reverts commit 57817c68229984818fea9e614d6f95249c3fb098.
+    
+    Avoid triggering the oom killer with a simple du on a big xfs tree on i586.
+    
+    Signed-off-by: Hans-Peter Jansen <hpj@urpla.net>
+
+:100644 100644 52e06b4... a76fc01... M	fs/xfs/linux-2.6/xfs_super.c
+
+diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
+index 52e06b4..a76fc01 100644
+--- a/fs/xfs/linux-2.6/xfs_super.c
++++ b/fs/xfs/linux-2.6/xfs_super.c
+@@ -954,14 +954,16 @@ xfs_fs_destroy_inode(
+ 	ASSERT_ALWAYS(!xfs_iflags_test(ip, XFS_IRECLAIM));
  
- #include <xfs/xfs.h>
-+#include <libxfs.h>
-+#include <xfs/xfs_types.h>
- #include <xfs/jdm.h>
- #include <xfs/xfs_dfrag.h>
-+#include <xfs/xfs_bmap_btree.h>
-+#include <xfs/xfs_dinode.h>
-+#include <xfs/xfs_attr_sf.h>
- 
- #include <fcntl.h>
- #include <errno.h>
-@@ -946,6 +951,147 @@ fsrfile_common(
- 	return -1; /* no error */
+ 	/*
+-	 * We always use background reclaim here because even if the
+-	 * inode is clean, it still may be under IO and hence we have
+-	 * to take the flush lock. The background reclaim path handles
+-	 * this more efficiently than we can here, so simply let background
+-	 * reclaim tear down all inodes.
++	 * If we have nothing to flush with this inode then complete the
++	 * teardown now, otherwise delay the flush operation.
+ 	 */
++	if (!xfs_inode_clean(ip)) {
++		xfs_inode_set_reclaim_tag(ip);
++		return;
++	}
++
+ out_reclaim:
+-	xfs_inode_set_reclaim_tag(ip);
++	xfs_ireclaim(ip);
  }
  
-+/*
-+ * Attempt to set the attr fork up correctly. This is simple for attr1
-+ * filesystems as they have a fixed inode fork offset. In that case
-+ * just create an attribute and that's all we need to do.
-+ *
-+ * For attr2 filesystems, see if we have the actual fork offset in
-+ * the bstat structure. If so, just create additional attributes on
-+ * the temporary inode until the offset matches.
-+ *
-+ * If it doesn't exist, we can only do best effort. Add an attribute at a time
-+ * to move the inode fork around, but take into account that the attribute
-+ * might be too small to move the fork every time we add one.  This should
-+ * hopefully put the fork offset in the right place. It's not a big deal if we
-+ * don't get it right - the kernel will reject it when we try to swap extents.
-+ */
-+static int
-+fsr_setup_attr_fork(
-+	int		fd,
-+	int		tfd,
-+	xfs_bstat_t	*bstatp)
-+{
-+	struct stat64	tstatbuf;
-+	int		i;
-+	int		last_forkoff = 0;
-+	int		no_change_cnt = 0;
-+	int		ret;
-+
-+	if (!(bstatp->bs_xflags & XFS_XFLAG_HASATTR))
-+		return 0;
-+
-+	/*
-+	 * use the old method if we have attr1 or the kernel does not yet
-+	 * support passing the fork offset in the bulkstat data.
-+	 */
-+	if (!(fsgeom.flags & XFS_FSOP_GEOM_FLAGS_ATTR2) ||
-+	    bstatp->bs_forkoff == 0) {
-+		/* attr1 */
-+		ret = fsetxattr(tfd, "user.X", "X", 1, XATTR_CREATE);
-+		if (ret) {
-+			fsrprintf(_("could not set ATTR\n"));
-+			return -1;
-+		}
-+		goto out;
-+	}
-+
-+	/* attr2 w/ fork offsets */
-+
-+	if (fstat64(tfd, &tstatbuf) < 0) {
-+		fsrprintf(_("unable to stat temp file: %s\n"),
-+					strerror(errno));
-+		return -1;
-+	}
-+
-+	i = 0;
-+	do {
-+		xfs_bstat_t	tbstat;
-+		xfs_ino_t	ino;
-+		char		name[64];
-+		int		diff;
-+
-+		/*
-+		 * bulkstat the temp inode  to see what the forkoff is. Use
-+		 * this to compare against the target and determine what we
-+		 * need to do.
-+		 */
-+		ino = tstatbuf.st_ino;
-+		if ((xfs_bulkstat_single(tfd, &ino, &tbstat)) < 0) {
-+			fsrprintf(_("unable to get bstat on temp file: %s\n"),
-+						strerror(errno));
-+			return -1;
-+		}
-+		if (dflag)
-+			fsrprintf(_("orig forkoff %d, temp forkoff %d\n"),
-+					bstatp->bs_forkoff, tbstat.bs_forkoff);
-+
-+		snprintf(name, sizeof(name), "user.%d", i);
-+
-+		/*
-+		 * If there is no attribute, then we need to create one to get
-+		 * an attribute fork at the default location.
-+		 */
-+		if (!tbstat.bs_forkoff) {
-+			ret = fsetxattr(tfd, name, "XX", 2, XATTR_CREATE);
-+			if (ret) {
-+				fsrprintf(_("could not set ATTR\n"));
-+				return -1;
-+			}
-+			continue;
-+		}
-+
-+		/*
-+		 * make a progress check so we don't get stuck trying to extend
-+		 * a large btree form attribute fork.
-+		 */
-+		if (last_forkoff == tbstat.bs_forkoff) {
-+			if (no_change_cnt++ > 10)
-+				break;
-+		}
-+		no_change_cnt = 0;
-+		last_forkoff = tbstat.bs_forkoff;
-+
-+		/* work out which way to grow the fork */
-+		diff = tbstat.bs_forkoff - bstatp->bs_forkoff;
-+		if (abs(diff) > fsgeom.inodesize - sizeof(struct xfs_dinode)) {
-+			fsrprintf(_("forkoff diff %d too large!\n"), diff);
-+			return -1;
-+		}
-+
-+		/* if they are equal, we are done */
-+		if (!diff)
-+			goto out;
-+
-+		/*
-+		 * if the temp inode fork offset is smaller then we have to
-+		 * grow the data fork
-+		 */
-+		if (diff < 0) {
-+			/*
-+			 * create some temporary extents in the inode to move
-+			 * the fork in the direction we need. This can be done
-+			 * by preallocating some single block extents at
-+			 * non-contiguous offsets.
-+			 */
-+			/* XXX: unimplemented! */
-+			goto out;
-+		}
-+
-+		/* we need to grow the attr fork, so create another attr */
-+		ret = fsetxattr(tfd, name, "XX", 2, XATTR_CREATE);
-+		if (ret) {
-+			fsrprintf(_("could not set ATTR\n"));
-+			return -1;
-+		}
-+
-+	} while (++i < 100); /* don't go forever */
-+
-+out:
-+	if (dflag)
-+		fsrprintf(_("set temp attr\n"));
-+	return 0;
-+}
- 
  /*
-  * Do the defragmentation of a single file.
-@@ -1000,14 +1146,10 @@ packfile(char *fname, char *tname, int fd,
- 	unlink(tname);
- 
- 	/* Setup extended attributes */
--	if (statp->bs_xflags & XFS_XFLAG_HASATTR) {
--		if (fsetxattr(tfd, "user.X", "X", 1, XATTR_CREATE) != 0) {
--			fsrprintf(_("could not set ATTR on tmp: %s:\n"), tname);
--			close(tfd);
--			return -1;
--		}
--		if (dflag)
--			fsrprintf(_("%s set temp attr\n"), tname);
-+	if (fsr_setup_attr_fork(fd, tfd, statp) != 0) {
-+		fsrprintf(_("failed to set ATTR fork on tmp: %s:\n"), tname);
-+		close(tfd);
-+		return -1;
- 	}
- 
- 	/* Setup extended inode flags, project identifier, etc */
-diff --git a/include/xfs_fs.h b/include/xfs_fs.h
-index 9aff7bb..2376abb 100644
---- a/include/xfs_fs.h
-+++ b/include/xfs_fs.h
-@@ -300,7 +300,8 @@ typedef struct xfs_bstat {
- 	__s32		bs_extents;	/* number of extents		*/
- 	__u32		bs_gen;		/* generation count		*/
- 	__u16		bs_projid;	/* project id			*/
--	unsigned char	bs_pad[14];	/* pad space, unused		*/
-+	__u16		bs_forkoff;	/* inode fork offset in bytes	*/
-+	unsigned char	bs_pad[12];	/* pad space, unused		*/
- 	__u32		bs_dmevmask;	/* DMIG event mask		*/
- 	__u16		bs_dmstate;	/* DMIG state info		*/
- 	__u16		bs_aextents;	/* attribute number of extents	*/
--- 
-1.6.5
 
 _______________________________________________
 xfs mailing list
