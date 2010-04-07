@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o37CYm3b188582 for <xfs@oss.sgi.com>; Wed, 7 Apr 2010 07:34:54 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 866FB2A335B
-	for <xfs@oss.sgi.com>; Wed,  7 Apr 2010 05:36:39 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id QJmyxYXoJxI58QaW for
-	<xfs@oss.sgi.com>; Wed, 07 Apr 2010 05:36:39 -0700 (PDT)
-Date: Wed, 7 Apr 2010 08:36:38 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Oops in xfs_dir2_block_lookup_int from storage corruption [2.6.33]
-Message-ID: <20100407123638.GA21797@infradead.org>
-References: <20100404081657.GA24143@hostway.ca>
+	o37E3hAi194730 for <xfs@oss.sgi.com>; Wed, 7 Apr 2010 09:03:43 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7C9B5153A11A
+	for <xfs@oss.sgi.com>; Wed,  7 Apr 2010 07:05:26 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	Zh95LfUSptNkfDEb for <xfs@oss.sgi.com>;
+	Wed, 07 Apr 2010 07:05:26 -0700 (PDT)
+Date: Thu, 8 Apr 2010 00:05:23 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: PROBLEM + POSS FIX: kernel stack overflow, xfs, many disks,
+	heavy write load, 8k stack, x86-64
+Message-ID: <20100407140523.GJ11036@dastard>
+References: <4BBC6719.7080304@humyo.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100404081657.GA24143@hostway.ca>
+In-Reply-To: <4BBC6719.7080304@humyo.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,32 +30,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Simon Kirby <sim@hostway.ca>
-Cc: xfs@oss.sgi.com
+To: John Berthels <john@humyo.com>
+Cc: Nick Gregory <nick@humyo.com>, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, Rob Sanderson <rob@humyo.com>
 
-On Sun, Apr 04, 2010 at 01:16:57AM -0700, Simon Kirby wrote:
->         /*
->          * Loop doing a binary search for our hash value.
->          * Find our entry, ENOENT if it's not there.
->          */
->         for (low = 0, high = be32_to_cpu(btp->count) - 1; ; ) {
->                 ASSERT(low <= high);
->                 mid = (low + high) >> 1;
-> ======>         if ((hash = be32_to_cpu(blp[mid].hashval)) == args->hashval)
->                         break;
+On Wed, Apr 07, 2010 at 12:06:01PM +0100, John Berthels wrote:
+> Hi folks,
 > 
-> blp is 8 bytes which matches the multiplication of the array index in the
-> instruction.  So, this means that blp[mid] pointed to 0xffff8800f674bf00,
-> and mid was 0x0000000015c6535e.  That sounds kind of high...?
+> [I'm afraid that I'm not subscribed to the list, please cc: me on
+> any reply].
+> 
+> Problem: kernel.org 2.6.33.2 x86_64 kernel locks up under
+> write-heavy I/O load. It is "fixed" by changing THREAD_ORDER to 2.
+> 
+> Is this an OK long-term solution/should this be needed? As far as I
+> can see from searching, there is an expectation that xfs would
+> generally work with 8k stacks (THREAD_ORDER 1). We don't have xfs
+> stacked over LVM or anything else.
 
-Yes. Looks like btp->count was corrupted.  It counts the number of
-xfs_dir2_leaf_entry in the directory block, which is 16 bytes larger.
-So with 4k directory blocks that you're using we could only pack 256
-entries in one block, and that's already disconting the head and tail
-headers we have in the block format.
+I'm not seeing stacks deeper than about 5.6k on XFS under heavy write
+loads. That's nowhere near blowing an 8k stack, so there must be
+something special about what you are doing. Can you post the stack
+traces that are being generated for the deepest stack generated -
+/sys/kernel/debug/tracing/stack_trace should contain it.
 
-I'll add some more error checking to the directory code when I get
-time for it.
+> Background: We have a cluster of systems with roughly the following
+> specs (2GB RAM, 24 (twenty-four) 1TB+ disks, Intel Core2 Duo @
+> 2.2GHz).
+> 
+> Following a the addition of three new servers to the cluster, we
+> started seeing a high incidence of intermittent lockups (up to
+> several times per day for some servers) across both the old and new
+> servers. Prior to that, we saw this problem only rarely (perhaps
+> once per 3 months).
+
+What is generating the write load?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
