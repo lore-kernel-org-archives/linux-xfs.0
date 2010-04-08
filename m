@@ -1,30 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o38BJTaE019002 for <xfs@oss.sgi.com>; Thu, 8 Apr 2010 06:19:30 -0500
-Received: from mail.netcenter.hu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 623C3153B173
-	for <xfs@oss.sgi.com>; Thu,  8 Apr 2010 04:21:17 -0700 (PDT)
-Received: from mail.netcenter.hu (ns.netcenter.hu [195.228.254.57]) by
-	cuda.sgi.com with ESMTP id E755te8j9vl83aUd for
-	<xfs@oss.sgi.com>; Thu, 08 Apr 2010 04:21:17 -0700 (PDT)
-Message-ID: <00bb01cad70d$a814c2c0$0400a8c0@dcccs>
-From: "Janos Haar" <janos.haar@netcenter.hu>
-References: <02c101cacbf8$d21d1650$0400a8c0@dcccs>
-	<179901cad182$5f87f620$0400a8c0@dcccs>
-	<t2h2375c9f91004010337p618c4d5yc739fa25b5f842fa@mail.gmail.com>
-	<1fe901cad2b0$d39d0300$0400a8c0@dcccs>
-	<20100402230905.GW3335@dastard>
-	<22c901cad333$7a67db60$0400a8c0@dcccs>
-	<20100404103701.GX3335@dastard>
-	<2bd101cad4ec$5a425f30$0400a8c0@dcccs>
-	<20100405224522.GZ3335@dastard>
-	<3a5f01cad6c5$8a722c00$0400a8c0@dcccs>
-	<20100408025822.GL11036@dastard>
-Subject: Re: Kernel crash in xfs_iflush_cluster (was Somebody take a look
-	please!...)
-Date: Thu, 8 Apr 2010 13:21:34 +0200
+	o38CCQ41021568 for <xfs@oss.sgi.com>; Thu, 8 Apr 2010 07:12:26 -0500
+Received: from mx1.gb1.humyo.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 66D462A9170
+	for <xfs@oss.sgi.com>; Thu,  8 Apr 2010 05:14:17 -0700 (PDT)
+Received: from mx1.gb1.humyo.com (mx1.gb1.humyo.com [62.44.71.171]) by
+	cuda.sgi.com with ESMTP id 5nvHcdQZYManNfP5 for
+	<xfs@oss.sgi.com>; Thu, 08 Apr 2010 05:14:17 -0700 (PDT)
+Message-ID: <4BBDC92D.8060503@humyo.com>
+Date: Thu, 08 Apr 2010 13:16:45 +0100
+From: John Berthels <john@humyo.com>
 MIME-Version: 1.0
+Subject: Re: PROBLEM + POSS FIX: kernel stack overflow, xfs, many disks, heavy
+	write load, 8k stack, x86-64
+References: <4BBC6719.7080304@humyo.com> <20100407140523.GJ11036@dastard>
+	<4BBCAB57.3000106@humyo.com> <20100407234341.GK11036@dastard>
+	<20100408030347.GM11036@dastard>
+In-Reply-To: <20100408030347.GM11036@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,48 +31,28 @@ Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, xiyou.wangcong@gmail.com, kamezawa.hiroyu@jp.fujitsu.com
+Cc: Nick Gregory <nick@humyo.com>, linux-mm@kvack.org, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, Rob Sanderson <rob@humyo.com>
 
+Dave Chinner wrote:
+> On Thu, Apr 08, 2010 at 09:43:41AM +1000, Dave Chinner wrote:
+>   
+> And there's a patch attached that stops direct reclaim from writing
+> back dirty pages - it seems to work fine from some rough testing
+> I've done. Perhaps you might want to give it a spin on a
+> test box, John?
+>   
+Thanks very much for this. The patch is in and soaking on a THREAD_ORDER 
+1 kernel (2.6.33.2 + patch + stack instrumentation), so far so good, but 
+it's early days. After about 2hrs of uptime:
 
------ Original Message ----- 
-From: "Dave Chinner" <david@fromorbit.com>
-To: "Janos Haar" <janos.haar@netcenter.hu>
-Cc: <xiyou.wangcong@gmail.com>; <linux-kernel@vger.kernel.org>; 
-<kamezawa.hiroyu@jp.fujitsu.com>; <linux-mm@kvack.org>; <xfs@oss.sgi.com>; 
-<axboe@kernel.dk>
-Sent: Thursday, April 08, 2010 4:58 AM
-Subject: Re: Kernel crash in xfs_iflush_cluster (was Somebody take a look 
-please!...)
+$ dmesg | grep stack | tail -1
+[   60.350766] apache2 used greatest stack depth: 2544 bytes left
 
+(which tallies well with your 5 1/2Kbytes usage figure).
 
-> On Thu, Apr 08, 2010 at 04:45:13AM +0200, Janos Haar wrote:
->> Hello,
->>
->> Sorry, but still have the problem with 2.6.33.2.
->
-> Yeah, these still a fix that needs to be back ported to .33
-> to solve this problem. It's in the series for 2.6.32.x, so maybe
-> pulling the 2.6.32-stable-queue tree in the meantime is your best
-> bet.
+I'll reply again after it's been running long enough to draw conclusions.
 
-Ok, thank you.
-But where can i find this tree?
-
-Thanks,
-Janos
-
->
-> Cheers,
->
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/ 
+jb
 
 _______________________________________________
 xfs mailing list
