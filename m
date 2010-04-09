@@ -1,15 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o39MTlGI146505 for <xfs@oss.sgi.com>; Fri, 9 Apr 2010 17:29:47 -0500
+	o39MTkpF146479 for <xfs@oss.sgi.com>; Fri, 9 Apr 2010 17:29:47 -0500
 Received: from cf--amer001e--3.americas.sgi.com
 	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3EEBA8F80C5
-	for <xfs@oss.sgi.com>; Fri,  9 Apr 2010 15:31:40 -0700 (PDT)
-Subject: [PATCHv2 8/10] xfs: avoid repeated pointer dereferences
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CA3AF8F80C4
+	for <xfs@oss.sgi.com>; Fri,  9 Apr 2010 15:31:36 -0700 (PDT)
+Subject: Re: [PATCH 0/7] xfs: xfs_log_recover.c cleanups
 From: Alex Elder <aelder@sgi.com>
-Date: Fri, 09 Apr 2010 17:30:42 -0500
-Message-ID: <1270852242.7840.158.camel@doink>
+In-Reply-To: <201003182253.o2IMrfX0001827@stout.americas.sgi.com>
+References: <201003182253.o2IMrfX0001827@stout.americas.sgi.com>
+Date: Fri, 09 Apr 2010 17:26:04 -0500
+Message-ID: <1270851964.7840.120.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -26,63 +28,30 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-In xlog_find_cycle_start() use a local variable for some repeated
-operations rather than constantly updating the memory location
-whose address is passed in.
+On Thu, 2010-03-18 at 17:53 -0500, Alex Elder wrote:
+> This series of patches contains a set of changes primarily in
+> the file "fs/xfs/xfs_log_recover.c".  They're mostly cleanup
+> patches, but one of them fixes a bug in two spots.
 
-Signed-off-by: Alex Elder <aelder@sgi.com>
+I'm re-submitting this series of patches.  A few of them
+are unchanged (already reviewed by Christoph Hellwig).
+I have addressed a few other comments he made:
+- Only encapsulate the validity check, not the reporting
+  of errors, in the 5th patch
+- The 7th "odds and ends" patch has been broken into
+  several smaller patches, each with its own explanation.
+  A few changes have been removed for now.
+- Added another patch to the series that gets rid of
+  the l_sectbb_log (which holds the log-base-2 of
+  the number of basic blocks in a log sector), and
+  in its places uses l_sectsize (the number of basic
+  blocks in a log sector).
 
----
-fs/xfs/xfs_log_recover.c |   83 ++++++++++++++++++++++++-----------------------
- fs/xfs/xfs_log_recover.c |   26 ++++++++++++++------------
- 1 file changed, 14 insertions(+), 12 deletions(-)
+There are now 10 patches in the series.  I've indicated
+the patches that involve changes from before (possibly
+pulled into a separate patch) with "PATCHv2".
 
-Index: b/fs/xfs/xfs_log_recover.c
-===================================================================
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -354,26 +354,28 @@ xlog_find_cycle_start(
- {
- 	xfs_caddr_t	offset;
- 	xfs_daddr_t	mid_blk;
-+	xfs_daddr_t	end_blk;
- 	uint		mid_cycle;
- 	int		error;
- 
--	mid_blk = BLK_AVG(first_blk, *last_blk);
--	while (mid_blk != first_blk && mid_blk != *last_blk) {
-+	ASSERT(last_blk != NULL);
-+	end_blk = *last_blk;
-+	mid_blk = BLK_AVG(first_blk, end_blk);
-+	while (mid_blk != first_blk && mid_blk != end_blk) {
- 		error = xlog_bread(log, mid_blk, 1, bp, &offset);
- 		if (error)
- 			return error;
- 		mid_cycle = xlog_get_cycle(offset);
--		if (mid_cycle == cycle) {
--			*last_blk = mid_blk;
--			/* last_half_cycle == mid_cycle */
--		} else {
--			first_blk = mid_blk;
--			/* first_half_cycle == mid_cycle */
--		}
--		mid_blk = BLK_AVG(first_blk, *last_blk);
-+		if (mid_cycle == cycle)
-+			end_blk = mid_blk;   /* last_half_cycle == mid_cycle */
-+		else
-+			first_blk = mid_blk; /* first_half_cycle == mid_cycle */
-+		mid_blk = BLK_AVG(first_blk, end_blk);
- 	}
--	ASSERT((mid_blk == first_blk && mid_blk+1 == *last_blk) ||
--	       (mid_blk == *last_blk && mid_blk-1 == first_blk));
-+	ASSERT((mid_blk == first_blk && mid_blk+1 == end_blk) ||
-+	       (mid_blk == end_blk && mid_blk-1 == first_blk));
-+
-+	*last_blk = end_blk;
- 
- 	return 0;
- }
-
+					-Alex
 
 _______________________________________________
 xfs mailing list
