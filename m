@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o39MTlFD146481 for <xfs@oss.sgi.com>; Fri, 9 Apr 2010 17:29:47 -0500
+	o39MTlGI146505 for <xfs@oss.sgi.com>; Fri, 9 Apr 2010 17:29:47 -0500
 Received: from cf--amer001e--3.americas.sgi.com
 	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E7AE98F80D1
-	for <xfs@oss.sgi.com>; Fri,  9 Apr 2010 15:31:39 -0700 (PDT)
-Subject: [PATCH 2/10] xfs: fix min bufsize bugs in two places
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3EEBA8F80C5
+	for <xfs@oss.sgi.com>; Fri,  9 Apr 2010 15:31:40 -0700 (PDT)
+Subject: [PATCHv2 8/10] xfs: avoid repeated pointer dereferences
 From: Alex Elder <aelder@sgi.com>
-Date: Fri, 09 Apr 2010 17:26:53 -0500
-Message-ID: <1270852013.7840.132.camel@doink>
+Date: Fri, 09 Apr 2010 17:30:42 -0500
+Message-ID: <1270852242.7840.158.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -26,80 +26,62 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-This fixes a bug in two places that I found by inspection.  In
-xlog_find_verify_cycle() and xlog_write_log_records(), the code
-attempts to allocate a buffer to hold as many blocks as possible.
-It gives up if the number of blocks to be allocated gets too small.
-Right now it uses log->l_sectbb_log as that lower bound, but I'm
-sure it's supposed to be the actual log sector size instead.  That
-is, the lower bound should be (1 << log->l_sectbb_log).
-
-Also define a simple macro xlog_sectbb(log) to represent the number
-of basic blocks in a sector for the given log.
-
-(No change from original submission; I have implemented Christoph's
-suggestion about storing l_sectsize rather than l_sectbb_log in
-a new, separate patch in this series.)
+In xlog_find_cycle_start() use a local variable for some repeated
+operations rather than constantly updating the memory location
+whose address is passed in.
 
 Signed-off-by: Alex Elder <aelder@sgi.com>
 
 ---
-fs/xfs/xfs_log_recover.c |   21 +++++++++++++++++----
- fs/xfs/xfs_log_recover.c |   21 +++++++++++++++++----
- 1 file changed, 17 insertions(+), 4 deletions(-)
+fs/xfs/xfs_log_recover.c |   83 ++++++++++++++++++++++++-----------------------
+ fs/xfs/xfs_log_recover.c |   26 ++++++++++++++------------
+ 1 file changed, 14 insertions(+), 12 deletions(-)
 
 Index: b/fs/xfs/xfs_log_recover.c
 ===================================================================
 --- a/fs/xfs/xfs_log_recover.c
 +++ b/fs/xfs/xfs_log_recover.c
-@@ -66,6 +66,9 @@ STATIC void	xlog_recover_check_summary(x
- 	((bbs + (log)->l_sectbb_mask + 1) & ~(log)->l_sectbb_mask) : (bbs) )
- #define XLOG_SECTOR_ROUNDDOWN_BLKNO(log, bno)	((bno) & ~(log)->l_sectbb_mask)
+@@ -354,26 +354,28 @@ xlog_find_cycle_start(
+ {
+ 	xfs_caddr_t	offset;
+ 	xfs_daddr_t	mid_blk;
++	xfs_daddr_t	end_blk;
+ 	uint		mid_cycle;
+ 	int		error;
  
-+/* Number of basic blocks in a log sector */
-+#define xlog_sectbb(log) (1 << (log)->l_sectbb_log)
+-	mid_blk = BLK_AVG(first_blk, *last_blk);
+-	while (mid_blk != first_blk && mid_blk != *last_blk) {
++	ASSERT(last_blk != NULL);
++	end_blk = *last_blk;
++	mid_blk = BLK_AVG(first_blk, end_blk);
++	while (mid_blk != first_blk && mid_blk != end_blk) {
+ 		error = xlog_bread(log, mid_blk, 1, bp, &offset);
+ 		if (error)
+ 			return error;
+ 		mid_cycle = xlog_get_cycle(offset);
+-		if (mid_cycle == cycle) {
+-			*last_blk = mid_blk;
+-			/* last_half_cycle == mid_cycle */
+-		} else {
+-			first_blk = mid_blk;
+-			/* first_half_cycle == mid_cycle */
+-		}
+-		mid_blk = BLK_AVG(first_blk, *last_blk);
++		if (mid_cycle == cycle)
++			end_blk = mid_blk;   /* last_half_cycle == mid_cycle */
++		else
++			first_blk = mid_blk; /* first_half_cycle == mid_cycle */
++		mid_blk = BLK_AVG(first_blk, end_blk);
+ 	}
+-	ASSERT((mid_blk == first_blk && mid_blk+1 == *last_blk) ||
+-	       (mid_blk == *last_blk && mid_blk-1 == first_blk));
++	ASSERT((mid_blk == first_blk && mid_blk+1 == end_blk) ||
++	       (mid_blk == end_blk && mid_blk-1 == first_blk));
 +
- STATIC xfs_buf_t *
- xlog_get_bp(
- 	xlog_t		*log,
-@@ -376,12 +379,16 @@ xlog_find_verify_cycle(
- 	xfs_caddr_t	buf = NULL;
- 	int		error = 0;
++	*last_blk = end_blk;
  
-+	/*
-+	 * Greedily allocate a buffer big enough to handle the full
-+	 * range of basic blocks we'll be examining.  If that fails,
-+	 * try a smaller size.  We need to be able to read at least
-+	 * a log sector, or we're out of luck.
-+	 */
- 	bufblks = 1 << ffs(nbblks);
--
- 	while (!(bp = xlog_get_bp(log, bufblks))) {
--		/* can't get enough memory to do everything in one big buffer */
- 		bufblks >>= 1;
--		if (bufblks <= log->l_sectbb_log)
-+		if (bufblks < xlog_sectbb(log))
- 			return ENOMEM;
- 	}
- 
-@@ -1158,10 +1165,16 @@ xlog_write_log_records(
- 	int		error = 0;
- 	int		i, j = 0;
- 
-+	/*
-+	 * Greedily allocate a buffer big enough to handle the full
-+	 * range of basic blocks to be written.  If that fails, try
-+	 * a smaller size.  We need to be able to write at least a
-+	 * log sector, or we're out of luck.
-+	 */
- 	bufblks = 1 << ffs(blocks);
- 	while (!(bp = xlog_get_bp(log, bufblks))) {
- 		bufblks >>= 1;
--		if (bufblks <= log->l_sectbb_log)
-+		if (bufblks < xlog_sectbb(log))
- 			return ENOMEM;
- 	}
- 
+ 	return 0;
+ }
 
 
 _______________________________________________
