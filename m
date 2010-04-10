@@ -1,21 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3A3WaZQ163798 for <xfs@oss.sgi.com>; Fri, 9 Apr 2010 22:32:36 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 753CEFD0083
-	for <xfs@oss.sgi.com>; Fri,  9 Apr 2010 20:34:28 -0700 (PDT)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id 8qgBPnKFF8NMpiOK for
-	<xfs@oss.sgi.com>; Fri, 09 Apr 2010 20:34:28 -0700 (PDT)
-Message-ID: <4BBFF1C3.9040000@sandeen.net>
-Date: Fri, 09 Apr 2010 22:34:27 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	o3A80uCS179150 for <xfs@oss.sgi.com>; Sat, 10 Apr 2010 03:00:56 -0500
+Received: from mail-vw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 207422B2D45
+	for <xfs@oss.sgi.com>; Sat, 10 Apr 2010 01:02:48 -0700 (PDT)
+Received: from mail-vw0-f53.google.com (mail-vw0-f53.google.com
+	[209.85.212.53]) by cuda.sgi.com with ESMTP id 5fqcCQ4i1WDh5BzN
+	for <xfs@oss.sgi.com>; Sat, 10 Apr 2010 01:02:48 -0700 (PDT)
+Received: by vws3 with SMTP id 3so876504vws.26
+	for <xfs@oss.sgi.com>; Sat, 10 Apr 2010 01:02:47 -0700 (PDT)
+Date: Sat, 10 Apr 2010 16:06:31 +0800
+From: =?utf-8?Q?Am=C3=A9rico?= Wang <xiyou.wangcong@gmail.com>
+Subject: Re: Kernel crash in xfs_iflush_cluster (was Somebody take a look
+	please!...)
+Message-ID: <20100410080631.GA9772@hack>
+References: <20100402230905.GW3335@dastard>
+	<22c901cad333$7a67db60$0400a8c0@dcccs>
+	<20100404103701.GX3335@dastard>
+	<2bd101cad4ec$5a425f30$0400a8c0@dcccs>
+	<20100405224522.GZ3335@dastard>
+	<3a5f01cad6c5$8a722c00$0400a8c0@dcccs>
+	<20100408025822.GL11036@dastard>
+	<00bb01cad70d$a814c2c0$0400a8c0@dcccs>
+	<alpine.DEB.2.01.1004091435170.29272@bogon.housecafe.de>
+	<099001cad836$39dc6860$0400a8c0@dcccs>
 MIME-Version: 1.0
-Subject: Re: [PATCH] enable inode64 by default when possible
-References: <4B7309D7.5090800@sandeen.net> <1270850499.7840.25.camel@doink>
-	<4BBFE478.3090901@hardwarefreak.com>
-In-Reply-To: <4BBFE478.3090901@hardwarefreak.com>
+Content-Disposition: inline
+In-Reply-To: <099001cad836$39dc6860$0400a8c0@dcccs>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,59 +40,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: xfs@oss.sgi.com
+To: Janos Haar <janos.haar@netcenter.hu>
+Cc: axboe@kernel.dk, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-mm@kvack.org, xiyou.wangcong@gmail.com, kamezawa.hiroyu@jp.fujitsu.com
 
-Stan Hoeppner wrote:
-> Alex Elder put forth on 4/9/2010 5:01 PM:
-> 
->> OK, it's been about two months since Eric proposed this, and
->> I'm finally getting around to writing up a response.
->>
->> I discussed this with a few people within SGI, and there were
->> two main concerns that were mentioned:
->> - This may be a problem for some NFS clients
->> - This may be a problem for some backup software
->> We don't believe there are any direct issues with DMF or CXFS
->> in making this change.
->>
->> I understand that the change is only in the default behavior,
->> and that forcing 32-bit inodes will still be an available
->> option.
-> 
-> Hi Alex,
-> 
-> How will this change affect those people running 32bit CPUs and kernels, if
-> at all?  Or is this change related not to the word width of the hardware/OS
-> but to the size of the filesystem and/or number of files/inodes contained
-> within?  You mentioned possible issues with NFS.  Are there any issues with
-> Samba?
+On Sat, Apr 10, 2010 at 12:44:28AM +0200, Janos Haar wrote:
+> Hello,
+>
 
-Recent 32-bit kernels can handle 64-bit inodes.
+Hi,
 
-Userspace is a different issue; it -can- certainly cope, but many userspace
-apps don't use the 64-bit interfaces, stat64 and friends.
+> I am just started to test the stable-queue patch series on 2.6.32.10.
+> Now running, we will see...
+> The 2.6.33.2 made 4 crashes in the last 3 days. :-(
+> This was more worse than the original 2.6.32.10.
+>
+> (I am very interested, anyway, this is the last shot of this server.
+> The owner giving me an ultimate.
+> If the server crashes again in the next week, i need to replace the 
+> entire HW, the OS, and the services as well...)
+>
 
-These should get fixed, IMHO, as did the large file problems in years past ...
+I would recommend you to use a distribution-released kernel,
+rather than a stable kernel from kernel.org, because usually
+the distribution maintains a longer supported kernel than
+kernel.org.
+
+Just a little suggestion. Hope it helps for you to choose Linux. ;)
+
+Thanks.
+
+-- 
+Live like a child, think like the god.
  
-> Intel Atom (32bit x86) CPUs and XFS on multi terabyte disks are popular with
-> many folks running Linux based media PCs, streaming their ripped DVDs and
-> other large media files from their XFS filesystems.  I don't personally do
-> this, but I also have 32bit only systems that won't be replaced with 64bit
-> CPUs for some time to come.
-
-Multi-terabyte on a 32-bit atom with 2G memory is -really- pushing it
-in terms of ability to run repair - at least depending on the value of
-"multi".   Swap helps I guess but massive filesystems on underpowered
-boxes is a classic example of enough rope to hang oneself, IMHO.  :)
-
-Note, as Alex said, you can always force the mount to stay in 32 bits.
-And for smaller filesystems, no inode would be past 32 bits anyway.
-
--Eric
- 
-> Thanks.
-> 
 
 _______________________________________________
 xfs mailing list
