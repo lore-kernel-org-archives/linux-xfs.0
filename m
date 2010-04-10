@@ -1,32 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o39MgVva147907 for <xfs@oss.sgi.com>; Fri, 9 Apr 2010 17:42:31 -0500
-Received: from mail.netcenter.hu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4D7822B1A5C
-	for <xfs@oss.sgi.com>; Fri,  9 Apr 2010 15:44:22 -0700 (PDT)
-Received: from mail.netcenter.hu (ns.netcenter.hu [195.228.254.57]) by
-	cuda.sgi.com with ESMTP id zC0mClOK8aYN54TU for
-	<xfs@oss.sgi.com>; Fri, 09 Apr 2010 15:44:22 -0700 (PDT)
-Message-ID: <099001cad836$39dc6860$0400a8c0@dcccs>
-From: "Janos Haar" <janos.haar@netcenter.hu>
-References: <02c101cacbf8$d21d1650$0400a8c0@dcccs>
-	<179901cad182$5f87f620$0400a8c0@dcccs>
-	<t2h2375c9f91004010337p618c4d5yc739fa25b5f842fa@mail.gmail.com>
-	<1fe901cad2b0$d39d0300$0400a8c0@dcccs>
-	<20100402230905.GW3335@dastard>
-	<22c901cad333$7a67db60$0400a8c0@dcccs>
-	<20100404103701.GX3335@dastard>
-	<2bd101cad4ec$5a425f30$0400a8c0@dcccs>
-	<20100405224522.GZ3335@dastard>
-	<3a5f01cad6c5$8a722c00$0400a8c0@dcccs>
-	<20100408025822.GL11036@dastard>
-	<00bb01cad70d$a814c2c0$0400a8c0@dcccs>
-	<alpine.DEB.2.01.1004091435170.29272@bogon.housecafe.de>
-Subject: Re: Kernel crash in xfs_iflush_cluster (was Somebody take a look
-	please!...)
-Date: Sat, 10 Apr 2010 00:44:28 +0200
+	o3A2Zt8s161474 for <xfs@oss.sgi.com>; Fri, 9 Apr 2010 21:35:56 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 532512B2807
+	for <xfs@oss.sgi.com>; Fri,  9 Apr 2010 19:37:47 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id 7uD10BhRC9HxDxXb
+	for <xfs@oss.sgi.com>; Fri, 09 Apr 2010 19:37:47 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id 2717A6C3DC
+	for <xfs@oss.sgi.com>; Fri,  9 Apr 2010 21:37:45 -0500 (CDT)
+Message-ID: <4BBFE478.3090901@hardwarefreak.com>
+Date: Fri, 09 Apr 2010 21:37:44 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
+Subject: Re: [PATCH] enable inode64 by default when possible
+References: <4B7309D7.5090800@sandeen.net> <1270850499.7840.25.camel@doink>
+In-Reply-To: <1270850499.7840.25.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,62 +26,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christian Kujau <lists@nerdbynature.de>
-Cc: axboe@kernel.dk, "\"LKML\"" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-mm@kvack.org, xiyou.wangcong@gmail.com, kamezawa.hiroyu@jp.fujitsu.com
+To: xfs@oss.sgi.com
 
-Hello,
+Alex Elder put forth on 4/9/2010 5:01 PM:
 
-I am just started to test the stable-queue patch series on 2.6.32.10.
-Now running, we will see...
-The 2.6.33.2 made 4 crashes in the last 3 days. :-(
-This was more worse than the original 2.6.32.10.
+> OK, it's been about two months since Eric proposed this, and
+> I'm finally getting around to writing up a response.
+> 
+> I discussed this with a few people within SGI, and there were
+> two main concerns that were mentioned:
+> - This may be a problem for some NFS clients
+> - This may be a problem for some backup software
+> We don't believe there are any direct issues with DMF or CXFS
+> in making this change.
+> 
+> I understand that the change is only in the default behavior,
+> and that forcing 32-bit inodes will still be an available
+> option.
 
-(I am very interested, anyway, this is the last shot of this server.
-The owner giving me an ultimate.
-If the server crashes again in the next week, i need to replace the entire 
-HW, the OS, and the services as well...)
+Hi Alex,
 
-Thanks a lot for help.
+How will this change affect those people running 32bit CPUs and kernels, if
+at all?  Or is this change related not to the word width of the hardware/OS
+but to the size of the filesystem and/or number of files/inodes contained
+within?  You mentioned possible issues with NFS.  Are there any issues with
+Samba?
 
-Best Regards,
-Janos Haar
+Intel Atom (32bit x86) CPUs and XFS on multi terabyte disks are popular with
+many folks running Linux based media PCs, streaming their ripped DVDs and
+other large media files from their XFS filesystems.  I don't personally do
+this, but I also have 32bit only systems that won't be replaced with 64bit
+CPUs for some time to come.
 
------ Original Message ----- 
-From: "Christian Kujau" <lists@nerdbynature.de>
-To: "Janos Haar" <janos.haar@netcenter.hu>
-Cc: "Dave Chinner" <david@fromorbit.com>; <axboe@kernel.dk>; "LKML" 
-<linux-kernel@vger.kernel.org>; <xfs@oss.sgi.com>; <linux-mm@kvack.org>; 
-<xiyou.wangcong@gmail.com>; <kamezawa.hiroyu@jp.fujitsu.com>
-Sent: Friday, April 09, 2010 11:37 PM
-Subject: Re: Kernel crash in xfs_iflush_cluster (was Somebody take a look 
-please!...)
+Thanks.
 
-
-> On Thu, 8 Apr 2010 at 13:21, Janos Haar wrote:
->> > Yeah, these still a fix that needs to be back ported to .33
->> > to solve this problem. It's in the series for 2.6.32.x, so maybe
->> > pulling the 2.6.32-stable-queue tree in the meantime is your best
->> > bet.
->>
->> Ok, thank you.
->> But where can i find this tree?
->
->
-> Perhaps Dave meant the stable-queue?
->
-> http://git.kernel.org/?p=linux/kernel/git/stable/stable-queue.git
->
-> Then again, 2.6.34-rc3 needs testing too! :-)
->
-> Christian.
-> -- 
-> BOFH excuse #98:
->
-> The vendor put the bug there. 
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
