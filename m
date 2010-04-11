@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3ALEFJb225959 for <xfs@oss.sgi.com>; Sat, 10 Apr 2010 16:14:15 -0500
+	o3BMhJGu055446 for <xfs@oss.sgi.com>; Sun, 11 Apr 2010 17:43:20 -0500
 Received: from mail.netcenter.hu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E6CBEFD65A1
-	for <xfs@oss.sgi.com>; Sat, 10 Apr 2010 14:15:35 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2B0A52B5385
+	for <xfs@oss.sgi.com>; Sun, 11 Apr 2010 15:44:39 -0700 (PDT)
 Received: from mail.netcenter.hu (ns.netcenter.hu [195.228.254.57]) by
-	cuda.sgi.com with ESMTP id Wb0DtCr9kMocjzfF for
-	<xfs@oss.sgi.com>; Sat, 10 Apr 2010 14:15:35 -0700 (PDT)
-Message-ID: <0d5b01cad8f2$fdbd5750$0400a8c0@dcccs>
+	cuda.sgi.com with ESMTP id GLnrkvNDYpirnV4e for
+	<xfs@oss.sgi.com>; Sun, 11 Apr 2010 15:44:39 -0700 (PDT)
+Message-ID: <11b701cad9c8$93212530$0400a8c0@dcccs>
 From: "Janos Haar" <janos.haar@netcenter.hu>
 References: <02c101cacbf8$d21d1650$0400a8c0@dcccs>
 	<179901cad182$5f87f620$0400a8c0@dcccs>
@@ -23,7 +23,7 @@ References: <02c101cacbf8$d21d1650$0400a8c0@dcccs>
 	<20100408025822.GL11036@dastard>
 Subject: Re: Kernel crash in xfs_iflush_cluster (was Somebody take a look
 	please!...)
-Date: Sat, 10 Apr 2010 23:15:45 +0200
+Date: Mon, 12 Apr 2010 00:44:37 +0200
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -40,69 +40,17 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, xiyou.wangcong@gmail.com, kamezawa.hiroyu@jp.fujitsu.com
 
-Dave,
+Hi,
 
-Not the server looks stable, but only runs in 23 hour at this point.
+Ok, here comes the funny part:
+I have got several messages from the kernel about one of my XFS (sdb2) have 
+corrupted inodes, but my xfs_repair (v. 2.8.11) says the FS is clean and 
+shine.
+Should i upgrade my xfs_repair, or this is another bug? :-)
 
-Now i can see these and similar messages:
-Apr 10 09:59:09 alfa kernel: Filesystem "sdb2": corrupt dinode 673160714, 
-extent total = -1392508927, nblocks = 5.  Unmount and run xfs_repair.
-Apr 10 09:59:09 alfa kernel: ffff880153797a00: 49 4e 81 a4 01 02 00 01 00 00 
-00 30 00 00 00 30  IN.........0...0
-Apr 10 09:59:09 alfa kernel: Filesystem "sdb2": XFS internal error 
-xfs_iformat(1) at line 332 of file fs/xfs/xfs_inode.c.  Caller 
-0xffffffff811d70d6
-Apr 10 09:59:09 alfa kernel:
-Apr 10 09:59:09 alfa kernel: Pid: 2324, comm: updatedb Not tainted 2.6.32.10 
-#3
-Apr 10 09:59:09 alfa kernel: Call Trace:
-Apr 10 09:59:09 alfa kernel:  [<ffffffff811cf87d>] 
-xfs_error_report+0x41/0x43
-Apr 10 09:59:09 alfa kernel:  [<ffffffff811d70d6>] ? xfs_iread+0xb1/0x184
-Apr 10 09:59:09 alfa kernel:  [<ffffffff811cf8d1>] 
-xfs_corruption_error+0x52/0x5e
-Apr 10 09:59:09 alfa kernel:  [<ffffffff811d6c68>] xfs_iformat+0x10d/0x4ca
-Apr 10 09:59:09 alfa kernel:  [<ffffffff811d70d6>] ? xfs_iread+0xb1/0x184
-Apr 10 09:59:09 alfa kernel:  [<ffffffff811d70d6>] xfs_iread+0xb1/0x184
-Apr 10 09:59:09 alfa kernel:  [<ffffffff811d3ee2>] xfs_iget+0x2c3/0x455
-Apr 10 09:59:09 alfa kernel:  [<ffffffff811eab8b>] xfs_lookup+0x82/0xb3
-Apr 10 09:59:09 alfa kernel:  [<ffffffff811f5a8f>] xfs_vn_lookup+0x45/0x86
-Apr 10 09:59:09 alfa kernel:  [<ffffffff810e3f73>] do_lookup+0xde/0x1ca
-Apr 10 09:59:09 alfa kernel:  [<ffffffff810e65b6>] 
-__link_path_walk+0x84e/0xcb3
-Apr 10 09:59:09 alfa kernel:  [<ffffffff810e4462>] ? path_init+0xaf/0x156
-Apr 10 09:59:09 alfa kernel:  [<ffffffff810e6a6e>] path_walk+0x53/0x9c
-Apr 10 09:59:09 alfa kernel:  [<ffffffff810e6b9e>] do_path_lookup+0x2f/0xac
-Apr 10 09:59:09 alfa kernel:  [<ffffffff810e7603>] user_path_at+0x57/0x91
-Apr 10 09:59:09 alfa kernel:  [<ffffffff810ec2e5>] ? dput+0x54/0x132
-Apr 10 09:59:09 alfa kernel:  [<ffffffff810df492>] ? cp_new_stat+0xfb/0x114
-Apr 10 09:59:09 alfa kernel:  [<ffffffff810df670>] vfs_fstatat+0x3a/0x67
-Apr 10 09:59:09 alfa kernel:  [<ffffffff810df6f4>] vfs_lstat+0x1e/0x20
-Apr 10 09:59:09 alfa kernel:  [<ffffffff810df715>] sys_newlstat+0x1f/0x39
-Apr 10 09:59:09 alfa kernel:  [<ffffffff8175d2d3>] ? 
-trace_hardirqs_on_thunk+0x3a/0x3f
-Apr 10 09:59:09 alfa kernel:  [<ffffffff811d3f36>] ? xfs_iget+0x317/0x455
-Apr 10 09:59:09 alfa kernel:  [<ffffffff8100b09b>] 
-system_call_fastpath+0x16/0x1b
-Apr 10 09:59:09 alfa kernel: Filesystem "sdb2": corrupt inode 673160713 
-((a)extents = 16777217).  Unmount and run xfs_repair.
-Apr 10 09:59:09 alfa kernel: ffff880153797900: 49 4e 81 a4 01 02 00 01 00 00 
-00 30 00 00 00 30  IN.........0...0
-Apr 10 09:59:09 alfa kernel: Filesystem "sdb2": XFS internal error 
-xfs_iformat_extents(1) at line 558 of file fs/xfs/xfs_inode.c.  Caller 
-0xffffffff811d6e70
-Apr 10 09:59:09 alfa kernel:
+Thanks,
 
-All reports sdb2 for corruption.
-I will test this partition as soon as i can plan some minute planned 
-pause....
-
-Thanks for all your help again.
-
-Best Regards:
-Janos Haar
-
-
+Janos
 
 ----- Original Message ----- 
 From: "Dave Chinner" <david@fromorbit.com>
