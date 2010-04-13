@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3D4c0ea190676 for <xfs@oss.sgi.com>; Mon, 12 Apr 2010 23:38:00 -0500
-Received: from moutng.kundenserver.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 349AD126B761
-	for <xfs@oss.sgi.com>; Mon, 12 Apr 2010 21:39:54 -0700 (PDT)
-Received: from moutng.kundenserver.de (moutng.kundenserver.de
-	[212.227.126.171]) by cuda.sgi.com with ESMTP id
-	FPZXxpJZtQ6iRHBr for <xfs@oss.sgi.com>;
-	Mon, 12 Apr 2010 21:39:54 -0700 (PDT)
-Date: Mon, 12 Apr 2010 21:39:43 -0700 (PDT)
-From: Christian Kujau <lists@nerdbynature.de>
-Subject: Re: 2.6.34-rc3: inode 0x401afe0 background reclaim flush failed with
-	11
-In-Reply-To: <20100413042451.GQ2493@dastard>
-Message-ID: <alpine.DEB.2.01.1004122135350.29272@bogon.housecafe.de>
-References: <alpine.DEB.2.01.1004091348010.29272@bogon.housecafe.de>
-	<20100413024946.GP2493@dastard>
-	<alpine.DEB.2.01.1004121950510.29272@bogon.housecafe.de>
-	<20100413042451.GQ2493@dastard>
+	o3D5AIR9194870 for <xfs@oss.sgi.com>; Tue, 13 Apr 2010 00:10:19 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 88B5D2BAA80
+	for <xfs@oss.sgi.com>; Mon, 12 Apr 2010 22:12:12 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
+	[150.101.137.100]) by cuda.sgi.com with ESMTP id
+	oVOJ3isBgcOBuqz8 for <xfs@oss.sgi.com>;
+	Mon, 12 Apr 2010 22:12:12 -0700 (PDT)
+Date: Tue, 13 Apr 2010 15:12:09 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/10] xfs: fix min bufsize bugs in two places
+Message-ID: <20100413051209.GT2493@dastard>
+References: <1270852013.7840.132.camel@doink> <20100412063248.GG2493@dastard>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20100412063248.GG2493@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,30 +29,60 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Alex Elder <aelder@sgi.com>
 Cc: xfs@oss.sgi.com
 
+On Mon, Apr 12, 2010 at 04:32:48PM +1000, Dave Chinner wrote:
+> On Fri, Apr 09, 2010 at 05:26:53PM -0500, Alex Elder wrote:
+> > This fixes a bug in two places that I found by inspection.  In
+> > xlog_find_verify_cycle() and xlog_write_log_records(), the code
+> > attempts to allocate a buffer to hold as many blocks as possible.
+> > It gives up if the number of blocks to be allocated gets too small.
+> > Right now it uses log->l_sectbb_log as that lower bound, but I'm
+> > sure it's supposed to be the actual log sector size instead.  That
+> > is, the lower bound should be (1 << log->l_sectbb_log).
+> > 
+> > Also define a simple macro xlog_sectbb(log) to represent the number
+> > of basic blocks in a sector for the given log.
+> > 
+> > (No change from original submission; I have implemented Christoph's
+> > suggestion about storing l_sectsize rather than l_sectbb_log in
+> > a new, separate patch in this series.)
+> > 
+> > Signed-off-by: Alex Elder <aelder@sgi.com>
+> > 
+> > ---
+> > fs/xfs/xfs_log_recover.c |   21 +++++++++++++++++----
+> >  fs/xfs/xfs_log_recover.c |   21 +++++++++++++++++----
+> >  1 file changed, 17 insertions(+), 4 deletions(-)
+> > 
+> > Index: b/fs/xfs/xfs_log_recover.c
+> > ===================================================================
+> > --- a/fs/xfs/xfs_log_recover.c
+> > +++ b/fs/xfs/xfs_log_recover.c
+> > @@ -66,6 +66,9 @@ STATIC void	xlog_recover_check_summary(x
+> >  	((bbs + (log)->l_sectbb_mask + 1) & ~(log)->l_sectbb_mask) : (bbs) )
+> >  #define XLOG_SECTOR_ROUNDDOWN_BLKNO(log, bno)	((bno) & ~(log)->l_sectbb_mask)
+> >  
+> > +/* Number of basic blocks in a log sector */
+> > +#define xlog_sectbb(log) (1 << (log)->l_sectbb_log)
+> > +
+> 
+> Can you do this without the #define? There's a spot in
+> xlog_alloc_log() where the l_sectbb_mask is set up that
+> open code this shift, so it seems to me that this woul dbe the spot
+> to set up a l_sect_size variable and reference that instead...
 
-For the sake of the archives:
+I note you did this with a later patch, so this one is good to go.
 
-On Tue, 13 Apr 2010 at 14:24, Dave Chinner wrote:
-> Hmmm - I'd never realised that find doesn't decode hex numbers.
-> I guess I rarely use find for that purpose. I'll keep that in mind
-> when adding new output.
+Reviewed-by: Dave Chinner <david@fromorbit.com>
 
-No, but standard /bin/sh can do it:
+Cheers,
 
-   $ find . -inum $((0xff)) -ls
-   255    0 -rw-r--r--   1 root     root      0 Apr 12 21:35 ./0156
-
-I'll have to remember this next time...
-
-Thanks,
-Christian.
+Dave.
 -- 
-BOFH excuse #276:
-
-U.S. Postal Service
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
