@@ -1,20 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3D7sFI2205155 for <xfs@oss.sgi.com>; Tue, 13 Apr 2010 02:54:15 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7AEC0126ED63
-	for <xfs@oss.sgi.com>; Tue, 13 Apr 2010 00:56:07 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
-	[150.101.137.103]) by cuda.sgi.com with ESMTP id
-	2FSlddfQsgmFP8r0 for <xfs@oss.sgi.com>;
-	Tue, 13 Apr 2010 00:56:07 -0700 (PDT)
-Date: Tue, 13 Apr 2010 17:56:04 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [GIT] branch tracking reviewed patches
-Message-ID: <20100413075604.GU2493@dastard>
+	o3D7wQww205547 for <xfs@oss.sgi.com>; Tue, 13 Apr 2010 02:58:27 -0500
+Received: from mail.netcenter.hu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 73CA02BB04C
+	for <xfs@oss.sgi.com>; Tue, 13 Apr 2010 01:00:15 -0700 (PDT)
+Received: from mail.netcenter.hu (ns.netcenter.hu [195.228.254.57]) by
+	cuda.sgi.com with ESMTP id JUXHyfDPGVXOLfFt for
+	<xfs@oss.sgi.com>; Tue, 13 Apr 2010 01:00:15 -0700 (PDT)
+Message-ID: <18b101cadadf$5edbb660$0400a8c0@dcccs>
+From: "Janos Haar" <janos.haar@netcenter.hu>
+References: <t2h2375c9f91004010337p618c4d5yc739fa25b5f842fa@mail.gmail.com>
+	<1fe901cad2b0$d39d0300$0400a8c0@dcccs>
+	<20100402230905.GW3335@dastard>
+	<22c901cad333$7a67db60$0400a8c0@dcccs>
+	<20100404103701.GX3335@dastard>
+	<2bd101cad4ec$5a425f30$0400a8c0@dcccs>
+	<20100405224522.GZ3335@dastard>
+	<3a5f01cad6c5$8a722c00$0400a8c0@dcccs>
+	<20100408025822.GL11036@dastard>
+	<11b701cad9c8$93212530$0400a8c0@dcccs>
+	<20100412001158.GA2493@dastard>
+Subject: Re: Kernel crash in xfs_iflush_cluster (was Somebody take a look
+	please!...)
+Date: Tue, 13 Apr 2010 10:00:17 +0200
 MIME-Version: 1.0
-Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,45 +33,107 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: aelder@sgi.com
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, xiyou.wangcong@gmail.com, kamezawa.hiroyu@jp.fujitsu.com
 
-Alex,
 
-I've just pulled all the oustanding reviewed patches into a branch
-in my git tree. I'm going to try to push all such reviewed patches
-that aren't in the main xfs-dev tree into this branch so I don't
-lose track of them and they still get QA time rather than slowly
-bitrotting on the list. The branch that contains these is at:
+----- Original Message ----- 
+From: "Dave Chinner" <david@fromorbit.com>
+To: "Janos Haar" <janos.haar@netcenter.hu>
+Cc: <xiyou.wangcong@gmail.com>; <linux-kernel@vger.kernel.org>; 
+<kamezawa.hiroyu@jp.fujitsu.com>; <linux-mm@kvack.org>; <xfs@oss.sgi.com>; 
+<axboe@kernel.dk>
+Sent: Monday, April 12, 2010 2:11 AM
+Subject: Re: Kernel crash in xfs_iflush_cluster (was Somebody take a look 
+please!...)
 
-git://git.kernel.org/pub/scm/linux/kernel/git/dgc/xfs.git for-dev
 
-I'm also going to try to maintain a branch that contains patches
-that haven't completed the review process, once again for tracking
-purposes. This will probably only contain patches that don't require
-massaging to apply. That branch can be found at:
+> On Mon, Apr 12, 2010 at 12:44:37AM +0200, Janos Haar wrote:
+>> Hi,
+>>
+>> Ok, here comes the funny part:
+>> I have got several messages from the kernel about one of my XFS
+>> (sdb2) have corrupted inodes, but my xfs_repair (v. 2.8.11) says the
+>> FS is clean and shine.
+>> Should i upgrade my xfs_repair, or this is another bug? :-)
+>
+> v2.8.11 is positively ancient. :/
+>
+> I'd upgrade (current is 3.1.1) and re-run repair again.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/dgc/xfs.git for-review
+OK, i will get the new repair today.
 
-Note that I will be rebasing these branches, so only pull them
-into temporary/disposable branches if you want to look at them or
-use them.
+btw
+Since i tested the FS with the 2.8.11, today morning i found this in the 
+log:
 
-Every so often I'll send a pull request for the for-dev branch;
-if the branch has not been pulled into the xfs-dev tree and I update
-the branch I'll send another pull req to let you know that I've
-updated it.
+...
+Apr 12 00:41:10 alfa kernel: XFS mounting filesystem sdb2   # This was the 
+point of check with xfs_repair v2.8.11
+Apr 13 03:08:33 alfa kernel: xfs_da_do_buf: bno 32768
+Apr 13 03:08:33 alfa kernel: dir: inode 474253931
+Apr 13 03:08:33 alfa kernel: Filesystem "sdb2": XFS internal error 
+xfs_da_do_buf(1) at line 2020 of file fs/xfs/xfs_da_btree.c.  Caller 
+0xffffffff811c4fa6
+Apr 13 03:08:33 alfa kernel:
+Apr 13 03:08:33 alfa kernel: Pid: 27304, comm: 01vegzet_runner Not tainted 
+2.6.32.10 #3
+Apr 13 03:08:33 alfa kernel: Call Trace:
+Apr 13 03:08:33 alfa kernel:  [<ffffffff811cf87d>] 
+xfs_error_report+0x41/0x43
+Apr 13 03:08:33 alfa kernel:  [<ffffffff811c4fa6>] ? 
+xfs_da_read_buf+0x2a/0x2c
+Apr 13 03:08:33 alfa kernel:  [<ffffffff811c4c30>] xfs_da_do_buf+0x2a6/0x5aa
+Apr 13 03:08:33 alfa kernel:  [<ffffffff811c4fa6>] xfs_da_read_buf+0x2a/0x2c
+Apr 13 03:08:33 alfa kernel:  [<ffffffff811ca0f1>] ? 
+xfs_dir2_leaf_lookup_int+0x104/0x259
+Apr 13 03:08:33 alfa kernel:  [<ffffffff811ca0f1>] 
+xfs_dir2_leaf_lookup_int+0x104/0x259
+Apr 13 03:08:33 alfa kernel:  [<ffffffff811ca56e>] 
+xfs_dir2_leaf_lookup+0x26/0xb5
+Apr 13 03:08:33 alfa kernel:  [<ffffffff811c6d60>] ? 
+xfs_dir2_isleaf+0x21/0x52
+Apr 13 03:08:33 alfa kernel:  [<ffffffff811c74ea>] 
+xfs_dir_lookup+0x104/0x157
+Apr 13 03:08:33 alfa kernel:  [<ffffffff811eab59>] xfs_lookup+0x50/0xb3
+Apr 13 03:08:33 alfa kernel:  [<ffffffff811f5a8f>] xfs_vn_lookup+0x45/0x86
+Apr 13 03:08:33 alfa kernel:  [<ffffffff810e4164>] __lookup_hash+0x105/0x12a
+Apr 13 03:08:33 alfa kernel:  [<ffffffff810e41c4>] lookup_hash+0x3b/0x40
+Apr 13 03:08:33 alfa kernel:  [<ffffffff810e7021>] do_unlinkat+0x71/0x17d
+Apr 13 03:08:33 alfa kernel:  [<ffffffff8175d2d3>] ? 
+trace_hardirqs_on_thunk+0x3a/0x3f
+Apr 13 03:08:33 alfa kernel:  [<ffffffff810e5a1d>] ? putname+0x3c/0x3e
+Apr 13 03:08:33 alfa kernel:  [<ffffffff810e7143>] sys_unlink+0x16/0x18
+Apr 13 03:08:33 alfa kernel:  [<ffffffff8100b09b>] 
+system_call_fastpath+0x16/0x1b
+....
 
-Cheers,
+The entire log is here:
+http://download.netcenter.hu/bughunt/20100413/messages
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+What is the best next step?
+Check with the new repair?
+
+Thanks,
+Janos
+
+
+>
+> Cheers,
+>
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/ 
 
 _______________________________________________
 xfs mailing list
