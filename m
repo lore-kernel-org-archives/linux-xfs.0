@@ -1,23 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3D1InbA177974 for <xfs@oss.sgi.com>; Mon, 12 Apr 2010 20:18:49 -0500
+	o3D1IfcZ177908 for <xfs@oss.sgi.com>; Mon, 12 Apr 2010 20:18:42 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A5FFC2BA417
-	for <xfs@oss.sgi.com>; Mon, 12 Apr 2010 18:20:42 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	O8Evl1Pew6YGXoAp for <xfs@oss.sgi.com>;
-	Mon, 12 Apr 2010 18:20:42 -0700 (PDT)
-Date: Mon, 12 Apr 2010 16:21:58 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id ACF131269E0B
+	for <xfs@oss.sgi.com>; Mon, 12 Apr 2010 18:20:34 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	YiNWwq4XkJ7FQjlr for <xfs@oss.sgi.com>;
+	Mon, 12 Apr 2010 18:20:34 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] enable inode64 by default when possible
-Message-ID: <20100412062158.GF2493@dastard>
-References: <4B7309D7.5090800@sandeen.net> <1270850499.7840.25.camel@doink>
-	<4BBFE478.3090901@hardwarefreak.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4BBFE478.3090901@hardwarefreak.com>
+Subject: [PATCH 0/2] Context sensitive memory shrinker support
+Date: Tue, 13 Apr 2010 10:24:13 +1000
+Message-Id: <1271118255-21070-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,53 +21,25 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: xfs@oss.sgi.com
+To: linux-kernel@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, xfs@oss.sgi.com
 
-On Fri, Apr 09, 2010 at 09:37:44PM -0500, Stan Hoeppner wrote:
-> Alex Elder put forth on 4/9/2010 5:01 PM:
-> 
-> > OK, it's been about two months since Eric proposed this, and
-> > I'm finally getting around to writing up a response.
-> > 
-> > I discussed this with a few people within SGI, and there were
-> > two main concerns that were mentioned:
-> > - This may be a problem for some NFS clients
-> > - This may be a problem for some backup software
-> > We don't believe there are any direct issues with DMF or CXFS
-> > in making this change.
-> > 
-> > I understand that the change is only in the default behavior,
-> > and that forcing 32-bit inodes will still be an available
-> > option.
-> 
-> Hi Alex,
-> 
-> How will this change affect those people running 32bit CPUs and kernels, if
-> at all?  Or is this change related not to the word width of the hardware/OS
-> but to the size of the filesystem and/or number of files/inodes contained
-> within?  You mentioned possible issues with NFS.  Are there any issues with
-> Samba?
-> 
-> Intel Atom (32bit x86) CPUs
+Recently I made the XFS inode reclaim operate entirely in the background for
+both clean and dirty inodes as it simplified the code a lot and is somewhat
+more efficient. Unfortunately, there are some workloads where the
+background reclaim is not freeing memory fast enough, so the reclaim needs an
+extra push when memory is low.
 
-No, I think Atom is 64 bit.
-
-/me checks his mailserver
-
-Yup, it's running a 64 bit kernel and 64 bit userspace. No 32 bit
-issues there....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+The inode caches are per-filesystem on XFS, so to make effective use of the
+shrinker callbacks when memory is low, we need a context to be passed through
+the shrinker to give us the filesystem context to run the reclaim from. The
+two patches introduce the shrinker context and implement the XFS inode reclaim
+shrinkers.
 
 _______________________________________________
 xfs mailing list
