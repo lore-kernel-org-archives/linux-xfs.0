@@ -1,22 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3DFMFQP242589 for <xfs@oss.sgi.com>; Tue, 13 Apr 2010 10:22:15 -0500
-Received: from mx.inode.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8A7BB153FE02
-	for <xfs@oss.sgi.com>; Tue, 13 Apr 2010 08:24:09 -0700 (PDT)
-Received: from mx.inode.at (mx13.lb01.inode.at [62.99.145.15]) by cuda.sgi.com
-	with ESMTP id ncGfFRhANNvBql2H for <xfs@oss.sgi.com>;
-	Tue, 13 Apr 2010 08:24:09 -0700 (PDT)
+	o3DG8tMf245913 for <xfs@oss.sgi.com>; Tue, 13 Apr 2010 11:08:56 -0500
+Received: from fmmailgate04.web.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4D32812753D8
+	for <xfs@oss.sgi.com>; Tue, 13 Apr 2010 09:10:49 -0700 (PDT)
+Received: from fmmailgate04.web.de (fmmailgate04.web.de [217.72.192.242]) by
+	cuda.sgi.com with ESMTP id qwtDtGwNdUhUsmit for
+	<xfs@oss.sgi.com>; Tue, 13 Apr 2010 09:10:49 -0700 (PDT)
+Date: Tue, 13 Apr 2010 18:08:50 +0200 (CEST)
+From: Sebastian Brings <Sebastian.Brings@web.de>
+Message-ID: <4627460.211442.1271174930836.JavaMail.fmail@mwmweb047>
 Subject: Re: XFS-filesystem corrupted by defragmentation
-References: <87r5mjpn8l.fsf@workstation006.office.ice-sf.at>
-	<alpine.DEB.1.10.1004131022140.32213@castor.opentrend.net>
-From: Bernhard Gschaider <bgschaid_lists@ice-sf.at>
-Date: Tue, 13 Apr 2010 17:24:04 +0200
-In-Reply-To: <alpine.DEB.1.10.1004131022140.32213@castor.opentrend.net>
-	(Robert Brockway's message of "Tue,
-	13 Apr 2010 10:58:22 -0400 (EDT)")
-Message-ID: <877hobnzor.fsf@workstation006.office.ice-sf.at>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -26,86 +21,74 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Robert Brockway <robert@timetraveller.org>
-Cc: xfs@oss.sgi.com
+To: Bernhard Gschaider <bgschaid_lists@ice-sf.at>, xfs@oss.sgi.com
 
-
-Thanks for the answer
-
->>>>> On Tue, 13 Apr 2010 10:58:22 -0400 (EDT)
->>>>> "RB" == Robert Brockway <robert@timetraveller.org> wrote:
-
-    RB> On Tue, 13 Apr 2010, Bernhard Gschaider wrote:
-    >>> xfs_db -r /dev/mapper/VolGroup00-LogVol04
-    >> xfs_db: unexpected XFS SB magic number 0x00000000 xfs_db: read
-    >> failed: Invalid argument xfs_db: data size check failed
-    >> cache_node_purge: refcount was 1, not zero (node=0x2a25c20)
-    >> xfs_db: cannot read root inode (22)
-
-    RB> Hi Bernhard.  Hmm that doesn't sound good.
-
-http://oss.sgi.com/archives/xfs/2007-04/msg00580.html suggests a sync
-for that kind of situation. Any thoughts on this? I know that there is
-no definite answer to his. Only guesses by people who have more
-experience than me
-
-    >> The file-system is still mounted and working and I don't dare
-    >> to do anything about it (am in a mild state of panic) because I
-    >> think it might not come back if I do.
-
-    RB> I think your choice to sit back and evaluate your options
-    RB> before acting is a wise one, especially since the filesystem
-    RB> is apparently mounted and functioning.
-
-    RB> Depending on how worried you are there are various options
-    RB> available.  Eg you could declare an emergency on the server
-    RB> and use xfs_freeze to freeze the filesystem while you take a
-    RB> backup.  Note - I have never used xfs_freeze like this, it is
-    RB> just a suggestion.  Naturally this will cause an outage and
-    RB> problems for users.
-
-They'll have to live with that
-
-    RB> Alternatively you could use xfsdump to capture an incremental
-    RB> or full backup on the running system. (depending on whether
-    RB> you already have a level 0 xfs dump file or not).  The
-    RB> developers have confirmed (on this list) that xfsdump will
-    RB> provide a consistent backup on a live filesystem.
-
-    RB> Please note that any heavy I/O (like a backup) has the
-    RB> potential to cause problems on a sick filesystem.  In my
-    RB> experience xfs is inclined to automatically remount read-only
-    RB> if it detects problems.  While this can be catastrophic for
-    RB> running processes it is helpful in protecting data so I'm
-    RB> happy it works this way.
-
-    RB> One last note.  I hope you have good backups already.  If you
-    RB> don't then this is the time to start taking good backups.
-
-I have weekly backups with amanda. The tapes verify OK, but I never
-tried a full-scale recover before. 
-
-    RB> These are the notes from my backup talk:
-
-    RB> http://www.timetraveller.org/talks/backup_talk.pdf
-
-    >> I swear to god: I did not do anything else with the
-    >> xfs_*-commands than the stuff mentioned above
-
-    RB> I defrag XFS filesystems from cron as recommended by SGI and
-    RB> I've never had a problem.  Maybe defragmentation didn't cause
-    RB> the problem - maybe it just revealed an underlying problem.
-
-But it doesn't have to do with the hole that the xfs_bmap reported for
-that file?
-
-Bernhard
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+PiBIaSE+ID4gSSdtIGFza2luZyBoZXJlIGJlY2F1c2UgSSd2ZSBiZWVuIHJlZmVycmVkIGhlcmUg
+ZnJvIHRoZSBDZW50T1MtbWFpbGluZz4gbGlzdCAoZm9yIHRoZSBmdWxsIHN0b3J5IHNlZT4gaHR0
+cDovL3d3dy5wdWJicy5uZXQvMjAxMDA0L2NlbnRvcy8xNzExMi1jZW50b3MtcGVyZm9ybWFuY2Ut
+PiBwcm9ibGVtcy13aXRoLXhmcy1vbi1jZW50b3MtNTQuaHRtbD4gYW5kID4gaHR0cDovL3d3dy5w
+dWJicy5uZXQvMjAxMDA0L2NlbnRvcy8yNDU0Mi1jZW50b3MteGZzLWZpbGVzeXN0ZW0tPiBjb3Jy
+dXB0ZWQtYnktZGVmcmFnbWVudGF0aW9uLXdhcy1wZXJmb3JtYW5jZS1wcm9ibGVtcy13aXRoLXhm
+cy1vbi0+IGNlbnRvcy01NC5odG1sPiB0aGUgZm9sbG93aW5nIHN0dWZmIGlzIGEgc3VtbWFyeSBv
+ZiB0aGlzKT4gPiBJdCB3YXMgc3VnZ2VzdGVkIHRvIG1lIHRoYXQgdGhlIHNvdXJjZSBvZiBteSBw
+ZXJmb3JtYW5jZSBwcm9ibGVtcyBtaWdodD4gYmUgdGhlIGZyYWdtZW50YXRpb24gb2YgdGhlIFhG
+Uy1zeXN0ZW0uIEkgdGVzdGVkIGZvciBmcmFnbWVudGF0aW9uIGFuZD4gZ290ID4gPiB4ZnNfZGI+
+IGZyYWc+IGFjdHVhbCA2MzQ5MzU1LCBpZGVhbCA0ODY1NjgzLCBmcmFnbWVudGF0aW9uIGZhY3Rv
+ciAyMy4zNyU+ID4gQmVmb3JlIEknZCB0cnkgdG8gZGVmcmFnbWVudCBteSB3aG9sZSBmaWxlc3lz
+dGVtIEkgZmlndXJlZCAiTGV0J3MgdHJ5PiBpdCBvbiBzb21lIGZpbGUiLiA+ID4gU28gSSBkaWQ+
+ID4gPiB4ZnNfYm1hcCAvcmFpZC9UZW1wL3NvbWVEaXNraW1hZ2UuaXNvPiBbb3V0cHV0IHNob3dz
+IDEwMSBleHRlbnRzIGFuZCAxIGhvbGVdPiA+IFRoZW4gSSBkZWZyYWdtZW50ZWQgdGhlIGZpbGU+
+ID4geGZzX2ZzciAvcmFpZC9UZW1wL3NvbWVEaXNraW1hZ2UuaXNvPiBleHRlbnRzIGJlZm9yZTox
+MDEgYWZ0ZXI6MyBET05FPiA+ID4geGZzX2JtYXAgL3JhaWQvVGVtcC9zb21lRGlza2ltYWdlLmlz
+bz4gW291dHB1dCBzaG93cyAzIGV4dGVudHMgYW5kIDEgaG9sZV0+ID4gYW5kIG5vdyBjb21lcyB0
+aGUgYnVtbWVyOiBpIHdhbnRlZCB0byBjaGVjayB0aGUgZnJhZ21lbnRhdGlvbiBvZiB0aGU+IHdo
+b2xlIGZpbGVzeXN0ZW0gKGp1c3QgZm9yIGNoZWNraW5nKTo+ID4gPiB4ZnNfZGIgLXIgL2Rldi9t
+YXBwZXIvVm9sR3JvdXAwMC1Mb2dWb2wwND4geGZzX2RiOiB1bmV4cGVjdGVkIFhGUyBTQiBtYWdp
+YyBudW1iZXIgMHgwMDAwMDAwMD4geGZzX2RiOiByZWFkIGZhaWxlZDogSW52YWxpZCBhcmd1bWVu
+dD4geGZzX2RiOiBkYXRhIHNpemUgY2hlY2sgZmFpbGVkPiBjYWNoZV9ub2RlX3B1cmdlOiByZWZj
+b3VudCB3YXMgMSwgbm90IHplcm8gKG5vZGU9MHgyYTI1YzIwKT4geGZzX2RiOiBjYW5ub3QgcmVh
+ZCByb290IGlub2RlICgyMik+ID4gVEhBVCBvdXRwdXQgd2FzIGRlZmluaXRseSBub3QgdGhlcmUg
+d2hlbiBJIGRpZCB0aGlzIHRoZSBsYXN0IHRpbWUgYW5kPiB0aGVyZWZvciB0aGUgbmV3IGZyYWdt
+ZW50YXRpb24gZG9lcyBub3QgbWFrZSBtZSBoYXBweSBlaXRoZXI+ID4geGZzX2RiPiBmcmFnPiBh
+Y3R1YWwgMCwgaWRlYWwgMCwgZnJhZ21lbnRhdGlvbiBmYWN0b3IgMC4wMCU+ID4gVGhlIGZpbGUt
+c3lzdGVtIGlzIHN0aWxsIG1vdW50ZWQgYW5kIHdvcmtpbmcgYW5kIEkgZG9uJ3QgZGFyZSB0byBk
+bz4gYW55dGhpbmcgYWJvdXQgaXQgKGFtIGluIGEgbWlsZCBzdGF0ZSBvZiBwYW5pYykgYmVjYXVz
+ZSBJIHRoaW5rIGl0PiBtaWdodCBub3QgY29tZSBiYWNrIGlmIEkgZG8uPiA+IEFueSBzdWdnZXN0
+aW9ucyBtb3N0IHdlbGNvbWUgKGFtIGdvb2dsaW5nIG15c2VsZiBiZWZvcmUgSSBkbyBhbnl0aGlu
+Zz4gYWJvdXQgaXQpLj4gPiBJIHN3ZWFyIHRvIGdvZDogSSBkaWQgbm90IGRvIGFueXRoaW5nIGVs
+c2Ugd2l0aCB0aGUgeGZzXyotY29tbWFuZHM+IHRoYW4gdGhlIHN0dWZmIG1lbnRpb25lZCBhYm92
+ZT4gPiBBcyBmYXIgYXMgSSB1bmRlcnN0b29kIGZyb20gb3RoZXIgcGxhY2VzIHRoZSBmaXJzdCB0
+aGluZyB0byBkbyBpcyAidHJ5PiB0byBnZXQgdGhlIGluY29yZSBjb3B5IG9mIHRoZSBYRlMgc3Vw
+ZXJibG9jayBmbHVzaGVkIG91dCIgYmVmb3JlPiBwcm9jZWVkaW5nIChtdXN0IGZpbmQgb3V0IGhv
+dyB0byBkbyB0aGF0KS4gSG93IHdvdWxkIHlvdSBzdWdnZXN0IHRvPiBwcm9jZWVkIGZyb20gdGhh
+dD8gSWYgZGVmcmFnbWVudGluZyBvbmUgZmlsZSBtZXNzZXMgdGhpbmdzIHVwIHRoaXM+IGJhZGx5
+IGhvdyBzYWZlIGlzIGRlZnJhZ21lbnRhdGlvbiBpbiBnZW5lcmFsPz4gPiBUaGFua3MgZm9yIHlv
+dXIgdGltZT4gQmVybmhhcmQ+ID4gSW5mbyBhYm91dCBteSBzeXN0ZW0uIFRlbGwgbWUgaWYgeW91
+IG5lZWQgbW9yZSBpbmZvOj4gPiBNeSBzeXN0ZW0gaXMgYSBDZW50T1MgNS40ICh3aGljaCBpcyBl
+cXVpdmFsZW50IHRvIGEgUkhFTCA1LjQpIHdoaWNoPiBtZWFucyBrZXJuZWwgMi42LjE4ICg2NGJp
+dC4gVW5tb2RpZmllZCBYZW4tS2VybmVsKS4geGZzX2RiIC1WIHJlcG9ydHM+ICJ4ZnNfZGIgdmVy
+c2lvbiAyLjkuNCI+ID4gTWVtb3J5IG9uIHRoZSBzeXN0ZW0gaXMgNEdpZyAoMiBEdWFsQ29yZSBY
+ZW5vbnMpLiBUaGUgZmlsZXN5c3RlbSBpcz4gMy41IFRCIG9mIHdoaWNoIDc0MCBHaWcgYXJlIHVz
+ZWQuIFdoaWNoIGlzIHRoZSBtYXhpbXVtIGFtb3VudCB1c2VkPiBkdXJpbmcgdGhlIG9uZSB5ZWFy
+IHRoYXQgdGhlIGZpbGVzeXN0ZW0gaXMgYmVpbmcgdXNlZCAodGhhdCBpcyB3aHkgdGhlPiBoaWdo
+IGZyYWdtZW50YXRpb24gYW1hemVzIG1lKSBUaGUgZmlsZXN5c3RlbSBpcyBvbiBhIExWTS1Wb2x1
+bWUgd2hpY2g+IHNpdHMgb24gYSBSQUlEIDUgKEhhcmR3YXJlIFJBSUQpIGRyaXZlLj4gPiAlIHhm
+c19pbmZvIC9yYWlkPiBtZXRhLWRhdGE9L2Rldi9Wb2xHcm91cDAwL0xvZ1ZvbDA1IGlzaXplPTI1
+NiBhZ2NvdW50PTMyLCA+IGFnc2l6ZT0yOTQzNDg4MCBibGtzPiA9IHNlY3Rzej01MTIgYXR0cj0w
+PiBkYXRhID0gYnNpemU9NDA5NiBibG9ja3M9OTQxOTE2MTYwLCBpbWF4cGN0PTI1PiA9IHN1bml0
+PTAgc3dpZHRoPTAgYmxrcywgdW53cml0dGVuPTE+IG5hbWluZyA9dmVyc2lvbiAyIGJzaXplPTQw
+OTYgPiBsb2cgPWludGVybmFsIGJzaXplPTQwOTYgYmxvY2tzPTMyNzY4LCB2ZXJzaW9uPTE+ID0g
+c2VjdHN6PTUxMiBzdW5pdD0wIGJsa3MsIGxhenktY291bnQ9MD4gcmVhbHRpbWUgPW5vbmUgZXh0
+c3o9NDA5NiBibG9ja3M9MCwgcnRleHRlbnRzPTA+IApIaSwKCmNvdWxkIGl0IGJlIHlvdSBzcGVj
+aWZpZWQgdGhlIHdyb25nIGRldmljZSBmb3IgeGZzX2RiPyBUaGUgeGZzX2luZm8gZ2l2ZXMgPS9k
+ZXYvVm9sR3JvdXAwMC9Mb2dWb2wwNSAgYXMgbWV0YWRhdGEgZGV2aWNlLCBidXQgZm9yIHhmc19k
+YiB5b3UgdXNlZCAvZGV2L21hcHBlci9Wb2xHcm91cDAwLUxvZ1ZvbDA0Li4uCgpTZWJhc3RpYW4K
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X18KTkVVOiBXRUIuREUgRFNMIGbDvHIgMTksOTkgRVVSL210bC4gdW5kIG9obmUgTWluZGVzdC1M
+YXVmemVpdCEKaHR0cDovL3Byb2R1a3RlLndlYi5kZS9nby8wMi8KCl9fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5z
+Z2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
