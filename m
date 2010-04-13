@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3DG8tMf245913 for <xfs@oss.sgi.com>; Tue, 13 Apr 2010 11:08:56 -0500
-Received: from fmmailgate04.web.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4D32812753D8
-	for <xfs@oss.sgi.com>; Tue, 13 Apr 2010 09:10:49 -0700 (PDT)
-Received: from fmmailgate04.web.de (fmmailgate04.web.de [217.72.192.242]) by
-	cuda.sgi.com with ESMTP id qwtDtGwNdUhUsmit for
-	<xfs@oss.sgi.com>; Tue, 13 Apr 2010 09:10:49 -0700 (PDT)
-Date: Tue, 13 Apr 2010 18:08:50 +0200 (CEST)
-From: Sebastian Brings <Sebastian.Brings@web.de>
-Message-ID: <4627460.211442.1271174930836.JavaMail.fmail@mwmweb047>
-Subject: Re: XFS-filesystem corrupted by defragmentation
+	o3DGrvjY248525 for <xfs@oss.sgi.com>; Tue, 13 Apr 2010 11:53:57 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 335E179A8DB
+	for <xfs@oss.sgi.com>; Tue, 13 Apr 2010 09:55:51 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id F9XpIs9Ohcpm9NqJ for
+	<xfs@oss.sgi.com>; Tue, 13 Apr 2010 09:55:51 -0700 (PDT)
+Message-ID: <4BC49D94.8090402@sandeen.net>
+Date: Tue, 13 Apr 2010 11:36:36 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
+Subject: Re: XFS-filesystem corrupted by defragmentation
+References: <87r5mjpn8l.fsf@workstation006.office.ice-sf.at>
+In-Reply-To: <87r5mjpn8l.fsf@workstation006.office.ice-sf.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,74 +23,75 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Bernhard Gschaider <bgschaid_lists@ice-sf.at>, xfs@oss.sgi.com
+To: Bernhard Gschaider <bgschaid_lists@ice-sf.at>
+Cc: xfs@oss.sgi.com
 
-PiBIaSE+ID4gSSdtIGFza2luZyBoZXJlIGJlY2F1c2UgSSd2ZSBiZWVuIHJlZmVycmVkIGhlcmUg
-ZnJvIHRoZSBDZW50T1MtbWFpbGluZz4gbGlzdCAoZm9yIHRoZSBmdWxsIHN0b3J5IHNlZT4gaHR0
-cDovL3d3dy5wdWJicy5uZXQvMjAxMDA0L2NlbnRvcy8xNzExMi1jZW50b3MtcGVyZm9ybWFuY2Ut
-PiBwcm9ibGVtcy13aXRoLXhmcy1vbi1jZW50b3MtNTQuaHRtbD4gYW5kID4gaHR0cDovL3d3dy5w
-dWJicy5uZXQvMjAxMDA0L2NlbnRvcy8yNDU0Mi1jZW50b3MteGZzLWZpbGVzeXN0ZW0tPiBjb3Jy
-dXB0ZWQtYnktZGVmcmFnbWVudGF0aW9uLXdhcy1wZXJmb3JtYW5jZS1wcm9ibGVtcy13aXRoLXhm
-cy1vbi0+IGNlbnRvcy01NC5odG1sPiB0aGUgZm9sbG93aW5nIHN0dWZmIGlzIGEgc3VtbWFyeSBv
-ZiB0aGlzKT4gPiBJdCB3YXMgc3VnZ2VzdGVkIHRvIG1lIHRoYXQgdGhlIHNvdXJjZSBvZiBteSBw
-ZXJmb3JtYW5jZSBwcm9ibGVtcyBtaWdodD4gYmUgdGhlIGZyYWdtZW50YXRpb24gb2YgdGhlIFhG
-Uy1zeXN0ZW0uIEkgdGVzdGVkIGZvciBmcmFnbWVudGF0aW9uIGFuZD4gZ290ID4gPiB4ZnNfZGI+
-IGZyYWc+IGFjdHVhbCA2MzQ5MzU1LCBpZGVhbCA0ODY1NjgzLCBmcmFnbWVudGF0aW9uIGZhY3Rv
-ciAyMy4zNyU+ID4gQmVmb3JlIEknZCB0cnkgdG8gZGVmcmFnbWVudCBteSB3aG9sZSBmaWxlc3lz
-dGVtIEkgZmlndXJlZCAiTGV0J3MgdHJ5PiBpdCBvbiBzb21lIGZpbGUiLiA+ID4gU28gSSBkaWQ+
-ID4gPiB4ZnNfYm1hcCAvcmFpZC9UZW1wL3NvbWVEaXNraW1hZ2UuaXNvPiBbb3V0cHV0IHNob3dz
-IDEwMSBleHRlbnRzIGFuZCAxIGhvbGVdPiA+IFRoZW4gSSBkZWZyYWdtZW50ZWQgdGhlIGZpbGU+
-ID4geGZzX2ZzciAvcmFpZC9UZW1wL3NvbWVEaXNraW1hZ2UuaXNvPiBleHRlbnRzIGJlZm9yZTox
-MDEgYWZ0ZXI6MyBET05FPiA+ID4geGZzX2JtYXAgL3JhaWQvVGVtcC9zb21lRGlza2ltYWdlLmlz
-bz4gW291dHB1dCBzaG93cyAzIGV4dGVudHMgYW5kIDEgaG9sZV0+ID4gYW5kIG5vdyBjb21lcyB0
-aGUgYnVtbWVyOiBpIHdhbnRlZCB0byBjaGVjayB0aGUgZnJhZ21lbnRhdGlvbiBvZiB0aGU+IHdo
-b2xlIGZpbGVzeXN0ZW0gKGp1c3QgZm9yIGNoZWNraW5nKTo+ID4gPiB4ZnNfZGIgLXIgL2Rldi9t
-YXBwZXIvVm9sR3JvdXAwMC1Mb2dWb2wwND4geGZzX2RiOiB1bmV4cGVjdGVkIFhGUyBTQiBtYWdp
-YyBudW1iZXIgMHgwMDAwMDAwMD4geGZzX2RiOiByZWFkIGZhaWxlZDogSW52YWxpZCBhcmd1bWVu
-dD4geGZzX2RiOiBkYXRhIHNpemUgY2hlY2sgZmFpbGVkPiBjYWNoZV9ub2RlX3B1cmdlOiByZWZj
-b3VudCB3YXMgMSwgbm90IHplcm8gKG5vZGU9MHgyYTI1YzIwKT4geGZzX2RiOiBjYW5ub3QgcmVh
-ZCByb290IGlub2RlICgyMik+ID4gVEhBVCBvdXRwdXQgd2FzIGRlZmluaXRseSBub3QgdGhlcmUg
-d2hlbiBJIGRpZCB0aGlzIHRoZSBsYXN0IHRpbWUgYW5kPiB0aGVyZWZvciB0aGUgbmV3IGZyYWdt
-ZW50YXRpb24gZG9lcyBub3QgbWFrZSBtZSBoYXBweSBlaXRoZXI+ID4geGZzX2RiPiBmcmFnPiBh
-Y3R1YWwgMCwgaWRlYWwgMCwgZnJhZ21lbnRhdGlvbiBmYWN0b3IgMC4wMCU+ID4gVGhlIGZpbGUt
-c3lzdGVtIGlzIHN0aWxsIG1vdW50ZWQgYW5kIHdvcmtpbmcgYW5kIEkgZG9uJ3QgZGFyZSB0byBk
-bz4gYW55dGhpbmcgYWJvdXQgaXQgKGFtIGluIGEgbWlsZCBzdGF0ZSBvZiBwYW5pYykgYmVjYXVz
-ZSBJIHRoaW5rIGl0PiBtaWdodCBub3QgY29tZSBiYWNrIGlmIEkgZG8uPiA+IEFueSBzdWdnZXN0
-aW9ucyBtb3N0IHdlbGNvbWUgKGFtIGdvb2dsaW5nIG15c2VsZiBiZWZvcmUgSSBkbyBhbnl0aGlu
-Zz4gYWJvdXQgaXQpLj4gPiBJIHN3ZWFyIHRvIGdvZDogSSBkaWQgbm90IGRvIGFueXRoaW5nIGVs
-c2Ugd2l0aCB0aGUgeGZzXyotY29tbWFuZHM+IHRoYW4gdGhlIHN0dWZmIG1lbnRpb25lZCBhYm92
-ZT4gPiBBcyBmYXIgYXMgSSB1bmRlcnN0b29kIGZyb20gb3RoZXIgcGxhY2VzIHRoZSBmaXJzdCB0
-aGluZyB0byBkbyBpcyAidHJ5PiB0byBnZXQgdGhlIGluY29yZSBjb3B5IG9mIHRoZSBYRlMgc3Vw
-ZXJibG9jayBmbHVzaGVkIG91dCIgYmVmb3JlPiBwcm9jZWVkaW5nIChtdXN0IGZpbmQgb3V0IGhv
-dyB0byBkbyB0aGF0KS4gSG93IHdvdWxkIHlvdSBzdWdnZXN0IHRvPiBwcm9jZWVkIGZyb20gdGhh
-dD8gSWYgZGVmcmFnbWVudGluZyBvbmUgZmlsZSBtZXNzZXMgdGhpbmdzIHVwIHRoaXM+IGJhZGx5
-IGhvdyBzYWZlIGlzIGRlZnJhZ21lbnRhdGlvbiBpbiBnZW5lcmFsPz4gPiBUaGFua3MgZm9yIHlv
-dXIgdGltZT4gQmVybmhhcmQ+ID4gSW5mbyBhYm91dCBteSBzeXN0ZW0uIFRlbGwgbWUgaWYgeW91
-IG5lZWQgbW9yZSBpbmZvOj4gPiBNeSBzeXN0ZW0gaXMgYSBDZW50T1MgNS40ICh3aGljaCBpcyBl
-cXVpdmFsZW50IHRvIGEgUkhFTCA1LjQpIHdoaWNoPiBtZWFucyBrZXJuZWwgMi42LjE4ICg2NGJp
-dC4gVW5tb2RpZmllZCBYZW4tS2VybmVsKS4geGZzX2RiIC1WIHJlcG9ydHM+ICJ4ZnNfZGIgdmVy
-c2lvbiAyLjkuNCI+ID4gTWVtb3J5IG9uIHRoZSBzeXN0ZW0gaXMgNEdpZyAoMiBEdWFsQ29yZSBY
-ZW5vbnMpLiBUaGUgZmlsZXN5c3RlbSBpcz4gMy41IFRCIG9mIHdoaWNoIDc0MCBHaWcgYXJlIHVz
-ZWQuIFdoaWNoIGlzIHRoZSBtYXhpbXVtIGFtb3VudCB1c2VkPiBkdXJpbmcgdGhlIG9uZSB5ZWFy
-IHRoYXQgdGhlIGZpbGVzeXN0ZW0gaXMgYmVpbmcgdXNlZCAodGhhdCBpcyB3aHkgdGhlPiBoaWdo
-IGZyYWdtZW50YXRpb24gYW1hemVzIG1lKSBUaGUgZmlsZXN5c3RlbSBpcyBvbiBhIExWTS1Wb2x1
-bWUgd2hpY2g+IHNpdHMgb24gYSBSQUlEIDUgKEhhcmR3YXJlIFJBSUQpIGRyaXZlLj4gPiAlIHhm
-c19pbmZvIC9yYWlkPiBtZXRhLWRhdGE9L2Rldi9Wb2xHcm91cDAwL0xvZ1ZvbDA1IGlzaXplPTI1
-NiBhZ2NvdW50PTMyLCA+IGFnc2l6ZT0yOTQzNDg4MCBibGtzPiA9IHNlY3Rzej01MTIgYXR0cj0w
-PiBkYXRhID0gYnNpemU9NDA5NiBibG9ja3M9OTQxOTE2MTYwLCBpbWF4cGN0PTI1PiA9IHN1bml0
-PTAgc3dpZHRoPTAgYmxrcywgdW53cml0dGVuPTE+IG5hbWluZyA9dmVyc2lvbiAyIGJzaXplPTQw
-OTYgPiBsb2cgPWludGVybmFsIGJzaXplPTQwOTYgYmxvY2tzPTMyNzY4LCB2ZXJzaW9uPTE+ID0g
-c2VjdHN6PTUxMiBzdW5pdD0wIGJsa3MsIGxhenktY291bnQ9MD4gcmVhbHRpbWUgPW5vbmUgZXh0
-c3o9NDA5NiBibG9ja3M9MCwgcnRleHRlbnRzPTA+IApIaSwKCmNvdWxkIGl0IGJlIHlvdSBzcGVj
-aWZpZWQgdGhlIHdyb25nIGRldmljZSBmb3IgeGZzX2RiPyBUaGUgeGZzX2luZm8gZ2l2ZXMgPS9k
-ZXYvVm9sR3JvdXAwMC9Mb2dWb2wwNSAgYXMgbWV0YWRhdGEgZGV2aWNlLCBidXQgZm9yIHhmc19k
-YiB5b3UgdXNlZCAvZGV2L21hcHBlci9Wb2xHcm91cDAwLUxvZ1ZvbDA0Li4uCgpTZWJhc3RpYW4K
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X18KTkVVOiBXRUIuREUgRFNMIGbDvHIgMTksOTkgRVVSL210bC4gdW5kIG9obmUgTWluZGVzdC1M
-YXVmemVpdCEKaHR0cDovL3Byb2R1a3RlLndlYi5kZS9nby8wMi8KCl9fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5z
-Z2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On 04/13/2010 07:10 AM, Bernhard Gschaider wrote:
+> 
+> Hi!
+> 
+> I'm asking here because I've been referred here fro the CentOS-mailing
+> list (for the full story see
+> http://www.pubbs.net/201004/centos/17112-centos-performance-problems-with-xfs-on-centos-54.html
+> and 
+> http://www.pubbs.net/201004/centos/24542-centos-xfs-filesystem-corrupted-by-defragmentation-was-performance-problems-with-xfs-on-centos-54.html
+> the following stuff is a summary of this)
+> 
+> It was suggested to me that the source of my performance problems might
+> be the fragmentation of the XFS-system. I tested for fragmentation and
+> got 
+> 
+> xfs_db> frag
+> actual 6349355, ideal 4865683, fragmentation factor 23.37%
+
+so on average your filesystem has 6349355/4865683 = 1.3 extents per file.
+
+Just as a casual side note, this is not even remotely bad, at least
+on average.
+
+> Before I'd try to defragment my whole filesystem I figured "Let's try
+> it on some file". 
+> 
+> So I did
+> 
+>> xfs_bmap /raid/Temp/someDiskimage.iso
+> [output shows 101 extents and 1 hole]
+> 
+> Then I defragmented the file
+>> xfs_fsr /raid/Temp/someDiskimage.iso
+> extents before:101 after:3 DONE
+> 
+>> xfs_bmap /raid/Temp/someDiskimage.iso
+> [output shows 3 extents and 1 hole]
+> 
+> and now comes the bummer: i wanted to check the fragmentation of the
+> whole filesystem (just for checking):
+> 
+>> xfs_db -r /dev/mapper/VolGroup00-LogVol04
+> xfs_db: unexpected XFS SB magic number 0x00000000
+> xfs_db: read failed: Invalid argument
+> xfs_db: data size check failed
+> cache_node_purge: refcount was 1, not zero (node=0x2a25c20)
+> xfs_db: cannot read root inode (22)
+
+So here you did:
+
+# xfs_db -r /dev/mapper/VolGroup00-LogVol04
+
+but below you show:
+
+% xfs_info  /raid
+> meta-data=/dev/VolGroup00/LogVol05
+
+.... wrong device maybe?
+
+-Eric
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
