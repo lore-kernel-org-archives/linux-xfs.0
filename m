@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3DHdJoq251663 for <xfs@oss.sgi.com>; Tue, 13 Apr 2010 12:39:19 -0500
-Received: from mx.inode.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E6EDA2BCE59
-	for <xfs@oss.sgi.com>; Tue, 13 Apr 2010 10:41:13 -0700 (PDT)
-Received: from mx.inode.at (mx21.lb01.inode.at [62.99.145.23]) by cuda.sgi.com
-	with ESMTP id LqkcscEZ8VMRO6bt for <xfs@oss.sgi.com>;
-	Tue, 13 Apr 2010 10:41:13 -0700 (PDT)
-Subject: Re: XFS-filesystem corrupted by defragmentation
-References: <4627460.211442.1271174930836.JavaMail.fmail@mwmweb047>
-From: Bernhard Gschaider <Bernhard.Gschaider@ice-sf.at>
-Date: Tue, 13 Apr 2010 19:41:10 +0200
-In-Reply-To: <4627460.211442.1271174930836.JavaMail.fmail@mwmweb047>
-	(Sebastian Brings's message of "Tue,
-	13 Apr 2010 18:08:50 +0200 (CEST)")
-Message-ID: <87ljcrjlmx.fsf@workstation006.office.ice-sf.at>
+	o3DIAW6d253385 for <xfs@oss.sgi.com>; Tue, 13 Apr 2010 13:10:34 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2619D12FB592
+	for <xfs@oss.sgi.com>; Tue, 13 Apr 2010 11:12:26 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id 1Wqi0X5eEDXXY1J1 for
+	<xfs@oss.sgi.com>; Tue, 13 Apr 2010 11:12:26 -0700 (PDT)
+Date: Tue, 13 Apr 2010 14:12:25 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 3/8] xfs: make the log ticket transaction id random
+Message-ID: <20100413181225.GB5043@infradead.org>
+References: <1270125691-29266-1-git-send-email-david@fromorbit.com>
+	<1270125691-29266-4-git-send-email-david@fromorbit.com>
+	<20100403093156.GD20166@infradead.org>
+	<20100405233910.GA11036@dastard>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20100405233910.GA11036@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,32 +31,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Sebastian Brings <Sebastian.Brings@web.de>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
+On Tue, Apr 06, 2010 at 09:39:10AM +1000, Dave Chinner wrote:
+> Ideally, yes. However, I didn't want to introduce a global
+> monatomically increasing counter into the transaction code. I'm
+> seeing upwards of 50-60k transactions/s on my test box - that's
+> getting into the range where reliable global counters become
+> scalability limitations. I know this can be solved, but it is
+> somewhat complex and I'm not sure at this point that the complexity
+> is necessary. What do you think?
 
-This is the first of many apologies in this mail: I apologize to everyone
-for using German in this list and to Sebastian for the silly pun
-(which he probably heard many times before): "Herr Brings, Ihr Tipp bringts"
-
-Sebastian is exactly right: I copy/pasted the device-name from the
-output of df to use with xfs_db when I should have used the value from
-the fstab. Everything is alright with the filesystem (except for the
-guy handling it)
-
-So I apologize to all those whose time I've wasted (and who were nice
-enough to answer me)
-I apologize for doubting the quality of the XFS-filesystem and tools
-And last but not least I apologize for top-posting
-
-Bernhard
-
->>>>> On Tue, 13 Apr 2010 18:08:50 +0200 (CEST)
->>>>> "SB" == Sebastian Brings <Sebastian.Brings@web.de> wrote:
-
-    SB> could it be you specified the wrong device for xfs_db? The
-    SB> xfs_info gives =/dev/VolGroup00/LogVol05 as metadata device,
-    SB> but for xfs_db you used /dev/mapper/VolGroup00-LogVol04...
+I think making log revoery absolutely fail proof is nessecary, but for
+now your version defintively is an improvment over the current version,
+so ACK.
 
 _______________________________________________
 xfs mailing list
