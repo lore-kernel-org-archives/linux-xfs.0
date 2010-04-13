@@ -1,30 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3D7wQww205547 for <xfs@oss.sgi.com>; Tue, 13 Apr 2010 02:58:27 -0500
-Received: from mail.netcenter.hu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 73CA02BB04C
-	for <xfs@oss.sgi.com>; Tue, 13 Apr 2010 01:00:15 -0700 (PDT)
-Received: from mail.netcenter.hu (ns.netcenter.hu [195.228.254.57]) by
-	cuda.sgi.com with ESMTP id JUXHyfDPGVXOLfFt for
-	<xfs@oss.sgi.com>; Tue, 13 Apr 2010 01:00:15 -0700 (PDT)
-Message-ID: <18b101cadadf$5edbb660$0400a8c0@dcccs>
-From: "Janos Haar" <janos.haar@netcenter.hu>
-References: <t2h2375c9f91004010337p618c4d5yc739fa25b5f842fa@mail.gmail.com>
-	<1fe901cad2b0$d39d0300$0400a8c0@dcccs>
-	<20100402230905.GW3335@dastard>
-	<22c901cad333$7a67db60$0400a8c0@dcccs>
-	<20100404103701.GX3335@dastard>
-	<2bd101cad4ec$5a425f30$0400a8c0@dcccs>
-	<20100405224522.GZ3335@dastard>
-	<3a5f01cad6c5$8a722c00$0400a8c0@dcccs>
-	<20100408025822.GL11036@dastard>
-	<11b701cad9c8$93212530$0400a8c0@dcccs>
-	<20100412001158.GA2493@dastard>
-Subject: Re: Kernel crash in xfs_iflush_cluster (was Somebody take a look
-	please!...)
-Date: Tue, 13 Apr 2010 10:00:17 +0200
+	o3D82CS8205806 for <xfs@oss.sgi.com>; Tue, 13 Apr 2010 03:02:12 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CE5452BB08A
+	for <xfs@oss.sgi.com>; Tue, 13 Apr 2010 01:04:05 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	HCwuXSSgzq3HeM7f for <xfs@oss.sgi.com>;
+	Tue, 13 Apr 2010 01:04:05 -0700 (PDT)
+Date: Tue, 13 Apr 2010 18:03:57 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [GIT PULL] reviewed patches for -dev tree
+Message-ID: <20100413080357.GV2493@dastard>
 MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,107 +23,81 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, xiyou.wangcong@gmail.com, kamezawa.hiroyu@jp.fujitsu.com
+To: aelder@sgi.com
+Cc: xfs@oss.sgi.com
 
+Alex,
 
------ Original Message ----- 
-From: "Dave Chinner" <david@fromorbit.com>
-To: "Janos Haar" <janos.haar@netcenter.hu>
-Cc: <xiyou.wangcong@gmail.com>; <linux-kernel@vger.kernel.org>; 
-<kamezawa.hiroyu@jp.fujitsu.com>; <linux-mm@kvack.org>; <xfs@oss.sgi.com>; 
-<axboe@kernel.dk>
-Sent: Monday, April 12, 2010 2:11 AM
-Subject: Re: Kernel crash in xfs_iflush_cluster (was Somebody take a look 
-please!...)
+Can you please pull from the tree indicated below. It contains all
+the outstanding reviewed patches not you committed to the xfs-dev
+tree.
 
+Also, the following commits in the pull request need to be pushed to
+mainline for 2.6.34:
 
-> On Mon, Apr 12, 2010 at 12:44:37AM +0200, Janos Haar wrote:
->> Hi,
->>
->> Ok, here comes the funny part:
->> I have got several messages from the kernel about one of my XFS
->> (sdb2) have corrupted inodes, but my xfs_repair (v. 2.8.11) says the
->> FS is clean and shine.
->> Should i upgrade my xfs_repair, or this is another bug? :-)
->
-> v2.8.11 is positively ancient. :/
->
-> I'd upgrade (current is 3.1.1) and re-run repair again.
+	xfs: ensure that sync updates the log tail correctly
+	xfs: don't warn on EAGAIN in inode reclaim
 
-OK, i will get the new repair today.
-
-btw
-Since i tested the FS with the 2.8.11, today morning i found this in the 
-log:
-
-...
-Apr 12 00:41:10 alfa kernel: XFS mounting filesystem sdb2   # This was the 
-point of check with xfs_repair v2.8.11
-Apr 13 03:08:33 alfa kernel: xfs_da_do_buf: bno 32768
-Apr 13 03:08:33 alfa kernel: dir: inode 474253931
-Apr 13 03:08:33 alfa kernel: Filesystem "sdb2": XFS internal error 
-xfs_da_do_buf(1) at line 2020 of file fs/xfs/xfs_da_btree.c.  Caller 
-0xffffffff811c4fa6
-Apr 13 03:08:33 alfa kernel:
-Apr 13 03:08:33 alfa kernel: Pid: 27304, comm: 01vegzet_runner Not tainted 
-2.6.32.10 #3
-Apr 13 03:08:33 alfa kernel: Call Trace:
-Apr 13 03:08:33 alfa kernel:  [<ffffffff811cf87d>] 
-xfs_error_report+0x41/0x43
-Apr 13 03:08:33 alfa kernel:  [<ffffffff811c4fa6>] ? 
-xfs_da_read_buf+0x2a/0x2c
-Apr 13 03:08:33 alfa kernel:  [<ffffffff811c4c30>] xfs_da_do_buf+0x2a6/0x5aa
-Apr 13 03:08:33 alfa kernel:  [<ffffffff811c4fa6>] xfs_da_read_buf+0x2a/0x2c
-Apr 13 03:08:33 alfa kernel:  [<ffffffff811ca0f1>] ? 
-xfs_dir2_leaf_lookup_int+0x104/0x259
-Apr 13 03:08:33 alfa kernel:  [<ffffffff811ca0f1>] 
-xfs_dir2_leaf_lookup_int+0x104/0x259
-Apr 13 03:08:33 alfa kernel:  [<ffffffff811ca56e>] 
-xfs_dir2_leaf_lookup+0x26/0xb5
-Apr 13 03:08:33 alfa kernel:  [<ffffffff811c6d60>] ? 
-xfs_dir2_isleaf+0x21/0x52
-Apr 13 03:08:33 alfa kernel:  [<ffffffff811c74ea>] 
-xfs_dir_lookup+0x104/0x157
-Apr 13 03:08:33 alfa kernel:  [<ffffffff811eab59>] xfs_lookup+0x50/0xb3
-Apr 13 03:08:33 alfa kernel:  [<ffffffff811f5a8f>] xfs_vn_lookup+0x45/0x86
-Apr 13 03:08:33 alfa kernel:  [<ffffffff810e4164>] __lookup_hash+0x105/0x12a
-Apr 13 03:08:33 alfa kernel:  [<ffffffff810e41c4>] lookup_hash+0x3b/0x40
-Apr 13 03:08:33 alfa kernel:  [<ffffffff810e7021>] do_unlinkat+0x71/0x17d
-Apr 13 03:08:33 alfa kernel:  [<ffffffff8175d2d3>] ? 
-trace_hardirqs_on_thunk+0x3a/0x3f
-Apr 13 03:08:33 alfa kernel:  [<ffffffff810e5a1d>] ? putname+0x3c/0x3e
-Apr 13 03:08:33 alfa kernel:  [<ffffffff810e7143>] sys_unlink+0x16/0x18
-Apr 13 03:08:33 alfa kernel:  [<ffffffff8100b09b>] 
-system_call_fastpath+0x16/0x1b
-....
-
-The entire log is here:
-http://download.netcenter.hu/bughunt/20100413/messages
-
-What is the best next step?
-Check with the new repair?
+The first addresses a regression introduced in 2.6.34-rc1, the
+second silences a needless warning that is being reported on
+2.6.33.
 
 Thanks,
-Janos
 
+Dave.
 
->
-> Cheers,
->
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/ 
+The following changes since commit 68a2ac777cca40ccc993512bcf457999be71cc36:
+  Christoph Hellwig (1):
+        xfs: clean up xlog_write_adv_cnt
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/xfs.git for-dev
+
+Alex Elder (6):
+      xfs: add const qualifiers to xfs error function args
+      xfs: fix min bufsize bugs in two places
+      xfs: simplify XLOG_SECTOR_ROUND*()
+      xfs: kill XLOG_SECTOR_ROUND*()
+      xfs: encapsulate bbcount validity checking
+      xfs: nothing special about 1-block log sector
+
+Christoph Hellwig (1):
+      xfs: remove xfs_dqmarker
+
+Dave Chinner (7):
+      xfs: ensure that sync updates the log tail correctly
+      xfs: don't warn on EAGAIN in inode reclaim
+      xfs: add log item recovery tracing
+      xfs: convert the per-mount dquot list to use list heads
+      xfs: remove duplicate code from dquot reclaim
+      xfs: convert the dquot hash list to use list heads
+      xfs: convert the dquot free list to use list heads
+
+ fs/xfs/linux-2.6/xfs_sync.c    |    4 +-
+ fs/xfs/linux-2.6/xfs_trace.c   |    3 +
+ fs/xfs/linux-2.6/xfs_trace.h   |  141 +++++++++++-
+ fs/xfs/quota/xfs_dquot.c       |  120 ++++------
+ fs/xfs/quota/xfs_dquot.h       |   35 +---
+ fs/xfs/quota/xfs_qm.c          |  515 ++++++++++++++--------------------------
+ fs/xfs/quota/xfs_qm.h          |   23 +--
+ fs/xfs/quota/xfs_qm_stats.c    |    2 +-
+ fs/xfs/quota/xfs_qm_syscalls.c |   38 ++--
+ fs/xfs/quota/xfs_quota_priv.h  |   75 ------
+ fs/xfs/xfs_buf_item.h          |    2 +-
+ fs/xfs/xfs_error.c             |   30 ++--
+ fs/xfs/xfs_error.h             |    9 +-
+ fs/xfs/xfs_log.c               |   38 ++-
+ fs/xfs/xfs_log_recover.c       |  155 +++++++++----
+ fs/xfs/xfs_trans.h             |    9 +
+ 16 files changed, 562 insertions(+), 637 deletions(-)
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
