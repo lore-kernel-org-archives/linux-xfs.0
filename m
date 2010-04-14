@@ -1,23 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3DNcOrl013126 for <xfs@oss.sgi.com>; Tue, 13 Apr 2010 18:38:24 -0500
+	o3E0Ej9n015879 for <xfs@oss.sgi.com>; Tue, 13 Apr 2010 19:14:46 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DAC132BEE29
-	for <xfs@oss.sgi.com>; Tue, 13 Apr 2010 16:40:17 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	Pd2JvHuuxANIrCpB for <xfs@oss.sgi.com>;
-	Tue, 13 Apr 2010 16:40:17 -0700 (PDT)
-Date: Wed, 14 Apr 2010 09:40:15 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5218812FCAE9
+	for <xfs@oss.sgi.com>; Tue, 13 Apr 2010 17:16:39 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	FtfUy78QBMXFjuqO for <xfs@oss.sgi.com>;
+	Tue, 13 Apr 2010 17:16:39 -0700 (PDT)
+Date: Wed, 14 Apr 2010 10:16:15 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: wait for direct I/O to complete in fsync and
-	write_inode
-Message-ID: <20100413234015.GB2493@dastard>
-References: <20100306132018.GA31360@infradead.org>
+Subject: Re: Kernel crash in xfs_iflush_cluster (was Somebody take a look
+	please!...)
+Message-ID: <20100414001615.GC2493@dastard>
+References: <20100405224522.GZ3335@dastard>
+	<3a5f01cad6c5$8a722c00$0400a8c0@dcccs>
+	<20100408025822.GL11036@dastard>
+	<11b701cad9c8$93212530$0400a8c0@dcccs>
+	<20100412001158.GA2493@dastard>
+	<18b101cadadf$5edbb660$0400a8c0@dcccs>
+	<20100413083931.GW2493@dastard>
+	<190201cadaeb$02ec22c0$0400a8c0@dcccs>
+	<20100413113445.GZ2493@dastard>
+	<1cd501cadb62$3a93e790$0400a8c0@dcccs>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100306132018.GA31360@infradead.org>
+In-Reply-To: <1cd501cadb62$3a93e790$0400a8c0@dcccs>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,22 +39,107 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Janos Haar <janos.haar@netcenter.hu>
+Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, xiyou.wangcong@gmail.com, kamezawa.hiroyu@jp.fujitsu.com
 
-On Sat, Mar 06, 2010 at 08:20:18AM -0500, Christoph Hellwig wrote:
+On Wed, Apr 14, 2010 at 01:36:56AM +0200, Janos Haar wrote:
+> ----- Original Message ----- From: "Dave Chinner"
+> >On Tue, Apr 13, 2010 at 11:23:36AM +0200, Janos Haar wrote:
+> >>>If you run:
+> >>>
+> >>>$ xfs_db -r -c "inode 474253940" -c p /dev/sdb2
+> >>>
+> >>>Then I can can confirm whether there is corruption on disk or not.
+> >>>Probably best to sample multiple of the inode numbers from the above
+> >>>list of bad inodes.
+> >>
+> >>Here is the log:
+> >>http://download.netcenter.hu/bughunt/20100413/debug.log
+> >
+> >There are multiple fields in the inode that are corrupted.
+> >I am really surprised that xfs-repair - even an old version - is not
+> >picking up the corruption....
 > 
-> We need to wait for all pending direct I/O requests before taking care of
-> metadata in fsync and write_inode.
+> I think i know now the reason....
+> My case starting to turn into more and more interesting.
+> 
+> (Just a little note for remember: tuesday night, i have run the old
+> 2.8.11 xfs_repair on the partiton wich was reported as corrupt by
+> the kernel, but it was clean.
+> The system was not restarted!)
+> 
+> Like you suggested, today, i have tried to make a backup from the data.
+> During the copy, the kernel reported a lot of corrupted entries
+> again, and finally the kernel crashed! (with the 19 patch pack)
+> Unfortunately the kernel can't write the debug info into the syslog.
+> The system restarted automatically, the service runs again, and i
+> can't do another backup attempt because force of the owner.
+> Today night, when the traffic was in the low period, i have stopped
+> the service, umount the partition, and repeat the xfs_repair on the
+> previously reported partition on more ways.
+> 
+> Here you can see the results:
+> xfs_repair 2.8.11 run #1:
+> http://download.netcenter.hu/bughunt/20100413/repair2811-nr1.log
 
-Sorry, I missed this one when scaning the list for outstanding
-patches yesterday. The concept looks fine, though:
+So this successfully detected and repaired the corruption.  I don't
+think this is new corruption - the corrupted inode numbers are the
+same as you reported a few days back.
 
-> Note that the write_inode hunk will causes conflicts when merging with
-> mainline, I'm not sure how to best deal with that.
+> xfs_repair 2.8.11 run #2:
+> http://download.netcenter.hu/bughunt/20100413/repair2811-nr2.log
+> 
+> echo 3 >/proc/sys/vm/drop_caches - performed
+> 
+> xfs_repair 2.8.11 run #3:
+> http://download.netcenter.hu/bughunt/20100413/repair2811-nr3.log
 
-I don't think it applies to the current xfs-dev tree any more,
-either.  Can you rebase it?
+These two are clearing lost+found and rediscovering the
+diesconnected inodes that were discovered in the first pass. Nothing
+wrng here, that's just the way older repair versions behaved.
+
+> xfs_reapir 3.1.1 run #1:
+> http://download.netcenter.hu/bughunt/20100413/repair311-nr1.log
+
+And this detected nothing wrong, either.
+
+> For me, it looks like the FS gets corrupted between tuesday night
+> and today night.
+> Note: because i am expecting kernel crashes, the dirty data flush
+> was set for some miliseconds timeout only for prevent too much data
+> lost.
+> It was one kernel crash in this period, but the XFS have journal,
+> and should be cleaned correctly. (i don't think this is the problem)
+> 
+> The other interesting thing is, why only this partition gets
+> corrupted? (again, and again?)
+
+Can you reporduce the corruption again now that the filesystem has
+been repaired? I want to know (if the corruption appears again)
+whether it appears in the same location as this one.
+
+> >>I mean, if i am right, the hw memory problem makes only 1-2 bit
+> >>corruption seriously, and the sw page handling problem makes bad
+> >>memory pages, no?
+> >
+> >RAM ECC guarantees correction of single bit errors and detection of
+> >double bit errors (which cause the kernel to panic, IIRC). I can't
+> >tell you what happens when larger errors occur, though...
+> 
+> Yes, but this system have non-ECC ram unfortunately.
+
+If your hardware doesn't have ECC, then you can't rule out anything
+- even a dodgy power supply can cause this sort of transient
+problem. I'm not saying that this is the cause, but I've been
+assuming that you're actually running hardware with ECC on RAM,
+caches, buses, etc.
+
+> This makes me think this is sw problem, and not a simple memory
+> corruption, or the corruption can appear only for a short of time in
+> the hw.
+
+If you can take the performance hit, turn on the kernel memory leak
+detector and see if that catches anything.
 
 Cheers,
 
