@@ -1,32 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3E0Ej9n015879 for <xfs@oss.sgi.com>; Tue, 13 Apr 2010 19:14:46 -0500
+	o3E5vPDE039621 for <xfs@oss.sgi.com>; Wed, 14 Apr 2010 00:57:25 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5218812FCAE9
-	for <xfs@oss.sgi.com>; Tue, 13 Apr 2010 17:16:39 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	FtfUy78QBMXFjuqO for <xfs@oss.sgi.com>;
-	Tue, 13 Apr 2010 17:16:39 -0700 (PDT)
-Date: Wed, 14 Apr 2010 10:16:15 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CE0E412FD431
+	for <xfs@oss.sgi.com>; Tue, 13 Apr 2010 22:59:18 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	4gsuFlBrg9o1HZNv for <xfs@oss.sgi.com>;
+	Tue, 13 Apr 2010 22:59:18 -0700 (PDT)
+Date: Wed, 14 Apr 2010 15:59:15 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Kernel crash in xfs_iflush_cluster (was Somebody take a look
-	please!...)
-Message-ID: <20100414001615.GC2493@dastard>
-References: <20100405224522.GZ3335@dastard>
-	<3a5f01cad6c5$8a722c00$0400a8c0@dcccs>
-	<20100408025822.GL11036@dastard>
-	<11b701cad9c8$93212530$0400a8c0@dcccs>
-	<20100412001158.GA2493@dastard>
-	<18b101cadadf$5edbb660$0400a8c0@dcccs>
-	<20100413083931.GW2493@dastard>
-	<190201cadaeb$02ec22c0$0400a8c0@dcccs>
-	<20100413113445.GZ2493@dastard>
-	<1cd501cadb62$3a93e790$0400a8c0@dcccs>
+Subject: Re: [GIT PULL] reviewed patches for -dev tree
+Message-ID: <20100414055915.GI2493@dastard>
+References: <20100413080357.GV2493@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1cd501cadb62$3a93e790$0400a8c0@dcccs>
+In-Reply-To: <20100413080357.GV2493@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,111 +29,79 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Janos Haar <janos.haar@netcenter.hu>
-Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, xiyou.wangcong@gmail.com, kamezawa.hiroyu@jp.fujitsu.com
+To: aelder@sgi.com
+Cc: xfs@oss.sgi.com
 
-On Wed, Apr 14, 2010 at 01:36:56AM +0200, Janos Haar wrote:
-> ----- Original Message ----- From: "Dave Chinner"
-> >On Tue, Apr 13, 2010 at 11:23:36AM +0200, Janos Haar wrote:
-> >>>If you run:
-> >>>
-> >>>$ xfs_db -r -c "inode 474253940" -c p /dev/sdb2
-> >>>
-> >>>Then I can can confirm whether there is corruption on disk or not.
-> >>>Probably best to sample multiple of the inode numbers from the above
-> >>>list of bad inodes.
-> >>
-> >>Here is the log:
-> >>http://download.netcenter.hu/bughunt/20100413/debug.log
-> >
-> >There are multiple fields in the inode that are corrupted.
-> >I am really surprised that xfs-repair - even an old version - is not
-> >picking up the corruption....
+On Tue, Apr 13, 2010 at 06:03:57PM +1000, Dave Chinner wrote:
+> Alex,
 > 
-> I think i know now the reason....
-> My case starting to turn into more and more interesting.
+> Can you please pull from the tree indicated below. It contains all
+> the outstanding reviewed patches not you committed to the xfs-dev
+> tree.
 > 
-> (Just a little note for remember: tuesday night, i have run the old
-> 2.8.11 xfs_repair on the partiton wich was reported as corrupt by
-> the kernel, but it was clean.
-> The system was not restarted!)
+> Also, the following commits in the pull request need to be pushed to
+> mainline for 2.6.34:
 > 
-> Like you suggested, today, i have tried to make a backup from the data.
-> During the copy, the kernel reported a lot of corrupted entries
-> again, and finally the kernel crashed! (with the 19 patch pack)
-> Unfortunately the kernel can't write the debug info into the syslog.
-> The system restarted automatically, the service runs again, and i
-> can't do another backup attempt because force of the owner.
-> Today night, when the traffic was in the low period, i have stopped
-> the service, umount the partition, and repeat the xfs_repair on the
-> previously reported partition on more ways.
+> 	xfs: ensure that sync updates the log tail correctly
+> 	xfs: don't warn on EAGAIN in inode reclaim
 > 
-> Here you can see the results:
-> xfs_repair 2.8.11 run #1:
-> http://download.netcenter.hu/bughunt/20100413/repair2811-nr1.log
+> The first addresses a regression introduced in 2.6.34-rc1, the
+> second silences a needless warning that is being reported on
+> 2.6.33.
 
-So this successfully detected and repaired the corruption.  I don't
-think this is new corruption - the corrupted inode numbers are the
-same as you reported a few days back.
+I just updated the branch with this commit appended:
 
-> xfs_repair 2.8.11 run #2:
-> http://download.netcenter.hu/bughunt/20100413/repair2811-nr2.log
-> 
-> echo 3 >/proc/sys/vm/drop_caches - performed
-> 
-> xfs_repair 2.8.11 run #3:
-> http://download.netcenter.hu/bughunt/20100413/repair2811-nr3.log
+	xfs: make the log ticket transaction id random
 
-These two are clearing lost+found and rediscovering the
-diesconnected inodes that were discovered in the first pass. Nothing
-wrng here, that's just the way older repair versions behaved.
+So it now looks like:
 
-> xfs_reapir 3.1.1 run #1:
-> http://download.netcenter.hu/bughunt/20100413/repair311-nr1.log
+The following changes since commit 68a2ac777cca40ccc993512bcf457999be71cc36:
+  Christoph Hellwig (1):
+        xfs: clean up xlog_write_adv_cnt
 
-And this detected nothing wrong, either.
+are available in the git repository at:
 
-> For me, it looks like the FS gets corrupted between tuesday night
-> and today night.
-> Note: because i am expecting kernel crashes, the dirty data flush
-> was set for some miliseconds timeout only for prevent too much data
-> lost.
-> It was one kernel crash in this period, but the XFS have journal,
-> and should be cleaned correctly. (i don't think this is the problem)
-> 
-> The other interesting thing is, why only this partition gets
-> corrupted? (again, and again?)
+  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/xfs.git ..BRANCH.NOT.VERIFIED..
 
-Can you reporduce the corruption again now that the filesystem has
-been repaired? I want to know (if the corruption appears again)
-whether it appears in the same location as this one.
+Alex Elder (6):
+      xfs: add const qualifiers to xfs error function args
+      xfs: fix min bufsize bugs in two places
+      xfs: simplify XLOG_SECTOR_ROUND*()
+      xfs: kill XLOG_SECTOR_ROUND*()
+      xfs: encapsulate bbcount validity checking
+      xfs: nothing special about 1-block log sector
 
-> >>I mean, if i am right, the hw memory problem makes only 1-2 bit
-> >>corruption seriously, and the sw page handling problem makes bad
-> >>memory pages, no?
-> >
-> >RAM ECC guarantees correction of single bit errors and detection of
-> >double bit errors (which cause the kernel to panic, IIRC). I can't
-> >tell you what happens when larger errors occur, though...
-> 
-> Yes, but this system have non-ECC ram unfortunately.
+Christoph Hellwig (1):
+      xfs: remove xfs_dqmarker
 
-If your hardware doesn't have ECC, then you can't rule out anything
-- even a dodgy power supply can cause this sort of transient
-problem. I'm not saying that this is the cause, but I've been
-assuming that you're actually running hardware with ECC on RAM,
-caches, buses, etc.
+Dave Chinner (8):
+      xfs: ensure that sync updates the log tail correctly
+      xfs: don't warn on EAGAIN in inode reclaim
+      xfs: add log item recovery tracing
+      xfs: convert the per-mount dquot list to use list heads
+      xfs: remove duplicate code from dquot reclaim
+      xfs: convert the dquot hash list to use list heads
+      xfs: convert the dquot free list to use list heads
+      xfs: make the log ticket transaction id random
 
-> This makes me think this is sw problem, and not a simple memory
-> corruption, or the corruption can appear only for a short of time in
-> the hw.
+ fs/xfs/linux-2.6/xfs_sync.c    |    4 +-
+ fs/xfs/linux-2.6/xfs_trace.c   |    3 +
+ fs/xfs/linux-2.6/xfs_trace.h   |  141 +++++++++++-
+ fs/xfs/quota/xfs_dquot.c       |  120 ++++------
+ fs/xfs/quota/xfs_dquot.h       |   35 +---
+ fs/xfs/quota/xfs_qm.c          |  515 ++++++++++++++--------------------------
+ fs/xfs/quota/xfs_qm.h          |   23 +--
+ fs/xfs/quota/xfs_qm_stats.c    |    2 +-
+ fs/xfs/quota/xfs_qm_syscalls.c |   38 ++--
+ fs/xfs/quota/xfs_quota_priv.h  |   75 ------
+ fs/xfs/xfs_buf_item.h          |    2 +-
+ fs/xfs/xfs_error.c             |   30 ++--
+ fs/xfs/xfs_error.h             |    9 +-
+ fs/xfs/xfs_log.c               |   40 ++-
+ fs/xfs/xfs_log_recover.c       |  155 +++++++++----
+ fs/xfs/xfs_trans.h             |    9 +
+ 16 files changed, 563 insertions(+), 638 deletions(-)
 
-If you can take the performance hit, turn on the kernel memory leak
-detector and see if that catches anything.
-
-Cheers,
-
-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
