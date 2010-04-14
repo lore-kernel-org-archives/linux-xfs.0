@@ -1,13 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3ELHH8J100466 for <xfs@oss.sgi.com>; Wed, 14 Apr 2010 16:17:17 -0500
-Subject: Re: [PATCHv2 9/10] xfs: a few more minor xfs_log_recover.c cleanups
+	o3ELUIq9101217 for <xfs@oss.sgi.com>; Wed, 14 Apr 2010 16:30:18 -0500
+Subject: Re: [PATCHv2 10/10] xfs: track the log sector size rather than
+	log2(that)
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20100412071131.GK2493@dastard>
-References: <1270852266.7840.159.camel@doink> <20100412071131.GK2493@dastard>
-Date: Wed, 14 Apr 2010 16:19:12 -0500
-Message-ID: <1271279952.3559.81.camel@doink>
+In-Reply-To: <20100412072919.GL2493@dastard>
+References: <1271048070.3174.125.camel@doink> <20100412072919.GL2493@dastard>
+Date: Wed, 14 Apr 2010 16:32:12 -0500
+Message-ID: <1271280732.3559.94.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -25,50 +26,107 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, 2010-04-12 at 17:11 +1000, Dave Chinner wrote:
-> On Fri, Apr 09, 2010 at 05:31:06PM -0500, Alex Elder wrote:
-> > Minor things that didn't seem to warrant their own individual
-> > patches:
-> > - In xlog_bread_noalign(), reorder assertions so the buffer pointer
-> >   is known to be non-null before attempting to dereference it.
+On Mon, 2010-04-12 at 17:29 +1000, Dave Chinner wrote:
+> On Sun, Apr 11, 2010 at 11:54:30PM -0500, Alex Elder wrote:
+> > Change struct log so it keeps track of the size (in basic blocks)
+> > of a log sector in l_sectsize rather than the log-base-2 of that
+> > value (previously, l_sectbb_log).
+> > 
+> > Signed-off-by: Alex Elder <aelder@sgi.com>
 > 
-> That's OK, but if you are debugging then it'll be obvious what
-> happend by it being a null ptr dereference rather than an assert
-> failure. Hence if anything I'd just kill the ASSERT(bp)....
-
-I personally prefer proactively asserting it rather than
-just deducing it was a null pointer from the wreckage.  But
-whatever, we disagree and I'm OK with dropping the assert.
-
-> > - Add a more descriptive header comment for xlog_find_verify_cycle().
+> OK, this is what I commented on earlier....
 > 
-> It just describes what the code does - I don't think it make the
-> code any clearer and makes it more likely that if we ever change the
-> code the comment will then be wrong...
-
-I still think the existing comments are confusing.  What do you
-think of this instead:
-
-/*
- * Check that the range of blocks does not contain stop_on_cycle_no.
- * Fill in *new_blk with the block offset where such block is found,
- * or with -1 (an invalid block number) if there is no such block in
- * the range.  The scan needs to occur from front to back and the
- * pointer into the region must be updated since a later routine will
- * need to perform another test.  
- */
-
-> > - Make a few additions to the comments in xlog_find_head().  Also
-> >   rearrange some expressions in a few spots to produce the same
-> >   result, but in a way that seems more clear what's being computed.
+> > @@ -1050,29 +1051,31 @@ xlog_alloc_log(xfs_mount_t	*mp,
+> >  
+> >  	error = EFSCORRUPTED;
+> >  	if (xfs_sb_version_hassector(&mp->m_sb)) {
+> > -		log->l_sectbb_log = mp->m_sb.sb_logsectlog - BBSHIFT;
+> > -		if (log->l_sectbb_log < 0 ||
+> > -		    log->l_sectbb_log > mp->m_sectbb_log) {
+> > -			xlog_warn("XFS: Log sector size (0x%x) out of range.",
+> > -						log->l_sectbb_log);
+> > +	        sector_bits = mp->m_sb.sb_logsectlog;
+> > +		if (sector_bits < BBSHIFT) {
+> > +			xlog_warn("XFS: Log sector byte size too small "
+> > +				"(0x%x < 0x%x)", sector_bits, BBSHIFT);
 > 
-> I'd say this is probably the only bits of the patch that add value.
-> Can you split this one out by itself?
+> "sector_bits"?  That doesn't seem to fit the units the log sector
+> size being read from and checked against. i.e. it's not bits, nor is
+> it bytes (as the error message says). It's really log2(sector size),
+> so perhaps calling it sector_size_log would be more accurate.
 
-I will re-post a v3 on this and the others I've responded to
-today, just so we're all clear on what's being accepted.  I
-will break this patch into two pieces, allowing for this last
-bit to be considered separate from the rest.
+My intent here was to avoid the use of "log" to mean "logarithm"
+in the log (meaning "log") code...  The "bits" here is the number
+of bits required to represent a log sector.  Sort of like CHAR_BIT
+is 8.  I also intentionally avoided encoded units in the name,
+since what it represents changes from representing a number of
+bytes to representing a number of blocks.
+
+I'll try to reformulate this, see if I can come up with
+something more clear.
+
+> >  			goto out_free_log;
+> >  		}
+> >  
+> > -		/* for larger sector sizes, must have v2 or external log */
+> > -		if (log->l_sectbb_log != 0 &&
+> > -		    (log->l_logBBstart != 0 &&
+> > -		     !xfs_sb_version_haslogv2(&mp->m_sb))) {
+> > -			xlog_warn("XFS: log sector size (0x%x) invalid "
+> > -				  "for configuration.", log->l_sectbb_log);
+> > +	        sector_bits -= BBSHIFT;
+> > +		if (sector_bits > mp->m_sectbb_log) {
+> > +			xlog_warn("XFS: Log sector basic block size too large "
+> 
+> It's just the log sector size is too large - no need for "basic
+> block" in that error message.
+
+I differentiated because the earlier value was really
+    log2(bytes in a sector)
+while this one is
+    log2(basic blocks in a sector)
+
+If someone were really looking at these, alongside the code,
+they could figure out the difference, so I don't really
+care much about this.  I'll take another shot at it and
+will repost.
+
+> 
+> > +				"(0x%x > 0x%x)", sector_bits, mp->m_sectbb_log);
+> >  			goto out_free_log;
+> >  		}
+> 
+> > -		if (mp->m_sb.sb_logsectlog < BBSHIFT) {
+> > -			xlog_warn("XFS: Log sector log (0x%x) too small.",
+> > -						mp->m_sb.sb_logsectlog);
+> > +
+> > +		/* for larger sector sizes, must have v2 or external log */
+> > +		if (sector_bits && (log->l_logBBstart > 0 &&
+> > +					!xfs_sb_version_haslogv2(&mp->m_sb))) {
+> 
+> no need for the extra ()s there.
+
+You're right; they were there in the original code.
+I don't like them and will remove them.
+
+> > +
+> > +			xlog_warn("XFS: log sector size (0x%x) invalid "
+> > +				  "for configuration.", sector_bits);
+> >  			goto out_free_log;
+> >  		}
+> >  	}
+> > -	log->l_sectbb_mask = (1 << log->l_sectbb_log) - 1;
+> > +	log->l_sectsize = 1 << sector_bits;
+> > +	log->l_sectbb_mask = log->l_sectsize - 1;
+> 
+> There's only only place left that uses l_sectbb_mask left (in
+> xlog_align()), so you could probably kill it while you are at it.
+
+Agreed.  I will add another patch to do that.
+
+> Everything else looks OK.
+
+Thanks for the reviews.
 
 					-Alex
 
