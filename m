@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3FIFbDp183234 for <xfs@oss.sgi.com>; Thu, 15 Apr 2010 13:15:37 -0500
+	o3FIFjM6183284 for <xfs@oss.sgi.com>; Thu, 15 Apr 2010 13:15:45 -0500
 Received: from cf--amer001e--3.americas.sgi.com
 	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 448E38F80CA
-	for <xfs@oss.sgi.com>; Thu, 15 Apr 2010 11:17:31 -0700 (PDT)
-Subject: [PATCH 2/5] xfs: avoid repeated pointer dereferences
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 880A7AC017
+	for <xfs@oss.sgi.com>; Thu, 15 Apr 2010 11:17:41 -0700 (PDT)
+Subject: [PATCH 5/5] xfs: kill off l_sectbb_mask
 From: Alex Elder <aelder@sgi.com>
-Date: Thu, 15 Apr 2010 13:17:30 -0500
-Message-ID: <1271355450.2680.91.camel@doink>
+Date: Thu, 15 Apr 2010 13:17:40 -0500
+Message-ID: <1271355460.2680.94.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -26,62 +26,80 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-In xlog_find_cycle_start() use a local variable for some repeated
-operations rather than constantly accessing the memory location
-whose address is passed in.
-
-(This version drops an assertion that a pointer is non-null.)
+There remains only one user of the l_sectbb_mask field in the log
+structure.  Just kill it off and compute the mask where needed
+from the power-of-2 sector size.
 
 Signed-off-by: Alex Elder <aelder@sgi.com>
 
 ---
- fs/xfs/xfs_log_recover.c |   25 +++++++++++++------------
- 1 file changed, 13 insertions(+), 12 deletions(-)
+ fs/xfs/xfs_log.c         |    1 -
+ fs/xfs/xfs_log_priv.h    |    4 +---
+ fs/xfs/xfs_log_recover.c |   14 +++++++++-----
+ 3 files changed, 10 insertions(+), 9 deletions(-)
 
+Index: b/fs/xfs/xfs_log.c
+===================================================================
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1089,7 +1089,6 @@ xlog_alloc_log(xfs_mount_t	*mp,
+ 		}
+ 	}
+ 	log->l_sectsize = 1 << size;
+-	log->l_sectbb_mask = log->l_sectsize - 1;
+ 
+ 	xlog_get_iclog_buffer_size(mp, log);
+ 
+Index: b/fs/xfs/xfs_log_priv.h
+===================================================================
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -396,9 +396,7 @@ typedef struct log {
+ 	struct xfs_buf_cancel	**l_buf_cancel_table;
+ 	int			l_iclog_hsize;  /* size of iclog header */
+ 	int			l_iclog_heads;  /* # of iclog header sectors */
+-	uint			l_sectsize;     /* sector size in BBs */
+-	uint			l_sectbb_mask;  /* sector size (in BBs)
+-						 * alignment mask */
++	uint			l_sectsize;     /* sector size in BBs (2^n) */
+ 	int			l_iclog_size;	/* size of log in bytes */
+ 	int			l_iclog_size_log; /* log power size of log */
+ 	int			l_iclog_bufs;	/* number of iclog buffers */
 Index: b/fs/xfs/xfs_log_recover.c
 ===================================================================
 --- a/fs/xfs/xfs_log_recover.c
 +++ b/fs/xfs/xfs_log_recover.c
-@@ -354,26 +354,27 @@ xlog_find_cycle_start(
- {
- 	xfs_caddr_t	offset;
- 	xfs_daddr_t	mid_blk;
-+	xfs_daddr_t	end_blk;
- 	uint		mid_cycle;
- 	int		error;
- 
--	mid_blk = BLK_AVG(first_blk, *last_blk);
--	while (mid_blk != first_blk && mid_blk != *last_blk) {
-+	end_blk = *last_blk;
-+	mid_blk = BLK_AVG(first_blk, end_blk);
-+	while (mid_blk != first_blk && mid_blk != end_blk) {
- 		error = xlog_bread(log, mid_blk, 1, bp, &offset);
- 		if (error)
- 			return error;
- 		mid_cycle = xlog_get_cycle(offset);
--		if (mid_cycle == cycle) {
--			*last_blk = mid_blk;
--			/* last_half_cycle == mid_cycle */
--		} else {
--			first_blk = mid_blk;
--			/* first_half_cycle == mid_cycle */
--		}
--		mid_blk = BLK_AVG(first_blk, *last_blk);
-+		if (mid_cycle == cycle)
-+			end_blk = mid_blk;   /* last_half_cycle == mid_cycle */
-+		else
-+			first_blk = mid_blk; /* first_half_cycle == mid_cycle */
-+		mid_blk = BLK_AVG(first_blk, end_blk);
- 	}
--	ASSERT((mid_blk == first_blk && mid_blk+1 == *last_blk) ||
--	       (mid_blk == *last_blk && mid_blk-1 == first_blk));
-+	ASSERT((mid_blk == first_blk && mid_blk+1 == end_blk) ||
-+	       (mid_blk == end_blk && mid_blk-1 == first_blk));
-+
-+	*last_blk = end_blk;
- 
- 	return 0;
+@@ -121,6 +121,10 @@ xlog_put_bp(
+ 	xfs_buf_free(bp);
  }
+ 
++/*
++ * Return the address of the start of the given block number's data
++ * in a log buffer.  The buffer covers a log sector-aligned region.
++ */
+ STATIC xfs_caddr_t
+ xlog_align(
+ 	xlog_t		*log,
+@@ -128,14 +132,14 @@ xlog_align(
+ 	int		nbblks,
+ 	xfs_buf_t	*bp)
+ {
++	xfs_daddr_t	offset;
+ 	xfs_caddr_t	ptr;
+ 
+-	if (log->l_sectsize == 1)
+-		return XFS_BUF_PTR(bp);
++	offset = blk_no & ((xfs_daddr_t) log->l_sectsize - 1);
++	ptr = XFS_BUF_PTR(bp) + BBTOB(offset);
++
++	ASSERT(ptr + BBTOB(nbblks) <= XFS_BUF_PTR(bp) + XFS_BUF_SIZE(bp));
+ 
+-	ptr = XFS_BUF_PTR(bp) + BBTOB((int)blk_no & log->l_sectbb_mask);
+-	ASSERT(XFS_BUF_SIZE(bp) >=
+-		BBTOB(nbblks + (blk_no & log->l_sectbb_mask)));
+ 	return ptr;
+ }
+ 
 
 
 _______________________________________________
