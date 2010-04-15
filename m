@@ -1,30 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3FALZv8156906 for <xfs@oss.sgi.com>; Thu, 15 Apr 2010 05:21:35 -0500
-Received: from mail.netcenter.hu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B5B27125E669
-	for <xfs@oss.sgi.com>; Thu, 15 Apr 2010 03:23:29 -0700 (PDT)
-Received: from mail.netcenter.hu (ns.netcenter.hu [195.228.254.57]) by
-	cuda.sgi.com with ESMTP id dgyGAbxRyWRufD72 for
-	<xfs@oss.sgi.com>; Thu, 15 Apr 2010 03:23:29 -0700 (PDT)
-Message-ID: <24dd01cadc85$b1d9ea10$0400a8c0@dcccs>
-From: "Janos Haar" <janos.haar@netcenter.hu>
-References: <20100408025822.GL11036@dastard>
-	<11b701cad9c8$93212530$0400a8c0@dcccs>
-	<20100412001158.GA2493@dastard>
-	<18b101cadadf$5edbb660$0400a8c0@dcccs>
-	<20100413083931.GW2493@dastard>
-	<190201cadaeb$02ec22c0$0400a8c0@dcccs>
-	<20100413113445.GZ2493@dastard>
-	<1cd501cadb62$3a93e790$0400a8c0@dcccs>
-	<20100414001615.GC2493@dastard>
-	<233401cadc69$64c1f4f0$0400a8c0@dcccs>
-	<20100415092330.GU2493@dastard>
-Subject: Re: Kernel crash in xfs_iflush_cluster (was Somebody take a look
-	please!...)
-Date: Thu, 15 Apr 2010 12:23:26 +0200
+	o3FGFs2d177311 for <xfs@oss.sgi.com>; Thu, 15 Apr 2010 11:15:57 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 55E5A2C6312
+	for <xfs@oss.sgi.com>; Thu, 15 Apr 2010 09:17:46 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id p6QEyGVyrxAjVJ0W for
+	<xfs@oss.sgi.com>; Thu, 15 Apr 2010 09:17:46 -0700 (PDT)
+Date: Thu, 15 Apr 2010 12:17:45 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfstests: make sure $seq.full files don't land in /
+Message-ID: <20100415161745.GA21742@infradead.org>
+References: <4BC5EDE6.7000001@sandeen.net>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4BC5EDE6.7000001@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,111 +24,25 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, xiyou.wangcong@gmail.com, kamezawa.hiroyu@jp.fujitsu.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
+
+On Wed, Apr 14, 2010 at 11:31:34AM -0500, Eric Sandeen wrote:
+> 186 and 192, at least, were landing (part of) their $seq.full
+> files in /
+> 
+> Fix this by using $here/$seq.full where needed.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+
+Looks good,
 
 
------ Original Message ----- 
-From: "Dave Chinner" <david@fromorbit.com>
-To: "Janos Haar" <janos.haar@netcenter.hu>
-Cc: <xiyou.wangcong@gmail.com>; <linux-kernel@vger.kernel.org>; 
-<kamezawa.hiroyu@jp.fujitsu.com>; <linux-mm@kvack.org>; <xfs@oss.sgi.com>; 
-<axboe@kernel.dk>
-Sent: Thursday, April 15, 2010 11:23 AM
-Subject: Re: Kernel crash in xfs_iflush_cluster (was Somebody take a look 
-please!...)
-
-
-> On Thu, Apr 15, 2010 at 09:00:49AM +0200, Janos Haar wrote:
->> Dave,
->>
->> The corruption + crash reproduced. (unfortunately)
->>
->> http://download.netcenter.hu/bughunt/20100413/messages-15
->>
->> Apr 14 01:06:33 alfa kernel: XFS mounting filesystem sdb2
->>
->> This was the point of the xfs_repair more times.
->
-> OK, the inodes that are corrupted are different, so there's still
-> something funky going on here. I still would suggest replacing the
-> RAID controller to rule that out as the cause.
-
-This was not a cheap card and i can't replace, because have only one, and 
-the owner decided allready about i need to replace the entire server @ 
-saturday.
-I have only 2 day to get useful debug information when the server is online.
-This is bad too for testing, becasue the workload will disappear, and we 
-need to figure out something to reproduce the problem offline...
-
->
-> FWIW, do you have any other servers with similar h/w, s/w and
-> workloads? If so, are they seeing problems?
-
-This is a web based game, wich generates a loooot of small files on the 
-corrupted filesystem, and as far as i see, the corruption happens only @ 
-writing, but not when reading.
-Because i can copy multiple times big gz files across the partitions, and 
-compare, and test for crc, and there is a cron-tester wich tests 12GB gz 
-files hourly but can't find any problem, this shows me, the corruption only 
-happens when writing, and not on the content, but on the FS.
-This scores the RAID card problem more lower, am i right? :-)
-
-Additionally in the last 3 days i have tried 2 times to cp -aR the entire 
-partition to another, and both times the corruption appears ON THE SOURCE 
-and finally the kernel crashed.
-
-step 1. repair
-step 2 run the game (files generated...)
-step 3 start copy partition's data in background
-step 4 corruption reported by kernel
-step 5 kernel crashed during write
-
-Can this be a race between read and write?
-
-Btw i have 2 server with this game, the difference are these:
-
-- The game's language
-- The HW's structure similar, but totally different branded all the parts, 
-except the Intel CPU. :-)
-- The workload is lower on the stable server
-- The stable server is not selected for replace. :-)
-
-The important matches:
-- The base OS is FC6 on both
-- The actual kernel on the stable server is 2.6.28.10
-(This kernel starts to crash @ the beginnig of Marc. month on which we are 
-working on.)
-- The FS and the internal structure is the same
-
->
-> Can you recompile the kernel with CONFIG_XFS_DEBUG enabled and
-> reboot into it before you repair and remount the filesystem again?
-
-Yes, of course!
-I will do it now, we have 2 days left to get useful infos....
-
-> (i.e. so that we know that we have started with a clean filesystem
-> and the debug kernel) I'm hoping that this will catch the corruption
-> much sooner, perhaps before it gets to disk. Note that this will
-> cause the machine to panic when corruption is detected, and it is
-> much,much more careful about checking in memory structures so there
-> is a CPU overhead involved as well.
-
-not a problem.
-
-
->
-> Cheers,
->
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com 
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
