@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3GDe60H251657 for <xfs@oss.sgi.com>; Fri, 16 Apr 2010 08:40:07 -0500
-Received: from mx1.gb1.humyo.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C02481487E7D
-	for <xfs@oss.sgi.com>; Fri, 16 Apr 2010 06:42:03 -0700 (PDT)
-Received: from mx1.gb1.humyo.com (mx1.gb1.humyo.com [62.44.71.171]) by
-	cuda.sgi.com with ESMTP id cWIgajYUZgREbP4T for
-	<xfs@oss.sgi.com>; Fri, 16 Apr 2010 06:42:03 -0700 (PDT)
-Message-ID: <4BC86920.3080101@humyo.com>
-Date: Fri, 16 Apr 2010 14:41:52 +0100
-From: John Berthels <john@humyo.com>
+	o3GFl07K258146 for <xfs@oss.sgi.com>; Fri, 16 Apr 2010 10:47:01 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CCAD71488156
+	for <xfs@oss.sgi.com>; Fri, 16 Apr 2010 08:48:57 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id zMafkwRNprgxeu9u for
+	<xfs@oss.sgi.com>; Fri, 16 Apr 2010 08:48:57 -0700 (PDT)
+Received: from int-mx02.intmail.prod.int.phx2.redhat.com
+	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id o3GFmuSg025150
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Fri, 16 Apr 2010 11:48:56 -0400
+Message-ID: <4BC886E7.3030606@redhat.com>
+Date: Fri, 16 Apr 2010 10:48:55 -0500
+From: Eric Sandeen <esandeen@redhat.com>
 MIME-Version: 1.0
-Subject: Re: PROBLEM + POSS FIX: kernel stack overflow, xfs, many disks, heavy
-	write load, 8k stack, x86-64
-References: <4BBC6719.7080304@humyo.com> <20100407140523.GJ11036@dastard>
-	<4BBCAB57.3000106@humyo.com> <20100407234341.GK11036@dastard>
-	<20100408030347.GM11036@dastard> <4BBDC92D.8060503@humyo.com>
-	<4BBDEC9A.9070903@humyo.com> <20100408233837.GP11036@dastard>
-	<20100409113850.GE13327@think>
-In-Reply-To: <20100409113850.GE13327@think>
+Subject: Re: [PATCH] 125 run ftrunc with relative path
+References: <alpine.LFD.2.00.1004160924090.2710@localhost>
+In-Reply-To: <alpine.LFD.2.00.1004160924090.2710@localhost>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,90 +28,47 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Chris Mason <chris.mason@oracle.com>, Dave Chinner <david@fromorbit.com>, John Berthels <john@humyo.com>, linux-kernel@vger.kernel.org, Nick Gregory <nick@humyo.com>, Rob Sanderson <rob@humyo.com>, xfs@oss.sgi.com, linux-mm@kvack.org
+To: Lukas Czerner <lczerner@redhat.com>
+Cc: xfs@oss.sgi.com
 
-Chris Mason wrote:
-> shrink_zone on my box isn't 500 bytes, but lets try the easy stuff
-> first.  This is against .34, if you have any trouble applying to .32,
-> just add the word noinline after the word static on the function
-> definitions.
+On 04/16/2010 02:27 AM, Lukas Czerner wrote:
+> From 16588d733e681954386f1b92dd6e47cfef92a207 Mon Sep 17 00:00:00 2001
+> From: Lukas Czerner <lczerner@redhat.com>
+> Date: Tue, 13 Apr 2010 19:34:07 +0200
+> Subject: [PATCH] 125 run ftrunc with relative path
 > 
-> This makes shrink_zone disappear from my check_stack.pl output.
-> Basically I think the compiler is inlining the shrink_active_zone and
-> shrink_inactive_zone code into shrink_zone.
+> Since ftrunc is invoked with su $qa_user, it can fail when absolute path
+> is not accessible to everyone.
 
-Hi Chris,
+Looks right to me.
 
-I hadn't seen the followup discussion on lkml until today, but this message:
+After talking w/ you on IRC, I'll take the liberty of adding your
+signed-off-by: to the patch, and check it in with my reviewed-by:
 
-http://marc.info/?l=linux-mm&m=127122143303771&w=2
+Thanks,
+-Eric
 
-allowed me to look at stack usage in our build environment. If I've 
-understood correctly, it seems that a build with gcc-4.4 and gcc-4.3 
-have very different stack usages for shrink_zone(): 0x88 versus 0x1d8. 
-(details below).
-
-The reason appears to be the -fconserve-stack compilation option 
-specified when using 4.4, since running the cmdline from mm/.vmscan.cmd 
-with gcc-4.4 but *without* -fconserve-stack gives the same result as 
-with 4.3.
-
-According to the discussion when the flag was added, 
-http://www.gossamer-threads.com/lists/linux/kernel/1131612
-this flag seems to primarily affects inlining, so I double-checked the 
-noinline patch you sent to the list and discovered that it had been 
-incorrectly applied to the build tree. Correctly applying that patch to 
-mm/vmscan.c (and using gcc-4.3) gives a
-
-sub    $0x78,%rsp
-
-line. I'm very sorry that this test or ours wasn't correct and I'm sorry 
-for sending bad info to the list.
-
-We're currently building a kernel with gcc-4.4 and will let you know if 
-it blows the 8k limit or not.
-
-Thanks for your help.
-
-regards,
-
-jb
-
-$ gcc-4.3 --version
-gcc-4.3 (Ubuntu 4.3.4-5ubuntu1) 4.3.4
-$ gcc-4.4 --version
-gcc-4.4 (Ubuntu 4.4.1-4ubuntu9) 4.4.1
-
-
-$ make CC=gcc-4.4 mm/vmscan.o
-$ objdump -d mm/vmscan.o  | less +/shrink_zone
-0000000000002830 <shrink_zone>:
-     2830:       55                      push   %rbp
-     2831:       48 89 e5                mov    %rsp,%rbp
-     2834:       41 57                   push   %r15
-     2836:       41 56                   push   %r14
-     2838:       41 55                   push   %r13
-     283a:       41 54                   push   %r12
-     283c:       53                      push   %rbx
-     283d:       48 81 ec 88 00 00 00    sub    $0x88,%rsp
-     2844:       e8 00 00 00 00          callq  2849 <shrink_zone+0x19>
-$ make clean
-$ make CC=gcc-4.3 mm/vmscan.o
-$ objdump -d mm/vmscan.o  | less +/shrink_zone
-0000000000001ca0 <shrink_zone>:
-     1ca0:       55                      push   %rbp
-     1ca1:       48 89 e5                mov    %rsp,%rbp
-     1ca4:       41 57                   push   %r15
-     1ca6:       41 56                   push   %r14
-     1ca8:       41 55                   push   %r13
-     1caa:       41 54                   push   %r12
-     1cac:       53                      push   %rbx
-     1cad:       48 81 ec d8 01 00 00    sub    $0x1d8,%rsp
-     1cb4:       e8 00 00 00 00          callq  1cb9 <shrink_zone+0x19>
+> ---
+>  125 |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/125 b/125
+> index e84109a..9a29941 100755
+> --- a/125
+> +++ b/125
+> @@ -61,7 +61,7 @@ touch $TESTFILE
+>  chmod a+rw $TESTDIR
+>  chmod a+rw $TESTFILE
+>  
+> -su $qa_user -c "$here/src/ftrunc -f $TESTFILE"
+> +su $qa_user -c "./src/ftrunc -f $TESTFILE"
+>  
+>  if [ "$?" != "0" ];  then
+>      echo src/ftrunc returned non 0 status!
 
 _______________________________________________
 xfs mailing list
