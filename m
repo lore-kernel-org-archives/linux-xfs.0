@@ -1,16 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3FJRfNT187051 for <xfs@oss.sgi.com>; Thu, 15 Apr 2010 14:27:41 -0500
-Subject: Re: [PATCH] xfstests: exit non-0 if fs check fails
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <4BB3F61D.3020507@sandeen.net>
-References: <4BB3DCEF.8040704@redhat.com> <20100401001956.GL7671@dastard>
-	<4BB3F61D.3020507@sandeen.net>
-Date: Thu, 15 Apr 2010 14:29:31 -0500
-Message-ID: <1271359771.2680.128.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	o3G7POWX231623 for <xfs@oss.sgi.com>; Fri, 16 Apr 2010 02:25:24 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2FB5112A78A6
+	for <xfs@oss.sgi.com>; Fri, 16 Apr 2010 00:27:20 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id lw40SkrEpbHwZoiO for
+	<xfs@oss.sgi.com>; Fri, 16 Apr 2010 00:27:20 -0700 (PDT)
+Received: from int-mx01.intmail.prod.int.phx2.redhat.com
+	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id o3G7RJ6h030740
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Fri, 16 Apr 2010 03:27:20 -0400
+Date: Fri, 16 Apr 2010 09:27:17 +0200 (CEST)
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: [PATCH] 125 run ftrunc with relative path
+Message-ID: <alpine.LFD.2.00.1004160924090.2710@localhost>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,113 +30,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: Lukas Czerner <lczerner@redhat.com>, Eric Sandeen <esandeen@redhat.com>
 
-On Wed, 2010-03-31 at 20:25 -0500, Eric Sandeen wrote:
-> Dave Chinner wrote:
-> > On Wed, Mar 31, 2010 at 06:38:23PM -0500, Eric Sandeen wrote:
-> >> Right now if any of the _check_scratch_fs tests etc fail,
-> >> the check script exits but with 0 status.
-> >>
-> >> This change will cause the status to be non-0 so we can detect
-> >> the error.
-> >>
-> >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> > 
-> > Wouldn't it be better to do:
-> > 
-> > -   [ $ok -eq 0 ] && exit 1
-> > +    if [ $ok -eq 0 ]; then
-> > +	status=1
-> > +	exit 1
-> > +    fi
-> > 
-> > To catch all failures rather than just the fsck failure?
+>From 16588d733e681954386f1b92dd6e47cfef92a207 Mon Sep 17 00:00:00 2001
+From: Lukas Czerner <lczerner@redhat.com>
+Date: Tue, 13 Apr 2010 19:34:07 +0200
+Subject: [PATCH] 125 run ftrunc with relative path
 
-I see this patch is already committed to xfstests-dev.
+Since ftrunc is invoked with su $qa_user, it can fail when absolute path
+is not accessible to everyone.
+---
+ 125 |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-I don't see the point of setting status=1 before exiting.
-If what you meant was to set the status and then *return*
-a non-zero value it would make sense.
-
-How do you feel about updating your patch and committing
-the result to the -dev tree?
-
-If you change "exit" to "return" in both spots you
-can consider it reviewed by me.
-
-					-Alex
-
-PS  Here is a script that shows what's going on.
-
-#!/bin/bash
-
-echo =============
-status=1
-echo top-level shell PID is $$
-echo initial status is $status
-
-bash <<!
-        echo -------------
-        echo sub-shell PID is \$$
-        echo sub-shell initial status is \$status
-
-        foo() { echo foo PID is \$$; status=2; return 3; }
-        bar() { echo bar PID is \$$; status=4; exit 5; }
-        
-        echo -------------
-        status=0
-        foo             # This is run in the current (sub) shell
-        echo foo result is \$?
-        echo post-foo status is \$status
-        echo current shell PID is \$$
-
-        echo -------------
-        status=0
-        bar             # This will exit to the top-level shell
-        # And the next three will not get executed
-        echo bar result is \$?
-        echo post-bar status is \$status
-        echo current shell PID is \$$
-!
-R=$?
-echo -------------
-echo final result is $R
-echo final shell PID is $$
-echo final status is $status
-
-echo =============
-
-exit 0
-
-
-
-> sure, that sounds better.  I'll check that version in w/ your SOB
-> unless I hear otherwise :)
-> 
-> Thanks,
-> -Eric
-> 
-> >> ---
-> >>
-> >> (aside - we could make it 2 instead of 1, so that a calling script
-> >> could fsck and continue ... thoughts?)
-> > 
-> > I think if a test corrupts a filesystem, the test run should stop
-> > so the failure can be analysed without needing to reproduce it
-> > again...
-> > 
-> > Cheers,
-> > 
-> > Dave.
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
-
+diff --git a/125 b/125
+index e84109a..9a29941 100755
+--- a/125
++++ b/125
+@@ -61,7 +61,7 @@ touch $TESTFILE
+ chmod a+rw $TESTDIR
+ chmod a+rw $TESTFILE
+ 
+-su $qa_user -c "$here/src/ftrunc -f $TESTFILE"
++su $qa_user -c "./src/ftrunc -f $TESTFILE"
+ 
+ if [ "$?" != "0" ];  then
+     echo src/ftrunc returned non 0 status!
+-- 
+1.6.6.1
 
 _______________________________________________
 xfs mailing list
