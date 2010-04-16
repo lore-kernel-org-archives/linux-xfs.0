@@ -1,12 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3GLTnFA013025 for <xfs@oss.sgi.com>; Fri, 16 Apr 2010 16:29:49 -0500
-From: Alex Elder <aelder@sgi.com>
-Message-Id: <201004162131.o3GLVgZQ026576@stout.americas.sgi.com>
-Date: Fri, 16 Apr 2010 16:31:42 -0500
-Subject: [GIT PULL] XFS update for 2.6.34-rc5
+	o3GNjXOV020755 for <xfs@oss.sgi.com>; Fri, 16 Apr 2010 18:45:34 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F4110FFF1CA
+	for <xfs@oss.sgi.com>; Fri, 16 Apr 2010 16:47:28 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	wkQeS0I02FLUhqHp for <xfs@oss.sgi.com>;
+	Fri, 16 Apr 2010 16:47:28 -0700 (PDT)
+Date: Sat, 17 Apr 2010 09:47:24 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: 2.6.32.11 hangs with xfstest 104
+Message-ID: <20100416234724.GD2493@dastard>
+References: <cone.1271414893.151380.55874.1001@bork.lsof.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <cone.1271414893.151380.55874.1001@bork.lsof.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,26 +29,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Roel van Meer <rolek@bokxing.nl>
+Cc: xfs@oss.sgi.com
 
-Please pull these two changes for 2.6.34-rc5.	-Alex
+On Fri, Apr 16, 2010 at 12:48:13PM +0200, Roel van Meer wrote:
+> Hi list,
+> 
+> I've been running xfstests on a slackware linux server with kernel
+> 2.6.32.11.
+> I've noticed that xfstest # 104 reliably hangs the kernel. Attached
+> are two call traces.
 
-The following changes since commit dc57da3875f527b1cc195ea4ce5bd32e1e68433d:
-  Linus Torvalds (1):
-        Merge branch 'x86-fixes-for-linus' of git://git.kernel.org/.../tip/linux-2.6-tip
+Yes, it does, and has done since test 104 was written to exercise a
+growfs deadlock years ago. I re-enabled it in the auto group because
+it's been fixed it and those fixes are now in the 2.6.34-rc tree.
 
-are available in the git repository at:
+Cheers,
 
-  git://oss.sgi.com/xfs/xfs for-linus
-
-Dave Chinner (2):
-      xfs: ensure that sync updates the log tail correctly
-      xfs: don't warn on EAGAIN in inode reclaim
-
- fs/xfs/linux-2.6/xfs_sync.c |    4 ++--
- fs/xfs/xfs_log.c            |   38 ++++++++++++++++++++++++++------------
- 2 files changed, 28 insertions(+), 14 deletions(-)
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
