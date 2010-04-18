@@ -1,15 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3IHG8ZG149960 for <xfs@oss.sgi.com>; Sun, 18 Apr 2010 12:16:08 -0500
-Date: Sun, 18 Apr 2010 13:18:05 -0400
+	o3IHFEnE149894 for <xfs@oss.sgi.com>; Sun, 18 Apr 2010 12:15:14 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EBFAE2CD343
+	for <xfs@oss.sgi.com>; Sun, 18 Apr 2010 10:17:12 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id Z35i3aLjx8UWMZQZ for
+	<xfs@oss.sgi.com>; Sun, 18 Apr 2010 10:17:12 -0700 (PDT)
+Date: Sun, 18 Apr 2010 13:17:12 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCHv2 4/5] xfs: record log sector size rather than log2(that)
-Message-ID: <20100418171805.GA28944@infradead.org>
-References: <201004162053.o3GKrrgr025189@stout.americas.sgi.com>
+Subject: Re: [PATCH] xfs_fsr: Improve handling of attribute forks V2
+Message-ID: <20100418171712.GB25924@infradead.org>
+References: <1270545579-24835-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201004162053.o3GKrrgr025189@stout.americas.sgi.com>
+In-Reply-To: <1270545579-24835-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,23 +28,13 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Apr 16, 2010 at 03:53:53PM -0500, Alex Elder wrote:
-> Change struct log so it keeps track of the size (in basic blocks) of
-> a log sector in l_sectBBsize rather than the log-base-2 of that
-> value (previously, l_sectbb_log).  The name was chosen for
-> consistency with the other fields in the structure that represent
-> a number of basic blocks.
-> 
-> (Updated so that a variable used in computing and verifying a log's
-> sector size is named "log2_size".  Also added the "BB" to the
-> structure field name, based on feedback from Eric Sandeen.  Also
-> dropped some superfluous parentheses.)
+Looks good,
 
-Looks good.  Eventually we should replace all the "BB" with "bb" in
-the log code, but for now this is a good enough.
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
