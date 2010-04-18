@@ -1,19 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3IHxK5d152117 for <xfs@oss.sgi.com>; Sun, 18 Apr 2010 12:59:20 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F0AB812C242F
-	for <xfs@oss.sgi.com>; Sun, 18 Apr 2010 11:01:18 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id pRFxkUFZqb6tXElx for
-	<xfs@oss.sgi.com>; Sun, 18 Apr 2010 11:01:18 -0700 (PDT)
-Date: Sun, 18 Apr 2010 14:01:18 -0400
+	o3IHRbWb150501 for <xfs@oss.sgi.com>; Sun, 18 Apr 2010 12:27:37 -0500
+Date: Sun, 18 Apr 2010 13:29:35 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: XFS status update for March 2010
-Message-ID: <20100418180118.GA20394@infradead.org>
+Subject: Re: [PATCHv2 5/5] xfs: kill off l_sectbb_mask
+Message-ID: <20100418172935.GA1677@infradead.org>
+References: <201004162054.o3GKs54f025204@stout.americas.sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <201004162054.o3GKs54f025204@stout.americas.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,41 +22,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, linux-kernel@vger.kernel.org
+To: Alex Elder <aelder@sgi.com>
+Cc: xfs@oss.sgi.com
 
-The merge window for Linux 2.6.34 closed in the first week of March,
-with the important XFS features already landing in February.  Not
-surprisingly the XFS merge activity in March has been rather slow,
-with only about a dozen bug fixes patches making it towards Linus'
-tree in that time.
+On Fri, Apr 16, 2010 at 03:54:05PM -0500, Alex Elder wrote:
+> + * Return the address of the start of the given block number's data
+> + * in a log buffer.  The buffer covers a log sector-aligned region.
+> + */
+>  STATIC xfs_caddr_t
+>  xlog_align(
+>  	xlog_t		*log,
+> @@ -128,14 +132,14 @@ xlog_align(
+>  	int		nbblks,
+>  	xfs_buf_t	*bp)
+>  {
+> +	xfs_daddr_t	offset;
+>  	xfs_caddr_t	ptr;
+>  
+> -	if (log->l_sectBBsize == 1)
+> -		return XFS_BUF_PTR(bp);
+> +	offset = blk_no & ((xfs_daddr_t) log->l_sectBBsize - 1);
+> +	ptr = XFS_BUF_PTR(bp) + BBTOB(offset);
+> +
+> +	ASSERT(ptr + BBTOB(nbblks) <= XFS_BUF_PTR(bp) + XFS_BUF_SIZE(bp));
+>  
+> -	ptr = XFS_BUF_PTR(bp) + BBTOB((int)blk_no & log->l_sectbb_mask);
+> -	ASSERT(XFS_BUF_SIZE(bp) >=
+> -		BBTOB(nbblks + (blk_no & log->l_sectbb_mask)));
+>  	return ptr;
 
-On the other hand active development for the 2.6.35 merge window has
-been very active.  Most importantly there was a lot of work on the
-transaction and log subsystems.  Starting with a large patchset to
-clean up and refactor the transaction subsystem and introducing more
-flexible I/O containers in the low-level logging code work is
-progressing to a new, more efficient logging implementation.  While
-this preparatory work has already been merged in the development tree,
-the actual delayed logging implementation still needs more work after
-the initial public posting.  The delayed logging implementation which
-is very briefly modeled after the journaling mode in the ext3/4
-and reiserfs filesystems allows to accumulated multiple asynchronous
-transactions in memory instead of possibly writing them out
-many times.  Using the new delayed logging mechanism I/O bandwidth
-used for the log decreases by orders of magnitude and performance
-on metadata intensive workloads increases massively. 
+And btw, now that I think about it we can just remove the
+log->l_sectBBsize == 1 case entirely, so the whole thing could become:
 
-In addition to that a new version of the discard (aka TRIM) support
-has been posted, this time entirely contained in kernel space
-and without the need of a userspace utility to drive it.  Last but
-not least the usual steady stream of cleanups and bug fixes has not
-ceased this month either.
+STATIC xfs_caddr_t
+xlog_align(
+	struct log	*log,
+	xfs_daddr_t	blk_no,
+	int		nbblks,
+	struct xfs_buf	*bp)
+{
+	xfs_daddr_t	offset;
 
-Besides the usual flow of fixes and new test cases in the xfstests
-test suite development on the userspace side has been rather slow.
-Xfsprogs has only seen a single fix for SMP locking in xfs_repair
-and support for building on Debian GNU/kFreeBSD, and xfsdump
-has seen no commit at all.
+	offset = blk_no & ((xfs_daddr_t) log->l_sectBBsize - 1);
+	ASSERT(BBTOB(offset + nbblks) <= XFS_BUF_SIZE(bp));
+
+	return XFS_BUF_PTR(bp) + BBTOB(offset);
+}
 
 _______________________________________________
 xfs mailing list
