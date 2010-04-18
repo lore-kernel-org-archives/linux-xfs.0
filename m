@@ -1,21 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3IHBULU149617 for <xfs@oss.sgi.com>; Sun, 18 Apr 2010 12:11:42 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F2DF52CEAB8
-	for <xfs@oss.sgi.com>; Sun, 18 Apr 2010 10:13:28 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id mVnBQ60dY2HlwIfB for
-	<xfs@oss.sgi.com>; Sun, 18 Apr 2010 10:13:28 -0700 (PDT)
-Date: Sun, 18 Apr 2010 13:13:26 -0400
+	o3IHJNnr150119 for <xfs@oss.sgi.com>; Sun, 18 Apr 2010 12:19:23 -0500
+Date: Sun, 18 Apr 2010 13:21:21 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: more swap extent fixes for dynamic fork offsets
-Message-ID: <20100418171326.GA25924@infradead.org>
-References: <1270543984-20598-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCHv2 5/5] xfs: kill off l_sectbb_mask
+Message-ID: <20100418172121.GB28944@infradead.org>
+References: <201004162054.o3GKs54f025204@stout.americas.sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1270543984-20598-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <201004162054.o3GKs54f025204@stout.americas.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,13 +22,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Alex Elder <aelder@sgi.com>
 Cc: xfs@oss.sgi.com
 
-Looks good,
+On Fri, Apr 16, 2010 at 03:54:05PM -0500, Alex Elder wrote:
+> -	uint			l_sectBBsize;   /* sector size in BBs */
+> -	uint			l_sectbb_mask;  /* sector size (in BBs)
+> -						 * alignment mask */
+> +	uint			l_sectBBsize;   /* sector size in BBs (2^n) */
+
+The 2^n comment doesn't make too much sense to me.
+
+But in general looks good, nice cleanup.
 
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+> @@ -128,14 +132,14 @@ xlog_align(
+>  	int		nbblks,
+>  	xfs_buf_t	*bp)
+>  {
+> +	xfs_daddr_t	offset;
+>  	xfs_caddr_t	ptr;
+>  
+> -	if (log->l_sectBBsize == 1)
+> -		return XFS_BUF_PTR(bp);
+> +	offset = blk_no & ((xfs_daddr_t) log->l_sectBBsize - 1);
+> +	ptr = XFS_BUF_PTR(bp) + BBTOB(offset);
+> +
+> +	ASSERT(ptr + BBTOB(nbblks) <= XFS_BUF_PTR(bp) + XFS_BUF_SIZE(bp));
+
+And Dave's version of this assert definitively makes a lot more sense,
+this is one while evolved from the previous one is rather ugly.
 
 _______________________________________________
 xfs mailing list
