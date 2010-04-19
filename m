@@ -1,22 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3J3ikkw184196 for <xfs@oss.sgi.com>; Sun, 18 Apr 2010 22:44:46 -0500
-Received: from rcsinet10.oracle.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id ED28A2CB648
-	for <xfs@oss.sgi.com>; Sun, 18 Apr 2010 20:46:44 -0700 (PDT)
-Received: from rcsinet10.oracle.com (rcsinet10.oracle.com [148.87.113.121]) by
-	cuda.sgi.com with ESMTP id x0q7vCgEUqJxma3A for
-	<xfs@oss.sgi.com>; Sun, 18 Apr 2010 20:46:44 -0700 (PDT)
-Date: Mon, 19 Apr 2010 11:45:23 +0800
-From: Wengang Wang <wen.gang.wang@oracle.com>
-Subject: Re: different log info for mkfs.xfs and xfs_growfs
-Message-ID: <20100419034523.GA3659@laptop.oracle.com>
-References: <20100417145947.GA2573@laptop.oracle.com>
-	<4BCA78D2.2030400@sandeen.net>
-MIME-Version: 1.0
+	o3J96dAn204525 for <xfs@oss.sgi.com>; Mon, 19 Apr 2010 04:06:40 -0500
+Received: from bork.lsof.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D2AAD2D05CB
+	for <xfs@oss.sgi.com>; Mon, 19 Apr 2010 02:08:36 -0700 (PDT)
+Received: from bork.lsof.org (bork.lsof.org [87.253.148.42]) by cuda.sgi.com
+	with ESMTP id V0pP4yUDEgDuTPl0 for <xfs@oss.sgi.com>;
+	Mon, 19 Apr 2010 02:08:36 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+	by bork.lsof.org (Postfix) with ESMTP id 08495B8CA
+	for <xfs@oss.sgi.com>; Mon, 19 Apr 2010 11:08:36 +0200 (CEST)
+Received: from bork.lsof.org ([127.0.0.1])
+	by localhost (bork.lsof.org [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id Cx5+qCpiYZOf for <xfs@oss.sgi.com>;
+	Mon, 19 Apr 2010 11:08:34 +0200 (CEST)
+Received: from bork.lsof.org (localhost [127.0.0.1])
+	by bork.lsof.org (Postfix) with ESMTP id EE6B6B847
+	for <xfs@oss.sgi.com>; Mon, 19 Apr 2010 11:08:33 +0200 (CEST)
+References: <cone.1271414893.151380.55874.1001@bork.lsof.org>
+	<20100416234724.GD2493@dastard>
+Message-ID: <cone.1271668113.965996.76612.1001@bork.lsof.org>
+From: Roel van Meer <rolek@bokxing.nl>
+Subject: Re: 2.6.32.11 hangs with xfstest 104
+Date: Mon, 19 Apr 2010 11:08:33 +0200
+Mime-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4BCA78D2.2030400@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,81 +34,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com, Wengang Wang <wen.gang.wang@oracle.com>
+To: xfs@oss.sgi.com
 
-On 10-04-17 22:13, Eric Sandeen wrote:
-> Wengang Wang wrote:
-> > Hi experts,
-> > 
-> > I just noticed that the log info is different for mkfs.xfs and
-> > xfs_growfs.
-> > 
-> > [root@desk test-xfsprogs]# mkfs.xfs -llogdev=/dev/sda11,size=32768b
-> > /dev/sda10 -f
-> > meta-data=/dev/sda10             isize=256    agcount=4, agsize=1250558
-> > blks
-> >          =                       sectsz=512   attr=2
-> > data     =                       bsize=4096   blocks=5002231, imaxpct=25
-> >          =                       sunit=0      swidth=0 blks
-> > naming   =version 2              bsize=4096   ascii-ci=0
-> > log      =/dev/sda11             bsize=4096   blocks=32768, version=2
-> >          =                       sectsz=512   sunit=0 blks, lazy-count=0
-> > realtime =none                   extsz=4096   blocks=0, rtextents=0
-> > [root@desk test-xfsprogs]# mount -ologdev=/dev/sda11 /dev/sda10 /xfs
-> > [root@desk test-xfsprogs]# xfs_growfs -n /xfs 
-> > meta-data=/dev/sda10             isize=256    agcount=4, agsize=1250558
-> > blks
-> >          =                       sectsz=512   attr=2
-> > data     =                       bsize=4096   blocks=5002231, imaxpct=25
-> >          =                       sunit=0      swidth=0 blks
-> > naming   =version 2              bsize=4096   ascii-ci=0
-> > log      =external               bsize=4096   blocks=32768, version=2
-> >          =                       sectsz=512   sunit=0 blks, lazy-count=0
-> > realtime =none                   extsz=4096   blocks=0, rtextents=0
-> > 
-> > So xfs_growfs is simply reporting external.
-> 
-> The devicename isn't stored in the superblock, so growfs can't get it via
-> the XFS_IOC_FSGEOMETRY ioctl.
-> 
-> > Why there is such a difference? And how get to know the log device name after it
-> > is mounted?
-> 
-> /etc/mtab? :)
-> 
-> The UUID of the filesystem can be found in the log device after mkfs, but
-> xfs is also perfectly happy with a completely zeroed-out log device (after
-> a clean unmount).
- 
-Ok. I got.
-> > It's 3.0.0 of xfsprogs. I failed to test with upstream because of the
-> > comlilation error:
-> > [wwg@desk xfsprogs.git]$ make
-> > Building include
-> > Building libxfs
-> >     [DEP]
-> > /usr/bin/makedepend: warning:  ignoring option -Wall
-> > /usr/bin/makedepend: error:  cannot open "no-strict-aliasing"
-> >     [LD]     libxfs.la
-> > libtool: link: only absolute run-paths are allowed
-> > gmake[2]: *** [libxfs.la] Error 1
-> > gmake[1]: *** [libxfs] Error 2
-> > make: *** [default] Error 2
-> 
-> I think I saw this once but it went away; does a make realclean
-> fix it up for you - or was this a pristine git tree?
+Dave Chinner writes:
 
-Yes, realclean works. 
+>> I've been running xfstests on a slackware linux server with kernel
+>> 2.6.32.11.
+>> I've noticed that xfstest # 104 reliably hangs the kernel. Attached
+>> are two call traces.
+> 
+> Yes, it does, and has done since test 104 was written to exercise a
+> growfs deadlock years ago. I re-enabled it in the auto group because
+> it's been fixed it and those fixes are now in the 2.6.34-rc tree.
 
-Thanks for the explanations!
+Aha, thanks. I can confirm that I did see the problem with 2.6.33.2 but that 
+I cannot reproduce it with 2.6.34-rc4, so everything seems to be like it 
+should be.
 
-regards,
-wengang.
+Thanks again,
+
+roel
 
 _______________________________________________
 xfs mailing list
