@@ -1,16 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3JDpWkd220263 for <xfs@oss.sgi.com>; Mon, 19 Apr 2010 08:51:33 -0500
-Subject: Re: [PATCHv2 5/5] xfs: kill off l_sectbb_mask
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20100418172935.GA1677@infradead.org>
-References: <201004162054.o3GKs54f025204@stout.americas.sgi.com>
-	<20100418172935.GA1677@infradead.org>
-Date: Mon, 19 Apr 2010 08:53:27 -0500
-Message-ID: <1271685207.3032.54.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	o3JDwk37220679 for <xfs@oss.sgi.com>; Mon, 19 Apr 2010 08:58:46 -0500
+Received: from mx1.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5A0FD15435FD
+	for <xfs@oss.sgi.com>; Mon, 19 Apr 2010 07:00:44 -0700 (PDT)
+Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
+	with ESMTP id 2yMvFonQMp7GaphP for <xfs@oss.sgi.com>;
+	Mon, 19 Apr 2010 07:00:44 -0700 (PDT)
+Date: Tue, 20 Apr 2010 00:00:39 +1000
+From: Nick Piggin <npiggin@suse.de>
+Subject: Re: [PATCH 1/2] mm: add context argument to shrinker callback
+Message-ID: <20100419140039.GQ5683@laptop>
+References: <1271118255-21070-1-git-send-email-david@fromorbit.com>
+	<1271118255-21070-2-git-send-email-david@fromorbit.com>
+	<20100418001514.GA26575@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20100418001514.GA26575@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,63 +31,28 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: XFS Mailing List <xfs@oss.sgi.com>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-On Sun, 2010-04-18 at 13:29 -0400, Christoph Hellwig wrote:
-> On Fri, Apr 16, 2010 at 03:54:05PM -0500, Alex Elder wrote:
-> > + * Return the address of the start of the given block number's data
-> > + * in a log buffer.  The buffer covers a log sector-aligned region.
-> > + */
-> >  STATIC xfs_caddr_t
-> >  xlog_align(
-> >  	xlog_t		*log,
-> > @@ -128,14 +132,14 @@ xlog_align(
-> >  	int		nbblks,
-> >  	xfs_buf_t	*bp)
-> >  {
-> > +	xfs_daddr_t	offset;
-> >  	xfs_caddr_t	ptr;
-> >  
-> > -	if (log->l_sectBBsize == 1)
-> > -		return XFS_BUF_PTR(bp);
-> > +	offset = blk_no & ((xfs_daddr_t) log->l_sectBBsize - 1);
-> > +	ptr = XFS_BUF_PTR(bp) + BBTOB(offset);
-> > +
-> > +	ASSERT(ptr + BBTOB(nbblks) <= XFS_BUF_PTR(bp) + XFS_BUF_SIZE(bp));
-> >  
-> > -	ptr = XFS_BUF_PTR(bp) + BBTOB((int)blk_no & log->l_sectbb_mask);
-> > -	ASSERT(XFS_BUF_SIZE(bp) >=
-> > -		BBTOB(nbblks + (blk_no & log->l_sectbb_mask)));
-> >  	return ptr;
-> 
-> And btw, now that I think about it we can just remove the
-> log->l_sectBBsize == 1 case entirely, so the whole thing could become:
+On Sat, Apr 17, 2010 at 08:15:14PM -0400, Christoph Hellwig wrote:
+> Any chance we can still get this into 2.6.34?  It's really needed to fix
+> a regression in XFS that would be hard to impossible to work around
+> inside the fs.  While it touches quite a few places the changes are
+> trivial and well understood.
 
-Yes, I contemplated that and am happy to do it that way.
-I chose this way because there seemed to be "so much" cruft
-that was not needed in that special case...  Anyway, I'll
-change it to the way you suggest before committing it.
+Why do you even need this context argument?  Reclaim is not doing anything
+smart about this, it would just call each call shrinker in turn.
 
-Thanks for the review.
+Do you not have an easily traversable list of mountpoints? Can you just
+make a list of them? It would be cheaper than putting a whole shrinker
+structure into them anyway.
 
-					-Alex
+The main reason I would be against proliferation of dynamic shrinker
+registration would be that it could change reclaim behaviour depending
+on how they get ordered (in the cache the caches are semi-dependent,
+like inode cache and dentry cache).
 
-> STATIC xfs_caddr_t
-> xlog_align(
-> 	struct log	*log,
-> 	xfs_daddr_t	blk_no,
-> 	int		nbblks,
-> 	struct xfs_buf	*bp)
-> {
-> 	xfs_daddr_t	offset;
-> 
-> 	offset = blk_no & ((xfs_daddr_t) log->l_sectBBsize - 1);
-> 	ASSERT(BBTOB(offset + nbblks) <= XFS_BUF_SIZE(bp));
-> 
-> 	return XFS_BUF_PTR(bp) + BBTOB(offset);
-> }
-
-
+Unless there is a reason I missed, I would much prefer not to do this
+like this.
 
 _______________________________________________
 xfs mailing list
