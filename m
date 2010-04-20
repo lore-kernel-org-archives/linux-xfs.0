@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3K4trU1000877 for <xfs@oss.sgi.com>; Mon, 19 Apr 2010 23:55:53 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 611DE2D65E7
-	for <xfs@oss.sgi.com>; Mon, 19 Apr 2010 21:57:51 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	u5JOM5gHqjYZcUBv for <xfs@oss.sgi.com>;
-	Mon, 19 Apr 2010 21:57:51 -0700 (PDT)
-Date: Tue, 20 Apr 2010 14:57:48 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests: fix compile issue with gdbm and
-	--enable-lib64 warnnings
-Message-ID: <20100420045748.GC15130@dastard>
-References: <1270784882-8130-1-git-send-email-wezhang@redhat.com>
+	o3K5Kg9F004961 for <xfs@oss.sgi.com>; Tue, 20 Apr 2010 00:20:43 -0500
+Received: from rcsinet10.oracle.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 093DC2D63D1
+	for <xfs@oss.sgi.com>; Mon, 19 Apr 2010 22:22:41 -0700 (PDT)
+Received: from rcsinet10.oracle.com (rcsinet10.oracle.com [148.87.113.121]) by
+	cuda.sgi.com with ESMTP id pVKC0x1H7Y6zesq3 for
+	<xfs@oss.sgi.com>; Mon, 19 Apr 2010 22:22:41 -0700 (PDT)
+Date: Tue, 20 Apr 2010 13:20:28 +0800
+From: Wengang Wang <wen.gang.wang@oracle.com>
+Subject: Re: [PATCH] xfsprogs: mkfs: make strict check on -ialign option
+Message-ID: <20100420052028.GC2494@laptop.oracle.com>
+References: <201004190942.o3J7aqh5003810@rcsinet13.oracle.com>
+	<20100420034533.GB15130@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1270784882-8130-1-git-send-email-wezhang@redhat.com>
+In-Reply-To: <20100420034533.GB15130@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,74 +29,67 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Wenming Zhang <wezhang@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com, greg.marsden@oracle.com, joe.jin@oracle.com, Wengang Wang <wen.gang.wang@oracle.com>
 
-On Fri, Apr 09, 2010 at 11:48:02AM +0800, Wenming Zhang wrote:
-> fix couldn't be compiled with gdbm lib issue
-> and clear warnings while configure with  --enable-lib64 
+On 10-04-20 13:45, Dave Chinner wrote:
+> On Mon, Apr 19, 2010 at 05:41:36PM +0800, Wengang Wang wrote:
+> > Though it's clearly said in mkfs.xfs man page that for -ialign option only 1 or
+> > 0 are valid values, I would like to make a strict check on it in code.
+> > 
+> > If a user specified -ialign=y(but he meant -ialign=1 actually), mkfs treats "y"
+> > as "0"(simply by atoi()) thus acts wrongly without complaint. I think we'd better
+> > prevent that from happening, so I made the patch. The patch fails the operation
+> > on values for -ialign option, like "yes", "no", "y", "n".
+> > 
+> > Signed-off-by: Wengang Wang <wen.gang.wang@oracle.com>
+> > ---
+> >  mkfs/xfs_mkfs.c |    7 +++++--
+> >  1 files changed, 5 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> > index 2d09e36..d7e9eb3 100644
+> > --- a/mkfs/xfs_mkfs.c
+> > +++ b/mkfs/xfs_mkfs.c
+> > @@ -1180,14 +1180,17 @@ main(
+> >  			p = optarg;
+> >  			while (*p != '\0') {
+> >  				char	*value;
+> > +				int len;
+> >  
+> >  				switch (getsubopt(&p, (constpp)iopts, &value)) {
+> >  				case I_ALIGN:
+> >  					if (!value)
+> >  						value = "1";
+> > -					iaflag = atoi(value);
+> > -					if (iaflag < 0 || iaflag > 1)
+> > +					len = strlen(value);
+> > +					if (len != 1 || value[0] < '0' ||
+> > +					    value[0] > '1')
+> >  						illegal(value, "i align");
+> > +					iaflag = value[0] - '0';
 > 
-> Signed-off-by: Wenming Zhang <wezhang@redhat.com>
-> ---
->  configure.in |    7 +++++++
->  1 files changed, 7 insertions(+), 0 deletions(-)
-> 
-> diff --git a/configure.in b/configure.in
-> index 45b7fd1..92e2711 100644
-> --- a/configure.in
-> +++ b/configure.in
-> @@ -10,6 +10,7 @@ AC_HEADER_STDC
->  			errno.h			\
->  			malloc.h		\
->  			uuid.h			\
-> +			gdbm.h			\
->  			uuid/uuid.h		\
->  			sys/uuid.h		\
->  			sys/file.h		\
+> Wouldn't this be better changing atoi() to strtol() and then checking
+> errno along with the bounds?
+Hi Dave,
 
-I'm not sure why this is needed - we don't directly include gdbm.h.
-We check for gdbm/ndbm.h (or gdbm-ndbm.h on debian in a a patch
-I have), the presence of which implies that gdbm.h exists on the
-system.
+I tested strtol() with some cases, result is like the following:
 
-Even if it is necessary to check for this, the check needs to go
-into the GDBM package checks (m4/package_gdbmdev.m4) to
-enable/disable the have_db variable so that it simply isn't used if
-it is not present.
+<str> -- <result> errno: <errno>
 
+"12" -- 12 errno: 0
+"yes" -- 0 errno: 0
+"no" -- 0 errno: 0
+"y" -- 0 errno: 0
+"" -- 0 errno: 0
+"0" -- 0 errno: 0
+"1" -- 1 errno: 0
 
-> @@ -44,6 +45,12 @@ in
->  		;;
->  	*)
->  		AC_MULTILIB($enable_lib64)
-> +		AC_ARG_ENABLE([lib64], [AS_HELP_STRING([--enable-lib64],
-> +                			[enable lib64 support (default is no)])],
-> +				[enable_lib64=$withval],
-> +				[enable_lib64=no]
-> +		)
-> +
+It can't tell the original string is "yes", "no", "y", "" or "0" for
+returning zero with errno being "OK". That is not the result I want.
 
-I don't think this is right - yes, it will suppress the warning,
-but I don't think it works correctly. The argument needs to be enabled
-and evaluated before it is used, and IIRC the AC_ARG_ENABLE result
-is put into $enableval not $withval.
-
-So shouldn't it be something like this (untested):
-
-		AC_ARG_ENABLE(lib64,
-			AS_HELP_STRING([--enable-lib64],
-				[enable lib64 support (default=no)]
-			enable_lib64=$enableval,
-			enable_lib64=no)
-		AC_SUBST(enable_lib64)
-		AC_MULTILIB($enable_lib64)
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+regards,
+wengang.
 
 _______________________________________________
 xfs mailing list
