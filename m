@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3K2ebI7256108 for <xfs@oss.sgi.com>; Mon, 19 Apr 2010 21:40:38 -0500
+	o3K2fe3P256220 for <xfs@oss.sgi.com>; Mon, 19 Apr 2010 21:41:41 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7135B12D1707
-	for <xfs@oss.sgi.com>; Mon, 19 Apr 2010 19:42:34 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	Tka1FvBqD6IYqjuK for <xfs@oss.sgi.com>;
-	Mon, 19 Apr 2010 19:42:34 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 254D92D611F
+	for <xfs@oss.sgi.com>; Mon, 19 Apr 2010 19:43:38 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	KYU5g9690BvQuqP5 for <xfs@oss.sgi.com>;
+	Mon, 19 Apr 2010 19:43:38 -0700 (PDT)
+Received: from dastard (unverified [121.44.229.111])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	21279219-1927428
+	for <xfs@oss.sgi.com>; Tue, 20 Apr 2010 12:13:37 +0930 (CST)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/4] writeback: pay attention to wbc->nr_to_write in
-	write_cache_pages
-Date: Tue, 20 Apr 2010 12:41:53 +1000
-Message-Id: <1271731314-5893-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 4/4] xfs: remove nr_to_write writeback windup.
+Date: Tue, 20 Apr 2010 12:41:54 +1000
+Message-Id: <1271731314-5893-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1271731314-5893-1-git-send-email-david@fromorbit.com>
 References: <1271731314-5893-1-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,88 +27,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKSWYgYSBmaWxlc3lzdGVt
-IHdyaXRlcyBtb3JlIHRoYW4gb25lIHBhZ2UgaW4gLT53cml0ZXBhZ2UsIHdyaXRlX2NhY2hlX3Bh
-Z2VzCmZhaWxzIHRvIG5vdGljZSB0aGlzIGFuZCBjb250aW51ZXMgdG8gYXR0ZW1wdCB3cml0ZWJh
-Y2sgd2hlbiB3YmMtPm5yX3RvX3dyaXRlCmhhcyBnb25lIG5lZ2F0aXZlIC0gdGhpcyB0cmFjZSB3
-YXMgY2FwdHVyZWQgZnJvbSBYRlM6CgoKICAgIHdiY193cml0ZWJhY2tfc3RhcnQ6IHRvd3J0PTEw
-MjQKICAgIHdiY193cml0ZXBhZ2U6IHRvd3J0PTEwMjQKICAgIHdiY193cml0ZXBhZ2U6IHRvd3J0
-PTAKICAgIHdiY193cml0ZXBhZ2U6IHRvd3J0PS0xCiAgICB3YmNfd3JpdGVwYWdlOiB0b3dydD0t
-NQogICAgd2JjX3dyaXRlcGFnZTogdG93cnQ9LTIxCiAgICB3YmNfd3JpdGVwYWdlOiB0b3dydD0t
-ODUKClRoaXMgaGFzIGFkdmVyc2UgZWZmZWN0cyBvbiBmaWxlc3lzdGVtIHdyaXRlYmFjayBiZWhh
-dmlvdXIuIHdyaXRlX2NhY2hlX3BhZ2VzKCkKbmVlZHMgdG8gdGVybWluYXRlIGFmdGVyIGEgY2Vy
-dGFpbiBudW1iZXIgb2YgcGFnZXMgYXJlIHdyaXR0ZW4sIG5vdCBhZnRlciBhCmNlcnRhaW4gbnVt
-YmVyIG9mIGNhbGxzIHRvIC0+d3JpdGVwYWdlIGFyZSBtYWRlLiBNYWtlIGl0IG9ic2VydmUgdGhl
-IGN1cnJlbnQKdmFsdWUgb2Ygd2JjLT5ucl90b193cml0ZSBhbmQgdHJlYXQgYSB2YWx1ZSBvZiA8
-PSAwIGFzIHRob3VnaCBpdCBpcyBhIGVpdGhlciBhCnRlcm1pbmF0aW9uIGNvbmRpdGlvbiBvciBh
-IHRyaWdnZXIgdG8gcmVzZXQgdG8gTUFYX1dSSVRF4biGQUNLX1BBR0VTIGZvciBkYXRhCmludGVn
-cml0eSBzeW5jcy4KClNpZ25lZC1vZmYtYnk6IERhdmUgQ2hpbm5lciA8ZGNoaW5uZXJAcmVkaGF0
-LmNvbT4KLS0tCiBmcy9mcy13cml0ZWJhY2suYyAgICAgICAgICAgICAgICB8ICAgIDkgLS0tLS0t
-LS0tCiBpbmNsdWRlL2xpbnV4L3dyaXRlYmFjay5oICAgICAgICB8ICAgIDkgKysrKysrKysrCiBp
-bmNsdWRlL3RyYWNlL2V2ZW50cy93cml0ZWJhY2suaCB8ICAgIDEgKwogbW0vcGFnZS13cml0ZWJh
-Y2suYyAgICAgICAgICAgICAgfCAgIDIwICsrKysrKysrKysrKysrKysrKystCiA0IGZpbGVzIGNo
-YW5nZWQsIDI5IGluc2VydGlvbnMoKyksIDEwIGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2Zz
-L2ZzLXdyaXRlYmFjay5jIGIvZnMvZnMtd3JpdGViYWNrLmMKaW5kZXggNTIxNGI2MS4uZDgyNzFk
-NSAxMDA2NDQKLS0tIGEvZnMvZnMtd3JpdGViYWNrLmMKKysrIGIvZnMvZnMtd3JpdGViYWNrLmMK
-QEAgLTY3NSwxNSArNjc1LDYgQEAgdm9pZCB3cml0ZWJhY2tfaW5vZGVzX3diYyhzdHJ1Y3Qgd3Jp
-dGViYWNrX2NvbnRyb2wgKndiYykKIAl3cml0ZWJhY2tfaW5vZGVzX3diKCZiZGktPndiLCB3YmMp
-OwogfQogCi0vKgotICogVGhlIG1heGltdW0gbnVtYmVyIG9mIHBhZ2VzIHRvIHdyaXRlb3V0IGlu
-IGEgc2luZ2xlIGJkaSBmbHVzaC9rdXBkYXRlCi0gKiBvcGVyYXRpb24uICBXZSBkbyB0aGlzIHNv
-IHdlIGRvbid0IGhvbGQgSV9TWU5DIGFnYWluc3QgYW4gaW5vZGUgZm9yCi0gKiBlbm9ybW91cyBh
-bW91bnRzIG9mIHRpbWUsIHdoaWNoIHdvdWxkIGJsb2NrIGEgdXNlcnNwYWNlIHRhc2sgd2hpY2gg
-aGFzCi0gKiBiZWVuIGZvcmNlZCB0byB0aHJvdHRsZSBhZ2FpbnN0IHRoYXQgaW5vZGUuICBBbHNv
-LCB0aGUgY29kZSByZWV2YWx1YXRlcwotICogdGhlIGRpcnR5IGVhY2ggdGltZSBpdCBoYXMgd3Jp
-dHRlbiB0aGlzIG1hbnkgcGFnZXMuCi0gKi8KLSNkZWZpbmUgTUFYX1dSSVRFQkFDS19QQUdFUyAg
-ICAgMTAyNAotCiBzdGF0aWMgaW5saW5lIGJvb2wgb3Zlcl9iZ3JvdW5kX3RocmVzaCh2b2lkKQog
-ewogCXVuc2lnbmVkIGxvbmcgYmFja2dyb3VuZF90aHJlc2gsIGRpcnR5X3RocmVzaDsKZGlmZiAt
-LWdpdCBhL2luY2x1ZGUvbGludXgvd3JpdGViYWNrLmggYi9pbmNsdWRlL2xpbnV4L3dyaXRlYmFj
-ay5oCmluZGV4IGIyZDYxNWYuLjg1MzNhMGYgMTAwNjQ0Ci0tLSBhL2luY2x1ZGUvbGludXgvd3Jp
-dGViYWNrLmgKKysrIGIvaW5jbHVkZS9saW51eC93cml0ZWJhY2suaApAQCAtMTQsNiArMTQsMTUg
-QEAgZXh0ZXJuIHN0cnVjdCBsaXN0X2hlYWQgaW5vZGVfaW5fdXNlOwogZXh0ZXJuIHN0cnVjdCBs
-aXN0X2hlYWQgaW5vZGVfdW51c2VkOwogCiAvKgorICogVGhlIG1heGltdW0gbnVtYmVyIG9mIHBh
-Z2VzIHRvIHdyaXRlb3V0IGluIGEgc2luZ2xlIGJkaSBmbHVzaC9rdXBkYXRlCisgKiBvcGVyYXRp
-b24uICBXZSBkbyB0aGlzIHNvIHdlIGRvbid0IGhvbGQgSV9TWU5DIGFnYWluc3QgYW4gaW5vZGUg
-Zm9yCisgKiBlbm9ybW91cyBhbW91bnRzIG9mIHRpbWUsIHdoaWNoIHdvdWxkIGJsb2NrIGEgdXNl
-cnNwYWNlIHRhc2sgd2hpY2ggaGFzCisgKiBiZWVuIGZvcmNlZCB0byB0aHJvdHRsZSBhZ2FpbnN0
-IHRoYXQgaW5vZGUuICBBbHNvLCB0aGUgY29kZSByZWV2YWx1YXRlcworICogdGhlIGRpcnR5IGVh
-Y2ggdGltZSBpdCBoYXMgd3JpdHRlbiB0aGlzIG1hbnkgcGFnZXMuCisgKi8KKyNkZWZpbmUgTUFY
-X1dSSVRFQkFDS19QQUdFUyAgICAgMTAyNAorCisvKgogICogZnMvZnMtd3JpdGViYWNrLmMKICAq
-LwogZW51bSB3cml0ZWJhY2tfc3luY19tb2RlcyB7CmRpZmYgLS1naXQgYS9pbmNsdWRlL3RyYWNl
-L2V2ZW50cy93cml0ZWJhY2suaCBiL2luY2x1ZGUvdHJhY2UvZXZlbnRzL3dyaXRlYmFjay5oCmlu
-ZGV4IDAyZjM0YTUuLjNiY2JkODMgMTAwNjQ0Ci0tLSBhL2luY2x1ZGUvdHJhY2UvZXZlbnRzL3dy
-aXRlYmFjay5oCisrKyBiL2luY2x1ZGUvdHJhY2UvZXZlbnRzL3dyaXRlYmFjay5oCkBAIC0yNDEs
-NiArMjQxLDcgQEAgREVGSU5FX1dCQ19FVkVOVCh3YmNfd3JpdGViYWNrX3dhaXQpOwogREVGSU5F
-X1dCQ19FVkVOVCh3YmNfYmFsYW5jZV9kaXJ0eV9zdGFydCk7CiBERUZJTkVfV0JDX0VWRU5UKHdi
-Y19iYWxhbmNlX2RpcnR5X3dyaXR0ZW4pOwogREVGSU5FX1dCQ19FVkVOVCh3YmNfYmFsYW5jZV9k
-aXJ0eV93YWl0KTsKK0RFRklORV9XQkNfRVZFTlQod2JjX3dyaXRlcGFnZSk7CiAKICNlbmRpZiAv
-KiBfVFJBQ0VfV1JJVEVCQUNLX0ggKi8KIApkaWZmIC0tZ2l0IGEvbW0vcGFnZS13cml0ZWJhY2su
-YyBiL21tL3BhZ2Utd3JpdGViYWNrLmMKaW5kZXggZDQ1ZjU5ZS4uZTIyYWY4NCAxMDA2NDQKLS0t
-IGEvbW0vcGFnZS13cml0ZWJhY2suYworKysgYi9tbS9wYWdlLXdyaXRlYmFjay5jCkBAIC05MTcs
-NiArOTE3LDcgQEAgY29udGludWVfdW5sb2NrOgogCQkJaWYgKCFjbGVhcl9wYWdlX2RpcnR5X2Zv
-cl9pbyhwYWdlKSkKIAkJCQlnb3RvIGNvbnRpbnVlX3VubG9jazsKIAorCQkJdHJhY2Vfd2JjX3dy
-aXRlcGFnZSh3YmMpOwogCQkJcmV0ID0gKCp3cml0ZXBhZ2UpKHBhZ2UsIHdiYywgZGF0YSk7CiAJ
-CQlpZiAodW5saWtlbHkocmV0KSkgewogCQkJCWlmIChyZXQgPT0gQU9QX1dSSVRFUEFHRV9BQ1RJ
-VkFURSkgewpAQCAtOTM1LDcgKzkzNiw3IEBAIGNvbnRpbnVlX3VubG9jazoKIAkJCQkJZG9uZSA9
-IDE7CiAJCQkJCWJyZWFrOwogCQkJCX0KLSAJCQl9CisJCQl9CiAKIAkJCWlmIChucl90b193cml0
-ZSA+IDApIHsKIAkJCQlucl90b193cml0ZS0tOwpAQCAtOTU1LDYgKzk1NiwyMyBAQCBjb250aW51
-ZV91bmxvY2s6CiAJCQkJCWJyZWFrOwogCQkJCX0KIAkJCX0KKworCQkJLyoKKwkJCSAqIFNvbWUg
-ZmlsZXN5c3RlbXMgd2lsbCB3cml0ZSBtdWx0aXBsZSBwYWdlcyBpbgorCQkJICogLT53cml0ZXBh
-Z2UsIHNvIHdiYy0+bnJfdG9fd3JpdGUgY2FuIGNoYW5nZSBtdWNoLAorCQkJICogbXVjaCBmYXN0
-ZXIgdGhhbiBucl90b193cml0ZS4gQ2hlY2sgdGhpcyBhcyBhbiBleGl0CisJCQkgKiBjb25kaXRp
-b24sIG9yIGlmIHdlIGFyZSBkb2luZyBhIGRhdGEgaW50ZWdyaXR5IHN5bmMsCisJCQkgKiByZXNl
-dCB0aGUgd2JjIHRvIE1BWF9XUklURUJBQ0tfUEFHRVMgc28gdGhhdCBzdWNoCisJCQkgKiBmaWxl
-c3lzdGVtcyBjYW4gZG8gb3B0aW1hbCB3cml0ZW91dCBoZXJlLgorCQkJICovCisJCQlpZiAod2Jj
-LT5ucl90b193cml0ZSA8PSAwKSB7CisJCQkJaWYgKHdiYy0+c3luY19tb2RlID09IFdCX1NZTkNf
-Tk9ORSkgeworCQkJCQlkb25lID0gMTsKKwkJCQkJbnJfdG9fd3JpdGUgPSAwOworCQkJCQlicmVh
-azsKKwkJCQl9CisJCQkJd2JjLT5ucl90b193cml0ZSA9IE1BWF9XUklURUJBQ0tfUEFHRVM7CisJ
-CQl9CiAJCX0KIAkJcGFnZXZlY19yZWxlYXNlKCZwdmVjKTsKIAkJY29uZF9yZXNjaGVkKCk7Ci0t
-IAoxLjYuNQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18K
-eGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxt
-YW4vbGlzdGluZm8veGZzCg==
+From: Dave Chinner <dchinner@redhat.com>
+
+Now that the background flush code has been fixed, we shouldn't need to
+silently multiply the wbc->nr_to_write to get good writeback. Remove
+that code.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/linux-2.6/xfs_aops.c |    8 --------
+ 1 files changed, 0 insertions(+), 8 deletions(-)
+
+diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
+index 9962850..2b2225d 100644
+--- a/fs/xfs/linux-2.6/xfs_aops.c
++++ b/fs/xfs/linux-2.6/xfs_aops.c
+@@ -1336,14 +1336,6 @@ xfs_vm_writepage(
+ 	if (!page_has_buffers(page))
+ 		create_empty_buffers(page, 1 << inode->i_blkbits, 0);
+ 
+-
+-	/*
+-	 *  VM calculation for nr_to_write seems off.  Bump it way
+-	 *  up, this gets simple streaming writes zippy again.
+-	 *  To be reviewed again after Jens' writeback changes.
+-	 */
+-	wbc->nr_to_write *= 4;
+-
+ 	/*
+ 	 * Convert delayed allocate, unwritten or unmapped space
+ 	 * to real space and flush out to disk.
+-- 
+1.6.5
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
