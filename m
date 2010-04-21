@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3KNRASC072793 for <xfs@oss.sgi.com>; Tue, 20 Apr 2010 18:27:10 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5811E1B480E1
-	for <xfs@oss.sgi.com>; Tue, 20 Apr 2010 16:29:07 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	rpsajyIgVGMZXHRi for <xfs@oss.sgi.com>;
-	Tue, 20 Apr 2010 16:29:07 -0700 (PDT)
-Date: Wed, 21 Apr 2010 09:29:04 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/4] writeback: tracing and wbc->nr_to_write fixes
-Message-ID: <20100420232904.GA23541@dastard>
-References: <1271731314-5893-1-git-send-email-david@fromorbit.com>
-	<4BCD97C8.6090406@rsk.demon.co.uk>
+	o3L34D40083803 for <xfs@oss.sgi.com>; Tue, 20 Apr 2010 22:04:14 -0500
+Received: from rcsinet10.oracle.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 271ED10472DF
+	for <xfs@oss.sgi.com>; Tue, 20 Apr 2010 20:06:12 -0700 (PDT)
+Received: from rcsinet10.oracle.com (rcsinet10.oracle.com [148.87.113.121]) by
+	cuda.sgi.com with ESMTP id wyR7SjaFZWC7xVwp for
+	<xfs@oss.sgi.com>; Tue, 20 Apr 2010 20:06:12 -0700 (PDT)
+Date: Wed, 21 Apr 2010 11:03:14 +0800
+From: Wengang Wang <wen.gang.wang@oracle.com>
+Subject: Re: do we support using a file as logdev?
+Message-ID: <20100421030314.GB2252@laptop.oracle.com>
+References: <20100420143656.GA3634@laptop.oracle.com>
+	<4BCDDDD0.9000808@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4BCD97C8.6090406@rsk.demon.co.uk>
+In-Reply-To: <4BCDDDD0.9000808@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,51 +29,66 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Richard Kennedy <richard@rsk.demon.co.uk>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com, joe.jin@oracle.com, greg.marsden@oracle.com, Wengang Wang <wen.gang.wang@oracle.com>
 
-On Tue, Apr 20, 2010 at 01:02:16PM +0100, Richard Kennedy wrote:
-> On 20/04/10 03:41, Dave Chinner wrote:
-> > This series contains the initial writeback tracing patches from
-> > Jens, as well as the extensions I added to provide visibility into
-> > writeback control structures as the are used by the writeback code.
-> > The visibility given is sufficient to understand what is happening
-> > in the writeback path - what path is writing data, what path is
-> > blocking on congestion, etc, and to determine the differences in
-> > behaviour for different sync modes and calling contexts. This
-> > tracing really needs to be integrated into mainline so that anyone
-> > can improve the tracing as they use it to track down problems
-> > in our convoluted writeback paths.
+On 10-04-20 12:01, Eric Sandeen wrote:
+> On 04/20/2010 09:36 AM, Wengang Wang wrote:
+> > Hi experts,
 > > 
-> > The remaining patches are fixes to problems that the new tracing
-> > highlighted.
+> > Do we support using a file as log device?
+> > If no, it's strange that we support running xfs on a file but don't support log
+> > file.
+> > If yes, it fails at mount.
+> > 
+> > [root@desk test-xfsprogs]# mkfs.xfs
+> > -llogdev=/root/test-xfsprogs/test-xfsprogs-tmp/imagefile,size=32768b
+> > /dev/sda10 -f
+> > meta-data=/dev/sda10             isize=256    agcount=4, agsize=1250558
+> > blks
+> >          =                       sectsz=512   attr=2
+> > data     =                       bsize=4096   blocks=5002231, imaxpct=25
+> >          =                       sunit=0      swidth=0 blks
+> > naming   =version 2              bsize=4096   ascii-ci=0
+> > log      =/root/test-xfsprogs/test-xfsprogs-tmp/imagefile bsize=4096
+> > blocks=32768, version=2
+> >          =                       sectsz=512   sunit=0 blks, lazy-count=0
+> > realtime =none                   extsz=4096   blocks=0, rtextents=0
+> > [root@desk test-xfsprogs]# mount
+> > -ologdev=/root/test-xfsprogs/test-xfsprogs-tmp/imagefile /dev/sda10 /xfs
+> > mount: the kernel does not recognize /dev/sda10 as a block device
+> >        (maybe `insmod driver'?)
 > 
-> Hi Dave,
+> Well, -o logdev=$BLAH sets up m_logname with that value in the mount
+> point, and xfs_open_devices() then tries:
 > 
-> Thanks for adding tracing to this, it will be really useful.
+>         if (mp->m_logname) {
+>                 error = xfs_blkdev_get(mp, mp->m_logname, &logdev);
 > 
-> The fix to write_cache_pages looks really interesting, I'm going to test
-> it on my machine. Maybe it should be a separate patch to get more
-> visibility?
+> which eventually does
+> 
+> 	open_bdev_exclusive(name, FMODE_READ|FMODE_WRITE, mp);
+> /**
+>  * open_bdev_exclusive  -  open a block device by name and set it up for use
+>  *
+>  * @path:       special file representing the block device
+>  * @mode:       FMODE_... combination to pass be used
+>  * @holder:     owner for exclusion
+>  *
+>  * Open the blockdevice described by the special file at @path, claim it
+>  * for the @holder.
+>  */
+> 
+> ... this is all in kernelspace, which has no notion of what
+> /root/test-xfsprogs/test-xfsprogs-tmp/imagefile might be.  You'll need
+> to use a devicename that open_bdev_exclusive() can understand (like
+> /dev/loop0, as suggested)
 
-I don't see a big need to separate the series at this point. Once
-there's been a review and testing we can decide how to push them
-into mainline. IMO, the tracing is just as important as the bug
-fixes....
+I see.
+Thanks Eric for your detailed explanation!
 
-> Ext4 also multiplies nr_to_write, so will that need fixing too?
-
-No idea. I don't claim to understand ext4's convoluted delayed
-allocation path and all it's constraints, so I guess you'd need to
-ask the ext4 developers about that one. After all, with the tracing
-they'd be able to see if there is a problem. ;)
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+regards,
+wengang.
 
 _______________________________________________
 xfs mailing list
