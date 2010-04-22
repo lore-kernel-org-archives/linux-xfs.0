@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3MH6nEh218047 for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 12:06:49 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 24EA24DA024
-	for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 10:08:50 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id wZZ6Tl5TsOdKxIOB for
-	<xfs@oss.sgi.com>; Thu, 22 Apr 2010 10:08:50 -0700 (PDT)
-Date: Thu, 22 Apr 2010 13:08:49 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: Improve scalability of busy extent tracking
-Message-ID: <20100422170848.GA26101@infradead.org>
-References: <1271828835-2094-1-git-send-email-david@fromorbit.com>
-	<20100422110143.GA21867@infradead.org>
-	<20100422161626.GE23541@dastard>
+	o3MJ5IKX225942 for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 14:05:19 -0500
+Received: from mx2.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 200FD1303A59
+	for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 12:07:18 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id RJiEeuSE1Qisxf2y for <xfs@oss.sgi.com>;
+	Thu, 22 Apr 2010 12:07:18 -0700 (PDT)
+Date: Thu, 22 Apr 2010 21:07:18 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 3/4] writeback: pay attention to wbc->nr_to_write in
+	write_cache_pages
+Message-ID: <20100422190718.GA19286@quack.suse.cz>
+References: <1271731314-5893-1-git-send-email-david@fromorbit.com>
+	<1271731314-5893-4-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100422161626.GE23541@dastard>
+In-Reply-To: <1271731314-5893-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,26 +26,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Been looking at this a bit and I have a theory:
-
- - a tid is not actually unique to a xfs_trans structure, if
-   we call xfs_trans_dup a single xlog_ticket, and with that the
-   tid is re-used by multiple transaction structure.
- - because of that the major semantic change in the version vs
-   the previous one is that we now do not force the synchronous
-   transaction for the case where we re-used a block in
-   the rolled over transaction.
-
-Still not quite sure about the implications of this.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlIDIwLTA0LTEwIDEyOjQxOjUzLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4gRnJvbTogRGF2
+ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgo+IAo+IElmIGEgZmlsZXN5c3RlbSB3cml0
+ZXMgbW9yZSB0aGFuIG9uZSBwYWdlIGluIC0+d3JpdGVwYWdlLCB3cml0ZV9jYWNoZV9wYWdlcwo+
+IGZhaWxzIHRvIG5vdGljZSB0aGlzIGFuZCBjb250aW51ZXMgdG8gYXR0ZW1wdCB3cml0ZWJhY2sg
+d2hlbiB3YmMtPm5yX3RvX3dyaXRlCj4gaGFzIGdvbmUgbmVnYXRpdmUgLSB0aGlzIHRyYWNlIHdh
+cyBjYXB0dXJlZCBmcm9tIFhGUzoKPiAKPiAKPiAgICAgd2JjX3dyaXRlYmFja19zdGFydDogdG93
+cnQ9MTAyNAo+ICAgICB3YmNfd3JpdGVwYWdlOiB0b3dydD0xMDI0Cj4gICAgIHdiY193cml0ZXBh
+Z2U6IHRvd3J0PTAKPiAgICAgd2JjX3dyaXRlcGFnZTogdG93cnQ9LTEKPiAgICAgd2JjX3dyaXRl
+cGFnZTogdG93cnQ9LTUKPiAgICAgd2JjX3dyaXRlcGFnZTogdG93cnQ9LTIxCj4gICAgIHdiY193
+cml0ZXBhZ2U6IHRvd3J0PS04NQo+IAo+IFRoaXMgaGFzIGFkdmVyc2UgZWZmZWN0cyBvbiBmaWxl
+c3lzdGVtIHdyaXRlYmFjayBiZWhhdmlvdXIuIHdyaXRlX2NhY2hlX3BhZ2VzKCkKPiBuZWVkcyB0
+byB0ZXJtaW5hdGUgYWZ0ZXIgYSBjZXJ0YWluIG51bWJlciBvZiBwYWdlcyBhcmUgd3JpdHRlbiwg
+bm90IGFmdGVyIGEKPiBjZXJ0YWluIG51bWJlciBvZiBjYWxscyB0byAtPndyaXRlcGFnZSBhcmUg
+bWFkZS4gTWFrZSBpdCBvYnNlcnZlIHRoZSBjdXJyZW50Cj4gdmFsdWUgb2Ygd2JjLT5ucl90b193
+cml0ZSBhbmQgdHJlYXQgYSB2YWx1ZSBvZiA8PSAwIGFzIHRob3VnaCBpdCBpcyBhIGVpdGhlciBh
+Cj4gdGVybWluYXRpb24gY29uZGl0aW9uIG9yIGEgdHJpZ2dlciB0byByZXNldCB0byBNQVhfV1JJ
+VEXhuIZBQ0tfUEFHRVMgZm9yIGRhdGEKPiBpbnRlZ3JpdHkgc3luY3MuCj4gCj4gU2lnbmVkLW9m
+Zi1ieTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgo+IC0tLQo+ICBmcy9mcy13
+cml0ZWJhY2suYyAgICAgICAgICAgICAgICB8ICAgIDkgLS0tLS0tLS0tCj4gIGluY2x1ZGUvbGlu
+dXgvd3JpdGViYWNrLmggICAgICAgIHwgICAgOSArKysrKysrKysKPiAgaW5jbHVkZS90cmFjZS9l
+dmVudHMvd3JpdGViYWNrLmggfCAgICAxICsKPiAgbW0vcGFnZS13cml0ZWJhY2suYyAgICAgICAg
+ICAgICAgfCAgIDIwICsrKysrKysrKysrKysrKysrKystCj4gIDQgZmlsZXMgY2hhbmdlZCwgMjkg
+aW5zZXJ0aW9ucygrKSwgMTAgZGVsZXRpb25zKC0pCj4gCiAgPHNuaXA+Cgo+IGRpZmYgLS1naXQg
+YS9tbS9wYWdlLXdyaXRlYmFjay5jIGIvbW0vcGFnZS13cml0ZWJhY2suYwo+IGluZGV4IGQ0NWY1
+OWUuLmUyMmFmODQgMTAwNjQ0Cj4gLS0tIGEvbW0vcGFnZS13cml0ZWJhY2suYwo+ICsrKyBiL21t
+L3BhZ2Utd3JpdGViYWNrLmMKPiBAQCAtOTE3LDYgKzkxNyw3IEBAIGNvbnRpbnVlX3VubG9jazoK
+PiAgCQkJaWYgKCFjbGVhcl9wYWdlX2RpcnR5X2Zvcl9pbyhwYWdlKSkKPiAgCQkJCWdvdG8gY29u
+dGludWVfdW5sb2NrOwo+ICAKPiArCQkJdHJhY2Vfd2JjX3dyaXRlcGFnZSh3YmMpOwo+ICAJCQly
+ZXQgPSAoKndyaXRlcGFnZSkocGFnZSwgd2JjLCBkYXRhKTsKPiAgCQkJaWYgKHVubGlrZWx5KHJl
+dCkpIHsKPiAgCQkJCWlmIChyZXQgPT0gQU9QX1dSSVRFUEFHRV9BQ1RJVkFURSkgewo+IEBAIC05
+MzUsNyArOTM2LDcgQEAgY29udGludWVfdW5sb2NrOgo+ICAJCQkJCWRvbmUgPSAxOwo+ICAJCQkJ
+CWJyZWFrOwo+ICAJCQkJfQo+IC0gCQkJfQo+ICsJCQl9Cj4gIAo+ICAJCQlpZiAobnJfdG9fd3Jp
+dGUgPiAwKSB7Cj4gIAkJCQlucl90b193cml0ZS0tOwo+IEBAIC05NTUsNiArOTU2LDIzIEBAIGNv
+bnRpbnVlX3VubG9jazoKPiAgCQkJCQlicmVhazsKPiAgCQkJCX0KPiAgCQkJfQo+ICsKPiArCQkJ
+LyoKPiArCQkJICogU29tZSBmaWxlc3lzdGVtcyB3aWxsIHdyaXRlIG11bHRpcGxlIHBhZ2VzIGlu
+Cj4gKwkJCSAqIC0+d3JpdGVwYWdlLCBzbyB3YmMtPm5yX3RvX3dyaXRlIGNhbiBjaGFuZ2UgbXVj
+aCwKPiArCQkJICogbXVjaCBmYXN0ZXIgdGhhbiBucl90b193cml0ZS4gQ2hlY2sgdGhpcyBhcyBh
+biBleGl0Cj4gKwkJCSAqIGNvbmRpdGlvbiwgb3IgaWYgd2UgYXJlIGRvaW5nIGEgZGF0YSBpbnRl
+Z3JpdHkgc3luYywKPiArCQkJICogcmVzZXQgdGhlIHdiYyB0byBNQVhfV1JJVEVCQUNLX1BBR0VT
+IHNvIHRoYXQgc3VjaAo+ICsJCQkgKiBmaWxlc3lzdGVtcyBjYW4gZG8gb3B0aW1hbCB3cml0ZW91
+dCBoZXJlLgo+ICsJCQkgKi8KPiArCQkJaWYgKHdiYy0+bnJfdG9fd3JpdGUgPD0gMCkgewo+ICsJ
+CQkJaWYgKHdiYy0+c3luY19tb2RlID09IFdCX1NZTkNfTk9ORSkgewo+ICsJCQkJCWRvbmUgPSAx
+Owo+ICsJCQkJCW5yX3RvX3dyaXRlID0gMDsKPiArCQkJCQlicmVhazsKPiArCQkJCX0KPiArCQkJ
+CXdiYy0+bnJfdG9fd3JpdGUgPSBNQVhfV1JJVEVCQUNLX1BBR0VTOwo+ICsJCQl9CiAgSG9uZXN0
+bHksIHRoaXMgaXMgYW4gdWdseSBoYWNrLiBJJ2QgcmF0aGVyIHdvcmsgdG93YXJkcyBpZ25vcmlu
+Zwpucl90b193cml0ZSBjb21wbGV0ZWx5IGluIFdCX1NZTkNfQUxMIG1vZGUgc2luY2UgaXQgZG9l
+c24ndCByZWFsbHkgbWFrZQphbnkgc2VuY2UgdG8gc2F5ICJ3cml0ZSBtZSAqc2FmZWx5KiA1IHBh
+Z2VzIi4KCgkJCQkJCQkJSG9uemEKLS0gCkphbiBLYXJhIDxqYWNrQHN1c2UuY3o+ClNVU0UgTGFi
+cywgQ1IKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhm
+cyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFu
+L2xpc3RpbmZvL3hmcwo=
