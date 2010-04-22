@@ -1,21 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3MGiW89216144 for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 11:44:32 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1B3E74DA439
-	for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 09:46:32 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 6H8gXHFw44NL92U9 for
-	<xfs@oss.sgi.com>; Thu, 22 Apr 2010 09:46:32 -0700 (PDT)
-Date: Thu, 22 Apr 2010 12:46:32 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: different error messages for mkfs.xfs -ssize
-Message-ID: <20100422164632.GA25662@infradead.org>
-References: <20100422153636.GB3822@laptop.oracle.com>
+	o3MGtFp4217027 for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 11:55:15 -0500
+Received: from mx1.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4F0E38AA86A
+	for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 09:57:15 -0700 (PDT)
+Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
+	with ESMTP id DL0xDheBgTccEiUF for <xfs@oss.sgi.com>;
+	Thu, 22 Apr 2010 09:57:15 -0700 (PDT)
+Date: Fri, 23 Apr 2010 02:57:11 +1000
+From: Nick Piggin <npiggin@suse.de>
+Subject: Re: [PATCH 1/2] mm: add context argument to shrinker callback
+Message-ID: <20100422165711.GA5683@laptop>
+References: <1271118255-21070-2-git-send-email-david@fromorbit.com>
+	<20100418001514.GA26575@infradead.org>
+	<20100419140039.GQ5683@laptop> <20100420004149.GA14744@dastard>
+	<20100420083840.GR5683@laptop> <20100420103216.GK15130@dastard>
+	<20100421084004.GS5683@laptop>
+	<20100422163211.GA2478@infradead.org>
+	<20100422163801.GZ5683@laptop>
+	<20100422164247.GA15882@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100422153636.GB3822@laptop.oracle.com>
+In-Reply-To: <20100422164247.GA15882@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,72 +35,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Wengang Wang <wen.gang.wang@oracle.com>
-Cc: greg.marsden@oracle.com, joe.jin@oracle.com, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-On Thu, Apr 22, 2010 at 11:36:36PM +0800, Wengang Wang wrote:
-> Hi experts,
+On Thu, Apr 22, 2010 at 12:42:47PM -0400, Christoph Hellwig wrote:
+> On Fri, Apr 23, 2010 at 02:38:01AM +1000, Nick Piggin wrote:
+> > I don't understand, it should be implemented like just all the other
+> > shrinkers AFAIKS. Like the dcache one that has to shrink multiple
+> > superblocks. There is absolutely no requirement for this API change
+> > to implement it in XFS.
 > 
-> I got different error messages when provide different value for -ssize.
-> Why the error messages are different? They are different but no one is
-> containing more info than the other.
+> The dcache shrinker is an example for a complete mess.
+
+I don't know. It's not really caused by not registering multiple
+shrinkers. It seems to be caused more by the locking, which is not
+going away when you have multiple shrinkers.
+
+The XFS patch seems to be pinning the mount structure when it is
+registered, so it would have no such locking/refcounting problems
+using a private list AFAIKS.
+
+
+> > But the shrinker list *is* a global list. The downside of it in the way
+> > it was done in the XFS patch is that 1) it is much larger than a simple
+> > list head, and 2) not usable by anything other then the shrinker.
 > 
-> [root@desk test-xfsprogs]# mkfs.xfs -ssize=256 /dev/sda10 -f 2>&1 |head -n 1
-> illegal sector size 256
-> [root@desk test-xfsprogs]# mkfs.xfs -ssize=3072 /dev/sda10 -f 2>&1 |head -n 1
-> Illegal value 3072 for -s sectsize option
+> It is an existing global list just made more useful.  Whenever a driver
+> has muliple instances of pool that need shrinking this comes in useful,
+> it's not related to filesystems at all. 
 
-It's because we have an early test that just tests for the value beeing
-negative or not a power of two, and a later one that checks for the
-exact range.  The untested patch below cleans this up a bit, but once
-I get started on this I might do an even bigger sweep on the mkfs
-option parsing and error handling..
-
-Index: xfsprogs-dev/mkfs/xfs_mkfs.c
-===================================================================
---- xfsprogs-dev.orig/mkfs/xfs_mkfs.c	2010-04-22 18:32:16.708004506 +0200
-+++ xfsprogs-dev/mkfs/xfs_mkfs.c	2010-04-22 18:36:49.217255590 +0200
-@@ -1540,8 +1540,6 @@ main(
- 						conflict('s', sopts, S_SECTSIZE,
- 							 S_SECTLOG);
- 					sectorlog = atoi(value);
--					if (sectorlog <= 0)
--						illegal(value, "s sectlog");
- 					lsectorlog = sectorlog;
- 					sectorsize = 1 << sectorlog;
- 					lsectorsize = sectorsize;
-@@ -1558,9 +1556,6 @@ main(
- 							 S_SECTSIZE);
- 					sectorsize = cvtnum(
- 						blocksize, sectorsize, value);
--					if (sectorsize <= 0 ||
--					    !ispow2(sectorsize))
--						illegal(value, "s sectsize");
- 					lsectorsize = sectorsize;
- 					sectorlog =
- 						libxfs_highbit32(sectorsize);
-@@ -1637,7 +1632,9 @@ main(
- 	}
- 
- 	if (sectorsize < XFS_MIN_SECTORSIZE ||
--	    sectorsize > XFS_MAX_SECTORSIZE || sectorsize > blocksize) {
-+	    sectorsize > XFS_MAX_SECTORSIZE ||
-+	    sectorsize > blocksize ||
-+	    !ispow2(sectorsize)) {
- 		fprintf(stderr, _("illegal sector size %d\n"), sectorsize);
- 		usage();
- 	}
-@@ -1647,7 +1644,9 @@ main(
- 		usage();
- 	}
- 	if (lsectorsize < XFS_MIN_SECTORSIZE ||
--	    lsectorsize > XFS_MAX_SECTORSIZE || lsectorsize > blocksize) {
-+	    lsectorsize > XFS_MAX_SECTORSIZE ||
-+	    lsectorsize > blocksize ||
-+	    !ispow2(lsectorsize)) {
- 		fprintf(stderr, _("illegal log sector size %d\n"), lsectorsize);
- 		usage();
- 	} else if (lsectorsize > XFS_MIN_SECTORSIZE && !lsu && !lsunit) {
+I would say less useful, because shrinker structure cannot be used
+by anything but the shrinker, wheras a private list can be used by
+anything, including the applicable shrinker.
 
 _______________________________________________
 xfs mailing list
