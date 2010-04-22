@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3MBlNEv194601 for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 06:47:24 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C8DA42E5ED4
-	for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 04:49:24 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id u8P6A6YALRLA9HDe for
-	<xfs@oss.sgi.com>; Thu, 22 Apr 2010 04:49:24 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1O4uuI-000591-Gr
-	for xfs@oss.sgi.com; Thu, 22 Apr 2010 11:49:24 +0000
-Date: Thu, 22 Apr 2010 07:49:22 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/5] xfs: removed unused XFS_QMOPT_ flags
-Message-ID: <20100422114921.GA17131@infradead.org>
-References: <20100418001041.865247520@bombadil.infradead.org>
-	<20100418001058.355165168@bombadil.infradead.org>
+	o3MCeHRU198113 for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 07:40:17 -0500
+Received: from rcsinet10.oracle.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2312A1054A01
+	for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 05:42:17 -0700 (PDT)
+Received: from rcsinet10.oracle.com (rcsinet10.oracle.com [148.87.113.121]) by
+	cuda.sgi.com with ESMTP id COo4jqjbmmHmiHd8 for
+	<xfs@oss.sgi.com>; Thu, 22 Apr 2010 05:42:17 -0700 (PDT)
+Received: from rcsinet15.oracle.com (rcsinet15.oracle.com [148.87.113.117])
+	by rcsinet10.oracle.com (Switch-3.4.2/Switch-3.4.1) with ESMTP id
+	o3MCgBAa015895
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 12:42:13 GMT
+Received: from acsmt353.oracle.com (acsmt353.oracle.com [141.146.40.153])
+	by rcsinet15.oracle.com (Switch-3.4.2/Switch-3.4.1) with ESMTP id
+	o3MCZdfe007603 for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 12:42:10 GMT
+Date: Thu, 22 Apr 2010 20:41:18 +0800
+From: Wengang Wang <wen.gang.wang@oracle.com>
+Subject: mkfs.xfs man page for -nsize
+Message-ID: <20100422124118.GA3406@laptop.oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100418001058.355165168@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,10 +35,37 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: greg.marsden@oracle.com, joe.jin@oracle.com
 
-Btw, before applying this the subject should be fixed up to read:
+Hi experts,
 
-"xfs: remove unused XFS_QMOPT_ flags"
+When trying -nsize=128 and -n6144 option to mkfs.xfs respectively, I got
+error message:
+"Illegal value xxx for -n size option"
+
+But checking the man page,
+
+----------------
+-n naming_options
+	These  options  specify  the  version  and  size parameters  for the
+naming (directory) area of the filesystem. The valid nam-ing_options are:
+
+	        size=value | log=value
+			The block size is specified either as a value in bytes
+with size=, or as a base two logarithm value with log=.  The default size value
+for version 2 directories is 4096 bytes (4 KiB), unless the filesystem block
+size is larger than 4096, in which case the default value is the filesystem
+block size.  For version 1 directories the  block  size  is the same as the
+filesystem block size.
+----------------
+
+I got no idea why the value is illegal.
+
+Checking the codes, I found it also must be larger or equal to block size and it
+must be in powers of 2, 2^N. Should we add these two limitation to man page?
+
+regards,
+wengang.
 
 _______________________________________________
 xfs mailing list
