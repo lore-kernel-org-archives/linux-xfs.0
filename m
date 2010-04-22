@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3MJPk5u227602 for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 14:25:46 -0500
+	o3MJPXbl227385 for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 14:25:33 -0500
 Received: from coco.kroah.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2B56D1057B71
-	for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 12:27:46 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 85AE92E79B2
+	for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 12:27:33 -0700 (PDT)
 Received: from coco.kroah.org (kroah.org [198.145.64.141]) by cuda.sgi.com
-	with ESMTP id fljwCpEHksq9ma38 for <xfs@oss.sgi.com>;
-	Thu, 22 Apr 2010 12:27:46 -0700 (PDT)
-Message-Id: <20100422190909.720368125@kvm.kroah.org>
-Date: Thu, 22 Apr 2010 12:07:57 -0700
+	with ESMTP id zcAvX5rZ6dgB6YDQ for <xfs@oss.sgi.com>;
+	Thu, 22 Apr 2010 12:27:33 -0700 (PDT)
+Message-Id: <20100422190908.228267538@kvm.kroah.org>
+Date: Thu, 22 Apr 2010 12:07:40 -0700
 From: Greg KH <gregkh@suse.de>
-Subject: [026/197] xfs: Non-blocking inode locking in IO completion
+Subject: [009/197] xfs: simplify inode teardown
 In-Reply-To: <20100422191857.GA13268@kroah.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -27,226 +27,210 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: xfs@oss.sgi.com, Alex Elder <aelder@sgi.com>, akpm@linux-foundation.org, torvalds@linux-foundation.org, stable-review@kernel.org, alan@lxorguk.ukuu.org.uk
+Cc: stable-review@kernel.org, Alex Elder <aelder@sgi.com>, akpm@linux-foundation.org, xfs@oss.sgi.com, torvalds@linux-foundation.org, Christoph Hellwig <hch@lst.de>, alan@lxorguk.ukuu.org.uk
 
 2.6.32-stable review patch.  If anyone has any objections, please let us know.
 
 ------------------
 
-From: Dave Chinner <david@fromorbit.com>
 
-commit 77d7a0c2eeb285c9069e15396703d0cb9690ac50 upstream
+From: Christoph Hellwig <hch@infradead.org>
 
-The introduction of barriers to loop devices has created a new IO
-order completion dependency that XFS does not handle. The loop
-device implements barriers using fsync and so turns a log IO in the
-XFS filesystem on the loop device into a data IO in the backing
-filesystem. That is, the completion of log IOs in the loop
-filesystem are now dependent on completion of data IO in the backing
-filesystem.
+commit 848ce8f731aed0a2d4ab5884a4f6664af73d2dd0 upstream
 
-This can cause deadlocks when a flush daemon issues a log force with
-an inode locked because the IO completion of IO on the inode is
-blocked by the inode lock. This in turn prevents further data IO
-completion from occuring on all XFS filesystems on that CPU (due to
-the shared nature of the completion queues). This then prevents the
-log IO from completing because the log is waiting for data IO
-completion as well.
+Currently the reclaim code for the case where we don't reclaim the
+final reclaim is overly complicated.  We know that the inode is clean
+but instead of just directly reclaiming the clean inode we go through
+the whole process of marking the inode reclaimable just to directly
+reclaim it from the calling context.  Besides being overly complicated
+this introduces a race where iget could recycle an inode between
+marked reclaimable and actually being reclaimed leading to panics.
 
-The fix for this new completion order dependency issue is to make
-the IO completion inode locking non-blocking. If the inode lock
-can't be grabbed, simply requeue the IO completion back to the work
-queue so that it can be processed later. This prevents the
-completion queue from being blocked and allows data IO completion on
-other inodes to proceed, hence avoiding completion order dependent
-deadlocks.
+This patch gets rid of the existing reclaim path, and replaces it with
+a simple call to xfs_ireclaim if the inode was clean.  While we're at
+it we also use the slightly more lax xfs_inode_clean check we'd use
+later to determine if we need to flush the inode here.
 
-Signed-off-by: Dave Chinner <david@fromorbit.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Finally get rid of xfs_reclaim function and place the remaining small
+bits of reclaim code directly into xfs_fs_destroy_inode.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reported-by: Patrick Schreurs <patrick@news-service.com>
+Reported-by: Tommy van Leeuwen <tommy@news-service.com>
+Tested-by: Patrick Schreurs <patrick@news-service.com>
+Reviewed-by: Alex Elder <aelder@sgi.com>
 Signed-off-by: Alex Elder <aelder@sgi.com>
 Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 ---
- fs/xfs/linux-2.6/xfs_aops.c |  118 ++++++++++++++++++++++++++++++--------------
- 1 file changed, 82 insertions(+), 36 deletions(-)
+ fs/xfs/linux-2.6/xfs_super.c |   34 ++++++++++++++++++++++++++++++----
+ fs/xfs/linux-2.6/xfs_sync.c  |   15 ++++-----------
+ fs/xfs/linux-2.6/xfs_sync.h  |    1 -
+ fs/xfs/xfs_vnodeops.c        |   40 ----------------------------------------
+ fs/xfs/xfs_vnodeops.h        |    1 -
+ 5 files changed, 34 insertions(+), 57 deletions(-)
 
---- a/fs/xfs/linux-2.6/xfs_aops.c
-+++ b/fs/xfs/linux-2.6/xfs_aops.c
-@@ -204,14 +204,17 @@ xfs_ioend_new_eof(
- }
- 
- /*
-- * Update on-disk file size now that data has been written to disk.
-- * The current in-memory file size is i_size.  If a write is beyond
-- * eof i_new_size will be the intended file size until i_size is
-- * updated.  If this write does not extend all the way to the valid
-- * file size then restrict this update to the end of the write.
-+ * Update on-disk file size now that data has been written to disk.  The
-+ * current in-memory file size is i_size.  If a write is beyond eof i_new_size
-+ * will be the intended file size until i_size is updated.  If this write does
-+ * not extend all the way to the valid file size then restrict this update to
-+ * the end of the write.
-+ *
-+ * This function does not block as blocking on the inode lock in IO completion
-+ * can lead to IO completion order dependency deadlocks.. If it can't get the
-+ * inode ilock it will return EAGAIN. Callers must handle this.
+--- a/fs/xfs/linux-2.6/xfs_super.c
++++ b/fs/xfs/linux-2.6/xfs_super.c
+@@ -930,13 +930,39 @@ xfs_fs_alloc_inode(
   */
--
--STATIC void
+ STATIC void
+ xfs_fs_destroy_inode(
+-	struct inode	*inode)
++	struct inode		*inode)
+ {
+-	xfs_inode_t		*ip = XFS_I(inode);
++	struct xfs_inode	*ip = XFS_I(inode);
++
++	xfs_itrace_entry(ip);
+ 
+ 	XFS_STATS_INC(vn_reclaim);
+-	if (xfs_reclaim(ip))
+-		panic("%s: cannot reclaim 0x%p\n", __func__, inode);
++
++	/* bad inode, get out here ASAP */
++	if (is_bad_inode(inode))
++		goto out_reclaim;
++
++	xfs_ioend_wait(ip);
++
++	ASSERT(XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0);
++
++	/*
++	 * We should never get here with one of the reclaim flags already set.
++	 */
++	ASSERT_ALWAYS(!xfs_iflags_test(ip, XFS_IRECLAIMABLE));
++	ASSERT_ALWAYS(!xfs_iflags_test(ip, XFS_IRECLAIM));
++
++	/*
++	 * If we have nothing to flush with this inode then complete the
++	 * teardown now, otherwise delay the flush operation.
++	 */
++	if (!xfs_inode_clean(ip)) {
++		xfs_inode_set_reclaim_tag(ip);
++		return;
++	}
++
++out_reclaim:
++	xfs_ireclaim(ip);
+ }
+ 
+ /*
+--- a/fs/xfs/linux-2.6/xfs_sync.c
++++ b/fs/xfs/linux-2.6/xfs_sync.c
+@@ -663,10 +663,9 @@ xfs_syncd_stop(
+ 	kthread_stop(mp->m_sync_task);
+ }
+ 
+-int
 +STATIC int
- xfs_setfilesize(
- 	xfs_ioend_t		*ioend)
+ xfs_reclaim_inode(
+ 	xfs_inode_t	*ip,
+-	int		locked,
+ 	int		sync_mode)
  {
-@@ -222,9 +225,11 @@ xfs_setfilesize(
- 	ASSERT(ioend->io_type != IOMAP_READ);
- 
- 	if (unlikely(ioend->io_error))
--		return;
-+		return 0;
-+
-+	if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
-+		return EAGAIN;
- 
--	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	isize = xfs_ioend_new_eof(ioend);
- 	if (isize) {
- 		ip->i_d.di_size = isize;
-@@ -232,6 +237,28 @@ xfs_setfilesize(
+ 	xfs_perag_t	*pag = xfs_get_perag(ip->i_mount, ip->i_ino);
+@@ -682,10 +681,6 @@ xfs_reclaim_inode(
+ 	    !__xfs_iflags_test(ip, XFS_IRECLAIMABLE)) {
+ 		spin_unlock(&ip->i_flags_lock);
+ 		write_unlock(&pag->pag_ici_lock);
+-		if (locked) {
+-			xfs_ifunlock(ip);
+-			xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-		}
+ 		return -EAGAIN;
  	}
- 
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	return 0;
-+}
-+
-+/*
-+ * Schedule IO completion handling on a xfsdatad if this was
-+ * the final hold on this ioend. If we are asked to wait,
-+ * flush the workqueue.
-+ */
-+STATIC void
-+xfs_finish_ioend(
-+	xfs_ioend_t	*ioend,
-+	int		wait)
-+{
-+	if (atomic_dec_and_test(&ioend->io_remaining)) {
-+		struct workqueue_struct *wq;
-+
-+		wq = (ioend->io_type == IOMAP_UNWRITTEN) ?
-+			xfsconvertd_workqueue : xfsdatad_workqueue;
-+		queue_work(wq, &ioend->io_work);
-+		if (wait)
-+			flush_workqueue(wq);
-+	}
- }
- 
- /*
-@@ -243,9 +270,23 @@ xfs_end_bio_delalloc(
- {
- 	xfs_ioend_t		*ioend =
- 		container_of(work, xfs_ioend_t, io_work);
-+	int			error;
- 
--	xfs_setfilesize(ioend);
--	xfs_destroy_ioend(ioend);
-+	/*
-+	 * If we didn't complete processing of the ioend, requeue it to the
-+	 * tail of the workqueue for another attempt later. Otherwise destroy
-+	 * it.
-+	 */
-+	error = xfs_setfilesize(ioend);
-+	if (error == EAGAIN) {
-+		atomic_inc(&ioend->io_remaining);
-+		xfs_finish_ioend(ioend, 0);
-+		/* ensure we don't spin on blocked ioends */
-+		delay(1);
-+	} else {
-+		ASSERT(!error);
-+		xfs_destroy_ioend(ioend);
-+	}
- }
- 
- /*
-@@ -257,9 +298,23 @@ xfs_end_bio_written(
- {
- 	xfs_ioend_t		*ioend =
- 		container_of(work, xfs_ioend_t, io_work);
-+	int			error;
- 
--	xfs_setfilesize(ioend);
--	xfs_destroy_ioend(ioend);
-+	/*
-+	 * If we didn't complete processing of the ioend, requeue it to the
-+	 * tail of the workqueue for another attempt later. Otherwise destroy
-+	 * it.
-+	 */
-+	error = xfs_setfilesize(ioend);
-+	if (error == EAGAIN) {
-+		atomic_inc(&ioend->io_remaining);
-+		xfs_finish_ioend(ioend, 0);
-+		/* ensure we don't spin on blocked ioends */
-+		delay(1);
-+	} else {
-+		ASSERT(!error);
-+		xfs_destroy_ioend(ioend);
-+	}
- }
- 
- /*
-@@ -279,13 +334,25 @@ xfs_end_bio_unwritten(
- 	size_t			size = ioend->io_size;
- 
- 	if (likely(!ioend->io_error)) {
-+		int	error;
- 		if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
--			int error;
- 			error = xfs_iomap_write_unwritten(ip, offset, size);
- 			if (error)
- 				ioend->io_error = error;
- 		}
--		xfs_setfilesize(ioend);
-+		/*
-+		 * If we didn't complete processing of the ioend, requeue it to the
-+		 * tail of the workqueue for another attempt later. Otherwise destroy
-+		 * it.
-+		 */
-+		error = xfs_setfilesize(ioend);
-+		if (error == EAGAIN) {
-+			atomic_inc(&ioend->io_remaining);
-+			xfs_finish_ioend(ioend, 0);
-+			/* ensure we don't spin on blocked ioends */
-+			delay(1);
-+			return;
-+		}
- 	}
- 	xfs_destroy_ioend(ioend);
- }
-@@ -304,27 +371,6 @@ xfs_end_bio_read(
- }
- 
- /*
-- * Schedule IO completion handling on a xfsdatad if this was
-- * the final hold on this ioend. If we are asked to wait,
-- * flush the workqueue.
-- */
--STATIC void
--xfs_finish_ioend(
--	xfs_ioend_t	*ioend,
--	int		wait)
--{
--	if (atomic_dec_and_test(&ioend->io_remaining)) {
--		struct workqueue_struct *wq = xfsdatad_workqueue;
--		if (ioend->io_work.func == xfs_end_bio_unwritten)
--			wq = xfsconvertd_workqueue;
--
--		queue_work(wq, &ioend->io_work);
--		if (wait)
--			flush_workqueue(wq);
+ 	__xfs_iflags_set(ip, XFS_IRECLAIM);
+@@ -704,10 +699,8 @@ xfs_reclaim_inode(
+ 	 * We get the flush lock regardless, though, just to make sure
+ 	 * we don't free it while it is being flushed.
+ 	 */
+-	if (!locked) {
+-		xfs_ilock(ip, XFS_ILOCK_EXCL);
+-		xfs_iflock(ip);
 -	}
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	xfs_iflock(ip);
+ 
+ 	/*
+ 	 * In the case of a forced shutdown we rely on xfs_iflush() to
+@@ -778,7 +771,7 @@ xfs_reclaim_inode_now(
+ 	}
+ 	read_unlock(&pag->pag_ici_lock);
+ 
+-	return xfs_reclaim_inode(ip, 0, flags);
++	return xfs_reclaim_inode(ip, flags);
+ }
+ 
+ int
+--- a/fs/xfs/linux-2.6/xfs_sync.h
++++ b/fs/xfs/linux-2.6/xfs_sync.h
+@@ -44,7 +44,6 @@ void xfs_quiesce_attr(struct xfs_mount *
+ 
+ void xfs_flush_inodes(struct xfs_inode *ip);
+ 
+-int xfs_reclaim_inode(struct xfs_inode *ip, int locked, int sync_mode);
+ int xfs_reclaim_inodes(struct xfs_mount *mp, int mode);
+ 
+ void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -2456,46 +2456,6 @@ xfs_set_dmattrs(
+ 	return error;
+ }
+ 
+-int
+-xfs_reclaim(
+-	xfs_inode_t	*ip)
+-{
+-
+-	xfs_itrace_entry(ip);
+-
+-	ASSERT(!VN_MAPPED(VFS_I(ip)));
+-
+-	/* bad inode, get out here ASAP */
+-	if (is_bad_inode(VFS_I(ip))) {
+-		xfs_ireclaim(ip);
+-		return 0;
+-	}
+-
+-	xfs_ioend_wait(ip);
+-
+-	ASSERT(XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0);
+-
+-	/*
+-	 * If we have nothing to flush with this inode then complete the
+-	 * teardown now, otherwise break the link between the xfs inode and the
+-	 * linux inode and clean up the xfs inode later. This avoids flushing
+-	 * the inode to disk during the delete operation itself.
+-	 *
+-	 * When breaking the link, we need to set the XFS_IRECLAIMABLE flag
+-	 * first to ensure that xfs_iunpin() will never see an xfs inode
+-	 * that has a linux inode being reclaimed. Synchronisation is provided
+-	 * by the i_flags_lock.
+-	 */
+-	if (!ip->i_update_core && (ip->i_itemp == NULL)) {
+-		xfs_ilock(ip, XFS_ILOCK_EXCL);
+-		xfs_iflock(ip);
+-		xfs_iflags_set(ip, XFS_IRECLAIMABLE);
+-		return xfs_reclaim_inode(ip, 1, XFS_IFLUSH_DELWRI_ELSE_SYNC);
+-	}
+-	xfs_inode_set_reclaim_tag(ip);
+-	return 0;
 -}
 -
--/*
-  * Allocate and initialise an IO completion structure.
-  * We need to track unwritten extent write completion here initially.
-  * We'll need to extend this for updating the ondisk inode size later
+ /*
+  * xfs_alloc_file_space()
+  *      This routine allocates disk space for the given file.
+--- a/fs/xfs/xfs_vnodeops.h
++++ b/fs/xfs/xfs_vnodeops.h
+@@ -38,7 +38,6 @@ int xfs_symlink(struct xfs_inode *dp, st
+ 		const char *target_path, mode_t mode, struct xfs_inode **ipp,
+ 		cred_t *credp);
+ int xfs_set_dmattrs(struct xfs_inode *ip, u_int evmask, u_int16_t state);
+-int xfs_reclaim(struct xfs_inode *ip);
+ int xfs_change_file_space(struct xfs_inode *ip, int cmd,
+ 		xfs_flock64_t *bf, xfs_off_t offset, int attr_flags);
+ int xfs_rename(struct xfs_inode *src_dp, struct xfs_name *src_name,
 
 
 _______________________________________________
