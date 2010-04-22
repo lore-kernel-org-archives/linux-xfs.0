@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3MJPXbl227385 for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 14:25:33 -0500
+	o3MJPhsK227540 for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 14:25:43 -0500
 Received: from coco.kroah.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 85AE92E79B2
-	for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 12:27:33 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CD7091057B6F
+	for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 12:27:43 -0700 (PDT)
 Received: from coco.kroah.org (kroah.org [198.145.64.141]) by cuda.sgi.com
-	with ESMTP id zcAvX5rZ6dgB6YDQ for <xfs@oss.sgi.com>;
-	Thu, 22 Apr 2010 12:27:33 -0700 (PDT)
-Message-Id: <20100422190908.228267538@kvm.kroah.org>
-Date: Thu, 22 Apr 2010 12:07:40 -0700
+	with ESMTP id GFlHmf59REfxrGAJ for <xfs@oss.sgi.com>;
+	Thu, 22 Apr 2010 12:27:43 -0700 (PDT)
+Message-Id: <20100422190909.378226336@kvm.kroah.org>
+Date: Thu, 22 Apr 2010 12:07:53 -0700
 From: Greg KH <gregkh@suse.de>
-Subject: [009/197] xfs: simplify inode teardown
+Subject: [022/197] xfs: xfs_swap_extents needs to handle dynamic fork offsets
 In-Reply-To: <20100422191857.GA13268@kroah.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -27,210 +27,189 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: stable-review@kernel.org, Alex Elder <aelder@sgi.com>, akpm@linux-foundation.org, xfs@oss.sgi.com, torvalds@linux-foundation.org, Christoph Hellwig <hch@lst.de>, alan@lxorguk.ukuu.org.uk
+Cc: xfs@oss.sgi.com, Alex Elder <aelder@sgi.com>, akpm@linux-foundation.org, torvalds@linux-foundation.org, stable-review@kernel.org, alan@lxorguk.ukuu.org.uk
 
 2.6.32-stable review patch.  If anyone has any objections, please let us know.
 
 ------------------
 
+From: Dave Chinner <david@fromorbit.com>
 
-From: Christoph Hellwig <hch@infradead.org>
+commit e09f98606dcc156de1146c209d45a0d6d5f51c3f upstream
 
-commit 848ce8f731aed0a2d4ab5884a4f6664af73d2dd0 upstream
+When swapping extents, we can corrupt inodes by swapping data forks
+that are in incompatible formats.  This is caused by the two indoes
+having different fork offsets due to the presence of an attribute
+fork on an attr2 filesystem.  xfs_fsr tries to be smart about
+setting the fork offset, but the trick it plays only works on attr1
+(old fixed format attribute fork) filesystems.
 
-Currently the reclaim code for the case where we don't reclaim the
-final reclaim is overly complicated.  We know that the inode is clean
-but instead of just directly reclaiming the clean inode we go through
-the whole process of marking the inode reclaimable just to directly
-reclaim it from the calling context.  Besides being overly complicated
-this introduces a race where iget could recycle an inode between
-marked reclaimable and actually being reclaimed leading to panics.
+Changing the way xfs_fsr sets up the attribute fork will prevent
+this situation from ever occurring, so in the kernel code we can get
+by with a preventative fix - check that the data fork in the
+defragmented inode is in a format valid for the inode it is being
+swapped into.  This will lead to files that will silently and
+potentially repeatedly fail defragmentation, so issue a warning to
+the log when this particular failure occurs to let us know that
+xfs_fsr needs updating/fixing.
 
-This patch gets rid of the existing reclaim path, and replaces it with
-a simple call to xfs_ireclaim if the inode was clean.  While we're at
-it we also use the slightly more lax xfs_inode_clean check we'd use
-later to determine if we need to flush the inode here.
+To help identify how to improve xfs_fsr to avoid this issue, add
+trace points for the inodes being swapped so that we can determine
+why the swap was rejected and to confirm that the code is making the
+right decisions and modifications when swapping forks.
 
-Finally get rid of xfs_reclaim function and place the remaining small
-bits of reclaim code directly into xfs_fs_destroy_inode.
+A further complication is even when the swap is allowed to proceed
+when the fork offset is different between the two inodes then value
+for the maximum number of extents the data fork can hold can be
+wrong. Make sure these are also set correctly after the swap occurs.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reported-by: Patrick Schreurs <patrick@news-service.com>
-Reported-by: Tommy van Leeuwen <tommy@news-service.com>
-Tested-by: Patrick Schreurs <patrick@news-service.com>
-Reviewed-by: Alex Elder <aelder@sgi.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Alex Elder <aelder@sgi.com>
 Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
----
- fs/xfs/linux-2.6/xfs_super.c |   34 ++++++++++++++++++++++++++++++----
- fs/xfs/linux-2.6/xfs_sync.c  |   15 ++++-----------
- fs/xfs/linux-2.6/xfs_sync.h  |    1 -
- fs/xfs/xfs_vnodeops.c        |   40 ----------------------------------------
- fs/xfs/xfs_vnodeops.h        |    1 -
- 5 files changed, 34 insertions(+), 57 deletions(-)
 
---- a/fs/xfs/linux-2.6/xfs_super.c
-+++ b/fs/xfs/linux-2.6/xfs_super.c
-@@ -930,13 +930,39 @@ xfs_fs_alloc_inode(
-  */
- STATIC void
- xfs_fs_destroy_inode(
--	struct inode	*inode)
-+	struct inode		*inode)
- {
--	xfs_inode_t		*ip = XFS_I(inode);
-+	struct xfs_inode	*ip = XFS_I(inode);
-+
-+	xfs_itrace_entry(ip);
- 
- 	XFS_STATS_INC(vn_reclaim);
--	if (xfs_reclaim(ip))
--		panic("%s: cannot reclaim 0x%p\n", __func__, inode);
-+
-+	/* bad inode, get out here ASAP */
-+	if (is_bad_inode(inode))
-+		goto out_reclaim;
-+
-+	xfs_ioend_wait(ip);
-+
-+	ASSERT(XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0);
-+
-+	/*
-+	 * We should never get here with one of the reclaim flags already set.
-+	 */
-+	ASSERT_ALWAYS(!xfs_iflags_test(ip, XFS_IRECLAIMABLE));
-+	ASSERT_ALWAYS(!xfs_iflags_test(ip, XFS_IRECLAIM));
-+
-+	/*
-+	 * If we have nothing to flush with this inode then complete the
-+	 * teardown now, otherwise delay the flush operation.
-+	 */
-+	if (!xfs_inode_clean(ip)) {
-+		xfs_inode_set_reclaim_tag(ip);
-+		return;
-+	}
-+
-+out_reclaim:
-+	xfs_ireclaim(ip);
- }
- 
- /*
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -663,10 +663,9 @@ xfs_syncd_stop(
- 	kthread_stop(mp->m_sync_task);
- }
- 
--int
-+STATIC int
- xfs_reclaim_inode(
- 	xfs_inode_t	*ip,
--	int		locked,
- 	int		sync_mode)
- {
- 	xfs_perag_t	*pag = xfs_get_perag(ip->i_mount, ip->i_ino);
-@@ -682,10 +681,6 @@ xfs_reclaim_inode(
- 	    !__xfs_iflags_test(ip, XFS_IRECLAIMABLE)) {
- 		spin_unlock(&ip->i_flags_lock);
- 		write_unlock(&pag->pag_ici_lock);
--		if (locked) {
--			xfs_ifunlock(ip);
--			xfs_iunlock(ip, XFS_ILOCK_EXCL);
--		}
- 		return -EAGAIN;
- 	}
- 	__xfs_iflags_set(ip, XFS_IRECLAIM);
-@@ -704,10 +699,8 @@ xfs_reclaim_inode(
- 	 * We get the flush lock regardless, though, just to make sure
- 	 * we don't free it while it is being flushed.
- 	 */
--	if (!locked) {
--		xfs_ilock(ip, XFS_ILOCK_EXCL);
--		xfs_iflock(ip);
--	}
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+	xfs_iflock(ip);
- 
- 	/*
- 	 * In the case of a forced shutdown we rely on xfs_iflush() to
-@@ -778,7 +771,7 @@ xfs_reclaim_inode_now(
- 	}
- 	read_unlock(&pag->pag_ici_lock);
- 
--	return xfs_reclaim_inode(ip, 0, flags);
-+	return xfs_reclaim_inode(ip, flags);
- }
- 
- int
---- a/fs/xfs/linux-2.6/xfs_sync.h
-+++ b/fs/xfs/linux-2.6/xfs_sync.h
-@@ -44,7 +44,6 @@ void xfs_quiesce_attr(struct xfs_mount *
- 
- void xfs_flush_inodes(struct xfs_inode *ip);
- 
--int xfs_reclaim_inode(struct xfs_inode *ip, int locked, int sync_mode);
- int xfs_reclaim_inodes(struct xfs_mount *mp, int mode);
- 
- void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -2456,46 +2456,6 @@ xfs_set_dmattrs(
+---
+ fs/xfs/xfs_dfrag.c |  106 +++++++++++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 90 insertions(+), 16 deletions(-)
+
+--- a/fs/xfs/xfs_dfrag.c
++++ b/fs/xfs/xfs_dfrag.c
+@@ -113,10 +113,82 @@ xfs_swapext(
  	return error;
  }
  
--int
--xfs_reclaim(
--	xfs_inode_t	*ip)
--{
--
--	xfs_itrace_entry(ip);
--
--	ASSERT(!VN_MAPPED(VFS_I(ip)));
--
--	/* bad inode, get out here ASAP */
--	if (is_bad_inode(VFS_I(ip))) {
--		xfs_ireclaim(ip);
--		return 0;
++/*
++ * We need to check that the format of the data fork in the temporary inode is
++ * valid for the target inode before doing the swap. This is not a problem with
++ * attr1 because of the fixed fork offset, but attr2 has a dynamically sized
++ * data fork depending on the space the attribute fork is taking so we can get
++ * invalid formats on the target inode.
++ *
++ * E.g. target has space for 7 extents in extent format, temp inode only has
++ * space for 6.  If we defragment down to 7 extents, then the tmp format is a
++ * btree, but when swapped it needs to be in extent format. Hence we can't just
++ * blindly swap data forks on attr2 filesystems.
++ *
++ * Note that we check the swap in both directions so that we don't end up with
++ * a corrupt temporary inode, either.
++ *
++ * Note that fixing the way xfs_fsr sets up the attribute fork in the source
++ * inode will prevent this situation from occurring, so all we do here is
++ * reject and log the attempt. basically we are putting the responsibility on
++ * userspace to get this right.
++ */
++static int
++xfs_swap_extents_check_format(
++	xfs_inode_t	*ip,	/* target inode */
++	xfs_inode_t	*tip)	/* tmp inode */
++{
++
++	/* Should never get a local format */
++	if (ip->i_d.di_format == XFS_DINODE_FMT_LOCAL ||
++	    tip->i_d.di_format == XFS_DINODE_FMT_LOCAL)
++		return EINVAL;
++
++	/*
++	 * if the target inode has less extents that then temporary inode then
++	 * why did userspace call us?
++	 */
++	if (ip->i_d.di_nextents < tip->i_d.di_nextents)
++		return EINVAL;
++
++	/*
++	 * if the target inode is in extent form and the temp inode is in btree
++	 * form then we will end up with the target inode in the wrong format
++	 * as we already know there are less extents in the temp inode.
++	 */
++	if (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
++	    tip->i_d.di_format == XFS_DINODE_FMT_BTREE)
++		return EINVAL;
++
++	/* Check temp in extent form to max in target */
++	if (tip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
++	    XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) > ip->i_df.if_ext_max)
++		return EINVAL;
++
++	/* Check target in extent form to max in temp */
++	if (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
++	    XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) > tip->i_df.if_ext_max)
++		return EINVAL;
++
++	/* Check root block of temp in btree form to max in target */
++	if (tip->i_d.di_format == XFS_DINODE_FMT_BTREE &&
++	    XFS_IFORK_BOFF(ip) &&
++	    tip->i_df.if_broot_bytes > XFS_IFORK_BOFF(ip))
++		return EINVAL;
++
++	/* Check root block of target in btree form to max in temp */
++	if (ip->i_d.di_format == XFS_DINODE_FMT_BTREE &&
++	    XFS_IFORK_BOFF(tip) &&
++	    ip->i_df.if_broot_bytes > XFS_IFORK_BOFF(tip))
++		return EINVAL;
++
++	return 0;
++}
++
+ int
+ xfs_swap_extents(
+-	xfs_inode_t	*ip,
+-	xfs_inode_t	*tip,
++	xfs_inode_t	*ip,	/* target inode */
++	xfs_inode_t	*tip,	/* tmp inode */
+ 	xfs_swapext_t	*sxp)
+ {
+ 	xfs_mount_t	*mp;
+@@ -160,13 +232,6 @@ xfs_swap_extents(
+ 		goto out_unlock;
+ 	}
+ 
+-	/* Should never get a local format */
+-	if (ip->i_d.di_format == XFS_DINODE_FMT_LOCAL ||
+-	    tip->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
+-		error = XFS_ERROR(EINVAL);
+-		goto out_unlock;
 -	}
 -
--	xfs_ioend_wait(ip);
--
--	ASSERT(XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0);
--
+ 	if (VN_CACHED(VFS_I(tip)) != 0) {
+ 		xfs_inval_cached_trace(tip, 0, -1, 0, -1);
+ 		error = xfs_flushinval_pages(tip, 0, -1,
+@@ -189,13 +254,12 @@ xfs_swap_extents(
+ 		goto out_unlock;
+ 	}
+ 
 -	/*
--	 * If we have nothing to flush with this inode then complete the
--	 * teardown now, otherwise break the link between the xfs inode and the
--	 * linux inode and clean up the xfs inode later. This avoids flushing
--	 * the inode to disk during the delete operation itself.
--	 *
--	 * When breaking the link, we need to set the XFS_IRECLAIMABLE flag
--	 * first to ensure that xfs_iunpin() will never see an xfs inode
--	 * that has a linux inode being reclaimed. Synchronisation is provided
--	 * by the i_flags_lock.
+-	 * If the target has extended attributes, the tmp file
+-	 * must also in order to ensure the correct data fork
+-	 * format.
 -	 */
--	if (!ip->i_update_core && (ip->i_itemp == NULL)) {
--		xfs_ilock(ip, XFS_ILOCK_EXCL);
--		xfs_iflock(ip);
--		xfs_iflags_set(ip, XFS_IRECLAIMABLE);
--		return xfs_reclaim_inode(ip, 1, XFS_IFLUSH_DELWRI_ELSE_SYNC);
--	}
--	xfs_inode_set_reclaim_tag(ip);
--	return 0;
--}
--
- /*
-  * xfs_alloc_file_space()
-  *      This routine allocates disk space for the given file.
---- a/fs/xfs/xfs_vnodeops.h
-+++ b/fs/xfs/xfs_vnodeops.h
-@@ -38,7 +38,6 @@ int xfs_symlink(struct xfs_inode *dp, st
- 		const char *target_path, mode_t mode, struct xfs_inode **ipp,
- 		cred_t *credp);
- int xfs_set_dmattrs(struct xfs_inode *ip, u_int evmask, u_int16_t state);
--int xfs_reclaim(struct xfs_inode *ip);
- int xfs_change_file_space(struct xfs_inode *ip, int cmd,
- 		xfs_flock64_t *bf, xfs_off_t offset, int attr_flags);
- int xfs_rename(struct xfs_inode *src_dp, struct xfs_name *src_name,
+-	if ( XFS_IFORK_Q(ip) != XFS_IFORK_Q(tip) ) {
+-		error = XFS_ERROR(EINVAL);
++	/* check inode formats now that data is flushed */
++	error = xfs_swap_extents_check_format(ip, tip);
++	if (error) {
++		xfs_fs_cmn_err(CE_NOTE, mp,
++		    "%s: inode 0x%llx format is incompatible for exchanging.",
++				__FILE__, ip->i_ino);
+ 		goto out_unlock;
+ 	}
+ 
+@@ -276,6 +340,16 @@ xfs_swap_extents(
+ 	*tifp = *tempifp;	/* struct copy */
+ 
+ 	/*
++	 * Fix the in-memory data fork values that are dependent on the fork
++	 * offset in the inode. We can't assume they remain the same as attr2
++	 * has dynamic fork offsets.
++	 */
++	ifp->if_ext_max = XFS_IFORK_SIZE(ip, XFS_DATA_FORK) /
++					(uint)sizeof(xfs_bmbt_rec_t);
++	tifp->if_ext_max = XFS_IFORK_SIZE(tip, XFS_DATA_FORK) /
++					(uint)sizeof(xfs_bmbt_rec_t);
++
++	/*
+ 	 * Fix the on-disk inode values
+ 	 */
+ 	tmp = (__uint64_t)ip->i_d.di_nblocks;
 
 
 _______________________________________________
