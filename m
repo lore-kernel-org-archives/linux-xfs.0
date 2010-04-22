@@ -1,27 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3MEn0R4207237 for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 09:49:00 -0500
-Received: from rcsinet10.oracle.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CAF141547EA3
-	for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 07:51:00 -0700 (PDT)
-Received: from rcsinet10.oracle.com (rcsinet10.oracle.com [148.87.113.121]) by
-	cuda.sgi.com with ESMTP id AcHDl0iyHymk5zAP for
-	<xfs@oss.sgi.com>; Thu, 22 Apr 2010 07:51:00 -0700 (PDT)
-Received: from acsinet15.oracle.com (acsinet15.oracle.com [141.146.126.227])
-	by rcsinet10.oracle.com (Switch-3.4.2/Switch-3.4.1) with ESMTP id
-	o3MEovnE017466
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 14:50:59 GMT
-Received: from acsmt354.oracle.com (acsmt354.oracle.com [141.146.40.154])
-	by acsinet15.oracle.com (Switch-3.4.2/Switch-3.4.1) with ESMTP id
-	o3MEhMAh027334 for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 14:50:56 GMT
-Date: Thu, 22 Apr 2010 22:49:39 +0800
-From: Wengang Wang <wen.gang.wang@oracle.com>
-Subject: is realtime device supported?
-Message-ID: <20100422144939.GA3822@laptop.oracle.com>
+	o3MGa6SP215174 for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 11:36:06 -0500
+Received: from mx1.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 769DC1DDA8A8
+	for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 09:38:07 -0700 (PDT)
+Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
+	with ESMTP id pl0qszQfHsZHS1vz for <xfs@oss.sgi.com>;
+	Thu, 22 Apr 2010 09:38:07 -0700 (PDT)
+Date: Fri, 23 Apr 2010 02:38:01 +1000
+From: Nick Piggin <npiggin@suse.de>
+Subject: Re: [PATCH 1/2] mm: add context argument to shrinker callback
+Message-ID: <20100422163801.GZ5683@laptop>
+References: <1271118255-21070-1-git-send-email-david@fromorbit.com>
+	<1271118255-21070-2-git-send-email-david@fromorbit.com>
+	<20100418001514.GA26575@infradead.org>
+	<20100419140039.GQ5683@laptop> <20100420004149.GA14744@dastard>
+	<20100420083840.GR5683@laptop> <20100420103216.GK15130@dastard>
+	<20100421084004.GS5683@laptop>
+	<20100422163211.GA2478@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20100422163211.GA2478@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,34 +34,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: greg.marsden@oracle.com, joe.jin@oracle.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-Hi experts,
+On Thu, Apr 22, 2010 at 12:32:11PM -0400, Christoph Hellwig wrote:
+> On Wed, Apr 21, 2010 at 06:40:04PM +1000, Nick Piggin wrote:
+> > I'm saying that dynamic registration is no good, if we don't have a
+> > way to order the shrinkers.
+> 
+> We can happily throw in a priority field into the shrinker structure,
+> but at this stage in the release process I'd rather have an as simple
+> as possible fix for the regression.  And just adding the context pointer
+> which is a no-op for all existing shrinkers fits that scheme very well.
+> 
+> If it makes you happier I can queue up a patch to add the priorities
+> for 2.6.35.  I think figuring out any meaningful priorities will be
+> much harder than that, though.
 
-Do we support realtime device?
+I don't understand, it should be implemented like just all the other
+shrinkers AFAIKS. Like the dcache one that has to shrink multiple
+superblocks. There is absolutely no requirement for this API change
+to implement it in XFS.
 
-I got the following error:
+If you then add a patch to change the API and can show how it improves
+the situation, then fine.
 
-[root@desk test-xfsprogs]# mkfs.xfs -rrtdev=/dev/sda12,extsize=4096
-/dev/sda10 -f
-meta-data=/dev/sda10             isize=256    agcount=4, agsize=1250558
-blks
-         =                       sectsz=512   attr=2
-data     =                       bsize=4096   blocks=5002231, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0
-log      =internal log           bsize=4096   blocks=2560, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=0
-realtime =/dev/sda12             extsz=4096   blocks=2502115,
-rtextents=2502115
-[root@desk test-xfsprogs]# mount /dev/sda10 /xfs
-mount: Function not implemented
-[root@desk test-xfsprogs]# mount -ortdev=/dev/sda12 /dev/sda10 /xfs
-mount: Function not implemented
+> 
+> > > If a change of interface means that we end up with shorter call
+> > > chains, less global state, more flexibilty, better batching and IO
+> > > patterns, less duplication of code and algorithms and it doesn't
+> > > cause any regressions, then where's the problem?
+> > 
+> > Yep that would all be great but I don't see how the interface change
+> > enables any of that at all. It seems to me that the advantage goes
+> > the other way because it doesn't put as much crap into your mount
+> > structure and you end up with an useful traversable list of mounts as
+> > a side-effect.
+> 
+> There really is not need for that.  The Linux VFS is designed to have
+> superblocks independent, which actually is a good thing as global
+> state gets in the way of scalability or just clean code.  Note that
+> a mounts list would be even worse as filesystems basically are not
+> concerned with mount points themselves.
 
-regards,
-wengang.
+But the shrinker list *is* a global list. The downside of it in the way
+it was done in the XFS patch is that 1) it is much larger than a simple
+list head, and 2) not usable by anything other then the shrinker.
+
+OK, maybe there will never be other uses for it other than shrinker, but
+that's not a disadvantage (just one less advantage).
 
 _______________________________________________
 xfs mailing list
