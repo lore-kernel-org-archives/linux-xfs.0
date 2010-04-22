@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3MJ5IKX225942 for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 14:05:19 -0500
-Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 200FD1303A59
-	for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 12:07:18 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id RJiEeuSE1Qisxf2y for <xfs@oss.sgi.com>;
-	Thu, 22 Apr 2010 12:07:18 -0700 (PDT)
-Date: Thu, 22 Apr 2010 21:07:18 +0200
+	o3MJB8AZ226413 for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 14:11:08 -0500
+Received: from mx1.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2667E2E74AE
+	for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 12:13:08 -0700 (PDT)
+Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
+	with ESMTP id Zp9KIqp4EV0QMXM9 for <xfs@oss.sgi.com>;
+	Thu, 22 Apr 2010 12:13:08 -0700 (PDT)
+Date: Thu, 22 Apr 2010 21:13:09 +0200
 From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 3/4] writeback: pay attention to wbc->nr_to_write in
-	write_cache_pages
-Message-ID: <20100422190718.GA19286@quack.suse.cz>
+Subject: Re: [PATCH 5/4] writeback: limit write_cache_pages integrity
+	scanning to current EOF
+Message-ID: <20100422191309.GC19286@quack.suse.cz>
 References: <1271731314-5893-1-git-send-email-david@fromorbit.com>
-	<1271731314-5893-4-git-send-email-david@fromorbit.com>
+	<20100420034005.GA15130@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1271731314-5893-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <20100420034005.GA15130@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,61 +26,77 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-T24gVHVlIDIwLTA0LTEwIDEyOjQxOjUzLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4gRnJvbTogRGF2
-ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgo+IAo+IElmIGEgZmlsZXN5c3RlbSB3cml0
-ZXMgbW9yZSB0aGFuIG9uZSBwYWdlIGluIC0+d3JpdGVwYWdlLCB3cml0ZV9jYWNoZV9wYWdlcwo+
-IGZhaWxzIHRvIG5vdGljZSB0aGlzIGFuZCBjb250aW51ZXMgdG8gYXR0ZW1wdCB3cml0ZWJhY2sg
-d2hlbiB3YmMtPm5yX3RvX3dyaXRlCj4gaGFzIGdvbmUgbmVnYXRpdmUgLSB0aGlzIHRyYWNlIHdh
-cyBjYXB0dXJlZCBmcm9tIFhGUzoKPiAKPiAKPiAgICAgd2JjX3dyaXRlYmFja19zdGFydDogdG93
-cnQ9MTAyNAo+ICAgICB3YmNfd3JpdGVwYWdlOiB0b3dydD0xMDI0Cj4gICAgIHdiY193cml0ZXBh
-Z2U6IHRvd3J0PTAKPiAgICAgd2JjX3dyaXRlcGFnZTogdG93cnQ9LTEKPiAgICAgd2JjX3dyaXRl
-cGFnZTogdG93cnQ9LTUKPiAgICAgd2JjX3dyaXRlcGFnZTogdG93cnQ9LTIxCj4gICAgIHdiY193
-cml0ZXBhZ2U6IHRvd3J0PS04NQo+IAo+IFRoaXMgaGFzIGFkdmVyc2UgZWZmZWN0cyBvbiBmaWxl
-c3lzdGVtIHdyaXRlYmFjayBiZWhhdmlvdXIuIHdyaXRlX2NhY2hlX3BhZ2VzKCkKPiBuZWVkcyB0
-byB0ZXJtaW5hdGUgYWZ0ZXIgYSBjZXJ0YWluIG51bWJlciBvZiBwYWdlcyBhcmUgd3JpdHRlbiwg
-bm90IGFmdGVyIGEKPiBjZXJ0YWluIG51bWJlciBvZiBjYWxscyB0byAtPndyaXRlcGFnZSBhcmUg
-bWFkZS4gTWFrZSBpdCBvYnNlcnZlIHRoZSBjdXJyZW50Cj4gdmFsdWUgb2Ygd2JjLT5ucl90b193
-cml0ZSBhbmQgdHJlYXQgYSB2YWx1ZSBvZiA8PSAwIGFzIHRob3VnaCBpdCBpcyBhIGVpdGhlciBh
-Cj4gdGVybWluYXRpb24gY29uZGl0aW9uIG9yIGEgdHJpZ2dlciB0byByZXNldCB0byBNQVhfV1JJ
-VEXhuIZBQ0tfUEFHRVMgZm9yIGRhdGEKPiBpbnRlZ3JpdHkgc3luY3MuCj4gCj4gU2lnbmVkLW9m
-Zi1ieTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgo+IC0tLQo+ICBmcy9mcy13
-cml0ZWJhY2suYyAgICAgICAgICAgICAgICB8ICAgIDkgLS0tLS0tLS0tCj4gIGluY2x1ZGUvbGlu
-dXgvd3JpdGViYWNrLmggICAgICAgIHwgICAgOSArKysrKysrKysKPiAgaW5jbHVkZS90cmFjZS9l
-dmVudHMvd3JpdGViYWNrLmggfCAgICAxICsKPiAgbW0vcGFnZS13cml0ZWJhY2suYyAgICAgICAg
-ICAgICAgfCAgIDIwICsrKysrKysrKysrKysrKysrKystCj4gIDQgZmlsZXMgY2hhbmdlZCwgMjkg
-aW5zZXJ0aW9ucygrKSwgMTAgZGVsZXRpb25zKC0pCj4gCiAgPHNuaXA+Cgo+IGRpZmYgLS1naXQg
-YS9tbS9wYWdlLXdyaXRlYmFjay5jIGIvbW0vcGFnZS13cml0ZWJhY2suYwo+IGluZGV4IGQ0NWY1
-OWUuLmUyMmFmODQgMTAwNjQ0Cj4gLS0tIGEvbW0vcGFnZS13cml0ZWJhY2suYwo+ICsrKyBiL21t
-L3BhZ2Utd3JpdGViYWNrLmMKPiBAQCAtOTE3LDYgKzkxNyw3IEBAIGNvbnRpbnVlX3VubG9jazoK
-PiAgCQkJaWYgKCFjbGVhcl9wYWdlX2RpcnR5X2Zvcl9pbyhwYWdlKSkKPiAgCQkJCWdvdG8gY29u
-dGludWVfdW5sb2NrOwo+ICAKPiArCQkJdHJhY2Vfd2JjX3dyaXRlcGFnZSh3YmMpOwo+ICAJCQly
-ZXQgPSAoKndyaXRlcGFnZSkocGFnZSwgd2JjLCBkYXRhKTsKPiAgCQkJaWYgKHVubGlrZWx5KHJl
-dCkpIHsKPiAgCQkJCWlmIChyZXQgPT0gQU9QX1dSSVRFUEFHRV9BQ1RJVkFURSkgewo+IEBAIC05
-MzUsNyArOTM2LDcgQEAgY29udGludWVfdW5sb2NrOgo+ICAJCQkJCWRvbmUgPSAxOwo+ICAJCQkJ
-CWJyZWFrOwo+ICAJCQkJfQo+IC0gCQkJfQo+ICsJCQl9Cj4gIAo+ICAJCQlpZiAobnJfdG9fd3Jp
-dGUgPiAwKSB7Cj4gIAkJCQlucl90b193cml0ZS0tOwo+IEBAIC05NTUsNiArOTU2LDIzIEBAIGNv
-bnRpbnVlX3VubG9jazoKPiAgCQkJCQlicmVhazsKPiAgCQkJCX0KPiAgCQkJfQo+ICsKPiArCQkJ
-LyoKPiArCQkJICogU29tZSBmaWxlc3lzdGVtcyB3aWxsIHdyaXRlIG11bHRpcGxlIHBhZ2VzIGlu
-Cj4gKwkJCSAqIC0+d3JpdGVwYWdlLCBzbyB3YmMtPm5yX3RvX3dyaXRlIGNhbiBjaGFuZ2UgbXVj
-aCwKPiArCQkJICogbXVjaCBmYXN0ZXIgdGhhbiBucl90b193cml0ZS4gQ2hlY2sgdGhpcyBhcyBh
-biBleGl0Cj4gKwkJCSAqIGNvbmRpdGlvbiwgb3IgaWYgd2UgYXJlIGRvaW5nIGEgZGF0YSBpbnRl
-Z3JpdHkgc3luYywKPiArCQkJICogcmVzZXQgdGhlIHdiYyB0byBNQVhfV1JJVEVCQUNLX1BBR0VT
-IHNvIHRoYXQgc3VjaAo+ICsJCQkgKiBmaWxlc3lzdGVtcyBjYW4gZG8gb3B0aW1hbCB3cml0ZW91
-dCBoZXJlLgo+ICsJCQkgKi8KPiArCQkJaWYgKHdiYy0+bnJfdG9fd3JpdGUgPD0gMCkgewo+ICsJ
-CQkJaWYgKHdiYy0+c3luY19tb2RlID09IFdCX1NZTkNfTk9ORSkgewo+ICsJCQkJCWRvbmUgPSAx
-Owo+ICsJCQkJCW5yX3RvX3dyaXRlID0gMDsKPiArCQkJCQlicmVhazsKPiArCQkJCX0KPiArCQkJ
-CXdiYy0+bnJfdG9fd3JpdGUgPSBNQVhfV1JJVEVCQUNLX1BBR0VTOwo+ICsJCQl9CiAgSG9uZXN0
-bHksIHRoaXMgaXMgYW4gdWdseSBoYWNrLiBJJ2QgcmF0aGVyIHdvcmsgdG93YXJkcyBpZ25vcmlu
-Zwpucl90b193cml0ZSBjb21wbGV0ZWx5IGluIFdCX1NZTkNfQUxMIG1vZGUgc2luY2UgaXQgZG9l
-c24ndCByZWFsbHkgbWFrZQphbnkgc2VuY2UgdG8gc2F5ICJ3cml0ZSBtZSAqc2FmZWx5KiA1IHBh
-Z2VzIi4KCgkJCQkJCQkJSG9uemEKLS0gCkphbiBLYXJhIDxqYWNrQHN1c2UuY3o+ClNVU0UgTGFi
-cywgQ1IKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhm
-cyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFu
-L2xpc3RpbmZvL3hmcwo=
+On Tue 20-04-10 13:40:05, Dave Chinner wrote:
+> 
+> sync can currently take a really long time if a concurrent writer is
+> extending a file. The problem is that the dirty pages on the address
+> space grow in the same direction as write_cache_pages scans, so if
+> the writer keeps ahead of writeback, the writeback will not
+> terminate until the writer stops adding dirty pages.
+> 
+> For a data integrity sync, we only need to write the pages dirty at
+> the time we start the writeback, so we can stop scanning once we get
+> to the page that was at the end of the file at the time the scan
+> started.
+> 
+> This will prevent operations like copying a large file preventing
+> sync from completing as it will not write back pages that were
+> dirtied after the sync was started. This does not impact the
+> existing integrity guarantees, as any dirty page (old or new)
+> within the EOF range at the start of the scan will still be
+> captured.
+  Looks good.
+
+Acked-by: Jan Kara <jack@suse.cz>
+
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  mm/page-writeback.c |   15 +++++++++++++++
+>  1 files changed, 15 insertions(+), 0 deletions(-)
+> 
+> diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+> index e22af84..4ba2728 100644
+> --- a/mm/page-writeback.c
+> +++ b/mm/page-writeback.c
+> @@ -852,7 +852,22 @@ int write_cache_pages(struct address_space *mapping,
+>  		if (wbc->range_start == 0 && wbc->range_end == LLONG_MAX)
+>  			range_whole = 1;
+>  		cycled = 1; /* ignore range_cyclic tests */
+> +
+> +		/*
+> +		 * If this is a data integrity sync, cap the writeback to the
+> +		 * current end of file. Any extension to the file that occurs
+> +		 * after this is a new write and we don't need to write those
+> +		 * pages out to fulfil our data integrity requirements. If we
+> +		 * try to write them out, we can get stuck in this scan until
+> +		 * the concurrent writer stops adding dirty pages and extending
+> +		 * EOF.
+> +		 */
+> +		if (wbc->sync_mode == WB_SYNC_ALL &&
+> +		    wbc->range_end == LLONG_MAX) {
+> +			end = i_size_read(mapping->host) >> PAGE_CACHE_SHIFT;
+> +		}
+>  	}
+> +
+>  retry:
+>  	done_index = index;
+>  	while (!done && (index <= end)) {
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
