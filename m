@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3N2lg62006585 for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 21:47:43 -0500
+	o3N2xxFm007610 for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 21:59:59 -0500
 Received: from rcsinet10.oracle.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D64AE10590F9
-	for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 19:49:41 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 102A72E8816
+	for <xfs@oss.sgi.com>; Thu, 22 Apr 2010 20:01:57 -0700 (PDT)
 Received: from rcsinet10.oracle.com (rcsinet10.oracle.com [148.87.113.121]) by
-	cuda.sgi.com with ESMTP id QKqLVah06EbDvODo for
-	<xfs@oss.sgi.com>; Thu, 22 Apr 2010 19:49:41 -0700 (PDT)
-Date: Fri, 23 Apr 2010 10:48:25 +0800
+	cuda.sgi.com with ESMTP id GFZKX4zOna56PyHx for
+	<xfs@oss.sgi.com>; Thu, 22 Apr 2010 20:01:57 -0700 (PDT)
+Date: Fri, 23 Apr 2010 11:00:11 +0800
 From: Wengang Wang <wen.gang.wang@oracle.com>
-Subject: Re: different error messages for mkfs.xfs -ssize
-Message-ID: <20100423024825.GA2949@laptop.oracle.com>
-References: <20100422153636.GB3822@laptop.oracle.com>
-	<F57F2AD357626644AF76410876025D751277F5@CGYEX705.encana.com>
+Subject: Re: is realtime device supported?
+Message-ID: <20100423030011.GB2949@laptop.oracle.com>
+References: <20100422144939.GA3822@laptop.oracle.com>
+	<20100422162325.GA29668@infradead.org> <4BD07F06.70101@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <F57F2AD357626644AF76410876025D751277F5@CGYEX705.encana.com>
+In-Reply-To: <4BD07F06.70101@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,54 +29,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "Kinzel, David" <David.Kinzel@encana.com>
-Cc: xfs@oss.sgi.com, joe.jin@oracle.com, greg.marsden@oracle.com, Wengang Wang <wen.gang.wang@oracle.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com, greg.marsden@oracle.com, joe.jin@oracle.com, Wengang Wang <wen.gang.wang@oracle.com>
 
-On 10-04-22 10:18, Kinzel, David wrote:
-> >-----Original Message-----
-> >From: xfs-bounces@oss.sgi.com [mailto:xfs-bounces@oss.sgi.com] 
-> >On Behalf Of Wengang Wang
-> >Sent: Thursday, April 22, 2010 9:37 AM
-> >To: xfs@oss.sgi.com
-> >Cc: greg.marsden@oracle.com; joe.jin@oracle.com
-> >Subject: different error messages for mkfs.xfs -ssize
-> >
-> >Hi experts,
-> >
-> >I got different error messages when provide different value for -ssize.
-> >Why the error messages are different? They are different but no one is
-> >containing more info than the other.
-> 
-> 1639         if (sectorsize < XFS_MIN_SECTORSIZE ||
-> 1640             sectorsize > XFS_MAX_SECTORSIZE || sectorsize >
-> blocksize) {
-> 1641                 fprintf(stderr, _("illegal sector size %d\n"),
-> sectorsize);
-> 1642                 usage();
-> 1643         }
-> 
-> According to the defaults:
-> 
-> 62 #define XFS_MIN_SECTORSIZE_LOG  9       /* i.e. 512 bytes */
-> 64 #define XFS_MIN_SECTORSIZE      (1 << XFS_MIN_SECTORSIZE_LOG)
-> 
-> Looks like your sectorsize is not greater than XFS_MIN_SECTORSIZE
-> (illegal sector size)
-> 
-> For 3072,
-> 
-> 1561                                         if (sectorsize <= 0 ||
-> 1562                                             !ispow2(sectorsize))
-> 1563                                                 illegal(value, "s
-> sectsize");
-> 
-> 3072 is not a power of two (illegal value)
+On 10-04-22 11:53, Eric Sandeen wrote:
+> Christoph Hellwig wrote:
+> > On Thu, Apr 22, 2010 at 10:49:39PM +0800, Wengang Wang wrote:
+> >> Do we support realtime device?
+> >>
+> >> I got the following error:
+> > 
+> > It sounds like you do not have CONFIG_XFS_RT enable in your kernel
+> > configuration.  But to answer your original question the realtime
+> > device is not supported in the sense of actively maintained.  The
+> > code is still there, but more or less for legacy reasons.  I would
+> > not recommend it for new installations.
 
-Yes. That are the places where different error messges are printed.
-I meant If there is no more info for a message than the other, It's
-better that the messages are the same.
+Yes, CONFIG_XFS_RT is disabled.
+[wwg@desk linux-2.6.18.x86_64]$ grep CONFIG_XFS_RT .config
+# CONFIG_XFS_RT is not set
 
-Thanks a lot!
+And Ok I see. Also should we add the point to man page of mkfs.xfs?
+
+> 
+> Agreed.
+> 
+> FWIW, dmesg probably gave you a more helpful error message than
+> mount...
+> 
+>                 cmn_err(CE_WARN, "XFS: RT mount failed");
+> 
+> hm or maybe not ;)
+
+Only "XFS: RT mount failed" :)
+
+Thanks all!
 
 regards,
 wengang.
