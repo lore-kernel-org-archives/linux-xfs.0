@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3O4opWS119051 for <xfs@oss.sgi.com>; Fri, 23 Apr 2010 23:50:52 -0500
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 90A381303719
-	for <xfs@oss.sgi.com>; Fri, 23 Apr 2010 21:52:52 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id uDXjUqyKQ92rTpvI
-	for <xfs@oss.sgi.com>; Fri, 23 Apr 2010 21:52:52 -0700 (PDT)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id 200C36C243
-	for <xfs@oss.sgi.com>; Fri, 23 Apr 2010 23:52:52 -0500 (CDT)
-Message-ID: <4BD27923.1020208@hardwarefreak.com>
-Date: Fri, 23 Apr 2010 23:52:51 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	o3OEUw82158143 for <xfs@oss.sgi.com>; Sat, 24 Apr 2010 09:30:58 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 086888C8159
+	for <xfs@oss.sgi.com>; Sat, 24 Apr 2010 07:32:59 -0700 (PDT)
+Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
+	by cuda.sgi.com with ESMTP id sPx49SY2afhF6BDL for
+	<xfs@oss.sgi.com>; Sat, 24 Apr 2010 07:32:59 -0700 (PDT)
+Message-ID: <4BD30119.3020404@sandeen.net>
+Date: Sat, 24 Apr 2010 09:32:57 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
 Subject: Re: [Fwd: Benchmarking data from a raid machine 2.6.34-rc3]
-References: <4BD25B7F.8020509@redhat.com>
-In-Reply-To: <4BD25B7F.8020509@redhat.com>
+References: <4BD25B7F.8020509@redhat.com> <4BD27923.1020208@hardwarefreak.com>
+In-Reply-To: <4BD27923.1020208@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,21 +27,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: xfs@oss.sgi.com
 
-Eric Sandeen put forth on 4/23/2010 9:46 PM:
-> FYI...
+Stan Hoeppner wrote:
+> Eric Sandeen put forth on 4/23/2010 9:46 PM:
+>> FYI...
+>>
+>> I asked Keith if he could do xfs nobarrier runs as well.
+>>
+>> If there are ext4 nobarrier runs "winning" it seems only fair.  :)
 > 
-> I asked Keith if he could do xfs nobarrier runs as well.
+> Do you have a link to the hardware specs used in the testing Eric?
 > 
-> If there are ext4 nobarrier runs "winning" it seems only fair.  :)
+> Thanks.
+> 
 
-Do you have a link to the hardware specs used in the testing Eric?
+There are machine specs at http://btrfs.boxacle.net/ but I don't know
+for -sure- that he's testing the exact same setup now.
 
-Thanks.
+I assume so, though.  (I shoulda included that top URL in the message)
 
--- 
-Stan
+-Eric
 
 _______________________________________________
 xfs mailing list
