@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3OEUw82158143 for <xfs@oss.sgi.com>; Sat, 24 Apr 2010 09:30:58 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 086888C8159
-	for <xfs@oss.sgi.com>; Sat, 24 Apr 2010 07:32:59 -0700 (PDT)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id sPx49SY2afhF6BDL for
-	<xfs@oss.sgi.com>; Sat, 24 Apr 2010 07:32:59 -0700 (PDT)
-Message-ID: <4BD30119.3020404@sandeen.net>
-Date: Sat, 24 Apr 2010 09:32:57 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	o3OGgYh8166659 for <xfs@oss.sgi.com>; Sat, 24 Apr 2010 11:42:34 -0500
+Received: from moutng.kundenserver.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EB50E1321437
+	for <xfs@oss.sgi.com>; Sat, 24 Apr 2010 09:44:33 -0700 (PDT)
+Received: from moutng.kundenserver.de (moutng.kundenserver.de [212.227.17.9])
+	by cuda.sgi.com with ESMTP id QnYgShKfCct74rra for
+	<xfs@oss.sgi.com>; Sat, 24 Apr 2010 09:44:33 -0700 (PDT)
+From: "Hans-Peter Jansen" <hpj@urpla.net>
+Subject: Re: 2.6.34-rc3: simple du (on a big xfs tree) triggers oom killer
+	[bisected: 57817c68229984818fea9e614d6f95249c3fb098]
+Date: Sat, 24 Apr 2010 18:44:22 +0200
+References: <201004050049.17952.hpj@urpla.net> <20100413091823.GD7544@dastard>
+	<201004131142.33518.hpj@urpla.net>
+In-Reply-To: <201004131142.33518.hpj@urpla.net>
 MIME-Version: 1.0
-Subject: Re: [Fwd: Benchmarking data from a raid machine 2.6.34-rc3]
-References: <4BD25B7F.8020509@redhat.com> <4BD27923.1020208@hardwarefreak.com>
-In-Reply-To: <4BD27923.1020208@hardwarefreak.com>
+Content-Disposition: inline
+Message-Id: <201004241844.23482.hpj@urpla.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,28 +30,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Nick Piggin <npiggin@suse.de>, opensuse-kernel@opensuse.org, Greg KH <gregkh@suse.de>, linux-kernel@vger.kernel.org
 
-Stan Hoeppner wrote:
-> Eric Sandeen put forth on 4/23/2010 9:46 PM:
->> FYI...
->>
->> I asked Keith if he could do xfs nobarrier runs as well.
->>
->> If there are ext4 nobarrier runs "winning" it seems only fair.  :)
-> 
-> Do you have a link to the hardware specs used in the testing Eric?
-> 
-> Thanks.
-> 
+On Tuesday 13 April 2010, 11:42:33 Hans-Peter Jansen wrote:
+> On Tuesday 13 April 2010, 11:18:23 Dave Chinner wrote:
+> > On Tue, Apr 13, 2010 at 10:50:35AM +0200, Hans-Peter Jansen wrote:
+> > > Dave, may I ask you kindly for briefly elaborating on the worst
+> > > consequences of just reverting this hunk, as I've done before?
+> >
+> > Well, given that is the new shrinker code generating the warnings,
+> > reverting/removing that hunk will render the patch useless :0
+>
+> Excuse me, I didn't express myself well. I'm after the consequences of
+> applying the revert, that I posted a few messages above.
+>
+> > I'll get you a working 2.6.33 patch tomorrow - it's dinner time
+> > now....
+>
+> Cool, thanks.
 
-There are machine specs at http://btrfs.boxacle.net/ but I don't know
-for -sure- that he's testing the exact same setup now.
+Obviously and not totally unexpected, really fixing this is going to take 
+more time.
 
-I assume so, though.  (I shoulda included that top URL in the message)
+FYI, 2.6.33.2 is still affected from this issue. 
 
--Eric
+Greg, you might search for a server using xfs filesystems and and a i586 
+kernel >= 2.6.33, (2.6.32.11 of SLE11-SP1 will serve as well), log in as an 
+ordinary user, do a "du" on /usr, and wait for the other users screaming...
+
+BTW, all affected kernels, available from 
+http://download.opensuse.org/repositories/home:/frispete: have the 
+offending patch reverted (see subject), do run fine for me (on this 
+aspect).
+
+Will you guys pass by another round of stable fixes without doing anything 
+on this issue?
+
+Dave, this is why I'm kindly asking you: what might be the worst 
+consequences, if we just do the revert for now (at least for 2.6.33), until 
+you and Nick came to a final decision on how to solve this issue in the 
+future.
+
+Just a brief note would be fine.
+
+Cheers,
+Pete
 
 _______________________________________________
 xfs mailing list
