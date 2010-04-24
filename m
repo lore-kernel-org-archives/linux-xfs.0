@@ -1,18 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3OMcDxF190668 for <xfs@oss.sgi.com>; Sat, 24 Apr 2010 17:38:13 -0500
-Received: from mail-px0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3DD261041A52
-	for <xfs@oss.sgi.com>; Sat, 24 Apr 2010 15:40:14 -0700 (PDT)
-Received: from mail-px0-f181.google.com (mail-px0-f181.google.com
-	[209.85.212.181]) by cuda.sgi.com with ESMTP id
-	4s6ov2My1EPYwelk for <xfs@oss.sgi.com>;
-	Sat, 24 Apr 2010 15:40:14 -0700 (PDT)
-Received: by pxi19 with SMTP id 19so1348427pxi.26
-	for <xfs@oss.sgi.com>; Sat, 24 Apr 2010 15:40:14 -0700 (PDT)
-Message-ID: <4BD37360.10804@gmail.com>
-Date: Sat, 24 Apr 2010 15:40:32 -0700
+	o3OMdVmi190803 for <xfs@oss.sgi.com>; Sat, 24 Apr 2010 17:39:31 -0500
+Received: from mail-pw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BA20013214DA
+	for <xfs@oss.sgi.com>; Sat, 24 Apr 2010 15:41:33 -0700 (PDT)
+Received: from mail-pw0-f53.google.com (mail-pw0-f53.google.com
+	[209.85.160.53]) by cuda.sgi.com with ESMTP id IDdE6AGCobeXz7Ki
+	for <xfs@oss.sgi.com>; Sat, 24 Apr 2010 15:41:33 -0700 (PDT)
+Received: by pwj10 with SMTP id 10so7409087pwj.26
+	for <xfs@oss.sgi.com>; Sat, 24 Apr 2010 15:41:32 -0700 (PDT)
+Message-ID: <4BD373AE.3000703@gmail.com>
+Date: Sat, 24 Apr 2010 15:41:50 -0700
 From: "Justin P. Mattock" <justinmattock@gmail.com>
 MIME-Version: 1.0
 Subject: Re: [opensuse-kernel] Re: 2.6.34-rc3: simple du (on a big xfs tree)
@@ -79,21 +78,10 @@ On 04/24/2010 03:30 PM, Hans-Peter Jansen wrote:
 > Cheers,
 > Pete
 
+sh*t.. my bad just replied to the wrong
+thread..
 
-is this bisectable?
-from what I remember with 2.6.33
-looking at the bugreports I don't recall
-any issue in regards with firmware related stuff
-for radeon(but could be wrong).
-
-Keep in mind, I don't have your card, but I do have the X1600
-which had no issues so far(running the latest HEAD).
-does changing the .config work for you?
-(in regards to what the thread I posted
-had mentioned)
-
-as for the open suse SP1 of SLE11..glad there is
-an option to load the latest kernel.
+I'm tired.. please ignore this.
 
 Justin P. Mattock
 
