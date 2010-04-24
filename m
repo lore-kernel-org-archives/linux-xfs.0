@@ -1,23 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3NMNgwK092859 for <xfs@oss.sgi.com>; Fri, 23 Apr 2010 17:23:43 -0500
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2D5588C22B2
-	for <xfs@oss.sgi.com>; Fri, 23 Apr 2010 15:25:43 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id vz9uhK8zINTry9cQ
-	for <xfs@oss.sgi.com>; Fri, 23 Apr 2010 15:25:43 -0700 (PDT)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id A36D86C359
-	for <xfs@oss.sgi.com>; Fri, 23 Apr 2010 17:25:42 -0500 (CDT)
-Message-ID: <4BD21E65.80203@hardwarefreak.com>
-Date: Fri, 23 Apr 2010 17:25:41 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	o3O2iSka110185 for <xfs@oss.sgi.com>; Fri, 23 Apr 2010 21:44:28 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3217A1D45B11
+	for <xfs@oss.sgi.com>; Fri, 23 Apr 2010 19:46:29 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id qrqNrzKjqjxwBQOk for
+	<xfs@oss.sgi.com>; Fri, 23 Apr 2010 19:46:29 -0700 (PDT)
+Received: from int-mx03.intmail.prod.int.phx2.redhat.com
+	(int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id o3O2kSQi009144
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Fri, 23 Apr 2010 22:46:29 -0400
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx03.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
+	id o3O2kN1C027104
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Fri, 23 Apr 2010 22:46:27 -0400
+Message-ID: <4BD25B7F.8020509@redhat.com>
+Date: Fri, 23 Apr 2010 21:46:23 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: Re: power failure causes files loss
-References: <28340118.post@talk.nabble.com>
-In-Reply-To: <28340118.post@talk.nabble.com>
+Subject: [Fwd: Benchmarking data from a raid machine 2.6.34-rc3]
+Content-Type: multipart/mixed; boundary="------------000503090000000906090306"
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,41 +33,125 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-YWRhbWFudHpqIHB1dCBmb3J0aCBvbiA0LzIzLzIwMTAgNjoyOCBBTToKPiAKPiBIZWxsbywKPiAK
-PiAgICAgIEnigJltIHdyaXRpbmcgZGF0YSBvbiBhIHNlcnZlciBpbiBteSBjb21wYW55LCBidXQg
-cG93ZXIgY3V0IHN1ZGRlbmx5LiBJCj4gaGFkIHRvIHJlc3RhcnQgdGhlIG1hY2hpbmUsIHRoZW4g
-SSBmb3VuZCB0aGF0IG1hbnkgZmlsZXMgaW4gdGhlIHdvcmtpbmcKPiBkaXJlY3RvcnkgaGFkIGJl
-ZW4gbG9zdC4gSSBtYWRlIHNvbWUgdHJpZXMgd2l0aCB4ZnNfcmVwYWlyIGFuZCBpdCBkaWRuJ3QK
-PiByZXBhaXIgbXkgY29ycnVwdGVkIGZpbGUuCj4gCj4gV2hhdCBhcmUgdGhlIHJlYXNvbnMgY2F1
-c2VkIHRoaXMgcHJvYmxlbT8gSSB3b3VsZCBsaWtlIHRvIGtub3cgaXMgd2hhdCBjYW4gSQo+IGRv
-IHRvIHJlc29sdmUgdGhpcyBwcm9ibGVtPyBJcyBYRlMgYWJsZSB0byByZWNvdmVyIG15IGZpbGUg
-d2l0aCBpdHMgcmlnaHQKPiBjb250ZW50LCBhdCBsZWFzdCBhIGNvbnNpc3RlbnQgY29udGVudD8g
-Cj4gCj4gICAgICBJJ20gcnVubmluZyBhIDIuNi4yNCBrZXJuZWwgd2l0aCB4ZnNwcm9ncy0zLjEu
-MSwgYW5kIHRoZSBvcGVyYXRpbmcKPiBzeXN0ZW0gaXMgUmVkSGF0IEVudGVycHJpc2UgTGludXgg
-NSBTZXJ2ZXIgKDY0LWJpdCkuCj4gCj4gICAgICBEbyB5b3Uga25vdyBpZiB0aGlzIHByb2JsZW0g
-aGFzIG9mdGVuIGJlZW4gZW5jb3VudGVyZWQsIHRoZXJlIGlzIGEgd2F5Cj4gdG8gcHJvY2VlZD8g
-Cj4gCj4gVGhhbmsgeW91ICEKPiAKPiBBZGFtYW50CgpYRlMgaXNuJ3QgdGhlIGNhdXNlIG9mIHlv
-dXIgcHJvYmxlbS4gIFJ1bm5pbmcgd2l0aG91dCBhIHByb3BlciBVUFMgaXMgdGhlCmNhdXNlIG9m
-IHlvdXIgcHJvYmxlbS4gIEZpeCB0aGUgY2F1c2Ugb2YgeW91ciBwcm9ibGVtIGJ5IHB1cmNoYXNp
-bmcgYQpwcm9wZXJseSBzaXplZCBhbmQgaW5zdHJ1bWVudGVkL21vbml0b3JlZCBVUFMuICBZT1Ug
-Q0FOTk9UIHJlbHkgb24geW91ciBPUwpvciBmaWxlc3lzdGVtIGRyaXZlciB0byBwcmV2ZW50IGRh
-dGEgbG9zcyBkdWUgdG8gcG93ZXIgbG9zcywgb3IgdG8gcHJvcGVybHkKcmVjb3ZlciBmcm9tIHN1
-Y2ggdW5leHBlY3RlZCBwb3dlciBsb3NzIGlmL3doZW4gaXQgb2NjdXJzLiAgVGhpcyBpcyB3aHkg
-eW91CmFic29sdXRlbHkgbmVlZCB0byBlbGltaW5hdGUgdGhlIHBvc3NpYmlsaXR5IG9mIHVuZXhw
-ZWN0ZWQgcG93ZXIgbG9zcy4gIFRoaXMKaXMgdGhlIHNvbGUgcHVycG9zZSBmb3IgdGhlIGV4aXN0
-ZW5jZSBvZiBjb21wYW5pZXMgc3VjaCBhcyBBUEMsIExpZWJlcnQsClRyaXBwTGl0ZSBhbmQgb3Ro
-ZXJzLgoKSSdkIGhhdmUgdGhvdWdodCBieSAyMDEwIHRoYXQgdGhlIGVudGlyZSBJVCBjYWRyZSB3
-b3JsZHdpZGUgd291bGQgYWxyZWFkeSBiZQplZHVjYXRlZCBvbiBwcm9wZXIgcG93ZXIgYmFja3Vw
-IHBsYW5uaW5nIGFuZCBwcm9jZWR1cmVzLiAgSSBndWVzcyBub3QuCgpBY3F1aXJlIGEgcHJvcGVy
-IFVQUyBhbmQgY29uZmlndXJlIGl0IHByb3Blcmx5LCBzcGVjaWZpY2FsbHkgbWVhbmluZwptb25p
-dG9yaW5nIGFuZCBhbGVydHMgd2hpY2ggd2lsbCBhbGxvdyBmb3IgcGVyZm9ybWluZyBhIHByb3Bl
-ciBzaHV0ZG93bgpkdXJpbmcgYW4gZXh0ZW5kZWQgb3V0YWdlLCBhbmQgeW91ciBwcm9ibGVtcyB3
-aWxsIGRpc2FwcGVhci4KCi0tIApTdGFuCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8v
-b3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+This is a multi-part message in MIME format.
+--------------000503090000000906090306
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+
+FYI...
+
+I asked Keith if he could do xfs nobarrier runs as well.
+
+If there are ext4 nobarrier runs "winning" it seems only fair.  :)
+
+-Eric
+
+--------------000503090000000906090306
+Content-Type: message/rfc822;
+ name="Benchmarking data from a raid machine 2.6.34-rc3.eml"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename*0="Benchmarking data from a raid machine 2.6.34-rc3.eml"
+
+Return-Path: linux-ext4-owner@vger.kernel.org
+Received: from zmta03.collab.prod.int.phx2.redhat.com (LHLO
+ zmta03.collab.prod.int.phx2.redhat.com) (10.5.5.33) by
+ mail06.corp.redhat.com with LMTP; Fri, 23 Apr 2010 20:06:40 -0400 (EDT)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by zmta03.collab.prod.int.phx2.redhat.com (Postfix) with ESMTP id 0A5544CCAE;
+	Fri, 23 Apr 2010 20:06:40 -0400 (EDT)
+Received: from zmta03.collab.prod.int.phx2.redhat.com ([127.0.0.1])
+	by localhost (zmta03.collab.prod.int.phx2.redhat.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id N0+a-T+k1WYR; Fri, 23 Apr 2010 20:06:39 -0400 (EDT)
+Received: from int-mx05.intmail.prod.int.phx2.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.18])
+	by zmta03.collab.prod.int.phx2.redhat.com (Postfix) with ESMTP id E184C4CB39;
+	Fri, 23 Apr 2010 20:06:39 -0400 (EDT)
+Received: from mx1.redhat.com (ext-mx02.extmail.prod.ext.phx2.redhat.com [10.5.110.6])
+	by int-mx05.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id o3O06dAg012185;
+	Fri, 23 Apr 2010 20:06:39 -0400
+Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
+	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id o3O06T8f005167;
+	Fri, 23 Apr 2010 20:06:29 -0400
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S1755487Ab0DXAGV (ORCPT <rfc822;lczerner@redhat.com> + 6 others);
+	Fri, 23 Apr 2010 20:06:21 -0400
+Received: from e39.co.us.ibm.com ([32.97.110.160]:50535 "EHLO
+	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755430Ab0DXAGU (ORCPT
+	<rfc822;linux-ext4@vger.kernel.org>); Fri, 23 Apr 2010 20:06:20 -0400
+Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com [9.17.195.107])
+	by e39.co.us.ibm.com (8.14.3/8.13.1) with ESMTP id o3NNvuoW025922
+	for <linux-ext4@vger.kernel.org>; Fri, 23 Apr 2010 17:57:56 -0600
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o3O06JZC126758
+	for <linux-ext4@vger.kernel.org>; Fri, 23 Apr 2010 18:06:19 -0600
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id o3O06JPj024215
+	for <linux-ext4@vger.kernel.org>; Fri, 23 Apr 2010 18:06:19 -0600
+Received: from [9.76.76.183] (sig-9-76-76-183.mts.ibm.com [9.76.76.183])
+	by d03av01.boulder.ibm.com (8.14.3/8.13.1/NCO v10.0 AVin) with ESMTP id o3O06ING024202
+	for <linux-ext4@vger.kernel.org>; Fri, 23 Apr 2010 18:06:18 -0600
+Subject: Benchmarking data from a raid machine 2.6.34-rc3
+From: Keith Mannthey <kmannth@us.ibm.com>
+To: "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
+Content-Type: text/plain
+Date: Fri, 23 Apr 2010 17:06:18 -0700
+Message-Id: <1272067578.9664.40.camel@keith-laptop>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Sender: linux-ext4-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <linux-ext4.vger.kernel.org>
+X-Mailing-List: linux-ext4@vger.kernel.org
+X-RedHat-Spam-Score: -2.31  (RCVD_IN_DNSWL_MED,T_RP_MATCHES_RCVD)
+X-Scanned-By: MIMEDefang 2.67 on 10.5.11.18
+X-Scanned-By: MIMEDefang 2.67 on 10.5.110.6
+
+At long last here is a good data set for filesystem comparison.  It is
+from 2.6.34-rc3 (unpatched). It compares ext3 ext4 ext4-nobarrier,
+btrfs, btrfs-nocow, xfs and jfs on a software raid setup with a decent
+spindle count. 
+
+http://btrfs.boxacle.net/repository/raid/2010-04-14_2004/2.6.34-rc3/2.6.34-rc3.html
+
+
+As we know touring barriers off helps a lot with ext4 on this machine.
+I think Steve Pratt send some notification to the btrfs folks. Feel free
+to point others at this data.
+
+
+A history from this setup can be found here:  (mostly btrfs related
+data)
+
+http://btrfs.boxacle.net/repository/raid/history/History.html
+
+
+I hope to be do these large data set runs once in every major kernel
+revision life cycle. 
+
+Thanks,
+  Keith Mannthey
+  LTC FS-Dev 
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-ext4" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--------------000503090000000906090306
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--------------000503090000000906090306--
