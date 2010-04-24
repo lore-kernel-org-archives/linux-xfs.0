@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3OGgYh8166659 for <xfs@oss.sgi.com>; Sat, 24 Apr 2010 11:42:34 -0500
+	o3OH3rSY168043 for <xfs@oss.sgi.com>; Sat, 24 Apr 2010 12:03:54 -0500
 Received: from moutng.kundenserver.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EB50E1321437
-	for <xfs@oss.sgi.com>; Sat, 24 Apr 2010 09:44:33 -0700 (PDT)
-Received: from moutng.kundenserver.de (moutng.kundenserver.de [212.227.17.9])
-	by cuda.sgi.com with ESMTP id QnYgShKfCct74rra for
-	<xfs@oss.sgi.com>; Sat, 24 Apr 2010 09:44:33 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B178E1DDC3F5
+	for <xfs@oss.sgi.com>; Sat, 24 Apr 2010 10:05:55 -0700 (PDT)
+Received: from moutng.kundenserver.de (moutng.kundenserver.de [212.227.17.8])
+	by cuda.sgi.com with ESMTP id W6HTsuvDdTB1nWAn for
+	<xfs@oss.sgi.com>; Sat, 24 Apr 2010 10:05:55 -0700 (PDT)
 From: "Hans-Peter Jansen" <hpj@urpla.net>
-Subject: Re: 2.6.34-rc3: simple du (on a big xfs tree) triggers oom killer
-	[bisected: 57817c68229984818fea9e614d6f95249c3fb098]
-Date: Sat, 24 Apr 2010 18:44:22 +0200
-References: <201004050049.17952.hpj@urpla.net> <20100413091823.GD7544@dastard>
-	<201004131142.33518.hpj@urpla.net>
-In-Reply-To: <201004131142.33518.hpj@urpla.net>
+Subject: Re: power failure causes files loss
+Date: Sat, 24 Apr 2010 19:05:43 +0200
+References: <28340118.post@talk.nabble.com> <4BD21E65.80203@hardwarefreak.com>
+In-Reply-To: <4BD21E65.80203@hardwarefreak.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-Message-Id: <201004241844.23482.hpj@urpla.net>
+Message-Id: <201004241905.44282.hpj@urpla.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,58 +24,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Nick Piggin <npiggin@suse.de>, opensuse-kernel@opensuse.org, Greg KH <gregkh@suse.de>, linux-kernel@vger.kernel.org
+Cc: adamantzj <tzj1983@163.com>, Stan Hoeppner <stan@hardwarefreak.com>
 
-On Tuesday 13 April 2010, 11:42:33 Hans-Peter Jansen wrote:
-> On Tuesday 13 April 2010, 11:18:23 Dave Chinner wrote:
-> > On Tue, Apr 13, 2010 at 10:50:35AM +0200, Hans-Peter Jansen wrote:
-> > > Dave, may I ask you kindly for briefly elaborating on the worst
-> > > consequences of just reverting this hunk, as I've done before?
-> >
-> > Well, given that is the new shrinker code generating the warnings,
-> > reverting/removing that hunk will render the patch useless :0
->
-> Excuse me, I didn't express myself well. I'm after the consequences of
-> applying the revert, that I posted a few messages above.
->
-> > I'll get you a working 2.6.33 patch tomorrow - it's dinner time
-> > now....
->
-> Cool, thanks.
-
-Obviously and not totally unexpected, really fixing this is going to take 
-more time.
-
-FYI, 2.6.33.2 is still affected from this issue. 
-
-Greg, you might search for a server using xfs filesystems and and a i586 
-kernel >= 2.6.33, (2.6.32.11 of SLE11-SP1 will serve as well), log in as an 
-ordinary user, do a "du" on /usr, and wait for the other users screaming...
-
-BTW, all affected kernels, available from 
-http://download.opensuse.org/repositories/home:/frispete: have the 
-offending patch reverted (see subject), do run fine for me (on this 
-aspect).
-
-Will you guys pass by another round of stable fixes without doing anything 
-on this issue?
-
-Dave, this is why I'm kindly asking you: what might be the worst 
-consequences, if we just do the revert for now (at least for 2.6.33), until 
-you and Nick came to a final decision on how to solve this issue in the 
-future.
-
-Just a brief note would be fine.
-
-Cheers,
-Pete
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gU2F0dXJkYXkgMjQgQXByaWwgMjAxMCwgMDA6MjU6NDEgU3RhbiBIb2VwcG5lciB3cm90ZToK
+PiBhZGFtYW50emogcHV0IGZvcnRoIG9uIDQvMjMvMjAxMCA2OjI4IEFNOgo+ID4gSGVsbG8sCj4g
+Pgo+ID4gICAgICBJ4oCZbSB3cml0aW5nIGRhdGEgb24gYSBzZXJ2ZXIgaW4gbXkgY29tcGFueSwg
+YnV0IHBvd2VyIGN1dAo+ID4gc3VkZGVubHkuIEkgaGFkIHRvIHJlc3RhcnQgdGhlIG1hY2hpbmUs
+IHRoZW4gSSBmb3VuZCB0aGF0IG1hbnkgZmlsZXMgaW4KPiA+IHRoZSB3b3JraW5nIGRpcmVjdG9y
+eSBoYWQgYmVlbiBsb3N0LiBJIG1hZGUgc29tZSB0cmllcyB3aXRoIHhmc19yZXBhaXIKPiA+IGFu
+ZCBpdCBkaWRuJ3QgcmVwYWlyIG15IGNvcnJ1cHRlZCBmaWxlLgo+ID4KPiA+IFdoYXQgYXJlIHRo
+ZSByZWFzb25zIGNhdXNlZCB0aGlzIHByb2JsZW0/IEkgd291bGQgbGlrZSB0byBrbm93IGlzIHdo
+YXQKPiA+IGNhbiBJIGRvIHRvIHJlc29sdmUgdGhpcyBwcm9ibGVtPyBJcyBYRlMgYWJsZSB0byBy
+ZWNvdmVyIG15IGZpbGUgd2l0aAo+ID4gaXRzIHJpZ2h0IGNvbnRlbnQsIGF0IGxlYXN0IGEgY29u
+c2lzdGVudCBjb250ZW50Pwo+ID4KPiA+ICAgICAgSSdtIHJ1bm5pbmcgYSAyLjYuMjQga2VybmVs
+IHdpdGggeGZzcHJvZ3MtMy4xLjEsIGFuZCB0aGUgb3BlcmF0aW5nCj4gPiBzeXN0ZW0gaXMgUmVk
+SGF0IEVudGVycHJpc2UgTGludXggNSBTZXJ2ZXIgKDY0LWJpdCkuCj4gPgo+ID4gICAgICBEbyB5
+b3Uga25vdyBpZiB0aGlzIHByb2JsZW0gaGFzIG9mdGVuIGJlZW4gZW5jb3VudGVyZWQsIHRoZXJl
+IGlzIGEKPiA+IHdheSB0byBwcm9jZWVkPwo+ID4KPiA+IFRoYW5rIHlvdSAhCj4gPgo+ID4gQWRh
+bWFudAo+Cj4gWEZTIGlzbid0IHRoZSBjYXVzZSBvZiB5b3VyIHByb2JsZW0uICBSdW5uaW5nIHdp
+dGhvdXQgYSBwcm9wZXIgVVBTIGlzIHRoZQo+IGNhdXNlIG9mIHlvdXIgcHJvYmxlbS4gIEZpeCB0
+aGUgY2F1c2Ugb2YgeW91ciBwcm9ibGVtIGJ5IHB1cmNoYXNpbmcgYQo+IHByb3Blcmx5IHNpemVk
+IGFuZCBpbnN0cnVtZW50ZWQvbW9uaXRvcmVkIFVQUy4gIFlPVSBDQU5OT1QgcmVseSBvbiB5b3Vy
+Cj4gT1Mgb3IgZmlsZXN5c3RlbSBkcml2ZXIgdG8gcHJldmVudCBkYXRhIGxvc3MgZHVlIHRvIHBv
+d2VyIGxvc3MsIG9yIHRvCj4gcHJvcGVybHkgcmVjb3ZlciBmcm9tIHN1Y2ggdW5leHBlY3RlZCBw
+b3dlciBsb3NzIGlmL3doZW4gaXQgb2NjdXJzLiAgVGhpcwo+IGlzIHdoeSB5b3UgYWJzb2x1dGVs
+eSBuZWVkIHRvIGVsaW1pbmF0ZSB0aGUgcG9zc2liaWxpdHkgb2YgdW5leHBlY3RlZAo+IHBvd2Vy
+IGxvc3MuICBUaGlzIGlzIHRoZSBzb2xlIHB1cnBvc2UgZm9yIHRoZSBleGlzdGVuY2Ugb2YgY29t
+cGFuaWVzIHN1Y2gKPiBhcyBBUEMsIExpZWJlcnQsIFRyaXBwTGl0ZSBhbmQgb3RoZXJzLgo+Cj4g
+SSdkIGhhdmUgdGhvdWdodCBieSAyMDEwIHRoYXQgdGhlIGVudGlyZSBJVCBjYWRyZSB3b3JsZHdp
+ZGUgd291bGQgYWxyZWFkeQo+IGJlIGVkdWNhdGVkIG9uIHByb3BlciBwb3dlciBiYWNrdXAgcGxh
+bm5pbmcgYW5kIHByb2NlZHVyZXMuICBJIGd1ZXNzIG5vdC4KPgo+IEFjcXVpcmUgYSBwcm9wZXIg
+VVBTIGFuZCBjb25maWd1cmUgaXQgcHJvcGVybHksIHNwZWNpZmljYWxseSBtZWFuaW5nCj4gbW9u
+aXRvcmluZyBhbmQgYWxlcnRzIHdoaWNoIHdpbGwgYWxsb3cgZm9yIHBlcmZvcm1pbmcgYSBwcm9w
+ZXIgc2h1dGRvd24KPiBkdXJpbmcgYW4gZXh0ZW5kZWQgb3V0YWdlLCBhbmQgeW91ciBwcm9ibGVt
+cyB3aWxsIGRpc2FwcGVhci4KCldoaWxlIHlvdSdyZSByaWdodCBmb3IgdGhlIGdlbmVyYWwgY2Fz
+ZSBvZiBjb3Vyc2UsIHRoZXJlIGFyZSBtYW55IG90aGVyIApmYWlsdXJlIGNvbmRpdGlvbnMsIHRo
+YXQgYW4gVVBTIHdpbGwgbm90IHByZXZlbnQsIGVnLiBrZXJuZWwgY3Jhc2hlcy4gClRoZXJlZm9y
+ZSB0aGVyZSBpcyBhbiB2aXZpZCBpbnRlcmVzdCwgdGhhdCBhbnkgc3RvcmFnZSBiYXNlZCBmaWxl
+c3lzdGVtcyAgCnNob3VsZCBzdGF5IGNvbnNpc3RlbnQgX2FueV8gdGltZSAoYW5kIHVzdWFsbHkg
+ZmlsZXN5c3RlbSBkZXZlbG9wZXJzIHNwZW5kIAphbiBjb25zaWRlcmFibGUgYW1vdW50IG9mIHRo
+ZWlyIHRpbWUgb24gZml4aW5nIHN1Y2ggcHJvYmxlbXMsIGlmIHRoZXkgCmFyaXNlKS4gCgpBZGFt
+YW50LCB0aGUgcGVvcGxlIHJlYWRpbmcgaGVyZSBhcmUgcmFyZWx5IHRyYWluZWQgaW4gdGVsZXBh
+dGhpYyAgIApjYXBhYmlsaXRpZXMuIElmIHlvdSBuZWVkIG1vcmUgc3BlY2lmaWMgYW5zd2Vycywg
+eW91IG5lZWQgdG8gcHJvdmlkZSBtb3JlIApzcGVjaWZpYyBkZXRhaWxzLCBlZy4gbW91bnQgb3B0
+aW9ucywgZXJyb3IgbG9ncywgZXRjLgoKUGV0ZQoKX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0
+cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
