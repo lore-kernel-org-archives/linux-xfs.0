@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3OJJ17V177068 for <xfs@oss.sgi.com>; Sat, 24 Apr 2010 14:19:01 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B54E18C8622
-	for <xfs@oss.sgi.com>; Sat, 24 Apr 2010 12:21:02 -0700 (PDT)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id hTp3XrLx7ZSrctFS for
-	<xfs@oss.sgi.com>; Sat, 24 Apr 2010 12:21:02 -0700 (PDT)
-Message-ID: <4BD3449D.9020802@sandeen.net>
-Date: Sat, 24 Apr 2010 14:21:01 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+	o3OLAiVa184154 for <xfs@oss.sgi.com>; Sat, 24 Apr 2010 16:10:44 -0500
+Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3664D2EC1E1
+	for <xfs@oss.sgi.com>; Sat, 24 Apr 2010 14:12:43 -0700 (PDT)
+Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
+	cuda.sgi.com with ESMTP id e8DMbOjuUrP2yWSd for
+	<xfs@oss.sgi.com>; Sat, 24 Apr 2010 14:12:43 -0700 (PDT)
+Date: Sat, 24 Apr 2010 23:12:23 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
 Subject: Re: power failure causes files loss
+Message-ID: <20100424231223.39b12239@galadriel.home>
+In-Reply-To: <201004241905.44282.hpj@urpla.net>
 References: <28340118.post@talk.nabble.com> <4BD21E65.80203@hardwarefreak.com>
 	<201004241905.44282.hpj@urpla.net>
-In-Reply-To: <201004241905.44282.hpj@urpla.net>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,57 +24,32 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Hans-Peter Jansen <hpj@urpla.net>
 Cc: adamantzj <tzj1983@163.com>, Stan Hoeppner <stan@hardwarefreak.com>, xfs@oss.sgi.com
 
-SGFucy1QZXRlciBKYW5zZW4gd3JvdGU6Cj4gT24gU2F0dXJkYXkgMjQgQXByaWwgMjAxMCwgMDA6
-MjU6NDEgU3RhbiBIb2VwcG5lciB3cm90ZToKPj4gYWRhbWFudHpqIHB1dCBmb3J0aCBvbiA0LzIz
-LzIwMTAgNjoyOCBBTToKPj4+IEhlbGxvLAo+Pj4KPj4+ICAgICAgSeKAmW0gd3JpdGluZyBkYXRh
-IG9uIGEgc2VydmVyIGluIG15IGNvbXBhbnksIGJ1dCBwb3dlciBjdXQKPj4+IHN1ZGRlbmx5LiBJ
-IGhhZCB0byByZXN0YXJ0IHRoZSBtYWNoaW5lLCB0aGVuIEkgZm91bmQgdGhhdCBtYW55IGZpbGVz
-IGluCj4+PiB0aGUgd29ya2luZyBkaXJlY3RvcnkgaGFkIGJlZW4gbG9zdC4gSSBtYWRlIHNvbWUg
-dHJpZXMgd2l0aCB4ZnNfcmVwYWlyCj4+PiBhbmQgaXQgZGlkbid0IHJlcGFpciBteSBjb3JydXB0
-ZWQgZmlsZS4KPj4+Cj4+PiBXaGF0IGFyZSB0aGUgcmVhc29ucyBjYXVzZWQgdGhpcyBwcm9ibGVt
-PyBJIHdvdWxkIGxpa2UgdG8ga25vdyBpcyB3aGF0Cj4+PiBjYW4gSSBkbyB0byByZXNvbHZlIHRo
-aXMgcHJvYmxlbT8gSXMgWEZTIGFibGUgdG8gcmVjb3ZlciBteSBmaWxlIHdpdGgKPj4+IGl0cyBy
-aWdodCBjb250ZW50LCBhdCBsZWFzdCBhIGNvbnNpc3RlbnQgY29udGVudD8KPj4+Cj4+PiAgICAg
-IEknbSBydW5uaW5nIGEgMi42LjI0IGtlcm5lbCB3aXRoIHhmc3Byb2dzLTMuMS4xLCBhbmQgdGhl
-IG9wZXJhdGluZwo+Pj4gc3lzdGVtIGlzIFJlZEhhdCBFbnRlcnByaXNlIExpbnV4IDUgU2VydmVy
-ICg2NC1iaXQpLgo+Pj4KPj4+ICAgICAgRG8geW91IGtub3cgaWYgdGhpcyBwcm9ibGVtIGhhcyBv
-ZnRlbiBiZWVuIGVuY291bnRlcmVkLCB0aGVyZSBpcyBhCj4+PiB3YXkgdG8gcHJvY2VlZD8KPj4+
-Cj4+PiBUaGFuayB5b3UgIQo+Pj4KPj4+IEFkYW1hbnQKPj4gWEZTIGlzbid0IHRoZSBjYXVzZSBv
-ZiB5b3VyIHByb2JsZW0uICBSdW5uaW5nIHdpdGhvdXQgYSBwcm9wZXIgVVBTIGlzIHRoZQo+PiBj
-YXVzZSBvZiB5b3VyIHByb2JsZW0uICBGaXggdGhlIGNhdXNlIG9mIHlvdXIgcHJvYmxlbSBieSBw
-dXJjaGFzaW5nIGEKPj4gcHJvcGVybHkgc2l6ZWQgYW5kIGluc3RydW1lbnRlZC9tb25pdG9yZWQg
-VVBTLiAgWU9VIENBTk5PVCByZWx5IG9uIHlvdXIKPj4gT1Mgb3IgZmlsZXN5c3RlbSBkcml2ZXIg
-dG8gcHJldmVudCBkYXRhIGxvc3MgZHVlIHRvIHBvd2VyIGxvc3MsIG9yIHRvCj4+IHByb3Blcmx5
-IHJlY292ZXIgZnJvbSBzdWNoIHVuZXhwZWN0ZWQgcG93ZXIgbG9zcyBpZi93aGVuIGl0IG9jY3Vy
-cy4gIFRoaXMKPj4gaXMgd2h5IHlvdSBhYnNvbHV0ZWx5IG5lZWQgdG8gZWxpbWluYXRlIHRoZSBw
-b3NzaWJpbGl0eSBvZiB1bmV4cGVjdGVkCj4+IHBvd2VyIGxvc3MuICBUaGlzIGlzIHRoZSBzb2xl
-IHB1cnBvc2UgZm9yIHRoZSBleGlzdGVuY2Ugb2YgY29tcGFuaWVzIHN1Y2gKPj4gYXMgQVBDLCBM
-aWViZXJ0LCBUcmlwcExpdGUgYW5kIG90aGVycy4KPj4KPj4gSSdkIGhhdmUgdGhvdWdodCBieSAy
-MDEwIHRoYXQgdGhlIGVudGlyZSBJVCBjYWRyZSB3b3JsZHdpZGUgd291bGQgYWxyZWFkeQo+PiBi
-ZSBlZHVjYXRlZCBvbiBwcm9wZXIgcG93ZXIgYmFja3VwIHBsYW5uaW5nIGFuZCBwcm9jZWR1cmVz
-LiAgSSBndWVzcyBub3QuCj4+Cj4+IEFjcXVpcmUgYSBwcm9wZXIgVVBTIGFuZCBjb25maWd1cmUg
-aXQgcHJvcGVybHksIHNwZWNpZmljYWxseSBtZWFuaW5nCj4+IG1vbml0b3JpbmcgYW5kIGFsZXJ0
-cyB3aGljaCB3aWxsIGFsbG93IGZvciBwZXJmb3JtaW5nIGEgcHJvcGVyIHNodXRkb3duCj4+IGR1
-cmluZyBhbiBleHRlbmRlZCBvdXRhZ2UsIGFuZCB5b3VyIHByb2JsZW1zIHdpbGwgZGlzYXBwZWFy
-Lgo+IAo+IFdoaWxlIHlvdSdyZSByaWdodCBmb3IgdGhlIGdlbmVyYWwgY2FzZSBvZiBjb3Vyc2Us
-IHRoZXJlIGFyZSBtYW55IG90aGVyIAo+IGZhaWx1cmUgY29uZGl0aW9ucywgdGhhdCBhbiBVUFMg
-d2lsbCBub3QgcHJldmVudCwgZWcuIGtlcm5lbCBjcmFzaGVzLiAKPiBUaGVyZWZvcmUgdGhlcmUg
-aXMgYW4gdml2aWQgaW50ZXJlc3QsIHRoYXQgYW55IHN0b3JhZ2UgYmFzZWQgZmlsZXN5c3RlbXMg
-IAo+IHNob3VsZCBzdGF5IGNvbnNpc3RlbnQgX2FueV8gdGltZSAoYW5kIHVzdWFsbHkgZmlsZXN5
-c3RlbSBkZXZlbG9wZXJzIHNwZW5kIAo+IGFuIGNvbnNpZGVyYWJsZSBhbW91bnQgb2YgdGhlaXIg
-dGltZSBvbiBmaXhpbmcgc3VjaCBwcm9ibGVtcywgaWYgdGhleSAKPiBhcmlzZSkuIAo+IAo+IEFk
-YW1hbnQsIHRoZSBwZW9wbGUgcmVhZGluZyBoZXJlIGFyZSByYXJlbHkgdHJhaW5lZCBpbiB0ZWxl
-cGF0aGljICAgCj4gY2FwYWJpbGl0aWVzLiBJZiB5b3UgbmVlZCBtb3JlIHNwZWNpZmljIGFuc3dl
-cnMsIHlvdSBuZWVkIHRvIHByb3ZpZGUgbW9yZSAKPiBzcGVjaWZpYyBkZXRhaWxzLCBlZy4gbW91
-bnQgb3B0aW9ucywgZXJyb3IgbG9ncywgZXRjLgo+IAo+IFBldGUKClNlZSBhbHNvOgoKIkVhdCBN
-eSBEYXRhOiBIb3cgRXZlcnlib2R5IEdldHMgRmlsZSBJTyBXcm9uZyIKaHR0cDovL3d3dy5mbGFt
-aW5nc3BvcmsuY29tL3RhbGtzLwoKOikKCi1FcmljCgpfX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpo
-dHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+Le Sat, 24 Apr 2010 19:05:43 +0200 vous =E9criviez:
+
+> that any storage based filesystems  =
+
+> should stay consistent _any_ time
+
+AFAIK only FreeBSD UFS-with soft-updates actually comes close to that,
+at the huge cost of being impossibly complex :)
+
+-- =
+
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
