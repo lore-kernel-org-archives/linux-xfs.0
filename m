@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3P3VJIH224508 for <xfs@oss.sgi.com>; Sat, 24 Apr 2010 22:31:19 -0500
-Received: from thunker.thunk.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5CB072ED9FD
-	for <xfs@oss.sgi.com>; Sat, 24 Apr 2010 20:33:21 -0700 (PDT)
-Received: from thunker.thunk.org (thunk.org [69.25.196.29]) by cuda.sgi.com
-	with ESMTP id 2CRFnkhmYv4APUI5 for <xfs@oss.sgi.com>;
-	Sat, 24 Apr 2010 20:33:21 -0700 (PDT)
-Date: Sat, 24 Apr 2010 23:33:15 -0400
-From: tytso@mit.edu
-Subject: Re: [PATCH 3/4] writeback: pay attention to wbc->nr_to_write in
-	write_cache_pages
-Message-ID: <20100425033315.GC667@thunk.org>
-References: <1271731314-5893-1-git-send-email-david@fromorbit.com>
-	<1271731314-5893-4-git-send-email-david@fromorbit.com>
+	o3P9fnQc251901 for <xfs@OSS.SGI.com>; Sun, 25 Apr 2010 04:41:50 -0500
+Received: from ty.sabi.co.UK (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0BEEA8CA695
+	for <xfs@OSS.SGI.com>; Sun, 25 Apr 2010 02:43:50 -0700 (PDT)
+Received: from ty.sabi.co.UK (82-69-39-138.dsl.in-addr.zen.co.uk
+	[82.69.39.138]) by cuda.sgi.com with ESMTP id ZvUrJpV9Y2nKS0tl
+	for <xfs@OSS.SGI.com>; Sun, 25 Apr 2010 02:43:50 -0700 (PDT)
+Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.uk)
+	by ty.sabi.co.UK with esmtp(Exim 4.63 #1) id 1O5yNF-000441-HC
+	for <xfs@OSS.SGI.com>; Sun, 25 Apr 2010 10:43:37 +0100
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1271731314-5893-4-git-send-email-david@fromorbit.com>
+Message-ID: <19412.3777.475058.533813@tree.ty.sabi.co.uk>
+Date: Sun, 25 Apr 2010 10:43:29 +0100
+Subject: Re: power failure causes files loss
+In-Reply-To: <201004241905.44282.hpj@urpla.net>
+References: <28340118.post@talk.nabble.com> <4BD21E65.80203@hardwarefreak.com>
+	<201004241905.44282.hpj@urpla.net>
+From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,56 +27,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Linux XFS <xfs@oss.sgi.com>
 
-T24gVHVlLCBBcHIgMjAsIDIwMTAgYXQgMTI6NDE6NTNQTSArMTAwMCwgRGF2ZSBDaGlubmVyIHdy
-b3RlOgo+IEZyb206IERhdmUgQ2hpbm5lciA8ZGNoaW5uZXJAcmVkaGF0LmNvbT4KPiAKPiBJZiBh
-IGZpbGVzeXN0ZW0gd3JpdGVzIG1vcmUgdGhhbiBvbmUgcGFnZSBpbiAtPndyaXRlcGFnZSwgd3Jp
-dGVfY2FjaGVfcGFnZXMKPiBmYWlscyB0byBub3RpY2UgdGhpcyBhbmQgY29udGludWVzIHRvIGF0
-dGVtcHQgd3JpdGViYWNrIHdoZW4gd2JjLT5ucl90b193cml0ZQo+IGhhcyBnb25lIG5lZ2F0aXZl
-IC0gdGhpcyB0cmFjZSB3YXMgY2FwdHVyZWQgZnJvbSBYRlM6Cj4gCj4gCj4gICAgIHdiY193cml0
-ZWJhY2tfc3RhcnQ6IHRvd3J0PTEwMjQKPiAgICAgd2JjX3dyaXRlcGFnZTogdG93cnQ9MTAyNAo+
-ICAgICB3YmNfd3JpdGVwYWdlOiB0b3dydD0wCj4gICAgIHdiY193cml0ZXBhZ2U6IHRvd3J0PS0x
-Cj4gICAgIHdiY193cml0ZXBhZ2U6IHRvd3J0PS01Cj4gICAgIHdiY193cml0ZXBhZ2U6IHRvd3J0
-PS0yMQo+ICAgICB3YmNfd3JpdGVwYWdlOiB0b3dydD0tODUKPiAKPiBUaGlzIGhhcyBhZHZlcnNl
-IGVmZmVjdHMgb24gZmlsZXN5c3RlbSB3cml0ZWJhY2sgYmVoYXZpb3VyLiB3cml0ZV9jYWNoZV9w
-YWdlcygpCj4gbmVlZHMgdG8gdGVybWluYXRlIGFmdGVyIGEgY2VydGFpbiBudW1iZXIgb2YgcGFn
-ZXMgYXJlIHdyaXR0ZW4sIG5vdCBhZnRlciBhCj4gY2VydGFpbiBudW1iZXIgb2YgY2FsbHMgdG8g
-LT53cml0ZXBhZ2UgYXJlIG1hZGUuIE1ha2UgaXQgb2JzZXJ2ZSB0aGUgY3VycmVudAo+IHZhbHVl
-IG9mIHdiYy0+bnJfdG9fd3JpdGUgYW5kIHRyZWF0IGEgdmFsdWUgb2YgPD0gMCBhcyB0aG91Z2gg
-aXQgaXMgYSBlaXRoZXIgYQo+IHRlcm1pbmF0aW9uIGNvbmRpdGlvbiBvciBhIHRyaWdnZXIgdG8g
-cmVzZXQgdG8gTUFYX1dSSVRF4biGQUNLX1BBR0VTIGZvciBkYXRhCj4gaW50ZWdyaXR5IHN5bmNz
-LgoKQmUgY2FyZWZ1bCBoZXJlLiAgSWYgeW91IGFyZSBnb2luZyB0byB3cml0ZSBtb3JlIHBhZ2Vz
-IHRoYW4gd2hhdCB0aGUKd3JpdGViYWNrIGNvZGUgaGFzIHJlcXVlc3RlZCAodGhlIHN0dXBpZCBu
-byBtb3JlIHRoYW4gMTAyNCBwYWdlcwpyZXN0cmljdGlvbiBpbiB0aGUgd3JpdGViYWNrIGNvZGUg
-YmVmb3JlIGl0IGp1bXBzIHRvIHN0YXJ0IHdyaXRpbmcKc29tZSBvdGhlciBpbm9kZSksIHlvdSBh
-Y3R1YWxseSBuZWVkIHRvIGxldCB0aGUgcmV0dXJuZWQKd2JjLT5ucl90b193cml0ZSBnbyBuZWdh
-dGl2ZSwgc28gdGhhdCB3Yl93cml0ZWJhY2soKSBrbm93cyBob3cgbWFueQpwYWdlcyBpdCBoYXMg
-d3JpdHRlbi4KCkluIG90aGVyIHdvcmRzLCB0aGUgd3JpdGViYWNrIGNvZGUgYXNzdW1lcyB0aGF0
-IAoKICA8b3JpZ25hbCB2YWx1ZSBvZiBucl90b193cml0ZT4gLSA8cmV0dXJuZWQgd2JjLT5ucl90
-b193cml0ZT4KCmlzCgogIDxudW1iZXIgb2YgcGFnZXMgYWN0dWFsbHkgd3JpdHRlbj4KCklmIHlv
-dSBkb24ndCBsZXQgd2JjLT5ucl90b193cml0ZSBnbyBuZWdhdGl2ZSwgdGhlIHdyaXRlYmFjayBj
-b2RlIHdpbGwKYmUgY29uZnVzZWQgYWJvdXQgaG93IG1hbnkgcGFnZXMgd2VyZSBfYWN0dWFsbHlf
-IHdyaXR0ZW4sIGFuZCB0aGUKd3JpdGViYWNrIGNvZGUgZW5kcyB1cCB3cml0aW5nIHRvbyBtdWNo
-LiAgU2VlIGNvbW1pdCAyZmFmMmUxLgoKQWxsIG9mIHRoaXMgaXMgYSBjcm9jayBvZiBjb3Vyc2Uu
-ICBUaGUgZmlsZSBzeXN0ZW0gc2hvdWxkbid0IGJlCnNlY29uZC1ndWVzc2luZyB0aGUgd3JpdGVi
-YWNrIGNvZGUuICBJbnN0ZWFkIHRoZSB3cml0ZWJhY2sgY29kZSBzaG91bGQKYmUgYWRhcHRpdmVs
-eSBtZWFzdXJpbmcgaG93IGxvbmcgaXQgdGFrZXMgdG8gd2VyZSB3cml0dGVuIG91dCBOIHBhZ2Vz
-CnRvIGEgcGFydGljdWxhciBibG9jayBkZXZpY2UsIGFuZCB0aGVuIGRlY2lkZSB3aGF0J3MgdGhl
-IGFwcHJvcHJpYXRlCnNldHRpbmcgZm9yIG5yX3RvX3dyaXRlLiAgV2hhdCBtYWtlcyBzZW5zZSBm
-b3IgYSBVU0Igc3RpY2ssIG9yIGEgNDIwMApSUE0gbGFwdG9wIGRyaXZlLCBtYXkgbm90IG1ha2Ug
-c2Vuc2UgZm9yIGEgbWFzc2l2ZSBSQUlEIGFycmF5Li4uLgoKQnV0IHNpbmNlIHdlIGRvbid0IGhh
-dmUgdGhhdCwgYm90aCBYRlMgYW5kIGV4dDQgaGF2ZSB3b3JrYXJvdW5kcyBmb3IKYnJhaW4tZGFt
-YWdlZCB3cml0ZWJhY2sgYmVoYXZpb3VyLiAgKEkgZGlkIHNvbWUgdGVzdGluZywgYW5kIGV2ZW4g
-Zm9yCnN0YW5kYXJkIGxhcHRvcCBkcml2ZXMgdGhlIGNhcCBvZiAxMDI0IHBhZ2VzIGlzIGp1c3Qg
-V2F5IFRvbyBTbWFsbDsKdGhhdCBsaW1pdCB3YXMgc2V0IHNvbWV0aGluZyBsaWtlIGEgZGVjYWRl
-IGFnbywgYW5kIGV2ZXJ5b25lIGhhcyBiZWVuCmFmcmFpZCB0byBjaGFuZ2UgaXQsIGV2ZW4gdGhv
-dWdoIGRpc2tzIGhhdmUgZ290dGVuIGEgd2VlIGJpdCBmYXN0ZXIKc2luY2UgdGhvc2UgZGF5cy4p
-CgogICAgCSAgIAkgICAgICAJICAgICAgIAkgICAgIAkgLSBUZWQKCl9fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5z
-Z2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+[ ... usual call for 'O_PONIES' ... ]
+
+> While you're right for the general case of course, there are
+> many other failure conditions, that an UPS will not prevent,
+> eg. kernel crashes.
+
+> Therefore there is an vivid interest, that any storage based
+> filesystems should stay consistent _any_ time (and usually
+> filesystem developers spend an considerable amount of their
+> time on fixing such problems, if they arise).
+
+That's strictly speaking impossible, almost always undesirable,
+and at the same time easy to achieve: if you want something like
+that just mount with '-o sync' :-).
+
+If you want that *and* excellent performance, just mount with
+'-o ponies' instead :-).
+
+If you want that *and* excellent performance *and* scalable
+performance with small IO just mount with '-o unicorns' :-).
+
+This topic has been already discussed a few times over in this
+mailing list, and in the kernel mailing etc.; those who can get
+it have gotten it, those who don't continue to whine.
+
+The real problem is not so much the '-o ponies' (or '-o unicorns')
+attitude, it is that even those who get it still have a hard time
+with doing the right things because of limited or broken behaviour,
+at all levels (from the POSIX semantics of 'fsync' to the Linux
+page cache to the firmware of many drives).
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
