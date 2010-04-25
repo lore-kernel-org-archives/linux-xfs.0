@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3OMdVmi190803 for <xfs@oss.sgi.com>; Sat, 24 Apr 2010 17:39:31 -0500
-Received: from mail-pw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BA20013214DA
-	for <xfs@oss.sgi.com>; Sat, 24 Apr 2010 15:41:33 -0700 (PDT)
-Received: from mail-pw0-f53.google.com (mail-pw0-f53.google.com
-	[209.85.160.53]) by cuda.sgi.com with ESMTP id IDdE6AGCobeXz7Ki
-	for <xfs@oss.sgi.com>; Sat, 24 Apr 2010 15:41:33 -0700 (PDT)
-Received: by pwj10 with SMTP id 10so7409087pwj.26
-	for <xfs@oss.sgi.com>; Sat, 24 Apr 2010 15:41:32 -0700 (PDT)
-Message-ID: <4BD373AE.3000703@gmail.com>
-Date: Sat, 24 Apr 2010 15:41:50 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+	o3P3VJIH224508 for <xfs@oss.sgi.com>; Sat, 24 Apr 2010 22:31:19 -0500
+Received: from thunker.thunk.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5CB072ED9FD
+	for <xfs@oss.sgi.com>; Sat, 24 Apr 2010 20:33:21 -0700 (PDT)
+Received: from thunker.thunk.org (thunk.org [69.25.196.29]) by cuda.sgi.com
+	with ESMTP id 2CRFnkhmYv4APUI5 for <xfs@oss.sgi.com>;
+	Sat, 24 Apr 2010 20:33:21 -0700 (PDT)
+Date: Sat, 24 Apr 2010 23:33:15 -0400
+From: tytso@mit.edu
+Subject: Re: [PATCH 3/4] writeback: pay attention to wbc->nr_to_write in
+	write_cache_pages
+Message-ID: <20100425033315.GC667@thunk.org>
+References: <1271731314-5893-1-git-send-email-david@fromorbit.com>
+	<1271731314-5893-4-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: Re: [opensuse-kernel] Re: 2.6.34-rc3: simple du (on a big xfs tree)
-	triggers oom killer [bisected:
-	57817c68229984818fea9e614d6f95249c3fb098]
-References: <201004050049.17952.hpj@urpla.net>
-	<201004241844.23482.hpj@urpla.net>
-	<20100424232320.71f764eb@galadriel.home>
-	<201004250030.40867.hpj@urpla.net>
-In-Reply-To: <201004250030.40867.hpj@urpla.net>
+Content-Disposition: inline
+In-Reply-To: <1271731314-5893-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,62 +26,56 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Hans-Peter Jansen <hpj@urpla.net>
-Cc: Nick Piggin <npiggin@suse.de>, opensuse-kernel@opensuse.org, Greg KH <gregkh@suse.de>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On 04/24/2010 03:30 PM, Hans-Peter Jansen wrote:
-> On Saturday 24 April 2010, 23:23:20 Emmanuel Florac wrote:
->> Le Sat, 24 Apr 2010 18:44:22 +0200 vous =E9criviez:
->>> Greg, you might search for a server using xfs filesystems and and a
->>> i586 kernel>=3D 2.6.33, (2.6.32.11 of SLE11-SP1 will serve as well),
->>> log in as an ordinary user, do a "du" on /usr, and wait for the other
->>> users screaming...
->>
->> I did precisely that, and didn't notice anything special (du on kernel
->> source tree) kernel 2.6.32.11, deadline scheduler, 7 drives RAID-6
->> array, 8GB RAM.
->
-> I guess, you're not on this specific openSUSE git version of 2.6.32.11 (e=
-.g.
-> the preparation for SP1 of SLE11), which, as usual, carries a lot of stuff
-> from later kernels. The offending patch was included in linux-2.6.33
-> between -rc4 and -rc5:
->
-> Committer
-> Alex Elder<aelder@sgi.com>
-> Author
-> Dave Chinner<david@fromorbit.com>
-> Author date
-> 11.01.10 00:51
-> Parent
-> xfs: Avoid inodes in reclaim when flushing from inode cache
-> Child
-> xfs: Remove inode iolock held check during allocation
-> Branch
-> master origin (Merge branch 'for-linus' of git://git.kernel.org/pub/scm/.=
-..)
-> Branch
-> 2.6.33.1 (Linux 2.6.33)
-> Follows
-> v2.6.33-rc4 (Linux 2.6.33-rc4)
-> Precedes
-> v2.6.33-rc5 (Linux 2.6.33-rc5)
->
-> Cheers,
-> Pete
-
-sh*t.. my bad just replied to the wrong
-thread..
-
-I'm tired.. please ignore this.
-
-Justin P. Mattock
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlLCBBcHIgMjAsIDIwMTAgYXQgMTI6NDE6NTNQTSArMTAwMCwgRGF2ZSBDaGlubmVyIHdy
+b3RlOgo+IEZyb206IERhdmUgQ2hpbm5lciA8ZGNoaW5uZXJAcmVkaGF0LmNvbT4KPiAKPiBJZiBh
+IGZpbGVzeXN0ZW0gd3JpdGVzIG1vcmUgdGhhbiBvbmUgcGFnZSBpbiAtPndyaXRlcGFnZSwgd3Jp
+dGVfY2FjaGVfcGFnZXMKPiBmYWlscyB0byBub3RpY2UgdGhpcyBhbmQgY29udGludWVzIHRvIGF0
+dGVtcHQgd3JpdGViYWNrIHdoZW4gd2JjLT5ucl90b193cml0ZQo+IGhhcyBnb25lIG5lZ2F0aXZl
+IC0gdGhpcyB0cmFjZSB3YXMgY2FwdHVyZWQgZnJvbSBYRlM6Cj4gCj4gCj4gICAgIHdiY193cml0
+ZWJhY2tfc3RhcnQ6IHRvd3J0PTEwMjQKPiAgICAgd2JjX3dyaXRlcGFnZTogdG93cnQ9MTAyNAo+
+ICAgICB3YmNfd3JpdGVwYWdlOiB0b3dydD0wCj4gICAgIHdiY193cml0ZXBhZ2U6IHRvd3J0PS0x
+Cj4gICAgIHdiY193cml0ZXBhZ2U6IHRvd3J0PS01Cj4gICAgIHdiY193cml0ZXBhZ2U6IHRvd3J0
+PS0yMQo+ICAgICB3YmNfd3JpdGVwYWdlOiB0b3dydD0tODUKPiAKPiBUaGlzIGhhcyBhZHZlcnNl
+IGVmZmVjdHMgb24gZmlsZXN5c3RlbSB3cml0ZWJhY2sgYmVoYXZpb3VyLiB3cml0ZV9jYWNoZV9w
+YWdlcygpCj4gbmVlZHMgdG8gdGVybWluYXRlIGFmdGVyIGEgY2VydGFpbiBudW1iZXIgb2YgcGFn
+ZXMgYXJlIHdyaXR0ZW4sIG5vdCBhZnRlciBhCj4gY2VydGFpbiBudW1iZXIgb2YgY2FsbHMgdG8g
+LT53cml0ZXBhZ2UgYXJlIG1hZGUuIE1ha2UgaXQgb2JzZXJ2ZSB0aGUgY3VycmVudAo+IHZhbHVl
+IG9mIHdiYy0+bnJfdG9fd3JpdGUgYW5kIHRyZWF0IGEgdmFsdWUgb2YgPD0gMCBhcyB0aG91Z2gg
+aXQgaXMgYSBlaXRoZXIgYQo+IHRlcm1pbmF0aW9uIGNvbmRpdGlvbiBvciBhIHRyaWdnZXIgdG8g
+cmVzZXQgdG8gTUFYX1dSSVRF4biGQUNLX1BBR0VTIGZvciBkYXRhCj4gaW50ZWdyaXR5IHN5bmNz
+LgoKQmUgY2FyZWZ1bCBoZXJlLiAgSWYgeW91IGFyZSBnb2luZyB0byB3cml0ZSBtb3JlIHBhZ2Vz
+IHRoYW4gd2hhdCB0aGUKd3JpdGViYWNrIGNvZGUgaGFzIHJlcXVlc3RlZCAodGhlIHN0dXBpZCBu
+byBtb3JlIHRoYW4gMTAyNCBwYWdlcwpyZXN0cmljdGlvbiBpbiB0aGUgd3JpdGViYWNrIGNvZGUg
+YmVmb3JlIGl0IGp1bXBzIHRvIHN0YXJ0IHdyaXRpbmcKc29tZSBvdGhlciBpbm9kZSksIHlvdSBh
+Y3R1YWxseSBuZWVkIHRvIGxldCB0aGUgcmV0dXJuZWQKd2JjLT5ucl90b193cml0ZSBnbyBuZWdh
+dGl2ZSwgc28gdGhhdCB3Yl93cml0ZWJhY2soKSBrbm93cyBob3cgbWFueQpwYWdlcyBpdCBoYXMg
+d3JpdHRlbi4KCkluIG90aGVyIHdvcmRzLCB0aGUgd3JpdGViYWNrIGNvZGUgYXNzdW1lcyB0aGF0
+IAoKICA8b3JpZ25hbCB2YWx1ZSBvZiBucl90b193cml0ZT4gLSA8cmV0dXJuZWQgd2JjLT5ucl90
+b193cml0ZT4KCmlzCgogIDxudW1iZXIgb2YgcGFnZXMgYWN0dWFsbHkgd3JpdHRlbj4KCklmIHlv
+dSBkb24ndCBsZXQgd2JjLT5ucl90b193cml0ZSBnbyBuZWdhdGl2ZSwgdGhlIHdyaXRlYmFjayBj
+b2RlIHdpbGwKYmUgY29uZnVzZWQgYWJvdXQgaG93IG1hbnkgcGFnZXMgd2VyZSBfYWN0dWFsbHlf
+IHdyaXR0ZW4sIGFuZCB0aGUKd3JpdGViYWNrIGNvZGUgZW5kcyB1cCB3cml0aW5nIHRvbyBtdWNo
+LiAgU2VlIGNvbW1pdCAyZmFmMmUxLgoKQWxsIG9mIHRoaXMgaXMgYSBjcm9jayBvZiBjb3Vyc2Uu
+ICBUaGUgZmlsZSBzeXN0ZW0gc2hvdWxkbid0IGJlCnNlY29uZC1ndWVzc2luZyB0aGUgd3JpdGVi
+YWNrIGNvZGUuICBJbnN0ZWFkIHRoZSB3cml0ZWJhY2sgY29kZSBzaG91bGQKYmUgYWRhcHRpdmVs
+eSBtZWFzdXJpbmcgaG93IGxvbmcgaXQgdGFrZXMgdG8gd2VyZSB3cml0dGVuIG91dCBOIHBhZ2Vz
+CnRvIGEgcGFydGljdWxhciBibG9jayBkZXZpY2UsIGFuZCB0aGVuIGRlY2lkZSB3aGF0J3MgdGhl
+IGFwcHJvcHJpYXRlCnNldHRpbmcgZm9yIG5yX3RvX3dyaXRlLiAgV2hhdCBtYWtlcyBzZW5zZSBm
+b3IgYSBVU0Igc3RpY2ssIG9yIGEgNDIwMApSUE0gbGFwdG9wIGRyaXZlLCBtYXkgbm90IG1ha2Ug
+c2Vuc2UgZm9yIGEgbWFzc2l2ZSBSQUlEIGFycmF5Li4uLgoKQnV0IHNpbmNlIHdlIGRvbid0IGhh
+dmUgdGhhdCwgYm90aCBYRlMgYW5kIGV4dDQgaGF2ZSB3b3JrYXJvdW5kcyBmb3IKYnJhaW4tZGFt
+YWdlZCB3cml0ZWJhY2sgYmVoYXZpb3VyLiAgKEkgZGlkIHNvbWUgdGVzdGluZywgYW5kIGV2ZW4g
+Zm9yCnN0YW5kYXJkIGxhcHRvcCBkcml2ZXMgdGhlIGNhcCBvZiAxMDI0IHBhZ2VzIGlzIGp1c3Qg
+V2F5IFRvbyBTbWFsbDsKdGhhdCBsaW1pdCB3YXMgc2V0IHNvbWV0aGluZyBsaWtlIGEgZGVjYWRl
+IGFnbywgYW5kIGV2ZXJ5b25lIGhhcyBiZWVuCmFmcmFpZCB0byBjaGFuZ2UgaXQsIGV2ZW4gdGhv
+dWdoIGRpc2tzIGhhdmUgZ290dGVuIGEgd2VlIGJpdCBmYXN0ZXIKc2luY2UgdGhvc2UgZGF5cy4p
+CgogICAgCSAgIAkgICAgICAJICAgICAgIAkgICAgIAkgLSBUZWQKCl9fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5z
+Z2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
