@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3PBFXSX259105 for <xfs@OSS.SGI.com>; Sun, 25 Apr 2010 06:15:34 -0500
-Received: from ty.sabi.co.UK (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8A3B62EE51A
-	for <xfs@OSS.SGI.com>; Sun, 25 Apr 2010 04:17:34 -0700 (PDT)
-Received: from ty.sabi.co.UK (82-69-39-138.dsl.in-addr.zen.co.uk
-	[82.69.39.138]) by cuda.sgi.com with ESMTP id G8L7sdBSXMxULxec
-	for <xfs@OSS.SGI.com>; Sun, 25 Apr 2010 04:17:34 -0700 (PDT)
-Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.uk)
-	by ty.sabi.co.UK with esmtp(Exim 4.63 #1) id 1O5zq5-0004Hq-7T
-	for <xfs@OSS.SGI.com>; Sun, 25 Apr 2010 12:17:29 +0100
-MIME-Version: 1.0
-Message-ID: <19412.9412.177637.116303@tree.ty.sabi.co.uk>
-Date: Sun, 25 Apr 2010 12:17:24 +0100
+	o3PD0Jk3004557 for <xfs@oss.sgi.com>; Sun, 25 Apr 2010 08:00:19 -0500
+Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 016348CAD0E
+	for <xfs@oss.sgi.com>; Sun, 25 Apr 2010 06:02:18 -0700 (PDT)
+Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
+	cuda.sgi.com with ESMTP id 9EQPnmY1g44ccC93 for
+	<xfs@oss.sgi.com>; Sun, 25 Apr 2010 06:02:18 -0700 (PDT)
+Date: Sun, 25 Apr 2010 15:02:09 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
 Subject: Re: xfs_fsr question for improvement
-In-Reply-To: <20100417091357.4e7ad1e0@galadriel.home>
+Message-ID: <20100425150209.5167fe96@galadriel.home>
+In-Reply-To: <19412.9412.177637.116303@tree.ty.sabi.co.uk>
 References: <201004161043.11243@zmi.at> <20100417012415.GE2493@dastard>
 	<20100417091357.4e7ad1e0@galadriel.home>
-From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
+	<19412.9412.177637.116303@tree.ty.sabi.co.uk>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,50 +25,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linux XFS <xfs@oss.sgi.com>
+To: Peter Grandi <pg_xf2@xf2.for.sabi.co.UK>
+Cc: Linux XFS <xfs@oss.sgi.com>
 
-[ ... ]
+Le Sun, 25 Apr 2010 12:17:24 +0100 vous =E9criviez:
 
->> XFS resists fragmentation better than most other filesystems,
->> so defragmentation, while possible, is generally not needed.
+> > my test VMware server (performance dropped down to abysmal
+> > level until I set up a daily xfs_fsr cron job),  =
 
-That's a common myth. For most file systems and filesystems.
-Also most applications write files really badly.
+> =
 
-  http://www.sabi.co.uk/blog/anno06-3rd.html#060914b
+> That should not be the case unless you are using very sparse
+> VM image files, in which case you get what you pay for.
+> =
 
-> There two systems nevertheless where I need to use xfs_fsr
-> regularly to keep decent performance :
 
-Fortunately 'xfs_fsr' is mostly reliable, but in-place
-defragmentation is a risky propostion for several reasons even
-if 'xfs_fsr' is fairly reliable.
+This is a development and test VM Ware server, so it hosts lots ( 100
+or so) of test VM with sparse image files (when you start a VM to host
+a quick test, you don't want to spend 15 minutes initializing the
+drives).
 
-Note also that 'xfs_fsr' uses a terrible "defragmentation"
-strategy (from 'man xfs_fsr'):
+> > and a write-intensive video server.  =
 
-  "The reorganization algorithm operates on one file at a time,"
+> =
 
-  "xfs_fsr improves the layout of extents for each file by
-  copying the entire file to a temporary location and then
-  interchanging the data extents of the target and temporary
-  files in an atomic manner."
+> That also should not be the case unless your applications write
+> strategy is wrong and you get extremely interleaved streams, in
+> which case you get what you paid for the application programmer.
 
-> my test VMware server (performance dropped down to abysmal
-> level until I set up a daily xfs_fsr cron job),
+The application write strategy is as simple as possible; several
+different machines unaware of every other write huge media files to a
+samba share. I don't know how it could be worse, however it could
+hardly be enhanced in any way.
 
-That should not be the case unless you are using very sparse
-VM image files, in which case you get what you pay for.
+-- =
 
-> and a write-intensive video server.
-
-That also should not be the case unless your applications write
-strategy is wrong and you get extremely interleaved streams, in
-which case you get what you paid for the application programmer.
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
 
 _______________________________________________
 xfs mailing list
