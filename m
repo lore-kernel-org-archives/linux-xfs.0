@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3P9fnQc251901 for <xfs@OSS.SGI.com>; Sun, 25 Apr 2010 04:41:50 -0500
-Received: from ty.sabi.co.UK (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0BEEA8CA695
-	for <xfs@OSS.SGI.com>; Sun, 25 Apr 2010 02:43:50 -0700 (PDT)
-Received: from ty.sabi.co.UK (82-69-39-138.dsl.in-addr.zen.co.uk
-	[82.69.39.138]) by cuda.sgi.com with ESMTP id ZvUrJpV9Y2nKS0tl
-	for <xfs@OSS.SGI.com>; Sun, 25 Apr 2010 02:43:50 -0700 (PDT)
-Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.uk)
-	by ty.sabi.co.UK with esmtp(Exim 4.63 #1) id 1O5yNF-000441-HC
-	for <xfs@OSS.SGI.com>; Sun, 25 Apr 2010 10:43:37 +0100
+	o3PA7oh7254029 for <xfs@oss.sgi.com>; Sun, 25 Apr 2010 05:07:50 -0500
+Received: from rcsinet10.oracle.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CDD798CA141
+	for <xfs@oss.sgi.com>; Sun, 25 Apr 2010 03:09:52 -0700 (PDT)
+Received: from rcsinet10.oracle.com (rcsinet10.oracle.com [148.87.113.121]) by
+	cuda.sgi.com with ESMTP id P30FldAei5SKsYJp for
+	<xfs@oss.sgi.com>; Sun, 25 Apr 2010 03:09:52 -0700 (PDT)
+Date: Sun, 25 Apr 2010 18:08:33 +0800
+From: Wengang Wang <wen.gang.wang@oracle.com>
+Subject: Re: is realtime device supported?
+Message-ID: <20100425100833.GA2361@laptop.us.oracle.com>
+References: <20100422144939.GA3822@laptop.oracle.com>
+	<20100422162325.GA29668@infradead.org> <4BD07F06.70101@sandeen.net>
+	<20100423030011.GB2949@laptop.oracle.com>
+	<4BD111CA.4040205@sandeen.net>
 MIME-Version: 1.0
-Message-ID: <19412.3777.475058.533813@tree.ty.sabi.co.uk>
-Date: Sun, 25 Apr 2010 10:43:29 +0100
-Subject: Re: power failure causes files loss
-In-Reply-To: <201004241905.44282.hpj@urpla.net>
-References: <28340118.post@talk.nabble.com> <4BD21E65.80203@hardwarefreak.com>
-	<201004241905.44282.hpj@urpla.net>
-From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
+Content-Disposition: inline
+In-Reply-To: <4BD111CA.4040205@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,38 +31,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linux XFS <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com, greg.marsden@oracle.com, joe.jin@oracle.com, Wengang Wang <wen.gang.wang@oracle.com>
 
-[ ... usual call for 'O_PONIES' ... ]
+Hi Eirc,
 
-> While you're right for the general case of course, there are
-> many other failure conditions, that an UPS will not prevent,
-> eg. kernel crashes.
+On 10-04-22 22:19, Eric Sandeen wrote:
+> Wengang Wang wrote:
+> > On 10-04-22 11:53, Eric Sandeen wrote:
+> >> Christoph Hellwig wrote:
+> >>> On Thu, Apr 22, 2010 at 10:49:39PM +0800, Wengang Wang wrote:
+> >>>> Do we support realtime device?
+> >>>>
+> >>>> I got the following error:
+> >>> It sounds like you do not have CONFIG_XFS_RT enable in your kernel
+> >>> configuration.  But to answer your original question the realtime
+> >>> device is not supported in the sense of actively maintained.  The
+> >>> code is still there, but more or less for legacy reasons.  I would
+> >>> not recommend it for new installations.
+> > 
+> > Yes, CONFIG_XFS_RT is disabled.
+> > [wwg@desk linux-2.6.18.x86_64]$ grep CONFIG_XFS_RT .config
+> > # CONFIG_XFS_RT is not set
+> > 
+> > And Ok I see. Also should we add the point to man page of mkfs.xfs?
+> > 
+> >> Agreed.
+> >>
+> >> FWIW, dmesg probably gave you a more helpful error message than
+> >> mount...
+> >>
+> >>                 cmn_err(CE_WARN, "XFS: RT mount failed");
+> >>
+> >> hm or maybe not ;)
+> > 
+> > Only "XFS: RT mount failed" :)
+> 
+> A patch to explicitly say that it failed because CONFIG_XFS_RT was off
+> would be happily accepted, too.
 
-> Therefore there is an vivid interest, that any storage based
-> filesystems should stay consistent _any_ time (and usually
-> filesystem developers spend an considerable amount of their
-> time on fixing such problems, if they arise).
+Yes. I will try to make the patch.
+> 
+> I am curious, are you doing a lot of QA type work on xfs?  You are finding
+> some interesting things that could certainly be fixed up, we appreciate it.
 
-That's strictly speaking impossible, almost always undesirable,
-and at the same time easy to achieve: if you want something like
-that just mount with '-o sync' :-).
+I am just interested in it :). I like to play with various file systems.
 
-If you want that *and* excellent performance, just mount with
-'-o ponies' instead :-).
-
-If you want that *and* excellent performance *and* scalable
-performance with small IO just mount with '-o unicorns' :-).
-
-This topic has been already discussed a few times over in this
-mailing list, and in the kernel mailing etc.; those who can get
-it have gotten it, those who don't continue to whine.
-
-The real problem is not so much the '-o ponies' (or '-o unicorns')
-attitude, it is that even those who get it still have a hard time
-with doing the right things because of limited or broken behaviour,
-at all levels (from the POSIX semantics of 'fsync' to the Linux
-page cache to the firmware of many drives).
+regards,
+wengang.
 
 _______________________________________________
 xfs mailing list
