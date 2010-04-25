@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3PIFqQ1028144 for <xfs@oss.sgi.com>; Sun, 25 Apr 2010 13:15:52 -0500
-Received: from mx1.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 66AE12EEC72
-	for <xfs@oss.sgi.com>; Sun, 25 Apr 2010 11:17:54 -0700 (PDT)
-Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
-	with ESMTP id N88kCY4kjCYUIoVN for <xfs@oss.sgi.com>;
-	Sun, 25 Apr 2010 11:17:54 -0700 (PDT)
-Date: Sun, 25 Apr 2010 11:18:35 -0700
-From: Greg KH <gregkh@suse.de>
-Subject: Re: 2.6.34-rc3: simple du (on a big xfs tree) triggers oom killer
-	[bisected: 57817c68229984818fea9e614d6f95249c3fb098]
-Message-ID: <20100425181835.GA22772@suse.de>
-References: <201004050049.17952.hpj@urpla.net> <20100413091823.GD7544@dastard>
-	<201004131142.33518.hpj@urpla.net>
-	<201004241844.23482.hpj@urpla.net> <20100425162740.GB19195@suse.de>
-	<20100425165734.GA2887@infradead.org>
+	o3PL2Xb7035346 for <xfs@oss.sgi.com>; Sun, 25 Apr 2010 16:02:34 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 72ED71326E30
+	for <xfs@oss.sgi.com>; Sun, 25 Apr 2010 14:04:35 -0700 (PDT)
+Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
+	by cuda.sgi.com with ESMTP id ysieoUHDxT9OkmJr for
+	<xfs@oss.sgi.com>; Sun, 25 Apr 2010 14:04:35 -0700 (PDT)
+Message-ID: <4BD4AE62.9080600@sandeen.net>
+Date: Sun, 25 Apr 2010 16:04:34 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100425165734.GA2887@infradead.org>
+Subject: Re: xfs_fsr question for improvement
+References: <201004161043.11243@zmi.at>
+	<20100417012415.GE2493@dastard>	<20100417091357.4e7ad1e0@galadriel.home>	<19412.9412.177637.116303@tree.ty.sabi.co.uk>
+	<20100425150209.5167fe96@galadriel.home>
+In-Reply-To: <20100425150209.5167fe96@galadriel.home>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,31 +25,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Nick Piggin <npiggin@suse.de>, xfs@oss.sgi.com, opensuse-kernel@opensuse.org, linux-kernel@vger.kernel.org
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: Peter Grandi <pg_xf2@xf2.for.sabi.co.UK>, Linux XFS <xfs@oss.sgi.com>
 
-On Sun, Apr 25, 2010 at 12:57:35PM -0400, Christoph Hellwig wrote:
-> On Sun, Apr 25, 2010 at 09:27:40AM -0700, Greg KH wrote:
-> > On Sat, Apr 24, 2010 at 06:44:22PM +0200, Hans-Peter Jansen wrote:
-> > > FYI, 2.6.33.2 is still affected from this issue. 
-> > 
-> > Is 2.6.33.3-rc2 affected?  A lot of xfs patches are in there (as are in
-> > 2.6.32.12-rc2.)
-> 
-> Yes.  It's not even in mainline yet as Nick doesn't like the trivial
-> core VM fix required to solve this in a clean way.
+Emmanuel Florac wrote:
+> Le Sun, 25 Apr 2010 12:17:24 +0100 vous =E9criviez:
+> =
 
-Hm, Nick, why?  This seems like a real problem, easily reproduced.  Is
-it solved some other way in Linus's tree that we could backport to the
--stable series?
+>>> my test VMware server (performance dropped down to abysmal
+>>> level until I set up a daily xfs_fsr cron job),  =
 
-thanks,
+>> That should not be the case unless you are using very sparse
+>> VM image files, in which case you get what you pay for.
+>>
+> =
 
-greg k-h
+> This is a development and test VM Ware server, so it hosts lots ( 100
+> or so) of test VM with sparse image files (when you start a VM to host
+> a quick test, you don't want to spend 15 minutes initializing the
+> drives).
+
+If you have the -space- then you can use space preallocation to
+do this very quickly, FWIW.  xfs_io's resvsp command, or fallocate
+in recent util-linux-ng, if vmware doesn't do it on its own already.
+
+You pay some penalty for unwritten extent conversion but it'd be
+better than massive fragmentation of the images.
+
+>>> and a write-intensive video server.  =
+
+>> That also should not be the case unless your applications write
+>> strategy is wrong and you get extremely interleaved streams, in
+>> which case you get what you paid for the application programmer.
+> =
+
+> The application write strategy is as simple as possible; several
+> different machines unaware of every other write huge media files to a
+> samba share. I don't know how it could be worse, however it could
+> hardly be enhanced in any way.
+
+If it's all large writes, you could mount -o allocsize=3D512m or so:
+
+  allocsize=3Dsize
+        Sets the buffered I/O end-of-file preallocation size when
+        doing delayed allocation writeout (default size is 64KiB).
+        Valid values for this option are page size (typically 4KiB)
+        through to 1GiB, inclusive, in power-of-2 increments.
+
+and that might help.
+
+-Eric
 
 _______________________________________________
 xfs mailing list
