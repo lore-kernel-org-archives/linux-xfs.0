@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3PD3AnE004743 for <xfs@oss.sgi.com>; Sun, 25 Apr 2010 08:03:10 -0500
-Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3B1D12EE56E
-	for <xfs@oss.sgi.com>; Sun, 25 Apr 2010 06:05:11 -0700 (PDT)
-Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
-	cuda.sgi.com with ESMTP id GJuAeviXoNG4qJrL for
-	<xfs@oss.sgi.com>; Sun, 25 Apr 2010 06:05:11 -0700 (PDT)
-Date: Sun, 25 Apr 2010 15:04:54 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
+	o3PGP2X6021303 for <xfs@oss.sgi.com>; Sun, 25 Apr 2010 11:25:03 -0500
+Received: from mx1.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B883A1DDCECC
+	for <xfs@oss.sgi.com>; Sun, 25 Apr 2010 09:27:05 -0700 (PDT)
+Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
+	with ESMTP id 6aAwGBM6Jvu9VtEo for <xfs@oss.sgi.com>;
+	Sun, 25 Apr 2010 09:27:05 -0700 (PDT)
+Date: Sun, 25 Apr 2010 09:27:40 -0700
+From: Greg KH <gregkh@suse.de>
 Subject: Re: 2.6.34-rc3: simple du (on a big xfs tree) triggers oom killer
 	[bisected: 57817c68229984818fea9e614d6f95249c3fb098]
-Message-ID: <20100425150454.29332472@galadriel.home>
-In-Reply-To: <201004250030.40867.hpj@urpla.net>
-References: <201004050049.17952.hpj@urpla.net>
+Message-ID: <20100425162740.GB19195@suse.de>
+References: <201004050049.17952.hpj@urpla.net> <20100413091823.GD7544@dastard>
+	<201004131142.33518.hpj@urpla.net>
 	<201004241844.23482.hpj@urpla.net>
-	<20100424232320.71f764eb@galadriel.home>
-	<201004250030.40867.hpj@urpla.net>
-Mime-Version: 1.0
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <201004241844.23482.hpj@urpla.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,30 +27,22 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Hans-Peter Jansen <hpj@urpla.net>
-Cc: Nick Piggin <npiggin@suse.de>, Greg KH <gregkh@suse.de>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+Cc: Nick Piggin <npiggin@suse.de>, opensuse-kernel@opensuse.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Le Sun, 25 Apr 2010 00:30:40 +0200 vous =E9criviez:
+On Sat, Apr 24, 2010 at 06:44:22PM +0200, Hans-Peter Jansen wrote:
+> FYI, 2.6.33.2 is still affected from this issue. 
 
-> I guess, you're not on this specific openSUSE git version of
-> 2.6.32.11 (e.g. the preparation for SP1 of SLE11), which, as usual,
-> carries a lot of stuff from later kernels.
+Is 2.6.33.3-rc2 affected?  A lot of xfs patches are in there (as are in
+2.6.32.12-rc2.)
 
-No, I always use pristine unpatched kernel.org releases, no SELinux, no
-nothing. Just another confirmation I should go on this way :)
+thanks,
 
--- =
-
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+greg k-h
 
 _______________________________________________
 xfs mailing list
