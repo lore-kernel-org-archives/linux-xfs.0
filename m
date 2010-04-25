@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3PD0Jk3004557 for <xfs@oss.sgi.com>; Sun, 25 Apr 2010 08:00:19 -0500
+	o3PD3AnE004743 for <xfs@oss.sgi.com>; Sun, 25 Apr 2010 08:03:10 -0500
 Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 016348CAD0E
-	for <xfs@oss.sgi.com>; Sun, 25 Apr 2010 06:02:18 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3B1D12EE56E
+	for <xfs@oss.sgi.com>; Sun, 25 Apr 2010 06:05:11 -0700 (PDT)
 Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
-	cuda.sgi.com with ESMTP id 9EQPnmY1g44ccC93 for
-	<xfs@oss.sgi.com>; Sun, 25 Apr 2010 06:02:18 -0700 (PDT)
-Date: Sun, 25 Apr 2010 15:02:09 +0200
+	cuda.sgi.com with ESMTP id GJuAeviXoNG4qJrL for
+	<xfs@oss.sgi.com>; Sun, 25 Apr 2010 06:05:11 -0700 (PDT)
+Date: Sun, 25 Apr 2010 15:04:54 +0200
 From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: xfs_fsr question for improvement
-Message-ID: <20100425150209.5167fe96@galadriel.home>
-In-Reply-To: <19412.9412.177637.116303@tree.ty.sabi.co.uk>
-References: <201004161043.11243@zmi.at> <20100417012415.GE2493@dastard>
-	<20100417091357.4e7ad1e0@galadriel.home>
-	<19412.9412.177637.116303@tree.ty.sabi.co.uk>
+Subject: Re: 2.6.34-rc3: simple du (on a big xfs tree) triggers oom killer
+	[bisected: 57817c68229984818fea9e614d6f95249c3fb098]
+Message-ID: <20100425150454.29332472@galadriel.home>
+In-Reply-To: <201004250030.40867.hpj@urpla.net>
+References: <201004050049.17952.hpj@urpla.net>
+	<201004241844.23482.hpj@urpla.net>
+	<20100424232320.71f764eb@galadriel.home>
+	<201004250030.40867.hpj@urpla.net>
 Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -29,38 +31,17 @@ Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Peter Grandi <pg_xf2@xf2.for.sabi.co.UK>
-Cc: Linux XFS <xfs@oss.sgi.com>
+To: Hans-Peter Jansen <hpj@urpla.net>
+Cc: Nick Piggin <npiggin@suse.de>, Greg KH <gregkh@suse.de>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Le Sun, 25 Apr 2010 12:17:24 +0100 vous =E9criviez:
+Le Sun, 25 Apr 2010 00:30:40 +0200 vous =E9criviez:
 
-> > my test VMware server (performance dropped down to abysmal
-> > level until I set up a daily xfs_fsr cron job),  =
+> I guess, you're not on this specific openSUSE git version of
+> 2.6.32.11 (e.g. the preparation for SP1 of SLE11), which, as usual,
+> carries a lot of stuff from later kernels.
 
-> =
-
-> That should not be the case unless you are using very sparse
-> VM image files, in which case you get what you pay for.
-> =
-
-
-This is a development and test VM Ware server, so it hosts lots ( 100
-or so) of test VM with sparse image files (when you start a VM to host
-a quick test, you don't want to spend 15 minutes initializing the
-drives).
-
-> > and a write-intensive video server.  =
-
-> =
-
-> That also should not be the case unless your applications write
-> strategy is wrong and you get extremely interleaved streams, in
-> which case you get what you paid for the application programmer.
-
-The application write strategy is as simple as possible; several
-different machines unaware of every other write huge media files to a
-samba share. I don't know how it could be worse, however it could
-hardly be enhanced in any way.
+No, I always use pristine unpatched kernel.org releases, no SELinux, no
+nothing. Just another confirmation I should go on this way :)
 
 -- =
 
