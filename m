@@ -1,28 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3QCWHxX083944 for <xfs@oss.sgi.com>; Mon, 26 Apr 2010 07:32:18 -0500
-Received: from rcsinet10.oracle.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 04144154AD3B
-	for <xfs@oss.sgi.com>; Mon, 26 Apr 2010 05:34:20 -0700 (PDT)
-Received: from rcsinet10.oracle.com (rcsinet10.oracle.com [148.87.113.121]) by
-	cuda.sgi.com with ESMTP id PWAtPDXrKdYAZsZQ for
-	<xfs@oss.sgi.com>; Mon, 26 Apr 2010 05:34:20 -0700 (PDT)
-Received: from rcsinet15.oracle.com (rcsinet15.oracle.com [148.87.113.117])
-	by rcsinet10.oracle.com (Switch-3.4.2/Switch-3.4.1) with ESMTP id
-	o3QCY48O003067
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Mon, 26 Apr 2010 12:34:09 GMT
-Received: from acsmt354.oracle.com (acsmt354.oracle.com [141.146.40.154])
-	by rcsinet15.oracle.com (Switch-3.4.2/Switch-3.4.1) with ESMTP id
-	o3QCXvjn021436 for <xfs@oss.sgi.com>; Mon, 26 Apr 2010 12:33:58 GMT
-Date: Mon, 26 Apr 2010 20:32:10 +0800
-From: Wengang Wang <wen.gang.wang@oracle.com>
-Subject: Re: [PATCH] xfsprogs: mkfs manpage -nsize/log
-Message-ID: <20100426123210.GA3194@laptop.oracle.com>
-References: <201004261155.o3QBFk83032745@rcsinet15.oracle.com>
+	o3QFvKLk095982 for <xfs@oss.sgi.com>; Mon, 26 Apr 2010 10:57:20 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BA43C154B4AF
+	for <xfs@oss.sgi.com>; Mon, 26 Apr 2010 08:59:22 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id i1Ta0T3b27HFkk9V for
+	<xfs@oss.sgi.com>; Mon, 26 Apr 2010 08:59:22 -0700 (PDT)
+Message-ID: <4BD5B851.2090807@sandeen.net>
+Date: Mon, 26 Apr 2010 10:59:13 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
+Subject: Re: [PATCH] xfsprogs: mkfs manpage -nsize/log
+References: <201004261155.o3QBFk83032745@rcsinet15.oracle.com>
 In-Reply-To: <201004261155.o3QBFk83032745@rcsinet15.oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -39,21 +30,14 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Wengang Wang <wen.gang.wang@oracle.com>
 Cc: greg.marsden@oracle.com, joe.jin@oracle.com, xfs@oss.sgi.com
 
-Sorry.
-Send description of this patch.
-
-There are two limitation for mkfs.xfs -nsize/log option:
-1) directory block size must be a power of 2 size.
-2) it can't be less than a file system block size.
-
-Current man page don't include the above information. User could
-be confused with errors, say "Illegal value xxx for -n size option", but
-they can't find out the cause by checking the man page.
-
-The patch adds the two limitations to the manpage.
-
-On 10-04-26 19:53, Wengang Wang wrote:
+On 04/26/2010 06:53 AM, Wengang Wang wrote:
 > Signed-off-by: Wengang Wang <wen.gang.wang@oracle.com>
+
+Looks good, thank you!   I'll merge this along with your updated commit
+message.
+
+-Eric
+
 > ---
 >  man/man8/mkfs.xfs.8 |    2 ++
 >  1 files changed, 2 insertions(+), 0 deletions(-)
@@ -71,13 +55,6 @@ On 10-04-26 19:53, Wengang Wang wrote:
 >  The default size
 >  .I value
 >  for version 2 directories is 4096 bytes (4 KiB),
-> -- 
-> 1.6.6.1
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
