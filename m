@@ -1,21 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3QKqEHH108770
-	for <linux-xfs@oss.sgi.com>; Mon, 26 Apr 2010 15:52:15 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5958C8D423E
-	for <linux-xfs@oss.sgi.com>; Mon, 26 Apr 2010 13:54:18 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id LmYpGvtg1DGyaacC for
-	<linux-xfs@oss.sgi.com>; Mon, 26 Apr 2010 13:54:18 -0700 (PDT)
-Message-ID: <4BD5FD72.2070106@sandeen.net>
-Date: Mon, 26 Apr 2010 15:54:10 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	o3QKv1WU108872 for <xfs@oss.sgi.com>; Mon, 26 Apr 2010 15:57:02 -0500
+Received: from smtp.sauce.co.nz (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 470BF2F2923
+	for <xfs@oss.sgi.com>; Mon, 26 Apr 2010 13:59:02 -0700 (PDT)
+Received: from smtp.sauce.co.nz (smtp.sauce.co.nz [210.48.49.72]) by
+	cuda.sgi.com with ESMTP id L500kRPmRXEObxgL for
+	<xfs@oss.sgi.com>; Mon, 26 Apr 2010 13:59:02 -0700 (PDT)
+Message-ID: <4BD5FE93.50208@sauce.co.nz>
+Date: Tue, 27 Apr 2010 08:58:59 +1200
+From: Richard Scobie <richard@sauce.co.nz>
 MIME-Version: 1.0
-Subject: Re: Attempt to Access Beyond End of Device
-References: <26132521.11272313223159.JavaMail.root@wombat>
-In-Reply-To: <26132521.11272313223159.JavaMail.root@wombat>
+Subject: Re: xfs_fsr question for improvement
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,74 +21,189 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: willis@arlut.utexas.edu
-Cc: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 04/26/2010 03:20 PM, willis@arlut.utexas.edu wrote:
-> Federico Sevilla III wrote: "It wasn't an XFS-centric problem, after
-> all"
-> 
-> Adding Federico's comment... Some Adadptec Controller firmware
-> versions will pass incorrect device parameters to the linux kernel.
-> The kernel log output misled me to believe is was a corrupt
-> filesystem or partition map, however it was just an adaptec bug.
-> 
-> Adaptac has a fix procedure for this at:
-> http://ask.adaptec.com/scripts/adaptec_tic.cfg/php.exe/enduser/std_adp.php?p_faqid=16914
+Linda Walsh wrote:
 
-Thanks for the followup; we've seen this a couple times, and it
-has always stumped me.
+ > 	That's a rather naive view.  It may not be one application but several
+ > writing to the disk at once.  Or it could be one, but recording 
+multiple streams
+ > to disk at the same time -- of course it would have to write them to 
+disk as they
+ > come in, as memory is limited -- how else would you prevent 
+interleaving in such
+ > a case?  There are too many situations where fragmenting can occur to 
+toss them
+ > all off and say they are the result of not paying an application 
+programmer to do it
+ > "correctly".
 
--Eric
+Agreed. XFS does offer some assistence for improving some of these 
+situations - the "filestreams" mount option. This is not very well 
+documented in man pages, but the following is extracted from tutorial notes:
 
->  Below is the my kernel's dmesg output. After following Adaptec's
-> procedure, the errors went away and I was able to mount the
-> filesystem and see all of my existing data. ----- mount: /dev/sda:
-> can't read superblock Mount Error at /dev/sdj. Is filesystem
-> realtime? Need a File System? attempt to access beyond end of device 
-> sda: rw=0, want=YYYY, limit=XXXX I/O error in filesystem ("sda")
-> meta-data dev sdj block 0xZZZZ ("xfs_read_buf") error 5 buf count
-> 512 XFS: size check 2 failed -----
-> 
-> Regards,
-> 
-> Michael Willis
-> 
-> 
-> 
-> 
-> 
-> -- Eric Sandeen wrote : Federico Sevilla III wrote:
->> Hi,
->> 
->> We've set up Debian GNU/Linux 4.0 "Etch" on an IBM x3400 machine
->> with two 73.4GB SAS hard drives in hardware RAID 1 with a
->> battery-backed cache. We are using the stock Debian 2.6.18-4-686
->> kernel.
-> 
-> can you send along the results of:
-> 
-> # xfs_db -r -c "sb 0" -c "print" /dev/sda8?
-> 
-> and # cat /proc/partitions
-> 
-> ... and does the hardware raid have a funky sector size?
-> 
-> -Eric
-> 
-> 
-> 
-> -- This message was sent on behalf of willis@arlut.utexas.edu at
-> openSubscriber.com 
-> http://www.opensubscriber.com/message/linux-xfs@oss.sgi.com/7550412.html
->
->  _______________________________________________ xfs mailing list 
-> xfs@oss.sgi.com http://oss.sgi.com/mailman/listinfo/xfs
-> 
+"Filestreams Allocator
+
+A certain class of applications such as those doing film scanner
+video ingest will write many large files to a directory in sequence.
+It's important for playback performance that these files end up
+allocated next to each other on disk, since consecutive data is
+retrieved optimally by hardware RAID read-ahead.
+
+XFS's standard allocator starts out doing the right thing as far
+as file allocation is concerned.  Even if multiple streams are being
+written simultaneously, their files will be placed separately and
+contiguously on disk.  The problem is that once an allocation group
+fills up, a new one must be chosen and there's no longer a parent
+directory in a unique AG to use as an AG "owner".  Without a way
+to reserve the new AG for the original directory's use, all the
+files being allocated by all the streams will start getting placed
+in the same AGs as each other.  The result is that consecutive
+frames in one directory are placed on disk with frames from other
+directories interleaved between them, which is a worst-case layout
+for playback performance.  When reading back the frames in directory
+A, hardware RAID read-ahead will cache data from frames in directory
+B which is counterproductive.
+
+Create a file system with a small AG size to demonstrate:
+
+sles10:~ sjv: sudo mkfs.xfs -d agsize=64m /dev/sdb7 > /dev/null
+sles10:~ sjv: sudo mount /dev/sdb7 /test
+sles10:~ sjv: sudo chmod 777 /test
+sles10:~ sjv: cd /test
+sles10:/test sjv:
+
+Create ten 10MB files concurrently in two directories:
+
+sles10:/test sjv: mkdir a b
+sles10:/test sjv: for dir in a b; do
+ > > for file in `seq 0 9`; do
+ > > xfs_mkfile 10m $dir/$file
+ > > done &
+ > > done; wait 2>/dev/null
+[1] 30904
+[2] 30905
+sles10:/test sjv: ls -lid * */*
+    131 drwxr-xr-x 2 sjv users       86 2006-10-20 13:48 a
+    132 -rw------- 1 sjv users 10485760 2006-10-20 13:48 a/0
+    133 -rw------- 1 sjv users 10485760 2006-10-20 13:48 a/1
+    134 -rw------- 1 sjv users 10485760 2006-10-20 13:48 a/2
+    135 -rw------- 1 sjv users 10485760 2006-10-20 13:48 a/3
+    136 -rw------- 1 sjv users 10485760 2006-10-20 13:48 a/4
+    137 -rw------- 1 sjv users 10485760 2006-10-20 13:48 a/5
+    138 -rw------- 1 sjv users 10485760 2006-10-20 13:48 a/6
+    139 -rw------- 1 sjv users 10485760 2006-10-20 13:48 a/7
+    140 -rw------- 1 sjv users 10485760 2006-10-20 13:48 a/8
+    141 -rw------- 1 sjv users 10485760 2006-10-20 13:48 a/9
+262272 drwxr-xr-x 2 sjv users       86 2006-10-20 13:48 b
+262273 -rw------- 1 sjv users 10485760 2006-10-20 13:48 b/0
+262274 -rw------- 1 sjv users 10485760 2006-10-20 13:48 b/1
+262275 -rw------- 1 sjv users 10485760 2006-10-20 13:48 b/2
+262276 -rw------- 1 sjv users 10485760 2006-10-20 13:48 b/3
+262277 -rw------- 1 sjv users 10485760 2006-10-20 13:48 b/4
+262278 -rw------- 1 sjv users 10485760 2006-10-20 13:48 b/5
+262279 -rw------- 1 sjv users 10485760 2006-10-20 13:48 b/6
+262280 -rw------- 1 sjv users 10485760 2006-10-20 13:48 b/7
+262281 -rw------- 1 sjv users 10485760 2006-10-20 13:48 b/8
+262282 -rw------- 1 sjv users 10485760 2006-10-20 13:48 b/9
+sles10:/test sjv:
+
+Note that all the inodes are in the same AGs as each other.  What
+about the file data?  Use xfs_bmap -v to examine the extents:
+
+sles10:/test sjv: for file in `seq 0 9`; do
+ > > bmap_a=`xfs_bmap -v a/$file | tail -1`
+ > > bmap_b=`xfs_bmap -v b/$file | tail -1`
+ > > ag_a=`echo $bmap_a | awk '{print $4}'`
+ > > ag_b=`echo $bmap_b | awk '{print $4}'`
+ > > br_a=`echo $bmap_a | awk '{printf "%-18s", $3}'`
+ > > br_b=`echo $bmap_b | awk '{printf "%-18s", $3}'`
+ > > echo a/$file: $ag_a "$br_a" b/$file: $ag_b "$br_b"
+ > > done
+a/0: 0 96..20575          b/0: 1 131168..151647
+a/1: 0 20576..41055       b/1: 1 151648..172127
+a/2: 0 41056..61535       b/2: 1 172128..192607
+a/3: 0 61536..82015       b/3: 1 192608..213087
+a/4: 0 82016..102495      b/4: 1 213088..233567
+a/5: 0 102496..122975     b/5: 1 233568..254047
+a/6: 2 299600..300111     b/6: 2 262208..275007
+a/7: 2 338016..338527     b/7: 2 312400..312911
+a/8: 2 344672..361567     b/8: 3 393280..401983
+a/9: 2 361568..382047     b/9: 3 401984..421951
+sles10:/test sjv:
+
+The middle column is the AG number and the right column is the block
+range.  Note how the extents for files in both directories get
+placed on top of each other in AG 2.
+
+Something to note in the results is that even though the file extents
+have worked their way up into AGs 2 and 3, the inode numbers show
+that the file inodes are all in the same AGs as their parent
+directory, i.e. AGs 0 and 1.  Why is this?  To understand, it's
+important to consider the order in which events are occurring.  The
+two bash processes writing files are calling xfs_mkfile, which
+starts by opening a file with the O_CREAT flag.  At this point, XFS
+has no idea how large the file's data is going to be, so it dutifully
+creates a new inode for the file in the same AG as the parent
+directory.  The call returns successfully and the system continues
+with its tasks.  When XFS is asked write the file data a short time
+later, a new AG must be found for it because the AG the inode is
+in is full.  The result is a violation of the original goal to keep
+file data close to its inode on disk.  In practice, because inodes
+are allocated in clusters on disk, a process that's reading back a
+stream is likely to cache all the inodes it needs with just one or
+two reads, so the disk seeking involved won't be as bad as it first
+seems.
+
+On the other hand, the extent data placement seen in the xfs_bmap
+-v output is a problem.  Once the data extents spilled into AG 2,
+both processes were given allocations there on a first-come-first-served
+basis.  This destroyed the neatly contiguous allocation pattern for
+the files and will certainly degrade read performance later on.
+
+To address this issue, a new allocation algorithm was added to XFS
+that associates a parent directory with an AG until a preset
+inactivity timeout elapses.  The new algorithm is called the
+Filestreams allocator and it is enabled in one of two ways.  Either
+the filesystem is mounted with the -o filestreams option, or the
+filestreams chattr flag is applied to a directory to indicate that
+all allocations beneath that point in the directory hierarchy should
+use the filestreams allocator.
+
+With the filestreams allocator enabled, the above test produces
+results that look like this:
+
+a/0: 0 96..20575          b/0: 1 131168..151647
+a/1: 0 20576..41055       b/1: 1 151648..172127
+a/2: 0 41056..61535       b/2: 1 172128..192607
+a/3: 0 61536..82015       b/3: 1 192608..213087
+a/4: 0 82016..102495      b/4: 1 213088..233567
+a/5: 0 102496..122975     b/5: 1 233568..254047
+a/6: 2 272456..273479     b/6: 3 393280..410271
+a/7: 2 290904..300119     b/7: 3 410272..426655
+a/8: 2 300632..321111     b/8: 3 426656..441503
+a/9: 2 329304..343639     b/9: 3 441504..459935
+
+Once the process writing files to the first directory starts using
+AG 2, that AG is no longer considered available so the other process
+skips it and moves to AG 3."
+
+ > I don't see why you posted -- it wasn't to help anyone nor to offer 
+constructive
+ > criticism.  It was a bit harsh on the criticism side, as though 
+something about it
+ > was 'personal' for you....   Also sensed a tinge of bitterness in 
+that last bit of
+
+Not unusual for this poster.
+
+Regards,
+
+Richard
 
 _______________________________________________
 xfs mailing list
