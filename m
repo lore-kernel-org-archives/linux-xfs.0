@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3Q00pA9043817 for <xfs@oss.sgi.com>; Sun, 25 Apr 2010 19:00:51 -0500
-Received: from Ishtar.sc.tlinx.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A9BB98A8F61
-	for <xfs@oss.sgi.com>; Sun, 25 Apr 2010 17:02:45 -0700 (PDT)
-Received: from Ishtar.sc.tlinx.org
-	(173-164-175-65-SFBA.hfc.comcastbusiness.net [173.164.175.65])
-	by cuda.sgi.com with ESMTP id js05XvWKPixWF6k6 for
-	<xfs@oss.sgi.com>; Sun, 25 Apr 2010 17:02:45 -0700 (PDT)
-Message-ID: <4BD4D81C.5040503@tlinx.org>
-Date: Sun, 25 Apr 2010 17:02:36 -0700
-From: Linda Walsh <xfs@tlinx.org>
+	o3Q0YrNw045283 for <xfs@oss.sgi.com>; Sun, 25 Apr 2010 19:34:53 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 951312EF182
+	for <xfs@oss.sgi.com>; Sun, 25 Apr 2010 17:36:55 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
+	[150.101.137.100]) by cuda.sgi.com with ESMTP id
+	CFkDHpfcBYGzBOhS for <xfs@oss.sgi.com>;
+	Sun, 25 Apr 2010 17:36:55 -0700 (PDT)
+Date: Mon, 26 Apr 2010 10:36:37 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: 2.6.34-rc3: simple du (on a big xfs tree) triggers oom killer
+	[bisected: 57817c68229984818fea9e614d6f95249c3fb098]
+Message-ID: <20100426003637.GB11437@dastard>
+References: <201004050049.17952.hpj@urpla.net> <20100413091823.GD7544@dastard>
+	<201004131142.33518.hpj@urpla.net>
+	<201004241844.23482.hpj@urpla.net> <20100425162740.GB19195@suse.de>
 MIME-Version: 1.0
-Subject: Re: xfs_fsr question for improvement
-References: <201004161043.11243@zmi.at>
-	<20100417012415.GE2493@dastard>	<20100417091357.4e7ad1e0@galadriel.home>
-	<19412.9412.177637.116303@tree.ty.sabi.co.uk>
-In-Reply-To: <19412.9412.177637.116303@tree.ty.sabi.co.uk>
+Content-Disposition: inline
+In-Reply-To: <20100425162740.GB19195@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,69 +32,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Peter Grandi <pg_xf2@xf2.for.sabi.co.UK>
-Cc: Linux XFS <xfs@oss.sgi.com>
+To: Greg KH <gregkh@suse.de>
+Cc: Nick Piggin <npiggin@suse.de>, linux-kernel@vger.kernel.org, opensuse-kernel@opensuse.org, xfs@oss.sgi.com
 
-Peter Grandi wrote:
->>> XFS resists fragmentation better than most other filesystems,
->>> so defragmentation, while possible, is generally not needed.
->
-> That's a common myth. For most file systems and filesystems.
-> Also most applications write files really badly.
->   http://www.sabi.co.uk/blog/anno06-3rd.html#060914b
-----
-	Do you have any evidence to back this up?  The article you quote says nothing
-about xfs allocation -- it's talking about Windows systems using FAT or NTFS -- unless,
-you've ported XFS to Windows?   If not, I'm I don't see how your comments are
-relevant.
+On Sun, Apr 25, 2010 at 09:27:40AM -0700, Greg KH wrote:
+> On Sat, Apr 24, 2010 at 06:44:22PM +0200, Hans-Peter Jansen wrote:
+> > FYI, 2.6.33.2 is still affected from this issue. 
+> 
+> Is 2.6.33.3-rc2 affected?  A lot of xfs patches are in there (as are in
+> 2.6.32.12-rc2.)
 
-> Fortunately 'xfs_fsr' is mostly reliable, but in-place
-> defragmentation is a risky propostion for several reasons even
-> if 'xfs_fsr' is fairly reliable.
----
-	How is it risky?  Do you have any evidence to back up this claim?
-It copies from where it is at, to a pre-reserved, vacant space (which it finds just
-before it does the copy).  When the copy is done successfully, its points the inode
-at the defragmented data, and frees the old copy -- or at least that's my
-'not having looked at the code' understanding of it.  
-	This is basically a file copy.  So you are saying that file defragmentation
-in place using file copy is risky?  Doesn't this imply you are saying
-that copying files is risky?  How is this meaninful?
+The fix is not in Linus' kernel yet, Greg. So once that is done,
+I'll have to backport the fix back to those stable kernels as well.
+It's not a trivial fix, so it will miss this round of stable
+releases....
 
-> Note also that 'xfs_fsr' uses a terrible "defragmentation"
-> strategy (from 'man xfs_fsr'):
->   "The reorganization algorithm operates on one file at a time,"
-----
-	xfs_fsr does a superb job of file defragmenting.  It doesn't 
-do disk defragmenting.  But it does defragment single files well, which was
-all it was designed to do.  We can lament that it hasn't been improved on, 
-but no one with money or with 'free time' (ha) and the knowledge, has seen it as 
-a problem, so it hasn't been fixed.
+Cheers,
 
-
-> That also should not be the case unless your applications write
-> strategy is wrong and you get extremely interleaved streams, in
-> which case you get what you paid for the application programmer.
----
-	That's a rather naive view.  It may not be one application but several
-writing to the disk at once.  Or it could be one, but recording multiple streams
-to disk at the same time -- of course it would have to write them to disk as they
-come in, as memory is limited -- how else would you prevent interleaving in such
-a case?  There are too many situations where fragmenting can occur to toss them
-all off and say they are the result of not paying an application programmer to do it
-"correctly".
-
-I don't see why you posted -- it wasn't to help anyone nor to offer constructive
-criticism.  It was a bit harsh on the criticism side, as though something about it
-was 'personal' for you....   Also sensed a tinge of bitterness in that last bit of
-criticism about the video stream fragmentation.  I'm sorry for your loss, but please
-try to understand, that this is a forum/list for developers/users to help with xfs problems.
-
-Please rethink your approach here, and I'm apologize in advance if I'm out of
-line, but something seemed off-key in this post, but maybe I'm misreading things
-completetely... its happened before. :-)
-
-Linda Walsh
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
