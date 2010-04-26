@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3Q1lASf048662 for <xfs@oss.sgi.com>; Sun, 25 Apr 2010 20:47:10 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5CBCB1329DAE
-	for <xfs@oss.sgi.com>; Sun, 25 Apr 2010 18:49:11 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	O6WCXX85GIxYq6vV for <xfs@oss.sgi.com>;
-	Sun, 25 Apr 2010 18:49:11 -0700 (PDT)
-Date: Mon, 26 Apr 2010 11:49:08 +1000
-From: Dave Chinner <david@fromorbit.com>
+	o3Q2f8UO051220 for <xfs@oss.sgi.com>; Sun, 25 Apr 2010 21:41:08 -0500
+Received: from thunker.thunk.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1A19A8CAFC8
+	for <xfs@oss.sgi.com>; Sun, 25 Apr 2010 19:43:10 -0700 (PDT)
+Received: from thunker.thunk.org (thunk.org [69.25.196.29]) by cuda.sgi.com
+	with ESMTP id DIDXTAb0DqQXYj0B for <xfs@oss.sgi.com>;
+	Sun, 25 Apr 2010 19:43:10 -0700 (PDT)
+Date: Sun, 25 Apr 2010 22:43:02 -0400
+From: tytso@mit.edu
 Subject: Re: [PATCH 3/4] writeback: pay attention to wbc->nr_to_write in
 	write_cache_pages
-Message-ID: <20100426014908.GD11437@dastard>
+Message-ID: <20100426024302.GC13043@thunk.org>
 References: <1271731314-5893-1-git-send-email-david@fromorbit.com>
 	<1271731314-5893-4-git-send-email-david@fromorbit.com>
-	<20100425033315.GC667@thunk.org>
+	<20100425033315.GC667@thunk.org> <20100426014908.GD11437@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100425033315.GC667@thunk.org>
+In-Reply-To: <20100426014908.GD11437@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,89 +27,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: tytso@mit.edu, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-T24gU2F0LCBBcHIgMjQsIDIwMTAgYXQgMTE6MzM6MTVQTSAtMDQwMCwgdHl0c29AbWl0LmVkdSB3
-cm90ZToKPiBPbiBUdWUsIEFwciAyMCwgMjAxMCBhdCAxMjo0MTo1M1BNICsxMDAwLCBEYXZlIENo
-aW5uZXIgd3JvdGU6Cj4gPiBGcm9tOiBEYXZlIENoaW5uZXIgPGRjaGlubmVyQHJlZGhhdC5jb20+
-Cj4gPiAKPiA+IElmIGEgZmlsZXN5c3RlbSB3cml0ZXMgbW9yZSB0aGFuIG9uZSBwYWdlIGluIC0+
-d3JpdGVwYWdlLCB3cml0ZV9jYWNoZV9wYWdlcwo+ID4gZmFpbHMgdG8gbm90aWNlIHRoaXMgYW5k
-IGNvbnRpbnVlcyB0byBhdHRlbXB0IHdyaXRlYmFjayB3aGVuIHdiYy0+bnJfdG9fd3JpdGUKPiA+
-IGhhcyBnb25lIG5lZ2F0aXZlIC0gdGhpcyB0cmFjZSB3YXMgY2FwdHVyZWQgZnJvbSBYRlM6Cj4g
-PiAKPiA+IAo+ID4gICAgIHdiY193cml0ZWJhY2tfc3RhcnQ6IHRvd3J0PTEwMjQKPiA+ICAgICB3
-YmNfd3JpdGVwYWdlOiB0b3dydD0xMDI0Cj4gPiAgICAgd2JjX3dyaXRlcGFnZTogdG93cnQ9MAo+
-ID4gICAgIHdiY193cml0ZXBhZ2U6IHRvd3J0PS0xCj4gPiAgICAgd2JjX3dyaXRlcGFnZTogdG93
-cnQ9LTUKPiA+ICAgICB3YmNfd3JpdGVwYWdlOiB0b3dydD0tMjEKPiA+ICAgICB3YmNfd3JpdGVw
-YWdlOiB0b3dydD0tODUKPiA+IAo+ID4gVGhpcyBoYXMgYWR2ZXJzZSBlZmZlY3RzIG9uIGZpbGVz
-eXN0ZW0gd3JpdGViYWNrIGJlaGF2aW91ci4gd3JpdGVfY2FjaGVfcGFnZXMoKQo+ID4gbmVlZHMg
-dG8gdGVybWluYXRlIGFmdGVyIGEgY2VydGFpbiBudW1iZXIgb2YgcGFnZXMgYXJlIHdyaXR0ZW4s
-IG5vdCBhZnRlciBhCj4gPiBjZXJ0YWluIG51bWJlciBvZiBjYWxscyB0byAtPndyaXRlcGFnZSBh
-cmUgbWFkZS4gTWFrZSBpdCBvYnNlcnZlIHRoZSBjdXJyZW50Cj4gPiB2YWx1ZSBvZiB3YmMtPm5y
-X3RvX3dyaXRlIGFuZCB0cmVhdCBhIHZhbHVlIG9mIDw9IDAgYXMgdGhvdWdoIGl0IGlzIGEgZWl0
-aGVyIGEKPiA+IHRlcm1pbmF0aW9uIGNvbmRpdGlvbiBvciBhIHRyaWdnZXIgdG8gcmVzZXQgdG8g
-TUFYX1dSSVRF4biGQUNLX1BBR0VTIGZvciBkYXRhCj4gPiBpbnRlZ3JpdHkgc3luY3MuCj4gCj4g
-QmUgY2FyZWZ1bCBoZXJlLiAgSWYgeW91IGFyZSBnb2luZyB0byB3cml0ZSBtb3JlIHBhZ2VzIHRo
-YW4gd2hhdCB0aGUKPiB3cml0ZWJhY2sgY29kZSBoYXMgcmVxdWVzdGVkICh0aGUgc3R1cGlkIG5v
-IG1vcmUgdGhhbiAxMDI0IHBhZ2VzCj4gcmVzdHJpY3Rpb24gaW4gdGhlIHdyaXRlYmFjayBjb2Rl
-IGJlZm9yZSBpdCBqdW1wcyB0byBzdGFydCB3cml0aW5nCj4gc29tZSBvdGhlciBpbm9kZSksIHlv
-dSBhY3R1YWxseSBuZWVkIHRvIGxldCB0aGUgcmV0dXJuZWQKPiB3YmMtPm5yX3RvX3dyaXRlIGdv
-IG5lZ2F0aXZlLCBzbyB0aGF0IHdiX3dyaXRlYmFjaygpIGtub3dzIGhvdyBtYW55Cj4gcGFnZXMg
-aXQgaGFzIHdyaXR0ZW4uCj4gCj4gSW4gb3RoZXIgd29yZHMsIHRoZSB3cml0ZWJhY2sgY29kZSBh
-c3N1bWVzIHRoYXQgCj4gCj4gICA8b3JpZ25hbCB2YWx1ZSBvZiBucl90b193cml0ZT4gLSA8cmV0
-dXJuZWQgd2JjLT5ucl90b193cml0ZT4KPiAKPiBpcwo+IAo+ICAgPG51bWJlciBvZiBwYWdlcyBh
-Y3R1YWxseSB3cml0dGVuPgoKWWVzLCBidXQgdGhhdCBkb2VzIG5vdCByZXF1aXJlIGEgbmVnYXRp
-dmUgdmFsdWUgdG8gZ2V0IHJpZ2h0LiAgTm9uZQpvZiB0aGUgY29kZSByZWxpZXMgb24gbmVnYXRp
-dmUgbnJfdG9fd3JpdGUgdmFsdWVzIHRvIGRvIGFueXRoaW5nCmNvcnJlY3RseSwgYW5kIGFsbCB0
-aGUgdGVybWluYXRpb24gY2hlY2tzIGFyZSBmb3Igd2JjLT5ucl90by13cml0ZQo8PSAwLiBBbmQg
-dGhlIHRyYWNpbmcgc2hvd3MgaXQgYmVoYXZlcyBjb3JyZWN0bHkgd2hlbgp3YmMtPm5yX3RvX3dy
-aXRlID0gMCBvbiByZXR1cm4uIFJlcXVpcmluZyBhIG5lZ2F0aXZlIG51bWJlciBpcyBub3QKZG9j
-dW1lbnRlZCBpbiBhbnkgb2YgdGhlIGNvbW1lbnRzLCB3cml0ZV9jYWNoZV9wYWdlcygpIGRvZXMg
-bm90CnJldHVybiBhIG5lZ2F0aXZlIG51bWJlciwgZXRjLCBzbyBJIGNhbid0IHNlZSB3aHkgeW91
-IHRoaW5rIHRoaXMgaXMKbmVjZXNzYXJ5Li4uLgoKPiBJZiB5b3UgZG9uJ3QgbGV0IHdiYy0+bnJf
-dG9fd3JpdGUgZ28gbmVnYXRpdmUsIHRoZSB3cml0ZWJhY2sgY29kZSB3aWxsCj4gYmUgY29uZnVz
-ZWQgYWJvdXQgaG93IG1hbnkgcGFnZXMgd2VyZSBfYWN0dWFsbHlfIHdyaXR0ZW4sIGFuZCB0aGUK
-PiB3cml0ZWJhY2sgY29kZSBlbmRzIHVwIHdyaXRpbmcgdG9vIG11Y2guICBTZWUgY29tbWl0IDJm
-YWYyZTEuCgpleHQ0IGFkZGVkIGEgImJ1bXAiIHRvIHdiYy0+bnJfdG9fd3JpdGUsIHRoZW4gaW4g
-c29tZSBjYXNlcyBmb3Jnb3QKdG8gcmVtb3ZlIGl0IHNvIGl0IG5ldmVyIHJldHVybmVkIHRvIDw9
-IDAuIFdlbGwsIG9mIGNvdXJzZSB0aGlzCmNhdXNlcyB3cml0ZWJhY2sgdG8gd3JpdGUgdG9vIG11
-Y2ghIEJ1dCB0aGF0J3MgYW4gZXh0NCBidWcgbm90CmFsbG93aW5nIG5yX3RvX3dyaXRlIHRvIHJl
-YWNoIHplcm8gKG5vdCBuZWdhdGl2ZSwgYnV0IHplcm8pLCBub3QgYQpnZW5lcmFsIHdyaXRlYmFj
-ayBidWcuLi4uCgo+IEFsbCBvZiB0aGlzIGlzIGEgY3JvY2sgb2YgY291cnNlLiAgVGhlIGZpbGUg
-c3lzdGVtIHNob3VsZG4ndCBiZQo+IHNlY29uZC1ndWVzc2luZyB0aGUgd3JpdGViYWNrIGNvZGUu
-ICBJbnN0ZWFkIHRoZSB3cml0ZWJhY2sgY29kZSBzaG91bGQKPiBiZSBhZGFwdGl2ZWx5IG1lYXN1
-cmluZyBob3cgbG9uZyBpdCB0YWtlcyB0byB3ZXJlIHdyaXR0ZW4gb3V0IE4gcGFnZXMKPiB0byBh
-IHBhcnRpY3VsYXIgYmxvY2sgZGV2aWNlLCBhbmQgdGhlbiBkZWNpZGUgd2hhdCdzIHRoZSBhcHBy
-b3ByaWF0ZQo+IHNldHRpbmcgZm9yIG5yX3RvX3dyaXRlLiAgV2hhdCBtYWtlcyBzZW5zZSBmb3Ig
-YSBVU0Igc3RpY2ssIG9yIGEgNDIwMAo+IFJQTSBsYXB0b3AgZHJpdmUsIG1heSBub3QgbWFrZSBz
-ZW5zZSBmb3IgYSBtYXNzaXZlIFJBSUQgYXJyYXkuLi4uCgpXaHk/IFdyaXRlYmFjayBzaG91bGQg
-anVzdCBrZWVwIHB1c2hpbmcgcGFnZXMgZG93biB1bnRpbCBpdCBjb25nZXN0cwp0aGUgYmxvY2sg
-ZGV2aWNlLiBUaGVuIGl0IHRocm90dGxlcyBpdHNlbGYgaW4gZ2V0X3JlcXVlc3QoKSBhbmQgc28K
-d3JpdGViYWNrIGFscmVhZHkgYWRhcHRzIHRvIHRoZSBsb2FkIG9uIHRoZSBkZXZpY2UuICBNdWx0
-aXBsZSBwYXNzZXMKb2YgMTAyNCBwYWdlcyBwZXIgZGlydHkgaW5vZGUgaXMgZmluZSBmb3IgdGhp
-cyAtIGEgbGFyZ2VyCm5yX3RvX3dyaXRlIGRvZXNuJ3QgZ2V0IHRoZSBibG9jayBkZXZpY2UgdG8g
-Y29uZ2VzdGlvbiBhbnkgZmFzdGVyIG9yCnNsb3dlciwgbm9yIGRvZXMgaXQgY2hhbmdlIHRoZSBi
-ZWhhdmlvdXIgb25jZSBhdCBjb25nZXN0aW9uLi4uLgoKPiBCdXQgc2luY2Ugd2UgZG9uJ3QgaGF2
-ZSB0aGF0LCBib3RoIFhGUyBhbmQgZXh0NCBoYXZlIHdvcmthcm91bmRzIGZvcgo+IGJyYWluLWRh
-bWFnZWQgd3JpdGViYWNrIGJlaGF2aW91ci4gIChJIGRpZCBzb21lIHRlc3RpbmcsIGFuZCBldmVu
-IGZvcgo+IHN0YW5kYXJkIGxhcHRvcCBkcml2ZXMgdGhlIGNhcCBvZiAxMDI0IHBhZ2VzIGlzIGp1
-c3QgV2F5IFRvbyBTbWFsbDsKPiB0aGF0IGxpbWl0IHdhcyBzZXQgc29tZXRoaW5nIGxpa2UgYSBk
-ZWNhZGUgYWdvLCBhbmQgZXZlcnlvbmUgaGFzIGJlZW4KPiBhZnJhaWQgdG8gY2hhbmdlIGl0LCBl
-dmVuIHRob3VnaCBkaXNrcyBoYXZlIGdvdHRlbiBhIHdlZSBiaXQgZmFzdGVyCj4gc2luY2UgdGhv
-c2UgZGF5cy4pCgpYRlMgcHV0IGEgd29ya2Fyb3VuZCBpbiBmb3IgYSBkaWZmZXJlbnQgcmVhc29u
-IHRvIGV4dDQuIGV4dDQgcHV0IGl0CmluIHRvIGltcHJvdmUgZGVsYXllZCBhbGxvY2F0aW9uIGJ5
-IHdvcmtpbmcgd2l0aCBsYXJnZXIgY2h1bmtzIG9mCnBhZ2VzLiBYRlMgcHV0IGl0IGluIHRvIGdl
-dCBsYXJnZSBJT3MgdG8gYmUgaXNzdWVkIHRocm91Z2gKc3VibWl0X2JpbygpLCBub3QgdG8gaGVs
-cCB0aGUgYWxsb2NhdG9yLi4uCgpBbmQgdG8gYmUgdGhlIG5hc3R5IHBlcnNvbiB0byBzaG9vdCBk
-b3duIHlvdXIgbW9kZXJuIGhhcmR3YXJlCnRoZW9yeTogbnJfdG9fd3JpdGUgPSAxMDI0IHBhZ2Vz
-IHdvcmtzIGp1c3QgZmluZSBvbiBteSBsYXB0b3AgKFhGUwpvbiBpbmRpbGl4IFNTRCkgYXMgd2Vs
-bCBhcyBteSBiaWcgdGVzdCBzZXJ2ZXIgKFhGUyBvbiAxMiBkaXNrIFJBSUQwKQpUaGUgc2VydmVy
-IGdldHMgMS41R0IvcyB3aXRoIHByZXR0eSBtdWNoIHBlcmZlY3QgSU8gcGF0dGVybnMgd2l0aAp0
-aGUgZml4ZXMgSSBwb3N0ZWQsIHVubGlrZSB0aGUgbWVzcyBvZiBzaW5nbGUgcGFnZSBJT3MgdGhh
-dCBvY2N1cnMKd2l0aG91dCB0aGVtLi4uLgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5l
-cgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3Nz
-LnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Mon, Apr 26, 2010 at 11:49:08AM +1000, Dave Chinner wrote:
+> 
+> Yes, but that does not require a negative value to get right.  None
+> of the code relies on negative nr_to_write values to do anything
+> correctly, and all the termination checks are for wbc->nr_to-write
+> <= 0. And the tracing shows it behaves correctly when
+> wbc->nr_to_write = 0 on return. Requiring a negative number is not
+> documented in any of the comments, write_cache_pages() does not
+> return a negative number, etc, so I can't see why you think this is
+> necessary....
+
+In fs/fs-writeback.c, wb_writeback(), around line 774:
+
+   		      wrote += MAX_WRITEBACK_PAGES - wbc.nr_to_write;
+
+If we want "wrote" to be reflect accurately the number of pages that
+the filesystem actually wrote, then if you write more pages than what
+was requested by wbc.nr_to_write, then it needs to be negative.
+
+> XFS put a workaround in for a different reason to ext4. ext4 put it
+> in to improve delayed allocation by working with larger chunks of
+> pages. XFS put it in to get large IOs to be issued through
+> submit_bio(), not to help the allocator...
+
+That's why I put in ext4 at least initially, yes.  I'm working on
+rewriting the ext4_writepages() code to make this unnecessary....
+
+However...
+
+> And to be the nasty person to shoot down your modern hardware
+> theory: nr_to_write = 1024 pages works just fine on my laptop (XFS
+> on indilix SSD) as well as my big test server (XFS on 12 disk RAID0)
+> The server gets 1.5GB/s with pretty much perfect IO patterns with
+> the fixes I posted, unlike the mess of single page IOs that occurs
+> without them....
+
+Have you tested with multiple files that are subject to writeout at
+the same time?  After all, if your I/O allocator does a great job of
+keeping the files contiguous in chunks larger tham 4MB, then if you
+have two or more files that need to be written out, the page allocator
+will round robin between the two files in 4MB chunks, and that might
+not be considered an ideal I/O pattern.
+
+Regards,
+
+					- Ted
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
