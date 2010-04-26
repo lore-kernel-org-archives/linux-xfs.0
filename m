@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3Q0UWLE045111 for <xfs@oss.sgi.com>; Sun, 25 Apr 2010 19:30:32 -0500
+	o3Q1lASf048662 for <xfs@oss.sgi.com>; Sun, 25 Apr 2010 20:47:10 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6954B1327233
-	for <xfs@oss.sgi.com>; Sun, 25 Apr 2010 17:32:32 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	DbGzcdipXS7edYc7 for <xfs@oss.sgi.com>;
-	Sun, 25 Apr 2010 17:32:32 -0700 (PDT)
-Date: Mon, 26 Apr 2010 10:32:13 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5CBCB1329DAE
+	for <xfs@oss.sgi.com>; Sun, 25 Apr 2010 18:49:11 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	O6WCXX85GIxYq6vV for <xfs@oss.sgi.com>;
+	Sun, 25 Apr 2010 18:49:11 -0700 (PDT)
+Date: Mon, 26 Apr 2010 11:49:08 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 2.6.34-rc3: simple du (on a big xfs tree) triggers oom killer
-	[bisected: 57817c68229984818fea9e614d6f95249c3fb098]
-Message-ID: <20100426003213.GA11437@dastard>
-References: <201004050049.17952.hpj@urpla.net> <20100413091823.GD7544@dastard>
-	<201004131142.33518.hpj@urpla.net>
-	<201004241844.23482.hpj@urpla.net>
+Subject: Re: [PATCH 3/4] writeback: pay attention to wbc->nr_to_write in
+	write_cache_pages
+Message-ID: <20100426014908.GD11437@dastard>
+References: <1271731314-5893-1-git-send-email-david@fromorbit.com>
+	<1271731314-5893-4-git-send-email-david@fromorbit.com>
+	<20100425033315.GC667@thunk.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201004241844.23482.hpj@urpla.net>
+In-Reply-To: <20100425033315.GC667@thunk.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,94 +28,89 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Hans-Peter Jansen <hpj@urpla.net>
-Cc: Nick Piggin <npiggin@suse.de>, opensuse-kernel@opensuse.org, Greg KH <gregkh@suse.de>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: tytso@mit.edu, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Sat, Apr 24, 2010 at 06:44:22PM +0200, Hans-Peter Jansen wrote:
-> On Tuesday 13 April 2010, 11:42:33 Hans-Peter Jansen wrote:
-> > On Tuesday 13 April 2010, 11:18:23 Dave Chinner wrote:
-> > > On Tue, Apr 13, 2010 at 10:50:35AM +0200, Hans-Peter Jansen wrote:
-> > > > Dave, may I ask you kindly for briefly elaborating on the worst
-> > > > consequences of just reverting this hunk, as I've done before?
-> > >
-> > > Well, given that is the new shrinker code generating the warnings,
-> > > reverting/removing that hunk will render the patch useless :0
-> >
-> > Excuse me, I didn't express myself well. I'm after the consequences of
-> > applying the revert, that I posted a few messages above.
-> >
-> > > I'll get you a working 2.6.33 patch tomorrow - it's dinner time
-> > > now....
-> >
-> > Cool, thanks.
-> 
-> Obviously and not totally unexpected, really fixing this is going to take 
-> more time.
-
-The problem is that the fix I did has been rejected by the upstream
-VM guys, and the stable rules are that fixes have to be in mainline
-before they can be put in a stable release.  So, until we get a fix
-in mainline, it can't be fixed in the -stable kernels.
-
-> FYI, 2.6.33.2 is still affected from this issue. 
-> 
-> Greg, you might search for a server using xfs filesystems and and a i586 
-> kernel >= 2.6.33, (2.6.32.11 of SLE11-SP1 will serve as well), log in as an 
-> ordinary user, do a "du" on /usr, and wait for the other users screaming...
-
-Yet there's only been one report of the problem. While that doesn't
-make it any less serious, I don't think the problem you're reporting
-is as widespread as you are making it out to be. We'll get the fix
-done and upstream, and then it will go back to the stable kernel.
-
-You could always apply the *tested* patches I posted that fix
-the problem, as....
-
-> BTW, all affected kernels, available from 
-> http://download.opensuse.org/repositories/home:/frispete: have the 
-> offending patch reverted (see subject), do run fine for me (on this 
-> aspect).
-
-... you seem to be capable of doing so.
-
-> Will you guys pass by another round of stable fixes without doing anything 
-> on this issue?
-
-If the process of getting the fix upstream takes longer than another
-stable release cycle, then yes. I'm sorry, but I can't control the
-process, and if someone takes a week to NACK a fix, then you're just
-going to have to wait longer. Feel free to run the fix in the
-meantime - testing it, even if it was NACKed will still help us
-because if it fixes your problem we know that we are fixing the
-_right problem_.
-
-If you can't live with this, then you shouldn't be running the
-latest and greatest kernels in your production environment....
-
-> Dave, this is why I'm kindly asking you: what might be the worst 
-> consequences, if we just do the revert for now (at least for 2.6.33), until 
-> you and Nick came to a final decision on how to solve this issue in the 
-> future.
-
-I've already told you - you could be reintroducing all the really
-hard to reproduce inode reclaim problems (oops, hangs, panics,
-potentially even fs corruption) that the patch in question was part
-of the fix for.  You're running code that changes reclaim in very
-subtle ways and has not been tested upstream in any way - if it
-breaks you get to keep all the broken pieces to yourself...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gU2F0LCBBcHIgMjQsIDIwMTAgYXQgMTE6MzM6MTVQTSAtMDQwMCwgdHl0c29AbWl0LmVkdSB3
+cm90ZToKPiBPbiBUdWUsIEFwciAyMCwgMjAxMCBhdCAxMjo0MTo1M1BNICsxMDAwLCBEYXZlIENo
+aW5uZXIgd3JvdGU6Cj4gPiBGcm9tOiBEYXZlIENoaW5uZXIgPGRjaGlubmVyQHJlZGhhdC5jb20+
+Cj4gPiAKPiA+IElmIGEgZmlsZXN5c3RlbSB3cml0ZXMgbW9yZSB0aGFuIG9uZSBwYWdlIGluIC0+
+d3JpdGVwYWdlLCB3cml0ZV9jYWNoZV9wYWdlcwo+ID4gZmFpbHMgdG8gbm90aWNlIHRoaXMgYW5k
+IGNvbnRpbnVlcyB0byBhdHRlbXB0IHdyaXRlYmFjayB3aGVuIHdiYy0+bnJfdG9fd3JpdGUKPiA+
+IGhhcyBnb25lIG5lZ2F0aXZlIC0gdGhpcyB0cmFjZSB3YXMgY2FwdHVyZWQgZnJvbSBYRlM6Cj4g
+PiAKPiA+IAo+ID4gICAgIHdiY193cml0ZWJhY2tfc3RhcnQ6IHRvd3J0PTEwMjQKPiA+ICAgICB3
+YmNfd3JpdGVwYWdlOiB0b3dydD0xMDI0Cj4gPiAgICAgd2JjX3dyaXRlcGFnZTogdG93cnQ9MAo+
+ID4gICAgIHdiY193cml0ZXBhZ2U6IHRvd3J0PS0xCj4gPiAgICAgd2JjX3dyaXRlcGFnZTogdG93
+cnQ9LTUKPiA+ICAgICB3YmNfd3JpdGVwYWdlOiB0b3dydD0tMjEKPiA+ICAgICB3YmNfd3JpdGVw
+YWdlOiB0b3dydD0tODUKPiA+IAo+ID4gVGhpcyBoYXMgYWR2ZXJzZSBlZmZlY3RzIG9uIGZpbGVz
+eXN0ZW0gd3JpdGViYWNrIGJlaGF2aW91ci4gd3JpdGVfY2FjaGVfcGFnZXMoKQo+ID4gbmVlZHMg
+dG8gdGVybWluYXRlIGFmdGVyIGEgY2VydGFpbiBudW1iZXIgb2YgcGFnZXMgYXJlIHdyaXR0ZW4s
+IG5vdCBhZnRlciBhCj4gPiBjZXJ0YWluIG51bWJlciBvZiBjYWxscyB0byAtPndyaXRlcGFnZSBh
+cmUgbWFkZS4gTWFrZSBpdCBvYnNlcnZlIHRoZSBjdXJyZW50Cj4gPiB2YWx1ZSBvZiB3YmMtPm5y
+X3RvX3dyaXRlIGFuZCB0cmVhdCBhIHZhbHVlIG9mIDw9IDAgYXMgdGhvdWdoIGl0IGlzIGEgZWl0
+aGVyIGEKPiA+IHRlcm1pbmF0aW9uIGNvbmRpdGlvbiBvciBhIHRyaWdnZXIgdG8gcmVzZXQgdG8g
+TUFYX1dSSVRF4biGQUNLX1BBR0VTIGZvciBkYXRhCj4gPiBpbnRlZ3JpdHkgc3luY3MuCj4gCj4g
+QmUgY2FyZWZ1bCBoZXJlLiAgSWYgeW91IGFyZSBnb2luZyB0byB3cml0ZSBtb3JlIHBhZ2VzIHRo
+YW4gd2hhdCB0aGUKPiB3cml0ZWJhY2sgY29kZSBoYXMgcmVxdWVzdGVkICh0aGUgc3R1cGlkIG5v
+IG1vcmUgdGhhbiAxMDI0IHBhZ2VzCj4gcmVzdHJpY3Rpb24gaW4gdGhlIHdyaXRlYmFjayBjb2Rl
+IGJlZm9yZSBpdCBqdW1wcyB0byBzdGFydCB3cml0aW5nCj4gc29tZSBvdGhlciBpbm9kZSksIHlv
+dSBhY3R1YWxseSBuZWVkIHRvIGxldCB0aGUgcmV0dXJuZWQKPiB3YmMtPm5yX3RvX3dyaXRlIGdv
+IG5lZ2F0aXZlLCBzbyB0aGF0IHdiX3dyaXRlYmFjaygpIGtub3dzIGhvdyBtYW55Cj4gcGFnZXMg
+aXQgaGFzIHdyaXR0ZW4uCj4gCj4gSW4gb3RoZXIgd29yZHMsIHRoZSB3cml0ZWJhY2sgY29kZSBh
+c3N1bWVzIHRoYXQgCj4gCj4gICA8b3JpZ25hbCB2YWx1ZSBvZiBucl90b193cml0ZT4gLSA8cmV0
+dXJuZWQgd2JjLT5ucl90b193cml0ZT4KPiAKPiBpcwo+IAo+ICAgPG51bWJlciBvZiBwYWdlcyBh
+Y3R1YWxseSB3cml0dGVuPgoKWWVzLCBidXQgdGhhdCBkb2VzIG5vdCByZXF1aXJlIGEgbmVnYXRp
+dmUgdmFsdWUgdG8gZ2V0IHJpZ2h0LiAgTm9uZQpvZiB0aGUgY29kZSByZWxpZXMgb24gbmVnYXRp
+dmUgbnJfdG9fd3JpdGUgdmFsdWVzIHRvIGRvIGFueXRoaW5nCmNvcnJlY3RseSwgYW5kIGFsbCB0
+aGUgdGVybWluYXRpb24gY2hlY2tzIGFyZSBmb3Igd2JjLT5ucl90by13cml0ZQo8PSAwLiBBbmQg
+dGhlIHRyYWNpbmcgc2hvd3MgaXQgYmVoYXZlcyBjb3JyZWN0bHkgd2hlbgp3YmMtPm5yX3RvX3dy
+aXRlID0gMCBvbiByZXR1cm4uIFJlcXVpcmluZyBhIG5lZ2F0aXZlIG51bWJlciBpcyBub3QKZG9j
+dW1lbnRlZCBpbiBhbnkgb2YgdGhlIGNvbW1lbnRzLCB3cml0ZV9jYWNoZV9wYWdlcygpIGRvZXMg
+bm90CnJldHVybiBhIG5lZ2F0aXZlIG51bWJlciwgZXRjLCBzbyBJIGNhbid0IHNlZSB3aHkgeW91
+IHRoaW5rIHRoaXMgaXMKbmVjZXNzYXJ5Li4uLgoKPiBJZiB5b3UgZG9uJ3QgbGV0IHdiYy0+bnJf
+dG9fd3JpdGUgZ28gbmVnYXRpdmUsIHRoZSB3cml0ZWJhY2sgY29kZSB3aWxsCj4gYmUgY29uZnVz
+ZWQgYWJvdXQgaG93IG1hbnkgcGFnZXMgd2VyZSBfYWN0dWFsbHlfIHdyaXR0ZW4sIGFuZCB0aGUK
+PiB3cml0ZWJhY2sgY29kZSBlbmRzIHVwIHdyaXRpbmcgdG9vIG11Y2guICBTZWUgY29tbWl0IDJm
+YWYyZTEuCgpleHQ0IGFkZGVkIGEgImJ1bXAiIHRvIHdiYy0+bnJfdG9fd3JpdGUsIHRoZW4gaW4g
+c29tZSBjYXNlcyBmb3Jnb3QKdG8gcmVtb3ZlIGl0IHNvIGl0IG5ldmVyIHJldHVybmVkIHRvIDw9
+IDAuIFdlbGwsIG9mIGNvdXJzZSB0aGlzCmNhdXNlcyB3cml0ZWJhY2sgdG8gd3JpdGUgdG9vIG11
+Y2ghIEJ1dCB0aGF0J3MgYW4gZXh0NCBidWcgbm90CmFsbG93aW5nIG5yX3RvX3dyaXRlIHRvIHJl
+YWNoIHplcm8gKG5vdCBuZWdhdGl2ZSwgYnV0IHplcm8pLCBub3QgYQpnZW5lcmFsIHdyaXRlYmFj
+ayBidWcuLi4uCgo+IEFsbCBvZiB0aGlzIGlzIGEgY3JvY2sgb2YgY291cnNlLiAgVGhlIGZpbGUg
+c3lzdGVtIHNob3VsZG4ndCBiZQo+IHNlY29uZC1ndWVzc2luZyB0aGUgd3JpdGViYWNrIGNvZGUu
+ICBJbnN0ZWFkIHRoZSB3cml0ZWJhY2sgY29kZSBzaG91bGQKPiBiZSBhZGFwdGl2ZWx5IG1lYXN1
+cmluZyBob3cgbG9uZyBpdCB0YWtlcyB0byB3ZXJlIHdyaXR0ZW4gb3V0IE4gcGFnZXMKPiB0byBh
+IHBhcnRpY3VsYXIgYmxvY2sgZGV2aWNlLCBhbmQgdGhlbiBkZWNpZGUgd2hhdCdzIHRoZSBhcHBy
+b3ByaWF0ZQo+IHNldHRpbmcgZm9yIG5yX3RvX3dyaXRlLiAgV2hhdCBtYWtlcyBzZW5zZSBmb3Ig
+YSBVU0Igc3RpY2ssIG9yIGEgNDIwMAo+IFJQTSBsYXB0b3AgZHJpdmUsIG1heSBub3QgbWFrZSBz
+ZW5zZSBmb3IgYSBtYXNzaXZlIFJBSUQgYXJyYXkuLi4uCgpXaHk/IFdyaXRlYmFjayBzaG91bGQg
+anVzdCBrZWVwIHB1c2hpbmcgcGFnZXMgZG93biB1bnRpbCBpdCBjb25nZXN0cwp0aGUgYmxvY2sg
+ZGV2aWNlLiBUaGVuIGl0IHRocm90dGxlcyBpdHNlbGYgaW4gZ2V0X3JlcXVlc3QoKSBhbmQgc28K
+d3JpdGViYWNrIGFscmVhZHkgYWRhcHRzIHRvIHRoZSBsb2FkIG9uIHRoZSBkZXZpY2UuICBNdWx0
+aXBsZSBwYXNzZXMKb2YgMTAyNCBwYWdlcyBwZXIgZGlydHkgaW5vZGUgaXMgZmluZSBmb3IgdGhp
+cyAtIGEgbGFyZ2VyCm5yX3RvX3dyaXRlIGRvZXNuJ3QgZ2V0IHRoZSBibG9jayBkZXZpY2UgdG8g
+Y29uZ2VzdGlvbiBhbnkgZmFzdGVyIG9yCnNsb3dlciwgbm9yIGRvZXMgaXQgY2hhbmdlIHRoZSBi
+ZWhhdmlvdXIgb25jZSBhdCBjb25nZXN0aW9uLi4uLgoKPiBCdXQgc2luY2Ugd2UgZG9uJ3QgaGF2
+ZSB0aGF0LCBib3RoIFhGUyBhbmQgZXh0NCBoYXZlIHdvcmthcm91bmRzIGZvcgo+IGJyYWluLWRh
+bWFnZWQgd3JpdGViYWNrIGJlaGF2aW91ci4gIChJIGRpZCBzb21lIHRlc3RpbmcsIGFuZCBldmVu
+IGZvcgo+IHN0YW5kYXJkIGxhcHRvcCBkcml2ZXMgdGhlIGNhcCBvZiAxMDI0IHBhZ2VzIGlzIGp1
+c3QgV2F5IFRvbyBTbWFsbDsKPiB0aGF0IGxpbWl0IHdhcyBzZXQgc29tZXRoaW5nIGxpa2UgYSBk
+ZWNhZGUgYWdvLCBhbmQgZXZlcnlvbmUgaGFzIGJlZW4KPiBhZnJhaWQgdG8gY2hhbmdlIGl0LCBl
+dmVuIHRob3VnaCBkaXNrcyBoYXZlIGdvdHRlbiBhIHdlZSBiaXQgZmFzdGVyCj4gc2luY2UgdGhv
+c2UgZGF5cy4pCgpYRlMgcHV0IGEgd29ya2Fyb3VuZCBpbiBmb3IgYSBkaWZmZXJlbnQgcmVhc29u
+IHRvIGV4dDQuIGV4dDQgcHV0IGl0CmluIHRvIGltcHJvdmUgZGVsYXllZCBhbGxvY2F0aW9uIGJ5
+IHdvcmtpbmcgd2l0aCBsYXJnZXIgY2h1bmtzIG9mCnBhZ2VzLiBYRlMgcHV0IGl0IGluIHRvIGdl
+dCBsYXJnZSBJT3MgdG8gYmUgaXNzdWVkIHRocm91Z2gKc3VibWl0X2JpbygpLCBub3QgdG8gaGVs
+cCB0aGUgYWxsb2NhdG9yLi4uCgpBbmQgdG8gYmUgdGhlIG5hc3R5IHBlcnNvbiB0byBzaG9vdCBk
+b3duIHlvdXIgbW9kZXJuIGhhcmR3YXJlCnRoZW9yeTogbnJfdG9fd3JpdGUgPSAxMDI0IHBhZ2Vz
+IHdvcmtzIGp1c3QgZmluZSBvbiBteSBsYXB0b3AgKFhGUwpvbiBpbmRpbGl4IFNTRCkgYXMgd2Vs
+bCBhcyBteSBiaWcgdGVzdCBzZXJ2ZXIgKFhGUyBvbiAxMiBkaXNrIFJBSUQwKQpUaGUgc2VydmVy
+IGdldHMgMS41R0IvcyB3aXRoIHByZXR0eSBtdWNoIHBlcmZlY3QgSU8gcGF0dGVybnMgd2l0aAp0
+aGUgZml4ZXMgSSBwb3N0ZWQsIHVubGlrZSB0aGUgbWVzcyBvZiBzaW5nbGUgcGFnZSBJT3MgdGhh
+dCBvY2N1cnMKd2l0aG91dCB0aGVtLi4uLgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5l
+cgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3Nz
+LnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
