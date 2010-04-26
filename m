@@ -1,28 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3QMsW0p112101 for <xfs@oss.sgi.com>; Mon, 26 Apr 2010 17:54:33 -0500
-Received: from esri3.esri.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E1DC988D79F
-	for <xfs@oss.sgi.com>; Mon, 26 Apr 2010 15:56:31 -0700 (PDT)
-Received: from esri3.esri.com (esrismtp2.esri.com [198.102.62.103]) by
-	cuda.sgi.com with ESMTP id 4hlYQhyKHl6gcBUk for
-	<xfs@oss.sgi.com>; Mon, 26 Apr 2010 15:56:31 -0700 (PDT)
-Received: from leoray.esri.com (leoray.esri.com [10.27.102.12])
-	by esri3.esri.com (8.11.7p3+Sun/8.11.7) with ESMTP id o3QMuSC11237
-	for <xfs@oss.sgi.com>; Mon, 26 Apr 2010 15:56:28 -0700 (PDT)
-Received: from leoray.esri.com (leoray.esri.com [127.0.0.1])
-	by leoray.esri.com (8.14.3/8.14.3) with ESMTP id o3QMuSJq007148
-	for <xfs@oss.sgi.com>; Mon, 26 Apr 2010 15:56:28 -0700
-Received: (from ray5147@localhost)
-	by leoray.esri.com (8.14.3/8.14.3/Submit) id o3QMuSOr007147
-	for xfs@oss.sgi.com; Mon, 26 Apr 2010 15:56:28 -0700
-Date: Mon, 26 Apr 2010 15:56:28 -0700
-From: Ray Van Dolson <rvandolson@esri.com>
-Subject: O_SYNC behavior?
-Message-ID: <20100426225627.GA7106@esri.com>
+	o3QNNpkW113911 for <xfs@oss.sgi.com>; Mon, 26 Apr 2010 18:23:51 -0500
+Received: from postoffice2.aconex.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6CE6412683BA
+	for <xfs@oss.sgi.com>; Mon, 26 Apr 2010 16:25:50 -0700 (PDT)
+Received: from postoffice2.aconex.com (mail.aconex.com [203.89.202.182]) by
+	cuda.sgi.com with ESMTP id RpPg5FR7evYtdl8l for
+	<xfs@oss.sgi.com>; Mon, 26 Apr 2010 16:25:50 -0700 (PDT)
+Date: Tue, 27 Apr 2010 09:25:43 +1000 (EST)
+From: Nathan Scott <nathans@aconex.com>
+Message-ID: <537687191.239471272324343715.JavaMail.root@mail-au.aconex.com>
+In-Reply-To: <20100426225627.GA7106@esri.com>
+Subject: Re: O_SYNC behavior?
 MIME-Version: 1.0
-Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,20 +26,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Ray Van Dolson <rvandolson@esri.com>
+Cc: xfs@oss.sgi.com
 
-End-user question:
 
-NFS client accessing an NFS export on an XFS based filesystem via
-"sync" (O_SYNC) mode.
+----- "Ray Van Dolson" <rvandolson@esri.com> wrote:
 
-Will write confirmation be sent back from the NFS server when the data
-is written to the xfs journal, or not until it is actually written to
-disk (assuming in this case the journal is on a separate SSD device or
-something similar)?
+> End-user question:
+> 
+> NFS client accessing an NFS export on an XFS based filesystem via
+> "sync" (O_SYNC) mode.
+> 
+> Will write confirmation be sent back from the NFS server when the
+> data is written to the xfs journal,
 
-Thanks,
-Ray
+Data is never written to the journal.
+
+cheers.
+
+-- 
+Nathan
 
 _______________________________________________
 xfs mailing list
