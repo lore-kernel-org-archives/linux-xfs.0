@@ -1,25 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3R00EwB115251 for <xfs@oss.sgi.com>; Mon, 26 Apr 2010 19:00:15 -0500
-Received: from mx1.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 81C7113335E2
-	for <xfs@oss.sgi.com>; Mon, 26 Apr 2010 17:02:17 -0700 (PDT)
-Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
-	with ESMTP id wvV0idZ5EFXk9CD0 for <xfs@oss.sgi.com>;
-	Mon, 26 Apr 2010 17:02:17 -0700 (PDT)
-Date: Mon, 26 Apr 2010 17:02:02 -0700
-From: Greg KH <gregkh@suse.de>
-Subject: Re: 2.6.34-rc3: simple du (on a big xfs tree) triggers oom killer
-	[bisected: 57817c68229984818fea9e614d6f95249c3fb098]
-Message-ID: <20100427000202.GA31470@suse.de>
-References: <201004050049.17952.hpj@urpla.net> <20100413091823.GD7544@dastard>
-	<201004131142.33518.hpj@urpla.net>
-	<201004241844.23482.hpj@urpla.net> <20100425162740.GB19195@suse.de>
-	<20100426003637.GB11437@dastard>
+	o3R0odrX117464 for <xfs@oss.sgi.com>; Mon, 26 Apr 2010 19:50:39 -0500
+From: Alex Elder <aelder@sgi.com>
+Message-Id: <201004270052.o3R0qZB7014331@stout.americas.sgi.com>
+Date: Mon, 26 Apr 2010 19:52:34 -0500
+Subject: [GIT PULL] XFS update for 2.6.34-rc6
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100426003637.GB11437@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,28 +19,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Nick Piggin <npiggin@suse.de>, linux-kernel@vger.kernel.org, opensuse-kernel@opensuse.org, xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, Apr 26, 2010 at 10:36:37AM +1000, Dave Chinner wrote:
-> On Sun, Apr 25, 2010 at 09:27:40AM -0700, Greg KH wrote:
-> > On Sat, Apr 24, 2010 at 06:44:22PM +0200, Hans-Peter Jansen wrote:
-> > > FYI, 2.6.33.2 is still affected from this issue. 
-> > 
-> > Is 2.6.33.3-rc2 affected?  A lot of xfs patches are in there (as are in
-> > 2.6.32.12-rc2.)
-> 
-> The fix is not in Linus' kernel yet, Greg. So once that is done,
-> I'll have to backport the fix back to those stable kernels as well.
-> It's not a trivial fix, so it will miss this round of stable
-> releases....
+Sorry to send this so late in the cycle.  It corrects a data
+corruption error though and I hate to see it wait until 2.6.35.
+If it doesn't make it for -rc6 perhaps you'll take it for -rc7.
 
-Ok, that's fine, just checking.  I'm in no rush, I have plenty of other
-patches to queue up for the next stable releases :)
+					-Alex
 
-thanks,
+The following changes since commit b91ce4d14a21fc04d165be30319541e0f9204f15:
+  Linus Torvalds (1):
+        Merge git://git.kernel.org/.../davem/net-2.6
 
-greg k-h
+are available in the git repository at:
+
+  git://oss.sgi.com/xfs/xfs for-linus
+
+Dave Chinner (1):
+      xfs: more swap extent fixes for dynamic fork offsets
+
+ fs/xfs/xfs_dfrag.c |   22 ++++++++++++++++------
+ 1 files changed, 16 insertions(+), 6 deletions(-)
 
 _______________________________________________
 xfs mailing list
