@@ -1,29 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3S3aqTu198874 for <xfs@oss.sgi.com>; Tue, 27 Apr 2010 22:36:53 -0500
+	o3S4WOZv201349 for <xfs@oss.sgi.com>; Tue, 27 Apr 2010 23:32:24 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3DB822F86F7
-	for <xfs@oss.sgi.com>; Tue, 27 Apr 2010 20:38:50 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 31AE62F87BC
+	for <xfs@oss.sgi.com>; Tue, 27 Apr 2010 21:34:26 -0700 (PDT)
 Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
 	[150.101.137.103]) by cuda.sgi.com with ESMTP id
-	o71T3CC2kvPRTMMM for <xfs@oss.sgi.com>;
-	Tue, 27 Apr 2010 20:38:50 -0700 (PDT)
-Date: Wed, 28 Apr 2010 13:38:29 +1000
+	txdx6uk0E6tONtIt for <xfs@oss.sgi.com>;
+	Tue, 27 Apr 2010 21:34:26 -0700 (PDT)
+Received: from dastard (unverified [121.44.229.111])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	22233003-1927428
+	for <xfs@oss.sgi.com>; Wed, 28 Apr 2010 14:04:25 +0930 (CST)
+Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
+	(envelope-from <dave@fromorbit.com>) id 1O6yyY-0005Mt-9B
+	for xfs@oss.sgi.com; Wed, 28 Apr 2010 14:34:18 +1000
+Received: from dave by disturbed with local (Exim 4.71)
+	(envelope-from <dave@disturbed.disaster>) id 1O6yyO-0001NN-Nb
+	for xfs@oss.sgi.com; Wed, 28 Apr 2010 14:34:08 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/2] mm: add context argument to shrinker callback
-Message-ID: <20100428033829.GE9783@dastard>
-References: <1271118255-21070-1-git-send-email-david@fromorbit.com>
-	<1271118255-21070-2-git-send-email-david@fromorbit.com>
-	<20100418001514.GA26575@infradead.org>
-	<20100419140039.GQ5683@laptop> <20100420004149.GA14744@dastard>
-	<20100420083840.GR5683@laptop> <20100420103216.GK15130@dastard>
-	<20100421084004.GS5683@laptop>
-	<20100422163211.GA2478@infradead.org>
-	<20100422163801.GZ5683@laptop>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100422163801.GZ5683@laptop>
+Subject: [PATCH] xfs: add a shrinker to background inode reclaim
+Date: Wed, 28 Apr 2010 14:34:08 +1000
+Message-Id: <1272429248-5269-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,76 +31,317 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Nick Piggin <npiggin@suse.de>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: xfs@oss.sgi.com
 
-On Fri, Apr 23, 2010 at 02:38:01AM +1000, Nick Piggin wrote:
-> On Thu, Apr 22, 2010 at 12:32:11PM -0400, Christoph Hellwig wrote:
-> > On Wed, Apr 21, 2010 at 06:40:04PM +1000, Nick Piggin wrote:
-> > > I'm saying that dynamic registration is no good, if we don't have a
-> > > way to order the shrinkers.
-> > 
-> > We can happily throw in a priority field into the shrinker structure,
-> > but at this stage in the release process I'd rather have an as simple
-> > as possible fix for the regression.  And just adding the context pointer
-> > which is a no-op for all existing shrinkers fits that scheme very well.
-> > 
-> > If it makes you happier I can queue up a patch to add the priorities
-> > for 2.6.35.  I think figuring out any meaningful priorities will be
-> > much harder than that, though.
-> 
-> I don't understand, it should be implemented like just all the other
-> shrinkers AFAIKS. Like the dcache one that has to shrink multiple
-> superblocks. There is absolutely no requirement for this API change
-> to implement it in XFS.
+From: Dave Chinner <dchinner@redhat.com>
 
-Well, I've gone and done this global shrinker because I need a fix
-for the problem before .34 releases, not because I like it.
+On low memory boxes or those with highmem, kernel can OOM before the
+background reclaims inodes via xfssyncd. Add a shrinker to run inode
+reclaim so that it inode reclaim is expedited when memory is low.
 
-Now my problem is that the accepted method of using global shrinkers
-(i.e. split nr_to-scan into portions based on per-fs usage) is
-causing a regression compared to not having a shrinker at all. The
-context based shrinker did not cause this regression, either.
+This is more complex than it needs to be because the VM folk don't
+want a context added to the shrinker infrastructure. Hence we need
+to add a global list of XFS mount structures so the shrinker can
+traverse them.
 
-The regression is oom-killer panics with "no killable tasks" - it
-kills my 1GB RAM VM dead.  Without a shrinker or with the context
-based shrinkers I will see one or two dd processes getting
-OOM-killed maybe once every 10 or so runs on this VM, but the machine
-continues to stay up. The global shrinker is turning this into a
-panic, and it is happening about twice as often.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/linux-2.6/xfs_super.c   |    5 ++
+ fs/xfs/linux-2.6/xfs_sync.c    |  112 +++++++++++++++++++++++++++++++++++++---
+ fs/xfs/linux-2.6/xfs_sync.h    |    7 ++-
+ fs/xfs/quota/xfs_qm_syscalls.c |    3 +-
+ fs/xfs/xfs_ag.h                |    1 +
+ fs/xfs/xfs_mount.h             |    1 +
+ 6 files changed, 120 insertions(+), 9 deletions(-)
 
-To fix this I've had to remove all the code that proportions the
-reclaim across all the XFS filesystems in the system. Basically it
-now walks from the first filesystem in the list to the last every
-time and effectively it only reclaims from the first filesystem it
-finds with reclaimable inodes.
-
-This is exactly the behaviour the context based shrinkers give me,
-without the need for adding global lists, additional locking and
-traverses. Also, context based shrinkers won't re-traverse all the
-filesystems, avoiding the potential for starving some filesystems of
-shrinker based reclaim if filesystems earlier in the list are
-putting more inodes into reclaim concurrently.
-
-Given that this behaviour matches pretty closely to the reasons I've
-already given for preferring context based per-fs shrinkers than a
-global shrinker and list, can we please move forward with this API
-change, Nick?
-
-As it is, I'm going to cross my fingers and ship this global
-shrinker because of time limitations, but I certainly hoping that
-for .35 we can move to context based shrinking....
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
+index 1abcacc..a43d09e 100644
+--- a/fs/xfs/linux-2.6/xfs_super.c
++++ b/fs/xfs/linux-2.6/xfs_super.c
+@@ -1210,6 +1210,7 @@ xfs_fs_put_super(
+ 
+ 	xfs_unmountfs(mp);
+ 	xfs_freesb(mp);
++	xfs_inode_shrinker_unregister(mp);
+ 	xfs_icsb_destroy_counters(mp);
+ 	xfs_close_devices(mp);
+ 	xfs_dmops_put(mp);
+@@ -1623,6 +1624,8 @@ xfs_fs_fill_super(
+ 	if (error)
+ 		goto fail_vnrele;
+ 
++	xfs_inode_shrinker_register(mp);
++
+ 	kfree(mtpt);
+ 	return 0;
+ 
+@@ -1868,6 +1871,7 @@ init_xfs_fs(void)
+ 		goto out_cleanup_procfs;
+ 
+ 	vfs_initquota();
++	xfs_inode_shrinker_init();
+ 
+ 	error = register_filesystem(&xfs_fs_type);
+ 	if (error)
+@@ -1895,6 +1899,7 @@ exit_xfs_fs(void)
+ {
+ 	vfs_exitquota();
+ 	unregister_filesystem(&xfs_fs_type);
++	xfs_inode_shrinker_destroy();
+ 	xfs_sysctl_unregister();
+ 	xfs_cleanup_procfs();
+ 	xfs_buf_terminate();
+diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+index 3a64179..3884e20 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.c
++++ b/fs/xfs/linux-2.6/xfs_sync.c
+@@ -95,7 +95,8 @@ xfs_inode_ag_walk(
+ 					   struct xfs_perag *pag, int flags),
+ 	int			flags,
+ 	int			tag,
+-	int			exclusive)
++	int			exclusive,
++	int			*nr_to_scan)
+ {
+ 	uint32_t		first_index;
+ 	int			last_error = 0;
+@@ -134,7 +135,7 @@ restart:
+ 		if (error == EFSCORRUPTED)
+ 			break;
+ 
+-	} while (1);
++	} while ((*nr_to_scan)--);
+ 
+ 	if (skipped) {
+ 		delay(1);
+@@ -150,12 +151,15 @@ xfs_inode_ag_iterator(
+ 					   struct xfs_perag *pag, int flags),
+ 	int			flags,
+ 	int			tag,
+-	int			exclusive)
++	int			exclusive,
++	int			*nr_to_scan)
+ {
+ 	int			error = 0;
+ 	int			last_error = 0;
+ 	xfs_agnumber_t		ag;
++	int			nr;
+ 
++	nr = nr_to_scan ? *nr_to_scan : INT_MAX;
+ 	for (ag = 0; ag < mp->m_sb.sb_agcount; ag++) {
+ 		struct xfs_perag	*pag;
+ 
+@@ -165,14 +169,18 @@ xfs_inode_ag_iterator(
+ 			continue;
+ 		}
+ 		error = xfs_inode_ag_walk(mp, pag, execute, flags, tag,
+-						exclusive);
++						exclusive, &nr);
+ 		xfs_perag_put(pag);
+ 		if (error) {
+ 			last_error = error;
+ 			if (error == EFSCORRUPTED)
+ 				break;
+ 		}
++		if (nr <= 0)
++			break;
+ 	}
++	if (nr_to_scan)
++		*nr_to_scan = nr;
+ 	return XFS_ERROR(last_error);
+ }
+ 
+@@ -291,7 +299,7 @@ xfs_sync_data(
+ 	ASSERT((flags & ~(SYNC_TRYLOCK|SYNC_WAIT)) == 0);
+ 
+ 	error = xfs_inode_ag_iterator(mp, xfs_sync_inode_data, flags,
+-				      XFS_ICI_NO_TAG, 0);
++				      XFS_ICI_NO_TAG, 0, NULL);
+ 	if (error)
+ 		return XFS_ERROR(error);
+ 
+@@ -310,7 +318,7 @@ xfs_sync_attr(
+ 	ASSERT((flags & ~SYNC_WAIT) == 0);
+ 
+ 	return xfs_inode_ag_iterator(mp, xfs_sync_inode_attr, flags,
+-				     XFS_ICI_NO_TAG, 0);
++				     XFS_ICI_NO_TAG, 0, NULL);
+ }
+ 
+ STATIC int
+@@ -636,6 +644,7 @@ __xfs_inode_set_reclaim_tag(
+ 	radix_tree_tag_set(&pag->pag_ici_root,
+ 			   XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino),
+ 			   XFS_ICI_RECLAIM_TAG);
++	pag->pag_ici_reclaimable++;
+ }
+ 
+ /*
+@@ -668,6 +677,7 @@ __xfs_inode_clear_reclaim_tag(
+ {
+ 	radix_tree_tag_clear(&pag->pag_ici_root,
+ 			XFS_INO_TO_AGINO(mp, ip->i_ino), XFS_ICI_RECLAIM_TAG);
++	pag->pag_ici_reclaimable--;
+ }
+ 
+ /*
+@@ -817,5 +827,93 @@ xfs_reclaim_inodes(
+ 	int		mode)
+ {
+ 	return xfs_inode_ag_iterator(mp, xfs_reclaim_inode, mode,
+-					XFS_ICI_RECLAIM_TAG, 1);
++					XFS_ICI_RECLAIM_TAG, 1, NULL);
++}
++
++/*
++ * Shrinker infrastructure.
++ *
++ * This is all far more complex than it needs to be. It adds a global list of
++ * mounts because the shrinkers can only call a global context. We need to make
++ * the shrinkers pass a context to avoid the need for global state.
++ */
++static LIST_HEAD(xfs_mount_list);
++static struct rw_semaphore xfs_mount_list_lock;
++
++static int
++xfs_reclaim_inode_shrink(
++	int		nr_to_scan,
++	gfp_t		gfp_mask)
++{
++	struct xfs_mount *mp;
++	struct xfs_perag *pag;
++	xfs_agnumber_t	ag;
++	int		reclaimable = 0;
++
++	if (nr_to_scan) {
++		if (!(gfp_mask & __GFP_FS))
++			return -1;
++
++		down_read(&xfs_mount_list_lock);
++		list_for_each_entry(mp, &xfs_mount_list, m_mplist) {
++			xfs_inode_ag_iterator(mp, xfs_reclaim_inode, 0,
++					XFS_ICI_RECLAIM_TAG, 1, &nr_to_scan);
++			if (nr_to_scan <= 0)
++				break;
++		}
++		up_read(&xfs_mount_list_lock);
++	}
++
++	down_read(&xfs_mount_list_lock);
++	list_for_each_entry(mp, &xfs_mount_list, m_mplist) {
++		for (ag = 0; ag < mp->m_sb.sb_agcount; ag++) {
++
++			pag = xfs_perag_get(mp, ag);
++			if (!pag->pag_ici_init) {
++				xfs_perag_put(pag);
++				continue;
++			}
++			reclaimable += pag->pag_ici_reclaimable;
++			xfs_perag_put(pag);
++		}
++	}
++	up_read(&xfs_mount_list_lock);
++	return reclaimable;
++}
++
++static struct shrinker xfs_inode_shrinker = {
++	.shrink = xfs_reclaim_inode_shrink,
++	.seeks = DEFAULT_SEEKS,
++};
++
++void __init
++xfs_inode_shrinker_init(void)
++{
++	init_rwsem(&xfs_mount_list_lock);
++	register_shrinker(&xfs_inode_shrinker);
++}
++
++void
++xfs_inode_shrinker_destroy(void)
++{
++	ASSERT(list_empty(&xfs_mount_list));
++	unregister_shrinker(&xfs_inode_shrinker);
++}
++
++void
++xfs_inode_shrinker_register(
++	struct xfs_mount	*mp)
++{
++	down_write(&xfs_mount_list_lock);
++	list_add_tail(&mp->m_mplist, &xfs_mount_list);
++	up_write(&xfs_mount_list_lock);
++}
++
++void
++xfs_inode_shrinker_unregister(
++	struct xfs_mount	*mp)
++{
++	down_write(&xfs_mount_list_lock);
++	list_del(&mp->m_mplist);
++	up_write(&xfs_mount_list_lock);
+ }
+diff --git a/fs/xfs/linux-2.6/xfs_sync.h b/fs/xfs/linux-2.6/xfs_sync.h
+index d480c34..cdcbaac 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.h
++++ b/fs/xfs/linux-2.6/xfs_sync.h
+@@ -53,6 +53,11 @@ void __xfs_inode_clear_reclaim_tag(struct xfs_mount *mp, struct xfs_perag *pag,
+ int xfs_sync_inode_valid(struct xfs_inode *ip, struct xfs_perag *pag);
+ int xfs_inode_ag_iterator(struct xfs_mount *mp,
+ 	int (*execute)(struct xfs_inode *ip, struct xfs_perag *pag, int flags),
+-	int flags, int tag, int write_lock);
++	int flags, int tag, int write_lock, int *nr_to_scan);
++
++void xfs_inode_shrinker_init(void);
++void xfs_inode_shrinker_destroy(void);
++void xfs_inode_shrinker_register(struct xfs_mount *mp);
++void xfs_inode_shrinker_unregister(struct xfs_mount *mp);
+ 
+ #endif
+diff --git a/fs/xfs/quota/xfs_qm_syscalls.c b/fs/xfs/quota/xfs_qm_syscalls.c
+index f14408e..26fa431 100644
+--- a/fs/xfs/quota/xfs_qm_syscalls.c
++++ b/fs/xfs/quota/xfs_qm_syscalls.c
+@@ -889,7 +889,8 @@ xfs_qm_dqrele_all_inodes(
+ 	uint		 flags)
+ {
+ 	ASSERT(mp->m_quotainfo);
+-	xfs_inode_ag_iterator(mp, xfs_dqrele_inode, flags, XFS_ICI_NO_TAG, 0);
++	xfs_inode_ag_iterator(mp, xfs_dqrele_inode, flags,
++				XFS_ICI_NO_TAG, 0, NULL);
+ }
+ 
+ /*------------------------------------------------------------------------*/
+diff --git a/fs/xfs/xfs_ag.h b/fs/xfs/xfs_ag.h
+index b1a5a1f..abb8222 100644
+--- a/fs/xfs/xfs_ag.h
++++ b/fs/xfs/xfs_ag.h
+@@ -223,6 +223,7 @@ typedef struct xfs_perag {
+ 	int		pag_ici_init;	/* incore inode cache initialised */
+ 	rwlock_t	pag_ici_lock;	/* incore inode lock */
+ 	struct radix_tree_root pag_ici_root;	/* incore inode cache root */
++	int		pag_ici_reclaimable;	/* reclaimable inodes */
+ #endif
+ 	int		pagb_count;	/* pagb slots in use */
+ 	xfs_perag_busy_t pagb_list[XFS_PAGB_NUM_SLOTS];	/* unstable blocks */
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 4fa0bc7..9ff48a1 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -259,6 +259,7 @@ typedef struct xfs_mount {
+ 	wait_queue_head_t	m_wait_single_sync_task;
+ 	__int64_t		m_update_flags;	/* sb flags we need to update
+ 						   on the next remount,rw */
++	struct list_head	m_mplist;	/* inode shrinker mount list */
+ } xfs_mount_t;
+ 
+ /*
 -- 
-Dave Chinner
-david@fromorbit.com
+1.5.6.5
 
 _______________________________________________
 xfs mailing list
