@@ -1,19 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3S2xNGZ197077 for <xfs@oss.sgi.com>; Tue, 27 Apr 2010 21:59:24 -0500
-Received: from rcsinet10.oracle.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E98502F8683
-	for <xfs@oss.sgi.com>; Tue, 27 Apr 2010 20:01:27 -0700 (PDT)
-Received: from rcsinet10.oracle.com (rcsinet10.oracle.com [148.87.113.121]) by
-	cuda.sgi.com with ESMTP id QY5kr7hrqkjpiP0O for
-	<xfs@oss.sgi.com>; Tue, 27 Apr 2010 20:01:27 -0700 (PDT)
-From: Tao Ma <tao.ma@oracle.com>
-Subject: [PATCH v2] XFS: Let the broken fiemap work in query mode.
-Date: Wed, 28 Apr 2010 11:00:25 +0800
-Message-Id: <1272423625-20142-1-git-send-email-tao.ma@oracle.com>
-In-Reply-To: <20100428023058.GD9783@dastard>
-References: <20100428023058.GD9783@dastard>
+	o3S3aqTu198874 for <xfs@oss.sgi.com>; Tue, 27 Apr 2010 22:36:53 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3DB822F86F7
+	for <xfs@oss.sgi.com>; Tue, 27 Apr 2010 20:38:50 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	o71T3CC2kvPRTMMM for <xfs@oss.sgi.com>;
+	Tue, 27 Apr 2010 20:38:50 -0700 (PDT)
+Date: Wed, 28 Apr 2010 13:38:29 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/2] mm: add context argument to shrinker callback
+Message-ID: <20100428033829.GE9783@dastard>
+References: <1271118255-21070-1-git-send-email-david@fromorbit.com>
+	<1271118255-21070-2-git-send-email-david@fromorbit.com>
+	<20100418001514.GA26575@infradead.org>
+	<20100419140039.GQ5683@laptop> <20100420004149.GA14744@dastard>
+	<20100420083840.GR5683@laptop> <20100420103216.GK15130@dastard>
+	<20100421084004.GS5683@laptop>
+	<20100422163211.GA2478@infradead.org>
+	<20100422163801.GZ5683@laptop>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20100422163801.GZ5683@laptop>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,120 +32,76 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-kernel@vger.kernel.org
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs@oss.sgi.com, Alex Elder <aelder@sgi.com>, Christoph Hellwig <hch@lst.de>, Tao Ma <tao.ma@oracle.com>
+To: Nick Piggin <npiggin@suse.de>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-Dave Chinner wrote:
-> On Wed, Apr 28, 2010 at 10:00:01AM +0800, Tao Ma wrote:
->> Hi Dave,
->>
->> Dave Chinner wrote:
->>> On Tue, Apr 27, 2010 at 02:17:45PM +0800, Tao Ma wrote:
->>>> According to Documentation/filesystems/fiemap.txt, If fm_extent_count
->>>> is zero, then the fm_extents[] array is ignored (no extents will be
->>>> returned), and the fm_mapped_extents count will hold the number of
->>>> extents needed.
->>>>
->>>> But as the commit 97db39a1f6f69e906e98118392400de5217aa33a has changed
->>>> bmv_count to the caller's input buffer, this number query function can't
->>>> work any more. As this commit is written to change bmv_count from
->>>> MAXEXTNUM because of ENOMEM, we can't find a really suitable number to
->>>> set bmv_count now in xfs_vn_fiemap. Since we really have no idea of how
->>>> much extents the file has, a big number may cause ENOMEM, while a small
->>>> one will mask the real extent no.
->>>>
->>>> So this patch try to resolve this problem by adding a temporary getbmapx
->>>> in xfs_getbmap. If the caller didn't give bmv_count, we don't allocate
->>>> the "out" either. Instead, every time we want to use 'out', use '&tmp'
->>>> instead.
->>>>
->>>> I know this solution is a bit ugly, but I can't find a way to resolve
->>>> this issue while not changing the codes too much. So any good suggestion
->>>> is welcomed.
->>> I don't see a need to change xfs_getbmap() to fix this. We can limit
->>> the maximum allocation size to something realistic just by setting
->>> bm.bmv.count to something sane. e.g, in xfs_vn_fiemap:
->>>
->>> -	bm.bmv_count = fieinfo->fi_extents_max + 1;
->>> +	bm.bmv.count = !fieinfo->fi_extents_max ? MAXEXTNUM :
->>> +					fieinfo->fi_extents_max - 1;
->>> +	bm.bmv_count = MIN(bm.bmv_count,
->>> 				(PAGE_SIZE * 16 / sizeof(struct getbmapx)));
->>>
->>> Unless I'm missing something, that should also prevent the case of
->>> an application providing a really large fi_extents_max from
->>> triggering ENOMEM in most cases as well.
->> I just worry about one thing: What if the real extent number is
->> larger than the PAGE_SIZE * 16 / sizeof(struct getbmapx)? In this
->> case, we will give up the wrong extent number to the user space.
+On Fri, Apr 23, 2010 at 02:38:01AM +1000, Nick Piggin wrote:
+> On Thu, Apr 22, 2010 at 12:32:11PM -0400, Christoph Hellwig wrote:
+> > On Wed, Apr 21, 2010 at 06:40:04PM +1000, Nick Piggin wrote:
+> > > I'm saying that dynamic registration is no good, if we don't have a
+> > > way to order the shrinkers.
+> > 
+> > We can happily throw in a priority field into the shrinker structure,
+> > but at this stage in the release process I'd rather have an as simple
+> > as possible fix for the regression.  And just adding the context pointer
+> > which is a no-op for all existing shrinkers fits that scheme very well.
+> > 
+> > If it makes you happier I can queue up a patch to add the priorities
+> > for 2.6.35.  I think figuring out any meaningful priorities will be
+> > much harder than that, though.
 > 
-> Applications need to handle mappings changing from query to getting
-> the mapping, so this should not be a major issue. Especially as the
-> method of fiemap indicating there are more extents to be extracted
-> from the inode in the case the kernel can't allocate a buffer large
-> enough is already documented.
-> 
-> Realistically though, xfs_getbmap() needs a complete rewrite so
-> right now I'd prefer just to do the minimum to fix the reported
-> problem that continue to make it into even more of a mess than it is
-> now...
-Fair enough. Here is the updated patch.
+> I don't understand, it should be implemented like just all the other
+> shrinkers AFAIKS. Like the dcache one that has to shrink multiple
+> superblocks. There is absolutely no requirement for this API change
+> to implement it in XFS.
 
-btw, I am working on adding the test cases in xfstests.
+Well, I've gone and done this global shrinker because I need a fix
+for the problem before .34 releases, not because I like it.
 
-Regards,
-Tao
+Now my problem is that the accepted method of using global shrinkers
+(i.e. split nr_to-scan into portions based on per-fs usage) is
+causing a regression compared to not having a shrinker at all. The
+context based shrinker did not cause this regression, either.
 
->From e5d32636c907be106d55d63c253d1750a4a898d7 Mon Sep 17 00:00:00 2001
-From: Tao Ma <tao.ma@oracle.com>
-Date: Wed, 28 Apr 2010 10:25:33 +0800
-Subject: [PATCH v2] XFS: Let the broken fiemap work in query mode.
+The regression is oom-killer panics with "no killable tasks" - it
+kills my 1GB RAM VM dead.  Without a shrinker or with the context
+based shrinkers I will see one or two dd processes getting
+OOM-killed maybe once every 10 or so runs on this VM, but the machine
+continues to stay up. The global shrinker is turning this into a
+panic, and it is happening about twice as often.
 
-According to Documentation/filesystems/fiemap.txt, If fm_extent_count
-is zero, then the fm_extents[] array is ignored (no extents will be
-returned), and the fm_mapped_extents count will hold the number of
-extents needed.
+To fix this I've had to remove all the code that proportions the
+reclaim across all the XFS filesystems in the system. Basically it
+now walks from the first filesystem in the list to the last every
+time and effectively it only reclaims from the first filesystem it
+finds with reclaimable inodes.
 
-But as the commit 97db39a1f6f69e906e98118392400de5217aa33a has changed
-bmv_count to the caller's input buffer, this number query function can't
-work any more. As this commit is written to change bmv_count from
-MAXEXTNUM because of ENOMEM.
+This is exactly the behaviour the context based shrinkers give me,
+without the need for adding global lists, additional locking and
+traverses. Also, context based shrinkers won't re-traverse all the
+filesystems, avoiding the potential for starving some filesystems of
+shrinker based reclaim if filesystems earlier in the list are
+putting more inodes into reclaim concurrently.
 
-This patch just try to set bm.bmv.count to something sane.
-Thanks to Dave Chinner <david@fromorbit.com> for the suggestion.
+Given that this behaviour matches pretty closely to the reasons I've
+already given for preferring context based per-fs shrinkers than a
+global shrinker and list, can we please move forward with this API
+change, Nick?
 
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Alex Elder <aelder@sgi.com>
-Signed-off-by: Tao Ma <tao.ma@oracle.com>
----
- fs/xfs/linux-2.6/xfs_iops.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+As it is, I'm going to cross my fingers and ship this global
+shrinker because of time limitations, but I certainly hoping that
+for .35 we can move to context based shrinking....
 
-diff --git a/fs/xfs/linux-2.6/xfs_iops.c b/fs/xfs/linux-2.6/xfs_iops.c
-index 2259460..24ccad9 100644
---- a/fs/xfs/linux-2.6/xfs_iops.c
-+++ b/fs/xfs/linux-2.6/xfs_iops.c
-@@ -662,7 +662,10 @@ xfs_vn_fiemap(
- 		bm.bmv_length = BTOBB(length);
- 
- 	/* We add one because in getbmap world count includes the header */
--	bm.bmv_count = fieinfo->fi_extents_max + 1;
-+	bm.bmv_count = !fieinfo->fi_extents_max ? MAXEXTNUM :
-+					fieinfo->fi_extents_max + 1;
-+	bm.bmv_count = MIN(bm.bmv_count,
-+			   (__s32)(PAGE_SIZE * 16 / sizeof(struct getbmapx)));
- 	bm.bmv_iflags = BMV_IF_PREALLOC;
- 	if (fieinfo->fi_flags & FIEMAP_FLAG_XATTR)
- 		bm.bmv_iflags |= BMV_IF_ATTRFORK;
+Cheers,
+
+Dave.
 -- 
-1.6.3.3.334.g916e1.dirty
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
