@@ -1,21 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3SARm4u225261 for <xfs@oss.sgi.com>; Wed, 28 Apr 2010 05:27:49 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E5D541AEC341
-	for <xfs@oss.sgi.com>; Wed, 28 Apr 2010 03:29:52 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id KwO4Lky5EeqAumFN for
-	<xfs@oss.sgi.com>; Wed, 28 Apr 2010 03:29:52 -0700 (PDT)
-Date: Wed, 28 Apr 2010 06:29:51 -0400
+	o3SBVxPv229078 for <xfs@oss.sgi.com>; Wed, 28 Apr 2010 06:31:59 -0500
+Date: Wed, 28 Apr 2010 07:33:59 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfsqa: more sh to bash conversions
-Message-ID: <20100428102951.GA23924@infradead.org>
-References: <1272432608-15231-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH v2] XFS: Let the broken fiemap work in query mode.
+Message-ID: <20100428113359.GB27769@infradead.org>
+References: <20100428023058.GD9783@dastard>
+	<1272423625-20142-1-git-send-email-tao.ma@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1272432608-15231-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1272423625-20142-1-git-send-email-tao.ma@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,16 +23,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Tao Ma <tao.ma@oracle.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, Alex Elder <aelder@sgi.com>, Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, Apr 28, 2010 at 03:30:08PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> A new test is using /bin/sh and failing on debia???. Clean it up and all the
-> remaining uses of /bin/sh.
+On Wed, Apr 28, 2010 at 11:00:25AM +0800, Tao Ma wrote:
+> -	bm.bmv_count = fieinfo->fi_extents_max + 1;
+> +	bm.bmv_count = !fieinfo->fi_extents_max ? MAXEXTNUM :
+> +					fieinfo->fi_extents_max + 1;
+> +	bm.bmv_count = MIN(bm.bmv_count,
+> +			   (__s32)(PAGE_SIZE * 16 / sizeof(struct getbmapx)));
 
-Looks good,
+I would use min_t here instead of the case, but otherwise the patch
+looks good to me,
 
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
