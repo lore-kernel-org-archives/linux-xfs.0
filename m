@@ -1,30 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3T0EZfX020644 for <xfs@oss.sgi.com>; Wed, 28 Apr 2010 19:14:35 -0500
+	o3T0J5Jr020997 for <xfs@oss.sgi.com>; Wed, 28 Apr 2010 19:19:06 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B48942FC6CF
-	for <xfs@oss.sgi.com>; Wed, 28 Apr 2010 17:16:38 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	RficI4xbllreNGpJ for <xfs@oss.sgi.com>;
-	Wed, 28 Apr 2010 17:16:38 -0700 (PDT)
-Received: from dastard (unverified [121.44.229.111])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	22474262-1927428
-	for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 09:46:37 +0930 (CST)
-Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1O7HQi-0007Pp-0C
-	for xfs@oss.sgi.com; Thu, 29 Apr 2010 10:16:36 +1000
-Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1O7HQY-0007f0-DF
-	for xfs@oss.sgi.com; Thu, 29 Apr 2010 10:16:26 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B040E1AF28CF
+	for <xfs@oss.sgi.com>; Wed, 28 Apr 2010 17:21:09 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
+	[150.101.137.100]) by cuda.sgi.com with ESMTP id
+	gcq8tVkFEtAEwSEB for <xfs@oss.sgi.com>;
+	Wed, 28 Apr 2010 17:21:09 -0700 (PDT)
+Date: Thu, 29 Apr 2010 10:21:07 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/3] xfsqa: keep xfs_fsr output around in test 222
-Date: Thu, 29 Apr 2010 10:16:25 +1000
-Message-Id: <1272500186-29393-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1272500186-29393-1-git-send-email-david@fromorbit.com>
-References: <1272500186-29393-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 00/11] remove xfs_iomap
+Message-ID: <20100429002107.GK9783@dastard>
+References: <20100428122850.075189557@bombadil.infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20100428122850.075189557@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,39 +25,33 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+On Wed, Apr 28, 2010 at 08:28:50AM -0400, Christoph Hellwig wrote:
+> This series gets rid of the xfs_iomap structure which we use to
+> communicate between xfs_aops.c and xfs_iomap.c.  It's not a very
+> useful structure - we basically need block offsets above and below
+> it, but it's in terms of bytes.  Removing it and using the xfs_bmbt_irec
+> structure instead thus simplifies the code and reduces the stack footprint
+> of the writeback code.
 
-To confirm that xfs_fsr is doing the right thing, make it output debug
-and verbose messages and store them in the 222.full file so that it
-can be checked after the fact for correct operation.
+I like the idea - anything we can remove from the writeback path is
+useful in terms of stack footprint. I've had a quick look over the
+patches and can't see any obvious issues, but I need to do a more
+in-depth review of them over the next couple of days. In the mean
+time, I'll add them to my QA stack...
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- 222 |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Cheers,
 
-diff --git a/222 b/222
-index 574c181..a65c845 100644
---- a/222
-+++ b/222
-@@ -51,7 +51,7 @@ _supported_os Linux
- 
- [ "$XFS_FSR_PROG" = "" ] && _notrun "xfs_fsr not found"
- 
--xfs_fsr $TEST_MNT > /dev/null 2>&1
-+xfs_fsr -d -v $TEST_MNT > $seq.full 2>&1
- 
- echo "--- silence is golden ---"
- status=0 ; exit
+Dave.
 -- 
-1.5.6.5
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
