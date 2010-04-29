@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3TAbBkD063581 for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 05:37:11 -0500
+	o3TAIn34062306 for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 05:18:49 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AFD1C8EC793
-	for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 03:39:16 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F034B2FD69B
+	for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 03:20:54 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id Y8JnGBEu5QAqeHCj for
-	<xfs@oss.sgi.com>; Thu, 29 Apr 2010 03:39:16 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1O7R9I-0002kR-5l
-	for xfs@oss.sgi.com; Thu, 29 Apr 2010 10:39:16 +0000
-Date: Thu, 29 Apr 2010 06:39:16 -0400
+	by cuda.sgi.com with ESMTP id FHm1j9hDVETbav89 for
+	<xfs@oss.sgi.com>; Thu, 29 Apr 2010 03:20:54 -0700 (PDT)
+Date: Thu, 29 Apr 2010 06:20:54 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfstests: fix fiemap-tester when build without fallocate
-Message-ID: <20100429103916.GA10535@infradead.org>
+Subject: Re: [PATCH 3/3] xfsqa: build dbtest on debian platforms
+Message-ID: <20100429102054.GD29677@infradead.org>
+References: <1272500186-29393-1-git-send-email-david@fromorbit.com>
+	<1272500186-29393-4-git-send-email-david@fromorbit.com>
+	<20100429064943.GB3774@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20100429064943.GB3774@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,45 +30,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Make sure at least the tests passing -p0 like xfstests 225 can work when
-built without fallocate support.
+On Thu, Apr 29, 2010 at 04:49:43PM +1000, Dave Chinner wrote:
+> On Thu, Apr 29, 2010 at 10:16:26AM +1000, Dave Chinner wrote:
+> > Set up autoconf to find the correct headers and compat libraries for
+> > debian squeeze, and massage the includes to ensure the right headers get
+> > included. Also fix a compile warning that was emitted now that it is being
+> > compiled.
+> > 
+> > Signed-off-by: Dave Chinner <david@fromorbit.com>
+> 
+> I missed a O_WRONLY->O_RDWR dbm_open fix (forgot to refresh the
+> patch before sending the patchbomb) in this, so it builds but
+> doesn't run.
+> 
+> Updated patch below.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Index: xfstests-dev/src/fiemap-tester.c
-===================================================================
---- xfstests-dev.orig/src/fiemap-tester.c	2010-04-29 10:32:52.000000000 +0000
-+++ xfstests-dev/src/fiemap-tester.c	2010-04-29 10:35:11.000000000 +0000
-@@ -37,14 +37,10 @@ static void
- usage(void)
- {
- 	printf("Usage: fiemap-tester [-m map] [-r number of runs] [-s seed] [-q]");
--#ifdef HAVE_FALLOCATE
- 	printf("[-p preallocate (1/0)] ");
--#endif
- 	printf("filename\n");
- 	printf("  -m map    : generate a file with the map given and test\n");
--#ifdef HAVE_FALLOCATE
- 	printf("  -p 0/1    : turn block preallocation on or off\n");
--#endif
- 	printf("  -r count  : number of runs to execute (default infinity)\n");
- 	printf("  -s seed   : seed for random map generator (default 1)\n");
- 	printf("  -q        : be quiet about non-errors\n");
-@@ -513,9 +509,10 @@ main(int argc, char **argv)
- 		case 'p':
- 			prealloc = atoi(optarg);;
- #ifndef HAVE_FALLOCATE
--			if (prealloc)
-+			if (prealloc) {
- 				printf("Not built with preallocation support\n");
--			usage();
-+				usage();
-+			}
- #endif
- 			break;
- 		case 'q':
+Well, that needs some documentation in the patch description.
 
 _______________________________________________
 xfs mailing list
