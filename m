@@ -1,19 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3T25m6N027669 for <xfs@oss.sgi.com>; Wed, 28 Apr 2010 21:05:49 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E41FD2FCA9E
-	for <xfs@oss.sgi.com>; Wed, 28 Apr 2010 19:07:53 -0700 (PDT)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id MAIuj0yS8wWdXIOW for
-	<xfs@oss.sgi.com>; Wed, 28 Apr 2010 19:07:53 -0700 (PDT)
-Message-ID: <4BD8E9F8.4090701@sandeen.net>
-Date: Wed, 28 Apr 2010 21:07:52 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	o3T2QULl028779 for <xfs@oss.sgi.com>; Wed, 28 Apr 2010 21:26:31 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 80FCC120C4DF
+	for <xfs@oss.sgi.com>; Wed, 28 Apr 2010 19:28:34 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	Liwo4Ar6aCm2A1zA for <xfs@oss.sgi.com>;
+	Wed, 28 Apr 2010 19:28:34 -0700 (PDT)
+Date: Thu, 29 Apr 2010 12:28:25 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfsprogs: write both features2 fields when xfs_admin
+	changes lazy_count
+Message-ID: <20100429022825.GD2512@dastard>
+References: <4BD8E9F8.4090701@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] xfsprogs: write both features2 fields when xfs_admin changes
-	lazy_count
+Content-Disposition: inline
+In-Reply-To: <4BD8E9F8.4090701@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,27 +30,17 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
-Cc: =?UTF-8?B?TWFyY2luIE1pcm9zxYJhdw==?= <marcin@mejor.pl>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Marcin =?utf-8?B?TWlyb3PFgmF3?= <marcin@mejor.pl>, xfs-oss <xfs@oss.sgi.com>
 
-eGZzX2FkbWluIC1jIGludm9rZXMgcmVwYWlyIGRpcmVjdGx5IHRvIGNoYW5nZSBsYXp5X2NvdW50
-LApidXQgaXQgZG9lc24ndCB3cml0ZSBib3RoIGZlYXR1cmVzMiBmaWVsZHMsIHNvIHRoaXM6Cgoj
-IG1rZnMueGZzIC1kZmlsZSxuYW1lPWZzZmlsZSxzaXplPTEwZyAtbGxhenktY291bnQ9MAojIHhm
-c19hZG1pbiAtYyAxIGZzZmlsZQojIHhmc19yZXBhaXIgZnNmaWxlCgp5aWVsZHMgZXJyb3JzLgoK
-UmVwb3J0ZWQtYnk6IE1hcmNpbiBNaXJvc8WCYXcgPG1hcmNpbkBtZWpvci5wbD4KU2lnbmVkLW9m
-Zi1ieTogRXJpYyBTYW5kZWVuIDxzYW5kZWVuQHNhbmRlZW4ubmV0PgotLS0KCmRpZmYgLS1naXQg
-YS9yZXBhaXIvcGhhc2UxLmMgYi9yZXBhaXIvcGhhc2UxLmMKaW5kZXggNjE4Nzk2ZS4uZGJmYmM5
-YiAxMDA2NDQKLS0tIGEvcmVwYWlyL3BoYXNlMS5jCisrKyBiL3JlcGFpci9waGFzZTEuYwpAQCAt
-MTE3LDExICsxMTcsMTMgQEAgcGhhc2UxKHhmc19tb3VudF90ICptcCkKIAkJaWYgKGxhenlfY291
-bnQgJiYgIXhmc19zYl92ZXJzaW9uX2hhc2xhenlzYmNvdW50KHNiKSkgewogCQkJc2ItPnNiX3Zl
-cnNpb25udW0gfD0gWEZTX1NCX1ZFUlNJT05fTU9SRUJJVFNCSVQ7CiAJCQlzYi0+c2JfZmVhdHVy
-ZXMyIHw9IFhGU19TQl9WRVJTSU9OMl9MQVpZU0JDT1VOVEJJVDsKKwkJCXNiLT5zYl9iYWRfZmVh
-dHVyZXMyIHw9IFhGU19TQl9WRVJTSU9OMl9MQVpZU0JDT1VOVEJJVDsKIAkJCXByaW1hcnlfc2Jf
-bW9kaWZpZWQgPSAxOwogCQkJcHJpbnRmKF8oIkVuYWJsaW5nIGxhenktY291bnRlcnNcbiIpKTsK
-IAkJfSBlbHNlCiAJCWlmICghbGF6eV9jb3VudCAmJiB4ZnNfc2JfdmVyc2lvbl9oYXNsYXp5c2Jj
-b3VudChzYikpIHsKIAkJCXNiLT5zYl9mZWF0dXJlczIgJj0gflhGU19TQl9WRVJTSU9OMl9MQVpZ
-U0JDT1VOVEJJVDsKKwkJCXNiLT5zYl9iYWRfZmVhdHVyZXMyICY9IH5YRlNfU0JfVkVSU0lPTjJf
-TEFaWVNCQ09VTlRCSVQ7CiAJCQlwcmludGYoXygiRGlzYWJsaW5nIGxhenktY291bnRlcnNcbiIp
-KTsKIAkJCXByaW1hcnlfc2JfbW9kaWZpZWQgPSAxOwogCQl9IGVsc2UgewoKCl9fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZz
-QG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+T24gV2VkLCBBcHIgMjgsIDIwMTAgYXQgMDk6MDc6NTJQTSAtMDUwMCwgRXJpYyBTYW5kZWVuIHdy
+b3RlOgo+IHhmc19hZG1pbiAtYyBpbnZva2VzIHJlcGFpciBkaXJlY3RseSB0byBjaGFuZ2UgbGF6
+eV9jb3VudCwKPiBidXQgaXQgZG9lc24ndCB3cml0ZSBib3RoIGZlYXR1cmVzMiBmaWVsZHMsIHNv
+IHRoaXM6Cj4gCj4gIyBta2ZzLnhmcyAtZGZpbGUsbmFtZT1mc2ZpbGUsc2l6ZT0xMGcgLWxsYXp5
+LWNvdW50PTAKPiAjIHhmc19hZG1pbiAtYyAxIGZzZmlsZQo+ICMgeGZzX3JlcGFpciBmc2ZpbGUK
+PiAKPiB5aWVsZHMgZXJyb3JzLgo+IAo+IFJlcG9ydGVkLWJ5OiBNYXJjaW4gTWlyb3PFgmF3IDxt
+YXJjaW5AbWVqb3IucGw+Cj4gU2lnbmVkLW9mZi1ieTogRXJpYyBTYW5kZWVuIDxzYW5kZWVuQHNh
+bmRlZW4ubmV0PgoKUmV2aWV3ZWQtYnk6IERhdmUgQ2hpbm5lciA8ZGF2aWRAZnJvbW9yYml0LmNv
+bT4KCi0tIApEYXZlIENoaW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3Nz
+LnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
