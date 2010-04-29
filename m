@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3T2QULl028779 for <xfs@oss.sgi.com>; Wed, 28 Apr 2010 21:26:31 -0500
+	o3T5XXPo041539 for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 00:33:34 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 80FCC120C4DF
-	for <xfs@oss.sgi.com>; Wed, 28 Apr 2010 19:28:34 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	Liwo4Ar6aCm2A1zA for <xfs@oss.sgi.com>;
-	Wed, 28 Apr 2010 19:28:34 -0700 (PDT)
-Date: Thu, 29 Apr 2010 12:28:25 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9DAE18EBCDF
+	for <xfs@oss.sgi.com>; Wed, 28 Apr 2010 22:35:37 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
+	[150.101.137.104]) by cuda.sgi.com with ESMTP id
+	G0caX1Pv1fvGCkMu for <xfs@oss.sgi.com>;
+	Wed, 28 Apr 2010 22:35:37 -0700 (PDT)
+Date: Thu, 29 Apr 2010 15:35:14 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfsprogs: write both features2 fields when xfs_admin
-	changes lazy_count
-Message-ID: <20100429022825.GD2512@dastard>
-References: <4BD8E9F8.4090701@sandeen.net>
+Subject: Re: [PATCH] xfstests: Add query fiemap count test.
+Message-ID: <20100429053514.GA3774@dastard>
+References: <20100428015035.GC9783@dastard>
+	<1272437450-4654-1-git-send-email-tao.ma@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4BD8E9F8.4090701@sandeen.net>
+In-Reply-To: <1272437450-4654-1-git-send-email-tao.ma@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,21 +26,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Marcin =?utf-8?B?TWlyb3PFgmF3?= <marcin@mejor.pl>, xfs-oss <xfs@oss.sgi.com>
+To: Tao Ma <tao.ma@oracle.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, Alex Elder <aelder@sgi.com>, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-T24gV2VkLCBBcHIgMjgsIDIwMTAgYXQgMDk6MDc6NTJQTSAtMDUwMCwgRXJpYyBTYW5kZWVuIHdy
-b3RlOgo+IHhmc19hZG1pbiAtYyBpbnZva2VzIHJlcGFpciBkaXJlY3RseSB0byBjaGFuZ2UgbGF6
-eV9jb3VudCwKPiBidXQgaXQgZG9lc24ndCB3cml0ZSBib3RoIGZlYXR1cmVzMiBmaWVsZHMsIHNv
-IHRoaXM6Cj4gCj4gIyBta2ZzLnhmcyAtZGZpbGUsbmFtZT1mc2ZpbGUsc2l6ZT0xMGcgLWxsYXp5
-LWNvdW50PTAKPiAjIHhmc19hZG1pbiAtYyAxIGZzZmlsZQo+ICMgeGZzX3JlcGFpciBmc2ZpbGUK
-PiAKPiB5aWVsZHMgZXJyb3JzLgo+IAo+IFJlcG9ydGVkLWJ5OiBNYXJjaW4gTWlyb3PFgmF3IDxt
-YXJjaW5AbWVqb3IucGw+Cj4gU2lnbmVkLW9mZi1ieTogRXJpYyBTYW5kZWVuIDxzYW5kZWVuQHNh
-bmRlZW4ubmV0PgoKUmV2aWV3ZWQtYnk6IERhdmUgQ2hpbm5lciA8ZGF2aWRAZnJvbW9yYml0LmNv
-bT4KCi0tIApEYXZlIENoaW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3Nz
-LnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Wed, Apr 28, 2010 at 02:50:50PM +0800, Tao Ma wrote:
+> According to Documentation/filesystems/fiemap.txt, If fm_extent_count
+> is zero, then the fm_extents[] array is ignored (no extents will be
+> returned), and the fm_mapped_extents count will hold the number of
+> extents needed.
+> 
+> This is broken by commit 97db39a1f6f69e906e98118392400de5217aa33a.
+> So add this test case in fiemap tester to avoid future regression.
+> 
+> Cc: Dave Chinner <david@fromorbit.com>
+> Cc: Eric Sandeen <sandeen@redhat.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Alex Elder <aelder@sgi.com>
+> Signed-off-by: Tao Ma <tao.ma@oracle.com>
+
+Looks ok. Just running for a test and if I don't see any problems,
+then I'll check it in. Thanks for the fix and the test, Tao. ;)
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
