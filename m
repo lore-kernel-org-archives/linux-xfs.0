@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3TAIn34062306 for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 05:18:49 -0500
+	o3TAI0Sb062200 for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 05:18:00 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F034B2FD69B
-	for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 03:20:54 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E579A8ECB43
+	for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 03:20:05 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id FHm1j9hDVETbav89 for
-	<xfs@oss.sgi.com>; Thu, 29 Apr 2010 03:20:54 -0700 (PDT)
-Date: Thu, 29 Apr 2010 06:20:54 -0400
+	by cuda.sgi.com with ESMTP id PNJPF22dN5EsCdyo for
+	<xfs@oss.sgi.com>; Thu, 29 Apr 2010 03:20:05 -0700 (PDT)
+Date: Thu, 29 Apr 2010 06:20:05 -0400
 From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH 3/3] xfsqa: build dbtest on debian platforms
-Message-ID: <20100429102054.GD29677@infradead.org>
+Message-ID: <20100429102005.GC29677@infradead.org>
 References: <1272500186-29393-1-git-send-email-david@fromorbit.com>
 	<1272500186-29393-4-git-send-email-david@fromorbit.com>
-	<20100429064943.GB3774@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100429064943.GB3774@dastard>
+In-Reply-To: <1272500186-29393-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,22 +32,19 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Apr 29, 2010 at 04:49:43PM +1000, Dave Chinner wrote:
-> On Thu, Apr 29, 2010 at 10:16:26AM +1000, Dave Chinner wrote:
-> > Set up autoconf to find the correct headers and compat libraries for
-> > debian squeeze, and massage the includes to ensure the right headers get
-> > included. Also fix a compile warning that was emitted now that it is being
-> > compiled.
-> > 
-> > Signed-off-by: Dave Chinner <david@fromorbit.com>
+On Thu, Apr 29, 2010 at 10:16:26AM +1000, Dave Chinner wrote:
+> Set up autoconf to find the correct headers and compat libraries for
+> debian squeeze, and massage the includes to ensure the right headers get
+> included. Also fix a compile warning that was emitted now that it is being
+> compiled.
 > 
-> I missed a O_WRONLY->O_RDWR dbm_open fix (forgot to refresh the
-> patch before sending the patchbomb) in this, so it builds but
-> doesn't run.
-> 
-> Updated patch below.
+> Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-Well, that needs some documentation in the patch description.
+Ah, nice.  I've been trying to get this working on Debian off and on
+again for years, but never got this far.
+
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
