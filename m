@@ -1,17 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3TKnYhR100202 for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 15:49:35 -0500
-Subject: Re: [PATCH 10/11] xfs: clean up end index calculation in
-	xfs_page_state_convert
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20100428123016.305118675@bombadil.infradead.org>
-References: <20100428122850.075189557@bombadil.infradead.org>
-	<20100428123016.305118675@bombadil.infradead.org>
-Date: Thu, 29 Apr 2010 15:50:53 -0500
-Message-ID: <1272574253.3221.145.camel@doink>
+	o3TLcH1o102835 for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 16:38:18 -0500
+Received: from smtp1.linux-foundation.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A1E3D1491B1A
+	for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 14:40:19 -0700 (PDT)
+Received: from smtp1.linux-foundation.org (smtp1.linux-foundation.org
+	[140.211.169.13]) by cuda.sgi.com with ESMTP id
+	HK8arsmk9VoLJdf8 for <xfs@oss.sgi.com>;
+	Thu, 29 Apr 2010 14:40:19 -0700 (PDT)
+Date: Thu, 29 Apr 2010 14:39:31 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 3/4] writeback: pay attention to wbc->nr_to_write in
+	write_cache_pages
+Message-Id: <20100429143931.331c2bab.akpm@linux-foundation.org>
+In-Reply-To: <1271731314-5893-4-git-send-email-david@fromorbit.com>
+References: <1271731314-5893-1-git-send-email-david@fromorbit.com>
+	<1271731314-5893-4-git-send-email-david@fromorbit.com>
 Mime-Version: 1.0
-Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,71 +30,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: XFS Mailing List <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, xfs@oss.sgi.com
 
-On Wed, 2010-04-28 at 08:29 -0400, Christoph Hellwig wrote:
-> plain text document attachment (xfs-iomap-cleanup-11)
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Tue, 20 Apr 2010 12:41:53 +1000
+Dave Chinner <david@fromorbit.com> wrote:
 
-Whoops, I think I responded twice to patch 9.
-
-The whole series of 11 looks good.
-
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
-
-> Index: xfs/fs/xfs/linux-2.6/xfs_aops.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/linux-2.6/xfs_aops.c	2010-04-28 12:59:52.857024355 +0200
-> +++ xfs/fs/xfs/linux-2.6/xfs_aops.c	2010-04-28 12:59:54.989003542 +0200
-> @@ -1064,7 +1064,7 @@ xfs_page_state_convert(
->  	unsigned long           p_offset = 0;
->  	unsigned int		type;
->  	__uint64_t              end_offset;
-> -	pgoff_t                 end_index, last_index, tlast;
-> +	pgoff_t                 end_index, last_index;
->  	ssize_t			size, len;
->  	int			flags, err, imap_valid = 0, uptodate = 1;
->  	int			page_dirty, count = 0;
-> @@ -1259,15 +1259,22 @@ xfs_page_state_convert(
->  		xfs_start_page_writeback(page, 1, count);
->  
->  	if (ioend && imap_valid) {
-> -		struct xfs_mount	*m = XFS_I(inode)->i_mount;
-> -		xfs_off_t		iomap_offset = XFS_FSB_TO_B(m, imap.br_startoff);
-> -		xfs_off_t		iomap_bsize = XFS_FSB_TO_B(m, imap.br_blockcount);
-> -
-> -		offset = (iomap_offset + iomap_bsize - 1) >>
-> -					PAGE_CACHE_SHIFT;
-> -		tlast = min_t(pgoff_t, offset, last_index);
-> +		xfs_off_t		end_index;
-> +
-> +		end_index = imap.br_startoff + imap.br_blockcount;
-> +
-> +		/* to bytes */
-> +		end_index <<= inode->i_blkbits;
-> +
-> +		/* to pages */
-> +		end_index = (end_index - 1) >> PAGE_CACHE_SHIFT;
-> +
-> +		/* check against file size */
-> +		if (end_index > last_index)
-> +			end_index = last_index;
-> +
->  		xfs_cluster_write(inode, page->index + 1, &imap, &ioend,
-> -					wbc, startio, all_bh, tlast);
-> +					wbc, startio, all_bh, end_index);
->  	}
->  
->  	if (iohead)
+> If a filesystem writes more than one page in ->writepage, write_cache_pages
+> fails to notice this and continues to attempt writeback when wbc->nr_to_write
+> has gone negative - this trace was captured from XFS:
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> 
+>     wbc_writeback_start: towrt=1024
+>     wbc_writepage: towrt=1024
+>     wbc_writepage: towrt=0
+>     wbc_writepage: towrt=-1
+>     wbc_writepage: towrt=-5
+>     wbc_writepage: towrt=-21
+>     wbc_writepage: towrt=-85
+> 
 
+Bug.
 
+AFAIT it's a regression introduced by
+
+: commit 17bc6c30cf6bfffd816bdc53682dd46fc34a2cf4
+: Author:     Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
+: AuthorDate: Thu Oct 16 10:09:17 2008 -0400
+: Commit:     Theodore Ts'o <tytso@mit.edu>
+: CommitDate: Thu Oct 16 10:09:17 2008 -0400
+: 
+:     vfs: Add no_nrwrite_index_update writeback control flag
+
+I suggest that what you do here is remove the local `nr_to_write' from
+write_cache_pages() and go back to directly using wbc->nr_to_write
+within the loop.
+
+And thus we restore the convention that if the fs writes back more than
+a single page, it subtracts (nr_written - 1) from wbc->nr_to_write.
 
 _______________________________________________
 xfs mailing list
