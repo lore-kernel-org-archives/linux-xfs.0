@@ -1,14 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3TKDdlh098553 for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 15:13:39 -0500
-Subject: Re: [PATCH 08/11] xfs: clean up xfs_iomap_valid
+	o3TKUU5I099260 for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 15:30:30 -0500
+Subject: Re: [PATCH 09/11] xfs: clean up mapping size calculation in
+	__xfs_get_blocks
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20100428123015.969557658@bombadil.infradead.org>
+In-Reply-To: <20100428123016.152412458@bombadil.infradead.org>
 References: <20100428122850.075189557@bombadil.infradead.org>
-	<20100428123015.969557658@bombadil.infradead.org>
-Date: Thu, 29 Apr 2010 15:15:38 -0500
-Message-ID: <1272572138.3221.127.camel@doink>
+	<20100428123016.152412458@bombadil.infradead.org>
+Date: Thu, 29 Apr 2010 15:32:30 -0500
+Message-ID: <1272573150.3221.142.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -27,15 +28,15 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
 On Wed, 2010-04-28 at 08:28 -0400, Christoph Hellwig wrote:
-> plain text document attachment (xfs-iomap-cleanup-9)
-> Rename all iomap_valid identifiers to imap_valid to fit the new world order,
-> and clean up xfs_iomap_valid to convert the passed in offset to blocks
-> instead of the imap values to bytes.  Use the simpler inode->i_blkbits
-> instead of the XFS macros for this.
-> 
+> plain text document attachment (xfs-iomap-cleanup-10)
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Looks good.
+Looks good.  I do think the result of your cleanups is
+cleaner looking code.  I worry (a little bit) that
+some of the information embedded in some things (like
+macro names, e.g. XFS_FSB_TO_B()) going away makes
+the code less understandable by someone unfamiliar
+with it.  Nevertheless...
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
