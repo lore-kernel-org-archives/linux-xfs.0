@@ -1,17 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3TDa2lO074949 for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 08:36:03 -0500
-Date: Thu, 29 Apr 2010 09:38:07 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/5] [PATCH] xfs: simplify buffer to transaction matching
-Message-ID: <20100429133806.GA16259@infradead.org>
-References: <20100418001041.865247520@bombadil.infradead.org>
-	<20100418001058.677429475@bombadil.infradead.org>
-	<1272548122.3221.77.camel@doink>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1272548122.3221.77.camel@doink>
+	o3TDrbjH076076 for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 08:53:38 -0500
+Subject: Re: [PATCH 01/11] xfs: limit xfs_imap_to_bmap to a single mapping
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20100428123014.517888577@bombadil.infradead.org>
+References: <20100428122850.075189557@bombadil.infradead.org>
+	<20100428123014.517888577@bombadil.infradead.org>
+Date: Thu, 29 Apr 2010 08:55:13 -0500
+Message-ID: <1272549313.3221.79.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,19 +23,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Thu, Apr 29, 2010 at 08:35:22AM -0500, Alex Elder wrote:
-> Dave suggested using the xfs_trans_*_item() routines (which maybe
-> could be renamed xfs_trans_item_*() someday).  That is the right
-> thing to do, but not necessary at this point.  In fact I prefer
-> this smaller change anyway, since it clearly just transforms
-> the original xfs_trans_buf_item_match_all() code directly to
-> the new result.  The switch to use xfs_trans_*_item() can (and
-> should) happen as a follow-on patch.
+On Wed, 2010-04-28 at 08:28 -0400, Christoph Hellwig wrote:
+> plain text document attachment (xfs-iomap-cleanup-1)
+> We only call xfs_iomap for single mappings anyway, so remove all code
+> dealing with multiple mappings from xfs_imap_to_bmap and add asserts
+> that we never get results that we do not expect.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Yes, I'll prepare an incremental patch in the next days.
+Looks good.
+
+Reviewed-by: Alex Elder <aelder@sgi.com>
+
+> Index: xfs/fs/xfs/xfs_iomap.c
+> ===================================================================
+> --- xfs.orig/fs/xfs/xfs_iomap.c	2010-04-28 14:06:53.000000000 +0200
+> +++ xfs/fs/xfs/xfs_iomap.c	2010-04-28 14:14:38.708003332 +0200
+
+. . .
 
 _______________________________________________
 xfs mailing list
