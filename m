@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3U3I6LF124569 for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 22:18:07 -0500
+	o3U3ejTV125410 for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 22:40:45 -0500
 Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1B4CF1AFD248
-	for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 20:20:11 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 18F843000C6
+	for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 20:42:50 -0700 (PDT)
 Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id fO0i6xhF3ioMnfsN for
-	<xfs@oss.sgi.com>; Thu, 29 Apr 2010 20:20:11 -0700 (PDT)
-Message-ID: <4BDA4C6B.3080503@sandeen.net>
-Date: Thu, 29 Apr 2010 22:20:11 -0500
+	by cuda.sgi.com with ESMTP id j6motbFJ43Mb85b4 for
+	<xfs@oss.sgi.com>; Thu, 29 Apr 2010 20:42:50 -0700 (PDT)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail.sandeen.net (Postfix) with ESMTP id 9E3A39E98B7
+	for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 22:42:49 -0500 (CDT)
+Message-ID: <4BDA51B9.4010501@sandeen.net>
+Date: Thu, 29 Apr 2010 22:42:49 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH 3/3] xfsqa: build dbtest on debian platforms
-References: <1272500186-29393-1-git-send-email-david@fromorbit.com>	<1272500186-29393-4-git-send-email-david@fromorbit.com>	<20100429064943.GB3774@dastard>
-	<20100429104611.GA17317@infradead.org>	<20100430012630.GC32515@dastard>
-	<1272594520.3221.154.camel@doink>
-In-Reply-To: <1272594520.3221.154.camel@doink>
+Subject: [PATCH] xfs: replace E2BIG with EFBIG where appropriate
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,60 +30,103 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: aelder@sgi.com
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-Alex Elder wrote:
-> On Fri, 2010-04-30 at 11:26 +1000, Dave Chinner wrote:
->> On Thu, Apr 29, 2010 at 06:46:11AM -0400, Christoph Hellwig wrote:
->>> Spoken too soon.  While this second patch at least compiles on my Debian
->>> testing  system it doesn't link:
->>>
->>> /tmp/ccWcHXtY.o: In function `CleanupDbmLookup': /root/xfstests-dev/src/dbtest.c:304: undefined reference to `dbm_close'
->>> /tmp/ccWcHXtY.o: In function `DoDbmLookup':
->>> /root/xfstests-dev/src/dbtest.c:220: undefined reference to `dbm_fetch'
->>> /root/xfstests-dev/src/dbtest.c:264: undefined reference to `dbm_fetch' /tmp/ccWcHXtY.o: In function `InitDbmLookup':
->>> /root/xfstests-dev/src/dbtest.c:144: undefined reference to `dbm_open'
->>> /root/xfstests-dev/src/dbtest.c:178: undefined reference to `dbm_store'
->>> /root/xfstests-dev/src/dbtest.c:191: undefined reference to `dbm_close'
->>> /root/xfstests-dev/src/dbtest.c:196: undefined reference to `dbm_open'
->>> collect2: ld returned 1 exit status
->>> make[2]: *** [dbtest] Error 1
->>> make[1]: *** [src] Error 2
->>> make: *** [default] Error 2
->> Where is libgdbm-compat on your system?
-> 
-> I think we need to do a better job of defining what's required
-> for this stuff--building and running.  I know I had trouble
-> the first time I set things up, and now that it works I
-> have no recollection of the stuff that I did.  It would be
-> good to make it easier for people to get testing going,
-> we might get more people actually running them in a wider
-> variety of environments.
+Many places in the xfs code return E2BIG when they really
+mean EFBIG; trying to grow past 16T on a 32 bit machine,
+for example, says "Argument list too long" rather than "File
+too large" which is not particularly helpful.
 
-Making missing stuff gracefully handled runtime helps...
+Some of these don't make perfect sense as EFBIG either,
+but still better than E2BIG IMHO.
 
-I also have a hacked up rpm for this, that way package dependencies
-take care of it all seamlessly:
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
 
-BuildRequires:  autoconf, libtool, xfsprogs-devel, e2fsprogs-devel
-BuildRequires:  libacl-devel, libattr-devel, libaio-devel
-Requires:       bash, xfsprogs, xfsdump, perl, acl, attr, bind-utils
-Requires:       bc, indent, quota
-
-If I just knew a decent place to drop the stuff that was compliant
-with fs hierarchy rules, I'd toss it into fedora, and debian might
-not be far behind ...
-
--Eric
-
-> 					-Alex
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index e79b56b..c415ffd 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -268,10 +268,10 @@ xfs_sb_validate_fsb_count(
+ 
+ #if XFS_BIG_BLKNOS     /* Limited by ULONG_MAX of page cache index */
+ 	if (nblocks >> (PAGE_CACHE_SHIFT - sbp->sb_blocklog) > ULONG_MAX)
+-		return E2BIG;
++		return EFBIG;
+ #else                  /* Limited by UINT_MAX of sectors */
+ 	if (nblocks << (sbp->sb_blocklog - BBSHIFT) > UINT_MAX)
+-		return E2BIG;
++		return EFBIG;
+ #endif
+ 	return 0;
+ }
+@@ -393,7 +393,7 @@ xfs_mount_validate_sb(
+ 	    xfs_sb_validate_fsb_count(sbp, sbp->sb_rblocks)) {
+ 		xfs_fs_mount_cmn_err(flags,
+ 			"file system too large to be mounted on this system.");
+-		return XFS_ERROR(E2BIG);
++		return XFS_ERROR(EFBIG);
+ 	}
+ 
+ 	if (unlikely(sbp->sb_inprogress)) {
+@@ -1009,7 +1009,7 @@ xfs_check_sizes(xfs_mount_t *mp)
+ 	d = (xfs_daddr_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
+ 	if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_dblocks) {
+ 		cmn_err(CE_WARN, "XFS: size check 1 failed");
+-		return XFS_ERROR(E2BIG);
++		return XFS_ERROR(EFBIG);
+ 	}
+ 	error = xfs_read_buf(mp, mp->m_ddev_targp,
+ 			     d - XFS_FSS_TO_BB(mp, 1),
+@@ -1019,7 +1019,7 @@ xfs_check_sizes(xfs_mount_t *mp)
+ 	} else {
+ 		cmn_err(CE_WARN, "XFS: size check 2 failed");
+ 		if (error == ENOSPC)
+-			error = XFS_ERROR(E2BIG);
++			error = XFS_ERROR(EFBIG);
+ 		return error;
+ 	}
+ 
+@@ -1027,7 +1027,7 @@ xfs_check_sizes(xfs_mount_t *mp)
+ 		d = (xfs_daddr_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
+ 		if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_logblocks) {
+ 			cmn_err(CE_WARN, "XFS: size check 3 failed");
+-			return XFS_ERROR(E2BIG);
++			return XFS_ERROR(EFBIG);
+ 		}
+ 		error = xfs_read_buf(mp, mp->m_logdev_targp,
+ 				     d - XFS_FSB_TO_BB(mp, 1),
+@@ -1037,7 +1037,7 @@ xfs_check_sizes(xfs_mount_t *mp)
+ 		} else {
+ 			cmn_err(CE_WARN, "XFS: size check 3 failed");
+ 			if (error == ENOSPC)
+-				error = XFS_ERROR(E2BIG);
++				error = XFS_ERROR(EFBIG);
+ 			return error;
+ 		}
+ 	}
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 6be05f7..1644551 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -2247,7 +2247,7 @@ xfs_rtmount_init(
+ 		cmn_err(CE_WARN, "XFS: realtime mount -- %llu != %llu",
+ 			(unsigned long long) XFS_BB_TO_FSB(mp, d),
+ 			(unsigned long long) mp->m_sb.sb_rblocks);
+-		return XFS_ERROR(E2BIG);
++		return XFS_ERROR(EFBIG);
+ 	}
+ 	error = xfs_read_buf(mp, mp->m_rtdev_targp,
+ 				d - XFS_FSB_TO_BB(mp, 1),
+@@ -2256,7 +2256,7 @@ xfs_rtmount_init(
+ 		cmn_err(CE_WARN,
+ 	"XFS: realtime mount -- xfs_read_buf failed, returned %d", error);
+ 		if (error == ENOSPC)
+-			return XFS_ERROR(E2BIG);
++			return XFS_ERROR(EFBIG);
+ 		return error;
+ 	}
+ 	xfs_buf_relse(bp);
 
 _______________________________________________
 xfs mailing list
