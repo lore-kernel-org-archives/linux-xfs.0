@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3U20R21120099 for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 21:00:27 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BE0BB3004BB
-	for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 19:02:31 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	lFgI5ox2XnIlNsMR for <xfs@oss.sgi.com>;
-	Thu, 29 Apr 2010 19:02:31 -0700 (PDT)
-Date: Fri, 30 Apr 2010 12:02:24 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: add a shrinker to background inode reclaim
-Message-ID: <20100430020224.GD32515@dastard>
-References: <1272429248-5269-1-git-send-email-david@fromorbit.com>
-	<1272539253.3221.64.camel@doink>
+	o3U2D142121122 for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 21:13:02 -0500
+Received: from mail-iw0-f193.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 25EA71278FAB
+	for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 19:15:06 -0700 (PDT)
+Received: from mail-iw0-f193.google.com (mail-iw0-f193.google.com
+	[209.85.223.193]) by cuda.sgi.com with ESMTP id
+	OiVA9IBlyvbhb7ij for <xfs@oss.sgi.com>;
+	Thu, 29 Apr 2010 19:15:06 -0700 (PDT)
+Received: by iwn31 with SMTP id 31so9428037iwn.30
+	for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 19:15:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1272539253.3221.64.camel@doink>
+In-Reply-To: <p2y25446eb91004291741k7e8e72cejc72093caf9cc99aa@mail.gmail.com>
+References: <i2hdb2d1ee61004291707k9ffebed2k4ff6eb72354cbe63@mail.gmail.com>
+	<p2y25446eb91004291741k7e8e72cejc72093caf9cc99aa@mail.gmail.com>
+Date: Thu, 29 Apr 2010 19:15:05 -0700
+Message-ID: <r2ndb2d1ee61004291915t1f7df28ci407380b3b1208f1@mail.gmail.com>
+Subject: Re: xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed: Argument list too
+	long
+From: Benjamin Lau <benjamin.a.lau@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,104 +28,49 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-T24gVGh1LCBBcHIgMjksIDIwMTAgYXQgMDY6MDc6MzNBTSAtMDUwMCwgQWxleCBFbGRlciB3cm90
-ZToKPiBPbiBXZWQsIDIwMTAtMDQtMjggYXQgMTQ6MzQgKzEwMDAsIERhdmUgQ2hpbm5lciB3cm90
-ZToKPiA+IEZyb206IERhdmUgQ2hpbm5lciA8ZGNoaW5uZXJAcmVkaGF0LmNvbT4KPiA+IAo+ID4g
-T24gbG93IG1lbW9yeSBib3hlcyBvciB0aG9zZSB3aXRoIGhpZ2htZW0sIGtlcm5lbCBjYW4gT09N
-IGJlZm9yZSB0aGUKPiA+IGJhY2tncm91bmQgcmVjbGFpbXMgaW5vZGVzIHZpYSB4ZnNzeW5jZC4g
-QWRkIGEgc2hyaW5rZXIgdG8gcnVuIGlub2RlCj4gPiByZWNsYWltIHNvIHRoYXQgaXQgaW5vZGUg
-cmVjbGFpbSBpcyBleHBlZGl0ZWQgd2hlbiBtZW1vcnkgaXMgbG93Lgo+ID4gCj4gPiBUaGlzIGlz
-IG1vcmUgY29tcGxleCB0aGFuIGl0IG5lZWRzIHRvIGJlIGJlY2F1c2UgdGhlIFZNIGZvbGsgZG9u
-J3QKPiA+IHdhbnQgYSBjb250ZXh0IGFkZGVkIHRvIHRoZSBzaHJpbmtlciBpbmZyYXN0cnVjdHVy
-ZS4gSGVuY2Ugd2UgbmVlZAo+ID4gdG8gYWRkIGEgZ2xvYmFsIGxpc3Qgb2YgWEZTIG1vdW50IHN0
-cnVjdHVyZXMgc28gdGhlIHNocmlua2VyIGNhbgo+ID4gdHJhdmVyc2UgdGhlbS4KPiAKPiBJIGhh
-dmUgc29tZSBjb21tZW50czsgb25lIG9mIHRoZW0gc3VnZ2VzdHMgYSBmYWlybmVzcwo+IGNoYW5n
-ZS4gIEJ1dCBJIGtub3cgdGhpcyBmaXggaXMgdmVyeSBpbXBvcnRhbnQgYW5kCj4gd2UncmUgc2hv
-cnQgb24gdGltZSBzbyBJJ20gZ29pbmcgdG8gcHVsbCB0aGlzIGluIGFzLWlzCj4gYW5kIGFzayBM
-aW51cyB0byBwdWxsIGl0IGFzIHdlbGwuICAKCkkgdHJpZWQgYmVpbmcgZmFpciwgaXQgZGlkbid0
-IHdvcmsgYW5kIEkgaGF2ZSBiaWdnZXIgdGhpbmdzIHRvIHNwZW5kCm15IHRpbWUgb24gKGxpa2Ug
-Z2V0dGluZyBjb250ZXh0IGJhc2VkIHNocmlua2VycyBhY2NlcHRlZCA7KS4KCj4gLiAuIC4KPiA+
-IEBAIC0xMzQsNyArMTM1LDcgQEAgcmVzdGFydDoKPiA+ICAJCWlmIChlcnJvciA9PSBFRlNDT1JS
-VVBURUQpCj4gPiAgCQkJYnJlYWs7Cj4gPiAgCj4gPiAtCX0gd2hpbGUgKDEpOwo+ID4gKwl9IHdo
-aWxlICgoKm5yX3RvX3NjYW4pLS0pOwo+IAo+IERvIHlvdSBldmVyIHBsYW4gdG8gcmV0dXJuIGEg
-bmVnYXRpdmUgdmFsdWUgaW4gKm5yX3RvX3NjYW4/CgpOby4KCj4gPiBAQCAtMTY1LDE0ICsxNjks
-MTggQEAgeGZzX2lub2RlX2FnX2l0ZXJhdG9yKAo+ID4gIAkJCWNvbnRpbnVlOwo+ID4gIAkJfQo+
-ID4gIAkJZXJyb3IgPSB4ZnNfaW5vZGVfYWdfd2FsayhtcCwgcGFnLCBleGVjdXRlLCBmbGFncywg
-dGFnLAo+ID4gLQkJCQkJCWV4Y2x1c2l2ZSk7Cj4gPiArCQkJCQkJZXhjbHVzaXZlLCAmbnIpOwo+
-ID4gIAkJeGZzX3BlcmFnX3B1dChwYWcpOwo+ID4gIAkJaWYgKGVycm9yKSB7Cj4gPiAgCQkJbGFz
-dF9lcnJvciA9IGVycm9yOwo+ID4gIAkJCWlmIChlcnJvciA9PSBFRlNDT1JSVVBURUQpCj4gPiAg
-CQkJCWJyZWFrOwo+ID4gIAkJfQo+ID4gKwkJaWYgKG5yIDw9IDApCj4gPiArCQkJYnJlYWs7Cj4g
-Cj4gV2h5IGNoZWNrIGZvciBuZWdhdGl2ZSBoZXJlPyAgSXQgd2lsbCBuZXZlciBnbyBuZWdhdGl2
-ZQo+IGFzIGN1cnJlbnRseSB1c2VkLiAgKERlZmVuc2l2ZSBjb2RpbmcgaXMgYSByZWFzb25hYmxl
-Cj4gZXhwbGFuYXRpb24uKQoKQSBuZWdhdGl2ZSB2YWx1ZSBpcyBpbnZhbGlkIC0gaW5kaWNhdGXR
-lSBhbiBvdmVyZmxvdyAtIHNvIGFib3J0IG9uCnRoZSB0ZXJtaW5hdGlvbiBjYXNlICgwKSBvciBp
-bnZhbGlkIHZhbHVlICg8IDApLiBTbyB5ZXMsIGkgZ3Vlc3MgeW91CmNvdWxkIHNheSAiZGVmZW5z
-aXZlIGNvZGluZyIuIDspCgo+ID4gKy8qCj4gPiArICogU2hyaW5rZXIgaW5mcmFzdHJ1Y3R1cmUu
-Cj4gPiArICoKPiA+ICsgKiBUaGlzIGlzIGFsbCBmYXIgbW9yZSBjb21wbGV4IHRoYW4gaXQgbmVl
-ZHMgdG8gYmUuIEl0IGFkZHMgYSBnbG9iYWwgbGlzdCBvZgo+ID4gKyAqIG1vdW50cyBiZWNhdXNl
-IHRoZSBzaHJpbmtlcnMgY2FuIG9ubHkgY2FsbCBhIGdsb2JhbCBjb250ZXh0LiBXZSBuZWVkIHRv
-IG1ha2UKPiA+ICsgKiB0aGUgc2hyaW5rZXJzIHBhc3MgYSBjb250ZXh0IHRvIGF2b2lkIHRoZSBu
-ZWVkIGZvciBnbG9iYWwgc3RhdGUuCj4gPiArICovCj4gPiArc3RhdGljIExJU1RfSEVBRCh4ZnNf
-bW91bnRfbGlzdCk7Cj4gPiArc3RhdGljIHN0cnVjdCByd19zZW1hcGhvcmUgeGZzX21vdW50X2xp
-c3RfbG9jazsKPiA+ICsKPiA+ICtzdGF0aWMgaW50Cj4gPiAreGZzX3JlY2xhaW1faW5vZGVfc2hy
-aW5rKAo+ID4gKwlpbnQJCW5yX3RvX3NjYW4sCj4gPiArCWdmcF90CQlnZnBfbWFzaykKPiA+ICt7
-Cj4gPiArCXN0cnVjdCB4ZnNfbW91bnQgKm1wOwo+ID4gKwlzdHJ1Y3QgeGZzX3BlcmFnICpwYWc7
-Cj4gPiArCXhmc19hZ251bWJlcl90CWFnOwo+ID4gKwlpbnQJCXJlY2xhaW1hYmxlID0gMDsKPiA+
-ICsKPiA+ICsJaWYgKG5yX3RvX3NjYW4pIHsKPiA+ICsJCWlmICghKGdmcF9tYXNrICYgX19HRlBf
-RlMpKQo+ID4gKwkJCXJldHVybiAtMTsKPiA+ICsKPiA+ICsJCWRvd25fcmVhZCgmeGZzX21vdW50
-X2xpc3RfbG9jayk7Cj4gPiArCQlsaXN0X2Zvcl9lYWNoX2VudHJ5KG1wLCAmeGZzX21vdW50X2xp
-c3QsIG1fbXBsaXN0KSB7Cj4gPiArCQkJeGZzX2lub2RlX2FnX2l0ZXJhdG9yKG1wLCB4ZnNfcmVj
-bGFpbV9pbm9kZSwgMCwKPiA+ICsJCQkJCVhGU19JQ0lfUkVDTEFJTV9UQUcsIDEsICZucl90b19z
-Y2FuKTsKPiA+ICsJCQlpZiAobnJfdG9fc2NhbiA8PSAwKQo+ID4gKwkJCQlicmVhazsKPiAKPiBT
-byB3ZSBsaW1pdCBvdXIgc2NhbiB1c2luZyBucl90b19zY2FuLCBhbmQgd2UnbGwgYnJlYWsgb3V0
-IGFzCj4gc29vbiBhcyB3ZSBoYXZlIGV4aGF1c3RlZCB0aGF0IG1hbnkgc2NhbnMKCll1cCwgdGhh
-dCdzIGV4YWN0bHkgaG93IHNocmlua2VycyBhcmUgc3VwcG9zZWQgdG8gd29yay4gSWYgdGhlcmUK
-aXMgbW9yZSB0byBkbywgdGhlbiB0aGUgc2hyaW5rZXIgd2lsbCBiZSBjYWxsZWQgYWdhaW4gd2l0
-aCBhIG5ldwpucl90b19zY2FuIHZhbHVlLgoKPiAoaS5lLiwgcmVjbGFpbWVkIGlub2RlcykuIAoK
-QSBzY2FuIGNvdW50IGlzIG5vdCBhY3R1YWxseSBmcmVlaW5nL3JlY2xhaW1pbmcgYW4gb2JqZWN0
-LCBpdCdzIHRoZQpudW1iZXIgb2Ygb2JqZWN0cyB3ZSd2ZSBsb29rZWQgYXQgd2l0aCBpbnRlbnQg
-dG8gcmVjbGFpbS4gV2UgbWF5IG5vdApyZWNsYWltIGFueSBieSB0aGUgdGltZSB0aGUgc2NhbiBj
-b3VudCBpcyBleGhhdXN0ZWQsIGFuZCB0aGF0J3MgdGhlCnJlYXNvbiB0aGF0IHdoeSBwcm9wb3J0
-aW9uaW5nIGFjcm9zcyBmaWxlc3lzdGVtcyBpcyBub3Qgd29ya2luZyBpbgp0aGlzIGNhc2UuCgpU
-aGUgcmVhc29uIGZvciB0aGlzIGJlaGF2aW91ciBpcyB0aGF0IGl0IHByZXZlbnRzIHNjYW5uaW5n
-IHRob3VzYW5kcwooZXZlbiAxMHMgb3IgMTAwcyBvZiB0aG91c2FuZHMpIG9mIG9iamVjdHMgYmVm
-b3JlIGZpbmRpbmcgZW5vdWdoIHRvCnJlY2xhaW0uICBJZiB0aGVyZSBhcmUgdGhhdCBtYW55IHVu
-cmVjbGFpbWFibGUgb2JqZWN0cyBvbiB0aGUgZW5kIG9mCnRoZSBMUlUsIHRoZW4gdGhlcmUncyBu
-byBwb2ludCB0cnlpbmcgdG8gcmVjbGFpbSBmcm9tIGl0IHJpZ2h0IG5vdwphbmQgdGhlIHRpbWUg
-aXMgYmV0dGVyIHNwZW50IG9uIHJlY2xhaW1pbmcgZnJvbSBzb21ld2hlcmUgZWxzZS4KCj4gV2Un
-cmUgZW5mb3JjaW5nIHRoaXMgbGltaXQgYWNyb3NzIHRoZSBnbG9iYWwgbGlzdCBvZgo+IGFsbCBt
-b3VudHMuICBTaW5jZSB3ZSBkb24ndCB1cGRhdGUgdGhlIGxpc3QsIGFuZCB3ZSB0cmF2ZXJzZQo+
-IHRoZSBsaXN0IGZyb20gdGhlIGJlZ2lubmluZyBlYWNoIHRpbWUsIHRoZSBmaXJzdCBtb3VudCBh
-bHdheXMKPiBnZXRzIGhpdCwgdGhlIG9uZXMgbGF0ZXIgaW4gdGhlIGxpc3QgbWF5IG5ldmVyIGJl
-IHJlYWNoZWQuCgpZZXMsIHRoYXQgbWF5IGhhcHBlbi4gaG93ZXZlciwgaWYgdGhlIGZpcnN0IGZp
-bGVzeXN0ZW0gaGFzIG1vcmUKaW5vZGVzIHRvIHJlY2xhaW0sIHdlIGRvbid0IGxvc2UgYW55dGhp
-bmcgYnkgcmVjbGFpbWluZyB0aGVtIGZpcnN0LAphcyB0aGUgeGZzc3luY2QgZm9yIHRoZSBvdGhl
-ciBmaWVsc3lzdGVtcyB3aWxsIGNvbWUgYnkgc29vbiBhbmQgZG8gYQpjb21wbGV0ZSByZWNsYWlt
-IHBhc3Mgb24gdGhlbS4KClRoZSBpc3N1ZSB3aXRoIHRoZSBzaHJpbmtlciBpcyB0aGF0IGlmIHdl
-IHNwbGl0IHRoZSBiYXRjaCB1cCBvdmVyCmFsbCB0aGUgZmlsZXN5c3RlbXMsIHRoZW4gdGhlIHNo
-cmlua2VyIG1ha2VzIG11Y2ggc2xvd2VyIHByb2dyZXNzCmJlY2F1c2UgdGhlIGJhdGNoZXMgYXJl
-IG5vdCBsYXJnZSBlbm91Z2ggdG8gZ2V0IHBhc3QgdGhlIGZpcnN0CmNsdXN0ZXIgb2YgcmVjbGFp
-bWFibGUgaW5vZGVzIG9uIGVhY2ggZmlsZXN5dHNlbSB0aGF0IGlzIGN1cnJlbnRseQp1bmRlciBJ
-Ty4uLi4gCgo+IEkgdGhpbmstLWdpdmVuIHRoZSByZXN0cmljdGVkIGVudmlyb25tZW50IHdlJ3Jl
-IHdvcmtpbmcgaW4KPiBoZXJlLS13ZSBjb3VsZCBtYWtlIHRoZSBzY2FucyBtb3JlIGZhaXIgYnkg
-cm90YXRpbmcgdGhlIHN0YXJ0aW5nCj4gcG9pbnQgZm9yIHNjYW5zIGVhY2ggdGltZSB0aHJvdWdo
-LiAgSS5lLiwgcmVjb3JkIHRoZSBsYXN0IG1vdW50Cj4gcG9pbnQgd2Ugc2Nhbm5lZCBhbmQgcGlj
-ayB1cCB0aGVyZSBuZXh0IHRpbWUgKG9yIGF0IHRoZSBmcm9udAo+IG9mIHRoZSBsaXN0IGlmIHRo
-YXQgbW91bnQgd2VudCBhd2F5KS4KCkkgYWdyZWUgd2l0aCB5b3UgaW4gdGhhdCBpZiB0aGUgYWlt
-IHdhcyB0byBrZWVwIHRoaXMgY29kZSB0aGVuIHdlJ2QKbmVlZCB0byBkbyB0aGlzLiBIb3dldmVy
-LCBpdCdzIG5vdCB3b3J0aCB0aGUgZWZmb3J0IG9mIGRlc2lnbmluZyBhbmQKdGVzdGluZyBhIGZh
-bmN5IHNjaGVtZSBnaXZlbiB0aGF0IEknbSBnb2luZyB0byBkbyBteSBiZXN0IHRvIHJlbW92ZQp0
-aGlzIHRyYXZlcnNlIGxpc3QgYXMgcXVpY2tseSBhcyBwb3NzaWJsZS4gVGhlIGN1cnJlbnQgc3R1
-ZmYgd29ya3MsCmJ1dCB0cnlpbmcgdG8gaW1wcm92ZSBpdCBpcyBsaWtlIHBvbGlzaGluZyBhIHR1
-cmQgLSBubyBtYXR0ZXIgaG93CnNoaW55IHlvdSBtYWtlIGl0LCBpbiB0aGUgZW5kIGl0J3Mgc3Rp
-bGwganVzdCBhIHNtZWxseSBwaWxlIG9mIGNyYXAuCgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBD
-aGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6
-Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+Ah,,, okay well that's good to know... I guess it is time to upgrade then...
+
+Thanks,
+
+Ben
+
+On Thu, Apr 29, 2010 at 5:41 PM, James Braid <jamesb@loreland.org> wrote:
+> On Fri, Apr 30, 2010 at 01:07, Benjamin Lau <benjamin.a.lau@gmail.com> wr=
+ote:
+>> [2] Full output of xfs_growfs:
+>> meta-data=3D/dev/mapper/vg00-lv_raid isize=3D256 =A0 =A0agcount=3D40, ag=
+size=3D61047552 blks
+>> =A0 =A0 =A0 =A0 =A0 =A0=3D =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 s=
+ectsz=3D512 =A0 attr=3D2
+>> data =A0 =A0 =3D =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 bsize=3D409=
+6 =A0 blocks=3D2441868288, imaxpct=3D25
+>> =A0 =A0 =A0 =A0 =3D =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 sunit=3D=
+0 =A0 =A0 =A0swidth=3D0 blks
+>> naming =A0 =3Dversion 2 =A0 =A0 =A0 =A0 =A0 =A0 =A0bsize=3D4096
+>> log =A0 =A0 =A0=3Dinternal =A0 =A0 =A0 =A0 =A0 =A0 =A0 bsize=3D4096 =A0 =
+blocks=3D32768, version=3D2
+>> =A0 =A0 =A0 =A0 =3D =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 sectsz=
+=3D512 =A0 sunit=3D0 blks, lazy-count=3D0
+>> realtime =3Dnone =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 extsz=3D4096 =A0 bl=
+ocks=3D0, rtextents=3D0
+>> xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed: Argument list too long
+>>
+>> OS/Kernel Info:
+>> Debian Lenny
+>> Linux bigmama 2.6.30-2-686-bigmem #1 SMP Sat Sep 26 02:30:18 UTC 2009
+>> i686 GNU/Linux
+>
+> Filesystems >16TB aren't supported on 32-bit machines - it looks like
+> your growfs is going to exceed that limit. Time to upgrade! ;)
+>
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
