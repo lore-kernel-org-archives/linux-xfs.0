@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3UHOxOq176015 for <xfs@oss.sgi.com>; Fri, 30 Apr 2010 12:24:59 -0500
-Subject: Re: [PATCH 3/3] xfsqa: build dbtest on debian platforms
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20100430163903.GA14107@infradead.org>
-References: <1272500186-29393-1-git-send-email-david@fromorbit.com>
-	<1272500186-29393-4-git-send-email-david@fromorbit.com>
-	<20100429064943.GB3774@dastard> <20100429104611.GA17317@infradead.org>
-	<20100430012630.GC32515@dastard> <1272594520.3221.154.camel@doink>
-	<20100430085511.GE32515@dastard> <20100430163903.GA14107@infradead.org>
-Date: Fri, 30 Apr 2010 12:24:46 -0500
-Message-ID: <1272648286.2976.20.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	o3UHV8Zd176362 for <xfs@oss.sgi.com>; Fri, 30 Apr 2010 12:31:08 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2573C1DE15D2
+	for <xfs@oss.sgi.com>; Fri, 30 Apr 2010 10:33:13 -0700 (PDT)
+Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
+	by cuda.sgi.com with ESMTP id 0ysneQe7W7Ncjw32 for
+	<xfs@oss.sgi.com>; Fri, 30 Apr 2010 10:33:13 -0700 (PDT)
+Message-ID: <4BDB1459.90505@sandeen.net>
+Date: Fri, 30 Apr 2010 12:33:13 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: stripe unit/width, inode64, misc mkfs.xfs params
+References: <133AD8A0-119B-4A41-9AF6-46F43111A941@facebook.com>
+In-Reply-To: <133AD8A0-119B-4A41-9AF6-46F43111A941@facebook.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,37 +23,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Peter Merelis <merelis@facebook.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Fri, 2010-04-30 at 12:39 -0400, Christoph Hellwig wrote:
-> On Fri, Apr 30, 2010 at 06:55:11PM +1000, Dave Chinner wrote:
-> > autoconf is supposed to handle that. If you don't have a critical
-> > package, autoconf will fail and ask you to install it. For
-> > non-critical packages or libraries, it just compiles it out.  The
-> > above error indicates that my autoconf changes are not detecting the
-> > libgdbm_compat library correctly (no surprise, I just hacked a hack
-> > to make it work on my system) so once that is sorted dbtest won't
-> > even be built unless the libraries are installed and detected.
-> > 
-> > FWIW, Christoph, does the problem go away with a 'make distclean;
-> > make'?
-> 
-> Yes, that fixes it and now I can run 010.
-> 
-> Thanks!
-> 
+Peter Merelis wrote:
+> Hi,
+>  =
 
-OK, I'm about to mark the original post "Reviewed".
+> Apologies in advance as I imagine this issue is raised frequently, but ca=
+n someone familiar with these sorts of things sanity check my stripe unit/w=
+idth settings since the underlying storage controller is not exposing the d=
+ata to mkfs.xfs apparently:
+>  =
 
-Meanwhile I think we should discuss packing, but I'll start
-that discussion in a separate message.
+> 12 disk raid6
+> 256k stripe
+>  =
 
-					-Alex
+> su=3D256k
+> sw=3D10
+
+sounds right
+
+> =85which I believe is equivalent to:
+>  =
+
+> sunit=3D512
+> swidth=3D5120
+>  =
+
+> Is that correct?
+
+probably, but FWIW su/sw might be easier since it deals in byte / multiplie=
+r units.
+
+
+> Also, does the inode64 option make sense for a filesystem with only a few=
+ files, each around ~100G?
+
+for a large filesystem, yes, if your userspace can cope.
+
+> And finally, are 'allocsize=3D1GB,nobarrier,noatime,nodiratime' recommend=
+ed mount options?
+
+no mount options are recommended without more information about the load ;)
+
+nobarrier is only recommended if the storage has a battery-backed cache (or=
+ no cache)
+
+allocsize=3D1GB is probably ok if you really are only writing large files a=
+nd have
+fragmentation problems
+
+noatime,nodiratime probably don't matter much at all.
+
+-Eric
+
+> Thanks,
+> Peter
+>  =
+
+> =
+
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> =
+
 
 _______________________________________________
 xfs mailing list
