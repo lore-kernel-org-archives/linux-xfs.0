@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3U3D7mb124234 for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 22:13:08 -0500
+	o3U3I6LF124569 for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 22:18:07 -0500
 Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5F5281AFDA2B
-	for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 20:15:12 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1B4CF1AFD248
+	for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 20:20:11 -0700 (PDT)
 Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id 2LbOHyQsA8A0j9hh for
-	<xfs@oss.sgi.com>; Thu, 29 Apr 2010 20:15:12 -0700 (PDT)
-Message-ID: <4BDA4B40.7070709@sandeen.net>
-Date: Thu, 29 Apr 2010 22:15:12 -0500
+	by cuda.sgi.com with ESMTP id fO0i6xhF3ioMnfsN for
+	<xfs@oss.sgi.com>; Thu, 29 Apr 2010 20:20:11 -0700 (PDT)
+Message-ID: <4BDA4C6B.3080503@sandeen.net>
+Date: Thu, 29 Apr 2010 22:20:11 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfsprogs: bump version and update changelog
-References: <20100429102805.GA4895@infradead.org>
-In-Reply-To: <20100429102805.GA4895@infradead.org>
+Subject: Re: [PATCH 3/3] xfsqa: build dbtest on debian platforms
+References: <1272500186-29393-1-git-send-email-david@fromorbit.com>	<1272500186-29393-4-git-send-email-david@fromorbit.com>	<20100429064943.GB3774@dastard>
+	<20100429104611.GA17317@infradead.org>	<20100430012630.GC32515@dastard>
+	<1272594520.3221.154.camel@doink>
+In-Reply-To: <1272594520.3221.154.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,65 +29,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: aelder@sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Alex Elder wrote:
+> On Fri, 2010-04-30 at 11:26 +1000, Dave Chinner wrote:
+>> On Thu, Apr 29, 2010 at 06:46:11AM -0400, Christoph Hellwig wrote:
+>>> Spoken too soon.  While this second patch at least compiles on my Debian
+>>> testing  system it doesn't link:
+>>>
+>>> /tmp/ccWcHXtY.o: In function `CleanupDbmLookup': /root/xfstests-dev/src/dbtest.c:304: undefined reference to `dbm_close'
+>>> /tmp/ccWcHXtY.o: In function `DoDbmLookup':
+>>> /root/xfstests-dev/src/dbtest.c:220: undefined reference to `dbm_fetch'
+>>> /root/xfstests-dev/src/dbtest.c:264: undefined reference to `dbm_fetch' /tmp/ccWcHXtY.o: In function `InitDbmLookup':
+>>> /root/xfstests-dev/src/dbtest.c:144: undefined reference to `dbm_open'
+>>> /root/xfstests-dev/src/dbtest.c:178: undefined reference to `dbm_store'
+>>> /root/xfstests-dev/src/dbtest.c:191: undefined reference to `dbm_close'
+>>> /root/xfstests-dev/src/dbtest.c:196: undefined reference to `dbm_open'
+>>> collect2: ld returned 1 exit status
+>>> make[2]: *** [dbtest] Error 1
+>>> make[1]: *** [src] Error 2
+>>> make: *** [default] Error 2
+>> Where is libgdbm-compat on your system?
 > 
-> Index: xfsprogs-dev/VERSION
-> ===================================================================
-> --- xfsprogs-dev.orig/VERSION	2010-04-29 12:21:54.074004868 +0200
-> +++ xfsprogs-dev/VERSION	2010-04-29 12:21:59.188004170 +0200
-> @@ -3,5 +3,5 @@
->  #
->  PKG_MAJOR=3
->  PKG_MINOR=1
-> -PKG_REVISION=1
-> +PKG_REVISION=2
->  PKG_BUILD=1
-> Index: xfsprogs-dev/doc/CHANGES
-> ===================================================================
-> --- xfsprogs-dev.orig/doc/CHANGES	2010-04-29 12:21:54.084013459 +0200
-> +++ xfsprogs-dev/doc/CHANGES	2010-04-29 12:22:37.625255672 +0200
-> @@ -1,3 +1,15 @@
-> +xfsprogs-3.1.2
-> +	- Fix missing thread synchronization in xfs_repair duplicate
-> +	  extent tracking.
-> +	- Fix handling of dynamic attribute fork roots in xfs_fsr.
-> +	- Fix sb_bad_features2 manipulations when tweaking the lazy count
-> +	  flag.
-> +	- Add support for building on Debian GNU/kFreeBSD, thanks
-> +	  to Petr Salinger.
-> +	- Improvements to the mkfs.xfs manpage, thanks to Wengang Wang.
-> +	- Various small blkid integreation fixes in mkfs.xfs.
+> I think we need to do a better job of defining what's required
+> for this stuff--building and running.  I know I had trouble
+> the first time I set things up, and now that it works I
+> have no recollection of the stuff that I did.  It would be
+> good to make it easier for people to get testing going,
+> we might get more people actually running them in a wider
+> variety of environments.
 
-"integration"
+Making missing stuff gracefully handled runtime helps...
 
-Other than that, looks good, was time for a new release. :)
+I also have a hacked up rpm for this, that way package dependencies
+take care of it all seamlessly:
 
-Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
+BuildRequires:  autoconf, libtool, xfsprogs-devel, e2fsprogs-devel
+BuildRequires:  libacl-devel, libattr-devel, libaio-devel
+Requires:       bash, xfsprogs, xfsdump, perl, acl, attr, bind-utils
+Requires:       bc, indent, quota
 
-> +	- Fix build against stricter system headers.
-> +
->  xfsprogs-3.1.1 (29 January 2010)
->  	- Fix various blkid topology support problems in mkfs.xfs.
->  	- Fix various build warnings.
-> Index: xfsprogs-dev/debian/changelog
-> ===================================================================
-> --- xfsprogs-dev.orig/debian/changelog	2010-01-30 20:39:41.872254549 +0100
-> +++ xfsprogs-dev/debian/changelog	2010-04-29 12:23:53.931253925 +0200
-> @@ -1,3 +1,10 @@
-> +xfsprogs (3.1.2) unstable; urgency=low
-> +
-> +  * New upstream release
-> +  * Allow for building on GNU/kFreeBSD (closes: #485796)
-> +
-> + -- Nathan Scott <nathans@debian.org>  Thu, 29 Apr 2010 14:25:43 +1100
-> +
->  xfsprogs (3.1.1) unstable; urgency=low
->  
->    * New upstream release
+If I just knew a decent place to drop the stuff that was compliant
+with fs hierarchy rules, I'd toss it into fedora, and debian might
+not be far behind ...
+
+-Eric
+
+> 					-Alex
 > 
 > _______________________________________________
 > xfs mailing list
