@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3UGhb4D174009 for <xfs@oss.sgi.com>; Fri, 30 Apr 2010 11:43:37 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E343F1DE0E42
-	for <xfs@oss.sgi.com>; Fri, 30 Apr 2010 09:45:43 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id kSybrwqyGRb0mlaK for
-	<xfs@oss.sgi.com>; Fri, 30 Apr 2010 09:45:43 -0700 (PDT)
-Date: Fri, 30 Apr 2010 12:45:43 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH V2] xfs: be more explicit if RT mount fails due to config
-Message-ID: <20100430164543.GA4753@infradead.org>
-References: <4BDA54A4.3040204@sandeen.net>
-	<20100430164002.GC14107@infradead.org>
-	<4BDB08C4.6070900@sandeen.net>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4BDB08C4.6070900@sandeen.net>
+	o3UHOxOq176015 for <xfs@oss.sgi.com>; Fri, 30 Apr 2010 12:24:59 -0500
+Subject: Re: [PATCH 3/3] xfsqa: build dbtest on debian platforms
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20100430163903.GA14107@infradead.org>
+References: <1272500186-29393-1-git-send-email-david@fromorbit.com>
+	<1272500186-29393-4-git-send-email-david@fromorbit.com>
+	<20100429064943.GB3774@dastard> <20100429104611.GA17317@infradead.org>
+	<20100430012630.GC32515@dastard> <1272594520.3221.154.camel@doink>
+	<20100430085511.GE32515@dastard> <20100430163903.GA14107@infradead.org>
+Date: Fri, 30 Apr 2010 12:24:46 -0500
+Message-ID: <1272648286.2976.20.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,22 +26,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Fri, Apr 30, 2010 at 11:43:48AM -0500, Eric Sandeen wrote:
-> Recent testers were slightly confused that a realtime
-> mount failed due to missing CONFIG_XFS_RT; we can make
-> that a little more obvious.
+On Fri, 2010-04-30 at 12:39 -0400, Christoph Hellwig wrote:
+> On Fri, Apr 30, 2010 at 06:55:11PM +1000, Dave Chinner wrote:
+> > autoconf is supposed to handle that. If you don't have a critical
+> > package, autoconf will fail and ask you to install it. For
+> > non-critical packages or libraries, it just compiles it out.  The
+> > above error indicates that my autoconf changes are not detecting the
+> > libgdbm_compat library correctly (no surprise, I just hacked a hack
+> > to make it work on my system) so once that is sorted dbtest won't
+> > even be built unless the libraries are installed and detected.
+> > 
+> > FWIW, Christoph, does the problem go away with a 'make distclean;
+> > make'?
 > 
-> V2: drop the else as suggested by Christoph
+> Yes, that fixes it and now I can run 010.
 > 
-> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+> Thanks!
+> 
 
-Looks good,
+OK, I'm about to mark the original post "Reviewed".
 
+Meanwhile I think we should discuss packing, but I'll start
+that discussion in a separate message.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+					-Alex
 
 _______________________________________________
 xfs mailing list
