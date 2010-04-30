@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3UGkwRB174215 for <xfs@oss.sgi.com>; Fri, 30 Apr 2010 11:47:00 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 801C8903B11
-	for <xfs@oss.sgi.com>; Fri, 30 Apr 2010 09:49:04 -0700 (PDT)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id I0cnZKzGBO79ee94 for
-	<xfs@oss.sgi.com>; Fri, 30 Apr 2010 09:49:04 -0700 (PDT)
-Message-ID: <4BDB09FF.8020901@sandeen.net>
-Date: Fri, 30 Apr 2010 11:49:03 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	o3UGhb4D174009 for <xfs@oss.sgi.com>; Fri, 30 Apr 2010 11:43:37 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E343F1DE0E42
+	for <xfs@oss.sgi.com>; Fri, 30 Apr 2010 09:45:43 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id kSybrwqyGRb0mlaK for
+	<xfs@oss.sgi.com>; Fri, 30 Apr 2010 09:45:43 -0700 (PDT)
+Date: Fri, 30 Apr 2010 12:45:43 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH V2] xfs: be more explicit if RT mount fails due to config
+Message-ID: <20100430164543.GA4753@infradead.org>
+References: <4BDA54A4.3040204@sandeen.net>
+	<20100430164002.GC14107@infradead.org>
+	<4BDB08C4.6070900@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: Building XFSDump but missing uuid development package
-References: <53964.41414.qm@web180401.mail.gq1.yahoo.com>
-In-Reply-To: <53964.41414.qm@web180401.mail.gq1.yahoo.com>
+Content-Disposition: inline
+In-Reply-To: <4BDB08C4.6070900@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,27 +30,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Peter Shuere <petershuere@yahoo.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
 
-Peter Shuere wrote:
-> Hi,
+On Fri, Apr 30, 2010 at 11:43:48AM -0500, Eric Sandeen wrote:
+> Recent testers were slightly confused that a realtime
+> mount failed due to missing CONFIG_XFS_RT; we can make
+> that a little more obvious.
 > 
-> I am trying to build the XFS utility, but during the build-process, I
-> ran into a problem saying that I need the UUID development package to
-> make the build complete. I am using OpenSUSE 11.2, where should I get
-> the copy of the uuid-devel source (or binary, whichever one that
-> works).
+> V2: drop the else as suggested by Christoph
+> 
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-e2fsprogs-devel might contain it; fedora recently split this out into a
-separate uuid-devel package which then moved to a sub-package of util-linux-ng.
+Looks good,
 
-So you'll need one of those packages, whatever contains the uuid headers.
 
-(FWIW opensuse probably already has xfsprogs packaged, but I assume
-you have a reason to build it yourself...)
-
--Eric
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
