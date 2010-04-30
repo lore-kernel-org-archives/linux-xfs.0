@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3UGbM4w173464 for <xfs@oss.sgi.com>; Fri, 30 Apr 2010 11:37:23 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0753E903138
-	for <xfs@oss.sgi.com>; Fri, 30 Apr 2010 09:39:28 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id w4zlKxUqzoCmlvhM for
-	<xfs@oss.sgi.com>; Fri, 30 Apr 2010 09:39:28 -0700 (PDT)
-Date: Fri, 30 Apr 2010 12:39:27 -0400
+	o3UGaxqH173417 for <xfs@oss.sgi.com>; Fri, 30 Apr 2010 11:37:02 -0500
+Date: Fri, 30 Apr 2010 12:39:03 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: replace E2BIG with EFBIG where appropriate
-Message-ID: <20100430163927.GB14107@infradead.org>
-References: <4BDA51B9.4010501@sandeen.net>
+Subject: Re: [PATCH 3/3] xfsqa: build dbtest on debian platforms
+Message-ID: <20100430163903.GA14107@infradead.org>
+References: <1272500186-29393-1-git-send-email-david@fromorbit.com>
+	<1272500186-29393-4-git-send-email-david@fromorbit.com>
+	<20100429064943.GB3774@dastard>
+	<20100429104611.GA17317@infradead.org>
+	<20100430012630.GC32515@dastard> <1272594520.3221.154.camel@doink>
+	<20100430085511.GE32515@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4BDA51B9.4010501@sandeen.net>
+In-Reply-To: <20100430085511.GE32515@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,24 +27,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com, Alex Elder <aelder@sgi.com>
 
-On Thu, Apr 29, 2010 at 10:42:49PM -0500, Eric Sandeen wrote:
-> Many places in the xfs code return E2BIG when they really
-> mean EFBIG; trying to grow past 16T on a 32 bit machine,
-> for example, says "Argument list too long" rather than "File
-> too large" which is not particularly helpful.
+On Fri, Apr 30, 2010 at 06:55:11PM +1000, Dave Chinner wrote:
+> autoconf is supposed to handle that. If you don't have a critical
+> package, autoconf will fail and ask you to install it. For
+> non-critical packages or libraries, it just compiles it out.  The
+> above error indicates that my autoconf changes are not detecting the
+> libgdbm_compat library correctly (no surprise, I just hacked a hack
+> to make it work on my system) so once that is sorted dbtest won't
+> even be built unless the libraries are installed and detected.
 > 
-> Some of these don't make perfect sense as EFBIG either,
-> but still better than E2BIG IMHO.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+> FWIW, Christoph, does the problem go away with a 'make distclean;
+> make'?
 
-Looks good,
+Yes, that fixes it and now I can run 010.
 
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Thanks!
 
 _______________________________________________
 xfs mailing list
