@@ -1,32 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o3U5xuTb133356 for <xfs@oss.sgi.com>; Fri, 30 Apr 2010 00:59:56 -0500
-Received: from e23smtp09.au.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 172A6300A6E
-	for <xfs@oss.sgi.com>; Thu, 29 Apr 2010 23:02:00 -0700 (PDT)
-Received: from e23smtp09.au.ibm.com (e23smtp09.au.ibm.com [202.81.31.142]) by
-	cuda.sgi.com with ESMTP id Dco84zhsUzS6B3BY for
-	<xfs@oss.sgi.com>; Thu, 29 Apr 2010 23:02:00 -0700 (PDT)
-Received: from d23relay05.au.ibm.com (d23relay05.au.ibm.com [202.81.31.247])
-	by e23smtp09.au.ibm.com (8.14.3/8.13.1) with ESMTP id o3U61w0D000401
-	for <xfs@oss.sgi.com>; Fri, 30 Apr 2010 16:01:58 +1000
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay05.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	o3U5t79n766038 for <xfs@oss.sgi.com>; Fri, 30 Apr 2010 15:55:07 +1000
-Received: from d23av04.au.ibm.com (loopback [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id
-	o3U61vtA021673 for <xfs@oss.sgi.com>; Fri, 30 Apr 2010 16:01:58 +1000
-From: "Aneesh Kumar K. V" <aneesh.kumar@linux.vnet.ibm.com>
-Subject: Re: [PATCH 3/4] writeback: pay attention to wbc->nr_to_write in
-	write_cache_pages
-In-Reply-To: <20100429143931.331c2bab.akpm@linux-foundation.org>
-References: <1271731314-5893-1-git-send-email-david@fromorbit.com>
-	<1271731314-5893-4-git-send-email-david@fromorbit.com>
-	<20100429143931.331c2bab.akpm@linux-foundation.org>
-Date: Fri, 30 Apr 2010 11:31:53 +0530
-Message-ID: <87sk6dwka6.fsf@linux.vnet.ibm.com>
+	o3U8rAAA143962 for <xfs@oss.sgi.com>; Fri, 30 Apr 2010 03:53:11 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 83342300DBC
+	for <xfs@oss.sgi.com>; Fri, 30 Apr 2010 01:55:14 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	OGKobJiMGH3cESrY for <xfs@oss.sgi.com>;
+	Fri, 30 Apr 2010 01:55:14 -0700 (PDT)
+Date: Fri, 30 Apr 2010 18:55:11 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/3] xfsqa: build dbtest on debian platforms
+Message-ID: <20100430085511.GE32515@dastard>
+References: <1272500186-29393-1-git-send-email-david@fromorbit.com>
+	<1272500186-29393-4-git-send-email-david@fromorbit.com>
+	<20100429064943.GB3774@dastard>
+	<20100429104611.GA17317@infradead.org>
+	<20100430012630.GC32515@dastard> <1272594520.3221.154.camel@doink>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1272594520.3221.154.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,67 +33,61 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Thu, 29 Apr 2010 14:39:31 -0700, Andrew Morton <akpm@linux-foundation.org> wrote:
-> On Tue, 20 Apr 2010 12:41:53 +1000
-> Dave Chinner <david@fromorbit.com> wrote:
-> 
-> > If a filesystem writes more than one page in ->writepage, write_cache_pages
-> > fails to notice this and continues to attempt writeback when wbc->nr_to_write
-> > has gone negative - this trace was captured from XFS:
+On Thu, Apr 29, 2010 at 09:28:40PM -0500, Alex Elder wrote:
+> On Fri, 2010-04-30 at 11:26 +1000, Dave Chinner wrote:
+> > On Thu, Apr 29, 2010 at 06:46:11AM -0400, Christoph Hellwig wrote:
+> > > Spoken too soon.  While this second patch at least compiles on my Debian
+> > > testing  system it doesn't link:
+> > > 
+> > > /tmp/ccWcHXtY.o: In function `CleanupDbmLookup': /root/xfstests-dev/src/dbtest.c:304: undefined reference to `dbm_close'
+> > > /tmp/ccWcHXtY.o: In function `DoDbmLookup':
+> > > /root/xfstests-dev/src/dbtest.c:220: undefined reference to `dbm_fetch'
+> > > /root/xfstests-dev/src/dbtest.c:264: undefined reference to `dbm_fetch' /tmp/ccWcHXtY.o: In function `InitDbmLookup':
+> > > /root/xfstests-dev/src/dbtest.c:144: undefined reference to `dbm_open'
+> > > /root/xfstests-dev/src/dbtest.c:178: undefined reference to `dbm_store'
+> > > /root/xfstests-dev/src/dbtest.c:191: undefined reference to `dbm_close'
+> > > /root/xfstests-dev/src/dbtest.c:196: undefined reference to `dbm_open'
+> > > collect2: ld returned 1 exit status
+> > > make[2]: *** [dbtest] Error 1
+> > > make[1]: *** [src] Error 2
+> > > make: *** [default] Error 2
 > > 
-> > 
-> >     wbc_writeback_start: towrt=1024
-> >     wbc_writepage: towrt=1024
-> >     wbc_writepage: towrt=0
-> >     wbc_writepage: towrt=-1
-> >     wbc_writepage: towrt=-5
-> >     wbc_writepage: towrt=-21
-> >     wbc_writepage: towrt=-85
-> > 
+> > Where is libgdbm-compat on your system?
 > 
-> Bug.
-> 
-> AFAIT it's a regression introduced by
-> 
-> : commit 17bc6c30cf6bfffd816bdc53682dd46fc34a2cf4
-> : Author:     Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
-> : AuthorDate: Thu Oct 16 10:09:17 2008 -0400
-> : Commit:     Theodore Ts'o <tytso@mit.edu>
-> : CommitDate: Thu Oct 16 10:09:17 2008 -0400
-> : 
-> :     vfs: Add no_nrwrite_index_update writeback control flag
-> 
-> I suggest that what you do here is remove the local `nr_to_write' from
-> write_cache_pages() and go back to directly using wbc->nr_to_write
-> within the loop.
-> 
-> And thus we restore the convention that if the fs writes back more than
-> a single page, it subtracts (nr_written - 1) from wbc->nr_to_write.
-> 
+> I think we need to do a better job of defining what's required
+> for this stuff--building and running.
 
-My mistake i never expected writepage to write more than one page. The
-interface said 'writepage' so it was natural to expect that it writes only
-one page. BTW the reason for the change is to give file system which
-accumulate dirty pages using write_cache_pages and attempt to write
-them out later a chance to properly manage nr_to_write. Something like
+autoconf is supposed to handle that. If you don't have a critical
+package, autoconf will fail and ask you to install it. For
+non-critical packages or libraries, it just compiles it out.  The
+above error indicates that my autoconf changes are not detecting the
+libgdbm_compat library correctly (no surprise, I just hacked a hack
+to make it work on my system) so once that is sorted dbtest won't
+even be built unless the libraries are installed and detected.
 
-ext4_da_writepages
--- write_cache_pages
----- collect dirty page
----- return
---return
---now try to writeout all the collected dirty pages ( say 100)
-----Only able to allocate blocks for 50 pages
-    so update nr_to_write -= 50 and mark rest of 50 pages as dirty
-    again
+FWIW, Christoph, does the problem go away with a 'make distclean;
+make'?
 
-So we want wbc->nr_to_write updated only by ext4_da_writepages. 
+> I know I had trouble the first time I set things up, and now that
+> it works I have no recollection of the stuff that I did.  It would
+> be good to make it easier for people to get testing going, we
+> might get more people actually running them in a wider variety of
+> environments.
 
+A real source package for xfstests is the right way to do this, I
+think. That way installing the package can pull in the correct
+dependencies before you try to build it. There's only so much we
+can do if all you do is a git clone to install it...
 
--aneesh
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
