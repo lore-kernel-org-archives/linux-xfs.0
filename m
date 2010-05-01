@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o41CuY2a252632 for <xfs@oss.sgi.com>; Sat, 1 May 2010 07:56:36 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2E41F304F29
-	for <xfs@oss.sgi.com>; Sat,  1 May 2010 05:58:40 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id lNveYqkHpcHorCgE for
-	<xfs@oss.sgi.com>; Sat, 01 May 2010 05:58:40 -0700 (PDT)
-Date: Sat, 1 May 2010 08:58:39 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/5] [PATCH] xfs: simplify buffer to transaction matching
-Message-ID: <20100501125839.GA26342@infradead.org>
-References: <20100418001041.865247520@bombadil.infradead.org>
-	<20100418001058.677429475@bombadil.infradead.org>
-	<20100420064155.GH15130@dastard>
+	o41Db8Zx255665 for <xfs@oss.sgi.com>; Sat, 1 May 2010 08:37:08 -0500
+Received: from Ishtar.sc.tlinx.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0D859304E20
+	for <xfs@oss.sgi.com>; Sat,  1 May 2010 06:39:09 -0700 (PDT)
+Received: from Ishtar.sc.tlinx.org
+	(173-164-175-65-SFBA.hfc.comcastbusiness.net [173.164.175.65])
+	by cuda.sgi.com with ESMTP id CWrAAYtC3999NOw6 for
+	<xfs@oss.sgi.com>; Sat, 01 May 2010 06:39:09 -0700 (PDT)
+Message-ID: <4BDC2EEC.9080808@tlinx.org>
+Date: Sat, 01 May 2010 06:38:52 -0700
+From: Linda Walsh <xfs@tlinx.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100420064155.GH15130@dastard>
+Subject: Re: Building XFSDump but missing uuid development package
+References: <53964.41414.qm@web180401.mail.gq1.yahoo.com>
+In-Reply-To: <53964.41414.qm@web180401.mail.gq1.yahoo.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,43 +28,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Peter Shuere <petershuere@yahoo.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Apr 20, 2010 at 04:41:55PM +1000, Dave Chinner wrote:
-> Good start, but I think that it should use xfs_trans_first_item()
-> and xfs_trans_next_item() rather than walking the descriptor
-> table directly.
 
-I tried implementing it, but it doesn't work.  We can call the buffer
-matching routines on transactions that don't have any item linked to
-it, which will cause xfs_trans_first_item to panic.  Compare this code
-in xfs_trans_buf_item_match:
 
-	for (licp = &tp->t_items; licp != NULL; licp = licp->lic_next) {
-		if (xfs_lic_are_all_free(licp)) {
-			ASSERT(licp == &tp->t_items);
-			ASSERT(licp->lic_next == NULL);
-			return NULL;
-		}
+Peter Shuere wrote:
+> Hi,
+> 
+> I am trying to build the XFS utility, but during the build-process, I ran into a problem saying that I need the UUID development package to make the build complete. I am using OpenSUSE 11.2, where should I get the copy of the uuid-devel source (or binary, whichever one that works).
+(On SuSE 11.2:)
+> zypper se uuid 
+Loading repository data...
+Reading installed packages...
 
-		...
-	}
-
-to this in xfs_trans_first_item:
-
-	licp = &tp->t_items;
-        /*
-	 * If it's not in the first chunk, skip to the second.
-	 */
-	if (xfs_lic_are_all_free(licp)) {
-		licp = licp->lic_next;
-	}
-
-	/*
-	 * Return the first non-free descriptor in the chunk.
-	 */
-	ASSERT(!xfs_lic_are_all_free(licp));
+S | Name                | Summary                                   | Type      
+--+---------------------+-------------------------------------------+-----------
+i | libuuid-devel       | Development files for libuuid1            | package   
+  | libuuid-devel-32bit | Development files for libuuid1            | package   
+i | libuuid1            | Library to generate UUIDs                 | package   
+i | libuuid1-32bit      | Library to generate UUIDs                 | package   
+  | perl-Data-UUID      | Perl extension for generating Globally/-> | package   
+  | perl-Data-UUID      | Perl extension for generating Globally/-> | srcpackage
+  | uuidd               | Utilities for the Second Extended File -> | package   
+---
+Does libuuid-devel not work for you?
 
 _______________________________________________
 xfs mailing list
