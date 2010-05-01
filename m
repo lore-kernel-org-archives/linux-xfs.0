@@ -1,21 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o41Db8Zx255665 for <xfs@oss.sgi.com>; Sat, 1 May 2010 08:37:08 -0500
-Received: from Ishtar.sc.tlinx.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0D859304E20
-	for <xfs@oss.sgi.com>; Sat,  1 May 2010 06:39:09 -0700 (PDT)
-Received: from Ishtar.sc.tlinx.org
-	(173-164-175-65-SFBA.hfc.comcastbusiness.net [173.164.175.65])
-	by cuda.sgi.com with ESMTP id CWrAAYtC3999NOw6 for
-	<xfs@oss.sgi.com>; Sat, 01 May 2010 06:39:09 -0700 (PDT)
-Message-ID: <4BDC2EEC.9080808@tlinx.org>
-Date: Sat, 01 May 2010 06:38:52 -0700
-From: Linda Walsh <xfs@tlinx.org>
+	o41JjOC2019250 for <xfs@oss.sgi.com>; Sat, 1 May 2010 14:45:24 -0500
+Received: from thunker.thunk.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E07601DE2210
+	for <xfs@oss.sgi.com>; Sat,  1 May 2010 12:47:30 -0700 (PDT)
+Received: from thunker.thunk.org (thunk.org [69.25.196.29]) by cuda.sgi.com
+	with ESMTP id vdVaK8oPWRT2YIM7 for <xfs@oss.sgi.com>;
+	Sat, 01 May 2010 12:47:30 -0700 (PDT)
+Date: Sat, 1 May 2010 15:47:10 -0400
+From: tytso@mit.edu
+Subject: Re: [PATCH 3/4] writeback: pay attention to wbc->nr_to_write in
+	write_cache_pages
+Message-ID: <20100501194710.GV14986@thunk.org>
+References: <1271731314-5893-1-git-send-email-david@fromorbit.com>
+	<1271731314-5893-4-git-send-email-david@fromorbit.com>
+	<20100429143931.331c2bab.akpm@linux-foundation.org>
+	<87sk6dwka6.fsf@linux.vnet.ibm.com>
+	<20100430124329.10a4c02b.akpm@linux-foundation.org>
 MIME-Version: 1.0
-Subject: Re: Building XFSDump but missing uuid development package
-References: <53964.41414.qm@web180401.mail.gq1.yahoo.com>
-In-Reply-To: <53964.41414.qm@web180401.mail.gq1.yahoo.com>
+Content-Disposition: inline
+In-Reply-To: <20100430124329.10a4c02b.akpm@linux-foundation.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,31 +33,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Peter Shuere <petershuere@yahoo.com>
-Cc: xfs@oss.sgi.com
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, "Aneesh Kumar K. V" <aneesh.kumar@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org
 
-
-
-Peter Shuere wrote:
-> Hi,
+On Fri, Apr 30, 2010 at 12:43:29PM -0700, Andrew Morton wrote:
 > 
-> I am trying to build the XFS utility, but during the build-process, I ran into a problem saying that I need the UUID development package to make the build complete. I am using OpenSUSE 11.2, where should I get the copy of the uuid-devel source (or binary, whichever one that works).
-(On SuSE 11.2:)
-> zypper se uuid 
-Loading repository data...
-Reading installed packages...
+> Maybe that fs shouldn't be calling write_cache_pages() at all.  After
+> all, write_cache_pages() is a wrapper which emits a sequence of calls
+> to ->writepage(), and ->writepage() writes a page.
 
-S | Name                | Summary                                   | Type      
---+---------------------+-------------------------------------------+-----------
-i | libuuid-devel       | Development files for libuuid1            | package   
-  | libuuid-devel-32bit | Development files for libuuid1            | package   
-i | libuuid1            | Library to generate UUIDs                 | package   
-i | libuuid1-32bit      | Library to generate UUIDs                 | package   
-  | perl-Data-UUID      | Perl extension for generating Globally/-> | package   
-  | perl-Data-UUID      | Perl extension for generating Globally/-> | srcpackage
-  | uuidd               | Utilities for the Second Extended File -> | package   
----
-Does libuuid-devel not work for you?
+On my todo list is to fix ext4 to not call write_cache_pages() at all.
+We are seriously abusing that function ATM, since we're not actually
+writing the pages when we call write_cache_pages().  I won't go into
+what we're doing, because it's too embarassing, but suffice it to say
+that we end up calling pagevec_lookup() or pagevec_lookup_tag()
+*four*, count them *four* times while trying to do writeback.
+
+I have a simple patch that gives ext4 our own copy of
+write_cache_pages(), and then simplifies it a lot, and fixes a bunch
+of problems, but then I discarded it in favor of fundamentally redoing
+how we do writeback at all, but it's going to take a while to get
+things completely right.  But I am working to try to fix this.
+
+If it would help, I can ressurect the "fork write_cache_pages() and
+simplify" patch, so ext4 isn't dependent on the mm/page-writeback.c's
+write_cache_pages(), if there is an immediate, short-term need to fix
+that function.
+
+						- Ted
 
 _______________________________________________
 xfs mailing list
