@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o43CFDOE153173 for <xfs@oss.sgi.com>; Mon, 3 May 2010 07:15:13 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 986F8307F7F
-	for <xfs@oss.sgi.com>; Mon,  3 May 2010 05:17:19 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	KsokmC62TlIps8fY for <xfs@oss.sgi.com>;
-	Mon, 03 May 2010 05:17:19 -0700 (PDT)
-Date: Mon, 3 May 2010 22:17:16 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs_fsr question for improvement
-Message-ID: <20100503121716.GF2591@dastard>
-References: <201004161043.11243@zmi.at> <20100417012415.GE2493@dastard>
-	<201005030849.47591@zmi.at>
+	o43DWe3v156458 for <xfs@oss.sgi.com>; Mon, 3 May 2010 08:32:40 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 572EB1554454
+	for <xfs@oss.sgi.com>; Mon,  3 May 2010 06:34:48 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id PBFBbK0gy8iletOz for
+	<xfs@oss.sgi.com>; Mon, 03 May 2010 06:34:48 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1O8vnL-0005bJ-Gz
+	for xfs@oss.sgi.com; Mon, 03 May 2010 13:34:47 +0000
+Date: Mon, 3 May 2010 09:34:47 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH] xfs: kill xfs_trans_find_item
+Message-ID: <20100503133447.GA21325@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201005030849.47591@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,132 +29,213 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, May 03, 2010 at 08:49:43AM +0200, Michael Monnerie wrote:
-> On Samstag, 17. April 2010 Dave Chinner wrote:
-> > They have thousands of extents in them and they are all between
-> > 8-10GB in size, and IO from my VMs are stiall capable of saturating
-> > the disks backing these files. While I'd normally consider these
-> > files fragmented and candidates for running fsr on tme, the number
-> > of extents is not actually a performance limiting factor and so
-> > there's no point in defragmenting them. Especially as that requires
-> > shutting down the VMs...
-> 
-> I personally care less about file fragmentation than about 
-> metadata/inode/directory fragmentation. This server gets accesses from 
-> numerous people,
-> 
-> # time find /mountpoint/ -inum 107901420
-> /mountpoint/some/dir/ectory/path/x.iso
-> 
-> real    7m50.732s
-> user    0m0.152s
-> sys     0m2.376s
-> 
-> It took nearly 8 minutes to search through that mount point, which is 
-> 6TB big on a RAID-5 striped over 7 2TB disks, so search speed should be 
-> high.
+xfs_trans_find_item is just and awkward way to derefence ->li_desc in
+the log_item structure.  So replace the calls to it with the direct
+reference, and while we're at it also make these type-safe instead using
+casts.
 
-Not necessarily, as your raid array has shown.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
->
-> Especially as there are only 765.000 files on that disk:
-> Filesystem            Inodes   IUsed   IFree IUse%
-> /mountpoint           1258291200  765659 1257525541    1%
-> 
-> Wouldn't you say an 8 minutes search over just 765.000 files is slow, 
-> even when only using 7x 2TB 7200rpm disks in RAID-5?
-
-Depends on the directory structure and the number of IOs needed to
-traverse it. If it's only a handful of files per directory, then you
-get no internal directory readahead to hide read latency. That
-results in a small random synchronous read workload that might
-require a couple of hundred thousand IOs to complete.
-
->From your early stats showing a read rate of 50 IO/s from the raid
-array, then the directory read traverse has requires about 25kiops
-to complete. That takes about 10s on my laptop's cheap SSD, which
-does random reads about 50x faster than your RAID array....
-
-> > > Would it be possible xfs_fsr defrags the meta data in a way that
-> > > they are all together so seeks are faster?
-> > 
-> > It's not related to fsr because fsr does not defragment metadata.
-> > Some metadata cannot be defragmented (e.g. inodes cannot be moved),
-> > some metadata cannot be manipulated directly (e.g. free space
-> > btrees), and some is just difficult to do (e.g. directory
-> > defragmentation) so hasn't ever been done.
-> 
-> I see. On this particular server I know it would be good for performance 
-> to have the metadata defrag'ed, but that's not the aim of xfs_fsr.
-> But maybe some developer is bored once and finds a way to optimize the 
-> search&find of files on an aged filesystem, i.e. metadata defrag :-)
-
-Many have. Find and tar have resisted attempts to optimise them over
-the years, so stuff like this:
-
-http://oss.oracle.com/~mason/acp/
-
-grows on the interwebs all over the place... ;)
-
-
-> I tried this two times:
-> # time find /mountpoint/ -inum 107901420
-> real    8m17.316s
-> user    0m0.148s 
-> sys     0m1.964s 
-> 
-> # time find /mountpoint/ -inum 107901420
-> real    0m30.113s
-> user    0m0.540s 
-> sys     0m9.813s 
-> 
-> Caching helps the 2nd time :-)
-
-That still seems rather slow traversing 750,000 cached directory
-entries. My laptop (1.3GHz CULV core2 CPU) does 465,000 directory
-entries in:
-
-$ time sudo find / -mount -inum 123809285
-
-real    0m2.196s
-user    0m0.384s
-sys     0m1.464s
-
-> > Raid 5/6 generally provides the same IOPS performance as a single
-> > spindle, regardless of the width of the RAID stripe. A 2TB sata
-> > drive might be able to do 150-200 IOPS, so a RAID5 array made up of
-> > these drives will tend to max out at roughly the same....
-> 
-> Running xfs_fsr, I can see up to 1200r+1200w=2400I/Os per second:
-> 
-> Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-
-> sz avgqu-sz   await  svctm  %util
-> xvdc              0,00     0,00    0,00 1191,42     0,00 52320,16    
-> 87,83   121,23   96,77   0,71  84,63
-> xvde              0,00     0,00 1226,35    0,00 52324,15     0,00    
-> 85,33     0,77    0,62   0,13  15,33
-> 
-> But on average it's about 600-700 read plus writes per second, so 
-> 1200-1400 IOPS. 
-> Both "disks" are 2TB LVM volumes on the same raidset, I just had to 
-> split it as XEN doesn't allow to create >2TB volumes.
-> 
-> So, the badly slow I/O I see during "find" are not happening during fsr. 
-> How can that be?
-
-Because most of the IO xfs_fsr does is large sequential IO which the
-RAID caches are optimised for. Directory traversals, OTOH, are small,
-semi-random IO which are latency sensitive....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Index: xfs/fs/xfs/quota/xfs_trans_dquot.c
+===================================================================
+--- xfs.orig/fs/xfs/quota/xfs_trans_dquot.c	2010-04-30 18:33:49.928263075 +0200
++++ xfs/fs/xfs/quota/xfs_trans_dquot.c	2010-05-03 15:28:51.713004310 +0200
+@@ -93,12 +93,10 @@ xfs_trans_log_dquot(
+ 	xfs_trans_t	*tp,
+ 	xfs_dquot_t	*dqp)
+ {
+-	xfs_log_item_desc_t	*lidp;
++	xfs_log_item_desc_t	*lidp = dqp->q_logitem.qli_item.li_desc;
+ 
+ 	ASSERT(dqp->q_transp == tp);
+ 	ASSERT(XFS_DQ_IS_LOCKED(dqp));
+-
+-	lidp = xfs_trans_find_item(tp, (xfs_log_item_t*)(&dqp->q_logitem));
+ 	ASSERT(lidp != NULL);
+ 
+ 	tp->t_flags |= XFS_TRANS_DIRTY;
+@@ -890,9 +888,8 @@ xfs_trans_log_quotaoff_item(
+ 	xfs_trans_t		*tp,
+ 	xfs_qoff_logitem_t	*qlp)
+ {
+-	xfs_log_item_desc_t	*lidp;
++	xfs_log_item_desc_t	*lidp = qlp->qql_item.li_desc;
+ 
+-	lidp = xfs_trans_find_item(tp, (xfs_log_item_t *)qlp);
+ 	ASSERT(lidp != NULL);
+ 
+ 	tp->t_flags |= XFS_TRANS_DIRTY;
+Index: xfs/fs/xfs/xfs_buf_item.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_buf_item.c	2010-05-01 15:06:36.160254276 +0200
++++ xfs/fs/xfs/xfs_buf_item.c	2010-05-03 15:28:51.714004520 +0200
+@@ -441,13 +441,10 @@ xfs_buf_item_unpin_remove(
+ 		 * occurs later in the xfs_trans_uncommit() will try to
+ 		 * reference the buffer which we no longer have a hold on.
+ 		 */
+-		struct xfs_log_item_desc *lidp;
+-
+ 		ASSERT(XFS_BUF_VALUSEMA(bip->bli_buf) <= 0);
+ 		trace_xfs_buf_item_unpin_stale(bip);
+ 
+-		lidp = xfs_trans_find_item(tp, (xfs_log_item_t *)bip);
+-		xfs_trans_free_item(tp, lidp);
++		xfs_trans_free_item(tp, bip->bli_item.li_desc);
+ 
+ 		/*
+ 		 * Since the transaction no longer refers to the buffer, the
+Index: xfs/fs/xfs/xfs_extfree_item.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_extfree_item.c	2010-04-30 18:33:49.911254275 +0200
++++ xfs/fs/xfs/xfs_extfree_item.c	2010-05-03 15:28:51.719004170 +0200
+@@ -132,18 +132,18 @@ STATIC void
+ xfs_efi_item_unpin_remove(xfs_efi_log_item_t *efip, xfs_trans_t *tp)
+ {
+ 	struct xfs_ail		*ailp = efip->efi_item.li_ailp;
+-	xfs_log_item_desc_t	*lidp;
+ 
+ 	spin_lock(&ailp->xa_lock);
+ 	if (efip->efi_flags & XFS_EFI_CANCELED) {
++		xfs_log_item_t	*lip = &efip->efi_item;
++
+ 		/*
+ 		 * free the xaction descriptor pointing to this item
+ 		 */
+-		lidp = xfs_trans_find_item(tp, (xfs_log_item_t *) efip);
+-		xfs_trans_free_item(tp, lidp);
++		xfs_trans_free_item(tp, lip->li_desc);
+ 
+ 		/* xfs_trans_ail_delete() drops the AIL lock. */
+-		xfs_trans_ail_delete(ailp, (xfs_log_item_t *)efip);
++		xfs_trans_ail_delete(ailp, lip);
+ 		xfs_efi_item_free(efip);
+ 	} else {
+ 		efip->efi_flags |= XFS_EFI_COMMITTED;
+Index: xfs/fs/xfs/xfs_trans_buf.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_trans_buf.c	2010-05-01 14:59:07.653003960 +0200
++++ xfs/fs/xfs/xfs_trans_buf.c	2010-05-03 15:28:51.723003751 +0200
+@@ -518,7 +518,7 @@ xfs_trans_brelse(xfs_trans_t	*tp,
+ 	 * Find the item descriptor pointing to this buffer's
+ 	 * log item.  It must be there.
+ 	 */
+-	lidp = xfs_trans_find_item(tp, (xfs_log_item_t*)bip);
++	lidp = bip->bli_item.li_desc;
+ 	ASSERT(lidp != NULL);
+ 
+ 	trace_xfs_trans_brelse(bip);
+@@ -707,7 +707,7 @@ xfs_trans_log_buf(xfs_trans_t	*tp,
+ 		bip->bli_format.blf_flags &= ~XFS_BLI_CANCEL;
+ 	}
+ 
+-	lidp = xfs_trans_find_item(tp, (xfs_log_item_t*)bip);
++	lidp = bip->bli_item.li_desc;
+ 	ASSERT(lidp != NULL);
+ 
+ 	tp->t_flags |= XFS_TRANS_DIRTY;
+@@ -748,7 +748,7 @@ xfs_trans_binval(
+ 	ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
+ 
+ 	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
+-	lidp = xfs_trans_find_item(tp, (xfs_log_item_t*)bip);
++	lidp = bip->bli_item.li_desc;
+ 	ASSERT(lidp != NULL);
+ 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+ 
+Index: xfs/fs/xfs/xfs_trans_extfree.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_trans_extfree.c	2010-05-01 14:59:07.653003960 +0200
++++ xfs/fs/xfs/xfs_trans_extfree.c	2010-05-03 15:28:51.728005428 +0200
+@@ -65,11 +65,10 @@ xfs_trans_log_efi_extent(xfs_trans_t		*t
+ 			 xfs_fsblock_t		start_block,
+ 			 xfs_extlen_t		ext_len)
+ {
+-	xfs_log_item_desc_t	*lidp;
++	xfs_log_item_desc_t	*lidp = efip->efi_item.li_desc;
+ 	uint			next_extent;
+ 	xfs_extent_t		*extp;
+ 
+-	lidp = xfs_trans_find_item(tp, (xfs_log_item_t*)efip);
+ 	ASSERT(lidp != NULL);
+ 
+ 	tp->t_flags |= XFS_TRANS_DIRTY;
+@@ -122,11 +121,10 @@ xfs_trans_log_efd_extent(xfs_trans_t		*t
+ 			 xfs_fsblock_t		start_block,
+ 			 xfs_extlen_t		ext_len)
+ {
+-	xfs_log_item_desc_t	*lidp;
++	xfs_log_item_desc_t	*lidp = efdp->efd_item.li_desc;
+ 	uint			next_extent;
+ 	xfs_extent_t		*extp;
+ 
+-	lidp = xfs_trans_find_item(tp, (xfs_log_item_t*)efdp);
+ 	ASSERT(lidp != NULL);
+ 
+ 	tp->t_flags |= XFS_TRANS_DIRTY;
+Index: xfs/fs/xfs/xfs_trans_inode.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_trans_inode.c	2010-04-30 18:33:49.886254554 +0200
++++ xfs/fs/xfs/xfs_trans_inode.c	2010-05-03 15:28:51.732005497 +0200
+@@ -149,13 +149,11 @@ xfs_trans_log_inode(
+ 	xfs_inode_t	*ip,
+ 	uint		flags)
+ {
+-	xfs_log_item_desc_t	*lidp;
++	xfs_log_item_desc_t	*lidp = ip->i_itemp->ili_item.li_desc;
+ 
+ 	ASSERT(ip->i_transp == tp);
+ 	ASSERT(ip->i_itemp != NULL);
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+-
+-	lidp = xfs_trans_find_item(tp, (xfs_log_item_t*)(ip->i_itemp));
+ 	ASSERT(lidp != NULL);
+ 
+ 	tp->t_flags |= XFS_TRANS_DIRTY;
+Index: xfs/fs/xfs/xfs_trans_item.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_trans_item.c	2010-05-01 14:59:07.653003960 +0200
++++ xfs/fs/xfs/xfs_trans_item.c	2010-05-03 15:28:51.736005218 +0200
+@@ -177,25 +177,6 @@ xfs_trans_free_item(xfs_trans_t	*tp, xfs
+ }
+ 
+ /*
+- * This is called to find the descriptor corresponding to the given
+- * log item.  It returns a pointer to the descriptor.
+- * The log item MUST have a corresponding descriptor in the given
+- * transaction.  This routine does not return NULL, it panics.
+- *
+- * The descriptor pointer is kept in the log item's li_desc field.
+- * Just return it.
+- */
+-/*ARGSUSED*/
+-xfs_log_item_desc_t *
+-xfs_trans_find_item(xfs_trans_t	*tp, xfs_log_item_t *lip)
+-{
+-	ASSERT(lip->li_desc != NULL);
+-
+-	return lip->li_desc;
+-}
+-
+-
+-/*
+  * Return a pointer to the first descriptor in the chunk list.
+  * This does not return NULL if there are none, it panics.
+  *
+Index: xfs/fs/xfs/xfs_trans_priv.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_trans_priv.h	2010-05-01 14:59:07.654003960 +0200
++++ xfs/fs/xfs/xfs_trans_priv.h	2010-05-03 15:28:51.740033714 +0200
+@@ -30,8 +30,6 @@ struct xfs_log_item_desc	*xfs_trans_add_
+ 					    struct xfs_log_item *);
+ void				xfs_trans_free_item(struct xfs_trans *,
+ 					    struct xfs_log_item_desc *);
+-struct xfs_log_item_desc	*xfs_trans_find_item(struct xfs_trans *,
+-					     struct xfs_log_item *);
+ struct xfs_log_item_desc	*xfs_trans_first_item(struct xfs_trans *);
+ struct xfs_log_item_desc	*xfs_trans_next_item(struct xfs_trans *,
+ 					     struct xfs_log_item_desc *);
 
 _______________________________________________
 xfs mailing list
