@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o41JjOC2019250 for <xfs@oss.sgi.com>; Sat, 1 May 2010 14:45:24 -0500
-Received: from thunker.thunk.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E07601DE2210
-	for <xfs@oss.sgi.com>; Sat,  1 May 2010 12:47:30 -0700 (PDT)
-Received: from thunker.thunk.org (thunk.org [69.25.196.29]) by cuda.sgi.com
-	with ESMTP id vdVaK8oPWRT2YIM7 for <xfs@oss.sgi.com>;
-	Sat, 01 May 2010 12:47:30 -0700 (PDT)
-Date: Sat, 1 May 2010 15:47:10 -0400
-From: tytso@mit.edu
-Subject: Re: [PATCH 3/4] writeback: pay attention to wbc->nr_to_write in
-	write_cache_pages
-Message-ID: <20100501194710.GV14986@thunk.org>
-References: <1271731314-5893-1-git-send-email-david@fromorbit.com>
-	<1271731314-5893-4-git-send-email-david@fromorbit.com>
-	<20100429143931.331c2bab.akpm@linux-foundation.org>
-	<87sk6dwka6.fsf@linux.vnet.ibm.com>
-	<20100430124329.10a4c02b.akpm@linux-foundation.org>
+	o434Le1Y130030 for <xfs@oss.sgi.com>; Sun, 2 May 2010 23:21:40 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7A2A6306F7E
+	for <xfs@oss.sgi.com>; Sun,  2 May 2010 21:23:46 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	qKAxlio6K0pGfWwy for <xfs@oss.sgi.com>;
+	Sun, 02 May 2010 21:23:46 -0700 (PDT)
+Date: Mon, 3 May 2010 14:23:43 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 4/5] [PATCH] xfs: simplify buffer to transaction matching
+Message-ID: <20100503042343.GD2591@dastard>
+References: <20100418001041.865247520@bombadil.infradead.org>
+	<20100418001058.677429475@bombadil.infradead.org>
+	<20100420064155.GH15130@dastard>
+	<20100501125839.GA26342@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100430124329.10a4c02b.akpm@linux-foundation.org>
+In-Reply-To: <20100501125839.GA26342@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,34 +32,72 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, "Aneesh Kumar K. V" <aneesh.kumar@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Fri, Apr 30, 2010 at 12:43:29PM -0700, Andrew Morton wrote:
+On Sat, May 01, 2010 at 08:58:39AM -0400, Christoph Hellwig wrote:
+> On Tue, Apr 20, 2010 at 04:41:55PM +1000, Dave Chinner wrote:
+> > Good start, but I think that it should use xfs_trans_first_item()
+> > and xfs_trans_next_item() rather than walking the descriptor
+> > table directly.
 > 
-> Maybe that fs shouldn't be calling write_cache_pages() at all.  After
-> all, write_cache_pages() is a wrapper which emits a sequence of calls
-> to ->writepage(), and ->writepage() writes a page.
+> I tried implementing it, but it doesn't work.  We can call the buffer
+> matching routines on transactions that don't have any item linked to
+> it, which will cause xfs_trans_first_item to panic.  Compare this code
+> in xfs_trans_buf_item_match:
+> 
+> 	for (licp = &tp->t_items; licp != NULL; licp = licp->lic_next) {
+> 		if (xfs_lic_are_all_free(licp)) {
+> 			ASSERT(licp == &tp->t_items);
+> 			ASSERT(licp->lic_next == NULL);
+> 			return NULL;
+> 		}
+> 
+> 		...
+> 	}
+> 
+> to this in xfs_trans_first_item:
+> 
+> 	licp = &tp->t_items;
+>         /*
+> 	 * If it's not in the first chunk, skip to the second.
+> 	 */
+> 	if (xfs_lic_are_all_free(licp)) {
+> 		licp = licp->lic_next;
+> 	}
+> 
+> 	/*
+> 	 * Return the first non-free descriptor in the chunk.
+> 	 */
+> 	ASSERT(!xfs_lic_are_all_free(licp));
 
-On my todo list is to fix ext4 to not call write_cache_pages() at all.
-We are seriously abusing that function ATM, since we're not actually
-writing the pages when we call write_cache_pages().  I won't go into
-what we're doing, because it's too embarassing, but suffice it to say
-that we end up calling pagevec_lookup() or pagevec_lookup_tag()
-*four*, count them *four* times while trying to do writeback.
+Is there any reason why xfs_trans_first_item() should panic if it
+doesn't find a log item? I can't think of one that can't be handled
+by returning NULL and the caller doing ASSERT(lidp)? The callers:
 
-I have a simple patch that gives ext4 our own copy of
-write_cache_pages(), and then simplifies it a lot, and fixes a bunch
-of problems, but then I discarded it in favor of fundamentally redoing
-how we do writeback at all, but it's going to take a while to get
-things completely right.  But I am working to try to fix this.
+	xfs_trans_count_vecs - has assert, triggers shutdown
+	xfs_trans_fill_vecs - has assert, handles null return
+	xfs_trans_committed - handles null return
+	xfs_trans_uncommit - handles null return
 
-If it would help, I can ressurect the "fork write_cache_pages() and
-simplify" patch, so ext4 isn't dependent on the mm/page-writeback.c's
-write_cache_pages(), if there is an immediate, short-term need to fix
-that function.
+So it seems like we could make xfs_trans_first_item() not assert
+fail on debug kernels.
 
-						- Ted
+The other thing that concerns me is that we have two different
+definitions of "empty transactions" in these two functions. It seems
+to me that xfs_trans_first_item() is the correct one - if we remove
+items from the transaction there is no guarantee that the embedded
+chunk in the transaction contains any active descriptors. Hence I
+think the code in xfs_trans_buf_item_match[_all]() is actually
+buggy...
+
+Cheers,
+
+Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
