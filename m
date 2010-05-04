@@ -1,24 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o43Fh3hN161622 for <xfs@oss.sgi.com>; Mon, 3 May 2010 10:43:05 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7EA84308BC1
-	for <xfs@oss.sgi.com>; Mon,  3 May 2010 08:45:11 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id BQmuZCfbq2rTVskX for
-	<xfs@oss.sgi.com>; Mon, 03 May 2010 08:45:11 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1O8xpW-0004db-SH
-	for xfs@oss.sgi.com; Mon, 03 May 2010 15:45:10 +0000
-Date: Mon, 3 May 2010 11:45:10 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: kill xfs_trans_find_item
-Message-ID: <20100503154510.GA15411@infradead.org>
-References: <20100503133447.GA21325@infradead.org>
+	o441meWC190348 for <xfs@oss.sgi.com>; Mon, 3 May 2010 20:48:40 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A2DE691E1D0
+	for <xfs@oss.sgi.com>; Mon,  3 May 2010 18:50:46 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
+	[150.101.137.102]) by cuda.sgi.com with ESMTP id
+	f41DvEVkAU0ZgwO9 for <xfs@oss.sgi.com>;
+	Mon, 03 May 2010 18:50:46 -0700 (PDT)
+Received: from dastard (unverified [121.44.229.111])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	22782987-1927428
+	for <xfs@oss.sgi.com>; Tue, 04 May 2010 11:20:44 +0930 (CST)
+Received: from dave by dastard with local (Exim 4.71)
+	(envelope-from <david@fromorbit.com>) id 1O97HW-000285-Rg
+	for xfs@oss.sgi.com; Tue, 04 May 2010 11:50:42 +1000
+Date: Tue, 4 May 2010 11:50:42 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [GIT] Delayed Logging V3
+Message-ID: <20100504015042.GA8120@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100503133447.GA21325@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,22 +30,92 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On Mon, May 03, 2010 at 09:34:47AM -0400, Christoph Hellwig wrote:
-> xfs_trans_find_item is just and awkward way to derefence ->li_desc in
-> the log_item structure.  So replace the calls to it with the direct
-> reference, and while we're at it also make these type-safe instead using
-> casts.
-
-Actually, ignore this patch for now.  I have a larger one that will
-incorporate it.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+SGkgRm9sa3MsCgpUaGlzIGlzIHZlcnNpb24gMyBvZiB0aGUgZGVsYXllZCBsb2dnaW5nIHNlcmll
+cy4KCkkgd29uJ3QgcmVwZWF0IGV2ZXJ5dGhpbmcgYWJvdXQgd2hhdCBpdCBpcywganVzdCBwb2lu
+dCB5b3UKaGVyZToKCmh0dHA6Ly9tYXJjLmluZm8vP2w9bGludXgteGZzJm09MTI2ODYyNzc3MTE4
+OTQ2Jnc9MgoKZm9yIHRoZSBkZXNjcmlwdGlvbiwgYW5kIGhlcmU6CgpnaXQ6Ly9naXQua2VybmVs
+Lm9yZy9wdWIvc2NtL2xpbnV4L2tlcm5lbC9naXQvZGdjL3hmcy5naXQgZGVsYXllZC1sb2dnaW5n
+Cgpmb3IgdGhlIGN1cnJlbnQgY29kZS4gTm90ZSB0aGF0IHRoaXMgaXMgYSByZWJhc2VkIGJyYW5j
+aCwgc28geW91J2xsCm5lZWQgdG8gcHVsbCBpdCBhZ2FpbiBpbnRvIGEgbmV3IGJyYW5jaCB0byBy
+ZXZpZXcuCgpBbGwgcHJldmlvdXNseSBrbm93biwgcmVwcm9kdWNhYmxlIGlzc3VlcyBoYXZlIGJl
+ZW4gZml4ZWQgaW4gdGhpcwpyZWxlYXNlLCBhbmQgYXMgc3VjaCBJIGNvbnNpZGVyIGl0IHJlYWR5
+IGZyb20gYSBmdW5jdGlvbmFsIFBPViBmb3IKaW5jbHVzaW9uIGludG8gdGhlIC1kZXYgdHJlZSBh
+cyBhbiBleHBlcmltZW50YWwgZmVhdHVyZS4KClRoZSBuZXcgY2xlYW51cHMgYWRkZWQgaW4gdGhp
+cyB2ZXJzaW9uIG1lYW4gaXQgdG91Y2hl0ZUgbW9yZSBmaWxlcwp0aGF0IHRoZSBwcmV2aW91cyB2
+ZXJzaW9ucywgYnV0IG92ZXJhbGwgaXQgc2hvdWxkIHN0aWxsIGJlIHNpbXBsZXIKdG8gcmV2aWV3
+IGJlY2F1c2UgSSd2ZSBjb2xsYXBzZWQgbWFueSBvZiB0aGUgaW50ZXJtZWRpYXRlIHBhdGNoZXMK
+aW50byBvbmUgIkludHJvZHVjZSBkZWxheWVkIGxvZ2dpbmcgY29yZSBjb2RlIiBjb21taXQuCgpW
+ZXJzaW9uIDM6IDI4IGZpbGVzIGNoYW5nZWQsIDIzNjYgaW5zZXJ0aW9ucygrKSwgNTA2IGRlbGV0
+aW9ucygtKQpWZXJzaW9uIDI6IDIyIGZpbGVzIGNoYW5nZWQsIDIxODggaW5zZXJ0aW9ucygrKSwg
+Mzc3IGRlbGV0aW9ucygtKQpWZXJzaW9uIDE6IDE5IGZpbGVzIGNoYW5nZWQsIDI1OTQgaW5zZXJ0
+aW9ucygrKSwgNTgwIGRlbGV0aW9ucygtKQoKQ2hhbmdlcyBmb3IgVjM6Cm8gY2hhbmdlZCBidWZm
+ZXIgbG9nIGl0ZW0gcmVmZXJlbmNlIGNvdW50ZWQgbW9kZWwgdG8gYmUgY29uc2lzdGVudAogIGZv
+ciBib3RoIGxvZ2dpbmcgbW9kZXMKbyBjbGVhbmVkIHVwIFhGU19CTEkgZmxhZ3MgdXNhZ2UgKG5l
+dyBjb21taXQpCm8gc2VwYXJhdGVkIG91dCBsb2cgdGlja2V0IG92ZXJydW4gcHJpbnRpbmcgY2xl
+YW51cCAobmV3IGNvbW1pdCkKbyBtYWRlIHN1cmUgImRlbGF5bG9nIiBvcHRpb24gc2hvd3MgdXAg
+aW4gL3Byb2MvbW91bnRzCm8gY29sbGFwc2VkIG1hbnkgb2YgdGhlIGludGVybWVkaWF0ZSBjb21t
+aXRzIHRvZ2V0aGVyIHRvIG1ha2UgaXQKICBlYXNpZXIgdG8gcmV2aWV3Cm8gZml4ZWQgaW5vZGUg
+YnVmZmVyIHRhZ2dpbmcgaXNzdWUgdGhhdCB3YXMgY2F1c2luZyBzaHV0ZG93bnMgaW4gbG9nCiAg
+cmVjb3ZlcnkgaW4gdGVzdCAwODcgYW5kIDEyMQoKQ2hhbmdlcyBmb3IgVjI6Cm8gMjIgZmlsZXMg
+Y2hhbmdlZCwgMjE4OCBpbnNlcnRpb25zKCspLCAzNzcgZGVsZXRpb25zKC0pCm8gZml4ZWQgc29t
+ZSBtZW1vcnkgbGVha3MKbyBmaXhlZCB0aWNrZXQgYWxsb2NhdGlvbiBmb3IgY2hlY2twb2ludHMg
+dG8gdXNlIEtNX05PRlMKbyBtaW5vciBjb2RlIGNsZWFudXBzCm8gcGVyZm9ybWVkIHN0cmVzcyBh
+bmQgc2NhbGFiaWxpdHkgdGVzdGluZwoKClRoZSBmb2xsb3dpbmcgY2hhbmdlcyBzaW5jZSBjb21t
+aXQgNmZmNzViNzgxODJjMzE0MTEyYzExNzNlZGFhYjZjMTY0Yzk1ZDc3NToKICBDaHJpc3RvcGgg
+SGVsbHdpZyAoMSk6CiAgICAgICAgeGZzOiBtYXJrIHhmc19pb21hcF93cml0ZV8gaGVscGVycyBz
+dGF0aWMKCmFyZSBhdmFpbGFibGUgaW4gdGhlIGdpdCByZXBvc2l0b3J5IGF0OgoKICBnaXQ6Ly9n
+aXQua2VybmVsLm9yZy9wdWIvc2NtL2xpbnV4L2tlcm5lbC9naXQvZGdjL3hmcy5naXQgZGVsYXll
+ZC1sb2dnaW5nCgpEYXZlIENoaW5uZXIgKDEwKToKICAgICAgeGZzOiBJbXByb3ZlIHNjYWxhYmls
+aXR5IG9mIGJ1c3kgZXh0ZW50IHRyYWNraW5nCiAgICAgIHhmczogYWxsb3cgbG9nIHRpY2tldCBh
+bGxvY2F0aW9uIHRvIHRha2UgYWxsb2NhdGlvbiBmbGFncwogICAgICB4ZnM6IG1vZGlmeSBidWZm
+ZXIgaXRlbSByZWZlcmVuY2UgY291bnRpbmcgVjIKICAgICAgeGZzOiBhbGxvdyBkZXRlY3Rpb24g
+b2YgaW5vZGUgYWxsb2NhdGlvbiBidWZmZXJzIGluIHJlY292ZXJ5CiAgICAgIHhmczogY2xlYW4g
+dXAgbG9nIHRpY2tldCBvdmVycnVuIGRlYnVnIG91dHB1dAogICAgICB4ZnM6IERlbGF5ZWQgbG9n
+Z2luZyBkZXNpZ24gZG9jdW1lbnRhdGlvbgogICAgICB4ZnM6IEludHJvZHVjZSBkZWxheWVkIGxv
+Z2dpbmcgY29yZSBjb2RlCiAgICAgIHhmczogZm9yY2VkIHVubW91bnRzIG5lZWQgdG8gcHVzaCB0
+aGUgQ0lMCiAgICAgIHhmczogZW5hYmxlIGJhY2tncm91bmQgcHVzaGluZyBvZiB0aGUgQ0lMCiAg
+ICAgIHhmczogYWxsb3cgZGV0ZWN0aW9uIG9mIGlub2RlIGFsbG9jYXRpb24gYnVmZmVycyBpbiBy
+ZWNvdmVyeQoKIC4uLi9maWxlc3lzdGVtcy94ZnMtZGVsYXllZC1sb2dnaW5nLWRlc2lnbi50eHQg
+ICAgIHwgIDgxOSArKysrKysrKysrKysrKysrKysrKwogZnMveGZzL01ha2VmaWxlICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgICAxICsKIGZzL3hmcy9saW51eC0yLjYveGZz
+X2J1Zi5jICAgICAgICAgICAgICAgICAgICAgICAgIHwgICAxMSArLQogZnMveGZzL2xpbnV4LTIu
+Ni94ZnNfcXVvdGFvcHMuYyAgICAgICAgICAgICAgICAgICAgfCAgICAxICsKIGZzL3hmcy9saW51
+eC0yLjYveGZzX3N1cGVyLmMgICAgICAgICAgICAgICAgICAgICAgIHwgICAxMiArLQogZnMveGZz
+L2xpbnV4LTIuNi94ZnNfdHJhY2UuaCAgICAgICAgICAgICAgICAgICAgICAgfCAgIDgwICsrLQog
+ZnMveGZzL3F1b3RhL3hmc19kcXVvdC5jICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgICA2
+ICstCiBmcy94ZnMvc3VwcG9ydC9kZWJ1Zy5jICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8
+ICAgIDEgKwogZnMveGZzL3hmc19hZy5oICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgfCAgIDIxICstCiBmcy94ZnMveGZzX2FsbG9jLmMgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICB8ICAyNzIgKysrKy0tLQogZnMveGZzL3hmc19hbGxvYy5oICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgfCAgICA1ICstCiBmcy94ZnMveGZzX2J1Zl9pdGVtLmMgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICB8ICAxNjYgKystLQogZnMveGZzL3hmc19idWZfaXRlbS5o
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgIDE4ICstCiBmcy94ZnMveGZzX2Vycm9y
+LmMgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAgIDIgKy0KIGZzL3hmcy94ZnNf
+ZmlsZXN0cmVhbS5jICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgICAgMSArCiBmcy94ZnMv
+eGZzX2xvZy5jICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAxMDcgKystCiBm
+cy94ZnMveGZzX2xvZy5oICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAgMTIg
+Ky0KIGZzL3hmcy94ZnNfbG9nX2NpbC5jICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwg
+IDcyOSArKysrKysrKysrKysrKysrKwogZnMveGZzL3hmc19sb2dfcHJpdi5oICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgfCAgMTE4ICsrKy0KIGZzL3hmcy94ZnNfbG9nX3JlY292ZXIuYyAg
+ICAgICAgICAgICAgICAgICAgICAgICAgIHwgICA0NiArLQogZnMveGZzL3hmc19sb2dfcmVjb3Zl
+ci5oICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgICAyICstCiBmcy94ZnMveGZzX21vdW50
+LmggICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAgIDEgKwogZnMveGZzL3hmc190
+cmFucy5jICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgMjE2ICsrKysrLQogZnMv
+eGZzL3hmc190cmFucy5oICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgIDQ1ICst
+CiBmcy94ZnMveGZzX3RyYW5zX2J1Zi5jICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAg
+NDYgKy0KIGZzL3hmcy94ZnNfdHJhbnNfZXh0ZnJlZS5jICAgICAgICAgICAgICAgICAgICAgICAg
+IHwgICAgMSArCiBmcy94ZnMveGZzX3RyYW5zX2l0ZW0uYyAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICB8ICAxMTQgKy0tLQogZnMveGZzL3hmc190cmFuc19wcml2LmggICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgfCAgIDE5ICstCiAyOCBmaWxlcyBjaGFuZ2VkLCAyMzY2IGluc2VydGlvbnMo
+KyksIDUwNiBkZWxldGlvbnMoLSkKIGNyZWF0ZSBtb2RlIDEwMDY0NCBEb2N1bWVudGF0aW9uL2Zp
+bGVzeXN0ZW1zL3hmcy1kZWxheWVkLWxvZ2dpbmctZGVzaWduLnR4dAogY3JlYXRlIG1vZGUgMTAw
+NjQ0IGZzL3hmcy94ZnNfbG9nX2NpbC5jCgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVy
+CmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Mu
+c2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
