@@ -1,28 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o45Fmo8I042650 for <xfs@oss.sgi.com>; Wed, 5 May 2010 10:48:51 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4B3BB94443B
-	for <xfs@oss.sgi.com>; Wed,  5 May 2010 08:50:58 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 3G3vav7Ko7FvhkXw for
-	<xfs@oss.sgi.com>; Wed, 05 May 2010 08:50:58 -0700 (PDT)
-Message-ID: <4BE193AF.3070505@redhat.com>
-Date: Wed, 05 May 2010 10:50:07 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	o45K7KgN052556 for <xfs@oss.sgi.com>; Wed, 5 May 2010 15:07:20 -0500
+Received: from kuber.nabble.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3EA271BD4CE3
+	for <xfs@oss.sgi.com>; Wed,  5 May 2010 13:09:28 -0700 (PDT)
+Received: from kuber.nabble.com (kuber.nabble.com [216.139.236.158]) by
+	cuda.sgi.com with ESMTP id EN57YOvciPBrVMRK for
+	<xfs@oss.sgi.com>; Wed, 05 May 2010 13:09:28 -0700 (PDT)
+Received: from isper.nabble.com ([192.168.236.156])
+	by kuber.nabble.com with esmtp (Exim 4.63)
+	(envelope-from <lists@nabble.com>) id 1O9kuO-0002wM-0U
+	for xfs@oss.sgi.com; Wed, 05 May 2010 13:09:28 -0700
+Message-ID: <28465863.post@talk.nabble.com>
+Date: Wed, 5 May 2010 13:09:27 -0700 (PDT)
+From: Rafal Blaszczyk <blaszczykr+linux@gmail.com>
+Subject: Re: Fwd: xfs - fixing wrong xfs size
+In-Reply-To: <dbd747120904130933i6ae66aedt7912a47b7e561f76@mail.gmail.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2] New testcase to check if fallocate
-	respects	RLIMIT_FSIZE or not
-References: <201004281854.49730.knikanth@suse.de> <4BD85F1F.7030100@suse.de>
-	<201004291014.07194.knikanth@suse.de>
-	<20100430143319.d51d6d77.akpm@linux-foundation.org>
-	<20100501070426.GA9562@amitarora.in.ibm.com>
-	<20100501101846.GA3769@infradead.org>
-	<20100503083135.GC13756@amitarora.in.ibm.com>
-	<4BE08718.5040608@redhat.com>
-	<20100505075556.GA5142@amitarora.in.ibm.com>
-In-Reply-To: <20100505075556.GA5142@amitarora.in.ibm.com>
+References: <dbd747120904130713t7388971axf75ee779b5b1e1f2@mail.gmail.com>
+	<49E353FD.5060207@sandeen.net>
+	<dbd747120904130933i6ae66aedt7912a47b7e561f76@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,20 +33,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
-Cc: Nick Piggin <npiggin@suse.de>, Andreas Dilger <adilger@sun.com>, Eelis <opensuse.org@contacts.eelis.net>, Theodore Ts'o <tytso@mit.edu>, Nikanth Karthikesan <knikanth@suse.de>, coly.li@suse.de, Amit Arora <aarora@in.ibm.com>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-ext4@vger.kernel.org
+To: xfs@oss.sgi.com
 
-On 05/05/2010 02:55 AM, Amit K. Arora wrote:
-> On Tue, May 04, 2010 at 03:44:08PM -0500, Eric Sandeen wrote:
->> Amit K. Arora wrote:
->>> Here is the new testcase.
->> Thanks!  A few comments...
-> Thanks for the review!
 
-Sure thing - looks good, I'll merge it after a retest if it all goes
-well.  :)
 
--Eric
+
+On Mon, Apr 13, 2009 at 5:02 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+
+
+> > attempt to access beyond end of device
+> > md0: rw=0, want=123024384, limit=123023488
+> > I/O error in filesystem ("md0") meta-data dev md0 block 0x75533f8
+>
+>       ("xfs_read_buf") error 5 buf count 4096
+> >
+> > XFS: size check 2 failed
+
+Hi,
+I've had similiar problems with md on top of lvm after converting from
+single LV to mirrored (md device). I've managed to solve it by expanding
+underlying devices by just a few megabytes. I suppose it's not your case
+because you're dealing with bare devices.
+But you could still try to experiment with xfs_growfs or other xfs_* tools.
+
+>From my case - this is not md's fault. XFS wants to have more underlying
+space than it has and it cannot be mounted.
+-- 
+View this message in context: http://old.nabble.com/xfs---fixing-wrong-xfs-size-tp23023562p28465863.html
+Sent from the Xfs - General mailing list archive at Nabble.com.
 
 _______________________________________________
 xfs mailing list
