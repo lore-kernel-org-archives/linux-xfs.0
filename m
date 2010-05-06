@@ -1,30 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o461i6wn065053 for <xfs@oss.sgi.com>; Wed, 5 May 2010 20:44:07 -0500
+	o461i6uO065054 for <xfs@oss.sgi.com>; Wed, 5 May 2010 20:44:07 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1E1B11B0A183
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1E0C83139BD
 	for <xfs@oss.sgi.com>; Wed,  5 May 2010 18:46:14 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	m7NJICAWh4k3PXd5 for <xfs@oss.sgi.com>;
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	UEZVoSixDaFVed0Z for <xfs@oss.sgi.com>;
 	Wed, 05 May 2010 18:46:14 -0700 (PDT)
 Received: from dastard (unverified [121.44.229.111])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	23089836-1927428
+	23378077-1927428
 	for <xfs@oss.sgi.com>; Thu, 06 May 2010 11:16:13 +0930 (CST)
-Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1O9qA6-0005Df-HH
+Received: from [192.168.1.9] (helo=disturbed) by dastard with esmtp (Exim 4.71)
+	(envelope-from <dave@fromorbit.com>) id 1O9qA6-0005DO-AD
 	for xfs@oss.sgi.com; Thu, 06 May 2010 11:46:02 +1000
 Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1O9qA5-0000cT-H0
-	for xfs@oss.sgi.com; Thu, 06 May 2010 11:46:01 +1000
+	(envelope-from <dave@disturbed.disaster>) id 1O9q9v-0000cN-Cr
+	for xfs@oss.sgi.com; Thu, 06 May 2010 11:45:51 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 06/11] xfs: clean up log ticket overrun debug output
-Date: Thu,  6 May 2010 11:45:46 +1000
-Message-Id: <1273110351-2333-7-git-send-email-david@fromorbit.com>
+Subject: [PATCH 04/11] xfs: modify buffer item reference counting V2
+Date: Thu,  6 May 2010 11:45:44 +1000
+Message-Id: <1273110351-2333-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1273110351-2333-1-git-send-email-david@fromorbit.com>
 References: <1273110351-2333-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,81 +34,131 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
-
-Push the error message output when a ticket overrun is detected
-into the ticket printing functions. Also remove the debug version
-of the code as the production version will still panic just as
-effectively on a debug kernel via the panic mask being set.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_error.c |    2 +-
- fs/xfs/xfs_log.c   |   19 +++++--------------
- 2 files changed, 6 insertions(+), 15 deletions(-)
-
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index ef96175..047b8a8 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -170,7 +170,7 @@ xfs_cmn_err(int panic_tag, int level, xfs_mount_t *mp, char *fmt, ...)
- 	va_list ap;
- 
- #ifdef DEBUG
--	xfs_panic_mask |= XFS_PTAG_SHUTDOWN_CORRUPT;
-+	xfs_panic_mask |= (XFS_PTAG_SHUTDOWN_CORRUPT | XFS_PTAG_LOGRES);
- #endif
- 
- 	if (xfs_panic_mask && (xfs_panic_mask & panic_tag)
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 83be6a6..1efb303 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1645,6 +1645,10 @@ xlog_print_tic_res(xfs_mount_t *mp, xlog_ticket_t *ticket)
- 			    "bad-rtype" : res_type_str[r_type-1]),
- 			    ticket->t_res_arr[i].r_len);
- 	}
-+
-+	xfs_cmn_err(XFS_PTAG_LOGRES, CE_ALERT, mp,
-+		"xfs_log_write: reservation ran out. Need to up reservation");
-+	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
- }
- 
- /*
-@@ -1897,21 +1901,8 @@ xlog_write(
- 	*start_lsn = 0;
- 
- 	len = xlog_write_calc_vec_length(ticket, log_vector);
--	if (ticket->t_curr_res < len) {
-+	if (ticket->t_curr_res < len)
- 		xlog_print_tic_res(log->l_mp, ticket);
--#ifdef DEBUG
--		xlog_panic(
--	"xfs_log_write: reservation ran out. Need to up reservation");
--#else
--		/* Customer configurable panic */
--		xfs_cmn_err(XFS_PTAG_LOGRES, CE_ALERT, log->l_mp,
--	"xfs_log_write: reservation ran out. Need to up reservation");
--
--		/* If we did not panic, shutdown the filesystem */
--		xfs_force_shutdown(log->l_mp, SHUTDOWN_CORRUPT_INCORE);
--#endif
--	}
--
- 	ticket->t_curr_res -= len;
- 
- 	index = 0;
--- 
-1.5.6.5
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKVGhlIGJ1ZmZlciBsb2cg
+aXRlbSByZWZlcmVuY2UgY291bnRzIHVzZWQgdG8gdGFrZSByZWZlcmVuY2XRlSBmb3IgZXZlcnkK
+dHJhbnNhY3Rpb24sIHNpbWlsYXIgdG8gdGhlIHBpbiBjb3VudGluZy4gVGhpcyBpcyBzeW1tZXRy
+aWMgKGxpa2UgdGhlCnBpbi91bnBpbikgd2l0aCByZXNwZWN0IHRvIHRyYW5zYWN0aW9uIGNvbXBs
+ZXRpb24sIGJ1dCB3aXRoIGRsZWF5ZWQgbG9nZ2luZwpiZWNvbWVzIGFzc3ltZXRyaWMgYXMgdGhl
+IHBpbm5pbmcgYmVjb21lcyBhc3N5bWV0cmljIHcuci50LiB0cmFuc2FjdGlvbgpjb21wbGV0aW9u
+LgoKVG8gbWFrZSBib3RoIGNhc2VzIHRoZSBzYW1lLCBhbGxvdyB0aGUgYnVmZmVyIHBpbm5pbmcg
+dG8gdGFrZSBhIHJlZmVyZW5jZSB0bwp0aGUgYnVmZmVyIGxvZyBpdGVtIGFuZCBhbHdheXMgZHJv
+cCB0aGUgcmVmZXJlbmNlIHRoZSB0cmFuc2FjdGlvbiBoYXMgb24gaXQKd2hlbiBiZWluZyB1bmxv
+Y2tlZC4gVGhpcyBpcyBiYWxhbmNlZCBjb3JyZWN0bHkgYmVjYXVzZSB0aGUgdW5waW4gb3BlcmF0
+aW9uCmFsd2F5cyBkcm9wcyBhIHJlZmVyZW5jZSB0byB0aGUgbG9nIGl0ZW0uIEhlbmNlIHJlZmVy
+ZW5jZSBjb3VudGluZyBiZWNvbWVzCnN5bW1ldHJpYyB3LnIudC4gaXRlbSBwaW5uaW5nIGFzIHdl
+bGwgYXMgdy5yLnQgYWN0aXZlIHRyYW5zYWN0aW9ucyBhbmQgYXMgYQpyZXN1bHQgdGhlIHJlZmVy
+ZW5jZSBjb3VudGluZyBtb2RlbCByZW1haW4gY29uc2lzdGVudCBiZXR3ZWVuIG5vcm1hbCBhbmQK
+ZGVsYXllZCBsb2dnaW5nLgoKU2lnbmVkLW9mZi1ieTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckBy
+ZWRoYXQuY29tPgotLS0KIGZzL3hmcy94ZnNfYnVmX2l0ZW0uYyB8ICAxMTAgKysrKysrKysrKysr
+KysrKysrKysrKy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCiAxIGZpbGVzIGNoYW5nZWQsIDUw
+IGluc2VydGlvbnMoKyksIDYwIGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNf
+YnVmX2l0ZW0uYyBiL2ZzL3hmcy94ZnNfYnVmX2l0ZW0uYwppbmRleCAyNDAzNDBhLi40Y2Q1ZjYx
+IDEwMDY0NAotLS0gYS9mcy94ZnMveGZzX2J1Zl9pdGVtLmMKKysrIGIvZnMveGZzL3hmc19idWZf
+aXRlbS5jCkBAIC0zNDEsMTAgKzM0MSwxNSBAQCB4ZnNfYnVmX2l0ZW1fZm9ybWF0KAogfQogCiAv
+KgotICogVGhpcyBpcyBjYWxsZWQgdG8gcGluIHRoZSBidWZmZXIgYXNzb2NpYXRlZCB3aXRoIHRo
+ZSBidWYgbG9nCi0gKiBpdGVtIGluIG1lbW9yeSBzbyBpdCBjYW5ub3QgYmUgd3JpdHRlbiBvdXQu
+ICBTaW1wbHkgY2FsbCBicGluKCkKLSAqIG9uIHRoZSBidWZmZXIgdG8gZG8gdGhpcy4KKyAqIFRo
+aXMgaXMgY2FsbGVkIHRvIHBpbiB0aGUgYnVmZmVyIGFzc29jaWF0ZWQgd2l0aCB0aGUgYnVmIGxv
+ZyBpdGVtIGluIG1lbW9yeQorICogc28gaXQgY2Fubm90IGJlIHdyaXR0ZW4gb3V0LiAgU2ltcGx5
+IGNhbGwgYnBpbigpIG9uIHRoZSBidWZmZXIgdG8gZG8gdGhpcy4KKyAqCisgKiBXZSBhbHNvIGFs
+d2F5cyB0YWtlIGEgcmVmZXJlbmNlIHRvIHRoZSBidWZmZXIgbG9nIGl0ZW0gaGVyZSBzbyB0aGF0
+IHRoZSBibGkKKyAqIGlzIGhlbGQgd2hpbGUgdGhlIGl0ZW0gaXMgcGlubmVkIGluIG1lbW9yeS4g
+VGhpcyBtZWFucyB0aGF0IHdlIGNhbgorICogdW5jb25kaXRpb25hbGx5IGRyb3AgdGhlIHJlZmVy
+ZW5jZSBjb3VudCBhIHRyYW5zYWN0aW9uIGhvbGRzIHdoZW4gdGhlCisgKiB0cmFuc2FjdGlvbiBp
+cyBjb21wbGV0ZWQuCiAgKi8KKwogU1RBVElDIHZvaWQKIHhmc19idWZfaXRlbV9waW4oCiAJeGZz
+X2J1Zl9sb2dfaXRlbV90CSpiaXApCkBAIC0zNTYsNiArMzYxLDcgQEAgeGZzX2J1Zl9pdGVtX3Bp
+bigKIAlBU1NFUlQoYXRvbWljX3JlYWQoJmJpcC0+YmxpX3JlZmNvdW50KSA+IDApOwogCUFTU0VS
+VCgoYmlwLT5ibGlfZmxhZ3MgJiBYRlNfQkxJX0xPR0dFRCkgfHwKIAkgICAgICAgKGJpcC0+Ymxp
+X2ZsYWdzICYgWEZTX0JMSV9TVEFMRSkpOworCWF0b21pY19pbmMoJmJpcC0+YmxpX3JlZmNvdW50
+KTsKIAl0cmFjZV94ZnNfYnVmX2l0ZW1fcGluKGJpcCk7CiAJeGZzX2JwaW4oYnApOwogfQpAQCAt
+NDg5LDIwICs0OTUsMjMgQEAgeGZzX2J1Zl9pdGVtX3RyeWxvY2soCiB9CiAKIC8qCi0gKiBSZWxl
+YXNlIHRoZSBidWZmZXIgYXNzb2NpYXRlZCB3aXRoIHRoZSBidWYgbG9nIGl0ZW0uCi0gKiBJZiB0
+aGVyZSBpcyBubyBkaXJ0eSBsb2dnZWQgZGF0YSBhc3NvY2lhdGVkIHdpdGggdGhlCi0gKiBidWZm
+ZXIgcmVjb3JkZWQgaW4gdGhlIGJ1ZiBsb2cgaXRlbSwgdGhlbiBmcmVlIHRoZQotICogYnVmIGxv
+ZyBpdGVtIGFuZCByZW1vdmUgdGhlIHJlZmVyZW5jZSB0byBpdCBpbiB0aGUKLSAqIGJ1ZmZlci4K
+KyAqIFJlbGVhc2UgdGhlIGJ1ZmZlciBhc3NvY2lhdGVkIHdpdGggdGhlIGJ1ZiBsb2cgaXRlbS4g
+IElmIHRoZXJlIGlzIG5vIGRpcnR5CisgKiBsb2dnZWQgZGF0YSBhc3NvY2lhdGVkIHdpdGggdGhl
+IGJ1ZmZlciByZWNvcmRlZCBpbiB0aGUgYnVmIGxvZyBpdGVtLCB0aGVuCisgKiBmcmVlIHRoZSBi
+dWYgbG9nIGl0ZW0gYW5kIHJlbW92ZSB0aGUgcmVmZXJlbmNlIHRvIGl0IGluIHRoZSBidWZmZXIu
+CiAgKgotICogVGhpcyBjYWxsIGlnbm9yZXMgdGhlIHJlY3Vyc2lvbiBjb3VudC4gIEl0IGlzIG9u
+bHkgY2FsbGVkCi0gKiB3aGVuIHRoZSBidWZmZXIgc2hvdWxkIFJFQUxMWSBiZSB1bmxvY2tlZCwg
+cmVnYXJkbGVzcwotICogb2YgdGhlIHJlY3Vyc2lvbiBjb3VudC4KKyAqIFRoaXMgY2FsbCBpZ25v
+cmVzIHRoZSByZWN1cnNpb24gY291bnQuICBJdCBpcyBvbmx5IGNhbGxlZCB3aGVuIHRoZSBidWZm
+ZXIKKyAqIHNob3VsZCBSRUFMTFkgYmUgdW5sb2NrZWQsIHJlZ2FyZGxlc3Mgb2YgdGhlIHJlY3Vy
+c2lvbiBjb3VudC4KICAqCi0gKiBJZiB0aGUgWEZTX0JMSV9IT0xEIGZsYWcgaXMgc2V0IGluIHRo
+ZSBidWYgbG9nIGl0ZW0sIHRoZW4KLSAqIGZyZWUgdGhlIGxvZyBpdGVtIGlmIG5lY2Vzc2FyeSBi
+dXQgZG8gbm90IHVubG9jayB0aGUgYnVmZmVyLgotICogVGhpcyBpcyBmb3Igc3VwcG9ydCBvZiB4
+ZnNfdHJhbnNfYmhvbGQoKS4gTWFrZSBzdXJlIHRoZQotICogWEZTX0JMSV9IT0xEIGZpZWxkIGlz
+IGNsZWFyZWQgaWYgd2UgZG9uJ3QgZnJlZSB0aGUgaXRlbS4KKyAqIFdlIHVuY29uZGl0aW9uYWxs
+eSBkcm9wIHRoZSB0cmFuc2FjdGlvbidzIHJlZmVyZW5jZSB0byB0aGUgbG9nIGl0ZW0uIElmIHRo
+ZQorICogaXRlbSB3YXMgbG9nZ2VkLCB0aGVuIGFub3RoZXIgcmVmZXJlbmNlIHdhcyB0YWtlbiB3
+aGVuIGl0IHdhcyBwaW5uZWQsIHNvIHdlCisgKiBjYW4gc2FmZWx5IGRyb3AgdGhlIHRyYW5zYWN0
+aW9uIHJlZmVyZW5jZSBub3cuICBUaGlzIGFsc28gYWxsb3dzIHVzIHRvIGF2b2lkCisgKiBwb3Rl
+bnRpYWwgcmFjZXMgd2l0aCB0aGUgdW5waW4gY29kZSBmcmVlaW5nIHRoZSBibGkgYnkgbm90IHJl
+ZmVyZW5jaW5nIHRoZQorICogYmxpIGFmdGVyIHdlJ3ZlIGRyb3BwZWQgdGhlIHJlZmVyZW5jZSBj
+b3VudC4KKyAqCisgKiBJZiB0aGUgWEZTX0JMSV9IT0xEIGZsYWcgaXMgc2V0IGluIHRoZSBidWYg
+bG9nIGl0ZW0sIHRoZW4gZnJlZSB0aGUgbG9nIGl0ZW0KKyAqIGlmIG5lY2Vzc2FyeSBidXQgZG8g
+bm90IHVubG9jayB0aGUgYnVmZmVyLiAgVGhpcyBpcyBmb3Igc3VwcG9ydCBvZgorICogeGZzX3Ry
+YW5zX2Job2xkKCkuIE1ha2Ugc3VyZSB0aGUgWEZTX0JMSV9IT0xEIGZpZWxkIGlzIGNsZWFyZWQg
+aWYgd2UgZG9uJ3QKKyAqIGZyZWUgdGhlIGl0ZW0uCiAgKi8KIFNUQVRJQyB2b2lkCiB4ZnNfYnVm
+X2l0ZW1fdW5sb2NrKApAQCAtNTE0LDczICs1MjMsNTQgQEAgeGZzX2J1Zl9pdGVtX3VubG9jaygK
+IAogCWJwID0gYmlwLT5ibGlfYnVmOwogCi0JLyoKLQkgKiBDbGVhciB0aGUgYnVmZmVyJ3MgYXNz
+b2NpYXRpb24gd2l0aCB0aGlzIHRyYW5zYWN0aW9uLgotCSAqLworCS8qIENsZWFyIHRoZSBidWZm
+ZXIncyBhc3NvY2lhdGlvbiB3aXRoIHRoaXMgdHJhbnNhY3Rpb24uICovCiAJWEZTX0JVRl9TRVRf
+RlNQUklWQVRFMihicCwgTlVMTCk7CiAKIAkvKgotCSAqIElmIHRoaXMgaXMgYSB0cmFuc2FjdGlv
+biBhYm9ydCwgZG9uJ3QgcmV0dXJuIGVhcmx5LgotCSAqIEluc3RlYWQsIGFsbG93IHRoZSBicmVs
+c2UgdG8gaGFwcGVuLgotCSAqIE5vcm1hbGx5IGl0IHdvdWxkIGJlIGRvbmUgZm9yIHN0YWxlIChj
+YW5jZWxsZWQpIGJ1ZmZlcnMKLQkgKiBhdCB1bnBpbiB0aW1lLCBidXQgd2UnbGwgbmV2ZXIgZ28g
+dGhyb3VnaCB0aGUgcGluL3VucGluCi0JICogY3ljbGUgaWYgd2UgYWJvcnQgaW5zaWRlIGNvbW1p
+dC4KKwkgKiBJZiB0aGlzIGlzIGEgdHJhbnNhY3Rpb24gYWJvcnQsIGRvbid0IHJldHVybiBlYXJs
+eS4gIEluc3RlYWQsIGFsbG93CisJICogdGhlIGJyZWxzZSB0byBoYXBwZW4uICBOb3JtYWxseSBp
+dCB3b3VsZCBiZSBkb25lIGZvciBzdGFsZQorCSAqIChjYW5jZWxsZWQpIGJ1ZmZlcnMgYXQgdW5w
+aW4gdGltZSwgYnV0IHdlJ2xsIG5ldmVyIGdvIHRocm91Z2ggdGhlCisJICogcGluL3VucGluIGN5
+Y2xlIGlmIHdlIGFib3J0IGluc2lkZSBjb21taXQuCiAJICovCiAJYWJvcnRlZCA9IChiaXAtPmJs
+aV9pdGVtLmxpX2ZsYWdzICYgWEZTX0xJX0FCT1JURUQpICE9IDA7CiAKIAkvKgotCSAqIElmIHRo
+ZSBidWYgaXRlbSBpcyBtYXJrZWQgc3RhbGUsIHRoZW4gZG9uJ3QgZG8gYW55dGhpbmcuCi0JICog
+V2UnbGwgdW5sb2NrIHRoZSBidWZmZXIgYW5kIGZyZWUgdGhlIGJ1ZiBpdGVtIHdoZW4gdGhlCi0J
+ICogYnVmZmVyIGlzIHVucGlubmVkIGZvciB0aGUgbGFzdCB0aW1lLgorCSAqIEJlZm9yZSBwb3Nz
+aWJseSBmcmVlaW5nIHRoZSBidWYgaXRlbSwgZGV0ZXJtaW5lIGlmIHdlIHNob3VsZAorCSAqIHJl
+bGVhc2UgdGhlIGJ1ZmZlciBhdCB0aGUgZW5kIG9mIHRoaXMgcm91dGluZS4KKwkgKi8KKwlob2xk
+ID0gYmlwLT5ibGlfZmxhZ3MgJiBYRlNfQkxJX0hPTEQ7CisKKwkvKiBDbGVhciB0aGUgcGVyIHRy
+YW5zYWN0aW9uIHN0YXRlLiAqLworCWJpcC0+YmxpX2ZsYWdzICY9IH4oWEZTX0JMSV9MT0dHRUQg
+fCBYRlNfQkxJX0hPTEQpOworCisJLyoKKwkgKiBJZiB0aGUgYnVmIGl0ZW0gaXMgbWFya2VkIHN0
+YWxlLCB0aGVuIGRvbid0IGRvIGFueXRoaW5nLiAgV2UnbGwKKwkgKiB1bmxvY2sgdGhlIGJ1ZmZl
+ciBhbmQgZnJlZSB0aGUgYnVmIGl0ZW0gd2hlbiB0aGUgYnVmZmVyIGlzIHVucGlubmVkCisJICog
+Zm9yIHRoZSBsYXN0IHRpbWUuCiAJICovCiAJaWYgKGJpcC0+YmxpX2ZsYWdzICYgWEZTX0JMSV9T
+VEFMRSkgewotCQliaXAtPmJsaV9mbGFncyAmPSB+WEZTX0JMSV9MT0dHRUQ7CiAJCXRyYWNlX3hm
+c19idWZfaXRlbV91bmxvY2tfc3RhbGUoYmlwKTsKIAkJQVNTRVJUKGJpcC0+YmxpX2Zvcm1hdC5i
+bGZfZmxhZ3MgJiBYRlNfQkxJX0NBTkNFTCk7Ci0JCWlmICghYWJvcnRlZCkKKwkJaWYgKCFhYm9y
+dGVkKSB7CisJCQlhdG9taWNfZGVjKCZiaXAtPmJsaV9yZWZjb3VudCk7CiAJCQlyZXR1cm47CisJ
+CX0KIAl9CiAKLQkvKgotCSAqIERyb3AgdGhlIHRyYW5zYWN0aW9uJ3MgcmVmZXJlbmNlIHRvIHRo
+ZSBsb2cgaXRlbSBpZgotCSAqIGl0IHdhcyBub3QgbG9nZ2VkIGFzIHBhcnQgb2YgdGhlIHRyYW5z
+YWN0aW9uLiAgT3RoZXJ3aXNlCi0JICogd2UnbGwgZHJvcCB0aGUgcmVmZXJlbmNlIGluIHhmc19i
+dWZfaXRlbV91bnBpbigpIHdoZW4KLQkgKiB0aGUgdHJhbnNhY3Rpb24gaXMgcmVhbGx5IHRocm91
+Z2ggd2l0aCB0aGUgYnVmZmVyLgotCSAqLwotCWlmICghKGJpcC0+YmxpX2ZsYWdzICYgWEZTX0JM
+SV9MT0dHRUQpKSB7Ci0JCWF0b21pY19kZWMoJmJpcC0+YmxpX3JlZmNvdW50KTsKLQl9IGVsc2Ug
+ewotCQkvKgotCQkgKiBDbGVhciB0aGUgbG9nZ2VkIGZsYWcgc2luY2UgdGhpcyBpcyBwZXIKLQkJ
+ICogdHJhbnNhY3Rpb24gc3RhdGUuCi0JCSAqLwotCQliaXAtPmJsaV9mbGFncyAmPSB+WEZTX0JM
+SV9MT0dHRUQ7Ci0JfQotCi0JLyoKLQkgKiBCZWZvcmUgcG9zc2libHkgZnJlZWluZyB0aGUgYnVm
+IGl0ZW0sIGRldGVybWluZSBpZiB3ZSBzaG91bGQKLQkgKiByZWxlYXNlIHRoZSBidWZmZXIgYXQg
+dGhlIGVuZCBvZiB0aGlzIHJvdXRpbmUuCi0JICovCi0JaG9sZCA9IGJpcC0+YmxpX2ZsYWdzICYg
+WEZTX0JMSV9IT0xEOwogCXRyYWNlX3hmc19idWZfaXRlbV91bmxvY2soYmlwKTsKIAogCS8qCi0J
+ICogSWYgdGhlIGJ1ZiBpdGVtIGlzbid0IHRyYWNraW5nIGFueSBkYXRhLCBmcmVlIGl0LgotCSAq
+IE90aGVyd2lzZSwgaWYgWEZTX0JMSV9IT0xEIGlzIHNldCBjbGVhciBpdC4KKwkgKiBJZiB0aGUg
+YnVmIGl0ZW0gaXNuJ3QgdHJhY2tpbmcgYW55IGRhdGEsIGZyZWUgaXQsIG90aGVyd2lzZSBkcm9w
+IHRoZQorCSAqIHJlZmVyZW5jZSB3ZSBob2xkIHRvIGl0LgogCSAqLwogCWlmICh4ZnNfYml0bWFw
+X2VtcHR5KGJpcC0+YmxpX2Zvcm1hdC5ibGZfZGF0YV9tYXAsCi0JCQkgICAgIGJpcC0+YmxpX2Zv
+cm1hdC5ibGZfbWFwX3NpemUpKSB7CisJCQkgICAgIGJpcC0+YmxpX2Zvcm1hdC5ibGZfbWFwX3Np
+emUpKQogCQl4ZnNfYnVmX2l0ZW1fcmVsc2UoYnApOwotCX0gZWxzZSBpZiAoaG9sZCkgewotCQli
+aXAtPmJsaV9mbGFncyAmPSB+WEZTX0JMSV9IT0xEOwotCX0KKwllbHNlCisJCWF0b21pY19kZWMo
+JmJpcC0+YmxpX3JlZmNvdW50KTsKIAotCS8qCi0JICogUmVsZWFzZSB0aGUgYnVmZmVyIGlmIFhG
+U19CTElfSE9MRCB3YXMgbm90IHNldC4KLQkgKi8KLQlpZiAoIWhvbGQpIHsKKwlpZiAoIWhvbGQp
+CiAJCXhmc19idWZfcmVsc2UoYnApOwotCX0KIH0KIAogLyoKLS0gCjEuNS42LjUKCl9fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QK
+eGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
