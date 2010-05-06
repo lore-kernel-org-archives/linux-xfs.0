@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o46KX610130167 for <xfs@oss.sgi.com>; Thu, 6 May 2010 15:33:07 -0500
+	o46Kmiju130822 for <xfs@oss.sgi.com>; Thu, 6 May 2010 15:48:44 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4B20E31778B
-	for <xfs@oss.sgi.com>; Thu,  6 May 2010 13:35:16 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DB328155BF26
+	for <xfs@oss.sgi.com>; Thu,  6 May 2010 13:50:54 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id IC44Fm77kNGZvLmz for
-	<xfs@oss.sgi.com>; Thu, 06 May 2010 13:35:16 -0700 (PDT)
-Date: Thu, 6 May 2010 16:35:14 -0400
+	by cuda.sgi.com with ESMTP id b9kHhq5cxLfv93ES for
+	<xfs@oss.sgi.com>; Thu, 06 May 2010 13:50:54 -0700 (PDT)
+Date: Thu, 6 May 2010 16:50:54 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Question : Using libhandle from xfsprogs and xfs actions made
-	"by handle"
-Message-ID: <20100506203514.GA6854@infradead.org>
-References: <4BE178B3.8030501@cea.fr>
+Subject: Re: [PATCH 06/11] xfs: clean up log ticket overrun debug output
+Message-ID: <20100506205054.GA24110@infradead.org>
+References: <1273110351-2333-1-git-send-email-david@fromorbit.com>
+	<1273110351-2333-7-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4BE178B3.8030501@cea.fr>
+In-Reply-To: <1273110351-2333-7-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,29 +29,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: DENIEL Philippe <philippe.deniel@CEA.FR>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, May 05, 2010 at 03:54:59PM +0200, DENIEL Philippe wrote:
-> When looking at XFS, I saw there was "open_by_handle" and  
-> "path_to_handle" calls. This sounds very very good to me : this sounds  
-> like kind of bridge to build a handle-based API to address XFS. But so  
-> far, I am a bit stuck : for exporting XFS through my NFS server, I would  
-> need to do "by handle" everything that can be done through POSIX calls,  
-> open/read/write/close files, create files/directories/symlinks, erasing  
-> or moving files... and so on. I do not know if this is possible with the  
-> calls in libhandle.so. But if I had such handle based tools, I think I  
-> could make a nice NFS server on top of XFS (I did this kind of port for  
-> LUSTRE (which has a full handle based API) in my NFS server and I had  
-> really good performances). Can someone provide me with information about  
-> this ?
+On Thu, May 06, 2010 at 11:45:46AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Push the error message output when a ticket overrun is detected
+> into the ticket printing functions. Also remove the debug version
+> of the code as the production version will still panic just as
+> effectively on a debug kernel via the panic mask being set.
 
-For some reason the handle code currently rejects special files
-(block/char/fifo) in open_by_handle.  I can't see any good reason for
-that and plan to submit a patch to lift that restriction.  Except
-for that libhandle is exactly what you want - there's various tools
-that use it for that kind of work, the most prominent is
-xfsdump/xfsrestore.
+Looks good,
+
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
