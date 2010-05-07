@@ -1,31 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o475dIQ9148905 for <xfs@oss.sgi.com>; Fri, 7 May 2010 00:39:18 -0500
+	o475dCq8148876 for <xfs@oss.sgi.com>; Fri, 7 May 2010 00:39:13 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1987A318A38
-	for <xfs@oss.sgi.com>; Thu,  6 May 2010 22:41:26 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	gtMjCLWSYf25lKZp for <xfs@oss.sgi.com>;
-	Thu, 06 May 2010 22:41:26 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 917C71370485
+	for <xfs@oss.sgi.com>; Thu,  6 May 2010 22:41:21 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	cA2n9RAWwqlmR9vB for <xfs@oss.sgi.com>;
+	Thu, 06 May 2010 22:41:21 -0700 (PDT)
 Received: from dastard (unverified [121.45.169.108])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	11831200-1927428
-	for <xfs@oss.sgi.com>; Fri, 07 May 2010 15:11:25 +0930 (CST)
-Received: from [192.168.1.9] (helo=disturbed) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1OAGJO-0006rj-MM
-	for xfs@oss.sgi.com; Fri, 07 May 2010 15:41:22 +1000
+	23556247-1927428
+	for <xfs@oss.sgi.com>; Fri, 07 May 2010 15:11:20 +0930 (CST)
+Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
+	(envelope-from <dave@fromorbit.com>) id 1OAGJA-0006rV-JM
+	for xfs@oss.sgi.com; Fri, 07 May 2010 15:41:08 +1000
 Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1OAGJD-00066p-9a
-	for xfs@oss.sgi.com; Fri, 07 May 2010 15:41:11 +1000
+	(envelope-from <dave@disturbed.disaster>) id 1OAGJ2-00066O-RU
+	for xfs@oss.sgi.com; Fri, 07 May 2010 15:41:00 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 12/12] xfs: Ensure inode allocation buffers are fully replayed
-Date: Fri,  7 May 2010 15:41:00 +1000
-Message-Id: <1273210860-23414-13-git-send-email-david@fromorbit.com>
+Subject: [PATCH 04/12] xfs: Clean up XFS_BLI_* flag namespace
+Date: Fri,  7 May 2010 15:40:52 +1000
+Message-Id: <1273210860-23414-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1273210860-23414-1-git-send-email-david@fromorbit.com>
 References: <1273210860-23414-1-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,197 +33,518 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKV2l0aCBkZWxheWVkIGxv
-Z2dpbmcsIHdlIGNhbiBnZXQgaW5vZGUgYWxsb2NhdGlvbiBidWZmZXJzIGluIHRoZQpzYW1lIHRy
-YW5zYWN0aW9uIGlub2RlIHVubGluayBidWZmZXJzLiBXZSBkb24ndCBjdXJyZW50bHkgbWFyayBp
-bm9kZQphbGxvY2F0aW9uIGJ1ZmZlcnMgaW4gdGhlIGxvZywgc28gaW5vZGUgdW5saW5rIGJ1ZmZl
-cnMgdGFrZQpwcmVjZWRlbmNlIG92ZXIgYWxsb2NhdGlvbiBidWZmZXJzLgoKVGhlIHJlc3VsdCBp
-cyB0aGF0IHdoZW4gdGhleSBhcmUgY29tYmluZWQgaW50byB0aGUgc2FtZSBjaGVja3BvaW50LApv
-bmx5IHRoZSB1bmxpbmtlZCBpbm9kZSBjaGFpbiBmaWVsZHMgYXJlIHJlcGxheWVkLCByZXN1bHRp
-bmcgaW4KdW5pbml0aWFsaXNlZCBpbm9kZSBidWZmZXJzIGJlaW5nIGRldGVjdGVkIHdoZW4gdGhl
-IG5leHQgaW5vZGUKbW9kaWZpY2F0aW9uIGlzIHJlcGxheWVkLgoKVG8gZml4IHRoaXMsIHdlIG5l
-ZWQgdG8gZW5zdXJlIHRoYXQgd2UgZG8gbm90IHNldCB0aGUgaW5vZGUgYnVmZmVyCmZsYWcgaW4g
-dGhlIGJ1ZmZlciBsb2cgaXRlbSBmb3JtYXQgZmxhZ3MgaWYgdGhlIGlub2RlIGFsbG9jYXRpb24g
-aGFzCm5vdCBhbHJlYWR5IGhpdCB0aGUgbG9nLiBUbyBhdm9pZCByZXF1aXJpbmcgYSBjaGFuZ2Ug
-dG8gbG9nCnJlY292ZXJ5LCB3ZSByZWFsbHkgbmVlZCB0byBtYWtlIHRoaXMgYSBtb2RpZmljYXRp
-b24gdGhhdCByZWxpZXMKb25seSBvbiBpbi1tZW1vcnkgc2F0ZS4KCldlIGNhbiBkbyB0aGlzIGJ5
-IGNoZWNraW5nIGR1cmluZyBidWZmZXIgbG9nIGZvcm1hdHRpbmcgKHdoaWxlIHRoZQpDSUwgY2Fu
-bm90IGJlIGZsdXNoZWQpIGlmIHdlIGFyZSBzdGlsbCBpbiB0aGUgc2FtZSBzZXF1ZW5jZSB3aGVu
-IHdlCmNvbW1pdCB0aGUgdW5saW5rIHRyYW5zYWN0aW9uIGFzIHRoZSBpbm9kZSBhbGxvY2F0aW9u
-IHRyYW5zYWN0aW9uLgpJZiB3ZSBhcmUsIHRoZW4gd2UgZG8gbm90IGFkZCB0aGUgaW5vZGUgYnVm
-ZmVyIGZsYWcgdG8gdGhlIGJ1ZmZlcgpsb2cgZm9ybWF0IGl0ZW0gZmxhZ3MuIFRoaXMgbWVhbnMg
-dGhlIGVudGlyZSBidWZmZXIgd2lsbCBiZQpyZXBsYXllZCwgbm90IGp1c3QgdGhlIHVubGlua2Vk
-IGZpZWxkcy4gV2UgZG8gdGhpcyB3aGlsZQpDSUwgZmx1c2hl0ZUgYXJlIGxvY2tlZCBvdXQgdG8g
-ZW5zdXJlIHRoYXQgd2UgZG9uJ3QgcmFjZSB3aXRoIHRoZQpzZXF1ZW5jZSBudW1iZXJzIGNoYW5n
-aW5nIGFuZCBoZW5jZSBmYWlsIHRvIHB1dCB0aGUgaW5vZGUgYnVmZmVyCmZsYWcgaW4gdGhlIGJ1
-ZmZlciBmb3JtYXQgZmxhZ3Mgd2hlbiB3ZSByZWFsbHkgbmVlZCB0by4KCkFsc28sIG1vdmUgYW4g
-YXNzZXJ0IGluIHRoZSBidWZmZXIgcmVsZWFzZSBwYXRoIG91dHNpZGUgdGhlIGhhc2gKc3Bpbmxv
-Y2sgc28gdGhhdCBpZiB0aGUgYXNzZXJ0IGlzIGhpdCB0aGUgc3lzdGVtIGNvbnRpbnVlcyB0byBy
-dW4gaW4KYSBkZWJ1Z2dhYmxlIHN0YXRlLgoKU2lnbmVkLW9mZi1ieTogRGF2ZSBDaGlubmVyIDxk
-Y2hpbm5lckByZWRoYXQuY29tPgotLS0KIGZzL3hmcy9saW51eC0yLjYveGZzX2J1Zi5jIHwgICAg
-MiArLQogZnMveGZzL3hmc19idWZfaXRlbS5jICAgICAgfCAgIDE0ICsrKysrKysrKysrKwogZnMv
-eGZzL3hmc19idWZfaXRlbS5oICAgICAgfCAgICA0ICsrLQogZnMveGZzL3hmc19sb2cuaCAgICAg
-ICAgICAgfCAgICAxICsKIGZzL3hmcy94ZnNfbG9nX2NpbC5jICAgICAgIHwgICA0OCArKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKystCiBmcy94ZnMveGZzX3RyYW5zLmMg
-ICAgICAgICB8ICAgMTYgKysrKysrKysrKystLQogZnMveGZzL3hmc190cmFucy5oICAgICAgICAg
-fCAgICAxICsKIGZzL3hmcy94ZnNfdHJhbnNfYnVmLmMgICAgIHwgICAyMCArKysrKysrKystLS0t
-LS0tLS0KIDggZmlsZXMgY2hhbmdlZCwgODkgaW5zZXJ0aW9ucygrKSwgMTcgZGVsZXRpb25zKC0p
-CgpkaWZmIC0tZ2l0IGEvZnMveGZzL2xpbnV4LTIuNi94ZnNfYnVmLmMgYi9mcy94ZnMvbGludXgt
-Mi42L3hmc19idWYuYwppbmRleCA4MjY3OGJmLi5lMDg1ZWNhIDEwMDY0NAotLS0gYS9mcy94ZnMv
-bGludXgtMi42L3hmc19idWYuYworKysgYi9mcy94ZnMvbGludXgtMi42L3hmc19idWYuYwpAQCAt
-ODAwLDkgKzgwMCw5IEBAIHhmc19idWZfcmVsZSgKIAkJfSBlbHNlIGlmIChicC0+Yl9mbGFncyAm
-IFhCRl9GU19NQU5BR0VEKSB7CiAJCQlzcGluX3VubG9jaygmaGFzaC0+YmhfbG9jayk7CiAJCX0g
-ZWxzZSB7Ci0JCQlBU1NFUlQoIShicC0+Yl9mbGFncyAmIChYQkZfREVMV1JJfF9YQkZfREVMV1JJ
-X1EpKSk7CiAJCQlsaXN0X2RlbF9pbml0KCZicC0+Yl9oYXNoX2xpc3QpOwogCQkJc3Bpbl91bmxv
-Y2soJmhhc2gtPmJoX2xvY2spOworCQkJQVNTRVJUKCEoYnAtPmJfZmxhZ3MgJiAoWEJGX0RFTFdS
-SXxfWEJGX0RFTFdSSV9RKSkpOwogCQkJeGZzX2J1Zl9mcmVlKGJwKTsKIAkJfQogCX0KZGlmZiAt
-LWdpdCBhL2ZzL3hmcy94ZnNfYnVmX2l0ZW0uYyBiL2ZzL3hmcy94ZnNfYnVmX2l0ZW0uYwppbmRl
-eCBiY2JiNjYxLi4wMmE4MDk4IDEwMDY0NAotLS0gYS9mcy94ZnMveGZzX2J1Zl9pdGVtLmMKKysr
-IGIvZnMveGZzL3hmc19idWZfaXRlbS5jCkBAIC0yNTQsNiArMjU0LDIwIEBAIHhmc19idWZfaXRl
-bV9mb3JtYXQoCiAJdmVjcCsrOwogCW52ZWNzID0gMTsKIAorCS8qCisJICogSWYgaXQgaXMgYW4g
-aW5vZGUgYnVmZmVyLCB0cmFuc2ZlciB0aGUgaW4tbWVtb3J5IHN0YXRlIHRvIHRoZQorCSAqIGZv
-cm1hdCBmbGFncyBhbmQgY2xlYXIgdGhlIGluLW1lbW9yeSBzdGF0ZS4gV2UgZG8gbm90IHRyYW5z
-ZmVyCisJICogdGhpcyBzdGF0ZSBpZiB0aGUgaW5vZGUgYnVmZmVyIGFsbG9jYXRpb24gaGFzIG5v
-dCB5ZXQgYmVlbiBjb21taXR0ZWQKKwkgKiB0byB0aGUgbG9nIGFzIHNldHRpbmcgdGhlIFhGU19C
-TElfSU5PREVfQlVGIGZsYWcgd2lsbCBwcmV2ZW50CisJICogY29ycmVjdCByZXBsYXkgb2YgdGhl
-IGlub2RlIGFsbG9jYXRpb24uCisJICovCisJaWYgKGJpcC0+YmxpX2ZsYWdzICYgWEZTX0JMSV9J
-Tk9ERV9CVUYpIHsKKwkJaWYgKCEoKGJpcC0+YmxpX2ZsYWdzICYgWEZTX0JMSV9JTk9ERV9BTExP
-Q19CVUYpICYmCisJCSAgICAgIHhmc19sb2dfaXRlbV9pbl9jdXJyZW50X2Noa3B0KCZiaXAtPmJs
-aV9pdGVtKSkpCisJCQliaXAtPmJsaV9mb3JtYXQuYmxmX2ZsYWdzIHw9IFhGU19CTEZfSU5PREVf
-QlVGOworCQliaXAtPmJsaV9mbGFncyAmPSB+WEZTX0JMSV9JTk9ERV9CVUY7CisJfQorCiAJaWYg
-KGJpcC0+YmxpX2ZsYWdzICYgWEZTX0JMSV9TVEFMRSkgewogCQkvKgogCQkgKiBUaGUgYnVmZmVy
-IGlzIHN0YWxlLCBzbyBhbGwgd2UgbmVlZCB0byBsb2cKZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNf
-YnVmX2l0ZW0uaCBiL2ZzL3hmcy94ZnNfYnVmX2l0ZW0uaAppbmRleCA4Y2JiODJiLi5mMjBiYjQ3
-IDEwMDY0NAotLS0gYS9mcy94ZnMveGZzX2J1Zl9pdGVtLmgKKysrIGIvZnMveGZzL3hmc19idWZf
-aXRlbS5oCkBAIC02OSw2ICs2OSw3IEBAIHR5cGVkZWYgc3RydWN0IHhmc19idWZfbG9nX2Zvcm1h
-dCB7CiAjZGVmaW5lCVhGU19CTElfTE9HR0VECQkweDA4CiAjZGVmaW5lCVhGU19CTElfSU5PREVf
-QUxMT0NfQlVGCTB4MTAKICNkZWZpbmUgWEZTX0JMSV9TVEFMRV9JTk9ERQkweDIwCisjZGVmaW5l
-CVhGU19CTElfSU5PREVfQlVGCTB4NDAKIAogI2RlZmluZSBYRlNfQkxJX0ZMQUdTIFwKIAl7IFhG
-U19CTElfSE9MRCwJCSJIT0xEIiB9LCBcCkBAIC03Niw3ICs3Nyw4IEBAIHR5cGVkZWYgc3RydWN0
-IHhmc19idWZfbG9nX2Zvcm1hdCB7CiAJeyBYRlNfQkxJX1NUQUxFLAkiU1RBTEUiIH0sIFwKIAl7
-IFhGU19CTElfTE9HR0VELAkiTE9HR0VEIiB9LCBcCiAJeyBYRlNfQkxJX0lOT0RFX0FMTE9DX0JV
-RiwgIklOT0RFX0FMTE9DIiB9LCBcCi0JeyBYRlNfQkxJX1NUQUxFX0lOT0RFLAkiU1RBTEVfSU5P
-REUiIH0KKwl7IFhGU19CTElfU1RBTEVfSU5PREUsCSJTVEFMRV9JTk9ERSIgfSwgXAorCXsgWEZT
-X0JMSV9JTk9ERV9CVUYsCSJJTk9ERV9CVUYiIH0KIAogCiAjaWZkZWYgX19LRVJORUxfXwpkaWZm
-IC0tZ2l0IGEvZnMveGZzL3hmc19sb2cuaCBiL2ZzL3hmcy94ZnNfbG9nLmgKaW5kZXggNGEwYzU3
-NC4uMDRjNzhlNiAxMDA2NDQKLS0tIGEvZnMveGZzL3hmc19sb2cuaAorKysgYi9mcy94ZnMveGZz
-X2xvZy5oCkBAIC0xOTgsNiArMTk4LDcgQEAgeGxvZ190aWRfdCB4ZnNfbG9nX2dldF90cmFuc19p
-ZGVudChzdHJ1Y3QgeGZzX3RyYW5zICp0cCk7CiBpbnQJeGZzX2xvZ19jb21taXRfY2lsKHN0cnVj
-dCB4ZnNfbW91bnQgKm1wLCBzdHJ1Y3QgeGZzX3RyYW5zICp0cCwKIAkJCQlzdHJ1Y3QgeGZzX2xv
-Z192ZWMgKmxvZ192ZWN0b3IsCiAJCQkJeGZzX2xzbl90ICpjb21taXRfbHNuLCBpbnQgZmxhZ3Mp
-OworYm9vbAl4ZnNfbG9nX2l0ZW1faW5fY3VycmVudF9jaGtwdChzdHJ1Y3QgeGZzX2xvZ19pdGVt
-ICpsaXApOwogCiAjZW5kaWYKIApkaWZmIC0tZ2l0IGEvZnMveGZzL3hmc19sb2dfY2lsLmMgYi9m
-cy94ZnMveGZzX2xvZ19jaWwuYwppbmRleCA4MDZjZjZiLi5mNjczM2ViIDEwMDY0NAotLS0gYS9m
-cy94ZnMveGZzX2xvZ19jaWwuYworKysgYi9mcy94ZnMveGZzX2xvZ19jaWwuYwpAQCAtMjAxLDYg
-KzIwMSwxNSBAQCB4bG9nX2NpbF9pbnNlcnQoCiAJY3R4LT5udmVjcyArPSBkaWZmX2lvdmVjczsK
-IAogCS8qCisJICogSWYgdGhpcyBpcyB0aGUgZmlyc3QgdGltZSB0aGUgaXRlbSBpcyBiZWluZyBj
-b21taXR0ZWQgdG8gdGhlIENJTCwKKwkgKiBzdG9yZSB0aGUgc2VxdWVuY2UgbnVtYmVyIG9uIHRo
-ZSBsb2cgaXRlbSBzbyB3ZSBjYW4gdGVsbAorCSAqIGluIGZ1dHVyZSBjb21taXRzIHdoZXRoZXIg
-dGhpcyBpcyB0aGUgZmlyc3QgY2hlY2twb2ludCB0aGUgaXRlbSBpcworCSAqIGJlaW5nIGNvbW1p
-dHRlZCBpbnRvLgorCSAqLworCWlmICghaXRlbS0+bGlfc2VxKQorCQlpdGVtLT5saV9zZXEgPSBj
-dHgtPnNlcXVlbmNlOworCisJLyoKIAkgKiBOb3cgdHJhbnNmZXIgZW5vdWdoIHRyYW5zYWN0aW9u
-IHJlc2VydmF0aW9uIHRvIHRoZSBjb250ZXh0IHRpY2tldAogCSAqIGZvciB0aGUgY2hlY2twb2lu
-dC4gVGhlIGNvbnRleHQgdGlja2V0IGlzIHNwZWNpYWwgLSB0aGUgdW5pdAogCSAqIHJlc2VydmF0
-aW9uIGhhcyB0byBncm93IGFzIHdlbGwgYXMgdGhlIGN1cnJlbnQgcmVzZXJ2YXRpb24gYXMgd2UK
-QEAgLTMyOCw2ICszMzcsMTAgQEAgeGxvZ19jaWxfZnJlZV9sb2d2ZWMoCiAgKiBGb3IgbW9yZSBz
-cGVjaWZpYyBpbmZvcm1hdGlvbiBhYm91dCB0aGUgb3JkZXIgb2Ygb3BlcmF0aW9ucyBpbgogICog
-eGZzX2xvZ19jb21taXRfY2lsKCkgcGxlYXNlIHJlZmVyIHRvIHRoZSBjb21tZW50cyBpbgogICog
-eGZzX3RyYW5zX2NvbW1pdF9pY2xvZygpLgorICoKKyAqIENhbGxlZCB3aXRoIHRoZSBjb250ZXh0
-IGxvY2sgYWxyZWFkeSBoZWxkIGluIHJlYWQgbW9kZSB0byBsb2NrIG91dAorICogYmFja2dyb3Vu
-ZCBjb21taXQsIHJldHVybnMgd2l0aG91dCBpdCBoZWxkIG9uY2UgYmFja2dyb3VuZCBjb21taXRz
-IGFyZQorICogYWxsb3dlZCBhZ2Fpbi4KICAqLwogaW50CiB4ZnNfbG9nX2NvbW1pdF9jaWwoCkBA
-IC0zNDYsMTEgKzM1OSwxMCBAQCB4ZnNfbG9nX2NvbW1pdF9jaWwoCiAKIAlpZiAoWExPR19GT1JD
-RURfU0hVVERPV04obG9nKSkgewogCQl4bG9nX2NpbF9mcmVlX2xvZ3ZlYyhsb2dfdmVjdG9yKTsK
-KwkJdXBfcmVhZCgmbG9nLT5sX2NpbHAtPnhjX2N0eF9sb2NrKTsKIAkJcmV0dXJuIFhGU19FUlJP
-UihFSU8pOwogCX0KIAotCS8qIGxvY2sgb3V0IGJhY2tncm91bmQgY29tbWl0ICovCi0JZG93bl9y
-ZWFkKCZsb2ctPmxfY2lscC0+eGNfY3R4X2xvY2spOwogCXhsb2dfY2lsX2Zvcm1hdF9pdGVtcyhs
-b2csIGxvZ192ZWN0b3IsIHRwLT50X3RpY2tldCwgY29tbWl0X2xzbik7CiAKIAkvKiBjaGVjayB3
-ZSBkaWRuJ3QgYmxvdyB0aGUgcmVzZXJ2YXRpb24gKi8KQEAgLTY4NywzICs2OTksMzUgQEAgcmVz
-dGFydDoKIAlyZXR1cm4gY29tbWl0X2xzbjsKIH0KIAorLyoKKyAqIENoZWNrIGlmIHRoZSBjdXJy
-ZW50IGxvZyBpdGVtIHdhcyBmaXJzdCBjb21taXR0ZWQgaW4gdGhpcyBzZXF1ZW5jZS4KKyAqIFdl
-IGNhbid0IHJlbHkgb24ganVzdCB0aGUgbG9nIGl0ZW0gYmVpbmcgaW4gdGhlIENJTCwgd2UgaGF2
-ZSB0byBjaGVjaworICogdGhlIHJlY29yZGVkIGNvbW1pdCBzZXF1ZW5jZSBudW1iZXIuCisgKgor
-ICogTm90ZTogZm9yIHRoaXMgdG8gYmUgdXNlZCBpbiBhIG5vbi1yYWN5IG1hbm5lciwgaXQgaGFz
-IHRvIGJlIGNhbGxlZCB3aXRoCisgKiBDSUwgZmx1c2hpbmcgbG9ja2VkIG91dC4gQXMgYSByZXN1
-bHQsIGl0IHNob3VsZCBvbmx5IGJlIHVzZWQgZHVyaW5nIHRoZQorICogdHJhbnNhY3Rpb24gY29t
-bWl0IHByb2Nlc3Mgd2hlbiBkZWNpZGluZyB3aGF0IHRvIGZvcm1hdCBpbnRvIHRoZSBpdGVtLgor
-ICovCitib29sCit4ZnNfbG9nX2l0ZW1faW5fY3VycmVudF9jaGtwdCgKKwlzdHJ1Y3QgeGZzX2xv
-Z19pdGVtICpsaXApCit7CisJc3RydWN0IHhmc19jaWxfY3R4ICpjdHg7CisKKwlpZiAoIShsaXAt
-PmxpX21vdW50cC0+bV9mbGFncyAmIFhGU19NT1VOVF9ERUxBWUxPRykpCisJCXJldHVybiBmYWxz
-ZTsKKwlpZiAobGlzdF9lbXB0eSgmbGlwLT5saV9jaWwpKQorCQlyZXR1cm4gZmFsc2U7CisKKwlj
-dHggPSBsaXAtPmxpX21vdW50cC0+bV9sb2ctPmxfY2lscC0+eGNfY3R4OworCisJLyoKKwkgKiBs
-aV9zZXEgaXMgd3JpdHRlbiBvbiB0aGUgZmlyc3QgY29tbWl0IG9mIGEgbG9nIGl0ZW0gdG8gcmVj
-b3JkIHRoZQorCSAqIGZpcnN0IGNoZWNrcG9pbnQgaXQgaXMgd3JpdHRlbiB0by4gSGVuY2UgaWYg
-aXQgaXMgZGlmZmVyZW50IHRvIHRoZQorCSAqIGN1cnJlbnQgc2VxdWVuY2UsIHdlJ3JlIGluIGEg
-bmV3IGNoZWNrcG9pbnQuCisJICovCisJaWYgKFhGU19MU05fQ01QKGxpcC0+bGlfc2VxLCBjdHgt
-PnNlcXVlbmNlKSAhPSAwKQorCQlyZXR1cm4gZmFsc2U7CisJcmV0dXJuIHRydWU7Cit9CisKZGlm
-ZiAtLWdpdCBhL2ZzL3hmcy94ZnNfdHJhbnMuYyBiL2ZzL3hmcy94ZnNfdHJhbnMuYwppbmRleCA5
-YmRiNDkyLi4zZTg4YzNmIDEwMDY0NAotLS0gYS9mcy94ZnMveGZzX3RyYW5zLmMKKysrIGIvZnMv
-eGZzL3hmc190cmFucy5jCkBAIC00NSw2ICs0NSw3IEBACiAjaW5jbHVkZSAieGZzX3RyYW5zX3Nw
-YWNlLmgiCiAjaW5jbHVkZSAieGZzX2lub2RlX2l0ZW0uaCIKICNpbmNsdWRlICJ4ZnNfdHJhY2Uu
-aCIKKyNpbmNsdWRlICJ4ZnNfbG9nX3ByaXYuaCIKIAoga21lbV96b25lX3QJKnhmc190cmFuc196
-b25lOwogCkBAIC0xMjYxLDEwICsxMjYyLDE5IEBAIHhmc190cmFuc19jb21taXRfY2lsKAogCQly
-ZXR1cm4gRU5PTUVNOwogCiAJLyoKLQkgKiBGaWxsIGluIHRoZSBsb2dfdmVjdG9yIGFuZCBwaW4g
-dGhlIGxvZ2dlZCBpdGVtcywgYW5kCi0JICogdGhlbiB3cml0ZSB0aGUgdHJhbnNhY3Rpb24gdG8g
-dGhlIGxvZy4gV2UgaGF2ZSB0byBsb2NrCi0JICogb3V0IENJTCBmbHVzaGVzIGZyb20gdGhpcyBw
-b2ludCBhcyB3ZSBhcmUgZ29pbmcgdG8gcGluCisJICogTm93IHdlIG5lZWQgdG8gZmlsbCBpbiB0
-aGUgbG9nX3ZlY3RvciBhbmQgcGluIHRoZSBsb2dnZWQgaXRlbXMsIGFuZAorCSAqIHRoZW4gd3Jp
-dGUgdGhlIHRyYW5zYWN0aW9uIHRvIHRoZSBsb2cuCisJICoKKwkgKiBJbXBvcnRhbnQ6IFdlIGhh
-dmUgdG8gbG9jayBvdXQgQ0lMIGZsdXNoZXMgZnJvbSB0aGlzIHBvaW50IGFzCisJICogdHJhbnNm
-ZXJyaW5nIHN0YXRlIGZyb20gdGhlIGluIG1lbW9yeSBsb2cgaXRlbXMgdG8gdGhlIGxvZyBpdGVt
-CisJICogaGVhZGVycyBkdXJpbmcgZm9ybWF0dGluZyBtYXkgcmVxdWlyZSBhdG9taWNpdHkgYWdh
-aW5zdCBsb2cgd3JpdGVzCisJICogdG8gZW5zdXJlIHRoYXQgc3RhdGUgaXMgdHJhbnNmZXJyZWQg
-dG8gdGhlIGxvZyB3aXRob3V0IHJhY2luZworCSAqIGFnYWluc3QgZmx1c2hlcy4KKwkgKgorCSAq
-IHhmc19sb2dfY29tbWl0X2NpbCgpIHdpbGwgcmVsZWFzZSB0aGUgbG9jayBhcyBwYXJ0IG9mIHRo
-ZSBjb21taXQKKwkgKiBwcm9jZXNzLgogCSAqLworCWRvd25fcmVhZCgmbXAtPm1fbG9nLT5sX2Np
-bHAtPnhjX2N0eF9sb2NrKTsKIAl4ZnNfdHJhbnNfZmlsbF9sb2dfdmVjcyh0cCwgbG9nX3ZlY3Rv
-cik7CiAKIAlyZXR1cm4geGZzX2xvZ19jb21taXRfY2lsKG1wLCB0cCwgbG9nX3ZlY3RvciwgY29t
-bWl0X2xzbiwgZmxhZ3MpOwpkaWZmIC0tZ2l0IGEvZnMveGZzL3hmc190cmFucy5oIGIvZnMveGZz
-L3hmc190cmFucy5oCmluZGV4IGIxZWEyMGMuLjhjNjllNzggMTAwNjQ0Ci0tLSBhL2ZzL3hmcy94
-ZnNfdHJhbnMuaAorKysgYi9mcy94ZnMveGZzX3RyYW5zLmgKQEAgLTgzNSw2ICs4MzUsNyBAQCB0
-eXBlZGVmIHN0cnVjdCB4ZnNfbG9nX2l0ZW0gewogCS8qIGRlbGF5ZWQgbG9nZ2luZyAqLwogCXN0
-cnVjdCBsaXN0X2hlYWQJCWxpX2NpbDsJCS8qIENJTCBwb2ludGVycyAqLwogCXN0cnVjdCB4ZnNf
-bG9nX3ZlYwkJKmxpX2x2OwkJLyogYWN0aXZlIGxvZyB2ZWN0b3IgKi8KKwl4ZnNfbHNuX3QJCQls
-aV9zZXE7CQkvKiBDSUwgY29tbWl0IHNlcSAqLwogfSB4ZnNfbG9nX2l0ZW1fdDsKIAogI2RlZmlu
-ZQlYRlNfTElfSU5fQUlMCTB4MQpkaWZmIC0tZ2l0IGEvZnMveGZzL3hmc190cmFuc19idWYuYyBi
-L2ZzL3hmcy94ZnNfdHJhbnNfYnVmLmMKaW5kZXggMzM5MGMzZS4uNjNkODFhMiAxMDA2NDQKLS0t
-IGEvZnMveGZzL3hmc190cmFuc19idWYuYworKysgYi9mcy94ZnMveGZzX3RyYW5zX2J1Zi5jCkBA
-IC03OTIsNyArNzkyLDcgQEAgeGZzX3RyYW5zX2JpbnZhbCgKIAlYRlNfQlVGX1VOREVMQVlXUklU
-RShicCk7CiAJWEZTX0JVRl9TVEFMRShicCk7CiAJYmlwLT5ibGlfZmxhZ3MgfD0gWEZTX0JMSV9T
-VEFMRTsKLQliaXAtPmJsaV9mbGFncyAmPSB+KFhGU19CTElfTE9HR0VEIHwgWEZTX0JMSV9ESVJU
-WSk7CisJYmlwLT5ibGlfZmxhZ3MgJj0gfihYRlNfQkxJX0lOT0RFX0JVRiB8IFhGU19CTElfTE9H
-R0VEIHwgWEZTX0JMSV9ESVJUWSk7CiAJYmlwLT5ibGlfZm9ybWF0LmJsZl9mbGFncyAmPSB+WEZT
-X0JMRl9JTk9ERV9CVUY7CiAJYmlwLT5ibGlfZm9ybWF0LmJsZl9mbGFncyB8PSBYRlNfQkxGX0NB
-TkNFTDsKIAltZW1zZXQoKGNoYXIgKikoYmlwLT5ibGlfZm9ybWF0LmJsZl9kYXRhX21hcCksIDAs
-CkBAIC04MDIsMTYgKzgwMiwxNiBAQCB4ZnNfdHJhbnNfYmludmFsKAogfQogCiAvKgotICogVGhp
-cyBjYWxsIGlzIHVzZWQgdG8gaW5kaWNhdGUgdGhhdCB0aGUgYnVmZmVyIGNvbnRhaW5zIG9uLWRp
-c2sKLSAqIGlub2RlcyB3aGljaCBtdXN0IGJlIGhhbmRsZWQgc3BlY2lhbGx5IGR1cmluZyByZWNv
-dmVyeS4gIFRoZXkKLSAqIHJlcXVpcmUgc3BlY2lhbCBoYW5kbGluZyBiZWNhdXNlIG9ubHkgdGhl
-IGRpX25leHRfdW5saW5rZWQgZnJvbQotICogdGhlIGlub2RlcyBpbiB0aGUgYnVmZmVyIHNob3Vs
-ZCBiZSByZWNvdmVyZWQuICBUaGUgcmVzdCBvZiB0aGUKLSAqIGRhdGEgaW4gdGhlIGJ1ZmZlciBp
-cyBsb2dnZWQgdmlhIHRoZSBpbm9kZXMgdGhlbXNlbHZlcy4KKyAqIFRoaXMgY2FsbCBpcyB1c2Vk
-IHRvIGluZGljYXRlIHRoYXQgdGhlIGJ1ZmZlciBjb250YWlucyBvbi1kaXNrIGlub2RlcyB3aGlj
-aAorICogbXVzdCBiZSBoYW5kbGVkIHNwZWNpYWxseSBkdXJpbmcgcmVjb3ZlcnkuICBUaGV5IHJl
-cXVpcmUgc3BlY2lhbCBoYW5kbGluZworICogYmVjYXVzZSBvbmx5IHRoZSBkaV9uZXh0X3VubGlu
-a2VkIGZyb20gdGhlIGlub2RlcyBpbiB0aGUgYnVmZmVyIHNob3VsZCBiZQorICogcmVjb3ZlcmVk
-LiAgVGhlIHJlc3Qgb2YgdGhlIGRhdGEgaW4gdGhlIGJ1ZmZlciBpcyBsb2dnZWQgdmlhIHRoZSBp
-bm9kZXMKKyAqIHRoZW1zZWx2ZXMuCiAgKgotICogQWxsIHdlIGRvIGlzIHNldCB0aGUgWEZTX0JM
-SV9JTk9ERV9CVUYgZmxhZyBpbiB0aGUgYnVmZmVyJ3MgbG9nCi0gKiBmb3JtYXQgc3RydWN0dXJl
-IHNvIHRoYXQgd2UnbGwga25vdyB3aGF0IHRvIGRvIGF0IHJlY292ZXJ5IHRpbWUuCisgKiBBbGwg
-d2UgZG8gaXMgc2V0IHRoZSBYRlNfQkxJX0lOT0RFX0JVRiBmbGFnIGluIHRoZSBpdGVtcyBmbGFn
-cyBzbyBpdCBjYW4gYmUKKyAqIHRyYW5zZmVycmVkIHRvIHRoZSBidWZmZXIncyBsb2cgZm9ybWF0
-IHN0cnVjdHVyZSBzbyB0aGF0IHdlJ2xsIGtub3cgd2hhdCB0bworICogZG8gYXQgcmVjb3Zlcnkg
-dGltZS4KICAqLwotLyogQVJHU1VTRUQgKi8KIHZvaWQKIHhmc190cmFuc19pbm9kZV9idWYoCiAJ
-eGZzX3RyYW5zX3QJKnRwLApAQCAtODI2LDcgKzgyNiw3IEBAIHhmc190cmFuc19pbm9kZV9idWYo
-CiAJYmlwID0gWEZTX0JVRl9GU1BSSVZBVEUoYnAsIHhmc19idWZfbG9nX2l0ZW1fdCAqKTsKIAlB
-U1NFUlQoYXRvbWljX3JlYWQoJmJpcC0+YmxpX3JlZmNvdW50KSA+IDApOwogCi0JYmlwLT5ibGlf
-Zm9ybWF0LmJsZl9mbGFncyB8PSBYRlNfQkxGX0lOT0RFX0JVRjsKKwliaXAtPmJsaV9mbGFncyB8
-PSBYRlNfQkxJX0lOT0RFX0JVRjsKIH0KIAogLyoKLS0gCjEuNS42LjUKCl9fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9z
-cy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+From: Dave Chinner <dchinner@redhat.com>
+
+Clean up the buffer log format (XFS_BLI_*) flags because they have a
+polluted namespace. They XFS_BLI_ prefix is used for both in-memory
+and on-disk flag feilds, but have overlapping values for different
+flags. Rename the buffer log format flags to use the XFS_BLF_*
+prefix to avoid confusing them with the in-memory XFS_BLI_* prefixed
+flags.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/linux-2.6/xfs_super.c |    2 +-
+ fs/xfs/quota/xfs_dquot.c     |    6 ++--
+ fs/xfs/xfs_buf_item.c        |   42 +++++++++++++++++++-------------------
+ fs/xfs/xfs_buf_item.h        |   14 ++++++------
+ fs/xfs/xfs_log_recover.c     |   46 +++++++++++++++++++++---------------------
+ fs/xfs/xfs_log_recover.h     |    2 +-
+ fs/xfs/xfs_trans_buf.c       |   28 ++++++++++++------------
+ 7 files changed, 70 insertions(+), 70 deletions(-)
+
+diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
+index a43d09e..1e88c98 100644
+--- a/fs/xfs/linux-2.6/xfs_super.c
++++ b/fs/xfs/linux-2.6/xfs_super.c
+@@ -1753,7 +1753,7 @@ xfs_init_zones(void)
+ 	 * but it is much faster.
+ 	 */
+ 	xfs_buf_item_zone = kmem_zone_init((sizeof(xfs_buf_log_item_t) +
+-				(((XFS_MAX_BLOCKSIZE / XFS_BLI_CHUNK) /
++				(((XFS_MAX_BLOCKSIZE / XFS_BLF_CHUNK) /
+ 				  NBWORD) * sizeof(int))), "xfs_buf_item");
+ 	if (!xfs_buf_item_zone)
+ 		goto out_destroy_trans_zone;
+diff --git a/fs/xfs/quota/xfs_dquot.c b/fs/xfs/quota/xfs_dquot.c
+index b89ec5d..585e763 100644
+--- a/fs/xfs/quota/xfs_dquot.c
++++ b/fs/xfs/quota/xfs_dquot.c
+@@ -344,9 +344,9 @@ xfs_qm_init_dquot_blk(
+ 	for (i = 0; i < q->qi_dqperchunk; i++, d++, curid++)
+ 		xfs_qm_dqinit_core(curid, type, d);
+ 	xfs_trans_dquot_buf(tp, bp,
+-			    (type & XFS_DQ_USER ? XFS_BLI_UDQUOT_BUF :
+-			    ((type & XFS_DQ_PROJ) ? XFS_BLI_PDQUOT_BUF :
+-			     XFS_BLI_GDQUOT_BUF)));
++			    (type & XFS_DQ_USER ? XFS_BLF_UDQUOT_BUF :
++			    ((type & XFS_DQ_PROJ) ? XFS_BLF_PDQUOT_BUF :
++			     XFS_BLF_GDQUOT_BUF)));
+ 	xfs_trans_log_buf(tp, bp, 0, BBTOB(q->qi_dqchunklen) - 1);
+ }
+ 
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 4cd5f61..bcbb661 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -64,7 +64,7 @@ xfs_buf_item_log_debug(
+ 	nbytes = last - first + 1;
+ 	bfset(bip->bli_logged, first, nbytes);
+ 	for (x = 0; x < nbytes; x++) {
+-		chunk_num = byte >> XFS_BLI_SHIFT;
++		chunk_num = byte >> XFS_BLF_SHIFT;
+ 		word_num = chunk_num >> BIT_TO_WORD_SHIFT;
+ 		bit_num = chunk_num & (NBWORD - 1);
+ 		wordp = &(bip->bli_format.blf_data_map[word_num]);
+@@ -166,7 +166,7 @@ xfs_buf_item_size(
+ 		 * cancel flag in it.
+ 		 */
+ 		trace_xfs_buf_item_size_stale(bip);
+-		ASSERT(bip->bli_format.blf_flags & XFS_BLI_CANCEL);
++		ASSERT(bip->bli_format.blf_flags & XFS_BLF_CANCEL);
+ 		return 1;
+ 	}
+ 
+@@ -197,9 +197,9 @@ xfs_buf_item_size(
+ 		} else if (next_bit != last_bit + 1) {
+ 			last_bit = next_bit;
+ 			nvecs++;
+-		} else if (xfs_buf_offset(bp, next_bit * XFS_BLI_CHUNK) !=
+-			   (xfs_buf_offset(bp, last_bit * XFS_BLI_CHUNK) +
+-			    XFS_BLI_CHUNK)) {
++		} else if (xfs_buf_offset(bp, next_bit * XFS_BLF_CHUNK) !=
++			   (xfs_buf_offset(bp, last_bit * XFS_BLF_CHUNK) +
++			    XFS_BLF_CHUNK)) {
+ 			last_bit = next_bit;
+ 			nvecs++;
+ 		} else {
+@@ -261,7 +261,7 @@ xfs_buf_item_format(
+ 		 * cancel flag in it.
+ 		 */
+ 		trace_xfs_buf_item_format_stale(bip);
+-		ASSERT(bip->bli_format.blf_flags & XFS_BLI_CANCEL);
++		ASSERT(bip->bli_format.blf_flags & XFS_BLF_CANCEL);
+ 		bip->bli_format.blf_size = nvecs;
+ 		return;
+ 	}
+@@ -294,28 +294,28 @@ xfs_buf_item_format(
+ 		 * keep counting and scanning.
+ 		 */
+ 		if (next_bit == -1) {
+-			buffer_offset = first_bit * XFS_BLI_CHUNK;
++			buffer_offset = first_bit * XFS_BLF_CHUNK;
+ 			vecp->i_addr = xfs_buf_offset(bp, buffer_offset);
+-			vecp->i_len = nbits * XFS_BLI_CHUNK;
++			vecp->i_len = nbits * XFS_BLF_CHUNK;
+ 			vecp->i_type = XLOG_REG_TYPE_BCHUNK;
+ 			nvecs++;
+ 			break;
+ 		} else if (next_bit != last_bit + 1) {
+-			buffer_offset = first_bit * XFS_BLI_CHUNK;
++			buffer_offset = first_bit * XFS_BLF_CHUNK;
+ 			vecp->i_addr = xfs_buf_offset(bp, buffer_offset);
+-			vecp->i_len = nbits * XFS_BLI_CHUNK;
++			vecp->i_len = nbits * XFS_BLF_CHUNK;
+ 			vecp->i_type = XLOG_REG_TYPE_BCHUNK;
+ 			nvecs++;
+ 			vecp++;
+ 			first_bit = next_bit;
+ 			last_bit = next_bit;
+ 			nbits = 1;
+-		} else if (xfs_buf_offset(bp, next_bit << XFS_BLI_SHIFT) !=
+-			   (xfs_buf_offset(bp, last_bit << XFS_BLI_SHIFT) +
+-			    XFS_BLI_CHUNK)) {
+-			buffer_offset = first_bit * XFS_BLI_CHUNK;
++		} else if (xfs_buf_offset(bp, next_bit << XFS_BLF_SHIFT) !=
++			   (xfs_buf_offset(bp, last_bit << XFS_BLF_SHIFT) +
++			    XFS_BLF_CHUNK)) {
++			buffer_offset = first_bit * XFS_BLF_CHUNK;
+ 			vecp->i_addr = xfs_buf_offset(bp, buffer_offset);
+-			vecp->i_len = nbits * XFS_BLI_CHUNK;
++			vecp->i_len = nbits * XFS_BLF_CHUNK;
+ 			vecp->i_type = XLOG_REG_TYPE_BCHUNK;
+ /* You would think we need to bump the nvecs here too, but we do not
+  * this number is used by recovery, and it gets confused by the boundary
+@@ -399,7 +399,7 @@ xfs_buf_item_unpin(
+ 		ASSERT(XFS_BUF_VALUSEMA(bp) <= 0);
+ 		ASSERT(!(XFS_BUF_ISDELAYWRITE(bp)));
+ 		ASSERT(XFS_BUF_ISSTALE(bp));
+-		ASSERT(bip->bli_format.blf_flags & XFS_BLI_CANCEL);
++		ASSERT(bip->bli_format.blf_flags & XFS_BLF_CANCEL);
+ 		trace_xfs_buf_item_unpin_stale(bip);
+ 
+ 		/*
+@@ -550,7 +550,7 @@ xfs_buf_item_unlock(
+ 	 */
+ 	if (bip->bli_flags & XFS_BLI_STALE) {
+ 		trace_xfs_buf_item_unlock_stale(bip);
+-		ASSERT(bip->bli_format.blf_flags & XFS_BLI_CANCEL);
++		ASSERT(bip->bli_format.blf_flags & XFS_BLF_CANCEL);
+ 		if (!aborted) {
+ 			atomic_dec(&bip->bli_refcount);
+ 			return;
+@@ -707,12 +707,12 @@ xfs_buf_item_init(
+ 	}
+ 
+ 	/*
+-	 * chunks is the number of XFS_BLI_CHUNK size pieces
++	 * chunks is the number of XFS_BLF_CHUNK size pieces
+ 	 * the buffer can be divided into. Make sure not to
+ 	 * truncate any pieces.  map_size is the size of the
+ 	 * bitmap needed to describe the chunks of the buffer.
+ 	 */
+-	chunks = (int)((XFS_BUF_COUNT(bp) + (XFS_BLI_CHUNK - 1)) >> XFS_BLI_SHIFT);
++	chunks = (int)((XFS_BUF_COUNT(bp) + (XFS_BLF_CHUNK - 1)) >> XFS_BLF_SHIFT);
+ 	map_size = (int)((chunks + NBWORD) >> BIT_TO_WORD_SHIFT);
+ 
+ 	bip = (xfs_buf_log_item_t*)kmem_zone_zalloc(xfs_buf_item_zone,
+@@ -780,8 +780,8 @@ xfs_buf_item_log(
+ 	/*
+ 	 * Convert byte offsets to bit numbers.
+ 	 */
+-	first_bit = first >> XFS_BLI_SHIFT;
+-	last_bit = last >> XFS_BLI_SHIFT;
++	first_bit = first >> XFS_BLF_SHIFT;
++	last_bit = last >> XFS_BLF_SHIFT;
+ 
+ 	/*
+ 	 * Calculate the total number of bits to be set.
+diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
+index df44545..8cbb82b 100644
+--- a/fs/xfs/xfs_buf_item.h
++++ b/fs/xfs/xfs_buf_item.h
+@@ -41,22 +41,22 @@ typedef struct xfs_buf_log_format {
+  * This flag indicates that the buffer contains on disk inodes
+  * and requires special recovery handling.
+  */
+-#define	XFS_BLI_INODE_BUF	0x1
++#define	XFS_BLF_INODE_BUF	0x1
+ /*
+  * This flag indicates that the buffer should not be replayed
+  * during recovery because its blocks are being freed.
+  */
+-#define	XFS_BLI_CANCEL		0x2
++#define	XFS_BLF_CANCEL		0x2
+ /*
+  * This flag indicates that the buffer contains on disk
+  * user or group dquots and may require special recovery handling.
+  */
+-#define	XFS_BLI_UDQUOT_BUF	0x4
+-#define XFS_BLI_PDQUOT_BUF	0x8
+-#define	XFS_BLI_GDQUOT_BUF	0x10
++#define	XFS_BLF_UDQUOT_BUF	0x4
++#define XFS_BLF_PDQUOT_BUF	0x8
++#define	XFS_BLF_GDQUOT_BUF	0x10
+ 
+-#define	XFS_BLI_CHUNK		128
+-#define	XFS_BLI_SHIFT		7
++#define	XFS_BLF_CHUNK		128
++#define	XFS_BLF_SHIFT		7
+ #define	BIT_TO_WORD_SHIFT	5
+ #define	NBWORD			(NBBY * sizeof(unsigned int))
+ 
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 0de08e3..14a69ae 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -1576,7 +1576,7 @@ xlog_recover_reorder_trans(
+ 
+ 		switch (ITEM_TYPE(item)) {
+ 		case XFS_LI_BUF:
+-			if (!(buf_f->blf_flags & XFS_BLI_CANCEL)) {
++			if (!(buf_f->blf_flags & XFS_BLF_CANCEL)) {
+ 				trace_xfs_log_recover_item_reorder_head(log,
+ 							trans, item, pass);
+ 				list_move(&item->ri_list, &trans->r_itemq);
+@@ -1638,7 +1638,7 @@ xlog_recover_do_buffer_pass1(
+ 	/*
+ 	 * If this isn't a cancel buffer item, then just return.
+ 	 */
+-	if (!(flags & XFS_BLI_CANCEL)) {
++	if (!(flags & XFS_BLF_CANCEL)) {
+ 		trace_xfs_log_recover_buf_not_cancel(log, buf_f);
+ 		return;
+ 	}
+@@ -1696,7 +1696,7 @@ xlog_recover_do_buffer_pass1(
+  * Check to see whether the buffer being recovered has a corresponding
+  * entry in the buffer cancel record table.  If it does then return 1
+  * so that it will be cancelled, otherwise return 0.  If the buffer is
+- * actually a buffer cancel item (XFS_BLI_CANCEL is set), then decrement
++ * actually a buffer cancel item (XFS_BLF_CANCEL is set), then decrement
+  * the refcount on the entry in the table and remove it from the table
+  * if this is the last reference.
+  *
+@@ -1721,7 +1721,7 @@ xlog_check_buffer_cancelled(
+ 		 * There is nothing in the table built in pass one,
+ 		 * so this buffer must not be cancelled.
+ 		 */
+-		ASSERT(!(flags & XFS_BLI_CANCEL));
++		ASSERT(!(flags & XFS_BLF_CANCEL));
+ 		return 0;
+ 	}
+ 
+@@ -1733,7 +1733,7 @@ xlog_check_buffer_cancelled(
+ 		 * There is no corresponding entry in the table built
+ 		 * in pass one, so this buffer has not been cancelled.
+ 		 */
+-		ASSERT(!(flags & XFS_BLI_CANCEL));
++		ASSERT(!(flags & XFS_BLF_CANCEL));
+ 		return 0;
+ 	}
+ 
+@@ -1752,7 +1752,7 @@ xlog_check_buffer_cancelled(
+ 			 * one in the table and remove it if this is the
+ 			 * last reference.
+ 			 */
+-			if (flags & XFS_BLI_CANCEL) {
++			if (flags & XFS_BLF_CANCEL) {
+ 				bcp->bc_refcount--;
+ 				if (bcp->bc_refcount == 0) {
+ 					if (prevp == NULL) {
+@@ -1772,7 +1772,7 @@ xlog_check_buffer_cancelled(
+ 	 * We didn't find a corresponding entry in the table, so
+ 	 * return 0 so that the buffer is NOT cancelled.
+ 	 */
+-	ASSERT(!(flags & XFS_BLI_CANCEL));
++	ASSERT(!(flags & XFS_BLF_CANCEL));
+ 	return 0;
+ }
+ 
+@@ -1874,8 +1874,8 @@ xlog_recover_do_inode_buffer(
+ 			nbits = xfs_contig_bits(data_map, map_size,
+ 							 bit);
+ 			ASSERT(nbits > 0);
+-			reg_buf_offset = bit << XFS_BLI_SHIFT;
+-			reg_buf_bytes = nbits << XFS_BLI_SHIFT;
++			reg_buf_offset = bit << XFS_BLF_SHIFT;
++			reg_buf_bytes = nbits << XFS_BLF_SHIFT;
+ 			item_index++;
+ 		}
+ 
+@@ -1889,7 +1889,7 @@ xlog_recover_do_inode_buffer(
+ 		}
+ 
+ 		ASSERT(item->ri_buf[item_index].i_addr != NULL);
+-		ASSERT((item->ri_buf[item_index].i_len % XFS_BLI_CHUNK) == 0);
++		ASSERT((item->ri_buf[item_index].i_len % XFS_BLF_CHUNK) == 0);
+ 		ASSERT((reg_buf_offset + reg_buf_bytes) <= XFS_BUF_COUNT(bp));
+ 
+ 		/*
+@@ -1955,9 +1955,9 @@ xlog_recover_do_reg_buffer(
+ 		nbits = xfs_contig_bits(data_map, map_size, bit);
+ 		ASSERT(nbits > 0);
+ 		ASSERT(item->ri_buf[i].i_addr != NULL);
+-		ASSERT(item->ri_buf[i].i_len % XFS_BLI_CHUNK == 0);
++		ASSERT(item->ri_buf[i].i_len % XFS_BLF_CHUNK == 0);
+ 		ASSERT(XFS_BUF_COUNT(bp) >=
+-		       ((uint)bit << XFS_BLI_SHIFT)+(nbits<<XFS_BLI_SHIFT));
++		       ((uint)bit << XFS_BLF_SHIFT)+(nbits<<XFS_BLF_SHIFT));
+ 
+ 		/*
+ 		 * Do a sanity check if this is a dquot buffer. Just checking
+@@ -1966,7 +1966,7 @@ xlog_recover_do_reg_buffer(
+ 		 */
+ 		error = 0;
+ 		if (buf_f->blf_flags &
+-		   (XFS_BLI_UDQUOT_BUF|XFS_BLI_PDQUOT_BUF|XFS_BLI_GDQUOT_BUF)) {
++		   (XFS_BLF_UDQUOT_BUF|XFS_BLF_PDQUOT_BUF|XFS_BLF_GDQUOT_BUF)) {
+ 			if (item->ri_buf[i].i_addr == NULL) {
+ 				cmn_err(CE_ALERT,
+ 					"XFS: NULL dquot in %s.", __func__);
+@@ -1987,9 +1987,9 @@ xlog_recover_do_reg_buffer(
+ 		}
+ 
+ 		memcpy(xfs_buf_offset(bp,
+-			(uint)bit << XFS_BLI_SHIFT),	/* dest */
++			(uint)bit << XFS_BLF_SHIFT),	/* dest */
+ 			item->ri_buf[i].i_addr,		/* source */
+-			nbits<<XFS_BLI_SHIFT);		/* length */
++			nbits<<XFS_BLF_SHIFT);		/* length */
+  next:
+ 		i++;
+ 		bit += nbits;
+@@ -2148,11 +2148,11 @@ xlog_recover_do_dquot_buffer(
+ 	}
+ 
+ 	type = 0;
+-	if (buf_f->blf_flags & XFS_BLI_UDQUOT_BUF)
++	if (buf_f->blf_flags & XFS_BLF_UDQUOT_BUF)
+ 		type |= XFS_DQ_USER;
+-	if (buf_f->blf_flags & XFS_BLI_PDQUOT_BUF)
++	if (buf_f->blf_flags & XFS_BLF_PDQUOT_BUF)
+ 		type |= XFS_DQ_PROJ;
+-	if (buf_f->blf_flags & XFS_BLI_GDQUOT_BUF)
++	if (buf_f->blf_flags & XFS_BLF_GDQUOT_BUF)
+ 		type |= XFS_DQ_GROUP;
+ 	/*
+ 	 * This type of quotas was turned off, so ignore this buffer
+@@ -2173,7 +2173,7 @@ xlog_recover_do_dquot_buffer(
+  * here which overlaps that may be stale.
+  *
+  * When meta-data buffers are freed at run time we log a buffer item
+- * with the XFS_BLI_CANCEL bit set to indicate that previous copies
++ * with the XFS_BLF_CANCEL bit set to indicate that previous copies
+  * of the buffer in the log should not be replayed at recovery time.
+  * This is so that if the blocks covered by the buffer are reused for
+  * file data before we crash we don't end up replaying old, freed
+@@ -2207,7 +2207,7 @@ xlog_recover_do_buffer_trans(
+ 	if (pass == XLOG_RECOVER_PASS1) {
+ 		/*
+ 		 * In this pass we're only looking for buf items
+-		 * with the XFS_BLI_CANCEL bit set.
++		 * with the XFS_BLF_CANCEL bit set.
+ 		 */
+ 		xlog_recover_do_buffer_pass1(log, buf_f);
+ 		return 0;
+@@ -2244,7 +2244,7 @@ xlog_recover_do_buffer_trans(
+ 
+ 	mp = log->l_mp;
+ 	buf_flags = XBF_LOCK;
+-	if (!(flags & XFS_BLI_INODE_BUF))
++	if (!(flags & XFS_BLF_INODE_BUF))
+ 		buf_flags |= XBF_MAPPED;
+ 
+ 	bp = xfs_buf_read(mp->m_ddev_targp, blkno, len, buf_flags);
+@@ -2257,10 +2257,10 @@ xlog_recover_do_buffer_trans(
+ 	}
+ 
+ 	error = 0;
+-	if (flags & XFS_BLI_INODE_BUF) {
++	if (flags & XFS_BLF_INODE_BUF) {
+ 		error = xlog_recover_do_inode_buffer(mp, item, bp, buf_f);
+ 	} else if (flags &
+-		  (XFS_BLI_UDQUOT_BUF|XFS_BLI_PDQUOT_BUF|XFS_BLI_GDQUOT_BUF)) {
++		  (XFS_BLF_UDQUOT_BUF|XFS_BLF_PDQUOT_BUF|XFS_BLF_GDQUOT_BUF)) {
+ 		xlog_recover_do_dquot_buffer(mp, log, item, bp, buf_f);
+ 	} else {
+ 		xlog_recover_do_reg_buffer(mp, item, bp, buf_f);
+diff --git a/fs/xfs/xfs_log_recover.h b/fs/xfs/xfs_log_recover.h
+index 75d7492..1c55ccb 100644
+--- a/fs/xfs/xfs_log_recover.h
++++ b/fs/xfs/xfs_log_recover.h
+@@ -28,7 +28,7 @@
+ #define XLOG_RHASH(tid)	\
+ 	((((__uint32_t)tid)>>XLOG_RHASH_SHIFT) & (XLOG_RHASH_SIZE-1))
+ 
+-#define XLOG_MAX_REGIONS_IN_ITEM   (XFS_MAX_BLOCKSIZE / XFS_BLI_CHUNK / 2 + 1)
++#define XLOG_MAX_REGIONS_IN_ITEM   (XFS_MAX_BLOCKSIZE / XFS_BLF_CHUNK / 2 + 1)
+ 
+ 
+ /*
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 9cd8090..3390c3e 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -114,7 +114,7 @@ _xfs_trans_bjoin(
+ 	xfs_buf_item_init(bp, tp->t_mountp);
+ 	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
+ 	ASSERT(!(bip->bli_flags & XFS_BLI_STALE));
+-	ASSERT(!(bip->bli_format.blf_flags & XFS_BLI_CANCEL));
++	ASSERT(!(bip->bli_format.blf_flags & XFS_BLF_CANCEL));
+ 	ASSERT(!(bip->bli_flags & XFS_BLI_LOGGED));
+ 	if (reset_recur)
+ 		bip->bli_recur = 0;
+@@ -511,7 +511,7 @@ xfs_trans_brelse(xfs_trans_t	*tp,
+ 	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
+ 	ASSERT(bip->bli_item.li_type == XFS_LI_BUF);
+ 	ASSERT(!(bip->bli_flags & XFS_BLI_STALE));
+-	ASSERT(!(bip->bli_format.blf_flags & XFS_BLI_CANCEL));
++	ASSERT(!(bip->bli_format.blf_flags & XFS_BLF_CANCEL));
+ 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+ 
+ 	/*
+@@ -619,7 +619,7 @@ xfs_trans_bhold(xfs_trans_t	*tp,
+ 
+ 	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
+ 	ASSERT(!(bip->bli_flags & XFS_BLI_STALE));
+-	ASSERT(!(bip->bli_format.blf_flags & XFS_BLI_CANCEL));
++	ASSERT(!(bip->bli_format.blf_flags & XFS_BLF_CANCEL));
+ 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+ 	bip->bli_flags |= XFS_BLI_HOLD;
+ 	trace_xfs_trans_bhold(bip);
+@@ -641,7 +641,7 @@ xfs_trans_bhold_release(xfs_trans_t	*tp,
+ 
+ 	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
+ 	ASSERT(!(bip->bli_flags & XFS_BLI_STALE));
+-	ASSERT(!(bip->bli_format.blf_flags & XFS_BLI_CANCEL));
++	ASSERT(!(bip->bli_format.blf_flags & XFS_BLF_CANCEL));
+ 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+ 	ASSERT(bip->bli_flags & XFS_BLI_HOLD);
+ 	bip->bli_flags &= ~XFS_BLI_HOLD;
+@@ -704,7 +704,7 @@ xfs_trans_log_buf(xfs_trans_t	*tp,
+ 		bip->bli_flags &= ~XFS_BLI_STALE;
+ 		ASSERT(XFS_BUF_ISSTALE(bp));
+ 		XFS_BUF_UNSTALE(bp);
+-		bip->bli_format.blf_flags &= ~XFS_BLI_CANCEL;
++		bip->bli_format.blf_flags &= ~XFS_BLF_CANCEL;
+ 	}
+ 
+ 	lidp = xfs_trans_find_item(tp, (xfs_log_item_t*)bip);
+@@ -762,8 +762,8 @@ xfs_trans_binval(
+ 		ASSERT(!(XFS_BUF_ISDELAYWRITE(bp)));
+ 		ASSERT(XFS_BUF_ISSTALE(bp));
+ 		ASSERT(!(bip->bli_flags & (XFS_BLI_LOGGED | XFS_BLI_DIRTY)));
+-		ASSERT(!(bip->bli_format.blf_flags & XFS_BLI_INODE_BUF));
+-		ASSERT(bip->bli_format.blf_flags & XFS_BLI_CANCEL);
++		ASSERT(!(bip->bli_format.blf_flags & XFS_BLF_INODE_BUF));
++		ASSERT(bip->bli_format.blf_flags & XFS_BLF_CANCEL);
+ 		ASSERT(lidp->lid_flags & XFS_LID_DIRTY);
+ 		ASSERT(tp->t_flags & XFS_TRANS_DIRTY);
+ 		return;
+@@ -774,7 +774,7 @@ xfs_trans_binval(
+ 	 * in the buf log item.  The STALE flag will be used in
+ 	 * xfs_buf_item_unpin() to determine if it should clean up
+ 	 * when the last reference to the buf item is given up.
+-	 * We set the XFS_BLI_CANCEL flag in the buf log format structure
++	 * We set the XFS_BLF_CANCEL flag in the buf log format structure
+ 	 * and log the buf item.  This will be used at recovery time
+ 	 * to determine that copies of the buffer in the log before
+ 	 * this should not be replayed.
+@@ -793,8 +793,8 @@ xfs_trans_binval(
+ 	XFS_BUF_STALE(bp);
+ 	bip->bli_flags |= XFS_BLI_STALE;
+ 	bip->bli_flags &= ~(XFS_BLI_LOGGED | XFS_BLI_DIRTY);
+-	bip->bli_format.blf_flags &= ~XFS_BLI_INODE_BUF;
+-	bip->bli_format.blf_flags |= XFS_BLI_CANCEL;
++	bip->bli_format.blf_flags &= ~XFS_BLF_INODE_BUF;
++	bip->bli_format.blf_flags |= XFS_BLF_CANCEL;
+ 	memset((char *)(bip->bli_format.blf_data_map), 0,
+ 	      (bip->bli_format.blf_map_size * sizeof(uint)));
+ 	lidp->lid_flags |= XFS_LID_DIRTY;
+@@ -826,7 +826,7 @@ xfs_trans_inode_buf(
+ 	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
+ 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+ 
+-	bip->bli_format.blf_flags |= XFS_BLI_INODE_BUF;
++	bip->bli_format.blf_flags |= XFS_BLF_INODE_BUF;
+ }
+ 
+ /*
+@@ -908,9 +908,9 @@ xfs_trans_dquot_buf(
+ 	ASSERT(XFS_BUF_ISBUSY(bp));
+ 	ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
+ 	ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
+-	ASSERT(type == XFS_BLI_UDQUOT_BUF ||
+-	       type == XFS_BLI_PDQUOT_BUF ||
+-	       type == XFS_BLI_GDQUOT_BUF);
++	ASSERT(type == XFS_BLF_UDQUOT_BUF ||
++	       type == XFS_BLF_PDQUOT_BUF ||
++	       type == XFS_BLF_GDQUOT_BUF);
+ 
+ 	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
+ 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+-- 
+1.5.6.5
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
