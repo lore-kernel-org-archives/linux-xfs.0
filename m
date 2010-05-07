@@ -1,21 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o47GpHOc168600 for <xfs@oss.sgi.com>; Fri, 7 May 2010 11:51:17 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1B03C1DE85D5
-	for <xfs@oss.sgi.com>; Fri,  7 May 2010 09:53:27 -0700 (PDT)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id PzflvdTHUEIJz1qj for
-	<xfs@oss.sgi.com>; Fri, 07 May 2010 09:53:27 -0700 (PDT)
-Message-ID: <4BE44587.6090603@sandeen.net>
-Date: Fri, 07 May 2010 11:53:27 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: posix_fallocate
-References: <201005071022.37863.kb@sysmikro.com.pl>
-	<4BE43F34.40309@sandeen.net>
-In-Reply-To: <4BE43F34.40309@sandeen.net>
+	o47JopUm172499 for <xfs@oss.sgi.com>; Fri, 7 May 2010 14:50:52 -0500
+Received: from cf--amer001e--3.americas.sgi.com
+	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 35FAA8F80AD
+	for <xfs@oss.sgi.com>; Fri,  7 May 2010 12:53:00 -0700 (PDT)
+Subject: [ANNOUNCE] xfsprogs v3.1.2
+From: Alex Elder <aelder@sgi.com>
+Date: Fri, 07 May 2010 14:52:14 -0500
+Message-ID: <1273261934.2971.30.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,55 +20,40 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: =?UTF-8?B?S3J6eXN6dG9mIELFgmFzemtvd3NraQ==?= <kb@sysmikro.com.pl>
-Cc: xfs@oss.sgi.com
+To: XFS Mailing List <xfs@oss.sgi.com>
 
-RXJpYyBTYW5kZWVuIHdyb3RlOgo+IEtyenlzenRvZiBCxYJhc3prb3dza2kgd3JvdGU6Cj4+IEhl
-bGxvLAo+Pgo+PiBJIHVzZSB0aGlzIHRvIHByZWFsbG9jYXRlIGxhcmdlIHNwYWNlIGJ1dCBmb3Vu
-ZCBhbiBpc3N1ZS4gUG9zaXhfZmFsbG9jYXRlIAo+PiB3b3JrcyByaWdodCB3aXRoIHNpemVzIGxp
-a2UgMTAwRywgMVQgYW5kIGV2ZW4gMTBUIG9uIHNvbWUgYm94ZXMgKG9uIHNvbWUgCj4+IG90aGVy
-IGNhbiBmYWlsIGFmdGVyIGUuZy4gN1QgdGhyZXNob2xkKSBidXQgaWYgaSB0cmllZCBlLmcuIDE2
-VCB0aGUgdXNlciAKPj4gc3BhY2UgcHJvY2VzcyB3b3VsZCBiZSAiUiJ1bm5pbmcgZm9yZXZlciBh
-bmQgaXQgaXMgbm90IGludGVycnVwdGlibGUuIAo+PiBGdXJ0aGVybW9yZSBzb21lIG90aGVyIG5v
-dCByZWxhdGVkIHByb2Nlc3NlcyBsaWtlIHNzaGQsIGJhc2ggZW50ZXIgRCBzdGF0ZS4gCj4+IFRo
-ZXJlIGlzIG5vdGhpbmcgaW4ga2VybmVsIGxvZy4KCk9oLCBvbmUgdGhpbmcgeW91IHNob3VsZCBr
-bm93IGlzIHRoYXQgZGVwZW5kaW5nIG9uIHlvdXIgdmVyc2lvbiBvZiBnbGliYywKcG9zaXhfZmFs
-bG9jYXRlIG1heSBiZSB3cml0aW5nIDBzIGFuZCBub3QgdXNpbmcgcHJlYWxsb2NhdGlvbiBjYWxs
-cy4KCkRvIHlvdSBrbm93IHdoaWNoIHlvdXJzIGlzIHVzaW5nPyAgc3RyYWNlIHNob3VsZCB0ZWxs
-IHlvdSBvbiBhIHNtYWxsCmZpbGUgdGVzdC4KCkFueXdheSwgSSBhbSBzZWVpbmcgdGhpbmdzIGdl
-dCBzdHVjayBhcm91bmQgOFQgaXQgc2VlbXMuLi4KCiMgdG91Y2ggL21udC90ZXN0L2JpZ2ZpbGUK
-IyB4ZnNfaW8gLWMgInJlc3ZzcCAwIDE2dCIgL21udC90ZXN0L2JpZ2ZpbGUgCgouLi4gd2FpdCAu
-Li4gaW4gb3RoZXIgd2luZG93IC4uLgoKIyBkdSAtaGMgL21udC90ZXN0L2JpZ2ZpbGUgCjguMEcJ
-L21udC90ZXN0L2JpZ2ZpbGUKOC4wRwl0b3RhbAoKIyBlY2hvIHQgPiAvcHJvYy9zeXNycS10cmln
-Z2VyIAojIGRtZXNnIHwgZ3JlcCAtQTIwIHhmc19pbwp4ZnNfaW8gICAgICAgIFIgIHJ1bm5pbmcg
-dGFzayAgICAgMzU3NiAyOTQ0NCAgMjkzNjIgMHgwMDAwMDAwNgogZmZmZjg4MDljZmJiNDkyMCBm
-ZmZmZmZmZjgxNDc4ZDlmIGZmZmZmZmZmYTAzMmQzYzUgMDAwMDAwMDAwMDAwMDI0NgogZmZmZjg4
-MDljZmJiNDkyMCBmZmZmZmZmZjgxNDc4OGJjIDAwMDAwMDAwMDAwMDAwMDAgZmZmZmZmZmY4MWJh
-MzUxMAogZmZmZjg4MDlkMzQyOWE2OCBmZmZmZmZmZmEwMzJiNjBmIGZmZmY4ODA5ZDM0MjlhYTgg
-MDAwMDAwMDAwMDAwMDAxZQpDYWxsIFRyYWNlOgogWzxmZmZmZmZmZjgxNDc4ZDlmPl0gPyBfX211
-dGV4X2xvY2tfY29tbW9uKzB4MzZkLzB4MzkyCiBbPGZmZmZmZmZmYTAzMmQzYzU+XSA/IHhmc19p
-Y3NiX21vZGlmeV9jb3VudGVycysweDE3Zi8weDFhYyBbeGZzXQogWzxmZmZmZmZmZmEwMzJiNjBm
-Pl0gPyB4ZnNfaWNzYl91bmxvY2tfYWxsX2NvdW50ZXJzKzB4NGQvMHg2MCBbeGZzXQogWzxmZmZm
-ZmZmZmEwMzJiOGJmPl0gPyB4ZnNfaWNzYl9kaXNhYmxlX2NvdW50ZXIrMHg4Yy8weDk1IFt4ZnNd
-CiBbPGZmZmZmZmZmODE0NzhlODg+XSA/IG11dGV4X2xvY2tfbmVzdGVkKzB4M2UvMHg0MwogWzxm
-ZmZmZmZmZmEwMzJkM2QzPl0gPyB4ZnNfaWNzYl9tb2RpZnlfY291bnRlcnMrMHgxOGQvMHgxYWMg
-W3hmc10KIFs8ZmZmZmZmZmZhMDMyZDUzNj5dID8geGZzX21vZF9pbmNvcmVfc2IrMHgyOS8weDZl
-IFt4ZnNdCiBbPGZmZmZmZmZmYTAzMzA1MmM+XSA/IF94ZnNfdHJhbnNfYWxsb2MrMHgyNy8weDYx
-IFt4ZnNdCiBbPGZmZmZmZmZmYTAzMzAzZDM+XSA/IHhmc190cmFuc19yZXNlcnZlKzB4NmMvMHgx
-OWUgW3hmc10KIFs8ZmZmZmZmZmY4MTA2ZmI0NT5dID8gdXBfd3JpdGUrMHgyYi8weDMyCiBbPGZm
-ZmZmZmZmYTAzMzVlNTU+XSA/IHhmc19hbGxvY19maWxlX3NwYWNlKzB4MTYzLzB4MzA2IFt4ZnNd
-CiBbPGZmZmZmZmZmODEwNzEyMGE+XSA/IHNjaGVkX2Nsb2NrX2NwdSsweGMzLzB4Y2UKIFs8ZmZm
-ZmZmZmZhMDMzNjEyMj5dID8geGZzX2NoYW5nZV9maWxlX3NwYWNlKzB4MTJhLzB4MmI4IFt4ZnNd
-CiBbPGZmZmZmZmZmODEwNmY5YmY+XSA/IGRvd25fd3JpdGVfbmVzdGVkKzB4ODAvMHg4YgogWzxm
-ZmZmZmZmZmEwMzFiOGNlPl0gPyB4ZnNfaWxvY2srMHgzMC8weGI0IFt4ZnNdCiBbPGZmZmZmZmZm
-YTAzM2UwZTQ+XSA/IHhmc192bl9mYWxsb2NhdGUrMHg4MC8weGY0IFt4ZnNdCi0tClIgICAgICAg
-ICB4ZnNfaW8gMjk0NDQgIDg2MDE0NjI0Ljc4NjYxNyAgICAgICAxNjIgICAxMjAgIDg2MDE0NjI0
-Ljc4NjYxNyAgICAxMzc2NTUuMTYxMzI3ICAgICAgIDQwOC45Nzk5NzcgLwoKIyB1bmFtZSAtcgoy
-LjYuMzQtMC40LnJjMC5naXQyLmZjMTQueDg2XzY0CgpJJ2xsIGxvb2sgaW50byAgaXQuCgotRXJp
-YwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1h
-aWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlz
-dGluZm8veGZzCg==
+Version 3.1.2 of xfsprogs has been released.
+
+A gzipped-tar archive of the source code is available here:
+
+    ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsprogs-3.1.2.tar.gz
+
+The source code can be accessed via git using this URL:
+
+    git://oss.sgi.com/xfs/cmds/xfsprogs.git
+
+Below is a summary (from the doc/CHANGES file) of changes
+since release 3.1.1:
+
+xfsprogs-3.1.2 (6 May 2010)
+	- Fix missing thread synchronization in xfs_repair duplicate
+	  extent tracking.
+	- Fix handling of dynamic attribute fork roots in xfs_fsr.
+	- Fix sb_bad_features2 manipulations when tweaking the lazy
+          count flag.
+	- Add support for building on Debian GNU/kFreeBSD, thanks
+	  to Petr Salinger.
+	- Improvements to the mkfs.xfs manpage, thanks to Wengang Wang.
+	- Various small blkid integration fixes in mkfs.xfs.
+	- Fix build against stricter system headers.
+
+
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
