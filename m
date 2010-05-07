@@ -1,24 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o46Npt8w137294 for <xfs@oss.sgi.com>; Thu, 6 May 2010 18:51:55 -0500
+	o475d5Fk148836 for <xfs@oss.sgi.com>; Fri, 7 May 2010 00:39:06 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1C483136DE43
-	for <xfs@oss.sgi.com>; Thu,  6 May 2010 16:54:04 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3168F1370478
+	for <xfs@oss.sgi.com>; Thu,  6 May 2010 22:41:14 -0700 (PDT)
 Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
 	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	oFMA5tk8poayg6jb for <xfs@oss.sgi.com>;
-	Thu, 06 May 2010 16:54:04 -0700 (PDT)
-Date: Fri, 7 May 2010 09:54:01 +1000
+	Zz885nI9sefibWLq for <xfs@oss.sgi.com>;
+	Thu, 06 May 2010 22:41:14 -0700 (PDT)
+Received: from dastard (unverified [121.45.169.108])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	23556234-1927428
+	for <xfs@oss.sgi.com>; Fri, 07 May 2010 15:11:13 +0930 (CST)
+Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
+	(envelope-from <dave@fromorbit.com>) id 1OAGJ4-0006rC-5U
+	for xfs@oss.sgi.com; Fri, 07 May 2010 15:41:02 +1000
+Received: from dave by disturbed with local (Exim 4.71)
+	(envelope-from <dave@disturbed.disaster>) id 1OAGJ2-00066H-JK
+	for xfs@oss.sgi.com; Fri, 07 May 2010 15:41:00 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/11] xfs: delayed logging
-Message-ID: <20100506235401.GD19579@dastard>
-References: <1273110351-2333-1-git-send-email-david@fromorbit.com>
-	<20100506132641.GC19579@dastard>
-	<20100506191218.GA18555@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100506191218.GA18555@infradead.org>
+Subject: [PATCH 02/12] xfs: allow log ticket allocation to take allocation
+	flags
+Date: Fri,  7 May 2010 15:40:50 +1000
+Message-Id: <1273210860-23414-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1273210860-23414-1-git-send-email-david@fromorbit.com>
+References: <1273210860-23414-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,54 +34,75 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, May 06, 2010 at 03:12:18PM -0400, Christoph Hellwig wrote:
-> > Secondly, for delayed logging only, matching by transaction
-> > structure address triggers the failure because busy extents
-> > have a much longer life than the transaction structure. It is clear
-> > why the transaction ID matching didn't trip over - it would have
-> > triggered a log force in this situation, and hence blocked until
-> > the checkpoint that fs_mark-2742 had triggered was complete before
-> > redoing the rbtree insert.
-> 
-> True, the busy extents get spliced over to the cil context, so they
-> outlive the transaction structure.
-> 
-> > Right now I'm simply going to go back to using the transaction ID
-> > for matching transactions, even though the above analysis points out
-> > that even that is not as efficient as it could be for delayed
-> > logging. That is, we don't even need to force the log or have a
-> > synchronous transaction if the extent was first freed in the current
-> > checkpoint seqeunce. Doing that, however, requires pinning the
-> > checkpoint sequence (i.e. preventing a flush) until the current
-> > transaction commits. While that is in the plan for delayed logging,
-> > it is future functionality and hence I'm not going to attempt to
-> > design and implement it this close to 2.6.35-rc cycle. [*]
-> 
-> Sounds fine to me.  I'm not a fan of exporting the tid, but it
-> seems like there's no good way around it for now.  Please make the
-> tid exporting a separate changeset so that it's easily revertable
-> once this is sorted out.
+From: Dave Chinner <dchinner@redhat.com>
 
-Yeah, that's a good idea.
+Delayed logging currently requires ticket allocation to succeed, so
+we need to be able to sleep on allocation. It also should not allow
+memory allocation to recurse into the filesystem. hence we need to
+pass allocation flags directing the type of allocation the caller
+requires.
 
-> And documenting all this in comments in the code so that it's archived
-> would be very useful!
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_log.c |   16 ++++++++--------
+ 1 files changed, 8 insertions(+), 8 deletions(-)
 
-Will do. 
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 687b220..83be6a6 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -88,11 +88,9 @@ STATIC void xlog_ungrant_log_space(xlog_t	 *log,
+ 
+ 
+ /* local ticket functions */
+-STATIC xlog_ticket_t	*xlog_ticket_alloc(xlog_t *log,
+-					 int	unit_bytes,
+-					 int	count,
+-					 char	clientid,
+-					 uint	flags);
++STATIC xlog_ticket_t *xlog_ticket_alloc(xlog_t *log, int unit_bytes, int count,
++					char clientid, uint flags,
++					int alloc_flags);
+ 
+ #if defined(DEBUG)
+ STATIC void	xlog_verify_dest_ptr(xlog_t *log, char *ptr);
+@@ -376,7 +374,8 @@ xfs_log_reserve(
+ 	} else {
+ 		/* may sleep if need to allocate more tickets */
+ 		internal_ticket = xlog_ticket_alloc(log, unit_bytes, cnt,
+-						  client, flags);
++						  client, flags,
++						  KM_SLEEP|KM_MAYFAIL);
+ 		if (!internal_ticket)
+ 			return XFS_ERROR(ENOMEM);
+ 		internal_ticket->t_trans_type = t_type;
+@@ -3331,13 +3330,14 @@ xlog_ticket_alloc(
+ 	int		unit_bytes,
+ 	int		cnt,
+ 	char		client,
+-	uint		xflags)
++	uint		xflags,
++	int		alloc_flags)
+ {
+ 	struct xlog_ticket *tic;
+ 	uint		num_headers;
+ 	int		iclog_space;
+ 
+-	tic = kmem_zone_zalloc(xfs_log_ticket_zone, KM_SLEEP|KM_MAYFAIL);
++	tic = kmem_zone_zalloc(xfs_log_ticket_zone, alloc_flags);
+ 	if (!tic)
+ 		return NULL;
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+1.5.6.5
 
 _______________________________________________
 xfs mailing list
