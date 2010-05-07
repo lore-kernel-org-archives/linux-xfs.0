@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o475dLhM148929 for <xfs@oss.sgi.com>; Fri, 7 May 2010 00:39:21 -0500
+	o475dLSA148932 for <xfs@oss.sgi.com>; Fri, 7 May 2010 00:39:21 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1BA90963902
-	for <xfs@oss.sgi.com>; Thu,  6 May 2010 22:41:29 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	aGk7jjK98smAGyfJ for <xfs@oss.sgi.com>;
-	Thu, 06 May 2010 22:41:29 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EA8FD318A39
+	for <xfs@oss.sgi.com>; Thu,  6 May 2010 22:41:28 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	8OFs8yUh6ZGRwTBV for <xfs@oss.sgi.com>;
+	Thu, 06 May 2010 22:41:28 -0700 (PDT)
 Received: from dastard (unverified [121.45.169.108])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	23402973-1927428
+	23359261-1927428
 	for <xfs@oss.sgi.com>; Fri, 07 May 2010 15:11:24 +0930 (CST)
-Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1OAGJE-0006rX-Fl
-	for xfs@oss.sgi.com; Fri, 07 May 2010 15:41:12 +1000
+Received: from [192.168.1.9] (helo=disturbed) by dastard with esmtp (Exim 4.71)
+	(envelope-from <dave@fromorbit.com>) id 1OAGJO-0006rY-F5
+	for xfs@oss.sgi.com; Fri, 07 May 2010 15:41:22 +1000
 Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1OAGJC-00066W-WE
+	(envelope-from <dave@disturbed.disaster>) id 1OAGJD-00066e-1v
 	for xfs@oss.sgi.com; Fri, 07 May 2010 15:41:11 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 07/12] xfs: Improve scalability of busy extent tracking
-Date: Fri,  7 May 2010 15:40:55 +1000
-Message-Id: <1273210860-23414-8-git-send-email-david@fromorbit.com>
+Subject: [PATCH 08/12] xfs: Delayed logging design documentation
+Date: Fri,  7 May 2010 15:40:56 +1000
+Message-Id: <1273210860-23414-9-git-send-email-david@fromorbit.com>
 In-Reply-To: <1273210860-23414-1-git-send-email-david@fromorbit.com>
 References: <1273210860-23414-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,1178 +34,867 @@ List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============7271736806019775892=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-When we free a metadata extent, we record it in the per-AG busy
-extent array so that it is not re-used before the freeing
-transaction hits the disk. This array is fixed size, so when it
-overflows we make further allocation transactions synchronous
-because we cannot track more freed extents until those transactions
-hit the disk and are completed. Under heavy mixed allocation and
-freeing workloads with large log buffers, we can overflow this array
-quite easily.
+--===============7271736806019775892==
+Content-Type: text/plain
 
-Further, the array is sparsely populated, which means that inserts
-need to search for a free slot, and array searches often have to
-search many more slots that are actually used to check all the
-busy extents. Quite inefficient, really.
+From: Dave Chinner <dchinner@redhat.com>
 
-To enable this aspect of extent freeing to scale better, we need
-a structure that can grow dynamically. While in other areas of
-XFS we have used radix trees, the extents being freed are at random
-locations on disk so are better suited to being indexed by an rbtree.
+Document the design of the delayed logging implementation. This
+includes assumptions made, dead ends followed, the reasoning behind
+the structuring of the code, the layout of various structures, how
+things fit together, traps and pit-falls avoided, etc. This is all
+too much to document in the code itself, so do it in a separate
+file.
 
-So, use a per-AG rbtree indexed by block number to track busy
-extents.  This incures a memory allocation when marking an extent
-busy, but should not occur too often in low memory situations. This
-should scale to an arbitrary number of extents so should not be a
-limitation for features such as in-memory aggregation of
-transactions.
-
-However, there are still situations where we can't avoid allocating
-busy extents (such as allocation from the AGFL). To minimise the
-overhead of such occurences, we need to avoid doing a synchronous
-log force while holding the AGF locked to ensure that the previous
-transactions are safely on disk before we use the extent. We can do
-this by marking the transaction doing the allocation as synchronous
-rather issuing a log force.
-
-Because of the locking involved and the ordering of transactions,
-the synchronous transaction provides the same guarantees as a
-synchronous log force because it ensures that all the prior
-transactions are already on disk when the synchronous transaction
-hits the disk. i.e. it preserves the free->allocate order of the
-extent correctly in recovery.
-
-By doing this, we avoid holding the AGF locked while log writes are
-in progress, hence reducing the length of time the lock is held and
-therefore we increase the rate at which we can allocate and free
-from the allocation group, thereby increasing overall throughput.
-
-The only problem with this approach is that when a metadata buffer is
-marked stale (e.g. a directory block is removed), then buffer remains
-pinned and locked until the log goes to disk. The issue here is that
-if that stale buffer is reallocated in a subsequent transaction, the
-attempt to lock that buffer in the transaction will hang waiting
-the log to go to disk to unlock and unpin the buffer. Hence if
-someone tries to lock a pinned, stale, locked buffer we need to
-push on the log to get it unlocked ASAP. Effectively we are trading
-off a guaranteed log force for a much less common trigger for log
-force to occur.
-
-Ideally we should not reallocate busy extents. That is a much more
-complex fix to the problem as it involves direct intervention in the
-allocation btree searches in many places. This is left to a future
-set of modifications.
-
-Finally, now that we track busy extents in allocated memory, we
-don't need the descriptors in the transaction structure to point to
-them. We can replace the complex busy chunk infrastructure with a
-simple linked list of busy extents. This allows us to remove a large
-chunk of code, making the overall change a net reduction in code
-size.
-
-Signed-off-by: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/linux-2.6/xfs_buf.c      |    9 +
- fs/xfs/linux-2.6/xfs_quotaops.c |    1 +
- fs/xfs/linux-2.6/xfs_trace.h    |   83 ++++++---
- fs/xfs/xfs_ag.h                 |   24 ++-
- fs/xfs/xfs_alloc.c              |  364 ++++++++++++++++++++++++++++-----------
- fs/xfs/xfs_alloc.h              |    7 +-
- fs/xfs/xfs_alloc_btree.c        |    2 +-
- fs/xfs/xfs_log.h                |    3 -
- fs/xfs/xfs_trans.c              |   41 ++----
- fs/xfs/xfs_trans.h              |   35 +----
- fs/xfs/xfs_trans_item.c         |  109 ------------
- fs/xfs/xfs_trans_priv.h         |    4 -
- fs/xfs/xfs_types.h              |    2 +
- 13 files changed, 361 insertions(+), 323 deletions(-)
+ .../filesystems/xfs-delayed-logging-design.txt     |  819 ++++++++++++++++++++
+ 1 files changed, 819 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/filesystems/xfs-delayed-logging-design.txt
 
-diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
-index 6873afc..82678bf 100644
---- a/fs/xfs/linux-2.6/xfs_buf.c
-+++ b/fs/xfs/linux-2.6/xfs_buf.c
-@@ -37,6 +37,7 @@
- 
- #include "xfs_sb.h"
- #include "xfs_inum.h"
-+#include "xfs_log.h"
- #include "xfs_ag.h"
- #include "xfs_dmapi.h"
- #include "xfs_mount.h"
-@@ -850,6 +851,12 @@ xfs_buf_lock_value(
-  *	Note that this in no way locks the underlying pages, so it is only
-  *	useful for synchronizing concurrent use of buffer objects, not for
-  *	synchronizing independent access to the underlying pages.
-+ *
-+ *	If we come across a stale, pinned, locked buffer, we know that we
-+ *	are being asked to lock a buffer that has been reallocated. Because
-+ *	it is pinned, we know that the log has not been pushed to disk and
-+ *	hence it will still be locked. Rather than sleeping until someone
-+ *	else pushes the log, push it ourselves before trying to get the lock.
-  */
- void
- xfs_buf_lock(
-@@ -857,6 +864,8 @@ xfs_buf_lock(
- {
- 	trace_xfs_buf_lock(bp, _RET_IP_);
- 
-+	if (atomic_read(&bp->b_pin_count) && (bp->b_flags & XBF_STALE))
-+		xfs_log_force(bp->b_mount, 0);
- 	if (atomic_read(&bp->b_io_remaining))
- 		blk_run_address_space(bp->b_target->bt_mapping);
- 	down(&bp->b_sema);
-diff --git a/fs/xfs/linux-2.6/xfs_quotaops.c b/fs/xfs/linux-2.6/xfs_quotaops.c
-index 1947514..2e73688 100644
---- a/fs/xfs/linux-2.6/xfs_quotaops.c
-+++ b/fs/xfs/linux-2.6/xfs_quotaops.c
-@@ -19,6 +19,7 @@
- #include "xfs_dmapi.h"
- #include "xfs_sb.h"
- #include "xfs_inum.h"
-+#include "xfs_log.h"
- #include "xfs_ag.h"
- #include "xfs_mount.h"
- #include "xfs_quota.h"
-diff --git a/fs/xfs/linux-2.6/xfs_trace.h b/fs/xfs/linux-2.6/xfs_trace.h
-index 8a319cf..ff6bc79 100644
---- a/fs/xfs/linux-2.6/xfs_trace.h
-+++ b/fs/xfs/linux-2.6/xfs_trace.h
-@@ -1059,83 +1059,112 @@ TRACE_EVENT(xfs_bunmap,
- 
- );
- 
-+#define XFS_BUSY_SYNC \
-+	{ 0,	"async" }, \
-+	{ 1,	"sync" }
+diff --git a/Documentation/filesystems/xfs-delayed-logging-design.txt b/Documentation/filesystems/xfs-delayed-logging-design.txt
+new file mode 100644
+index 0000000..2b7ff2e
+--- /dev/null
++++ b/Documentation/filesystems/xfs-delayed-logging-design.txt
+@@ -0,0 +1,819 @@
++XFS Delayed Logging Design
++--------------------------
 +
- TRACE_EVENT(xfs_alloc_busy,
--	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t agbno,
--		 xfs_extlen_t len, int slot),
--	TP_ARGS(mp, agno, agbno, len, slot),
-+	TP_PROTO(struct xfs_trans *trans, xfs_agnumber_t agno,
-+		 xfs_agblock_t agbno, xfs_extlen_t len, int sync),
-+	TP_ARGS(trans, agno, agbno, len, sync),
- 	TP_STRUCT__entry(
- 		__field(dev_t, dev)
-+		__field(struct xfs_trans *, tp)
-+		__field(int, tid)
- 		__field(xfs_agnumber_t, agno)
- 		__field(xfs_agblock_t, agbno)
- 		__field(xfs_extlen_t, len)
--		__field(int, slot)
-+		__field(int, sync)
- 	),
- 	TP_fast_assign(
--		__entry->dev = mp->m_super->s_dev;
-+		__entry->dev = trans->t_mountp->m_super->s_dev;
-+		__entry->tp = trans;
-+		__entry->tid = trans->t_ticket->t_tid;
- 		__entry->agno = agno;
- 		__entry->agbno = agbno;
- 		__entry->len = len;
--		__entry->slot = slot;
-+		__entry->sync = sync;
- 	),
--	TP_printk("dev %d:%d agno %u agbno %u len %u slot %d",
-+	TP_printk("dev %d:%d trans 0x%p tid 0x%x agno %u agbno %u len %u %s",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->tp,
-+		  __entry->tid,
- 		  __entry->agno,
- 		  __entry->agbno,
- 		  __entry->len,
--		  __entry->slot)
-+		  __print_symbolic(__entry->sync, XFS_BUSY_SYNC))
- 
- );
- 
--#define XFS_BUSY_STATES \
--	{ 0,	"found" }, \
--	{ 1,	"missing" }
--
- TRACE_EVENT(xfs_alloc_unbusy,
- 	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
--		 int slot, int found),
--	TP_ARGS(mp, agno, slot, found),
-+		 xfs_agblock_t agbno, xfs_extlen_t len),
-+	TP_ARGS(mp, agno, agbno, len),
- 	TP_STRUCT__entry(
- 		__field(dev_t, dev)
- 		__field(xfs_agnumber_t, agno)
--		__field(int, slot)
--		__field(int, found)
-+		__field(xfs_agblock_t, agbno)
-+		__field(xfs_extlen_t, len)
- 	),
- 	TP_fast_assign(
- 		__entry->dev = mp->m_super->s_dev;
- 		__entry->agno = agno;
--		__entry->slot = slot;
--		__entry->found = found;
-+		__entry->agbno = agbno;
-+		__entry->len = len;
- 	),
--	TP_printk("dev %d:%d agno %u slot %d %s",
-+	TP_printk("dev %d:%d agno %u agbno %u len %u",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  __entry->agno,
--		  __entry->slot,
--		  __print_symbolic(__entry->found, XFS_BUSY_STATES))
-+		  __entry->agbno,
-+		  __entry->len)
- );
- 
-+#define XFS_BUSY_STATES \
-+	{ 0,	"missing" }, \
-+	{ 1,	"found" }
++Introduction to Re-logging in XFS
++---------------------------------
 +
- TRACE_EVENT(xfs_alloc_busysearch,
--	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t agbno,
--		 xfs_extlen_t len, xfs_lsn_t lsn),
--	TP_ARGS(mp, agno, agbno, len, lsn),
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
-+		 xfs_agblock_t agbno, xfs_extlen_t len, int found),
-+	TP_ARGS(mp, agno, agbno, len, found),
- 	TP_STRUCT__entry(
- 		__field(dev_t, dev)
- 		__field(xfs_agnumber_t, agno)
- 		__field(xfs_agblock_t, agbno)
- 		__field(xfs_extlen_t, len)
--		__field(xfs_lsn_t, lsn)
-+		__field(int, found)
- 	),
- 	TP_fast_assign(
- 		__entry->dev = mp->m_super->s_dev;
- 		__entry->agno = agno;
- 		__entry->agbno = agbno;
- 		__entry->len = len;
--		__entry->lsn = lsn;
-+		__entry->found = found;
- 	),
--	TP_printk("dev %d:%d agno %u agbno %u len %u force lsn 0x%llx",
-+	TP_printk("dev %d:%d agno %u agbno %u len %u %s",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  __entry->agno,
- 		  __entry->agbno,
- 		  __entry->len,
-+		  __print_symbolic(__entry->found, XFS_BUSY_STATES))
-+);
++XFS logging is a combination of logical and physical logging. Some objects,
++such as inodes and dquots, are logged in logical format where the details
++logged are made up of the changes to in-core structures rather than on-disk
++structures. Other objects - typically buffers - have their physical changes
++logged. The reason for these differences is to reduce the amount of log space
++required for objects that are frequently logged. Some parts of inodes are more
++frequently logged than others, and inodes are typically more frequently logged
++than any other object (except maybe the superblock buffer) so keeping the
++amount of metadata logged low is of prime importance.
 +
-+TRACE_EVENT(xfs_trans_commit_lsn,
-+	TP_PROTO(struct xfs_trans *trans),
-+	TP_ARGS(trans),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(struct xfs_trans *, tp)
-+		__field(xfs_lsn_t, lsn)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = trans->t_mountp->m_super->s_dev;
-+		__entry->tp = trans;
-+		__entry->lsn = trans->t_commit_lsn;
-+	),
-+	TP_printk("dev %d:%d trans 0x%p commit_lsn 0x%llx",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->tp,
- 		  __entry->lsn)
- );
- 
-diff --git a/fs/xfs/xfs_ag.h b/fs/xfs/xfs_ag.h
-index abb8222..401f364 100644
---- a/fs/xfs/xfs_ag.h
-+++ b/fs/xfs/xfs_ag.h
-@@ -175,14 +175,20 @@ typedef struct xfs_agfl {
- } xfs_agfl_t;
- 
- /*
-- * Busy block/extent entry.  Used in perag to mark blocks that have been freed
-- * but whose transactions aren't committed to disk yet.
-+ * Busy block/extent entry.  Indexed by a rbtree in perag to mark blocks that
-+ * have been freed but whose transactions aren't committed to disk yet.
-+ *
-+ * Note that we use the transaction ID to record the transaction, not the
-+ * transaction structure itself. See xfs_alloc_busy_insert() for details.
-  */
--typedef struct xfs_perag_busy {
--	xfs_agblock_t	busy_start;
--	xfs_extlen_t	busy_length;
--	struct xfs_trans *busy_tp;	/* transaction that did the free */
--} xfs_perag_busy_t;
-+struct xfs_busy_extent {
-+	struct rb_node	rb_node;	/* ag by-bno indexed search tree */
-+	struct list_head list;		/* transaction busy extent list */
-+	xfs_agnumber_t	agno;
-+	xfs_agblock_t	bno;
-+	xfs_extlen_t	length;
-+	xlog_tid_t	tid;		/* transaction that created this */
-+};
- 
- /*
-  * Per-ag incore structure, copies of information in agf and agi,
-@@ -216,7 +222,8 @@ typedef struct xfs_perag {
- 	xfs_agino_t	pagl_leftrec;
- 	xfs_agino_t	pagl_rightrec;
- #ifdef __KERNEL__
--	spinlock_t	pagb_lock;	/* lock for pagb_list */
-+	spinlock_t	pagb_lock;	/* lock for pagb_tree */
-+	struct rb_root	pagb_tree;	/* ordered tree of busy extents */
- 
- 	atomic_t        pagf_fstrms;    /* # of filestreams active in this AG */
- 
-@@ -226,7 +233,6 @@ typedef struct xfs_perag {
- 	int		pag_ici_reclaimable;	/* reclaimable inodes */
- #endif
- 	int		pagb_count;	/* pagb slots in use */
--	xfs_perag_busy_t pagb_list[XFS_PAGB_NUM_SLOTS];	/* unstable blocks */
- } xfs_perag_t;
- 
- /*
-diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
-index 94cddbf..f8d592b 100644
---- a/fs/xfs/xfs_alloc.c
-+++ b/fs/xfs/xfs_alloc.c
-@@ -46,11 +46,9 @@
- #define	XFSA_FIXUP_BNO_OK	1
- #define	XFSA_FIXUP_CNT_OK	2
- 
--STATIC void
--xfs_alloc_search_busy(xfs_trans_t *tp,
--		    xfs_agnumber_t agno,
--		    xfs_agblock_t bno,
--		    xfs_extlen_t len);
-+static int
-+xfs_alloc_busy_search(struct xfs_mount *mp, xfs_agnumber_t agno,
-+		    xfs_agblock_t bno, xfs_extlen_t len);
- 
- /*
-  * Prototypes for per-ag allocation routines
-@@ -540,9 +538,16 @@ xfs_alloc_ag_vextent(
- 				be32_to_cpu(agf->agf_length));
- 			xfs_alloc_log_agf(args->tp, args->agbp,
- 						XFS_AGF_FREEBLKS);
--			/* search the busylist for these blocks */
--			xfs_alloc_search_busy(args->tp, args->agno,
--					args->agbno, args->len);
-+			/*
-+			 * Search the busylist for these blocks and mark the
-+			 * transaction as synchronous if blocks are found. This
-+			 * avoids the need to block in due to a synchronous log
-+			 * force to ensure correct ordering as the synchronous
-+			 * transaction will guarantee that for us.
-+			 */
-+			if (xfs_alloc_busy_search(args->mp, args->agno,
-+						args->agbno, args->len))
-+				xfs_trans_set_sync(args->tp);
- 		}
- 		if (!args->isfl)
- 			xfs_trans_mod_sb(args->tp,
-@@ -1693,7 +1698,7 @@ xfs_free_ag_extent(
- 	 * when the iclog commits to disk.  If a busy block is allocated,
- 	 * the iclog is pushed up to the LSN that freed the block.
- 	 */
--	xfs_alloc_mark_busy(tp, agno, bno, len);
-+	xfs_alloc_busy_insert(tp, agno, bno, len);
- 	return 0;
- 
-  error0:
-@@ -1993,10 +1998,17 @@ xfs_alloc_get_freelist(
- 	 * and remain there until the freeing transaction is committed to
- 	 * disk.  Now that we have allocated blocks, this list must be
- 	 * searched to see if a block is being reused.  If one is, then
--	 * the freeing transaction must be pushed to disk NOW by forcing
--	 * to disk all iclogs up that transaction's LSN.
--	 */
--	xfs_alloc_search_busy(tp, be32_to_cpu(agf->agf_seqno), bno, 1);
-+	 * the freeing transaction must be pushed to disk before this
-+	 * transaction.
-+	 *
-+	 * We do this by setting the current transaction
-+	 * to a sync transaction which guarantees that the freeing transaction
-+	 * is on disk before this transaction. This is done instead of a
-+	 * synchronous log force here so that we don't sit and wait with
-+	 * the AGF locked in the transaction during the log force.
-+	 */
-+	if (xfs_alloc_busy_search(mp, be32_to_cpu(agf->agf_seqno), bno, 1))
-+		xfs_trans_set_sync(tp);
- 	return 0;
- }
- 
-@@ -2201,7 +2213,7 @@ xfs_alloc_read_agf(
- 			be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNTi]);
- 		spin_lock_init(&pag->pagb_lock);
- 		pag->pagb_count = 0;
--		memset(pag->pagb_list, 0, sizeof(pag->pagb_list));
-+		pag->pagb_tree = RB_ROOT;
- 		pag->pagf_init = 1;
- 	}
- #ifdef DEBUG
-@@ -2479,127 +2491,273 @@ error0:
-  * list is reused, the transaction that freed it must be forced to disk
-  * before continuing to use the block.
-  *
-- * xfs_alloc_mark_busy - add to the per-ag busy list
-- * xfs_alloc_clear_busy - remove an item from the per-ag busy list
-+ * xfs_alloc_busy_insert - add to the per-ag busy list
-+ * xfs_alloc_busy_clear - remove an item from the per-ag busy list
-+ * xfs_alloc_busy_search - search for a busy extent
-+ */
++The reason that this is such a concern is that XFS allows multiple separate
++modifications to a single object to be carried in the log at any given time.
++This allows the log to avoid needing to flush each change to disk before
++recording a new change to the object. XFS does this via a method called
++"re-logging". Conceptually, this is quite simple - all it requires is that any
++new change to the object is recorded with a *new copy* of all the existing
++changes in the new transaction that is written to the log.
 +
-+/*
-+ * Insert a new extent into the busy tree.
-+ *
-+ * This is straight forward, except that we can get overlaps with existing busy
-+ * extents, and even duplicate busy extents. There are two main cases we have
-+ * to handle here.
-+ *
-+ * The first case is a transaction that triggers a "free - allocate - free"
-+ * cycle. This can occur during btree manipulations as a btree block is freed
-+ * to the freelist, then allocated from the free list, then freed again. In
-+ * this case, the second extnet free is what triggers the duplicate and as such
-+ * the transaction IDs should match. Because the extent was allocated in this
-+ * transaction, the transaction must be marked as synchronous. This is true for
-+ * all cases where the free/alloc/free occurs in the one transaction, hence the
-+ * addition of the ASSERT(tp->t_flags & XFS_TRANS_SYNC) to this case. This
-+ * serves to catch violations of the second case quite effectively.
-+ *
-+ * The second case is where the free/alloc/free occur in different
-+ * transactions. In this case, we can't mark the extent busy immediately
-+ * because it is already tracked in a transaction that may be committing.  When
-+ * the log commit completes, the busy extent will be removed from the tree. If
-+ * we allow this busy insert to continue using that busy extent structure, it
-+ * can be freed before this transaction is safely in the log.  Hence our only
-+ * option in this case is to force the log to remove the existing busy extent
-+ * from the list before we insert the new one with the current transaction ID.
-+ *
-+ * The problem we are trying to avoid in the free-alloc-free in separate
-+ * transactions is most easily described with a timeline:
-+ *
-+ *      Thread 1	Thread 2	Thread 3	xfslogd
-+ *	xact alloc
-+ *	free X
-+ *	mark busy
-+ *	commit xact
-+ *	free xact
-+ *			xact alloc
-+ *			alloc X
-+ *			busy search
-+ *			mark xact sync
-+ *			commit xact
-+ *			free xact
-+ *			force log
-+ *			checkpoint starts
-+ *			....
-+ *					xact alloc
-+ *					free X
-+ *					mark busy
-+ *					finds match
-+ *					*** KABOOM! ***
-+ *					....
-+ *							log IO completes
-+ *							unbusy 1:91909
-+ *			checkpoint completes
-+ *
-+ * By issuing a log force in thread 3 @ "KABOOM", the thread will block until
-+ * the checkpoint completes, and the busy extent it matched will have been
-+ * removed from the tree when it is woken. Hence it can then continue safely.
-+ *
-+ * However, to ensure this matching process is robust, we need to use the
-+ * transaction ID for identifying transaction, as delayed logging results in
-+ * the busy extent and transaction lifecycles being different. i.e. the busy
-+ * extent is active for a lot longer than the transaction.  Hence the
-+ * transaction structure can be freed and reallocated, then mark the same
-+ * extent busy again in the new transaction. In this case the new transaction
-+ * will have a different tid but can have the same address, and hence we need
-+ * to check against the tid.
-+ *
-+ * Future: for delayed logging, we could avoid the log force is the extent was
-+ * first freed in the current checkpoint sequence. This, however, requires the
-+ * ability to pin the current checkpoint in memory until this transaction
-+ * commits to ensure that both the original free and the current one combine
-+ * logically into the one checkpoint. If the checkpoint sequences are
-+ * different, however, we still need to wait on a log force.
-  */
- void
--xfs_alloc_mark_busy(xfs_trans_t *tp,
--		    xfs_agnumber_t agno,
--		    xfs_agblock_t bno,
--		    xfs_extlen_t len)
-+xfs_alloc_busy_insert(
-+	struct xfs_trans	*tp,
-+	xfs_agnumber_t		agno,
-+	xfs_agblock_t		bno,
-+	xfs_extlen_t		len)
- {
--	xfs_perag_busy_t	*bsy;
-+	struct xfs_busy_extent	*new;
-+	struct xfs_busy_extent	*busyp;
- 	struct xfs_perag	*pag;
--	int			n;
-+	struct rb_node		**rbp;
-+	struct rb_node		*parent;
-+	xfs_agblock_t		uend, bend;
-+	int			match;
- 
--	pag = xfs_perag_get(tp->t_mountp, agno);
--	spin_lock(&pag->pagb_lock);
- 
--	/* search pagb_list for an open slot */
--	for (bsy = pag->pagb_list, n = 0;
--	     n < XFS_PAGB_NUM_SLOTS;
--	     bsy++, n++) {
--		if (bsy->busy_tp == NULL) {
--			break;
--		}
-+	new = kmem_zalloc(sizeof(struct xfs_busy_extent), KM_MAYFAIL);
-+	if (!new) {
-+		/*
-+		 * No Memory!  Since it is now not possible to track the free
-+		 * block, make this a synchronous transaction to insure that
-+		 * the block is not reused before this transaction commits.
-+		 */
-+		trace_xfs_alloc_busy(tp, agno, bno, len, 1);
-+		xfs_trans_set_sync(tp);
-+		return;
- 	}
- 
--	trace_xfs_alloc_busy(tp->t_mountp, agno, bno, len, n);
-+	new->agno = agno;
-+	new->bno = bno;
-+	new->length = len;
-+	new->tid = xfs_log_get_trans_ident(tp);
- 
--	if (n < XFS_PAGB_NUM_SLOTS) {
--		bsy = &pag->pagb_list[n];
--		pag->pagb_count++;
--		bsy->busy_start = bno;
--		bsy->busy_length = len;
--		bsy->busy_tp = tp;
--		xfs_trans_add_busy(tp, agno, n);
--	} else {
-+	INIT_LIST_HEAD(&new->list);
++That is, if we have a sequence of changes A through to F, and the object was
++written to disk after change D, we would see in the log the following series
++of transactions, their contents and the log sequence number (LSN) of the
++transaction:
 +
-+	/* trace before insert to be able to see failed inserts */
-+	trace_xfs_alloc_busy(tp, agno, bno, len, 0);
++	Transaction		Contents	LSN
++	   A			   A		   X
++	   B			  A+B		  X+n
++	   C			 A+B+C		 X+n+m
++	   D			A+B+C+D		X+n+m+o
++	    <object written to disk>
++	   E			   E		   Y (> X+n+m+o)
++	   F			  E+F		  Yٍ+p
 +
-+	pag = xfs_perag_get(tp->t_mountp, new->agno);
-+	uend = bno + len - 1;
-+restart:
-+	spin_lock(&pag->pagb_lock);
-+	rbp = &pag->pagb_tree.rb_node;
-+	parent = NULL;
-+	busyp = NULL;
-+	match = 0;
-+	while (*rbp) {
-+		parent = *rbp;
-+		busyp = rb_entry(parent, struct xfs_busy_extent, rb_node);
-+		bend = busyp->bno + busyp->length - 1;
++In other words, each time an object is relogged, the new transaction contains
++the aggregation of all the previous changes currently held only in the log.
 +
-+		if (new->bno < busyp->bno) {
-+			/* may overlap, but exact start block is lower */
-+			rbp = &(*rbp)->rb_left;
-+			if (uend >= busyp->bno) {
-+				if (busyp->tid != new->tid)
-+					match = -1;
-+				else if (match >= 0)
-+					match = 1;
-+			}
-+		} else if (new->bno > busyp->bno) {
-+			/* may overlap, but exact start block is higher */
-+			rbp = &(*rbp)->rb_right;
-+			if (bno <= bend) {
-+				if (busyp->tid != new->tid)
-+					match = -1;
-+				else if (match >= 0)
-+					match = 1;
-+			}
-+		} else {
-+			if (busyp->tid != new->tid)
-+				match = -1;
-+			else if (match >= 0)
-+				match = 1;
-+			break;
-+		}
-+		busyp = NULL;
-+	}
-+	if (match < 0) {
-+		/* overlap marked busy in different transaction */
-+		spin_unlock(&pag->pagb_lock);
-+		xfs_log_force(tp->t_mountp, XFS_LOG_SYNC);
-+		goto restart;
-+	}
-+	if (match > 0) {
- 		/*
--		 * The busy list is full!  Since it is now not possible to
--		 * track the free block, make this a synchronous transaction
--		 * to insure that the block is not reused before this
--		 * transaction commits.
-+		 * overlap marked busy in same transaction. Update if exact
-+		 * start block match, otherwise combine the busy extents into
-+		 * a single range.
- 		 */
--		xfs_trans_set_sync(tp);
-+		if (busyp->bno == new->bno) {
-+			busyp->length = max(busyp->length, new->length);
-+			spin_unlock(&pag->pagb_lock);
-+			ASSERT(tp->t_flags & XFS_TRANS_SYNC);
-+			xfs_perag_put(pag);
-+			kmem_free(new);
-+			return;
-+		}
-+		rb_erase(&busyp->rb_node, &pag->pagb_tree);
-+		new->length = max(busyp->bno + busyp->length,
-+					new->bno + new->length) -
-+				min(busyp->bno, new->bno);
-+		new->bno = min(busyp->bno, new->bno);
- 	}
- 
-+	rb_link_node(&new->rb_node, parent, rbp);
-+	rb_insert_color(&new->rb_node, &pag->pagb_tree);
++This relogging technique also allows objects to be moved forward in the log so
++that an object being relogged does not prevent the tail of the log from ever
++moving forward.  This can be seen in the table above by the changing
++(increasing) LSN of each subsquent transaction - the LSN is effectively a
++direct encoding of the location in the log of the transaction.
 +
-+	list_add(&new->list, &tp->t_busy);
- 	spin_unlock(&pag->pagb_lock);
- 	xfs_perag_put(pag);
-+	kmem_free(busyp);
- }
- 
--void
--xfs_alloc_clear_busy(xfs_trans_t *tp,
--		     xfs_agnumber_t agno,
--		     int idx)
-+/*
-+ * Search for a busy extent within the range of the extent we are about to
-+ * allocate.  You need to be holding the busy extent tree lock when calling
-+ * xfs_alloc_busy_search(). This function returns 0 for no overlapping busy
-+ * extent, -1 for an overlapping but not exact busy extent, and 1 for an exact
-+ * match. This is done so that a non-zero return indicates an overlap that
-+ * will require a synchronous transaction, but it can still be
-+ * used to distinguish between a partial or exact match.
-+ */
-+static int
-+xfs_alloc_busy_search(
-+	struct xfs_mount	*mp,
-+	xfs_agnumber_t		agno,
-+	xfs_agblock_t		bno,
-+	xfs_extlen_t		len)
- {
- 	struct xfs_perag	*pag;
--	xfs_perag_busy_t	*list;
-+	struct rb_node		*rbp;
-+	xfs_agblock_t		uend, bend;
-+	struct xfs_busy_extent	*busyp;
-+	int			match = 0;
- 
--	ASSERT(idx < XFS_PAGB_NUM_SLOTS);
--	pag = xfs_perag_get(tp->t_mountp, agno);
-+	pag = xfs_perag_get(mp, agno);
- 	spin_lock(&pag->pagb_lock);
--	list = pag->pagb_list;
- 
--	trace_xfs_alloc_unbusy(tp->t_mountp, agno, idx, list[idx].busy_tp == tp);
--
--	if (list[idx].busy_tp == tp) {
--		list[idx].busy_tp = NULL;
--		pag->pagb_count--;
-+	uend = bno + len - 1;
-+	rbp = pag->pagb_tree.rb_node;
++This relogging is also used to implement long-running, multiple-commit
++transactions.  These transaction are known as rolling transactions, and require
++a special log reservation known as a permanent transaction reservation. A
++typical example of a rolling transaction is the removal of extents from an
++inode which can only be done at a rate of two extents per transaction because
++of reservation size limitations. Hence a rolling extent removal transaction
++keeps relogging the inode and btree buffers as they get modified in each
++removal operation. This keeps them moving forward in the log as the operation
++progresses, ensuring that current operation never gets blocked by itself if the
++log wraps around.
 +
-+	/* find closest start bno overlap */
-+	while (rbp) {
-+		busyp = rb_entry(rbp, struct xfs_busy_extent, rb_node);
-+		bend = busyp->bno + busyp->length - 1;
-+		if (bno < busyp->bno) {
-+			/* may overlap, but exact start block is lower */
-+			if (uend >= busyp->bno)
-+				match = -1;
-+			rbp = rbp->rb_left;
-+		} else if (bno > busyp->bno) {
-+			/* may overlap, but exact start block is higher */
-+			if (bno <= bend)
-+				match = -1;
-+			rbp = rbp->rb_right;
-+		} else {
-+			/* bno matches busyp, length determines exact match */
-+			match = (busyp->length == len) ? 1 : -1;
-+			break;
-+		}
- 	}
--
- 	spin_unlock(&pag->pagb_lock);
-+	trace_xfs_alloc_busysearch(mp, agno, bno, len, !!match);
- 	xfs_perag_put(pag);
-+	return match;
- }
- 
--
--/*
-- * If we find the extent in the busy list, force the log out to get the
-- * extent out of the busy list so the caller can use it straight away.
-- */
--STATIC void
--xfs_alloc_search_busy(xfs_trans_t *tp,
--		    xfs_agnumber_t agno,
--		    xfs_agblock_t bno,
--		    xfs_extlen_t len)
-+void
-+xfs_alloc_busy_clear(
-+	struct xfs_mount	*mp,
-+	struct xfs_busy_extent	*busyp)
- {
- 	struct xfs_perag	*pag;
--	xfs_perag_busy_t	*bsy;
--	xfs_agblock_t		uend, bend;
--	xfs_lsn_t		lsn = 0;
--	int			cnt;
- 
--	pag = xfs_perag_get(tp->t_mountp, agno);
--	spin_lock(&pag->pagb_lock);
--	cnt = pag->pagb_count;
-+	trace_xfs_alloc_unbusy(mp, busyp->agno, busyp->bno,
-+						busyp->length);
- 
--	/*
--	 * search pagb_list for this slot, skipping open slots. We have to
--	 * search the entire array as there may be multiple overlaps and
--	 * we have to get the most recent LSN for the log force to push out
--	 * all the transactions that span the range.
--	 */
--	uend = bno + len - 1;
--	for (cnt = 0; cnt < pag->pagb_count; cnt++) {
--		bsy = &pag->pagb_list[cnt];
--		if (!bsy->busy_tp)
--			continue;
--
--		bend = bsy->busy_start + bsy->busy_length - 1;
--		if (bno > bend || uend < bsy->busy_start)
--			continue;
--
--		/* (start1,length1) within (start2, length2) */
--		if (XFS_LSN_CMP(bsy->busy_tp->t_commit_lsn, lsn) > 0)
--			lsn = bsy->busy_tp->t_commit_lsn;
--	}
-+	ASSERT(xfs_alloc_busy_search(mp, busyp->agno, busyp->bno,
-+						busyp->length) == 1);
++Hence it can be seen that the relogging operation is fundamental to the correct
++working of the XFS journalling subsystem. From the above description, most
++people should be able to see why the XFS metadata operations writes so much to
++the log - repeated operations to the same objects write the same changes to
++the log over and over again. Worse is the fact that objects tend to get
++dirtier as they get relogged, so each subsequent transaction is writing more
++metadata into the log.
 +
-+	list_del_init(&busyp->list);
++Another feature of the XFS transaction subsystem is that most transactions are
++asynchronous. That is, they don't commit to disk until either a log buffer is
++filled (a log buffer can hold multiple transactions) or a synchronous operation
++forces the log buffers holding the transactions to disk. This means that XFS is
++doing aggregation of transactions in memory - batching them, if you like - to
++minimise the impact of the log IO on transaction throughput.
 +
-+	pag = xfs_perag_get(mp, busyp->agno);
-+	spin_lock(&pag->pagb_lock);
-+	rb_erase(&busyp->rb_node, &pag->pagb_tree);
- 	spin_unlock(&pag->pagb_lock);
- 	xfs_perag_put(pag);
--	trace_xfs_alloc_busysearch(tp->t_mountp, agno, bno, len, lsn);
- 
--	/*
--	 * If a block was found, force the log through the LSN of the
--	 * transaction that freed the block
--	 */
--	if (lsn)
--		xfs_log_force_lsn(tp->t_mountp, lsn, XFS_LOG_SYNC);
-+	kmem_free(busyp);
- }
-diff --git a/fs/xfs/xfs_alloc.h b/fs/xfs/xfs_alloc.h
-index 599bffa..6d05199 100644
---- a/fs/xfs/xfs_alloc.h
-+++ b/fs/xfs/xfs_alloc.h
-@@ -22,6 +22,7 @@ struct xfs_buf;
- struct xfs_mount;
- struct xfs_perag;
- struct xfs_trans;
-+struct xfs_busy_extent;
- 
- /*
-  * Freespace allocation types.  Argument to xfs_alloc_[v]extent.
-@@ -119,15 +120,13 @@ xfs_alloc_longest_free_extent(struct xfs_mount *mp,
- #ifdef __KERNEL__
- 
- void
--xfs_alloc_mark_busy(xfs_trans_t *tp,
-+xfs_alloc_busy_insert(xfs_trans_t *tp,
- 		xfs_agnumber_t agno,
- 		xfs_agblock_t bno,
- 		xfs_extlen_t len);
- 
- void
--xfs_alloc_clear_busy(xfs_trans_t *tp,
--		xfs_agnumber_t ag,
--		int idx);
-+xfs_alloc_busy_clear(struct xfs_mount *mp, struct xfs_busy_extent *busyp);
- 
- #endif	/* __KERNEL__ */
- 
-diff --git a/fs/xfs/xfs_alloc_btree.c b/fs/xfs/xfs_alloc_btree.c
-index b726e10..83f4942 100644
---- a/fs/xfs/xfs_alloc_btree.c
-+++ b/fs/xfs/xfs_alloc_btree.c
-@@ -134,7 +134,7 @@ xfs_allocbt_free_block(
- 	 * disk. If a busy block is allocated, the iclog is pushed up to the
- 	 * LSN that freed the block.
- 	 */
--	xfs_alloc_mark_busy(cur->bc_tp, be32_to_cpu(agf->agf_seqno), bno, 1);
-+	xfs_alloc_busy_insert(cur->bc_tp, be32_to_cpu(agf->agf_seqno), bno, 1);
- 	xfs_trans_agbtree_delta(cur->bc_tp, -1);
- 	return 0;
- }
-diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
-index 38af110..05f205a 100644
---- a/fs/xfs/xfs_log.h
-+++ b/fs/xfs/xfs_log.h
-@@ -18,9 +18,6 @@
- #ifndef	__XFS_LOG_H__
- #define __XFS_LOG_H__
- 
--/* transaction ID type */
--typedef __uint32_t xlog_tid_t;
--
- /* get lsn fields */
- #define CYCLE_LSN(lsn) ((uint)((lsn)>>32))
- #define BLOCK_LSN(lsn) ((uint)(lsn))
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index be578ec..40d9595 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -44,6 +44,7 @@
- #include "xfs_trans_priv.h"
- #include "xfs_trans_space.h"
- #include "xfs_inode_item.h"
-+#include "xfs_trace.h"
- 
- kmem_zone_t	*xfs_trans_zone;
- 
-@@ -243,9 +244,8 @@ _xfs_trans_alloc(
- 	tp->t_type = type;
- 	tp->t_mountp = mp;
- 	tp->t_items_free = XFS_LIC_NUM_SLOTS;
--	tp->t_busy_free = XFS_LBC_NUM_SLOTS;
- 	xfs_lic_init(&(tp->t_items));
--	XFS_LBC_INIT(&(tp->t_busy));
-+	INIT_LIST_HEAD(&tp->t_busy);
- 	return tp;
- }
- 
-@@ -255,8 +255,13 @@ _xfs_trans_alloc(
-  */
- STATIC void
- xfs_trans_free(
--	xfs_trans_t	*tp)
-+	struct xfs_trans	*tp)
- {
-+	struct xfs_busy_extent	*busyp, *n;
++The limitation on asynchronous transaction throughput is the number and size of
++log buffers made available by the log manager. By default there are 8 log
++buffers available and the size of each is 32kB - the size can be increased up
++to 256kB by use of a mount option.
 +
-+	list_for_each_entry_safe(busyp, n, &tp->t_busy, list)
-+		xfs_alloc_busy_clear(tp->t_mountp, busyp);
++Effectively, this gives us the maximum bound of outstanding metadata changes
++that can be made to the filesystem at any point in time - if all the log
++buffers are full and under IO, then no more transactions can be committed until
++the current batch completes. It is now common for a single current CPU core to
++be to able to issue enough transactions to keep the log buffers full and under
++IO permanently. Hence the XFS journalling subsystem can be considered to be IO
++bound.
 +
- 	atomic_dec(&tp->t_mountp->m_active_trans);
- 	xfs_trans_free_dqinfo(tp);
- 	kmem_zone_free(xfs_trans_zone, tp);
-@@ -285,9 +290,8 @@ xfs_trans_dup(
- 	ntp->t_type = tp->t_type;
- 	ntp->t_mountp = tp->t_mountp;
- 	ntp->t_items_free = XFS_LIC_NUM_SLOTS;
--	ntp->t_busy_free = XFS_LBC_NUM_SLOTS;
- 	xfs_lic_init(&(ntp->t_items));
--	XFS_LBC_INIT(&(ntp->t_busy));
-+	INIT_LIST_HEAD(&ntp->t_busy);
- 
- 	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
- 	ASSERT(tp->t_ticket != NULL);
-@@ -423,7 +427,6 @@ undo_blocks:
- 	return error;
- }
- 
--
- /*
-  * Record the indicated change to the given field for application
-  * to the file system's superblock when the transaction commits.
-@@ -930,26 +933,6 @@ xfs_trans_item_committed(
- 	IOP_UNPIN(lip);
- }
- 
--/* Clear all the per-AG busy list items listed in this transaction */
--static void
--xfs_trans_clear_busy_extents(
--	struct xfs_trans	*tp)
--{
--	xfs_log_busy_chunk_t	*lbcp;
--	xfs_log_busy_slot_t	*lbsp;
--	int			i;
--
--	for (lbcp = &tp->t_busy; lbcp != NULL; lbcp = lbcp->lbc_next) {
--		i = 0;
--		for (lbsp = lbcp->lbc_busy; i < lbcp->lbc_unused; i++, lbsp++) {
--			if (XFS_LBC_ISFREE(lbcp, i))
--				continue;
--			xfs_alloc_clear_busy(tp, lbsp->lbc_ag, lbsp->lbc_idx);
--		}
--	}
--	xfs_trans_free_busy(tp);
--}
--
- /*
-  * This is typically called by the LM when a transaction has been fully
-  * committed to disk.  It needs to unpin the items which have
-@@ -984,7 +967,6 @@ xfs_trans_committed(
- 		kmem_free(licp);
- 	}
- 
--	xfs_trans_clear_busy_extents(tp);
- 	xfs_trans_free(tp);
- }
- 
-@@ -1013,7 +995,6 @@ xfs_trans_uncommit(
- 	xfs_trans_unreserve_and_mod_dquots(tp);
- 
- 	xfs_trans_free_items(tp, flags);
--	xfs_trans_free_busy(tp);
- 	xfs_trans_free(tp);
- }
- 
-@@ -1075,6 +1056,8 @@ xfs_trans_commit_iclog(
- 	*commit_lsn = xfs_log_done(mp, tp->t_ticket, &commit_iclog, log_flags);
- 
- 	tp->t_commit_lsn = *commit_lsn;
-+	trace_xfs_trans_commit_lsn(tp);
++Delayed Logging: Concepts
++-------------------------
 +
- 	if (nvec > XFS_TRANS_LOGVEC_COUNT)
- 		kmem_free(log_vector);
- 
-@@ -1260,7 +1243,6 @@ out_unreserve:
- 	}
- 	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
- 	xfs_trans_free_items(tp, error ? XFS_TRANS_ABORT : 0);
--	xfs_trans_free_busy(tp);
- 	xfs_trans_free(tp);
- 
- 	XFS_STATS_INC(xs_trans_empty);
-@@ -1339,7 +1321,6 @@ xfs_trans_cancel(
- 	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
- 
- 	xfs_trans_free_items(tp, flags);
--	xfs_trans_free_busy(tp);
- 	xfs_trans_free(tp);
- }
- 
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index c62beee..ff7e9e6 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -813,6 +813,7 @@ struct xfs_log_item_desc;
- struct xfs_mount;
- struct xfs_trans;
- struct xfs_dquot_acct;
-+struct xfs_busy_extent;
- 
- typedef struct xfs_log_item {
- 	struct list_head		li_ail;		/* AIL pointers */
-@@ -872,34 +873,6 @@ typedef struct xfs_item_ops {
- #define XFS_ITEM_PUSHBUF	3
- 
- /*
-- * This structure is used to maintain a list of block ranges that have been
-- * freed in the transaction.  The ranges are listed in the perag[] busy list
-- * between when they're freed and the transaction is committed to disk.
-- */
--
--typedef struct xfs_log_busy_slot {
--	xfs_agnumber_t		lbc_ag;
--	ushort			lbc_idx;	/* index in perag.busy[] */
--} xfs_log_busy_slot_t;
--
--#define XFS_LBC_NUM_SLOTS	31
--typedef struct xfs_log_busy_chunk {
--	struct xfs_log_busy_chunk	*lbc_next;
--	uint				lbc_free;	/* free slots bitmask */
--	ushort				lbc_unused;	/* first unused */
--	xfs_log_busy_slot_t		lbc_busy[XFS_LBC_NUM_SLOTS];
--} xfs_log_busy_chunk_t;
--
--#define	XFS_LBC_MAX_SLOT	(XFS_LBC_NUM_SLOTS - 1)
--#define	XFS_LBC_FREEMASK	((1U << XFS_LBC_NUM_SLOTS) - 1)
--
--#define	XFS_LBC_INIT(cp)	((cp)->lbc_free = XFS_LBC_FREEMASK)
--#define	XFS_LBC_CLAIM(cp, slot)	((cp)->lbc_free &= ~(1 << (slot)))
--#define	XFS_LBC_SLOT(cp, slot)	(&((cp)->lbc_busy[(slot)]))
--#define	XFS_LBC_VACANCY(cp)	(((cp)->lbc_free) & XFS_LBC_FREEMASK)
--#define	XFS_LBC_ISFREE(cp, slot) ((cp)->lbc_free & (1 << (slot)))
--
--/*
-  * This is the type of function which can be given to xfs_trans_callback()
-  * to be called upon the transaction's commit to disk.
-  */
-@@ -950,8 +923,7 @@ typedef struct xfs_trans {
- 	unsigned int		t_items_free;	/* log item descs free */
- 	xfs_log_item_chunk_t	t_items;	/* first log item desc chunk */
- 	xfs_trans_header_t	t_header;	/* header for in-log trans */
--	unsigned int		t_busy_free;	/* busy descs free */
--	xfs_log_busy_chunk_t	t_busy;		/* busy/async free blocks */
-+	struct list_head	t_busy;		/* list of busy extents */
- 	unsigned long		t_pflags;	/* saved process flags state */
- } xfs_trans_t;
- 
-@@ -1025,9 +997,6 @@ int		_xfs_trans_commit(xfs_trans_t *,
- void		xfs_trans_cancel(xfs_trans_t *, int);
- int		xfs_trans_ail_init(struct xfs_mount *);
- void		xfs_trans_ail_destroy(struct xfs_mount *);
--xfs_log_busy_slot_t *xfs_trans_add_busy(xfs_trans_t *tp,
--					xfs_agnumber_t ag,
--					xfs_extlen_t idx);
- 
- extern kmem_zone_t	*xfs_trans_zone;
- 
-diff --git a/fs/xfs/xfs_trans_item.c b/fs/xfs/xfs_trans_item.c
-index eb3fc57..2937a1e 100644
---- a/fs/xfs/xfs_trans_item.c
-+++ b/fs/xfs/xfs_trans_item.c
-@@ -438,112 +438,3 @@ xfs_trans_unlock_chunk(
- 
- 	return freed;
- }
--
--
--/*
-- * This is called to add the given busy item to the transaction's
-- * list of busy items.  It must find a free busy item descriptor
-- * or allocate a new one and add the item to that descriptor.
-- * The function returns a pointer to busy descriptor used to point
-- * to the new busy entry.  The log busy entry will now point to its new
-- * descriptor with its ???? field.
-- */
--xfs_log_busy_slot_t *
--xfs_trans_add_busy(xfs_trans_t *tp, xfs_agnumber_t ag, xfs_extlen_t idx)
--{
--	xfs_log_busy_chunk_t	*lbcp;
--	xfs_log_busy_slot_t	*lbsp;
--	int			i=0;
--
--	/*
--	 * If there are no free descriptors, allocate a new chunk
--	 * of them and put it at the front of the chunk list.
--	 */
--	if (tp->t_busy_free == 0) {
--		lbcp = (xfs_log_busy_chunk_t*)
--		       kmem_alloc(sizeof(xfs_log_busy_chunk_t), KM_SLEEP);
--		ASSERT(lbcp != NULL);
--		/*
--		 * Initialize the chunk, and then
--		 * claim the first slot in the newly allocated chunk.
--		 */
--		XFS_LBC_INIT(lbcp);
--		XFS_LBC_CLAIM(lbcp, 0);
--		lbcp->lbc_unused = 1;
--		lbsp = XFS_LBC_SLOT(lbcp, 0);
--
--		/*
--		 * Link in the new chunk and update the free count.
--		 */
--		lbcp->lbc_next = tp->t_busy.lbc_next;
--		tp->t_busy.lbc_next = lbcp;
--		tp->t_busy_free = XFS_LIC_NUM_SLOTS - 1;
--
--		/*
--		 * Initialize the descriptor and the generic portion
--		 * of the log item.
--		 *
--		 * Point the new slot at this item and return it.
--		 * Also point the log item at its currently active
--		 * descriptor and set the item's mount pointer.
--		 */
--		lbsp->lbc_ag = ag;
--		lbsp->lbc_idx = idx;
--		return lbsp;
--	}
--
--	/*
--	 * Find the free descriptor. It is somewhere in the chunklist
--	 * of descriptors.
--	 */
--	lbcp = &tp->t_busy;
--	while (lbcp != NULL) {
--		if (XFS_LBC_VACANCY(lbcp)) {
--			if (lbcp->lbc_unused <= XFS_LBC_MAX_SLOT) {
--				i = lbcp->lbc_unused;
--				break;
--			} else {
--				/* out-of-order vacancy */
--				cmn_err(CE_DEBUG, "OOO vacancy lbcp 0x%p\n", lbcp);
--				ASSERT(0);
--			}
--		}
--		lbcp = lbcp->lbc_next;
--	}
--	ASSERT(lbcp != NULL);
--	/*
--	 * If we find a free descriptor, claim it,
--	 * initialize it, and return it.
--	 */
--	XFS_LBC_CLAIM(lbcp, i);
--	if (lbcp->lbc_unused <= i) {
--		lbcp->lbc_unused = i + 1;
--	}
--	lbsp = XFS_LBC_SLOT(lbcp, i);
--	tp->t_busy_free--;
--	lbsp->lbc_ag = ag;
--	lbsp->lbc_idx = idx;
--	return lbsp;
--}
--
--
--/*
-- * xfs_trans_free_busy
-- * Free all of the busy lists from a transaction
-- */
--void
--xfs_trans_free_busy(xfs_trans_t *tp)
--{
--	xfs_log_busy_chunk_t	*lbcp;
--	xfs_log_busy_chunk_t	*lbcq;
--
--	lbcp = tp->t_busy.lbc_next;
--	while (lbcp != NULL) {
--		lbcq = lbcp->lbc_next;
--		kmem_free(lbcp);
--		lbcp = lbcq;
--	}
--
--	XFS_LBC_INIT(&tp->t_busy);
--	tp->t_busy.lbc_unused = 0;
--}
-diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-index 73e2ad3..901dc0f 100644
---- a/fs/xfs/xfs_trans_priv.h
-+++ b/fs/xfs/xfs_trans_priv.h
-@@ -38,10 +38,6 @@ struct xfs_log_item_desc	*xfs_trans_next_item(struct xfs_trans *,
- void				xfs_trans_free_items(struct xfs_trans *, int);
- void				xfs_trans_unlock_items(struct xfs_trans *,
- 							xfs_lsn_t);
--void				xfs_trans_free_busy(xfs_trans_t *tp);
--xfs_log_busy_slot_t		*xfs_trans_add_busy(xfs_trans_t *tp,
--						    xfs_agnumber_t ag,
--						    xfs_extlen_t idx);
- 
- /*
-  * AIL traversal cursor.
-diff --git a/fs/xfs/xfs_types.h b/fs/xfs/xfs_types.h
-index b099045..3207752 100644
---- a/fs/xfs/xfs_types.h
-+++ b/fs/xfs/xfs_types.h
-@@ -75,6 +75,8 @@ typedef	__uint32_t	xfs_dahash_t;	/* dir/attr hash value */
- 
- typedef __uint16_t	xfs_prid_t;	/* prid_t truncated to 16bits in XFS */
- 
-+typedef __uint32_t	xlog_tid_t;	/* transaction ID type */
++The key thing to note about the asynchronous logging combined with the
++relogging technique XFS uses is that we can be relogging changed objects
++multiple times before they are committed to disk in the log buffers. If we
++return to the previous relogging example, it is entirely possible that
++transactions A through D are committed to disk in the same log buffer.
 +
- /*
-  * These types are 64 bits on disk but are either 32 or 64 bits in memory.
-  * Disk based types:
++That is, a single log buffer may contain multiple copies of the same object,
++but only one of those copies needs to be there - the last one "D", as it
++contains all the changes from the previous changes. In other words, we have one
++necessary copy in the log buffer, and three stale copies that are simply
++wasting space. When we are doing repeated operations on the same set of
++objects, these "stale objects" can be over 90% of the space used in the log
++buffers. It is clear that reducing the number of stale objects written to the
++log would greatly reduce the amount of metadata we write to the log, and this
++is the fundamental goal of delayed logging.
++
++From a conceptual point of view, XFS is already doing relogging in memory (where
++memory == log buffer), only it is doing it extremely inefficiently. It is using
++logical to physical formatting to do the relogging because there is no
++infrastructure to keep track of logical changes in memory prior to physically
++formatting the changes in a transaction to the log buffer. Hence we cannot avoid
++accumulating stale objects in the log buffers.
++
++Delayed logging is the name we've given to keeping and tracking transactional
++changes to objects in memory outside the log buffer infrastructure. Because of
++the relogging concept fundamental to the XFS journalling subsystem, this is
++actually relatively easy to do - all the changes to logged items are already
++tracked in the current infrastructure. The big problem is how to accumulate
++them and get them to the log in a consistent, recoverable manner.
++Describing the problems and how they have been solved is the focus of this
++document.
++
++One of the key changes that delayed logging makes to the operation of the
++journalling subsystem is that it disassociates the amount of outstanding
++metadata changes from the size and number of log buffers available. In other
++words, instead of there only being a maximum of 2MB of transaction changes not
++written to the log at any point in time, there may be a much greater amount
++being accumulated in memory. Hence the potential for loss of metadata on a
++crash is much greater than for the existing logging mechanism.
++
++It should be noted that this does not change the guarantee that log recovery
++will result in a consistent filesystem. What it does mean is that as far as the
++recovered filesystem is concerned, there may be many thousands of transactions
++that simply did not occur as a result of the crash. This makes it even more
++important that applications that care about their data use fsync() where they
++need to ensure application level data integrity is maintained.
++
++It should be noted that delayed logging is not an innovative new concept that
++warrants rigorous proofs to determine whether it is correct or not. The method
++of accumulating changes in memory for some period before writing them to the
++log is used effectively in many filesystems including ext3 and ext4. Hence
++no time is spent in this document trying to convince the reader that the
++concept is sound. Instead it is simply considered a "solved problem" and as
++such implementing it in XFS is purely an exercise in software engineering.
++
++The fundamental requirements for delayed logging in XFS are simple:
++
++	1. Reduce the amount of metadata written to the log by at least
++	   an order of magnitude.
++	2. Supply sufficient statistics to validate Requirement #1.
++	3. Supply sufficient new tracing infrastructure to be able to debug
++	   problems with the new code.
++	4. No on-disk format change (metadata or log format).
++	5. Enable and disable with a mount option.
++	6. No performance regressions for synchronous transaction workloads.
++
++Delayed Logging: Design
++-----------------------
++
++Storing Changes
++
++The problem with accumulating changes at a logical level (i.e. just using the
++existing log item dirty region tracking) is that when it comes to writing the
++changes to the log buffers, we need to ensure that the object we are formatting
++is not changing while we do this. This requires locking the object to prevent
++concurrent modification. Hence flushing the logical changes to the log would
++require us to lock every object, format them, and then unlock them again.
++
++This introduces lots of scope for deadlocks with transactions that are already
++running. For example, a transaction has object A locked and modified, but needs
++the delayed logging tracking lock to commit the transaction. However, the
++flushing thread has the delayed logging tracking lock already held, and is
++trying to get the lock on object A to flush it to the log buffer. This appears
++to be an unsolvable deadlock condition, and it was solving this problem that
++was the barrier to implementing delayed logging for so long.
++
++The solution is relatively simple - it just took a long time to recognise it.
++Put simply, the current logging code formats the changes to each item into an
++vector array that points to the changed regions in the item. The log write code
++simply copies the memory these vectors point to into the log buffer during
++transaction commit while the item is locked in the transaction. Instead of
++using the log buffer as the destination of the formatting code, we can use an
++allocated memory buffer big enough to fit the formatted vector.
++
++If we then copy the vector into the memory buffer and rewrite the vector to
++point to the memory buffer rather than the object itself, we now have a copy of
++the changes in a format that is compatible with the log buffer writing code.
++that does not require us to lock the item to access. This formatting and
++rewriting can all be done while the object is locked during transaction commit,
++resulting in a vector that is transactionally consistent and can be accessed
++without needing to lock the owning item.
++
++Hence we avoid the need to lock items when we need to flush outstanding
++asynchronous transactions to the log. The differences between the existing
++formatting method and the delayed logging formatting can be seen in the
++diagram below.
++
++Current format log vector:
++
++Object    +---------------------------------------------+
++Vector 1      +----+
++Vector 2                    +----+
++Vector 3                                   +----------+
++
++After formatting:
++
++Log Buffer    +-V1-+-V2-+----V3----+
++
++Delayed logging vector:
++
++Object    +---------------------------------------------+
++Vector 1      +----+
++Vector 2                    +----+
++Vector 3                                   +----------+
++
++After formatting:
++
++Memory Buffer +-V1-+-V2-+----V3----+
++Vector 1      +----+
++Vector 2           +----+
++Vector 3                +----------+
++
++The memory buffer and associated vector need to be passed as a single object,
++but still need to be associated with the parent object so if the object is
++relogged we can replace the current memory buffer with a new memory buffer that
++contains the latest changes.
++
++The reason for keeping the vector around after we've formatted the memory
++buffer is to support splitting vectors across log buffer boundaries correctly.
++If we don't keep the vector around, we do not know where the region boundaries
++are in the item, so we'd need a new encapsulation method for regions in the log
++buffer writing (i.e. double encapsulation). This would be an on-disk format
++change and as such is not desirable.  It also means we'd have to write the log
++region headers in the formatting stage, which is problematic as there is per
++region state that needs to be placed into the headers during the log write.
++
++Hence we need to keep the vector, but by attaching the memory buffer to it and
++rewriting the vector addresses to point at the memory buffer we end up with a
++self-describing object that can be passed to the log buffer write code to be
++handled in exactly the same manner as the existing log vectors are handled.
++Hence we avoid needing a new on-disk format to handle items that have been
++relogged in memory.
++
++
++Tracking Changes
++
++Now that we can record transactional changes in memory in a form that allows
++them to be used without limitations, we need to be able to track and accumulate
++them so that they can be written to the log at some later point in time.  The
++log item is the natural place to store this vector and buffer, and also makes sense
++to be the object that is used to track committed objects as it will always
++exist once the object has been included in a transaction.
++
++The log item is already used to track the log items that have been written to
++the log but not yet written to disk. Such log items are considered "active"
++and as such are stored in the Active Item List (AIL) which is a LSN-ordered
++double linked list. Items are inserted into this list during log buffer IO
++completion, after which they are unpinned and can be written to disk. An object
++that is in the AIL can be relogged, which causes the object to be pinned again
++and then moved forward in the AIL when the log buffer IO completes for that
++transaction.
++
++Essentially, this shows that an item that is in the AIL can still be modified
++and relogged, so any tracking must be separate to the AIL infrastructure. As
++such, we cannot reuse the AIL list pointers for tracking committed items, nor
++can we store state in any field that is protected by the AIL lock. Hence the
++committed item tracking needs it's own locks, lists and state fields in the log
++item.
++
++Similar to the AIL, tracking of committed items is done through a new list
++called the Committed Item List (CIL).  The list tracks log items that have been
++committed and have formatted memory buffers attached to them. It tracks objects
++in transaction commit order, so when an object is relogged it is removed from
++it's place in the list and re-inserted at the tail. This is entirely arbitrary
++and done to make it easy for debugging - the last items in the list are the
++ones that are most recently modified. Ordering of the CIL is not necessary for
++transactional integrity (as discussed in the next section) so the ordering is
++done for convenience/sanity of the developers.
++
++
++Delayed Logging: Checkpoints
++
++When we have a log synchronisation event, commonly known as a "log force",
++all the items in the CIL must be written into the log via the log buffers.
++We need to write these items in the order that they exist in the CIL, and they
++need to be written as an atomic transaction. The need for all the objects to be
++written as an atomic transaction comes from the requirements of relogging and
++log replay - all the changes in all the objects in a given transaction must
++either be completely replayed during log recovery, or not replayed at all. If
++a transaction is not replayed because it is not complete in the log, then
++no later transactions should be replayed, either.
++
++To fulfill this requirement, we need to write the entire CIL in a single log
++transaction. Fortunately, the XFS log code has no fixed limit on the size of a
++transaction, nor does the log replay code. The only fundamental limit is that
++the transaction cannot be larger than just under half the size of the log.  The
++reason for this limit is that to find the head and tail of the log, there must
++be at least one complete transaction in the log at any given time. If a
++transaction is larger than half the log, then there is the possibility that a
++crash during the write of a such a transaction could partially overwrite the
++only complete previous transaction in the log. This will result in a recovery
++failure and an inconsistent filesystem and hence we must enforce the maximum
++size of a checkpoint to be slightly less than a half the log.
++
++Apart from this size requirement, a checkpoint transaction looks no different
++to any other transaction - it contains a transaction header, a series of
++formatted log items and a commit record at the tail. From a recovery
++perspective, the checkpoint transaction is also no different - just a lot
++bigger with a lot more items in it. The worst case effect of this is that we
++might need to tune the recovery transaction object hash size.
++
++Because the checkpoint is just another transaction and all the changes to log
++items are stored as log vectors, we can use the existing log buffer writing
++code to write the changes into the log. To do this efficiently, we need to
++minimise the time we hold the CIL locked while writing the checkpoint
++transaction. The current log write code enables us to do this easily with the
++way it separates the writing of the transaction contents (the log vectors) from
++the transaction commit record, but tracking this requires us to have a
++per-checkpoint context that travels through the log write process through to
++checkpoint completion.
++
++Hence a checkpoint has a context that tracks the state of the current
++checkpoint from initiation to checkpoint completion. A new context is initiated
++at the same time a checkpoint transaction is started. That is, when we remove
++all the current items from the CIL during a checkpoint operation, we move all
++those changes into the current checkpoint context. We then initialise a new
++context and attach that to the CIL for aggregation of new transactions.
++
++This allows us to unlock the CIL immediately after transfer of all the
++committed items and effectively allow new transactions to be issued while we
++are formatting the checkpoint into the log. It also allows concurrent
++checkpoints to be written into the log buffers in the case of log force heavy
++workloads, just like the existing transaction commit code does. This, however,
++requires that we strictly order the commit records in the log so that
++checkpoint sequence order is maintained during log replay.
++
++To ensure that we can be writing an item into a checkpoint transaction at
++the same time another transaction modifies the item and inserts the log item
++into the new CIL, then checkpoint transaction commit code cannot use log items
++to store the list of log vectors that need to be written into the transaction.
++Hence log vectors need to be able to be chained together to allow them to be
++detatched from the log items. That is, when the CIL is flushed the memory
++buffer and log vector attached to each log item needs to be attached to the
++checkpoint context so that the log item can be released. In diagrammatic form,
++the CIL would look like this before the flush:
++
++	CIL Head
++	   |
++	   V
++	Log Item <-> log vector 1	-> memory buffer
++	   |				-> vector array
++	   V
++	Log Item <-> log vector 2	-> memory buffer
++	   |				-> vector array
++	   V
++	......
++	   |
++	   V
++	Log Item <-> log vector N-1	-> memory buffer
++	   |				-> vector array
++	   V
++	Log Item <-> log vector N	-> memory buffer
++					-> vector array
++
++And after the flush the CIL head is empty, and the checkpoint context log
++vector list would look like:
++
++	Checkpoint Context
++	   |
++	   V
++	log vector 1	-> memory buffer
++	   |		-> vector array
++	   |		-> Log Item
++	   V
++	log vector 2	-> memory buffer
++	   |		-> vector array
++	   |		-> Log Item
++	   V
++	......
++	   |
++	   V
++	log vector N-1	-> memory buffer
++	   |		-> vector array
++	   |		-> Log Item
++	   V
++	log vector N	-> memory buffer
++			-> vector array
++			-> Log Item
++
++Once this transfer is done, the CIL can be unlocked and new transactions can
++start, while the checkpoint flush code works over the log vector chain to
++commit the checkpoint.
++
++Once the checkpoint is written into the log buffers, the checkpoint context is
++attached to the log buffer that the commit record was written to along with a
++completion callback. Log IO completion will call that callback, which can then
++run transaction committed processing for the log items (i.e. insert into AIL
++and unpin) in the log vector chain and then free the log vector chain and
++checkpoint context.
++
++Discussion Point: I am uncertain as to whether the log item is the most
++efficient way to track vectors, even though it seems like the natural way to do
++it. The fact that we walk the log items (in the CIL) just to chain the log
++vectors and break the link between the log item and the log vector means that
++we take a cache line hit for the log item list modification, then another for
++the log vector chaining. If we track by the log vectors, then we only need to
++break the link between the log item and the log vector, which means we should
++dirty only the log item cachelines. Normally I wouldn't be concerned about one
++vs two dirty cachelines except for the fact I've seen upwards of 80,000 log
++vectors in one checkpoint transaction. I'd guess this is a "measure and
++compare" situation that can be done after a working and reviewed implementation
++is in the dev tree....
++
++Delayed Logging: Checkpoint Sequencing
++
++One of the key aspects of the XFS transaction subsystem is that it tags
++committed transactions with the log sequence number of the transaction commit.
++This allows transactions to be issued asynchronously even though there may be
++future operations that cannot be completed until that transaction is fully
++committed to the log. In the rare case that a dependent operation occurs (e.g.
++re-using a freed metadata extent for a data extent), a special, optimised log
++force can be issued to force the dependent transaction to disk immediately.
++
++To do this, transactions need to record the LSN of the commit record of the
++transaction. This LSN comes directly from the log buffer the transaction is
++written into. While this works just fine for the existing transaction
++mechanism, it does not work for delayed logging because transactions are not
++written directly into the log buffers. Hence some other method of sequencing
++transactions is required.
++
++As discussed in the checkpoint section, delayed logging uses per-checkpoint
++contexts, and as such it is simple to assign a sequence number to each
++checkpoint. Because the switching of checkpoint contexts must be done
++atomically, it is simple to ensure that each new context has a monotonically
++increasing sequence number assigned to it without the need for an external
++atomic counter - we can just take the current context sequence number and add
++one to it for the new context.
++
++Then, instead of assigning a log buffer LSN to the transaction commit LSN
++during the commit, we can assign the current checkpoint sequence. This allows
++operations that track transactions that have not yet completed know what
++checkpoint sequence needs to be committed before they can continue. As a
++result, the code that forces the log to a specific LSN now needs to ensure that
++the log forces to a specific checkpoint.
++
++To ensure that we can do this, we need to track all the checkpoint contexts
++that are currently committing to the log. When we flush a checkpoint, the
++context gets added to a "committing" list which can be searched. When a
++checkpoint commit completes, it is removed from the committing list. Because
++the checkpoint context records the LSN of the commit record for the checkpoint,
++we can also wait on the log buffer that contains the commit record, thereby
++using the existing log force mechanisms to execute synchronous forces.
++
++It should be noted that the synchronous forces may need to be extended with
++mitigation algorithms similar to the current log buffer code to allow
++aggregation of multiple synchronous transactions if there are already
++synchronous transactions being flushed. Investigation of the performance of the
++current design is needed before making any decisions here.
++
++The main concern with log forces is to ensure that all the previous checkpoints
++are also committed to disk before the one we need to wait for. Therefore we
++need to check that all the prior contexts in the committing list are also
++complete before waiting on the one we need to complete. We do this
++synchronisation in the log force code so that we don't need to wait anywhere
++else for such serialisation - it only matters when we do a log force.
++
++The only remaining complexity is that a log force now also has to handle the
++case where the forcing sequence number is the same as the current context. That
++is, we need to flush the CIL and potentially wait for it to complete. This is a
++simple addition to the existing log forcing code to check the sequence numbers
++and push if required. Indeed, placing the current sequence checkpoint flush in
++the log force code enables the current mechanism for issuing synchronous
++transactions to remain untouched (i.e. commit an asynchronous transaction, then
++force the log at the LSN of that transaction) and so the higher level code
++behaves the same regardless of whether delayed logging is being used or not.
++
++Delayed Logging: Checkpoint Log Space Accounting
++
++The big issue for a checkpoint transaction is the log space reservation for the
++transaction. We don't know how big a checkpoint transaction is going to be
++ahead of time, nor how many log buffers it will take to write out, nor the
++number of split log vector regions are going to be used. We can track the
++amount of log space required as we add items to the commit item list, but we
++still need to reserve the space in the log for the checkpoint.
++
++A typical transaction reserves enough space in the log for the worst case space
++usage of the transaction. The reservation accounts for log record headers,
++transaction and region headers, headers for split regions, buffer tail padding,
++etc. as well as the actual space for all the changed metadata in the
++transaction. While some of this is fixed overhead, much of it is dependent on
++the size of the transaction and the number of regions being logged (the number
++of log vectors in the transaction).
++
++An example of the differences would be logging directory changes versus logging
++inode changes. If you modify lots of inode cores (e.g. chmod -R g+w *), then
++there are lots of transactions that only contain an inode core and an inode log
++format structure. That is, two vectors totaling roughly 150 bytes. If we modify
++10,000 inodes, we have about 1.5MB of metadata to write in 20,000 vectors. Each
++vector is 12 bytes, so the total to be logged is approximately 1.75MB. In
++comparison, if we are logging full directory buffers, they are typically 4KB
++each, so we in 1.5MB of directory buffers we'd have roughly 400 buffers and a
++buffer format structure for each buffer - roughly 800 vectors or 1.51MB total
++space.  From this, it should be obvious that a static log space reservation is
++not particularly flexible and is difficult to select the "optimal value" for
++all workloads.
++
++Further, if we are going to use a static reservation, which bit of the entire
++reservation does it cover? We account for space used by the transaction
++reservation by tracking the space currently used by the object in the CIL and
++then calculating the increase or decrease in space used as the object is
++relogged. This allows for a checkpoint reservation to only have to account for
++log buffer metadata used such as log header records.
++
++However, even using a static reservation for just the log metadata is
++problematic. Typically log record headers use at least 16KB of log space per
++1MB of log space consumed (512 bytes per 32k) and the reservation needs to be
++large enough to handle arbitrary sized checkpoint transactions. This
++reservation needs to be made before the checkpoint is started, and we need to
++be able to reserve the space without sleeping.  For a 8MB checkpoint, we need a
++reservation of around 150KB, which is a non-trivial amount of space.
++
++A static reservation needs to manipulate the log grant counters - we can take a
++permanent reservation on the space, but we still need to make sure we refresh
++the write reservation (the actual space available to the transaction) after
++every checkpoint transaction completion. Unfortunately, if this space is not
++available when required, then the regrant code will sleep waiting for it.
++
++The problem with this is that it can lead to deadlocks as we may need to commit
++checkpoints to be able to free up log space (refer back to the description of
++rolling transactions for an example of this).  Hence we *must* always have
++space available in the log if we are to use static reservations, and that is
++very difficult and complex to arrange. It is possible to do, but there is a
++simpler way.
++
++The simpler way of doing this is tracking the entire log space used by the
++items in the CIL and using this to dynamically calculate the amount of log
++space required by the log metadata. If this log metadata space changes as a
++result of a transaction commit inserting a new memory buffer into the CIL, then
++the difference in space required is removed from the transaction that causes
++the change. Transactions at this level will *always* have enough space
++available in their reservation for this as they have already reserved the
++maximal amount of log metadata space they require, and such a delta reservation
++will always be less than or equal to the maximal amount in the reservation.
++
++Hence we can grow the checkpoint transaction reservation dynamically as items
++are added to the CIL and avoid the need for reserving and regranting log space
++up front. This avoids deadlocks and removes a blocking point from the
++checkpoint flush code.
++
++As mentioned early, transactions can't grow to more than half the size of the
++log. Hence as part of the reservation growing, we need to also check the size
++of the reservation against the maximum allowed transaction size. If we reach
++the maximum threshold, we need to push the CIL to the log. This is effectively
++a "background flush" and is done on demand. This is identical to
++a CIL push triggered by a log force, only that there is no waiting for the
++checkpoint commit to complete. This background push is checked and executed by
++transaction commit code.
++
++If the transaction subsystem goes idle while we still have items in the CIL,
++they will be flushed by the periodic log force issued by the xfssyncd. This log
++force will push the CIL to disk, and if the transaction subsystem stays idle,
++allow the idle log to be covered (effectively marked clean) in exactly the same
++manner that is done for the existing logging method. A discussion point is
++whether this log force needs to be done more frequently than the current rate
++which is once every 30s.
++
++
++Delayed Logging: Log Item Pinning
++
++Currently log items are pinned during transaction commit while the items are
++still locked. This happens just after the items are formatted, though it could
++be done any time before the items are unlocked. The result of this mechanism is
++that items get pinned once for every transaction that is committed to the log
++buffers. Hence items that are relogged in the log buffers will have a pin count
++for every outstanding transaction they were dirtied in. When each of these
++transactions is completed, they will unpin the item once. As a result, the item
++only becomes unpinned when all the transactions complete and there are no
++pending transactions. Thus the pinning and unpinning of a log item is symmetric
++as there is a 1:1 relationship with transaction commit and log item completion.
++
++For delayed logging, however, we have an assymetric transaction commit to
++completion relationship. Every time an object is relogged in the CIL it goes
++through the commit process without a corresponding completion being registered.
++That is, we now have a many-to-one relationship between transaction commit and
++log item completion. The result of this is that pinning and unpinning of the
++log items becomes unbalanced if we retain the "pin on transaction commit, unpin
++on transaction completion" model.
++
++To keep pin/unpin symmetry, the algorithm needs to change to a "pin on
++insertion into the CIL, unpin on checkpoint completion". In other words, the
++pinning and unpinning becomes symmetric around a checkpoint context. We have to
++pin the object the first time it is inserted into the CIL - if it is already in
++the CIL during a transaction commit, then we do not pin it again. Because there
++can be multiple outstanding checkpoint contexts, we can still see elevated pin
++counts, but as each checkpoint completes the pin count will retain the correct
++value according to it's context.
++
++Just to make matters more slightly more complex, this checkpoint level context
++for the pin count means that the pinning of an item must take place under the
++CIL commit/flush lock. If we pin the object outside this lock, we cannot
++guarantee which context the pin count is associated with. This is because of
++the fact pinning the item is dependent on whether the item is present in the
++current CIL or not. If we don't pin the CIL first before we check and pin the
++object, we have a race with CIL being flushed between the check and the pin
++(or not pinning, as the case may be). Hence we must hold the CIL flush/commit
++lock to guarantee that we pin the items correctly.
++
++Delayed Logging: Concurrent Scalability
++
++A fundamental requirement for the CIL is that accesses through transaction
++commits must scale to many concurrent commits. The current transaction commit
++code does not break down even when there are transactions coming from 2048
++processors at once. The current transaction code does not go any faster than if
++there was only one CPU using it, but it does not slow down either.
++
++As a result, the delayed logging transaction commit code needs to be designed
++for concurrency from the ground up. It is obvious that there are serialisation
++points in the design - the three important ones are:
++
++	1. Locking out new transaction commits while flushing the CIL
++	2. Adding items to the CIL and updating item space accounting
++	3. Checkpoint commit ordering
++
++Looking at the transaction commit and CIL flushing interactions, it is clear
++that we have a many-to-one interaction here. That is, the only restriction on
++the number of concurrent transactions that can be trying to commit at once is
++the amount of space available in the log for their reservations. The practical
++limit here is in the order of several hundred concurrent transactions for a
++128MB log, which means that it is generally one per CPU in a machine.
++
++The amount of time a transaction commit needs to hold out a flush is a
++relatively long period of time - the pinning of log items needs to be done
++while we are holding out a CIL flush, so at the moment that means it is held
++across the formatting of the objects into memory buffers (i.e. while memcpy()s
++are in progress). Ultimately a two pass algorithm where the formatting is done
++separately to the pinning of objects could be used to reduce the hold time of
++the transaction commit side.
++
++Because of the number of potential transaction commit side holders, the lock
++really needs to be a sleeping lock - if the CIL flush takes the lock, we do not
++want every other CPU in the machine spinning on the CIL lock. Given that
++flushing the CIL could involve walking a list of tens of thousands of log
++items, it will get held for a significant time and so spin contention is a
++significant concern. Preventing lots of CPUs spinning doing nothing is the
++main reason for choosing a sleeping lock even though nothing in either the
++transaction commit or CIL flush side sleeps with the lock held.
++
++It should also be noted that CIL flushing is also a relatively rare operation
++compared to transaction commit for asynchronous transaction workloads - only
++time will tell if using a read-write semaphore for exclusion will limit
++transaction commit concurrency due to cache line bouncing of the lock on the
++read side.
++
++The second serialisation point is on the transaction commit side where items
++are inserted into the CIL. Because transactions can enter this code
++concurrently, the CIL needs to be protected separately from the above
++commit/flush exclusion. It also needs to be an exclusive lock but it is only
++held for a very short time and so a spin lock is appropriate here. It is
++possible that this lock will become a contention point, but given the short
++hold time once per transaction I think that contention is unlikely.
++
++The final serialisation point is the checkpoint commit record ordering code
++that is run as part of the checkpoint commit and log force sequencing. The code
++path that triggers a CIL flush (i.e. whatever triggers the log force) will enter
++an ordering loop after writing all the log vectors into the log buffers but
++before writing the commit record. This loop walks the list of committing
++checkpoints and needs to block waiting for checkpoints to complete their commit
++record write. As a result it needs a lock and a wait variable. Log force
++sequencing also requires the same lock, list walk, and blocking mechanism to
++ensure completion of checkpoints.
++
++These two sequencing operations can use the mechanism even though the
++events they are waiting for are different. The checkpoint commit record
++sequencing needs to wait until checkpoint contexts contain a commit LSN
++(obtained through completion of a commit record write) while log force
++sequencing needs to wait until previous checkpoint contexts are removed from
++the committing list (i.e. they've completed). A simple wait variable and
++broadcast wakeups (thundering herds) has been used to implement these two
++serialisation queues. They use the same lock as the CIL, too. If we see too
++much contention on the CIL lock, or too many context switches as a result of
++the broadcast wakeups these operations can be put under a new spinlock and
++given separate wait lists to reduce lock contention and the number of processes
++woken by the wrong event.
++
++
++Lifecycle Changes
++
++The existing log item life cycle is as follows:
++
++	1. Transaction allocate
++	2. Transaction reserve
++	3. Lock item
++	4. Join item to transaction
++		If not already attached,
++			Allocate log item
++			Attach log item to owner item
++		Attach log item to transaction
++	5. Modify item
++		Record modifications in log item
++	6. Transaction commit
++		Pin item in memory
++		Format item into log buffer
++		Write commit LSN into transaction
++		Unlock item
++		Attach transaction to log buffer
++
++	<log buffer IO dispatched>
++	<log buffer IO completes>
++
++	7. Transaction completion
++		Mark log item committed
++		Insert log item into AIL
++			Write commit LSN into log item
++		Unpin log item
++	8. AIL traversal
++		Lock item
++		Mark log item clean
++		Flush item to disk
++
++	<item IO completion>
++
++	9. Log item removed from AIL
++		Moves log tail
++		Item unlocked
++
++Essentially, steps 1-6 operate independently from step 7, which is also
++independent of steps 8-9. An item can be locked in steps 1-6 or steps 8-9
++at the same time step 7 is occurring, but only steps 1-6 or 8-9 can occur
++at the same time. If the log item is in the AIL or between steps 6 and 7
++and steps 1-6 are re-entered, then the item is relogged. Only when steps 8-9
++are entered and completed is the object considered clean.
++
++With delayed logging, there are new steps inserted into the life cycle:
++
++	1. Transaction allocate
++	2. Transaction reserve
++	3. Lock item
++	4. Join item to transaction
++		If not already attached,
++			Allocate log item
++			Attach log item to owner item
++		Attach log item to transaction
++	5. Modify item
++		Record modifications in log item
++	6. Transaction commit
++		Pin item in memory if not pinned in CIL
++		Format item into log vector + buffer
++		Attach log vector and buffer to log item
++		Insert log item into CIL
++		Write CIL context sequence into transaction
++		Unlock item
++
++	<next log force>
++
++	7. CIL push
++		lock CIL flush
++		Chain log vectors and buffers together
++		Remove items from CIL
++		unlock CIL flush
++		write log vectors into log
++		sequence commit records
++		attach checkpoint context to log buffer
++
++	<log buffer IO dispatched>
++	<log buffer IO completes>
++
++	8. Checkpoint completion
++		Mark log item committed
++		Insert item into AIL
++			Write commit LSN into log item
++		Unpin log item
++	9. AIL traversal
++		Lock item
++		Mark log item clean
++		Flush item to disk
++	<item IO completion>
++	10. Log item removed from AIL
++		Moves log tail
++		Item unlocked
++
++From this, it can be seen that the only life cycle differences between the two
++logging methods are in the middle of the life cycle - they still have the same
++beginning and end and execution constraints. The only differences are in the
++commiting of the log items to the log itself and the completion processing.
++Hence delayed logging should not introduce any constraints on log item
++behaviour, allocation or freeing that don't already exist.
++
++As a result of this zero-impact "insertion" of delayed logging infrastructure
++and the design of the internal structures to avoid on disk format changes, we
++can basically switch between delayed logging and the existing mechanism with a
++mount option. Fundamentally, there is no reason why the log manager would not
++be able to swap methods automatically and transparently depending on load
++characteristics, but this should not be necessary if delayed logging works as
++designed.
++
++Roadmap:
++
++2.6.35 Inclusion in mainline as an experimental mount option
++	=> approximately 2-3 months to merge window
++	=> needs to be in xfs-dev tree in 4-6 weeks
++	=> code is nearing readiness for review
++
++2.6.37 Remove experimental tag from mount option
++	=> should be roughly 6 months after initial merge
++	=> enough time to:
++		=> gain confidence and fix problems reported by early
++		   adopters (a.k.a. guinea pigs)
++		=> address worst performance regressions and undesired
++		   behaviours
++		=> start tuning/optimising code for parallelism
++		=> start tuning/optimising algorithms consuming
++		   excessive CPU time
++
++2.6.39 Switch default mount option to use delayed logging
++	=> should be roughly 12 months after initial merge
++	=> enough time to shake out remaining problems before next round of
++	   enterprise distro kernel rebases
++
++
++
 -- 
 1.5.6.5
+
+
+--===============7271736806019775892==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============7271736806019775892==--
