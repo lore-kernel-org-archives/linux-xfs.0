@@ -1,30 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o475dHsD148897 for <xfs@oss.sgi.com>; Fri, 7 May 2010 00:39:17 -0500
+	o475cup2148792 for <xfs@oss.sgi.com>; Fri, 7 May 2010 00:38:56 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C1F68318A37
-	for <xfs@oss.sgi.com>; Thu,  6 May 2010 22:41:26 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	aLgmHDpLBmAaJvjC for <xfs@oss.sgi.com>;
-	Thu, 06 May 2010 22:41:26 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E95A89638FA
+	for <xfs@oss.sgi.com>; Thu,  6 May 2010 22:41:06 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	MRZALpYbNeukYAkv for <xfs@oss.sgi.com>;
+	Thu, 06 May 2010 22:41:06 -0700 (PDT)
 Received: from dastard (unverified [121.45.169.108])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	11831201-1927428
-	for <xfs@oss.sgi.com>; Fri, 07 May 2010 15:11:25 +0930 (CST)
+	23442142-1927428
+	for <xfs@oss.sgi.com>; Fri, 07 May 2010 15:11:03 +0930 (CST)
 Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1OAGJE-0006rf-Me
-	for xfs@oss.sgi.com; Fri, 07 May 2010 15:41:12 +1000
+	(envelope-from <dave@fromorbit.com>) id 1OAGJ4-0006rA-4y
+	for xfs@oss.sgi.com; Fri, 07 May 2010 15:41:02 +1000
 Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1OAGJD-00066m-7i
-	for xfs@oss.sgi.com; Fri, 07 May 2010 15:41:11 +1000
+	(envelope-from <dave@disturbed.disaster>) id 1OAGJ2-00066D-F6
+	for xfs@oss.sgi.com; Fri, 07 May 2010 15:41:00 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 11/12] xfs: enable background pushing of the CIL
-Date: Fri,  7 May 2010 15:40:59 +1000
-Message-Id: <1273210860-23414-12-git-send-email-david@fromorbit.com>
-In-Reply-To: <1273210860-23414-1-git-send-email-david@fromorbit.com>
-References: <1273210860-23414-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/12] xfs: delayed logging V5
+Date: Fri,  7 May 2010 15:40:48 +1000
+Message-Id: <1273210860-23414-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,139 +38,133 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
 
-If we let the CIL grow without bound, it will grow large enough to violate
-recovery constraints (must be at least one complete transaction in the log at
-all times) or take forever to write out through the log buffers. Hence we need
-a check during asynchronous transactions as to whether the CIL needs to be
-pushed.
+Hi Folks,
 
-We track the amount of log space the CIL consumes, so it is relatively simple
-to limit it on a pure size basis. Make the limit the minimum of just under half
-the log size (recovery constraint) or 8MB of log space (which is an awful lot
-of metadata).
+This is version 5 of the delayed logging series.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_log_cil.c  |   25 ++++++++++++++++++++++++-
- fs/xfs/xfs_log_priv.h |   45 +++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 69 insertions(+), 1 deletions(-)
+I won't repeat everything about what it is, just point you
+here:
 
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 3cb1957..806cf6b 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -339,6 +339,7 @@ xfs_log_commit_cil(
- {
- 	struct log		*log = mp->m_log;
- 	int			log_flags = 0;
-+	int			push = 0;
- 
- 	if (flags & XFS_TRANS_RELEASE_LOG_RES)
- 		log_flags = XFS_LOG_REL_PERM_RESERV;
-@@ -368,13 +369,26 @@ xfs_log_commit_cil(
- 	xfs_log_done(mp, tp->t_ticket, NULL, log_flags);
- 	xfs_trans_unreserve_and_mod_sb(tp);
- 
--	/* background commit is allowed again */
-+	/* check for background commit */
-+	if (log->l_cilp->xc_ctx->space_used > XLOG_CIL_SPACE_LIMIT(log))
-+		push = 1;
-+
- 	up_read(&log->l_cilp->xc_ctx_lock);
- 	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
- 
- 	/* xfs_trans_free_items() unlocks them first */
- 	xfs_trans_free_items(tp, *commit_lsn, 0);
- 	xfs_trans_free(tp);
-+
-+	/*
-+	 * We need to push CIL every so often so we don't cache more than we
-+	 * can fit in the log. The limit really is that a checkpoint can't be
-+	 * more than half the log (the current checkpoint is not allowed to
-+	 * overwrite the previous checkpoint), but commit latency and memory
-+	 * usage limit this to a smaller size in most cases.
-+	 */
-+	if (push)
-+		xlog_cil_push(log, 0);
- 	return 0;
- }
- 
-@@ -453,6 +467,15 @@ xlog_cil_push(
- 		return 0;
- 	}
- 
-+	/* check for spurious background flush */
-+	if (!push_now &&
-+	    log->l_cilp->xc_ctx->space_used < XLOG_CIL_SPACE_LIMIT(log)) {
-+		up_write(&cil->xc_ctx_lock);
-+		xfs_log_ticket_put(new_ctx->ticket);
-+		kmem_free(new_ctx);
-+		return 0;
-+	}
-+
- 	/*
- 	 * pull all the log vectors off the items in the CIL, and
- 	 * remove the items from the CIL. We don't need the CIL lock
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index f9a0e64..fa1aaa5 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -425,6 +425,51 @@ struct xfs_cil {
- };
- 
- /*
-+ * The amount of log space we should the CIL to aggregate is difficult to size.
-+ * Whatever we chose we have to make we can get a reservation for the log space
-+ * effectively, that it is large enough to capture sufficient relogging to
-+ * reduce log buffer IO significantly, but it is not too large for the log or
-+ * induces too much latency when writing out through the iclogs. We track both
-+ * space consumed and the number of vectors in the checkpoint context, so we
-+ * need to decide which to use for limiting.
-+ *
-+ * Every log buffer we write out during a push needs a header reserved, which
-+ * is at least one sector and more for v2 logs. Hence we need a reservation of
-+ * at least 512 bytes per 32k of log space just for the LR headers. That means
-+ * 16KB of reservation per megabyte of delayed logging space we will consume,
-+ * plus various headers.  The number of headers will vary based on the num of
-+ * io vectors, so limiting on a specific number of vectors is going to result
-+ * in transactions of varying size. IOWs, it is more consistent to track and
-+ * limit space consumed in the log rather than by the number of objects being
-+ * logged in order to prevent checkpoint ticket overruns.
-+ *
-+ * Further, use of static reservations through the log grant mechanism is
-+ * problematic. It introduces a lot of complexity (e.g. reserve grant vs write
-+ * grant) and a significant deadlock potential because regranting write space
-+ * can block on log pushes. Hence if we have to regrant log space during a log
-+ * push, we can deadlock.
-+ *
-+ * However, we can avoid this by use of a dynamic "reservation stealing"
-+ * technique during transaction commit whereby unused reservation space in the
-+ * transaction ticket is transferred to the CIL ctx commit ticket to cover the
-+ * space needed by the checkpoint transaction. This means that we never need to
-+ * specifically reserve space for the CIL checkpoint transaction, nor do we
-+ * need to regrant space once the checkpoint completes. This also means the
-+ * checkpoint transaction ticket is specific to the checkpoint context, rather
-+ * than the CIL itself.
-+ *
-+ * With dynamic reservations, we can basically make up arbitrary limits for the
-+ * checkpoint size so long as they don't violate any other size rules.  Hence
-+ * the initial maximum size for the checkpoint transaction will be set to a
-+ * quarter of the log or 8MB, which ever is smaller. 8MB is an arbitrary limit
-+ * right now based on the latency of writing out a large amount of data through
-+ * the circular iclog buffers.
-+ */
-+
-+#define XLOG_CIL_SPACE_LIMIT(log)	\
-+	(min((log->l_logsize >> 2), (8 * 1024 * 1024)))
-+
-+/*
-  * The reservation head lsn is not made up of a cycle number and block number.
-  * Instead, it uses a cycle number and byte number.  Logs don't expect to
-  * overflow 31 bits worth of byte offset, so using a byte number will mean
--- 
-1.5.6.5
+http://marc.info/?l=linux-xfs&m=126862777118946&w=2
+
+for the description, and here:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/dgc/xfs.git delayed-logging
+
+for the current code. Note that this is a rebased branch, so you'll
+need to pull it again into a new branch to review.
+
+This version includes a documentation updates and fixes to
+the busy extent tracking infrastructure.
+
+The patch series follows this mail to make it easier for people to
+respond to specific pieces of the code during review. I'm still
+making the entire patch set available through git, though.
+
+Changes the previous versions:
+
+Version 5: 27 files changed, 2457 insertions(+), 513 deletions(-)
+Version 4: 26 files changed, 2351 insertions(+), 510 deletions(-)
+Version 3: 28 files changed, 2366 insertions(+), 506 deletions(-)
+Version 2: 22 files changed, 2188 insertions(+), 377 deletions(-)
+Version 1: 19 files changed, 2594 insertions(+), 580 deletions(-)
+
+Changes for V5:
+o fixed many typos in the desgin documentation - thanks to Nathan Scott
+  for proof reading it. :)
+o found another transaction assert failure - un-reverting the change to
+  transaction ID matching as the reason it avoided the assert failures is now
+  known. (new commit for exporting the ticket ID).
+o added transaction ID to busy extent tracing
+o added lots of comments explaining the reason for needing transaction ID
+  matching w/ delayed logging.
+o added overlap detection in busy extent inserts
+
+Changes for V4:
+o fixes duplicate transaction IDs on rolling transactions (new commit)
+o folded in a busy extent freeing cleanup from Christoph Hellwig
+o made API prefix consistent (xfs_alloc_busy_*)
+o combined xfs_alloc_mark_busy and xfs_alloc_busy_insert
+o reverted back to tracking transaction pointers in busy extents
+o removed exporting of transaction ID for busy extents
+o fixed an off-by-one in the extent range match in the busy extent
+  search code that has been triggering assert failures
+o use list_splice_init() when splicing busy extents from the
+  transaction to the checkpoint context to ensure we don't get
+  transactions thinking they have busy extents to free after we've
+  already attached them to the checkpoint.
+
+Changes for V3:
+o changed buffer log item reference counted model to be consistent
+  for both logging modes
+o cleaned up XFS_BLI flags usage (new commit)
+o separated out log ticket overrun printing cleanup (new commit)
+o made sure "delaylog" option shows up in /proc/mounts
+o collapsed many of the intermediate commits together to make it
+  easier to review
+o fixed inode buffer tagging issue that was causing shutdowns in log
+  recovery in test 087 and 121
+
+Changes for V2:
+o 22 files changed, 2188 insertions(+), 377 deletions(-)
+o fixed some memory leaks
+o fixed ticket allocation for checkpoints to use KM_NOFS
+o minor code cleanups
+o performed stress and scalability testing
+
+The following changes since commit 6ff75b78182c314112c1173edaab6c164c95d775:
+  Christoph Hellwig (1):
+        xfs: mark xfs_iomap_write_ helpers static
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/xfs.git delayed-logging
+
+Dave Chinner (12):
+      xfs: Don't reuse the same transaction ID for duplicated transactions.
+      xfs: allow log ticket allocation to take allocation flags
+      xfs: modify buffer item reference counting
+      xfs: Clean up XFS_BLI_* flag namespace
+      xfs: clean up log ticket overrun debug output
+      xfs: make the log ticket ID available outside the log infrastructure
+      xfs: Improve scalability of busy extent tracking
+      xfs: Delayed logging design documentation
+      xfs: Introduce delayed logging core code
+      xfs: forced unmounts need to push the CIL
+      xfs: enable background pushing of the CIL
+      xfs: Ensure inode allocation buffers are fully replayed
+
+ .../filesystems/xfs-delayed-logging-design.txt     |  819 ++++++++++++++++++++
+ fs/xfs/Makefile                                    |    1 +
+ fs/xfs/linux-2.6/xfs_buf.c                         |   11 +-
+ fs/xfs/linux-2.6/xfs_quotaops.c                    |    1 +
+ fs/xfs/linux-2.6/xfs_super.c                       |   12 +-
+ fs/xfs/linux-2.6/xfs_trace.h                       |   83 ++-
+ fs/xfs/quota/xfs_dquot.c                           |    6 +-
+ fs/xfs/xfs_ag.h                                    |   24 +-
+ fs/xfs/xfs_alloc.c                                 |  364 +++++++---
+ fs/xfs/xfs_alloc.h                                 |    7 +-
+ fs/xfs/xfs_alloc_btree.c                           |    2 +-
+ fs/xfs/xfs_buf_item.c                              |  166 ++--
+ fs/xfs/xfs_buf_item.h                              |   18 +-
+ fs/xfs/xfs_error.c                                 |    2 +-
+ fs/xfs/xfs_log.c                                   |  123 +++-
+ fs/xfs/xfs_log.h                                   |   14 +-
+ fs/xfs/xfs_log_cil.c                               |  733 ++++++++++++++++++
+ fs/xfs/xfs_log_priv.h                              |  118 +++-
+ fs/xfs/xfs_log_recover.c                           |   46 +-
+ fs/xfs/xfs_log_recover.h                           |    2 +-
+ fs/xfs/xfs_mount.h                                 |    1 +
+ fs/xfs/xfs_trans.c                                 |  195 ++++-
+ fs/xfs/xfs_trans.h                                 |   44 +-
+ fs/xfs/xfs_trans_buf.c                             |   46 +-
+ fs/xfs/xfs_trans_item.c                            |  114 +---
+ fs/xfs/xfs_trans_priv.h                            |   16 +-
+ fs/xfs/xfs_types.h                                 |    2 +
+ 27 files changed, 2457 insertions(+), 513 deletions(-)
+ create mode 100644 Documentation/filesystems/xfs-delayed-logging-design.txt
+ create mode 100644 fs/xfs/xfs_log_cil.c
 
 _______________________________________________
 xfs mailing list
