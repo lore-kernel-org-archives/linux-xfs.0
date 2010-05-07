@@ -1,30 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o475dKgR148915 for <xfs@oss.sgi.com>; Fri, 7 May 2010 00:39:20 -0500
+	o475dLpY148934 for <xfs@oss.sgi.com>; Fri, 7 May 2010 00:39:22 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9E664318A3C
-	for <xfs@oss.sgi.com>; Thu,  6 May 2010 22:41:29 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	txuk9a9suEHNbWCz for <xfs@oss.sgi.com>;
-	Thu, 06 May 2010 22:41:29 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 782B0318A2E
+	for <xfs@oss.sgi.com>; Thu,  6 May 2010 22:41:05 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
+	[150.101.137.102]) by cuda.sgi.com with ESMTP id
+	qCDbhUWBpw9QDd1U for <xfs@oss.sgi.com>;
+	Thu, 06 May 2010 22:41:05 -0700 (PDT)
 Received: from dastard (unverified [121.45.169.108])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	23556264-1927428
-	for <xfs@oss.sgi.com>; Fri, 07 May 2010 15:11:28 +0930 (CST)
+	23267856-1927428
+	for <xfs@oss.sgi.com>; Fri, 07 May 2010 15:11:03 +0930 (CST)
 Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1OAGJJ-0006rr-QY
-	for xfs@oss.sgi.com; Fri, 07 May 2010 15:41:17 +1000
+	(envelope-from <dave@fromorbit.com>) id 1OAGJ4-0006rD-87
+	for xfs@oss.sgi.com; Fri, 07 May 2010 15:41:02 +1000
 Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1OAGJD-00066j-5y
-	for xfs@oss.sgi.com; Fri, 07 May 2010 15:41:11 +1000
+	(envelope-from <dave@disturbed.disaster>) id 1OAGJ2-00066K-Lh
+	for xfs@oss.sgi.com; Fri, 07 May 2010 15:41:00 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 10/12] xfs: forced unmounts need to push the CIL
-Date: Fri,  7 May 2010 15:40:58 +1000
-Message-Id: <1273210860-23414-11-git-send-email-david@fromorbit.com>
+Subject: [PATCH 03/12] xfs: modify buffer item reference counting
+Date: Fri,  7 May 2010 15:40:51 +1000
+Message-Id: <1273210860-23414-4-git-send-email-david@fromorbit.com>
 In-Reply-To: <1273210860-23414-1-git-send-email-david@fromorbit.com>
 References: <1273210860-23414-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,62 +34,132 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
-
-If the filesystem is being shut down and the there is no log error,
-the current code forces out the current log buffers. This code now needs
-to push the CIL before it forces out the log buffers to acheive the same
-result.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_log.c |   15 +++++++++++++++
- 1 files changed, 15 insertions(+), 0 deletions(-)
-
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 23f2a05..7144a9e 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -3691,6 +3691,11 @@ xlog_state_ioerror(
-  *	c. nothing new gets queued up after (a) and (b) are done.
-  *	d. if !logerror, flush the iclogs to disk, then seal them off
-  *	   for business.
-+ *
-+ * Note: for delayed logging the !logerror case needs to flush the regions
-+ * held in memory out to the iclogs before flushing them to disk. This needs
-+ * to be done before the log is marked as shutdown, otherwise the flush to the
-+ * iclogs will fail.
-  */
- int
- xfs_log_force_umount(
-@@ -3724,6 +3729,16 @@ xfs_log_force_umount(
- 		return 1;
- 	}
- 	retval = 0;
-+
-+	/*
-+	 * Flush the in memory commit item list before marking the log as
-+	 * being shut down. We need to do it in this order to ensure all the
-+	 * completed transactions are flushed to disk with the xfs_log_force()
-+	 * call below.
-+	 */
-+	if (!logerror && (mp->m_flags & XFS_MOUNT_DELAYLOG))
-+		xlog_cil_push(log, 1);
-+
- 	/*
- 	 * We must hold both the GRANT lock and the LOG lock,
- 	 * before we mark the filesystem SHUTDOWN and wake
--- 
-1.5.6.5
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKVGhlIGJ1ZmZlciBsb2cg
+aXRlbSByZWZlcmVuY2UgY291bnRzIHVzZWQgdG8gdGFrZSByZWZlcmVuY2XRlSBmb3IgZXZlcnkK
+dHJhbnNhY3Rpb24sIHNpbWlsYXIgdG8gdGhlIHBpbiBjb3VudGluZy4gVGhpcyBpcyBzeW1tZXRy
+aWMgKGxpa2UgdGhlCnBpbi91bnBpbikgd2l0aCByZXNwZWN0IHRvIHRyYW5zYWN0aW9uIGNvbXBs
+ZXRpb24sIGJ1dCB3aXRoIGRsZWF5ZWQgbG9nZ2luZwpiZWNvbWVzIGFzc3ltZXRyaWMgYXMgdGhl
+IHBpbm5pbmcgYmVjb21lcyBhc3N5bWV0cmljIHcuci50LiB0cmFuc2FjdGlvbgpjb21wbGV0aW9u
+LgoKVG8gbWFrZSBib3RoIGNhc2VzIHRoZSBzYW1lLCBhbGxvdyB0aGUgYnVmZmVyIHBpbm5pbmcg
+dG8gdGFrZSBhIHJlZmVyZW5jZSB0bwp0aGUgYnVmZmVyIGxvZyBpdGVtIGFuZCBhbHdheXMgZHJv
+cCB0aGUgcmVmZXJlbmNlIHRoZSB0cmFuc2FjdGlvbiBoYXMgb24gaXQKd2hlbiBiZWluZyB1bmxv
+Y2tlZC4gVGhpcyBpcyBiYWxhbmNlZCBjb3JyZWN0bHkgYmVjYXVzZSB0aGUgdW5waW4gb3BlcmF0
+aW9uCmFsd2F5cyBkcm9wcyBhIHJlZmVyZW5jZSB0byB0aGUgbG9nIGl0ZW0uIEhlbmNlIHJlZmVy
+ZW5jZSBjb3VudGluZyBiZWNvbWVzCnN5bW1ldHJpYyB3LnIudC4gaXRlbSBwaW5uaW5nIGFzIHdl
+bGwgYXMgdy5yLnQgYWN0aXZlIHRyYW5zYWN0aW9ucyBhbmQgYXMgYQpyZXN1bHQgdGhlIHJlZmVy
+ZW5jZSBjb3VudGluZyBtb2RlbCByZW1haW4gY29uc2lzdGVudCBiZXR3ZWVuIG5vcm1hbCBhbmQK
+ZGVsYXllZCBsb2dnaW5nLgoKU2lnbmVkLW9mZi1ieTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckBy
+ZWRoYXQuY29tPgpSZXZpZXdlZC1ieTogQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+Ci0t
+LQogZnMveGZzL3hmc19idWZfaXRlbS5jIHwgIDExMCArKysrKysrKysrKysrKysrKysrKysrLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KIDEgZmlsZXMgY2hhbmdlZCwgNTAgaW5zZXJ0aW9ucygr
+KSwgNjAgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvZnMveGZzL3hmc19idWZfaXRlbS5jIGIv
+ZnMveGZzL3hmc19idWZfaXRlbS5jCmluZGV4IDI0MDM0MGEuLjRjZDVmNjEgMTAwNjQ0Ci0tLSBh
+L2ZzL3hmcy94ZnNfYnVmX2l0ZW0uYworKysgYi9mcy94ZnMveGZzX2J1Zl9pdGVtLmMKQEAgLTM0
+MSwxMCArMzQxLDE1IEBAIHhmc19idWZfaXRlbV9mb3JtYXQoCiB9CiAKIC8qCi0gKiBUaGlzIGlz
+IGNhbGxlZCB0byBwaW4gdGhlIGJ1ZmZlciBhc3NvY2lhdGVkIHdpdGggdGhlIGJ1ZiBsb2cKLSAq
+IGl0ZW0gaW4gbWVtb3J5IHNvIGl0IGNhbm5vdCBiZSB3cml0dGVuIG91dC4gIFNpbXBseSBjYWxs
+IGJwaW4oKQotICogb24gdGhlIGJ1ZmZlciB0byBkbyB0aGlzLgorICogVGhpcyBpcyBjYWxsZWQg
+dG8gcGluIHRoZSBidWZmZXIgYXNzb2NpYXRlZCB3aXRoIHRoZSBidWYgbG9nIGl0ZW0gaW4gbWVt
+b3J5CisgKiBzbyBpdCBjYW5ub3QgYmUgd3JpdHRlbiBvdXQuICBTaW1wbHkgY2FsbCBicGluKCkg
+b24gdGhlIGJ1ZmZlciB0byBkbyB0aGlzLgorICoKKyAqIFdlIGFsc28gYWx3YXlzIHRha2UgYSBy
+ZWZlcmVuY2UgdG8gdGhlIGJ1ZmZlciBsb2cgaXRlbSBoZXJlIHNvIHRoYXQgdGhlIGJsaQorICog
+aXMgaGVsZCB3aGlsZSB0aGUgaXRlbSBpcyBwaW5uZWQgaW4gbWVtb3J5LiBUaGlzIG1lYW5zIHRo
+YXQgd2UgY2FuCisgKiB1bmNvbmRpdGlvbmFsbHkgZHJvcCB0aGUgcmVmZXJlbmNlIGNvdW50IGEg
+dHJhbnNhY3Rpb24gaG9sZHMgd2hlbiB0aGUKKyAqIHRyYW5zYWN0aW9uIGlzIGNvbXBsZXRlZC4K
+ICAqLworCiBTVEFUSUMgdm9pZAogeGZzX2J1Zl9pdGVtX3BpbigKIAl4ZnNfYnVmX2xvZ19pdGVt
+X3QJKmJpcCkKQEAgLTM1Niw2ICszNjEsNyBAQCB4ZnNfYnVmX2l0ZW1fcGluKAogCUFTU0VSVChh
+dG9taWNfcmVhZCgmYmlwLT5ibGlfcmVmY291bnQpID4gMCk7CiAJQVNTRVJUKChiaXAtPmJsaV9m
+bGFncyAmIFhGU19CTElfTE9HR0VEKSB8fAogCSAgICAgICAoYmlwLT5ibGlfZmxhZ3MgJiBYRlNf
+QkxJX1NUQUxFKSk7CisJYXRvbWljX2luYygmYmlwLT5ibGlfcmVmY291bnQpOwogCXRyYWNlX3hm
+c19idWZfaXRlbV9waW4oYmlwKTsKIAl4ZnNfYnBpbihicCk7CiB9CkBAIC00ODksMjAgKzQ5NSwy
+MyBAQCB4ZnNfYnVmX2l0ZW1fdHJ5bG9jaygKIH0KIAogLyoKLSAqIFJlbGVhc2UgdGhlIGJ1ZmZl
+ciBhc3NvY2lhdGVkIHdpdGggdGhlIGJ1ZiBsb2cgaXRlbS4KLSAqIElmIHRoZXJlIGlzIG5vIGRp
+cnR5IGxvZ2dlZCBkYXRhIGFzc29jaWF0ZWQgd2l0aCB0aGUKLSAqIGJ1ZmZlciByZWNvcmRlZCBp
+biB0aGUgYnVmIGxvZyBpdGVtLCB0aGVuIGZyZWUgdGhlCi0gKiBidWYgbG9nIGl0ZW0gYW5kIHJl
+bW92ZSB0aGUgcmVmZXJlbmNlIHRvIGl0IGluIHRoZQotICogYnVmZmVyLgorICogUmVsZWFzZSB0
+aGUgYnVmZmVyIGFzc29jaWF0ZWQgd2l0aCB0aGUgYnVmIGxvZyBpdGVtLiAgSWYgdGhlcmUgaXMg
+bm8gZGlydHkKKyAqIGxvZ2dlZCBkYXRhIGFzc29jaWF0ZWQgd2l0aCB0aGUgYnVmZmVyIHJlY29y
+ZGVkIGluIHRoZSBidWYgbG9nIGl0ZW0sIHRoZW4KKyAqIGZyZWUgdGhlIGJ1ZiBsb2cgaXRlbSBh
+bmQgcmVtb3ZlIHRoZSByZWZlcmVuY2UgdG8gaXQgaW4gdGhlIGJ1ZmZlci4KICAqCi0gKiBUaGlz
+IGNhbGwgaWdub3JlcyB0aGUgcmVjdXJzaW9uIGNvdW50LiAgSXQgaXMgb25seSBjYWxsZWQKLSAq
+IHdoZW4gdGhlIGJ1ZmZlciBzaG91bGQgUkVBTExZIGJlIHVubG9ja2VkLCByZWdhcmRsZXNzCi0g
+KiBvZiB0aGUgcmVjdXJzaW9uIGNvdW50LgorICogVGhpcyBjYWxsIGlnbm9yZXMgdGhlIHJlY3Vy
+c2lvbiBjb3VudC4gIEl0IGlzIG9ubHkgY2FsbGVkIHdoZW4gdGhlIGJ1ZmZlcgorICogc2hvdWxk
+IFJFQUxMWSBiZSB1bmxvY2tlZCwgcmVnYXJkbGVzcyBvZiB0aGUgcmVjdXJzaW9uIGNvdW50Lgog
+ICoKLSAqIElmIHRoZSBYRlNfQkxJX0hPTEQgZmxhZyBpcyBzZXQgaW4gdGhlIGJ1ZiBsb2cgaXRl
+bSwgdGhlbgotICogZnJlZSB0aGUgbG9nIGl0ZW0gaWYgbmVjZXNzYXJ5IGJ1dCBkbyBub3QgdW5s
+b2NrIHRoZSBidWZmZXIuCi0gKiBUaGlzIGlzIGZvciBzdXBwb3J0IG9mIHhmc190cmFuc19iaG9s
+ZCgpLiBNYWtlIHN1cmUgdGhlCi0gKiBYRlNfQkxJX0hPTEQgZmllbGQgaXMgY2xlYXJlZCBpZiB3
+ZSBkb24ndCBmcmVlIHRoZSBpdGVtLgorICogV2UgdW5jb25kaXRpb25hbGx5IGRyb3AgdGhlIHRy
+YW5zYWN0aW9uJ3MgcmVmZXJlbmNlIHRvIHRoZSBsb2cgaXRlbS4gSWYgdGhlCisgKiBpdGVtIHdh
+cyBsb2dnZWQsIHRoZW4gYW5vdGhlciByZWZlcmVuY2Ugd2FzIHRha2VuIHdoZW4gaXQgd2FzIHBp
+bm5lZCwgc28gd2UKKyAqIGNhbiBzYWZlbHkgZHJvcCB0aGUgdHJhbnNhY3Rpb24gcmVmZXJlbmNl
+IG5vdy4gIFRoaXMgYWxzbyBhbGxvd3MgdXMgdG8gYXZvaWQKKyAqIHBvdGVudGlhbCByYWNlcyB3
+aXRoIHRoZSB1bnBpbiBjb2RlIGZyZWVpbmcgdGhlIGJsaSBieSBub3QgcmVmZXJlbmNpbmcgdGhl
+CisgKiBibGkgYWZ0ZXIgd2UndmUgZHJvcHBlZCB0aGUgcmVmZXJlbmNlIGNvdW50LgorICoKKyAq
+IElmIHRoZSBYRlNfQkxJX0hPTEQgZmxhZyBpcyBzZXQgaW4gdGhlIGJ1ZiBsb2cgaXRlbSwgdGhl
+biBmcmVlIHRoZSBsb2cgaXRlbQorICogaWYgbmVjZXNzYXJ5IGJ1dCBkbyBub3QgdW5sb2NrIHRo
+ZSBidWZmZXIuICBUaGlzIGlzIGZvciBzdXBwb3J0IG9mCisgKiB4ZnNfdHJhbnNfYmhvbGQoKS4g
+TWFrZSBzdXJlIHRoZSBYRlNfQkxJX0hPTEQgZmllbGQgaXMgY2xlYXJlZCBpZiB3ZSBkb24ndAor
+ICogZnJlZSB0aGUgaXRlbS4KICAqLwogU1RBVElDIHZvaWQKIHhmc19idWZfaXRlbV91bmxvY2so
+CkBAIC01MTQsNzMgKzUyMyw1NCBAQCB4ZnNfYnVmX2l0ZW1fdW5sb2NrKAogCiAJYnAgPSBiaXAt
+PmJsaV9idWY7CiAKLQkvKgotCSAqIENsZWFyIHRoZSBidWZmZXIncyBhc3NvY2lhdGlvbiB3aXRo
+IHRoaXMgdHJhbnNhY3Rpb24uCi0JICovCisJLyogQ2xlYXIgdGhlIGJ1ZmZlcidzIGFzc29jaWF0
+aW9uIHdpdGggdGhpcyB0cmFuc2FjdGlvbi4gKi8KIAlYRlNfQlVGX1NFVF9GU1BSSVZBVEUyKGJw
+LCBOVUxMKTsKIAogCS8qCi0JICogSWYgdGhpcyBpcyBhIHRyYW5zYWN0aW9uIGFib3J0LCBkb24n
+dCByZXR1cm4gZWFybHkuCi0JICogSW5zdGVhZCwgYWxsb3cgdGhlIGJyZWxzZSB0byBoYXBwZW4u
+Ci0JICogTm9ybWFsbHkgaXQgd291bGQgYmUgZG9uZSBmb3Igc3RhbGUgKGNhbmNlbGxlZCkgYnVm
+ZmVycwotCSAqIGF0IHVucGluIHRpbWUsIGJ1dCB3ZSdsbCBuZXZlciBnbyB0aHJvdWdoIHRoZSBw
+aW4vdW5waW4KLQkgKiBjeWNsZSBpZiB3ZSBhYm9ydCBpbnNpZGUgY29tbWl0LgorCSAqIElmIHRo
+aXMgaXMgYSB0cmFuc2FjdGlvbiBhYm9ydCwgZG9uJ3QgcmV0dXJuIGVhcmx5LiAgSW5zdGVhZCwg
+YWxsb3cKKwkgKiB0aGUgYnJlbHNlIHRvIGhhcHBlbi4gIE5vcm1hbGx5IGl0IHdvdWxkIGJlIGRv
+bmUgZm9yIHN0YWxlCisJICogKGNhbmNlbGxlZCkgYnVmZmVycyBhdCB1bnBpbiB0aW1lLCBidXQg
+d2UnbGwgbmV2ZXIgZ28gdGhyb3VnaCB0aGUKKwkgKiBwaW4vdW5waW4gY3ljbGUgaWYgd2UgYWJv
+cnQgaW5zaWRlIGNvbW1pdC4KIAkgKi8KIAlhYm9ydGVkID0gKGJpcC0+YmxpX2l0ZW0ubGlfZmxh
+Z3MgJiBYRlNfTElfQUJPUlRFRCkgIT0gMDsKIAogCS8qCi0JICogSWYgdGhlIGJ1ZiBpdGVtIGlz
+IG1hcmtlZCBzdGFsZSwgdGhlbiBkb24ndCBkbyBhbnl0aGluZy4KLQkgKiBXZSdsbCB1bmxvY2sg
+dGhlIGJ1ZmZlciBhbmQgZnJlZSB0aGUgYnVmIGl0ZW0gd2hlbiB0aGUKLQkgKiBidWZmZXIgaXMg
+dW5waW5uZWQgZm9yIHRoZSBsYXN0IHRpbWUuCisJICogQmVmb3JlIHBvc3NpYmx5IGZyZWVpbmcg
+dGhlIGJ1ZiBpdGVtLCBkZXRlcm1pbmUgaWYgd2Ugc2hvdWxkCisJICogcmVsZWFzZSB0aGUgYnVm
+ZmVyIGF0IHRoZSBlbmQgb2YgdGhpcyByb3V0aW5lLgorCSAqLworCWhvbGQgPSBiaXAtPmJsaV9m
+bGFncyAmIFhGU19CTElfSE9MRDsKKworCS8qIENsZWFyIHRoZSBwZXIgdHJhbnNhY3Rpb24gc3Rh
+dGUuICovCisJYmlwLT5ibGlfZmxhZ3MgJj0gfihYRlNfQkxJX0xPR0dFRCB8IFhGU19CTElfSE9M
+RCk7CisKKwkvKgorCSAqIElmIHRoZSBidWYgaXRlbSBpcyBtYXJrZWQgc3RhbGUsIHRoZW4gZG9u
+J3QgZG8gYW55dGhpbmcuICBXZSdsbAorCSAqIHVubG9jayB0aGUgYnVmZmVyIGFuZCBmcmVlIHRo
+ZSBidWYgaXRlbSB3aGVuIHRoZSBidWZmZXIgaXMgdW5waW5uZWQKKwkgKiBmb3IgdGhlIGxhc3Qg
+dGltZS4KIAkgKi8KIAlpZiAoYmlwLT5ibGlfZmxhZ3MgJiBYRlNfQkxJX1NUQUxFKSB7Ci0JCWJp
+cC0+YmxpX2ZsYWdzICY9IH5YRlNfQkxJX0xPR0dFRDsKIAkJdHJhY2VfeGZzX2J1Zl9pdGVtX3Vu
+bG9ja19zdGFsZShiaXApOwogCQlBU1NFUlQoYmlwLT5ibGlfZm9ybWF0LmJsZl9mbGFncyAmIFhG
+U19CTElfQ0FOQ0VMKTsKLQkJaWYgKCFhYm9ydGVkKQorCQlpZiAoIWFib3J0ZWQpIHsKKwkJCWF0
+b21pY19kZWMoJmJpcC0+YmxpX3JlZmNvdW50KTsKIAkJCXJldHVybjsKKwkJfQogCX0KIAotCS8q
+Ci0JICogRHJvcCB0aGUgdHJhbnNhY3Rpb24ncyByZWZlcmVuY2UgdG8gdGhlIGxvZyBpdGVtIGlm
+Ci0JICogaXQgd2FzIG5vdCBsb2dnZWQgYXMgcGFydCBvZiB0aGUgdHJhbnNhY3Rpb24uICBPdGhl
+cndpc2UKLQkgKiB3ZSdsbCBkcm9wIHRoZSByZWZlcmVuY2UgaW4geGZzX2J1Zl9pdGVtX3VucGlu
+KCkgd2hlbgotCSAqIHRoZSB0cmFuc2FjdGlvbiBpcyByZWFsbHkgdGhyb3VnaCB3aXRoIHRoZSBi
+dWZmZXIuCi0JICovCi0JaWYgKCEoYmlwLT5ibGlfZmxhZ3MgJiBYRlNfQkxJX0xPR0dFRCkpIHsK
+LQkJYXRvbWljX2RlYygmYmlwLT5ibGlfcmVmY291bnQpOwotCX0gZWxzZSB7Ci0JCS8qCi0JCSAq
+IENsZWFyIHRoZSBsb2dnZWQgZmxhZyBzaW5jZSB0aGlzIGlzIHBlcgotCQkgKiB0cmFuc2FjdGlv
+biBzdGF0ZS4KLQkJICovCi0JCWJpcC0+YmxpX2ZsYWdzICY9IH5YRlNfQkxJX0xPR0dFRDsKLQl9
+Ci0KLQkvKgotCSAqIEJlZm9yZSBwb3NzaWJseSBmcmVlaW5nIHRoZSBidWYgaXRlbSwgZGV0ZXJt
+aW5lIGlmIHdlIHNob3VsZAotCSAqIHJlbGVhc2UgdGhlIGJ1ZmZlciBhdCB0aGUgZW5kIG9mIHRo
+aXMgcm91dGluZS4KLQkgKi8KLQlob2xkID0gYmlwLT5ibGlfZmxhZ3MgJiBYRlNfQkxJX0hPTEQ7
+CiAJdHJhY2VfeGZzX2J1Zl9pdGVtX3VubG9jayhiaXApOwogCiAJLyoKLQkgKiBJZiB0aGUgYnVm
+IGl0ZW0gaXNuJ3QgdHJhY2tpbmcgYW55IGRhdGEsIGZyZWUgaXQuCi0JICogT3RoZXJ3aXNlLCBp
+ZiBYRlNfQkxJX0hPTEQgaXMgc2V0IGNsZWFyIGl0LgorCSAqIElmIHRoZSBidWYgaXRlbSBpc24n
+dCB0cmFja2luZyBhbnkgZGF0YSwgZnJlZSBpdCwgb3RoZXJ3aXNlIGRyb3AgdGhlCisJICogcmVm
+ZXJlbmNlIHdlIGhvbGQgdG8gaXQuCiAJICovCiAJaWYgKHhmc19iaXRtYXBfZW1wdHkoYmlwLT5i
+bGlfZm9ybWF0LmJsZl9kYXRhX21hcCwKLQkJCSAgICAgYmlwLT5ibGlfZm9ybWF0LmJsZl9tYXBf
+c2l6ZSkpIHsKKwkJCSAgICAgYmlwLT5ibGlfZm9ybWF0LmJsZl9tYXBfc2l6ZSkpCiAJCXhmc19i
+dWZfaXRlbV9yZWxzZShicCk7Ci0JfSBlbHNlIGlmIChob2xkKSB7Ci0JCWJpcC0+YmxpX2ZsYWdz
+ICY9IH5YRlNfQkxJX0hPTEQ7Ci0JfQorCWVsc2UKKwkJYXRvbWljX2RlYygmYmlwLT5ibGlfcmVm
+Y291bnQpOwogCi0JLyoKLQkgKiBSZWxlYXNlIHRoZSBidWZmZXIgaWYgWEZTX0JMSV9IT0xEIHdh
+cyBub3Qgc2V0LgotCSAqLwotCWlmICghaG9sZCkgeworCWlmICghaG9sZCkKIAkJeGZzX2J1Zl9y
+ZWxzZShicCk7Ci0JfQogfQogCiAvKgotLSAKMS41LjYuNQoKX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5j
+b20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
