@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o48F4kKX195212 for <xfs@oss.sgi.com>; Sat, 8 May 2010 10:04:46 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0AB831286E40
-	for <xfs@oss.sgi.com>; Sat,  8 May 2010 08:07:04 -0700 (PDT)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id 6vKGyPcGu0r2BEkE for
-	<xfs@oss.sgi.com>; Sat, 08 May 2010 08:07:04 -0700 (PDT)
-Message-ID: <4BE57E0D.3020601@sandeen.net>
-Date: Sat, 08 May 2010 10:06:53 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	o48HDZA2197447 for <xfs@oss.sgi.com>; Sat, 8 May 2010 12:13:38 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 184461078DCF
+	for <xfs@oss.sgi.com>; Sat,  8 May 2010 10:15:55 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id whVbNHPIOaAi99Lc for
+	<xfs@oss.sgi.com>; Sat, 08 May 2010 10:15:55 -0700 (PDT)
+Date: Sat, 8 May 2010 13:15:45 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 07/12] xfs: Improve scalability of busy extent tracking
+Message-ID: <20100508171544.GA10971@infradead.org>
+References: <1273210860-23414-1-git-send-email-david@fromorbit.com>
+	<1273210860-23414-8-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: Re: failed to read root inode
-References: <4BE55A63.8070203@purplehaze.ch>
-In-Reply-To: <4BE55A63.8070203@purplehaze.ch>
+Content-Disposition: inline
+In-Reply-To: <1273210860-23414-8-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,72 +29,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christian Affolter <christian.affolter@purplehaze.ch>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-Christian Affolter wrote:
-> Hi
-> 
-> After a disk crash within a hardware RAID-6 controller and kernel
-> freeze, I'm unable to mount an XFS filesystem on top of an EVMS volume:
+Looks good, but a couple minor comments below:
 
-Are you sure the volume is reassembled correctly?  It seems like the
-fs has a ton of damage ...
 
-One trick I often recommend is to make a metadata image of the fs
-with xfs_metadump / xfs_mdrestore and run repair on that to see
-what repair -would- do, but I guess you've already run it on the
-real fs.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-So if repair isn't making a mountable fs, first suggestion would
-be to re-try with the latest version of repair.
+> diff --git a/fs/xfs/linux-2.6/xfs_quotaops.c b/fs/xfs/linux-2.6/xfs_quotaops.c
+> index 1947514..2e73688 100644
+> --- a/fs/xfs/linux-2.6/xfs_quotaops.c
+> +++ b/fs/xfs/linux-2.6/xfs_quotaops.c
+> @@ -19,6 +19,7 @@
+>  #include "xfs_dmapi.h"
+>  #include "xfs_sb.h"
+>  #include "xfs_inum.h"
+> +#include "xfs_log.h"
+>  #include "xfs_ag.h"
+>  #include "xfs_mount.h"
+>  #include "xfs_quota.h"
 
-> Filesystem "dm-13": Disabling barriers, not supported by the underlying
-> device
+This hunk is not needed.
 
-Honestly, that could be part of the problem too, if a bunch of
-disks with write caches all lost them, in the array.
+> --- a/fs/xfs/xfs_log.h
+> +++ b/fs/xfs/xfs_log.h
+> @@ -18,9 +18,6 @@
+>  #ifndef	__XFS_LOG_H__
+>  #define __XFS_LOG_H__
+>  
+> -/* transaction ID type */
+> -typedef __uint32_t xlog_tid_t;
+> -
 
-> XFS mounting filesystem dm-13
-> Starting XFS recovery on filesystem: dm-13 (logdev: internal)
-> XFS internal error XFS_WANT_CORRUPTED_GOTO at line 1599 of file
-> fs/xfs/xfs_alloc.c.  Caller 0xffffffff8035c58d
-> Pid: 13473, comm: mount Not tainted 2.6.26-gentoo #1
-...
 
-> XFS: log mount finish failed
+> --- a/fs/xfs/xfs_types.h
+> +++ b/fs/xfs/xfs_types.h
+> @@ -75,6 +75,8 @@ typedef	__uint32_t	xfs_dahash_t;	/* dir/attr hash value */
+>  
+>  typedef __uint16_t	xfs_prid_t;	/* prid_t truncated to 16bits in XFS */
+>  
+> +typedef __uint32_t	xlog_tid_t;	/* transaction ID type */
 
-So recovery is failing, you could try mount -o ro,norecovery at this
-point to see what's still left on the fs... but:
- 
-> I tried to repair the filesystem with the help of xfs_repair many times,
-> without any luck:
-> Filesystem "dm-13": Disabling barriers, not supported by the underlying
-> device
-> XFS mounting filesystem dm-13
-> XFS: failed to read root inode
-
-...
-
-> xfs_check output:
-> cache_node_purge: refcount was 1, not zero (node=0x820010)
-> xfs_check: cannot read root inode (117)
-
-That's a bit of an odd root inode number, I think, which
-makes me think maybe there are still serious problems.
-
-> Are there any other ways to fix the unreadable root inode or to restore
-> the remaining data?
-> 
-> 
-> Environment informations:
-> Linux Kernel: 2.6.26-gentoo (x86_64)
-> xfsprogs:     3.0.3
-
-Those are both pretty old at this point, I can't say there is anything
-specific in newer xfsprogs, but I'd probably give that a shot first.
-
--Eric
+This should be in the patch introducing xfs_log_get_trans_ident.
 
 _______________________________________________
 xfs mailing list
