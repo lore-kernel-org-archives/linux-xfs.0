@@ -1,22 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o48HDZA2197447 for <xfs@oss.sgi.com>; Sat, 8 May 2010 12:13:38 -0500
+	o48J6WIv199772 for <xfs@oss.sgi.com>; Sat, 8 May 2010 14:06:34 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 184461078DCF
-	for <xfs@oss.sgi.com>; Sat,  8 May 2010 10:15:55 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 144A91DE8EDB
+	for <xfs@oss.sgi.com>; Sat,  8 May 2010 12:08:43 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id whVbNHPIOaAi99Lc for
-	<xfs@oss.sgi.com>; Sat, 08 May 2010 10:15:55 -0700 (PDT)
-Date: Sat, 8 May 2010 13:15:45 -0400
+	by cuda.sgi.com with ESMTP id xfE5sDfgADFmQSp3 for
+	<xfs@oss.sgi.com>; Sat, 08 May 2010 12:08:43 -0700 (PDT)
+Date: Sat, 8 May 2010 15:08:43 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 07/12] xfs: Improve scalability of busy extent tracking
-Message-ID: <20100508171544.GA10971@infradead.org>
-References: <1273210860-23414-1-git-send-email-david@fromorbit.com>
-	<1273210860-23414-8-git-send-email-david@fromorbit.com>
+Subject: XFS status update for April 2010
+Message-ID: <20100508190843.GA20445@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1273210860-23414-8-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,49 +26,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
-Looks good, but a couple minor comments below:
+In April 2.6.34 still was in the release candidate phase, with
+a hand full of XFS fixes making it into mainline.  Development for
+the 2.6.35 merge window went ahead full steam at the same time.
 
+While a fair amount of patches hit the development tree these were
+largely cleanups, with the real development activity happening on
+the mailing list.  There was another round of patches and following
+discussion on the scalable busy extent tracking and delayed logging
+features mentioned last month.  They are expected to be merged in
+May and queue up for the Linux 2.6.35 window.  Last but not least
+April saw a large number of XFS fixes backported to the 2.6.32 and
+2.6.33 -stable series.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-> diff --git a/fs/xfs/linux-2.6/xfs_quotaops.c b/fs/xfs/linux-2.6/xfs_quotaops.c
-> index 1947514..2e73688 100644
-> --- a/fs/xfs/linux-2.6/xfs_quotaops.c
-> +++ b/fs/xfs/linux-2.6/xfs_quotaops.c
-> @@ -19,6 +19,7 @@
->  #include "xfs_dmapi.h"
->  #include "xfs_sb.h"
->  #include "xfs_inum.h"
-> +#include "xfs_log.h"
->  #include "xfs_ag.h"
->  #include "xfs_mount.h"
->  #include "xfs_quota.h"
-
-This hunk is not needed.
-
-> --- a/fs/xfs/xfs_log.h
-> +++ b/fs/xfs/xfs_log.h
-> @@ -18,9 +18,6 @@
->  #ifndef	__XFS_LOG_H__
->  #define __XFS_LOG_H__
->  
-> -/* transaction ID type */
-> -typedef __uint32_t xlog_tid_t;
-> -
-
-
-> --- a/fs/xfs/xfs_types.h
-> +++ b/fs/xfs/xfs_types.h
-> @@ -75,6 +75,8 @@ typedef	__uint32_t	xfs_dahash_t;	/* dir/attr hash value */
->  
->  typedef __uint16_t	xfs_prid_t;	/* prid_t truncated to 16bits in XFS */
->  
-> +typedef __uint32_t	xlog_tid_t;	/* transaction ID type */
-
-This should be in the patch introducing xfs_log_get_trans_ident.
+In user land xfsprogs has seen few but important updates, preparing
+for a new release next month.  The xfs_repair tool saw a fix to
+correctly enable the lazy superblock counters on an existing
+filesystem, and xfs_fsr saw updates to better deal with dynamic
+attribute forks.  Last but not a least a port to Debian GNU/kFreeBSD
+got merged. The xfstests test suite saw two new test cases and various
+smaller fixes.
 
 _______________________________________________
 xfs mailing list
