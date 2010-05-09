@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o49I1jYp231964 for <xfs@oss.sgi.com>; Sun, 9 May 2010 13:01:45 -0500
-Received: from b.mx.filmlight.ltd.uk (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id C3734323B11
-	for <xfs@oss.sgi.com>; Sun,  9 May 2010 11:03:55 -0700 (PDT)
-Received: from b.mx.filmlight.ltd.uk (bongo.filmlight.ltd.uk [77.107.81.251])
-	by cuda.sgi.com with SMTP id XB1sxCk9Y6w8qwyB for
-	<xfs@oss.sgi.com>; Sun, 09 May 2010 11:03:55 -0700 (PDT)
-Message-Id: <B461E034-D859-4D21-8DB1-E5FA599833E9@filmlight.ltd.uk>
-From: Roger Willcocks <roger@filmlight.ltd.uk>
-In-Reply-To: <4BE55A63.8070203@purplehaze.ch>
-Mime-Version: 1.0 (Apple Message framework v936)
-Subject: Re: failed to read root inode
-Date: Sun, 9 May 2010 19:03:52 +0100
-References: <4BE55A63.8070203@purplehaze.ch>
+	o49Hmb9C231767 for <xfs@oss.sgi.com>; Sun, 9 May 2010 12:48:38 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0D1468FB1B5
+	for <xfs@oss.sgi.com>; Sun,  9 May 2010 10:51:03 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id mHKBod0nkVTuvSCp for
+	<xfs@oss.sgi.com>; Sun, 09 May 2010 10:51:03 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1OBAeO-0000cP-CF
+	for xfs@oss.sgi.com; Sun, 09 May 2010 17:50:48 +0000
+Date: Sun, 9 May 2010 13:50:48 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH] xfs: add discard support (at transaction commit)
+Message-ID: <20100509175048.GA1435@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,164 +25,154 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christian Affolter <christian.affolter@purplehaze.ch>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-The original xfs_repair log looks reasonably sane, and suggests that  
-the block(s) containing inodes 128-191 had been zeroed out. xfs_repair  
-claims to have fixed all that up, and rebuilt the root directory  
-amongst others.
+Now that we have reliably tracking of deleted extents in a transaction
+we can easily implement "online" discard support which calls
+blkdev_issue_discard once a transaction commits.  We simply have to
+walk the list of busy extents after transaction commit, but before deleting
+it from the rbtree tracking these busy extents.
 
-However xfs_check still complains, and correspondence off-list shows  
-that xfs_repair -n detects the same 'bad magic number 0xfeed' on  
-alternating inodes as xfs_check:
+This does not replace by background discard support patch which is probably
+better for thin provisioned arrays - I will updated it to apply ontop of
+this patch when I'm ready to re-submit it.
 
-bad magic number 0xfeed on inode 128
-bad version number 0x0 on inode 128
-bad magic number 0x0 on inode 129
-bad version number 0x0 on inode 129
-bad (negative) size -8161755683656211562 on inode 129
-bad magic number 0xfeed on inode 130
-bad version number 0x0 on inode 130
-bad magic number 0x0 on inode 131
-bad version number 0x0 on inode 131
-bad (negative) size -8161755683656211562 on inode 131
+[Note: this patch needs Dave's delayed-logging series any patch titled
+ "xfs: simplify log item descriptor tracking" applied]
 
-This pattern corresponds to the corruption described in http://oss.sgi.com/archives/xfs/2008-01/msg00696.html
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-xfs_check also says:
-
-block 0/8 expected type unknown got log
-block 0/9 expected type unknown got log
-block 0/10 expected type unknown got log
-block 0/11 expected type unknown got log
-
-Could xfs_repair (or remounting the disk) have written log data over  
-those blocks?
-
---
-Roger
-
-
-On 8 May 2010, at 13:34, Christian Affolter wrote:
-
-> Hi
->
-> After a disk crash within a hardware RAID-6 controller and kernel
-> freeze, I'm unable to mount an XFS filesystem on top of an EVMS  
-> volume:
->
-> Filesystem "dm-13": Disabling barriers, not supported by the  
-> underlying
-> device
-> XFS mounting filesystem dm-13
-> Starting XFS recovery on filesystem: dm-13 (logdev: internal)
-> XFS internal error XFS_WANT_CORRUPTED_GOTO at line 1599 of file
-> fs/xfs/xfs_alloc.c.  Caller 0xffffffff8035c58d
-> Pid: 13473, comm: mount Not tainted 2.6.26-gentoo #1
->
-> Call Trace:
-> [<ffffffff8035c58d>] xfs_free_extent+0xcd/0x110
-> [<ffffffff8035aa03>] xfs_free_ag_extent+0x4e3/0x740
-> [<ffffffff8035c58d>] xfs_free_extent+0xcd/0x110
-> [<ffffffff80395e9d>] xlog_recover_process_efi+0x18d/0x1d0
-> [<ffffffff80397400>] xlog_recover_process_efis+0x60/0xa0
-> [<ffffffff80397463>] xlog_recover_finish+0x23/0xf0
-> [<ffffffff8039d36a>] xfs_mountfs+0x4da/0x680
-> [<ffffffff803a9ba8>] kmem_alloc+0x58/0x100
-> [<ffffffff803a9cfb>] kmem_zalloc+0x2b/0x40
-> [<ffffffff803a3dbd>] xfs_mount+0x36d/0x3a0
-> [<ffffffff803b4bad>] xfs_fs_fill_super+0xbd/0x220
-> [<ffffffff8028b551>] get_sb_bdev+0x141/0x180
-> [<ffffffff803b4af0>] xfs_fs_fill_super+0x0/0x220
-> [<ffffffff8028aeb6>] vfs_kern_mount+0x56/0xc0
-> [<ffffffff8028af83>] do_kern_mount+0x53/0x110
-> [<ffffffff802a343b>] do_new_mount+0x9b/0xe0
-> [<ffffffff802a3666>] do_mount+0x1e6/0x220
-> [<ffffffff802670f5>] __get_free_pages+0x15/0x60
-> [<ffffffff802a373b>] sys_mount+0x9b/0x100
-> [<ffffffff8020b49b>] system_call_after_swapgs+0x7b/0x80
->
-> Filesystem "dm-13": XFS internal error xfs_trans_cancel at line 1163  
-> of
-> file fs/xfs/xfs_trans.c.  Caller 0xffffffff80395eb1
-> Pid: 13473, comm: mount Not tainted 2.6.26-gentoo #1
->
-> Call Trace:
-> [<ffffffff80395eb1>] xlog_recover_process_efi+0x1a1/0x1d0
-> [<ffffffff8039fd16>] xfs_trans_cancel+0x126/0x150
-> [<ffffffff80395eb1>] xlog_recover_process_efi+0x1a1/0x1d0
-> [<ffffffff80397400>] xlog_recover_process_efis+0x60/0xa0
-> [<ffffffff80397463>] xlog_recover_finish+0x23/0xf0
-> [<ffffffff8039d36a>] xfs_mountfs+0x4da/0x680
-> [<ffffffff803a9ba8>] kmem_alloc+0x58/0x100
-> [<ffffffff803a9cfb>] kmem_zalloc+0x2b/0x40
-> [<ffffffff803a3dbd>] xfs_mount+0x36d/0x3a0
-> [<ffffffff803b4bad>] xfs_fs_fill_super+0xbd/0x220
-> [<ffffffff8028b551>] get_sb_bdev+0x141/0x180
-> [<ffffffff803b4af0>] xfs_fs_fill_super+0x0/0x220
-> [<ffffffff8028aeb6>] vfs_kern_mount+0x56/0xc0
-> [<ffffffff8028af83>] do_kern_mount+0x53/0x110
-> [<ffffffff802a343b>] do_new_mount+0x9b/0xe0
-> [<ffffffff802a3666>] do_mount+0x1e6/0x220
-> [<ffffffff802670f5>] __get_free_pages+0x15/0x60
-> [<ffffffff802a373b>] sys_mount+0x9b/0x100
-> [<ffffffff8020b49b>] system_call_after_swapgs+0x7b/0x80
->
-> xfs_force_shutdown(dm-13,0x8) called from line 1164 of file
-> fs/xfs/xfs_trans.c.  Return address = 0xffffffff8039fd2f
-> Filesystem "dm-13": Corruption of in-memory data detected.  Shutting
-> down filesystem: dm-13
-> Please umount the filesystem, and rectify the problem(s)
-> Failed to recover EFIs on filesystem: dm-13
-> XFS: log mount finish failed
->
->
-> I tried to repair the filesystem with the help of xfs_repair many  
-> times,
-> without any luck:
-> Filesystem "dm-13": Disabling barriers, not supported by the  
-> underlying
-> device
-> XFS mounting filesystem dm-13
-> XFS: failed to read root inode
->
-> xfs_check output:
-> cache_node_purge: refcount was 1, not zero (node=0x820010)
-> xfs_check: cannot read root inode (117)
-> cache_node_purge: refcount was 1, not zero (node=0x8226b0)
-> xfs_check: cannot read realtime bitmap inode (117)
-> block 0/8 expected type unknown got log
-> block 0/9 expected type unknown got log
-> block 0/10 expected type unknown got log
-> block 0/11 expected type unknown got log
-> bad magic number 0xfeed for inode 128
-> [...]
->
-> Are there any other ways to fix the unreadable root inode or to  
-> restore
-> the remaining data?
->
->
-> Environment informations:
-> Linux Kernel: 2.6.26-gentoo (x86_64)
-> xfsprogs:     3.0.3
->
-> Attached you'll find the xfs_repair and xfs_check output.
->
->
-> Thanks in advance and kind regards
-> Christian
-> < 
-> xfs_repair 
-> .log><xfs_check.log>_______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Index: xfs/fs/xfs/xfs_alloc.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_alloc.c	2010-05-09 19:08:34.544262404 +0200
++++ xfs/fs/xfs/xfs_alloc.c	2010-05-09 19:09:24.975032203 +0200
+@@ -2761,3 +2761,25 @@ xfs_alloc_busy_clear(
+ 
+ 	kmem_free(busyp);
+ }
++
++int
++xfs_discard_extent(
++	struct xfs_mount	*mp,
++	struct xfs_busy_extent	*busyp)
++{
++	int			error = 0;
++	xfs_daddr_t		bno;
++	__int64_t		len;
++
++	if ((mp->m_flags & XFS_MOUNT_DISCARD) == 0)
++		return 0;
++
++	bno = XFS_AGB_TO_DADDR(mp, busyp->agno, busyp->bno);
++	len = XFS_FSB_TO_BB(mp, busyp->length);
++
++	error = -blkdev_issue_discard(mp->m_ddev_targp->bt_bdev, bno, len,
++				      GFP_NOFS, DISCARD_FL_BARRIER);
++	if (error && error != EOPNOTSUPP)
++		xfs_fs_cmn_err(CE_NOTE, mp, "discard failed, error %d", error);
++	return error;
++}
+Index: xfs/fs/xfs/xfs_alloc.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_alloc.h	2010-05-09 19:08:34.551265756 +0200
++++ xfs/fs/xfs/xfs_alloc.h	2010-05-09 19:09:16.213023263 +0200
+@@ -128,6 +128,9 @@ xfs_alloc_busy_insert(xfs_trans_t *tp,
+ void
+ xfs_alloc_busy_clear(struct xfs_mount *mp, struct xfs_busy_extent *busyp);
+ 
++int
++xfs_discard_extent(struct xfs_mount *mp, struct xfs_busy_extent *busyp);
++
+ #endif	/* __KERNEL__ */
+ 
+ /*
+Index: xfs/fs/xfs/linux-2.6/xfs_super.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2010-05-09 19:08:34.562254302 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_super.c	2010-05-09 19:09:16.223693748 +0200
+@@ -120,6 +120,8 @@ mempool_t *xfs_ioend_pool;
+ #define MNTOPT_DMI	"dmi"		/* DMI enabled (DMAPI / XDSM) */
+ #define MNTOPT_DELAYLOG   "delaylog"	/* Delayed loging enabled */
+ #define MNTOPT_NODELAYLOG "nodelaylog"	/* Delayed loging disabled */
++#define MNTOPT_DISCARD	"discard"	/* Discard unused blocks */
++#define MNTOPT_NODISCARD "nodiscard"	/* Do not discard unused blocks */
+ 
+ /*
+  * Table driven mount option parser.
+@@ -382,6 +384,10 @@ xfs_parseargs(
+ 				"- use at your own risk.\n");
+ 		} else if (!strcmp(this_char, MNTOPT_NODELAYLOG)) {
+ 			mp->m_flags &= ~XFS_MOUNT_DELAYLOG;
++		} else if (!strcmp(this_char, MNTOPT_DISCARD)) {
++			mp->m_flags |= XFS_MOUNT_DISCARD;
++		} else if (!strcmp(this_char, MNTOPT_NODISCARD)) {
++			mp->m_flags &= ~XFS_MOUNT_DISCARD;
+ 		} else if (!strcmp(this_char, "ihashsize")) {
+ 			cmn_err(CE_WARN,
+ 	"XFS: ihashsize no longer used, option is deprecated.");
+Index: xfs/fs/xfs/xfs_mount.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_mount.h	2010-05-09 19:08:34.571254232 +0200
++++ xfs/fs/xfs/xfs_mount.h	2010-05-09 19:09:16.231005734 +0200
+@@ -274,6 +274,7 @@ typedef struct xfs_mount {
+ #define XFS_MOUNT_FS_SHUTDOWN	(1ULL << 4)	/* atomic stop of all filesystem
+ 						   operations, typically for
+ 						   disk errors in metadata */
++#define XFS_MOUNT_DISCARD	(1ULL << 5)	/* discard unused blocks */
+ #define XFS_MOUNT_RETERR	(1ULL << 6)     /* return alignment errors to
+ 						   user */
+ #define XFS_MOUNT_NOALIGN	(1ULL << 7)	/* turn off stripe alignment
+Index: xfs/fs/xfs/xfs_log_cil.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_log_cil.c	2010-05-09 19:08:34.580004407 +0200
++++ xfs/fs/xfs/xfs_log_cil.c	2010-05-09 19:09:16.241255699 +0200
+@@ -415,6 +415,7 @@ xlog_cil_committed(
+ 	int	abort)
+ {
+ 	struct xfs_cil_ctx	*ctx = args;
++	struct xfs_mount	*mp = ctx->cil->xc_log->l_mp;
+ 	struct xfs_log_vec	*lv;
+ 	int			abortflag = abort ? XFS_LI_ABORTED : 0;
+ 	struct xfs_busy_extent	*busyp, *n;
+@@ -425,8 +426,10 @@ xlog_cil_committed(
+ 							abortflag);
+ 	}
+ 
+-	list_for_each_entry_safe(busyp, n, &ctx->busy_extents, list)
+-		xfs_alloc_busy_clear(ctx->cil->xc_log->l_mp, busyp);
++	list_for_each_entry_safe(busyp, n, &ctx->busy_extents, list) {
++		xfs_discard_extent(mp, busyp);
++		xfs_alloc_busy_clear(mp, busyp);
++	}
+ 
+ 	spin_lock(&ctx->cil->xc_cil_lock);
+ 	list_del(&ctx->committing);
+Index: xfs/fs/xfs/xfs_trans.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_trans.c	2010-05-09 19:08:34.596025010 +0200
++++ xfs/fs/xfs/xfs_trans.c	2010-05-09 19:09:16.252005804 +0200
+@@ -1398,6 +1398,7 @@ xfs_trans_committed(
+ 	int			abortflag)
+ {
+ 	struct xfs_log_item_desc *lidp, *next;
++	struct xfs_busy_extent	*busyp;
+ 
+ 	/* Call the transaction's completion callback if there is one. */
+ 	if (tp->t_callback != NULL)
+@@ -1408,6 +1409,9 @@ xfs_trans_committed(
+ 		xfs_trans_free_item_desc(lidp);
+ 	}
+ 
++	list_for_each_entry(busyp, &tp->t_busy, list)
++		xfs_discard_extent(tp->t_mountp, busyp);
++
+ 	xfs_trans_free(tp);
+ }
+ 
 
 _______________________________________________
 xfs mailing list
