@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o49HTZ35231388 for <xfs@oss.sgi.com>; Sun, 9 May 2010 12:29:36 -0500
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CC1F41287E71
-	for <xfs@oss.sgi.com>; Sun,  9 May 2010 10:32:01 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id 799963EXAcfKOdgB
-	for <xfs@oss.sgi.com>; Sun, 09 May 2010 10:32:01 -0700 (PDT)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id 31E976C32E
-	for <xfs@oss.sgi.com>; Sun,  9 May 2010 12:31:46 -0500 (CDT)
-Message-ID: <4BE6F22F.5090603@hardwarefreak.com>
-Date: Sun, 09 May 2010 12:34:39 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
-MIME-Version: 1.0
+	o49I1jYp231964 for <xfs@oss.sgi.com>; Sun, 9 May 2010 13:01:45 -0500
+Received: from b.mx.filmlight.ltd.uk (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id C3734323B11
+	for <xfs@oss.sgi.com>; Sun,  9 May 2010 11:03:55 -0700 (PDT)
+Received: from b.mx.filmlight.ltd.uk (bongo.filmlight.ltd.uk [77.107.81.251])
+	by cuda.sgi.com with SMTP id XB1sxCk9Y6w8qwyB for
+	<xfs@oss.sgi.com>; Sun, 09 May 2010 11:03:55 -0700 (PDT)
+Message-Id: <B461E034-D859-4D21-8DB1-E5FA599833E9@filmlight.ltd.uk>
+From: Roger Willcocks <roger@filmlight.ltd.uk>
+In-Reply-To: <4BE55A63.8070203@purplehaze.ch>
+Mime-Version: 1.0 (Apple Message framework v936)
 Subject: Re: failed to read root inode
-References: <4BE55A63.8070203@purplehaze.ch>	<4BE5EB5D.5020702@hardwarefreak.com>
-	<4BE6D63F.3070404@purplehaze.ch>
-In-Reply-To: <4BE6D63F.3070404@purplehaze.ch>
+Date: Sun, 9 May 2010 19:03:52 +0100
+References: <4BE55A63.8070203@purplehaze.ch>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,130 +23,164 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christian Affolter <christian.affolter@purplehaze.ch>
+Cc: xfs@oss.sgi.com
 
-Christian Affolter put forth on 5/9/2010 10:35 AM:
+The original xfs_repair log looks reasonably sane, and suggests that  
+the block(s) containing inodes 128-191 had been zeroed out. xfs_repair  
+claims to have fixed all that up, and rebuilt the root directory  
+amongst others.
 
-> That's a good question ;) Honestly I don't know how this could happen,
-> all I saw were a bunch of errors from the RAID controller driver. In the
-> past two other disks failed and the controller reported each failure
-> correctly and started to rebuild the array automatically by using the
-> hot-spare disk. So it did its job two times correctly.
+However xfs_check still complains, and correspondence off-list shows  
+that xfs_repair -n detects the same 'bad magic number 0xfeed' on  
+alternating inodes as xfs_check:
+
+bad magic number 0xfeed on inode 128
+bad version number 0x0 on inode 128
+bad magic number 0x0 on inode 129
+bad version number 0x0 on inode 129
+bad (negative) size -8161755683656211562 on inode 129
+bad magic number 0xfeed on inode 130
+bad version number 0x0 on inode 130
+bad magic number 0x0 on inode 131
+bad version number 0x0 on inode 131
+bad (negative) size -8161755683656211562 on inode 131
+
+This pattern corresponds to the corruption described in http://oss.sgi.com/archives/xfs/2008-01/msg00696.html
+
+xfs_check also says:
+
+block 0/8 expected type unknown got log
+block 0/9 expected type unknown got log
+block 0/10 expected type unknown got log
+block 0/11 expected type unknown got log
+
+Could xfs_repair (or remounting the disk) have written log data over  
+those blocks?
+
+--
+Roger
+
+
+On 8 May 2010, at 13:34, Christian Affolter wrote:
+
+> Hi
+>
+> After a disk crash within a hardware RAID-6 controller and kernel
+> freeze, I'm unable to mount an XFS filesystem on top of an EVMS  
+> volume:
+>
+> Filesystem "dm-13": Disabling barriers, not supported by the  
+> underlying
+> device
+> XFS mounting filesystem dm-13
+> Starting XFS recovery on filesystem: dm-13 (logdev: internal)
+> XFS internal error XFS_WANT_CORRUPTED_GOTO at line 1599 of file
+> fs/xfs/xfs_alloc.c.  Caller 0xffffffff8035c58d
+> Pid: 13473, comm: mount Not tainted 2.6.26-gentoo #1
+>
+> Call Trace:
+> [<ffffffff8035c58d>] xfs_free_extent+0xcd/0x110
+> [<ffffffff8035aa03>] xfs_free_ag_extent+0x4e3/0x740
+> [<ffffffff8035c58d>] xfs_free_extent+0xcd/0x110
+> [<ffffffff80395e9d>] xlog_recover_process_efi+0x18d/0x1d0
+> [<ffffffff80397400>] xlog_recover_process_efis+0x60/0xa0
+> [<ffffffff80397463>] xlog_recover_finish+0x23/0xf0
+> [<ffffffff8039d36a>] xfs_mountfs+0x4da/0x680
+> [<ffffffff803a9ba8>] kmem_alloc+0x58/0x100
+> [<ffffffff803a9cfb>] kmem_zalloc+0x2b/0x40
+> [<ffffffff803a3dbd>] xfs_mount+0x36d/0x3a0
+> [<ffffffff803b4bad>] xfs_fs_fill_super+0xbd/0x220
+> [<ffffffff8028b551>] get_sb_bdev+0x141/0x180
+> [<ffffffff803b4af0>] xfs_fs_fill_super+0x0/0x220
+> [<ffffffff8028aeb6>] vfs_kern_mount+0x56/0xc0
+> [<ffffffff8028af83>] do_kern_mount+0x53/0x110
+> [<ffffffff802a343b>] do_new_mount+0x9b/0xe0
+> [<ffffffff802a3666>] do_mount+0x1e6/0x220
+> [<ffffffff802670f5>] __get_free_pages+0x15/0x60
+> [<ffffffff802a373b>] sys_mount+0x9b/0x100
+> [<ffffffff8020b49b>] system_call_after_swapgs+0x7b/0x80
+>
+> Filesystem "dm-13": XFS internal error xfs_trans_cancel at line 1163  
+> of
+> file fs/xfs/xfs_trans.c.  Caller 0xffffffff80395eb1
+> Pid: 13473, comm: mount Not tainted 2.6.26-gentoo #1
+>
+> Call Trace:
+> [<ffffffff80395eb1>] xlog_recover_process_efi+0x1a1/0x1d0
+> [<ffffffff8039fd16>] xfs_trans_cancel+0x126/0x150
+> [<ffffffff80395eb1>] xlog_recover_process_efi+0x1a1/0x1d0
+> [<ffffffff80397400>] xlog_recover_process_efis+0x60/0xa0
+> [<ffffffff80397463>] xlog_recover_finish+0x23/0xf0
+> [<ffffffff8039d36a>] xfs_mountfs+0x4da/0x680
+> [<ffffffff803a9ba8>] kmem_alloc+0x58/0x100
+> [<ffffffff803a9cfb>] kmem_zalloc+0x2b/0x40
+> [<ffffffff803a3dbd>] xfs_mount+0x36d/0x3a0
+> [<ffffffff803b4bad>] xfs_fs_fill_super+0xbd/0x220
+> [<ffffffff8028b551>] get_sb_bdev+0x141/0x180
+> [<ffffffff803b4af0>] xfs_fs_fill_super+0x0/0x220
+> [<ffffffff8028aeb6>] vfs_kern_mount+0x56/0xc0
+> [<ffffffff8028af83>] do_kern_mount+0x53/0x110
+> [<ffffffff802a343b>] do_new_mount+0x9b/0xe0
+> [<ffffffff802a3666>] do_mount+0x1e6/0x220
+> [<ffffffff802670f5>] __get_free_pages+0x15/0x60
+> [<ffffffff802a373b>] sys_mount+0x9b/0x100
+> [<ffffffff8020b49b>] system_call_after_swapgs+0x7b/0x80
+>
+> xfs_force_shutdown(dm-13,0x8) called from line 1164 of file
+> fs/xfs/xfs_trans.c.  Return address = 0xffffffff8039fd2f
+> Filesystem "dm-13": Corruption of in-memory data detected.  Shutting
+> down filesystem: dm-13
+> Please umount the filesystem, and rectify the problem(s)
+> Failed to recover EFIs on filesystem: dm-13
+> XFS: log mount finish failed
+>
+>
+> I tried to repair the filesystem with the help of xfs_repair many  
+> times,
+> without any luck:
+> Filesystem "dm-13": Disabling barriers, not supported by the  
+> underlying
+> device
+> XFS mounting filesystem dm-13
+> XFS: failed to read root inode
+>
+> xfs_check output:
+> cache_node_purge: refcount was 1, not zero (node=0x820010)
+> xfs_check: cannot read root inode (117)
+> cache_node_purge: refcount was 1, not zero (node=0x8226b0)
+> xfs_check: cannot read realtime bitmap inode (117)
+> block 0/8 expected type unknown got log
+> block 0/9 expected type unknown got log
+> block 0/10 expected type unknown got log
+> block 0/11 expected type unknown got log
+> bad magic number 0xfeed for inode 128
 > [...]
-> 
-> kernel: arcmsr0: abort device command of scsi id = 1 lun = 0
-> kernel: arcmsr0: abort device command of scsi id = 4 lun = 0
-> kernel: arcmsr0: abort device command of scsi id = 4 lun = 0
-> kernel: arcmsr0: abort device command of scsi id = 4 lun = 0
-> kernel: arcmsr0: abort device command of scsi id = 4 lun = 0
-> kernel: arcmsr0: abort device command of scsi id = 2 lun = 0
-> kernel: arcmsr0: ccb ='0xffff8100bf819080'
-
-Ok, that's not good.  Looks like the Areca driver is showing communication
-failure with 3 physical drives simultaneously.  Can't be a drive problem.
-
-I just read through about 20 Google hits, and it seems this Areca issue is
-pretty common.  One OP said he had a defective card.  The rest all report
-the same or similar errors, across many Areca models, using many different
-drives, under moderate to high I/O load, under multiple *nix OSes, usually
-lots of small file copies is the trigger.  I've read plenty of less than
-flattering things about Areca RAID cards in the past.  This is just more of
-the same.
-
->From everything I've read on this, the problem is either:
-
-A.  A defective Areca card
-B.  Firmware issue (card and/or drives)
-C.  Driver issue
-D.  More than one of the above
-
-> Areca Technology Corp. ARC-1160 16-Port PCI-X to SATA RAID Controller
-> Firmware Version   : V1.42 2006-10-13
-
-That's a 16 port card.  How many total drives do you have connected?
-
-Are they all the same model/firmware rev?  If different models, do you at
-least have identical models in each RAID pack? Mixing different
-brands/models/firmware revs within a RAID pack is always a very bad idea.
-In fact, using anything but identical drives/firmware on a single controller
-card is a bad idea.  Some cards are more finicky than others, but almost all
-of them will have problems of one kind or another with a mixed bag 'o
-drives.  They can have problems with all identical drives if the drive
-firmware isn't to the card firmware's liking (see below).
-
-> After the hard reset, one disk was reported as 'faild' and the rebuild
-> started.
-
-Unfortunately the errors reported weren't indicative of a bad drive, but
-multiple bad drives.  None of the drives are bad.  The
-controller/firmware/driver have a problem, or have a problem with the
-drive(s) firmware.  The Areca firmware marked one drive as bad because the
-logic says something besides the card/firmware/driver _must_ be bad.  So, it
-marked one of the drives as bad and started rebuilding it.
-
-Back in the late '90s I had Mylex DAC960 cards doing exactly the same thing
-due to a problem with firmware on the Seagate ST118202 Cheetah drives.  The
-DAC960 would just kick a drive offline willy nilly.  This was with 8
-identical firmware drives in RAID5 arrays on a single SCSI channel.  Was
-really annoying.  I was at customer sites twice weekly replacing and
-rebuilding drives until Seagate finally admitted the firmware bug and
-advance shipped us 50 new 3 series Cheetah drives.  That was really fun
-replacing drives one by one and rebuilding the arrays after each drive swap.
- We lost a lot of labor $$ over that and had some less than happy customers.
- Once all the drives were replaced with the 3 series, we never had another
-problem with any of those arrays.  I'm still surprised I was able to rebuild
-the arrays without issues after adding each new drive, which was a slightly
-different size with a different firmware.  I was just sure the rebuilds
-would puke.  I got lucky.  These systems were in production, thus the reason
-we didn't restore from tape, which would have saved a lot of time.
-
->> What is the status of the RAID6 volume as reported by the RAID card BIOS?
-> 
-> By now, the rebuild finished, therefor the volume is in normal
-> non-degraded state.
-
-That's good.
-
->> What is the status of each of your EVMS volumes as reported by the EVMS UI?
-> 
-> They're all active. Do you need more informations here? There are
-> approximately 45 active volumes on this server.
-
-No.  Just wanted to know if they're all reported as healthy.
-
->> I'm asking all of these questions because it seems rather clear that the
->> root cause of your problem lies at a layer well below the XFS filesystem.
-> 
-> Yes, I never blamed XFS for being the cause of the problem.
-
-I should have worded that differently.  I didn't mean to imply that you were
-blaming XFS.  I meant that I wanted to help you figure out the root cause
-which wasn't XFS.
-
->> You have two layers of physical disk abstraction below XFS:  a hardware
->> RAID6 and a software logical volume manager.  You've apparently suffered a
->> storage system hardware failure, according to your description.  You haven't
->> given any details of the current status of the hardware RAID, or of the
->> logical volumes, merely that XFS is having problems.  I think a "Well duh!"
->> is in order.
->>
->> Please provide _detailed_ information from the RAID card BIOS and the EVMS
->> UI.  Even if the problem isn't XFS related I for one would be glad to assist
->> you in getting this fixed.  Right now we don't have enough information.  At
->> least I don't.
-
-On second read, this looks rather preachy and antagonistic.  I truly did not
-intend that tone.  Please accept my apology if this came across that way.  I
-think I was starting to get frustrated because I wanted to troubleshoot this
-further but didn't feel I had enough info.  Again, this was less than
-professional, and I apologize.
-
--- 
-Stan
+>
+> Are there any other ways to fix the unreadable root inode or to  
+> restore
+> the remaining data?
+>
+>
+> Environment informations:
+> Linux Kernel: 2.6.26-gentoo (x86_64)
+> xfsprogs:     3.0.3
+>
+> Attached you'll find the xfs_repair and xfs_check output.
+>
+>
+> Thanks in advance and kind regards
+> Christian
+> < 
+> xfs_repair 
+> .log><xfs_check.log>_______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
