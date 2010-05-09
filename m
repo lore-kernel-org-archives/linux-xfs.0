@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o49LvbwT236157 for <xfs@oss.sgi.com>; Sun, 9 May 2010 16:57:38 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 06E0697ED36
-	for <xfs@oss.sgi.com>; Sun,  9 May 2010 15:00:03 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	E7uPCgbbx6EMBlny for <xfs@oss.sgi.com>;
-	Sun, 09 May 2010 15:00:03 -0700 (PDT)
-Date: Mon, 10 May 2010 07:59:44 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: add discard support (at transaction commit)
-Message-ID: <20100509215944.GF25419@dastard>
-References: <20100509175048.GA1435@infradead.org>
+	o49NXCnf239450 for <xfs@oss.sgi.com>; Sun, 9 May 2010 18:33:13 -0500
+Received: from mx05.kabsi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 77CB312CFD0C
+	for <xfs@oss.sgi.com>; Sun,  9 May 2010 16:35:23 -0700 (PDT)
+Received: from mx05.kabsi.at (mx05.kabsi.at [195.202.128.131]) by cuda.sgi.com
+	with ESMTP id kuqLNikG77dPr77h for <xfs@oss.sgi.com>;
+	Sun, 09 May 2010 16:35:23 -0700 (PDT)
+Received: from 192.168.5.201 (h081217058120.dyn.cm.kabsi.at [81.217.58.120])
+	by mx05.kabsi.at (8.13.8/8.13.8) with ESMTP id o49NZLsv002587
+	for <xfs@oss.sgi.com>; Mon, 10 May 2010 01:35:22 +0200
+Date: Mon, 10 May 2010 01:35:11 +0200
+From: Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>
+Message-ID: <1743435018.20100510013511@kaneda.iguw.tuwien.ac.at>
+Subject: Re: xfs and raid5 - "Structure needs cleaning for directory open"
+In-Reply-To: <1816344475.20100509204800@kaneda.iguw.tuwien.ac.at>
+References: <1816344475.20100509204800@kaneda.iguw.tuwien.ac.at>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100509175048.GA1435@infradead.org>
+Reply-To: Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,60 +27,123 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Sun, May 09, 2010 at 01:50:48PM -0400, Christoph Hellwig wrote:
-> Now that we have reliably tracking of deleted extents in a transaction
-> we can easily implement "online" discard support which calls
-> blkdev_issue_discard once a transaction commits.  We simply have to
-> walk the list of busy extents after transaction commit, but before deleting
-> it from the rbtree tracking these busy extents.
-> 
-> This does not replace by background discard support patch which is probably
-> better for thin provisioned arrays - I will updated it to apply ontop of
-> this patch when I'm ready to re-submit it.
 
-I think this can  be made to work, but I don't really like it that
-much, especially the barrier flush part. Is there any particular
-reason we need to issue discards at this level apart from "other
-filesystems are doing it" rather than doing it lazily in a
-non-performance critical piece of code?
+not sure if my original post made it to the list members since it
+never arrived here, but it is already listed in the archive:
+http://oss.sgi.com/pipermail/xfs/2010-May/045303.html
 
-Regardless of this, some questions about the patch come to mind:
+another update:
+I restarted the server several times, always with the raid intact (no
+syncing) and started to backup as much data as possible. in the last
+hours the file system was heavily used (both read and write, about 2TB
+copied to another SATA disk); during this time the error occured
+a few times:
 
-	1. is it safe to block the xfslogd in the block layer in,
-	say, get_request()? i.e. should we be issuing IO from an IO
-	completion handler? That raises red flags in my head...
+since raid is stable I suspect it is entirely an XFS (or hardware) problem?
 
-	2. issuing discards will block xfslogd and potentially stall
-	the log if there are lots of discards to issue.
+find: ./Hana: Structure needs cleaning
 
-	3. DISCARD_FL_BARRIER appears to be used to allow async
-	issuing of the discard to ensure any followup write has the
-	discard processed first. What happens if the device does not
-	support barriers or barriers are turned off?
+00000000: aa b9 6a 52 fa 62 8c 36 17 19 b8 75 0f 2a 92 f5  =AA=B9jR=FAb.6..=
+=B8u.*.=F5
+Filesystem "md0": XFS internal error xfs_da_do_buf(2) at line 2112 of file =
+fs/xfs/xfs_da_btree.c.  Caller 0xffffffff8834482e
 
-	To me it appears that a lack of barriers could result in a
-	write being reordered in front of the discard.  e.g.
-	delalloc results in btree block freed, marked busy. New
-	delalloc occurs, allocates block, marked sync, forces log,
-	issues async discard, completes transaction and then writes
-	data async.  Which operation does the drive see and complete
-	first - the discard or the data write?
+Call Trace:
+ [<ffffffff8834472d>] :xfs:xfs_da_do_buf+0x503/0x5b1
+ [<ffffffff8834482e>] :xfs:xfs_da_read_buf+0x16/0x1b
+ [<ffffffff8020cb6c>] _atomic_dec_and_lock+0x39/0x57
+ [<ffffffff8834482e>] :xfs:xfs_da_read_buf+0x16/0x1b
+ [<ffffffff88349b0c>] :xfs:xfs_dir2_leaf_getdents+0x354/0x5ec
+ [<ffffffff88349b0c>] :xfs:xfs_dir2_leaf_getdents+0x354/0x5ec
+ [<ffffffff88372c6c>] :xfs:xfs_hack_filldir+0x0/0x5b
+ [<ffffffff88372c6c>] :xfs:xfs_hack_filldir+0x0/0x5b
+ [<ffffffff88346868>] :xfs:xfs_readdir+0xa7/0xb6
+ [<ffffffff88373301>] :xfs:xfs_file_readdir+0xff/0x14c
+ [<ffffffff80225d93>] filldir+0x0/0xb7
+ [<ffffffff80225d93>] filldir+0x0/0xb7
+ [<ffffffff802366f7>] vfs_readdir+0x77/0xa9
+ [<ffffffff80239f2a>] sys_getdents+0x75/0xbd
+ [<ffffffff80260295>] tracesys+0x47/0xb6
+ [<ffffffff802602f9>] tracesys+0xab/0xb6
 
-	4. A barrier IO on every discard? In a word: Ouch.
+00000000: ea 4c ea e1 7a f1 2f 88 13 f9 a5 24 08 38 31 4e  =EAL=EA=E1z=F1/.=
+.=F9=A5$.81N
+Filesystem "md0": XFS internal error xfs_da_do_buf(2) at line 2112 of file =
+fs/xfs/xfs_da_btree.c.  Caller 0xffffffff8834482e
 
-Cheers,
+Call Trace:
+ [<ffffffff8834472d>] :xfs:xfs_da_do_buf+0x503/0x5b1
+ [<ffffffff8834482e>] :xfs:xfs_da_read_buf+0x16/0x1b
+ [<ffffffff8020cb6c>] _atomic_dec_and_lock+0x39/0x57
+ [<ffffffff8834482e>] :xfs:xfs_da_read_buf+0x16/0x1b
+ [<ffffffff88349b0c>] :xfs:xfs_dir2_leaf_getdents+0x354/0x5ec
+ [<ffffffff88349b0c>] :xfs:xfs_dir2_leaf_getdents+0x354/0x5ec
+ [<ffffffff88372c6c>] :xfs:xfs_hack_filldir+0x0/0x5b
+ [<ffffffff88372c6c>] :xfs:xfs_hack_filldir+0x0/0x5b
+ [<ffffffff88346868>] :xfs:xfs_readdir+0xa7/0xb6
+ [<ffffffff88373301>] :xfs:xfs_file_readdir+0xff/0x14c
+ [<ffffffff80225d93>] filldir+0x0/0xb7
+ [<ffffffff80225d93>] filldir+0x0/0xb7
+ [<ffffffff802366f7>] vfs_readdir+0x77/0xa9
+ [<ffffffff80239f2a>] sys_getdents+0x75/0xbd
+ [<ffffffff80260295>] tracesys+0x47/0xb6
+ [<ffffffff802602f9>] tracesys+0xab/0xb6
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+00000000: ea 4c ea e1 7a f1 2f 88 13 f9 a5 24 08 38 31 4e  =EAL=EA=E1z=F1/.=
+.=F9=A5$.81N
+Filesystem "md0": XFS internal error xfs_da_do_buf(2) at line 2112 of file =
+fs/xfs/xfs_da_btree.c.  Caller 0xffffffff8834482e
+
+Call Trace:
+ [<ffffffff8834472d>] :xfs:xfs_da_do_buf+0x503/0x5b1
+ [<ffffffff8834482e>] :xfs:xfs_da_read_buf+0x16/0x1b
+ [<ffffffff8020cb6c>] _atomic_dec_and_lock+0x39/0x57
+ [<ffffffff8834482e>] :xfs:xfs_da_read_buf+0x16/0x1b
+ [<ffffffff88349b0c>] :xfs:xfs_dir2_leaf_getdents+0x354/0x5ec
+ [<ffffffff88349b0c>] :xfs:xfs_dir2_leaf_getdents+0x354/0x5ec
+ [<ffffffff88372c6c>] :xfs:xfs_hack_filldir+0x0/0x5b
+ [<ffffffff88372c6c>] :xfs:xfs_hack_filldir+0x0/0x5b
+ [<ffffffff88346868>] :xfs:xfs_readdir+0xa7/0xb6
+ [<ffffffff88373301>] :xfs:xfs_file_readdir+0xff/0x14c
+ [<ffffffff80225d93>] filldir+0x0/0xb7
+ [<ffffffff80225d93>] filldir+0x0/0xb7
+ [<ffffffff802366f7>] vfs_readdir+0x77/0xa9
+ [<ffffffff80239f2a>] sys_getdents+0x75/0xbd
+ [<ffffffff80260295>] tracesys+0x47/0xb6
+ [<ffffffff802602f9>] tracesys+0xab/0xb6
+
+00000000: ea 4c ea e1 7a f1 2f 88 13 f9 a5 24 08 38 31 4e  =EAL=EA=E1z=F1/.=
+.=F9=A5$.81N
+Filesystem "md0": XFS internal error xfs_da_do_buf(2) at line 2112 of file =
+fs/xfs/xfs_da_btree.c.  Caller 0xffffffff8834482e
+
+Call Trace:
+ [<ffffffff8834472d>] :xfs:xfs_da_do_buf+0x503/0x5b1
+ [<ffffffff8834482e>] :xfs:xfs_da_read_buf+0x16/0x1b
+ [<ffffffff8020cb6c>] _atomic_dec_and_lock+0x39/0x57
+ [<ffffffff8834482e>] :xfs:xfs_da_read_buf+0x16/0x1b
+ [<ffffffff88349b0c>] :xfs:xfs_dir2_leaf_getdents+0x354/0x5ec
+ [<ffffffff88349b0c>] :xfs:xfs_dir2_leaf_getdents+0x354/0x5ec
+ [<ffffffff88372c6c>] :xfs:xfs_hack_filldir+0x0/0x5b
+ [<ffffffff88372c6c>] :xfs:xfs_hack_filldir+0x0/0x5b
+ [<ffffffff88346868>] :xfs:xfs_readdir+0xa7/0xb6
+ [<ffffffff88373301>] :xfs:xfs_file_readdir+0xff/0x14c
+ [<ffffffff80225d93>] filldir+0x0/0xb7
+ [<ffffffff80225d93>] filldir+0x0/0xb7
+ [<ffffffff802366f7>] vfs_readdir+0x77/0xa9
+ [<ffffffff80239f2a>] sys_getdents+0x75/0xbd
+ [<ffffffff80260295>] tracesys+0x47/0xb6
+ [<ffffffff802602f9>] tracesys+0xab/0xb6
+
+please advise.
+
+tnx.
 
 _______________________________________________
 xfs mailing list
