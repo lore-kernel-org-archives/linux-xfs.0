@@ -1,22 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4A79sth253109 for <xfs@oss.sgi.com>; Mon, 10 May 2010 02:09:55 -0500
-Received: from v007470.home.net.pl (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id 58035139BD1F
-	for <xfs@oss.sgi.com>; Mon, 10 May 2010 00:12:05 -0700 (PDT)
-Received: from v007470.home.net.pl (v007470.home.net.pl [212.85.125.104]) by
-	cuda.sgi.com with SMTP id GTQQX9oGsijPrwHD for
-	<xfs@oss.sgi.com>; Mon, 10 May 2010 00:12:05 -0700 (PDT)
-From: Krzysztof =?utf-8?q?B=C5=82aszkowski?= <kb@sysmikro.com.pl>
-Subject: Re: posix_fallocate
-Date: Mon, 10 May 2010 09:11:52 +0200
-References: <201005071022.37863.kb@sysmikro.com.pl>
-	<4BE43F34.40309@sandeen.net> <4BE44587.6090603@sandeen.net>
-In-Reply-To: <4BE44587.6090603@sandeen.net>
+	o4A6plnp252709 for <xfs@oss.sgi.com>; Mon, 10 May 2010 01:51:47 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 93ACE97E7CA
+	for <xfs@oss.sgi.com>; Sun,  9 May 2010 23:54:16 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id heFQw9eDfrPRgMHg for
+	<xfs@oss.sgi.com>; Sun, 09 May 2010 23:54:16 -0700 (PDT)
+Received: from int-mx04.intmail.prod.int.phx2.redhat.com
+	(int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.17])
+	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id o4A6rvCr026731
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Mon, 10 May 2010 02:53:58 -0400
+Received: from ns3.rdu.redhat.com (ns3.rdu.redhat.com [10.11.255.199])
+	by int-mx04.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
+	id o4A6rvK9019897
+	for <xfs@oss.sgi.com>; Mon, 10 May 2010 02:53:57 -0400
+Received: from [10.64.48.185] (vpn1-48-185.bne.redhat.com [10.64.48.185])
+	by ns3.rdu.redhat.com (8.13.8/8.13.8) with ESMTP id o4A6rtBq010916
+	for <xfs@oss.sgi.com>; Mon, 10 May 2010 02:53:56 -0400
+Message-ID: <4BE7AD82.90300@gmail.com>
+Date: Mon, 10 May 2010 16:53:54 +1000
+From: Mark Goodwin <goodwinos@gmail.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-Message-Id: <201005100911.52491.kb@sysmikro.com.pl>
+Subject: Re: xfs and raid5 - "Structure needs cleaning for directory open"
+References: <20100510022033.GB7165@dastard>
+In-Reply-To: <20100510022033.GB7165@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,71 +35,38 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Eric Sandeen <sandeen@sandeen.net>
 
-T24gRnJpZGF5IDA3IE1heSAyMDEwIDE4OjUzLCBFcmljIFNhbmRlZW4gd3JvdGU6Cj4gRXJpYyBT
-YW5kZWVuIHdyb3RlOgo+ID4gS3J6eXN6dG9mIELFgmFzemtvd3NraSB3cm90ZToKPiA+PiBIZWxs
-bywKPiA+Pgo+ID4+IEkgdXNlIHRoaXMgdG8gcHJlYWxsb2NhdGUgbGFyZ2Ugc3BhY2UgYnV0IGZv
-dW5kIGFuIGlzc3VlLgo+ID4+IFBvc2l4X2ZhbGxvY2F0ZSB3b3JrcyByaWdodCB3aXRoIHNpemVz
-IGxpa2UgMTAwRywgMVQgYW5kIGV2ZW4gMTBUIG9uCj4gPj4gc29tZSBib3hlcyAob24gc29tZSBv
-dGhlciBjYW4gZmFpbCBhZnRlciBlLmcuIDdUIHRocmVzaG9sZCkgYnV0IGlmIGkKPiA+PiB0cmll
-ZCBlLmcuIDE2VCB0aGUgdXNlciBzcGFjZSBwcm9jZXNzIHdvdWxkIGJlICJSInVubmluZyBmb3Jl
-dmVyIGFuZCBpdAo+ID4+IGlzIG5vdCBpbnRlcnJ1cHRpYmxlLiBGdXJ0aGVybW9yZSBzb21lIG90
-aGVyIG5vdCByZWxhdGVkIHByb2Nlc3NlcyBsaWtlCj4gPj4gc3NoZCwgYmFzaCBlbnRlciBEIHN0
-YXRlLiBUaGVyZSBpcyBub3RoaW5nIGluIGtlcm5lbCBsb2cuCj4KPiBPaCwgb25lIHRoaW5nIHlv
-dSBzaG91bGQga25vdyBpcyB0aGF0IGRlcGVuZGluZyBvbiB5b3VyIHZlcnNpb24gb2YgZ2xpYmMs
-Cj4gcG9zaXhfZmFsbG9jYXRlIG1heSBiZSB3cml0aW5nIDBzIGFuZCBub3QgdXNpbmcgcHJlYWxs
-b2NhdGlvbiBjYWxscy4KCkkgYW0gYWJzb2x1dGVseSBzdXJlIHRoYXQgcmVjZW50IGxpYmMgZG9l
-c24ndCBlbXVsYXRlIHRoaXMgc3lzY2FsbCAKCgo+Cj4gRG8geW91IGtub3cgd2hpY2ggeW91cnMg
-aXMgdXNpbmc/CgpzeXNjYWxsIChsaWJjIDIuOSkKCj4gc3RyYWNlIHNob3VsZCB0ZWxsIHlvdSBv
-biBhIHNtYWxsIAo+IGZpbGUgdGVzdC4KPgo+IEFueXdheSwgSSBhbSBzZWVpbmcgdGhpbmdzIGdl
-dCBzdHVjayBhcm91bmQgOFQgaXQgc2VlbXMuLi4KCnllcywgaSBub3RpY2VkIHRoYXQgc29tZXRp
-bWVzIHRoZSB0aHJlc2hvbGQgcG9pbnQgaXMgaGlnaGVyLgoKPgo+ICMgdG91Y2ggL21udC90ZXN0
-L2JpZ2ZpbGUKPiAjIHhmc19pbyAtYyAicmVzdnNwIDAgMTZ0IiAvbW50L3Rlc3QvYmlnZmlsZQo+
-Cj4gLi4uIHdhaXQgLi4uIGluIG90aGVyIHdpbmRvdyAuLi4KPgo+ICMgZHUgLWhjIC9tbnQvdGVz
-dC9iaWdmaWxlCj4gOC4wRwkvbW50L3Rlc3QvYmlnZmlsZQo+IDguMEcJdG90YWwKPgo+ICMgZWNo
-byB0ID4gL3Byb2Mvc3lzcnEtdHJpZ2dlcgoKSXQgd2FzIGdvb2QgaWRlYSB0byB1c2Ugc3lzcnEu
-IEkgZGlkbid0IHRoaW5rIGFib3V0IHRoaXMgYnV0IHJhdGhlciBmb2N1c2VkIG9uIApmdHJhY2Ug
-YW5kIGhvdyB0byBhbmFseXNlIHRoZXNlIG1lZ3Mgb2YgZGF0YQoKCj4gIyBkbWVzZyB8IGdyZXAg
-LUEyMCB4ZnNfaW8KPiB4ZnNfaW8gICAgICAgIFIgIHJ1bm5pbmcgdGFzayAgICAgMzU3NiAyOTQ0
-NCAgMjkzNjIgMHgwMDAwMDAwNgo+ICBmZmZmODgwOWNmYmI0OTIwIGZmZmZmZmZmODE0NzhkOWYg
-ZmZmZmZmZmZhMDMyZDNjNSAwMDAwMDAwMDAwMDAwMjQ2Cj4gIGZmZmY4ODA5Y2ZiYjQ5MjAgZmZm
-ZmZmZmY4MTQ3ODhiYyAwMDAwMDAwMDAwMDAwMDAwIGZmZmZmZmZmODFiYTM1MTAKPiAgZmZmZjg4
-MDlkMzQyOWE2OCBmZmZmZmZmZmEwMzJiNjBmIGZmZmY4ODA5ZDM0MjlhYTggMDAwMDAwMDAwMDAw
-MDAxZQo+IENhbGwgVHJhY2U6Cj4gIFs8ZmZmZmZmZmY4MTQ3OGQ5Zj5dID8gX19tdXRleF9sb2Nr
-X2NvbW1vbisweDM2ZC8weDM5Mgo+ICBbPGZmZmZmZmZmYTAzMmQzYzU+XSA/IHhmc19pY3NiX21v
-ZGlmeV9jb3VudGVycysweDE3Zi8weDFhYyBbeGZzXQo+ICBbPGZmZmZmZmZmYTAzMmI2MGY+XSA/
-IHhmc19pY3NiX3VubG9ja19hbGxfY291bnRlcnMrMHg0ZC8weDYwIFt4ZnNdCj4gIFs8ZmZmZmZm
-ZmZhMDMyYjhiZj5dID8geGZzX2ljc2JfZGlzYWJsZV9jb3VudGVyKzB4OGMvMHg5NSBbeGZzXQo+
-ICBbPGZmZmZmZmZmODE0NzhlODg+XSA/IG11dGV4X2xvY2tfbmVzdGVkKzB4M2UvMHg0Mwo+ICBb
-PGZmZmZmZmZmYTAzMmQzZDM+XSA/IHhmc19pY3NiX21vZGlmeV9jb3VudGVycysweDE4ZC8weDFh
-YyBbeGZzXQo+ICBbPGZmZmZmZmZmYTAzMmQ1MzY+XSA/IHhmc19tb2RfaW5jb3JlX3NiKzB4Mjkv
-MHg2ZSBbeGZzXQo+ICBbPGZmZmZmZmZmYTAzMzA1MmM+XSA/IF94ZnNfdHJhbnNfYWxsb2MrMHgy
-Ny8weDYxIFt4ZnNdCj4gIFs8ZmZmZmZmZmZhMDMzMDNkMz5dID8geGZzX3RyYW5zX3Jlc2VydmUr
-MHg2Yy8weDE5ZSBbeGZzXQo+ICBbPGZmZmZmZmZmODEwNmZiNDU+XSA/IHVwX3dyaXRlKzB4MmIv
-MHgzMgo+ICBbPGZmZmZmZmZmYTAzMzVlNTU+XSA/IHhmc19hbGxvY19maWxlX3NwYWNlKzB4MTYz
-LzB4MzA2IFt4ZnNdCj4gIFs8ZmZmZmZmZmY4MTA3MTIwYT5dID8gc2NoZWRfY2xvY2tfY3B1KzB4
-YzMvMHhjZQo+ICBbPGZmZmZmZmZmYTAzMzYxMjI+XSA/IHhmc19jaGFuZ2VfZmlsZV9zcGFjZSsw
-eDEyYS8weDJiOCBbeGZzXQo+ICBbPGZmZmZmZmZmODEwNmY5YmY+XSA/IGRvd25fd3JpdGVfbmVz
-dGVkKzB4ODAvMHg4Ygo+ICBbPGZmZmZmZmZmYTAzMWI4Y2U+XSA/IHhmc19pbG9jaysweDMwLzB4
-YjQgW3hmc10KPiAgWzxmZmZmZmZmZmEwMzNlMGU0Pl0gPyB4ZnNfdm5fZmFsbG9jYXRlKzB4ODAv
-MHhmNCBbeGZzXQo+IC0tCj4gUiAgICAgICAgIHhmc19pbyAyOTQ0NCAgODYwMTQ2MjQuNzg2NjE3
-ICAgICAgIDE2MiAgIDEyMCAgODYwMTQ2MjQuNzg2NjE3ICAgCj4gMTM3NjU1LjE2MTMyNyAgICAg
-ICA0MDguOTc5OTc3IC8KPgo+ICMgdW5hbWUgLXIKPiAyLjYuMzQtMC40LnJjMC5naXQyLmZjMTQu
-eDg2XzY0Cj4KPiBJJ2xsIGxvb2sgaW50byAgaXQuCgpXZSBzdGljayB3aXRoIDIuNi4zMS41IHdo
-aWNoIHNlZW1zIHRvIGJlIGdvb2QgZm9yIHVzLiBXZSBkbyBub3QgY2hhbmdlIGtlcm5lbHMgCmVh
-c2lseSwgYXMgc29vbiBhcyBoaWdoZXIgcmV2aXNpb24gYXJyaXZlcyBiZWNhdXNlIGl0IGRvZXNu
-J3QgbWFrZSBzZW5zZSBmcm9tIApzdGFiaWxpdHkgcG9pbnQgb2Ygdmlldy4gV2UgaGF2ZSBzZWVu
-IHRvbyBtYW55IHRpbWVzIHJlZ3Jlc3Npb24gYnVncyBzbyBpZiB3ZSAKYXJlIGNvbmZpZGVudCB3
-aXRoIHNvbWUgcmV2aXNpb24gdGhlbiB0aGVyZSBpcyBubyBwb2ludCB0byBjaGFuZ2UgdGhpcy4K
-CktyenlzenRvZiBCxYJhc3prb3dza2kKCgo+Cj4gLUVyaWMKPgo+IF9fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCj4geGZzIG1haWxpbmcgbGlzdAo+IHhmc0Bv
-c3Muc2dpLmNvbQo+IGh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwoKX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcg
-bGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8v
-eGZzCg==
+On 05/10/2010 12:20 PM, Dave Chinner wrote:
+> On Sun, May 09, 2010 at 08:48:00PM +0200, Rainer Fuegenstein wrote:
+>>
+>> today in the morning some daemon processes terminated because of
+>> errors in the xfs file system on top of a software raid5, consisting
+>> of 4*1.5TB WD caviar green SATA disks.
+>
+> Reminds me of a recent(-ish) md/dm readahead cancellation fix - that
+> would fit the symptoms of (btree corruption showing up under heavy IO
+> load but no corruption on disk. However, I can't seem to find any
+> references to it at the moment (can't remember the bug title), but
+> perhaps your distro doesn't have the fix in it?
+
+If it's the bug that Dave's thinking of, it's an issue with md
+error handling and the BIO_UPTODATE flag, see :
+http://www.mail-archive.com/linux-raid@vger.kernel.org/msg06628.html
+
+For RHEL, this is addressed in Red Hat BZ 512552
+https://bugzilla.redhat.com/show_bug.cgi?id=512552
+
+upstream commit c2b00852fbae4f8c45c2651530ded3bd01bde814
+
+Cheers
+-- Mark
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
