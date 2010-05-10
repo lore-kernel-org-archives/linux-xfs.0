@@ -1,16 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4AHOX1A017469 for <xfs@oss.sgi.com>; Mon, 10 May 2010 12:24:34 -0500
-Date: Mon, 10 May 2010 13:26:43 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests: test extent size hints
-Message-ID: <20100510172643.GA14991@infradead.org>
-References: <20100429103444.GA8019@infradead.org>
-	<20100429151003.GC27637@sgi.com>
+	o4AIF4se020593 for <xfs@oss.sgi.com>; Mon, 10 May 2010 13:15:05 -0500
+Received: from v007470.home.net.pl (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id BD18C1DEAE10
+	for <xfs@oss.sgi.com>; Mon, 10 May 2010 11:17:16 -0700 (PDT)
+Received: from v007470.home.net.pl (v007470.home.net.pl [212.85.125.104]) by
+	cuda.sgi.com with SMTP id dbeRbhdnsMjCfZlk for
+	<xfs@oss.sgi.com>; Mon, 10 May 2010 11:17:16 -0700 (PDT)
+From: Krzysztof =?utf-8?q?B=C5=82aszkowski?= <kb@sysmikro.com.pl>
+Subject: Re: posix_fallocate
+Date: Mon, 10 May 2010 20:17:11 +0200
+References: <201005071022.37863.kb@sysmikro.com.pl>
+	<201005100911.52491.kb@sysmikro.com.pl>
+	<4BE81AB4.7000600@sandeen.net>
+In-Reply-To: <4BE81AB4.7000600@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100429151003.GC27637@sgi.com>
+Message-Id: <201005102017.11706.kb@sysmikro.com.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,216 +26,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Geoffrey Wehrman <gwehrman@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Eric Sandeen <sandeen@sandeen.net>
 
-On Thu, Apr 29, 2010 at 10:10:03AM -0500, Geoffrey Wehrman wrote:
-> On Thu, Apr 29, 2010 at 06:34:44AM -0400, Christoph Hellwig wrote:
-> | This is an adapted version of the reproduced in OSS BZ #874, which
-> | shows file corruption when using the extent size hint.
-> | 
-> | Geoffrey, can you say if licensing the small test program as GPLv2+
-> | is fine so that we can add it to xfstests?
-> 
-> Thanks for asking Christoph.  Please include an SGI copyright in both
-> the test script and the t_holes.c source.  The GPLv2+ license is fine.
-
-Is this version fine to commit?
-
-Geoffrey, if you could add a Signed-off-by: that would be perfect,
-thanks!
-
----
-
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] xfstests: test extent size hints
-Cc: Geoffrey Wehrman <gwehrman@sgi.com>
-
-This is an adapted version of the reproduced in OSS BZ #874, which
-shows file corruption when using the extent size hint.
-
-Geoffrey, can you say if licensing the small test program as GPLv2+
-is fine so that we can add it to xfstests?
-
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Index: xfstests-dev/229
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ xfstests-dev/229	2010-05-10 17:21:24.000000000 +0000
-@@ -0,0 +1,88 @@
-+#! /bin/bash
-+# FS QA Test No. 221
-+#
-+# Check for file corruption when using the extent size hint on
-+# the normal data subvolume.
-+#
-+# http://oss.sgi.com/bugzilla/show_bug.cgi?id=874
-+#
-+# Based on a bug report and testcase from Geoffrey Wehrman <gwehrman@sgi.com>.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2010 Christoph Hellwig.  All Rights Reserved.
-+# Copyright (c) 2010 Silicon Graphics, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=hch@lst.de
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+
-+_cleanup()
-+{
-+    rm -rf ${TDIR}
-+}
-+
-+trap "_cleanup ; exit \$status" 0 1 2 3 15
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+
-+TDIR="${TEST_DIR}/t_holes"
-+NFILES="10"
-+EXTSIZE="256k"
-+
-+# Create the test directory
-+mkdir ${TDIR}
-+
-+# Set the test directory extsize
-+xfs_io -c "extsize ${EXTSIZE}" ${TDIR}
-+
-+# Create a set of holey files
-+echo "generating ${NFILES} files"
-+
-+for i in $(seq 0 ${NFILES}); do
-+  $here/src/t_holes ${TDIR}/${i}
-+done
-+
-+# Compare the files
-+echo "comparing files"
-+errcnt=0
-+j=0
-+for i in $(seq 0 ${NFILES}); do
-+    let j=$i+1
-+    while [ ${j} -lt ${NFILES} ] ; do
-+	if ! cmp ${TDIR}/${i} ${TDIR}/${j} ; then
-+	    let errcnt=$errcnt+1
-+	fi
-+	let j=$j+1
-+    done
-+done
-+
-+echo "got ${errcnt} errors"
-+
-+status=$errcnt
-+exit $status
-Index: xfstests-dev/229.out
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ xfstests-dev/229.out	2010-05-07 10:18:56.000000000 +0000
-@@ -0,0 +1,4 @@
-+QA output created by 229
-+generating 10 files
-+comparing files
-+got 0 errors
-Index: xfstests-dev/group
-===================================================================
---- xfstests-dev.orig/group	2010-05-07 10:18:35.000000000 +0000
-+++ xfstests-dev/group	2010-05-10 17:20:50.000000000 +0000
-@@ -342,3 +342,4 @@ deprecated
- 226 auto enospc
- 227 auto fsr
- 228 rw auto prealloc quick
-+229 auto rw
-Index: xfstests-dev/src/Makefile
-===================================================================
---- xfstests-dev.orig/src/Makefile	2010-05-07 10:18:20.000000000 +0000
-+++ xfstests-dev/src/Makefile	2010-05-07 10:18:56.000000000 +0000
-@@ -10,7 +10,7 @@ TARGETS = dirstress fill fill2 getpagesi
- 	mmapcat append_reader append_writer dirperf metaperf \
- 	devzero feature alloc fault fstest t_access_root \
- 	godown resvtest writemod makeextents itrash rename \
--	multi_open_unlink dmiperf unwritten_sync genhashnames
-+	multi_open_unlink dmiperf unwritten_sync genhashnames t_holes
- 
- LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
- 	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
-Index: xfstests-dev/src/t_holes.c
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ xfstests-dev/src/t_holes.c	2010-05-10 17:22:33.000000000 +0000
-@@ -0,0 +1,41 @@
-+/*
-+ * Copyright (c) 2010 Silicon Graphics, Inc.  All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+#include <unistd.h>
-+#include <fcntl.h>
-+#include <sys/types.h>
-+#include <stdio.h>
-+
-+int main(int argc, char **argv)
-+{
-+	int buf[1024];
-+	int fd, i, j;
-+
-+	fd = open(argv[1], O_RDWR|O_CREAT, 0666);
-+        for (i = 1; i < 9100; i++) {
-+		for (j = 0; j < 1024; j++)
-+			buf[j]  = i | i << 5;
-+
-+		if (write(fd,buf,253*4*sizeof(int))!= 253*4*sizeof(int))
-+			printf("Write did not return correct amount\n");
-+
-+		if ((i % 9) == 0 && i < 9001)
-+			lseek(fd, 4096 * 110,SEEK_CUR);
-+	}
-+
-+	close(fd);
-+	return 0;
-+}
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gTW9uZGF5IDEwIE1heSAyMDEwIDE2OjM5LCBFcmljIFNhbmRlZW4gd3JvdGU6Cj4gS3J6eXN6
+dG9mIELFgmFzemtvd3NraSB3cm90ZToKPiA+IE9uIEZyaWRheSAwNyBNYXkgMjAxMCAxODo1Mywg
+RXJpYyBTYW5kZWVuIHdyb3RlOgo+ID4+IEVyaWMgU2FuZGVlbiB3cm90ZToKPiA+Pj4gS3J6eXN6
+dG9mIELFgmFzemtvd3NraSB3cm90ZToKPiA+Pj4+IEhlbGxvLAo+ID4+Pj4KPiA+Pj4+IEkgdXNl
+IHRoaXMgdG8gcHJlYWxsb2NhdGUgbGFyZ2Ugc3BhY2UgYnV0IGZvdW5kIGFuIGlzc3VlLgo+ID4+
+Pj4gUG9zaXhfZmFsbG9jYXRlIHdvcmtzIHJpZ2h0IHdpdGggc2l6ZXMgbGlrZSAxMDBHLCAxVCBh
+bmQgZXZlbiAxMFQgb24KPiA+Pj4+IHNvbWUgYm94ZXMgKG9uIHNvbWUgb3RoZXIgY2FuIGZhaWwg
+YWZ0ZXIgZS5nLiA3VCB0aHJlc2hvbGQpIGJ1dCBpZiBpCj4gPj4+PiB0cmllZCBlLmcuIDE2VCB0
+aGUgdXNlciBzcGFjZSBwcm9jZXNzIHdvdWxkIGJlICJSInVubmluZyBmb3JldmVyIGFuZAo+ID4+
+Pj4gaXQgaXMgbm90IGludGVycnVwdGlibGUuIEZ1cnRoZXJtb3JlIHNvbWUgb3RoZXIgbm90IHJl
+bGF0ZWQgcHJvY2Vzc2VzCj4gPj4+PiBsaWtlIHNzaGQsIGJhc2ggZW50ZXIgRCBzdGF0ZS4gVGhl
+cmUgaXMgbm90aGluZyBpbiBrZXJuZWwgbG9nLgo+ID4+Cj4gPj4gT2gsIG9uZSB0aGluZyB5b3Ug
+c2hvdWxkIGtub3cgaXMgdGhhdCBkZXBlbmRpbmcgb24geW91ciB2ZXJzaW9uIG9mCj4gPj4gZ2xp
+YmMsIHBvc2l4X2ZhbGxvY2F0ZSBtYXkgYmUgd3JpdGluZyAwcyBhbmQgbm90IHVzaW5nIHByZWFs
+bG9jYXRpb24KPiA+PiBjYWxscy4KPiA+Cj4gPiBJIGFtIGFic29sdXRlbHkgc3VyZSB0aGF0IHJl
+Y2VudCBsaWJjIGRvZXNuJ3QgZW11bGF0ZSB0aGlzIHN5c2NhbGwKPgo+IHJpZ2h0LCByZWNlbnQg
+Z2xpYmMgZG9lcyBub3QgKHVubGVzcyB0aGUgdW5kZXJseWluZyBmcyBkb2Vzbid0IHN1cHBvcnQg
+aXQpCj4KPiAuLi4KPgo+ID4gV2Ugc3RpY2sgd2l0aCAyLjYuMzEuNSB3aGljaCBzZWVtcyB0byBi
+ZSBnb29kIGZvciB1cy4gV2UgZG8gbm90IGNoYW5nZQo+ID4ga2VybmVscyBlYXNpbHksIGFzIHNv
+b24gYXMgaGlnaGVyIHJldmlzaW9uIGFycml2ZXMgYmVjYXVzZSBpdCBkb2Vzbid0Cj4gPiBtYWtl
+IHNlbnNlIGZyb20gc3RhYmlsaXR5IHBvaW50IG9mIHZpZXcuIFdlIGhhdmUgc2VlbiB0b28gbWFu
+eSB0aW1lcwo+ID4gcmVncmVzc2lvbiBidWdzIHNvIGlmIHdlIGFyZSBjb25maWRlbnQgd2l0aCBz
+b21lIHJldmlzaW9uIHRoZW4gdGhlcmUgaXMKPiA+IG5vIHBvaW50IHRvIGNoYW5nZSB0aGlzLgo+
+Cj4gSXQgd2FzIGp1c3QgYSB0ZXN0aW5nIHN1Z2dlc3Rpb24sIGJ1dCBJIGFscmVhZHkgdGVzdGVk
+IHVwc3RyZWFtIGFuZCB0aGUKPiBwcm9ibGVtIHBlcnNpc3RzLCBub3cganVzdCBuZWVkIHRvIGZp
+bmQgdGhlIHRpbWUgdG8gZGlnIGludG8gaXQuCgpJIHNlZSBhbmQgSSBhbSBnbGFkIHlvdSBjb25m
+aXJtZWQgdGhpcy4gRG8geW91IHRoaW5rIHRoYXQgZmFsbG9jYXRlIGNhbGxlZCAKbWFueSB0aW1l
+cyB3aXRoIGZpeGVkIHNpemUgYW5kIGluY3JlYXNpbmcgb2Zmc2V0IHdpbGwgd29yayBiZXR0ZXIg
+dGhhbiBvbmUgCnRpbWUgY2FsbCB3aXRoIGh1Z2Ugc2l6ZSBAIDAgb2Zmc2V0ID8KCktyenlzenRv
+Zgo+Cj4gLUVyaWMKPgo+IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fCj4geGZzIG1haWxpbmcgbGlzdAo+IHhmc0Bvc3Muc2dpLmNvbQo+IGh0dHA6Ly9vc3Mu
+c2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwoKX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0
+cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
