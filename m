@@ -1,17 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4AHY9ID018049 for <xfs@oss.sgi.com>; Mon, 10 May 2010 12:34:09 -0500
-Date: Mon, 10 May 2010 12:36:18 -0500
-From: Geoffrey Wehrman <gwehrman@sgi.com>
-Subject: Re: [PATCH] xfstests: test extent size hints
-Message-ID: <20100510173618.GB12949@sgi.com>
-References: <20100429103444.GA8019@infradead.org>
-	<20100429151003.GC27637@sgi.com>
-	<20100510172643.GA14991@infradead.org>
+	o4AHf1dL018475 for <xfs@oss.sgi.com>; Mon, 10 May 2010 12:41:01 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 419EC330B12
+	for <xfs@oss.sgi.com>; Mon, 10 May 2010 10:43:14 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id sIzvRVAhG9gCJ1aq for
+	<xfs@oss.sgi.com>; Mon, 10 May 2010 10:43:14 -0700 (PDT)
+Date: Mon, 10 May 2010 13:43:12 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 12/12] xfs: Ensure inode allocation buffers are fully
+	replayed
+Message-ID: <20100510174312.GA11849@infradead.org>
+References: <1273210860-23414-1-git-send-email-david@fromorbit.com>
+	<1273210860-23414-13-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100510172643.GA14991@infradead.org>
+In-Reply-To: <1273210860-23414-13-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,219 +30,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, May 10, 2010 at 01:26:43PM -0400, Christoph Hellwig wrote:
-| On Thu, Apr 29, 2010 at 10:10:03AM -0500, Geoffrey Wehrman wrote:
-| > On Thu, Apr 29, 2010 at 06:34:44AM -0400, Christoph Hellwig wrote:
-| > | This is an adapted version of the reproduced in OSS BZ #874, which
-| > | shows file corruption when using the extent size hint.
-| > | 
-| > | Geoffrey, can you say if licensing the small test program as GPLv2+
-| > | is fine so that we can add it to xfstests?
-| > 
-| > Thanks for asking Christoph.  Please include an SGI copyright in both
-| > the test script and the t_holes.c source.  The GPLv2+ license is fine.
-| 
-| Is this version fine to commit?
-
-Looks great.  Thanks!
-
-| Geoffrey, if you could add a Signed-off-by: that would be perfect,
-| thanks!
-
-Done.
+Looks good,
 
 
-Geoffrey
-
----
-
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] xfstests: test extent size hints
-Cc: Geoffrey Wehrman <gwehrman@sgi.com>
-
-This is an adapted version of the reproduced in OSS BZ #874, which
-shows file corruption when using the extent size hint.
-
-Geoffrey, can you say if licensing the small test program as GPLv2+
-is fine so that we can add it to xfstests?
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Geoffrey Wehrman <gwehrman@sgi.com>
+> Also, move an assert in the buffer release path outside the hash
+> spinlock so that if the assert is hit the system continues to run in
+> a debuggable state.
 
-Index: xfstests-dev/229
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ xfstests-dev/229	2010-05-10 17:21:24.000000000 +0000
-@@ -0,0 +1,88 @@
-+#! /bin/bash
-+# FS QA Test No. 221
-+#
-+# Check for file corruption when using the extent size hint on
-+# the normal data subvolume.
-+#
-+# http://oss.sgi.com/bugzilla/show_bug.cgi?id=874
-+#
-+# Based on a bug report and testcase from Geoffrey Wehrman <gwehrman@sgi.com>.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2010 Christoph Hellwig.  All Rights Reserved.
-+# Copyright (c) 2010 Silicon Graphics, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=hch@lst.de
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+
-+_cleanup()
-+{
-+    rm -rf ${TDIR}
-+}
-+
-+trap "_cleanup ; exit \$status" 0 1 2 3 15
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+
-+TDIR="${TEST_DIR}/t_holes"
-+NFILES="10"
-+EXTSIZE="256k"
-+
-+# Create the test directory
-+mkdir ${TDIR}
-+
-+# Set the test directory extsize
-+xfs_io -c "extsize ${EXTSIZE}" ${TDIR}
-+
-+# Create a set of holey files
-+echo "generating ${NFILES} files"
-+
-+for i in $(seq 0 ${NFILES}); do
-+  $here/src/t_holes ${TDIR}/${i}
-+done
-+
-+# Compare the files
-+echo "comparing files"
-+errcnt=0
-+j=0
-+for i in $(seq 0 ${NFILES}); do
-+    let j=$i+1
-+    while [ ${j} -lt ${NFILES} ] ; do
-+	if ! cmp ${TDIR}/${i} ${TDIR}/${j} ; then
-+	    let errcnt=$errcnt+1
-+	fi
-+	let j=$j+1
-+    done
-+done
-+
-+echo "got ${errcnt} errors"
-+
-+status=$errcnt
-+exit $status
-Index: xfstests-dev/229.out
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ xfstests-dev/229.out	2010-05-07 10:18:56.000000000 +0000
-@@ -0,0 +1,4 @@
-+QA output created by 229
-+generating 10 files
-+comparing files
-+got 0 errors
-Index: xfstests-dev/group
-===================================================================
---- xfstests-dev.orig/group	2010-05-07 10:18:35.000000000 +0000
-+++ xfstests-dev/group	2010-05-10 17:20:50.000000000 +0000
-@@ -342,3 +342,4 @@ deprecated
- 226 auto enospc
- 227 auto fsr
- 228 rw auto prealloc quick
-+229 auto rw
-Index: xfstests-dev/src/Makefile
-===================================================================
---- xfstests-dev.orig/src/Makefile	2010-05-07 10:18:20.000000000 +0000
-+++ xfstests-dev/src/Makefile	2010-05-07 10:18:56.000000000 +0000
-@@ -10,7 +10,7 @@ TARGETS = dirstress fill fill2 getpagesi
- 	mmapcat append_reader append_writer dirperf metaperf \
- 	devzero feature alloc fault fstest t_access_root \
- 	godown resvtest writemod makeextents itrash rename \
--	multi_open_unlink dmiperf unwritten_sync genhashnames
-+	multi_open_unlink dmiperf unwritten_sync genhashnames t_holes
- 
- LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
- 	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
-Index: xfstests-dev/src/t_holes.c
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ xfstests-dev/src/t_holes.c	2010-05-10 17:22:33.000000000 +0000
-@@ -0,0 +1,41 @@
-+/*
-+ * Copyright (c) 2010 Silicon Graphics, Inc.  All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+#include <unistd.h>
-+#include <fcntl.h>
-+#include <sys/types.h>
-+#include <stdio.h>
-+
-+int main(int argc, char **argv)
-+{
-+	int buf[1024];
-+	int fd, i, j;
-+
-+	fd = open(argv[1], O_RDWR|O_CREAT, 0666);
-+        for (i = 1; i < 9100; i++) {
-+		for (j = 0; j < 1024; j++)
-+			buf[j]  = i | i << 5;
-+
-+		if (write(fd,buf,253*4*sizeof(int))!= 253*4*sizeof(int))
-+			printf("Write did not return correct amount\n");
-+
-+		if ((i % 9) == 0 && i < 9001)
-+			lseek(fd, 4096 * 110,SEEK_CUR);
-+	}
-+
-+	close(fd);
-+	return 0;
-+}
+But this really should be a separate patch.
 
 _______________________________________________
 xfs mailing list
