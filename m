@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4AMoQr8037294 for <xfs@oss.sgi.com>; Mon, 10 May 2010 17:50:27 -0500
+	o4AMuGYA037565 for <xfs@oss.sgi.com>; Mon, 10 May 2010 17:56:16 -0500
 Received: from coco.kroah.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 57D97120FE80
-	for <xfs@oss.sgi.com>; Mon, 10 May 2010 15:52:59 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0CC00139F02E
+	for <xfs@oss.sgi.com>; Mon, 10 May 2010 15:58:27 -0700 (PDT)
 Received: from coco.kroah.org (kroah.org [198.145.64.141]) by cuda.sgi.com
-	with ESMTP id dMY0mbOePnPFbyoU for <xfs@oss.sgi.com>;
-	Mon, 10 May 2010 15:52:59 -0700 (PDT)
-Message-Id: <20100510223324.424796921@kvm.kroah.org>
-Date: Mon, 10 May 2010 15:32:49 -0700
+	with ESMTP id zLGTx7PNFdQFlzbi for <xfs@oss.sgi.com>;
+	Mon, 10 May 2010 15:58:27 -0700 (PDT)
+Message-Id: <20100510223541.333994587@kvm.kroah.org>
+Date: Mon, 10 May 2010 15:35:29 -0700
 From: Greg KH <gregkh@suse.de>
-Subject: [078/117] xfs: add a shrinker to background inode reclaim
-In-Reply-To: <20100510223700.GA18404@kroah.com>
+Subject: [77/98] xfs: add a shrinker to background inode reclaim
+In-Reply-To: <20100510223714.GA18416@kroah.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,7 +29,7 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: linux-kernel@vger.kernel.org, stable@kernel.org
 Cc: xfs@oss.sgi.com, Dave Chinner <dchinner@redhat.com>, akpm@linux-foundation.org, torvalds@linux-foundation.org, stable-review@kernel.org, alan@lxorguk.ukuu.org.uk
 
-2.6.33-stable review patch.  If anyone has any objections, please let us know.
+2.6.32-stable review patch.  If anyone has any objections, please let us know.
 
 ------------------
 
@@ -62,7 +62,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 
 --- a/fs/xfs/linux-2.6/xfs_super.c
 +++ b/fs/xfs/linux-2.6/xfs_super.c
-@@ -1160,6 +1160,7 @@ xfs_fs_put_super(
+@@ -1164,6 +1164,7 @@ xfs_fs_put_super(
  
  	xfs_unmountfs(mp);
  	xfs_freesb(mp);
@@ -70,16 +70,16 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
  	xfs_icsb_destroy_counters(mp);
  	xfs_close_devices(mp);
  	xfs_dmops_put(mp);
-@@ -1523,6 +1524,8 @@ xfs_fs_fill_super(
+@@ -1555,6 +1556,8 @@ xfs_fs_fill_super(
  	if (error)
  		goto fail_vnrele;
  
 +	xfs_inode_shrinker_register(mp);
 +
  	kfree(mtpt);
- 	return 0;
  
-@@ -1767,6 +1770,7 @@ init_xfs_fs(void)
+ 	xfs_itrace_exit(XFS_I(sb->s_root->d_inode));
+@@ -1894,6 +1897,7 @@ init_xfs_fs(void)
  		goto out_cleanup_procfs;
  
  	vfs_initquota();
@@ -87,7 +87,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
  
  	error = register_filesystem(&xfs_fs_type);
  	if (error)
-@@ -1794,6 +1798,7 @@ exit_xfs_fs(void)
+@@ -1923,6 +1927,7 @@ exit_xfs_fs(void)
  {
  	vfs_exitquota();
  	unregister_filesystem(&xfs_fs_type);
@@ -97,7 +97,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
  	xfs_buf_terminate();
 --- a/fs/xfs/linux-2.6/xfs_sync.c
 +++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -95,7 +95,8 @@ xfs_inode_ag_walk(
+@@ -94,7 +94,8 @@ xfs_inode_ag_walk(
  					   struct xfs_perag *pag, int flags),
  	int			flags,
  	int			tag,
@@ -107,7 +107,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
  {
  	struct xfs_perag	*pag = &mp->m_perag[ag];
  	uint32_t		first_index;
-@@ -135,7 +136,7 @@ restart:
+@@ -134,7 +135,7 @@ restart:
  		if (error == EFSCORRUPTED)
  			break;
  
@@ -116,7 +116,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
  
  	if (skipped) {
  		delay(1);
-@@ -153,23 +154,30 @@ xfs_inode_ag_iterator(
+@@ -152,23 +153,30 @@ xfs_inode_ag_iterator(
  					   struct xfs_perag *pag, int flags),
  	int			flags,
  	int			tag,
@@ -149,7 +149,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
  	return XFS_ERROR(last_error);
  }
  
-@@ -289,7 +297,7 @@ xfs_sync_data(
+@@ -288,7 +296,7 @@ xfs_sync_data(
  	ASSERT((flags & ~(SYNC_TRYLOCK|SYNC_WAIT)) == 0);
  
  	error = xfs_inode_ag_iterator(mp, xfs_sync_inode_data, flags,
@@ -158,7 +158,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
  	if (error)
  		return XFS_ERROR(error);
  
-@@ -311,7 +319,7 @@ xfs_sync_attr(
+@@ -310,7 +318,7 @@ xfs_sync_attr(
  	ASSERT((flags & ~SYNC_WAIT) == 0);
  
  	return xfs_inode_ag_iterator(mp, xfs_sync_inode_attr, flags,
@@ -167,7 +167,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
  }
  
  STATIC int
-@@ -679,6 +687,7 @@ __xfs_inode_set_reclaim_tag(
+@@ -678,6 +686,7 @@ __xfs_inode_set_reclaim_tag(
  	radix_tree_tag_set(&pag->pag_ici_root,
  			   XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino),
  			   XFS_ICI_RECLAIM_TAG);
@@ -175,7 +175,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
  }
  
  /*
-@@ -710,6 +719,7 @@ __xfs_inode_clear_reclaim_tag(
+@@ -709,6 +718,7 @@ __xfs_inode_clear_reclaim_tag(
  {
  	radix_tree_tag_clear(&pag->pag_ici_root,
  			XFS_INO_TO_AGINO(mp, ip->i_ino), XFS_ICI_RECLAIM_TAG);
@@ -183,7 +183,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
  }
  
  STATIC int
-@@ -770,5 +780,88 @@ xfs_reclaim_inodes(
+@@ -769,5 +779,88 @@ xfs_reclaim_inodes(
  	int		mode)
  {
  	return xfs_inode_ag_iterator(mp, xfs_reclaim_inode, mode,
@@ -290,7 +290,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
  #endif
 --- a/fs/xfs/quota/xfs_qm_syscalls.c
 +++ b/fs/xfs/quota/xfs_qm_syscalls.c
-@@ -891,7 +891,8 @@ xfs_qm_dqrele_all_inodes(
+@@ -893,7 +893,8 @@ xfs_qm_dqrele_all_inodes(
  	uint		 flags)
  {
  	ASSERT(mp->m_quotainfo);
@@ -302,7 +302,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
  /*------------------------------------------------------------------------*/
 --- a/fs/xfs/xfs_ag.h
 +++ b/fs/xfs/xfs_ag.h
-@@ -229,6 +229,7 @@ typedef struct xfs_perag
+@@ -215,6 +215,7 @@ typedef struct xfs_perag
  	int		pag_ici_init;	/* incore inode cache initialised */
  	rwlock_t	pag_ici_lock;	/* incore inode lock */
  	struct radix_tree_root pag_ici_root;	/* incore inode cache root */
@@ -312,7 +312,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
  
 --- a/fs/xfs/xfs_mount.h
 +++ b/fs/xfs/xfs_mount.h
-@@ -257,6 +257,7 @@ typedef struct xfs_mount {
+@@ -243,6 +243,7 @@ typedef struct xfs_mount {
  	wait_queue_head_t	m_wait_single_sync_task;
  	__int64_t		m_update_flags;	/* sb flags we need to update
  						   on the next remount,rw */
