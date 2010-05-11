@@ -1,15 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4BEjgp3094958 for <xfs@oss.sgi.com>; Tue, 11 May 2010 09:45:42 -0500
-Subject: Re: [078/117] xfs: add a shrinker to background inode reclaim
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20100510223324.424796921@kvm.kroah.org>
-References: <20100510223324.424796921@kvm.kroah.org>
-Date: Tue, 11 May 2010 09:46:56 -0500
-Message-ID: <1273589216.2674.14.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	o4BFAfnF096343 for <xfs@oss.sgi.com>; Tue, 11 May 2010 10:10:41 -0500
+Received: from mx1.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 547A11561668
+	for <xfs@oss.sgi.com>; Tue, 11 May 2010 08:13:18 -0700 (PDT)
+Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
+	with ESMTP id gogUyXArgCMgcbGv for <xfs@oss.sgi.com>;
+	Tue, 11 May 2010 08:13:18 -0700 (PDT)
+Date: Tue, 11 May 2010 08:12:08 -0700
+From: Greg KH <gregkh@suse.de>
+Subject: Re: [77/98] xfs: add a shrinker to background inode reclaim
+Message-ID: <20100511151208.GI14895@suse.de>
+References: <20100510223541.333994587@kvm.kroah.org>
+	<1273589240.2674.15.camel@doink>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1273589240.2674.15.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,25 +29,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Greg KH <gregkh@suse.de>
-Cc: linux-kernel@vger.kernel.org, stable@kernel.org, Dave Chinner <dchinner@redhat.com>, akpm@linux-foundation.org, xfs@oss.sgi.com, torvalds@linux-foundation.org, stable-review@kernel.org, alan@lxorguk.ukuu.org.uk
+To: Alex Elder <aelder@sgi.com>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, stable-review@kernel.org, Dave Chinner <dchinner@redhat.com>, akpm@linux-foundation.org, torvalds@linux-foundation.org, stable@kernel.org, alan@lxorguk.ukuu.org.uk
 
-On Mon, 2010-05-10 at 15:32 -0700, Greg KH wrote:
-> 2.6.33-stable review patch.  If anyone has any objections, please let us know.
+On Tue, May 11, 2010 at 09:47:20AM -0500, Alex Elder wrote:
+> On Mon, 2010-05-10 at 15:35 -0700, Greg KH wrote:
+> > 2.6.32-stable review patch.  If anyone has any objections, please let us know.
+> 
+> Acked-by: Alex Elder <aelder@sgi.com>
 
-Acked-by: Alex Elder <aelder@sgi.com>
+Thanks, I've added your ack for both the .32 and .33 versions of this
+patch.
 
-> ------------------
-> 
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> commit 9bf729c0af67897ea8498ce17c29b0683f7f2028 upstream
-> 
-> On low memory boxes or those with highmem, kernel can OOM before the
-> background reclaims inodes via xfssyncd. Add a shrinker to run inode
-> reclaim so that it inode reclaim is expedited when memory is low.
-> 
-...
+greg k-h
 
 _______________________________________________
 xfs mailing list
