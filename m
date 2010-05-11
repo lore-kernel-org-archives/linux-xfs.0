@@ -1,18 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4AMuGYA037565 for <xfs@oss.sgi.com>; Mon, 10 May 2010 17:56:16 -0500
-Received: from coco.kroah.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0CC00139F02E
-	for <xfs@oss.sgi.com>; Mon, 10 May 2010 15:58:27 -0700 (PDT)
-Received: from coco.kroah.org (kroah.org [198.145.64.141]) by cuda.sgi.com
-	with ESMTP id zLGTx7PNFdQFlzbi for <xfs@oss.sgi.com>;
-	Mon, 10 May 2010 15:58:27 -0700 (PDT)
-Message-Id: <20100510223541.333994587@kvm.kroah.org>
-Date: Mon, 10 May 2010 15:35:29 -0700
-From: Greg KH <gregkh@suse.de>
-Subject: [77/98] xfs: add a shrinker to background inode reclaim
-In-Reply-To: <20100510223714.GA18416@kroah.com>
+	o4BA31Eu080591 for <xfs@oss.sgi.com>; Tue, 11 May 2010 05:03:02 -0500
+Received: from smtp.stepping-stone.ch (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0BDE614952F3
+	for <xfs@oss.sgi.com>; Tue, 11 May 2010 03:05:37 -0700 (PDT)
+Received: from smtp.stepping-stone.ch (smtp.stepping-stone.ch
+	[194.176.109.228]) by cuda.sgi.com with ESMTP id
+	F8TMumapPxPkJQvy for <xfs@oss.sgi.com>;
+	Tue, 11 May 2010 03:05:37 -0700 (PDT)
+Message-ID: <4BE92BCD.1000604@purplehaze.ch>
+Date: Tue, 11 May 2010 12:05:01 +0200
+From: Christian Affolter <christian.affolter@purplehaze.ch>
+MIME-Version: 1.0
+Subject: Re: failed to read root inode
+References: <4BE55A63.8070203@purplehaze.ch> <4BE57E0D.3020601@sandeen.net>
+	<4BE6CC4C.3030501@purplehaze.ch>
+In-Reply-To: <4BE6CC4C.3030501@purplehaze.ch>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,306 +25,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: xfs@oss.sgi.com, Dave Chinner <dchinner@redhat.com>, akpm@linux-foundation.org, torvalds@linux-foundation.org, stable-review@kernel.org, alan@lxorguk.ukuu.org.uk
+To: xfs@oss.sgi.com
 
-2.6.32-stable review patch.  If anyone has any objections, please let us know.
+Hi
 
-------------------
+>> So if repair isn't making a mountable fs, first suggestion would
+>> be to re-try with the latest version of repair.
+> 
+> OK, I will try that. Unfortunately the latest upstream version isn't
+> included within the distribution package repository, so I will have to
+> compile it first.
 
-From: Dave Chinner <dchinner@redhat.com>
+OK, I was able to mount the volume by first repairing it with the latest
+xfs_repair version and mount -o ro,norecovery [...]
 
-commit 9bf729c0af67897ea8498ce17c29b0683f7f2028 upstream
-
-On low memory boxes or those with highmem, kernel can OOM before the
-background reclaims inodes via xfssyncd. Add a shrinker to run inode
-reclaim so that it inode reclaim is expedited when memory is low.
-
-This is more complex than it needs to be because the VM folk don't
-want a context added to the shrinker infrastructure. Hence we need
-to add a global list of XFS mount structures so the shrinker can
-traverse them.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+Thank you everybody for your helpfulness and your suggestions regarding
+this problem.
 
 
----
- fs/xfs/linux-2.6/xfs_super.c   |    5 +
- fs/xfs/linux-2.6/xfs_sync.c    |  107 ++++++++++++++++++++++++++++++++++++++---
- fs/xfs/linux-2.6/xfs_sync.h    |    7 ++
- fs/xfs/quota/xfs_qm_syscalls.c |    3 -
- fs/xfs/xfs_ag.h                |    1 
- fs/xfs/xfs_mount.h             |    1 
- 6 files changed, 115 insertions(+), 9 deletions(-)
-
---- a/fs/xfs/linux-2.6/xfs_super.c
-+++ b/fs/xfs/linux-2.6/xfs_super.c
-@@ -1164,6 +1164,7 @@ xfs_fs_put_super(
- 
- 	xfs_unmountfs(mp);
- 	xfs_freesb(mp);
-+	xfs_inode_shrinker_unregister(mp);
- 	xfs_icsb_destroy_counters(mp);
- 	xfs_close_devices(mp);
- 	xfs_dmops_put(mp);
-@@ -1555,6 +1556,8 @@ xfs_fs_fill_super(
- 	if (error)
- 		goto fail_vnrele;
- 
-+	xfs_inode_shrinker_register(mp);
-+
- 	kfree(mtpt);
- 
- 	xfs_itrace_exit(XFS_I(sb->s_root->d_inode));
-@@ -1894,6 +1897,7 @@ init_xfs_fs(void)
- 		goto out_cleanup_procfs;
- 
- 	vfs_initquota();
-+	xfs_inode_shrinker_init();
- 
- 	error = register_filesystem(&xfs_fs_type);
- 	if (error)
-@@ -1923,6 +1927,7 @@ exit_xfs_fs(void)
- {
- 	vfs_exitquota();
- 	unregister_filesystem(&xfs_fs_type);
-+	xfs_inode_shrinker_destroy();
- 	xfs_sysctl_unregister();
- 	xfs_cleanup_procfs();
- 	xfs_buf_terminate();
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -94,7 +94,8 @@ xfs_inode_ag_walk(
- 					   struct xfs_perag *pag, int flags),
- 	int			flags,
- 	int			tag,
--	int			exclusive)
-+	int			exclusive,
-+	int			*nr_to_scan)
- {
- 	struct xfs_perag	*pag = &mp->m_perag[ag];
- 	uint32_t		first_index;
-@@ -134,7 +135,7 @@ restart:
- 		if (error == EFSCORRUPTED)
- 			break;
- 
--	} while (1);
-+	} while ((*nr_to_scan)--);
- 
- 	if (skipped) {
- 		delay(1);
-@@ -152,23 +153,30 @@ xfs_inode_ag_iterator(
- 					   struct xfs_perag *pag, int flags),
- 	int			flags,
- 	int			tag,
--	int			exclusive)
-+	int			exclusive,
-+	int			*nr_to_scan)
- {
- 	int			error = 0;
- 	int			last_error = 0;
- 	xfs_agnumber_t		ag;
-+	int			nr;
- 
-+	nr = nr_to_scan ? *nr_to_scan : INT_MAX;
- 	for (ag = 0; ag < mp->m_sb.sb_agcount; ag++) {
- 		if (!mp->m_perag[ag].pag_ici_init)
- 			continue;
- 		error = xfs_inode_ag_walk(mp, ag, execute, flags, tag,
--						exclusive);
-+						exclusive, &nr);
- 		if (error) {
- 			last_error = error;
- 			if (error == EFSCORRUPTED)
- 				break;
- 		}
-+		if (nr <= 0)
-+			break;
- 	}
-+	if (nr_to_scan)
-+		*nr_to_scan = nr;
- 	return XFS_ERROR(last_error);
- }
- 
-@@ -288,7 +296,7 @@ xfs_sync_data(
- 	ASSERT((flags & ~(SYNC_TRYLOCK|SYNC_WAIT)) == 0);
- 
- 	error = xfs_inode_ag_iterator(mp, xfs_sync_inode_data, flags,
--				      XFS_ICI_NO_TAG, 0);
-+				      XFS_ICI_NO_TAG, 0, NULL);
- 	if (error)
- 		return XFS_ERROR(error);
- 
-@@ -310,7 +318,7 @@ xfs_sync_attr(
- 	ASSERT((flags & ~SYNC_WAIT) == 0);
- 
- 	return xfs_inode_ag_iterator(mp, xfs_sync_inode_attr, flags,
--				     XFS_ICI_NO_TAG, 0);
-+				     XFS_ICI_NO_TAG, 0, NULL);
- }
- 
- STATIC int
-@@ -678,6 +686,7 @@ __xfs_inode_set_reclaim_tag(
- 	radix_tree_tag_set(&pag->pag_ici_root,
- 			   XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino),
- 			   XFS_ICI_RECLAIM_TAG);
-+	pag->pag_ici_reclaimable++;
- }
- 
- /*
-@@ -709,6 +718,7 @@ __xfs_inode_clear_reclaim_tag(
- {
- 	radix_tree_tag_clear(&pag->pag_ici_root,
- 			XFS_INO_TO_AGINO(mp, ip->i_ino), XFS_ICI_RECLAIM_TAG);
-+	pag->pag_ici_reclaimable--;
- }
- 
- STATIC int
-@@ -769,5 +779,88 @@ xfs_reclaim_inodes(
- 	int		mode)
- {
- 	return xfs_inode_ag_iterator(mp, xfs_reclaim_inode, mode,
--					XFS_ICI_RECLAIM_TAG, 1);
-+					XFS_ICI_RECLAIM_TAG, 1, NULL);
-+}
-+
-+/*
-+ * Shrinker infrastructure.
-+ *
-+ * This is all far more complex than it needs to be. It adds a global list of
-+ * mounts because the shrinkers can only call a global context. We need to make
-+ * the shrinkers pass a context to avoid the need for global state.
-+ */
-+static LIST_HEAD(xfs_mount_list);
-+static struct rw_semaphore xfs_mount_list_lock;
-+
-+static int
-+xfs_reclaim_inode_shrink(
-+	int		nr_to_scan,
-+	gfp_t		gfp_mask)
-+{
-+	struct xfs_mount *mp;
-+	xfs_agnumber_t	ag;
-+	int		reclaimable = 0;
-+
-+	if (nr_to_scan) {
-+		if (!(gfp_mask & __GFP_FS))
-+			return -1;
-+
-+		down_read(&xfs_mount_list_lock);
-+		list_for_each_entry(mp, &xfs_mount_list, m_mplist) {
-+			xfs_inode_ag_iterator(mp, xfs_reclaim_inode, 0,
-+					XFS_ICI_RECLAIM_TAG, 1, &nr_to_scan);
-+			if (nr_to_scan <= 0)
-+				break;
-+		}
-+		up_read(&xfs_mount_list_lock);
-+	}
-+
-+	down_read(&xfs_mount_list_lock);
-+	list_for_each_entry(mp, &xfs_mount_list, m_mplist) {
-+		for (ag = 0; ag < mp->m_sb.sb_agcount; ag++) {
-+
-+			if (!mp->m_perag[ag].pag_ici_init)
-+				continue;
-+			reclaimable += mp->m_perag[ag].pag_ici_reclaimable;
-+		}
-+	}
-+	up_read(&xfs_mount_list_lock);
-+	return reclaimable;
-+}
-+
-+static struct shrinker xfs_inode_shrinker = {
-+	.shrink = xfs_reclaim_inode_shrink,
-+	.seeks = DEFAULT_SEEKS,
-+};
-+
-+void __init
-+xfs_inode_shrinker_init(void)
-+{
-+	init_rwsem(&xfs_mount_list_lock);
-+	register_shrinker(&xfs_inode_shrinker);
-+}
-+
-+void
-+xfs_inode_shrinker_destroy(void)
-+{
-+	ASSERT(list_empty(&xfs_mount_list));
-+	unregister_shrinker(&xfs_inode_shrinker);
-+}
-+
-+void
-+xfs_inode_shrinker_register(
-+	struct xfs_mount	*mp)
-+{
-+	down_write(&xfs_mount_list_lock);
-+	list_add_tail(&mp->m_mplist, &xfs_mount_list);
-+	up_write(&xfs_mount_list_lock);
-+}
-+
-+void
-+xfs_inode_shrinker_unregister(
-+	struct xfs_mount	*mp)
-+{
-+	down_write(&xfs_mount_list_lock);
-+	list_del(&mp->m_mplist);
-+	up_write(&xfs_mount_list_lock);
- }
---- a/fs/xfs/linux-2.6/xfs_sync.h
-+++ b/fs/xfs/linux-2.6/xfs_sync.h
-@@ -54,6 +54,11 @@ void __xfs_inode_clear_reclaim_tag(struc
- int xfs_sync_inode_valid(struct xfs_inode *ip, struct xfs_perag *pag);
- int xfs_inode_ag_iterator(struct xfs_mount *mp,
- 	int (*execute)(struct xfs_inode *ip, struct xfs_perag *pag, int flags),
--	int flags, int tag, int write_lock);
-+	int flags, int tag, int write_lock, int *nr_to_scan);
-+
-+void xfs_inode_shrinker_init(void);
-+void xfs_inode_shrinker_destroy(void);
-+void xfs_inode_shrinker_register(struct xfs_mount *mp);
-+void xfs_inode_shrinker_unregister(struct xfs_mount *mp);
- 
- #endif
---- a/fs/xfs/quota/xfs_qm_syscalls.c
-+++ b/fs/xfs/quota/xfs_qm_syscalls.c
-@@ -893,7 +893,8 @@ xfs_qm_dqrele_all_inodes(
- 	uint		 flags)
- {
- 	ASSERT(mp->m_quotainfo);
--	xfs_inode_ag_iterator(mp, xfs_dqrele_inode, flags, XFS_ICI_NO_TAG, 0);
-+	xfs_inode_ag_iterator(mp, xfs_dqrele_inode, flags,
-+				XFS_ICI_NO_TAG, 0, NULL);
- }
- 
- /*------------------------------------------------------------------------*/
---- a/fs/xfs/xfs_ag.h
-+++ b/fs/xfs/xfs_ag.h
-@@ -215,6 +215,7 @@ typedef struct xfs_perag
- 	int		pag_ici_init;	/* incore inode cache initialised */
- 	rwlock_t	pag_ici_lock;	/* incore inode lock */
- 	struct radix_tree_root pag_ici_root;	/* incore inode cache root */
-+	int		pag_ici_reclaimable;	/* reclaimable inodes */
- #endif
- } xfs_perag_t;
- 
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -243,6 +243,7 @@ typedef struct xfs_mount {
- 	wait_queue_head_t	m_wait_single_sync_task;
- 	__int64_t		m_update_flags;	/* sb flags we need to update
- 						   on the next remount,rw */
-+	struct list_head	m_mplist;	/* inode shrinker mount list */
- } xfs_mount_t;
- 
- /*
-
+Regards
+Christian
 
 _______________________________________________
 xfs mailing list
