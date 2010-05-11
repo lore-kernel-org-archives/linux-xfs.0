@@ -1,23 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4BEIMCD093501 for <xfs@oss.sgi.com>; Tue, 11 May 2010 09:18:22 -0500
-Received: from v007470.home.net.pl (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id 3D8C915617B6
-	for <xfs@oss.sgi.com>; Tue, 11 May 2010 07:20:58 -0700 (PDT)
-Received: from v007470.home.net.pl (v007470.home.net.pl [212.85.125.104]) by
-	cuda.sgi.com with SMTP id iFZJGguK2xI4Zfai for
-	<xfs@oss.sgi.com>; Tue, 11 May 2010 07:20:58 -0700 (PDT)
-From: Krzysztof =?utf-8?q?B=C5=82aszkowski?= <kb@sysmikro.com.pl>
-Subject: Re: posix_fallocate
-Date: Tue, 11 May 2010 16:20:20 +0200
-References: <201005071022.37863.kb@sysmikro.com.pl>
-	<201005102017.11706.kb@sysmikro.com.pl>
-	<4BE85436.5040402@sandeen.net>
-In-Reply-To: <4BE85436.5040402@sandeen.net>
-MIME-Version: 1.0
-Content-Disposition: inline
-Message-Id: <201005111620.21081.kb@sysmikro.com.pl>
+	o4BEjg4n094959 for <xfs@oss.sgi.com>; Tue, 11 May 2010 09:45:42 -0500
+Subject: Re: [77/98] xfs: add a shrinker to background inode reclaim
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20100510223541.333994587@kvm.kroah.org>
+References: <20100510223541.333994587@kvm.kroah.org>
+Date: Tue, 11 May 2010 09:47:20 -0500
+Message-ID: <1273589240.2674.15.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,53 +18,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: Greg KH <gregkh@suse.de>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, stable-review@kernel.org, Dave Chinner <dchinner@redhat.com>, akpm@linux-foundation.org, torvalds@linux-foundation.org, stable@kernel.org, alan@lxorguk.ukuu.org.uk
 
-T24gTW9uZGF5IDEwIE1heSAyMDEwIDIwOjQ1LCBFcmljIFNhbmRlZW4gd3JvdGU6Cj4gS3J6eXN6
-dG9mIELFgmFzemtvd3NraSB3cm90ZToKPiA+IE9uIE1vbmRheSAxMCBNYXkgMjAxMCAxNjozOSwg
-RXJpYyBTYW5kZWVuIHdyb3RlOgo+ID4+IEtyenlzenRvZiBCxYJhc3prb3dza2kgd3JvdGU6Cj4K
-PiAuLi4KPgo+ID4+PiBXZSBzdGljayB3aXRoIDIuNi4zMS41IHdoaWNoIHNlZW1zIHRvIGJlIGdv
-b2QgZm9yIHVzLiBXZSBkbyBub3QgY2hhbmdlCj4gPj4+IGtlcm5lbHMgZWFzaWx5LCBhcyBzb29u
-IGFzIGhpZ2hlciByZXZpc2lvbiBhcnJpdmVzIGJlY2F1c2UgaXQgZG9lc24ndAo+ID4+PiBtYWtl
-IHNlbnNlIGZyb20gc3RhYmlsaXR5IHBvaW50IG9mIHZpZXcuIFdlIGhhdmUgc2VlbiB0b28gbWFu
-eSB0aW1lcwo+ID4+PiByZWdyZXNzaW9uIGJ1Z3Mgc28gaWYgd2UgYXJlIGNvbmZpZGVudCB3aXRo
-IHNvbWUgcmV2aXNpb24gdGhlbiB0aGVyZSBpcwo+ID4+PiBubyBwb2ludCB0byBjaGFuZ2UgdGhp
-cy4KPiA+Pgo+ID4+IEl0IHdhcyBqdXN0IGEgdGVzdGluZyBzdWdnZXN0aW9uLCBidXQgSSBhbHJl
-YWR5IHRlc3RlZCB1cHN0cmVhbSBhbmQgdGhlCj4gPj4gcHJvYmxlbSBwZXJzaXN0cywgbm93IGp1
-c3QgbmVlZCB0byBmaW5kIHRoZSB0aW1lIHRvIGRpZyBpbnRvIGl0Lgo+ID4KPiA+IEkgc2VlIGFu
-ZCBJIGFtIGdsYWQgeW91IGNvbmZpcm1lZCB0aGlzLiBEbyB5b3UgdGhpbmsgdGhhdCBmYWxsb2Nh
-dGUKPiA+IGNhbGxlZCBtYW55IHRpbWVzIHdpdGggZml4ZWQgc2l6ZSBhbmQgaW5jcmVhc2luZyBv
-ZmZzZXQgd2lsbCB3b3JrIGJldHRlcgo+ID4gdGhhbiBvbmUgdGltZSBjYWxsIHdpdGggaHVnZSBz
-aXplIEAgMCBvZmZzZXQgPwo+Cj4gSSdkIGV4cGVjdCB0aGF0IHRvIHdvcms7IGl0J3MgY2VydGFp
-bmx5IHdvcnRoIGEgdGVzdAoKYWdyZWVkLgoKPiAsIGFuZCBwbGVhc2Ugc2VuZCB5b3VyIAo+IHJl
-c3VsdHMgYmFjayB0byB0aGUgbGlzdCA7KQoKb2theSwgd2lsbCBkbyB0aGlzIHRvbW9ycm93LgoK
-CkJVVCBsZXQncyB0aGluayBhYm91dCBwb3NzaWJsZSByZXN1bHRzOgotIHRlc3Qgd2lsbCBmYWls
-LiBub3RoaW5nIHRvIGNvbW1lbnQuCgotIHRlc3Qgd2lsbCBwYXNzLiB0aGlzIGlzIGludGVyZXN0
-aW5nIGNhc2UuCgpBIHBhc3NlZCB0ZXN0IC0gZG9lcyB0aGlzIHRlc3QgcHJvdmUgYW55dGhpbmcg
-PwppdCBtYXkgYnV0IHRoaXMgaXMgbm90IG9idmlvdXMuCklmIHRoZSBmYXVsdCB3YXMgY2F1c2Vk
-IGJ5IHNvbWUgYWxnb3JpdGhtaWMgbWlzdGFrZSAoc29tZSB0YWJsZSBzaXplLCBidWZmZXIgCnNp
-emUgYWNjb3JkaW5nIHRvIGlucHV0IHNpemUpIHRoZW4gdGhlIHRlc3QgcmVzdWx0IGNvdWxkIGJl
-IGEgcHJvb2YuCgpidXQgaWYgaXQgZmFpbHMgZHVlIHRvIG1pc3Npbmcgc3BpbmxvY2svbXV0ZXgg
-ZWxzZXdoZXJlIHRoZW4gd2UgdGFsayBhYm91dCAKcHJvYmFiaWxpdHkgb2YgZmFpbHVyZSB3aGlj
-aCBkZXBlbmRzIG9uIHJlcXVlc3RlZCBzaXplLiAKCmJhZCBuZXdzIGlzIHRoYXQgdGhpcyBmYWls
-dXJlIGhhcHBlbnMgYXQgdmFyaW91cyBzaXplcyBkZXBlbmRpbmcgb24gaHcgCmNvbmZpZ3VyYXRp
-b24uIE9uIHNvbWUgYm94ZXMgdGhlIHRocmVzaG9sZCBwb2ludCBpcyBhYnQgN1Qgd2hpbGUgYW5v
-dGhlciAKYm94ZXMgZmFpbCBhZnRlciBlLmcuIDE1VC4KSSBhbSBub3Qgc3VyZSBhYm91dCBhbnkg
-cmVsYXRpb25zaGlwIGJldHdlZW4gdGhlc2UgYm94ZXMgaW4gaW5zdGFsbGVkIG1lbW9yeSwgCmFt
-b3VudCBvZiBsb2dpY2FsIGNvcmVzIGFuZCB0aGVpcnMgZnJlcXVlbmN5IChhbmQgY3VycmVudCB3
-b3JrbG9hZCkKIApJbiB0aGlzIGxhdGVyIGNhc2UgdGhlIHRlc3Qgd2lsbCBwcm92ZSBub3RoaW5n
-LiBJZiBpIHJ1biBpdCA1IHRpbWVzIGFuZCBpdCAKcGFzc2VkIDUgdGltZXMgaXQgd291bGQgbWVh
-biBvbmx5IHRoYXQgaSB3YXMgbHVja3kuCgphcyBsb25nIGFzIHdlIGRvbid0IGtub3cgdGhlIGV4
-YWN0IG5hdHVyZSBvZiB0aGlzIGZhdWx0IHdlIGNhbid0IGNvbnNpZGVyIHN1Y2ggCnRlc3QgYXMg
-cmVsaWFibGUgZml4LgoKCktyenlzenRvZgoKUFMgb2YgY291cnNlIGkgd2lsbCB0cnkgdGhpcyBq
-dXN0IHRvIHNhdGlzZnkgY3VyaW9zaXR5IHRvbW9ycm93IGFmdGVybm9vbiAoUEwgCnRpbWUpIGFz
-IGFsbCBoaWdoIGNhcGFjaXR5IHN0b3JhZ2UgaGFzIGJlZW4gc2hpcHBlZCB0byBjdXN0b21lcnMg
-YWxyZWFkeS4gCgo+Cj4gdGhhbmtzLAo+IC1FcmljCj4KPiA+IEtyenlzenRvZgo+ID4KPiA+PiAt
-RXJpYwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZz
-IG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4v
-bGlzdGluZm8veGZzCg==
+On Mon, 2010-05-10 at 15:35 -0700, Greg KH wrote:
+> 2.6.32-stable review patch.  If anyone has any objections, please let us know.
+
+Acked-by: Alex Elder <aelder@sgi.com>
+
+> ------------------
+> 
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> commit 9bf729c0af67897ea8498ce17c29b0683f7f2028 upstream
+> 
+> On low memory boxes or those with highmem, kernel can OOM before the
+> background reclaims inodes via xfssyncd. Add a shrinker to run inode
+> reclaim so that it inode reclaim is expedited when memory is low.
+> 
+...
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
