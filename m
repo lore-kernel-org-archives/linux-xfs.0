@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4DEq0ZX231470 for <xfs@oss.sgi.com>; Thu, 13 May 2010 09:52:01 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DA35333DB88
-	for <xfs@oss.sgi.com>; Thu, 13 May 2010 07:54:13 -0700 (PDT)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id RFZlsnnox3aYOJjD for
-	<xfs@oss.sgi.com>; Thu, 13 May 2010 07:54:13 -0700 (PDT)
-Message-ID: <4BEC1294.2000904@sandeen.net>
-Date: Thu, 13 May 2010 09:54:12 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	o4DHJrEY236903 for <xfs@oss.sgi.com>; Thu, 13 May 2010 12:19:53 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BA29913D18BC
+	for <xfs@oss.sgi.com>; Thu, 13 May 2010 10:22:07 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id MhPsIOzbz2xOy8EF
+	for <xfs@oss.sgi.com>; Thu, 13 May 2010 10:22:07 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id C6B556C2D1
+	for <xfs@oss.sgi.com>; Thu, 13 May 2010 12:22:06 -0500 (CDT)
+Message-ID: <4BEC3581.3020208@hardwarefreak.com>
+Date: Thu, 13 May 2010 12:23:13 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] fsfreeze: suspend and resume access to an filesystem
-References: <1194896399.685821273733580088.JavaMail.root@zmail06.collab.prod.int.phx2.redhat.com>
-	<20100513.163313.67205054690538917.yamato@redhat.com>
-In-Reply-To: <20100513.163313.67205054690538917.yamato@redhat.com>
+Subject: Re: bad primary superblock - bad magic number !!!
+References: <28512276.post@talk.nabble.com>
+	<4BE82955.2080009@sandeen.net>	<978493.86662.qm@web112902.mail.gq1.yahoo.com>	<20100510222211.3e73cdeb@galadriel.home>	<132290.52744.qm@web112902.mail.gq1.yahoo.com>	<20100512142902.47d1022a@harpe.intellique.com>	<606770.71420.qm@web112907.mail.gq1.yahoo.com>	<20100513114151.110fe8f9@galadriel.home>
+	<408113.19031.qm@web112903.mail.gq1.yahoo.com>
+In-Reply-To: <408113.19031.qm@web112903.mail.gq1.yahoo.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,53 +32,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Masatake YAMATO <yamato@redhat.com>
-Cc: e2fsprogs-ext4@lists.sourceforge.net, util-linux-ng@vger.kernel.org, linux-cluster@redhat.com, htaira@redhat.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Masatake YAMATO wrote:
-> Hi,
+Leo Davis put forth on 5/13/2010 6:00 AM:
+>> If I understand correctly, c0d0 represents a drive (the first one).
+>> Apparently this drive is dead, or close. You should probably ditch it.
 > 
-> (The disscussion can be found at
->  http://thread.gmane.org/gmane.linux.utilities.util-linux-ng/3181/focus=3193)
-> 
->> Hello.
->>
->> I understand reason when it use with device-mapper.
->> I think, fsfreeze command need for filesystem on physical block device without device-mapper.
->> For example, by storage controller based LUN snapshot.
->>
->> # fsfreeze -f /data
->> # ssh root@192.168.0.1 "take snapshot lun0"
->> # fsfreeze -u /data
->>
->> * /data is mounted physical block device(/dev/sdb1)
-> 
-> As Hajime wrote, taking snapshot in physical storage level is popular
-> situation. It seems that xfs_freeze can be used for the purpose but
-> the name `xfs_freeze' gives the impression that the command is only 
-> for xfs. 
-> 
-> My argument can be applicable to gfs2_tool, too.  "gfs2_tool freeze"
-> also does ``ioctl(fd, FIFREEZE, 0)''.
-> 
-> 
-> One of the solution is to add xxx_freeze for each file system implementation
-> which has freeze/unfreeze methods to eash util-xxx, xxx-progs or xxx-utils. 
-> e.g. Adding ext4_freeze or ext3_freeze command to e2fsprogs package.
-> 
-> However, I think this is not good idea. Linux provides file system neutral
-> interface already. So it is better to have file system neutral command(fsfreeze)
-> and the command is included in file system neutral package, util-linux-ng.
+> nope, c0d0 represents ( ControllerNumber[c0] LogicalDriveNumber[d0] )
+> so its 12 disks in 2 partitions- c0d0 and c0d1
+> c0d0 holds configuration information
+> I boot from a different device, the raid set is used only for storing data.
 
-I tend to agree, since there is a common interface, there is no reason to
-have filesystem-specific tools which all do the same thing.
+Which model SmartArray controller is this?  Is it SCSI, SAS, or SATA?
 
-Note that xfs_freeze existed long before the common interface, and in fact
-the common ioctl number was chosen based on the xfs number, so that explains
-the existence of the xfs-specific tool, and why it does happen to work
-now on non-xfs filesystems....
+If SAS or SATA, is there an expander in the enclosure?
 
--Eric
+What model is the external drive enclosure which houses the 12 drives?
+
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
