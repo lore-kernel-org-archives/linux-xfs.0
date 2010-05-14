@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4E7MQSr009958 for <xfs@oss.sgi.com>; Fri, 14 May 2010 02:22:27 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A6A8F12923A6
-	for <xfs@oss.sgi.com>; Fri, 14 May 2010 00:25:18 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	rAlwKBOWHlyAeHfg for <xfs@oss.sgi.com>;
-	Fri, 14 May 2010 00:25:18 -0700 (PDT)
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5/5] xfs: make use of new shrinker callout
-Date: Fri, 14 May 2010 17:24:23 +1000
-Message-Id: <1273821863-29524-6-git-send-email-david@fromorbit.com>
+	o4EHmFCe035552 for <xfs@oss.sgi.com>; Fri, 14 May 2010 12:48:15 -0500
+Received: from nlpi157.prodigy.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6C25F342DC6
+	for <xfs@oss.sgi.com>; Fri, 14 May 2010 10:50:28 -0700 (PDT)
+Received: from nlpi157.prodigy.net (nlpi157.sbcis.sbc.com [207.115.36.171]) by
+	cuda.sgi.com with ESMTP id w3KkXDEsrb75OXaT for
+	<xfs@oss.sgi.com>; Fri, 14 May 2010 10:50:28 -0700 (PDT)
+Date: Fri, 14 May 2010 12:46:52 -0500 (CDT)
+From: Christoph Lameter <cl@linux.com>
+Subject: Defrag in shrinkers (was Re: [PATCH 0/5] Per-superblock shrinkers)
 In-Reply-To: <1273821863-29524-1-git-send-email-david@fromorbit.com>
+Message-ID: <alpine.DEB.2.00.1005141244380.9466@router.home>
 References: <1273821863-29524-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,356 +23,189 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-kernel@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: npiggin@suse.de, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, Pekka Enberg <penberg@cs.helsinki.fi>, linux-fsdevel@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+Would it also be possible to add some defragmentation logic when you
+revise the shrinkers? Here is a prototype patch that would allow you to
+determine the other objects sitting in the same page as a given object.
 
-Convert the inode reclaim shrinker to use the new per-sb shrinker
-operations.  This fixes a bunch of lockdep warnings about the
-xfs_mount_list_lock being taken in different reclaim contexts by
-removing it, and allows the reclaim to be proportioned across
-filesystems with no extra code.
+With that I hope that you have enough information to determine if its
+worth to evict the other objects as well to reclaim the slab page.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+
+From: Christoph Lameter <cl@linux-foundation.org>
+Subject: Slab allocators: Introduce function to determine other objects in the same slab page
+
+kmem_cache_objects() can be used to determin other objects sharing the same
+slab. With such knowledge a slab user can intentionally free all slab objects
+in a slab to allow the freeing of the slab as a whole. This is particularly
+important for the dentry and inode cache handling since they reclaim objects
+in LRU fashion. With this function they can see if the object is sitting in
+a sparsely populated slab page and if so decide to reclaim the other objects
+in the slab page. In many situations we can otherwise get high memory use
+since only a very small portion of the available object slots are in use
+(this can occur after a file scan or when the computational load on a server
+changes).
+
+kmem_cache_object() returns the number of objects currently in use. A parameter
+allows the retrieval of the maximum number of objects that would fit into this
+slab page.
+
+The user must then use these numbers to determine if an effort should be made
+to free the remaining objects. The allocated objects are returned in an array
+of pointers.
+
+Objects can only stay allocated if the user has some way of locking out
+kmem_cache_free() operations on the slab. Otherwise the operations on the
+returned object pointers cause race conditions.
+
+Signed-off-by: Christoph Lameter <cl@linux-foundation.org>
+
 ---
- fs/xfs/linux-2.6/xfs_super.c   |   23 ++++++--
- fs/xfs/linux-2.6/xfs_sync.c    |  124 +++++++++++-----------------------------
- fs/xfs/linux-2.6/xfs_sync.h    |   16 +++--
- fs/xfs/quota/xfs_qm_syscalls.c |    2 +-
- fs/xfs/xfs_mount.h             |    1 -
- 5 files changed, 61 insertions(+), 105 deletions(-)
+ include/linux/slab.h |   18 ++++++++++++++++++
+ mm/slab.c            |   23 +++++++++++++++++++++++
+ mm/slob.c            |    6 ++++++
+ mm/slub.c            |   42 ++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 89 insertions(+)
 
-diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
-index 29f1edc..2bd512a 100644
---- a/fs/xfs/linux-2.6/xfs_super.c
-+++ b/fs/xfs/linux-2.6/xfs_super.c
-@@ -1209,7 +1209,6 @@ xfs_fs_put_super(
- 
- 	xfs_unmountfs(mp);
- 	xfs_freesb(mp);
--	xfs_inode_shrinker_unregister(mp);
- 	xfs_icsb_destroy_counters(mp);
- 	xfs_close_devices(mp);
- 	xfs_dmops_put(mp);
-@@ -1623,8 +1622,6 @@ xfs_fs_fill_super(
- 	if (error)
- 		goto fail_vnrele;
- 
--	xfs_inode_shrinker_register(mp);
--
- 	kfree(mtpt);
- 	return 0;
- 
-@@ -1678,6 +1675,22 @@ xfs_fs_get_sb(
- 			   mnt);
- }
- 
-+static int
-+xfs_fs_nr_cached_objects(
-+	struct super_block	*sb)
-+{
-+	return xfs_reclaim_inodes_count(XFS_M(sb));
-+}
-+
-+static int
-+xfs_fs_free_cached_objects(
-+	struct super_block	*sb,
-+	int			nr_to_scan)
-+{
-+	xfs_reclaim_inodes_nr(XFS_M(sb), 0, nr_to_scan);
-+	return 0;
-+}
-+
- static const struct super_operations xfs_super_operations = {
- 	.alloc_inode		= xfs_fs_alloc_inode,
- 	.destroy_inode		= xfs_fs_destroy_inode,
-@@ -1691,6 +1704,8 @@ static const struct super_operations xfs_super_operations = {
- 	.statfs			= xfs_fs_statfs,
- 	.remount_fs		= xfs_fs_remount,
- 	.show_options		= xfs_fs_show_options,
-+	.nr_cached_objects	= xfs_fs_nr_cached_objects,
-+	.free_cached_objects	= xfs_fs_free_cached_objects,
- };
- 
- static struct file_system_type xfs_fs_type = {
-@@ -1870,7 +1885,6 @@ init_xfs_fs(void)
- 		goto out_cleanup_procfs;
- 
- 	vfs_initquota();
--	xfs_inode_shrinker_init();
- 
- 	error = register_filesystem(&xfs_fs_type);
- 	if (error)
-@@ -1898,7 +1912,6 @@ exit_xfs_fs(void)
- {
- 	vfs_exitquota();
- 	unregister_filesystem(&xfs_fs_type);
--	xfs_inode_shrinker_destroy();
- 	xfs_sysctl_unregister();
- 	xfs_cleanup_procfs();
- 	xfs_buf_terminate();
-diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index 17ec4a6..4f26673 100644
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -137,7 +137,7 @@ restart:
- 
- 	} while ((*nr_to_scan)--);
- 
--	if (skipped) {
-+	if (skipped && *nr_to_scan > 0) {
- 		delay(1);
- 		goto restart;
- 	}
-@@ -152,14 +152,14 @@ xfs_inode_ag_iterator(
- 	int			flags,
- 	int			tag,
- 	int			exclusive,
--	int			*nr_to_scan)
-+	int			nr_to_scan)
- {
- 	int			error = 0;
- 	int			last_error = 0;
- 	xfs_agnumber_t		ag;
--	int			nr;
- 
--	nr = nr_to_scan ? *nr_to_scan : INT_MAX;
-+	if (nr_to_scan <= 0)
-+		nr_to_scan = INT_MAX;
- 	for (ag = 0; ag < mp->m_sb.sb_agcount; ag++) {
- 		struct xfs_perag	*pag;
- 
-@@ -169,18 +169,16 @@ xfs_inode_ag_iterator(
- 			continue;
- 		}
- 		error = xfs_inode_ag_walk(mp, pag, execute, flags, tag,
--						exclusive, &nr);
-+						exclusive, &nr_to_scan);
- 		xfs_perag_put(pag);
- 		if (error) {
- 			last_error = error;
- 			if (error == EFSCORRUPTED)
- 				break;
- 		}
--		if (nr <= 0)
-+		if (nr_to_scan <= 0)
- 			break;
- 	}
--	if (nr_to_scan)
--		*nr_to_scan = nr;
- 	return XFS_ERROR(last_error);
- }
- 
-@@ -299,7 +297,7 @@ xfs_sync_data(
- 	ASSERT((flags & ~(SYNC_TRYLOCK|SYNC_WAIT)) == 0);
- 
- 	error = xfs_inode_ag_iterator(mp, xfs_sync_inode_data, flags,
--				      XFS_ICI_NO_TAG, 0, NULL);
-+				      XFS_ICI_NO_TAG, 0, 0);
- 	if (error)
- 		return XFS_ERROR(error);
- 
-@@ -318,7 +316,7 @@ xfs_sync_attr(
- 	ASSERT((flags & ~SYNC_WAIT) == 0);
- 
- 	return xfs_inode_ag_iterator(mp, xfs_sync_inode_attr, flags,
--				     XFS_ICI_NO_TAG, 0, NULL);
-+				     XFS_ICI_NO_TAG, 0, 0);
- }
- 
- STATIC int
-@@ -858,100 +856,44 @@ reclaim:
- 
- }
- 
-+/*
-+ * Scan a certain number of inodes for reclaim. nr_to_scan <= 0 means reclaim
-+ * every inode that has the reclaim tag set.
+Index: linux-2.6/include/linux/slab.h
+===================================================================
+--- linux-2.6.orig/include/linux/slab.h	2010-05-14 12:24:44.000000000 -0500
++++ linux-2.6/include/linux/slab.h	2010-05-14 12:37:36.000000000 -0500
+@@ -110,6 +110,24 @@ int kern_ptr_validate(const void *ptr, u
+ int kmem_ptr_validate(struct kmem_cache *cachep, const void *ptr);
+
+ /*
++ * Determine objects in the same slab page as a given object.
++ *
++ * The return value is the number of objects currently allocated in the slab
++ * or a negative error value and the maximum number of objects that this
++ * slab page could handle.
++ *
++ * Warning: The objects returned can be freed at any time and therefore the
++ * pointer can be invalid unless other measures are taken to avoid objects
++ * being freed while looping through the list of objects.
++ *
++ * Return codes:
++ *	-E2BIG	More objects than fit into the provided list.
++ *	-EBUSY	Objects in the slab are allocation queues.
 + */
- int
--xfs_reclaim_inodes(
-+xfs_reclaim_inodes_nr(
- 	xfs_mount_t	*mp,
--	int		mode)
-+	int		mode,
-+	int		nr_to_scan)
- {
- 	return xfs_inode_ag_iterator(mp, xfs_reclaim_inode, mode,
--					XFS_ICI_RECLAIM_TAG, 1, NULL);
-+					XFS_ICI_RECLAIM_TAG, 1, nr_to_scan);
- }
- 
- /*
-- * Shrinker infrastructure.
-+ * Return the number of reclaimable inodes in the filesystem for
-+ * the shrinker to determine how much to reclaim.
-  *
-- * This is all far more complex than it needs to be. It adds a global list of
-- * mounts because the shrinkers can only call a global context. We need to make
-- * the shrinkers pass a context to avoid the need for global state.
-+ * Because the inode cache may not have any reclaimable inodes in it, but will
-+ * be populated as part of the higher level cleaning, we need to count all
-+ * those inodes as reclaimable here as well.
-  */
--static LIST_HEAD(xfs_mount_list);
--static struct rw_semaphore xfs_mount_list_lock;
--
--static int
--xfs_reclaim_inode_shrink(
--	struct shrinker	*shrink,
--	int		nr_to_scan,
--	gfp_t		gfp_mask)
-+int
-+xfs_reclaim_inodes_count(
-+	xfs_mount_t	*mp)
- {
--	struct xfs_mount *mp;
--	struct xfs_perag *pag;
--	xfs_agnumber_t	ag;
--	int		reclaimable = 0;
--
--	if (nr_to_scan) {
--		if (!(gfp_mask & __GFP_FS))
--			return -1;
--
--		down_read(&xfs_mount_list_lock);
--		list_for_each_entry(mp, &xfs_mount_list, m_mplist) {
--			xfs_inode_ag_iterator(mp, xfs_reclaim_inode, 0,
--					XFS_ICI_RECLAIM_TAG, 1, &nr_to_scan);
--			if (nr_to_scan <= 0)
--				break;
--		}
--		up_read(&xfs_mount_list_lock);
--	}
--
--	down_read(&xfs_mount_list_lock);
--	list_for_each_entry(mp, &xfs_mount_list, m_mplist) {
--		for (ag = 0; ag < mp->m_sb.sb_agcount; ag++) {
-+	xfs_agnumber_t		ag;
-+	int			reclaimable = 0;
- 
--			pag = xfs_perag_get(mp, ag);
--			if (!pag->pag_ici_init) {
--				xfs_perag_put(pag);
--				continue;
--			}
--			reclaimable += pag->pag_ici_reclaimable;
-+	for (ag = 0; ag < mp->m_sb.sb_agcount; ag++) {
-+		struct xfs_perag *pag = xfs_perag_get(mp, ag);
-+		if (!pag->pag_ici_init) {
- 			xfs_perag_put(pag);
-+			continue;
- 		}
-+		reclaimable += pag->pag_ici_reclaimable;
-+		xfs_perag_put(pag);
- 	}
--	up_read(&xfs_mount_list_lock);
--	return reclaimable;
--}
--
--static struct shrinker xfs_inode_shrinker = {
--	.shrink = xfs_reclaim_inode_shrink,
--	.seeks = DEFAULT_SEEKS,
--};
--
--void __init
--xfs_inode_shrinker_init(void)
--{
--	init_rwsem(&xfs_mount_list_lock);
--	register_shrinker(&xfs_inode_shrinker);
--}
--
--void
--xfs_inode_shrinker_destroy(void)
--{
--	ASSERT(list_empty(&xfs_mount_list));
--	unregister_shrinker(&xfs_inode_shrinker);
--}
--
--void
--xfs_inode_shrinker_register(
--	struct xfs_mount	*mp)
--{
--	down_write(&xfs_mount_list_lock);
--	list_add_tail(&mp->m_mplist, &xfs_mount_list);
--	up_write(&xfs_mount_list_lock);
-+	return reclaimable + mp->m_super->s_nr_inodes_unused;
- }
- 
--void
--xfs_inode_shrinker_unregister(
--	struct xfs_mount	*mp)
--{
--	down_write(&xfs_mount_list_lock);
--	list_del(&mp->m_mplist);
--	up_write(&xfs_mount_list_lock);
--}
-diff --git a/fs/xfs/linux-2.6/xfs_sync.h b/fs/xfs/linux-2.6/xfs_sync.h
-index cdcbaac..c55f645 100644
---- a/fs/xfs/linux-2.6/xfs_sync.h
-+++ b/fs/xfs/linux-2.6/xfs_sync.h
-@@ -43,7 +43,14 @@ void xfs_quiesce_attr(struct xfs_mount *mp);
- 
- void xfs_flush_inodes(struct xfs_inode *ip);
- 
--int xfs_reclaim_inodes(struct xfs_mount *mp, int mode);
-+int xfs_reclaim_inodes_count(struct xfs_mount *mp);
-+int xfs_reclaim_inodes_nr(struct xfs_mount *mp, int mode, int nr_to_scan);
++int kmem_cache_objects(struct kmem_cache *slab, const void *x,
++		 const void **list, int max, int *capacity);
 +
-+static inline int
-+xfs_reclaim_inodes(struct xfs_mount *mp, int mode)
-+{
-+	return xfs_reclaim_inodes_nr(mp, mode, 0);
-+}
- 
- void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
- void __xfs_inode_set_reclaim_tag(struct xfs_perag *pag, struct xfs_inode *ip);
-@@ -53,11 +60,6 @@ void __xfs_inode_clear_reclaim_tag(struct xfs_mount *mp, struct xfs_perag *pag,
- int xfs_sync_inode_valid(struct xfs_inode *ip, struct xfs_perag *pag);
- int xfs_inode_ag_iterator(struct xfs_mount *mp,
- 	int (*execute)(struct xfs_inode *ip, struct xfs_perag *pag, int flags),
--	int flags, int tag, int write_lock, int *nr_to_scan);
--
--void xfs_inode_shrinker_init(void);
--void xfs_inode_shrinker_destroy(void);
--void xfs_inode_shrinker_register(struct xfs_mount *mp);
--void xfs_inode_shrinker_unregister(struct xfs_mount *mp);
-+	int flags, int tag, int write_lock, int nr_to_scan);
- 
- #endif
-diff --git a/fs/xfs/quota/xfs_qm_syscalls.c b/fs/xfs/quota/xfs_qm_syscalls.c
-index 50bee07..94c0cac 100644
---- a/fs/xfs/quota/xfs_qm_syscalls.c
-+++ b/fs/xfs/quota/xfs_qm_syscalls.c
-@@ -892,7 +892,7 @@ xfs_qm_dqrele_all_inodes(
- {
- 	ASSERT(mp->m_quotainfo);
- 	xfs_inode_ag_iterator(mp, xfs_dqrele_inode, flags,
--				XFS_ICI_NO_TAG, 0, NULL);
-+				XFS_ICI_NO_TAG, 0, 0);
++/*
+  * Please use this macro to create slab caches. Simply specify the
+  * name of the structure and maybe some flags that are listed above.
+  *
+Index: linux-2.6/mm/slub.c
+===================================================================
+--- linux-2.6.orig/mm/slub.c	2010-05-14 12:37:27.000000000 -0500
++++ linux-2.6/mm/slub.c	2010-05-14 12:40:10.000000000 -0500
+@@ -2868,6 +2868,48 @@ void kfree(const void *x)
  }
- 
- /*------------------------------------------------------------------------*/
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 9ff48a1..4fa0bc7 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -259,7 +259,6 @@ typedef struct xfs_mount {
- 	wait_queue_head_t	m_wait_single_sync_task;
- 	__int64_t		m_update_flags;	/* sb flags we need to update
- 						   on the next remount,rw */
--	struct list_head	m_mplist;	/* inode shrinker mount list */
- } xfs_mount_t;
- 
+ EXPORT_SYMBOL(kfree);
+
++static void get_object(struct kmem_cache *s, void *object, void *private)
++{
++	const void ***list = private;
++
++	*(*list)++ = object;
++}
++
++int kmem_cache_objects(struct kmem_cache *s, const void *x,
++		const void **list, int list_size, int *capacity)
++{
++	int r;
++	struct page *page;
++	unsigned long *map;
++
++	page = virt_to_head_page(x);
++	BUG_ON(!PageSlab(page));
++	BUG_ON(page->slab != s);
++	*capacity = page->objects;
++
++	map = kmalloc(BITS_TO_LONGS(page->objects), GFP_KERNEL);
++
++	slab_lock(page);
++	r = page->inuse;
++
++	if (page->inuse > list_size) {
++		r = -E2BIG;
++		goto abort;
++	}
++
++	if (PageSlubFrozen(page)) {
++		r = -EBUSY;
++		goto abort;
++	}
++
++	traverse_objects(s, page, get_object, &list, map);
++
++abort:
++	slab_unlock(page);
++	kfree(map);
++	return r;
++}
++
  /*
--- 
-1.5.6.5
+  * kmem_cache_shrink removes empty slabs from the partial lists and sorts
+  * the remaining slabs by the number of items in use. The slabs with the
+Index: linux-2.6/mm/slab.c
+===================================================================
+--- linux-2.6.orig/mm/slab.c	2010-05-14 12:24:44.000000000 -0500
++++ linux-2.6/mm/slab.c	2010-05-14 12:37:36.000000000 -0500
+@@ -3617,6 +3617,29 @@ out:
+ 	return 0;
+ }
+
++int kmem_cache_objects(struct kmem_cache *cachep, const void *objp,
++		const void **list, int list_size, int *capacity)
++{
++	struct slab *slabp = virt_to_slab(objp);
++	void *p;
++	int i;
++
++	BUG_ON(cachep != virt_to_cache(objp));
++
++	*capacity = cachep->num;
++	if (slabp->inuse > list_size)
++		return -E2BIG;
++
++	for (i = 0, p = slabp->s_mem; i < cachep->num;
++				 i++, p += cachep->buffer_size) {
++
++		if (slab_bufctl(slabp)[i] == BUFCTL_ACTIVE)
++			*(list) ++ = p;
++
++	}
++	return slabp->inuse;
++}
++
+ #ifdef CONFIG_NUMA
+ void *kmem_cache_alloc_node(struct kmem_cache *cachep, gfp_t flags, int nodeid)
+ {
+Index: linux-2.6/mm/slob.c
+===================================================================
+--- linux-2.6.orig/mm/slob.c	2010-05-14 12:24:44.000000000 -0500
++++ linux-2.6/mm/slob.c	2010-05-14 12:37:36.000000000 -0500
+@@ -658,6 +658,12 @@ void kmem_cache_free(struct kmem_cache *
+ }
+ EXPORT_SYMBOL(kmem_cache_free);
+
++void kmem_cache_objects(struct kmem_cache *c, const void *b, void **list,
++						int list_size, int *capacity)
++{
++	return -EBUSY;
++}
++
+ unsigned int kmem_cache_size(struct kmem_cache *c)
+ {
+ 	return c->size;
 
 _______________________________________________
 xfs mailing list
