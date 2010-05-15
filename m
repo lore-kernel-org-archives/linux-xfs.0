@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4F1DfV7055540 for <xfs@oss.sgi.com>; Fri, 14 May 2010 20:13:42 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 95B093443F0
-	for <xfs@oss.sgi.com>; Fri, 14 May 2010 18:15:56 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	FKowVC1Bm0tTDdRu for <xfs@oss.sgi.com>;
-	Fri, 14 May 2010 18:15:56 -0700 (PDT)
-Date: Sat, 15 May 2010 11:15:23 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Defrag in shrinkers (was Re: [PATCH 0/5] Per-superblock shrinkers)
-Message-ID: <20100515011523.GG8120@dastard>
+	o4FH67oo108748 for <xfs@oss.sgi.com>; Sat, 15 May 2010 12:06:07 -0500
+Received: from mail001.aei.ca (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 21027129479D
+	for <xfs@oss.sgi.com>; Sat, 15 May 2010 10:09:08 -0700 (PDT)
+Received: from mail001.aei.ca (mail001.aei.ca [206.123.6.130]) by cuda.sgi.com
+	with ESMTP id XWYA3juORITMUaEd for <xfs@oss.sgi.com>;
+	Sat, 15 May 2010 10:09:08 -0700 (PDT)
+From: Ed Tomlinson <edt@aei.ca>
+Subject: Re: Defrag in shrinkers
+Date: Sat, 15 May 2010 13:08:17 -0400
 References: <1273821863-29524-1-git-send-email-david@fromorbit.com>
 	<alpine.DEB.2.00.1005141244380.9466@router.home>
+	<87y6fmmdak.fsf@basil.nowhere.org>
+In-Reply-To: <87y6fmmdak.fsf@basil.nowhere.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.00.1005141244380.9466@router.home>
+Message-Id: <201005151308.18090.edt@aei.ca>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,44 +29,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Lameter <cl@linux.com>
-Cc: npiggin@suse.de, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, Pekka Enberg <penberg@cs.helsinki.fi>, linux-fsdevel@vger.kernel.org
+To: Andi Kleen <andi@firstfloor.org>
+Cc: npiggin@suse.de, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, Pekka Enberg <penberg@cs.helsinki.fi>, linux-fsdevel@vger.kernel.org, Christoph Lameter <cl@linux.com>
 
-On Fri, May 14, 2010 at 12:46:52PM -0500, Christoph Lameter wrote:
-> Would it also be possible to add some defragmentation logic when you
-> revise the shrinkers? Here is a prototype patch that would allow you to
-> determine the other objects sitting in the same page as a given object.
+On Friday 14 May 2010 16:36:03 Andi Kleen wrote:
+> Christoph Lameter <cl@linux.com> writes:
 > 
-> With that I hope that you have enough information to determine if its
-> worth to evict the other objects as well to reclaim the slab page.
+> > Would it also be possible to add some defragmentation logic when you
+> > revise the shrinkers? Here is a prototype patch that would allow you to
+> > determine the other objects sitting in the same page as a given object.
+> >
+> > With that I hope that you have enough information to determine if its
+> > worth to evict the other objects as well to reclaim the slab page.
+> 
+> I like the idea, it would be useful for the hwpoison code too,
+> when it tries to clean a page.
 
-I'll have a think about how this might fit in - the real problem is
-when the list returns objects that belong to a different superblock.
-We can only safely check whether the object belongs to the current
-superblock - to check if it belongs to a different sb we a lot of
-locks and reference counting to juggle. That would require
-re-introducing all the muck (and then some) that this patchset
-removes from the shrinkers.
+If this is done generally we probably want to retune the 'pressure' put on the slab.  The
+whole reason for the callbacks was to keep the 'pressure on the slab proportional to the
+memory pressure (scan rate).  
 
-Perhaps just freeing the objects that belong to the current sb would
-be sufficient to realise significant improvements (will be fine for
-systems that only have one active or dominant filesystem), but i
-think some experimentation would be needed.
-
-The that brings us to test cases - we need a good one. I think we
-need to re-evaluate where we stand with regard to slab fragmentation
-(which probably hasn't changed much), and we need to be able to
-quantify the amount of improvement the increase in complexity will
-provide.  I don't have anything close to hand to generate such
-fragmentation, so it might take a little time to write a test that
-does the IO patterns I know will generate problems...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Ed Tomlinson
 
 _______________________________________________
 xfs mailing list
