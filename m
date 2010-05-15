@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4FLSxbn123893 for <xfs@oss.sgi.com>; Sat, 15 May 2010 16:29:00 -0500
-Received: from april.london.02.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7E2F313DE59B
-	for <xfs@oss.sgi.com>; Sat, 15 May 2010 14:31:14 -0700 (PDT)
-Received: from april.london.02.net (april.london.02.net [87.194.255.143]) by
-	cuda.sgi.com with ESMTP id Ipauik3vv4JC7fvC for
-	<xfs@oss.sgi.com>; Sat, 15 May 2010 14:31:14 -0700 (PDT)
-Received: from [192.168.1.130] (94.192.40.220) by april.london.02.net
+	o4FM4xXv125878 for <xfs@oss.sgi.com>; Sat, 15 May 2010 17:04:59 -0500
+Received: from woodbine.london.02.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C1FFD34562A
+	for <xfs@oss.sgi.com>; Sat, 15 May 2010 15:07:13 -0700 (PDT)
+Received: from woodbine.london.02.net (woodbine.london.02.net
+	[87.194.255.145]) by cuda.sgi.com with ESMTP id
+	CYaPAKNC18NiNsui for <xfs@oss.sgi.com>;
+	Sat, 15 May 2010 15:07:13 -0700 (PDT)
+Received: from [192.168.1.130] (94.192.40.220) by woodbine.london.02.net
 	(8.5.016.1)
-	id 4B79C26301F1D967 for xfs@oss.sgi.com; Sat, 15 May 2010 22:31:14 +0100
-Message-ID: <4BEF12A5.2030505@btinternet.com>
-Date: Sat, 15 May 2010 22:31:17 +0100
+	id 4A20329609CA5C1D for xfs@oss.sgi.com; Sat, 15 May 2010 23:07:13 +0100
+Message-ID: <4BEF1B14.1060009@btinternet.com>
+Date: Sat, 15 May 2010 23:07:16 +0100
 From: Marcel z maleho mesta <newsx@btinternet.com>
 MIME-Version: 1.0
 Subject: Structure needs cleaning - Seagate Expansion External HDD 2TB USB
@@ -53,7 +54,7 @@ http://xfs.org/index.php/XFS_FAQ#Q:_I_see_applications_returning_error_990_or_.2
 and tried xfs_repair /dev/sdb1 and xfs_check /dev/sdb1 and can Mount the 
 disk and all the folders in root apart from few files are ok "copied 
 into Lost+Found Folder", but the most important one "DVBgrab" with about 
-400Gb of data :( (each file is between 1 and 2 Gb)
+400Gb of data :( (each file is between 1 and 2 Gb) is missing.
 
 Are those files gone, or is there a chance that they can be somehow 
 recovered with combination of xfs_repair commands?
