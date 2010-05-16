@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4GJV7fN182580 for <xfs@oss.sgi.com>; Sun, 16 May 2010 14:31:07 -0500
-Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 055EB130832A
-	for <xfs@oss.sgi.com>; Sun, 16 May 2010 12:34:14 -0700 (PDT)
-Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
-	cuda.sgi.com with ESMTP id mukIDnVr7izeVcxt for
-	<xfs@oss.sgi.com>; Sun, 16 May 2010 12:34:14 -0700 (PDT)
-Date: Sun, 16 May 2010 21:33:07 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: Structure needs cleaning - Seagate Expansion External HDD 2TB USB
-Message-ID: <20100516213307.4252621c@galadriel.home>
-In-Reply-To: <4BEF12A5.2030505@btinternet.com>
-References: <4BEF12A5.2030505@btinternet.com>
-Mime-Version: 1.0
+	o4GNUWAL210137 for <xfs@oss.sgi.com>; Sun, 16 May 2010 18:30:33 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 096B7149731D
+	for <xfs@oss.sgi.com>; Sun, 16 May 2010 16:33:40 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	p9lo72COatGt1wAh for <xfs@oss.sgi.com>;
+	Sun, 16 May 2010 16:33:40 -0700 (PDT)
+Date: Mon, 17 May 2010 09:32:43 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs didn't provide redundancy for citical data structure?
+Message-ID: <20100516233243.GH8120@dastard>
+References: <AANLkTimP06rpMX4BRaRIggMctQ2qR7Cul9yqcJR6Xj3O@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <AANLkTimP06rpMX4BRaRIggMctQ2qR7Cul9yqcJR6Xj3O@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,111 +25,40 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Marcel z maleho mesta <newsx@btinternet.com>
-Cc: xfs@oss.sgi.com
+To: hank peng <pengxihan@gmail.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Le Sat, 15 May 2010 22:31:17 +0100 vous =E9criviez:
+On Sat, May 15, 2010 at 11:57:51PM +0800, hank peng wrote:
+> I read this paper: http://pages.cs.wisc.edu/~vshree/xfs.pdf, which
+> says xfs didn't provide redundancy for citical data structure, such as
+> mirror, parity. I wonder if it is so?
+> If it is, is there plan to implement that for XFS developers?
 
->  but the most important one "DVBgrab" with about =
+XFS assumes redundancy and protection against bit errors is done in
+the block layeri (i.e. RAID of some kind). Changing that assumption
+takes a lot of work and involves modifying the disk format, so can't
+be done overnight. That being said, work is in progress to make XFS
+more robust - see this page for ideas on how we are approaching the
+problem:
 
-> 400Gb of data :( (each file is between 1 and 2 Gb)
+http://xfs.org/index.php/Reliable_Detection_and_Repair_of_Metadata_Corruption
 
-Don't write anything to your drive. Here is a perl script I wrote to
-find back lost DV files from a huge corrupted array.
-Mount some other place to save the found files to /mnt/destination,
-then run the script passing the device to search as parameter.
+I'll also point out that the above paper makes some fundamental
+mistakes (e.g. XFS does not use "data=ordered" journalling as they
+conclude it does from a limited observation). Hence the rest of
+their results are somewhat questionable, too, as we can't examine
+them closely enough to confirm or deny them....
 
-#!/usr/bin/perl
-use strict;
-use warnings;
+Cheers,
 
-
-$|=3D1 ;
-
-my ( $file )  =3D @ARGV;
-
-my $blocksize =3D 4096 ;
-
-my $lookupstring =3D pack "H*", "1F0700" ;
-my $regexp =3D qr/^(.*?)($lookupstring.*)$/s ;
-
-open ( my $raid, "< $file" ) or die "can't open $file \n" ;
-
-{
-	my $block ;
-	my $offset =3D 0 ;
-	my $nextblock =3D 0;
-	my $testfile;
-	=
-
-	# frame size is 1440000 bytes
-	my $framebuffer1 =3D '' ;
-		=
-
-	my $outnumber =3D 0;
-	seek $raid, $offset, 0 or die ;
-	=
-
-	while ( my $readbytes =3D read $raid, $block, $blocksize ) {
-		$offset +=3D $readbytes ;
-		=
-
-		print "* offset : $offset\n" unless ( $offset %
-1073741824 ) ; =
-
-		if ( length $framebuffer1 =3D=3D 0 ) {
-			if ( $block =3D~ m/$regexp/ ) {
-				print "found, file $outnumber
-offset $offset\n"; $framebuffer1 =3D $2 ;
-			}
-		} elsif ( length $framebuffer1 < 144000 - $blocksize ) {
-			$framebuffer1 .=3D $block ;
-			print "file head inside : offset $offset\n" if
-( $block =3D~ m/$regexp/ ) ; } elsif ( length $framebuffer1 =3D=3D 144000 -
-$blocksize ) { $framebuffer1 .=3D $block ;
-		} else {
-			$framebuffer1 .=3D substr( $block, 0, ( 144000 -
-length $framebuffer1 ) ) ;
-
-			if ( not $testfile ) {
-				print "OPEN\n";
-				open $testfile,
-">/mnt/destination/out". sprintf ("%09d", $outnumber) . ".dv" or die
-"can't write file $outnumber "; }
-
-			print $testfile $framebuffer1 ;
-			=
-
-			if ( $block =3D~ m/$regexp/ ) {
-				print "found, file $outnumber
-offset $offset\n"; $framebuffer1 =3D $2 ;
-			} else {
-				print "CLOSE\n" ;
-				close $testfile ;
-				undef $testfile ;
-				$framebuffer1 =3D '' ;
-				$outnumber++;
-			}
-		}
-
-	}
-}		=
-
-		=
-
-
--- =
-
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
