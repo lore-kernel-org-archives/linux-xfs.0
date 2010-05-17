@@ -1,29 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4HNMeZn014519 for <xfs@oss.sgi.com>; Mon, 17 May 2010 18:22:40 -0500
+	o4HNMKla014367 for <xfs@oss.sgi.com>; Mon, 17 May 2010 18:22:20 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B765E9C4D7F
-	for <xfs@oss.sgi.com>; Mon, 17 May 2010 16:25:55 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	nZ1f6fWg3JifSLZC for <xfs@oss.sgi.com>;
-	Mon, 17 May 2010 16:25:55 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 81CB79C4D46
+	for <xfs@oss.sgi.com>; Mon, 17 May 2010 16:25:35 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	xsQV0PVWwK1DTSiZ for <xfs@oss.sgi.com>;
+	Mon, 17 May 2010 16:25:35 -0700 (PDT)
 Received: from dastard (unverified [121.44.136.97])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	12987993-1927428
-	for <xfs@oss.sgi.com>; Tue, 18 May 2010 08:54:55 +0930 (CST)
+	24605596-1927428
+	for <xfs@oss.sgi.com>; Tue, 18 May 2010 08:54:35 +0930 (CST)
 Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1OE9fw-00059p-56
-	for xfs@oss.sgi.com; Tue, 18 May 2010 09:24:44 +1000
+	(envelope-from <dave@fromorbit.com>) id 1OE9fm-00059b-3O
+	for xfs@oss.sgi.com; Tue, 18 May 2010 09:24:34 +1000
 Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1OE9fr-0000Ri-8e
-	for xfs@oss.sgi.com; Tue, 18 May 2010 09:24:39 +1000
+	(envelope-from <dave@disturbed.disaster>) id 1OE9fh-0000Rg-7n
+	for xfs@oss.sgi.com; Tue, 18 May 2010 09:24:29 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 06/12] xfs: make the log ticket ID available outside the log
-	infrastructure
-Date: Tue, 18 May 2010 09:24:22 +1000
-Message-Id: <1274138668-1662-7-git-send-email-david@fromorbit.com>
+Subject: [PATCH 05/12] xfs: clean up log ticket overrun debug output
+Date: Tue, 18 May 2010 09:24:21 +1000
+Message-Id: <1274138668-1662-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1274138668-1662-1-git-send-email-david@fromorbit.com>
 References: <1274138668-1662-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -43,98 +42,69 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The ticket ID is needed to uniquely identify transactions when doing busy
-extent matching. Delayed logging changes the lifecycle of busy extents with
-respect to the transaction structure lifecycle. Hence we can no longer use
-the transaction structure as a means of determining the owner of the busy
-extent as it may be freed and reused while the busy extent is still active.
-
-This commit provides the infrastructure to access the xlog_tid_t held in the
-ticket from a transaction handle. This avoids the need for callers to peek
-into the transaction and log structures to find this out.
+Push the error message output when a ticket overrun is detected
+into the ticket printing functions. Also remove the debug version
+of the code as the production version will still panic just as
+effectively on a debug kernel via the panic mask being set.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_log.c      |    7 +++++++
- fs/xfs/xfs_log.h      |    4 +++-
- fs/xfs/xfs_log_priv.h |    2 --
- fs/xfs/xfs_types.h    |    2 ++
- 4 files changed, 12 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_error.c |    2 +-
+ fs/xfs/xfs_log.c   |   19 +++++--------------
+ 2 files changed, 6 insertions(+), 15 deletions(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 1efb303..19d0c5f 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -3312,6 +3312,13 @@ xfs_log_ticket_get(
- 	return ticket;
- }
+diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+index ef96175..047b8a8 100644
+--- a/fs/xfs/xfs_error.c
++++ b/fs/xfs/xfs_error.c
+@@ -170,7 +170,7 @@ xfs_cmn_err(int panic_tag, int level, xfs_mount_t *mp, char *fmt, ...)
+ 	va_list ap;
  
-+xlog_tid_t
-+xfs_log_get_trans_ident(
-+	struct xfs_trans	*tp)
-+{
-+	return tp->t_ticket->t_tid;
-+}
-+
- /*
-  * Allocate and initialise a new log ticket.
-  */
-diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
-index 229d1f3..05f205a 100644
---- a/fs/xfs/xfs_log.h
-+++ b/fs/xfs/xfs_log.h
-@@ -19,7 +19,6 @@
- #define __XFS_LOG_H__
- 
- /* get lsn fields */
--
- #define CYCLE_LSN(lsn) ((uint)((lsn)>>32))
- #define BLOCK_LSN(lsn) ((uint)(lsn))
- 
-@@ -134,6 +133,7 @@ struct xlog_in_core;
- struct xlog_ticket;
- struct xfs_log_item;
- struct xfs_item_ops;
-+struct xfs_trans;
- 
- void	xfs_log_item_init(struct xfs_mount	*mp,
- 			struct xfs_log_item	*item,
-@@ -190,6 +190,8 @@ void	  xlog_iodone(struct xfs_buf *);
- struct xlog_ticket * xfs_log_ticket_get(struct xlog_ticket *ticket);
- void	  xfs_log_ticket_put(struct xlog_ticket *ticket);
- 
-+xlog_tid_t xfs_log_get_trans_ident(struct xfs_trans *tp);
-+
+ #ifdef DEBUG
+-	xfs_panic_mask |= XFS_PTAG_SHUTDOWN_CORRUPT;
++	xfs_panic_mask |= (XFS_PTAG_SHUTDOWN_CORRUPT | XFS_PTAG_LOGRES);
  #endif
  
- 
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 9cf6951..ac97bdd 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -152,8 +152,6 @@ static inline uint xlog_get_client_id(__be32 i)
- #define	XLOG_RECOVERY_NEEDED	0x4	/* log was recovered */
- #define XLOG_IO_ERROR		0x8	/* log hit an I/O error, and being
- 					   shutdown */
--typedef __uint32_t xlog_tid_t;
--
- 
- #ifdef __KERNEL__
- /*
-diff --git a/fs/xfs/xfs_types.h b/fs/xfs/xfs_types.h
-index b099045..3207752 100644
---- a/fs/xfs/xfs_types.h
-+++ b/fs/xfs/xfs_types.h
-@@ -75,6 +75,8 @@ typedef	__uint32_t	xfs_dahash_t;	/* dir/attr hash value */
- 
- typedef __uint16_t	xfs_prid_t;	/* prid_t truncated to 16bits in XFS */
- 
-+typedef __uint32_t	xlog_tid_t;	/* transaction ID type */
+ 	if (xfs_panic_mask && (xfs_panic_mask & panic_tag)
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 83be6a6..1efb303 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1645,6 +1645,10 @@ xlog_print_tic_res(xfs_mount_t *mp, xlog_ticket_t *ticket)
+ 			    "bad-rtype" : res_type_str[r_type-1]),
+ 			    ticket->t_res_arr[i].r_len);
+ 	}
 +
++	xfs_cmn_err(XFS_PTAG_LOGRES, CE_ALERT, mp,
++		"xfs_log_write: reservation ran out. Need to up reservation");
++	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+ }
+ 
  /*
-  * These types are 64 bits on disk but are either 32 or 64 bits in memory.
-  * Disk based types:
+@@ -1897,21 +1901,8 @@ xlog_write(
+ 	*start_lsn = 0;
+ 
+ 	len = xlog_write_calc_vec_length(ticket, log_vector);
+-	if (ticket->t_curr_res < len) {
++	if (ticket->t_curr_res < len)
+ 		xlog_print_tic_res(log->l_mp, ticket);
+-#ifdef DEBUG
+-		xlog_panic(
+-	"xfs_log_write: reservation ran out. Need to up reservation");
+-#else
+-		/* Customer configurable panic */
+-		xfs_cmn_err(XFS_PTAG_LOGRES, CE_ALERT, log->l_mp,
+-	"xfs_log_write: reservation ran out. Need to up reservation");
+-
+-		/* If we did not panic, shutdown the filesystem */
+-		xfs_force_shutdown(log->l_mp, SHUTDOWN_CORRUPT_INCORE);
+-#endif
+-	}
+-
+ 	ticket->t_curr_res -= len;
+ 
+ 	index = 0;
 -- 
 1.5.6.5
 
