@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4HMGFsJ010845 for <xfs@oss.sgi.com>; Mon, 17 May 2010 17:16:16 -0500
-Received: from smtp-auth.no-ip.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CF77E13F3547
-	for <xfs@oss.sgi.com>; Mon, 17 May 2010 15:18:32 -0700 (PDT)
-Received: from smtp-auth.no-ip.com (smtp-auth.no-ip.com [204.16.252.94]) by
-	cuda.sgi.com with ESMTP id 3YqF27YkFLpoJ8Tn for
-	<xfs@oss.sgi.com>; Mon, 17 May 2010 15:18:32 -0700 (PDT)
-Message-ID: <4BF1C0B4.5090009@redhat.com>
-Date: Mon, 17 May 2010 18:18:28 -0400
-From: Doug Ledford <dledford@redhat.com>
-MIME-Version: 1.0
+	o4HN2iMu013419 for <xfs@oss.sgi.com>; Mon, 17 May 2010 18:02:45 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 92AE6145FA87
+	for <xfs@oss.sgi.com>; Mon, 17 May 2010 16:05:59 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	9NTDVUDoEQOjmGbl for <xfs@oss.sgi.com>;
+	Mon, 17 May 2010 16:05:59 -0700 (PDT)
+Date: Tue, 18 May 2010 09:04:53 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: xfs and raid5 - "Structure needs cleaning for directory open"
+Message-ID: <20100517230453.GM8120@dastard>
 References: <20100510022033.GB7165@dastard> <4BF1B4FE.7020503@redhat.com>
-	<20100517214532.GL8120@dastard>
-In-Reply-To: <20100517214532.GL8120@dastard>
+	<20100517214532.GL8120@dastard> <4BF1C0B4.5090009@redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4BF1C0B4.5090009@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,105 +26,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============5544411952365528590=="
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Doug Ledford <dledford@redhat.com>
 Cc: linux-raid@vger.kernel.org, Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>, xfs@oss.sgi.com
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---===============5544411952365528590==
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig4EE3AC9ADF5C31DF579B67EA"
-
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig4EE3AC9ADF5C31DF579B67EA
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-On 05/17/2010 05:45 PM, Dave Chinner wrote:
-> On Mon, May 17, 2010 at 05:28:30PM -0400, Doug Ledford wrote:
->> On 05/09/2010 10:20 PM, Dave Chinner wrote:
->>> On Sun, May 09, 2010 at 08:48:00PM +0200, Rainer Fuegenstein wrote:
->>>>
->>>> today in the morning some daemon processes terminated because of
->>>> errors in the xfs file system on top of a software raid5, consisting=
-
->>>> of 4*1.5TB WD caviar green SATA disks.
->>>
->>> Reminds me of a recent(-ish) md/dm readahead cancellation fix - that
->>> would fit the symptoms of (btree corruption showing up under heavy IO=
-
->>> load but no corruption on disk. However, I can't seem to find any
->>> references to it at the moment (can't remember the bug title), but
->>> perhaps your distro doesn't have the fix in it?
->>>
->>> Cheers,
->>>
->>> Dave.
->>
->> That sounds plausible, as does hardware error.  A memory bit flip unde=
-r
->> heavy load would cause the in memory data to be corrupt while the on
->> disk data is good.
->=20
-> The data dumps from the bad blocks weren't wrong by a single bit -
-> they were unrecogni=D1=95able garbage - so that it very unlikely to be
-> a memory erro causing the problem.
-
-Not true.  It can still be a single bit error but a single bit error
-higher up in the chain.  Aka a single bit error in the scsi command to
-read various sectors, then you read in all sorts of wrong data and
-everything from there is totally whacked.
-
->> By waiting to check it until later, the bad memory
->> was flushed at some point and when the data was reloaded it came in ok=
-
->> this time.
->=20
-> Yup - XFS needs to do a better job of catching this case - the
-> prototype metadata checksumming patch caught most of these cases...
->=20
-> Cheers,
->=20
-> Dave.
-
-
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: CFBFF194
-	      http://people.redhat.com/dledford
-
-Infiniband specific RPMs available at
-	      http://people.redhat.com/dledford/Infiniband
-
-
---------------enig4EE3AC9ADF5C31DF579B67EA
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAkvxwLQACgkQg6WylM+/8ZQChgCfWmTFOjnepMDqZT8gVFbA3ndr
-ibQAnAkq0TVEgGm+CEHqmbO2+Ei8ilEp
-=snZS
------END PGP SIGNATURE-----
-
---------------enig4EE3AC9ADF5C31DF579B67EA--
-
-
---===============5544411952365528590==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---===============5544411952365528590==--
+T24gTW9uLCBNYXkgMTcsIDIwMTAgYXQgMDY6MTg6MjhQTSAtMDQwMCwgRG91ZyBMZWRmb3JkIHdy
+b3RlOgo+IE9uIDA1LzE3LzIwMTAgMDU6NDUgUE0sIERhdmUgQ2hpbm5lciB3cm90ZToKPiA+IE9u
+IE1vbiwgTWF5IDE3LCAyMDEwIGF0IDA1OjI4OjMwUE0gLTA0MDAsIERvdWcgTGVkZm9yZCB3cm90
+ZToKPiA+PiBPbiAwNS8wOS8yMDEwIDEwOjIwIFBNLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4gPj4+
+IE9uIFN1biwgTWF5IDA5LCAyMDEwIGF0IDA4OjQ4OjAwUE0gKzAyMDAsIFJhaW5lciBGdWVnZW5z
+dGVpbiB3cm90ZToKPiA+Pj4+Cj4gPj4+PiB0b2RheSBpbiB0aGUgbW9ybmluZyBzb21lIGRhZW1v
+biBwcm9jZXNzZXMgdGVybWluYXRlZCBiZWNhdXNlIG9mCj4gPj4+PiBlcnJvcnMgaW4gdGhlIHhm
+cyBmaWxlIHN5c3RlbSBvbiB0b3Agb2YgYSBzb2Z0d2FyZSByYWlkNSwgY29uc2lzdGluZwo+ID4+
+Pj4gb2YgNCoxLjVUQiBXRCBjYXZpYXIgZ3JlZW4gU0FUQSBkaXNrcy4KPiA+Pj4KPiA+Pj4gUmVt
+aW5kcyBtZSBvZiBhIHJlY2VudCgtaXNoKSBtZC9kbSByZWFkYWhlYWQgY2FuY2VsbGF0aW9uIGZp
+eCAtIHRoYXQKPiA+Pj4gd291bGQgZml0IHRoZSBzeW1wdG9tcyBvZiAoYnRyZWUgY29ycnVwdGlv
+biBzaG93aW5nIHVwIHVuZGVyIGhlYXZ5IElPCj4gPj4+IGxvYWQgYnV0IG5vIGNvcnJ1cHRpb24g
+b24gZGlzay4gSG93ZXZlciwgSSBjYW4ndCBzZWVtIHRvIGZpbmQgYW55Cj4gPj4+IHJlZmVyZW5j
+ZXMgdG8gaXQgYXQgdGhlIG1vbWVudCAoY2FuJ3QgcmVtZW1iZXIgdGhlIGJ1ZyB0aXRsZSksIGJ1
+dAo+ID4+PiBwZXJoYXBzIHlvdXIgZGlzdHJvIGRvZXNuJ3QgaGF2ZSB0aGUgZml4IGluIGl0Pwo+
+ID4+Pgo+ID4+PiBDaGVlcnMsCj4gPj4+Cj4gPj4+IERhdmUuCj4gPj4KPiA+PiBUaGF0IHNvdW5k
+cyBwbGF1c2libGUsIGFzIGRvZXMgaGFyZHdhcmUgZXJyb3IuICBBIG1lbW9yeSBiaXQgZmxpcCB1
+bmRlcgo+ID4+IGhlYXZ5IGxvYWQgd291bGQgY2F1c2UgdGhlIGluIG1lbW9yeSBkYXRhIHRvIGJl
+IGNvcnJ1cHQgd2hpbGUgdGhlIG9uCj4gPj4gZGlzayBkYXRhIGlzIGdvb2QuCj4gPiAKPiA+IFRo
+ZSBkYXRhIGR1bXBzIGZyb20gdGhlIGJhZCBibG9ja3Mgd2VyZW4ndCB3cm9uZyBieSBhIHNpbmds
+ZSBiaXQgLQo+ID4gdGhleSB3ZXJlIHVucmVjb2duadGVYWJsZSBnYXJiYWdlIC0gc28gdGhhdCBp
+dCB2ZXJ5IHVubGlrZWx5IHRvIGJlCj4gPiBhIG1lbW9yeSBlcnJvIGNhdXNpbmcgdGhlIHByb2Js
+ZW0uCj4gCj4gTm90IHRydWUuICBJdCBjYW4gc3RpbGwgYmUgYSBzaW5nbGUgYml0IGVycm9yIGJ1
+dCBhIHNpbmdsZSBiaXQgZXJyb3IKPiBoaWdoZXIgdXAgaW4gdGhlIGNoYWluLiAgQWthIGEgc2lu
+Z2xlIGJpdCBlcnJvciBpbiB0aGUgc2NzaSBjb21tYW5kIHRvCj4gcmVhZCB2YXJpb3VzIHNlY3Rv
+cnMsIHRoZW4geW91IHJlYWQgaW4gYWxsIHNvcnRzIG9mIHdyb25nIGRhdGEgYW5kCj4gZXZlcnl0
+aGluZyBmcm9tIHRoZXJlIGlzIHRvdGFsbHkgd2hhY2tlZC4KCkkgZGlkbid0IHNheSBpdCAqY291
+bGRuJ3QgYmUqIGEgYml0IGVycm9yLCBqdXN0IGl0IHdhcyBfdmVyeQp1bmxpa2VseV8uICBIYXJk
+d2FyZSBlcnJvcnMgdGhhdCByZXN1bHQgb25seSBpbiByZXBlYXRlZCBYRlMgYnRyZWUKY29ycnVw
+dGlvbiBpbiBtZW1vcnkgb3IgY2F1c2luZyBvdGhlciBlcnJvcnMgaW4gdGhlIHN5c3RlbSBpcwpz
+b21ldGhpbmcgSSd2ZSBuZXZlciBzZWVuLCBldmVuIG9uIG1hY2hpbmVzIHdpdGgga25vd24gYmFk
+IG1lbW9yeSwKSEJBcywgaW50ZXJjb25uZWN0cywgZXRjLiBBcHBseWluZyBPY2NhbSdzIFJhem9y
+IHRvIHRoaXMgY2FzZQppbmRpY2F0ZXMgdGhhdCBpdCBpcyBnb2luZyB0byBiZSBjYXVzZWQgYnkg
+YSBzb2Z0d2FyZSBwcm9ibGVtLgoKWWVzLCBpdCdzIHN0aWxsIHBvc3NpYmxlIHRoYXQgaXQncyBh
+IGhhcmR3YXJlIGlzc3VlLCBqdXN0IHZlcnksIHZlcnkKdW5saWtlbHkuIEFuZCBpZiBpdCBpcyBo
+YXJkd2FyZSBhbmQgeW91IGNhbiBwcm92ZSB0aGF0IGl0IHdhcyB0aGUKY2F1c2UsIHRoZW4gSSBz
+dWdnZXN0IHdlIGFsbCBidXkgYSBsb3R0ZXJ5IHRpY2tldC4uLi4gOykKCkNoZWVycywKCkRhdmUu
+Ci0tIApEYXZlIENoaW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNn
+aS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
