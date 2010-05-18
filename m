@@ -1,31 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4HNMUkI014417 for <xfs@oss.sgi.com>; Mon, 17 May 2010 18:22:30 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D96439C4D48
-	for <xfs@oss.sgi.com>; Mon, 17 May 2010 16:25:45 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	yDq5G1lXWsWbY0a6 for <xfs@oss.sgi.com>;
-	Mon, 17 May 2010 16:25:45 -0700 (PDT)
-Received: from dastard (unverified [121.44.136.97])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	24466475-1927428
-	for <xfs@oss.sgi.com>; Tue, 18 May 2010 08:54:45 +0930 (CST)
-Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1OE9fl-00059S-SH
-	for xfs@oss.sgi.com; Tue, 18 May 2010 09:24:33 +1000
-Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1OE9fg-0000RW-W6
-	for xfs@oss.sgi.com; Tue, 18 May 2010 09:24:28 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 02/12] xfs: allow log ticket allocation to take allocation
-	flags
-Date: Tue, 18 May 2010 09:24:18 +1000
-Message-Id: <1274138668-1662-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1274138668-1662-1-git-send-email-david@fromorbit.com>
-References: <1274138668-1662-1-git-send-email-david@fromorbit.com>
+	o4I060aN016568 for <xfs@oss.sgi.com>; Mon, 17 May 2010 19:06:01 -0500
+Received: from mail-qy0-f187.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 80C0B9C4949
+	for <xfs@oss.sgi.com>; Mon, 17 May 2010 17:09:16 -0700 (PDT)
+Received: from mail-qy0-f187.google.com (mail-qy0-f187.google.com
+	[209.85.221.187]) by cuda.sgi.com with ESMTP id
+	LDoO4ImY6Ps9mVAj for <xfs@oss.sgi.com>;
+	Mon, 17 May 2010 17:09:16 -0700 (PDT)
+Received: by qyk17 with SMTP id 17so7304176qyk.12
+	for <xfs@oss.sgi.com>; Mon, 17 May 2010 17:08:16 -0700 (PDT)
+MIME-Version: 1.0
+Date: Mon, 17 May 2010 17:08:16 -0700
+Message-ID: <AANLkTikek9K8-BqNgee_tXz72beHpWEUl41YtDPrD-3P@mail.gmail.com>
+Subject: mounting hixfs (Hitachi "tuned" XFS) on 2.6 kernel
+From: big beer <bigbeerjr@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,75 +24,121 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hello list,
 
-Delayed logging currently requires ticket allocation to succeed, so
-we need to be able to sleep on allocation. It also should not allow
-memory allocation to recurse into the filesystem. hence we need to
-pass allocation flags directing the type of allocation the caller
-requires.
+I seem to find myself in the unlucky situation of having myself some
+hixfs filesystems I'm trying to migrate off of.
+Some background on hixfs (as I understand it).
+At some point in the past, prior to purchasing a NAS company, Hitachi
+decided that they could make their own NAS solution using
+linux/LVM/XFS. They give you a little integrated 2.4 linux blade in
+one of their storage subsystems with a nice (circa yr 2000) web
+frontend to manage samba and nfs serving. The disks that are presented
+to this little guy are encapsulated in LVM and formatted lv's with a
+variant of XFS that is shown as hixfs on the machine. You get a very
+limited shell on this guy and you have to run everything through sudo
+if you want cli access (which is heavily limited).
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_log.c |   16 ++++++++--------
- 1 files changed, 8 insertions(+), 8 deletions(-)
+I'm in the process of trying to get off said solution and am running
+into some issues getting the file system on this black box to be
+mounted/recognized on a standard 2.6 linux host.
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 687b220..83be6a6 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -88,11 +88,9 @@ STATIC void xlog_ungrant_log_space(xlog_t	 *log,
- 
- 
- /* local ticket functions */
--STATIC xlog_ticket_t	*xlog_ticket_alloc(xlog_t *log,
--					 int	unit_bytes,
--					 int	count,
--					 char	clientid,
--					 uint	flags);
-+STATIC xlog_ticket_t *xlog_ticket_alloc(xlog_t *log, int unit_bytes, int count,
-+					char clientid, uint flags,
-+					int alloc_flags);
- 
- #if defined(DEBUG)
- STATIC void	xlog_verify_dest_ptr(xlog_t *log, char *ptr);
-@@ -376,7 +374,8 @@ xfs_log_reserve(
- 	} else {
- 		/* may sleep if need to allocate more tickets */
- 		internal_ticket = xlog_ticket_alloc(log, unit_bytes, cnt,
--						  client, flags);
-+						  client, flags,
-+						  KM_SLEEP|KM_MAYFAIL);
- 		if (!internal_ticket)
- 			return XFS_ERROR(ENOMEM);
- 		internal_ticket->t_trans_type = t_type;
-@@ -3331,13 +3330,14 @@ xlog_ticket_alloc(
- 	int		unit_bytes,
- 	int		cnt,
- 	char		client,
--	uint		xflags)
-+	uint		xflags,
-+	int		alloc_flags)
- {
- 	struct xlog_ticket *tic;
- 	uint		num_headers;
- 	int		iclog_space;
- 
--	tic = kmem_zone_zalloc(xfs_log_ticket_zone, KM_SLEEP|KM_MAYFAIL);
-+	tic = kmem_zone_zalloc(xfs_log_ticket_zone, alloc_flags);
- 	if (!tic)
- 		return NULL;
- 
--- 
-1.5.6.5
+Here is some output from some xfs tools:
+
+box ~ # xfs_check /dev/vghorclu00/lvARRAY2
+xfs_check: unexpected XFS SB magic number 0x48584653
+bad superblock magic number 48584653, giving up
+
+box ~ # xfs_repair -v /dev/vghorclu00/lvARRAY2
+Phase 1 - find and verify superblock...
+bad primary superblock - bad magic number !!!
+
+attempting to find secondary superblock... Sorry, could not find valid
+secondary superblock
+Exiting now.
+
+box ~ # xfs_db /dev/vghorclu00/lvARRAY2
+xfs_db: unexpected XFS SB magic number 0x48584653
+xfs_db> sb 0
+xfs_db> p
+magicnum = 0x48584653
+blocksize = 4096
+dblocks = 136437760
+rblocks = 0
+rextents = 0
+uuid = bc354b71-ad02-4e47-b27a-428060c18622
+logstart = 68157444
+rootino = 128
+rbmino = 129
+rsumino = 130
+rextsize = 16
+agblocks = 1048576
+agcount = 131
+rbmblocks = 0
+logblocks = 1280
+versionnum = 0x20d4
+sectsize = 512
+inodesize = 256
+inopblock = 16
+fname = "\000\000\000\000\000\000\000\000\000\000\000\000"
+blocklog = 12
+sectlog = 9
+inodelog = 8
+inopblog = 4
+agblklog = 20
+rextslog = 0
+inprogress = 0
+imax_pct = 25
+icount = 9486016
+ifree = 3138839
+fdblocks = 14074682
+frextents = 0
+uquotino = 131
+gquotino = 132
+qflags = 0
+flags = 0
+shared_vn = 0
+inoalignmt = 2
+unit = 0
+width = 0
+dirblklog = 0
+logsectlog = 0
+logsectsize = 0
+logsunit = 0
+features2 = 0
+bad_features2 = 0
+xfs_db>
+
+I would like to be able to get this FS mounted on a box that supports
+vanilla XFS.
+I'm hoping that Hitachi has done something like change the magic
+number so that the normal user land tools will just bail. I've got a
+way to make quick copies of this FS so I am fair game to experiment on
+it.
+
+I've made some calls to Hitachi to find out what the deal is, so far
+no one there has been very helpful, nor provided me with any insight
+to getting these mounted. I'm thinking that since XFS is GPL'd and
+they made extensions to it, and sold it, they should at least provide
+source for their user land tools/kernel module for the FS. Unless they
+licensed it from SGI?
+
+I should note that on their black box solution they've got a different
+set of user land tools all prefixed with "hi" (hixfs_db, hixfs_repair,
+etc). While I do have ways to grab their userland tools, the kernel
+module is for 2.4 so I don't think I'll have much luck just c&p
+everything over.
+
+If anyone has any ideas on what to do, and/or where to start, I'd
+greatly appreciate it.
+
+Thanks!
 
 _______________________________________________
 xfs mailing list
