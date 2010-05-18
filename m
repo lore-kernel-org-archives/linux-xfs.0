@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4I3jIEO025776 for <xfs@oss.sgi.com>; Mon, 17 May 2010 22:45:19 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 435F013F6953
-	for <xfs@oss.sgi.com>; Mon, 17 May 2010 20:47:35 -0700 (PDT)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id vElklb8xb5UZ3Nio for
-	<xfs@oss.sgi.com>; Mon, 17 May 2010 20:47:35 -0700 (PDT)
-Message-ID: <4BF20DD3.50006@sandeen.net>
-Date: Mon, 17 May 2010 22:47:31 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	o4I3cR8x025397 for <xfs@oss.sgi.com>; Mon, 17 May 2010 22:38:28 -0500
+Received: from mail-qy0-f193.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 78ACF13F634F
+	for <xfs@oss.sgi.com>; Mon, 17 May 2010 20:40:44 -0700 (PDT)
+Received: from mail-qy0-f193.google.com (mail-qy0-f193.google.com
+	[209.85.221.193]) by cuda.sgi.com with ESMTP id
+	iGbP66Zpzh4ZYawO for <xfs@oss.sgi.com>;
+	Mon, 17 May 2010 20:40:44 -0700 (PDT)
+Received: by qyk31 with SMTP id 31so8832811qyk.25
+	for <xfs@oss.sgi.com>; Mon, 17 May 2010 20:40:44 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: mounting hixfs (Hitachi "tuned" XFS) on 2.6 kernel
+In-Reply-To: <4BF1EC44.7070803@hardwarefreak.com>
 References: <AANLkTikek9K8-BqNgee_tXz72beHpWEUl41YtDPrD-3P@mail.gmail.com>
-In-Reply-To: <AANLkTikek9K8-BqNgee_tXz72beHpWEUl41YtDPrD-3P@mail.gmail.com>
+	<4BF1EC44.7070803@hardwarefreak.com>
+Date: Mon, 17 May 2010 20:34:14 -0700
+Message-ID: <AANLkTin_WoxWP3JXHvflVVP_2fGzgbSVfpPW1KGiyd1z@mail.gmail.com>
+Subject: Re: mounting hixfs (Hitachi "tuned" XFS) on 2.6 kernel
+From: big beer <bigbeerjr@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,86 +31,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: big beer <bigbeerjr@gmail.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-big beer wrote:
-> Hello list,
-> 
-> I seem to find myself in the unlucky situation of having myself some
-> hixfs filesystems I'm trying to migrate off of.
-> Some background on hixfs (as I understand it).
-> At some point in the past, prior to purchasing a NAS company, Hitachi
-> decided that they could make their own NAS solution using
-> linux/LVM/XFS. They give you a little integrated 2.4 linux blade in
-> one of their storage subsystems with a nice (circa yr 2000) web
-> frontend to manage samba and nfs serving. The disks that are presented
-> to this little guy are encapsulated in LVM and formatted lv's with a
-> variant of XFS that is shown as hixfs on the machine. You get a very
-> limited shell on this guy and you have to run everything through sudo
-> if you want cli access (which is heavily limited).
-> 
-> I'm in the process of trying to get off said solution and am running
-> into some issues getting the file system on this black box to be
-> mounted/recognized on a standard 2.6 linux host.
-> 
-> Here is some output from some xfs tools:
-> 
-> box ~ # xfs_check /dev/vghorclu00/lvARRAY2
-> xfs_check: unexpected XFS SB magic number 0x48584653
-> bad superblock magic number 48584653, giving up
+>On Mon, May 17, 2010 at 6:24 PM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+> big beer put forth on 5/17/2010 7:08 PM:
+>
+>> If anyone has any ideas on what to do, and/or where to start, I'd
+>> greatly appreciate it.
+>
+> Why are you avoiding the obvious solution in favor of hacking?
+>
+> --
+> Stan
+>
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+>
+Sending back to the list this time instead of Stan directly (Sorry Stan) :)
 
-'HXFS' - heh.
 
-(58 46 53 42 'XFSB' is the proper magic)
+The obvious solution for me would be a backup or rsync. Unfortunately
+both of those have issues with this particular setup.
 
-> box ~ # xfs_repair -v /dev/vghorclu00/lvARRAY2
-> Phase 1 - find and verify superblock...
-> bad primary superblock - bad magic number !!!
-> 
-> attempting to find secondary superblock... Sorry, could not find valid
-> secondary superblock
-> Exiting now.
-> 
-> box ~ # xfs_db /dev/vghorclu00/lvARRAY2
-> xfs_db: unexpected XFS SB magic number 0x48584653
+Using a backup over the network to migrate will be way too slow
+(days). There are way too many files to index and this poor little nas
+box is already falling over with cpu load from daily activities. I can
+quickly make a mirror on the storage, and move it over to another
+larger host quickly (minutes). Mounting the FS on another machine will
+greatly improve the time and accuracy, as I won't have to worry about
+inconsistencies as it's a block level copy.
 
-...
+The black-box solution is also very painful to work with, no gcc, no
+automake, no rsync, etc.
+I would also think that for some reason I can't think of, it would be
+nice to have support for this version of XFS be available for free for
+others. Some other poor sap might find some value.
 
- 
-> I would like to be able to get this FS mounted on a box that supports
-> vanilla XFS.
-> I'm hoping that Hitachi has done something like change the magic
-> number so that the normal user land tools will just bail. I've got a
-> way to make quick copies of this FS so I am fair game to experiment on
-> it.
-> 
-> I've made some calls to Hitachi to find out what the deal is, so far
-> no one there has been very helpful, nor provided me with any insight
-> to getting these mounted. I'm thinking that since XFS is GPL'd and
-> they made extensions to it, and sold it, they should at least provide
-> source for their user land tools/kernel module for the FS. Unless they
-> licensed it from SGI?
+So I went and changed the magic number to 0x58465342 by dumping the
+1st 512 bytes off the volume, editing, and writing back, now I'm
+getting "Can't verify primary superblock". Using xfs_db to look at the
+other superblocks indeed still shows HXFS. Any advise how I can
+find/dump/re-write one of the other superblocks? I'd like to see if I
+can change another one of them if xfs_repair will run.
 
-I can't speak to that, I dunno.
- 
-> I should note that on their black box solution they've got a different
-> set of user land tools all prefixed with "hi" (hixfs_db, hixfs_repair,
-> etc). While I do have ways to grab their userland tools, the kernel
-> module is for 2.4 so I don't think I'll have much luck just c&p
-> everything over.
-> 
-> If anyone has any ideas on what to do, and/or where to start, I'd
-> greatly appreciate it.
-> 
-> Thanks!
-
-*shrug* could try rewriting the magic with xfs_db and then having your
-way with it, see if that works.
-
-Or, just copy off this "solution" onto a new filesystem? :)
-
--Eric
+Thanks!
 
 _______________________________________________
 xfs mailing list
