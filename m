@@ -1,27 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4IGfm2C062155 for <xfs@oss.sgi.com>; Tue, 18 May 2010 11:41:48 -0500
-Received: from mail-iw0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 682EB13FA1D5
-	for <xfs@oss.sgi.com>; Tue, 18 May 2010 09:44:04 -0700 (PDT)
-Received: from mail-iw0-f181.google.com (mail-iw0-f181.google.com
-	[209.85.214.181]) by cuda.sgi.com with ESMTP id
-	yQ8xTh7CmqLIaD6g for <xfs@oss.sgi.com>;
-	Tue, 18 May 2010 09:44:04 -0700 (PDT)
-Received: by iwn33 with SMTP id 33so971480iwn.26
-	for <xfs@oss.sgi.com>; Tue, 18 May 2010 09:44:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTim93-4YueMBizXKLGRFka2vwqzJzDx5_P5gs0bl@mail.gmail.com>
-References: <AANLkTikek9K8-BqNgee_tXz72beHpWEUl41YtDPrD-3P@mail.gmail.com>
-	<4BF1EC44.7070803@hardwarefreak.com>
-	<AANLkTin_WoxWP3JXHvflVVP_2fGzgbSVfpPW1KGiyd1z@mail.gmail.com>
-	<4BF219A6.4010900@hardwarefreak.com>
-	<AANLkTim93-4YueMBizXKLGRFka2vwqzJzDx5_P5gs0bl@mail.gmail.com>
-Date: Tue, 18 May 2010 09:44:04 -0700
-Message-ID: <AANLkTim17eZcbW3gCOdziY3-Vsyd-XjBkmWV875yOWIC@mail.gmail.com>
-Subject: Re: mounting hixfs (Hitachi "tuned" XFS) on 2.6 kernel
-From: Benjamin Lau <benjamin.a.lau@gmail.com>
+	o4IGnuGi062551 for <xfs@oss.sgi.com>; Tue, 18 May 2010 11:49:56 -0500
+Received: from smtp4-g21.free.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A289913F9460
+	for <xfs@oss.sgi.com>; Tue, 18 May 2010 09:52:11 -0700 (PDT)
+Received: from smtp4-g21.free.fr (smtp4-g21.free.fr [212.27.42.4]) by
+	cuda.sgi.com with ESMTP id bEDEGnAe6LDGD36H for
+	<xfs@oss.sgi.com>; Tue, 18 May 2010 09:52:11 -0700 (PDT)
+Date: Tue, 18 May 2010 18:52:04 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: rsync from xfs to nfs+xfs and ACL problems
+Message-ID: <20100518185204.186258c0@harpe.intellique.com>
+In-Reply-To: <201005181350.15308@zmi.at>
+References: <201005181350.15308@zmi.at>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,150 +23,69 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: multipart/mixed; boundary="===============6204462754945785848=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Michael Monnerie <michael.monnerie@is.it-management.at>
+Cc: xfs@oss.sgi.com
 
-I think this is the document you might be looking for:
-http://www.hds.com/assets/pdf/open-source-licenses-applicable-to-hds-produc=
-ts.pdf
+--===============6204462754945785848==
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/G6itQV1tEoqSE0p2KtcbUCo"; protocol="application/pgp-signature"
 
-This outlines all of the licenses for the various bits of Hitachi Data
-Systems for the FOSS components.
+--Sig_/G6itQV1tEoqSE0p2KtcbUCo
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-V. NAS File Sharing
-Contact information:
-Project Manager
-NAS File Sharing
-Hitachi Data Systems
-750 Central Expressway
-Santa Clara, California 95050
+Le Tue, 18 May 2010 13:50:15 +0200
+Michael Monnerie <michael.monnerie@is.it-management.at> =E9crivait:
 
-Please note that the source code for the NAS File Sharing kernel is
-available for
-download at: http://www.hitachi.co.jp/products/it/storagesolutions/
-techsupport/download/index.html. Other GPL source code in the NAS File
-Sharing product is available by request.
+> Does it mean I can't sync ACLs? How could I do it? I need a full
+> backup including ACLs, as I want to move all data and then restore.
 
-Unfortunately that link seems to give back a 404 (I understand a
-smidgen of Japanese. So you may have no choice but to contact them in
-a more direct manner.  But it looks like they had the code posted
-someplace at some point in the past.
+Use nfs4 instead, should be fine. Exports structure is different. The
+simple way is to simply add "fsid=3D0" in /etc/exports :
 
-Hope that helps,
+/mnt/whatever *(fsid=3D0,rw,async,no_root_squash,no_subtree_check)
 
-Ben
+Restart your nfs daemons, then mount (notice the / instead
+of /mnt/whatever ) :
 
-On Tue, May 18, 2010 at 8:19 AM, big beer <bigbeerjr@gmail.com> wrote:
-> On Mon, May 17, 2010 at 9:37 PM, Stan Hoeppner <stan@hardwarefreak.com> w=
-rote:
->> big beer put forth on 5/17/2010 10:34 PM:
->>>> On Mon, May 17, 2010 at 6:24 PM, Stan Hoeppner <stan@hardwarefreak.com=
-> wrote:
->>>> big beer put forth on 5/17/2010 7:08 PM:
->>>>
->>>>> If anyone has any ideas on what to do, and/or where to start, I'd
->>>>> greatly appreciate it.
->>>>
->>>> Why are you avoiding the obvious solution in favor of hacking?
->>>>
->>> Sending back to the list this time instead of Stan directly (Sorry Stan=
-) :)
->>
->> No problem. =A0I love my Tbird "reply-to-list" option. :)
->>
->>> The obvious solution for me would be a backup or rsync. Unfortunately
->>> both of those have issues with this particular setup.
->>>
->>> Using a backup over the network to migrate will be way too slow
->>> (days). There are way too many files to index and this poor little nas
->>> box is already falling over with cpu load from daily activities. I can
->>> quickly make a mirror on the storage, and move it over to another
->>> larger host quickly (minutes). Mounting the FS on another machine will
->>> greatly improve the time and accuracy, as I won't have to worry about
->>> inconsistencies as it's a block level copy.
->>
->>> The black-box solution is also very painful to work with, no gcc, no
->>> automake, no rsync, etc.
->>> I would also think that for some reason I can't think of, it would be
->>> nice to have support for this version of XFS be available for free for
->>> others. Some other poor sap might find some value.
->>>
->>> So I went and changed the magic number to 0x58465342 by dumping the
->>> 1st 512 bytes off the volume, editing, and writing back, now I'm
->>> getting "Can't verify primary superblock". Using xfs_db to look at the
->>> other superblocks indeed still shows HXFS. Any advise how I can
->>> find/dump/re-write one of the other superblocks? I'd like to see if I
->>> can change another one of them if xfs_repair will run.
->>
->> Seems to me you're taking some big chances with live data. =A0One wrong =
-turn
->> and you could hose the FS and lose all the data, yes? =A0I'd rather give=
- you
->> recommendations not related to this current path you're taking. =A0Would=
- you
->> please provide the model or part number of this Hitachi NAS so I can get=
- an
->> idea of what exactly it is you're dealing with, and possibly offer other
->> solutions?
->>
->> Maybe someone else here can help you pull this off via XFS. =A0I can't. =
-=A0But
->> I'll gladly spend some time researching other possible solutions, mainly
->> getting a high capacity drive connected so you can do a cp -a or tar and=
- be
->> done with this overnight, in a data-safe manner.
->>
->> --
->> Stan
->>
->> _______________________________________________
->> xfs mailing list
->> xfs@oss.sgi.com
->> http://oss.sgi.com/mailman/listinfo/xfs
->>
->
->
-> It's called a eNAS, but it's really just 2 linux 2.4 blades (debian
-> woody), with failsafe (think heartbeat), LVM, custom XFS, samba, nfs,
-> and a pile of sudo available scripts that are 700 and a web based gui
-> to manage it.
->
-> I though about moving it via another FS on the NAS and then connecting
-> it to my target migration host also. The only exposed connections on
-> the hardware are ethernet, and it's integrated in the storage
-> subsystem. I'd have to call a tech =A0to even come take it out. So I'm
-> limited to something that is fiber attached to the sub-system, ok
-> that's fine, just means no USB disk or the like. The real problem is
-> that since I don't have root there is no way to create or mount any
-> other devices that contain another FS. The restrictive GUI/scripts
-> automatically creates and mounts FS's with their modified XFS version,
-> and there are no options to do otherwise.
->
-> I'm playing it "safe" by taking a block level copy of the luns that
-> are exposed to this thing, and then presenting the copy over to my
-> target host. I'm not brave enough to totally trash live data. I'm
-> going to give some of the suggestions a go with a fresh copy of the
-> data and see what comes of it.
->
-> Of course the 1st thing I did was call Hitachi support and ask them
-> what the deal is, dropping words like "GPL" and "license bound to
-> distribute", but to no avail. Of course I'm dealing with low level
-> support people that more than likely didn't work for the big H when
-> this thing was built. I've escalated through the channels I have
-> available to me.
->
-> We'll see what comes of it.
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
->
+mount -t nfs4 server:/ /mnt/nfsmount
+
+regards,
+--=20
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
+
+--Sig_/G6itQV1tEoqSE0p2KtcbUCo
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkvyxbQACgkQX3jQXNUicVZpZACglubOu26W1DE40MahKILYXLcV
+d2wAnAmPXdWmZgdNbXWE7O7eNGxe1cm8
+=viE9
+-----END PGP SIGNATURE-----
+
+--Sig_/G6itQV1tEoqSE0p2KtcbUCo--
+
+
+--===============6204462754945785848==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============6204462754945785848==--
