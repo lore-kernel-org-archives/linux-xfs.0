@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4JMQCGS159189 for <xfs@oss.sgi.com>; Wed, 19 May 2010 17:26:12 -0500
+	o4JMZAa7159583 for <xfs@oss.sgi.com>; Wed, 19 May 2010 17:35:11 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9447835CC3D
-	for <xfs@oss.sgi.com>; Wed, 19 May 2010 15:28:29 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	cOqW4ikIORQ9hgiO for <xfs@oss.sgi.com>;
-	Wed, 19 May 2010 15:28:29 -0700 (PDT)
-Date: Thu, 20 May 2010 08:28:13 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5AB20109AA5B
+	for <xfs@oss.sgi.com>; Wed, 19 May 2010 15:38:38 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	IWaqvH5XAjkUy197 for <xfs@oss.sgi.com>;
+	Wed, 19 May 2010 15:38:38 -0700 (PDT)
+Date: Thu, 20 May 2010 08:37:25 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/7] Add test of quota accounting using fsx
-Message-ID: <20100519222813.GN8120@dastard>
-References: <1274276289-8839-1-git-send-email-jack@suse.cz>
-	<1274276289-8839-5-git-send-email-jack@suse.cz>
+Subject: Re: [PATCH 03/12] xfs: modify buffer item reference counting
+Message-ID: <20100519223725.GO8120@dastard>
+References: <1274138668-1662-1-git-send-email-david@fromorbit.com>
+	<1274138668-1662-4-git-send-email-david@fromorbit.com>
+	<1274294158.2140.35.camel@doink>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1274276289-8839-5-git-send-email-jack@suse.cz>
+In-Reply-To: <1274294158.2140.35.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,92 +27,66 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: hch@infradead.org, xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, May 19, 2010 at 03:38:06PM +0200, Jan Kara wrote:
-> Run fsx (and also several fsx threads in parallel) and verify that
-> quota accounting is correct after they finish.
-> 
-> Signed-off-by: Jan Kara <jack@suse.cz>
-> ---
->  231     |  139 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  231.out |   10 +++++
->  group   |    1 +
->  3 files changed, 150 insertions(+), 0 deletions(-)
->  create mode 100755 231
->  create mode 100644 231.out
-> 
-> diff --git a/231 b/231
-> new file mode 100755
-> index 0000000..0e34d33
-> --- /dev/null
-> +++ b/231
-> @@ -0,0 +1,139 @@
-> +#! /bin/bash
-> +# FSQA Test No. 231
-> +#
-> +# Run fsx with quotas enabled and verify accounted quotas in the end
-> +#
-> +# Derived from test 127
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2006 Silicon Graphics, Inc.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#
-> +#-----------------------------------------------------------------------
-> +#
-> +# creator
-> +owner=jack@suse.cz
-> +
-> +seq=`basename $0`
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
-> +
-> +# get standard environment, filters and checks
-> +. ./common.rc
-> +. ./common.filter
-> +. ./common.quota
-> +
-> +FSX_FILE_SIZE=64000000
-> +FSX_ARGS="-q -l $FSX_FILE_SIZE -o 65536 -S 191110531 -N 20000"
-
-My only question about this test is the use of a fixed seed for the
-test - shouldn't we randomise it and save the seed to $seq.full?
-This will results in different combinations of operations being
-tested (better long term coverage), but we still have the seed
-available to try to reproduce failures if they are based on a
-specific pattern of ops...
-
-As it stands, this would still be fine with a fixed seed...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gV2VkLCBNYXkgMTksIDIwMTAgYXQgMDE6MzU6NThQTSAtMDUwMCwgQWxleCBFbGRlciB3cm90
+ZToKPiBPbiBUdWUsIDIwMTAtMDUtMTggYXQgMDk6MjQgKzEwMDAsIERhdmUgQ2hpbm5lciB3cm90
+ZToKPiA+IEZyb206IERhdmUgQ2hpbm5lciA8ZGNoaW5uZXJAcmVkaGF0LmNvbT4KPiA+IAo+ID4g
+VGhlIGJ1ZmZlciBsb2cgaXRlbSByZWZlcmVuY2UgY291bnRzIHVzZWQgdG8gdGFrZSByZWZlcmVu
+Y2XRlSBmb3IgZXZlcnkKPiA+IHRyYW5zYWN0aW9uLCBzaW1pbGFyIHRvIHRoZSBwaW4gY291bnRp
+bmcuIFRoaXMgaXMgc3ltbWV0cmljIChsaWtlIHRoZQo+ID4gcGluL3VucGluKSB3aXRoIHJlc3Bl
+Y3QgdG8gdHJhbnNhY3Rpb24gY29tcGxldGlvbiwgYnV0IHdpdGggZGxlYXllZCBsb2dnaW5nCj4g
+PiBiZWNvbWVzIGFzc3ltZXRyaWMgYXMgdGhlIHBpbm5pbmcgYmVjb21lcyBhc3N5bWV0cmljIHcu
+ci50LiB0cmFuc2FjdGlvbgo+ID4gY29tcGxldGlvbi4KPiAKPiBEb2luZyB0aGUgcmVmZXJlbmNl
+IGNvdW50cyB0aGlzIHdheSBpcyBhbiBpbXByb3ZlbWVudC4KPiAKPiBJIGhhdmUgYSBxdWVzdGlv
+biBiZWxvdy4KPiAKPiAuIC4gLgo+ID4gLS0tIGEvZnMveGZzL3hmc19idWZfaXRlbS5jCj4gPiAr
+KysgYi9mcy94ZnMveGZzX2J1Zl9pdGVtLmMKPiAuIC4gLgo+ID4gIFNUQVRJQyB2b2lkCj4gPiAg
+eGZzX2J1Zl9pdGVtX3VubG9jaygKPiA+IEBAIC01MTQsNzMgKzUyMyw1NCBAQCB4ZnNfYnVmX2l0
+ZW1fdW5sb2NrKAo+ID4gIAo+ID4gIAlicCA9IGJpcC0+YmxpX2J1ZjsKPiA+ICAKPiA+IC0JLyoK
+PiA+IC0JICogQ2xlYXIgdGhlIGJ1ZmZlcidzIGFzc29jaWF0aW9uIHdpdGggdGhpcyB0cmFuc2Fj
+dGlvbi4KPiA+IC0JICovCj4gPiArCS8qIENsZWFyIHRoZSBidWZmZXIncyBhc3NvY2lhdGlvbiB3
+aXRoIHRoaXMgdHJhbnNhY3Rpb24uICovCj4gPiAgCVhGU19CVUZfU0VUX0ZTUFJJVkFURTIoYnAs
+IE5VTEwpOwo+ID4gIAo+ID4gIAkvKgo+ID4gLQkgKiBJZiB0aGlzIGlzIGEgdHJhbnNhY3Rpb24g
+YWJvcnQsIGRvbid0IHJldHVybiBlYXJseS4KPiA+IC0JICogSW5zdGVhZCwgYWxsb3cgdGhlIGJy
+ZWxzZSB0byBoYXBwZW4uCj4gPiAtCSAqIE5vcm1hbGx5IGl0IHdvdWxkIGJlIGRvbmUgZm9yIHN0
+YWxlIChjYW5jZWxsZWQpIGJ1ZmZlcnMKPiA+IC0JICogYXQgdW5waW4gdGltZSwgYnV0IHdlJ2xs
+IG5ldmVyIGdvIHRocm91Z2ggdGhlIHBpbi91bnBpbgo+ID4gLQkgKiBjeWNsZSBpZiB3ZSBhYm9y
+dCBpbnNpZGUgY29tbWl0Lgo+ID4gKwkgKiBJZiB0aGlzIGlzIGEgdHJhbnNhY3Rpb24gYWJvcnQs
+IGRvbid0IHJldHVybiBlYXJseS4gIEluc3RlYWQsIGFsbG93Cj4gPiArCSAqIHRoZSBicmVsc2Ug
+dG8gaGFwcGVuLiAgTm9ybWFsbHkgaXQgd291bGQgYmUgZG9uZSBmb3Igc3RhbGUKPiA+ICsJICog
+KGNhbmNlbGxlZCkgYnVmZmVycyBhdCB1bnBpbiB0aW1lLCBidXQgd2UnbGwgbmV2ZXIgZ28gdGhy
+b3VnaCB0aGUKPiA+ICsJICogcGluL3VucGluIGN5Y2xlIGlmIHdlIGFib3J0IGluc2lkZSBjb21t
+aXQuCj4gPiAgCSAqLwo+ID4gIAlhYm9ydGVkID0gKGJpcC0+YmxpX2l0ZW0ubGlfZmxhZ3MgJiBY
+RlNfTElfQUJPUlRFRCkgIT0gMDsKPiA+ICAKPiA+ICAJLyoKPiA+IC0JICogSWYgdGhlIGJ1ZiBp
+dGVtIGlzIG1hcmtlZCBzdGFsZSwgdGhlbiBkb24ndCBkbyBhbnl0aGluZy4KPiA+IC0JICogV2Un
+bGwgdW5sb2NrIHRoZSBidWZmZXIgYW5kIGZyZWUgdGhlIGJ1ZiBpdGVtIHdoZW4gdGhlCj4gPiAt
+CSAqIGJ1ZmZlciBpcyB1bnBpbm5lZCBmb3IgdGhlIGxhc3QgdGltZS4KPiA+ICsJICogQmVmb3Jl
+IHBvc3NpYmx5IGZyZWVpbmcgdGhlIGJ1ZiBpdGVtLCBkZXRlcm1pbmUgaWYgd2Ugc2hvdWxkCj4g
+PiArCSAqIHJlbGVhc2UgdGhlIGJ1ZmZlciBhdCB0aGUgZW5kIG9mIHRoaXMgcm91dGluZS4KPiA+
+ICsJICovCj4gPiArCWhvbGQgPSBiaXAtPmJsaV9mbGFncyAmIFhGU19CTElfSE9MRDsKPiA+ICsK
+PiA+ICsJLyogQ2xlYXIgdGhlIHBlciB0cmFuc2FjdGlvbiBzdGF0ZS4gKi8KPiA+ICsJYmlwLT5i
+bGlfZmxhZ3MgJj0gfihYRlNfQkxJX0xPR0dFRCB8IFhGU19CTElfSE9MRCk7Cj4gPiArCj4gPiAr
+CS8qCj4gPiArCSAqIElmIHRoZSBidWYgaXRlbSBpcyBtYXJrZWQgc3RhbGUsIHRoZW4gZG9uJ3Qg
+ZG8gYW55dGhpbmcuICBXZSdsbAo+ID4gKwkgKiB1bmxvY2sgdGhlIGJ1ZmZlciBhbmQgZnJlZSB0
+aGUgYnVmIGl0ZW0gd2hlbiB0aGUgYnVmZmVyIGlzIHVucGlubmVkCj4gPiArCSAqIGZvciB0aGUg
+bGFzdCB0aW1lLgo+ID4gIAkgKi8KPiA+ICAJaWYgKGJpcC0+YmxpX2ZsYWdzICYgWEZTX0JMSV9T
+VEFMRSkgewo+ID4gLQkJYmlwLT5ibGlfZmxhZ3MgJj0gflhGU19CTElfTE9HR0VEOwo+ID4gIAkJ
+dHJhY2VfeGZzX2J1Zl9pdGVtX3VubG9ja19zdGFsZShiaXApOwo+ID4gIAkJQVNTRVJUKGJpcC0+
+YmxpX2Zvcm1hdC5ibGZfZmxhZ3MgJiBYRlNfQkxJX0NBTkNFTCk7Cj4gPiAtCQlpZiAoIWFib3J0
+ZWQpCj4gPiArCQlpZiAoIWFib3J0ZWQpIHsKPiA+ICsJCQlhdG9taWNfZGVjKCZiaXAtPmJsaV9y
+ZWZjb3VudCk7Cj4gCj4gSSBub3RpY2UgdGhhdCwgdW5saWtlIGJlZm9yZSwgaWYgeW91IHJldHVy
+biB2aWEgdGhpcyBwYXRoCj4gdGhlIFhGU19CTElfSE9MRCBmbGFnIHdpbGwgaGF2ZSBiZWVuIHR1
+cm5lZCBvZmYuICBJIGd1ZXNzCj4gSSBkb24ndCBrbm93IG9mZiBoYW5kIHdoZXRoZXIgdGhpcyBp
+cyBhbiBpc3N1ZS4gIENhbiB5b3UKPiBleHBsYWluIHdoeSBpdCBpcyBub3Q/CgpBIGJ1ZmZlciB0
+aGF0IGhhcyBiZWVuIG1hcmtlZCBzdGFsZSBpcyBvbiB0aGF0IGhhcyBiZWVuIGludmFsaWRhdGVk
+Owp0aGV5IHNob3VsZG4ndCBnZXQgaGVsZCBhY3Jvc3Mgcm9sbGluZyB0cmFuc2FjdGlvbnMgYmVj
+YXVzZSB0aGV5CnJlZmVyZW5jZSBmcmVlIHNwYWNlIGFuZCBjYW5ub3QgYmUgcmV1c2VkIHdpdGhv
+dXQgYmVpbmcgcmVhbGxvY2F0ZWQuCgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRh
+dmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dp
+LmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
