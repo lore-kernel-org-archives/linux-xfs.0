@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4JMZAa7159583 for <xfs@oss.sgi.com>; Wed, 19 May 2010 17:35:11 -0500
+	o4JMd0KA159772 for <xfs@oss.sgi.com>; Wed, 19 May 2010 17:39:00 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5AB20109AA5B
-	for <xfs@oss.sgi.com>; Wed, 19 May 2010 15:38:38 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	IWaqvH5XAjkUy197 for <xfs@oss.sgi.com>;
-	Wed, 19 May 2010 15:38:38 -0700 (PDT)
-Date: Thu, 20 May 2010 08:37:25 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D381E1B0E6DB
+	for <xfs@oss.sgi.com>; Wed, 19 May 2010 15:41:17 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	Vvy7k8riiXNXpk2p for <xfs@oss.sgi.com>;
+	Wed, 19 May 2010 15:41:17 -0700 (PDT)
+Date: Thu, 20 May 2010 08:41:14 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 03/12] xfs: modify buffer item reference counting
-Message-ID: <20100519223725.GO8120@dastard>
+Subject: Re: [PATCH 05/12] xfs: clean up log ticket overrun debug output
+Message-ID: <20100519224114.GP8120@dastard>
 References: <1274138668-1662-1-git-send-email-david@fromorbit.com>
-	<1274138668-1662-4-git-send-email-david@fromorbit.com>
-	<1274294158.2140.35.camel@doink>
+	<1274138668-1662-6-git-send-email-david@fromorbit.com>
+	<1274296604.2140.55.camel@doink>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1274294158.2140.35.camel@doink>
+In-Reply-To: <1274296604.2140.55.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,66 +27,91 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Alex Elder <aelder@sgi.com>
 Cc: xfs@oss.sgi.com
 
-T24gV2VkLCBNYXkgMTksIDIwMTAgYXQgMDE6MzU6NThQTSAtMDUwMCwgQWxleCBFbGRlciB3cm90
-ZToKPiBPbiBUdWUsIDIwMTAtMDUtMTggYXQgMDk6MjQgKzEwMDAsIERhdmUgQ2hpbm5lciB3cm90
-ZToKPiA+IEZyb206IERhdmUgQ2hpbm5lciA8ZGNoaW5uZXJAcmVkaGF0LmNvbT4KPiA+IAo+ID4g
-VGhlIGJ1ZmZlciBsb2cgaXRlbSByZWZlcmVuY2UgY291bnRzIHVzZWQgdG8gdGFrZSByZWZlcmVu
-Y2XRlSBmb3IgZXZlcnkKPiA+IHRyYW5zYWN0aW9uLCBzaW1pbGFyIHRvIHRoZSBwaW4gY291bnRp
-bmcuIFRoaXMgaXMgc3ltbWV0cmljIChsaWtlIHRoZQo+ID4gcGluL3VucGluKSB3aXRoIHJlc3Bl
-Y3QgdG8gdHJhbnNhY3Rpb24gY29tcGxldGlvbiwgYnV0IHdpdGggZGxlYXllZCBsb2dnaW5nCj4g
-PiBiZWNvbWVzIGFzc3ltZXRyaWMgYXMgdGhlIHBpbm5pbmcgYmVjb21lcyBhc3N5bWV0cmljIHcu
-ci50LiB0cmFuc2FjdGlvbgo+ID4gY29tcGxldGlvbi4KPiAKPiBEb2luZyB0aGUgcmVmZXJlbmNl
-IGNvdW50cyB0aGlzIHdheSBpcyBhbiBpbXByb3ZlbWVudC4KPiAKPiBJIGhhdmUgYSBxdWVzdGlv
-biBiZWxvdy4KPiAKPiAuIC4gLgo+ID4gLS0tIGEvZnMveGZzL3hmc19idWZfaXRlbS5jCj4gPiAr
-KysgYi9mcy94ZnMveGZzX2J1Zl9pdGVtLmMKPiAuIC4gLgo+ID4gIFNUQVRJQyB2b2lkCj4gPiAg
-eGZzX2J1Zl9pdGVtX3VubG9jaygKPiA+IEBAIC01MTQsNzMgKzUyMyw1NCBAQCB4ZnNfYnVmX2l0
-ZW1fdW5sb2NrKAo+ID4gIAo+ID4gIAlicCA9IGJpcC0+YmxpX2J1ZjsKPiA+ICAKPiA+IC0JLyoK
-PiA+IC0JICogQ2xlYXIgdGhlIGJ1ZmZlcidzIGFzc29jaWF0aW9uIHdpdGggdGhpcyB0cmFuc2Fj
-dGlvbi4KPiA+IC0JICovCj4gPiArCS8qIENsZWFyIHRoZSBidWZmZXIncyBhc3NvY2lhdGlvbiB3
-aXRoIHRoaXMgdHJhbnNhY3Rpb24uICovCj4gPiAgCVhGU19CVUZfU0VUX0ZTUFJJVkFURTIoYnAs
-IE5VTEwpOwo+ID4gIAo+ID4gIAkvKgo+ID4gLQkgKiBJZiB0aGlzIGlzIGEgdHJhbnNhY3Rpb24g
-YWJvcnQsIGRvbid0IHJldHVybiBlYXJseS4KPiA+IC0JICogSW5zdGVhZCwgYWxsb3cgdGhlIGJy
-ZWxzZSB0byBoYXBwZW4uCj4gPiAtCSAqIE5vcm1hbGx5IGl0IHdvdWxkIGJlIGRvbmUgZm9yIHN0
-YWxlIChjYW5jZWxsZWQpIGJ1ZmZlcnMKPiA+IC0JICogYXQgdW5waW4gdGltZSwgYnV0IHdlJ2xs
-IG5ldmVyIGdvIHRocm91Z2ggdGhlIHBpbi91bnBpbgo+ID4gLQkgKiBjeWNsZSBpZiB3ZSBhYm9y
-dCBpbnNpZGUgY29tbWl0Lgo+ID4gKwkgKiBJZiB0aGlzIGlzIGEgdHJhbnNhY3Rpb24gYWJvcnQs
-IGRvbid0IHJldHVybiBlYXJseS4gIEluc3RlYWQsIGFsbG93Cj4gPiArCSAqIHRoZSBicmVsc2Ug
-dG8gaGFwcGVuLiAgTm9ybWFsbHkgaXQgd291bGQgYmUgZG9uZSBmb3Igc3RhbGUKPiA+ICsJICog
-KGNhbmNlbGxlZCkgYnVmZmVycyBhdCB1bnBpbiB0aW1lLCBidXQgd2UnbGwgbmV2ZXIgZ28gdGhy
-b3VnaCB0aGUKPiA+ICsJICogcGluL3VucGluIGN5Y2xlIGlmIHdlIGFib3J0IGluc2lkZSBjb21t
-aXQuCj4gPiAgCSAqLwo+ID4gIAlhYm9ydGVkID0gKGJpcC0+YmxpX2l0ZW0ubGlfZmxhZ3MgJiBY
-RlNfTElfQUJPUlRFRCkgIT0gMDsKPiA+ICAKPiA+ICAJLyoKPiA+IC0JICogSWYgdGhlIGJ1ZiBp
-dGVtIGlzIG1hcmtlZCBzdGFsZSwgdGhlbiBkb24ndCBkbyBhbnl0aGluZy4KPiA+IC0JICogV2Un
-bGwgdW5sb2NrIHRoZSBidWZmZXIgYW5kIGZyZWUgdGhlIGJ1ZiBpdGVtIHdoZW4gdGhlCj4gPiAt
-CSAqIGJ1ZmZlciBpcyB1bnBpbm5lZCBmb3IgdGhlIGxhc3QgdGltZS4KPiA+ICsJICogQmVmb3Jl
-IHBvc3NpYmx5IGZyZWVpbmcgdGhlIGJ1ZiBpdGVtLCBkZXRlcm1pbmUgaWYgd2Ugc2hvdWxkCj4g
-PiArCSAqIHJlbGVhc2UgdGhlIGJ1ZmZlciBhdCB0aGUgZW5kIG9mIHRoaXMgcm91dGluZS4KPiA+
-ICsJICovCj4gPiArCWhvbGQgPSBiaXAtPmJsaV9mbGFncyAmIFhGU19CTElfSE9MRDsKPiA+ICsK
-PiA+ICsJLyogQ2xlYXIgdGhlIHBlciB0cmFuc2FjdGlvbiBzdGF0ZS4gKi8KPiA+ICsJYmlwLT5i
-bGlfZmxhZ3MgJj0gfihYRlNfQkxJX0xPR0dFRCB8IFhGU19CTElfSE9MRCk7Cj4gPiArCj4gPiAr
-CS8qCj4gPiArCSAqIElmIHRoZSBidWYgaXRlbSBpcyBtYXJrZWQgc3RhbGUsIHRoZW4gZG9uJ3Qg
-ZG8gYW55dGhpbmcuICBXZSdsbAo+ID4gKwkgKiB1bmxvY2sgdGhlIGJ1ZmZlciBhbmQgZnJlZSB0
-aGUgYnVmIGl0ZW0gd2hlbiB0aGUgYnVmZmVyIGlzIHVucGlubmVkCj4gPiArCSAqIGZvciB0aGUg
-bGFzdCB0aW1lLgo+ID4gIAkgKi8KPiA+ICAJaWYgKGJpcC0+YmxpX2ZsYWdzICYgWEZTX0JMSV9T
-VEFMRSkgewo+ID4gLQkJYmlwLT5ibGlfZmxhZ3MgJj0gflhGU19CTElfTE9HR0VEOwo+ID4gIAkJ
-dHJhY2VfeGZzX2J1Zl9pdGVtX3VubG9ja19zdGFsZShiaXApOwo+ID4gIAkJQVNTRVJUKGJpcC0+
-YmxpX2Zvcm1hdC5ibGZfZmxhZ3MgJiBYRlNfQkxJX0NBTkNFTCk7Cj4gPiAtCQlpZiAoIWFib3J0
-ZWQpCj4gPiArCQlpZiAoIWFib3J0ZWQpIHsKPiA+ICsJCQlhdG9taWNfZGVjKCZiaXAtPmJsaV9y
-ZWZjb3VudCk7Cj4gCj4gSSBub3RpY2UgdGhhdCwgdW5saWtlIGJlZm9yZSwgaWYgeW91IHJldHVy
-biB2aWEgdGhpcyBwYXRoCj4gdGhlIFhGU19CTElfSE9MRCBmbGFnIHdpbGwgaGF2ZSBiZWVuIHR1
-cm5lZCBvZmYuICBJIGd1ZXNzCj4gSSBkb24ndCBrbm93IG9mZiBoYW5kIHdoZXRoZXIgdGhpcyBp
-cyBhbiBpc3N1ZS4gIENhbiB5b3UKPiBleHBsYWluIHdoeSBpdCBpcyBub3Q/CgpBIGJ1ZmZlciB0
-aGF0IGhhcyBiZWVuIG1hcmtlZCBzdGFsZSBpcyBvbiB0aGF0IGhhcyBiZWVuIGludmFsaWRhdGVk
-Owp0aGV5IHNob3VsZG4ndCBnZXQgaGVsZCBhY3Jvc3Mgcm9sbGluZyB0cmFuc2FjdGlvbnMgYmVj
-YXVzZSB0aGV5CnJlZmVyZW5jZSBmcmVlIHNwYWNlIGFuZCBjYW5ub3QgYmUgcmV1c2VkIHdpdGhv
-dXQgYmVpbmcgcmVhbGxvY2F0ZWQuCgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRh
-dmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dp
-LmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Wed, May 19, 2010 at 02:16:44PM -0500, Alex Elder wrote:
+> On Tue, 2010-05-18 at 09:24 +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Push the error message output when a ticket overrun is detected
+> > into the ticket printing functions. Also remove the debug version
+> > of the code as the production version will still panic just as
+> > effectively on a debug kernel via the panic mask being set.
+> 
+> Another not-really-actionable bit of commentary
+> below, but this looks good.
+> 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  fs/xfs/xfs_error.c |    2 +-
+> >  fs/xfs/xfs_log.c   |   19 +++++--------------
+> >  2 files changed, 6 insertions(+), 15 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+> > index ef96175..047b8a8 100644
+> > --- a/fs/xfs/xfs_error.c
+> > +++ b/fs/xfs/xfs_error.c
+> > @@ -170,7 +170,7 @@ xfs_cmn_err(int panic_tag, int level, xfs_mount_t *mp, char *fmt, ...)
+> >  	va_list ap;
+> >  
+> >  #ifdef DEBUG
+> > -	xfs_panic_mask |= XFS_PTAG_SHUTDOWN_CORRUPT;
+> > +	xfs_panic_mask |= (XFS_PTAG_SHUTDOWN_CORRUPT | XFS_PTAG_LOGRES);
+> >  #endif
+> >  
+> >  	if (xfs_panic_mask && (xfs_panic_mask & panic_tag)
+> > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> > index 83be6a6..1efb303 100644
+> > --- a/fs/xfs/xfs_log.c
+> > +++ b/fs/xfs/xfs_log.c
+> > @@ -1645,6 +1645,10 @@ xlog_print_tic_res(xfs_mount_t *mp, xlog_ticket_t *ticket)
+> >  			    "bad-rtype" : res_type_str[r_type-1]),
+> >  			    ticket->t_res_arr[i].r_len);
+> >  	}
+> > +
+> > +	xfs_cmn_err(XFS_PTAG_LOGRES, CE_ALERT, mp,
+> > +		"xfs_log_write: reservation ran out. Need to up reservation");
+> > +	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+> >  }
+> >  
+> >  /*
+> > @@ -1897,21 +1901,8 @@ xlog_write(
+> >  	*start_lsn = 0;
+> >  
+> >  	len = xlog_write_calc_vec_length(ticket, log_vector);
+> > -	if (ticket->t_curr_res < len) {
+> > +	if (ticket->t_curr_res < len)
+> >  		xlog_print_tic_res(log->l_mp, ticket);
+> 
+> Somehow "xlog_print_tic_res" doesn't suggest to me
+> that we're going to panic at this point, and I think
+> therefore that bit of information is lost with this
+> change.
+
+Normally it won't panic - if there is a problem it will shut down
+the filesystem. Only if the kernel is a debug kernel or the admin
+has specifically set the panic mask to panic on this failure
+will there be a panic.
+
+If we start to document every place where there is in shutdown or
+panic inside a function call that is not documented at eh function
+call site, we won't be able to see the code for the "this might
+panic" comments. ;)
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
