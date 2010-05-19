@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4JNgOFB163579 for <xfs@oss.sgi.com>; Wed, 19 May 2010 18:42:24 -0500
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3D49635D0AF
-	for <xfs@oss.sgi.com>; Wed, 19 May 2010 16:44:42 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id LN39DzFf4KTuXE45
-	for <xfs@oss.sgi.com>; Wed, 19 May 2010 16:44:42 -0700 (PDT)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id 7FCDB6C264
-	for <xfs@oss.sgi.com>; Wed, 19 May 2010 18:44:42 -0500 (CDT)
-Message-ID: <4BF47859.6020808@hardwarefreak.com>
-Date: Wed, 19 May 2010 18:46:33 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	o4JNPGAk162911 for <xfs@oss.sgi.com>; Wed, 19 May 2010 18:25:16 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 298D61411EAD
+	for <xfs@oss.sgi.com>; Wed, 19 May 2010 16:27:34 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	XuRBrEf4l3B6C1Rb for <xfs@oss.sgi.com>;
+	Wed, 19 May 2010 16:27:34 -0700 (PDT)
+Date: Thu, 20 May 2010 09:27:31 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS on 2.6.26: reading the first 4K of a large file takes ages
+Message-ID: <20100519232731.GR8120@dastard>
+References: <8239xojfco.fsf@mid.bfk.de> <20100519114826.GA18224@infradead.org>
 MIME-Version: 1.0
-Subject: Re: noatime,nodiratime?
-References: <4BF3F212.5030600@hardwarefreak.com>	<20100519182336.GA6264@infradead.org>	<4BF43B3C.6030403@hardwarefreak.com>
-	<4BF44105.4040902@sandeen.net>
-In-Reply-To: <4BF44105.4040902@sandeen.net>
+Content-Disposition: inline
+In-Reply-To: <20100519114826.GA18224@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,44 +29,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com, Florian Weimer <fweimer@bfk.de>
 
-Eric Sandeen put forth on 5/19/2010 2:50 PM:
+On Wed, May 19, 2010 at 07:48:26AM -0400, Christoph Hellwig wrote:
+> On Wed, May 19, 2010 at 11:33:27AM +0000, Florian Weimer wrote:
+> > We've got a couple of rather large files, and with a cold cache,
+> > reading the first 4K bytes of the file (e.g., just running
+> > "head --bytes 4096" on it) takes ages, up to several minutes,
+> > sometimes triggering the hang check timer.
+> > 
+> > I wonder if XFS reads the whole extent information into RAM when the
+> > file is opened.  Is this the case, at least on 2.6.26?  Has this
+> > changed in later versions, perhaps?
+> 
+> Yes, XFS always reads in the extent map, and no this hasn't changed
+> recently.
 
-> xfs_info actually calls xfs_growfs -n, and it's only reporting on-disk
-> geometry.  I kind of doubt that'll change.  If you want to see mount
-> options, /proc/mounts is the place ... but then we don't show the
-> defaults ;)  I wonder if we should change that and be explicit about
-> every option in /proc/mounts *shrug*
+And demand paging the in-memory information is hard. It's on a to-do
+list somewhere 'round here....
 
-IMHO the option values should be listed, whether they are the defaults or
-user defined.  XFS may be breaking convention by doing so, as it appears
-EXT2 (and probably 3/4, and other filesystems) behave the same as XFS
-currently does--no display of default settings, except rw.
+Cheers,
 
-> It's so hard to keep google up to date ;)
-
-Add the information to the FAQ and it'll show up in Google indexes in short
-order, assuming you allow robots to crawl xfs.org, which IIRC, you do.
-
-> /proc/mounts shows all mount options which were set differently from
-> defaults.
-
-Yes.  It would be nice to see the settings regardless of default or user
-defined.  In the absence of, or in addition to this, could we get a
-consistent (default) for each setting in XFS man mount?  For example,
-barrier is listed but we're not told if it's the default.  nobarrier isn't
-even in the man page, but it's on the wiki FAQ.  The wiki FAQ tells us that
-barrier is the default.  I'm referring to the man page that comes with
-Debian 5.0.  The current man page may be updated to reflect some of these
-things, though I've not read it yet.
-
-Sorry if I seem nit-picky.  I've spent many hours trying to hunt down some
-of this information and it's been a frustrating process.  XFS rocks.
-Currently, from here, the docs don't rock yet. :(
-
+Dave.
 -- 
-Stan
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
