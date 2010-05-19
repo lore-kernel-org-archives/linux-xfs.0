@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4JB2RFe123783 for <xfs@oss.sgi.com>; Wed, 19 May 2010 06:02:28 -0500
-Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 110A235994F
-	for <xfs@oss.sgi.com>; Wed, 19 May 2010 04:04:44 -0700 (PDT)
-Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id EV84sd4SCl6yMaXs for
-	<xfs@oss.sgi.com>; Wed, 19 May 2010 04:04:44 -0700 (PDT)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: rsync from xfs to nfs+xfs and ACL problems
-Date: Wed, 19 May 2010 13:04:37 +0200
-References: <201005181350.15308@zmi.at> <20100518123304.GH2150@dastard>
-In-Reply-To: <20100518123304.GH2150@dastard>
+	o4JBVBT1125389 for <xfs@oss.sgi.com>; Wed, 19 May 2010 06:31:12 -0500
+Received: from mx01.bfk.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 10C28359A51
+	for <xfs@oss.sgi.com>; Wed, 19 May 2010 04:33:29 -0700 (PDT)
+Received: from mx01.bfk.de (mx01.bfk.de [193.227.124.2]) by cuda.sgi.com with
+	ESMTP id CTyIOlhjnq5gttgn for <xfs@oss.sgi.com>;
+	Wed, 19 May 2010 04:33:29 -0700 (PDT)
+Received: from mx00.int.bfk.de ([10.119.110.2])
+	by mx01.bfk.de with esmtps (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	id 1OEhWe-0003hk-GR
+	for xfs@oss.sgi.com; Wed, 19 May 2010 11:33:24 +0000
+Received: by bfk.de with local id 1OEhWh-0001SN-C7
+	for xfs@oss.sgi.com; Wed, 19 May 2010 11:33:27 +0000
+Subject: XFS on 2.6.26: reading the first 4K of a large file takes ages
+From: Florian Weimer <fweimer@bfk.de>
+Date: Wed, 19 May 2010 11:33:27 +0000
+Message-ID: <8239xojfco.fsf@mid.bfk.de>
 MIME-Version: 1.0
-Message-Id: <201005191304.42314@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,81 +27,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6058617221505877770=="
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============6058617221505877770==
-Content-Type: multipart/signed;
-  boundary="nextPart1795516.piKT4rThn2";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+We've got a couple of rather large files, and with a cold cache,
+reading the first 4K bytes of the file (e.g., just running
+"head --bytes 4096" on it) takes ages, up to several minutes,
+sometimes triggering the hang check timer.
 
---nextPart1795516.piKT4rThn2
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+I wonder if XFS reads the whole extent information into RAM when the
+file is opened.  Is this the case, at least on 2.6.26?  Has this
+changed in later versions, perhaps?
 
-On Dienstag, 18. Mai 2010 Dave Chinner wrote:
-> NFSv3 doesn't support ACLs, IIRC.
+The files in question are heavily fragmented (they have been created
+with holes first, and the holes have been filled in subsequently).
+I'll try to run xfs_fsr on those files, but it's going to be
+tough. 8-/
 
-Thank you for the hint. I remounted with nfs4 now:
-type nfs4 (rw,noatime,nodiratime,rsize=3D65536,wsize=3D65536,tcp,intr,acl)
+-- =
 
-And now I get this on "rsync -aPvHAX":
-
-rsync: chown "somedir/Cen731n.afm" failed: Invalid argument (22)
-rsync: chown "somedir/Teil2" failed: Invalid argument (22)
-rsync: rsync_xal_set:=20
-lsetxattr("somedir/Teil2/IMAGE.CCD","trusted.SGI_ACL_FILE") failed:=20
-Operation not supported (95)
-
-I changed again and defined an rsync module on the target, making a=20
-direct rsync and no more shown errors. Still, what is causing the tons=20
-of errors when rsyncing to nfs+xfs, no matter if nfs3 or nfs4? I looked=20
-manually at some files and it seems everything was copied well, despite=20
-the errors.
-
-Could inode64 be a problem here?
-
-=2D-=20
-mit freundlichen Gr=FCssen,
-Michael Monnerie, Ing. BSc
-
-it-management Internet Services
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: 0660 / 415 65 31
-
-// Wir haben im Moment zwei H=E4user zu verkaufen:
-// http://zmi.at/langegg/
-// http://zmi.at/haus2009/
-
---nextPart1795516.piKT4rThn2
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.12 (GNU/Linux)
-
-iEYEABECAAYFAkvzxcoACgkQzhSR9xwSCbQJ2QCgykEjbJPDt7dHhvwY9HmcwHQy
-Az8An3PiSjCv/Qq7L+qNo46cfwwg87Jp
-=rQQD
------END PGP SIGNATURE-----
-
---nextPart1795516.piKT4rThn2--
-
-
---===============6058617221505877770==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Florian Weimer                <fweimer@bfk.de>
+BFK edv-consulting GmbH       http://www.bfk.de/
+Kriegsstra=DFe 100              tel: +49-721-96201-1
+D-76133 Karlsruhe             fax: +49-721-96201-99
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6058617221505877770==--
