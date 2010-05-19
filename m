@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4JMd0KA159772 for <xfs@oss.sgi.com>; Wed, 19 May 2010 17:39:00 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D381E1B0E6DB
-	for <xfs@oss.sgi.com>; Wed, 19 May 2010 15:41:17 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	Vvy7k8riiXNXpk2p for <xfs@oss.sgi.com>;
-	Wed, 19 May 2010 15:41:17 -0700 (PDT)
-Date: Thu, 20 May 2010 08:41:14 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 05/12] xfs: clean up log ticket overrun debug output
-Message-ID: <20100519224114.GP8120@dastard>
-References: <1274138668-1662-1-git-send-email-david@fromorbit.com>
-	<1274138668-1662-6-git-send-email-david@fromorbit.com>
-	<1274296604.2140.55.camel@doink>
+	o4JNgOFB163579 for <xfs@oss.sgi.com>; Wed, 19 May 2010 18:42:24 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3D49635D0AF
+	for <xfs@oss.sgi.com>; Wed, 19 May 2010 16:44:42 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id LN39DzFf4KTuXE45
+	for <xfs@oss.sgi.com>; Wed, 19 May 2010 16:44:42 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id 7FCDB6C264
+	for <xfs@oss.sgi.com>; Wed, 19 May 2010 18:44:42 -0500 (CDT)
+Message-ID: <4BF47859.6020808@hardwarefreak.com>
+Date: Wed, 19 May 2010 18:46:33 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1274296604.2140.55.camel@doink>
+Subject: Re: noatime,nodiratime?
+References: <4BF3F212.5030600@hardwarefreak.com>	<20100519182336.GA6264@infradead.org>	<4BF43B3C.6030403@hardwarefreak.com>
+	<4BF44105.4040902@sandeen.net>
+In-Reply-To: <4BF44105.4040902@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,85 +31,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, May 19, 2010 at 02:16:44PM -0500, Alex Elder wrote:
-> On Tue, 2010-05-18 at 09:24 +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Push the error message output when a ticket overrun is detected
-> > into the ticket printing functions. Also remove the debug version
-> > of the code as the production version will still panic just as
-> > effectively on a debug kernel via the panic mask being set.
-> 
-> Another not-really-actionable bit of commentary
-> below, but this looks good.
-> 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> >  fs/xfs/xfs_error.c |    2 +-
-> >  fs/xfs/xfs_log.c   |   19 +++++--------------
-> >  2 files changed, 6 insertions(+), 15 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-> > index ef96175..047b8a8 100644
-> > --- a/fs/xfs/xfs_error.c
-> > +++ b/fs/xfs/xfs_error.c
-> > @@ -170,7 +170,7 @@ xfs_cmn_err(int panic_tag, int level, xfs_mount_t *mp, char *fmt, ...)
-> >  	va_list ap;
-> >  
-> >  #ifdef DEBUG
-> > -	xfs_panic_mask |= XFS_PTAG_SHUTDOWN_CORRUPT;
-> > +	xfs_panic_mask |= (XFS_PTAG_SHUTDOWN_CORRUPT | XFS_PTAG_LOGRES);
-> >  #endif
-> >  
-> >  	if (xfs_panic_mask && (xfs_panic_mask & panic_tag)
-> > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> > index 83be6a6..1efb303 100644
-> > --- a/fs/xfs/xfs_log.c
-> > +++ b/fs/xfs/xfs_log.c
-> > @@ -1645,6 +1645,10 @@ xlog_print_tic_res(xfs_mount_t *mp, xlog_ticket_t *ticket)
-> >  			    "bad-rtype" : res_type_str[r_type-1]),
-> >  			    ticket->t_res_arr[i].r_len);
-> >  	}
-> > +
-> > +	xfs_cmn_err(XFS_PTAG_LOGRES, CE_ALERT, mp,
-> > +		"xfs_log_write: reservation ran out. Need to up reservation");
-> > +	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-> >  }
-> >  
-> >  /*
-> > @@ -1897,21 +1901,8 @@ xlog_write(
-> >  	*start_lsn = 0;
-> >  
-> >  	len = xlog_write_calc_vec_length(ticket, log_vector);
-> > -	if (ticket->t_curr_res < len) {
-> > +	if (ticket->t_curr_res < len)
-> >  		xlog_print_tic_res(log->l_mp, ticket);
-> 
-> Somehow "xlog_print_tic_res" doesn't suggest to me
-> that we're going to panic at this point, and I think
-> therefore that bit of information is lost with this
-> change.
+Eric Sandeen put forth on 5/19/2010 2:50 PM:
 
-Normally it won't panic - if there is a problem it will shut down
-the filesystem. Only if the kernel is a debug kernel or the admin
-has specifically set the panic mask to panic on this failure
-will there be a panic.
+> xfs_info actually calls xfs_growfs -n, and it's only reporting on-disk
+> geometry.  I kind of doubt that'll change.  If you want to see mount
+> options, /proc/mounts is the place ... but then we don't show the
+> defaults ;)  I wonder if we should change that and be explicit about
+> every option in /proc/mounts *shrug*
 
-If we start to document every place where there is in shutdown or
-panic inside a function call that is not documented at eh function
-call site, we won't be able to see the code for the "this might
-panic" comments. ;)
+IMHO the option values should be listed, whether they are the defaults or
+user defined.  XFS may be breaking convention by doing so, as it appears
+EXT2 (and probably 3/4, and other filesystems) behave the same as XFS
+currently does--no display of default settings, except rw.
 
-Cheers,
+> It's so hard to keep google up to date ;)
 
-Dave.
+Add the information to the FAQ and it'll show up in Google indexes in short
+order, assuming you allow robots to crawl xfs.org, which IIRC, you do.
+
+> /proc/mounts shows all mount options which were set differently from
+> defaults.
+
+Yes.  It would be nice to see the settings regardless of default or user
+defined.  In the absence of, or in addition to this, could we get a
+consistent (default) for each setting in XFS man mount?  For example,
+barrier is listed but we're not told if it's the default.  nobarrier isn't
+even in the man page, but it's on the wiki FAQ.  The wiki FAQ tells us that
+barrier is the default.  I'm referring to the man page that comes with
+Debian 5.0.  The current man page may be updated to reflect some of these
+things, though I've not read it yet.
+
+Sorry if I seem nit-picky.  I've spent many hours trying to hunt down some
+of this information and it's been a frustrating process.  XFS rocks.
+Currently, from here, the docs don't rock yet. :(
+
 -- 
-Dave Chinner
-david@fromorbit.com
+Stan
 
 _______________________________________________
 xfs mailing list
