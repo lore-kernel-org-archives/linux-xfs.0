@@ -1,18 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4JDa6Nu131902 for <xfs@oss.sgi.com>; Wed, 19 May 2010 08:36:07 -0500
+	o4JDa6Jv131886 for <xfs@oss.sgi.com>; Wed, 19 May 2010 08:36:06 -0500
 Received: from mx1.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 40178156C518
-	for <xfs@oss.sgi.com>; Wed, 19 May 2010 06:39:31 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 458221DF3500
+	for <xfs@oss.sgi.com>; Wed, 19 May 2010 06:38:24 -0700 (PDT)
 Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
-	with ESMTP id GbbKrv8u8fF3YpGj for <xfs@oss.sgi.com>;
-	Wed, 19 May 2010 06:39:31 -0700 (PDT)
+	with ESMTP id RBLivk6etzTFGTAZ for <xfs@oss.sgi.com>;
+	Wed, 19 May 2010 06:38:24 -0700 (PDT)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 6/7] Add quota accounting test when fsstress is run and quota
-	limits are set low
-Date: Wed, 19 May 2010 15:38:08 +0200
-Message-Id: <1274276289-8839-7-git-send-email-jack@suse.cz>
+Subject: [PATCH 2/7] Fix test whether kernel supports quotas
+Date: Wed, 19 May 2010 15:38:04 +0200
+Message-Id: <1274276289-8839-3-git-send-email-jack@suse.cz>
 In-Reply-To: <1274276289-8839-1-git-send-email-jack@suse.cz>
 References: <1274276289-8839-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,168 +30,32 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: hch@infradead.org, Jan Kara <jack@suse.cz>
 
-Test various error recovery paths whether they properly handle EDQUOT failures.
+For all 2.6 kernels presence of quota support in kernel can be detected by
+checking /proc/sys/fs/quota. This is actually more reliable than trying to
+mount a filesystem with quota options (for example because SCRATCH_DEV does
+not have to contain a filesystem type we are going to test).
 
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- 233     |  124 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 233.out |    6 +++
- group   |    1 +
- 3 files changed, 131 insertions(+), 0 deletions(-)
- create mode 100755 233
- create mode 100644 233.out
+ common.quota |    5 +----
+ 1 files changed, 1 insertions(+), 4 deletions(-)
 
-diff --git a/233 b/233
-new file mode 100755
-index 0000000..1185a6d
---- /dev/null
-+++ b/233
-@@ -0,0 +1,124 @@
-+#! /bin/bash
-+# FSQA Test No. 233
-+#
-+# Run fsstress with quotas enabled and limits set low and verify accounted
-+# quotas in the end
-+#
-+# Derived from test 231
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2006 Silicon Graphics, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=jack@suse.cz
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+. ./common.quota
-+
-+FSX_FILE_SIZE=64000000
-+FSX_ARGS="-q -l $FSX_FILE_SIZE -o 65536 -S 191110531 -N 100000"
-+
-+filter_scratch()
-+{
-+        perl -ne "
-+s,$SCRATCH_MNT,[SCR_MNT],;
-+s,$SCRATCH_DEV,[SCR_DEV],;
-+        print;"
-+}
-+
-+check_usage()
-+{
-+	quotaon -f -u -g $SCRATCH_MNT 2>/dev/null
-+	repquota -u -g -n $SCRATCH_MNT  | grep -v "^#0" | filter_scratch |
-+		sort >$tmp.orig
-+	quotacheck -u -g $SCRATCH_MNT 2>/dev/null
-+	repquota -u -g -n $SCRATCH_MNT  | grep -v "^#0" | filter_scratch |
-+		sort >$tmp.checked
-+	quotaon -u -g $SCRATCH_MNT 2>/dev/null
-+	diff $tmp.orig $tmp.checked
-+}
-+
-+_filter_num()
-+{
-+	tee -a $here/$seq.full |\
-+	sed -e 's/[0-9][0-9]* inodes/I inodes/g' \
-+	    -e 's/[0-9][0-9]* paths/P paths/g' \
-+	    -e 's/seed = [0-9][0-9]*/seed = S/'
-+}
-+
-+_fsstress()
-+{
-+	echo ""
-+	echo "Testing fsstress"
-+	echo ""
-+
-+	out=$SCRATCH_MNT/fsstress.$$
-+	count=5000
-+	args="-z \
-+-f rmdir=20 -f link=10 -f creat=10 -f mkdir=10 -f unlink=20 -f symlink=10 \
-+-f rename=10 -f fsync=2 -f write=15 -f dwrite=15 \
-+-n $count -d $out -p 7"
-+
-+	echo "fsstress $args" | sed -e "s#$out#outdir#"
-+	if ! su $qa_user -c "$FSSTRESS_PROG $args" | _filter_num
-+	then
-+		echo "    fsstress $args returned $?"
-+		cat $tmp.out | tee -a $here/$seq.full
-+		status=1
-+	fi
-+}
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+_require_scratch
-+_require_quota
-+_require_user
-+_need_to_be_root
-+
-+umount $SCRATCH_DEV 2>/dev/null
-+_scratch_mkfs >> $seq.full 2>&1
-+_scratch_mount "-o usrquota,grpquota"
-+chmod 777 $SCRATCH_MNT
-+quotacheck -u -g $SCRATCH_MNT 2>/dev/null
-+quotaon -u -g $SCRATCH_MNT 2>/dev/null
-+setquota -u $qa_user 32000 32000 1000 1000 $SCRATCH_MNT 2>/dev/null
-+
-+if ! _fsstress; then
-+	umount $SCRATCH_DEV 2>/dev/null
-+	exit
-+fi
-+
-+if ! check_usage; then
-+	umount $SCRATCH_DEV 2>/dev/null
-+	status=1
-+	exit
-+fi
-+
-+umount $SCRATCH_DEV 2>/dev/null
-+status=0
-+exit
-diff --git a/233.out b/233.out
-new file mode 100644
-index 0000000..208910d
---- /dev/null
-+++ b/233.out
-@@ -0,0 +1,6 @@
-+QA output created by 233
-+
-+Testing fsstress
-+
-+fsstress -z -f rmdir=20 -f link=10 -f creat=10 -f mkdir=10 -f unlink=20 -f symlink=10 -f rename=10 -f fsync=2 -f write=15 -f dwrite=15 -n 5000 -d outdir -p 7
-+seed = S
-diff --git a/group b/group
-index c8cd774..cc9bdb2 100644
---- a/group
-+++ b/group
-@@ -346,3 +346,4 @@ deprecated
- 230 auto quota quick
- 231 auto quota
- 232 auto quota
-+233 auto quota
+diff --git a/common.quota b/common.quota
+index 51bdc71..033390f 100644
+--- a/common.quota
++++ b/common.quota
+@@ -27,10 +27,7 @@
+ _require_quota()
+ {
+     [ -x /usr/bin/quota ] || _notrun "Quota user tools not installed"
+-    _scratch_mount "-o usrquota,grpquota"
+-    ret=$?
+-    umount $SCRATCH_MNT
+-    [ $ret -ne 0 ] && _notrun "Installed kernel does not support quota"
++    [ -d /proc/sys/fs/quota ] || _notrun "Installed kernel does not support quota"
+ }
+ 
+ #
 -- 
 1.6.4.2
 
