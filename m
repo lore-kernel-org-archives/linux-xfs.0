@@ -1,16 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4JJERUV149013 for <xfs@oss.sgi.com>; Wed, 19 May 2010 14:14:28 -0500
-Subject: Re: [PATCH 05/12] xfs: clean up log ticket overrun debug output
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1274138668-1662-6-git-send-email-david@fromorbit.com>
-References: <1274138668-1662-1-git-send-email-david@fromorbit.com>
-	<1274138668-1662-6-git-send-email-david@fromorbit.com>
-Date: Wed, 19 May 2010 14:16:44 -0500
-Message-ID: <1274296604.2140.55.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	o4JJLuR7149350 for <xfs@oss.sgi.com>; Wed, 19 May 2010 14:21:56 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 576E735BFAD
+	for <xfs@oss.sgi.com>; Wed, 19 May 2010 12:24:15 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id 9wA2eLdDXQk8VyAZ
+	for <xfs@oss.sgi.com>; Wed, 19 May 2010 12:24:15 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id A71836C24C
+	for <xfs@oss.sgi.com>; Wed, 19 May 2010 14:24:14 -0500 (CDT)
+Message-ID: <4BF43B3C.6030403@hardwarefreak.com>
+Date: Wed, 19 May 2010 14:25:48 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
+MIME-Version: 1.0
+Subject: Re: noatime,nodiratime?
+References: <4BF3F212.5030600@hardwarefreak.com>
+	<20100519182336.GA6264@infradead.org>
+In-Reply-To: <20100519182336.GA6264@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,88 +31,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, 2010-05-18 at 09:24 +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+Christoph Hellwig put forth on 5/19/2010 1:23 PM:
+> On Wed, May 19, 2010 at 09:13:38AM -0500, Stan Hoeppner wrote:
+>> Need a little education here.  I have a general understanding of what the
+>> inode access timestamps "are" but I have no idea what, if any, applications
+>> make use of these access times.  I see posts all over Google land saying to
+>> use "noatime,nodiratime,logbufs=8" for XFS mount options to increase
+>> performance.
 > 
-> Push the error message output when a ticket overrun is detected
-> into the ticket printing functions. Also remove the debug version
-> of the code as the production version will still panic just as
-> effectively on a debug kernel via the panic mask being set.
+> Which doesn't make much sense.  First 8 log buffers has been the default
+> for XFS for a long time.  Second nodiratime has always been useless as
+> it is a strict subset of of noatime.  Now noatime isn't the default yet,
+> but instead relatime is, which still updates the atime in memory, but
+> only writes it back when the inode has other changes, or on umount.
+> It should give you equivalent performance to noatime, but better
+> functionality.
 
-Another not-really-actionable bit of commentary
-below, but this looks good.
+Wow.  That'll teach me to trust that man pages are accurate. :)  Maybe you
+could add this explanation about relatime vs noatime to the man page as well.
 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_error.c |    2 +-
->  fs/xfs/xfs_log.c   |   19 +++++--------------
->  2 files changed, 6 insertions(+), 15 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-> index ef96175..047b8a8 100644
-> --- a/fs/xfs/xfs_error.c
-> +++ b/fs/xfs/xfs_error.c
-> @@ -170,7 +170,7 @@ xfs_cmn_err(int panic_tag, int level, xfs_mount_t *mp, char *fmt, ...)
->  	va_list ap;
->  
->  #ifdef DEBUG
-> -	xfs_panic_mask |= XFS_PTAG_SHUTDOWN_CORRUPT;
-> +	xfs_panic_mask |= (XFS_PTAG_SHUTDOWN_CORRUPT | XFS_PTAG_LOGRES);
->  #endif
->  
->  	if (xfs_panic_mask && (xfs_panic_mask & panic_tag)
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 83be6a6..1efb303 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -1645,6 +1645,10 @@ xlog_print_tic_res(xfs_mount_t *mp, xlog_ticket_t *ticket)
->  			    "bad-rtype" : res_type_str[r_type-1]),
->  			    ticket->t_res_arr[i].r_len);
->  	}
-> +
-> +	xfs_cmn_err(XFS_PTAG_LOGRES, CE_ALERT, mp,
-> +		"xfs_log_write: reservation ran out. Need to up reservation");
-> +	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
->  }
->  
->  /*
-> @@ -1897,21 +1901,8 @@ xlog_write(
->  	*start_lsn = 0;
->  
->  	len = xlog_write_calc_vec_length(ticket, log_vector);
-> -	if (ticket->t_curr_res < len) {
-> +	if (ticket->t_curr_res < len)
->  		xlog_print_tic_res(log->l_mp, ticket);
+Any chance xfs_info could be updated to output the information we're
+discussing, including spitting out the XFS specific mount options that are
+currently active at the time of running xfs_info?  There seems to be much
+confusion in the community due to lack of accurate information being
+available.  Google for "XFS performance" and you'll see
+"noatime,nodiratime,logbufs=8" mentioned consistently from early 2000's to
+the present as a performance enhancer.
 
-Somehow "xlog_print_tic_res" doesn't suggest to me
-that we're going to panic at this point, and I think
-therefore that bit of information is lost with this
-change.  I prefer what you've done, but I think I
-would have liked some brief comment or something that
-tells me this is a fatal condition.
+If what you say is true, on my 2.6.32.9 system, I actually decreased logbufs
+from 8 to 4 half an hour ago, instead of increasing it from 2 to 4, as man
+lead me to believe I was doing.  Do any of the xfs tools output the XFS
+specific active mount options allowing an op to confirm changes?  As someone
+else stated it would be nice to be able to see these parameter values.  As
+is, AFAICT, there's no way to confirm these parameter values.
 
-> -#ifdef DEBUG
-> -		xlog_panic(
-> -	"xfs_log_write: reservation ran out. Need to up reservation");
-> -#else
-> -		/* Customer configurable panic */
-> -		xfs_cmn_err(XFS_PTAG_LOGRES, CE_ALERT, log->l_mp,
-> -	"xfs_log_write: reservation ran out. Need to up reservation");
-> -
-> -		/* If we did not panic, shutdown the filesystem */
-> -		xfs_force_shutdown(log->l_mp, SHUTDOWN_CORRUPT_INCORE);
-> -#endif
-> -	}
-> -
->  	ticket->t_curr_res -= len;
->  
->  	index = 0;
-
-
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
