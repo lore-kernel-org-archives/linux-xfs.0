@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4JBiMvF126061 for <xfs@oss.sgi.com>; Wed, 19 May 2010 06:44:22 -0500
-Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D5E0C359D43
-	for <xfs@oss.sgi.com>; Wed, 19 May 2010 04:46:40 -0700 (PDT)
-Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id EWAt5XD7WJYTzzO9 for
-	<xfs@oss.sgi.com>; Wed, 19 May 2010 04:46:40 -0700 (PDT)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: rsync from xfs to nfs+xfs and ACL problems
-Date: Wed, 19 May 2010 13:46:38 +0200
-References: <201005181350.15308@zmi.at> <201005191304.42314@zmi.at>
-	<20100519112034.GA29064@infradead.org>
-In-Reply-To: <20100519112034.GA29064@infradead.org>
+	o4JBk9c1126179 for <xfs@oss.sgi.com>; Wed, 19 May 2010 06:46:09 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 603E41DF3242
+	for <xfs@oss.sgi.com>; Wed, 19 May 2010 04:48:28 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id L6iccW2gaSGNOPPL for
+	<xfs@oss.sgi.com>; Wed, 19 May 2010 04:48:28 -0700 (PDT)
+Date: Wed, 19 May 2010 07:48:26 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: XFS on 2.6.26: reading the first 4K of a large file takes ages
+Message-ID: <20100519114826.GA18224@infradead.org>
+References: <8239xojfco.fsf@mid.bfk.de>
 MIME-Version: 1.0
-Message-Id: <201005191346.38699@zmi.at>
+Content-Disposition: inline
+In-Reply-To: <8239xojfco.fsf@mid.bfk.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,73 +24,27 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============5136552703720770437=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Christoph Hellwig <hch@infradead.org>
+To: Florian Weimer <fweimer@bfk.de>
+Cc: xfs@oss.sgi.com
 
---===============5136552703720770437==
-Content-Type: multipart/signed;
-  boundary="nextPart14486152.hTmOFNolno";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+On Wed, May 19, 2010 at 11:33:27AM +0000, Florian Weimer wrote:
+> We've got a couple of rather large files, and with a cold cache,
+> reading the first 4K bytes of the file (e.g., just running
+> "head --bytes 4096" on it) takes ages, up to several minutes,
+> sometimes triggering the hang check timer.
+> 
+> I wonder if XFS reads the whole extent information into RAM when the
+> file is opened.  Is this the case, at least on 2.6.26?  Has this
+> changed in later versions, perhaps?
 
---nextPart14486152.hTmOFNolno
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-
-On Mittwoch, 19. Mai 2010 Christoph Hellwig wrote:
-> XFS stores ACLs different than other Linux filesystems because it's
-> on-disk compatible to IRIX.  While the other filesystems store the
->  ACL in the same format that is used for the user interface XFS
->  stores it in a separate trusted extended attribute.  rsync should
->  and
-> traditionally has ignored those attributes, but it seems something in
-> rsync changed recently so that it tries to copy these attributes in
-> the trusted.* namespace, which fails on NFS.
-=20
-Thank you. Does that mean I can simply ignore that errors, and that=20
-everything is OK even over NFS?
-
-=2D-=20
-mit freundlichen Gr=FCssen,
-Michael Monnerie, Ing. BSc
-
-it-management Internet Services
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: 0660 / 415 65 31
-
-// Wir haben im Moment zwei H=E4user zu verkaufen:
-// http://zmi.at/langegg/
-// http://zmi.at/haus2009/
-
---nextPart14486152.hTmOFNolno
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.12 (GNU/Linux)
-
-iEYEABECAAYFAkvzz54ACgkQzhSR9xwSCbToYACfZCfVVotIH8DOuhe5/3OfPWXl
-deIAoOXNiBlN0UBJQ5N7JnK7mFiFNDrM
-=xRXb
------END PGP SIGNATURE-----
-
---nextPart14486152.hTmOFNolno--
-
-
---===============5136552703720770437==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Yes, XFS always reads in the extent map, and no this hasn't changed
+recently.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============5136552703720770437==--
