@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4JDa7Wg131928 for <xfs@oss.sgi.com>; Wed, 19 May 2010 08:36:07 -0500
-Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B76C5156C51A
-	for <xfs@oss.sgi.com>; Wed, 19 May 2010 06:39:33 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id FDBHtMJoh5PJGnfH for <xfs@oss.sgi.com>;
-	Wed, 19 May 2010 06:39:33 -0700 (PDT)
+	o4JDa65k131884 for <xfs@oss.sgi.com>; Wed, 19 May 2010 08:36:06 -0500
+Received: from mx1.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 01E801DF3789
+	for <xfs@oss.sgi.com>; Wed, 19 May 2010 06:38:23 -0700 (PDT)
+Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
+	with ESMTP id lvwI8DeQT7DIdFAO for <xfs@oss.sgi.com>;
+	Wed, 19 May 2010 06:38:23 -0700 (PDT)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 1/7] xfstests: test extent size hints
-Date: Wed, 19 May 2010 15:38:03 +0200
-Message-Id: <1274276289-8839-2-git-send-email-jack@suse.cz>
+Subject: [PATCH 3/7] Test basic quota enforcement
+Date: Wed, 19 May 2010 15:38:05 +0200
+Message-Id: <1274276289-8839-4-git-send-email-jack@suse.cz>
 In-Reply-To: <1274276289-8839-1-git-send-email-jack@suse.cz>
 References: <1274276289-8839-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -28,45 +28,35 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: hch@infradead.org, Christoph Hellwig <hch@lst.de>
+Cc: hch@infradead.org, Jan Kara <jack@suse.cz>
 
-From: Christoph Hellwig <hch@lst.de>
+Add a test which checks whether basic quota enforcement works.
 
-This is an adapted version of the reproduced in OSS BZ #874, which
-shows file corruption when using the extent size hint.
-
-Signed-off-by: Geoffrey Wehrman <gwehrman@sgi.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- 229           |   88 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 229.out       |    4 ++
- group         |    1 +
- src/Makefile  |    2 +-
- src/t_holes.c |   41 ++++++++++++++++++++++++++
- 5 files changed, 135 insertions(+), 1 deletions(-)
- create mode 100644 229
- create mode 100644 229.out
- create mode 100644 src/t_holes.c
+ 230     |  145 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 230.out |  131 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ group   |    1 +
+ 3 files changed, 277 insertions(+), 0 deletions(-)
+ create mode 100755 230
+ create mode 100644 230.out
 
-diff --git a/229 b/229
-new file mode 100644
-index 0000000..418a5af
+diff --git a/230 b/230
+new file mode 100755
+index 0000000..a63e004
 --- /dev/null
-+++ b/229
-@@ -0,0 +1,88 @@
++++ b/230
+@@ -0,0 +1,145 @@
 +#! /bin/bash
-+# FS QA Test No. 221
++# FS QA Test No. 230
 +#
-+# Check for file corruption when using the extent size hint on
-+# the normal data subvolume.
-+#
-+# http://oss.sgi.com/bugzilla/show_bug.cgi?id=874
-+#
-+# Based on a bug report and testcase from Geoffrey Wehrman <gwehrman@sgi.com>.
++# Simple quota enforcement test.
 +#
 +#-----------------------------------------------------------------------
-+# Copyright (c) 2010 Christoph Hellwig.  All Rights Reserved.
-+# Copyright (c) 2010 Silicon Graphics, Inc.  All Rights Reserved.
++# Copyright (c) 2010 Jan Kara.  All Rights Reserved.
++#
++# Based on test 219,
++# Copyright (c) 2005 Silicon Graphics, Inc.  All Rights Reserved.
 +#
 +# This program is free software; you can redistribute it and/or
 +# modify it under the terms of the GNU General Public License as
@@ -84,7 +74,7 @@ index 0000000..418a5af
 +#-----------------------------------------------------------------------
 +#
 +# creator
-+owner=hch@lst.de
++owner=jack@suse.cz
 +
 +seq=`basename $0`
 +echo "QA output created by $seq"
@@ -92,135 +82,262 @@ index 0000000..418a5af
 +here=`pwd`
 +tmp=/tmp/$$
 +status=1	# failure is the default!
-+
-+_cleanup()
-+{
-+    rm -rf ${TDIR}
-+}
-+
-+trap "_cleanup ; exit \$status" 0 1 2 3 15
++trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
 +
 +# get standard environment, filters and checks
 +. ./common.rc
++. ./common.filter
++. ./common.quota
++
++filter_scratch()
++{
++	perl -ne "
++s,$SCRATCH_MNT,[SCR_MNT],;
++s,$SCRATCH_DEV,[SCR_DEV],;
++	print;"
++}
 +
 +# real QA test starts here
 +_supported_fs generic
-+_supported_os Linux
++_supported_os Linux #IRIX
++_require_scratch
++_require_quota
++_require_user
++_need_to_be_root
 +
-+TDIR="${TEST_DIR}/t_holes"
-+NFILES="10"
-+EXTSIZE="256k"
++test_files()
++{
++	echo; echo "### create files, setting up ownership (type=$type)"
++	touch $SCRATCH_MNT/file{1,2}
++	chown $qa_user $SCRATCH_MNT/file{1,2}
++	chgrp $qa_user $SCRATCH_MNT/file{1,2}
++	chmod 777 $SCRATCH_MNT
++}
 +
-+# Create the test directory
-+mkdir ${TDIR}
++test_enforcement()
++{
++	echo "### some buffered IO (type=$type)"
++	echo "--- initiating IO..." >>$seq.full
++	# Firstly fit below block soft limit
++	su $qa_user -c "$XFS_IO_PROG -F -c 'pwrite 0 4096' -c fsync \
++		$SCRATCH_MNT/file1" 2>&1 >>$seq.full | tee -a $seq.full
++	repquota -$type $SCRATCH_MNT  | grep -v "^root" | filter_scratch
++	# Secondly overcome block soft limit
++	su $qa_user -c "$XFS_IO_PROG -F -c 'pwrite 0 4097' -c fsync \
++		$SCRATCH_MNT/file1" 2>&1 >>$seq.full | tee -a $seq.full
++	repquota -$type $SCRATCH_MNT  | grep -v "^root" | filter_scratch
++	# Now try to overcome block hardlimit
++	su $qa_user -c "$XFS_IO_PROG -F -c 'pwrite 0 4097' -c fsync \
++		$SCRATCH_MNT/file2" 2>&1 >>$seq.full | tee -a $seq.full
++	repquota -$type $SCRATCH_MNT  | grep -v "^root" | filter_scratch
++	# Now sleep for grace time and check that softlimit got enforced
++	sleep $grace
++	su $qa_user -c "$XFS_IO_PROG -F -c 'truncate 0' -c 'pwrite 0 1' \
++		$SCRATCH_MNT/file2" 2>&1 >>$seq.full | tee -a $seq.full
++	repquota -$type $SCRATCH_MNT  | grep -v "^root" | filter_scratch
++	# And now the softlimit test for inodes
++	su $qa_user -c "touch $SCRATCH_MNT/file3" 2>&1 >>$seq.full |
++							tee -a $seq.full
++	repquota -$type $SCRATCH_MNT  | grep -v "^root" | filter_scratch
++	# Try to exceed inode hardlimit
++	su $qa_user -c "touch $SCRATCH_MNT/file4 $SCRATCH_MNT/file5" 2>&1 \
++			>>$seq.full | tee -a $seq.full
++	repquota -$type $SCRATCH_MNT  | grep -v "^root" | filter_scratch
++	# Wait and check grace time enforcement
++	rm -f $SCRATCH_MNT/file4 >>$seq.full 2>&1
++	sleep $grace
++	su $qa_user -c "touch $SCRATCH_MNT/file4" 2>&1 >>$seq.full |
++			tee -a $seq.full
++	repquota -$type $SCRATCH_MNT  | grep -v "^root" | filter_scratch
++	echo "--- completed IO ($type)" >>$seq.full
++}
 +
-+# Set the test directory extsize
-+xfs_io -c "extsize ${EXTSIZE}" ${TDIR}
++cleanup_files()
++{
++	rm -f $SCRATCH_MNT/file{1,2,3,4,5}
++}
 +
-+# Create a set of holey files
-+echo "generating ${NFILES} files"
++# real QA test starts here
++rm -f $seq.full
 +
-+for i in $(seq 0 ${NFILES}); do
-+  $here/src/t_holes ${TDIR}/${i}
-+done
++grace=2
 +
-+# Compare the files
-+echo "comparing files"
-+errcnt=0
-+j=0
-+for i in $(seq 0 ${NFILES}); do
-+    let j=$i+1
-+    while [ ${j} -lt ${NFILES} ] ; do
-+	if ! cmp ${TDIR}/${i} ${TDIR}/${j} ; then
-+	    let errcnt=$errcnt+1
-+	fi
-+	let j=$j+1
-+    done
-+done
++_scratch_mkfs >> $seq.full 2>&1
++_scratch_mount "-o usrquota,grpquota"
++quotacheck -u -g $SCRATCH_MNT 2>/dev/null
++quotaon $SCRATCH_MNT 2>/dev/null
++setquota -u $qa_user 4 12 2 4 $SCRATCH_MNT
++setquota -u -t $grace $grace $SCRATCH_MNT
++setquota -g $qa_user 4 12 2 4 $SCRATCH_MNT
++setquota -g -t $grace $grace $SCRATCH_MNT
++umount $SCRATCH_DEV
 +
-+echo "got ${errcnt} errors"
++echo; echo "### test user limit enforcement"
++_scratch_mount "-o usrquota"
++quotaon $SCRATCH_MNT 2>/dev/null
++type=u
++test_files
++test_enforcement
++cleanup_files
++umount $SCRATCH_DEV 2>/dev/null
 +
-+status=$errcnt
-+exit $status
-diff --git a/229.out b/229.out
++echo; echo "### test group limit enforcement"
++_scratch_mount "-o grpquota"
++quotaon $SCRATCH_MNT 2>/dev/null
++type=g
++test_files
++test_enforcement
++cleanup_files
++umount $SCRATCH_DEV 2>/dev/null
++
++status=0
++exit
+diff --git a/230.out b/230.out
 new file mode 100644
-index 0000000..233920f
+index 0000000..87fb372
 --- /dev/null
-+++ b/229.out
-@@ -0,0 +1,4 @@
-+QA output created by 229
-+generating 10 files
-+comparing files
-+got 0 errors
++++ b/230.out
+@@ -0,0 +1,131 @@
++QA output created by 230
++
++### test user limit enforcement
++
++### create files, setting up ownership (type=u)
++### some buffered IO (type=u)
++*** Report for user quotas on device [SCR_DEV]
++Block grace time: 00:00; Inode grace time: 00:00
++                        Block limits                File limits
++User            used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     --       4       4      12              2     2     4       
++
++
++*** Report for user quotas on device [SCR_DEV]
++Block grace time: 00:00; Inode grace time: 00:00
++                        Block limits                File limits
++User            used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     +-       8       4      12  00:00       2     2     4       
++
++
++pwrite64: Disk quota exceeded
++*** Report for user quotas on device [SCR_DEV]
++Block grace time: 00:00; Inode grace time: 00:00
++                        Block limits                File limits
++User            used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     +-      12       4      12  00:00       2     2     4       
++
++
++pwrite64: Disk quota exceeded
++*** Report for user quotas on device [SCR_DEV]
++Block grace time: 00:00; Inode grace time: 00:00
++                        Block limits                File limits
++User            used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     +-       8       4      12   none       2     2     4       
++
++
++*** Report for user quotas on device [SCR_DEV]
++Block grace time: 00:00; Inode grace time: 00:00
++                        Block limits                File limits
++User            used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     ++       8       4      12   none       3     2     4  00:00
++
++
++touch: cannot touch `/local/test1/file5': Disk quota exceeded
++*** Report for user quotas on device [SCR_DEV]
++Block grace time: 00:00; Inode grace time: 00:00
++                        Block limits                File limits
++User            used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     ++       8       4      12   none       4     2     4  00:00
++
++
++touch: cannot touch `/local/test1/file4': Disk quota exceeded
++*** Report for user quotas on device [SCR_DEV]
++Block grace time: 00:00; Inode grace time: 00:00
++                        Block limits                File limits
++User            used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     ++       8       4      12   none       3     2     4   none
++
++
++
++### test group limit enforcement
++
++### create files, setting up ownership (type=g)
++### some buffered IO (type=g)
++*** Report for group quotas on device [SCR_DEV]
++Block grace time: 00:00; Inode grace time: 00:00
++                        Block limits                File limits
++Group           used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     --       4       4      12              2     2     4       
++
++
++*** Report for group quotas on device [SCR_DEV]
++Block grace time: 00:00; Inode grace time: 00:00
++                        Block limits                File limits
++Group           used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     +-       8       4      12  00:00       2     2     4       
++
++
++pwrite64: Disk quota exceeded
++*** Report for group quotas on device [SCR_DEV]
++Block grace time: 00:00; Inode grace time: 00:00
++                        Block limits                File limits
++Group           used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     +-      12       4      12  00:00       2     2     4       
++
++
++pwrite64: Disk quota exceeded
++*** Report for group quotas on device [SCR_DEV]
++Block grace time: 00:00; Inode grace time: 00:00
++                        Block limits                File limits
++Group           used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     +-       8       4      12   none       2     2     4       
++
++
++*** Report for group quotas on device [SCR_DEV]
++Block grace time: 00:00; Inode grace time: 00:00
++                        Block limits                File limits
++Group           used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     ++       8       4      12   none       3     2     4  00:00
++
++
++touch: cannot touch `/local/test1/file5': Disk quota exceeded
++*** Report for group quotas on device [SCR_DEV]
++Block grace time: 00:00; Inode grace time: 00:00
++                        Block limits                File limits
++Group           used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     ++       8       4      12   none       4     2     4  00:00
++
++
++touch: cannot touch `/local/test1/file4': Disk quota exceeded
++*** Report for group quotas on device [SCR_DEV]
++Block grace time: 00:00; Inode grace time: 00:00
++                        Block limits                File limits
++Group           used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     ++       8       4      12   none       3     2     4   none
++
++
 diff --git a/group b/group
-index 69ba24d..2c1ac50 100644
+index 2c1ac50..441e0e9 100644
 --- a/group
 +++ b/group
-@@ -342,3 +342,4 @@ deprecated
- 226 auto enospc
+@@ -343,3 +343,4 @@ deprecated
  227 auto fsr
  228 rw auto prealloc quick
-+229 auto rw
-diff --git a/src/Makefile b/src/Makefile
-index 2f95fe2..976133d 100644
---- a/src/Makefile
-+++ b/src/Makefile
-@@ -10,7 +10,7 @@ TARGETS = dirstress fill fill2 getpagesize holes lstat64 \
- 	mmapcat append_reader append_writer dirperf metaperf \
- 	devzero feature alloc fault fstest t_access_root \
- 	godown resvtest writemod makeextents itrash rename \
--	multi_open_unlink dmiperf unwritten_sync genhashnames
-+	multi_open_unlink dmiperf unwritten_sync genhashnames t_holes
- 
- LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
- 	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
-diff --git a/src/t_holes.c b/src/t_holes.c
-new file mode 100644
-index 0000000..eba310a
---- /dev/null
-+++ b/src/t_holes.c
-@@ -0,0 +1,41 @@
-+/*
-+ * Copyright (c) 2010 Silicon Graphics, Inc.  All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+#include <unistd.h>
-+#include <fcntl.h>
-+#include <sys/types.h>
-+#include <stdio.h>
-+
-+int main(int argc, char **argv)
-+{
-+	int buf[1024];
-+	int fd, i, j;
-+
-+	fd = open(argv[1], O_RDWR|O_CREAT, 0666);
-+        for (i = 1; i < 9100; i++) {
-+		for (j = 0; j < 1024; j++)
-+			buf[j]  = i | i << 5;
-+
-+		if (write(fd,buf,253*4*sizeof(int))!= 253*4*sizeof(int))
-+			printf("Write did not return correct amount\n");
-+
-+		if ((i % 9) == 0 && i < 9001)
-+			lseek(fd, 4096 * 110,SEEK_CUR);
-+	}
-+
-+	close(fd);
-+	return 0;
-+}
+ 229 auto rw
++230 auto quota quick
 -- 
 1.6.4.2
 
