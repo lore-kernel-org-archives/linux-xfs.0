@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4JDa6cA131904 for <xfs@oss.sgi.com>; Wed, 19 May 2010 08:36:07 -0500
+	o4JDa7iC131914 for <xfs@oss.sgi.com>; Wed, 19 May 2010 08:36:07 -0500
 Received: from mx1.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5E0FF156C51A
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CB88D156C51E
 	for <xfs@oss.sgi.com>; Wed, 19 May 2010 06:39:31 -0700 (PDT)
 Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
-	with ESMTP id qFyZPdNc574FOTWi for <xfs@oss.sgi.com>;
+	with ESMTP id h2maL4Ic8gxwEKRY for <xfs@oss.sgi.com>;
 	Wed, 19 May 2010 06:39:31 -0700 (PDT)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 5/7] Add quota test with fsstress
-Date: Wed, 19 May 2010 15:38:07 +0200
-Message-Id: <1274276289-8839-6-git-send-email-jack@suse.cz>
+Subject: [PATCH 4/7] Add test of quota accounting using fsx
+Date: Wed, 19 May 2010 15:38:06 +0200
+Message-Id: <1274276289-8839-5-git-send-email-jack@suse.cz>
 In-Reply-To: <1274276289-8839-1-git-send-email-jack@suse.cz>
 References: <1274276289-8839-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,29 +30,30 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: hch@infradead.org, Jan Kara <jack@suse.cz>
 
-Run fsstress and verify that quota accounting is correct after it finishes.
+Run fsx (and also several fsx threads in parallel) and verify that
+quota accounting is correct after they finish.
 
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- 232     |  118 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 232.out |    6 +++
+ 231     |  139 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 231.out |   10 +++++
  group   |    1 +
- 3 files changed, 125 insertions(+), 0 deletions(-)
- create mode 100755 232
- create mode 100644 232.out
+ 3 files changed, 150 insertions(+), 0 deletions(-)
+ create mode 100755 231
+ create mode 100644 231.out
 
-diff --git a/232 b/232
+diff --git a/231 b/231
 new file mode 100755
-index 0000000..ef8ce8a
+index 0000000..0e34d33
 --- /dev/null
-+++ b/232
-@@ -0,0 +1,118 @@
++++ b/231
+@@ -0,0 +1,139 @@
 +#! /bin/bash
-+# FSQA Test No. 232
++# FSQA Test No. 231
 +#
-+# Run fsstress with quotas enabled and verify accounted quotas in the end
++# Run fsx with quotas enabled and verify accounted quotas in the end
 +#
-+# Derived from test 231
++# Derived from test 127
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2006 Silicon Graphics, Inc.  All Rights Reserved.
 +#
@@ -88,7 +89,7 @@ index 0000000..ef8ce8a
 +. ./common.quota
 +
 +FSX_FILE_SIZE=64000000
-+FSX_ARGS="-q -l $FSX_FILE_SIZE -o 65536 -S 191110531 -N 100000"
++FSX_ARGS="-q -l $FSX_FILE_SIZE -o 65536 -S 191110531 -N 20000"
 +
 +filter_scratch()
 +{
@@ -101,40 +102,34 @@ index 0000000..ef8ce8a
 +check_usage()
 +{
 +	quotaon -f -u -g $SCRATCH_MNT 2>/dev/null
-+	repquota -u -g -n $SCRATCH_MNT  | grep -v "^#0" | filter_scratch |
-+		sort >$tmp.orig
++	repquota -u -g $SCRATCH_MNT  | grep -v "^root" | filter_scratch \
++		>$tmp.orig
 +	quotacheck -u -g $SCRATCH_MNT 2>/dev/null
-+	repquota -u -g -n $SCRATCH_MNT  | grep -v "^#0" | filter_scratch |
-+		sort >$tmp.checked
++	repquota -u -g $SCRATCH_MNT  | grep -v "^root" | filter_scratch \
++		>$tmp.checked
 +	quotaon -u -g $SCRATCH_MNT 2>/dev/null
 +	diff $tmp.orig $tmp.checked
 +}
 +
-+_filter_num()
++_fsx()
 +{
-+	tee -a $here/$seq.full |\
-+	sed -e 's/[0-9][0-9]* inodes/I inodes/g' \
-+	    -e 's/[0-9][0-9]* paths/P paths/g' \
-+	    -e 's/seed = [0-9][0-9]*/seed = S/'
-+}
++	tasks=$1
++	echo "=== FSX Standard Mode, Memory Mapping, $tasks Tasks ==="
++	for (( i = 1; i <= $tasks; i++ )); do
++		su $qa_user -c "ltp/fsx $FSX_ARGS $SCRATCH_MNT/fsx_file$i" \
++			>$tmp.output$i 2>&1 &
++	done
 +
-+_fsstress()
-+{
-+	echo ""
-+	echo "Testing fsstress"
-+	echo ""
-+
-+	out=$SCRATCH_MNT/fsstress.$$
-+	count=2000
-+	args="-n $count -d $out -p 7"
-+
-+	echo "fsstress $args" | sed -e "s#$out#outdir#"
-+	if ! $FSSTRESS_PROG $args | _filter_num
-+	then
-+		echo "    fsstress $args returned $?"
-+		cat $tmp.out | tee -a $here/$seq.full
-+		status=1
-+	fi
++	for (( i = 1; i <= $tasks; i++ )); do
++		if ! wait %$i; then
++			cat $tmp.output$i
++			wait
++			return 1
++		fi
++		$XFS_IO_PROG -F -c 'fsync' $SCRATCH_MNT/fsx_file$i
++		cat $tmp.output$i
++	done
++	return 0
 +}
 +
 +# real QA test starts here
@@ -142,17 +137,44 @@ index 0000000..ef8ce8a
 +_supported_os Linux
 +_require_scratch
 +_require_quota
++_require_user
 +_need_to_be_root
 +
-+umount $SCRATCH_DEV 2>/dev/null
 +_scratch_mkfs >> $seq.full 2>&1
 +_scratch_mount "-o usrquota,grpquota"
 +chmod 777 $SCRATCH_MNT
 +quotacheck -u -g $SCRATCH_MNT 2>/dev/null
 +quotaon -u -g $SCRATCH_MNT 2>/dev/null
 +
-+if ! _fsstress; then
++if ! _fsx 1; then
 +	umount $SCRATCH_DEV 2>/dev/null
++	status=1
++	exit
++fi
++
++if ! check_usage; then
++	umount $SCRATCH_DEV 2>/dev/null
++	status=1
++	exit
++fi
++
++if ! _fsx 4; then
++	umount $SCRATCH_DEV 2>/dev/null
++	status=1
++	exit
++fi
++
++if ! check_usage; then
++	umount $SCRATCH_DEV 2>/dev/null
++	status=1
++	exit
++fi
++
++#flush cache after write
++FSX_ARGS="-f $FSX_ARGS"
++if ! _fsx 1; then
++	umount $SCRATCH_DEV 2>/dev/null
++	status=1
 +	exit
 +fi
 +
@@ -165,27 +187,31 @@ index 0000000..ef8ce8a
 +umount $SCRATCH_DEV 2>/dev/null
 +status=0
 +exit
-diff --git a/232.out b/232.out
+diff --git a/231.out b/231.out
 new file mode 100644
-index 0000000..744192e
+index 0000000..2f2d072
 --- /dev/null
-+++ b/232.out
-@@ -0,0 +1,6 @@
-+QA output created by 232
-+
-+Testing fsstress
-+
-+fsstress -n 2000 -d outdir -p 7
-+seed = S
++++ b/231.out
+@@ -0,0 +1,10 @@
++QA output created by 231
++=== FSX Standard Mode, Memory Mapping, 1 Tasks ===
++All operations completed A-OK!
++=== FSX Standard Mode, Memory Mapping, 4 Tasks ===
++All operations completed A-OK!
++All operations completed A-OK!
++All operations completed A-OK!
++All operations completed A-OK!
++=== FSX Standard Mode, Memory Mapping, 1 Tasks ===
++All operations completed A-OK!
 diff --git a/group b/group
-index 6b59c69..c8cd774 100644
+index 441e0e9..6b59c69 100644
 --- a/group
 +++ b/group
-@@ -345,3 +345,4 @@ deprecated
+@@ -344,3 +344,4 @@ deprecated
+ 228 rw auto prealloc quick
  229 auto rw
  230 auto quota quick
- 231 auto quota
-+232 auto quota
++231 auto quota
 -- 
 1.6.4.2
 
