@@ -1,21 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4JJmF4I150589 for <xfs@oss.sgi.com>; Wed, 19 May 2010 14:48:16 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0305E109A4E2
-	for <xfs@oss.sgi.com>; Wed, 19 May 2010 12:51:42 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id IJritcq3BZGFIkG3 for
-	<xfs@oss.sgi.com>; Wed, 19 May 2010 12:51:42 -0700 (PDT)
-Message-ID: <4BF44105.4040902@sandeen.net>
-Date: Wed, 19 May 2010 14:50:29 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	o4JKsjHU154733 for <xfs@oss.sgi.com>; Wed, 19 May 2010 15:54:45 -0500
+From: Alex Elder <aelder@sgi.com>
+Message-Id: <201005192056.o4JKuua2012029@stout.americas.sgi.com>
+Date: Wed, 19 May 2010 15:56:56 -0500
+Subject: [GIT PULL] XFS update for 2.6.35-rc1
 MIME-Version: 1.0
-Subject: Re: noatime,nodiratime?
-References: <4BF3F212.5030600@hardwarefreak.com>	<20100519182336.GA6264@infradead.org>
-	<4BF43B3C.6030403@hardwarefreak.com>
-In-Reply-To: <4BF43B3C.6030403@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,40 +19,131 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On 05/19/2010 02:25 PM, Stan Hoeppner wrote:
+FYI, I have a second batch of changes for XFS for 2.6.35-rc1.  I'll
+send a separate pull request for them in another day or two.
 
-> Any chance xfs_info could be updated to output the information we're
-> discussing, including spitting out the XFS specific mount options that are
-> currently active at the time of running xfs_info?  
+					-Alex
 
-xfs_info actually calls xfs_growfs -n, and it's only reporting on-disk
-geometry.  I kind of doubt that'll change.  If you want to see mount
-options, /proc/mounts is the place ... but then we don't show the
-defaults ;)  I wonder if we should change that and be explicit about
-every option in /proc/mounts *shrug*
+The following changes since commit 537b60d17894b7c19a6060feae40299d7109d6e7:
 
-> There seems to be much
-> confusion in the community due to lack of accurate information being
-> available.  Google for "XFS performance" and you'll see
-> "noatime,nodiratime,logbufs=8" mentioned consistently from early 2000's to
-> the present as a performance enhancer.
+  Merge branch 'x86-uv-for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/tip/linux-2.6-tip (2010-05-18 09:46:35 -0700)
 
-It's so hard to keep google up to date ;)
+are available in the git repository at:
 
-> If what you say is true, on my 2.6.32.9 system, I actually decreased logbufs
-> from 8 to 4 half an hour ago, instead of increasing it from 2 to 4, as man
-> lead me to believe I was doing.  Do any of the xfs tools output the XFS
-> specific active mount options allowing an op to confirm changes?  As someone
-> else stated it would be nice to be able to see these parameter values.  As
-> is, AFAICT, there's no way to confirm these parameter values.
+  git://oss.sgi.com/xfs/xfs for-linus
 
-/proc/mounts shows all mount options which were set differently from
-defaults.
+Alex Elder (12):
+      xfs: add const qualifiers to xfs error function args
+      xfs: fix min bufsize bugs in two places
+      xfs: simplify XLOG_SECTOR_ROUND*()
+      xfs: kill XLOG_SECTOR_ROUND*()
+      xfs: encapsulate bbcount validity checking
+      xfs: nothing special about 1-block log sector
+      xfs: change a few labels in xfs_log_recover.c
+      xfs: avoid repeated pointer dereferences
+      xfs: minor odds and ends in xfs_log_recover.c
+      xfs: record log sector size rather than log2(that)
+      xfs: kill off l_sectbb_mask
+      Merge branch 'master' into for-linus
 
--Eric
+Andrea Gelmini (1):
+      xfs: xfs_trace.c: duplicated include
+
+Christoph Hellwig (23):
+      xfs: clean up xfs_trans_commit logic even more
+      xfs: reindent xlog_write
+      xfs: clean up xlog_write_adv_cnt
+      xfs: remove xfs_dqmarker
+      xfs: remove periodic superblock writeback
+      xfs: enforce synchronous writes in xfs_bwrite
+      xfs: wait for direct I/O to complete in fsync and write_inode
+      xfs: access quotainfo structure directly
+      xfs: remove a few macro indirections in the quota code
+      xfs: removed unused XFS_QMOPT_ flags
+      xfs: remove dead XFS_LOUD_RECOVERY code
+      xfs: simplify buffer to transaction matching
+      xfs: limit xfs_imap_to_bmap to a single mapping
+      xfs: remove iomap_target
+      xfs: remove iomap_delta
+      xfs: report iomap_offset and iomap_bsize in block base
+      xfs: report iomap_bn in block base
+      xfs: kill struct xfs_iomap
+      xfs: move I/O type flags into xfs_aops.c
+      xfs: clean up xfs_iomap_valid
+      xfs: clean up mapping size calculation in __xfs_get_blocks
+      xfs: clean up end index calculation in xfs_page_state_convert
+      xfs: mark xfs_iomap_write_ helpers static
+
+Dave Chinner (16):
+      xfs: factor log item initialisation
+      xfs: Add inode pin counts to traces
+      xfs: remove stale parameter from ->iop_unpin method
+      xfs: fix reservation release commit flag in xfs_bmap_add_attrfork()
+      xfs: split out iclog writing from xfs_trans_commit()
+      xfs: update and factor xfs_trans_committed()
+      xfs: Clean up xfs_trans_committed code after factoring
+      xfs: log ticket reservation underestimates the number of iclogs
+      xfs: factor xlog_write
+      xfs: introduce new internal log vector structure
+      xfs: add log item recovery tracing
+      xfs: convert the per-mount dquot list to use list heads
+      xfs: remove duplicate code from dquot reclaim
+      xfs: convert the dquot hash list to use list heads
+      xfs: convert the dquot free list to use list heads
+      xfs: make the log ticket transaction id random
+
+Jan Engelhardt (1):
+      xfs: add blockdev name to kthreads
+
+Tao Ma (1):
+      xfs: Make fiemap work in query mode.
+
+Zhitong Wang (1):
+      xfs: Fix integer overflow in fs/xfs/linux-2.6/xfs_ioctl*.c
+
+ fs/xfs/linux-2.6/xfs_aops.c    |  231 +++++++-----
+ fs/xfs/linux-2.6/xfs_buf.c     |   27 +-
+ fs/xfs/linux-2.6/xfs_buf.h     |    2 +-
+ fs/xfs/linux-2.6/xfs_file.c    |    2 +
+ fs/xfs/linux-2.6/xfs_ioctl.c   |    4 +
+ fs/xfs/linux-2.6/xfs_ioctl32.c |    4 +
+ fs/xfs/linux-2.6/xfs_iops.c    |    5 +-
+ fs/xfs/linux-2.6/xfs_super.c   |   10 +-
+ fs/xfs/linux-2.6/xfs_sync.c    |   91 ++----
+ fs/xfs/linux-2.6/xfs_trace.c   |    4 +-
+ fs/xfs/linux-2.6/xfs_trace.h   |  150 ++++++++-
+ fs/xfs/quota/xfs_dquot.c       |  193 +++++------
+ fs/xfs/quota/xfs_dquot.h       |   35 +--
+ fs/xfs/quota/xfs_dquot_item.c  |   30 +-
+ fs/xfs/quota/xfs_qm.c          |  609 ++++++++++++--------------------
+ fs/xfs/quota/xfs_qm.h          |   23 +-
+ fs/xfs/quota/xfs_qm_stats.c    |    2 +-
+ fs/xfs/quota/xfs_qm_syscalls.c |  152 ++++-----
+ fs/xfs/quota/xfs_quota_priv.h  |  102 ------
+ fs/xfs/quota/xfs_trans_dquot.c |   29 +-
+ fs/xfs/xfs_bmap.c              |    2 +-
+ fs/xfs/xfs_buf_item.c          |   55 ++--
+ fs/xfs/xfs_buf_item.h          |    2 +-
+ fs/xfs/xfs_error.c             |   30 +-
+ fs/xfs/xfs_error.h             |    9 +-
+ fs/xfs/xfs_extfree_item.c      |   18 +-
+ fs/xfs/xfs_inode.c             |    2 +
+ fs/xfs/xfs_inode_item.c        |   21 +-
+ fs/xfs/xfs_iomap.c             |  123 ++-----
+ fs/xfs/xfs_iomap.h             |   47 +---
+ fs/xfs/xfs_log.c               |  702 +++++++++++++++++++++++--------------
+ fs/xfs/xfs_log.h               |   13 +
+ fs/xfs/xfs_log_priv.h          |   12 +-
+ fs/xfs/xfs_log_recover.c       |  311 ++++++++---------
+ fs/xfs/xfs_mount.c             |    7 -
+ fs/xfs/xfs_quota.h             |    3 -
+ fs/xfs/xfs_trans.c             |  760 +++++++++++++++++++---------------------
+ fs/xfs/xfs_trans.h             |   14 +-
+ fs/xfs/xfs_trans_buf.c         |  187 +++--------
+ 39 files changed, 1905 insertions(+), 2118 deletions(-)
 
 _______________________________________________
 xfs mailing list
