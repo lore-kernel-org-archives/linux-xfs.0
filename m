@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4JHuJeV145584 for <xfs@oss.sgi.com>; Wed, 19 May 2010 12:56:20 -0500
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6C5A99E8A93
-	for <xfs@oss.sgi.com>; Wed, 19 May 2010 10:59:47 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id nuGaUtCEF3myRaRH
-	for <xfs@oss.sgi.com>; Wed, 19 May 2010 10:59:47 -0700 (PDT)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id 035056C24C
-	for <xfs@oss.sgi.com>; Wed, 19 May 2010 12:58:37 -0500 (CDT)
-Message-ID: <4BF42725.8060903@hardwarefreak.com>
-Date: Wed, 19 May 2010 13:00:05 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
-MIME-Version: 1.0
+	o4JILKiZ146609 for <xfs@oss.sgi.com>; Wed, 19 May 2010 13:21:22 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D9B65156DD13
+	for <xfs@oss.sgi.com>; Wed, 19 May 2010 11:24:47 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id h13cbQkXA4Js9fCn for
+	<xfs@oss.sgi.com>; Wed, 19 May 2010 11:24:47 -0700 (PDT)
+Date: Wed, 19 May 2010 14:23:36 -0400
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: noatime,nodiratime?
+Message-ID: <20100519182336.GA6264@infradead.org>
 References: <4BF3F212.5030600@hardwarefreak.com>
-	<87mxvveqyq.fsf@petole.demisel.net>
-In-Reply-To: <87mxvveqyq.fsf@petole.demisel.net>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4BF3F212.5030600@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,30 +28,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: xfs@oss.sgi.com
 
-Nicolas KOWALSKI put forth on 5/19/2010 12:33 PM:
-> Stan Hoeppner <stan@hardwarefreak.com> writes:
->> Need a little education here.  I have a general understanding of what the
->> inode access timestamps "are" but I have no idea what, if any, applications
->> make use of these access times.  I see posts all over Google land saying to
->> use "noatime,nodiratime,logbufs=8" for XFS mount options to increase
->> performance.
-> 
-> BTW, about the mount options for XFS, is there a way to check for the
-> default values (things like logbsize, logbufs, something else)?
-> 
-> I used to have noatime,logbufs=8,logbsize=256k on my fileserver, not
-> sure if these are still necessary.
+On Wed, May 19, 2010 at 09:13:38AM -0500, Stan Hoeppner wrote:
+> Need a little education here.  I have a general understanding of what the
+> inode access timestamps "are" but I have no idea what, if any, applications
+> make use of these access times.  I see posts all over Google land saying to
+> use "noatime,nodiratime,logbufs=8" for XFS mount options to increase
+> performance.
 
-Yes, the defaults for each parameter are in your mount man page.
-logbsize=256K is higher than the default, which is 32K for any system with
-over 32MB RAM.  logbufs=8 will be the default if your blocksize is 64K.  If
-your blocksize is 4K you'll get logbufs=2 by default.  This is all in the
-XFS section of man mount.
-
--- 
-Stan
+Which doesn't make much sense.  First 8 log buffers has been the default
+for XFS for a long time.  Second nodiratime has always been useless as
+it is a strict subset of of noatime.  Now noatime isn't the default yet,
+but instead relatime is, which still updates the atime in memory, but
+only writes it back when the inode has other changes, or on umount.
+It should give you equivalent performance to noatime, but better
+functionality.
 
 _______________________________________________
 xfs mailing list
