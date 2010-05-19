@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4JE17Ag133677 for <xfs@oss.sgi.com>; Wed, 19 May 2010 09:01:08 -0500
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 47667156CBC8
-	for <xfs@oss.sgi.com>; Wed, 19 May 2010 07:04:33 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id ZckiA8Dg4nXhvz8i
-	for <xfs@oss.sgi.com>; Wed, 19 May 2010 07:04:33 -0700 (PDT)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id 487936C24C
-	for <xfs@oss.sgi.com>; Wed, 19 May 2010 09:03:25 -0500 (CDT)
-Message-ID: <4BF3EFBD.7080808@hardwarefreak.com>
-Date: Wed, 19 May 2010 09:03:41 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	o4JDolSW133153 for <xfs@oss.sgi.com>; Wed, 19 May 2010 08:50:48 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CDB721DF395D
+	for <xfs@oss.sgi.com>; Wed, 19 May 2010 06:53:05 -0700 (PDT)
+Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
+	by cuda.sgi.com with ESMTP id Y0n03tujAHiSsQnf for
+	<xfs@oss.sgi.com>; Wed, 19 May 2010 06:53:05 -0700 (PDT)
+Message-ID: <4BF3ED40.20609@sandeen.net>
+Date: Wed, 19 May 2010 08:53:04 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
 Subject: Re: mounting hixfs (Hitachi "tuned" XFS) on 2.6 kernel
 References: <AANLkTikek9K8-BqNgee_tXz72beHpWEUl41YtDPrD-3P@mail.gmail.com>	<4BF1EC44.7070803@hardwarefreak.com>	<AANLkTin_WoxWP3JXHvflVVP_2fGzgbSVfpPW1KGiyd1z@mail.gmail.com>	<4BF219A6.4010900@hardwarefreak.com>	<AANLkTim93-4YueMBizXKLGRFka2vwqzJzDx5_P5gs0bl@mail.gmail.com>	<AANLkTim17eZcbW3gCOdziY3-Vsyd-XjBkmWV875yOWIC@mail.gmail.com>	<1274201857.17233.144.camel@montana.filmlight.ltd.uk>	<AANLkTimZnSIrjAsboL5AgZPRPl3qzCz0DyfE8cEp6KmO@mail.gmail.com>
-	<4BF366C9.9050300@hardwarefreak.com> <4BF3ED40.20609@sandeen.net>
-In-Reply-To: <4BF3ED40.20609@sandeen.net>
+	<4BF366C9.9050300@hardwarefreak.com>
+In-Reply-To: <4BF366C9.9050300@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,33 +28,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: xfs@oss.sgi.com
 
-Eric Sandeen put forth on 5/19/2010 8:53 AM:
+Stan Hoeppner wrote:
+> big beer put forth on 5/18/2010 5:43 PM:
+> 
+>> Strangely enough I was told by Hitachi that they licensed XFS from
+>> SGI, so they don't have any GPL code to give back.
+> 
+> IIRC (and IANAL) any version of XFS, with the exception of CXFS, running on
+> Linux is GPL'd code.  There is no such beast as non GPL XFS on Linux.
+> 
+> For that SGI licensing statement to be true, they've have to be running XFS
+> on IRIX, which means they'd need an IRIX license as well.  Not to mention
+> that IRIX only runs on MIPS hardware, and only SGI MIPS hardware.  This HDS
+> storage blade is x86.
+> 
+> It seems whoever told you that is misinformed or is being disingenuous in
+> order to avoid assisting you.
 
->> The GNU GPL does not give users permission to attach other licenses to the 
->> program. But the copyright holder for a program can release it under several 
->> different licenses in parallel. One of them may be the GNU GPL.
+Anyone with clear copyright can license the code under any license(s) they wish.
+So assuming SGI had clear copyright on all linux xfs code, it is certainly
+possible to offer it under an alternate license.
 
-I admit my ignorance.  I was under the impression the GPL forbade a
-copyright holder from releasing under parallel licenses if the GPL was one
-of them.  Thank you for educating me Eric.
+http://www.gnu.org/licenses/gpl-faq.html#HeardOtherLicense :
 
-It seems posts are made weekly to various lists that the reason ZFS
-can't/won't be included in Linux is because the Open Solaris license is
-incompatible with the GPL.  According to what you posted, there's nothing
-stopping Oracle from releasing the ZFS source under multiple licenses
-concurrently, including the GPL.  So I guess the "conventional wisdom"
-argument relating to Linux+GPL+ZFS is false.  The reasons are "other".
+> I heard that someone got a copy of a GPL'ed program under another license.
+> Is this possible?
+> 
+> The GNU GPL does not give users permission to attach other licenses to the 
+> program. But the copyright holder for a program can release it under several 
+> different licenses in parallel. One of them may be the GNU GPL.
+> 
+> The license that comes in your copy, assuming it was put in by the copyright 
+> holder and that you got the copy legitimately, is the license that applies 
+> to your copy.
 
-> (hoping the thread doesn't dissolve into a giant gpl speculation
-> thread, having just fueled it further...)
+-Eric
 
-Nah.  This will be my only comment on it.  I rarely swim in the GPL pool as
-I'm not a dev.  Hence my ignorance. :(  Again thanks for the education.
-
--- 
-Stan
+(hoping the thread doesn't dissolve into a giant gpl speculation
+thread, having just fueled it further...)
 
 _______________________________________________
 xfs mailing list
