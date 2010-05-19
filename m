@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4JDa7iC131914 for <xfs@oss.sgi.com>; Wed, 19 May 2010 08:36:07 -0500
-Received: from mx1.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CB88D156C51E
-	for <xfs@oss.sgi.com>; Wed, 19 May 2010 06:39:31 -0700 (PDT)
-Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
-	with ESMTP id h2maL4Ic8gxwEKRY for <xfs@oss.sgi.com>;
-	Wed, 19 May 2010 06:39:31 -0700 (PDT)
+	o4JDa7Wg131928 for <xfs@oss.sgi.com>; Wed, 19 May 2010 08:36:07 -0500
+Received: from mx2.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B76C5156C51A
+	for <xfs@oss.sgi.com>; Wed, 19 May 2010 06:39:33 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id FDBHtMJoh5PJGnfH for <xfs@oss.sgi.com>;
+	Wed, 19 May 2010 06:39:33 -0700 (PDT)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 4/7] Add test of quota accounting using fsx
-Date: Wed, 19 May 2010 15:38:06 +0200
-Message-Id: <1274276289-8839-5-git-send-email-jack@suse.cz>
+Subject: [PATCH 1/7] xfstests: test extent size hints
+Date: Wed, 19 May 2010 15:38:03 +0200
+Message-Id: <1274276289-8839-2-git-send-email-jack@suse.cz>
 In-Reply-To: <1274276289-8839-1-git-send-email-jack@suse.cz>
 References: <1274276289-8839-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -28,34 +28,45 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: hch@infradead.org, Jan Kara <jack@suse.cz>
+Cc: hch@infradead.org, Christoph Hellwig <hch@lst.de>
 
-Run fsx (and also several fsx threads in parallel) and verify that
-quota accounting is correct after they finish.
+From: Christoph Hellwig <hch@lst.de>
 
-Signed-off-by: Jan Kara <jack@suse.cz>
+This is an adapted version of the reproduced in OSS BZ #874, which
+shows file corruption when using the extent size hint.
+
+Signed-off-by: Geoffrey Wehrman <gwehrman@sgi.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- 231     |  139 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 231.out |   10 +++++
- group   |    1 +
- 3 files changed, 150 insertions(+), 0 deletions(-)
- create mode 100755 231
- create mode 100644 231.out
+ 229           |   88 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 229.out       |    4 ++
+ group         |    1 +
+ src/Makefile  |    2 +-
+ src/t_holes.c |   41 ++++++++++++++++++++++++++
+ 5 files changed, 135 insertions(+), 1 deletions(-)
+ create mode 100644 229
+ create mode 100644 229.out
+ create mode 100644 src/t_holes.c
 
-diff --git a/231 b/231
-new file mode 100755
-index 0000000..0e34d33
+diff --git a/229 b/229
+new file mode 100644
+index 0000000..418a5af
 --- /dev/null
-+++ b/231
-@@ -0,0 +1,139 @@
++++ b/229
+@@ -0,0 +1,88 @@
 +#! /bin/bash
-+# FSQA Test No. 231
++# FS QA Test No. 221
 +#
-+# Run fsx with quotas enabled and verify accounted quotas in the end
++# Check for file corruption when using the extent size hint on
++# the normal data subvolume.
 +#
-+# Derived from test 127
++# http://oss.sgi.com/bugzilla/show_bug.cgi?id=874
++#
++# Based on a bug report and testcase from Geoffrey Wehrman <gwehrman@sgi.com>.
++#
 +#-----------------------------------------------------------------------
-+# Copyright (c) 2006 Silicon Graphics, Inc.  All Rights Reserved.
++# Copyright (c) 2010 Christoph Hellwig.  All Rights Reserved.
++# Copyright (c) 2010 Silicon Graphics, Inc.  All Rights Reserved.
 +#
 +# This program is free software; you can redistribute it and/or
 +# modify it under the terms of the GNU General Public License as
@@ -73,7 +84,7 @@ index 0000000..0e34d33
 +#-----------------------------------------------------------------------
 +#
 +# creator
-+owner=jack@suse.cz
++owner=hch@lst.de
 +
 +seq=`basename $0`
 +echo "QA output created by $seq"
@@ -81,137 +92,135 @@ index 0000000..0e34d33
 +here=`pwd`
 +tmp=/tmp/$$
 +status=1	# failure is the default!
-+trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    rm -rf ${TDIR}
++}
++
++trap "_cleanup ; exit \$status" 0 1 2 3 15
 +
 +# get standard environment, filters and checks
 +. ./common.rc
-+. ./common.filter
-+. ./common.quota
-+
-+FSX_FILE_SIZE=64000000
-+FSX_ARGS="-q -l $FSX_FILE_SIZE -o 65536 -S 191110531 -N 20000"
-+
-+filter_scratch()
-+{
-+        perl -ne "
-+s,$SCRATCH_MNT,[SCR_MNT],;
-+s,$SCRATCH_DEV,[SCR_DEV],;
-+        print;"
-+}
-+
-+check_usage()
-+{
-+	quotaon -f -u -g $SCRATCH_MNT 2>/dev/null
-+	repquota -u -g $SCRATCH_MNT  | grep -v "^root" | filter_scratch \
-+		>$tmp.orig
-+	quotacheck -u -g $SCRATCH_MNT 2>/dev/null
-+	repquota -u -g $SCRATCH_MNT  | grep -v "^root" | filter_scratch \
-+		>$tmp.checked
-+	quotaon -u -g $SCRATCH_MNT 2>/dev/null
-+	diff $tmp.orig $tmp.checked
-+}
-+
-+_fsx()
-+{
-+	tasks=$1
-+	echo "=== FSX Standard Mode, Memory Mapping, $tasks Tasks ==="
-+	for (( i = 1; i <= $tasks; i++ )); do
-+		su $qa_user -c "ltp/fsx $FSX_ARGS $SCRATCH_MNT/fsx_file$i" \
-+			>$tmp.output$i 2>&1 &
-+	done
-+
-+	for (( i = 1; i <= $tasks; i++ )); do
-+		if ! wait %$i; then
-+			cat $tmp.output$i
-+			wait
-+			return 1
-+		fi
-+		$XFS_IO_PROG -F -c 'fsync' $SCRATCH_MNT/fsx_file$i
-+		cat $tmp.output$i
-+	done
-+	return 0
-+}
 +
 +# real QA test starts here
 +_supported_fs generic
 +_supported_os Linux
-+_require_scratch
-+_require_quota
-+_require_user
-+_need_to_be_root
 +
-+_scratch_mkfs >> $seq.full 2>&1
-+_scratch_mount "-o usrquota,grpquota"
-+chmod 777 $SCRATCH_MNT
-+quotacheck -u -g $SCRATCH_MNT 2>/dev/null
-+quotaon -u -g $SCRATCH_MNT 2>/dev/null
++TDIR="${TEST_DIR}/t_holes"
++NFILES="10"
++EXTSIZE="256k"
 +
-+if ! _fsx 1; then
-+	umount $SCRATCH_DEV 2>/dev/null
-+	status=1
-+	exit
-+fi
++# Create the test directory
++mkdir ${TDIR}
 +
-+if ! check_usage; then
-+	umount $SCRATCH_DEV 2>/dev/null
-+	status=1
-+	exit
-+fi
++# Set the test directory extsize
++xfs_io -c "extsize ${EXTSIZE}" ${TDIR}
 +
-+if ! _fsx 4; then
-+	umount $SCRATCH_DEV 2>/dev/null
-+	status=1
-+	exit
-+fi
++# Create a set of holey files
++echo "generating ${NFILES} files"
 +
-+if ! check_usage; then
-+	umount $SCRATCH_DEV 2>/dev/null
-+	status=1
-+	exit
-+fi
++for i in $(seq 0 ${NFILES}); do
++  $here/src/t_holes ${TDIR}/${i}
++done
 +
-+#flush cache after write
-+FSX_ARGS="-f $FSX_ARGS"
-+if ! _fsx 1; then
-+	umount $SCRATCH_DEV 2>/dev/null
-+	status=1
-+	exit
-+fi
++# Compare the files
++echo "comparing files"
++errcnt=0
++j=0
++for i in $(seq 0 ${NFILES}); do
++    let j=$i+1
++    while [ ${j} -lt ${NFILES} ] ; do
++	if ! cmp ${TDIR}/${i} ${TDIR}/${j} ; then
++	    let errcnt=$errcnt+1
++	fi
++	let j=$j+1
++    done
++done
 +
-+if ! check_usage; then
-+	umount $SCRATCH_DEV 2>/dev/null
-+	status=1
-+	exit
-+fi
++echo "got ${errcnt} errors"
 +
-+umount $SCRATCH_DEV 2>/dev/null
-+status=0
-+exit
-diff --git a/231.out b/231.out
++status=$errcnt
++exit $status
+diff --git a/229.out b/229.out
 new file mode 100644
-index 0000000..2f2d072
+index 0000000..233920f
 --- /dev/null
-+++ b/231.out
-@@ -0,0 +1,10 @@
-+QA output created by 231
-+=== FSX Standard Mode, Memory Mapping, 1 Tasks ===
-+All operations completed A-OK!
-+=== FSX Standard Mode, Memory Mapping, 4 Tasks ===
-+All operations completed A-OK!
-+All operations completed A-OK!
-+All operations completed A-OK!
-+All operations completed A-OK!
-+=== FSX Standard Mode, Memory Mapping, 1 Tasks ===
-+All operations completed A-OK!
++++ b/229.out
+@@ -0,0 +1,4 @@
++QA output created by 229
++generating 10 files
++comparing files
++got 0 errors
 diff --git a/group b/group
-index 441e0e9..6b59c69 100644
+index 69ba24d..2c1ac50 100644
 --- a/group
 +++ b/group
-@@ -344,3 +344,4 @@ deprecated
+@@ -342,3 +342,4 @@ deprecated
+ 226 auto enospc
+ 227 auto fsr
  228 rw auto prealloc quick
- 229 auto rw
- 230 auto quota quick
-+231 auto quota
++229 auto rw
+diff --git a/src/Makefile b/src/Makefile
+index 2f95fe2..976133d 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -10,7 +10,7 @@ TARGETS = dirstress fill fill2 getpagesize holes lstat64 \
+ 	mmapcat append_reader append_writer dirperf metaperf \
+ 	devzero feature alloc fault fstest t_access_root \
+ 	godown resvtest writemod makeextents itrash rename \
+-	multi_open_unlink dmiperf unwritten_sync genhashnames
++	multi_open_unlink dmiperf unwritten_sync genhashnames t_holes
+ 
+ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
+ 	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
+diff --git a/src/t_holes.c b/src/t_holes.c
+new file mode 100644
+index 0000000..eba310a
+--- /dev/null
++++ b/src/t_holes.c
+@@ -0,0 +1,41 @@
++/*
++ * Copyright (c) 2010 Silicon Graphics, Inc.  All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++#include <unistd.h>
++#include <fcntl.h>
++#include <sys/types.h>
++#include <stdio.h>
++
++int main(int argc, char **argv)
++{
++	int buf[1024];
++	int fd, i, j;
++
++	fd = open(argv[1], O_RDWR|O_CREAT, 0666);
++        for (i = 1; i < 9100; i++) {
++		for (j = 0; j < 1024; j++)
++			buf[j]  = i | i << 5;
++
++		if (write(fd,buf,253*4*sizeof(int))!= 253*4*sizeof(int))
++			printf("Write did not return correct amount\n");
++
++		if ((i % 9) == 0 && i < 9001)
++			lseek(fd, 4096 * 110,SEEK_CUR);
++	}
++
++	close(fd);
++	return 0;
++}
 -- 
 1.6.4.2
 
