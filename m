@@ -1,16 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4JIXhFu147090 for <xfs@oss.sgi.com>; Wed, 19 May 2010 13:33:43 -0500
-Subject: Re: [PATCH 03/12] xfs: modify buffer item reference counting
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1274138668-1662-4-git-send-email-david@fromorbit.com>
-References: <1274138668-1662-1-git-send-email-david@fromorbit.com>
-	<1274138668-1662-4-git-send-email-david@fromorbit.com>
-Date: Wed, 19 May 2010 13:35:58 -0500
-Message-ID: <1274294158.2140.35.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	o4JIMGrN146654 for <xfs@oss.sgi.com>; Wed, 19 May 2010 13:22:16 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 84DE635BA96
+	for <xfs@oss.sgi.com>; Wed, 19 May 2010 11:24:35 -0700 (PDT)
+Received: from bombadil.infradead.org ([18.85.46.34]) by cuda.sgi.com with
+	ESMTP id gKZ0bE9RvhJaHX9r for <xfs@oss.sgi.com>;
+	Wed, 19 May 2010 11:24:35 -0700 (PDT)
+Date: Wed, 19 May 2010 14:24:34 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: noatime,nodiratime?
+Message-ID: <20100519182434.GB6264@infradead.org>
+References: <4BF3F212.5030600@hardwarefreak.com>
+	<87mxvveqyq.fsf@petole.demisel.net>
+	<4BF42725.8060903@hardwarefreak.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4BF42725.8060903@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,59 +26,25 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Stan Hoeppner <stan@hardwarefreak.com>
 Cc: xfs@oss.sgi.com
 
-T24gVHVlLCAyMDEwLTA1LTE4IGF0IDA5OjI0ICsxMDAwLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4g
-RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgo+IAo+IFRoZSBidWZmZXIg
-bG9nIGl0ZW0gcmVmZXJlbmNlIGNvdW50cyB1c2VkIHRvIHRha2UgcmVmZXJlbmNl0ZUgZm9yIGV2
-ZXJ5Cj4gdHJhbnNhY3Rpb24sIHNpbWlsYXIgdG8gdGhlIHBpbiBjb3VudGluZy4gVGhpcyBpcyBz
-eW1tZXRyaWMgKGxpa2UgdGhlCj4gcGluL3VucGluKSB3aXRoIHJlc3BlY3QgdG8gdHJhbnNhY3Rp
-b24gY29tcGxldGlvbiwgYnV0IHdpdGggZGxlYXllZCBsb2dnaW5nCj4gYmVjb21lcyBhc3N5bWV0
-cmljIGFzIHRoZSBwaW5uaW5nIGJlY29tZXMgYXNzeW1ldHJpYyB3LnIudC4gdHJhbnNhY3Rpb24K
-PiBjb21wbGV0aW9uLgoKRG9pbmcgdGhlIHJlZmVyZW5jZSBjb3VudHMgdGhpcyB3YXkgaXMgYW4g
-aW1wcm92ZW1lbnQuCgpJIGhhdmUgYSBxdWVzdGlvbiBiZWxvdy4KCi4gLiAuCj4gLS0tIGEvZnMv
-eGZzL3hmc19idWZfaXRlbS5jCj4gKysrIGIvZnMveGZzL3hmc19idWZfaXRlbS5jCi4gLiAuCj4g
-IFNUQVRJQyB2b2lkCj4gIHhmc19idWZfaXRlbV91bmxvY2soCj4gQEAgLTUxNCw3MyArNTIzLDU0
-IEBAIHhmc19idWZfaXRlbV91bmxvY2soCj4gIAo+ICAJYnAgPSBiaXAtPmJsaV9idWY7Cj4gIAo+
-IC0JLyoKPiAtCSAqIENsZWFyIHRoZSBidWZmZXIncyBhc3NvY2lhdGlvbiB3aXRoIHRoaXMgdHJh
-bnNhY3Rpb24uCj4gLQkgKi8KPiArCS8qIENsZWFyIHRoZSBidWZmZXIncyBhc3NvY2lhdGlvbiB3
-aXRoIHRoaXMgdHJhbnNhY3Rpb24uICovCj4gIAlYRlNfQlVGX1NFVF9GU1BSSVZBVEUyKGJwLCBO
-VUxMKTsKPiAgCj4gIAkvKgo+IC0JICogSWYgdGhpcyBpcyBhIHRyYW5zYWN0aW9uIGFib3J0LCBk
-b24ndCByZXR1cm4gZWFybHkuCj4gLQkgKiBJbnN0ZWFkLCBhbGxvdyB0aGUgYnJlbHNlIHRvIGhh
-cHBlbi4KPiAtCSAqIE5vcm1hbGx5IGl0IHdvdWxkIGJlIGRvbmUgZm9yIHN0YWxlIChjYW5jZWxs
-ZWQpIGJ1ZmZlcnMKPiAtCSAqIGF0IHVucGluIHRpbWUsIGJ1dCB3ZSdsbCBuZXZlciBnbyB0aHJv
-dWdoIHRoZSBwaW4vdW5waW4KPiAtCSAqIGN5Y2xlIGlmIHdlIGFib3J0IGluc2lkZSBjb21taXQu
-Cj4gKwkgKiBJZiB0aGlzIGlzIGEgdHJhbnNhY3Rpb24gYWJvcnQsIGRvbid0IHJldHVybiBlYXJs
-eS4gIEluc3RlYWQsIGFsbG93Cj4gKwkgKiB0aGUgYnJlbHNlIHRvIGhhcHBlbi4gIE5vcm1hbGx5
-IGl0IHdvdWxkIGJlIGRvbmUgZm9yIHN0YWxlCj4gKwkgKiAoY2FuY2VsbGVkKSBidWZmZXJzIGF0
-IHVucGluIHRpbWUsIGJ1dCB3ZSdsbCBuZXZlciBnbyB0aHJvdWdoIHRoZQo+ICsJICogcGluL3Vu
-cGluIGN5Y2xlIGlmIHdlIGFib3J0IGluc2lkZSBjb21taXQuCj4gIAkgKi8KPiAgCWFib3J0ZWQg
-PSAoYmlwLT5ibGlfaXRlbS5saV9mbGFncyAmIFhGU19MSV9BQk9SVEVEKSAhPSAwOwo+ICAKPiAg
-CS8qCj4gLQkgKiBJZiB0aGUgYnVmIGl0ZW0gaXMgbWFya2VkIHN0YWxlLCB0aGVuIGRvbid0IGRv
-IGFueXRoaW5nLgo+IC0JICogV2UnbGwgdW5sb2NrIHRoZSBidWZmZXIgYW5kIGZyZWUgdGhlIGJ1
-ZiBpdGVtIHdoZW4gdGhlCj4gLQkgKiBidWZmZXIgaXMgdW5waW5uZWQgZm9yIHRoZSBsYXN0IHRp
-bWUuCj4gKwkgKiBCZWZvcmUgcG9zc2libHkgZnJlZWluZyB0aGUgYnVmIGl0ZW0sIGRldGVybWlu
-ZSBpZiB3ZSBzaG91bGQKPiArCSAqIHJlbGVhc2UgdGhlIGJ1ZmZlciBhdCB0aGUgZW5kIG9mIHRo
-aXMgcm91dGluZS4KPiArCSAqLwo+ICsJaG9sZCA9IGJpcC0+YmxpX2ZsYWdzICYgWEZTX0JMSV9I
-T0xEOwo+ICsKPiArCS8qIENsZWFyIHRoZSBwZXIgdHJhbnNhY3Rpb24gc3RhdGUuICovCj4gKwli
-aXAtPmJsaV9mbGFncyAmPSB+KFhGU19CTElfTE9HR0VEIHwgWEZTX0JMSV9IT0xEKTsKPiArCj4g
-KwkvKgo+ICsJICogSWYgdGhlIGJ1ZiBpdGVtIGlzIG1hcmtlZCBzdGFsZSwgdGhlbiBkb24ndCBk
-byBhbnl0aGluZy4gIFdlJ2xsCj4gKwkgKiB1bmxvY2sgdGhlIGJ1ZmZlciBhbmQgZnJlZSB0aGUg
-YnVmIGl0ZW0gd2hlbiB0aGUgYnVmZmVyIGlzIHVucGlubmVkCj4gKwkgKiBmb3IgdGhlIGxhc3Qg
-dGltZS4KPiAgCSAqLwo+ICAJaWYgKGJpcC0+YmxpX2ZsYWdzICYgWEZTX0JMSV9TVEFMRSkgewo+
-IC0JCWJpcC0+YmxpX2ZsYWdzICY9IH5YRlNfQkxJX0xPR0dFRDsKPiAgCQl0cmFjZV94ZnNfYnVm
-X2l0ZW1fdW5sb2NrX3N0YWxlKGJpcCk7Cj4gIAkJQVNTRVJUKGJpcC0+YmxpX2Zvcm1hdC5ibGZf
-ZmxhZ3MgJiBYRlNfQkxJX0NBTkNFTCk7Cj4gLQkJaWYgKCFhYm9ydGVkKQo+ICsJCWlmICghYWJv
-cnRlZCkgewo+ICsJCQlhdG9taWNfZGVjKCZiaXAtPmJsaV9yZWZjb3VudCk7CgpJIG5vdGljZSB0
-aGF0LCB1bmxpa2UgYmVmb3JlLCBpZiB5b3UgcmV0dXJuIHZpYSB0aGlzIHBhdGgKdGhlIFhGU19C
-TElfSE9MRCBmbGFnIHdpbGwgaGF2ZSBiZWVuIHR1cm5lZCBvZmYuICBJIGd1ZXNzCkkgZG9uJ3Qg
-a25vdyBvZmYgaGFuZCB3aGV0aGVyIHRoaXMgaXMgYW4gaXNzdWUuICBDYW4geW91CmV4cGxhaW4g
-d2h5IGl0IGlzIG5vdD8KCj4gIAkJCXJldHVybjsKPiArCQl9Cj4gIAl9Cj4gIAouIC4gLgoKX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcg
-bGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8v
-eGZzCg==
+On Wed, May 19, 2010 at 01:00:05PM -0500, Stan Hoeppner wrote:
+> Yes, the defaults for each parameter are in your mount man page.
+> logbsize=256K is higher than the default, which is 32K for any system with
+> over 32MB RAM.  logbufs=8 will be the default if your blocksize is 64K.  If
+> your blocksize is 4K you'll get logbufs=2 by default.  This is all in the
+> XFS section of man mount.
+
+But it's not actually true anymore for a long time.  XFS is always using
+8 32k log buffers these days.  I'll prepare an update for the mount man
+page to correct this.
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
