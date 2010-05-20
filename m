@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4KF3ctS211960 for <xfs@oss.sgi.com>; Thu, 20 May 2010 10:03:38 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 42F061DF4E86
-	for <xfs@oss.sgi.com>; Thu, 20 May 2010 08:05:57 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id p7LSRLvJleHbck1I for
-	<xfs@oss.sgi.com>; Thu, 20 May 2010 08:05:57 -0700 (PDT)
-Date: Thu, 20 May 2010 11:05:55 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/7] Fix test whether kernel supports quotas
-Message-ID: <20100520150555.GB27124@infradead.org>
+	o4KHBudV217252 for <xfs@oss.sgi.com>; Thu, 20 May 2010 12:11:57 -0500
+Received: from mx1.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 74E9F3602DC
+	for <xfs@oss.sgi.com>; Thu, 20 May 2010 10:14:15 -0700 (PDT)
+Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
+	with ESMTP id WuvuHVbnljtF5JYP for <xfs@oss.sgi.com>;
+	Thu, 20 May 2010 10:14:15 -0700 (PDT)
+Date: Thu, 20 May 2010 19:14:08 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 1/7] xfstests: test extent size hints
+Message-ID: <20100520171408.GF3395@quack.suse.cz>
 References: <1274276289-8839-1-git-send-email-jack@suse.cz>
-	<1274276289-8839-3-git-send-email-jack@suse.cz>
-	<20100519184225.GA32747@infradead.org>
-	<20100520124902.GB3395@quack.suse.cz>
+	<1274276289-8839-2-git-send-email-jack@suse.cz>
+	<20100520150141.GA27124@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100520124902.GB3395@quack.suse.cz>
+In-Reply-To: <20100520150141.GA27124@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,31 +30,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-On Thu, May 20, 2010 at 02:49:02PM +0200, Jan Kara wrote:
-> On Wed 19-05-10 14:42:25, Christoph Hellwig wrote:
-> > On Wed, May 19, 2010 at 03:38:04PM +0200, Jan Kara wrote:
-> > > For all 2.6 kernels presence of quota support in kernel can be detected by
-> > > checking /proc/sys/fs/quota. This is actually more reliable than trying to
-> > > mount a filesystem with quota options (for example because SCRATCH_DEV does
-> > > not have to contain a filesystem type we are going to test).
-> > 
-> > It's not actually correct.  /proc/sys/fs/quota only gets registered by
-> > fs/quota/dquot.c, which means it's not avaiable in a kernel that only
-> > has XFS quotas.
->   Ah, I was convinced that _require_quota() should check whether VFS
-> quotas are enabled but apparently it should work also for XFS. So would
-> test like below be OK?
-> 
-> if [ $FSTYP = "xfs" ]; then
->     [ -f /proc/fs/xfs/xqmstat ] || _notrun "Installed kernel does not support XFS quota"
-> else
->     [ -d /proc/sys/fs/quota ] || _notrun "Installed kernel does not support quota"
-> fi
+On Thu 20-05-10 11:01:42, Christoph Hellwig wrote:
+> I think you included one patch too many in your series, this was already
+  Yes, I've noticed that as well. Sorry for that.
 
-That would still fail for GFS2.
+> applied.  Btw, if you have this in a git tree making that available
+> would ease testing a bit.
+  OK. It's at
+git://git.kernel.org/pub/scm/linux/kernel/git/jack/xfstests-dev/
+  in branch quota-tests
+  (I know it's inappropriate place but I'm too lazy to setup the repository
+somewhere else ;).
+
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
