@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4KCkper205084 for <xfs@oss.sgi.com>; Thu, 20 May 2010 07:46:51 -0500
+	o4KCoN4V205248 for <xfs@oss.sgi.com>; Thu, 20 May 2010 07:50:23 -0500
 Received: from mx1.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B806D1417E49
-	for <xfs@oss.sgi.com>; Thu, 20 May 2010 05:49:10 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 171611D4FD71
+	for <xfs@oss.sgi.com>; Thu, 20 May 2010 05:52:42 -0700 (PDT)
 Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
-	with ESMTP id miq9asl2LKf41xKb for <xfs@oss.sgi.com>;
-	Thu, 20 May 2010 05:49:10 -0700 (PDT)
-Date: Thu, 20 May 2010 14:49:02 +0200
+	with ESMTP id WZSb2G0TTH07uST8 for <xfs@oss.sgi.com>;
+	Thu, 20 May 2010 05:52:42 -0700 (PDT)
+Date: Thu, 20 May 2010 14:52:34 +0200
 From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 2/7] Fix test whether kernel supports quotas
-Message-ID: <20100520124902.GB3395@quack.suse.cz>
+Subject: Re: [PATCH 4/7] Add test of quota accounting using fsx
+Message-ID: <20100520125234.GC3395@quack.suse.cz>
 References: <1274276289-8839-1-git-send-email-jack@suse.cz>
-	<1274276289-8839-3-git-send-email-jack@suse.cz>
-	<20100519184225.GA32747@infradead.org>
+	<1274276289-8839-5-git-send-email-jack@suse.cz>
+	<20100519222813.GN8120@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100519184225.GA32747@infradead.org>
+In-Reply-To: <20100519222813.GN8120@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,31 +30,83 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: hch@infradead.org, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-On Wed 19-05-10 14:42:25, Christoph Hellwig wrote:
-> On Wed, May 19, 2010 at 03:38:04PM +0200, Jan Kara wrote:
-> > For all 2.6 kernels presence of quota support in kernel can be detected by
-> > checking /proc/sys/fs/quota. This is actually more reliable than trying to
-> > mount a filesystem with quota options (for example because SCRATCH_DEV does
-> > not have to contain a filesystem type we are going to test).
+On Thu 20-05-10 08:28:13, Dave Chinner wrote:
+> On Wed, May 19, 2010 at 03:38:06PM +0200, Jan Kara wrote:
+> > Run fsx (and also several fsx threads in parallel) and verify that
+> > quota accounting is correct after they finish.
+> > 
+> > Signed-off-by: Jan Kara <jack@suse.cz>
+> > ---
+> >  231     |  139 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  231.out |   10 +++++
+> >  group   |    1 +
+> >  3 files changed, 150 insertions(+), 0 deletions(-)
+> >  create mode 100755 231
+> >  create mode 100644 231.out
+> > 
+> > diff --git a/231 b/231
+> > new file mode 100755
+> > index 0000000..0e34d33
+> > --- /dev/null
+> > +++ b/231
+> > @@ -0,0 +1,139 @@
+> > +#! /bin/bash
+> > +# FSQA Test No. 231
+> > +#
+> > +# Run fsx with quotas enabled and verify accounted quotas in the end
+> > +#
+> > +# Derived from test 127
+> > +#-----------------------------------------------------------------------
+> > +# Copyright (c) 2006 Silicon Graphics, Inc.  All Rights Reserved.
+> > +#
+> > +# This program is free software; you can redistribute it and/or
+> > +# modify it under the terms of the GNU General Public License as
+> > +# published by the Free Software Foundation.
+> > +#
+> > +# This program is distributed in the hope that it would be useful,
+> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > +# GNU General Public License for more details.
+> > +#
+> > +# You should have received a copy of the GNU General Public License
+> > +# along with this program; if not, write the Free Software Foundation,
+> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> > +#
+> > +#-----------------------------------------------------------------------
+> > +#
+> > +# creator
+> > +owner=jack@suse.cz
+> > +
+> > +seq=`basename $0`
+> > +echo "QA output created by $seq"
+> > +
+> > +here=`pwd`
+> > +tmp=/tmp/$$
+> > +status=1	# failure is the default!
+> > +trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
+> > +
+> > +# get standard environment, filters and checks
+> > +. ./common.rc
+> > +. ./common.filter
+> > +. ./common.quota
+> > +
+> > +FSX_FILE_SIZE=64000000
+> > +FSX_ARGS="-q -l $FSX_FILE_SIZE -o 65536 -S 191110531 -N 20000"
 > 
-> It's not actually correct.  /proc/sys/fs/quota only gets registered by
-> fs/quota/dquot.c, which means it's not avaiable in a kernel that only
-> has XFS quotas.
-  Ah, I was convinced that _require_quota() should check whether VFS
-quotas are enabled but apparently it should work also for XFS. So would
-test like below be OK?
+> My only question about this test is the use of a fixed seed for the
+> test - shouldn't we randomise it and save the seed to $seq.full?
+> This will results in different combinations of operations being
+> tested (better long term coverage), but we still have the seed
+> available to try to reproduce failures if they are based on a
+> specific pattern of ops...
+  Ah, that's a great idea. I wanted a reproducible testcase so I
+chose fixed seed but I forgot I could save it in $seq.full. I'll
+change the test to work this way.
 
-if [ $FSTYP = "xfs" ]; then
-    [ -f /proc/fs/xfs/xqmstat ] || _notrun "Installed kernel does not support XFS quota"
-else
-    [ -d /proc/sys/fs/quota ] || _notrun "Installed kernel does not support quota"
-fi
-
-									Honza
-
+								Honza
 -- 
 Jan Kara <jack@suse.cz>
 SUSE Labs, CR
