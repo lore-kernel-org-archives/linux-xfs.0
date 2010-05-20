@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4KF9BJW212233 for <xfs@oss.sgi.com>; Thu, 20 May 2010 10:09:11 -0500
+	o4KF3ctS211960 for <xfs@oss.sgi.com>; Thu, 20 May 2010 10:03:38 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6404C35FB88
-	for <xfs@oss.sgi.com>; Thu, 20 May 2010 08:11:31 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 42F061DF4E86
+	for <xfs@oss.sgi.com>; Thu, 20 May 2010 08:05:57 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 5mMs9b2IoJIQqFyq for
-	<xfs@oss.sgi.com>; Thu, 20 May 2010 08:11:31 -0700 (PDT)
-Date: Thu, 20 May 2010 11:11:30 -0400
+	by cuda.sgi.com with ESMTP id p7LSRLvJleHbck1I for
+	<xfs@oss.sgi.com>; Thu, 20 May 2010 08:05:57 -0700 (PDT)
+Date: Thu, 20 May 2010 11:05:55 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/7] Test basic quota enforcement
-Message-ID: <20100520151130.GC27124@infradead.org>
+Subject: Re: [PATCH 2/7] Fix test whether kernel supports quotas
+Message-ID: <20100520150555.GB27124@infradead.org>
 References: <1274276289-8839-1-git-send-email-jack@suse.cz>
-	<1274276289-8839-4-git-send-email-jack@suse.cz>
+	<1274276289-8839-3-git-send-email-jack@suse.cz>
+	<20100519184225.GA32747@infradead.org>
+	<20100520124902.GB3395@quack.suse.cz>
 MIME-Version: 1.0
-In-Reply-To: <1274276289-8839-4-git-send-email-jack@suse.cz>
+Content-Disposition: inline
+In-Reply-To: <20100520124902.GB3395@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,39 +27,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============2834966458863200912=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Jan Kara <jack@suse.cz>
-Cc: hch@infradead.org, xfs@oss.sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
---===============2834966458863200912==
-Content-Type: text/plain; charset=unknown-8bit
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+On Thu, May 20, 2010 at 02:49:02PM +0200, Jan Kara wrote:
+> On Wed 19-05-10 14:42:25, Christoph Hellwig wrote:
+> > On Wed, May 19, 2010 at 03:38:04PM +0200, Jan Kara wrote:
+> > > For all 2.6 kernels presence of quota support in kernel can be detected by
+> > > checking /proc/sys/fs/quota. This is actually more reliable than trying to
+> > > mount a filesystem with quota options (for example because SCRATCH_DEV does
+> > > not have to contain a filesystem type we are going to test).
+> > 
+> > It's not actually correct.  /proc/sys/fs/quota only gets registered by
+> > fs/quota/dquot.c, which means it's not avaiable in a kernel that only
+> > has XFS quotas.
+>   Ah, I was convinced that _require_quota() should check whether VFS
+> quotas are enabled but apparently it should work also for XFS. So would
+> test like below be OK?
+> 
+> if [ $FSTYP = "xfs" ]; then
+>     [ -f /proc/fs/xfs/xqmstat ] || _notrun "Installed kernel does not support XFS quota"
+> else
+>     [ -d /proc/sys/fs/quota ] || _notrun "Installed kernel does not support quota"
+> fi
 
-The golden output contains "/local/test1/file5" which appaears
-to be in your test fs.  You need to do something like
-
-	sed -e "s,$SCRATCH_MNT,SCRATCH_MNT,g"
-
-or
-
-	sed -e "s,$T“T_MNT,TEST_MNT,g"
-
-to make the test portable.  This probably applies to the other tests
-as well.
-
-
---===============2834966458863200912==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+That would still fail for GFS2.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============2834966458863200912==--
