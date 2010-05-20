@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4JNPGAk162911 for <xfs@oss.sgi.com>; Wed, 19 May 2010 18:25:16 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 298D61411EAD
-	for <xfs@oss.sgi.com>; Wed, 19 May 2010 16:27:34 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	XuRBrEf4l3B6C1Rb for <xfs@oss.sgi.com>;
-	Wed, 19 May 2010 16:27:34 -0700 (PDT)
-Date: Thu, 20 May 2010 09:27:31 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS on 2.6.26: reading the first 4K of a large file takes ages
-Message-ID: <20100519232731.GR8120@dastard>
-References: <8239xojfco.fsf@mid.bfk.de> <20100519114826.GA18224@infradead.org>
+	o4K4bZji179103 for <xfs@oss.sgi.com>; Wed, 19 May 2010 23:37:35 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id ED3DE35D9E8
+	for <xfs@oss.sgi.com>; Wed, 19 May 2010 21:39:53 -0700 (PDT)
+Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
+	by cuda.sgi.com with ESMTP id OCfM3ljcEx2Vqd4j for
+	<xfs@oss.sgi.com>; Wed, 19 May 2010 21:39:53 -0700 (PDT)
+Message-ID: <4BF4BD18.1020608@sandeen.net>
+Date: Wed, 19 May 2010 23:39:52 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100519114826.GA18224@infradead.org>
+Subject: Re: xfstests: 226: have xfs_io use bigger buffers
+References: <201005192244.o4JMiEPY014864@stout.americas.sgi.com>
+In-Reply-To: <201005192244.o4JMiEPY014864@stout.americas.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,32 +27,62 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com, Florian Weimer <fweimer@bfk.de>
+To: Alex Elder <aelder@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, May 19, 2010 at 07:48:26AM -0400, Christoph Hellwig wrote:
-> On Wed, May 19, 2010 at 11:33:27AM +0000, Florian Weimer wrote:
-> > We've got a couple of rather large files, and with a cold cache,
-> > reading the first 4K bytes of the file (e.g., just running
-> > "head --bytes 4096" on it) takes ages, up to several minutes,
-> > sometimes triggering the hang check timer.
-> > 
-> > I wonder if XFS reads the whole extent information into RAM when the
-> > file is opened.  Is this the case, at least on 2.6.26?  Has this
-> > changed in later versions, perhaps?
+Alex Elder wrote:
+> By default xfs_io uses a buffer size of 4096 bytes.  On test 226,
+> the result is that the test runs much slower (at least an order
+> of magnitude) than it needs to.
 > 
-> Yes, XFS always reads in the extent map, and no this hasn't changed
-> recently.
+> Add a flag to the "pwrite" command sent to xfs_io so it uses
+> larger buffers, thereby speeding things up considerably.
+> 
+> Signed-off-by: Alex Elder <aelder@sgi.com>
 
-And demand paging the in-memory information is hard. It's on a to-do
-list somewhere 'round here....
+Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> ---
+>  226 |    9 +++++++--
+>  1 file changed, 7 insertions(+), 2 deletions(-)
+> 
+> Index: b/226
+> ===================================================================
+> --- a/226
+> +++ b/226
+> @@ -49,10 +49,14 @@ _scratch_mount
+>  
+>  loops=16
+>  
+> +# Buffer size argument supplied to xfs_io "pwrite" command
+> +buffer="-b $(expr 512 \* 1024)"
+> +
+>  echo "--> $loops buffered 64m writes in a loop"
+>  for I in `seq 1 $loops`; do
+>  	echo -n "$I "
+> -	xfs_io -F -f -c 'pwrite 0 64m' $SCRATCH_MNT/test >> $seq.full
+> +	xfs_io -F -f \
+> +		-c "pwrite ${buffer} 0 64m" $SCRATCH_MNT/test >> $seq.full
+>  	rm -f $SCRATCH_MNT/test
+>  done
+>  
+> @@ -63,7 +67,8 @@ _scratch_mount
+>  echo "--> $loops direct 64m writes in a loop"
+>  for I in `seq 1 $loops`; do
+>  	echo -n "$I "
+> -	xfs_io -F -f -d -c 'pwrite 0 64m' $SCRATCH_MNT/test >> $seq.full
+> +	xfs_io -F -f -d \
+> +		-c "pwrite ${buffer} 0 64m" $SCRATCH_MNT/test >> $seq.full
+>  	rm -f $SCRATCH_MNT/test 
+>  done
+>  
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
