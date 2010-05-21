@@ -1,22 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4LF4Lrw013681 for <xfs@oss.sgi.com>; Fri, 21 May 2010 10:04:21 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A7E3A1DF621C
-	for <xfs@oss.sgi.com>; Fri, 21 May 2010 08:06:41 -0700 (PDT)
-Received: from bombadil.infradead.org ([18.85.46.34]) by cuda.sgi.com with
-	ESMTP id BADdIozhpa0ro98v for <xfs@oss.sgi.com>;
-	Fri, 21 May 2010 08:06:41 -0700 (PDT)
-Date: Fri, 21 May 2010 11:06:40 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/4] writeback: initial tracing support
-Message-ID: <20100521150640.GB4598@infradead.org>
-References: <1271731314-5893-1-git-send-email-david@fromorbit.com>
-	<1271731314-5893-2-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1271731314-5893-2-git-send-email-david@fromorbit.com>
+	o4LKxn2j030572 for <xfs@oss.sgi.com>; Fri, 21 May 2010 15:59:49 -0500
+Subject: Re: [PATCH 08/12] xfs: Delayed logging design documentation
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <1274138668-1662-9-git-send-email-david@fromorbit.com>
+References: <1274138668-1662-1-git-send-email-david@fromorbit.com>
+	<1274138668-1662-9-git-send-email-david@fromorbit.com>
+Date: Fri, 21 May 2010 16:02:05 -0500
+Message-ID: <1274475725.2255.38.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,16 +24,29 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Tue, Apr 20, 2010 at 12:41:51PM +1000, Dave Chinner wrote:
-> From: From: Jens Axboe <jens.axboe@oracle.com>
+On Tue, 2010-05-18 at 09:24 +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Trace queue/sched/exec parts of the writeback loop.
+> Document the design of the delayed logging implementation. This
+> includes assumptions made, dead ends followed, the reasoning behind
+> the structuring of the code, the layout of various structures, how
+> things fit together, traps and pit-falls avoided, etc. This is all
+> too much to document in the code itself, so do it in a separate
+> file.
 
-If you move the CREATE_TRACE_POINTS into fs-writeback.c and include
-<trace/events/writeback.h> after the sturcture defintions there's no
-need to move them to a header.
+I found some typo's and other things, but will hold off
+suggesting (or posting fixes for) them until after we've
+got the baseline document checked in.
+
+Reviewed-by: Alex Elder <aelder@sgi.com>
+
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  .../filesystems/xfs-delayed-logging-design.txt     |  819 ++++++++++++++++++++
+>  1 files changed, 819 insertions(+), 0 deletions(-)
+>  create mode 100644 Documentation/filesystems/xfs-delayed-logging-design.txt
 
 _______________________________________________
 xfs mailing list
