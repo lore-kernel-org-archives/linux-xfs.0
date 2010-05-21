@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4LBR9qr003761 for <xfs@oss.sgi.com>; Fri, 21 May 2010 06:27:09 -0500
-Received: from mail-ew0-f228.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2030A149B460
-	for <xfs@oss.sgi.com>; Fri, 21 May 2010 04:30:45 -0700 (PDT)
-Received: from mail-ew0-f228.google.com (mail-ew0-f228.google.com
-	[209.85.219.228]) by cuda.sgi.com with ESMTP id
-	z3hFAHwAD2fyU3Yv for <xfs@oss.sgi.com>;
-	Fri, 21 May 2010 04:30:45 -0700 (PDT)
-Received: by ewy28 with SMTP id 28so168275ewy.18
-	for <xfs@oss.sgi.com>; Fri, 21 May 2010 04:29:26 -0700 (PDT)
+	o4LDfxaL009982 for <xfs@oss.sgi.com>; Fri, 21 May 2010 08:42:00 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 87CC91571A76
+	for <xfs@oss.sgi.com>; Fri, 21 May 2010 06:45:36 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id DJCVl4bevd3CSoCf
+	for <xfs@oss.sgi.com>; Fri, 21 May 2010 06:45:36 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id 50B5A6C264
+	for <xfs@oss.sgi.com>; Fri, 21 May 2010 08:44:17 -0500 (CDT)
+Message-ID: <4BF68E74.8040305@hardwarefreak.com>
+Date: Fri, 21 May 2010 08:45:24 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-In-Reply-To: <4BF62766.8070105@hardwarefreak.com>
-References: <AANLkTilJD2Jfr4W97BiAlyc_7C9jLEhEzuEWSDyVKXYP@mail.gmail.com>
-	<20100521041415.GW8120@dastard> <4BF62766.8070105@hardwarefreak.com>
-Date: Fri, 21 May 2010 12:29:26 +0100
-Message-ID: <AANLkTinobXUKRN0s_3Ia-5XBix05Tvhp36K5fUsysjh-@mail.gmail.com>
 Subject: Re: Tuning XFS for real time audio on a laptop with encrypted LVM
-From: Pedro Ribeiro <pedrib@gmail.com>
+References: <AANLkTilJD2Jfr4W97BiAlyc_7C9jLEhEzuEWSDyVKXYP@mail.gmail.com>	<20100521041415.GW8120@dastard>
+	<4BF62766.8070105@hardwarefreak.com>
+	<AANLkTinobXUKRN0s_3Ia-5XBix05Tvhp36K5fUsysjh-@mail.gmail.com>
+In-Reply-To: <AANLkTinobXUKRN0s_3Ia-5XBix05Tvhp36K5fUsysjh-@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,103 +28,256 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>, david@fromorbit.com
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 21 May 2010 07:25, Stan Hoeppner <stan@hardwarefreak.com> wrote:
-> Dave Chinner put forth on 5/20/2010 11:14 PM:
->
->> I only ever use the noop scheduler with XFS these days. CFQ has been
->> a steaming pile of ever changing regressions for the past 4 or 5
->> kernel releases, so i stopped using it. Besides, XFS is often 10-15%
->> faster on no-op for the same workload, anyway...
->
-> IIRC the elevator sits below the FS in the stack, and has a tighter
-> relationship to the block device driver and physical storage subsystem th=
-an
-> to the FS. =A0I have one box with a 7.2K 500GB WD drive and a sata_sil
-> controller that doesn't support NCQ. =A0Without NCQ due to no controller
-> support or ATA_horkage_NCQ blacklisted drives, the deadline and anticipat=
-ory
-> (now removed from the kernel IIRC) elevators yield vastly superior
-> performance under load compared to CFQ or noop.
->
-> Noop fits well with good hardware RAID, either local machine PCI/x/e RAID
-> card or straight FC HBA talking to a SAN array controller. =A0CFQ just ge=
-ts in
-> the way with good hardware. =A0In some testing I've done with FC HBAs and
-> target LUNs on IBM FasTt and Nexsan SAN arrays, deadline has shown a tiny
-> advantage over noop with a few synthetic tests. =A0This testing was perfo=
-rmed
-> on SLED 10 and Debian Etch guests atop VMWare ESX 3 at night on weekends
-> when load across the ESX blade farm was near zero, but it was still done =
-in
-> a virtual environment. =A0On bare hardware, I'm not sure one would get the
-> same results. =A0Anyway, the deadline elevator gave such little advantage=
- over
-> noop, I'd still recommend noop on good hardware due to zero CPU overhead.
-> Deadline has a few fancy tricks so it will always eat more CPU, even thou=
-gh
-> it's a modest amount.
->
-> I'd sum the elevator choice up this way: =A0If you have a good storage
-> hardware and driver combo such as fast SATA disks with good NCQ, or just
-> about any SCSI, SAS, RAID, or SAN setup, go with noop. =A0For lesser
-> hardware/drivers, use deadline (i.e. lacking or crappy NCQ, or on laptops
-> due to the slow 4200/5400 rpm drives, even if they do have good NCQ).
->
-> I agree with Dave that CFQ isn't all that great, and in my testing it's e=
-ven
-> worse when used with Linux guests on ESX than it is on bare metal.
->
-> Caveat: =A0I'm no expert, and I don't do storage subsystem performance te=
-sting
-> all day long. =A0I'm just reporting my first hand experience. =A0YMMV and=
- all
-> the normal disclaimers apply.
->
-> --
-> Stan
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
->
+Pedro Ribeiro put forth on 5/21/2010 6:29 AM:
+ 
+> So it is agreed that CFQ sucks right now. I'll continue my testing but
+> now with proper daily use to see which is better, deadline or noop.
 
-Thanks for the answers.
+I'd be curious to see what your seek performance is with each elevator on that laptop drive.  Give this basic parallel seek tester a spin.
 
-I do value my data a lot (that's why I changed from Windows some years
-ago), and even though this is a laptop with battery protection I keep
-crashing and hard locking it because I like always to use -rcX kernels
-and to fool around with lots of dangerous stuff/settings/etc.
+Make runs with 1, 8, 16, 32, and 64 threads to find peak seek throughput and number of threads required to reach it.  Each run takes about 30 seconds.  For 7.2k rpm and up mechanical drives and SSDs you'd want to test 128 and 256 threads also.  Due to the threaded nature good command queuing will have a substantial effect on results, as will elevator choice on some systems.  For background info and evolution of this code, see this thread:  http://www.linuxinsight.com/how_fast_is_your_disk.html
 
-Actually that is one of the reasons I stick with XFS instead of going
-to EXT4 or the like. I've been using and torturing XFS for a couple of
-years now and I NEVER suffered any corruption, and only had a couple
-of times where unimportant data loss happened, but it was completely
-expected because I was an ass. I only lost the data that was unsynched
-during the last minute though.
+compile with:
+gcc -o seeker_baryluk -O2 -march=native seeker_baryluk.c -pthread
 
-I forgot to say that I have a SATA-I 5400rpm hard drive, it does
-support NCQ and since this is a laptop there is no RAID or similars.
+run command:
+./seeker_baryluk device number_of_threads
 
-I've been running a few tests with bonnie++ and hdparm. hdparm reports
-my bare hard drive speed as 67 Mb/s for read. With bonnie++ the
-maximum I can get is 52 Mb/s with noop and cfq and deadline only gives
-me 48 Mb/s. This is not bad at all. noop is a tad faster in all the
-tests and the only thing it performs worse is in read latency,
-although read throughput appears to be the same.
+A nice feature is that you can test an entire drive or individual partitions (or an entire SAN LUN or just partitions on said LUN).  This can tell you how much slower inner cylinders are compared to outer cylinders, and even works for local RAID and SAN LUNs.
 
-So it is agreed that CFQ sucks right now. I'll continue my testing but
-now with proper daily use to see which is better, deadline or noop.
+./seeker_baryluk /dev/sda 64
+./seeker_baryluk /dev/sda2 64
+...
+./seeker_baryluk /dev/sda9 64
 
-Regards,
-Pedro
+I find this a much more informative simple test of storage subsystem performance than something like hdparm which is very small sequential I/O.
+
+--- seeker_baryluk.c ---
+
+#define _LARGEFILE64_SOURCE
+
+#ifndef _REENTRANT
+#define _REENTRANT
+#endif
+#include <pthread.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <errno.h>
+#include <time.h>
+#include <signal.h>
+#include <sys/fcntl.h>
+#include <sys/ioctl.h>
+#include <linux/fs.h>
+
+#define BLOCKSIZE 512
+#define TIMEOUT 30
+
+pthread_mutex_t muteks = PTHREAD_MUTEX_INITIALIZER;
+
+int count;
+time_t start;
+off64_t maxoffset = 0;
+off64_t minoffset = 249994674176000uLL;
+
+
+int threads;
+
+typedef struct {
+	int id;
+	int fd;
+	int run;
+	char* filename;
+	unsigned int seed;
+	unsigned long long numbytes;
+	char* buffer;
+	int count;
+	off64_t maxoffset;
+	off64_t minoffset;
+} parm;
+
+parm *p;
+
+void done() {
+	int i;
+	time_t end;
+
+	time(&end);
+
+	if (end < start + TIMEOUT) {
+		printf(".");
+		alarm(1);
+		return;
+	}
+
+	for (i = 0; i < threads; i++) {
+		p[i].run = 0;
+	}
+}
+
+void report() {
+	if (count) {
+		printf(".\nResults: %d seeks/second, %.3f ms random access time (%llu < offsets < %llu)\n",
+			count / TIMEOUT, 1000.0 * TIMEOUT / count, (unsigned long long)minoffset, (unsigned long long)maxoffset);
+	}
+	exit(EXIT_SUCCESS);
+}
+
+void handle(const char *string, int error) {
+	if (error) {
+		perror(string);
+		exit(EXIT_FAILURE);
+	}
+}
+
+void* f(void *arg) {
+	int retval;
+	off64_t offset;
+
+	parm *p = (parm*)arg;
+
+	srand(p->seed);
+
+	/* wait for all processes */
+	pthread_mutex_lock(&muteks);
+	pthread_mutex_unlock(&muteks);
+
+	while (p->run) {
+		offset = (off64_t) ( (unsigned long long) (p->numbytes * (rand_r(&(p->seed)) / (RAND_MAX + 1.0) )));
+		//printf("%d %llu\n", p->id, (unsigned long long )offset);
+		retval = lseek64(p->fd, offset, SEEK_SET);
+		handle("lseek64", retval == (off64_t) -1);
+		retval = read(p->fd, p->buffer, BLOCKSIZE);
+		handle("read", retval < 0);
+
+		p->count++;
+		if (offset > p->maxoffset) {
+			p->maxoffset = offset;
+		} else if (offset < p->minoffset) {
+			p->minoffset = offset;
+		}
+	}
+
+	//pthread_exit(NULL);
+	return NULL;
+}
+
+int main(int argc, char **argv) {
+	int fd, retval;
+	int physical_sector_size = 0;
+	size_t logical_sector_size = 0ULL;
+	unsigned long long numblocks, numbytes;
+	unsigned long long ull;
+	unsigned long ul;
+	pthread_t *t_id;
+	pthread_attr_t pthread_custom_attr;
+	int i;
+
+	setvbuf(stdout, NULL, _IONBF, 0);
+
+	printf("Seeker v3.0, 2009-06-17, "
+	       "http://www.linuxinsight.com/how_fast_is_your_disk.html\n");
+
+	if (!(argc == 2 || argc == 3)) {
+		printf("Usage: %s device [threads]\n", argv[0]);
+		exit(1);
+	}
+
+	threads = 1;
+	if (argc == 3) {
+		threads = atoi(argv[2]);
+	}
+
+	//pthread_mutex_init(&muteks, NULL); 
+
+	fd = open(argv[1], O_RDONLY | O_LARGEFILE);
+	handle("open", fd < 0);
+
+#ifdef BLKGETSIZE64
+	retval = ioctl(fd, BLKGETSIZE64, &ull);
+	numbytes = (unsigned long long)ull;
+#else
+	retval = ioctl(fd, BLKGETSIZE, &ul);
+	numbytes = (unsigned long long)ul;
+#endif
+	handle("ioctl", retval == -1);
+	retval = ioctl(fd, BLKBSZGET, &logical_sector_size);
+	handle("ioctl", retval == -1 && logical_sector_size > 0);
+	retval = ioctl(fd, BLKSSZGET, &physical_sector_size);
+	handle("ioctl", retval == -1 && physical_sector_size > 0);
+	numblocks = ((unsigned long long)numbytes)/(unsigned long long)BLOCKSIZE;
+	printf("Benchmarking %s [%llu blocks, %llu bytes, %llu GB, %llu MB, %llu GiB, %llu MiB]\n",
+		argv[1], numblocks, numbytes, numbytes/(1024uLL*1024uLL*1024uLL), numbytes / (1024uLL*1024uLL), numbytes/(1000uLL*1000uLL*1000uLL), numbytes / (1000uLL*1000uLL));
+	printf("[%d logical sector size, %d physical sector size]\n", physical_sector_size, physical_sector_size);
+	printf("[%d threads]\n", threads);
+	printf("Wait %d seconds", TIMEOUT);
+
+	t_id = (pthread_t *)malloc(threads*sizeof(pthread_t));
+	handle("malloc", t_id == NULL);
+	pthread_attr_init(&pthread_custom_attr);
+	p = (parm *)malloc(sizeof(parm)*threads);
+	handle("malloc", p == NULL);
+
+	time(&start);
+
+	pthread_mutex_lock(&muteks);
+
+
+	srand((unsigned int)start*(unsigned int)getpid());
+
+	for (i = 0; i < threads; i++) {
+		p[i].id = i;
+		p[i].filename = argv[1];
+		p[i].seed = rand()+i;
+		p[i].fd = dup(fd);
+		handle("dup", p[i].fd < 0);
+		p[i].buffer = malloc(sizeof(char)*BLOCKSIZE);
+		p[i].numbytes = numbytes;
+		handle("malloc", p[i].buffer == NULL);
+		p[i].run = 1;
+		p[i].count = 0;
+		p[i].minoffset = minoffset;
+		p[i].maxoffset = maxoffset;
+
+		retval = pthread_create(&(t_id[i]), NULL, f, (void*)(p+i));
+		handle("pthread_create", retval != 0);
+	}
+
+	sleep(1);
+
+	time(&start);
+	signal(SIGALRM, &done);
+	alarm(1);
+
+	pthread_mutex_unlock(&muteks);
+
+	for (i = 0; i < threads; i++) {
+		pthread_join(t_id[i], NULL);
+	}
+
+	for (i = 0; i < threads; i++) {
+		count += p[i].count;
+		if (p[i].maxoffset > maxoffset) {
+			maxoffset = p[i].maxoffset;
+		}
+		if (p[i].minoffset < minoffset) {
+			minoffset = p[i].minoffset;
+		}
+	}
+
+	report();
+
+	/* notreached */
+	return 0;
+}
 
 _______________________________________________
 xfs mailing list
