@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4LKxn2j030572 for <xfs@oss.sgi.com>; Fri, 21 May 2010 15:59:49 -0500
-Subject: Re: [PATCH 08/12] xfs: Delayed logging design documentation
+	o4LL3jjR030732 for <xfs@oss.sgi.com>; Fri, 21 May 2010 16:03:45 -0500
+Subject: Re: [PATCH 09/12] xfs: Introduce delayed logging core code
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1274138668-1662-9-git-send-email-david@fromorbit.com>
+In-Reply-To: <1274138668-1662-10-git-send-email-david@fromorbit.com>
 References: <1274138668-1662-1-git-send-email-david@fromorbit.com>
-	<1274138668-1662-9-git-send-email-david@fromorbit.com>
-Date: Fri, 21 May 2010 16:02:05 -0500
-Message-ID: <1274475725.2255.38.camel@doink>
+	<1274138668-1662-10-git-send-email-david@fromorbit.com>
+Date: Fri, 21 May 2010 16:06:03 -0500
+Message-ID: <1274475963.2255.42.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,24 +29,28 @@ Cc: xfs@oss.sgi.com
 On Tue, 2010-05-18 at 09:24 +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Document the design of the delayed logging implementation. This
-> includes assumptions made, dead ends followed, the reasoning behind
-> the structuring of the code, the layout of various structures, how
-> things fit together, traps and pit-falls avoided, etc. This is all
-> too much to document in the code itself, so do it in a separate
-> file.
+> The delayed logging code only changes in-memory structures and as
+> such can be enabled and disabled with a mount option. Add the mount
+> option and emit a warning that this is an experimental feature that
+> should not be used in production yet.
 
-I found some typo's and other things, but will hold off
-suggesting (or posting fixes for) them until after we've
-got the baseline document checked in.
+I gave this a careful review.  I am a little surprised at
+how nicely you could stitch this in, leveraging the existing
+code, while still supporting the "old" logging model.
+
+Anyway, I found some nits but no bugs so I'm not going
+to bother mentioning them here.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
+. . .
+
+> the necessary synchronisation for correct operation in both cases.
+> 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > ---
->  .../filesystems/xfs-delayed-logging-design.txt     |  819 ++++++++++++++++++++
->  1 files changed, 819 insertions(+), 0 deletions(-)
->  create mode 100644 Documentation/filesystems/xfs-delayed-logging-design.txt
+
 
 _______________________________________________
 xfs mailing list
