@@ -1,22 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4L4Bx55244228 for <xfs@oss.sgi.com>; Thu, 20 May 2010 23:12:00 -0500
+	o4L5jpNF250049 for <xfs@oss.sgi.com>; Fri, 21 May 2010 00:45:51 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8E8E7A016B8
-	for <xfs@oss.sgi.com>; Thu, 20 May 2010 21:15:34 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	KKSVEb9kvHwRTVCk for <xfs@oss.sgi.com>;
-	Thu, 20 May 2010 21:15:34 -0700 (PDT)
-Date: Fri, 21 May 2010 14:14:15 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DB895A01D39
+	for <xfs@oss.sgi.com>; Thu, 20 May 2010 22:49:24 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	FCfnyIUDWW8iz96D for <xfs@oss.sgi.com>;
+	Thu, 20 May 2010 22:49:24 -0700 (PDT)
+Received: from dastard (unverified [121.44.31.48])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	25043584-1927428
+	for <xfs@oss.sgi.com>; Fri, 21 May 2010 15:18:06 +0930 (CST)
+Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
+	(envelope-from <dave@fromorbit.com>) id 1OFL5Z-0001su-H3
+	for xfs@oss.sgi.com; Fri, 21 May 2010 15:48:05 +1000
+Received: from dave by disturbed with local (Exim 4.71)
+	(envelope-from <dave@disturbed.disaster>) id 1OFL5T-0000cx-57
+	for xfs@oss.sgi.com; Fri, 21 May 2010 15:47:59 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Tuning XFS for real time audio on a laptop with encrypted LVM
-Message-ID: <20100521041415.GW8120@dastard>
-References: <AANLkTilJD2Jfr4W97BiAlyc_7C9jLEhEzuEWSDyVKXYP@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <AANLkTilJD2Jfr4W97BiAlyc_7C9jLEhEzuEWSDyVKXYP@mail.gmail.com>
+Subject: [PATCH] xfs: Check new inode size is OK before preallocating
+Date: Fri, 21 May 2010 15:47:59 +1000
+Message-Id: <1274420879-2391-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,54 +31,83 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Pedro Ribeiro <pedrib@gmail.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, May 21, 2010 at 03:16:15AM +0100, Pedro Ribeiro wrote:
-> Hi all,
-> 
-> I was wondering what is the best scheduler for my use case given my
-> current hardware.
-> 
-> I have a laptop with a fast Core 2 duo at 2.26 and a nice amount of
-> ram (4GB) which I use primarily for real time audio (though without a
-> -rt kernel). All my partitions are XFS under LVM which itself is
-> contained on a LUKS partition (encrypted with AES 128).
-> 
-> CFQ currently does not perform very well and causes a lot of thrashing
-> and high latencies when I/O usage is high. Changing it to the noop
-> scheduler solves some of the problems and makes it more responsive.
-> Still performance is a bit of a let down: it takes 1m30s to unpack the
-> linux-2.6.34 tarball and a massive 2m30s to rm -r.
-> I have lazy-count=1, noatime, logbufs=8, logbsize=256k and a 128m log.
-> 
-> Is there any tunable I should mess with to solve this?
+From: Dave Chinner <dchinner@redhat.com>
 
-Depends if you value your data or not. If you don't care about
-corruption or data loss on sudden power loss (e.g. battery runs
-flat), then add nobarrier to your mount options. Otherwise, you're
-close to the best performance you are going to get on that hardware
-with XFS.
+The new xfsqa test 228 tries to preallocate more space than the
+filesystem contains. it should fail, but instead triggers an assert
+about lock flags.  The failure is due to the size extension failing
+in vmtruncate() due to rlimit being set. Check this before we start
+the preallocation to avoid allocating space that will never be used.
 
-> And what do you
-> think of my scheduler change (I haven't tested it that much to be
-> honest)?
+Also the path through xfs_vn_allocate already holds the IO lock, so
+it should not be present in the lock flags when the setattr fails.
+Hence the assert needs to take this into account. This will prevent
+other such callers from hitting this incorrect ASSERT.
 
-I only ever use the noop scheduler with XFS these days. CFQ has been
-a steaming pile of ever changing regressions for the past 4 or 5
-kernel releases, so i stopped using it. Besides, XFS is often 10-15%
-faster on no-op for the same workload, anyway...
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/linux-2.6/xfs_iops.c |   16 +++++++++++++---
+ fs/xfs/xfs_vnodeops.c       |    2 +-
+ 2 files changed, 14 insertions(+), 4 deletions(-)
 
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/linux-2.6/xfs_iops.c b/fs/xfs/linux-2.6/xfs_iops.c
+index 9c8019c..d74914f 100644
+--- a/fs/xfs/linux-2.6/xfs_iops.c
++++ b/fs/xfs/linux-2.6/xfs_iops.c
+@@ -585,11 +585,20 @@ xfs_vn_fallocate(
+ 	bf.l_len = len;
+ 
+ 	xfs_ilock(ip, XFS_IOLOCK_EXCL);
++
++	/* check the new inode size is valid before allocating */
++	if (!(mode & FALLOC_FL_KEEP_SIZE) &&
++	    offset + len > i_size_read(inode)) {
++		new_size = offset + len;
++		error = inode_newsize_ok(inode, newsize);
++		if (error)
++			goto out_unlock;
++	}
++
+ 	error = -xfs_change_file_space(ip, XFS_IOC_RESVSP, &bf,
+ 				       0, XFS_ATTR_NOLOCK);
+-	if (!error && !(mode & FALLOC_FL_KEEP_SIZE) &&
+-	    offset + len > i_size_read(inode))
+-		new_size = offset + len;
++	if (error)
++		goto out_unlock;
+ 
+ 	/* Change file size if needed */
+ 	if (new_size) {
+@@ -600,6 +609,7 @@ xfs_vn_fallocate(
+ 		error = -xfs_setattr(ip, &iattr, XFS_ATTR_NOLOCK);
+ 	}
+ 
++out_unlock:
+ 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+ out_error:
+ 	return error;
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+index 9d376be..a06bd62 100644
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -267,7 +267,7 @@ xfs_setattr(
+ 		if (code) {
+ 			ASSERT(tp == NULL);
+ 			lock_flags &= ~XFS_ILOCK_EXCL;
+-			ASSERT(lock_flags == XFS_IOLOCK_EXCL);
++			ASSERT(lock_flags == XFS_IOLOCK_EXCL || !need_iolock);
+ 			goto error_return;
+ 		}
+ 		tp = xfs_trans_alloc(mp, XFS_TRANS_SETATTR_SIZE);
 -- 
-Dave Chinner
-david@fromorbit.com
+1.5.6.5
 
 _______________________________________________
 xfs mailing list
