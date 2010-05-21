@@ -1,17 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4LKvJiR030395 for <xfs@oss.sgi.com>; Fri, 21 May 2010 15:57:19 -0500
-Subject: Re: [PATCH 07/12] xfs: Improve scalability of busy extent tracking
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20100521021619.GV8120@dastard>
-References: <1274138668-1662-1-git-send-email-david@fromorbit.com>
-	<1274138668-1662-8-git-send-email-david@fromorbit.com>
-	<1274386538.2095.148.camel@doink>  <20100521021619.GV8120@dastard>
-Date: Fri, 21 May 2010 15:59:35 -0500
-Message-ID: <1274475575.2255.36.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	o4LLXxBu031963 for <xfs@oss.sgi.com>; Fri, 21 May 2010 16:33:59 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 98D743652AF
+	for <xfs@oss.sgi.com>; Fri, 21 May 2010 14:36:19 -0700 (PDT)
+Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
+	by cuda.sgi.com with ESMTP id sCXDGpDBKDl8TeiQ for
+	<xfs@oss.sgi.com>; Fri, 21 May 2010 14:36:19 -0700 (PDT)
+Message-ID: <4BF6FCD1.10805@sandeen.net>
+Date: Fri, 21 May 2010 16:36:17 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: [PATCH 1/2] xfs: drop dmapi hooks
+References: <20100510140823.GA16540@infradead.org>
+In-Reply-To: <20100510140823.GA16540@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,33 +27,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Fri, 2010-05-21 at 12:16 +1000, Dave Chinner wrote:
-> On Thu, May 20, 2010 at 03:15:38PM -0500, Alex Elder wrote:
-> > On Tue, 2010-05-18 at 09:24 +1000, Dave Chinner wrote:
-. . .
-> FWIW, Alex, this code has been out there for some time now - could
-> you please attempt to review code before the last minute? Your
-> reviews are valuable and feedback like this while I was having
-> trouble with this code would have helped a great deal. However, now
-> I'm pressed for time to retest significant modifications right
-> before a merge deadline....
+Christoph Hellwig wrote:
+> Dmapi support was never merged upstream, but we still have a lot of hooks
+> bloating XFS for it, all over the fast pathes of the filesystem.
+> 
+> This patch drops over 700 lines of dmapi overhead.  If we'll ever get HSM
+> support in mainline at least the namespace events can be done much saner
+> in the VFS instead of the individual filesystem, so it's not like this
+> is much help for future work.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-I'm really sorry Dave.  I've been meaning to do this review
-for literally weeks, but have been repeatedly preempted by
-other things.  I actually thought Linus wouldn't release
-the 2.6.34 as quickly as he did after -rc7, and expected
-I'd have another week or more to review this.
+yeah, probably about time.
 
-In any case I'll put a better priority on it in the
-future--especially when we approach the start of a new
-release cycle.
+There is a fair bit of dmapi crumbs left though:
 
-					-Alex
+[sandeen@sandeen xfs]$ grep -ri dmapi * | wc -l
+63
 
+so I think this patch can go further toward its goal...
 
+-Eric
 
 _______________________________________________
 xfs mailing list
