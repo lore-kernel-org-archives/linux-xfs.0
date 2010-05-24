@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4OECGsZ183225 for <xfs@oss.sgi.com>; Mon, 24 May 2010 09:12:16 -0500
-Received: from mx1.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4833B1DF8988
+	o4OECGbm183241 for <xfs@oss.sgi.com>; Mon, 24 May 2010 09:12:17 -0500
+Received: from mx2.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6D728369D41
 	for <xfs@oss.sgi.com>; Mon, 24 May 2010 07:14:37 -0700 (PDT)
-Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
-	with ESMTP id UQvIAdNyTsHK2Igc for <xfs@oss.sgi.com>;
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id Luwyb8zQHDUJRgjA for <xfs@oss.sgi.com>;
 	Mon, 24 May 2010 07:14:37 -0700 (PDT)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 5/8] Add quota test with fsstress
-Date: Mon, 24 May 2010 16:14:16 +0200
-Message-Id: <1274710459-11446-6-git-send-email-jack@suse.cz>
+Subject: [PATCH 3/8] Test basic quota enforcement
+Date: Mon, 24 May 2010 16:14:14 +0200
+Message-Id: <1274710459-11446-4-git-send-email-jack@suse.cz>
 In-Reply-To: <1274710459-11446-1-git-send-email-jack@suse.cz>
 References: <1274710459-11446-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,31 +30,33 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: hch@infradead.org, Jan Kara <jack@suse.cz>
 
-Run fsstress and verify that quota accounting is correct after it finishes.
+Add a test which checks whether basic quota enforcement works.
 
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- 232     |  115 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 232.out |    6 +++
+ 230     |  145 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 230.out |  131 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  group   |    1 +
- 3 files changed, 122 insertions(+), 0 deletions(-)
- create mode 100755 232
- create mode 100644 232.out
+ 3 files changed, 277 insertions(+), 0 deletions(-)
+ create mode 100755 230
+ create mode 100644 230.out
 
-diff --git a/232 b/232
+diff --git a/230 b/230
 new file mode 100755
-index 0000000..cf4d25a
+index 0000000..e75a828
 --- /dev/null
-+++ b/232
-@@ -0,0 +1,115 @@
++++ b/230
+@@ -0,0 +1,145 @@
 +#! /bin/bash
-+# FSQA Test No. 232
++# FS QA Test No. 230
 +#
-+# Run fsstress with quotas enabled and verify accounted quotas in the end
++# Simple quota enforcement test.
 +#
-+# Derived from test 231
 +#-----------------------------------------------------------------------
-+# Copyright (c) 2006 Silicon Graphics, Inc.  All Rights Reserved.
++# Copyright (c) 2010 Jan Kara.  All Rights Reserved.
++#
++# Based on test 219,
++# Copyright (c) 2005 Silicon Graphics, Inc.  All Rights Reserved.
 +#
 +# This program is free software; you can redistribute it and/or
 +# modify it under the terms of the GNU General Public License as
@@ -89,100 +91,253 @@ index 0000000..cf4d25a
 +
 +filter_scratch()
 +{
-+        perl -ne "
++	perl -ne "
 +s,$SCRATCH_MNT,[SCR_MNT],;
 +s,$SCRATCH_DEV,[SCR_DEV],;
-+        print;"
-+}
-+
-+check_usage()
-+{
-+	quotaon -f -u -g $SCRATCH_MNT 2>/dev/null
-+	repquota -u -g -n $SCRATCH_MNT  | grep -v "^#0" | filter_scratch |
-+		sort >$tmp.orig
-+	quotacheck -u -g $SCRATCH_MNT 2>/dev/null
-+	repquota -u -g -n $SCRATCH_MNT  | grep -v "^#0" | filter_scratch |
-+		sort >$tmp.checked
-+	quotaon -u -g $SCRATCH_MNT 2>/dev/null
-+	diff $tmp.orig $tmp.checked
-+}
-+
-+_filter_num()
-+{
-+	tee -a $here/$seq.full |\
-+	sed -e 's/[0-9][0-9]* inodes/I inodes/g' \
-+	    -e 's/[0-9][0-9]* paths/P paths/g' \
-+	    -e 's/seed = [0-9][0-9]*/seed = S/'
-+}
-+
-+_fsstress()
-+{
-+	echo ""
-+	echo "Testing fsstress"
-+	echo ""
-+
-+	out=$SCRATCH_MNT/fsstress.$$
-+	count=2000
-+	args="-n $count -d $out -p 7"
-+
-+	echo "fsstress $args" | tee -a $here/$seq.full | sed -e "s#$out#outdir#"
-+	if ! $FSSTRESS_PROG $args | tee -a $here/$seq.full | _filter_num
-+	then
-+		echo "    fsstress $args returned $?"
-+		cat $tmp.out | tee -a $here/$seq.full
-+		status=1
-+	fi
++	print;"
 +}
 +
 +# real QA test starts here
 +_supported_fs generic
-+_supported_os Linux
++_supported_os Linux #IRIX
 +_require_scratch
 +_require_quota
++_require_user
 +_need_to_be_root
 +
-+umount $SCRATCH_DEV 2>/dev/null
++test_files()
++{
++	echo; echo "### create files, setting up ownership (type=$type)"
++	touch $SCRATCH_MNT/file{1,2} 2>/dev/null
++	chown $qa_user $SCRATCH_MNT/file{1,2} 2>/dev/null
++	chgrp $qa_user $SCRATCH_MNT/file{1,2} 2>/dev/null
++	chmod 777 $SCRATCH_MNT 2>/dev/null
++}
++
++test_enforcement()
++{
++	echo "### some buffered IO (type=$type)"
++	echo "--- initiating IO..." >>$seq.full
++	# Firstly fit below block soft limit
++	su $qa_user -c "$XFS_IO_PROG -F -c 'pwrite 0 4096' -c fsync \
++		$SCRATCH_MNT/file1" 2>&1 >>$seq.full | tee -a $seq.full
++	repquota -$type $SCRATCH_MNT  | grep -v "^root" | filter_scratch
++	# Secondly overcome block soft limit
++	su $qa_user -c "$XFS_IO_PROG -F -c 'pwrite 0 4097' -c fsync \
++		$SCRATCH_MNT/file1" 2>&1 >>$seq.full | tee -a $seq.full
++	repquota -$type $SCRATCH_MNT  | grep -v "^root" | filter_scratch
++	# Now try to overcome block hardlimit
++	su $qa_user -c "$XFS_IO_PROG -F -c 'pwrite 0 4097' -c fsync \
++		$SCRATCH_MNT/file2" 2>&1 >>$seq.full | tee -a $seq.full
++	repquota -$type $SCRATCH_MNT  | grep -v "^root" | filter_scratch
++	# Now sleep for grace time and check that softlimit got enforced
++	sleep $grace
++	su $qa_user -c "$XFS_IO_PROG -F -c 'truncate 0' -c 'pwrite 0 1' \
++		$SCRATCH_MNT/file2" 2>&1 >>$seq.full | tee -a $seq.full
++	repquota -$type $SCRATCH_MNT  | grep -v "^root" | filter_scratch
++	# And now the softlimit test for inodes
++	su $qa_user -c "touch $SCRATCH_MNT/file3" 2>&1 >>$seq.full |
++		filter_scratch | tee -a $seq.full
++	repquota -$type $SCRATCH_MNT  | grep -v "^root" | filter_scratch
++	# Try to exceed inode hardlimit
++	su $qa_user -c "touch $SCRATCH_MNT/file4 $SCRATCH_MNT/file5" 2>&1 \
++		>>$seq.full | filter_scratch | tee -a $seq.full
++	repquota -$type $SCRATCH_MNT  | grep -v "^root" | filter_scratch
++	# Wait and check grace time enforcement
++	rm -f $SCRATCH_MNT/file4 >>$seq.full 2>&1
++	sleep $grace
++	su $qa_user -c "touch $SCRATCH_MNT/file4" 2>&1 >>$seq.full |
++		filter_scratch | tee -a $seq.full
++	repquota -$type $SCRATCH_MNT  | grep -v "^root" | filter_scratch
++	echo "--- completed IO ($type)" >>$seq.full
++}
++
++cleanup_files()
++{
++	rm -f $SCRATCH_MNT/file{1,2,3,4,5}
++}
++
++# real QA test starts here
++rm -f $seq.full
++
++grace=2
++
 +_scratch_mkfs >> $seq.full 2>&1
 +_scratch_mount "-o usrquota,grpquota"
-+chmod 777 $SCRATCH_MNT
 +quotacheck -u -g $SCRATCH_MNT 2>/dev/null
-+quotaon -u -g $SCRATCH_MNT 2>/dev/null
++quotaon $SCRATCH_MNT 2>/dev/null
++setquota -u $qa_user 4 12 2 4 $SCRATCH_MNT
++setquota -u -t $grace $grace $SCRATCH_MNT
++setquota -g $qa_user 4 12 2 4 $SCRATCH_MNT
++setquota -g -t $grace $grace $SCRATCH_MNT
++umount $SCRATCH_DEV
 +
-+if ! _fsstress; then
-+	umount $SCRATCH_DEV 2>/dev/null
-+	exit
-+fi
-+
-+if ! check_usage; then
-+	umount $SCRATCH_DEV 2>/dev/null
-+	status=1
-+	exit
-+fi
-+
++echo; echo "### test user limit enforcement"
++_scratch_mount "-o usrquota"
++quotaon $SCRATCH_MNT 2>/dev/null
++type=u
++test_files
++test_enforcement
++cleanup_files
 +umount $SCRATCH_DEV 2>/dev/null
++
++echo; echo "### test group limit enforcement"
++_scratch_mount "-o grpquota"
++quotaon $SCRATCH_MNT 2>/dev/null
++type=g
++test_files
++test_enforcement
++cleanup_files
++umount $SCRATCH_DEV 2>/dev/null
++
 +status=0
 +exit
-diff --git a/232.out b/232.out
+diff --git a/230.out b/230.out
 new file mode 100644
-index 0000000..744192e
+index 0000000..e62d88f
 --- /dev/null
-+++ b/232.out
-@@ -0,0 +1,6 @@
-+QA output created by 232
++++ b/230.out
+@@ -0,0 +1,131 @@
++QA output created by 230
 +
-+Testing fsstress
++### test user limit enforcement
 +
-+fsstress -n 2000 -d outdir -p 7
-+seed = S
++### create files, setting up ownership (type=u)
++### some buffered IO (type=u)
++*** Report for user quotas on device [SCR_DEV]
++Block grace time: 00:00; Inode grace time: 00:00
++                        Block limits                File limits
++User            used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     --       4       4      12              2     2     4       
++
++
++*** Report for user quotas on device [SCR_DEV]
++Block grace time: 00:00; Inode grace time: 00:00
++                        Block limits                File limits
++User            used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     +-       8       4      12  00:00       2     2     4       
++
++
++pwrite64: Disk quota exceeded
++*** Report for user quotas on device [SCR_DEV]
++Block grace time: 00:00; Inode grace time: 00:00
++                        Block limits                File limits
++User            used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     +-      12       4      12  00:00       2     2     4       
++
++
++pwrite64: Disk quota exceeded
++*** Report for user quotas on device [SCR_DEV]
++Block grace time: 00:00; Inode grace time: 00:00
++                        Block limits                File limits
++User            used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     +-       8       4      12   none       2     2     4       
++
++
++*** Report for user quotas on device [SCR_DEV]
++Block grace time: 00:00; Inode grace time: 00:00
++                        Block limits                File limits
++User            used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     ++       8       4      12   none       3     2     4  00:00
++
++
++touch: cannot touch `[SCR_MNT]/file5': Disk quota exceeded
++*** Report for user quotas on device [SCR_DEV]
++Block grace time: 00:00; Inode grace time: 00:00
++                        Block limits                File limits
++User            used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     ++       8       4      12   none       4     2     4  00:00
++
++
++touch: cannot touch `[SCR_MNT]/file4': Disk quota exceeded
++*** Report for user quotas on device [SCR_DEV]
++Block grace time: 00:00; Inode grace time: 00:00
++                        Block limits                File limits
++User            used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     ++       8       4      12   none       3     2     4   none
++
++
++
++### test group limit enforcement
++
++### create files, setting up ownership (type=g)
++### some buffered IO (type=g)
++*** Report for group quotas on device [SCR_DEV]
++Block grace time: 00:00; Inode grace time: 00:00
++                        Block limits                File limits
++Group           used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     --       4       4      12              2     2     4       
++
++
++*** Report for group quotas on device [SCR_DEV]
++Block grace time: 00:00; Inode grace time: 00:00
++                        Block limits                File limits
++Group           used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     +-       8       4      12  00:00       2     2     4       
++
++
++pwrite64: Disk quota exceeded
++*** Report for group quotas on device [SCR_DEV]
++Block grace time: 00:00; Inode grace time: 00:00
++                        Block limits                File limits
++Group           used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     +-      12       4      12  00:00       2     2     4       
++
++
++pwrite64: Disk quota exceeded
++*** Report for group quotas on device [SCR_DEV]
++Block grace time: 00:00; Inode grace time: 00:00
++                        Block limits                File limits
++Group           used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     +-       8       4      12   none       2     2     4       
++
++
++*** Report for group quotas on device [SCR_DEV]
++Block grace time: 00:00; Inode grace time: 00:00
++                        Block limits                File limits
++Group           used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     ++       8       4      12   none       3     2     4  00:00
++
++
++touch: cannot touch `[SCR_MNT]/file5': Disk quota exceeded
++*** Report for group quotas on device [SCR_DEV]
++Block grace time: 00:00; Inode grace time: 00:00
++                        Block limits                File limits
++Group           used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     ++       8       4      12   none       4     2     4  00:00
++
++
++touch: cannot touch `[SCR_MNT]/file4': Disk quota exceeded
++*** Report for group quotas on device [SCR_DEV]
++Block grace time: 00:00; Inode grace time: 00:00
++                        Block limits                File limits
++Group           used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     ++       8       4      12   none       3     2     4   none
++
++
 diff --git a/group b/group
-index 6b59c69..c8cd774 100644
+index 2c1ac50..441e0e9 100644
 --- a/group
 +++ b/group
-@@ -345,3 +345,4 @@ deprecated
+@@ -343,3 +343,4 @@ deprecated
+ 227 auto fsr
+ 228 rw auto prealloc quick
  229 auto rw
- 230 auto quota quick
- 231 auto quota
-+232 auto quota
++230 auto quota quick
 -- 
 1.6.4.2
 
