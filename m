@@ -1,21 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4NELPV6125472 for <xfs@oss.sgi.com>; Sun, 23 May 2010 09:21:26 -0500
-Received: from out3.smtp.messagingengine.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 167C23678C0
-	for <xfs@oss.sgi.com>; Sun, 23 May 2010 07:23:46 -0700 (PDT)
-Received: from out3.smtp.messagingengine.com (out3.smtp.messagingengine.com
-	[66.111.4.27]) by cuda.sgi.com with ESMTP id x3HbUoczSuBvNVNf
-	for <xfs@oss.sgi.com>; Sun, 23 May 2010 07:23:46 -0700 (PDT)
-Date: Sun, 23 May 2010 09:23:44 -0500
-From: Roman Kononov <roman@binarylife.net>
-Subject: Re: WARNING in xfs_lwr.c, xfs_write()
-Message-ID: <20100523092344.0fcaab42@aaa.pulp.binarylife.net>
-In-Reply-To: <20100523101856.GL2150@dastard>
-References: <20100523002023.41f5a5c8@aaa.pulp.binarylife.net>
-	<20100523101856.GL2150@dastard>
-Mime-Version: 1.0
+	o4O0SOgD146504 for <xfs@oss.sgi.com>; Sun, 23 May 2010 19:28:25 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 82836A24B5C
+	for <xfs@oss.sgi.com>; Sun, 23 May 2010 17:32:14 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	mVgh6jo2qkCejY0c for <xfs@oss.sgi.com>;
+	Sun, 23 May 2010 17:32:14 -0700 (PDT)
+Received: from dastard (unverified [121.44.31.48])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	25569129-1927428
+	for <xfs@oss.sgi.com>; Mon, 24 May 2010 10:00:40 +0930 (CST)
+Received: from dave by dastard with local (Exim 4.71)
+	(envelope-from <david@fromorbit.com>) id 1OGLZ1-0005Lw-IN
+	for xfs@oss.sgi.com; Mon, 24 May 2010 10:30:39 +1000
+Date: Mon, 24 May 2010 10:30:39 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 0/12] xfs: delayed logging V6
+Message-ID: <20100524003039.GB12087@dastard>
+References: <1274138668-1662-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1274138668-1662-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,37 +32,77 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 2010-05-23, 20:18:56 +1000, Dave Chinner <david@fromorbit.com> wrote:
-> You've got some workload that is mixing direct IO writes with some
-> form of buffered or mmap IO on the same file and they are racing.
-> Mixing different types of IO on the one inode is also known as A
-> Really Bad Idea because there is no guarantee of coherency between
-> them....
-> 
-> Can you find out what the application is triggering this?
-
-This is severely modified Postgresql, which does mix direct IO with
-buffered one.
-
-You say "they are racing". Do you mean that this can cause file system
-corruption? Doest it simply warn that direct user data races with
-buffered user data and one of them wins? This warning "taints" the
-kernel. Should it be safe to do different types of IOs on different
-non-overlapping 4-KiB-aligned regions of the same file (I am unsure
-if this is what the application really does)?
-
-Thanks,
-
-Roman
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlLCBNYXkgMTgsIDIwMTAgYXQgMDk6MjQ6MTZBTSArMTAwMCwgRGF2ZSBDaGlubmVyIHdy
+b3RlOgo+IAo+IEhpIEZvbGtzLAo+IAo+IFRoaXMgaXMgdmVyc2lvbiA2IG9mIHRoZSBkZWxheWVk
+IGxvZ2dpbmcgc2VyaWVzIGFuZCBpcyB0aGUgZmlyc3QKPiByZWxlYXNlIGNhbmRpZGF0ZSBmb3Ig
+aW5jbHXRlWlvbiBpbiB0aGUgeGZzLWRldiB0cmVlIGFuZCAyLjYuMzUtcmMxLgoKQlRXLCBoZXJl
+J3MgYSBjb3VwbGUgb2YgcXVpY2sgYmVuY2htYXJrcyBJJ3ZlIHJ1biBvdmVyIHRoZSBsYXN0CmNv
+dXBsZSBvZiBkYXlzIHRvIGNoZWNrIGNvbXBhcml0aXZlIHBlcmZvcm1hbmNlLiBJIGZvdW5kIHRo
+YXQgdGhlCnByZXZpb3VzIHNjYWxhYmlsaXR5IHRlc3RpbmcgSSBkaWQgd2FzIGxpbWl0ZWQgYnkg
+dHdvIGZhY3RvcnM6CgoJMS4gT25seSA0IEFHcyBpbiB0aGUgdGVzdCBmaWxlc3lzdGVtLCBzbyBv
+bmx5IDQtd2F5CglwYXJhbGxlbGlzbSBvbiBhbGxvY2F0aW9uL2ZyZWVpbmcuIEhlbmNlIGl0IHdv
+bid0IHNjYWxlIHRvIDgKCXRocmVhZHMgbm8gbWF0dGVyIHdoYXQgSSBkby4uLi4KCTIuIGxvY2tk
+ZXAgY2hlY2tpbmcgbGltaXRzIHNjYWxhYmlsaXR5IHRvIGFyb3VuZCA0IHRocmVhZHMuCgpTbyBJ
+IHJlLXJhbiB0aGUgcHVyZS1tZXRhZGF0YSwgc2VxdWVudGlhbCBjcmVhdGUvcmVtb3ZlIGZzX21h
+cmsKdGVzdHMgSSd2ZSBwcmV2aW91c2x5IHJ1biB3aXRoIHRoZSBmb2xsb3dpbmcgcmVzdWx0cy4g
+YmFycmllcnMKd2VyZSBkaXNhYmxlZCBvbiBib3RoIFhGUyBhbmQgZXh0NCwgYW5kIFhGUyBhbHNv
+IHdhcyBjb25maWd1cmVkCndpdGg6CgpNS0ZTX09QVElPTlM9Ii1sIHNpemU9MTI4bSAtZCBhZ2Nv
+dW50PTE2IgpNT1VOVF9PUFRJT05TPSItbyBbbm9dZGVsYXlsb2csbG9nYnNpemU9MjYyMTQ0LG5v
+YmFycmllciIKCiguL2ZzX21hcmsgLVMwIC1uIDEwMDAwMCAtcyAwIC1kIC9tbnQvc2NyYXRjaC8w
+IC4uLikKCm5vZGVsYXlsb2c6CgkJICAgZnNfbWFyayByYXRlCnRocmVhZHMJICAgICBub2RlbGF5
+bG9nCSAgICAgIGRlbGF5bG9nCQlleHQ0CiAgMQkJMTdrL3MJCTE5ay9zCQkzM2svcwogIDIJCTMw
+ay9zCQkzNWsvcwkJNjZrL3MKICA0CQk0MmsvcwkJNjNrL3MJCTgway9zCiAgOAkJMzlrL3MJCTk3
+ay9zCQk0NWsvcwoKVGhpcyBzaG93cyBwdXJlIG1ldGFkYXRhIG9wZXJhdGlvbnMgc2NhbGUgbXVj
+aCwgbXVjaCBiZXR0ZXIsCmVzcGVjaWFsbHkgZm9yIG11bHRpdGhyZWFkZWQgd29ya2xvYWRzLiBU
+aGUgbG9nIHRocm91Z2hwdXQgYXQgOAp0aHJlYWRzIGlzIDMuNXggbG93ZXIgZm9yIGEgMi41eCBp
+bXByb3ZlbWVudCBpbiBwZXJmb3JtYW5jZS4KCkFsc28gd29ydGggbm90aW5nIGlzIHRoYXQgdGhl
+IHBlcmZvcm1hbmNlIGlzIGNvbXBldGl0aXZlIHdpdGggZXh0NAphbmQgZXhjZWVkcyBpdCBhdCBh
+IGhpZ2hlciBwYXJhbGxlbGlzbS4gQWxzbyB3b3J0aCBub3RpbmcgaXMgdGhlCmRpc2sgc3Vic3lz
+dGVtIHJlcXVpcmVtZW50cyB0byBzdXN0YWluIHRoaXMgcGVyZm9ybWFuY2UuIFRoZXNlCm51bWJl
+cnMgd2VyZSByZWNvcmRlZCBvZiBwbWNoYXJ0IGdyYXBocyB3LyBhIDVzIHNhbXBsZSBpbnRlcnZh
+bCwgc28Kc2hvdWxkIGJlIGNvbnNpZGVyZWQgYmFsbHBhcmsgbnVtYmVycyAoaS5lIGNsb3NlIGJ1
+dCBub3QgcGVyZmVjdGx5CmFjY3VyYXRlKToKCgkJCSAgIElPUFMvcyBAIE1CL3MKdGhyZWFkcwkJ
+bm9kZWxheWxvZyAgICAgIGRlbGF5bG9nCSAgZXh0NAogIDEJCTEuMGsgQCAyODAJIDUwIEAgMTAJ
+ICAgNTAgQCAyMAogIDIJCTIuMGsgQCA0NjAJMTAwIEAgMjAJICA1MDAgQCA3NQogIDQJCTIuNWsg
+QCA1MjAJMzAwIEAgNTAJIDYuNWsgQCAxNTAKICA4CQkzLjdrIEAgNDgwCTkwMCBAIDE1MAkgOS44
+ayBAIDE4MAoKV2UgY2FuIHNlZSB3aHkgdGhlIGN1cmVudCBYRlMgam91cm5hbGxpbmcgbW9kZSBp
+cyBzbG93IC0gaXQgcmVxdWlyZXMKNTAwTUIvcyBvZiBsb2cgdGhyb3VnaHB1dCB0byBnZXQgdG8g
+NDBrIGNyZWF0ZXMvcyBhbmQgYWxtb3N0IGFsbAp0aGUgSU9QcyBhcmUgc2VydmljaW5nIGxvZyBJ
+Ty4KCmV4dDQsIG9uIHRoZSBvdGhlciBoYW5kLCByZWFsbHkgc3RyYWlucyB0aGUgSU9QIGNhcGFi
+aWxpdHkgb2YgdGhlCmRpc2sgc3Vic3lzdGVtIGFuZCB0aGF0IGlzIHRoZSBsaW1pdGluZyBmYWN0
+b3IgYXQgZ3JlYXRlciB0aGFuIHR3bwp0aHJlYWRzLiBJdCdzIGFuIGludGVyZXN0aW5nIHByb2dy
+ZXNzaW9uLCB0b28sIGluIHRoYXQgdGhlIGlvcHMgZ28KdXAgYnkgYW4gb3JkZXIgb2YgbWFnbml0
+dWRlIGVhY2ggdGltZSB0aGUgdGhyZWFkIGNvdW50IGRvdWJsZXMuCgpUaGUgYmVzdCBJTyBiZWhh
+dmlvdXIgY29tZXMgZnJvbSB0aGUgZGVsYXllZCBsb2dnaW5nIHZlcnNpb24gb2YgWEZTLAp3aXRo
+IHRoZSBsb3dlc3QgYmFuZHdpZHRoIGFuZCBpb3BzIHRvIHN1c3RhaW4gdGhlIGhpZ2hlc3QKcGVy
+Zm9ybWFuY2UuIEFsbCB0aGUgSU8gaXMgdG8gdGhlIGxvZyAtIG5vIG1ldGFkYXRhIGlzIHdyaXR0
+ZW4gdG8KZGlzayBhdCBhbGwsIHdoaWNoIGlzIHRoZSB3YXkgdGhpcyB0ZXN0IHNob3VsZCBleGVj
+dXRlLiAgQXMgYSByZXVsdCwKdGhlIGRlbGF5ZWQgbG9nZ2luZyBjb2RlIHdhcyB0aGUgb25seSBj
+b25maWd1cmF0aW9uIG5vdCBsaW1pdGVkIGJ5CnRoZSBJTyBzdWJzeXN0ZW0gLSBpbnN0ZWFkIGl0
+IHdhcyBjb21wbGV0ZWx5IENQVSBib3VuZCAoOCBDUFVzCndvcnRoKS4uLgoKSG93ZXZlciwgaXQn
+cyBub3QgYWxsIHJvc2VzLCBhcyBkYmVuY2ggd2lsbCBzaG93OgoKIyBNS0ZTX09QVElPTlM9Ii1s
+IHNpemU9MTI4bSAtZCBhZ2NvdW50PTE2IiBNT1VOVF9PUFRJT05TPSItbyBub2RlbGF5bG9nLG5v
+YmFycmllciIgLi9iZW5jaCAxIGRhdmUgZGF2ZSBkYmVuY2htdWx0aQoKVGhyb3VnaHB1dCBpcyBp
+biBNQi9zLCBsYXRlbmN5IGluIG1zLgoKCQkgIG5vZGVsYXlsb2cJCSAgZGVsYXlsb2cKVGhyZWFk
+cwkJdGhydXB1dCAgbWF4LWxhdAl0aHJ1cHV0CW1heC1sYXQKICAgMQkJMTUzLjAxMSAgIDQ1LjQ1
+MAkxNTcuMDM2ICA1OS42ODUKICAgMgkJMzE5LjUzNCAgIDE4LjA5NgkzMzAuMDYyICA0MS40NTgK
+ICAxMAkJMTM1MC4zMSAgIDQ2LjYzMQk3MjYuMDc1IDMwMy40MzQKICAyMAkJMTQ5Ny45MyAgMzY1
+LjA5Mgk1NDcuMzgwIDU0MS4yMjMKIDEwMAkJMTQxMC40MiAyNDg4LjEwNQk0NzcuOTY0IDE3Ny40
+NzEKIDIwMAkJMTIzMi45NyAgMjk3Ljk4Mgk0NTcuNjQxIDQ0Ny4wNjAKClRoZXJlIGlzIG5vIGRp
+ZmZlcmVuY2UgZm9yIDEtMiB0aHJlYWRzICh3aXRoaW4gdGhlIGVycm9yIG1hcmdpbiBvZgpkYmVu
+Y2gpLCBidXQgZGVsYXllZCBsb2dnaW5nIHNob3dzIHNpZ25pZmljYW50IHRocm91Z2hwdXQgcmVk
+dWN0aW9ucwooPjYwJSBkZWdyYWRhdGlvbikgYXQgaGlnaGVyIHRocmVhZCBjb3VudHMuIFRoaXMg
+YXBwZWFycyB0byBiZSBkdWUKdG8gdGhlIHVub3B0aW1pc2VkIGxvZyBmb3JjZSBpbXBsZW1lbnRh
+dGlvbiB0aGF0IHRoZSBkZWxheWVkIGxvZ2dpbmcKY29kZSBjdXJyZW50bHkgaGFzLiBJJ2xsIHBy
+b2JhYmx5IHVzZSBkYmVuY2ggb3ZlciB0aGUgbmV4dCBmZXcgd2Vla3MKYXMgYSBtZWFzdXJlIHRv
+IHRyeSB0byBicmluZyB0aGlzIHBhcnQgb2YgdGhlIGRlbGF5ZWQgbG9nZ2luZyBjb2RlCnVwIHRv
+IHRoZSBzYW1lIHBlcmZvcm1hbmNlLgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpk
+YXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNn
+aS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
