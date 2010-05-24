@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4O6aaLl163632 for <xfs@oss.sgi.com>; Mon, 24 May 2010 01:36:37 -0500
+	o4O6Yj11163521 for <xfs@oss.sgi.com>; Mon, 24 May 2010 01:34:46 -0500
 Received: from song.cn.fujitsu.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C79BFA255B1
-	for <xfs@oss.sgi.com>; Sun, 23 May 2010 23:40:30 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B3F18142FA76
+	for <xfs@oss.sgi.com>; Sun, 23 May 2010 23:37:03 -0700 (PDT)
 Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id i54xfkiAgDVwGHEE for
-	<xfs@oss.sgi.com>; Sun, 23 May 2010 23:40:30 -0700 (PDT)
-Message-ID: <4BFA1F03.6030909@cn.fujitsu.com>
-Date: Mon, 24 May 2010 14:38:59 +0800
+	cuda.sgi.com with ESMTP id OjE9kXFb2fI4ohuB for
+	<xfs@oss.sgi.com>; Sun, 23 May 2010 23:37:03 -0700 (PDT)
+Message-ID: <4BFA1E90.5050805@cn.fujitsu.com>
+Date: Mon, 24 May 2010 14:37:04 +0800
 From: Shi Weihua <shiwh@cn.fujitsu.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] btrfs: should add a permission check for setfacl
-References: <4BF1E458.7060500@cn.fujitsu.com>
-	<20100520083340.GC11920@infradead.org>
-In-Reply-To: <20100520083340.GC11920@infradead.org>
+Subject: Re: [PATCH 07/10] btrfs: fix wrong ctime when adding link
+References: <4BF4E336.40603@cn.fujitsu.com>
+	<20100520083300.GB11920@infradead.org>
+In-Reply-To: <20100520083300.GB11920@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,57 +29,39 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: "Yan, Zheng" <zheng.yan@oracle.com>, linux-btrfs@vger.kernel.org, chris.mason@oracle.com, xfs@oss.sgi.com
+Cc: Linux Btrfs <linux-btrfs@vger.kernel.org>, Chris Mason <chris.mason@oracle.com>, Miao Xie <miaox@cn.fujitsu.com>, xfs@oss.sgi.com
 
 cc xfstests ml
 
 at 2010-5-20 16:33, Christoph Hellwig wrote:
-> On Tue, May 18, 2010 at 08:50:32AM +0800, Shi Weihua wrote:
->> On btrfs, do the following
->> ------------------
->> # su user1
->> # cd btrfs-part/
->> # touch aaa
->> # getfacl aaa
->>   # file: aaa
->>   # owner: user1
->>   # group: user1
->>   user::rw-
->>   group::rw-
->>   other::r--
->> # su user2
->> # cd btrfs-part/
->> # setfacl -m u::rwx aaa
->> # getfacl aaa
->>   # file: aaa
->>   # owner: user1
->>   # group: user1
->>   user::rwx           <- successed to setfacl
->>   group::rw-
->>   other::r--
->> ------------------
->> but we should prohibit it that user2 changing user1's acl.
->> In fact, on ext3 and other fs, a message occurs:
->>   setfacl: aaa: Operation not permitted
+> On Thu, May 20, 2010 at 03:22:30PM +0800, Miao Xie wrote:
+>> the ctime of file has not been updated when I create a link for it.
+>>
+>> Steps to reproduce:
+>>  # touch file1
+>>  # stat -c %Z file1
+>>  1273592239
+>>  # link flink1 file1
+>>  # stat -c %Z file1
+>>  1273592239             <-- have not been updated
+>>
+>> This patch fix this problem.
 > 
-> Can you add this as a new testcase to xfstests so that we can easiy
-> check for regressions and future filesystems implementing this
-> correctly?
-> 
+> Care to add a test to xfstests to check for this regression?
 
-did it. maybe it should be merged into 051 or 099.
+did it. 
 
 Signed-off-by: Shi Weihua <shiwh@cn.fujitsu.com>
 ---
-diff -urpN xfstests.orig.229/230 xfstests/230
---- xfstests.orig.229/230	1970-01-01 08:00:00.000000000 +0800
-+++ xfstests/230	2010-05-28 14:27:02.000000000 +0800
-@@ -0,0 +1,80 @@
+diff -urpN xfstests.orig/229 xfstests/229
+--- xfstests.orig/229	1970-01-01 08:00:00.000000000 +0800
++++ xfstests/229	2010-05-28 11:27:14.000000000 +0800
+@@ -0,0 +1,73 @@
 +#! /bin/bash
-+# FS QA Test No. 230
++# FS QA Test No. 229
 +#
-+# Check user B can setfacl a file which belongs to user A
-+# See also http://marc.info/?l=linux-btrfs&m=127434445620298&w=2
++# Check ctime updated or not if file linked
++# See also http://marc.info/?l=linux-btrfs&m=127434439020230&w=2
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2010 FUJITSU LIMITED. All Rights Reserved.
@@ -105,72 +87,63 @@ diff -urpN xfstests.orig.229/230 xfstests/230
 +seq=`basename $0`
 +echo "QA output created by $seq"
 +
++_cleanup()
++{
++	if [ -a $TEST_DIR/ouch2 ]; then
++		rm -f $TEST_DIR/ouch2
++	fi
++	if [ -a $TEST_DIR/ouch ]; then
++		rm -f $TEST_DIR/ouch
++	fi
++}
++
 +here=`pwd`
-+tmp=/tmp/$$
-+runas=$here/src/runas
-+status=1        # FAILure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
 +
 +# get standard environment, filters and checks
 +. ./common.rc
-+. ./common.filter
-+. ./common.attr
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+	[ -n "$testdir" ] && rm -rf $testdir/$seq.dir1
-+	_cleanup_testdir
-+}
 +
 +# real QA test starts here
 +_supported_fs generic
 +# only Linux supports fallocate
 +_supported_os Linux
 +
-+[ -x $runas ] || _notrun "$runas executable not found"
++# create a file and get its ctime
++touch $TEST_DIR/ouch
++ctime=`stat -c %Z $TEST_DIR/ouch`
++sleep 1
 +
-+rm -f $seq.full
++# create a link to a file and get existing file's ctime 
++link $TEST_DIR/ouch $TEST_DIR/ouch2
++ctime2=`stat -c %Z $TEST_DIR/ouch`
 +
-+_setup_testdir
++# check ctime updated
++if [ $ctime2 -le $ctime ]; then
++	echo "ctime: $ctime -> $ctime2 "
++	echo "Fatal error: ctime not updated after link"
++	_cleanup
++	exit 1
++fi
 +
-+_need_to_be_root
-+_acl_setup_ids
-+_require_acls
-+
-+# get dir
-+cd $testdir
-+rm -rf $seq.dir1
-+mkdir $seq.dir1
-+cd $seq.dir1
-+
-+touch file1
-+chown $acl1.$acl1 file1
-+
-+echo "Expect to FAIL"
-+$runas -u $acl2 -g $acl2 -- `which setfacl` -m u::rwx file1 2>&1
++_cleanup
 +
 +echo "Test over."
 +# success, all done
 +status=0
 +exit
-diff -urpN xfstests.orig.229/230.out xfstests/230.out
---- xfstests.orig.229/230.out	1970-01-01 08:00:00.000000000 +0800
-+++ xfstests/230.out	2010-05-28 14:27:05.000000000 +0800
-@@ -0,0 +1,4 @@
-+QA output created by 230
-+Expect to FAIL
-+setfacl: file1: Operation not permitted
+diff -urpN xfstests.orig/229.out xfstests/229.out
+--- xfstests.orig/229.out	1970-01-01 08:00:00.000000000 +0800
++++ xfstests/229.out	2010-05-28 11:27:14.000000000 +0800
+@@ -0,0 +1,2 @@
++QA output created by 229
 +Test over.
-diff -urpN xfstests.orig.229/group xfstests/group
---- xfstests.orig.229/group	2010-05-28 11:29:31.000000000 +0800
-+++ xfstests/group	2010-05-28 14:26:48.000000000 +0800
-@@ -343,3 +343,4 @@ deprecated
+diff -urpN xfstests.orig/group xfstests/group
+--- xfstests.orig/group	2010-05-07 23:32:13.000000000 +0800
++++ xfstests/group	2010-05-28 11:27:02.000000000 +0800
+@@ -342,3 +342,4 @@ deprecated
+ 226 auto enospc
  227 auto fsr
  228 rw auto prealloc quick
- 229 auto
-+230 acl auto
++229 auto
 
 _______________________________________________
 xfs mailing list
