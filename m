@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4O8LJjD168438 for <xfs@oss.sgi.com>; Mon, 24 May 2010 03:21:20 -0500
-Received: from song.cn.fujitsu.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9E7F01574727
-	for <xfs@oss.sgi.com>; Mon, 24 May 2010 01:25:13 -0700 (PDT)
-Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id DRPez0SmHD6BpC9J for
-	<xfs@oss.sgi.com>; Mon, 24 May 2010 01:25:13 -0700 (PDT)
-Message-ID: <4BFA3815.7070000@cn.fujitsu.com>
-Date: Mon, 24 May 2010 16:25:57 +0800
-From: Li Zefan <lizf@cn.fujitsu.com>
-MIME-Version: 1.0
-Subject: [PATCH] xfs: convert more trace events to DEFINE_EVENT
+	o4OECGs5183240 for <xfs@oss.sgi.com>; Mon, 24 May 2010 09:12:17 -0500
+Received: from mx1.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 02F33369D3E
+	for <xfs@oss.sgi.com>; Mon, 24 May 2010 07:14:38 -0700 (PDT)
+Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
+	with ESMTP id igxPNlC7gyQCvw2h for <xfs@oss.sgi.com>;
+	Mon, 24 May 2010 07:14:38 -0700 (PDT)
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 8/8] Add test for quota accounting after remount read only
+Date: Mon, 24 May 2010 16:14:19 +0200
+Message-Id: <1274710459-11446-9-git-send-email-jack@suse.cz>
+In-Reply-To: <1274710459-11446-1-git-send-email-jack@suse.cz>
+References: <1274710459-11446-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,427 +22,166 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <dchinner@redhat.com>, Alex Elder <aelder@sgi.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, Frederic Weisbecker <fweisbec@gmail.com>, Christoph Hellwig <hch@lst.de>, Steven Rostedt <rostedt@goodmis.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: hch@infradead.org, Jan Kara <jack@suse.cz>
 
-Use DECLARE_EVENT_CLASS, and save ~15K:
+Check that quota accounting works after remounting read-only and
+then back read-write.
 
-   text    data     bss     dec     hex filename
- 171949   43028      48  215025   347f1 fs/xfs/linux-2.6/xfs_trace.o.orig
- 156521   43028      36  199585   30ba1 fs/xfs/linux-2.6/xfs_trace.o
-
-No change in functionality.
-
-Signed-off-by: Li Zefan <lizf@cn.fujitsu.com>
+Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/xfs/linux-2.6/xfs_trace.h |  356 ++++++++++++++++++++++--------------------
- 1 files changed, 188 insertions(+), 168 deletions(-)
+ 235     |   83 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 235.out |   34 +++++++++++++++++++++++++
+ group   |    1 +
+ 3 files changed, 118 insertions(+), 0 deletions(-)
+ create mode 100755 235
+ create mode 100644 235.out
 
-diff --git a/fs/xfs/linux-2.6/xfs_trace.h b/fs/xfs/linux-2.6/xfs_trace.h
-index 8a319cf..7f5fb71 100644
---- a/fs/xfs/linux-2.6/xfs_trace.h
-+++ b/fs/xfs/linux-2.6/xfs_trace.h
-@@ -82,33 +82,6 @@ DECLARE_EVENT_CLASS(xfs_attr_list_class,
- 	)
- )
- 
--#define DEFINE_PERAG_REF_EVENT(name) \
--TRACE_EVENT(name, \
--	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, int refcount, \
--		 unsigned long caller_ip), \
--	TP_ARGS(mp, agno, refcount, caller_ip), \
--	TP_STRUCT__entry( \
--		__field(dev_t, dev) \
--		__field(xfs_agnumber_t, agno) \
--		__field(int, refcount) \
--		__field(unsigned long, caller_ip) \
--	), \
--	TP_fast_assign( \
--		__entry->dev = mp->m_super->s_dev; \
--		__entry->agno = agno; \
--		__entry->refcount = refcount; \
--		__entry->caller_ip = caller_ip; \
--	), \
--	TP_printk("dev %d:%d agno %u refcount %d caller %pf", \
--		  MAJOR(__entry->dev), MINOR(__entry->dev), \
--		  __entry->agno, \
--		  __entry->refcount, \
--		  (char *)__entry->caller_ip) \
--);
--
--DEFINE_PERAG_REF_EVENT(xfs_perag_get)
--DEFINE_PERAG_REF_EVENT(xfs_perag_put)
--
- #define DEFINE_ATTR_LIST_EVENT(name) \
- DEFINE_EVENT(xfs_attr_list_class, name, \
- 	TP_PROTO(struct xfs_attr_list_context *ctx), \
-@@ -122,6 +95,37 @@ DEFINE_ATTR_LIST_EVENT(xfs_attr_list_add);
- DEFINE_ATTR_LIST_EVENT(xfs_attr_list_wrong_blk);
- DEFINE_ATTR_LIST_EVENT(xfs_attr_list_notfound);
- 
-+DECLARE_EVENT_CLASS(xfs_perag_class,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, int refcount,
-+		 unsigned long caller_ip),
-+	TP_ARGS(mp, agno, refcount, caller_ip),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(int, refcount)
-+		__field(unsigned long, caller_ip)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->refcount = refcount;
-+		__entry->caller_ip = caller_ip;
-+	),
-+	TP_printk("dev %d:%d agno %u refcount %d caller %pf",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->agno,
-+		  __entry->refcount,
-+		  (char *)__entry->caller_ip)
-+);
+diff --git a/235 b/235
+new file mode 100755
+index 0000000..97632e5
+--- /dev/null
++++ b/235
+@@ -0,0 +1,83 @@
++#! /bin/bash
++# FS QA Test No. 235
++#
++# Test whether quota gets properly reenabled after remount read-write
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2010 Jan Kara.  All Rights Reserved.
++#
++# Based on test 219,
++# Copyright (c) 2005 Silicon Graphics, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++# creator
++owner=jack@suse.cz
 +
-+#define DEFINE_PERAG_REF_EVENT(name)	\
-+DEFINE_EVENT(xfs_perag_class, name,	\
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, int refcount,	\
-+		 unsigned long caller_ip),					\
-+	TP_ARGS(mp, agno, refcount, caller_ip))
-+DEFINE_PERAG_REF_EVENT(xfs_perag_get);
-+DEFINE_PERAG_REF_EVENT(xfs_perag_put);
++seq=`basename $0`
++echo "QA output created by $seq"
 +
- TRACE_EVENT(xfs_attr_list_node_descend,
- 	TP_PROTO(struct xfs_attr_list_context *ctx,
- 		 struct xfs_da_node_entry *btree),
-@@ -775,165 +779,181 @@ DEFINE_LOGGRANT_EVENT(xfs_log_ungrant_enter);
- DEFINE_LOGGRANT_EVENT(xfs_log_ungrant_exit);
- DEFINE_LOGGRANT_EVENT(xfs_log_ungrant_sub);
- 
--#define DEFINE_RW_EVENT(name) \
--TRACE_EVENT(name, \
--	TP_PROTO(struct xfs_inode *ip, size_t count, loff_t offset, int flags), \
--	TP_ARGS(ip, count, offset, flags), \
--	TP_STRUCT__entry( \
--		__field(dev_t, dev) \
--		__field(xfs_ino_t, ino) \
--		__field(xfs_fsize_t, size) \
--		__field(xfs_fsize_t, new_size) \
--		__field(loff_t, offset) \
--		__field(size_t, count) \
--		__field(int, flags) \
--	), \
--	TP_fast_assign( \
--		__entry->dev = VFS_I(ip)->i_sb->s_dev; \
--		__entry->ino = ip->i_ino; \
--		__entry->size = ip->i_d.di_size; \
--		__entry->new_size = ip->i_new_size; \
--		__entry->offset = offset; \
--		__entry->count = count; \
--		__entry->flags = flags; \
--	), \
--	TP_printk("dev %d:%d ino 0x%llx size 0x%llx new_size 0x%llx " \
--		  "offset 0x%llx count 0x%zx ioflags %s", \
--		  MAJOR(__entry->dev), MINOR(__entry->dev), \
--		  __entry->ino, \
--		  __entry->size, \
--		  __entry->new_size, \
--		  __entry->offset, \
--		  __entry->count, \
--		  __print_flags(__entry->flags, "|", XFS_IO_FLAGS)) \
-+DECLARE_EVENT_CLASS(xfs_file_class,
-+	TP_PROTO(struct xfs_inode *ip, size_t count, loff_t offset, int flags),
-+	TP_ARGS(ip, count, offset, flags),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, ino)
-+		__field(xfs_fsize_t, size)
-+		__field(xfs_fsize_t, new_size)
-+		__field(loff_t, offset)
-+		__field(size_t, count)
-+		__field(int, flags)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = VFS_I(ip)->i_sb->s_dev;
-+		__entry->ino = ip->i_ino;
-+		__entry->size = ip->i_d.di_size;
-+		__entry->new_size = ip->i_new_size;
-+		__entry->offset = offset;
-+		__entry->count = count;
-+		__entry->flags = flags;
-+	),
-+	TP_printk("dev %d:%d ino 0x%llx size 0x%llx new_size 0x%llx "
-+		  "offset 0x%llx count 0x%zx ioflags %s",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino,
-+		  __entry->size,
-+		  __entry->new_size,
-+		  __entry->offset,
-+		  __entry->count,
-+		  __print_flags(__entry->flags, "|", XFS_IO_FLAGS))
- )
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
 +
-+#define DEFINE_RW_EVENT(name)		\
-+DEFINE_EVENT(xfs_file_class, name,	\
-+	TP_PROTO(struct xfs_inode *ip, size_t count, loff_t offset, int flags),	\
-+	TP_ARGS(ip, count, offset, flags))
- DEFINE_RW_EVENT(xfs_file_read);
- DEFINE_RW_EVENT(xfs_file_buffered_write);
- DEFINE_RW_EVENT(xfs_file_direct_write);
- DEFINE_RW_EVENT(xfs_file_splice_read);
- DEFINE_RW_EVENT(xfs_file_splice_write);
- 
--
--#define DEFINE_PAGE_EVENT(name) \
--TRACE_EVENT(name, \
--	TP_PROTO(struct inode *inode, struct page *page, unsigned long off), \
--	TP_ARGS(inode, page, off), \
--	TP_STRUCT__entry( \
--		__field(dev_t, dev) \
--		__field(xfs_ino_t, ino) \
--		__field(pgoff_t, pgoff) \
--		__field(loff_t, size) \
--		__field(unsigned long, offset) \
--		__field(int, delalloc) \
--		__field(int, unmapped) \
--		__field(int, unwritten) \
--	), \
--	TP_fast_assign( \
--		int delalloc = -1, unmapped = -1, unwritten = -1; \
--	\
--		if (page_has_buffers(page)) \
--			xfs_count_page_state(page, &delalloc, \
--					     &unmapped, &unwritten); \
--		__entry->dev = inode->i_sb->s_dev; \
--		__entry->ino = XFS_I(inode)->i_ino; \
--		__entry->pgoff = page_offset(page); \
--		__entry->size = i_size_read(inode); \
--		__entry->offset = off; \
--		__entry->delalloc = delalloc; \
--		__entry->unmapped = unmapped; \
--		__entry->unwritten = unwritten; \
--	), \
--	TP_printk("dev %d:%d ino 0x%llx pgoff 0x%lx size 0x%llx offset %lx " \
--		  "delalloc %d unmapped %d unwritten %d", \
--		  MAJOR(__entry->dev), MINOR(__entry->dev), \
--		  __entry->ino, \
--		  __entry->pgoff, \
--		  __entry->size, \
--		  __entry->offset, \
--		  __entry->delalloc, \
--		  __entry->unmapped, \
--		  __entry->unwritten) \
-+DECLARE_EVENT_CLASS(xfs_page_class,
-+	TP_PROTO(struct inode *inode, struct page *page, unsigned long off),
-+	TP_ARGS(inode, page, off),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, ino)
-+		__field(pgoff_t, pgoff)
-+		__field(loff_t, size)
-+		__field(unsigned long, offset)
-+		__field(int, delalloc)
-+		__field(int, unmapped)
-+		__field(int, unwritten)
-+	),
-+	TP_fast_assign(
-+		int delalloc = -1, unmapped = -1, unwritten = -1;
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++. ./common.quota
 +
-+		if (page_has_buffers(page))
-+			xfs_count_page_state(page, &delalloc,
-+					     &unmapped, &unwritten);
-+		__entry->dev = inode->i_sb->s_dev;
-+		__entry->ino = XFS_I(inode)->i_ino;
-+		__entry->pgoff = page_offset(page);
-+		__entry->size = i_size_read(inode);
-+		__entry->offset = off;
-+		__entry->delalloc = delalloc;
-+		__entry->unmapped = unmapped;
-+		__entry->unwritten = unwritten;
-+	),
-+	TP_printk("dev %d:%d ino 0x%llx pgoff 0x%lx size 0x%llx offset %lx "
-+		  "delalloc %d unmapped %d unwritten %d",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino,
-+		  __entry->pgoff,
-+		  __entry->size,
-+		  __entry->offset,
-+		  __entry->delalloc,
-+		  __entry->unmapped,
-+		  __entry->unwritten)
- )
++filter_scratch()
++{
++	perl -ne "
++s,$SCRATCH_MNT,[SCR_MNT],;
++s,$SCRATCH_DEV,[SCR_DEV],;
++	print;"
++}
 +
-+#define DEFINE_PAGE_EVENT(name)		\
-+DEFINE_EVENT(xfs_page_class, name,	\
-+	TP_PROTO(struct inode *inode, struct page *page, unsigned long off),	\
-+	TP_ARGS(inode, page, off))
- DEFINE_PAGE_EVENT(xfs_writepage);
- DEFINE_PAGE_EVENT(xfs_releasepage);
- DEFINE_PAGE_EVENT(xfs_invalidatepage);
- 
--#define DEFINE_IOMAP_EVENT(name) \
--TRACE_EVENT(name, \
--	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, ssize_t count, \
--		 int flags, struct xfs_bmbt_irec *irec), \
--	TP_ARGS(ip, offset, count, flags, irec), \
--	TP_STRUCT__entry( \
--		__field(dev_t, dev) \
--		__field(xfs_ino_t, ino) \
--		__field(loff_t, size) \
--		__field(loff_t, new_size) \
--		__field(loff_t, offset) \
--		__field(size_t, count) \
--		__field(int, flags) \
--		__field(xfs_fileoff_t, startoff) \
--		__field(xfs_fsblock_t, startblock) \
--		__field(xfs_filblks_t, blockcount) \
--	), \
--	TP_fast_assign( \
--		__entry->dev = VFS_I(ip)->i_sb->s_dev; \
--		__entry->ino = ip->i_ino; \
--		__entry->size = ip->i_d.di_size; \
--		__entry->new_size = ip->i_new_size; \
--		__entry->offset = offset; \
--		__entry->count = count; \
--		__entry->flags = flags; \
--		__entry->startoff = irec ? irec->br_startoff : 0; \
--		__entry->startblock = irec ? irec->br_startblock : 0; \
--		__entry->blockcount = irec ? irec->br_blockcount : 0; \
--	), \
--	TP_printk("dev %d:%d ino 0x%llx size 0x%llx new_size 0x%llx " \
--		  "offset 0x%llx count %zd flags %s " \
--		  "startoff 0x%llx startblock %lld blockcount 0x%llx", \
--		  MAJOR(__entry->dev), MINOR(__entry->dev), \
--		  __entry->ino, \
--		  __entry->size, \
--		  __entry->new_size, \
--		  __entry->offset, \
--		  __entry->count, \
--		  __print_flags(__entry->flags, "|", BMAPI_FLAGS), \
--		  __entry->startoff, \
--		  (__int64_t)__entry->startblock, \
--		  __entry->blockcount) \
-+DECLARE_EVENT_CLASS(xfs_iomap_class,
-+	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, ssize_t count,
-+		 int flags, struct xfs_bmbt_irec *irec),
-+	TP_ARGS(ip, offset, count, flags, irec),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, ino)
-+		__field(loff_t, size)
-+		__field(loff_t, new_size)
-+		__field(loff_t, offset)
-+		__field(size_t, count)
-+		__field(int, flags)
-+		__field(xfs_fileoff_t, startoff)
-+		__field(xfs_fsblock_t, startblock)
-+		__field(xfs_filblks_t, blockcount)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = VFS_I(ip)->i_sb->s_dev;
-+		__entry->ino = ip->i_ino;
-+		__entry->size = ip->i_d.di_size;
-+		__entry->new_size = ip->i_new_size;
-+		__entry->offset = offset;
-+		__entry->count = count;
-+		__entry->flags = flags;
-+		__entry->startoff = irec ? irec->br_startoff : 0;
-+		__entry->startblock = irec ? irec->br_startblock : 0;
-+		__entry->blockcount = irec ? irec->br_blockcount : 0;
-+	),
-+	TP_printk("dev %d:%d ino 0x%llx size 0x%llx new_size 0x%llx "
-+		  "offset 0x%llx count %zd flags %s "
-+		  "startoff 0x%llx startblock %lld blockcount 0x%llx",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino,
-+		  __entry->size,
-+		  __entry->new_size,
-+		  __entry->offset,
-+		  __entry->count,
-+		  __print_flags(__entry->flags, "|", BMAPI_FLAGS),
-+		  __entry->startoff,
-+		  (__int64_t)__entry->startblock,
-+		  __entry->blockcount)
- )
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux #IRIX
++_require_scratch
++_require_quota
++_require_user
++_need_to_be_root
 +
-+#define DEFINE_IOMAP_EVENT(name)	\
-+DEFINE_EVENT(xfs_iomap_class, name,	\
-+	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, ssize_t count,	\
-+		 int flags, struct xfs_bmbt_irec *irec),		\
-+	TP_ARGS(ip, offset, count, flags, irec))
- DEFINE_IOMAP_EVENT(xfs_iomap_enter);
- DEFINE_IOMAP_EVENT(xfs_iomap_found);
- DEFINE_IOMAP_EVENT(xfs_iomap_alloc);
- 
--#define DEFINE_SIMPLE_IO_EVENT(name) \
--TRACE_EVENT(name, \
--	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, ssize_t count), \
--	TP_ARGS(ip, offset, count), \
--	TP_STRUCT__entry( \
--		__field(dev_t, dev) \
--		__field(xfs_ino_t, ino) \
--		__field(loff_t, size) \
--		__field(loff_t, new_size) \
--		__field(loff_t, offset) \
--		__field(size_t, count) \
--	), \
--	TP_fast_assign( \
--		__entry->dev = VFS_I(ip)->i_sb->s_dev; \
--		__entry->ino = ip->i_ino; \
--		__entry->size = ip->i_d.di_size; \
--		__entry->new_size = ip->i_new_size; \
--		__entry->offset = offset; \
--		__entry->count = count; \
--	), \
--	TP_printk("dev %d:%d ino 0x%llx size 0x%llx new_size 0x%llx " \
--		  "offset 0x%llx count %zd", \
--		  MAJOR(__entry->dev), MINOR(__entry->dev), \
--		  __entry->ino, \
--		  __entry->size, \
--		  __entry->new_size, \
--		  __entry->offset, \
--		  __entry->count) \
-+DECLARE_EVENT_CLASS(xfs_simple_io_class,
-+	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, ssize_t count),
-+	TP_ARGS(ip, offset, count),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, ino)
-+		__field(loff_t, size)
-+		__field(loff_t, new_size)
-+		__field(loff_t, offset)
-+		__field(size_t, count)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = VFS_I(ip)->i_sb->s_dev;
-+		__entry->ino = ip->i_ino;
-+		__entry->size = ip->i_d.di_size;
-+		__entry->new_size = ip->i_new_size;
-+		__entry->offset = offset;
-+		__entry->count = count;
-+	),
-+	TP_printk("dev %d:%d ino 0x%llx size 0x%llx new_size 0x%llx "
-+		  "offset 0x%llx count %zd",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino,
-+		  __entry->size,
-+		  __entry->new_size,
-+		  __entry->offset,
-+		  __entry->count)
- );
++# real QA test starts here
++rm -f $seq.full
 +
-+#define DEFINE_SIMPLE_IO_EVENT(name)	\
-+DEFINE_EVENT(xfs_simple_io_class, name,	\
-+	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, ssize_t count),	\
-+	TP_ARGS(ip, offset, count))
- DEFINE_SIMPLE_IO_EVENT(xfs_delalloc_enospc);
- DEFINE_SIMPLE_IO_EVENT(xfs_unwritten_convert);
- 
++_scratch_mkfs >> $seq.full 2>&1
++_scratch_mount "-o usrquota,grpquota"
++quotacheck -u -g $SCRATCH_MNT 2>/dev/null
++quotaon $SCRATCH_MNT 2>/dev/null
++
++touch $SCRATCH_MNT/testfile
++chown $qa_user:$qa_user $SCRATCH_MNT/testfile
++
++repquota -u -g $SCRATCH_MNT  | grep -v "^root" | filter_scratch
++
++mount -o remount,ro $SCRATCH_DEV 2>&1 | tee -a $seq.full | filter_scratch
++touch $SCRATCH_MNT/failed 2>&1 | tee -a $seq.full | filter_scratch
++mount -o remount,rw $SCRATCH_DEV 2>&1 | tee -a $seq.full | filter_scratch
++
++$XFS_IO_PROG -F -c 'pwrite 0 16k' -c 'fsync' \
++			$SCRATCH_MNT/testfile >>$seq.full 2>&1
++repquota -u -g $SCRATCH_MNT  | grep -v "^root" | filter_scratch
++
++umount $SCRATCH_DEV 2>/dev/null
++
++status=0
++exit
+diff --git a/235.out b/235.out
+new file mode 100644
+index 0000000..8d3eb1f
+--- /dev/null
++++ b/235.out
+@@ -0,0 +1,34 @@
++QA output created by 235
++*** Report for user quotas on device [SCR_DEV]
++Block grace time: 7days; Inode grace time: 7days
++                        Block limits                File limits
++User            used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     --       0       0       0              1     0     0       
++
++
++*** Report for group quotas on device [SCR_DEV]
++Block grace time: 7days; Inode grace time: 7days
++                        Block limits                File limits
++Group           used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     --       0       0       0              1     0     0       
++
++
++touch: cannot touch `[SCR_MNT]/failed': Read-only file system
++*** Report for user quotas on device [SCR_DEV]
++Block grace time: 7days; Inode grace time: 7days
++                        Block limits                File limits
++User            used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     --      16       0       0              1     0     0       
++
++
++*** Report for group quotas on device [SCR_DEV]
++Block grace time: 7days; Inode grace time: 7days
++                        Block limits                File limits
++Group           used    soft    hard  grace    used  soft  hard  grace
++----------------------------------------------------------------------
++fsgqa     --      16       0       0              1     0     0       
++
++
+diff --git a/group b/group
+index 3a95e48..6b915b2 100644
+--- a/group
++++ b/group
+@@ -348,3 +348,4 @@ deprecated
+ 232 auto quota
+ 233 auto quota
+ 234 auto quota
++235 auto quota quick
 -- 
-1.6.3
+1.6.4.2
 
 _______________________________________________
 xfs mailing list
