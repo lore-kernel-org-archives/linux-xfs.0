@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4P8pA9K237173 for <xfs@oss.sgi.com>; Tue, 25 May 2010 03:51:10 -0500
+	o4P8p8VZ237155 for <xfs@oss.sgi.com>; Tue, 25 May 2010 03:51:08 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7D96636CBF5
-	for <xfs@oss.sgi.com>; Tue, 25 May 2010 01:53:31 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	LbvlsU2hnKtoHMDX for <xfs@oss.sgi.com>;
-	Tue, 25 May 2010 01:53:31 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 426E836CBEF
+	for <xfs@oss.sgi.com>; Tue, 25 May 2010 01:53:29 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	KSBz1VEXQYo6T6oA for <xfs@oss.sgi.com>;
+	Tue, 25 May 2010 01:53:29 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5/5] xfs: make use of new shrinker callout
-Date: Tue, 25 May 2010 18:53:08 +1000
-Message-Id: <1274777588-21494-6-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/5] inode: Make unused inode LRU per superblock
+Date: Tue, 25 May 2010 18:53:04 +1000
+Message-Id: <1274777588-21494-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1274777588-21494-1-git-send-email-david@fromorbit.com>
 References: <1274777588-21494-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,344 +33,261 @@ Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Convert the inode reclaim shrinker to use the new per-sb shrinker
-operations.  This fixes a bunch of lockdep warnings about the
-xfs_mount_list_lock being taken in different reclaim contexts by
-removing it, and allows the reclaim to be proportioned across
-filesystems with no extra code.
+The inode unused list is currently a global LRU. This does not match
+the other global filesystem cache - the dentry cache - which uses
+per-superblock LRU lists. Hence we have related filesystem object
+types using different LRU reclaimatin schemes.
+
+To enable a per-superblock filesystem cache shrinker, both of these
+caches need to have per-sb unused object LRU lists. Hence this patch
+converts the global inode LRU to per-sb LRUs.
+
+The patch only does rudimentary per-sb propotioning in the shrinker
+infrastructure, as this gets removed when the per-sb shrinker
+callouts are introduced later on.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/linux-2.6/xfs_super.c   |   23 ++++++--
- fs/xfs/linux-2.6/xfs_sync.c    |  124 +++++++++++-----------------------------
- fs/xfs/linux-2.6/xfs_sync.h    |   16 +++--
- fs/xfs/quota/xfs_qm_syscalls.c |    2 +-
- fs/xfs/xfs_mount.h             |    1 -
- 5 files changed, 61 insertions(+), 105 deletions(-)
+ fs/fs-writeback.c         |    2 +-
+ fs/inode.c                |   87 +++++++++++++++++++++++++++++++++++++++-----
+ fs/super.c                |    1 +
+ include/linux/fs.h        |    4 ++
+ include/linux/writeback.h |    1 -
+ 5 files changed, 83 insertions(+), 12 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
-index f24dbe5..b59886a 100644
---- a/fs/xfs/linux-2.6/xfs_super.c
-+++ b/fs/xfs/linux-2.6/xfs_super.c
-@@ -1212,7 +1212,6 @@ xfs_fs_put_super(
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index 5c4161f..b1e76ef 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -565,7 +565,7 @@ select_queue:
+ 			/*
+ 			 * The inode is clean, unused
+ 			 */
+-			list_move(&inode->i_list, &inode_unused);
++			list_move(&inode->i_list, &inode->i_sb->s_inode_lru);
+ 		}
+ 	}
+ 	inode_sync_complete(inode);
+diff --git a/fs/inode.c b/fs/inode.c
+index 2bee20a..3caa758 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -25,6 +25,7 @@
+ #include <linux/mount.h>
+ #include <linux/async.h>
+ #include <linux/posix_acl.h>
++#include "internal.h"
  
- 	xfs_unmountfs(mp);
- 	xfs_freesb(mp);
--	xfs_inode_shrinker_unregister(mp);
- 	xfs_icsb_destroy_counters(mp);
- 	xfs_close_devices(mp);
- 	xfs_dmops_put(mp);
-@@ -1626,8 +1625,6 @@ xfs_fs_fill_super(
- 	if (error)
- 		goto fail_vnrele;
+ /*
+  * This is needed for the following functions:
+@@ -74,7 +75,6 @@ static unsigned int i_hash_shift __read_mostly;
+  */
  
--	xfs_inode_shrinker_register(mp);
--
- 	kfree(mtpt);
- 	return 0;
+ LIST_HEAD(inode_in_use);
+-LIST_HEAD(inode_unused);
+ static struct hlist_head *inode_hashtable __read_mostly;
  
-@@ -1681,6 +1678,22 @@ xfs_fs_get_sb(
- 			   mnt);
+ /*
+@@ -292,6 +292,7 @@ void __iget(struct inode *inode)
+ 	if (!(inode->i_state & (I_DIRTY|I_SYNC)))
+ 		list_move(&inode->i_list, &inode_in_use);
+ 	inodes_stat.nr_unused--;
++	inode->i_sb->s_nr_inodes_unused--;
  }
  
-+static int
-+xfs_fs_nr_cached_objects(
-+	struct super_block	*sb)
-+{
-+	return xfs_reclaim_inodes_count(XFS_M(sb));
-+}
-+
-+static int
-+xfs_fs_free_cached_objects(
-+	struct super_block	*sb,
-+	int			nr_to_scan)
-+{
-+	xfs_reclaim_inodes_nr(XFS_M(sb), 0, nr_to_scan);
-+	return 0;
-+}
-+
- static const struct super_operations xfs_super_operations = {
- 	.alloc_inode		= xfs_fs_alloc_inode,
- 	.destroy_inode		= xfs_fs_destroy_inode,
-@@ -1694,6 +1707,8 @@ static const struct super_operations xfs_super_operations = {
- 	.statfs			= xfs_fs_statfs,
- 	.remount_fs		= xfs_fs_remount,
- 	.show_options		= xfs_fs_show_options,
-+	.nr_cached_objects	= xfs_fs_nr_cached_objects,
-+	.free_cached_objects	= xfs_fs_free_cached_objects,
- };
- 
- static struct file_system_type xfs_fs_type = {
-@@ -1873,7 +1888,6 @@ init_xfs_fs(void)
- 		goto out_cleanup_procfs;
- 
- 	vfs_initquota();
--	xfs_inode_shrinker_init();
- 
- 	error = register_filesystem(&xfs_fs_type);
- 	if (error)
-@@ -1901,7 +1915,6 @@ exit_xfs_fs(void)
+ /**
+@@ -386,6 +387,7 @@ static int invalidate_list(struct list_head *head, struct list_head *dispose)
+ 		invalidate_inode_buffers(inode);
+ 		if (!atomic_read(&inode->i_count)) {
+ 			list_move(&inode->i_list, dispose);
++			inode->i_sb->s_nr_inodes_unused--;
+ 			WARN_ON(inode->i_state & I_NEW);
+ 			inode->i_state |= I_FREEING;
+ 			count++;
+@@ -444,32 +446,31 @@ static int can_unuse(struct inode *inode)
+  *
+  * Any inodes which are pinned purely because of attached pagecache have their
+  * pagecache removed.  We expect the final iput() on that inode to add it to
+- * the front of the inode_unused list.  So look for it there and if the
++ * the front of the sb->s_inode_lru list.  So look for it there and if the
+  * inode is still freeable, proceed.  The right inode is found 99.9% of the
+  * time in testing on a 4-way.
+  *
+  * If the inode has metadata buffers attached to mapping->private_list then
+  * try to remove them.
+  */
+-static void prune_icache(int nr_to_scan)
++static void shrink_icache_sb(struct super_block *sb, int *nr_to_scan)
  {
- 	vfs_exitquota();
- 	unregister_filesystem(&xfs_fs_type);
--	xfs_inode_shrinker_destroy();
- 	xfs_sysctl_unregister();
- 	xfs_cleanup_procfs();
- 	xfs_buf_terminate();
-diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index c881a0c..6d74a0d 100644
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -137,7 +137,7 @@ restart:
+ 	LIST_HEAD(freeable);
+ 	int nr_pruned = 0;
+ 	int nr_scanned;
+ 	unsigned long reap = 0;
  
- 	} while ((*nr_to_scan)--);
+-	down_read(&iprune_sem);
+ 	spin_lock(&inode_lock);
+-	for (nr_scanned = 0; nr_scanned < nr_to_scan; nr_scanned++) {
++	for (nr_scanned = *nr_to_scan; nr_scanned >= 0; nr_scanned--) {
+ 		struct inode *inode;
  
--	if (skipped) {
-+	if (skipped && *nr_to_scan > 0) {
- 		delay(1);
- 		goto restart;
- 	}
-@@ -152,14 +152,14 @@ xfs_inode_ag_iterator(
- 	int			flags,
- 	int			tag,
- 	int			exclusive,
--	int			*nr_to_scan)
-+	int			nr_to_scan)
- {
- 	int			error = 0;
- 	int			last_error = 0;
- 	xfs_agnumber_t		ag;
--	int			nr;
+-		if (list_empty(&inode_unused))
++		if (list_empty(&sb->s_inode_lru))
+ 			break;
  
--	nr = nr_to_scan ? *nr_to_scan : INT_MAX;
-+	if (nr_to_scan <= 0)
-+		nr_to_scan = INT_MAX;
- 	for (ag = 0; ag < mp->m_sb.sb_agcount; ag++) {
- 		struct xfs_perag	*pag;
+-		inode = list_entry(inode_unused.prev, struct inode, i_list);
++		inode = list_entry(sb->s_inode_lru.prev, struct inode, i_list);
  
-@@ -169,18 +169,16 @@ xfs_inode_ag_iterator(
+ 		if (inode->i_state || atomic_read(&inode->i_count)) {
+-			list_move(&inode->i_list, &inode_unused);
++			list_move(&inode->i_list, &sb->s_inode_lru);
  			continue;
  		}
- 		error = xfs_inode_ag_walk(mp, pag, execute, flags, tag,
--						exclusive, &nr);
-+						exclusive, &nr_to_scan);
- 		xfs_perag_put(pag);
- 		if (error) {
- 			last_error = error;
- 			if (error == EFSCORRUPTED)
- 				break;
- 		}
--		if (nr <= 0)
-+		if (nr_to_scan <= 0)
- 			break;
+ 		if (inode_has_buffers(inode) || inode->i_data.nrpages) {
+@@ -481,7 +482,7 @@ static void prune_icache(int nr_to_scan)
+ 			iput(inode);
+ 			spin_lock(&inode_lock);
+ 
+-			if (inode != list_entry(inode_unused.next,
++			if (inode != list_entry(sb->s_inode_lru.next,
+ 						struct inode, i_list))
+ 				continue;	/* wrong inode or list_empty */
+ 			if (!can_unuse(inode))
+@@ -493,13 +494,77 @@ static void prune_icache(int nr_to_scan)
+ 		nr_pruned++;
  	}
--	if (nr_to_scan)
--		*nr_to_scan = nr;
- 	return XFS_ERROR(last_error);
- }
+ 	inodes_stat.nr_unused -= nr_pruned;
++	sb->s_nr_inodes_unused -= nr_pruned;
+ 	if (current_is_kswapd())
+ 		__count_vm_events(KSWAPD_INODESTEAL, reap);
+ 	else
+ 		__count_vm_events(PGINODESTEAL, reap);
+ 	spin_unlock(&inode_lock);
++	*nr_to_scan = nr_scanned;
  
-@@ -299,7 +297,7 @@ xfs_sync_data(
- 	ASSERT((flags & ~(SYNC_TRYLOCK|SYNC_WAIT)) == 0);
- 
- 	error = xfs_inode_ag_iterator(mp, xfs_sync_inode_data, flags,
--				      XFS_ICI_NO_TAG, 0, NULL);
-+				      XFS_ICI_NO_TAG, 0, 0);
- 	if (error)
- 		return XFS_ERROR(error);
- 
-@@ -318,7 +316,7 @@ xfs_sync_attr(
- 	ASSERT((flags & ~SYNC_WAIT) == 0);
- 
- 	return xfs_inode_ag_iterator(mp, xfs_sync_inode_attr, flags,
--				     XFS_ICI_NO_TAG, 0, NULL);
-+				     XFS_ICI_NO_TAG, 0, 0);
- }
- 
- STATIC int
-@@ -821,100 +819,44 @@ reclaim:
- 
- }
- 
-+/*
-+ * Scan a certain number of inodes for reclaim. nr_to_scan <= 0 means reclaim
-+ * every inode that has the reclaim tag set.
-+ */
- int
--xfs_reclaim_inodes(
-+xfs_reclaim_inodes_nr(
- 	xfs_mount_t	*mp,
--	int		mode)
-+	int		mode,
-+	int		nr_to_scan)
- {
- 	return xfs_inode_ag_iterator(mp, xfs_reclaim_inode, mode,
--					XFS_ICI_RECLAIM_TAG, 1, NULL);
-+					XFS_ICI_RECLAIM_TAG, 1, nr_to_scan);
- }
- 
- /*
-- * Shrinker infrastructure.
-+ * Return the number of reclaimable inodes in the filesystem for
-+ * the shrinker to determine how much to reclaim.
-  *
-- * This is all far more complex than it needs to be. It adds a global list of
-- * mounts because the shrinkers can only call a global context. We need to make
-- * the shrinkers pass a context to avoid the need for global state.
-+ * Because the inode cache may not have any reclaimable inodes in it, but will
-+ * be populated as part of the higher level cleaning, we need to count all
-+ * those inodes as reclaimable here as well.
-  */
--static LIST_HEAD(xfs_mount_list);
--static struct rw_semaphore xfs_mount_list_lock;
--
--static int
--xfs_reclaim_inode_shrink(
--	struct shrinker	*shrink,
--	int		nr_to_scan,
--	gfp_t		gfp_mask)
-+int
-+xfs_reclaim_inodes_count(
-+	xfs_mount_t	*mp)
- {
--	struct xfs_mount *mp;
--	struct xfs_perag *pag;
--	xfs_agnumber_t	ag;
--	int		reclaimable = 0;
--
--	if (nr_to_scan) {
--		if (!(gfp_mask & __GFP_FS))
--			return -1;
--
--		down_read(&xfs_mount_list_lock);
--		list_for_each_entry(mp, &xfs_mount_list, m_mplist) {
--			xfs_inode_ag_iterator(mp, xfs_reclaim_inode, 0,
--					XFS_ICI_RECLAIM_TAG, 1, &nr_to_scan);
--			if (nr_to_scan <= 0)
--				break;
--		}
--		up_read(&xfs_mount_list_lock);
--	}
--
--	down_read(&xfs_mount_list_lock);
--	list_for_each_entry(mp, &xfs_mount_list, m_mplist) {
--		for (ag = 0; ag < mp->m_sb.sb_agcount; ag++) {
-+	xfs_agnumber_t		ag;
-+	int			reclaimable = 0;
- 
--			pag = xfs_perag_get(mp, ag);
--			if (!pag->pag_ici_init) {
--				xfs_perag_put(pag);
--				continue;
--			}
--			reclaimable += pag->pag_ici_reclaimable;
-+	for (ag = 0; ag < mp->m_sb.sb_agcount; ag++) {
-+		struct xfs_perag *pag = xfs_perag_get(mp, ag);
-+		if (!pag->pag_ici_init) {
- 			xfs_perag_put(pag);
-+			continue;
- 		}
-+		reclaimable += pag->pag_ici_reclaimable;
-+		xfs_perag_put(pag);
- 	}
--	up_read(&xfs_mount_list_lock);
--	return reclaimable;
--}
--
--static struct shrinker xfs_inode_shrinker = {
--	.shrink = xfs_reclaim_inode_shrink,
--	.seeks = DEFAULT_SEEKS,
--};
--
--void __init
--xfs_inode_shrinker_init(void)
--{
--	init_rwsem(&xfs_mount_list_lock);
--	register_shrinker(&xfs_inode_shrinker);
--}
--
--void
--xfs_inode_shrinker_destroy(void)
--{
--	ASSERT(list_empty(&xfs_mount_list));
--	unregister_shrinker(&xfs_inode_shrinker);
--}
--
--void
--xfs_inode_shrinker_register(
--	struct xfs_mount	*mp)
--{
--	down_write(&xfs_mount_list_lock);
--	list_add_tail(&mp->m_mplist, &xfs_mount_list);
--	up_write(&xfs_mount_list_lock);
-+	return reclaimable + mp->m_super->s_nr_inodes_unused;
- }
- 
--void
--xfs_inode_shrinker_unregister(
--	struct xfs_mount	*mp)
--{
--	down_write(&xfs_mount_list_lock);
--	list_del(&mp->m_mplist);
--	up_write(&xfs_mount_list_lock);
--}
-diff --git a/fs/xfs/linux-2.6/xfs_sync.h b/fs/xfs/linux-2.6/xfs_sync.h
-index cdcbaac..c55f645 100644
---- a/fs/xfs/linux-2.6/xfs_sync.h
-+++ b/fs/xfs/linux-2.6/xfs_sync.h
-@@ -43,7 +43,14 @@ void xfs_quiesce_attr(struct xfs_mount *mp);
- 
- void xfs_flush_inodes(struct xfs_inode *ip);
- 
--int xfs_reclaim_inodes(struct xfs_mount *mp, int mode);
-+int xfs_reclaim_inodes_count(struct xfs_mount *mp);
-+int xfs_reclaim_inodes_nr(struct xfs_mount *mp, int mode, int nr_to_scan);
-+
-+static inline int
-+xfs_reclaim_inodes(struct xfs_mount *mp, int mode)
-+{
-+	return xfs_reclaim_inodes_nr(mp, mode, 0);
+ 	dispose_list(&freeable);
 +}
- 
- void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
- void __xfs_inode_set_reclaim_tag(struct xfs_perag *pag, struct xfs_inode *ip);
-@@ -53,11 +60,6 @@ void __xfs_inode_clear_reclaim_tag(struct xfs_mount *mp, struct xfs_perag *pag,
- int xfs_sync_inode_valid(struct xfs_inode *ip, struct xfs_perag *pag);
- int xfs_inode_ag_iterator(struct xfs_mount *mp,
- 	int (*execute)(struct xfs_inode *ip, struct xfs_perag *pag, int flags),
--	int flags, int tag, int write_lock, int *nr_to_scan);
--
--void xfs_inode_shrinker_init(void);
--void xfs_inode_shrinker_destroy(void);
--void xfs_inode_shrinker_register(struct xfs_mount *mp);
--void xfs_inode_shrinker_unregister(struct xfs_mount *mp);
-+	int flags, int tag, int write_lock, int nr_to_scan);
- 
- #endif
-diff --git a/fs/xfs/quota/xfs_qm_syscalls.c b/fs/xfs/quota/xfs_qm_syscalls.c
-index 92b002f..f5b0e4e 100644
---- a/fs/xfs/quota/xfs_qm_syscalls.c
-+++ b/fs/xfs/quota/xfs_qm_syscalls.c
-@@ -894,7 +894,7 @@ xfs_qm_dqrele_all_inodes(
- {
- 	ASSERT(mp->m_quotainfo);
- 	xfs_inode_ag_iterator(mp, xfs_dqrele_inode, flags,
--				XFS_ICI_NO_TAG, 0, NULL);
-+				XFS_ICI_NO_TAG, 0, 0);
++
++static void prune_icache(int count)
++{
++	struct super_block *sb, *n;
++	int w_count;
++	int unused = inodes_stat.nr_unused;
++	int prune_ratio;
++	int pruned;
++
++	if (unused == 0 || count == 0)
++		return;
++	down_read(&iprune_sem);
++	if (count >= unused)
++		prune_ratio = 1;
++	else
++		prune_ratio = unused / count;
++	spin_lock(&sb_lock);
++	list_for_each_entry_safe(sb, n, &super_blocks, s_list) {
++		if (list_empty(&sb->s_instances))
++			continue;
++		if (sb->s_nr_inodes_unused == 0)
++			continue;
++		sb->s_count++;
++		/* Now, we reclaim unused dentrins with fairness.
++		 * We reclaim them same percentage from each superblock.
++		 * We calculate number of dentries to scan on this sb
++		 * as follows, but the implementation is arranged to avoid
++		 * overflows:
++		 * number of dentries to scan on this sb =
++		 * count * (number of dentries on this sb /
++		 * number of dentries in the machine)
++		 */
++		spin_unlock(&sb_lock);
++		if (prune_ratio != 1)
++			w_count = (sb->s_nr_inodes_unused / prune_ratio) + 1;
++		else
++			w_count = sb->s_nr_inodes_unused;
++		pruned = w_count;
++		/*
++		 * We need to be sure this filesystem isn't being unmounted,
++		 * otherwise we could race with generic_shutdown_super(), and
++		 * end up holding a reference to an inode while the filesystem
++		 * is unmounted.  So we try to get s_umount, and make sure
++		 * s_root isn't NULL.
++		 */
++		if (down_read_trylock(&sb->s_umount)) {
++			if ((sb->s_root != NULL) &&
++			    (!list_empty(&sb->s_inode_lru))) {
++				shrink_icache_sb(sb, &w_count);
++				pruned -= w_count;
++			}
++			up_read(&sb->s_umount);
++		}
++		spin_lock(&sb_lock);
++		count -= pruned;
++		__put_super(sb);
++		/* more work left to do? */
++		if (count <= 0)
++			break;
++	}
++	spin_unlock(&sb_lock);
+ 	up_read(&iprune_sem);
  }
  
- /*------------------------------------------------------------------------*/
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 9ff48a1..4fa0bc7 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -259,7 +259,6 @@ typedef struct xfs_mount {
- 	wait_queue_head_t	m_wait_single_sync_task;
- 	__int64_t		m_update_flags;	/* sb flags we need to update
- 						   on the next remount,rw */
--	struct list_head	m_mplist;	/* inode shrinker mount list */
- } xfs_mount_t;
+@@ -1238,8 +1303,9 @@ int generic_detach_inode(struct inode *inode)
+ 
+ 	if (!hlist_unhashed(&inode->i_hash)) {
+ 		if (!(inode->i_state & (I_DIRTY|I_SYNC)))
+-			list_move(&inode->i_list, &inode_unused);
++			list_move(&inode->i_list, &sb->s_inode_lru);
+ 		inodes_stat.nr_unused++;
++		sb->s_nr_inodes_unused++;
+ 		if (sb->s_flags & MS_ACTIVE) {
+ 			spin_unlock(&inode_lock);
+ 			return 0;
+@@ -1252,6 +1318,7 @@ int generic_detach_inode(struct inode *inode)
+ 		WARN_ON(inode->i_state & I_NEW);
+ 		inode->i_state &= ~I_WILL_FREE;
+ 		inodes_stat.nr_unused--;
++		sb->s_nr_inodes_unused--;
+ 		hlist_del_init(&inode->i_hash);
+ 	}
+ 	list_del_init(&inode->i_list);
+diff --git a/fs/super.c b/fs/super.c
+index 69688b1..c554c53 100644
+--- a/fs/super.c
++++ b/fs/super.c
+@@ -60,6 +60,7 @@ static struct super_block *alloc_super(struct file_system_type *type)
+ 		INIT_HLIST_HEAD(&s->s_anon);
+ 		INIT_LIST_HEAD(&s->s_inodes);
+ 		INIT_LIST_HEAD(&s->s_dentry_lru);
++		INIT_LIST_HEAD(&s->s_inode_lru);
+ 		init_rwsem(&s->s_umount);
+ 		mutex_init(&s->s_lock);
+ 		lockdep_set_class(&s->s_umount, &type->s_umount_key);
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index b336cb9..7b90c43 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1346,6 +1346,10 @@ struct super_block {
+ 	struct list_head	s_dentry_lru;	/* unused dentry lru */
+ 	int			s_nr_dentry_unused;	/* # of dentry on lru */
+ 
++	/* s_inode_lru and s_nr_inodes_unused are protected by inode_lock */
++	struct list_head	s_inode_lru;	/* unused inode lru */
++	int			s_nr_inodes_unused;	/* # of inodes on lru */
++
+ 	struct block_device	*s_bdev;
+ 	struct backing_dev_info *s_bdi;
+ 	struct mtd_info		*s_mtd;
+diff --git a/include/linux/writeback.h b/include/linux/writeback.h
+index cc97d6c..a74837e 100644
+--- a/include/linux/writeback.h
++++ b/include/linux/writeback.h
+@@ -11,7 +11,6 @@ struct backing_dev_info;
+ 
+ extern spinlock_t inode_lock;
+ extern struct list_head inode_in_use;
+-extern struct list_head inode_unused;
  
  /*
+  * fs/fs-writeback.c
 -- 
 1.5.6.5
 
