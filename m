@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4PAUvTQ241662 for <xfs@oss.sgi.com>; Tue, 25 May 2010 05:30:57 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D23D836D444
-	for <xfs@oss.sgi.com>; Tue, 25 May 2010 03:33:18 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id XbaElF4hN9Sx09Cz for
-	<xfs@oss.sgi.com>; Tue, 25 May 2010 03:33:18 -0700 (PDT)
-Date: Tue, 25 May 2010 06:33:17 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH (resend)] xfs: don't allow recursion into fs under
-	write_begin
-Message-ID: <20100525103317.GB2864@infradead.org>
-References: <4BF8056E.8080900@sandeen.net>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4BF8056E.8080900@sandeen.net>
+	o4PAqZCm242762 for <xfs@oss.sgi.com>; Tue, 25 May 2010 05:52:36 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6FD4736D26E
+	for <xfs@oss.sgi.com>; Tue, 25 May 2010 03:54:57 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	hlOgvMi29z7qR3d8 for <xfs@oss.sgi.com>;
+	Tue, 25 May 2010 03:54:57 -0700 (PDT)
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 6/6] writeback: limit write_cache_pages integrity scanning to
+	current EOF
+Date: Tue, 25 May 2010 20:54:12 +1000
+Message-Id: <1274784852-30502-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1274784852-30502-1-git-send-email-david@fromorbit.com>
+References: <1274784852-30502-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,27 +24,68 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, linux-mm@kvack.org, Michael Monnerie <michael.monnerie@is.it-management.at>, xfs-oss <xfs@oss.sgi.com>
+To: linux-kernel@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, jens.axboe@oracle.com, linux-ext4@vger.kernel.org, tytso@mit.edu, xfs@oss.sgi.com
 
-On Sat, May 22, 2010 at 11:25:18AM -0500, Eric Sandeen wrote:
-> Michael Monnerie reported this fantastic stack overflow:
+From: Dave Chinner <dchinner@redhat.com>
 
-> I don't think we can afford to let write_begin recurse into the fs,
-> so we can set AOP_FLAG_NOFS ... is this too big a hammer?
+sync can currently take a really long time if a concurrent writer is
+extending a file. The problem is that the dirty pages on the address
+space grow in the same direction as write_cache_pages scans, so if
+the writer keeps ahead of writeback, the writeback will not
+terminate until the writer stops adding dirty pages.
 
-I don't really like it.  There's nothing XFS-specific here - it's the
-same problem with direct reclaim calling back into the FS and causing
-massive amounts of problems.  If we want to fix this class of problems
-we just need to do the same thing ext4 and btrfs already do and refuse
-to call the allocator from reclaim context.
+For a data integrity sync, we only need to write the pages dirty at
+the time we start the writeback, so we can stop scanning once we get
+to the page that was at the end of the file at the time the scan
+started.
 
-Just curious, how much stack does the path up to generic_perform_write
-use?
+This will prevent operations like copying a large file preventing
+sync from completing as it will not write back pages that were
+dirtied after the sync was started. This does not impact the
+existing integrity guarantees, as any dirty page (old or new)
+within the EOF range at the start of the scan will still be
+captured.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ mm/page-writeback.c |   15 +++++++++++++++
+ 1 files changed, 15 insertions(+), 0 deletions(-)
+
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index 0fe713d..c97e973 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -855,7 +855,22 @@ int write_cache_pages(struct address_space *mapping,
+ 		if (wbc->range_start == 0 && wbc->range_end == LLONG_MAX)
+ 			range_whole = 1;
+ 		cycled = 1; /* ignore range_cyclic tests */
++
++		/*
++		 * If this is a data integrity sync, cap the writeback to the
++		 * current end of file. Any extension to the file that occurs
++		 * after this is a new write and we don't need to write those
++		 * pages out to fulfil our data integrity requirements. If we
++		 * try to write them out, we can get stuck in this scan until
++		 * the concurrent writer stops adding dirty pages and extending
++		 * EOF.
++		 */
++		if (wbc->sync_mode == WB_SYNC_ALL &&
++		    wbc->range_end == LLONG_MAX) {
++			end = i_size_read(mapping->host) >> PAGE_CACHE_SHIFT;
++		}
+ 	}
++
+ retry:
+ 	done_index = index;
+ 	while (!done && (index <= end)) {
+-- 
+1.5.6.5
 
 _______________________________________________
 xfs mailing list
