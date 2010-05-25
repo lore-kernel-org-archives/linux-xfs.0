@@ -1,29 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4RFgrcr142804 for <xfs@oss.sgi.com>; Thu, 27 May 2010 10:42:53 -0500
-Received: from kaylee.flamingspork.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9D8F8145452F
-	for <xfs@oss.sgi.com>; Thu, 27 May 2010 08:45:16 -0700 (PDT)
-Received: from kaylee.flamingspork.com (kaylee.flamingspork.com
-	[74.207.245.61]) by cuda.sgi.com with ESMTP id vxXpkw7HAFyQYhjg
-	for <xfs@oss.sgi.com>; Thu, 27 May 2010 08:45:16 -0700 (PDT)
-From: Stewart Smith <stewart@flamingspork.com>
-Subject: Re: NOW: o_direct   --  WAS: Re: WARNING in xfs_lwr.c, xfs_write()
-In-Reply-To: <20100527145714.GA28678@infradead.org>
-References: <20100523002023.41f5a5c8@aaa.pulp.binarylife.net>
-	<20100523101856.GL2150@dastard>
-	<20100523092344.0fcaab42@aaa.pulp.binarylife.net>
-	<4BF9FCA8.8090906@hardwarefreak.com>
-	<20100524143428.6f3a117c@abend.internal.xtremedata.com>
-	<20100526070620.GT2150@dastard>
-	<4BFD3926.6040208@hardwarefreak.com>
-	<20100527114736.GA13112@infradead.org>
-	<87pr0hbg4g.fsf@willster.local.flamingspork.com>
-	<20100527145714.GA28678@infradead.org>
-Date: Fri, 28 May 2010 01:45:14 +1000
-Message-ID: <877hmpjqlx.fsf@willster.local.flamingspork.com>
+	o4RFp5tW143235 for <xfs@oss.sgi.com>; Thu, 27 May 2010 10:51:06 -0500
+Received: from mx1.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6C5DDA68538
+	for <xfs@oss.sgi.com>; Thu, 27 May 2010 08:55:19 -0700 (PDT)
+Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
+	with ESMTP id ncp2veAFT5QO0Azu for <xfs@oss.sgi.com>;
+	Thu, 27 May 2010 08:55:19 -0700 (PDT)
+Date: Tue, 25 May 2010 22:39:15 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 3/8] Test basic quota enforcement
+Message-ID: <20100525203914.GE3783@quack.suse.cz>
+References: <1274710459-11446-1-git-send-email-jack@suse.cz>
+	<1274710459-11446-4-git-send-email-jack@suse.cz>
+	<20100525100635.GA21252@infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20100525100635.GA21252@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,27 +31,169 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Stan Hoeppner <stan@hardwarefreak.com>, xfs@oss.sgi.com
+Cc: Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-On Thu, 27 May 2010 10:57:14 -0400, Christoph Hellwig <hch@infradead.org> wrote:
-> On Thu, May 27, 2010 at 11:58:55PM +1000, Stewart Smith wrote:
-> > There is O_DIRECT type functionality available on Windows, with similar
-> > restrictions for aligned IO too. You have to use the Win32 APIs to do it
-> > though, the POSIX ones won't get you it (or more than 2048 files open at
-> > once).
-> > 
-> > In practice we've only ever found Solaris (other than linux) to be
-> > reliable with O_DIRECT (at least on UFS... ZFS is... well... I wouldn't
-> > run a database server on it yet).
+On Tue 25-05-10 06:06:35, Christoph Hellwig wrote:
+> On Mon, May 24, 2010 at 04:14:14PM +0200, Jan Kara wrote:
+> > Add a test which checks whether basic quota enforcement works.
 > 
-> Solaris doesn't support O_DIRECT either, it instead has a separate
-> directio call - just another pointless difference.
+> This one fails for me when testing and xfs filesystem on latest Linus'
+> tree (with Debian -testing userspace):
+  OK, I've committed a fixed version of the test to the repository.
 
-Oh yeah, casually forgot about that. Shows how much I'm writing new code
-on Solaris that is IO performance critical (on Solaris).
-
+								Honza
+> 
+> --- 230.out	2010-05-25 09:49:35.000000000 +0000
+> +++ 230.out.bad	2010-05-25 09:52:49.000000000 +0000
+> @@ -4,20 +4,22 @@
+>  
+>  ### create files, setting up ownership (type=u)
+>  ### some buffered IO (type=u)
+> +pwrite64: Disk quota exceeded
+>  *** Report for user quotas on device [SCR_DEV]
+>  Block grace time: 00:00; Inode grace time: 00:00
+>                          Block limits                File limits
+>  User            used    soft    hard  grace    used  soft  hard  grace
+>  ----------------------------------------------------------------------
+> -fsgqa     --       4       4      12              2     2     4       
+> +fsgqa     --       0       4      12              2     2     4  00:00
+>  
+>  
+> +pwrite64: Disk quota exceeded
+>  *** Report for user quotas on device [SCR_DEV]
+>  Block grace time: 00:00; Inode grace time: 00:00
+>                          Block limits                File limits
+>  User            used    soft    hard  grace    used  soft  hard  grace
+>  ----------------------------------------------------------------------
+> -fsgqa     +-       8       4      12  00:00       2     2     4       
+> +fsgqa     --       0       4      12              2     2     4  00:00
+>  
+>  
+>  pwrite64: Disk quota exceeded
+> @@ -26,7 +28,7 @@
+>                          Block limits                File limits
+>  User            used    soft    hard  grace    used  soft  hard  grace
+>  ----------------------------------------------------------------------
+> -fsgqa     +-      12       4      12  00:00       2     2     4       
+> +fsgqa     --       0       4      12              2     2     4  00:00
+>  
+>  
+>  pwrite64: Disk quota exceeded
+> @@ -35,24 +37,26 @@
+>                          Block limits                File limits
+>  User            used    soft    hard  grace    used  soft  hard  grace
+>  ----------------------------------------------------------------------
+> -fsgqa     +-       8       4      12   none       2     2     4       
+> +fsgqa     --       0       4      12              2     2     4   none
+>  
+>  
+> +touch: cannot touch `[SCR_MNT]/file3': Disk quota exceeded
+>  *** Report for user quotas on device [SCR_DEV]
+>  Block grace time: 00:00; Inode grace time: 00:00
+>                          Block limits                File limits
+>  User            used    soft    hard  grace    used  soft  hard  grace
+>  ----------------------------------------------------------------------
+> -fsgqa     ++       8       4      12   none       3     2     4  00:00
+> +fsgqa     --       0       4      12              2     2     4   none
+>  
+>  
+> +touch: cannot touch `[SCR_MNT]/file4': Disk quota exceeded
+>  touch: cannot touch `[SCR_MNT]/file5': Disk quota exceeded
+>  *** Report for user quotas on device [SCR_DEV]
+>  Block grace time: 00:00; Inode grace time: 00:00
+>                          Block limits                File limits
+>  User            used    soft    hard  grace    used  soft  hard  grace
+>  ----------------------------------------------------------------------
+> -fsgqa     ++       8       4      12   none       4     2     4  00:00
+> +fsgqa     --       0       4      12              2     2     4   none
+>  
+>  
+>  touch: cannot touch `[SCR_MNT]/file4': Disk quota exceeded
+> @@ -61,7 +65,7 @@
+>                          Block limits                File limits
+>  User            used    soft    hard  grace    used  soft  hard  grace
+>  ----------------------------------------------------------------------
+> -fsgqa     ++       8       4      12   none       3     2     4   none
+> +fsgqa     --       0       4      12              2     2     4   none
+>  
+>  
+>  
+> @@ -69,20 +73,22 @@
+>  
+>  ### create files, setting up ownership (type=g)
+>  ### some buffered IO (type=g)
+> +pwrite64: Disk quota exceeded
+>  *** Report for group quotas on device [SCR_DEV]
+>  Block grace time: 00:00; Inode grace time: 00:00
+>                          Block limits                File limits
+>  Group           used    soft    hard  grace    used  soft  hard  grace
+>  ----------------------------------------------------------------------
+> -fsgqa     --       4       4      12              2     2     4       
+> +fsgqa     --       0       4      12              2     2     4  00:00
+>  
+>  
+> +pwrite64: Disk quota exceeded
+>  *** Report for group quotas on device [SCR_DEV]
+>  Block grace time: 00:00; Inode grace time: 00:00
+>                          Block limits                File limits
+>  Group           used    soft    hard  grace    used  soft  hard  grace
+>  ----------------------------------------------------------------------
+> -fsgqa     +-       8       4      12  00:00       2     2     4       
+> +fsgqa     --       0       4      12              2     2     4  00:00
+>  
+>  
+>  pwrite64: Disk quota exceeded
+> @@ -91,7 +97,7 @@
+>                          Block limits                File limits
+>  Group           used    soft    hard  grace    used  soft  hard  grace
+>  ----------------------------------------------------------------------
+> -fsgqa     +-      12       4      12  00:00       2     2     4       
+> +fsgqa     --       0       4      12              2     2     4  00:00
+>  
+>  
+>  pwrite64: Disk quota exceeded
+> @@ -100,24 +106,26 @@
+>                          Block limits                File limits
+>  Group           used    soft    hard  grace    used  soft  hard  grace
+>  ----------------------------------------------------------------------
+> -fsgqa     +-       8       4      12   none       2     2     4       
+> +fsgqa     --       0       4      12              2     2     4   none
+>  
+>  
+> +touch: cannot touch `[SCR_MNT]/file3': Disk quota exceeded
+>  *** Report for group quotas on device [SCR_DEV]
+>  Block grace time: 00:00; Inode grace time: 00:00
+>                          Block limits                File limits
+>  Group           used    soft    hard  grace    used  soft  hard  grace
+>  ----------------------------------------------------------------------
+> -fsgqa     ++       8       4      12   none       3     2     4  00:00
+> +fsgqa     --       0       4      12              2     2     4   none
+>  
+>  
+> +touch: cannot touch `[SCR_MNT]/file4': Disk quota exceeded
+>  touch: cannot touch `[SCR_MNT]/file5': Disk quota exceeded
+>  *** Report for group quotas on device [SCR_DEV]
+>  Block grace time: 00:00; Inode grace time: 00:00
+>                          Block limits                File limits
+>  Group           used    soft    hard  grace    used  soft  hard  grace
+>  ----------------------------------------------------------------------
+> -fsgqa     ++       8       4      12   none       4     2     4  00:00
+> +fsgqa     --       0       4      12              2     2     4   none
+>  
+>  
+>  touch: cannot touch `[SCR_MNT]/file4': Disk quota exceeded
+> @@ -126,6 +134,6 @@
+>                          Block limits                File limits
+>  Group           used    soft    hard  grace    used  soft  hard  grace
+>  ----------------------------------------------------------------------
+> -fsgqa     ++       8       4      12   none       3     2     4   none
+> +fsgqa     --       0       4      12              2     2     4   none
+>  
+>  
+> 
 -- 
-Stewart Smith
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
