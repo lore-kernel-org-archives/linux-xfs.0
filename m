@@ -1,19 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4PIEn7t025978 for <xfs@oss.sgi.com>; Tue, 25 May 2010 13:14:51 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7F0551DFC738
-	for <xfs@oss.sgi.com>; Tue, 25 May 2010 11:17:12 -0700 (PDT)
-Received: from bombadil.infradead.org ([18.85.46.34]) by cuda.sgi.com with
-	ESMTP id 3bHnAKqaRRWIyZ2N for <xfs@oss.sgi.com>;
-	Tue, 25 May 2010 11:17:12 -0700 (PDT)
-Date: Tue, 25 May 2010 14:17:11 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfs: skip writeback from reclaim context
-Message-ID: <20100525181711.GA4119@infradead.org>
+	o4PJ3sY5033050 for <xfs@oss.sgi.com>; Tue, 25 May 2010 14:03:54 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3708C1440AAF
+	for <xfs@oss.sgi.com>; Tue, 25 May 2010 12:06:14 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id NYJBCd7CAjf7kxYd for
+	<xfs@oss.sgi.com>; Tue, 25 May 2010 12:06:14 -0700 (PDT)
+Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv14.zmi.at (Postfix) with ESMTPSA id B6FA9800183
+	for <xfs@oss.sgi.com>; Tue, 25 May 2010 21:06:11 +0200 (CEST)
+Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id 617F383C804
+	for <xfs@oss.sgi.com>; Tue, 25 May 2010 21:06:11 +0200 (CEST)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: LVM snapshot not mountable
+Date: Tue, 25 May 2010 21:06:06 +0200
+References: <201005251725.48452@zmi.at> <20100525154927.GA25353@infradead.org>
+In-Reply-To: <20100525154927.GA25353@infradead.org>
 MIME-Version: 1.0
-Content-Disposition: inline
+Message-Id: <201005252106.10889@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,54 +33,66 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============8118770672016628030=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-Allowing writeback from reclaim context causes massive problems with stack
-overflows as we can call into the writeback code which tends to be a heavy
-stack user both in the generic code and XFS from random contexts that
-perform memory allocations.
+--===============8118770672016628030==
+Content-Type: multipart/signed;
+  boundary="nextPart5316389.8ZGQzqQ1Wc";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-Follow the example of btrfs (and in slightly different form ext4) and refuse
-to write out data from reclaim context.  This issue should really be handled
-by the VM so that we can tune better for this case, but until we get it
-sorted out there we have to hack around this in each filesystem with a
-complex writeback path.
+--nextPart5316389.8ZGQzqQ1Wc
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Dienstag, 25. Mai 2010 Christoph Hellwig wrote:
+> mount -o ro,norecovery,nouuid /dev/db/dbnap /mnt
+> or use
+>  xfs_admin -U generate /dev/db/dbnap
 
-Index: xfs/fs/xfs/linux-2.6/xfs_aops.c
-===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_aops.c	2010-05-25 11:40:59.068253457 +0200
-+++ xfs/fs/xfs/linux-2.6/xfs_aops.c	2010-05-25 18:25:39.575011803 +0200
-@@ -1326,6 +1326,21 @@ xfs_vm_writepage(
- 	trace_xfs_writepage(inode, page, 0);
- 
- 	/*
-+	 * Refuse to write the page out if we are called from reclaim context.
-+	 *
-+	 * This is primarily to avoid stack overflows when called from deep
-+	 * used stacks in random callers for direct reclaim, but disabling
-+	 * reclaim for kswap is a nice side-effect as kswapd causes rather
-+	 * suboptimal I/O patters, too.
-+	 *
-+	 * This should really be done by the core VM, but until that happens
-+	 * filesystems like XFS, btrfs and ext4 have to take care of this
-+	 * by themselves.
-+	 */
-+	if (current->flags & PF_MEMALLOC)
-+		goto out_fail;
-+
-+	/*
- 	 * We need a transaction if:
- 	 *  1. There are delalloc buffers on the page
- 	 *  2. The page is uptodate and we have unmapped buffers
+Gracias, merci, grazie, danke, thanks.
+
+=2D-=20
+mit freundlichen Gr=FCssen,
+Michael Monnerie, Ing. BSc
+
+it-management Internet Services
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: 0660 / 415 65 31
+
+// Wir haben im Moment zwei H=E4user zu verkaufen:
+// http://zmi.at/langegg/
+// http://zmi.at/haus2009/
+
+--nextPart5316389.8ZGQzqQ1Wc
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.12 (GNU/Linux)
+
+iEYEABECAAYFAkv8H6IACgkQzhSR9xwSCbTKHgCgvF5S5QxNcbhL92C0tnfJFdDT
+nkQAoNIZ1clJJ3uXpnAoJJ06jMrmhy7O
+=wrLC
+-----END PGP SIGNATURE-----
+
+--nextPart5316389.8ZGQzqQ1Wc--
+
+
+--===============8118770672016628030==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============8118770672016628030==--
