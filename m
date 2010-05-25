@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4RFp5tW143235 for <xfs@oss.sgi.com>; Thu, 27 May 2010 10:51:06 -0500
-Received: from mx1.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6C5DDA68538
-	for <xfs@oss.sgi.com>; Thu, 27 May 2010 08:55:19 -0700 (PDT)
-Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
-	with ESMTP id ncp2veAFT5QO0Azu for <xfs@oss.sgi.com>;
-	Thu, 27 May 2010 08:55:19 -0700 (PDT)
-Date: Tue, 25 May 2010 22:39:15 +0200
+	o4RFp5fv143233 for <xfs@oss.sgi.com>; Thu, 27 May 2010 10:51:06 -0500
+Received: from mx2.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2ADCF145314F
+	for <xfs@oss.sgi.com>; Thu, 27 May 2010 08:53:28 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id egwuNZ3s8Fddfo0C for <xfs@oss.sgi.com>;
+	Thu, 27 May 2010 08:53:28 -0700 (PDT)
+Date: Tue, 25 May 2010 16:41:45 +0200
 From: Jan Kara <jack@suse.cz>
 Subject: Re: [PATCH 3/8] Test basic quota enforcement
-Message-ID: <20100525203914.GE3783@quack.suse.cz>
+Message-ID: <20100525144145.GD3783@quack.suse.cz>
 References: <1274710459-11446-1-git-send-email-jack@suse.cz>
 	<1274710459-11446-4-git-send-email-jack@suse.cz>
 	<20100525100635.GA21252@infradead.org>
@@ -39,9 +39,6 @@ On Tue 25-05-10 06:06:35, Christoph Hellwig wrote:
 > 
 > This one fails for me when testing and xfs filesystem on latest Linus'
 > tree (with Debian -testing userspace):
-  OK, I've committed a fixed version of the test to the repository.
-
-								Honza
 > 
 > --- 230.out	2010-05-25 09:49:35.000000000 +0000
 > +++ 230.out.bad	2010-05-25 09:52:49.000000000 +0000
@@ -50,6 +47,16 @@ On Tue 25-05-10 06:06:35, Christoph Hellwig wrote:
 >  ### create files, setting up ownership (type=u)
 >  ### some buffered IO (type=u)
 > +pwrite64: Disk quota exceeded
+  Hmm, the test fails differently for XFS in my setting but it fails as
+well. One reason is that XFS starts counting grace time when user reaches
+softlimit while VFS quotas start counting grace time when user exceeds
+softlimit.
+  Another reason probably is that limit 12 KB is too tight for XFS to write
+a 4 KB file probably due to delayed allocation. So I'll try to loosen the
+limits a bit to make test 230 work also for xfs. Thanks for report.
+
+									Honza
+
 >  *** Report for user quotas on device [SCR_DEV]
 >  Block grace time: 00:00; Inode grace time: 00:00
 >                          Block limits                File limits
