@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4PMDAfj044558 for <xfs@oss.sgi.com>; Tue, 25 May 2010 17:13:10 -0500
-Received: from mail-px0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EE708371329
-	for <xfs@oss.sgi.com>; Tue, 25 May 2010 15:15:32 -0700 (PDT)
-Received: from mail-px0-f181.google.com (mail-px0-f181.google.com
-	[209.85.212.181]) by cuda.sgi.com with ESMTP id
-	0VSkdCvb6NSOeqjF for <xfs@oss.sgi.com>;
-	Tue, 25 May 2010 15:15:32 -0700 (PDT)
-Received: by pxi15 with SMTP id 15so2959758pxi.26
-	for <xfs@oss.sgi.com>; Tue, 25 May 2010 15:15:31 -0700 (PDT)
-From: Huang Weiyi <weiyi.huang@gmail.com>
-Subject: [PATCH] xfs: remove duplicated #include
-Date: Wed, 26 May 2010 06:15:26 +0800
-Message-Id: <1274825726-4364-1-git-send-email-weiyi.huang@gmail.com>
+	o4PMuAQU046723 for <xfs@oss.sgi.com>; Tue, 25 May 2010 17:56:10 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1EB7D14426EE
+	for <xfs@oss.sgi.com>; Tue, 25 May 2010 15:58:31 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	ZgRnH9H4oPi5KUsO for <xfs@oss.sgi.com>;
+	Tue, 25 May 2010 15:58:31 -0700 (PDT)
+Date: Wed, 26 May 2010 08:58:29 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: fix race in inode cluster freeing failing to
+	stale inodes
+Message-ID: <20100525225829.GO2150@dastard>
+References: <1274581478-19260-1-git-send-email-david@fromorbit.com>
+	<20100525164052.GA18666@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20100525164052.GA18666@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,36 +27,49 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: aelder@sgi.com
-Cc: Huang Weiyi <weiyi.huang@gmail.com>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Remove duplicated #include('s) in
-  fs/xfs/linux-2.6/xfs_quotaops.c
+On Tue, May 25, 2010 at 12:40:52PM -0400, Christoph Hellwig wrote:
+> Looks good, but some minor nits on the comments below:
+> 
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> >  		/*
+> > +		 * Now we've locked out tail pushing and flushing by locking
+> > +		 * the buffer, look for each inode in memory and attempt to
+> > +		 * lock it. Any inode we get the locks on add it to the inode
+> > +		 * buffer and set it up for being staled on buffer IO
+> > +		 * completion.
+> 
+> This comment reads a bit odd.  The first thing we do in the loop is
+> locking the buffer, so the "Now" at the beginning of the comment feels
+> rather out of place.  What about:
+> 
+> 		/*
+> 		 * For each inode in memory attempt to add it to the inode
+> 		 * buffer and set it up for being staled on buffer IO
+> 		 * completion.  This is safe as we've locked out tail
+> 		 * pushing and flushing by locking the buffer.
+> 		 *
+> 		 * We have already marked every inode that was part of
+> 		 * a transaction stale above, which means there is no
+> 		 * point in even trying to lock them.
+> 		 */
 
-Signed-off-by: Huang Weiyi <weiyi.huang@gmail.com>
----
- fs/xfs/linux-2.6/xfs_quotaops.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+That reads better. I'll update it to match.
 
-diff --git a/fs/xfs/linux-2.6/xfs_quotaops.c b/fs/xfs/linux-2.6/xfs_quotaops.c
-index 9ac8aea..067cafb 100644
---- a/fs/xfs/linux-2.6/xfs_quotaops.c
-+++ b/fs/xfs/linux-2.6/xfs_quotaops.c
-@@ -23,7 +23,6 @@
- #include "xfs_ag.h"
- #include "xfs_mount.h"
- #include "xfs_quota.h"
--#include "xfs_log.h"
- #include "xfs_trans.h"
- #include "xfs_bmap_btree.h"
- #include "xfs_inode.h"
+Cheers,
+
+Dave.
 -- 
-1.6.1.3
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
