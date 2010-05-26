@@ -1,22 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4QGFEKn086774 for <xfs@oss.sgi.com>; Wed, 26 May 2010 11:15:15 -0500
-Received: from mx1.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 47D84157A40B
-	for <xfs@oss.sgi.com>; Wed, 26 May 2010 09:19:23 -0700 (PDT)
-Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
-	with ESMTP id 9TzHo5CggZc2HnNZ for <xfs@oss.sgi.com>;
-	Wed, 26 May 2010 09:19:23 -0700 (PDT)
-Date: Thu, 27 May 2010 02:17:33 +1000
-From: Nick Piggin <npiggin@suse.de>
-Subject: Re: [PATCH 1/5] inode: Make unused inode LRU per superblock
-Message-ID: <20100526161732.GC22536@laptop>
-References: <1274777588-21494-1-git-send-email-david@fromorbit.com>
-	<1274777588-21494-2-git-send-email-david@fromorbit.com>
+	o4QJtLsZ092600 for <xfs@oss.sgi.com>; Wed, 26 May 2010 14:55:22 -0500
+Received: from smtp.sauce.co.nz (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9F78A143F9EC
+	for <xfs@oss.sgi.com>; Wed, 26 May 2010 12:57:42 -0700 (PDT)
+Received: from smtp.sauce.co.nz (smtp.sauce.co.nz [210.48.49.72]) by
+	cuda.sgi.com with ESMTP id kDRJYZGvSBxVZc6V for
+	<xfs@oss.sgi.com>; Wed, 26 May 2010 12:57:42 -0700 (PDT)
+Message-ID: <4BFD7D34.9060006@sauce.co.nz>
+Date: Thu, 27 May 2010 07:57:40 +1200
+From: Richard Scobie <richard@sauce.co.nz>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1274777588-21494-2-git-send-email-david@fromorbit.com>
+Subject: Re: xfsdump -- not enough memory to dump attributes? w/>20G free
+ --
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,29 +22,35 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, May 25, 2010 at 06:53:04PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> The inode unused list is currently a global LRU. This does not match
-> the other global filesystem cache - the dentry cache - which uses
-> per-superblock LRU lists. Hence we have related filesystem object
-> types using different LRU reclaimatin schemes.
+Linda A. Walsh wrote:
 
-Is this an improvement I wonder? The dcache is using per sb lists
-because it specifically requires sb traversal.
+BTW -- how do you tell the version of the xfs progs from
+the individual progs -- I'm going from the installed rpm
+name, but if I build from the git, that won't be helpful.
+I don't see a VERSION command in xfsdump/restore?
 
-What allocation/reclaim really wants (for good scalability and NUMA
-characteristics) is per-zone lists for these things. It's easy to
-convert a single list into per-zone lists.
 
-It is much harder to convert per-sb lists into per-sb x per-zone lists.
+
+Hi Linda,
+
+xfsdump with no arguments shows the version:
+
+[rs@sam ~]$ xfsdump
+xfsdump: version 3.0.1 (dump format 3.0)
+xfsdump: usage: xfsdump [ -a (dump DMF dualstate files as offline) ]
+                         [ -b <blocksize> ]
+....
+
+
+Regards,
+
+Richard
 
 _______________________________________________
 xfs mailing list
