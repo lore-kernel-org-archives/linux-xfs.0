@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4QNAK5K098995 for <xfs@oss.sgi.com>; Wed, 26 May 2010 18:10:20 -0500
+	o4QNGNjY099247 for <xfs@oss.sgi.com>; Wed, 26 May 2010 18:16:23 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 09761A5C82D
-	for <xfs@oss.sgi.com>; Wed, 26 May 2010 16:14:29 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	pA3RtHVDipFUod7i for <xfs@oss.sgi.com>;
-	Wed, 26 May 2010 16:14:29 -0700 (PDT)
-Date: Thu, 27 May 2010 09:12:14 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 911643799AB
+	for <xfs@oss.sgi.com>; Wed, 26 May 2010 16:18:45 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	LeOJMuxpNetZgDwQ for <xfs@oss.sgi.com>;
+	Wed, 26 May 2010 16:18:45 -0700 (PDT)
+Date: Thu, 27 May 2010 09:18:42 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/5] superblock: introduce per-sb cache shrinker
-	infrastructure
-Message-ID: <20100526231214.GB1395@dastard>
-References: <1274777588-21494-1-git-send-email-david@fromorbit.com>
-	<1274777588-21494-4-git-send-email-david@fromorbit.com>
-	<20100526164116.GD22536@laptop>
+Subject: Re: noatime,nodiratime?
+Message-ID: <20100526231842.GC1395@dastard>
+References: <4BF3F212.5030600@hardwarefreak.com>
+	<20100519182336.GA6264@infradead.org>
+	<4BF43B3C.6030403@hardwarefreak.com> <4BF44105.4040902@sandeen.net>
+	<4BF47859.6020808@hardwarefreak.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100526164116.GD22536@laptop>
+In-Reply-To: <4BF47859.6020808@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,92 +28,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Nick Piggin <npiggin@suse.de>
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: xfs@oss.sgi.com
 
-T24gVGh1LCBNYXkgMjcsIDIwMTAgYXQgMDI6NDE6MTZBTSArMTAwMCwgTmljayBQaWdnaW4gd3Jv
-dGU6Cj4gT24gVHVlLCBNYXkgMjUsIDIwMTAgYXQgMDY6NTM6MDZQTSArMTAwMCwgRGF2ZSBDaGlu
-bmVyIHdyb3RlOgo+ID4gQEAgLTQ1NiwyMSArNDU2LDE2IEBAIHN0YXRpYyB2b2lkIHBydW5lX29u
-ZV9kZW50cnkoc3RydWN0IGRlbnRyeSAqIGRlbnRyeSkKPiA+ICAgKiB3aGljaCBmbGFncyBhcmUg
-c2V0LiBUaGlzIG1lYW5zIHdlIGRvbid0IG5lZWQgdG8gbWFpbnRhaW4gbXVsdGlwbGUKPiA+ICAg
-KiBzaW1pbGFyIGNvcGllcyBvZiB0aGlzIGxvb3AuCj4gPiAgICovCj4gPiAtc3RhdGljIHZvaWQg
-X19zaHJpbmtfZGNhY2hlX3NiKHN0cnVjdCBzdXBlcl9ibG9jayAqc2IsIGludCAqY291bnQsIGlu
-dCBmbGFncykKPiA+ICtzdGF0aWMgdm9pZCBfX3Nocmlua19kY2FjaGVfc2Ioc3RydWN0IHN1cGVy
-X2Jsb2NrICpzYiwgaW50IGNvdW50LCBpbnQgZmxhZ3MpCj4gPiAgewo+ID4gIAlMSVNUX0hFQUQo
-cmVmZXJlbmNlZCk7Cj4gPiAgCUxJU1RfSEVBRCh0bXApOwo+ID4gIAlzdHJ1Y3QgZGVudHJ5ICpk
-ZW50cnk7Cj4gPiAtCWludCBjbnQgPSAwOwo+ID4gIAo+ID4gIAlCVUdfT04oIXNiKTsKPiA+IC0J
-QlVHX09OKChmbGFncyAmIERDQUNIRV9SRUZFUkVOQ0VEKSAmJiBjb3VudCA9PSBOVUxMKTsKPiA+
-ICsJQlVHX09OKChmbGFncyAmIERDQUNIRV9SRUZFUkVOQ0VEKSAmJiBjb3VudCA9PSAtMSk7Cj4g
-PiAgCXNwaW5fbG9jaygmZGNhY2hlX2xvY2spOwo+ID4gLQlpZiAoY291bnQgIT0gTlVMTCkKPiA+
-IC0JCS8qIGNhbGxlZCBmcm9tIHBydW5lX2RjYWNoZSgpIGFuZCBzaHJpbmtfZGNhY2hlX3BhcmVu
-dCgpICovCj4gPiAtCQljbnQgPSAqY291bnQ7Cj4gPiAtcmVzdGFydDoKPiA+IC0JaWYgKGNvdW50
-ID09IE5VTEwpCj4gPiArCWlmIChjb3VudCA9PSAtMSkKPiA+ICAJCWxpc3Rfc3BsaWNlX2luaXQo
-JnNiLT5zX2RlbnRyeV9scnUsICZ0bXApOwo+ID4gIAllbHNlIHsKPiA+ICAJCXdoaWxlICghbGlz
-dF9lbXB0eSgmc2ItPnNfZGVudHJ5X2xydSkpIHsKPiA+IEBAIC00OTIsMTMgKzQ4NywxMyBAQCBy
-ZXN0YXJ0Ogo+ID4gIAkJCX0gZWxzZSB7Cj4gPiAgCQkJCWxpc3RfbW92ZV90YWlsKCZkZW50cnkt
-PmRfbHJ1LCAmdG1wKTsKPiA+ICAJCQkJc3Bpbl91bmxvY2soJmRlbnRyeS0+ZF9sb2NrKTsKPiA+
-IC0JCQkJY250LS07Cj4gPiAtCQkJCWlmICghY250KQo+ID4gKwkJCQlpZiAoLS1jb3VudCA9PSAw
-KQo+ID4gIAkJCQkJYnJlYWs7Cj4gPiAgCQkJfQo+ID4gIAkJCWNvbmRfcmVzY2hlZF9sb2NrKCZk
-Y2FjaGVfbG9jayk7Cj4gPiAgCQl9Cj4gPiAgCX0KPiA+ICtwcnVuZV9tb3JlOgo+ID4gIAl3aGls
-ZSAoIWxpc3RfZW1wdHkoJnRtcCkpIHsKPiA+ICAJCWRlbnRyeSA9IGxpc3RfZW50cnkodG1wLnBy
-ZXYsIHN0cnVjdCBkZW50cnksIGRfbHJ1KTsKPiA+ICAJCWRlbnRyeV9scnVfZGVsX2luaXQoZGVu
-dHJ5KTsKPiA+IEBAIC01MTYsODggKzUxMSwyOSBAQCByZXN0YXJ0Ogo+ID4gIAkJLyogZGVudHJ5
-LT5kX2xvY2sgd2FzIGRyb3BwZWQgaW4gcHJ1bmVfb25lX2RlbnRyeSgpICovCj4gPiAgCQljb25k
-X3Jlc2NoZWRfbG9jaygmZGNhY2hlX2xvY2spOwo+ID4gIAl9Cj4gPiAtCWlmIChjb3VudCA9PSBO
-VUxMICYmICFsaXN0X2VtcHR5KCZzYi0+c19kZW50cnlfbHJ1KSkKPiA+IC0JCWdvdG8gcmVzdGFy
-dDsKPiA+IC0JaWYgKGNvdW50ICE9IE5VTEwpCj4gPiAtCQkqY291bnQgPSBjbnQ7Cj4gPiArCWlm
-IChjb3VudCA9PSAtMSAmJiAhbGlzdF9lbXB0eSgmc2ItPnNfZGVudHJ5X2xydSkpIHsKPiA+ICsJ
-CWxpc3Rfc3BsaWNlX2luaXQoJnNiLT5zX2RlbnRyeV9scnUsICZ0bXApOwo+ID4gKwkJZ290byBw
-cnVuZV9tb3JlOwo+ID4gKwl9Cj4gCj4gTml0cGljayBidXQgSSBwcmVmZXIganVzdCB0aGUgcmVz
-dGFydCBsYWJlbCB3aGVyIGl0IGlzIHByZXZpb3VzbHkuIFRoaXMKPiBpcyBtb3Zpbmcgc2V0dXAg
-Zm9yIHRoZSBuZXh0IGl0ZXJhdGlvbiBpbnRvIHRoZSAiZXJyb3IiIGNhc2UuCgpPaywgd2lsbCBm
-aXguCgo+ID4gK3N0YXRpYyBpbnQgcHJ1bmVfc3VwZXIoc3RydWN0IHNocmlua2VyICpzaHJpbmss
-IGludCBucl90b19zY2FuLCBnZnBfdCBnZnBfbWFzaykKPiA+ICt7Cj4gPiArCXN0cnVjdCBzdXBl
-cl9ibG9jayAqc2I7Cj4gPiArCWludCBjb3VudDsKPiA+ICsKPiA+ICsJc2IgPSBjb250YWluZXJf
-b2Yoc2hyaW5rLCBzdHJ1Y3Qgc3VwZXJfYmxvY2ssIHNfc2hyaW5rKTsKPiA+ICsKPiA+ICsJLyoK
-PiA+ICsJICogRGVhZGxvY2sgYXZvaWRhbmNlLiAgV2UgbWF5IGhvbGQgdmFyaW91cyBGUyBsb2Nr
-cywgYW5kIHdlIGRvbid0IHdhbnQKPiA+ICsJICogdG8gcmVjdXJzZSBpbnRvIHRoZSBGUyB0aGF0
-IGNhbGxlZCB1cyBpbiBjbGVhcl9pbm9kZSgpIGFuZCBmcmllbmRzLi4KPiA+ICsJICovCj4gPiAr
-CWlmICghKGdmcF9tYXNrICYgX19HRlBfRlMpKQo+ID4gKwkJcmV0dXJuIC0xOwo+ID4gKwo+ID4g
-KwkvKgo+ID4gKwkgKiBpZiB3ZSBjYW4ndCBnZXQgdGhlIHVtb3VudCBsb2NrLCB0aGVuIHRoZXJl
-J3Mgbm8gcG9pbnQgaGF2aW5nIHRoZQo+ID4gKwkgKiBzaHJpbmtlciB0cnkgYWdhaW4gYmVjYXVz
-ZSB0aGUgc2IgaXMgYmVpbmcgdG9ybiBkb3duLgo+ID4gKwkgKi8KPiA+ICsJaWYgKCFkb3duX3Jl
-YWRfdHJ5bG9jaygmc2ItPnNfdW1vdW50KSkKPiA+ICsJCXJldHVybiAtMTsKPiAKPiBXb3VsZCB5
-b3UganVzdCBlbGFib3JhdGUgb24gdGhlIGxvY2sgb3JkZXIgcHJvYmxlbSBzb21ld2hlcmU/ICh0
-aGUKPiBjb21tZW50IG1ha2VzIGl0IGxvb2sgbGlrZSB3ZSAqY291bGQqIHRha2UgdGhlIG11dGV4
-IGlmIHdlIHdhbnRlZAo+IHRvKS4KClRoZSBzaHJpbmtlciBpcyB1bnJlZ2lzdGVyZWQgaW4gZGVh
-Y3RpdmF0ZV9sb2NrZWRfc3VwZXIoKSB3aGljaCBpcwpqdXN0IGJlZm9yZSAtPmtpbGxfc2IgaXMg
-Y2FsbGVkLiBUaGUgc2ItPnNfdW1vdW50IGxvY2sgaXMgaGVsZCBhdAp0aGlzIHBvaW50LiBoZW5j
-ZSBpcyB0aGUgc2hyaW5rZXIgaXMgb3BlcmF0aW5nLCB3ZSB3aWxsIGRlYWRsb2NrIGlmCndlIHRy
-eSB0byBsb2NrIGl0IGxpa2UgdGhpczoKCgl1bm1vdW50OgkJCXNocmlua2VyOgoJCQkJCWRvd25f
-cmVhZCgmc2hyaW5rZXJfbG9jayk7Cglkb3duX3dyaXRlKCZzYi0+c191bW91bnQpCgl1bnJlZ2lz
-dGVyX3Nocmlua2VyKCkKCWRvd25fd3JpdGUoJnNocmlua2VyX2xvY2spCgkJCQkJcHJ1bmVfc3Vw
-ZXIoKQoJCQkJCSAgZG93bl9yZWFkKCZzYi0+c191bW91bnQpOwoJCQkJCSAgKGRlYWRsb2NrKQoK
-aGVuY2UgaWYgd2UgY2FuJ3QgZ2V0IHRoZSBzYi0+c191bW91bnQgbG9jayBpbiBwcnVuZV9zdXBl
-cigpLCB0aGVuCnRoZSBzdXBlcmJsb2NrIG11c3QgYmUgYmVpbmcgdW5tb3VudGVkIGFuZCB0aGUg
-c2hyaW5rZXIgc2hvdWxkIGFib3J0CmFzIHRoZSAtPmtpbGxfc2IgbWV0aG9kIHdpbGwgY2xlYW4g
-dXAgZXZlcnl0aGluZyBhZnRlciB0aGUgc2hyaW5rZXIKaXMgdW5yZWdpc3RlcmVkLiBIZW5jZSB0
-aGUgZG93bl9yZWFkX3RyeWxvY2soKS4KCgo+ID4gKwlpZiAoIXNiLT5zX3Jvb3QpIHsKPiA+ICsJ
-CXVwX3JlYWQoJnNiLT5zX3Vtb3VudCk7Cj4gPiArCQlyZXR1cm4gLTE7Cj4gPiArCX0KPiA+ICsK
-PiA+ICsJaWYgKG5yX3RvX3NjYW4pIHsKPiA+ICsJCS8qIHByb3BvcnRpb24gdGhlIHNjYW4gYmV0
-d2VlbiB0aGUgdHdvIGNhY2hl0ZUgKi8KPiA+ICsJCWludCB0b3RhbDsKPiA+ICsKPiA+ICsJCXRv
-dGFsID0gc2ItPnNfbnJfZGVudHJ5X3VudXNlZCArIHNiLT5zX25yX2lub2Rlc191bnVzZWQgKyAx
-Owo+ID4gKwkJY291bnQgPSAobnJfdG9fc2NhbiAqIHNiLT5zX25yX2RlbnRyeV91bnVzZWQpIC8g
-dG90YWw7Cj4gPiArCj4gPiArCQkvKiBwcnVuZSBkY2FjaGUgZmlyc3QgYXMgaWNhY2hlIGlzIHBp
-bm5lZCBieSBpdCAqLwo+ID4gKwkJcHJ1bmVfZGNhY2hlX3NiKHNiLCBjb3VudCk7Cj4gPiArCQlw
-cnVuZV9pY2FjaGVfc2Ioc2IsIG5yX3RvX3NjYW4gLSBjb3VudCk7Cj4gPiArCX0KPiA+ICsKPiA+
-ICsJY291bnQgPSAoKHNiLT5zX25yX2RlbnRyeV91bnVzZWQgKyBzYi0+c19ucl9pbm9kZXNfdW51
-c2VkKSAvIDEwMCkKPiA+ICsJCQkJCQkqIHN5c2N0bF92ZnNfY2FjaGVfcHJlc3N1cmU7Cj4gCj4g
-RG8geW91IHRoaW5rIHRydW5jYXRpbmcgaW4gdGhlIGRpdmlzaW9ucyBpcyBhdCBhbGwgYSBwcm9i
-bGVtPyBJdAo+IHByb2JhYmx5IGRvZXNuJ3QgbWF0dGVyIG11Y2ggSSBzdXBwb3NlLgoKU2FtZSBj
-b2RlIGFzIGN1cnJlbnRseSBleGlzdHMuIElJUkMsIHRoZSByZWFzb25pbmcgaXMgdGhhdCBpZiB3
-ZSd2ZQpnb3QgbGVzcyB0aGF0IDEwMCBvYmplY3RzIHRvIHJlY2xhaW0sIHRoZW4gd2UncmUgdW5s
-aWtlbHkgdG8gYmUgYWJsZQp0byBmcmVlIHVwIGFueSBtZW1vcnkgZnJvbSB0aGUgY2FjaGVzLCBh
-bnl3YXkuCgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5j
-b20KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBt
-YWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xp
-c3RpbmZvL3hmcwo=
+On Wed, May 19, 2010 at 06:46:33PM -0500, Stan Hoeppner wrote:
+> Eric Sandeen put forth on 5/19/2010 2:50 PM:
+> 
+> > xfs_info actually calls xfs_growfs -n, and it's only reporting on-disk
+> > geometry.  I kind of doubt that'll change.  If you want to see mount
+> > options, /proc/mounts is the place ... but then we don't show the
+> > defaults ;)  I wonder if we should change that and be explicit about
+> > every option in /proc/mounts *shrug*
+> 
+> IMHO the option values should be listed, whether they are the defaults or
+> user defined.  XFS may be breaking convention by doing so, as it appears
+> EXT2 (and probably 3/4, and other filesystems) behave the same as XFS
+> currently does--no display of default settings, except rw.
+> 
+> > It's so hard to keep google up to date ;)
+> 
+> Add the information to the FAQ and it'll show up in Google indexes in short
+> order, assuming you allow robots to crawl xfs.org, which IIRC, you do.
+> 
+> > /proc/mounts shows all mount options which were set differently from
+> > defaults.
+> 
+> Yes.  It would be nice to see the settings regardless of default or user
+> defined.  In the absence of, or in addition to this, could we get a
+> consistent (default) for each setting in XFS man mount?  For example,
+> barrier is listed but we're not told if it's the default.  nobarrier isn't
+> even in the man page, but it's on the wiki FAQ.  The wiki FAQ tells us that
+> barrier is the default.  I'm referring to the man page that comes with
+> Debian 5.0.  The current man page may be updated to reflect some of these
+> things, though I've not read it yet.
+>
+> Sorry if I seem nit-picky.  I've spent many hours trying to hunt down some
+> of this information and it's been a frustrating process.  XFS rocks.
+> Currently, from here, the docs don't rock yet. :(
+
+Patches to fix up the docs will be gratefully accepted. :)
+Patches to change the output of /proc/mounts might take a little
+more discussion....
+
+Note that the man pages for mount are in the util-linux package, not
+anything XFS...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
