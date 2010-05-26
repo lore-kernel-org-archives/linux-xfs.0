@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4QGd1ej087469 for <xfs@oss.sgi.com>; Wed, 26 May 2010 11:39:01 -0500
-Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 43C9C3782A2
-	for <xfs@oss.sgi.com>; Wed, 26 May 2010 09:41:23 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id U4H6xNCHLQHsG922 for <xfs@oss.sgi.com>;
-	Wed, 26 May 2010 09:41:23 -0700 (PDT)
-Date: Thu, 27 May 2010 02:41:16 +1000
+	o4QGFEKn086774 for <xfs@oss.sgi.com>; Wed, 26 May 2010 11:15:15 -0500
+Received: from mx1.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 47D84157A40B
+	for <xfs@oss.sgi.com>; Wed, 26 May 2010 09:19:23 -0700 (PDT)
+Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
+	with ESMTP id 9TzHo5CggZc2HnNZ for <xfs@oss.sgi.com>;
+	Wed, 26 May 2010 09:19:23 -0700 (PDT)
+Date: Thu, 27 May 2010 02:17:33 +1000
 From: Nick Piggin <npiggin@suse.de>
-Subject: Re: [PATCH 3/5] superblock: introduce per-sb cache shrinker
-	infrastructure
-Message-ID: <20100526164116.GD22536@laptop>
+Subject: Re: [PATCH 1/5] inode: Make unused inode LRU per superblock
+Message-ID: <20100526161732.GC22536@laptop>
 References: <1274777588-21494-1-git-send-email-david@fromorbit.com>
-	<1274777588-21494-4-git-send-email-david@fromorbit.com>
+	<1274777588-21494-2-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1274777588-21494-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1274777588-21494-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,89 +25,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-T24gVHVlLCBNYXkgMjUsIDIwMTAgYXQgMDY6NTM6MDZQTSArMTAwMCwgRGF2ZSBDaGlubmVyIHdy
-b3RlOgo+IEBAIC00NTYsMjEgKzQ1NiwxNiBAQCBzdGF0aWMgdm9pZCBwcnVuZV9vbmVfZGVudHJ5
-KHN0cnVjdCBkZW50cnkgKiBkZW50cnkpCj4gICAqIHdoaWNoIGZsYWdzIGFyZSBzZXQuIFRoaXMg
-bWVhbnMgd2UgZG9uJ3QgbmVlZCB0byBtYWludGFpbiBtdWx0aXBsZQo+ICAgKiBzaW1pbGFyIGNv
-cGllcyBvZiB0aGlzIGxvb3AuCj4gICAqLwo+IC1zdGF0aWMgdm9pZCBfX3Nocmlua19kY2FjaGVf
-c2Ioc3RydWN0IHN1cGVyX2Jsb2NrICpzYiwgaW50ICpjb3VudCwgaW50IGZsYWdzKQo+ICtzdGF0
-aWMgdm9pZCBfX3Nocmlua19kY2FjaGVfc2Ioc3RydWN0IHN1cGVyX2Jsb2NrICpzYiwgaW50IGNv
-dW50LCBpbnQgZmxhZ3MpCj4gIHsKPiAgCUxJU1RfSEVBRChyZWZlcmVuY2VkKTsKPiAgCUxJU1Rf
-SEVBRCh0bXApOwo+ICAJc3RydWN0IGRlbnRyeSAqZGVudHJ5Owo+IC0JaW50IGNudCA9IDA7Cj4g
-IAo+ICAJQlVHX09OKCFzYik7Cj4gLQlCVUdfT04oKGZsYWdzICYgRENBQ0hFX1JFRkVSRU5DRUQp
-ICYmIGNvdW50ID09IE5VTEwpOwo+ICsJQlVHX09OKChmbGFncyAmIERDQUNIRV9SRUZFUkVOQ0VE
-KSAmJiBjb3VudCA9PSAtMSk7Cj4gIAlzcGluX2xvY2soJmRjYWNoZV9sb2NrKTsKPiAtCWlmIChj
-b3VudCAhPSBOVUxMKQo+IC0JCS8qIGNhbGxlZCBmcm9tIHBydW5lX2RjYWNoZSgpIGFuZCBzaHJp
-bmtfZGNhY2hlX3BhcmVudCgpICovCj4gLQkJY250ID0gKmNvdW50Owo+IC1yZXN0YXJ0Ogo+IC0J
-aWYgKGNvdW50ID09IE5VTEwpCj4gKwlpZiAoY291bnQgPT0gLTEpCj4gIAkJbGlzdF9zcGxpY2Vf
-aW5pdCgmc2ItPnNfZGVudHJ5X2xydSwgJnRtcCk7Cj4gIAllbHNlIHsKPiAgCQl3aGlsZSAoIWxp
-c3RfZW1wdHkoJnNiLT5zX2RlbnRyeV9scnUpKSB7Cj4gQEAgLTQ5MiwxMyArNDg3LDEzIEBAIHJl
-c3RhcnQ6Cj4gIAkJCX0gZWxzZSB7Cj4gIAkJCQlsaXN0X21vdmVfdGFpbCgmZGVudHJ5LT5kX2xy
-dSwgJnRtcCk7Cj4gIAkJCQlzcGluX3VubG9jaygmZGVudHJ5LT5kX2xvY2spOwo+IC0JCQkJY250
-LS07Cj4gLQkJCQlpZiAoIWNudCkKPiArCQkJCWlmICgtLWNvdW50ID09IDApCj4gIAkJCQkJYnJl
-YWs7Cj4gIAkJCX0KPiAgCQkJY29uZF9yZXNjaGVkX2xvY2soJmRjYWNoZV9sb2NrKTsKPiAgCQl9
-Cj4gIAl9Cj4gK3BydW5lX21vcmU6Cj4gIAl3aGlsZSAoIWxpc3RfZW1wdHkoJnRtcCkpIHsKPiAg
-CQlkZW50cnkgPSBsaXN0X2VudHJ5KHRtcC5wcmV2LCBzdHJ1Y3QgZGVudHJ5LCBkX2xydSk7Cj4g
-IAkJZGVudHJ5X2xydV9kZWxfaW5pdChkZW50cnkpOwo+IEBAIC01MTYsODggKzUxMSwyOSBAQCBy
-ZXN0YXJ0Ogo+ICAJCS8qIGRlbnRyeS0+ZF9sb2NrIHdhcyBkcm9wcGVkIGluIHBydW5lX29uZV9k
-ZW50cnkoKSAqLwo+ICAJCWNvbmRfcmVzY2hlZF9sb2NrKCZkY2FjaGVfbG9jayk7Cj4gIAl9Cj4g
-LQlpZiAoY291bnQgPT0gTlVMTCAmJiAhbGlzdF9lbXB0eSgmc2ItPnNfZGVudHJ5X2xydSkpCj4g
-LQkJZ290byByZXN0YXJ0Owo+IC0JaWYgKGNvdW50ICE9IE5VTEwpCj4gLQkJKmNvdW50ID0gY250
-Owo+ICsJaWYgKGNvdW50ID09IC0xICYmICFsaXN0X2VtcHR5KCZzYi0+c19kZW50cnlfbHJ1KSkg
-ewo+ICsJCWxpc3Rfc3BsaWNlX2luaXQoJnNiLT5zX2RlbnRyeV9scnUsICZ0bXApOwo+ICsJCWdv
-dG8gcHJ1bmVfbW9yZTsKPiArCX0KCk5pdHBpY2sgYnV0IEkgcHJlZmVyIGp1c3QgdGhlIHJlc3Rh
-cnQgbGFiZWwgd2hlciBpdCBpcyBwcmV2aW91c2x5LiBUaGlzCmlzIG1vdmluZyBzZXR1cCBmb3Ig
-dGhlIG5leHQgaXRlcmF0aW9uIGludG8gdGhlICJlcnJvciIgY2FzZS4KCgo+ICtzdGF0aWMgaW50
-IHBydW5lX3N1cGVyKHN0cnVjdCBzaHJpbmtlciAqc2hyaW5rLCBpbnQgbnJfdG9fc2NhbiwgZ2Zw
-X3QgZ2ZwX21hc2spCj4gK3sKPiArCXN0cnVjdCBzdXBlcl9ibG9jayAqc2I7Cj4gKwlpbnQgY291
-bnQ7Cj4gKwo+ICsJc2IgPSBjb250YWluZXJfb2Yoc2hyaW5rLCBzdHJ1Y3Qgc3VwZXJfYmxvY2ss
-IHNfc2hyaW5rKTsKPiArCj4gKwkvKgo+ICsJICogRGVhZGxvY2sgYXZvaWRhbmNlLiAgV2UgbWF5
-IGhvbGQgdmFyaW91cyBGUyBsb2NrcywgYW5kIHdlIGRvbid0IHdhbnQKPiArCSAqIHRvIHJlY3Vy
-c2UgaW50byB0aGUgRlMgdGhhdCBjYWxsZWQgdXMgaW4gY2xlYXJfaW5vZGUoKSBhbmQgZnJpZW5k
-cy4uCj4gKwkgKi8KPiArCWlmICghKGdmcF9tYXNrICYgX19HRlBfRlMpKQo+ICsJCXJldHVybiAt
-MTsKPiArCj4gKwkvKgo+ICsJICogaWYgd2UgY2FuJ3QgZ2V0IHRoZSB1bW91bnQgbG9jaywgdGhl
-biB0aGVyZSdzIG5vIHBvaW50IGhhdmluZyB0aGUKPiArCSAqIHNocmlua2VyIHRyeSBhZ2FpbiBi
-ZWNhdXNlIHRoZSBzYiBpcyBiZWluZyB0b3JuIGRvd24uCj4gKwkgKi8KPiArCWlmICghZG93bl9y
-ZWFkX3RyeWxvY2soJnNiLT5zX3Vtb3VudCkpCj4gKwkJcmV0dXJuIC0xOwoKV291bGQgeW91IGp1
-c3QgZWxhYm9yYXRlIG9uIHRoZSBsb2NrIG9yZGVyIHByb2JsZW0gc29tZXdoZXJlPyAodGhlCmNv
-bW1lbnQgbWFrZXMgaXQgbG9vayBsaWtlIHdlICpjb3VsZCogdGFrZSB0aGUgbXV0ZXggaWYgd2Ug
-d2FudGVkCnRvKS4KCgo+ICsKPiArCWlmICghc2ItPnNfcm9vdCkgewo+ICsJCXVwX3JlYWQoJnNi
-LT5zX3Vtb3VudCk7Cj4gKwkJcmV0dXJuIC0xOwo+ICsJfQo+ICsKPiArCWlmIChucl90b19zY2Fu
-KSB7Cj4gKwkJLyogcHJvcG9ydGlvbiB0aGUgc2NhbiBiZXR3ZWVuIHRoZSB0d28gY2FjaGXRlSAq
-Lwo+ICsJCWludCB0b3RhbDsKPiArCj4gKwkJdG90YWwgPSBzYi0+c19ucl9kZW50cnlfdW51c2Vk
-ICsgc2ItPnNfbnJfaW5vZGVzX3VudXNlZCArIDE7Cj4gKwkJY291bnQgPSAobnJfdG9fc2NhbiAq
-IHNiLT5zX25yX2RlbnRyeV91bnVzZWQpIC8gdG90YWw7Cj4gKwo+ICsJCS8qIHBydW5lIGRjYWNo
-ZSBmaXJzdCBhcyBpY2FjaGUgaXMgcGlubmVkIGJ5IGl0ICovCj4gKwkJcHJ1bmVfZGNhY2hlX3Ni
-KHNiLCBjb3VudCk7Cj4gKwkJcHJ1bmVfaWNhY2hlX3NiKHNiLCBucl90b19zY2FuIC0gY291bnQp
-Owo+ICsJfQo+ICsKPiArCWNvdW50ID0gKChzYi0+c19ucl9kZW50cnlfdW51c2VkICsgc2ItPnNf
-bnJfaW5vZGVzX3VudXNlZCkgLyAxMDApCj4gKwkJCQkJCSogc3lzY3RsX3Zmc19jYWNoZV9wcmVz
-c3VyZTsKCkRvIHlvdSB0aGluayB0cnVuY2F0aW5nIGluIHRoZSBkaXZpc2lvbnMgaXMgYXQgYWxs
-IGEgcHJvYmxlbT8gSXQKcHJvYmFibHkgZG9lc24ndCBtYXR0ZXIgbXVjaCBJIHN1cHBvc2UuCgo+
-IEBAIC0xNjIsNiArMjEzLDcgQEAgdm9pZCBkZWFjdGl2YXRlX2xvY2tlZF9zdXBlcihzdHJ1Y3Qg
-c3VwZXJfYmxvY2sgKnMpCj4gIAlzdHJ1Y3QgZmlsZV9zeXN0ZW1fdHlwZSAqZnMgPSBzLT5zX3R5
-cGU7Cj4gIAlpZiAoYXRvbWljX2RlY19hbmRfdGVzdCgmcy0+c19hY3RpdmUpKSB7Cj4gIAkJdmZz
-X2RxX29mZihzLCAwKTsKPiArCQl1bnJlZ2lzdGVyX3Nocmlua2VyKCZzLT5zX3Nocmluayk7Cj4g
-IAkJZnMtPmtpbGxfc2Iocyk7Cj4gIAkJcHV0X2ZpbGVzeXN0ZW0oZnMpOwo+ICAJCXB1dF9zdXBl
-cihzKTsKPiBAQCAtMzM1LDYgKzM4Nyw3IEBAIHJldHJ5Ogo+ICAJbGlzdF9hZGRfdGFpbCgmcy0+
-c19saXN0LCAmc3VwZXJfYmxvY2tzKTsKPiAgCWxpc3RfYWRkKCZzLT5zX2luc3RhbmNlcywgJnR5
-cGUtPmZzX3N1cGVycyk7Cj4gIAlzcGluX3VubG9jaygmc2JfbG9jayk7Cj4gKwlyZWdpc3Rlcl9z
-aHJpbmtlcigmcy0+c19zaHJpbmspOwo+ICAJZ2V0X2ZpbGVzeXN0ZW0odHlwZSk7Cj4gIAlyZXR1
-cm4gczsKPiAgfQo+IGRpZmYgLS1naXQgYS9pbmNsdWRlL2xpbnV4L2ZzLmggYi9pbmNsdWRlL2xp
-bnV4L2ZzLmgKPiBpbmRleCA3YjkwYzQzLi41YmZmMmRjIDEwMDY0NAo+IC0tLSBhL2luY2x1ZGUv
-bGludXgvZnMuaAo+ICsrKyBiL2luY2x1ZGUvbGludXgvZnMuaAo+IEBAIC0zODIsNiArMzgyLDcg
-QEAgc3RydWN0IGlub2Rlc19zdGF0X3Qgewo+ICAjaW5jbHVkZSA8bGludXgvY2FwYWJpbGl0eS5o
-Pgo+ICAjaW5jbHVkZSA8bGludXgvc2VtYXBob3JlLmg+Cj4gICNpbmNsdWRlIDxsaW51eC9maWVt
-YXAuaD4KPiArI2luY2x1ZGUgPGxpbnV4L21tLmg+Cj4gIAo+ICAjaW5jbHVkZSA8YXNtL2F0b21p
-Yy5oPgo+ICAjaW5jbHVkZSA8YXNtL2J5dGVvcmRlci5oPgo+IEBAIC0xMzg1LDggKzEzODYsMTQg
-QEAgc3RydWN0IHN1cGVyX2Jsb2NrIHsKPiAgCSAqIGdlbmVyaWNfc2hvd19vcHRpb25zKCkKPiAg
-CSAqLwo+ICAJY2hhciAqc19vcHRpb25zOwo+ICsKPiArCXN0cnVjdCBzaHJpbmtlciBzX3Nocmlu
-azsJLyogcGVyLXNiIHNocmlua2VyIGhhbmRsZSAqLwo+ICB9OwoKX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNn
-aS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Tue, May 25, 2010 at 06:53:04PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> The inode unused list is currently a global LRU. This does not match
+> the other global filesystem cache - the dentry cache - which uses
+> per-superblock LRU lists. Hence we have related filesystem object
+> types using different LRU reclaimatin schemes.
+
+Is this an improvement I wonder? The dcache is using per sb lists
+because it specifically requires sb traversal.
+
+What allocation/reclaim really wants (for good scalability and NUMA
+characteristics) is per-zone lists for these things. It's easy to
+convert a single list into per-zone lists.
+
+It is much harder to convert per-sb lists into per-sb x per-zone lists.
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
