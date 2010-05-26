@@ -1,24 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4QF2gWg084327 for <xfs@oss.sgi.com>; Wed, 26 May 2010 10:02:43 -0500
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 33C961445562
-	for <xfs@oss.sgi.com>; Wed, 26 May 2010 08:05:04 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id BM3wQDN5DTWfviIy
-	for <xfs@oss.sgi.com>; Wed, 26 May 2010 08:05:04 -0700 (PDT)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id 380C36C35D
-	for <xfs@oss.sgi.com>; Wed, 26 May 2010 10:05:04 -0500 (CDT)
-Message-ID: <4BFD3926.6040208@hardwarefreak.com>
-Date: Wed, 26 May 2010 10:07:18 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	o4QFt7k8086049 for <xfs@oss.sgi.com>; Wed, 26 May 2010 10:55:08 -0500
+Date: Wed, 26 May 2010 17:57:23 +0200 (CEST)
+From: Julia Lawall <julia@diku.dk>
+Subject: [PATCH 11/17] fs/xfs/quota: Add missing mutex_unlock
+Message-ID: <Pine.LNX.4.64.1005261757050.23743@ask.diku.dk>
 MIME-Version: 1.0
-Subject: NOW: o_direct   --  WAS: Re: WARNING in xfs_lwr.c, xfs_write()
-References: <20100523002023.41f5a5c8@aaa.pulp.binarylife.net>	<20100523101856.GL2150@dastard>	<20100523092344.0fcaab42@aaa.pulp.binarylife.net>	<4BF9FCA8.8090906@hardwarefreak.com>	<20100524143428.6f3a117c@abend.internal.xtremedata.com>
-	<20100526070620.GT2150@dastard>
-In-Reply-To: <20100526070620.GT2150@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,61 +15,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>, xfs-masters@oss.sgi.com, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-RGF2ZSBDaGlubmVyIHB1dCBmb3J0aCBvbiA1LzI2LzIwMTAgMjowNiBBTToKPiBPbiBNb24sIE1h
-eSAyNCwgMjAxMCBhdCAwMjozNDoyOFBNIC0wNTAwLCBSb21hbiBLb25vbm92IHdyb3RlOgo+PiBP
-biBTdW4sIDIzIE1heSAyMDEwIDIzOjEyOjI0IC0wNTAwIFN0YW4gSG9lcHBuZXIKPj4gPHN0YW5A
-aGFyZHdhcmVmcmVhay5jb20+IHdyb3RlOgo+Pj4gIlRoZSB3aG9sZSBub3Rpb24gb2YgImRpcmVj
-dCBJTyIgaXMgdG90YWxseSBicmFpbmRhbWFnZWQuIEp1c3Qgc2F5IG5vLgo+PiAuLi4KPj4+IEZy
-b206ICBodHRwOi8vbGttbC5vcmcvbGttbC8yMDA3LzEvMTAvMjM1Cj4+Cj4+IEkgZGVmaW5pdGVs
-eSBtZWFzdXJlIGRyYW1hdGljIG92ZXJhbGwgcGVyZm9ybWFuY2UgYmVuZWZpdCB1c2luZwo+PiBP
-X0RJUkVDVCBjYXJlZnVsbHkuCj4+Cj4+IEluIHRoYXQgdGhyZWFkLCBpdCBpcyBkb3VidGZ1bCB0
-aGF0IG1hZHZpc2UrbW1hcCttc3luYyBhbGxvdwo+PiBhc3luY2hyb25vdXMgemVyby1jb3B5IHJl
-YWRzIGFuZCB3cml0ZXMgdG8vZnJvbSBhbHJlYWR5IHBpbm5lZCBieSBhCj4+IGRldmljZSBkcml2
-ZXIgbWVtb3J5IG9mIGRhdGEgcHJvZHVjZWQvY29uc3VtZWQgYnkgdGhhdCBkZXZpY2UsIHdpdGhv
-dXQKPj4gY2FjaGUgcG9sbHV0aW9uIGFuZCB3aXRoIGludGVsbGlnZW50IGhhbmRsaW5nIG9mIGRp
-c2sgZXJyb3JzLiBBbSBJCj4+IHdyb25nPwo+IAo+IE5vLCB5b3UgYXJlIG5vdCB3cm9uZy4KPiAK
-PiBSZW1lbWJlciwganVzdCBiZWNhdXNlIExpbnVzIGFzc2VydHMgc29tZXRoaW5nIGl0IGRvZXNu
-J3QgbWVhbiBoZSBpcwo+IHJpZ2h0LiBZZXMsIGhlJ3MgcmlnaHQgYW4gYXdmdWwgbG90IG9mIHRo
-ZSB0aW1lLCBidXQgbm90IGFsd2F5cy4gIEluCj4gdGhpcyBjYXNlLCBtb3N0IHBlb3BsZSB3aXRo
-IGV4cGVyaWVuY2UgaW4gd3JpdGluZyBoaWdoIHBlcmZvcm1hbmNlCj4gSU8gZW5naW5lcyB3aXRo
-IHRlbGwgeW91ciB0aGF0IG1tYXAoKSBhbmQgYWR2aXNvcnkgaW50ZXJmYWNlcyBhcmUgbm8KPiBz
-dWJzdGl0dXRlIGZvciB0aGUgZmluZSBncmFpbmVkIGNvbnRyb2wgb2YgSU8gaXNzdWUgdGhhdCBk
-aXJlY3QgSU8KPiBwcm92aWRlcyB5b3Ugd2l0aC4KPiAKPiBBbmQgaW4gdGhlIGNhc2Ugb2YgWEZT
-LCBtbWFwIHNlcmlhbGlzZdGVIHdyaXRlIHBhZ2UgZmF1bHRzIHRvCj4gZGlmZmVyZW50IGFyZWFz
-IG9mIHRoZSBzYW1lIGZpbGUsIHdoZXJlYXMgZGlyZWN0IElPIGFsbG93cwo+IGNvbmN1cnJlbnQg
-cmVhZHMgYW5kIHdyaXRlcyB0byBkaWZmZXJlbnQgcmVnaW9ucyBvZiB0aGUgc2FtZSBmaWxlLgo+
-IFRoYXQgbWFrZXMgZGlyZWN0IElPIGZhciBtb3JlIHNjYWxhYmxlIHRoYW4gdGhhbiBhbnkgbW1h
-cCBpbnRlcmZhY2UKPiB3aWxsIGV2ZXIgYmUuLi4uCj4gCj4gQ2hlZXJzLAo+IAo+IERhdmUuCgpQ
-bGVhc2UgZWR1Y2F0ZSB0aGUgaWdub3JhbnQgYSBsaXR0bGUgYml0IERhdmUuICBJJ20gbm90IGEg
-cHJvZ3JhbW1lciwgb3IgYXQKbGVhc3QsIGhhdmVuJ3QgYmVlbiBvbmUgZm9yIGEgY291cGxlIG9m
-IGRlY2FkZXMuICBJZiBvX2RpcmVjdCBpcyBzdXBlcmlvciB0bwptbWFwLCB3aHkgdGhlbiBkb24n
-dCwgc2F5LCBQb3N0Zml4IGFuZCBEb3ZlY290IHVzZSBpdCBpbnN0ZWFkIG9mIG1tYXA/ICBFbWFp
-bApzZXJ2ZXJzIGFyZSBzb21lIG9mIHRoZSBtb3N0IGRpc2sgSS9PIGJvdW5kIGFwcGxpY2F0aW9u
-cyBvbiB0aGUgcGxhbmV0LiAgSQp3b3VsZCB0aGluayBvbiBoZWF2aWx5IGxvYWRlZCBtYWlsIHNl
-cnZlcnMgKHNtdHAgb3IgaW1hcCksIGF0ICRiaWdfaXNwIGZvcgpleGFtcGxlLCBidWZmZXIgY2Fj
-aGUgd291bGQgeWllbGQgdmVyeSBsaXR0bGUgcGVyZm9ybWFuY2UgZ2FpbiwgYW5kIG1heSBldmVu
-CnNsb3cgdGhlIHN5c3RlbSBkb3duIGR1ZSB0byBidWZmZXIgY2FjaGUgdGhyYXNoaW5nLgoKV2h5
-IGRvIHlvdSB0aGluayBXaWV0c2UgYW5kIFRpbW8gZG9uJ3QgdXNlIG9fZGlyZWN0IGluc3RlYWQg
-b2YgbW1hcD8gIFRpbW8gaXMKd29ya2luZyBvbiBhIGNvbXBsZXggYW5kIGFnZ3Jlc3NpdmUgdG90
-YWxseSBhc3luY2hyb25vdXMgSS9PIHN1YnN5c3RlbSBmb3IgYQpmdXR1cmUgRG92ZWNvdCByZWxl
-YXNlIGluIGFuIGVmZm9ydCB0byBzcGVlZCB1cCBJL08gb24gbG9hZGVkIHN5c3RlbXMuICBDb3Vs
-ZApvX2RpcmVjdCBub3QgYmUgdGhlIHNvbHV0aW9uPyAgQUZBSUssIGJvdGggUG9zdGZpeCBhbmQg
-RG92ZWNvdCBzdXBwb3J0IHJ1bm5pbmcKb24ganVzdCBhYm91dCBldmVyeSBVbml4IGxpa2UgT1Mg
-b24gdGhlIHBsYW5ldC4gIElzIG9fZGlyZWN0IG5vdCBhIHBvcnRhYmxlCmludGVyZmFjZSwgbGlt
-aXRlZCB0byBMaW51eCBvbmx5PyAgSXMgb19kaXJlY3QgYSBQT1NJWCBzdGFuZGFyZD8KCkknbSBz
-dXJlIG9fZGlyZWN0IGlzbid0IHRoZSBiZXN0IGZpdCBmb3IgbWFueSBJL08gYm91bmQgYXBwbGlj
-YXRpb25zLiBJJ20ganVzdAp0cnlpbmcgdG8gdW5kZXJzdGFuZCB3aHkuICBXaGF0IGFwcGxpY2F0
-aW9ucyBhcmUgdGhlIGJlc3QgY2FuZGlkYXRlcyBmb3IgdXNpbmcKb19kaXJlY3Q/ICBXaHkgd291
-bGQgb25lIHdhbnQgdG8gYXZvaWQgdXNpbmcgb19kaXJlY3QgaW4gYW4gSS9PIGJvdW5kIGFwcGxp
-Y2F0aW9uPwoKTXkgYXBvbG9naWVzIGZvciB0aGUgbmV3YmlzaCBxdWVzdGlvbnMuICBJZiB0aGlz
-IGhhcyBhbGwgYmVlbiBhc2tlZC9hbnN3ZXJlZApiZWZvcmUsIHBsZWFzZSBqdXN0IHBvaW50IG1l
-IHRvIGFueSBwYXBlcnMgdGhhdCBleHBsYWluIHRoZSBwcm9zL2NvbnMgb2YKb19kaXJlY3QuICBU
-aGFua3MuCgotLSAKU3RhbgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2ku
-Y29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+From: Julia Lawall <julia@diku.dk>
+
+Add a mutex_unlock missing on the error path.  The use of this lock is
+balanced elsewhere in the file.
+
+The semantic match that finds this problem is as follows:
+(http://coccinelle.lip6.fr/)
+
+// <smpl>
+@@
+expression E1;
+@@
+
+* mutex_lock(E1,...);
+  <+... when != E1
+  if (...) {
+    ... when != E1
+*   return ...;
+  }
+  ...+>
+* mutex_unlock(E1,...);
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+The use of ENOMEM rather than -ENOMEM is also a bit odd.
+
+ fs/xfs/quota/xfs_qm.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/quota/xfs_qm.c b/fs/xfs/quota/xfs_qm.c
+index 38e7641..2d8b7bc 100644
+--- a/fs/xfs/quota/xfs_qm.c
++++ b/fs/xfs/quota/xfs_qm.c
+@@ -249,8 +249,10 @@ xfs_qm_hold_quotafs_ref(
+ 
+ 	if (!xfs_Gqm) {
+ 		xfs_Gqm = xfs_Gqm_init();
+-		if (!xfs_Gqm)
++		if (!xfs_Gqm) {
++			mutex_unlock(&xfs_Gqm_lock);
+ 			return ENOMEM;
++		}
+ 	}
+ 
+ 	/*
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
