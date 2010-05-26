@@ -1,19 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4QJtLsZ092600 for <xfs@oss.sgi.com>; Wed, 26 May 2010 14:55:22 -0500
-Received: from smtp.sauce.co.nz (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9F78A143F9EC
-	for <xfs@oss.sgi.com>; Wed, 26 May 2010 12:57:42 -0700 (PDT)
-Received: from smtp.sauce.co.nz (smtp.sauce.co.nz [210.48.49.72]) by
-	cuda.sgi.com with ESMTP id kDRJYZGvSBxVZc6V for
-	<xfs@oss.sgi.com>; Wed, 26 May 2010 12:57:42 -0700 (PDT)
-Message-ID: <4BFD7D34.9060006@sauce.co.nz>
-Date: Thu, 27 May 2010 07:57:40 +1200
-From: Richard Scobie <richard@sauce.co.nz>
+	o4QMxAjV097890 for <xfs@oss.sgi.com>; Wed, 26 May 2010 17:59:11 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1057C3798A0
+	for <xfs@oss.sgi.com>; Wed, 26 May 2010 16:01:32 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	MWWmx7cR3NZt7EGv for <xfs@oss.sgi.com>;
+	Wed, 26 May 2010 16:01:32 -0700 (PDT)
+Date: Thu, 27 May 2010 09:01:29 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/5] inode: Make unused inode LRU per superblock
+Message-ID: <20100526230129.GA1395@dastard>
+References: <1274777588-21494-1-git-send-email-david@fromorbit.com>
+	<1274777588-21494-2-git-send-email-david@fromorbit.com>
+	<20100526161732.GC22536@laptop>
 MIME-Version: 1.0
-Subject: Re: xfsdump -- not enough memory to dump attributes? w/>20G free
- --
+Content-Disposition: inline
+In-Reply-To: <20100526161732.GC22536@laptop>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,37 +27,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Nick Piggin <npiggin@suse.de>
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Linda A. Walsh wrote:
-
-BTW -- how do you tell the version of the xfs progs from
-the individual progs -- I'm going from the installed rpm
-name, but if I build from the git, that won't be helpful.
-I don't see a VERSION command in xfsdump/restore?
-
-
-
-Hi Linda,
-
-xfsdump with no arguments shows the version:
-
-[rs@sam ~]$ xfsdump
-xfsdump: version 3.0.1 (dump format 3.0)
-xfsdump: usage: xfsdump [ -a (dump DMF dualstate files as offline) ]
-                         [ -b <blocksize> ]
-....
-
-
-Regards,
-
-Richard
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCBNYXkgMjcsIDIwMTAgYXQgMDI6MTc6MzNBTSArMTAwMCwgTmljayBQaWdnaW4gd3Jv
+dGU6Cj4gT24gVHVlLCBNYXkgMjUsIDIwMTAgYXQgMDY6NTM6MDRQTSArMTAwMCwgRGF2ZSBDaGlu
+bmVyIHdyb3RlOgo+ID4gRnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgo+
+ID4gCj4gPiBUaGUgaW5vZGUgdW51c2VkIGxpc3QgaXMgY3VycmVudGx5IGEgZ2xvYmFsIExSVS4g
+VGhpcyBkb2VzIG5vdCBtYXRjaAo+ID4gdGhlIG90aGVyIGdsb2JhbCBmaWxlc3lzdGVtIGNhY2hl
+IC0gdGhlIGRlbnRyeSBjYWNoZSAtIHdoaWNoIHVzZXMKPiA+IHBlci1zdXBlcmJsb2NrIExSVSBs
+aXN0cy4gSGVuY2Ugd2UgaGF2ZSByZWxhdGVkIGZpbGVzeXN0ZW0gb2JqZWN0Cj4gPiB0eXBlcyB1
+c2luZyBkaWZmZXJlbnQgTFJVIHJlY2xhaW1hdGluIHNjaGVtZXMuCj4gCj4gSXMgdGhpcyBhbiBp
+bXByb3ZlbWVudCBJIHdvbmRlcj8gVGhlIGRjYWNoZSBpcyB1c2luZyBwZXIgc2IgbGlzdHMKPiBi
+ZWNhdXNlIGl0IHNwZWNpZmljYWxseSByZXF1aXJlcyBzYiB0cmF2ZXJzYWwuCgpSaWdodCAtIEkg
+b3JpZ2luYWxseSBpbXBsZW1lbnRlZCB0aGUgcGVyLXNiIGRlbnRyeSBsaXN0cyBmb3IKc2NhbGFi
+aWxpdHkgcHVycG9zZXMuIGkuZS4gdG8gYXZvaWQgbW9ub3BvbGlzaW5nIHRoZSBkZW50cnlfbG9j
+awpkdXJpbmcgdW5tb3VudCBsb29raW5nIGZvciBkZW50cmllcyBvbiBhIHNwZWNpZmljIHNiIGFu
+ZCBoYW5naW5nIHRoZQpzeXN0ZW0gZm9yIHNldmVyYWwgbWludXRlcy4KCkhvd2V2ZXIsIHRoZSBy
+ZWFzb24gZm9yIGRvaW5nIHRoaXMgdG8gdGhlIGlub2RlIGNhY2hlIGlzIG5vdCBmb3IKc2NhbGFi
+aWxpdHksIGl0J3MgYmVjYXVzZSB3ZSBoYXZlIGEgdGlnaHQgcmVsYXRpb25zaGlwIGJldHdlZW4g
+dGhlCmRlbnRyeSBhbmQgaW5vZGUgY2FjaGXRlS4gVGhhdCBpcywgcmVjbGFpbSBmcm9tIHRoZSBk
+ZW50cnkgTFJVIGdyb3dzCnRoZSBpbm9kZSBMUlUuICBMaWtlIHRoZSByZWdpc3RyYXRpb24gb2Yg
+dGhlIHNocmlua2VycywgdGhpcyBpcyBraW5kCm9mIGFuIGltcGxpY2l0LCB1bmRvY3VtZW50ZWQg
+YmVoYXZvdXIgb2YgdGhlIGN1cnJlbnQgc2hyaW5rZXIKaW1wbGVtZW5hdGlvbi4KCldoYXQgdGhp
+cyBwYXRjaCBzZXJpZXMgZG9lcyBpcyB0YWtlIHRoYXQgaW1wbGljaXQgcmVsYXRpb25zaGlwIGFu
+ZAptYWtlIGl0IGV4cGxpY2l0LiAgSXQgYWxzbyBhbGxvd3Mgb3RoZXIgZmlsZXN5c3RlbSBjYWNo
+ZXMgdG8gdGllCmludG8gdGhlIHJlbGF0aW9uc2hpcCBpZiB0aGV5IG5lZWQgdG8gKGUuZy4gdGhl
+IFhGUyBpbm9kZSBjYWNoZSkuCldoYXQgaXQgX2RvZXNuJ3QgZG9fIGlzIGNoYW5nZSB0aGUgbWFj
+cm8gbGV2ZWwgYmVoYXZpb3VyIG9mIHRoZQpzaHJpbmtlcnMuLi4KCj4gV2hhdCBhbGxvY2F0aW9u
+L3JlY2xhaW0gcmVhbGx5IHdhbnRzIChmb3IgZ29vZCBzY2FsYWJpbGl0eSBhbmQgTlVNQQo+IGNo
+YXJhY3RlcmlzdGljcykgaXMgcGVyLXpvbmUgbGlzdHMgZm9yIHRoZXNlIHRoaW5ncy4gSXQncyBl
+YXN5IHRvCj4gY29udmVydCBhIHNpbmdsZSBsaXN0IGludG8gcGVyLXpvbmUgbGlzdHMuCj4KPiBJ
+dCBpcyBtdWNoIGhhcmRlciB0byBjb252ZXJ0IHBlci1zYiBsaXN0cyBpbnRvIHBlci1zYiB4IHBl
+ci16b25lIGxpc3RzLgoKTm8gaXQncyBub3QuIEp1c3QgY29udmVydCB0aGUgc197ZGVudHJ5LGlu
+b2RlfV9scnUgbGlzdHMgb24gZWFjaApzdXBlcmJsb2NrIGFuZCBjYWxsIHRoZSBzaHJpbmtlciB3
+aXRoIGEgbmV3IHpvbmUgbWFzayBmaWVsZCB0byBwaWNrCnRoZSBjb3JyZWN0IExSVS4gVGhhdCdz
+IG5vIGhhcmRlciB0aGFuIGNvbnZlcnRpbmcgYSBnbG9iYWwgTFJVLgpBbnl3YXksIHlvdSdkIHN0
+aWxsIGhhdmUgdG8gZG8gcGVyLXNiIHggcGVyLXpvbmUgbGlzdHMgZm9yIHRoZSBkZW50cnkgTFJV
+cywKc28gY2hhbmdpbmcgdGhlIGlub2RlIGNhY2hlIHRvIHBlci1zYiBtYWtlcyBubyBkaWZmZXJl
+bmNlLgoKSG93ZXZlciwgdGhpcyBpcyBhIG1vb3QgcG9pbnQgYmVjYXVzZSB3ZSBkb24ndCBoYXZl
+IHBlci16b25lIHNocmlua2VyCmludGVyZmFjZXMuIFRoYXQncyBhbiBlbnRpcmVseSBzZXBhcmF0
+ZSBkaXNjdXNzaW9uIGJlY2F1c2Ugb2YgdGhlCm1hY3JvLWxldmVsIGJlaGF2aW91cmFsIGNoYW5n
+ZXMgaXQgaW1wbGllcy4uLi4KCkNoZWVycywKCkRhdmUuCi0tIApEYXZlIENoaW5uZXIKZGF2aWRA
+ZnJvbW9yYml0LmNvbQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29t
+L21haWxtYW4vbGlzdGluZm8veGZzCg==
