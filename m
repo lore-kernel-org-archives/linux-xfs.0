@@ -1,27 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4R6iCI9117427 for <xfs@oss.sgi.com>; Thu, 27 May 2010 01:44:12 -0500
-Received: from mx1.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 583A61D5224B
-	for <xfs@oss.sgi.com>; Wed, 26 May 2010 23:46:35 -0700 (PDT)
-Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
-	with ESMTP id 5loMaOtEl9Gmq9Ta for <xfs@oss.sgi.com>;
-	Wed, 26 May 2010 23:46:35 -0700 (PDT)
-Date: Thu, 27 May 2010 16:46:31 +1000
-From: Nick Piggin <npiggin@suse.de>
-Subject: Re: [PATCH 3/5 v2] superblock: introduce per-sb cache shrinker
-	infrastructure
-Message-ID: <20100527064631.GK22536@laptop>
-References: <1274777588-21494-1-git-send-email-david@fromorbit.com>
-	<1274777588-21494-4-git-send-email-david@fromorbit.com>
-	<20100526164116.GD22536@laptop> <20100526231214.GB1395@dastard>
-	<20100527015335.GD1395@dastard>
-	<20100527040120.GX31073@ZenIV.linux.org.uk>
-	<20100527061751.GK12087@dastard>
+	o4R6tILm117906 for <xfs@oss.sgi.com>; Thu, 27 May 2010 01:55:18 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 943F237AB20
+	for <xfs@oss.sgi.com>; Wed, 26 May 2010 23:57:41 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id o7ltVTYynj1KMiis for
+	<xfs@oss.sgi.com>; Wed, 26 May 2010 23:57:41 -0700 (PDT)
+Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv14.zmi.at (Postfix) with ESMTPSA id CC239800184
+	for <xfs@oss.sgi.com>; Thu, 27 May 2010 08:57:39 +0200 (CEST)
+Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id 7615983C804
+	for <xfs@oss.sgi.com>; Thu, 27 May 2010 08:57:39 +0200 (CEST)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: puzzling error: XenServer, LVM and XFS
+Date: Thu, 27 May 2010 08:57:38 +0200
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100527061751.GK12087@dastard>
+Message-Id: <201005270857.39048@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,52 +31,84 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============6883727878221218155=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, xfs@oss.sgi.com, Al Viro <viro@ZenIV.linux.org.uk>, linux-kernel@vger.kernel.org
+To: xfs@oss.sgi.com
 
-On Thu, May 27, 2010 at 04:17:51PM +1000, Dave Chinner wrote:
-> On Thu, May 27, 2010 at 05:01:20AM +0100, Al Viro wrote:
-> > Um...  Maybe I'm dumb, but what's wrong with doing unregistration from
-> > deactivate_locked_super(), right after the call of ->kill_sb()?  At that
-> > point ->s_umount is already dropped, so we won't deadlock at all.
-> > Shrinker rwsem will make sure that all shrinkers-in-progress will run
-> > to completion, so we won't get a superblock freed under prune_super().
-> > I don't particulary mind down_try_read() in prune_super(), but why not
-> > make life obviously safer?
-> > 
-> > Am I missing something here?
-> 
-> I was worried about memory allocation in the ->kill_sb path
-> deadlocking on the s_umount lock if it enters reclaim. e.g.  XFS
-> inodes can still be dirty even after the VFS has disposed of them,
-> and writing them back can require page cache allocation for the
-> backing buffers. If allocation recurses back into the shrinker, we
-> can deadlock on the s_umount lock.  This doesn't seem like an XFS
-> specific problem, so I used a trylock to avoid that whole class of
-> problems (same way the current shrinkers do).
+--===============6883727878221218155==
+Content-Type: multipart/signed;
+  boundary="nextPart1400176.4lrSpho5rt";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-If GFP_FS is set, we wouldn't touch the locks. It is a concern
-though, if __GFP_FS allocations were previously permitted under
-the exclusive lock.
+--nextPart1400176.4lrSpho5rt
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
- 
-> >From there, we can unregister the shrinker before calling ->kill_sb
-> as per above. That, in turn, means that the unmount
-> invalidate_inodes() vs shrinker race goes away and the iprune_sem is
-> not needed in the new prune_icache_sb() function.  I'm pretty sure
-> that I can now remove the iprune_sem, but I haven't written the
-> patch to do that yet.
+I have a problem I can recreate, but have no idea where to ask/report=20
+it. I have a XenServer 5.5 based Virtual Machine with a running openSUSE=20
+11.2. Everything running fine.
 
-I do really like that aspect of your patch. It's nice to have the
-shrinker always only operating against active supers. So I would
-be in favour of your current scheme.
+Now I add another disk (which is an LVM volume on the host), there there=20
+I create a partition. In this partition, I create an LVM volume:
+pvcreate ..
+vgcreate ..
+lvcreate ..
+So far no problem.
 
+Now I create an XFS:
+mkfs.xfs /dev/test/test
+mount /dev/test/test /1
+
+I can reproduce and get tons of these errors on 2 different XenServers=20
+in 2 different VMs:
+
+May 27 08:32:11 zdb13 kernel: [  738.046895] end_request: I/O error, dev=20
+xvdc, sector 0
+
+This only happens after XFS is mounted from the LVM volume. On another=20
+machine where active I/O is happening, I get tons of these errors every=20
+some seconds.
+
+=2D-=20
+mit freundlichen Gr=C3=BCssen,
+Michael Monnerie, Ing. BSc
+
+it-management Internet Services
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: 0660 / 415 65 31
+
+// Wir haben im Moment zwei H=C3=A4user zu verkaufen:
+// http://zmi.at/langegg/
+// http://zmi.at/haus2009/
+
+--nextPart1400176.4lrSpho5rt
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.12 (GNU/Linux)
+
+iEYEABECAAYFAkv+F+MACgkQzhSR9xwSCbTc3ACgmI2qeDY02o7MdaRxxxVvuatr
+c+UAoOLokTjKCirI0jR4BPWp+Ie+nLrs
+=bTBF
+-----END PGP SIGNATURE-----
+
+--nextPart1400176.4lrSpho5rt--
+
+
+--===============6883727878221218155==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============6883727878221218155==--
