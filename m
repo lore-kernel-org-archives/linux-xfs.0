@@ -1,28 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4R1utZG103870 for <xfs@oss.sgi.com>; Wed, 26 May 2010 20:56:55 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2A23E109F70C
-	for <xfs@oss.sgi.com>; Wed, 26 May 2010 19:01:05 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	o71R4d7EqnJuvtoh for <xfs@oss.sgi.com>;
-	Wed, 26 May 2010 19:01:05 -0700 (PDT)
-Received: from dastard (unverified [121.45.174.97])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	25867136-1927428
-	for <xfs@oss.sgi.com>; Thu, 27 May 2010 11:29:16 +0930 (CST)
-Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1OHSNP-0001nF-HC
-	for xfs@oss.sgi.com; Thu, 27 May 2010 11:59:15 +1000
-Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1OHSNG-0008C1-CF
-	for xfs@oss.sgi.com; Thu, 27 May 2010 11:59:06 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: Re-initialise lockdep context for all inodes in reclaim
-Date: Thu, 27 May 2010 11:59:06 +1000
-Message-Id: <1274925546-31468-1-git-send-email-david@fromorbit.com>
+	o4R2Gt7s104492 for <xfs@oss.sgi.com>; Wed, 26 May 2010 21:16:56 -0500
+Received: from mx1.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A991C144D916
+	for <xfs@oss.sgi.com>; Wed, 26 May 2010 19:19:18 -0700 (PDT)
+Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
+	with ESMTP id mbvZ3gYWNbznAK4Z for <xfs@oss.sgi.com>;
+	Wed, 26 May 2010 19:19:18 -0700 (PDT)
+Date: Thu, 27 May 2010 12:19:05 +1000
+From: Nick Piggin <npiggin@suse.de>
+Subject: Re: [PATCH 3/5] superblock: introduce per-sb cache shrinker
+	infrastructure
+Message-ID: <20100527021905.GG22536@laptop>
+References: <1274777588-21494-1-git-send-email-david@fromorbit.com>
+	<1274777588-21494-4-git-send-email-david@fromorbit.com>
+	<20100526164116.GD22536@laptop> <20100526231214.GB1395@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20100526231214.GB1395@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,55 +27,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
-
-We re-initialise the lockdep context for inode iolocks when dropping an inode,
-but not when we delete an inode. Now that we can reclaim inodes from a shrinker,
-we can get get false lockdep warnings about inode iolock inversions during
-reclaim of deleted inodes. Hence we need to re-initialise the iolock in the
-delete path as well.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/linux-2.6/xfs_super.c |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
-
-diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
-index 8119d1b..ba0e884 100644
---- a/fs/xfs/linux-2.6/xfs_super.c
-+++ b/fs/xfs/linux-2.6/xfs_super.c
-@@ -911,6 +911,20 @@ xfs_fs_destroy_inode(
- 
- 	XFS_STATS_INC(vn_reclaim);
- 
-+	/*
-+	 * The iolock is used by the file system to coordinate reads,
-+	 * writes, and block truncates.  Up to this point the lock
-+	 * protected concurrent accesses by users of the inode.  But
-+	 * from here forward we're doing some final processing of the
-+	 * inode because we're done with it, and although we reuse the
-+	 * iolock for protection it is really a distinct lock class
-+	 * (in the lockdep sense) from before.  To keep lockdep happy
-+	 * (and basically indicate what we are doing), we explicitly
-+	 * re-init the iolock here.
-+	 */
-+	ASSERT(!rwsem_is_locked(&ip->i_iolock.mr_lock));
-+	mrlock_init(&ip->i_iolock, MRLOCK_BARRIER, "xfsio", ip->i_ino);
-+
- 	/* bad inode, get out here ASAP */
- 	if (is_bad_inode(inode))
- 		goto out_reclaim;
--- 
-1.5.6.5
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCBNYXkgMjcsIDIwMTAgYXQgMDk6MTI6MTRBTSArMTAwMCwgRGF2ZSBDaGlubmVyIHdy
+b3RlOgo+IE9uIFRodSwgTWF5IDI3LCAyMDEwIGF0IDAyOjQxOjE2QU0gKzEwMDAsIE5pY2sgUGln
+Z2luIHdyb3RlOgo+ID4gT24gVHVlLCBNYXkgMjUsIDIwMTAgYXQgMDY6NTM6MDZQTSArMTAwMCwg
+RGF2ZSBDaGlubmVyIHdyb3RlOgo+ID4gPiBAQCAtNDU2LDIxICs0NTYsMTYgQEAgc3RhdGljIHZv
+aWQgcHJ1bmVfb25lX2RlbnRyeShzdHJ1Y3QgZGVudHJ5ICogZGVudHJ5KQo+ID4gPiArCS8qCj4g
+PiA+ICsJICogaWYgd2UgY2FuJ3QgZ2V0IHRoZSB1bW91bnQgbG9jaywgdGhlbiB0aGVyZSdzIG5v
+IHBvaW50IGhhdmluZyB0aGUKPiA+ID4gKwkgKiBzaHJpbmtlciB0cnkgYWdhaW4gYmVjYXVzZSB0
+aGUgc2IgaXMgYmVpbmcgdG9ybiBkb3duLgo+ID4gPiArCSAqLwo+ID4gPiArCWlmICghZG93bl9y
+ZWFkX3RyeWxvY2soJnNiLT5zX3Vtb3VudCkpCj4gPiA+ICsJCXJldHVybiAtMTsKPiA+IAo+ID4g
+V291bGQgeW91IGp1c3QgZWxhYm9yYXRlIG9uIHRoZSBsb2NrIG9yZGVyIHByb2JsZW0gc29tZXdo
+ZXJlPyAodGhlCj4gPiBjb21tZW50IG1ha2VzIGl0IGxvb2sgbGlrZSB3ZSAqY291bGQqIHRha2Ug
+dGhlIG11dGV4IGlmIHdlIHdhbnRlZAo+ID4gdG8pLgo+IAo+IFRoZSBzaHJpbmtlciBpcyB1bnJl
+Z2lzdGVyZWQgaW4gZGVhY3RpdmF0ZV9sb2NrZWRfc3VwZXIoKSB3aGljaCBpcwo+IGp1c3QgYmVm
+b3JlIC0+a2lsbF9zYiBpcyBjYWxsZWQuIFRoZSBzYi0+c191bW91bnQgbG9jayBpcyBoZWxkIGF0
+Cj4gdGhpcyBwb2ludC4gaGVuY2UgaXMgdGhlIHNocmlua2VyIGlzIG9wZXJhdGluZywgd2Ugd2ls
+bCBkZWFkbG9jayBpZgo+IHdlIHRyeSB0byBsb2NrIGl0IGxpa2UgdGhpczoKPiAKPiAJdW5tb3Vu
+dDoJCQlzaHJpbmtlcjoKPiAJCQkJCWRvd25fcmVhZCgmc2hyaW5rZXJfbG9jayk7Cj4gCWRvd25f
+d3JpdGUoJnNiLT5zX3Vtb3VudCkKPiAJdW5yZWdpc3Rlcl9zaHJpbmtlcigpCj4gCWRvd25fd3Jp
+dGUoJnNocmlua2VyX2xvY2spCj4gCQkJCQlwcnVuZV9zdXBlcigpCj4gCQkJCQkgIGRvd25fcmVh
+ZCgmc2ItPnNfdW1vdW50KTsKPiAJCQkJCSAgKGRlYWRsb2NrKQo+IAo+IGhlbmNlIGlmIHdlIGNh
+bid0IGdldCB0aGUgc2ItPnNfdW1vdW50IGxvY2sgaW4gcHJ1bmVfc3VwZXIoKSwgdGhlbgo+IHRo
+ZSBzdXBlcmJsb2NrIG11c3QgYmUgYmVpbmcgdW5tb3VudGVkIGFuZCB0aGUgc2hyaW5rZXIgc2hv
+dWxkIGFib3J0Cj4gYXMgdGhlIC0+a2lsbF9zYiBtZXRob2Qgd2lsbCBjbGVhbiB1cCBldmVyeXRo
+aW5nIGFmdGVyIHRoZSBzaHJpbmtlcgo+IGlzIHVucmVnaXN0ZXJlZC4gSGVuY2UgdGhlIGRvd25f
+cmVhZF90cnlsb2NrKCkuCgpZb3UgYWRkZWQgaXQgdG8gdGhlIGNvbW1lbnQgaW4geW91ciB1cGRh
+dGVkIHBhdGNoLCB0aGF0IHdhcyB0aGUgbWFpbgp0aGluZyBJIHdhbnRlZC4gVGhhbmtzLgoKCj4g
+PiA+ICsJaWYgKCFzYi0+c19yb290KSB7Cj4gPiA+ICsJCXVwX3JlYWQoJnNiLT5zX3Vtb3VudCk7
+Cj4gPiA+ICsJCXJldHVybiAtMTsKPiA+ID4gKwl9Cj4gPiA+ICsKPiA+ID4gKwlpZiAobnJfdG9f
+c2Nhbikgewo+ID4gPiArCQkvKiBwcm9wb3J0aW9uIHRoZSBzY2FuIGJldHdlZW4gdGhlIHR3byBj
+YWNoZdGVICovCj4gPiA+ICsJCWludCB0b3RhbDsKPiA+ID4gKwo+ID4gPiArCQl0b3RhbCA9IHNi
+LT5zX25yX2RlbnRyeV91bnVzZWQgKyBzYi0+c19ucl9pbm9kZXNfdW51c2VkICsgMTsKPiA+ID4g
+KwkJY291bnQgPSAobnJfdG9fc2NhbiAqIHNiLT5zX25yX2RlbnRyeV91bnVzZWQpIC8gdG90YWw7
+Cj4gPiA+ICsKPiA+ID4gKwkJLyogcHJ1bmUgZGNhY2hlIGZpcnN0IGFzIGljYWNoZSBpcyBwaW5u
+ZWQgYnkgaXQgKi8KPiA+ID4gKwkJcHJ1bmVfZGNhY2hlX3NiKHNiLCBjb3VudCk7Cj4gPiA+ICsJ
+CXBydW5lX2ljYWNoZV9zYihzYiwgbnJfdG9fc2NhbiAtIGNvdW50KTsKPiA+ID4gKwl9Cj4gPiA+
+ICsKPiA+ID4gKwljb3VudCA9ICgoc2ItPnNfbnJfZGVudHJ5X3VudXNlZCArIHNiLT5zX25yX2lu
+b2Rlc191bnVzZWQpIC8gMTAwKQo+ID4gPiArCQkJCQkJKiBzeXNjdGxfdmZzX2NhY2hlX3ByZXNz
+dXJlOwo+ID4gCj4gPiBEbyB5b3UgdGhpbmsgdHJ1bmNhdGluZyBpbiB0aGUgZGl2aXNpb25zIGlz
+IGF0IGFsbCBhIHByb2JsZW0/IEl0Cj4gPiBwcm9iYWJseSBkb2Vzbid0IG1hdHRlciBtdWNoIEkg
+c3VwcG9zZS4KPiAKPiBTYW1lIGNvZGUgYXMgY3VycmVudGx5IGV4aXN0cy4gSUlSQywgdGhlIHJl
+YXNvbmluZyBpcyB0aGF0IGlmIHdlJ3ZlCj4gZ290IGxlc3MgdGhhdCAxMDAgb2JqZWN0cyB0byBy
+ZWNsYWltLCB0aGVuIHdlJ3JlIHVubGlrZWx5IHRvIGJlIGFibGUKPiB0byBmcmVlIHVwIGFueSBt
+ZW1vcnkgZnJvbSB0aGUgY2FjaGVzLCBhbnl3YXkuCgpZZWFoLCB3aGljaCBpcyB3aHkgSSBzdG9w
+IHNob3J0IG9mIHNheWluZyB5b3Ugc2hvdWxkIGNoYW5nZSBpdCBpbgp0aGlzIHBhdGNoLgoKQnV0
+IEkgdGhpbmsgd2Ugc2hvdWxkIGVuc3VyZSB0aGluZ3MgY2FuIGdldCByZWNsYWltZWQgZXZlbnR1
+YWxseS4KMTAwIG9iamVjdHMgY291bGQgYmUgMTAwIHNsYWJzLCB3aGljaCBjb3VsZCBiZSBhbnl0
+aGluZyBmcm9tCmhhbGYgYSBtZWcgdG8gaGFsZiBhIGRvemVuLiBNdWx0aXBsaWVkIGJ5IGVhY2gg
+b2YgdGhlIGNhY2hlcy4KQ291bGQgYmUgc2lnbmlmaWNhbnQgaW4gc21hbGwgc3lzdGVtcy4KCl9f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5n
+IGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZv
+L3hmcwo=
