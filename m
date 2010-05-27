@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4QNGNjY099247 for <xfs@oss.sgi.com>; Wed, 26 May 2010 18:16:23 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 911643799AB
-	for <xfs@oss.sgi.com>; Wed, 26 May 2010 16:18:45 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	LeOJMuxpNetZgDwQ for <xfs@oss.sgi.com>;
-	Wed, 26 May 2010 16:18:45 -0700 (PDT)
-Date: Thu, 27 May 2010 09:18:42 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: noatime,nodiratime?
-Message-ID: <20100526231842.GC1395@dastard>
-References: <4BF3F212.5030600@hardwarefreak.com>
-	<20100519182336.GA6264@infradead.org>
-	<4BF43B3C.6030403@hardwarefreak.com> <4BF44105.4040902@sandeen.net>
-	<4BF47859.6020808@hardwarefreak.com>
+	o4R22SCW104069 for <xfs@oss.sgi.com>; Wed, 26 May 2010 21:02:29 -0500
+Received: from mx1.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B208F144D710
+	for <xfs@oss.sgi.com>; Wed, 26 May 2010 19:04:52 -0700 (PDT)
+Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
+	with ESMTP id zwPB8OIqXD9QiCEV for <xfs@oss.sgi.com>;
+	Wed, 26 May 2010 19:04:52 -0700 (PDT)
+Date: Thu, 27 May 2010 12:04:45 +1000
+From: Nick Piggin <npiggin@suse.de>
+Subject: Re: [PATCH 1/5] inode: Make unused inode LRU per superblock
+Message-ID: <20100527020445.GF22536@laptop>
+References: <1274777588-21494-1-git-send-email-david@fromorbit.com>
+	<1274777588-21494-2-git-send-email-david@fromorbit.com>
+	<20100526161732.GC22536@laptop> <20100526230129.GA1395@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4BF47859.6020808@hardwarefreak.com>
+In-Reply-To: <20100526230129.GA1395@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,63 +26,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, May 19, 2010 at 06:46:33PM -0500, Stan Hoeppner wrote:
-> Eric Sandeen put forth on 5/19/2010 2:50 PM:
-> 
-> > xfs_info actually calls xfs_growfs -n, and it's only reporting on-disk
-> > geometry.  I kind of doubt that'll change.  If you want to see mount
-> > options, /proc/mounts is the place ... but then we don't show the
-> > defaults ;)  I wonder if we should change that and be explicit about
-> > every option in /proc/mounts *shrug*
-> 
-> IMHO the option values should be listed, whether they are the defaults or
-> user defined.  XFS may be breaking convention by doing so, as it appears
-> EXT2 (and probably 3/4, and other filesystems) behave the same as XFS
-> currently does--no display of default settings, except rw.
-> 
-> > It's so hard to keep google up to date ;)
-> 
-> Add the information to the FAQ and it'll show up in Google indexes in short
-> order, assuming you allow robots to crawl xfs.org, which IIRC, you do.
-> 
-> > /proc/mounts shows all mount options which were set differently from
-> > defaults.
-> 
-> Yes.  It would be nice to see the settings regardless of default or user
-> defined.  In the absence of, or in addition to this, could we get a
-> consistent (default) for each setting in XFS man mount?  For example,
-> barrier is listed but we're not told if it's the default.  nobarrier isn't
-> even in the man page, but it's on the wiki FAQ.  The wiki FAQ tells us that
-> barrier is the default.  I'm referring to the man page that comes with
-> Debian 5.0.  The current man page may be updated to reflect some of these
-> things, though I've not read it yet.
->
-> Sorry if I seem nit-picky.  I've spent many hours trying to hunt down some
-> of this information and it's been a frustrating process.  XFS rocks.
-> Currently, from here, the docs don't rock yet. :(
-
-Patches to fix up the docs will be gratefully accepted. :)
-Patches to change the output of /proc/mounts might take a little
-more discussion....
-
-Note that the man pages for mount are in the util-linux package, not
-anything XFS...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCBNYXkgMjcsIDIwMTAgYXQgMDk6MDE6MjlBTSArMTAwMCwgRGF2ZSBDaGlubmVyIHdy
+b3RlOgo+IE9uIFRodSwgTWF5IDI3LCAyMDEwIGF0IDAyOjE3OjMzQU0gKzEwMDAsIE5pY2sgUGln
+Z2luIHdyb3RlOgo+ID4gT24gVHVlLCBNYXkgMjUsIDIwMTAgYXQgMDY6NTM6MDRQTSArMTAwMCwg
+RGF2ZSBDaGlubmVyIHdyb3RlOgo+ID4gPiBGcm9tOiBEYXZlIENoaW5uZXIgPGRjaGlubmVyQHJl
+ZGhhdC5jb20+Cj4gPiA+IAo+ID4gPiBUaGUgaW5vZGUgdW51c2VkIGxpc3QgaXMgY3VycmVudGx5
+IGEgZ2xvYmFsIExSVS4gVGhpcyBkb2VzIG5vdCBtYXRjaAo+ID4gPiB0aGUgb3RoZXIgZ2xvYmFs
+IGZpbGVzeXN0ZW0gY2FjaGUgLSB0aGUgZGVudHJ5IGNhY2hlIC0gd2hpY2ggdXNlcwo+ID4gPiBw
+ZXItc3VwZXJibG9jayBMUlUgbGlzdHMuIEhlbmNlIHdlIGhhdmUgcmVsYXRlZCBmaWxlc3lzdGVt
+IG9iamVjdAo+ID4gPiB0eXBlcyB1c2luZyBkaWZmZXJlbnQgTFJVIHJlY2xhaW1hdGluIHNjaGVt
+ZXMuCj4gPiAKPiA+IElzIHRoaXMgYW4gaW1wcm92ZW1lbnQgSSB3b25kZXI/IFRoZSBkY2FjaGUg
+aXMgdXNpbmcgcGVyIHNiIGxpc3RzCj4gPiBiZWNhdXNlIGl0IHNwZWNpZmljYWxseSByZXF1aXJl
+cyBzYiB0cmF2ZXJzYWwuCj4gCj4gUmlnaHQgLSBJIG9yaWdpbmFsbHkgaW1wbGVtZW50ZWQgdGhl
+IHBlci1zYiBkZW50cnkgbGlzdHMgZm9yCj4gc2NhbGFiaWxpdHkgcHVycG9zZXMuIGkuZS4gdG8g
+YXZvaWQgbW9ub3BvbGlzaW5nIHRoZSBkZW50cnlfbG9jawo+IGR1cmluZyB1bm1vdW50IGxvb2tp
+bmcgZm9yIGRlbnRyaWVzIG9uIGEgc3BlY2lmaWMgc2IgYW5kIGhhbmdpbmcgdGhlCj4gc3lzdGVt
+IGZvciBzZXZlcmFsIG1pbnV0ZXMuCj4gCj4gSG93ZXZlciwgdGhlIHJlYXNvbiBmb3IgZG9pbmcg
+dGhpcyB0byB0aGUgaW5vZGUgY2FjaGUgaXMgbm90IGZvcgo+IHNjYWxhYmlsaXR5LCBpdCdzIGJl
+Y2F1c2Ugd2UgaGF2ZSBhIHRpZ2h0IHJlbGF0aW9uc2hpcCBiZXR3ZWVuIHRoZQo+IGRlbnRyeSBh
+bmQgaW5vZGUgY2FjaGXRlS4gVGhhdCBpcywgcmVjbGFpbSBmcm9tIHRoZSBkZW50cnkgTFJVIGdy
+b3dzCj4gdGhlIGlub2RlIExSVS4gIExpa2UgdGhlIHJlZ2lzdHJhdGlvbiBvZiB0aGUgc2hyaW5r
+ZXJzLCB0aGlzIGlzIGtpbmQKPiBvZiBhbiBpbXBsaWNpdCwgdW5kb2N1bWVudGVkIGJlaGF2b3Vy
+IG9mIHRoZSBjdXJyZW50IHNocmlua2VyCj4gaW1wbGVtZW5hdGlvbi4KClJpZ2h0LCB0aGF0J3Mg
+d2h5IEkgd29uZGVyIHdoZXRoZXIgaXQgaXMgYW4gaW1wcm92ZW1lbnQuIEl0IHdvdWxkCmJlIGlu
+dGVyZXN0aW5nIHRvIHNlZSBzb21lIHRlc3RzIChzaG93aW5nIGF0IGxlYXN0IHBhcml0eSkuCgog
+Cj4gV2hhdCB0aGlzIHBhdGNoIHNlcmllcyBkb2VzIGlzIHRha2UgdGhhdCBpbXBsaWNpdCByZWxh
+dGlvbnNoaXAgYW5kCj4gbWFrZSBpdCBleHBsaWNpdC4gIEl0IGFsc28gYWxsb3dzIG90aGVyIGZp
+bGVzeXN0ZW0gY2FjaGVzIHRvIHRpZQo+IGludG8gdGhlIHJlbGF0aW9uc2hpcCBpZiB0aGV5IG5l
+ZWQgdG8gKGUuZy4gdGhlIFhGUyBpbm9kZSBjYWNoZSkuCj4gV2hhdCBpdCBfZG9lc24ndCBkb18g
+aXMgY2hhbmdlIHRoZSBtYWNybyBsZXZlbCBiZWhhdmlvdXIgb2YgdGhlCj4gc2hyaW5rZXJzLi4u
+Cj4gCj4gPiBXaGF0IGFsbG9jYXRpb24vcmVjbGFpbSByZWFsbHkgd2FudHMgKGZvciBnb29kIHNj
+YWxhYmlsaXR5IGFuZCBOVU1BCj4gPiBjaGFyYWN0ZXJpc3RpY3MpIGlzIHBlci16b25lIGxpc3Rz
+IGZvciB0aGVzZSB0aGluZ3MuIEl0J3MgZWFzeSB0bwo+ID4gY29udmVydCBhIHNpbmdsZSBsaXN0
+IGludG8gcGVyLXpvbmUgbGlzdHMuCj4gPgo+ID4gSXQgaXMgbXVjaCBoYXJkZXIgdG8gY29udmVy
+dCBwZXItc2IgbGlzdHMgaW50byBwZXItc2IgeCBwZXItem9uZSBsaXN0cy4KPiAKPiBObyBpdCdz
+IG5vdC4gSnVzdCBjb252ZXJ0IHRoZSBzX3tkZW50cnksaW5vZGV9X2xydSBsaXN0cyBvbiBlYWNo
+Cj4gc3VwZXJibG9jayBhbmQgY2FsbCB0aGUgc2hyaW5rZXIgd2l0aCBhIG5ldyB6b25lIG1hc2sg
+ZmllbGQgdG8gcGljawo+IHRoZSBjb3JyZWN0IExSVS4gVGhhdCdzIG5vIGhhcmRlciB0aGFuIGNv
+bnZlcnRpbmcgYSBnbG9iYWwgTFJVLgo+IEFueXdheSwgeW91J2Qgc3RpbGwgaGF2ZSB0byBkbyBw
+ZXItc2IgeCBwZXItem9uZSBsaXN0cyBmb3IgdGhlIGRlbnRyeSBMUlVzLAo+IHNvIGNoYW5naW5n
+IHRoZSBpbm9kZSBjYWNoZSB0byBwZXItc2IgbWFrZXMgbm8gZGlmZmVyZW5jZS4KClJpZ2h0LCBp
+dCBqdXN0IG1ha2VzIGl0IGhhcmRlciB0byBkby4gQnkgbXVjaCBoYXJkZXIsIEkgZGlkIG1vc3Rs
+eSBtZWFuCnRoZSBleHRyYSBtZW1vcnkgb3ZlcmhlYWQuIElmIHRoZXJlIGlzICpubyogYmVuZWZp
+dCBmcm9tIGRvaW5nIHBlci1zYgppY2FjaGUgdGhlbiBJIHdvdWxkIHF1ZXN0aW9uIHdoZXRoZXIg
+d2Ugc2hvdWxkLgoKIAo+IEhvd2V2ZXIsIHRoaXMgaXMgYSBtb290IHBvaW50IGJlY2F1c2Ugd2Ug
+ZG9uJ3QgaGF2ZSBwZXItem9uZSBzaHJpbmtlcgo+IGludGVyZmFjZXMuIFRoYXQncyBhbiBlbnRp
+cmVseSBzZXBhcmF0ZSBkaXNjdXNzaW9uIGJlY2F1c2Ugb2YgdGhlCj4gbWFjcm8tbGV2ZWwgYmVo
+YXZpb3VyYWwgY2hhbmdlcyBpdCBpbXBsaWVzLi4uLgoKWWVwLiBJIGhhdmUgc29tZSBwYXRjaGVz
+IGZvciBpdCwgYnV0IHRoZXkncmUgY3VycmVudGx5IGJlaGluZCB0aGUgb3RoZXIKZmluZSBncmFp
+bmVkIGxvY2tpbmcgc3R1ZmYuIEJ1dCBpdCdzIHNvbWV0aGluZyB0aGF0IHJlYWxseSBuZWVkcyB0
+byBiZQppbXBsZW1lbnRlZCwgSU1PLgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29z
+cy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
