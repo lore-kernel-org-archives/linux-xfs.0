@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4RBnUCH130843 for <xfs@oss.sgi.com>; Thu, 27 May 2010 06:49:30 -0500
+	o4RCJGAU132330 for <xfs@oss.sgi.com>; Thu, 27 May 2010 07:19:17 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BE99112A0B39
-	for <xfs@oss.sgi.com>; Thu, 27 May 2010 04:53:44 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1219D37B448
+	for <xfs@oss.sgi.com>; Thu, 27 May 2010 05:21:40 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id dWEeJ0WAtvysAsGA for
-	<xfs@oss.sgi.com>; Thu, 27 May 2010 04:53:44 -0700 (PDT)
-Date: Thu, 27 May 2010 07:51:53 -0400
+	by cuda.sgi.com with ESMTP id eJEJHiF9tTKU4m6W for
+	<xfs@oss.sgi.com>; Thu, 27 May 2010 05:21:40 -0700 (PDT)
+Date: Thu, 27 May 2010 08:21:38 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: puzzling error: XenServer, LVM and XFS
-Message-ID: <20100527115153.GB13112@infradead.org>
-References: <201005270857.39048@zmi.at>
+Subject: Re: [PATCH] xfs: Re-initialise lockdep context for all inodes in
+	reclaim
+Message-ID: <20100527122138.GA14632@infradead.org>
+References: <1274925546-31468-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201005270857.39048@zmi.at>
+In-Reply-To: <1274925546-31468-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,25 +29,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, May 27, 2010 at 08:57:38AM +0200, Michael Monnerie wrote:
-> May 27 08:32:11 zdb13 kernel: [  738.046895] end_request: I/O error, dev 
-> xvdc, sector 0
+On Thu, May 27, 2010 at 11:59:06AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> This only happens after XFS is mounted from the LVM volume. On another 
-> machine where active I/O is happening, I get tons of these errors every 
-> some seconds.
+> We re-initialise the lockdep context for inode iolocks when dropping an inode,
+> but not when we delete an inode. Now that we can reclaim inodes from a shrinker,
+> we can get get false lockdep warnings about inode iolock inversions during
+> reclaim of deleted inodes. Hence we need to re-initialise the iolock in the
+> delete path as well.
 
-This looks like the Xen block device code is buggy and doesn't handle
-the I/O pattern XFS throws at it.  A sector 0 error during mount usually
-is the superblock barrier test write.  To verify that assumptions
-try mounting the XFS filesystems with -o nobarrier and see if it goes
-away.  Note that this is only for testing, and I would _not_ recommend
-it for production use.  If it makes the error go away please file
-a bug with the Xen guys to fix their barrier support by either
-implementing it properly or not advertizing it.
+clear_inode also gets called when we delete an inode, so at least
+the rationale for this isn't quite right.  It seems like we re-acquire
+new lockdep dependecies between clear_inode and destroy_inode that your
+shrinker doesn't like.  What lockdep report do you see?
 
 _______________________________________________
 xfs mailing list
