@@ -1,27 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4RBjFlK130603 for <xfs@oss.sgi.com>; Thu, 27 May 2010 06:45:15 -0500
+	o4RBnUCH130843 for <xfs@oss.sgi.com>; Thu, 27 May 2010 06:49:30 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 99F7F157B50C
-	for <xfs@oss.sgi.com>; Thu, 27 May 2010 04:49:29 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BE99112A0B39
+	for <xfs@oss.sgi.com>; Thu, 27 May 2010 04:53:44 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id GOPxVlydcJ3PiNtz for
-	<xfs@oss.sgi.com>; Thu, 27 May 2010 04:49:29 -0700 (PDT)
-Date: Thu, 27 May 2010 07:47:37 -0400
+	by cuda.sgi.com with ESMTP id dWEeJ0WAtvysAsGA for
+	<xfs@oss.sgi.com>; Thu, 27 May 2010 04:53:44 -0700 (PDT)
+Date: Thu, 27 May 2010 07:51:53 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: NOW: o_direct   --  WAS: Re: WARNING in xfs_lwr.c, xfs_write()
-Message-ID: <20100527114736.GA13112@infradead.org>
-References: <20100523002023.41f5a5c8@aaa.pulp.binarylife.net>
-	<20100523101856.GL2150@dastard>
-	<20100523092344.0fcaab42@aaa.pulp.binarylife.net>
-	<4BF9FCA8.8090906@hardwarefreak.com>
-	<20100524143428.6f3a117c@abend.internal.xtremedata.com>
-	<20100526070620.GT2150@dastard>
-	<4BFD3926.6040208@hardwarefreak.com>
+Subject: Re: puzzling error: XenServer, LVM and XFS
+Message-ID: <20100527115153.GB13112@infradead.org>
+References: <201005270857.39048@zmi.at>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4BFD3926.6040208@hardwarefreak.com>
+In-Reply-To: <201005270857.39048@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,17 +28,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>
+To: Michael Monnerie <michael.monnerie@is.it-management.at>
 Cc: xfs@oss.sgi.com
 
-O_DIRECT is not a Posix standard and not very portable.  It originated
-on IRIX, and Linux inherited it during the 2.4 kernel series days.
-These days FreeBSD/NetBSD and AIX support it as well, but for example
-Solaris, HP-UX and OpenBSD don't, nevermind Windows or Mac OS.
+On Thu, May 27, 2010 at 08:57:38AM +0200, Michael Monnerie wrote:
+> May 27 08:32:11 zdb13 kernel: [  738.046895] end_request: I/O error, dev 
+> xvdc, sector 0
+> 
+> This only happens after XFS is mounted from the LVM volume. On another 
+> machine where active I/O is happening, I get tons of these errors every 
+> some seconds.
 
-I have no idea why the MTAs don't want to use it - it's generally easier
-to use then memory mapped I/O, and has much more deterministic
-performance.
+This looks like the Xen block device code is buggy and doesn't handle
+the I/O pattern XFS throws at it.  A sector 0 error during mount usually
+is the superblock barrier test write.  To verify that assumptions
+try mounting the XFS filesystems with -o nobarrier and see if it goes
+away.  Note that this is only for testing, and I would _not_ recommend
+it for production use.  If it makes the error go away please file
+a bug with the Xen guys to fix their barrier support by either
+implementing it properly or not advertizing it.
 
 _______________________________________________
 xfs mailing list
