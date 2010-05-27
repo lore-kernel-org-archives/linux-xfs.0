@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4R45A6C107926 for <xfs@oss.sgi.com>; Wed, 26 May 2010 23:05:11 -0500
+	o4R3xpwO107690 for <xfs@oss.sgi.com>; Wed, 26 May 2010 22:59:52 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7300937A698
-	for <xfs@oss.sgi.com>; Wed, 26 May 2010 21:07:33 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	WFS2RKPsb45SmPTD for <xfs@oss.sgi.com>;
-	Wed, 26 May 2010 21:07:33 -0700 (PDT)
-Date: Thu, 27 May 2010 14:07:04 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A976E37A662
+	for <xfs@oss.sgi.com>; Wed, 26 May 2010 21:02:13 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	fjkAEYvPTyNaV4kN for <xfs@oss.sgi.com>;
+	Wed, 26 May 2010 21:02:13 -0700 (PDT)
+Date: Thu, 27 May 2010 14:02:10 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/5] superblock: introduce per-sb cache shrinker
-	infrastructure
-Message-ID: <20100527040704.GJ12087@dastard>
+Subject: Re: [PATCH 1/5] inode: Make unused inode LRU per superblock
+Message-ID: <20100527040210.GI12087@dastard>
 References: <1274777588-21494-1-git-send-email-david@fromorbit.com>
-	<1274777588-21494-4-git-send-email-david@fromorbit.com>
-	<20100526164116.GD22536@laptop> <20100526231214.GB1395@dastard>
-	<20100527021905.GG22536@laptop>
+	<1274777588-21494-2-git-send-email-david@fromorbit.com>
+	<20100526161732.GC22536@laptop> <20100526230129.GA1395@dastard>
+	<20100527020445.GF22536@laptop>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100527021905.GG22536@laptop>
+In-Reply-To: <20100527020445.GF22536@laptop>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,47 +28,82 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Nick Piggin <npiggin@suse.de>
 Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, May 27, 2010 at 12:19:05PM +1000, Nick Piggin wrote:
-> On Thu, May 27, 2010 at 09:12:14AM +1000, Dave Chinner wrote:
-> > On Thu, May 27, 2010 at 02:41:16AM +1000, Nick Piggin wrote:
-> > > > +	count = ((sb->s_nr_dentry_unused + sb->s_nr_inodes_unused) / 100)
-> > > > +						* sysctl_vfs_cache_pressure;
-> > > 
-> > > Do you think truncating in the divisions is at all a problem? It
-> > > probably doesn't matter much I suppose.
-> > 
-> > Same code as currently exists. IIRC, the reasoning is that if we've
-> > got less that 100 objects to reclaim, then we're unlikely to be able
-> > to free up any memory from the caches, anyway.
-> 
-> Yeah, which is why I stop short of saying you should change it in
-> this patch.
-> 
-> But I think we should ensure things can get reclaimed eventually.
-> 100 objects could be 100 slabs, which could be anything from
-> half a meg to half a dozen. Multiplied by each of the caches.
-> Could be significant in small systems.
-
-True, but usually there are busy objects in the dentry and inode
-slabs, so it shouldn't be a significant issue. We can probably
-address such problems if they can be demonstrated to be an issue in
-a separate patch set....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCBNYXkgMjcsIDIwMTAgYXQgMTI6MDQ6NDVQTSArMTAwMCwgTmljayBQaWdnaW4gd3Jv
+dGU6Cj4gT24gVGh1LCBNYXkgMjcsIDIwMTAgYXQgMDk6MDE6MjlBTSArMTAwMCwgRGF2ZSBDaGlu
+bmVyIHdyb3RlOgo+ID4gT24gVGh1LCBNYXkgMjcsIDIwMTAgYXQgMDI6MTc6MzNBTSArMTAwMCwg
+TmljayBQaWdnaW4gd3JvdGU6Cj4gPiA+IE9uIFR1ZSwgTWF5IDI1LCAyMDEwIGF0IDA2OjUzOjA0
+UE0gKzEwMDAsIERhdmUgQ2hpbm5lciB3cm90ZToKPiA+ID4gPiBGcm9tOiBEYXZlIENoaW5uZXIg
+PGRjaGlubmVyQHJlZGhhdC5jb20+Cj4gPiA+ID4gCj4gPiA+ID4gVGhlIGlub2RlIHVudXNlZCBs
+aXN0IGlzIGN1cnJlbnRseSBhIGdsb2JhbCBMUlUuIFRoaXMgZG9lcyBub3QgbWF0Y2gKPiA+ID4g
+PiB0aGUgb3RoZXIgZ2xvYmFsIGZpbGVzeXN0ZW0gY2FjaGUgLSB0aGUgZGVudHJ5IGNhY2hlIC0g
+d2hpY2ggdXNlcwo+ID4gPiA+IHBlci1zdXBlcmJsb2NrIExSVSBsaXN0cy4gSGVuY2Ugd2UgaGF2
+ZSByZWxhdGVkIGZpbGVzeXN0ZW0gb2JqZWN0Cj4gPiA+ID4gdHlwZXMgdXNpbmcgZGlmZmVyZW50
+IExSVSByZWNsYWltYXRpbiBzY2hlbWVzLgo+ID4gPiAKPiA+ID4gSXMgdGhpcyBhbiBpbXByb3Zl
+bWVudCBJIHdvbmRlcj8gVGhlIGRjYWNoZSBpcyB1c2luZyBwZXIgc2IgbGlzdHMKPiA+ID4gYmVj
+YXVzZSBpdCBzcGVjaWZpY2FsbHkgcmVxdWlyZXMgc2IgdHJhdmVyc2FsLgo+ID4gCj4gPiBSaWdo
+dCAtIEkgb3JpZ2luYWxseSBpbXBsZW1lbnRlZCB0aGUgcGVyLXNiIGRlbnRyeSBsaXN0cyBmb3IK
+PiA+IHNjYWxhYmlsaXR5IHB1cnBvc2VzLiBpLmUuIHRvIGF2b2lkIG1vbm9wb2xpc2luZyB0aGUg
+ZGVudHJ5X2xvY2sKPiA+IGR1cmluZyB1bm1vdW50IGxvb2tpbmcgZm9yIGRlbnRyaWVzIG9uIGEg
+c3BlY2lmaWMgc2IgYW5kIGhhbmdpbmcgdGhlCj4gPiBzeXN0ZW0gZm9yIHNldmVyYWwgbWludXRl
+cy4KPiA+IAo+ID4gSG93ZXZlciwgdGhlIHJlYXNvbiBmb3IgZG9pbmcgdGhpcyB0byB0aGUgaW5v
+ZGUgY2FjaGUgaXMgbm90IGZvcgo+ID4gc2NhbGFiaWxpdHksIGl0J3MgYmVjYXVzZSB3ZSBoYXZl
+IGEgdGlnaHQgcmVsYXRpb25zaGlwIGJldHdlZW4gdGhlCj4gPiBkZW50cnkgYW5kIGlub2RlIGNh
+Y2hl0ZUuIFRoYXQgaXMsIHJlY2xhaW0gZnJvbSB0aGUgZGVudHJ5IExSVSBncm93cwo+ID4gdGhl
+IGlub2RlIExSVS4gIExpa2UgdGhlIHJlZ2lzdHJhdGlvbiBvZiB0aGUgc2hyaW5rZXJzLCB0aGlz
+IGlzIGtpbmQKPiA+IG9mIGFuIGltcGxpY2l0LCB1bmRvY3VtZW50ZWQgYmVoYXZvdXIgb2YgdGhl
+IGN1cnJlbnQgc2hyaW5rZXIKPiA+IGltcGxlbWVuYXRpb24uCj4gCj4gUmlnaHQsIHRoYXQncyB3
+aHkgSSB3b25kZXIgd2hldGhlciBpdCBpcyBhbiBpbXByb3ZlbWVudC4gSXQgd291bGQKPiBiZSBp
+bnRlcmVzdGluZyB0byBzZWUgc29tZSB0ZXN0cyAoc2hvd2luZyBhdCBsZWFzdCBwYXJpdHkpLgoK
+SSd2ZSBkb25lIHNvbWUgdGVzdGluZyBzaG93aW5nIHBhcml0eS4gVGhleSd2ZSBiZWVuIGFsb25n
+IHRoZSBsaW5lcwpvZjoKCS0gcG9wdWxhdGUgY2FjaGUgd2l0aCAxbSBkZW50cmllcyArIGlub2Rl
+cwoJLSBydW4gJ3RpbWUgZWNobyAyID4gL3Byb2Mvc3lzL3ZtL2Ryb3BfY2FjaGVzJwoKSSd2ZSB1
+c2VkIGRpZmZlcmVudCBtZXRob2RzIG9mIHBvcHVsYXRpbmcgdGhlIGNhY2hlcyB0byBoYXZlIHRo
+ZW0Kbm9uLXNlcXVlbnRpYWwgaW4gdGhlIExSVSAoaS5lLiB0cmlnZ2VyIGZyYWdtZW50YXRpb24p
+LCBoYXZlIGRpcnR5CmJhY2tpbmcgaW5vZGVzIChlLmcuIHRoZSBWRlMgaW5vZGUgY2xlYW4sIHRo
+ZSB4ZnMgaW5vZGUgZGlydHkKYmVjYXVzZSB0cmFuc2FjdGlvbnMgaGF2ZW4ndCBjb21wbGV0ZWQp
+LCBldGMuCgpUaGUgdmFyaWF0aW9uIG9uIHRoZSB0ZXN0IGlzIGFyb3VuZCArLTEwJSwgd2l0aCB0
+aGUgcGVyLXNiIHNocmlua2VycwphdmVyYWdpbmcgYWJvdXQgNSUgbG93ZXIgdGltZSB0byByZWNs
+YWltLiBUaGlzIGlzIHdpdGhpbiB0aGUgZXJyb3IKbWFyZ2luIG9mIHRoZSB0ZXN0LCBzbyBpdCdz
+IG5vdCByZWFsbHkgYSBjb25jbHVzaXZlIHdpbiwgYnV0IGl0IGlzCmNlcnRhaW5seSBzaG93cyB0
+aGF0IGl0IGRvZXMgbm90IHNsb3cgYW55dGhpbmcgZG93bi4gSWYgeW91J3ZlIGdvdCBhCmJldHRl
+ciB3YXkgdG8gdGVzdCBpdCwgdGhlbiBJJ20gYWxsIGVhcnMuLi4uCgo+ID4gV2hhdCB0aGlzIHBh
+dGNoIHNlcmllcyBkb2VzIGlzIHRha2UgdGhhdCBpbXBsaWNpdCByZWxhdGlvbnNoaXAgYW5kCj4g
+PiBtYWtlIGl0IGV4cGxpY2l0LiAgSXQgYWxzbyBhbGxvd3Mgb3RoZXIgZmlsZXN5c3RlbSBjYWNo
+ZXMgdG8gdGllCj4gPiBpbnRvIHRoZSByZWxhdGlvbnNoaXAgaWYgdGhleSBuZWVkIHRvIChlLmcu
+IHRoZSBYRlMgaW5vZGUgY2FjaGUpLgo+ID4gV2hhdCBpdCBfZG9lc24ndCBkb18gaXMgY2hhbmdl
+IHRoZSBtYWNybyBsZXZlbCBiZWhhdmlvdXIgb2YgdGhlCj4gPiBzaHJpbmtlcnMuLi4KPiA+IAo+
+ID4gPiBXaGF0IGFsbG9jYXRpb24vcmVjbGFpbSByZWFsbHkgd2FudHMgKGZvciBnb29kIHNjYWxh
+YmlsaXR5IGFuZCBOVU1BCj4gPiA+IGNoYXJhY3RlcmlzdGljcykgaXMgcGVyLXpvbmUgbGlzdHMg
+Zm9yIHRoZXNlIHRoaW5ncy4gSXQncyBlYXN5IHRvCj4gPiA+IGNvbnZlcnQgYSBzaW5nbGUgbGlz
+dCBpbnRvIHBlci16b25lIGxpc3RzLgo+ID4gPgo+ID4gPiBJdCBpcyBtdWNoIGhhcmRlciB0byBj
+b252ZXJ0IHBlci1zYiBsaXN0cyBpbnRvIHBlci1zYiB4IHBlci16b25lIGxpc3RzLgo+ID4gCj4g
+PiBObyBpdCdzIG5vdC4gSnVzdCBjb252ZXJ0IHRoZSBzX3tkZW50cnksaW5vZGV9X2xydSBsaXN0
+cyBvbiBlYWNoCj4gPiBzdXBlcmJsb2NrIGFuZCBjYWxsIHRoZSBzaHJpbmtlciB3aXRoIGEgbmV3
+IHpvbmUgbWFzayBmaWVsZCB0byBwaWNrCj4gPiB0aGUgY29ycmVjdCBMUlUuIFRoYXQncyBubyBo
+YXJkZXIgdGhhbiBjb252ZXJ0aW5nIGEgZ2xvYmFsIExSVS4KPiA+IEFueXdheSwgeW91J2Qgc3Rp
+bGwgaGF2ZSB0byBkbyBwZXItc2IgeCBwZXItem9uZSBsaXN0cyBmb3IgdGhlIGRlbnRyeSBMUlVz
+LAo+ID4gc28gY2hhbmdpbmcgdGhlIGlub2RlIGNhY2hlIHRvIHBlci1zYiBtYWtlcyBubyBkaWZm
+ZXJlbmNlLgo+IAo+IFJpZ2h0LCBpdCBqdXN0IG1ha2VzIGl0IGhhcmRlciB0byBkby4gQnkgbXVj
+aCBoYXJkZXIsIEkgZGlkIG1vc3RseSBtZWFuCj4gdGhlIGV4dHJhIG1lbW9yeSBvdmVyaGVhZC4K
+CllvdSd2ZSBzdGlsbCBnb3QgdG8gYWxsb2NhdGUgdGhhdCBleHRyYSBtZW1vcnkgb24gdGhlIHBl
+ci1zYiBkZW50cnkKTFJVcyBzbyBpdCdzIG5vdCByZWFsbHkgYSB2YWxpZCBhcmd1bWVudC4gSU9X
+cywgaWYgaXQncyB0b28gbXVjaAptZW1vcnkgZm9yIHBlci1zYiBpbm9kZSBMUlVzLCB0aGVuIGl0
+J3MgdG9vIG11Y2ggbWVtb3J5IGZvciB0aGUKcGVyLXNiIGRlbnRyeSBMUlVzIGFzIHdlbGwuLi4K
+Cj4gSWYgdGhlcmUgaXMgKm5vKiBiZW5lZml0IGZyb20gZG9pbmcgcGVyLXNiCj4gaWNhY2hlIHRo
+ZW4gSSB3b3VsZCBxdWVzdGlvbiB3aGV0aGVyIHdlIHNob3VsZC4KClRoZSBzYW1lIHZhZ3VlIHF1
+ZXN0aW9ucyB3b25kZXJpbmcgYWJvdXQgdGhlIGJlbmVmaXQgb2YgcGVyLXNiCmRlbnRyeSBMUlVz
+IHdlcmUgcmFpc2VkIHdoZW4gSSBmaXJzdCBwcm9wb3NlZCB0aGVtIHllYXJzIGFnbywgYW5kCmxv
+b2sgd2hlcmUgd2UgYXJlIG5vdy4gIEJlc2lkZXMsIGZvY3Vzc2luZyBvbiB3aGV0aGVyIHRoaXMg
+b25lIHBhdGNoCmlzIGEgYmVuZWZpdCBvciBub3QgaXMgcmVhbGx5IG1pc3NpbmcgdGhlIHBvaW50
+IGJlY2F1c2UgaXQncyB0aGUKYmVuZWZpdHMgb2YgdGhpcyBwYXRjaHNldCBhcyBhIHdob2xlIHRo
+YXQgbmVlZCB0byBiZSBjb25zaWRlcmVkLi4uLgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hp
+bm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8v
+b3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
