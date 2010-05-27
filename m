@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4RH62nC147529 for <xfs@oss.sgi.com>; Thu, 27 May 2010 12:06:02 -0500
-Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4D4B437D45B
-	for <xfs@oss.sgi.com>; Thu, 27 May 2010 10:08:25 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id ToxQQBthPeCFFVBJ for <xfs@oss.sgi.com>;
-	Thu, 27 May 2010 10:08:25 -0700 (PDT)
-Date: Thu, 27 May 2010 19:08:11 +0200
+	o4RHX01l149667 for <xfs@oss.sgi.com>; Thu, 27 May 2010 12:33:00 -0500
+Received: from mx1.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 87982149D589
+	for <xfs@oss.sgi.com>; Thu, 27 May 2010 10:37:15 -0700 (PDT)
+Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
+	with ESMTP id 3APsRGIWP72zRfzs for <xfs@oss.sgi.com>;
+	Thu, 27 May 2010 10:37:15 -0700 (PDT)
+Date: Thu, 27 May 2010 19:35:09 +0200
 From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 3/8] Test basic quota enforcement
-Message-ID: <20100527170810.GB3576@quack.suse.cz>
-References: <1274710459-11446-1-git-send-email-jack@suse.cz>
-	<1274710459-11446-4-git-send-email-jack@suse.cz>
-	<20100525100635.GA21252@infradead.org>
-	<20100525203914.GE3783@quack.suse.cz>
-	<20100527163024.GA18771@infradead.org>
+Subject: Re: [PATCH 0/2] xfstests-dev: More stress tests
+Message-ID: <20100527173508.GD3576@quack.suse.cz>
+References: <1274977524-19741-1-git-send-email-dmonakhov@openvz.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100527163024.GA18771@infradead.org>
+In-Reply-To: <1274977524-19741-1-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,24 +28,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: Dmitry Monakhov <dmonakhov@openvz.org>
+Cc: hch@infradead.org, sandeen@redhat.com, jack@suse.cz, xfs@oss.sgi.com
 
-On Thu 27-05-10 12:30:24, Christoph Hellwig wrote:
-> On Tue, May 25, 2010 at 10:39:15PM +0200, Jan Kara wrote:
-> > On Tue 25-05-10 06:06:35, Christoph Hellwig wrote:
-> > > On Mon, May 24, 2010 at 04:14:14PM +0200, Jan Kara wrote:
-> > > > Add a test which checks whether basic quota enforcement works.
-> > > 
-> > > This one fails for me when testing and xfs filesystem on latest Linus'
-> > > tree (with Debian -testing userspace):
-> >   OK, I've committed a fixed version of the test to the repository.
+On Thu 27-05-10 20:25:22, Dmitry Monakhov wrote:
+> I've finally port my tests to common platform with respect to previous
+> comments. Pathes agains Jen's xfstest tree
 > 
-> Thanks, I've pulled your updated tree.  Btw, your kernel.org xfstests
-> tree is not a bare repo which will increase the load in the kernel.org
-> servers needlessly.
-  Thanks! I've now removed the repo and next time when I need it I will
-create a proper bare repository.
+> *Tests state*
+> I've executed it on ext4 on current ext4.git/next snapshot and
+> with http://patchwork.ozlabs.org/patch/53720/
+> 
+> 0001) Is now succeed finally.(i've found more than 5 bugs with that testcase)
+> 
+> 0002) Is failed by now:
+>       Sometimes it failed due to quota leak (dont know where yet)
+  I sometimes observe that quota accounting is wrong on ext4 in my fsstress
+test as well...
+
+>       Sometimes kernel hungs with following call trace:
+>       sys_quotactl
+>       ->do_quotactl
+>         ->vfs_quota_off
+>           ->vfs_quota_disable
+>             ->invalidate_dquots()
+>               /* Wait here for a dqput */
+>      Seems what we have dquot leakage.
+> Still digging...
+  Hmm, interesting. I don't have a clue where that could happen.
 
 								Honza
 -- 
