@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4R22SCW104069 for <xfs@oss.sgi.com>; Wed, 26 May 2010 21:02:29 -0500
-Received: from mx1.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B208F144D710
-	for <xfs@oss.sgi.com>; Wed, 26 May 2010 19:04:52 -0700 (PDT)
-Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
-	with ESMTP id zwPB8OIqXD9QiCEV for <xfs@oss.sgi.com>;
-	Wed, 26 May 2010 19:04:52 -0700 (PDT)
-Date: Thu, 27 May 2010 12:04:45 +1000
-From: Nick Piggin <npiggin@suse.de>
-Subject: Re: [PATCH 1/5] inode: Make unused inode LRU per superblock
-Message-ID: <20100527020445.GF22536@laptop>
-References: <1274777588-21494-1-git-send-email-david@fromorbit.com>
-	<1274777588-21494-2-git-send-email-david@fromorbit.com>
-	<20100526161732.GC22536@laptop> <20100526230129.GA1395@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100526230129.GA1395@dastard>
+	o4R1u27x103844 for <xfs@oss.sgi.com>; Wed, 26 May 2010 20:56:03 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 71ABE37A2B5
+	for <xfs@oss.sgi.com>; Wed, 26 May 2010 18:58:25 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	m2thSSzC91D3DwNH for <xfs@oss.sgi.com>;
+	Wed, 26 May 2010 18:58:25 -0700 (PDT)
+Received: from dastard (unverified [121.45.174.97])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	26002374-1927428
+	for <xfs@oss.sgi.com>; Thu, 27 May 2010 11:28:23 +0930 (CST)
+Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
+	(envelope-from <dave@fromorbit.com>) id 1OHSMZ-0001n9-3A
+	for xfs@oss.sgi.com; Thu, 27 May 2010 11:58:23 +1000
+Received: from dave by disturbed with local (Exim 4.71)
+	(envelope-from <dave@disturbed.disaster>) id 1OHSMQ-0008Ar-0E
+	for xfs@oss.sgi.com; Thu, 27 May 2010 11:58:14 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] xfs: fix might_sleep() warning when initialising per-ag tree
+Date: Thu, 27 May 2010 11:58:13 +1000
+Message-Id: <1274925493-31401-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,62 +31,43 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-T24gVGh1LCBNYXkgMjcsIDIwMTAgYXQgMDk6MDE6MjlBTSArMTAwMCwgRGF2ZSBDaGlubmVyIHdy
-b3RlOgo+IE9uIFRodSwgTWF5IDI3LCAyMDEwIGF0IDAyOjE3OjMzQU0gKzEwMDAsIE5pY2sgUGln
-Z2luIHdyb3RlOgo+ID4gT24gVHVlLCBNYXkgMjUsIDIwMTAgYXQgMDY6NTM6MDRQTSArMTAwMCwg
-RGF2ZSBDaGlubmVyIHdyb3RlOgo+ID4gPiBGcm9tOiBEYXZlIENoaW5uZXIgPGRjaGlubmVyQHJl
-ZGhhdC5jb20+Cj4gPiA+IAo+ID4gPiBUaGUgaW5vZGUgdW51c2VkIGxpc3QgaXMgY3VycmVudGx5
-IGEgZ2xvYmFsIExSVS4gVGhpcyBkb2VzIG5vdCBtYXRjaAo+ID4gPiB0aGUgb3RoZXIgZ2xvYmFs
-IGZpbGVzeXN0ZW0gY2FjaGUgLSB0aGUgZGVudHJ5IGNhY2hlIC0gd2hpY2ggdXNlcwo+ID4gPiBw
-ZXItc3VwZXJibG9jayBMUlUgbGlzdHMuIEhlbmNlIHdlIGhhdmUgcmVsYXRlZCBmaWxlc3lzdGVt
-IG9iamVjdAo+ID4gPiB0eXBlcyB1c2luZyBkaWZmZXJlbnQgTFJVIHJlY2xhaW1hdGluIHNjaGVt
-ZXMuCj4gPiAKPiA+IElzIHRoaXMgYW4gaW1wcm92ZW1lbnQgSSB3b25kZXI/IFRoZSBkY2FjaGUg
-aXMgdXNpbmcgcGVyIHNiIGxpc3RzCj4gPiBiZWNhdXNlIGl0IHNwZWNpZmljYWxseSByZXF1aXJl
-cyBzYiB0cmF2ZXJzYWwuCj4gCj4gUmlnaHQgLSBJIG9yaWdpbmFsbHkgaW1wbGVtZW50ZWQgdGhl
-IHBlci1zYiBkZW50cnkgbGlzdHMgZm9yCj4gc2NhbGFiaWxpdHkgcHVycG9zZXMuIGkuZS4gdG8g
-YXZvaWQgbW9ub3BvbGlzaW5nIHRoZSBkZW50cnlfbG9jawo+IGR1cmluZyB1bm1vdW50IGxvb2tp
-bmcgZm9yIGRlbnRyaWVzIG9uIGEgc3BlY2lmaWMgc2IgYW5kIGhhbmdpbmcgdGhlCj4gc3lzdGVt
-IGZvciBzZXZlcmFsIG1pbnV0ZXMuCj4gCj4gSG93ZXZlciwgdGhlIHJlYXNvbiBmb3IgZG9pbmcg
-dGhpcyB0byB0aGUgaW5vZGUgY2FjaGUgaXMgbm90IGZvcgo+IHNjYWxhYmlsaXR5LCBpdCdzIGJl
-Y2F1c2Ugd2UgaGF2ZSBhIHRpZ2h0IHJlbGF0aW9uc2hpcCBiZXR3ZWVuIHRoZQo+IGRlbnRyeSBh
-bmQgaW5vZGUgY2FjaGXRlS4gVGhhdCBpcywgcmVjbGFpbSBmcm9tIHRoZSBkZW50cnkgTFJVIGdy
-b3dzCj4gdGhlIGlub2RlIExSVS4gIExpa2UgdGhlIHJlZ2lzdHJhdGlvbiBvZiB0aGUgc2hyaW5r
-ZXJzLCB0aGlzIGlzIGtpbmQKPiBvZiBhbiBpbXBsaWNpdCwgdW5kb2N1bWVudGVkIGJlaGF2b3Vy
-IG9mIHRoZSBjdXJyZW50IHNocmlua2VyCj4gaW1wbGVtZW5hdGlvbi4KClJpZ2h0LCB0aGF0J3Mg
-d2h5IEkgd29uZGVyIHdoZXRoZXIgaXQgaXMgYW4gaW1wcm92ZW1lbnQuIEl0IHdvdWxkCmJlIGlu
-dGVyZXN0aW5nIHRvIHNlZSBzb21lIHRlc3RzIChzaG93aW5nIGF0IGxlYXN0IHBhcml0eSkuCgog
-Cj4gV2hhdCB0aGlzIHBhdGNoIHNlcmllcyBkb2VzIGlzIHRha2UgdGhhdCBpbXBsaWNpdCByZWxh
-dGlvbnNoaXAgYW5kCj4gbWFrZSBpdCBleHBsaWNpdC4gIEl0IGFsc28gYWxsb3dzIG90aGVyIGZp
-bGVzeXN0ZW0gY2FjaGVzIHRvIHRpZQo+IGludG8gdGhlIHJlbGF0aW9uc2hpcCBpZiB0aGV5IG5l
-ZWQgdG8gKGUuZy4gdGhlIFhGUyBpbm9kZSBjYWNoZSkuCj4gV2hhdCBpdCBfZG9lc24ndCBkb18g
-aXMgY2hhbmdlIHRoZSBtYWNybyBsZXZlbCBiZWhhdmlvdXIgb2YgdGhlCj4gc2hyaW5rZXJzLi4u
-Cj4gCj4gPiBXaGF0IGFsbG9jYXRpb24vcmVjbGFpbSByZWFsbHkgd2FudHMgKGZvciBnb29kIHNj
-YWxhYmlsaXR5IGFuZCBOVU1BCj4gPiBjaGFyYWN0ZXJpc3RpY3MpIGlzIHBlci16b25lIGxpc3Rz
-IGZvciB0aGVzZSB0aGluZ3MuIEl0J3MgZWFzeSB0bwo+ID4gY29udmVydCBhIHNpbmdsZSBsaXN0
-IGludG8gcGVyLXpvbmUgbGlzdHMuCj4gPgo+ID4gSXQgaXMgbXVjaCBoYXJkZXIgdG8gY29udmVy
-dCBwZXItc2IgbGlzdHMgaW50byBwZXItc2IgeCBwZXItem9uZSBsaXN0cy4KPiAKPiBObyBpdCdz
-IG5vdC4gSnVzdCBjb252ZXJ0IHRoZSBzX3tkZW50cnksaW5vZGV9X2xydSBsaXN0cyBvbiBlYWNo
-Cj4gc3VwZXJibG9jayBhbmQgY2FsbCB0aGUgc2hyaW5rZXIgd2l0aCBhIG5ldyB6b25lIG1hc2sg
-ZmllbGQgdG8gcGljawo+IHRoZSBjb3JyZWN0IExSVS4gVGhhdCdzIG5vIGhhcmRlciB0aGFuIGNv
-bnZlcnRpbmcgYSBnbG9iYWwgTFJVLgo+IEFueXdheSwgeW91J2Qgc3RpbGwgaGF2ZSB0byBkbyBw
-ZXItc2IgeCBwZXItem9uZSBsaXN0cyBmb3IgdGhlIGRlbnRyeSBMUlVzLAo+IHNvIGNoYW5naW5n
-IHRoZSBpbm9kZSBjYWNoZSB0byBwZXItc2IgbWFrZXMgbm8gZGlmZmVyZW5jZS4KClJpZ2h0LCBp
-dCBqdXN0IG1ha2VzIGl0IGhhcmRlciB0byBkby4gQnkgbXVjaCBoYXJkZXIsIEkgZGlkIG1vc3Rs
-eSBtZWFuCnRoZSBleHRyYSBtZW1vcnkgb3ZlcmhlYWQuIElmIHRoZXJlIGlzICpubyogYmVuZWZp
-dCBmcm9tIGRvaW5nIHBlci1zYgppY2FjaGUgdGhlbiBJIHdvdWxkIHF1ZXN0aW9uIHdoZXRoZXIg
-d2Ugc2hvdWxkLgoKIAo+IEhvd2V2ZXIsIHRoaXMgaXMgYSBtb290IHBvaW50IGJlY2F1c2Ugd2Ug
-ZG9uJ3QgaGF2ZSBwZXItem9uZSBzaHJpbmtlcgo+IGludGVyZmFjZXMuIFRoYXQncyBhbiBlbnRp
-cmVseSBzZXBhcmF0ZSBkaXNjdXNzaW9uIGJlY2F1c2Ugb2YgdGhlCj4gbWFjcm8tbGV2ZWwgYmVo
-YXZpb3VyYWwgY2hhbmdlcyBpdCBpbXBsaWVzLi4uLgoKWWVwLiBJIGhhdmUgc29tZSBwYXRjaGVz
-IGZvciBpdCwgYnV0IHRoZXkncmUgY3VycmVudGx5IGJlaGluZCB0aGUgb3RoZXIKZmluZSBncmFp
-bmVkIGxvY2tpbmcgc3R1ZmYuIEJ1dCBpdCdzIHNvbWV0aGluZyB0aGF0IHJlYWxseSBuZWVkcyB0
-byBiZQppbXBsZW1lbnRlZCwgSU1PLgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29z
-cy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+From: Dave Chinner <dchinner@redhat.com>
+
+The use of radix_tree_preload() only works if the radix tree was initialised
+without the __GFP_WAIT flag. The per-ag tree uses GFP_NOFS, so does not trigger
+allocation of new tree nodes from the preloaded array. Hence it enters the
+allocator with a spinlock held and triggers the might_sleep() warnings.
+
+Reported-by; Chris Mason <chris.mason@oracle.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_mount.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index ace795f..c901283 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1251,7 +1251,7 @@ xfs_mountfs(
+ 	 * Allocate and initialize the per-ag data.
+ 	 */
+ 	spin_lock_init(&mp->m_perag_lock);
+-	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_NOFS);
++	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_ATOMIC);
+ 	error = xfs_initialize_perag(mp, sbp->sb_agcount, &mp->m_maxagi);
+ 	if (error) {
+ 		cmn_err(CE_WARN, "XFS: Failed per-ag init: %d", error);
+-- 
+1.5.6.5
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
