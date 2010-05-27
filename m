@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4RHX01l149667 for <xfs@oss.sgi.com>; Thu, 27 May 2010 12:33:00 -0500
-Received: from mx1.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 87982149D589
-	for <xfs@oss.sgi.com>; Thu, 27 May 2010 10:37:15 -0700 (PDT)
-Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
-	with ESMTP id 3APsRGIWP72zRfzs for <xfs@oss.sgi.com>;
-	Thu, 27 May 2010 10:37:15 -0700 (PDT)
-Date: Thu, 27 May 2010 19:35:09 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 0/2] xfstests-dev: More stress tests
-Message-ID: <20100527173508.GD3576@quack.suse.cz>
-References: <1274977524-19741-1-git-send-email-dmonakhov@openvz.org>
+	o4RJ3BUr157214 for <xfs@oss.sgi.com>; Thu, 27 May 2010 14:03:11 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 70618A6B114
+	for <xfs@oss.sgi.com>; Thu, 27 May 2010 12:07:26 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id BFggdPHOpLPalhxm for
+	<xfs@oss.sgi.com>; Thu, 27 May 2010 12:07:26 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
+	Linux)) id 1OHiOb-0004nS-P0
+	for xfs@oss.sgi.com; Thu, 27 May 2010 19:05:33 +0000
+Date: Thu, 27 May 2010 15:05:33 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH] xfs: improve xfs_isilocked
+Message-ID: <20100527190533.GB16102@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1274977524-19741-1-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,39 +29,57 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dmitry Monakhov <dmonakhov@openvz.org>
-Cc: hch@infradead.org, sandeen@redhat.com, jack@suse.cz, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu 27-05-10 20:25:22, Dmitry Monakhov wrote:
-> I've finally port my tests to common platform with respect to previous
-> comments. Pathes agains Jen's xfstest tree
-> 
-> *Tests state*
-> I've executed it on ext4 on current ext4.git/next snapshot and
-> with http://patchwork.ozlabs.org/patch/53720/
-> 
-> 0001) Is now succeed finally.(i've found more than 5 bugs with that testcase)
-> 
-> 0002) Is failed by now:
->       Sometimes it failed due to quota leak (dont know where yet)
-  I sometimes observe that quota accounting is wrong on ext4 in my fsstress
-test as well...
+Use rwsem_is_locked to make the assertations for shared locks work.
 
->       Sometimes kernel hungs with following call trace:
->       sys_quotactl
->       ->do_quotactl
->         ->vfs_quota_off
->           ->vfs_quota_disable
->             ->invalidate_dquots()
->               /* Wait here for a dqput */
->      Seems what we have dquot leakage.
-> Still digging...
-  Hmm, interesting. I don't have a clue where that could happen.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+Index: xfs/fs/xfs/xfs_iget.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_iget.c	2010-05-25 11:40:59.216005587 +0200
++++ xfs/fs/xfs/xfs_iget.c	2010-05-27 20:59:09.244004330 +0200
+@@ -740,30 +738,24 @@ xfs_ilock_demote(
+ }
+ 
+ #ifdef DEBUG
+-/*
+- * Debug-only routine, without additional rw_semaphore APIs, we can
+- * now only answer requests regarding whether we hold the lock for write
+- * (reader state is outside our visibility, we only track writer state).
+- *
+- * Note: this means !xfs_isilocked would give false positives, so don't do that.
+- */
+ int
+ xfs_isilocked(
+ 	xfs_inode_t		*ip,
+ 	uint			lock_flags)
+ {
+-	if ((lock_flags & (XFS_ILOCK_EXCL|XFS_ILOCK_SHARED)) ==
+-			XFS_ILOCK_EXCL) {
+-		if (!ip->i_lock.mr_writer)
+-			return 0;
++	if (lock_flags & (XFS_ILOCK_EXCL|XFS_ILOCK_SHARED)) {
++		if (!(lock_flags & XFS_ILOCK_SHARED))
++			return !!ip->i_lock.mr_writer;
++		return rwsem_is_locked(&ip->i_lock.mr_lock);
+ 	}
+ 
+-	if ((lock_flags & (XFS_IOLOCK_EXCL|XFS_IOLOCK_SHARED)) ==
+-			XFS_IOLOCK_EXCL) {
+-		if (!ip->i_iolock.mr_writer)
+-			return 0;
++	if (lock_flags & (XFS_IOLOCK_EXCL|XFS_IOLOCK_SHARED)) {
++		if (!(lock_flags & XFS_IOLOCK_SHARED))
++			return !!ip->i_iolock.mr_writer;
++		return rwsem_is_locked(&ip->i_iolock.mr_lock);
+ 	}
+ 
+-	return 1;
++	ASSERT(0);
++	return 0;
+ }
+ #endif
 
 _______________________________________________
 xfs mailing list
