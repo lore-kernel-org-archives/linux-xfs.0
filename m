@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4RLUoot165693 for <xfs@oss.sgi.com>; Thu, 27 May 2010 16:30:51 -0500
+	o4RLVr6T165761 for <xfs@oss.sgi.com>; Thu, 27 May 2010 16:31:53 -0500
 Received: from smtp1.linux-foundation.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3541C10A3909
-	for <xfs@oss.sgi.com>; Thu, 27 May 2010 14:35:05 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EABEB10A3A6D
+	for <xfs@oss.sgi.com>; Thu, 27 May 2010 14:36:09 -0700 (PDT)
 Received: from smtp1.linux-foundation.org (smtp1.linux-foundation.org
 	[140.211.169.13]) by cuda.sgi.com with ESMTP id
-	Nry2Lxay0Oe7HyiH for <xfs@oss.sgi.com>;
-	Thu, 27 May 2010 14:35:05 -0700 (PDT)
-Date: Thu, 27 May 2010 14:32:33 -0700
+	0jhKraQ0Ejmy1Nzh for <xfs@oss.sgi.com>;
+	Thu, 27 May 2010 14:36:09 -0700 (PDT)
+Date: Thu, 27 May 2010 14:33:41 -0700
 From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 1/6] writeback: initial tracing support
-Message-Id: <20100527143233.836b2c47.akpm@linux-foundation.org>
-In-Reply-To: <1274784852-30502-2-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 6/6] writeback: limit write_cache_pages integrity
+	scanning to current EOF
+Message-Id: <20100527143341.d4258798.akpm@linux-foundation.org>
+In-Reply-To: <1274784852-30502-7-git-send-email-david@fromorbit.com>
 References: <1274784852-30502-1-git-send-email-david@fromorbit.com>
-	<1274784852-30502-2-git-send-email-david@fromorbit.com>
+	<1274784852-30502-7-git-send-email-david@fromorbit.com>
 Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -32,99 +33,89 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: tytso@mit.edu, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, jens.axboe@oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On Tue, 25 May 2010 20:54:07 +1000
+On Tue, 25 May 2010 20:54:12 +1000
 Dave Chinner <david@fromorbit.com> wrote:
 
-> From: From: Jens Axboe <jens.axboe@oracle.com>
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Trace queue/sched/exec parts of the writeback loop.
+> sync can currently take a really long time if a concurrent writer is
+> extending a file. The problem is that the dirty pages on the address
+> space grow in the same direction as write_cache_pages scans, so if
+> the writer keeps ahead of writeback, the writeback will not
+> terminate until the writer stops adding dirty pages.
 
-It would be most useful if this patchset's description provided sample
-tracing output, so we can see what the patch is actually providing us.
+<looks at Jens>
 
-> -#define inode_to_bdi(inode)	((inode)->i_mapping->backing_dev_info)
-> -
-> -/*
-> - * We don't actually have pdflush, but this one is exported though /proc...
-> - */
-> -int nr_pdflush_threads;
-> -
->  /*
->   * Passed into wb_writeback(), essentially a subset of writeback_control
->   */
-> @@ -63,6 +57,16 @@ struct bdi_work {
->  	unsigned long state;		/* flag bits, see WS_* */
->  };
->  
-> +#define CREATE_TRACE_POINTS
-> +#include <trace/events/writeback.h>
-> +
-> +#define inode_to_bdi(inode)	((inode)->i_mapping->backing_dev_info)
+The really was a pretty basic bug.  It's writeback 101 to test that case :(
 
-Could/should be implemented in C.
+> For a data integrity sync, we only need to write the pages dirty at
+> the time we start the writeback, so we can stop scanning once we get
+> to the page that was at the end of the file at the time the scan
+> started.
+> 
+> This will prevent operations like copying a large file preventing
+> sync from completing as it will not write back pages that were
+> dirtied after the sync was started. This does not impact the
+> existing integrity guarantees, as any dirty page (old or new)
+> within the EOF range at the start of the scan will still be
+> captured.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  mm/page-writeback.c |   15 +++++++++++++++
+>  1 files changed, 15 insertions(+), 0 deletions(-)
+> 
+> diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+> index 0fe713d..c97e973 100644
+> --- a/mm/page-writeback.c
+> +++ b/mm/page-writeback.c
+> @@ -855,7 +855,22 @@ int write_cache_pages(struct address_space *mapping,
+>  		if (wbc->range_start == 0 && wbc->range_end == LLONG_MAX)
+>  			range_whole = 1;
+>  		cycled = 1; /* ignore range_cyclic tests */
+> +
+> +		/*
+> +		 * If this is a data integrity sync, cap the writeback to the
+> +		 * current end of file. Any extension to the file that occurs
+> +		 * after this is a new write and we don't need to write those
+> +		 * pages out to fulfil our data integrity requirements. If we
+> +		 * try to write them out, we can get stuck in this scan until
+> +		 * the concurrent writer stops adding dirty pages and extending
+> +		 * EOF.
+> +		 */
+> +		if (wbc->sync_mode == WB_SYNC_ALL &&
+> +		    wbc->range_end == LLONG_MAX) {
+> +			end = i_size_read(mapping->host) >> PAGE_CACHE_SHIFT;
+> +		}
+>  	}
+> +
 
-> +/*
-> + * We don't actually have pdflush, but this one is exported though /proc...
-> + */
-> +int nr_pdflush_threads;
+This is somewhat inefficient.  It's really trivial and fast to find the
+highest-index dirty page by walking straight down the
+PAGECACHE_TAG_DIRTY-tagged nodes.
 
-So this is always zero now?
+However pagevec_lookup_tag(..., PAGECACHE_TAG_DIRTY) should do a pretty
+good job of skipping over the (millions of) pages between the (last
+dirty page before `end') and (`end').  So it _should_ be OK.  Some thought
+and runtime testing would be good.
 
-We don't want to keep it forever.  Add a
-printk_once("nr_pdflush_threads is deprecated") when someone reads it,
-remove it in 2014.
 
->
-> ...
->
-> --- /dev/null
-> +++ b/include/trace/events/writeback.h
-> @@ -0,0 +1,171 @@
-> +#undef TRACE_SYSTEM
-> +#define TRACE_SYSTEM writeback
-> +
-> +#if !defined(_TRACE_WRITEBACK_H) || defined(TRACE_HEADER_MULTI_READ)
 
-Seems wrong.  If you define TRACE_HEADER_MULTI_READ then include this
-header twice, things explode.  Which negates the purpose of
-_TRACE_WRITEBACK_H.
+That being said, I think the patch is insufficient.  If I create an
+enormous (possibly sparse) file with a 16TB hole (or a run of clean
+pages) in the middle and then start busily writing into that hole (run
+of clean pages), the problem will still occur.
 
-> +#define _TRACE_WRITEBACK_H
-> +
-> +#include <linux/backing-dev.h>
-> +#include <linux/writeback.h>
-> +
-> +TRACE_EVENT(writeback_queue,
-> +
-> +	TP_PROTO(struct backing_dev_info *bdi, struct wb_writeback_args *args),
-> +
-> +	TP_ARGS(bdi, args),
-> +
-> +	TP_STRUCT__entry(
-> +		__array(char,		name,		16)
-> +		__field(long,		nr_pages)
-> +		__field(int,		sb)
-> +		__field(int,		sync_mode)
-> +		__field(int,		for_kupdate)
-> +		__field(int,		range_cyclic)
-> +		__field(int,		for_background)
-> +	),
-> +
-> +	TP_fast_assign(
-> +		strncpy(__entry->name, dev_name(bdi->dev), 16);
-> +		__entry->nr_pages	= args->nr_pages;
-> +		__entry->sb		= !!args->sb;
-> +		__entry->for_kupdate	= args->for_kupdate;
-> +		__entry->range_cyclic	= args->range_cyclic;
-> +		__entry->for_background	= args->for_background;
-> +	),
-> +
-> +	TP_printk("%s: pages=%ld, sb=%d, kupdate=%d, range_cyclic=%d "
-> +		  "for_background=%d", __entry->name, __entry->nr_pages,
-> +			__entry->sb, __entry->for_kupdate,
-> +			__entry->range_cyclic, __entry->for_background)
-> +);
-> +
+One obvious fix for that (a) would be to add another radix-tree tag and
+do two passes across the radix-tree.
+
+Another fix (b) would be to track the number of dirty pages per
+adddress_space, and only write that number of pages.
+
+Another fix would be to work out how the code handled this situation
+before we broke it, and restore that in some fashion.  I guess fix (b)
+above kinda does that.
+
 
 _______________________________________________
 xfs mailing list
