@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4RKUIIq162287 for <xfs@oss.sgi.com>; Thu, 27 May 2010 15:30:18 -0500
+	o4RKUIPP162286 for <xfs@oss.sgi.com>; Thu, 27 May 2010 15:30:18 -0500
 Received: from smtp1.linux-foundation.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 686CA37E115
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 221701D52AD1
 	for <xfs@oss.sgi.com>; Thu, 27 May 2010 13:32:41 -0700 (PDT)
 Received: from smtp1.linux-foundation.org (smtp1.linux-foundation.org
 	[140.211.169.13]) by cuda.sgi.com with ESMTP id
-	aovAkAtEce8ukktD for <xfs@oss.sgi.com>;
+	1VwGXdb3Q8Rr0jed for <xfs@oss.sgi.com>;
 	Thu, 27 May 2010 13:32:41 -0700 (PDT)
-Date: Thu, 27 May 2010 13:32:30 -0700
+Date: Thu, 27 May 2010 13:32:34 -0700
 From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 1/5] inode: Make unused inode LRU per superblock
-Message-Id: <20100527133230.780be6c7.akpm@linux-foundation.org>
-In-Reply-To: <1274777588-21494-2-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 3/5] superblock: introduce per-sb cache shrinker
+	infrastructure
+Message-Id: <20100527133234.e0814239.akpm@linux-foundation.org>
+In-Reply-To: <1274777588-21494-4-git-send-email-david@fromorbit.com>
 References: <1274777588-21494-1-git-send-email-david@fromorbit.com>
-	<1274777588-21494-2-git-send-email-david@fromorbit.com>
+	<1274777588-21494-4-git-send-email-david@fromorbit.com>
 Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -32,53 +33,52 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, 25 May 2010 18:53:04 +1000
+On Tue, 25 May 2010 18:53:06 +1000
 Dave Chinner <david@fromorbit.com> wrote:
 
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> The inode unused list is currently a global LRU. This does not match
-> the other global filesystem cache - the dentry cache - which uses
-> per-superblock LRU lists. Hence we have related filesystem object
-> types using different LRU reclaimatin schemes.
+> With context based shrinkers, we can implement a per-superblock
+> shrinker that shrinks the caches attached to the superblock. We
+> currently have global shrinkers for the inode and dentry caches that
+> split up into per-superblock operations via a coarse proportioning
+> method that does not batch very well.  The global shrinkers also
+> have a dependency - dentries pin inodes - so we have to be very
+> careful about how we register the global shrinkers so that the
+> implicit call order is always correct.
 > 
-> To enable a per-superblock filesystem cache shrinker, both of these
-> caches need to have per-sb unused object LRU lists. Hence this patch
-> converts the global inode LRU to per-sb LRUs.
+> With a per-sb shrinker callout, we can encode this dependency
+> directly into the per-sb shrinker, hence avoiding the need for
+> strictly ordering shrinker registrations. We also have no need for
+> any proportioning code for the shrinker subsystem already provides
+> this functionality across all shrinkers. Allowing the shrinker to
+> operate on a single superblock at a time means that we do less
+> superblock list traversals and locking and reclaim should batch more
+> effectively. This should result in less CPU overhead for reclaim and
+> potentially faster reclaim of items from each filesystem.
 > 
-> The patch only does rudimentary per-sb propotioning in the shrinker
-> infrastructure, as this gets removed when the per-sb shrinker
-> callouts are introduced later on.
+
+I go all tingly when a changelog contains the word "should".
+
+OK, it _should_ do X.  But _does_ it actually do X?
+
+>  fs/super.c         |   53 +++++++++++++++++++++
+>  include/linux/fs.h |    7 +++
+>  4 files changed, 88 insertions(+), 214 deletions(-)
 > 
-> ...
->
-> +			list_move(&inode->i_list, &inode->i_sb->s_inode_lru);
+> diff --git a/fs/dcache.c b/fs/dcache.c
+> index dba6b6d..d7bd781 100644
+> --- a/fs/dcache.c
+> +++ b/fs/dcache.c
+> @@ -456,21 +456,16 @@ static void prune_one_dentry(struct dentry * dentry)
+>   * which flags are set. This means we don't need to maintain multiple
+>   * similar copies of this loop.
+>   */
+> -static void __shrink_dcache_sb(struct super_block *sb, int *count, int flags)
+> +static void __shrink_dcache_sb(struct super_block *sb, int count, int flags)
 
-It's a shape that s_inode_lru is still protected by inode_lock.  One
-day we're going to get in trouble over that lock.  Migrating to a
-per-sb lock would be logical and might help.
+Forgot to update the kerneldoc description of `count'.
 
-Did you look into this?  I expect we'd end up taking both inode_lock
-and the new sb->lru_lock in several places, which wouldn't be of any
-help, at least in the interim.  Long-term, the locking for
-fs-writeback.c should move to the per-superblock one also, at which
-time this problem largely goes away I think.  Unfortunately the
-writeback inode lists got moved into the backing_dev_info, whcih messes
-things up a bit.
-
->  	inodes_stat.nr_unused--;
-> +	inode->i_sb->s_nr_inodes_unused--;
-
-It's regrettable to be counting the same thing twice.  Did you look
-into removing (or no longer using) inodes_stat.nr_unused?
-
-
-> +		/* Now, we reclaim unused dentrins with fairness.
-
-May as well fix the typo while we're there.
-
-Please review all these comments to ensure that they are still accurate
-and complete.
 
 _______________________________________________
 xfs mailing list
