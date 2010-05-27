@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4RMcFmD169176 for <xfs@oss.sgi.com>; Thu, 27 May 2010 17:38:15 -0500
+	o4RMpw3N170121 for <xfs@oss.sgi.com>; Thu, 27 May 2010 17:51:58 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 225751D531A3
-	for <xfs@oss.sgi.com>; Thu, 27 May 2010 15:40:38 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	YFHuQwfBC4TLCg3I for <xfs@oss.sgi.com>;
-	Thu, 27 May 2010 15:40:38 -0700 (PDT)
-Date: Fri, 28 May 2010 08:40:34 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5AC9037EA9B
+	for <xfs@oss.sgi.com>; Thu, 27 May 2010 15:54:20 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	ef22rgIQT9gdi62q for <xfs@oss.sgi.com>;
+	Thu, 27 May 2010 15:54:20 -0700 (PDT)
+Date: Fri, 28 May 2010 08:54:18 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/5] superblock: introduce per-sb cache shrinker
-	infrastructure
-Message-ID: <20100527224034.GO12087@dastard>
+Subject: Re: [PATCH 1/5] inode: Make unused inode LRU per superblock
+Message-ID: <20100527225418.GP12087@dastard>
 References: <1274777588-21494-1-git-send-email-david@fromorbit.com>
-	<1274777588-21494-4-git-send-email-david@fromorbit.com>
-	<20100527063523.GJ22536@laptop>
+	<1274777588-21494-2-git-send-email-david@fromorbit.com>
+	<20100527133230.780be6c7.akpm@linux-foundation.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100527063523.GJ22536@laptop>
+In-Reply-To: <20100527133230.780be6c7.akpm@linux-foundation.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,107 +27,89 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Nick Piggin <npiggin@suse.de>
+To: Andrew Morton <akpm@linux-foundation.org>
 Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-T24gVGh1LCBNYXkgMjcsIDIwMTAgYXQgMDQ6MzU6MjNQTSArMTAwMCwgTmljayBQaWdnaW4gd3Jv
-dGU6Cj4gT24gVHVlLCBNYXkgMjUsIDIwMTAgYXQgMDY6NTM6MDZQTSArMTAwMCwgRGF2ZSBDaGlu
-bmVyIHdyb3RlOgo+ID4gLS0tIGEvZnMvc3VwZXIuYwo+ID4gKysrIGIvZnMvc3VwZXIuYwo+ID4g
-QEAgLTM3LDYgKzM3LDUwIEBACj4gPiAgTElTVF9IRUFEKHN1cGVyX2Jsb2Nrcyk7Cj4gPiAgREVG
-SU5FX1NQSU5MT0NLKHNiX2xvY2spOwo+ID4gIAo+ID4gK3N0YXRpYyBpbnQgcHJ1bmVfc3VwZXIo
-c3RydWN0IHNocmlua2VyICpzaHJpbmssIGludCBucl90b19zY2FuLCBnZnBfdCBnZnBfbWFzaykK
-PiA+ICt7Cj4gPiArCXN0cnVjdCBzdXBlcl9ibG9jayAqc2I7Cj4gPiArCWludCBjb3VudDsKPiA+
-ICsKPiA+ICsJc2IgPSBjb250YWluZXJfb2Yoc2hyaW5rLCBzdHJ1Y3Qgc3VwZXJfYmxvY2ssIHNf
-c2hyaW5rKTsKPiA+ICsKPiA+ICsJLyoKPiA+ICsJICogRGVhZGxvY2sgYXZvaWRhbmNlLiAgV2Ug
-bWF5IGhvbGQgdmFyaW91cyBGUyBsb2NrcywgYW5kIHdlIGRvbid0IHdhbnQKPiA+ICsJICogdG8g
-cmVjdXJzZSBpbnRvIHRoZSBGUyB0aGF0IGNhbGxlZCB1cyBpbiBjbGVhcl9pbm9kZSgpIGFuZCBm
-cmllbmRzLi4KPiA+ICsJICovCj4gPiArCWlmICghKGdmcF9tYXNrICYgX19HRlBfRlMpKQo+ID4g
-KwkJcmV0dXJuIC0xOwo+ID4gKwo+ID4gKwkvKgo+ID4gKwkgKiBpZiB3ZSBjYW4ndCBnZXQgdGhl
-IHVtb3VudCBsb2NrLCB0aGVuIHRoZXJlJ3Mgbm8gcG9pbnQgaGF2aW5nIHRoZQo+ID4gKwkgKiBz
-aHJpbmtlciB0cnkgYWdhaW4gYmVjYXVzZSB0aGUgc2IgaXMgYmVpbmcgdG9ybiBkb3duLgo+ID4g
-KwkgKi8KPiA+ICsJaWYgKCFkb3duX3JlYWRfdHJ5bG9jaygmc2ItPnNfdW1vdW50KSkKPiA+ICsJ
-CXJldHVybiAtMTsKPiA+ICsKPiA+ICsJaWYgKCFzYi0+c19yb290KSB7Cj4gPiArCQl1cF9yZWFk
-KCZzYi0+c191bW91bnQpOwo+ID4gKwkJcmV0dXJuIC0xOwo+ID4gKwl9Cj4gPiArCj4gPiArCWlm
-IChucl90b19zY2FuKSB7Cj4gPiArCQkvKiBwcm9wb3J0aW9uIHRoZSBzY2FuIGJldHdlZW4gdGhl
-IHR3byBjYWNoZdGVICovCj4gPiArCQlpbnQgdG90YWw7Cj4gPiArCj4gPiArCQl0b3RhbCA9IHNi
-LT5zX25yX2RlbnRyeV91bnVzZWQgKyBzYi0+c19ucl9pbm9kZXNfdW51c2VkICsgMTsKPiA+ICsJ
-CWNvdW50ID0gKG5yX3RvX3NjYW4gKiBzYi0+c19ucl9kZW50cnlfdW51c2VkKSAvIHRvdGFsOwo+
-ID4gKwo+ID4gKwkJLyogcHJ1bmUgZGNhY2hlIGZpcnN0IGFzIGljYWNoZSBpcyBwaW5uZWQgYnkg
-aXQgKi8KPiA+ICsJCXBydW5lX2RjYWNoZV9zYihzYiwgY291bnQpOwo+ID4gKwkJcHJ1bmVfaWNh
-Y2hlX3NiKHNiLCBucl90b19zY2FuIC0gY291bnQpOwo+IAo+IEhtbSwgYW4gaW50ZXJlc3Rpbmcg
-ZHluYW1pYyB0aGF0IHlvdSd2ZSBjaGFuZ2VkIGlzIHRoYXQgcHJldmlvdXNseQo+IHdlJ2Qgc2Nh
-biBkY2FjaGUgTFJVIHByb3BvcnRpb25hdGVseSB0byBwYWdlY2FjaGUsIGFuZCB0aGVuIHNjYW4K
-PiBpbm9kZSBMUlUgaW4gcHJvcG9ydGlvbiB0byB0aGUgY3VycmVudCBudW1iZXIgb2YgdW51c2Vk
-IGlub2Rlcy4KPiAKPiBCdXQgd2UgY2FuIHRoaW5rIG9mIGlub2RlcyB0aGF0IGFyZSBvbmx5IGlu
-IHVzZSBieSB1bnVzZWQgKGFuZCBhZ2VkKQo+IGRlbnRyaWVzIGFzIGVmZmVjdGl2ZWx5IHVudXNl
-ZCB0aGVtc2VsdmVzLiBTbyB0aGlzIHNlcXVlbmNlIHVuZGVyCj4gZXN0aW1hdGVzIGhvdyBtYW55
-IGlub2RlcyB0byBzY2FuLiBUaGlzIGNvdWxkIGJpYXMgcHJlc3N1cmUgYWdhaW5zdAo+IGRjYWNo
-ZSBJJ2QgdGhpbmssIGVzcGVjaWFsbHkgY29uc2lkZXJpbmcgaW5vZGVzIGFyZSBmYXIgbGFyZ2Vy
-IHRoYW4KPiBkZW50cmllcy4gTWF5YmUgcmVxdWlyZSAyIHBhc3NlcyB0byBnZXQgdGhlIGlub2Rl
-cyB1bnVzZWQgaW50aGUKPiBmaXJzdCBwYXNzLgoKSXQncyBzZWxmLWJhbGFuY2luZyAtIGl0IHRy
-ZW5kcyB0b3dhcmRzIGFuIGVxdWFsIG51bWJlciBvZiB1bnVzZWQKZGVudHJpZXMgYW5kIGlub2Rl
-cyBpbiB0aGUgY2FjaGVzLiBZZXMsIGl0IHdpbGwgdGVhciBkb3duIG1vcmUKZGVudHJpZXMgYXQg
-Zmlyc3QsIGJ1dCB3ZSBuZWVkIHRvIGRvIHRoYXQgdG8gYmUgYWJsZSB0byByZWNsYWltCmlub2Rl
-cy4g4oSrcyByZWNsYWltIHByb2dyZXNzZXMgdGhlIHByb3BvdGlvbiBvZiBpbm9kZXMgaW5jcmVh
-c2VzLCBzbwp0aGUgYW1vdW50IG9mIGlub2RlcyByZWNsYWltZWQgaW5jcmVhc2VzLiAKCkJhc2lj
-YWxseSB0aGlzIGlzIGEgcmVjb2duaXRpb24gdGhhdCB0aGUgaW1wb3J0YW50IGNhY2hlIGZvcgph
-dm9pZGluZyBJTyBpcyB0aGUgaW5vZGUgY2FjaGUsIG5vdCBoZSBkZW50cnkgY2FjaGUuIE9uY2Ug
-dGhlIGlub2RlCmNhY2hlIGlzIGZyZWVkIHRoYXQgd2UgbmVlZCB0byBkbyBJTyB0byByZXBvcHVs
-YXRlIGl0LCBidXQKcmVidWlsZGluZyBkZW50cmllcyBmcm9tdGVoIGlub2RlIGNhY2hlIG9ubHkg
-Y29zdHMgQ1BVIHRpbWUuIEhlbmNlCnVuZGVyIGxpZ2h0IHJlY2xhaW0sIGlub2RlcyBhcmUgbW9z
-dGx5IGxlZnQgaW4gY2FjaGUgYnV0IHdlIGZyZWUgdXAKbWVtb3J5IHRoYXQgb25seSBjb3N0cyBD
-UFUgdG8gcmVidWlsZC4gVW5kZXIgaGVhdnksIHN1c3RhaW5lZApyZWNsYWltLCB3ZSB0cmVuZCB0
-b3dhcmRzIGZyZWVpbmcgZXF1YWwgYW1vdW50cyBvZiBvYmplY3RzIGZyb20gYm90aApjYWNoZXMu
-CgpUaGlzIGlzIHByZXR0eSBtdWNoIHdoYXQgdGhlIGN1cnJlbnQgY29kZSBhdHRlbXB0cyB0byBk
-byAtIGZyZWUgYQpsb3Qgb2YgZGVudHJpZXMsIHRoZW4gZnJlZSBhIHNtYWxsZXIgYW1vdW50IG9m
-IHRoZSBpbm9kZXMgdGhhdCB3ZXJlCnVzZWQgYnkgdGhlIGZyZWVkIGRlbnRyaWVzLiBPbmNlIGFn
-YWluIGl0IGlzIGEgZGlyZWN0IGVuY29kaW5nIG9mCndoYXQgaXMgY3VycmVudGx5IGFuIGltcGxp
-Y2l0IGRlc2lnbiBmZWF0dXJlIC0gaXQgbWFrZXMgaXQgKm9idmlvdXMqCmhvdyB3ZSBhcmUgdHJ5
-aW5nIHRvIGJhbGFuY2UgdGhlIGNhY2hlcy4KCkFub3RoZXIgcmVhc29uIGZvciB0aGlzIGlzIHRo
-YXQgdGhlIGNhbGN1bGF0aW9uIGNoYW5nZXMgYWdhaW4gdG8KYWxsb3cgZmlsZXN5c3RlbSBjYWNo
-ZXMgdG8gbW9kaXkgdGhpcyBwcm9wb3J0aW9uaW5nIGluIHRoZSBuZXh0CnBhdGNoLi4uLgoKRldJ
-VywgdGhpcyBhbHNvIG1ha2VzIHdvcmtsb2FkcyB0aGF0IGdlbmVyYXRlIGh1bmRyZWRzIG9mIHRo
-b3VzYW5kcwpvZiBuZXZlci10by1iZS11c2VkIGFnYWluIG5lZ2F0aXZlIGRlbnRyaWVzIGZyZWUg
-ZGNhY2hlIG1lbW9yeSByZWFsbHkKcXVpY2tseSBvbiBtZW1vcnkgcHJlc3N1cmUuLi4KCj4gUGFy
-dCBvZiB0aGUgcHJvYmxlbSBpcyB0aGUgZnVubnkgc2hyaW5rZXIgQVBJLgo+IAo+IFRoZSByaWdo
-dCB3YXkgdG8gZG8gaXQgaXMgdG8gY2hhbmdlIHRoZSBzaHJpbmtlciBBUEkgc28gdGhhdCBpdCBw
-YXNzZXMKPiBkb3duIHRoZSBscnVfcGFnZXMgYW5kIHNjYW5uZWQgaW50byB0aGUgY2FsbGJhY2su
-IEZyb20gdGhlcmUsIHRoZQo+IHNocmlua2VycyBjYW4gY2FsY3VsYXRlIHRoZSBhcHByb3ByaWF0
-ZSByYXRpbyBvZiBvYmplY3RzIHRvIHNjYW4uCj4gTm8gbmVlZCBmb3IgMi1jYWxsIHNjaGVtZSwg
-bm8gbmVlZCBmb3Igc2hyaW5rZXItPnNlZWtzLCBhbmQgdGhlCj4gYWJpbGl0eSB0byBjYWxjdWxh
-dGUgYW4gYXBwcm9wcmlhdGUgcmF0aW8gZmlyc3QgZm9yIGRjYWNoZSwgYW5kICp0aGVuKgo+IGZv
-ciBpY2FjaGUuCgpNeSBvbmx5IGNvbmNlcm4gYWJvdXQgdGhpcyBpcyB0aGF0IGV4cG9zZXMgdGhl
-IGlubmVyIHdvcmtpbmdzIG9mIHRoZQpzaHJpbmtlciBhbmQgbW0gc3Vic3lzdGVtIHRvIGNvZGUg
-dGhhdCBzaW1wbHkgZG9lc24ndCBuZWVkIHRvIGtub3cKYWJvdXQgaXQuCgoKPiBBIGhlbHBlciBv
-ZiBjb3Vyc2UgY2FuIGRvIHRoZSBjYWxjdWxhdGlvbiAoY29uc2lkZXJpbmcgdGhhdCBldmVyeQo+
-IGRyaXZlciBhbmQgdGhlaXIgZG9nIHdpbGwgZG8gdGhlIHdyb25nIHRoaW5nIGlmIHdlIGxldCB0
-aGVtIDopKS4KPiAKPiB1bnNpZ25lZCBsb25nIHNocmlua2VyX3NjYW4odW5zaWduZWQgbG9uZyBs
-cnVfcGFnZXMsCj4gCQkJdW5zaWduZWQgbG9uZyBscnVfc2Nhbm5lZCwKPiAJCQl1bnNpZ25lZCBs
-b25nIG5yX29iamVjdHMsCj4gCQkJdW5zaWduZWQgbG9uZyBzY2FuX3JhdGlvKQo+IHsKPiAJdW5z
-aWduZWQgbG9uZyBsb25nIHRtcCA9IG5yX29iamVjdHM7Cj4gCj4gCXRtcCAqPSBscnVfc2Nhbm5l
-ZCAqIDEwMDsKPiAJZG9fZGl2KHRtcCwgKGxydV9wYWdlcyAqIHNjYW5fcmF0aW8pICsgMSk7Cj4g
-Cj4gCXJldHVybiAodW5zaWduZWQgbG9uZyl0bXA7Cj4gfQo+IAo+IFRoZW4gdGhlIHNocmlua2Vy
-IGNhbGxiYWNrIHdpbGwgZ286Cj4gCXNiLT5zX25yX2RlbnRyeV9zY2FuICs9IHNocmlua2VyX3Nj
-YW4obHJ1X3BhZ2VzLCBscnVfc2Nhbm5lZCwKPiAJCQkJc2ItPnNfbnJfZGVudHJ5X3VudXNlZCwK
-PiAJCQkJdmZzX2NhY2hlX3ByZXNzdXJlICogU0VFS1NfUEVSX0RFTlRSWSk7Cj4gCWlmIChzYi0+
-c19ucl9kZW50cnlfc2NhbiA+IFNIUklOS19CQVRDSCkKPiAJCXBydW5lX2RjYWNoZSgpCj4gCj4g
-CXNiLT5zX25yX2lub2RlX3NjYW4gKz0gc2hyaW5rZXJfc2NhbihscnVfcGFnZXMsIGxydV9zY2Fu
-bmVkLAo+IAkJCQlzYi0+c19ucl9pbm9kZXNfdW51c2VkLAo+IAkJCQl2ZnNfY2FjaGVfcHJlc3N1
-cmUgKiBTRUVLU19QRVJfSU5PREUpOwo+IAkuLi4KPiAKPiBXaGF0IGRvIHlvdSB0aGluayBvZiB0
-aGF0PyBTZWVpbmcgYXMgd2UncmUgY2hhbmdpbmcgdGhlIHNocmlua2VyIEFQSQo+IGFueXdheSwg
-SSdkIHRoaW5rIGl0IGlzIGhpZ2ggdGltZSB0byBkbyBzb210aGluZyBsaWtlIHRoaXMuCgpJZ25v
-cmluZyB0aGUgZGNhY2hlL2ljYWNoZSByZWNsYWltIHJhdGlvIGlzc3VlcywgSSdkIHByZWZlciBh
-IHR3bwpjYWxsIEFQSSB0aGF0IG1hdGNoZXMgdGhlIGN1cnJlbnQgYmVoYXZpb3VyLCBsZWF2aW5n
-IHRoZSBjYWNsdWxhdGlvbgpvZiBob3cgbXVjaCB0byByZWNsYWltIGluIHNocmlua19zbGFiKCku
-IEVuY29kaW5nIGl0IHRoaXMgd2F5IG1ha2VzCml0IG1vcmUgZGlmZmljdWx0IHRvIGNoYW5nZSB0
-aGUgaGlnaCBsZXZlbCBiZWhhdmlvdXIgZS5nLiBpZiB3ZSB3YW50CnRvIG1vZGlmeSB0aGUgYW1v
-dW50IG9mIHNsYWIgcmVjbGFpbSBiYXNlZCBvbiByZWNsYWltIHByaW9yaXR5LCB3ZSdkCmhhdmUg
-dG8gY2FobmdlIGV2ZXJ5IHNocmlua2VyIGluc3RlYWQgb2YganVzdCBzaHJpbmtfc2xhYigpLgoK
-Q2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBs
-aXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94
-ZnMK
+On Thu, May 27, 2010 at 01:32:30PM -0700, Andrew Morton wrote:
+> On Tue, 25 May 2010 18:53:04 +1000
+> Dave Chinner <david@fromorbit.com> wrote:
+> 
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > The inode unused list is currently a global LRU. This does not match
+> > the other global filesystem cache - the dentry cache - which uses
+> > per-superblock LRU lists. Hence we have related filesystem object
+> > types using different LRU reclaimatin schemes.
+> > 
+> > To enable a per-superblock filesystem cache shrinker, both of these
+> > caches need to have per-sb unused object LRU lists. Hence this patch
+> > converts the global inode LRU to per-sb LRUs.
+> > 
+> > The patch only does rudimentary per-sb propotioning in the shrinker
+> > infrastructure, as this gets removed when the per-sb shrinker
+> > callouts are introduced later on.
+> > 
+> > ...
+> >
+> > +			list_move(&inode->i_list, &inode->i_sb->s_inode_lru);
+> 
+> It's a shape that s_inode_lru is still protected by inode_lock.  One
+> day we're going to get in trouble over that lock.  Migrating to a
+> per-sb lock would be logical and might help.
+> 
+> Did you look into this? 
+
+Yes, I have. Yes, it's possible.  It's solving a different problem,
+so I figured it can be done in a different patch set.
+
+> I expect we'd end up taking both inode_lock
+> and the new sb->lru_lock in several places, which wouldn't be of any
+> help, at least in the interim.  Long-term, the locking for
+> fs-writeback.c should move to the per-superblock one also, at which
+> time this problem largely goes away I think.  Unfortunately the
+> writeback inode lists got moved into the backing_dev_info, whcih messes
+> things up a bit.
+
+*nod*
+
+> 
+> >  	inodes_stat.nr_unused--;
+> > +	inode->i_sb->s_nr_inodes_unused--;
+> 
+> It's regrettable to be counting the same thing twice.  Did you look
+> into removing (or no longer using) inodes_stat.nr_unused?
+
+Sort of. The complexity is the stats are userspace visible, so they
+can't just be removed. Replacing the current stats means that when
+they are read from /proc we would need to walk all the superblocks
+to aggregate them. The bit I haven't looked at yet is whether
+walking superblocks is allowed in a proc handler.
+
+So in the mean time, I just copied what was done for the
+dentry_stats. If it's ok to do this walk, then we can change both
+the dentry and inode stats at the same time.
+
+> > +		/* Now, we reclaim unused dentrins with fairness.
+> 
+> May as well fix the typo while we're there.
+> 
+> Please review all these comments to ensure that they are still accurate
+> and complete.
+
+Will do.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
