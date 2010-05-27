@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4R3xEiN107644 for <xfs@oss.sgi.com>; Wed, 26 May 2010 22:59:14 -0500
-Received: from ZenIV.linux.org.uk (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AF8DCA64418
-	for <xfs@oss.sgi.com>; Wed, 26 May 2010 21:03:19 -0700 (PDT)
-Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
-	cuda.sgi.com with ESMTP id VODZP0LyytwGeMtV for
-	<xfs@oss.sgi.com>; Wed, 26 May 2010 21:03:19 -0700 (PDT)
-Date: Thu, 27 May 2010 05:01:20 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: [PATCH 3/5 v2] superblock: introduce per-sb cache shrinker
-	infrastructure
-Message-ID: <20100527040120.GX31073@ZenIV.linux.org.uk>
+	o4R4LGKb108677 for <xfs@oss.sgi.com>; Wed, 26 May 2010 23:21:16 -0500
+Received: from mx2.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C987837A6E1
+	for <xfs@oss.sgi.com>; Wed, 26 May 2010 21:23:37 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id SMykjBYMTbLse2MC for <xfs@oss.sgi.com>;
+	Wed, 26 May 2010 21:23:37 -0700 (PDT)
+Date: Thu, 27 May 2010 14:23:32 +1000
+From: Nick Piggin <npiggin@suse.de>
+Subject: Re: [PATCH 1/5] inode: Make unused inode LRU per superblock
+Message-ID: <20100527042332.GH22536@laptop>
 References: <1274777588-21494-1-git-send-email-david@fromorbit.com>
-	<1274777588-21494-4-git-send-email-david@fromorbit.com>
-	<20100526164116.GD22536@laptop> <20100526231214.GB1395@dastard>
-	<20100527015335.GD1395@dastard>
+	<1274777588-21494-2-git-send-email-david@fromorbit.com>
+	<20100526161732.GC22536@laptop> <20100526230129.GA1395@dastard>
+	<20100527020445.GF22536@laptop> <20100527040210.GI12087@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100527015335.GD1395@dastard>
+In-Reply-To: <20100527040210.GI12087@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,56 +27,81 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Nick Piggin <npiggin@suse.de>, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, May 27, 2010 at 11:53:35AM +1000, Dave Chinner wrote:
-> On Thu, May 27, 2010 at 09:12:14AM +1000, Dave Chinner wrote:
-> > On Thu, May 27, 2010 at 02:41:16AM +1000, Nick Piggin wrote:
-> ....
-> > > Nitpick but I prefer just the restart label wher it is previously. This
-> > > is moving setup for the next iteration into the "error" case.
-> > 
-> > Ok, will fix.
-> ....
-> > > Would you just elaborate on the lock order problem somewhere? (the
-> > > comment makes it look like we *could* take the mutex if we wanted
-> > > to).
-> > 
-> > The shrinker is unregistered in deactivate_locked_super() which is
-> > just before ->kill_sb is called. The sb->s_umount lock is held at
-> > this point. hence is the shrinker is operating, we will deadlock if
-> > we try to lock it like this:
-> > 
-> > 	unmount:			shrinker:
-> > 					down_read(&shrinker_lock);
-> > 	down_write(&sb->s_umount)
-> > 	unregister_shrinker()
-> > 	down_write(&shrinker_lock)
-> > 					prune_super()
-> > 					  down_read(&sb->s_umount);
-> > 					  (deadlock)
-> > 
-> > hence if we can't get the sb->s_umount lock in prune_super(), then
-> > the superblock must be being unmounted and the shrinker should abort
-> > as the ->kill_sb method will clean up everything after the shrinker
-> > is unregistered. Hence the down_read_trylock().
-
-Um...  Maybe I'm dumb, but what's wrong with doing unregistration from
-deactivate_locked_super(), right after the call of ->kill_sb()?  At that
-point ->s_umount is already dropped, so we won't deadlock at all.
-Shrinker rwsem will make sure that all shrinkers-in-progress will run
-to completion, so we won't get a superblock freed under prune_super().
-I don't particulary mind down_try_read() in prune_super(), but why not
-make life obviously safer?
-
-Am I missing something here?
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCBNYXkgMjcsIDIwMTAgYXQgMDI6MDI6MTBQTSArMTAwMCwgRGF2ZSBDaGlubmVyIHdy
+b3RlOgo+IE9uIFRodSwgTWF5IDI3LCAyMDEwIGF0IDEyOjA0OjQ1UE0gKzEwMDAsIE5pY2sgUGln
+Z2luIHdyb3RlOgo+ID4gT24gVGh1LCBNYXkgMjcsIDIwMTAgYXQgMDk6MDE6MjlBTSArMTAwMCwg
+RGF2ZSBDaGlubmVyIHdyb3RlOgo+ID4gPiBPbiBUaHUsIE1heSAyNywgMjAxMCBhdCAwMjoxNzoz
+M0FNICsxMDAwLCBOaWNrIFBpZ2dpbiB3cm90ZToKPiA+ID4gPiBPbiBUdWUsIE1heSAyNSwgMjAx
+MCBhdCAwNjo1MzowNFBNICsxMDAwLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4gPiA+ID4gPiBGcm9t
+OiBEYXZlIENoaW5uZXIgPGRjaGlubmVyQHJlZGhhdC5jb20+Cj4gPiA+ID4gPiAKPiA+ID4gPiA+
+IFRoZSBpbm9kZSB1bnVzZWQgbGlzdCBpcyBjdXJyZW50bHkgYSBnbG9iYWwgTFJVLiBUaGlzIGRv
+ZXMgbm90IG1hdGNoCj4gPiA+ID4gPiB0aGUgb3RoZXIgZ2xvYmFsIGZpbGVzeXN0ZW0gY2FjaGUg
+LSB0aGUgZGVudHJ5IGNhY2hlIC0gd2hpY2ggdXNlcwo+ID4gPiA+ID4gcGVyLXN1cGVyYmxvY2sg
+TFJVIGxpc3RzLiBIZW5jZSB3ZSBoYXZlIHJlbGF0ZWQgZmlsZXN5c3RlbSBvYmplY3QKPiA+ID4g
+PiA+IHR5cGVzIHVzaW5nIGRpZmZlcmVudCBMUlUgcmVjbGFpbWF0aW4gc2NoZW1lcy4KPiA+ID4g
+PiAKPiA+ID4gPiBJcyB0aGlzIGFuIGltcHJvdmVtZW50IEkgd29uZGVyPyBUaGUgZGNhY2hlIGlz
+IHVzaW5nIHBlciBzYiBsaXN0cwo+ID4gPiA+IGJlY2F1c2UgaXQgc3BlY2lmaWNhbGx5IHJlcXVp
+cmVzIHNiIHRyYXZlcnNhbC4KPiA+ID4gCj4gPiA+IFJpZ2h0IC0gSSBvcmlnaW5hbGx5IGltcGxl
+bWVudGVkIHRoZSBwZXItc2IgZGVudHJ5IGxpc3RzIGZvcgo+ID4gPiBzY2FsYWJpbGl0eSBwdXJw
+b3Nlcy4gaS5lLiB0byBhdm9pZCBtb25vcG9saXNpbmcgdGhlIGRlbnRyeV9sb2NrCj4gPiA+IGR1
+cmluZyB1bm1vdW50IGxvb2tpbmcgZm9yIGRlbnRyaWVzIG9uIGEgc3BlY2lmaWMgc2IgYW5kIGhh
+bmdpbmcgdGhlCj4gPiA+IHN5c3RlbSBmb3Igc2V2ZXJhbCBtaW51dGVzLgo+ID4gPiAKPiA+ID4g
+SG93ZXZlciwgdGhlIHJlYXNvbiBmb3IgZG9pbmcgdGhpcyB0byB0aGUgaW5vZGUgY2FjaGUgaXMg
+bm90IGZvcgo+ID4gPiBzY2FsYWJpbGl0eSwgaXQncyBiZWNhdXNlIHdlIGhhdmUgYSB0aWdodCBy
+ZWxhdGlvbnNoaXAgYmV0d2VlbiB0aGUKPiA+ID4gZGVudHJ5IGFuZCBpbm9kZSBjYWNoZdGVLiBU
+aGF0IGlzLCByZWNsYWltIGZyb20gdGhlIGRlbnRyeSBMUlUgZ3Jvd3MKPiA+ID4gdGhlIGlub2Rl
+IExSVS4gIExpa2UgdGhlIHJlZ2lzdHJhdGlvbiBvZiB0aGUgc2hyaW5rZXJzLCB0aGlzIGlzIGtp
+bmQKPiA+ID4gb2YgYW4gaW1wbGljaXQsIHVuZG9jdW1lbnRlZCBiZWhhdm91ciBvZiB0aGUgY3Vy
+cmVudCBzaHJpbmtlcgo+ID4gPiBpbXBsZW1lbmF0aW9uLgo+ID4gCj4gPiBSaWdodCwgdGhhdCdz
+IHdoeSBJIHdvbmRlciB3aGV0aGVyIGl0IGlzIGFuIGltcHJvdmVtZW50LiBJdCB3b3VsZAo+ID4g
+YmUgaW50ZXJlc3RpbmcgdG8gc2VlIHNvbWUgdGVzdHMgKHNob3dpbmcgYXQgbGVhc3QgcGFyaXR5
+KS4KPiAKPiBJJ3ZlIGRvbmUgc29tZSB0ZXN0aW5nIHNob3dpbmcgcGFyaXR5LiBUaGV5J3ZlIGJl
+ZW4gYWxvbmcgdGhlIGxpbmVzCj4gb2Y6Cj4gCS0gcG9wdWxhdGUgY2FjaGUgd2l0aCAxbSBkZW50
+cmllcyArIGlub2Rlcwo+IAktIHJ1biAndGltZSBlY2hvIDIgPiAvcHJvYy9zeXMvdm0vZHJvcF9j
+YWNoZXMnCj4gCj4gSSd2ZSB1c2VkIGRpZmZlcmVudCBtZXRob2RzIG9mIHBvcHVsYXRpbmcgdGhl
+IGNhY2hlcyB0byBoYXZlIHRoZW0KPiBub24tc2VxdWVudGlhbCBpbiB0aGUgTFJVIChpLmUuIHRy
+aWdnZXIgZnJhZ21lbnRhdGlvbiksIGhhdmUgZGlydHkKPiBiYWNraW5nIGlub2RlcyAoZS5nLiB0
+aGUgVkZTIGlub2RlIGNsZWFuLCB0aGUgeGZzIGlub2RlIGRpcnR5Cj4gYmVjYXVzZSB0cmFuc2Fj
+dGlvbnMgaGF2ZW4ndCBjb21wbGV0ZWQpLCBldGMuCj4gCj4gVGhlIHZhcmlhdGlvbiBvbiB0aGUg
+dGVzdCBpcyBhcm91bmQgKy0xMCUsIHdpdGggdGhlIHBlci1zYiBzaHJpbmtlcnMKPiBhdmVyYWdp
+bmcgYWJvdXQgNSUgbG93ZXIgdGltZSB0byByZWNsYWltLiBUaGlzIGlzIHdpdGhpbiB0aGUgZXJy
+b3IKPiBtYXJnaW4gb2YgdGhlIHRlc3QsIHNvIGl0J3Mgbm90IHJlYWxseSBhIGNvbmNsdXNpdmUg
+d2luLCBidXQgaXQgaXMKPiBjZXJ0YWlubHkgc2hvd3MgdGhhdCBpdCBkb2VzIG5vdCBzbG93IGFu
+eXRoaW5nIGRvd24uIElmIHlvdSd2ZSBnb3QgYQo+IGJldHRlciB3YXkgdG8gdGVzdCBpdCwgdGhl
+biBJJ20gYWxsIGVhcnMuLi4uCgpJIGd1ZXNzIHRoZSBwcm9ibGVtIGlzIHRoYXQgaW5vZGUgTFJV
+IGNhY2hlIGlzbid0IHZlcnkgdXNlZnVsIGFzCmxvbmcgYXMgdGhlcmUgYXJlIGRlbnRyaWVzIGlu
+IHRoZSB3YXkgKHdoaWNoIGlzIG1vc3Qgb2YgdGhlIHRpbWUsCmlzbid0IGl0PykuIEkgdGhpbmsg
+bmZzZCB3aWxsIGV4ZXJjaXNlIHRoZW0gYmV0dGVyPyBEb250IGtub3cgb2YKYW55IG90aGVyIGNh
+c2VzLgoKCj4gPiBSaWdodCwgaXQganVzdCBtYWtlcyBpdCBoYXJkZXIgdG8gZG8uIEJ5IG11Y2gg
+aGFyZGVyLCBJIGRpZCBtb3N0bHkgbWVhbgo+ID4gdGhlIGV4dHJhIG1lbW9yeSBvdmVyaGVhZC4K
+PiAKPiBZb3UndmUgc3RpbGwgZ290IHRvIGFsbG9jYXRlIHRoYXQgZXh0cmEgbWVtb3J5IG9uIHRo
+ZSBwZXItc2IgZGVudHJ5Cj4gTFJVcyBzbyBpdCdzIG5vdCByZWFsbHkgYSB2YWxpZCBhcmd1bWVu
+dC4KCldlbGwgaXQgd291bGQgYmUgcGVyLXpvbmUsIHBlci1zYiBsaXN0LCBidXQgSSBkb24ndCB0
+aGluayB0aGF0Cm1ha2VzIGl0IGFuIGl2YWxpZCBwb2ludC4KCgo+IElPV3MsIGlmIGl0J3MgdG9v
+IG11Y2gKPiBtZW1vcnkgZm9yIHBlci1zYiBpbm9kZSBMUlVzLCB0aGVuIGl0J3MgdG9vIG11Y2gg
+bWVtb3J5IGZvciB0aGUKPiBwZXItc2IgZGVudHJ5IExSVXMgYXMgd2VsbC4uLgoKTm90IGFib3V0
+IGhvdyBtdWNoIGlzIHRvbyBtdWNoLCBpdCdzIGFib3V0IG1vcmUgY29zdCBvciBtZW1vcnkKdXNh
+Z2UgZm9yIHdoYXQgYmVuZWZpdD8gSSBndWVzcyBpdCBpc24ndCBhIGxvdCBtb3JlIG1lbW9yeSB0
+aG91Z2guCgogCj4gPiBJZiB0aGVyZSBpcyAqbm8qIGJlbmVmaXQgZnJvbSBkb2luZyBwZXItc2IK
+PiA+IGljYWNoZSB0aGVuIEkgd291bGQgcXVlc3Rpb24gd2hldGhlciB3ZSBzaG91bGQuCj4gCj4g
+VGhlIHNhbWUgdmFndWUgcXVlc3Rpb25zIHdvbmRlcmluZyBhYm91dCB0aGUgYmVuZWZpdCBvZiBw
+ZXItc2IKPiBkZW50cnkgTFJVcyB3ZXJlIHJhaXNlZCB3aGVuIEkgZmlyc3QgcHJvcG9zZWQgdGhl
+bSB5ZWFycyBhZ28sIGFuZAo+IGxvb2sgd2hlcmUgd2UgYXJlIG5vdy4KClRvIGJlIGZhaXIgdGhh
+dCBpcyBiZWNhdXNlIHRoZXJlIHdlcmUgc3BlY2lmaWMgbmVlZHMgdG8gZG8gcGVyLXNiCnBydW5p
+bmcuIFRoaXMgaXNuJ3QgdGhlIGNhc2Ugd2l0aCBpY2FjaGUuCgoKPiAgQmVzaWRlcywgZm9jdXNz
+aW5nIG9uIHdoZXRoZXIgdGhpcyBvbmUgcGF0Y2gKPiBpcyBhIGJlbmVmaXQgb3Igbm90IGlzIHJl
+YWxseSBtaXNzaW5nIHRoZSBwb2ludCBiZWNhdXNlIGl0J3MgdGhlCj4gYmVuZWZpdHMgb2YgdGhp
+cyBwYXRjaHNldCBhcyBhIHdob2xlIHRoYXQgbmVlZCB0byBiZSBjb25zaWRlcmVkLi4uLgoKSSB3
+b3VsZCBpbmRlZWQgbGlrZSB0byBmb2N1cyBvbiB0aGUgYmVuZWZpdHMgb2YgdGhlIHBhdGNoc2V0
+IGFzIGEKd2hvbGUuIExlYXZpbmcgYXNpZGUgdGhlIHhmcyBjaGFuZ2VzLCBpdCB3b3VsZCBiZSBp
+bnRlcmVzdGluZyB0bwpoYXZlIGF0IGxlYXN0IGEgZmV3IG51bWJlcnMgZm9yIGRjYWNoZS9pY2Fj
+aGUgaGVhdnkgd29ya2xvYWRzLgoKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Mu
+c2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
