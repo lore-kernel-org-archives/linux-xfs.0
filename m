@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4RGN9vT145110 for <xfs@oss.sgi.com>; Thu, 27 May 2010 11:23:10 -0500
+	o4RGN8va145098 for <xfs@oss.sgi.com>; Thu, 27 May 2010 11:23:08 -0500
 Received: from mail-bw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6DD4913D6F06
-	for <xfs@oss.sgi.com>; Thu, 27 May 2010 09:25:32 -0700 (PDT)
-Received: from mail-bw0-f53.google.com (mail-bw0-f53.google.com
-	[209.85.214.53]) by cuda.sgi.com with ESMTP id tJ5uzKD1OX2J7Tll
-	for <xfs@oss.sgi.com>; Thu, 27 May 2010 09:25:32 -0700 (PDT)
-Received: by bwz20 with SMTP id 20so11042bwz.26
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 47A6C37C97D
 	for <xfs@oss.sgi.com>; Thu, 27 May 2010 09:25:31 -0700 (PDT)
+Received: from mail-bw0-f53.google.com (mail-bw0-f53.google.com
+	[209.85.214.53]) by cuda.sgi.com with ESMTP id PyyCVphd3Vqv8OPK
+	for <xfs@oss.sgi.com>; Thu, 27 May 2010 09:25:31 -0700 (PDT)
+Received: by bwz20 with SMTP id 20so11040bwz.26
+	for <xfs@oss.sgi.com>; Thu, 27 May 2010 09:25:30 -0700 (PDT)
 From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: [PATCH 2/2] xfstests-dev: Add one more quota stress test
-Date: Thu, 27 May 2010 20:25:24 +0400
-Message-Id: <1274977524-19741-3-git-send-email-dmonakhov@openvz.org>
-In-Reply-To: <1274977524-19741-2-git-send-email-dmonakhov@openvz.org>
+Subject: [PATCH 1/2] xfstests-dev: add one more stress test
+Date: Thu, 27 May 2010 20:25:23 +0400
+Message-Id: <1274977524-19741-2-git-send-email-dmonakhov@openvz.org>
+In-Reply-To: <1274977524-19741-1-git-send-email-dmonakhov@openvz.org>
 References: <1274977524-19741-1-git-send-email-dmonakhov@openvz.org>
-	<1274977524-19741-2-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,30 +32,42 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: jack@suse.cz
 Cc: hch@infradead.org, sandeen@redhat.com, Dmitry Monakhov <dmonakhov@openvz.org>, xfs@oss.sgi.com
 
-Test is inherent from 236 and runs with quota enabled.
-Later when we will fixup quota code to pe reliable for errors
-(ENOSPC/ENOMEM) we may merge the test with 236.
+During stress testing we want to cover most of code paths.
+fsstress is very good for this purpose. But it has expandable
+nature (disk usage almost continually grow). So once we
+goes it no ENOSPC condition we will be where till the end.
+
+But by running 'dd' in parallel we can regularly trigger
+ENOSPC but only for a limited periods of time.
+
+This is my favorite stress test case configuration
+https://bugzilla.kernel.org/show_bug.cgi?id=15742
+https://bugzilla.kernel.org/show_bug.cgi?id=15792
+https://bugzilla.kernel.org/show_bug.cgi?id=15827
 
 Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
 ---
- 237     |  138 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 237.out |    8 ++++
- group   |    3 +-
- 3 files changed, 148 insertions(+), 1 deletions(-)
- create mode 100755 237
- create mode 100644 237.out
+ 236     |  103 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 236.out |    5 +++
+ group   |    1 +
+ 3 files changed, 109 insertions(+), 0 deletions(-)
+ create mode 100755 236
+ create mode 100644 236.out
 
-diff --git a/237 b/237
+diff --git a/236 b/236
 new file mode 100755
-index 0000000..053c7ad
+index 0000000..9e8e34a
 --- /dev/null
-+++ b/237
-@@ -0,0 +1,138 @@
++++ b/236
+@@ -0,0 +1,103 @@
 +#! /bin/bash
-+# FS QA Test No. 237
++# FS QA Test No. 236
 +#
-+# Perform agressive stress testing with quota enabled
-+# Derived from 236.
++# Perform fsstress test with parallel dd
++# This proven to be a good stress test
++# * Continuous dd retult in ENOSPC condition but only for a limited periods
++#   of time.
++# * Fsstress test cover many code paths
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2010 Dmitry Monakhov.  All Rights Reserved.
@@ -85,40 +96,10 @@ index 0000000..053c7ad
 +tmp=/tmp/$$
 +status=1	# failure is the default!
 +
-+
-+filter_scratch()
++_cleanup()
 +{
-+	perl -ne "
-+s,$SCRATCH_MNT,[SCR_MNT],;
-+s,$SCRATCH_DEV,[SCR_DEV],;
-+	print;"
++    rm -f $tmp.*
 +}
-+check_usage()
-+{
-+	quotaon -f -u -g $SCRATCH_MNT 2>/dev/null
-+	repquota -u -g -n $SCRATCH_MNT  | grep -v "^#0" | filter_scratch |
-+		sort >$tmp.orig
-+	quotacheck -u -g $SCRATCH_MNT 2>/dev/null
-+	repquota -u -g -n $SCRATCH_MNT  | grep -v "^#0" | filter_scratch |
-+		sort >$tmp.checked
-+	quotaon -u -g $SCRATCH_MNT 2>/dev/null
-+	diff $tmp.orig $tmp.checked
-+}
-+
-+
-+tmp=/tmp/$$
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+. ./common.quota
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux #IRIX
-+_require_scratch
-+_require_quota
-+_need_to_be_root
 +
 +workout()
 +{
@@ -142,17 +123,29 @@ index 0000000..053c7ad
 +	dd if=/dev/zero of=$SCRATCH_MNT/BIG_FILE bs=1M conv=fsync 2> /dev/null
 +    done
 +
-+    # Kill parent fsstress task to prevent complain from bash 
++    # Kill parent fsstress task to prevent complain from bash
 +    kill $pid 2>/dev/null
 +    wait $pid 2>/dev/null
++
 +    # Kill actual stress workers
 +    for ((i = 0; i < $kill_tries; i++))
 +    do
 +	killall -r -q -TERM fsstress 2> /dev/null
++	sleep 1
 +    done
 +    unlink $SCRATCH_MNT/BIG_FILE    
 +}
 +
++trap "_cleanup ; exit \$status" 0 1 2 3 15
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++_require_scratch
 +
 +rm -f $seq.full
 +
@@ -162,60 +155,34 @@ index 0000000..053c7ad
 +echo ""                                     >>$seq.full
 +SIZE=`expr 128 \* 1024 \* 1024`
 +_scratch_mkfs_sized $SIZE      > /dev/null 2>&1 || _fail "mkfs failed"
-+_scratch_mount "-o usrquota,grpquota"
-+quotacheck -u -g $SCRATCH_MNT 2>/dev/null
-+
-+# Currently quota is not able to handle errors from quota internals
-+# so quota goes inconsistent after any error. To workaround this let's
-+# allocate space for quota files to protect quota from ENOSPC
-+# TODO: Remove this logic after quota becomes enospc tolerant -dmon@
-+mv $SCRATCH_MNT/aquota.user{,.tmp}
-+mv $SCRATCH_MNT/aquota.group{,.tmp}
-+dd if=/dev/zero of=$SCRATCH_MNT/aquota.user bs=1M count=10 2>/dev/null
-+dd if=/dev/zero of=$SCRATCH_MNT/aquota.group bs=1M count=10 2>/dev/null
-+dd if=$SCRATCH_MNT/aquota.user.tmp of=$SCRATCH_MNT/aquota.user conv=notrunc \
-+    2>/dev/null 
-+dd if=$SCRATCH_MNT/aquota.group.tmp of=$SCRATCH_MNT/aquota.group conv=notrunc \
-+    2>/dev/null
-+rm -rf $SCRATCH_MNT/aquota.*.tmp
-+
-+quotaon $SCRATCH_MNT 2>/dev/null
++_scratch_mount >> $seq.full 2>&1 || _fail "mount failed"
 +workout
-+if ! check_usage; then
-+	umount $SCRATCH_DEV 2>/dev/null
-+	status=1
-+	exit
-+fi
++umount $SCRATCH_MNT
++echo 
 +echo Checking filesystem
 +_check_scratch_fs
 +status=$?
 +exit
-diff --git a/237.out b/237.out
+diff --git a/236.out b/236.out
 new file mode 100644
-index 0000000..4cd7f0f
+index 0000000..03ffccd
 --- /dev/null
-+++ b/237.out
-@@ -0,0 +1,8 @@
-+QA output created by 237
++++ b/236.out
+@@ -0,0 +1,5 @@
++QA output created by 236
 +Running fsstress.
 +Running ENOSPC hitters.
-+Setting grace times and other flags to default values.
-+Assuming number of blocks is 10240.
-+Setting grace times and other flags to default values.
-+Assuming number of blocks is 10240.
++
 +Checking filesystem
 diff --git a/group b/group
-index 6402020..389b3ff 100644
+index cc76175..6402020 100644
 --- a/group
 +++ b/group
-@@ -349,4 +349,5 @@ deprecated
+@@ -349,3 +349,4 @@ deprecated
  233 auto quota
  234 auto quota
  235 auto quota quick
--236 auto
-\ No newline at end of file
 +236 auto
-+237 auto quota
 \ No newline at end of file
 -- 
 1.6.6
