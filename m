@@ -1,24 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4RGS0nO145410 for <xfs@oss.sgi.com>; Thu, 27 May 2010 11:28:00 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C499214542D5
-	for <xfs@oss.sgi.com>; Thu, 27 May 2010 09:30:24 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id l5iIbko8wYHUSGwm for
-	<xfs@oss.sgi.com>; Thu, 27 May 2010 09:30:24 -0700 (PDT)
-Date: Thu, 27 May 2010 12:30:24 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/8] Test basic quota enforcement
-Message-ID: <20100527163024.GA18771@infradead.org>
-References: <1274710459-11446-1-git-send-email-jack@suse.cz>
-	<1274710459-11446-4-git-send-email-jack@suse.cz>
-	<20100525100635.GA21252@infradead.org>
-	<20100525203914.GE3783@quack.suse.cz>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100525203914.GE3783@quack.suse.cz>
+	o4RGN79L145092 for <xfs@oss.sgi.com>; Thu, 27 May 2010 11:23:07 -0500
+Received: from mail-fx0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9D6A9A68AF1
+	for <xfs@oss.sgi.com>; Thu, 27 May 2010 09:27:21 -0700 (PDT)
+Received: from mail-fx0-f53.google.com (mail-fx0-f53.google.com
+	[209.85.161.53]) by cuda.sgi.com with ESMTP id IG4auCOMy8uLVv7U
+	for <xfs@oss.sgi.com>; Thu, 27 May 2010 09:27:21 -0700 (PDT)
+Received: by fxm14 with SMTP id 14so143216fxm.26
+	for <xfs@oss.sgi.com>; Thu, 27 May 2010 09:25:29 -0700 (PDT)
+From: Dmitry Monakhov <dmonakhov@openvz.org>
+Subject: [PATCH 0/2] xfstests-dev: More stress tests
+Date: Thu, 27 May 2010 20:25:22 +0400
+Message-Id: <1274977524-19741-1-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,25 +22,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: xfs@oss.sgi.com
+To: jack@suse.cz
+Cc: hch@infradead.org, sandeen@redhat.com, Dmitry Monakhov <dmonakhov@openvz.org>, xfs@oss.sgi.com
 
-On Tue, May 25, 2010 at 10:39:15PM +0200, Jan Kara wrote:
-> On Tue 25-05-10 06:06:35, Christoph Hellwig wrote:
-> > On Mon, May 24, 2010 at 04:14:14PM +0200, Jan Kara wrote:
-> > > Add a test which checks whether basic quota enforcement works.
-> > 
-> > This one fails for me when testing and xfs filesystem on latest Linus'
-> > tree (with Debian -testing userspace):
->   OK, I've committed a fixed version of the test to the repository.
+I've finally port my tests to common platform with respect to previous
+comments. Pathes agains Jen's xfstest tree
 
-Thanks, I've pulled your updated tree.  Btw, your kernel.org xfstests
-tree is not a bare repo which will increase the load in the kernel.org
-servers needlessly.
+*Tests state*
+I've executed it on ext4 on current ext4.git/next snapshot and
+with http://patchwork.ozlabs.org/patch/53720/
+
+0001) Is now succeed finally.(i've found more than 5 bugs with that testcase)
+
+0002) Is failed by now:
+      Sometimes it failed due to quota leak (dont know where yet)
+      Sometimes kernel hungs with following call trace:
+      sys_quotactl
+      ->do_quotactl
+        ->vfs_quota_off
+          ->vfs_quota_disable
+            ->invalidate_dquots()
+              /* Wait here for a dqput */
+     Seems what we have dquot leakage.
+Still digging...
 
 _______________________________________________
 xfs mailing list
