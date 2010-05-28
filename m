@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4RMwiea170810 for <xfs@oss.sgi.com>; Thu, 27 May 2010 17:58:45 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D16111D52F4E
-	for <xfs@oss.sgi.com>; Thu, 27 May 2010 16:01:07 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
-	[150.101.137.103]) by cuda.sgi.com with ESMTP id
-	E4xT4KfWn5eMltqo for <xfs@oss.sgi.com>;
-	Thu, 27 May 2010 16:01:07 -0700 (PDT)
-Date: Fri, 28 May 2010 09:01:04 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/5] superblock: introduce per-sb cache shrinker
-	infrastructure
-Message-ID: <20100527230104.GQ12087@dastard>
-References: <1274777588-21494-1-git-send-email-david@fromorbit.com>
-	<1274777588-21494-4-git-send-email-david@fromorbit.com>
-	<20100527133234.e0814239.akpm@linux-foundation.org>
+	o4S0c9Zx179715 for <xfs@oss.sgi.com>; Thu, 27 May 2010 19:38:09 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B16E6149D8CE
+	for <xfs@oss.sgi.com>; Thu, 27 May 2010 17:42:26 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id 2VT5ijtKjilsUBfC
+	for <xfs@oss.sgi.com>; Thu, 27 May 2010 17:42:26 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id 8339F6C24C
+	for <xfs@oss.sgi.com>; Thu, 27 May 2010 19:40:32 -0500 (CDT)
+Message-ID: <4BFF118F.3090508@hardwarefreak.com>
+Date: Thu, 27 May 2010 19:42:55 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100527133234.e0814239.akpm@linux-foundation.org>
+Subject: Re: NOW: o_direct   --  WAS: Re: WARNING in xfs_lwr.c, xfs_write()
+References: <20100523002023.41f5a5c8@aaa.pulp.binarylife.net>	<20100523101856.GL2150@dastard>	<20100523092344.0fcaab42@aaa.pulp.binarylife.net>	<4BF9FCA8.8090906@hardwarefreak.com>	<20100524143428.6f3a117c@abend.internal.xtremedata.com>	<20100526070620.GT2150@dastard>	<4BFD3926.6040208@hardwarefreak.com>
+	<87mxvlbfu6.fsf@willster.local.flamingspork.com>
+In-Reply-To: <87mxvlbfu6.fsf@willster.local.flamingspork.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,75 +31,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, May 27, 2010 at 01:32:34PM -0700, Andrew Morton wrote:
-> On Tue, 25 May 2010 18:53:06 +1000
-> Dave Chinner <david@fromorbit.com> wrote:
-> 
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > With context based shrinkers, we can implement a per-superblock
-> > shrinker that shrinks the caches attached to the superblock. We
-> > currently have global shrinkers for the inode and dentry caches that
-> > split up into per-superblock operations via a coarse proportioning
-> > method that does not batch very well.  The global shrinkers also
-> > have a dependency - dentries pin inodes - so we have to be very
-> > careful about how we register the global shrinkers so that the
-> > implicit call order is always correct.
-> > 
-> > With a per-sb shrinker callout, we can encode this dependency
-> > directly into the per-sb shrinker, hence avoiding the need for
-> > strictly ordering shrinker registrations. We also have no need for
-> > any proportioning code for the shrinker subsystem already provides
-> > this functionality across all shrinkers. Allowing the shrinker to
-> > operate on a single superblock at a time means that we do less
-> > superblock list traversals and locking and reclaim should batch more
-> > effectively. This should result in less CPU overhead for reclaim and
-> > potentially faster reclaim of items from each filesystem.
-> > 
-> 
-> I go all tingly when a changelog contains the word "should".
-> 
-> OK, it _should_ do X.  But _does_ it actually do X?
+Stewart Smith put forth on 5/27/2010 9:05 AM:
 
-As i said to Nick - the tests I ran showed an average improvement of
-5% but the accuracy of the benchmark was +/-10%. Hence it's hard to
-draw any conclusive results from that. It appears to be slightly
-faster on an otherwise idle system, but...
+> Also, email smtpd delivering a message on a machine, you could quite
+> likely have imapd come along and read that soon after, so using the
+> cache makes sense.
 
-As it is, the XFS shrinker that gets integrated into this structure
-in a later patch peaks at a higher rate - 150k inodes/s vs 90k
-inodes/s with the current shrinker - but still it's hard to quantify
-qualitatively. I'm going to run more benchmarks to try to get better
-numbers.
+Ah, that's a good point.  I've been using Postfix and Dovecot Local Delivery
+Agent long enough that I'd forgotten about those folks who have their MTA drop
+mail into /var/mail/%u etc which is then picked up by their imapd.  Dovecot
+LDA receives from Postfix via pipe, so mail doesn't actually hit the disk
+until Dovecot decides where it goes, via sieve scripts, for example.
 
-> >  fs/super.c         |   53 +++++++++++++++++++++
-> >  include/linux/fs.h |    7 +++
-> >  4 files changed, 88 insertions(+), 214 deletions(-)
-> > 
-> > diff --git a/fs/dcache.c b/fs/dcache.c
-> > index dba6b6d..d7bd781 100644
-> > --- a/fs/dcache.c
-> > +++ b/fs/dcache.c
-> > @@ -456,21 +456,16 @@ static void prune_one_dentry(struct dentry * dentry)
-> >   * which flags are set. This means we don't need to maintain multiple
-> >   * similar copies of this loop.
-> >   */
-> > -static void __shrink_dcache_sb(struct super_block *sb, int *count, int flags)
-> > +static void __shrink_dcache_sb(struct super_block *sb, int count, int flags)
-> 
-> Forgot to update the kerneldoc description of `count'.
-
-Will fix.
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Stan
 
 _______________________________________________
 xfs mailing list
