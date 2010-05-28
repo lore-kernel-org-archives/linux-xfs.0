@@ -1,13 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4SIOO2P235711 for <xfs@oss.sgi.com>; Fri, 28 May 2010 13:24:24 -0500
+	o4SIl8eK236729 for <xfs@oss.sgi.com>; Fri, 28 May 2010 13:47:09 -0500
 Subject: Re: [PATCH] xfs: fix access to upper inodes without inode64
 From: Alex Elder <aelder@sgi.com>
 In-Reply-To: <20100527190515.GA16102@infradead.org>
 References: <20100527190515.GA16102@infradead.org>
-Date: Fri, 28 May 2010 13:19:19 -0500
-Message-ID: <1275070759.2302.14.camel@doink>
+Date: Fri, 28 May 2010 13:49:00 -0500
+Message-ID: <1275072540.2302.21.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,71 +34,38 @@ On Thu, 2010-05-27 at 15:05 -0400, Christoph Hellwig wrote:
 > tree for all allocation groups, and also cleans xfs_initialize_perag up
 > a bit to separate the inode32 logical from the general perag structure
 > setup.
-
-This looks generally good, but I have a comment below that
-is not a bug now but could become one.
-
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 
-> Index: xfs/fs/xfs/xfs_mount.c
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+One other thing:
+
+> Index: xfs/fs/xfs/xfs_inode.c
 > ===================================================================
-> --- xfs.orig/fs/xfs/xfs_mount.c	2010-05-27 20:59:09.191004330 +0200
-> +++ xfs/fs/xfs/xfs_mount.c	2010-05-27 20:59:43.290004329 +0200
-
-. . .
-
-> @@ -497,30 +489,30 @@ xfs_initialize_perag(
->  		} else {
->  			max_metadata = agcount;
->  		}
-> +
->  		for (index = 0; index < agcount; index++) {
->  			ino = XFS_AGINO_TO_INO(mp, index, agino);
-> -			if (ino > max_inum) {
-> +			if (ino > XFS_MAXINUMBER_32) {
->  				index++;
->  				break;
->  			}
+> --- xfs.orig/fs/xfs/xfs_inode.c	2010-05-27 20:59:09.000000000 +0200
+> +++ xfs/fs/xfs/xfs_inode.c	2010-05-27 20:59:43.315004399 +0200
+> @@ -2624,7 +2624,6 @@ xfs_iflush_cluster(
+>  	int			i;
 >  
-> -			/* This ag is preferred for inodes */
->  			pag = xfs_perag_get(mp, index);
->  			pag->pagi_inodeok = 1;
->  			if (index < max_metadata)
->  				pag->pagf_metadata = 1;
-> -			xfs_initialize_perag_icache(pag);
->  			xfs_perag_put(pag);
->  		}
-> +
-> +		*maxagi = agcount;
+>  	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
+> -	ASSERT(pag->pag_ici_init);
 
-Here you unconditionally assign to *maxagi...
+This doesn't apply in my tree, because it's missing this:
+        ASSERT(pag->pagi_inodeok);
 
->  	} else {
-> -		/* Setup default behavior for smaller filesystems */
->  		for (index = 0; index < agcount; index++) {
->  			pag = xfs_perag_get(mp, index);
->  			pag->pagi_inodeok = 1;
-> -			xfs_initialize_perag_icache(pag);
->  			xfs_perag_put(pag);
->  		}
->  	}
-> +
->  	if (maxagi)
->  		*maxagi = index;
+I believe that this missing assertion should be deleted
+also, to go along with the purpose of this patch.
 
-...while here it checks to be sure it's non-null before
-assigning.  Right now, the two places that call this
-function always pass the address of something.  I don't
-care which way it goes, but the two assignments should
-be done consistently (either both or neither should check
-for null before assignment).
-
-Other than that, this change looks really good.  Unless I
-hear from you otherwise, I'll make the change before commit.
-I will make both (all) spots assume a valid pointer is
-passed in.
+Again, I'll make this change myself before I commit;
+let me know if you would like me not to.
 
 					-Alex
+
+>  
+>  	inodes_per_cluster = XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_inodelog;
+>  	ilist_size = inodes_per_cluster * sizeof(xfs_inode_t *);
+> 
+
+
 
 _______________________________________________
 xfs mailing list
