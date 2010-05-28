@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4S54qWi195539 for <xfs@oss.sgi.com>; Fri, 28 May 2010 00:04:52 -0500
+	o4S5H7Oj196346 for <xfs@oss.sgi.com>; Fri, 28 May 2010 00:17:07 -0500
 Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 32FD11D5273D
-	for <xfs@oss.sgi.com>; Thu, 27 May 2010 22:07:15 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 84098130C1A0
+	for <xfs@oss.sgi.com>; Thu, 27 May 2010 22:21:22 -0700 (PDT)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id IeouDxVj1ZNMULjC for <xfs@oss.sgi.com>;
-	Thu, 27 May 2010 22:07:15 -0700 (PDT)
-Date: Fri, 28 May 2010 15:06:55 +1000
+	with ESMTP id 8IlAKx3OwH4b0pAq for <xfs@oss.sgi.com>;
+	Thu, 27 May 2010 22:21:22 -0700 (PDT)
+Date: Fri, 28 May 2010 15:19:24 +1000
 From: Nick Piggin <npiggin@suse.de>
-Subject: Re: [PATCH 6/6] writeback: limit write_cache_pages integrity
-	scanning to current EOF
-Message-ID: <20100528050655.GY22536@laptop>
-References: <1274784852-30502-1-git-send-email-david@fromorbit.com>
-	<1274784852-30502-7-git-send-email-david@fromorbit.com>
-	<20100527143341.d4258798.akpm@linux-foundation.org>
+Subject: Re: [PATCH 3/5] superblock: introduce per-sb cache shrinker
+	infrastructure
+Message-ID: <20100528051924.GZ22536@laptop>
+References: <1274777588-21494-1-git-send-email-david@fromorbit.com>
+	<1274777588-21494-4-git-send-email-david@fromorbit.com>
+	<20100527063523.GJ22536@laptop> <20100527224034.GO12087@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100527143341.d4258798.akpm@linux-foundation.org>
+In-Reply-To: <20100527224034.GO12087@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,60 +27,99 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: tytso@mit.edu, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, jens.axboe@oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, May 27, 2010 at 02:33:41PM -0700, Andrew Morton wrote:
-> On Tue, 25 May 2010 20:54:12 +1000
-> Dave Chinner <david@fromorbit.com> wrote:
-> 
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > sync can currently take a really long time if a concurrent writer is
-> > extending a file. The problem is that the dirty pages on the address
-> > space grow in the same direction as write_cache_pages scans, so if
-> > the writer keeps ahead of writeback, the writeback will not
-> > terminate until the writer stops adding dirty pages.
-
-...
-
-> That being said, I think the patch is insufficient.  If I create an
-> enormous (possibly sparse) file with a 16TB hole (or a run of clean
-> pages) in the middle and then start busily writing into that hole (run
-> of clean pages), the problem will still occur.
-
-Yep.
-
- 
-> One obvious fix for that (a) would be to add another radix-tree tag and
-> do two passes across the radix-tree.
-
-Yes this is the method I tried. Jan has taken it further and should
-have the latest patches around. A good test case for the starvation
-would be helpful.
-
-
-> Another fix (b) would be to track the number of dirty pages per
-> adddress_space, and only write that number of pages.
-> 
-> Another fix would be to work out how the code handled this situation
-> before we broke it, and restore that in some fashion.  I guess fix (b)
-> above kinda does that.
-
-I took that out (and offered fix a in replacement but it was turned
-down at the time). Because b stands for broken.
-
-IIRC we were writing out no more than 2x the dirty pages of the file
-during sync. The problem with that is more pages can be dirtied after
-we calculate the number, and then we might write out those newly dirty
-pages and miss old dirty pages.
-
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gRnJpLCBNYXkgMjgsIDIwMTAgYXQgMDg6NDA6MzRBTSArMTAwMCwgRGF2ZSBDaGlubmVyIHdy
+b3RlOgo+IE9uIFRodSwgTWF5IDI3LCAyMDEwIGF0IDA0OjM1OjIzUE0gKzEwMDAsIE5pY2sgUGln
+Z2luIHdyb3RlOgo+ID4gQnV0IHdlIGNhbiB0aGluayBvZiBpbm9kZXMgdGhhdCBhcmUgb25seSBp
+biB1c2UgYnkgdW51c2VkIChhbmQgYWdlZCkKPiA+IGRlbnRyaWVzIGFzIGVmZmVjdGl2ZWx5IHVu
+dXNlZCB0aGVtc2VsdmVzLiBTbyB0aGlzIHNlcXVlbmNlIHVuZGVyCj4gPiBlc3RpbWF0ZXMgaG93
+IG1hbnkgaW5vZGVzIHRvIHNjYW4uIFRoaXMgY291bGQgYmlhcyBwcmVzc3VyZSBhZ2FpbnN0Cj4g
+PiBkY2FjaGUgSSdkIHRoaW5rLCBlc3BlY2lhbGx5IGNvbnNpZGVyaW5nIGlub2RlcyBhcmUgZmFy
+IGxhcmdlciB0aGFuCj4gPiBkZW50cmllcy4gTWF5YmUgcmVxdWlyZSAyIHBhc3NlcyB0byBnZXQg
+dGhlIGlub2RlcyB1bnVzZWQgaW50aGUKPiA+IGZpcnN0IHBhc3MuCj4gCj4gSXQncyBzZWxmLWJh
+bGFuY2luZyAtIGl0IHRyZW5kcyB0b3dhcmRzIGFuIGVxdWFsIG51bWJlciBvZiB1bnVzZWQKPiBk
+ZW50cmllcyBhbmQgaW5vZGVzIGluIHRoZSBjYWNoZXMuIFllcywgaXQgd2lsbCB0ZWFyIGRvd24g
+bW9yZQo+IGRlbnRyaWVzIGF0IGZpcnN0LCBidXQgd2UgbmVlZCB0byBkbyB0aGF0IHRvIGJlIGFi
+bGUgdG8gcmVjbGFpbQo+IGlub2Rlcy4KCkJ1dCB0aGVuIGl0IGRvZXNuJ3Qgc2NhbiBlbm91Z2gg
+aW5vZGVzIG9uIHRoZSBpbm9kZSBwYXNzLgoKCj4g4oSrcyByZWNsYWltIHByb2dyZXNzZXMgdGhl
+IHByb3BvdGlvbiBvZiBpbm9kZXMgaW5jcmVhc2VzLCBzbwo+IHRoZSBhbW91bnQgb2YgaW5vZGVz
+IHJlY2xhaW1lZCBpbmNyZWFzZXMuIAo+IAo+IEJhc2ljYWxseSB0aGlzIGlzIGEgcmVjb2duaXRp
+b24gdGhhdCB0aGUgaW1wb3J0YW50IGNhY2hlIGZvcgo+IGF2b2lkaW5nIElPIGlzIHRoZSBpbm9k
+ZSBjYWNoZSwgbm90IGhlIGRlbnRyeSBjYWNoZS4gT25jZSB0aGUgaW5vZGUKCllvdSBjYW4gYmlh
+cyBhZ2FpbnN0IHRoZSBkY2FjaGUgdXNpbmcgbXVsdGlwbGllcnMuCgoKPiBjYWNoZSBpcyBmcmVl
+ZCB0aGF0IHdlIG5lZWQgdG8gZG8gSU8gdG8gcmVwb3B1bGF0ZSBpdCwgYnV0Cj4gcmVidWlsZGlu
+ZyBkZW50cmllcyBmcm9tdGVoIGlub2RlIGNhY2hlIG9ubHkgY29zdHMgQ1BVIHRpbWUuIEhlbmNl
+Cj4gdW5kZXIgbGlnaHQgcmVjbGFpbSwgaW5vZGVzIGFyZSBtb3N0bHkgbGVmdCBpbiBjYWNoZSBi
+dXQgd2UgZnJlZSB1cAo+IG1lbW9yeSB0aGF0IG9ubHkgY29zdHMgQ1BVIHRvIHJlYnVpbGQuIFVu
+ZGVyIGhlYXZ5LCBzdXN0YWluZWQKPiByZWNsYWltLCB3ZSB0cmVuZCB0b3dhcmRzIGZyZWVpbmcg
+ZXF1YWwgYW1vdW50cyBvZiBvYmplY3RzIGZyb20gYm90aAo+IGNhY2hlcy4KCkkgZG9uJ3Qga25v
+dyBpZiB5b3UndmUgZ290IG51bWJlcnMgb3IgcGF0dGVybnMgdG8ganVzdGlmeSB0aGF0LgpNeSBw
+b2ludCBpcyB0aGF0IHRoaW5ncyBzaG91bGQgc3RheSBhcyBjbG9zZSB0byB0aGUgb2xkIGNvZGUg
+YXMKcG9zc2libGUgd2l0aG91dCBnb29kIHJlYXNvbi4KCiAKPiBUaGlzIGlzIHByZXR0eSBtdWNo
+IHdoYXQgdGhlIGN1cnJlbnQgY29kZSBhdHRlbXB0cyB0byBkbyAtIGZyZWUgYQo+IGxvdCBvZiBk
+ZW50cmllcywgdGhlbiBmcmVlIGEgc21hbGxlciBhbW91bnQgb2YgdGhlIGlub2RlcyB0aGF0IHdl
+cmUKPiB1c2VkIGJ5IHRoZSBmcmVlZCBkZW50cmllcy4gT25jZSBhZ2FpbiBpdCBpcyBhIGRpcmVj
+dCBlbmNvZGluZyBvZgo+IHdoYXQgaXMgY3VycmVudGx5IGFuIGltcGxpY2l0IGRlc2lnbiBmZWF0
+dXJlIC0gaXQgbWFrZXMgaXQgKm9idmlvdXMqCj4gaG93IHdlIGFyZSB0cnlpbmcgdG8gYmFsYW5j
+ZSB0aGUgY2FjaGVzLgoKV2l0aCB5b3VyIHBhdGNoZXMsIGlmIHRoZXJlIGFyZSBubyBpbm9kZXMg
+ZnJlZSB5b3Ugd291bGQgbmVlZCB0byB0YWtlCjIgcGFzc2VzIGF0IGZyZWVpbmcgdGhlIGRlbnRy
+eSBjYWNoZS4gTXkgc3VnZ2VzdGlvbiBpcyBjbG9zZXIgdG8gdGhlCmN1cnJlbnQgY29kZS4KIAoK
+PiBBbm90aGVyIHJlYXNvbiBmb3IgdGhpcyBpcyB0aGF0IHRoZSBjYWxjdWxhdGlvbiBjaGFuZ2Vz
+IGFnYWluIHRvCj4gYWxsb3cgZmlsZXN5c3RlbSBjYWNoZXMgdG8gbW9kaXkgdGhpcyBwcm9wb3J0
+aW9uaW5nIGluIHRoZSBuZXh0Cj4gcGF0Y2guLi4uCj4gCj4gRldJVywgdGhpcyBhbHNvIG1ha2Vz
+IHdvcmtsb2FkcyB0aGF0IGdlbmVyYXRlIGh1bmRyZWRzIG9mIHRob3VzYW5kcwo+IG9mIG5ldmVy
+LXRvLWJlLXVzZWQgYWdhaW4gbmVnYXRpdmUgZGVudHJpZXMgZnJlZSBkY2FjaGUgbWVtb3J5IHJl
+YWxseQo+IHF1aWNrbHkgb24gbWVtb3J5IHByZXNzdXJlLi4uCgpUaGF0IHdvdWxkIHN0aWxsIGJl
+IHRoZSBjYXNlIGJlY2F1c2UgdXNlZCBpbm9kZXMgYXJlbid0IGdldHRpbmcgdGhlaXIKZGVudHJp
+ZXMgZnJlZWQgc28gbGl0dGxlIGlub2RlIHNjYW5uaW5nIHdpbGwgb2NjdXIuCgo+IAo+ID4gUGFy
+dCBvZiB0aGUgcHJvYmxlbSBpcyB0aGUgZnVubnkgc2hyaW5rZXIgQVBJLgo+ID4gCj4gPiBUaGUg
+cmlnaHQgd2F5IHRvIGRvIGl0IGlzIHRvIGNoYW5nZSB0aGUgc2hyaW5rZXIgQVBJIHNvIHRoYXQg
+aXQgcGFzc2VzCj4gPiBkb3duIHRoZSBscnVfcGFnZXMgYW5kIHNjYW5uZWQgaW50byB0aGUgY2Fs
+bGJhY2suIEZyb20gdGhlcmUsIHRoZQo+ID4gc2hyaW5rZXJzIGNhbiBjYWxjdWxhdGUgdGhlIGFw
+cHJvcHJpYXRlIHJhdGlvIG9mIG9iamVjdHMgdG8gc2Nhbi4KPiA+IE5vIG5lZWQgZm9yIDItY2Fs
+bCBzY2hlbWUsIG5vIG5lZWQgZm9yIHNocmlua2VyLT5zZWVrcywgYW5kIHRoZQo+ID4gYWJpbGl0
+eSB0byBjYWxjdWxhdGUgYW4gYXBwcm9wcmlhdGUgcmF0aW8gZmlyc3QgZm9yIGRjYWNoZSwgYW5k
+ICp0aGVuKgo+ID4gZm9yIGljYWNoZS4KPiAKPiBNeSBvbmx5IGNvbmNlcm4gYWJvdXQgdGhpcyBp
+cyB0aGF0IGV4cG9zZXMgdGhlIGlubmVyIHdvcmtpbmdzIG9mIHRoZQo+IHNocmlua2VyIGFuZCBt
+bSBzdWJzeXN0ZW0gdG8gY29kZSB0aGF0IHNpbXBseSBkb2Vzbid0IG5lZWQgdG8ga25vdwo+IGFi
+b3V0IGl0LgoKSXQncyBqdXN0IHByb3ZpZGluZyBhIHJhdGlvLiBUaGUgc2hyaW5rZXJzIGFsbHJl
+YWR5IGtub3cgdGhleSBhcmUKc2Nhbm5pbmcgYmFzZWQgb24gYSByYXRpbyBvZiBwYWdlY2FjaGUg
+c2Nhbm5lZC4KCgo+ID4gQSBoZWxwZXIgb2YgY291cnNlIGNhbiBkbyB0aGUgY2FsY3VsYXRpb24g
+KGNvbnNpZGVyaW5nIHRoYXQgZXZlcnkKPiA+IGRyaXZlciBhbmQgdGhlaXIgZG9nIHdpbGwgZG8g
+dGhlIHdyb25nIHRoaW5nIGlmIHdlIGxldCB0aGVtIDopKS4KPiA+IAo+ID4gdW5zaWduZWQgbG9u
+ZyBzaHJpbmtlcl9zY2FuKHVuc2lnbmVkIGxvbmcgbHJ1X3BhZ2VzLAo+ID4gCQkJdW5zaWduZWQg
+bG9uZyBscnVfc2Nhbm5lZCwKPiA+IAkJCXVuc2lnbmVkIGxvbmcgbnJfb2JqZWN0cywKPiA+IAkJ
+CXVuc2lnbmVkIGxvbmcgc2Nhbl9yYXRpbykKPiA+IHsKPiA+IAl1bnNpZ25lZCBsb25nIGxvbmcg
+dG1wID0gbnJfb2JqZWN0czsKPiA+IAo+ID4gCXRtcCAqPSBscnVfc2Nhbm5lZCAqIDEwMDsKPiA+
+IAlkb19kaXYodG1wLCAobHJ1X3BhZ2VzICogc2Nhbl9yYXRpbykgKyAxKTsKPiA+IAo+ID4gCXJl
+dHVybiAodW5zaWduZWQgbG9uZyl0bXA7Cj4gPiB9Cj4gPiAKPiA+IFRoZW4gdGhlIHNocmlua2Vy
+IGNhbGxiYWNrIHdpbGwgZ286Cj4gPiAJc2ItPnNfbnJfZGVudHJ5X3NjYW4gKz0gc2hyaW5rZXJf
+c2NhbihscnVfcGFnZXMsIGxydV9zY2FubmVkLAo+ID4gCQkJCXNiLT5zX25yX2RlbnRyeV91bnVz
+ZWQsCj4gPiAJCQkJdmZzX2NhY2hlX3ByZXNzdXJlICogU0VFS1NfUEVSX0RFTlRSWSk7Cj4gPiAJ
+aWYgKHNiLT5zX25yX2RlbnRyeV9zY2FuID4gU0hSSU5LX0JBVENIKQo+ID4gCQlwcnVuZV9kY2Fj
+aGUoKQo+ID4gCj4gPiAJc2ItPnNfbnJfaW5vZGVfc2NhbiArPSBzaHJpbmtlcl9zY2FuKGxydV9w
+YWdlcywgbHJ1X3NjYW5uZWQsCj4gPiAJCQkJc2ItPnNfbnJfaW5vZGVzX3VudXNlZCwKPiA+IAkJ
+CQl2ZnNfY2FjaGVfcHJlc3N1cmUgKiBTRUVLU19QRVJfSU5PREUpOwo+ID4gCS4uLgo+ID4gCj4g
+PiBXaGF0IGRvIHlvdSB0aGluayBvZiB0aGF0PyBTZWVpbmcgYXMgd2UncmUgY2hhbmdpbmcgdGhl
+IHNocmlua2VyIEFQSQo+ID4gYW55d2F5LCBJJ2QgdGhpbmsgaXQgaXMgaGlnaCB0aW1lIHRvIGRv
+IHNvbXRoaW5nIGxpa2UgdGhpcy4KPiAKPiBJZ25vcmluZyB0aGUgZGNhY2hlL2ljYWNoZSByZWNs
+YWltIHJhdGlvIGlzc3VlcywgSSdkIHByZWZlciBhIHR3bwoKV2VsbCBpZiBpdCBpcyBhbiBpc3N1
+ZSwgaXQgc2hvdWxkIGJlIGNoYW5nZWQgaW4gYSBkaWZmZXJlbnQgcGF0Y2gKSSB0aGluayAod2l0
+aCBudW1iZXJzKS4KCgo+IGNhbGwgQVBJIHRoYXQgbWF0Y2hlcyB0aGUgY3VycmVudCBiZWhhdmlv
+dXIsIGxlYXZpbmcgdGhlIGNhY2x1bGF0aW9uCj4gb2YgaG93IG11Y2ggdG8gcmVjbGFpbSBpbiBz
+aHJpbmtfc2xhYigpLiBFbmNvZGluZyBpdCB0aGlzIHdheSBtYWtlcwo+IGl0IG1vcmUgZGlmZmlj
+dWx0IHRvIGNoYW5nZSB0aGUgaGlnaCBsZXZlbCBiZWhhdmlvdXIgZS5nLiBpZiB3ZSB3YW50Cj4g
+dG8gbW9kaWZ5IHRoZSBhbW91bnQgb2Ygc2xhYiByZWNsYWltIGJhc2VkIG9uIHJlY2xhaW0gcHJp
+b3JpdHksIHdlJ2QKPiBoYXZlIHRvIGNhaG5nZSBldmVyeSBzaHJpbmtlciBpbnN0ZWFkIG9mIGp1
+c3Qgc2hyaW5rX3NsYWIoKS4KCldlIGNhbiBtb2RpZml5IHRoZSByYXRpb3MgYmVmb3JlIGNhbGxp
+bmcgaWYgbmVlZGVkLCBvciBoYXZlIGEgZGVmYXVsdApyYXRpbyBkZWZpbmUgdG8gbXVsdGlwbHkg
+d2l0aCBhcyB3ZWxsLgoKQnV0IHNocmlua2VycyBhcmUgdmVyeSBzdWJzeXN0ZW0gc3BlY2lmaWMu
+CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFp
+bGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0
+aW5mby94ZnMK
