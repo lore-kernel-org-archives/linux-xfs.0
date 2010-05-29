@@ -1,15 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4SJdJNm239130 for <xfs@oss.sgi.com>; Fri, 28 May 2010 14:39:19 -0500
-Subject: Re: [PATCH] xfs: improve xfs_isilocked
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20100527190533.GB16102@infradead.org>
-References: <20100527190533.GB16102@infradead.org>
-Date: Fri, 28 May 2010 14:40:53 -0500
-Message-ID: <1275075653.2302.38.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	o4T5VOq2008249 for <xfs@oss.sgi.com>; Sat, 29 May 2010 00:31:24 -0500
+Received: from hcmut.edu.vn (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CCE1CA8BC4D
+	for <xfs@oss.sgi.com>; Fri, 28 May 2010 22:35:43 -0700 (PDT)
+Received: from hcmut.edu.vn (mailserv.hcmut.edu.vn [203.162.44.74]) by
+	cuda.sgi.com with ESMTP id 2SK5v1HZXxHT2N7A for
+	<xfs@oss.sgi.com>; Fri, 28 May 2010 22:35:43 -0700 (PDT)
+Date: 29 May 2010 05:22:26 -0000
+From: MAILER-DAEMON@hcmut.edu.vn
+Subject: failure notice
+Message-Id: <20100529053543.CCE1CA8BC4D@cuda.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,90 +20,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, 2010-05-27 at 15:05 -0400, Christoph Hellwig wrote:
-> Use rwsem_is_locked to make the assertations for shared locks work.
+Hi. This is the qmail-send program at hcmut.edu.vn.
+I'm afraid I wasn't able to deliver your message to the following addresses.
+This is a permanent error; I've given up. Sorry it didn't work out.
+Contact to luu@hcmut.edu.vn
 
-So you're changing it so it answers "yes it's locked"
-even it it's only a read lock now, right?
+<ntphu@sim.hcmut.edu.vn>:
+172.28.120.2 does not like recipient.
+Remote host said: 550 <ntphu@sim.hcmut.edu.vn>, Recipient unknown
+Giving up on 172.28.120.2.
 
-Previously it was basically (once each for ilock and
-iolock):  "If the exclusive flag is set, but there is no
-writer, then it is not locked; otherwise it is."
+--- Below this line is a copy of the message.
 
-Now it's "If the exclusive flag is set, but no writer,
-it's not locked.  Otherwise if the shared flag is
-set it's locked if rwsem_is_locked() says we are.
-Otherwise (ASSERT(0) and) it is not locked."
+Return-Path: <xfs@oss.sgi.com>
+Received: (qmail 28823 invoked from network); 29 May 2010 05:22:23 -0000
+Received: from unknown (HELO vnuserv.vnuhcm.edu.vn) ([172.16.1.2])
+          (envelope-sender <xfs@oss.sgi.com>)
+          by hcmut.edu.vn (qmail-ldap-1.03) with SMTP
+          for <ntphu@sim.hcmut.edu.vn>; 29 May 2010 05:22:23 -0000
+Received: from oss.sgi.com (localhost [113.167.65.22] (may be forged))
+	by vnuserv.vnuhcm.edu.vn (8.14.3/8.13.8) with ESMTP id o4T6pHYq009871
+	for <ntphu@sim.hcmut.edu.vn>; Sat, 29 May 2010 13:51:18 +0700
+Date: Sat, 29 May 2010 13:51:17 +0700
+Message-Id: <201005290651.o4T6pHYq009871@vnuserv.vnuhcm.edu.vn>
+From: xfs@oss.sgi.com
+To: ntphu@sim.hcmut.edu.vn
+Subject: Delivery reports about your e-mail
+Content-Type: text/plain
+X-BK-MailScanner-OpenProtect-Information: Please contact the ISP for more information
+X-BK-MailScanner-OpenProtect: Found to be clean
+X-BK-MailScanner-OpenProtect-MCPCheck: 
+X-BK-MailScanner-OpenProtect-SpamCheck: not spam, SpamAssassin (score=0.346,
+	required 5, ALL_TRUSTED -1.44, BLANK_LINES_70_80 1.24,
+	NO_REAL_NAME 0.55)
+X-BK-MailScanner-OpenProtect-From: xfs@oss.sgi.com
 
-That last part is wrong I think.  It should be OK to
-call xfs_isilocked() with neither flag set, in which
-case the result should be 0.  And if the exclusive
-flag is set, and there *is* a writer, it *is* locked,
-so it should return 1.
-
-					-Alex
-
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Index: xfs/fs/xfs/xfs_iget.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/xfs_iget.c	2010-05-25 11:40:59.216005587 +0200
-> +++ xfs/fs/xfs/xfs_iget.c	2010-05-27 20:59:09.244004330 +0200
-> @@ -740,30 +738,24 @@ xfs_ilock_demote(
->  }
->  
->  #ifdef DEBUG
-> -/*
-> - * Debug-only routine, without additional rw_semaphore APIs, we can
-> - * now only answer requests regarding whether we hold the lock for write
-> - * (reader state is outside our visibility, we only track writer state).
-> - *
-> - * Note: this means !xfs_isilocked would give false positives, so don't do that.
-> - */
->  int
->  xfs_isilocked(
->  	xfs_inode_t		*ip,
->  	uint			lock_flags)
->  {
-> -	if ((lock_flags & (XFS_ILOCK_EXCL|XFS_ILOCK_SHARED)) ==
-> -			XFS_ILOCK_EXCL) {
-> -		if (!ip->i_lock.mr_writer)
-> -			return 0;
-> +	if (lock_flags & (XFS_ILOCK_EXCL|XFS_ILOCK_SHARED)) {
-> +		if (!(lock_flags & XFS_ILOCK_SHARED))
-> +			return !!ip->i_lock.mr_writer;
-> +		return rwsem_is_locked(&ip->i_lock.mr_lock);
->  	}
->  
-> -	if ((lock_flags & (XFS_IOLOCK_EXCL|XFS_IOLOCK_SHARED)) ==
-> -			XFS_IOLOCK_EXCL) {
-> -		if (!ip->i_iolock.mr_writer)
-> -			return 0;
-> +	if (lock_flags & (XFS_IOLOCK_EXCL|XFS_IOLOCK_SHARED)) {
-> +		if (!(lock_flags & XFS_IOLOCK_SHARED))
-> +			return !!ip->i_iolock.mr_writer;
-> +		return rwsem_is_locked(&ip->i_iolock.mr_lock);
->  	}
->  
-> -	return 1;
-> +	ASSERT(0);
-> +	return 0;
->  }
->  #endif
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Your mail 113.167.65.22:14912->172.16.1.2:25  contains contaminated file _Fromxfs_oss.sgi.com__Datexfs_oss.sgi.com__SubjDelivery_reports_about_your_e_mail_/_message.zip_/message.pif with virus Email-Worm.Win32.Mydoom.m, so it is dropped.
 
 
+
+
+-- 
+This message has been scanned for viruses and
+dangerous content by OpenProtect(http://www.openprotect.com), and is
+believed to be clean.
+
+
+-- 
+This message has been scanned for viruses and
+dangerous content by OpenProtect(http://www.openprotect.com), and is
+believed to be clean.
 
 _______________________________________________
 xfs mailing list
