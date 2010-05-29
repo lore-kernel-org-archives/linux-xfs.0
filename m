@@ -1,16 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4T9ltmQ021026 for <xfs@oss.sgi.com>; Sat, 29 May 2010 04:47:56 -0500
-Date: Sat, 29 May 2010 05:50:19 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: improve xfs_isilocked
-Message-ID: <20100529095019.GA18859@infradead.org>
-References: <20100527190533.GB16102@infradead.org>
-	<1275075653.2302.38.camel@doink>
+	o4TDhhm9032843
+	for <linux-xfs@oss.sgi.com>; Sat, 29 May 2010 08:43:44 -0500
+Received: from moutng.kundenserver.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F00DD383E0F
+	for <linux-xfs@oss.sgi.com>; Sat, 29 May 2010 06:46:06 -0700 (PDT)
+Received: from moutng.kundenserver.de (moutng.kundenserver.de
+	[212.227.126.187]) by cuda.sgi.com with ESMTP id
+	nEnRamEhNM9T1Avq for <linux-xfs@oss.sgi.com>;
+	Sat, 29 May 2010 06:46:06 -0700 (PDT)
+Message-ID: <00ec390d$40327$1c7d6153135764@regina>
+From: "Sam L. Carl" <mail@traffictractor.com>
+Subject: RE: Hey, Opt In Email Lists Give Away!
+Date: Sat, 29 May 2010 14:46:03 +0100
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1275075653.2302.38.camel@doink>
+Reply-To: "Sam L. Carl" <mail@traffictractor.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,58 +28,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-On Fri, May 28, 2010 at 02:40:53PM -0500, Alex Elder wrote:
-> On Thu, 2010-05-27 at 15:05 -0400, Christoph Hellwig wrote:
-> > Use rwsem_is_locked to make the assertations for shared locks work.
-> 
-> So you're changing it so it answers "yes it's locked"
-> even it it's only a read lock now, right?
+Hey, 
 
-If XFS_ILOCK_SHARED/XFS_IOLOCK_SHARED are in the flags we'll answer yes
-it's locked for a read lock now, indeed.
+You have to check this out if your a webmaster. http://www.traffictractor.com is giving away thousands of opt in emails. 
 
-> Previously it was basically (once each for ilock and
-> iolock):  "If the exclusive flag is set, but there is no
-> writer, then it is not locked; otherwise it is."
+This is huge! Everyone is talking about it now. With these opt in email addresses you can do so much. It takes years and a lot of money to build a list from scratch but now you have the chance to grab a massive list.
 
-Yes.
+Use it for ezine, email, autoresponders, they will bring your website a huge amount of power, traffic and sales. 
 
-> Now it's "If the exclusive flag is set, but no writer,
-> it's not locked.  Otherwise if the shared flag is
-> set it's locked if rwsem_is_locked() says we are.
-> Otherwise (ASSERT(0) and) it is not locked."
+You have to check it out at http://www.traffictractor.com
 
-Not exactly.  Now it's:
-
- - if excl is set but shared isn't return true if mr_writer is
-   set, else false
- - if shared is set either alone or together with excl return
-   if it is locked in any way (rwsem_is_locked).
-
-Note that xfs_isilocked can be called like:
-
-	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
-
-which means that either excl or shared is fine.
-
- - if either one or both of excl and shared are set and it's 
-
-> That last part is wrong I think.  It should be OK to
-> call xfs_isilocked() with neither flag set, in which
-> case the result should be 0.
-
-We can argue about removing the assert, but we currently don't
-and should't call xfs_isilocked wit ha 0 argument - it's rather
-pointless to do so.
-
-> And if the exclusive
-> flag is set, and there *is* a writer, it *is* locked,
-> so it should return 1.
-
-We do that right now.
+All the best,
+Sam L. Carl
 
 _______________________________________________
 xfs mailing list
