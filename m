@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4VG6ZuJ178939 for <xfs@oss.sgi.com>; Mon, 31 May 2010 11:06:35 -0500
+	o4VG6YmT178919 for <xfs@oss.sgi.com>; Mon, 31 May 2010 11:06:34 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E8CF8387869
-	for <xfs@oss.sgi.com>; Mon, 31 May 2010 09:09:01 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E438F157FB5A
+	for <xfs@oss.sgi.com>; Mon, 31 May 2010 09:11:13 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id K1GwiAwNJDwVNc7q for
-	<xfs@oss.sgi.com>; Mon, 31 May 2010 09:09:01 -0700 (PDT)
+	by cuda.sgi.com with ESMTP id rdoyTN6z5ivjbtdK for
+	<xfs@oss.sgi.com>; Mon, 31 May 2010 09:11:13 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat
-	Linux)) id 1OJ7Xx-00013c-GI
-	for xfs@oss.sgi.com; Mon, 31 May 2010 16:09:01 +0000
-Message-Id: <20100531160901.401855518@bombadil.infradead.org>
-Date: Mon, 31 May 2010 12:07:38 -0400
+	Linux)) id 1OJ7Xv-0000tM-TI
+	for xfs@oss.sgi.com; Mon, 31 May 2010 16:09:00 +0000
+Message-Id: <20100531160859.618170031@bombadil.infradead.org>
+Date: Mon, 31 May 2010 12:07:31 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 11/17] xfs: simplify inode to transaction joining
+Subject: [PATCH 04/17] xfs: drop dmapi hooks
 References: <20100531160727.842750532@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-simplify-xfs_trans_ijoin
+Content-Disposition: inline; filename=xfs-drop-dmapi-hooks
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,880 +32,1965 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Currently we need to either call IHOLD or xfs_trans_ihold on an inode when
-joining it to a transaction via xfs_trans_ijoin.
+Dmapi support was never merged upstream, but we still have a lot of hooks
+bloating XFS for it, all over the fast pathes of the filesystem.
 
-This patches instead makes xfs_trans_ijoin usable on it's own by doing
-an implicity xfs_trans_ihold, which also allows us to drop the third
-argument.  For the case where we want to hold a reference on the inode
-a xfs_trans_ijoin_ref wrapper is added which does the IHOLD and marks
-the inode for needing an xfs_iput.  In addition to the cleaner interface
-to the caller this also simplifies the implementation.
+This patch drops over 700 lines of dmapi overhead.  If we'll ever get HSM
+support in mainline at least the namespace events can be done much saner
+in the VFS instead of the individual filesystem, so it's not like this
+is much help for future work.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs/fs/xfs/quota/xfs_dquot.c
-===================================================================
---- xfs.orig/fs/xfs/quota/xfs_dquot.c	2010-05-29 18:44:47.554255638 +0200
-+++ xfs/fs/xfs/quota/xfs_dquot.c	2010-05-29 18:49:10.749003438 +0200
-@@ -378,14 +378,7 @@ xfs_qm_dqalloc(
- 		return (ESRCH);
- 	}
- 
--	/*
--	 * xfs_trans_commit normally decrements the vnode ref count
--	 * when it unlocks the inode. Since we want to keep the quota
--	 * inode around, we bump the vnode ref count now.
--	 */
--	IHOLD(quotip);
--
--	xfs_trans_ijoin(tp, quotip, XFS_ILOCK_EXCL);
-+	xfs_trans_ijoin_ref(tp, quotip, XFS_ILOCK_EXCL);
- 	nmaps = 1;
- 	if ((error = xfs_bmapi(tp, quotip,
- 			      offset_fsb, XFS_DQUOT_CLUSTER_SIZE_FSB,
-Index: xfs/fs/xfs/xfs_bmap.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_bmap.c	2010-05-29 18:44:44.719005883 +0200
-+++ xfs/fs/xfs/xfs_bmap.c	2010-05-29 18:49:11.611005462 +0200
-@@ -3739,9 +3739,10 @@ xfs_bmap_add_attrfork(
- 		ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
- 	}
- 	ASSERT(ip->i_d.di_anextents == 0);
--	IHOLD(ip);
--	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
-+
-+	xfs_trans_ijoin_ref(tp, ip, XFS_ILOCK_EXCL);
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+
- 	switch (ip->i_d.di_format) {
- 	case XFS_DINODE_FMT_DEV:
- 		ip->i_d.di_forkoff = roundup(sizeof(xfs_dev_t), 8) >> 3;
-Index: xfs/fs/xfs/xfs_rename.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_rename.c	2010-05-29 18:44:44.198005742 +0200
-+++ xfs/fs/xfs/xfs_rename.c	2010-05-29 18:44:47.678039336 +0200
-@@ -169,26 +169,14 @@ xfs_rename(
- 	/*
- 	 * Join all the inodes to the transaction. From this point on,
- 	 * we can rely on either trans_commit or trans_cancel to unlock
--	 * them.  Note that we need to add a vnode reference to the
--	 * directories since trans_commit & trans_cancel will decrement
--	 * them when they unlock the inodes.  Also, we need to be careful
--	 * not to add an inode to the transaction more than once.
-+	 * them.
- 	 */
--	IHOLD(src_dp);
--	xfs_trans_ijoin(tp, src_dp, XFS_ILOCK_EXCL);
--
--	if (new_parent) {
--		IHOLD(target_dp);
--		xfs_trans_ijoin(tp, target_dp, XFS_ILOCK_EXCL);
--	}
--
--	IHOLD(src_ip);
--	xfs_trans_ijoin(tp, src_ip, XFS_ILOCK_EXCL);
--
--	if (target_ip) {
--		IHOLD(target_ip);
--		xfs_trans_ijoin(tp, target_ip, XFS_ILOCK_EXCL);
--	}
-+	xfs_trans_ijoin_ref(tp, src_dp, XFS_ILOCK_EXCL);
-+	if (new_parent)
-+		xfs_trans_ijoin_ref(tp, target_dp, XFS_ILOCK_EXCL);
-+	xfs_trans_ijoin_ref(tp, src_ip, XFS_ILOCK_EXCL);
-+	if (target_ip)
-+		xfs_trans_ijoin_ref(tp, target_ip, XFS_ILOCK_EXCL);
- 
- 	/*
- 	 * If we are using project inheritance, we only allow renames
-Index: xfs/fs/xfs/xfs_trans.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_trans.h	2010-05-29 18:44:44.783005813 +0200
-+++ xfs/fs/xfs/xfs_trans.h	2010-05-29 18:49:12.008004765 +0200
-@@ -475,8 +475,8 @@ void		xfs_trans_dquot_buf(xfs_trans_t *,
- void		xfs_trans_inode_alloc_buf(xfs_trans_t *, struct xfs_buf *);
- int		xfs_trans_iget(struct xfs_mount *, xfs_trans_t *,
- 			       xfs_ino_t , uint, uint, struct xfs_inode **);
--void		xfs_trans_ijoin(xfs_trans_t *, struct xfs_inode *, uint);
--void		xfs_trans_ihold(xfs_trans_t *, struct xfs_inode *);
-+void		xfs_trans_ijoin_ref(struct xfs_trans *, struct xfs_inode *, uint);
-+void		xfs_trans_ijoin(struct xfs_trans *, struct xfs_inode *);
- void		xfs_trans_log_buf(xfs_trans_t *, struct xfs_buf *, uint, uint);
- void		xfs_trans_log_inode(xfs_trans_t *, struct xfs_inode *, uint);
- struct xfs_efi_log_item	*xfs_trans_get_efi(xfs_trans_t *, uint);
-Index: xfs/fs/xfs/xfs_trans_inode.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_trans_inode.c	2010-05-29 18:44:44.695207098 +0200
-+++ xfs/fs/xfs/xfs_trans_inode.c	2010-05-29 18:44:47.682003507 +0200
-@@ -33,6 +33,7 @@
- #include "xfs_btree.h"
- #include "xfs_trans_priv.h"
- #include "xfs_inode_item.h"
-+#include "xfs_trace.h"
- 
- #ifdef XFS_TRANS_DEBUG
- STATIC void
-@@ -42,7 +43,6 @@ xfs_trans_inode_broot_debug(
- #define	xfs_trans_inode_broot_debug(ip)
- #endif
- 
--
- /*
-  * Get an inode and join it to the transaction.
-  */
-@@ -58,32 +58,31 @@ xfs_trans_iget(
- 	int			error;
- 
- 	error = xfs_iget(mp, tp, ino, flags, lock_flags, ipp, 0);
--	if (!error && tp)
--		xfs_trans_ijoin(tp, *ipp, lock_flags);
-+	if (!error && tp) {
-+		xfs_trans_ijoin(tp, *ipp);
-+		(*ipp)->i_itemp->ili_lock_flags = lock_flags;
-+	}
- 	return error;
- }
- 
- /*
-- * Add the locked inode to the transaction.
-- * The inode must be locked, and it cannot be associated with any
-- * transaction.  The caller must specify the locks already held
-- * on the inode.
-+ * Add a locked inode to the transaction.
-+ *
-+ * The inode must be locked, and it cannot be associated with any transaction.
-  */
- void
- xfs_trans_ijoin(
--	xfs_trans_t	*tp,
--	xfs_inode_t	*ip,
--	uint		lock_flags)
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*ip)
- {
- 	xfs_inode_log_item_t	*iip;
- 
- 	ASSERT(ip->i_transp == NULL);
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
--	ASSERT(lock_flags & XFS_ILOCK_EXCL);
- 	if (ip->i_itemp == NULL)
- 		xfs_inode_item_init(ip, ip->i_mount);
- 	iip = ip->i_itemp;
--	ASSERT(iip->ili_flags == 0);
-+	ASSERT(iip->ili_lock_flags == 0);
- 
- 	/*
- 	 * Get a log_item_desc to point at the new item.
-@@ -93,42 +92,31 @@ xfs_trans_ijoin(
- 	xfs_trans_inode_broot_debug(ip);
- 
- 	/*
--	 * If the IO lock is already held, mark that in the inode log item.
--	 */
--	if (lock_flags & XFS_IOLOCK_EXCL) {
--		iip->ili_flags |= XFS_ILI_IOLOCKED_EXCL;
--	} else if (lock_flags & XFS_IOLOCK_SHARED) {
--		iip->ili_flags |= XFS_ILI_IOLOCKED_SHARED;
--	}
--
--	/*
- 	 * Initialize i_transp so we can find it with xfs_inode_incore()
- 	 * in xfs_trans_iget() above.
- 	 */
- 	ip->i_transp = tp;
- }
- 
--
--
- /*
-- * Mark the inode as not needing to be unlocked when the inode item's
-- * IOP_UNLOCK() routine is called.  The inode must already be locked
-- * and associated with the given transaction.
-+ * Add a locked inode to the transaction.
-+ *
-+ *
-+ * Grabs a reference to the inode which will be dropped when the transaction
-+ * is commited.  The inode will also be unlocked at that point.  The inode
-+ * must be locked, and it cannot be associated with any transaction.
-  */
--/*ARGSUSED*/
- void
--xfs_trans_ihold(
--	xfs_trans_t	*tp,
--	xfs_inode_t	*ip)
-+xfs_trans_ijoin_ref(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*ip,
-+	uint			lock_flags)
- {
--	ASSERT(ip->i_transp == tp);
--	ASSERT(ip->i_itemp != NULL);
--	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
--
--	ip->i_itemp->ili_flags |= XFS_ILI_HOLD;
-+	xfs_trans_ijoin(tp, ip);
-+	IHOLD(ip);
-+	ip->i_itemp->ili_lock_flags = lock_flags;
- }
- 
--
- /*
-  * This is called to mark the fields indicated in fieldmask as needing
-  * to be logged when the transaction is committed.  The inode must
-Index: xfs/fs/xfs/xfs_vnodeops.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_vnodeops.c	2010-05-29 18:44:44.233005323 +0200
-+++ xfs/fs/xfs/xfs_vnodeops.c	2010-05-29 18:49:10.853004415 +0200
-@@ -268,8 +268,7 @@ xfs_setattr(
- 		commit_flags = XFS_TRANS_RELEASE_LOG_RES;
- 		xfs_ilock(ip, XFS_ILOCK_EXCL);
- 
--		xfs_trans_ijoin(tp, ip, lock_flags);
--		xfs_trans_ihold(tp, ip);
-+		xfs_trans_ijoin(tp, ip);
- 
- 		/*
- 		 * Only change the c/mtime if we are changing the size
-@@ -319,8 +318,7 @@ xfs_setattr(
- 			xfs_iflags_set(ip, XFS_ITRUNCATED);
- 		}
- 	} else if (tp) {
--		xfs_trans_ijoin(tp, ip, lock_flags);
--		xfs_trans_ihold(tp, ip);
-+		xfs_trans_ijoin(tp, ip);
- 	}
- 
- 	/*
-@@ -653,10 +651,7 @@ xfs_free_eofblocks(
- 		}
- 
- 		xfs_ilock(ip, XFS_ILOCK_EXCL);
--		xfs_trans_ijoin(tp, ip,
--				XFS_IOLOCK_EXCL |
--				XFS_ILOCK_EXCL);
--		xfs_trans_ihold(tp, ip);
-+		xfs_trans_ijoin(tp, ip);
- 
- 		error = xfs_itruncate_finish(&tp, ip,
- 					     ip->i_size,
-@@ -728,8 +723,7 @@ xfs_inactive_symlink_rmt(
- 	xfs_ilock(ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
- 	size = (int)ip->i_d.di_size;
- 	ip->i_d.di_size = 0;
--	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
--	xfs_trans_ihold(tp, ip);
-+	xfs_trans_ijoin(tp, ip);
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 	/*
- 	 * Find the block(s) so we can inval and unmap them.
-@@ -773,8 +767,7 @@ xfs_inactive_symlink_rmt(
- 	 * Mark it dirty so it will be logged and moved forward in the log as
- 	 * part of every commit.
- 	 */
--	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
--	xfs_trans_ihold(tp, ip);
-+	xfs_trans_ijoin(tp, ip);
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 	/*
- 	 * Get a new, empty transaction to return to our caller.
-@@ -907,8 +900,7 @@ xfs_inactive_attrs(
- 		goto error_cancel;
- 
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	xfs_trans_ijoin(tp, ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
--	xfs_trans_ihold(tp, ip);
-+	xfs_trans_ijoin(tp, ip);
- 	xfs_idestroy_fork(ip, XFS_ATTR_FORK);
- 
- 	ASSERT(ip->i_d.di_anextents == 0);
-@@ -1095,8 +1087,7 @@ xfs_inactive(
- 		}
- 
- 		xfs_ilock(ip, XFS_ILOCK_EXCL);
--		xfs_trans_ijoin(tp, ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
--		xfs_trans_ihold(tp, ip);
-+		xfs_trans_ijoin(tp, ip);
- 
- 		/*
- 		 * normally, we have to run xfs_itruncate_finish sync.
-@@ -1129,8 +1120,7 @@ xfs_inactive(
- 			return VN_INACTIVE_CACHE;
- 		}
- 
--		xfs_trans_ijoin(tp, ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
--		xfs_trans_ihold(tp, ip);
-+		xfs_trans_ijoin(tp, ip);
- 	} else {
- 		error = xfs_trans_reserve(tp, 0,
- 					  XFS_IFREE_LOG_RES(mp),
-@@ -1143,8 +1133,7 @@ xfs_inactive(
- 		}
- 
- 		xfs_ilock(ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
--		xfs_trans_ijoin(tp, ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
--		xfs_trans_ihold(tp, ip);
-+		xfs_trans_ijoin(tp, ip);
- 	}
- 
- 	/*
-@@ -1392,8 +1381,7 @@ xfs_create(
- 	 * the transaction cancel unlocking dp so don't do it explicitly in the
- 	 * error path.
- 	 */
--	IHOLD(dp);
--	xfs_trans_ijoin(tp, dp, XFS_ILOCK_EXCL);
-+	xfs_trans_ijoin_ref(tp, dp, XFS_ILOCK_EXCL);
- 	unlock_dp_on_error = B_FALSE;
- 
- 	error = xfs_dir_createname(tp, dp, name, ip->i_ino,
-@@ -1730,15 +1718,8 @@ xfs_remove(
- 
- 	xfs_lock_two_inodes(dp, ip, XFS_ILOCK_EXCL);
- 
--	/*
--	 * At this point, we've gotten both the directory and the entry
--	 * inodes locked.
--	 */
--	IHOLD(ip);
--	xfs_trans_ijoin(tp, dp, XFS_ILOCK_EXCL);
--
--	IHOLD(dp);
--	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
-+	xfs_trans_ijoin_ref(tp, dp, XFS_ILOCK_EXCL);
-+	xfs_trans_ijoin_ref(tp, ip, XFS_ILOCK_EXCL);
- 
- 	/*
- 	 * If we're removing a directory perform some additional validation.
-@@ -1884,15 +1865,8 @@ xfs_link(
- 
- 	xfs_lock_two_inodes(sip, tdp, XFS_ILOCK_EXCL);
- 
--	/*
--	 * Increment vnode ref counts since xfs_trans_commit &
--	 * xfs_trans_cancel will both unlock the inodes and
--	 * decrement the associated ref counts.
--	 */
--	IHOLD(sip);
--	IHOLD(tdp);
--	xfs_trans_ijoin(tp, sip, XFS_ILOCK_EXCL);
--	xfs_trans_ijoin(tp, tdp, XFS_ILOCK_EXCL);
-+	xfs_trans_ijoin_ref(tp, sip, XFS_ILOCK_EXCL);
-+	xfs_trans_ijoin_ref(tp, tdp, XFS_ILOCK_EXCL);
- 
- 	/*
- 	 * If the source has too many links, we can't make any more to it.
-@@ -2087,8 +2061,7 @@ xfs_symlink(
- 	 * transaction cancel unlocking dp so don't do it explicitly in the
- 	 * error path.
- 	 */
--	IHOLD(dp);
--	xfs_trans_ijoin(tp, dp, XFS_ILOCK_EXCL);
-+	xfs_trans_ijoin_ref(tp, dp, XFS_ILOCK_EXCL);
- 	unlock_dp_on_error = B_FALSE;
- 
- 	/*
-@@ -2227,13 +2200,12 @@ xfs_set_dmattrs(
- 		return error;
- 	}
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
-+	xfs_trans_ijoin_ref(tp, ip, XFS_ILOCK_EXCL);
- 
- 	ip->i_d.di_dmevmask = evmask;
- 	ip->i_d.di_dmstate  = state;
- 
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--	IHOLD(ip);
- 	error = xfs_trans_commit(tp, 0);
- 
- 	return error;
-@@ -2366,8 +2338,7 @@ xfs_alloc_file_space(
- 		if (error)
- 			goto error1;
- 
--		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
--		xfs_trans_ihold(tp, ip);
-+		xfs_trans_ijoin(tp, ip);
- 
- 		/*
- 		 * Issue the xfs_bmapi() call to allocate the blocks
-@@ -2668,8 +2639,7 @@ xfs_free_file_space(
- 		if (error)
- 			goto error1;
- 
--		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
--		xfs_trans_ihold(tp, ip);
-+		xfs_trans_ijoin(tp, ip);
- 
- 		/*
- 		 * issue the bunmapi() call to free the blocks
-@@ -2839,8 +2809,7 @@ xfs_change_file_space(
- 
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 
--	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
--	xfs_trans_ihold(tp, ip);
-+	xfs_trans_ijoin(tp, ip);
- 
- 	if ((attr_flags & XFS_ATTR_DMI) == 0) {
- 		ip->i_d.di_mode &= ~S_ISUID;
-Index: xfs/fs/xfs/linux-2.6/xfs_ioctl.c
-===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_ioctl.c	2010-05-29 18:44:44.024034028 +0200
-+++ xfs/fs/xfs/linux-2.6/xfs_ioctl.c	2010-05-29 18:44:47.689026206 +0200
-@@ -1035,8 +1035,7 @@ xfs_ioctl_setattr(
- 		}
- 	}
- 
--	xfs_trans_ijoin(tp, ip, lock_flags);
--	xfs_trans_ihold(tp, ip);
-+	xfs_trans_ijoin(tp, ip);
- 
- 	/*
- 	 * Change file ownership.  Must be the owner or privileged.
-Index: xfs/fs/xfs/linux-2.6/xfs_sync.c
-===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_sync.c	2010-05-29 18:44:44.048005742 +0200
-+++ xfs/fs/xfs/linux-2.6/xfs_sync.c	2010-05-29 18:44:47.695005533 +0200
-@@ -328,8 +328,7 @@ xfs_commit_dummy_trans(
- 
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 
--	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
--	xfs_trans_ihold(tp, ip);
-+	xfs_trans_ijoin(tp, ip);
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 	error = xfs_trans_commit(tp, 0);
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-Index: xfs/fs/xfs/xfs_attr.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_attr.c	2010-05-29 18:44:44.103255638 +0200
-+++ xfs/fs/xfs/xfs_attr.c	2010-05-29 18:49:10.764003787 +0200
-@@ -319,8 +319,7 @@ xfs_attr_set_int(
- 		return (error);
- 	}
- 
--	xfs_trans_ijoin(args.trans, dp, XFS_ILOCK_EXCL);
--	xfs_trans_ihold(args.trans, dp);
-+	xfs_trans_ijoin(args.trans, dp);
- 
- 	/*
- 	 * If the attribute list is non-existent or a shortform list,
-@@ -390,10 +389,8 @@ xfs_attr_set_int(
- 		 * bmap_finish() may have committed the last trans and started
- 		 * a new one.  We need the inode to be in all transactions.
- 		 */
--		if (committed) {
--			xfs_trans_ijoin(args.trans, dp, XFS_ILOCK_EXCL);
--			xfs_trans_ihold(args.trans, dp);
--		}
-+		if (committed)
-+			xfs_trans_ijoin(args.trans, dp);
- 
- 		/*
- 		 * Commit the leaf transformation.  We'll need another (linked)
-@@ -538,8 +535,7 @@ xfs_attr_remove_int(xfs_inode_t *dp, str
- 	 * No need to make quota reservations here. We expect to release some
- 	 * blocks not allocate in the common case.
- 	 */
--	xfs_trans_ijoin(args.trans, dp, XFS_ILOCK_EXCL);
--	xfs_trans_ihold(args.trans, dp);
-+	xfs_trans_ijoin(args.trans, dp);
- 
- 	/*
- 	 * Decide on what work routines to call based on the inode size.
-@@ -815,8 +811,7 @@ xfs_attr_inactive(xfs_inode_t *dp)
- 	 * No need to make quota reservations here. We expect to release some
- 	 * blocks, not allocate, in the common case.
- 	 */
--	xfs_trans_ijoin(trans, dp, XFS_ILOCK_EXCL);
--	xfs_trans_ihold(trans, dp);
-+	xfs_trans_ijoin(trans, dp);
- 
- 	/*
- 	 * Decide on what work routines to call based on the inode size.
-@@ -975,10 +970,8 @@ xfs_attr_leaf_addname(xfs_da_args_t *arg
- 		 * bmap_finish() may have committed the last trans and started
- 		 * a new one.  We need the inode to be in all transactions.
- 		 */
--		if (committed) {
--			xfs_trans_ijoin(args->trans, dp, XFS_ILOCK_EXCL);
--			xfs_trans_ihold(args->trans, dp);
--		}
-+		if (committed)
-+			xfs_trans_ijoin(args->trans, dp);
- 
- 		/*
- 		 * Commit the current trans (including the inode) and start
-@@ -1079,10 +1072,8 @@ xfs_attr_leaf_addname(xfs_da_args_t *arg
- 			 * and started a new one.  We need the inode to be
- 			 * in all transactions.
- 			 */
--			if (committed) {
--				xfs_trans_ijoin(args->trans, dp, XFS_ILOCK_EXCL);
--				xfs_trans_ihold(args->trans, dp);
--			}
-+			if (committed)
-+				xfs_trans_ijoin(args->trans, dp);
- 		} else
- 			xfs_da_buf_done(bp);
- 
-@@ -1155,10 +1146,8 @@ xfs_attr_leaf_removename(xfs_da_args_t *
- 		 * bmap_finish() may have committed the last trans and started
- 		 * a new one.  We need the inode to be in all transactions.
- 		 */
--		if (committed) {
--			xfs_trans_ijoin(args->trans, dp, XFS_ILOCK_EXCL);
--			xfs_trans_ihold(args->trans, dp);
--		}
-+		if (committed)
-+			xfs_trans_ijoin(args->trans, dp);
- 	} else
- 		xfs_da_buf_done(bp);
- 	return(0);
-@@ -1311,10 +1300,8 @@ restart:
- 			 * and started a new one.  We need the inode to be
- 			 * in all transactions.
- 			 */
--			if (committed) {
--				xfs_trans_ijoin(args->trans, dp, XFS_ILOCK_EXCL);
--				xfs_trans_ihold(args->trans, dp);
--			}
-+			if (committed)
-+				xfs_trans_ijoin(args->trans, dp);
- 
- 			/*
- 			 * Commit the node conversion and start the next
-@@ -1350,10 +1337,8 @@ restart:
- 		 * bmap_finish() may have committed the last trans and started
- 		 * a new one.  We need the inode to be in all transactions.
- 		 */
--		if (committed) {
--			xfs_trans_ijoin(args->trans, dp, XFS_ILOCK_EXCL);
--			xfs_trans_ihold(args->trans, dp);
--		}
-+		if (committed)
-+			xfs_trans_ijoin(args->trans, dp);
- 	} else {
- 		/*
- 		 * Addition succeeded, update Btree hashvals.
-@@ -1464,10 +1449,8 @@ restart:
- 			 * and started a new one.  We need the inode to be
- 			 * in all transactions.
- 			 */
--			if (committed) {
--				xfs_trans_ijoin(args->trans, dp, XFS_ILOCK_EXCL);
--				xfs_trans_ihold(args->trans, dp);
--			}
-+			if (committed)
-+				xfs_trans_ijoin(args->trans, dp);
- 		}
- 
- 		/*
-@@ -1598,10 +1581,8 @@ xfs_attr_node_removename(xfs_da_args_t *
- 		 * bmap_finish() may have committed the last trans and started
- 		 * a new one.  We need the inode to be in all transactions.
- 		 */
--		if (committed) {
--			xfs_trans_ijoin(args->trans, dp, XFS_ILOCK_EXCL);
--			xfs_trans_ihold(args->trans, dp);
--		}
-+		if (committed)
-+			xfs_trans_ijoin(args->trans, dp);
- 
- 		/*
- 		 * Commit the Btree join operation and start a new trans.
-@@ -1652,10 +1633,8 @@ xfs_attr_node_removename(xfs_da_args_t *
- 			 * and started a new one.  We need the inode to be
- 			 * in all transactions.
- 			 */
--			if (committed) {
--				xfs_trans_ijoin(args->trans, dp, XFS_ILOCK_EXCL);
--				xfs_trans_ihold(args->trans, dp);
--			}
-+			if (committed)
-+				xfs_trans_ijoin(args->trans, dp);
- 		} else
- 			xfs_da_brelse(args->trans, bp);
- 	}
-@@ -2093,10 +2072,8 @@ xfs_attr_rmtval_set(xfs_da_args_t *args)
- 		 * bmap_finish() may have committed the last trans and started
- 		 * a new one.  We need the inode to be in all transactions.
- 		 */
--		if (committed) {
--			xfs_trans_ijoin(args->trans, dp, XFS_ILOCK_EXCL);
--			xfs_trans_ihold(args->trans, dp);
--		}
-+		if (committed)
-+			xfs_trans_ijoin(args->trans, dp);
- 
- 		ASSERT(nmap == 1);
- 		ASSERT((map.br_startblock != DELAYSTARTBLOCK) &&
-@@ -2249,10 +2226,8 @@ xfs_attr_rmtval_remove(xfs_da_args_t *ar
- 		 * bmap_finish() may have committed the last trans and started
- 		 * a new one.  We need the inode to be in all transactions.
- 		 */
--		if (committed) {
--			xfs_trans_ijoin(args->trans, args->dp, XFS_ILOCK_EXCL);
--			xfs_trans_ihold(args->trans, args->dp);
--		}
-+		if (committed)
-+			xfs_trans_ijoin(args->trans, args->dp);
- 
- 		/*
- 		 * Close out trans and start the next one in the chain.
-Index: xfs/fs/xfs/xfs_dfrag.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_dfrag.c	2010-05-29 18:44:44.127260247 +0200
-+++ xfs/fs/xfs/xfs_dfrag.c	2010-05-29 18:44:47.708005952 +0200
-@@ -413,11 +413,8 @@ xfs_swap_extents(
- 	}
- 
- 
--	IHOLD(ip);
--	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
--
--	IHOLD(tip);
--	xfs_trans_ijoin(tp, tip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
-+	xfs_trans_ijoin_ref(tp, ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
-+	xfs_trans_ijoin_ref(tp, tip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
- 
- 	xfs_trans_log_inode(tp, ip,  ilf_fields);
- 	xfs_trans_log_inode(tp, tip, tilf_fields);
-Index: xfs/fs/xfs/xfs_fsops.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_fsops.c	2010-05-29 18:44:44.139031165 +0200
-+++ xfs/fs/xfs/xfs_fsops.c	2010-05-29 18:44:47.713005812 +0200
-@@ -633,8 +633,7 @@ xfs_fs_log_dummy(
- 	ip = mp->m_rootip;
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 
--	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
--	xfs_trans_ihold(tp, ip);
-+	xfs_trans_ijoin(tp, ip);
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 	xfs_trans_set_sync(tp);
- 	error = xfs_trans_commit(tp, 0);
-Index: xfs/fs/xfs/xfs_inode.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_inode.c	2010-05-29 18:44:47.572011120 +0200
-+++ xfs/fs/xfs/xfs_inode.c	2010-05-29 18:49:11.627003926 +0200
-@@ -1459,7 +1459,7 @@ xfs_itruncate_finish(
- 	ASSERT((*tp)->t_flags & XFS_TRANS_PERM_LOG_RES);
- 	ASSERT(ip->i_transp == *tp);
- 	ASSERT(ip->i_itemp != NULL);
--	ASSERT(ip->i_itemp->ili_flags & XFS_ILI_HOLD);
-+	ASSERT(ip->i_itemp->ili_lock_flags == 0);
- 
- 
- 	ntp = *tp;
-@@ -1611,12 +1611,8 @@ xfs_itruncate_finish(
- 		 */
- 		error = xfs_bmap_finish(tp, &free_list, &committed);
- 		ntp = *tp;
--		if (committed) {
--			/* link the inode into the next xact in the chain */
--			xfs_trans_ijoin(ntp, ip,
--					XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
--			xfs_trans_ihold(ntp, ip);
--		}
-+		if (committed)
-+			xfs_trans_ijoin(ntp, ip);
- 
- 		if (error) {
- 			/*
-@@ -1645,9 +1641,7 @@ xfs_itruncate_finish(
- 		error = xfs_trans_commit(*tp, 0);
- 		*tp = ntp;
- 
--		/* link the inode into the next transaction in the chain */
--		xfs_trans_ijoin(ntp, ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
--		xfs_trans_ihold(ntp, ip);
-+		xfs_trans_ijoin(ntp, ip);
- 
- 		if (error)
- 			return error;
-Index: xfs/fs/xfs/xfs_iomap.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_iomap.c	2010-05-29 18:44:44.173005812 +0200
-+++ xfs/fs/xfs/xfs_iomap.c	2010-05-29 18:49:10.832274285 +0200
-@@ -329,8 +329,7 @@ xfs_iomap_write_direct(
- 	if (error)
- 		goto error1;
- 
--	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
--	xfs_trans_ihold(tp, ip);
-+	xfs_trans_ijoin(tp, ip);
- 
- 	bmapi_flag = XFS_BMAPI_WRITE;
- 	if ((flags & BMAPI_DIRECT) && (offset < ip->i_size || extsz))
-@@ -597,8 +596,7 @@ xfs_iomap_write_allocate(
- 				return XFS_ERROR(error);
- 			}
- 			xfs_ilock(ip, XFS_ILOCK_EXCL);
--			xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
--			xfs_trans_ihold(tp, ip);
-+			xfs_trans_ijoin(tp, ip);
- 
- 			xfs_bmap_init(&free_list, &first_block);
- 
-@@ -761,8 +759,7 @@ xfs_iomap_write_unwritten(
- 		}
- 
- 		xfs_ilock(ip, XFS_ILOCK_EXCL);
--		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
--		xfs_trans_ihold(tp, ip);
-+		xfs_trans_ijoin(tp, ip);
- 
- 		/*
- 		 * Modify the unwritten extent state of the buffer.
-Index: xfs/fs/xfs/xfs_trans.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_trans.c	2010-05-29 18:44:44.776255080 +0200
-+++ xfs/fs/xfs/xfs_trans.c	2010-05-29 18:44:47.726070626 +0200
-@@ -1892,7 +1892,6 @@ xfs_trans_roll(
- 	if (error)
- 		return error;
- 
--	xfs_trans_ijoin(trans, dp, XFS_ILOCK_EXCL);
--	xfs_trans_ihold(trans, dp);
-+	xfs_trans_ijoin(trans, dp);
- 	return 0;
- }
-Index: xfs/fs/xfs/xfs_utils.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_utils.c	2010-05-29 18:44:44.226005812 +0200
-+++ xfs/fs/xfs/xfs_utils.c	2010-05-29 18:44:47.732005603 +0200
-@@ -374,8 +374,8 @@ xfs_truncate_file(
- 	 * of references will stay constant.
- 	 */
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
--	xfs_trans_ihold(tp, ip);
-+	xfs_trans_ijoin(tp, ip);
-+
- 	/*
- 	 * Signal a sync xaction.  The only case where that isn't
- 	 * the case is if we're truncating an already unlinked file
-Index: xfs/fs/xfs/xfs_inode_item.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_inode_item.c	2010-05-29 18:44:47.580032003 +0200
-+++ xfs/fs/xfs/xfs_inode_item.c	2010-05-29 18:49:14.203004136 +0200
-@@ -628,19 +628,10 @@ xfs_inode_item_unlock(
- {
- 	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
- 	struct xfs_inode	*ip = iip->ili_inode;
--	uint			hold;
--	uint			iolocked;
--	uint			lock_flags;
-+	unsigned short		lock_flags;
- 
--	ASSERT(iip != NULL);
- 	ASSERT(iip->ili_inode->i_itemp != NULL);
- 	ASSERT(xfs_isilocked(iip->ili_inode, XFS_ILOCK_EXCL));
--	ASSERT((!(iip->ili_inode->i_itemp->ili_flags &
--		  XFS_ILI_IOLOCKED_EXCL)) ||
--	       xfs_isilocked(iip->ili_inode, XFS_IOLOCK_EXCL));
--	ASSERT((!(iip->ili_inode->i_itemp->ili_flags &
--		  XFS_ILI_IOLOCKED_SHARED)) ||
--	       xfs_isilocked(iip->ili_inode, XFS_IOLOCK_SHARED));
- 
- 	/*
- 	 * Clear the transaction pointer in the inode.
-@@ -668,35 +659,10 @@ xfs_inode_item_unlock(
- 		iip->ili_aextents_buf = NULL;
- 	}
- 
--	/*
--	 * Figure out if we should unlock the inode or not.
--	 */
--	hold = iip->ili_flags & XFS_ILI_HOLD;
--
--	/*
--	 * Before clearing out the flags, remember whether we
--	 * are holding the inode's IO lock.
--	 */
--	iolocked = iip->ili_flags & XFS_ILI_IOLOCKED_ANY;
--
--	/*
--	 * Clear out the fields of the inode log item particular
--	 * to the current transaction.
--	 */
--	iip->ili_flags = 0;
--
--	/*
--	 * Unlock the inode if XFS_ILI_HOLD was not set.
--	 */
--	if (!hold) {
--		lock_flags = XFS_ILOCK_EXCL;
--		if (iolocked & XFS_ILI_IOLOCKED_EXCL) {
--			lock_flags |= XFS_IOLOCK_EXCL;
--		} else if (iolocked & XFS_ILI_IOLOCKED_SHARED) {
--			lock_flags |= XFS_IOLOCK_SHARED;
--		}
-+	lock_flags = iip->ili_lock_flags;
-+	iip->ili_lock_flags = 0;
-+	if (lock_flags)
- 		xfs_iput(iip->ili_inode, lock_flags);
--	}
- }
- 
- /*
-Index: xfs/fs/xfs/xfs_inode_item.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_inode_item.h	2010-05-29 18:44:47.582032213 +0200
-+++ xfs/fs/xfs/xfs_inode_item.h	2010-05-29 18:49:35.192005952 +0200
-@@ -103,12 +103,6 @@ typedef struct xfs_inode_log_format_64 {
- 				 XFS_ILOG_ADATA | XFS_ILOG_AEXT | \
- 				 XFS_ILOG_ABROOT)
- 
--#define	XFS_ILI_HOLD		0x1
--#define	XFS_ILI_IOLOCKED_EXCL	0x2
--#define	XFS_ILI_IOLOCKED_SHARED	0x4
--
--#define	XFS_ILI_IOLOCKED_ANY   (XFS_ILI_IOLOCKED_EXCL | XFS_ILI_IOLOCKED_SHARED)
--
- static inline int xfs_ilog_fbroot(int w)
- {
- 	return (w == XFS_DATA_FORK ? XFS_ILOG_DBROOT : XFS_ILOG_ABROOT);
-@@ -137,7 +131,7 @@ typedef struct xfs_inode_log_item {
- 	struct xfs_inode	*ili_inode;	   /* inode ptr */
- 	xfs_lsn_t		ili_flush_lsn;	   /* lsn at last flush */
- 	xfs_lsn_t		ili_last_lsn;	   /* lsn at last transaction */
--	unsigned short		ili_flags;	   /* misc flags */
-+	unsigned short		ili_lock_flags;	   /* lock flags */
- 	unsigned short		ili_logged;	   /* flushed logged data */
- 	unsigned int		ili_last_fields;   /* fields when flushed */
- 	struct xfs_bmbt_rec	*ili_extents_buf;  /* array of logged
+---
+
+V1 -> V2
+
+ - updated to account for the delayed logging branch merge
+ - remove a few more left overs pointed out by Eric
+
 Index: xfs/fs/xfs/linux-2.6/xfs_file.c
 ===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_file.c	2010-05-29 18:44:44.020005812 +0200
-+++ xfs/fs/xfs/linux-2.6/xfs_file.c	2010-05-29 18:49:10.742004625 +0200
-@@ -158,8 +158,7 @@ xfs_file_fsync(
- 		 * transaction.	 So we play it safe and fire off the
- 		 * transaction anyway.
- 		 */
--		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
--		xfs_trans_ihold(tp, ip);
-+		xfs_trans_ijoin(tp, ip);
- 		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 		xfs_trans_set_sync(tp);
- 		error = _xfs_trans_commit(tp, 0, &log_flushed);
+--- xfs.orig/fs/xfs/linux-2.6/xfs_file.c	2010-05-22 00:40:37.890004594 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_file.c	2010-05-25 11:14:59.236274548 +0200
+@@ -24,7 +24,6 @@
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+ #include "xfs_trans.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_alloc_btree.h"
+@@ -275,20 +274,6 @@ xfs_file_aio_read(
+ 		mutex_lock(&inode->i_mutex);
+ 	xfs_ilock(ip, XFS_IOLOCK_SHARED);
+ 
+-	if (DM_EVENT_ENABLED(ip, DM_EVENT_READ) && !(ioflags & IO_INVIS)) {
+-		int dmflags = FILP_DELAY_FLAG(file) | DM_SEM_FLAG_RD(ioflags);
+-		int iolock = XFS_IOLOCK_SHARED;
+-
+-		ret = -XFS_SEND_DATA(mp, DM_EVENT_READ, ip, iocb->ki_pos, size,
+-					dmflags, &iolock);
+-		if (ret) {
+-			xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+-			if (unlikely(ioflags & IO_ISDIRECT))
+-				mutex_unlock(&inode->i_mutex);
+-			return ret;
+-		}
+-	}
+-
+ 	if (unlikely(ioflags & IO_ISDIRECT)) {
+ 		if (inode->i_mapping->nrpages) {
+ 			ret = -xfs_flushinval_pages(ip,
+@@ -321,7 +306,6 @@ xfs_file_splice_read(
+ 	unsigned int		flags)
+ {
+ 	struct xfs_inode	*ip = XFS_I(infilp->f_mapping->host);
+-	struct xfs_mount	*mp = ip->i_mount;
+ 	int			ioflags = 0;
+ 	ssize_t			ret;
+ 
+@@ -335,18 +319,6 @@ xfs_file_splice_read(
+ 
+ 	xfs_ilock(ip, XFS_IOLOCK_SHARED);
+ 
+-	if (DM_EVENT_ENABLED(ip, DM_EVENT_READ) && !(ioflags & IO_INVIS)) {
+-		int iolock = XFS_IOLOCK_SHARED;
+-		int error;
+-
+-		error = XFS_SEND_DATA(mp, DM_EVENT_READ, ip, *ppos, count,
+-					FILP_DELAY_FLAG(infilp), &iolock);
+-		if (error) {
+-			xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+-			return -error;
+-		}
+-	}
+-
+ 	trace_xfs_file_splice_read(ip, count, *ppos, ioflags);
+ 
+ 	ret = generic_file_splice_read(infilp, ppos, pipe, count, flags);
+@@ -367,7 +339,6 @@ xfs_file_splice_write(
+ {
+ 	struct inode		*inode = outfilp->f_mapping->host;
+ 	struct xfs_inode	*ip = XFS_I(inode);
+-	struct xfs_mount	*mp = ip->i_mount;
+ 	xfs_fsize_t		isize, new_size;
+ 	int			ioflags = 0;
+ 	ssize_t			ret;
+@@ -382,18 +353,6 @@ xfs_file_splice_write(
+ 
+ 	xfs_ilock(ip, XFS_IOLOCK_EXCL);
+ 
+-	if (DM_EVENT_ENABLED(ip, DM_EVENT_WRITE) && !(ioflags & IO_INVIS)) {
+-		int iolock = XFS_IOLOCK_EXCL;
+-		int error;
+-
+-		error = XFS_SEND_DATA(mp, DM_EVENT_WRITE, ip, *ppos, count,
+-					FILP_DELAY_FLAG(outfilp), &iolock);
+-		if (error) {
+-			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+-			return -error;
+-		}
+-	}
+-
+ 	new_size = *ppos + count;
+ 
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+@@ -627,7 +586,6 @@ xfs_file_aio_write(
+ 	int			ioflags = 0;
+ 	xfs_fsize_t		isize, new_size;
+ 	int			iolock;
+-	int			eventsent = 0;
+ 	size_t			ocount = 0, count;
+ 	int			need_i_mutex;
+ 
+@@ -673,33 +631,6 @@ start:
+ 		goto out_unlock_mutex;
+ 	}
+ 
+-	if ((DM_EVENT_ENABLED(ip, DM_EVENT_WRITE) &&
+-	    !(ioflags & IO_INVIS) && !eventsent)) {
+-		int		dmflags = FILP_DELAY_FLAG(file);
+-
+-		if (need_i_mutex)
+-			dmflags |= DM_FLAGS_IMUX;
+-
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-		error = XFS_SEND_DATA(ip->i_mount, DM_EVENT_WRITE, ip,
+-				      pos, count, dmflags, &iolock);
+-		if (error) {
+-			goto out_unlock_internal;
+-		}
+-		xfs_ilock(ip, XFS_ILOCK_EXCL);
+-		eventsent = 1;
+-
+-		/*
+-		 * The iolock was dropped and reacquired in XFS_SEND_DATA
+-		 * so we have to recheck the size when appending.
+-		 * We will only "goto start;" once, since having sent the
+-		 * event prevents another call to XFS_SEND_DATA, which is
+-		 * what allows the size to change in the first place.
+-		 */
+-		if ((file->f_flags & O_APPEND) && pos != ip->i_size)
+-			goto start;
+-	}
+-
+ 	if (ioflags & IO_ISDIRECT) {
+ 		xfs_buftarg_t	*target =
+ 			XFS_IS_REALTIME_INODE(ip) ?
+@@ -830,22 +761,6 @@ write_retry:
+ 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	}
+ 
+-	if (ret == -ENOSPC &&
+-	    DM_EVENT_ENABLED(ip, DM_EVENT_NOSPACE) && !(ioflags & IO_INVIS)) {
+-		xfs_iunlock(ip, iolock);
+-		if (need_i_mutex)
+-			mutex_unlock(&inode->i_mutex);
+-		error = XFS_SEND_NAMESP(ip->i_mount, DM_EVENT_NOSPACE, ip,
+-				DM_RIGHT_NULL, ip, DM_RIGHT_NULL, NULL, NULL,
+-				0, 0, 0); /* Delay flag intentionally  unused */
+-		if (need_i_mutex)
+-			mutex_lock(&inode->i_mutex);
+-		xfs_ilock(ip, iolock);
+-		if (error)
+-			goto out_unlock_internal;
+-		goto start;
+-	}
+-
+ 	error = -ret;
+ 	if (ret <= 0)
+ 		goto out_unlock_internal;
+Index: xfs/fs/xfs/linux-2.6/xfs_ioctl.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_ioctl.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_ioctl.c	2010-05-25 11:14:59.237275526 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+ #include "xfs_alloc.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_alloc_btree.h"
+@@ -1117,16 +1116,7 @@ xfs_ioctl_setattr(
+ 	xfs_qm_dqrele(udqp);
+ 	xfs_qm_dqrele(gdqp);
+ 
+-	if (code)
+-		return code;
+-
+-	if (DM_EVENT_ENABLED(ip, DM_EVENT_ATTRIBUTE)) {
+-		XFS_SEND_NAMESP(mp, DM_EVENT_ATTRIBUTE, ip, DM_RIGHT_NULL,
+-				NULL, DM_RIGHT_NULL, NULL, NULL, 0, 0,
+-				(mask & FSX_NONBLOCK) ? DM_FLAGS_NDELAY : 0);
+-	}
+-
+-	return 0;
++	return code;
+ 
+  error_return:
+ 	xfs_qm_dqrele(udqp);
 Index: xfs/fs/xfs/linux-2.6/xfs_super.c
 ===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2010-05-29 18:44:44.709255988 +0200
-+++ xfs/fs/xfs/linux-2.6/xfs_super.c	2010-05-29 18:44:47.751005673 +0200
-@@ -1023,8 +1023,7 @@ xfs_log_inode(
- 	 * an inode in another recent transaction.  So we play it safe and
- 	 * fire off the transaction anyway.
+--- xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2010-05-24 23:11:41.018253918 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_super.c	2010-05-25 11:15:23.496005936 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+ #include "xfs_alloc.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_quota.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+@@ -116,9 +115,6 @@ mempool_t *xfs_ioend_pool;
+ #define MNTOPT_GQUOTANOENF "gqnoenforce"/* group quota limit enforcement */
+ #define MNTOPT_PQUOTANOENF "pqnoenforce"/* project quota limit enforcement */
+ #define MNTOPT_QUOTANOENF  "qnoenforce"	/* same as uqnoenforce */
+-#define MNTOPT_DMAPI	"dmapi"		/* DMI enabled (DMAPI / XDSM) */
+-#define MNTOPT_XDSM	"xdsm"		/* DMI enabled (DMAPI / XDSM) */
+-#define MNTOPT_DMI	"dmi"		/* DMI enabled (DMAPI / XDSM) */
+ #define MNTOPT_DELAYLOG   "delaylog"	/* Delayed loging enabled */
+ #define MNTOPT_NODELAYLOG "nodelaylog"	/* Delayed loging disabled */
+ 
+@@ -172,15 +168,13 @@ suffix_strtoul(char *s, char **endp, uns
+ STATIC int
+ xfs_parseargs(
+ 	struct xfs_mount	*mp,
+-	char			*options,
+-	char			**mtpt)
++	char			*options)
+ {
+ 	struct super_block	*sb = mp->m_super;
+ 	char			*this_char, *value, *eov;
+ 	int			dsunit = 0;
+ 	int			dswidth = 0;
+ 	int			iosize = 0;
+-	int			dmapi_implies_ikeep = 1;
+ 	__uint8_t		iosizelog = 0;
+ 
+ 	/*
+@@ -243,15 +237,10 @@ xfs_parseargs(
+ 			if (!mp->m_logname)
+ 				return ENOMEM;
+ 		} else if (!strcmp(this_char, MNTOPT_MTPT)) {
+-			if (!value || !*value) {
+-				cmn_err(CE_WARN,
+-					"XFS: %s option requires an argument",
+-					this_char);
+-				return EINVAL;
+-			}
+-			*mtpt = kstrndup(value, MAXNAMELEN, GFP_KERNEL);
+-			if (!*mtpt)
+-				return ENOMEM;
++			cmn_err(CE_WARN,
++				"XFS: %s option not allowed on this system",
++				this_char);
++			return EINVAL;
+ 		} else if (!strcmp(this_char, MNTOPT_RTDEV)) {
+ 			if (!value || !*value) {
+ 				cmn_err(CE_WARN,
+@@ -329,7 +318,6 @@ xfs_parseargs(
+ 		} else if (!strcmp(this_char, MNTOPT_IKEEP)) {
+ 			mp->m_flags |= XFS_MOUNT_IKEEP;
+ 		} else if (!strcmp(this_char, MNTOPT_NOIKEEP)) {
+-			dmapi_implies_ikeep = 0;
+ 			mp->m_flags &= ~XFS_MOUNT_IKEEP;
+ 		} else if (!strcmp(this_char, MNTOPT_LARGEIO)) {
+ 			mp->m_flags &= ~XFS_MOUNT_COMPAT_IOSIZE;
+@@ -370,12 +358,6 @@ xfs_parseargs(
+ 		} else if (!strcmp(this_char, MNTOPT_GQUOTANOENF)) {
+ 			mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE);
+ 			mp->m_qflags &= ~XFS_OQUOTA_ENFD;
+-		} else if (!strcmp(this_char, MNTOPT_DMAPI)) {
+-			mp->m_flags |= XFS_MOUNT_DMAPI;
+-		} else if (!strcmp(this_char, MNTOPT_XDSM)) {
+-			mp->m_flags |= XFS_MOUNT_DMAPI;
+-		} else if (!strcmp(this_char, MNTOPT_DMI)) {
+-			mp->m_flags |= XFS_MOUNT_DMAPI;
+ 		} else if (!strcmp(this_char, MNTOPT_DELAYLOG)) {
+ 			mp->m_flags |= XFS_MOUNT_DELAYLOG;
+ 			cmn_err(CE_WARN,
+@@ -430,12 +412,6 @@ xfs_parseargs(
+ 		return EINVAL;
+ 	}
+ 
+-	if ((mp->m_flags & XFS_MOUNT_DMAPI) && (!*mtpt || *mtpt[0] == '\0')) {
+-		printk("XFS: %s option needs the mount point option as well\n",
+-			MNTOPT_DMAPI);
+-		return EINVAL;
+-	}
+-
+ 	if ((dsunit && !dswidth) || (!dsunit && dswidth)) {
+ 		cmn_err(CE_WARN,
+ 			"XFS: sunit and swidth must be specified together");
+@@ -449,18 +425,6 @@ xfs_parseargs(
+ 		return EINVAL;
+ 	}
+ 
+-	/*
+-	 * Applications using DMI filesystems often expect the
+-	 * inode generation number to be monotonically increasing.
+-	 * If we delete inode chunks we break this assumption, so
+-	 * keep unused inode chunks on disk for DMI filesystems
+-	 * until we come up with a better solution.
+-	 * Note that if "ikeep" or "noikeep" mount options are
+-	 * supplied, then they are honored.
+-	 */
+-	if ((mp->m_flags & XFS_MOUNT_DMAPI) && dmapi_implies_ikeep)
+-		mp->m_flags |= XFS_MOUNT_IKEEP;
+-
+ done:
+ 	if (!(mp->m_flags & XFS_MOUNT_NOALIGN)) {
+ 		/*
+@@ -542,7 +506,6 @@ xfs_showargs(
+ 		{ XFS_MOUNT_OSYNCISOSYNC,	"," MNTOPT_OSYNCISOSYNC },
+ 		{ XFS_MOUNT_ATTR2,		"," MNTOPT_ATTR2 },
+ 		{ XFS_MOUNT_FILESTREAMS,	"," MNTOPT_FILESTREAM },
+-		{ XFS_MOUNT_DMAPI,		"," MNTOPT_DMAPI },
+ 		{ XFS_MOUNT_GRPID,		"," MNTOPT_GRPID },
+ 		{ XFS_MOUNT_DELAYLOG,		"," MNTOPT_DELAYLOG },
+ 		{ 0, NULL }
+@@ -1206,8 +1169,6 @@ xfs_fs_put_super(
+ 		xfs_sync_attr(mp, 0);
+ 	}
+ 
+-	XFS_SEND_PREUNMOUNT(mp);
+-
+ 	/*
+ 	 * Blow away any referenced inode in the filestreams cache.
+ 	 * This can and will cause log traffic as inodes go inactive
+@@ -1217,14 +1178,11 @@ xfs_fs_put_super(
+ 
+ 	XFS_bflush(mp->m_ddev_targp);
+ 
+-	XFS_SEND_UNMOUNT(mp);
+-
+ 	xfs_unmountfs(mp);
+ 	xfs_freesb(mp);
+ 	xfs_inode_shrinker_unregister(mp);
+ 	xfs_icsb_destroy_counters(mp);
+ 	xfs_close_devices(mp);
+-	xfs_dmops_put(mp);
+ 	xfs_free_fsname(mp);
+ 	kfree(mp);
+ }
+@@ -1542,7 +1500,6 @@ xfs_fs_fill_super(
+ 	struct inode		*root;
+ 	struct xfs_mount	*mp = NULL;
+ 	int			flags = 0, error = ENOMEM;
+-	char			*mtpt = NULL;
+ 
+ 	mp = kzalloc(sizeof(struct xfs_mount), GFP_KERNEL);
+ 	if (!mp)
+@@ -1558,7 +1515,7 @@ xfs_fs_fill_super(
+ 	mp->m_super = sb;
+ 	sb->s_fs_info = mp;
+ 
+-	error = xfs_parseargs(mp, (char *)data, &mtpt);
++	error = xfs_parseargs(mp, (char *)data);
+ 	if (error)
+ 		goto out_free_fsname;
+ 
+@@ -1570,16 +1527,12 @@ xfs_fs_fill_super(
+ #endif
+ 	sb->s_op = &xfs_super_operations;
+ 
+-	error = xfs_dmops_get(mp);
+-	if (error)
+-		goto out_free_fsname;
+-
+ 	if (silent)
+ 		flags |= XFS_MFSI_QUIET;
+ 
+ 	error = xfs_open_devices(mp);
+ 	if (error)
+-		goto out_put_dmops;
++		goto out_free_fsname;
+ 
+ 	if (xfs_icsb_init_counters(mp))
+ 		mp->m_flags |= XFS_MOUNT_NO_PERCPU_SB;
+@@ -1607,8 +1560,6 @@ xfs_fs_fill_super(
+ 	if (error)
+ 		goto out_filestream_unmount;
+ 
+-	XFS_SEND_MOUNT(mp, DM_RIGHT_NULL, mtpt, mp->m_fsname);
+-
+ 	sb->s_magic = XFS_SB_MAGIC;
+ 	sb->s_blocksize = mp->m_sb.sb_blocksize;
+ 	sb->s_blocksize_bits = ffs(sb->s_blocksize) - 1;
+@@ -1637,7 +1588,6 @@ xfs_fs_fill_super(
+ 
+ 	xfs_inode_shrinker_register(mp);
+ 
+-	kfree(mtpt);
+ 	return 0;
+ 
+  out_filestream_unmount:
+@@ -1647,11 +1597,8 @@ xfs_fs_fill_super(
+  out_destroy_counters:
+ 	xfs_icsb_destroy_counters(mp);
+ 	xfs_close_devices(mp);
+- out_put_dmops:
+-	xfs_dmops_put(mp);
+  out_free_fsname:
+ 	xfs_free_fsname(mp);
+-	kfree(mtpt);
+ 	kfree(mp);
+  out:
+ 	return -error;
+Index: xfs/fs/xfs/xfs_bmap.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_bmap.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/xfs_bmap.c	2010-05-25 11:14:59.261004260 +0200
+@@ -34,7 +34,6 @@
+ #include "xfs_dinode.h"
+ #include "xfs_inode.h"
+ #include "xfs_btree.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_ialloc.h"
+ #include "xfs_itable.h"
+@@ -5605,28 +5604,6 @@ xfs_getbmap(
+ 		prealloced = 0;
+ 		fixlen = 1LL << 32;
+ 	} else {
+-		/*
+-		 * If the BMV_IF_NO_DMAPI_READ interface bit specified, do
+-		 * not generate a DMAPI read event.  Otherwise, if the
+-		 * DM_EVENT_READ bit is set for the file, generate a read
+-		 * event in order that the DMAPI application may do its thing
+-		 * before we return the extents.  Usually this means restoring
+-		 * user file data to regions of the file that look like holes.
+-		 *
+-		 * The "old behavior" (from XFS_IOC_GETBMAP) is to not specify
+-		 * BMV_IF_NO_DMAPI_READ so that read events are generated.
+-		 * If this were not true, callers of ioctl(XFS_IOC_GETBMAP)
+-		 * could misinterpret holes in a DMAPI file as true holes,
+-		 * when in fact they may represent offline user data.
+-		 */
+-		if (DM_EVENT_ENABLED(ip, DM_EVENT_READ) &&
+-		    !(iflags & BMV_IF_NO_DMAPI_READ)) {
+-			error = XFS_SEND_DATA(mp, DM_EVENT_READ, ip,
+-					      0, 0, 0, NULL);
+-			if (error)
+-				return XFS_ERROR(error);
+-		}
+-
+ 		if (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS &&
+ 		    ip->i_d.di_format != XFS_DINODE_FMT_BTREE &&
+ 		    ip->i_d.di_format != XFS_DINODE_FMT_LOCAL)
+Index: xfs/fs/xfs/xfs_rename.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_rename.c	2010-05-22 00:39:04.104004455 +0200
++++ xfs/fs/xfs/xfs_rename.c	2010-05-25 11:14:59.266265051 +0200
+@@ -24,7 +24,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_da_btree.h"
+ #include "xfs_bmap_btree.h"
+@@ -119,18 +118,6 @@ xfs_rename(
+ 	xfs_itrace_entry(src_dp);
+ 	xfs_itrace_entry(target_dp);
+ 
+-	if (DM_EVENT_ENABLED(src_dp, DM_EVENT_RENAME) ||
+-	    DM_EVENT_ENABLED(target_dp, DM_EVENT_RENAME)) {
+-		error = XFS_SEND_NAMESP(mp, DM_EVENT_RENAME,
+-					src_dp, DM_RIGHT_NULL,
+-					target_dp, DM_RIGHT_NULL,
+-					src_name->name, target_name->name,
+-					0, 0, 0);
+-		if (error)
+-			return error;
+-	}
+-	/* Return through std_return after this point. */
+-
+ 	new_parent = (src_dp != target_dp);
+ 	src_is_directory = ((src_ip->i_d.di_mode & S_IFMT) == S_IFDIR);
+ 
+@@ -369,26 +356,13 @@ xfs_rename(
+ 	 * trans_commit will unlock src_ip, target_ip & decrement
+ 	 * the vnode references.
  	 */
--	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
--	xfs_trans_ihold(tp, ip);
-+	xfs_trans_ijoin(tp, ip);
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 	xfs_trans_set_sync(tp);
- 	error = xfs_trans_commit(tp, 0);
+-	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
+-
+-	/* Fall through to std_return with error = 0 or errno from
+-	 * xfs_trans_commit	 */
+-std_return:
+-	if (DM_EVENT_ENABLED(src_dp, DM_EVENT_POSTRENAME) ||
+-	    DM_EVENT_ENABLED(target_dp, DM_EVENT_POSTRENAME)) {
+-		(void) XFS_SEND_NAMESP (mp, DM_EVENT_POSTRENAME,
+-					src_dp, DM_RIGHT_NULL,
+-					target_dp, DM_RIGHT_NULL,
+-					src_name->name, target_name->name,
+-					0, error, 0);
+-	}
+-	return error;
++	return xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
+ 
+  abort_return:
+ 	cancel_flags |= XFS_TRANS_ABORT;
+-	/* FALLTHROUGH */
+  error_return:
+ 	xfs_bmap_cancel(&free_list);
+ 	xfs_trans_cancel(tp, cancel_flags);
+-	goto std_return;
++ std_return:
++	return error;
+ }
+Index: xfs/fs/xfs/xfs_vnodeops.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_vnodeops.c	2010-05-22 00:40:37.991004874 +0200
++++ xfs/fs/xfs/xfs_vnodeops.c	2010-05-25 11:14:59.274016343 +0200
+@@ -26,7 +26,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_da_btree.h"
+ #include "xfs_bmap_btree.h"
+@@ -143,16 +142,6 @@ xfs_setattr(
+ 			goto error_return;
+ 		}
+ 	} else {
+-		if (DM_EVENT_ENABLED(ip, DM_EVENT_TRUNCATE) &&
+-		    !(flags & XFS_ATTR_DMI)) {
+-			int dmflags = AT_DELAY_FLAG(flags) | DM_SEM_FLAG_WR;
+-			code = XFS_SEND_DATA(mp, DM_EVENT_TRUNCATE, ip,
+-				iattr->ia_size, 0, dmflags, NULL);
+-			if (code) {
+-				lock_flags = 0;
+-				goto error_return;
+-			}
+-		}
+ 		if (need_iolock)
+ 			lock_flags |= XFS_IOLOCK_EXCL;
+ 	}
+@@ -470,17 +459,10 @@ xfs_setattr(
+ 			return XFS_ERROR(code);
+ 	}
+ 
+-	if (DM_EVENT_ENABLED(ip, DM_EVENT_ATTRIBUTE) &&
+-	    !(flags & XFS_ATTR_DMI)) {
+-		(void) XFS_SEND_NAMESP(mp, DM_EVENT_ATTRIBUTE, ip, DM_RIGHT_NULL,
+-					NULL, DM_RIGHT_NULL, NULL, NULL,
+-					0, 0, AT_DELAY_FLAG(flags));
+-	}
+ 	return 0;
+ 
+  abort_return:
+ 	commit_flags |= XFS_TRANS_ABORT;
+-	/* FALLTHROUGH */
+  error_return:
+ 	xfs_qm_dqrele(udqp);
+ 	xfs_qm_dqrele(gdqp);
+@@ -1060,9 +1042,6 @@ xfs_inactive(
+ 
+ 	mp = ip->i_mount;
+ 
+-	if (ip->i_d.di_nlink == 0 && DM_EVENT_ENABLED(ip, DM_EVENT_DESTROY))
+-		XFS_SEND_DESTROY(mp, ip, DM_RIGHT_NULL);
+-
+ 	error = 0;
+ 
+ 	/* If this is a read-only mount, don't do this (would generate I/O) */
+@@ -1314,16 +1293,6 @@ xfs_create(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return XFS_ERROR(EIO);
+ 
+-	if (DM_EVENT_ENABLED(dp, DM_EVENT_CREATE)) {
+-		error = XFS_SEND_NAMESP(mp, DM_EVENT_CREATE,
+-				dp, DM_RIGHT_NULL, NULL,
+-				DM_RIGHT_NULL, name->name, NULL,
+-				mode, 0, 0);
+-
+-		if (error)
+-			return error;
+-	}
+-
+ 	if (dp->i_d.di_flags & XFS_DIFLAG_PROJINHERIT)
+ 		prid = dp->i_d.di_projid;
+ 	else
+@@ -1487,16 +1456,7 @@ xfs_create(
+ 	xfs_qm_dqrele(gdqp);
+ 
+ 	*ipp = ip;
+-
+-	/* Fallthrough to std_return with error = 0  */
+- std_return:
+-	if (DM_EVENT_ENABLED(dp, DM_EVENT_POSTCREATE)) {
+-		XFS_SEND_NAMESP(mp, DM_EVENT_POSTCREATE, dp, DM_RIGHT_NULL,
+-				ip, DM_RIGHT_NULL, name->name, NULL, mode,
+-				error, 0);
+-	}
+-
+-	return error;
++	return 0;
+ 
+  out_bmap_cancel:
+ 	xfs_bmap_cancel(&free_list);
+@@ -1510,8 +1470,8 @@ xfs_create(
+ 
+ 	if (unlock_dp_on_error)
+ 		xfs_iunlock(dp, XFS_ILOCK_EXCL);
+-
+-	goto std_return;
++ std_return:
++	return error;
+ 
+  out_abort_rele:
+ 	/*
+@@ -1732,14 +1692,6 @@ xfs_remove(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return XFS_ERROR(EIO);
+ 
+-	if (DM_EVENT_ENABLED(dp, DM_EVENT_REMOVE)) {
+-		error = XFS_SEND_NAMESP(mp, DM_EVENT_REMOVE, dp, DM_RIGHT_NULL,
+-					NULL, DM_RIGHT_NULL, name->name, NULL,
+-					ip->i_d.di_mode, 0, 0);
+-		if (error)
+-			return error;
+-	}
+-
+ 	error = xfs_qm_dqattach(dp, 0);
+ 	if (error)
+ 		goto std_return;
+@@ -1877,21 +1829,15 @@ xfs_remove(
+ 	if (!is_dir && link_zero && xfs_inode_is_filestream(ip))
+ 		xfs_filestream_deassociate(ip);
+ 
+- std_return:
+-	if (DM_EVENT_ENABLED(dp, DM_EVENT_POSTREMOVE)) {
+-		XFS_SEND_NAMESP(mp, DM_EVENT_POSTREMOVE, dp, DM_RIGHT_NULL,
+-				NULL, DM_RIGHT_NULL, name->name, NULL,
+-				ip->i_d.di_mode, error, 0);
+-	}
+-
+-	return error;
++	return 0;
+ 
+  out_bmap_cancel:
+ 	xfs_bmap_cancel(&free_list);
+ 	cancel_flags |= XFS_TRANS_ABORT;
+  out_trans_cancel:
+ 	xfs_trans_cancel(tp, cancel_flags);
+-	goto std_return;
++ std_return:
++	return error;
+ }
+ 
+ int
+@@ -1917,17 +1863,6 @@ xfs_link(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return XFS_ERROR(EIO);
+ 
+-	if (DM_EVENT_ENABLED(tdp, DM_EVENT_LINK)) {
+-		error = XFS_SEND_NAMESP(mp, DM_EVENT_LINK,
+-					tdp, DM_RIGHT_NULL,
+-					sip, DM_RIGHT_NULL,
+-					target_name->name, NULL, 0, 0, 0);
+-		if (error)
+-			return error;
+-	}
+-
+-	/* Return through std_return after this point. */
+-
+ 	error = xfs_qm_dqattach(sip, 0);
+ 	if (error)
+ 		goto std_return;
+@@ -2014,27 +1949,14 @@ xfs_link(
+ 		goto abort_return;
+ 	}
+ 
+-	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
+-	if (error)
+-		goto std_return;
+-
+-	/* Fall through to std_return with error = 0. */
+-std_return:
+-	if (DM_EVENT_ENABLED(sip, DM_EVENT_POSTLINK)) {
+-		(void) XFS_SEND_NAMESP(mp, DM_EVENT_POSTLINK,
+-				tdp, DM_RIGHT_NULL,
+-				sip, DM_RIGHT_NULL,
+-				target_name->name, NULL, 0, error, 0);
+-	}
+-	return error;
++	return xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
+ 
+  abort_return:
+ 	cancel_flags |= XFS_TRANS_ABORT;
+-	/* FALLTHROUGH */
+-
+  error_return:
+ 	xfs_trans_cancel(tp, cancel_flags);
+-	goto std_return;
++ std_return:
++	return error;
+ }
+ 
+ int
+@@ -2086,17 +2008,6 @@ xfs_symlink(
+ 	if (pathlen >= MAXPATHLEN)      /* total string too long */
+ 		return XFS_ERROR(ENAMETOOLONG);
+ 
+-	if (DM_EVENT_ENABLED(dp, DM_EVENT_SYMLINK)) {
+-		error = XFS_SEND_NAMESP(mp, DM_EVENT_SYMLINK, dp,
+-					DM_RIGHT_NULL, NULL, DM_RIGHT_NULL,
+-					link_name->name,
+-					(unsigned char *)target_path, 0, 0, 0);
+-		if (error)
+-			return error;
+-	}
+-
+-	/* Return through std_return after this point. */
+-
+ 	udqp = gdqp = NULL;
+ 	if (dp->i_d.di_flags & XFS_DIFLAG_PROJINHERIT)
+ 		prid = dp->i_d.di_projid;
+@@ -2278,21 +2189,8 @@ xfs_symlink(
+ 	xfs_qm_dqrele(udqp);
+ 	xfs_qm_dqrele(gdqp);
+ 
+-	/* Fall through to std_return with error = 0 or errno from
+-	 * xfs_trans_commit	*/
+-std_return:
+-	if (DM_EVENT_ENABLED(dp, DM_EVENT_POSTSYMLINK)) {
+-		(void) XFS_SEND_NAMESP(mp, DM_EVENT_POSTSYMLINK,
+-					dp, DM_RIGHT_NULL,
+-					error ? NULL : ip,
+-					DM_RIGHT_NULL, link_name->name,
+-					(unsigned char *)target_path,
+-					0, error, 0);
+-	}
+-
+-	if (!error)
+-		*ipp = ip;
+-	return error;
++	*ipp = ip;
++	return 0;
+ 
+  error2:
+ 	IRELE(ip);
+@@ -2306,8 +2204,8 @@ std_return:
+ 
+ 	if (unlock_dp_on_error)
+ 		xfs_iunlock(dp, XFS_ILOCK_EXCL);
+-
+-	goto std_return;
++ std_return:
++	return error;
+ }
+ 
+ int
+@@ -2412,25 +2310,9 @@ xfs_alloc_file_space(
+ 	startoffset_fsb	= XFS_B_TO_FSBT(mp, offset);
+ 	allocatesize_fsb = XFS_B_TO_FSB(mp, count);
+ 
+-	/*	Generate a DMAPI event if needed.	*/
+-	if (alloc_type != 0 && offset < ip->i_size &&
+-			(attr_flags & XFS_ATTR_DMI) == 0  &&
+-			DM_EVENT_ENABLED(ip, DM_EVENT_WRITE)) {
+-		xfs_off_t           end_dmi_offset;
+-
+-		end_dmi_offset = offset+len;
+-		if (end_dmi_offset > ip->i_size)
+-			end_dmi_offset = ip->i_size;
+-		error = XFS_SEND_DATA(mp, DM_EVENT_WRITE, ip, offset,
+-				      end_dmi_offset - offset, 0, NULL);
+-		if (error)
+-			return error;
+-	}
+-
+ 	/*
+ 	 * Allocate file space until done or until there is an error
+ 	 */
+-retry:
+ 	while (allocatesize_fsb && !error) {
+ 		xfs_fileoff_t	s, e;
+ 
+@@ -2527,17 +2409,6 @@ retry:
+ 		startoffset_fsb += allocated_fsb;
+ 		allocatesize_fsb -= allocated_fsb;
+ 	}
+-dmapi_enospc_check:
+-	if (error == ENOSPC && (attr_flags & XFS_ATTR_DMI) == 0 &&
+-	    DM_EVENT_ENABLED(ip, DM_EVENT_NOSPACE)) {
+-		error = XFS_SEND_NAMESP(mp, DM_EVENT_NOSPACE,
+-				ip, DM_RIGHT_NULL,
+-				ip, DM_RIGHT_NULL,
+-				NULL, NULL, 0, 0, 0); /* Delay flag intentionally unused */
+-		if (error == 0)
+-			goto retry;	/* Maybe DMAPI app. has made space */
+-		/* else fall through with error from XFS_SEND_DATA */
+-	}
+ 
+ 	return error;
+ 
+@@ -2548,7 +2419,7 @@ error0:	/* Cancel bmap, unlock inode, un
+ error1:	/* Just cancel transaction */
+ 	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-	goto dmapi_enospc_check;
++	return error;
+ }
+ 
+ /*
+@@ -2661,7 +2532,6 @@ xfs_free_file_space(
+ {
+ 	int			committed;
+ 	int			done;
+-	xfs_off_t		end_dmi_offset;
+ 	xfs_fileoff_t		endoffset_fsb;
+ 	int			error;
+ 	xfs_fsblock_t		firstfsb;
+@@ -2691,19 +2561,7 @@ xfs_free_file_space(
+ 		return error;
+ 	rt = XFS_IS_REALTIME_INODE(ip);
+ 	startoffset_fsb	= XFS_B_TO_FSB(mp, offset);
+-	end_dmi_offset = offset + len;
+-	endoffset_fsb = XFS_B_TO_FSBT(mp, end_dmi_offset);
+-
+-	if (offset < ip->i_size && (attr_flags & XFS_ATTR_DMI) == 0 &&
+-	    DM_EVENT_ENABLED(ip, DM_EVENT_WRITE)) {
+-		if (end_dmi_offset > ip->i_size)
+-			end_dmi_offset = ip->i_size;
+-		error = XFS_SEND_DATA(mp, DM_EVENT_WRITE, ip,
+-				offset, end_dmi_offset - offset,
+-				AT_DELAY_FLAG(attr_flags), NULL);
+-		if (error)
+-			return error;
+-	}
++	endoffset_fsb = XFS_B_TO_FSBT(mp, offset + len);
+ 
+ 	if (attr_flags & XFS_ATTR_NOLOCK)
+ 		need_iolock = 0;
+Index: xfs/fs/xfs/Makefile
+===================================================================
+--- xfs.orig/fs/xfs/Makefile	2010-05-24 23:11:41.000000000 +0200
++++ xfs/fs/xfs/Makefile	2010-05-25 11:14:59.282031778 +0200
+@@ -90,8 +90,7 @@ xfs-y				+= xfs_alloc.o \
+ 				   xfs_trans_item.o \
+ 				   xfs_utils.o \
+ 				   xfs_vnodeops.o \
+-				   xfs_rw.o \
+-				   xfs_dmops.o
++				   xfs_rw.o
+ 
+ xfs-$(CONFIG_XFS_TRACE)		+= xfs_btree_trace.o
+ 
+Index: xfs/fs/xfs/linux-2.6/xfs_aops.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_aops.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_aops.c	2010-05-25 11:14:59.286031150 +0200
+@@ -23,7 +23,6 @@
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+ #include "xfs_trans.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_alloc_btree.h"
+Index: xfs/fs/xfs/linux-2.6/xfs_buf.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_buf.c	2010-05-24 23:11:41.000000000 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_buf.c	2010-05-25 11:14:59.297023956 +0200
+@@ -39,7 +39,6 @@
+ #include "xfs_inum.h"
+ #include "xfs_log.h"
+ #include "xfs_ag.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_trace.h"
+ 
+Index: xfs/fs/xfs/linux-2.6/xfs_export.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_export.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_export.c	2010-05-25 11:14:59.303023816 +0200
+@@ -23,7 +23,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_export.h"
+ #include "xfs_vnodeops.h"
+Index: xfs/fs/xfs/linux-2.6/xfs_fs_subr.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_fs_subr.c	2010-05-22 00:40:37.890004594 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_fs_subr.c	2010-05-25 11:14:59.310005937 +0200
+@@ -21,10 +21,6 @@
+ #include "xfs_inode.h"
+ #include "xfs_trace.h"
+ 
+-int  fs_noerr(void) { return 0; }
+-int  fs_nosys(void) { return ENOSYS; }
+-void fs_noval(void) { return; }
+-
+ /*
+  * note: all filemap functions return negative error codes. These
+  * need to be inverted before returning to the xfs core functions.
+Index: xfs/fs/xfs/linux-2.6/xfs_fs_subr.h
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_fs_subr.h	2010-05-22 00:39:04.000000000 +0200
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+@@ -1,25 +0,0 @@
+-/*
+- * Copyright (c) 2000,2002,2005 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-#ifndef	__XFS_FS_SUBR_H__
+-#define __XFS_FS_SUBR_H__
+-
+-extern int  fs_noerr(void);
+-extern int  fs_nosys(void);
+-extern void fs_noval(void);
+-
+-#endif	/* __XFS_FS_SUBR_H__ */
+Index: xfs/fs/xfs/linux-2.6/xfs_ioctl32.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_ioctl32.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_ioctl32.c	2010-05-25 11:14:59.317003422 +0200
+@@ -29,7 +29,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_attr_sf.h"
+Index: xfs/fs/xfs/linux-2.6/xfs_iops.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_iops.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_iops.c	2010-05-25 11:14:59.319042045 +0200
+@@ -26,7 +26,6 @@
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+ #include "xfs_alloc.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_quota.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+Index: xfs/fs/xfs/linux-2.6/xfs_linux.h
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_linux.h	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_linux.h	2010-05-25 11:14:59.324043582 +0200
+@@ -87,7 +87,6 @@
+ #include <xfs_aops.h>
+ #include <xfs_super.h>
+ #include <xfs_globals.h>
+-#include <xfs_fs_subr.h>
+ #include <xfs_buf.h>
+ 
+ /*
+Index: xfs/fs/xfs/linux-2.6/xfs_quotaops.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_quotaops.c	2010-05-24 23:11:41.000000000 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_quotaops.c	2010-05-25 11:14:59.329274410 +0200
+@@ -16,7 +16,6 @@
+  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+  */
+ #include "xfs.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_sb.h"
+ #include "xfs_inum.h"
+ #include "xfs_log.h"
+Index: xfs/fs/xfs/linux-2.6/xfs_sync.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_sync.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_sync.c	2010-05-25 11:14:59.335006286 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_alloc_btree.h"
+Index: xfs/fs/xfs/linux-2.6/xfs_trace.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_trace.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_trace.c	2010-05-25 11:14:59.338005727 +0200
+@@ -34,7 +34,6 @@
+ #include "xfs_dinode.h"
+ #include "xfs_inode.h"
+ #include "xfs_btree.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_ialloc.h"
+ #include "xfs_itable.h"
+Index: xfs/fs/xfs/quota/xfs_dquot.c
+===================================================================
+--- xfs.orig/fs/xfs/quota/xfs_dquot.c	2010-05-24 23:11:41.000000000 +0200
++++ xfs/fs/xfs/quota/xfs_dquot.c	2010-05-25 11:14:59.344006076 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+ #include "xfs_alloc.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_quota.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+Index: xfs/fs/xfs/quota/xfs_dquot_item.c
+===================================================================
+--- xfs.orig/fs/xfs/quota/xfs_dquot_item.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/quota/xfs_dquot_item.c	2010-05-25 11:14:59.350033035 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+ #include "xfs_alloc.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_quota.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+Index: xfs/fs/xfs/quota/xfs_qm.c
+===================================================================
+--- xfs.orig/fs/xfs/quota/xfs_qm.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/quota/xfs_qm.c	2010-05-25 11:14:59.357004121 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+ #include "xfs_alloc.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_quota.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+Index: xfs/fs/xfs/quota/xfs_qm_bhv.c
+===================================================================
+--- xfs.orig/fs/xfs/quota/xfs_qm_bhv.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/quota/xfs_qm_bhv.c	2010-05-25 11:14:59.361013061 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+ #include "xfs_alloc.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_quota.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+Index: xfs/fs/xfs/quota/xfs_qm_stats.c
+===================================================================
+--- xfs.orig/fs/xfs/quota/xfs_qm_stats.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/quota/xfs_qm_stats.c	2010-05-25 11:14:59.363010267 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+ #include "xfs_alloc.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_quota.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+Index: xfs/fs/xfs/quota/xfs_qm_syscalls.c
+===================================================================
+--- xfs.orig/fs/xfs/quota/xfs_qm_syscalls.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/quota/xfs_qm_syscalls.c	2010-05-25 11:14:59.368004121 +0200
+@@ -28,7 +28,6 @@
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+ #include "xfs_alloc.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_quota.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+Index: xfs/fs/xfs/quota/xfs_trans_dquot.c
+===================================================================
+--- xfs.orig/fs/xfs/quota/xfs_trans_dquot.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/quota/xfs_trans_dquot.c	2010-05-25 11:14:59.372003632 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+ #include "xfs_alloc.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_quota.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+Index: xfs/fs/xfs/support/debug.c
+===================================================================
+--- xfs.orig/fs/xfs/support/debug.c	2010-05-22 00:39:04.000000000 +0200
++++ xfs/fs/xfs/support/debug.c	2010-05-25 11:14:59.376020813 +0200
+@@ -22,7 +22,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_inum.h"
+ #include "xfs_ag.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_error.h"
+ 
+Index: xfs/fs/xfs/xfs_alloc.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_alloc.c	2010-05-24 23:11:41.000000000 +0200
++++ xfs/fs/xfs/xfs_alloc.c	2010-05-25 11:14:59.381273222 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_alloc_btree.h"
+Index: xfs/fs/xfs/xfs_alloc_btree.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_alloc_btree.c	2010-05-24 23:11:41.000000000 +0200
++++ xfs/fs/xfs/xfs_alloc_btree.c	2010-05-25 11:14:59.386036737 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_alloc_btree.h"
+Index: xfs/fs/xfs/xfs_attr.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_attr.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/xfs_attr.c	2010-05-25 11:14:59.390255762 +0200
+@@ -26,7 +26,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_da_btree.h"
+ #include "xfs_bmap_btree.h"
+Index: xfs/fs/xfs/xfs_attr_leaf.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_attr_leaf.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/xfs_attr_leaf.c	2010-05-25 11:14:59.398255692 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_da_btree.h"
+ #include "xfs_bmap_btree.h"
+Index: xfs/fs/xfs/xfs_bmap_btree.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_bmap_btree.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/xfs_bmap_btree.c	2010-05-25 11:14:59.404255552 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_alloc_btree.h"
+Index: xfs/fs/xfs/xfs_btree.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_btree.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/xfs_btree.c	2010-05-25 11:14:59.410003911 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_alloc_btree.h"
+Index: xfs/fs/xfs/xfs_buf_item.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_buf_item.c	2010-05-24 23:11:41.000000000 +0200
++++ xfs/fs/xfs/xfs_buf_item.c	2010-05-25 11:14:59.418034083 +0200
+@@ -24,7 +24,6 @@
+ #include "xfs_trans.h"
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_buf_item.h"
+ #include "xfs_trans_priv.h"
+Index: xfs/fs/xfs/xfs_da_btree.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_da_btree.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/xfs_da_btree.c	2010-05-25 11:14:59.424006216 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_da_btree.h"
+ #include "xfs_bmap_btree.h"
+Index: xfs/fs/xfs/xfs_dfrag.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dfrag.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/xfs_dfrag.c	2010-05-25 11:14:59.430031918 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_alloc_btree.h"
+Index: xfs/fs/xfs/xfs_dir2.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dir2.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/xfs_dir2.c	2010-05-25 11:14:59.435037366 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_da_btree.h"
+ #include "xfs_bmap_btree.h"
+Index: xfs/fs/xfs/xfs_dir2_block.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dir2_block.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/xfs_dir2_block.c	2010-05-25 11:14:59.440014527 +0200
+@@ -24,7 +24,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_da_btree.h"
+ #include "xfs_bmap_btree.h"
+Index: xfs/fs/xfs/xfs_dir2_data.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dir2_data.c	2010-05-22 00:39:04.000000000 +0200
++++ xfs/fs/xfs/xfs_dir2_data.c	2010-05-25 11:14:59.442011873 +0200
+@@ -24,7 +24,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_da_btree.h"
+ #include "xfs_bmap_btree.h"
+Index: xfs/fs/xfs/xfs_dir2_leaf.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dir2_leaf.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/xfs_dir2_leaf.c	2010-05-25 11:14:59.454006216 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_da_btree.h"
+ #include "xfs_bmap_btree.h"
+Index: xfs/fs/xfs/xfs_dir2_node.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dir2_node.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/xfs_dir2_node.c	2010-05-25 11:14:59.671255345 +0200
+@@ -24,7 +24,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_da_btree.h"
+ #include "xfs_bmap_btree.h"
+Index: xfs/fs/xfs/xfs_dir2_sf.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dir2_sf.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/xfs_dir2_sf.c	2010-05-25 11:14:59.678033455 +0200
+@@ -24,7 +24,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_da_btree.h"
+ #include "xfs_bmap_btree.h"
+Index: xfs/fs/xfs/xfs_dmapi.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dmapi.h	2010-05-22 00:39:04.000000000 +0200
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+@@ -1,170 +0,0 @@
+-/*
+- * Copyright (c) 2000-2005 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-#ifndef __XFS_DMAPI_H__
+-#define __XFS_DMAPI_H__
+-
+-/*	Values used to define the on-disk version of dm_attrname_t. All
+- *	on-disk attribute names start with the 8-byte string "SGI_DMI_".
+- *
+- *      In the on-disk inode, DMAPI attribute names consist of the user-provided
+- *      name with the DMATTR_PREFIXSTRING pre-pended.  This string must NEVER be
+- *      changed.
+- */
+-
+-#define DMATTR_PREFIXLEN	8
+-#define DMATTR_PREFIXSTRING	"SGI_DMI_"
+-
+-typedef enum {
+-	DM_EVENT_INVALID	= -1,
+-	DM_EVENT_CANCEL		= 0,		/* not supported */
+-	DM_EVENT_MOUNT		= 1,
+-	DM_EVENT_PREUNMOUNT	= 2,
+-	DM_EVENT_UNMOUNT	= 3,
+-	DM_EVENT_DEBUT		= 4,		/* not supported */
+-	DM_EVENT_CREATE		= 5,
+-	DM_EVENT_CLOSE		= 6,		/* not supported */
+-	DM_EVENT_POSTCREATE	= 7,
+-	DM_EVENT_REMOVE		= 8,
+-	DM_EVENT_POSTREMOVE	= 9,
+-	DM_EVENT_RENAME		= 10,
+-	DM_EVENT_POSTRENAME	= 11,
+-	DM_EVENT_LINK		= 12,
+-	DM_EVENT_POSTLINK	= 13,
+-	DM_EVENT_SYMLINK	= 14,
+-	DM_EVENT_POSTSYMLINK	= 15,
+-	DM_EVENT_READ		= 16,
+-	DM_EVENT_WRITE		= 17,
+-	DM_EVENT_TRUNCATE	= 18,
+-	DM_EVENT_ATTRIBUTE	= 19,
+-	DM_EVENT_DESTROY	= 20,
+-	DM_EVENT_NOSPACE	= 21,
+-	DM_EVENT_USER		= 22,
+-	DM_EVENT_MAX		= 23
+-} dm_eventtype_t;
+-#define HAVE_DM_EVENTTYPE_T
+-
+-typedef enum {
+-	DM_RIGHT_NULL,
+-	DM_RIGHT_SHARED,
+-	DM_RIGHT_EXCL
+-} dm_right_t;
+-#define HAVE_DM_RIGHT_T
+-
+-/* Defines for determining if an event message should be sent. */
+-#ifdef HAVE_DMAPI
+-#define	DM_EVENT_ENABLED(ip, event) ( \
+-	unlikely ((ip)->i_mount->m_flags & XFS_MOUNT_DMAPI) && \
+-		( ((ip)->i_d.di_dmevmask & (1 << event)) || \
+-		  ((ip)->i_mount->m_dmevmask & (1 << event)) ) \
+-	)
+-#else
+-#define DM_EVENT_ENABLED(ip, event)	(0)
+-#endif
+-
+-#define DM_XFS_VALID_FS_EVENTS		( \
+-	(1 << DM_EVENT_PREUNMOUNT)	| \
+-	(1 << DM_EVENT_UNMOUNT)		| \
+-	(1 << DM_EVENT_NOSPACE)		| \
+-	(1 << DM_EVENT_DEBUT)		| \
+-	(1 << DM_EVENT_CREATE)		| \
+-	(1 << DM_EVENT_POSTCREATE)	| \
+-	(1 << DM_EVENT_REMOVE)		| \
+-	(1 << DM_EVENT_POSTREMOVE)	| \
+-	(1 << DM_EVENT_RENAME)		| \
+-	(1 << DM_EVENT_POSTRENAME)	| \
+-	(1 << DM_EVENT_LINK)		| \
+-	(1 << DM_EVENT_POSTLINK)	| \
+-	(1 << DM_EVENT_SYMLINK)		| \
+-	(1 << DM_EVENT_POSTSYMLINK)	| \
+-	(1 << DM_EVENT_ATTRIBUTE)	| \
+-	(1 << DM_EVENT_DESTROY)		)
+-
+-/* Events valid in dm_set_eventlist() when called with a file handle for
+-   a regular file or a symlink.  These events are persistent.
+-*/
+-
+-#define	DM_XFS_VALID_FILE_EVENTS	( \
+-	(1 << DM_EVENT_ATTRIBUTE)	| \
+-	(1 << DM_EVENT_DESTROY)		)
+-
+-/* Events valid in dm_set_eventlist() when called with a file handle for
+-   a directory.  These events are persistent.
+-*/
+-
+-#define	DM_XFS_VALID_DIRECTORY_EVENTS	( \
+-	(1 << DM_EVENT_CREATE)		| \
+-	(1 << DM_EVENT_POSTCREATE)	| \
+-	(1 << DM_EVENT_REMOVE)		| \
+-	(1 << DM_EVENT_POSTREMOVE)	| \
+-	(1 << DM_EVENT_RENAME)		| \
+-	(1 << DM_EVENT_POSTRENAME)	| \
+-	(1 << DM_EVENT_LINK)		| \
+-	(1 << DM_EVENT_POSTLINK)	| \
+-	(1 << DM_EVENT_SYMLINK)		| \
+-	(1 << DM_EVENT_POSTSYMLINK)	| \
+-	(1 << DM_EVENT_ATTRIBUTE)	| \
+-	(1 << DM_EVENT_DESTROY)		)
+-
+-/* Events supported by the XFS filesystem. */
+-#define	DM_XFS_SUPPORTED_EVENTS		( \
+-	(1 << DM_EVENT_MOUNT)		| \
+-	(1 << DM_EVENT_PREUNMOUNT)	| \
+-	(1 << DM_EVENT_UNMOUNT)		| \
+-	(1 << DM_EVENT_NOSPACE)		| \
+-	(1 << DM_EVENT_CREATE)		| \
+-	(1 << DM_EVENT_POSTCREATE)	| \
+-	(1 << DM_EVENT_REMOVE)		| \
+-	(1 << DM_EVENT_POSTREMOVE)	| \
+-	(1 << DM_EVENT_RENAME)		| \
+-	(1 << DM_EVENT_POSTRENAME)	| \
+-	(1 << DM_EVENT_LINK)		| \
+-	(1 << DM_EVENT_POSTLINK)	| \
+-	(1 << DM_EVENT_SYMLINK)		| \
+-	(1 << DM_EVENT_POSTSYMLINK)	| \
+-	(1 << DM_EVENT_READ)		| \
+-	(1 << DM_EVENT_WRITE)		| \
+-	(1 << DM_EVENT_TRUNCATE)	| \
+-	(1 << DM_EVENT_ATTRIBUTE)	| \
+-	(1 << DM_EVENT_DESTROY)		)
+-
+-
+-/*
+- *	Definitions used for the flags field on dm_send_*_event().
+- */
+-
+-#define DM_FLAGS_NDELAY		0x001	/* return EAGAIN after dm_pending() */
+-#define DM_FLAGS_UNWANTED	0x002	/* event not in fsys dm_eventset_t */
+-#define DM_FLAGS_IMUX		0x004	/* thread holds i_mutex */
+-#define DM_FLAGS_IALLOCSEM_RD	0x010	/* thread holds i_alloc_sem rd */
+-#define DM_FLAGS_IALLOCSEM_WR	0x020	/* thread holds i_alloc_sem wr */
+-
+-/*
+- *	Pull in platform specific event flags defines
+- */
+-#include "xfs_dmapi_priv.h"
+-
+-/*
+- *	Macros to turn caller specified delay/block flags into
+- *	dm_send_xxxx_event flag DM_FLAGS_NDELAY.
+- */
+-
+-#define FILP_DELAY_FLAG(filp) ((filp->f_flags&(O_NDELAY|O_NONBLOCK)) ? \
+-			DM_FLAGS_NDELAY : 0)
+-#define AT_DELAY_FLAG(f) ((f & XFS_ATTR_NONBLOCK) ? DM_FLAGS_NDELAY : 0)
+-
+-#endif  /* __XFS_DMAPI_H__ */
+Index: xfs/fs/xfs/xfs_dmops.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dmops.c	2010-05-22 00:39:04.000000000 +0200
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+@@ -1,55 +0,0 @@
+-/*
+- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-#include "xfs.h"
+-#include "xfs_fs.h"
+-#include "xfs_types.h"
+-#include "xfs_log.h"
+-#include "xfs_trans.h"
+-#include "xfs_sb.h"
+-#include "xfs_dmapi.h"
+-#include "xfs_inum.h"
+-#include "xfs_ag.h"
+-#include "xfs_mount.h"
+-
+-
+-static struct xfs_dmops xfs_dmcore_stub = {
+-	.xfs_send_data		= (xfs_send_data_t)fs_nosys,
+-	.xfs_send_mmap		= (xfs_send_mmap_t)fs_noerr,
+-	.xfs_send_destroy	= (xfs_send_destroy_t)fs_nosys,
+-	.xfs_send_namesp	= (xfs_send_namesp_t)fs_nosys,
+-	.xfs_send_mount		= (xfs_send_mount_t)fs_nosys,
+-	.xfs_send_unmount	= (xfs_send_unmount_t)fs_noerr,
+-};
+-
+-int
+-xfs_dmops_get(struct xfs_mount *mp)
+-{
+-	if (mp->m_flags & XFS_MOUNT_DMAPI) {
+-		cmn_err(CE_WARN,
+-			"XFS: dmapi support not available in this kernel.");
+-		return EINVAL;
+-	}
+-
+-	mp->m_dm_ops = &xfs_dmcore_stub;
+-	return 0;
+-}
+-
+-void
+-xfs_dmops_put(struct xfs_mount *mp)
+-{
+-}
+Index: xfs/fs/xfs/xfs_error.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_error.c	2010-05-24 23:11:41.000000000 +0200
++++ xfs/fs/xfs/xfs_error.c	2010-05-25 11:14:59.684255901 +0200
+@@ -24,7 +24,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_dir2_sf.h"
+Index: xfs/fs/xfs/xfs_extfree_item.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_extfree_item.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/xfs_extfree_item.c	2010-05-25 11:14:59.687282511 +0200
+@@ -24,7 +24,6 @@
+ #include "xfs_buf_item.h"
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_trans_priv.h"
+ #include "xfs_extfree_item.h"
+Index: xfs/fs/xfs/xfs_filestream.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_filestream.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/xfs_filestream.c	2010-05-25 11:14:59.694256111 +0200
+@@ -24,7 +24,6 @@
+ #include "xfs_dinode.h"
+ #include "xfs_inode.h"
+ #include "xfs_ag.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_log.h"
+ #include "xfs_trans.h"
+ #include "xfs_sb.h"
+Index: xfs/fs/xfs/xfs_fsops.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_fsops.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/xfs_fsops.c	2010-05-25 11:14:59.700275318 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_alloc_btree.h"
+Index: xfs/fs/xfs/xfs_ialloc.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_ialloc.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/xfs_ialloc.c	2010-05-25 11:14:59.705254086 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_alloc_btree.h"
+Index: xfs/fs/xfs/xfs_ialloc_btree.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_ialloc_btree.c	2010-05-22 00:39:04.000000000 +0200
++++ xfs/fs/xfs/xfs_ialloc_btree.c	2010-05-25 11:14:59.709254155 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_alloc_btree.h"
+Index: xfs/fs/xfs/xfs_iget.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_iget.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/xfs_iget.c	2010-05-25 11:14:59.713253736 +0200
+@@ -26,7 +26,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_alloc_btree.h"
+Index: xfs/fs/xfs/xfs_inode.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_inode.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/xfs_inode.c	2010-05-25 11:14:59.716253946 +0200
+@@ -28,7 +28,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_alloc_btree.h"
+Index: xfs/fs/xfs/xfs_inode_item.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_inode_item.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/xfs_inode_item.c	2010-05-25 11:14:59.722275178 +0200
+@@ -26,7 +26,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_trans_priv.h"
+ #include "xfs_bmap_btree.h"
+Index: xfs/fs/xfs/xfs_iomap.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_iomap.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/xfs_iomap.c	2010-05-25 11:14:59.733005937 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+ #include "xfs_alloc.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_quota.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+Index: xfs/fs/xfs/xfs_itable.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_itable.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/xfs_itable.c	2010-05-25 11:14:59.740006635 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_alloc_btree.h"
+Index: xfs/fs/xfs/xfs_log.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_log.c	2010-05-24 23:11:41.000000000 +0200
++++ xfs/fs/xfs/xfs_log.c	2010-05-25 11:14:59.753006007 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_error.h"
+ #include "xfs_log_priv.h"
+Index: xfs/fs/xfs/xfs_log_recover.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_log_recover.c	2010-05-24 23:11:41.000000000 +0200
++++ xfs/fs/xfs/xfs_log_recover.c	2010-05-25 11:14:59.762003492 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_error.h"
+ #include "xfs_bmap_btree.h"
+Index: xfs/fs/xfs/xfs_mount.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_mount.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/xfs_mount.c	2010-05-25 11:14:59.764011664 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_alloc_btree.h"
+Index: xfs/fs/xfs/xfs_mount.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_mount.h	2010-05-24 23:11:41.025253988 +0200
++++ xfs/fs/xfs/xfs_mount.h	2010-05-25 11:15:46.687030871 +0200
+@@ -66,65 +66,6 @@ struct xfs_nameops;
+ struct xfs_ail;
+ struct xfs_quotainfo;
+ 
+-
+-/*
+- * Prototypes and functions for the Data Migration subsystem.
+- */
+-
+-typedef int	(*xfs_send_data_t)(int, struct xfs_inode *,
+-			xfs_off_t, size_t, int, int *);
+-typedef int	(*xfs_send_mmap_t)(struct vm_area_struct *, uint);
+-typedef int	(*xfs_send_destroy_t)(struct xfs_inode *, dm_right_t);
+-typedef int	(*xfs_send_namesp_t)(dm_eventtype_t, struct xfs_mount *,
+-			struct xfs_inode *, dm_right_t,
+-			struct xfs_inode *, dm_right_t,
+-			const unsigned char *, const unsigned char *,
+-			mode_t, int, int);
+-typedef int	(*xfs_send_mount_t)(struct xfs_mount *, dm_right_t,
+-			char *, char *);
+-typedef void	(*xfs_send_unmount_t)(struct xfs_mount *, struct xfs_inode *,
+-			dm_right_t, mode_t, int, int);
+-
+-typedef struct xfs_dmops {
+-	xfs_send_data_t		xfs_send_data;
+-	xfs_send_mmap_t		xfs_send_mmap;
+-	xfs_send_destroy_t	xfs_send_destroy;
+-	xfs_send_namesp_t	xfs_send_namesp;
+-	xfs_send_mount_t	xfs_send_mount;
+-	xfs_send_unmount_t	xfs_send_unmount;
+-} xfs_dmops_t;
+-
+-#define XFS_DMAPI_UNMOUNT_FLAGS(mp) \
+-	(((mp)->m_dmevmask & (1 << DM_EVENT_UNMOUNT)) ? 0 : DM_FLAGS_UNWANTED)
+-
+-#define XFS_SEND_DATA(mp, ev,ip,off,len,fl,lock) \
+-	(*(mp)->m_dm_ops->xfs_send_data)(ev,ip,off,len,fl,lock)
+-#define XFS_SEND_MMAP(mp, vma,fl) \
+-	(*(mp)->m_dm_ops->xfs_send_mmap)(vma,fl)
+-#define XFS_SEND_DESTROY(mp, ip,right) \
+-	(*(mp)->m_dm_ops->xfs_send_destroy)(ip,right)
+-#define XFS_SEND_NAMESP(mp, ev,b1,r1,b2,r2,n1,n2,mode,rval,fl) \
+-	(*(mp)->m_dm_ops->xfs_send_namesp)(ev,NULL,b1,r1,b2,r2,n1,n2,mode,rval,fl)
+-#define XFS_SEND_MOUNT(mp,right,path,name) \
+-	(*(mp)->m_dm_ops->xfs_send_mount)(mp,right,path,name)
+-#define XFS_SEND_PREUNMOUNT(mp) \
+-do { \
+-	if (mp->m_flags & XFS_MOUNT_DMAPI) { \
+-		(*(mp)->m_dm_ops->xfs_send_namesp)(DM_EVENT_PREUNMOUNT, mp, \
+-			(mp)->m_rootip, DM_RIGHT_NULL, \
+-			(mp)->m_rootip, DM_RIGHT_NULL, \
+-			NULL, NULL, 0, 0, XFS_DMAPI_UNMOUNT_FLAGS(mp)); \
+-	} \
+-} while (0)
+-#define XFS_SEND_UNMOUNT(mp) \
+-do { \
+-	if (mp->m_flags & XFS_MOUNT_DMAPI) { \
+-		(*(mp)->m_dm_ops->xfs_send_unmount)(mp, (mp)->m_rootip, \
+-			DM_RIGHT_NULL, 0, 0, XFS_DMAPI_UNMOUNT_FLAGS(mp)); \
+-	} \
+-} while (0)
+-
+-
+ #ifdef HAVE_PERCPU_SB
+ 
+ /*
+@@ -241,8 +182,6 @@ typedef struct xfs_mount {
+ 	uint			m_chsize;	/* size of next field */
+ 	struct xfs_chash	*m_chash;	/* fs private inode per-cluster
+ 						 * hash table */
+-	struct xfs_dmops	*m_dm_ops;	/* vector of DMI ops */
+-	struct xfs_qmops	*m_qm_ops;	/* vector of XQM ops */
+ 	atomic_t		m_active_trans;	/* number trans frozen */
+ #ifdef HAVE_PERCPU_SB
+ 	xfs_icsb_cnts_t __percpu *m_sb_cnts;	/* per-cpu superblock counters */
+@@ -269,7 +208,6 @@ typedef struct xfs_mount {
+ 						   must be synchronous except
+ 						   for space allocations */
+ #define XFS_MOUNT_DELAYLOG	(1ULL << 1)	/* delayed logging is enabled */
+-#define XFS_MOUNT_DMAPI		(1ULL << 2)	/* dmapi is enabled */
+ #define XFS_MOUNT_WAS_CLEAN	(1ULL << 3)
+ #define XFS_MOUNT_FS_SHUTDOWN	(1ULL << 4)	/* atomic stop of all filesystem
+ 						   operations, typically for
+@@ -440,11 +378,6 @@ extern int	xfs_sb_validate_fsb_count(str
+ 
+ extern int	xfs_dev_is_read_only(struct xfs_mount *, char *);
+ 
+-extern int	xfs_dmops_get(struct xfs_mount *);
+-extern void	xfs_dmops_put(struct xfs_mount *);
+-
+-extern struct xfs_dmops xfs_dmcore_xfs;
+-
+ #endif	/* __KERNEL__ */
+ 
+ extern void	xfs_mod_sb(struct xfs_trans *, __int64_t);
+Index: xfs/fs/xfs/xfs_rtalloc.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_rtalloc.c	2010-05-22 00:39:04.000000000 +0200
++++ xfs/fs/xfs/xfs_rtalloc.c	2010-05-25 11:14:59.778003841 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_alloc_btree.h"
+Index: xfs/fs/xfs/xfs_rw.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_rw.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/xfs_rw.c	2010-05-25 11:14:59.784026331 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_alloc_btree.h"
+Index: xfs/fs/xfs/xfs_trans.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_trans.c	2010-05-24 23:11:41.000000000 +0200
++++ xfs/fs/xfs/xfs_trans.c	2010-05-25 11:14:59.797257578 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_error.h"
+ #include "xfs_da_btree.h"
+Index: xfs/fs/xfs/xfs_trans_ail.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_trans_ail.c	2010-05-22 00:40:37.000000000 +0200
++++ xfs/fs/xfs/xfs_trans_ail.c	2010-05-25 11:14:59.802255482 +0200
+@@ -24,7 +24,6 @@
+ #include "xfs_trans.h"
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_trans_priv.h"
+ #include "xfs_error.h"
+Index: xfs/fs/xfs/xfs_trans_buf.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_trans_buf.c	2010-05-24 23:11:41.000000000 +0200
++++ xfs/fs/xfs/xfs_trans_buf.c	2010-05-25 11:14:59.808006007 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_alloc_btree.h"
+Index: xfs/fs/xfs/xfs_trans_extfree.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_trans_extfree.c	2010-05-22 00:39:04.000000000 +0200
++++ xfs/fs/xfs/xfs_trans_extfree.c	2010-05-25 11:14:59.812006356 +0200
+@@ -23,7 +23,6 @@
+ #include "xfs_trans.h"
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_trans_priv.h"
+ #include "xfs_extfree_item.h"
+Index: xfs/fs/xfs/xfs_trans_inode.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_trans_inode.c	2010-05-22 00:39:04.000000000 +0200
++++ xfs/fs/xfs/xfs_trans_inode.c	2010-05-25 11:14:59.816006845 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_alloc_btree.h"
+Index: xfs/fs/xfs/xfs_utils.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_utils.c	2010-05-22 00:39:04.000000000 +0200
++++ xfs/fs/xfs/xfs_utils.c	2010-05-25 11:14:59.820006076 +0200
+@@ -25,7 +25,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_dir2_sf.h"
+Index: xfs/fs/xfs/xfs_trans_item.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_trans_item.c	2010-05-24 23:11:41.000000000 +0200
++++ xfs/fs/xfs/xfs_trans_item.c	2010-05-25 11:14:59.823006076 +0200
+@@ -28,7 +28,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ 
+ STATIC int	xfs_trans_unlock_chunk(xfs_log_item_chunk_t *,
+Index: xfs/fs/xfs/linux-2.6/xfs_dmapi_priv.h
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_dmapi_priv.h	2010-05-22 00:39:04.000000000 +0200
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+@@ -1,28 +0,0 @@
+-/*
+- * Copyright (c) 2000-2006 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-#ifndef __XFS_DMAPI_PRIV_H__
+-#define __XFS_DMAPI_PRIV_H__
+-
+-/*
+- *	Based on IO_ISDIRECT, decide which i_ flag is set.
+- */
+-#define DM_SEM_FLAG_RD(ioflags) (((ioflags) & IO_ISDIRECT) ? \
+-			      DM_FLAGS_IMUX : 0)
+-#define DM_SEM_FLAG_WR	(DM_FLAGS_IALLOCSEM_WR | DM_FLAGS_IMUX)
+-
+-#endif /*__XFS_DMAPI_PRIV_H__*/
+Index: xfs/fs/xfs/linux-2.6/xfs_super.h
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_super.h	2010-05-22 00:39:04.089004246 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_super.h	2010-05-25 11:14:59.826005657 +0200
+@@ -56,12 +56,6 @@ extern void xfs_qm_exit(void);
+ # define XFS_BIGFS_STRING
+ #endif
+ 
+-#ifdef CONFIG_XFS_DMAPI
+-# define XFS_DMAPI_STRING	"dmapi support, "
+-#else
+-# define XFS_DMAPI_STRING
+-#endif
+-
+ #ifdef DEBUG
+ # define XFS_DBG_STRING		"debug"
+ #else
+@@ -72,7 +66,6 @@ extern void xfs_qm_exit(void);
+ 				XFS_SECURITY_STRING \
+ 				XFS_REALTIME_STRING \
+ 				XFS_BIGFS_STRING \
+-				XFS_DMAPI_STRING \
+ 				XFS_DBG_STRING /* DBG must be last */
+ 
+ struct xfs_inode;
+Index: xfs/fs/xfs/xfs_log_cil.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_log_cil.c	2010-05-25 11:16:08.428003561 +0200
++++ xfs/fs/xfs/xfs_log_cil.c	2010-05-25 11:16:11.151344325 +0200
+@@ -27,7 +27,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+-#include "xfs_dmapi.h"
+ #include "xfs_mount.h"
+ #include "xfs_error.h"
+ #include "xfs_alloc.h"
 
 _______________________________________________
 xfs mailing list
