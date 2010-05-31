@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o4UN6sS7131537 for <xfs@oss.sgi.com>; Sun, 30 May 2010 18:06:54 -0500
+	o4V6bH8D152366 for <xfs@oss.sgi.com>; Mon, 31 May 2010 01:37:17 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 36F1DA9311E
-	for <xfs@oss.sgi.com>; Sun, 30 May 2010 16:11:27 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
-	[150.101.137.103]) by cuda.sgi.com with ESMTP id
-	NIYSfB5CH8a67MNo for <xfs@oss.sgi.com>;
-	Sun, 30 May 2010 16:11:27 -0700 (PDT)
-Date: Mon, 31 May 2010 09:09:15 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DF5031B6479D
+	for <xfs@oss.sgi.com>; Sun, 30 May 2010 23:39:41 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	tloDHODMcI9yLv82 for <xfs@oss.sgi.com>;
+	Sun, 30 May 2010 23:39:41 -0700 (PDT)
+Date: Mon, 31 May 2010 16:39:38 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: remove lazy per-AG initialization
-Message-ID: <20100530230915.GA13732@dastard>
-References: <20100528175108.GA9421@infradead.org>
+Subject: Re: [PATCH 3/5] superblock: introduce per-sb cache shrinker
+	infrastructure
+Message-ID: <20100531063938.GE1395@dastard>
+References: <1274777588-21494-1-git-send-email-david@fromorbit.com>
+	<1274777588-21494-4-git-send-email-david@fromorbit.com>
+	<20100527063523.GJ22536@laptop> <20100527224034.GO12087@dastard>
+	<20100528051924.GZ22536@laptop>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100528175108.GA9421@infradead.org>
+In-Reply-To: <20100528051924.GZ22536@laptop>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,48 +29,103 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Nick Piggin <npiggin@suse.de>
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Fri, May 28, 2010 at 01:51:08PM -0400, Christoph Hellwig wrote:
-> Historically XFS initializes the allocator / inode allocator per-AG
-> lazily, that is the first time this information is required.  For
-> filesystems that use lazy superblock counters (which is the default now)
-> we already have to walk all AGs to initialize the superblock counters
-> on an unclean shutdown.
-
-Which is not common, so isn't frequently triggered in the normal
-mount process. The reason for the lazy initialisation is to speed
-the mount process up when there are thousands of AGs. That is, we
-avoid thousands of serialised IOs in the mount path. Have you
-checked to see what the impact is on the clean mount execution time
-is on such a filesystem?
-
-FWIW, in the case of an unclean shutdown, we are already on the slow path
-due to log recovery so adding IO to read all the headers it not such
-a big deal as they have probably been read in during replay, anyway.
-
-> This patch generalizes that code so that we
-> always initialize the per-AG data on mount, and also during growfs so
-> that we can remove all the special case code in the fastpath which
-> couldn't assume that the per-AG data is already initialized.
-
-I like the cleanup, but I'm not sure that potentially adding tens of
-seconds to the time to mount a really large filesystem is a good
-tradeoff...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gRnJpLCBNYXkgMjgsIDIwMTAgYXQgMDM6MTk6MjRQTSArMTAwMCwgTmljayBQaWdnaW4gd3Jv
+dGU6Cj4gT24gRnJpLCBNYXkgMjgsIDIwMTAgYXQgMDg6NDA6MzRBTSArMTAwMCwgRGF2ZSBDaGlu
+bmVyIHdyb3RlOgo+ID4gT24gVGh1LCBNYXkgMjcsIDIwMTAgYXQgMDQ6MzU6MjNQTSArMTAwMCwg
+TmljayBQaWdnaW4gd3JvdGU6Cj4gPiA+IEJ1dCB3ZSBjYW4gdGhpbmsgb2YgaW5vZGVzIHRoYXQg
+YXJlIG9ubHkgaW4gdXNlIGJ5IHVudXNlZCAoYW5kIGFnZWQpCj4gPiA+IGRlbnRyaWVzIGFzIGVm
+ZmVjdGl2ZWx5IHVudXNlZCB0aGVtc2VsdmVzLiBTbyB0aGlzIHNlcXVlbmNlIHVuZGVyCj4gPiA+
+IGVzdGltYXRlcyBob3cgbWFueSBpbm9kZXMgdG8gc2Nhbi4gVGhpcyBjb3VsZCBiaWFzIHByZXNz
+dXJlIGFnYWluc3QKPiA+ID4gZGNhY2hlIEknZCB0aGluaywgZXNwZWNpYWxseSBjb25zaWRlcmlu
+ZyBpbm9kZXMgYXJlIGZhciBsYXJnZXIgdGhhbgo+ID4gPiBkZW50cmllcy4gTWF5YmUgcmVxdWly
+ZSAyIHBhc3NlcyB0byBnZXQgdGhlIGlub2RlcyB1bnVzZWQgaW50aGUKPiA+ID4gZmlyc3QgcGFz
+cy4KPiA+IAo+ID4gSXQncyBzZWxmLWJhbGFuY2luZyAtIGl0IHRyZW5kcyB0b3dhcmRzIGFuIGVx
+dWFsIG51bWJlciBvZiB1bnVzZWQKPiA+IGRlbnRyaWVzIGFuZCBpbm9kZXMgaW4gdGhlIGNhY2hl
+cy4gWWVzLCBpdCB3aWxsIHRlYXIgZG93biBtb3JlCj4gPiBkZW50cmllcyBhdCBmaXJzdCwgYnV0
+IHdlIG5lZWQgdG8gZG8gdGhhdCB0byBiZSBhYmxlIHRvIHJlY2xhaW0KPiA+IGlub2Rlcy4KPiAK
+PiBCdXQgdGhlbiBpdCBkb2Vzbid0IHNjYW4gZW5vdWdoIGlub2RlcyBvbiB0aGUgaW5vZGUgcGFz
+cy4KCldlIGRvbid0IGdldCBhIHNpbmdsZSBzaHJpbmtlciBjYWxsIC0gd2UgZ2V0IGJhdGNoZXMg
+b2YgdGhlbSBmbyBlYWNoCnNocmlua2VyLiAgVGhlIHNocmlua2VyIGRldGVybWluZXMgaG93IG1h
+bnkgb2JqZWN0cyB0byBzY2FuIGluIHRoZQpjYWNoZSwgYW5kIHRoYXQgb25seSBjaGFuZ2VzIGZv
+ciBlYWNoIHNocmlua2VyIHRvIGNhbGwgYmFzZWQgb24gdGhlCnRoZSBzaHJpbmtlci0+c2Vla3Mg
+YW5kIHRoZSBudW1iZXIgb2Ygb2JqZWN0cyBpbiB0aGUgY2FjaGUuICBPbmNlCnRoZSBudW1iZXIg
+aXMgZGVjaWRlZCwgdGhlbiB0aGUgc2hyaW5rZXIgZ2V0cyBiYXRjaGVzIG9mIHJlY2xhaW0gdG8K
+b3BlcmF0ZSBvbi4KCkZ1bmRhbWVudGFsbHksIHRoZSBjdXJyZW50IHNocmlua2VyIHdpbGwgYXNr
+IGZvciB0aGUgc2FtZSBwZXJjZW50YWdlCm9mIGVhY2ggY2FjaGUgdG8gYmUgc2Nhbm5lZCAtIGlm
+IGl0IGRlY2lkZXMgdG8gc2NhbiAyMCUgb2YgdGhlCmRlbnRyeSBjYWNoZSwgaXQgd2lsbCBhbHNv
+IGRlY2lkZSB0byBzY2FuIDIwJSBvZiB0aGUgaW5vZGUgY2FjaGUKSGVuY2Ugd2hhdCB0aGUgaW5v
+ZGUgc2hyaW5rZXIgaXMgZG9pbmcgaXMgc2Nhbm5pbmcgMjAlIG9mIHRoZSBpbm9kZXMKZnJlZWQg
+YnkgdGhlIGRjYWNoZSBzaHJpbmtlci4KCkluIHJvdWdoIG51bWJlcnMsIHNheSB3ZSBoYXZlIDEw
+MGsgZGVudHJpZXMsIGFuZCB0aGUgc2hyaW5rZXIKY2FsY3VsYXRlcyBpdCBuZWVkcyB0byBzY2Fu
+IDIwJSBvZiB0aGUgY2FjaGVzIHRvIHJlY2xhaW0gdGhlbSwgdGhlCmN1cnJlbnQgY29kZSB3aWxs
+IGVuZCB1cCB3aXRoOgoKCQl1bnVzZWQgZGVudHJpZXMJCXVudXNlZCBpbm9kZXMKYmVmb3JlCQkg
+MTAwawkJCSAgICAwCmFmdGVyIGRlbnRyeQkgIDgwawkJCSAgMjBrCmFmdGVyIGlub2RlCSAgODBr
+CQkJICAxNmsKClNvIHdlIGdldCAyMGsgZGVudHJpZXMgZnJlZWQgYW5kIDRrIGlub2RlcyBmcmVl
+ZCBvbiB0aGF0IHNocmlua19zbGFiCnBhc3MuCgpUbyBjb250cmFzdCB0aGlzIGFnYWluc3QgdGhl
+IGNvZGUgSSBwcm9wb3NlZCwgSSdsbCBtYWtlIGEgY291cGxlIG9mCnNpbXBsaWNmaWNhdGlvbnMg
+dG8gYXZvaWQgaHVydGluZyBteSBicmFpbi4gVGhhdCBpcywgSSdsbCBhc3N1bWUKU0hSSU5LX0JB
+VENIPTEwMCAocmF0aGVyIHRoYW4gMTI4KSBhbmQgZm9yZ2V0dGluZyBhYm91dCByb3VuZGluZwpl
+cnJvcnMuIFdpdGggdGhpcywgdGhlIGFsZ29yaXRobSBJIGVuY29kZWQgZ2l2ZXMgcm91Z2hseSB0
+aGUKZm9sbG93aW5nIGZvciBhIDIwJSBvYmplY3QgcmVjbGFpbToKCm51bWJlciBvZiBiYXRjaGVz
+ID0gMjBrIC8gMTAwID0gMjAwCgoJCQkJVW51c2VkCgkJZGVudHJpZXMraW5vZGVzCQlkZW50cmll
+cwlpbm9kZXMKYmVmb3JlCQkgIDEwMGsJCQkxMDBrCQkgICAgMApiYXRjaCAxCQkgIDEwMGsJCQk5
+OTkwMAkJICAxMDAKYmF0Y2ggMgkJICAxMDBrCQkJOTk4MDAJCSAgMjAwCi4uLi4KYmF0Y2ggMTAJ
+ICAxMDBrCQkJOTkwMDAJCSAxMDAwCmJhdGNoIDIwCSAgOTk5OTAJCQk5ODAxMAkJIDE5OTAKYmF0
+Y2ggMzAJICA5OTk4MAkJCTk3MDMwCQkgMjk1MApiYXRjaCA1MAkgIDk5OTEwCQkJOTUxMDAJCSA0
+ODEwCmJhdGNoIDYwCSAgOTk4NjAJCQk5NDE1MAkJIDU3MTAKLi4uLi4KYmF0Y2ggMjAwCSAgOTgx
+MDAJCQk4MTkwMAkJMTYyMDAKCkFuZCBzbyAocm91Z2hseSkgd2Ugc2VlIHRoYXQgdGhlIG51bWJl
+ciBvZiBpbm9kZXMgYmVpbmcgcmVjbGFpbSBwZXIKc2V0IG9mIDEwIGJhdGNoZXMgcm91Z2hseSBl
+cXVhbHMgdGhlIChiYXRjaCBudW1iZXIgLSAxMCkuIEhlbmNlIG92ZXIKMjAwIGJhdGNoZXMsIHdl
+IGNhbiBleHBlY3QgdG8gc2VlIHJvdWdobHkgMTkwICsgMTgwICsgLi4uICsgMTAKaW5vZGVzIHJl
+Y2xhaW1lZC4gVGhhdCBpcyAxOTAwIGlub2Rlcy4gIFNpbWlsYXJseSBmb3IgZGVudHJpZXMsIHdl
+CmdldCByb3VnaGx5IDEwMDAgKyA5OTAgKyA5ODAgKyAuLi4gODEwIGRlbnRyaWVzIHJlY2xhaW1l
+ZCAtIDE4LDEwMAppbiB0b3RhbC4KCkluIG90aGVyIHdvcmRzLCB3ZSBoYXZlIHJvdWdobHkgMThr
+IGRlbnRyaWVzIGFuZCAxLjlrIGlub2RlcwpyZWNsYWltZWQgZm9yIHRoZSBjb2RlIEkgd3JvdGUg
+bmV3IGFsZ29yaXRobS4gVGhhdCBkb2VzIG1lYW4gaXQKaW5pdGlhbGx5IGF0dGVtcHRzIHRvIHJl
+Y2xhaW0gZGVudHJpZXMgZmFzdGVyIHRoYW4gdGhlIGN1cnJlbnQgY29kZSwgYnV0CmFzIHRoZSBu
+dW1iZXIgb2YgdW51c2VkIGlub2RlcyBpbmNyZWFzZXMsIHRoaXMgY29tZXMgYmFjayB0byBwYXJp
+dHkKd2l0aCB0aGUgY3VycmVudCBjb2RlIGFuZCB3ZSBlbmQgdXAgd2l0aCBhIDE6MSByZWNsYWlt
+IHJhdGlvLgoKVGhpcyBpcyBnb29kIGJlaGF2aW91ciAtIGRlbnRyaWVzIGFyZSBjaGVhcCB0byBy
+ZWNvbnN0cnVjdCBmcm9tIHRoZQppbm9kZSBjYWNoZSwgYW5kIHdlIHNob3VsZCBob2xkIG9udG8g
+dGhlIGlub2RlIGNhY2hlIGFzIG11Y2ggYXMKcG9zc2libGUuIGkuZS4gd2Ugc2hvdWxkIHJlY2xh
+aW0gdGhlbSBtb3JlIGFnZ3Jlc3NpdmVseSBvbmx5IGlmCnRoZXJlIGlzIHN1c3RhaW5lZCBwcmVz
+c3VyZSBvbiB0aGUgc3VwZXJibG9jayBhbmQgdGhhdCBpcyB3aGF0IHRoZQphYm92ZSBhbGdvcml0
+aG0gZG9lcy4KCj4gPiDihKtzIHJlY2xhaW0gcHJvZ3Jlc3NlcyB0aGUgcHJvcG90aW9uIG9mIGlu
+b2RlcyBpbmNyZWFzZXMsIHNvCj4gPiB0aGUgYW1vdW50IG9mIGlub2RlcyByZWNsYWltZWQgaW5j
+cmVhc2VzLiAKPiA+IAo+ID4gQmFzaWNhbGx5IHRoaXMgaXMgYSByZWNvZ25pdGlvbiB0aGF0IHRo
+ZSBpbXBvcnRhbnQgY2FjaGUgZm9yCj4gPiBhdm9pZGluZyBJTyBpcyB0aGUgaW5vZGUgY2FjaGUs
+IG5vdCBoZSBkZW50cnkgY2FjaGUuIE9uY2UgdGhlIGlub2RlCj4gCj4gWW91IGNhbiBiaWFzIGFn
+YWluc3QgdGhlIGRjYWNoZSB1c2luZyBtdWx0aXBsaWVycy4KCk11bHRpcGxpZXJzIGFyZSBub3Qg
+c2VsZi1iYWxhbmNpbmcsIGFuZCBnZW5lcmFsbHkganVzdCBhbXBsaWZ5IGFueQppbWJhbGFuY2Ug
+YW4gYWxnb3JpdGhtIHRlbmRzIHRvd2FyZHMuIFRoZSB2ZnNfY2FjaGVfcHJlc3N1cmUKbXVsdGlw
+bGllciBpcyBhIHNoaW5pbmcgZXhhbXBsZSBvZiB0aGlzIGtpbmQgb2YgdXR0ZXJseSB1c2VsZXNz
+Cmtub2IuLi4KCj4gPiA+IFBhcnQgb2YgdGhlIHByb2JsZW0gaXMgdGhlIGZ1bm55IHNocmlua2Vy
+IEFQSS4KPiA+ID4gCj4gPiA+IFRoZSByaWdodCB3YXkgdG8gZG8gaXQgaXMgdG8gY2hhbmdlIHRo
+ZSBzaHJpbmtlciBBUEkgc28gdGhhdCBpdCBwYXNzZXMKPiA+ID4gZG93biB0aGUgbHJ1X3BhZ2Vz
+IGFuZCBzY2FubmVkIGludG8gdGhlIGNhbGxiYWNrLiBGcm9tIHRoZXJlLCB0aGUKPiA+ID4gc2hy
+aW5rZXJzIGNhbiBjYWxjdWxhdGUgdGhlIGFwcHJvcHJpYXRlIHJhdGlvIG9mIG9iamVjdHMgdG8g
+c2Nhbi4KPiA+ID4gTm8gbmVlZCBmb3IgMi1jYWxsIHNjaGVtZSwgbm8gbmVlZCBmb3Igc2hyaW5r
+ZXItPnNlZWtzLCBhbmQgdGhlCj4gPiA+IGFiaWxpdHkgdG8gY2FsY3VsYXRlIGFuIGFwcHJvcHJp
+YXRlIHJhdGlvIGZpcnN0IGZvciBkY2FjaGUsIGFuZCAqdGhlbioKPiA+ID4gZm9yIGljYWNoZS4K
+PiA+IAo+ID4gTXkgb25seSBjb25jZXJuIGFib3V0IHRoaXMgaXMgdGhhdCBleHBvc2VzIHRoZSBp
+bm5lciB3b3JraW5ncyBvZiB0aGUKPiA+IHNocmlua2VyIGFuZCBtbSBzdWJzeXN0ZW0gdG8gY29k
+ZSB0aGF0IHNpbXBseSBkb2Vzbid0IG5lZWQgdG8ga25vdwo+ID4gYWJvdXQgaXQuCj4gCj4gSXQn
+cyBqdXN0IHByb3ZpZGluZyBhIHJhdGlvLiBUaGUgc2hyaW5rZXJzIGFsbHJlYWR5IGtub3cgdGhl
+eSBhcmUKPiBzY2FubmluZyBiYXNlZCBvbiBhIHJhdGlvIG9mIHBhZ2VjYWNoZSBzY2FubmVkLgoK
+U3VyZSwgYnV0IHRoZSBzaHJpbmtlcnMgYXJlIGp1c3QgYSBzaW1wbGUgbWVjaGFuaXNtIGZvciBp
+bXBsZW1lbnRpbmcKVk0gcG9saWN5IGRlY2lzaW9ucy4gSU1PIHJlY2xhaW0gcG9saWN5IGRlY2lz
+aW9ucyBzaG91bGQgbm90IGJlCnB1c2hlZCBkb3duIGFuZCByZXBsaWNhdGVkIGluIGV2ZXJ5IG9u
+ZSBvZiB0aGVzZSByZWNsYWltIG1lY2hhbmlzbXMuCgo+IEJ1dCBzaHJpbmtlcnMgYXJlIHZlcnkg
+c3Vic3lzdGVtIHNwZWNpZmljLgoKQW5kIGFzIHN1Y2ggc2hvdWxkIGNvbmNlbnRyYXRlIG9uIGdl
+dHRpbmcgdGhlaXIgc3Vic3lzdGVtIHJlY2xhaW0KY29ycmVjdCwgbm90IGhhdmUgdG8gd29ycnkg
+YWJvdXQgaW1wbGVtZW50aW5nIFZNIHBvbGljeQpjYWxjdWxhdGlvbnMuLi4KCkNoZWVycywKCkRh
+dmUuCi0tIApEYXZlIENoaW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3Nz
+LnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
