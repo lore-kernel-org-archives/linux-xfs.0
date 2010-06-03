@@ -1,25 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o536oQOE140151 for <xfs@oss.sgi.com>; Thu, 3 Jun 2010 01:50:28 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BB9CE391DD7
-	for <xfs@oss.sgi.com>; Wed,  2 Jun 2010 23:52:54 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id BZ1KeKLHdLOrmcCe for
-	<xfs@oss.sgi.com>; Wed, 02 Jun 2010 23:52:54 -0700 (PDT)
-Date: Thu, 3 Jun 2010 02:52:52 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 02/17] xfs: skip writeback from reclaim context
-Message-ID: <20100603065252.GA28592@infradead.org>
-References: <20100531160727.842750532@bombadil.infradead.org>
-	<20100531160859.184576507@bombadil.infradead.org>
-	<20100602043957.GB7011@dastard>
-	<20100602100812.GA25035@infradead.org>
-	<20100602230209.GA27325@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100602230209.GA27325@dastard>
+	o53GHfTw165289 for <xfs@oss.sgi.com>; Thu, 3 Jun 2010 11:17:42 -0500
+Subject: Re: [PATCH] xfs: improve xfs_isilocked
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20100529095019.GA18859@infradead.org>
+References: <20100527190533.GB16102@infradead.org>
+	<1275075653.2302.38.camel@doink> <20100529095019.GA18859@infradead.org>
+Date: Thu, 03 Jun 2010 11:19:27 -0500
+Message-ID: <1275581967.2468.9.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,34 +23,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-mm@kvack.org, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Thu, Jun 03, 2010 at 09:02:09AM +1000, Dave Chinner wrote:
-> Did you skip it unconditionally, or only when a transaction was
-> required?
+On Sat, 2010-05-29 at 05:50 -0400, Christoph Hellwig wrote:
+> On Fri, May 28, 2010 at 02:40:53PM -0500, Alex Elder wrote:
+> > On Thu, 2010-05-27 at 15:05 -0400, Christoph Hellwig wrote:
+> > > Use rwsem_is_locked to make the assertations for shared locks work.
+> > 
+> > So you're changing it so it answers "yes it's locked"
+> > even it it's only a read lock now, right?
+. . .
 
-xfs_vm_releasepage is mostly a no-op if no transaction is required.
-If we have neither delalloc nor unwritten buffer we do not actually
-enter xfs_page_state_convert, and ->releasepage also doesn't touch
-unampped buffers at all.
+> > Now it's "If the exclusive flag is set, but no writer,
+> > it's not locked.  Otherwise if the shared flag is
+> > set it's locked if rwsem_is_locked() says we are.
+> > Otherwise (ASSERT(0) and) it is not locked."
+> 
+> Not exactly.  Now it's:
+> 
+>  - if excl is set but shared isn't return true if mr_writer is
+>    set, else false
+>  - if shared is set either alone or together with excl return
+>    if it is locked in any way (rwsem_is_locked).
 
-> The scary part is that I've seen stack traces (i.e. most stack used)
-> through this reclaim path for delalloc conversion even for
-> allocations that are GFP_NOFS and the only thing saving us from
-> deadlocks is th PF_FSTRANS check. Even worse is that
-> shrinker_page_list() will call try_to_release_pages() without
-> checking whether it's allowed to enter the filesystem or not, so we
-> can be doing block allocation in places we've specifically told the
-> memory allocation subsystem not to....
+OK, that makes sense, I get it now.
 
-s/shrinker_page_list/shrink_page_list/ and
-s/try_to_release_pages/try_to_release_page/ above.
+> Note that xfs_isilocked can be called like:
+> 
+> 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
+> 
+> which means that either excl or shared is fine.
+> 
+>  - if either one or both of excl and shared are set and it's 
+> 
+> > That last part is wrong I think.  It should be OK to
+> > call xfs_isilocked() with neither flag set, in which
+> > case the result should be 0.
+> 
+> We can argue about removing the assert, but we currently don't
+> and should't call xfs_isilocked wit ha 0 argument - it's rather
+> pointless to do so.
 
-shrink_page_list takes the gfp_mask for try_to_release_page from
-the scan_control structure passed to it from all the top of the long
-callchain.  I can't find anobvious bug, but this could cause a lot
-more harm.
+Yes, you're right.  I'd still say the function should
+return the right answer even if given an unreasonable
+request.  But that's being pedantic.
+
+> 
+> > And if the exclusive
+> > flag is set, and there *is* a writer, it *is* locked,
+> > so it should return 1.
+> 
+> We do that right now.
+
+Yup.  Thanks for setting me straight.
+
+Reviewed-by: Alex Elder <aelder@sgi.com>
+
+
+
 
 _______________________________________________
 xfs mailing list
