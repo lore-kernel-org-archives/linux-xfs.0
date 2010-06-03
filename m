@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o53NrjSB186382 for <xfs@oss.sgi.com>; Thu, 3 Jun 2010 18:53:45 -0500
+	o53NrQM9186315 for <xfs@oss.sgi.com>; Thu, 3 Jun 2010 18:53:27 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D22B210ABFE1
-	for <xfs@oss.sgi.com>; Thu,  3 Jun 2010 16:58:43 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DE23310ABFCB
+	for <xfs@oss.sgi.com>; Thu,  3 Jun 2010 16:58:24 -0700 (PDT)
 Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
 	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	PbUVsNkkkt6NjChc for <xfs@oss.sgi.com>;
-	Thu, 03 Jun 2010 16:58:43 -0700 (PDT)
+	cIoxCvCt1wWzoaav for <xfs@oss.sgi.com>;
+	Thu, 03 Jun 2010 16:58:24 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 4/6] writeback: pay attention to wbc->nr_to_write in
-	write_cache_pages
-Date: Fri,  4 Jun 2010 09:55:26 +1000
-Message-Id: <1275609328-12514-5-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/6] writeback: Add tracing to balance_dirty_pages
+Date: Fri,  4 Jun 2010 09:55:24 +1000
+Message-Id: <1275609328-12514-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1275609328-12514-1-git-send-email-david@fromorbit.com>
 References: <1275609328-12514-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,129 +33,174 @@ Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-If a filesystem writes more than one page in ->writepage, write_cache_pages
-fails to notice this and continues to attempt writeback when wbc->nr_to_write
-has gone negative - this trace was captured from XFS:
-
-
-    wbc_writeback_start: towrt=1024
-    wbc_writepage: towrt=1024
-    wbc_writepage: towrt=0
-    wbc_writepage: towrt=-1
-    wbc_writepage: towrt=-5
-    wbc_writepage: towrt=-21
-    wbc_writepage: towrt=-85
-
-This has adverse effects on filesystem writeback behaviour. write_cache_pages()
-needs to terminate after a certain number of pages are written, not after a
-certain number of calls to ->writepage are made.  This is a regression
-introduced by 17bc6c30cf6bfffd816bdc53682dd46fc34a2cf4 ("vfs: Add
-no_nrwrite_index_update writeback control flag"), but cannot be reverted
-directly due to subsequent bug fixes that have gone in on top of it.
-
-This commit adds a ->writepage tracepoint inside write_cache_pages() (how the
-above trace was generated) and does the revert manually leaving the subsequent
-bug fixes intact. ext4 is not affected by this as a previous commit in the
-series stops ext4 from using the generic function.
+Tracing high level background writeback events is good, but it doesn't
+give the entire picture. Add IO dispatched by foreground throttling to the
+writeback events.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- include/linux/writeback.h   |    9 ---------
- include/trace/events/ext4.h |    5 +----
- mm/page-writeback.c         |   15 +++++----------
- 3 files changed, 6 insertions(+), 23 deletions(-)
+ fs/fs-writeback.c                |    5 ++
+ include/trace/events/writeback.h |   80 ++++++++++++++++++++++++++++++++++++++
+ mm/page-writeback.c              |    4 ++
+ 3 files changed, 89 insertions(+), 0 deletions(-)
 
-diff --git a/include/linux/writeback.h b/include/linux/writeback.h
-index cc97d6c..52e82f3 100644
---- a/include/linux/writeback.h
-+++ b/include/linux/writeback.h
-@@ -56,15 +56,6 @@ struct writeback_control {
- 	unsigned for_reclaim:1;		/* Invoked from the page allocator */
- 	unsigned range_cyclic:1;	/* range_start is cyclic */
- 	unsigned more_io:1;		/* more io to be dispatched */
--	/*
--	 * write_cache_pages() won't update wbc->nr_to_write and
--	 * mapping->writeback_index if no_nrwrite_index_update
--	 * is set.  write_cache_pages() may write more than we
--	 * requested and we want to make sure nr_to_write and
--	 * writeback_index are updated in a consistent manner
--	 * so we use a single control to update them
--	 */
--	unsigned no_nrwrite_index_update:1;
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index ebfaed8..7cd4585 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -819,7 +819,11 @@ static long wb_writeback(struct bdi_writeback *wb,
+ 		wbc.more_io = 0;
+ 		wbc.nr_to_write = MAX_WRITEBACK_PAGES;
+ 		wbc.pages_skipped = 0;
++
++		trace_wbc_writeback_start(&wbc);
+ 		writeback_inodes_wb(wb, &wbc);
++		trace_wbc_writeback_written(&wbc);
++
+ 		args->nr_pages -= MAX_WRITEBACK_PAGES - wbc.nr_to_write;
+ 		wrote += MAX_WRITEBACK_PAGES - wbc.nr_to_write;
  
- 	/*
- 	 * For WB_SYNC_ALL, the sb must always be pinned. For WB_SYNC_NONE,
-diff --git a/include/trace/events/ext4.h b/include/trace/events/ext4.h
-index f5b1ba9..f3865c7 100644
---- a/include/trace/events/ext4.h
-+++ b/include/trace/events/ext4.h
-@@ -306,7 +306,6 @@ TRACE_EVENT(ext4_da_writepages_result,
- 		__field(	int,	pages_written		)
- 		__field(	long,	pages_skipped		)
- 		__field(	char,	more_io			)	
--		__field(	char,	no_nrwrite_index_update )
- 		__field(       pgoff_t,	writeback_index		)
- 	),
+@@ -847,6 +851,7 @@ static long wb_writeback(struct bdi_writeback *wb,
+ 		if (!list_empty(&wb->b_more_io))  {
+ 			inode = list_entry(wb->b_more_io.prev,
+ 						struct inode, i_list);
++			trace_wbc_writeback_wait(&wbc);
+ 			inode_wait_for_writeback(inode);
+ 		}
+ 		spin_unlock(&inode_lock);
+diff --git a/include/trace/events/writeback.h b/include/trace/events/writeback.h
+index df76457..72c1a12 100644
+--- a/include/trace/events/writeback.h
++++ b/include/trace/events/writeback.h
+@@ -7,6 +7,9 @@
+ #include <linux/backing-dev.h>
+ #include <linux/writeback.h>
  
-@@ -317,16 +316,14 @@ TRACE_EVENT(ext4_da_writepages_result,
- 		__entry->pages_written	= pages_written;
- 		__entry->pages_skipped	= wbc->pages_skipped;
- 		__entry->more_io	= wbc->more_io;
--		__entry->no_nrwrite_index_update = wbc->no_nrwrite_index_update;
- 		__entry->writeback_index = inode->i_mapping->writeback_index;
- 	),
++struct wb_writeback_args;
++struct bdi_work;
++
+ TRACE_EVENT(writeback_queue,
  
--	TP_printk("dev %s ino %lu ret %d pages_written %d pages_skipped %ld more_io %d no_nrwrite_index_update %d writeback_index %lu",
-+	TP_printk("dev %s ino %lu ret %d pages_written %d pages_skipped %ld more_io %d writeback_index %lu",
- 		  jbd2_dev_to_name(__entry->dev),
- 		  (unsigned long) __entry->ino, __entry->ret,
- 		  __entry->pages_written, __entry->pages_skipped,
- 		  __entry->more_io,
--		  __entry->no_nrwrite_index_update,
- 		  (unsigned long) __entry->writeback_index)
+ 	TP_PROTO(struct backing_dev_info *bdi, struct wb_writeback_args *args),
+@@ -165,6 +168,83 @@ TRACE_EVENT(writeback_bdi_register,
+ 	TP_printk("%s: %s", __entry->name,
+ 			__entry->start ? "registered" : "unregistered")
  );
++
++/* pass flags explicitly */
++DECLARE_EVENT_CLASS(wbc_class,
++	TP_PROTO(struct writeback_control *wbc),
++	TP_ARGS(wbc),
++	TP_STRUCT__entry(
++		__field(unsigned int, wbc)
++		__array(char, name, 16)
++		__field(long, nr_to_write)
++		__field(long, pages_skipped)
++		__field(int, sb)
++		__field(int, sync_mode)
++		__field(int, nonblocking)
++		__field(int, encountered_congestion)
++		__field(int, for_kupdate)
++		__field(int, for_background)
++		__field(int, for_reclaim)
++		__field(int, range_cyclic)
++		__field(int, more_io)
++		__field(unsigned long, older_than_this)
++		__field(long, range_start)
++		__field(long, range_end)
++	),
++
++	TP_fast_assign(
++		char *__name = "(none)";
++
++		__entry->wbc		= (unsigned long)wbc & 0xffff;
++		if (wbc->bdi)
++			strncpy(__entry->name, dev_name(wbc->bdi->dev), 16);
++		else
++			strncpy(__entry->name, __name, 16);
++		__entry->nr_to_write	= wbc->nr_to_write;
++		__entry->pages_skipped	= wbc->pages_skipped;
++		__entry->sb		= !!wbc->sb;
++		__entry->sync_mode	= wbc->sync_mode;
++		__entry->for_kupdate	= wbc->for_kupdate;
++		__entry->for_background	= wbc->for_background;
++		__entry->for_reclaim	= wbc->for_reclaim;
++		__entry->range_cyclic	= wbc->range_cyclic;
++		__entry->more_io	= wbc->more_io;
++		__entry->older_than_this = wbc->older_than_this ?
++						*wbc->older_than_this : 0;
++		__entry->range_start	= (long)wbc->range_start;
++		__entry->range_end	= (long)wbc->range_end;
++	),
++
++	TP_printk("dev %s wbc=%x towrt=%ld skip=%ld sb=%d mode=%d kupd=%d "
++		"bgrd=%d reclm=%d cyclic=%d more=%d older=0x%lx "
++		"start=0x%lx end=0x%lx",
++		__entry->name,
++		__entry->wbc,
++		__entry->nr_to_write,
++		__entry->pages_skipped,
++		__entry->sb,
++		__entry->sync_mode,
++		__entry->for_kupdate,
++		__entry->for_background,
++		__entry->for_reclaim,
++		__entry->range_cyclic,
++		__entry->more_io,
++		__entry->older_than_this,
++		__entry->range_start,
++		__entry->range_end)
++)
++
++#define DEFINE_WBC_EVENT(name) \
++DEFINE_EVENT(wbc_class, name, \
++	TP_PROTO(struct writeback_control *wbc), \
++	TP_ARGS(wbc))
++DEFINE_WBC_EVENT(wbc_writeback_start);
++DEFINE_WBC_EVENT(wbc_writeback_written);
++DEFINE_WBC_EVENT(wbc_writeback_wait);
++DEFINE_WBC_EVENT(wbc_balance_dirty_start);
++DEFINE_WBC_EVENT(wbc_balance_dirty_written);
++DEFINE_WBC_EVENT(wbc_balance_dirty_wait);
++
+ #endif /* _TRACE_WRITEBACK_H */
  
+ /* This part must be outside protection */
 diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index caaf954..0fe713d 100644
+index b289310..68eb727 100644
 --- a/mm/page-writeback.c
 +++ b/mm/page-writeback.c
-@@ -839,7 +839,6 @@ int write_cache_pages(struct address_space *mapping,
- 	pgoff_t done_index;
- 	int cycled;
- 	int range_whole = 0;
--	long nr_to_write = wbc->nr_to_write;
+@@ -34,6 +34,7 @@
+ #include <linux/syscalls.h>
+ #include <linux/buffer_head.h>
+ #include <linux/pagevec.h>
++#include <trace/events/writeback.h>
  
- 	pagevec_init(&pvec, 0);
- 	if (wbc->range_cyclic) {
-@@ -940,11 +939,10 @@ continue_unlock:
- 					done = 1;
- 					break;
- 				}
-- 			}
-+			}
+ /*
+  * After a CPU has dirtied this many pages, balance_dirty_pages_ratelimited
+@@ -536,11 +537,13 @@ static void balance_dirty_pages(struct address_space *mapping,
+ 		 * threshold otherwise wait until the disk writes catch
+ 		 * up.
+ 		 */
++		trace_wbc_balance_dirty_start(&wbc);
+ 		if (bdi_nr_reclaimable > bdi_thresh) {
+ 			writeback_inodes_wbc(&wbc);
+ 			pages_written += write_chunk - wbc.nr_to_write;
+ 			get_dirty_limits(&background_thresh, &dirty_thresh,
+ 				       &bdi_thresh, bdi);
++			trace_wbc_balance_dirty_written(&wbc);
+ 		}
  
--			if (nr_to_write > 0) {
--				nr_to_write--;
--				if (nr_to_write == 0 &&
-+			if (wbc->nr_to_write > 0) {
-+				if (--wbc->nr_to_write == 0 &&
- 				    wbc->sync_mode == WB_SYNC_NONE) {
- 					/*
- 					 * We stop writing back only if we are
-@@ -975,11 +973,8 @@ continue_unlock:
- 		end = writeback_index - 1;
- 		goto retry;
- 	}
--	if (!wbc->no_nrwrite_index_update) {
--		if (wbc->range_cyclic || (range_whole && nr_to_write > 0))
--			mapping->writeback_index = done_index;
--		wbc->nr_to_write = nr_to_write;
--	}
-+	if (wbc->range_cyclic || (range_whole && wbc->nr_to_write > 0))
-+		mapping->writeback_index = done_index;
+ 		/*
+@@ -566,6 +569,7 @@ static void balance_dirty_pages(struct address_space *mapping,
+ 		if (pages_written >= write_chunk)
+ 			break;		/* We've done our duty */
  
- 	return ret;
- }
++		trace_wbc_balance_dirty_wait(&wbc);
+ 		__set_current_state(TASK_INTERRUPTIBLE);
+ 		io_schedule_timeout(pause);
+ 
 -- 
 1.7.1
 
