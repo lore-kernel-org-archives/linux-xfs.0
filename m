@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o53NrYjb186331 for <xfs@oss.sgi.com>; Thu, 3 Jun 2010 18:53:35 -0500
+	o53NwZGF186604 for <xfs@oss.sgi.com>; Thu, 3 Jun 2010 18:58:36 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9517F384B58
-	for <xfs@oss.sgi.com>; Thu,  3 Jun 2010 16:56:02 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	W2gmMYlwieGEXSaO for <xfs@oss.sgi.com>;
-	Thu, 03 Jun 2010 16:56:02 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 99C29384B5B
+	for <xfs@oss.sgi.com>; Thu,  3 Jun 2010 16:56:03 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	SHjnJq78yvIrsh8D for <xfs@oss.sgi.com>;
+	Thu, 03 Jun 2010 16:56:03 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/6] writeback: Add tracing to write_cache_pages
-Date: Fri,  4 Jun 2010 09:55:25 +1000
-Message-Id: <1275609328-12514-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 5/6] xfs: remove nr_to_write writeback windup.
+Date: Fri,  4 Jun 2010 09:55:27 +1000
+Message-Id: <1275609328-12514-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1275609328-12514-1-git-send-email-david@fromorbit.com>
 References: <1275609328-12514-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,42 +31,37 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Add a trace event to the ->writepage loop in write_cache_pages to give
-visibility into how the ->writepage call is changing variables within the
-writeback control structure. Of most interest is how wbc->nr_to_write changes
-from call to call, especially with filesystems that write multiple pages
-in ->writepage.
+From: Dave Chinner <dchinner@redhat.com>
+
+Now that the background flush code has been fixed, we shouldn't need to
+silently multiply the wbc->nr_to_write to get good writeback. Remove
+that code.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- include/trace/events/writeback.h |    1 +
- mm/page-writeback.c              |    1 +
- 2 files changed, 2 insertions(+), 0 deletions(-)
+ fs/xfs/linux-2.6/xfs_aops.c |    8 --------
+ 1 files changed, 0 insertions(+), 8 deletions(-)
 
-diff --git a/include/trace/events/writeback.h b/include/trace/events/writeback.h
-index 72c1a12..5dda40e 100644
---- a/include/trace/events/writeback.h
-+++ b/include/trace/events/writeback.h
-@@ -244,6 +244,7 @@ DEFINE_WBC_EVENT(wbc_writeback_wait);
- DEFINE_WBC_EVENT(wbc_balance_dirty_start);
- DEFINE_WBC_EVENT(wbc_balance_dirty_written);
- DEFINE_WBC_EVENT(wbc_balance_dirty_wait);
-+DEFINE_WBC_EVENT(wbc_writepage);
+diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
+index 089eaca..4c89db3 100644
+--- a/fs/xfs/linux-2.6/xfs_aops.c
++++ b/fs/xfs/linux-2.6/xfs_aops.c
+@@ -1366,14 +1366,6 @@ xfs_vm_writepage(
+ 	if (!page_has_buffers(page))
+ 		create_empty_buffers(page, 1 << inode->i_blkbits, 0);
  
- #endif /* _TRACE_WRITEBACK_H */
- 
-diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index 68eb727..caaf954 100644
---- a/mm/page-writeback.c
-+++ b/mm/page-writeback.c
-@@ -921,6 +921,7 @@ continue_unlock:
- 			if (!clear_page_dirty_for_io(page))
- 				goto continue_unlock;
- 
-+			trace_wbc_writepage(wbc);
- 			ret = (*writepage)(page, wbc, data);
- 			if (unlikely(ret)) {
- 				if (ret == AOP_WRITEPAGE_ACTIVATE) {
+-
+-	/*
+-	 *  VM calculation for nr_to_write seems off.  Bump it way
+-	 *  up, this gets simple streaming writes zippy again.
+-	 *  To be reviewed again after Jens' writeback changes.
+-	 */
+-	wbc->nr_to_write *= 4;
+-
+ 	/*
+ 	 * Convert delayed allocate, unwritten or unmapped space
+ 	 * to real space and flush out to disk.
 -- 
 1.7.1
 
