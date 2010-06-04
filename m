@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5415dCj189984 for <xfs@oss.sgi.com>; Thu, 3 Jun 2010 20:05:39 -0500
-Received: from song.cn.fujitsu.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1F6C63934C6
-	for <xfs@oss.sgi.com>; Thu,  3 Jun 2010 18:08:05 -0700 (PDT)
-Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id s0m2Xpb3foFjnJMY for
-	<xfs@oss.sgi.com>; Thu, 03 Jun 2010 18:08:05 -0700 (PDT)
-Message-ID: <4C085289.9040000@cn.fujitsu.com>
-Date: Fri, 04 Jun 2010 09:10:33 +0800
-From: Li Zefan <lizf@cn.fujitsu.com>
+	o541e597191479 for <xfs@oss.sgi.com>; Thu, 3 Jun 2010 20:40:05 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 35999396208
+	for <xfs@oss.sgi.com>; Thu,  3 Jun 2010 18:42:32 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	LKc7aXvCelveaLFF for <xfs@oss.sgi.com>;
+	Thu, 03 Jun 2010 18:42:32 -0700 (PDT)
+Date: Fri, 4 Jun 2010 11:42:29 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: remove lazy per-AG initialization
+Message-ID: <20100604014229.GD19651@dastard>
+References: <20100528175108.GA9421@infradead.org>
+	<20100530230915.GA13732@dastard> <1275602290.2468.110.camel@doink>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/6] writeback: initial tracing support
-References: <1275609328-12514-1-git-send-email-david@fromorbit.com>
-	<1275609328-12514-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1275609328-12514-2-git-send-email-david@fromorbit.com>
+Content-Disposition: inline
+In-Reply-To: <1275602290.2468.110.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,92 +30,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-> +TRACE_EVENT(writeback_queue,
-> +
-> +	TP_PROTO(struct backing_dev_info *bdi, struct wb_writeback_args *args),
-> +
-> +	TP_ARGS(bdi, args),
-> +
-> +	TP_STRUCT__entry(
-> +		__array(char,		name,		16)
-> +		__field(long,		nr_pages)
-> +		__field(int,		sb)
-> +		__field(int,		sync_mode)
-> +		__field(int,		for_kupdate)
-> +		__field(int,		range_cyclic)
-> +		__field(int,		for_background)
-> +	),
-> +
-> +	TP_fast_assign(
-> +		strncpy(__entry->name, dev_name(bdi->dev), 16);
+On Thu, Jun 03, 2010 at 04:58:10PM -0500, Alex Elder wrote:
+> On Mon, 2010-05-31 at 09:09 +1000, Dave Chinner wrote:
+> > On Fri, May 28, 2010 at 01:51:08PM -0400, Christoph Hellwig wrote:
+> > > Historically XFS initializes the allocator / inode allocator per-AG
+> > > lazily, that is the first time this information is required.  For
+> > > filesystems that use lazy superblock counters (which is the default now)
+> > > we already have to walk all AGs to initialize the superblock counters
+> > > on an unclean shutdown.
+> > 
+> > Which is not common, so isn't frequently triggered in the normal
+> > mount process. The reason for the lazy initialisation is to speed
+> > the mount process up when there are thousands of AGs. That is, we
+> > avoid thousands of serialised IOs in the mount path. Have you
+> > checked to see what the impact is on the clean mount execution time
+> > is on such a filesystem?
+> 
+> It's interesting that the time penalty you're talking about
+> doesn't go away, it just becomes less noticeable because it's
+> aggregated over subsequent access to the AG's.
 
-Should use strlcpy() ?
+Right, the penalty is currently taken at access time, rather than at
+mount time. One way to test the impact is to compare the runtime
+difference for xfstests with MKFS_OPTIONS="-d agsize=16m" to bump up
+the AG count and see how much additional IO and time it takes...
 
-> +		__entry->nr_pages	= args->nr_pages;
-> +		__entry->sb		= !!args->sb;
-> +		__entry->for_kupdate	= args->for_kupdate;
-> +		__entry->range_cyclic	= args->range_cyclic;
-> +		__entry->for_background	= args->for_background;
-> +	),
-> +
-> +	TP_printk("%s: pages=%ld, sb=%d, kupdate=%d, range_cyclic=%d "
-> +		  "for_background=%d", __entry->name, __entry->nr_pages,
-> +			__entry->sb, __entry->for_kupdate,
-> +			__entry->range_cyclic, __entry->for_background)
-> +);
-> +
-> +TRACE_EVENT(writeback_sched,
-> +
-> +	TP_PROTO(struct backing_dev_info *bdi, struct bdi_work *work,
-> +		 const char *msg),
-> +
-> +	TP_ARGS(bdi, work, msg),
-> +
-> +	TP_STRUCT__entry(
-> +		__array(char,			name,		16)
-> +		__field(unsigned int,		work)
-> +		__array(char,			task,		8)
-> +	),
-> +
-> +	TP_fast_assign(
-> +		strncpy(__entry->name, dev_name(bdi->dev), 16);
+Cheers,
 
-ditto
-
-> +		__entry->work = (unsigned long) work & 0xffff;
-> +		snprintf(__entry->task, 8, "%s", msg);
-> +	),
-> +
-> +	TP_printk("work=%x, task=%s", __entry->work, __entry->task)
-> +);
-
-...
-
-> +TRACE_EVENT(writeback_bdi_register,
-> +
-> +	TP_PROTO(const char *name, int start),
-> +
-> +	TP_ARGS(name, start),
-> +
-> +	TP_STRUCT__entry(
-> +		__array(char,	name,		16)
-> +		__field(int,	start)
-> +	),
-> +
-> +	TP_fast_assign(
-> +		strncpy(__entry->name, name, 16);
-
-ditto
-
-> +		__entry->start = start;
-> +	),
-> +
-> +	TP_printk("%s: %s", __entry->name,
-> +			__entry->start ? "registered" : "unregistered")
-> +);
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
