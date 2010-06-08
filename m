@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o575vccn124328 for <xfs@oss.sgi.com>; Mon, 7 Jun 2010 00:57:38 -0500
-Received: from rcsinet11.oracle.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 119C5149726F
-	for <xfs@oss.sgi.com>; Sun,  6 Jun 2010 23:00:08 -0700 (PDT)
-Received: from rcsinet11.oracle.com (rcsinet11.oracle.com [148.87.113.123]) by
-	cuda.sgi.com with ESMTP id T6UIu7FyxYZhvK61 for
-	<xfs@oss.sgi.com>; Sun, 06 Jun 2010 23:00:08 -0700 (PDT)
-Received: from oracle.com (localhost [127.0.0.1])
-	by rcsinet11.oracle.com (Switch-3.4.2/Switch-3.4.2) with ESMTP id
-	o576067A006081 for <xfs@oss.sgi.com>; Mon, 7 Jun 2010 06:00:07 GMT
-Message-Id: <1517568223.1275890399274@ace.smi>
-Date: Mon, 7 Jun 2010 05:59:59 +0000
-From: no-reply@oracle.com
-Subject: Email attachment rejected
+	o5808rBM178560 for <xfs@oss.sgi.com>; Mon, 7 Jun 2010 19:08:53 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 095D13A0417
+	for <xfs@oss.sgi.com>; Mon,  7 Jun 2010 17:11:23 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	WcSzrfBEs5ZovLtV for <xfs@oss.sgi.com>;
+	Mon, 07 Jun 2010 17:11:23 -0700 (PDT)
+Date: Tue, 8 Jun 2010 10:11:15 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 0/6] writeback: tracing and fixes V3.
+Message-ID: <20100608001115.GB6965@dastard>
+References: <1275609328-12514-1-git-send-email-david@fromorbit.com>
+	<20100604074938.GB4448@infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20100604074938.GB4448@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,9 +30,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-fsdevel@vger.kernel.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Oracle does not allow messages with executable message attachments.
+On Fri, Jun 04, 2010 at 03:49:38AM -0400, Christoph Hellwig wrote:
+> 
+> Not sure what the rules for new tracepoints are, but in addition to the
+> fixes I'd really love to see the tracepoints in 2.6.35.
+
+Personally I think they are just as important (or even more
+important) than the bug fixes because we seem to break this code
+regularly because nobody can clearly see what the internals are
+doing to verify their change is working correctly.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
