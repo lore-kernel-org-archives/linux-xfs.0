@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o580afiX179774 for <xfs@oss.sgi.com>; Mon, 7 Jun 2010 19:36:42 -0500
+	o580acf4179731 for <xfs@oss.sgi.com>; Mon, 7 Jun 2010 19:36:38 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8D526158C5B8
-	for <xfs@oss.sgi.com>; Mon,  7 Jun 2010 17:42:03 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	byJMsoKd88AgwXXo for <xfs@oss.sgi.com>;
-	Mon, 07 Jun 2010 17:42:03 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C14251D57632
+	for <xfs@oss.sgi.com>; Mon,  7 Jun 2010 17:39:08 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	YlEtfoENHVIMiH3c for <xfs@oss.sgi.com>;
+	Mon, 07 Jun 2010 17:39:08 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/6] writeback: initial tracing support
-Date: Tue,  8 Jun 2010 10:38:02 +1000
-Message-Id: <1275957487-23633-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 4/6] writeback: pay attention to wbc->nr_to_write in
+	write_cache_pages
+Date: Tue,  8 Jun 2010 10:38:05 +1000
+Message-Id: <1275957487-23633-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1275957487-23633-1-git-send-email-david@fromorbit.com>
 References: <1275957487-23633-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,361 +32,127 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: torvalds@linux-foundation.org
 Cc: linux-fsdevel@vger.kernel.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-From: From: Jens Axboe <jens.axboe@oracle.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-Trace queue/sched/exec parts of the writeback loop. This provides
-insight into when and why flusher threads are scheduled to run. e.g
-a sync invocation leaves a trace like:
+If a filesystem writes more than one page in ->writepage, write_cache_pages
+fails to notice this and continues to attempt writeback when wbc->nr_to_write
+has gone negative - this trace was captured from XFS:
 
-sync-2798  [006] 611323.335713: writeback_queue: 253:16: pages=87879, sb=0, kupdate=0, range_cyclic=0 for_background=0
-sync-2798  [006] 611323.335718: writeback_sched: work=37c0, task=task
-sync-2798  [006] 611323.335817: writeback_queue: 8:0: pages=92680, sb=1, kupdate=0, range_cyclic=-1 for_background=0
-sync-2798  [006] 611323.335819: writeback_sched: work=35c0, task=task
-sync-2798  [006] 611323.335855: writeback_queue: 253:16: pages=92680, sb=1, kupdate=0, range_cyclic=-1 for_background=0
-sync-2798  [006] 611323.335857: writeback_sched: work=36c0, task=task
-sync-2798  [006] 611323.335890: writeback_queue: 8:0: pages=9223372036854775807, sb=1, kupdate=0, range_cyclic=0 for_background=0
-sync-2798  [006] 611323.335891: writeback_sched: work=fe58, task=task
-sync-2798  [006] 611323.377341: writeback_queue: 253:16: pages=9223372036854775807, sb=1, kupdate=0, range_cyclic=0 for_background=0
-sync-2798  [006] 611323.377346: writeback_sched: work=fe58, task=task
 
-This also lays the foundation for adding more writeback tracing to
-provide deeper insight into the whole writeback path.
+    wbc_writeback_start: towrt=1024
+    wbc_writepage: towrt=1024
+    wbc_writepage: towrt=0
+    wbc_writepage: towrt=-1
+    wbc_writepage: towrt=-5
+    wbc_writepage: towrt=-21
+    wbc_writepage: towrt=-85
 
-Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
+This has adverse effects on filesystem writeback behaviour. write_cache_pages()
+needs to terminate after a certain number of pages are written, not after a
+certain number of calls to ->writepage are made.  This is a regression
+introduced by 17bc6c30cf6bfffd816bdc53682dd46fc34a2cf4 ("vfs: Add
+no_nrwrite_index_update writeback control flag"), but cannot be reverted
+directly due to subsequent bug fixes that have gone in on top of it.
+
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/fs-writeback.c                |   45 ++++++++--
- include/trace/events/writeback.h |  171 ++++++++++++++++++++++++++++++++++++++
- mm/backing-dev.c                 |    3 +
- 3 files changed, 209 insertions(+), 10 deletions(-)
- create mode 100644 include/trace/events/writeback.h
+ include/linux/writeback.h   |    9 ---------
+ include/trace/events/ext4.h |    5 +----
+ mm/page-writeback.c         |   15 +++++----------
+ 3 files changed, 6 insertions(+), 23 deletions(-)
 
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index 1d1088f..0949dfd 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -26,15 +26,9 @@
- #include <linux/blkdev.h>
- #include <linux/backing-dev.h>
- #include <linux/buffer_head.h>
-+#include <linux/ftrace.h>
- #include "internal.h"
- 
--#define inode_to_bdi(inode)	((inode)->i_mapping->backing_dev_info)
--
--/*
-- * We don't actually have pdflush, but this one is exported though /proc...
-- */
--int nr_pdflush_threads;
--
- /*
-  * Passed into wb_writeback(), essentially a subset of writeback_control
-  */
-@@ -62,6 +56,21 @@ struct bdi_work {
- 	unsigned long state;		/* flag bits, see WS_* */
+diff --git a/include/linux/writeback.h b/include/linux/writeback.h
+index f641346..d63ef8f 100644
+--- a/include/linux/writeback.h
++++ b/include/linux/writeback.h
+@@ -56,15 +56,6 @@ struct writeback_control {
+ 	unsigned for_reclaim:1;		/* Invoked from the page allocator */
+ 	unsigned range_cyclic:1;	/* range_start is cyclic */
+ 	unsigned more_io:1;		/* more io to be dispatched */
+-	/*
+-	 * write_cache_pages() won't update wbc->nr_to_write and
+-	 * mapping->writeback_index if no_nrwrite_index_update
+-	 * is set.  write_cache_pages() may write more than we
+-	 * requested and we want to make sure nr_to_write and
+-	 * writeback_index are updated in a consistent manner
+-	 * so we use a single control to update them
+-	 */
+-	unsigned no_nrwrite_index_update:1;
  };
  
-+/*
-+ * Include the creation of the trace points after defining the bdi_work and
-+ * wb_writeback_args structures so that the definitions remain local to this
-+ * file.
-+ */
-+#define CREATE_TRACE_POINTS
-+#include <trace/events/writeback.h>
-+
-+#define inode_to_bdi(inode)	((inode)->i_mapping->backing_dev_info)
-+
-+/*
-+ * We don't actually have pdflush, but this one is exported though /proc...
-+ */
-+int nr_pdflush_threads;
-+
- enum {
- 	WS_USED_B = 0,
- 	WS_ONSTACK_B,
-@@ -136,6 +145,8 @@ static void wb_work_complete(struct bdi_work *work)
+ /*
+diff --git a/include/trace/events/ext4.h b/include/trace/events/ext4.h
+index f5b1ba9..f3865c7 100644
+--- a/include/trace/events/ext4.h
++++ b/include/trace/events/ext4.h
+@@ -306,7 +306,6 @@ TRACE_EVENT(ext4_da_writepages_result,
+ 		__field(	int,	pages_written		)
+ 		__field(	long,	pages_skipped		)
+ 		__field(	char,	more_io			)	
+-		__field(	char,	no_nrwrite_index_update )
+ 		__field(       pgoff_t,	writeback_index		)
+ 	),
  
- static void wb_clear_pending(struct bdi_writeback *wb, struct bdi_work *work)
- {
-+	trace_writeback_clear(work);
-+
- 	/*
- 	 * The caller has retrieved the work arguments from this work,
- 	 * drop our reference. If this is the last ref, delete and free it
-@@ -171,12 +182,16 @@ static void bdi_queue_work(struct backing_dev_info *bdi, struct bdi_work *work)
- 	 * If the default thread isn't there, make sure we add it. When
- 	 * it gets created and wakes up, we'll run this work.
- 	 */
--	if (unlikely(list_empty_careful(&bdi->wb_list)))
-+	if (unlikely(list_empty_careful(&bdi->wb_list))) {
-+		trace_writeback_sched(bdi, work, "default");
- 		wake_up_process(default_backing_dev_info.wb.task);
--	else {
-+	} else {
- 		struct bdi_writeback *wb = &bdi->wb;
-+		struct task_struct *task = wb->task;
+@@ -317,16 +316,14 @@ TRACE_EVENT(ext4_da_writepages_result,
+ 		__entry->pages_written	= pages_written;
+ 		__entry->pages_skipped	= wbc->pages_skipped;
+ 		__entry->more_io	= wbc->more_io;
+-		__entry->no_nrwrite_index_update = wbc->no_nrwrite_index_update;
+ 		__entry->writeback_index = inode->i_mapping->writeback_index;
+ 	),
  
--		if (wb->task)
-+		trace_writeback_sched(bdi, work, task ? "task" : "notask");
-+
-+		if (task)
- 			wake_up_process(wb->task);
+-	TP_printk("dev %s ino %lu ret %d pages_written %d pages_skipped %ld more_io %d no_nrwrite_index_update %d writeback_index %lu",
++	TP_printk("dev %s ino %lu ret %d pages_written %d pages_skipped %ld more_io %d writeback_index %lu",
+ 		  jbd2_dev_to_name(__entry->dev),
+ 		  (unsigned long) __entry->ino, __entry->ret,
+ 		  __entry->pages_written, __entry->pages_skipped,
+ 		  __entry->more_io,
+-		  __entry->no_nrwrite_index_update,
+ 		  (unsigned long) __entry->writeback_index)
+ );
+ 
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index 7ac39c5..0acadee 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -839,7 +839,6 @@ int write_cache_pages(struct address_space *mapping,
+ 	pgoff_t done_index;
+ 	int cycled;
+ 	int range_whole = 0;
+-	long nr_to_write = wbc->nr_to_write;
+ 
+ 	pagevec_init(&pvec, 0);
+ 	if (wbc->range_cyclic) {
+@@ -940,11 +939,10 @@ continue_unlock:
+ 					done = 1;
+ 					break;
+ 				}
+- 			}
++			}
+ 
+-			if (nr_to_write > 0) {
+-				nr_to_write--;
+-				if (nr_to_write == 0 &&
++			if (wbc->nr_to_write > 0) {
++				if (--wbc->nr_to_write == 0 &&
+ 				    wbc->sync_mode == WB_SYNC_NONE) {
+ 					/*
+ 					 * We stop writing back only if we are
+@@ -975,11 +973,8 @@ continue_unlock:
+ 		end = writeback_index - 1;
+ 		goto retry;
  	}
- }
-@@ -203,6 +218,7 @@ static void bdi_alloc_queue_work(struct backing_dev_info *bdi,
- 	work = kmalloc(sizeof(*work), GFP_ATOMIC);
- 	if (work) {
- 		bdi_work_init(work, args);
-+		trace_writeback_queue(bdi, args);
- 		bdi_queue_work(bdi, work);
- 	} else {
- 		struct bdi_writeback *wb = &bdi->wb;
-@@ -236,6 +252,7 @@ static void bdi_sync_writeback(struct backing_dev_info *bdi,
- 	bdi_work_init(&work, &args);
- 	work.state |= WS_ONSTACK;
+-	if (!wbc->no_nrwrite_index_update) {
+-		if (wbc->range_cyclic || (range_whole && nr_to_write > 0))
+-			mapping->writeback_index = done_index;
+-		wbc->nr_to_write = nr_to_write;
+-	}
++	if (wbc->range_cyclic || (range_whole && wbc->nr_to_write > 0))
++		mapping->writeback_index = done_index;
  
-+	trace_writeback_queue(bdi, &args);
- 	bdi_queue_work(bdi, &work);
- 	bdi_wait_on_work_clear(&work);
- }
-@@ -907,6 +924,8 @@ long wb_do_writeback(struct bdi_writeback *wb, int force_wait)
- 		if (force_wait)
- 			work->args.sync_mode = args.sync_mode = WB_SYNC_ALL;
- 
-+		trace_writeback_exec(work);
-+
- 		/*
- 		 * If this isn't a data integrity operation, just notify
- 		 * that we have seen this work and we are now starting it.
-@@ -942,9 +961,13 @@ int bdi_writeback_task(struct bdi_writeback *wb)
- 	unsigned long wait_jiffies = -1UL;
- 	long pages_written;
- 
-+	trace_writeback_thread_start(1);
-+
- 	while (!kthread_should_stop()) {
- 		pages_written = wb_do_writeback(wb, 0);
- 
-+		trace_writeback_pages_written(pages_written);
-+
- 		if (pages_written)
- 			last_active = jiffies;
- 		else if (wait_jiffies != -1UL) {
-@@ -974,6 +997,8 @@ int bdi_writeback_task(struct bdi_writeback *wb)
- 		try_to_freeze();
- 	}
- 
-+	trace_writeback_thread_start(0);
-+
- 	return 0;
- }
- 
-diff --git a/include/trace/events/writeback.h b/include/trace/events/writeback.h
-new file mode 100644
-index 0000000..6f510fa
---- /dev/null
-+++ b/include/trace/events/writeback.h
-@@ -0,0 +1,171 @@
-+#undef TRACE_SYSTEM
-+#define TRACE_SYSTEM writeback
-+
-+#if !defined(_TRACE_WRITEBACK_H) || defined(TRACE_HEADER_MULTI_READ)
-+#define _TRACE_WRITEBACK_H
-+
-+#include <linux/backing-dev.h>
-+#include <linux/writeback.h>
-+
-+TRACE_EVENT(writeback_queue,
-+
-+	TP_PROTO(struct backing_dev_info *bdi, struct wb_writeback_args *args),
-+
-+	TP_ARGS(bdi, args),
-+
-+	TP_STRUCT__entry(
-+		__array(char,		name,		16)
-+		__field(long,		nr_pages)
-+		__field(int,		sb)
-+		__field(int,		sync_mode)
-+		__field(int,		for_kupdate)
-+		__field(int,		range_cyclic)
-+		__field(int,		for_background)
-+	),
-+
-+	TP_fast_assign(
-+		strlcpy(__entry->name, dev_name(bdi->dev), 16);
-+		__entry->nr_pages	= args->nr_pages;
-+		__entry->sb		= !!args->sb;
-+		__entry->for_kupdate	= args->for_kupdate;
-+		__entry->range_cyclic	= args->range_cyclic;
-+		__entry->for_background	= args->for_background;
-+	),
-+
-+	TP_printk("%s: pages=%ld, sb=%d, kupdate=%d, range_cyclic=%d "
-+		  "for_background=%d", __entry->name, __entry->nr_pages,
-+			__entry->sb, __entry->for_kupdate,
-+			__entry->range_cyclic, __entry->for_background)
-+);
-+
-+TRACE_EVENT(writeback_sched,
-+
-+	TP_PROTO(struct backing_dev_info *bdi, struct bdi_work *work,
-+		 const char *msg),
-+
-+	TP_ARGS(bdi, work, msg),
-+
-+	TP_STRUCT__entry(
-+		__array(char,			name,		16)
-+		__field(unsigned int,		work)
-+		__array(char,			task,		8)
-+	),
-+
-+	TP_fast_assign(
-+		strlcpy(__entry->name, dev_name(bdi->dev), 16);
-+		__entry->work = (unsigned long) work & 0xffff;
-+		snprintf(__entry->task, 8, "%s", msg);
-+	),
-+
-+	TP_printk("work=%x, task=%s", __entry->work, __entry->task)
-+);
-+
-+TRACE_EVENT(writeback_exec,
-+
-+	TP_PROTO(struct bdi_work *work),
-+
-+	TP_ARGS(work),
-+
-+	TP_STRUCT__entry(
-+		__field(unsigned int,	work)
-+		__field(long,		nr_pages)
-+		__field(int,		sb)
-+		__field(int,		sync_mode)
-+		__field(int,		for_kupdate)
-+		__field(int,		range_cyclic)
-+		__field(int,		for_background)
-+	),
-+
-+	TP_fast_assign(
-+		__entry->work		= (unsigned long) work & 0xffff;
-+		__entry->nr_pages	= work->args.nr_pages;
-+		__entry->sb		= !!work->args.sb;
-+		__entry->for_kupdate	= work->args.for_kupdate;
-+		__entry->range_cyclic	= work->args.range_cyclic;
-+		__entry->for_background	= work->args.for_background;
-+
-+	),
-+
-+	TP_printk("work=%x pages=%ld, sb=%d, kupdate=%d, range_cyclic=%d"
-+		  " for_background=%d", __entry->work,
-+			__entry->nr_pages, __entry->sb, __entry->for_kupdate,
-+			__entry->range_cyclic, __entry->for_background)
-+);
-+
-+TRACE_EVENT(writeback_clear,
-+
-+	TP_PROTO(struct bdi_work *work),
-+
-+	TP_ARGS(work),
-+
-+	TP_STRUCT__entry(
-+		__field(struct bdi_work *,	work)
-+		__field(int,			refs)
-+	),
-+
-+	TP_fast_assign(
-+		__entry->work		= work;
-+		__entry->refs		= atomic_read(&work->pending);
-+	),
-+
-+	TP_printk("work=%p, refs=%d", __entry->work, __entry->refs)
-+);
-+
-+TRACE_EVENT(writeback_pages_written,
-+
-+	TP_PROTO(long pages_written),
-+
-+	TP_ARGS(pages_written),
-+
-+	TP_STRUCT__entry(
-+		__field(long,		pages)
-+	),
-+
-+	TP_fast_assign(
-+		__entry->pages		= pages_written;
-+	),
-+
-+	TP_printk("%ld", __entry->pages)
-+);
-+
-+
-+TRACE_EVENT(writeback_thread_start,
-+
-+	TP_PROTO(int start),
-+
-+	TP_ARGS(start),
-+
-+	TP_STRUCT__entry(
-+		__field(int,	start)
-+	),
-+
-+	TP_fast_assign(
-+		__entry->start = start;
-+	),
-+
-+	TP_printk("%s", __entry->start ? "started" : "exited")
-+);
-+
-+TRACE_EVENT(writeback_bdi_register,
-+
-+	TP_PROTO(const char *name, int start),
-+
-+	TP_ARGS(name, start),
-+
-+	TP_STRUCT__entry(
-+		__array(char,	name,		16)
-+		__field(int,	start)
-+	),
-+
-+	TP_fast_assign(
-+		strlcpy(__entry->name, name, 16);
-+		__entry->start = start;
-+	),
-+
-+	TP_printk("%s: %s", __entry->name,
-+			__entry->start ? "registered" : "unregistered")
-+);
-+#endif /* _TRACE_WRITEBACK_H */
-+
-+/* This part must be outside protection */
-+#include <trace/define_trace.h>
-diff --git a/mm/backing-dev.c b/mm/backing-dev.c
-index 660a87a..1f7723b 100644
---- a/mm/backing-dev.c
-+++ b/mm/backing-dev.c
-@@ -10,6 +10,7 @@
- #include <linux/module.h>
- #include <linux/writeback.h>
- #include <linux/device.h>
-+#include <trace/events/writeback.h>
- 
- static atomic_long_t bdi_seq = ATOMIC_LONG_INIT(0);
- 
-@@ -585,6 +586,7 @@ int bdi_register(struct backing_dev_info *bdi, struct device *parent,
- 
- 	bdi_debug_register(bdi, dev_name(dev));
- 	set_bit(BDI_registered, &bdi->state);
-+	trace_writeback_bdi_register(dev_name(dev), 1);
- exit:
  	return ret;
  }
-@@ -647,6 +649,7 @@ static void bdi_prune_sb(struct backing_dev_info *bdi)
- void bdi_unregister(struct backing_dev_info *bdi)
- {
- 	if (bdi->dev) {
-+		trace_writeback_bdi_register(dev_name(bdi->dev), 0);
- 		bdi_prune_sb(bdi);
- 
- 		if (!bdi_cap_flush_forker(bdi))
 -- 
 1.7.1
 
