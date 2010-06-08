@@ -1,27 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o58K19hE230198 for <xfs@oss.sgi.com>; Tue, 8 Jun 2010 15:01:09 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6673F1E0A4A8
-	for <xfs@oss.sgi.com>; Tue,  8 Jun 2010 13:03:40 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 28n8EbUTE0SWE8zj for
-	<xfs@oss.sgi.com>; Tue, 08 Jun 2010 13:03:40 -0700 (PDT)
-Received: from int-mx03.intmail.prod.int.phx2.redhat.com
-	(int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id o58K3dmY003059
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 8 Jun 2010 16:03:40 -0400
-Received: from neon.msp.redhat.com (neon.msp.redhat.com [10.15.80.10])
-	by int-mx03.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id o58K3dDn017907
-	for <xfs@oss.sgi.com>; Tue, 8 Jun 2010 16:03:39 -0400
-Message-ID: <4C0EA21B.8020703@sandeen.net>
-Date: Tue, 08 Jun 2010 15:03:39 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	o58KVVCK231406 for <xfs@oss.sgi.com>; Tue, 8 Jun 2010 15:31:31 -0500
+Received: from isrv.corpit.ru (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 25A9010C987A
+	for <xfs@oss.sgi.com>; Tue,  8 Jun 2010 13:36:59 -0700 (PDT)
+Received: from isrv.corpit.ru (isrv.corpit.ru [81.13.33.159]) by cuda.sgi.com
+	with ESMTP id lGCYKdLnZLdSm9gE for <xfs@oss.sgi.com>;
+	Tue, 08 Jun 2010 13:36:59 -0700 (PDT)
+Message-ID: <4C0EA938.9000104@msgid.tls.msk.ru>
+Date: Wed, 09 Jun 2010 00:34:00 +0400
+From: Michael Tokarev <mjt@tls.msk.ru>
 MIME-Version: 1.0
-Subject: [PATCH] xfstests: resolve symlinked devices to real paths
+Subject: xfs, 2.6.27=>.32 sync write 10 times slowdown [was: xfs, aacraid
+	2.6.27 => 2.6.32 results in 6 times slowdown]
+References: <4C0E13A7.20402@msgid.tls.msk.ru> <20100608122919.GC7869@dastard>
+In-Reply-To: <20100608122919.GC7869@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,98 +24,103 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs mailing list <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Linux-kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-If you try running xfstests on lvm volumes which are symlinks,
-it'll fail to run several tests because our _require_scratch 
-framework ultimately uses lstat not stat, and does not think 
-the lvm device (which is usually a symlink to a dm-X device) 
-is a block device.  Sigh.
+08.06.2010 16:29, Dave Chinner wrote:
+> On Tue, Jun 08, 2010 at 01:55:51PM +0400, Michael Tokarev wrote:
+>> Hello.
+>>
+>> I've got a.. difficult issue here, and am asking if anyone else
+>> has some expirence or information about it.
+>>
+>> Production environment (database).  Machine with an Adaptec
+>> RAID SCSI controller, 6 drives in raid10 array, XFS filesystem
+>> and Oracle database on top of it (with - hopefully - proper
+>> sunit/swidth).
+>>
+>> Upgrading kernel from 2.6.27 to 2.6.32, and users starts screaming
+>> about very bad performance.  Iostat reports increased I/O latencies,
+>> I/O time increases from ~5ms to ~30ms.  Switching back to 2.6.27,
+>> and everything is back to normal (or, rather, usual).
+>>
+>> I tried testing I/O with a sample program which performs direct random
+>> I/O on a given device, and all speeds are actually better in .32
+>> compared with .27, except of random concurrent r+w test, where .27
+>> gives a bit more chances to reads than .32.  Looking at the synthetic
+>> tests I'd expect .32 to be faster, but apparently it is not.
+>>
+>> This is only one machine here which is still running 2.6.27, all the
+>> rest are upgraded to 2.6.32, and I see good performance of .32 there.
+>> But this is also the only machine with hardware raid controller, which
+>> is onboard and hence not easy to get rid of, so I'm sorta forced to
+>> use it (I prefer software raid solution because of numerous reasons).
+>>
+>> One possible cause of this that comes to mind is block device write
+>> barriers.  But I can't find when they're actually implemented.
+>>
+>> The most problematic issue here is that this is only one machine that
+>> behaves like this, and it is a production server, so I've very little
+>> chances to experiment with it.
+>>
+>> So before the next try, I'd love to have some suggestions about what
+>> to look for.   In particular, I think it's worth the effort to look
+>> at write barriers, but again, I don't know how to check if they're
+>> actually being used.
+>>
+>> Anyone have suggestions for me to collect and to look at?
+>
+> http://xfs.org/index.php/XFS_FAQ#Q._Should_barriers_be_enabled_with_storage_which_has_a_persistent_write_cache.3F
 
-Last try at this - just resolve any symlinked devicenames
-into their realpath(3) in common.config.
+Yes, I've seen this.  We use xfs for quite long time.  The on-board
+controller does not have battery unit, so it should be no different
+than a software raid array or single drive.
 
-This actually seems to work.
+But I traced the issue to a particular workload -- see $subject.
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
+Simple test doing random reads or writes of 4k blocks in a 1Gb
+file located on an xfs filesystem, Mb/sec:
 
-diff --git a/common.config b/common.config
-index 926846b..e5b2483 100644
---- a/common.config
-+++ b/common.config
-@@ -208,6 +208,15 @@ else
-     known_hosts
- fi
- 
-+# Scripts just don't deal well with symlinked devices
-+if [ -L $TEST_DEV ]; then
-+        TEST_DEV=`src/realpath $TEST_DEV`
-+fi
-+
-+if [ -L $SCRATCH_DEV ]; then
-+        SCRATCH_DEV=`src/realpath $SCRATCH_DEV`
-+fi
-+
- echo $TEST_DEV | grep -q ":" > /dev/null 2>&1
- if [ ! -b "$TEST_DEV" -a "$?" != "0" ]; then
-     echo "common.config: Error: \$TEST_DEV ($TEST_DEV) is not a block device or a NFS filesystem"
-diff --git a/src/Makefile b/src/Makefile
-index 976133d..2399853 100644
---- a/src/Makefile
-+++ b/src/Makefile
-@@ -10,7 +10,8 @@ TARGETS = dirstress fill fill2 getpagesize holes lstat64 \
- 	mmapcat append_reader append_writer dirperf metaperf \
- 	devzero feature alloc fault fstest t_access_root \
- 	godown resvtest writemod makeextents itrash rename \
--	multi_open_unlink dmiperf unwritten_sync genhashnames t_holes
-+	multi_open_unlink dmiperf unwritten_sync genhashnames t_holes \
-+	realpath
- 
- LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
- 	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
-diff --git a/src/realpath.c b/src/realpath.c
-new file mode 100644
-index 0000000..997b1aa
---- /dev/null
-+++ b/src/realpath.c
-@@ -0,0 +1,32 @@
-+#include <limits.h>
-+#include <stdlib.h>
-+#include <stdio.h>
-+#include <string.h>
-+
-+/*
-+ * Simple wrapper around realpath(3) to get absolute path
-+ * to a device name; many xfstests scripts don't cope well
-+ * with symlinked devices due to differences in /proc/mounts,
-+ * /etc/mtab, mount output, etc.
-+ */
-+
-+int main(int argc, char *argv[])
-+{
-+	char path[PATH_MAX];
-+	char resolved_path[PATH_MAX];
-+
-+	if (argc != 2) {
-+		printf("Usage: %s <filename>\n", argv[0]);
-+		return 1;
-+	}
-+
-+	strncpy(path, argv[1], PATH_MAX-1);
-+
-+	if (!realpath(path, resolved_path)) {
-+		perror("Failed to resolve path for %s");
-+		return 1;
-+	}
-+
-+	printf("%s\n", resolved_path);
-+	return 0;
-+}
+                      sync  direct
+              read   write   write
+2.6.27 xfs   1.17    3.69    3.80
+2.6.32 xfs   1.26    0.52    5.10
+                      ^^^^
+2.6.32 ext3  1.19    4.91    5.02
+
+Note the 10 times difference between O_SYNC and O_DIRECT writes
+in 2.6.32.  This is, well, huge difference, and this is where
+the original slowdown comes from, apparently.  In 2.6.27 both
+sync and direct writes are on-par with each other, in .32
+direct write has improved, but sync write is just pathetic now.
+And compared with previous o_sync, that's about 6 times the
+difference which I reported previously.
+
+We're running a legacy oracle application here, on Oracle8,
+which does not support O_DIRECT and uses O_SYNC.  So it gets
+hit by this issue quite badly - no doubt users start screaming
+after switching to .32.
+
+I also tested ext3fs, for comparison.  This one does not have
+that problem and works just fine in both .32 and .27.  I also
+tried disabling barriers for xfs, which made no difference
+whatsoever.
+
+So it's O_SYNC writes on XFS which are problematic.  Together
+with hw raid apparently, since no one noticed when I switched
+other machines (with sw raid) from .27 to .32.
+
+I'll _try_ to find when the problem first appeared, but it is
+not that simple since I've only very small time window for
+testing.
+
+Thanks!
+
+/mjt
 
 _______________________________________________
 xfs mailing list
