@@ -1,18 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o59FLZsW020864 for <xfs@oss.sgi.com>; Wed, 9 Jun 2010 10:21:36 -0500
+	o59Hlaae026182 for <xfs@oss.sgi.com>; Wed, 9 Jun 2010 12:47:36 -0500
 Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B85C93ACC6D
-	for <xfs@oss.sgi.com>; Wed,  9 Jun 2010 08:23:51 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 911773AD6E7
+	for <xfs@oss.sgi.com>; Wed,  9 Jun 2010 10:49:51 -0700 (PDT)
 Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id joSOj0ejgD2DPsGJ for
-	<xfs@oss.sgi.com>; Wed, 09 Jun 2010 08:23:51 -0700 (PDT)
-Message-ID: <4C0FB207.20706@sandeen.net>
-Date: Wed, 09 Jun 2010 10:23:51 -0500
+	by cuda.sgi.com with ESMTP id tMcIj0U0Fm5rHuEt for
+	<xfs@oss.sgi.com>; Wed, 09 Jun 2010 10:49:51 -0700 (PDT)
+Message-ID: <4C0FD43D.3040803@sandeen.net>
+Date: Wed, 09 Jun 2010 12:49:49 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] xfstests 228: suppress core dump message
+Subject: Re: [PATCH 4/8] Add test of quota accounting using fsx
+References: <1274710459-11446-1-git-send-email-jack@suse.cz>
+	<1274710459-11446-5-git-send-email-jack@suse.cz>
+In-Reply-To: <1274710459-11446-5-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,52 +28,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
-Cc: Amit Arora <aarora@in.ibm.com>
+To: Jan Kara <jack@suse.cz>
+Cc: hch@infradead.org, xfs@oss.sgi.com
 
-When running 228 with abrt on in rhel6, I was getting different
-output due to a (core dumped) message on SIGXFSZ.  For some reason
-I wasn't able to use sed to filter it, and just ulimit -c 0 didn't
-suppress it either.
+Jan Kara wrote:
+> Run fsx (and also several fsx threads in parallel) and verify that
+> quota accounting is correct after they finish.
 
-abrt sets the core pattern to:
+Jan, I'm having trouble with this one on XFS for some reason, with our 
+RHEL6 kernel and quota-3.17...
 
-"|/usr/libexec/abrt-hook-ccpp /var/spool/abrt %p %s %u %c""
++Disabling group quota enforcement and accounting on /dev/mapper/VolGroup00-testvol2
++Disabling user quota enforcement and accounting on /dev/mapper/VolGroup00-testvol2
++repquota: Mountpoint (or device) /mnt/testarea/scratch not found or has no quota enabled.
++repquota: Not all specified mountpoints are using quota.
++repquota: Mountpoint (or device) /mnt/testarea/scratch not found or has no quota enabled.
++repquota: Not all specified mountpoints are using quota.
 
-which apparently allows core dumps even if ulimit -c is 0, due
-to the pipe.
+...
 
-Temporarily changing the kernel's core pattern to just plain "core"
-and setting ulimit -c to 0 does suppress it.  These are reset to
-original values after the test is run.
+however if I remove the quotaon calls (off / on settings) in check_usage()
+then it works:
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
+check_usage()
+{
+        # quotaon -f -u -g $SCRATCH_MNT 2>/dev/null
+        repquota -u -g $SCRATCH_MNT  | grep -v "^root" | filter_scratch \
+                >$tmp.orig
+        quotacheck -u -g $SCRATCH_MNT 2>/dev/null
+        repquota -u -g $SCRATCH_MNT  | grep -v "^root" | filter_scratch \
+                >$tmp.checked
+        # quotaon -u -g $SCRATCH_MNT 2>/dev/null
+        diff $tmp.orig $tmp.checked
+}
 
---- 228.orig	2010-06-09 11:13:27.000000000 -0400
-+++ 228	2010-06-09 11:19:57.000000000 -0400
-@@ -31,6 +31,8 @@
- {
- 	cd /
- 	rm -f $tmp.*
-+	sysctl -w kernel.core_pattern="$core_pattern" &>/dev/null
-+	ulimit -c $ulimit_c
- }
- 
- here=`pwd`
-@@ -58,6 +60,12 @@
- avail=`df -P $TEST_DIR | awk 'END {print $4}'`
- [ "$avail" -ge 104000 ] || _notrun "Test device is too small ($avail KiB)"
- 
-+# Suppress core dumped messages
-+core_pattern=`sysctl kernel.core_pattern | awk -F = '{print $NF}'`
-+ulimit_c=`ulimit -c`
-+sysctl -w kernel.core_pattern=core &>/dev/null
-+ulimit -c 0
-+
- # Set the FSIZE ulimit to 100MB and check
- ulimit -f 102400
- flim=`ulimit -f`
+
+Seems like 2 issues: noisy disable messages, and repquota failing when disabled.
+
+Any ideas?
+
+Thanks,
+-Eric
 
 _______________________________________________
 xfs mailing list
