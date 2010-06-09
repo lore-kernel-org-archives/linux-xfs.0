@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o590Zae0245422 for <xfs@oss.sgi.com>; Tue, 8 Jun 2010 19:35:37 -0500
+	o590Zig6245448 for <xfs@oss.sgi.com>; Tue, 8 Jun 2010 19:35:44 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7E68014AB3B6
-	for <xfs@oss.sgi.com>; Tue,  8 Jun 2010 17:38:07 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	7TxG4z778tCAfLos for <xfs@oss.sgi.com>;
-	Tue, 08 Jun 2010 17:38:07 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3574410D0BA4
+	for <xfs@oss.sgi.com>; Tue,  8 Jun 2010 17:41:12 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
+	[150.101.137.104]) by cuda.sgi.com with ESMTP id
+	u6KUmoAccAYU6Ap3 for <xfs@oss.sgi.com>;
+	Tue, 08 Jun 2010 17:41:12 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/3] xfs: remove nr_to_write writeback windup.
-Date: Wed,  9 Jun 2010 10:37:19 +1000
-Message-Id: <1276043840-1946-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/3] writeback: pay attention to wbc->nr_to_write in
+	write_cache_pages
+Date: Wed,  9 Jun 2010 10:37:18 +1000
+Message-Id: <1276043840-1946-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1276043840-1946-1-git-send-email-david@fromorbit.com>
 References: <1276043840-1946-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,35 +34,125 @@ Cc: linux-fsdevel@vger.kernel.org, akpm@linux-foundation.org, linux-kernel@vger.
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Now that the background flush code has been fixed, we shouldn't need to
-silently multiply the wbc->nr_to_write to get good writeback. Remove
-that code.
+If a filesystem writes more than one page in ->writepage, write_cache_pages
+fails to notice this and continues to attempt writeback when wbc->nr_to_write
+has gone negative - this trace was captured from XFS:
+
+
+    wbc_writeback_start: towrt=1024
+    wbc_writepage: towrt=1024
+    wbc_writepage: towrt=0
+    wbc_writepage: towrt=-1
+    wbc_writepage: towrt=-5
+    wbc_writepage: towrt=-21
+    wbc_writepage: towrt=-85
+
+This has adverse effects on filesystem writeback behaviour. write_cache_pages()
+needs to terminate after a certain number of pages are written, not after a
+certain number of calls to ->writepage are made.  This is a regression
+introduced by 17bc6c30cf6bfffd816bdc53682dd46fc34a2cf4 ("vfs: Add
+no_nrwrite_index_update writeback control flag"), but cannot be reverted
+directly due to subsequent bug fixes that have gone in on top of it.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/linux-2.6/xfs_aops.c |    8 --------
- 1 files changed, 0 insertions(+), 8 deletions(-)
+ include/linux/writeback.h   |    9 ---------
+ include/trace/events/ext4.h |    5 +----
+ mm/page-writeback.c         |   15 +++++----------
+ 3 files changed, 6 insertions(+), 23 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
-index a0fa3bf..34640d6 100644
---- a/fs/xfs/linux-2.6/xfs_aops.c
-+++ b/fs/xfs/linux-2.6/xfs_aops.c
-@@ -1381,14 +1381,6 @@ xfs_vm_writepage(
- 	if (!page_has_buffers(page))
- 		create_empty_buffers(page, 1 << inode->i_blkbits, 0);
- 
--
+diff --git a/include/linux/writeback.h b/include/linux/writeback.h
+index f641346..d63ef8f 100644
+--- a/include/linux/writeback.h
++++ b/include/linux/writeback.h
+@@ -56,15 +56,6 @@ struct writeback_control {
+ 	unsigned for_reclaim:1;		/* Invoked from the page allocator */
+ 	unsigned range_cyclic:1;	/* range_start is cyclic */
+ 	unsigned more_io:1;		/* more io to be dispatched */
 -	/*
--	 *  VM calculation for nr_to_write seems off.  Bump it way
--	 *  up, this gets simple streaming writes zippy again.
--	 *  To be reviewed again after Jens' writeback changes.
+-	 * write_cache_pages() won't update wbc->nr_to_write and
+-	 * mapping->writeback_index if no_nrwrite_index_update
+-	 * is set.  write_cache_pages() may write more than we
+-	 * requested and we want to make sure nr_to_write and
+-	 * writeback_index are updated in a consistent manner
+-	 * so we use a single control to update them
 -	 */
--	wbc->nr_to_write *= 4;
--
- 	/*
- 	 * Convert delayed allocate, unwritten or unmapped space
- 	 * to real space and flush out to disk.
+-	unsigned no_nrwrite_index_update:1;
+ };
+ 
+ /*
+diff --git a/include/trace/events/ext4.h b/include/trace/events/ext4.h
+index f5b1ba9..f3865c7 100644
+--- a/include/trace/events/ext4.h
++++ b/include/trace/events/ext4.h
+@@ -306,7 +306,6 @@ TRACE_EVENT(ext4_da_writepages_result,
+ 		__field(	int,	pages_written		)
+ 		__field(	long,	pages_skipped		)
+ 		__field(	char,	more_io			)	
+-		__field(	char,	no_nrwrite_index_update )
+ 		__field(       pgoff_t,	writeback_index		)
+ 	),
+ 
+@@ -317,16 +316,14 @@ TRACE_EVENT(ext4_da_writepages_result,
+ 		__entry->pages_written	= pages_written;
+ 		__entry->pages_skipped	= wbc->pages_skipped;
+ 		__entry->more_io	= wbc->more_io;
+-		__entry->no_nrwrite_index_update = wbc->no_nrwrite_index_update;
+ 		__entry->writeback_index = inode->i_mapping->writeback_index;
+ 	),
+ 
+-	TP_printk("dev %s ino %lu ret %d pages_written %d pages_skipped %ld more_io %d no_nrwrite_index_update %d writeback_index %lu",
++	TP_printk("dev %s ino %lu ret %d pages_written %d pages_skipped %ld more_io %d writeback_index %lu",
+ 		  jbd2_dev_to_name(__entry->dev),
+ 		  (unsigned long) __entry->ino, __entry->ret,
+ 		  __entry->pages_written, __entry->pages_skipped,
+ 		  __entry->more_io,
+-		  __entry->no_nrwrite_index_update,
+ 		  (unsigned long) __entry->writeback_index)
+ );
+ 
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index 5fa63bd..b3dbb80 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -835,7 +835,6 @@ int write_cache_pages(struct address_space *mapping,
+ 	pgoff_t done_index;
+ 	int cycled;
+ 	int range_whole = 0;
+-	long nr_to_write = wbc->nr_to_write;
+ 
+ 	pagevec_init(&pvec, 0);
+ 	if (wbc->range_cyclic) {
+@@ -935,11 +934,10 @@ continue_unlock:
+ 					done = 1;
+ 					break;
+ 				}
+- 			}
++			}
+ 
+-			if (nr_to_write > 0) {
+-				nr_to_write--;
+-				if (nr_to_write == 0 &&
++			if (wbc->nr_to_write > 0) {
++				if (--wbc->nr_to_write == 0 &&
+ 				    wbc->sync_mode == WB_SYNC_NONE) {
+ 					/*
+ 					 * We stop writing back only if we are
+@@ -970,11 +968,8 @@ continue_unlock:
+ 		end = writeback_index - 1;
+ 		goto retry;
+ 	}
+-	if (!wbc->no_nrwrite_index_update) {
+-		if (wbc->range_cyclic || (range_whole && nr_to_write > 0))
+-			mapping->writeback_index = done_index;
+-		wbc->nr_to_write = nr_to_write;
+-	}
++	if (wbc->range_cyclic || (range_whole && wbc->nr_to_write > 0))
++		mapping->writeback_index = done_index;
+ 
+ 	return ret;
+ }
 -- 
 1.7.1
 
