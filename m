@@ -1,21 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o59DN5mJ015990 for <xfs@oss.sgi.com>; Wed, 9 Jun 2010 08:23:07 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 74785158FF1C
-	for <xfs@oss.sgi.com>; Wed,  9 Jun 2010 06:28:39 -0700 (PDT)
-Received: from bombadil.infradead.org ([18.85.46.34]) by cuda.sgi.com with
-	ESMTP id 0ziie5tdtcCRRdLS for <xfs@oss.sgi.com>;
-	Wed, 09 Jun 2010 06:28:39 -0700 (PDT)
-Date: Wed, 9 Jun 2010 09:25:36 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests 217: remove file in between mkfs's
-Message-ID: <20100609132536.GA31729@infradead.org>
-References: <4C0F0A4C.7050600@sandeen.net>
+	o59FLZsW020864 for <xfs@oss.sgi.com>; Wed, 9 Jun 2010 10:21:36 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B85C93ACC6D
+	for <xfs@oss.sgi.com>; Wed,  9 Jun 2010 08:23:51 -0700 (PDT)
+Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
+	by cuda.sgi.com with ESMTP id joSOj0ejgD2DPsGJ for
+	<xfs@oss.sgi.com>; Wed, 09 Jun 2010 08:23:51 -0700 (PDT)
+Message-ID: <4C0FB207.20706@sandeen.net>
+Date: Wed, 09 Jun 2010 10:23:51 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4C0F0A4C.7050600@sandeen.net>
+Subject: [PATCH] xfstests 228: suppress core dump message
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,26 +25,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs-oss <xfs@oss.sgi.com>
+Cc: Amit Arora <aarora@in.ibm.com>
 
-On Tue, Jun 08, 2010 at 10:28:12PM -0500, Eric Sandeen wrote:
-> 217 requires a 2G scratch:
-> 
-> _require_fs_space $SCRATCH_MNT 2202000
-> 
-> but as we mkfs different sizes, we actually are filling in the
-> sparse loopback more and more, and 3.8G isn't enough to contain it.
-> 
-> If we remove & recreate the file between mkfs's it doesn't take
-> so much space ... I don't think it adds significantly to test time.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+When running 228 with abrt on in rhel6, I was getting different
+output due to a (core dumped) message on SIGXFSZ.  For some reason
+I wasn't able to use sed to filter it, and just ulimit -c 0 didn't
+suppress it either.
 
-Looks good,
+abrt sets the core pattern to:
 
+"|/usr/libexec/abrt-hook-ccpp /var/spool/abrt %p %s %u %c""
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+which apparently allows core dumps even if ulimit -c is 0, due
+to the pipe.
+
+Temporarily changing the kernel's core pattern to just plain "core"
+and setting ulimit -c to 0 does suppress it.  These are reset to
+original values after the test is run.
+
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
+
+--- 228.orig	2010-06-09 11:13:27.000000000 -0400
++++ 228	2010-06-09 11:19:57.000000000 -0400
+@@ -31,6 +31,8 @@
+ {
+ 	cd /
+ 	rm -f $tmp.*
++	sysctl -w kernel.core_pattern="$core_pattern" &>/dev/null
++	ulimit -c $ulimit_c
+ }
+ 
+ here=`pwd`
+@@ -58,6 +60,12 @@
+ avail=`df -P $TEST_DIR | awk 'END {print $4}'`
+ [ "$avail" -ge 104000 ] || _notrun "Test device is too small ($avail KiB)"
+ 
++# Suppress core dumped messages
++core_pattern=`sysctl kernel.core_pattern | awk -F = '{print $NF}'`
++ulimit_c=`ulimit -c`
++sysctl -w kernel.core_pattern=core &>/dev/null
++ulimit -c 0
++
+ # Set the FSIZE ulimit to 100MB and check
+ ulimit -f 102400
+ flim=`ulimit -f`
 
 _______________________________________________
 xfs mailing list
