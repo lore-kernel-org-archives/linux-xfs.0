@@ -1,25 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5AEtt7h079893 for <xfs@oss.sgi.com>; Thu, 10 Jun 2010 09:55:56 -0500
+	o5AGP9fr084106 for <xfs@oss.sgi.com>; Thu, 10 Jun 2010 11:25:09 -0500
 Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9CFC41E0C29F
-	for <xfs@oss.sgi.com>; Thu, 10 Jun 2010 07:58:27 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9A9573BB139
+	for <xfs@oss.sgi.com>; Thu, 10 Jun 2010 09:27:42 -0700 (PDT)
 Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id GYCoFuvuBerqnyTw for
-	<xfs@oss.sgi.com>; Thu, 10 Jun 2010 07:58:27 -0700 (PDT)
-Message-ID: <4C10FD91.4060209@sandeen.net>
-Date: Thu, 10 Jun 2010 09:58:25 -0500
+	by cuda.sgi.com with ESMTP id S5EIkekfwaJKQAua for
+	<xfs@oss.sgi.com>; Thu, 10 Jun 2010 09:27:42 -0700 (PDT)
+Message-ID: <4C11127C.3030907@sandeen.net>
+Date: Thu, 10 Jun 2010 11:27:40 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: xfs, 2.6.27=>.32 sync write 10 times slowdown [was: xfs, aacraid
-	2.6.27 => 2.6.32 results in 6 times slowdown]
-References: <4C0E13A7.20402@msgid.tls.msk.ru>
-	<20100608122919.GC7869@dastard>	<4C0EA938.9000104@msgid.tls.msk.ru>
-	<20100608231845.GG7869@dastard>	<4C0F3819.4000409@msgid.tls.msk.ru>
-	<20100609074741.GJ7869@dastard>	<4C0FE779.8010603@msgid.tls.msk.ru>
-	<20100610004701.GN7869@dastard>
-In-Reply-To: <20100610004701.GN7869@dastard>
+Subject: Re: xfs_repair 3.1.2 crashing
+References: <201006101306.07587@zmi.at>
+In-Reply-To: <201006101306.07587@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,44 +27,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Michael Tokarev <mjt@tls.msk.ru>, Linux-kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: Michael Monnerie <michael.monnerie@is.it-management.at>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Dave Chinner wrote:
-> On Wed, Jun 09, 2010 at 11:11:53PM +0400, Michael Tokarev wrote:
-
-
->> The same is with -o osyncisosync (in .34).  Actually,
->> osyncis[od]sync mount options does not change anything, not
->> in .32 nor in .34.
+Michael Monnerie wrote:
+> Dear devs, I have a massive problem with a filesystem in our internal 
+> server. We've had an overheating problem with the RAID controller CPU, 
+> as it's very hot here and aircondition was turn off... the system "just" 
+> stopped working. This is a XenServer with some Linuxen on it, and one of 
+> them (of course our main server :-) reports this on xfs_repair:
 > 
-> I think only osyncisosync exists, and it doesn't do anything
-> anymore.
+...
 
-Just to be pedantic, osyncisdsync "exists," but is deprecated and does
-nothing to change defaults:
+> Phase 4 - check for duplicate blocks...
+>         - setting up duplicate extent list...
+>         - check for inodes claiming duplicate blocks...
+>         - agno = 0
+>         - agno = 2
+>         - agno = 1
+> data fork in regular inode 2267035928 claims used block 537158068
+> xfs_repair: dinode.c:2101: process_inode_data_fork: Assertion `err == 0' 
+> failed.
+> 
+> Any ideas?
 
-                } else if (!strcmp(this_char, "osyncisdsync")) {
-                        /* no-op, this is now the default */
-                        cmn_err(CE_WARN,
-        "XFS: osyncisdsync is now the default, option is deprecated.");
-                }
-
-huh, didn't realize that osyncisosync does nothing but set a flag that
-is never tested other than to show mount options:
-
-  File                  Function      Line
-0 xfs_mount.h           <global>      285 #define XFS_MOUNT_OSYNCISOSYNC (1ULL << 13)
-1 linux-2.6/xfs_super.c xfs_parseargs 292 mp->m_flags |= XFS_MOUNT_OSYNCISOSYNC;
-2 linux-2.6/xfs_super.c xfs_showargs  542 { XFS_MOUNT_OSYNCISOSYNC, "," MNTOPT_OSYNCISOSYNC },
-
-Time to deprecate/remove that one too I guess?
+It'd be great to at least capture the issue by creating an xfs_metadump
+image for analysis...
 
 -Eric
  
-> Cheers,
-> 
-> Dave.
+> Before that, I had 3.0.3 installed, it found tons of errors before also 
+> crashing. I'll send that log later.
 
 _______________________________________________
 xfs mailing list
