@@ -1,33 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5BGkqLf147620
-	for <linux-xfs@oss.sgi.com>; Fri, 11 Jun 2010 11:46:52 -0500
-Received: from lo.gmane.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2D6CF3BFB11
-	for <linux-xfs@oss.sgi.com>; Fri, 11 Jun 2010 09:49:25 -0700 (PDT)
-Received: from lo.gmane.org (lo.gmane.org [80.91.229.12]) by cuda.sgi.com with
-	ESMTP id Qs6MZCmt1IYwHW1y for <linux-xfs@oss.sgi.com>;
-	Fri, 11 Jun 2010 09:49:25 -0700 (PDT)
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1ON7Q2-0001Fg-Lo
-	for linux-xfs@oss.sgi.com; Fri, 11 Jun 2010 18:49:22 +0200
-Received: from barriere.frankfurter-softwarefabrik.de ([217.11.197.1])
-	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Fri, 11 Jun 2010 18:49:22 +0200
-Received: from niemayer by barriere.frankfurter-softwarefabrik.de with local
-	(Gmexim 0.1 (Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Fri, 11 Jun 2010 18:49:22 +0200
-From: Peter Niemayer <niemayer@isg.de>
-Subject: Re: linux-2.6.34 xfs crash: xfs_inode_ag_iterator+0x6c - NULL pointer
-	dereference
-Date: Fri, 11 Jun 2010 18:49:10 +0200
-Message-ID: <hutpe6$p9t$2@dough.gmane.org>
-References: <hur8at$jua$1@dough.gmane.org>
-	<20100611161922.GB7556@infradead.org>
-Mime-Version: 1.0
-In-Reply-To: <20100611161922.GB7556@infradead.org>
+	o5BM6lnr164829 for <xfs@oss.sgi.com>; Fri, 11 Jun 2010 17:06:47 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8238012A8B21
+	for <xfs@oss.sgi.com>; Fri, 11 Jun 2010 15:12:34 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id yoNmTWtiL8UaLvaJ for
+	<xfs@oss.sgi.com>; Fri, 11 Jun 2010 15:12:34 -0700 (PDT)
+Message-ID: <4C12B40A.2070405@redhat.com>
+Date: Fri, 11 Jun 2010 17:09:14 -0500
+From: Eric Sandeen <sandeen@redhat.com>
+MIME-Version: 1.0
+Subject: [PATCH] quota: don't disable accounting with quotaoff
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,23 +21,53 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On 06/11/2010 06:19 PM, Christoph Hellwig wrote:
-> Unfortunately the backtrace doesn't really tell what has happened as
-> the origin of the backtrace scrolled away.
+The quotaon(8) man page says:
 
-Oh, sorry. Now it's too late for this incident - but if it happens
-again, I'll try to do screen-shots also from the "upper" part
-of the scroll buffer.
+NOTES ON XFS FILESYSTEMS
+...
+       To turn off quota limit enforcement on any XFS filesys-
+       tem, first make sure that quota accounting and enforce-
+       ment  are  both turned on using repquota -v filesystem.
+       Then, use  quotaoff  -v  filesystem  to  disable  limit
+       enforcement.   This may be done while the filesystem is
+       mounted.
 
-Regards,
+       Turning on quota limit enforcement on an XFS filesystem
+       is  achieved  using quotaon -v filesystem.  This may be
+       done while the filesystem is mounted
 
-Peter Niemayer
+however, quotaoff turns off both enforcement -and- accounting,
+and then quotaon fails.
+
+If the manpage describes the intended behavior, then I think the
+following patch is needed.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+--- quota-tools/quotaon_xfs.c	2010-01-05 10:39:54.000000000 -0500
++++ quota-tools-mine/quotaon_xfs.c	2010-06-11 17:45:12.000000000 -0400
+@@ -208,10 +208,9 @@
+ 	}
+ #endif /* XFS_ROOTHACK */
+ 
+-	if (xarg == NULL) {	/* both acct & enfd on/off */
+-		xopts |= (type == USRQUOTA) ?
+-			(XFS_QUOTA_UDQ_ACCT | XFS_QUOTA_UDQ_ENFD) :
+-			(XFS_QUOTA_GDQ_ACCT | XFS_QUOTA_GDQ_ENFD);
++	if (xarg == NULL) {	/* only enfd on/off */
++		xopts |= (type == USRQUOTA) ? XFS_QUOTA_UDQ_ENFD :
++			XFS_QUOTA_GDQ_ENFD;
+ 		err = xfs_onoff((char *)dev, type, flags, roothack, xopts);
+ 	}
+ 	else if (strcmp(xarg, "account") == 0) {
 
 _______________________________________________
 xfs mailing list
