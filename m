@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5BFpH6o144740 for <xfs@oss.sgi.com>; Fri, 11 Jun 2010 10:51:17 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3F9283BF314
-	for <xfs@oss.sgi.com>; Fri, 11 Jun 2010 08:53:51 -0700 (PDT)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id 9HBYgAbMIC7fL0Jt for
-	<xfs@oss.sgi.com>; Fri, 11 Jun 2010 08:53:51 -0700 (PDT)
-Message-ID: <4C125C0D.4080600@sandeen.net>
-Date: Fri, 11 Jun 2010 10:53:49 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: Make fiemap works with sparse file.
-References: <1276236135-12051-1-git-send-email-tao.ma@oracle.com>
-In-Reply-To: <1276236135-12051-1-git-send-email-tao.ma@oracle.com>
+	o5BGCbMf145657 for <xfs@oss.sgi.com>; Fri, 11 Jun 2010 11:12:39 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 19AFB3BF87F
+	for <xfs@oss.sgi.com>; Fri, 11 Jun 2010 09:15:11 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id 6jg2TdQUTXN7RpNZ for
+	<xfs@oss.sgi.com>; Fri, 11 Jun 2010 09:15:11 -0700 (PDT)
+Message-Id: <20100611161510.303551652@bombadil.infradead.org>
+Date: Fri, 11 Jun 2010 12:13:13 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH 1/3] xfs: fix corruption case for block size < page size
+References: <20100611161312.446670249@bombadil.infradead.org>
+Content-Disposition: inline; filename=xfs-fix-194
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,68 +22,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Tao Ma <tao.ma@oracle.com>
-Cc: linux-kernel@vger.kernel.org, Alex Elder <aelder@sgi.com>, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Eric Sandeen <sandeen@sandeen.net>
 
-Tao Ma wrote:
-> In xfs_vn_fiemap, we set bvm_count to fi_extent_max + 1 and want
-> to return fi_extent_max extents, but actually it won't work for
-> a sparse file. The reason is that in xfs_getbmap we will
-> calculate holes and set it in 'out', while out is malloced by
-> bmv_count(fi_extent_max+1) which didn't consider holes. So in the
-> worst case, if 'out' vector looks like
-> [hole, extent, hole, extent, hole, ... hole, extent, hole],
-> we will only return half of fi_extent_max extents.
-> 
-> So in xfs_vn_fiemap, we should consider this worst case. If the
-> user wants fi_extent_max extents, we need a 'out' with size of
-> 2 *fi_extent_max + 1.
+From: Eric Sandeen <sandeen@sandeen.net>                                        
 
-This all seems right to me, though your commit message above (+1)
-doesn't match the comment and code in the patch (+2)
+xfstests 194 first truncats a file back and then extends it again by
+truncating it to a larger size.  This causes discard_buffer to drop
+the mapped, but not the uptodate bit and thus creates something that
+xfs_page_state_convert takes for unmapped space created by mmap because
+it doesn't check for the dirty bit, which also gets cleared by
+discard_buffer and checked by other ->writepage implementations like
+block_write_full_page.  Handle this kind of buffers early, and unlike
+Eric's first version of the patch simply ASSERT that the buffers is
+dirty, given that the mmap write case can't happen anymore since the
+introduction of ->page_mkwrite.  The now dead code dealing with that
+will be deleted in a follow on patch.
 
--Eric
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-> Cc: Alex Elder <aelder@sgi.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Dave Chinner <david@fromorbit.com>
-> Signed-off-by: Tao Ma <tao.ma@oracle.com>
-> ---
->  fs/xfs/linux-2.6/xfs_iops.c |   16 ++++++++++++++--
->  1 files changed, 14 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/linux-2.6/xfs_iops.c b/fs/xfs/linux-2.6/xfs_iops.c
-> index 9c8019c..1db92e3 100644
-> --- a/fs/xfs/linux-2.6/xfs_iops.c
-> +++ b/fs/xfs/linux-2.6/xfs_iops.c
-> @@ -672,9 +672,21 @@ xfs_vn_fiemap(
->  	else
->  		bm.bmv_length = BTOBB(length);
->  
-> -	/* We add one because in getbmap world count includes the header */
-> +	/*
-> +	 * It is a bit tricky for us to calculate the bmv_count from
-> +	 * fi_extent_max.
-> +	 * If we support to return fi_extent_max extents to the user,
-> +	 * we need at most 2 * fi_extent_max + 1 for bmv_count since
-> +	 * in xfs_getbmap we will calculate holes while fi_extent_max
-> +	 * don't have them. So in the worst case, bmv can looks like
-> +	 * [hole, extent, hole, extent, hole, ... hole, extent, hole].
-> +	 * So there will be 2 *fi_extent_max + 1.
-> +	 * What's more, in getbmap world count have to include the
-> +	 * header, so we need another bmv. So the total number will
-> +	 * be 2 * fieinfo->fi_extents_max + 2.
-> +	 */
->  	bm.bmv_count = !fieinfo->fi_extents_max ? MAXEXTNUM :
-> -					fieinfo->fi_extents_max + 1;
-> +			2 * fieinfo->fi_extents_max + 2;
->  	bm.bmv_count = min_t(__s32, bm.bmv_count,
->  			     (PAGE_SIZE * 16 / sizeof(struct getbmapx)));
->  	bm.bmv_iflags = BMV_IF_PREALLOC;
+Index: xfs/fs/xfs/linux-2.6/xfs_aops.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_aops.c	2010-06-10 08:59:49.598004335 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_aops.c	2010-06-11 09:20:31.292254712 +0200
+@@ -1125,6 +1125,16 @@ xfs_page_state_convert(
+ 			continue;
+ 		}
+ 
++		/*
++		 * A hole may still be marked uptodate because discard_buffer
++		 * leaves the flag set.
++		 */
++		if (!buffer_mapped(bh) && buffer_uptodate(bh)) {
++			ASSERT(!buffer_dirty(bh));
++			imap_valid = 0;
++			continue;
++		}
++
+ 		if (imap_valid)
+ 			imap_valid = xfs_imap_valid(inode, &imap, offset);
+ 
 
 _______________________________________________
 xfs mailing list
