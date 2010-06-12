@@ -1,17 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5C27YPo173086 for <xfs@oss.sgi.com>; Fri, 11 Jun 2010 21:07:34 -0500
-Received: from rcsinet10.oracle.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7780714CB63B
-	for <xfs@oss.sgi.com>; Fri, 11 Jun 2010 19:10:08 -0700 (PDT)
-Received: from rcsinet10.oracle.com (rcsinet10.oracle.com [148.87.113.121]) by
-	cuda.sgi.com with ESMTP id rPPYDAUo0ZquLyx4 for
-	<xfs@oss.sgi.com>; Fri, 11 Jun 2010 19:10:08 -0700 (PDT)
-From: Tao Ma <tao.ma@oracle.com>
-Subject: [PATCH v2] xfs: Make fiemap works with sparse file.
-Date: Sat, 12 Jun 2010 10:08:15 +0800
-Message-Id: <1276308495-14267-1-git-send-email-tao.ma@oracle.com>
+	o5C4wKPw178132 for <xfs@oss.sgi.com>; Fri, 11 Jun 2010 23:58:20 -0500
+Received: from mail-vw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DDB3A1B6F7B4
+	for <xfs@oss.sgi.com>; Fri, 11 Jun 2010 22:00:53 -0700 (PDT)
+Received: from mail-vw0-f53.google.com (mail-vw0-f53.google.com
+	[209.85.212.53]) by cuda.sgi.com with ESMTP id b822CdlI7rYs7j5F
+	for <xfs@oss.sgi.com>; Fri, 11 Jun 2010 22:00:53 -0700 (PDT)
+Received: by vws16 with SMTP id 16so2076299vws.26
+	for <xfs@oss.sgi.com>; Fri, 11 Jun 2010 22:00:52 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20100524011907.GC12087@dastard>
+References: <20100523002023.41f5a5c8@aaa.pulp.binarylife.net>
+	<20100523101856.GL2150@dastard>
+	<20100523092344.0fcaab42@aaa.pulp.binarylife.net>
+	<20100524011907.GC12087@dastard>
+Date: Sat, 12 Jun 2010 01:00:52 -0400
+Message-ID: <AANLkTinyt6V9phjXrzrxm67THdRwTiN6pOim3uBUbo1Z@mail.gmail.com>
+Subject: Re: WARNING in xfs_lwr.c, xfs_write()
+From: Ilia Mirkin <imirkin@alum.mit.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,66 +28,67 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: sandeen@sandeen.net, linux-kernel@vger.kernel.org, Alex Elder <aelder@sgi.com>, Christoph Hellwig <hch@lst.de>, Tao Ma <tao.ma@oracle.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Roman Kononov <roman@binarylife.net>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-In xfs_vn_fiemap, we set bvm_count to fi_extent_max + 1 and want
-to return fi_extent_max extents, but actually it won't work for
-a sparse file. The reason is that in xfs_getbmap we will
-calculate holes and set it in 'out', while out is malloced by
-bmv_count(fi_extent_max+1) which didn't consider holes. So in the
-worst case, if 'out' vector looks like
-[hole, extent, hole, extent, hole, ... hole, extent, hole],
-we will only return half of fi_extent_max extents.
+Sorry to pick up an old-ish thread, but I have a similar situation:
 
-So in xfs_vn_fiemap, we should consider this worst case. If the
-user wants fi_extent_max extents, we need a 'out' with size of
-2 *fi_extent_max + 2(one more the header).
+On Sun, May 23, 2010 at 9:19 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Sun, May 23, 2010 at 09:23:44AM -0500, Roman Kononov wrote:
+>> On 2010-05-23, 20:18:56 +1000, Dave Chinner <david@fromorbit.com> wrote:
+>> > Can you find out what the application is triggering this?
 
-Cc: Alex Elder <aelder@sgi.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Dave Chinner <david@fromorbit.com>
-Acked-by: Eric Sandeen <sandeen@redhat.com>
-Signed-off-by: Tao Ma <tao.ma@oracle.com>
----
- fs/xfs/linux-2.6/xfs_iops.c |   16 ++++++++++++++--
- 1 files changed, 14 insertions(+), 2 deletions(-)
+I noticed this happening with mysql and xtrabackup -- the latter opens
+up mysql's files while mysql is still running (and modifying its own
+files) and backs them up in a (hopefully) safe way. mysql had been
+running on the machine without any such warnings for a while before we
+ran the backup, so I'm pretty sure that the backup is involved,
+although its process is never listed. Specifically the warning is:
 
-diff --git a/fs/xfs/linux-2.6/xfs_iops.c b/fs/xfs/linux-2.6/xfs_iops.c
-index 9c8019c..1db92e3 100644
---- a/fs/xfs/linux-2.6/xfs_iops.c
-+++ b/fs/xfs/linux-2.6/xfs_iops.c
-@@ -672,9 +672,21 @@ xfs_vn_fiemap(
- 	else
- 		bm.bmv_length = BTOBB(length);
- 
--	/* We add one because in getbmap world count includes the header */
-+	/*
-+	 * It is a bit tricky for us to calculate the bmv_count from
-+	 * fi_extent_max.
-+	 * If we support to return fi_extent_max extents to the user,
-+	 * we need at most 2 * fi_extent_max + 1 for bmv_count since
-+	 * in xfs_getbmap we will calculate holes while fi_extent_max
-+	 * don't have them. So in the worst case, bmv can looks like
-+	 * [hole, extent, hole, extent, hole, ... hole, extent, hole].
-+	 * So there will be 2 *fi_extent_max + 1.
-+	 * What's more, in getbmap world count have to include the
-+	 * header, so we need another bmv. So the total number will
-+	 * be 2 * fieinfo->fi_extents_max + 2.
-+	 */
- 	bm.bmv_count = !fieinfo->fi_extents_max ? MAXEXTNUM :
--					fieinfo->fi_extents_max + 1;
-+			2 * fieinfo->fi_extents_max + 2;
- 	bm.bmv_count = min_t(__s32, bm.bmv_count,
- 			     (PAGE_SIZE * 16 / sizeof(struct getbmapx)));
- 	bm.bmv_iflags = BMV_IF_PREALLOC;
--- 
-1.5.5
+[2584257.839386] ------------[ cut here ]------------
+[2584257.839395] WARNING: at fs/xfs/linux-2.6/xfs_lrw.c:651
+xfs_write+0x3dc/0x784()
+[2584257.839398] Hardware name: PowerEdge R710
+[2584257.839399] Modules linked in: nfsd cifs iTCO_wdt iTCO_vendor_support
+[2584257.839406] Pid: 7761, comm: mysqld Not tainted 2.6.33-gentoo-r2 #1
+[2584257.839407] Call Trace:
+[2584257.839411]  [<ffffffff8120da46>] ? xfs_write+0x3dc/0x784
+[2584257.839415]  [<ffffffff81038733>] warn_slowpath_common+0x77/0xa4
+[2584257.839417]  [<ffffffff8103876f>] warn_slowpath_null+0xf/0x11
+[2584257.839419]  [<ffffffff8120da46>] xfs_write+0x3dc/0x784
+[2584257.839424]  [<ffffffff810033ce>] ? apic_timer_interrupt+0xe/0x20
+[2584257.839427]  [<ffffffff8120a51a>] xfs_file_aio_write+0x5a/0x5c
+[2584257.839430]  [<ffffffff810d7cbe>] do_sync_write+0xc0/0x106
+[2584257.839435]  [<ffffffff810ff862>] ? __fsnotify_parent+0xc7/0xd3
+[2584257.839437]  [<ffffffff810d8624>] vfs_write+0xab/0x105
+[2584257.839439]  [<ffffffff810d86da>] sys_pwrite64+0x5c/0x7d
+[2584257.839442]  [<ffffffff81002a6b>] system_call_fastpath+0x16/0x1b
+[2584257.839444] ---[ end trace 8b0c2a6e5e86745f ]---
+
+> Yes, it should be safe, but the kernel code can't know whether this
+> is true or not - there are no specific interlocks with direct IO to
+> prevent concurrent buffered IO to the same region while a direct IO
+> is in progress. XFS does best effort attempts to maintain coherency
+> does not provide any guarantees, hence the warning when known race
+> conditions are tripped.
+
+Would it be safe to remove the warning at
+fs/xfs/linux-2.6/xfs_lrw.c:651 (which looks like it has moved to
+xfs_file.c in 2.6.34)? It seems undesirable to get a long stream of
+these (51 in this particular instance) every time we run a backup...
+IOW, is the warning purely something along the lines of "Userspace is
+doing something wonky, but the underlying FS will still be fine no
+matter what" kind of deal, or could there be an actual problem with
+the XFS metadata itself?
+
+Thanks for any advice,
+
+Ilia Mirkin
+imirkin@alum.mit.edu
 
 _______________________________________________
 xfs mailing list
