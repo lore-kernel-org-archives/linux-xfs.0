@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5E4PBSt019851 for <xfs@oss.sgi.com>; Sun, 13 Jun 2010 23:25:11 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A25553C3B93
-	for <xfs@oss.sgi.com>; Sun, 13 Jun 2010 21:27:45 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	8XqUuHUUdycX80IG for <xfs@oss.sgi.com>;
-	Sun, 13 Jun 2010 21:27:45 -0700 (PDT)
-Date: Mon, 14 Jun 2010 14:27:00 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] [16/23] XFS: Fix gcc 4.6 set but not read and unused
-	statement warnings
-Message-ID: <20100614042700.GC6590@dastard>
-References: <20100610110.764742110@firstfloor.org>
-	<20100610111052.3DDC5B1A2B@basil.firstfloor.org>
+	o5E5qkbd024888 for <xfs@oss.sgi.com>; Mon, 14 Jun 2010 00:52:47 -0500
+Received: from rcsinet10.oracle.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AB5F312AC3BE
+	for <xfs@oss.sgi.com>; Sun, 13 Jun 2010 22:58:48 -0700 (PDT)
+Received: from rcsinet10.oracle.com (rcsinet10.oracle.com [148.87.113.121]) by
+	cuda.sgi.com with ESMTP id sP4zlytfvxkNo9Wn for
+	<xfs@oss.sgi.com>; Sun, 13 Jun 2010 22:58:48 -0700 (PDT)
+Message-ID: <4C15C3C7.5090706@oracle.com>
+Date: Mon, 14 Jun 2010 13:53:11 +0800
+From: Tao Ma <tao.ma@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100610111052.3DDC5B1A2B@basil.firstfloor.org>
+Subject: Re: [PATCH v2] xfs: Make fiemap works with sparse file.
+References: <1276308495-14267-1-git-send-email-tao.ma@oracle.com>
+	<20100614002705.GA6590@dastard>
+In-Reply-To: <20100614002705.GA6590@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,228 +24,108 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andi Kleen <andi@firstfloor.org>
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: sandeen@sandeen.net, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Alex Elder <aelder@sgi.com>, Christoph Hellwig <hch@lst.de>, "tao.ma" <tao.ma@oracle.com>
 
-On Thu, Jun 10, 2010 at 01:10:52PM +0200, Andi Kleen wrote:
-> 
-> For my configuration, that is without quota or RT.
-> 
-> Mostly dead code removed I think (but needs additional review) 
+
+
+On 06/14/2010 08:27 AM, Dave Chinner wrote:
+> On Sat, Jun 12, 2010 at 10:08:15AM +0800, Tao Ma wrote:
+>> In xfs_vn_fiemap, we set bvm_count to fi_extent_max + 1 and want
+>> to return fi_extent_max extents, but actually it won't work for
+>> a sparse file.
 >
-> That is there were one or two bad error handling cases,
-> but they were not easily fixable, with comments 
-> and I left the warnings in for those for you to remember.
-> 
-> e.g. if there is a ENOSPC down in xfs_trans.c while
-> modifying the superblock it would not be handled.
+> Define "won't work". i.e. what's the test case?  I just created a
+> sparse file and checked it, and it reported all the extents in it:
+>
+> # xfs_bmap -vp testfile
+> testfile:
+>   EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
+>     0: [0..7]:          hole                                     8
+>     1: [8..15]:         96..103           0 (96..103)            8 00000
+>     2: [16..23]:        hole                                     8
+>     3: [24..31]:        112..119          0 (112..119)           8 00000
+>     4: [32..39]:        hole                                     8
+>     5: [40..47]:        128..135          0 (128..135)           8 00000
+>     6: [48..55]:        hole                                     8
+>     7: [56..63]:        144..151          0 (144..151)           8 00000
+>     8: [64..71]:        hole                                     8
+>     9: [72..79]:        160..167          0 (160..167)           8 00000
+>    10: [80..87]:        hole                                     8
+>    11: [88..95]:        176..183          0 (176..183)           8 00000
+>    12: [96..103]:       hole                                     8
+>    13: [104..111]:      192..199          0 (192..199)           8 00000
+>    14: [112..119]:      hole                                     8
+>    15: [120..127]:      208..215          0 (208..215)           8 00000
+ok, so let me explain it. In commit 
+2d1ff3c75a4642062d314634290be6d8da4ffb03, I add the mode for extent 
+query of fiemap for xfs. So with your test file, it will return that we 
+have 8 extents(because in xfs_fiemap_format we don't return holes). So 
+normally and naturally, a user begin to iterate all the extents by doing
 
-See my comments about these below.
+fiemap = malloc(sizeof(fiemap) + 8 * sizeof(struct fiemap_extent));
+fiemap->fm_extent_count = 8
 
-> Unused statements were mostly related to stub macros for disabled
-> features like QUOTA or RT ALLOC. I replace those with
-> inlines.
+But what will happen? He will only get 4 extent. So do you think it is 
+acceptable for a user? We told him that we have 8 extents, he has 
+allocated enough space, but he can't get what he wanted. And he need to
+fiemap = malloc(sizeof(fiemap) + 16 * sizeof(struct fiemap_extent));
+fiemap->fm_extent_count = 16
+to get 8 extent for your test file.
 
-Did you compile with/without XFS_DEBUG (I don't think so)? when
-changing code that affects ASSERT statements, CONFIG_XFS_DEBUG needs to
-be selected to test that this code compiles. Most XFs developers
-build with XFS_CONFIG_DEBUG for everything other than performance
-testing, so ensuring this builds is definitely required. ;)
+> # filefrag -v testfile
+> Filesystem type is: 58465342
+> File size of testfile is 65536 (16 blocks, blocksize 4096)
+>   ext logical physical expected length flags
+>     0       1       12               1
+>     1       3       14       12      1
+>     2       5       16       14      1
+>     3       7       18       16      1
+>     4       9       20       18      1
+>     5      11       22       20      1
+>     6      13       24       22      1
+>     7      15       26       24      1 eof
+> testfile: 9 extents found
+> #
+>
+> FWIW, filefrag seems busted - the file has 8 extents, not 9.
+yeah, filefrag is really broken.
+>
+>> The reason is that in xfs_getbmap we will
+>> calculate holes and set it in 'out', while out is malloced by
+>> bmv_count(fi_extent_max+1) which didn't consider holes. So in the
+>> worst case, if 'out' vector looks like
+>> [hole, extent, hole, extent, hole, ... hole, extent, hole],
+>> we will only return half of fi_extent_max extents.
+>
+> Right, it's not broken, we simply return less than fi_extent_mex
+> extents when there are holes. I don't see that as a problem as
+> applications have to handle that case anyway, and....
+see my above test case. I guess we really don't want a userspace user to 
+allocate num_extents * 2 + 1 fiemap_extent to get them.
+>
+>> So in xfs_vn_fiemap, we should consider this worst case. If the
+>> user wants fi_extent_max extents, we need a 'out' with size of
+>> 2 *fi_extent_max + 2(one more the header).
+>
+> That's rather dangerous, I think. It relies on other code to catch
+> the buffer overrun that this sets up for fragmented, non-sparse
+> files. Personally I'd much prefer to return fewer extents for sparse
+> files than to add a landmine like this into the kernel code....
+We just change the size of our 'out', we don't change fi_extent_max or 
+anything related to the fiemap. So I think what we care is how to keep 
+our 'out' in good shape and fiemap should handle and check their 
+fi_extent_max if we pass it more extents.
 
-I'd also be interested if any fixes are needed with all options
-enabled. Seems silly just to fix a few warnings in just one
-particular configuration rather than all of them...
+btw, maybe there is a better solution for the problem I described above. 
+If there is a good one, I am happy to accept it.
 
-> There were also some problems with variables used in ASSERT()
-> I partly moved those into the ASSERT itself and partly
-> used a new QASSERT that always evaluates.
-
-That's a pretty ugly hack for a single occurrence of a warning.
-Re-arrnaging the code is a much better idea than introducing a new
-ASSERT type. e.g:
-
--	ASSERT(ref >= 0);
-+	if (ref < 0)
-+		ASSERT(0);
-
-> Cc: xfs@oss.sgi.com
-> 
-> Signed-off-by: Andi Kleen <ak@linux.intel.com>
-> 
-> ---
->  fs/xfs/linux-2.6/xfs_sync.c |    3 +++
->  fs/xfs/support/debug.h      |    4 ++++
->  fs/xfs/xfs_alloc.c          |   10 +++-------
->  fs/xfs/xfs_da_btree.c       |   15 +++++----------
->  fs/xfs/xfs_dir2_block.c     |    6 +++---
->  fs/xfs/xfs_filestream.c     |   10 ++--------
->  fs/xfs/xfs_iget.c           |    3 ---
->  fs/xfs/xfs_inode.c          |    4 ----
->  fs/xfs/xfs_inode_item.c     |    8 ++------
->  fs/xfs/xfs_log.c            |    2 --
->  fs/xfs/xfs_quota.h          |   14 ++++++++++----
->  fs/xfs/xfs_trans.c          |    1 +
->  12 files changed, 33 insertions(+), 47 deletions(-)
-> 
-> Index: linux-2.6.35-rc2-gcc/fs/xfs/linux-2.6/xfs_sync.c
-> ===================================================================
-> --- linux-2.6.35-rc2-gcc.orig/fs/xfs/linux-2.6/xfs_sync.c
-> +++ linux-2.6.35-rc2-gcc/fs/xfs/linux-2.6/xfs_sync.c
-> @@ -554,6 +554,9 @@ xfs_sync_worker(
->  		xfs_log_force(mp, 0);
->  		xfs_reclaim_inodes(mp, 0);
->  		/* dgc: errors ignored here */
-> +		/* ak: yes and you'll get a warning for it now when you
-> +		 * upgrade compilers.
-> +		 */
->  		error = xfs_qm_sync(mp, SYNC_TRYLOCK);
->  		if (xfs_log_need_covered(mp))
->  			error = xfs_commit_dummy_trans(mp, 0);
-
-I don't think the coment is necessary - the compiler will remind us
-that we are ignoring errors.
-
-FWIW, we've now got a situation where external static code checkers
-will tell us that we are not handling an error case (which is where
-this code and comment came from), and now the compiler will warn us
-we are assigning but not using the return value. It's a bit of a
-Catch-22 situation. Hence my question is this - how are we supposed
-to "safely" ignore a return value seeing as the compiler is now
-making the current method rather noisy?
-
-> Index: linux-2.6.35-rc2-gcc/fs/xfs/xfs_da_btree.c
-> ===================================================================
-> --- linux-2.6.35-rc2-gcc.orig/fs/xfs/xfs_da_btree.c
-> +++ linux-2.6.35-rc2-gcc/fs/xfs/xfs_da_btree.c
-> @@ -581,10 +581,8 @@ xfs_da_node_add(xfs_da_state_t *state, x
->  	xfs_da_intnode_t *node;
->  	xfs_da_node_entry_t *btree;
->  	int tmp;
-> -	xfs_mount_t *mp;
->  
->  	node = oldblk->bp->data;
-> -	mp = state->mp;
->  	ASSERT(be16_to_cpu(node->hdr.info.magic) == XFS_DA_NODE_MAGIC);
->  	ASSERT((oldblk->index >= 0) && (oldblk->index <= be16_to_cpu(node->hdr.count)));
->  	ASSERT(newblk->blkno != 0);
-
-That'll break a CONFIG_XFS_DEBUG build as the next statement:
-
-        if (state->args->whichfork == XFS_DATA_FORK)
-                ASSERT(newblk->blkno >= mp->m_dirleafblk &&
-                       newblk->blkno < mp->m_dirfreeblk);
-
-uses mp inside ASSERT statements.
-
-> Index: linux-2.6.35-rc2-gcc/fs/xfs/xfs_dir2_block.c
-> ===================================================================
-> --- linux-2.6.35-rc2-gcc.orig/fs/xfs/xfs_dir2_block.c
-> +++ linux-2.6.35-rc2-gcc/fs/xfs/xfs_dir2_block.c
-> @@ -1073,10 +1073,10 @@ xfs_dir2_sf_to_block(
->  	 */
->  
->  	buf_len = dp->i_df.if_bytes;
-> -	buf = kmem_alloc(dp->i_df.if_bytes, KM_SLEEP);
-> +	buf = kmem_alloc(buf_len, KM_SLEEP);
->  
-> -	memcpy(buf, sfp, dp->i_df.if_bytes);
-> -	xfs_idata_realloc(dp, -dp->i_df.if_bytes, XFS_DATA_FORK);
-> +	memcpy(buf, sfp, buf_len);
-> +	xfs_idata_realloc(dp, -buf_len, XFS_DATA_FORK);
->  	dp->i_d.di_size = 0;
->  	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
->  	/*
-
-Just remove the buf_len variable in this case.
-
-> Index: linux-2.6.35-rc2-gcc/fs/xfs/xfs_filestream.c
-> ===================================================================
-> --- linux-2.6.35-rc2-gcc.orig/fs/xfs/xfs_filestream.c
-> +++ linux-2.6.35-rc2-gcc/fs/xfs/xfs_filestream.c
-> @@ -140,9 +140,8 @@ _xfs_filestream_pick_ag(
->  	int		flags,
->  	xfs_extlen_t	minlen)
->  {
-> -	int		streams, max_streams;
->  	int		err, trylock, nscan;
-> -	xfs_extlen_t	longest, free, minfree, maxfree = 0;
-> +	xfs_extlen_t	longest, minfree, maxfree = 0;
->  	xfs_agnumber_t	ag, max_ag = NULLAGNUMBER;
->  	struct xfs_perag *pag;
->  
-> @@ -174,7 +173,6 @@ _xfs_filestream_pick_ag(
->  		/* Keep track of the AG with the most free blocks. */
->  		if (pag->pagf_freeblks > maxfree) {
->  			maxfree = pag->pagf_freeblks;
-> -			max_streams = atomic_read(&pag->pagf_fstrms);
->  			max_ag = ag;
->  		}
->  
-> @@ -196,8 +194,6 @@ _xfs_filestream_pick_ag(
->  		     (flags & XFS_PICK_LOWSPACE))) {
->  
->  			/* Break out, retaining the reference on the AG. */
-> -			free = pag->pagf_freeblks;
-> -			streams = atomic_read(&pag->pagf_fstrms);
->  			xfs_perag_put(pag);
->  			*agp = ag;
->  			break;
-> @@ -234,8 +230,6 @@ next_ag:
->  		if (max_ag != NULLAGNUMBER) {
->  			xfs_filestream_get_ag(mp, max_ag);
->  			TRACE_AG_PICK1(mp, max_ag, maxfree);
-> -			streams = max_streams;
-> -			free = maxfree;
->  			*agp = max_ag;
->  			break;
->  		}
-> @@ -364,7 +358,7 @@ xfs_fstrm_free_func(
->  	/* Drop the reference taken on the AG when the item was added. */
->  	ref = xfs_filestream_put_ag(ip->i_mount, item->ag);
->  
-> -	ASSERT(ref >= 0);
-> +	QASSERT(ref >= 0);
->  	TRACE_FREE(ip->i_mount, ip, item->pip, item->ag,
->  		xfs_filestream_peek_ag(ip->i_mount, item->ag));
-
-These are all "unused" because they are used in debug code only. i.e.
-in XFS_FILESTREAMS_TRACE configs. This is manual debug code that
-needs to be converted to the trace infrastructure - the compiler may
-say it is unused, but it is not dead code, so shoul dnot be removed.
-
-See also my comment about QASSERT() above.
-
->  #define xfs_trans_unreserve_quota_nblks(tp, ip, nblks, ninos, flags) \
-> Index: linux-2.6.35-rc2-gcc/fs/xfs/xfs_trans.c
-> ===================================================================
-> --- linux-2.6.35-rc2-gcc.orig/fs/xfs/xfs_trans.c
-> +++ linux-2.6.35-rc2-gcc/fs/xfs/xfs_trans.c
-> @@ -1120,6 +1120,7 @@ xfs_trans_unreserve_and_mod_sb(
->  		error = xfs_mod_incore_sb_batch(tp->t_mountp, msb,
->  			(uint)(msbp - msb), rsvd);
->  		ASSERT(error == 0);
-> +		/* FIXME: need real error handling here, error can be ENOSPC */
-
-That comment is wrong and hence is not needed.  By design, we should
-never, ever get an error here because we've already reserved all the
-space we need and this is just an accounting call.  That's what the
-ASSERT(error == 0) is documenting. It's ben placed there to catch
-any re-occurrence of the race condition that is documented in the
-function head comment during development.  Anyway, if we do get an
-error here, we cannot handle it anyway - it's too late to do
-anything short of a complete shutdown as we've already written the
-transaction to the log.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Regards,
+Tao
 
 _______________________________________________
 xfs mailing list
