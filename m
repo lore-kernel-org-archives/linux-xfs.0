@@ -1,25 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5EGSnhW048605 for <xfs@oss.sgi.com>; Mon, 14 Jun 2010 11:28:51 -0500
-Received: from one.firstfloor.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BA5871D5AD96
-	for <xfs@oss.sgi.com>; Mon, 14 Jun 2010 09:31:23 -0700 (PDT)
-Received: from one.firstfloor.org (one.firstfloor.org [213.235.205.2]) by
-	cuda.sgi.com with ESMTP id x8OlMqLXHLdNVrAE for
-	<xfs@oss.sgi.com>; Mon, 14 Jun 2010 09:31:23 -0700 (PDT)
-Date: Mon, 14 Jun 2010 18:31:22 +0200
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: [PATCH] XFS: Fix gcc 4.6 set but not read and unused statement
-	warnings v2
-Message-ID: <20100614163122.GB369@basil.fritz.box>
-References: <20100614081356.GA27499@basil.fritz.box>
-	<20100614083021.GA29354@lst.de> <4C15EF75.5080909@linux.intel.com>
-	<20100614124804.GA8547@lst.de>
-	<20100614133958.GH17092@basil.fritz.box>
+	o5EMMcmr059081 for <xfs@oss.sgi.com>; Mon, 14 Jun 2010 17:22:39 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EBE0B12ADAA1
+	for <xfs@oss.sgi.com>; Mon, 14 Jun 2010 15:28:41 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	1iOBJBqfsx0CqorH for <xfs@oss.sgi.com>;
+	Mon, 14 Jun 2010 15:28:41 -0700 (PDT)
+Date: Tue, 15 Jun 2010 08:24:58 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] [16/23] XFS: Fix gcc 4.6 set but not read and unused
+	statement warnings
+Message-ID: <20100614222458.GF6590@dastard>
+References: <20100610110.764742110@firstfloor.org>
+	<20100610111052.3DDC5B1A2B@basil.firstfloor.org>
+	<20100614042700.GC6590@dastard>
+	<20100614074309.GA17092@basil.fritz.box>
+	<20100614133755.GE6590@dastard>
+	<20100614143720.GI17092@basil.fritz.box>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100614133958.GH17092@basil.fritz.box>
+In-Reply-To: <20100614143720.GI17092@basil.fritz.box>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,414 +36,54 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Andi Kleen <andi@firstfloor.org>
-Cc: Andi Kleen <ak@linux.intel.com>, Christoph Hellwig <hch@lst.de>, dgc@fromorbit.com, xfs@oss.sgi.com
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, Jun 14, 2010 at 03:39:58PM +0200, Andi Kleen wrote:
-> On Mon, Jun 14, 2010 at 02:48:04PM +0200, Christoph Hellwig wrote:
-> > On Mon, Jun 14, 2010 at 10:59:33AM +0200, Andi Kleen wrote:
-> > > >How can this work?  bp->data is a void pointer.
+On Mon, Jun 14, 2010 at 04:37:20PM +0200, Andi Kleen wrote:
+> > > > function head comment during development.  Anyway, if we do get an
+> > > > error here, we cannot handle it anyway - it's too late to do
+> > > > anything short of a complete shutdown as we've already written the
+> > > > transaction to the log.
 > > > 
-> > > It compiled with CONFIG_XFS_DEBUG enabled. Do I need to set some other
-> > > option to test this?
+> > > Well I guess it should be unconditional BUG_ON then.
 > > 
-> > It fails for me in a normal CONFIG_XFS_DEBUG build:
-> > 
-> > fs/xfs/xfs_da_btree.c: In function 'xfs_da_root_join':
-> > fs/xfs/xfs_da_btree.c:737: warning: dereferencing 'void *' pointer
-> > fs/xfs/xfs_da_btree.c:737: error: request for member 'magic' in
-> > something not a structure or union
-> > fs/xfs/xfs_da_btree.c:737: warning: dereferencing 'void *' pointer
+> > Don't be silly. A filesystem shutdown is all that is necessary,
 > 
-> 
-> Hmm, it really compiled here (scratching head)
+> Without BUG_ON it will not end up in kerneloops.org and you will
+> never know about it. 
 
-Never mind, it seems SUBDIRS doesn't set the DEBUG flag correctly. 
+We find out about corrupted filesystems all the time from users
+sending mail to the list. Even if we did panic by default on
+corruption events, kerneloops.org is *useless* for reporting them
+because finding out about a corruption is only the very first step
+of what is usually a long and involved process that requires user
+interaction to gather information necessary to find the cause of the
+corruption.
 
-Anyways I just dropped those hunks and you'll have to live with 
-the warnings if you don't want QASSERT.
+Besides, if we _really_ want the machine to panic on corruption,
+then we configure the machine specifically for it via setting the
+relevant corruption type bit in /proc/sys/fs/xfs/panic_mask. This is
+generally only used when a developer asks a user to set it to get
+kernel crash dumps triggered when a corruption event occurs so we
+can do remote, offline analysis of the failure.
 
-Final version
+> That's standard Linux kernel development
+> practice.  Maybe XFS should catch up on that.
 
--Andi
+I find this really amusing because linux filesystems have, over the
+last few years, implemented a simpler version of XFS's way of
+dealing with corruption events(*). Perhaps you should catch up
+with the state of the art before throwing rocks, Andi....
 
----
+Cheers,
 
-XFS: Fix gcc 4.6 set but not read and unused statement warnings v3
+Dave.
 
-For my configuration, that is without quota or RT.
-
-Mostly dead code removed I think (but needs additional review) 
-
-That is there were one or two bad error handling cases,
-but they were not easily fixable, with comments 
-and I left the warnings in for those for you to remember.
-
-e.g. if there is a ENOSPC down in xfs_trans.c while
-modifying the superblock it would not be handled.
-
-Unused statements were mostly related to stub macros for disabled
-features like QUOTA or RT ALLOC. I replace those with
-inlines.
-
-There were also some problems with variables used in ASSERT()
-I partly moved those into the ASSERT itself.
-
-v2: QASSERT removed. Dave Chinners comments addressed (well
-the one I liked). CONFIG_XFS_DEBUG builds again now.
-I checked RT+QUOTA enabled and there was no new warnings
-(if someone is interested i put the remaining ones
-at http://halobates.de/xfs-all-gcc46)
-v3: Finally fix DEBUG build
-
-Cc: xfs@oss.sgi.com
-
-Signed-off-by: Andi Kleen <ak@linux.intel.com>
-
----
- fs/xfs/linux-2.6/xfs_sync.c |    3 +++
- fs/xfs/xfs_alloc.c          |   10 +++-------
- fs/xfs/xfs_da_btree.c       |    6 ++----
- fs/xfs/xfs_dir2_block.c     |    6 +++---
- fs/xfs/xfs_filestream.c     |   16 +++++-----------
- fs/xfs/xfs_iget.c           |    3 ---
- fs/xfs/xfs_inode.c          |    4 ----
- fs/xfs/xfs_inode_item.c     |    7 ++-----
- fs/xfs/xfs_log.c            |    2 --
- fs/xfs/xfs_quota.h          |   14 ++++++++++----
- fs/xfs/xfs_trans.c          |    6 +++++-
- 11 files changed, 33 insertions(+), 44 deletions(-)
-
-Index: linux-2.6.35-rc3-gcc/fs/xfs/linux-2.6/xfs_sync.c
-===================================================================
---- linux-2.6.35-rc3-gcc.orig/fs/xfs/linux-2.6/xfs_sync.c
-+++ linux-2.6.35-rc3-gcc/fs/xfs/linux-2.6/xfs_sync.c
-@@ -554,6 +554,9 @@ xfs_sync_worker(
- 		xfs_log_force(mp, 0);
- 		xfs_reclaim_inodes(mp, 0);
- 		/* dgc: errors ignored here */
-+		/* ak: yes and you'll get a warning for it now when you
-+		 * upgrade compilers.
-+		 */
- 		error = xfs_qm_sync(mp, SYNC_TRYLOCK);
- 		if (xfs_log_need_covered(mp))
- 			error = xfs_commit_dummy_trans(mp, 0);
-Index: linux-2.6.35-rc3-gcc/fs/xfs/xfs_da_btree.c
-===================================================================
---- linux-2.6.35-rc3-gcc.orig/fs/xfs/xfs_da_btree.c
-+++ linux-2.6.35-rc3-gcc/fs/xfs/xfs_da_btree.c
-@@ -581,16 +581,14 @@ xfs_da_node_add(xfs_da_state_t *state, x
- 	xfs_da_intnode_t *node;
- 	xfs_da_node_entry_t *btree;
- 	int tmp;
--	xfs_mount_t *mp;
- 
- 	node = oldblk->bp->data;
--	mp = state->mp;
- 	ASSERT(be16_to_cpu(node->hdr.info.magic) == XFS_DA_NODE_MAGIC);
- 	ASSERT((oldblk->index >= 0) && (oldblk->index <= be16_to_cpu(node->hdr.count)));
- 	ASSERT(newblk->blkno != 0);
- 	if (state->args->whichfork == XFS_DATA_FORK)
--		ASSERT(newblk->blkno >= mp->m_dirleafblk &&
--		       newblk->blkno < mp->m_dirfreeblk);
-+		ASSERT(newblk->blkno >= state->mp->m_dirleafblk &&
-+		       newblk->blkno < state->mp->m_dirfreeblk);
- 
- 	/*
- 	 * We may need to make some room before we insert the new node.
-Index: linux-2.6.35-rc3-gcc/fs/xfs/xfs_dir2_block.c
-===================================================================
---- linux-2.6.35-rc3-gcc.orig/fs/xfs/xfs_dir2_block.c
-+++ linux-2.6.35-rc3-gcc/fs/xfs/xfs_dir2_block.c
-@@ -1073,10 +1073,10 @@ xfs_dir2_sf_to_block(
- 	 */
- 
- 	buf_len = dp->i_df.if_bytes;
--	buf = kmem_alloc(dp->i_df.if_bytes, KM_SLEEP);
-+	buf = kmem_alloc(buf_len, KM_SLEEP);
- 
--	memcpy(buf, sfp, dp->i_df.if_bytes);
--	xfs_idata_realloc(dp, -dp->i_df.if_bytes, XFS_DATA_FORK);
-+	memcpy(buf, sfp, buf_len);
-+	xfs_idata_realloc(dp, -buf_len, XFS_DATA_FORK);
- 	dp->i_d.di_size = 0;
- 	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
- 	/*
-Index: linux-2.6.35-rc3-gcc/fs/xfs/xfs_filestream.c
-===================================================================
---- linux-2.6.35-rc3-gcc.orig/fs/xfs/xfs_filestream.c
-+++ linux-2.6.35-rc3-gcc/fs/xfs/xfs_filestream.c
-@@ -140,9 +140,8 @@ _xfs_filestream_pick_ag(
- 	int		flags,
- 	xfs_extlen_t	minlen)
- {
--	int		streams, max_streams;
- 	int		err, trylock, nscan;
--	xfs_extlen_t	longest, free, minfree, maxfree = 0;
-+	xfs_extlen_t	longest, minfree, maxfree = 0;
- 	xfs_agnumber_t	ag, max_ag = NULLAGNUMBER;
- 	struct xfs_perag *pag;
- 
-@@ -174,7 +173,6 @@ _xfs_filestream_pick_ag(
- 		/* Keep track of the AG with the most free blocks. */
- 		if (pag->pagf_freeblks > maxfree) {
- 			maxfree = pag->pagf_freeblks;
--			max_streams = atomic_read(&pag->pagf_fstrms);
- 			max_ag = ag;
- 		}
- 
-@@ -196,8 +194,6 @@ _xfs_filestream_pick_ag(
- 		     (flags & XFS_PICK_LOWSPACE))) {
- 
- 			/* Break out, retaining the reference on the AG. */
--			free = pag->pagf_freeblks;
--			streams = atomic_read(&pag->pagf_fstrms);
- 			xfs_perag_put(pag);
- 			*agp = ag;
- 			break;
-@@ -234,8 +230,6 @@ next_ag:
- 		if (max_ag != NULLAGNUMBER) {
- 			xfs_filestream_get_ag(mp, max_ag);
- 			TRACE_AG_PICK1(mp, max_ag, maxfree);
--			streams = max_streams;
--			free = maxfree;
- 			*agp = max_ag;
- 			break;
- 		}
-@@ -364,7 +358,8 @@ xfs_fstrm_free_func(
- 	/* Drop the reference taken on the AG when the item was added. */
- 	ref = xfs_filestream_put_ag(ip->i_mount, item->ag);
- 
--	ASSERT(ref >= 0);
-+	if (ref < 0)
-+		ASSERT(0);
- 	TRACE_FREE(ip->i_mount, ip, item->pip, item->ag,
- 		xfs_filestream_peek_ag(ip->i_mount, item->ag));
- 
-@@ -465,7 +460,6 @@ xfs_filestream_lookup_ag(
- 	xfs_mru_cache_t	*cache;
- 	fstrm_item_t	*item;
- 	xfs_agnumber_t	ag;
--	int		ref;
- 
- 	if (!(ip->i_d.di_mode & (S_IFREG | S_IFDIR))) {
- 		ASSERT(0);
-@@ -481,10 +475,10 @@ xfs_filestream_lookup_ag(
- 
- 	ASSERT(ip == item->ip);
- 	ag = item->ag;
--	ref = xfs_filestream_peek_ag(ip->i_mount, ag);
- 	xfs_mru_cache_done(cache);
- 
--	TRACE_LOOKUP(ip->i_mount, ip, item->pip, ag, ref);
-+	TRACE_LOOKUP(ip->i_mount, ip, item->pip, ag,
-+			xfs_filestream_peek_ag(ip->i_mount, ag));
- 	return ag;
- }
- 
-Index: linux-2.6.35-rc3-gcc/fs/xfs/xfs_iget.c
-===================================================================
---- linux-2.6.35-rc3-gcc.orig/fs/xfs/xfs_iget.c
-+++ linux-2.6.35-rc3-gcc/fs/xfs/xfs_iget.c
-@@ -265,7 +265,6 @@ xfs_iget_cache_miss(
- {
- 	struct xfs_inode	*ip;
- 	int			error;
--	unsigned long		first_index, mask;
- 	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ino);
- 
- 	ip = xfs_inode_alloc(mp, ino);
-@@ -302,8 +301,6 @@ xfs_iget_cache_miss(
- 			BUG();
- 	}
- 
--	mask = ~(((XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_inodelog)) - 1);
--	first_index = agino & mask;
- 	write_lock(&pag->pag_ici_lock);
- 
- 	/* insert the new inode */
-Index: linux-2.6.35-rc3-gcc/fs/xfs/xfs_inode.c
-===================================================================
---- linux-2.6.35-rc3-gcc.orig/fs/xfs/xfs_inode.c
-+++ linux-2.6.35-rc3-gcc/fs/xfs/xfs_inode.c
-@@ -925,7 +925,6 @@ xfs_iread_extents(
- 	int		error;
- 	xfs_ifork_t	*ifp;
- 	xfs_extnum_t	nextents;
--	size_t		size;
- 
- 	if (unlikely(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE)) {
- 		XFS_ERROR_REPORT("xfs_iread_extents", XFS_ERRLEVEL_LOW,
-@@ -933,7 +932,6 @@ xfs_iread_extents(
- 		return XFS_ERROR(EFSCORRUPTED);
- 	}
- 	nextents = XFS_IFORK_NEXTENTS(ip, whichfork);
--	size = nextents * sizeof(xfs_bmbt_rec_t);
- 	ifp = XFS_IFORK_PTR(ip, whichfork);
- 
- 	/*
-@@ -3517,13 +3515,11 @@ xfs_iext_remove_indirect(
- 	xfs_extnum_t	ext_diff;	/* extents to remove in current list */
- 	xfs_extnum_t	nex1;		/* number of extents before idx */
- 	xfs_extnum_t	nex2;		/* extents after idx + count */
--	int		nlists;		/* entries in indirection array */
- 	int		page_idx = idx;	/* index in target extent list */
- 
- 	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
- 	erp = xfs_iext_idx_to_irec(ifp,  &page_idx, &erp_idx, 0);
- 	ASSERT(erp != NULL);
--	nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
- 	nex1 = page_idx;
- 	ext_cnt = count;
- 	while (ext_cnt) {
-Index: linux-2.6.35-rc3-gcc/fs/xfs/xfs_inode_item.c
-===================================================================
---- linux-2.6.35-rc3-gcc.orig/fs/xfs/xfs_inode_item.c
-+++ linux-2.6.35-rc3-gcc/fs/xfs/xfs_inode_item.c
-@@ -323,9 +323,8 @@ xfs_inode_item_format(
- 			ASSERT(ip->i_df.if_u1.if_extents != NULL);
- 			ASSERT(ip->i_d.di_nextents > 0);
- 			ASSERT(iip->ili_extents_buf == NULL);
--			nrecs = ip->i_df.if_bytes /
--				(uint)sizeof(xfs_bmbt_rec_t);
--			ASSERT(nrecs > 0);
-+			ASSERT((ip->i_df.if_bytes /
-+				(uint)sizeof(xfs_bmbt_rec_t)) > 0);
- #ifdef XFS_NATIVE_HOST
- 			if (nrecs == ip->i_d.di_nextents) {
- 				/*
-@@ -957,10 +956,8 @@ xfs_iflush_abort(
- 	xfs_inode_t		*ip)
- {
- 	xfs_inode_log_item_t	*iip = ip->i_itemp;
--	xfs_mount_t		*mp;
- 
- 	iip = ip->i_itemp;
--	mp = ip->i_mount;
- 	if (iip) {
- 		struct xfs_ail	*ailp = iip->ili_item.li_ailp;
- 		if (iip->ili_item.li_flags & XFS_LI_IN_AIL) {
-Index: linux-2.6.35-rc3-gcc/fs/xfs/xfs_log.c
-===================================================================
---- linux-2.6.35-rc3-gcc.orig/fs/xfs/xfs_log.c
-+++ linux-2.6.35-rc3-gcc/fs/xfs/xfs_log.c
-@@ -1047,7 +1047,6 @@ xlog_alloc_log(xfs_mount_t	*mp,
- 	xlog_in_core_t		*iclog, *prev_iclog=NULL;
- 	xfs_buf_t		*bp;
- 	int			i;
--	int			iclogsize;
- 	int			error = ENOMEM;
- 	uint			log2_size = 0;
- 
-@@ -1127,7 +1126,6 @@ xlog_alloc_log(xfs_mount_t	*mp,
- 	 * with different amounts of memory.  See the definition of
- 	 * xlog_in_core_t in xfs_log_priv.h for details.
- 	 */
--	iclogsize = log->l_iclog_size;
- 	ASSERT(log->l_iclog_size >= 4096);
- 	for (i=0; i < log->l_iclog_bufs; i++) {
- 		*iclogp = kmem_zalloc(sizeof(xlog_in_core_t), KM_MAYFAIL);
-Index: linux-2.6.35-rc3-gcc/fs/xfs/xfs_quota.h
-===================================================================
---- linux-2.6.35-rc3-gcc.orig/fs/xfs/xfs_quota.h
-+++ linux-2.6.35-rc3-gcc/fs/xfs/xfs_quota.h
-@@ -346,7 +346,13 @@ xfs_qm_vop_dqalloc(struct xfs_inode *ip,
- #define xfs_trans_mod_dquot_byino(tp, ip, fields, delta)
- #define xfs_trans_apply_dquot_deltas(tp)
- #define xfs_trans_unreserve_and_mod_dquots(tp)
--#define xfs_trans_reserve_quota_nblks(tp, ip, nblks, ninos, flags)	(0)
-+
-+static inline int xfs_trans_reserve_quota_nblks(struct xfs_trans *t,
-+		struct xfs_inode *i, long a, long b, uint c)
-+{
-+	return 0;
-+}
-+
- #define xfs_trans_reserve_quota_bydquots(tp, mp, u, g, nb, ni, fl)	(0)
- #define xfs_qm_vop_create_dqattach(tp, ip, u, g)
- #define xfs_qm_vop_rename_dqattach(it)					(0)
-@@ -355,13 +361,13 @@ xfs_qm_vop_dqalloc(struct xfs_inode *ip,
- #define xfs_qm_dqattach(ip, fl)						(0)
- #define xfs_qm_dqattach_locked(ip, fl)					(0)
- #define xfs_qm_dqdetach(ip)
--#define xfs_qm_dqrele(d)
-+static inline void xfs_qm_dqrele(struct xfs_dquot *d) {}
- #define xfs_qm_statvfs(ip, s)
--#define xfs_qm_sync(mp, fl)						(0)
-+static inline int xfs_qm_sync(struct xfs_mount *m, int i) { return 0; }
- #define xfs_qm_newmount(mp, a, b)					(0)
- #define xfs_qm_mount_quotas(mp)
- #define xfs_qm_unmount(mp)
--#define xfs_qm_unmount_quotas(mp)					(0)
-+static inline void xfs_qm_unmount_quotas(struct xfs_mount *m) {}
- #endif /* CONFIG_XFS_QUOTA */
- 
- #define xfs_trans_unreserve_quota_nblks(tp, ip, nblks, ninos, flags) \
-Index: linux-2.6.35-rc3-gcc/fs/xfs/xfs_trans.c
-===================================================================
---- linux-2.6.35-rc3-gcc.orig/fs/xfs/xfs_trans.c
-+++ linux-2.6.35-rc3-gcc/fs/xfs/xfs_trans.c
-@@ -1119,7 +1119,11 @@ xfs_trans_unreserve_and_mod_sb(
- 	if (msbp > msb) {
- 		error = xfs_mod_incore_sb_batch(tp->t_mountp, msb,
- 			(uint)(msbp - msb), rsvd);
--		ASSERT(error == 0);
-+		/*
-+	 	 * When an error happens here it's a race that's supposed
-+		 * to be fixed. Check for this unconditionally.
-+		 */
-+		BUG_ON(error != 0);
- 	}
- }
- 
-Index: linux-2.6.35-rc3-gcc/fs/xfs/xfs_alloc.c
-===================================================================
---- linux-2.6.35-rc3-gcc.orig/fs/xfs/xfs_alloc.c
-+++ linux-2.6.35-rc3-gcc/fs/xfs/xfs_alloc.c
-@@ -688,8 +688,6 @@ xfs_alloc_ag_vextent_near(
- 	xfs_agblock_t	ltbno;		/* start bno of left side entry */
- 	xfs_agblock_t	ltbnoa;		/* aligned ... */
- 	xfs_extlen_t	ltdiff;		/* difference to left side entry */
--	/*REFERENCED*/
--	xfs_agblock_t	ltend;		/* end bno of left side entry */
- 	xfs_extlen_t	ltlen;		/* length of left side entry */
- 	xfs_extlen_t	ltlena;		/* aligned ... */
- 	xfs_agblock_t	ltnew;		/* useful start bno of left side */
-@@ -814,8 +812,7 @@ xfs_alloc_ag_vextent_near(
- 		if ((error = xfs_alloc_get_rec(cnt_cur, &ltbno, &ltlen, &i)))
- 			goto error0;
- 		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
--		ltend = ltbno + ltlen;
--		ASSERT(ltend <= be32_to_cpu(XFS_BUF_TO_AGF(args->agbp)->agf_length));
-+		ASSERT(ltbno + ltlen <= be32_to_cpu(XFS_BUF_TO_AGF(args->agbp)->agf_length));
- 		args->len = blen;
- 		if (!xfs_alloc_fix_minleft(args)) {
- 			xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
-@@ -828,7 +825,7 @@ xfs_alloc_ag_vextent_near(
- 		 */
- 		args->agbno = bnew;
- 		ASSERT(bnew >= ltbno);
--		ASSERT(bnew + blen <= ltend);
-+		ASSERT(bnew + blen <= ltbno + ltlen);
- 		/*
- 		 * Set up a cursor for the by-bno tree.
- 		 */
-@@ -1157,7 +1154,6 @@ xfs_alloc_ag_vextent_near(
- 	/*
- 	 * Fix up the length and compute the useful address.
- 	 */
--	ltend = ltbno + ltlen;
- 	args->len = XFS_EXTLEN_MIN(ltlena, args->maxlen);
- 	xfs_alloc_fix_len(args);
- 	if (!xfs_alloc_fix_minleft(args)) {
-@@ -1170,7 +1166,7 @@ xfs_alloc_ag_vextent_near(
- 	(void)xfs_alloc_compute_diff(args->agbno, rlen, args->alignment, ltbno,
- 		ltlen, &ltnew);
- 	ASSERT(ltnew >= ltbno);
--	ASSERT(ltnew + rlen <= ltend);
-+	ASSERT(ltnew + rlen <= ltbno + ltlen);
- 	ASSERT(ltnew + rlen <= be32_to_cpu(XFS_BUF_TO_AGF(args->agbp)->agf_length));
- 	args->agbno = ltnew;
- 	if ((error = xfs_alloc_fixup_trees(cnt_cur, bno_cur_lt, ltbno, ltlen,
+(*) extN, fat, hpfs, jfs, nilfs2, ntfs, ocfs2 and logfs all have
+configurable corruption event behaviour that default to remount-ro
+and can be configured to panic the machine.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
