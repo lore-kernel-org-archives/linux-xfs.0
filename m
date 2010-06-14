@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5EAk22o037435 for <xfs@oss.sgi.com>; Mon, 14 Jun 2010 05:46:02 -0500
-Received: from mx1.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 79B6F3C4700
-	for <xfs@oss.sgi.com>; Mon, 14 Jun 2010 03:48:37 -0700 (PDT)
-Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
-	with ESMTP id yCvI3KdZ8R41YWvD for <xfs@oss.sgi.com>;
-	Mon, 14 Jun 2010 03:48:37 -0700 (PDT)
-Date: Mon, 14 Jun 2010 12:48:17 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 4/8] Add test of quota accounting using fsx
-Message-ID: <20100614104817.GE3903@quack.suse.cz>
-References: <1274710459-11446-1-git-send-email-jack@suse.cz>
-	<1274710459-11446-5-git-send-email-jack@suse.cz>
-	<4C0FD43D.3040803@sandeen.net>
-	<20100610105813.GB10827@quack.suse.cz>
-	<4C1117F3.2010008@sandeen.net>
+	o5ECR5Mh040433 for <xfs@oss.sgi.com>; Mon, 14 Jun 2010 07:27:05 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D01161D5A34E
+	for <xfs@oss.sgi.com>; Mon, 14 Jun 2010 05:29:39 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	JQvCH3QY9yOwW0mo for <xfs@oss.sgi.com>;
+	Mon, 14 Jun 2010 05:29:39 -0700 (PDT)
+Date: Mon, 14 Jun 2010 22:29:12 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2] xfs: Make fiemap works with sparse file.
+Message-ID: <20100614122912.GD6590@dastard>
+References: <1276308495-14267-1-git-send-email-tao.ma@oracle.com>
+	<20100614002705.GA6590@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4C1117F3.2010008@sandeen.net>
+In-Reply-To: <20100614002705.GA6590@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,89 +30,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: hch@infradead.org, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: Tao Ma <tao.ma@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Alex Elder <aelder@sgi.com>, sandeen@sandeen.net, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu 10-06-10 11:50:59, Eric Sandeen wrote:
-> Jan Kara wrote:
-> > On Wed 09-06-10 12:49:49, Eric Sandeen wrote:
-> >> Jan Kara wrote:
-> >>> Run fsx (and also several fsx threads in parallel) and verify that
-> >>> quota accounting is correct after they finish.
-> >> Jan, I'm having trouble with this one on XFS for some reason, with our 
-> >> RHEL6 kernel and quota-3.17...
-> >>
-> >> +Disabling group quota enforcement and accounting on /dev/mapper/VolGroup00-testvol2
-> >> +Disabling user quota enforcement and accounting on /dev/mapper/VolGroup00-testvol2
-> >> +repquota: Mountpoint (or device) /mnt/testarea/scratch not found or has no quota enabled.
-> >> +repquota: Not all specified mountpoints are using quota.
-> >> +repquota: Mountpoint (or device) /mnt/testarea/scratch not found or has no quota enabled.
-> >> +repquota: Not all specified mountpoints are using quota.
-> >>
-> >> ...
-> >>
-> >> however if I remove the quotaon calls (off / on settings) in check_usage()
-> >> then it works:
-> >>
-> >> check_usage()
-> >> {
-> >>         # quotaon -f -u -g $SCRATCH_MNT 2>/dev/null
-> >>         repquota -u -g $SCRATCH_MNT  | grep -v "^root" | filter_scratch \
-> >>                 >$tmp.orig
-> >>         quotacheck -u -g $SCRATCH_MNT 2>/dev/null
-> >>         repquota -u -g $SCRATCH_MNT  | grep -v "^root" | filter_scratch \
-> >>                 >$tmp.checked
-> >>         # quotaon -u -g $SCRATCH_MNT 2>/dev/null
-> >>         diff $tmp.orig $tmp.checked
-> >> }
-> >>
-> >>
-> >> Seems like 2 issues: noisy disable messages, and repquota failing when disabled.
-> >   I've fixed noisy disable messages in quotaon (without -v flag only errors
-> > should be printed) in CVS. 
+On Mon, Jun 14, 2010 at 10:27:06AM +1000, Dave Chinner wrote:
+> On Sat, Jun 12, 2010 at 10:08:15AM +0800, Tao Ma wrote:
+> > The reason is that in xfs_getbmap we will
+> > calculate holes and set it in 'out', while out is malloced by
+> > bmv_count(fi_extent_max+1) which didn't consider holes. So in the
+> > worst case, if 'out' vector looks like
+> > [hole, extent, hole, extent, hole, ... hole, extent, hole],
+> > we will only return half of fi_extent_max extents.
 > 
-> Ok, we should probably just add a filter for these so that it'll work
-> on older versions.
-  OK, will add that.
-
-> > With repquota & disabled quotas it's a bit more
-> > complicated. 
+> Right, it's not broken, we simply return less than fi_extent_mex
+> extents when there are holes. I don't see that as a problem as
+> applications have to handle that case anyway, and....
 > 
-> Hm I'm still woefully unfamiliar with quota intricacies.
+> > So in xfs_vn_fiemap, we should consider this worst case. If the
+> > user wants fi_extent_max extents, we need a 'out' with size of
+> > 2 *fi_extent_max + 2(one more the header).
 > 
-> It seems that after quotaon -f, repquota fails on xfs but works for ext*?
-  Yes, because we disabled also accounting. But with your change to quota
-tools it shouldn't be a problem anymore. Still I've added a test so that
-we turn quotas off only for ext? and reiserfs so that the tests work with
-older quota tools as well.
+> That's rather dangerous, I think. It relies on other code to catch
+> the buffer overrun that this sets up for fragmented, non-sparse
+> files. Personally I'd much prefer to return fewer extents for sparse
+> files than to add a landmine like this into the kernel code....
 
-> Not sure if that's intended...
-> 
-> Also is there a reason to disable quota before repquota?  Is disable/enable
-> around quotacheck enough?
-  Yes, that would be enough.
+I just had a thought - if you want to avoid holes being reported to
+fiemap, then add a BMV_IF_NO_HOLES flag to xfs_getbmap() and skip
+holes in the mappin gloop when this flag is set. That will make
+fiemap fill in the full number of extents without hacking the
+extent count...
 
-> Hm on ext* I'm also getting differences from the expected output; I suspect
-> due to selinux xattrs.  I'll try to get that fixed up.
-  I'm seeing some quota miscomputations for ext4, but ext2 and ext3 work
-fine for me. I didn't have time to look into why ext4 after quotacheck
-reports different number of blocks. Maybe it's just delayed allocation,
-maybe it's a real bug.
+Cheers,
 
-> > The problem is that for ext?, reiserfs,... you have to disable
-> > quotas before running quotacheck. Also quotacheck is NOP for XFS - we'd
-> > rather need to call something to really recompute quota usage for XFS. How
-> > that can be done?
-> 
-> It's regenerated at mount time if needed.  I don't know that we have a
-> method to force this recalculation...  I guess mounting with quotas disabled,
-> unmounting, then mounting again w/ quotas on will do it.
-  OK, I'll add this to the test.
-
-									Honza
+Dave.
 -- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
