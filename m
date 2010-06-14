@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5EDZMa0042655 for <xfs@oss.sgi.com>; Mon, 14 Jun 2010 08:35:22 -0500
-Received: from rcsinet10.oracle.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0FA88FB1D9F
-	for <xfs@oss.sgi.com>; Mon, 14 Jun 2010 06:41:25 -0700 (PDT)
-Received: from rcsinet10.oracle.com (rcsinet10.oracle.com [148.87.113.121]) by
-	cuda.sgi.com with ESMTP id FmuMDG26zAHCNQx3 for
-	<xfs@oss.sgi.com>; Mon, 14 Jun 2010 06:41:25 -0700 (PDT)
-Message-ID: <4C16308E.1030305@oracle.com>
-Date: Mon, 14 Jun 2010 21:37:18 +0800
-From: Tao Ma <tao.ma@oracle.com>
+	o5EDbS26042728 for <xfs@oss.sgi.com>; Mon, 14 Jun 2010 08:37:28 -0500
+Received: from one.firstfloor.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 500D112AD3BE
+	for <xfs@oss.sgi.com>; Mon, 14 Jun 2010 06:43:30 -0700 (PDT)
+Received: from one.firstfloor.org (one.firstfloor.org [213.235.205.2]) by
+	cuda.sgi.com with ESMTP id F5ph8Kf6jgwwIyWg for
+	<xfs@oss.sgi.com>; Mon, 14 Jun 2010 06:43:30 -0700 (PDT)
+Date: Mon, 14 Jun 2010 15:39:58 +0200
+From: Andi Kleen <andi@firstfloor.org>
+Subject: Re: [PATCH] XFS: Fix gcc 4.6 set but not read and unused statement
+	warnings v2
+Message-ID: <20100614133958.GH17092@basil.fritz.box>
+References: <20100614081356.GA27499@basil.fritz.box>
+	<20100614083021.GA29354@lst.de> <4C15EF75.5080909@linux.intel.com>
+	<20100614124804.GA8547@lst.de>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2] xfs: Make fiemap works with sparse file.
-References: <1276308495-14267-1-git-send-email-tao.ma@oracle.com>
-	<20100614002705.GA6590@dastard> <20100614122912.GD6590@dastard>
-In-Reply-To: <20100614122912.GD6590@dastard>
+Content-Disposition: inline
+In-Reply-To: <20100614124804.GA8547@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,54 +27,69 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, Alex Elder <aelder@sgi.com>, sandeen@sandeen.net, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: Andi Kleen <ak@linux.intel.com>, Andi Kleen <andi@firstfloor.org>, dgc@fromorbit.com, xfs@oss.sgi.com
 
-Hi Dave,
+On Mon, Jun 14, 2010 at 02:48:04PM +0200, Christoph Hellwig wrote:
+> On Mon, Jun 14, 2010 at 10:59:33AM +0200, Andi Kleen wrote:
+> > >How can this work?  bp->data is a void pointer.
+> > 
+> > It compiled with CONFIG_XFS_DEBUG enabled. Do I need to set some other
+> > option to test this?
+> 
+> It fails for me in a normal CONFIG_XFS_DEBUG build:
+> 
+> fs/xfs/xfs_da_btree.c: In function 'xfs_da_root_join':
+> fs/xfs/xfs_da_btree.c:737: warning: dereferencing 'void *' pointer
+> fs/xfs/xfs_da_btree.c:737: error: request for member 'magic' in
+> something not a structure or union
+> fs/xfs/xfs_da_btree.c:737: warning: dereferencing 'void *' pointer
 
-Dave Chinner wrote:
-> On Mon, Jun 14, 2010 at 10:27:06AM +1000, Dave Chinner wrote:
->   
->> On Sat, Jun 12, 2010 at 10:08:15AM +0800, Tao Ma wrote:
->>     
->>> The reason is that in xfs_getbmap we will
->>> calculate holes and set it in 'out', while out is malloced by
->>> bmv_count(fi_extent_max+1) which didn't consider holes. So in the
->>> worst case, if 'out' vector looks like
->>> [hole, extent, hole, extent, hole, ... hole, extent, hole],
->>> we will only return half of fi_extent_max extents.
->>>       
->> Right, it's not broken, we simply return less than fi_extent_mex
->> extents when there are holes. I don't see that as a problem as
->> applications have to handle that case anyway, and....
->>
->>     
->>> So in xfs_vn_fiemap, we should consider this worst case. If the
->>> user wants fi_extent_max extents, we need a 'out' with size of
->>> 2 *fi_extent_max + 2(one more the header).
->>>       
->> That's rather dangerous, I think. It relies on other code to catch
->> the buffer overrun that this sets up for fragmented, non-sparse
->> files. Personally I'd much prefer to return fewer extents for sparse
->> files than to add a landmine like this into the kernel code....
->>     
->
-> I just had a thought - if you want to avoid holes being reported to
-> fiemap, then add a BMV_IF_NO_HOLES flag to xfs_getbmap() and skip
-> holes in the mappin gloop when this flag is set. That will make
-> fiemap fill in the full number of extents without hacking the
-> extent count...
->   
-yeah, that should work and I will try to generate a patch for it.
-I am not quite familiar with xfs, so please be kind to me if I make some 
-stupid mistake in the patch. ;)
 
-Regards,
-Tao
+Hmm, it really compiled here (scratching head)
+
+% grep XFS .config
+CONFIG_XFS_FS=m
+# CONFIG_XFS_QUOTA is not set
+CONFIG_XFS_POSIX_ACL=y
+# CONFIG_XFS_RT is not set
+CONFIG_XFS_DEBUG=y
+% make CC=gcc46 SUBDIRS=fs/xfs
+  LD      fs/xfs/built-in.o
+  CC [M]  fs/xfs/linux-2.6/xfs_trace.o
+  CC [M]  fs/xfs/linux-2.6/xfs_acl.o
+  CC [M]  fs/xfs/linux-2.6/xfs_stats.o
+  CC [M]  fs/xfs/linux-2.6/xfs_sysctl.o
+  CC [M]  fs/xfs/linux-2.6/xfs_ioctl32.o
+  CC [M]  fs/xfs/xfs_alloc.o
+  CC [M]  fs/xfs/xfs_alloc_btree.o
+  CC [M]  fs/xfs/xfs_attr.o
+  CC [M]  fs/xfs/xfs_attr_leaf.o
+  CC [M]  fs/xfs/xfs_bit.o
+  CC [M]  fs/xfs/xfs_bmap.o
+  CC [M]  fs/xfs/xfs_bmap_btree.o
+  CC [M]  fs/xfs/xfs_btree.o
+  CC [M]  fs/xfs/xfs_buf_item.o
+  CC [M]  fs/xfs/xfs_da_btree.o   <---------------------------------
+  CC [M]  fs/xfs/xfs_dir2.o
+  CC [M]  fs/xfs/xfs_dir2_block.o
+fs/xfs/xfs_dir2_block.c: In function 'xfs_dir2_sf_to_block':
+fs/xfs/xfs_dir2_block.c:1153:26: warning: array subscript is above array bounds [-Warray-
+bounds]
+...
+
+
+Do I need to set some other option?
+
+-Andi
+
+
+-- 
+ak@linux.intel.com -- Speaking for myself only.
 
 _______________________________________________
 xfs mailing list
