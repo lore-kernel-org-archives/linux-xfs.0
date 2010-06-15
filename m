@@ -1,28 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5EMMcmr059081 for <xfs@oss.sgi.com>; Mon, 14 Jun 2010 17:22:39 -0500
+	o5F0qBlW064050 for <xfs@oss.sgi.com>; Mon, 14 Jun 2010 19:52:11 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EBE0B12ADAA1
-	for <xfs@oss.sgi.com>; Mon, 14 Jun 2010 15:28:41 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	1iOBJBqfsx0CqorH for <xfs@oss.sgi.com>;
-	Mon, 14 Jun 2010 15:28:41 -0700 (PDT)
-Date: Tue, 15 Jun 2010 08:24:58 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9C1693C7872
+	for <xfs@oss.sgi.com>; Mon, 14 Jun 2010 17:54:46 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	ASohuIhutP4RmIlx for <xfs@oss.sgi.com>;
+	Mon, 14 Jun 2010 17:54:46 -0700 (PDT)
+Date: Tue, 15 Jun 2010 10:54:42 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] [16/23] XFS: Fix gcc 4.6 set but not read and unused
-	statement warnings
-Message-ID: <20100614222458.GF6590@dastard>
-References: <20100610110.764742110@firstfloor.org>
-	<20100610111052.3DDC5B1A2B@basil.firstfloor.org>
-	<20100614042700.GC6590@dastard>
-	<20100614074309.GA17092@basil.fritz.box>
-	<20100614133755.GE6590@dastard>
-	<20100614143720.GI17092@basil.fritz.box>
+Subject: Re: [PATCH] XFS: Fix gcc 4.6 set but not read and unused statement
+	warnings v2
+Message-ID: <20100615005442.GL6590@dastard>
+References: <20100614081356.GA27499@basil.fritz.box>
+	<20100614083021.GA29354@lst.de> <4C15EF75.5080909@linux.intel.com>
+	<20100614124804.GA8547@lst.de>
+	<20100614133958.GH17092@basil.fritz.box>
+	<20100614163122.GB369@basil.fritz.box>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100614143720.GI17092@basil.fritz.box>
+In-Reply-To: <20100614163122.GB369@basil.fritz.box>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,51 +35,42 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Andi Kleen <andi@firstfloor.org>
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+Cc: Andi Kleen <ak@linux.intel.com>, Christoph Hellwig <hch@lst.de>, dgc@fromorbit.com, xfs@oss.sgi.com
 
-On Mon, Jun 14, 2010 at 04:37:20PM +0200, Andi Kleen wrote:
-> > > > function head comment during development.  Anyway, if we do get an
-> > > > error here, we cannot handle it anyway - it's too late to do
-> > > > anything short of a complete shutdown as we've already written the
-> > > > transaction to the log.
+On Mon, Jun 14, 2010 at 06:31:22PM +0200, Andi Kleen wrote:
+> On Mon, Jun 14, 2010 at 03:39:58PM +0200, Andi Kleen wrote:
+> > On Mon, Jun 14, 2010 at 02:48:04PM +0200, Christoph Hellwig wrote:
+> > > On Mon, Jun 14, 2010 at 10:59:33AM +0200, Andi Kleen wrote:
+> > > > >How can this work?  bp->data is a void pointer.
+> > > > 
+> > > > It compiled with CONFIG_XFS_DEBUG enabled. Do I need to set some other
+> > > > option to test this?
 > > > 
-> > > Well I guess it should be unconditional BUG_ON then.
+> > > It fails for me in a normal CONFIG_XFS_DEBUG build:
+> > > 
+> > > fs/xfs/xfs_da_btree.c: In function 'xfs_da_root_join':
+> > > fs/xfs/xfs_da_btree.c:737: warning: dereferencing 'void *' pointer
+> > > fs/xfs/xfs_da_btree.c:737: error: request for member 'magic' in
+> > > something not a structure or union
+> > > fs/xfs/xfs_da_btree.c:737: warning: dereferencing 'void *' pointer
 > > 
-> > Don't be silly. A filesystem shutdown is all that is necessary,
+> > 
+> > Hmm, it really compiled here (scratching head)
 > 
-> Without BUG_ON it will not end up in kerneloops.org and you will
-> never know about it. 
+> Never mind, it seems SUBDIRS doesn't set the DEBUG flag correctly. 
+> 
+> Anyways I just dropped those hunks and you'll have to live with 
+> the warnings if you don't want QASSERT.
 
-We find out about corrupted filesystems all the time from users
-sending mail to the list. Even if we did panic by default on
-corruption events, kerneloops.org is *useless* for reporting them
-because finding out about a corruption is only the very first step
-of what is usually a long and involved process that requires user
-interaction to gather information necessary to find the cause of the
-corruption.
+I'm still not happy with it.
 
-Besides, if we _really_ want the machine to panic on corruption,
-then we configure the machine specifically for it via setting the
-relevant corruption type bit in /proc/sys/fs/xfs/panic_mask. This is
-generally only used when a developer asks a user to set it to get
-kernel crash dumps triggered when a corruption event occurs so we
-can do remote, offline analysis of the failure.
-
-> That's standard Linux kernel development
-> practice.  Maybe XFS should catch up on that.
-
-I find this really amusing because linux filesystems have, over the
-last few years, implemented a simpler version of XFS's way of
-dealing with corruption events(*). Perhaps you should catch up
-with the state of the art before throwing rocks, Andi....
+We'll commit a modified version of one of your patches into the XFS
+tree as you seem unable to accept that changes might be necessary to
+get your code to pass review.
 
 Cheers,
 
 Dave.
-
-(*) extN, fat, hpfs, jfs, nilfs2, ntfs, ocfs2 and logfs all have
-configurable corruption event behaviour that default to remount-ro
-and can be configured to panic the machine.
 -- 
 Dave Chinner
 david@fromorbit.com
