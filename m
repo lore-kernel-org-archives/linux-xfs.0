@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5F2HWjZ066688 for <xfs@oss.sgi.com>; Mon, 14 Jun 2010 21:17:32 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AFE883C7A22
-	for <xfs@oss.sgi.com>; Mon, 14 Jun 2010 19:20:07 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	ESQ9ye9B5L5evERr for <xfs@oss.sgi.com>;
-	Mon, 14 Jun 2010 19:20:07 -0700 (PDT)
-Date: Tue, 15 Jun 2010 12:19:44 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: new truncate sequence
-Message-ID: <20100615021944.GQ6590@dastard>
-References: <20100614091731.GA22088@infradead.org>
+	o5F6JVBA075725 for <xfs@oss.sgi.com>; Tue, 15 Jun 2010 01:19:34 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0F432AE9730
+	for <xfs@oss.sgi.com>; Mon, 14 Jun 2010 23:25:39 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id NC3MDTQanp3HhOlx for
+	<xfs@oss.sgi.com>; Mon, 14 Jun 2010 23:25:39 -0700 (PDT)
+Date: Tue, 15 Jun 2010 02:22:04 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/3] xfs: simplify xfs_vm_releasepage
+Message-ID: <20100615062204.GA6974@infradead.org>
+References: <20100611161312.446670249@bombadil.infradead.org>
+	<20100611161511.791495868@bombadil.infradead.org>
+	<20100615013737.GN6590@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100614091731.GA22088@infradead.org>
+In-Reply-To: <20100615013737.GN6590@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,38 +30,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: npiggin@suse.de, viro@zeniv.linux.org.uk, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Mon, Jun 14, 2010 at 05:17:31AM -0400, Christoph Hellwig wrote:
-> Convert XFS to the new truncate sequence.  We still can have errors after
-> updating the file size in xfs_setattr, but these are real I/O errors and lead
-> to a transaction abort and filesystem shutdown, so they are not an issue.
+On Tue, Jun 15, 2010 at 11:37:37AM +1000, Dave Chinner wrote:
+> > +	/*
+> > +	 * VM calculation for nr_to_write seems off.  Bump it way
+> > +	 * up, this gets simple streaming writes zippy again.
+> > +	 * To be reviewed again after Jens' writeback changes.
+> > +	 */
+> > +	wbc->nr_to_write *= 4;
+> > +
 > 
-> Errors from ->write_begin and write_end can now be handled correctly because
-> we can actually get rid of the delalloc extents while previous the buffer
-> state was stipped in block_invalidatepage.
-> 
-> There is still no error handling for ->direct_IO, because doing so will need
-> some major restructuring given that we only have the iolock shared and do not
-> hold i_mutex at all.  Fortunately leaving the normally allocated blocks behind
-> there is not a major issue and this will get cleaned up by xfs_free_eofblock
-> later.
-> 
-> Note: the patch is against Al's vfs.git tree as that contains the nessecary
-> preparations.  I'd prefer to get it applied there so that we can get some
-> testing in linux-next.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> That's gone in mainline as of as of .35-rc3. We need to get the
+> xfs-dev tree updated.
 
-It looks sane, but I haven't done any testing on it.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+It's still in the XFS tree.  Either we need to rebase that one, or sort
+it out during a merge.
 
 _______________________________________________
 xfs mailing list
