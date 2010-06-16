@@ -1,24 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5G7VIDt120861 for <xfs@oss.sgi.com>; Wed, 16 Jun 2010 02:31:18 -0500
-Received: from mga02.intel.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3A3C112AF83B
-	for <xfs@oss.sgi.com>; Wed, 16 Jun 2010 00:37:32 -0700 (PDT)
-Received: from mga02.intel.com (mga02.intel.com [134.134.136.20]) by
-	cuda.sgi.com with ESMTP id kxGuTqxb0jU26UpK for
-	<xfs@oss.sgi.com>; Wed, 16 Jun 2010 00:37:32 -0700 (PDT)
-Message-ID: <4C187E56.70601@linux.intel.com>
-Date: Wed, 16 Jun 2010 09:33:42 +0200
-From: Andi Kleen <ak@linux.intel.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] XFS: Fix gcc 4.6 set but not read and unused statement
-	warnings v2
-References: <20100614081356.GA27499@basil.fritz.box>	<20100614083021.GA29354@lst.de>
-	<4C15EF75.5080909@linux.intel.com>	<20100614124804.GA8547@lst.de>	<20100614133958.GH17092@basil.fritz.box>
-	<20100614163122.GB369@basil.fritz.box>
-	<4C183B63.5090306@sandeen.net>
-In-Reply-To: <4C183B63.5090306@sandeen.net>
+	o5G9AZTZ123670 for <xfs@oss.sgi.com>; Wed, 16 Jun 2010 04:10:35 -0500
+Received: from bork.lsof.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 737C21598D87
+	for <xfs@oss.sgi.com>; Wed, 16 Jun 2010 02:16:48 -0700 (PDT)
+Received: from bork.lsof.org (bork.lsof.org [87.253.148.42]) by cuda.sgi.com
+	with ESMTP id K6Yk8TxonMSjDVE2 for <xfs@oss.sgi.com>;
+	Wed, 16 Jun 2010 02:16:48 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+	by bork.lsof.org (Postfix) with ESMTP id 46571BA3F
+	for <xfs@oss.sgi.com>; Wed, 16 Jun 2010 11:13:09 +0200 (CEST)
+Received: from bork.lsof.org ([127.0.0.1])
+	by localhost (bork.lsof.org [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id BlraG0UxLN7H for <xfs@oss.sgi.com>;
+	Wed, 16 Jun 2010 11:13:07 +0200 (CEST)
+Received: from bork.lsof.org (localhost [127.0.0.1])
+	by bork.lsof.org (Postfix) with ESMTP id 32833B98D
+	for <xfs@oss.sgi.com>; Wed, 16 Jun 2010 11:13:07 +0200 (CEST)
+References: <20100615132221.GA17385@infradead.org>
+Message-ID: <cone.1276679587.153934.32947.1001@bork.lsof.org>
+From: Roel van Meer <rolek@bokxing.nl>
+Subject: Re: XFS status update for May 2010
+Date: Wed, 16 Jun 2010 11:13:07 +0200
+Mime-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,35 +37,28 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Andi Kleen <andi@firstfloor.org>, Christoph Hellwig <hch@lst.de>, dgc@fromorbit.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
+Christoph Hellwig writes:
 
-> really?
->
-> $ make SUBDIRS=fs/xfs
->    CC [M]  fs/xfs/linux-2.6/xfs_super.o
-> fs/xfs/linux-2.6/xfs_super.c:73:2: error: #error DEBUG
-> make[1]: *** [fs/xfs/linux-2.6/xfs_super.o] Error 1
->
-> $ grep -A3 XFS_DEBUG fs/xfs/linux-2.6/xfs_super.c
-> #ifdef CONFIG_XFS_DEBUG
-> #error DEBUG
-> #endif
->
-> (above just for testing)
->
-> Offtopic I guess, but it sure seems to set it for me.
+> Meanwhile active development aimed at 2.6.35 merge progressed.  The
+> major feature for this window is the merge of the delayed logging code,
+> which adds a new logging mode that dramatically reduces the bandwidth
+> required for log I/O.  See the documentation [1] for details.  Testers
+> for this new code are welcome.
 
-You did a full build with XFS_DEBUG before without SUBDIRS, right?
+As of today I'm running 2.6.35-rc3 with XFS and delayed logging on a 4GB
+software raid0 we use to do nightly builds of about 150 software packages 
+(kernel, samba, etc) on Slackware 10.1.
 
-Kbuild puts the options into special .cmd files and I think
-those only get rebuild on a full build, not on a SUBDIRS
-build. So it never picked up the changed option for me.
+If there's anything specific I can do, please let me know. I have some more 
+hardware around to test with.
 
-Anyways that's the current theory, haven't retested that.
+By the way: thanks for these monthly status updates: they're really useful!
 
--Andi
+Regards,
+
+roel
 
 _______________________________________________
 xfs mailing list
