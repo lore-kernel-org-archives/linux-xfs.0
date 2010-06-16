@@ -1,30 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5G9AZTZ123670 for <xfs@oss.sgi.com>; Wed, 16 Jun 2010 04:10:35 -0500
-Received: from bork.lsof.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 737C21598D87
-	for <xfs@oss.sgi.com>; Wed, 16 Jun 2010 02:16:48 -0700 (PDT)
-Received: from bork.lsof.org (bork.lsof.org [87.253.148.42]) by cuda.sgi.com
-	with ESMTP id K6Yk8TxonMSjDVE2 for <xfs@oss.sgi.com>;
-	Wed, 16 Jun 2010 02:16:48 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-	by bork.lsof.org (Postfix) with ESMTP id 46571BA3F
-	for <xfs@oss.sgi.com>; Wed, 16 Jun 2010 11:13:09 +0200 (CEST)
-Received: from bork.lsof.org ([127.0.0.1])
-	by localhost (bork.lsof.org [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id BlraG0UxLN7H for <xfs@oss.sgi.com>;
-	Wed, 16 Jun 2010 11:13:07 +0200 (CEST)
-Received: from bork.lsof.org (localhost [127.0.0.1])
-	by bork.lsof.org (Postfix) with ESMTP id 32833B98D
-	for <xfs@oss.sgi.com>; Wed, 16 Jun 2010 11:13:07 +0200 (CEST)
-References: <20100615132221.GA17385@infradead.org>
-Message-ID: <cone.1276679587.153934.32947.1001@bork.lsof.org>
-From: Roel van Meer <rolek@bokxing.nl>
-Subject: Re: XFS status update for May 2010
-Date: Wed, 16 Jun 2010 11:13:07 +0200
-Mime-Version: 1.0
+	o5G9camk124367 for <xfs@oss.sgi.com>; Wed, 16 Jun 2010 04:38:38 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 14C4CB00C19
+	for <xfs@oss.sgi.com>; Wed, 16 Jun 2010 02:44:51 -0700 (PDT)
+Received: from bombadil.infradead.org ([18.85.46.34]) by cuda.sgi.com with
+	ESMTP id Kyhkhc4PEU49rqJ8 for <xfs@oss.sgi.com>;
+	Wed, 16 Jun 2010 02:44:51 -0700 (PDT)
+Date: Wed, 16 Jun 2010 05:41:12 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: XFS stack corruption: BUG: unable to handle kernel paging request
+Message-ID: <20100616094112.GA16216@infradead.org>
+References: <201006160810.33045@zmi.at>
+MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <201006160810.33045@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,32 +24,24 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Michael Monnerie <michael.monnerie@is.it-management.at>
+Cc: xfs@oss.sgi.com
 
-Christoph Hellwig writes:
+On Wed, Jun 16, 2010 at 08:10:23AM +0200, Michael Monnerie wrote:
+> This happened while I did an "rsync" to that server, and it was searching the files to sync.
+> Messages grabbed from the console:
 
-> Meanwhile active development aimed at 2.6.35 merge progressed.  The
-> major feature for this window is the merge of the delayed logging code,
-> which adds a new logging mode that dramatically reduces the bandwidth
-> required for log I/O.  See the documentation [1] for details.  Testers
-> for this new code are welcome.
+This might as well be another stack overflow.  You don't happen to have
+more lines of the stack trace?  I fear this might be another case of
+direct reclaim hitting you.
 
-As of today I'm running 2.6.35-rc3 with XFS and delayed logging on a 4GB
-software raid0 we use to do nightly builds of about 150 software packages 
-(kernel, samba, etc) on Slackware 10.1.
-
-If there's anything specific I can do, please let me know. I have some more 
-hardware around to test with.
-
-By the way: thanks for these monthly status updates: they're really useful!
-
-Regards,
-
-roel
+Try backporting commit 070ecdca54dde9577d2697088e74e45568f48efb
+"xfs: skip writeback from reclaim context", that should get rid of
+places calling into ->writepage with already deep stack usage.
 
 _______________________________________________
 xfs mailing list
