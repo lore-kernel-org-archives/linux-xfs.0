@@ -1,29 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5H2LU2Y152915 for <xfs@oss.sgi.com>; Wed, 16 Jun 2010 21:21:31 -0500
+	o5H2i9IB153579 for <xfs@oss.sgi.com>; Wed, 16 Jun 2010 21:44:09 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B7ACC3D60AE
-	for <xfs@oss.sgi.com>; Wed, 16 Jun 2010 19:24:06 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	FAHMhXggiBz9Fca1 for <xfs@oss.sgi.com>;
-	Wed, 16 Jun 2010 19:24:06 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 320A914E67E2
+	for <xfs@oss.sgi.com>; Wed, 16 Jun 2010 19:46:44 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	7DLioufLVU9xGF4Z for <xfs@oss.sgi.com>;
+	Wed, 16 Jun 2010 19:46:44 -0700 (PDT)
 Received: from dastard (unverified [121.44.96.63])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	28032813-1927428
-	for <xfs@oss.sgi.com>; Thu, 17 Jun 2010 11:54:04 +0930 (CST)
+	28078465-1927428
+	for <xfs@oss.sgi.com>; Thu, 17 Jun 2010 12:16:43 +0930 (CST)
 Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1OP4lu-0006NO-Qt
-	for xfs@oss.sgi.com; Thu, 17 Jun 2010 12:24:02 +1000
+	(envelope-from <dave@fromorbit.com>) id 1OP57p-0006OH-Vy
+	for xfs@oss.sgi.com; Thu, 17 Jun 2010 12:46:42 +1000
 Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1OP4ls-0002OV-SJ
-	for xfs@oss.sgi.com; Thu, 17 Jun 2010 12:24:00 +1000
+	(envelope-from <dave@disturbed.disaster>) id 1OP57o-0002ZF-7k
+	for xfs@oss.sgi.com; Thu, 17 Jun 2010 12:46:40 +1000
 From: Dave Chinner <david@fromorbit.com>
 Subject: [PATCH] xfsqa: test open_by_handle() on unlinked and freed inode
-	clusters
-Date: Thu, 17 Jun 2010 12:24:00 +1000
-Message-Id: <1276741440-9178-1-git-send-email-david@fromorbit.com>
+	clusters V2
+Date: Thu, 17 Jun 2010 12:46:40 +1000
+Message-Id: <1276742800-9845-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -69,6 +69,12 @@ This is a bug that has been present ever since the inode chunk
 deletion code was implemented. This test exercises the problem and
 documents the hoops you have to jump through to reproduce it.
 
+Version 2:
+
+o suppress mkfs output that was unnoticed due to failure noise
+o fix exit value so test reports success correctly (e.g. when run
+  with MOUNT_OPTIONS="-o ikeep")
+
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
  238          |   57 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -81,7 +87,7 @@ Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
 diff --git a/238 b/238
 new file mode 100755
-index 0000000..47214b7
+index 0000000..67146b6
 --- /dev/null
 +++ b/238
 @@ -0,0 +1,57 @@
@@ -116,7 +122,7 @@ index 0000000..47214b7
 +here=`pwd`
 +tmp=/tmp/$$
 +status=1	# failure is the default!
-+trap "_cleanup; exit $status" 0 1 2 3 15
++trap "_cleanup; exit \$status" 0 1 2 3 15
 +
 +_cleanup()
 +{
@@ -137,8 +143,8 @@ index 0000000..47214b7
 +
 +echo "Silence is golden"
 +
-+_scratch_mkfs
-+_scratch_mount
++_scratch_mkfs > /dev/null 2>&1
++_scratch_mount > /dev/null 2>&1
 +src/stale_handle $SCRATCH_MNT
 +status=$?
 +exit
