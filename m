@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5HMn0gg195049 for <xfs@oss.sgi.com>; Thu, 17 Jun 2010 17:49:01 -0500
+	o5HNmdOk197530 for <xfs@oss.sgi.com>; Thu, 17 Jun 2010 18:48:40 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9905714F7378
-	for <xfs@oss.sgi.com>; Thu, 17 Jun 2010 15:51:37 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	zrBUGguGRmYcTuhe for <xfs@oss.sgi.com>;
-	Thu, 17 Jun 2010 15:51:37 -0700 (PDT)
-Date: Fri, 18 Jun 2010 08:51:30 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 004CF14F7DCE
+	for <xfs@oss.sgi.com>; Thu, 17 Jun 2010 16:51:16 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	cSIVaneNMIdCSlTW for <xfs@oss.sgi.com>;
+	Thu, 17 Jun 2010 16:51:16 -0700 (PDT)
+Date: Fri, 18 Jun 2010 09:51:13 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfsqa: test open_by_handle() on unlinked and freed
-	inode clusters V2
-Message-ID: <20100617225130.GX6590@dastard>
-References: <1276756659-12338-1-git-send-email-david@fromorbit.com>
-	<201006171007.26040@zmi.at>
+Subject: Re: [PATCH] xfs: avoid synchronous transaction in xfs_fs_write_inode
+Message-ID: <20100617235113.GY6590@dastard>
+References: <20100608195905.GA577@infradead.org>
+	<20100609072911.GI7869@dastard>
+	<20100615112051.GA25064@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201006171007.26040@zmi.at>
+In-Reply-To: <20100615112051.GA25064@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,29 +31,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: aelder@sgi.com, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Thu, Jun 17, 2010 at 10:07:25AM +0200, Michael Monnerie wrote:
-> On Donnerstag, 17. Juni 2010 Dave Chinner wrote:
-> > Hence if we get a cold cache lookup from a stale handle that
-> > references such an inode, we can read the inode off disk even though
-> > it has been deleted because we don't check if the inode is allocated
-> > or not.  If the inode chunk has not been overwritten, then the inode
-> > read will succeed and the handle-to-dentry conversion will not error
-> > out like it is supposed to. The result is that stale NFS filehandles
-> > and open_by_handle() will succeed incorrectly on unlinked files for
-> > cold cache lookups.
->  
-> Wouldn't that qualify as a security problem and be handled as such? 
-> There should be back ports for "long term support" kernels of security-
-> sensitive people, and so on.
+On Tue, Jun 15, 2010 at 07:20:51AM -0400, Christoph Hellwig wrote:
+> On Wed, Jun 09, 2010 at 05:29:11PM +1000, Dave Chinner wrote:
+> > All great - I attempted this myself - but it breaks bulkstat. See
+> > xfstest 183:
+> 
+> I can't reproduce the failure.  And then I don't think we should
+> prioritize bulkstate over metadata performance.  The only major users
+> of bulkstat on XFS in the mainline kernel is xfsdump, and metadata
+> performance during normal loads is a lot more important.  And the
+> difference when using LVM/MD will be even larger with this as barriers
+> are a lot more expensive there.
+> 
+> What do you think about adding something like the patch below which
+> always makes bulkstat always use the iget version which doesn't show
+> this sort of problems.
+> 
+> ---
+> 
+> From: Christoph Hellwig <hch@lst.de>
+> Subject: xfs: always use iget in bulkstat
+> 
+> The non-coherent bulkstat versionsthat look directly at the inode
+> buffers causes various problems with performance optimizations that
+> make increased use of just logging inodes.  This patch makes bulkstat
+> always use iget, which should be fast enough for normal use with the
+> radix-tree based inode cache introduced a while ago.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Probably. Alex, are you able to handle this side of things?
+An important note: I think this patch is necessary to avoid bulkstat
+returning unlinked inodes when cache thrashing is occurring. The
+current non-coherent lookup will incorrectly return unlinked inodes
+if the inode cluster is marked stale, reclaimed and turfed from
+memory due to an unlink and memory pressure between the ialloc btree
+lookup and the cluster buffer read.
 
-Note that local open_by_handle() use is not really an issue - it
-requires root and if you have root you can run xfs_db or dd on the
-block device to get the same information.
+The only way to avoid this is to ensure that the ialloc btree lookup
+and the formatting of the inode into the user buffer is atomic, which
+means we have to do a coherent lookup that returns a locked into....
 
 Cheers,
 
