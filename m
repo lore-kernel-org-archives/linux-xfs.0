@@ -1,30 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5HFCmei181517 for <xfs@oss.sgi.com>; Thu, 17 Jun 2010 10:12:49 -0500
-Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EAFE51E1062B
-	for <xfs@oss.sgi.com>; Thu, 17 Jun 2010 08:15:25 -0700 (PDT)
-Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id XkXMfbFA1G5d1pau for
-	<xfs@oss.sgi.com>; Thu, 17 Jun 2010 08:15:25 -0700 (PDT)
-Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv14.zmi.at (Postfix) with ESMTPSA id 9DB9017A
-	for <xfs@oss.sgi.com>; Thu, 17 Jun 2010 17:15:23 +0200 (CEST)
-Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id 650BD83C829
-	for <xfs@oss.sgi.com>; Thu, 17 Jun 2010 17:15:10 +0200 (CEST)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: Help with XFS
-Date: Thu, 17 Jun 2010 17:15:22 +0200
-References: <OF4967B99D.609CC213-ONC1257745.0048E646-C1257745.004919A3@bergenofs.no>
-In-Reply-To: <OF4967B99D.609CC213-ONC1257745.0048E646-C1257745.004919A3@bergenofs.no>
+	o5HMn0gg195049 for <xfs@oss.sgi.com>; Thu, 17 Jun 2010 17:49:01 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9905714F7378
+	for <xfs@oss.sgi.com>; Thu, 17 Jun 2010 15:51:37 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
+	[150.101.137.104]) by cuda.sgi.com with ESMTP id
+	zrBUGguGRmYcTuhe for <xfs@oss.sgi.com>;
+	Thu, 17 Jun 2010 15:51:37 -0700 (PDT)
+Date: Fri, 18 Jun 2010 08:51:30 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfsqa: test open_by_handle() on unlinked and freed
+	inode clusters V2
+Message-ID: <20100617225130.GX6590@dastard>
+References: <1276756659-12338-1-git-send-email-david@fromorbit.com>
+	<201006171007.26040@zmi.at>
 MIME-Version: 1.0
-Message-Id: <201006171715.22933@zmi.at>
+Content-Disposition: inline
+In-Reply-To: <201006171007.26040@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,71 +27,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3868615489052227906=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Michael Monnerie <michael.monnerie@is.it-management.at>
+Cc: aelder@sgi.com, xfs@oss.sgi.com
 
---===============3868615489052227906==
-Content-Type: multipart/signed;
-  boundary="nextPart10146408.0gHbBgKp89";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+On Thu, Jun 17, 2010 at 10:07:25AM +0200, Michael Monnerie wrote:
+> On Donnerstag, 17. Juni 2010 Dave Chinner wrote:
+> > Hence if we get a cold cache lookup from a stale handle that
+> > references such an inode, we can read the inode off disk even though
+> > it has been deleted because we don't check if the inode is allocated
+> > or not.  If the inode chunk has not been overwritten, then the inode
+> > read will succeed and the handle-to-dentry conversion will not error
+> > out like it is supposed to. The result is that stale NFS filehandles
+> > and open_by_handle() will succeed incorrectly on unlinked files for
+> > cold cache lookups.
+>  
+> Wouldn't that qualify as a security problem and be handled as such? 
+> There should be back ports for "long term support" kernels of security-
+> sensitive people, and so on.
 
---nextPart10146408.0gHbBgKp89
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+Probably. Alex, are you able to handle this side of things?
 
-On Donnerstag, 17. Juni 2010 Thomas F=C3=B8rde wrote:
-> when i try to mount the XFS filesystem of 10TB, my 7.8 TB of data is
->  now  gone.
-=20
-Do you have any logs in /var/log/warn about errors before that crash?
-How long had that machine been up?
-What kernel version?
-How many files/dirs have there been?
+Note that local open_by_handle() use is not really an issue - it
+requires root and if you have root you can run xfs_db or dd on the
+block device to get the same information.
 
-I'm not a dev, but I guess running xfs_metadump, zipping the outcome and=20
-putting it on a website would be a good preparation.
+Cheers,
 
-=2D-=20
-mit freundlichen Gr=C3=BCssen,
-Michael Monnerie, Ing. BSc
-
-it-management Internet Services
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: 0660 / 415 65 31
-
-// Wir haben im Moment zwei H=C3=A4user zu verkaufen:
-// http://zmi.at/langegg/
-// http://zmi.at/haus2009/
-
---nextPart10146408.0gHbBgKp89
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.12 (GNU/Linux)
-
-iEYEABECAAYFAkwaPAoACgkQzhSR9xwSCbTZNwCeN2NaJIPsZ0OTfb57SPhCJHeL
-ZI4AoJwBkxWWQMG4RQ5PXYVlKJG+49bF
-=h4JM
------END PGP SIGNATURE-----
-
---nextPart10146408.0gHbBgKp89--
-
-
---===============3868615489052227906==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3868615489052227906==--
