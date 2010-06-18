@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5I7V0Om213419 for <xfs@oss.sgi.com>; Fri, 18 Jun 2010 02:31:00 -0500
+	o5I7UoIX213375 for <xfs@oss.sgi.com>; Fri, 18 Jun 2010 02:30:50 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EE9373E3E4B
-	for <xfs@oss.sgi.com>; Fri, 18 Jun 2010 00:33:36 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	WS18C9hmba8uZ9pb for <xfs@oss.sgi.com>;
-	Fri, 18 Jun 2010 00:33:36 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 035591B766DF
+	for <xfs@oss.sgi.com>; Fri, 18 Jun 2010 00:33:26 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	D9RHGU4mFzMu44dB for <xfs@oss.sgi.com>;
+	Fri, 18 Jun 2010 00:33:26 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/4] xfs: always use iget in bulkstat
-Date: Fri, 18 Jun 2010 17:32:51 +1000
-Message-Id: <1276846374-23916-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/4] xfs: rename XFS_IGET_BULKSTAT to XFS_IGET_UNTRUSTED
+Date: Fri, 18 Jun 2010 17:32:53 +1000
+Message-Id: <1276846374-23916-4-git-send-email-david@fromorbit.com>
 In-Reply-To: <1276846374-23916-1-git-send-email-david@fromorbit.com>
 References: <1276846374-23916-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,593 +31,114 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: security@kernel.org
 
-From: Christoph Hellwig <hch@lst.de>
+From: Dave Chinner <dchinner@redhat.com>
 
-The non-coherent bulkstat versionsthat look directly at the inode
-buffers causes various problems with performance optimizations that
-make increased use of just logging inodes.  This patch makes bulkstat
-always use iget, which should be fast enough for normal use with the
-radix-tree based inode cache introduced a while ago.
+Inode numbers may come from somewhere external to the filesystem
+(e.g. file handles, bulkstat information) and so are inherently
+untrusted. Rename the flag we use for these lookups to make it
+obvious we are doing a lookup of an untrusted inode number and need
+to verify it completely before trying to read it from disk.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/linux-2.6/xfs_ioctl.c   |    7 +-
- fs/xfs/linux-2.6/xfs_ioctl32.c |   12 +-
- fs/xfs/quota/xfs_qm.c          |   11 +-
- fs/xfs/quota/xfs_qm_syscalls.c |   16 +--
- fs/xfs/xfs_itable.c            |  281 ++++++----------------------------------
- fs/xfs/xfs_itable.h            |   14 --
- 6 files changed, 59 insertions(+), 282 deletions(-)
+ fs/xfs/linux-2.6/xfs_export.c |    9 ++++-----
+ fs/xfs/xfs_ialloc.c           |    6 +++---
+ fs/xfs/xfs_inode.c            |    2 +-
+ fs/xfs/xfs_inode.h            |    2 +-
+ fs/xfs/xfs_itable.c           |    2 +-
+ 5 files changed, 10 insertions(+), 11 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_ioctl.c b/fs/xfs/linux-2.6/xfs_ioctl.c
-index faafd94..a12ddda 100644
---- a/fs/xfs/linux-2.6/xfs_ioctl.c
-+++ b/fs/xfs/linux-2.6/xfs_ioctl.c
-@@ -670,10 +670,9 @@ xfs_ioc_bulkstat(
- 		error = xfs_bulkstat_single(mp, &inlast,
- 						bulkreq.ubuffer, &done);
- 	else	/* XFS_IOC_FSBULKSTAT */
--		error = xfs_bulkstat(mp, &inlast, &count,
--			(bulkstat_one_pf)xfs_bulkstat_one, NULL,
--			sizeof(xfs_bstat_t), bulkreq.ubuffer,
--			BULKSTAT_FG_QUICK, &done);
-+		error = xfs_bulkstat(mp, &inlast, &count, xfs_bulkstat_one,
-+				     sizeof(xfs_bstat_t), bulkreq.ubuffer,
-+				     &done);
- 
- 	if (error)
- 		return -error;
-diff --git a/fs/xfs/linux-2.6/xfs_ioctl32.c b/fs/xfs/linux-2.6/xfs_ioctl32.c
-index 40118b6..48c1aba 100644
---- a/fs/xfs/linux-2.6/xfs_ioctl32.c
-+++ b/fs/xfs/linux-2.6/xfs_ioctl32.c
-@@ -233,15 +233,13 @@ xfs_bulkstat_one_compat(
- 	xfs_ino_t	ino,		/* inode number to get data for */
- 	void		__user *buffer,	/* buffer to place output in */
- 	int		ubsize,		/* size of buffer */
--	void		*private_data,	/* my private data */
- 	xfs_daddr_t	bno,		/* starting bno of inode cluster */
- 	int		*ubused,	/* bytes used by me */
--	void		*dibuff,	/* on-disk inode buffer */
- 	int		*stat)		/* BULKSTAT_RV_... */
- {
- 	return xfs_bulkstat_one_int(mp, ino, buffer, ubsize,
- 				    xfs_bulkstat_one_fmt_compat, bno,
--				    ubused, dibuff, stat);
-+				    ubused, stat);
- }
- 
- /* copied from xfs_ioctl.c */
-@@ -294,13 +292,11 @@ xfs_compat_ioc_bulkstat(
- 		int res;
- 
- 		error = xfs_bulkstat_one_compat(mp, inlast, bulkreq.ubuffer,
--				sizeof(compat_xfs_bstat_t),
--				NULL, 0, NULL, NULL, &res);
-+				sizeof(compat_xfs_bstat_t), 0, NULL, &res);
- 	} else if (cmd == XFS_IOC_FSBULKSTAT_32) {
- 		error = xfs_bulkstat(mp, &inlast, &count,
--			xfs_bulkstat_one_compat, NULL,
--			sizeof(compat_xfs_bstat_t), bulkreq.ubuffer,
--			BULKSTAT_FG_QUICK, &done);
-+			xfs_bulkstat_one_compat, sizeof(compat_xfs_bstat_t),
-+			bulkreq.ubuffer, &done);
- 	} else
- 		error = XFS_ERROR(EINVAL);
- 	if (error)
-diff --git a/fs/xfs/quota/xfs_qm.c b/fs/xfs/quota/xfs_qm.c
-index 7a231ff..25bc7da 100644
---- a/fs/xfs/quota/xfs_qm.c
-+++ b/fs/xfs/quota/xfs_qm.c
-@@ -1625,10 +1625,8 @@ xfs_qm_dqusage_adjust(
- 	xfs_ino_t	ino,		/* inode number to get data for */
- 	void		__user *buffer,	/* not used */
- 	int		ubsize,		/* not used */
--	void		*private_data,	/* not used */
- 	xfs_daddr_t	bno,		/* starting block of inode cluster */
- 	int		*ubused,	/* not used */
--	void		*dip,		/* on-disk inode pointer (not used) */
- 	int		*res)		/* result code value */
- {
- 	xfs_inode_t	*ip;
-@@ -1789,12 +1787,13 @@ xfs_qm_quotacheck(
- 		 * Iterate thru all the inodes in the file system,
- 		 * adjusting the corresponding dquot counters in core.
- 		 */
--		if ((error = xfs_bulkstat(mp, &lastino, &count,
--				     xfs_qm_dqusage_adjust, NULL,
--				     structsz, NULL, BULKSTAT_FG_IGET, &done)))
-+		error = xfs_bulkstat(mp, &lastino, &count,
-+				     xfs_qm_dqusage_adjust,
-+				     structsz, NULL, &done);
-+		if (error)
- 			break;
- 
--	} while (! done);
-+	} while (!done);
+diff --git a/fs/xfs/linux-2.6/xfs_export.c b/fs/xfs/linux-2.6/xfs_export.c
+index e61232f..b39c05c 100644
+--- a/fs/xfs/linux-2.6/xfs_export.c
++++ b/fs/xfs/linux-2.6/xfs_export.c
+@@ -127,12 +127,11 @@ xfs_nfs_get_inode(
+ 		return ERR_PTR(-ESTALE);
  
  	/*
- 	 * We've made all the changes that we need to make incore.
-diff --git a/fs/xfs/quota/xfs_qm_syscalls.c b/fs/xfs/quota/xfs_qm_syscalls.c
-index 19f218c..aa44c58 100644
---- a/fs/xfs/quota/xfs_qm_syscalls.c
-+++ b/fs/xfs/quota/xfs_qm_syscalls.c
-@@ -1095,10 +1095,8 @@ xfs_qm_internalqcheck_adjust(
- 	xfs_ino_t	ino,		/* inode number to get data for */
- 	void		__user *buffer,	/* not used */
- 	int		ubsize,		/* not used */
--	void		*private_data,	/* not used */
- 	xfs_daddr_t	bno,		/* starting block of inode cluster */
- 	int		*ubused,	/* not used */
--	void		*dip,		/* not used */
- 	int		*res)		/* bulkstat result code */
- {
- 	xfs_inode_t		*ip;
-@@ -1191,15 +1189,15 @@ xfs_qm_internalqcheck(
- 		 * Iterate thru all the inodes in the file system,
- 		 * adjusting the corresponding dquot counters
- 		 */
--		if ((error = xfs_bulkstat(mp, &lastino, &count,
--				 xfs_qm_internalqcheck_adjust, NULL,
--				 0, NULL, BULKSTAT_FG_IGET, &done))) {
-+		error = xfs_bulkstat(mp, &lastino, &count,
-+				 xfs_qm_internalqcheck_adjust,
-+				 0, NULL, &done);
-+		if (error) {
-+			cmn_err(CE_DEBUG, "Bulkstat returned error 0x%x", error);
- 			break;
- 		}
--	} while (! done);
--	if (error) {
--		cmn_err(CE_DEBUG, "Bulkstat returned error 0x%x", error);
--	}
-+	} while (!done);
-+
- 	cmn_err(CE_DEBUG, "Checking results against system dquots");
- 	for (i = 0; i < qmtest_hashmask; i++) {
- 		xfs_dqtest_t	*d, *n;
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index 8314386..f554bd9 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -45,24 +45,41 @@ xfs_internal_inum(
- 		 (ino == mp->m_sb.sb_uquotino || ino == mp->m_sb.sb_gquotino)));
- }
- 
--STATIC int
--xfs_bulkstat_one_iget(
--	xfs_mount_t	*mp,		/* mount point for filesystem */
--	xfs_ino_t	ino,		/* inode number to get data for */
--	xfs_daddr_t	bno,		/* starting bno of inode cluster */
--	xfs_bstat_t	*buf,		/* return buffer */
--	int		*stat)		/* BULKSTAT_RV_... */
-+/*
-+ * Return stat information for one inode.
-+ * Return 0 if ok, else errno.
-+ */
-+int
-+xfs_bulkstat_one_int(
-+	struct xfs_mount	*mp,		/* mount point for filesystem */
-+	xfs_ino_t		ino,		/* inode to get data for */
-+	void __user		*buffer,	/* buffer to place output in */
-+	int			ubsize,		/* size of buffer */
-+	bulkstat_one_fmt_pf	formatter,	/* formatter, copy to user */
-+	xfs_daddr_t		bno,		/* starting bno of cluster */
-+	int			*ubused,	/* bytes used by me */
-+	int			*stat)		/* BULKSTAT_RV_... */
- {
--	xfs_icdinode_t	*dic;	/* dinode core info pointer */
--	xfs_inode_t	*ip;		/* incore inode pointer */
--	struct inode	*inode;
--	int		error;
-+	struct xfs_icdinode	*dic;		/* dinode core info pointer */
-+	struct xfs_inode	*ip;		/* incore inode pointer */
-+	struct inode		*inode;
-+	struct xfs_bstat	*buf;		/* return buffer */
-+	int			error = 0;	/* error value */
-+
-+	*stat = BULKSTAT_RV_NOTHING;
-+
-+	if (!buffer || xfs_internal_inum(mp, ino))
-+		return XFS_ERROR(EINVAL);
-+
-+	buf = kmem_alloc(sizeof(*buf), KM_SLEEP | KM_MAYFAIL);
-+	if (!buf)
-+		return XFS_ERROR(ENOMEM);
- 
- 	error = xfs_iget(mp, NULL, ino,
- 			 XFS_IGET_BULKSTAT, XFS_ILOCK_SHARED, &ip, bno);
- 	if (error) {
- 		*stat = BULKSTAT_RV_NOTHING;
--		return error;
-+		goto out_free;
- 	}
- 
- 	ASSERT(ip != NULL);
-@@ -123,77 +140,16 @@ xfs_bulkstat_one_iget(
- 		buf->bs_blocks = dic->di_nblocks + ip->i_delayed_blks;
- 		break;
- 	}
--
- 	xfs_iput(ip, XFS_ILOCK_SHARED);
--	return error;
--}
- 
--STATIC void
--xfs_bulkstat_one_dinode(
--	xfs_mount_t	*mp,		/* mount point for filesystem */
--	xfs_ino_t	ino,		/* inode number to get data for */
--	xfs_dinode_t	*dic,		/* dinode inode pointer */
--	xfs_bstat_t	*buf)		/* return buffer */
--{
--	/*
--	 * The inode format changed when we moved the link count and
--	 * made it 32 bits long.  If this is an old format inode,
--	 * convert it in memory to look like a new one.  If it gets
--	 * flushed to disk we will convert back before flushing or
--	 * logging it.  We zero out the new projid field and the old link
--	 * count field.  We'll handle clearing the pad field (the remains
--	 * of the old uuid field) when we actually convert the inode to
--	 * the new format. We don't change the version number so that we
--	 * can distinguish this from a real new format inode.
--	 */
--	if (dic->di_version == 1) {
--		buf->bs_nlink = be16_to_cpu(dic->di_onlink);
--		buf->bs_projid = 0;
--	} else {
--		buf->bs_nlink = be32_to_cpu(dic->di_nlink);
--		buf->bs_projid = be16_to_cpu(dic->di_projid);
--	}
-+	error = formatter(buffer, ubsize, ubused, buf);
- 
--	buf->bs_ino = ino;
--	buf->bs_mode = be16_to_cpu(dic->di_mode);
--	buf->bs_uid = be32_to_cpu(dic->di_uid);
--	buf->bs_gid = be32_to_cpu(dic->di_gid);
--	buf->bs_size = be64_to_cpu(dic->di_size);
--	buf->bs_atime.tv_sec = be32_to_cpu(dic->di_atime.t_sec);
--	buf->bs_atime.tv_nsec = be32_to_cpu(dic->di_atime.t_nsec);
--	buf->bs_mtime.tv_sec = be32_to_cpu(dic->di_mtime.t_sec);
--	buf->bs_mtime.tv_nsec = be32_to_cpu(dic->di_mtime.t_nsec);
--	buf->bs_ctime.tv_sec = be32_to_cpu(dic->di_ctime.t_sec);
--	buf->bs_ctime.tv_nsec = be32_to_cpu(dic->di_ctime.t_nsec);
--	buf->bs_xflags = xfs_dic2xflags(dic);
--	buf->bs_extsize = be32_to_cpu(dic->di_extsize) << mp->m_sb.sb_blocklog;
--	buf->bs_extents = be32_to_cpu(dic->di_nextents);
--	buf->bs_gen = be32_to_cpu(dic->di_gen);
--	memset(buf->bs_pad, 0, sizeof(buf->bs_pad));
--	buf->bs_dmevmask = be32_to_cpu(dic->di_dmevmask);
--	buf->bs_dmstate = be16_to_cpu(dic->di_dmstate);
--	buf->bs_aextents = be16_to_cpu(dic->di_anextents);
--	buf->bs_forkoff = XFS_DFORK_BOFF(dic);
-+	if (!error)
-+		*stat = BULKSTAT_RV_DIDONE;
- 
--	switch (dic->di_format) {
--	case XFS_DINODE_FMT_DEV:
--		buf->bs_rdev = xfs_dinode_get_rdev(dic);
--		buf->bs_blksize = BLKDEV_IOSIZE;
--		buf->bs_blocks = 0;
--		break;
--	case XFS_DINODE_FMT_LOCAL:
--	case XFS_DINODE_FMT_UUID:
--		buf->bs_rdev = 0;
--		buf->bs_blksize = mp->m_sb.sb_blocksize;
--		buf->bs_blocks = 0;
--		break;
--	case XFS_DINODE_FMT_EXTENTS:
--	case XFS_DINODE_FMT_BTREE:
--		buf->bs_rdev = 0;
--		buf->bs_blksize = mp->m_sb.sb_blocksize;
--		buf->bs_blocks = be64_to_cpu(dic->di_nblocks);
--		break;
--	}
-+ out_free:
-+	kmem_free(buf);
-+	return error;
- }
- 
- /* Return 0 on success or positive error */
-@@ -213,118 +169,19 @@ xfs_bulkstat_one_fmt(
- 	return 0;
- }
- 
--/*
-- * Return stat information for one inode.
-- * Return 0 if ok, else errno.
-- */
--int		   	    		/* error status */
--xfs_bulkstat_one_int(
--	xfs_mount_t	*mp,		/* mount point for filesystem */
--	xfs_ino_t	ino,		/* inode number to get data for */
--	void		__user *buffer,	/* buffer to place output in */
--	int		ubsize,		/* size of buffer */
--	bulkstat_one_fmt_pf formatter,	/* formatter, copy to user */
--	xfs_daddr_t	bno,		/* starting bno of inode cluster */
--	int		*ubused,	/* bytes used by me */
--	void		*dibuff,	/* on-disk inode buffer */
--	int		*stat)		/* BULKSTAT_RV_... */
--{
--	xfs_bstat_t	*buf;		/* return buffer */
--	int		error = 0;	/* error value */
--	xfs_dinode_t	*dip;		/* dinode inode pointer */
--
--	dip = (xfs_dinode_t *)dibuff;
--	*stat = BULKSTAT_RV_NOTHING;
--
--	if (!buffer || xfs_internal_inum(mp, ino))
--		return XFS_ERROR(EINVAL);
--
--	buf = kmem_alloc(sizeof(*buf), KM_SLEEP);
--
--	if (dip == NULL) {
--		/* We're not being passed a pointer to a dinode.  This happens
--		 * if BULKSTAT_FG_IGET is selected.  Do the iget.
--		 */
--		error = xfs_bulkstat_one_iget(mp, ino, bno, buf, stat);
--		if (error)
--			goto out_free;
--	} else {
--		xfs_bulkstat_one_dinode(mp, ino, dip, buf);
--	}
--
--	error = formatter(buffer, ubsize, ubused, buf);
--	if (error)
--		goto out_free;
--
--	*stat = BULKSTAT_RV_DIDONE;
--
-- out_free:
--	kmem_free(buf);
--	return error;
--}
--
- int
- xfs_bulkstat_one(
- 	xfs_mount_t	*mp,		/* mount point for filesystem */
- 	xfs_ino_t	ino,		/* inode number to get data for */
- 	void		__user *buffer,	/* buffer to place output in */
- 	int		ubsize,		/* size of buffer */
--	void		*private_data,	/* my private data */
- 	xfs_daddr_t	bno,		/* starting bno of inode cluster */
- 	int		*ubused,	/* bytes used by me */
--	void		*dibuff,	/* on-disk inode buffer */
- 	int		*stat)		/* BULKSTAT_RV_... */
- {
- 	return xfs_bulkstat_one_int(mp, ino, buffer, ubsize,
- 				    xfs_bulkstat_one_fmt, bno,
--				    ubused, dibuff, stat);
--}
--
--/*
-- * Test to see whether we can use the ondisk inode directly, based
-- * on the given bulkstat flags, filling in dipp accordingly.
-- * Returns zero if the inode is dodgey.
-- */
--STATIC int
--xfs_bulkstat_use_dinode(
--	xfs_mount_t	*mp,
--	int		flags,
--	xfs_buf_t	*bp,
--	int		clustidx,
--	xfs_dinode_t	**dipp)
--{
--	xfs_dinode_t	*dip;
--	unsigned int	aformat;
--
--	*dipp = NULL;
--	if (!bp || (flags & BULKSTAT_FG_IGET))
--		return 1;
--	dip = (xfs_dinode_t *)
--			xfs_buf_offset(bp, clustidx << mp->m_sb.sb_inodelog);
--	/*
--	 * Check the buffer containing the on-disk inode for di_mode == 0.
--	 * This is to prevent xfs_bulkstat from picking up just reclaimed
--	 * inodes that have their in-core state initialized but not flushed
--	 * to disk yet. This is a temporary hack that would require a proper
--	 * fix in the future.
--	 */
--	if (be16_to_cpu(dip->di_magic) != XFS_DINODE_MAGIC ||
--	    !XFS_DINODE_GOOD_VERSION(dip->di_version) ||
--	    !dip->di_mode)
--		return 0;
--	if (flags & BULKSTAT_FG_QUICK) {
--		*dipp = dip;
--		return 1;
--	}
--	/* BULKSTAT_FG_INLINE: if attr fork is local, or not there, use it */
--	aformat = dip->di_aformat;
--	if ((XFS_DFORK_Q(dip) == 0) ||
--	    (aformat == XFS_DINODE_FMT_LOCAL) ||
--	    (aformat == XFS_DINODE_FMT_EXTENTS && !dip->di_anextents)) {
--		*dipp = dip;
--		return 1;
--	}
--	return 1;
-+				    ubused, stat);
- }
- 
- #define XFS_BULKSTAT_UBLEFT(ubleft)	((ubleft) >= statstruct_size)
-@@ -338,10 +195,8 @@ xfs_bulkstat(
- 	xfs_ino_t		*lastinop, /* last inode returned */
- 	int			*ubcountp, /* size of buffer/count returned */
- 	bulkstat_one_pf		formatter, /* func that'd fill a single buf */
--	void			*private_data,/* private data for formatter */
- 	size_t			statstruct_size, /* sizeof struct filling */
- 	char			__user *ubuffer, /* buffer with inode stats */
--	int			flags,	/* defined in xfs_itable.h */
- 	int			*done)	/* 1 if there are more stats to get */
- {
- 	xfs_agblock_t		agbno=0;/* allocation group block number */
-@@ -376,14 +231,12 @@ xfs_bulkstat(
- 	int			ubelem;	/* spaces used in user's buffer */
- 	int			ubused;	/* bytes used by formatter */
- 	xfs_buf_t		*bp;	/* ptr to on-disk inode cluster buf */
--	xfs_dinode_t		*dip;	/* ptr into bp for specific inode */
- 
- 	/*
- 	 * Get the last inode value, see if there's nothing to do.
+-	 * The XFS_IGET_BULKSTAT means that an invalid inode number is just
+-	 * fine and not an indication of a corrupted filesystem.  Because
+-	 * clients can send any kind of invalid file handle, e.g. after
+-	 * a restore on the server we have to deal with this case gracefully.
++	 * The XFS_IGET_UNTRUSTED means that an invalid inode number is just
++	 * fine and not an indication of a corrupted filesystem as clients can
++	 * send invalid file handles and we have to handle it gracefully..
  	 */
- 	ino = (xfs_ino_t)*lastinop;
- 	lastino = ino;
--	dip = NULL;
- 	agno = XFS_INO_TO_AGNO(mp, ino);
- 	agino = XFS_INO_TO_AGINO(mp, ino);
- 	if (agno >= mp->m_sb.sb_agcount ||
-@@ -608,37 +461,6 @@ xfs_bulkstat(
- 							irbp->ir_startino) +
- 						((chunkidx & nimask) >>
- 						 mp->m_sb.sb_inopblog);
--
--					if (flags & (BULKSTAT_FG_QUICK |
--						     BULKSTAT_FG_INLINE)) {
--						int offset;
--
--						ino = XFS_AGINO_TO_INO(mp, agno,
--								       agino);
--						bno = XFS_AGB_TO_DADDR(mp, agno,
--								       agbno);
--
--						/*
--						 * Get the inode cluster buffer
--						 */
--						if (bp)
--							xfs_buf_relse(bp);
--
--						error = xfs_inotobp(mp, NULL, ino, &dip,
--								    &bp, &offset,
--								    XFS_IGET_BULKSTAT);
--
--						if (!error)
--							clustidx = offset / mp->m_sb.sb_inodesize;
--						if (XFS_TEST_ERROR(error != 0,
--								   mp, XFS_ERRTAG_BULKSTAT_READ_CHUNK,
--								   XFS_RANDOM_BULKSTAT_READ_CHUNK)) {
--							bp = NULL;
--							ubleft = 0;
--							rval = error;
--							break;
--						}
--					}
- 				}
- 				ino = XFS_AGINO_TO_INO(mp, agno, agino);
- 				bno = XFS_AGB_TO_DADDR(mp, agno, agbno);
-@@ -654,35 +476,13 @@ xfs_bulkstat(
- 				 * when the chunk is used up.
- 				 */
- 				irbp->ir_freecount++;
--				if (!xfs_bulkstat_use_dinode(mp, flags, bp,
--							     clustidx, &dip)) {
--					lastino = ino;
--					continue;
--				}
--				/*
--				 * If we need to do an iget, cannot hold bp.
--				 * Drop it, until starting the next cluster.
--				 */
--				if ((flags & BULKSTAT_FG_INLINE) && !dip) {
--					if (bp)
--						xfs_buf_relse(bp);
--					bp = NULL;
--				}
- 
- 				/*
- 				 * Get the inode and fill in a single buffer.
--				 * BULKSTAT_FG_QUICK uses dip to fill it in.
--				 * BULKSTAT_FG_IGET uses igets.
--				 * BULKSTAT_FG_INLINE uses dip if we have an
--				 * inline attr fork, else igets.
--				 * See: xfs_bulkstat_one & xfs_dm_bulkstat_one.
--				 * This is also used to count inodes/blks, etc
--				 * in xfs_qm_quotacheck.
- 				 */
- 				ubused = statstruct_size;
--				error = formatter(mp, ino, ubufp,
--						ubleft, private_data,
--						bno, &ubused, dip, &fmterror);
-+				error = formatter(mp, ino, ubufp, ubleft, bno,
-+						  &ubused, &fmterror);
- 				if (fmterror == BULKSTAT_RV_NOTHING) {
- 					if (error && error != ENOENT &&
- 						error != EINVAL) {
-@@ -775,7 +575,7 @@ xfs_bulkstat_single(
- 
- 	ino = (xfs_ino_t)*lastinop;
- 	error = xfs_bulkstat_one(mp, ino, buffer, sizeof(xfs_bstat_t),
--				 NULL, 0, NULL, NULL, &res);
-+				 0, NULL, &res);
+-	error = xfs_iget(mp, NULL, ino, XFS_IGET_BULKSTAT,
++	error = xfs_iget(mp, NULL, ino, XFS_IGET_UNTRUSTED,
+ 			 XFS_ILOCK_SHARED, &ip, 0);
  	if (error) {
  		/*
- 		 * Special case way failed, do it the "long" way
-@@ -784,8 +584,7 @@ xfs_bulkstat_single(
- 		(*lastinop)--;
- 		count = 1;
- 		if (xfs_bulkstat(mp, lastinop, &count, xfs_bulkstat_one,
--				NULL, sizeof(xfs_bstat_t), buffer,
--				BULKSTAT_FG_IGET, done))
-+				sizeof(xfs_bstat_t), buffer, done))
- 			return error;
- 		if (count == 0 || (xfs_ino_t)*lastinop != ino)
- 			return error == EFSCORRUPTED ?
-diff --git a/fs/xfs/xfs_itable.h b/fs/xfs/xfs_itable.h
-index 20792bf..fea0339 100644
---- a/fs/xfs/xfs_itable.h
-+++ b/fs/xfs/xfs_itable.h
-@@ -27,10 +27,8 @@ typedef int (*bulkstat_one_pf)(struct xfs_mount	*mp,
- 			       xfs_ino_t	ino,
- 			       void		__user *buffer,
- 			       int		ubsize,
--			       void		*private_data,
- 			       xfs_daddr_t	bno,
- 			       int		*ubused,
--			       void		*dip,
- 			       int		*stat);
+diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
+index 06eb987..4efc23b 100644
+--- a/fs/xfs/xfs_ialloc.c
++++ b/fs/xfs/xfs_ialloc.c
+@@ -1265,7 +1265,7 @@ error0:
+ 		return error;
  
- /*
-@@ -41,13 +39,6 @@ typedef int (*bulkstat_one_pf)(struct xfs_mount	*mp,
- #define BULKSTAT_RV_GIVEUP	2
+ 	/* for untrusted inodes check it is allocated first */
+-	if ((flags & XFS_IGET_BULKSTAT) &&
++	if ((flags & XFS_IGET_UNTRUSTED) &&
+ 	    (rec.ir_free & XFS_INOBT_MASK(agino - rec.ir_startino)))
+ 		return EINVAL;
  
- /*
-- * Values for bulkstat flag argument.
-- */
--#define BULKSTAT_FG_IGET	0x1	/* Go through the buffer cache */
--#define BULKSTAT_FG_QUICK	0x2	/* No iget, walk the dinode cluster */
--#define BULKSTAT_FG_INLINE	0x4	/* No iget if inline attrs */
--
--/*
-  * Return stat information in bulk (by-inode) for the filesystem.
+@@ -1307,7 +1307,7 @@ xfs_imap(
+ 	    ino != XFS_AGINO_TO_INO(mp, agno, agino)) {
+ #ifdef DEBUG
+ 		/* no diagnostics for bulkstat, ino comes from userspace */
+-		if (flags & XFS_IGET_BULKSTAT)
++		if (flags & XFS_IGET_UNTRUSTED)
+ 			return XFS_ERROR(EINVAL);
+ 		if (agno >= mp->m_sb.sb_agcount) {
+ 			xfs_fs_cmn_err(CE_ALERT, mp,
+@@ -1343,7 +1343,7 @@ xfs_imap(
+ 	 * inodes in stale state on disk. Hence we have to do a btree lookup
+ 	 * in all cases where an untrusted inode number is passed.
+ 	 */
+-	if (flags & XFS_IGET_BULKSTAT) {
++	if (flags & XFS_IGET_UNTRUSTED) {
+ 		error = xfs_imap_lookup(mp, tp, agno, agino, agbno,
+ 					&chunk_agbno, &offset_agbno, flags);
+ 		if (error)
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 5c2ada4..9101e79 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -173,7 +173,7 @@ xfs_imap_to_bp(
+ 		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
+ 						XFS_ERRTAG_ITOBP_INOTOBP,
+ 						XFS_RANDOM_ITOBP_INOTOBP))) {
+-			if (iget_flags & XFS_IGET_BULKSTAT) {
++			if (iget_flags & XFS_IGET_UNTRUSTED) {
+ 				xfs_trans_brelse(tp, bp);
+ 				return XFS_ERROR(EINVAL);
+ 			}
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 10dd2e0..7a2f347 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -499,7 +499,7 @@ do { \
+  * Flags for xfs_iget()
   */
- int					/* error status */
-@@ -56,10 +47,8 @@ xfs_bulkstat(
- 	xfs_ino_t	*lastino,	/* last inode returned */
- 	int		*count,		/* size of buffer/count returned */
- 	bulkstat_one_pf formatter,	/* func that'd fill a single buf */
--	void		*private_data,	/* private data for formatter */
- 	size_t		statstruct_size,/* sizeof struct that we're filling */
- 	char		__user *ubuffer,/* buffer with inode stats */
--	int		flags,		/* flag to control access method */
- 	int		*done);		/* 1 if there are more stats to get */
+ #define XFS_IGET_CREATE		0x1
+-#define XFS_IGET_BULKSTAT	0x2
++#define XFS_IGET_UNTRUSTED	0x2
  
- int
-@@ -84,7 +73,6 @@ xfs_bulkstat_one_int(
- 	bulkstat_one_fmt_pf	formatter,
- 	xfs_daddr_t		bno,
- 	int			*ubused,
--	void			*dibuff,
- 	int			*stat);
+ int		xfs_inotobp(struct xfs_mount *, struct xfs_trans *,
+ 			    xfs_ino_t, struct xfs_dinode **,
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index f554bd9..5fccd84 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -76,7 +76,7 @@ xfs_bulkstat_one_int(
+ 		return XFS_ERROR(ENOMEM);
  
- int
-@@ -93,10 +81,8 @@ xfs_bulkstat_one(
- 	xfs_ino_t		ino,
- 	void			__user *buffer,
- 	int			ubsize,
--	void			*private_data,
- 	xfs_daddr_t		bno,
- 	int			*ubused,
--	void			*dibuff,
- 	int			*stat);
- 
- typedef int (*inumbers_fmt_pf)(
+ 	error = xfs_iget(mp, NULL, ino,
+-			 XFS_IGET_BULKSTAT, XFS_ILOCK_SHARED, &ip, bno);
++			 XFS_IGET_UNTRUSTED, XFS_ILOCK_SHARED, &ip, bno);
+ 	if (error) {
+ 		*stat = BULKSTAT_RV_NOTHING;
+ 		goto out_free;
 -- 
 1.7.1
 
