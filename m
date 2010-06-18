@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5IGo14s232767 for <xfs@oss.sgi.com>; Fri, 18 Jun 2010 11:50:01 -0500
-Received: from smtp4-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C41623E5727
-	for <xfs@oss.sgi.com>; Fri, 18 Jun 2010 09:52:36 -0700 (PDT)
-Received: from smtp4-g21.free.fr (smtp4-g21.free.fr [212.27.42.4]) by
-	cuda.sgi.com with ESMTP id FRR9BFEFsTlVuswZ for
-	<xfs@oss.sgi.com>; Fri, 18 Jun 2010 09:52:36 -0700 (PDT)
-Date: Fri, 18 Jun 2010 18:52:23 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
+	o5IHIbFB233639 for <xfs@oss.sgi.com>; Fri, 18 Jun 2010 12:18:37 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 07106159D3D5
+	for <xfs@oss.sgi.com>; Fri, 18 Jun 2010 10:25:05 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id 17chEHKPKZn5MMYR
+	for <xfs@oss.sgi.com>; Fri, 18 Jun 2010 10:25:05 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id 654D26C072
+	for <xfs@oss.sgi.com>; Fri, 18 Jun 2010 12:21:14 -0500 (CDT)
+Message-ID: <4C1BAB09.4010801@hardwarefreak.com>
+Date: Fri, 18 Jun 2010 12:21:13 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
+MIME-Version: 1.0
 Subject: Re: Help with XFS
-Message-ID: <20100618185223.60119f36@harpe.intellique.com>
-In-Reply-To: <201006181843.01755@zmi.at>
-References: <OF4967B99D.609CC213-ONC1257745.0048E646-C1257745.004919A3@bergenofs.no>
-	<20100618133458.6640ce96@harpe.intellique.com>
-	<OF0E234D8E.F048FF4D-ONC1257746.003FC10E-C1257746.00407333@bergenofs.no>
+References: <OF4967B99D.609CC213-ONC1257745.0048E646-C1257745.004919A3@bergenofs.no>	<20100618133458.6640ce96@harpe.intellique.com>	<OF0E234D8E.F048FF4D-ONC1257746.003FC10E-C1257746.00407333@bergenofs.no>
 	<201006181843.01755@zmi.at>
-Mime-Version: 1.0
+In-Reply-To: <201006181843.01755@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,64 +27,26 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============8458348608599058271=="
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
---===============8458348608599058271==
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/M_spYOqWB3uW3Ax0K5TwS89"; protocol="application/pgp-signature"
-
---Sig_/M_spYOqWB3uW3Ax0K5TwS89
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-
-Le Fri, 18 Jun 2010 18:43:01 +0200
-Michael Monnerie <michael.monnerie@is.it-management.at> =C3=A9crivait:
-
-> =20
-> You have the money for a IBM DS4700 (costs with disk >15.000=E2=82=AC), b=
-ut
-> not for 4 cheap 2TB SATA disks to at least copy the data there? That
-> would have cost <500=E2=82=AC.
-
-This isn't very helpful. Advice to everyone : read the tao of backup
-( http://www.taobackup.com ). Old, funny and still right on.
-
---=20
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
-
---Sig_/M_spYOqWB3uW3Ax0K5TwS89
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkwbpEgACgkQX3jQXNUicVZ3gwCgw3lJm5bD1q1E5f4KDlof9QEt
-ILkAoPVN+FLUscWZYtDNA2CBdPvsmx1q
-=jY++
------END PGP SIGNATURE-----
-
---Sig_/M_spYOqWB3uW3Ax0K5TwS89--
-
-
---===============8458348608599058271==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---===============8458348608599058271==--
+TWljaGFlbCBNb25uZXJpZSBwdXQgZm9ydGggb24gNi8xOC8yMDEwIDExOjQzIEFNOgo+IE9uIEZy
+ZWl0YWcsIDE4LiBKdW5pIDIwMTAgVGhvbWFzIEbDuHJkZSB3cm90ZToKPj4gdGhlIHJhaWQgYXJy
+YXkgaXMgYSBGQyBTQU4gYXJyYXkgY29uc2lzdGluZyBvZiBEUzQ3MDAgdW5pdCB3aXRoCj4+ICBF
+WFA4MTAgIGV4cGFuc2lvbiBzeXN0ZW0KPiAgCj4gWW91IGhhdmUgdGhlIG1vbmV5IGZvciBhIElC
+TSBEUzQ3MDAgKGNvc3RzIHdpdGggZGlzayA+MTUuMDAw4oKsKSwgYnV0IG5vdCAKPiBmb3IgNCBj
+aGVhcCAyVEIgU0FUQSBkaXNrcyB0byBhdCBsZWFzdCBjb3B5IHRoZSBkYXRhIHRoZXJlPyBUaGF0
+IHdvdWxkIAo+IGhhdmUgY29zdCA8NTAw4oKsLgoKSSdtIGd1ZXNzaW5nIHRoZSBPUCB3b3JrcyBm
+b3IgYSBwZXRyb2xldW0gY29tcGFueSwgZ2l2ZW4gdGhlIHNlaXNtaWMgZGF0YS4KRWl0aGVyIHRo
+YXQgb3IgYSBnb3Zlcm5tZW50IGFnZW5jeSBzdHVkeWluZyB2b2xjYW5pc20uICBIZSBzdGF0ZXMg
+dGhlaXIgRFM0NzAwCnN5c3RlbShzKSAoYSBzaW5nbGUgRFM0NzAwIGlzIGxpbWl0ZWQgdG8gMTEy
+IGRyaXZlcykgaGF2ZSAzODR4MzAwR0IgZHJpdmVzLgpUaGF0IHNldHVwIHdvdWxkIGNvc3QgYXQg
+bGVhc3QgJDI1MGsgVVNEIGF0IElCTSBsaXN0IHByaWNlLCBwcm9iYWJseSBtb3JlCmdpdmVuIHRo
+ZSBudW1iZXIgb2YgZHJpdmVzLgoKTW9uZXkgaXNuJ3QgdGhlIGlzc3VlIGhlcmUuICBMYWNrIG9m
+IHBsYW5uaW5nIGFuZCBwcm9jZWR1cmUgc2VlbXMgdG8gYmUgdGhlIGlzc3VlLgoKLS0gClN0YW4K
+Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWls
+aW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3Rp
+bmZvL3hmcwo=
