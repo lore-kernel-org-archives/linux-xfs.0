@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5HNmdOk197530 for <xfs@oss.sgi.com>; Thu, 17 Jun 2010 18:48:40 -0500
+	o5I0j126199076 for <xfs@oss.sgi.com>; Thu, 17 Jun 2010 19:45:02 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 004CF14F7DCE
-	for <xfs@oss.sgi.com>; Thu, 17 Jun 2010 16:51:16 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	cSIVaneNMIdCSlTW for <xfs@oss.sgi.com>;
-	Thu, 17 Jun 2010 16:51:16 -0700 (PDT)
-Date: Fri, 18 Jun 2010 09:51:13 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 32E29159C2A6
+	for <xfs@oss.sgi.com>; Thu, 17 Jun 2010 17:51:24 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	hnhA1WPkVSSo7Svk for <xfs@oss.sgi.com>;
+	Thu, 17 Jun 2010 17:51:24 -0700 (PDT)
+Date: Fri, 18 Jun 2010 10:47:08 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: avoid synchronous transaction in xfs_fs_write_inode
-Message-ID: <20100617235113.GY6590@dastard>
-References: <20100608195905.GA577@infradead.org>
-	<20100609072911.GI7869@dastard>
-	<20100615112051.GA25064@infradead.org>
+Subject: Re: [PATCH v2] xfs: Make fiemap works with sparse file.
+Message-ID: <20100618004708.GZ6590@dastard>
+References: <20100614122912.GD6590@dastard>
+	<1276764799-4837-1-git-send-email-tao.ma@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100615112051.GA25064@infradead.org>
+In-Reply-To: <1276764799-4837-1-git-send-email-tao.ma@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,52 +30,74 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Tao Ma <tao.ma@oracle.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, Alex Elder <aelder@sgi.com>, Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Jun 15, 2010 at 07:20:51AM -0400, Christoph Hellwig wrote:
-> On Wed, Jun 09, 2010 at 05:29:11PM +1000, Dave Chinner wrote:
-> > All great - I attempted this myself - but it breaks bulkstat. See
-> > xfstest 183:
-> 
-> I can't reproduce the failure.  And then I don't think we should
-> prioritize bulkstate over metadata performance.  The only major users
-> of bulkstat on XFS in the mainline kernel is xfsdump, and metadata
-> performance during normal loads is a lot more important.  And the
-> difference when using LVM/MD will be even larger with this as barriers
-> are a lot more expensive there.
-> 
-> What do you think about adding something like the patch below which
-> always makes bulkstat always use the iget version which doesn't show
-> this sort of problems.
-> 
-> ---
-> 
-> From: Christoph Hellwig <hch@lst.de>
-> Subject: xfs: always use iget in bulkstat
-> 
-> The non-coherent bulkstat versionsthat look directly at the inode
-> buffers causes various problems with performance optimizations that
-> make increased use of just logging inodes.  This patch makes bulkstat
-> always use iget, which should be fast enough for normal use with the
-> radix-tree based inode cache introduced a while ago.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Thu, Jun 17, 2010 at 04:53:19PM +0800, Tao Ma wrote:
+> Hi Dave,
+> On 06/14/2010 08:29 PM, Dave Chinner wrote:
+> > I just had a thought - if you want to avoid holes being reported to
+> > fiemap, then add a BMV_IF_NO_HOLES flag to xfs_getbmap() and skip
+> > holes in the mappin gloop when this flag is set. That will make
+> > fiemap fill in the full number of extents without hacking the
+> > extent count...
+> Here is the updated one. I have used BVM_IF_NO_HOLES in xfs_getbmap
+> to skip increasing index 'cur_ext'. It is a bit ugly, see my commit
+> log. I guess maybe we can add another flag in xfs_bmapi so that it
+> don't even give us the holes?
 
-An important note: I think this patch is necessary to avoid bulkstat
-returning unlinked inodes when cache thrashing is occurring. The
-current non-coherent lookup will incorrectly return unlinked inodes
-if the inode cluster is marked stale, reclaimed and turfed from
-memory due to an unlink and memory pressure between the ialloc btree
-lookup and the cluster buffer read.
+No need...
 
-The only way to avoid this is to ensure that the ialloc btree lookup
-and the formatting of the inode into the user buffer is atomic, which
-means we have to do a coherent lookup that returns a locked into....
+> 
+> Regards,
+> Tao
+> 
+> From cee1765ffd3e2b003b837666b4620b5107ed9ddd Mon Sep 17 00:00:00 2001
+> From: Tao Ma <tao.ma@oracle.com>
+> Date: Thu, 17 Jun 2010 16:14:22 +0800
+> Subject: [PATCH v3] xfs: Make fiemap works with sparse file.
+> 
+> In xfs_vn_fiemap, we set bvm_count to fi_extent_max + 1 and want
+> to return fi_extent_max extents, but actually it won't work for
+> a sparse file. The reason is that in xfs_getbmap we will
+> calculate holes and set it in 'out', while out is malloced by
+> bmv_count(fi_extent_max+1) which didn't consider holes. So in the
+> worst case, if 'out' vector looks like
+> [hole, extent, hole, extent, hole, ... hole, extent, hole],
+> we will only return half of fi_extent_max extents.
+> 
+> This patch add a new parameter BMV_IF_NO_HOLES for bvm_iflags.
+> So with this flags, we don't use our 'out' in xfs_getbmap for
+> a hole. The solution is a bit ugly by just don't increasing
+> index of 'out' vector. I felt that it is not easy to skip it
+> at the very beginning since we have the complicated check and
+> some function like xfs_getbmapx_fix_eof_hole to adjust 'out'.
+
+... because I think we can safely skip xfs_getbmapx_fix_eof_hole()
+it only modifies the hole. Hence  just adding a check after the
+attribute fork end check (which needs to detect a hole to terminate)
+should be fine: e.g something like:
+
+			if (map[i].br_startblock == HOLESTARTBLOCK &&
+			    whichfork == XFS_ATTR_FORK) {
+				/* came to the end of attribute fork */
+				out[cur_ext].bmv_oflags |= BMV_OF_LAST;
+				goto out_free_map;
+			}
++			if (map[i].br_startblock == HOLESTARTBLOCK &&
++				 (iflags & BMV_IF_NO_HOLES)) {
++				memset(&out[cur_ext], 0, sizeof(out[cur_ext]));
++				continue;
++			}
+
+Should work and avoid the worst of the ugliness.
+
+The rest of the patch looks fine.
 
 Cheers,
 
 Dave.
+
 -- 
 Dave Chinner
 david@fromorbit.com
