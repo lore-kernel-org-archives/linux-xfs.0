@@ -1,30 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5IKt7C8239631 for <xfs@oss.sgi.com>; Fri, 18 Jun 2010 15:55:07 -0500
-Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 256423E65FB
-	for <xfs@oss.sgi.com>; Fri, 18 Jun 2010 13:57:43 -0700 (PDT)
-Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
-	cuda.sgi.com with ESMTP id bHhQgGz1mqyDyBc2 for
-	<xfs@oss.sgi.com>; Fri, 18 Jun 2010 13:57:43 -0700 (PDT)
-Date: Fri, 18 Jun 2010 22:57:12 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: Help with XFS
-Message-ID: <20100618225712.2d2794f7@galadriel.home>
-In-Reply-To: <OF2D06E1CF.A343BBE3-ONC1257746.00677C57-C1257746.006787E5@bergenofs.no>
-References: <OF4967B99D.609CC213-ONC1257745.0048E646-C1257745.004919A3@bergenofs.no>
-	<20100618132108.790921cf@harpe.intellique.com>
-	<OF450B8187.BD5256B0-ONC1257746.003E79FF-C1257746.003EE62C@bergenofs.no>
-	<20100618133458.6640ce96@harpe.intellique.com>
-	<OF0E234D8E.F048FF4D-ONC1257746.003FC10E-C1257746.00407333@bergenofs.no>
-	<20100618140028.05650928@harpe.intellique.com>
-	<OF9654ECF8.CC8A338F-ONC1257746.00437A9B-C1257746.004384E1@bergenofs.no>
-	<20100618150848.289428ed@harpe.intellique.com>
-	<OF752A728E.086B0B19-ONC1257746.00484C47-C1257746.004AACED@bergenofs.no>
-	<20100618160152.77dfb143@harpe.intellique.com>
-	<OF2D06E1CF.A343BBE3-ONC1257746.00677C57-C1257746.006787E5@bergenofs.no>
-Mime-Version: 1.0
+	o5J04Zx9245917 for <xfs@oss.sgi.com>; Fri, 18 Jun 2010 19:04:36 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 71C203E6E6D
+	for <xfs@oss.sgi.com>; Fri, 18 Jun 2010 17:07:13 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	QuAJ0vGrJVBSLho8 for <xfs@oss.sgi.com>;
+	Fri, 18 Jun 2010 17:07:13 -0700 (PDT)
+Date: Sat, 19 Jun 2010 10:07:07 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/4] xfs: validate untrusted inode numbers during lookup
+Message-ID: <20100619000707.GH6590@dastard>
+References: <1276846374-23916-1-git-send-email-david@fromorbit.com>
+	<1276846374-23916-3-git-send-email-david@fromorbit.com>
+	<20100618114156.GA5417@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20100618114156.GA5417@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,29 +27,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Thomas =?ISO-8859-1?Q?F=F8rde?= <thomas.forde@bergenofs.no>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: security@kernel.org, xfs@oss.sgi.com
 
-Le Fri, 18 Jun 2010 20:50:49 +0200 vous =E9criviez:
+On Fri, Jun 18, 2010 at 07:41:56AM -0400, Christoph Hellwig wrote:
+> On Fri, Jun 18, 2010 at 05:32:52PM +1000, Dave Chinner wrote:
+> > +static int
+> > +xfs_imap_lookup(
+> 
+> STATIC to keep the gcc inliner from overdoing thing?
 
-> when i compiled it i used libHX 3.4 as thats why the xfs_irecover =
+*Nod*.
 
-> ./configure demanded.
+> 
+> > +	xfs_mount_t	*mp,
+> > +	xfs_trans_t	*tp,
+> 
+> > +{
+> > +	xfs_inobt_rec_incore_t rec;
+> > +	xfs_btree_cur_t	*cur;
+> > +	xfs_buf_t	*agbp;
+> 
+> Please use the struct versions of these instead of the typedefs.
 
-Yes, but did you install libhx? Do you have /usr/lib/libHX.so* ?
+Copy-n-paste error - my bad.
 
--- =
+> > +#ifdef DEBUG
+> > +		xfs_fs_cmn_err(CE_ALERT, mp, "xfs_imap: "
+> > +				"xfs_inobt_get_rec() failed");
+> > +#endif /* DEBUG */
+> > +		error = XFS_ERROR(EINVAL);
+> 
+> No need to print these even for debug kernels I think.  And even then
+> we shouldn't do it if the untrusted flag is set.
 
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+Ok, I killed all the prints - they don't tell us what inode number
+the error occurred on anyway, so they aren't very useful anyway....
+
+> > +	}
+> > +error0:
+> 
+> I'd just call it out, or replace the goto by and if/else
+
+Ok, I rearranged the code to kill the goto. I will repost
+the series after a QA run.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
