@@ -1,28 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5KNeQFH091400 for <xfs@oss.sgi.com>; Sun, 20 Jun 2010 18:40:27 -0500
+	o5KNua3T091929 for <xfs@oss.sgi.com>; Sun, 20 Jun 2010 18:56:36 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 91D2D1D5E147
-	for <xfs@oss.sgi.com>; Sun, 20 Jun 2010 16:43:05 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	Fq988u5DclKEke8Q for <xfs@oss.sgi.com>;
-	Sun, 20 Jun 2010 16:43:05 -0700 (PDT)
-Received: from dastard (unverified [121.44.96.63])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	28463014-1927428
-	for <xfs@oss.sgi.com>; Mon, 21 Jun 2010 09:13:03 +0930 (CST)
-Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1OQUAH-00034H-Tl
-	for xfs@oss.sgi.com; Mon, 21 Jun 2010 09:43:01 +1000
-Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1OQUAE-0004ff-K9
-	for xfs@oss.sgi.com; Mon, 21 Jun 2010 09:42:58 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2C3C73ED453
+	for <xfs@oss.sgi.com>; Sun, 20 Jun 2010 16:59:14 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	mbxaP2iNN1jUbIdO for <xfs@oss.sgi.com>;
+	Sun, 20 Jun 2010 16:59:14 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfsqa: test 214 leaves files around that cause 236 to fail
-Date: Mon, 21 Jun 2010 09:42:58 +1000
-Message-Id: <1277077378-17927-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/4] xfs: rename XFS_IGET_BULKSTAT to XFS_IGET_UNTRUSTED
+Date: Mon, 21 Jun 2010 09:59:00 +1000
+Message-Id: <1277078341-19087-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1277078341-19087-1-git-send-email-david@fromorbit.com>
+References: <1277078341-19087-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,87 +29,121 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: security@kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Test 214 and 236 use the same file names for test files in the TEST
-filesystem and don't check/create clean initial test state. Hence if
-you run 214 then 236, 236 will fail with:
-
-+link: cannot create link `/mnt/test/ouch2' to `/mnt/test/ouch': File exists
-+ctime: 1277076527 -> 1277076527
-+Fatal error: ctime not updated after link
-
-Ensure that both tests clean up after themselves properly and also
-ensure a clean state before they start.
+Inode numbers may come from somewhere external to the filesystem
+(e.g. file handles, bulkstat information) and so are inherently
+untrusted. Rename the flag we use for these lookups to make it
+obvious we are doing a lookup of an untrusted inode number and need
+to verify it completely before trying to read it from disk.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- 214 |    2 ++
- 236 |   13 +++++--------
- 2 files changed, 7 insertions(+), 8 deletions(-)
+ fs/xfs/linux-2.6/xfs_export.c |    9 ++++-----
+ fs/xfs/xfs_ialloc.c           |   11 +++++++----
+ fs/xfs/xfs_inode.c            |    2 +-
+ fs/xfs/xfs_inode.h            |    2 +-
+ fs/xfs/xfs_itable.c           |    2 +-
+ 5 files changed, 14 insertions(+), 12 deletions(-)
 
-diff --git a/214 b/214
-index eb18825..cef7626 100755
---- a/214
-+++ b/214
-@@ -29,6 +29,7 @@ echo "QA output created by $seq"
+diff --git a/fs/xfs/linux-2.6/xfs_export.c b/fs/xfs/linux-2.6/xfs_export.c
+index e61232f..b39c05c 100644
+--- a/fs/xfs/linux-2.6/xfs_export.c
++++ b/fs/xfs/linux-2.6/xfs_export.c
+@@ -127,12 +127,11 @@ xfs_nfs_get_inode(
+ 		return ERR_PTR(-ESTALE);
  
- _cleanup()
- {
-+	rm -f $TEST_DIR/ouch*
- 	cd /
- 	rm -f $tmp.*
- }
-@@ -51,6 +52,7 @@ _supported_os Linux
- [ -n "$XFS_IO_PROG" ] || _notrun "xfs_io executable not found"
+ 	/*
+-	 * The XFS_IGET_BULKSTAT means that an invalid inode number is just
+-	 * fine and not an indication of a corrupted filesystem.  Because
+-	 * clients can send any kind of invalid file handle, e.g. after
+-	 * a restore on the server we have to deal with this case gracefully.
++	 * The XFS_IGET_UNTRUSTED means that an invalid inode number is just
++	 * fine and not an indication of a corrupted filesystem as clients can
++	 * send invalid file handles and we have to handle it gracefully..
+ 	 */
+-	error = xfs_iget(mp, NULL, ino, XFS_IGET_BULKSTAT,
++	error = xfs_iget(mp, NULL, ino, XFS_IGET_UNTRUSTED,
+ 			 XFS_ILOCK_SHARED, &ip, 0);
+ 	if (error) {
+ 		/*
+diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
+index 142ae8c..c3de5fa 100644
+--- a/fs/xfs/xfs_ialloc.c
++++ b/fs/xfs/xfs_ialloc.c
+@@ -1247,7 +1247,7 @@ xfs_imap_lookup(
+ 		return error;
  
- rm -f $seq.full
-+rm -f $TEST_DIR/ouch*
+ 	/* for untrusted inodes check it is allocated first */
+-	if ((flags & XFS_IGET_BULKSTAT) &&
++	if ((flags & XFS_IGET_UNTRUSTED) &&
+ 	    (rec.ir_free & XFS_INOBT_MASK(agino - rec.ir_startino)))
+ 		return EINVAL;
  
- _require_xfs_io_falloc
+@@ -1288,8 +1288,11 @@ xfs_imap(
+ 	if (agno >= mp->m_sb.sb_agcount || agbno >= mp->m_sb.sb_agblocks ||
+ 	    ino != XFS_AGINO_TO_INO(mp, agno, agino)) {
+ #ifdef DEBUG
+-		/* no diagnostics for bulkstat, ino comes from userspace */
+-		if (flags & XFS_IGET_BULKSTAT)
++		/*
++		 * Don't output diagnostic information for untrusted inodes
++		 * as they can be invalid without implying corruption.
++		 */
++		if (flags & XFS_IGET_UNTRUSTED)
+ 			return XFS_ERROR(EINVAL);
+ 		if (agno >= mp->m_sb.sb_agcount) {
+ 			xfs_fs_cmn_err(CE_ALERT, mp,
+@@ -1325,7 +1328,7 @@ xfs_imap(
+ 	 * inodes in stale state on disk. Hence we have to do a btree lookup
+ 	 * in all cases where an untrusted inode number is passed.
+ 	 */
+-	if (flags & XFS_IGET_BULKSTAT) {
++	if (flags & XFS_IGET_UNTRUSTED) {
+ 		error = xfs_imap_lookup(mp, tp, agno, agino, agbno,
+ 					&chunk_agbno, &offset_agbno, flags);
+ 		if (error)
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 5c2ada4..9101e79 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -173,7 +173,7 @@ xfs_imap_to_bp(
+ 		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
+ 						XFS_ERRTAG_ITOBP_INOTOBP,
+ 						XFS_RANDOM_ITOBP_INOTOBP))) {
+-			if (iget_flags & XFS_IGET_BULKSTAT) {
++			if (iget_flags & XFS_IGET_UNTRUSTED) {
+ 				xfs_trans_brelse(tp, bp);
+ 				return XFS_ERROR(EINVAL);
+ 			}
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 10dd2e0..7a2f347 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -499,7 +499,7 @@ do { \
+  * Flags for xfs_iget()
+  */
+ #define XFS_IGET_CREATE		0x1
+-#define XFS_IGET_BULKSTAT	0x2
++#define XFS_IGET_UNTRUSTED	0x2
  
-diff --git a/236 b/236
-index 4d257f0..a7500ed 100644
---- a/236
-+++ b/236
-@@ -30,15 +30,12 @@ echo "QA output created by $seq"
+ int		xfs_inotobp(struct xfs_mount *, struct xfs_trans *,
+ 			    xfs_ino_t, struct xfs_dinode **,
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index f554bd9..5fccd84 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -76,7 +76,7 @@ xfs_bulkstat_one_int(
+ 		return XFS_ERROR(ENOMEM);
  
- _cleanup()
- {
--	if [ -a $TEST_DIR/ouch2 ]; then
--		rm -f $TEST_DIR/ouch2
--	fi
--	if [ -a $TEST_DIR/ouch ]; then
--		rm -f $TEST_DIR/ouch
--	fi
-+	rm -f $TEST_DIR/ouch*
- }
- 
- here=`pwd`
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
- 
- # get standard environment, filters and checks
- . ./common.rc
-@@ -48,6 +45,8 @@ _supported_fs generic
- # only Linux supports fallocate
- _supported_os Linux
- 
-+rm -f $TEST_DIR/ouch*
-+
- # create a file and get its ctime
- touch $TEST_DIR/ouch
- ctime=`stat -c %Z $TEST_DIR/ouch`
-@@ -65,8 +64,6 @@ if [ $ctime2 -le $ctime ]; then
- 	exit 1
- fi
- 
--_cleanup
--
- echo "Test over."
- # success, all done
- status=0
+ 	error = xfs_iget(mp, NULL, ino,
+-			 XFS_IGET_BULKSTAT, XFS_ILOCK_SHARED, &ip, bno);
++			 XFS_IGET_UNTRUSTED, XFS_ILOCK_SHARED, &ip, bno);
+ 	if (error) {
+ 		*stat = BULKSTAT_RV_NOTHING;
+ 		goto out_free;
 -- 
 1.7.1
 
