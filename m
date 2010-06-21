@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5L7Jamf110255 for <xfs@oss.sgi.com>; Mon, 21 Jun 2010 02:19:36 -0500
+	o5L8XRX4113439 for <xfs@oss.sgi.com>; Mon, 21 Jun 2010 03:33:29 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 29D7E151077E
-	for <xfs@oss.sgi.com>; Mon, 21 Jun 2010 00:22:17 -0700 (PDT)
-Received: from bombadil.infradead.org ([18.85.46.34]) by cuda.sgi.com with
-	ESMTP id fHGABwUgyHnFIwah for <xfs@oss.sgi.com>;
-	Mon, 21 Jun 2010 00:22:17 -0700 (PDT)
-Date: Mon, 21 Jun 2010 03:22:16 -0400
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B4AC015113FF
+	for <xfs@oss.sgi.com>; Mon, 21 Jun 2010 01:36:07 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id KIreF4515ihYmHCu for
+	<xfs@oss.sgi.com>; Mon, 21 Jun 2010 01:36:07 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
+	Linux)) id 1OQcUB-0007aE-Da
+	for xfs@oss.sgi.com; Mon, 21 Jun 2010 08:36:07 +0000
+Message-Id: <20100621083607.340728554@bombadil.infradead.org>
+Date: Mon, 21 Jun 2010 04:35:49 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/4] xfs: remove block number from inode lookup code
-Message-ID: <20100621072216.GE1361@infradead.org>
-References: <1277078341-19087-1-git-send-email-david@fromorbit.com>
-	<1277078341-19087-5-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1277078341-19087-5-git-send-email-david@fromorbit.com>
+Subject: [PATCH 06/12] xfs: small cleanups for xfs_iomap / __xfs_get_blocks
+References: <20100621083543.125860679@bombadil.infradead.org>
+Content-Disposition: inline; filename=xfs-iomap-cleanup
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,25 +25,101 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: security@kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Jun 21, 2010 at 09:59:01AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> The block number comes from bulkstat based inode lookups to shortcut
-> the mapping calculations. We ar enot able to trust anything from
-> bulkstat, so drop the block number as well so that the correct
-> lookups and mappings are always done.
+Remove the flags argument to  __xfs_get_blocks as we can easily derive
+it from the direct argument, and remove the unused BMAPI_MMAP flag.
 
-Looks good,
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Index: xfs/fs/xfs/linux-2.6/xfs_aops.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_aops.c	2010-06-19 14:37:17.299004136 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_aops.c	2010-06-19 14:39:34.313254590 +0200
+@@ -1295,9 +1295,9 @@ __xfs_get_blocks(
+ 	sector_t		iblock,
+ 	struct buffer_head	*bh_result,
+ 	int			create,
+-	int			direct,
+-	bmapi_flags_t		flags)
++	int			direct)
+ {
++	int			flags = create ? BMAPI_WRITE : BMAPI_READ;
+ 	struct xfs_bmbt_irec	imap;
+ 	xfs_off_t		offset;
+ 	ssize_t			size;
+@@ -1312,8 +1312,11 @@ __xfs_get_blocks(
+ 	if (!create && direct && offset >= i_size_read(inode))
+ 		return 0;
+ 
+-	error = xfs_iomap(XFS_I(inode), offset, size,
+-			     create ? flags : BMAPI_READ, &imap, &nimap, &new);
++	if (direct && create)
++		flags |= BMAPI_DIRECT;
++
++	error = xfs_iomap(XFS_I(inode), offset, size, flags, &imap, &nimap,
++			  &new);
+ 	if (error)
+ 		return -error;
+ 	if (nimap == 0)
+@@ -1393,8 +1396,7 @@ xfs_get_blocks(
+ 	struct buffer_head	*bh_result,
+ 	int			create)
+ {
+-	return __xfs_get_blocks(inode, iblock,
+-				bh_result, create, 0, BMAPI_WRITE);
++	return __xfs_get_blocks(inode, iblock, bh_result, create, 0);
+ }
+ 
+ STATIC int
+@@ -1404,8 +1406,7 @@ xfs_get_blocks_direct(
+ 	struct buffer_head	*bh_result,
+ 	int			create)
+ {
+-	return __xfs_get_blocks(inode, iblock,
+-				bh_result, create, 1, BMAPI_WRITE|BMAPI_DIRECT);
++	return __xfs_get_blocks(inode, iblock, bh_result, create, 1);
+ }
+ 
+ STATIC void
+Index: xfs/fs/xfs/xfs_iomap.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_iomap.c	2010-06-19 14:38:03.535254031 +0200
++++ xfs/fs/xfs/xfs_iomap.c	2010-06-19 14:39:34.313254590 +0200
+@@ -133,7 +133,7 @@ xfs_iomap(
+ 			break;
+ 		}
+ 
+-		if (flags & (BMAPI_DIRECT|BMAPI_MMAP)) {
++		if (flags & BMAPI_DIRECT) {
+ 			error = xfs_iomap_write_direct(ip, offset, count, flags,
+ 						       imap, nimaps);
+ 		} else {
+Index: xfs/fs/xfs/xfs_iomap.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_iomap.h	2010-06-19 14:37:17.318004066 +0200
++++ xfs/fs/xfs/xfs_iomap.h	2010-06-19 14:39:34.318254380 +0200
+@@ -26,7 +26,6 @@ typedef enum {
+ 	/* modifiers */
+ 	BMAPI_IGNSTATE = (1 << 4),	/* ignore unwritten state on read */
+ 	BMAPI_DIRECT = (1 << 5),	/* direct instead of buffered write */
+-	BMAPI_MMAP = (1 << 6),		/* allocate for mmap write */
+ 	BMAPI_TRYLOCK = (1 << 7),	/* non-blocking request */
+ } bmapi_flags_t;
+ 
+@@ -36,7 +35,6 @@ typedef enum {
+ 	{ BMAPI_ALLOCATE,	"ALLOCATE" }, \
+ 	{ BMAPI_IGNSTATE,	"IGNSTATE" }, \
+ 	{ BMAPI_DIRECT,		"DIRECT" }, \
+-	{ BMAPI_MMAP,		"MMAP" }, \
+ 	{ BMAPI_TRYLOCK,	"TRYLOCK" }
+ 
+ struct xfs_inode;
 
 _______________________________________________
 xfs mailing list
