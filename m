@@ -1,20 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5KNui9c091964 for <xfs@oss.sgi.com>; Sun, 20 Jun 2010 18:56:45 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5ADBCB285EC
-	for <xfs@oss.sgi.com>; Sun, 20 Jun 2010 17:03:26 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	qIu8GS8Jnzn3KsjS for <xfs@oss.sgi.com>;
-	Sun, 20 Jun 2010 17:03:26 -0700 (PDT)
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/4] xfs: validate untrusted inode numbers during lookup
-Date: Mon, 21 Jun 2010 09:58:59 +1000
-Message-Id: <1277078341-19087-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1277078341-19087-1-git-send-email-david@fromorbit.com>
-References: <1277078341-19087-1-git-send-email-david@fromorbit.com>
+	o5L2rE5R097179 for <xfs@oss.sgi.com>; Sun, 20 Jun 2010 21:53:15 -0500
+Received: from rcsinet10.oracle.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A92171E11B48
+	for <xfs@oss.sgi.com>; Sun, 20 Jun 2010 19:55:53 -0700 (PDT)
+Received: from rcsinet10.oracle.com (rcsinet10.oracle.com [148.87.113.121]) by
+	cuda.sgi.com with ESMTP id nByTQobZRqHCAvtC for
+	<xfs@oss.sgi.com>; Sun, 20 Jun 2010 19:55:53 -0700 (PDT)
+Received: from rcsinet15.oracle.com (rcsinet15.oracle.com [148.87.113.117])
+	by rcsinet10.oracle.com (Switch-3.4.2/Switch-3.4.2) with ESMTP id
+	o5L2tpd7013431
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Mon, 21 Jun 2010 02:55:52 GMT
+Received: from acsmt355.oracle.com (acsmt355.oracle.com [141.146.40.155])
+	by rcsinet15.oracle.com (Switch-3.4.2/Switch-3.4.1) with ESMTP id
+	o5L2tkFM024706 for <xfs@oss.sgi.com>; Mon, 21 Jun 2010 02:55:46 GMT
+Subject: segment fault when running xfs_check -s
+From: xiaowei hu <xiaowei.hu@oracle.com>
+Date: Mon, 21 Jun 2010 10:55:18 +0800
+Message-ID: <1277088918.20616.81.camel@redfuture-desktop>
+Mime-Version: 1.0
+Reply-To: xiaowei.hu@oracle.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,207 +30,43 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: security@kernel.org
+Cc: wen.gang.wang@oracle.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi,
 
-When we decode a handle or do a bulkstat lookup, we are using an
-inode number we cannot trust to be valid. If we are deleting inode
-chunks from disk (default noikeep mode), then we cannot trust the on
-disk inode buffer for any given inode number to correctly reflect
-whether the inode has been unlinked as the di_mode nor the
-generation number may have been updated on disk.
+Recently I was playing with xfsprogs, and did some test on xfs_check
+tools in this mothod:
+1.make a xfs fs on one partition.
+mkfs.xfs -f /dev/sda2
+2.randomly modify some blocks on this volume using xfs_db.
+xfs_db -x -c blockget -c "blocktrash -3 -s 36 -n 81" /dev/sda2
+3.run xfs_check -s
+xfs_check -s /dev/sda2
 
-This is due to the fact that when we delete an inode chunk, we do
-not write the clusters back to disk when they are removed - instead
-we mark them stale to avoid them being written back potentially over
-the top of something that has been subsequently allocated at that
-location. The result is that we can have locations of disk that look
-like they contain valid inodes but in reality do not. Hence we
-cannot simply convert the inode number to a block number and read
-the location from disk to determine if the inode is valid or not.
+the output saying:
+[root@test1 ~]# xfs_check -s /dev/sda2
+bad version number 0x78 for inode 135
+bad magic number 0xa855 for inode 154
+bad magic number 0x5024 for inode 165
+/usr/local/bin/xfs_check: line 28:   769 Segmentation fault      xfs_db
+$DBOPTS -F -i -p xfs_check -c "blockget$OPTS" $1
 
-As a result, and XFS_IGET_BULKSTAT lookup needs to actually look the
-inode up in the inode allocation btree to determine if the inode
-number is valid or not.
+if I run xfs_check without -s option, don't have this fault.
 
-It should be noted even on ikeep filesystems, there is the
-possibility that blocks on disk may look like valid inode clusters.
-e.g. if there are filesystem images hosted on the filesystem. Hence
-even for ikeep filesystems we really need to validate that the inode
-number is valid before issuing the inode buffer read.
+Is this a known problem?
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_ialloc.c |  121 +++++++++++++++++++++++++++++++++------------------
- 1 files changed, 78 insertions(+), 43 deletions(-)
+I tried the latest code ,also have this problem.
 
-diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
-index 0cf49f0..142ae8c 100644
---- a/fs/xfs/xfs_ialloc.c
-+++ b/fs/xfs/xfs_ialloc.c
-@@ -1199,6 +1199,63 @@ error0:
- 	return error;
- }
- 
-+STATIC int
-+xfs_imap_lookup(
-+	struct xfs_mount	*mp,
-+	struct xfs_trans	*tp,
-+	xfs_agnumber_t		agno,
-+	xfs_agino_t		agino,
-+	xfs_agblock_t		agbno,
-+	xfs_agblock_t		*chunk_agbno,
-+	xfs_agblock_t		*offset_agbno,
-+	int			flags)
-+{
-+	struct xfs_inobt_rec_incore rec;
-+	struct xfs_btree_cur	*cur;
-+	struct xfs_buf		*agbp;
-+	xfs_agino_t		startino;
-+	int			error;
-+	int			i;
-+
-+	error = xfs_ialloc_read_agi(mp, tp, agno, &agbp);
-+	if (error) {
-+		xfs_fs_cmn_err(CE_ALERT, mp, "xfs_imap: "
-+				"xfs_ialloc_read_agi() returned "
-+				"error %d, agno %d",
-+				error, agno);
-+		return error;
-+	}
-+
-+	/*
-+	 * derive and lookup the exact inode record for the given agino. If the
-+	 * record cannot be found, then it's an invalid inode number and we
-+	 * should abort.
-+	 */
-+	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno);
-+	startino = agino & ~(XFS_IALLOC_INODES(mp) - 1);
-+	error = xfs_inobt_lookup(cur, startino, XFS_LOOKUP_EQ, &i);
-+	if (!error) {
-+		if (i)
-+			error = xfs_inobt_get_rec(cur, &rec, &i);
-+		if (!error && i == 0)
-+			error = EINVAL;
-+	}
-+
-+	xfs_trans_brelse(tp, agbp);
-+	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+	if (error)
-+		return error;
-+
-+	/* for untrusted inodes check it is allocated first */
-+	if ((flags & XFS_IGET_BULKSTAT) &&
-+	    (rec.ir_free & XFS_INOBT_MASK(agino - rec.ir_startino)))
-+		return EINVAL;
-+
-+	*chunk_agbno = XFS_AGINO_TO_AGBNO(mp, rec.ir_startino);
-+	*offset_agbno = agbno - *chunk_agbno;
-+	return 0;
-+}
-+
- /*
-  * Return the location of the inode in imap, for mapping it into a buffer.
-  */
-@@ -1259,6 +1316,23 @@ xfs_imap(
- 		return XFS_ERROR(EINVAL);
- 	}
- 
-+	blks_per_cluster = XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_blocklog;
-+
-+	/*
-+	 * For bulkstat and handle lookups, we have an untrusted inode number
-+	 * that we have to verify is valid. We cannot do this just by reading
-+	 * the inode buffer as it may have been unlinked and removed leaving
-+	 * inodes in stale state on disk. Hence we have to do a btree lookup
-+	 * in all cases where an untrusted inode number is passed.
-+	 */
-+	if (flags & XFS_IGET_BULKSTAT) {
-+		error = xfs_imap_lookup(mp, tp, agno, agino, agbno,
-+					&chunk_agbno, &offset_agbno, flags);
-+		if (error)
-+			return error;
-+		goto out_map;
-+	}
-+
- 	/*
- 	 * If the inode cluster size is the same as the blocksize or
- 	 * smaller we get to the buffer by simple arithmetics.
-@@ -1273,10 +1347,8 @@ xfs_imap(
- 		return 0;
- 	}
- 
--	blks_per_cluster = XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_blocklog;
--
- 	/*
--	 * If we get a block number passed from bulkstat we can use it to
-+	 * If we get a block number passed we can use it to
- 	 * find the buffer easily.
- 	 */
- 	if (imap->im_blkno) {
-@@ -1300,50 +1372,13 @@ xfs_imap(
- 		offset_agbno = agbno & mp->m_inoalign_mask;
- 		chunk_agbno = agbno - offset_agbno;
- 	} else {
--		xfs_btree_cur_t	*cur;	/* inode btree cursor */
--		xfs_inobt_rec_incore_t chunk_rec;
--		xfs_buf_t	*agbp;	/* agi buffer */
--		int		i;	/* temp state */
--
--		error = xfs_ialloc_read_agi(mp, tp, agno, &agbp);
--		if (error) {
--			xfs_fs_cmn_err(CE_ALERT, mp, "xfs_imap: "
--					"xfs_ialloc_read_agi() returned "
--					"error %d, agno %d",
--					error, agno);
--			return error;
--		}
--
--		cur = xfs_inobt_init_cursor(mp, tp, agbp, agno);
--		error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_LE, &i);
--		if (error) {
--			xfs_fs_cmn_err(CE_ALERT, mp, "xfs_imap: "
--					"xfs_inobt_lookup() failed");
--			goto error0;
--		}
--
--		error = xfs_inobt_get_rec(cur, &chunk_rec, &i);
--		if (error) {
--			xfs_fs_cmn_err(CE_ALERT, mp, "xfs_imap: "
--					"xfs_inobt_get_rec() failed");
--			goto error0;
--		}
--		if (i == 0) {
--#ifdef DEBUG
--			xfs_fs_cmn_err(CE_ALERT, mp, "xfs_imap: "
--					"xfs_inobt_get_rec() failed");
--#endif /* DEBUG */
--			error = XFS_ERROR(EINVAL);
--		}
-- error0:
--		xfs_trans_brelse(tp, agbp);
--		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+		error = xfs_imap_lookup(mp, tp, agno, agino, agbno,
-+					&chunk_agbno, &offset_agbno, flags);
- 		if (error)
- 			return error;
--		chunk_agbno = XFS_AGINO_TO_AGBNO(mp, chunk_rec.ir_startino);
--		offset_agbno = agbno - chunk_agbno;
- 	}
- 
-+out_map:
- 	ASSERT(agbno >= chunk_agbno);
- 	cluster_agbno = chunk_agbno +
- 		((offset_agbno / blks_per_cluster) * blks_per_cluster);
--- 
-1.7.1
+
+thanks,
+Xiaowei
+
+
 
 _______________________________________________
 xfs mailing list
