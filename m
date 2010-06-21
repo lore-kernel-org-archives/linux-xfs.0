@@ -1,22 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5L8XRX4113439 for <xfs@oss.sgi.com>; Mon, 21 Jun 2010 03:33:29 -0500
+	o5L8XS4u113450 for <xfs@oss.sgi.com>; Mon, 21 Jun 2010 03:33:28 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B4AC015113FF
-	for <xfs@oss.sgi.com>; Mon, 21 Jun 2010 01:36:07 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 686881454783
+	for <xfs@oss.sgi.com>; Mon, 21 Jun 2010 01:40:13 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id KIreF4515ihYmHCu for
-	<xfs@oss.sgi.com>; Mon, 21 Jun 2010 01:36:07 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
-	Linux)) id 1OQcUB-0007aE-Da
-	for xfs@oss.sgi.com; Mon, 21 Jun 2010 08:36:07 +0000
-Message-Id: <20100621083607.340728554@bombadil.infradead.org>
-Date: Mon, 21 Jun 2010 04:35:49 -0400
+	by cuda.sgi.com with ESMTP id IpqHqIxhCYHRC36P for
+	<xfs@oss.sgi.com>; Mon, 21 Jun 2010 01:40:13 -0700 (PDT)
+Message-Id: <20100621083606.569096949@bombadil.infradead.org>
+Date: Mon, 21 Jun 2010 04:35:45 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 06/12] xfs: small cleanups for xfs_iomap / __xfs_get_blocks
+Subject: [PATCH 02/12] xfs: fix corruption case for block size < page size
 References: <20100621083543.125860679@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-iomap-cleanup
+Content-Disposition: inline; filename=xfs-fix-194
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,95 +28,45 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Eric Sandeen <sandeen@sandeen.net>
 
-Remove the flags argument to  __xfs_get_blocks as we can easily derive
-it from the direct argument, and remove the unused BMAPI_MMAP flag.
+xfstests 194 first truncats a file back and then extends it again by
+truncating it to a larger size.  This causes discard_buffer to drop
+the mapped, but not the uptodate bit and thus creates something that
+xfs_page_state_convert takes for unmapped space created by mmap because
+it doesn't check for the dirty bit, which also gets cleared by
+discard_buffer and checked by other ->writepage implementations like
+block_write_full_page.  Handle this kind of buffers early, and unlike
+Eric's first version of the patch simply ASSERT that the buffers is
+dirty, given that the mmap write case can't happen anymore since the
+introduction of ->page_mkwrite.  The now dead code dealing with that
+will be deleted in a follow on patch.
 
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
 Index: xfs/fs/xfs/linux-2.6/xfs_aops.c
 ===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_aops.c	2010-06-19 14:37:17.299004136 +0200
-+++ xfs/fs/xfs/linux-2.6/xfs_aops.c	2010-06-19 14:39:34.313254590 +0200
-@@ -1295,9 +1295,9 @@ __xfs_get_blocks(
- 	sector_t		iblock,
- 	struct buffer_head	*bh_result,
- 	int			create,
--	int			direct,
--	bmapi_flags_t		flags)
-+	int			direct)
- {
-+	int			flags = create ? BMAPI_WRITE : BMAPI_READ;
- 	struct xfs_bmbt_irec	imap;
- 	xfs_off_t		offset;
- 	ssize_t			size;
-@@ -1312,8 +1312,11 @@ __xfs_get_blocks(
- 	if (!create && direct && offset >= i_size_read(inode))
- 		return 0;
- 
--	error = xfs_iomap(XFS_I(inode), offset, size,
--			     create ? flags : BMAPI_READ, &imap, &nimap, &new);
-+	if (direct && create)
-+		flags |= BMAPI_DIRECT;
-+
-+	error = xfs_iomap(XFS_I(inode), offset, size, flags, &imap, &nimap,
-+			  &new);
- 	if (error)
- 		return -error;
- 	if (nimap == 0)
-@@ -1393,8 +1396,7 @@ xfs_get_blocks(
- 	struct buffer_head	*bh_result,
- 	int			create)
- {
--	return __xfs_get_blocks(inode, iblock,
--				bh_result, create, 0, BMAPI_WRITE);
-+	return __xfs_get_blocks(inode, iblock, bh_result, create, 0);
- }
- 
- STATIC int
-@@ -1404,8 +1406,7 @@ xfs_get_blocks_direct(
- 	struct buffer_head	*bh_result,
- 	int			create)
- {
--	return __xfs_get_blocks(inode, iblock,
--				bh_result, create, 1, BMAPI_WRITE|BMAPI_DIRECT);
-+	return __xfs_get_blocks(inode, iblock, bh_result, create, 1);
- }
- 
- STATIC void
-Index: xfs/fs/xfs/xfs_iomap.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_iomap.c	2010-06-19 14:38:03.535254031 +0200
-+++ xfs/fs/xfs/xfs_iomap.c	2010-06-19 14:39:34.313254590 +0200
-@@ -133,7 +133,7 @@ xfs_iomap(
- 			break;
+--- xfs.orig/fs/xfs/linux-2.6/xfs_aops.c	2010-06-10 08:59:49.598004335 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_aops.c	2010-06-11 09:20:31.292254712 +0200
+@@ -1125,6 +1125,16 @@ xfs_page_state_convert(
+ 			continue;
  		}
  
--		if (flags & (BMAPI_DIRECT|BMAPI_MMAP)) {
-+		if (flags & BMAPI_DIRECT) {
- 			error = xfs_iomap_write_direct(ip, offset, count, flags,
- 						       imap, nimaps);
- 		} else {
-Index: xfs/fs/xfs/xfs_iomap.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_iomap.h	2010-06-19 14:37:17.318004066 +0200
-+++ xfs/fs/xfs/xfs_iomap.h	2010-06-19 14:39:34.318254380 +0200
-@@ -26,7 +26,6 @@ typedef enum {
- 	/* modifiers */
- 	BMAPI_IGNSTATE = (1 << 4),	/* ignore unwritten state on read */
- 	BMAPI_DIRECT = (1 << 5),	/* direct instead of buffered write */
--	BMAPI_MMAP = (1 << 6),		/* allocate for mmap write */
- 	BMAPI_TRYLOCK = (1 << 7),	/* non-blocking request */
- } bmapi_flags_t;
++		/*
++		 * A hole may still be marked uptodate because discard_buffer
++		 * leaves the flag set.
++		 */
++		if (!buffer_mapped(bh) && buffer_uptodate(bh)) {
++			ASSERT(!buffer_dirty(bh));
++			imap_valid = 0;
++			continue;
++		}
++
+ 		if (imap_valid)
+ 			imap_valid = xfs_imap_valid(inode, &imap, offset);
  
-@@ -36,7 +35,6 @@ typedef enum {
- 	{ BMAPI_ALLOCATE,	"ALLOCATE" }, \
- 	{ BMAPI_IGNSTATE,	"IGNSTATE" }, \
- 	{ BMAPI_DIRECT,		"DIRECT" }, \
--	{ BMAPI_MMAP,		"MMAP" }, \
- 	{ BMAPI_TRYLOCK,	"TRYLOCK" }
- 
- struct xfs_inode;
 
 _______________________________________________
 xfs mailing list
