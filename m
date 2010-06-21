@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5L7Idrt110170 for <xfs@oss.sgi.com>; Mon, 21 Jun 2010 02:18:42 -0500
+	o5L7Jamf110255 for <xfs@oss.sgi.com>; Mon, 21 Jun 2010 02:19:36 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 487C414AAB62
-	for <xfs@oss.sgi.com>; Mon, 21 Jun 2010 00:25:23 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 29D7E151077E
+	for <xfs@oss.sgi.com>; Mon, 21 Jun 2010 00:22:17 -0700 (PDT)
 Received: from bombadil.infradead.org ([18.85.46.34]) by cuda.sgi.com with
-	ESMTP id 96eXZFKNuIP6ubyM for <xfs@oss.sgi.com>;
-	Mon, 21 Jun 2010 00:25:23 -0700 (PDT)
-Date: Mon, 21 Jun 2010 03:21:18 -0400
+	ESMTP id fHGABwUgyHnFIwah for <xfs@oss.sgi.com>;
+	Mon, 21 Jun 2010 00:22:17 -0700 (PDT)
+Date: Mon, 21 Jun 2010 03:22:16 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: vmalloc, xfs_buf_get: failed to map pages
-Message-ID: <20100621072118.GA1361@infradead.org>
-References: <20100619150119.3ce64102@x2.grafnetz>
+Subject: Re: [PATCH 4/4] xfs: remove block number from inode lookup code
+Message-ID: <20100621072216.GE1361@infradead.org>
+References: <1277078341-19087-1-git-send-email-david@fromorbit.com>
+	<1277078341-19087-5-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100619150119.3ce64102@x2.grafnetz>
+In-Reply-To: <1277078341-19087-5-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,28 +29,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mario Bachmann <grafgrimm77@gmx.de>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: security@kernel.org, xfs@oss.sgi.com
 
-On Sat, Jun 19, 2010 at 03:01:19PM +0200, Mario Bachmann wrote:
-> Hello, 
+On Mon, Jun 21, 2010 at 09:59:01AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> on a 32bit machine, I have big problems with Linux 2.6.34. 
-> With Linux 2.6.33.4 everything runs fine. 
-> 
-> I do not know where to search for known bugs in xfs.
-> 
-> /var/log/messages shows a lot of lines:
-> 
-> Jun 19 11:43:15 amd2000 kernel: vmap allocation for size 4194304 failed: use vmalloc=<size> to increase size.
-> Jun 19 11:43:15 amd2000 kernel: xfs_buf_get: failed to map pages
-> 
-> What to to?
+> The block number comes from bulkstat based inode lookups to shortcut
+> the mapping calculations. We ar enot able to trust anything from
+> bulkstat, so drop the block number as well so that the correct
+> lookups and mappings are always done.
 
-Strange.  There have been no fixes to the vmap allocator nor to the
-XFS using this.  What other modules are you ising?  Maybe they increased
-their amount of used vmalloc space.  For now the only thing you can do
-is using the vmalloc= kernel paramter to increase the vmalloc space.
+Looks good,
+
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
