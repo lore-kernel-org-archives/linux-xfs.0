@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5L5p7Ag106327 for <xfs@oss.sgi.com>; Mon, 21 Jun 2010 00:51:07 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BCA6414AAD0C
-	for <xfs@oss.sgi.com>; Sun, 20 Jun 2010 22:57:49 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	AtyJ20idbt4xxlU5 for <xfs@oss.sgi.com>;
-	Sun, 20 Jun 2010 22:57:49 -0700 (PDT)
-Date: Mon, 21 Jun 2010 15:53:42 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs partition layout  and using xfs_growfs
-Message-ID: <20100621055342.GL6590@dastard>
-References: <4C1EEC01.9090509@tlinx.org>
+	o5L7IuaC110194 for <xfs@oss.sgi.com>; Mon, 21 Jun 2010 02:18:57 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B21BF14AAB67
+	for <xfs@oss.sgi.com>; Mon, 21 Jun 2010 00:25:41 -0700 (PDT)
+Received: from bombadil.infradead.org ([18.85.46.34]) by cuda.sgi.com with
+	ESMTP id hda3txC2yEf7RXXm for <xfs@oss.sgi.com>;
+	Mon, 21 Jun 2010 00:25:41 -0700 (PDT)
+Date: Mon, 21 Jun 2010 03:21:33 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfsqa: test 214 leaves files around that cause 236 to fail
+Message-ID: <20100621072133.GB1361@infradead.org>
+References: <1277077378-17927-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4C1EEC01.9090509@tlinx.org>
+In-Reply-To: <1277077378-17927-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,60 +28,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "Linda A. Walsh" <xfs@tlinx.org>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Sun, Jun 20, 2010 at 09:35:13PM -0700, Linda A. Walsh wrote:
+On Mon, Jun 21, 2010 at 09:42:58AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Is there any difference in a file systems layout and efficiency between
-> to xfs fs's of the same size, but where one was created at size
-> '100%', where the other was created at size 50%, but then grown
-> iteratively to 60, 70, 80, 90 and then 100% over time as it filled?
+> Test 214 and 236 use the same file names for test files in the TEST
+> filesystem and don't check/create clean initial test state. Hence if
+> you run 214 then 236, 236 will fail with:
+> 
+> +link: cannot create link `/mnt/test/ouch2' to `/mnt/test/ouch': File exists
+> +ctime: 1277076527 -> 1277076527
+> +Fatal error: ctime not updated after link
+> 
+> Ensure that both tests clean up after themselves properly and also
+> ensure a clean state before they start.
 
-Yes.
+Looks good,
 
-> Would the final file systems look pretty much the same
 
->From a structural perspective, it depends on the size of the AGs in
-the initial filesystem.  If the filesystem was big enough to begin
-with (i.e.  using maximally sized AGs at mkfs time) then growing it
-will result in a layout exactly the same as if it was mkfs'd at full
-size.
-
-However, the allocation patterns will be significantly different
-between the two filesystems, so there will be no similarity in data
-layout between the two different filesystems.
-
-> and have roughly the
-> same performance characteristics?
-
-See previous answer.
-
-> Assume, for sake of argument, that the
-> file system was grown before space got tight enough to cause any
-> severe large file fragmentation.
-
-See previous answer. ;)
-
-> I've been under the impression that one gained some performance benefits if one
-> laid out the whole file system at once  is that a mis-impression?
-
-I wouldn't say you "gain performance benefits" by starting with a
-larger filesystem, more that a grown filesystem has different aging
-characteristics to one that has not been grown. See previous answer.
-;)
-
-> That asked/said...is there any work underway to create an xfs_shrinkfs, so
-> that one could go the other way?
-
-http://xfs.org/index.php/Shrinking_Support
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
