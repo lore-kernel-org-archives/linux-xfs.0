@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5LBWlL3120101 for <xfs@oss.sgi.com>; Mon, 21 Jun 2010 06:32:47 -0500
-Received: from mail.gmx.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id 6E60D3EFE07
-	for <xfs@oss.sgi.com>; Mon, 21 Jun 2010 04:35:26 -0700 (PDT)
-Received: from mail.gmx.net (mail.gmx.net [213.165.64.20]) by cuda.sgi.com
-	with SMTP id lgHj0vEuIjzKSsiF for <xfs@oss.sgi.com>;
-	Mon, 21 Jun 2010 04:35:26 -0700 (PDT)
-Date: Mon, 21 Jun 2010 13:35:21 +0200
-From: Mario Bachmann <grafgrimm77@gmx.de>
-Subject: Re: vmalloc, xfs_buf_get: failed to map pages
-Message-ID: <20100621133521.4eb1a891@x2.grafnetz>
-In-Reply-To: <20100621072118.GA1361@infradead.org>
-References: <20100619150119.3ce64102@x2.grafnetz>
-	<20100621072118.GA1361@infradead.org>
+	o5M7FwBY229270 for <xfs@oss.sgi.com>; Tue, 22 Jun 2010 02:15:58 -0500
+Received: from rcsinet10.oracle.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EA9213F6937
+	for <xfs@oss.sgi.com>; Tue, 22 Jun 2010 00:18:38 -0700 (PDT)
+Received: from rcsinet10.oracle.com (rcsinet10.oracle.com [148.87.113.121]) by
+	cuda.sgi.com with ESMTP id mkLYKVFAitZ34b7f for
+	<xfs@oss.sgi.com>; Tue, 22 Jun 2010 00:18:38 -0700 (PDT)
+Subject: Re: segment fault when running xfs_check -s
+From: xiaowei hu <xiaowei.hu@oracle.com>
+In-Reply-To: <20100621053803.GK6590@dastard>
+References: <1277088918.20616.81.camel@redfuture-desktop>
+	<20100621053803.GK6590@dastard>
+Date: Tue, 22 Jun 2010 15:17:00 +0800
+Message-ID: <1277191020.1636.7.camel@redfuture-desktop>
 Mime-Version: 1.0
+Reply-To: xiaowei.hu@oracle.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,87 +29,219 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: wen.gang.wang@oracle.com, xfs@oss.sgi.com
 
-Am Mon, 21 Jun 2010 03:21:18 -0400
-schrieb Christoph Hellwig <hch@infradead.org>:
+Hi Dave,
 
-> On Sat, Jun 19, 2010 at 03:01:19PM +0200, Mario Bachmann wrote:
-> > Hello, 
+I tried this patch,it fixes this bug, thank you very much:)
+
+Regards,
+Xiaowei
+
+
+
+On Mon, 2010-06-21 at 15:38 +1000, Dave Chinner wrote:
+> On Mon, Jun 21, 2010 at 10:55:18AM +0800, xiaowei hu wrote:
+> > Hi,
 > > 
-> > on a 32bit machine, I have big problems with Linux 2.6.34. 
-> > With Linux 2.6.33.4 everything runs fine. 
+> > Recently I was playing with xfsprogs, and did some test on xfs_check
+> > tools in this mothod:
+> > 1.make a xfs fs on one partition.
+> > mkfs.xfs -f /dev/sda2
+> > 2.randomly modify some blocks on this volume using xfs_db.
+> > xfs_db -x -c blockget -c "blocktrash -3 -s 36 -n 81" /dev/sda2
+> > 3.run xfs_check -s
+> > xfs_check -s /dev/sda2
 > > 
-> > I do not know where to search for known bugs in xfs.
+> > the output saying:
+> > [root@test1 ~]# xfs_check -s /dev/sda2
+> > bad version number 0x78 for inode 135
+> > bad magic number 0xa855 for inode 154
+> > bad magic number 0x5024 for inode 165
+> > /usr/local/bin/xfs_check: line 28:   769 Segmentation fault      xfs_db
+> > $DBOPTS -F -i -p xfs_check -c "blockget$OPTS" $1
 > > 
-> > /var/log/messages shows a lot of lines:
+> > if I run xfs_check without -s option, don't have this fault.
 > > 
-> > Jun 19 11:43:15 amd2000 kernel: vmap allocation for size 4194304 failed: use vmalloc=<size> to increase size.
-> > Jun 19 11:43:15 amd2000 kernel: xfs_buf_get: failed to map pages
-> > 
-> > What to to?
+> > Is this a known problem?
 > 
-> Strange.  There have been no fixes to the vmap allocator nor to the
-> XFS using this.  What other modules are you ising?  Maybe they increased
-> their amount of used vmalloc space.  For now the only thing you can do
-> is using the vmalloc= kernel paramter to increase the vmalloc space.
+> No.
+> 
+> > I tried the latest code ,also have this problem.
+> 
+> Yeah, the code determining whether to output a message is broken:
+> 
+> 2651         if (!isfree) {
+> 2652                 id = find_inode(ino, 1);
+> 2653                 bno = XFS_INO_TO_FSB(mp, ino);
+> 2654                 blkmap = NULL;
+> 2655         }
+> 
+> find_inode() checks a list created by the "-i <ino #>" command line
+> option, so will always return NULL for this test case. Most of the checks
+> do this:
+> 
+> 2657                 if (!sflag || isfree || id->ilist || CHECK_BLIST(bno))
+> 
+> sflag is set by the "-s" command line option, which is why this
+> problem requires that to be set - the output checks don't get past
+> this otherwise.
+> 
+> isfree is a parameter passed into to say whether the inode is
+> allocated or not. The code hence assumes that if !isfree, then id !=
+> NULL, which is certainly not the case. Hence it can blow up if id =
+> NULL.
+> 
+> The line it crashed on:
+> 
+> 2670         if (isfree) {
+> 2671                 if (idic.di_nblocks != 0) {
+> 2672  >>>>>>                 if (!sflag || id->ilist || CHECK_BLIST(bno))
+> 
+> Looks like a clear case of copy-n-paste error - if isfree is set, the
+> id _must_ be null and we go kaboom.
+> 
+> It looks like none of the code in this function actually checks for
+> whether id is valid or not after find_inode and dereferencing the
+> reurn pointer.
+> 
+> The patch below should fix the problem.
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> ---
+>  db/check.c |   29 ++++++++++++++++-------------
+>  1 files changed, 16 insertions(+), 13 deletions(-)
+> 
+> diff --git a/db/check.c b/db/check.c
+> index 7620d9c..e0dcf63 100644
+> --- a/db/check.c
+> +++ b/db/check.c
+> @@ -2619,6 +2619,7 @@ process_inode(
+>  	xfs_qcnt_t		ic = 0;
+>  	xfs_qcnt_t		rc = 0;
+>  	xfs_dqid_t		dqprid;
+> +	int			v = 0;
+>  	static char		okfmts[] = {
+>  		0,				/* type 0 unused */
+>  		1 << XFS_DINODE_FMT_DEV,	/* FIFO */
+> @@ -2653,15 +2654,16 @@ process_inode(
+>  		bno = XFS_INO_TO_FSB(mp, ino);
+>  		blkmap = NULL;
+>  	}
+> +	v = (!sflag || (id && id->ilist) || CHECK_BLIST(bno));
+>  	if (idic.di_magic != XFS_DINODE_MAGIC) {
+> -		if (!sflag || isfree || id->ilist || CHECK_BLIST(bno))
+> +		if (isfree || v)
+>  			dbprintf(_("bad magic number %#x for inode %lld\n"),
+>  				idic.di_magic, ino);
+>  		error++;
+>  		return;
+>  	}
+>  	if (!XFS_DINODE_GOOD_VERSION(idic.di_version)) {
+> -		if (!sflag || isfree || id->ilist || CHECK_BLIST(bno))
+> +		if (isfree || v)
+>  			dbprintf(_("bad version number %#x for inode %lld\n"),
+>  				idic.di_version, ino);
+>  		error++;
+> @@ -2669,7 +2671,7 @@ process_inode(
+>  	}
+>  	if (isfree) {
+>  		if (idic.di_nblocks != 0) {
+> -			if (!sflag || id->ilist || CHECK_BLIST(bno))
+> +			if (v)
+>  				dbprintf(_("bad nblocks %lld for free inode "
+>  					 "%lld\n"),
+>  					idic.di_nblocks, ino);
+> @@ -2680,21 +2682,22 @@ process_inode(
+>  		else
+>  			nlink = idic.di_nlink;
+>  		if (nlink != 0) {
+> -			if (!sflag || id->ilist || CHECK_BLIST(bno))
+> +			if (v)
+>  				dbprintf(_("bad nlink %d for free inode %lld\n"),
+>  					nlink, ino);
+>  			error++;
+>  		}
+>  		if (idic.di_mode != 0) {
+> -			if (!sflag || id->ilist || CHECK_BLIST(bno))
+> +			if (v)
+>  				dbprintf(_("bad mode %#o for free inode %lld\n"),
+>  					idic.di_mode, ino);
+>  			error++;
+>  		}
+>  		return;
+>  	}
+> +
+>  	if (be32_to_cpu(dip->di_next_unlinked) != NULLAGINO) {
+> -		if (!sflag || isfree || id->ilist || CHECK_BLIST(bno))
+> +		if (v)
+>  			dbprintf(_("bad next unlinked %#x for inode %lld\n"),
+>  				be32_to_cpu(dip->di_next_unlinked), ino);
+>  		error++;
+> @@ -2704,27 +2707,27 @@ process_inode(
+>  	 */
+>  	if ((((idic.di_mode & S_IFMT) >> 12) > 15) ||
+>  	    (!(okfmts[(idic.di_mode & S_IFMT) >> 12] & (1 << idic.di_format)))) {
+> -		if (!sflag || id->ilist || CHECK_BLIST(bno))
+> +		if (v)
+>  			dbprintf(_("bad format %d for inode %lld type %#o\n"),
+>  				idic.di_format, id->ino, idic.di_mode & S_IFMT);
+>  		error++;
+>  		return;
+>  	}
+>  	if ((unsigned int)XFS_DFORK_ASIZE(dip, mp) >= XFS_LITINO(mp))  {
+> -		if (!sflag || id->ilist)
+> +		if (v)
+>  			dbprintf(_("bad fork offset %d for inode %lld\n"),
+>  				idic.di_forkoff, id->ino);
+>  		error++;
+>  		return;
+>  	}
+>  	if ((unsigned int)idic.di_aformat > XFS_DINODE_FMT_BTREE)  {
+> -		if (!sflag || id->ilist)
+> +		if (v)
+>  			dbprintf(_("bad attribute format %d for inode %lld\n"),
+>  				idic.di_aformat, id->ino);
+>  		error++;
+>  		return;
+>  	}
+> -	if (verbose || id->ilist || CHECK_BLIST(bno))
+> +	if (verbose || v)
+>  		dbprintf(_("inode %lld mode %#o fmt %s "
+>  			 "afmt %s "
+>  			 "nex %d anex %d nblk %lld sz %lld%s%s%s%s%s%s%s\n"),
+> @@ -2844,20 +2847,20 @@ process_inode(
+>  	}
+>  	totblocks = totdblocks + totiblocks + atotdblocks + atotiblocks;
+>  	if (totblocks != idic.di_nblocks) {
+> -		if (!sflag || id->ilist || CHECK_BLIST(bno))
+> +		if (v)
+>  			dbprintf(_("bad nblocks %lld for inode %lld, counted "
+>  				 "%lld\n"),
+>  				idic.di_nblocks, id->ino, totblocks);
+>  		error++;
+>  	}
+>  	if (nextents != idic.di_nextents) {
+> -		if (!sflag || id->ilist || CHECK_BLIST(bno))
+> +		if (v)
+>  			dbprintf(_("bad nextents %d for inode %lld, counted %d\n"),
+>  				idic.di_nextents, id->ino, nextents);
+>  		error++;
+>  	}
+>  	if (anextents != idic.di_anextents) {
+> -		if (!sflag || id->ilist || CHECK_BLIST(bno))
+> +		if (v)
+>  			dbprintf(_("bad anextents %d for inode %lld, counted "
+>  				 "%d\n"),
+>  				idic.di_anextents, id->ino, anextents);
 
-What is the command to get all used modules?
-
-Here is the output of the old kernel (2.6.33.4). I used the same kernel-.config for the new kernel (2.6.34):
-
-amd2000 ~ # cat /proc/modules 
-sch_sfq 4645 1 - Live 0xf9537000
-nfsd 219445 13 - Live 0xf9301000
-ipv6 201317 34 - Live 0xf9283000
-nf_conntrack_ftp 4780 0 - Live 0xf9238000
-nf_conntrack_irc 2587 0 - Live 0xf922d000
-ipt_REJECT 1785 2 - Live 0xf8782000
-xt_tcpudp 1863 64 - Live 0xf85cc000
-nf_conntrack_ipv4 7781 65 - Live 0xf85c0000
-nf_defrag_ipv4 747 1 nf_conntrack_ipv4, Live 0xf85b4000
-xt_state 919 65 - Live 0xf85ab000
-ipt_LOG 4203 12 - Live 0xf8586000
-xt_limit 1140 14 - Live 0xf857c000
-iptable_filter 1034 1 - Live 0xf84d4000
-ipt_addrtype 1449 0 - Live 0xf84ca000
-xt_DSCP 1499 0 - Live 0xf84c1000
-xt_dscp 1155 0 - Live 0xf84b8000
-xt_string 1051 0 - Live 0xf84af000
-xt_owner 791 6 - Live 0xf84a6000
-xt_NFQUEUE 1565 0 - Live 0xf849d000
-xt_multiport 2163 0 - Live 0xf8494000
-xt_MARK 597 0 - Live 0xf848a000
-xt_mark 597 0 - Live 0xf8481000
-xt_iprange 1112 0 - Live 0xf8478000
-xt_hashlimit 7490 0 - Live 0xf846e000
-xt_conntrack 2183 0 - Live 0xf8462000
-xt_CONNMARK 963 0 - Live 0xf8458000
-xt_connmark 803 0 - Live 0xf803e000
-nf_conntrack 38512 7 nf_conntrack_ftp,nf_conntrack_irc,nf_conntrack_ipv4,xt_state,xt_conntrack,xt_CONNMARK,xt_connmark, Live 0xf843f000
-ip_tables 7645 1 iptable_filter, Live 0xf8034000
-x_tables 9456 20 ipt_REJECT,xt_tcpudp,xt_state,ipt_LOG,xt_limit,ipt_addrtype,xt_DSCP,xt_dscp,xt_string,xt_owner,xt_NFQUEUE,xt_multiport,xt_MARK,xt_mark,xt_iprange,xt_hashlimit,xt_conntrack,xt_CONNMARK,xt_connmark,ip_tables, Live 0xf800d000
-snd_ens1371 13650 0 - Live 0xfa21d000
-gameport 6213 1 snd_ens1371, Live 0xfa20d000
-snd_rawmidi 14248 1 snd_ens1371, Live 0xfa1fd000
-snd_intel8x0 21243 0 - Live 0xfa1e8000
-snd_seq_device 4105 1 snd_rawmidi, Live 0xfa1d5000
-snd_ac97_codec 85509 2 snd_ens1371,snd_intel8x0, Live 0xfa190000
-ac97_bus 702 1 snd_ac97_codec, Live 0xfa166000
-snd_pcm 48336 3 snd_ens1371,snd_intel8x0,snd_ac97_codec, Live 0xfa0ef000
-snd_timer 14100 1 snd_pcm, Live 0xfa0ca000
-nvidia 9829303 0 - Live 0xf9636000 (P)
-ppdev 5090 0 - Live 0xf8bdd000
-parport_pc 23336 0 - Live 0xf8bbe000
-snd 36462 7 snd_ens1371,snd_rawmidi,snd_intel8x0,snd_seq_device,snd_ac97_codec,snd_pcm,snd_timer, Live 0xf8b95000
-parport 24435 2 ppdev,parport_pc, Live 0xf8b70000
-snd_page_alloc 5345 2 snd_intel8x0,snd_pcm, Live 0xf8012000
-
-What is a good value for vmalloc= ? 
-The machine has 1 GB of RAM. 
-
-Mario
 
 _______________________________________________
 xfs mailing list
