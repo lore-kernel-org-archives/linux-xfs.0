@@ -1,22 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5M7FwBY229270 for <xfs@oss.sgi.com>; Tue, 22 Jun 2010 02:15:58 -0500
-Received: from rcsinet10.oracle.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EA9213F6937
-	for <xfs@oss.sgi.com>; Tue, 22 Jun 2010 00:18:38 -0700 (PDT)
-Received: from rcsinet10.oracle.com (rcsinet10.oracle.com [148.87.113.121]) by
-	cuda.sgi.com with ESMTP id mkLYKVFAitZ34b7f for
-	<xfs@oss.sgi.com>; Tue, 22 Jun 2010 00:18:38 -0700 (PDT)
-Subject: Re: segment fault when running xfs_check -s
-From: xiaowei hu <xiaowei.hu@oracle.com>
-In-Reply-To: <20100621053803.GK6590@dastard>
-References: <1277088918.20616.81.camel@redfuture-desktop>
-	<20100621053803.GK6590@dastard>
-Date: Tue, 22 Jun 2010 15:17:00 +0800
-Message-ID: <1277191020.1636.7.camel@redfuture-desktop>
-Mime-Version: 1.0
-Reply-To: xiaowei.hu@oracle.com
+	o5MCShE7237996 for <xfs@oss.sgi.com>; Tue, 22 Jun 2010 07:28:43 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AA20B14ACD7D
+	for <xfs@oss.sgi.com>; Tue, 22 Jun 2010 05:35:25 -0700 (PDT)
+Received: from bombadil.infradead.org ([18.85.46.34]) by cuda.sgi.com with
+	ESMTP id P52YTNiBwVTaMCg4 for <xfs@oss.sgi.com>;
+	Tue, 22 Jun 2010 05:35:25 -0700 (PDT)
+Message-Id: <20100622123113.205150586@bombadil.infradead.org>
+Date: Tue, 22 Jun 2010 08:21:46 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH 2/2] xfs: move aio completion after unwritten extent conversion
+References: <20100622122144.302857146@bombadil.infradead.org>
+Content-Disposition: inline; filename=xfs-unwritten-fix
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,223 +22,86 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: wen.gang.wang@oracle.com, xfs@oss.sgi.com
+To: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, linux-ext4@vger.kernel.org
 
-Hi Dave,
+If we write into an unwritten extent using AIO we need to complete the AIO
+request after the extent conversion has finished.  Without that a read could
+race to see see the extent still unwritten and return zeros.   For synchronous
+I/O we already take care of that by flushing the xfsconvertd workqueue (which
+might be a bit of overkill).
 
-I tried this patch,it fixes this bug, thank you very much:)
+To do that add iocb and result fields to struct xfs_ioend, so that we can
+call aio_complete from xfs_end_io after the extent conversion has happened.
+Note that we need a new result field as io_error is used for positive errno
+values, while the AIO code can return negative error values and positive
+transfer sizes.
 
-Regards,
-Xiaowei
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-
-
-On Mon, 2010-06-21 at 15:38 +1000, Dave Chinner wrote:
-> On Mon, Jun 21, 2010 at 10:55:18AM +0800, xiaowei hu wrote:
-> > Hi,
-> > 
-> > Recently I was playing with xfsprogs, and did some test on xfs_check
-> > tools in this mothod:
-> > 1.make a xfs fs on one partition.
-> > mkfs.xfs -f /dev/sda2
-> > 2.randomly modify some blocks on this volume using xfs_db.
-> > xfs_db -x -c blockget -c "blocktrash -3 -s 36 -n 81" /dev/sda2
-> > 3.run xfs_check -s
-> > xfs_check -s /dev/sda2
-> > 
-> > the output saying:
-> > [root@test1 ~]# xfs_check -s /dev/sda2
-> > bad version number 0x78 for inode 135
-> > bad magic number 0xa855 for inode 154
-> > bad magic number 0x5024 for inode 165
-> > /usr/local/bin/xfs_check: line 28:   769 Segmentation fault      xfs_db
-> > $DBOPTS -F -i -p xfs_check -c "blockget$OPTS" $1
-> > 
-> > if I run xfs_check without -s option, don't have this fault.
-> > 
-> > Is this a known problem?
-> 
-> No.
-> 
-> > I tried the latest code ,also have this problem.
-> 
-> Yeah, the code determining whether to output a message is broken:
-> 
-> 2651         if (!isfree) {
-> 2652                 id = find_inode(ino, 1);
-> 2653                 bno = XFS_INO_TO_FSB(mp, ino);
-> 2654                 blkmap = NULL;
-> 2655         }
-> 
-> find_inode() checks a list created by the "-i <ino #>" command line
-> option, so will always return NULL for this test case. Most of the checks
-> do this:
-> 
-> 2657                 if (!sflag || isfree || id->ilist || CHECK_BLIST(bno))
-> 
-> sflag is set by the "-s" command line option, which is why this
-> problem requires that to be set - the output checks don't get past
-> this otherwise.
-> 
-> isfree is a parameter passed into to say whether the inode is
-> allocated or not. The code hence assumes that if !isfree, then id !=
-> NULL, which is certainly not the case. Hence it can blow up if id =
-> NULL.
-> 
-> The line it crashed on:
-> 
-> 2670         if (isfree) {
-> 2671                 if (idic.di_nblocks != 0) {
-> 2672  >>>>>>                 if (!sflag || id->ilist || CHECK_BLIST(bno))
-> 
-> Looks like a clear case of copy-n-paste error - if isfree is set, the
-> id _must_ be null and we go kaboom.
-> 
-> It looks like none of the code in this function actually checks for
-> whether id is valid or not after find_inode and dereferencing the
-> reurn pointer.
-> 
-> The patch below should fix the problem.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> ---
->  db/check.c |   29 ++++++++++++++++-------------
->  1 files changed, 16 insertions(+), 13 deletions(-)
-> 
-> diff --git a/db/check.c b/db/check.c
-> index 7620d9c..e0dcf63 100644
-> --- a/db/check.c
-> +++ b/db/check.c
-> @@ -2619,6 +2619,7 @@ process_inode(
->  	xfs_qcnt_t		ic = 0;
->  	xfs_qcnt_t		rc = 0;
->  	xfs_dqid_t		dqprid;
-> +	int			v = 0;
->  	static char		okfmts[] = {
->  		0,				/* type 0 unused */
->  		1 << XFS_DINODE_FMT_DEV,	/* FIFO */
-> @@ -2653,15 +2654,16 @@ process_inode(
->  		bno = XFS_INO_TO_FSB(mp, ino);
->  		blkmap = NULL;
->  	}
-> +	v = (!sflag || (id && id->ilist) || CHECK_BLIST(bno));
->  	if (idic.di_magic != XFS_DINODE_MAGIC) {
-> -		if (!sflag || isfree || id->ilist || CHECK_BLIST(bno))
-> +		if (isfree || v)
->  			dbprintf(_("bad magic number %#x for inode %lld\n"),
->  				idic.di_magic, ino);
->  		error++;
->  		return;
->  	}
->  	if (!XFS_DINODE_GOOD_VERSION(idic.di_version)) {
-> -		if (!sflag || isfree || id->ilist || CHECK_BLIST(bno))
-> +		if (isfree || v)
->  			dbprintf(_("bad version number %#x for inode %lld\n"),
->  				idic.di_version, ino);
->  		error++;
-> @@ -2669,7 +2671,7 @@ process_inode(
->  	}
->  	if (isfree) {
->  		if (idic.di_nblocks != 0) {
-> -			if (!sflag || id->ilist || CHECK_BLIST(bno))
-> +			if (v)
->  				dbprintf(_("bad nblocks %lld for free inode "
->  					 "%lld\n"),
->  					idic.di_nblocks, ino);
-> @@ -2680,21 +2682,22 @@ process_inode(
->  		else
->  			nlink = idic.di_nlink;
->  		if (nlink != 0) {
-> -			if (!sflag || id->ilist || CHECK_BLIST(bno))
-> +			if (v)
->  				dbprintf(_("bad nlink %d for free inode %lld\n"),
->  					nlink, ino);
->  			error++;
->  		}
->  		if (idic.di_mode != 0) {
-> -			if (!sflag || id->ilist || CHECK_BLIST(bno))
-> +			if (v)
->  				dbprintf(_("bad mode %#o for free inode %lld\n"),
->  					idic.di_mode, ino);
->  			error++;
->  		}
->  		return;
->  	}
-> +
->  	if (be32_to_cpu(dip->di_next_unlinked) != NULLAGINO) {
-> -		if (!sflag || isfree || id->ilist || CHECK_BLIST(bno))
-> +		if (v)
->  			dbprintf(_("bad next unlinked %#x for inode %lld\n"),
->  				be32_to_cpu(dip->di_next_unlinked), ino);
->  		error++;
-> @@ -2704,27 +2707,27 @@ process_inode(
->  	 */
->  	if ((((idic.di_mode & S_IFMT) >> 12) > 15) ||
->  	    (!(okfmts[(idic.di_mode & S_IFMT) >> 12] & (1 << idic.di_format)))) {
-> -		if (!sflag || id->ilist || CHECK_BLIST(bno))
-> +		if (v)
->  			dbprintf(_("bad format %d for inode %lld type %#o\n"),
->  				idic.di_format, id->ino, idic.di_mode & S_IFMT);
->  		error++;
->  		return;
->  	}
->  	if ((unsigned int)XFS_DFORK_ASIZE(dip, mp) >= XFS_LITINO(mp))  {
-> -		if (!sflag || id->ilist)
-> +		if (v)
->  			dbprintf(_("bad fork offset %d for inode %lld\n"),
->  				idic.di_forkoff, id->ino);
->  		error++;
->  		return;
->  	}
->  	if ((unsigned int)idic.di_aformat > XFS_DINODE_FMT_BTREE)  {
-> -		if (!sflag || id->ilist)
-> +		if (v)
->  			dbprintf(_("bad attribute format %d for inode %lld\n"),
->  				idic.di_aformat, id->ino);
->  		error++;
->  		return;
->  	}
-> -	if (verbose || id->ilist || CHECK_BLIST(bno))
-> +	if (verbose || v)
->  		dbprintf(_("inode %lld mode %#o fmt %s "
->  			 "afmt %s "
->  			 "nex %d anex %d nblk %lld sz %lld%s%s%s%s%s%s%s\n"),
-> @@ -2844,20 +2847,20 @@ process_inode(
->  	}
->  	totblocks = totdblocks + totiblocks + atotdblocks + atotiblocks;
->  	if (totblocks != idic.di_nblocks) {
-> -		if (!sflag || id->ilist || CHECK_BLIST(bno))
-> +		if (v)
->  			dbprintf(_("bad nblocks %lld for inode %lld, counted "
->  				 "%lld\n"),
->  				idic.di_nblocks, id->ino, totblocks);
->  		error++;
->  	}
->  	if (nextents != idic.di_nextents) {
-> -		if (!sflag || id->ilist || CHECK_BLIST(bno))
-> +		if (v)
->  			dbprintf(_("bad nextents %d for inode %lld, counted %d\n"),
->  				idic.di_nextents, id->ino, nextents);
->  		error++;
->  	}
->  	if (anextents != idic.di_anextents) {
-> -		if (!sflag || id->ilist || CHECK_BLIST(bno))
-> +		if (v)
->  			dbprintf(_("bad anextents %d for inode %lld, counted "
->  				 "%d\n"),
->  				idic.di_anextents, id->ino, anextents);
-
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_aops.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_aops.c	2010-06-22 14:05:02.522005722 +0200
++++ linux-2.6/fs/xfs/linux-2.6/xfs_aops.c	2010-06-22 14:08:30.065006205 +0200
+@@ -275,8 +275,11 @@ xfs_end_io(
+ 		xfs_finish_ioend(ioend, 0);
+ 		/* ensure we don't spin on blocked ioends */
+ 		delay(1);
+-	} else
++	} else {
++		if (ioend->io_iocb)
++			aio_complete(ioend->io_iocb, ioend->io_result, 0);
+ 		xfs_destroy_ioend(ioend);
++	}
+ }
+ 
+ /*
+@@ -309,6 +312,8 @@ xfs_alloc_ioend(
+ 	atomic_inc(&XFS_I(ioend->io_inode)->i_iocount);
+ 	ioend->io_offset = 0;
+ 	ioend->io_size = 0;
++	ioend->io_iocb = NULL;
++	ioend->io_result = 0;
+ 
+ 	INIT_WORK(&ioend->io_work, xfs_end_io);
+ 	return ioend;
+@@ -1604,6 +1609,7 @@ xfs_end_io_direct(
+ 	bool		is_async)
+ {
+ 	xfs_ioend_t	*ioend = iocb->private;
++	bool		complete_aio = is_async;
+ 
+ 	/*
+ 	 * Non-NULL private data means we need to issue a transaction to
+@@ -1629,7 +1635,14 @@ xfs_end_io_direct(
+ 	if (ioend->io_type == IO_READ) {
+ 		xfs_finish_ioend(ioend, 0);
+ 	} else if (private && size > 0) {
+-		xfs_finish_ioend(ioend, is_sync_kiocb(iocb));
++		if (is_async) {
++			ioend->io_iocb = iocb;
++			ioend->io_result = ret;
++			complete_aio = false;
++			xfs_finish_ioend(ioend, 0);
++		} else {
++			xfs_finish_ioend(ioend, 1);
++		}
+ 	} else {
+ 		/*
+ 		 * A direct I/O write ioend starts it's life in unwritten
+@@ -1648,7 +1661,7 @@ xfs_end_io_direct(
+ 	 */
+ 	iocb->private = NULL;
+ 
+-	if (is_async)
++	if (complete_aio)
+ 		aio_complete(iocb, ret, 0);
+ }
+ 
 
 _______________________________________________
 xfs mailing list
