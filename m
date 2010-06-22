@@ -1,19 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5MCSh8V237997 for <xfs@oss.sgi.com>; Tue, 22 Jun 2010 07:28:43 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B527014ACD7E
-	for <xfs@oss.sgi.com>; Tue, 22 Jun 2010 05:35:24 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id sS5h7hdqVjn7MG6D for
-	<xfs@oss.sgi.com>; Tue, 22 Jun 2010 05:35:24 -0700 (PDT)
-Message-Id: <20100622123113.011371666@bombadil.infradead.org>
-Date: Tue, 22 Jun 2010 08:21:45 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 1/2] direct-io: move aio_complete into ->end_io
-References: <20100622122144.302857146@bombadil.infradead.org>
-Content-Disposition: inline; filename=direct-io-unwritten-fix
+	o5MEY7vZ241771 for <xfs@oss.sgi.com>; Tue, 22 Jun 2010 09:34:08 -0500
+Received: from bork.lsof.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B202E131A44E
+	for <xfs@oss.sgi.com>; Tue, 22 Jun 2010 07:40:57 -0700 (PDT)
+Received: from bork.lsof.org (bork.lsof.org [87.253.148.42]) by cuda.sgi.com
+	with ESMTP id aL9tnQJEVNx3UBLi for <xfs@oss.sgi.com>;
+	Tue, 22 Jun 2010 07:40:57 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+	by bork.lsof.org (Postfix) with ESMTP id 2E072BB1F
+	for <xfs@oss.sgi.com>; Tue, 22 Jun 2010 16:36:45 +0200 (CEST)
+Received: from bork.lsof.org ([127.0.0.1])
+	by localhost (bork.lsof.org [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id CXwukQLb4pLt for <xfs@oss.sgi.com>;
+	Tue, 22 Jun 2010 16:36:43 +0200 (CEST)
+Received: from bork.lsof.org (localhost [127.0.0.1])
+	by bork.lsof.org (Postfix) with ESMTP id E332FBA45
+	for <xfs@oss.sgi.com>; Tue, 22 Jun 2010 16:36:42 +0200 (CEST)
+Message-ID: <cone.1277217402.916517.87295.1001@bork.lsof.org>
+From: Roel van Meer <rolek@bokxing.nl>
+Subject: advice for repair after IO error on raid device
+Date: Tue, 22 Jun 2010 16:36:42 +0200
+Mime-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,210 +32,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, linux-ext4@vger.kernel.org
+To: xfs@oss.sgi.com
 
-Filesystems with unwritten extent support must not complete an AIO request
-until the transaction to convert the extent has been commited.  That means
-the aio_complete calls needs to be moved into the ->end_io callback so
-that the filesystem can control when to call it exactly.
+Hi list,
 
-This makes a bit of a mess out of dio_complete and the ->end_io callback
-prototype even more complicated.  In addition ->end_io is now called with
-i_alloc_sem held for DIO_LOCKING filesystems.  The only filesystem that
-has both and ->end_io callback and sets DIO_LOCKING is ext4, which doesn't
-appear to do anything that could deadlock with i_alloc_sem in ->end_io.
+I recently I had a failed disk in a raid6 setup, which resulted in an IO 
+error, which in turn caused XFS to shut down with the messages below.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+I've seen on this list that incorrect use of xfs_repair might damage the fs 
+even more, so I would like to ask for some advice on the best way to 
+proceed.
 
-Index: linux-2.6/fs/direct-io.c
-===================================================================
---- linux-2.6.orig/fs/direct-io.c	2010-06-22 09:48:37.239004298 +0200
-+++ linux-2.6/fs/direct-io.c	2010-06-22 11:54:42.281003878 +0200
-@@ -218,7 +218,7 @@ static struct page *dio_get_page(struct
-  * filesystems can use it to hold additional state between get_block calls and
-  * dio_complete.
-  */
--static int dio_complete(struct dio *dio, loff_t offset, int ret)
-+static int dio_complete(struct dio *dio, loff_t offset, int ret, bool is_async)
- {
- 	ssize_t transferred = 0;
- 
-@@ -239,14 +239,6 @@ static int dio_complete(struct dio *dio,
- 			transferred = dio->i_size - offset;
- 	}
- 
--	if (dio->end_io && dio->result)
--		dio->end_io(dio->iocb, offset, transferred,
--			    dio->map_bh.b_private);
--
--	if (dio->flags & DIO_LOCKING)
--		/* lockdep: non-owner release */
--		up_read_non_owner(&dio->inode->i_alloc_sem);
--
- 	if (ret == 0)
- 		ret = dio->page_errors;
- 	if (ret == 0)
-@@ -254,6 +246,17 @@ static int dio_complete(struct dio *dio,
- 	if (ret == 0)
- 		ret = transferred;
- 
-+	if (dio->end_io && dio->result) {
-+		dio->end_io(dio->iocb, offset, transferred,
-+			    dio->map_bh.b_private, ret, is_async);
-+	} else if (is_async) {
-+		aio_complete(dio->iocb, ret, 0);
-+	}
-+
-+	if (dio->flags & DIO_LOCKING)
-+		/* lockdep: non-owner release */
-+		up_read_non_owner(&dio->inode->i_alloc_sem);
-+
- 	return ret;
- }
- 
-@@ -277,8 +280,7 @@ static void dio_bio_end_aio(struct bio *
- 	spin_unlock_irqrestore(&dio->bio_lock, flags);
- 
- 	if (remaining == 0) {
--		int ret = dio_complete(dio, dio->iocb->ki_pos, 0);
--		aio_complete(dio->iocb, ret, 0);
-+		dio_complete(dio, dio->iocb->ki_pos, 0, true);
- 		kfree(dio);
- 	}
- }
-@@ -1126,7 +1128,7 @@ direct_io_worker(int rw, struct kiocb *i
- 	spin_unlock_irqrestore(&dio->bio_lock, flags);
- 
- 	if (ret2 == 0) {
--		ret = dio_complete(dio, offset, ret);
-+		ret = dio_complete(dio, offset, ret, false);
- 		kfree(dio);
- 	} else
- 		BUG_ON(ret != -EIOCBQUEUED);
-Index: linux-2.6/fs/ext4/inode.c
-===================================================================
---- linux-2.6.orig/fs/ext4/inode.c	2010-06-22 09:48:37.249004508 +0200
-+++ linux-2.6/fs/ext4/inode.c	2010-06-22 12:18:45.883255381 +0200
-@@ -3775,7 +3775,8 @@ static ext4_io_end_t *ext4_init_io_end (
- }
- 
- static void ext4_end_io_dio(struct kiocb *iocb, loff_t offset,
--			    ssize_t size, void *private)
-+			    ssize_t size, void *private, int ret,
-+			    bool is_async)
- {
-         ext4_io_end_t *io_end = iocb->private;
- 	struct workqueue_struct *wq;
-@@ -3784,7 +3785,7 @@ static void ext4_end_io_dio(struct kiocb
- 
- 	/* if not async direct IO or dio with 0 bytes write, just return */
- 	if (!io_end || !size)
--		return;
-+		goto out;
- 
- 	ext_debug("ext4_end_io_dio(): io_end 0x%p"
- 		  "for inode %lu, iocb 0x%p, offset %llu, size %llu\n",
-@@ -3795,7 +3796,7 @@ static void ext4_end_io_dio(struct kiocb
- 	if (io_end->flag != EXT4_IO_UNWRITTEN){
- 		ext4_free_io_end(io_end);
- 		iocb->private = NULL;
--		return;
-+		goto out;
- 	}
- 
- 	io_end->offset = offset;
-@@ -3812,6 +3813,9 @@ static void ext4_end_io_dio(struct kiocb
- 	list_add_tail(&io_end->list, &ei->i_completed_io_list);
- 	spin_unlock_irqrestore(&ei->i_completed_io_lock, flags);
- 	iocb->private = NULL;
-+out:
-+	if (is_async)
-+		aio_complete(iocb, ret, 0);
- }
- 
- static void ext4_end_io_buffer_write(struct buffer_head *bh, int uptodate)
-Index: linux-2.6/fs/ocfs2/aops.c
-===================================================================
---- linux-2.6.orig/fs/ocfs2/aops.c	2010-06-22 09:48:37.259012749 +0200
-+++ linux-2.6/fs/ocfs2/aops.c	2010-06-22 12:19:03.931005757 +0200
-@@ -609,7 +609,9 @@ bail:
- static void ocfs2_dio_end_io(struct kiocb *iocb,
- 			     loff_t offset,
- 			     ssize_t bytes,
--			     void *private)
-+			     void *private,
-+			     int ret,
-+			     bool is_async)
- {
- 	struct inode *inode = iocb->ki_filp->f_path.dentry->d_inode;
- 	int level;
-@@ -623,6 +625,9 @@ static void ocfs2_dio_end_io(struct kioc
- 	if (!level)
- 		up_read(&inode->i_alloc_sem);
- 	ocfs2_rw_unlock(inode, level);
-+
-+	if (is_async)
-+		aio_complete(iocb, ret, 0);
- }
- 
- /*
-Index: linux-2.6/fs/xfs/linux-2.6/xfs_aops.c
-===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_aops.c	2010-06-22 09:48:37.268012190 +0200
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_aops.c	2010-06-22 14:05:02.522005722 +0200
-@@ -1599,7 +1599,9 @@ xfs_end_io_direct(
- 	struct kiocb	*iocb,
- 	loff_t		offset,
- 	ssize_t		size,
--	void		*private)
-+	void		*private,
-+	int		ret,
-+	bool		is_async)
- {
- 	xfs_ioend_t	*ioend = iocb->private;
- 
-@@ -1645,6 +1647,9 @@ xfs_end_io_direct(
- 	 * against double-freeing.
- 	 */
- 	iocb->private = NULL;
-+
-+	if (is_async)
-+		aio_complete(iocb, ret, 0);
- }
- 
- STATIC ssize_t
-Index: linux-2.6/fs/xfs/linux-2.6/xfs_aops.h
-===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_aops.h	2010-06-22 09:48:37.278274238 +0200
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_aops.h	2010-06-22 09:49:12.388034051 +0200
-@@ -37,6 +37,8 @@ typedef struct xfs_ioend {
- 	size_t			io_size;	/* size of the extent */
- 	xfs_off_t		io_offset;	/* offset in the file */
- 	struct work_struct	io_work;	/* xfsdatad work queue */
-+	struct kiocb		*io_iocb;
-+	int			io_result;
- } xfs_ioend_t;
- 
- extern const struct address_space_operations xfs_address_space_operations;
-Index: linux-2.6/include/linux/fs.h
-===================================================================
---- linux-2.6.orig/include/linux/fs.h	2010-06-22 09:49:07.188253984 +0200
-+++ linux-2.6/include/linux/fs.h	2010-06-22 10:34:10.128005975 +0200
-@@ -415,7 +415,8 @@ struct buffer_head;
- typedef int (get_block_t)(struct inode *inode, sector_t iblock,
- 			struct buffer_head *bh_result, int create);
- typedef void (dio_iodone_t)(struct kiocb *iocb, loff_t offset,
--			ssize_t bytes, void *private);
-+			ssize_t bytes, void *private, int ret,
-+			bool is_async);
- 
- /*
-  * Attribute flags.  These should be or-ed together to figure out what
+Currently I have unmounted the filesystem, replaced the failed disk and 
+rebuilt the raid array. I am upgrading xfstools to their latest version (the 
+current version is 2.9.8). Any hints on how to continue would be highly 
+appreciated.
+
+Background: This is a Fedora Core 3 machine, with a vanilla 2.6.31 kernel.
+The raid setup consists of 24x2TB disks in a raid6 setup. We use it to store 
+our backup snapshots and the entire volume is written to tape once a week.
+
+Thanks in advance,
+
+roel
+
+Jun 21 23:23:59 backup2 kernel: arcmsr6: abort device command of scsi id = 0 lun = 0
+Jun 21 23:24:10 backup2 kernel: arcmsr6: ccb ='0xffff8800cb88ad40'????????????????????????????? isr got aborted command
+Jun 21 23:24:10 backup2 kernel: arcmsr6: isr get an illegal ccb command???????????????????????????????? done acb = '0xffff880231c90408'ccb = '0xffff8800cb88ad40' ccbacb = '0xffff880231c90408' startdone = 0x0 ccboutstandingcount = 1
+Jun 21 23:24:10 backup2 kernel: sd 6:0:0:0: [sdb] Unhandled error code
+Jun 21 23:24:10 backup2 kernel: sd 6:0:0:0: [sdb] Result: hostbyte=DID_ABORT driverbyte=DRIVER_OK
+Jun 21 23:24:10 backup2 kernel: end_request: I/O error, dev sdb, sector 12887056410
+Jun 21 23:24:10 backup2 kernel: I/O error in filesystem ("sdb1") meta-data dev sdb1 block 0x30020dff8?????? ("xfs_trans_read_buf") error 5 buf count 4096
+Jun 21 23:24:10 backup2 kernel: xfs_force_shutdown(sdb1,0x1) called from line 414 of file fs/xfs/xfs_trans_buf.c.? Return address = 0xffffffffa0168eaf
+Jun 21 23:24:10 backup2 kernel: xfs_force_shutdown(sdb1,0x2) called from line 811 of file fs/xfs/xfs_log.c.? Return address = 0xffffffffa015c35f
+Jun 21 23:24:10 backup2 kernel: Filesystem "sdb1": I/O Error Detected.? Shutting down filesystem: sdb1
+Jun 21 23:24:10 backup2 kernel: Please umount the filesystem, and rectify the problem(s)
+Jun 21 23:24:20 backup2 kernel: Filesystem "sdb1": xfs_log_force: error 5 returned.
+Jun 21 23:24:50 backup2 kernel: Filesystem "sdb1": xfs_log_force: error 5 returned.
+Jun 21 23:25:20 backup2 kernel: Filesystem "sdb1": xfs_log_force: error 5 returned.
 
 _______________________________________________
 xfs mailing list
