@@ -1,21 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5MGTEfA245888 for <xfs@oss.sgi.com>; Tue, 22 Jun 2010 11:29:14 -0500
-Received: from smtp4-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2C94315A080A
-	for <xfs@oss.sgi.com>; Tue, 22 Jun 2010 09:36:04 -0700 (PDT)
-Received: from smtp4-g21.free.fr (smtp4-g21.free.fr [212.27.42.4]) by
-	cuda.sgi.com with ESMTP id c1NgOfD6IoeGcHOW for
-	<xfs@oss.sgi.com>; Tue, 22 Jun 2010 09:36:04 -0700 (PDT)
-Date: Tue, 22 Jun 2010 18:31:54 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: advice for repair after IO error on raid device
-Message-ID: <20100622183154.24e84e0d@harpe.intellique.com>
-In-Reply-To: <cone.1277218412.674723.87295.1001@bork.lsof.org>
-References: <cone.1277217402.916517.87295.1001@bork.lsof.org>
-	<cone.1277218412.674723.87295.1001@bork.lsof.org>
-Mime-Version: 1.0
+	o5N7ZBo4013797 for <xfs@oss.sgi.com>; Wed, 23 Jun 2010 02:35:11 -0500
+Received: from mailgate.ics.forth.gr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 955B53FA98D
+	for <xfs@oss.sgi.com>; Wed, 23 Jun 2010 00:37:51 -0700 (PDT)
+Received: from mailgate.ics.forth.gr (mailgate.ics.forth.gr [139.91.1.2]) by
+	cuda.sgi.com with ESMTP id jgzRxlOkUUXXl43z for
+	<xfs@oss.sgi.com>; Wed, 23 Jun 2010 00:37:51 -0700 (PDT)
+Received: from av1.ics.forth.gr (av1-in.ics.forth.gr [139.91.1.71])
+	by mailgate.ics.forth.gr (8.14.3/ICS-FORTH/V10-1.8-GATE) with ESMTP id
+	o5N7bl7L027250
+	for <xfs@oss.sgi.com>; Wed, 23 Jun 2010 10:37:50 +0300 (EEST)
+Received: from [139.91.92.13] ([139.91.92.13]) (authenticated bits=0)
+	by enigma.ics.forth.gr (8.14.3//ICS-FORTH/V10.3.0C-EXTNULL-SSL-SASL)
+	with ESMTP id o5N7blIa023547
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Wed, 23 Jun 2010 10:37:47 +0300
+Message-ID: <4C21B9AF.9010307@ics.forth.gr>
+Date: Wed, 23 Jun 2010 10:37:19 +0300
+From: Yannis Klonatos <klonatos@ics.forth.gr>
+MIME-Version: 1.0
+Subject: XFS peculiar behavior
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,44 +30,47 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Roel van Meer <rolek@bokxing.nl>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Le Tue, 22 Jun 2010 16:53:32 +0200
-Roel van Meer <rolek@bokxing.nl> =E9crivait:
+Hi all!
 
-> If someone could confirm (or reject) that, that would be great.
+         I have come across the following peculiar behavior in XFS and i 
+would appreciate any information anyone
+could provide.
+         In our lab we have a system that has twelve 500GByte hard disks 
+(total capacity 6TByte), connected to an
+Areca (ARC-1680D-IX-12) SAS storage controller. The disks are configured 
+as a RAID-0 device. Then I create
+a clean XFS filesystem on top of the raid volume, using the whole 
+capacity. We use this test-setup to measure
+performance improvement for a TPC-H experiment. We copy the database 
+over the clean XFS filesystem using the
+cp utility. The database used in our experiments is 56GBytes in size 
+(data + indices).
+         The problem is that i have noticed that XFS may - not all times 
+- split a table over a large disk distance. For
+example in one run i have noticed that a file of 13GByte is split over a 
+4,7TByte distance (I calculate this distance
+by subtracting the final block used for the file with the first one. The 
+two disk blocks values are acquired using the
+FIBMAP ioctl).
+         Is there some reasoning behind this (peculiar) behavior? I 
+would expect that since the underlying storage is so
+large, and the dataset is so small, XFS would try to minimize disk seeks 
+and thus place the file sequentially in disk.
+Furthermore, I understand that there may be some blocks left unused by 
+XFS between subsequent file blocks used
+in order to handle any write appends that may come afterward. But i 
+wouldn't expect such a large splitting of a single
+file.
+         Any help?
 
-Confirmation granted.
-
-> (By the way, is it necessary to run xfs_repair with -n first? If not,
-> are there advantages that would justify the extra time it takes?)
-
-It will indicate what modifications he would have done, before actually
-doing them... Like "inode 038953095 corrupted, would remove it" then
-"directory not connected, would move content moved to lost+found"
-
-I found that usually xfs_repair is quit quick and never takes much more
-than a couple of minutes (even on very big arrays) so you have no valid
-reason to skip the "xfs_repair -n" part.
-
-It may be nice to dump the filesystem metadata with xfs_metadump
-prior to using xfs_repair too. In the case where the repair's really
-gone bad, you could at least revert to the prior less broken state using
-xfs_mdrestore...
-
--- =
-
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+Thanks in advance,
+Yannis Klonatos
 
 _______________________________________________
 xfs mailing list
