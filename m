@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5NIUD3n035197 for <xfs@oss.sgi.com>; Wed, 23 Jun 2010 13:30:14 -0500
-Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6F3F3152E608
-	for <xfs@oss.sgi.com>; Wed, 23 Jun 2010 11:32:53 -0700 (PDT)
-Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id FXEFAO2QL8y28Fbq for
-	<xfs@oss.sgi.com>; Wed, 23 Jun 2010 11:32:53 -0700 (PDT)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: xfs_repair 3.1.2 crashing
-Date: Wed, 23 Jun 2010 20:32:46 +0200
-References: <201006101306.07587@zmi.at> <4C12E520.6040008@sandeen.net>
-	<201006121241.52336@zmi.at>
-In-Reply-To: <201006121241.52336@zmi.at>
+	o5NKZMBm038549 for <xfs@oss.sgi.com>; Wed, 23 Jun 2010 15:35:22 -0500
+Received: from coco.kroah.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 388C83FD563
+	for <xfs@oss.sgi.com>; Wed, 23 Jun 2010 13:38:03 -0700 (PDT)
+Received: from coco.kroah.org (kroah.org [198.145.64.141]) by cuda.sgi.com
+	with ESMTP id XlA8TvU7XVy8q4Fj for <xfs@oss.sgi.com>;
+	Wed, 23 Jun 2010 13:38:03 -0700 (PDT)
+Date: Wed, 23 Jun 2010 13:36:53 -0700
+From: Greg KH <greg@kroah.com>
+Subject: Re: [stable] [PATCH 1/3] writeback: pay attention to
+	wbc->nr_to_write in write_cache_pages
+Message-ID: <20100623203653.GB2281@kroah.com>
+References: <1276043840-1946-1-git-send-email-david@fromorbit.com>
+	<1276043840-1946-2-git-send-email-david@fromorbit.com>
+	<20100609140942.6799c84a.akpm@linux-foundation.org>
+	<20100609225804.GK7869@dastard> <20100610000811.GL7869@dastard>
 MIME-Version: 1.0
-Message-Id: <201006232032.51016@zmi.at>
+Content-Disposition: inline
+In-Reply-To: <20100610000811.GL7869@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,106 +28,81 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3023438379444634854=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, Eric Sandeen <sandeen@sandeen.net>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, torvalds@linux-foundation.org, stable@kernel.org
 
---===============3023438379444634854==
-Content-Type: multipart/signed;
-  boundary="nextPart4180749.6qIoClEGSH";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+On Thu, Jun 10, 2010 at 10:08:11AM +1000, Dave Chinner wrote:
+> On Thu, Jun 10, 2010 at 08:58:04AM +1000, Dave Chinner wrote:
+> > On Wed, Jun 09, 2010 at 02:09:42PM -0700, Andrew Morton wrote:
+> > > On Wed,  9 Jun 2010 10:37:18 +1000
+> > > Dave Chinner <david@fromorbit.com> wrote:
+> > > 
+> > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > 
+> > > > If a filesystem writes more than one page in ->writepage, write_cache_pages
+> > > > fails to notice this and continues to attempt writeback when wbc->nr_to_write
+> > > > has gone negative - this trace was captured from XFS:
+> > > > 
+> > > > 
+> > > >     wbc_writeback_start: towrt=1024
+> > > >     wbc_writepage: towrt=1024
+> > > >     wbc_writepage: towrt=0
+> > > >     wbc_writepage: towrt=-1
+> > > >     wbc_writepage: towrt=-5
+> > > >     wbc_writepage: towrt=-21
+> > > >     wbc_writepage: towrt=-85
+> > > > 
+> > > > This has adverse effects on filesystem writeback behaviour. write_cache_pages()
+> > > > needs to terminate after a certain number of pages are written, not after a
+> > > > certain number of calls to ->writepage are made.  This is a regression
+> > > > introduced by 17bc6c30cf6bfffd816bdc53682dd46fc34a2cf4 ("vfs: Add
+> > > > no_nrwrite_index_update writeback control flag"), but cannot be reverted
+> > > > directly due to subsequent bug fixes that have gone in on top of it.
+> > > 
+> > > Might be needed in -stable.  Unfortunately the most important piece of
+> > > information which is needed to make that decision was cunningly hidden
+> > > from us behind the vague-to-the-point-of-uselessness term "adverse
+> > > effects".
+> > > 
+> > > _what_ "adverse effects"??
+> > 
+> > Depends on how the specific filesystem handles a negative
+> > nr_to_write, doesn't it? I can't speak for the exact effect on
+> > anything other than XFS except to say that most ->write_page
+> > implemetnations don't handle the wbc->nr_to_write < 0 specifically...
+> > 
+> > For XFS, it results in increased CPU usage because it triggers
+> > page-at-a-time allocation (i.e no clustering), which increases
+> > overhead in the elveator due to merging requirements of single page
+> > bios and increased fragmentation due to small interleaved
+> > allocations on concurrent writeback workloads. Effectively it causes
+> > accelerated aging of XFS filesystems...
+> 
+> Sorry, forgot to address the -stable part of the question.
+> 
+> This series is dependent on the ext4 change to use it's own
+> writepage going into -stable first.  (i.e.
+> 8e48dcfbd7c0892b4cfd064d682cc4c95a29df32 "ext4: Use our own
+> write_cache_pages()").
+> 
+> I'd suggest that all 4 patches (the ext4 patch and the three in this
+> series) should go back to 2.6.34-stable due to the long term affect
+> this writeback bug could have on XFS filesystems, and the sync
+> taking too long problem has been fairly widely reported since at
+> least .32...
 
---nextPart4180749.6qIoClEGSH
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+Ok, can someone please tell me the git commit ids that need to be
+applied to the -stable trees?
 
-On Samstag, 12. Juni 2010 Michael Monnerie wrote:
-> openSUSE 11.2 with it's latest kernel, 2.6.31.12-0.2-desktop
+thanks,
 
-Any news here? I'd need a fix, is there a chance to get back the contents o=
-f this file?
-
-[212428.619676] Filesystem "dm-0": corrupt inode 2267035928 ((a)extents =3D=
- 7).  Unmount and run xfs_repair.                                          =
-                                                                           =
-            =20
-[212428.619681] ffff8800f3a9a800: 49 4e 81 fc 02 02 00 00 00 00 04 e5 00 00=
- 00 64  IN.............d                                                   =
-                                                                           =
-          =20
-[212428.619686] Filesystem "dm-0": XFS internal error xfs_iformat_extents(1=
-) at line 558 of file /usr/src/packages/BUILD/kernel-xen-2.6.31.12/linux-2.=
-6.31/fs/xfs/xfs_inode.c.  Caller 0xffffffffa019c44d
-[212428.619688]
-[212428.619691] Pid: 13006, comm: ls Not tainted 2.6.31.12-0.2-xen #1
-[212428.619694] Call Trace:
-[212428.619707]  [<ffffffff800119b9>] try_stack_unwind+0x189/0x1b0
-[212428.619714]  [<ffffffff8000f466>] dump_trace+0xa6/0x1e0
-[212428.619718]  [<ffffffff800114c4>] show_trace_log_lvl+0x64/0x90
-[212428.619722]  [<ffffffff80011513>] show_trace+0x23/0x40
-[212428.619727]  [<ffffffff8046b92c>] dump_stack+0x81/0x9e
-[212428.619761]  [<ffffffffa0191d5a>] xfs_error_report+0x5a/0x70 [xfs]
-[212428.619810]  [<ffffffffa0191ddc>] xfs_corruption_error+0x6c/0x90 [xfs]
-[212428.619853]  [<ffffffffa019bf24>] xfs_iformat_extents+0x234/0x280 [xfs]
-[212428.619903]  [<ffffffffa019c44d>] xfs_iformat+0x28d/0x5a0 [xfs]
-[212428.619951]  [<ffffffffa019c8e2>] xfs_iread+0x182/0x1c0 [xfs]
-[212428.620000]  [<ffffffffa0197cc8>] xfs_iget_cache_miss+0x78/0x200 [xfs]
-[212428.620046]  [<ffffffffa0197f79>] xfs_iget+0x129/0x1d0 [xfs]
-[212428.620094]  [<ffffffffa01b888e>] xfs_lookup+0xce/0x100 [xfs]
-[212428.620158]  [<ffffffffa01c5cac>] xfs_vn_lookup+0x6c/0xc0 [xfs]
-[212428.620220]  [<ffffffff80124702>] real_lookup+0x102/0x180
-[212428.620225]  [<ffffffff80126bc0>] do_lookup+0xd0/0x100
-[212428.620229]  [<ffffffff80127a98>] __link_path_walk+0x7f8/0xf40
-[212428.620233]  [<ffffffff801283f6>] path_walk+0x66/0xd0
-[212428.620237]  [<ffffffff801285cb>] do_path_lookup+0x6b/0xb0
-[212428.620240]  [<ffffffff80129531>] user_path_at+0x61/0xc0
-[212428.620244]  [<ffffffff8011e501>] vfs_fstatat+0x41/0x90
-[212428.620248]  [<ffffffff8011e5dc>] vfs_lstat+0x2c/0x50
-[212428.620251]  [<ffffffff8011e62e>] sys_newlstat+0x2e/0x70
-[212428.620254]  [<ffffffff8000c868>] system_call_fastpath+0x16/0x1b
-[212428.620263]  [<00007fcb58264e65>] 0x7fcb58264e65
-
-
-=2D-=20
-mit freundlichen Gr=C3=BCssen,
-Michael Monnerie, Ing. BSc
-
-it-management Internet Services
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: 0660 / 415 65 31
-
-// Wir haben im Moment zwei H=C3=A4user zu verkaufen:
-// http://zmi.at/langegg/
-// http://zmi.at/haus2009/
-
---nextPart4180749.6qIoClEGSH
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.12 (GNU/Linux)
-
-iEYEABECAAYFAkwiU1IACgkQzhSR9xwSCbRwVACeNLi96zjHR8F82fmeWN5fykOi
-LIcAoMlZsaVB/awpejS9hjQ1b9P7XrtE
-=99i8
------END PGP SIGNATURE-----
-
---nextPart4180749.6qIoClEGSH--
-
-
---===============3023438379444634854==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+greg k-h
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3023438379444634854==--
