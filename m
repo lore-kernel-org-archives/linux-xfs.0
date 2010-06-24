@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5OFJB7m177637 for <xfs@oss.sgi.com>; Thu, 24 Jun 2010 10:19:11 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6A296153ECDB
-	for <xfs@oss.sgi.com>; Thu, 24 Jun 2010 08:21:53 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id NeT5Rmdrn44to6wS for
-	<xfs@oss.sgi.com>; Thu, 24 Jun 2010 08:21:53 -0700 (PDT)
-Message-ID: <4C2377ED.8090300@sandeen.net>
-Date: Thu, 24 Jun 2010 10:21:17 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	o5OFfSsg206072 for <xfs@oss.sgi.com>; Thu, 24 Jun 2010 10:41:29 -0500
+Received: from mailgate.ics.forth.gr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 538F11119DFF
+	for <xfs@oss.sgi.com>; Thu, 24 Jun 2010 08:48:32 -0700 (PDT)
+Received: from mailgate.ics.forth.gr (mailgate.ics.forth.gr [139.91.1.2]) by
+	cuda.sgi.com with ESMTP id rzPxtba3DmtvLtv4 for
+	<xfs@oss.sgi.com>; Thu, 24 Jun 2010 08:48:32 -0700 (PDT)
+Message-ID: <4C237B4E.8030606@ics.forth.gr>
+Date: Thu, 24 Jun 2010 18:35:42 +0300
+From: Yannis Klonatos <klonatos@ics.forth.gr>
 MIME-Version: 1.0
 Subject: Re: XFS peculiar behavior
 References: <4C21B9AF.9010307@ics.forth.gr> <20100623231700.GP6590@dastard>
-	<4C236791.1030709@ics.forth.gr>
-In-Reply-To: <4C236791.1030709@ics.forth.gr>
+	<4C236791.1030709@ics.forth.gr> <4C2377ED.8090300@sandeen.net>
+In-Reply-To: <4C2377ED.8090300@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,146 +24,136 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Yannis Klonatos <klonatos@ics.forth.gr>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: andi@firstfloor.org, xfs@oss.sgi.com
 
-On 06/24/2010 09:11 AM, Yannis Klonatos wrote:
-> Hello again,
-> 
->          First of all, thank you all for your quick replies. I attach 
-> all the information you requested in your responses.
-> 
-> 1) The output of xfs_info is the following:
->
-> meta-data=/dev/sdf     isize=256    agcount=32, agsize=45776328 blks
->          =             sectsz=512   attr=0
-> data     =             bsize=4096   blocks=1464842496, imaxpct=25
->          =             sunit=0      swidth=0 blks, unwritten=1
-> naming   =version 2    bsize=4096
-> log      =internal     bsize=4096   blocks=32768, version=1
->          =             sectsz=512   sunit=0 blks, lazy-count=0
-> realtime =none         extsz=4096   blocks=0, rtextents=0
-> 
-> 2) The output of xfs_bmap in the lineitem.MYI table of the TPC-H 
-> workload is at one run:
-> 
-> /mnt/test/mysql/tpch/lineitem.MYI:
->   EXT: FILE-OFFSET           BLOCK-RANGE              AG  AG-OFFSET         TOTAL
->     0: [0..6344271]:         11352529416..11358873687 31 (72..6344343)    6344272
->     1: [6344272..10901343]:  1464842608..1469399679    4 (112..4557183)   4557072
->     2: [10901344..18439199]: 1831053200..1838591055    5 (80..7537935)    7537856
->     3: [18439200..25311519]: 2197263840..2204136159    6 (96..6872415)    6872320
->     4: [25311520..26660095]: 2563474464..2564823039    7 (96..1348671)    1348576
-> 
-> Given that all disk blocks are in units of 512-byte blocks, if I 
-> interpret the output
-> correctly the first file is at block 1465352792 = 698.4GByte offset and 
-> the last block
-> is at 5421.1GByte offset, meaning that this specific table is split over 
-> a 4,7TByte distance.
-
-The file started out in the last AG, and then had to wrap around,
-because it hit the end of the filesystem. :)  It was then somewhat
-sequential in AGs 4,5,6,7 after that, though not perfectly so.
-
-This run was with a clean filesystem?  Was the mountpoint
-/mnt/test?  XFS distributes new directories into new AGs (allocation
-groups, or disk regions) for parallelism, and then files in those dirs
-start populating the same AG.  So if /mnt/test/mysql/tpch ended up in
-the last AG (#31) then the file likely started there, too.
-
-Also, the "inode32" allocator biases data towards the end of the
-filesystem, because inode numbers in xfs reflect their on-disk location,
-and to keep inodes numbers below 2^32, it must save space in the lower
-portions of the filesystem.  You might want to re-test with a fresh
-filesystem mounted with the "inode64" mount option.
-
-> However, in another run (with a clean file system again)
-> 
-> /mnt/test/mysql/tpch/lineitem.MYI:
->   EXT: FILE-OFFSET      BLOCK-RANGE              AG AG-OFFSET           
-> TOTAL
->     0: [0..26660095]:   11352529416..11379189511 31 (72..26660167)   
-> 26660096
-
-Hmm.
-
-> 3) For the copy, as i mentioned in my previous mail, i copied the 
-> database over nfs using the cp -R linux program.
-> Thus, i believe all the files are copied sequentially, the one after the 
-> other, with no other concurrent write operations
-> running at the background. The file-system was pristine before the cp 
-> with no files, and just the mount directory was
-> created (all the other necessary files and directories are created from 
-> the cp program).
-
-IIRC, copies over NFS can affect xfs allocator performance, because
-(IIRC) it tends to close the filehandle periodically and xfs loses the
-allocator context.  We used to have a filehandle cache which held them
-open, but that went away some time ago.
-
-Dave will probably correct significant swaths of this information for
-me, though ;)
-
-> 4)  The version of xfsprogs is 2.9.4 (acquired with xfs_info -v) and the 
-> version of the kernel is 2.6.18-164.11.1.el5.
-
-Ah!  A Red Hat kernel; have you asked your Red Hat support folks for
-help on this issue?
-
--Eric
-
->          If you require any further information let me know. Let me 
-> state that i can also provide you with the complete
-> data-set if you feel it necessary trying to reproduce the issue.
-> 
-> Thanks,
-> Yannis Klonatos
->>> Hi all!
->>>
->>>          I have come across the following peculiar behavior in XFS
->>> and i would appreciate any information anyone
->>> could provide.
->>>          In our lab we have a system that has twelve 500GByte hard
->>> disks (total capacity 6TByte), connected to an
->>> Areca (ARC-1680D-IX-12) SAS storage controller. The disks are
->>> configured as a RAID-0 device. Then I create
->>> a clean XFS filesystem on top of the raid volume, using the whole
->>> capacity. We use this test-setup to measure
->>> performance improvement for a TPC-H experiment. We copy the database
->>> over the clean XFS filesystem using the
->>> cp utility. The database used in our experiments is 56GBytes in size
->>> (data + indices).
->>>          The problem is that i have noticed that XFS may - not all
->>> times - split a table over a large disk distance. For
->>> example in one run i have noticed that a file of 13GByte is split
->>> over a 4,7TByte distance (I calculate this distance
->>> by subtracting the final block used for the file with the first one.
->>> The two disk blocks values are acquired using the
->>> FIBMAP ioctl).
->>>          Is there some reasoning behind this (peculiar) behavior? I
->>> would expect that since the underlying storage is so
->>> large, and the dataset is so small, XFS would try to minimize disk
->>> seeks and thus place the file sequentially in disk.
->>> Furthermore, I understand that there may be some blocks left unused
->>> by XFS between subsequent file blocks used
->>> in order to handle any write appends that may come afterward. But i
->>> wouldn't expect such a large splitting of a single
->>> file.
->>>          Any help?
->>>      
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+z4PPhM65z4IgNi8yNC8yMDEwIDY6MjEgUE0sIE8vSCBFcmljIFNhbmRlZW4gzq3Os8+BzrHPiM61
+Ogo+IE9uIDA2LzI0LzIwMTAgMDk6MTEgQU0sIFlhbm5pcyBLbG9uYXRvcyB3cm90ZToKPiAgICAK
+Pj4gSGVsbG8gYWdhaW4sCj4+Cj4+ICAgICAgICAgICBGaXJzdCBvZiBhbGwsIHRoYW5rIHlvdSBh
+bGwgZm9yIHlvdXIgcXVpY2sgcmVwbGllcy4gSSBhdHRhY2gKPj4gYWxsIHRoZSBpbmZvcm1hdGlv
+biB5b3UgcmVxdWVzdGVkIGluIHlvdXIgcmVzcG9uc2VzLgo+Pgo+PiAxKSBUaGUgb3V0cHV0IG9m
+IHhmc19pbmZvIGlzIHRoZSBmb2xsb3dpbmc6Cj4+Cj4+IG1ldGEtZGF0YT0vZGV2L3NkZiAgICAg
+aXNpemU9MjU2ICAgIGFnY291bnQ9MzIsIGFnc2l6ZT00NTc3NjMyOCBibGtzCj4+ICAgICAgICAg
+ICA9ICAgICAgICAgICAgIHNlY3Rzej01MTIgICBhdHRyPTAKPj4gZGF0YSAgICAgPSAgICAgICAg
+ICAgICBic2l6ZT00MDk2ICAgYmxvY2tzPTE0NjQ4NDI0OTYsIGltYXhwY3Q9MjUKPj4gICAgICAg
+ICAgID0gICAgICAgICAgICAgc3VuaXQ9MCAgICAgIHN3aWR0aD0wIGJsa3MsIHVud3JpdHRlbj0x
+Cj4+IG5hbWluZyAgID12ZXJzaW9uIDIgICAgYnNpemU9NDA5Ngo+PiBsb2cgICAgICA9aW50ZXJu
+YWwgICAgIGJzaXplPTQwOTYgICBibG9ja3M9MzI3NjgsIHZlcnNpb249MQo+PiAgICAgICAgICAg
+PSAgICAgICAgICAgICBzZWN0c3o9NTEyICAgc3VuaXQ9MCBibGtzLCBsYXp5LWNvdW50PTAKPj4g
+cmVhbHRpbWUgPW5vbmUgICAgICAgICBleHRzej00MDk2ICAgYmxvY2tzPTAsIHJ0ZXh0ZW50cz0w
+Cj4+Cj4+IDIpIFRoZSBvdXRwdXQgb2YgeGZzX2JtYXAgaW4gdGhlIGxpbmVpdGVtLk1ZSSB0YWJs
+ZSBvZiB0aGUgVFBDLUgKPj4gd29ya2xvYWQgaXMgYXQgb25lIHJ1bjoKPj4KPj4gL21udC90ZXN0
+L215c3FsL3RwY2gvbGluZWl0ZW0uTVlJOgo+PiAgICBFWFQ6IEZJTEUtT0ZGU0VUICAgICAgICAg
+ICBCTE9DSy1SQU5HRSAgICAgICAgICAgICAgQUcgIEFHLU9GRlNFVCAgICAgICAgIFRPVEFMCj4+
+ICAgICAgMDogWzAuLjYzNDQyNzFdOiAgICAgICAgIDExMzUyNTI5NDE2Li4xMTM1ODg3MzY4NyAz
+MSAoNzIuLjYzNDQzNDMpICAgIDYzNDQyNzIKPj4gICAgICAxOiBbNjM0NDI3Mi4uMTA5MDEzNDNd
+OiAgMTQ2NDg0MjYwOC4uMTQ2OTM5OTY3OSAgICA0ICgxMTIuLjQ1NTcxODMpICAgNDU1NzA3Mgo+
+PiAgICAgIDI6IFsxMDkwMTM0NC4uMTg0MzkxOTldOiAxODMxMDUzMjAwLi4xODM4NTkxMDU1ICAg
+IDUgKDgwLi43NTM3OTM1KSAgICA3NTM3ODU2Cj4+ICAgICAgMzogWzE4NDM5MjAwLi4yNTMxMTUx
+OV06IDIxOTcyNjM4NDAuLjIyMDQxMzYxNTkgICAgNiAoOTYuLjY4NzI0MTUpICAgIDY4NzIzMjAK
+Pj4gICAgICA0OiBbMjUzMTE1MjAuLjI2NjYwMDk1XTogMjU2MzQ3NDQ2NC4uMjU2NDgyMzAzOSAg
+ICA3ICg5Ni4uMTM0ODY3MSkgICAgMTM0ODU3Ngo+Pgo+PiBHaXZlbiB0aGF0IGFsbCBkaXNrIGJs
+b2NrcyBhcmUgaW4gdW5pdHMgb2YgNTEyLWJ5dGUgYmxvY2tzLCBpZiBJCj4+IGludGVycHJldCB0
+aGUgb3V0cHV0Cj4+IGNvcnJlY3RseSB0aGUgZmlyc3QgZmlsZSBpcyBhdCBibG9jayAxNDY1MzUy
+NzkyID0gNjk4LjRHQnl0ZSBvZmZzZXQgYW5kCj4+IHRoZSBsYXN0IGJsb2NrCj4+IGlzIGF0IDU0
+MjEuMUdCeXRlIG9mZnNldCwgbWVhbmluZyB0aGF0IHRoaXMgc3BlY2lmaWMgdGFibGUgaXMgc3Bs
+aXQgb3Zlcgo+PiBhIDQsN1RCeXRlIGRpc3RhbmNlLgo+PiAgICAgIAo+IFRoZSBmaWxlIHN0YXJ0
+ZWQgb3V0IGluIHRoZSBsYXN0IEFHLCBhbmQgdGhlbiBoYWQgdG8gd3JhcCBhcm91bmQsCj4gYmVj
+YXVzZSBpdCBoaXQgdGhlIGVuZCBvZiB0aGUgZmlsZXN5c3RlbS4gOikgIEl0IHdhcyB0aGVuIHNv
+bWV3aGF0Cj4gc2VxdWVudGlhbCBpbiBBR3MgNCw1LDYsNyBhZnRlciB0aGF0LCB0aG91Z2ggbm90
+IHBlcmZlY3RseSBzby4KPgo+IFRoaXMgcnVuIHdhcyB3aXRoIGEgY2xlYW4gZmlsZXN5c3RlbT8g
+IFdhcyB0aGUgbW91bnRwb2ludAo+IC9tbnQvdGVzdD8gIFhGUyBkaXN0cmlidXRlcyBuZXcgZGly
+ZWN0b3JpZXMgaW50byBuZXcgQUdzIChhbGxvY2F0aW9uCj4gZ3JvdXBzLCBvciBkaXNrIHJlZ2lv
+bnMpIGZvciBwYXJhbGxlbGlzbSwgYW5kIHRoZW4gZmlsZXMgaW4gdGhvc2UgZGlycwo+IHN0YXJ0
+IHBvcHVsYXRpbmcgdGhlIHNhbWUgQUcuICBTbyBpZiAvbW50L3Rlc3QvbXlzcWwvdHBjaCBlbmRl
+ZCB1cCBpbgo+IHRoZSBsYXN0IEFHICgjMzEpIHRoZW4gdGhlIGZpbGUgbGlrZWx5IHN0YXJ0ZWQg
+dGhlcmUsIHRvby4KPiAgICAKCk9rLiBZb3VyIGFyZ3VtZW50IG1ha2VzIGEgbG90IG9mIHNlbnNl
+LiBIb3dldmVyLCB0aGlzIGlzIGEgY2xlYW4gZmlsZSAKc3lzdGVtIChtb3VudCBwb2ludCAvbW50
+L3Rlc3QpLCBhbmQKSSBhbSBjZXJ0YWluIHRoYXQgdGhlIGZpbGVzIGNvcGllZCBiZWZvcmUgdGhl
+IGFmb3JlbWVudGlvbmVkIGluZGV4IGZpbGUgCihsaW5laXRlbS5NWUkpIHJlcXVpcmUgMjhHQnl0
+ZSBzcGFjZQppbiB0b3RhbC4gU28sIHRoaXMgc3RpbGwgcmFpc2VzIHRoZSBxdWVzdGlvbiB3aHkg
+WEZTIHNwbGl0dGVkIHRoZXNlIApmaWxlcyBpbiBhIHdheSB0aGF0IGNhdXNlZCB0aGUgd2hvbGUg
+ZmlsZSBzeXN0ZW0Kc3BhY2UgdG8gYmUgImNvdmVyZWQiLCBhbmQgdGhlIGxpbmVpdGVtIGZpbGUg
+dG8gYmUgcGxhY2VkIHN0YXJ0aW5nIGF0IAp0aGUgZW5kIG9mIHRoZSBGUyAoYXMgeW91IG1lbnRp
+b25lZCkuCgpBbHNvLCBiYXNlZCBvbiBteSBsaXR0bGUgWEZTIGtub3dsZWRnZSBhbmQgYmFja2dy
+b3VuZCwgaSBzZXJpb3VzbHkgZG91YnQgCnRoYXQgcGFyYWxsZWxpc20gYWxvbmcgQUdzCmlzIGFu
+IGlzc3VlIGhlcmUsIHNpbmNlIHRoZSBjb3B5IHV0aWxpdHkgY29waWVzIGZpbGVzIHNlcXVlbnRp
+YWxseSwgc28gYSAKbmV3IEFHIHdvdWxkIGJlIGFsbG9jYXRlZCBmb3IgdGhlCi9tbnQvdGVzdC9t
+eXNxbC90cGNoIGRpcmVjdG9yeSwgYW5kIHdvdWxkIGJlIHBvcHVsYXRlZCBjb21wbGV0ZWx5IHdp
+dGggCmFsbCBpdHMgZmlsZXMsIGJlZm9yZSBhbm90aGVyIEFHCndhcyBjcmVhdGVkLiBUaGlzIGlz
+IHRydWUgb2YgY291cnNlLCBvbmx5IGlmIHlvdXIgb2JzZXJ2YXRpb24gaG9sZHMuCgo+IEFsc28s
+IHRoZSAiaW5vZGUzMiIgYWxsb2NhdG9yIGJpYXNlcyBkYXRhIHRvd2FyZHMgdGhlIGVuZCBvZiB0
+aGUKPiBmaWxlc3lzdGVtLCBiZWNhdXNlIGlub2RlIG51bWJlcnMgaW4geGZzIHJlZmxlY3QgdGhl
+aXIgb24tZGlzayBsb2NhdGlvbiwKPiBhbmQgdG8ga2VlcCBpbm9kZXMgbnVtYmVycyBiZWxvdyAy
+XjMyLCBpdCBtdXN0IHNhdmUgc3BhY2UgaW4gdGhlIGxvd2VyCj4gcG9ydGlvbnMgb2YgdGhlIGZp
+bGVzeXN0ZW0uICBZb3UgbWlnaHQgd2FudCB0byByZS10ZXN0IHdpdGggYSBmcmVzaAo+IGZpbGVz
+eXN0ZW0gbW91bnRlZCB3aXRoIHRoZSAiaW5vZGU2NCIgbW91bnQgb3B0aW9uLgo+Cj4gICAgCj4+
+IEhvd2V2ZXIsIGluIGFub3RoZXIgcnVuICh3aXRoIGEgY2xlYW4gZmlsZSBzeXN0ZW0gYWdhaW4p
+Cj4+Cj4+IC9tbnQvdGVzdC9teXNxbC90cGNoL2xpbmVpdGVtLk1ZSToKPj4gICAgRVhUOiBGSUxF
+LU9GRlNFVCAgICAgIEJMT0NLLVJBTkdFICAgICAgICAgICAgICBBRyBBRy1PRkZTRVQKPj4gVE9U
+QUwKPj4gICAgICAwOiBbMC4uMjY2NjAwOTVdOiAgIDExMzUyNTI5NDE2Li4xMTM3OTE4OTUxMSAz
+MSAoNzIuLjI2NjYwMTY3KQo+PiAyNjY2MDA5Ngo+PiAgICAgIAo+IEhtbS4KPgo+ICAgIAo+PiAz
+KSBGb3IgdGhlIGNvcHksIGFzIGkgbWVudGlvbmVkIGluIG15IHByZXZpb3VzIG1haWwsIGkgY29w
+aWVkIHRoZQo+PiBkYXRhYmFzZSBvdmVyIG5mcyB1c2luZyB0aGUgY3AgLVIgbGludXggcHJvZ3Jh
+bS4KPj4gVGh1cywgaSBiZWxpZXZlIGFsbCB0aGUgZmlsZXMgYXJlIGNvcGllZCBzZXF1ZW50aWFs
+bHksIHRoZSBvbmUgYWZ0ZXIgdGhlCj4+IG90aGVyLCB3aXRoIG5vIG90aGVyIGNvbmN1cnJlbnQg
+d3JpdGUgb3BlcmF0aW9ucwo+PiBydW5uaW5nIGF0IHRoZSBiYWNrZ3JvdW5kLiBUaGUgZmlsZS1z
+eXN0ZW0gd2FzIHByaXN0aW5lIGJlZm9yZSB0aGUgY3AKPj4gd2l0aCBubyBmaWxlcywgYW5kIGp1
+c3QgdGhlIG1vdW50IGRpcmVjdG9yeSB3YXMKPj4gY3JlYXRlZCAoYWxsIHRoZSBvdGhlciBuZWNl
+c3NhcnkgZmlsZXMgYW5kIGRpcmVjdG9yaWVzIGFyZSBjcmVhdGVkIGZyb20KPj4gdGhlIGNwIHBy
+b2dyYW0pLgo+PiAgICAgIAo+IElJUkMsIGNvcGllcyBvdmVyIE5GUyBjYW4gYWZmZWN0IHhmcyBh
+bGxvY2F0b3IgcGVyZm9ybWFuY2UsIGJlY2F1c2UKPiAoSUlSQykgaXQgdGVuZHMgdG8gY2xvc2Ug
+dGhlIGZpbGVoYW5kbGUgcGVyaW9kaWNhbGx5IGFuZCB4ZnMgbG9zZXMgdGhlCj4gYWxsb2NhdG9y
+IGNvbnRleHQuICBXZSB1c2VkIHRvIGhhdmUgYSBmaWxlaGFuZGxlIGNhY2hlIHdoaWNoIGhlbGQg
+dGhlbQo+IG9wZW4sIGJ1dCB0aGF0IHdlbnQgYXdheSBzb21lIHRpbWUgYWdvLgo+Cj4gRGF2ZSB3
+aWxsIHByb2JhYmx5IGNvcnJlY3Qgc2lnbmlmaWNhbnQgc3dhdGhzIG9mIHRoaXMgaW5mb3JtYXRp
+b24gZm9yCj4gbWUsIHRob3VnaCA7KQo+Cj4gICAgCj4+IDQpICBUaGUgdmVyc2lvbiBvZiB4ZnNw
+cm9ncyBpcyAyLjkuNCAoYWNxdWlyZWQgd2l0aCB4ZnNfaW5mbyAtdikgYW5kIHRoZQo+PiB2ZXJz
+aW9uIG9mIHRoZSBrZXJuZWwgaXMgMi42LjE4LTE2NC4xMS4xLmVsNS4KPj4gICAgICAKPiBBaCEg
+IEEgUmVkIEhhdCBrZXJuZWw7IGhhdmUgeW91IGFza2VkIHlvdXIgUmVkIEhhdCBzdXBwb3J0IGZv
+bGtzIGZvcgo+IGhlbHAgb24gdGhpcyBpc3N1ZT8KPiAgICAKCkkgc3VwcG9zZSB0aGF0IHRoZXkg
+d2lsbCByZWRpcmVjdCBtZSBiYWNrIHRvIHlvdSwgd29uJ3QgdGhleT8gOi0pCgo+IC1FcmljCj4K
+PiAgICAKPj4gICAgICAgICAgIElmIHlvdSByZXF1aXJlIGFueSBmdXJ0aGVyIGluZm9ybWF0aW9u
+IGxldCBtZSBrbm93LiBMZXQgbWUKPj4gc3RhdGUgdGhhdCBpIGNhbiBhbHNvIHByb3ZpZGUgeW91
+IHdpdGggdGhlIGNvbXBsZXRlCj4+IGRhdGEtc2V0IGlmIHlvdSBmZWVsIGl0IG5lY2Vzc2FyeSB0
+cnlpbmcgdG8gcmVwcm9kdWNlIHRoZSBpc3N1ZS4KPj4KPj4gVGhhbmtzLAo+PiBZYW5uaXMgS2xv
+bmF0b3MKPj4gICAgICAKPj4+PiBIaSBhbGwhCj4+Pj4KPj4+PiAgICAgICAgICAgSSBoYXZlIGNv
+bWUgYWNyb3NzIHRoZSBmb2xsb3dpbmcgcGVjdWxpYXIgYmVoYXZpb3IgaW4gWEZTCj4+Pj4gYW5k
+IGkgd291bGQgYXBwcmVjaWF0ZSBhbnkgaW5mb3JtYXRpb24gYW55b25lCj4+Pj4gY291bGQgcHJv
+dmlkZS4KPj4+PiAgICAgICAgICAgSW4gb3VyIGxhYiB3ZSBoYXZlIGEgc3lzdGVtIHRoYXQgaGFz
+IHR3ZWx2ZSA1MDBHQnl0ZSBoYXJkCj4+Pj4gZGlza3MgKHRvdGFsIGNhcGFjaXR5IDZUQnl0ZSks
+IGNvbm5lY3RlZCB0byBhbgo+Pj4+IEFyZWNhIChBUkMtMTY4MEQtSVgtMTIpIFNBUyBzdG9yYWdl
+IGNvbnRyb2xsZXIuIFRoZSBkaXNrcyBhcmUKPj4+PiBjb25maWd1cmVkIGFzIGEgUkFJRC0wIGRl
+dmljZS4gVGhlbiBJIGNyZWF0ZQo+Pj4+IGEgY2xlYW4gWEZTIGZpbGVzeXN0ZW0gb24gdG9wIG9m
+IHRoZSByYWlkIHZvbHVtZSwgdXNpbmcgdGhlIHdob2xlCj4+Pj4gY2FwYWNpdHkuIFdlIHVzZSB0
+aGlzIHRlc3Qtc2V0dXAgdG8gbWVhc3VyZQo+Pj4+IHBlcmZvcm1hbmNlIGltcHJvdmVtZW50IGZv
+ciBhIFRQQy1IIGV4cGVyaW1lbnQuIFdlIGNvcHkgdGhlIGRhdGFiYXNlCj4+Pj4gb3ZlciB0aGUg
+Y2xlYW4gWEZTIGZpbGVzeXN0ZW0gdXNpbmcgdGhlCj4+Pj4gY3AgdXRpbGl0eS4gVGhlIGRhdGFi
+YXNlIHVzZWQgaW4gb3VyIGV4cGVyaW1lbnRzIGlzIDU2R0J5dGVzIGluIHNpemUKPj4+PiAoZGF0
+YSArIGluZGljZXMpLgo+Pj4+ICAgICAgICAgICBUaGUgcHJvYmxlbSBpcyB0aGF0IGkgaGF2ZSBu
+b3RpY2VkIHRoYXQgWEZTIG1heSAtIG5vdCBhbGwKPj4+PiB0aW1lcyAtIHNwbGl0IGEgdGFibGUg
+b3ZlciBhIGxhcmdlIGRpc2sgZGlzdGFuY2UuIEZvcgo+Pj4+IGV4YW1wbGUgaW4gb25lIHJ1biBp
+IGhhdmUgbm90aWNlZCB0aGF0IGEgZmlsZSBvZiAxM0dCeXRlIGlzIHNwbGl0Cj4+Pj4gb3ZlciBh
+IDQsN1RCeXRlIGRpc3RhbmNlIChJIGNhbGN1bGF0ZSB0aGlzIGRpc3RhbmNlCj4+Pj4gYnkgc3Vi
+dHJhY3RpbmcgdGhlIGZpbmFsIGJsb2NrIHVzZWQgZm9yIHRoZSBmaWxlIHdpdGggdGhlIGZpcnN0
+IG9uZS4KPj4+PiBUaGUgdHdvIGRpc2sgYmxvY2tzIHZhbHVlcyBhcmUgYWNxdWlyZWQgdXNpbmcg
+dGhlCj4+Pj4gRklCTUFQIGlvY3RsKS4KPj4+PiAgICAgICAgICAgSXMgdGhlcmUgc29tZSByZWFz
+b25pbmcgYmVoaW5kIHRoaXMgKHBlY3VsaWFyKSBiZWhhdmlvcj8gSQo+Pj4+IHdvdWxkIGV4cGVj
+dCB0aGF0IHNpbmNlIHRoZSB1bmRlcmx5aW5nIHN0b3JhZ2UgaXMgc28KPj4+PiBsYXJnZSwgYW5k
+IHRoZSBkYXRhc2V0IGlzIHNvIHNtYWxsLCBYRlMgd291bGQgdHJ5IHRvIG1pbmltaXplIGRpc2sK
+Pj4+PiBzZWVrcyBhbmQgdGh1cyBwbGFjZSB0aGUgZmlsZSBzZXF1ZW50aWFsbHkgaW4gZGlzay4K
+Pj4+PiBGdXJ0aGVybW9yZSwgSSB1bmRlcnN0YW5kIHRoYXQgdGhlcmUgbWF5IGJlIHNvbWUgYmxv
+Y2tzIGxlZnQgdW51c2VkCj4+Pj4gYnkgWEZTIGJldHdlZW4gc3Vic2VxdWVudCBmaWxlIGJsb2Nr
+cyB1c2VkCj4+Pj4gaW4gb3JkZXIgdG8gaGFuZGxlIGFueSB3cml0ZSBhcHBlbmRzIHRoYXQgbWF5
+IGNvbWUgYWZ0ZXJ3YXJkLiBCdXQgaQo+Pj4+IHdvdWxkbid0IGV4cGVjdCBzdWNoIGEgbGFyZ2Ug
+c3BsaXR0aW5nIG9mIGEgc2luZ2xlCj4+Pj4gZmlsZS4KPj4+PiAgICAgICAgICAgQW55IGhlbHA/
+Cj4+Pj4KPj4+PiAgICAgICAgICAKPj4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX18KPj4geGZzIG1haWxpbmcgbGlzdAo+PiB4ZnNAb3NzLnNnaS5jb20KPj4g
+aHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCj4+Cj4+ICAgICAgCj4gICAg
+CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFp
+bGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0
+aW5mby94ZnMK
