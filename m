@@ -1,21 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5OFfSsg206072 for <xfs@oss.sgi.com>; Thu, 24 Jun 2010 10:41:29 -0500
+	o5OKSre3046340 for <xfs@oss.sgi.com>; Thu, 24 Jun 2010 15:28:54 -0500
 Received: from mailgate.ics.forth.gr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 538F11119DFF
-	for <xfs@oss.sgi.com>; Thu, 24 Jun 2010 08:48:32 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C135C154542F
+	for <xfs@oss.sgi.com>; Thu, 24 Jun 2010 13:31:34 -0700 (PDT)
 Received: from mailgate.ics.forth.gr (mailgate.ics.forth.gr [139.91.1.2]) by
-	cuda.sgi.com with ESMTP id rzPxtba3DmtvLtv4 for
-	<xfs@oss.sgi.com>; Thu, 24 Jun 2010 08:48:32 -0700 (PDT)
-Message-ID: <4C237B4E.8030606@ics.forth.gr>
-Date: Thu, 24 Jun 2010 18:35:42 +0300
+	cuda.sgi.com with ESMTP id 5oLrs1bS56y4aXDY for
+	<xfs@oss.sgi.com>; Thu, 24 Jun 2010 13:31:34 -0700 (PDT)
+Received: from av1.ics.forth.gr (av1-in.ics.forth.gr [139.91.1.71])
+	by mailgate.ics.forth.gr (8.14.3/ICS-FORTH/V10-1.8-GATE) with ESMTP id
+	o5OKVVsJ004496
+	for <xfs@oss.sgi.com>; Thu, 24 Jun 2010 23:31:33 +0300 (EEST)
+Received: from [192.168.1.63] (adsl-200.91.140.92.tellas.gr [91.140.92.200])
+	(authenticated bits=0)
+	by enigma.ics.forth.gr (8.14.3//ICS-FORTH/V10.3.0C-EXTNULL-SSL-SASL)
+	with ESMTP id o5OKXD3x023817
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Thu, 24 Jun 2010 23:33:14 +0300
+Message-ID: <4C23C074.5080100@ics.forth.gr>
+Date: Thu, 24 Jun 2010 23:30:44 +0300
 From: Yannis Klonatos <klonatos@ics.forth.gr>
 MIME-Version: 1.0
-Subject: Re: XFS peculiar behavior
-References: <4C21B9AF.9010307@ics.forth.gr> <20100623231700.GP6590@dastard>
-	<4C236791.1030709@ics.forth.gr> <4C2377ED.8090300@sandeen.net>
-In-Reply-To: <4C2377ED.8090300@sandeen.net>
+Subject: Metadata hit ratio
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,136 +31,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: andi@firstfloor.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-z4PPhM65z4IgNi8yNC8yMDEwIDY6MjEgUE0sIE8vSCBFcmljIFNhbmRlZW4gzq3Os8+BzrHPiM61
-Ogo+IE9uIDA2LzI0LzIwMTAgMDk6MTEgQU0sIFlhbm5pcyBLbG9uYXRvcyB3cm90ZToKPiAgICAK
-Pj4gSGVsbG8gYWdhaW4sCj4+Cj4+ICAgICAgICAgICBGaXJzdCBvZiBhbGwsIHRoYW5rIHlvdSBh
-bGwgZm9yIHlvdXIgcXVpY2sgcmVwbGllcy4gSSBhdHRhY2gKPj4gYWxsIHRoZSBpbmZvcm1hdGlv
-biB5b3UgcmVxdWVzdGVkIGluIHlvdXIgcmVzcG9uc2VzLgo+Pgo+PiAxKSBUaGUgb3V0cHV0IG9m
-IHhmc19pbmZvIGlzIHRoZSBmb2xsb3dpbmc6Cj4+Cj4+IG1ldGEtZGF0YT0vZGV2L3NkZiAgICAg
-aXNpemU9MjU2ICAgIGFnY291bnQ9MzIsIGFnc2l6ZT00NTc3NjMyOCBibGtzCj4+ICAgICAgICAg
-ICA9ICAgICAgICAgICAgIHNlY3Rzej01MTIgICBhdHRyPTAKPj4gZGF0YSAgICAgPSAgICAgICAg
-ICAgICBic2l6ZT00MDk2ICAgYmxvY2tzPTE0NjQ4NDI0OTYsIGltYXhwY3Q9MjUKPj4gICAgICAg
-ICAgID0gICAgICAgICAgICAgc3VuaXQ9MCAgICAgIHN3aWR0aD0wIGJsa3MsIHVud3JpdHRlbj0x
-Cj4+IG5hbWluZyAgID12ZXJzaW9uIDIgICAgYnNpemU9NDA5Ngo+PiBsb2cgICAgICA9aW50ZXJu
-YWwgICAgIGJzaXplPTQwOTYgICBibG9ja3M9MzI3NjgsIHZlcnNpb249MQo+PiAgICAgICAgICAg
-PSAgICAgICAgICAgICBzZWN0c3o9NTEyICAgc3VuaXQ9MCBibGtzLCBsYXp5LWNvdW50PTAKPj4g
-cmVhbHRpbWUgPW5vbmUgICAgICAgICBleHRzej00MDk2ICAgYmxvY2tzPTAsIHJ0ZXh0ZW50cz0w
-Cj4+Cj4+IDIpIFRoZSBvdXRwdXQgb2YgeGZzX2JtYXAgaW4gdGhlIGxpbmVpdGVtLk1ZSSB0YWJs
-ZSBvZiB0aGUgVFBDLUgKPj4gd29ya2xvYWQgaXMgYXQgb25lIHJ1bjoKPj4KPj4gL21udC90ZXN0
-L215c3FsL3RwY2gvbGluZWl0ZW0uTVlJOgo+PiAgICBFWFQ6IEZJTEUtT0ZGU0VUICAgICAgICAg
-ICBCTE9DSy1SQU5HRSAgICAgICAgICAgICAgQUcgIEFHLU9GRlNFVCAgICAgICAgIFRPVEFMCj4+
-ICAgICAgMDogWzAuLjYzNDQyNzFdOiAgICAgICAgIDExMzUyNTI5NDE2Li4xMTM1ODg3MzY4NyAz
-MSAoNzIuLjYzNDQzNDMpICAgIDYzNDQyNzIKPj4gICAgICAxOiBbNjM0NDI3Mi4uMTA5MDEzNDNd
-OiAgMTQ2NDg0MjYwOC4uMTQ2OTM5OTY3OSAgICA0ICgxMTIuLjQ1NTcxODMpICAgNDU1NzA3Mgo+
-PiAgICAgIDI6IFsxMDkwMTM0NC4uMTg0MzkxOTldOiAxODMxMDUzMjAwLi4xODM4NTkxMDU1ICAg
-IDUgKDgwLi43NTM3OTM1KSAgICA3NTM3ODU2Cj4+ICAgICAgMzogWzE4NDM5MjAwLi4yNTMxMTUx
-OV06IDIxOTcyNjM4NDAuLjIyMDQxMzYxNTkgICAgNiAoOTYuLjY4NzI0MTUpICAgIDY4NzIzMjAK
-Pj4gICAgICA0OiBbMjUzMTE1MjAuLjI2NjYwMDk1XTogMjU2MzQ3NDQ2NC4uMjU2NDgyMzAzOSAg
-ICA3ICg5Ni4uMTM0ODY3MSkgICAgMTM0ODU3Ngo+Pgo+PiBHaXZlbiB0aGF0IGFsbCBkaXNrIGJs
-b2NrcyBhcmUgaW4gdW5pdHMgb2YgNTEyLWJ5dGUgYmxvY2tzLCBpZiBJCj4+IGludGVycHJldCB0
-aGUgb3V0cHV0Cj4+IGNvcnJlY3RseSB0aGUgZmlyc3QgZmlsZSBpcyBhdCBibG9jayAxNDY1MzUy
-NzkyID0gNjk4LjRHQnl0ZSBvZmZzZXQgYW5kCj4+IHRoZSBsYXN0IGJsb2NrCj4+IGlzIGF0IDU0
-MjEuMUdCeXRlIG9mZnNldCwgbWVhbmluZyB0aGF0IHRoaXMgc3BlY2lmaWMgdGFibGUgaXMgc3Bs
-aXQgb3Zlcgo+PiBhIDQsN1RCeXRlIGRpc3RhbmNlLgo+PiAgICAgIAo+IFRoZSBmaWxlIHN0YXJ0
-ZWQgb3V0IGluIHRoZSBsYXN0IEFHLCBhbmQgdGhlbiBoYWQgdG8gd3JhcCBhcm91bmQsCj4gYmVj
-YXVzZSBpdCBoaXQgdGhlIGVuZCBvZiB0aGUgZmlsZXN5c3RlbS4gOikgIEl0IHdhcyB0aGVuIHNv
-bWV3aGF0Cj4gc2VxdWVudGlhbCBpbiBBR3MgNCw1LDYsNyBhZnRlciB0aGF0LCB0aG91Z2ggbm90
-IHBlcmZlY3RseSBzby4KPgo+IFRoaXMgcnVuIHdhcyB3aXRoIGEgY2xlYW4gZmlsZXN5c3RlbT8g
-IFdhcyB0aGUgbW91bnRwb2ludAo+IC9tbnQvdGVzdD8gIFhGUyBkaXN0cmlidXRlcyBuZXcgZGly
-ZWN0b3JpZXMgaW50byBuZXcgQUdzIChhbGxvY2F0aW9uCj4gZ3JvdXBzLCBvciBkaXNrIHJlZ2lv
-bnMpIGZvciBwYXJhbGxlbGlzbSwgYW5kIHRoZW4gZmlsZXMgaW4gdGhvc2UgZGlycwo+IHN0YXJ0
-IHBvcHVsYXRpbmcgdGhlIHNhbWUgQUcuICBTbyBpZiAvbW50L3Rlc3QvbXlzcWwvdHBjaCBlbmRl
-ZCB1cCBpbgo+IHRoZSBsYXN0IEFHICgjMzEpIHRoZW4gdGhlIGZpbGUgbGlrZWx5IHN0YXJ0ZWQg
-dGhlcmUsIHRvby4KPiAgICAKCk9rLiBZb3VyIGFyZ3VtZW50IG1ha2VzIGEgbG90IG9mIHNlbnNl
-LiBIb3dldmVyLCB0aGlzIGlzIGEgY2xlYW4gZmlsZSAKc3lzdGVtIChtb3VudCBwb2ludCAvbW50
-L3Rlc3QpLCBhbmQKSSBhbSBjZXJ0YWluIHRoYXQgdGhlIGZpbGVzIGNvcGllZCBiZWZvcmUgdGhl
-IGFmb3JlbWVudGlvbmVkIGluZGV4IGZpbGUgCihsaW5laXRlbS5NWUkpIHJlcXVpcmUgMjhHQnl0
-ZSBzcGFjZQppbiB0b3RhbC4gU28sIHRoaXMgc3RpbGwgcmFpc2VzIHRoZSBxdWVzdGlvbiB3aHkg
-WEZTIHNwbGl0dGVkIHRoZXNlIApmaWxlcyBpbiBhIHdheSB0aGF0IGNhdXNlZCB0aGUgd2hvbGUg
-ZmlsZSBzeXN0ZW0Kc3BhY2UgdG8gYmUgImNvdmVyZWQiLCBhbmQgdGhlIGxpbmVpdGVtIGZpbGUg
-dG8gYmUgcGxhY2VkIHN0YXJ0aW5nIGF0IAp0aGUgZW5kIG9mIHRoZSBGUyAoYXMgeW91IG1lbnRp
-b25lZCkuCgpBbHNvLCBiYXNlZCBvbiBteSBsaXR0bGUgWEZTIGtub3dsZWRnZSBhbmQgYmFja2dy
-b3VuZCwgaSBzZXJpb3VzbHkgZG91YnQgCnRoYXQgcGFyYWxsZWxpc20gYWxvbmcgQUdzCmlzIGFu
-IGlzc3VlIGhlcmUsIHNpbmNlIHRoZSBjb3B5IHV0aWxpdHkgY29waWVzIGZpbGVzIHNlcXVlbnRp
-YWxseSwgc28gYSAKbmV3IEFHIHdvdWxkIGJlIGFsbG9jYXRlZCBmb3IgdGhlCi9tbnQvdGVzdC9t
-eXNxbC90cGNoIGRpcmVjdG9yeSwgYW5kIHdvdWxkIGJlIHBvcHVsYXRlZCBjb21wbGV0ZWx5IHdp
-dGggCmFsbCBpdHMgZmlsZXMsIGJlZm9yZSBhbm90aGVyIEFHCndhcyBjcmVhdGVkLiBUaGlzIGlz
-IHRydWUgb2YgY291cnNlLCBvbmx5IGlmIHlvdXIgb2JzZXJ2YXRpb24gaG9sZHMuCgo+IEFsc28s
-IHRoZSAiaW5vZGUzMiIgYWxsb2NhdG9yIGJpYXNlcyBkYXRhIHRvd2FyZHMgdGhlIGVuZCBvZiB0
-aGUKPiBmaWxlc3lzdGVtLCBiZWNhdXNlIGlub2RlIG51bWJlcnMgaW4geGZzIHJlZmxlY3QgdGhl
-aXIgb24tZGlzayBsb2NhdGlvbiwKPiBhbmQgdG8ga2VlcCBpbm9kZXMgbnVtYmVycyBiZWxvdyAy
-XjMyLCBpdCBtdXN0IHNhdmUgc3BhY2UgaW4gdGhlIGxvd2VyCj4gcG9ydGlvbnMgb2YgdGhlIGZp
-bGVzeXN0ZW0uICBZb3UgbWlnaHQgd2FudCB0byByZS10ZXN0IHdpdGggYSBmcmVzaAo+IGZpbGVz
-eXN0ZW0gbW91bnRlZCB3aXRoIHRoZSAiaW5vZGU2NCIgbW91bnQgb3B0aW9uLgo+Cj4gICAgCj4+
-IEhvd2V2ZXIsIGluIGFub3RoZXIgcnVuICh3aXRoIGEgY2xlYW4gZmlsZSBzeXN0ZW0gYWdhaW4p
-Cj4+Cj4+IC9tbnQvdGVzdC9teXNxbC90cGNoL2xpbmVpdGVtLk1ZSToKPj4gICAgRVhUOiBGSUxF
-LU9GRlNFVCAgICAgIEJMT0NLLVJBTkdFICAgICAgICAgICAgICBBRyBBRy1PRkZTRVQKPj4gVE9U
-QUwKPj4gICAgICAwOiBbMC4uMjY2NjAwOTVdOiAgIDExMzUyNTI5NDE2Li4xMTM3OTE4OTUxMSAz
-MSAoNzIuLjI2NjYwMTY3KQo+PiAyNjY2MDA5Ngo+PiAgICAgIAo+IEhtbS4KPgo+ICAgIAo+PiAz
-KSBGb3IgdGhlIGNvcHksIGFzIGkgbWVudGlvbmVkIGluIG15IHByZXZpb3VzIG1haWwsIGkgY29w
-aWVkIHRoZQo+PiBkYXRhYmFzZSBvdmVyIG5mcyB1c2luZyB0aGUgY3AgLVIgbGludXggcHJvZ3Jh
-bS4KPj4gVGh1cywgaSBiZWxpZXZlIGFsbCB0aGUgZmlsZXMgYXJlIGNvcGllZCBzZXF1ZW50aWFs
-bHksIHRoZSBvbmUgYWZ0ZXIgdGhlCj4+IG90aGVyLCB3aXRoIG5vIG90aGVyIGNvbmN1cnJlbnQg
-d3JpdGUgb3BlcmF0aW9ucwo+PiBydW5uaW5nIGF0IHRoZSBiYWNrZ3JvdW5kLiBUaGUgZmlsZS1z
-eXN0ZW0gd2FzIHByaXN0aW5lIGJlZm9yZSB0aGUgY3AKPj4gd2l0aCBubyBmaWxlcywgYW5kIGp1
-c3QgdGhlIG1vdW50IGRpcmVjdG9yeSB3YXMKPj4gY3JlYXRlZCAoYWxsIHRoZSBvdGhlciBuZWNl
-c3NhcnkgZmlsZXMgYW5kIGRpcmVjdG9yaWVzIGFyZSBjcmVhdGVkIGZyb20KPj4gdGhlIGNwIHBy
-b2dyYW0pLgo+PiAgICAgIAo+IElJUkMsIGNvcGllcyBvdmVyIE5GUyBjYW4gYWZmZWN0IHhmcyBh
-bGxvY2F0b3IgcGVyZm9ybWFuY2UsIGJlY2F1c2UKPiAoSUlSQykgaXQgdGVuZHMgdG8gY2xvc2Ug
-dGhlIGZpbGVoYW5kbGUgcGVyaW9kaWNhbGx5IGFuZCB4ZnMgbG9zZXMgdGhlCj4gYWxsb2NhdG9y
-IGNvbnRleHQuICBXZSB1c2VkIHRvIGhhdmUgYSBmaWxlaGFuZGxlIGNhY2hlIHdoaWNoIGhlbGQg
-dGhlbQo+IG9wZW4sIGJ1dCB0aGF0IHdlbnQgYXdheSBzb21lIHRpbWUgYWdvLgo+Cj4gRGF2ZSB3
-aWxsIHByb2JhYmx5IGNvcnJlY3Qgc2lnbmlmaWNhbnQgc3dhdGhzIG9mIHRoaXMgaW5mb3JtYXRp
-b24gZm9yCj4gbWUsIHRob3VnaCA7KQo+Cj4gICAgCj4+IDQpICBUaGUgdmVyc2lvbiBvZiB4ZnNw
-cm9ncyBpcyAyLjkuNCAoYWNxdWlyZWQgd2l0aCB4ZnNfaW5mbyAtdikgYW5kIHRoZQo+PiB2ZXJz
-aW9uIG9mIHRoZSBrZXJuZWwgaXMgMi42LjE4LTE2NC4xMS4xLmVsNS4KPj4gICAgICAKPiBBaCEg
-IEEgUmVkIEhhdCBrZXJuZWw7IGhhdmUgeW91IGFza2VkIHlvdXIgUmVkIEhhdCBzdXBwb3J0IGZv
-bGtzIGZvcgo+IGhlbHAgb24gdGhpcyBpc3N1ZT8KPiAgICAKCkkgc3VwcG9zZSB0aGF0IHRoZXkg
-d2lsbCByZWRpcmVjdCBtZSBiYWNrIHRvIHlvdSwgd29uJ3QgdGhleT8gOi0pCgo+IC1FcmljCj4K
-PiAgICAKPj4gICAgICAgICAgIElmIHlvdSByZXF1aXJlIGFueSBmdXJ0aGVyIGluZm9ybWF0aW9u
-IGxldCBtZSBrbm93LiBMZXQgbWUKPj4gc3RhdGUgdGhhdCBpIGNhbiBhbHNvIHByb3ZpZGUgeW91
-IHdpdGggdGhlIGNvbXBsZXRlCj4+IGRhdGEtc2V0IGlmIHlvdSBmZWVsIGl0IG5lY2Vzc2FyeSB0
-cnlpbmcgdG8gcmVwcm9kdWNlIHRoZSBpc3N1ZS4KPj4KPj4gVGhhbmtzLAo+PiBZYW5uaXMgS2xv
-bmF0b3MKPj4gICAgICAKPj4+PiBIaSBhbGwhCj4+Pj4KPj4+PiAgICAgICAgICAgSSBoYXZlIGNv
-bWUgYWNyb3NzIHRoZSBmb2xsb3dpbmcgcGVjdWxpYXIgYmVoYXZpb3IgaW4gWEZTCj4+Pj4gYW5k
-IGkgd291bGQgYXBwcmVjaWF0ZSBhbnkgaW5mb3JtYXRpb24gYW55b25lCj4+Pj4gY291bGQgcHJv
-dmlkZS4KPj4+PiAgICAgICAgICAgSW4gb3VyIGxhYiB3ZSBoYXZlIGEgc3lzdGVtIHRoYXQgaGFz
-IHR3ZWx2ZSA1MDBHQnl0ZSBoYXJkCj4+Pj4gZGlza3MgKHRvdGFsIGNhcGFjaXR5IDZUQnl0ZSks
-IGNvbm5lY3RlZCB0byBhbgo+Pj4+IEFyZWNhIChBUkMtMTY4MEQtSVgtMTIpIFNBUyBzdG9yYWdl
-IGNvbnRyb2xsZXIuIFRoZSBkaXNrcyBhcmUKPj4+PiBjb25maWd1cmVkIGFzIGEgUkFJRC0wIGRl
-dmljZS4gVGhlbiBJIGNyZWF0ZQo+Pj4+IGEgY2xlYW4gWEZTIGZpbGVzeXN0ZW0gb24gdG9wIG9m
-IHRoZSByYWlkIHZvbHVtZSwgdXNpbmcgdGhlIHdob2xlCj4+Pj4gY2FwYWNpdHkuIFdlIHVzZSB0
-aGlzIHRlc3Qtc2V0dXAgdG8gbWVhc3VyZQo+Pj4+IHBlcmZvcm1hbmNlIGltcHJvdmVtZW50IGZv
-ciBhIFRQQy1IIGV4cGVyaW1lbnQuIFdlIGNvcHkgdGhlIGRhdGFiYXNlCj4+Pj4gb3ZlciB0aGUg
-Y2xlYW4gWEZTIGZpbGVzeXN0ZW0gdXNpbmcgdGhlCj4+Pj4gY3AgdXRpbGl0eS4gVGhlIGRhdGFi
-YXNlIHVzZWQgaW4gb3VyIGV4cGVyaW1lbnRzIGlzIDU2R0J5dGVzIGluIHNpemUKPj4+PiAoZGF0
-YSArIGluZGljZXMpLgo+Pj4+ICAgICAgICAgICBUaGUgcHJvYmxlbSBpcyB0aGF0IGkgaGF2ZSBu
-b3RpY2VkIHRoYXQgWEZTIG1heSAtIG5vdCBhbGwKPj4+PiB0aW1lcyAtIHNwbGl0IGEgdGFibGUg
-b3ZlciBhIGxhcmdlIGRpc2sgZGlzdGFuY2UuIEZvcgo+Pj4+IGV4YW1wbGUgaW4gb25lIHJ1biBp
-IGhhdmUgbm90aWNlZCB0aGF0IGEgZmlsZSBvZiAxM0dCeXRlIGlzIHNwbGl0Cj4+Pj4gb3ZlciBh
-IDQsN1RCeXRlIGRpc3RhbmNlIChJIGNhbGN1bGF0ZSB0aGlzIGRpc3RhbmNlCj4+Pj4gYnkgc3Vi
-dHJhY3RpbmcgdGhlIGZpbmFsIGJsb2NrIHVzZWQgZm9yIHRoZSBmaWxlIHdpdGggdGhlIGZpcnN0
-IG9uZS4KPj4+PiBUaGUgdHdvIGRpc2sgYmxvY2tzIHZhbHVlcyBhcmUgYWNxdWlyZWQgdXNpbmcg
-dGhlCj4+Pj4gRklCTUFQIGlvY3RsKS4KPj4+PiAgICAgICAgICAgSXMgdGhlcmUgc29tZSByZWFz
-b25pbmcgYmVoaW5kIHRoaXMgKHBlY3VsaWFyKSBiZWhhdmlvcj8gSQo+Pj4+IHdvdWxkIGV4cGVj
-dCB0aGF0IHNpbmNlIHRoZSB1bmRlcmx5aW5nIHN0b3JhZ2UgaXMgc28KPj4+PiBsYXJnZSwgYW5k
-IHRoZSBkYXRhc2V0IGlzIHNvIHNtYWxsLCBYRlMgd291bGQgdHJ5IHRvIG1pbmltaXplIGRpc2sK
-Pj4+PiBzZWVrcyBhbmQgdGh1cyBwbGFjZSB0aGUgZmlsZSBzZXF1ZW50aWFsbHkgaW4gZGlzay4K
-Pj4+PiBGdXJ0aGVybW9yZSwgSSB1bmRlcnN0YW5kIHRoYXQgdGhlcmUgbWF5IGJlIHNvbWUgYmxv
-Y2tzIGxlZnQgdW51c2VkCj4+Pj4gYnkgWEZTIGJldHdlZW4gc3Vic2VxdWVudCBmaWxlIGJsb2Nr
-cyB1c2VkCj4+Pj4gaW4gb3JkZXIgdG8gaGFuZGxlIGFueSB3cml0ZSBhcHBlbmRzIHRoYXQgbWF5
-IGNvbWUgYWZ0ZXJ3YXJkLiBCdXQgaQo+Pj4+IHdvdWxkbid0IGV4cGVjdCBzdWNoIGEgbGFyZ2Ug
-c3BsaXR0aW5nIG9mIGEgc2luZ2xlCj4+Pj4gZmlsZS4KPj4+PiAgICAgICAgICAgQW55IGhlbHA/
-Cj4+Pj4KPj4+PiAgICAgICAgICAKPj4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX18KPj4geGZzIG1haWxpbmcgbGlzdAo+PiB4ZnNAb3NzLnNnaS5jb20KPj4g
-aHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCj4+Cj4+ICAgICAgCj4gICAg
-CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFp
-bGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0
-aW5mby94ZnMK
+Hello all,
+
+         Along with my other (yet pending :-( ) question/issue, I have 
+another question (i hope this is the last :-) )
+now.
+         I would like to measure the hit ratio of the metadata accesses 
+of XFS (inode+internal buffers). It is my
+understanding that XFS uses its own data structures, and does not rely 
+on the buffercache mechanisms of
+the Linux kernel. However, even doing so, there may be cases that the 
+metadata may not fit in the RAM,
+and I/O operations are required to fetch them from the underlying 
+storage. I have found out that there are
+two places that XFS uses the submit_bio function. If i add some counters 
+there, would it suffice to measure all
+the metadata misses?
+         Or is this information available in one (or more) of the 
+xfs_stats counters? And if so, what do i need to sum
+up in order to get the total metadata hit and miss ratio?
+
+Thanks (again!) in advance,
+Yannis Klonatos
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
