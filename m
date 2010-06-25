@@ -1,29 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5OMMDbD049372 for <xfs@oss.sgi.com>; Thu, 24 Jun 2010 17:22:13 -0500
+	o5P0u8YA054365 for <xfs@oss.sgi.com>; Thu, 24 Jun 2010 19:56:08 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 39AED1546212
-	for <xfs@oss.sgi.com>; Thu, 24 Jun 2010 15:24:53 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	DCqePXt43nFrvEsr for <xfs@oss.sgi.com>;
-	Thu, 24 Jun 2010 15:24:53 -0700 (PDT)
-Received: from dastard (unverified [121.91.222.126])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	17549871-1927428
-	for <xfs@oss.sgi.com>; Fri, 25 Jun 2010 07:54:52 +0930 (CST)
-Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1ORuqn-00087a-67
-	for xfs@oss.sgi.com; Fri, 25 Jun 2010 08:24:49 +1000
-Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1ORuqh-00065Z-ON
-	for xfs@oss.sgi.com; Fri, 25 Jun 2010 08:24:43 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A3087112E97B
+	for <xfs@oss.sgi.com>; Thu, 24 Jun 2010 18:03:14 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	TxGkthzap62HLIni for <xfs@oss.sgi.com>;
+	Thu, 24 Jun 2010 18:03:14 -0700 (PDT)
+Date: Fri, 25 Jun 2010 10:58:36 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs_db: check for valid inode data pointer before
-	dereferencing
-Date: Fri, 25 Jun 2010 08:24:43 +1000
-Message-Id: <1277418283-23381-1-git-send-email-david@fromorbit.com>
+Subject: Re: XFS peculiar behavior
+Message-ID: <20100625005836.GT6590@dastard>
+References: <4C21B9AF.9010307@ics.forth.gr> <20100623231700.GP6590@dastard>
+	<4C236791.1030709@ics.forth.gr> <4C2377ED.8090300@sandeen.net>
+	<4C237B4E.8030606@ics.forth.gr>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4C237B4E.8030606@ics.forth.gr>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,153 +27,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Yannis Klonatos <klonatos@ics.forth.gr>
+Cc: andi@firstfloor.org, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
-
-When processing an inode, the code checks various flags to determine
-whether to output messages or not. When checking the CLI provided
-inode numbers to be verbose about, we fail to check if the inode
-data structre returned is valid or not before dereferencing it.
-Hence running xfs_check with the "serious errors only" flag, xfs_db
-will crash. Fix up the "should we output" logic to be safe.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- db/check.c |   29 ++++++++++++++++-------------
- 1 files changed, 16 insertions(+), 13 deletions(-)
-
-diff --git a/db/check.c b/db/check.c
-index c62321b..4f8a62a 100644
---- a/db/check.c
-+++ b/db/check.c
-@@ -2619,6 +2619,7 @@ process_inode(
- 	xfs_qcnt_t		ic = 0;
- 	xfs_qcnt_t		rc = 0;
- 	xfs_dqid_t		dqprid;
-+	int			v = 0;
- 	static char		okfmts[] = {
- 		0,				/* type 0 unused */
- 		1 << XFS_DINODE_FMT_DEV,	/* FIFO */
-@@ -2653,15 +2654,16 @@ process_inode(
- 		bno = XFS_INO_TO_FSB(mp, ino);
- 		blkmap = NULL;
- 	}
-+	v = (!sflag || (id && id->ilist) || CHECK_BLIST(bno));
- 	if (idic.di_magic != XFS_DINODE_MAGIC) {
--		if (!sflag || isfree || id->ilist || CHECK_BLIST(bno))
-+		if (isfree || v)
- 			dbprintf(_("bad magic number %#x for inode %lld\n"),
- 				idic.di_magic, ino);
- 		error++;
- 		return;
- 	}
- 	if (!XFS_DINODE_GOOD_VERSION(idic.di_version)) {
--		if (!sflag || isfree || id->ilist || CHECK_BLIST(bno))
-+		if (isfree || v)
- 			dbprintf(_("bad version number %#x for inode %lld\n"),
- 				idic.di_version, ino);
- 		error++;
-@@ -2669,7 +2671,7 @@ process_inode(
- 	}
- 	if (isfree) {
- 		if (idic.di_nblocks != 0) {
--			if (!sflag || id->ilist || CHECK_BLIST(bno))
-+			if (v)
- 				dbprintf(_("bad nblocks %lld for free inode "
- 					 "%lld\n"),
- 					idic.di_nblocks, ino);
-@@ -2680,21 +2682,22 @@ process_inode(
- 		else
- 			nlink = idic.di_nlink;
- 		if (nlink != 0) {
--			if (!sflag || id->ilist || CHECK_BLIST(bno))
-+			if (v)
- 				dbprintf(_("bad nlink %d for free inode %lld\n"),
- 					nlink, ino);
- 			error++;
- 		}
- 		if (idic.di_mode != 0) {
--			if (!sflag || id->ilist || CHECK_BLIST(bno))
-+			if (v)
- 				dbprintf(_("bad mode %#o for free inode %lld\n"),
- 					idic.di_mode, ino);
- 			error++;
- 		}
- 		return;
- 	}
-+
- 	if (be32_to_cpu(dip->di_next_unlinked) != NULLAGINO) {
--		if (!sflag || isfree || id->ilist || CHECK_BLIST(bno))
-+		if (v)
- 			dbprintf(_("bad next unlinked %#x for inode %lld\n"),
- 				be32_to_cpu(dip->di_next_unlinked), ino);
- 		error++;
-@@ -2704,27 +2707,27 @@ process_inode(
- 	 */
- 	if ((((idic.di_mode & S_IFMT) >> 12) > 15) ||
- 	    (!(okfmts[(idic.di_mode & S_IFMT) >> 12] & (1 << idic.di_format)))) {
--		if (!sflag || id->ilist || CHECK_BLIST(bno))
-+		if (v)
- 			dbprintf(_("bad format %d for inode %lld type %#o\n"),
- 				idic.di_format, id->ino, idic.di_mode & S_IFMT);
- 		error++;
- 		return;
- 	}
- 	if ((unsigned int)XFS_DFORK_ASIZE(dip, mp) >= XFS_LITINO(mp))  {
--		if (!sflag || id->ilist)
-+		if (v)
- 			dbprintf(_("bad fork offset %d for inode %lld\n"),
- 				idic.di_forkoff, id->ino);
- 		error++;
- 		return;
- 	}
- 	if ((unsigned int)idic.di_aformat > XFS_DINODE_FMT_BTREE)  {
--		if (!sflag || id->ilist)
-+		if (v)
- 			dbprintf(_("bad attribute format %d for inode %lld\n"),
- 				idic.di_aformat, id->ino);
- 		error++;
- 		return;
- 	}
--	if (verbose || id->ilist || CHECK_BLIST(bno))
-+	if (verbose || (id && id->ilist) || CHECK_BLIST(bno))
- 		dbprintf(_("inode %lld mode %#o fmt %s "
- 			 "afmt %s "
- 			 "nex %d anex %d nblk %lld sz %lld%s%s%s%s%s%s%s\n"),
-@@ -2844,20 +2847,20 @@ process_inode(
- 	}
- 	totblocks = totdblocks + totiblocks + atotdblocks + atotiblocks;
- 	if (totblocks != idic.di_nblocks) {
--		if (!sflag || id->ilist || CHECK_BLIST(bno))
-+		if (v)
- 			dbprintf(_("bad nblocks %lld for inode %lld, counted "
- 				 "%lld\n"),
- 				idic.di_nblocks, id->ino, totblocks);
- 		error++;
- 	}
- 	if (nextents != idic.di_nextents) {
--		if (!sflag || id->ilist || CHECK_BLIST(bno))
-+		if (v)
- 			dbprintf(_("bad nextents %d for inode %lld, counted %d\n"),
- 				idic.di_nextents, id->ino, nextents);
- 		error++;
- 	}
- 	if (anextents != idic.di_anextents) {
--		if (!sflag || id->ilist || CHECK_BLIST(bno))
-+		if (v)
- 			dbprintf(_("bad anextents %d for inode %lld, counted "
- 				 "%d\n"),
- 				idic.di_anextents, id->ino, anextents);
--- 
-1.7.1
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCBKdW4gMjQsIDIwMTAgYXQgMDY6MzU6NDJQTSArMDMwMCwgWWFubmlzIEtsb25hdG9z
+IHdyb3RlOgo+IM+Dz4TOuc+CIDYvMjQvMjAxMCA2OjIxIFBNLCBPL0ggRXJpYyBTYW5kZWVuIM6t
+zrPPgc6xz4jOtToKPiA+T24gMDYvMjQvMjAxMCAwOToxMSBBTSwgWWFubmlzIEtsb25hdG9zIHdy
+b3RlOgo+ID4+MikgVGhlIG91dHB1dCBvZiB4ZnNfYm1hcCBpbiB0aGUgbGluZWl0ZW0uTVlJIHRh
+YmxlIG9mIHRoZSBUUEMtSAo+ID4+d29ya2xvYWQgaXMgYXQgb25lIHJ1bjoKPiA+Pgo+ID4+L21u
+dC90ZXN0L215c3FsL3RwY2gvbGluZWl0ZW0uTVlJOgo+ID4+ICAgRVhUOiBGSUxFLU9GRlNFVCAg
+ICAgICAgICAgQkxPQ0stUkFOR0UgICAgICAgICAgICAgIEFHICBBRy1PRkZTRVQgICAgICAgICBU
+T1RBTAo+ID4+ICAgICAwOiBbMC4uNjM0NDI3MV06ICAgICAgICAgMTEzNTI1Mjk0MTYuLjExMzU4
+ODczNjg3IDMxICg3Mi4uNjM0NDM0MykgICAgNjM0NDI3Mgo+ID4+ICAgICAxOiBbNjM0NDI3Mi4u
+MTA5MDEzNDNdOiAgMTQ2NDg0MjYwOC4uMTQ2OTM5OTY3OSAgICA0ICgxMTIuLjQ1NTcxODMpICAg
+NDU1NzA3Mgo+ID4+ICAgICAyOiBbMTA5MDEzNDQuLjE4NDM5MTk5XTogMTgzMTA1MzIwMC4uMTgz
+ODU5MTA1NSAgICA1ICg4MC4uNzUzNzkzNSkgICAgNzUzNzg1Ngo+ID4+ICAgICAzOiBbMTg0Mzky
+MDAuLjI1MzExNTE5XTogMjE5NzI2Mzg0MC4uMjIwNDEzNjE1OSAgICA2ICg5Ni4uNjg3MjQxNSkg
+ICAgNjg3MjMyMAo+ID4+ICAgICA0OiBbMjUzMTE1MjAuLjI2NjYwMDk1XTogMjU2MzQ3NDQ2NC4u
+MjU2NDgyMzAzOSAgICA3ICg5Ni4uMTM0ODY3MSkgICAgMTM0ODU3Ngo+ID4+Cj4gPj5HaXZlbiB0
+aGF0IGFsbCBkaXNrIGJsb2NrcyBhcmUgaW4gdW5pdHMgb2YgNTEyLWJ5dGUgYmxvY2tzLCBpZiBJ
+Cj4gPj5pbnRlcnByZXQgdGhlIG91dHB1dAo+ID4+Y29ycmVjdGx5IHRoZSBmaXJzdCBmaWxlIGlz
+IGF0IGJsb2NrIDE0NjUzNTI3OTIgPSA2OTguNEdCeXRlIG9mZnNldCBhbmQKPiA+PnRoZSBsYXN0
+IGJsb2NrCj4gPj5pcyBhdCA1NDIxLjFHQnl0ZSBvZmZzZXQsIG1lYW5pbmcgdGhhdCB0aGlzIHNw
+ZWNpZmljIHRhYmxlIGlzIHNwbGl0IG92ZXIKPiA+PmEgNCw3VEJ5dGUgZGlzdGFuY2UuCj4gPlRo
+ZSBmaWxlIHN0YXJ0ZWQgb3V0IGluIHRoZSBsYXN0IEFHLCBhbmQgdGhlbiBoYWQgdG8gd3JhcCBh
+cm91bmQsCj4gPmJlY2F1c2UgaXQgaGl0IHRoZSBlbmQgb2YgdGhlIGZpbGVzeXN0ZW0uIDopICBJ
+dCB3YXMgdGhlbiBzb21ld2hhdAo+ID5zZXF1ZW50aWFsIGluIEFHcyA0LDUsNiw3IGFmdGVyIHRo
+YXQsIHRob3VnaCBub3QgcGVyZmVjdGx5IHNvLgo+ID4KPiA+VGhpcyBydW4gd2FzIHdpdGggYSBj
+bGVhbiBmaWxlc3lzdGVtPyAgV2FzIHRoZSBtb3VudHBvaW50Cj4gPi9tbnQvdGVzdD8gIFhGUyBk
+aXN0cmlidXRlcyBuZXcgZGlyZWN0b3JpZXMgaW50byBuZXcgQUdzIChhbGxvY2F0aW9uCj4gPmdy
+b3Vwcywgb3IgZGlzayByZWdpb25zKSBmb3IgcGFyYWxsZWxpc20sIGFuZCB0aGVuIGZpbGVzIGlu
+IHRob3NlIGRpcnMKPiA+c3RhcnQgcG9wdWxhdGluZyB0aGUgc2FtZSBBRy4gIFNvIGlmIC9tbnQv
+dGVzdC9teXNxbC90cGNoIGVuZGVkIHVwIGluCj4gPnRoZSBsYXN0IEFHICgjMzEpIHRoZW4gdGhl
+IGZpbGUgbGlrZWx5IHN0YXJ0ZWQgdGhlcmUsIHRvby4KPiAKPiBPay4gWW91ciBhcmd1bWVudCBt
+YWtlcyBhIGxvdCBvZiBzZW5zZS4gSG93ZXZlciwgdGhpcyBpcyBhIGNsZWFuCj4gZmlsZSBzeXN0
+ZW0gKG1vdW50IHBvaW50IC9tbnQvdGVzdCksIGFuZAo+IEkgYW0gY2VydGFpbiB0aGF0IHRoZSBm
+aWxlcyBjb3BpZWQgYmVmb3JlIHRoZSBhZm9yZW1lbnRpb25lZCBpbmRleAo+IGZpbGUgKGxpbmVp
+dGVtLk1ZSSkgcmVxdWlyZSAyOEdCeXRlIHNwYWNlCj4gaW4gdG90YWwuIFNvLCB0aGlzIHN0aWxs
+IHJhaXNlcyB0aGUgcXVlc3Rpb24gd2h5IFhGUyBzcGxpdHRlZCB0aGVzZQo+IGZpbGVzIGluIGEg
+d2F5IHRoYXQgY2F1c2VkIHRoZSB3aG9sZSBmaWxlIHN5c3RlbQo+IHNwYWNlIHRvIGJlICJjb3Zl
+cmVkIiwgYW5kIHRoZSBsaW5laXRlbSBmaWxlIHRvIGJlIHBsYWNlZCBzdGFydGluZwo+IGF0IHRo
+ZSBlbmQgb2YgdGhlIEZTIChhcyB5b3UgbWVudGlvbmVkKS4KClhGUyBzcHJlYWRzIGFsbG9jYXRp
+b24gb3V0IG92ZXIgaXQncyBlbnRpcmUgYWRkcmVzcyBzcGFjZSB0byBlbmFibGUKdXRpbGlzYXRp
+b24gb2YgYWxsIHRoZSBkaXNrcyBiYWNraW5nIHRoZSBmaWxlc3lzdGVtICh0aGluayBsaW5lYXIK
+Y29uY2F0ZW5hdGlvbiBvZiBkZXZpY2VzKS4gIFRoaXMgaXMgc3ViLW9wdGltYWwgZm9yIGEgc21h
+bGwgbnVtYmVyCm9mIHNwaW5kbGVzLCBidXQgWEZTIGlzIGRlc2lnbmVkIHRvIHNjYWxlIHRvIGh1
+bmRyZWRzIHRvIHRob3VzYW5kcwpvZiBkaXNrcyBlZmZlY3RpdmVseS4KCj4gPj40KSAgVGhlIHZl
+cnNpb24gb2YgeGZzcHJvZ3MgaXMgMi45LjQgKGFjcXVpcmVkIHdpdGggeGZzX2luZm8gLXYpIGFu
+ZCB0aGUKPiA+PnZlcnNpb24gb2YgdGhlIGtlcm5lbCBpcyAyLjYuMTgtMTY0LjExLjEuZWw1Lgo+
+ID5BaCEgIEEgUmVkIEhhdCBrZXJuZWw7IGhhdmUgeW91IGFza2VkIHlvdXIgUmVkIEhhdCBzdXBw
+b3J0IGZvbGtzIGZvcgo+ID5oZWxwIG9uIHRoaXMgaXNzdWU/Cj4gCj4gSSBzdXBwb3NlIHRoYXQg
+dGhleSB3aWxsIHJlZGlyZWN0IG1lIGJhY2sgdG8geW91LCB3b24ndCB0aGV5PyA6LSkKCk9yIG1l
+IDspCgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20K
+Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWls
+aW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3Rp
+bmZvL3hmcwo=
