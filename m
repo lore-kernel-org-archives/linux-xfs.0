@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5P1D9L7054950 for <xfs@oss.sgi.com>; Thu, 24 Jun 2010 20:13:09 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F03DF402A12
-	for <xfs@oss.sgi.com>; Thu, 24 Jun 2010 18:15:50 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	boz8qj86saR85fDQ for <xfs@oss.sgi.com>;
-	Thu, 24 Jun 2010 18:15:50 -0700 (PDT)
-Date: Fri, 25 Jun 2010 11:15:47 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Metadata hit ratio
-Message-ID: <20100625011547.GU6590@dastard>
-References: <4C23C074.5080100@ics.forth.gr>
+	o5P49Qk2067749 for <xfs@oss.sgi.com>; Thu, 24 Jun 2010 23:09:26 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 05FE51D60C83
+	for <xfs@oss.sgi.com>; Thu, 24 Jun 2010 21:12:08 -0700 (PDT)
+Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
+	by cuda.sgi.com with ESMTP id 4RTIaJ0yEZOCKz04 for
+	<xfs@oss.sgi.com>; Thu, 24 Jun 2010 21:12:08 -0700 (PDT)
+Message-ID: <4C242C97.8060506@sandeen.net>
+Date: Thu, 24 Jun 2010 23:12:07 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4C23C074.5080100@ics.forth.gr>
+Subject: Re: [PATCH] xfs: unregister inode shrinker before freeing filesystem
+	structures
+References: <1277428120-27216-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1277428120-27216-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,57 +28,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Yannis Klonatos <klonatos@ics.forth.gr>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Jun 24, 2010 at 11:30:44PM +0300, Yannis Klonatos wrote:
-> Hello all,
+Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
->         Along with my other (yet pending :-( ) question/issue, I
-> have another question (i hope this is the last :-) )
-> now.
->         I would like to measure the hit ratio of the metadata
-> accesses of XFS (inode+internal buffers). It is my
-> understanding that XFS uses its own data structures, and does not
-> rely on the buffercache mechanisms of
-> the Linux kernel. However, even doing so, there may be cases that
-> the metadata may not fit in the RAM,
-> and I/O operations are required to fetch them from the underlying
-> storage. I have found out that there are
-> two places that XFS uses the submit_bio function. If i add some
-> counters there, would it suffice to measure all
-> the metadata misses?
->         Or is this information available in one (or more) of the
-> xfs_stats counters? And if so, what do i need to sum
-> up in order to get the total metadata hit and miss ratio?
+> Currently we don't remove the XFS mount from the shrinker list until late in
+> the unmount path. By this time, we have already torn down the internals of the
+> filesystem (e.g. the per-ag structures), and hence if the shrinker is executed
+> between the teardown and the unregistering, the shrinker will get NULL per-ag
+> structure pointers and panic trying to dereference them.
+> 
+> Fix this by removingthe xfs mount from the shrinker list before tearing down
+> it's internal structures.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Start by looking here:
+Looks right to me, and is more symmetric with setup I think.
 
-http://xfs.org/index.php/Runtime_Stats
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-But you probably want some of the buf counters which are
-undocumented on that page, so a rough description of them is
-(from PCP):
-
-$ pminfo -t xfs.buffer
-xfs.buffer.get [number of request buffer calls]
-xfs.buffer.create [number of buffers created]
-xfs.buffer.get_locked [number of requests for a locked buffer which succeeded]
-xfs.buffer.get_locked_waited [number of requests for a locked buffer which waited]
-xfs.buffer.busy_locked [number of non-blocking requests for a locked buffer which failed]
-xfs.buffer.miss_locked [number of requests for a locked buffer which failed due to no buffer]
-xfs.buffer.page_retries [number of retry attempts when allocating a page for insertion in a buffer]
-xfs.buffer.page_found [number of hits in the page cache when looking for a page]
-xfs.buffer.get_read [number of buffer get calls requiring immediate device reads]
-
-So you might be able to get something from those stats.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> ---
+>  fs/xfs/linux-2.6/xfs_super.c |    6 +++++-
+>  1 files changed, 5 insertions(+), 1 deletions(-)
+> 
+> diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
+> index e3de46c..4605cd4 100644
+> --- a/fs/xfs/linux-2.6/xfs_super.c
+> +++ b/fs/xfs/linux-2.6/xfs_super.c
+> @@ -1156,9 +1156,13 @@ xfs_fs_put_super(
+>  
+>  	XFS_bflush(mp->m_ddev_targp);
+>  
+> +	/*
+> +	 * Unregister the memory shrinker before we tear down the mount
+> +	 * structure so we don't have memory reclaim racing with us here.
+> +	 */
+> +	xfs_inode_shrinker_unregister(mp);
+>  	xfs_unmountfs(mp);
+>  	xfs_freesb(mp);
+> -	xfs_inode_shrinker_unregister(mp);
+>  	xfs_icsb_destroy_counters(mp);
+>  	xfs_close_devices(mp);
+>  	xfs_free_fsname(mp);
 
 _______________________________________________
 xfs mailing list
