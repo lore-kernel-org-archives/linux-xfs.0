@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5SM20Nc044154 for <xfs@oss.sgi.com>; Mon, 28 Jun 2010 17:02:00 -0500
+	o5SM2p6X044268 for <xfs@oss.sgi.com>; Mon, 28 Jun 2010 17:02:52 -0500
 From: Alex Elder <aelder@sgi.com>
-Message-Id: <201006282204.o5SM4gph018113@stout.americas.sgi.com>
-Date: Mon, 28 Jun 2010 17:04:42 -0500
-Subject: [PATCH 02/15] xfs: rename and move definition of HAVE_DMAPI
+Message-Id: <201006282205.o5SM5Wps018169@stout.americas.sgi.com>
+Date: Mon, 28 Jun 2010 17:05:32 -0500
+Subject: [PATCH 07/15] xfs: rewrite XFS_SEND_MMAP() as a function
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -21,52 +21,55 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Change the HAVE_DMAPI symbol to be XFS_DMAPI instead, so it
-is more appropriately restricted to the XFS name space.  Move
-its definition into "xfs_dmapi.h"; the only other file that
-needs it #includes that file.
+Re-implement XFS_SEND_MMAP() using a real (static inline) function.
+
+The mount point passed in to XFS_SEND_MMAP() is always derived from
+from the vma struct that is the subject of VM operation.  Get rid of
+the mount point argument altogether, and compute what would have
+been passed within the macro, making the first argument the vma
+"target" of the event being signalled.
+
+Finally, move the checks for whether an event is enabled into
+the called function.
+
 
 Signed-off-by: Alex Elder <aelder@sgi.com>
 
 ---
- fs/xfs/xfs_dmapi.h |   11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_dmapi.h |   20 ++++++++++++++++++--
+ 1 file changed, 18 insertions(+), 2 deletions(-)
 
 Index: b/fs/xfs/xfs_dmapi.h
 ===================================================================
 --- a/fs/xfs/xfs_dmapi.h
 +++ b/fs/xfs/xfs_dmapi.h
-@@ -18,6 +18,11 @@
- #ifndef __XFS_DMAPI_H__
- #define __XFS_DMAPI_H__
+@@ -227,8 +227,24 @@ xfs_dmapi_send_data(
+ 	return send_data(event, ip, offset, length, flags, lock_flags);
+ }
  
-+#undef XFS_DMAPI
-+#if defined(CONFIG_XFS_DMAPI) || defined(CONFIG_XFS_DMAPI_MODULE)
-+#define XFS_DMAPI
-+#endif
+-#define XFS_SEND_MMAP(mp, vma,fl) \
+-	(*(mp)->m_dm_ops->xfs_send_mmap)(vma,fl)
++static inline int
++xfs_dmapi_send_mmap(
++	struct vm_area_struct	*vma,
++	unsigned long		vm_flags)
++{
++	struct inode		*inode = vma->vm_file->f_path.dentry->d_inode;
++	struct xfs_mount	*mp = XFS_M(inode->i_sb);
 +
- /*	Values used to define the on-disk version of dm_attrname_t. All
-  *	on-disk attribute names start with the 8-byte string "SGI_DMI_".
-  *
-@@ -66,15 +71,15 @@ typedef enum {
- #define HAVE_DM_RIGHT_T
- 
- /* Defines for determining if an event message should be sent. */
--#ifdef HAVE_DMAPI
-+#ifdef XFS_DMAPI
- #define	DM_EVENT_ENABLED(ip, event) ( \
- 	unlikely ((ip)->i_mount->m_flags & XFS_MOUNT_DMAPI) && \
- 		( ((ip)->i_d.di_dmevmask & (1 << event)) || \
- 		  ((ip)->i_mount->m_dmevmask & (1 << event)) ) \
- 	)
--#else
-+#else /* ! XFS_DMAPI */
- #define DM_EVENT_ENABLED(ip, event)	(0)
--#endif
-+#endif /* ! XFS_DMAPI */
- 
- #define DM_XFS_VALID_FS_EVENTS		( \
- 	(1 << DM_EVENT_PREUNMOUNT)	| \
++	if (mp->m_flags & XFS_MOUNT_DMAPI) {
++		xfs_send_mmap_t	send_mmap = mp->m_dm_ops->xfs_send_mmap;
++
++		return send_mmap(vma, vm_flags);
++	}
++	ASSERT_ALWAYS(vm_flags == VM_WRITE);
++
++	return 0;
++}
++
+ #define XFS_SEND_DESTROY(mp, ip,right) \
+ 	(*(mp)->m_dm_ops->xfs_send_destroy)(ip,right)
+ #define XFS_SEND_NAMESP(mp, ev,b1,r1,b2,r2,n1,n2,mode,rval,fl) \
 
 _______________________________________________
 xfs mailing list
