@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5SM3HMe044324 for <xfs@oss.sgi.com>; Mon, 28 Jun 2010 17:03:17 -0500
+	o5SM2vYh044289 for <xfs@oss.sgi.com>; Mon, 28 Jun 2010 17:02:57 -0500
 From: Alex Elder <aelder@sgi.com>
-Message-Id: <201006282206.o5SM62Hg018201@stout.americas.sgi.com>
-Date: Mon, 28 Jun 2010 17:06:02 -0500
-Subject: [PATCH 10/15] xfs: kill xfs_dmcore_stub
+Message-Id: <201006282205.o5SM5g24018177@stout.americas.sgi.com>
+Date: Mon, 28 Jun 2010 17:05:42 -0500
+Subject: [PATCH 08/15] xfs: rewrite XFS_SEND_DESTROY() as a function
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -21,157 +21,67 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Nobody ever dereferences an XFS mount point's m_dm_ops vector
-pointer any more unless the XFS_MOUNT_DMAPI mount flag is set.  So
-leverage that to just use a null pointer there in that case, and
-drop the whole xfs_dmcore_stub variable.
+Re-implement XFS_SEND_DESTROY() using a real (static inline)
+function.
 
-Change it so that once the m_dm_ops vector has had a chance to be
-assigned at mount time, a non-null m_vm_ops pointer is always used
-to indicate DMAPI is active on a file system rather than looking at
-the mount flag.
+The mount point passed in to XFS_SEND_DESTROY() is always taken from
+the i_mount field of the xfs_inode which is also provided.  Get rid
+of the mount point argument altogether, and compute what would have
+been passed within the macro.
 
-Also rearrange the logic in xfs_dmops_get() a bit to avoid
-including much of the code in the case DMAPI isn't supported
-at build time.
+Finally, move the test for whether the event is enabled into the
+called function.
 
 Signed-off-by: Alex Elder <aelder@sgi.com>
 
 ---
- fs/xfs/linux-2.6/xfs_file.c |    6 ++----
- fs/xfs/xfs_dmapi.h          |   10 +++++-----
- fs/xfs/xfs_dmops.c          |   37 +++++++++++++++++++++----------------
- 3 files changed, 28 insertions(+), 25 deletions(-)
+ fs/xfs/xfs_dmapi.h    |   16 ++++++++++++++--
+ fs/xfs/xfs_vnodeops.c |    5 ++---
+ 2 files changed, 16 insertions(+), 5 deletions(-)
 
-Index: b/fs/xfs/linux-2.6/xfs_file.c
-===================================================================
---- a/fs/xfs/linux-2.6/xfs_file.c
-+++ b/fs/xfs/linux-2.6/xfs_file.c
-@@ -674,8 +674,7 @@ start:
- 		goto out_unlock_mutex;
- 	}
- 
--	if (mp->m_flags & XFS_MOUNT_DMAPI && !(ioflags & IO_INVIS) &&
--			!eventsent) {
-+	if (mp->m_dm_ops && !(ioflags & IO_INVIS) && !eventsent) {
- 		int	dmflags = FILP_DELAY_FLAG(file);
- 
- 		if (need_i_mutex)
-@@ -830,8 +829,7 @@ write_retry:
- 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	}
- 
--	if (ret == -ENOSPC && mp->m_flags & XFS_MOUNT_DMAPI &&
--			!(ioflags & IO_INVIS)) {
-+	if (ret == -ENOSPC && mp->m_dm_ops && !(ioflags & IO_INVIS)) {
- 		xfs_iunlock(ip, iolock);
- 		if (need_i_mutex)
- 			mutex_unlock(&inode->i_mutex);
 Index: b/fs/xfs/xfs_dmapi.h
 ===================================================================
 --- a/fs/xfs/xfs_dmapi.h
 +++ b/fs/xfs/xfs_dmapi.h
-@@ -201,7 +201,7 @@ xfs_dmapi_event_enabled(struct xfs_inode
- #ifdef XFS_DMAPI
-     	unsigned int event_mask = 1 << event;
+@@ -245,8 +245,20 @@ xfs_dmapi_send_mmap(
+ 	return 0;
+ }
  
--	return ip->i_mount->m_flags & XFS_MOUNT_DMAPI &&
-+	return ip->i_mount->m_dm_ops &&
- 		(ip->i_mount->m_dmevmask & event_mask ||
- 			ip->i_d.di_dmevmask & event_mask);
- #else /* ! XFS_DMAPI */
-@@ -235,7 +235,7 @@ xfs_dmapi_send_mmap(
- 	struct inode		*inode = vma->vm_file->f_path.dentry->d_inode;
- 	struct xfs_mount	*mp = XFS_M(inode->i_sb);
- 
--	if (mp->m_flags & XFS_MOUNT_DMAPI) {
-+	if (mp->m_dm_ops) {
- 		xfs_send_mmap_t	send_mmap = mp->m_dm_ops->xfs_send_mmap;
- 
- 		return send_mmap(vma, vm_flags);
-@@ -319,7 +319,7 @@ xfs_dmapi_send_mount(
- 	struct xfs_mount	*mp,
- 	char			*path)
- {
--    	if (mp->m_flags & XFS_MOUNT_DMAPI) {
-+    	if (mp->m_dm_ops) {
- 		xfs_send_mount_t send_mount = mp->m_dm_ops->xfs_send_mount;
- 
- 		return send_mount(mp, DM_RIGHT_NULL, path, mp->m_fsname);
-@@ -333,7 +333,7 @@ static inline void
- xfs_dmapi_send_preunmount(
- 	struct xfs_mount	*mp)
- {
--	if (mp->m_flags & XFS_MOUNT_DMAPI)
-+	if (mp->m_dm_ops)
- 		(void) xfs_dmapi_send_namesp(mp->m_rootip, DM_RIGHT_NULL, NULL,
- 					DM_EVENT_PREUNMOUNT,
- 					mp->m_rootip, DM_RIGHT_NULL, NULL,
-@@ -344,7 +344,7 @@ static inline void
- xfs_dmapi_send_unmount(
- 	struct xfs_mount	*mp)
- {
--	if (mp->m_flags & XFS_MOUNT_DMAPI) {
-+	if (mp->m_dm_ops) {
- 		xfs_send_unmount_t send_unmount =
- 					mp->m_dm_ops->xfs_send_unmount;
- 
-Index: b/fs/xfs/xfs_dmops.c
-===================================================================
---- a/fs/xfs/xfs_dmops.c
-+++ b/fs/xfs/xfs_dmops.c
-@@ -28,30 +28,35 @@
- #include "xfs_inode.h"
- #include "xfs_dmapi.h"
- 
--
--static struct xfs_dmops xfs_dmcore_stub = {
--	.xfs_send_data		= (xfs_send_data_t)fs_nosys,
--	.xfs_send_mmap		= (xfs_send_mmap_t)fs_noerr,
--	.xfs_send_destroy	= (xfs_send_destroy_t)fs_nosys,
--	.xfs_send_namesp	= (xfs_send_namesp_t)fs_nosys,
--	.xfs_send_mount		= (xfs_send_mount_t)fs_nosys,
--	.xfs_send_unmount	= (xfs_send_unmount_t)fs_noerr,
--};
--
- int
- xfs_dmops_get(struct xfs_mount *mp)
- {
--	if (mp->m_flags & XFS_MOUNT_DMAPI) {
--		cmn_err(CE_WARN,
--			"XFS: dmapi support not available in this kernel.");
--		return EINVAL;
-+	ASSERT(!mp->m_dm_ops);
-+	if (!(mp->m_flags & XFS_MOUNT_DMAPI))
+-#define XFS_SEND_DESTROY(mp, ip,right) \
+-	(*(mp)->m_dm_ops->xfs_send_destroy)(ip,right)
++static inline int
++xfs_dmapi_send_destroy(
++	struct xfs_inode	*ip,
++	dm_right_t		right)
++{
++	xfs_send_destroy_t	send_destroy;
++
++	if (!xfs_dmapi_event_enabled(ip, DM_EVENT_DESTROY))
 +	    	return 0;
++	send_destroy = ip->i_mount->m_dm_ops->xfs_send_destroy;
 +
-+#ifdef	XFS_DMAPI
-+	mp->m_dm_ops = symbol_get(xfs_dmcore_xfs);
-+	if (!mp->m_dm_ops) {
-+		request_module("xfs_dmapi");
-+		mp->m_dm_ops = symbol_get(xfs_dmcore_xfs);
- 	}
-+	if (mp->m_dm_ops)
-+		return 0;
-+#endif	/* XFS_DMAPI */
- 
--	mp->m_dm_ops = &xfs_dmcore_stub;
--	return 0;
-+	/* Turn off the flag, since it won't be operative */
-+	mp->m_flags &= ~XFS_MOUNT_DMAPI;
-+	cmn_err(CE_WARN, "XFS: dmapi support not available in this kernel.");
++	return send_destroy(ip, right);
++}
 +
-+	return EINVAL;
- }
+ #define XFS_SEND_NAMESP(mp, ev,b1,r1,b2,r2,n1,n2,mode,rval,fl) \
+ 	(*(mp)->m_dm_ops->xfs_send_namesp)(ev,NULL,b1,r1,b2,r2,n1,n2,mode,rval,fl)
  
- void
- xfs_dmops_put(struct xfs_mount *mp)
- {
-+	if (mp->m_dm_ops) {
-+		symbol_put(xfs_dmcore_xfs);
-+		mp->m_dm_ops = NULL;
-+	}
- }
+Index: b/fs/xfs/xfs_vnodeops.c
+===================================================================
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -1061,9 +1061,8 @@ xfs_inactive(
+ 
+ 	mp = ip->i_mount;
+ 
+-	if (ip->i_d.di_nlink == 0 &&
+-		    xfs_dmapi_event_enabled(ip, DM_EVENT_DESTROY))
+-		XFS_SEND_DESTROY(mp, ip, DM_RIGHT_NULL);
++	if (ip->i_d.di_nlink == 0)
++		(void) xfs_dmapi_send_destroy(ip, DM_RIGHT_NULL);
+ 
+ 	error = 0;
+ 
 
 _______________________________________________
 xfs mailing list
