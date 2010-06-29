@@ -1,24 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5TNMoDL097341 for <xfs@oss.sgi.com>; Tue, 29 Jun 2010 18:22:51 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 57CD01D61F0C
-	for <xfs@oss.sgi.com>; Tue, 29 Jun 2010 16:25:35 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	oOhPFAb6O8XlWZPf for <xfs@oss.sgi.com>;
-	Tue, 29 Jun 2010 16:25:35 -0700 (PDT)
-Date: Wed, 30 Jun 2010 09:25:32 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs file system in process of becoming corrupt; though
-	xfs_repair thinks it's fine! ;-/ (was xfs_dump problem...)
-Message-ID: <20100629232532.GA24712@dastard>
-References: <4C26A51F.8020909@tlinx.org> <20100628022744.GX6590@dastard>
-	<4C2A749E.4060006@tlinx.org>
+	o5TNr4we098287 for <xfs@oss.sgi.com>; Tue, 29 Jun 2010 18:53:05 -0500
+Received: from firestarter.dermichi.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BD6761171B28
+	for <xfs@oss.sgi.com>; Tue, 29 Jun 2010 17:00:41 -0700 (PDT)
+Received: from firestarter.dermichi.com (firestarter.dermichi.com
+	[78.41.115.230]) by cuda.sgi.com with ESMTP id ZcecmuaJVBgzyzk5
+	for <xfs@oss.sgi.com>; Tue, 29 Jun 2010 17:00:41 -0700 (PDT)
+Received: from moonwalker.lan.dermichi.com
+	([2001:15c0:6679:1:218:8bff:feb1:c9e8])
+	by firestarter.dermichi.com with esmtpsa
+	(TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32) (Exim 4.72)
+	(envelope-from <mw@dermichi.com>) id 1OTkeZ-0006rH-0N
+	for xfs@oss.sgi.com; Wed, 30 Jun 2010 01:55:47 +0200
+Message-ID: <4C2A87FF.7090804@dermichi.com>
+Date: Wed, 30 Jun 2010 01:55:43 +0200
+From: Michael Weissenbacher <mw@dermichi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4C2A749E.4060006@tlinx.org>
+Subject: Re: xfs file system in process of becoming corrupt; though	xfs_repair
+	thinks it's fine! ;-/ (was xfs_dump problem...)
+References: <4C26A51F.8020909@tlinx.org>
+	<20100628022744.GX6590@dastard>	<4C2A749E.4060006@tlinx.org>
+	<20100629232532.GA24712@dastard>
+In-Reply-To: <20100629232532.GA24712@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,65 +36,24 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linda Walsh <xfs@tlinx.org>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-T24gVHVlLCBKdW4gMjksIDIwMTAgYXQgMDM6MzM6MDJQTSAtMDcwMCwgTGluZGEgV2Fsc2ggd3Jv
-dGU6Cj4gRGF2ZSBDaGlubmVyIHdyb3RlOgo+ID5DYW4geW91IGdldCBhIGxpc3Qgb2YgYWxsIHRo
-ZSBhdHRyaWJ1dGVzIGFuZCB0aGVpciBzaXplcyBvbiB0aGUKPiA+aW5vZGVzIHhmc2R1bXAgaXMg
-Y29tcGxhaW5pbmcgYWJvdXQ/Cj4gPgo+ID5DaGVlcnMsCj4gPgo+ID5EYXZlLgo+IFdpc2ggSSBj
-b3VsZC4uLmhhZCBhIHNvZnR3YXJlIHByb2JsZW0gdGhhdCBoYWQgbWUgaGF2ZSB0byByZXVzZSB0
-aGUKPiBkcml2ZSBJIGp1c3QgY29waWVkIHRob3NlIGV4YW1wbGVzIGZyb20uCj4gCj4gQnV0IGhh
-dmUgYW5vdGhlciBYRlMgcHJvYmxlbSB0aGF0IGlzIG11Y2ggbW9yZSByZWxpYWJseSBwZXJzaXN0
-ZW50Lgo+IEkgZG9uJ3Qga25vdyBpZiB0aGV5IGFyZSBhdCBhbGwgcmVsYXRlZCwgYnV0IHNpbmNl
-IEkgaGF2ZSB0aGlzIHByb2JsZW0KPiB0aGF0J3MgYSBiaXQgInN0dWNrIiwgaXQncyBlYXNpZXIg
-dG8gInJlcHJvZHVjZSIuCj4gCj4gRmlsZXN5c3RlbSBpcyBvbmUgb2YgbXkgbGFyZ2VyIG9uZXM6
-Cj4gCj4gSXNodGFyOi9Ub3JyZW50cz4gJ2RmJyAtVCAtLXN5bmMgIC4KPiBGaWxlc3lzdGVtICAg
-IFR5cGUgICAxSy1ibG9ja3MgICAgICBVc2VkIEF2YWlsYWJsZSBVc2UlIE1vdW50ZWQgb24KPiAv
-ZGV2L2RtLTcgICAgICB4ZnMgICA2NDQyMzE5NzQ0IDIzMDU2MzEwODAgNDEzNjY4ODY2NCAgMzYl
-IC9Ub3JyZW50cwo+IElzaHRhcjovVG9ycmVudHM+ICdkZicgLWlUIC0tc3luYyAgLgo+IEZpbGVz
-eXN0ZW0gICAgVHlwZSAgICBJbm9kZXMgICBJVXNlZCAgIElGcmVlIElVc2UlIE1vdW50ZWQgb24K
-PiAvZGV2L2RtLTcgICAgICB4ZnMgICAxMjg4NDkwMTEyICAgMzQzMTMgMTI4ODQ1NTc5OSAgICAx
-JSAvVG9ycmVudHMKPiAKPiBJIGhhdmUgMyBmaWxlcyB0aGF0IGRldmVsb3BlZCAnYnVncycgaW4g
-dGhlbSBpbiAzIHNlcGFyYXRlCj4gZGlyZWN0b3JpZXMuICBPZGRseSwgdGhleSB3ZXJlIHRoZXkg
-d2VyZSAzIGNvcGllcyBvZiB0aGUgc2FtZSAzCj4gZmlsZXMuICBWZXJ5IE9kZC4KPiAKPiBTeW1w
-dG9tIGlzIGZyb20gbHM6Cj4gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tCj4gSXNodGFyOi9Ub3JyZW50cz4gJ2xzJyAtbmkgYmFkKiAgICAgbHM6IGNhbm5vdCBhY2Nl
-c3MgYmFkLzMwLU9tb2lkZQo+IHRvIFlha3Vzb2t1IChUViBzYWl6de+9nFJlaW5hyrxzIFZlci4p
-Lm1wMzogTm8gc3VjaCBmaWxlIG9yIGRpcmVjdG9yeQo+IGxzOiBjYW5ub3QgYWNjZXNzIGJhZC8z
-MS1PbW9pZGUgdG8gWWFrdXNva3UgKFRWIHNhaXp1772cVG9tb2XKvHMgVmVyLikubXAzOiBObyBz
-dWNoIGZpbGUgb3IgZGlyZWN0b3J5Cj4gbHM6IGNhbm5vdCBhY2Nlc3MgYmFkLzMyLU9tb2lkZSB0
-byBZYWt1c29rdSAoVFYgc2FpenXvvZxOYW51YWzKvHMgVmVyLikubXAzOiBObyBzdWNoIGZpbGUg
-b3IgZGlyZWN0b3J5Cj4gYmFkOgo+IHRvdGFsIDAKPiAyMzU5MTAxID8/Pz8/Pz8/Pz8gPyA/ID8g
-PyAgICAgICAgICAgICAgICA/IDMwLU9tb2lkZSB0byBZYWt1c29rdSAoVFYgc2FpenXvvZxSZWlu
-Ycq8cyBWZXIuKS5tcDMKPiAyMzU0OTQ2ID8/Pz8/Pz8/Pz8gPyA/ID8gPyAgICAgICAgICAgICAg
-ICA/IDMxLU9tb2lkZSB0byBZYWt1c29rdSAoVFYgc2FpenXvvZxUb21vZcq8cyBWZXIuKS5tcDMK
-PiAyMzU0OTQ5ID8/Pz8/Pz8/Pz8gPyA/ID8gPyAgICAgICAgICAgICAgICA/IDMyLU9tb2lkZSB0
-byBZYWt1c29rdSAoVFYgc2FpenXvvZxOYW51YWzKvHMgVmVyLikubXAzCj4gbHM6IGNhbm5vdCBh
-Y2Nlc3MgYmFkMi8zMC1PbW9pZGUgdG8gWWFrdXNva3UgKFRWIHNhaXp1772cUmVpbmHKvHMgVmVy
-LikubXAzOiBObyBzdWNoIGZpbGUgb3IgZGlyZWN0b3J5Cj4gbHM6IGNhbm5vdCBhY2Nlc3MgYmFk
-Mi8zMS1PbW9pZGUgdG8gWWFrdXNva3UgKFRWIHNhaXp1772cVG9tb2XKvHMgVmVyLikubXAzOiBO
-byBzdWNoIGZpbGUgb3IgZGlyZWN0b3J5Cj4gbHM6IGNhbm5vdCBhY2Nlc3MgYmFkMi8zMi1PbW9p
-ZGUgdG8gWWFrdXNva3UgKFRWIHNhaXp1772cTmFudWFsyrxzIFZlci4pLm1wMzogTm8gc3VjaCBm
-aWxlIG9yIGRpcmVjdG9yeQoKVGhvc2UgZmlsZSBuYW1lcyBoYXZlIGEgd2VpcmQgY2hhcmFjdGVy
-IGluIHRoZW0gLSBhcmUgeW91IHN1cmUgdGhhdAp0aGUgdGVybWluYWwgc3VwcG9ydHMgdGhhdCBj
-aGFyYWN0ZXIgc2V0IGFuZCBpcyBub3QgbWFuZ2xpbmcgaXQgYW5kCmhlbmNlIG5vdCBtYXRjaGlu
-ZyB3aGF0IGlzIGFjdHVhbGx5IHN0b3JlZCBvbiBkaXNrPwoKPiBUaGUgZmlsZSBzeXN0ZW0sIGxh
-YmVsZWQgJ1RvcnJlbnRzJyBpcyBsYXllcmVkIG9uIGEgbHZtIGJhc2UgKEknbSBub3QgY29udmlu
-Y2VkIHRoYXQKPiBsdm0gaXMgYXMgcmVsaWFibGUgYXMgcGh5c2ljYWwgcGFydGl0aW9ucyBhdCB0
-aGlzIHBvaW50LCB3aGljaCBpcyB3aHkgSSBtZW50aW9uIGl0KS4KPiAKPiBJdCdzIGEgJ2xpdmUn
-IGZpbGUgc3lzdGVtLiAgV2hhdCBpbmZvIGRvIHlvdSB3YW50IG1lIHRvIGR1bXAgZnJvbSBpdD8K
-PiAKPiBJJ20gZHVtcGluZyB0aGUgZmlsZXMgZnJvbSBpdCBub3csIHNvIEkgY2FuIHRyeSB0byBy
-ZW1ha2UgdGhlIGZpbGUgc3lzdGVtLgo+IAo+IFRoZSBwcm9ibGVtIGlzICdzcHJlYWRpbmcnIHRv
-ICJuZXciIGZpbGVzLiAgQmFzaWNhbGx5LCBhbnkgZmlsZSB0aGF0IGlzIGJlaW5nIHdyaXR0ZW4g
-dG8KPiBub3csIHNlZW1zIHRvIGJlIGluIGRhbmdlciBvZiBiZWNvbWluZyBpbmFjY2Vzc2libGUu
-CgpEbyB0aG9zZSAibmV3IiBmaWxlcyBoYXZlIHRoZSBzYW1lIHN0cmFuZ2UgY2hhcmFjdGVycyBp
-biB0aGVtPwoKPiBBbHNvLCBGV0lXIC0tIEkgZGlkIHVubW91bnQgdGhlIGZpbGUgc3lzdGVtIGFu
-ZCBydW4geGZzX3JlcGFpci4gIEl0Cj4gZmluZHMgbm8gcHJvYmxlbXMgLS0gc28gd2h5IGFyZSB0
-aGVzZSBmaWxlcyBub3QgYWNjZXNzaWJsZT8KCklmIHRoZXJlIGFyZSBubyBwcm9ibGVtcyByZXBv
-cnRlZCBieSByZXBhaXIsIHRoZW4gSSBzdXNwZWN0IHRoYXQKaXQncyBhIHRlcm1pbmFsIGxldmVs
-IHByb2JsZW0uLi4KCkNoZWVycywKCkRhdmUuCi0tIApEYXZlIENoaW5uZXIKZGF2aWRAZnJvbW9y
-Yml0LmNvbQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18K
-eGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxt
-YW4vbGlzdGluZm8veGZzCg==
+SGkhCj4+IDIzNTkxMDEgPz8/Pz8/Pz8/PyA/ID8gPyA/ICAgICAgICAgICAgICAgID8gMzAtT21v
+aWRlIHRvIFlha3Vzb2t1IChUViBzYWl6de+9nFJlaW5hyrxzIFZlci4pLm1wMwo+PiAyMzU0OTQ2
+ID8/Pz8/Pz8/Pz8gPyA/ID8gPyAgICAgICAgICAgICAgICA/IDMxLU9tb2lkZSB0byBZYWt1c29r
+dSAoVFYgc2FpenXvvZxUb21vZcq8cyBWZXIuKS5tcDMKPj4gMjM1NDk0OSA/Pz8/Pz8/Pz8/ID8g
+PyA/ID8gICAgICAgICAgICAgICAgPyAzMi1PbW9pZGUgdG8gWWFrdXNva3UgKFRWIHNhaXp1772c
+TmFudWFsyrxzIFZlci4pLm1wMwo+PiBsczogY2Fubm90IGFjY2VzcyBiYWQyLzMwLU9tb2lkZSB0
+byBZYWt1c29rdSAoVFYgc2FpenXvvZxSZWluYcq8cyBWZXIuKS5tcDM6IE5vIHN1Y2ggZmlsZSBv
+ciBkaXJlY3RvcnkKPj4gbHM6IGNhbm5vdCBhY2Nlc3MgYmFkMi8zMS1PbW9pZGUgdG8gWWFrdXNv
+a3UgKFRWIHNhaXp1772cVG9tb2XKvHMgVmVyLikubXAzOiBObyBzdWNoIGZpbGUgb3IgZGlyZWN0
+b3J5Cj4+IGxzOiBjYW5ub3QgYWNjZXNzIGJhZDIvMzItT21vaWRlIHRvIFlha3Vzb2t1IChUViBz
+YWl6de+9nE5hbnVhbMq8cyBWZXIuKS5tcDM6IE5vIHN1Y2ggZmlsZSBvciBkaXJlY3RvcnkKPiAK
+PiAuLi4KPgo+IElmIHRoZXJlIGFyZSBubyBwcm9ibGVtcyByZXBvcnRlZCBieSByZXBhaXIsIHRo
+ZW4gSSBzdXNwZWN0IHRoYXQKPiBpdCdzIGEgdGVybWluYWwgbGV2ZWwgcHJvYmxlbS4uLgo+IApM
+b29raW5nIGF0IHRoaXMgaSByZW1lbWJlciBoYXZpbmcgc2ltaWxhciBwcm9ibGVtcyB3aGVuIG15
+IGZpbGVzeXN0ZW1zCndhcyBtb3VudGVkIHdpdGggaW5vZGU2NCBiZWZvcmUgYW5kIGFmdGVyIGkg
+bGVmdCBvdXQgdGhhdCBwYXJhbWV0ZXIuIFNvCkxpbmRhLCBjb3VsZCB5b3UgcmUtdHJ5IG1vdW50
+aW5nIHRoZSBmcyB3aXRoICJpbm9kZTY0Ii4KCmNoZWVycywKTWljaGFlbAoKX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNA
+b3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
