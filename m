@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5TMUhi8095094 for <xfs@oss.sgi.com>; Tue, 29 Jun 2010 17:30:43 -0500
-Received: from Ishtar.sc.tlinx.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EA20E1E1969F
-	for <xfs@oss.sgi.com>; Tue, 29 Jun 2010 15:33:28 -0700 (PDT)
-Received: from Ishtar.sc.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
-	cuda.sgi.com with ESMTP id 7rIEFXJL7IhjAhoR for
-	<xfs@oss.sgi.com>; Tue, 29 Jun 2010 15:33:28 -0700 (PDT)
-Message-ID: <4C2A749E.4060006@tlinx.org>
-Date: Tue, 29 Jun 2010 15:33:02 -0700
-From: Linda Walsh <xfs@tlinx.org>
+	o5TND2Ix097068 for <xfs@oss.sgi.com>; Tue, 29 Jun 2010 18:13:02 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 25FCB4193F4
+	for <xfs@oss.sgi.com>; Tue, 29 Jun 2010 16:15:46 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	UOvi5wBs2CbrCOHN for <xfs@oss.sgi.com>;
+	Tue, 29 Jun 2010 16:15:46 -0700 (PDT)
+Date: Wed, 30 Jun 2010 09:15:43 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS and Extended ACLs
+Message-ID: <20100629231543.GC6590@dastard>
+References: <001636458d40cae4e1048a2bf4e9@google.com>
 MIME-Version: 1.0
-Subject: Re: xfs file system in process of becoming corrupt;
-	though xfs_repair thinks it's fine! ; -/ (was xfs_dump problem...)
-References: <4C26A51F.8020909@tlinx.org> <20100628022744.GX6590@dastard>
-In-Reply-To: <20100628022744.GX6590@dastard>
+Content-Disposition: inline
+In-Reply-To: <001636458d40cae4e1048a2bf4e9@google.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,77 +25,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, xfs-oss <xfs@oss.sgi.com>
+To: nailman23@gmail.com
+Cc: xfs@oss.sgi.com
 
-RGF2ZSBDaGlubmVyIHdyb3RlOgo+IENhbiB5b3UgZ2V0IGEgbGlzdCBvZiBhbGwgdGhlIGF0dHJp
-YnV0ZXMgYW5kIHRoZWlyIHNpemVzIG9uIHRoZQo+IGlub2RlcyB4ZnNkdW1wIGlzIGNvbXBsYWlu
-aW5nIGFib3V0Pwo+IAo+IENoZWVycywKPiAKPiBEYXZlLgpXaXNoIEkgY291bGQuLi5oYWQgYSBz
-b2Z0d2FyZSBwcm9ibGVtIHRoYXQgaGFkIG1lIGhhdmUgdG8gcmV1c2UgdGhlCmRyaXZlIEkganVz
-dCBjb3BpZWQgdGhvc2UgZXhhbXBsZXMgZnJvbS4KCkJ1dCBoYXZlIGFub3RoZXIgWEZTIHByb2Js
-ZW0gdGhhdCBpcyBtdWNoIG1vcmUgcmVsaWFibHkgcGVyc2lzdGVudC4KSSBkb24ndCBrbm93IGlm
-IHRoZXkgYXJlIGF0IGFsbCByZWxhdGVkLCBidXQgc2luY2UgSSBoYXZlIHRoaXMgcHJvYmxlbQp0
-aGF0J3MgYSBiaXQgInN0dWNrIiwgaXQncyBlYXNpZXIgdG8gInJlcHJvZHVjZSIuCgpGaWxlc3lz
-dGVtIGlzIG9uZSBvZiBteSBsYXJnZXIgb25lczoKCklzaHRhcjovVG9ycmVudHM+ICdkZicgLVQg
-LS1zeW5jICAuCkZpbGVzeXN0ZW0gICAgVHlwZSAgIDFLLWJsb2NrcyAgICAgIFVzZWQgQXZhaWxh
-YmxlIFVzZSUgTW91bnRlZCBvbgovZGV2L2RtLTcgICAgICB4ZnMgICA2NDQyMzE5NzQ0IDIzMDU2
-MzEwODAgNDEzNjY4ODY2NCAgMzYlIC9Ub3JyZW50cwpJc2h0YXI6L1RvcnJlbnRzPiAnZGYnIC1p
-VCAtLXN5bmMgIC4KRmlsZXN5c3RlbSAgICBUeXBlICAgIElub2RlcyAgIElVc2VkICAgSUZyZWUg
-SVVzZSUgTW91bnRlZCBvbgovZGV2L2RtLTcgICAgICB4ZnMgICAxMjg4NDkwMTEyICAgMzQzMTMg
-MTI4ODQ1NTc5OSAgICAxJSAvVG9ycmVudHMKCkkgaGF2ZSAzIGZpbGVzIHRoYXQgZGV2ZWxvcGVk
-ICdidWdzJyBpbiB0aGVtIGluIDMgc2VwYXJhdGUgZGlyZWN0b3JpZXMuICAKT2RkbHksIHRoZXkg
-d2VyZSB0aGV5IHdlcmUgMyBjb3BpZXMgb2YgdGhlIHNhbWUgMyBmaWxlcy4gIFZlcnkgT2RkLgoK
-U3ltcHRvbSBpcyBmcm9tIGxzOgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0KSXNodGFyOi9Ub3JyZW50cz4gJ2xzJyAtbmkgYmFkKiAgICAgCmxzOiBjYW5ub3QgYWNj
-ZXNzIGJhZC8zMC1PbW9pZGUgdG8gWWFrdXNva3UgKFRWIHNhaXp1772cUmVpbmHKvHMgVmVyLiku
-bXAzOiBObyBzdWNoIGZpbGUgb3IgZGlyZWN0b3J5CmxzOiBjYW5ub3QgYWNjZXNzIGJhZC8zMS1P
-bW9pZGUgdG8gWWFrdXNva3UgKFRWIHNhaXp1772cVG9tb2XKvHMgVmVyLikubXAzOiBObyBzdWNo
-IGZpbGUgb3IgZGlyZWN0b3J5CmxzOiBjYW5ub3QgYWNjZXNzIGJhZC8zMi1PbW9pZGUgdG8gWWFr
-dXNva3UgKFRWIHNhaXp1772cTmFudWFsyrxzIFZlci4pLm1wMzogTm8gc3VjaCBmaWxlIG9yIGRp
-cmVjdG9yeQpiYWQ6CnRvdGFsIDAKMjM1OTEwMSA/Pz8/Pz8/Pz8/ID8gPyA/ID8gICAgICAgICAg
-ICAgICAgPyAzMC1PbW9pZGUgdG8gWWFrdXNva3UgKFRWIHNhaXp1772cUmVpbmHKvHMgVmVyLiku
-bXAzCjIzNTQ5NDYgPz8/Pz8/Pz8/PyA/ID8gPyA/ICAgICAgICAgICAgICAgID8gMzEtT21vaWRl
-IHRvIFlha3Vzb2t1IChUViBzYWl6de+9nFRvbW9lyrxzIFZlci4pLm1wMwoyMzU0OTQ5ID8/Pz8/
-Pz8/Pz8gPyA/ID8gPyAgICAgICAgICAgICAgICA/IDMyLU9tb2lkZSB0byBZYWt1c29rdSAoVFYg
-c2FpenXvvZxOYW51YWzKvHMgVmVyLikubXAzCmxzOiBjYW5ub3QgYWNjZXNzIGJhZDIvMzAtT21v
-aWRlIHRvIFlha3Vzb2t1IChUViBzYWl6de+9nFJlaW5hyrxzIFZlci4pLm1wMzogTm8gc3VjaCBm
-aWxlIG9yIGRpcmVjdG9yeQpsczogY2Fubm90IGFjY2VzcyBiYWQyLzMxLU9tb2lkZSB0byBZYWt1
-c29rdSAoVFYgc2FpenXvvZxUb21vZcq8cyBWZXIuKS5tcDM6IE5vIHN1Y2ggZmlsZSBvciBkaXJl
-Y3RvcnkKbHM6IGNhbm5vdCBhY2Nlc3MgYmFkMi8zMi1PbW9pZGUgdG8gWWFrdXNva3UgKFRWIHNh
-aXp1772cTmFudWFsyrxzIFZlci4pLm1wMzogTm8gc3VjaCBmaWxlIG9yIGRpcmVjdG9yeQoKYmFk
-MjoKdG90YWwgMAoyMjIwNTYwID8/Pz8/Pz8/Pz8gPyA/ID8gPyAgICAgICAgICAgICAgICA/IDMw
-LU9tb2lkZSB0byBZYWt1c29rdSAoVFYgc2FpenXvvZxSZWluYcq8cyBWZXIuKS5tcDMKMjIyMDU2
-MSA/Pz8/Pz8/Pz8/ID8gPyA/ID8gICAgICAgICAgICAgICAgPyAzMS1PbW9pZGUgdG8gWWFrdXNv
-a3UgKFRWIHNhaXp1772cVG9tb2XKvHMgVmVyLikubXAzCjIyMTgzMDIgPz8/Pz8/Pz8/PyA/ID8g
-PyA/ICAgICAgICAgICAgICAgID8gMzItT21vaWRlIHRvIFlha3Vzb2t1IChUViBzYWl6de+9nE5h
-bnVhbMq8cyBWZXIuKS5tcDMKbHM6IGNhbm5vdCBhY2Nlc3MgYmFkMy8zMC1PbW9pZGUgdG8gWWFr
-dXNva3UgKFRWIHNhaXp1772cUmVpbmHKvHMgVmVyLikubXAzOiBObyBzdWNoIGZpbGUgb3IgZGly
-ZWN0b3J5CmxzOiBjYW5ub3QgYWNjZXNzIGJhZDMvMzEtT21vaWRlIHRvIFlha3Vzb2t1IChUViBz
-YWl6de+9nFRvbW9lyrxzIFZlci4pLm1wMzogTm8gc3VjaCBmaWxlIG9yIGRpcmVjdG9yeQpsczog
-Y2Fubm90IGFjY2VzcyBiYWQzLzMyLU9tb2lkZSB0byBZYWt1c29rdSAoVFYgc2FpenXvvZxOYW51
-YWzKvHMgVmVyLikubXAzOiBObyBzdWNoIGZpbGUgb3IgZGlyZWN0b3J5CgpiYWQzOgp0b3RhbCAw
-CjIyMTgyOTUgPz8/Pz8/Pz8/PyA/ID8gPyA/ICAgICAgICAgICAgICAgID8gMzAtT21vaWRlIHRv
-IFlha3Vzb2t1IChUViBzYWl6de+9nFJlaW5hyrxzIFZlci4pLm1wMwoyMjE4Mjk2ID8/Pz8/Pz8/
-Pz8gPyA/ID8gPyAgICAgICAgICAgICAgICA/IDMxLU9tb2lkZSB0byBZYWt1c29rdSAoVFYgc2Fp
-enXvvZxUb21vZcq8cyBWZXIuKS5tcDMKMjIxODI5NyA/Pz8/Pz8/Pz8/ID8gPyA/ID8gICAgICAg
-ICAgICAgICAgPyAzMi1PbW9pZGUgdG8gWWFrdXNva3UgKFRWIHNhaXp1772cTmFudWFsyrxzIFZl
-ci4pLm1wMwotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KClRoZSBm
-aWxlIHN5c3RlbSwgbGFiZWxlZCAnVG9ycmVudHMnIGlzIGxheWVyZWQgb24gYSBsdm0gYmFzZSAo
-SSdtIG5vdCBjb252aW5jZWQgdGhhdApsdm0gaXMgYXMgcmVsaWFibGUgYXMgcGh5c2ljYWwgcGFy
-dGl0aW9ucyBhdCB0aGlzIHBvaW50LCB3aGljaCBpcyB3aHkgSSBtZW50aW9uIGl0KS4KCkl0J3Mg
-YSAnbGl2ZScgZmlsZSBzeXN0ZW0uICBXaGF0IGluZm8gZG8geW91IHdhbnQgbWUgdG8gZHVtcCBm
-cm9tIGl0PwoKSSdtIGR1bXBpbmcgdGhlIGZpbGVzIGZyb20gaXQgbm93LCBzbyBJIGNhbiB0cnkg
-dG8gcmVtYWtlIHRoZSBmaWxlIHN5c3RlbS4KClRoZSBwcm9ibGVtIGlzICdzcHJlYWRpbmcnIHRv
-ICJuZXciIGZpbGVzLiAgQmFzaWNhbGx5LCBhbnkgZmlsZSB0aGF0IGlzIGJlaW5nIHdyaXR0ZW4g
-dG8Kbm93LCBzZWVtcyB0byBiZSBpbiBkYW5nZXIgb2YgYmVjb21pbmcgaW5hY2Nlc3NpYmxlLiAg
-CgpBbHNvLCBGV0lXIC0tIEkgZGlkIHVubW91bnQgdGhlIGZpbGUgc3lzdGVtIGFuZCBydW4geGZz
-X3JlcGFpci4gIEl0IGZpbmRzIG5vIHByb2JsZW1zIC0tIApzbyB3aHkgYXJlIHRoZXNlIGZpbGVz
-IG5vdCBhY2Nlc3NpYmxlPwoKSWRlYXM/CgpOZXh0IHN0ZXBzPwoKVGhhbmtzIQpMaW5kYQoKCgoK
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxp
-bmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGlu
-Zm8veGZzCg==
+On Tue, Jun 29, 2010 at 02:21:42PM +0000, nailman23@gmail.com wrote:
+> Hi All,
+> 
+> I have an issue with extended ACLs. The situation is as follows:
+> 1) There are two users (UserA and UserB)
+> 2) They belong to the same group (users)
+> 3) The SAMBA share called "test" has user access enabled for UserA and UserB
+> 4) The UserA creates test.docx file on the "test" share and he
+> becomes the owner of the file.
+> 5) Then UserB edits the test.docx file and save changes. After that
+> UserB becomes the owner. It is not an issue because when editing the
+> file Word creates new temporary file and then, during saving,
+> overwrites the original file. The issue is when you check ACLs entry
+> you will see that UserA has his own ACLs entries, although he
+> already belongs to the "users" groups.
+> 
+> This occurs when the share has XFS file system in the bottom.
+> 
+> Then I have created an ext3 file system on the logical volume and
+> after performing all steps, the UserB was owner of the file, but the
+> UserA was no longer listed in ACLs entries.
+
+Can you provide a script that demonstrates the problem?
+
+> It seems the issue comes from XFS and the way as the XFS handles the
+> ACLs permissions.
+
+XFS uses the most of the generic code for getting and setting ACLs,
+so there shouldn't be any difference unless there is a bug or you
+are using an old kernel. What kernel are you running?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
