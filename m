@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5U13eTL100408 for <xfs@oss.sgi.com>; Tue, 29 Jun 2010 20:03:40 -0500
+	o5U1E5fp100694 for <xfs@oss.sgi.com>; Tue, 29 Jun 2010 20:14:05 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 872EB1574B67
-	for <xfs@oss.sgi.com>; Tue, 29 Jun 2010 18:06:25 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	USTMjGcUYSrRAIIn for <xfs@oss.sgi.com>;
-	Tue, 29 Jun 2010 18:06:25 -0700 (PDT)
-Date: Wed, 30 Jun 2010 11:06:22 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D2B33419722
+	for <xfs@oss.sgi.com>; Tue, 29 Jun 2010 18:16:50 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	THPkRHw1LSkjsZMO for <xfs@oss.sgi.com>;
+	Tue, 29 Jun 2010 18:16:50 -0700 (PDT)
+Date: Wed, 30 Jun 2010 11:16:47 +1000
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: xfs file system in process of becoming corrupt; though
-	xfs_repair thinks it's fine! ;-/ (was xfs_dump problem...)
-Message-ID: <20100630010622.GC24712@dastard>
+	xfs_repair	thinks it's fine! ; -/ (was xfs_dump problem...)
+Message-ID: <20100630011647.GD24712@dastard>
 References: <4C26A51F.8020909@tlinx.org> <20100628022744.GX6590@dastard>
 	<4C2A749E.4060006@tlinx.org> <20100629232532.GA24712@dastard>
-	<4C2A8948.3030008@tlinx.org>
+	<4C2A87FF.7090804@dermichi.com> <4C2A92DA.1020202@tlinx.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4C2A8948.3030008@tlinx.org>
+In-Reply-To: <4C2A92DA.1020202@tlinx.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,68 +28,27 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: "Linda A. Walsh" <xfs@tlinx.org>
-Cc: xfs-oss <xfs@oss.sgi.com>
+Cc: Michael Weissenbacher <mw@dermichi.com>, xfs-oss <xfs@oss.sgi.com>
 
-T24gVHVlLCBKdW4gMjksIDIwMTAgYXQgMDU6MDE6MTJQTSAtMDcwMCwgTGluZGEgQS4gV2Fsc2gg
-d3JvdGU6Cj4gCj4gCj4gRGF2ZSBDaGlubmVyIHdyb3RlOgo+IC0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLQo+ID4+SXNodGFyOi9Ub3JyZW50cz4gJ2xzJyAtbmkgYmFk
-KiAgICAgbHM6IGNhbm5vdCBhY2Nlc3MgYmFkLzMwLU9tb2lkZQo+ID4+dG8gWWFrdXNva3UgKFRW
-IHNhaXp1772cUmVpbmHKvHMgVmVyLikubXAzOiBObyBzdWNoIGZpbGUgb3IgZGlyZWN0b3J5Cj4g
-Pj5sczogY2Fubm90IGFjY2VzcyBiYWQvMzEtT21vaWRlIHRvIFlha3Vzb2t1IChUViBzYWl6de+9
-nFRvbW9lyrxzIFZlci4pLm1wMzogTm8gc3VjaCBmaWxlIG9yIGRpcmVjdG9yeQo+ID4+bHM6IGNh
-bm5vdCBhY2Nlc3MgYmFkLzMyLU9tb2lkZSB0byBZYWt1c29rdSAoVFYgc2FpenXvvZxOYW51YWzK
-vHMgVmVyLikubXAzOiBObyBzdWNoIGZpbGUgb3IgZGlyZWN0b3J5Cj4gPj5iYWQ6Cj4gPj50b3Rh
-bCAwCj4gPj4yMzU5MTAxID8/Pz8/Pz8/Pz8gPyA/ID8gPyAgICAgICAgICAgICAgICA/IDMwLU9t
-b2lkZSB0byBZYWt1c29rdSAoVFYgc2FpenXvvZxSZWluYcq8cyBWZXIuKS5tcDMKPiA+PjIzNTQ5
-NDYgPz8/Pz8/Pz8/PyA/ID8gPyA/ICAgICAgICAgICAgICAgID8gMzEtT21vaWRlIHRvIFlha3Vz
-b2t1IChUViBzYWl6de+9nFRvbW9lyrxzIFZlci4pLm1wMwo+ID4+MjM1NDk0OSA/Pz8/Pz8/Pz8/
-ID8gPyA/ID8gICAgICAgICAgICAgICAgPyAzMi1PbW9pZGUgdG8gWWFrdXNva3UgKFRWIHNhaXp1
-772cTmFudWFsyrxzIFZlci4pLm1wMwo+ID4+bHM6IGNhbm5vdCBhY2Nlc3MgYmFkMi8zMC1PbW9p
-ZGUgdG8gWWFrdXNva3UgKFRWIHNhaXp1772cUmVpbmHKvHMgVmVyLikubXAzOiBObyBzdWNoIGZp
-bGUgb3IgZGlyZWN0b3J5Cj4gPj5sczogY2Fubm90IGFjY2VzcyBiYWQyLzMxLU9tb2lkZSB0byBZ
-YWt1c29rdSAoVFYgc2FpenXvvZxUb21vZcq8cyBWZXIuKS5tcDM6IE5vIHN1Y2ggZmlsZSBvciBk
-aXJlY3RvcnkKPiA+PmxzOiBjYW5ub3QgYWNjZXNzIGJhZDIvMzItT21vaWRlIHRvIFlha3Vzb2t1
-IChUViBzYWl6de+9nE5hbnVhbMq8cyBWZXIuKS5tcDM6IE5vIHN1Y2ggZmlsZSBvciBkaXJlY3Rv
-cnkKPiA+Cj4gPlRob3NlIGZpbGUgbmFtZXMgaGF2ZSBhIHdlaXJkIGNoYXJhY3RlciBpbiB0aGVt
-IC0gYXJlIHlvdSBzdXJlIHRoYXQKPiA+dGhlIHRlcm1pbmFsIHN1cHBvcnRzIHRoYXQgY2hhcmFj
-dGVyIHNldCBhbmQgaXMgbm90IG1hbmdsaW5nIGl0IGFuZAo+ID5oZW5jZSBub3QgbWF0Y2hpbmcg
-d2hhdCBpcyBhY3R1YWxseSBzdG9yZWQgb24gZGlzaz8KPiAtLS0tLQo+IFRob3NlIGZpbGVzIHdl
-cmUgJ2ZpbmUnIGJlZm9yZSB0b2RheS4KPiAKPiBJIGtub3cgaXQgaXMgbm90IGEgdGVybWluYWwg
-cHJvYmxlbSAtLQo+IEkgdG9sZCBscyB0byBsaXN0IGFsbCBmaWxlcyBpbiB0aGUgZGlyZWN0b3J5
-IC0tIHRoZW4gaXQgc2F5cyAibm8gc3VjaCBmaWxlIi4KPiAKPiBDYW4geW91IHNheSB0aGF0ICIq
-IiBzaG91bGRuJ3QgbWF0Y2ggZXZlcnl0aGluZz8KPiAKPiBUaG9zZSBxdWVzdGlvbiBtYXJrcyBh
-cmUgaW4gdGhlIHBsYWNlIGZvciB0aGUgc2l6ZSEKPiAKPiBUaGVyZSBhcmUgbm8gd2VpcmQgY2hh
-cmFjdGVycyBpbiB0aG9zZSBmaWxlIG5hbWVzLgoKSSBiZWcgdG8gZGlmZmVyIDspCgo+IEhlcmUg
-YXJlIHRoZSBzYW1lIGZpbGVzIGluIGFub3RoZXIgZGlyZWN0b3J5Ogo+IG1wMz4gbGwgMyoKPiAt
-cnd4LS0tLS0tIDEgMzI1NTcwMiAyMDEwLTA2LTE0IDEwOjU0IDMwLU9tb2lkZSB0byBZYWt1c29r
-dSAoVFYgc2FpenXvvZxSZWluYcq8cyBWZXIuKS5tcDMqCj4gLXJ3eC0tLS0tLSAxIDMyNzIwMDQg
-MjAxMC0wNi0xNCAxMDo1NCAzMS1PbW9pZGUgdG8gWWFrdXNva3UgKFRWIHNhaXp1772cVG9tb2XK
-vHMgVmVyLikubXAzKgo+IC1yd3gtLS0tLS0gMSAzMjM0ODc2IDIwMTAtMDYtMTQgMTA6NTQgMzIt
-T21vaWRlIHRvIFlha3Vzb2t1IChUViBzYWl6de+9nE5hbnVhbMq8cyBWZXIuKS5tcDMqCiAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgXl5eClRoYXQgY2hhcmFjdGVyIGlzIGEgbm9uLWFzY2lpIGNoYXJhY3Rlciwgd2hp
-Y2ggaXMgd2h5IEkgd2FzCndvbmRlcmluZyBhYm91dCB0ZXJtaW5hbHMgYW5kIGNoYXJhY3RlciBz
-ZXRzLiAgSXQgZG9lcyBub3QgZGlzcGxheQpjb3JyZWN0bHkgaW4gbXV0dCAoYSBib2xkIHZlcnRp
-Y2FsIGJhcikgb3IgVmltIChhIGRvdHRlZCwgZG91YmxlCmNoYXJhY3RlciB3aWR0aCBzcXVhcmUp
-IHVzaW5nIExBTkc9ZW5fQVUuVVRGLTggaGVyZS4uLi4KCj4gVGhlIGZpZWxkcyBpdCBjYW4ndCBk
-aXNwbGF5IGFyZSB0aGUgZmlsZSBzaXplLCB0aW1lIGFuZCBkYXRlcyEKClllcywgSSBrbm93LgoK
-VG8gc3RhdCBhIGZpbGUgdG8gZ2V0IHRoYXQgaW5mb21yYXRpb24gZmlyc3QgeW91IGhhdmUgdG8g
-b3BlbiBpdCBhbmQKdGhhdCByZXF1aXJlcyBnZXR0aW5nIHRoZSBmaWxlIG5hbWUgZXhhY3RseSBy
-aWdodC4gSWYgeW91IHRyeSB0bwpvcGVuIGEgZmlsZSBlbmNvZGVkIHdpdGggb25lIGxhbmd1YWdl
-IHNldHRpbmcvY2hhcmFjdGVyIHNldCBhbmQgdGhlbgpkZWNvZGUgYW5kIHJlLWVuY29kZSBpdCB3
-aXRoIGFub3RoZXIsIHRoZSByYXcgZmlsZW5hbWUgZGF0YSB3aWxsIGJlCmRpZmZlcmVudCB0byB3
-aGF0IGlzIG9uIGRpc2suIEhlbmNlIHdoZW4gSSBzZWUgZmlsZW5hbWVzIHdpdGgKdW5wcmludGFi
-bGUgY2hhcmFjdGVycyBpbiB0aGUgbWFpbCwgaXQncyBhbHdheXMgd29ydGggY2hlY2tpbmcKZmly
-c3QuLi4KCj4gSG93IGNhbiBmaWxlIHNpemUsIHRpbWUgYW5kIGRhdGUgYmUgaW4gdW5wcmludGFi
-bGUgY2hhcmFjdGVycyB0aGF0ICJscyIgY2FuJ3QgZGlzcGxheT8KClRoZXkgYXJlbid0LiBUaGV5
-IGFyZSBwcmludGVkIGFzID8/PyBiZWNhdXNlIHRoZSBzdGF0IGZhaWxlZCBhbmQKaGVuY2UgdGhl
-eSBhcmUgdW5rbm93bi4KCkNoZWVycywKCkRhdmUuCi0tIApEYXZlIENoaW5uZXIKZGF2aWRAZnJv
-bW9yYml0LmNvbQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21h
-aWxtYW4vbGlzdGluZm8veGZzCg==
+On Tue, Jun 29, 2010 at 05:42:02PM -0700, Linda A. Walsh wrote:
+> Do I need >32 bit inodes if the filesystem size is > 2T?
+
+No. inode64 is recommended for multi-terabyte filesystems, but is
+not mandatory.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
