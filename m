@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5TNwXVH098495 for <xfs@oss.sgi.com>; Tue, 29 Jun 2010 18:58:34 -0500
-Received: from Ishtar.sc.tlinx.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0E6FB419361
-	for <xfs@oss.sgi.com>; Tue, 29 Jun 2010 17:01:19 -0700 (PDT)
-Received: from Ishtar.sc.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
-	cuda.sgi.com with ESMTP id dLIVfh5HTHbEj4Yn for
-	<xfs@oss.sgi.com>; Tue, 29 Jun 2010 17:01:19 -0700 (PDT)
-Message-ID: <4C2A8948.3030008@tlinx.org>
-Date: Tue, 29 Jun 2010 17:01:12 -0700
-From: "Linda A. Walsh" <xfs@tlinx.org>
+	o5U0I7d7099097 for <xfs@oss.sgi.com>; Tue, 29 Jun 2010 19:18:07 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 19AE6419445
+	for <xfs@oss.sgi.com>; Tue, 29 Jun 2010 17:20:49 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
+	[150.101.137.104]) by cuda.sgi.com with ESMTP id
+	AmxsZJbP8U1KLbyr for <xfs@oss.sgi.com>;
+	Tue, 29 Jun 2010 17:20:49 -0700 (PDT)
+Date: Wed, 30 Jun 2010 10:20:43 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 00/15] xfs: minimize DMAPI footprint
+Message-ID: <20100630002043.GB24712@dastard>
+References: <1277762653.2040.554.camel@doink>
+	<20100629075734.GA31118@infradead.org>
 MIME-Version: 1.0
-Subject: Re: xfs file system in process of becoming corrupt;
-	though xfs_repair thinks it's fine! ; -/ (was xfs_dump problem...)
-References: <4C26A51F.8020909@tlinx.org> <20100628022744.GX6590@dastard>
-	<4C2A749E.4060006@tlinx.org> <20100629232532.GA24712@dastard>
-In-Reply-To: <20100629232532.GA24712@dastard>
+Content-Disposition: inline
+In-Reply-To: <20100629075734.GA31118@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,49 +26,71 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com, linux-kernel@vger.kernel.org, Alex Elder <aelder@sgi.com>
 
-CgpEYXZlIENoaW5uZXIgd3JvdGU6Ci0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLQo+PiBJc2h0YXI6L1RvcnJlbnRzPiAnbHMnIC1uaSBiYWQqICAgICBsczogY2Fubm90
-IGFjY2VzcyBiYWQvMzAtT21vaWRlCj4+IHRvIFlha3Vzb2t1IChUViBzYWl6de+9nFJlaW5hyrxz
-IFZlci4pLm1wMzogTm8gc3VjaCBmaWxlIG9yIGRpcmVjdG9yeQo+PiBsczogY2Fubm90IGFjY2Vz
-cyBiYWQvMzEtT21vaWRlIHRvIFlha3Vzb2t1IChUViBzYWl6de+9nFRvbW9lyrxzIFZlci4pLm1w
-MzogTm8gc3VjaCBmaWxlIG9yIGRpcmVjdG9yeQo+PiBsczogY2Fubm90IGFjY2VzcyBiYWQvMzIt
-T21vaWRlIHRvIFlha3Vzb2t1IChUViBzYWl6de+9nE5hbnVhbMq8cyBWZXIuKS5tcDM6IE5vIHN1
-Y2ggZmlsZSBvciBkaXJlY3RvcnkKPj4gYmFkOgo+PiB0b3RhbCAwCj4+IDIzNTkxMDEgPz8/Pz8/
-Pz8/PyA/ID8gPyA/ICAgICAgICAgICAgICAgID8gMzAtT21vaWRlIHRvIFlha3Vzb2t1IChUViBz
-YWl6de+9nFJlaW5hyrxzIFZlci4pLm1wMwo+PiAyMzU0OTQ2ID8/Pz8/Pz8/Pz8gPyA/ID8gPyAg
-ICAgICAgICAgICAgICA/IDMxLU9tb2lkZSB0byBZYWt1c29rdSAoVFYgc2FpenXvvZxUb21vZcq8
-cyBWZXIuKS5tcDMKPj4gMjM1NDk0OSA/Pz8/Pz8/Pz8/ID8gPyA/ID8gICAgICAgICAgICAgICAg
-PyAzMi1PbW9pZGUgdG8gWWFrdXNva3UgKFRWIHNhaXp1772cTmFudWFsyrxzIFZlci4pLm1wMwo+
-PiBsczogY2Fubm90IGFjY2VzcyBiYWQyLzMwLU9tb2lkZSB0byBZYWt1c29rdSAoVFYgc2FpenXv
-vZxSZWluYcq8cyBWZXIuKS5tcDM6IE5vIHN1Y2ggZmlsZSBvciBkaXJlY3RvcnkKPj4gbHM6IGNh
-bm5vdCBhY2Nlc3MgYmFkMi8zMS1PbW9pZGUgdG8gWWFrdXNva3UgKFRWIHNhaXp1772cVG9tb2XK
-vHMgVmVyLikubXAzOiBObyBzdWNoIGZpbGUgb3IgZGlyZWN0b3J5Cj4+IGxzOiBjYW5ub3QgYWNj
-ZXNzIGJhZDIvMzItT21vaWRlIHRvIFlha3Vzb2t1IChUViBzYWl6de+9nE5hbnVhbMq8cyBWZXIu
-KS5tcDM6IE5vIHN1Y2ggZmlsZSBvciBkaXJlY3RvcnkKPiAKPiBUaG9zZSBmaWxlIG5hbWVzIGhh
-dmUgYSB3ZWlyZCBjaGFyYWN0ZXIgaW4gdGhlbSAtIGFyZSB5b3Ugc3VyZSB0aGF0Cj4gdGhlIHRl
-cm1pbmFsIHN1cHBvcnRzIHRoYXQgY2hhcmFjdGVyIHNldCBhbmQgaXMgbm90IG1hbmdsaW5nIGl0
-IGFuZAo+IGhlbmNlIG5vdCBtYXRjaGluZyB3aGF0IGlzIGFjdHVhbGx5IHN0b3JlZCBvbiBkaXNr
-PwotLS0tLQpUaG9zZSBmaWxlcyB3ZXJlICdmaW5lJyBiZWZvcmUgdG9kYXkuCgpJIGtub3cgaXQg
-aXMgbm90IGEgdGVybWluYWwgcHJvYmxlbSAtLQpJIHRvbGQgbHMgdG8gbGlzdCBhbGwgZmlsZXMg
-aW4gdGhlIGRpcmVjdG9yeSAtLSB0aGVuIGl0IHNheXMgIm5vIHN1Y2ggZmlsZSIuCgpDYW4geW91
-IHNheSB0aGF0ICIqIiBzaG91bGRuJ3QgbWF0Y2ggZXZlcnl0aGluZz8KClRob3NlIHF1ZXN0aW9u
-IG1hcmtzIGFyZSBpbiB0aGUgcGxhY2UgZm9yIHRoZSBzaXplIQoKVGhlcmUgYXJlIG5vIHdlaXJk
-IGNoYXJhY3RlcnMgaW4gdGhvc2UgZmlsZSBuYW1lcy4KCkhlcmUgYXJlIHRoZSBzYW1lIGZpbGVz
-IGluIGFub3RoZXIgZGlyZWN0b3J5OgptcDM+IGxsIDMqCi1yd3gtLS0tLS0gMSAzMjU1NzAyIDIw
-MTAtMDYtMTQgMTA6NTQgMzAtT21vaWRlIHRvIFlha3Vzb2t1IChUViBzYWl6de+9nFJlaW5hyrxz
-IFZlci4pLm1wMyoKLXJ3eC0tLS0tLSAxIDMyNzIwMDQgMjAxMC0wNi0xNCAxMDo1NCAzMS1PbW9p
-ZGUgdG8gWWFrdXNva3UgKFRWIHNhaXp1772cVG9tb2XKvHMgVmVyLikubXAzKgotcnd4LS0tLS0t
-IDEgMzIzNDg3NiAyMDEwLTA2LTE0IDEwOjU0IDMyLU9tb2lkZSB0byBZYWt1c29rdSAoVFYgc2Fp
-enXvvZxOYW51YWzKvHMgVmVyLikubXAzKgoKClRoZSBmaWVsZHMgaXQgY2FuJ3QgZGlzcGxheSBh
-cmUgdGhlIGZpbGUgc2l6ZSwgdGltZSBhbmQgZGF0ZXMhICBUaGUgbmFtZXMgZGlzcGxheSBvayEK
-CkhvdyBjYW4gZmlsZSBzaXplLCB0aW1lIGFuZCBkYXRlIGJlIGluIHVucHJpbnRhYmxlIGNoYXJh
-Y3RlcnMgdGhhdCAibHMiIGNhbid0IGRpc3BsYXk/CgpfX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpo
-dHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Tue, Jun 29, 2010 at 03:57:34AM -0400, Christoph Hellwig wrote:
+> > SGI has a product that uses the DMAPI support code that's
+> > included in mainline XFS, along with some additional code
+> > (the "never merged" stuff Christoph refers to) that we
+> > maintain separately.  To our customers that need it, this
+> > is an extremely important feature.
+> 
+> So why don't you bother to get HSM support upstream properly,
+> or at least maintain it somewhere where you can get at it?
+> What sourcxe tree do those important customers use it?
+> 
+> > What follows is a set of patches that I think accomplishes
+> > these goals.  The net result of these changes is:
+> 
+> While this is a lot better than the old DMAPI supoort, it's still
+> lots of dead code in the mainline tree, that won't ever be used
+> there, as proper HSM suport if it ever was merged would sit at
+> the VFS layer.
+
+My question about the DMAPI hooks also still stands - if we leave
+the hooks in mainline, how are we supposed to test that they are
+still placed correctly for the out-of-tree patches to function
+correctly? I can't see that we can actually do this, so I question
+the value of even leaving minimal hooks in place....
+
+> In addition to that the people who effectively maintain XFS for both
+> the community and lots of paying customers have done a large amount
+> of work ontop of the DMAPI removal of the last 1 1/2 month.  So I'd
+> say rebase your changes over
+> 
+> 	http://git.kernel.org/?p=linux/kernel/git/dgc/xfsdev.git;a=shortlog;h=refs/heads/for-2.6.36
+> 
+> and keep them in a separate branch dmapi-dev branch where SGI can pull
+> the code for it's customers from. This branch could also include the
+> actual dmapi code and core kernel modifications, so that people that
+> want dmapi support actually have chance to find a complete kernel tree
+> for it.
+
+This makes a lot of sense to me. I'd prefer an all-or-nothing
+approach to supporting DMAPI (and any other out-of-tree enabling
+functionality for that matter) and putting it all in separate
+branch would give us both all and nothing. ;)
+
+It would also help us test the DMAPI infrastructure without needing
+a HSM as the xfsqa test suite does a pretty good job of testing it.
+And, of course, we could also help clean it up if it is testable. As
+such, I'd be quite happy to maintain a dmapi-dev branch in the above
+repo if the eventual goal is to try to move the code towards being
+more acceptible for mainline inclusion....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
