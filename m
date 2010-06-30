@@ -1,28 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5TNr4we098287 for <xfs@oss.sgi.com>; Tue, 29 Jun 2010 18:53:05 -0500
-Received: from firestarter.dermichi.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BD6761171B28
-	for <xfs@oss.sgi.com>; Tue, 29 Jun 2010 17:00:41 -0700 (PDT)
-Received: from firestarter.dermichi.com (firestarter.dermichi.com
-	[78.41.115.230]) by cuda.sgi.com with ESMTP id ZcecmuaJVBgzyzk5
-	for <xfs@oss.sgi.com>; Tue, 29 Jun 2010 17:00:41 -0700 (PDT)
-Received: from moonwalker.lan.dermichi.com
-	([2001:15c0:6679:1:218:8bff:feb1:c9e8])
-	by firestarter.dermichi.com with esmtpsa
-	(TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32) (Exim 4.72)
-	(envelope-from <mw@dermichi.com>) id 1OTkeZ-0006rH-0N
-	for xfs@oss.sgi.com; Wed, 30 Jun 2010 01:55:47 +0200
-Message-ID: <4C2A87FF.7090804@dermichi.com>
-Date: Wed, 30 Jun 2010 01:55:43 +0200
-From: Michael Weissenbacher <mw@dermichi.com>
+	o5TNwXVH098495 for <xfs@oss.sgi.com>; Tue, 29 Jun 2010 18:58:34 -0500
+Received: from Ishtar.sc.tlinx.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0E6FB419361
+	for <xfs@oss.sgi.com>; Tue, 29 Jun 2010 17:01:19 -0700 (PDT)
+Received: from Ishtar.sc.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
+	cuda.sgi.com with ESMTP id dLIVfh5HTHbEj4Yn for
+	<xfs@oss.sgi.com>; Tue, 29 Jun 2010 17:01:19 -0700 (PDT)
+Message-ID: <4C2A8948.3030008@tlinx.org>
+Date: Tue, 29 Jun 2010 17:01:12 -0700
+From: "Linda A. Walsh" <xfs@tlinx.org>
 MIME-Version: 1.0
-Subject: Re: xfs file system in process of becoming corrupt; though	xfs_repair
-	thinks it's fine! ;-/ (was xfs_dump problem...)
-References: <4C26A51F.8020909@tlinx.org>
-	<20100628022744.GX6590@dastard>	<4C2A749E.4060006@tlinx.org>
-	<20100629232532.GA24712@dastard>
+Subject: Re: xfs file system in process of becoming corrupt;
+	though xfs_repair thinks it's fine! ; -/ (was xfs_dump problem...)
+References: <4C26A51F.8020909@tlinx.org> <20100628022744.GX6590@dastard>
+	<4C2A749E.4060006@tlinx.org> <20100629232532.GA24712@dastard>
 In-Reply-To: <20100629232532.GA24712@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -32,28 +25,49 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>, xfs-oss <xfs@oss.sgi.com>
 
-SGkhCj4+IDIzNTkxMDEgPz8/Pz8/Pz8/PyA/ID8gPyA/ICAgICAgICAgICAgICAgID8gMzAtT21v
-aWRlIHRvIFlha3Vzb2t1IChUViBzYWl6de+9nFJlaW5hyrxzIFZlci4pLm1wMwo+PiAyMzU0OTQ2
-ID8/Pz8/Pz8/Pz8gPyA/ID8gPyAgICAgICAgICAgICAgICA/IDMxLU9tb2lkZSB0byBZYWt1c29r
-dSAoVFYgc2FpenXvvZxUb21vZcq8cyBWZXIuKS5tcDMKPj4gMjM1NDk0OSA/Pz8/Pz8/Pz8/ID8g
-PyA/ID8gICAgICAgICAgICAgICAgPyAzMi1PbW9pZGUgdG8gWWFrdXNva3UgKFRWIHNhaXp1772c
-TmFudWFsyrxzIFZlci4pLm1wMwo+PiBsczogY2Fubm90IGFjY2VzcyBiYWQyLzMwLU9tb2lkZSB0
-byBZYWt1c29rdSAoVFYgc2FpenXvvZxSZWluYcq8cyBWZXIuKS5tcDM6IE5vIHN1Y2ggZmlsZSBv
-ciBkaXJlY3RvcnkKPj4gbHM6IGNhbm5vdCBhY2Nlc3MgYmFkMi8zMS1PbW9pZGUgdG8gWWFrdXNv
-a3UgKFRWIHNhaXp1772cVG9tb2XKvHMgVmVyLikubXAzOiBObyBzdWNoIGZpbGUgb3IgZGlyZWN0
-b3J5Cj4+IGxzOiBjYW5ub3QgYWNjZXNzIGJhZDIvMzItT21vaWRlIHRvIFlha3Vzb2t1IChUViBz
-YWl6de+9nE5hbnVhbMq8cyBWZXIuKS5tcDM6IE5vIHN1Y2ggZmlsZSBvciBkaXJlY3RvcnkKPiAK
-PiAuLi4KPgo+IElmIHRoZXJlIGFyZSBubyBwcm9ibGVtcyByZXBvcnRlZCBieSByZXBhaXIsIHRo
-ZW4gSSBzdXNwZWN0IHRoYXQKPiBpdCdzIGEgdGVybWluYWwgbGV2ZWwgcHJvYmxlbS4uLgo+IApM
-b29raW5nIGF0IHRoaXMgaSByZW1lbWJlciBoYXZpbmcgc2ltaWxhciBwcm9ibGVtcyB3aGVuIG15
-IGZpbGVzeXN0ZW1zCndhcyBtb3VudGVkIHdpdGggaW5vZGU2NCBiZWZvcmUgYW5kIGFmdGVyIGkg
-bGVmdCBvdXQgdGhhdCBwYXJhbWV0ZXIuIFNvCkxpbmRhLCBjb3VsZCB5b3UgcmUtdHJ5IG1vdW50
-aW5nIHRoZSBmcyB3aXRoICJpbm9kZTY0Ii4KCmNoZWVycywKTWljaGFlbAoKX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNA
-b3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+CgpEYXZlIENoaW5uZXIgd3JvdGU6Ci0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLQo+PiBJc2h0YXI6L1RvcnJlbnRzPiAnbHMnIC1uaSBiYWQqICAgICBsczogY2Fubm90
+IGFjY2VzcyBiYWQvMzAtT21vaWRlCj4+IHRvIFlha3Vzb2t1IChUViBzYWl6de+9nFJlaW5hyrxz
+IFZlci4pLm1wMzogTm8gc3VjaCBmaWxlIG9yIGRpcmVjdG9yeQo+PiBsczogY2Fubm90IGFjY2Vz
+cyBiYWQvMzEtT21vaWRlIHRvIFlha3Vzb2t1IChUViBzYWl6de+9nFRvbW9lyrxzIFZlci4pLm1w
+MzogTm8gc3VjaCBmaWxlIG9yIGRpcmVjdG9yeQo+PiBsczogY2Fubm90IGFjY2VzcyBiYWQvMzIt
+T21vaWRlIHRvIFlha3Vzb2t1IChUViBzYWl6de+9nE5hbnVhbMq8cyBWZXIuKS5tcDM6IE5vIHN1
+Y2ggZmlsZSBvciBkaXJlY3RvcnkKPj4gYmFkOgo+PiB0b3RhbCAwCj4+IDIzNTkxMDEgPz8/Pz8/
+Pz8/PyA/ID8gPyA/ICAgICAgICAgICAgICAgID8gMzAtT21vaWRlIHRvIFlha3Vzb2t1IChUViBz
+YWl6de+9nFJlaW5hyrxzIFZlci4pLm1wMwo+PiAyMzU0OTQ2ID8/Pz8/Pz8/Pz8gPyA/ID8gPyAg
+ICAgICAgICAgICAgICA/IDMxLU9tb2lkZSB0byBZYWt1c29rdSAoVFYgc2FpenXvvZxUb21vZcq8
+cyBWZXIuKS5tcDMKPj4gMjM1NDk0OSA/Pz8/Pz8/Pz8/ID8gPyA/ID8gICAgICAgICAgICAgICAg
+PyAzMi1PbW9pZGUgdG8gWWFrdXNva3UgKFRWIHNhaXp1772cTmFudWFsyrxzIFZlci4pLm1wMwo+
+PiBsczogY2Fubm90IGFjY2VzcyBiYWQyLzMwLU9tb2lkZSB0byBZYWt1c29rdSAoVFYgc2FpenXv
+vZxSZWluYcq8cyBWZXIuKS5tcDM6IE5vIHN1Y2ggZmlsZSBvciBkaXJlY3RvcnkKPj4gbHM6IGNh
+bm5vdCBhY2Nlc3MgYmFkMi8zMS1PbW9pZGUgdG8gWWFrdXNva3UgKFRWIHNhaXp1772cVG9tb2XK
+vHMgVmVyLikubXAzOiBObyBzdWNoIGZpbGUgb3IgZGlyZWN0b3J5Cj4+IGxzOiBjYW5ub3QgYWNj
+ZXNzIGJhZDIvMzItT21vaWRlIHRvIFlha3Vzb2t1IChUViBzYWl6de+9nE5hbnVhbMq8cyBWZXIu
+KS5tcDM6IE5vIHN1Y2ggZmlsZSBvciBkaXJlY3RvcnkKPiAKPiBUaG9zZSBmaWxlIG5hbWVzIGhh
+dmUgYSB3ZWlyZCBjaGFyYWN0ZXIgaW4gdGhlbSAtIGFyZSB5b3Ugc3VyZSB0aGF0Cj4gdGhlIHRl
+cm1pbmFsIHN1cHBvcnRzIHRoYXQgY2hhcmFjdGVyIHNldCBhbmQgaXMgbm90IG1hbmdsaW5nIGl0
+IGFuZAo+IGhlbmNlIG5vdCBtYXRjaGluZyB3aGF0IGlzIGFjdHVhbGx5IHN0b3JlZCBvbiBkaXNr
+PwotLS0tLQpUaG9zZSBmaWxlcyB3ZXJlICdmaW5lJyBiZWZvcmUgdG9kYXkuCgpJIGtub3cgaXQg
+aXMgbm90IGEgdGVybWluYWwgcHJvYmxlbSAtLQpJIHRvbGQgbHMgdG8gbGlzdCBhbGwgZmlsZXMg
+aW4gdGhlIGRpcmVjdG9yeSAtLSB0aGVuIGl0IHNheXMgIm5vIHN1Y2ggZmlsZSIuCgpDYW4geW91
+IHNheSB0aGF0ICIqIiBzaG91bGRuJ3QgbWF0Y2ggZXZlcnl0aGluZz8KClRob3NlIHF1ZXN0aW9u
+IG1hcmtzIGFyZSBpbiB0aGUgcGxhY2UgZm9yIHRoZSBzaXplIQoKVGhlcmUgYXJlIG5vIHdlaXJk
+IGNoYXJhY3RlcnMgaW4gdGhvc2UgZmlsZSBuYW1lcy4KCkhlcmUgYXJlIHRoZSBzYW1lIGZpbGVz
+IGluIGFub3RoZXIgZGlyZWN0b3J5OgptcDM+IGxsIDMqCi1yd3gtLS0tLS0gMSAzMjU1NzAyIDIw
+MTAtMDYtMTQgMTA6NTQgMzAtT21vaWRlIHRvIFlha3Vzb2t1IChUViBzYWl6de+9nFJlaW5hyrxz
+IFZlci4pLm1wMyoKLXJ3eC0tLS0tLSAxIDMyNzIwMDQgMjAxMC0wNi0xNCAxMDo1NCAzMS1PbW9p
+ZGUgdG8gWWFrdXNva3UgKFRWIHNhaXp1772cVG9tb2XKvHMgVmVyLikubXAzKgotcnd4LS0tLS0t
+IDEgMzIzNDg3NiAyMDEwLTA2LTE0IDEwOjU0IDMyLU9tb2lkZSB0byBZYWt1c29rdSAoVFYgc2Fp
+enXvvZxOYW51YWzKvHMgVmVyLikubXAzKgoKClRoZSBmaWVsZHMgaXQgY2FuJ3QgZGlzcGxheSBh
+cmUgdGhlIGZpbGUgc2l6ZSwgdGltZSBhbmQgZGF0ZXMhICBUaGUgbmFtZXMgZGlzcGxheSBvayEK
+CkhvdyBjYW4gZmlsZSBzaXplLCB0aW1lIGFuZCBkYXRlIGJlIGluIHVucHJpbnRhYmxlIGNoYXJh
+Y3RlcnMgdGhhdCAibHMiIGNhbid0IGRpc3BsYXk/CgpfX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpo
+dHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
