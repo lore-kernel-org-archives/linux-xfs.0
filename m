@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5UGISSk135722 for <xfs@oss.sgi.com>; Wed, 30 Jun 2010 11:18:28 -0500
+	o5UHnMB1138852 for <xfs@oss.sgi.com>; Wed, 30 Jun 2010 12:49:22 -0500
 Received: from Ishtar.sc.tlinx.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 997E841BC02
-	for <xfs@oss.sgi.com>; Wed, 30 Jun 2010 09:21:14 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 681EE14B3C25
+	for <xfs@oss.sgi.com>; Wed, 30 Jun 2010 10:57:04 -0700 (PDT)
 Received: from Ishtar.sc.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
-	cuda.sgi.com with ESMTP id FKpx2AFxUOisv7wc for
-	<xfs@oss.sgi.com>; Wed, 30 Jun 2010 09:21:14 -0700 (PDT)
-Received: from [192.168.3.12] (Athenae [192.168.3.12])
-	by Ishtar.sc.tlinx.org (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o5UGL23k018089 for <xfs@oss.sgi.com>; Wed, 30 Jun 2010 09:21:04 -0700
-Message-ID: <4C2B6EEE.5050103@tlinx.org>
-Date: Wed, 30 Jun 2010 09:21:02 -0700
+	cuda.sgi.com with ESMTP id RXuebcyXp6TlI9bz for
+	<xfs@oss.sgi.com>; Wed, 30 Jun 2010 10:57:04 -0700 (PDT)
+Message-ID: <4C2B8440.5030503@tlinx.org>
+Date: Wed, 30 Jun 2010 10:52:00 -0700
 From: "Linda A. Walsh" <xfs@tlinx.org>
 MIME-Version: 1.0
-Subject: xfs_restore -R -- recovering a previous restore...does it work?
-References: <4C2B37D6.50801@tlinx.org>
-In-Reply-To: <4C2B37D6.50801@tlinx.org>
+Subject: Re: xfs_restore -R -- recovering a previous restore...does it work?
+References: <4C2B37D6.50801@tlinx.org> <4C2B6EEE.5050103@tlinx.org>
+	<20100630172750.GA20764@puku.stupidest.org>
+In-Reply-To: <20100630172750.GA20764@puku.stupidest.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,53 +28,39 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Chris Wedgwood <cw@f00f.org>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-So why is this crashing?
+Dmesg shows nothing revealing.
 
-I just had it happen again -- something killed off the window it was
-executing in -- system didn't go down, but it got a hangup -- a
-cleaner shutdown -- but it still doesn't recover.
+I am not using tape -- I'm restoring from a file.
 
-Under what circumstances should this work?  Or does it work?
+Does it only work with tapes?  I didn't recall it saying so.
 
+-l
 
+Chris Wedgwood wrote:
+> On Wed, Jun 30, 2010 at 09:21:02AM -0700, Linda A. Walsh wrote:
+> 
+>> I just had it happen again -- something killed off the window it was
+>> executing in -- system didn't go down, but it got a hangup -- a
+>> cleaner shutdown -- but it still doesn't recover.
+> 
+> dmesg ...
+> 
+> see anything?
+> 
+>> Under what circumstances should this work?  Or does it work?
+> 
+> it used to work for me, i've not tried it recently though, i basically
+> gave up tapes (and xfsdump/restore) some time back due to size/cost
+> contraints
 
-Linda A. Walsh wrote:
-> Due to another bug in lvm, my restore of this partition crashed after running a few
-> hours (takes alot longer to restore than to backup).
-> 
-> So I decided to use the "-R" option to Resume my previously left off dump:
-> 
-> # xfsrestore -R -p 180 -f /backups/Ishtar/torrents/torrents-100629-0-1611.dump .
->   xfsrestore: using file dump (drive_simple) strategy
->   xfsrestore: version 3.0.4 (dump format 3.0) - Running single-threaded
->   xfsrestore: resuming restore previously begun Wed Jun 30 04:41:57 2010
->   xfsrestore: examining media file 0
->   xfsrestore: seeking past portion of media file already restored
-> 
-> Looks good so far!..Yup, and..
-> 
->   xfsrestore: drive_simple.c:770: do_seek_mark: Assertion `nreadneeded64 <= ( ( intgen_t ) ( ( ( 1ull << ( ( unsigned long long )sizeof( intgen_t ) * ( unsigned long long )8 - ( 1ull + 1ull ))) - 1ull ) * 2ull + 1ull ))' failed.
->   Aborted (core dumped)
-> 
-> 
-> Say what?  Um...is that supposed to be an error message?
->  
-> Why can't it just tell me why "'nreadneeded64' > 0xbfffffffffffffd"
-> is 'bad', or what it means?
-> 
-> I have a feeling that the 'core dumped' message means that 
-> if I want my filesystem restored in the near future, I should
-> just restart...
-> 
-> *sigh*
-> -l
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+----
+Do you not keep backups at all anymore?  Or if you do, do you not 
+care about the metastuff?  
+
+Only other backup util, that I know of, that speaks meta, is 'star'.
 
 _______________________________________________
 xfs mailing list
