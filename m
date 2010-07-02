@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o62JZlEp255997 for <xfs@oss.sgi.com>; Fri, 2 Jul 2010 14:35:47 -0500
-Subject: Re: [PATCH 09/15] xfs: rewrite XFS_SEND_NAMESP() as a function
+	o62Jm9SG256428 for <xfs@oss.sgi.com>; Fri, 2 Jul 2010 14:48:09 -0500
+Subject: Re: [PATCH 03/15] xfs: move DMAPI definitions out of "xfs_mount.h"
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20100629075855.GB31118@infradead.org>
-References: <201006282205.o5SM5qNZ018194@stout.americas.sgi.com>
-	<20100629075855.GB31118@infradead.org>
-Date: Fri, 02 Jul 2010 14:37:46 -0500
-Message-ID: <1278099466.1876.106.camel@doink>
+In-Reply-To: <20100629133500.GA11312@infradead.org>
+References: <201006282204.o5SM4qbU018132@stout.americas.sgi.com>
+	<20100629133500.GA11312@infradead.org>
+Date: Fri, 02 Jul 2010 14:50:02 -0500
+Message-ID: <1278100202.1876.120.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -26,16 +26,32 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Tue, 2010-06-29 at 03:58 -0400, Christoph Hellwig wrote:
-> A lot of arguments for the namesp even are always NULL or use
-> defaults.  You'll make your life a simpler by just removing them.
-> This also applies to some of the other dmapi callout, but it's most
-> extreme here.
+On Tue, 2010-06-29 at 09:35 -0400, Christoph Hellwig wrote:
+> On Mon, Jun 28, 2010 at 05:04:52PM -0500, Alex Elder wrote:
+> > XFS defines a bunch of DMAPI cruft in xfs_mount.h.  There is no need
+> > for it to be there; move it instead into the xfs_dmapi.h file.  A
+> > side-effect of this is that "xfs_dmapi.h" now depends on and needs
+> > to be #included after "xfs_mount.h" and "xfs_inode.h" (the latter of
+> > which itself depends on a "xfs_bmap_btree.h").
+> > 
+> > On the other hand, "xfs_dmapi.h" is #included by a LOT more files
+> > than it needs to be, so eliminate those cases.
+> > 
+> > Finally, "xfs_inode.h" defines a type dm_attrs_t that is never
+> > referenced anywhere else, so kill it off.
 > 
-I think I actually did that in later patches in the series,
-by setting up a set of new interface routines, one per
-event type, rather than multiplexing the namespace event
-function for lots of other things.
+> Asserting copyright on removing single include lines seems rather
+> interesting..
+
+I simply updated the copyright on every file I touched.
+We've been advised that "SGI" is the new description
+of the company in copyright statements, so I was just
+doing a blanket update.
+
+I'll keep those changes, but will drop the ones where I
+actually added a copyright that wasn't there before.
+Looks like only one of the 64 files changed fits that
+description ("linux-2.6/xfs_quotaops.c").
 
 					-Alex
 
