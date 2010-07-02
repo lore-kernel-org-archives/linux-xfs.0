@@ -1,14 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o62Jm9SG256428 for <xfs@oss.sgi.com>; Fri, 2 Jul 2010 14:48:09 -0500
-Subject: Re: [PATCH 03/15] xfs: move DMAPI definitions out of "xfs_mount.h"
+	o62KrNXt258521 for <xfs@oss.sgi.com>; Fri, 2 Jul 2010 15:53:23 -0500
+Subject: Re: xfsdev tree in linux-next?
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20100629133500.GA11312@infradead.org>
-References: <201006282204.o5SM4qbU018132@stout.americas.sgi.com>
-	<20100629133500.GA11312@infradead.org>
-Date: Fri, 02 Jul 2010 14:50:02 -0500
-Message-ID: <1278100202.1876.120.camel@doink>
+In-Reply-To: <20100702103951.GA18369@infradead.org>
+References: <20100702103951.GA18369@infradead.org>
+Date: Fri, 02 Jul 2010 15:56:06 -0500
+Message-ID: <1278104166.1876.134.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -24,34 +23,25 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+Cc: akpm@osdl.org, sfr@canb.auug.org.au, xfs@oss.sgi.com
 
-On Tue, 2010-06-29 at 09:35 -0400, Christoph Hellwig wrote:
-> On Mon, Jun 28, 2010 at 05:04:52PM -0500, Alex Elder wrote:
-> > XFS defines a bunch of DMAPI cruft in xfs_mount.h.  There is no need
-> > for it to be there; move it instead into the xfs_dmapi.h file.  A
-> > side-effect of this is that "xfs_dmapi.h" now depends on and needs
-> > to be #included after "xfs_mount.h" and "xfs_inode.h" (the latter of
-> > which itself depends on a "xfs_bmap_btree.h").
-> > 
-> > On the other hand, "xfs_dmapi.h" is #included by a LOT more files
-> > than it needs to be, so eliminate those cases.
-> > 
-> > Finally, "xfs_inode.h" defines a type dm_attrs_t that is never
-> > referenced anywhere else, so kill it off.
+On Fri, 2010-07-02 at 06:39 -0400, Christoph Hellwig wrote:
+> Hi Steve,
 > 
-> Asserting copyright on removing single include lines seems rather
-> interesting..
+> we've got a massive backlog of over a month worth of patches that have
+> been reviewed on the XFS list and QAed by Dave and me but not picked up
+> yet into the official tree.
+> 
+> Can you temporarily add
+> 
+> 	git://git.kernel.org/pub/scm/linux/kernel/git/dgc/xfsdev.git for-2.6.36
+> 
+> to the linux-next lineup so what we can get more testing exposure?
+> 
 
-I simply updated the copyright on every file I touched.
-We've been advised that "SGI" is the new description
-of the company in copyright statements, so I was just
-doing a blanket update.
-
-I'll keep those changes, but will drop the ones where I
-actually added a copyright that wasn't there before.
-Looks like only one of the 64 files changed fits that
-description ("linux-2.6/xfs_quotaops.c").
+FYI I will have git://oss.sgi.com/xfs/xfs.git master up-to-date
+today.  I'm waiting for some testing to finish before pushing
+out all the recent updates.  I'm sorry about the delay.
 
 					-Alex
 
