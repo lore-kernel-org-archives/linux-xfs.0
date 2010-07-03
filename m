@@ -1,12 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o62NqDpp003807 for <xfs@oss.sgi.com>; Fri, 2 Jul 2010 18:52:13 -0500
-From: Alex Elder <aelder@sgi.com>
-Message-Id: <201007022354.o62NsucI020931@stout.americas.sgi.com>
-Date: Fri, 02 Jul 2010 18:54:55 -0500
-Subject: [GIT PULL] XFS update for 2.6.35-rc4
+	o639IS4S022885 for <xfs@oss.sgi.com>; Sat, 3 Jul 2010 04:18:31 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7D7F4426347
+	for <xfs@oss.sgi.com>; Sat,  3 Jul 2010 02:21:17 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id 8IxlghbAxhvCit5e for
+	<xfs@oss.sgi.com>; Sat, 03 Jul 2010 02:21:17 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
+	Linux)) id 1OUyuT-0007Cj-2M
+	for xfs@oss.sgi.com; Sat, 03 Jul 2010 09:21:17 +0000
+Date: Sat, 3 Jul 2010 05:21:17 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH] xfs: remove a dmapi leftover
+Message-ID: <20100703092116.GA27669@infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,53 +29,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-These five commits implement a few security-related changes to XFS.
-One enforces more strict permission checks for swapping file
-extents.  Others do a better job of validating information from
-untrustworthy sources before using it.
+The open_exec file operation is only added by the external dmapi patch.
 
-					-Alex
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-The following changes since commit 123f94f22e3d283dfe68742b269c245b0501ad82:
-
-  Merge branch 'sched-fixes-for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/tip/linux-2.6-tip (2010-07-02 09:52:58 -0700)
-
-are available in the git repository at:
-
-  git://oss.sgi.com/xfs/xfs for-linus
-
-Christoph Hellwig (1):
-      xfs: always use iget in bulkstat
-
-Dan Rosenberg (1):
-      xfs: prevent swapext from operating on write-only files
-
-Dave Chinner (3):
-      xfs: validate untrusted inode numbers during lookup
-      xfs: rename XFS_IGET_BULKSTAT to XFS_IGET_UNTRUSTED
-      xfs: remove block number from inode lookup code
-
- fs/xfs/linux-2.6/xfs_export.c  |   11 +-
- fs/xfs/linux-2.6/xfs_ioctl.c   |    7 +-
- fs/xfs/linux-2.6/xfs_ioctl32.c |   15 +--
- fs/xfs/quota/xfs_qm.c          |   18 +--
- fs/xfs/quota/xfs_qm_syscalls.c |   27 ++--
- fs/xfs/xfs_dfrag.c             |    5 +-
- fs/xfs/xfs_ialloc.c            |  142 ++++++++++++---------
- fs/xfs/xfs_iget.c              |   10 +-
- fs/xfs/xfs_inode.c             |    5 +-
- fs/xfs/xfs_inode.h             |    6 +-
- fs/xfs/xfs_itable.c            |  285 ++++++----------------------------------
- fs/xfs/xfs_itable.h            |   17 ---
- fs/xfs/xfs_log_recover.c       |    2 +-
- fs/xfs/xfs_mount.c             |    2 +-
- fs/xfs/xfs_rtalloc.c           |    4 +-
- fs/xfs/xfs_trans_inode.c       |    2 +-
- fs/xfs/xfs_vnodeops.c          |    2 +-
- 17 files changed, 172 insertions(+), 388 deletions(-)
+Index: xfs/fs/xfs/linux-2.6/xfs_file.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_file.c	2010-07-03 10:54:07.323263955 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_file.c	2010-07-03 10:54:11.636128320 +0200
+@@ -921,9 +921,6 @@ const struct file_operations xfs_file_op
+ 	.open		= xfs_file_open,
+ 	.release	= xfs_file_release,
+ 	.fsync		= xfs_file_fsync,
+-#ifdef HAVE_FOP_OPEN_EXEC
+-	.open_exec	= xfs_file_open_exec,
+-#endif
+ };
+ 
+ const struct file_operations xfs_dir_file_operations = {
 
 _______________________________________________
 xfs mailing list
