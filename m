@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o65IYTDg134064 for <xfs@oss.sgi.com>; Mon, 5 Jul 2010 13:34:30 -0500
-Received: from ty.sabi.co.UK (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D43C315920DD
-	for <xfs@oss.sgi.com>; Mon,  5 Jul 2010 11:37:18 -0700 (PDT)
-Received: from ty.sabi.co.UK (82-69-39-138.dsl.in-addr.zen.co.uk
-	[82.69.39.138]) by cuda.sgi.com with ESMTP id ctGYxweOxQz4brzn
-	for <xfs@oss.sgi.com>; Mon, 05 Jul 2010 11:37:18 -0700 (PDT)
-MIME-Version: 1.0
-Message-ID: <19506.8873.902105.181763@tree.ty.sabi.co.uk>
-Date: Mon, 5 Jul 2010 19:21:29 +0100
+	o65IpJj1134784 for <xfs@oss.sgi.com>; Mon, 5 Jul 2010 13:51:20 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C70EF15B49C6
+	for <xfs@oss.sgi.com>; Mon,  5 Jul 2010 11:59:32 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id SxCSsYtHv1ffmifr for
+	<xfs@oss.sgi.com>; Mon, 05 Jul 2010 11:59:32 -0700 (PDT)
+Date: Mon, 5 Jul 2010 14:54:06 -0400
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: Slow delete
-In-Reply-To: <AANLkTim5GfiDw63CwrE1QMwQACpWd2OgDgEW8y8bpcSW@mail.gmail.com>
+Message-ID: <20100705185406.GA26435@infradead.org>
 References: <AANLkTinPmhJRD3CDdsHtkLFzYd2jF9ee7gPqgO6XBSfl@mail.gmail.com>
 	<20100705171338.3bb38e1d@harpe.intellique.com>
-	<AANLkTim5GfiDw63CwrE1QMwQACpWd2OgDgEW8y8bpcSW@mail.gmail.com>
-From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20100705171338.3bb38e1d@harpe.intellique.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,25 +29,15 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andrei Deftu <andreideftu@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: Andrei Deftu <andreideftu@gmail.com>, xfs@oss.sgi.com
 
->>> [ ... ] xfs is very slow when deleting a large number of
->>> files. [ ... ]
-
-Not quite -- it is nearly as fast as possible.
-
-> Thanks. Yes, I know about these tricks like 'nobarrier'
-> option, separate partition for metadata log, increased size
-> for the log, more log buffers or atime disabled. But I was
-> interested more in what is the real cause of this slowness.
-
-Tricks like those indicate quite clearly the real cause.
-
-To make it even more explicit, the real cause is that those who
-complain tha XFS is slow at deleting lots of files have a storage
-subsystem can only do a limited number of committed transactions
-per second and XFS does not "cheat".
+Using nobarrier really is a bad idea in general as it does not
+actually provides any transactional guarantee.  But if you're the kind
+of person that would use it anyway please upgrade to a 2.6.35-rc kernel
+and use the "delaylog" mount option, which will uses a new logging
+mechanism that will get you much better delete performance.  It's still
+experimental, but it's defintively not any worse than using nobarrier.
 
 _______________________________________________
 xfs mailing list
