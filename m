@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o65FUtfp127292 for <xfs@oss.sgi.com>; Mon, 5 Jul 2010 10:30:55 -0500
-Received: from mail-ww0-f41.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A549D429ACB
-	for <xfs@oss.sgi.com>; Mon,  5 Jul 2010 08:33:45 -0700 (PDT)
-Received: from mail-ww0-f41.google.com (mail-ww0-f41.google.com
-	[74.125.82.41]) by cuda.sgi.com with ESMTP id 5PhDcZx0VLOW9aNE
-	for <xfs@oss.sgi.com>; Mon, 05 Jul 2010 08:33:45 -0700 (PDT)
-Received: by wwb17 with SMTP id 17so1191583wwb.2
-	for <xfs@oss.sgi.com>; Mon, 05 Jul 2010 08:33:44 -0700 (PDT)
+	o65IYTDg134064 for <xfs@oss.sgi.com>; Mon, 5 Jul 2010 13:34:30 -0500
+Received: from ty.sabi.co.UK (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D43C315920DD
+	for <xfs@oss.sgi.com>; Mon,  5 Jul 2010 11:37:18 -0700 (PDT)
+Received: from ty.sabi.co.UK (82-69-39-138.dsl.in-addr.zen.co.uk
+	[82.69.39.138]) by cuda.sgi.com with ESMTP id ctGYxweOxQz4brzn
+	for <xfs@oss.sgi.com>; Mon, 05 Jul 2010 11:37:18 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20100705171338.3bb38e1d@harpe.intellique.com>
+Message-ID: <19506.8873.902105.181763@tree.ty.sabi.co.uk>
+Date: Mon, 5 Jul 2010 19:21:29 +0100
+Subject: Re: Slow delete
+In-Reply-To: <AANLkTim5GfiDw63CwrE1QMwQACpWd2OgDgEW8y8bpcSW@mail.gmail.com>
 References: <AANLkTinPmhJRD3CDdsHtkLFzYd2jF9ee7gPqgO6XBSfl@mail.gmail.com>
 	<20100705171338.3bb38e1d@harpe.intellique.com>
-Date: Mon, 5 Jul 2010 18:33:44 +0300
-Message-ID: <AANLkTim5GfiDw63CwrE1QMwQACpWd2OgDgEW8y8bpcSW@mail.gmail.com>
-Subject: Re: Slow delete
-From: Andrei Deftu <andreideftu@gmail.com>
+	<AANLkTim5GfiDw63CwrE1QMwQACpWd2OgDgEW8y8bpcSW@mail.gmail.com>
+From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,35 +25,29 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Emmanuel Florac <eflorac@intellique.com>
+To: Andrei Deftu <andreideftu@gmail.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Jul 5, 2010 at 6:13 PM, Emmanuel Florac <eflorac@intellique.com> wr=
-ote:
-> Le Mon, 5 Jul 2010 17:27:44 +0300
-> Andrei Deftu <andreideftu@gmail.com> =E9crivait:
->
->> As many people have pointed out, xfs is very slow when deleting a
->> large number of files. Does anyone has a technical answer to this
->> problem? Also, I am interested to know if there is a way to
->> temporarily speed up the delete process, regardless of all the other
->> parameters.
->
-> Using the "nobarrier" mount option (when applicable/advisable)
-> considerably speeds up metadata operations.
-> Another possibility is to use a ramdisk (or /dev/null) as a log device
-> though it could be... dangerous :)
+>>> [ ... ] xfs is very slow when deleting a large number of
+>>> files. [ ... ]
 
-Thanks. Yes, I know about these tricks like 'nobarrier' option,
-separate partition for metadata log, increased size for the log, more
-log buffers or atime disabled. But I was interested more in what is
-the real cause of this slowness.
+Not quite -- it is nearly as fast as possible.
 
-Andrei
+> Thanks. Yes, I know about these tricks like 'nobarrier'
+> option, separate partition for metadata log, increased size
+> for the log, more log buffers or atime disabled. But I was
+> interested more in what is the real cause of this slowness.
+
+Tricks like those indicate quite clearly the real cause.
+
+To make it even more explicit, the real cause is that those who
+complain tha XFS is slow at deleting lots of files have a storage
+subsystem can only do a limited number of committed transactions
+per second and XFS does not "cheat".
 
 _______________________________________________
 xfs mailing list
