@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o66JfgOc199102 for <xfs@oss.sgi.com>; Tue, 6 Jul 2010 14:41:42 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B1C6A15B6D02
-	for <xfs@oss.sgi.com>; Tue,  6 Jul 2010 12:49:58 -0700 (PDT)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id tYcgPDs1lKXANHzt for
-	<xfs@oss.sgi.com>; Tue, 06 Jul 2010 12:49:58 -0700 (PDT)
-Message-ID: <4C33879C.6050006@sandeen.net>
-Date: Tue, 06 Jul 2010 14:44:28 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	o66LwKSC203786 for <xfs@oss.sgi.com>; Tue, 6 Jul 2010 16:58:21 -0500
+Received: from mail-vw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1AADE1B2663D
+	for <xfs@oss.sgi.com>; Tue,  6 Jul 2010 15:01:10 -0700 (PDT)
+Received: from mail-vw0-f53.google.com (mail-vw0-f53.google.com
+	[209.85.212.53]) by cuda.sgi.com with ESMTP id DhQJozGbAyFlO8lN
+	for <xfs@oss.sgi.com>; Tue, 06 Jul 2010 15:01:10 -0700 (PDT)
+Received: by vws15 with SMTP id 15so7545657vws.26
+	for <xfs@oss.sgi.com>; Tue, 06 Jul 2010 15:01:10 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: Fwd: Need assistance on XFS undeleting files
-References: <AANLkTik59zx97OVNXSfk4Gbe5poVAIGgJiTJVlsJZIjL@mail.gmail.com>	<201007060807.24582.misiek@pld.org.pl>	<AANLkTikhinYuUDsT-5hqyNkR89Y4PeosvAQ3K2LFqYkn@mail.gmail.com>
-	<87fwzwx0rr.fsf@basil.nowhere.org>
-In-Reply-To: <87fwzwx0rr.fsf@basil.nowhere.org>
+In-Reply-To: <AANLkTimKKEvfJx6EQZeQF_HnlBLj6B8Kjfy6jUHGPnz5@mail.gmail.com>
+References: <AANLkTimKKEvfJx6EQZeQF_HnlBLj6B8Kjfy6jUHGPnz5@mail.gmail.com>
+From: Shaun Adolphson <shaun@adolphson.net>
+Date: Wed, 7 Jul 2010 08:00:50 +1000
+Message-ID: <AANLkTik62CyM_YTf2WvqKLkkPzqmZXnfF7nvUfUj9eBX@mail.gmail.com>
+Subject: Re: Re: CentOS 5.5 XFS internal errors (XFS_WANT_CORRUPTED_GOTO)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,37 +25,77 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============2523778879738462038=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andi Kleen <andi@firstfloor.org>
-Cc: James Shih <shija03@gmail.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Andi Kleen wrote:
-> James Shih <shija03@gmail.com> writes:
->>    I would like to know if the development team carries such tools -
->> tools that allow one to list the inodes of the XFS filesystem of
->> deleted files, and tools that allow one to cat (dump) the blocks from
->> a starting inode to all the following blocks until an indication that
->> the file is ended or a new indication of a new file appears. (these
->> tools would correspond to TCT's ils and pcat respectively).
-> 
-> XFS has no separate reserved inode table (but just allocates/free blocks
-> in the fs), so it can be difficult to even find the inodes when they're
-> gone.
+--===============2523778879738462038==
+Content-Type: multipart/alternative; boundary=0016e6475534e0874f048abf30f5
 
-However, xfs_irecover (http://jengelh.medozas.de/projects/hxtools/) may help,
-as long as the fs hasn't been written to much post-delete of course.
+--0016e6475534e0874f048abf30f5
+Content-Type: text/plain; charset=ISO-8859-1
 
--Eric
- 
-> -Andi
-> 
+>>* Software:*
+>>* - Fresh install of CentOS 5.5 64bit all patches up to date*
+>>* - Kernel 2.6.18-194.3.1.el5.centos.plus*
+>
+> First thing that comes to mind is the fact that 2.6.18 is about 3 years old.
+> I'm not familiar with CentOS patching policies, but even if you've received
+> and applied some XFS patches, they'd still probably be rather old.
+>
+> If CentOS 5.5 doesn't have a much newer kernel package available, say 2.6.30
+> or later, if I were you, I'd grab the kernel source from kernel.org and roll
+> your own 2.6.33.6 or 2.6.34.1.
 
 
+Currently that is the latest and greatest kernel available on CentOS. So we
+may need to investigate rolling our own kernel if there are no configuration
+changes that we can make to resolve the problem.
+
+Thanks,
+
+Shaun
+
+--0016e6475534e0874f048abf30f5
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+<div><span class=3D"Apple-style-span" style=3D"font-family: Times; font-siz=
+e: medium; -webkit-border-horizontal-spacing: 1px; -webkit-border-vertical-=
+spacing: 1px; "><pre>&gt;&gt;<i> Software:</i>
+&gt;&gt;<i> - Fresh install of CentOS 5.5 64bit all patches up to date</i>
+&gt;&gt;<i> - Kernel 2.6.18-194.3.1.el5.centos.plus</i>
+&gt;
+&gt; First thing that comes to mind is the fact that 2.6.18 is about 3 year=
+s old.
+&gt; I&#39;m not familiar with CentOS patching policies, but even if you&#3=
+9;ve received
+&gt; and applied some XFS patches, they&#39;d still probably be rather old.
+&gt;
+&gt; If CentOS 5.5 doesn&#39;t have a much newer kernel package available, =
+say 2.6.30
+&gt; or later, if I were you, I&#39;d grab the kernel source from <a href=
+=3D"http://kernel.org">kernel.org</a> and roll
+&gt; your own 2.6.33.6 or 2.6.34.1.</pre></span></div><div><br></div>Curren=
+tly=A0that is the=A0latest=A0and greatest kernel=A0available=A0on CentOS. S=
+o we may need to investigate rolling our own kernel if there are no configu=
+ration changes that we can make to resolve the problem.<div>
+
+<br></div><div>Thanks,</div><div><br></div><div>Shaun</div>
+
+--0016e6475534e0874f048abf30f5--
+
+
+--===============2523778879738462038==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============2523778879738462038==--
