@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o66BDWRc178776 for <xfs@oss.sgi.com>; Tue, 6 Jul 2010 06:13:32 -0500
-Received: from mail-gw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9583642BB8A
-	for <xfs@oss.sgi.com>; Tue,  6 Jul 2010 04:16:22 -0700 (PDT)
-Received: from mail-gw0-f53.google.com (mail-gw0-f53.google.com
-	[74.125.83.53]) by cuda.sgi.com with ESMTP id pQzGJMsgK14MW8Gc
-	for <xfs@oss.sgi.com>; Tue, 06 Jul 2010 04:16:22 -0700 (PDT)
-Received: by gwb19 with SMTP id 19so3188810gwb.26
-	for <xfs@oss.sgi.com>; Tue, 06 Jul 2010 04:16:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201007060807.24582.misiek@pld.org.pl>
+	o66CEhOL181156 for <xfs@oss.sgi.com>; Tue, 6 Jul 2010 07:14:45 -0500
+Received: from one.firstfloor.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AD4011B259E6
+	for <xfs@oss.sgi.com>; Tue,  6 Jul 2010 05:17:32 -0700 (PDT)
+Received: from one.firstfloor.org (one.firstfloor.org [213.235.205.2]) by
+	cuda.sgi.com with ESMTP id 8dk7mOH7O7utwkuX for
+	<xfs@oss.sgi.com>; Tue, 06 Jul 2010 05:17:32 -0700 (PDT)
+From: Andi Kleen <andi@firstfloor.org>
+Subject: Re: Fwd: Need assistance on XFS undeleting files
 References: <AANLkTik59zx97OVNXSfk4Gbe5poVAIGgJiTJVlsJZIjL@mail.gmail.com>
 	<201007060807.24582.misiek@pld.org.pl>
-Date: Tue, 6 Jul 2010 07:16:20 -0400
-Message-ID: <AANLkTikhinYuUDsT-5hqyNkR89Y4PeosvAQ3K2LFqYkn@mail.gmail.com>
-Subject: Fwd: Need assistance on XFS undeleting files
-From: James Shih <shija03@gmail.com>
+	<AANLkTikhinYuUDsT-5hqyNkR89Y4PeosvAQ3K2LFqYkn@mail.gmail.com>
+Date: Tue, 06 Jul 2010 14:17:28 +0200
+In-Reply-To: <AANLkTikhinYuUDsT-5hqyNkR89Y4PeosvAQ3K2LFqYkn@mail.gmail.com>
+	(James Shih's message of "Tue, 6 Jul 2010 07:16:20 -0400")
+Message-ID: <87fwzwx0rr.fsf@basil.nowhere.org>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,64 +26,29 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: James Shih <shija03@gmail.com>
+Cc: xfs@oss.sgi.com
 
-RGVhciBYRlMgZGV2ZWxvcGVycywKCiAgIFJlY2VudGx5IHdlIGhhZCB0aGUgdW5mb3J0dW5hdGUg
-ZXZlbnQgb2YgaGF2aW5nIGEgbGFyZ2UgYW1vdW50IG9mCmZpbGVzIGRlbGV0ZWQgZnJvbSBhbiBY
-RlMgbmV0d29yayBOQVMgKHZpYSBORlMpIHdoZXJlIGEgcmVtb3ZhbCBvZgpmaWxlcyB3YXMgcGVy
-Zm9ybWVkIChsZWF2aW5nIGludGFjdCkgdGhlIGZpbGVzIGJlaGluZC4gIEkndmUgYmVlbgpsb29r
-aW5nIGZvciBmb3JlbnNpYyB0b29scyBhbmQsIGhvcGVmdWxseSwgdG9vbHMgdGhhdCBhbGxvdyBt
-ZSB0bwpyZWNvdmVyIHRoZSBmaWxlcyAoaG9wZWZ1bGx5IHRoZWlyIGZpbGVuYW1lcyB0b28pLiAg
-UmVhZGluZyBzZXZlcmFsCnBhc3NhZ2VzIG9mIGRpZmZlcmVudCBib29rcyBhbmQgd2Vic2l0ZXMs
-IEkgaGF2ZSBmb3VuZCBUQ1QgKFRoZQpDb3JvcmVyJ3MgVG9vbGtpdCkgYW5kIHRoZSBTbGV1dGhr
-aXQsIGJ1dCBuZWl0aGVyIG9mIHRoZW0gb2ZmZXIKc3VwcG9ydCBmb3IgWEZTLgoKICAgSSB3b3Vs
-ZCBsaWtlIHRvIGtub3cgaWYgdGhlIGRldmVsb3BtZW50IHRlYW0gY2FycmllcyBzdWNoIHRvb2xz
-IC0KdG9vbHMgdGhhdCBhbGxvdyBvbmUgdG8gbGlzdCB0aGUgaW5vZGVzIG9mIHRoZSBYRlMgZmls
-ZXN5c3RlbSBvZgpkZWxldGVkIGZpbGVzLCBhbmQgdG9vbHMgdGhhdCBhbGxvdyBvbmUgdG8gY2F0
-IChkdW1wKSB0aGUgYmxvY2tzIGZyb20KYSBzdGFydGluZyBpbm9kZSB0byBhbGwgdGhlIGZvbGxv
-d2luZyBibG9ja3MgdW50aWwgYW4gaW5kaWNhdGlvbiB0aGF0CnRoZSBmaWxlIGlzIGVuZGVkIG9y
-IGEgbmV3IGluZGljYXRpb24gb2YgYSBuZXcgZmlsZSBhcHBlYXJzLiAodGhlc2UKdG9vbHMgd291
-bGQgY29ycmVzcG9uZCB0byBUQ1QncyBpbHMgYW5kIHBjYXQgcmVzcGVjdGl2ZWx5KS4KCiAgIFBl
-cmhhcHMsIGlmIG5vdCwgY291bGQgeW91IHBvaW50IG1lIG91dCB0byBhbnkgdG9vbHMgKGNvbW1l
-cmNpYWwgb3IKbm90KSB0aGF0IGNhbiByZXN0b3JlIHRoZSBmaWxlcyBvZiB0aGUgWEZTIGZpbGVz
-eXN0ZW0gLSBwcmVmZXJpYmx5CndpdGggdGhlaXIgZmlsZW5hbWVzPyAgRnJvbSB0aGUgb3BlbnNv
-dXJjZSBwZXJzcGVjdGl2ZSwgSSBoYXZlIGxvb2tlZAphdCBwaG90b3JlYyAmIHRlc3RkaXNrIChp
-dCBkb2VzIG5vdCBzdXBwb3J0IFhGUyksIGFuZCB0aGUgcmVzdWx0cyB3ZXJlCmZpbGVzIHdpdGhv
-dXQgZmlsZW5hbWVzIC0gdGhlIGZpbGVuYW1lcyBhcmUga2V5IHNpbmNlIHRoZXkgYXJlCmdlbmVy
-YXRlZCB0aG91Z2ggYSBoYXNoIGZvciBteSBhcHBsaWNhdGlvbiAtIHdpdGhvdXQgdGhlc2UgaXQg
-aXMKcmVhbGx5IGhhcmQgdG8gZGV0ZXJtaW5lIHdoZXJlIHRoZXkgYmVsb25nIHRvLiAgQ29tbWVy
-Y2lhbCByZXN0b3JpbmcKdG9vbHMgbGlrZSBVRlMgRXhwbG9yZXIgKG9ubHkgc2VlbXMgdG8gYmUg
-YWJsZSB0byByZXN0b3JlIHdpdGhvdXQgdGhlCmZpbGVuYW1lKSBhbmQgRGlza0RvY3RvcnMgWEZT
-IChpdCBkb2Vzbid0IHdvcmsgd2l0aCBkaXNrIGltYWdlcykKCiAgIEFmdGVyIGRvaW5nIGEgbGl0
-dGxlIHRlc3Qgb24gYSBwZW4gZHJpdmUsIHRyeWluZyB0byBzaW11bGF0ZSB0aGUKcmVhbCBlbnZp
-cm9ubWVudCAoc2V2ZXJhbCBUQnMgaW4gYSBSQUlENSBhcnJhbmdlbWVudCksIEkndmUgbm90aWNl
-ZAp0aGF0IGEgImRkIGlmPS9teS5pbWcgfCBzdHJpbmdzIHwgZ3JlcCAtaSAnbXlfbW92aWUnICIs
-IHJldHVybnMgdGhlCm1vdmllIGZpbGVuYW1lIHNldmVyYWwgdGltZXMgLSBzbyBhbm90aGVyIHF1
-ZXN0aW9uIEkgaGF2ZSBpcywgd2hhdApkb2VzIHRoaXMgZmlsZW5hbWUgcmVwcmVzZW50LCB0aGUg
-ZmFjdCB0aGF0IEkgaGF2ZSBpdCBvbiB0aGUKZmlsZXN5c3RlbSBzZXZlcmFsIHRpbWVzLCBzdG9y
-ZWQgYXMgYSBzdHJpbmcsIGlzIGl0IGFuIGluZGljYXRpb24gdGhhdAp0aGUgZmlsZSBhbmQgaXRz
-IGZpbGVuYW1lIGNhbiBiZSBhc3NvY2lhdGVkIGR1cmluZyBhIHJlc3RvcmluZwpwcm9jZXNzPwoK
-ICAgQW55IGFzc2lzdGFuY2UgaXMgZ3JlYXRseSBhcHByZWNpYXRlZCwKCiAgIEJlc3QgcmVnYXJk
-cywKCiAgIEphbWVzCi0tLS0tLS0tLS0gRm9yd2FyZGVkIG1lc3NhZ2UgLS0tLS0tLS0tLQpGcm9t
-OiBBcmthZGl1c3ogTWlza2lld2ljeiA8bWlzaWVrQHBsZC5vcmcucGw+CkRhdGU6IFR1ZSwgSnVs
-IDYsIDIwMTAgYXQgMjowNyBBTQpTdWJqZWN0OiBSZTogTmVlZCBhc3Npc3RhbmNlIG9uIFhGUyB1
-bmRlbGV0aW5nIGZpbGVzClRvOiBKYW1lcyBTaGloIDxzaGlqYTAzQGdtYWlsLmNvbT4KCgpPbiBU
-dWVzZGF5IDA2IG9mIEp1bHkgMjAxMCwgeW91IHdyb3RlOgo+IEhlbGxvIE1yLiBNacWba2lld2lj
-eiwKPgo+IMKgIFNvcnJ5IGZvciBzb2xpY2l0aW5nIHRvIHlvdSBpbiBzdWNoIGEgd2F5LCBidXQg
-SSBhbSBzaW1wbHkgdHJ5aW5nIHRvCj4gbG9vayBmb3IgdGhlIHByb3BlciBjb250YWN0cyBhbmQg
-ZGlyZWN0aW9uIHRoYXQgY2FuIGhlbHAgbWUgaW4gYQo+IGNvbXB1dGVyIGNyaXNpcyB0aGF0IGhh
-cyByZWNlbnRseSB0YWtlbiBwbGFjZSB1bmRlciBhbiBYRlMgTkFTLgoKUGxlYXNlIGFzayBvbiB4
-ZnNAb3NzLnNnaS5jb20gd2hpY2ggaXMgZGVkaWNhdGVkIHhmcyBtYWlsaW5nIGxpc3Qgd2l0aCB4
-ZnMKZGV2ZWxvcGVycyByZWFkaW5nIGl0LiBHb29nbGUgZm9yIGxpc3QgYXJjaGl2ZXMsIHRvby4K
-Cj4gwqAgRG9lcyBYRlMgcHJvdmlkZSBhbnkgdHlwZSBvZiB0b29scyB0byBkbyBmaWxlIHJlY292
-ZXJ5PwoKSSBkb24ndCBrbm93IHN1Y2ggdG9vbHMgdW5mb3J0dW5hdGVseSwgc28gdGhpcyB0YXNr
-IHdpbGwgYmUgcmVhbGx5IGhhcmQuCgo+IMKgIFRoYW5rIHlvdSwKPgo+IMKgIEphbWVzIFNoaWgu
-CgoKLS0KQXJrYWRpdXN6IE1pxZtraWV3aWN6IMKgIMKgIMKgIMKgUExEL0xpbnV4IFRlYW0KYXJl
-a20gLyBtYXZlbi5wbCDCoCDCoCDCoCDCoCDCoCDCoGh0dHA6Ly9mdHAucGxkLWxpbnV4Lm9yZy8K
-Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWls
-aW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3Rp
-bmZvL3hmcwo=
+James Shih <shija03@gmail.com> writes:
+>
+>    I would like to know if the development team carries such tools -
+> tools that allow one to list the inodes of the XFS filesystem of
+> deleted files, and tools that allow one to cat (dump) the blocks from
+> a starting inode to all the following blocks until an indication that
+> the file is ended or a new indication of a new file appears. (these
+> tools would correspond to TCT's ils and pcat respectively).
+
+XFS has no separate reserved inode table (but just allocates/free blocks
+in the fs), so it can be difficult to even find the inodes when they're
+gone.
+
+-Andi
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
