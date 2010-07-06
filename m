@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o66AtGeC177977 for <xfs@oss.sgi.com>; Tue, 6 Jul 2010 05:55:17 -0500
-Received: from mail-vw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DB0741B24F02
-	for <xfs@oss.sgi.com>; Tue,  6 Jul 2010 03:58:06 -0700 (PDT)
-Received: from mail-vw0-f53.google.com (mail-vw0-f53.google.com
-	[209.85.212.53]) by cuda.sgi.com with ESMTP id sxW6m2WBi5w0QuVM
-	for <xfs@oss.sgi.com>; Tue, 06 Jul 2010 03:58:06 -0700 (PDT)
-Received: by vws15 with SMTP id 15so6876364vws.26
-	for <xfs@oss.sgi.com>; Tue, 06 Jul 2010 03:58:05 -0700 (PDT)
+	o66BDWRc178776 for <xfs@oss.sgi.com>; Tue, 6 Jul 2010 06:13:32 -0500
+Received: from mail-gw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9583642BB8A
+	for <xfs@oss.sgi.com>; Tue,  6 Jul 2010 04:16:22 -0700 (PDT)
+Received: from mail-gw0-f53.google.com (mail-gw0-f53.google.com
+	[74.125.83.53]) by cuda.sgi.com with ESMTP id pQzGJMsgK14MW8Gc
+	for <xfs@oss.sgi.com>; Tue, 06 Jul 2010 04:16:22 -0700 (PDT)
+Received: by gwb19 with SMTP id 19so3188810gwb.26
+	for <xfs@oss.sgi.com>; Tue, 06 Jul 2010 04:16:21 -0700 (PDT)
 MIME-Version: 1.0
-From: Shaun Adolphson <shaun@adolphson.net>
-Date: Tue, 6 Jul 2010 20:57:45 +1000
-Message-ID: <AANLkTimKKEvfJx6EQZeQF_HnlBLj6B8Kjfy6jUHGPnz5@mail.gmail.com>
-Subject: CentOS 5.5 XFS internal errors (XFS_WANT_CORRUPTED_GOTO)
+In-Reply-To: <201007060807.24582.misiek@pld.org.pl>
+References: <AANLkTik59zx97OVNXSfk4Gbe5poVAIGgJiTJVlsJZIjL@mail.gmail.com>
+	<201007060807.24582.misiek@pld.org.pl>
+Date: Tue, 6 Jul 2010 07:16:20 -0400
+Message-ID: <AANLkTikhinYuUDsT-5hqyNkR89Y4PeosvAQ3K2LFqYkn@mail.gmail.com>
+Subject: Fwd: Need assistance on XFS undeleting files
+From: James Shih <shija03@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,145 +26,64 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi,
-
-We have been able to repeatably produce xfs internal errors
-(XFS_WANT_CORRUPTED_GOTO) on one of our fileservers. We are attempting
-to locally copy a 248Gig file off a usb drive formated as NTFS to the
-xfs drive. The copy gets about 96% of the way through and we get the
-following messages:
-
-Jun 28 22:14:46 terrorserver kernel: XFS internal error
-XFS_WANT_CORRUPTED_GOTO at line 2092 of file fs/xfs/xfs_bmap_btree.c.
-Caller 0xffffffff8837446f
-Jun 28 22:14:46 terrorserver kernel:
-Jun 28 22:14:46 terrorserver kernel: Call Trace:
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff8837c360>]
-:xfs:xfs_bmbt_insert+0xac/0x13a
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff8837446f>]
-:xfs:xfs_bmap_add_extent_delay_real+0x8cd/0x103a
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff88368cfa>]
-:xfs:xfs_alloc_vextent+0x379/0x3ff
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff8837543a>]
-:xfs:xfs_bmap_add_extent+0x1fb/0x390
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff88377f34>]
-:xfs:xfs_bmapi+0x895/0xe79
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff88398ff2>]
-:xfs:xfs_log_reserve+0xad/0xc9
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff88394082>]
-:xfs:xfs_iomap_write_allocate+0x201/0x328
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff88394b09>]
-:xfs:xfs_iomap+0x22a/0x2a5
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff883a9ae3>]
-:xfs:xfs_map_blocks+0x2d/0x65
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff883aa723>]
-:xfs:xfs_page_state_convert+0x2af/0x544
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff883aab04>]
-:xfs:xfs_vm_writepage+0xa7/0xdf
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff800cae35>]
-shrink_inactive_list+0x3fd/0x8d8
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff8001311b>]
-shrink_zone+0x127/0x18d
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff80057e60>] kswapd+0x323/0x46c
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff800a0abe>]
-autoremove_wake_function+0x0/0x2e
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff800a08a6>]
-keventd_create_kthread+0x0/0xc4
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff80057b3d>] kswapd+0x0/0x46c
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff800a08a6>]
-keventd_create_kthread+0x0/0xc4
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff80032894>] kthread+0xfe/0x132
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff8009d734>]
-request_module+0x0/0x14d
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff8005dfb1>] child_rip+0xa/0x11
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff800a08a6>]
-keventd_create_kthread+0x0/0xc4
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff80032796>] kthread+0x0/0x132
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff8005dfa7>] child_rip+0x0/0x11
-Jun 28 22:14:46 terrorserver kernel:
-Jun 28 22:14:46 terrorserver kernel: Filesystem "dm-0": XFS internal
-error xfs_trans_cancel at line 1164 of file fs/xfs/xfs_trans.c.
-Caller 0xffffffff88394186
-Jun 28 22:14:46 terrorserver kernel:
-Jun 28 22:14:46 terrorserver kernel: Call Trace:
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff883a1b37>]
-:xfs:xfs_trans_cancel+0x55/0xfa
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff88394186>]
-:xfs:xfs_iomap_write_allocate+0x305/0x328
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff88394b09>]
-:xfs:xfs_iomap+0x22a/0x2a5
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff883a9ae3>]
-:xfs:xfs_map_blocks+0x2d/0x65
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff883aa723>]
-:xfs:xfs_page_state_convert+0x2af/0x544
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff883aab04>]
-:xfs:xfs_vm_writepage+0xa7/0xdf
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff800cae35>]
-shrink_inactive_list+0x3fd/0x8d8
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff8001311b>]
-shrink_zone+0x127/0x18d
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff80057e60>] kswapd+0x323/0x46c
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff800a0abe>]
-autoremove_wake_function+0x0/0x2e
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff800a08a6>]
-keventd_create_kthread+0x0/0xc4
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff80057b3d>] kswapd+0x0/0x46c
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff800a08a6>]
-keventd_create_kthread+0x0/0xc4
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff80032894>] kthread+0xfe/0x132
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff8009d734>]
-request_module+0x0/0x14d
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff8005dfb1>] child_rip+0xa/0x11
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff800a08a6>]
-keventd_create_kthread+0x0/0xc4
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff80032796>] kthread+0x0/0x132
-Jun 28 22:14:46 terrorserver kernel:  [<ffffffff8005dfa7>] child_rip+0x0/0x11
-Jun 28 22:14:46 terrorserver kernel:
-Jun 28 22:14:46 terrorserver kernel: xfs_force_shutdown(dm-0,0x8)
-called from line 1165 of file fs/xfs/xfs_trans.c.  Return address =
-0xffffffff883a1b50
-Jun 28 22:14:46 terrorserver kernel: Filesystem "dm-0": Corruption of
-in-memory data detected.  Shutting down filesystem: dm-0
-Jun 28 22:14:46 terrorserver kernel: Please umount the filesystem, and
-rectify the problem(s)
-Jun 28 22:14:47 terrorserver kernel: Filesystem "dm-0": xfs_log_force:
-error 5 returned.
-
-We have reproduced the condition 3 times and each time we have been
-able to remount the drive ( to replay the transaction log ) and then
-preform and xfs_repair.
-
-We are just using cp to copy the file.
-
-Some further details about the system:
-
-Software:
-- Fresh install of CentOS 5.5 64bit all patches up to date
-- Kernel 2.6.18-194.3.1.el5.centos.plus
-
-RAID Hardware:
-- 3ware 9650SE 12 port sata controler
-- 6 x 1.5tb disk in a raid 5 (sde)
-- 6 x 2.0tb disks in a raid 5 (sdf)
-
-Configuration
-- LVM across sde and sdf
-- Formatted as XFS ( ~16 TB )
-
-Any guidance to resolving this issue would be much appreciated. I am
-able to provide any other information that is required.
-
-Thanks for any assistance you can provide.
-Regards,
-Shaun
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+RGVhciBYRlMgZGV2ZWxvcGVycywKCiAgIFJlY2VudGx5IHdlIGhhZCB0aGUgdW5mb3J0dW5hdGUg
+ZXZlbnQgb2YgaGF2aW5nIGEgbGFyZ2UgYW1vdW50IG9mCmZpbGVzIGRlbGV0ZWQgZnJvbSBhbiBY
+RlMgbmV0d29yayBOQVMgKHZpYSBORlMpIHdoZXJlIGEgcmVtb3ZhbCBvZgpmaWxlcyB3YXMgcGVy
+Zm9ybWVkIChsZWF2aW5nIGludGFjdCkgdGhlIGZpbGVzIGJlaGluZC4gIEkndmUgYmVlbgpsb29r
+aW5nIGZvciBmb3JlbnNpYyB0b29scyBhbmQsIGhvcGVmdWxseSwgdG9vbHMgdGhhdCBhbGxvdyBt
+ZSB0bwpyZWNvdmVyIHRoZSBmaWxlcyAoaG9wZWZ1bGx5IHRoZWlyIGZpbGVuYW1lcyB0b28pLiAg
+UmVhZGluZyBzZXZlcmFsCnBhc3NhZ2VzIG9mIGRpZmZlcmVudCBib29rcyBhbmQgd2Vic2l0ZXMs
+IEkgaGF2ZSBmb3VuZCBUQ1QgKFRoZQpDb3JvcmVyJ3MgVG9vbGtpdCkgYW5kIHRoZSBTbGV1dGhr
+aXQsIGJ1dCBuZWl0aGVyIG9mIHRoZW0gb2ZmZXIKc3VwcG9ydCBmb3IgWEZTLgoKICAgSSB3b3Vs
+ZCBsaWtlIHRvIGtub3cgaWYgdGhlIGRldmVsb3BtZW50IHRlYW0gY2FycmllcyBzdWNoIHRvb2xz
+IC0KdG9vbHMgdGhhdCBhbGxvdyBvbmUgdG8gbGlzdCB0aGUgaW5vZGVzIG9mIHRoZSBYRlMgZmls
+ZXN5c3RlbSBvZgpkZWxldGVkIGZpbGVzLCBhbmQgdG9vbHMgdGhhdCBhbGxvdyBvbmUgdG8gY2F0
+IChkdW1wKSB0aGUgYmxvY2tzIGZyb20KYSBzdGFydGluZyBpbm9kZSB0byBhbGwgdGhlIGZvbGxv
+d2luZyBibG9ja3MgdW50aWwgYW4gaW5kaWNhdGlvbiB0aGF0CnRoZSBmaWxlIGlzIGVuZGVkIG9y
+IGEgbmV3IGluZGljYXRpb24gb2YgYSBuZXcgZmlsZSBhcHBlYXJzLiAodGhlc2UKdG9vbHMgd291
+bGQgY29ycmVzcG9uZCB0byBUQ1QncyBpbHMgYW5kIHBjYXQgcmVzcGVjdGl2ZWx5KS4KCiAgIFBl
+cmhhcHMsIGlmIG5vdCwgY291bGQgeW91IHBvaW50IG1lIG91dCB0byBhbnkgdG9vbHMgKGNvbW1l
+cmNpYWwgb3IKbm90KSB0aGF0IGNhbiByZXN0b3JlIHRoZSBmaWxlcyBvZiB0aGUgWEZTIGZpbGVz
+eXN0ZW0gLSBwcmVmZXJpYmx5CndpdGggdGhlaXIgZmlsZW5hbWVzPyAgRnJvbSB0aGUgb3BlbnNv
+dXJjZSBwZXJzcGVjdGl2ZSwgSSBoYXZlIGxvb2tlZAphdCBwaG90b3JlYyAmIHRlc3RkaXNrIChp
+dCBkb2VzIG5vdCBzdXBwb3J0IFhGUyksIGFuZCB0aGUgcmVzdWx0cyB3ZXJlCmZpbGVzIHdpdGhv
+dXQgZmlsZW5hbWVzIC0gdGhlIGZpbGVuYW1lcyBhcmUga2V5IHNpbmNlIHRoZXkgYXJlCmdlbmVy
+YXRlZCB0aG91Z2ggYSBoYXNoIGZvciBteSBhcHBsaWNhdGlvbiAtIHdpdGhvdXQgdGhlc2UgaXQg
+aXMKcmVhbGx5IGhhcmQgdG8gZGV0ZXJtaW5lIHdoZXJlIHRoZXkgYmVsb25nIHRvLiAgQ29tbWVy
+Y2lhbCByZXN0b3JpbmcKdG9vbHMgbGlrZSBVRlMgRXhwbG9yZXIgKG9ubHkgc2VlbXMgdG8gYmUg
+YWJsZSB0byByZXN0b3JlIHdpdGhvdXQgdGhlCmZpbGVuYW1lKSBhbmQgRGlza0RvY3RvcnMgWEZT
+IChpdCBkb2Vzbid0IHdvcmsgd2l0aCBkaXNrIGltYWdlcykKCiAgIEFmdGVyIGRvaW5nIGEgbGl0
+dGxlIHRlc3Qgb24gYSBwZW4gZHJpdmUsIHRyeWluZyB0byBzaW11bGF0ZSB0aGUKcmVhbCBlbnZp
+cm9ubWVudCAoc2V2ZXJhbCBUQnMgaW4gYSBSQUlENSBhcnJhbmdlbWVudCksIEkndmUgbm90aWNl
+ZAp0aGF0IGEgImRkIGlmPS9teS5pbWcgfCBzdHJpbmdzIHwgZ3JlcCAtaSAnbXlfbW92aWUnICIs
+IHJldHVybnMgdGhlCm1vdmllIGZpbGVuYW1lIHNldmVyYWwgdGltZXMgLSBzbyBhbm90aGVyIHF1
+ZXN0aW9uIEkgaGF2ZSBpcywgd2hhdApkb2VzIHRoaXMgZmlsZW5hbWUgcmVwcmVzZW50LCB0aGUg
+ZmFjdCB0aGF0IEkgaGF2ZSBpdCBvbiB0aGUKZmlsZXN5c3RlbSBzZXZlcmFsIHRpbWVzLCBzdG9y
+ZWQgYXMgYSBzdHJpbmcsIGlzIGl0IGFuIGluZGljYXRpb24gdGhhdAp0aGUgZmlsZSBhbmQgaXRz
+IGZpbGVuYW1lIGNhbiBiZSBhc3NvY2lhdGVkIGR1cmluZyBhIHJlc3RvcmluZwpwcm9jZXNzPwoK
+ICAgQW55IGFzc2lzdGFuY2UgaXMgZ3JlYXRseSBhcHByZWNpYXRlZCwKCiAgIEJlc3QgcmVnYXJk
+cywKCiAgIEphbWVzCi0tLS0tLS0tLS0gRm9yd2FyZGVkIG1lc3NhZ2UgLS0tLS0tLS0tLQpGcm9t
+OiBBcmthZGl1c3ogTWlza2lld2ljeiA8bWlzaWVrQHBsZC5vcmcucGw+CkRhdGU6IFR1ZSwgSnVs
+IDYsIDIwMTAgYXQgMjowNyBBTQpTdWJqZWN0OiBSZTogTmVlZCBhc3Npc3RhbmNlIG9uIFhGUyB1
+bmRlbGV0aW5nIGZpbGVzClRvOiBKYW1lcyBTaGloIDxzaGlqYTAzQGdtYWlsLmNvbT4KCgpPbiBU
+dWVzZGF5IDA2IG9mIEp1bHkgMjAxMCwgeW91IHdyb3RlOgo+IEhlbGxvIE1yLiBNacWba2lld2lj
+eiwKPgo+IMKgIFNvcnJ5IGZvciBzb2xpY2l0aW5nIHRvIHlvdSBpbiBzdWNoIGEgd2F5LCBidXQg
+SSBhbSBzaW1wbHkgdHJ5aW5nIHRvCj4gbG9vayBmb3IgdGhlIHByb3BlciBjb250YWN0cyBhbmQg
+ZGlyZWN0aW9uIHRoYXQgY2FuIGhlbHAgbWUgaW4gYQo+IGNvbXB1dGVyIGNyaXNpcyB0aGF0IGhh
+cyByZWNlbnRseSB0YWtlbiBwbGFjZSB1bmRlciBhbiBYRlMgTkFTLgoKUGxlYXNlIGFzayBvbiB4
+ZnNAb3NzLnNnaS5jb20gd2hpY2ggaXMgZGVkaWNhdGVkIHhmcyBtYWlsaW5nIGxpc3Qgd2l0aCB4
+ZnMKZGV2ZWxvcGVycyByZWFkaW5nIGl0LiBHb29nbGUgZm9yIGxpc3QgYXJjaGl2ZXMsIHRvby4K
+Cj4gwqAgRG9lcyBYRlMgcHJvdmlkZSBhbnkgdHlwZSBvZiB0b29scyB0byBkbyBmaWxlIHJlY292
+ZXJ5PwoKSSBkb24ndCBrbm93IHN1Y2ggdG9vbHMgdW5mb3J0dW5hdGVseSwgc28gdGhpcyB0YXNr
+IHdpbGwgYmUgcmVhbGx5IGhhcmQuCgo+IMKgIFRoYW5rIHlvdSwKPgo+IMKgIEphbWVzIFNoaWgu
+CgoKLS0KQXJrYWRpdXN6IE1pxZtraWV3aWN6IMKgIMKgIMKgIMKgUExEL0xpbnV4IFRlYW0KYXJl
+a20gLyBtYXZlbi5wbCDCoCDCoCDCoCDCoCDCoCDCoGh0dHA6Ly9mdHAucGxkLWxpbnV4Lm9yZy8K
+Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWls
+aW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3Rp
+bmZvL3hmcwo=
