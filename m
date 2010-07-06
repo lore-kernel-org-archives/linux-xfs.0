@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o66GF8uE191885 for <xfs@oss.sgi.com>; Tue, 6 Jul 2010 11:15:09 -0500
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AE47142CF83
-	for <xfs@oss.sgi.com>; Tue,  6 Jul 2010 09:17:59 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id rl9QXcZPSIk0ZEFM
-	for <xfs@oss.sgi.com>; Tue, 06 Jul 2010 09:17:59 -0700 (PDT)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id C7A7B6C3F1
-	for <xfs@oss.sgi.com>; Tue,  6 Jul 2010 11:17:58 -0500 (CDT)
-Message-ID: <4C335736.1070701@hardwarefreak.com>
-Date: Tue, 06 Jul 2010 11:17:58 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	o66JfgOc199102 for <xfs@oss.sgi.com>; Tue, 6 Jul 2010 14:41:42 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B1C6A15B6D02
+	for <xfs@oss.sgi.com>; Tue,  6 Jul 2010 12:49:58 -0700 (PDT)
+Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
+	by cuda.sgi.com with ESMTP id tYcgPDs1lKXANHzt for
+	<xfs@oss.sgi.com>; Tue, 06 Jul 2010 12:49:58 -0700 (PDT)
+Message-ID: <4C33879C.6050006@sandeen.net>
+Date: Tue, 06 Jul 2010 14:44:28 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: CentOS 5.5 XFS internal errors (XFS_WANT_CORRUPTED_GOTO)
-References: <AANLkTimKKEvfJx6EQZeQF_HnlBLj6B8Kjfy6jUHGPnz5@mail.gmail.com>
-In-Reply-To: <AANLkTimKKEvfJx6EQZeQF_HnlBLj6B8Kjfy6jUHGPnz5@mail.gmail.com>
+Subject: Re: Fwd: Need assistance on XFS undeleting files
+References: <AANLkTik59zx97OVNXSfk4Gbe5poVAIGgJiTJVlsJZIjL@mail.gmail.com>	<201007060807.24582.misiek@pld.org.pl>	<AANLkTikhinYuUDsT-5hqyNkR89Y4PeosvAQ3K2LFqYkn@mail.gmail.com>
+	<87fwzwx0rr.fsf@basil.nowhere.org>
+In-Reply-To: <87fwzwx0rr.fsf@basil.nowhere.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,24 +28,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Andi Kleen <andi@firstfloor.org>
+Cc: James Shih <shija03@gmail.com>, xfs@oss.sgi.com
 
-Shaun Adolphson put forth on 7/6/2010 5:57 AM:
+Andi Kleen wrote:
+> James Shih <shija03@gmail.com> writes:
+>>    I would like to know if the development team carries such tools -
+>> tools that allow one to list the inodes of the XFS filesystem of
+>> deleted files, and tools that allow one to cat (dump) the blocks from
+>> a starting inode to all the following blocks until an indication that
+>> the file is ended or a new indication of a new file appears. (these
+>> tools would correspond to TCT's ils and pcat respectively).
+> 
+> XFS has no separate reserved inode table (but just allocates/free blocks
+> in the fs), so it can be difficult to even find the inodes when they're
+> gone.
 
-> Software:
-> - Fresh install of CentOS 5.5 64bit all patches up to date
-> - Kernel 2.6.18-194.3.1.el5.centos.plus
+However, xfs_irecover (http://jengelh.medozas.de/projects/hxtools/) may help,
+as long as the fs hasn't been written to much post-delete of course.
 
-First thing that comes to mind is the fact that 2.6.18 is about 3 years old.
-I'm not familiar with CentOS patching policies, but even if you've received
-and applied some XFS patches, they'd still probably be rather old.
+-Eric
+ 
+> -Andi
+> 
 
-If CentOS 5.5 doesn't have a much newer kernel package available, say 2.6.30
-or later, if I were you, I'd grab the kernel source from kernel.org and roll
-your own 2.6.33.6 or 2.6.34.1.
 
--- 
-Stan
 
 _______________________________________________
 xfs mailing list
