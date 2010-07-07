@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o67Lt0rP259155 for <xfs@oss.sgi.com>; Wed, 7 Jul 2010 16:55:00 -0500
-Received: from Ishtar.sc.tlinx.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EB438431E74
-	for <xfs@oss.sgi.com>; Wed,  7 Jul 2010 14:57:50 -0700 (PDT)
-Received: from Ishtar.sc.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
-	cuda.sgi.com with ESMTP id jLr8uVgZQ9GpcBBH for
-	<xfs@oss.sgi.com>; Wed, 07 Jul 2010 14:57:50 -0700 (PDT)
-Message-ID: <4C34F804.6040004@tlinx.org>
-Date: Wed, 07 Jul 2010 14:56:20 -0700
-From: Linda Walsh <xfs@tlinx.org>
+	o67NbWDC002550 for <xfs@oss.sgi.com>; Wed, 7 Jul 2010 18:37:32 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3046D15B9209
+	for <xfs@oss.sgi.com>; Wed,  7 Jul 2010 16:45:57 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id MyK3wzI2AV7SXRtG
+	for <xfs@oss.sgi.com>; Wed, 07 Jul 2010 16:45:57 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id 2EA276C029
+	for <xfs@oss.sgi.com>; Wed,  7 Jul 2010 18:40:22 -0500 (CDT)
+Message-ID: <4C351065.7060803@hardwarefreak.com>
+Date: Wed, 07 Jul 2010 18:40:21 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: Re: rsync and corrupt inodes (was xfs_dump problem)
-References: <4C26A51F.8020909@tlinx.org>
-	<20100628022744.GX6590@dastard>	<4C2A749E.4060006@tlinx.org>
-	<201006302025.20289@zmi.at> <20100630233029.GO24712@dastard>
-In-Reply-To: <20100630233029.GO24712@dastard>
+Subject: Re: utf-8' chars from Winxp machine may be problem related (was Re:
+	xfs	file system in process of becoming corrupt; though xfs_repair...)
+References: <4C26A51F.8020909@tlinx.org>	<20100628022744.GX6590@dastard>	<4C2A749E.4060006@tlinx.org>	<20100629232532.GA24712@dastard>	<4C2A8948.3030008@tlinx.org>	<20100630010622.GC24712@dastard>	<4C2AA36F.2070905@tlinx.org>
+	<4C2BB0C4.4060800@hardwarefreak.com> <4C34F464.6060506@tlinx.org>
+In-Reply-To: <4C34F464.6060506@tlinx.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,35 +28,53 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Dave Chinner wrote:
-> On Wed, Jun 30, 2010 at 08:25:20PM +0200, Michael Monnerie wrote:
->> From another Linux ("saturn"), I do an rsync via an rsync-module, 
-...
-> Are you running rsync locally on saturn
-----
+Linda A. Walsh put forth on 7/7/2010 4:40 PM:
 
-Data point:
+> So yup...foreign char delight.
+> 
+> I can easily image most or all of these having been imported from my
+> winXP machine at
+> one point -- as I only recently started using Win7.  -- and many of the
+> troublsome japanese
+> filenames were 'downloaded japanese anime-related stuff' that I did on
+> my old
+> XP machine -- which I used as a download client while I did work on my
+> Win7 machine...
+> That gave a huge influx of foreign names from a WinXP machine.  That
+> could be what
+> made the problem jump out so noticeable -- before it was only maybe
+> 20-30 files out of about a million or more.  But in the new batch it was
+> hundreds out of several thousand, so
+> they stand out alot more.
 
-I have two file systems with corruption -- one recent one had a WinXP
-client (as well as a Win7, and linux host), dumping foreign names into
-the file system (the Win clients through samba).
+I run into a similar problem frequently when saving downloads to my XFS samba
+shares via a Windows client.  I don't recall ever seeing XFS corruption, but I
+do have problems manipulating these file names through bash.  Quite often I
+end up having to rename the files through Windows Explorer to something bash
+can handle.  That usually fixes the problem--not always, but usually.
 
-However, my "home partition" use to regularly be used to backup the
-WinXP's home dir via  **rsync**.
+Just for comparison, I'm running:
 
+Debian stable (Lenny 5.0.4)
+rolled 2.6.32.9 from kernel.org, XFS in kernel not as module
+xfsprogs:  2.9.8-1lenny1
+bash:      3.2-4
+samba:     3.2.5-4lenny9
+W2K and XP Pro clients
 
-Some of those files were _un_readable on WinXP (like ones containing copyright
-symbols / registered trademark symbols, etc) -- but at the time, they
-WERE readable on linux.  Now some of those same files are no longer
-readable on linux.  Just thought I'd mention that on my 'home' partition,
-the corruption is in files that were transfered with rsync.
+As I've never seriously dealt with character encoding issues (i.e. changed
+anything related in Debian), I don't even know where/how to find my servers
+default character encoding.  Google isn't being very friendly here.  I'm using
+whatever character encoding is the default for US English Debian Lenny.
+
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
