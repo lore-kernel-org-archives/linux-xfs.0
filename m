@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o66NGAkU207356 for <xfs@oss.sgi.com>; Tue, 6 Jul 2010 18:16:11 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B6D4515B7461
-	for <xfs@oss.sgi.com>; Tue,  6 Jul 2010 16:24:29 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	P61dSCkZRVp0h9Or for <xfs@oss.sgi.com>;
-	Tue, 06 Jul 2010 16:24:29 -0700 (PDT)
-Date: Wed, 7 Jul 2010 09:18:57 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: CentOS 5.5 XFS internal errors (XFS_WANT_CORRUPTED_GOTO)
-Message-ID: <20100706231856.GC25018@dastard>
+	o671mSHU212091 for <xfs@oss.sgi.com>; Tue, 6 Jul 2010 20:48:28 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7488A42E985
+	for <xfs@oss.sgi.com>; Tue,  6 Jul 2010 18:51:18 -0700 (PDT)
+Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
+	by cuda.sgi.com with ESMTP id rvAoslEZeXVwiJHF for
+	<xfs@oss.sgi.com>; Tue, 06 Jul 2010 18:51:18 -0700 (PDT)
 References: <AANLkTimKKEvfJx6EQZeQF_HnlBLj6B8Kjfy6jUHGPnz5@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <AANLkTimKKEvfJx6EQZeQF_HnlBLj6B8Kjfy6jUHGPnz5@mail.gmail.com>
+	<20100706231856.GC25018@dastard>
+In-Reply-To: <20100706231856.GC25018@dastard>
+Mime-Version: 1.0 (iPhone Mail 8A293)
+Message-Id: <5AFCEF9B-5A38-496F-BF40-5B535FE58ACA@sandeen.net>
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: CentOS 5.5 XFS internal errors (XFS_WANT_CORRUPTED_GOTO)
+Date: Tue, 6 Jul 2010 20:51:16 -0500
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,56 +28,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Shaun Adolphson <shaun@adolphson.net>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Shaun Adolphson <shaun@adolphson.net>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Tue, Jul 06, 2010 at 08:57:45PM +1000, Shaun Adolphson wrote:
-> Hi,
+On Jul 6, 2010, at 6:18 PM, Dave Chinner <david@fromorbit.com> wrote:
+
+> On Tue, Jul 06, 2010 at 08:57:45PM +1000, Shaun Adolphson wrote:
+>> .
+>> 
+>> Some further details about the system:
+>> 
+>> Software:
+>> - Fresh install of CentOS 5.5 64bit all patches up to date
+>> - Kernel 2.6.18-194.3.1.el5.centos.plus
 > 
-> We have been able to repeatably produce xfs internal errors
-> (XFS_WANT_CORRUPTED_GOTO) on one of our fileservers. We are attempting
-> to locally copy a 248Gig file off a usb drive formated as NTFS to the
-> xfs drive. The copy gets about 96% of the way through and we get the
-> following messages:
+> I've got no idea exactly what version of XFS that has in it, so I
+> can't say off the top of my head whether this is a fixed bug or not.
 > 
-> Jun 28 22:14:46 terrorserver kernel: XFS internal error
-> XFS_WANT_CORRUPTED_GOTO at line 2092 of file fs/xfs/xfs_bmap_btree.c.
-> Caller 0xffffffff8837446f
+Assuming it's what is in the real RHEL it's 2.6.28.6 and a few patches IIRC, rpm changelog should say.
 
-Interesting. That's a corrupted inode extent btree - I haven't seen
-one of them for a long while. Were there any errors (like IO errors)
-reported before this?
+-Eric
 
-However, the first step is to determine if the error is on disk or an
-in-memory error. Can you post output of:
-
-	- xfs_info <mntpt>
-	- xfs_repair -n after a shutdown
-
-Can you upgrade xfsprogs (i.e. xfs_repair) to the latest version
-(3.1.2) before you do this as well?
-
-> We have reproduced the condition 3 times and each time we have been
-> able to remount the drive ( to replay the transaction log ) and then
-> preform and xfs_repair.
+> Cheers,
 > 
-> We are just using cp to copy the file.
+> Dave.
 > 
-> Some further details about the system:
-> 
-> Software:
-> - Fresh install of CentOS 5.5 64bit all patches up to date
-> - Kernel 2.6.18-194.3.1.el5.centos.plus
-
-I've got no idea exactly what version of XFS that has in it, so I
-can't say off the top of my head whether this is a fixed bug or not.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
