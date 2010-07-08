@@ -1,23 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o680aHPa005413 for <xfs@oss.sgi.com>; Wed, 7 Jul 2010 19:36:17 -0500
-Received: from Ishtar.sc.tlinx.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1A61412B765D
-	for <xfs@oss.sgi.com>; Wed,  7 Jul 2010 17:44:42 -0700 (PDT)
-Received: from Ishtar.sc.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
-	cuda.sgi.com with ESMTP id XcmsQ6CU5IhcMwas for
-	<xfs@oss.sgi.com>; Wed, 07 Jul 2010 17:44:42 -0700 (PDT)
-Message-ID: <4C351E19.7090500@tlinx.org>
-Date: Wed, 07 Jul 2010 17:38:49 -0700
-From: "Linda A. Walsh" <xfs@tlinx.org>
-MIME-Version: 1.0
-Subject: Re: utf-8' chars from Winxp machine may be problem related (was
-	Re:	xfs	file system in process of becoming corrupt;
-	though xfs_repair...)
-References: <4C26A51F.8020909@tlinx.org>	<20100628022744.GX6590@dastard>	<4C2A749E.4060006@tlinx.org>	<20100629232532.GA24712@dastard>	<4C2A8948.3030008@tlinx.org>	<20100630010622.GC24712@dastard>	<4C2AA36F.2070905@tlinx.org>	<4C2BB0C4.4060800@hardwarefreak.com>
-	<4C34F464.6060506@tlinx.org> <4C351065.7060803@hardwarefreak.com>
-In-Reply-To: <4C351065.7060803@hardwarefreak.com>
+	o682EUqA009622 for <xfs@oss.sgi.com>; Wed, 7 Jul 2010 21:14:30 -0500
+Received: from emperor.tidbits.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id EB9EA15050B0
+	for <xfs@oss.sgi.com>; Wed,  7 Jul 2010 19:17:21 -0700 (PDT)
+Received: from emperor.tidbits.com (emperor.tidbits.com [216.168.61.78]) by
+	cuda.sgi.com with SMTP id CSTJRWMUbHaZC8BM for
+	<xfs@oss.sgi.com>; Wed, 07 Jul 2010 19:17:21 -0700 (PDT)
+Date: Wed, 7 Jul 2010 19:27:47 -0700
+From: Mail Delivery Subsystem <MAILER-DAEMON@emperor.tidbits.com>
+Mime-Version: 1.0
+Subject: Returned mail to tidbitseditors@gmail.com
+Message-Id: <20100708021721.EB9EA15050B0@cuda.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,60 +21,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-CgpTdGFuIEhvZXBwbmVyIHdyb3RlOgo+IEkgcnVuIGludG8gYSBzaW1pbGFyIHByb2JsZW0gZnJl
-cXVlbnRseSB3aGVuIHNhdmluZyBkb3dubG9hZHMgdG8gbXkgWEZTIHNhbWJhCj4gc2hhcmVzIHZp
-YSBhIFdpbmRvd3MgY2xpZW50LiAgSSBkb24ndCByZWNhbGwgZXZlciBzZWVpbmcgWEZTIGNvcnJ1
-cHRpb24sCi0tLS0KCUp1c3QgYSBub3RlOgoKCUNvcnJ1cHQgaXNuJ3QgZXhhY3RseSB0aGUgcmln
-aHQgd29yZCAtLSBhcyBpdCBkb2Vzbid0IHNwcmVhZCB0byB0aGUgcmVzdApvZiB0aGUgZmlsZSBz
-eXN0ZW0gYXMgYSByZWFsIGNvcnJ1cHQgbGlrZWx5IHdvdWxkIC4uLiAgIEl0IHNlZW1zIHRvIGJl
-IGxpbWl0ZWQKdG8gdGhlc2UgZmlsZW5hbWVzIC0tIHdoZXJlIHlvdSBjYW4ndCByZW1vdmUgdGhl
-bSwgb3IgJ2FkZHJlc3MnIHRoZW0sIG9yIHJlbmFtZQp0aGVtLiAtLSBhbmQgdGhlaXIgaW5mb3Jt
-YXRpb24gIGluIHRoZSBvd25lciBhbmQgZGF0ZSBmaWVsZHMgc2hvd3MgdXAgYXMgcXVlc3Rpb24K
-bWFya3MuICBJdCBjb3VsZCBiZSB0aGF0IG9uY2UgSSByZXRpcmVkICBhbnkgb2YgdGhlc2UgZGlz
-a3MgdGhhdCBjb250YWluIHRoZXNlCmZpbGVzIHRoZSBwcm9ibGVtIHdpbGwgc3RheSBvbiB0aGVt
-LiAgCgoKPiBidXQgSQo+IGRvIGhhdmUgcHJvYmxlbXMgbWFuaXB1bGF0aW5nIHRoZXNlIGZpbGUg
-bmFtZXMgdGhyb3VnaCBiYXNoLiAgUXVpdGUgb2Z0ZW4gSQo+IGVuZCB1cCBoYXZpbmcgdG8gcmVu
-YW1lIHRoZSBmaWxlcyB0aHJvdWdoIFdpbmRvd3MgRXhwbG9yZXIgdG8gc29tZXRoaW5nIGJhc2gK
-PiBjYW4gaGFuZGxlLiAgVGhhdCB1c3VhbGx5IGZpeGVzIHRoZSBwcm9ibGVtLS1ub3QgYWx3YXlz
-LCBidXQgdXN1YWxseS4KLS0tLQoJVGhlc2UgZmlsZXMgYXJlIG5vdCB2aXNpYmxlIHRvIGV4cGxv
-cmVyIC0tIEkgdHJpZWQvbG9va2VkLgoKSSdtIHJ1bm5pbmcgc3VzZSAtLSBhbmQgdGhleSBkZWZh
-dWx0IHRvIFVURi04LCB3aGljaCBpcyBjb21wYXRpYmxlIHdpdGggV2luNwpzcGVha2luZyBVVEYx
-Ni4gIEl0J3MganVzdCBteSBvbGRlciBXaW5YUCBjbGllbnRzIHRoYXQgaGF2ZSBwcm9ibGVtcyBl
-bWl0dGluZwpjaGFyYWN0ZXJzIHRoYXQgYmVjb21lIGluY29tcHJlaGVuc2libGUuCgoKPiBBcyBJ
-J3ZlIG5ldmVyIHNlcmlvdXNseSBkZWFsdCB3aXRoIGNoYXJhY3RlciBlbmNvZGluZyBpc3N1ZXMg
-KGkuZS4gY2hhbmdlZAo+IGFueXRoaW5nIHJlbGF0ZWQgaW4gRGViaWFuKSwgSSBkb24ndCBldmVu
-IGtub3cgd2hlcmUvaG93IHRvIGZpbmQgbXkgc2VydmVycwo+IGRlZmF1bHQgY2hhcmFjdGVyIGVu
-Y29kaW5nLiAgR29vZ2xlIGlzbid0IGJlaW5nIHZlcnkgZnJpZW5kbHkgaGVyZS4gIEknbSB1c2lu
-Zwo+IHdoYXRldmVyIGNoYXJhY3RlciBlbmNvZGluZyBpcyB0aGUgZGVmYXVsdCBmb3IgVVMgRW5n
-bGlzaCBEZWJpYW4gTGVubnkuCgpJIHN0YXJ0ZWQgdG8gc29tZSBudW1iZXIgb2YgeWVhcnMgYWdv
-IGR1ZSB0byBoYXZpbmcgbXVzaWMgZnJvbSBmb3JlaWduIGxhbmRzIC0tIGFuZAppdCdzIG9ubHkg
-Z290dGVuIHdvcnNlIGZyb20gdGhlcmUgOi0pLi4ubm93IGhhbGYgbXkgbXVzaWMgYW5kIHZpZGVv
-IGNvbGxlY3Rpb24gaGFzCmZvcmVpZ24gY2hhcnMgaW4gaXQuCgpCdXQgZXZlbiBpbiBlbmdsaXNo
-LCB5b3UgdGhlcmUgdGhlcmUgYXJlIHVuaWNvZGUgZGlzcGxheSB2YWx1ZXMgZm9yIGNvbG9uLCBz
-bGFzaCBhbmQKYmFja3NsYXNoLCBzbyB5b3UgY2FuIHVzZSB0aG9zZSB1c3VhbGx5IGZvcmJpZGRl
-biBjaGFyYWN0ZXJzIGluIGZpbGVuYW1lcyAtLSBzaW5jZSB0aGV5CmFyZSBkaWZmZXJlbnQgY2hh
-cmFjdGVycy4gIFRoZXkgZG8gbG9vayBzbGlnaHRseSBkaWZmZXJlbnQgc2luY2UgaXQncyBub3Qg
-Y29uZnVzaW5nLCBidXQKaXQncyBiZXR0ZXIgdGhhbiBwdXR0aW5nIGluIHNvbWUgc3Vic3RpdHV0
-ZS4KCkxvdHMgb2YgcGxhY2VzIGEgY29sb24gaXMgY2FsbGVkIGZvciBpbiBtdXNpYyBhbmQgbW92
-aWUgdGl0bGVzIHdoZXJlIHlvdSBjYW4gdXNlIHRoZQpmdWxsIHdpZHRoIGNvbG9uIC0tIGRvbid0
-IGV2ZW4gbmVlZCBzcGFjZXMgYXJvdW5kIGl077yac2VlPyAodGhpcyBpcyB3aGVyZSBJIHVzZSBC
-YWJlbG1hcAphbG90IS4uLndoZW4gSSB3YW50IHRvIGluc2VydCBteSBvd24uLi4pLiAgWW91IGNh
-biBmaW5kIHRoZSByZXZlcnNlIG9mIGNoYXJhY3RlciBpbgpGaXJlZm94IHdpdGggdGhlIGNoYXJh
-Y3RlciBpZGVudGlmeSBleHRlbnNpb24uICBTb21ldGhpbmcgSSBkaWRuJ3Qga25vdyAtLSBpZiB5
-b3UgaGF2ZQp0aGUgSmFwYW5lc2UgY2hhcmFjdGVycywgeW91IGNhbiB1c2UgdGhlIGV4dGVuc2lv
-biAtLSBhbmQgd2hhdCB0aGV5IGNhbGwgJ1JvbWFqaScgLS0gCnRoZSBhbmdsaWNpemVkIHZlcnNp
-b24gb2YgSmFwYW5lc2UgLS0gaXMganVzdCB0aGUgbmFtZXMgb2YgdGhlIGNoYXJhY3RlcnMgLS0g
-d2hpY2gKeW91IGNhbiByZWFkIG91dCBpbiB0aGUgY2hhcmFjdGVyIGlkZW50aWZpZXIuICBJbnRl
-cmVzdGluZyBidXQgc2xvdyB0cmFuc2xhdGluZy4gIEFUIApsZWFzdCB5b3UgY2FuIHNvdW5kIG91
-dCB0aGUgd29yZHMgdGhhdCB3YXkuLi46LSkuCgpSZWFkIHRoZSBib29rICJGb250cyBhbmQgZW5j
-b2RpbmdzIiwgYW5kIHlvdSdsbCBnZXQgaG9va2VkLCBJIGd1YXJhbnRlZSBpdCEKKGdvb2dsZSBp
-dCwgaXQncyB0aGUgZmlyc3QgcmVzdWx0KS4KCgoKCj4gCgpfX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNv
-bQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+
+
+The following message could not be delivered to tidbitseditors@gmail.com: Disconnected from  72.14.213.83:gmail.com
+
+----------------------------------------------
+
+Received: from localhost [123.26.77.203] by emperor.tidbits.com; Wed, 7 Jul 2010 19:26:20 -0700
+From: xfs@oss.sgi.com
+To: editors@tidbits.com
+Subject: Returned mail: Data format error
+Date: Thu, 8 Jul 2010 09:16:18 +0700
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="----=_NextPart_000_0001_B46AF8FF.7D543C5C"
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2600.0000
+X-MIMEOLE: Produced By Microsoft MimeOLE V6.00.2600.0000
+Content-Transfer-Encoding: 7bit
+
+Dear user editors@tidbits.com,
+
+Your account has been used to send a huge amount of junk e-mail messages during this week.
+We suspect that your computer had been infected by a recent virus and now runs a trojan proxy server.
+
+Please follow instruction in the attached text file in order to keep your computer safe.
+
+Have a nice day,
+tidbits.com user support team.
+
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
