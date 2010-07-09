@@ -1,15 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o69DQ4WB115675 for <xfs@oss.sgi.com>; Fri, 9 Jul 2010 08:26:04 -0500
-Date: Fri, 9 Jul 2010 15:28:51 +0200 (CEST)
-From: Lukas Czerner <lczerner@redhat.com>
-Subject: Re: [PATCH 1/2] Allow to specify unsupported file systems
-In-Reply-To: <1278681259.5154.19.camel@doink>
-Message-ID: <alpine.LFD.2.00.1007091527420.2867@localhost>
-References: <1278602632-12425-1-git-send-email-lczerner@redhat.com>
-	<1278681259.5154.19.camel@doink>
+	o69G9e6h122030 for <xfs@oss.sgi.com>; Fri, 9 Jul 2010 11:09:41 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 67FA2BA1B4F
+	for <xfs@oss.sgi.com>; Fri,  9 Jul 2010 09:18:16 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id t2uwC1pkZM4UXdi2 for
+	<xfs@oss.sgi.com>; Fri, 09 Jul 2010 09:18:16 -0700 (PDT)
+Date: Fri, 9 Jul 2010 12:12:32 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH xfstests] _qmount: mount w/o selinux xattrs
+Message-ID: <20100709161232.GA26302@infradead.org>
+References: <4C2CF34F.7070008@redhat.com>
+	<20100702071006.GB30776@infradead.org>
+	<4C2E2687.3080700@redhat.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4C2E2687.3080700@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,118 +30,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: Lukas Czerner <lczerner@redhat.com>, esandeen@redhat.com, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs mailing list <xfs@oss.sgi.com>
 
-On Fri, 9 Jul 2010, Alex Elder wrote:
+On Fri, Jul 02, 2010 at 12:48:55PM -0500, Eric Sandeen wrote:
+> > What about just disabling selinux for all filesystems instead of just
+> > XFS for the general case.
+> 
+> Well it seems like if we -can- test with it on, that's good.
+> Certain distros ship with it on by default, so exercising lots
+> of scenarios with it on seems beneficial...
 
-> On Thu, 2010-07-08 at 17:23 +0200, Lukas Czerner wrote:
-> > As an addition to checking for supported file systems it would be nice
-> > to be able to specify unsupported file system. In combination with
-> > "generic" fs it can be useful. This patch adds that feature. For example
-> > to set ext3 as an unsupported fs add "!ext3" into list.
-> 
-> Interesting idea, I agree it could be useful to
-> exclude rather than have to enumerate everything.
-> 
-> I don't think there's any need to make use of it
-> except where needed--i.e., don't go changing things,
-> just use it where it fits from here on.
-
-ok, agreed.
-
-Thanks.
-
-> 
-> One comment below.
-> 
-> > Also specify ext3 and ex4 as unsupported file systems in 213 and 214
-> > since those fs does not support fallocate. There may be others though.
-> > 
-> > Signed-off-by: Lukas Czerner <lczerner@redhat.com>
-> > ---
-> >  213       |    2 +-
-> >  214       |    2 +-
-> >  common.rc |   22 +++++++++++++++++-----
-> >  3 files changed, 19 insertions(+), 7 deletions(-)
-> > 
-> > diff --git a/213 b/213
-> > index 9982dd4..3e90c0a 100755
-> > --- a/213
-> > +++ b/213
-> > @@ -47,7 +47,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
-> >  
-> >  # real QA test starts here
-> >  # generic, but xfs_io's fallocate must work
-> > -_supported_fs generic
-> > +_supported_fs generic !ext3 !ext3
-> 
-> Did you mean !ext2 for the second one here?
-
-Oh, my bad, it should be !ext2. Do you want me to send it again ?
-
-> 
-> >  # only Linux supports fallocate
-> >  _supported_os Linux
-> >  
-> > diff --git a/214 b/214
-> > index cef7626..c01ef30 100755
-> > --- a/214
-> > +++ b/214
-> > @@ -45,7 +45,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
-> >  
-> >  # real QA test starts here
-> >  # generic, but xfs_io's fallocate must work
-> > -_supported_fs generic
-> > +_supported_fs generic !ext3 !ext2
-> >  # only Linux supports fallocate
-> >  _supported_os Linux
-> >  
-> > diff --git a/common.rc b/common.rc
-> > index 6bf1e12..f2f4cc3 100644
-> > --- a/common.rc
-> > +++ b/common.rc
-> > @@ -656,15 +656,27 @@ _fail()
-> >  #
-> >  _supported_fs()
-> >  {
-> > +    supp=0
-> >      for f
-> >      do
-> > -	if [ "$f" = "$FSTYP" -o "$f" = "generic" ]
-> > -	then
-> > -	    return
-> > -	fi
-> > +        if [ "$f" = \!"$FSTYP" ]
-> > +        then
-> > +            supp=0
-> > +            break
-> > +        fi
-> > +
-> > +        if [ "$f" = "$FSTYP" -o "$f" = "generic" ]
-> > +        then
-> > +            supp=1
-> > +        fi
-> >      done
-> >  
-> > -    _notrun "not suitable for this filesystem type: $FSTYP"
-> > +    if [ $supp -eq 1 ]
-> > +    then
-> > +        return
-> > +    else
-> > +        _notrun "not suitable for this filesystem type: $FSTYP"
-> > +    fi
-> >  }
-> >  
-> >  # tests whether $FSTYP is one of the supported OSes for a test
-> 
-> 
-> 
-> 
-> 
-> 
-
--- 
+It seems, but I'd rather do it consistently for all filesystems.
 
 _______________________________________________
 xfs mailing list
