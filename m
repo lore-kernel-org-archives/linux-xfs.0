@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6C15h5C253780 for <xfs@oss.sgi.com>; Sun, 11 Jul 2010 20:05:43 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A9EE11B884F1
-	for <xfs@oss.sgi.com>; Sun, 11 Jul 2010 18:08:36 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	MQthUMkwEKek2xWt for <xfs@oss.sgi.com>;
-	Sun, 11 Jul 2010 18:08:36 -0700 (PDT)
-Date: Mon, 12 Jul 2010 11:08:32 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: CentOS 5.5 XFS internal errors (XFS_WANT_CORRUPTED_GOTO)
-Message-ID: <20100712010832.GA25335@dastard>
-References: <AANLkTimKKEvfJx6EQZeQF_HnlBLj6B8Kjfy6jUHGPnz5@mail.gmail.com>
-	<20100706231856.GC25018@dastard>
-	<AANLkTilOGA-XF2V_Z_7WntgA23CHNlfx1u0I8xJtHZDz@mail.gmail.com>
-	<AANLkTimcM9LfOHAH6q95esD4JU8Geb21750YMAh3JKBl@mail.gmail.com>
+	o6C2L9r8260005 for <xfs@oss.sgi.com>; Sun, 11 Jul 2010 21:21:10 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1671743BBE7
+	for <xfs@oss.sgi.com>; Sun, 11 Jul 2010 19:24:02 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id TNrQ4Sej4hKPR0Jm
+	for <xfs@oss.sgi.com>; Sun, 11 Jul 2010 19:24:02 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id 40CA16C482
+	for <xfs@oss.sgi.com>; Sun, 11 Jul 2010 21:24:02 -0500 (CDT)
+Message-ID: <4C3A7CC1.9030106@hardwarefreak.com>
+Date: Sun, 11 Jul 2010 21:24:01 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <AANLkTimcM9LfOHAH6q95esD4JU8Geb21750YMAh3JKBl@mail.gmail.com>
+Subject: Re: filesystem shrinks after using xfs_repair
+References: <DFB2DB04-A3BA-4272-A12A-4F28A7D51491@ucsc.edu>
+In-Reply-To: <DFB2DB04-A3BA-4272-A12A-4F28A7D51491@ucsc.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,64 +26,35 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Shaun Adolphson <shaun@adolphson.net>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-T24gU3VuLCBKdWwgMTEsIDIwMTAgYXQgMDk6NDQ6MDdQTSArMTAwMCwgU2hhdW4gQWRvbHBoc29u
-IHdyb3RlOgo+IE9uIFRodSwgSnVsIDgsIDIwMTAgYXQgOToyMSBQTSwgU2hhdW4gQWRvbHBoc29u
-IDxzaGF1bkBhZG9scGhzb24ubmV0PiB3cm90ZToKPiA+IE9uIFdlZCwgSnVsIDcsIDIwMTAgYXQg
-OToxOCBBTSwgRGF2ZSBDaGlubmVyIDxkYXZpZEBmcm9tb3JiaXQuY29tPiB3cm90ZToKPiA+Pgo+
-ID4+IE9uIFR1ZSwgSnVsIDA2LCAyMDEwIGF0IDA4OjU3OjQ1UE0gKzEwMDAsIFNoYXVuIEFkb2xw
-aHNvbiB3cm90ZToKPiA+PiA+IEhpLAo+ID4+ID4KPiA+PiA+IFdlIGhhdmUgYmVlbiBhYmxlIHRv
-IHJlcGVhdGFibHkgcHJvZHVjZSB4ZnMgaW50ZXJuYWwgZXJyb3JzCj4gPj4gPiAoWEZTX1dBTlRf
-Q09SUlVQVEVEX0dPVE8pIG9uIG9uZSBvZiBvdXIgZmlsZXNlcnZlcnMuIFdlIGFyZSBhdHRlbXB0
-aW5nCj4gPj4gPiB0byBsb2NhbGx5IGNvcHkgYSAyNDhHaWcgZmlsZSBvZmYgYSB1c2IgZHJpdmUg
-Zm9ybWF0ZWQgYXMgTlRGUyB0byB0aGUKPiA+PiA+IHhmcyBkcml2ZS4gVGhlIGNvcHkgZ2V0cyBh
-Ym91dCA5NiUgb2YgdGhlIHdheSB0aHJvdWdoIGFuZCB3ZSBnZXQgdGhlCj4gPj4gPiBmb2xsb3dp
-bmcgbWVzc2FnZXM6Cj4gPj4gPgo+ID4+ID4gSnVuIDI4IDIyOjE0OjQ2IHRlcnJvcnNlcnZlciBr
-ZXJuZWw6IFhGUyBpbnRlcm5hbCBlcnJvcgo+ID4+ID4gWEZTX1dBTlRfQ09SUlVQVEVEX0dPVE8g
-YXQgbGluZSAyMDkyIG9mIGZpbGUgZnMveGZzL3hmc19ibWFwX2J0cmVlLmMuCj4gPj4gPiBDYWxs
-ZXIgMHhmZmZmZmZmZjg4Mzc0NDZmCj4gPj4KPiA+PiBJbnRlcmVzdGluZy4gVGhhdCdzIGEgY29y
-cnVwdGVkIGlub2RlIGV4dGVudCBidHJlZSAtIEkgaGF2ZW4ndCBzZWVuCj4gPj4gb25lIG9mIHRo
-ZW0gZm9yIGEgbG9uZyB3aGlsZS4gV2VyZSB0aGVyZSBhbnkgZXJyb3JzIChsaWtlIElPIGVycm9y
-cykKPiA+PiByZXBvcnRlZCBiZWZvcmUgdGhpcz8KPiA+Pgo+ID4+IEhvd2V2ZXIsIHRoZSBmaXJz
-dCBzdGVwIGlzIHRvIGRldGVybWluZSBpZiB0aGUgZXJyb3IgaXMgb24gZGlzayBvciBhbgo+ID4+
-IGluLW1lbW9yeSBlcnJvci4gQ2FuIHlvdSBwb3N0IG91dHB1dCBvZjoKPiA+Pgo+ID4+IMKgIMKg
-IMKgIMKgLSB4ZnNfaW5mbyA8bW50cHQ+Cj4gCj4gbWV0YS1kYXRhPS9kZXYvVGVycm9yVm9sdW1l
-L3RlcnJvciBpc2l6ZT0yNTYgICAgYWdjb3VudD0xMzAzODUsCj4gYWdzaXplPTMyNzY4IGJsa3MK
-PiAgICAgICAgICAgICAgID0gICAgICAgICAgICAgICAgICAgICAgc2VjdHN6PTUxMiAgIGF0dHI9
-MQo+IGRhdGEgICAgICAgID0gICAgICAgICAgICAgICAgICAgICAgYnNpemU9NDA5NiAgIGJsb2Nr
-cz00MjcyNDMzMTUyLCBpbWF4cGN0PTI1Cj4gICAgICAgICAgICAgICA9ICAgICAgICAgICAgICAg
-ICAgICAgIHN1bml0PTAgICAgICBzd2lkdGg9MCBibGtzCj4gbmFtaW5nICAgPXZlcnNpb24gMiAg
-ICAgICAgIGJzaXplPTQwOTYgICBhc2NpaS1jaT0wCj4gbG9nICAgICAgICAgPWludGVybmFsICAg
-ICAgICAgICAgYnNpemU9NDA5NiAgIGJsb2Nrcz0yNTYwLCB2ZXJzaW9uPTEKPiAgICAgICAgICAg
-ICAgPSAgICAgICAgICAgICAgICAgICAgICAgc2VjdHN6PTUxMiAgIHN1bml0PTAgYmxrcywgbGF6
-eS1jb3VudD0wCj4gcmVhbHRpbWUgID1ub25lICAgICAgICAgICAgICAgZXh0c3o9NDA5NiAgIGJs
-b2Nrcz0wLCBydGV4dGVudHM9MAoKV0h5IGRpZCB5b3UgbWFrZSB0aGlzIGZpbGVzeXN0ZW0gd2l0
-aCAxMjhNQiBhbGxvY2F0aW9uIGdyb3Vwcz8gVGhlCmRlZmF1bHQgZm9yIGEgZmlsZXN5c3RlbSBv
-ZiB0aGlzIHNpemUgaXMgMVRCIGFsbG9jYXRpb24gZ3JvdXBzLgpNb3JlIHRoYW4gMTAwayBhbGxv
-Y2F0aW9uIGdyb3VwcyB3aWxsIGNlcnRhaW5seSBwdXNoIGludGVybmFsIEFHCnNjYW5uaW5nIHNj
-YWxhYmlsaXR5IHBhc3QgaXQncyB0ZXN0ZWQgbGltaXRzLi4uLgoKQWxzbywgYSBsb2cgb2YgMTBN
-QiBpcyByYXRoZXIgc21hbGwsIGFuZCBpdCB0ZWxscyBtZSB0aGF0IHlvdSBkaWRuJ3QKanVzdCBj
-cmVhdGUgdGhpcyBmaWxlc3lzdGVtIGZpcmVjdGx5IG9uIHRoZSAxNlRCIGJsb2NrIGRldmljZSB3
-aXRoIGEKcmVjZW50IG1rZnMueGZzLiBUaGF0IGlzLCBhdCBjdXJyZW50IG1rZnMueGZzIGRlZmF1
-bHRzIHRvIGdldCBhIGxheW91dCBsaWtlCnRoaXMgeW91J2QgaGF2ZSB0byDRlXRhcnQgd2l0aCBh
-IDUxMk1CIGZpbGVzeXN0ZW0gYW5kIGdyb3cgaXQgdG8KMTZUQi4KCkdyb3dpbmcgYSBmaWxlc3lz
-dGVtIGJ5IDMtNCBvcmRlcnMgb2YgbWFnbml0dWRlIGRvZXMgbm90IHJlc3VsdCBpbiBhCnBhcnRp
-Y3VsYXJseSBzYW5lIGZpbGVzeXN0ZW0gbGF5b3V0IGFuZCBwdXNoZXMgaXQgd2F5IG91dHNpZGUK
-Y29uZmlndXJhdGlvbnMgdGhhdCBhcmUgcmVndWxhcmx5IHRlc3RlZC4gIEkgc3Ryb25nbHkgc3Vn
-Z2VzdCB5b3UKcmVidWlsZCB0aGlzIGZpbGVzeXN0ZW0gd2l0aCBhIGRlZmF1bHQgbGF5b3V0IGZy
-b20gYSByZWNlbnQgbWtmcy54ZnMKYmVmb3JlIGdvaW5nIGFueSBmdXJ0aGVyLi4uLgoKPiA+PiDC
-oCDCoCDCoCDCoC0geGZzX3JlcGFpciAtbiBhZnRlciBhIHNodXRkb3duCj4gCj4gVGhlIG91dCBv
-dXQgb2YgdGhlIHhmc19yZXBhaXIgLW4gaXMgNm1iLCBiZWxvdyBpcyB0aGUgY29uZGVuc2VkCj4g
-dmVyc2lvbi4gSSBjYW4gcG9zdCB0aGUgd2hvbGUgb3V0cHV0IGlmIHJlcXVpcmVkLgoKSWYgdGhl
-cmUgd2VyZSBubyBlcnJvcnMsIHRoZW4gSSBkb24ndCBuZWVkIHRvIHNlZSBpdC4gSG93ZXZlciwg
-aWYKeW91IHRyaW1tZWQgZXJyb3JzIG91dCBvciB5b3UgZG9uJ3Qga25vdyB3aGF0IGVycm9ycyBs
-b29rIGxpa2UsIHRoZW4KSSBuZWVkIHRvIHNlZSB0aGUgd2hvbGUgb3V0cHV0Li4uCgpDaGVlcnMs
-CgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZz
-QG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+Eli Morris put forth on 7/11/2010 8:10 PM:
+> Hi guys,
+> 
+> Here are some of the log files from my XFS problem. Yes, I think this all started with a hardware failure of some sort. My storage is RAID 6, a an Astra SecureStor ES.
+> 
+> 
+> [root@nimbus log]# more messages.1 | grep I/O
+> Jul  2 17:02:30 nimbus kernel: sd 6:0:0:0: rejecting I/O to offline device
+> Jul  2 17:02:30 nimbus kernel: sd 6:0:0:0: rejecting I/O to offline device
+> Jul  2 17:02:30 nimbus kernel: sr 5:0:0:0: rejecting I/O to offline device
+
+<snip>
+
+What does the web gui log on the Astra ES tell you?
+
+If the Astra supports syslogging (I assume it does as it is billed as
+"enterprise class") you should configure that to facilitate consistent error
+information gathering--i.e. grep everything from one terminal session.
+
+-- 
+Stan
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
