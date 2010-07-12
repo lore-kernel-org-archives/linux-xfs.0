@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6CBir8Q025783 for <xfs@oss.sgi.com>; Mon, 12 Jul 2010 06:44:53 -0500
-Received: from smtp4-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C5D1343CA03
-	for <xfs@oss.sgi.com>; Mon, 12 Jul 2010 04:47:46 -0700 (PDT)
-Received: from smtp4-g21.free.fr (smtp4-g21.free.fr [212.27.42.4]) by
-	cuda.sgi.com with ESMTP id S5uSmEo54Snzzhtm for
-	<xfs@oss.sgi.com>; Mon, 12 Jul 2010 04:47:46 -0700 (PDT)
-Date: Mon, 12 Jul 2010 13:47:43 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: filesystem shrinks after using xfs_repair
-Message-ID: <20100712134743.624249b2@harpe.intellique.com>
-In-Reply-To: <DFB2DB04-A3BA-4272-A12A-4F28A7D51491@ucsc.edu>
-References: <DFB2DB04-A3BA-4272-A12A-4F28A7D51491@ucsc.edu>
-Mime-Version: 1.0
+	o6CCEPrA027055 for <xfs@oss.sgi.com>; Mon, 12 Jul 2010 07:14:25 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9B91314B9125
+	for <xfs@oss.sgi.com>; Mon, 12 Jul 2010 05:23:14 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id BUpUfxiaIlgGyxGq for
+	<xfs@oss.sgi.com>; Mon, 12 Jul 2010 05:23:14 -0700 (PDT)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: Slow delete
+Date: Mon, 12 Jul 2010 14:17:13 +0200
+References: <AANLkTinPmhJRD3CDdsHtkLFzYd2jF9ee7gPqgO6XBSfl@mail.gmail.com>
+	<20100705233448.GB24712@dastard>
+In-Reply-To: <20100705233448.GB24712@dastard>
+MIME-Version: 1.0
+Message-Id: <201007121417.14097@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,36 +24,75 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: multipart/mixed; boundary="===============2004926320602473969=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eli Morris <ermorris@ucsc.edu>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: lwn@lwn.net
 
-Le Sun, 11 Jul 2010 18:10:41 -0700
-Eli Morris <ermorris@ucsc.edu> =E9crivait:
+--===============2004926320602473969==
+Content-Type: multipart/signed;
+  boundary="nextPart3721879.1lt21px7t5";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-> Here are some of the log files from my XFS problem. Yes, I think this
-> all started with a hardware failure of some sort. My storage is RAID
-> 6, a an Astra SecureStor ES.
-> =
+--nextPart3721879.1lt21px7t5
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+On Dienstag, 6. Juli 2010 Dave Chinner wrote:
+> For a detailed explanation of the concept and how delayed logging
+> takes advantage of it to speed up stuff like deleting a large number
+> of files, see:
+>=20
+> http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux-2.6.git;a=3Dbl
+> ob;f=3DDocumentation/filesystems/xfs-delayed-logging-design.txt
+=20
+Great docu, although my head still exploded on reading this, and at some=20
+point I started to just read over it. Luckily, I'm no dev, otherwise I'd=20
+need to grow a second head for the extra brain space needed to=20
+understand all that stuff, and that would make my appearance even worse=20
+than it is already. Also, I'm not sure if the two-head solution isn't=20
+patented by Zaphod Beeblebrox already, at least in the U.S. region.
+
+=2D-=20
+mit freundlichen Gr=FCssen,
+Michael Monnerie, Ing. BSc
+
+it-management Internet Services
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: 0660 / 415 65 31
+
+// Wir haben im Moment zwei H=E4user zu verkaufen:
+// http://zmi.at/langegg/
+// http://zmi.at/haus2009/
+
+--nextPart3721879.1lt21px7t5
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.12 (GNU/Linux)
+
+iEYEABECAAYFAkw7B8oACgkQzhSR9xwSCbRCTgCg9W0Q5ZuwfbmsQsOFPm3/DhCA
+aLwAoOQrDyQbKVpr1q26Ts1E5Tlt54OB
+=JN3p
+-----END PGP SIGNATURE-----
+
+--nextPart3721879.1lt21px7t5--
 
 
-There are IO errors on sdc, sdd and sdg. Aren't these jbods connected
-through the same cable, for instance? You must correct the hardware
-problems before attempting any repair or it will do more harm than good.
-
--- =
-
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+--===============2004926320602473969==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============2004926320602473969==--
