@@ -1,26 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6C5h99A007825 for <xfs@oss.sgi.com>; Mon, 12 Jul 2010 00:43:10 -0500
+	o6C6cLBM010476 for <xfs@oss.sgi.com>; Mon, 12 Jul 2010 01:38:21 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1516B43BEAA
-	for <xfs@oss.sgi.com>; Sun, 11 Jul 2010 22:46:02 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	TBM3yMOuoGPXrJAw for <xfs@oss.sgi.com>;
-	Sun, 11 Jul 2010 22:46:02 -0700 (PDT)
-Date: Mon, 12 Jul 2010 15:45:59 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CFB5C15B03DE
+	for <xfs@oss.sgi.com>; Sun, 11 Jul 2010 23:41:13 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
+	[150.101.137.102]) by cuda.sgi.com with ESMTP id
+	FsFip324QLCEM1vE for <xfs@oss.sgi.com>;
+	Sun, 11 Jul 2010 23:41:13 -0700 (PDT)
+Received: from dastard (unverified [121.44.238.155])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	30970171-1927428
+	for <xfs@oss.sgi.com>; Mon, 12 Jul 2010 16:11:12 +0930 (CST)
+Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
+	(envelope-from <dave@fromorbit.com>) id 1OYChS-0006xS-Nf
+	for xfs@oss.sgi.com; Mon, 12 Jul 2010 16:41:10 +1000
+Received: from dave by disturbed with local (Exim 4.71)
+	(envelope-from <dave@disturbed.disaster>) id 1OYChG-0006UA-ER
+	for xfs@oss.sgi.com; Mon, 12 Jul 2010 16:40:58 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: CentOS 5.5 XFS internal errors (XFS_WANT_CORRUPTED_GOTO)
-Message-ID: <20100712054559.GE25335@dastard>
-References: <AANLkTimKKEvfJx6EQZeQF_HnlBLj6B8Kjfy6jUHGPnz5@mail.gmail.com>
-	<20100706231856.GC25018@dastard>
-	<AANLkTilOGA-XF2V_Z_7WntgA23CHNlfx1u0I8xJtHZDz@mail.gmail.com>
-	<AANLkTimcM9LfOHAH6q95esD4JU8Geb21750YMAh3JKBl@mail.gmail.com>
-	<20100712010832.GA25335@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100712010832.GA25335@dastard>
+Subject: [PATCH] xfs: unregister inode shrinker before freeing filesystem
+	structures V2
+Date: Mon, 12 Jul 2010 16:40:58 +1000
+Message-Id: <1278916858-24903-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,66 +32,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Shaun Adolphson <shaun@adolphson.net>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-T24gTW9uLCBKdWwgMTIsIDIwMTAgYXQgMTE6MDg6MzJBTSArMTAwMCwgRGF2ZSBDaGlubmVyIHdy
-b3RlOgo+IE9uIFN1biwgSnVsIDExLCAyMDEwIGF0IDA5OjQ0OjA3UE0gKzEwMDAsIFNoYXVuIEFk
-b2xwaHNvbiB3cm90ZToKPiA+IE9uIFRodSwgSnVsIDgsIDIwMTAgYXQgOToyMSBQTSwgU2hhdW4g
-QWRvbHBoc29uIDxzaGF1bkBhZG9scGhzb24ubmV0PiB3cm90ZToKPiA+ID4gT24gV2VkLCBKdWwg
-NywgMjAxMCBhdCA5OjE4IEFNLCBEYXZlIENoaW5uZXIgPGRhdmlkQGZyb21vcmJpdC5jb20+IHdy
-b3RlOgo+ID4gPj4KPiA+ID4+IE9uIFR1ZSwgSnVsIDA2LCAyMDEwIGF0IDA4OjU3OjQ1UE0gKzEw
-MDAsIFNoYXVuIEFkb2xwaHNvbiB3cm90ZToKPiA+ID4+ID4gSGksCj4gPiA+PiA+Cj4gPiA+PiA+
-IFdlIGhhdmUgYmVlbiBhYmxlIHRvIHJlcGVhdGFibHkgcHJvZHVjZSB4ZnMgaW50ZXJuYWwgZXJy
-b3JzCj4gPiA+PiA+IChYRlNfV0FOVF9DT1JSVVBURURfR09UTykgb24gb25lIG9mIG91ciBmaWxl
-c2VydmVycy4gV2UgYXJlIGF0dGVtcHRpbmcKPiA+ID4+ID4gdG8gbG9jYWxseSBjb3B5IGEgMjQ4
-R2lnIGZpbGUgb2ZmIGEgdXNiIGRyaXZlIGZvcm1hdGVkIGFzIE5URlMgdG8gdGhlCj4gPiA+PiA+
-IHhmcyBkcml2ZS4gVGhlIGNvcHkgZ2V0cyBhYm91dCA5NiUgb2YgdGhlIHdheSB0aHJvdWdoIGFu
-ZCB3ZSBnZXQgdGhlCj4gPiA+PiA+IGZvbGxvd2luZyBtZXNzYWdlczoKPiA+ID4+ID4KPiA+ID4+
-ID4gSnVuIDI4IDIyOjE0OjQ2IHRlcnJvcnNlcnZlciBrZXJuZWw6IFhGUyBpbnRlcm5hbCBlcnJv
-cgo+ID4gPj4gPiBYRlNfV0FOVF9DT1JSVVBURURfR09UTyBhdCBsaW5lIDIwOTIgb2YgZmlsZSBm
-cy94ZnMveGZzX2JtYXBfYnRyZWUuYy4KPiA+ID4+ID4gQ2FsbGVyIDB4ZmZmZmZmZmY4ODM3NDQ2
-Zgo+ID4gPj4KPiA+ID4+IEludGVyZXN0aW5nLiBUaGF0J3MgYSBjb3JydXB0ZWQgaW5vZGUgZXh0
-ZW50IGJ0cmVlIC0gSSBoYXZlbid0IHNlZW4KPiA+ID4+IG9uZSBvZiB0aGVtIGZvciBhIGxvbmcg
-d2hpbGUuIFdlcmUgdGhlcmUgYW55IGVycm9ycyAobGlrZSBJTyBlcnJvcnMpCj4gPiA+PiByZXBv
-cnRlZCBiZWZvcmUgdGhpcz8KPiA+ID4+Cj4gPiA+PiBIb3dldmVyLCB0aGUgZmlyc3Qgc3RlcCBp
-cyB0byBkZXRlcm1pbmUgaWYgdGhlIGVycm9yIGlzIG9uIGRpc2sgb3IgYW4KPiA+ID4+IGluLW1l
-bW9yeSBlcnJvci4gQ2FuIHlvdSBwb3N0IG91dHB1dCBvZjoKPiA+ID4+Cj4gPiA+PiDCoCDCoCDC
-oCDCoC0geGZzX2luZm8gPG1udHB0Pgo+ID4gCj4gPiBtZXRhLWRhdGE9L2Rldi9UZXJyb3JWb2x1
-bWUvdGVycm9yIGlzaXplPTI1NiAgICBhZ2NvdW50PTEzMDM4NSwKPiA+IGFnc2l6ZT0zMjc2OCBi
-bGtzCj4gPiAgICAgICAgICAgICAgID0gICAgICAgICAgICAgICAgICAgICAgc2VjdHN6PTUxMiAg
-IGF0dHI9MQo+ID4gZGF0YSAgICAgICAgPSAgICAgICAgICAgICAgICAgICAgICBic2l6ZT00MDk2
-ICAgYmxvY2tzPTQyNzI0MzMxNTIsIGltYXhwY3Q9MjUKPiA+ICAgICAgICAgICAgICAgPSAgICAg
-ICAgICAgICAgICAgICAgICBzdW5pdD0wICAgICAgc3dpZHRoPTAgYmxrcwo+ID4gbmFtaW5nICAg
-PXZlcnNpb24gMiAgICAgICAgIGJzaXplPTQwOTYgICBhc2NpaS1jaT0wCj4gPiBsb2cgICAgICAg
-ICA9aW50ZXJuYWwgICAgICAgICAgICBic2l6ZT00MDk2ICAgYmxvY2tzPTI1NjAsIHZlcnNpb249
-MQo+ID4gICAgICAgICAgICAgID0gICAgICAgICAgICAgICAgICAgICAgIHNlY3Rzej01MTIgICBz
-dW5pdD0wIGJsa3MsIGxhenktY291bnQ9MAo+ID4gcmVhbHRpbWUgID1ub25lICAgICAgICAgICAg
-ICAgZXh0c3o9NDA5NiAgIGJsb2Nrcz0wLCBydGV4dGVudHM9MAo+IAo+IFdIeSBkaWQgeW91IG1h
-a2UgdGhpcyBmaWxlc3lzdGVtIHdpdGggMTI4TUIgYWxsb2NhdGlvbiBncm91cHM/IFRoZQo+IGRl
-ZmF1bHQgZm9yIGEgZmlsZXN5c3RlbSBvZiB0aGlzIHNpemUgaXMgMVRCIGFsbG9jYXRpb24gZ3Jv
-dXBzLgo+IE1vcmUgdGhhbiAxMDBrIGFsbG9jYXRpb24gZ3JvdXBzIHdpbGwgY2VydGFpbmx5IHB1
-c2ggaW50ZXJuYWwgQUcKPiBzY2FubmluZyBzY2FsYWJpbGl0eSBwYXN0IGl0J3MgdGVzdGVkIGxp
-bWl0cy4uLi4KPiAKPiBBbHNvLCBhIGxvZyBvZiAxME1CIGlzIHJhdGhlciBzbWFsbCwgYW5kIGl0
-IHRlbGxzIG1lIHRoYXQgeW91IGRpZG4ndAo+IGp1c3QgY3JlYXRlIHRoaXMgZmlsZXN5c3RlbSBm
-aXJlY3RseSBvbiB0aGUgMTZUQiBibG9jayBkZXZpY2Ugd2l0aCBhCj4gcmVjZW50IG1rZnMueGZz
-LiBUaGF0IGlzLCBhdCBjdXJyZW50IG1rZnMueGZzIGRlZmF1bHRzIHRvIGdldCBhIGxheW91dCBs
-aWtlCj4gdGhpcyB5b3UnZCBoYXZlIHRvINGVdGFydCB3aXRoIGEgNTEyTUIgZmlsZXN5c3RlbSBh
-bmQgZ3JvdyBpdCB0bwo+IDE2VEIuCgpBY3R1YWxseSwgYW4gb2xkIG1rZnMgdGhhdCBkZWZhdWx0
-cyB0byAxNiBBR3MgYW5kIGEgZmlsZXN5c3RlbSBzaXplCm9mIDJHQiBpbiBuZWVkZWQgdG8gZ2V0
-IGEgbG9nIG9mIDI1NDAgYmxvY2tzLiBJIGp1c3QgZ3JldyBvbmUgb2YKdGhlc2UgdG8gcm91Z2hs
-eSAxNlRCIGFuZCBlbmRlZCB1cCB3aXRoIDEyNSwwMDAgQUdzLCBzbyBpdCdzIGluIHRoZQpiYWxs
-cGFyay4gQWxzbywgKmFsbG9jYXRpbmcqIDI1MEdCIHRvIGEgc2luZ2xlIGZpbGUgKGFzCnByZWFs
-bG9jYXRpb24pIGRvZXNuJ3QgYXBwZWFyIHRvIGhhdmUgYW55IHByb2JsZW1zIG9uIDIuNi4zNS1y
-YzQsIHNvCnRoZXJlIGRvZXNuJ3QgYXBwZWFyIHRvIGJlIGFueSBnZW5lcmFsIGVycm9yIGNhdXNl
-ZCBieSB0aGlzCmNvbmZpZ3VyYXRpb24gaW4gbWFpbmxpbmUuLi4uCgpDYW4geW91IHJ1biB0aGlz
-IGNvbW1hbmQ6CgojIHhmc19pbyAtZiAtYyAidHJ1bmNhdGUgMjUwZyIgLWMgInJlc3ZzcCAwIDI1
-MGciIDx0ZXN0IGZpbGU+CgpBbmQgc2VlIGlmIHRoYXQgZ2VuZXJhdGVzIHRoZSBzYW1lIGNvcnJ1
-cHRpb24gYXMgY29weWluZyBhIGZpbGU/CgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVy
-CmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Mu
-c2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+From: Dave Chinner <dchinner@redhat.com>
+
+Currently we don't remove the XFS mount from the shrinker list until late in
+the unmount path. By this time, we have already torn down the internals of the
+filesystem (e.g. the per-ag structures), and hence if the shrinker is executed
+between the teardown and the unregistering, the shrinker will get NULL per-ag
+structure pointers and panic trying to dereference them.
+
+Fix this by removing the xfs mount from the shrinker list before tearing down
+it's internal structures.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/linux-2.6/xfs_super.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
+
+diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
+index e3de46c..5bf7cf3 100644
+--- a/fs/xfs/linux-2.6/xfs_super.c
++++ b/fs/xfs/linux-2.6/xfs_super.c
+@@ -1145,6 +1145,11 @@ xfs_fs_put_super(
+ {
+ 	struct xfs_mount	*mp = XFS_M(sb);
+ 
++	/*
++	 * Unregister the memory shrinker before we tear down the mount
++	 * structure so we don't have memory reclaim racing with us here.
++	 */
++	xfs_inode_shrinker_unregister(mp);
+ 	xfs_syncd_stop(mp);
+ 
+ 	/*
+@@ -1158,7 +1163,6 @@ xfs_fs_put_super(
+ 
+ 	xfs_unmountfs(mp);
+ 	xfs_freesb(mp);
+-	xfs_inode_shrinker_unregister(mp);
+ 	xfs_icsb_destroy_counters(mp);
+ 	xfs_close_devices(mp);
+ 	xfs_free_fsname(mp);
+-- 
+1.7.1
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
