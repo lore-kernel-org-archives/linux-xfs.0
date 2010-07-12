@@ -1,13 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6C3YGJC000512 for <xfs@oss.sgi.com>; Sun, 11 Jul 2010 22:34:17 -0500
-Subject: Re: [PATCH] xfs: allow writeback from kswapd
+	o6C3eF7x000704 for <xfs@oss.sgi.com>; Sun, 11 Jul 2010 22:40:15 -0500
+Subject: Re: [PATCH] xfs: writepage always has buffers
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20100628143444.GB5473@infradead.org>
-References: <20100628143444.GB5473@infradead.org>
-Date: Sun, 11 Jul 2010 22:37:07 -0500
-Message-ID: <1278905827.7456.20.camel@doink>
+In-Reply-To: <20100628143457.GC5473@infradead.org>
+References: <20100628143457.GC5473@infradead.org>
+Date: Sun, 11 Jul 2010 22:43:09 -0500
+Message-ID: <1278906189.7456.22.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -26,40 +26,39 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
 On Mon, 2010-06-28 at 10:34 -0400, Christoph Hellwig wrote:
-> We only need disable I/O from direct or memcg reclaim.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> These days we always have buffers thanks to ->page_mkwrite.  And we already
+> have an assert a few lines above tripping in case that was not true due to
+> a bug.
 
-Looks good.
+Should the ASSERT() be made stronger (i.e., BUG_ON())?
+Looks to me like we'll crash if it ever happens in a
+non-debug kernel, and a BUG() call would more directly
+tell us what the problem was...
+
+In an case, this looks OK to me.
+
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
-
 > Index: xfs-dev/fs/xfs/linux-2.6/xfs_aops.c
 > ===================================================================
-> --- xfs-dev.orig/fs/xfs/linux-2.6/xfs_aops.c	2010-06-28 11:57:06.652261386 +0200
-> +++ xfs-dev/fs/xfs/linux-2.6/xfs_aops.c	2010-06-28 11:59:17.846068204 +0200
-> @@ -1049,16 +1049,15 @@ xfs_vm_writepage(
->  	/*
->  	 * Refuse to write the page out if we are called from reclaim context.
->  	 *
-> -	 * This is primarily to avoid stack overflows when called from deep
-> -	 * used stacks in random callers for direct reclaim, but disabling
-> -	 * reclaim for kswap is a nice side-effect as kswapd causes rather
-> -	 * suboptimal I/O patters, too.
-> +	 * This avoids stack overflows when called from deeply used stacks in
-> +	 * random callers for direct reclaim or memcg reclaim.  We explicitly
-> +	 * allow reclaim from kswapd as the stack usage there is relatively low.
->  	 *
->  	 * This should really be done by the core VM, but until that happens
->  	 * filesystems like XFS, btrfs and ext4 have to take care of this
->  	 * by themselves.
->  	 */
-> -	if (current->flags & PF_MEMALLOC)
-> +	if ((current->flags & (PF_MEMALLOC|PF_KSWAPD)) == PF_MEMALLOC)
+> --- xfs-dev.orig/fs/xfs/linux-2.6/xfs_aops.c	2010-06-28 11:59:29.590253914 +0200
+> +++ xfs-dev/fs/xfs/linux-2.6/xfs_aops.c	2010-06-28 11:59:48.341006462 +0200
+> @@ -1072,13 +1072,6 @@ xfs_vm_writepage(
+>  	if ((current->flags & PF_FSTRANS) && (delalloc || unwritten))
 >  		goto out_fail;
 >  
->  	/*
+> -	/*
+> -	 * Delay hooking up buffer heads until we have
+> -	 * made our go/no-go decision.
+> -	 */
+> -	if (!page_has_buffers(page))
+> -		create_empty_buffers(page, 1 << inode->i_blkbits, 0);
+> -
+>  	/* Is this page beyond the end of the file? */
+>  	offset = i_size_read(inode);
+>  	end_index = offset >> PAGE_CACHE_SHIFT;
 > 
 > _______________________________________________
 > xfs mailing list
