@@ -1,22 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6CF2cak034399 for <xfs@oss.sgi.com>; Mon, 12 Jul 2010 10:02:40 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8A88115BCDD2
-	for <xfs@oss.sgi.com>; Mon, 12 Jul 2010 08:11:33 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id hjEsw2WznO3PSuhQ for
-	<xfs@oss.sgi.com>; Mon, 12 Jul 2010 08:11:33 -0700 (PDT)
-Date: Mon, 12 Jul 2010 11:05:31 -0400
+	o6CG1uuu037184 for <xfs@oss.sgi.com>; Mon, 12 Jul 2010 11:01:56 -0500
+Date: Mon, 12 Jul 2010 12:04:50 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: unregister inode shrinker before freeing filesystem
-	structures V2
-Message-ID: <20100712150531.GA11776@infradead.org>
-References: <1278916858-24903-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] xfs: remove incorrect log write optimization
+Message-ID: <20100712160450.GA2666@infradead.org>
+References: <20100628143434.GA5473@infradead.org>
+	<1278905400.7456.14.camel@doink>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1278916858-24903-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1278905400.7456.14.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,28 +23,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Mon, Jul 12, 2010 at 04:40:58PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Sun, Jul 11, 2010 at 10:30:00PM -0500, Alex Elder wrote:
+> On Mon, 2010-06-28 at 10:34 -0400, Christoph Hellwig wrote:
+> > We do need a barrier for the first buffer of a split log write.  Otherwise
+> > we might incorrectly stamp the tail LSN into transactions in the first
+> > block, or not flush data I/O before updating the inode size.
 > 
-> Currently we don't remove the XFS mount from the shrinker list until late in
-> the unmount path. By this time, we have already torn down the internals of the
-> filesystem (e.g. the per-ag structures), and hence if the shrinker is executed
-> between the teardown and the unregistering, the shrinker will get NULL per-ag
-> structure pointers and panic trying to dereference them.
-> 
-> Fix this by removing the xfs mount from the shrinker list before tearing down
-> it's internal structures.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
+> I'm not sure whether "first block" means the one at the beginning
+> of the log, or the one at the beginning of a split log write.
 
-Looks good
-
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+It means beginning of the split write.  I can fix up the commit message
+if you want.
 
 _______________________________________________
 xfs mailing list
