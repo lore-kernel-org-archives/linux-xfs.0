@@ -1,13 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6C3eF7x000704 for <xfs@oss.sgi.com>; Sun, 11 Jul 2010 22:40:15 -0500
-Subject: Re: [PATCH] xfs: writepage always has buffers
+	o6C3R9PA262103 for <xfs@oss.sgi.com>; Sun, 11 Jul 2010 22:27:10 -0500
+Subject: Re: [PATCH] xfs: remove incorrect log write optimization
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20100628143457.GC5473@infradead.org>
-References: <20100628143457.GC5473@infradead.org>
-Date: Sun, 11 Jul 2010 22:43:09 -0500
-Message-ID: <1278906189.7456.22.camel@doink>
+In-Reply-To: <20100628143434.GA5473@infradead.org>
+References: <20100628143434.GA5473@infradead.org>
+Date: Sun, 11 Jul 2010 22:30:00 -0500
+Message-ID: <1278905400.7456.14.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -26,39 +26,41 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
 On Mon, 2010-06-28 at 10:34 -0400, Christoph Hellwig wrote:
-> These days we always have buffers thanks to ->page_mkwrite.  And we already
-> have an assert a few lines above tripping in case that was not true due to
-> a bug.
+> We do need a barrier for the first buffer of a split log write.  Otherwise
+> we might incorrectly stamp the tail LSN into transactions in the first
+> block, or not flush data I/O before updating the inode size.
 
-Should the ASSERT() be made stronger (i.e., BUG_ON())?
-Looks to me like we'll crash if it ever happens in a
-non-debug kernel, and a BUG() call would more directly
-tell us what the problem was...
+I'm not sure whether "first block" means the one at the beginning
+of the log, or the one at the beginning of a split log write.  In
+any case recovery handles the situation correctly if the write at
+the end of the log didn't make it to disk before the start of the
+log.  I think you're right about ordering with respect to data I/O
+though.
 
-In an case, this looks OK to me.
-
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+This looks good to me.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
-> Index: xfs-dev/fs/xfs/linux-2.6/xfs_aops.c
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Index: xfs-dev/fs/xfs/xfs_log.c
 > ===================================================================
-> --- xfs-dev.orig/fs/xfs/linux-2.6/xfs_aops.c	2010-06-28 11:59:29.590253914 +0200
-> +++ xfs-dev/fs/xfs/linux-2.6/xfs_aops.c	2010-06-28 11:59:48.341006462 +0200
-> @@ -1072,13 +1072,6 @@ xfs_vm_writepage(
->  	if ((current->flags & PF_FSTRANS) && (delalloc || unwritten))
->  		goto out_fail;
->  
+> --- xfs-dev.orig/fs/xfs/xfs_log.c	2010-06-28 11:51:30.423004228 +0200
+> +++ xfs-dev/fs/xfs/xfs_log.c	2010-06-28 11:52:52.559255519 +0200
+> @@ -1423,11 +1423,8 @@ xlog_sync(xlog_t		*log,
+>  	XFS_BUF_BUSY(bp);
+>  	XFS_BUF_ASYNC(bp);
+>  	bp->b_flags |= XBF_LOG_BUFFER;
 > -	/*
-> -	 * Delay hooking up buffer heads until we have
-> -	 * made our go/no-go decision.
+> -	 * Do an ordered write for the log block.
+> -	 * Its unnecessary to flush the first split block in the log wrap case.
 > -	 */
-> -	if (!page_has_buffers(page))
-> -		create_empty_buffers(page, 1 << inode->i_blkbits, 0);
-> -
->  	/* Is this page beyond the end of the file? */
->  	offset = i_size_read(inode);
->  	end_index = offset >> PAGE_CACHE_SHIFT;
+> -	if (!split && (log->l_mp->m_flags & XFS_MOUNT_BARRIER))
+> +
+> +	if (log->l_mp->m_flags & XFS_MOUNT_BARRIER)
+>  		XFS_BUF_ORDERED(bp);
+>  
+>  	ASSERT(XFS_BUF_ADDR(bp) <= log->l_logBBsize-1);
 > 
 > _______________________________________________
 > xfs mailing list
