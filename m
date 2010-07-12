@@ -1,16 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6CG2Sec037249 for <xfs@oss.sgi.com>; Mon, 12 Jul 2010 11:02:29 -0500
-Date: Mon, 12 Jul 2010 12:05:23 -0400
+	o6CGZVtF038819 for <xfs@oss.sgi.com>; Mon, 12 Jul 2010 11:35:32 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EAB0815BCA9D
+	for <xfs@oss.sgi.com>; Mon, 12 Jul 2010 09:44:26 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id DlHDt3rRoEzvlHFn for
+	<xfs@oss.sgi.com>; Mon, 12 Jul 2010 09:44:26 -0700 (PDT)
+Date: Mon, 12 Jul 2010 12:38:26 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: writepage always has buffers
-Message-ID: <20100712160523.GB2666@infradead.org>
-References: <20100628143457.GC5473@infradead.org>
-	<1278906189.7456.22.camel@doink>
+Subject: XFS status update for June 2010
+Message-ID: <20100712163826.GA17164@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1278906189.7456.22.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,22 +26,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
-On Sun, Jul 11, 2010 at 10:43:09PM -0500, Alex Elder wrote:
-> On Mon, 2010-06-28 at 10:34 -0400, Christoph Hellwig wrote:
-> > These days we always have buffers thanks to ->page_mkwrite.  And we already
-> > have an assert a few lines above tripping in case that was not true due to
-> > a bug.
-> 
-> Should the ASSERT() be made stronger (i.e., BUG_ON())?
-> Looks to me like we'll crash if it ever happens in a
-> non-debug kernel, and a BUG() call would more directly
-> tell us what the problem was...
+The month of June saw a few important bug fixes for the Linux 2.6.35
+release candidates.  That includes ensuring that files used for the
+swapext ioctl are writable to the user, and doing proper validation
+of inodes coming from untrusted sources, such as NFS exporting and
+the open by handle system calls.  The main work however has been
+focused on development for the Linux 2.6.36 merge window, including
+merging various patches that have been out on the mainline list
+for a long time.  Highlights include further performance improvements
+for sync heavy metadata workloads, stack space reduction in the
+writeback path and improvements of the XFS tracing infrastructure.
+Also after some discussion the remaining hooks for DMAPI are going
+to be dropped in mainline.   As a replacement a tree containing
+full DMAPI support with a slightly cleaner XFS interaction will be
+hosted by SGI.
 
-The crash tells it quite directly as well, the ASSERT is there more as
-a documentation of what we require.
+On the userspace side June was a rather slow month, with no updates
+to xfsprogs and xfsdump at all, and just one new test case and a cleanup
+applied to xfstests.
 
 _______________________________________________
 xfs mailing list
