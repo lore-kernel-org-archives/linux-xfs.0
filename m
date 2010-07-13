@@ -1,26 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6CMAuqo052618 for <xfs@oss.sgi.com>; Mon, 12 Jul 2010 17:10:57 -0500
+	o6D7mTnp076881 for <xfs@oss.sgi.com>; Tue, 13 Jul 2010 02:48:29 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BF519BB8EEB
-	for <xfs@oss.sgi.com>; Mon, 12 Jul 2010 15:19:51 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	3Meu0CHJyo5wL7Sx for <xfs@oss.sgi.com>;
-	Mon, 12 Jul 2010 15:19:51 -0700 (PDT)
-Date: Tue, 13 Jul 2010 08:13:46 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BDA3715BA004
+	for <xfs@oss.sgi.com>; Tue, 13 Jul 2010 00:51:23 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	Bueg7VUgHPTBmRVw for <xfs@oss.sgi.com>;
+	Tue, 13 Jul 2010 00:51:23 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH xfstests] _qmount: mount w/o selinux xattrs
-Message-ID: <20100712221346.GI25335@dastard>
-References: <4C2CF34F.7070008@redhat.com>
-	<20100702071006.GB30776@infradead.org>
-	<4C2E2687.3080700@redhat.com>
-	<20100709161232.GA26302@infradead.org>
-	<4C3B6D0A.2010708@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4C3B6D0A.2010708@redhat.com>
+Subject: [PATCH 0/2] Graceful failures for XFS on an unconfigured loop device
+Date: Tue, 13 Jul 2010 17:50:48 +1000
+Message-Id: <1279007450-10457-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,43 +21,28 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs mailing list <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org
 
-On Mon, Jul 12, 2010 at 02:29:14PM -0500, Eric Sandeen wrote:
-> On 07/09/2010 11:12 AM, Christoph Hellwig wrote
-> > On Fri, Jul 02, 2010 at 12:48:55PM -0500, Eric Sandeen wrote:
-> >>> What about just disabling selinux for all filesystems instead of just
-> >>> XFS for the general case.
-> >>
-> >> Well it seems like if we -can- test with it on, that's good.
-> >> Certain distros ship with it on by default, so exercising lots
-> >> of scenarios with it on seems beneficial...
-> > 
-> > It seems, but I'd rather do it consistently for all filesystems.
-> > 
-> 
-> except we can't, because xfs actually has such low-level format checking
-> that selinux -will- break it badly.
-> 
-> I guess we could flag which tests can't run w/ extra xattrs,
-> and only mount w/ the context for those?
+Run:
 
-Maybe use a group to define all the tests that can't run with
-selinux enabled and check it before running each test? i.e. use
-notrun to prevent such tests from running. The attr group isprobably
-a good start for the tests that will break w/ selinux enabled....
+# mount -t xfs /dev/loop0 /mnt
 
-Cheers.
+on a freshly booted system and it won't like you anymore. This series fixes
+the broken XFS error handling for dispatch errors on synchronous reads that
+causes a hang, and then patches the panic it uncovers. With these two patches,
+the mount fails gracefully.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+The modification to blkdev_issue_flush is probably not the right place to check
+for a valid q->make_request_fn. This just patches around the problem in the
+simplest way possible. There's probably a better way to fix it - personally I'd
+prefer that we don't even get to mounting a filesystem on an unconfigured loop
+device...
 
 _______________________________________________
 xfs mailing list
