@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6DCqJkL090759 for <xfs@oss.sgi.com>; Tue, 13 Jul 2010 07:52:19 -0500
-Received: from kernel.dk (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5A0FD1E27771
-	for <xfs@oss.sgi.com>; Tue, 13 Jul 2010 05:55:13 -0700 (PDT)
-Received: from kernel.dk (0122700014.0.fullrate.dk [95.166.99.235]) by
-	cuda.sgi.com with ESMTP id 8FyonjAcWe6zeB9A for
-	<xfs@oss.sgi.com>; Tue, 13 Jul 2010 05:55:13 -0700 (PDT)
-Message-ID: <4C3C6232.5090509@kernel.dk>
-Date: Tue, 13 Jul 2010 14:55:14 +0200
-From: Jens Axboe <axboe@kernel.dk>
+	o6DGbakL098381 for <xfs@oss.sgi.com>; Tue, 13 Jul 2010 11:37:36 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 817B91E2802B
+	for <xfs@oss.sgi.com>; Tue, 13 Jul 2010 09:40:31 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id EMzdHc3Y8UF7WHWC for
+	<xfs@oss.sgi.com>; Tue, 13 Jul 2010 09:40:31 -0700 (PDT)
+Message-ID: <4C3C96EF.3050103@redhat.com>
+Date: Tue, 13 Jul 2010 11:40:15 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/2] blkdev: check for valid request queue before issuing
-	flush
-References: <1279007450-10457-1-git-send-email-david@fromorbit.com>
-	<1279007450-10457-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1279007450-10457-3-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH xfstests] _qmount: mount w/o selinux xattrs
+References: <4C2CF34F.7070008@redhat.com>
+	<20100702071006.GB30776@infradead.org>
+	<4C2E2687.3080700@redhat.com>
+	<20100709161232.GA26302@infradead.org>
+	<4C3B6D0A.2010708@redhat.com> <20100712221346.GI25335@dastard>
+In-Reply-To: <20100712221346.GI25335@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,52 +32,43 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, xfs mailing list <xfs@oss.sgi.com>
 
-On 2010-07-13 09:50, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On 07/12/2010 05:13 PM, Dave Chinner wrote:
+> On Mon, Jul 12, 2010 at 02:29:14PM -0500, Eric Sandeen wrote:
+>> On 07/09/2010 11:12 AM, Christoph Hellwig wrote
+>>> On Fri, Jul 02, 2010 at 12:48:55PM -0500, Eric Sandeen wrote:
+>>>>> What about just disabling selinux for all filesystems instead of just
+>>>>> XFS for the general case.
+>>>>
+>>>> Well it seems like if we -can- test with it on, that's good.
+>>>> Certain distros ship with it on by default, so exercising lots
+>>>> of scenarios with it on seems beneficial...
+>>>
+>>> It seems, but I'd rather do it consistently for all filesystems.
+>>>
+>>
+>> except we can't, because xfs actually has such low-level format checking
+>> that selinux -will- break it badly.
+>>
+>> I guess we could flag which tests can't run w/ extra xattrs,
+>> and only mount w/ the context for those?
 > 
-> Issuing a blkdev_issue_flush() on an unconfigured loop device causes a panic as
-> q->make_request_fn is not configured. This can occur when trying to mount the
-> unconfigured loop device as an XFS filesystem. There are no guards that catch
-> the bio before the request function is called because we don't add a payload to
-> the bio. Instead, manually check this case as soon as we have a pointer to the
-> queue to flush.
+> Maybe use a group to define all the tests that can't run with
+> selinux enabled and check it before running each test? i.e. use
+> notrun to prevent such tests from running. The attr group isprobably
+> a good start for the tests that will break w/ selinux enabled....
+
+Something like that ... but there are more tests than just the attr
+group, I'm afraid.
+
+I'd have to re-run to see which break, guess I'll put that on the list.
+
+-Eric
+
+> Cheers.
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  block/blk-barrier.c |    9 +++++++++
->  1 files changed, 9 insertions(+), 0 deletions(-)
-> 
-> diff --git a/block/blk-barrier.c b/block/blk-barrier.c
-> index 0d710c9..0fd766e 100644
-> --- a/block/blk-barrier.c
-> +++ b/block/blk-barrier.c
-> @@ -319,6 +319,15 @@ int blkdev_issue_flush(struct block_device *bdev, gfp_t gfp_mask,
->  	if (!q)
->  		return -ENXIO;
->  
-> +	/*
-> +	 * some block devices may not have their queue correctly set up here
-> +	 * (e.g. loop device without a backing file) and so issuing a flush
-> +	 * here will panic. Ensure there is a request function before issuing
-> +	 * the barrier.
-> +	 */
-> +	if (!q->make_request_fn)
-> +		return -ENXIO;
-> +
->  	bio = bio_alloc(gfp_mask, 0);
->  	bio->bi_end_io = bio_end_empty_barrier;
->  	bio->bi_bdev = bdev;
-
-This may appear ugly, but I think the patch is fine since there's not
-much we can do about the loop crap (outside of changing how you do
-setup/configure of it).
-
-I'll apply this, thanks.
-
--- 
-Jens Axboe
+> Dave.
 
 _______________________________________________
 xfs mailing list
