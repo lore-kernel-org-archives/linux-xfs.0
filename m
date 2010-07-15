@@ -1,21 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6FBiwCa199890 for <xfs@oss.sgi.com>; Thu, 15 Jul 2010 06:44:59 -0500
+	o6FBigAY199847 for <xfs@oss.sgi.com>; Thu, 15 Jul 2010 06:44:43 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0B24815BF938
-	for <xfs@oss.sgi.com>; Thu, 15 Jul 2010 04:54:08 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	pduyvoEi2dmYIrB0 for <xfs@oss.sgi.com>;
-	Thu, 15 Jul 2010 04:54:08 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1F64E44A033
+	for <xfs@oss.sgi.com>; Thu, 15 Jul 2010 04:47:36 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	PhjezK1KB0SlgHW4 for <xfs@oss.sgi.com>;
+	Thu, 15 Jul 2010 04:47:36 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/3] xfs: track AGs with reclaimable inodes in per-ag radix
-	tree
-Date: Thu, 15 Jul 2010 21:46:58 +1000
-Message-Id: <1279194418-16119-4-git-send-email-david@fromorbit.com>
-In-Reply-To: <1279194418-16119-1-git-send-email-david@fromorbit.com>
-References: <1279194418-16119-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/3] shrinker fixes for XFS for 2.6.35
+Date: Thu, 15 Jul 2010 21:46:55 +1000
+Message-Id: <1279194418-16119-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,178 +29,92 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+Per-superblock shrinkers are not baked well enough for 2.6.36. However, we
+still need fixes for the XFS shrinker lockdep problems caused by the global
+mount list lock and other problems before 2.6.35 releases. The lockdep issues
+look like:
 
-https://bugzilla.kernel.org/show_bug.cgi?id=16348
+=======================================================
+[ INFO: possible circular locking dependency detected ]
+2.6.35-rc5-dgc+ #34
+-------------------------------------------------------
+kswapd0/471 is trying to acquire lock:
+ (&(&ip->i_lock)->mr_lock){++++-.}, at: [<ffffffff81316feb>] xfs_ilock+0x10b/0x190
 
-When the filesystem grows to a large number of allocation groups,
-the summing of recalimable inodes gets expensive. In many cases,
-most AGs won't have any reclaimable inodes and so we are wasting CPU
-time aggregating over these AGs. This is particularly important for
-the inode shrinker that gets called frequently under memory
-pressure.
+but task is already holding lock:
+ (&xfs_mount_list_lock){++++.-}, at: [<ffffffff81350fd6>] xfs_reclaim_inode_shrink+0xd6/0x150
 
-To avoid the overhead, track AGs with reclaimable inodes in the
-per-ag radix tree so that we can find all the AGs with reclaimable
-inodes via a simple gang tag lookup. This involves setting the tag
-when the first reclaimable inode is tracked in the AG, and removing
-the tag when the last reclaimable inode is removed from the tree.
-Then the summation process becomes a loop walking the radix tree
-summing AGs with the reclaim tag set.
+which lock already depends on the new lock.
 
-This significantly reduces the overhead of scanning - a 6400 AG
-filesystea now only uses about 25% of a cpu in kswapd while slab
-reclaim progresses instead of being permanently stuck at 100% CPU
-and making little progress. Clean filesystems filesystems will see
-no overhead and the overhead only increases linearly with the number
-of dirty AGs.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/linux-2.6/xfs_sync.c  |   71 +++++++++++++++++++++++++++++++++++++----
- fs/xfs/linux-2.6/xfs_trace.h |    3 ++
- 2 files changed, 67 insertions(+), 7 deletions(-)
+the existing dependency chain (in reverse order) is:
 
-diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index f433819..a51a07c 100644
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -144,6 +144,41 @@ restart:
- 	return last_error;
- }
- 
-+/*
-+ * Select the next per-ag structure to iterate during the walk. The reclaim
-+ * walk is optimised only to walk AGs with reclaimable inodes in them.
-+ */
-+static struct xfs_perag *
-+xfs_inode_ag_iter_next_pag(
-+	struct xfs_mount	*mp,
-+	xfs_agnumber_t		*first,
-+	int			tag)
-+{
-+	struct xfs_perag	*pag = NULL;
-+
-+	if (tag == XFS_ICI_RECLAIM_TAG) {
-+		int found;
-+		int ref;
-+
-+		spin_lock(&mp->m_perag_lock);
-+		found = radix_tree_gang_lookup_tag(&mp->m_perag_tree,
-+				(void **)&pag, *first, 1, tag);
-+		if (found <= 0) {
-+			spin_unlock(&mp->m_perag_lock);
-+			return NULL;
-+		}
-+		*first = pag->pag_agno + 1;
-+		/* open coded pag reference increment */
-+		ref = atomic_inc_return(&pag->pag_ref);
-+		spin_unlock(&mp->m_perag_lock);
-+		trace_xfs_perag_get_reclaim(mp, pag->pag_agno, ref, _RET_IP_);
-+	} else {
-+		pag = xfs_perag_get(mp, *first);
-+		(*first)++;
-+	}
-+	return pag;
-+}
-+
- int
- xfs_inode_ag_iterator(
- 	struct xfs_mount	*mp,
-@@ -154,16 +189,15 @@ xfs_inode_ag_iterator(
- 	int			exclusive,
- 	int			*nr_to_scan)
- {
-+	struct xfs_perag	*pag;
- 	int			error = 0;
- 	int			last_error = 0;
- 	xfs_agnumber_t		ag;
- 	int			nr;
- 
- 	nr = nr_to_scan ? *nr_to_scan : INT_MAX;
--	for (ag = 0; ag < mp->m_sb.sb_agcount; ag++) {
--		struct xfs_perag	*pag;
--
--		pag = xfs_perag_get(mp, ag);
-+	ag = 0;
-+	while ((pag = xfs_inode_ag_iter_next_pag(mp, &ag, tag))) {
- 		error = xfs_inode_ag_walk(mp, pag, execute, flags, tag,
- 						exclusive, &nr);
- 		xfs_perag_put(pag);
-@@ -640,6 +674,17 @@ __xfs_inode_set_reclaim_tag(
- 	radix_tree_tag_set(&pag->pag_ici_root,
- 			   XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino),
- 			   XFS_ICI_RECLAIM_TAG);
-+
-+	if (!pag->pag_ici_reclaimable) {
-+		/* propagate the reclaim tag up into the perag radix tree */
-+		spin_lock(&ip->i_mount->m_perag_lock);
-+		radix_tree_tag_set(&ip->i_mount->m_perag_tree,
-+				XFS_INO_TO_AGNO(ip->i_mount, ip->i_ino),
-+				XFS_ICI_RECLAIM_TAG);
-+		spin_unlock(&ip->i_mount->m_perag_lock);
-+		trace_xfs_perag_set_reclaim(ip->i_mount, pag->pag_agno,
-+							-1, _RET_IP_);
-+	}
- 	pag->pag_ici_reclaimable++;
- }
- 
-@@ -674,6 +719,16 @@ __xfs_inode_clear_reclaim_tag(
- 	radix_tree_tag_clear(&pag->pag_ici_root,
- 			XFS_INO_TO_AGINO(mp, ip->i_ino), XFS_ICI_RECLAIM_TAG);
- 	pag->pag_ici_reclaimable--;
-+	if (!pag->pag_ici_reclaimable) {
-+		/* clear the reclaim tag from the perag radix tree */
-+		spin_lock(&ip->i_mount->m_perag_lock);
-+		radix_tree_tag_clear(&ip->i_mount->m_perag_tree,
-+				XFS_INO_TO_AGNO(ip->i_mount, ip->i_ino),
-+				XFS_ICI_RECLAIM_TAG);
-+		spin_unlock(&ip->i_mount->m_perag_lock);
-+		trace_xfs_perag_clear_reclaim(ip->i_mount, pag->pag_agno,
-+							-1, _RET_IP_);
-+	}
- }
- 
- /*
-@@ -838,7 +893,7 @@ xfs_reclaim_inode_shrink(
- 	struct xfs_mount *mp;
- 	struct xfs_perag *pag;
- 	xfs_agnumber_t	ag;
--	int		reclaimable = 0;
-+	int		reclaimable;
- 
- 	mp = container_of(shrink, struct xfs_mount, m_inode_shrink);
- 	if (nr_to_scan) {
-@@ -852,8 +907,10 @@ xfs_reclaim_inode_shrink(
- 			return -1;
-        }
- 
--	for (ag = 0; ag < mp->m_sb.sb_agcount; ag++) {
--		pag = xfs_perag_get(mp, ag);
-+	reclaimable = 0;
-+	ag = 0;
-+	while ((pag = xfs_inode_ag_iter_next_pag(mp, &ag,
-+					XFS_ICI_RECLAIM_TAG))) {
- 		reclaimable += pag->pag_ici_reclaimable;
- 		xfs_perag_put(pag);
- 	}
-diff --git a/fs/xfs/linux-2.6/xfs_trace.h b/fs/xfs/linux-2.6/xfs_trace.h
-index 73d5aa1..3028206 100644
---- a/fs/xfs/linux-2.6/xfs_trace.h
-+++ b/fs/xfs/linux-2.6/xfs_trace.h
-@@ -124,7 +124,10 @@ DEFINE_EVENT(xfs_perag_class, name,	\
- 		 unsigned long caller_ip),					\
- 	TP_ARGS(mp, agno, refcount, caller_ip))
- DEFINE_PERAG_REF_EVENT(xfs_perag_get);
-+DEFINE_PERAG_REF_EVENT(xfs_perag_get_reclaim);
- DEFINE_PERAG_REF_EVENT(xfs_perag_put);
-+DEFINE_PERAG_REF_EVENT(xfs_perag_set_reclaim);
-+DEFINE_PERAG_REF_EVENT(xfs_perag_clear_reclaim);
- 
- TRACE_EVENT(xfs_attr_list_node_descend,
- 	TP_PROTO(struct xfs_attr_list_context *ctx,
--- 
-1.7.1
+-> #1 (&xfs_mount_list_lock){++++.-}:
+       [<ffffffff810b4ad6>] lock_acquire+0xa6/0x160
+       [<ffffffff817a4dd5>] _raw_spin_lock_irqsave+0x55/0xa0
+       [<ffffffff8106db62>] __wake_up+0x32/0x70
+       [<ffffffff811196db>] wakeup_kswapd+0xab/0xb0
+       [<ffffffff811132cd>] __alloc_pages_nodemask+0x27d/0x760
+       [<ffffffff81145c72>] kmem_getpages+0x62/0x160
+       [<ffffffff81146cdf>] fallback_alloc+0x18f/0x260
+       [<ffffffff81146a6b>] ____cache_alloc_node+0x9b/0x180
+       [<ffffffff811473bb>] kmem_cache_alloc+0x16b/0x1e0
+       [<ffffffff81340d54>] kmem_zone_alloc+0x94/0xe0
+       [<ffffffff813173a9>] xfs_inode_alloc+0x29/0x1b0
+       [<ffffffff8131781c>] xfs_iget+0x2ec/0x7a0
+       [<ffffffff8133a697>] xfs_trans_iget+0x27/0x60
+       [<ffffffff8131a60a>] xfs_ialloc+0xca/0x790
+       [<ffffffff8133b37f>] xfs_dir_ialloc+0xaf/0x340
+       [<ffffffff8133c38c>] xfs_create+0x3dc/0x710
+       [<ffffffff8134d277>] xfs_vn_mknod+0xa7/0x1c0
+       [<ffffffff8134d3c0>] xfs_vn_create+0x10/0x20
+       [<ffffffff8115ab2c>] vfs_create+0xac/0xd0
+       [<ffffffff8115b6bc>] do_last+0x51c/0x620
+       [<ffffffff8115dbd4>] do_filp_open+0x224/0x640
+       [<ffffffff8114d969>] do_sys_open+0x69/0x140
+       [<ffffffff8114da80>] sys_open+0x20/0x30
+       [<ffffffff81034ff2>] system_call_fastpath+0x16/0x1b
+
+-> #0 (&(&ip->i_lock)->mr_lock){++++-.}:
+       [<ffffffff810b47a3>] __lock_acquire+0x11c3/0x1450
+       [<ffffffff810b4ad6>] lock_acquire+0xa6/0x160
+       [<ffffffff810a2035>] down_write_nested+0x65/0xb0
+       [<ffffffff81316feb>] xfs_ilock+0x10b/0x190
+       [<ffffffff8135023d>] xfs_reclaim_inode+0x9d/0x250
+       [<ffffffff81350d4b>] xfs_inode_ag_walk+0x8b/0x150
+       [<ffffffff81350e9b>] xfs_inode_ag_iterator+0x8b/0xf0
+       [<ffffffff8135100c>] xfs_reclaim_inode_shrink+0x10c/0x150
+       [<ffffffff81119be5>] shrink_slab+0x135/0x1a0
+       [<ffffffff8111bac1>] balance_pgdat+0x421/0x6a0
+       [<ffffffff8111be5d>] kswapd+0x11d/0x320
+       [<ffffffff8109cdb6>] kthread+0x96/0xa0
+       [<ffffffff81035de4>] kernel_thread_helper+0x4/0x10
+
+other info that might help us debug this:
+
+2 locks held by kswapd0/471:
+ #0:  (shrinker_rwsem){++++..}, at: [<ffffffff81119aed>] shrink_slab+0x3d/0x1a0
+ #1:  (&xfs_mount_list_lock){++++.-}, at: [<ffffffff81350fd6>] xfs_reclaim_inode_shrink+0xd6/0x150
+
+There are also a few variations as these paths are traversed
+from different locations in different workloads.
+
+There are also scanning overhead problems caused by the global shrinker as seen
+in https://bugzilla.kernel.org/show_bug.cgi?id=16348. This is not helped by
+every shrinker call potentially traversing multiple filesystems to find one
+with reclaimable inodes.
+
+The context based shrinker solution is very simple and doesn't have any effect
+outside XFS. For XFS, it allows us to avoid locking needed by a global list, as
+well as remove the repeated scanning of clean filesystems on every shrinker
+call. In combination with the tagging of the per-AG index to track AGs with
+reclaimable inodes, all the unnecessary AG scanning is removed and the overhead
+is minimised. Hence kswapd CPU usage and reclaim progress is not hindered
+anymore.
+
+The patch set is also available at:
+
+	git://git.kernel.org/pub/scm/git/linux/dgc/xfsdev shrinker
 
 _______________________________________________
 xfs mailing list
