@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6FBigAY199847 for <xfs@oss.sgi.com>; Thu, 15 Jul 2010 06:44:43 -0500
+	o6FBiw9v199887 for <xfs@oss.sgi.com>; Thu, 15 Jul 2010 06:44:58 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1F64E44A033
-	for <xfs@oss.sgi.com>; Thu, 15 Jul 2010 04:47:36 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
-	[150.101.137.103]) by cuda.sgi.com with ESMTP id
-	PhjezK1KB0SlgHW4 for <xfs@oss.sgi.com>;
-	Thu, 15 Jul 2010 04:47:36 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1DB7144A066
+	for <xfs@oss.sgi.com>; Thu, 15 Jul 2010 04:47:53 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	ZvpVPvs4Yu4tHWA7 for <xfs@oss.sgi.com>;
+	Thu, 15 Jul 2010 04:47:53 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/3] shrinker fixes for XFS for 2.6.35
-Date: Thu, 15 Jul 2010 21:46:55 +1000
-Message-Id: <1279194418-16119-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/3] xfs: convert inode shrinker to per-filesystem contexts
+Date: Thu, 15 Jul 2010 21:46:57 +1000
+Message-Id: <1279194418-16119-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1279194418-16119-1-git-send-email-david@fromorbit.com>
+References: <1279194418-16119-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,92 +31,170 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-Per-superblock shrinkers are not baked well enough for 2.6.36. However, we
-still need fixes for the XFS shrinker lockdep problems caused by the global
-mount list lock and other problems before 2.6.35 releases. The lockdep issues
-look like:
+From: Dave Chinner <dchinner@redhat.com>
 
-=======================================================
-[ INFO: possible circular locking dependency detected ]
-2.6.35-rc5-dgc+ #34
--------------------------------------------------------
-kswapd0/471 is trying to acquire lock:
- (&(&ip->i_lock)->mr_lock){++++-.}, at: [<ffffffff81316feb>] xfs_ilock+0x10b/0x190
+Now the shrinker passes us a context, wire up a shrinker context per
+filesystem. This allows us to remove the global mount list and the
+locking problems that introduced. It also means that a shrinker call
+does not need to traverse clean filesystems before finding a
+filesystem with reclaimable inodes.  This significantly reduces
+scanning overhead when lots of filesystems are present.
 
-but task is already holding lock:
- (&xfs_mount_list_lock){++++.-}, at: [<ffffffff81350fd6>] xfs_reclaim_inode_shrink+0xd6/0x150
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/linux-2.6/xfs_super.c |    2 -
+ fs/xfs/linux-2.6/xfs_sync.c  |   62 +++++++++--------------------------------
+ fs/xfs/linux-2.6/xfs_sync.h  |    2 -
+ fs/xfs/xfs_mount.h           |    2 +-
+ 4 files changed, 15 insertions(+), 53 deletions(-)
 
-which lock already depends on the new lock.
-
-
-the existing dependency chain (in reverse order) is:
-
--> #1 (&xfs_mount_list_lock){++++.-}:
-       [<ffffffff810b4ad6>] lock_acquire+0xa6/0x160
-       [<ffffffff817a4dd5>] _raw_spin_lock_irqsave+0x55/0xa0
-       [<ffffffff8106db62>] __wake_up+0x32/0x70
-       [<ffffffff811196db>] wakeup_kswapd+0xab/0xb0
-       [<ffffffff811132cd>] __alloc_pages_nodemask+0x27d/0x760
-       [<ffffffff81145c72>] kmem_getpages+0x62/0x160
-       [<ffffffff81146cdf>] fallback_alloc+0x18f/0x260
-       [<ffffffff81146a6b>] ____cache_alloc_node+0x9b/0x180
-       [<ffffffff811473bb>] kmem_cache_alloc+0x16b/0x1e0
-       [<ffffffff81340d54>] kmem_zone_alloc+0x94/0xe0
-       [<ffffffff813173a9>] xfs_inode_alloc+0x29/0x1b0
-       [<ffffffff8131781c>] xfs_iget+0x2ec/0x7a0
-       [<ffffffff8133a697>] xfs_trans_iget+0x27/0x60
-       [<ffffffff8131a60a>] xfs_ialloc+0xca/0x790
-       [<ffffffff8133b37f>] xfs_dir_ialloc+0xaf/0x340
-       [<ffffffff8133c38c>] xfs_create+0x3dc/0x710
-       [<ffffffff8134d277>] xfs_vn_mknod+0xa7/0x1c0
-       [<ffffffff8134d3c0>] xfs_vn_create+0x10/0x20
-       [<ffffffff8115ab2c>] vfs_create+0xac/0xd0
-       [<ffffffff8115b6bc>] do_last+0x51c/0x620
-       [<ffffffff8115dbd4>] do_filp_open+0x224/0x640
-       [<ffffffff8114d969>] do_sys_open+0x69/0x140
-       [<ffffffff8114da80>] sys_open+0x20/0x30
-       [<ffffffff81034ff2>] system_call_fastpath+0x16/0x1b
-
--> #0 (&(&ip->i_lock)->mr_lock){++++-.}:
-       [<ffffffff810b47a3>] __lock_acquire+0x11c3/0x1450
-       [<ffffffff810b4ad6>] lock_acquire+0xa6/0x160
-       [<ffffffff810a2035>] down_write_nested+0x65/0xb0
-       [<ffffffff81316feb>] xfs_ilock+0x10b/0x190
-       [<ffffffff8135023d>] xfs_reclaim_inode+0x9d/0x250
-       [<ffffffff81350d4b>] xfs_inode_ag_walk+0x8b/0x150
-       [<ffffffff81350e9b>] xfs_inode_ag_iterator+0x8b/0xf0
-       [<ffffffff8135100c>] xfs_reclaim_inode_shrink+0x10c/0x150
-       [<ffffffff81119be5>] shrink_slab+0x135/0x1a0
-       [<ffffffff8111bac1>] balance_pgdat+0x421/0x6a0
-       [<ffffffff8111be5d>] kswapd+0x11d/0x320
-       [<ffffffff8109cdb6>] kthread+0x96/0xa0
-       [<ffffffff81035de4>] kernel_thread_helper+0x4/0x10
-
-other info that might help us debug this:
-
-2 locks held by kswapd0/471:
- #0:  (shrinker_rwsem){++++..}, at: [<ffffffff81119aed>] shrink_slab+0x3d/0x1a0
- #1:  (&xfs_mount_list_lock){++++.-}, at: [<ffffffff81350fd6>] xfs_reclaim_inode_shrink+0xd6/0x150
-
-There are also a few variations as these paths are traversed
-from different locations in different workloads.
-
-There are also scanning overhead problems caused by the global shrinker as seen
-in https://bugzilla.kernel.org/show_bug.cgi?id=16348. This is not helped by
-every shrinker call potentially traversing multiple filesystems to find one
-with reclaimable inodes.
-
-The context based shrinker solution is very simple and doesn't have any effect
-outside XFS. For XFS, it allows us to avoid locking needed by a global list, as
-well as remove the repeated scanning of clean filesystems on every shrinker
-call. In combination with the tagging of the per-AG index to track AGs with
-reclaimable inodes, all the unnecessary AG scanning is removed and the overhead
-is minimised. Hence kswapd CPU usage and reclaim progress is not hindered
-anymore.
-
-The patch set is also available at:
-
-	git://git.kernel.org/pub/scm/git/linux/dgc/xfsdev shrinker
+diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
+index f2d1718..80938c7 100644
+--- a/fs/xfs/linux-2.6/xfs_super.c
++++ b/fs/xfs/linux-2.6/xfs_super.c
+@@ -1883,7 +1883,6 @@ init_xfs_fs(void)
+ 		goto out_cleanup_procfs;
+ 
+ 	vfs_initquota();
+-	xfs_inode_shrinker_init();
+ 
+ 	error = register_filesystem(&xfs_fs_type);
+ 	if (error)
+@@ -1911,7 +1910,6 @@ exit_xfs_fs(void)
+ {
+ 	vfs_exitquota();
+ 	unregister_filesystem(&xfs_fs_type);
+-	xfs_inode_shrinker_destroy();
+ 	xfs_sysctl_unregister();
+ 	xfs_cleanup_procfs();
+ 	xfs_buf_terminate();
+diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+index be37582..f433819 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.c
++++ b/fs/xfs/linux-2.6/xfs_sync.c
+@@ -828,14 +828,7 @@ xfs_reclaim_inodes(
+ 
+ /*
+  * Shrinker infrastructure.
+- *
+- * This is all far more complex than it needs to be. It adds a global list of
+- * mounts because the shrinkers can only call a global context. We need to make
+- * the shrinkers pass a context to avoid the need for global state.
+  */
+-static LIST_HEAD(xfs_mount_list);
+-static struct rw_semaphore xfs_mount_list_lock;
+-
+ static int
+ xfs_reclaim_inode_shrink(
+ 	struct shrinker	*shrink,
+@@ -847,65 +840,38 @@ xfs_reclaim_inode_shrink(
+ 	xfs_agnumber_t	ag;
+ 	int		reclaimable = 0;
+ 
++	mp = container_of(shrink, struct xfs_mount, m_inode_shrink);
+ 	if (nr_to_scan) {
+ 		if (!(gfp_mask & __GFP_FS))
+ 			return -1;
+ 
+-		down_read(&xfs_mount_list_lock);
+-		list_for_each_entry(mp, &xfs_mount_list, m_mplist) {
+-			xfs_inode_ag_iterator(mp, xfs_reclaim_inode, 0,
++		xfs_inode_ag_iterator(mp, xfs_reclaim_inode, 0,
+ 					XFS_ICI_RECLAIM_TAG, 1, &nr_to_scan);
+-			if (nr_to_scan <= 0)
+-				break;
+-		}
+-		up_read(&xfs_mount_list_lock);
+-	}
++		/* if we don't exhaust the scan, don't bother coming back */
++		if (nr_to_scan > 0)
++			return -1;
++       }
+ 
+-	down_read(&xfs_mount_list_lock);
+-	list_for_each_entry(mp, &xfs_mount_list, m_mplist) {
+-		for (ag = 0; ag < mp->m_sb.sb_agcount; ag++) {
+-			pag = xfs_perag_get(mp, ag);
+-			reclaimable += pag->pag_ici_reclaimable;
+-			xfs_perag_put(pag);
+-		}
++	for (ag = 0; ag < mp->m_sb.sb_agcount; ag++) {
++		pag = xfs_perag_get(mp, ag);
++		reclaimable += pag->pag_ici_reclaimable;
++		xfs_perag_put(pag);
+ 	}
+-	up_read(&xfs_mount_list_lock);
+ 	return reclaimable;
+ }
+ 
+-static struct shrinker xfs_inode_shrinker = {
+-	.shrink = xfs_reclaim_inode_shrink,
+-	.seeks = DEFAULT_SEEKS,
+-};
+-
+-void __init
+-xfs_inode_shrinker_init(void)
+-{
+-	init_rwsem(&xfs_mount_list_lock);
+-	register_shrinker(&xfs_inode_shrinker);
+-}
+-
+-void
+-xfs_inode_shrinker_destroy(void)
+-{
+-	ASSERT(list_empty(&xfs_mount_list));
+-	unregister_shrinker(&xfs_inode_shrinker);
+-}
+-
+ void
+ xfs_inode_shrinker_register(
+ 	struct xfs_mount	*mp)
+ {
+-	down_write(&xfs_mount_list_lock);
+-	list_add_tail(&mp->m_mplist, &xfs_mount_list);
+-	up_write(&xfs_mount_list_lock);
++	mp->m_inode_shrink.shrink = xfs_reclaim_inode_shrink;
++	mp->m_inode_shrink.seeks = DEFAULT_SEEKS;
++	register_shrinker(&mp->m_inode_shrink);
+ }
+ 
+ void
+ xfs_inode_shrinker_unregister(
+ 	struct xfs_mount	*mp)
+ {
+-	down_write(&xfs_mount_list_lock);
+-	list_del(&mp->m_mplist);
+-	up_write(&xfs_mount_list_lock);
++	unregister_shrinker(&mp->m_inode_shrink);
+ }
+diff --git a/fs/xfs/linux-2.6/xfs_sync.h b/fs/xfs/linux-2.6/xfs_sync.h
+index cdcbaac..e28139a 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.h
++++ b/fs/xfs/linux-2.6/xfs_sync.h
+@@ -55,8 +55,6 @@ int xfs_inode_ag_iterator(struct xfs_mount *mp,
+ 	int (*execute)(struct xfs_inode *ip, struct xfs_perag *pag, int flags),
+ 	int flags, int tag, int write_lock, int *nr_to_scan);
+ 
+-void xfs_inode_shrinker_init(void);
+-void xfs_inode_shrinker_destroy(void);
+ void xfs_inode_shrinker_register(struct xfs_mount *mp);
+ void xfs_inode_shrinker_unregister(struct xfs_mount *mp);
+ 
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 1d2c7ee..5761087 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -259,7 +259,7 @@ typedef struct xfs_mount {
+ 	wait_queue_head_t	m_wait_single_sync_task;
+ 	__int64_t		m_update_flags;	/* sb flags we need to update
+ 						   on the next remount,rw */
+-	struct list_head	m_mplist;	/* inode shrinker mount list */
++	struct shrinker		m_inode_shrink;	/* inode reclaim shrinker */
+ } xfs_mount_t;
+ 
+ /*
+-- 
+1.7.1
 
 _______________________________________________
 xfs mailing list
