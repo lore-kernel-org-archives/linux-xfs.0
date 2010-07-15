@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6FI79LZ216375 for <xfs@oss.sgi.com>; Thu, 15 Jul 2010 13:07:09 -0500
-Subject: Re: [PATCH 4/5] xfs: use GFP_NOFS for page cache allocation
+	o6FI6808216310 for <xfs@oss.sgi.com>; Thu, 15 Jul 2010 13:06:08 -0500
+Subject: Re: [PATCH 3/5] xfs: fix xfs_trans_add_item() lockdep warnings
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1279154300-2018-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1279154300-2018-4-git-send-email-david@fromorbit.com>
 References: <1279154300-2018-1-git-send-email-david@fromorbit.com>
-	<1279154300-2018-5-git-send-email-david@fromorbit.com>
-Date: Thu, 15 Jul 2010 13:10:05 -0500
-Message-ID: <1279217405.2054.34.camel@doink>
+	<1279154300-2018-4-git-send-email-david@fromorbit.com>
+Date: Thu, 15 Jul 2010 13:09:01 -0500
+Message-ID: <1279217341.2054.33.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -24,45 +24,23 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+Cc: XFS Mailing List <xfs@oss.sgi.com>
 
 On Thu, 2010-07-15 at 10:38 +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Avoid a lockdep warning by preventing page cache allocation from
-> recursing back into the filesystem during memory reclaim.
+> xfs_trans_add_item() is called with ip->i_ilock held, which means it
+> is unsafe for memory reclaim to recurse back into the filesystem
+> (ilock is required in writeback). Hence the allocation needs to be
+> KM_NOFS to avoid recursion.
 
 Looks good.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
-
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/linux-2.6/xfs_aops.c |    5 +++--
->  1 files changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
-> index ed9c3db..1075791 100644
-> --- a/fs/xfs/linux-2.6/xfs_aops.c
-> +++ b/fs/xfs/linux-2.6/xfs_aops.c
-> @@ -1501,8 +1501,9 @@ xfs_vm_write_begin(
->  	void			**fsdata)
->  {
->  	*pagep = NULL;
-> -	return block_write_begin(file, mapping, pos, len, flags, pagep, fsdata,
-> -								xfs_get_blocks);
-> +	return block_write_begin(file, mapping, pos, len,
-> +				 (flags | AOP_FLAG_NOFS),
-
-                            Why the parentheses?
-
-> +				 pagep, fsdata, xfs_get_blocks);
->  }
->  
->  STATIC sector_t
-
-
+> Lockdep report indicating memory allocation being called with the
+> ip->i_ilock held is as follows:
+. . .
 
 _______________________________________________
 xfs mailing list
