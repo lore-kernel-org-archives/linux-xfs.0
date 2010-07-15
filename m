@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6FBihfo199851 for <xfs@oss.sgi.com>; Thu, 15 Jul 2010 06:44:44 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7171A44A033
-	for <xfs@oss.sgi.com>; Thu, 15 Jul 2010 04:47:39 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
-	[150.101.137.103]) by cuda.sgi.com with ESMTP id
-	e837ZAkBgGkXRit9 for <xfs@oss.sgi.com>;
-	Thu, 15 Jul 2010 04:47:39 -0700 (PDT)
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/3] mm: add context argument to shrinker callback
-Date: Thu, 15 Jul 2010 21:46:56 +1000
-Message-Id: <1279194418-16119-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1279194418-16119-1-git-send-email-david@fromorbit.com>
-References: <1279194418-16119-1-git-send-email-david@fromorbit.com>
+	o6FGtpbo213233
+	for <linux-xfs@oss.sgi.com>; Thu, 15 Jul 2010 11:55:52 -0500
+Received: from mrserver2.pmiatlanta.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0F6B144BA39
+	for <linux-xfs@oss.sgi.com>; Thu, 15 Jul 2010 09:58:42 -0700 (PDT)
+Received: from mrserver2.pmiatlanta.net
+	(96.38.230-38.static.gwnt.ga.charter.com [96.38.230.38]) by
+	cuda.sgi.com with ESMTP id 4GmSVvqffFzBZkhT for
+	<linux-xfs@oss.sgi.com>; Thu, 15 Jul 2010 09:58:42 -0700 (PDT)
+From: Mike Stallfus <mikes@practilutions.com>
+Subject: Practical Solutions News
+Mime-Version: 1.0
+Date: Thu, 15 Jul 2010 16:58:31 GMT
+Message-ID: <MRSERVER2D8o8HKHT0c000173c5@mrserver2.pmiatlanta.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,342 +23,241 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============2052632452234282003=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: linux-xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+This is a multipart message in mime format.
 
-The current shrinker implementation requires the registered callback
-to have global state to work from. This makes it difficult to shrink
-caches that are not global (e.g. per-filesystem caches). Pass the shrinker
-structure to the callback so that users can embed the shrinker structure
-in the context the shrinker needs to operate on and get back to it in the
-callback via container_of().
+--===============2052632452234282003==
+Content-Type: multipart/alternative; boundary="boundary03DC54A4_alternative"
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- arch/x86/kvm/mmu.c              |    2 +-
- drivers/gpu/drm/i915/i915_gem.c |    2 +-
- fs/dcache.c                     |    2 +-
- fs/gfs2/glock.c                 |    2 +-
- fs/gfs2/quota.c                 |    2 +-
- fs/gfs2/quota.h                 |    2 +-
- fs/inode.c                      |    2 +-
- fs/mbcache.c                    |    5 +++--
- fs/nfs/dir.c                    |    2 +-
- fs/nfs/internal.h               |    3 ++-
- fs/quota/dquot.c                |    2 +-
- fs/ubifs/shrinker.c             |    2 +-
- fs/ubifs/ubifs.h                |    2 +-
- fs/xfs/linux-2.6/xfs_buf.c      |    5 +++--
- fs/xfs/linux-2.6/xfs_sync.c     |    1 +
- fs/xfs/quota/xfs_qm.c           |    7 +++++--
- include/linux/mm.h              |    2 +-
- mm/vmscan.c                     |    8 +++++---
- 18 files changed, 31 insertions(+), 22 deletions(-)
+This is a multipart message in mime format.
 
-diff --git a/arch/x86/kvm/mmu.c b/arch/x86/kvm/mmu.c
-index 3699613..b1ed0a1 100644
---- a/arch/x86/kvm/mmu.c
-+++ b/arch/x86/kvm/mmu.c
-@@ -2926,7 +2926,7 @@ static int kvm_mmu_remove_some_alloc_mmu_pages(struct kvm *kvm)
- 	return kvm_mmu_zap_page(kvm, page) + 1;
- }
+--boundary03DC54A4_alternative
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Disposition: inline
+
+ PM Training 
+July 2010  
+
+PMP Live Training and Portal
+Live On Line Class Sessions PM4002 On Going
+Register for Live On Line sessions and receive a 90 day pass to jump in=
+to any live session underway on the web plus access to the training port=
+al! The PMP CertPrep is going on monthly. If you can only only attend th=
+e first week in July or August catch up in September. Or train on the Po=
+rtal and sit in on the specific Live Sessions you need help with. If you=
+ need to skip a Live session, no worry. Pick it up during the next sessi=
+on or on the portal. You even can repeat sessions if you can't get enoug=
+h of me! Total flexibility for you with a live instructor plus the train=
+ing portal. Sign up for any PM4002 session and receive a 90 day PASS for=
+ access to BOTH! 
+Classes are now scheduled through end of 2010. Follow this link: PSS Sc=
+hedule to see the current list. The PASS only applies to PM4002 (No PM40=
+03). The PMP Certification Prep PM4002 class spends 3 hours per night fr=
+om 7-10PM. 24 ECH are awarded- Details: PMP Cert Prep Training 
+Free 30 Day Access for Web Portal 
+The PSS training portal is the Best WEB Based training available. All l=
+ive sessions have been converted from my live material into flash enable=
+d voice recorded presentations - 13 modules. You can train ANY time - pl=
+ay one at lunch and replay as necessary. All support material, tests, an=
+d quizzes on line too! This is complete and I will provide email support=
+ with questions. I am offering a free look for 30 days visit the portal:=
+PSS Training Portal, create logon credentials, and you are in! Free acce=
+ss to the PMP Cert Prep class for 30 days. 
+Take both PM4002 and PM4003 EXAM Cram - and earn 35 Education hours, en=
+ough to qualify for the PMP Exam.
+Corporate Rates Available - Train ALL your PMs when they are available =
+
+Michael Stallfus, PMP
+Practical Solutions, LLC
+310 Ruby Forest PKWY
+Suwanee GA 30024 
+(404) 806 1497 
+mikes@practilutions.com
+We respect your privacy and if you would like to be removed from this m=
+ail list please click: remove 
+
  
--static int mmu_shrink(int nr_to_scan, gfp_t gfp_mask)
-+static int mmu_shrink(struct shrinker *shrink, int nr_to_scan, gfp_t gfp_mask)
- {
- 	struct kvm *kvm;
- 	struct kvm *kvm_freed = NULL;
-diff --git a/drivers/gpu/drm/i915/i915_gem.c b/drivers/gpu/drm/i915/i915_gem.c
-index 0743858..3b0b0b1 100644
---- a/drivers/gpu/drm/i915/i915_gem.c
-+++ b/drivers/gpu/drm/i915/i915_gem.c
-@@ -4977,7 +4977,7 @@ i915_gpu_is_active(struct drm_device *dev)
- }
+--boundary03DC54A4_alternative
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/html; charset="iso-8859-1"
+Content-Disposition: inline
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML xmlns=3D"http://www.w3.org/TR/REC-html40" xmlns:v =3D 
+"urn:schemas-microsoft-com:vml" xmlns:o =3D 
+"urn:schemas-microsoft-com:office:office"><HEAD><TITLE>Practical Soluti=
+ons News</TITLE>
+<STYLE type=3Dtext/css>
+<!--
+-->
+</STYLE>
+
+<META content=3D"30 Days" name=3Drevisit-after>
+<META content=3D"Project Management Training, consulting, and recruitin=
+g." 
+name=3Ddescription>
+<META content=3D"Michael Stallfus" name=3DAuthor>
+<STYLE type=3Dtext/css></STYLE>
+
+<META http-equiv=3DContent-Type content=3D"text/html; charset=3Diso-885=
+9-1">
+<META content=3D"MSHTML 6.00.2900.5726" name=3DGENERATOR></HEAD>
+<BODY text=3D#000000 vLink=3D#0000ff aLink=3D#0000ff link=3D#0000ff bgC=
+olor=3D#ffffff body 
+b>
+<DIV align=3Dcenter>
+<TABLE cellSpacing=3D0 cellPadding=3D0 width=3D712 bgColor=3D#004887 bo=
+rder=3D0>
+  <TBODY>
+  <TR>
+    <TD>
+      <TABLE class=3Dintrobox cellSpacing=3D0 cellPadding=3D0 width=3D7=
+00 
+      bgColor=3D#004887 border=3D0>
+        <TBODY>
+        <TR>
+          <TD vAlign=3Dcenter align=3Dmiddle width=3D"97%" height=3D60>=
+
+            <DIV align=3Dright><IMG class=3Dfltlft height=3D74 alt=3Dlo=
+goPSS.gif 
+            hspace=3D10 src=3D"http://www.practilutions.com/PSSLogoNew9=
+small.gif" 
+            width=3D209 align=3Dleft><FONT color=3D#d8a377 size=3D+3> <=
+EM><STRONG>PM 
+            Training</STRONG></STRONG></EM></FONT> </DIV>
+            <DIV align=3Dright><FONT color=3D#cccccc><STRONG>July 
+            2010</STRONG></FONT>&nbsp; </DIV>
+        <TR>
+          <TD width=3D700><IMG height=3D70 alt=3DGraphic3 
+            src=3D"http://www.practilutions.com/graphic3.jpg" 
+        width=3D706></TD></TR></TBODY></TABLE>
+      <TABLE borderColor=3D#004887 height=3Dauto cellSpacing=3D2 cellPa=
+dding=3D5 
+      width=3D706 align=3Dcenter bgColor=3D#f0f0c0 border=3D3>
+        <TBODY>
+        <TR>
+          <TD width=3D"80%">
+            <H1 align=3Dcenter>PMP Live Training and Portal</H1>
+            <H3><FONT color=3D#f06000><U>Live On Line Class Sessions PM=
+4002 On 
+            Going</U></FONT></H3>
+            <P><B>Register for Live On Line sessions and receive a<FONT=
  
- static int
--i915_gem_shrink(int nr_to_scan, gfp_t gfp_mask)
-+i915_gem_shrink(struct shrinker *shrink, int nr_to_scan, gfp_t gfp_mask)
- {
- 	drm_i915_private_t *dev_priv, *next_dev;
- 	struct drm_i915_gem_object *obj_priv, *next_obj;
-diff --git a/fs/dcache.c b/fs/dcache.c
-index c8c78ba..86d4db1 100644
---- a/fs/dcache.c
-+++ b/fs/dcache.c
-@@ -896,7 +896,7 @@ EXPORT_SYMBOL(shrink_dcache_parent);
-  *
-  * In this case we return -1 to tell the caller that we baled.
-  */
--static int shrink_dcache_memory(int nr, gfp_t gfp_mask)
-+static int shrink_dcache_memory(struct shrinker *shrink, int nr, gfp_t gfp_mask)
- {
- 	if (nr) {
- 		if (!(gfp_mask & __GFP_FS))
-diff --git a/fs/gfs2/glock.c b/fs/gfs2/glock.c
-index ddcdbf4..04b540c 100644
---- a/fs/gfs2/glock.c
-+++ b/fs/gfs2/glock.c
-@@ -1348,7 +1348,7 @@ void gfs2_glock_complete(struct gfs2_glock *gl, int ret)
- }
- 
- 
--static int gfs2_shrink_glock_memory(int nr, gfp_t gfp_mask)
-+static int gfs2_shrink_glock_memory(struct shrinker *shrink, int nr, gfp_t gfp_mask)
- {
- 	struct gfs2_glock *gl;
- 	int may_demote;
-diff --git a/fs/gfs2/quota.c b/fs/gfs2/quota.c
-index 49667d6..4ea548f 100644
---- a/fs/gfs2/quota.c
-+++ b/fs/gfs2/quota.c
-@@ -77,7 +77,7 @@ static LIST_HEAD(qd_lru_list);
- static atomic_t qd_lru_count = ATOMIC_INIT(0);
- static DEFINE_SPINLOCK(qd_lru_lock);
- 
--int gfs2_shrink_qd_memory(int nr, gfp_t gfp_mask)
-+int gfs2_shrink_qd_memory(struct shrinker *shrink, int nr, gfp_t gfp_mask)
- {
- 	struct gfs2_quota_data *qd;
- 	struct gfs2_sbd *sdp;
-diff --git a/fs/gfs2/quota.h b/fs/gfs2/quota.h
-index 195f60c..e7d236c 100644
---- a/fs/gfs2/quota.h
-+++ b/fs/gfs2/quota.h
-@@ -51,7 +51,7 @@ static inline int gfs2_quota_lock_check(struct gfs2_inode *ip)
- 	return ret;
- }
- 
--extern int gfs2_shrink_qd_memory(int nr, gfp_t gfp_mask);
-+extern int gfs2_shrink_qd_memory(struct shrinker *shrink, int nr, gfp_t gfp_mask);
- extern const struct quotactl_ops gfs2_quotactl_ops;
- 
- #endif /* __QUOTA_DOT_H__ */
-diff --git a/fs/inode.c b/fs/inode.c
-index 2bee20a..722860b 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -512,7 +512,7 @@ static void prune_icache(int nr_to_scan)
-  * This function is passed the number of inodes to scan, and it returns the
-  * total number of remaining possibly-reclaimable inodes.
-  */
--static int shrink_icache_memory(int nr, gfp_t gfp_mask)
-+static int shrink_icache_memory(struct shrinker *shrink, int nr, gfp_t gfp_mask)
- {
- 	if (nr) {
- 		/*
-diff --git a/fs/mbcache.c b/fs/mbcache.c
-index ec88ff3..e28f21b 100644
---- a/fs/mbcache.c
-+++ b/fs/mbcache.c
-@@ -115,7 +115,7 @@ mb_cache_indexes(struct mb_cache *cache)
-  * What the mbcache registers as to get shrunk dynamically.
-  */
- 
--static int mb_cache_shrink_fn(int nr_to_scan, gfp_t gfp_mask);
-+static int mb_cache_shrink_fn(struct shrinker *shrink, int nr_to_scan, gfp_t gfp_mask);
- 
- static struct shrinker mb_cache_shrinker = {
- 	.shrink = mb_cache_shrink_fn,
-@@ -191,13 +191,14 @@ forget:
-  * This function is called by the kernel memory management when memory
-  * gets low.
-  *
-+ * @shrink: (ignored)
-  * @nr_to_scan: Number of objects to scan
-  * @gfp_mask: (ignored)
-  *
-  * Returns the number of objects which are present in the cache.
-  */
- static int
--mb_cache_shrink_fn(int nr_to_scan, gfp_t gfp_mask)
-+mb_cache_shrink_fn(struct shrinker *shrink, int nr_to_scan, gfp_t gfp_mask)
- {
- 	LIST_HEAD(free_list);
- 	struct list_head *l, *ltmp;
-diff --git a/fs/nfs/dir.c b/fs/nfs/dir.c
-index 782b431..e60416d 100644
---- a/fs/nfs/dir.c
-+++ b/fs/nfs/dir.c
-@@ -1710,7 +1710,7 @@ static void nfs_access_free_list(struct list_head *head)
- 	}
- }
- 
--int nfs_access_cache_shrinker(int nr_to_scan, gfp_t gfp_mask)
-+int nfs_access_cache_shrinker(struct shrinker *shrink, int nr_to_scan, gfp_t gfp_mask)
- {
- 	LIST_HEAD(head);
- 	struct nfs_inode *nfsi;
-diff --git a/fs/nfs/internal.h b/fs/nfs/internal.h
-index d8bd619..e70f44b 100644
---- a/fs/nfs/internal.h
-+++ b/fs/nfs/internal.h
-@@ -205,7 +205,8 @@ extern struct rpc_procinfo nfs4_procedures[];
- void nfs_close_context(struct nfs_open_context *ctx, int is_sync);
- 
- /* dir.c */
--extern int nfs_access_cache_shrinker(int nr_to_scan, gfp_t gfp_mask);
-+extern int nfs_access_cache_shrinker(struct shrinker *shrink,
-+					int nr_to_scan, gfp_t gfp_mask);
- 
- /* inode.c */
- extern struct workqueue_struct *nfsiod_workqueue;
-diff --git a/fs/quota/dquot.c b/fs/quota/dquot.c
-index 12c233d..437d2ca 100644
---- a/fs/quota/dquot.c
-+++ b/fs/quota/dquot.c
-@@ -676,7 +676,7 @@ static void prune_dqcache(int count)
-  * This is called from kswapd when we think we need some
-  * more memory
-  */
--static int shrink_dqcache_memory(int nr, gfp_t gfp_mask)
-+static int shrink_dqcache_memory(struct shrinker *shrink, int nr, gfp_t gfp_mask)
- {
- 	if (nr) {
- 		spin_lock(&dq_list_lock);
-diff --git a/fs/ubifs/shrinker.c b/fs/ubifs/shrinker.c
-index 02feb59..0b20111 100644
---- a/fs/ubifs/shrinker.c
-+++ b/fs/ubifs/shrinker.c
-@@ -277,7 +277,7 @@ static int kick_a_thread(void)
- 	return 0;
- }
- 
--int ubifs_shrinker(int nr, gfp_t gfp_mask)
-+int ubifs_shrinker(struct shrinker *shrink, int nr, gfp_t gfp_mask)
- {
- 	int freed, contention = 0;
- 	long clean_zn_cnt = atomic_long_read(&ubifs_clean_zn_cnt);
-diff --git a/fs/ubifs/ubifs.h b/fs/ubifs/ubifs.h
-index 2eef553..0431087 100644
---- a/fs/ubifs/ubifs.h
-+++ b/fs/ubifs/ubifs.h
-@@ -1575,7 +1575,7 @@ int ubifs_tnc_start_commit(struct ubifs_info *c, struct ubifs_zbranch *zroot);
- int ubifs_tnc_end_commit(struct ubifs_info *c);
- 
- /* shrinker.c */
--int ubifs_shrinker(int nr_to_scan, gfp_t gfp_mask);
-+int ubifs_shrinker(struct shrinker *shrink, int nr_to_scan, gfp_t gfp_mask);
- 
- /* commit.c */
- int ubifs_bg_thread(void *info);
-diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
-index 649ade8..2ee3f7a 100644
---- a/fs/xfs/linux-2.6/xfs_buf.c
-+++ b/fs/xfs/linux-2.6/xfs_buf.c
-@@ -45,7 +45,7 @@
- 
- static kmem_zone_t *xfs_buf_zone;
- STATIC int xfsbufd(void *);
--STATIC int xfsbufd_wakeup(int, gfp_t);
-+STATIC int xfsbufd_wakeup(struct shrinker *, int, gfp_t);
- STATIC void xfs_buf_delwri_queue(xfs_buf_t *, int);
- static struct shrinker xfs_buf_shake = {
- 	.shrink = xfsbufd_wakeup,
-@@ -340,7 +340,7 @@ _xfs_buf_lookup_pages(
- 					__func__, gfp_mask);
- 
- 			XFS_STATS_INC(xb_page_retries);
--			xfsbufd_wakeup(0, gfp_mask);
-+			xfsbufd_wakeup(NULL, 0, gfp_mask);
- 			congestion_wait(BLK_RW_ASYNC, HZ/50);
- 			goto retry;
- 		}
-@@ -1762,6 +1762,7 @@ xfs_buf_runall_queues(
- 
- STATIC int
- xfsbufd_wakeup(
-+	struct shrinker		*shrink,
- 	int			priority,
- 	gfp_t			mask)
- {
-diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index ef7f021..be37582 100644
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -838,6 +838,7 @@ static struct rw_semaphore xfs_mount_list_lock;
- 
- static int
- xfs_reclaim_inode_shrink(
-+	struct shrinker	*shrink,
- 	int		nr_to_scan,
- 	gfp_t		gfp_mask)
- {
-diff --git a/fs/xfs/quota/xfs_qm.c b/fs/xfs/quota/xfs_qm.c
-index 8c117ff..67c0183 100644
---- a/fs/xfs/quota/xfs_qm.c
-+++ b/fs/xfs/quota/xfs_qm.c
-@@ -69,7 +69,7 @@ STATIC void	xfs_qm_list_destroy(xfs_dqlist_t *);
- 
- STATIC int	xfs_qm_init_quotainos(xfs_mount_t *);
- STATIC int	xfs_qm_init_quotainfo(xfs_mount_t *);
--STATIC int	xfs_qm_shake(int, gfp_t);
-+STATIC int	xfs_qm_shake(struct shrinker *, int, gfp_t);
- 
- static struct shrinker xfs_qm_shaker = {
- 	.shrink = xfs_qm_shake,
-@@ -2117,7 +2117,10 @@ xfs_qm_shake_freelist(
-  */
- /* ARGSUSED */
- STATIC int
--xfs_qm_shake(int nr_to_scan, gfp_t gfp_mask)
-+xfs_qm_shake(
-+	struct shrinker	*shrink,
-+	int		nr_to_scan,
-+	gfp_t		gfp_mask)
- {
- 	int	ndqused, nfree, n;
- 
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index b969efb..a2b4804 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -999,7 +999,7 @@ static inline void sync_mm_rss(struct task_struct *task, struct mm_struct *mm)
-  * querying the cache size, so a fastpath for that case is appropriate.
-  */
- struct shrinker {
--	int (*shrink)(int nr_to_scan, gfp_t gfp_mask);
-+	int (*shrink)(struct shrinker *, int nr_to_scan, gfp_t gfp_mask);
- 	int seeks;	/* seeks to recreate an obj */
- 
- 	/* These are for internal use */
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 9c7e57c..199fa43 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -213,8 +213,9 @@ unsigned long shrink_slab(unsigned long scanned, gfp_t gfp_mask,
- 	list_for_each_entry(shrinker, &shrinker_list, list) {
- 		unsigned long long delta;
- 		unsigned long total_scan;
--		unsigned long max_pass = (*shrinker->shrink)(0, gfp_mask);
-+		unsigned long max_pass;
- 
-+		max_pass = (*shrinker->shrink)(shrinker, 0, gfp_mask);
- 		delta = (4 * scanned) / shrinker->seeks;
- 		delta *= max_pass;
- 		do_div(delta, lru_pages + 1);
-@@ -242,8 +243,9 @@ unsigned long shrink_slab(unsigned long scanned, gfp_t gfp_mask,
- 			int shrink_ret;
- 			int nr_before;
- 
--			nr_before = (*shrinker->shrink)(0, gfp_mask);
--			shrink_ret = (*shrinker->shrink)(this_scan, gfp_mask);
-+			nr_before = (*shrinker->shrink)(shrinker, 0, gfp_mask);
-+			shrink_ret = (*shrinker->shrink)(shrinker, this_scan,
-+								gfp_mask);
- 			if (shrink_ret == -1)
- 				break;
- 			if (shrink_ret < nr_before)
--- 
-1.7.1
+            color=3D#ff0000><EM> 90 day pass to jump into any live sess=
+ion 
+            underway on the web plus access to the training portal!</EM=
+></FONT> 
+            The PMP CertPrep is going on monthly. If you can only only =
+attend 
+            the first week in July or August catch up in September. Or =
+train on 
+            the Portal and sit in on the specific Live Sessions you nee=
+d help 
+            with. If you need to skip a Live session, no worry. Pick it=
+ up 
+            during the next session or on the portal. You even can repe=
+at 
+            sessions if you can't get enough of me! Total flexibility f=
+or you 
+            with a live instructor plus the training portal.</B><EM> 
+            <STRONG>Sign up for any PM4002 session and receive a 90 day=
+ PASS for 
+            access to BOTH! </STRONG></EM></P>Classes are now scheduled=
+ through 
+            end of 2010. Follow this link: <A 
+            href=3D"http://www.practilutions.com/Course%20Schedule.htm"=
+>PSS 
+            Schedule</A> to see the current list. The PASS only applies=
+ to 
+            PM4002 (No PM4003). The <FONT face=3Dverdana 
+            color=3D#f06000><EM><STRONG>PMP Certification Prep PM4002 
+            class</STRONG></EM></FONT> spends 3 hours per night from 7-=
+10PM. 24 
+            ECH are awarded- Details: <A title=3D"Get Certified!" 
+            href=3D"http://www.practilutions.com/PMP%20Prep.htm">PMP Ce=
+rt Prep 
+            Training</A> 
+            <H3><STRONG><U><FONT color=3D#f06000>Free 30 Day Access for=
+ Web 
+            Portal</FONT></U></STRONG> </H3>
+            <P>The PSS training portal is the Best WEB Based training a=
+vailable. 
+            All live sessions have been converted from my live material=
+ into 
+            flash enabled voice recorded presentations - 13 modules. Yo=
+u can 
+            train ANY time - play one at lunch and replay as necessary.=
+ All 
+            support material, tests, and quizzes on line too! This is c=
+omplete 
+            and I will provide email support with questions. I am offer=
+ing a 
+            free look for 30 days visit the portal:<A title=3D"Web Port=
+al" 
+            href=3D"http://training.practilutions.com/training">PSS Tra=
+ining 
+            Portal</A>, create logon credentials, and you are in! Free =
+access to 
+            the PMP Cert Prep class for 30 days. 
+            <H3><FONT face=3Dverdana color=3D#f06000><EM><U>Take both P=
+M4002 and 
+            PM4003 EXAM Cram - and earn 35 Education hours, enough to q=
+ualify 
+            for the PMP Exam.</U></EM></FONT></H3>
+            <H3><FONT face=3Dverdana color=3D#f06000><EM><U>Corporate R=
+ates 
+            Available - Train ALL your PMs&nbsp;when they are 
+            available&nbsp;</U></EM></FONT></H3>
+            <P></P></TD></TR></TBODY></TABLE>
+      <TABLE borderColor=3D#004887 height=3Dauto cellSpacing=3D0 cellPa=
+dding=3D0 
+      width=3D700 align=3Dcenter bgColor=3D#f0f0c0 border=3D0>
+        <TBODY>
+        <TR>
+          <TD width=3D121 height=3D149><IMG height=3D127 alt=3DMLS hspa=
+ce=3D10 
+            src=3D"http://www.practilutions.com/DSC_1410h.jpg" width=3D=
+104 
+            align=3Dmiddle></TD>
+          <TD width=3D374><STRONG>Michael Stallfus, PMP<BR>Practical So=
+lutions, 
+            LLC<BR>310 Ruby Forest PKWY<BR>Suwanee GA 30024 <BR>(404) 8=
+06 1497 
+            <BR><A title=3Dinfo 
+            href=3D"mailto:mikes@practilutions.com?subject=3Dmore info =
+please">mikes@practilutions.com</A></STRONG></TD>
+          <TD width=3D205><IMG class=3Dfltrt height=3D56 alt=3DPSSLogo =
+hspace=3D5 
+            src=3D"http://www.practilutions.com/PSSLogoNew8small.gif" w=
+idth=3D184 
+            align=3Dbottom valign=3D"top"></TD></TR>
+        <TR>
+          <TD></TD>
+          <TD>
+            <H6 align=3Dcenter>We respect your privacy and if you would=
+ like to be 
+            removed from this mail list please click: <A title=3DUnsubs=
+cribe 
+            href=3D"mailto:unsubscribe@practilutions.com?subject=3Dremo=
+ve">remove</A>&nbsp;<BR></H6></TD></TR></TBODY></TABLE>&nbsp;</TD></TR><=
+/TBODY></TABLE></DIV></BODY></HTML>
+--boundary03DC54A4_alternative--
+
+
+--===============2052632452234282003==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============2052632452234282003==--
