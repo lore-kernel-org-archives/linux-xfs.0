@@ -1,29 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6F0a6BR173223 for <xfs@oss.sgi.com>; Wed, 14 Jul 2010 19:36:06 -0500
+	o6F0a5X2173213 for <xfs@oss.sgi.com>; Wed, 14 Jul 2010 19:36:06 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 32874159666E
-	for <xfs@oss.sgi.com>; Wed, 14 Jul 2010 17:39:02 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	StO01MSCoySUlARS for <xfs@oss.sgi.com>;
-	Wed, 14 Jul 2010 17:39:02 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 460BF119503E
+	for <xfs@oss.sgi.com>; Wed, 14 Jul 2010 17:45:12 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	uIYSlLETbgw9FZeJ for <xfs@oss.sgi.com>;
+	Wed, 14 Jul 2010 17:45:12 -0700 (PDT)
 Received: from dastard (unverified [121.44.38.238])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	19923723-1927428
-	for <xfs@oss.sgi.com>; Thu, 15 Jul 2010 10:08:59 +0930 (CST)
+	31478532-1927428
+	for <xfs@oss.sgi.com>; Thu, 15 Jul 2010 10:08:58 +0930 (CST)
 Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1OZCTP-0002zL-UP
-	for xfs@oss.sgi.com; Thu, 15 Jul 2010 10:38:47 +1000
+	(envelope-from <dave@fromorbit.com>) id 1OZCTF-0002zB-Nt
+	for xfs@oss.sgi.com; Thu, 15 Jul 2010 10:38:37 +1000
 Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1OZCTC-0000Y2-Ef
-	for xfs@oss.sgi.com; Thu, 15 Jul 2010 10:38:34 +1000
+	(envelope-from <dave@disturbed.disaster>) id 1OZCT2-0000Xq-7d
+	for xfs@oss.sgi.com; Thu, 15 Jul 2010 10:38:24 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5/5] xfs: fix memory reclaim recursion deadlock on locked
-	inode buffer
-Date: Thu, 15 Jul 2010 10:38:20 +1000
-Message-Id: <1279154300-2018-6-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/5] xfs: track AGs with reclaimable inodes in per-ag radix
+	tree
+Date: Thu, 15 Jul 2010 10:38:16 +1000
+Message-Id: <1279154300-2018-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1279154300-2018-1-git-send-email-david@fromorbit.com>
 References: <1279154300-2018-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -43,100 +43,174 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Calling into memory reclaim with a locked inode buffer can deadlock
-if memory reclaim tries to lock the inode buffer during inode
-teardown. Convert the relevant memory allocations to use KM_NOFS to
-avoid this deadlock condition.
+https://bugzilla.kernel.org/show_bug.cgi?id=16348
 
-Reported-by: Peter Watkins <treestem@gmail.com>
+When the filesystem grows to a large number of allocation groups,
+the summing of recalimable inodes gets expensive. In many cases,
+most AGs won't have any reclaimable inodes and so we are wasting CPU
+time aggregating over these AGs. This is particularly important for
+the inode shrinker that gets called frequently under memory
+pressure.
+
+To avoid the overhead, track AGs with reclaimable inodes in the
+per-ag radix tree so that we can find all the AGs with reclaimable
+inodes via a simple gang tag lookup. This involves setting the tag
+when the first reclaimable inode is tracked in the AG, and removing
+the tag when the last reclaimable inode is removed from the tree.
+Then the summation process becomes a loop walking the radix tree
+summing AGs with the reclaim tag set.
+
+This significantly reduces the overhead of scanning - a 6400 AG
+filesystea now only uses about 25% of a cpu in kswapd while slab reclaim
+progresses instead of being permanently stuck at 100% CPU and making little
+progress. Clean filesystems filesystems will see no overhead and the
+overhead only increases linearly with the number of dirty AGs.
+
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_inode.c |   20 +++++++++++---------
- 1 files changed, 11 insertions(+), 9 deletions(-)
+ fs/xfs/linux-2.6/xfs_sync.c  |   71 +++++++++++++++++++++++++++++++++++++----
+ fs/xfs/linux-2.6/xfs_trace.h |    3 ++
+ 2 files changed, 67 insertions(+), 7 deletions(-)
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 5715a9d..3c206b3 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -422,7 +422,7 @@ xfs_iformat(
- 	if (!XFS_DFORK_Q(dip))
- 		return 0;
- 	ASSERT(ip->i_afp == NULL);
--	ip->i_afp = kmem_zone_zalloc(xfs_ifork_zone, KM_SLEEP);
-+	ip->i_afp = kmem_zone_zalloc(xfs_ifork_zone, KM_SLEEP|KM_NOFS);
- 	ip->i_afp->if_ext_max =
- 		XFS_IFORK_ASIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t);
- 	switch (dip->di_aformat) {
-@@ -505,7 +505,7 @@ xfs_iformat_local(
- 		ifp->if_u1.if_data = ifp->if_u2.if_inline_data;
- 	else {
- 		real_size = roundup(size, 4);
--		ifp->if_u1.if_data = kmem_alloc(real_size, KM_SLEEP);
-+		ifp->if_u1.if_data = kmem_alloc(real_size, KM_SLEEP|KM_NOFS);
- 	}
- 	ifp->if_bytes = size;
- 	ifp->if_real_bytes = real_size;
-@@ -632,7 +632,7 @@ xfs_iformat_btree(
+diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+index 56fed91..51da595 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.c
++++ b/fs/xfs/linux-2.6/xfs_sync.c
+@@ -133,6 +133,41 @@ restart:
+ 	return last_error;
+ }
+ 
++/*
++ * Select the next per-ag structure to iterate during the walk. The reclaim
++ * walk is optimised only to walk AGs with reclaimable inodes in them.
++ */
++static struct xfs_perag *
++xfs_inode_ag_iter_next_pag(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		*first,
++	int			tag)
++{
++	struct xfs_perag	*pag = NULL;
++
++	if (tag == XFS_ICI_RECLAIM_TAG) {
++		int found;
++		int ref;
++
++		spin_lock(&mp->m_perag_lock);
++		found = radix_tree_gang_lookup_tag(&mp->m_perag_tree,
++				(void **)&pag, *first, 1, tag);
++		if (found <= 0) {
++			spin_unlock(&mp->m_perag_lock);
++			return NULL;
++		}
++		*first = pag->pag_agno + 1;
++		/* open coded pag reference increment */
++		ref = atomic_inc_return(&pag->pag_ref);
++		spin_unlock(&mp->m_perag_lock);
++		trace_xfs_perag_get_reclaim(mp, pag->pag_agno, ref, _RET_IP_);
++	} else {
++		pag = xfs_perag_get(mp, *first);
++		(*first)++;
++	}
++	return pag;
++}
++
+ int
+ xfs_inode_ag_iterator(
+ 	struct xfs_mount	*mp,
+@@ -143,16 +178,15 @@ xfs_inode_ag_iterator(
+ 	int			exclusive,
+ 	int			*nr_to_scan)
+ {
++	struct xfs_perag	*pag;
+ 	int			error = 0;
+ 	int			last_error = 0;
+ 	xfs_agnumber_t		ag;
+ 	int			nr;
+ 
+ 	nr = nr_to_scan ? *nr_to_scan : INT_MAX;
+-	for (ag = 0; ag < mp->m_sb.sb_agcount; ag++) {
+-		struct xfs_perag	*pag;
+-
+-		pag = xfs_perag_get(mp, ag);
++	ag = 0;
++	while ((pag = xfs_inode_ag_iter_next_pag(mp, &ag, tag))) {
+ 		error = xfs_inode_ag_walk(mp, pag, execute, flags, tag,
+ 						exclusive, &nr);
+ 		xfs_perag_put(pag);
+@@ -628,6 +662,17 @@ __xfs_inode_set_reclaim_tag(
+ 	radix_tree_tag_set(&pag->pag_ici_root,
+ 			   XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino),
+ 			   XFS_ICI_RECLAIM_TAG);
++
++	if (!pag->pag_ici_reclaimable) {
++		/* propagate the reclaim tag up into the perag radix tree */
++		spin_lock(&ip->i_mount->m_perag_lock);
++		radix_tree_tag_set(&ip->i_mount->m_perag_tree,
++				XFS_INO_TO_AGNO(ip->i_mount, ip->i_ino),
++				XFS_ICI_RECLAIM_TAG);
++		spin_unlock(&ip->i_mount->m_perag_lock);
++		trace_xfs_perag_set_reclaim(ip->i_mount, pag->pag_agno,
++							-1, _RET_IP_);
++	}
+ 	pag->pag_ici_reclaimable++;
+ }
+ 
+@@ -662,6 +707,16 @@ __xfs_inode_clear_reclaim_tag(
+ 	radix_tree_tag_clear(&pag->pag_ici_root,
+ 			XFS_INO_TO_AGINO(mp, ip->i_ino), XFS_ICI_RECLAIM_TAG);
+ 	pag->pag_ici_reclaimable--;
++	if (!pag->pag_ici_reclaimable) {
++		/* clear the reclaim tag from the perag radix tree */
++		spin_lock(&ip->i_mount->m_perag_lock);
++		radix_tree_tag_clear(&ip->i_mount->m_perag_tree,
++				XFS_INO_TO_AGNO(ip->i_mount, ip->i_ino),
++				XFS_ICI_RECLAIM_TAG);
++		spin_unlock(&ip->i_mount->m_perag_lock);
++		trace_xfs_perag_clear_reclaim(ip->i_mount, pag->pag_agno,
++							-1, _RET_IP_);
++	}
+ }
+ 
+ /*
+@@ -832,7 +887,7 @@ xfs_reclaim_inode_shrink(
+ 	struct xfs_mount *mp;
+ 	struct xfs_perag *pag;
+ 	xfs_agnumber_t	ag;
+-	int		reclaimable = 0;
++	int		reclaimable;
+ 
+ 	if (nr_to_scan) {
+ 		if (!(gfp_mask & __GFP_FS))
+@@ -849,9 +904,11 @@ xfs_reclaim_inode_shrink(
  	}
  
- 	ifp->if_broot_bytes = size;
--	ifp->if_broot = kmem_alloc(size, KM_SLEEP);
-+	ifp->if_broot = kmem_alloc(size, KM_SLEEP|KM_NOFS);
- 	ASSERT(ifp->if_broot != NULL);
- 	/*
- 	 * Copy and convert from the on-disk structure
-@@ -2191,7 +2191,7 @@ xfs_iroot_realloc(
- 		 */
- 		if (ifp->if_broot_bytes == 0) {
- 			new_size = (size_t)XFS_BMAP_BROOT_SPACE_CALC(rec_diff);
--			ifp->if_broot = kmem_alloc(new_size, KM_SLEEP);
-+			ifp->if_broot = kmem_alloc(new_size, KM_SLEEP|KM_NOFS);
- 			ifp->if_broot_bytes = (int)new_size;
- 			return;
+ 	down_read(&xfs_mount_list_lock);
++	reclaimable = 0;
+ 	list_for_each_entry(mp, &xfs_mount_list, m_mplist) {
+-		for (ag = 0; ag < mp->m_sb.sb_agcount; ag++) {
+-			pag = xfs_perag_get(mp, ag);
++		ag = 0;
++		while ((pag = xfs_inode_ag_iter_next_pag(mp, &ag,
++						XFS_ICI_RECLAIM_TAG))) {
+ 			reclaimable += pag->pag_ici_reclaimable;
+ 			xfs_perag_put(pag);
  		}
-@@ -2207,7 +2207,7 @@ xfs_iroot_realloc(
- 		new_size = (size_t)XFS_BMAP_BROOT_SPACE_CALC(new_max);
- 		ifp->if_broot = kmem_realloc(ifp->if_broot, new_size,
- 				(size_t)XFS_BMAP_BROOT_SPACE_CALC(cur_max), /* old size */
--				KM_SLEEP);
-+				KM_SLEEP|KM_NOFS);
- 		op = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
- 						     ifp->if_broot_bytes);
- 		np = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
-@@ -2233,7 +2233,7 @@ xfs_iroot_realloc(
- 	else
- 		new_size = 0;
- 	if (new_size > 0) {
--		new_broot = kmem_alloc(new_size, KM_SLEEP);
-+		new_broot = kmem_alloc(new_size, KM_SLEEP|KM_NOFS);
- 		/*
- 		 * First copy over the btree block header.
- 		 */
-@@ -2337,7 +2337,8 @@ xfs_idata_realloc(
- 		real_size = roundup(new_size, 4);
- 		if (ifp->if_u1.if_data == NULL) {
- 			ASSERT(ifp->if_real_bytes == 0);
--			ifp->if_u1.if_data = kmem_alloc(real_size, KM_SLEEP);
-+			ifp->if_u1.if_data = kmem_alloc(real_size,
-+							KM_SLEEP|KM_NOFS);
- 		} else if (ifp->if_u1.if_data != ifp->if_u2.if_inline_data) {
- 			/*
- 			 * Only do the realloc if the underlying size
-@@ -2348,11 +2349,12 @@ xfs_idata_realloc(
- 					kmem_realloc(ifp->if_u1.if_data,
- 							real_size,
- 							ifp->if_real_bytes,
--							KM_SLEEP);
-+							KM_SLEEP|KM_NOFS);
- 			}
- 		} else {
- 			ASSERT(ifp->if_real_bytes == 0);
--			ifp->if_u1.if_data = kmem_alloc(real_size, KM_SLEEP);
-+			ifp->if_u1.if_data = kmem_alloc(real_size,
-+							KM_SLEEP|KM_NOFS);
- 			memcpy(ifp->if_u1.if_data, ifp->if_u2.if_inline_data,
- 				ifp->if_bytes);
- 		}
+diff --git a/fs/xfs/linux-2.6/xfs_trace.h b/fs/xfs/linux-2.6/xfs_trace.h
+index d506753..24e5580 100644
+--- a/fs/xfs/linux-2.6/xfs_trace.h
++++ b/fs/xfs/linux-2.6/xfs_trace.h
+@@ -124,7 +124,10 @@ DEFINE_EVENT(xfs_perag_class, name,	\
+ 		 unsigned long caller_ip),					\
+ 	TP_ARGS(mp, agno, refcount, caller_ip))
+ DEFINE_PERAG_REF_EVENT(xfs_perag_get);
++DEFINE_PERAG_REF_EVENT(xfs_perag_get_reclaim);
+ DEFINE_PERAG_REF_EVENT(xfs_perag_put);
++DEFINE_PERAG_REF_EVENT(xfs_perag_set_reclaim);
++DEFINE_PERAG_REF_EVENT(xfs_perag_clear_reclaim);
+ 
+ TRACE_EVENT(xfs_attr_list_node_descend,
+ 	TP_PROTO(struct xfs_attr_list_context *ctx,
 -- 
 1.7.1
 
