@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6G5KWWe246111 for <xfs@oss.sgi.com>; Fri, 16 Jul 2010 00:20:32 -0500
+	o6G5Iqbp246023 for <xfs@oss.sgi.com>; Fri, 16 Jul 2010 00:18:52 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CC69D44F726
-	for <xfs@oss.sgi.com>; Thu, 15 Jul 2010 22:23:29 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E2F2044F71E
+	for <xfs@oss.sgi.com>; Thu, 15 Jul 2010 22:21:49 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id PLLsMwWAvUeWT7Je for
-	<xfs@oss.sgi.com>; Thu, 15 Jul 2010 22:23:29 -0700 (PDT)
-Date: Fri, 16 Jul 2010 01:23:29 -0400
+	by cuda.sgi.com with ESMTP id AcF57iaOHBmtPFJJ for
+	<xfs@oss.sgi.com>; Thu, 15 Jul 2010 22:21:49 -0700 (PDT)
+Date: Fri, 16 Jul 2010 01:21:49 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/5] xfs: reclaim bug fixes
-Message-ID: <20100716052329.GF29915@infradead.org>
+Subject: Re: [PATCH 4/5] xfs: use GFP_NOFS for page cache allocation
+Message-ID: <20100716052149.GD29915@infradead.org>
 References: <1279154300-2018-1-git-send-email-david@fromorbit.com>
+	<1279154300-2018-5-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1279154300-2018-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1279154300-2018-5-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,16 +32,37 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Jul 15, 2010 at 10:38:15AM +1000, Dave Chinner wrote:
-> The following patches fix excessive CPU consumption during inode
-> cache shrinking when filesystems have lots of allocation groups as
-> well as prevent a couple of lockdep reports that were found during
-> testing. Also included is a fix for a reclaim recursion deadlock
-> when allocating memory during inode initialisation.
+On Thu, Jul 15, 2010 at 10:38:19AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Avoid a lockdep warning by preventing page cache allocation from
+> recursing back into the filesystem during memory reclaim.
 
-Wa the overlap of patch 1 with the for-2.6.35 shrinker series
-intentional?  In addition to patch 1 patches 3 to 5 are also for-2.6.35
-material in my opinion.
+Yeah, I already have this in my queue too.  Noticed that we don't
+need it because of i_mutex as suggested in the stack overflow thread,
+but for the XFS ilock.
+
+> @@ -1501,8 +1501,9 @@ xfs_vm_write_begin(
+>  	void			**fsdata)
+>  {
+>  	*pagep = NULL;
+> -	return block_write_begin(file, mapping, pos, len, flags, pagep, fsdata,
+> -								xfs_get_blocks);
+> +	return block_write_begin(file, mapping, pos, len,
+> +				 (flags | AOP_FLAG_NOFS),
+> +				 pagep, fsdata, xfs_get_blocks);
+
+
+No need for the bracing:
+
+	return block_write_begin(file, mapping, pos, len, flags | AOP_FLAG_NOFS,
+				 pagep, fsdata, xfs_get_blocks);
+
+
+And with my truncate rework in the vfs tree we'll get rejection galore in
+linux-next, but Stephen has been pretty good at handling these..
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
