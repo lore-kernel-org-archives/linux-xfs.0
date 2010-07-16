@@ -1,16 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6GIpL7U019053 for <xfs@oss.sgi.com>; Fri, 16 Jul 2010 13:51:22 -0500
-Received: from CF--AMER002E--3.americas.sgi.com
-	(cf--amer002e--3.americas.sgi.com [137.38.100.6])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 35DE58F80B8
-	for <xfs@oss.sgi.com>; Fri, 16 Jul 2010 11:54:17 -0700 (PDT)
-Subject: [PATCH] xfs:negative_icount.patch
-From: Stuart Brodsky <sbrodsky@sgi.com>
-Date: Fri, 16 Jul 2010 13:53:41 -0500
-Message-ID: <1279306421.17689.38.camel@superior.americas.sgi.com>
-Mime-Version: 1.0
+	o6GMZ1xp028266 for <xfs@oss.sgi.com>; Fri, 16 Jul 2010 17:35:01 -0500
+Received: from saturn.euronetix.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6A9764535E1
+	for <xfs@oss.sgi.com>; Fri, 16 Jul 2010 15:37:56 -0700 (PDT)
+Received: from saturn.euronetix.com (dodownload.com [67.228.188.242]) by
+	cuda.sgi.com with ESMTP id h5t6K5YUmWeqjbmo for
+	<xfs@oss.sgi.com>; Fri, 16 Jul 2010 15:37:56 -0700 (PDT)
+Subject: XFS 3.1.1 is 100% SAFE
+Date: Fri, 16 Jul 2010 17:37:56 -0500
+From: "doDownload.com" <supp@dodownload.com>
+Message-ID: <9cb5a0825cb8d6d45a207d4e92cdfb8f@saturn.euronetix.com>
+MIME-Version: 1.0
+Reply-To: "doDownload.com" <supp@dodownload.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,82 +28,30 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-This patch fixes the stat -f icount field going negative.  The use of
-lazy counts means that the super block field sb_icount is not updated
-correctly and will allow over allocation of inodes above maxicount.
-
-Signed-off-by: Stu Brodsky <sbrodsky@sgi.com>
-
-Index: a/fs/xfs/xfs_ialloc.c
-===================================================================
---- a/fs/xfs/xfs_ialloc.c.orig	2010-07-16 10:12:02.000000000 -0500
-+++ b/fs/xfs/xfs_ialloc.c	2010-07-16 10:19:56.312633030 -0500
-@@ -260,7 +260,7 @@
- 	 */
- 	newlen = XFS_IALLOC_INODES(args.mp);
- 	if (args.mp->m_maxicount &&
--	    args.mp->m_sb.sb_icount + newlen > args.mp->m_maxicount)
-+	    atomic64_read(&args.mp->m_inodesinuse) + newlen >
-args.mp->m_maxicount)
- 		return XFS_ERROR(ENOSPC);
- 	args.minlen = args.maxlen = XFS_IALLOC_BLOCKS(args.mp);
- 	/*
-@@ -708,7 +708,7 @@
- 	 */
+Hello,
  
- 	if (mp->m_maxicount &&
--	    mp->m_sb.sb_icount + XFS_IALLOC_INODES(mp) > mp->m_maxicount) {
-+	    atomic64_read(&mp->m_inodesinuse) + XFS_IALLOC_INODES(mp) >
-mp->m_maxicount)
- 		noroom = 1;
- 		okalloc = 0;
- 	}
-Index: b/fs/xfs/xfs_mount.c
-===================================================================
---- a/fs/xfs/xfs_mount.c.orig	2010-07-16 10:12:02.000000000 -0500
-+++ b/fs/xfs/xfs_mount.c	2010-07-16 10:20:49.717572132 -0500
-@@ -744,6 +744,7 @@
- 	mp->m_blockmask = sbp->sb_blocksize - 1;
- 	mp->m_blockwsize = sbp->sb_blocksize >> XFS_WORDLOG;
- 	mp->m_blockwmask = mp->m_blockwsize - 1;
-+	atomic64_set(&mp->m_inodesinuse,sbp->sb_icount);
+ we wish all the best to your software in a New Year 2010 ! And thank you for this great piece of software on the Dodownload.com !
+You must to know, your product XFS 3.1.1 has been REALLY tested on Friday 16th of July 2010 by the newest antivirus system of the Dodownload.com and found to be *Safe and Clean*. It does not contain any kind of Trojans, Adware, Spyware and Viruses. The full scan reports you may view here: 
  
- 	mp->m_alloc_mxr[0] = xfs_allocbt_maxrecs(mp, sbp->sb_blocksize, 1);
- 	mp->m_alloc_mxr[1] = xfs_allocbt_maxrecs(mp, sbp->sb_blocksize, 0);
-Index: a/fs/xfs/xfs_mount.h
-===================================================================
---- a/fs/xfs/xfs_mount.h.orig	2010-07-16 10:12:02.000000000 -0500
-+++ b/fs/xfs/xfs_mount.h	2010-07-16 10:21:36.377577685 -0500
-@@ -137,6 +137,7 @@
- 	__uint8_t		m_agno_log;	/* log #ag's */
- 	__uint8_t		m_agino_log;	/* #bits for agino in inum */
- 	__uint16_t		m_inode_cluster_size;/* min inode buf size */
-+	atomic64_t		m_inodesinuse;	/* in use inodes */
- 	uint			m_blockmask;	/* sb_blocksize-1 */
- 	uint			m_blockwsize;	/* sb_blocksize in words */
- 	uint			m_blockwmask;	/* blockwsize-1 */
-Index: a/fs/xfs/xfs_trans.c
-===================================================================
---- a/fs/xfs/xfs_trans.c.orig	2010-07-16 10:12:02.000000000 -0500
-+++ b/fs/xfs/xfs_trans.c	2010-07-16 10:22:47.690249548 -0500
-@@ -805,6 +805,7 @@
- 	switch (field) {
- 	case XFS_TRANS_SB_ICOUNT:
- 		tp->t_icount_delta += delta;
-+		atomic64_add(delta,&tp->t_mountp->m_inodesinuse);
- 		if (xfs_sb_version_haslazysbcount(&mp->m_sb))
- 			flags &= ~XFS_TRANS_SB_DIRTY;
- 		break;
+ http://www.dodownload.com/av-report/xfs.html
+
+You and we know that this download is free of unwanted extras, but your users don't have an idea whether or not they will experience some unwanted activities after installing your program.
+If you would like easily increase your trust rank, refer your customers to see that your software is 100% SAFE. Easily show the Dodownload.com Certify - Seal of Quality on your site. The source code of your award is here: 
+
+http://www.dodownload.com/system/file+disk/xfs.html
+Like you'll see our reports are real and are not fake like from the other download sites! Dodownload.com will test your product for free in the future, too.
 
 
+Yours faithfully,
+     DoDownload.com Support Team
+	 mail:supp@dodownload.com
+	 web:www.dodownload.com
 
 
--- 
-Stuart Brodsky
-2750 Blue Water Road
-Eagan, MN. 55121
-651-683-7910
-<sbrodsky@sgi.com>
+More:
+ Dodownload.com is a download archive of over 65,000 software titles.
+ Currently is tested each one listed download by the 3 antivirus programs.
+ 
 
 _______________________________________________
 xfs mailing list
