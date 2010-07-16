@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6G5GbDN245935 for <xfs@oss.sgi.com>; Fri, 16 Jul 2010 00:16:37 -0500
+	o6G5JUkY246062 for <xfs@oss.sgi.com>; Fri, 16 Jul 2010 00:19:30 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BA78A45070B
-	for <xfs@oss.sgi.com>; Thu, 15 Jul 2010 22:19:34 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1A6F01D690B9
+	for <xfs@oss.sgi.com>; Thu, 15 Jul 2010 22:22:27 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id Yl9lj6PoZ8e3GCkz for
-	<xfs@oss.sgi.com>; Thu, 15 Jul 2010 22:19:34 -0700 (PDT)
-Date: Fri, 16 Jul 2010 01:19:34 -0400
+	by cuda.sgi.com with ESMTP id A4I9DaC4JidGEKFe for
+	<xfs@oss.sgi.com>; Thu, 15 Jul 2010 22:22:27 -0700 (PDT)
+Date: Fri, 16 Jul 2010 01:22:27 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/5] xfs: fix xfs_trans_add_item() lockdep warnings
-Message-ID: <20100716051934.GC29915@infradead.org>
+Subject: Re: [PATCH 5/5] xfs: fix memory reclaim recursion deadlock on locked
+	inode buffer
+Message-ID: <20100716052227.GE29915@infradead.org>
 References: <1279154300-2018-1-git-send-email-david@fromorbit.com>
-	<1279154300-2018-4-git-send-email-david@fromorbit.com>
+	<1279154300-2018-6-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1279154300-2018-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1279154300-2018-6-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,17 +33,15 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-> -	lidp = kmem_zone_zalloc(xfs_log_item_desc_zone, KM_SLEEP);
-> +	lidp = kmem_zone_zalloc(xfs_log_item_desc_zone, KM_SLEEP|KM_NOFS);
+On Thu, Jul 15, 2010 at 10:38:20AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Calling into memory reclaim with a locked inode buffer can deadlock
+> if memory reclaim tries to lock the inode buffer during inode
+> teardown. Convert the relevant memory allocations to use KM_NOFS to
+> avoid this deadlock condition.
 
-KM_NOFS by itself actually is sufficiant.  If you want to keep the
-KM_SLEEP for documentation purposes at least add some spaces to make
-it more redable.
-
-	lidp = kmem_zone_zalloc(xfs_log_item_desc_zone, KM_SLEEP | KM_NOFS);
-
-Once getting outside of nitpicking territory this looks good to me:
-
+Looks good, although the same style nitpicks as for patch 3 apply.
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 
