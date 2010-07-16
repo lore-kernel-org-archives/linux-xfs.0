@@ -1,22 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6G5DETj245762 for <xfs@oss.sgi.com>; Fri, 16 Jul 2010 00:13:17 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 56993BD367B
-	for <xfs@oss.sgi.com>; Thu, 15 Jul 2010 22:22:29 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id Qxy9uonhFHrGCsCB for
-	<xfs@oss.sgi.com>; Thu, 15 Jul 2010 22:22:29 -0700 (PDT)
-Date: Fri, 16 Jul 2010 01:16:08 -0400
+	o6G5E3OW245808 for <xfs@oss.sgi.com>; Fri, 16 Jul 2010 00:14:03 -0500
+Date: Fri, 16 Jul 2010 01:17:00 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/5] xfs: simplify and remove xfs_ireclaim
-Message-ID: <20100716051608.GA29915@infradead.org>
+Subject: Re: [PATCH 1/5] xfs: track AGs with reclaimable inodes in per-ag
+	radix tree
+Message-ID: <20100716051700.GB29915@infradead.org>
 References: <1279154300-2018-1-git-send-email-david@fromorbit.com>
-	<1279154300-2018-3-git-send-email-david@fromorbit.com>
+	<1279154300-2018-2-git-send-email-david@fromorbit.com>
+	<1279216900.2054.28.camel@doink>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1279154300-2018-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1279216900.2054.28.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,28 +25,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: XFS Mailing List <xfs@oss.sgi.com>
 
-On Thu, Jul 15, 2010 at 10:38:17AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> xfs_ireclaim has to get and put te pag structure because it is only
-> called with the inode to reclaim. The one caller of this function
-> already has a reference on the pag and a pointer to is, so move the
-> radix tree delete to the caller and remove xfs_ireclaim completely.
-> This avoids a xfs_perag_get/put on every inode being reclaimed.
-> 
-> The overhead was noticed in a bug report at:
-> 
-> https://bugzilla.kernel.org/show_bug.cgi?id=16348
+On Thu, Jul 15, 2010 at 01:01:40PM -0500, Alex Elder wrote:
+> Using the same tag represent a perag with reclaimable
+> inodes as the tag representing an inode is reclaimable
+> is nicely consistent...
 
-Looks good, I had looked into this earlier but never finished it.
-
-There's also some opportunity to optimize roundtrips on the ilock in
-this path.
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Oh, didn't notice that when reviewing it.  Not sure I like it
+too much.  If we ever grow more tags on the perag tree this
+might get rather confusing.
 
 _______________________________________________
 xfs mailing list
