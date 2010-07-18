@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6I5Pu0S123566 for <xfs@oss.sgi.com>; Sun, 18 Jul 2010 00:25:57 -0500
-Received: from mail-vw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A048F112F402
-	for <xfs@oss.sgi.com>; Sat, 17 Jul 2010 22:35:16 -0700 (PDT)
-Received: from mail-vw0-f53.google.com (mail-vw0-f53.google.com
-	[209.85.212.53]) by cuda.sgi.com with ESMTP id 44SOUAwKdD77X3Mg
-	for <xfs@oss.sgi.com>; Sat, 17 Jul 2010 22:35:16 -0700 (PDT)
-Received: by vws15 with SMTP id 15so3717092vws.26
-	for <xfs@oss.sgi.com>; Sat, 17 Jul 2010 22:28:46 -0700 (PDT)
+	o6IJ5b5k158791 for <xfs@oss.sgi.com>; Sun, 18 Jul 2010 14:05:38 -0500
+Received: from Ishtar.sc.tlinx.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7049315F160C
+	for <xfs@oss.sgi.com>; Sun, 18 Jul 2010 12:08:35 -0700 (PDT)
+Received: from Ishtar.sc.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
+	cuda.sgi.com with ESMTP id bnC2phMz7LZnyD5n for
+	<xfs@oss.sgi.com>; Sun, 18 Jul 2010 12:08:35 -0700 (PDT)
+Received: from [192.168.3.12] (Athenae [192.168.3.12])
+	by Ishtar.sc.tlinx.org (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	o6IJ8Kr5005733 for <xfs@oss.sgi.com>; Sun, 18 Jul 2010 12:08:22 -0700
+Message-ID: <4C435124.5010007@tlinx.org>
+Date: Sun, 18 Jul 2010 12:08:20 -0700
+From: Linda Walsh <xfs@tlinx.org>
 MIME-Version: 1.0
-In-Reply-To: <20100718045702.GB6282@infradead.org>
-References: <AANLkTilX3l8TbUztLStj_u9OqOZnBrsNQxmeV4DuBmYJ@mail.gmail.com>
-	<20100718012033.GA18888@dastard>
-	<20100718045702.GB6282@infradead.org>
-Date: Sun, 18 Jul 2010 01:28:43 -0400
-Message-ID: <AANLkTil7lvYW1awXbODVP5r6mXlTrlt4CCncvn5hU4b8@mail.gmail.com>
-Subject: Re: XFS hung on 2.6.33.3 kernel
-From: Ilia Mirkin <imirkin@alum.mit.edu>
+Subject: (humor?) Re: XFS 3.1.1 is 100% SAFE
+References: <9cb5a0825cb8d6d45a207d4e92cdfb8f@saturn.euronetix.com>
+In-Reply-To: <9cb5a0825cb8d6d45a207d4e92cdfb8f@saturn.euronetix.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,56 +26,53 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Sun, Jul 18, 2010 at 12:57 AM, Christoph Hellwig <hch@infradead.org> wro=
-te:
-> On Sun, Jul 18, 2010 at 11:20:33AM +1000, Dave Chinner wrote:
->> So, back to the situation with the WARN_ON(). You're running
->> applications that are doing something that:
->>
->> =A0 =A0 =A0 a) is not supported;
->> =A0 =A0 =A0 b) compromises data integrity guarantees;
->> =A0 =A0 =A0 c) is not reliably reported; and
->> =A0 =A0 =A0 d) might be causing hangs
->>
->> Right now I'm not particularly inclined to dig into this further;
->> it's obvious the applications are doing something that is not
->> supported (by XFS or the generic page cache code), so this is the
->> first thing you really need to care about getting fixed if you value
->> your backups...
->
-> While it's slightly crazy it's also a pretty easy way for users to shoot
-> themselve in their feet. =A0Unlike the generic filesystems with their
-> simplistic i_mutex locking we have a way to assure this works properly
-> in XFS with the shared/exclusive iolock, so I'm willing to look into
-> this further.
->
-> Ilia, would you be willing to test patches for this?
+  
 
-If by "this" you mean the WARN_ON's, no problem. It should be easy to
-repro in a non-critical setup, although I haven't tried. If you mean
-the hang, it will not be so easy to reproduce, as it has only happened
-once so far.
+doDownload.com wrote:
+> Hello,
+>  
+>  we wish all the best to your software in a New Year 2010 ! And thank you for this great piece of software on the Dodownload.com !
+----
 
-I would also be happy to share the details of our setup, if you'd like
-to be able to play with it directly yourself. With our setup, multiple
-WARN_ON's happen every time we run a backup (last time I checked, it
-was ~50, but I'm sure it varies).
+	???
+	xfs 3.1.1 is a executable program?  on ...lets see, dodownload.com...those are Windows programs.
+	So does this mean xfs has been ported to windows?  as an executable?
+	That's a loadable layer, right?
+	So I run xfs 3.1.1 (virus free!) and then ..wait...where is my xfs file system again?
+	
 
-As a last thought on the matter, I'm sure that this is all brought on
-by our use of innodb_flush_method=3DO_DIRECT which tells mysql to use
-direct io. Leaving that at its default which will just open the files
-regularly will probably make all these issues go away. I do not have a
-sufficient understanding of the details of how mysql uses direct io,
-and how it interacts with xtrabackup (which claims to work fine with
-direct io, but who knows) to be able to declare that it's safe, so I'm
-happy to accept Dave's advice to Not Do That.
+> You must to know, your product XFS 3.1.1 has been REALLY tested on Friday 16th of July 2010 by the newest antivirus system of the Dodownload.com and found to be *Safe and Clean*. It does not contain any kind of Trojans, Adware, Spyware and Viruses. The full scan reports you may view here: 
+>  
+>  http://www.dodownload.com/av-report/xfs.html
+> 
+> You and we know that this download is free of unwanted extras, but your users don't have an idea whether or not they will experience some unwanted activities after installing your program.
+> If you would like easily increase your trust rank, refer your customers to see that your software is 100% SAFE. Easily show the Dodownload.com Certify - Seal of Quality on your site. The source code of your award is here: 
+> 
+> http://www.dodownload.com/system/file+disk/xfs.html
+> Like you'll see our reports are real and are not fake like from the other download sites! Dodownload.com will test your product for free in the future, too.
+> 
+> 
+> Yours faithfully,
+>      DoDownload.com Support Team
+> 	 mail:supp@dodownload.com
+> 	 web:www.dodownload.com
+
+----
+
+	Gosh...I'm inspired with faith!**...  
+	I'll download it and install it on Windows right now!  Now if I can just figure
+out how to use it...
+
+	(it's sunday...)
+
+
+**--(it's sunday?)
 
 _______________________________________________
 xfs mailing list
