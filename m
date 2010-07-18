@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6ILFNrB165762 for <xfs@oss.sgi.com>; Sun, 18 Jul 2010 16:15:23 -0500
+	o6ILFLqf165749 for <xfs@oss.sgi.com>; Sun, 18 Jul 2010 16:15:21 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CA8EF1225197
-	for <xfs@oss.sgi.com>; Sun, 18 Jul 2010 14:24:54 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3E7CF15EDA90
+	for <xfs@oss.sgi.com>; Sun, 18 Jul 2010 14:18:21 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id WwDlNw4jYmkj7EsG for
-	<xfs@oss.sgi.com>; Sun, 18 Jul 2010 14:24:54 -0700 (PDT)
+	by cuda.sgi.com with ESMTP id KN2mnVCUD0Sqv0DG for
+	<xfs@oss.sgi.com>; Sun, 18 Jul 2010 14:18:21 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
-	Linux)) id 1OabFc-0005QD-9L
+	Linux)) id 1OabFc-0005RF-SE
 	for xfs@oss.sgi.com; Sun, 18 Jul 2010 21:18:20 +0000
-Message-Id: <20100718211820.098446075@bombadil.infradead.org>
-Date: Sun, 18 Jul 2010 17:17:09 -0400
+Message-Id: <20100718211820.739557136@bombadil.infradead.org>
+Date: Sun, 18 Jul 2010 17:17:11 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 1/3] direct-io: move aio_complete into ->end_io
+Subject: [PATCH 3/3] xfs simplify and speed up direct I/O completions
 References: <20100718211708.327705876@bombadil.infradead.org>
-Content-Disposition: inline; filename=direct-io-unwritten-fix
+Content-Disposition: inline; filename=xfs-unwritten-speedup
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,201 +32,252 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Filesystems with unwritten extent support must not complete an AIO request
-until the transaction to convert the extent has been commited.  That means
-the aio_complete calls needs to be moved into the ->end_io callback so
-that the filesystem can control when to call it exactly.
+Our current handling of direct I/O completions is rather suboptimal,
+because we defer it to a workqueue more often than needed, and we
+perform a much to aggressive flush of the workqueue in case unwritten
+extent conversions happen.
 
-This makes a bit of a mess out of dio_complete and the ->end_io callback
-prototype even more complicated. 
+This patch changes the direct I/O reads to not even use a completion
+handler, as we don't bother to use it at all, and to perform the unwritten
+extent conversions in caller context for synchronous direct I/O.
+
+For a small I/O size direct I/O workload on a consumer grade SSD, such as
+the untar of a kernel tree inside qemu this patch gives speedups of
+about 5%.  Getting us much closer to the speed of a native block device,
+or a fully allocated XFS file.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Jan Kara <jack@suse.cz> 
 
-Index: linux-2.6/fs/direct-io.c
+Index: xfs/fs/xfs/linux-2.6/xfs_aops.c
 ===================================================================
---- linux-2.6.orig/fs/direct-io.c	2010-06-22 09:48:37.239004298 +0200
-+++ linux-2.6/fs/direct-io.c	2010-06-22 11:54:42.281003878 +0200
-@@ -218,7 +218,7 @@ static struct page *dio_get_page(struct
-  * filesystems can use it to hold additional state between get_block calls and
-  * dio_complete.
-  */
--static int dio_complete(struct dio *dio, loff_t offset, int ret)
-+static int dio_complete(struct dio *dio, loff_t offset, int ret, bool is_async)
- {
- 	ssize_t transferred = 0;
- 
-@@ -239,14 +239,6 @@ static int dio_complete(struct dio *dio,
- 			transferred = dio->i_size - offset;
- 	}
- 
--	if (dio->end_io && dio->result)
--		dio->end_io(dio->iocb, offset, transferred,
--			    dio->map_bh.b_private);
--
--	if (dio->flags & DIO_LOCKING)
--		/* lockdep: non-owner release */
--		up_read_non_owner(&dio->inode->i_alloc_sem);
--
- 	if (ret == 0)
- 		ret = dio->page_errors;
- 	if (ret == 0)
-@@ -254,6 +246,17 @@ static int dio_complete(struct dio *dio,
- 	if (ret == 0)
- 		ret = transferred;
- 
-+	if (dio->end_io && dio->result) {
-+		dio->end_io(dio->iocb, offset, transferred,
-+			    dio->map_bh.b_private, ret, is_async);
-+	} else if (is_async) {
-+		aio_complete(dio->iocb, ret, 0);
-+	}
-+
-+	if (dio->flags & DIO_LOCKING)
-+		/* lockdep: non-owner release */
-+		up_read_non_owner(&dio->inode->i_alloc_sem);
-+
- 	return ret;
- }
- 
-@@ -277,8 +280,7 @@ static void dio_bio_end_aio(struct bio *
- 	spin_unlock_irqrestore(&dio->bio_lock, flags);
- 
- 	if (remaining == 0) {
--		int ret = dio_complete(dio, dio->iocb->ki_pos, 0);
--		aio_complete(dio->iocb, ret, 0);
-+		dio_complete(dio, dio->iocb->ki_pos, 0, true);
- 		kfree(dio);
- 	}
- }
-@@ -1126,7 +1128,7 @@ direct_io_worker(int rw, struct kiocb *i
- 	spin_unlock_irqrestore(&dio->bio_lock, flags);
- 
- 	if (ret2 == 0) {
--		ret = dio_complete(dio, offset, ret);
-+		ret = dio_complete(dio, offset, ret, false);
- 		kfree(dio);
- 	} else
- 		BUG_ON(ret != -EIOCBQUEUED);
-Index: linux-2.6/fs/ext4/inode.c
-===================================================================
---- linux-2.6.orig/fs/ext4/inode.c	2010-06-22 09:48:37.249004508 +0200
-+++ linux-2.6/fs/ext4/inode.c	2010-06-22 12:18:45.883255381 +0200
-@@ -3775,7 +3775,8 @@ static ext4_io_end_t *ext4_init_io_end (
- }
- 
- static void ext4_end_io_dio(struct kiocb *iocb, loff_t offset,
--			    ssize_t size, void *private)
-+			    ssize_t size, void *private, int ret,
-+			    bool is_async)
- {
-         ext4_io_end_t *io_end = iocb->private;
- 	struct workqueue_struct *wq;
-@@ -3784,7 +3785,7 @@ static void ext4_end_io_dio(struct kiocb
- 
- 	/* if not async direct IO or dio with 0 bytes write, just return */
- 	if (!io_end || !size)
--		return;
-+		goto out;
- 
- 	ext_debug("ext4_end_io_dio(): io_end 0x%p"
- 		  "for inode %lu, iocb 0x%p, offset %llu, size %llu\n",
-@@ -3795,7 +3796,7 @@ static void ext4_end_io_dio(struct kiocb
- 	if (io_end->flag != EXT4_IO_UNWRITTEN){
- 		ext4_free_io_end(io_end);
- 		iocb->private = NULL;
--		return;
-+		goto out;
- 	}
- 
- 	io_end->offset = offset;
-@@ -3812,6 +3813,9 @@ static void ext4_end_io_dio(struct kiocb
- 	list_add_tail(&io_end->list, &ei->i_completed_io_list);
- 	spin_unlock_irqrestore(&ei->i_completed_io_lock, flags);
- 	iocb->private = NULL;
-+out:
-+	if (is_async)
-+		aio_complete(iocb, ret, 0);
- }
- 
- static void ext4_end_io_buffer_write(struct buffer_head *bh, int uptodate)
-Index: linux-2.6/fs/ocfs2/aops.c
-===================================================================
---- linux-2.6.orig/fs/ocfs2/aops.c	2010-06-22 09:48:37.259012749 +0200
-+++ linux-2.6/fs/ocfs2/aops.c	2010-06-22 12:19:03.931005757 +0200
-@@ -609,7 +609,9 @@ bail:
- static void ocfs2_dio_end_io(struct kiocb *iocb,
- 			     loff_t offset,
- 			     ssize_t bytes,
--			     void *private)
-+			     void *private,
-+			     int ret,
-+			     bool is_async)
- {
- 	struct inode *inode = iocb->ki_filp->f_path.dentry->d_inode;
- 	int level;
-@@ -623,6 +625,9 @@ static void ocfs2_dio_end_io(struct kioc
- 	if (!level)
- 		up_read(&inode->i_alloc_sem);
- 	ocfs2_rw_unlock(inode, level);
-+
-+	if (is_async)
-+		aio_complete(iocb, ret, 0);
+--- xfs.orig/fs/xfs/linux-2.6/xfs_aops.c	2010-07-18 22:41:48.896494681 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_aops.c	2010-07-18 22:46:52.366494681 +0200
+@@ -202,23 +202,17 @@ xfs_setfilesize(
  }
  
  /*
-Index: linux-2.6/fs/xfs/linux-2.6/xfs_aops.c
-===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_aops.c	2010-06-22 09:48:37.268012190 +0200
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_aops.c	2010-06-22 14:05:02.522005722 +0200
-@@ -1599,7 +1599,9 @@ xfs_end_io_direct(
- 	struct kiocb	*iocb,
- 	loff_t		offset,
- 	ssize_t		size,
--	void		*private)
-+	void		*private,
-+	int		ret,
-+	bool		is_async)
+- * Schedule IO completion handling on a xfsdatad if this was
+- * the final hold on this ioend. If we are asked to wait,
+- * flush the workqueue.
++ * Schedule IO completion handling on the final put of an ioend.
+  */
+ STATIC void
+ xfs_finish_ioend(
+-	xfs_ioend_t	*ioend,
+-	int		wait)
++	struct xfs_ioend	*ioend)
  {
- 	xfs_ioend_t	*ioend = iocb->private;
+ 	if (atomic_dec_and_test(&ioend->io_remaining)) {
+-		struct workqueue_struct *wq;
+-
+-		wq = (ioend->io_type == IO_UNWRITTEN) ?
+-			xfsconvertd_workqueue : xfsdatad_workqueue;
+-		queue_work(wq, &ioend->io_work);
+-		if (wait)
+-			flush_workqueue(wq);
++		if (ioend->io_type == IO_UNWRITTEN)
++			queue_work(xfsconvertd_workqueue, &ioend->io_work);
++		else
++			queue_work(xfsdatad_workqueue, &ioend->io_work);
+ 	}
+ }
  
-@@ -1645,6 +1647,9 @@ xfs_end_io_direct(
- 	 * against double-freeing.
+@@ -262,7 +256,7 @@ xfs_end_io(
  	 */
- 	iocb->private = NULL;
+ 	if (error == EAGAIN) {
+ 		atomic_inc(&ioend->io_remaining);
+-		xfs_finish_ioend(ioend, 0);
++		xfs_finish_ioend(ioend);
+ 		/* ensure we don't spin on blocked ioends */
+ 		delay(1);
+ 	} else {
+@@ -273,6 +267,17 @@ xfs_end_io(
+ }
+ 
+ /*
++ * Call IO completion handling in caller context on the final put of an ioend.
++ */
++STATIC void
++xfs_finish_ioend_sync(
++	struct xfs_ioend	*ioend)
++{
++	if (atomic_dec_and_test(&ioend->io_remaining))
++		xfs_end_io(&ioend->io_work);
++}
 +
-+	if (is_async)
-+		aio_complete(iocb, ret, 0);
++/*
+  * Allocate and initialise an IO completion structure.
+  * We need to track unwritten extent write completion here initially.
+  * We'll need to extend this for updating the ondisk inode size later
+@@ -353,7 +358,7 @@ xfs_end_bio(
+ 	bio->bi_end_io = NULL;
+ 	bio_put(bio);
+ 
+-	xfs_finish_ioend(ioend, 0);
++	xfs_finish_ioend(ioend);
+ }
+ 
+ STATIC void
+@@ -495,7 +500,7 @@ xfs_submit_ioend(
+ 		}
+ 		if (bio)
+ 			xfs_submit_ioend_bio(wbc, ioend, bio);
+-		xfs_finish_ioend(ioend, 0);
++		xfs_finish_ioend(ioend);
+ 	} while ((ioend = next) != NULL);
+ }
+ 
+@@ -1406,70 +1411,56 @@ xfs_get_blocks_direct(
+ 	return __xfs_get_blocks(inode, iblock, bh_result, create, 1);
+ }
+ 
++/*
++ * Complete a direct I/O write request.
++ *
++ * If the private argument is non-NULL __xfs_get_blocks signals us that we
++ * need to issue a transaction to convert the range from unwritten to written
++ * extents.  In case this is regular synchronous I/O we just call xfs_end_io
++ * to do this and we are done.  But in case this was a successfull AIO
++ * request this handler is called from interrupt context, from which we
++ * can't start transactions.  In that case offload the I/O completion to
++ * the workqueues we also use for buffered I/O completion.
++ */
+ STATIC void
+-xfs_end_io_direct(
+-	struct kiocb	*iocb,
+-	loff_t		offset,
+-	ssize_t		size,
+-	void		*private,
+-	int		ret,
+-	bool		is_async)
++xfs_end_io_direct_write(
++	struct kiocb		*iocb,
++	loff_t			offset,
++	ssize_t			size,
++	void			*private,
++	int			ret,
++	bool			is_async)
+ {
+-	xfs_ioend_t	*ioend = iocb->private;
+-	bool		complete_aio = is_async;
++	struct xfs_ioend	*ioend = iocb->private;
+ 
+ 	/*
+-	 * Non-NULL private data means we need to issue a transaction to
+-	 * convert a range from unwritten to written extents.  This needs
+-	 * to happen from process context but aio+dio I/O completion
+-	 * happens from irq context so we need to defer it to a workqueue.
+-	 * This is not necessary for synchronous direct I/O, but we do
+-	 * it anyway to keep the code uniform and simpler.
+-	 *
+-	 * Well, if only it were that simple. Because synchronous direct I/O
+-	 * requires extent conversion to occur *before* we return to userspace,
+-	 * we have to wait for extent conversion to complete. Look at the
+-	 * iocb that has been passed to us to determine if this is AIO or
+-	 * not. If it is synchronous, tell xfs_finish_ioend() to kick the
+-	 * workqueue and wait for it to complete.
+-	 *
+-	 * The core direct I/O code might be changed to always call the
+-	 * completion handler in the future, in which case all this can
+-	 * go away.
++	 * blockdev_direct_IO can return an error even after the I/O
++	 * completion handler was called.  Thus we need to protect
++	 * against double-freeing.
+ 	 */
++	iocb->private = NULL;
++
+ 	ioend->io_offset = offset;
+ 	ioend->io_size = size;
+-	if (ioend->io_type == IO_READ) {
+-		xfs_finish_ioend(ioend, 0);
+-	} else if (private && size > 0) {
+-		if (is_async) {
++	if (private && size > 0)
++		ioend->io_type = IO_UNWRITTEN;
++
++	if (is_async) {
++		/*
++		 * If we are converting an unwritten extent we need to delay
++		 * the AIO completion until after the unwrittent extent
++		 * conversion has completed, otherwise do it ASAP.
++		 */
++		if (ioend->io_type == IO_UNWRITTEN) {
+ 			ioend->io_iocb = iocb;
+ 			ioend->io_result = ret;
+-			complete_aio = false;
+-			xfs_finish_ioend(ioend, 0);
+ 		} else {
+-			xfs_finish_ioend(ioend, 1);
++			aio_complete(iocb, ret, 0);
+ 		}
++		xfs_finish_ioend(ioend);
+ 	} else {
+-		/*
+-		 * A direct I/O write ioend starts it's life in unwritten
+-		 * state in case they map an unwritten extent.  This write
+-		 * didn't map an unwritten extent so switch it's completion
+-		 * handler.
+-		 */
+-		ioend->io_type = IO_NEW;
+-		xfs_finish_ioend(ioend, 0);
++		xfs_finish_ioend_sync(ioend);
+ 	}
+-
+-	/*
+-	 * blockdev_direct_IO can return an error even after the I/O
+-	 * completion handler was called.  Thus we need to protect
+-	 * against double-freeing.
+-	 */
+-	iocb->private = NULL;
+-
+-	if (complete_aio)
+-		aio_complete(iocb, ret, 0);
  }
  
  STATIC ssize_t
-Index: linux-2.6/fs/xfs/linux-2.6/xfs_aops.h
-===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_aops.h	2010-06-22 09:48:37.278274238 +0200
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_aops.h	2010-06-22 09:49:12.388034051 +0200
-@@ -37,6 +37,8 @@ typedef struct xfs_ioend {
- 	size_t			io_size;	/* size of the extent */
- 	xfs_off_t		io_offset;	/* offset in the file */
- 	struct work_struct	io_work;	/* xfsdatad work queue */
-+	struct kiocb		*io_iocb;
-+	int			io_result;
- } xfs_ioend_t;
+@@ -1480,23 +1471,26 @@ xfs_vm_direct_IO(
+ 	loff_t			offset,
+ 	unsigned long		nr_segs)
+ {
+-	struct file	*file = iocb->ki_filp;
+-	struct inode	*inode = file->f_mapping->host;
+-	struct block_device *bdev;
+-	ssize_t		ret;
+-
+-	bdev = xfs_find_bdev_for_inode(inode);
+-
+-	iocb->private = xfs_alloc_ioend(inode, rw == WRITE ?
+-					IO_UNWRITTEN : IO_READ);
+-
+-	ret = blockdev_direct_IO_no_locking(rw, iocb, inode, bdev, iov,
+-					    offset, nr_segs,
+-					    xfs_get_blocks_direct,
+-					    xfs_end_io_direct);
++	struct inode		*inode = iocb->ki_filp->f_mapping->host;
++	struct block_device	*bdev = xfs_find_bdev_for_inode(inode);
++	ssize_t			ret;
++
++	if (rw & WRITE) {
++		iocb->private = xfs_alloc_ioend(inode, IO_NEW);
++
++		ret = blockdev_direct_IO_no_locking(rw, iocb, inode, bdev, iov,
++						    offset, nr_segs,
++						    xfs_get_blocks_direct,
++						    xfs_end_io_direct_write);
++		if (ret != -EIOCBQUEUED && iocb->private)
++			xfs_destroy_ioend(iocb->private);
++	} else {
++		ret = blockdev_direct_IO_no_locking(rw, iocb, inode, bdev, iov,
++						    offset, nr_segs,
++						    xfs_get_blocks_direct,
++						    NULL);
++	}
  
- extern const struct address_space_operations xfs_address_space_operations;
-Index: linux-2.6/include/linux/fs.h
-===================================================================
---- linux-2.6.orig/include/linux/fs.h	2010-06-22 09:49:07.188253984 +0200
-+++ linux-2.6/include/linux/fs.h	2010-06-22 10:34:10.128005975 +0200
-@@ -415,7 +415,8 @@ struct buffer_head;
- typedef int (get_block_t)(struct inode *inode, sector_t iblock,
- 			struct buffer_head *bh_result, int create);
- typedef void (dio_iodone_t)(struct kiocb *iocb, loff_t offset,
--			ssize_t bytes, void *private);
-+			ssize_t bytes, void *private, int ret,
-+			bool is_async);
+-	if (unlikely(ret != -EIOCBQUEUED && iocb->private))
+-		xfs_destroy_ioend(iocb->private);
+ 	return ret;
+ }
  
- /*
-  * Attribute flags.  These should be or-ed together to figure out what
 
 _______________________________________________
 xfs mailing list
