@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6IKaRpw163622 for <xfs@oss.sgi.com>; Sun, 18 Jul 2010 15:36:27 -0500
+	o6IKaRwv163629 for <xfs@oss.sgi.com>; Sun, 18 Jul 2010 15:36:27 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7EBBB15EC74A
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 16CEF453E27
 	for <xfs@oss.sgi.com>; Sun, 18 Jul 2010 13:39:26 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 5LkG0C2x1EnDaYwl for
+	by cuda.sgi.com with ESMTP id TuGvgkMHqwLWOs20 for
 	<xfs@oss.sgi.com>; Sun, 18 Jul 2010 13:39:26 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
-	Linux)) id 1Oaady-0003tJ-50
+	Linux)) id 1Oaady-0003vp-NG
 	for xfs@oss.sgi.com; Sun, 18 Jul 2010 20:39:26 +0000
-Message-Id: <20100718203926.050740375@bombadil.infradead.org>
-Date: Sun, 18 Jul 2010 16:38:50 -0400
+Message-Id: <20100718203926.590752918@bombadil.infradead.org>
+Date: Sun, 18 Jul 2010 16:38:53 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 2/6] xfs: clean up filestreams helpers
+Subject: [PATCH 5/6] xfs: simplify xfs_truncate_file
 References: <20100718203848.927859114@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-cleanup-filestreams-getput
+Content-Disposition: inline; filename=xfs-simplify-xfs_truncate_file
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,212 +32,213 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Move xfs_filestream_peek_ag, xxfs_filestream_get_ag and xfs_filestream_put_ag
-from xfs_filestream.h to xfs_filestream.c where it's only callers are, and
-remove the inline marker while we're at it to let the compiler decide on the
-inlining.  Also don't return a value from xfs_filestream_put_ag because
-we don't need it.
+xfs_truncate_file is only used for truncating quota files.  Move it to
+xfs_qm_syscalls.c so it can be marked static and take advatange of the
+fact by removing the unused page cache validation and taking the iget
+into the helper.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs/fs/xfs/xfs_filestream.c
+Index: xfs/fs/xfs/quota/xfs_qm_syscalls.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_filestream.c	2010-07-18 15:10:45.662494680 +0200
-+++ xfs/fs/xfs/xfs_filestream.c	2010-07-18 15:11:26.526494680 +0200
-@@ -123,6 +123,82 @@ typedef struct fstrm_item
- 	xfs_inode_t	*pip;	/* Parent directory inode pointer. */
- } fstrm_item_t;
+--- xfs.orig/fs/xfs/quota/xfs_qm_syscalls.c	2010-06-19 22:35:53.198254580 +0200
++++ xfs/fs/xfs/quota/xfs_qm_syscalls.c	2010-06-19 22:36:27.215004336 +0200
+@@ -238,40 +238,74 @@ out_unlock:
+ 	return error;
+ }
  
-+/*
-+ * Allocation group filestream associations are tracked with per-ag atomic
-+ * counters.  These counters allow _xfs_filestream_pick_ag() to tell whether a
-+ * particular AG already has active filestreams associated with it. The mount
-+ * point's m_peraglock is used to protect these counters from per-ag array
-+ * re-allocation during a growfs operation.  When xfs_growfs_data_private() is
-+ * about to reallocate the array, it calls xfs_filestream_flush() with the
-+ * m_peraglock held in write mode.
-+ *
-+ * Since xfs_mru_cache_flush() guarantees that all the free functions for all
-+ * the cache elements have finished executing before it returns, it's safe for
-+ * the free functions to use the atomic counters without m_peraglock protection.
-+ * This allows the implementation of xfs_fstrm_free_func() to be agnostic about
-+ * whether it was called with the m_peraglock held in read mode, write mode or
-+ * not held at all.  The race condition this addresses is the following:
-+ *
-+ *  - The work queue scheduler fires and pulls a filestream directory cache
-+ *    element off the LRU end of the cache for deletion, then gets pre-empted.
-+ *  - A growfs operation grabs the m_peraglock in write mode, flushes all the
-+ *    remaining items from the cache and reallocates the mount point's per-ag
-+ *    array, resetting all the counters to zero.
-+ *  - The work queue thread resumes and calls the free function for the element
-+ *    it started cleaning up earlier.  In the process it decrements the
-+ *    filestreams counter for an AG that now has no references.
-+ *
-+ * With a shrinkfs feature, the above scenario could panic the system.
-+ *
-+ * All other uses of the following macros should be protected by either the
-+ * m_peraglock held in read mode, or the cache's internal locking exposed by the
-+ * interval between a call to xfs_mru_cache_lookup() and a call to
-+ * xfs_mru_cache_done().  In addition, the m_peraglock must be held in read mode
-+ * when new elements are added to the cache.
-+ *
-+ * Combined, these locking rules ensure that no associations will ever exist in
-+ * the cache that reference per-ag array elements that have since been
-+ * reallocated.
-+ */
-+static int
-+xfs_filestream_peek_ag(
-+	xfs_mount_t	*mp,
-+	xfs_agnumber_t	agno)
++STATIC int
++xfs_qm_scall_trunc_qfile(
++	struct xfs_mount	*mp,
++	xfs_ino_t		ino)
 +{
-+	struct xfs_perag *pag;
-+	int		ret;
++	struct xfs_inode	*ip;
++	struct xfs_trans	*tp;
++	int			error;
 +
-+	pag = xfs_perag_get(mp, agno);
-+	ret = atomic_read(&pag->pagf_fstrms);
-+	xfs_perag_put(pag);
-+	return ret;
++	if (ino == NULLFSINO)
++		return 0;
++
++	error = xfs_iget(mp, NULL, ino, 0, 0, &ip);
++	if (error)
++		return error;
++
++	xfs_ilock(ip, XFS_IOLOCK_EXCL);
++
++	tp = xfs_trans_alloc(mp, XFS_TRANS_TRUNCATE_FILE);
++	error = xfs_trans_reserve(tp, 0, XFS_ITRUNCATE_LOG_RES(mp), 0,
++				  XFS_TRANS_PERM_LOG_RES,
++				  XFS_ITRUNCATE_LOG_COUNT);
++	if (error) {
++		xfs_trans_cancel(tp, 0);
++		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
++		goto out_put;
++	}
++
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	xfs_trans_ijoin(tp, ip);
++
++	error = xfs_itruncate_finish(&tp, ip, 0, XFS_DATA_FORK, 1);
++	if (error) {
++		xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES |
++				     XFS_TRANS_ABORT);
++		goto out_unlock;
++	}
++
++	xfs_ichgtime(ip, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
++	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
++
++out_unlock:
++	xfs_iunlock(ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
++out_put:
++	IRELE(ip);
++	return error;
 +}
 +
-+static int
-+xfs_filestream_get_ag(
-+	xfs_mount_t	*mp,
-+	xfs_agnumber_t	agno)
-+{
-+	struct xfs_perag *pag;
-+	int		ret;
-+
-+	pag = xfs_perag_get(mp, agno);
-+	ret = atomic_inc_return(&pag->pagf_fstrms);
-+	xfs_perag_put(pag);
-+	return ret;
-+}
-+
-+static void
-+xfs_filestream_put_ag(
-+	xfs_mount_t	*mp,
-+	xfs_agnumber_t	agno)
-+{
-+	struct xfs_perag *pag;
-+
-+	pag = xfs_perag_get(mp, agno);
-+	atomic_dec(&pag->pagf_fstrms);
-+	xfs_perag_put(pag);
-+}
- 
- /*
-  * Scan the AGs starting at startag looking for an AG that isn't in use and has
-@@ -351,16 +427,14 @@ xfs_fstrm_free_func(
+ int
+ xfs_qm_scall_trunc_qfiles(
+ 	xfs_mount_t	*mp,
+ 	uint		flags)
  {
- 	fstrm_item_t	*item  = (fstrm_item_t *)data;
- 	xfs_inode_t	*ip = item->ip;
--	int ref;
+ 	int		error = 0, error2 = 0;
+-	xfs_inode_t	*qip;
  
- 	ASSERT(ip->i_ino == ino);
+ 	if (!xfs_sb_version_hasquota(&mp->m_sb) || flags == 0) {
+ 		qdprintk("qtrunc flags=%x m_qflags=%x\n", flags, mp->m_qflags);
+ 		return XFS_ERROR(EINVAL);
+ 	}
  
- 	xfs_iflags_clear(ip, XFS_IFILESTREAM);
+-	if ((flags & XFS_DQ_USER) && mp->m_sb.sb_uquotino != NULLFSINO) {
+-		error = xfs_iget(mp, NULL, mp->m_sb.sb_uquotino, 0, 0, &qip);
+-		if (!error) {
+-			error = xfs_truncate_file(mp, qip);
+-			IRELE(qip);
+-		}
+-	}
+-
+-	if ((flags & (XFS_DQ_GROUP|XFS_DQ_PROJ)) &&
+-	    mp->m_sb.sb_gquotino != NULLFSINO) {
+-		error2 = xfs_iget(mp, NULL, mp->m_sb.sb_gquotino, 0, 0, &qip);
+-		if (!error2) {
+-			error2 = xfs_truncate_file(mp, qip);
+-			IRELE(qip);
+-		}
+-	}
++	if (flags & XFS_DQ_USER)
++		error = xfs_qm_scall_trunc_qfile(mp, mp->m_sb.sb_uquotino);
++	if (flags & (XFS_DQ_GROUP|XFS_DQ_PROJ))
++		error2 = xfs_qm_scall_trunc_qfile(mp, mp->m_sb.sb_gquotino);
  
- 	/* Drop the reference taken on the AG when the item was added. */
--	ref = xfs_filestream_put_ag(ip->i_mount, item->ag);
-+	xfs_filestream_put_ag(ip->i_mount, item->ag);
+ 	return error ? error : error2;
+ }
  
--	ASSERT(ref >= 0);
- 	TRACE_FREE(ip->i_mount, ip, item->pip, item->ag,
- 		xfs_filestream_peek_ag(ip->i_mount, item->ag));
- 
-Index: xfs/fs/xfs/xfs_filestream.h
+-
+ /*
+  * Switch on (a given) quota enforcement for a filesystem.  This takes
+  * effect immediately.
+Index: xfs/fs/xfs/xfs_utils.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_filestream.h	2010-07-18 15:10:45.676494680 +0200
-+++ xfs/fs/xfs/xfs_filestream.h	2010-07-18 15:10:48.212494681 +0200
-@@ -42,88 +42,6 @@ extern ktrace_t *xfs_filestreams_trace_b
- 
- #endif
- 
+--- xfs.orig/fs/xfs/xfs_utils.c	2010-06-19 22:35:53.205004127 +0200
++++ xfs/fs/xfs/xfs_utils.c	2010-06-19 22:36:27.215004336 +0200
+@@ -320,86 +320,3 @@ xfs_bumplink(
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 	return 0;
+ }
+-
 -/*
-- * Allocation group filestream associations are tracked with per-ag atomic
-- * counters.  These counters allow _xfs_filestream_pick_ag() to tell whether a
-- * particular AG already has active filestreams associated with it. The mount
-- * point's m_peraglock is used to protect these counters from per-ag array
-- * re-allocation during a growfs operation.  When xfs_growfs_data_private() is
-- * about to reallocate the array, it calls xfs_filestream_flush() with the
-- * m_peraglock held in write mode.
-- *
-- * Since xfs_mru_cache_flush() guarantees that all the free functions for all
-- * the cache elements have finished executing before it returns, it's safe for
-- * the free functions to use the atomic counters without m_peraglock protection.
-- * This allows the implementation of xfs_fstrm_free_func() to be agnostic about
-- * whether it was called with the m_peraglock held in read mode, write mode or
-- * not held at all.  The race condition this addresses is the following:
-- *
-- *  - The work queue scheduler fires and pulls a filestream directory cache
-- *    element off the LRU end of the cache for deletion, then gets pre-empted.
-- *  - A growfs operation grabs the m_peraglock in write mode, flushes all the
-- *    remaining items from the cache and reallocates the mount point's per-ag
-- *    array, resetting all the counters to zero.
-- *  - The work queue thread resumes and calls the free function for the element
-- *    it started cleaning up earlier.  In the process it decrements the
-- *    filestreams counter for an AG that now has no references.
-- *
-- * With a shrinkfs feature, the above scenario could panic the system.
-- *
-- * All other uses of the following macros should be protected by either the
-- * m_peraglock held in read mode, or the cache's internal locking exposed by the
-- * interval between a call to xfs_mru_cache_lookup() and a call to
-- * xfs_mru_cache_done().  In addition, the m_peraglock must be held in read mode
-- * when new elements are added to the cache.
-- *
-- * Combined, these locking rules ensure that no associations will ever exist in
-- * the cache that reference per-ag array elements that have since been
-- * reallocated.
+- * Try to truncate the given file to 0 length.  Currently called
+- * only out of xfs_remove when it has to truncate a file to free
+- * up space for the remove to proceed.
 - */
--/*
-- * xfs_filestream_peek_ag is only used in tracing code
-- */
--static inline int
--xfs_filestream_peek_ag(
+-int
+-xfs_truncate_file(
 -	xfs_mount_t	*mp,
--	xfs_agnumber_t	agno)
+-	xfs_inode_t	*ip)
 -{
--	struct xfs_perag *pag;
--	int		ret;
+-	xfs_trans_t	*tp;
+-	int		error;
 -
--	pag = xfs_perag_get(mp, agno);
--	ret = atomic_read(&pag->pagf_fstrms);
--	xfs_perag_put(pag);
--	return ret;
+-#ifdef QUOTADEBUG
+-	/*
+-	 * This is called to truncate the quotainodes too.
+-	 */
+-	if (XFS_IS_UQUOTA_ON(mp)) {
+-		if (ip->i_ino != mp->m_sb.sb_uquotino)
+-			ASSERT(ip->i_udquot);
+-	}
+-	if (XFS_IS_OQUOTA_ON(mp)) {
+-		if (ip->i_ino != mp->m_sb.sb_gquotino)
+-			ASSERT(ip->i_gdquot);
+-	}
+-#endif
+-	/*
+-	 * Make the call to xfs_itruncate_start before starting the
+-	 * transaction, because we cannot make the call while we're
+-	 * in a transaction.
+-	 */
+-	xfs_ilock(ip, XFS_IOLOCK_EXCL);
+-	error = xfs_itruncate_start(ip, XFS_ITRUNC_DEFINITE, (xfs_fsize_t)0);
+-	if (error) {
+-		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+-		return error;
+-	}
+-
+-	tp = xfs_trans_alloc(mp, XFS_TRANS_TRUNCATE_FILE);
+-	if ((error = xfs_trans_reserve(tp, 0, XFS_ITRUNCATE_LOG_RES(mp), 0,
+-				      XFS_TRANS_PERM_LOG_RES,
+-				      XFS_ITRUNCATE_LOG_COUNT))) {
+-		xfs_trans_cancel(tp, 0);
+-		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+-		return error;
+-	}
+-
+-	/*
+-	 * Follow the normal truncate locking protocol.  Since we
+-	 * hold the inode in the transaction, we know that its number
+-	 * of references will stay constant.
+-	 */
+-	xfs_ilock(ip, XFS_ILOCK_EXCL);
+-	xfs_trans_ijoin(tp, ip);
+-
+-	/*
+-	 * Signal a sync xaction.  The only case where that isn't
+-	 * the case is if we're truncating an already unlinked file
+-	 * on a wsync fs.  In that case, we know the blocks can't
+-	 * reappear in the file because the links to file are
+-	 * permanently toast.  Currently, we're always going to
+-	 * want a sync transaction because this code is being
+-	 * called from places where nlink is guaranteed to be 1
+-	 * but I'm leaving the tests in to protect against future
+-	 * changes -- rcc.
+-	 */
+-	error = xfs_itruncate_finish(&tp, ip, (xfs_fsize_t)0,
+-				     XFS_DATA_FORK,
+-				     ((ip->i_d.di_nlink != 0 ||
+-				       !(mp->m_flags & XFS_MOUNT_WSYNC))
+-				      ? 1 : 0));
+-	if (error) {
+-		xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES |
+-				 XFS_TRANS_ABORT);
+-	} else {
+-		xfs_ichgtime(ip, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+-		error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
+-	}
+-	xfs_iunlock(ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
+-
+-	return error;
 -}
--
--static inline int
--xfs_filestream_get_ag(
--	xfs_mount_t	*mp,
--	xfs_agnumber_t	agno)
--{
--	struct xfs_perag *pag;
--	int		ret;
--
--	pag = xfs_perag_get(mp, agno);
--	ret = atomic_inc_return(&pag->pagf_fstrms);
--	xfs_perag_put(pag);
--	return ret;
--}
--
--static inline int
--xfs_filestream_put_ag(
--	xfs_mount_t	*mp,
--	xfs_agnumber_t	agno)
--{
--	struct xfs_perag *pag;
--	int		ret;
--
--	pag = xfs_perag_get(mp, agno);
--	ret = atomic_dec_return(&pag->pagf_fstrms);
--	xfs_perag_put(pag);
--	return ret;
--}
--
- /* allocation selection flags */
- typedef enum xfs_fstrm_alloc {
- 	XFS_PICK_USERDATA = 1,
+Index: xfs/fs/xfs/xfs_utils.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_utils.h	2010-06-19 22:35:53.222003778 +0200
++++ xfs/fs/xfs/xfs_utils.h	2010-06-19 22:36:27.218012367 +0200
+@@ -18,7 +18,6 @@
+ #ifndef __XFS_UTILS_H__
+ #define __XFS_UTILS_H__
+ 
+-extern int xfs_truncate_file(xfs_mount_t *, xfs_inode_t *);
+ extern int xfs_dir_ialloc(xfs_trans_t **, xfs_inode_t *, mode_t, xfs_nlink_t,
+ 				xfs_dev_t, cred_t *, prid_t, int,
+ 				xfs_inode_t **, int *);
 
 _______________________________________________
 xfs mailing list
