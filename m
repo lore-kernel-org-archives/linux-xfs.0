@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6IKaSM7163644 for <xfs@oss.sgi.com>; Sun, 18 Jul 2010 15:36:28 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AB6B4BD867B
-	for <xfs@oss.sgi.com>; Sun, 18 Jul 2010 13:46:00 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 3wOvSfWLfwQmHAPG for
-	<xfs@oss.sgi.com>; Sun, 18 Jul 2010 13:46:00 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
-	Linux)) id 1Oaady-0003xd-U7
-	for xfs@oss.sgi.com; Sun, 18 Jul 2010 20:39:26 +0000
-Message-Id: <20100718203926.789965169@bombadil.infradead.org>
-Date: Sun, 18 Jul 2010 16:38:54 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 6/6] xfs: clean up xfs_bmap_get_bp
-References: <20100718203848.927859114@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-cleanup-xfs_bmap_get_bp
+	o6IKEh5i162616 for <xfs@oss.sgi.com>; Sun, 18 Jul 2010 15:14:44 -0500
+Received: from mail-vw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 428D445632C
+	for <xfs@oss.sgi.com>; Sun, 18 Jul 2010 13:17:41 -0700 (PDT)
+Received: from mail-vw0-f53.google.com (mail-vw0-f53.google.com
+	[209.85.212.53]) by cuda.sgi.com with ESMTP id AK9ycYuLcEmh52UZ
+	for <xfs@oss.sgi.com>; Sun, 18 Jul 2010 13:17:41 -0700 (PDT)
+Received: by vws15 with SMTP id 15so3976380vws.26
+	for <xfs@oss.sgi.com>; Sun, 18 Jul 2010 13:17:41 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTil7lvYW1awXbODVP5r6mXlTrlt4CCncvn5hU4b8@mail.gmail.com>
+References: <AANLkTilX3l8TbUztLStj_u9OqOZnBrsNQxmeV4DuBmYJ@mail.gmail.com>
+	<20100718012033.GA18888@dastard>
+	<20100718045702.GB6282@infradead.org>
+	<AANLkTil7lvYW1awXbODVP5r6mXlTrlt4CCncvn5hU4b8@mail.gmail.com>
+Date: Sun, 18 Jul 2010 16:17:41 -0400
+Message-ID: <AANLkTilDtdOWsrBlx-lqIOI-kdr5yvOPi145bhsjl1Tk@mail.gmail.com>
+Subject: Re: XFS hung on 2.6.33.3 kernel
+From: Ilia Mirkin <imirkin@alum.mit.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,78 +28,70 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Sun, Jul 18, 2010 at 1:28 AM, Ilia Mirkin <imirkin@alum.mit.edu> wrote:
+> On Sun, Jul 18, 2010 at 12:57 AM, Christoph Hellwig <hch@infradead.org> w=
+rote:
+>> On Sun, Jul 18, 2010 at 11:20:33AM +1000, Dave Chinner wrote:
+>>> So, back to the situation with the WARN_ON(). You're running
+>>> applications that are doing something that:
+>>>
+>>> =A0 =A0 =A0 a) is not supported;
+>>> =A0 =A0 =A0 b) compromises data integrity guarantees;
+>>> =A0 =A0 =A0 c) is not reliably reported; and
+>>> =A0 =A0 =A0 d) might be causing hangs
+>>>
+>>> Right now I'm not particularly inclined to dig into this further;
+>>> it's obvious the applications are doing something that is not
+>>> supported (by XFS or the generic page cache code), so this is the
+>>> first thing you really need to care about getting fixed if you value
+>>> your backups...
+>>
+>> While it's slightly crazy it's also a pretty easy way for users to shoot
+>> themselve in their feet. =A0Unlike the generic filesystems with their
+>> simplistic i_mutex locking we have a way to assure this works properly
+>> in XFS with the shared/exclusive iolock, so I'm willing to look into
+>> this further.
+>>
+>> Ilia, would you be willing to test patches for this?
+>
+> If by "this" you mean the WARN_ON's, no problem. It should be easy to
+> repro in a non-critical setup, although I haven't tried. If you mean
+> the hang, it will not be so easy to reproduce, as it has only happened
+> once so far.
+>
+> I would also be happy to share the details of our setup, if you'd like
+> to be able to play with it directly yourself. With our setup, multiple
+> WARN_ON's happen every time we run a backup (last time I checked, it
+> was ~50, but I'm sure it varies).
+>
+> As a last thought on the matter, I'm sure that this is all brought on
+> by our use of innodb_flush_method=3DO_DIRECT which tells mysql to use
+> direct io. Leaving that at its default which will just open the files
+> regularly will probably make all these issues go away. I do not have a
+> sufficient understanding of the details of how mysql uses direct io,
+> and how it interacts with xtrabackup (which claims to work fine with
+> direct io, but who knows) to be able to declare that it's safe, so I'm
+> happy to accept Dave's advice to Not Do That.
+>
 
-Index: xfs/fs/xfs/xfs_bmap.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_bmap.c	2010-06-03 13:33:14.087004121 +0200
-+++ xfs/fs/xfs/xfs_bmap.c	2010-06-03 13:36:46.510005447 +0200
-@@ -5648,41 +5648,34 @@ xfs_bmap_eof(
- }
- 
- #ifdef DEBUG
--STATIC
--xfs_buf_t *
-+STATIC struct xfs_buf *
- xfs_bmap_get_bp(
--	xfs_btree_cur_t         *cur,
-+	struct xfs_btree_cur	*cur,
- 	xfs_fsblock_t		bno)
- {
--	int i;
--	xfs_buf_t *bp;
-+	struct xfs_log_item_desc *lidp;
-+	int			i;
- 
- 	if (!cur)
--		return(NULL);
-+		return NULL;
- 
--	bp = NULL;
--	for(i = 0; i < XFS_BTREE_MAXLEVELS; i++) {
--		bp = cur->bc_bufs[i];
--		if (!bp) break;
--		if (XFS_BUF_ADDR(bp) == bno)
--			break;	/* Found it */
-+	for (i = 0; i < XFS_BTREE_MAXLEVELS; i++) {
-+		if (!cur->bc_bufs[i])
-+			break;
-+		if (XFS_BUF_ADDR(cur->bc_bufs[i]) == bno)
-+			return cur->bc_bufs[i];
- 	}
--	if (i == XFS_BTREE_MAXLEVELS)
--		bp = NULL;
- 
--	if (!bp) { /* Chase down all the log items to see if the bp is there */
--		struct xfs_log_item_desc *lidp;
-+	/* Chase down all the log items to see if the bp is there */
-+	list_for_each_entry(lidp, &cur->bc_tp->t_items, lid_trans) {
- 		struct xfs_buf_log_item	*bip;
--
--		list_for_each_entry(lidp, &cur->bc_tp->t_items, lid_trans) {
--			bip = (struct xfs_buf_log_item *)lidp->lid_item;
--			if (bip->bli_item.li_type == XFS_LI_BUF &&
--			    XFS_BUF_ADDR(bip->bli_buf) == bno)
--				return bip->bli_buf;
--		}
-+		bip = (struct xfs_buf_log_item *)lidp->lid_item;
-+		if (bip->bli_item.li_type == XFS_LI_BUF &&
-+		    XFS_BUF_ADDR(bip->bli_buf) == bno)
-+			return bip->bli_buf;
- 	}
- 
--	return bp;
-+	return NULL;
- }
- 
- STATIC void
+In case you guys are interested, I've also opened a bug at
+https://bugs.launchpad.net/percona-xtrabackup/+bug/606981. I never
+quite bothered to _really_ understand all of the details of O_DIRECT
+vs mmap vs read, so if I've misrepresented reality in the bug, feel
+free to correct it there, or let me know and I'll try to straighten
+things out.
+
+-- =
+
+Ilia Mirkin
+imirkin@alum.mit.edu
 
 _______________________________________________
 xfs mailing list
