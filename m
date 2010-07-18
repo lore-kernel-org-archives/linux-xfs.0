@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6IKaRwv163629 for <xfs@oss.sgi.com>; Sun, 18 Jul 2010 15:36:27 -0500
+	o6IKaRjD163626 for <xfs@oss.sgi.com>; Sun, 18 Jul 2010 15:36:27 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 16CEF453E27
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D4F9315EC751
 	for <xfs@oss.sgi.com>; Sun, 18 Jul 2010 13:39:26 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id TuGvgkMHqwLWOs20 for
+	by cuda.sgi.com with ESMTP id MnOyqxBJnzHFdRc6 for
 	<xfs@oss.sgi.com>; Sun, 18 Jul 2010 13:39:26 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
-	Linux)) id 1Oaady-0003vp-NG
+	Linux)) id 1Oaady-0003uc-Go
 	for xfs@oss.sgi.com; Sun, 18 Jul 2010 20:39:26 +0000
-Message-Id: <20100718203926.590752918@bombadil.infradead.org>
-Date: Sun, 18 Jul 2010 16:38:53 -0400
+Message-Id: <20100718203926.427127966@bombadil.infradead.org>
+Date: Sun, 18 Jul 2010 16:38:52 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 5/6] xfs: simplify xfs_truncate_file
+Subject: [PATCH 4/6] xfs: kill the b_strat callback in xfs_buf
 References: <20100718203848.927859114@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-simplify-xfs_truncate_file
+Content-Disposition: inline; filename=xfs-kill-b_strat
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,213 +32,156 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-xfs_truncate_file is only used for truncating quota files.  Move it to
-xfs_qm_syscalls.c so it can be marked static and take advatange of the
-fact by removing the unused page cache validation and taking the iget
-into the helper.
+The b_strat callback is used by xfs_buf_iostrategy to perform additional
+checks before submitting a buffer.  It is used in xfs_bwrite and when
+writing out delayed buffers.  In xfs_bwrite it we can de-virtualize the
+call easily as b_strat is set a few lines above the call to
+xfs_buf_iostrategy.  For the delayed buffers the rationale is a bit
+more complicated:
+
+ - there are three callers of xfs_buf_delwri_queue, which places buffers
+   on the delwri list:
+    (1) xfs_bdwrite - this sets up b_strat, so it's fine
+    (2) xfs_buf_iorequest.  None of the callers can have XBF_DELWRI set:
+	- xlog_bdstrat is only used for log buffers, which are never delwri
+	- _xfs_buf_read explicitly clears the delwri flag
+	- xfs_buf_iodone_work retries log buffers only
+	- xfsbdstrat - only used for reads, superblock writes without the
+	  delwri flag, log I/O and file zeroing with explicitly allocated
+	  buffers.
+	- xfs_buf_iostrategy - only calls xfs_buf_iorequest if b_strat is
+	  not set
+    (3) xfs_buf_unlock
+	- only puts the buffer on the delwri list if the DELWRI flag is
+	  already set.  The DELWRI flag is only ever set in xfs_bwrite,
+	  xfs_buf_iodone_callbacks, or xfs_trans_log_buf.  For
+	  xfs_buf_iodone_callbacks and xfs_trans_log_buf we require
+	  an initialized buf item, which means b_strat was set to
+	  xfs_bdstrat_cb in xfs_buf_item_init.
+
+Conclusion: we can just get rid of the callback and replace it with
+explicit calls to xfs_bdstrat_cb.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs/fs/xfs/quota/xfs_qm_syscalls.c
+Index: xfs/fs/xfs/linux-2.6/xfs_buf.c
 ===================================================================
---- xfs.orig/fs/xfs/quota/xfs_qm_syscalls.c	2010-06-19 22:35:53.198254580 +0200
-+++ xfs/fs/xfs/quota/xfs_qm_syscalls.c	2010-06-19 22:36:27.215004336 +0200
-@@ -238,40 +238,74 @@ out_unlock:
- 	return error;
- }
- 
-+STATIC int
-+xfs_qm_scall_trunc_qfile(
-+	struct xfs_mount	*mp,
-+	xfs_ino_t		ino)
-+{
-+	struct xfs_inode	*ip;
-+	struct xfs_trans	*tp;
-+	int			error;
-+
-+	if (ino == NULLFSINO)
-+		return 0;
-+
-+	error = xfs_iget(mp, NULL, ino, 0, 0, &ip);
-+	if (error)
-+		return error;
-+
-+	xfs_ilock(ip, XFS_IOLOCK_EXCL);
-+
-+	tp = xfs_trans_alloc(mp, XFS_TRANS_TRUNCATE_FILE);
-+	error = xfs_trans_reserve(tp, 0, XFS_ITRUNCATE_LOG_RES(mp), 0,
-+				  XFS_TRANS_PERM_LOG_RES,
-+				  XFS_ITRUNCATE_LOG_COUNT);
-+	if (error) {
-+		xfs_trans_cancel(tp, 0);
-+		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-+		goto out_put;
-+	}
-+
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+	xfs_trans_ijoin(tp, ip);
-+
-+	error = xfs_itruncate_finish(&tp, ip, 0, XFS_DATA_FORK, 1);
-+	if (error) {
-+		xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES |
-+				     XFS_TRANS_ABORT);
-+		goto out_unlock;
-+	}
-+
-+	xfs_ichgtime(ip, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-+	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
-+
-+out_unlock:
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
-+out_put:
-+	IRELE(ip);
-+	return error;
-+}
-+
- int
- xfs_qm_scall_trunc_qfiles(
- 	xfs_mount_t	*mp,
- 	uint		flags)
+--- xfs.orig/fs/xfs/linux-2.6/xfs_buf.c	2010-07-18 07:16:09.101494681 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_buf.c	2010-07-18 07:16:10.646494682 +0200
+@@ -987,13 +987,12 @@ xfs_bwrite(
  {
- 	int		error = 0, error2 = 0;
--	xfs_inode_t	*qip;
+ 	int			error;
  
- 	if (!xfs_sb_version_hasquota(&mp->m_sb) || flags == 0) {
- 		qdprintk("qtrunc flags=%x m_qflags=%x\n", flags, mp->m_qflags);
- 		return XFS_ERROR(EINVAL);
+-	bp->b_strat = xfs_bdstrat_cb;
+ 	bp->b_mount = mp;
+ 	bp->b_flags |= XBF_WRITE;
+ 	bp->b_flags &= ~(XBF_ASYNC | XBF_READ);
+ 
+ 	xfs_buf_delwri_dequeue(bp);
+-	xfs_buf_iostrategy(bp);
++	xfs_bdstrat_cb(bp);
+ 
+ 	error = xfs_buf_iowait(bp);
+ 	if (error)
+@@ -1009,7 +1008,6 @@ xfs_bdwrite(
+ {
+ 	trace_xfs_buf_bdwrite(bp, _RET_IP_);
+ 
+-	bp->b_strat = xfs_bdstrat_cb;
+ 	bp->b_mount = mp;
+ 
+ 	bp->b_flags &= ~XBF_READ;
+@@ -1044,7 +1042,6 @@ xfs_bioerror(
+ 	XFS_BUF_UNDONE(bp);
+ 	XFS_BUF_STALE(bp);
+ 
+-	XFS_BUF_CLR_BDSTRAT_FUNC(bp);
+ 	xfs_biodone(bp);
+ 
+ 	return EIO;
+@@ -1074,7 +1071,6 @@ xfs_bioerror_relse(
+ 	XFS_BUF_DONE(bp);
+ 	XFS_BUF_STALE(bp);
+ 	XFS_BUF_CLR_IODONE_FUNC(bp);
+-	XFS_BUF_CLR_BDSTRAT_FUNC(bp);
+ 	if (!(fl & XBF_ASYNC)) {
+ 		/*
+ 		 * Mark b_error and B_ERROR _both_.
+@@ -1857,7 +1853,7 @@ xfsbufd(
+ 			struct xfs_buf *bp;
+ 			bp = list_first_entry(&tmp, struct xfs_buf, b_list);
+ 			list_del_init(&bp->b_list);
+-			xfs_buf_iostrategy(bp);
++			xfs_bdstrat_cb(bp);
+ 			count++;
+ 		}
+ 		if (count)
+@@ -1904,7 +1900,7 @@ xfs_flush_buftarg(
+ 			bp->b_flags &= ~XBF_ASYNC;
+ 			list_add(&bp->b_list, &wait_list);
+ 		}
+-		xfs_buf_iostrategy(bp);
++		xfs_bdstrat_cb(bp);
  	}
  
--	if ((flags & XFS_DQ_USER) && mp->m_sb.sb_uquotino != NULLFSINO) {
--		error = xfs_iget(mp, NULL, mp->m_sb.sb_uquotino, 0, 0, &qip);
--		if (!error) {
--			error = xfs_truncate_file(mp, qip);
--			IRELE(qip);
--		}
--	}
--
--	if ((flags & (XFS_DQ_GROUP|XFS_DQ_PROJ)) &&
--	    mp->m_sb.sb_gquotino != NULLFSINO) {
--		error2 = xfs_iget(mp, NULL, mp->m_sb.sb_gquotino, 0, 0, &qip);
--		if (!error2) {
--			error2 = xfs_truncate_file(mp, qip);
--			IRELE(qip);
--		}
--	}
-+	if (flags & XFS_DQ_USER)
-+		error = xfs_qm_scall_trunc_qfile(mp, mp->m_sb.sb_uquotino);
-+	if (flags & (XFS_DQ_GROUP|XFS_DQ_PROJ))
-+		error2 = xfs_qm_scall_trunc_qfile(mp, mp->m_sb.sb_gquotino);
- 
- 	return error ? error : error2;
- }
- 
--
- /*
-  * Switch on (a given) quota enforcement for a filesystem.  This takes
-  * effect immediately.
-Index: xfs/fs/xfs/xfs_utils.c
+ 	if (wait) {
+Index: xfs/fs/xfs/linux-2.6/xfs_buf.h
 ===================================================================
---- xfs.orig/fs/xfs/xfs_utils.c	2010-06-19 22:35:53.205004127 +0200
-+++ xfs/fs/xfs/xfs_utils.c	2010-06-19 22:36:27.215004336 +0200
-@@ -320,86 +320,3 @@ xfs_bumplink(
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 	return 0;
- }
--
--/*
-- * Try to truncate the given file to 0 length.  Currently called
-- * only out of xfs_remove when it has to truncate a file to free
-- * up space for the remove to proceed.
-- */
--int
--xfs_truncate_file(
--	xfs_mount_t	*mp,
--	xfs_inode_t	*ip)
+--- xfs.orig/fs/xfs/linux-2.6/xfs_buf.h	2010-07-18 07:16:09.108494681 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_buf.h	2010-07-18 07:16:10.647494682 +0200
+@@ -187,7 +187,6 @@ typedef struct xfs_buf {
+ 	atomic_t		b_io_remaining;	/* #outstanding I/O requests */
+ 	xfs_buf_iodone_t	b_iodone;	/* I/O completion function */
+ 	xfs_buf_relse_t		b_relse;	/* releasing function */
+-	xfs_buf_bdstrat_t	b_strat;	/* pre-write function */
+ 	struct completion	b_iowait;	/* queue for I/O waiters */
+ 	void			*b_fspriv;
+ 	void			*b_fspriv2;
+@@ -245,11 +244,6 @@ extern int xfs_buf_iowait(xfs_buf_t *);
+ extern void xfs_buf_iomove(xfs_buf_t *, size_t, size_t, void *,
+ 				xfs_buf_rw_t);
+ 
+-static inline int xfs_buf_iostrategy(xfs_buf_t *bp)
 -{
--	xfs_trans_t	*tp;
--	int		error;
--
--#ifdef QUOTADEBUG
--	/*
--	 * This is called to truncate the quotainodes too.
--	 */
--	if (XFS_IS_UQUOTA_ON(mp)) {
--		if (ip->i_ino != mp->m_sb.sb_uquotino)
--			ASSERT(ip->i_udquot);
--	}
--	if (XFS_IS_OQUOTA_ON(mp)) {
--		if (ip->i_ino != mp->m_sb.sb_gquotino)
--			ASSERT(ip->i_gdquot);
--	}
--#endif
--	/*
--	 * Make the call to xfs_itruncate_start before starting the
--	 * transaction, because we cannot make the call while we're
--	 * in a transaction.
--	 */
--	xfs_ilock(ip, XFS_IOLOCK_EXCL);
--	error = xfs_itruncate_start(ip, XFS_ITRUNC_DEFINITE, (xfs_fsize_t)0);
--	if (error) {
--		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
--		return error;
--	}
--
--	tp = xfs_trans_alloc(mp, XFS_TRANS_TRUNCATE_FILE);
--	if ((error = xfs_trans_reserve(tp, 0, XFS_ITRUNCATE_LOG_RES(mp), 0,
--				      XFS_TRANS_PERM_LOG_RES,
--				      XFS_ITRUNCATE_LOG_COUNT))) {
--		xfs_trans_cancel(tp, 0);
--		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
--		return error;
--	}
--
--	/*
--	 * Follow the normal truncate locking protocol.  Since we
--	 * hold the inode in the transaction, we know that its number
--	 * of references will stay constant.
--	 */
--	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	xfs_trans_ijoin(tp, ip);
--
--	/*
--	 * Signal a sync xaction.  The only case where that isn't
--	 * the case is if we're truncating an already unlinked file
--	 * on a wsync fs.  In that case, we know the blocks can't
--	 * reappear in the file because the links to file are
--	 * permanently toast.  Currently, we're always going to
--	 * want a sync transaction because this code is being
--	 * called from places where nlink is guaranteed to be 1
--	 * but I'm leaving the tests in to protect against future
--	 * changes -- rcc.
--	 */
--	error = xfs_itruncate_finish(&tp, ip, (xfs_fsize_t)0,
--				     XFS_DATA_FORK,
--				     ((ip->i_d.di_nlink != 0 ||
--				       !(mp->m_flags & XFS_MOUNT_WSYNC))
--				      ? 1 : 0));
--	if (error) {
--		xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES |
--				 XFS_TRANS_ABORT);
--	} else {
--		xfs_ichgtime(ip, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
--		error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
--	}
--	xfs_iunlock(ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
--
--	return error;
+-	return bp->b_strat ? bp->b_strat(bp) : xfs_buf_iorequest(bp);
 -}
-Index: xfs/fs/xfs/xfs_utils.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_utils.h	2010-06-19 22:35:53.222003778 +0200
-+++ xfs/fs/xfs/xfs_utils.h	2010-06-19 22:36:27.218012367 +0200
-@@ -18,7 +18,6 @@
- #ifndef __XFS_UTILS_H__
- #define __XFS_UTILS_H__
+-
+ static inline int xfs_buf_geterror(xfs_buf_t *bp)
+ {
+ 	return bp ? bp->b_error : ENOMEM;
+@@ -321,8 +315,6 @@ extern void xfs_buf_terminate(void);
+ #define XFS_BUF_IODONE_FUNC(bp)			((bp)->b_iodone)
+ #define XFS_BUF_SET_IODONE_FUNC(bp, func)	((bp)->b_iodone = (func))
+ #define XFS_BUF_CLR_IODONE_FUNC(bp)		((bp)->b_iodone = NULL)
+-#define XFS_BUF_SET_BDSTRAT_FUNC(bp, func)	((bp)->b_strat = (func))
+-#define XFS_BUF_CLR_BDSTRAT_FUNC(bp)		((bp)->b_strat = NULL)
  
--extern int xfs_truncate_file(xfs_mount_t *, xfs_inode_t *);
- extern int xfs_dir_ialloc(xfs_trans_t **, xfs_inode_t *, mode_t, xfs_nlink_t,
- 				xfs_dev_t, cred_t *, prid_t, int,
- 				xfs_inode_t **, int *);
+ #define XFS_BUF_FSPRIVATE(bp, type)		((type)(bp)->b_fspriv)
+ #define XFS_BUF_SET_FSPRIVATE(bp, val)		((bp)->b_fspriv = (void*)(val))
+Index: xfs/fs/xfs/xfs_buf_item.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_buf_item.c	2010-07-18 07:16:09.117494681 +0200
++++ xfs/fs/xfs/xfs_buf_item.c	2010-07-18 07:16:10.654494682 +0200
+@@ -694,7 +694,6 @@ xfs_buf_item_init(
+ 	 */
+ 	if (bp->b_mount != mp)
+ 		bp->b_mount = mp;
+-	XFS_BUF_SET_BDSTRAT_FUNC(bp, xfs_bdstrat_cb);
+ 	if (XFS_BUF_FSPRIVATE(bp, void *) != NULL) {
+ 		lip = XFS_BUF_FSPRIVATE(bp, xfs_log_item_t *);
+ 		if (lip->li_type == XFS_LI_BUF) {
+Index: xfs/fs/xfs/xfs_inode.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_inode.c	2010-07-18 07:16:09.127494681 +0200
++++ xfs/fs/xfs/xfs_inode.c	2010-07-18 07:16:10.662494682 +0200
+@@ -2717,7 +2717,6 @@ cluster_corrupt_out:
+ 		 * mark it as stale and brelse.
+ 		 */
+ 		if (XFS_BUF_IODONE_FUNC(bp)) {
+-			XFS_BUF_CLR_BDSTRAT_FUNC(bp);
+ 			XFS_BUF_UNDONE(bp);
+ 			XFS_BUF_STALE(bp);
+ 			XFS_BUF_ERROR(bp,EIO);
 
 _______________________________________________
 xfs mailing list
