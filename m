@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6INlgvI173148 for <xfs@oss.sgi.com>; Sun, 18 Jul 2010 18:47:43 -0500
+	o6J0B8Pm174140 for <xfs@oss.sgi.com>; Sun, 18 Jul 2010 19:11:09 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D463B1E2BD26
-	for <xfs@oss.sgi.com>; Sun, 18 Jul 2010 16:50:40 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	v7IJmg5yDjxb3m6a for <xfs@oss.sgi.com>;
-	Sun, 18 Jul 2010 16:50:40 -0700 (PDT)
-Date: Mon, 19 Jul 2010 09:50:36 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C6E2E15C2E71
+	for <xfs@oss.sgi.com>; Sun, 18 Jul 2010 17:20:40 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
+	[150.101.137.102]) by cuda.sgi.com with ESMTP id
+	LqShcwoaMjtTOBDW for <xfs@oss.sgi.com>;
+	Sun, 18 Jul 2010 17:20:40 -0700 (PDT)
+Date: Mon, 19 Jul 2010 10:14:03 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS hung on 2.6.33.3 kernel
-Message-ID: <20100718235036.GC32635@dastard>
-References: <AANLkTilX3l8TbUztLStj_u9OqOZnBrsNQxmeV4DuBmYJ@mail.gmail.com>
-	<20100718012033.GA18888@dastard>
-	<AANLkTikEv75KRyRTs4awmG894NSKMnBkJNJPYsypMdWf@mail.gmail.com>
+Subject: Re: [PATCH] xfs:negative_icount.patch
+Message-ID: <20100719001403.GC23223@dastard>
+References: <1279306421.17689.38.camel@superior.americas.sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <AANLkTikEv75KRyRTs4awmG894NSKMnBkJNJPYsypMdWf@mail.gmail.com>
+In-Reply-To: <1279306421.17689.38.camel@superior.americas.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,57 +29,113 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ilia Mirkin <imirkin@alum.mit.edu>
+To: Stuart Brodsky <sbrodsky@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Sat, Jul 17, 2010 at 09:35:33PM -0400, Ilia Mirkin wrote:
-> On Sat, Jul 17, 2010 at 9:20 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Sat, Jul 17, 2010 at 12:01:11AM -0400, Ilia Mirkin wrote:
-> > I can't find a thread that holds the XFS inode lock that everything
-> > is waiting on. I think it is the ILOCK, but none of the threads in
-> > this trace should be holding it where they are blocked. IOWs, the
-> > output does not give me enough information to get to the root cause.
+On Fri, Jul 16, 2010 at 01:53:41PM -0500, Stuart Brodsky wrote:
+> This patch fixes the stat -f icount field going negative.  The use of
+> lazy counts means that the super block field sb_icount is not updated
+> correctly and will allow over allocation of inodes above maxicount.
 > 
-> In case this happens again, was there something more useful I could
-> have collected? Should I have grabbed all task states?
+> Signed-off-by: Stu Brodsky <sbrodsky@sgi.com>
+> 
+> Index: a/fs/xfs/xfs_ialloc.c
+> ===================================================================
+> --- a/fs/xfs/xfs_ialloc.c.orig	2010-07-16 10:12:02.000000000 -0500
+> +++ b/fs/xfs/xfs_ialloc.c	2010-07-16 10:19:56.312633030 -0500
+> @@ -260,7 +260,7 @@
+>  	 */
+>  	newlen = XFS_IALLOC_INODES(args.mp);
+>  	if (args.mp->m_maxicount &&
+> -	    args.mp->m_sb.sb_icount + newlen > args.mp->m_maxicount)
+> +	    atomic64_read(&args.mp->m_inodesinuse) + newlen >
+> args.mp->m_maxicount)
+>  		return XFS_ERROR(ENOSPC);
+>  	args.minlen = args.maxlen = XFS_IALLOC_BLOCKS(args.mp);
+>  	/*
+> @@ -708,7 +708,7 @@
+>  	 */
+>  
+>  	if (mp->m_maxicount &&
+> -	    mp->m_sb.sb_icount + XFS_IALLOC_INODES(mp) > mp->m_maxicount) {
+> +	    atomic64_read(&mp->m_inodesinuse) + XFS_IALLOC_INODES(mp) >
+> mp->m_maxicount)
+>  		noroom = 1;
+>  		okalloc = 0;
+>  	}
 
-All the task states, including the running tasks, is probably a good
-start. Also, if the kernel you are running has tracing events
-enabled and has the necessary XFS tracepoints (I can't remember off
-the top of my head whether they are in 2.6.33), you might want to
-enable tracing of:
+.....
 
-	xfs_ilock
-	xfs_ilock_nowait
-	xfs_ilock_demote
-	xfs_iunlock
+> Index: a/fs/xfs/xfs_trans.c
+> ===================================================================
+> --- a/fs/xfs/xfs_trans.c.orig	2010-07-16 10:12:02.000000000 -0500
+> +++ b/fs/xfs/xfs_trans.c	2010-07-16 10:22:47.690249548 -0500
+> @@ -805,6 +805,7 @@
+>  	switch (field) {
+>  	case XFS_TRANS_SB_ICOUNT:
+>  		tp->t_icount_delta += delta;
+> +		atomic64_add(delta,&tp->t_mountp->m_inodesinuse);
+>  		if (xfs_sb_version_haslazysbcount(&mp->m_sb))
+>  			flags &= ~XFS_TRANS_SB_DIRTY;
+>  		break;
 
-via:
+This is still racy. It may fix your specific reproducer but I can't see how
+changing the in use inode count from late in xfs_trans_commit() to early in
+xfs_trans_commit() solves the problem: if we look at it
+like this:
 
-# echo 1 > /sys/kernel/debug/tracing/events/xfs/<trace_point>/enable
 
-and when the problem is hit dumping the trace via:
+	thread 1		thread 2
+	check count
+	<start alloc>
+	.....
+				check count
+				<start alloc>
+				....
+	<update count>
 
-# cat /sys/kernel/debug/tracing/trace > trace.log
 
-You may also want to bump up the trace buffer size to capture more
-events:
+All you've done if change where <update count> occurs rather than
+solving the race that prevents negative inode counts.
 
-# echo 32768 > /sys/kernel/debug/tracing/buffer_size_kb
+Realistically, there is nothing wrong with XFS exceeding mp->m_maxicount by a
+small amount - it's just an arbitrary limit that we use to prevent all the
+filesytem space from being taken up by inodes.  I think the problem is just a
+reporting problem here in xfs_fs_statfs():
 
-Though I suspect the only way to get to the bottom of it will
-be to work out a reproducable test case....
+1245         fakeinos = statp->f_bfree << sbp->sb_inopblog;
+1246         statp->f_files =
+1247             MIN(sbp->sb_icount + fakeinos, (__uint64_t)XFS_MAXINUMBER);
+1248         if (mp->m_maxicount)
+1249                 statp->f_files = min_t(typeof(statp->f_files),
+1250                                         statp->f_files,
+1251                                         mp->m_maxicount);
+1252         statp->f_ffree = statp->f_files - (sbp->sb_icount - sbp->sb_ifree);
 
-> It's pretty obvious that allowing userspace to hang the FS is really
-> bad, but I appreciate that the app is doing something that the kernel
-> didn't expect.
+Assume no free space and no free inodes (statp->f_bfree = 0, => fakeinos = 0),
+and we have just hit the above race condition to allocate more inodes than
+mp->m_maxicount. Hence we have sbp->sb_icount > mp->m_maxicount and that gives:
 
-Yeah, we need to fix the hang - it's the bigger issues of mixed
-direct/buffered IO that I was refering to...
+	statp->f_files = min(sbp->sb_icount, mp->m_maxicount);
+	statp->f_files = mp->m_maxicount;
+
+And now we've allocated all the free inodes (sbp->sb_ifree = 0). Therefore:
+
+	statp->f_ffree = mp->m_maxicount - (sbp->sb_icount - 0)
+
+Which gives statp->f_ffree < 0 and hence negative free inodes. I think
+all that is required to "fix" this is to clamp statp->f_ffree to zero.
+i.e.:
+
+	if (statp->f_ffree < 0)
+		statp->f_ffree = 0;
+
+Make sense?
 
 Cheers,
 
 Dave.
+
 -- 
 Dave Chinner
 david@fromorbit.com
