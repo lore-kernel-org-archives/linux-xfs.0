@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6J0M0Te174763 for <xfs@oss.sgi.com>; Sun, 18 Jul 2010 19:22:00 -0500
+	o6J0S0Yt174990 for <xfs@oss.sgi.com>; Sun, 18 Jul 2010 19:28:01 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B885145651E
-	for <xfs@oss.sgi.com>; Sun, 18 Jul 2010 17:24:58 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
-	[150.101.137.103]) by cuda.sgi.com with ESMTP id
-	6wym7v7VZAq1K9gZ for <xfs@oss.sgi.com>;
-	Sun, 18 Jul 2010 17:24:58 -0700 (PDT)
-Date: Mon, 19 Jul 2010 10:24:56 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 187E715F1BD8
+	for <xfs@oss.sgi.com>; Sun, 18 Jul 2010 17:30:58 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	z305t4j2mBJIqudM for <xfs@oss.sgi.com>;
+	Sun, 18 Jul 2010 17:30:58 -0700 (PDT)
+Date: Mon, 19 Jul 2010 10:30:56 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/5] xfs: fix xfs_trans_add_item() lockdep warnings
-Message-ID: <20100719002456.GF23223@dastard>
+Subject: Re: [PATCH 0/5] xfs: reclaim bug fixes
+Message-ID: <20100719003056.GG23223@dastard>
 References: <1279154300-2018-1-git-send-email-david@fromorbit.com>
-	<1279154300-2018-4-git-send-email-david@fromorbit.com>
-	<20100716051934.GC29915@infradead.org>
+	<20100716052329.GF29915@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100716051934.GC29915@infradead.org>
+In-Reply-To: <20100716052329.GF29915@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,17 +33,25 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Fri, Jul 16, 2010 at 01:19:34AM -0400, Christoph Hellwig wrote:
-> > -	lidp = kmem_zone_zalloc(xfs_log_item_desc_zone, KM_SLEEP);
-> > +	lidp = kmem_zone_zalloc(xfs_log_item_desc_zone, KM_SLEEP|KM_NOFS);
+On Fri, Jul 16, 2010 at 01:23:29AM -0400, Christoph Hellwig wrote:
+> On Thu, Jul 15, 2010 at 10:38:15AM +1000, Dave Chinner wrote:
+> > The following patches fix excessive CPU consumption during inode
+> > cache shrinking when filesystems have lots of allocation groups as
+> > well as prevent a couple of lockdep reports that were found during
+> > testing. Also included is a fix for a reclaim recursion deadlock
+> > when allocating memory during inode initialisation.
 > 
-> KM_NOFS by itself actually is sufficiant.  If you want to keep the
-> KM_SLEEP for documentation purposes at least add some spaces to make
-> it more redable.
-> 
-> 	lidp = kmem_zone_zalloc(xfs_log_item_desc_zone, KM_SLEEP | KM_NOFS);
+> Wa the overlap of patch 1 with the for-2.6.35 shrinker series
+> intentional?  In addition to patch 1 patches 3 to 5 are also for-2.6.35
+> material in my opinion.
 
-Will do.
+I realised that we'd get a messy, messy conflict if I separated the
+per-ag tree reclaim tracking from the shrinker patchset, so I
+included it in that one as it was also part of fixing reported
+XFS shrinker regressions to avoid such conflicts.
+
+But yes, i think that all the lockdep fixes are probably 2.6.35
+material.
 
 Cheers,
 
