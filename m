@@ -1,25 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6J0LOHC174714 for <xfs@oss.sgi.com>; Sun, 18 Jul 2010 19:21:24 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 44EA845651C
-	for <xfs@oss.sgi.com>; Sun, 18 Jul 2010 17:24:21 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	5dO9NkB4r58zMQTn for <xfs@oss.sgi.com>;
-	Sun, 18 Jul 2010 17:24:21 -0700 (PDT)
-Date: Mon, 19 Jul 2010 10:24:18 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/5] xfs: track AGs with reclaimable inodes in per-ag
-	radix tree
-Message-ID: <20100719002418.GE23223@dastard>
-References: <1279154300-2018-1-git-send-email-david@fromorbit.com>
-	<1279154300-2018-2-git-send-email-david@fromorbit.com>
-	<1279216900.2054.28.camel@doink>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1279216900.2054.28.camel@doink>
+	o6JIq0aI230440 for <xfs@oss.sgi.com>; Mon, 19 Jul 2010 13:52:01 -0500
+Subject: Re: Slow delete
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <201007121417.14097@zmi.at>
+References: <AANLkTinPmhJRD3CDdsHtkLFzYd2jF9ee7gPqgO6XBSfl@mail.gmail.com>
+	<20100705233448.GB24712@dastard>  <201007121417.14097@zmi.at>
+Date: Mon, 19 Jul 2010 13:54:57 -0500
+Message-ID: <1279565697.1855.136.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,116 +23,82 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
+To: Michael Monnerie <michael.monnerie@is.it-management.at>
 Cc: XFS Mailing List <xfs@oss.sgi.com>
 
-On Thu, Jul 15, 2010 at 01:01:40PM -0500, Alex Elder wrote:
-> On Thu, 2010-07-15 at 10:38 +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
+On Mon, 2010-07-12 at 14:17 +0200, Michael Monnerie wrote:
+> On Dienstag, 6. Juli 2010 Dave Chinner wrote:
+> > For a detailed explanation of the concept and how delayed logging
+> > takes advantage of it to speed up stuff like deleting a large number
+> > of files, see:
 > > 
-> > https://bugzilla.kernel.org/show_bug.cgi?id=16348
-> > 
-> > When the filesystem grows to a large number of allocation groups,
-> > the summing of recalimable inodes gets expensive. In many cases,
-> > most AGs won't have any reclaimable inodes and so we are wasting CPU
-> > time aggregating over these AGs. This is particularly important for
-> > the inode shrinker that gets called frequently under memory
-> > pressure.
-> > 
-> > To avoid the overhead, track AGs with reclaimable inodes in the
-> > per-ag radix tree so that we can find all the AGs with reclaimable
-> > inodes via a simple gang tag lookup. This involves setting the tag
-> > when the first reclaimable inode is tracked in the AG, and removing
-> > the tag when the last reclaimable inode is removed from the tree.
-> > Then the summation process becomes a loop walking the radix tree
-> > summing AGs with the reclaim tag set.
-> > 
-> > This significantly reduces the overhead of scanning - a 6400 AG
-> > filesystea now only uses about 25% of a cpu in kswapd while slab reclaim
-> > progresses instead of being permanently stuck at 100% CPU and making little
-> > progress. Clean filesystems filesystems will see no overhead and the
-> > overhead only increases linearly with the number of dirty AGs.
-> 
-> Using the same tag represent a perag with reclaimable
-> inodes as the tag representing an inode is reclaimable
-> is nicely consistent...
-> 
-> I have a few comments below for your consideration
-> but they are minor (and don't even require a response).
-> 
-> Overall this looks good.
-> 
-> Reviewed-by: Alex Elder <aelder@sgi.com>
-> 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/linux-2.6/xfs_sync.c  |   71 +++++++++++++++++++++++++++++++++++++----
-> >  fs/xfs/linux-2.6/xfs_trace.h |    3 ++
-> >  2 files changed, 67 insertions(+), 7 deletions(-)
-> > 
-> > diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-> > index 56fed91..51da595 100644
-> > --- a/fs/xfs/linux-2.6/xfs_sync.c
-> > +++ b/fs/xfs/linux-2.6/xfs_sync.c
-> > @@ -133,6 +133,41 @@ restart:
-> >  	return last_error;
-> >  }
-> >  
-> > +/*
-> > + * Select the next per-ag structure to iterate during the walk. The reclaim
-> > + * walk is optimised only to walk AGs with reclaimable inodes in them.
-> > + */
-> > +static struct xfs_perag *
-> > +xfs_inode_ag_iter_next_pag(
-> > +	struct xfs_mount	*mp,
-> > +	xfs_agnumber_t		*first,
-> > +	int			tag)
-> > +{
-> > +	struct xfs_perag	*pag = NULL;
-> > +
-> > +	if (tag == XFS_ICI_RECLAIM_TAG) {
-> > +		int found;
-> > +		int ref;
-> > +
-> > +		spin_lock(&mp->m_perag_lock);
-> > +		found = radix_tree_gang_lookup_tag(&mp->m_perag_tree,
-> > +				(void **)&pag, *first, 1, tag);
-> > +		if (found <= 0) {
-> > +			spin_unlock(&mp->m_perag_lock);
-> > +			return NULL;
-> > +		}
-> > +		*first = pag->pag_agno + 1;
-> 
-> Maybe move this below, just before the return.  I.e.:
-> 	if (pag)
-> 		*first = pag->pag_agno + 1;
-> 
-> To me it's slightly clearer that we're just setting
-> up to search next time with the perag following the
-> one returned.
+> > http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=bl
+> > ob;f=Documentation/filesystems/xfs-delayed-logging-design.txt
+>  
+> Great docu, although my head still exploded on reading this, and at some 
+> point I started to just read over it. Luckily, I'm no dev, otherwise I'd 
+> need to grow a second head for the extra brain space needed to 
+> understand all that stuff, and that would make my appearance even worse 
+> than it is already. Also, I'm not sure if the two-head solution isn't 
+> patented by Zaphod Beeblebrox already, at least in the U.S. region.
 
-If found <=0, we didn't find anything in the tree. I don't know what
-the value of pag is going to be in this case, so we have to check
-the return value to determine if pag is valid or not.
-The other gang lookups in XFS use the same convention...
->
-> > +		/* open coded pag reference increment */
-> 
-> By open-coding here you miss the assertions in xfs_perag_get().
-> (Though a common inline encapsulating them would have to be
-> in a header because the two functions reside in different files.)
+Assuming your single head is still in good enough shape
+to understand this, here's a high-level (though imprecise)
+explanation.
 
-Yes, it misses them, but we do sufficient calls to xfs_perag_get()
-elsewhere that I don't think it makes much difference - we'll still
-get the ASSERT()s tripping, and the tracing will still point out
-where the problem is...
+Like many operations in XFS, deleting an entry from a
+directory requires the creation of entries in the XFS
+log.  These entries record the net effect of the delete
+operation, allowing the delete operation to be reconstructed
+(more or less) in the event of a crash.
 
-Cheers,
+A transaction in the log records information about
+critical data structures and how they will change as
+the result of an operation.  Log entries get saved to
+disk in such a way that following a crash, the file
+system can be put into a consistent state quickly by
+"replaying" entries recently recorded to the log.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+If you perform a number of operations on the same object
+(such as removing multiple files from the same directory),
+XFS currently sends copies of some of the affected data
+structures to the log repeatedly--once for each operation
+in sequence.
+
+So for example if you delete lots of files from the same
+directory, there is a consequently large volume of log
+activity that needs to be performed, often describing
+updates to the same data structure.  Such a structure
+will (currently) get written to disk many many times
+as a result.
+
+Dave recently added support for "delayed logging" to
+XFS.  It's currently an experimental feature, enabled
+via a mount option.  When delayed logging is active,
+some log activity is held off, allowing numerous
+updates to the same data structure to be aggregated.
+A logged data structure can then be committed to disk
+much less frequently, reducing the amount of data that
+needs to be written to disk while preserving the ability
+to recover the file system following a crash.
+
+This optimization allows certain operations (like
+mass deletions) to be completed much more efficiently,
+and in the case of large directories the performance
+improvement that results can be significant.
+
+In any crash situation, there will be a certain amount
+of file system activity underway at the time of the
+crash that will be lost; logging file system operations
+doesn't eliminate that possibility.  The down side of
+delayed logging is this type of loss is likely to be
+greater than it would be with the more conventional
+XFS logging mechanism.  This is a tradeoff between
+file system performance in normal operation and the
+amount that can be recovered after a crash.
+
+					-Alex
+
 
 _______________________________________________
 xfs mailing list
