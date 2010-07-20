@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6K85udc008783 for <xfs@oss.sgi.com>; Tue, 20 Jul 2010 03:05:57 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E1C64BEB18D
-	for <xfs@oss.sgi.com>; Tue, 20 Jul 2010 01:15:36 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	xh2dWV6LTGMs3qqt for <xfs@oss.sgi.com>;
-	Tue, 20 Jul 2010 01:15:36 -0700 (PDT)
-Date: Tue, 20 Jul 2010 18:08:52 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/3] xfs simplify and speed up direct I/O completions
-Message-ID: <20100720080852.GN32635@dastard>
-References: <20100718211708.327705876@bombadil.infradead.org>
-	<20100718211820.739557136@bombadil.infradead.org>
+	o6K86KBb008815 for <xfs@oss.sgi.com>; Tue, 20 Jul 2010 03:06:20 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1337945AB89
+	for <xfs@oss.sgi.com>; Tue, 20 Jul 2010 01:09:20 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id m19c4BSAgcuVF7dM for
+	<xfs@oss.sgi.com>; Tue, 20 Jul 2010 01:09:20 -0700 (PDT)
+Date: Tue, 20 Jul 2010 04:09:19 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 3/6] xfs: remove obsolete osyncisosync mount option
+Message-ID: <20100720080919.GA15470@infradead.org>
+References: <20100718203848.927859114@bombadil.infradead.org>
+	<20100718203926.229290039@bombadil.infradead.org>
+	<20100720073832.GH32635@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100718211820.739557136@bombadil.infradead.org>
+In-Reply-To: <20100720073832.GH32635@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,34 +30,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Sun, Jul 18, 2010 at 05:17:11PM -0400, Christoph Hellwig wrote:
-> Our current handling of direct I/O completions is rather suboptimal,
-> because we defer it to a workqueue more often than needed, and we
-> perform a much to aggressive flush of the workqueue in case unwritten
-> extent conversions happen.
+On Tue, Jul 20, 2010 at 05:38:32PM +1000, Dave Chinner wrote:
+> >  	"XFS: ihashsize no longer used, option is deprecated.");
+> >  		} else if (!strcmp(this_char, "osyncisdsync")) {
+> > -			/* no-op, this is now the default */
+> >  			cmn_err(CE_WARN,
+> > -	"XFS: osyncisdsync is now the default, option is deprecated.");
+> > +	"XFS: the osyncisdsync option is deprecated as has no effect.");
+> > +		} else if (!strcmp(this_char, "osyncisosync")) {
+> > +			cmn_err(CE_WARN,
+> > +	"XFS: the osyncisosync option is deprecated as has no effect.");
+> >  		} else if (!strcmp(this_char, "irixsgid")) {
+> >  			cmn_err(CE_WARN,
+> >  	"XFS: irixsgid is now a sysctl(2) variable, option is deprecated.");
 > 
-> This patch changes the direct I/O reads to not even use a completion
-> handler, as we don't bother to use it at all, and to perform the unwritten
-> extent conversions in caller context for synchronous direct I/O.
+> Look better as:
 > 
-> For a small I/O size direct I/O workload on a consumer grade SSD, such as
-> the untar of a kernel tree inside qemu this patch gives speedups of
-> about 5%.  Getting us much closer to the speed of a native block device,
-> or a fully allocated XFS file.
+> 	"XFS: osyncisdsync has no effect, option is deprecated."
+> 	"XFS: osyncisosync has no effect, option is deprecated."
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> so they are consistent with the other deprecated option output.
+> I've made this change to the patch i have in my tree....
 
-Looks a lot saner - getting rid of the workqueue flushes is a good
-thing.
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
--- 
-Dave Chinner
-david@fromorbit.com
+Sure, fine with me.
 
 _______________________________________________
 xfs mailing list
