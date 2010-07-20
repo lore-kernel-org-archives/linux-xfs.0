@@ -1,24 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6KH66fA031248 for <xfs@oss.sgi.com>; Tue, 20 Jul 2010 12:06:07 -0500
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3D1331B8B73B
-	for <xfs@oss.sgi.com>; Tue, 20 Jul 2010 10:09:06 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id WCZQ9SNe7xCmd5CE
-	for <xfs@oss.sgi.com>; Tue, 20 Jul 2010 10:09:06 -0700 (PDT)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id 858606C011
-	for <xfs@oss.sgi.com>; Tue, 20 Jul 2010 12:09:06 -0500 (CDT)
-Message-ID: <4C45D831.5010102@hardwarefreak.com>
-Date: Tue, 20 Jul 2010 12:09:05 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	o6KItdIl035184 for <xfs@oss.sgi.com>; Tue, 20 Jul 2010 13:55:39 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1CF3245CB80
+	for <xfs@oss.sgi.com>; Tue, 20 Jul 2010 11:58:37 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id dtyFdj34JfqvgNcI for
+	<xfs@oss.sgi.com>; Tue, 20 Jul 2010 11:58:37 -0700 (PDT)
+Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv14.zmi.at (Postfix) with ESMTPSA id 2201B400
+	for <xfs@oss.sgi.com>; Tue, 20 Jul 2010 20:58:36 +0200 (CEST)
+Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id C226983C82E
+	for <xfs@oss.sgi.com>; Tue, 20 Jul 2010 20:57:47 +0200 (CEST)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: 4k sector drives
+Date: Tue, 20 Jul 2010 20:58:27 +0200
 MIME-Version: 1.0
-Subject: Re: Slow delete
-References: <AANLkTinPmhJRD3CDdsHtkLFzYd2jF9ee7gPqgO6XBSfl@mail.gmail.com>	<201007121417.14097@zmi.at>
-	<1279565697.1855.136.camel@doink> <201007201304.28490@zmi.at>
-In-Reply-To: <201007201304.28490@zmi.at>
+Message-Id: <201007202058.35141@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,32 +31,73 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============3347529337919464080=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Michael Monnerie put forth on 7/20/2010 6:04 AM:
+--===============3347529337919464080==
+Content-Type: multipart/signed;
+  boundary="nextPart2946653.uYl0X8xdK7";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-> Can someone guess the exact problems that can happen with delayed 
-> transaction on a crash?
+--nextPart2946653.uYl0X8xdK7
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-The only real crash scenario difference, as I understand it, is that with
-delayed logging enabled you'll potentially lose more data due to crash as more
-is held memory resident with delayed logging enabled.  The characteristics of
-the data loss are the same with and without this enabled, it's just
-potentially more severe with delayed logging enabled.
+Dear list, I don't know who else to ask this:
 
-If your systems are prone to power loss, hardware failures, or kernel panics,
-I'd not enable delayed logging.  If your systems are rock solid, and you can
-benefit from the minor decrease in file fragmentation and the increase in mass
-file delete speed, then enable it.
+I recently bought 2 new 4k sector drives (WD Caviar Green 2TB,=20
+WD20EARS), but Linux kernel 2.6.34.1 still says:
 
--- 
-Stan
+# blockdev --getss /dev/sdd
+512
+
+Shouldn't that be 4096? Where is the problem?
+
+
+=2D-=20
+mit freundlichen Gr=C3=BCssen,
+Michael Monnerie, Ing. BSc
+
+it-management Internet Services
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: 0660 / 415 65 31
+
+****** Aktuelles Radiointerview! ******
+http://www.it-podcast.at/aktuelle-sendung.html
+
+// Wir haben im Moment zwei H=C3=A4user zu verkaufen:
+// http://zmi.at/langegg/
+// http://zmi.at/haus2009/
+
+--nextPart2946653.uYl0X8xdK7
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.12 (GNU/Linux)
+
+iEYEABECAAYFAkxF8dsACgkQzhSR9xwSCbSVUACfTqWNQecKS/Ys5PfDAjt4N9F3
+Q9kAnjAy7eHybdNjwwnEJZTKAdWSN4Br
+=oCe6
+-----END PGP SIGNATURE-----
+
+--nextPart2946653.uYl0X8xdK7--
+
+
+--===============3347529337919464080==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3347529337919464080==--
