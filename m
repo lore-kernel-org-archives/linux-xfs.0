@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6K7Vr38007179 for <xfs@oss.sgi.com>; Tue, 20 Jul 2010 02:31:53 -0500
+	o6K7WIQC007195 for <xfs@oss.sgi.com>; Tue, 20 Jul 2010 02:32:19 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3B69515F9C05
-	for <xfs@oss.sgi.com>; Tue, 20 Jul 2010 00:34:51 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	mwTN2T2fBpyyuIZm for <xfs@oss.sgi.com>;
-	Tue, 20 Jul 2010 00:34:51 -0700 (PDT)
-Date: Tue, 20 Jul 2010 17:34:45 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C325245AACC
+	for <xfs@oss.sgi.com>; Tue, 20 Jul 2010 00:35:17 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
+	[150.101.137.102]) by cuda.sgi.com with ESMTP id
+	THiuYPkioEtikFqJ for <xfs@oss.sgi.com>;
+	Tue, 20 Jul 2010 00:35:17 -0700 (PDT)
+Date: Tue, 20 Jul 2010 17:35:14 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/6] xfs: fix gcc 4.6 set but not read and unused
-	statement warnings
-Message-ID: <20100720073445.GF32635@dastard>
+Subject: Re: [PATCH 2/6] xfs: clean up filestreams helpers
+Message-ID: <20100720073514.GG32635@dastard>
 References: <20100718203848.927859114@bombadil.infradead.org>
-	<20100718203925.908589529@bombadil.infradead.org>
+	<20100718203926.050740375@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100718203925.908589529@bombadil.infradead.org>
+In-Reply-To: <20100718203926.050740375@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,14 +31,18 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Andi Kleen <ak@linux.intel.com>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Sun, Jul 18, 2010 at 04:38:49PM -0400, Christoph Hellwig wrote:
-> [hch: dropped a few hunks that need structural changes instead]
+On Sun, Jul 18, 2010 at 04:38:50PM -0400, Christoph Hellwig wrote:
+> Move xfs_filestream_peek_ag, xxfs_filestream_get_ag and xfs_filestream_put_ag
+> from xfs_filestream.h to xfs_filestream.c where it's only callers are, and
+> remove the inline marker while we're at it to let the compiler decide on the
+> inlining.  Also don't return a value from xfs_filestream_put_ag because
+> we don't need it.
 > 
-> Signed-off-by: Andi Kleen <ak@linux.intel.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Dave Chinner <david@fromorbit.com>
 
 -- 
 Dave Chinner
