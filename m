@@ -1,16 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6KJR8RK036919 for <xfs@oss.sgi.com>; Tue, 20 Jul 2010 14:27:08 -0500
-Subject: Re: [PATCH 1/3] mm: add context argument to shrinker callback
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1279194418-16119-2-git-send-email-david@fromorbit.com>
-References: <1279194418-16119-1-git-send-email-david@fromorbit.com>
-	<1279194418-16119-2-git-send-email-david@fromorbit.com>
-Date: Tue, 20 Jul 2010 14:30:04 -0500
-Message-ID: <1279654204.1859.232.camel@doink>
+	o6KKaXXV039922 for <xfs@oss.sgi.com>; Tue, 20 Jul 2010 15:36:33 -0500
+Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0C64245D69C
+	for <xfs@oss.sgi.com>; Tue, 20 Jul 2010 13:39:32 -0700 (PDT)
+Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
+	cuda.sgi.com with ESMTP id mVs23uWYqGwZ4A9i for
+	<xfs@oss.sgi.com>; Tue, 20 Jul 2010 13:39:32 -0700 (PDT)
+Date: Tue, 20 Jul 2010 22:39:05 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: 4k sector drives
+Message-ID: <20100720223905.296a780a@galadriel.home>
+In-Reply-To: <201007202058.35141@zmi.at>
+References: <201007202058.35141@zmi.at>
 Mime-Version: 1.0
-Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,56 +23,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Michael Monnerie <michael.monnerie@is.it-management.at>
+Cc: xfs@oss.sgi.com
 
-On Thu, 2010-07-15 at 21:46 +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> The current shrinker implementation requires the registered callback
-> to have global state to work from. This makes it difficult to shrink
-> caches that are not global (e.g. per-filesystem caches). Pass the shrinker
-> structure to the callback so that users can embed the shrinker structure
-> in the context the shrinker needs to operate on and get back to it in the
-> callback via container_of().
+Le Tue, 20 Jul 2010 20:58:27 +0200 vous =E9criviez:
 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  arch/x86/kvm/mmu.c              |    2 +-
->  drivers/gpu/drm/i915/i915_gem.c |    2 +-
->  fs/dcache.c                     |    2 +-
->  fs/gfs2/glock.c                 |    2 +-
->  fs/gfs2/quota.c                 |    2 +-
->  fs/gfs2/quota.h                 |    2 +-
->  fs/inode.c                      |    2 +-
->  fs/mbcache.c                    |    5 +++--
->  fs/nfs/dir.c                    |    2 +-
->  fs/nfs/internal.h               |    3 ++-
->  fs/quota/dquot.c                |    2 +-
->  fs/ubifs/shrinker.c             |    2 +-
->  fs/ubifs/ubifs.h                |    2 +-
->  fs/xfs/linux-2.6/xfs_buf.c      |    5 +++--
->  fs/xfs/linux-2.6/xfs_sync.c     |    1 +
->  fs/xfs/quota/xfs_qm.c           |    7 +++++--
->  include/linux/mm.h              |    2 +-
->  mm/vmscan.c                     |    8 +++++---
->  18 files changed, 31 insertions(+), 22 deletions(-)
+> I recently bought 2 new 4k sector drives (WD Caviar Green 2TB, =
 
-You seem to have missed two registered shrinkers:
-- ttm_pool_mm_shrink() in "drivers/gpu/drm/ttm/ttm_page_alloc.c"
-- rpcauth_cache_shrinker() in "net/sunrpc/auth.c"
+> WD20EARS), but Linux kernel 2.6.34.1 still says:
+> =
 
-Other that that, this looks good to me.
+> # blockdev --getss /dev/sdd
+> 512
+> =
 
-					-Alex
+> Shouldn't that be 4096? Where is the problem?
 
+They come in emulation mode (like many SATA-II drives came in SATA-I
+mode). You must set them to 4K blocks manually, for WD IIRC with a DOS
+software. And you need a controller that supports 4K blocks, too
+(probably anything older than a year won't).
 
+-- =
 
-
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
 
 _______________________________________________
 xfs mailing list
