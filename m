@@ -1,26 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6L6piQX065840 for <xfs@oss.sgi.com>; Wed, 21 Jul 2010 01:51:44 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3FF4ABF7158
-	for <xfs@oss.sgi.com>; Wed, 21 Jul 2010 00:01:28 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	QoLOFQF5yr38A29H for <xfs@oss.sgi.com>;
-	Wed, 21 Jul 2010 00:01:28 -0700 (PDT)
-Date: Wed, 21 Jul 2010 16:54:29 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Calculating swidth On A RAID6 Volume
-Message-ID: <20100721065429.GX32635@dastard>
-References: <3C5E029826A0704DB5998577FCFF46F0094DA1AD69@dagobah>
-	<4C45AF09.5090901@dermichi.com>
-	<20100720164444.4c1cef88@harpe.intellique.com>
-	<201007201700.51977@zmi.at>
-	<20100720172704.609477f4@harpe.intellique.com>
+	o6L7osiM067639 for <xfs@oss.sgi.com>; Wed, 21 Jul 2010 02:50:54 -0500
+Received: from mail-bw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6861BBF738C
+	for <xfs@oss.sgi.com>; Wed, 21 Jul 2010 01:00:40 -0700 (PDT)
+Received: from mail-bw0-f53.google.com (mail-bw0-f53.google.com
+	[209.85.214.53]) by cuda.sgi.com with ESMTP id jvtcCU5a3AKYypKY
+	for <xfs@oss.sgi.com>; Wed, 21 Jul 2010 01:00:40 -0700 (PDT)
+Received: by bwz6 with SMTP id 6so4360334bwz.26
+	for <xfs@oss.sgi.com>; Wed, 21 Jul 2010 00:53:53 -0700 (PDT)
+From: Khelben Blackstaff <eye.of.the.8eholder@gmail.com>
+Subject: RE: 4k sector drives
+Date: Wed, 21 Jul 2010 10:53:45 +0300
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100720172704.609477f4@harpe.intellique.com>
+Message-Id: <201007211053.45191.eye.of.the.8eholder@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,56 +23,38 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Emmanuel Florac <eflorac@intellique.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Jul 20, 2010 at 05:27:04PM +0200, Emmanuel Florac wrote:
-> Le Tue, 20 Jul 2010 17:00:51 +0200
-> Michael Monnerie <michael.monnerie@is.it-management.at> =E9crivait:
-> =
+> shows a jumper exists for "advanced format", but doesn't tell what it 
+> does. I'll try to set or unset it depending on what it is now, and see 
+> if there's a difference.
 
-> > I'd say using su+sw is more future proof than swidth+sunit, as 4K
-> > sector drives will become standard, and then using 512B units will be
-> > outdated anyway, right?
-> =
+No, don't set the jumper.
 
-> Absolutely, and furthermore I'm wondering what's happening in the
-> case where the drives have 4096 bytes blocks; I suppose then sunit
-> should be expressed as a number of 4096 bytes blocks, and what about
-> swidth ? the hell if I know :) This is also probably a nice little nest
-> of coming filesystem bugs to be hatched :=3D)
+Because DOS required the first head to be empty for some reason
+and because allmost every geometry uses 63 sectors per track,
+the first partition usually starts at sector 63. The jumper tells the
+disk firmware to use a mapping so that the sectors fall in a 4096
+boundary. (It uses either +1 or -7 offset). So, the OS thinks it writes
+to sector 63 while it truly writes to sector 64 (or 56). Every sector
+is transparently mapped using this offset.
 
-No, the sky is not going to fall. ;)
+This jumper exists to be used only with legacy OSes like Windows XP
+and makes sense when there is only one primary partition which covers
+the whole disk.
 
-The stripe unit is not related to sector size except for the fact
-that sector size defines the minimum filesystem block size and the
-stripe unit is an integer mutliple of the filesystem block size.
-i.e.
+So, don't use the jumper in linux but align properly the partitions.
+fdisk from util-linux-ng > 0.17 align on 1MB so everything will be fine.
+If you use an older version then align the partitions manually.
 
-mkfs.xfs -s size=3D512 -b size=3D512 -d sunit=3D1,swidth=3D1
-
-is a valid configuration that gives single sector sunit/swidth
-alignment. Hence sunit needs to be able to express sizes in
-multiples of 512 bytes.
-
-For a 4k sector size drive, the equivalent is:
-
-mkfs.xfs -s size=3D4096 -b size=3D4096 -d sunit=3D8,swidth=3D8
-
-and mkfs.xfs will ensure that any value of sunit that is not
-a multiple of 8 (4k) will be rejected.....
-
-Cheers,
-
-Dave.
--- =
-
-Dave Chinner
-david@fromorbit.com
+WD EARS drives with 00Y model revision doesn't report the sector size
+properly and only report 512 bytes. (Use hdparm to see it)
+Those with 00Z revision report correctly that they have 4096 physical
+sector size and 512 logical sector size.
 
 _______________________________________________
 xfs mailing list
