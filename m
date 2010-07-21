@@ -1,20 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6LAUwAT072834 for <xfs@oss.sgi.com>; Wed, 21 Jul 2010 05:30:58 -0500
-Received: from mail-fx0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AC8E6460758
-	for <xfs@oss.sgi.com>; Wed, 21 Jul 2010 03:33:56 -0700 (PDT)
-Received: from mail-fx0-f53.google.com (mail-fx0-f53.google.com
-	[209.85.161.53]) by cuda.sgi.com with ESMTP id PXH536VoqDBAGsTZ
-	for <xfs@oss.sgi.com>; Wed, 21 Jul 2010 03:33:56 -0700 (PDT)
-Received: by fxm19 with SMTP id 19so4078382fxm.26
-	for <xfs@oss.sgi.com>; Wed, 21 Jul 2010 03:33:56 -0700 (PDT)
-From: Khelben Blackstaff <eye.of.the.8eholder@gmail.com>
-Subject: Re: 4k sector drives
-Date: Wed, 21 Jul 2010 13:33:48 +0300
+	o6LBXpa4075301 for <xfs@oss.sgi.com>; Wed, 21 Jul 2010 06:33:52 -0500
+Date: Wed, 21 Jul 2010 13:36:47 +0200
+From: Christian Dietrich <qy03fugy@stud.informatik.uni-erlangen.de>
+Subject: [PATCH] fs/xfs: Remove dead CONFIG_XFS_DMAPI
+Message-ID: <20100721113646.GA1054@faui49.informatik.uni-erlangen.de>
 MIME-Version: 1.0
-Message-Id: <201007211333.48363.eye.of.the.8eholder@gmail.com>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,39 +20,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>, xfs-masters@oss.sgi.com, Stephen Hemminger <shemminger@vyatta.com>, Andrew Morton <akpm@linux-foundation.org>, Alexey Dobriyan <adobriyan@gmail.com>, Al Viro <viro@zeniv.linux.org.uk>, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
+Cc: vamos-dev@i4.informatik.uni-erlangen.de
 
-> I have these:
-> Model=WDC WD20EARS-00MVWB0, FwRev=50.0AB50, SerialNo=WD-WMAZ20035646
-> Model=WDC WD20EARS-00MVWB0, FwRev=50.0AB50, SerialNo=WD-WMAZ20028252
+CONFIG_XFS_DMAPI doesn't exist in Kconfig and is never defined anywhere
+else, therefore removing all references for it from the source
+code. Because XFS_DMAPI is never defined, XFS_DMAPI_STRING is always
+an empty string. So we can remove all references to it.
 
-> Any chance to get Linux know they are 4k sector drives manually?
+Signed-off-by: Christian Dietrich <qy03fugy@stud.informatik.uni-erlangen.de>
+---
+ fs/xfs/linux-2.6/xfs_super.h |    7 -------
+ 1 files changed, 0 insertions(+), 7 deletions(-)
 
-Your revision numbers are different than mine, because you have the 2TB drive,
-but i guess its the same for these too. You can try "hdparm -I /dev/sdX" (capital i)
-or "cat /sys/block/sdX/queue/hw_sector_size" to see what they report.
-
-Mine report "Logical/Physical Sector size:           512 bytes"
-There are newer revisions that report "Physical Sector size: 4096 bytes"
-
-Nevertheless, you don't have to get them to report 4k to linux. As long as you
-align the partitions its fine. As i said in the other post, newer fdisk doesn't use
-"DOS compatibility mode" and uses sectors by default (instead of stupid CHS)
-with a 1MB alignment, so every partition will be properly aligned. If you don't
-dual boot Windows, you can also use GPT partitioning scheme.
-Also, from what i have seen, xfsprogs are quite clever and find most stuff on
-their own. I usually mkfs with "-s size=4096" just to be sure.
-
-Slightly offtopic, there is another "problem" with these drives. They park the heads
-every 8 seconds, so they _might_ wear prematurely. You can change the 8sec timer
-or disable it with the wdidle3 utility from this url
-http://support.wdc.com/product/download.asp?groupid=609&sid=113&lang=en
-
-If you want to know more about the problem, there are many forums where
-you can read about wdidle3 and i also posted about it on my blog.
-http://lordkhelben.wordpress.com/2010/05/15/wd-caviar-green-hard-disks-idle-settings/
-
-I hope i helped.
+diff --git a/fs/xfs/linux-2.6/xfs_super.h b/fs/xfs/linux-2.6/xfs_super.h
+index 519618e..1ef4a4d 100644
+--- a/fs/xfs/linux-2.6/xfs_super.h
++++ b/fs/xfs/linux-2.6/xfs_super.h
+@@ -56,12 +56,6 @@ extern void xfs_qm_exit(void);
+ # define XFS_BIGFS_STRING
+ #endif
+ 
+-#ifdef CONFIG_XFS_DMAPI
+-# define XFS_DMAPI_STRING	"dmapi support, "
+-#else
+-# define XFS_DMAPI_STRING
+-#endif
+-
+ #ifdef DEBUG
+ # define XFS_DBG_STRING		"debug"
+ #else
+@@ -72,7 +66,6 @@ extern void xfs_qm_exit(void);
+ 				XFS_SECURITY_STRING \
+ 				XFS_REALTIME_STRING \
+ 				XFS_BIGFS_STRING \
+-				XFS_DMAPI_STRING \
+ 				XFS_DBG_STRING /* DBG must be last */
+ 
+ struct xfs_inode;
+-- 
+1.7.0.4
 
 _______________________________________________
 xfs mailing list
