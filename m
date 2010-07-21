@@ -1,14 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6LIUOWV092173 for <xfs@oss.sgi.com>; Wed, 21 Jul 2010 13:30:24 -0500
+	o6LJ77n6093464 for <xfs@oss.sgi.com>; Wed, 21 Jul 2010 14:07:07 -0500
 Subject: Re: xfsprogs: only absolute run-paths are allowed
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20100721171319.GA17772@infradead.org>
+In-Reply-To: <alpine.DEB.2.01.1007211149320.3964@bogon.housecafe.de>
 References: <alpine.DEB.2.01.1007210408390.3964@bogon.housecafe.de>
-	<20100721171319.GA17772@infradead.org>
-Date: Wed, 21 Jul 2010 13:33:22 -0500
-Message-ID: <1279737202.1816.16.camel@doink>
+	<20100721171319.GA17772@infradead.org> <1279737202.1816.16.camel@doink>
+	<alpine.DEB.2.01.1007211149320.3964@bogon.housecafe.de>
+Date: Wed, 21 Jul 2010 14:10:04 -0500
+Message-ID: <1279739404.1816.20.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -23,67 +24,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Christian Kujau <lists@nerdbynature.de>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Wed, 2010-07-21 at 13:13 -0400, Christoph Hellwig wrote:
-> On Wed, Jul 21, 2010 at 04:31:01AM -0700, Christian Kujau wrote:
-> > Hi,
+On Wed, 2010-07-21 at 11:55 -0700, Christian Kujau wrote:
+> On Wed, 21 Jul 2010 at 13:33, Alex Elder wrote:
+> > > The patch below should fix this issue.  Note that you need to do a
+> > > 
+> > > 	make realclean
+> > > 	make configure
+> > > 
+> > > to regenerate the configure script first.
 > > 
-> > I noticed that I can't use --prefix= any more for the ./configure script. 
-> > Doing so makes libtool unhappy:
-> > 
-> > $ make configure
-> > $ ./configure --prefix=/opt/xfsprogs
-> > $ make
-> > [...]
-> > libtool: link: only absolute run-paths are allowed
-> > make[2]: *** [libxfs.la] Error 1
+> > This looks OK to me.  Once you get confirmation
+> > it works for Christian you can re-format your
+> > description and commit it.  (I didn't see the
+> > problem in my environment for some reason.)
 > 
-> The patch below should fix this issue.  Note that you need to do a
+> Yes, the patch works for me, thanks Christoph!
 > 
-> 	make realclean
-> 	make configure
+>  Tested-by: Christian Kujau <lists@nerdbynature.de>
 > 
-> to regenerate the configure script first.
+> Btw, I noticed quite a few warnings[0] during compilation:
+> 
+>    warning: pointer targets in assignment differ in signedness
+>    warning: pointer targets in passing argument 1 of '...' differ in signedness
+> 
+> I hope they're nothing to worry about?
 
-This looks OK to me.  Once you get confirmation
-it works for Christian you can re-format your
-description and commit it.  (I didn't see the
-problem in my environment for some reason.)
+Nothing to worry about.  We need to update some
+code but it some cases it needs to match the
+kernel code as well.  Eventually we'll get there.
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+					-Alex
 
-> Index: xfsprogs-dev/configure.in
-> ===================================================================
-> --- xfsprogs-dev.orig/configure.in	2010-07-21 19:03:45.225494681 +0200
-> +++ xfsprogs-dev/configure.in	2010-07-21 19:06:19.649494682 +0200
-> @@ -65,12 +65,17 @@ esac
->  case $exec_prefix:$prefix in
->  NONE:NONE | NONE:/usr | /usr:*)
->    root_sbindir='/sbin'
-> -  AC_SUBST([root_sbindir])
-> -
->    root_libdir="/${base_libdir}"
-> -  AC_SUBST([root_libdir])
-> +  ;;
-> +*)
-> +  root_sbindir="${sbindir}"
-> +  root_libdir="${libdir}"
-> +  ;;
->  esac
->  
-> +AC_SUBST([root_sbindir])
-> +AC_SUBST([root_libdir])
-> +
->  # Find localized files
->  LOCALIZED_FILES=""
->  for lfile in `find ${srcdir} -name '*.c' -type f || exit 1`; do
+> Thanks again,
+> Christian.
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> [0] http://nerdbynature.de/bits/xfsprogs/prefix/make_v3.1.2.log.gz
 
 
 
