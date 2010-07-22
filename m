@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6M5JWDL120226 for <xfs@oss.sgi.com>; Thu, 22 Jul 2010 00:19:35 -0500
-Date: Thu, 22 Jul 2010 01:22:33 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfsprogs: only absolute run-paths are allowed
-Message-ID: <20100722052232.GA25620@infradead.org>
-References: <alpine.DEB.2.01.1007210408390.3964@bogon.housecafe.de>
-	<20100721171319.GA17772@infradead.org>
-	<1279737202.1816.16.camel@doink>
-	<alpine.DEB.2.01.1007211149320.3964@bogon.housecafe.de>
+	o6M6LGCc123088 for <xfs@oss.sgi.com>; Thu, 22 Jul 2010 01:21:16 -0500
+Received: from postoffice2.aconex.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 968F0466A4F
+	for <xfs@oss.sgi.com>; Wed, 21 Jul 2010 23:24:00 -0700 (PDT)
+Received: from postoffice2.aconex.com (mail.aconex.com [203.89.202.182]) by
+	cuda.sgi.com with ESMTP id vesywmxNOL0wcx0R for
+	<xfs@oss.sgi.com>; Wed, 21 Jul 2010 23:24:00 -0700 (PDT)
+Date: Thu, 22 Jul 2010 16:23:54 +1000 (EST)
+From: Nathan Scott <nathans@aconex.com>
+Message-ID: <1424814756.1148211279779834118.JavaMail.root@mail-au.aconex.com>
+In-Reply-To: <20100722053057.GA1768@infradead.org>
+Subject: Re: [PATCH] xfs_io: allow resvsp command for foreign filesystems
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.01.1007211149320.3964@bogon.housecafe.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,11 +26,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christian Kujau <lists@nerdbynature.de>
-Cc: xfs@oss.sgi.com, Alex Elder <aelder@sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-I've applied that patch now both to xfsprogs and xfsdump which had
-the exact same issue.
+
+----- "Christoph Hellwig" <hch@infradead.org> wrote:
+
+> Recent kernels implement the RESVP ioctl in common code, so using
+> command for non-XFS filesystems is fine.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+
+Looks good.
+
+Reviewed-by: Nathan Scott <nathans@debian.org>
+
+
+cheers.
+
+-- 
+Nathan
 
 _______________________________________________
 xfs mailing list
