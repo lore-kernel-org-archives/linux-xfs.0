@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6LIqYou092975 for <xfs@oss.sgi.com>; Wed, 21 Jul 2010 13:52:34 -0500
-Received: from moutng.kundenserver.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3539EBF8B4F
-	for <xfs@oss.sgi.com>; Wed, 21 Jul 2010 12:02:22 -0700 (PDT)
-Received: from moutng.kundenserver.de (moutng.kundenserver.de
-	[212.227.126.187]) by cuda.sgi.com with ESMTP id
-	6dn6S4Bek0PDClZI for <xfs@oss.sgi.com>;
-	Wed, 21 Jul 2010 12:02:22 -0700 (PDT)
-Date: Wed, 21 Jul 2010 11:55:26 -0700 (PDT)
-From: Christian Kujau <lists@nerdbynature.de>
-Subject: Re: xfsprogs: only absolute run-paths are allowed
-In-Reply-To: <1279737202.1816.16.camel@doink>
-Message-ID: <alpine.DEB.2.01.1007211149320.3964@bogon.housecafe.de>
-References: <alpine.DEB.2.01.1007210408390.3964@bogon.housecafe.de>
-	<20100721171319.GA17772@infradead.org>
-	<1279737202.1816.16.camel@doink>
+	o6M5V4xF120778 for <xfs@oss.sgi.com>; Thu, 22 Jul 2010 00:31:05 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 99B36466619
+	for <xfs@oss.sgi.com>; Wed, 21 Jul 2010 22:34:06 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id iYo8F88bkMKoFWPI for
+	<xfs@oss.sgi.com>; Wed, 21 Jul 2010 22:34:06 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
+	Linux)) id 1OboMz-0000Sc-8u
+	for xfs@oss.sgi.com; Thu, 22 Jul 2010 05:30:57 +0000
+Date: Thu, 22 Jul 2010 01:30:57 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH] xfs_io: allow resvsp command for foreign filesystems
+Message-ID: <20100722053057.GA1768@infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,41 +29,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, 21 Jul 2010 at 13:33, Alex Elder wrote:
-> > The patch below should fix this issue.  Note that you need to do a
-> > 
-> > 	make realclean
-> > 	make configure
-> > 
-> > to regenerate the configure script first.
-> 
-> This looks OK to me.  Once you get confirmation
-> it works for Christian you can re-format your
-> description and commit it.  (I didn't see the
-> problem in my environment for some reason.)
+Recent kernels implement the RESVP ioctl in common code, so using
+command for non-XFS filesystems is fine.
 
-Yes, the patch works for me, thanks Christoph!
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
- Tested-by: Christian Kujau <lists@nerdbynature.de>
-
-Btw, I noticed quite a few warnings[0] during compilation:
-
-   warning: pointer targets in assignment differ in signedness
-   warning: pointer targets in passing argument 1 of '...' differ in signedness
-
-I hope they're nothing to worry about?
-
-Thanks again,
-Christian.
-
-[0] http://nerdbynature.de/bits/xfsprogs/prefix/make_v3.1.2.log.gz
--- 
-BOFH excuse #260:
-
-We're upgrading /dev/null
+Index: xfsprogs-dev/io/prealloc.c
+===================================================================
+--- xfsprogs-dev.orig/io/prealloc.c	2010-07-21 19:11:34.943494680 +0200
++++ xfsprogs-dev/io/prealloc.c	2010-07-21 19:11:57.093494680 +0200
+@@ -182,7 +182,7 @@ prealloc_init(void)
+ 	resvsp_cmd.cfunc = resvsp_f;
+ 	resvsp_cmd.argmin = 2;
+ 	resvsp_cmd.argmax = 2;
+-	resvsp_cmd.flags = CMD_NOMAP_OK;
++	resvsp_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+ 	resvsp_cmd.args = _("off len");
+ 	resvsp_cmd.oneline =
+ 		_("reserves space associated with part of a file");
 
 _______________________________________________
 xfs mailing list
