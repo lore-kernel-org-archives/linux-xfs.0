@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6MMQ3T8164173 for <xfs@oss.sgi.com>; Thu, 22 Jul 2010 17:26:03 -0500
+	o6MNPmn0167186 for <xfs@oss.sgi.com>; Thu, 22 Jul 2010 18:25:48 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 656611E327A6
-	for <xfs@oss.sgi.com>; Thu, 22 Jul 2010 15:29:03 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	5gD5n2fgvMwtxNvU for <xfs@oss.sgi.com>;
-	Thu, 22 Jul 2010 15:29:03 -0700 (PDT)
-Date: Fri, 23 Jul 2010 08:29:00 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 74F64C13A2F
+	for <xfs@oss.sgi.com>; Thu, 22 Jul 2010 16:35:44 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
+	[150.101.137.102]) by cuda.sgi.com with ESMTP id
+	6XCcw4jYoxGXVRnl for <xfs@oss.sgi.com>;
+	Thu, 22 Jul 2010 16:35:44 -0700 (PDT)
+Date: Fri, 23 Jul 2010 09:28:46 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfsprogs: CFLAGS not passed in
-Message-ID: <20100722222900.GB32635@dastard>
-References: <201007220821.44314@zmi.at>
+Subject: Re: High latencies writing to a memory mapped file
+Message-ID: <20100722232846.GC32635@dastard>
+References: <20100722144706.GA2840@BohrerMBP.rgmadvisors.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201007220821.44314@zmi.at>
+In-Reply-To: <20100722144706.GA2840@BohrerMBP.rgmadvisors.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,43 +29,138 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
+To: Shawn Bohrer <shawn.bohrer@gmail.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Jul 22, 2010 at 08:21:39AM +0200, Michael Monnerie wrote:
-> I saw Christian Kujau's report yesterday with a quick fix, so maybe my 
-> reports of a similar problem have been missed in the thread "rsync and 
-> corrupt inodes (was xfs_dump problem)" and this is a repost:
+On Thu, Jul 22, 2010 at 09:47:06AM -0500, Shawn Bohrer wrote:
+> Hello,
 > 
-> I tried to compile xfsprogs with the "CFLAGS":
-> CFLAGS="-march=athlon64-sse3 -g -Os" ./configure --prefix=/usr
+> We have an application that receives data over the network, and then
+> writes data out to a shared memory mapped file on xfs.  Previously
+> everything worked great when we were running a CentOS 5.3 kernel
+> (2.6.18-128.7.1.el5), but when we upgraded to the newer CentOS 5.4 or
+> 5.5 kernels we started to see occasional spikes (up to 1 second) in
+> the time it takes to write the data to the memory mapped file.  I
+> noticed that between the CentOS 5.3 and 5.4 kernels the upstream xfs
+> changes were backported.  Testing on 2.6.32.16 shows the same
+> occasional latency spikes.
 > 
-> No matter what I use for CFLAGS, the resulting binary repair/xfs_repair 
-> is always the same. So it seems to be ignored during compile anyway. 
-> Smells like a bug? Because config.status gets the CFLAGS set, it's just 
-> not used during compile. Comparing a "config.status" with CFLAGS set and 
-> without:
+> After doing some debugging on 2.6.32.16 I have found the cause of the
+> latency spikes.  The spikes occur every time pdflush runs to flush the
+> dirty pages.  Note our app only writes data at about 1.5 MB/s and we
+> are well below both the dirty_background_ratio and the dirty_ratio so
+> these flushes are only of pages that are dirty_expire_centisecs old.
+> Capturing one of the spikes with ftrace shows:
+> 
+> ...
+> flush-8:0-601   [011] 1291592.127590: funcgraph_entry:                   |  xfs_ilock() {
+> flush-8:0-601   [011] 1291592.127590: funcgraph_entry:                   |    down_write() {
+> flush-8:0-601   [011] 1291592.127590: funcgraph_entry:        0.213 us   |      _cond_resched();
+> flush-8:0-601   [011] 1291592.127591: funcgraph_exit:         0.657 us   |    }
+> flush-8:0-601   [011] 1291592.127591: funcgraph_exit:         1.174 us   |  }
+> flush-8:0-601   [011] 1291592.127764: sched_switch:         task flush-8:0:601 [120] (D) ==> swapper:0 [120]
+> ...
 
-Yup, include/builddefs.in needs a line at the top something like:
+what is the lead-in context to this hunk? i.e. how does xfs_ilock()
+get called? That will tell me if it is blocking on the iolock or the
+ilock...
 
-CFLAGS = @CFLAGS@
+> Here you can see flush-8:0 acquires the xfs_ilock() then I believe it
+> blocks waiting for the I/O to complete.  Next you can see my
+> file_writer process generates a page fault while writing new data to
+> the memory mapped file.  The page fault tries to acquire the
+> xfs_ilock() and then blocks because it is held by the flush-8:0
+> process.
+> 
+> ...
+> file_writer-10549 [001] 1291593.100416: print:                00000000 write_delay start
+> file_writer-10549 [001] 1291593.100419: funcgraph_entry:                   |  handle_mm_fault() {
+> file_writer-10549 [001] 1291593.100420: funcgraph_entry:                   |    __do_fault() {
+> file_writer-10549 [001] 1291593.100420: funcgraph_entry:                   |      filemap_fault() {
+> file_writer-10549 [001] 1291593.100421: funcgraph_entry:        0.775 us   |        find_get_page();
+> file_writer-10549 [001] 1291593.100422: funcgraph_entry:        0.191 us   |        _cond_resched();
+> file_writer-10549 [001] 1291593.100422: funcgraph_exit:         1.980 us   |      }
+> file_writer-10549 [001] 1291593.100422: funcgraph_entry:                   |      unlock_page() {
+> file_writer-10549 [001] 1291593.100423: funcgraph_entry:        0.154 us   |        page_waitqueue();
+> file_writer-10549 [001] 1291593.100423: funcgraph_entry:        0.313 us   |        __wake_up_bit();
+> file_writer-10549 [001] 1291593.100423: funcgraph_exit:         1.080 us   |      }
+> file_writer-10549 [001] 1291593.100424: funcgraph_entry:                   |      xfs_vm_page_mkwrite() {
+> file_writer-10549 [001] 1291593.100424: funcgraph_entry:                   |        block_page_mkwrite() {
+> file_writer-10549 [001] 1291593.100424: funcgraph_entry:        0.240 us   |          _cond_resched();
+> file_writer-10549 [001] 1291593.100425: funcgraph_entry:                   |          block_prepare_write() {
+> file_writer-10549 [001] 1291593.100425: funcgraph_entry:                   |            __block_prepare_write() {
+> file_writer-10549 [001] 1291593.100426: funcgraph_entry:                   |              create_empty_buffers() {
+> file_writer-10549 [001] 1291593.100426: funcgraph_entry:                   |                alloc_page_buffers() {
+> file_writer-10549 [001] 1291593.100426: funcgraph_entry:                   |                  alloc_buffer_head() {
+> file_writer-10549 [001] 1291593.100426: funcgraph_entry:                   |                    kmem_cache_alloc() {
+> file_writer-10549 [001] 1291593.100427: funcgraph_entry:        0.491 us   |                      _cond_resched();
+> file_writer-10549 [001] 1291593.100427: funcgraph_exit:         1.043 us   |                    }
+> file_writer-10549 [001] 1291593.100428: funcgraph_entry:        0.185 us   |                    recalc_bh_state();
+> file_writer-10549 [001] 1291593.100428: funcgraph_exit:         2.003 us   |                  }
+> file_writer-10549 [001] 1291593.100428: funcgraph_entry:        0.137 us   |                  set_bh_page();
+> file_writer-10549 [001] 1291593.100428: funcgraph_exit:         2.701 us   |                }
+> file_writer-10549 [001] 1291593.100429: funcgraph_entry:        0.271 us   |                _spin_lock();
+> file_writer-10549 [001] 1291593.100429: funcgraph_exit:         3.751 us   |              }
+> file_writer-10549 [001] 1291593.100429: funcgraph_entry:                   |              xfs_get_blocks() {
+> file_writer-10549 [001] 1291593.100430: funcgraph_entry:                   |                __xfs_get_blocks() {
+> file_writer-10549 [001] 1291593.100430: funcgraph_entry:                   |                  xfs_iomap() {
+> file_writer-10549 [001] 1291593.100430: funcgraph_entry:                   |                    xfs_ilock() {
 
-To initialise CFLAGS to whatever configure decided it should be.
-However, the way the flags are build in builddefs means that more
-work than this is needed to allow the CFLAGS env variable to
-override all the compile options that get added together....
+So this is trying to lock the ilock exclusively to map the range or
+do delayed allocation reservations.
 
-e.g:
+> Finally xfslogd/1 wakes up the flush-8:0 process which releases the
+> xfs_ilock() waking up my file_writer process and allowing it to
+> continue.
+> ...
+> xfslogd/1-213   [001] 1291593.158606: sched_wakeup:         task flush-8:0:601 [120] success=1 [011]
+>    <idle>-0     [011] 1291593.158609: sched_switch:         task swapper:0 [120] (R) ==> flush-8:0:601 [120]
 
-$ CFLAGS="-Os" ./configure
-....
-$ make Q=
-....
-gcc -MM -Os -I. -g -O2 -DNDEBUG -DVERSION=\"3.1.2\" -DLOCALEDIR=.....
-....
+xfslogd? Inodes do not get locked across log writes; they are
+unlocked in the transaction commit.
 
-The OPTIMIZER compile options are still included here, so there's
-potential conflict just by dumbly initialising CFLAGS....
+Hmmm - perhaps the issue is that the transaction commit has not been
+able to get a iclog buffer to write the transaction into and so is
+sleeping waiting for an iclog IO to complete. That would be woken by
+the xfslogd, and then the transaction would write into the
+now-available iclog and unlock the inode.
+
+So, I'd say that in this case your application is waiting for log IO
+completion to occur. Nothing you can do to avoid that, but you can
+minimise the impact - increase the log buffer size via the mount
+option logbsize (i.e. -o logbsize=262144) to reduce the frequency of
+iclog buffer IOs and make it less likely the system will run stall
+having run out of iclog space.
+
+The other possibility is that the log IO is being slowed by barriers
+being issued with the log writes. If you've got non-volatile caches
+on your storage, you can turn off barriers and that should help
+reduce log IO latency significantly.
+
+Another possibility is to switch to the deadline or no-op IO
+scheduler to avoid log IO being delayed by (the ever changing)
+CFQ IO scheduling idiosyncracies.
+
+> Where the new kernels provides:
+> 
+> static struct vm_operations_struct xfs_file_vm_ops = {
+>         .nopage         = filemap_nopage,
+>         .populate       = filemap_populate,
+>         .page_mkwrite   = xfs_vm_page_mkwrite,
+> };
+> 
+> static const struct vm_operations_struct xfs_file_vm_ops = {
+>         .fault          = filemap_fault,
+>         .page_mkwrite   = xfs_vm_page_mkwrite,
+> };
+> 
+> So I can see that the xfs_vm_page_mkwrite is a new addition and this
+> is what is causing the stalls on the newer kernels.
+
+->page_mkwrite is necessary to solve significant other problems with
+mmap writes (like detecting ENOSPC correctly and allowing mmap
+writes to execute delayed allocation and detect unwritten extents
+correctly) so it's not going away.
 
 Cheers,
 
