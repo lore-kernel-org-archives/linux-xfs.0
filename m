@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6N9GXUN192545 for <xfs@oss.sgi.com>; Fri, 23 Jul 2010 04:16:33 -0500
-Received: from mail-fx0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9F1D946B7BF
-	for <xfs@oss.sgi.com>; Fri, 23 Jul 2010 02:19:35 -0700 (PDT)
-Received: from mail-fx0-f53.google.com (mail-fx0-f53.google.com
-	[209.85.161.53]) by cuda.sgi.com with ESMTP id qNOyCMl2SEXbOQik
-	for <xfs@oss.sgi.com>; Fri, 23 Jul 2010 02:19:35 -0700 (PDT)
-Received: by fxm19 with SMTP id 19so5792630fxm.26
-	for <xfs@oss.sgi.com>; Fri, 23 Jul 2010 02:19:34 -0700 (PDT)
-From: Khelben Blackstaff <eye.of.the.8eholder@gmail.com>
-Subject: Re: 4k sector drives
-Date: Fri, 23 Jul 2010 12:19:21 +0300
-MIME-Version: 1.0
-Message-Id: <201007231219.21880.eye.of.the.8eholder@gmail.com>
+	o6NAK8tZ194815 for <xfs@oss.sgi.com>; Fri, 23 Jul 2010 05:20:08 -0500
+Received: from smtp4-g21.free.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8B857C1F2CC
+	for <xfs@oss.sgi.com>; Fri, 23 Jul 2010 03:30:06 -0700 (PDT)
+Received: from smtp4-g21.free.fr (smtp4-g21.free.fr [212.27.42.4]) by
+	cuda.sgi.com with ESMTP id 9mffwJoQTx6cTzsZ for
+	<xfs@oss.sgi.com>; Fri, 23 Jul 2010 03:30:06 -0700 (PDT)
+Date: Fri, 23 Jul 2010 12:23:06 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: filesystem shrinks after using xfs_repair
+Message-ID: <20100723122306.1b33aa82@harpe.intellique.com>
+In-Reply-To: <274A8D0C-4C31-4FB9-AB2D-BA3C31D497E0@ucsc.edu>
+References: <DFB2DB04-A3BA-4272-A12A-4F28A7D51491@ucsc.edu>
+	<20100712134743.624249b2@harpe.intellique.com>
+	<274A8D0C-4C31-4FB9-AB2D-BA3C31D497E0@ucsc.edu>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,28 +25,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eli Morris <ermorris@ucsc.edu>
+Cc: xfs@oss.sgi.com
 
-> Thanks, I did this, and it even worked for my other WDC 
-> WD2002FYPS-01U1B0, which was on 12 seconds (the EARS were on 8s as you 
-> said), and now all three drives have a 120s delay before parking. That 
+Le Fri, 23 Jul 2010 01:30:40 -0700
+Eli Morris <ermorris@ucsc.edu> =E9crivait:
 
-I am glad it worked.
+> I think the raid tech support and me found and corrected the hardware
+> problems associated with the RAID. I'm still having the same problem
+> though. I expanded the filesystem to use the space of the now
+> corrected RAID and that seems to work OK. I can write files to the
+> new space OK. But then, if I run xfs_repair on the volume, the newly
+> added space disappears and there are tons of error messages from
+> xfs_repair (listed below)
 
->should be sufficient. It didn't work for the VelociRaptor in my PC, just 
-> to mention.
+When you do the xfs_repair, did you check dmesg or /var/log/messages
+immediately thereafter? Just to get sure there isn't any intervening
+hard error.
 
-Disks from the Green series support some features that help the
-enviroment. Among them is having lower rpm (usually 5400) and
-the intellipark feature that you set to 120s.
+-- =
 
-If i am not mistaken, VelociRaptor is the low latency 10K rpm
-drive, so it's not surprising that it doesn't support this. Only
-drives from the Green series do.
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
 
 _______________________________________________
 xfs mailing list
