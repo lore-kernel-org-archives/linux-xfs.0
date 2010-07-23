@@ -1,23 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6NA9OrD194329 for <xfs@oss.sgi.com>; Fri, 23 Jul 2010 05:09:25 -0500
+	o6NAcYUF195624 for <xfs@oss.sgi.com>; Fri, 23 Jul 2010 05:38:34 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5618515C7DB6
-	for <xfs@oss.sgi.com>; Fri, 23 Jul 2010 03:19:22 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	gBwYnfEfmYmp17z7 for <xfs@oss.sgi.com>;
-	Fri, 23 Jul 2010 03:19:22 -0700 (PDT)
-Date: Fri, 23 Jul 2010 20:12:22 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 19D9A1E33224
+	for <xfs@oss.sgi.com>; Fri, 23 Jul 2010 03:41:35 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	9bGi3MaooZ64dQEW for <xfs@oss.sgi.com>;
+	Fri, 23 Jul 2010 03:41:35 -0700 (PDT)
+Received: from dastard (unverified [121.44.18.238])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	32660699-1927428
+	for <xfs@oss.sgi.com>; Fri, 23 Jul 2010 20:11:34 +0930 (CST)
+Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
+	(envelope-from <dave@fromorbit.com>) id 1OcFgx-0007Qw-0y
+	for xfs@oss.sgi.com; Fri, 23 Jul 2010 20:41:23 +1000
+Received: from dave by disturbed with local (Exim 4.71)
+	(envelope-from <dave@disturbed.disaster>) id 1OcFgv-0000RW-Me
+	for xfs@oss.sgi.com; Fri, 23 Jul 2010 20:41:21 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests 240: test non-aligned AIO hole-filling
-Message-ID: <20100723101222.GH32635@dastard>
-References: <4C489676.2000605@redhat.com>
- <20100723024938.GD32635@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100723024938.GD32635@dastard>
+Subject: [PATCH 3/3] xfs: wait on IO completion inside an IO context
+Date: Fri, 23 Jul 2010 20:41:18 +1000
+Message-Id: <1279881678-1660-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1279881678-1660-1-git-send-email-david@fromorbit.com>
+References: <1279881678-1660-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,81 +33,131 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: ext4 development <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Fri, Jul 23, 2010 at 12:49:38PM +1000, Dave Chinner wrote:
-> On Thu, Jul 22, 2010 at 02:05:26PM -0500, Eric Sandeen wrote:
-> > This replicates file corruption we've seen with qemu-kvm when
-> > we use if=virtio,cache=none,aio=native for IO to a sparse
-> > ext4- or xfs-hosted file, and the partitions/filesystems
-> > within that file image are not block-aligned.  (think sector
-> > 63 here...)  This results in AIO IOs not aligned to the
-> > filesystem blocks.
-> > 
-> > This test modifies aiodio_sparse2.c to add an option to start
-> > the file IO at an offset.
-> > 
-> > When we do 4k writes to a 16k file in 2 threads, starting
-> > at offset 512, we get 0s interspersed in the file where they
-> > should not be:
-> > 
-> > 00000000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-> > *
-> > 00000200  01 01 01 01 01 01 01 01  01 01 01 01 01 01 01 01  |................|
-> > *
-> > 00001000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-> > *
-> > 00001200  01 01 01 01 01 01 01 01  01 01 01 01 01 01 01 01  |................|
-> > ....
-> > 
-> > Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-> 
-> looks good - it needs to remove the $TEST_DIR/aiodio_sparse file
-> before the test starts, though, so that repeated tests fail
-> correctly. Otherwise:
-> 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> 
-> Also, Eric, can you run this proof-of-concept test branch (on top of
-> the current XFS for-2.6.36 branch) and see if QEMU is happy with it?
-> It passes this test on my machine....
-> 
-> The following changes since commit d2ec2c790b3994bf0c4381cacc489b514705887c:
-> 
->   xfs: clean up xfs_bmap_get_bp (2010-07-22 12:52:08 +1000)
-> 
-> are available in the git repository at:
->   git://git.kernel.org/pub/scm/linux/kernel/git/dgc/xfsdev aio-unaligned
+From: Dave Chinner <dchinner@redhat.com>
 
-I just pushed another patch onto this series that will makes test
-240 pass reliably here rather than hanging. It's all a bit messy,
-but it does serve to illustrate the problem and a potential avenue
-to prevent it....
+To wait while IOs drain from the inode while inside an ioend context, we have
+to wait until the inode io count drops to 1 - the reference we hold - rather
+than zero. Add functionality to the ioend wait subsystem to do this.
 
-Dave Chinner (5):
-      Merge branch 'master' into working
-      Merge branch 'for-2.6.36' into working
-      fs: get_blocks needs an unaligned mapping flag
-      xfs: serialise unaligned direct IO into unwritten extents
-      xfs: wait on IO completion inside an IO context
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/linux-2.6/xfs_aops.c |   50 +++++++++++++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_inode.h          |   13 ++++++-----
+ 2 files changed, 55 insertions(+), 8 deletions(-)
 
- fs/buffer.c                 |   17 ++++----
- fs/direct-io.c              |   25 ++++++++++-
- fs/ioctl.c                  |    2 +-
- fs/mpage.c                  |    6 ++-
- fs/xfs/linux-2.6/xfs_aops.c |   95 ++++++++++++++++++++++++++++++++++++++-----
- fs/xfs/xfs_inode.h          |   13 +++---
- include/linux/fs.h          |   10 ++++-
- 7 files changed, 136 insertions(+), 32 deletions(-)
-
+diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
+index 5682490..ec499f2 100644
+--- a/fs/xfs/linux-2.6/xfs_aops.c
++++ b/fs/xfs/linux-2.6/xfs_aops.c
+@@ -64,6 +64,9 @@ xfs_ioend_init(void)
+ 		init_waitqueue_head(&xfs_ioend_wq[i]);
+ }
+ 
++/*
++ * wait for all IO to drain from the inode
++ */
+ void
+ xfs_ioend_wait(
+ 	xfs_inode_t	*ip)
+@@ -73,12 +76,55 @@ xfs_ioend_wait(
+ 	wait_event(*wq, (atomic_read(&ip->i_iocount) == 0));
+ }
+ 
++/*
++ * If we have an active ioend in the caller context (e.g.
++ * xfs_get_blocks_direct) we need to wait for the count to drop to one before
++ * we are woken.
++ *
++ * For this to work in the context of concurrent callers (concurrent direct IO),
++ * this function must be called with the iolock held exclusively to prevent
++ * other IOs blocking here and preventing the count from ever dropping to 1.
++ */
++STATIC void
++xfs_ioend_wait_excl(
++	xfs_inode_t	*ip)
++{
++	wait_queue_head_t *wq = to_ioend_wq(ip);
++
++	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
++	xfs_iflags_set(ip, XFS_IIOEND_WAIT_EXCL);
++	wait_event(*wq, (atomic_read(&ip->i_iocount) == 1));
++	xfs_iflags_clear(ip, XFS_IIOEND_WAIT_EXCL);
++}
++
+ STATIC void
+ xfs_ioend_wake(
+ 	xfs_inode_t	*ip)
+ {
+-	if (atomic_dec_and_test(&ip->i_iocount))
++	if (atomic_dec_and_test(&ip->i_iocount)) {
++		wake_up(to_ioend_wq(ip));
++		return;
++	}
++
++	/*
++	 * do an unlocked check for an exclusive wait before trying to get
++	 * spinlocks to avoid hurting the normal path too much. We can do this
++	 * check unlocked because if the flag is not set here and this is the
++	 * last IO remaining (i.e. iocount == 1 after the above decrement),
++	 * then any code that enters xfs_ioend_wait_excl() will now see that
++	 * i_iocount == 1 and return immediately. Hence we don't need to issue
++	 * a wakeup in this case, and it keeps the common case overhead as low
++	 * as possible.
++	 */
++	smp_rmb();
++	if (!__xfs_iflags_test(ip, XFS_IIOEND_WAIT_EXCL))
++		return;
++
++	spin_lock(&ip->i_flags_lock);
++	if (atomic_read(&ip->i_iocount) == 1 &&
++	    __xfs_iflags_test(ip, XFS_IIOEND_WAIT_EXCL))
+ 		wake_up(to_ioend_wq(ip));
++	spin_unlock(&ip->i_flags_lock);
+ }
+ 
+ void
+@@ -1334,7 +1380,7 @@ remap:
+ 	    (flags & GET_BLOCKS_UNALIGNED) && !iolock_changed) {
+ 		xfs_iunlock(XFS_I(inode), XFS_IOLOCK_SHARED);
+ 		xfs_ilock(XFS_I(inode), XFS_IOLOCK_EXCL);
+-		xfs_ioend_wait(XFS_I(inode));
++		xfs_ioend_wait_excl(XFS_I(inode));
+ 		iolock_changed = 1;
+ 		goto remap;
+ 	}
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 0898c54..40b5203 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -357,12 +357,13 @@ static inline void xfs_ifunlock(xfs_inode_t *ip)
+ /*
+  * In-core inode flags.
+  */
+-#define XFS_IRECLAIM    0x0001  /* we have started reclaiming this inode    */
+-#define XFS_ISTALE	0x0002	/* inode has been staled */
+-#define XFS_IRECLAIMABLE 0x0004 /* inode can be reclaimed */
+-#define XFS_INEW	0x0008	/* inode has just been allocated */
+-#define XFS_IFILESTREAM	0x0010	/* inode is in a filestream directory */
+-#define XFS_ITRUNCATED	0x0020	/* truncated down so flush-on-close */
++#define XFS_IRECLAIM		0x0001  /* have started reclaiming this inode */
++#define XFS_ISTALE		0x0002	/* inode has been staled */
++#define XFS_IRECLAIMABLE	0x0004	/* inode can be reclaimed */
++#define XFS_INEW		0x0008	/* inode has just been allocated */
++#define XFS_IFILESTREAM		0x0010	/* inode is in a filestream directory */
++#define XFS_ITRUNCATED		0x0020	/* truncated down so flush-on-close */
++#define XFS_IIOEND_WAIT_EXCL	0x0040	/* io completion waiter in io context */
+ 
+ /*
+  * Flags for inode locking.
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.1
 
 _______________________________________________
 xfs mailing list
