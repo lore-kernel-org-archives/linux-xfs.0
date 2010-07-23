@@ -1,16 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6NFSRno208179 for <xfs@oss.sgi.com>; Fri, 23 Jul 2010 10:28:28 -0500
-Subject: Re: [PATCH 1/3] fs: get_blocks needs an unaligned mapping flag
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1279881678-1660-2-git-send-email-david@fromorbit.com>
-References: <1279881678-1660-1-git-send-email-david@fromorbit.com>
-	<1279881678-1660-2-git-send-email-david@fromorbit.com>
-Date: Fri, 23 Jul 2010 10:29:57 -0500
-Message-ID: <1279898997.1983.86.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	o6NGX52u211881 for <xfs@oss.sgi.com>; Fri, 23 Jul 2010 11:33:05 -0500
+Received: from ucsc.edu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 229F046D012
+	for <xfs@oss.sgi.com>; Fri, 23 Jul 2010 09:36:07 -0700 (PDT)
+Received: from ucsc.edu (email-prod-out-1.ucsc.edu [128.114.129.85]) by
+	cuda.sgi.com with ESMTP id QK7nc7wsJ7crNicJ for
+	<xfs@oss.sgi.com>; Fri, 23 Jul 2010 09:36:07 -0700 (PDT)
+Subject: Re: filesystem shrinks after using xfs_repair
+Mime-Version: 1.0 (Apple Message framework v1081)
+From: Eli Morris <ermorris@ucsc.edu>
+In-Reply-To: <20100723122306.1b33aa82@harpe.intellique.com>
+Date: Fri, 23 Jul 2010 09:36:00 -0700
+Message-Id: <E84063EA-39F4-4B99-9F24-4D90EADB7C0D@ucsc.edu>
+References: <DFB2DB04-A3BA-4272-A12A-4F28A7D51491@ucsc.edu>
+	<20100712134743.624249b2@harpe.intellique.com>
+	<274A8D0C-4C31-4FB9-AB2D-BA3C31D497E0@ucsc.edu>
+	<20100723122306.1b33aa82@harpe.intellique.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,61 +26,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Emmanuel Florac <eflorac@intellique.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, 2010-07-23 at 20:41 +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> When issuing concurrent unaligned direct IO to the same filesystem block, the
-> direct IO sub-block zeroing code will extend the length of the write being done
-> when writing into a hole or unwritten extents. If we are writing into unwritten
-> extents, then the two IOs will both see the extent as unwritten at IO issue
-> time and attempt to zero the part of the block that they are not writing to.
-> 
-> The result of this is that whichever IO completes last will win and part of the
-> block will be zero instead of containing the correct data. Eric Sandeen has
-> demonstrated the problem with xfstest #240. In the case of XFS, we allow
-> concurrent direct IO writes to occur, but we cannot allow block zeroing to
-> occur concurrently with other IO.
-> 
-> To allow serialisation of block zeroing across multiple independent IOs, we
-> need to know if the region being mapped by the IO is fsb-aligned or not. If it
-> is not aligned, then we need to prevent further direct IO writes from being
-> executed until the IO that is doing the zeroing completes (i.e. converts the
-> extent back to written). Passing the fact that the mapping is for an unaligned
-> IO into the get_blocks calback is sufficient to allow us to implement the
-> necessary serialisation.
-> 
-> Change the "create" parameter of the get_blocks callback to a flags field,
-> and define the flags to be backwards compatible as such:
-> 
-> #define GET_BLOCKS_READ		0x00	/* map, no allocation */
-> #define GET_BLOCKS_CREATE	0x01	/* map, allocate if hole */
-> #define GET_BLOCKS_UNALIGNED	0x02	/* mapping for unaligned IO */
+On Jul 23, 2010, at 3:23 AM, Emmanuel Florac wrote:
 
-This looks good to me.
+> Le Fri, 23 Jul 2010 01:30:40 -0700
+> Eli Morris <ermorris@ucsc.edu> =E9crivait:
+> =
 
-Two nits.  You could change the name of the "create" variable
-in get_more_blocks() to be consistent with your change.
+>> I think the raid tech support and me found and corrected the hardware
+>> problems associated with the RAID. I'm still having the same problem
+>> though. I expanded the filesystem to use the space of the now
+>> corrected RAID and that seems to work OK. I can write files to the
+>> new space OK. But then, if I run xfs_repair on the volume, the newly
+>> added space disappears and there are tons of error messages from
+>> xfs_repair (listed below)
+> =
 
-And I guess I like that the GET_BLOCKS_UNALIGNED is a flag
-OR'd rather than a distinct value (i.e., CREATE_UNALIGNED).
-You could make the comment at the definition of these
-flag values to indicate they're "flag bits" rather than
-just "flags" because it could conceivably be misconstrued
-as-is.
+> When you do the xfs_repair, did you check dmesg or /var/log/messages
+> immediately thereafter? Just to get sure there isn't any intervening
+> hard error.
+> =
 
-In any case:
+> -- =
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+> ------------------------------------------------------------------------
+> Emmanuel Florac     |   Direction technique
+>                    |   Intellique
+>                    |	<eflorac@intellique.com>
+>                    |   +33 1 78 94 84 02
+> ------------------------------------------------------------------------
 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Hi, =
 
+
+No, I don't see any hardware errors after running xfs_repair.
+
+thanks,
+
+Eli
 
 _______________________________________________
 xfs mailing list
