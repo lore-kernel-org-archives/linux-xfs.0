@@ -1,16 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6NFSXIF208203 for <xfs@oss.sgi.com>; Fri, 23 Jul 2010 10:28:33 -0500
-Subject: Re: [PATCH 3/3] xfs: wait on IO completion inside an IO context
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1279881678-1660-4-git-send-email-david@fromorbit.com>
-References: <1279881678-1660-1-git-send-email-david@fromorbit.com>
-	<1279881678-1660-4-git-send-email-david@fromorbit.com>
-Date: Fri, 23 Jul 2010 10:30:09 -0500
-Message-ID: <1279899009.1983.88.camel@doink>
+	o6NFPbX1208053 for <xfs@oss.sgi.com>; Fri, 23 Jul 2010 10:25:38 -0500
+Received: from smtp4-g21.free.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2FC51132D6AE
+	for <xfs@oss.sgi.com>; Fri, 23 Jul 2010 08:35:36 -0700 (PDT)
+Received: from smtp4-g21.free.fr (smtp4-g21.free.fr [212.27.42.4]) by
+	cuda.sgi.com with ESMTP id QgUe0qiYvlLdSOG5 for
+	<xfs@oss.sgi.com>; Fri, 23 Jul 2010 08:35:36 -0700 (PDT)
+Date: Fri, 23 Jul 2010 17:28:38 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: 4k sector drives
+Message-ID: <20100723172838.3b40a745@harpe.intellique.com>
+In-Reply-To: <201007231802.11491.eye.of.the.8eholder@gmail.com>
+References: <201007231802.11491.eye.of.the.8eholder@gmail.com>
 Mime-Version: 1.0
-Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,27 +23,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Khelben Blackstaff <eye.of.the.8eholder@gmail.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, 2010-07-23 at 20:41 +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> To wait while IOs drain from the inode while inside an ioend context, we have
-> to wait until the inode io count drops to 1 - the reference we hold - rather
-> than zero. Add functionality to the ioend wait subsystem to do this.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Le Fri, 23 Jul 2010 18:02:11 +0300
+Khelben Blackstaff <eye.of.the.8eholder@gmail.com> =E9crivait:
 
-Looks good.
+> It hurts a lot. On my 1TB EARS when i was benchmarking unaligned
+> partitions, untarring a linux kernel for example took ages. (tar
+> output finished quickly but then you had to wait a long time till the
+> shell prompt returns)
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+Extracting a linux tarball creates lots of very small files, so it is
+expected to perform very badly on unaligned partitions. But I suppose
+that copying the tarball itself to the disk could be only slightly
+slower than normal.
 
+-- =
 
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
 
 _______________________________________________
 xfs mailing list
