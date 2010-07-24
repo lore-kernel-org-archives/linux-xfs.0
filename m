@@ -1,23 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6O8iq2G254745 for <xfs@oss.sgi.com>; Sat, 24 Jul 2010 03:44:54 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 22CD0C25A7F
-	for <xfs@oss.sgi.com>; Sat, 24 Jul 2010 01:54:57 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id xJFISB6RR6xt9Zkf for
-	<xfs@oss.sgi.com>; Sat, 24 Jul 2010 01:54:57 -0700 (PDT)
-Date: Sat, 24 Jul 2010 04:47:51 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: 4k sector drives
-Message-ID: <20100724084751.GA32006@infradead.org>
-References: <201007211333.48363.eye.of.the.8eholder@gmail.com>
-	<201007230809.28111@zmi.at> <20100723095832.GA23174@infradead.org>
-	<201007231259.11714@zmi.at>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <201007231259.11714@zmi.at>
+	o6OBCRge261109 for <xfs@oss.sgi.com>; Sat, 24 Jul 2010 06:12:27 -0500
+Subject: Re: [RFC, PATCH 0/3] serialise concurrent direct IO sub-block zeroing
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20100724000946.GK32635@dastard>
+References: <1279881678-1660-1-git-send-email-david@fromorbit.com>
+	<4C49EB67.6020509@sandeen.net>  <20100724000946.GK32635@dastard>
+Date: Sat, 24 Jul 2010 06:12:29 -0500
+Message-ID: <1279969949.4737.3.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,19 +23,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On Fri, Jul 23, 2010 at 12:59:07PM +0200, Michael Monnerie wrote:
-> On Freitag, 23. Juli 2010 Christoph Hellwig wrote:
-> > -b size=4096 is the default anyway, for 4k sector drivers you also
-> >  want -s size=4096, which you do not want for 512 byte sector disks.
+On Sat, 2010-07-24 at 10:09 +1000, Dave Chinner wrote:
+> On Fri, Jul 23, 2010 at 02:20:07PM -0500, Eric Sandeen wrote:
+> > Dave Chinner wrote:
+> > > Patches for discussion seeing as git.kernel.org is being slow to update.
+> > > 
+> > 
+> > I can confirm that this fixes the qemu problems, too.
+> > 
+> > Also makes the install take about 30min vs. 10 ;)
 > 
-> Thanks for clarification. Should I use "-s size=4096" despite the drive 
-> saying 512b sectors? It's a "hidden" 4K sector drive, so maybe declaring 
-> it extra for XFS helps performance? Or does it not matter at all?
+> Yeah, that's no surprise - it'll be serialising all the IO even when
+> it doesn't need to. Good to know that we've found the cause of the
+> problem, though, so we can work from here towards a more robust
+> solution.
 
-If it really is one using -s size=4096 is the right thing to do.
+The patchesmade test 240 in the xfstests suite pass when
+it consistently did not for me without it.
+
+However I found that test 104 hung the two times I tried it.
+At first I thought it could have been just taking a long time
+but the fsstress processes were unkillable and shutdown
+didn't complete either.  I tried again after removing the
+patches and 104 passed again.
+
+					-Alex
 
 _______________________________________________
 xfs mailing list
