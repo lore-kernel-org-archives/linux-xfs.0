@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6NJH9HS217778 for <xfs@oss.sgi.com>; Fri, 23 Jul 2010 14:17:09 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 16C83C1FAE3
-	for <xfs@oss.sgi.com>; Fri, 23 Jul 2010 12:27:08 -0700 (PDT)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id mhYrKQw3Drko1x7d for
-	<xfs@oss.sgi.com>; Fri, 23 Jul 2010 12:27:08 -0700 (PDT)
-Message-ID: <4C49EB67.6020509@sandeen.net>
-Date: Fri, 23 Jul 2010 14:20:07 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+	o6O06m4M230556 for <xfs@oss.sgi.com>; Fri, 23 Jul 2010 19:06:49 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C99E546A99E
+	for <xfs@oss.sgi.com>; Fri, 23 Jul 2010 17:09:49 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	ZLKPOaela6Y0Z8QJ for <xfs@oss.sgi.com>;
+	Fri, 23 Jul 2010 17:09:49 -0700 (PDT)
+Date: Sat, 24 Jul 2010 10:09:46 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [RFC, PATCH 0/3] serialise concurrent direct IO sub-block zeroing
+Message-ID: <20100724000946.GK32635@dastard>
 References: <1279881678-1660-1-git-send-email-david@fromorbit.com>
-In-Reply-To: <1279881678-1660-1-git-send-email-david@fromorbit.com>
+	<4C49EB67.6020509@sandeen.net>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4C49EB67.6020509@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,19 +30,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-Dave Chinner wrote:
-> Patches for discussion seeing as git.kernel.org is being slow to update.
+On Fri, Jul 23, 2010 at 02:20:07PM -0500, Eric Sandeen wrote:
+> Dave Chinner wrote:
+> > Patches for discussion seeing as git.kernel.org is being slow to update.
+> > 
 > 
+> I can confirm that this fixes the qemu problems, too.
+> 
+> Also makes the install take about 30min vs. 10 ;)
 
-I can confirm that this fixes the qemu problems, too.
+Yeah, that's no surprise - it'll be serialising all the IO even when
+it doesn't need to. Good to know that we've found the cause of the
+problem, though, so we can work from here towards a more robust
+solution.
 
-Also makes the install take about 30min vs. 10 ;)
+Cheers,
 
-
--Eric
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
