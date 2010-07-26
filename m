@@ -1,27 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6Q419UI095203 for <xfs@oss.sgi.com>; Sun, 25 Jul 2010 23:01:09 -0500
-Received: from ucsc.edu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A12EC1D6A085
-	for <xfs@oss.sgi.com>; Sun, 25 Jul 2010 21:04:12 -0700 (PDT)
-Received: from ucsc.edu (email-prod-out-1.ucsc.edu [128.114.129.85]) by
-	cuda.sgi.com with ESMTP id RTU9hmEs08qnXcSG for
-	<xfs@oss.sgi.com>; Sun, 25 Jul 2010 21:04:12 -0700 (PDT)
-Subject: Re: filesystem shrinks after using xfs_repair
-Mime-Version: 1.0 (Apple Message framework v1081)
-From: Eli Morris <ermorris@ucsc.edu>
-In-Reply-To: <20100726034545.GE655@dastard>
-Date: Sun, 25 Jul 2010 21:04:03 -0700
-Message-Id: <10B6F36F-BE01-4BF7-9815-2E8F6BF71B41@ucsc.edu>
-References: <DFB2DB04-A3BA-4272-A12A-4F28A7D51491@ucsc.edu>
-	<20100712134743.624249b2@harpe.intellique.com>
-	<274A8D0C-4C31-4FB9-AB2D-BA3C31D497E0@ucsc.edu>
-	<20100724005426.GN32635@dastard>
-	<F2AC32C3-2437-4625-980A-3BC9B3C541A2@ucsc.edu>
-	<20100724023922.GP32635@dastard>
-	<777100A1-57DE-4DE0-B1F0-64977BD694AD@ucsc.edu>
-	<20100726034545.GE655@dastard>
+	o6Q5o2mX101801 for <xfs@oss.sgi.com>; Mon, 26 Jul 2010 00:50:03 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7867E102D22
+	for <xfs@oss.sgi.com>; Sun, 25 Jul 2010 23:00:14 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id dxB00zPq8ufubzVY for
+	<xfs@oss.sgi.com>; Sun, 25 Jul 2010 23:00:14 -0700 (PDT)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: permanent kernel upgrading (was: bug and fun with XFS: unable to
+	handle kernel NULL pointer dereference)
+Date: Mon, 26 Jul 2010 07:52:54 +0200
+References: <201007260019.51568@zmi.at> <20100726001859.GD655@dastard>
+In-Reply-To: <20100726001859.GD655@dastard>
+MIME-Version: 1.0
+Message-Id: <201007260752.59573@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,209 +24,102 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============5130142153794461137=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, Dave Chinner <david@fromorbit.com>
+
+--===============5130142153794461137==
+Content-Type: multipart/signed;
+  boundary="nextPart2557216.lLY253211c";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
+
+--nextPart2557216.lLY253211c
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+On Montag, 26. Juli 2010 Dave Chinner wrote:
+> > # mount /disks/work/
+> > # umount /disks/work/
+> > umount: /disks/work: device is busy.
+> >         (In some cases useful info about processes that use
+> >          the device is found by lsof(8) or fuser(1))
+>=20
+> Some other process has taken a reference to the fs, I'd say.
+> And if that process triggered an oops, then you'd see this.
+
+This is definitely improbable ;-). I stopped all processes, except sshd=20
+and mingetty (for the console processes), and "lsof" reported no open=20
+files. I'd swear it must be a bug, but as you said 2.6.27 (openSUSE=20
+11.1) is just too old to take care.
+=20
+> Corrupt attribute fork - matches with the oops signatures.  I'd
+> definitely consider upgrading your kernel as a first step...
+=20
+That's why I wrote "which I planned to migrate". I was just in the=20
+process of doing so.
+
+This brings me to another question: openSUSE 11.1 is, despite being old,=20
+still maintained, so I was under the impression that I'd get updates for=20
+problems. But I already received "upgrade your kernel" the last time for=20
+my openSUSE 11.2 with it's kernel vmlinuz-2.6.31.12, which by the time=20
+was the latest release (in the meantime openSUSE 11.3 got released).
+So is this just a generic recommendation of developers who love the=20
+bleeding-edge stuff and know how many problems they fixed since 2.6.27=20
+("yak, that old stuff, how could it ever run?"), or is it known that not=20
+enough fixes go into "maintained" kernels by distributions?
+
+I have tons of servers to maintain, and can't compile kernels on my own=20
+anymore (I did this when I was younger), so I used openSUSE and I am in=20
+the process of replacing servers to SLES, which should receive much=20
+better services but still kernel upgrading is not supported on such=20
+platforms. So what is the best practice that one should choose when=20
+running "long time services" where you can't upgrade all the time?
+
+Just curious. :-)
+
+=2D-=20
+mit freundlichen Gr=FCssen,
+Michael Monnerie, Ing. BSc
+
+it-management Internet Services
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: 0660 / 415 65 31
+
+****** Aktuelles Radiointerview! ******
+http://www.it-podcast.at/aktuelle-sendung.html
+
+// Wir haben im Moment zwei H=E4user zu verkaufen:
+// http://zmi.at/langegg/
+// http://zmi.at/haus2009/
+
+--nextPart2557216.lLY253211c
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.12 (GNU/Linux)
+
+iEYEABECAAYFAkxNIrsACgkQzhSR9xwSCbQXagCdGHy1cYpR3vqVZ0eX1zOn/2I+
+BlwAoNLxbAdWf07HK9xo3IAVqkGCipnb
+=HKy5
+-----END PGP SIGNATURE-----
+
+--nextPart2557216.lLY253211c--
 
 
-On Jul 25, 2010, at 8:45 PM, Dave Chinner wrote:
-
-> On Sun, Jul 25, 2010 at 08:20:44PM -0700, Eli Morris wrote:
->> On Jul 23, 2010, at 7:39 PM, Dave Chinner wrote:
->>> On Fri, Jul 23, 2010 at 06:08:08PM -0700, Eli Morris wrote:
->>>> On Jul 23, 2010, at 5:54 PM, Dave Chinner wrote:
->>>>> On Fri, Jul 23, 2010 at 01:30:40AM -0700, Eli Morris wrote:
->>>>>> I think the raid tech support and me found and corrected the
->>>>>> hardware problems associated with the RAID. I'm still having the
->>>>>> same problem though. I expanded the filesystem to use the space of
->>>>>> the now corrected RAID and that seems to work OK. I can write
->>>>>> files to the new space OK. But then, if I run xfs_repair on the
->>>>>> volume, the newly added space disappears and there are tons of
->>>>>> error messages from xfs_repair (listed below).
->>>>> 
->>>>> Can you post the full output of the xfs_repair? The superblock is
->>>>> the first thing that is checked and repaired, so if it is being
->>>>> "repaired" to reduce the size of the volume then all the other errors
->>>>> are just a result of that. e.g. the grow could be leaving stale
->>>>> secndary superblocks around and repair is seeing a primary/secondary
->>>>> mismatch and restoring the secondary which has the size parameter
->>>>> prior to the grow....
->>>>> 
->>>>> Also, the output of 'cat /proc/partitions' would be interesting
->>>>> from before the grow, after the grow (when everything is working),
->>>>> and again after the xfs_repair when everything goes bad....
->>>> 
->>>> Thanks for replying. Here is the output I think you're looking for....
->>> 
->>> Sure is. The underlying device does not change configuration, and:
->>> 
->>>> [root@nimbus /]# xfs_repair /dev/mapper/vg1-vol5
->>>> Phase 1 - find and verify superblock...
->>>> writing modified primary superblock
->>>> Phase 2 - using internal log
->>> 
->>> There's a smoking gun - the primary superblock was modified in some
->>> way. Looks like the only way we can get this occurring without an
->>> error or warning being emitted is if repair found more superblocks
->>> with the old geometry in it them than the new geometry.
->>> 
->>> With a current kernel, growfs is supposed to update every single
->>> secondary superblock, so I can't see how this could be occurring.
->>> However, can you remind me what kernel your are running and gather
->>> the following information?
->>> 
->>> Run this before the grow:
->>> 
->>> # echo 3 > /proc/sys/vm/drop-caches
->>> # for ag in `seq 0 1 125`; do
->>>> xfs_db -r -c "sb $ag" -c "p agcount" -c "p dblocks" <device>
->>>> done
->>> 
->>> Then run the grow, sync, and unmount the filesystem. After that,
->>> re-run the above xfs_db command and post the output of both so I can
->>> see what growfs is actually doing to the secondary superblocks?
->> 
->> [root@nimbus ~]# uname -a
->> Linux nimbus.pmc.ucsc.edu 2.6.18-128.1.14.el5 #1 SMP Wed Jun 17 06:38:05 EDT 2009 x86_64 x86_64 x86_64 GNU/Linux
-> 
-> Ok, so that's a relatively old RHEL or Centos version, right?
-> 
->> [root@nimbus vm]#  echo 3 > /proc/sys/vm/drop_caches
->> [root@nimbus vm]# for ag in `seq 0 1 125`; do
->>> xfs_db -r -c "sb $ag" -c "p agcount" -c "p dblocks" /dev/vg1/vol5
->>> done
->> agcount = 126
->> dblocks = 13427728384
->> agcount = 126
->> dblocks = 13427728384
-> ....
-> 
-> All nice and consistent before.
-> 
->> [root@nimbus vm]# umount /export/vol5
->> [root@nimbus vm]#  echo 3 > /proc/sys/vm/drop_caches
->> [root@nimbus vm]# for ag in `seq 0 1 125`; do
->>> xfs_db -r -c "sb $ag" -c "p agcount" -c "p dblocks" /dev/vg1/vol5
->>> done
->> agcount = 156
->> dblocks = 16601554944
->> agcount = 126
->> dblocks = 13427728384
->> agcount = 126
->> dblocks = 13427728384
-> .....
-> 
-> And after the grow only the primary superblock has the new size and
-> agcount, which is why repair is returning it back to the old size.
-> Can you dump the output after the grow for 155 AGs instead of 125
-> so we can see if the new secondary superblocks were written? (just
-> dumping `seq 125 1 155` will be fine.)
-> 
-> Also, the only way I can see this happening is that if there is an
-> IO error reading or writing the first secondary superblock. That
-> should leave a warning in dmesg - can you check to see if there's an
-> error of the form "error %d reading secondary superblock for ag %d"
-> or "write error %d updating secondary superblock for ag %d" in the
-> logs? I notice that if this happens, we log but don't return the
-> error, so the grow will look like it succeeded...
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-
-Hi Dave, 
-
-Here is the output---
-
-thanks,
-
-Eli
-
-[root@nimbus log]# cat /etc/redhat-release
-CentOS release 5.3 (Final)
-
-[root@nimbus log]# grep error dmesg
-
-[root@nimbus log]# grep superblock *
-
-so, don't see anything there.
-
-[root@nimbus log]# echo 3 > /proc/sys/vm/drop_caches
-[root@nimbus log]#  for ag in `seq 125 1 155`; do
-> xfs_db -r -c "sb $ag" -c "p agcount" -c "p dblocks" /dev/vg1/vol5
-> done
-agcount = 126
-dblocks = 13427728384
-agcount = 126
-dblocks = 13427728384
-agcount = 126
-dblocks = 13427728384
-agcount = 126
-dblocks = 13427728384
-agcount = 126
-dblocks = 13427728384
-agcount = 126
-dblocks = 13427728384
-agcount = 126
-dblocks = 13427728384
-agcount = 126
-dblocks = 13427728384
-agcount = 126
-dblocks = 13427728384
-agcount = 126
-dblocks = 13427728384
-agcount = 126
-dblocks = 13427728384
-agcount = 126
-dblocks = 13427728384
-agcount = 126
-dblocks = 13427728384
-agcount = 126
-dblocks = 13427728384
-agcount = 126
-dblocks = 13427728384
-agcount = 126
-dblocks = 13427728384
-agcount = 126
-dblocks = 13427728384
-agcount = 126
-dblocks = 13427728384
-agcount = 126
-dblocks = 13427728384
-agcount = 126
-dblocks = 13427728384
-agcount = 126
-dblocks = 13427728384
-agcount = 126
-dblocks = 13427728384
-agcount = 126
-dblocks = 13427728384
-agcount = 126
-dblocks = 13427728384
-agcount = 126
-dblocks = 13427728384
-agcount = 126
-dblocks = 13427728384
-agcount = 126
-dblocks = 13427728384
-agcount = 126
-dblocks = 13427728384
-agcount = 126
-dblocks = 13427728384
-agcount = 126
-dblocks = 13427728384
-agcount = 126
-dblocks = 13427728384
-[root@nimbus log]# 
-
+--===============5130142153794461137==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============5130142153794461137==--
