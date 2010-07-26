@@ -1,20 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6Q922EU110128 for <xfs@oss.sgi.com>; Mon, 26 Jul 2010 04:02:02 -0500
-Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 99D40C287A1
-	for <xfs@oss.sgi.com>; Mon, 26 Jul 2010 02:12:18 -0700 (PDT)
-Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id MdqWCzwbBAEAbH3I for
-	<xfs@oss.sgi.com>; Mon, 26 Jul 2010 02:12:18 -0700 (PDT)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: 4k drives: benefits and models?
-Date: Mon, 26 Jul 2010 11:05:02 +0200
-References: <20100726082141.GA8239@apartia.fr>
-In-Reply-To: <20100726082141.GA8239@apartia.fr>
+	o6Q9Wn0n111256 for <xfs@OSS.SGI.com>; Mon, 26 Jul 2010 04:32:50 -0500
+Received: from smarthost03.mail.zen.net.uk (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C8CBE156BF84
+	for <xfs@OSS.SGI.com>; Mon, 26 Jul 2010 02:35:53 -0700 (PDT)
+Received: from smarthost03.mail.zen.net.uk (smarthost03.mail.zen.net.uk
+	[212.23.3.142]) by cuda.sgi.com with ESMTP id jAJUHhAAD7PDaoE6
+	for <xfs@OSS.SGI.com>; Mon, 26 Jul 2010 02:35:53 -0700 (PDT)
+Received: from [82.69.39.138] (helo=ty.sabi.co.UK)
+	by smarthost03.mail.zen.net.uk with esmtps
+	(TLS-1.0:DHE_RSA_AES_256_CBC_SHA1:32) (Exim 4.63)
+	(envelope-from <pg_mh@mh.to.sabi.co.UK>) id 1OdK6C-0006M7-Lz
+	for xfs@OSS.SGI.com; Mon, 26 Jul 2010 09:35:52 +0000
+Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.uk)
+	by ty.sabi.co.UK with esmtp(Exim 4.63 #1) id 1OdK63-0005q0-No
+	for <xfs@OSS.SGI.com>; Mon, 26 Jul 2010 10:35:43 +0100
 MIME-Version: 1.0
-Message-Id: <201007261105.02689@zmi.at>
+Message-ID: <19533.22251.225560.835077@tree.ty.sabi.co.uk>
+Date: Mon, 26 Jul 2010 10:35:39 +0100
+Subject: Re: 4k drives: benefits and models?
+In-Reply-To: <20100726082141.GA8239@apartia.fr>
+References: <20100726082141.GA8239@apartia.fr>
+From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,94 +31,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7191379032120900501=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Linux XFS <xfs@oss.sgi.com>
 
---===============7191379032120900501==
-Content-Type: multipart/signed;
-  boundary="nextPart3044400.iNKUnuxUTx";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
 
---nextPart3044400.iNKUnuxUTx
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-
-On Montag, 26. Juli 2010 Louis-David Mitterrand wrote:
 > - what are the benefits of these new drives? Speed, temperature,
 >   reliability?
->=20
-> - what specific HD models are truely 4k for purchase right now? I'm
->  on the market for a bunch of 2Tb drives, what is a good choice?
->=20
+
+It is purely higher density. A longer physical sector means less
+percentage of the disk is "wasted" on metadata. This benefits
+the manufacturer mostly, so they can claim more capacity with
+less cost (but more credibly than the far more slimy trick of
+LCD manufacturers who are going to ever more extreme landscape
+ratios to claim a longer diagonal with less pixels).
+
+>From the user/filesystem point iof view it is not a positive
+thing, but since the 4BSD FFS introduced 4KiB blocks (a very bad
+idea) and intel and others followed throught with alrge 4KiB
+pages that has been largely irrelevant.
+
+Also it seems that few people are aware that other device types
+have large sectors, as CDs have 2KiB sectors, DVDs have 32KiB,
+BDRs have 64KiB sectors (and both simulate 2KiB sectors), and
+SSDs can have 256KiB sectors (or rather "erase blocks", I think
+that they can read in smaller units than that).
+
+> - what specific HD models are truely 4k for purchase right
+>   now? I'm on the market for a bunch of 2Tb drives, what is a
+>   good choice?
+
+These are two completely unrelated questions, and the second is
+sort of irrelevant because there are so few manufacturers and
+thus models that one has to buy all of them. Except of course
+for those who fill their arrays with disks from the same brand,
+model and even shipping carton, as they know better.
+
+As to the first, there have been a few discussions in the past
+on vsarious Linux mailing lists etc, but the list of models
+changes as manufacturers change firmware and "truely" is thus a
+somewhat elastic concept dependent on revision not just model.
+
 > - what options do I need when creating my raid6 array and xfs
->  filesystem to fully take advantage of 4k sectors?
-=20
-ATM we are in a transition phase - there are first drives available, and=20
-it will take some time until every hardware and software piece is fully=20
-able to support 4K sectors. Probably all hard disk manufacturers will=20
-switch to 4K sectors within the next years, as the advantage is that=20
-more data can be saved onto a hard drive, and speed slightly increases=20
-(when used correctly). But that will be a long transition.
+>   filesystem to fully take advantage of 4k sectors?
 
-It's not necessary to buy 4k sector drives, I'd only recommend it if you=20
-are a techie and want to play around with it. Stay at normal drives,=20
-that's proven technology and works.
-
-=46or a hardware RAID-6 controller, it shouldn't matter, as the stripe=20
-size is usually 16k or higher, which is 32 sectors (or 8x 4K sectors),=20
-and as a multiple of the sector size there's no speed difference to=20
-normal drives.
-
-I use my 2 4k drives with a software RAID-0 in Linux, it's mostly to=20
-play around (sometimes I'm still a techie), and get an idea of how good=20
-the technology can be used already.
-
-I have no idea about Windows support for 4k sector drives.
-
-=2D-=20
-mit freundlichen Gr=FCssen,
-Michael Monnerie, Ing. BSc
-
-it-management Internet Services
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: 0660 / 415 65 31
-
-****** Aktuelles Radiointerview! ******
-http://www.it-podcast.at/aktuelle-sendung.html
-
-// Wir haben im Moment zwei H=E4user zu verkaufen:
-// http://zmi.at/langegg/
-// http://zmi.at/haus2009/
-
---nextPart3044400.iNKUnuxUTx
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.12 (GNU/Linux)
-
-iEYEABECAAYFAkxNT74ACgkQzhSR9xwSCbShEACgsQHSNWG1NCqHBzgdxDb22ZBg
-DwQAn13P1Hz7P92MZEmyRg8f54DFjyH+
-=tVKq
------END PGP SIGNATURE-----
-
---nextPart3044400.iNKUnuxUTx--
-
-
---===============7191379032120900501==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Some recent posts to this mailing list give those. I would add
+also large inodes (2Kib), to alleviate the big downside of 4KiB
+sectors for small files.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============7191379032120900501==--
