@@ -1,28 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6Q9Wn0n111256 for <xfs@OSS.SGI.com>; Mon, 26 Jul 2010 04:32:50 -0500
-Received: from smarthost03.mail.zen.net.uk (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C8CBE156BF84
-	for <xfs@OSS.SGI.com>; Mon, 26 Jul 2010 02:35:53 -0700 (PDT)
-Received: from smarthost03.mail.zen.net.uk (smarthost03.mail.zen.net.uk
-	[212.23.3.142]) by cuda.sgi.com with ESMTP id jAJUHhAAD7PDaoE6
-	for <xfs@OSS.SGI.com>; Mon, 26 Jul 2010 02:35:53 -0700 (PDT)
-Received: from [82.69.39.138] (helo=ty.sabi.co.UK)
-	by smarthost03.mail.zen.net.uk with esmtps
-	(TLS-1.0:DHE_RSA_AES_256_CBC_SHA1:32) (Exim 4.63)
-	(envelope-from <pg_mh@mh.to.sabi.co.UK>) id 1OdK6C-0006M7-Lz
-	for xfs@OSS.SGI.com; Mon, 26 Jul 2010 09:35:52 +0000
-Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.uk)
-	by ty.sabi.co.UK with esmtp(Exim 4.63 #1) id 1OdK63-0005q0-No
-	for <xfs@OSS.SGI.com>; Mon, 26 Jul 2010 10:35:43 +0100
+	o6Q9Qbsv111019 for <xfs@oss.sgi.com>; Mon, 26 Jul 2010 04:26:39 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C4AE01461ED8
+	for <xfs@oss.sgi.com>; Mon, 26 Jul 2010 02:29:41 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id kR2B5Hms74gr3lgU for
+	<xfs@oss.sgi.com>; Mon, 26 Jul 2010 02:29:41 -0700 (PDT)
+Date: Mon, 26 Jul 2010 05:29:38 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs: add discard support (at transaction commit)
+Message-ID: <20100726092938.GA13150@infradead.org>
+References: <20100509175048.GA1435@infradead.org>
+	<20100509215944.GF25419@dastard>
 MIME-Version: 1.0
-Message-ID: <19533.22251.225560.835077@tree.ty.sabi.co.uk>
-Date: Mon, 26 Jul 2010 10:35:39 +0100
-Subject: Re: 4k drives: benefits and models?
-In-Reply-To: <20100726082141.GA8239@apartia.fr>
-References: <20100726082141.GA8239@apartia.fr>
-From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
+Content-Disposition: inline
+In-Reply-To: <20100509215944.GF25419@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,51 +29,70 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linux XFS <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: lczerner@redhat.com, jmoyer@redhat.com, snitzer@redhat.com, xfs@oss.sgi.com
+
+On Mon, May 10, 2010 at 07:59:44AM +1000, Dave Chinner wrote:
+> I think this can  be made to work, but I don't really like it that
+> much, especially the barrier flush part. Is there any particular
+> reason we need to issue discards at this level apart from "other
+> filesystems are doing it" rather than doing it lazily in a
+> non-performance critical piece of code?
+
+To be able to benchmark it.  I finally had the opportunity to test
+discard against a real life highend storage device - an iscsi attached
+RAID array from a big name vendor (not quite sure about the NDA status,
+so I can't name which one exactly yet).
+
+Running postmark with our without discards enabled with a setup Lukas
+created the online discard support is much faster than the offline
+one.  With online discard on XFS we are getting close to the speed
+without discards.
+
+Unfortunately the discard performance isn't always 100% determinstic so
+we have some error margin, but with the online discard support discards
+are in the range of 1.5% faster than no
+discard mode to 3% slower, while the offline discard is in the range
+of 4 to 8% slower.  That still compares favourable to the online discard
+in ext4 which is 10% to 15% slower than not using discard.  The btrfs
+is online discard is in the same range as XFS, with a tendency to be
+even slightly faster.
+
+> Regardless of this, some questions about the patch come to mind:
+> 
+> 	1. is it safe to block the xfslogd in the block layer in,
+> 	say, get_request()? i.e. should we be issuing IO from an IO
+> 	completion handler? That raises red flags in my head...
 
 
-> - what are the benefits of these new drives? Speed, temperature,
->   reliability?
+Good question - probably not a that smart idea.  
+> 
+> 	2. issuing discards will block xfslogd and potentially stall
+> 	the log if there are lots of discards to issue.
 
-It is purely higher density. A longer physical sector means less
-percentage of the disk is "wasted" on metadata. This benefits
-the manufacturer mostly, so they can claim more capacity with
-less cost (but more credibly than the far more slimy trick of
-LCD manufacturers who are going to ever more extreme landscape
-ratios to claim a longer diagonal with less pixels).
+> 	3. DISCARD_FL_BARRIER appears to be used to allow async
+> 	issuing of the discard to ensure any followup write has the
+> 	discard processed first. What happens if the device does not
+> 	support barriers or barriers are turned off?
 
->From the user/filesystem point iof view it is not a positive
-thing, but since the 4BSD FFS introduced 4KiB blocks (a very bad
-idea) and intel and others followed throught with alrge 4KiB
-pages that has been largely irrelevant.
+These days all useful devices do support barriers, and certainly
+any device that supports discards does.  But if not we'll get back
+an EOPNOTUPP error which simply gets ignored.
 
-Also it seems that few people are aware that other device types
-have large sectors, as CDs have 2KiB sectors, DVDs have 32KiB,
-BDRs have 64KiB sectors (and both simulate 2KiB sectors), and
-SSDs can have 256KiB sectors (or rather "erase blocks", I think
-that they can read in smaller units than that).
+Note that for a device that does not support write barriers (which
+includes basically any highend storage device that supports scsi thin
+provisioning) the DISCARD flag currently evaluates to a queue drain,
+but even that isn't actually nessecary in this case.  It will be gone
+soon as part changes I plan to the barrier code.
 
-> - what specific HD models are truely 4k for purchase right
->   now? I'm on the market for a bunch of 2Tb drives, what is a
->   good choice?
+> 	4. A barrier IO on every discard? In a word: Ouch.
 
-These are two completely unrelated questions, and the second is
-sort of irrelevant because there are so few manufacturers and
-thus models that one has to buy all of them. Except of course
-for those who fill their arrays with disks from the same brand,
-model and even shipping carton, as they know better.
-
-As to the first, there have been a few discussions in the past
-on vsarious Linux mailing lists etc, but the list of models
-changes as manufacturers change firmware and "truely" is thus a
-somewhat elastic concept dependent on revision not just model.
-
-> - what options do I need when creating my raid6 array and xfs
->   filesystem to fully take advantage of 4k sectors?
-
-Some recent posts to this mailing list give those. I would add
-also large inodes (2Kib), to alleviate the big downside of 4KiB
-sectors for small files.
+Whne running with the delaylog option the discard don't happen very
+often anymore.  Basically we'll do one discard everytime we write a log
+record.  Which in fact already did a barrier anyway, so the the effect
+isn't that bad.  We'd could in fact get away with just removing the
+barrier and doing a cache flush just after the discard, but before
+removing the extents from the busy list.
 
 _______________________________________________
 xfs mailing list
