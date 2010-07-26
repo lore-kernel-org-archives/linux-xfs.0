@@ -1,29 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6Q6hSkS104430 for <xfs@oss.sgi.com>; Mon, 26 Jul 2010 01:43:29 -0500
-Received: from ucsc.edu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id ED3FCD071D5
-	for <xfs@oss.sgi.com>; Sun, 25 Jul 2010 23:53:45 -0700 (PDT)
-Received: from ucsc.edu (email-prod-out-1.ucsc.edu [128.114.129.85]) by
-	cuda.sgi.com with ESMTP id vpW2yXyHGSS5sjlQ for
-	<xfs@oss.sgi.com>; Sun, 25 Jul 2010 23:53:45 -0700 (PDT)
-Subject: Re: filesystem shrinks after using xfs_repair
-Mime-Version: 1.0 (Apple Message framework v1081)
-From: Eli Morris <ermorris@ucsc.edu>
-In-Reply-To: <20100726060604.GF7362@dastard>
-Date: Sun, 25 Jul 2010 23:46:29 -0700
-Message-Id: <F91DF703-4BFF-415B-91B6-87A88F096C91@ucsc.edu>
-References: <DFB2DB04-A3BA-4272-A12A-4F28A7D51491@ucsc.edu>
-	<20100712134743.624249b2@harpe.intellique.com>
-	<274A8D0C-4C31-4FB9-AB2D-BA3C31D497E0@ucsc.edu>
-	<20100724005426.GN32635@dastard>
-	<F2AC32C3-2437-4625-980A-3BC9B3C541A2@ucsc.edu>
-	<20100724023922.GP32635@dastard>
-	<777100A1-57DE-4DE0-B1F0-64977BD694AD@ucsc.edu>
-	<20100726034545.GE655@dastard>
-	<10B6F36F-BE01-4BF7-9815-2E8F6BF71B41@ucsc.edu>
-	<20100726060604.GF7362@dastard>
+	o6Q7ERsf105771 for <xfs@oss.sgi.com>; Mon, 26 Jul 2010 02:14:27 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DE97E1D6A352
+	for <xfs@oss.sgi.com>; Mon, 26 Jul 2010 00:17:29 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	euv1YT77WaRNBdiY for <xfs@oss.sgi.com>;
+	Mon, 26 Jul 2010 00:17:29 -0700 (PDT)
+Date: Mon, 26 Jul 2010 17:17:26 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: permanent kernel upgrading (was: bug and fun with XFS: unable
+	to handle kernel NULL pointer dereference)
+Message-ID: <20100726071726.GG7362@dastard>
+References: <201007260019.51568@zmi.at> <20100726001859.GD655@dastard>
+	<201007260752.59573@zmi.at>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <201007260752.59573@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,127 +31,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Michael Monnerie <michael.monnerie@is.it-management.at>
 Cc: xfs@oss.sgi.com
 
+On Mon, Jul 26, 2010 at 07:52:54AM +0200, Michael Monnerie wrote:
+> This brings me to another question: openSUSE 11.1 is, despite being old, 
+> still maintained, so I was under the impression that I'd get updates for 
+> problems.
 
-On Jul 25, 2010, at 11:06 PM, Dave Chinner wrote:
+Most subsystems are not directly "maintained" by the distro
+maintainers. They _hope_ the upstream developers backport all their
+bug fixes to "long term stable" kernels like 2.6.27 and just merge
+those backports in. The reality is that after one or two releases,
+upstream has moved on and the long-term stable kernels don't see
+very many fixes from upstream...
 
-> On Sun, Jul 25, 2010 at 09:04:03PM -0700, Eli Morris wrote:
->> On Jul 25, 2010, at 8:45 PM, Dave Chinner wrote:
->>> On Sun, Jul 25, 2010 at 08:20:44PM -0700, Eli Morris wrote:
->>>> [root@nimbus vm]#  echo 3 > /proc/sys/vm/drop_caches
->>>> [root@nimbus vm]# for ag in `seq 0 1 125`; do
->>>>> xfs_db -r -c "sb $ag" -c "p agcount" -c "p dblocks" /dev/vg1/vol5
->>>>> done
->>>> agcount = 126
->>>> dblocks = 13427728384
->>>> agcount = 126
->>>> dblocks = 13427728384
->>> ....
->>> 
->>> All nice and consistent before.
->>> 
->>>> [root@nimbus vm]# umount /export/vol5
->>>> [root@nimbus vm]#  echo 3 > /proc/sys/vm/drop_caches
->>>> [root@nimbus vm]# for ag in `seq 0 1 125`; do
->>>>> xfs_db -r -c "sb $ag" -c "p agcount" -c "p dblocks" /dev/vg1/vol5
->>>>> done
->>>> agcount = 156
->>>> dblocks = 16601554944
->>>> agcount = 126
->>>> dblocks = 13427728384
->>>> agcount = 126
->>>> dblocks = 13427728384
->>> .....
->>> 
->>> And after the grow only the primary superblock has the new size and
->>> agcount, which is why repair is returning it back to the old size.
->>> Can you dump the output after the grow for 155 AGs instead of 125
->>> so we can see if the new secondary superblocks were written? (just
->>> dumping `seq 125 1 155` will be fine.)
-> 
-> Which shows:
-> 
->> agcount = 126
->> dblocks = 13427728384
->> agcount = 126
->> dblocks = 13427728384
-> ....
-> 
-> Well, that's puzzling. The in-memory superblock is written to each
-> of the secondary superblocks, and that _should_ match the primary
-> superblock. The in-memory superblock is what is modified
-> during the growfs transaction and it is them synchronously written
-> to each secondary superblock. Without any I/O errors, I'm not sure
-> what is happening here.
-> 
-> Oh, I just noticed this from your previous mail:
-> 
->> [root@nimbus vm]# df -h
->> Filesystem            Size  Used Avail Use% Mounted on
-> .....
->> /dev/mapper/vg1-vol5   51T   51T   90M 100% /export/vol5
->                         ^^^^^^^^^^^^^^^
-> 
->> [root@nimbus vm]# umount /export/vol5
->> [root@nimbus vm]#  echo 3 > /proc/sys/vm/drop_caches
->> [root@nimbus vm]# for ag in `seq 0 1 125`; do
->>> xfs_db -r -c "sb $ag" -c "p agcount" -c "p dblocks" /dev/vg1/vol5
->>> done
->> agcount = 156
->> dblocks = 16601554944
->  ^^^^^^^^^^^^^^^^^^^^^
-> 
-> These don't match up - we've got the situation where the on-disk
-> value for the primary superblock has changed, but the in-memory
-> value has not appeared to change.
-> 
-> And I note from the original email I asked for data from that the
-> filesystem did not show up as 62TB until you unmounted and mounted
-> it again, which would have read the 62TB size from the primary
-> superblock on disk during mount. You do not need to unmount and
-> remount to see the new size. This leads me to believe you are
-> hitting one (or more) of the growfs overflow bugs that was fixed a
-> while back.
-> 
-> I've just confirmed that the problem does not exist at top-of-tree.
-> The following commands gives the right output, and the repair at the
-> end does not truncate the filesystem:
-> 
-> xfs_io -f -c "truncate $((13427728384 * 4096))" fsfile
-> mkfs.xfs -f -l size=128m,lazy-count=0 -d size=13427728384b,agcount=126,file,name=fsfile
-> xfs_io -f -c "truncate $((16601554944 * 4096))" fsfile
-> mount -o loop fsfile /mnt/scratch
-> xfs_growfs /mnt/scratch
-> xfs_info /mnt/scratch
-> umount /mnt/scratch
-> xfs_db -c "sb 0" -c "p agcount" -c "p dblocks" -f fsfile
-> xfs_db -c "sb 1" -c "p agcount" -c "p dblocks" -f fsfile
-> xfs_db -c "sb 127" -c "p agcount" -c "p dblocks" -f fsfile
-> xfs_repair -f fsfile
-> 
-> So rather than try to triage this any further, can you upgrade your
-> kernel/system to something more recent?
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> But I already received "upgrade your kernel" the last time for 
+> my openSUSE 11.2 with it's kernel vmlinuz-2.6.31.12, which by the time 
+> was the latest release (in the meantime openSUSE 11.3 got released).
 
-Hi Dave,
+Yup, that's the distro maintainer's way of saying "we don't actively
+support that subsystem".
 
-I can update this to Centos 5 Update 4, but I can't install updates forward of it's release date of Dec 15, 2009. The reason is that this is the head node of a cluster and it uses the Rocks cluster distribution. The newest of Rocks is based on Centos 5 Update 4, but Rocks systems do not support updates (via yum, for example). 
+> So is this just a generic recommendation of developers who love the 
+> bleeding-edge stuff and know how many problems they fixed since 2.6.27 
+> ("yak, that old stuff, how could it ever run?"), or is it known that not 
+> enough fixes go into "maintained" kernels by distributions?
 
-Updating the OS takes me a day or two for the whole cluster and all the user programs. If you're pretty sure that will fix the problem, I'll go for it tomorrow. I'd appreciate it very much if you could let me know if Centos 5.4 is recent enough that it will fix the problem.
+I think it is more of a reflection on where resources are available.
+Most free distros do very little in the way of maintenance except
+for security issues because they don't have the knowledge or
+resources to triage and fix most subsystems.
 
-I will note that I've grown the filesystem several times, and while I recall having to unmount and remount the filesystem each time for it to report its new size, I've never seen it fall back to its old size when running xfs_repair. In fact, the original filesystem is about 12 TB, so xfs_repair only reverses the last grow and not the previous ones.
+However, upstream resources are limited. If we identify a problem as
+a fixed bug, then it is up to the distro maintainers to backport it,
+not us. Distro maintenance is not our problem or responsisbility
+because no upstream developer has the bandwidth to be able to supply
+fixes to everyone, nor are they likely to want to beause it's mostly
+boring, unrewarding work.
 
-thanks again for your help,
+That said, many upstream developers are also distro
+maintainers and as a result those distros tend to keep up to date
+with all needed fixes for those subsystems.
 
-Eli
+> I have tons of servers to maintain, and can't compile kernels on my own 
+> anymore (I did this when I was younger), so I used openSUSE and I am in 
+> the process of replacing servers to SLES, which should receive much 
+> better services but still kernel upgrading is not supported on such 
+> platforms. So what is the best practice that one should choose when 
+> running "long time services" where you can't upgrade all the time?
+
+Purchase a support contract for an enterprise distro that actively
+supports the features you require....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
