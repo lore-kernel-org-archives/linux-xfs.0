@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6Q7ERsf105771 for <xfs@oss.sgi.com>; Mon, 26 Jul 2010 02:14:27 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DE97E1D6A352
-	for <xfs@oss.sgi.com>; Mon, 26 Jul 2010 00:17:29 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	euv1YT77WaRNBdiY for <xfs@oss.sgi.com>;
-	Mon, 26 Jul 2010 00:17:29 -0700 (PDT)
-Date: Mon, 26 Jul 2010 17:17:26 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: permanent kernel upgrading (was: bug and fun with XFS: unable
-	to handle kernel NULL pointer dereference)
-Message-ID: <20100726071726.GG7362@dastard>
-References: <201007260019.51568@zmi.at> <20100726001859.GD655@dastard>
-	<201007260752.59573@zmi.at>
+	o6Q8e45q109290 for <xfs@oss.sgi.com>; Mon, 26 Jul 2010 03:40:05 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B1FA3162A430
+	for <xfs@oss.sgi.com>; Mon, 26 Jul 2010 01:43:08 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id 6GggaMgaSBayUPud for
+	<xfs@oss.sgi.com>; Mon, 26 Jul 2010 01:43:08 -0700 (PDT)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: permanent kernel upgrading (was: bug and fun with XFS: unable to
+	handle kernel NULL pointer dereference)
+Date: Mon, 26 Jul 2010 10:43:06 +0200
+References: <201007260019.51568@zmi.at> <201007260752.59573@zmi.at>
+	<20100726071726.GG7362@dastard>
+In-Reply-To: <20100726071726.GG7362@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <201007260752.59573@zmi.at>
+Message-Id: <201007261043.06991@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,71 +25,69 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============0146818417605503295=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Jul 26, 2010 at 07:52:54AM +0200, Michael Monnerie wrote:
-> This brings me to another question: openSUSE 11.1 is, despite being old, 
-> still maintained, so I was under the impression that I'd get updates for 
-> problems.
+--===============0146818417605503295==
+Content-Type: multipart/signed;
+  boundary="nextPart1980771.vEPMIcsVPE";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-Most subsystems are not directly "maintained" by the distro
-maintainers. They _hope_ the upstream developers backport all their
-bug fixes to "long term stable" kernels like 2.6.27 and just merge
-those backports in. The reality is that after one or two releases,
-upstream has moved on and the long-term stable kernels don't see
-very many fixes from upstream...
+--nextPart1980771.vEPMIcsVPE
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-> But I already received "upgrade your kernel" the last time for 
-> my openSUSE 11.2 with it's kernel vmlinuz-2.6.31.12, which by the time 
-> was the latest release (in the meantime openSUSE 11.3 got released).
+On Montag, 26. Juli 2010 Dave Chinner wrote:
+> Purchase a support contract for an enterprise distro that actively
+> supports the features you require....
+=20
+I just installed SLES 11 SP1, has kernel 2.6.32.13-0.4, hope that's=20
+enough :-)
 
-Yup, that's the distro maintainer's way of saying "we don't actively
-support that subsystem".
+=2D-=20
+mit freundlichen Gr=FCssen,
+Michael Monnerie, Ing. BSc
 
-> So is this just a generic recommendation of developers who love the 
-> bleeding-edge stuff and know how many problems they fixed since 2.6.27 
-> ("yak, that old stuff, how could it ever run?"), or is it known that not 
-> enough fixes go into "maintained" kernels by distributions?
+it-management Internet Services
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: 0660 / 415 65 31
 
-I think it is more of a reflection on where resources are available.
-Most free distros do very little in the way of maintenance except
-for security issues because they don't have the knowledge or
-resources to triage and fix most subsystems.
+****** Aktuelles Radiointerview! ******
+http://www.it-podcast.at/aktuelle-sendung.html
 
-However, upstream resources are limited. If we identify a problem as
-a fixed bug, then it is up to the distro maintainers to backport it,
-not us. Distro maintenance is not our problem or responsisbility
-because no upstream developer has the bandwidth to be able to supply
-fixes to everyone, nor are they likely to want to beause it's mostly
-boring, unrewarding work.
+// Wir haben im Moment zwei H=E4user zu verkaufen:
+// http://zmi.at/langegg/
+// http://zmi.at/haus2009/
 
-That said, many upstream developers are also distro
-maintainers and as a result those distros tend to keep up to date
-with all needed fixes for those subsystems.
+--nextPart1980771.vEPMIcsVPE
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
-> I have tons of servers to maintain, and can't compile kernels on my own 
-> anymore (I did this when I was younger), so I used openSUSE and I am in 
-> the process of replacing servers to SLES, which should receive much 
-> better services but still kernel upgrading is not supported on such 
-> platforms. So what is the best practice that one should choose when 
-> running "long time services" where you can't upgrade all the time?
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.12 (GNU/Linux)
 
-Purchase a support contract for an enterprise distro that actively
-supports the features you require....
+iEYEABECAAYFAkxNSpoACgkQzhSR9xwSCbQ4YgCgwX/sJZ6+QFUHX9IdeVjxKzK/
+RA0AoLb7yYCxOGSJXZbkFVvnGfdF4Wbq
+=lYy+
+-----END PGP SIGNATURE-----
 
-Cheers,
+--nextPart1980771.vEPMIcsVPE--
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+
+--===============0146818417605503295==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============0146818417605503295==--
