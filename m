@@ -1,21 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6Q5o2mX101801 for <xfs@oss.sgi.com>; Mon, 26 Jul 2010 00:50:03 -0500
+	o6Q5sO1w101927 for <xfs@oss.sgi.com>; Mon, 26 Jul 2010 00:54:25 -0500
 Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7867E102D22
-	for <xfs@oss.sgi.com>; Sun, 25 Jul 2010 23:00:14 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8B1DC132F0E1
+	for <xfs@oss.sgi.com>; Sun, 25 Jul 2010 23:04:41 -0700 (PDT)
 Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id dxB00zPq8ufubzVY for
-	<xfs@oss.sgi.com>; Sun, 25 Jul 2010 23:00:14 -0700 (PDT)
+	cuda.sgi.com with ESMTP id jUWByuhP4ddiPOiB for
+	<xfs@oss.sgi.com>; Sun, 25 Jul 2010 23:04:41 -0700 (PDT)
+Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv14.zmi.at (Postfix) with ESMTPSA id 1D24917D
+	for <xfs@oss.sgi.com>; Mon, 26 Jul 2010 07:57:27 +0200 (CEST)
+Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id 6156183C804
+	for <xfs@oss.sgi.com>; Mon, 26 Jul 2010 07:56:35 +0200 (CEST)
 From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: permanent kernel upgrading (was: bug and fun with XFS: unable to
-	handle kernel NULL pointer dereference)
-Date: Mon, 26 Jul 2010 07:52:54 +0200
-References: <201007260019.51568@zmi.at> <20100726001859.GD655@dastard>
-In-Reply-To: <20100726001859.GD655@dastard>
+Subject: Re: filesystem shrinks after using xfs_repair
+Date: Mon, 26 Jul 2010 07:57:26 +0200
+References: <DFB2DB04-A3BA-4272-A12A-4F28A7D51491@ucsc.edu>
+	<20100726034545.GE655@dastard>
+	<10B6F36F-BE01-4BF7-9815-2E8F6BF71B41@ucsc.edu>
+In-Reply-To: <10B6F36F-BE01-4BF7-9815-2E8F6BF71B41@ucsc.edu>
 MIME-Version: 1.0
-Message-Id: <201007260752.59573@zmi.at>
+Message-Id: <201007260757.26419@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,62 +35,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============5130142153794461137=="
+Content-Type: multipart/mixed; boundary="===============4072142463758077860=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, Dave Chinner <david@fromorbit.com>
+To: xfs@oss.sgi.com
 
---===============5130142153794461137==
+--===============4072142463758077860==
 Content-Type: multipart/signed;
-  boundary="nextPart2557216.lLY253211c";
+  boundary="nextPart5072175.yPUAvpTk1W";
   protocol="application/pgp-signature";
   micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
 
---nextPart2557216.lLY253211c
+--nextPart5072175.yPUAvpTk1W
 Content-Type: Text/Plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 
-On Montag, 26. Juli 2010 Dave Chinner wrote:
-> > # mount /disks/work/
-> > # umount /disks/work/
-> > umount: /disks/work: device is busy.
-> >         (In some cases useful info about processes that use
-> >          the device is found by lsof(8) or fuser(1))
->=20
-> Some other process has taken a reference to the fs, I'd say.
-> And if that process triggered an oops, then you'd see this.
+On Montag, 26. Juli 2010 Eli Morris wrote:
+> [root@nimbus log]# grep error dmesg
+> [root@nimbus log]# grep superblock *
 
-This is definitely improbable ;-). I stopped all processes, except sshd=20
-and mingetty (for the console processes), and "lsof" reported no open=20
-files. I'd swear it must be a bug, but as you said 2.6.27 (openSUSE=20
-11.1) is just too old to take care.
-=20
-> Corrupt attribute fork - matches with the oops signatures.  I'd
-> definitely consider upgrading your kernel as a first step...
-=20
-That's why I wrote "which I planned to migrate". I was just in the=20
-process of doing so.
-
-This brings me to another question: openSUSE 11.1 is, despite being old,=20
-still maintained, so I was under the impression that I'd get updates for=20
-problems. But I already received "upgrade your kernel" the last time for=20
-my openSUSE 11.2 with it's kernel vmlinuz-2.6.31.12, which by the time=20
-was the latest release (in the meantime openSUSE 11.3 got released).
-So is this just a generic recommendation of developers who love the=20
-bleeding-edge stuff and know how many problems they fixed since 2.6.27=20
-("yak, that old stuff, how could it ever run?"), or is it known that not=20
-enough fixes go into "maintained" kernels by distributions?
-
-I have tons of servers to maintain, and can't compile kernels on my own=20
-anymore (I did this when I was younger), so I used openSUSE and I am in=20
-the process of replacing servers to SLES, which should receive much=20
-better services but still kernel upgrading is not supported on such=20
-platforms. So what is the best practice that one should choose when=20
-running "long time services" where you can't upgrade all the time?
-
-Just curious. :-)
+Did you "dmesg >dmesg" before that? Just to be sure every dmesg output=20
+is really in that file. Maybe CentOS does this, I don't know, I just=20
+wanted to be sure you didn't make a mistake here.
 
 =2D-=20
 mit freundlichen Gr=FCssen,
@@ -96,22 +75,22 @@ http://www.it-podcast.at/aktuelle-sendung.html
 // http://zmi.at/langegg/
 // http://zmi.at/haus2009/
 
---nextPart2557216.lLY253211c
+--nextPart5072175.yPUAvpTk1W
 Content-Type: application/pgp-signature; name=signature.asc 
 Content-Description: This is a digitally signed message part.
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.12 (GNU/Linux)
 
-iEYEABECAAYFAkxNIrsACgkQzhSR9xwSCbQXagCdGHy1cYpR3vqVZ0eX1zOn/2I+
-BlwAoNLxbAdWf07HK9xo3IAVqkGCipnb
-=HKy5
+iEYEABECAAYFAkxNI8YACgkQzhSR9xwSCbTKLACg8aHKfjneJC5NZ7WfAzQ2NSQm
+SwsAnjJr0NMy5seI2mU2M8ROwtlO8AXe
+=qV/7
 -----END PGP SIGNATURE-----
 
---nextPart2557216.lLY253211c--
+--nextPart5072175.yPUAvpTk1W--
 
 
---===============5130142153794461137==
+--===============4072142463758077860==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -122,4 +101,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============5130142153794461137==--
+--===============4072142463758077860==--
