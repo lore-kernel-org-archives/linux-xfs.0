@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6Q0Fxid086878 for <xfs@oss.sgi.com>; Sun, 25 Jul 2010 19:16:00 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 32D02132E727
-	for <xfs@oss.sgi.com>; Sun, 25 Jul 2010 17:26:13 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	2PiBsrQBKsyjcC0K for <xfs@oss.sgi.com>;
-	Sun, 25 Jul 2010 17:26:13 -0700 (PDT)
-Date: Mon, 26 Jul 2010 10:18:59 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: bug and fun with XFS: unable to handle kernel NULL pointer
-	dereference
-Message-ID: <20100726001859.GD655@dastard>
-References: <201007260019.51568@zmi.at>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <201007260019.51568@zmi.at>
+	o6Q3HhkC093605 for <xfs@oss.sgi.com>; Sun, 25 Jul 2010 22:17:43 -0500
+Received: from ucsc.edu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1A55645C906
+	for <xfs@oss.sgi.com>; Sun, 25 Jul 2010 20:20:46 -0700 (PDT)
+Received: from ucsc.edu (email-prod-out-1.ucsc.edu [128.114.129.85]) by
+	cuda.sgi.com with ESMTP id PNnGPYkFwpvqDI4s for
+	<xfs@oss.sgi.com>; Sun, 25 Jul 2010 20:20:46 -0700 (PDT)
+Subject: Re: filesystem shrinks after using xfs_repair
+Mime-Version: 1.0 (Apple Message framework v1081)
+From: Eli Morris <ermorris@ucsc.edu>
+In-Reply-To: <20100724023922.GP32635@dastard>
+Date: Sun, 25 Jul 2010 20:20:44 -0700
+Message-Id: <777100A1-57DE-4DE0-B1F0-64977BD694AD@ucsc.edu>
+References: <DFB2DB04-A3BA-4272-A12A-4F28A7D51491@ucsc.edu>
+	<20100712134743.624249b2@harpe.intellique.com>
+	<274A8D0C-4C31-4FB9-AB2D-BA3C31D497E0@ucsc.edu>
+	<20100724005426.GN32635@dastard>
+	<F2AC32C3-2437-4625-980A-3BC9B3C541A2@ucsc.edu>
+	<20100724023922.GP32635@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,66 +32,612 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Jul 26, 2010 at 12:19:47AM +0200, Michael Monnerie wrote:
-> I just enjoy an obviously broken XFS filesystem. It was a running 
-> server, which I planned to migrate so I did "rsync -aHAX / 
-> otherhost::rsyncmodule", and experienced a "killed". At that time I 
-> thought it was a one time mistake, so restarted rsync, but Murphy made 
-> it get killed again.
+
+On Jul 23, 2010, at 7:39 PM, Dave Chinner wrote:
+
+> On Fri, Jul 23, 2010 at 06:08:08PM -0700, Eli Morris wrote:
+>> On Jul 23, 2010, at 5:54 PM, Dave Chinner wrote:
+>>> On Fri, Jul 23, 2010 at 01:30:40AM -0700, Eli Morris wrote:
+>>>> I think the raid tech support and me found and corrected the
+>>>> hardware problems associated with the RAID. I'm still having the
+>>>> same problem though. I expanded the filesystem to use the space of
+>>>> the now corrected RAID and that seems to work OK. I can write
+>>>> files to the new space OK. But then, if I run xfs_repair on the
+>>>> volume, the newly added space disappears and there are tons of
+>>>> error messages from xfs_repair (listed below).
+>>> 
+>>> Can you post the full output of the xfs_repair? The superblock is
+>>> the first thing that is checked and repaired, so if it is being
+>>> "repaired" to reduce the size of the volume then all the other errors
+>>> are just a result of that. e.g. the grow could be leaving stale
+>>> secndary superblocks around and repair is seeing a primary/secondary
+>>> mismatch and restoring the secondary which has the size parameter
+>>> prior to the grow....
+>>> 
+>>> Also, the output of 'cat /proc/partitions' would be interesting
+>>> from before the grow, after the grow (when everything is working),
+>>> and again after the xfs_repair when everything goes bad....
+>> 
+>> Thanks for replying. Here is the output I think you're looking for....
 > 
-> So I looked into dmesg, just to find this: It's the log of all messages, 
-> so maybe twice the same, I copy everything for reference. See attachment 
-> "xfs-bug.dmesg.txt".
-
-The first occurrence is:
-
-> Pid: 1809, comm: syslog-ng Not tainted 2.6.27.48-0.1-xen #1
-
-That's an old kernel, and doesn't seem related to the rsync
-triggered problem, even though it is the same oops signature.
-
-> I started to look, and quickly found a funny problem: Once I mount that 
-> partition, I cannot unmount it again:
+> Sure is. The underlying device does not change configuration, and:
 > 
-> # mount /disks/work/
-> # umount /disks/work/
-> umount: /disks/work: device is busy.
->         (In some cases useful info about processes that use
->          the device is found by lsof(8) or fuser(1))
-
-Some other process has taken a reference to the fs, I'd say.
-And if that process triggered an oops, then you'd see this.
-
-> So I rebooted without mounting that partition, and 
+>> [root@nimbus /]# xfs_repair /dev/mapper/vg1-vol5
+>> Phase 1 - find and verify superblock...
+>> writing modified primary superblock
+>> Phase 2 - using internal log
 > 
-> # xfs_repair -n /dev/xvda2 [VERSION:3.1.2]
-> xfs_repair: /lib64/libuuid.so.1: no version information available 
-> (required by xfs_repair)                                                                                                                                          
-> Phase 1 - find and verify superblock...                                                                                                                                                                                             
-> Phase 2 - using internal log                                                                                                                                                                                                        
->         - scan filesystem freespace and inode maps...                                                                                                                                                                               
->         - found root inode chunk
-> Phase 3 - for each AG...
->         - scan (but don't clear) agi unlinked lists...
->         - process known inodes and perform inode discovery...
->         - agno = 0
->         - agno = 1
-> local inode 8636461 attr too small (size = 0, min size = 4)
-> bad attribute fork in inode 8636461, would clear attr fork
-> would have cleared inode 8636461
+> There's a smoking gun - the primary superblock was modified in some
+> way. Looks like the only way we can get this occurring without an
+> error or warning being emitted is if repair found more superblocks
+> with the old geometry in it them than the new geometry.
+> 
+> With a current kernel, growfs is supposed to update every single
+> secondary superblock, so I can't see how this could be occurring.
+> However, can you remind me what kernel your are running and gather
+> the following information?
+> 
+> Run this before the grow:
+> 
+> # echo 3 > /proc/sys/vm/drop-caches
+> # for ag in `seq 0 1 125`; do
+>> xfs_db -r -c "sb $ag" -c "p agcount" -c "p dblocks" <device>
+>> done
+> 
+> Then run the grow, sync, and unmount the filesystem. After that,
+> re-run the above xfs_db command and post the output of both so I can
+> see what growfs is actually doing to the secondary superblocks?
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 
-Corrupt attribute fork - matches with the oops signatures.  I'd
-definitely consider upgrading your kernel as a first step...
 
-Cheers,
+Hi Dave and everyone,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Here is the output from the commands you asked that I run....
+
+Thanks so much for the help. I'm definitely not an expert on filesystems, so I really appreciate the help from you and everyone.
+
+Eli
+
+[root@nimbus ~]# uname -a
+Linux nimbus.pmc.ucsc.edu 2.6.18-128.1.14.el5 #1 SMP Wed Jun 17 06:38:05 EDT 2009 x86_64 x86_64 x86_64 GNU/Linux
+
+
+[root@nimbus vm]#  echo 3 > /proc/sys/vm/drop_caches
+[root@nimbus vm]# for ag in `seq 0 1 125`; do
+> xfs_db -r -c "sb $ag" -c "p agcount" -c "p dblocks" /dev/vg1/vol5
+> done
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+[root@nimbus vm]# 
+
+[root@nimbus vm]# sync
+[root@nimbus vm]# df -h
+Filesystem            Size  Used Avail Use% Mounted on
+/dev/sdb2              24G  7.6G   15G  34% /
+/dev/sda5             1.7T  1.3T  391G  77% /export
+/dev/sda2             3.8G  1.4G  2.3G  37% /var
+tmpfs                  16G     0   16G   0% /dev/shm
+/dev/sdb1             995G  946G   19G  99% /storage
+tmpfs                 7.7G  7.9M  7.7G   1% /var/lib/ganglia/rrds
+/dev/mapper/vg1-vol5   51T   51T   90M 100% /export/vol5
+[root@nimbus vm]# umount /export/vol5
+[root@nimbus vm]#  echo 3 > /proc/sys/vm/drop_caches
+[root@nimbus vm]# for ag in `seq 0 1 125`; do
+> xfs_db -r -c "sb $ag" -c "p agcount" -c "p dblocks" /dev/vg1/vol5
+> done
+agcount = 156
+dblocks = 16601554944
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+agcount = 126
+dblocks = 13427728384
+[root@nimbus vm]# 
+
 
 _______________________________________________
 xfs mailing list
