@@ -1,32 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6QL44I5141850 for <xfs@oss.sgi.com>; Mon, 26 Jul 2010 16:04:04 -0500
-Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0CEE0C34EA2
-	for <xfs@oss.sgi.com>; Mon, 26 Jul 2010 14:14:20 -0700 (PDT)
-Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
-	cuda.sgi.com with ESMTP id 6Y4EsEBAorPEsr5M for
-	<xfs@oss.sgi.com>; Mon, 26 Jul 2010 14:14:20 -0700 (PDT)
-Date: Mon, 26 Jul 2010 23:06:53 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: filesystem shrinks after using xfs_repair
-Message-ID: <20100726230653.5da272c1@galadriel.home>
-In-Reply-To: <AE59CF1C-6E28-4468-892A-394AE324EEF0@ucsc.edu>
-References: <DFB2DB04-A3BA-4272-A12A-4F28A7D51491@ucsc.edu>
-	<20100712134743.624249b2@harpe.intellique.com>
-	<274A8D0C-4C31-4FB9-AB2D-BA3C31D497E0@ucsc.edu>
-	<20100724005426.GN32635@dastard>
-	<F2AC32C3-2437-4625-980A-3BC9B3C541A2@ucsc.edu>
-	<20100724023922.GP32635@dastard>
-	<777100A1-57DE-4DE0-B1F0-64977BD694AD@ucsc.edu>
-	<20100726034545.GE655@dastard>
-	<10B6F36F-BE01-4BF7-9815-2E8F6BF71B41@ucsc.edu>
-	<20100726060604.GF7362@dastard>
-	<F91DF703-4BFF-415B-91B6-87A88F096C91@ucsc.edu>
-	<20100726114940.7a97f29e@harpe.intellique.com>
-	<AE59CF1C-6E28-4468-892A-394AE324EEF0@ucsc.edu>
-Mime-Version: 1.0
+	o6QLhRIJ143374 for <xfs@oss.sgi.com>; Mon, 26 Jul 2010 16:43:28 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EAB6812BA3E0
+	for <xfs@oss.sgi.com>; Mon, 26 Jul 2010 14:53:46 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id NZevENq06roUAscp for
+	<xfs@oss.sgi.com>; Mon, 26 Jul 2010 14:53:46 -0700 (PDT)
+Message-ID: <4C4E0229.5040002@sandeen.net>
+Date: Mon, 26 Jul 2010 16:46:17 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: [PATCH 4/8] Add test of quota accounting using fsx
+References: <1274710459-11446-1-git-send-email-jack@suse.cz>	<1274710459-11446-5-git-send-email-jack@suse.cz>	<4C0FD43D.3040803@sandeen.net>
+	<20100615095505.GB3347@quack.suse.cz>
+In-Reply-To: <20100615095505.GB3347@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,32 +24,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eli Morris <ermorris@ucsc.edu>
-Cc: xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: hch@infradead.org, ext4 development <linux-ext4@vger.kernel.org>, xfs@oss.sgi.com
 
-Le Mon, 26 Jul 2010 10:22:11 -0700 vous =E9criviez:
+On 06/15/2010 04:55 AM, Jan Kara wrote:
+> On Wed 09-06-10 12:49:49, Eric Sandeen wrote:
+>> Jan Kara wrote:
+>>> Run fsx (and also several fsx threads in parallel) and verify that
+>>> quota accounting is correct after they finish.
+>>
+>> Jan, I'm having trouble with this one on XFS for some reason, with our 
+>> RHEL6 kernel and quota-3.17...
+>   OK, attached is an improvement to the XFSQA tests after which all quota
+> tests pass for XFS just fine.
+>   The second patch is just minor general improvement of _require_scratch
+> macro.
+>   Could they be added to XFSQA repository? Thanks.
 
-> I think the Live CD is a great suggestion. I was just thinking
-> though. do you know of a Live CD that has XFS utilities on it? From
-> what I've seen, I've had to install XFS utilities after installing
-> the OS, which I don't think one can do with a live CD. I can look,
-> but if you know of one, that would probably save some digging.
+Jan, I've got some ext4 failures reported on these, although I can't hit
+them, so not quite sure what's going on.
 
-I'm pretty sure Ubuntu and Knoppix both come with xfs-progs. =
+In 231:
 
++< fsgqa     --     760       0       0              3     0     0
++---
++> fsgqa     --     764       0       0              3     0     0
++14c14
++< fsgqa     --     760       0       0              3     0     0
++---
++> fsgqa     --     764       0       0              3     0     0
 
--- =
+after the quotacheck & repquota we have 4 more blocks.  Maybe this
+is due to my accounting of metadata blocks at write time, and not
+before ... would it be reasonable to put a sync call as the first
+line of check_usage() ?
 
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+Also in 233:
+
++< #501      --   15392       0       0            998     0     0
++< #501      --   15392   32000   32000            998  1000  1000
++---
++> #501      +-   32084   32000   32000  7days     998  1000  1000
++> #501      --   32084       0       0            998     0     0
+
+"7days" magically appeared after the quotacheck.  Not sure what's going
+on there...
+
+Thanks,
+-Eric
 
 _______________________________________________
 xfs mailing list
