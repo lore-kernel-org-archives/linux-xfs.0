@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6RD8A30187151 for <xfs@oss.sgi.com>; Tue, 27 Jul 2010 08:08:11 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E82A012BA29F
-	for <xfs@oss.sgi.com>; Tue, 27 Jul 2010 06:18:35 -0700 (PDT)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id Z0kBeqrn8iXut1tj for
-	<xfs@oss.sgi.com>; Tue, 27 Jul 2010 06:18:35 -0700 (PDT)
-References: <1274710459-11446-1-git-send-email-jack@suse.cz>
-	<1274710459-11446-5-git-send-email-jack@suse.cz>
-	<4C0FD43D.3040803@sandeen.net>
-	<20100615095505.GB3347@quack.suse.cz>
-	<4C4E0229.5040002@sandeen.net>
-	<20100727081538.GB3358@quack.suse.cz>
-	<20100727084848.GC3358@quack.suse.cz>
-In-Reply-To: <20100727084848.GC3358@quack.suse.cz>
-Mime-Version: 1.0 (iPhone Mail 8A293)
-Message-Id: <9EBA299E-8A0B-4610-B8FA-3A97FECFA0A4@sandeen.net>
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH 4/8] Add test of quota accounting using fsx
-Date: Tue, 27 Jul 2010 08:11:30 -0500
+	o6RDRaS4188179 for <xfs@oss.sgi.com>; Tue, 27 Jul 2010 08:27:37 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 925421E3436D
+	for <xfs@oss.sgi.com>; Tue, 27 Jul 2010 06:30:40 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	spUvGKyzDnupmOIH for <xfs@oss.sgi.com>;
+	Tue, 27 Jul 2010 06:30:40 -0700 (PDT)
+Date: Tue, 27 Jul 2010 23:30:38 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS hang in xlog_grant_log_space (was Re: VFS scalability git
+	tree)
+Message-ID: <20100727133038.GP7362@dastard>
+References: <20100722190100.GA22269@amd> <20100723135514.GJ32635@dastard>
+	<20100727070538.GA2893@amd> <20100727080632.GA4958@amd>
+	<20100727113626.GA2884@amd>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20100727113626.GA2884@amd>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,28 +32,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: "hch@infradead.org" <hch@infradead.org>, ext4 development <linux-ext4@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Nick Piggin <npiggin@kernel.dk>
+Cc: xfs@oss.sgi.com
 
-On Jul 27, 2010, at 3:48 AM, Jan Kara <jack@suse.cz> wrote:
-
->>> 
->>  Just last week a change went into xfstests which introduces a generic
->> quota checking function and uses sync before getting quota usage. I think
->> xfstests passed for me with ext4 after this change but I've now restarted
->> the tests to recheck it.
->  For me all the quota tests pass just fine with ext4 and the latest
-> xfstests... So does the latest version work also for you?
+On Tue, Jul 27, 2010 at 09:36:26PM +1000, Nick Piggin wrote:
+> On Tue, Jul 27, 2010 at 06:06:32PM +1000, Nick Piggin wrote:
+> On this same system, same setup (vanilla kernel with sha given below),
+> I have now twice reproduced a complete hang in XFS. I can give more
+> information, test patches or options etc if required.
 > 
-Whoops sorry, they do pass for me in the devel tree; I had missed that recent change and I guess our qa had tested a tree without it.  I wondered why it didn't work for them...  Sorry for the noise....
-
-Eric
-
->                                    Honza
-> --
-> Jan Kara <jack@suse.cz>
-> SUSE Labs, CR
+> setup.sh looks like this:
+> #!/bin/bash
+> modprobe rd rd_size=$[2*1024*1024]
+> dd if=/dev/zero of=/dev/ram0 bs=4K
+> mkfs.xfs -f -l size=64m -d agcount=16 /dev/ram0
+> mount -o delaylog,logbsize=262144,nobarrier /dev/ram0 mnt
 > 
+> The 'dd' is required to ensure rd driver does not allocate pages
+> during IO (which can lead to out of memory deadlocks). Running just
+> involves changing into mnt directory and
+> 
+> while true
+> do
+>   sync
+>   echo 3 > /proc/sys/vm/drop_caches
+>   ../dbench -c ../loadfiles/client.txt -t20 8
+>   rm -rf clients
+> done
+> 
+> And wait for it to hang (happend in < 5 minutes here)
+....
+> Call Trace:
+>  [<ffffffff812361f8>] xlog_grant_log_space+0x158/0x3d0
+
+It's waiting on log space to be freed up. Either there's an
+accounting problem (possible), or you've got an xfslogd/xfsaild
+spinning and not making progress competing log IOs or pushing the
+tail of the log. I'll see if I can reproduce it.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
