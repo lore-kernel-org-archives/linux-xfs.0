@@ -1,25 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6RDRaS4188179 for <xfs@oss.sgi.com>; Tue, 27 Jul 2010 08:27:37 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 925421E3436D
-	for <xfs@oss.sgi.com>; Tue, 27 Jul 2010 06:30:40 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	spUvGKyzDnupmOIH for <xfs@oss.sgi.com>;
-	Tue, 27 Jul 2010 06:30:40 -0700 (PDT)
-Date: Tue, 27 Jul 2010 23:30:38 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS hang in xlog_grant_log_space (was Re: VFS scalability git
-	tree)
-Message-ID: <20100727133038.GP7362@dastard>
-References: <20100722190100.GA22269@amd> <20100723135514.GJ32635@dastard>
-	<20100727070538.GA2893@amd> <20100727080632.GA4958@amd>
-	<20100727113626.GA2884@amd>
+	o6REpZaa191700 for <xfs@oss.sgi.com>; Tue, 27 Jul 2010 09:51:35 -0500
+Received: from mail-pw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B2A5A1BE99C3
+	for <xfs@oss.sgi.com>; Tue, 27 Jul 2010 07:54:38 -0700 (PDT)
+Received: from mail-pw0-f53.google.com (mail-pw0-f53.google.com
+	[209.85.160.53]) by cuda.sgi.com with ESMTP id k8U7KXplUEGQVzv4
+	for <xfs@oss.sgi.com>; Tue, 27 Jul 2010 07:54:38 -0700 (PDT)
+Received: by pwj4 with SMTP id 4so611358pwj.26
+	for <xfs@oss.sgi.com>; Tue, 27 Jul 2010 07:54:38 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100727113626.GA2884@amd>
+Date: Tue, 27 Jul 2010 20:24:38 +0530
+Message-ID: <AANLkTimRHxT3LFM_Wqad7AH65VhLBSBDLhTCxjCr10Dz@mail.gmail.com>
+Subject: Regarding [GIT PULL] Shrinker fixes for XFS for 2.6.36-rc6
+From: Sujit Karatparambil <sujit.kmadhavan@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,50 +27,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Nick Piggin <npiggin@kernel.dk>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Jul 27, 2010 at 09:36:26PM +1000, Nick Piggin wrote:
-> On Tue, Jul 27, 2010 at 06:06:32PM +1000, Nick Piggin wrote:
-> On this same system, same setup (vanilla kernel with sha given below),
-> I have now twice reproduced a complete hang in XFS. I can give more
-> information, test patches or options etc if required.
-> 
-> setup.sh looks like this:
-> #!/bin/bash
-> modprobe rd rd_size=$[2*1024*1024]
-> dd if=/dev/zero of=/dev/ram0 bs=4K
-> mkfs.xfs -f -l size=64m -d agcount=16 /dev/ram0
-> mount -o delaylog,logbsize=262144,nobarrier /dev/ram0 mnt
-> 
-> The 'dd' is required to ensure rd driver does not allocate pages
-> during IO (which can lead to out of memory deadlocks). Running just
-> involves changing into mnt directory and
-> 
-> while true
-> do
->   sync
->   echo 3 > /proc/sys/vm/drop_caches
->   ../dbench -c ../loadfiles/client.txt -t20 8
->   rm -rf clients
-> done
-> 
-> And wait for it to hang (happend in < 5 minutes here)
-....
-> Call Trace:
->  [<ffffffff812361f8>] xlog_grant_log_space+0x158/0x3d0
+Hi David,
 
-It's waiting on log space to be freed up. Either there's an
-accounting problem (possible), or you've got an xfslogd/xfsaild
-spinning and not making progress competing log IOs or pushing the
-tail of the log. I'll see if I can reproduce it.
+I had a doubt on this patch. I just wanted to whether the patch given
+below doesnot help you to
+fix this issue? Also whether this patch has gone to mainline kernel.
 
-Cheers,
+http://www.mail-archive.com/linux-api@vger.kernel.org/msg00013.html
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Sujit K M
 
 _______________________________________________
 xfs mailing list
