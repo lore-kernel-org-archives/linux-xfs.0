@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6R6dSVg170341 for <xfs@oss.sgi.com>; Tue, 27 Jul 2010 01:39:28 -0500
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9E40A474E95
-	for <xfs@oss.sgi.com>; Mon, 26 Jul 2010 23:42:32 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id JjacbmuIIdwddfet
-	for <xfs@oss.sgi.com>; Mon, 26 Jul 2010 23:42:32 -0700 (PDT)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id B5B686C309
-	for <xfs@oss.sgi.com>; Tue, 27 Jul 2010 01:42:31 -0500 (CDT)
-Message-ID: <4C4E8151.8060403@hardwarefreak.com>
-Date: Tue, 27 Jul 2010 01:48:49 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	o6R6oMKY170799 for <xfs@oss.sgi.com>; Tue, 27 Jul 2010 01:50:22 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C5BC2474C84
+	for <xfs@oss.sgi.com>; Mon, 26 Jul 2010 23:53:27 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id z8Ftpwp7At7nDTZM for
+	<xfs@oss.sgi.com>; Mon, 26 Jul 2010 23:53:27 -0700 (PDT)
+Date: Tue, 27 Jul 2010 02:53:26 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/2] xfs: use range primitives for xfs page cache
+	operations
+Message-ID: <20100727065326.GA32510@infradead.org>
+References: <1280210129-10925-1-git-send-email-david@fromorbit.com>
+	<1280210129-10925-2-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: Re: filesystem shrinks after using xfs_repair
-References: <DFB2DB04-A3BA-4272-A12A-4F28A7D51491@ucsc.edu>	<20100712134743.624249b2@harpe.intellique.com>	<274A8D0C-4C31-4FB9-AB2D-BA3C31D497E0@ucsc.edu>	<20100724005426.GN32635@dastard>	<F2AC32C3-2437-4625-980A-3BC9B3C541A2@ucsc.edu>	<20100724023922.GP32635@dastard>	<777100A1-57DE-4DE0-B1F0-64977BD694AD@ucsc.edu>	<20100726034545.GE655@dastard>	<10B6F36F-BE01-4BF7-9815-2E8F6BF71B41@ucsc.edu>	<20100726060604.GF7362@dastard>	<F91DF703-4BFF-415B-91B6-87A88F096C91@ucsc.edu>	<20100726114940.7a97f29e@harpe.intellique.com>	<AE59CF1C-6E28-4468-892A-394AE324EEF0@ucsc.edu>	<20100726230653.5da272c1@galadriel.home>
-	<89B1ECDD-E9F4-4044-953A-76987AAF8EFE@ucsc.edu>
-In-Reply-To: <89B1ECDD-E9F4-4044-953A-76987AAF8EFE@ucsc.edu>
+Content-Disposition: inline
+In-Reply-To: <1280210129-10925-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,17 +30,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Eli Morris put forth on 7/27/2010 12:02 AM:
-> Hi,
-> 
-> Thanks. I tried a Knoppix live DVD (latest version) today and it does seem to have xfs-progs, but I can't get it to recognize the lvm volume that the filesystem is on. LVM2 programs are available, but 'vgscan  --mknodes' turns up nothing. I'll continue to look into it, but if anyone has any ideas, please let me know.
+On Tue, Jul 27, 2010 at 03:55:28PM +1000, Dave Chinner wrote:
+> While XFS passes ranges to operate on from the core code, the
+> functions being called ignore the either the entire range or the end
+> of the range. This is historical because when the function were
+> written linux didn't have the necessary range operations. Update the
+> functions to use the correct operations.
 
-www.sysresccd.org
+Assuming you have actually tested this - given that we've ignore
+these parameters so long that I'm really fearing some callers have
+started to rely on that behaviour.
 
--- 
-Stan
+>  	if (mapping->nrpages) {
+
+I'd drop this check ere as well - no other caller does it.
+
+>  		xfs_iflags_clear(ip, XFS_ITRUNCATED);
+> -		ret = filemap_write_and_wait(mapping);
+> +		ret = filemap_write_and_wait_range(mapping, first,
+> +					last == -1 ? LLONG_MAX : last);
+>  		if (!ret)
+> -			truncate_inode_pages(mapping, first);
+> +			truncate_inode_pages_range(mapping, first, last);
+>  	}
+>  	return -ret;
+>  }
+> @@ -73,7 +71,8 @@ xfs_flush_pages(
+>  
+>  	if (mapping_tagged(mapping, PAGECACHE_TAG_DIRTY)) {
+
+Same for this check.
+
+>  		xfs_iflags_clear(ip, XFS_ITRUNCATED);
+> -		ret = -filemap_fdatawrite(mapping);
+> +		ret = -filemap_fdatawrite_range(mapping, first,
+> +					last == -1 ? LLONG_MAX : last);
+
+Also for the non-async case we should just use
+filemap_write_and_wait_range, and kill off xfs_wait_on_pages.
 
 _______________________________________________
 xfs mailing list
