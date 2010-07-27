@@ -1,17 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6RGD4tl196100 for <xfs@oss.sgi.com>; Tue, 27 Jul 2010 11:13:04 -0500
-Received: from cf--amer001e--3.americas.sgi.com
-	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EF091304082
-	for <xfs@oss.sgi.com>; Tue, 27 Jul 2010 09:16:06 -0700 (PDT)
-Subject: XFS Master Branch Rebase
-From: Alex Elder <aelder@sgi.com>
-Date: Tue, 27 Jul 2010 11:16:06 -0500
-Message-ID: <1280247366.2002.111.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	o6RJuSiq206314 for <xfs@oss.sgi.com>; Tue, 27 Jul 2010 14:56:28 -0500
+Received: from CGYSNEX002.encana.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1A80F12BD013
+	for <xfs@oss.sgi.com>; Tue, 27 Jul 2010 13:06:52 -0700 (PDT)
+Received: from CGYSNEX002.encana.com (cgysnex002.encana.com [142.56.87.69]) by
+	cuda.sgi.com with ESMTP id 9CFLQOyftE2DbGTP for
+	<xfs@oss.sgi.com>; Tue, 27 Jul 2010 13:06:52 -0700 (PDT)
+Received: from CGYEX202.encana.com (unverified) by CGYSNEX002.encana.com
+	(Clearswift SMTPRS 5.3.2) with ESMTP id
+	<T97209c31888e38574515b0@CGYSNEX002.encana.com> for <xfs@oss.sgi.com>;
+	Tue, 27 Jul 2010 13:59:28 -0600
+Received: from CGYEX710.encana.com (unverified) by CGYEX202.encana.com
+	(Clearswift SMTPRS 5.3.2) with ESMTP id
+	<T97209c31dd8e38c91316c8@CGYEX202.encana.com> for <xfs@oss.sgi.com>;
+	Tue, 27 Jul 2010 13:59:28 -0600
+Content-class: urn:content-classes:message
+MIME-Version: 1.0
+Subject: RE: High latencies writing to a memory mapped file
+Date: Tue, 27 Jul 2010 13:59:28 -0600
+Message-ID: <F57F2AD357626644AF76410876025D75529604@CGYEX705.encana.com>
+In-Reply-To: <20100727144914.GA29349@citd.de>
+References: <20100722144706.GA2840@BohrerMBP.rgmadvisors.com><20100727092452.GA23307@citd.de><4C4EDEFD.7000401@hardwarefreak.com>
+	<20100727144914.GA29349@citd.de>
+From: "Kinzel, David" <David.Kinzel@encana.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,41 +39,25 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Some recent commits have resulted in changes to
-the XFS master branch that result in non-trivial
-merges, which are not something we want to have in
-our git history.  (I didn't realize this when I
-pushed my last set of updates out, unfortunately.)
+>> Matthias Schniedermeyer put forth on 7/27/2010 4:24 AM:
+>> 
+>> > We have a linux-computer with samba to act as a fileserver 
+>for a few 
+>> > Windows-Clients and ever since kernel 2.6.26 (Never 
+>happend with 2.6.25) 
+>> > the server randomly "hangs" for a few seconds (Which is more of a 
+>> > problem that drives people crazy).
+>> 
 
-To remedy this, I'm have re-based the XFS master
-branch on oss.sgi.com against v2.6.35-rc6.
+The server hangs, or the connections to samba do? I've found that samba
+is given a ridiculously low IO priority so that any IO on the server
+will pretty much cause it to stall -- be it updating locate, a backup
+job, etc. 
 
-This is important to you if you currently have
-a git tree tracking this branch in the XFS
-repository, because doing a typical "git pull"
-won't produce in the desired result.
+This email communication and any files transmitted with it may contain confidential and or proprietary information and is provided for the use of the intended recipient only.  Any review, retransmission or dissemination of this information by anyone other than the intended recipient is prohibited.  If you receive this email in error, please contact the sender and delete this communication and any copies immediately.  Thank you.
+http://www.encana.com
 
-Instead, you should issue a command like one
-of the following to update your private branch.
 
-If your branch "xfs-master" tracks branch "master"
-at git://oss.sgi.com/xfs/xfs.git, and you now
-have "xfs-master" checked out, you can do this:
-    git pull --rebase -f
-
-If you have a different branch checked out, you
-can do this instead to force the re-based commits
-to land in your "xfs-master" branch:
-    git pull git://oss.sgi.com/xfs/xfs.git +master:xfs-master
-
-Another way to get a current branch to line up with
-the newly re-based XFS master branch is  to reset
-it to an earlier commit (such as v2.6.35-rc5) and
-follow that with a "git pull" command:
-    git reset --hard v2.6.35-rc5
-    git pull git://oss.sgi.com/xfs/xfs.git master
-
-					-Alex
 
 _______________________________________________
 xfs mailing list
