@@ -1,30 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6RJuSiq206314 for <xfs@oss.sgi.com>; Tue, 27 Jul 2010 14:56:28 -0500
-Received: from CGYSNEX002.encana.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1A80F12BD013
-	for <xfs@oss.sgi.com>; Tue, 27 Jul 2010 13:06:52 -0700 (PDT)
-Received: from CGYSNEX002.encana.com (cgysnex002.encana.com [142.56.87.69]) by
-	cuda.sgi.com with ESMTP id 9CFLQOyftE2DbGTP for
-	<xfs@oss.sgi.com>; Tue, 27 Jul 2010 13:06:52 -0700 (PDT)
-Received: from CGYEX202.encana.com (unverified) by CGYSNEX002.encana.com
-	(Clearswift SMTPRS 5.3.2) with ESMTP id
-	<T97209c31888e38574515b0@CGYSNEX002.encana.com> for <xfs@oss.sgi.com>;
-	Tue, 27 Jul 2010 13:59:28 -0600
-Received: from CGYEX710.encana.com (unverified) by CGYEX202.encana.com
-	(Clearswift SMTPRS 5.3.2) with ESMTP id
-	<T97209c31dd8e38c91316c8@CGYEX202.encana.com> for <xfs@oss.sgi.com>;
-	Tue, 27 Jul 2010 13:59:28 -0600
-Content-class: urn:content-classes:message
-MIME-Version: 1.0
-Subject: RE: High latencies writing to a memory mapped file
-Date: Tue, 27 Jul 2010 13:59:28 -0600
-Message-ID: <F57F2AD357626644AF76410876025D75529604@CGYEX705.encana.com>
-In-Reply-To: <20100727144914.GA29349@citd.de>
-References: <20100722144706.GA2840@BohrerMBP.rgmadvisors.com><20100727092452.GA23307@citd.de><4C4EDEFD.7000401@hardwarefreak.com>
-	<20100727144914.GA29349@citd.de>
-From: "Kinzel, David" <David.Kinzel@encana.com>
+	o6RKk50p208557 for <xfs@oss.sgi.com>; Tue, 27 Jul 2010 15:46:06 -0500
+Subject: Re: [RFC, PATCH 0/2] xfs: Fast zeroing of allocated space
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <1280210129-10925-1-git-send-email-david@fromorbit.com>
+References: <1280210129-10925-1-git-send-email-david@fromorbit.com>
+Date: Tue, 27 Jul 2010 15:49:07 -0500
+Message-ID: <1280263747.2002.200.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,26 +22,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
->> Matthias Schniedermeyer put forth on 7/27/2010 4:24 AM:
->> 
->> > We have a linux-computer with samba to act as a fileserver 
->for a few 
->> > Windows-Clients and ever since kernel 2.6.26 (Never 
->happend with 2.6.25) 
->> > the server randomly "hangs" for a few seconds (Which is more of a 
->> > problem that drives people crazy).
->> 
+On Tue, 2010-07-27 at 15:55 +1000, Dave Chinner wrote:
+> These two patches allow conversion of a written range of a file into
+> back into unwritten state. The first patch converts page cache
+> helper functions to use the correct range primitives as we need to
+> be able to toss (invalidate) pages only within the range specified,
+> not to to the end of the file as it currently uses.
+> 
+> The actual conversion also preallocates any holes in the range, so
+> it turns the entire range requested into allocated, unwritten
+> extents.
+> 
+> I also have a patch that adds this functionality to fallocate(). I
+> haven't tested that at all, but if this is something we want to
+> support, I'd suggest that we want fallocate to be able to do it...
 
-The server hangs, or the connections to samba do? I've found that samba
-is given a ridiculously low IO priority so that any IO on the server
-will pretty much cause it to stall -- be it updating locate, a backup
-job, etc. 
+Nice feature.  Kind of surprising to me how small the set
+of changes it requires is.
 
-This email communication and any files transmitted with it may contain confidential and or proprietary information and is provided for the use of the intended recipient only.  Any review, retransmission or dissemination of this information by anyone other than the intended recipient is prohibited.  If you receive this email in error, please contact the sender and delete this communication and any copies immediately.  Thank you.
-http://www.encana.com
+I agree with Christoph's comments.  These two patches otherwise
+look good to me as well.
 
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
 
 _______________________________________________
