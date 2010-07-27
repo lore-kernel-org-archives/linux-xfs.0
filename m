@@ -1,28 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6R5iW52167606 for <xfs@oss.sgi.com>; Tue, 27 Jul 2010 00:44:32 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 608FC12BB468
-	for <xfs@oss.sgi.com>; Mon, 26 Jul 2010 22:54:54 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	bR44VrEQfPC2Ux3i for <xfs@oss.sgi.com>;
-	Mon, 26 Jul 2010 22:54:54 -0700 (PDT)
-Received: from dastard (unverified [121.44.18.238])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	32959310-1927428
-	for <xfs@oss.sgi.com>; Tue, 27 Jul 2010 15:17:34 +0930 (CST)
-Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1Odd0o-0004HY-1h
-	for xfs@oss.sgi.com; Tue, 27 Jul 2010 15:47:34 +1000
-Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1Odd0l-0002og-5H
-	for xfs@oss.sgi.com; Tue, 27 Jul 2010 15:47:31 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: don't hold the XFS_ILOCK while flushing pages in swapext
-Date: Tue, 27 Jul 2010 15:47:31 +1000
-Message-Id: <1280209651-10800-1-git-send-email-david@fromorbit.com>
+	o6R6dSVg170341 for <xfs@oss.sgi.com>; Tue, 27 Jul 2010 01:39:28 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9E40A474E95
+	for <xfs@oss.sgi.com>; Mon, 26 Jul 2010 23:42:32 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id JjacbmuIIdwddfet
+	for <xfs@oss.sgi.com>; Mon, 26 Jul 2010 23:42:32 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id B5B686C309
+	for <xfs@oss.sgi.com>; Tue, 27 Jul 2010 01:42:31 -0500 (CDT)
+Message-ID: <4C4E8151.8060403@hardwarefreak.com>
+Date: Tue, 27 Jul 2010 01:48:49 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
+MIME-Version: 1.0
+Subject: Re: filesystem shrinks after using xfs_repair
+References: <DFB2DB04-A3BA-4272-A12A-4F28A7D51491@ucsc.edu>	<20100712134743.624249b2@harpe.intellique.com>	<274A8D0C-4C31-4FB9-AB2D-BA3C31D497E0@ucsc.edu>	<20100724005426.GN32635@dastard>	<F2AC32C3-2437-4625-980A-3BC9B3C541A2@ucsc.edu>	<20100724023922.GP32635@dastard>	<777100A1-57DE-4DE0-B1F0-64977BD694AD@ucsc.edu>	<20100726034545.GE655@dastard>	<10B6F36F-BE01-4BF7-9815-2E8F6BF71B41@ucsc.edu>	<20100726060604.GF7362@dastard>	<F91DF703-4BFF-415B-91B6-87A88F096C91@ucsc.edu>	<20100726114940.7a97f29e@harpe.intellique.com>	<AE59CF1C-6E28-4468-892A-394AE324EEF0@ucsc.edu>	<20100726230653.5da272c1@galadriel.home>
+	<89B1ECDD-E9F4-4044-953A-76987AAF8EFE@ucsc.edu>
+In-Reply-To: <89B1ECDD-E9F4-4044-953A-76987AAF8EFE@ucsc.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,76 +27,21 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Eli Morris put forth on 7/27/2010 12:02 AM:
+> Hi,
+> 
+> Thanks. I tried a Knoppix live DVD (latest version) today and it does seem to have xfs-progs, but I can't get it to recognize the lvm volume that the filesystem is on. LVM2 programs are available, but 'vgscan  --mknodes' turns up nothing. I'll continue to look into it, but if anyone has any ideas, please let me know.
 
-Otherwise it'll deadlock during allocation/block mapping.
+www.sysresccd.org
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_dfrag.c |   31 ++++++++++++++++++-------------
- 1 files changed, 18 insertions(+), 13 deletions(-)
-
-diff --git a/fs/xfs/xfs_dfrag.c b/fs/xfs/xfs_dfrag.c
-index 3b9582c..f04a79a 100644
---- a/fs/xfs/xfs_dfrag.c
-+++ b/fs/xfs/xfs_dfrag.c
-@@ -229,29 +229,34 @@ xfs_swap_extents(
- 	 * below.
- 	 */
- 	xfs_lock_two_inodes(ip, tip, XFS_IOLOCK_EXCL);
-+
-+	/*
-+	 * can't hold the ILOCK while flushing pages, so flush now we won't get
-+	 * new pages cached as we hold the XFS_IOLOCK_EXCL.
-+	 */
-+	if (VN_CACHED(VFS_I(tip)) != 0) {
-+		error = xfs_flushinval_pages(tip, 0, -1,
-+				FI_REMAPF_LOCKED);
-+		if (error)
-+			goto out_unlock;
-+	}
-+
- 	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
- 
--	/* Verify that both files have the same format */
--	if ((ip->i_d.di_mode & S_IFMT) != (tip->i_d.di_mode & S_IFMT)) {
-+	/* Verify we have no cached pages for ftmp */
-+	if (VN_CACHED(VFS_I(tip)) != 0) {
- 		error = XFS_ERROR(EINVAL);
- 		goto out_unlock;
- 	}
- 
--	/* Verify both files are either real-time or non-realtime */
--	if (XFS_IS_REALTIME_INODE(ip) != XFS_IS_REALTIME_INODE(tip)) {
-+	/* Verify that both files have the same format */
-+	if ((ip->i_d.di_mode & S_IFMT) != (tip->i_d.di_mode & S_IFMT)) {
- 		error = XFS_ERROR(EINVAL);
- 		goto out_unlock;
- 	}
- 
--	if (VN_CACHED(VFS_I(tip)) != 0) {
--		error = xfs_flushinval_pages(tip, 0, -1,
--				FI_REMAPF_LOCKED);
--		if (error)
--			goto out_unlock;
--	}
--
--	/* Verify O_DIRECT for ftmp */
--	if (VN_CACHED(VFS_I(tip)) != 0) {
-+	/* Verify both files are either real-time or non-realtime */
-+	if (XFS_IS_REALTIME_INODE(ip) != XFS_IS_REALTIME_INODE(tip)) {
- 		error = XFS_ERROR(EINVAL);
- 		goto out_unlock;
- 	}
 -- 
-1.7.1
+Stan
 
 _______________________________________________
 xfs mailing list
