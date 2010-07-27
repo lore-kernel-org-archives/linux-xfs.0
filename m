@@ -1,26 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6R8kBx4175308 for <xfs@oss.sgi.com>; Tue, 27 Jul 2010 03:46:11 -0500
-Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0E2908E2762
-	for <xfs@oss.sgi.com>; Tue, 27 Jul 2010 01:56:34 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id bIpXPH2rKPOfkscG for <xfs@oss.sgi.com>;
-	Tue, 27 Jul 2010 01:56:34 -0700 (PDT)
-Date: Tue, 27 Jul 2010 10:48:48 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 4/8] Add test of quota accounting using fsx
-Message-ID: <20100727084848.GC3358@quack.suse.cz>
-References: <1274710459-11446-1-git-send-email-jack@suse.cz>
-	<1274710459-11446-5-git-send-email-jack@suse.cz>
-	<4C0FD43D.3040803@sandeen.net>
-	<20100615095505.GB3347@quack.suse.cz>
-	<4C4E0229.5040002@sandeen.net>
-	<20100727081538.GB3358@quack.suse.cz>
+	o6R9M39N176487 for <xfs@oss.sgi.com>; Tue, 27 Jul 2010 04:22:03 -0500
+Received: from enyo.dsw2k3.info (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 60127475556
+	for <xfs@oss.sgi.com>; Tue, 27 Jul 2010 02:25:08 -0700 (PDT)
+Received: from enyo.dsw2k3.info (enyo.dsw2k3.info [195.71.86.239]) by
+	cuda.sgi.com with ESMTP id ISctBWkhPDG4RSJb for
+	<xfs@oss.sgi.com>; Tue, 27 Jul 2010 02:25:08 -0700 (PDT)
+Date: Tue, 27 Jul 2010 11:24:52 +0200
+From: Matthias Schniedermeyer <ms@citd.de>
+Subject: Re: High latencies writing to a memory mapped file
+Message-ID: <20100727092452.GA23307@citd.de>
+References: <20100722144706.GA2840@BohrerMBP.rgmadvisors.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100727081538.GB3358@quack.suse.cz>
+In-Reply-To: <20100722144706.GA2840@BohrerMBP.rgmadvisors.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,53 +28,58 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: hch@infradead.org, ext4 development <linux-ext4@vger.kernel.org>, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: Shawn Bohrer <shawn.bohrer@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Tue 27-07-10 10:15:38, Jan Kara wrote:
-> On Mon 26-07-10 16:46:17, Eric Sandeen wrote:
-> > On 06/15/2010 04:55 AM, Jan Kara wrote:
-> > > On Wed 09-06-10 12:49:49, Eric Sandeen wrote:
-> > >> Jan Kara wrote:
-> > >>> Run fsx (and also several fsx threads in parallel) and verify that
-> > >>> quota accounting is correct after they finish.
-> > >>
-> > >> Jan, I'm having trouble with this one on XFS for some reason, with our 
-> > >> RHEL6 kernel and quota-3.17...
-> > >   OK, attached is an improvement to the XFSQA tests after which all quota
-> > > tests pass for XFS just fine.
-> > >   The second patch is just minor general improvement of _require_scratch
-> > > macro.
-> > >   Could they be added to XFSQA repository? Thanks.
-> > 
-> > Jan, I've got some ext4 failures reported on these, although I can't hit
-> > them, so not quite sure what's going on.
-> > 
-> > In 231:
-> > 
-> > +< fsgqa     --     760       0       0              3     0     0
-> > +---
-> > +> fsgqa     --     764       0       0              3     0     0
-> > +14c14
-> > +< fsgqa     --     760       0       0              3     0     0
-> > +---
-> > +> fsgqa     --     764       0       0              3     0     0
-> > 
-> > after the quotacheck & repquota we have 4 more blocks.  Maybe this
-> > is due to my accounting of metadata blocks at write time, and not
-> > before ... would it be reasonable to put a sync call as the first
-> > line of check_usage() ?
->   Just last week a change went into xfstests which introduces a generic
-> quota checking function and uses sync before getting quota usage. I think
-> xfstests passed for me with ext4 after this change but I've now restarted
-> the tests to recheck it.
-  For me all the quota tests pass just fine with ext4 and the latest
-xfstests... So does the latest version work also for you?
+On 22.07.2010 09:47, Shawn Bohrer wrote:
 
-									Honza
+I can't help with your exact problem, but this reminds me of a quite 
+similar looking problem i have.
+
+We have a linux-computer with samba to act as a fileserver for a few 
+Windows-Clients and ever since kernel 2.6.26 (Never happend with 2.6.25) 
+the server randomly "hangs" for a few seconds (Which is more of a 
+problem that drives people crazy). It takes about 1-2 weeks for the 
+symtoms to show and only a reboot of the computer "cures" it (for 
+another 1-2 weeks).
+
+Because of the long incubation period and the whole slew of subsystems 
+(and samba) involded, i never had the drive to debug this, as a "quick" 
+reboot every 1-2 weeks only takes about 2 minutes.
+
+With "whole slew of subsystems" in mean:
+Hardware: SATA on onboard-controller (Intel G41-Chipset(ICH7) with 
+PIIX-driver, because BIOS is crippled and doesn't allow AHCI)
+(Hardware itself is unlikly to be be at fault, because a few month ago 
+the complete computer and HDDs were switched, but the problem persisted)
+
+Kernel:
+Currently 2.6.32(-5, Debian SID), first seen with 2.6.26 (vanilla)
+
+Drivers/Filesystem:
+md(RAID1), loop-aes, XFS
+(I tried logbufs=8,logbsize=256k,nobarrier, no apparent changes. I'm 
+not 100% sure if i tried other schedulers, but i think i did)
+
+And finally Samba on top.
+
+
+As i had to reboot the computer just yesterday, and will have to power 
+down the server over the weekend because we are moving, it will be at 
+least 2-3 weeks before i anticipate the problem to resurface.
+In case anybody has an idea what i could do to identify and/or isolate 
+the root-cause, i'm open for suggestions.
+
+
+
+
+Bis denn
+
 -- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+Real Programmers consider "what you see is what you get" to be just as 
+bad a concept in Text Editors as it is in women. No, the Real Programmer
+wants a "you asked for it, you got it" text editor -- complicated, 
+cryptic, powerful, unforgiving, dangerous.
 
 _______________________________________________
 xfs mailing list
