@@ -1,22 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o6RNOIL5216094 for <xfs@oss.sgi.com>; Tue, 27 Jul 2010 18:24:19 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9E8881638B66
-	for <xfs@oss.sgi.com>; Tue, 27 Jul 2010 16:27:22 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	LpKQ2mWsLwtNrsaT for <xfs@oss.sgi.com>;
-	Tue, 27 Jul 2010 16:27:22 -0700 (PDT)
-Date: Wed, 28 Jul 2010 09:27:19 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS Master Branch Rebase
-Message-ID: <20100727232719.GR7362@dastard>
-References: <1280247366.2002.111.camel@doink>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1280247366.2002.111.camel@doink>
+	o6S59MFf232158 for <xfs@oss.sgi.com>; Wed, 28 Jul 2010 00:09:23 -0500
+Received: from ucsc.edu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 114D311A3C7A
+	for <xfs@oss.sgi.com>; Tue, 27 Jul 2010 22:19:51 -0700 (PDT)
+Received: from ucsc.edu (email-prod-out-1.ucsc.edu [128.114.129.85]) by
+	cuda.sgi.com with ESMTP id fAkSt4IqaQeBdiHJ for
+	<xfs@oss.sgi.com>; Tue, 27 Jul 2010 22:19:51 -0700 (PDT)
+Subject: Re: filesystem shrinks after using xfs_repair
+Mime-Version: 1.0 (Apple Message framework v1081)
+From: Eli Morris <ermorris@ucsc.edu>
+In-Reply-To: <20100726102036.GH7362@dastard>
+Date: Tue, 27 Jul 2010 22:12:25 -0700
+Message-Id: <0EC8FE5D-212C-4030-9D59-FDF38DF4E9EE@ucsc.edu>
+References: <20100712134743.624249b2@harpe.intellique.com>
+	<274A8D0C-4C31-4FB9-AB2D-BA3C31D497E0@ucsc.edu>
+	<20100724005426.GN32635@dastard>
+	<F2AC32C3-2437-4625-980A-3BC9B3C541A2@ucsc.edu>
+	<20100724023922.GP32635@dastard>
+	<777100A1-57DE-4DE0-B1F0-64977BD694AD@ucsc.edu>
+	<20100726034545.GE655@dastard>
+	<10B6F36F-BE01-4BF7-9815-2E8F6BF71B41@ucsc.edu>
+	<20100726060604.GF7362@dastard>
+	<F91DF703-4BFF-415B-91B6-87A88F096C91@ucsc.edu>
+	<20100726102036.GH7362@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,72 +37,83 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Michael Monnerie <michael.monnerie@is.it-management.at>
 
-On Tue, Jul 27, 2010 at 11:16:06AM -0500, Alex Elder wrote:
-> Some recent commits have resulted in changes to
-> the XFS master branch that result in non-trivial
-> merges, which are not something we want to have in
-> our git history.  (I didn't realize this when I
-> pushed my last set of updates out, unfortunately.)
+
+On Jul 26, 2010, at 3:20 AM, Dave Chinner wrote:
+
+> On Sun, Jul 25, 2010 at 11:46:29PM -0700, Eli Morris wrote:
+>> On Jul 25, 2010, at 11:06 PM, Dave Chinner wrote:
+>>> On Sun, Jul 25, 2010 at 09:04:03PM -0700, Eli Morris wrote:
+>>>> On Jul 25, 2010, at 8:45 PM, Dave Chinner wrote:
+>>> I've just confirmed that the problem does not exist at top-of-tree.
+>>> The following commands gives the right output, and the repair at the
+>>> end does not truncate the filesystem:
+>>> 
+>>> xfs_io -f -c "truncate $((13427728384 * 4096))" fsfile
+>>> mkfs.xfs -f -l size=128m,lazy-count=0 -d size=13427728384b,agcount=126,file,name=fsfile
+>>> xfs_io -f -c "truncate $((16601554944 * 4096))" fsfile
+>>> mount -o loop fsfile /mnt/scratch
+>>> xfs_growfs /mnt/scratch
+>>> xfs_info /mnt/scratch
+>>> umount /mnt/scratch
+>>> xfs_db -c "sb 0" -c "p agcount" -c "p dblocks" -f fsfile
+>>> xfs_db -c "sb 1" -c "p agcount" -c "p dblocks" -f fsfile
+>>> xfs_db -c "sb 127" -c "p agcount" -c "p dblocks" -f fsfile
+>>> xfs_repair -f fsfile
+>>> 
+>>> So rather than try to triage this any further, can you upgrade your
+>>> kernel/system to something more recent?
+>> 
+>> I can update this to Centos 5 Update 4, but I can't install
+>> updates forward of it's release date of Dec 15, 2009. The reason
+>> is that this is the head node of a cluster and it uses the Rocks
+>> cluster distribution. The newest of Rocks is based on Centos 5
+>> Update 4, but Rocks systems do not support updates (via yum, for
+>> example). 
+>> 
+>> Updating the OS takes me a day or two for the whole cluster and
+>> all the user programs. If you're pretty sure that will fix the
+>> problem, I'll go for it tomorrow. I'd appreciate it very much if
+>> you could let me know if Centos 5.4 is recent enough that it will
+>> fix the problem..
 > 
-> To remedy this, I'm have re-based the XFS master
-> branch on oss.sgi.com against v2.6.35-rc6.
+> The only way I can find out is to load CentOS 5.4 onto a
+> system and run the above test. You can probably do that just as
+> easily as I can...
+> 
+>> I will note that I've grown the filesystem several times, and
+>> while I recall having to unmount and remount the filesystem each
+>> time for it to report its new size, I've never seen it fall back
+>> to its old size when running xfs_repair. In fact, the original
+>> filesystem is about 12 TB, so xfs_repair only reverses the last
+>> grow and not the previous ones.
+> 
+> Hmmm - I can't recall any bug where unmount was required before
+> the new size would show up. I know we had problems with arithmetic
+> overflows in both the xfs_growfs binary and the kernel code, but
+> they did not manifest in this manner. Hence I can't really say why
+> you are seeing that behaviour or why this time it is different.
+> 
+> The suggestion of using a recent live CD to do the grow is a good
+> one - it might be your best option, rather than upgrading everything....
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 
-<groan>
 
-Alex, this is a bit annoying. Rebases are a real pain for anyone
-downstream that is using git in non-trivial ways. I'll give you an
-idea of what this means to me - for the xfs tree directly:
+Hi All,
 
-	- bare repository on kernel.org I have to fix
-	- local bare repo pulled from kernel.org I have to fix
-	- local working repo I have to fix with about 10 separate
-	  working branches that I have now have to rebase
-	- run garbage collection on all repos
+Thanks for all the help. I was finally able to get a USB thumb drive made up with Fedora 13 (64 bit version-that turned out to be important!). I did the xfs_growfs after booting off that, then rebooted back to my normal configuration, ran xfs_repair, and this time the file system stayed OK. I'm doing an overnight write test and will run xfs_repair again tomorrow morning, but I think that solved the problem. BTW, Fedora has a great tool for making USB thumb drives with the live distro on it. It does everything for you, including downloading the disc image. nice. That's a pretty nasty bug.
 
-And for the for-2.6.36 branch of my xfsdev.git tree on kernel.org
-(which I've been careful not to require rebasing as the OSS tree has
-gained more commits):
+thanks again!
 
-	- all the commits in that branch are stale, so the branch
-	  has to be destroyed (in 3 repos)
-	- remove any branch based on for-2.6.36 in 2 bare repos
-	- recreate a new branch and pull the new xfs tree commits
-	  into it and push it back out to bare repos
-	- rebase another ~10 local working branches based on the
-	  for-2.6.36 branch and push them back out
-	- restage all the pending commits that I hadn't pushed out
-	  on that branch yet.
-	- run garbage collection on all repos
-
-And to top that all off - I know that people have pulled branches
-from this tree that are based on for-2.6.36, so they are going to
-get problems when trying to update them again. i.e. an upstream
-rebase triggers problems for users downstream of my repo, not just
-the direct downstream of the OSS repo....
-
-....
-
-> If you have a different branch checked out, you
-> can do this instead to force the re-based commits
-> to land in your "xfs-master" branch:
->     git pull git://oss.sgi.com/xfs/xfs.git +master:xfs-master
-
-You don't want to do this - the forced merge causes a branch in
-history in the local repository and hence it's no longer an
-identical copy of the upstream repository any more. I got caught by
-this on a previous rebase when I started pushing commits back out
-and people tried to pull them...
-
-Cheers,
-
-Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
+Eli
 
 _______________________________________________
 xfs mailing list
