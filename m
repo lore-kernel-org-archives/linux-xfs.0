@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o58FIEWn010807 for <xfs@oss.sgi.com>; Tue, 8 Jun 2010 10:18:14 -0500
+	o58FI5tZ010771 for <xfs@oss.sgi.com>; Tue, 8 Jun 2010 10:18:05 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B77D511B052F
-	for <xfs@oss.sgi.com>; Thu, 29 Jul 2010 16:03:39 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4A07B11B0528
+	for <xfs@oss.sgi.com>; Thu, 29 Jul 2010 16:03:30 -0700 (PDT)
 Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
 	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	qIsGAmdXbvBmMLDx for <xfs@oss.sgi.com>;
-	Thu, 29 Jul 2010 16:03:39 -0700 (PDT)
+	r6XLCT6q94Lzqodi for <xfs@oss.sgi.com>;
+	Thu, 29 Jul 2010 16:03:30 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/2] xfs: ensure we mark all inodes in a freed cluster
-	XFS_ISTALE
-Date: Fri, 30 Jul 2010 08:55:46 +1000
-Message-Id: <1280444146-14540-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1280444146-14540-1-git-send-email-david@fromorbit.com>
-References: <1280444146-14540-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/2] xfs: fix bugs uncovered by dbench testing
+Date: Fri, 30 Jul 2010 08:55:44 +1000
+Message-Id: <1280444146-14540-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,187 +22,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: npiggin@kernel.de
 
-From: Dave Chinner <dchinner@redhat.com>
-
-Under heavy load parallel metadata loads (e.g. dbench), we can fail
-to mark all the inodes in a cluster being freed as XFS_ISTALE as we
-skip inodes we cannot get the XFS_ILOCK_EXCL or the flush lock on.
-When this happens and the inode cluster buffer has already been
-marked stale and freed, inode reclaim can try to write the inode out
-as it is dirty and not marked stale. This can result in writing th
-metadata to an freed extent, or in the case it has already
-been overwritten trigger a magic number check failure and return an
-EUCLEAN error such as:
-
-Filesystem "ram0": inode 0x442ba1 background reclaim flush failed with 117
-
-Fix this by ensuring that we hoover up all in memory inodes in the
-cluster and mark them XFS_ISTALE when freeing the cluster.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_inode.c |   88 ++++++++++++++++++++++++++++-----------------------
- 1 files changed, 48 insertions(+), 40 deletions(-)
-
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 68415cb..abc50b6 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1914,6 +1914,11 @@ xfs_iunlink_remove(
- 	return 0;
- }
- 
-+/*
-+ * A big issue when freeing the inode cluster is is that we _cannot_ skip any
-+ * inodes that are in memory - they all must be marked stale and attached to
-+ * the cluster buffer.
-+ */
- STATIC void
- xfs_ifree_cluster(
- 	xfs_inode_t	*free_ip,
-@@ -1945,8 +1950,6 @@ xfs_ifree_cluster(
- 	}
- 
- 	for (j = 0; j < nbufs; j++, inum += ninodes) {
--		int	found = 0;
--
- 		blkno = XFS_AGB_TO_DADDR(mp, XFS_INO_TO_AGNO(mp, inum),
- 					 XFS_INO_TO_AGBNO(mp, inum));
- 
-@@ -1963,26 +1966,6 @@ xfs_ifree_cluster(
- 					XBF_LOCK);
- 
- 		/*
--		 * Walk the inodes already attached to the buffer and mark them
--		 * stale. These will all have the flush locks held, so an
--		 * in-memory inode walk can't lock them.
--		 */
--		lip = XFS_BUF_FSPRIVATE(bp, xfs_log_item_t *);
--		while (lip) {
--			if (lip->li_type == XFS_LI_INODE) {
--				iip = (xfs_inode_log_item_t *)lip;
--				ASSERT(iip->ili_logged == 1);
--				lip->li_cb = xfs_istale_done;
--				xfs_trans_ail_copy_lsn(mp->m_ail,
--							&iip->ili_flush_lsn,
--							&iip->ili_item.li_lsn);
--				xfs_iflags_set(iip->ili_inode, XFS_ISTALE);
--				found++;
--			}
--			lip = lip->li_bio_list;
--		}
--
--		/*
- 		 * For each inode in memory attempt to add it to the inode
- 		 * buffer and set it up for being staled on buffer IO
- 		 * completion.  This is safe as we've locked out tail pushing
-@@ -1999,42 +1982,68 @@ xfs_ifree_cluster(
- 
- 			/* Inode not in memory or stale, nothing to do */
- 			if (!ip || xfs_iflags_test(ip, XFS_ISTALE)) {
-+next_inode:
- 				read_unlock(&pag->pag_ici_lock);
- 				continue;
- 			}
- 
--			/* don't try to lock/unlock the current inode */
-+			/*
-+			 * Walk the inodes already attached to the buffer to
-+			 * see if this inode is already there. If so, mark it
-+			 * stale. These will all have the flush locks held, so an
-+			 * in-memory inode walk can't lock them. We do this
-+			 * inside the loop so that we know for certain that we
-+			 * don't encounter inodes with the flush lock already
-+			 * held and hence deadlock below.
-+			 */
-+			lip = XFS_BUF_FSPRIVATE(bp, xfs_log_item_t *);
-+			do {
-+				if (lip->li_type == XFS_LI_INODE) {
-+					iip = (xfs_inode_log_item_t *)lip;
-+					if (iip->ili_inode != ip)
-+						continue;
-+					ASSERT(iip->ili_logged == 1);
-+					lip->li_cb = xfs_istale_done;
-+					xfs_trans_ail_copy_lsn(mp->m_ail,
-+								&iip->ili_flush_lsn,
-+								&iip->ili_item.li_lsn);
-+					xfs_iflags_set(iip->ili_inode, XFS_ISTALE);
-+					goto next_inode;
-+				}
-+			} while ((lip = lip->li_bio_list) != NULL);
-+
-+			/*
-+			 * Don't try to lock/unlock the current inode, but we
-+			 * _cannot_ skip the other inodes that we did not find
-+			 * in the list attached to the buffer and are not
-+			 * already marked stale. If we can't lock it, back off
-+			 * and retry.
-+			 */
-+
- 			if (ip != free_ip &&
- 			    !xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)) {
- 				read_unlock(&pag->pag_ici_lock);
-+				delay(1);
-+				i--;
- 				continue;
- 			}
- 			read_unlock(&pag->pag_ici_lock);
- 
--			if (!xfs_iflock_nowait(ip)) {
--				if (ip != free_ip)
--					xfs_iunlock(ip, XFS_ILOCK_EXCL);
--				continue;
--			}
--
-+			xfs_iflock(ip);
- 			xfs_iflags_set(ip, XFS_ISTALE);
--			if (xfs_inode_clean(ip)) {
--				ASSERT(ip != free_ip);
--				xfs_ifunlock(ip);
--				xfs_iunlock(ip, XFS_ILOCK_EXCL);
--				continue;
--			}
- 
-+			/*
-+			 * we don't need to attach clean inodes or those only
-+			 * with unlogged changes (which we throw away, anyway).
-+			 */
- 			iip = ip->i_itemp;
--			if (!iip) {
--				/* inode with unlogged changes only */
-+			if (!iip || xfs_inode_clean(ip)) {
- 				ASSERT(ip != free_ip);
- 				ip->i_update_core = 0;
- 				xfs_ifunlock(ip);
- 				xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 				continue;
- 			}
--			found++;
- 
- 			iip->ili_last_fields = iip->ili_format.ilf_fields;
- 			iip->ili_format.ilf_fields = 0;
-@@ -2049,8 +2058,7 @@ xfs_ifree_cluster(
- 				xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 		}
- 
--		if (found)
--			xfs_trans_stale_inode_buf(tp, bp);
-+		xfs_trans_stale_inode_buf(tp, bp);
- 		xfs_trans_binval(tp, bp);
- 	}
- 
--- 
-1.7.1
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+VGhlIHJlcHJvZHVjZXIgTmljayBmb3VuZCB0aGF0IGh1bmcgdGhlIFhGUyBmaWxlc3lzdGVtIGhh
+cyB0d28KZGlmZmVyZW50IGNhdXNlcy4gQm90aCBtYW5pZmVzdCBpbiB0aGUgc2FtZSB3YXksIHNv
+IGl0IHdhcyBkaWZmaWN1bHQgdG8gdGVsbAp0aGVtIGFwYXLhuasgLSB0aGV5IGxlZnQgYW4gaXRl
+bSB0aGF0IGNvdWxkIG5vdGJlIGZsdXNoZWQgc3R1Y2sgaW4gdGhlIEFJTCBhbmQKaGVuY2UgcHJl
+dmVudGluZyB0aGUgdGFpbCBvZiB0aGUgbG9nIGZyb20gYmVpbmcgbW92ZWQgZm9yd2FyZC4KClRo
+ZSBtb3N0IGZyZXF1ZW50bHkgdHJpcHBlZCBwcm9ibGVtIChnZW5lcmFsbHkgd2l0aGluIDUgbWlu
+dXRlcykgd2FzIHRoZSBDSUwKY29tbWl0IHJhY2Ugd2hlbiB0aGUgY2hlY2twb2l0biBjb3VsZCBj
+b21taXQgYmVmb3JlIHRoZSB0cmFuc2FjdGlvbiBpdGVtcyB3ZXJlCnVubG9ja2VkLCByZXN1bHRp
+bmcgaW4gc3RhbGUgaW5mb3JtYXRpb24gaW4gbG9nIGl0ZW1zIGFuZCBpbmNvcnJlY3QgcHJvY2Vz
+c2luZwpvZiBzdGFsZSBidWZmZXJzLiBJIGNvdWwgZG5vdCByZXByb2R1Y2UgdGhpcyByYWNlIGNv
+bmRpdGlvbiB3aXRoIGEgZGVidWcKa2VybmVsLCB3aGljaCBleHBsYWluIHdoeSBteSBwcmV2aW91
+cyBkYmVuY2ggdGVzdGluZyBkaWQgbm90IHVuY292ZXIgaXQuCgpMZXNzIGZyZXF1ZW50bHkgdHJp
+cHBlZCB3YXMgdGhlIGlub2RlIGNsdXN0ZXIgZnJlZWluZyBwcm9ibGVtIC0gaXQgd291bGQgdGFr
+ZQphcm91bmQgMiBob3VycyBvbiBhdmVyYWdlIHRvIHRyaXAgdGhpcyBvbmUsIGFuZCBpdCBkb2Vz
+IG5vdCByZXF1aXJlIGRlbGF5ZWQKbG9nZ2luZyB0byBoaXQuCgpOaWNrLCB5b3UnbGwgbmVlZCBi
+b3RoIHBhdGNoZXMgdG8gYXZvaWQgdGhlIHRoZSBoYW5ncyB5b3UgcmVwb3J0ZWQgLSBJJ3ZlIGhh
+ZAp5b3VyIHRlc3QgY2FzZSBydW5uaW5nIG5vdyBmb3IganVzdCBvdmVyIHRlbiBob3VycyB3aXRo
+b3V0IGFueSBpc3N1ZXMgc28gZmFyLgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29z
+cy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
