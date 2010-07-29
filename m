@@ -1,31 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o58FO2bN011013 for <xfs@oss.sgi.com>; Tue, 8 Jun 2010 10:24:02 -0500
+	o58FI4k9010766 for <xfs@oss.sgi.com>; Tue, 8 Jun 2010 10:18:05 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 30D5B480939
-	for <xfs@oss.sgi.com>; Thu, 29 Jul 2010 16:01:54 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	WjtF4ZHRRBojALo4 for <xfs@oss.sgi.com>;
-	Thu, 29 Jul 2010 16:01:54 -0700 (PDT)
-Date: Fri, 30 Jul 2010 09:01:47 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 62D511659A7A
+	for <xfs@oss.sgi.com>; Thu, 29 Jul 2010 15:55:57 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	UIbea9OV0Cbt7236 for <xfs@oss.sgi.com>;
+	Thu, 29 Jul 2010 15:55:57 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: filesystem shrinks after using xfs_repair
-Message-ID: <20100729230147.GN655@dastard>
-References: <F2AC32C3-2437-4625-980A-3BC9B3C541A2@ucsc.edu>
-	<20100724023922.GP32635@dastard>
-	<777100A1-57DE-4DE0-B1F0-64977BD694AD@ucsc.edu>
-	<20100726034545.GE655@dastard>
-	<10B6F36F-BE01-4BF7-9815-2E8F6BF71B41@ucsc.edu>
-	<20100726060604.GF7362@dastard>
-	<F91DF703-4BFF-415B-91B6-87A88F096C91@ucsc.edu>
-	<20100726102036.GH7362@dastard>
-	<0EC8FE5D-212C-4030-9D59-FDF38DF4E9EE@ucsc.edu>
-	<D6C570D6-FEC7-4E3C-AAC2-13275721370A@ucsc.edu>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <D6C570D6-FEC7-4E3C-AAC2-13275721370A@ucsc.edu>
+Subject: [PATCH 1/2] xfs: unlock items before allowing the CIL to commit
+Date: Fri, 30 Jul 2010 08:55:45 +1000
+Message-Id: <1280444146-14540-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1280444146-14540-1-git-send-email-david@fromorbit.com>
+References: <1280444146-14540-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,38 +23,103 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eli Morris <ermorris@ucsc.edu>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: npiggin@kernel.de
 
-On Thu, Jul 29, 2010 at 12:22:30PM -0700, Eli Morris wrote:
-> I tried filling up the disk with data to see if that worked Ok and
-> it did, up until this point. There is something I don't understand
-> going on though. 'df' says that I have 381 GB free on the disk,
-> but I can't write to the disk anymore because it says it there
-> isn't any space left on it. Is this some insane round off error or
-> is there something going on here?
+From: Dave Chinner <dchinner@redhat.com>
 
-If you haven't specified inode64, then all inodes are located below
-the 1TB mark. You've probably run out of space (or contiguous 16k
-chunks of free space) below 1TB. Using inode64 will avoid this - for
-a filesystem of that size, inode64 is probably a good idea as it
-will significantly improve performance.
+When we commit a transaction using delayed logging, we need to
+unlock the items in the transaciton before we unlock the CIL context
+and allow it to be checkpointed. If we unlock them after we release
+the CIl context lock, the CIL can checkpoint and complete before
+we free the log items. This breaks stale buffer item unlock and
+unpin processing as there is an implicit assumption that the unlock
+will occur before the unpin.
 
-Keep in mind that legacy 32bit applications may have problems with
-64 bit inode numbers, so if you have such applications (or 32 bit
-NFS clients) then you need to check carefully as to whether 64 bit
-inodes will work correctly or not....
+Also, some log items need to store the LSN of the transaction commit
+in the item (inodes and EFIs) and so can race with other transaction
+completions if we don't prevent the CIL from checkpointing before
+the unlock occurs.
 
-Cheers,
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_log_cil.c    |   14 ++++++++++++++
+ fs/xfs/xfs_trans.c      |    5 +----
+ fs/xfs/xfs_trans_priv.h |    3 ++-
+ 3 files changed, 17 insertions(+), 5 deletions(-)
 
-Dave.
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index 31e4ea2..ef8e7d9 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -377,9 +377,23 @@ xfs_log_commit_cil(
+ 	xfs_log_done(mp, tp->t_ticket, NULL, log_flags);
+ 	xfs_trans_unreserve_and_mod_sb(tp);
+ 
++	/*
++	 * Once all the items of the transaction have been copied to the CIL,
++	 * the items can be unlocked and freed.
++	 *
++	 * This needs to be done before we drop the CIL context lock because we
++	 * have to update state in the log items and unlock them before they go
++	 * to disk. If we don't, then the CIL checkpoint can race with us and
++	 * we can run checkpoint completion before we've updated and unlocked
++	 * the log items. This affects (at least) processing of stale buffers,
++	 * inodes and EFIs.
++	 */
++	xfs_trans_free_items(tp, *commit_lsn, 0);
++
+ 	/* check for background commit before unlock */
+ 	if (log->l_cilp->xc_ctx->space_used > XLOG_CIL_SPACE_LIMIT(log))
+ 		push = 1;
++
+ 	up_read(&log->l_cilp->xc_ctx_lock);
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index fdca741..1c47eda 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -1167,7 +1167,7 @@ xfs_trans_del_item(
+  * Unlock all of the items of a transaction and free all the descriptors
+  * of that transaction.
+  */
+-STATIC void
++void
+ xfs_trans_free_items(
+ 	struct xfs_trans	*tp,
+ 	xfs_lsn_t		commit_lsn,
+@@ -1653,9 +1653,6 @@ xfs_trans_commit_cil(
+ 		return error;
+ 
+ 	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
+-
+-	/* xfs_trans_free_items() unlocks them first */
+-	xfs_trans_free_items(tp, *commit_lsn, 0);
+ 	xfs_trans_free(tp);
+ 	return 0;
+ }
+diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
+index e2d93d8..62da86c 100644
+--- a/fs/xfs/xfs_trans_priv.h
++++ b/fs/xfs/xfs_trans_priv.h
+@@ -25,7 +25,8 @@ struct xfs_trans;
+ 
+ void	xfs_trans_add_item(struct xfs_trans *, struct xfs_log_item *);
+ void	xfs_trans_del_item(struct xfs_log_item *);
+-
++void	xfs_trans_free_items(struct xfs_trans *tp, xfs_lsn_t commit_lsn,
++				int flags);
+ void	xfs_trans_item_committed(struct xfs_log_item *lip,
+ 				xfs_lsn_t commit_lsn, int aborted);
+ void	xfs_trans_unreserve_and_mod_sb(struct xfs_trans *tp);
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.1
 
 _______________________________________________
 xfs mailing list
