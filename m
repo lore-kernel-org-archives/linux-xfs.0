@@ -1,26 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o58FNWxs010985 for <xfs@oss.sgi.com>; Tue, 8 Jun 2010 10:23:32 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CD95D480914
-	for <xfs@oss.sgi.com>; Thu, 29 Jul 2010 15:57:01 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	tbzxsuwqnRLDsIWF for <xfs@oss.sgi.com>;
-	Thu, 29 Jul 2010 15:57:01 -0700 (PDT)
-Date: Fri, 30 Jul 2010 08:56:58 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS hang in xlog_grant_log_space
-Message-ID: <20100729225658.GM655@dastard>
-References: <20100722190100.GA22269@amd> <20100723135514.GJ32635@dastard>
-	<20100727070538.GA2893@amd> <20100727080632.GA4958@amd>
-	<20100727113626.GA2884@amd> <20100727133038.GP7362@dastard>
-	<20100727145808.GQ7362@dastard> <20100728131744.GS7362@dastard>
-	<20100729140546.GB7217@amd>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100729140546.GB7217@amd>
+	o58FcFXx011777 for <xfs@oss.sgi.com>; Tue, 8 Jun 2010 10:38:15 -0500
+Received: from ucsc.edu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 30ADF13E7FD1
+	for <xfs@oss.sgi.com>; Thu, 29 Jul 2010 16:16:08 -0700 (PDT)
+Received: from ucsc.edu (email-prod-out-1.ucsc.edu [128.114.129.85]) by
+	cuda.sgi.com with ESMTP id KGhL7WKHuYfZf13n for
+	<xfs@oss.sgi.com>; Thu, 29 Jul 2010 16:16:08 -0700 (PDT)
+Subject: Re: filesystem shrinks after using xfs_repair
+Mime-Version: 1.0 (Apple Message framework v1081)
+From: Eli Morris <ermorris@ucsc.edu>
+In-Reply-To: <20100729230147.GN655@dastard>
+Date: Thu, 29 Jul 2010 16:15:55 -0700
+Message-Id: <04349CE2-CF8B-463C-8B06-5E4E59E869B2@ucsc.edu>
+References: <F2AC32C3-2437-4625-980A-3BC9B3C541A2@ucsc.edu>
+	<20100724023922.GP32635@dastard>
+	<777100A1-57DE-4DE0-B1F0-64977BD694AD@ucsc.edu>
+	<20100726034545.GE655@dastard>
+	<10B6F36F-BE01-4BF7-9815-2E8F6BF71B41@ucsc.edu>
+	<20100726060604.GF7362@dastard>
+	<F91DF703-4BFF-415B-91B6-87A88F096C91@ucsc.edu>
+	<20100726102036.GH7362@dastard>
+	<0EC8FE5D-212C-4030-9D59-FDF38DF4E9EE@ucsc.edu>
+	<D6C570D6-FEC7-4E3C-AAC2-13275721370A@ucsc.edu>
+	<20100729230147.GN655@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,50 +37,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Nick Piggin <npiggin@suse.de>
-Cc: Nick Piggin <npiggin@kernel.dk>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Jul 30, 2010 at 12:05:46AM +1000, Nick Piggin wrote:
-> On Wed, Jul 28, 2010 at 11:17:44PM +1000, Dave Chinner wrote:
-> > Something very strange is happening, and to make matters worse I
-> > cannot reproduce it with a debug kernel (ran for 3 hours without
-> > failing). Hence it smells like a race condition somewhere.
-> > 
-> > I've reproduced it without delayed logging, so it is not directly
-> > related to that functionality.
-> > 
-> > I've seen this warning:
-> > 
-> > Filesystem "ram0": inode 0x704680 background reclaim flush failed with 117
-> > 
-> > Which indicates we failed to mark an inode stale when freeing an
-> > inode cluster, but I think I've fixed that and the problem still
-> > shows up. It's posible the last version didn't fix it, but....
+
+On Jul 29, 2010, at 4:01 PM, Dave Chinner wrote:
+
+> On Thu, Jul 29, 2010 at 12:22:30PM -0700, Eli Morris wrote:
+>> I tried filling up the disk with data to see if that worked Ok and
+>> it did, up until this point. There is something I don't understand
+>> going on though. 'df' says that I have 381 GB free on the disk,
+>> but I can't write to the disk anymore because it says it there
+>> isn't any space left on it. Is this some insane round off error or
+>> is there something going on here?
 > 
-> I've seen that one a couple of times too. Keeps coming back each
-> time you echo 3 > /proc/sys/vm/drop_caches :)
-
-Yup - it's an unflushable inode that is pinning the tail of the log,
-hence causing the log space hangs.
-
-> > Now I've got the ag iterator rotor patch in place as well and
-> > possibly a different version of the cluster free fix to what I
-> > previously tested and it's now been running for almost half an hour.
-> > I can't say yet whether I've fixed the bug of just changed the
-> > timing enough to avoid it. I'll leave this test running over night
-> > and redo individual patch testing tomorrow.
+> If you haven't specified inode64, then all inodes are located below
+> the 1TB mark. You've probably run out of space (or contiguous 16k
+> chunks of free space) below 1TB. Using inode64 will avoid this - for
+> a filesystem of that size, inode64 is probably a good idea as it
+> will significantly improve performance.
 > 
-> I reproduced it with fs_stress now too. Any patches I could test
-> for you just let me know.
+> Keep in mind that legacy 32bit applications may have problems with
+> 64 bit inode numbers, so if you have such applications (or 32 bit
+> NFS clients) then you need to check carefully as to whether 64 bit
+> inodes will work correctly or not....
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 
-You should see them in a few minutes ;)
 
-Cheers,
+Hi Dave,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Is that something I could do now, or only when the filesystem is created? If I mount it with '-o inode64', can I mount it without that later, or once I write to the filesystem like that, can I not go back to mounting it in 32 bit mode? 
+
+Thanks again,
+
+Eli
+
+
 
 _______________________________________________
 xfs mailing list
