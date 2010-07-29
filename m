@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o58FI4k9010766 for <xfs@oss.sgi.com>; Tue, 8 Jun 2010 10:18:05 -0500
+	o58FIEWn010807 for <xfs@oss.sgi.com>; Tue, 8 Jun 2010 10:18:14 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 62D511659A7A
-	for <xfs@oss.sgi.com>; Thu, 29 Jul 2010 15:55:57 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
-	[150.101.137.103]) by cuda.sgi.com with ESMTP id
-	UIbea9OV0Cbt7236 for <xfs@oss.sgi.com>;
-	Thu, 29 Jul 2010 15:55:57 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B77D511B052F
+	for <xfs@oss.sgi.com>; Thu, 29 Jul 2010 16:03:39 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	qIsGAmdXbvBmMLDx for <xfs@oss.sgi.com>;
+	Thu, 29 Jul 2010 16:03:39 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/2] xfs: unlock items before allowing the CIL to commit
-Date: Fri, 30 Jul 2010 08:55:45 +1000
-Message-Id: <1280444146-14540-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/2] xfs: ensure we mark all inodes in a freed cluster
+	XFS_ISTALE
+Date: Fri, 30 Jul 2010 08:55:46 +1000
+Message-Id: <1280444146-14540-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1280444146-14540-1-git-send-email-david@fromorbit.com>
 References: <1280444146-14540-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,91 +34,173 @@ Cc: npiggin@kernel.de
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When we commit a transaction using delayed logging, we need to
-unlock the items in the transaciton before we unlock the CIL context
-and allow it to be checkpointed. If we unlock them after we release
-the CIl context lock, the CIL can checkpoint and complete before
-we free the log items. This breaks stale buffer item unlock and
-unpin processing as there is an implicit assumption that the unlock
-will occur before the unpin.
+Under heavy load parallel metadata loads (e.g. dbench), we can fail
+to mark all the inodes in a cluster being freed as XFS_ISTALE as we
+skip inodes we cannot get the XFS_ILOCK_EXCL or the flush lock on.
+When this happens and the inode cluster buffer has already been
+marked stale and freed, inode reclaim can try to write the inode out
+as it is dirty and not marked stale. This can result in writing th
+metadata to an freed extent, or in the case it has already
+been overwritten trigger a magic number check failure and return an
+EUCLEAN error such as:
 
-Also, some log items need to store the LSN of the transaction commit
-in the item (inodes and EFIs) and so can race with other transaction
-completions if we don't prevent the CIL from checkpointing before
-the unlock occurs.
+Filesystem "ram0": inode 0x442ba1 background reclaim flush failed with 117
+
+Fix this by ensuring that we hoover up all in memory inodes in the
+cluster and mark them XFS_ISTALE when freeing the cluster.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_log_cil.c    |   14 ++++++++++++++
- fs/xfs/xfs_trans.c      |    5 +----
- fs/xfs/xfs_trans_priv.h |    3 ++-
- 3 files changed, 17 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_inode.c |   88 ++++++++++++++++++++++++++++-----------------------
+ 1 files changed, 48 insertions(+), 40 deletions(-)
 
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 31e4ea2..ef8e7d9 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -377,9 +377,23 @@ xfs_log_commit_cil(
- 	xfs_log_done(mp, tp->t_ticket, NULL, log_flags);
- 	xfs_trans_unreserve_and_mod_sb(tp);
- 
-+	/*
-+	 * Once all the items of the transaction have been copied to the CIL,
-+	 * the items can be unlocked and freed.
-+	 *
-+	 * This needs to be done before we drop the CIL context lock because we
-+	 * have to update state in the log items and unlock them before they go
-+	 * to disk. If we don't, then the CIL checkpoint can race with us and
-+	 * we can run checkpoint completion before we've updated and unlocked
-+	 * the log items. This affects (at least) processing of stale buffers,
-+	 * inodes and EFIs.
-+	 */
-+	xfs_trans_free_items(tp, *commit_lsn, 0);
-+
- 	/* check for background commit before unlock */
- 	if (log->l_cilp->xc_ctx->space_used > XLOG_CIL_SPACE_LIMIT(log))
- 		push = 1;
-+
- 	up_read(&log->l_cilp->xc_ctx_lock);
- 
- 	/*
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index fdca741..1c47eda 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -1167,7 +1167,7 @@ xfs_trans_del_item(
-  * Unlock all of the items of a transaction and free all the descriptors
-  * of that transaction.
-  */
--STATIC void
-+void
- xfs_trans_free_items(
- 	struct xfs_trans	*tp,
- 	xfs_lsn_t		commit_lsn,
-@@ -1653,9 +1653,6 @@ xfs_trans_commit_cil(
- 		return error;
- 
- 	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
--
--	/* xfs_trans_free_items() unlocks them first */
--	xfs_trans_free_items(tp, *commit_lsn, 0);
- 	xfs_trans_free(tp);
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 68415cb..abc50b6 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1914,6 +1914,11 @@ xfs_iunlink_remove(
  	return 0;
  }
-diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-index e2d93d8..62da86c 100644
---- a/fs/xfs/xfs_trans_priv.h
-+++ b/fs/xfs/xfs_trans_priv.h
-@@ -25,7 +25,8 @@ struct xfs_trans;
  
- void	xfs_trans_add_item(struct xfs_trans *, struct xfs_log_item *);
- void	xfs_trans_del_item(struct xfs_log_item *);
++/*
++ * A big issue when freeing the inode cluster is is that we _cannot_ skip any
++ * inodes that are in memory - they all must be marked stale and attached to
++ * the cluster buffer.
++ */
+ STATIC void
+ xfs_ifree_cluster(
+ 	xfs_inode_t	*free_ip,
+@@ -1945,8 +1950,6 @@ xfs_ifree_cluster(
+ 	}
+ 
+ 	for (j = 0; j < nbufs; j++, inum += ninodes) {
+-		int	found = 0;
 -
-+void	xfs_trans_free_items(struct xfs_trans *tp, xfs_lsn_t commit_lsn,
-+				int flags);
- void	xfs_trans_item_committed(struct xfs_log_item *lip,
- 				xfs_lsn_t commit_lsn, int aborted);
- void	xfs_trans_unreserve_and_mod_sb(struct xfs_trans *tp);
+ 		blkno = XFS_AGB_TO_DADDR(mp, XFS_INO_TO_AGNO(mp, inum),
+ 					 XFS_INO_TO_AGBNO(mp, inum));
+ 
+@@ -1963,26 +1966,6 @@ xfs_ifree_cluster(
+ 					XBF_LOCK);
+ 
+ 		/*
+-		 * Walk the inodes already attached to the buffer and mark them
+-		 * stale. These will all have the flush locks held, so an
+-		 * in-memory inode walk can't lock them.
+-		 */
+-		lip = XFS_BUF_FSPRIVATE(bp, xfs_log_item_t *);
+-		while (lip) {
+-			if (lip->li_type == XFS_LI_INODE) {
+-				iip = (xfs_inode_log_item_t *)lip;
+-				ASSERT(iip->ili_logged == 1);
+-				lip->li_cb = xfs_istale_done;
+-				xfs_trans_ail_copy_lsn(mp->m_ail,
+-							&iip->ili_flush_lsn,
+-							&iip->ili_item.li_lsn);
+-				xfs_iflags_set(iip->ili_inode, XFS_ISTALE);
+-				found++;
+-			}
+-			lip = lip->li_bio_list;
+-		}
+-
+-		/*
+ 		 * For each inode in memory attempt to add it to the inode
+ 		 * buffer and set it up for being staled on buffer IO
+ 		 * completion.  This is safe as we've locked out tail pushing
+@@ -1999,42 +1982,68 @@ xfs_ifree_cluster(
+ 
+ 			/* Inode not in memory or stale, nothing to do */
+ 			if (!ip || xfs_iflags_test(ip, XFS_ISTALE)) {
++next_inode:
+ 				read_unlock(&pag->pag_ici_lock);
+ 				continue;
+ 			}
+ 
+-			/* don't try to lock/unlock the current inode */
++			/*
++			 * Walk the inodes already attached to the buffer to
++			 * see if this inode is already there. If so, mark it
++			 * stale. These will all have the flush locks held, so an
++			 * in-memory inode walk can't lock them. We do this
++			 * inside the loop so that we know for certain that we
++			 * don't encounter inodes with the flush lock already
++			 * held and hence deadlock below.
++			 */
++			lip = XFS_BUF_FSPRIVATE(bp, xfs_log_item_t *);
++			do {
++				if (lip->li_type == XFS_LI_INODE) {
++					iip = (xfs_inode_log_item_t *)lip;
++					if (iip->ili_inode != ip)
++						continue;
++					ASSERT(iip->ili_logged == 1);
++					lip->li_cb = xfs_istale_done;
++					xfs_trans_ail_copy_lsn(mp->m_ail,
++								&iip->ili_flush_lsn,
++								&iip->ili_item.li_lsn);
++					xfs_iflags_set(iip->ili_inode, XFS_ISTALE);
++					goto next_inode;
++				}
++			} while ((lip = lip->li_bio_list) != NULL);
++
++			/*
++			 * Don't try to lock/unlock the current inode, but we
++			 * _cannot_ skip the other inodes that we did not find
++			 * in the list attached to the buffer and are not
++			 * already marked stale. If we can't lock it, back off
++			 * and retry.
++			 */
++
+ 			if (ip != free_ip &&
+ 			    !xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)) {
+ 				read_unlock(&pag->pag_ici_lock);
++				delay(1);
++				i--;
+ 				continue;
+ 			}
+ 			read_unlock(&pag->pag_ici_lock);
+ 
+-			if (!xfs_iflock_nowait(ip)) {
+-				if (ip != free_ip)
+-					xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-				continue;
+-			}
+-
++			xfs_iflock(ip);
+ 			xfs_iflags_set(ip, XFS_ISTALE);
+-			if (xfs_inode_clean(ip)) {
+-				ASSERT(ip != free_ip);
+-				xfs_ifunlock(ip);
+-				xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-				continue;
+-			}
+ 
++			/*
++			 * we don't need to attach clean inodes or those only
++			 * with unlogged changes (which we throw away, anyway).
++			 */
+ 			iip = ip->i_itemp;
+-			if (!iip) {
+-				/* inode with unlogged changes only */
++			if (!iip || xfs_inode_clean(ip)) {
+ 				ASSERT(ip != free_ip);
+ 				ip->i_update_core = 0;
+ 				xfs_ifunlock(ip);
+ 				xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 				continue;
+ 			}
+-			found++;
+ 
+ 			iip->ili_last_fields = iip->ili_format.ilf_fields;
+ 			iip->ili_format.ilf_fields = 0;
+@@ -2049,8 +2058,7 @@ xfs_ifree_cluster(
+ 				xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 		}
+ 
+-		if (found)
+-			xfs_trans_stale_inode_buf(tp, bp);
++		xfs_trans_stale_inode_buf(tp, bp);
+ 		xfs_trans_binval(tp, bp);
+ 	}
+ 
 -- 
 1.7.1
 
