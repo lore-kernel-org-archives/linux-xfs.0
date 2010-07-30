@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o58KM8Tj023224 for <xfs@oss.sgi.com>; Tue, 8 Jun 2010 15:22:08 -0500
-Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DC9F011B1CF6
-	for <xfs@oss.sgi.com>; Thu, 29 Jul 2010 21:07:34 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	6oG1FOwfY692HiFf for <xfs@oss.sgi.com>;
-	Thu, 29 Jul 2010 21:07:34 -0700 (PDT)
-Date: Fri, 30 Jul 2010 13:59:55 +1000
-From: Nick Piggin <npiggin@kernel.dk>
-Subject: Re: XFS hang in xlog_grant_log_space
-Message-ID: <20100730035955.GA5271@amd>
-References: <20100722190100.GA22269@amd> <20100723135514.GJ32635@dastard>
-	<20100727070538.GA2893@amd> <20100727080632.GA4958@amd>
-	<20100727113626.GA2884@amd> <20100727133038.GP7362@dastard>
-	<20100727145808.GQ7362@dastard> <20100728131744.GS7362@dastard>
-	<20100729140546.GB7217@amd> <20100729225658.GM655@dastard>
+	o58LFoOg024950 for <xfs@oss.sgi.com>; Tue, 8 Jun 2010 16:15:51 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 53BF247C903
+	for <xfs@oss.sgi.com>; Thu, 29 Jul 2010 21:53:42 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
+	[150.101.137.104]) by cuda.sgi.com with ESMTP id
+	39cGioPnP3J38Wvq for <xfs@oss.sgi.com>;
+	Thu, 29 Jul 2010 21:53:42 -0700 (PDT)
+Date: Fri, 30 Jul 2010 14:53:31 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] dio: track and serialise unaligned direct IO
+Message-ID: <20100730045331.GA2126@dastard>
+References: <1280443516-14448-1-git-send-email-david@fromorbit.com>
+	<20100730025324.GO25774@parisc-linux.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100729225658.GM655@dastard>
+In-Reply-To: <20100730025324.GO25774@parisc-linux.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,46 +30,75 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Nick Piggin <npiggin@suse.de>, Nick Piggin <npiggin@kernel.dk>, xfs@oss.sgi.com
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-fsdevel@vger.kernel.org, sandeen@sandeen.net, xfs@oss.sgi.com
 
-On Fri, Jul 30, 2010 at 08:56:58AM +1000, Dave Chinner wrote:
-> On Fri, Jul 30, 2010 at 12:05:46AM +1000, Nick Piggin wrote:
-> > On Wed, Jul 28, 2010 at 11:17:44PM +1000, Dave Chinner wrote:
-> > > Something very strange is happening, and to make matters worse I
-> > > cannot reproduce it with a debug kernel (ran for 3 hours without
-> > > failing). Hence it smells like a race condition somewhere.
-> > > 
-> > > I've reproduced it without delayed logging, so it is not directly
-> > > related to that functionality.
-> > > 
-> > > I've seen this warning:
-> > > 
-> > > Filesystem "ram0": inode 0x704680 background reclaim flush failed with 117
-> > > 
-> > > Which indicates we failed to mark an inode stale when freeing an
-> > > inode cluster, but I think I've fixed that and the problem still
-> > > shows up. It's posible the last version didn't fix it, but....
+On Thu, Jul 29, 2010 at 08:53:24PM -0600, Matthew Wilcox wrote:
+> On Fri, Jul 30, 2010 at 08:45:16AM +1000, Dave Chinner wrote:
+> > If we get two unaligned direct IO's to the same filesystem block
+> > that is marked as a new allocation (i.e. buffer_new), then both IOs will
+> > zero the portion of the block they are not writing data to. As a
+> > result, when the IOs complete there will be a portion of the block
+> > that contains zeros from the last IO to complete rather than the
+> > data that should be there.
+> 
+> Urgh.  Yuck.
+> 
+> > This is easily manifested by qemu using aio+dio with an unaligned
+> > guest filesystem - every IO is unaligned and fileystem corruption is
+> > encountered in the guest filesystem. xfstest 240 (from Eric Sandeen)
+> > is also a simple reproducer.
 > > 
-> > I've seen that one a couple of times too. Keeps coming back each
-> > time you echo 3 > /proc/sys/vm/drop_caches :)
+> > To avoid this problem, track unaligned IO that triggers sub-block zeroing and
+> > check new incoming unaligned IO that require sub-block zeroing against that
+> > list. If we get an overlap where the start and end of unaligned IOs hit the
+> > same filesystem block, then we need to block the incoming IOs until the IO that
+> > is zeroing the block completes. The blocked IO can then continue without
+> > needing to do any zeroing and hence won't overwrite valid data with zeros.
 > 
-> Yup - it's an unflushable inode that is pinning the tail of the log,
-> hence causing the log space hangs.
-> 
-> > > Now I've got the ag iterator rotor patch in place as well and
-> > > possibly a different version of the cluster free fix to what I
-> > > previously tested and it's now been running for almost half an hour.
-> > > I can't say yet whether I've fixed the bug of just changed the
-> > > timing enough to avoid it. I'll leave this test running over night
-> > > and redo individual patch testing tomorrow.
-> > 
-> > I reproduced it with fs_stress now too. Any patches I could test
-> > for you just let me know.
-> 
-> You should see them in a few minutes ;)
+> Urgh.  Yuck.
 
-It's certainly not locking up like it used to... Thanks!
+It's better than silent data corruption.
+
+> Could we perhaps handle this by making an IO instantiate a page cache
+> page for partial writes, and forcing that portion of the IO through the
+> page cache?  The second IO would hit the same page and use the existing
+> O_DIRECT vs page cache paths.
+
+I don't want any direct IO for XFS to go through the page cache -
+unaligned or not. using the page cache for the unaligned blocks
+would also be much worse for performance that this method because it
+turns unaligned direct IO into 3 IOs - the unaligned head block, the
+aligned body and the unaligned tail block. It would also be a
+performance hit you take on every single dio, whereas this way the
+hit is only taken when an overlap is detected.
+
+And besides, such decisions on whether to use buffered IO have to be
+made high up in the filesystem when we are deciding how to lock the
+inode for the dio - buffered IO requires exclusive locking, not the
+shared locking we do for dio writes. That further reduces the
+performance of unaligned direct IO even when there are no overlaps,
+and it's a solution that every filesystem needs to implement
+themselves in some way.
+
+I've looked at a couple of different ways to fix this (e.g. passing
+the unaligned state to get_blocks() to allow the filesystem to
+serialise there) but they've all died a horrible death of dodgy
+locking and hacky IO completion detection. not to mention
+requiring a different solution in every filesystem.
+
+This way may be a bit ugly, but it works, is isolated and seems to
+me to be the least-worst way of solving the problem. It could be
+made to scale better by making the tracking per-inode, but I don't
+think that growing the struct inode for this corner case is a good
+tradeoff, either...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
