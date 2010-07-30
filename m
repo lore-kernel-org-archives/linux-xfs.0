@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o591BjlU034818 for <xfs@oss.sgi.com>; Tue, 8 Jun 2010 20:11:46 -0500
+	o592po1R037938 for <xfs@oss.sgi.com>; Tue, 8 Jun 2010 21:51:51 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5883A1585CA6
-	for <xfs@oss.sgi.com>; Fri, 30 Jul 2010 01:49:38 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 77ACB13357D8
+	for <xfs@oss.sgi.com>; Fri, 30 Jul 2010 03:37:19 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id g2vPWqJ8esiIJSSe for
-	<xfs@oss.sgi.com>; Fri, 30 Jul 2010 01:49:38 -0700 (PDT)
-Date: Fri, 30 Jul 2010 04:49:36 -0400
+	by cuda.sgi.com with ESMTP id toM1WCI60NNsNCLR for
+	<xfs@oss.sgi.com>; Fri, 30 Jul 2010 03:37:19 -0700 (PDT)
+Date: Fri, 30 Jul 2010 06:29:43 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/2] xfs: unlock items before allowing the CIL to commit
-Message-ID: <20100730084936.GA28105@infradead.org>
-References: <1280444146-14540-1-git-send-email-david@fromorbit.com>
-	<1280444146-14540-2-git-send-email-david@fromorbit.com>
+Subject: Re: filesystem shrinks after using xfs_repair
+Message-ID: <20100730102943.GA24106@infradead.org>
+References: <20100726034545.GE655@dastard>
+	<20100730091554.2c9ca1ec@galadriel.home>
+	<20100730075746.GA20444@infradead.org> <201007301223.12134@zmi.at>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1280444146-14540-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <201007301223.12134@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,29 +30,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: npiggin@kernel.de, xfs@oss.sgi.com
+To: Michael Monnerie <michael.monnerie@is.it-management.at>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Fri, Jul 30, 2010 at 08:55:45AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> When we commit a transaction using delayed logging, we need to
-> unlock the items in the transaciton before we unlock the CIL context
-> and allow it to be checkpointed. If we unlock them after we release
-> the CIl context lock, the CIL can checkpoint and complete before
-> we free the log items. This breaks stale buffer item unlock and
-> unpin processing as there is an implicit assumption that the unlock
-> will occur before the unpin.
-> 
-> Also, some log items need to store the LSN of the transaction commit
-> in the item (inodes and EFIs) and so can race with other transaction
-> completions if we don't prevent the CIL from checkpointing before
-> the unlock occurs.
+On Fri, Jul 30, 2010 at 12:23:08PM +0200, Michael Monnerie wrote:
+> On Freitag, 30. Juli 2010 Christoph Hellwig wrote:
+> > Recent enough kernel work fine with filesystems that inode64 was used
+> > on even if it's not specified anymore.
+>  
+> Really? Since when exactly? That would be a nice feature. If we can 
+> define it clearly, I could put that on the FAQ.
 
-Looks good.  It also avoid keeping the items around over the CIL push,
-which should help with memory consumption under load.
+Linux 2.6.35 will be the first kernel with the bugfixes for this to
+work.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+> But how does it truncate the numbers >int32 and avoid collisions?
+
+It doesn't.  Existing inodes won't nessecarily fit into 32-bits, but
+no new inodes above it will be allocated.
 
 _______________________________________________
 xfs mailing list
