@@ -1,30 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o58FcFXx011777 for <xfs@oss.sgi.com>; Tue, 8 Jun 2010 10:38:15 -0500
-Received: from ucsc.edu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 30ADF13E7FD1
-	for <xfs@oss.sgi.com>; Thu, 29 Jul 2010 16:16:08 -0700 (PDT)
-Received: from ucsc.edu (email-prod-out-1.ucsc.edu [128.114.129.85]) by
-	cuda.sgi.com with ESMTP id KGhL7WKHuYfZf13n for
-	<xfs@oss.sgi.com>; Thu, 29 Jul 2010 16:16:08 -0700 (PDT)
+	o58H2BSJ015187 for <xfs@oss.sgi.com>; Tue, 8 Jun 2010 12:02:11 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 776FF480A81
+	for <xfs@oss.sgi.com>; Thu, 29 Jul 2010 17:40:02 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id DToYAQJVNIiq6aua for
+	<xfs@oss.sgi.com>; Thu, 29 Jul 2010 17:40:02 -0700 (PDT)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
 Subject: Re: filesystem shrinks after using xfs_repair
-Mime-Version: 1.0 (Apple Message framework v1081)
-From: Eli Morris <ermorris@ucsc.edu>
-In-Reply-To: <20100729230147.GN655@dastard>
-Date: Thu, 29 Jul 2010 16:15:55 -0700
-Message-Id: <04349CE2-CF8B-463C-8B06-5E4E59E869B2@ucsc.edu>
+Date: Fri, 30 Jul 2010 02:39:55 +0200
 References: <F2AC32C3-2437-4625-980A-3BC9B3C541A2@ucsc.edu>
-	<20100724023922.GP32635@dastard>
-	<777100A1-57DE-4DE0-B1F0-64977BD694AD@ucsc.edu>
-	<20100726034545.GE655@dastard>
-	<10B6F36F-BE01-4BF7-9815-2E8F6BF71B41@ucsc.edu>
-	<20100726060604.GF7362@dastard>
-	<F91DF703-4BFF-415B-91B6-87A88F096C91@ucsc.edu>
-	<20100726102036.GH7362@dastard>
-	<0EC8FE5D-212C-4030-9D59-FDF38DF4E9EE@ucsc.edu>
-	<D6C570D6-FEC7-4E3C-AAC2-13275721370A@ucsc.edu>
 	<20100729230147.GN655@dastard>
+	<04349CE2-CF8B-463C-8B06-5E4E59E869B2@ucsc.edu>
+In-Reply-To: <04349CE2-CF8B-463C-8B06-5E4E59E869B2@ucsc.edu>
+MIME-Version: 1.0
+Message-Id: <201007300239.59574@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,54 +25,76 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============1795755423305684290=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Eli Morris <ermorris@ucsc.edu>
+
+--===============1795755423305684290==
+Content-Type: multipart/signed;
+  boundary="nextPart1720842.L9Ubu44vQO";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
+
+--nextPart1720842.L9Ubu44vQO
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+On Freitag, 30. Juli 2010 Eli Morris wrote:
+> Is that something I could do now, or only when the filesystem is
+>  created? If I mount it with '-o inode64', can I mount it without
+>  that later, or once I write to the filesystem like that, can I not
+>  go back to mounting it in 32 bit mode?=20
+=20
+Once you mount with inode64, you can't go back.
+
+I'm not sure which applications are "broken", but I use inode64 for a=20
+backup server where lots of Linux boxes connect to over NFS, and a Samba=20
+for Windows PCs which has inode64, and at least didn't see any problem=20
+over the years. That doesn't mean there isn't a problem, of course ;-)
+
+=2D-=20
+mit freundlichen Gr=FCssen,
+Michael Monnerie, Ing. BSc
+
+it-management Internet Services
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: 0660 / 415 65 31
+
+****** Aktuelles Radiointerview! ******
+http://www.it-podcast.at/aktuelle-sendung.html
+
+// Wir haben im Moment zwei H=E4user zu verkaufen:
+// http://zmi.at/langegg/
+// http://zmi.at/haus2009/
+
+--nextPart1720842.L9Ubu44vQO
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.12 (GNU/Linux)
+
+iEYEABECAAYFAkxSH18ACgkQzhSR9xwSCbTx9ACgxEv5/D1aNj5EhphOQ30ST+e1
+iX4An2sW95zH6USiJLvNZws8lRJn7ZGe
+=ar5P
+-----END PGP SIGNATURE-----
+
+--nextPart1720842.L9Ubu44vQO--
 
 
-On Jul 29, 2010, at 4:01 PM, Dave Chinner wrote:
-
-> On Thu, Jul 29, 2010 at 12:22:30PM -0700, Eli Morris wrote:
->> I tried filling up the disk with data to see if that worked Ok and
->> it did, up until this point. There is something I don't understand
->> going on though. 'df' says that I have 381 GB free on the disk,
->> but I can't write to the disk anymore because it says it there
->> isn't any space left on it. Is this some insane round off error or
->> is there something going on here?
-> 
-> If you haven't specified inode64, then all inodes are located below
-> the 1TB mark. You've probably run out of space (or contiguous 16k
-> chunks of free space) below 1TB. Using inode64 will avoid this - for
-> a filesystem of that size, inode64 is probably a good idea as it
-> will significantly improve performance.
-> 
-> Keep in mind that legacy 32bit applications may have problems with
-> 64 bit inode numbers, so if you have such applications (or 32 bit
-> NFS clients) then you need to check carefully as to whether 64 bit
-> inodes will work correctly or not....
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-
-
-Hi Dave,
-
-Is that something I could do now, or only when the filesystem is created? If I mount it with '-o inode64', can I mount it without that later, or once I write to the filesystem like that, can I not go back to mounting it in 32 bit mode? 
-
-Thanks again,
-
-Eli
-
-
+--===============1795755423305684290==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============1795755423305684290==--
