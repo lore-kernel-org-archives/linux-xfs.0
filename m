@@ -1,31 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o59A58Mx058419 for <xfs@oss.sgi.com>; Wed, 9 Jun 2010 05:05:08 -0500
-Received: from e34.co.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7FAE6483B47
-	for <xfs@oss.sgi.com>; Fri, 30 Jul 2010 10:43:00 -0700 (PDT)
-Received: from e34.co.us.ibm.com (e34.co.us.ibm.com [32.97.110.152]) by
-	cuda.sgi.com with ESMTP id xVdbu4SQM5l9W9Oq for
-	<xfs@oss.sgi.com>; Fri, 30 Jul 2010 10:43:00 -0700 (PDT)
-Received: from d03relay01.boulder.ibm.com (d03relay01.boulder.ibm.com
-	[9.17.195.226])
-	by e34.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id o6UHYMxh019639
-	for <xfs@oss.sgi.com>; Fri, 30 Jul 2010 11:34:22 -0600
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by d03relay01.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	o6UHggu9120988 for <xfs@oss.sgi.com>; Fri, 30 Jul 2010 11:42:42 -0600
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id o6UHgbkx008325
-	for <xfs@oss.sgi.com>; Fri, 30 Jul 2010 11:42:37 -0600
-Subject: Re: [PATCH] dio: track and serialise unaligned direct IO
-From: Badari Pulavarty <pbadari@gmail.com>
-In-Reply-To: <1280443516-14448-1-git-send-email-david@fromorbit.com>
-References: <1280443516-14448-1-git-send-email-david@fromorbit.com>
-Date: Fri, 30 Jul 2010 10:43:09 -0700
-Message-Id: <1280511789.16484.18.camel@badari-desktop>
-Mime-Version: 1.0
+	o59EGWRt068446 for <xfs@oss.sgi.com>; Wed, 9 Jun 2010 09:16:32 -0500
+Received: from stout.americas.sgi.com (stout.americas.sgi.com [128.162.232.50])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B0F70AC009
+	for <xfs@oss.sgi.com>; Fri, 30 Jul 2010 14:54:23 -0700 (PDT)
+Received: from stout.americas.sgi.com (localhost6.localdomain6 [127.0.0.1])
+	by stout.americas.sgi.com (8.14.3/8.14.2) with ESMTP id o6ULsN6t008916
+	for <xfs@oss.sgi.com>; Fri, 30 Jul 2010 16:54:23 -0500
+Received: (from aelder@localhost)
+	by stout.americas.sgi.com (8.14.3/8.14.3/Submit) id o6ULsNdm008915
+	for xfs@oss.sgi.com; Fri, 30 Jul 2010 16:54:23 -0500
+From: Alex Elder <aelder@sgi.com>
+Message-Id: <201007302154.o6ULsNdm008915@stout.americas.sgi.com>
+Date: Fri, 30 Jul 2010 16:54:23 -0500
+Subject: [PATCH] xfstests: have getfacl(1) report numeric id's
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,174 +24,199 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, sandeen@sandeen.net, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-T24gRnJpLCAyMDEwLTA3LTMwIGF0IDA4OjQ1ICsxMDAwLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4g
-RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgo+IAo+IElmIHdlIGdldCB0
-d28gdW5hbGlnbmVkIGRpcmVjdCBJTydzIHRvIHRoZSBzYW1lIGZpbGVzeXN0ZW0gYmxvY2sKPiB0
-aGF0IGlzIG1hcmtlZCBhcyBhIG5ldyBhbGxvY2F0aW9uIChpLmUuIGJ1ZmZlcl9uZXcpLCB0aGVu
-IGJvdGggSU9zIHdpbGwKPiB6ZXJvIHRoZSBwb3J0aW9uIG9mIHRoZSBibG9jayB0aGV5IGFyZSBu
-b3Qgd3JpdGluZyBkYXRhIHRvLiBBcyBhCj4gcmVzdWx0LCB3aGVuIHRoZSBJT3MgY29tcGxldGUg
-dGhlcmUgd2lsbCBiZSBhIHBvcnRpb24gb2YgdGhlIGJsb2NrCj4gdGhhdCBjb250YWlucyB6ZXJv
-cyBmcm9tIHRoZSBsYXN0IElPIHRvIGNvbXBsZXRlIHJhdGhlciB0aGFuIHRoZQo+IGRhdGEgdGhh
-dCBzaG91bGQgYmUgdGhlcmUuCj4gCj4gVGhpcyBpcyBlYXNpbHkgbWFuaWZlc3RlZCBieSBxZW11
-IHVzaW5nIGFpbytkaW8gd2l0aCBhbiB1bmFsaWduZWQKPiBndWVzdCBmaWxlc3lzdGVtIC0gZXZl
-cnkgSU8gaXMgdW5hbGlnbmVkIGFuZCBmaWxleXN0ZW0gY29ycnVwdGlvbiBpcwo+IGVuY291bnRl
-cmVkIGluIHRoZSBndWVzdCBmaWxlc3lzdGVtLiB4ZnN0ZXN0IDI0MCAoZnJvbSBFcmljIFNhbmRl
-ZW4pCj4gaXMgYWxzbyBhIHNpbXBsZSByZXByb2R1Y2VyLgo+IAo+IFRvIGF2b2lkIHRoaXMgcHJv
-YmxlbSwgdHJhY2sgdW5hbGlnbmVkIElPIHRoYXQgdHJpZ2dlcnMgc3ViLWJsb2NrIHplcm9pbmcg
-YW5kCj4gY2hlY2sgbmV3IGluY29taW5nIHVuYWxpZ25lZCBJTyB0aGF0IHJlcXVpcmUgc3ViLWJs
-b2NrIHplcm9pbmcgYWdhaW5zdCB0aGF0Cj4gbGlzdC4gSWYgd2UgZ2V0IGFuIG92ZXJsYXAgd2hl
-cmUgdGhlIHN0YXJ0IGFuZCBlbmQgb2YgdW5hbGlnbmVkIElPcyBoaXQgdGhlCj4gc2FtZSBmaWxl
-c3lzdGVtIGJsb2NrLCB0aGVuIHdlIG5lZWQgdG8gYmxvY2sgdGhlIGluY29taW5nIElPcyB1bnRp
-bCB0aGUgSU8gdGhhdAo+IGlzIHplcm9pbmcgdGhlIGJsb2NrIGNvbXBsZXRlcy4gVGhlIGJsb2Nr
-ZWQgSU8gY2FuIHRoZW4gY29udGludWUgd2l0aG91dAo+IG5lZWRpbmcgdG8gZG8gYW55IHplcm9p
-bmcgYW5kIGhlbmNlIHdvbid0IG92ZXJ3cml0ZSB2YWxpZCBkYXRhIHdpdGggemVyb3MuCj4gCj4g
-U2lnbmVkLW9mZi1ieTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKSSBjYW4g
-Y29uZmlybSB0aGF0LCBpdCAgZml4ZXMgY29ycnVwdGlvbiAgb2YgbXkgVk0gaW1hZ2VzIHdoZW4g
-dXNpbmcgQUlPCitESU8uIChjYWNoZT1ub25lLGFpbz1uYXRpdmUpLiBJIGhhdmVuJ3QgcmV2aWV3
-ZWQgdGhlIHBhdGNoIGNsb3NlbHksIGJ1dAoKMSkgY2FuIHdlIGRvIHRoaXMgb25seSBmb3IgQUlP
-K0RJTyBjb21iaW5hdGlvbiA/IEZvciByZWd1bGFyIERJTywgd2UKc2hvdWxkIGhhdmUgYWxsIHRo
-ZSBJT3Mgc2VyaWFsaXplZCBieSBpX211dGV4IGFueXdheS4uCgoyKSBIYXZpbmcgYSBzaW5nbGUg
-Z2xvYmFsIGxpc3QgKGZvciBhbGwgZGV2aWNlcykgbWlnaHQgY2F1c2Ugc2NhbGluZwppc3N1ZXMu
-CgozKSBBcmUgeW91IGRyb3BwaW5nIGlfbXV0ZXggd2hlbiB5b3UgYXJlIHdhaXRpbmcgZm9yIHRo
-ZSB6ZXJvLW91dCB0bwpmaW5pc2ggPwoKClRoYW5rcywKQmFkYXJpCj4gLS0tCj4gIGZzL2RpcmVj
-dC1pby5jIHwgIDE1MiArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKy0tCj4gIDEgZmlsZXMgY2hhbmdlZCwgMTQ2IGluc2VydGlvbnMoKyksIDYgZGVs
-ZXRpb25zKC0pCj4gCj4gZGlmZiAtLWdpdCBhL2ZzL2RpcmVjdC1pby5jIGIvZnMvZGlyZWN0LWlv
-LmMKPiBpbmRleCBhMTBjYjkxLi42MTE1MjRlIDEwMDY0NAo+IC0tLSBhL2ZzL2RpcmVjdC1pby5j
-Cj4gKysrIGIvZnMvZGlyZWN0LWlvLmMKPiBAQCAtNzEsNiArNzEsOSBAQCBzdHJ1Y3QgZGlvIHsK
-PiAgCXVuc2lnbmVkIHN0YXJ0X3plcm9fZG9uZTsJLyogZmxhZzogc3ViLWJsb2Nrc2l6ZSB6ZXJv
-aW5nIGhhcwo+ICAJCQkJCSAgIGJlZW4gcGVyZm9ybWVkIGF0IHRoZSBzdGFydCBvZiBhCj4gIAkJ
-CQkJICAgd3JpdGUgKi8KPiArI2RlZmluZSBMQVNUX1NFQ1RPUiAoKHNlY3Rvcl90KS0xTEwpCj4g
-KwlzZWN0b3JfdCB6ZXJvX2Jsb2NrX2Zyb250OwkvKiBmcyBibG9jayB3ZSBhcmUgemVyb2luZyBh
-dCBmcm9udCAqLwo+ICsJc2VjdG9yX3QgemVyb19ibG9ja19yZWFyOwkvKiBmcyBibG9jayB3ZSBh
-cmUgemVyb2luZyBhdCByZWFyICovCj4gIAlpbnQgcGFnZXNfaW5faW87CQkvKiBhcHByb3hpbWF0
-ZSB0b3RhbCBJTyBwYWdlcyAqLwo+ICAJc2l6ZV90CXNpemU7CQkJLyogdG90YWwgcmVxdWVzdCBz
-aXplIChkb2Vzbid0IGNoYW5nZSkqLwo+ICAJc2VjdG9yX3QgYmxvY2tfaW5fZmlsZTsJCS8qIEN1
-cnJlbnQgb2Zmc2V0IGludG8gdGhlIHVuZGVybHlpbmcKPiBAQCAtMTM1LDYgKzEzOCwxMDEgQEAg
-c3RydWN0IGRpbyB7Cj4gIAlzdHJ1Y3QgcGFnZSAqcGFnZXNbRElPX1BBR0VTXTsJLyogcGFnZSBi
-dWZmZXIgKi8KPiAgfTsKPiAgCj4gKwo+ICsvKgo+ICsgKiByZWNvcmQgZnMgYmxvY2tzIHdlIGFy
-ZSBkb2luZyB6ZXJvaW5nIG9uIGluIGEgemVybyBibG9jayBsaXN0Lgo+ICsgKiB1bmFsaWduZWQg
-SU8gaXMgbm90IHZlcnkgcGVyZm9ybWFudCBhbmQgc28gaXMgcmVsYXRpdmVseSB1bmNvbW1vbiwK
-PiArICogc28gYSBnbG9iYWwgbGlzdCBzaG91bGQgYmUgc3VmZmljZW50IHRvIHRyYWNrIHRoZW0u
-Cj4gKyAqLwo+ICtzdHJ1Y3QgZGlvX3plcm9fYmxvY2sgewo+ICsJc3RydWN0IGxpc3RfaGVhZCBk
-aW9fbGlzdDsJLyogbGlzdCBvZiBpbyBpbiBwcm9ncmVzcyAqLwo+ICsJc2VjdG9yX3QJemVyb19i
-bG9jazsJLyogYmxvY2sgYmVpbmcgemVyb2VkICovCj4gKwlzdHJ1Y3QgZGlvCSpkaW87CQkvKiBv
-d25lciBkaW8gKi8KPiArCXdhaXRfcXVldWVfaGVhZF90IHdxOwkJLyogTmV3IElPIGJsb2NrIGhl
-cmUgKi8KPiArCWF0b21pY190CXJlZjsJCS8qIHJlZmVyZW5jZSBjb3VudCAqLwo+ICt9Owo+ICsK
-PiArREVGSU5FX1NQSU5MT0NLKGRpb196ZXJvX2Jsb2NrX2xvY2spOwo+ICtMSVNUX0hFQUQoZGlv
-X3plcm9fYmxvY2tfbGlzdCk7Cj4gKwo+ICsvKgo+ICsgKiBBZGQgYSBmaWxlc3lzdGVtIGJsb2Nr
-IHRvIHRoZSBsaXN0IG9mIGJsb2NrcyB3ZSBhcmUgdHJhY2tpbmcuCj4gKyAqLwo+ICtzdGF0aWMg
-dm9pZAo+ICtkaW9fc3RhcnRfemVyb19ibG9jayhzdHJ1Y3QgZGlvICpkaW8sIHNlY3Rvcl90IHpl
-cm9fYmxvY2spCj4gK3sKPiArCXN0cnVjdCBkaW9femVyb19ibG9jayAqemI7Cj4gKwo+ICsJemIg
-PSBrbWFsbG9jKHNpemVvZigqemIpLCBHRlBfTk9JTyk7Cj4gKwlpZiAoIXpiKQo+ICsJCXJldHVy
-bjsKPiArCUlOSVRfTElTVF9IRUFEKCZ6Yi0+ZGlvX2xpc3QpOwo+ICsJaW5pdF93YWl0cXVldWVf
-aGVhZCgmemItPndxKTsKPiArCXpiLT56ZXJvX2Jsb2NrID0gemVyb19ibG9jazsKPiArCXpiLT5k
-aW8gPSBkaW87Cj4gKwlhdG9taWNfc2V0KCZ6Yi0+cmVmLCAxKTsKPiArCj4gKwlzcGluX2xvY2so
-JmRpb196ZXJvX2Jsb2NrX2xvY2spOwo+ICsJbGlzdF9hZGQoJnpiLT5kaW9fbGlzdCwgJmRpb196
-ZXJvX2Jsb2NrX2xpc3QpOwo+ICsJc3Bpbl91bmxvY2soJmRpb196ZXJvX2Jsb2NrX2xvY2spOwo+
-ICt9Cj4gKwo+ICtzdGF0aWMgdm9pZAo+ICtkaW9fZHJvcF96ZXJvX2Jsb2NrKHN0cnVjdCBkaW9f
-emVyb19ibG9jayAqemIpCj4gK3sKPiArCWlmIChhdG9taWNfZGVjX2FuZF90ZXN0KCZ6Yi0+cmVm
-KSkKPiArCQlrZnJlZSh6Yik7Cj4gK30KPiArCj4gKy8qCj4gKyAqIENoZWNrIHdoZXRoZXIgYSBm
-aWxlc3lzdGVtIGJsb2NrIGlzIGN1cnJlbnRseSBiZWluZyB6ZXJvZWQsIGFuZCBpZiBpdCBpcwo+
-ICsgKiB3YWl0IGZvciBpdCB0byBjb21wbGV0ZSBiZWZvcmUgcmV0dXJuaW5nLiBJZiB3ZSB3YWl0
-ZWQgZm9yIGEgYmxvY2sgYmVpbmcKPiArICogemVyb2VkLCByZXR1cm4gMSB0byBpbmRpY2F0ZSB0
-aGF0IHRoZSBibG9jayBpcyBhbHJlYWR5IGluaXRpYWxpc2VkLAo+ICsgKiBvdGhlcndpc2UgcmV0
-dXJuIDAgdG8gaW5kaWNhdGUgdGhhdCBpdCBuZWVkcyB6ZXJvaW5nLgo+ICsgKi8KPiArc3RhdGlj
-IGludAo+ICtkaW9fd2FpdF96ZXJvX2Jsb2NrKHN0cnVjdCBkaW8gKmRpbywgc2VjdG9yX3QgemVy
-b19ibG9jaykKPiArewo+ICsJc3RydWN0IGRpb196ZXJvX2Jsb2NrICp6YjsKPiArCj4gKwlzcGlu
-X2xvY2soJmRpb196ZXJvX2Jsb2NrX2xvY2spOwo+ICsJbGlzdF9mb3JfZWFjaF9lbnRyeSh6Yiwg
-JmRpb196ZXJvX2Jsb2NrX2xpc3QsIGRpb19saXN0KSB7Cj4gKwkJaWYgKHpiLT5kaW8tPmlub2Rl
-ICE9IGRpby0+aW5vZGUpCj4gKwkJCWNvbnRpbnVlOwo+ICsJCWlmICh6Yi0+emVyb19ibG9jayAh
-PSB6ZXJvX2Jsb2NrKQo+ICsJCQljb250aW51ZTsKPiArCQlhdG9taWNfaW5jKCZ6Yi0+cmVmKTsK
-PiArCQlzcGluX3VubG9jaygmZGlvX3plcm9fYmxvY2tfbG9jayk7Cj4gKwkJd2FpdF9ldmVudCh6
-Yi0+d3EsIChsaXN0X2VtcHR5KCZ6Yi0+ZGlvX2xpc3QpKSk7Cj4gKwkJZGlvX2Ryb3BfemVyb19i
-bG9jayh6Yik7Cj4gKwkJcmV0dXJuIDE7Cj4gKwl9Cj4gKwlzcGluX3VubG9jaygmZGlvX3plcm9f
-YmxvY2tfbG9jayk7Cj4gKwlyZXR1cm4gMDsKPiArfQo+ICsKPiArLyoKPiArICogQ29tcGxldGUg
-YSBibG9jayB6ZXJvaW5nIGFuZCB3YWtlIHVwIGFueW9uZSB3YWl0aW5nIGZvciBpdC4KPiArICov
-Cj4gK3N0YXRpYyB2b2lkIGRpb19lbmRfemVyb19ibG9jayhzdHJ1Y3QgZGlvICpkaW8sIHNlY3Rv
-cl90IHplcm9fYmxvY2spCj4gK3sKPiArCXN0cnVjdCBkaW9femVyb19ibG9jayAqemI7Cj4gKwo+
-ICsJc3Bpbl9sb2NrKCZkaW9femVyb19ibG9ja19sb2NrKTsKPiArCWxpc3RfZm9yX2VhY2hfZW50
-cnkoemIsICZkaW9femVyb19ibG9ja19saXN0LCBkaW9fbGlzdCkgewo+ICsJCWlmICh6Yi0+ZGlv
-LT5pbm9kZSAhPSBkaW8tPmlub2RlKQo+ICsJCQljb250aW51ZTsKPiArCQlpZiAoemItPnplcm9f
-YmxvY2sgIT0gemVyb19ibG9jaykKPiArCQkJY29udGludWU7Cj4gKwkJbGlzdF9kZWxfaW5pdCgm
-emItPmRpb19saXN0KTsKPiArCQlzcGluX3VubG9jaygmZGlvX3plcm9fYmxvY2tfbG9jayk7Cj4g
-KwkJd2FrZV91cCgmemItPndxKTsKPiArCQlkaW9fZHJvcF96ZXJvX2Jsb2NrKHpiKTsKPiArCQly
-ZXR1cm47Cj4gKwl9Cj4gKwlzcGluX3VubG9jaygmZGlvX3plcm9fYmxvY2tfbG9jayk7Cj4gK30K
-PiArCj4gIC8qCj4gICAqIEhvdyBtYW55IHBhZ2VzIGFyZSBpbiB0aGUgcXVldWU/Cj4gICAqLwo+
-IEBAIC0yNTMsNiArMzUxLDExIEBAIHN0YXRpYyBpbnQgZGlvX2NvbXBsZXRlKHN0cnVjdCBkaW8g
-KmRpbywgbG9mZl90IG9mZnNldCwgaW50IHJldCwgYm9vbCBpc19hc3luYykKPiAgCQlhaW9fY29t
-cGxldGUoZGlvLT5pb2NiLCByZXQsIDApOwo+ICAJfQo+ICAKPiArCWlmIChkaW8tPnplcm9fYmxv
-Y2tfZnJvbnQgIT0gTEFTVF9TRUNUT1IpCj4gKwkJZGlvX2VuZF96ZXJvX2Jsb2NrKGRpbywgZGlv
-LT56ZXJvX2Jsb2NrX2Zyb250KTsKPiArCWlmIChkaW8tPnplcm9fYmxvY2tfcmVhciAhPSBMQVNU
-X1NFQ1RPUikKPiArCQlkaW9fZW5kX3plcm9fYmxvY2soZGlvLCBkaW8tPnplcm9fYmxvY2tfcmVh
-cik7Cj4gKwo+ICAJaWYgKGRpby0+ZmxhZ3MgJiBESU9fTE9DS0lORykKPiAgCQkvKiBsb2NrZGVw
-OiBub24tb3duZXIgcmVsZWFzZSAqLwo+ICAJCXVwX3JlYWRfbm9uX293bmVyKCZkaW8tPmlub2Rl
-LT5pX2FsbG9jX3NlbSk7Cj4gQEAgLTc3Nyw2ICs4ODAsMTIgQEAgc3RhdGljIHZvaWQgY2xlYW5f
-YmxvY2tkZXZfYWxpYXNlcyhzdHJ1Y3QgZGlvICpkaW8pCj4gICAqIGJsb2NrIHdpdGggemVyb3Mu
-IFRoaXMgaGFwcGVucyBvbmx5IGlmIHVzZXItYnVmZmVyLCBmaWxlb2Zmc2V0IG9yCj4gICAqIGlv
-IGxlbmd0aCBpcyBub3QgZmlsZXN5c3RlbSBibG9jay1zaXplIG11bHRpcGxlLgo+ICAgKgo+ICsg
-KiBXZSBuZWVkIHRvIHRyYWNrIHRoZSBibG9ja3Mgd2UgYXJlIHplcm9pbmcuIElmIHdlIGhhdmUg
-Y29uY3VycmVudCBJT3MgdGhhdCBoaXQKPiArICogdGhlIHNhbWUgc3RhcnQgb3IgZW5kIGJsb2Nr
-LCB3ZSBkbyBub3Qgd2FudCBhbGwgdGhlIElPcyB0byB6ZXJvIHRoZSBwb3J0aW9uCj4gKyAqIHRo
-ZXkgYXJlIG5vdCB3cml0aW5nIGRhdGEgdG8gYXMgdGhhdCB3aWxsIG92ZXJ3cml0ZSBkYXRhIGZy
-b20gdGhlIG90aGVyIElPcy4KPiArICogSGVuY2Ugd2UgbmVlZCB0byBibG9jayB1bnRpbCB0aGUg
-Zmlyc3QgdW5hbGlnbmVkIElPIGNvbXBsZXRlcyBiZWZvcmUgd2UgY2FuCj4gKyAqIGNvbnRpbnVl
-ICh3aXRob3V0IGV4ZWN1dGluZyBhbnkgemVyb2luZykuCj4gKyAqCj4gICAqIGBlbmQnIGlzIHpl
-cm8gaWYgd2UncmUgZG9pbmcgdGhlIHN0YXJ0IG9mIHRoZSBJTywgMSBhdCB0aGUgZW5kIG9mIHRo
-ZQo+ICAgKiBJTy4KPiAgICovCj4gQEAgLTc4NCw4ICs4OTMsOCBAQCBzdGF0aWMgdm9pZCBkaW9f
-emVyb19ibG9jayhzdHJ1Y3QgZGlvICpkaW8sIGludCBlbmQpCj4gIHsKPiAgCXVuc2lnbmVkIGRp
-b19ibG9ja3NfcGVyX2ZzX2Jsb2NrOwo+ICAJdW5zaWduZWQgdGhpc19jaHVua19ibG9ja3M7CS8q
-IEluIGRpb19ibG9ja3MgKi8KPiAtCXVuc2lnbmVkIHRoaXNfY2h1bmtfYnl0ZXM7Cj4gIAlzdHJ1
-Y3QgcGFnZSAqcGFnZTsKPiArCXNlY3Rvcl90IGZzYmxvY2s7Cj4gIAo+ICAJZGlvLT5zdGFydF96
-ZXJvX2RvbmUgPSAxOwo+ICAJaWYgKCFkaW8tPmJsa2ZhY3RvciB8fCAhYnVmZmVyX25ldygmZGlv
-LT5tYXBfYmgpKQo+IEBAIC03OTcsMTcgKzkwNiw0MSBAQCBzdGF0aWMgdm9pZCBkaW9femVyb19i
-bG9jayhzdHJ1Y3QgZGlvICpkaW8sIGludCBlbmQpCj4gIAlpZiAoIXRoaXNfY2h1bmtfYmxvY2tz
-KQo+ICAJCXJldHVybjsKPiAgCj4gKwlpZiAoZW5kKQo+ICsJCXRoaXNfY2h1bmtfYmxvY2tzID0g
-ZGlvX2Jsb2Nrc19wZXJfZnNfYmxvY2sgLSB0aGlzX2NodW5rX2Jsb2NrczsKPiArCj4gIAkvKgo+
-ICAJICogV2UgbmVlZCB0byB6ZXJvIG91dCBwYXJ0IG9mIGFuIGZzIGJsb2NrLiAgSXQgaXMgZWl0
-aGVyIGF0IHRoZQo+IC0JICogYmVnaW5uaW5nIG9yIHRoZSBlbmQgb2YgdGhlIGZzIGJsb2NrLgo+
-ICsJICogYmVnaW5uaW5nIG9yIHRoZSBlbmQgb2YgdGhlIGZzIGJsb2NrLCBidXQgZmlyc3Qgd2Ug
-bmVlZCB0byBjaGVjayBpZgo+ICsJICogdGhlcmUgaXMgYWxyZWFkeSBhIHplcm9pbmcgYmVpbmcg
-cnVuIG9uIHRoaXMgYmxvY2suCj4gKwkgKgo+ICsJICogSWYgd2UgYXJlIGRvaW5nIGEgc3ViLWJs
-b2NrIElPIChpLmUuIHplcm9pbmcgYm90aCBmcm9udCBhbmQgcmVhciBvZgo+ICsJICogdGhlIHNh
-bWUgYmxvY2spIHdlIGRvbid0IG5lZWQgdG8gd2FpdCBvciBzZXQgYSBnYXVyZCBmb3IgdGhlIHJl
-YXIgb2YKPiArCSAqIHRoZSBibG9jayBhcyB3ZSBhbHJlYWR5IGhhdmUgb25lIHNldC4KPiAgCSAq
-Lwo+IC0JaWYgKGVuZCkgCj4gLQkJdGhpc19jaHVua19ibG9ja3MgPSBkaW9fYmxvY2tzX3Blcl9m
-c19ibG9jayAtIHRoaXNfY2h1bmtfYmxvY2tzOwo+ICsJZnNibG9jayA9IGRpby0+YmxvY2tfaW5f
-ZmlsZSA+PiBkaW8tPmJsa2ZhY3RvcjsKPiArCWlmICghZW5kIHx8IGRpby0+emVyb19ibG9ja19m
-cm9udCAhPSBmc2Jsb2NrKSB7Cj4gIAo+IC0JdGhpc19jaHVua19ieXRlcyA9IHRoaXNfY2h1bmtf
-YmxvY2tzIDw8IGRpby0+YmxrYml0czsKPiArCQkvKiB3YWl0IGZvciBhbnkgemVyb2luZyBhbHJl
-YWR5IGluIHByb2dyZXNzICovCj4gKwkJaWYgKGRpb193YWl0X3plcm9fYmxvY2soZGlvLCBmc2Js
-b2NrKSkgewo+ICsJCQkvKiBza2lwIHRoZSByYW5nZSB3ZSB3b3VsZCBoYXZlIHplcm9lZC4gKi8K
-PiArCQkJZGlvLT5uZXh0X2Jsb2NrX2Zvcl9pbyArPSB0aGlzX2NodW5rX2Jsb2NrczsKPiArCQkJ
-cmV0dXJuOwo+ICsJCX0KPiArCj4gKwkJLyoKPiArCQkgKiB3ZSBhcmUgZ29pbmcgdG8gemVybyBz
-dHVmZiBub3csIHNvIHNldCBhIGd1YXJkIHRvIGNhdGNoCj4gKwkJICogb3RoZXJzIHRoYXQgbWln
-aHQgd2FudCB0byB6ZXJvIHRoZSBzYW1lIGJsb2NrLgo+ICsJCSAqLwo+ICsJCWRpb19zdGFydF96
-ZXJvX2Jsb2NrKGRpbywgZnNibG9jayk7Cj4gKwkJaWYgKGVuZCkKPiArCQkJZGlvLT56ZXJvX2Js
-b2NrX3JlYXIgPSBmc2Jsb2NrOwo+ICsJCWVsc2UKPiArCQkJZGlvLT56ZXJvX2Jsb2NrX2Zyb250
-ID0gZnNibG9jazsKPiArCX0KPiAgCj4gIAlwYWdlID0gWkVST19QQUdFKDApOwo+IC0JaWYgKHN1
-Ym1pdF9wYWdlX3NlY3Rpb24oZGlvLCBwYWdlLCAwLCB0aGlzX2NodW5rX2J5dGVzLCAKPiArCWlm
-IChzdWJtaXRfcGFnZV9zZWN0aW9uKGRpbywgcGFnZSwgMCwgdGhpc19jaHVua19ibG9ja3MgPDwg
-ZGlvLT5ibGtiaXRzLAo+ICAJCQkJZGlvLT5uZXh0X2Jsb2NrX2Zvcl9pbykpCj4gIAkJcmV0dXJu
-Owo+ICAKPiBAQCAtMTE5MSw2ICsxMzI0LDEzIEBAIF9fYmxvY2tkZXZfZGlyZWN0X0lPX25ld3Ry
-dW5jKGludCBydywgc3RydWN0IGtpb2NiICppb2NiLCBzdHJ1Y3QgaW5vZGUgKmlub2RlLAo+ICAJ
-ICovCj4gIAltZW1zZXQoZGlvLCAwLCBvZmZzZXRvZihzdHJ1Y3QgZGlvLCBwYWdlcykpOwo+ICAK
-PiArCS8qCj4gKwkgKiB6ZXJvX2Jsb2NrcyBuZWVkIHRvIGluaXRpYWxpc2VkIHRvIGxhcmdl0ZV0
-IHZhbHVlIHRvIGF2b2lkCj4gKwkgKiBtYXRjaGluZyB0aGUgemVybyBibG9jayBhY2NpZGVudGFs
-bHkuCj4gKwkgKi8KPiArCWRpby0+emVyb19ibG9ja19mcm9udCA9IExBU1RfU0VDVE9SOwo+ICsJ
-ZGlvLT56ZXJvX2Jsb2NrX3JlYXIgPSBMQVNUX1NFQ1RPUjsKPiArCj4gIAlkaW8tPmZsYWdzID0g
-ZmxhZ3M7Cj4gIAlpZiAoZGlvLT5mbGFncyAmIERJT19MT0NLSU5HKSB7Cj4gIAkJLyogd2F0Y2gg
-b3V0IGZvciBhIDAgbGVuIGlvIGZyb20gYSB0cmlja3N5IGZzICovCj4gLS0gCj4gMS43LjEKPiAK
-PiAtLQo+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1
-YnNjcmliZSBsaW51eC1mc2RldmVsIiBpbgo+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpv
-cmRvbW9Admdlci5rZXJuZWwub3JnCj4gTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDovL3Zn
-ZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sCgpfX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNv
-bQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+This patch arranges for calls to getfacl(1) to be given the "-n"
+flag, which requests that user and group id's be listed numerically
+rather than using names.  The affected test output files are also
+updated to indicate the effect of the change.
+
+This eliminates some spurious output differences I was seeing, due
+to the presence of NIS in my test environment.
+
+Signed-off-by: Alex Elder <aelder@sgi.com>
+
+---
+ 051     |   10 +++++-----
+ 051.out |   20 ++++++++++----------
+ 067     |    8 ++++----
+ 067.out |   16 ++++++++--------
+ 4 files changed, 27 insertions(+), 27 deletions(-)
+
+Index: b/051
+===================================================================
+--- a/051
++++ b/051
+@@ -343,23 +343,23 @@ acl5=`_create_n_aces 17` # 1 over A.G. l
+ 
+ echo "1 below xfs acl max"
+ chacl $acl1 largeaclfile
+-getfacl largeaclfile | _filter_aces
++getfacl -n largeaclfile | _filter_aces
+ 
+ echo "xfs acl max"
+ chacl $acl2 largeaclfile
+-getfacl largeaclfile | _filter_aces
++getfacl -n largeaclfile | _filter_aces
+ 
+ echo "1 above xfs acl max"
+ chacl $acl3 largeaclfile
+-getfacl largeaclfile | _filter_aces
++getfacl -n largeaclfile | _filter_aces
+ 
+ echo "use 16 aces"
+ chacl $acl4 largeaclfile
+-getfacl largeaclfile | _filter_aces
++getfacl -n largeaclfile | _filter_aces
+ 
+ echo "use 17 aces"
+ chacl $acl5 largeaclfile
+-getfacl largeaclfile | _filter_aces
++getfacl -n largeaclfile | _filter_aces
+ 
+ #-------------------------------------------------------
+ 
+Index: b/051.out
+===================================================================
+--- a/051.out
++++ b/051.out
+@@ -222,8 +222,8 @@ chacl: a::rwx - Invalid argument
+ === Test out large ACLs  ===
+ 1 below xfs acl max
+ # file: largeaclfile
+-# owner: root
+-# group: root
++# owner: 0
++# group: 0
+ user::rwx
+ user:1:rwx
+ user:2:rwx
+@@ -251,8 +251,8 @@ other::rwx
+ 
+ xfs acl max
+ # file: largeaclfile
+-# owner: root
+-# group: root
++# owner: 0
++# group: 0
+ user::rwx
+ user:1:rwx
+ user:2:rwx
+@@ -282,8 +282,8 @@ other::rwx
+ 1 above xfs acl max
+ chacl: cannot set access acl on "largeaclfile": Invalid argument
+ # file: largeaclfile
+-# owner: root
+-# group: root
++# owner: 0
++# group: 0
+ user::rwx
+ user:1:rwx
+ user:2:rwx
+@@ -312,8 +312,8 @@ other::rwx
+ 
+ use 16 aces
+ # file: largeaclfile
+-# owner: root
+-# group: root
++# owner: 0
++# group: 0
+ user::rwx
+ user:1:rwx
+ user:2:rwx
+@@ -333,8 +333,8 @@ other::rwx
+ 
+ use 17 aces
+ # file: largeaclfile
+-# owner: root
+-# group: root
++# owner: 0
++# group: 0
+ user::rwx
+ user:1:rwx
+ user:2:rwx
+Index: b/067
+===================================================================
+--- a/067
++++ b/067
+@@ -72,19 +72,19 @@ acl21=`_create_n_aces 21`
+ 
+ echo "try 20 aces for access acl"
+ chacl $acl20 largeacldir
+-getfacl largeacldir | _filter_aces
++getfacl -n largeacldir | _filter_aces
+ 
+ echo "try 20 aces for default acl"
+ chacl -d $acl20 largeacldir
+-getfacl largeacldir | _filter_aces
++getfacl -n largeacldir | _filter_aces
+ 
+ echo "try 21 aces for access acl"
+ chacl $acl21 largeacldir
+-getfacl largeacldir | _filter_aces
++getfacl -n largeacldir | _filter_aces
+ 
+ echo "try 21 aces for default acl"
+ chacl -d $acl21 largeacldir
+-getfacl largeacldir | _filter_aces
++getfacl -n largeacldir | _filter_aces
+ 
+ # success, all done
+ status=0
+Index: b/067.out
+===================================================================
+--- a/067.out
++++ b/067.out
+@@ -3,8 +3,8 @@ QA output created by 067
+ === Test out large ACLs  ===
+ try 20 aces for access acl
+ # file: largeacldir
+-# owner: root
+-# group: root
++# owner: 0
++# group: 0
+ user::rwx
+ user:1:rwx
+ user:2:rwx
+@@ -28,8 +28,8 @@ other::rwx
+ 
+ try 20 aces for default acl
+ # file: largeacldir
+-# owner: root
+-# group: root
++# owner: 0
++# group: 0
+ user::rwx
+ user:1:rwx
+ user:2:rwx
+@@ -73,8 +73,8 @@ default:other::rwx
+ 
+ try 21 aces for access acl
+ # file: largeacldir
+-# owner: root
+-# group: root
++# owner: 0
++# group: 0
+ user::rwx
+ user:1:rwx
+ user:2:rwx
+@@ -119,8 +119,8 @@ default:other::rwx
+ 
+ try 21 aces for default acl
+ # file: largeacldir
+-# owner: root
+-# group: root
++# owner: 0
++# group: 0
+ user::rwx
+ user:1:rwx
+ user:2:rwx
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
