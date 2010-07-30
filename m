@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o58IBRBu017649 for <xfs@oss.sgi.com>; Tue, 8 Jun 2010 13:11:28 -0500
-Received: from ucsc.edu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B3A1511B1906
-	for <xfs@oss.sgi.com>; Thu, 29 Jul 2010 18:56:52 -0700 (PDT)
-Received: from ucsc.edu (email-prod-out-1.ucsc.edu [128.114.129.85]) by
-	cuda.sgi.com with ESMTP id rM45fdy4EeBBluqY for
-	<xfs@oss.sgi.com>; Thu, 29 Jul 2010 18:56:52 -0700 (PDT)
-Subject: Re: filesystem shrinks after using xfs_repair
-Mime-Version: 1.0 (Apple Message framework v1081)
-From: Eli Morris <ermorris@ucsc.edu>
-In-Reply-To: <201007300239.59574@zmi.at>
-Date: Thu, 29 Jul 2010 18:49:04 -0700
-Message-Id: <562BA312-FBBA-492C-882F-2E0A93DA888F@ucsc.edu>
-References: <F2AC32C3-2437-4625-980A-3BC9B3C541A2@ucsc.edu>
-	<20100729230147.GN655@dastard>
-	<04349CE2-CF8B-463C-8B06-5E4E59E869B2@ucsc.edu>
-	<201007300239.59574@zmi.at>
+	o58JFZtU020712 for <xfs@oss.sgi.com>; Tue, 8 Jun 2010 14:15:36 -0500
+Received: from mail.parisc-linux.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EAF07118F797
+	for <xfs@oss.sgi.com>; Thu, 29 Jul 2010 20:01:00 -0700 (PDT)
+Received: from mail.parisc-linux.org (palinux.external.hp.com [192.25.206.14])
+	by cuda.sgi.com with ESMTP id 148Pt7dVn7fE842b for
+	<xfs@oss.sgi.com>; Thu, 29 Jul 2010 20:01:00 -0700 (PDT)
+Date: Thu, 29 Jul 2010 20:53:24 -0600
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] dio: track and serialise unaligned direct IO
+Message-ID: <20100730025324.GO25774@parisc-linux.org>
+References: <1280443516-14448-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1280443516-14448-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,61 +24,47 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, sandeen@sandeen.net, xfs@oss.sgi.com
 
+On Fri, Jul 30, 2010 at 08:45:16AM +1000, Dave Chinner wrote:
+> If we get two unaligned direct IO's to the same filesystem block
+> that is marked as a new allocation (i.e. buffer_new), then both IOs will
+> zero the portion of the block they are not writing data to. As a
+> result, when the IOs complete there will be a portion of the block
+> that contains zeros from the last IO to complete rather than the
+> data that should be there.
 
-On Jul 29, 2010, at 5:39 PM, Michael Monnerie wrote:
+Urgh.  Yuck.
 
-> On Freitag, 30. Juli 2010 Eli Morris wrote:
->> Is that something I could do now, or only when the filesystem is
->> created? If I mount it with '-o inode64', can I mount it without
->> that later, or once I write to the filesystem like that, can I not
->> go back to mounting it in 32 bit mode? =
+> This is easily manifested by qemu using aio+dio with an unaligned
+> guest filesystem - every IO is unaligned and fileystem corruption is
+> encountered in the guest filesystem. xfstest 240 (from Eric Sandeen)
+> is also a simple reproducer.
+> 
+> To avoid this problem, track unaligned IO that triggers sub-block zeroing and
+> check new incoming unaligned IO that require sub-block zeroing against that
+> list. If we get an overlap where the start and end of unaligned IOs hit the
+> same filesystem block, then we need to block the incoming IOs until the IO that
+> is zeroing the block completes. The blocked IO can then continue without
+> needing to do any zeroing and hence won't overwrite valid data with zeros.
 
-> =
+Urgh.  Yuck.
 
-> Once you mount with inode64, you can't go back.
-> =
+Could we perhaps handle this by making an IO instantiate a page cache
+page for partial writes, and forcing that portion of the IO through the
+page cache?  The second IO would hit the same page and use the existing
+O_DIRECT vs page cache paths.
 
-> I'm not sure which applications are "broken", but I use inode64 for a =
-
-> backup server where lots of Linux boxes connect to over NFS, and a Samba =
-
-> for Windows PCs which has inode64, and at least didn't see any problem =
-
-> over the years. That doesn't mean there isn't a problem, of course ;-)
-> =
-
-> -- =
-
-> mit freundlichen Gr=FCssen,
-> Michael Monnerie, Ing. BSc
-> =
-
-> it-management Internet Services
-> http://proteger.at [gesprochen: Prot-e-schee]
-> Tel: 0660 / 415 65 31
-> =
-
-> ****** Aktuelles Radiointerview! ******
-> http://www.it-podcast.at/aktuelle-sendung.html
-> =
-
-> // Wir haben im Moment zwei H=E4user zu verkaufen:
-> // http://zmi.at/langegg/
-> // http://zmi.at/haus2009/
-
-Thanks guys,
-
-That makes sense.
-
-cheers,
-Eli
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
 
 _______________________________________________
 xfs mailing list
