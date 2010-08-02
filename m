@@ -1,14 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o72HlSah199734 for <xfs@oss.sgi.com>; Mon, 2 Aug 2010 12:47:28 -0500
-Subject: Re: [PATCH] xfstests: have getfacl(1) report numeric id's
+	o72HoimQ199857 for <xfs@oss.sgi.com>; Mon, 2 Aug 2010 12:50:44 -0500
+Received: from cf--amer001e--3.americas.sgi.com
+	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1ED838F804B
+	for <xfs@oss.sgi.com>; Mon,  2 Aug 2010 10:51:01 -0700 (PDT)
+Subject: [PATCH] xfstests: update README file to document some recent changes
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20100801141549.GB10192@infradead.org>
-References: <201007302154.o6ULsNdm008915@stout.americas.sgi.com>
-	<20100801141549.GB10192@infradead.org>
-Date: Mon, 02 Aug 2010 12:47:44 -0500
-Message-ID: <1280771264.2236.61.camel@doink>
+Date: Mon, 02 Aug 2010 12:51:00 -0500
+Message-ID: <1280771460.2236.68.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -23,34 +24,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Sun, 2010-08-01 at 10:15 -0400, Christoph Hellwig wrote:
-> On Fri, Jul 30, 2010 at 04:54:23PM -0500, Alex Elder wrote:
-> > This patch arranges for calls to getfacl(1) to be given the "-n"
-> > flag, which requests that user and group id's be listed numerically
-> > rather than using names.  The affected test output files are also
-> > updated to indicate the effect of the change.
-> > 
-> > This eliminates some spurious output differences I was seeing, due
-> > to the presence of NIS in my test environment.
-> > 
-> > Signed-off-by: Alex Elder <aelder@sgi.com>
-> 
-> Looks good,
-> 
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> I wonder if this usage should be documented somewhere for future tests.
-> 
+Update the README file to document the new _cat_passwd and
+_cat_group functions, and to recommend passing "-n" to
+getfacl(1) so it produces numeric output.
 
-Same goes for the use of _cat_passwd and _cat_group.
-I'll add something to the "README" file in the "Test
-script environment" section and will post that shortly.
+Signed-off-by: Alex Elder <aelder@sgi.com>
 
-					-Alex
+---
+ README |   14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+Index: b/README
+===================================================================
+--- a/README
++++ b/README
+@@ -160,6 +160,20 @@ Test script environment:
+ 				  string DATE for deterministic
+ 				  output
+ 
++	_cat_passwd,		- dump the content of the password
++	_cat_group		  or group file (both the local file
++				  and the content of the NIS database
++				  if it is likely to be present)
++
++     4. General recommendations, usage conventions, etc.:
++	- When the content of the password or group file is
++	  required, get it using the _cat_passwd and _cat_group
++	  functions, to ensure NIS information is included if NIS
++	  is active.
++	- When calling getfacl in a test, pass the "-n" argument so
++	  that numeric rather than symbolic identifiers are used in
++	  the output.
++
+ Verified output:
+ 
+     Each test script has a numerical name, e.g. 007, and an associated
+
 
 _______________________________________________
 xfs mailing list
