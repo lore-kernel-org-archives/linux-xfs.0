@@ -1,17 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o72HoimQ199857 for <xfs@oss.sgi.com>; Mon, 2 Aug 2010 12:50:44 -0500
-Received: from cf--amer001e--3.americas.sgi.com
-	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1ED838F804B
-	for <xfs@oss.sgi.com>; Mon,  2 Aug 2010 10:51:01 -0700 (PDT)
-Subject: [PATCH] xfstests: update README file to document some recent changes
-From: Alex Elder <aelder@sgi.com>
-Date: Mon, 02 Aug 2010 12:51:00 -0500
-Message-ID: <1280771460.2236.68.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	o72Ip5FN202770 for <xfs@oss.sgi.com>; Mon, 2 Aug 2010 13:51:05 -0500
+Received: from mx2.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2888215D1249
+	for <xfs@oss.sgi.com>; Mon,  2 Aug 2010 11:59:17 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id p66knIPt0OsD0iyS for <xfs@oss.sgi.com>;
+	Mon, 02 Aug 2010 11:59:17 -0700 (PDT)
+Date: Mon, 2 Aug 2010 20:50:53 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 1/2] dio: track and serialise unaligned direct IO
+Message-ID: <20100802185052.GK3278@quack.suse.cz>
+References: <1280733945-16231-1-git-send-email-david@fromorbit.com>
+	<1280733945-16231-2-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1280733945-16231-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,44 +29,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, sandeen@sandeen.net, xfs@oss.sgi.com
 
-Update the README file to document the new _cat_passwd and
-_cat_group functions, and to recommend passing "-n" to
-getfacl(1) so it produces numeric output.
+On Mon 02-08-10 17:25:44, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> If we get two unaligned direct IO's to the same filesystem block
+> that is marked as a new allocation (i.e. buffer_new), then both IOs
+> will zero the portion of the block they are not writing data to. As
+> a result, when the IOs complete there will be a portion of the block
+> that contains zeros from the last IO to complete rather than the
+> data that should be there.
+> 
+> This is easily manifested by qemu using aio+dio with an unaligned
+> guest filesystem - every IO is unaligned and fileystem corruption is
+> encountered in the guest filesystem. xfstest 240 (from Eric Sandeen)
+> is also a simple reproducer.
+> 
+> To avoid this problem, track unaligned IO that triggers sub-block
+> zeroing and check new incoming unaligned IO that require sub-block
+> zeroing against that list. If we get an overlap where the start and
+> end of unaligned IOs hit the same filesystem block, then we need to
+> block the incoming IOs until the IO that is zeroing the block
+> completes. The blocked IO can then continue without needing to do
+> any zeroing and hence won't overwrite valid data with zeros.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+...
+> +/*
+> + * Add a filesystem block to the list of blocks we are tracking.
+> + */
+> +static void
+> +dio_start_zero_block(struct dio *dio, sector_t zero_block)
+> +{
+> +	struct dio_zero_block *zb;
+> +
+> +	zb = kmalloc(sizeof(*zb), GFP_NOIO);
+> +	if (!zb)
+> +		return;
+  Ho hum, so if the allocation fails, we will just silently corrupt the
+data anyway? Not good I think.
 
-Signed-off-by: Alex Elder <aelder@sgi.com>
-
----
- README |   14 ++++++++++++++
- 1 file changed, 14 insertions(+)
-
-Index: b/README
-===================================================================
---- a/README
-+++ b/README
-@@ -160,6 +160,20 @@ Test script environment:
- 				  string DATE for deterministic
- 				  output
- 
-+	_cat_passwd,		- dump the content of the password
-+	_cat_group		  or group file (both the local file
-+				  and the content of the NIS database
-+				  if it is likely to be present)
-+
-+     4. General recommendations, usage conventions, etc.:
-+	- When the content of the password or group file is
-+	  required, get it using the _cat_passwd and _cat_group
-+	  functions, to ensure NIS information is included if NIS
-+	  is active.
-+	- When calling getfacl in a test, pass the "-n" argument so
-+	  that numeric rather than symbolic identifiers are used in
-+	  the output.
-+
- Verified output:
- 
-     Each test script has a numerical name, e.g. 007, and an associated
-
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
