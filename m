@@ -1,22 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o729UDB1181641 for <xfs@oss.sgi.com>; Mon, 2 Aug 2010 04:30:14 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5CBE715CE763
-	for <xfs@oss.sgi.com>; Mon,  2 Aug 2010 02:38:23 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id Z4V5JPN1Lna0HyeB for
-	<xfs@oss.sgi.com>; Mon, 02 Aug 2010 02:38:23 -0700 (PDT)
-Date: Mon, 2 Aug 2010 05:30:24 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/2] dio: track and serialise unaligned direct IO
-Message-ID: <20100802093024.GA7612@infradead.org>
-References: <1280733945-16231-1-git-send-email-david@fromorbit.com>
-	<1280733945-16231-2-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1280733945-16231-2-git-send-email-david@fromorbit.com>
+	o72HlSah199734 for <xfs@oss.sgi.com>; Mon, 2 Aug 2010 12:47:28 -0500
+Subject: Re: [PATCH] xfstests: have getfacl(1) report numeric id's
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20100801141549.GB10192@infradead.org>
+References: <201007302154.o6ULsNdm008915@stout.americas.sgi.com>
+	<20100801141549.GB10192@infradead.org>
+Date: Mon, 02 Aug 2010 12:47:44 -0500
+Message-ID: <1280771264.2236.61.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,18 +23,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, sandeen@sandeen.net, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-> +DEFINE_SPINLOCK(dio_zero_block_lock);
-> +LIST_HEAD(dio_zero_block_list);
+On Sun, 2010-08-01 at 10:15 -0400, Christoph Hellwig wrote:
+> On Fri, Jul 30, 2010 at 04:54:23PM -0500, Alex Elder wrote:
+> > This patch arranges for calls to getfacl(1) to be given the "-n"
+> > flag, which requests that user and group id's be listed numerically
+> > rather than using names.  The affected test output files are also
+> > updated to indicate the effect of the change.
+> > 
+> > This eliminates some spurious output differences I was seeing, due
+> > to the presence of NIS in my test environment.
+> > 
+> > Signed-off-by: Alex Elder <aelder@sgi.com>
+> 
+> Looks good,
+> 
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> I wonder if this usage should be documented somewhere for future tests.
+> 
 
-These two should be static.
+Same goes for the use of _cat_passwd and _cat_group.
+I'll add something to the "README" file in the "Test
+script environment" section and will post that shortly.
 
-Otherwise looks good,
-
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+					-Alex
 
 _______________________________________________
 xfs mailing list
