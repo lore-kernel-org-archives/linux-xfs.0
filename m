@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o736IZD9227980 for <xfs@oss.sgi.com>; Tue, 3 Aug 2010 01:18:36 -0500
+	o736HmYr227950 for <xfs@oss.sgi.com>; Tue, 3 Aug 2010 01:17:49 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B31441D6FCA6
-	for <xfs@oss.sgi.com>; Mon,  2 Aug 2010 23:18:53 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	b3otcOfNeziUCa6V for <xfs@oss.sgi.com>;
-	Mon, 02 Aug 2010 23:18:53 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AB06148E3D6
+	for <xfs@oss.sgi.com>; Mon,  2 Aug 2010 23:18:06 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
+	[150.101.137.104]) by cuda.sgi.com with ESMTP id
+	0ECpHzKeHjLuQCZa for <xfs@oss.sgi.com>;
+	Mon, 02 Aug 2010 23:18:06 -0700 (PDT)
 Received: from dastard (unverified [121.44.216.100])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	33894427-1927428
-	for <xfs@oss.sgi.com>; Tue, 03 Aug 2010 15:48:52 +0930 (CST)
+	33661580-1927428
+	for <xfs@oss.sgi.com>; Tue, 03 Aug 2010 15:48:05 +0930 (CST)
 Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1OgApu-000797-ND
-	for xfs@oss.sgi.com; Tue, 03 Aug 2010 16:18:50 +1000
+	(envelope-from <dave@fromorbit.com>) id 1OgAp9-00078v-AU
+	for xfs@oss.sgi.com; Tue, 03 Aug 2010 16:18:03 +1000
 Received: from dave by disturbed with local (Exim 4.71)
-	(envelope-from <dave@disturbed.disaster>) id 1OgApo-0007o4-Lh
-	for xfs@oss.sgi.com; Tue, 03 Aug 2010 16:18:44 +1000
+	(envelope-from <dave@disturbed.disaster>) id 1OgAp3-0007fp-7h
+	for xfs@oss.sgi.com; Tue, 03 Aug 2010 16:17:57 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfsprogs: Add support for XFS_IOC_ZERO_RANGE
-Date: Tue,  3 Aug 2010 16:18:44 +1000
-Message-Id: <1280816324-29984-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH] xfstests: add a test for XFS_IOC_ZERO_RANGE
+Date: Tue,  3 Aug 2010 16:17:57 +1000
+Message-Id: <1280816277-29473-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,115 +40,285 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Add xfs_io support for XFS_IOC_ZERO_RANGE and document the ioctl
-parameter in the xfsctl(3) man page.
-
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/xfs_fs.h  |    1 +
- io/prealloc.c     |   29 +++++++++++++++++++++++++++++
- man/man3/xfsctl.3 |   18 ++++++++++++++++++
- 3 files changed, 48 insertions(+), 0 deletions(-)
+ 241     |  192 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 241.out |   57 +++++++++++++++++++
+ group   |    1 +
+ 3 files changed, 250 insertions(+), 0 deletions(-)
+ create mode 100644 241
+ create mode 100644 241.out
 
-diff --git a/include/xfs_fs.h b/include/xfs_fs.h
-index 2376abb..74e7274 100644
---- a/include/xfs_fs.h
-+++ b/include/xfs_fs.h
-@@ -458,6 +458,7 @@ typedef struct xfs_handle {
- /*	XFS_IOC_SETBIOSIZE ---- deprecated 46	   */
- /*	XFS_IOC_GETBIOSIZE ---- deprecated 47	   */
- #define XFS_IOC_GETBMAPX	_IOWR('X', 56, struct getbmap)
-+#define XFS_IOC_ZERO_RANGE	_IOW ('X', 57, struct xfs_flock64)
- 
- /*
-  * ioctl commands that replace IRIX syssgi()'s
-diff --git a/io/prealloc.c b/io/prealloc.c
-index 5f6b029..c8b7df6 100644
---- a/io/prealloc.c
-+++ b/io/prealloc.c
-@@ -29,6 +29,7 @@ static cmdinfo_t allocsp_cmd;
- static cmdinfo_t freesp_cmd;
- static cmdinfo_t resvsp_cmd;
- static cmdinfo_t unresvsp_cmd;
-+static cmdinfo_t zero_cmd;
- #if defined(HAVE_FALLOCATE)
- static cmdinfo_t falloc_cmd;
- #endif
-@@ -125,6 +126,24 @@ unresvsp_f(
- 	return 0;
- }
- 
-+static int
-+zero_f(
-+	int		argc,
-+	char		**argv)
+diff --git a/241 b/241
+new file mode 100644
+index 0000000..b627438
+--- /dev/null
++++ b/241
+@@ -0,0 +1,192 @@
++#! /bin/bash
++# FS QA Test No. 241
++#
++# Test XFS_IOC_ZERO_RANGE
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2010 Red Hat.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++# creator
++owner=dchinner@redhat.com
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++
++_cleanup()
 +{
-+	xfs_flock64_t	segment;
-+
-+	if (!offset_length(argv[1], argv[2], &segment))
-+		return 0;
-+
-+	if (xfsctl(file->name, file->fd, XFS_IOC_ZERO_RANGE, &segment) < 0) {
-+		perror("XFS_IOC_ZERO_RANGE");
-+		return 0;
-+	}
-+	return 0;
++    rm -f $tmp.*
 +}
 +
++trap "_cleanup ; exit \$status" 0 1 2 3 15
 +
- #if defined (HAVE_FALLOCATE)
- static int
- fallocate_f(
-@@ -196,10 +215,20 @@ prealloc_init(void)
- 	unresvsp_cmd.oneline =
- 		_("frees reserved space associated with part of a file");
- 
-+	zero_cmd.name = _("zero");
-+	zero_cmd.cfunc = zero_f;
-+	zero_cmd.argmin = 2;
-+	zero_cmd.argmax = 2;
-+	zero_cmd.flags = CMD_NOMAP_OK;
-+	zero_cmd.args = _("off len");
-+	zero_cmd.oneline =
-+		_("Converts the given range of a file to allocated zeros");
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
 +
- 	add_command(&allocsp_cmd);
- 	add_command(&freesp_cmd);
- 	add_command(&resvsp_cmd);
- 	add_command(&unresvsp_cmd);
-+	add_command(&zero_cmd);
- 
- #if defined (HAVE_FALLOCATE)
- 	falloc_cmd.name = _("falloc");
-diff --git a/man/man3/xfsctl.3 b/man/man3/xfsctl.3
-index 64e18df..784b3e0 100644
---- a/man/man3/xfsctl.3
-+++ b/man/man3/xfsctl.3
-@@ -338,6 +338,24 @@ in the final argument.
- Partial filesystem blocks are zeroed, and whole filesystem blocks are
- removed from the file.  The file size does not change.
- 
-+.TP
-+.B XFS_IOC_ZERO_RANGE
-+This command is used to convert a range of a file to zeros without issuing data
-+IO.
-+A range of bytes is specified using a pointer to a variable of type
-+.B xfs_flock64_t
-+in the final argument.
-+Blocks are preallocated for regions that span holes in the file, and the entire
-+range is converted to unwritten extents.
-+This operation is a fast method of overwriting any from the range specified
-+with zeros without removing any blocks or having to write zeros to disk.
-+Any subsequent read in the given range will return zeros until new data is
-+written.
-+This functionality requires filesystems to support unwritten extents.
-+If
-+.BR xfs_info (8)
-+reports unwritten=1, then the filesystem was made to flag unwritten extents.
++# real QA test starts here
++_supported_fs xfs
++_supported_os Linux
 +
- .\" .TP
- .\" .B XFS_IOC_GETBIOSIZE
- .\" This command gets information about the preferred buffered I/O
++die_now()
++{
++	status=1
++	exit
++}
++
++_filter_bmap()
++{
++    awk '$3 ~ /hole/ { print $1, $2, $3; next }
++         $7 ~ /10000/ { print $1, $2, "unwritten"; next }
++         $7 ~ /00000/ {print $1, $2, "data" }'
++}
++
++# test the different corner cases for zeroing a range:
++#
++#	1. into a hole
++#	2. into allocated space
++#	3. into unwritten space
++#	4. hole -> data
++#	5. hole -> unwritten
++#	6. data -> hole
++#	7. data -> unwritten
++#	8. unwritten -> hole
++#	9. unwritten -> data
++#	10. hole -> data -> hole
++#	11. data -> hole -> data
++#	12. unwritten -> data -> unwritten
++#	13. data -> unwritten -> data
++
++testfile=$TEST_DIR/241.$$
++
++echo "	1. into a hole"
++rm -f $testfile
++$XFS_IO_PROG -f -c "truncate 20k" \
++	-c "zero 4k 8k" \
++	-c "bmap -vp" $testfile | _filter_bmap
++[ $? -ne 0 ] && die_now
++
++echo "	2. into allocated space"
++rm -f $testfile
++$XFS_IO_PROG -f -c "truncate 20k" \
++	-c "pwrite 0 20k" -c "fsync" \
++	-c "zero 4k 8k" \
++	-c "bmap -vp" $testfile | _filter_bmap
++[ $? -ne 0 ] && die_now
++
++echo "	3. into unwritten space"
++rm -f $testfile
++$XFS_IO_PROG -f -c "truncate 20k" \
++	-c "resvsp 0 20k" \
++	-c "zero 4k 8k" \
++	-c "bmap -vp" $testfile | _filter_bmap
++[ $? -ne 0 ] && die_now
++
++echo "	4. hole -> data"
++rm -f $testfile
++$XFS_IO_PROG -f -c "truncate 20k" \
++	-c "pwrite 8k 8k" -c "fsync" \
++	-c "zero 4k 8k" \
++	-c "bmap -vp" $testfile | _filter_bmap
++[ $? -ne 0 ] && die_now
++
++echo "	5. hole -> unwritten"
++rm -f $testfile
++$XFS_IO_PROG -f -c "truncate 20k" \
++	-c "resvsp 8k 8k" \
++	-c "zero 4k 8k" \
++	-c "bmap -vp" $testfile | _filter_bmap
++[ $? -ne 0 ] && die_now
++
++echo "	6. data -> hole"
++rm -f $testfile
++$XFS_IO_PROG -f -c "truncate 20k" \
++	-c "pwrite 0 8k" -c "fsync" \
++	-c "zero 4k 8k" \
++	-c "bmap -vp" $testfile | _filter_bmap
++[ $? -ne 0 ] && die_now
++
++echo "	7. data -> unwritten"
++rm -f $testfile
++$XFS_IO_PROG -f -c "truncate 20k" \
++	-c "pwrite 0 8k" -c "fsync" \
++	-c "resvsp 8k 8k" \
++	-c "zero 4k 8k" \
++	-c "bmap -vp" $testfile | _filter_bmap
++[ $? -ne 0 ] && die_now
++
++echo "	8. unwritten -> hole"
++rm -f $testfile
++$XFS_IO_PROG -f -c "truncate 20k" \
++	-c "resvsp 0 8k" \
++	-c "zero 4k 8k" \
++	-c "bmap -vp" $testfile | _filter_bmap
++[ $? -ne 0 ] && die_now
++
++echo "	9. unwritten -> data"
++rm -f $testfile
++$XFS_IO_PROG -f -c "truncate 20k" \
++	-c "resvsp 0 8k" \
++	-c "pwrite 8k 8k" -c "fsync" \
++	-c "zero 4k 8k" \
++	-c "bmap -vp" $testfile | _filter_bmap
++[ $? -ne 0 ] && die_now
++
++echo "	10. hole -> data -> hole"
++rm -f $testfile
++$XFS_IO_PROG -f -c "truncate 20k" \
++	-c "pwrite 8k 4k" -c "fsync" \
++	-c "zero 4k 12k" \
++	-c "bmap -vp" $testfile | _filter_bmap
++[ $? -ne 0 ] && die_now
++
++echo "	11. data -> hole -> data"
++rm -f $testfile
++$XFS_IO_PROG -f -c "truncate 20k" \
++	-c "resvsp 0 20k" \
++	-c "pwrite 0 8k" \
++	-c "pwrite 12k 8k" -c "fsync" \
++	-c "unresvsp 8k 4k" \
++	-c "zero 4k 12k" \
++	-c "bmap -vp" $testfile | _filter_bmap
++[ $? -ne 0 ] && die_now
++
++echo "	12. unwritten -> data -> unwritten"
++rm -f $testfile
++$XFS_IO_PROG -f -c "truncate 20k" \
++	-c "resvsp 0 20k" \
++	-c "pwrite 8k 4k" -c "fsync" \
++	-c "zero 4k 12k" \
++	-c "bmap -vp" $testfile | _filter_bmap
++[ $? -ne 0 ] && die_now
++
++
++echo "	13. data -> unwritten -> data"
++rm -f $testfile
++$XFS_IO_PROG -f -c "truncate 20k" \
++	-c "resvsp 0 20k" \
++	-c "pwrite 0k 8k" -c "fsync" \
++	-c "pwrite 12k 8k" -c "fsync" \
++	-c "zero 4k 12k" \
++	-c "bmap -vp" $testfile | _filter_bmap
++[ $? -ne 0 ] && die_now
++
++status=0 ; exit
+diff --git a/241.out b/241.out
+new file mode 100644
+index 0000000..7b3481f
+--- /dev/null
++++ b/241.out
+@@ -0,0 +1,57 @@
++QA output created by 241
++	1. into a hole
++0: [0..7]: hole
++1: [8..23]: unwritten
++2: [24..39]: hole
++	2. into allocated space
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++	3. into unwritten space
++0: [0..39]: unwritten
++	4. hole -> data
++0: [0..7]: hole
++1: [8..15]: unwritten
++2: [16..23]: unwritten
++3: [24..31]: data
++4: [32..39]: hole
++	5. hole -> unwritten
++0: [0..7]: hole
++1: [8..15]: unwritten
++2: [16..31]: unwritten
++3: [32..39]: hole
++	6. data -> hole
++0: [0..7]: data
++1: [8..15]: unwritten
++2: [16..23]: unwritten
++3: [24..39]: hole
++	7. data -> unwritten
++0: [0..7]: data
++1: [8..15]: unwritten
++2: [16..31]: unwritten
++3: [32..39]: hole
++	8. unwritten -> hole
++0: [0..15]: unwritten
++1: [16..23]: unwritten
++2: [24..39]: hole
++	9. unwritten -> data
++0: [0..15]: unwritten
++1: [16..23]: unwritten
++2: [24..31]: data
++3: [32..39]: hole
++	10. hole -> data -> hole
++0: [0..7]: hole
++1: [8..15]: unwritten
++2: [16..23]: unwritten
++3: [24..31]: unwritten
++4: [32..39]: hole
++	11. data -> hole -> data
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: data
++	12. unwritten -> data -> unwritten
++0: [0..39]: unwritten
++	13. data -> unwritten -> data
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: data
+diff --git a/group b/group
+index afe7614..f6e8d7b 100644
+--- a/group
++++ b/group
+@@ -354,3 +354,4 @@ deprecated
+ 238 auto quick metadata ioctl
+ 239 auto aio rw
+ 240 auto aio quick rw
++241 auto quick prealloc
 -- 
 1.7.1
 
