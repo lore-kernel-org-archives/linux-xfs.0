@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o74BHnRO030398 for <xfs@oss.sgi.com>; Wed, 4 Aug 2010 06:17:50 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F00D911CBEC1
-	for <xfs@oss.sgi.com>; Wed,  4 Aug 2010 04:26:12 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 5JMVqVyas9XHe7wn for
-	<xfs@oss.sgi.com>; Wed, 04 Aug 2010 04:26:12 -0700 (PDT)
-Date: Wed, 4 Aug 2010 07:18:03 -0400
-From: Christoph Hellwig <hch@infradead.org>
+	o74Bqj5f032262 for <xfs@oss.sgi.com>; Wed, 4 Aug 2010 06:52:45 -0500
+Received: from uplift.swm.pp.se (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 614431E3D32E
+	for <xfs@oss.sgi.com>; Wed,  4 Aug 2010 04:53:04 -0700 (PDT)
+Received: from uplift.swm.pp.se (swm.pp.se [212.247.200.143]) by cuda.sgi.com
+	with ESMTP id rKoxrBR5RM9rFA4a for <xfs@oss.sgi.com>;
+	Wed, 04 Aug 2010 04:53:04 -0700 (PDT)
+Date: Wed, 4 Aug 2010 13:53:03 +0200 (CEST)
+From: Mikael Abrahamsson <swmike@swm.pp.se>
 Subject: Re: How to track down abysmal performance ata - raid1 - crypto -
 	vg/lv - xfs
-Message-ID: <20100804111803.GA32643@infradead.org>
+In-Reply-To: <20100804111803.GA32643@infradead.org>
+Message-ID: <alpine.DEB.1.10.1008041351100.19930@uplift.swm.pp.se>
 References: <20100804073546.GA7494@comet.dominikbrodowski.net>
 	<20100804085039.GA11671@infradead.org>
 	<20100804091317.GA27779@isilmar-3.linta.de>
@@ -20,9 +21,8 @@ References: <20100804073546.GA7494@comet.dominikbrodowski.net>
 	<20100804073546.GA7494@comet.dominikbrodowski.net>
 	<201008041116.09822@zmi.at>
 	<20100804102526.GB13766@isilmar-3.linta.de>
+	<20100804111803.GA32643@infradead.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100804102526.GB13766@isilmar-3.linta.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,36 +31,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dominik Brodowski <linux@dominikbrodowski.net>, Michael Monnerie <michael.monnerie@is.it-management.at>, Christoph Hellwig <hch@infradead.org>, linux-raid@vger.kernel.org, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, dm-devel@redhat.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, linux-kernel@vger.kernel.org, Dominik Brodowski <linux@dominikbrodowski.net>, xfs@oss.sgi.com, linux-raid@vger.kernel.org, dm-devel@redhat.com
 
-On Wed, Aug 04, 2010 at 12:25:26PM +0200, Dominik Brodowski wrote:
-> Hey,
-> 
-> many thanks for your feedback. It seems the crypto step is the culprit:
-> 
-> Reading 1.1 GB with dd, iflag=direct, bs=8k:
-> 
-> /dev/sd*                35.3 MB/s       ( 90 %)
-> /dev/md*                39.1 MB/s       (100 %)
-> /dev/mapper/md*_crypt    3.9 MB/s       ( 10 %)
-> /dev/mapper/vg1-*        3.9 MB/s       ( 10 %)
-> 
-> The "good" news: it also happens on my notebook, even though it has a
-> different setup (no raid, disk -> lv/vg -> crypt). On my notebook, I'm
-> more than happy to test out different kernel versions, patches etc.
-> 
-> /dev/sd*                17.7 MB/s       (100 %)
-> /dev/mapper/vg1-*       16.2 MB/s       ( 92 %)
-> /dev/mapper/*_crypt      3.1 MB/s       ( 18 %)
+On Wed, 4 Aug 2010, Christoph Hellwig wrote:
 
-The good news is that you have it tracked down, the bad news is that
-I know very little about dm-crypt.  Maybe the issue is the single
-threaded decryption in dm-crypt?  Can you check how much CPU time
-the dm crypt kernel thread uses?
+> The good news is that you have it tracked down, the bad news is that I 
+> know very little about dm-crypt.  Maybe the issue is the single threaded 
+> decryption in dm-crypt?  Can you check how much CPU time the dm crypt 
+> kernel thread uses?
+
+I'm not sure it's that. I have a Core i5 with AES-NI and that didn't 
+significantly increase my overall performance, as it's not there the 
+bottleneck is (at least in my system).
+
+I earlier sent out an email wondering if someone could shed some light on 
+how scheduling, block caching and read-ahead works together when one does 
+disks->md->crypto->lvm->fs, becase that's a lot of layers and potentially 
+a lot of unneeded buffering, readahead and scheduling magic?
+
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
 
 _______________________________________________
 xfs mailing list
