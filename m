@@ -1,30 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o74CvfSb034042 for <xfs@oss.sgi.com>; Wed, 4 Aug 2010 07:57:41 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 73DE115D0478
-	for <xfs@oss.sgi.com>; Wed,  4 Aug 2010 06:06:05 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id vj3WzoTl3An5KA3U for
-	<xfs@oss.sgi.com>; Wed, 04 Aug 2010 06:06:05 -0700 (PDT)
-Date: Wed, 4 Aug 2010 08:56:31 -0400
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: How to track down abysmal performance ata - raid1 - crypto -
-	vg/lv - xfs
-Message-ID: <20100804125631.GC17263@redhat.com>
-References: <20100804073546.GA7494@comet.dominikbrodowski.net>
-	<20100804085039.GA11671@infradead.org>
-	<20100804091317.GA27779@isilmar-3.linta.de>
-	<20100804092122.GA2998@infradead.org>
-	<20100804073546.GA7494@comet.dominikbrodowski.net>
-	<201008041116.09822@zmi.at>
-	<20100804102526.GB13766@isilmar-3.linta.de>
-	<20100804111803.GA32643@infradead.org>
-	<alpine.DEB.1.10.1008041351100.19930@uplift.swm.pp.se>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.1.10.1008041351100.19930@uplift.swm.pp.se>
+	o74EGxOa036181 for <xfs@oss.sgi.com>; Wed, 4 Aug 2010 09:16:59 -0500
+Received: from CF--AMER002E--3.americas.sgi.com
+	(cf--amer002e--3.americas.sgi.com [137.38.100.6])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3EFD1AC002
+	for <xfs@oss.sgi.com>; Wed,  4 Aug 2010 07:17:17 -0700 (PDT)
+Subject: [PATCH v3] xfs: ensure f_ffree returned by statfs() is non-negative
+From: Stuart Brodsky <sbrodsky@sgi.com>
+Date: Wed, 04 Aug 2010 09:15:59 -0500
+Message-ID: <1280931359.12084.2519.camel@superior.americas.sgi.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,28 +23,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, linux-raid@vger.kernel.org, Andi Kleen <ak@linux.intel.com>, linux-kernel@vger.kernel.org, Dominik Brodowski <linux@dominikbrodowski.net>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, device-mapper development <dm-devel@redhat.com>
+To: xfs@oss.sgi.com
 
-On Wed, Aug 04 2010 at  7:53am -0400,
-Mikael Abrahamsson <swmike@swm.pp.se> wrote:
+Because of delayed updates to sb_icount field in the super block, it
+is possible to allocate over maxicount number of inodes.  This
+causes the arithmetic to calculate a negative number of free inodes
+in user commands like df or stat -f.
 
-> On Wed, 4 Aug 2010, Christoph Hellwig wrote:
-> 
-> >The good news is that you have it tracked down, the bad news is
-> >that I know very little about dm-crypt.  Maybe the issue is the
-> >single threaded decryption in dm-crypt?  Can you check how much
-> >CPU time the dm crypt kernel thread uses?
-> 
-> I'm not sure it's that. I have a Core i5 with AES-NI and that didn't
-> significantly increase my overall performance, as it's not there the
-> bottleneck is (at least in my system).
+Since maxicount is a somewhat arbitrary number, a slight over
+allocation is not critical but user commands should be displayed as
+0 or greater and never go negative.  To do this the value in the
+stats buffer f_ffree is capped to never go negative.
 
-You could try applying both of these patches that are pending review for
-hopeful inclussion in 2.6.36:
+Signed-off-by: Stu Brodsky <sbrodsky@sgi.com>
 
-https://patchwork.kernel.org/patch/103404/
-https://patchwork.kernel.org/patch/112657/
+--- a/fs/xfs/linux-2.6/xfs_super.c.orig 2010-07-20
+06:06:19.269572013-0500
++++ b/fs/xfs/linux-2.6/xfs_super.c 2010-07-20 08:09:17.773570840 -0500
+@@ -1226,6 +1226,7 @@
+        struct xfs_inode        *ip = XFS_I(dentry->d_inode);
+        __uint64_t              fakeinos, id;
+        xfs_extlen_t            lsize;
++       __int64_t               ffree;
+  
+        statp->f_type = XFS_SB_MAGIC;
+        statp->f_namelen = MAXNAMELEN - 1;
+@@ -1249,7 +1250,9 @@
+        statp->f_files = min_t(typeof(statp->f_files),
+                                        statp->f_files,
+                                        mp->m_maxicount);
+-       statp->f_ffree = statp->f_files - (sbp->sb_icount -
+sbp->sb_ifree);
++       ffree = statp->f_files - (sbp->sb_icount - sbp->sb_ifree);
++       statp->f_ffree = (__u64) (ffree < 0 ? 0 : ffree);
++
+        spin_unlock(&mp->m_sb_lock);
+
+        if ((ip->i_d.di_flags & XFS_DIFLAG_PROJINHERIT) ||
+-- 
+Stuart Brodsky
+2750 Blue Water Road
+Eagan, MN. 55121
+651-683-7910
+<sbrodsky@sgi.com>
 
 _______________________________________________
 xfs mailing list
