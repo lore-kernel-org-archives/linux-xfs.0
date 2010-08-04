@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o741FZZb002920 for <xfs@oss.sgi.com>; Tue, 3 Aug 2010 20:15:35 -0500
-Received: from mail-vw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0936D34AB82
-	for <xfs@oss.sgi.com>; Tue,  3 Aug 2010 18:23:55 -0700 (PDT)
-Received: from mail-vw0-f53.google.com (mail-vw0-f53.google.com
-	[209.85.212.53]) by cuda.sgi.com with ESMTP id hWbgEIzzaBsrw2pS
-	for <xfs@oss.sgi.com>; Tue, 03 Aug 2010 18:23:55 -0700 (PDT)
-Received: by vws15 with SMTP id 15so3619892vws.26
-	for <xfs@oss.sgi.com>; Tue, 03 Aug 2010 18:15:54 -0700 (PDT)
+	o743bAYc007049 for <xfs@oss.sgi.com>; Tue, 3 Aug 2010 22:37:10 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3C64816958CC
+	for <xfs@oss.sgi.com>; Tue,  3 Aug 2010 20:37:28 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
+	[150.101.137.100]) by cuda.sgi.com with ESMTP id
+	qVpW3CriMr5hQNdH for <xfs@oss.sgi.com>;
+	Tue, 03 Aug 2010 20:37:28 -0700 (PDT)
+Date: Wed, 4 Aug 2010 13:37:18 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] dio: track and serialise unaligned direct IO
+Message-ID: <20100804033718.GU7362@dastard>
+References: <1280443516-14448-1-git-send-email-david@fromorbit.com>
+	<1280880678.2334.27.camel@mingming-laptop>
 MIME-Version: 1.0
-In-Reply-To: <20100804004746.GT7362@dastard>
-References: <AANLkTilX3l8TbUztLStj_u9OqOZnBrsNQxmeV4DuBmYJ@mail.gmail.com>
-	<20100718012033.GA18888@dastard>
-	<AANLkTikEv75KRyRTs4awmG894NSKMnBkJNJPYsypMdWf@mail.gmail.com>
-	<20100718235036.GC32635@dastard>
-	<AANLkTi=EzePfBRdEFQo2BRtKy=464Ci6zPG=UyYJiwNp@mail.gmail.com>
-	<20100804004746.GT7362@dastard>
-Date: Tue, 3 Aug 2010 21:15:53 -0400
-Message-ID: <AANLkTikfK6z7b=0Vpijyz-3m3+_MTtcrbeQk-B9LkK61@mail.gmail.com>
-Subject: Re: XFS hung on 2.6.33.3 kernel
-From: Ilia Mirkin <imirkin@alum.mit.edu>
+Content-Disposition: inline
+In-Reply-To: <1280880678.2334.27.camel@mingming-laptop>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,52 +26,68 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Mingming Cao <cmm@us.ibm.com>
+Cc: linux-fsdevel@vger.kernel.org, sandeen@sandeen.net, xfs@oss.sgi.com
 
-On Tue, Aug 3, 2010 at 8:47 PM, Dave Chinner <david@fromorbit.com> wrote:
-> Ilia,
->
-> Can you send me the output of this for your kernel that the
-> traces came from:
->
-> $ gdb <path/to/vmlinux>
-> (gdb) l *( xfs_write+0x2cc)
->
-> You can run it against the vmlinux file in the kernel build
-> directory. =A0Basically I need to know which xfs_ilock() call in
-> xfs_write() one of the mysqld-test processes is stuck on.
+On Tue, Aug 03, 2010 at 05:11:18PM -0700, Mingming Cao wrote:
+> On Fri, 2010-07-30 at 08:45 +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > If we get two unaligned direct IO's to the same filesystem block
+> > that is marked as a new allocation (i.e. buffer_new), then both IOs will
+> > zero the portion of the block they are not writing data to. As a
+> > result, when the IOs complete there will be a portion of the block
+> > that contains zeros from the last IO to complete rather than the
+> > data that should be there.
+> > 
+> > This is easily manifested by qemu using aio+dio with an unaligned
+> > guest filesystem - every IO is unaligned and fileystem corruption is
+> > encountered in the guest filesystem. xfstest 240 (from Eric Sandeen)
+> > is also a simple reproducer.
+> > 
+> > To avoid this problem, track unaligned IO that triggers sub-block zeroing and
+> > check new incoming unaligned IO that require sub-block zeroing against that
+> > list. If we get an overlap where the start and end of unaligned IOs hit the
+> > same filesystem block, then we need to block the incoming IOs until the IO that
+> > is zeroing the block completes. The blocked IO can then continue without
+> > needing to do any zeroing and hence won't overwrite valid data with zeros.
+> > 
+> 
+> This seems to address both two IOs are unaligned direct IO. If the first
+> IO is aligned direct IO, then it is not tracked?
+> 
+> I am also concerned about the aligned direct IO case...
+> 
+> 1) first thread aio+dio+aligned write to a hole, there is no zero-out
+> submitted from kernel. But the hole remains initialized before all IO
+> complete and convert it from uninitialized extent to initialized.
+> 2) second thread aio+dio+unalign write to the same hole, this time it is
+> unaligned. since buffer is still new (not converted yet), the new
+> incoming thread zero out port of data that first thread has written to
 
-No problem - BTW, I'm running this on a 2.6.33.3 kernel (same as the
-one before, although diff hardware). If you want (and are fine with me
-"destroying" the current state), I can upgrade it to a kernel of your
-choice and repeat the test overnight.
+That is clearly and unmistakably an application bug - it should not
+be issuing concurrent, overlapping IO to the same block(s)
+regardless of whether they are unaligned, aligned or a mixture of
+both. By using direct IO, the application has assumed responsibility
+for preventing data corruption due to overlapping IOs - they are
+inherently racy and nothing in the dio code prevents that from
+occurring.
 
-Naturally I didn't have CONFIG_DEBUG_INFO in there... just changed
-that to Y and recompiled. I'm not entirely sure that this preserves
-all the offsets, but at least the BUG-HUNTING doc makes allusions that
-it would.
+The bug I'm fixing is for *non-overlapping* concurrent unaligned IOs
+where the kernel direct IO code causes the data corruption, not the
+application. The application is not doing something stupid, and as
+such needs to be fixed.
 
-(gdb) l *( xfs_write+0x2cc)
-0xffffffff8124342d is in xfs_write (fs/xfs/linux-2.6/xfs_lrw.c:597).
-592                     if (!need_i_mutex && (mapping->nrpages || pos
-> xip->i_size)) {
-593                             xfs_iunlock(xip, XFS_ILOCK_EXCL|iolock);
-594                             iolock =3D XFS_IOLOCK_EXCL;
-595                             need_i_mutex =3D 1;
-596                             mutex_lock(&inode->i_mutex);
-597                             xfs_ilock(xip, XFS_ILOCK_EXCL|iolock);
-598                             goto start;
-599                     }
-600             }
-601
+Cheers,
 
-Well, at least it points at an xfs_ilock, so pretty good chance that
-adding debug info didn't change anything else.
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
