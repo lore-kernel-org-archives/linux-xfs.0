@@ -1,27 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o744M7dI008787 for <xfs@oss.sgi.com>; Tue, 3 Aug 2010 23:22:07 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2BB2A16962AC
-	for <xfs@oss.sgi.com>; Tue,  3 Aug 2010 21:22:26 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	E77riBl4lkElbh3A for <xfs@oss.sgi.com>;
-	Tue, 03 Aug 2010 21:22:26 -0700 (PDT)
-Date: Wed, 4 Aug 2010 14:22:18 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] dio: track and serialise unaligned direct IO
-Message-ID: <20100804042218.GW7362@dastard>
-References: <1280443516-14448-1-git-send-email-david@fromorbit.com>
-	<20100730025324.GO25774@parisc-linux.org>
-	<20100730045331.GA2126@dastard>
-	<1280856865.2436.31.camel@mingming-laptop>
-	<20100803225658.GB26402@dastard>
-	<1280878874.2334.6.camel@mingming-laptop>
+	o744cnTX010144 for <xfs@oss.sgi.com>; Tue, 3 Aug 2010 23:38:50 -0500
+Received: from mail-vw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A7B5716963DC
+	for <xfs@oss.sgi.com>; Tue,  3 Aug 2010 21:39:09 -0700 (PDT)
+Received: from mail-vw0-f53.google.com (mail-vw0-f53.google.com
+	[209.85.212.53]) by cuda.sgi.com with ESMTP id inQY48jv6dpJHHa2
+	for <xfs@oss.sgi.com>; Tue, 03 Aug 2010 21:39:09 -0700 (PDT)
+Received: by vws15 with SMTP id 15so3749585vws.26
+	for <xfs@oss.sgi.com>; Tue, 03 Aug 2010 21:39:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1280878874.2334.6.camel@mingming-laptop>
+In-Reply-To: <20100804042725.GX7362@dastard>
+References: <AANLkTilX3l8TbUztLStj_u9OqOZnBrsNQxmeV4DuBmYJ@mail.gmail.com>
+	<20100718012033.GA18888@dastard>
+	<AANLkTikEv75KRyRTs4awmG894NSKMnBkJNJPYsypMdWf@mail.gmail.com>
+	<20100718235036.GC32635@dastard>
+	<AANLkTi=EzePfBRdEFQo2BRtKy=464Ci6zPG=UyYJiwNp@mail.gmail.com>
+	<20100804004746.GT7362@dastard>
+	<AANLkTikfK6z7b=0Vpijyz-3m3+_MTtcrbeQk-B9LkK61@mail.gmail.com>
+	<20100804042725.GX7362@dastard>
+Date: Wed, 4 Aug 2010 00:39:08 -0400
+Message-ID: <AANLkTikkwW48u_y=Tzkh=ob-YanbOpGmCaAH7q=8PpFx@mail.gmail.com>
+Subject: Re: XFS hung on 2.6.33.3 kernel
+From: Ilia Mirkin <imirkin@alum.mit.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,71 +32,69 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mingming Cao <cmm@us.ibm.com>
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, sandeen@sandeen.net, Matthew Wilcox <matthew@wil.cx>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Aug 03, 2010 at 04:41:14PM -0700, Mingming Cao wrote:
-> On Wed, 2010-08-04 at 08:56 +1000, Dave Chinner wrote:
-> > On Tue, Aug 03, 2010 at 10:34:25AM -0700, Mingming Cao wrote:
-> > > On Fri, 2010-07-30 at 14:53 +1000, Dave Chinner wrote:
-> > > > On Thu, Jul 29, 2010 at 08:53:24PM -0600, Matthew Wilcox wrote:
-> > > > > On Fri, Jul 30, 2010 at 08:45:16AM +1000, Dave Chinner wrote:
-> > > > > > If we get two unaligned direct IO's to the same filesystem block
-> > > > > > that is marked as a new allocation (i.e. buffer_new), then both IOs will
-> > > > > > zero the portion of the block they are not writing data to. As a
-> > > > > > result, when the IOs complete there will be a portion of the block
-> > > > > > that contains zeros from the last IO to complete rather than the
-> > > > > > data that should be there.
-> > ....
-> > > > I don't want any direct IO for XFS to go through the page cache -
-> > > > unaligned or not. using the page cache for the unaligned blocks
-> > > > would also be much worse for performance that this method because it
-> > > > turns unaligned direct IO into 3 IOs - the unaligned head block, the
-> > > > aligned body and the unaligned tail block. It would also be a
-> > > > performance hit you take on every single dio, whereas this way the
-> > > > hit is only taken when an overlap is detected.
-> > > 
-> > > Does this problem also possible for DIO and non AIO case? (Ext4 case
-> > > this only happy with AIO+DIO+unaligned).  If not, could we simply force
-> > > unaligned AIO+DIO to be synchronous? Still direct IO...
-> > 
-> > There is nothing specific to AIO about this bug. XFS (at least)
-> > allows concurrent DIO writes to the same inode regardless of whether
-> > they are dispatched via AIO or multiple separate threads and so the
-> > race condition exists outside just the AIO context...
-> > 
-> 
-> Okay..yeah ext4 prevent direct IO write to the same inode from multiple
-> threads, so this is not a issue for non-aio case.
-> 
-> How does XFS serialize direct IO (aligned) to the same file offset(or
-> overlap) from multiple threads?
+On Wed, Aug 4, 2010 at 12:27 AM, Dave Chinner <david@fromorbit.com> wrote:
+> On Tue, Aug 03, 2010 at 09:15:53PM -0400, Ilia Mirkin wrote:
+>> On Tue, Aug 3, 2010 at 8:47 PM, Dave Chinner <david@fromorbit.com> wrote:
+>> > Ilia,
+>> >
+>> > Can you send me the output of this for your kernel that the
+>> > traces came from:
+>> >
+>> > $ gdb <path/to/vmlinux>
+>> > (gdb) l *( xfs_write+0x2cc)
+>> >
+>> > You can run it against the vmlinux file in the kernel build
+>> > directory. =A0Basically I need to know which xfs_ilock() call in
+>> > xfs_write() one of the mysqld-test processes is stuck on.
+>>
+>> No problem - BTW, I'm running this on a 2.6.33.3 kernel (same as the
+>> one before, although diff hardware). If you want (and are fine with me
+>> "destroying" the current state), I can upgrade it to a kernel of your
+>> choice and repeat the test overnight.
+>>
+>> Naturally I didn't have CONFIG_DEBUG_INFO in there... just changed
+>> that to Y and recompiled. I'm not entirely sure that this preserves
+>> all the offsets, but at least the BUG-HUNTING doc makes allusions that
+>> it would.
+>>
+>> (gdb) l *( xfs_write+0x2cc)
+>> 0xffffffff8124342d is in xfs_write (fs/xfs/linux-2.6/xfs_lrw.c:597).
+>> 592 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (!need_i_mutex && (mappin=
+g->nrpages || pos
+>> > xip->i_size)) {
+>> 593 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 xfs_iunlock(=
+xip, XFS_ILOCK_EXCL|iolock);
+>> 594 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 iolock =3D X=
+FS_IOLOCK_EXCL;
+>> 595 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 need_i_mutex=
+ =3D 1;
+>> 596 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 mutex_lock(&=
+inode->i_mutex);
+>> 597 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 xfs_ilock(xi=
+p, XFS_ILOCK_EXCL|iolock);
+>
+> Make sense. Can you run 'l *(xfs_ilock+0x2c)' as well? I just need to
+> confirm which lock it has blocked on.
 
-It doesn't. The 1996 usenix paper describes it well:
-
-http://oss.sgi.com/projects/xfs/papers/xfs_usenix/index.html
-
-See section 6.2 "Performing File I/O", sepcifically the sections on
-"Using Direct I/O" and "Using Multiple Processes". Quote:
-
-"When using direct I/O, multiple readers and writers can all access
-the file simultaneously. Currently, when using direct I/O and
-multiple writers, we place the burden of serializing writes to the
-same region of the file on the application."
-
-This is still true 15 years later....
-
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+(gdb) l *(xfs_ilock+0x2c)
+0xffffffff81221001 is in xfs_ilock (fs/xfs/linux-2.6/mrlock.h:48).
+43              down_read_nested(&mrp->mr_lock, subclass);
+44      }
+45
+46      static inline void mrupdate_nested(mrlock_t *mrp, int subclass)
+47      {
+48              down_write_nested(&mrp->mr_lock, subclass);
+49      #ifdef DEBUG
+50              mrp->mr_writer =3D 1;
+51      #endif
+52      }
 
 _______________________________________________
 xfs mailing list
