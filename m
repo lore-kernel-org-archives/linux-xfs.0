@@ -1,29 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o74MOT9x050339 for <xfs@oss.sgi.com>; Wed, 4 Aug 2010 17:24:29 -0500
-Received: from mx1.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 50308495B50
-	for <xfs@oss.sgi.com>; Wed,  4 Aug 2010 15:24:49 -0700 (PDT)
-Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
-	with ESMTP id z2AMMmyrferUQ96P for <xfs@oss.sgi.com>;
-	Wed, 04 Aug 2010 15:24:49 -0700 (PDT)
-Date: Thu, 5 Aug 2010 08:24:38 +1000
-From: Neil Brown <neilb@suse.de>
-Subject: Re: How to track down abysmal performance ata - raid1 - crypto -
-	vg/lv - xfs
-Message-ID: <20100805082438.0b476adb@notabene>
-In-Reply-To: <alpine.DEB.1.10.1008041351100.19930@uplift.swm.pp.se>
-References: <20100804073546.GA7494@comet.dominikbrodowski.net>
-	<20100804085039.GA11671@infradead.org>
-	<20100804091317.GA27779@isilmar-3.linta.de>
-	<20100804092122.GA2998@infradead.org>
-	<20100804073546.GA7494@comet.dominikbrodowski.net>
-	<201008041116.09822@zmi.at>
-	<20100804102526.GB13766@isilmar-3.linta.de>
-	<20100804111803.GA32643@infradead.org>
-	<alpine.DEB.1.10.1008041351100.19930@uplift.swm.pp.se>
-Mime-Version: 1.0
+	o7512cGP055067 for <xfs@oss.sgi.com>; Wed, 4 Aug 2010 20:02:39 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 14EF7496305
+	for <xfs@oss.sgi.com>; Wed,  4 Aug 2010 18:02:57 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	gnggZeO5m86apioB for <xfs@oss.sgi.com>;
+	Wed, 04 Aug 2010 18:02:57 -0700 (PDT)
+Date: Thu, 5 Aug 2010 11:02:42 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] dio: track and serialise unaligned direct IO
+Message-ID: <20100805010242.GA7362@dastard>
+References: <1280443516-14448-1-git-send-email-david@fromorbit.com>
+	<1280880678.2334.27.camel@mingming-laptop>
+	<20100804033718.GU7362@dastard>
+	<1280933752.4676.6.camel@mingming-laptop>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1280933752.4676.6.camel@mingming-laptop>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,49 +32,74 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Dominik Brodowski <linux@dominikbrodowski.net>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, dm-devel@redhat.com
+To: Mingming Cao <cmm@us.ibm.com>
+Cc: linux-fsdevel@vger.kernel.org, sandeen@sandeen.net, xfs@oss.sgi.com
 
-On Wed, 4 Aug 2010 13:53:03 +0200 (CEST)
-Mikael Abrahamsson <swmike@swm.pp.se> wrote:
-
-> On Wed, 4 Aug 2010, Christoph Hellwig wrote:
+On Wed, Aug 04, 2010 at 07:55:52AM -0700, Mingming Cao wrote:
+> On Wed, 2010-08-04 at 13:37 +1000, Dave Chinner wrote:
+> > On Tue, Aug 03, 2010 at 05:11:18PM -0700, Mingming Cao wrote:
+> > > This seems to address both two IOs are unaligned direct IO. If the first
+> > > IO is aligned direct IO, then it is not tracked?
+> > > 
+> > > I am also concerned about the aligned direct IO case...
+> > > 
+> > > 1) first thread aio+dio+aligned write to a hole, there is no zero-out
+> > > submitted from kernel. But the hole remains initialized before all IO
+> > > complete and convert it from uninitialized extent to initialized.
+> > > 2) second thread aio+dio+unalign write to the same hole, this time it is
+> > > unaligned. since buffer is still new (not converted yet), the new
+> > > incoming thread zero out port of data that first thread has written to
+> > 
+> > That is clearly and unmistakably an application bug - it should not
+> > be issuing concurrent, overlapping IO to the same block(s)
+> > regardless of whether they are unaligned, aligned or a mixture of
+> > both. By using direct IO, the application has assumed responsibility
+> > for preventing data corruption due to overlapping IOs - they are
+> > inherently racy and nothing in the dio code prevents that from
+> > occurring.
 > 
-> > The good news is that you have it tracked down, the bad news is that I 
-> > know very little about dm-crypt.  Maybe the issue is the single threaded 
-> > decryption in dm-crypt?  Can you check how much CPU time the dm crypt 
-> > kernel thread uses?
+> while there are multiple applications running on the same filesystem,
+> they could possible touching the same files concurrently. How could
+> applications know there is other apps to change the same file at the
+> same time?
+
+That's for the applications to figure out.  A typical way of
+acheiving serialisation at application level is for all the
+applications doing dio to the same files is to use byte-range
+locking...
+
+Remember, DIO abdicates all responsibility for IO coherency to the
+applications. If userspace is issuing concurrent direct IOs to the
+same block _no matter how_, then that is an application problem, not
+a kernel problem.
+
+If you want the kernel to avoid overlapping DIO, then we have to
+track _every single DIO_. We clearly do not do that, have never done
+that, and no OS that implements direct IO has ever done that. It is,
+quite simply, not the responsibility of the kernel to prevent
+userspace from doing stupid stuff with DIO and it never has been.
+If you want POSIX IO coherency semantics, then *don't use DIO*.
+
+> > The bug I'm fixing is for *non-overlapping* concurrent unaligned IOs
+> > where the kernel direct IO code causes the data corruption, not the
+> > application. The application is not doing something stupid, and as
+> > such needs to be fixed.
 > 
-> I'm not sure it's that. I have a Core i5 with AES-NI and that didn't 
-> significantly increase my overall performance, as it's not there the 
-> bottleneck is (at least in my system).
-> 
-> I earlier sent out an email wondering if someone could shed some light on 
-> how scheduling, block caching and read-ahead works together when one does 
-> disks->md->crypto->lvm->fs, becase that's a lot of layers and potentially 
-> a lot of unneeded buffering, readahead and scheduling magic?
-> 
+> For the case I refering to here, it's the kernel direct IO who zero out
+> the block for 2).  The application did 2) did not do zero-out it self,
+> but it will result in loose data the application write in 1). It's the
+> same as what you are trying to fix.
 
-Both page-cache and read-ahead work at the filesystem level, so only the
-device in the stack that the filesystem mounts from is relevant for these.
-Any read-ahead setting on other devices are ignored.
-Other levels only have a cache if they explicitly need one.  e.g. raid5 has a
-stripe-cache to allow parity calculations across all blocks in a stripe.
+No it isn't. Overlapping vs non-overlapping DIO are two very different
+cases.
 
-Scheduling can potentially happen at every layer, but it takes very different
-forms.  Crypto, lvm, raid0 etc don't do any scheduling - it is just
-first-in-first-out.
-RAID5 does some scheduling for writes (but not reads) to try to gather full
-stripes.  If you write 2 of 3 blocks in a stripe, then 3 of 3 in another
-stripe, the 3 of 3 will be processed immediately while the 2 of 3 might be
-delayed a little in the hope that the third will arrive.
+Cheers,
 
-The sys/block/XXX/queue/scheduler setting only applies at the bottom of the
-stack (though when you have dm-multipath it is actually one step above the
-bottom).
+Dave.
 
-Hope that helps,
-NeilBrown
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
