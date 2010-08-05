@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o756gJTX070349 for <xfs@oss.sgi.com>; Thu, 5 Aug 2010 01:42:19 -0500
-Received: from mail-vw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1087711CDF24
-	for <xfs@oss.sgi.com>; Wed,  4 Aug 2010 23:50:46 -0700 (PDT)
-Received: from mail-vw0-f53.google.com (mail-vw0-f53.google.com
-	[209.85.212.53]) by cuda.sgi.com with ESMTP id ymBwEeYHQeEjRdRR
-	for <xfs@oss.sgi.com>; Wed, 04 Aug 2010 23:50:46 -0700 (PDT)
-Received: by vws15 with SMTP id 15so4885786vws.26
-	for <xfs@oss.sgi.com>; Wed, 04 Aug 2010 23:42:38 -0700 (PDT)
+	o758VRqi074537 for <xfs@oss.sgi.com>; Thu, 5 Aug 2010 03:31:27 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 783E016A6D2A
+	for <xfs@oss.sgi.com>; Thu,  5 Aug 2010 01:31:47 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id D6SMvevTanG2A2JJ
+	for <xfs@oss.sgi.com>; Thu, 05 Aug 2010 01:31:47 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id 40C306C014
+	for <xfs@oss.sgi.com>; Thu,  5 Aug 2010 03:31:47 -0500 (CDT)
+Message-ID: <4C5A774D.6000400@hardwarefreak.com>
+Date: Thu, 05 Aug 2010 03:33:17 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-In-Reply-To: <20100805062541.GC26402@dastard>
-References: <AANLkTilX3l8TbUztLStj_u9OqOZnBrsNQxmeV4DuBmYJ@mail.gmail.com>
-	<20100718012033.GA18888@dastard>
-	<AANLkTikEv75KRyRTs4awmG894NSKMnBkJNJPYsypMdWf@mail.gmail.com>
-	<20100718235036.GC32635@dastard>
-	<AANLkTi=EzePfBRdEFQo2BRtKy=464Ci6zPG=UyYJiwNp@mail.gmail.com>
-	<20100805062541.GC26402@dastard>
-Date: Thu, 5 Aug 2010 02:42:38 -0400
-Message-ID: <AANLkTinhwA1greZdCnoDvd9ieYinhjv0M07sNkbVdy3_@mail.gmail.com>
-Subject: Re: XFS hung on 2.6.33.3 kernel
-From: Ilia Mirkin <imirkin@alum.mit.edu>
+Subject: Re: How to track down abysmal performance ata - raid1 - crypto -
+	vg/lv - xfs
+References: <20100804073546.GA7494@comet.dominikbrodowski.net>	<20100804085039.GA11671@infradead.org>	<20100804091317.GA27779@isilmar-3.linta.de>	<20100804092122.GA2998@infradead.org>	<20100804073546.GA7494@comet.dominikbrodowski.net>	<201008041116.09822@zmi.at>	<20100804102526.GB13766@isilmar-3.linta.de>	<20100804111803.GA32643@infradead.org>	<alpine.DEB.1.10.1008041351100.19930@uplift.swm.pp.se>
+	<20100805082438.0b476adb@notabene>
+In-Reply-To: <20100805082438.0b476adb@notabene>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,51 +28,25 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Aug 5, 2010 at 2:25 AM, Dave Chinner <david@fromorbit.com> wrote:
-> a couple of things to see if the hang can be caused faster? Maybe
-> trying these different initial conditions:
+Neil Brown put forth on 8/4/2010 5:24 PM:
 
-Together or independently?
+> Both page-cache and read-ahead work at the filesystem level
 
->
-> =A0 =A0 =A0 =A0- use a smaller test file
+Are you referring to /sys/block/sdx/queue/read_ahead_kb?  I'm pretty sure this
+works below the FS level and below the partition level.  This read_ahead works
+at the block device level.  At least for individual or JBOD.
 
-OK. My theory [based on no evidence] was that it had to be bigger than
-RAM size. I'll try less though.
+Are you saying this setting gets ignored by the kernel if/when mdadm, LVM,
+and/or crypto are used?
 
-> =A0 =A0 =A0 =A0- allocate the file with worst case fragmentation by
-> =A0 =A0 =A0 =A0 =A0writing it backwards in synchronous 4k blocks before
-> =A0 =A0 =A0 =A0 =A0running the test
-
-I created the file with
-
-dd if=3D/dev/zero of=3D... bs=3D1M count=3D...
-
-How would I "write backwards"? Like truncate and then seek to the end,
-write, seek back, write, etc? Is there a utility that might do it
-already?
-
-> =A0 =A0 =A0 =A0- preallocating the test file with fallocate()
-
-Sure.
-
->
-> Also, it woul dbe interesting to find out if a newer kernel also
-> hangs in a similar manner, say 2.6.35?
-
-Will do.
-
--- =
-
-Ilia Mirkin
-imirkin@alum.mit.edu
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
