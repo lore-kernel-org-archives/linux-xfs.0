@@ -1,24 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o75GZ6eK094317 for <xfs@oss.sgi.com>; Thu, 5 Aug 2010 11:35:06 -0500
-Received: from linta.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5F7C449931F
-	for <xfs@oss.sgi.com>; Thu,  5 Aug 2010 09:35:26 -0700 (PDT)
-Received: from linta.de (isilmar-3.linta.de [188.40.101.200]) by cuda.sgi.com
-	with ESMTP id QHcP1AArGuD5SODv for <xfs@oss.sgi.com>;
-	Thu, 05 Aug 2010 09:35:26 -0700 (PDT)
-Date: Thu, 5 Aug 2010 18:35:19 +0200
-From: Dominik Brodowski <linux@dominikbrodowski.net>
+	o75J6OOq098876 for <xfs@oss.sgi.com>; Thu, 5 Aug 2010 14:06:24 -0500
+Received: from rcsinet10.oracle.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6DDFD1E40383
+	for <xfs@oss.sgi.com>; Thu,  5 Aug 2010 12:06:43 -0700 (PDT)
+Received: from rcsinet10.oracle.com (rcsinet10.oracle.com [148.87.113.121]) by
+	cuda.sgi.com with ESMTP id VFGD2Xl3XjCNxWSH for
+	<xfs@oss.sgi.com>; Thu, 05 Aug 2010 12:06:43 -0700 (PDT)
+Date: Thu, 5 Aug 2010 15:01:38 -0400
+From: Chris Mason <chris.mason@oracle.com>
 Subject: Re: direct-io regression [Was: How to track down abysmal
 	performance ata - raid1 - crypto - vg/lv - xfs]
-Message-ID: <20100805163519.GA6604@comet.dominikbrodowski.net>
-References: <20100805123649.GA18672@dhcp231-156.rdu.redhat.com>
+Message-ID: <20100805190138.GV29846@think>
+References: <20100804085039.GA11671@infradead.org>
+	<20100804091317.GA27779@isilmar-3.linta.de>
+	<20100804092122.GA2998@infradead.org>
+	<20100804073546.GA7494@comet.dominikbrodowski.net>
+	<201008041116.09822@zmi.at>
+	<20100804102526.GB13766@isilmar-3.linta.de>
+	<15446.1280953986@localhost>
+	<20100805093100.GA3001@comet.dominikbrodowski.net>
 	<20100805113240.GA29846@think>
-	<20100805153519.GA7242@comet.dominikbrodowski.net>
+	<x49tyn8c2ea.fsf@segfault.boston.devel.redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100805153519.GA7242@comet.dominikbrodowski.net>
+In-Reply-To: <x49tyn8c2ea.fsf@segfault.boston.devel.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,33 +38,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Chris Mason <chris.mason@oracle.com>, josef@redhat.com, Valdis.Kletnieks@vt.edu, Michael Monnerie <michael.monnerie@is.it-management.at>, Christoph Hellwig <hch@infradead.org>, linux-raid@vger.kernel.org, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, dm-devel@redhat.com
+To: Jeff Moyer <jmoyer@redhat.com>
+Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, linux-raid@vger.kernel.org, Valdis.Kletnieks@vt.edu, linux-kernel@vger.kernel.org, Dominik Brodowski <linux@dominikbrodowski.net>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, dm-devel@redhat.com, josef@redhat.com
 
-Small correction:
+On Thu, Aug 05, 2010 at 02:58:37PM -0400, Jeff Moyer wrote:
+> Chris Mason <chris.mason@oracle.com> writes:
+> 
+> > But, I'm surprised your drive is doing 8K dio reads at 16MB/s, that
+> > seems a little high.  
+> 
+> I'm not sure why you think that.  We're talking about a plain old SATA
+> disk, right?  I can get 40-50MB/s on my systems for 8KB O_DIRECT reads.
+> What am I missing?
 
-On Thu, Aug 05, 2010 at 05:35:19PM +0200, Dominik Brodowski wrote:
-> With this fix, I get proper speeds when doing dio reads from
-> /dev/mapper/vg0-*_crypt; see the 17.3 MB/s above. Most strangely,
-> also accesing /dev/mapper/vg0-* (un-encrypted) and the raw
-> device at /dev/sda* speeds up (to up to 28 MB/s). Was only seeing around
-> 16 to 18 MB/s without this patch for unencrypted access.
+Clearly I'm wrong, his drive is going much faster ;)  I expect the
+smaller reads to be slower but the drive's internal cache is doing well.
 
-The speed-up of the unencrypted access (18 -> 28 MB/s) is caused by using a
-different configuration for kernel 2.6.35; and seems to be unrelated to your
-patch. Will try to track down which config option is the culprit.
-
-
-kernel, dmcrypt?	| good config | bad config
--------------------------------------------------
-patched 2.6.35, dmcrypt	  ~ 18 MB/s	~ 13 MB/s
-patched 2.6.35		  ~ 28 MB/s	~ 18 MB/s
--------------------------------------------------
-plain 2.6.35, dmcrypt	  ~  3 MB/s	~  3 MB/s
-plain 2.6.35		  <not tested>	~ 16 MB/s	
-
-
-Best,
-	Dominik
+-chris
 
 _______________________________________________
 xfs mailing list
