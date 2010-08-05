@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o75KsYmk104158 for <xfs@oss.sgi.com>; Thu, 5 Aug 2010 15:54:34 -0500
+	o75KsYHE104159 for <xfs@oss.sgi.com>; Thu, 5 Aug 2010 15:54:34 -0500
 Received: from linta.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8D85E1E40A49
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 58AF01E40A47
 	for <xfs@oss.sgi.com>; Thu,  5 Aug 2010 13:54:54 -0700 (PDT)
 Received: from linta.de (isilmar-3.linta.de [188.40.101.200]) by cuda.sgi.com
-	with ESMTP id QDHksjO6vZUllQZq for <xfs@oss.sgi.com>;
+	with ESMTP id 0cqRXy2JVxfCaEhX for <xfs@oss.sgi.com>;
 	Thu, 05 Aug 2010 13:54:54 -0700 (PDT)
-Date: Thu, 5 Aug 2010 22:54:48 +0200
+Date: Thu, 5 Aug 2010 22:47:49 +0200
 From: Dominik Brodowski <linux@dominikbrodowski.net>
-Subject: Performance impact of CONFIG_SCHED_MC? direct-io test case
-Message-ID: <20100805205448.GB6318@comet.dominikbrodowski.net>
+Subject: Performance impact of CONFIG_DEBUG? direct-io test case
+Message-ID: <20100805204749.GA6318@comet.dominikbrodowski.net>
 References: <20100805123649.GA18672@dhcp231-156.rdu.redhat.com>
 	<20100805113240.GA29846@think>
 	<20100805153519.GA7242@comet.dominikbrodowski.net>
@@ -35,24 +35,35 @@ To: linux-kernel@vger.kernel.org, mingo@redhat.com, peterz@infradead.org
 Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, linux-raid@vger.kernel.org, Valdis.Kletnieks@vt.edu, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, dm-devel@redhat.com, Chris Mason <chris.mason@oracle.com>, josef@redhat.com
 
 
-How large is the performance impact of CONFIG_SCHED_MC -- for which there
-is a warning that it comes "at a cost of slightly increased overhead in
-some places."? Well, for the test workload I've been working with lately,
+How large is the performance impact of CONFIG_DEBUG? Well, for the test
+workload I've been working with lately,
 
 dd if=<device> of=/dev/zero bs=8k count=100000 iflag=direct
 
 where <device> is a dm-crypted LVM volume consisting of several
-partitions on a notebook pata harddisk, and all this runs on a Core2 Duo,
-I get a ~ 10 % performance reduction if CONFIG_SCHED_MC is enabled.
+partitions on a notebook pata harddisk, I get the following results:
 
-Combined with the CONFIG_DEBUG performance reduction mentioned in the other
-message, all of the reduction from 28 MB/s to 18 MB/s is explained for.
+1) best results are ~ 28 MB/s
+
+2) Enabling CONFIG_DEBUG_LOCK_ALLOC, which also means CONFIG_LOCKDEP
+   being enabled, causes the transfer rate to decrease by ~ 1.2 MB/s
+
+3) Enabling CONFIG_DEBUG_SPINLOCK && CONFIG_DEBUG_MUTEXTES or
+   CONFIG_DEBUG_SPINLOCK_SLEEP=y costs about ~ 0.4 MB/s each
+
+4) Enabling all of the following options:
+	CONFIG_DEBUG_RT_MUTEXES
+	CONFIG_DEBUG_PI_LIST
+	CONFIG_PROVE_LOCKING
+	CONFIG_LOCK_STAT
+	CONFIG_DEBUG_LOCKDEP
+   costs another ~ 5 MB/s.
+
+So, for this test case, the performance impact of (some) CONFIG_DEBUG
+options is highly significant, here by about 25 %.
 
 Best,
 	Dominik
-
-PS: Ingo: you got both mingo@elte.hu and mingo@redhat.com in MAINTAINERS,
-I suppose both are valid?
 
 _______________________________________________
 xfs mailing list
