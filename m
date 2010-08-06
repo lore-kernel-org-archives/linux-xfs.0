@@ -1,21 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o76D0k7J140954 for <xfs@oss.sgi.com>; Fri, 6 Aug 2010 08:00:48 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E2795F67B1B
-	for <xfs@oss.sgi.com>; Fri,  6 Aug 2010 06:01:08 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id lMY4vXejcnDpMsy5 for
-	<xfs@oss.sgi.com>; Fri, 06 Aug 2010 06:01:08 -0700 (PDT)
-Date: Fri, 6 Aug 2010 09:01:06 -0400
+	o76D2XSv141052 for <xfs@oss.sgi.com>; Fri, 6 Aug 2010 08:02:33 -0500
+Date: Fri, 6 Aug 2010 09:02:53 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: Reduce log force overhead for delayed logging
-Message-ID: <20100806130106.GA16818@infradead.org>
-References: <1280801234-23568-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH v3] xfs: ensure f_ffree returned by statfs() is
+	non-negative
+Message-ID: <20100806130253.GB16818@infradead.org>
+References: <1280931359.12084.2519.camel@superior.americas.sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1280801234-23568-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1280931359.12084.2519.camel@superior.americas.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,35 +23,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: npiggin@kernel.de, xfs@oss.sgi.com
+To: Stuart Brodsky <sbrodsky@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Looks good to me,
+Good changelog this time around, thanks.
 
+> -       statp->f_ffree = statp->f_files - (sbp->sb_icount -
+> sbp->sb_ifree);
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Your mailer line-wrapper the patch here.
 
-minor nitpicks below:
+> +       ffree = statp->f_files - (sbp->sb_icount - sbp->sb_ifree);
+> +       statp->f_ffree = (__u64) (ffree < 0 ? 0 : ffree);
 
->  int
->  xlog_cil_push(
+Why not just use min_t here?
 
-This can be marked STATIC now.
-
-> +/*
-> + * CIL force routines
-> + */
-> +xfs_lsn_t xlog_cil_force_lsn(struct log *log, xfs_lsn_t sequence);
-> +
-> +static inline void
-> +xlog_cil_force(struct log	*log)
-> +{
-> +	if (log->l_cilp)
-> +		xlog_cil_force_lsn(log, log->l_cilp->xc_current_sequence);
-> +}
-
-I'd move the if (log->l_cilp) check to the caller.  One of the two
-already does so, as does the caller of xlog_cil_force_lsn.
+	statp->f_ffree = max_t(__int64_t, ffree, 0);
 
 _______________________________________________
 xfs mailing list
