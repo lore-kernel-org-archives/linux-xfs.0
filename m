@@ -1,21 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o76D3CnG141099 for <xfs@oss.sgi.com>; Fri, 6 Aug 2010 08:03:12 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9148D49C587
-	for <xfs@oss.sgi.com>; Fri,  6 Aug 2010 06:03:34 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id qaFgvaOgXq94Lbgd for
-	<xfs@oss.sgi.com>; Fri, 06 Aug 2010 06:03:34 -0700 (PDT)
-Date: Fri, 6 Aug 2010 09:03:34 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests: fix NIS detection damage
-Message-ID: <20100806130334.GC16818@infradead.org>
-References: <1281057519-24730-1-git-send-email-david@fromorbit.com>
+	o77A84Pd192929 for <xfs@oss.sgi.com>; Sat, 7 Aug 2010 05:08:04 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DBDEE16C4101
+	for <xfs@oss.sgi.com>; Sat,  7 Aug 2010 03:08:24 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	WjmLDeXAHhV1IrsT for <xfs@oss.sgi.com>;
+	Sat, 07 Aug 2010 03:08:24 -0700 (PDT)
+Date: Sat, 7 Aug 2010 20:08:21 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS hung on 2.6.33.3 kernel
+Message-ID: <20100807100821.GC7362@dastard>
+References: <AANLkTilX3l8TbUztLStj_u9OqOZnBrsNQxmeV4DuBmYJ@mail.gmail.com>
+	<20100718012033.GA18888@dastard>
+	<AANLkTikEv75KRyRTs4awmG894NSKMnBkJNJPYsypMdWf@mail.gmail.com>
+	<20100718235036.GC32635@dastard>
+	<AANLkTi=EzePfBRdEFQo2BRtKy=464Ci6zPG=UyYJiwNp@mail.gmail.com>
+	<20100805062541.GC26402@dastard>
+	<AANLkTinhwA1greZdCnoDvd9ieYinhjv0M07sNkbVdy3_@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1281057519-24730-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <AANLkTinhwA1greZdCnoDvd9ieYinhjv0M07sNkbVdy3_@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,30 +31,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Ilia Mirkin <imirkin@alum.mit.edu>
 Cc: xfs@oss.sgi.com
 
-On Fri, Aug 06, 2010 at 11:18:39AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> NIS detection wasn't tested on machines without NIS enabled, so many tests are
-> failing on non-NIS machines. the _yp_active function has no specific return
-> value so always evaluates as 0 (active) and the "_cat_passwd" function is
-> called from within an awk script which is not valid as the shell may run with a
-> sanitised environment. Hence the functions do not need specific export calls,
-> either, as unsanitised subshells will automatically inherit the parent's
-> environment.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+On Thu, Aug 05, 2010 at 02:42:38AM -0400, Ilia Mirkin wrote:
+> On Thu, Aug 5, 2010 at 2:25 AM, Dave Chinner <david@fromorbit.com> wrote:
+> > a couple of things to see if the hang can be caused faster? Maybe
+> > trying these different initial conditions:
+> =
 
-Looks good,
+> Together or independently?
 
+independently first - then if that does't work, maybe together?
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > =A0 =A0 =A0 =A0- allocate the file with worst case fragmentation by
+> > =A0 =A0 =A0 =A0 =A0writing it backwards in synchronous 4k blocks before
+> > =A0 =A0 =A0 =A0 =A0running the test
+> =
+
+> I created the file with
+> =
+
+> dd if=3D/dev/zero of=3D... bs=3D1M count=3D...
+> =
+
+> How would I "write backwards"? Like truncate and then seek to the end,
+> write, seek back, write, etc? Is there a utility that might do it
+> already?
+
+For a 1GB file:
+
+$ for i in `seq 256000 1 0`; do
+> dd if=3D/dev/zero of=3Dtestfile bs=3D4k count=3D1 seek=3D$i conv=3Dnotrun=
+c,sync
+> done
+
+Cheers,
+
+Dave.
+-- =
+
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
