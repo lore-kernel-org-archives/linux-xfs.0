@@ -1,28 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o77A84Pd192929 for <xfs@oss.sgi.com>; Sat, 7 Aug 2010 05:08:04 -0500
+	o77ADVrW193170 for <xfs@oss.sgi.com>; Sat, 7 Aug 2010 05:13:31 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DBDEE16C4101
-	for <xfs@oss.sgi.com>; Sat,  7 Aug 2010 03:08:24 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	WjmLDeXAHhV1IrsT for <xfs@oss.sgi.com>;
-	Sat, 07 Aug 2010 03:08:24 -0700 (PDT)
-Date: Sat, 7 Aug 2010 20:08:21 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8190149F79F
+	for <xfs@oss.sgi.com>; Sat,  7 Aug 2010 03:13:52 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	jn9ILX9FggwIjGmK for <xfs@oss.sgi.com>;
+	Sat, 07 Aug 2010 03:13:52 -0700 (PDT)
+Date: Sat, 7 Aug 2010 20:13:49 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS hung on 2.6.33.3 kernel
-Message-ID: <20100807100821.GC7362@dastard>
-References: <AANLkTilX3l8TbUztLStj_u9OqOZnBrsNQxmeV4DuBmYJ@mail.gmail.com>
-	<20100718012033.GA18888@dastard>
-	<AANLkTikEv75KRyRTs4awmG894NSKMnBkJNJPYsypMdWf@mail.gmail.com>
-	<20100718235036.GC32635@dastard>
-	<AANLkTi=EzePfBRdEFQo2BRtKy=464Ci6zPG=UyYJiwNp@mail.gmail.com>
-	<20100805062541.GC26402@dastard>
-	<AANLkTinhwA1greZdCnoDvd9ieYinhjv0M07sNkbVdy3_@mail.gmail.com>
+Subject: Re: How to track down abysmal performance ata - raid1 - crypto -
+	vg/lv - xfs
+Message-ID: <20100807101349.GD7362@dastard>
+References: <20100804085039.GA11671@infradead.org>
+	<20100804091317.GA27779@isilmar-3.linta.de>
+	<20100804092122.GA2998@infradead.org>
+	<20100804073546.GA7494@comet.dominikbrodowski.net>
+	<201008041116.09822@zmi.at>
+	<20100804102526.GB13766@isilmar-3.linta.de>
+	<20100804111803.GA32643@infradead.org>
+	<alpine.DEB.1.10.1008041351100.19930@uplift.swm.pp.se>
+	<20100805082438.0b476adb@notabene>
+	<4C5A774D.6000400@hardwarefreak.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <AANLkTinhwA1greZdCnoDvd9ieYinhjv0M07sNkbVdy3_@mail.gmail.com>
+In-Reply-To: <4C5A774D.6000400@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,50 +35,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ilia Mirkin <imirkin@alum.mit.edu>
+To: Stan Hoeppner <stan@hardwarefreak.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Aug 05, 2010 at 02:42:38AM -0400, Ilia Mirkin wrote:
-> On Thu, Aug 5, 2010 at 2:25 AM, Dave Chinner <david@fromorbit.com> wrote:
-> > a couple of things to see if the hang can be caused faster? Maybe
-> > trying these different initial conditions:
-> =
+On Thu, Aug 05, 2010 at 03:33:17AM -0500, Stan Hoeppner wrote:
+> Neil Brown put forth on 8/4/2010 5:24 PM:
+> 
+> > Both page-cache and read-ahead work at the filesystem level
+> 
+> Are you referring to /sys/block/sdx/queue/read_ahead_kb?  I'm pretty sure this
+> works below the FS level and below the partition level.  This read_ahead works
+> at the block device level.  At least for individual or JBOD.
 
-> Together or independently?
+That number is used to initialise the default readahead value for
+any file descriptor opened on the filesystem. readahead is tracked
+per-fd at the page cache level, so is effectively at the filesystem
+level, not the block device.
 
-independently first - then if that does't work, maybe together?
+> Are you saying this setting gets ignored by the kernel if/when mdadm, LVM,
+> and/or crypto are used?
 
-> > =A0 =A0 =A0 =A0- allocate the file with worst case fragmentation by
-> > =A0 =A0 =A0 =A0 =A0writing it backwards in synchronous 4k blocks before
-> > =A0 =A0 =A0 =A0 =A0running the test
-> =
-
-> I created the file with
-> =
-
-> dd if=3D/dev/zero of=3D... bs=3D1M count=3D...
-> =
-
-> How would I "write backwards"? Like truncate and then seek to the end,
-> write, seek back, write, etc? Is there a utility that might do it
-> already?
-
-For a 1GB file:
-
-$ for i in `seq 256000 1 0`; do
-> dd if=3D/dev/zero of=3Dtestfile bs=3D4k count=3D1 seek=3D$i conv=3Dnotrun=
-c,sync
-> done
+Only the value from the block device the filesystem sits on is used.
+i.e. if you are using /dev/md0, then the filesystem uses the value
+from /sys/block/md0/queue/read_ahead_kb and ignores all the ones set
+on the /dev/sdX devices that make up /dev/md0.
 
 Cheers,
 
 Dave.
--- =
-
+-- 
 Dave Chinner
 david@fromorbit.com
 
