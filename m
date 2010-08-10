@@ -1,23 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o787kead242465 for <xfs@oss.sgi.com>; Sun, 8 Aug 2010 02:46:40 -0500
-Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2D7B0D76721
-	for <xfs@oss.sgi.com>; Sun,  8 Aug 2010 00:47:00 -0700 (PDT)
-Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id kADZHkndxDaxO9K7 for
-	<xfs@oss.sgi.com>; Sun, 08 Aug 2010 00:47:00 -0700 (PDT)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: How to track down abysmal performance ata - raid1 - crypto -
-	vg/lv - xfs
-Date: Sun, 8 Aug 2010 09:46:53 +0200
-References: <20100804085039.GA11671@infradead.org>
-	<4C5A774D.6000400@hardwarefreak.com>
-	<20100807101349.GD7362@dastard>
-In-Reply-To: <20100807101349.GD7362@dastard>
-MIME-Version: 1.0
-Message-Id: <201008080946.57635@zmi.at>
+	o7A7Nnic077523 for <xfs@oss.sgi.com>; Tue, 10 Aug 2010 02:23:50 -0500
+Received: from mout-bounce.perfora.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C709D4A5AD3
+	for <xfs@oss.sgi.com>; Tue, 10 Aug 2010 00:24:13 -0700 (PDT)
+Received: from mout-bounce.perfora.net (mout-bounce.perfora.net
+	[74.208.4.199]) by cuda.sgi.com with ESMTP id ilvRXRhHGo3P15Hc
+	for <xfs@oss.sgi.com>; Tue, 10 Aug 2010 00:24:13 -0700 (PDT)
+From: Traditions Customer Service <tradcustomerservice@hotshotsusa.com>
+Subject: Thank you for contacting Traditions
+Date: Tue, 10 Aug 2010 03:24:13 -0400
+Message-Id: <0Lruj8-1Ov7a71SQw-013vgj@mx.perfora.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,90 +20,28 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3497980372135725310=="
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============3497980372135725310==
-Content-Type: multipart/signed;
-  boundary="nextPart4150250.H0cggjMXBm";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+Thank you for contacting us!  We have answered some common questions below.  If we haven't, you will receive an answer shortly.  Please contact us at 800-297-4723 for immediate answers to your questions.
 
---nextPart4150250.H0cggjMXBm
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+How long will my order take to ship?
+Diploma Frames - 2-4 weeks
+Announcements - 7-10 business days
+Rings - 8-10 weeks
+Cap and Gown - approximately 2 weeks prior to commencement
 
-On Samstag, 7. August 2010 Dave Chinner wrote:
-> > Are you referring to /sys/block/sdx/queue/read_ahead_kb?  I'm
-> > pretty sure this works below the FS level and below the partition
-> > level.  This read_ahead works at the block device level.  At least
-> > for individual or JBOD.
->=20
-> That number is used to initialise the default readahead value for
-> any file descriptor opened on the filesystem. readahead is tracked
-> per-fd at the page cache level, so is effectively at the filesystem
-> level, not the block device.
->=20
-> > Are you saying this setting gets ignored by the kernel if/when
-> > mdadm, LVM, and/or crypto are used?
->=20
-> Only the value from the block device the filesystem sits on is used.
-> i.e. if you are using /dev/md0, then the filesystem uses the value
-> from /sys/block/md0/queue/read_ahead_kb and ignores all the ones set
-> on the /dev/sdX devices that make up /dev/md0.
-=20
-That would be a wonderful piece of documentation belonging to=20
-Documentation/sysctl/fs.txt or vm.txt, and /sbin/sysctl should not only=20
-change /proc/sys values, but also /sys entries.
+I forgot to order my cap and gown, how can I get one?
+You can visit our office at 1540 Louis Bork Drive, Batavia, IL to purchase a gown.  Or you can purchase one at commencement, our representatives will be set up 2 hours prior to commencement. Please contact our office at 800-297-4723 for more info.
 
-Such performance knobs are very poorly documented, but would be an=20
-important bit for administrators to tune systems for their needs. This=20
-is something that's really missing in Linux.
-
-
-=2D-=20
-mit freundlichen Gr=FCssen,
-Michael Monnerie, Ing. BSc
-
-it-management Internet Services
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: 0660 / 415 65 31
-
-****** Aktuelles Radiointerview! ******
-http://www.it-podcast.at/aktuelle-sendung.html
-
-// Wir haben im Moment zwei H=E4user zu verkaufen:
-// http://zmi.at/langegg/
-// http://zmi.at/haus2009/
-
---nextPart4150250.H0cggjMXBm
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.12 (GNU/Linux)
-
-iEYEABECAAYFAkxeYPEACgkQzhSR9xwSCbTtcACg2gg83JJO+lbH3KLkgJ4fDXlU
-DdIAnAkrxrZk2tQe3iQ1GfstSe1GxLez
-=7Hw6
------END PGP SIGNATURE-----
-
---nextPart4150250.H0cggjMXBm--
-
-
---===============3497980372135725310==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+How can I track my order?
+You will receive an email confirmation when you place your order online and another email confirmation once your order has shipped.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3497980372135725310==--
