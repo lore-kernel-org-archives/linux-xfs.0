@@ -1,32 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7BI8Krf153709
-	for <linux-xfs@oss.sgi.com>; Wed, 11 Aug 2010 13:08:21 -0500
-Received: from lo.gmane.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9EDACC8167B
-	for <linux-xfs@oss.sgi.com>; Wed, 11 Aug 2010 11:17:26 -0700 (PDT)
-Received: from lo.gmane.org (lo.gmane.org [80.91.229.12]) by cuda.sgi.com with
-	ESMTP id Smsvlse4bC1C5CW0 for <linux-xfs@oss.sgi.com>;
-	Wed, 11 Aug 2010 11:17:26 -0700 (PDT)
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1OjFjF-00062n-Ff
-	for linux-xfs@oss.sgi.com; Wed, 11 Aug 2010 20:08:41 +0200
-Received: from barriere.frankfurter-softwarefabrik.de ([217.11.197.1])
-	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Wed, 11 Aug 2010 20:08:41 +0200
-Received: from niemayer by barriere.frankfurter-softwarefabrik.de with local
-	(Gmexim 0.1 (Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Wed, 11 Aug 2010 20:08:41 +0200
-From: Peter Niemayer <niemayer@isg.de>
-Subject: Re: observed significant performance improvement using "delaylog"
-	in a real-world application
-Date: Wed, 11 Aug 2010 20:08:33 +0200
-Message-ID: <i3uov1$ugj$1@dough.gmane.org>
-References: <i3rt4t$46c$1@dough.gmane.org> <20100811000854.GL26402@dastard>
-Mime-Version: 1.0
-In-Reply-To: <20100811000854.GL26402@dastard>
+	o7BMV1rv165700 for <xfs@oss.sgi.com>; Wed, 11 Aug 2010 17:31:02 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 266F5C9D9CA
+	for <xfs@oss.sgi.com>; Wed, 11 Aug 2010 15:40:07 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id DOFcOyckcjhVQXg5 for
+	<xfs@oss.sgi.com>; Wed, 11 Aug 2010 15:40:07 -0700 (PDT)
+Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv14.zmi.at (Postfix) with ESMTPSA id 63C03703
+	for <xfs@oss.sgi.com>; Thu, 12 Aug 2010 00:31:22 +0200 (CEST)
+Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id 2B2FE401C2E
+	for <xfs@oss.sgi.com>; Thu, 12 Aug 2010 00:31:22 +0200 (CEST)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: observed significant performance improvement using "delaylog" in
+	a real-world application
+Date: Thu, 12 Aug 2010 00:31:21 +0200
+References: <i3rt4t$46c$1@dough.gmane.org> <201008111428.31196@zmi.at>
+	<i3ul1b$d3b$1@dough.gmane.org>
+In-Reply-To: <i3ul1b$d3b$1@dough.gmane.org>
+MIME-Version: 1.0
+Message-Id: <201008120031.21682@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,33 +35,75 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: multipart/mixed; boundary="===============4153623471444682869=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 08/11/2010 02:08 AM, Dave Chinner wrote:
-> One thing that you might want to try to
-> further improve performance is the logbsize=262144 option as well.
-> That will help flush log IO faster by doing less IOs.
+--===============4153623471444682869==
+Content-Type: multipart/signed;
+  boundary="nextPart2733270.f5vIWqtFvQ";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-Tried that - but this did not have a positive effect.
-(In fact a slightly negative one, but that could be within
-the measurement accuracy).
+--nextPart2733270.f5vIWqtFvQ
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-> Also, if your workload is doing lots of fsync calls, then the
-> optimisations I posted a few days ago should also help improve
-> delaylog throughput.
+On Mittwoch, 11. August 2010 Peter Niemayer wrote:
+> I think after the "ext2"-age no serious file system ever had
+> a real problem dealing with lots of files in one directory -
+> or do you have contradicting information?
+=20
+IIRC 2010 there was someone on this list reporting problems when a=20
+certain amount of files were created in a dir. He had to do with=20
+audio/video recording, where delays are important (not to have). At one=20
+point file creating time increased a lot, but I don't remember if it was=20
+a filesystem problem or something else. But as it was the only report I=20
+saw, I'd say you are right and a big number of files per dir doesn't=20
+matter anymore.
 
-We don't to any fsync's.
+=2D-=20
+mit freundlichen Gr=FCssen,
+Michael Monnerie, Ing. BSc
 
-Regards,
+it-management Internet Services
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: 0660 / 415 65 31
 
-Peter Niemayer
+****** Aktuelles Radiointerview! ******
+http://www.it-podcast.at/aktuelle-sendung.html
 
+// Wir haben im Moment zwei H=E4user zu verkaufen:
+// http://zmi.at/langegg/
+// http://zmi.at/haus2009/
+
+--nextPart2733270.f5vIWqtFvQ
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.12 (GNU/Linux)
+
+iEYEABECAAYFAkxjJLkACgkQzhSR9xwSCbSYSwCgitiYdnwFqzjN3l/I/fYrqoTv
+p/EAoPZMdS/4+Xdko9AsCQU9c8Uwrjoq
+=VXNZ
+-----END PGP SIGNATURE-----
+
+--nextPart2733270.f5vIWqtFvQ--
+
+
+--===============4153623471444682869==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============4153623471444682869==--
