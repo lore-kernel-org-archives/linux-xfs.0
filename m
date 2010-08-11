@@ -1,34 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7BH1RI1150539
-	for <linux-xfs@oss.sgi.com>; Wed, 11 Aug 2010 12:01:30 -0500
+	o7BI8Krf153709
+	for <linux-xfs@oss.sgi.com>; Wed, 11 Aug 2010 13:08:21 -0500
 Received: from lo.gmane.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 40F144ABD38
-	for <linux-xfs@oss.sgi.com>; Wed, 11 Aug 2010 10:01:51 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9EDACC8167B
+	for <linux-xfs@oss.sgi.com>; Wed, 11 Aug 2010 11:17:26 -0700 (PDT)
 Received: from lo.gmane.org (lo.gmane.org [80.91.229.12]) by cuda.sgi.com with
-	ESMTP id nJw8Dem8a9yljCyU for <linux-xfs@oss.sgi.com>;
-	Wed, 11 Aug 2010 10:01:51 -0700 (PDT)
+	ESMTP id Smsvlse4bC1C5CW0 for <linux-xfs@oss.sgi.com>;
+	Wed, 11 Aug 2010 11:17:26 -0700 (PDT)
 Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1OjEgO-0000CM-Vr
-	for linux-xfs@oss.sgi.com; Wed, 11 Aug 2010 19:01:40 +0200
+	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1OjFjF-00062n-Ff
+	for linux-xfs@oss.sgi.com; Wed, 11 Aug 2010 20:08:41 +0200
 Received: from barriere.frankfurter-softwarefabrik.de ([217.11.197.1])
 	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
 	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Wed, 11 Aug 2010 19:01:40 +0200
+	for <linux-xfs@oss.sgi.com>; Wed, 11 Aug 2010 20:08:41 +0200
 Received: from niemayer by barriere.frankfurter-softwarefabrik.de with local
 	(Gmexim 0.1 (Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Wed, 11 Aug 2010 19:01:40 +0200
+	for <linux-xfs@oss.sgi.com>; Wed, 11 Aug 2010 20:08:41 +0200
 From: Peter Niemayer <niemayer@isg.de>
 Subject: Re: observed significant performance improvement using "delaylog"
 	in a real-world application
-Date: Wed, 11 Aug 2010 19:01:31 +0200
-Message-ID: <i3ul1b$d3b$1@dough.gmane.org>
-References: <i3rt4t$46c$1@dough.gmane.org>
-	<201008111003.36890@zmi.at>	<i3trg6$eps$1@dough.gmane.org>
-	<201008111428.31196@zmi.at>
+Date: Wed, 11 Aug 2010 20:08:33 +0200
+Message-ID: <i3uov1$ugj$1@dough.gmane.org>
+References: <i3rt4t$46c$1@dough.gmane.org> <20100811000854.GL26402@dastard>
 Mime-Version: 1.0
-In-Reply-To: <201008111428.31196@zmi.at>
+In-Reply-To: <20100811000854.GL26402@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -43,20 +41,25 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: linux-xfs@oss.sgi.com
 
-On 08/11/2010 02:28 PM, Michael Monnerie wrote:
-> Thank you. Are those files located within one dir or do you use a hash
-> structure like squid cache does?
+On 08/11/2010 02:08 AM, Dave Chinner wrote:
+> One thing that you might want to try to
+> further improve performance is the logbsize=262144 option as well.
+> That will help flush log IO faster by doing less IOs.
 
-There's only a shallow hierarchy (for functional, not for distribution
-reasons), so the relevant directories have thousands of files in them.
+Tried that - but this did not have a positive effect.
+(In fact a slightly negative one, but that could be within
+the measurement accuracy).
 
-I think after the "ext2"-age no serious file system ever had
-a real problem dealing with lots of files in one directory -
-or do you have contradicting information?
+> Also, if your workload is doing lots of fsync calls, then the
+> optimisations I posted a few days ago should also help improve
+> delaylog throughput.
+
+We don't to any fsync's.
 
 Regards,
 
 Peter Niemayer
+
 
 _______________________________________________
 xfs mailing list
