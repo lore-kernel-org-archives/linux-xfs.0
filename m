@@ -1,25 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7CInwpT234587 for <xfs@oss.sgi.com>; Thu, 12 Aug 2010 13:49:58 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 91F4814CC869
-	for <xfs@oss.sgi.com>; Thu, 12 Aug 2010 11:59:08 -0700 (PDT)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id 2EdTDpKRa3H42lJd for
-	<xfs@oss.sgi.com>; Thu, 12 Aug 2010 11:59:08 -0700 (PDT)
-Received: from Liberator.local (unknown [12.198.177.3])
+	o7CJ5Hur236103 for <xfs@oss.sgi.com>; Thu, 12 Aug 2010 14:05:17 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D8C0B4AFF15
+	for <xfs@oss.sgi.com>; Thu, 12 Aug 2010 12:05:38 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id sAeC3VQSqmF3JIEk for
+	<xfs@oss.sgi.com>; Thu, 12 Aug 2010 12:05:38 -0700 (PDT)
+Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv14.zmi.at (Postfix) with ESMTPSA id AFBBD17F
+	for <xfs@oss.sgi.com>; Thu, 12 Aug 2010 21:05:36 +0200 (CEST)
+Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail.sandeen.net (Postfix) with ESMTP id DA4354106E08
-	for <xfs@oss.sgi.com>; Thu, 12 Aug 2010 13:50:18 -0500 (CDT)
-Message-ID: <4C644269.20109@sandeen.net>
-Date: Thu, 12 Aug 2010 14:50:17 -0400
-From: Eric Sandeen <sandeen@sandeen.net>
+	(Client did not present a certificate)
+	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id 53231401C2E
+	for <xfs@oss.sgi.com>; Thu, 12 Aug 2010 21:05:36 +0200 (CEST)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: observed significant performance improvement using "delaylog" in
+Date: Thu, 12 Aug 2010 21:05:35 +0200
+References: <201008121346.30760.eye.of.the.8eholder@gmail.com>
+In-Reply-To: <201008121346.30760.eye.of.the.8eholder@gmail.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests 228: suppress core dump message
-References: <4C0FB207.20706@sandeen.net>
-In-Reply-To: <4C0FB207.20706@sandeen.net>
+Message-Id: <201008122105.35787@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,67 +33,69 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============0526552923721286178=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Eric Sandeen wrote:
-> When running 228 with abrt on in rhel6, I was getting different
-> output due to a (core dumped) message on SIGXFSZ.  For some reason
-> I wasn't able to use sed to filter it, and just ulimit -c 0 didn't
-> suppress it either.
-> 
-> abrt sets the core pattern to:
-> 
-> "|/usr/libexec/abrt-hook-ccpp /var/spool/abrt %p %s %u %c""
-> 
-> which apparently allows core dumps even if ulimit -c is 0, due
-> to the pipe.
-> 
-> Temporarily changing the kernel's core pattern to just plain "core"
-> and setting ulimit -c to 0 does suppress it.  These are reset to
-> original values after the test is run.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+--===============0526552923721286178==
+Content-Type: multipart/signed;
+  boundary="nextPart2301956.zxzAzIfnxN";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-hm ping on this one?
+--nextPart2301956.zxzAzIfnxN
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-> ---
-> 
-> --- 228.orig	2010-06-09 11:13:27.000000000 -0400
-> +++ 228	2010-06-09 11:19:57.000000000 -0400
-> @@ -31,6 +31,8 @@
->  {
->  	cd /
->  	rm -f $tmp.*
-> +	sysctl -w kernel.core_pattern="$core_pattern" &>/dev/null
-> +	ulimit -c $ulimit_c
->  }
->  
->  here=`pwd`
-> @@ -58,6 +60,12 @@
->  avail=`df -P $TEST_DIR | awk 'END {print $4}'`
->  [ "$avail" -ge 104000 ] || _notrun "Test device is too small ($avail KiB)"
->  
-> +# Suppress core dumped messages
-> +core_pattern=`sysctl kernel.core_pattern | awk -F = '{print $NF}'`
-> +ulimit_c=`ulimit -c`
-> +sysctl -w kernel.core_pattern=core &>/dev/null
-> +ulimit -c 0
-> +
->  # Set the FSIZE ulimit to 100MB and check
->  ulimit -f 102400
->  flim=`ulimit -f`
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+On Donnerstag, 12. August 2010 Khelben Blackstaff wrote:
+> Here is my post with the results of the benchmark.
+> http://lordkhelben.wordpress.com/2010/07/08/xfs-delayed-logging/
+=20
+Wow, BTRFS rocks. I guess I'll use it once it's released. But I'm=20
+stunned that XFS is that much slower than ext4 in many tests.
+
+=2D-=20
+mit freundlichen Gr=FCssen,
+Michael Monnerie, Ing. BSc
+
+it-management Internet Services
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: 0660 / 415 65 31
+
+****** Aktuelles Radiointerview! ******
+http://www.it-podcast.at/aktuelle-sendung.html
+
+// Wir haben im Moment zwei H=E4user zu verkaufen:
+// http://zmi.at/langegg/
+// http://zmi.at/haus2009/
+
+--nextPart2301956.zxzAzIfnxN
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.12 (GNU/Linux)
+
+iEYEABECAAYFAkxkRf8ACgkQzhSR9xwSCbRmrwCfRXRm0LhqVC4RUcP8bR7XrAww
+Q/kAn27cR9q6j4+JDZu9OJ0mg+dYEvw5
+=en7I
+-----END PGP SIGNATURE-----
+
+--nextPart2301956.zxzAzIfnxN--
+
+
+--===============0526552923721286178==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============0526552923721286178==--
