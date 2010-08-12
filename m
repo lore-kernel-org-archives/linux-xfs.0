@@ -1,32 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7CLkX84252159
-	for <linux-xfs@oss.sgi.com>; Thu, 12 Aug 2010 16:46:36 -0500
-Received: from lo.gmane.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0299614CD663
-	for <linux-xfs@oss.sgi.com>; Thu, 12 Aug 2010 14:55:43 -0700 (PDT)
-Received: from lo.gmane.org (lo.gmane.org [80.91.229.12]) by cuda.sgi.com with
-	ESMTP id RhLpHU5UHaHZAwnz for <linux-xfs@oss.sgi.com>;
-	Thu, 12 Aug 2010 14:55:43 -0700 (PDT)
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1Ojfbv-0007Xy-UW
-	for linux-xfs@oss.sgi.com; Thu, 12 Aug 2010 23:46:51 +0200
-Received: from barriere.frankfurter-softwarefabrik.de ([217.11.197.1])
-	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Thu, 12 Aug 2010 23:46:51 +0200
-Received: from niemayer by barriere.frankfurter-softwarefabrik.de with local
-	(Gmexim 0.1 (Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Thu, 12 Aug 2010 23:46:51 +0200
-From: Peter Niemayer <niemayer@isg.de>
-Subject: Re: observed significant performance improvement using "delaylog" in
-Date: Thu, 12 Aug 2010 23:46:43 +0200
-Message-ID: <i41q43$6td$1@dough.gmane.org>
-References: <201008121346.30760.eye.of.the.8eholder@gmail.com>
-	<201008122105.35787@zmi.at>
-Mime-Version: 1.0
-In-Reply-To: <201008122105.35787@zmi.at>
+	o7CMAGkk254317 for <xfs@oss.sgi.com>; Thu, 12 Aug 2010 17:10:17 -0500
+Received: from isrv.corpit.ru (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0FC3B14CDC41
+	for <xfs@oss.sgi.com>; Thu, 12 Aug 2010 15:19:30 -0700 (PDT)
+Received: from isrv.corpit.ru (isrv.corpit.ru [86.62.121.231]) by cuda.sgi.com
+	with ESMTP id OJAvY0iEXroFrJKS for <xfs@oss.sgi.com>;
+	Thu, 12 Aug 2010 15:19:30 -0700 (PDT)
+Message-ID: <4C64715F.8060000@msgid.tls.msk.ru>
+Date: Fri, 13 Aug 2010 02:10:39 +0400
+From: Michael Tokarev <mjt@tls.msk.ru>
+MIME-Version: 1.0
+Subject: Alignment size?
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,57 +21,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 08/12/2010 09:05 PM, Michael Monnerie wrote:
-> On Donnerstag, 12. August 2010 Khelben Blackstaff wrote:
->> Here is my post with the results of the benchmark.
->> http://lordkhelben.wordpress.com/2010/07/08/xfs-delayed-logging/
->
-> Wow, BTRFS rocks.
+Hello.
 
-Be sure to measure your specific use-case before jumping
-to conclusions.
+I used XFS for a long time on many different
+servers, and it works well.  But now I encountered
+an.. unexpected problem.
 
-With our application, for example, Btrfs performed exceptionally
-bad - about 4 times(!) as slow as XFS.
+The question is: on one of our servers, XFS requires
+different alignment size for O_DIRECT operations than
+on others.  Usually it's 512 bytes, but on this server
+it is 4096 - both min_io and alignment (this is from
+XFS_IOC_DIOINFO ioctl).
 
-Then again, there are some use-cases where even older
-file-systems like reiser3 excel (e.g. storing files for
-cyrus imapd).
+I'm not sure what the reason for this is.
+On this server, the underlying block device is raid5
+(linux sw raid), but we had other machines with raid5
+which didn't have that alignment requiriments.
 
+The problem with that is that Oracle db, which we use
+with XFS alot, refuses to work on this machine, or,
+rather, XFS refuses to process I/O in 512-byte chunks
+from oracle (control files and redolog files).
 
-> But I'm stunned that XFS is that much slower than ext4 in many tests.
+I know it is a frequent combination which is used in
+production in many places, and is used here alot too,
+but I haven't seen anyone mentioning this issue we
+have now, with "larger than usual" alignment size
+requiriments.
 
-Again, it all depends on the use-case. For us, ext4
-performs good (when used with all kinds of performance-enhancing,
-safety-reducing mount-options), but not as good as XFS.
+Is there a way to remedy this somehow, without
+reformatting whole 600+ gb?
 
-To me, as of today, XFS' big strength is performing good to
-excellent (while not always better than all other file-systems)
-in many use-cases - without worries about instability or immaturity.
+Thank you!
 
-
-One thing, I guess, is for sure: Every file-system will require
-continued development to stay competitive.
-
-SSDs, for example, are just beginning to get used appropriately
-by modern file-systems. There's plenty of opportunity left to
-optimize for them.
-
-And once that is done, there may be yet another storage-technology
-available (PRAM? Racetrack?), that benefits from specific strategies.
-
-So the competition will stay open... :-)
-
-Regards,
-
-Peter Niemayer
-
+/mjt
 
 _______________________________________________
 xfs mailing list
