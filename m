@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7DFFFKt069017 for <xfs@oss.sgi.com>; Fri, 13 Aug 2010 10:15:15 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6BA2B4B4E1C
-	for <xfs@oss.sgi.com>; Fri, 13 Aug 2010 08:15:42 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id cUgKGiqzNIgNGV2r for
-	<xfs@oss.sgi.com>; Fri, 13 Aug 2010 08:15:42 -0700 (PDT)
-Date: Fri, 13 Aug 2010 11:15:39 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Alignment size?
-Message-ID: <20100813151539.GA22492@infradead.org>
-References: <4C64715F.8060000@msgid.tls.msk.ru>
-	<20100812234911.GC10429@dastard>
-	<4C64E52E.2060806@msgid.tls.msk.ru>
-	<20100813113915.GD10429@dastard>
+	o7DKeAHO092705 for <xfs@oss.sgi.com>; Fri, 13 Aug 2010 15:40:10 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BAA1314D1AC6
+	for <xfs@oss.sgi.com>; Fri, 13 Aug 2010 13:49:28 -0700 (PDT)
+Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
+	by cuda.sgi.com with ESMTP id CD8e9EgiSh5NIZCn for
+	<xfs@oss.sgi.com>; Fri, 13 Aug 2010 13:49:28 -0700 (PDT)
+Message-ID: <4C65ADC1.3010801@sandeen.net>
+Date: Fri, 13 Aug 2010 15:40:33 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100813113915.GD10429@dastard>
+Subject: Re: fs corruption not detected by xfs_check or _repair
+References: <4C656149.6050604@nethype.de>
+In-Reply-To: <4C656149.6050604@nethype.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,18 +27,57 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Michael Tokarev <mjt@tls.msk.ru>, xfs@oss.sgi.com
+To: Marco Maisenhelder <marco@nethype.de>
+Cc: xfs@oss.sgi.com
 
-On Fri, Aug 13, 2010 at 09:39:15PM +1000, Dave Chinner wrote:
-> The workaround old versions of mkfs.xfs used was to create the fs
-> with a sector size of 4k when it detected md raid5 underneath it so
-> the sb and ag headers were all 4k aligned and sized, just like the
-> rest of the filesystem....
+Marco Maisenhelder wrote:
+> Hi list,
+> 
+> I have a little bit of a problem after a catastrophic hardware failure
+> (power supply went up in smoke and took half of my server with it -
+> luckily only one of my raid5 disks though). My xfs data partition on my
+> raid has some severe corruption that prevents me from accessing some
+> files and directories on the partition. This is how the problem
+> manifests itself:
+> 
+> *marco:/etc# ls -lrt /store/xfs_corruption/x/
+> ls: cannot access /store/xfs_corruption/x/db.backup2: Invalid argument
+> ls: cannot access /store/xfs_corruption/x/db.backup1: Invalid argument
+> total 0
+> ?????????? ? ? ? ?                ? db.backup2
+> ?????????? ? ? ? ?                ? db.backup1
+> 
+> xfs_check does not report any errors. xfs_repair does not repair anything.
+> 
+> xfs_repair version 3.1.2
+> xfs_check version 3.1.2
+> System is Debian stable using a 2.6.26-2-amd64 kernel
+> 
+> *marco:/etc# xfs_info /store/
+> meta-data=/dev/mapper/vgraid-rstore isize=256    agcount=48,
+> agsize=11443904 blks
+>          =                       sectsz=512   attr=2
+> data     =                       bsize=4096   blocks=549307392, imaxpct=25
+>          =                       sunit=64     swidth=192 blks
+> naming   =version 2              bsize=4096
+> log      =internal               bsize=4096   blocks=32768, version=2
+>          =                       sectsz=512   sunit=64 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> 
+> There's nothing in any of the system logs that would hint to the
+> filesystem being corrupt.
+> 
+> I have done a metadump but after looking into it found that there's
+> still sensitive information in there. I would be ok sharing it with
+> individual developers but I can't put that on an open mailinglist.
 
-That workaround is still in latests mkfs.xfs if you build against
-the internal libdisk instead of libblkid.  And that's the case at
-least for Debian, and probably a few other distributions as well.
+You might be able to xfs_mdrestore, mount that, remove all but the
+offending directory, re-metadump that, and put it out there?  Just a thought,
+I haven't looked in further detail at your xfs_db adventures, sorry - maybe
+there's enough info there but I'm swamped in other things ATM, so will leave
+it to others, I hope.  :)
+
+-Eric
 
 _______________________________________________
 xfs mailing list
