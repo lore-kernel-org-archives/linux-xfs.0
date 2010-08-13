@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7DN54al103019 for <xfs@oss.sgi.com>; Fri, 13 Aug 2010 18:05:04 -0500
+	o7DNFv8a104326
+	for <linux-xfs@oss.sgi.com>; Fri, 13 Aug 2010 18:15:57 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 12B11CA6263
-	for <xfs@oss.sgi.com>; Fri, 13 Aug 2010 16:14:23 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	1ZBEsBng4Yb67oLU for <xfs@oss.sgi.com>;
-	Fri, 13 Aug 2010 16:14:23 -0700 (PDT)
-Date: Sat, 14 Aug 2010 09:05:25 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DABF41B2DDF6
+	for <linux-xfs@oss.sgi.com>; Fri, 13 Aug 2010 16:16:22 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
+	[150.101.137.102]) by cuda.sgi.com with ESMTP id
+	Tdy75fkwlCQjBMkG for <linux-xfs@oss.sgi.com>;
+	Fri, 13 Aug 2010 16:16:22 -0700 (PDT)
+Date: Sat, 14 Aug 2010 09:16:19 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: fs corruption not detected by xfs_check or _repair
-Message-ID: <20100813230525.GF10429@dastard>
-References: <4C656149.6050604@nethype.de>
+Subject: Re: simpler _xfs_dic2xflags() ?
+Message-ID: <20100813231619.GG10429@dastard>
+References: <1281738591.5897.17.camel@segv.aura.of.mankind>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4C656149.6050604@nethype.de>
+In-Reply-To: <1281738591.5897.17.camel@segv.aura.of.mankind>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,49 +30,77 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Marco Maisenhelder <marco@nethype.de>
-Cc: xfs@oss.sgi.com
+To: utz lehmann <xfs2@s2y4n2c.de>
+Cc: linux-xfs <linux-xfs@oss.sgi.com>
 
-On Fri, Aug 13, 2010 at 05:14:17PM +0200, Marco Maisenhelder wrote:
-> Hi list,
+On Sat, Aug 14, 2010 at 12:29:51AM +0200, utz lehmann wrote:
+> Hello
 > 
-> I have a little bit of a problem after a catastrophic hardware
-> failure (power supply went up in smoke and took half of my server
-> with it - luckily only one of my raid5 disks though). My xfs data
-> partition on my raid has some severe corruption that prevents me
-> from accessing some files and directories on the partition. This is
-> how the problem manifests itself:
+> I just found following function in xfs_inode.c:
 > 
-> *marco:/etc# ls -lrt /store/xfs_corruption/x/
-> ls: cannot access /store/xfs_corruption/x/db.backup2: Invalid argument
-> ls: cannot access /store/xfs_corruption/x/db.backup1: Invalid argument
-> total 0
-> ?????????? ? ? ? ?                ? db.backup2
-> ?????????? ? ? ? ?                ? db.backup1
-
-What operation is returning EINVAL? strace should tell you that.
-
-> *marco:/etc# xfs_info /store/
-> meta-data=/dev/mapper/vgraid-rstore isize=256    agcount=48,
-> agsize=11443904 blks
->          =                       sectsz=512   attr=2
-> data     =                       bsize=4096   blocks=549307392, imaxpct=25
->          =                       sunit=64     swidth=192 blks
-> naming   =version 2              bsize=4096
-> log      =internal               bsize=4096   blocks=32768, version=2
->          =                       sectsz=512   sunit=64 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> STATIC uint
+> _xfs_dic2xflags(
+> 	__uint16_t		di_flags)
+> {
+> 	uint			flags = 0;
 > 
-> There's nothing in any of the system logs that would hint to the
-> filesystem being corrupt.
+> 	if (di_flags & XFS_DIFLAG_ANY) {
+> 		if (di_flags & XFS_DIFLAG_REALTIME)
+> 			flags |= XFS_XFLAG_REALTIME;
+> 		if (di_flags & XFS_DIFLAG_PREALLOC)
+> 			flags |= XFS_XFLAG_PREALLOC;
+> 		if (di_flags & XFS_DIFLAG_IMMUTABLE)
+> 			flags |= XFS_XFLAG_IMMUTABLE;
+> 		if (di_flags & XFS_DIFLAG_APPEND)
+> 			flags |= XFS_XFLAG_APPEND;
+> 		if (di_flags & XFS_DIFLAG_SYNC)
+> 			flags |= XFS_XFLAG_SYNC;
+> 		if (di_flags & XFS_DIFLAG_NOATIME)
+> 			flags |= XFS_XFLAG_NOATIME;
+> 		if (di_flags & XFS_DIFLAG_NODUMP)
+> 			flags |= XFS_XFLAG_NODUMP;
+> 		if (di_flags & XFS_DIFLAG_RTINHERIT)
+> 			flags |= XFS_XFLAG_RTINHERIT;
+> 		if (di_flags & XFS_DIFLAG_PROJINHERIT)
+> 			flags |= XFS_XFLAG_PROJINHERIT;
+> 		if (di_flags & XFS_DIFLAG_NOSYMLINKS)
+> 			flags |= XFS_XFLAG_NOSYMLINKS;
+> 		if (di_flags & XFS_DIFLAG_EXTSIZE)
+> 			flags |= XFS_XFLAG_EXTSIZE;
+> 		if (di_flags & XFS_DIFLAG_EXTSZINHERIT)
+> 			flags |= XFS_XFLAG_EXTSZINHERIT;
+> 		if (di_flags & XFS_DIFLAG_NODEFRAG)
+> 			flags |= XFS_XFLAG_NODEFRAG;
+> 		if (di_flags & XFS_DIFLAG_FILESTREAM)
+> 			flags |= XFS_XFLAG_FILESTREAM;
+> 	}
+> 
+> 	return flags;
+> }
+> 
+> Can't the whole function be replaced by something like this?
+> 
+> flags = di_flags & MASK;
+> 
+> The corresponding XFS_DIFLAGS and XFS_XFLAGS have the same values.
 
->From the xfs_db output, all the directories look valid, so I'm not
-sure what is causing the problem, yet.  What kernel version and
-xfs_repair version are you running?
+Sure they have the same value right now, but remember that
+XFS_XFLAG_* values are part of userspace ABI and the XFS_DIFLAG_*
+define to the on-disk format values.
+
+We keep a logical separation of the two as there is no guarantee
+they will remain the same over time. Indeed, there are XFS_XFLAGS_*
+values that have no equivalent XFS_DIFLAG_ value. Further, we are
+out of space for new flags in the inode flags field and hence any
+new on-disk flags will be in a different format to the current on
+disk values and hence we'd break any masking based optimisation if
+we change them...
 
 Cheers,
 
 Dave.
+
+
 -- 
 Dave Chinner
 david@fromorbit.com
