@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7DKgSiL092914 for <xfs@oss.sgi.com>; Fri, 13 Aug 2010 15:42:28 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E8DE44B6E37
-	for <xfs@oss.sgi.com>; Fri, 13 Aug 2010 13:42:54 -0700 (PDT)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id rMAHwzOn4CEOajFr for
-	<xfs@oss.sgi.com>; Fri, 13 Aug 2010 13:42:54 -0700 (PDT)
-Message-ID: <4C65AE4D.6070502@sandeen.net>
-Date: Fri, 13 Aug 2010 15:42:53 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: observed significant performance improvement using "delaylog" in
-References: <201008121346.30760.eye.of.the.8eholder@gmail.com>	<i41q43$6td$1@dough.gmane.org>
-	<4C6516CA.2010602@hardwarefreak.com>	<201008131235.45050@zmi.at>
-	<20100813122907.GA14650@infradead.org>
-	<20100813141344.GE10429@dastard>
-In-Reply-To: <20100813141344.GE10429@dastard>
+	o7DMTSTt100134
+	for <linux-xfs@oss.sgi.com>; Fri, 13 Aug 2010 17:29:29 -0500
+Received: from moutng.kundenserver.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3FECFCA6199
+	for <linux-xfs@oss.sgi.com>; Fri, 13 Aug 2010 15:38:47 -0700 (PDT)
+Received: from moutng.kundenserver.de (moutng.kundenserver.de
+	[212.227.126.171]) by cuda.sgi.com with ESMTP id
+	gzORB4HelJYfgCFU for <linux-xfs@oss.sgi.com>;
+	Fri, 13 Aug 2010 15:38:47 -0700 (PDT)
+Subject: simpler _xfs_dic2xflags() ?
+From: utz lehmann <xfs2@s2y4n2c.de>
+Date: Sat, 14 Aug 2010 00:29:51 +0200
+Message-ID: <1281738591.5897.17.camel@segv.aura.of.mankind>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,27 +27,61 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Michael Monnerie <michael.monnerie@is.it-management.at>, Stan Hoeppner <stan@hardwarefreak.com>, xfs@oss.sgi.com
+To: linux-xfs <linux-xfs@oss.sgi.com>
 
-Dave Chinner wrote:
-> On Fri, Aug 13, 2010 at 08:29:07AM -0400, Christoph Hellwig wrote:
+Hello
 
-...
+I just found following function in xfs_inode.c:
 
->> And asking
->> him/her to add -o delaylog would also be good.
-> 
-> Yes, that would be an interesting comparison...
+STATIC uint
+_xfs_dic2xflags(
+	__uint16_t		di_flags)
+{
+	uint			flags = 0;
 
-I was thinking the same thing; I'll do that.
+	if (di_flags & XFS_DIFLAG_ANY) {
+		if (di_flags & XFS_DIFLAG_REALTIME)
+			flags |= XFS_XFLAG_REALTIME;
+		if (di_flags & XFS_DIFLAG_PREALLOC)
+			flags |= XFS_XFLAG_PREALLOC;
+		if (di_flags & XFS_DIFLAG_IMMUTABLE)
+			flags |= XFS_XFLAG_IMMUTABLE;
+		if (di_flags & XFS_DIFLAG_APPEND)
+			flags |= XFS_XFLAG_APPEND;
+		if (di_flags & XFS_DIFLAG_SYNC)
+			flags |= XFS_XFLAG_SYNC;
+		if (di_flags & XFS_DIFLAG_NOATIME)
+			flags |= XFS_XFLAG_NOATIME;
+		if (di_flags & XFS_DIFLAG_NODUMP)
+			flags |= XFS_XFLAG_NODUMP;
+		if (di_flags & XFS_DIFLAG_RTINHERIT)
+			flags |= XFS_XFLAG_RTINHERIT;
+		if (di_flags & XFS_DIFLAG_PROJINHERIT)
+			flags |= XFS_XFLAG_PROJINHERIT;
+		if (di_flags & XFS_DIFLAG_NOSYMLINKS)
+			flags |= XFS_XFLAG_NOSYMLINKS;
+		if (di_flags & XFS_DIFLAG_EXTSIZE)
+			flags |= XFS_XFLAG_EXTSIZE;
+		if (di_flags & XFS_DIFLAG_EXTSZINHERIT)
+			flags |= XFS_XFLAG_EXTSZINHERIT;
+		if (di_flags & XFS_DIFLAG_NODEFRAG)
+			flags |= XFS_XFLAG_NODEFRAG;
+		if (di_flags & XFS_DIFLAG_FILESTREAM)
+			flags |= XFS_XFLAG_FILESTREAM;
+	}
 
--Eric
+	return flags;
+}
 
-> Cheers,
-> 
-> Dave.
-> 
+Can't the whole function be replaced by something like this?
+
+flags = di_flags & MASK;
+
+The corresponding XFS_DIFLAGS and XFS_XFLAGS have the same values.
+
+
+utz
+
 
 _______________________________________________
 xfs mailing list
