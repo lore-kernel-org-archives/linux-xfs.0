@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7DBcrHq053199 for <xfs@oss.sgi.com>; Fri, 13 Aug 2010 06:38:53 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 950B51702493
-	for <xfs@oss.sgi.com>; Fri, 13 Aug 2010 04:39:18 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	FFyUmO3CimZhDiH6 for <xfs@oss.sgi.com>;
-	Fri, 13 Aug 2010 04:39:18 -0700 (PDT)
-Date: Fri, 13 Aug 2010 21:39:15 +1000
-From: Dave Chinner <david@fromorbit.com>
+	o7DBZocd052990 for <xfs@oss.sgi.com>; Fri, 13 Aug 2010 06:35:50 -0500
+Received: from b.mx.filmlight.ltd.uk (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id 63D704B37E2
+	for <xfs@oss.sgi.com>; Fri, 13 Aug 2010 04:36:15 -0700 (PDT)
+Received: from b.mx.filmlight.ltd.uk (bongo.filmlight.ltd.uk [77.107.81.251])
+	by cuda.sgi.com with SMTP id UyLpnoDXHsI01ZIC for
+	<xfs@oss.sgi.com>; Fri, 13 Aug 2010 04:36:15 -0700 (PDT)
 Subject: Re: Alignment size?
-Message-ID: <20100813113915.GD10429@dastard>
-References: <4C64715F.8060000@msgid.tls.msk.ru>
-	<20100812234911.GC10429@dastard>
-	<4C64E52E.2060806@msgid.tls.msk.ru>
-MIME-Version: 1.0
-Content-Disposition: inline
+From: Roger Willcocks <roger@filmlight.ltd.uk>
 In-Reply-To: <4C64E52E.2060806@msgid.tls.msk.ru>
+References: <4C64715F.8060000@msgid.tls.msk.ru>
+	<20100812234911.GC10429@dastard>  <4C64E52E.2060806@msgid.tls.msk.ru>
+Date: Fri, 13 Aug 2010 12:36:05 +0100
+Message-Id: <1281699365.12371.142.camel@montana.filmlight.ltd.uk>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,70 +31,52 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Michael Tokarev <mjt@tls.msk.ru>
 Cc: xfs@oss.sgi.com
 
-On Fri, Aug 13, 2010 at 10:24:46AM +0400, Michael Tokarev wrote:
-> 13.08.2010 03:49, Dave Chinner wrote:
-> > On Fri, Aug 13, 2010 at 02:10:39AM +0400, Michael Tokarev wrote:
-> >> Hello.
-> >>
-> >> I used XFS for a long time on many different
-> >> servers, and it works well.  But now I encountered
-> >> an.. unexpected problem.
-> >>
-> >> The question is: on one of our servers, XFS requires
-> >> different alignment size for O_DIRECT operations than
-> >> on others.  Usually it's 512 bytes, but on this server
-> >> it is 4096 - both min_io and alignment (this is from
-> >> XFS_IOC_DIOINFO ioctl).
-> > 
-> > It'll be a filesystem set up with a 4k sector size, then.  Check the
-> > output of xfs_info.
-> 
-> yes, xfs_info reports sectsz=4096, I noticed this yesterday.
 
-....
+On Fri, 2010-08-13 at 10:24 +0400, Michael Tokarev wrote:
 
-> So the question that remains is: why?
-> 
-> It's an old machine (PIV era), with old scsi disks (74Gb
-> non-hotswap), -- the same disks as used on numerous other
-> machines out there, where there's no such issue.
+> So why xfs decided the block size is 4K??
 
-If the software was as old as the machine, then that's the likely
-reason.  The old md raid5 implementation did not handle sub-page
-size aligned IO very well - a change of IO alignment would cause the
-stripe cache to be purged and cause performance to be terrible.
-Hence every time XFS wrote the superblock or an AG header it would
-purge the stripe cache.
+We had a similar problem with direct io here, with 2.6.9; I quote from
+the Bugzilla:
 
-The workaround old versions of mkfs.xfs used was to create the fs
-with a sector size of 4k when it detected md raid5 underneath it so
-the sb and ag headers were all 4k aligned and sized, just like the
-rest of the filesystem....
+"mkfs.xfs has md-specific code (!) that looks at the raid flavour to
+figure stripe parameters, alignment requirements, etc.
 
-> And a related question, -- is there a way to create
-> xfs fs with the right sector size?  The filesystem
-> were ok in years, not only on this machine, and I'm
-> quite afraid to replace it with something else (e.g.
-> ext4) in a hurry without good prior testing.
+"Raid flavours 4,5 and 6 force the alignment to be the same as the file system
+block size (which is 4096 bytes)."
 
-# mkfs.xfs -s <size> ....
+Here's a program to test the alignment requirements:
 
-if you want to set it manually. YOu shouldn't need to with any
-relatively recent mkfs.xfs...
+----
 
-> By the way, how one can check the "sector size" of a
-> block device nowadays?  I think I saw something about
-> sysfs, but I see nothing of that sort in 2.6.32 kernel
-> (which is used on this and other systems).
+#include <xfs/libxfs.h>
+#include <fcntl.h>
 
-/sys/block/<dev>/queue/hw_sector_size
+int main(int argc, char* argv[])
+{
+	struct dioattr	dio;
 
-Cheers,
+	int tfd = open((argc == 2) ? argv[1] : "/mnt/disk1", O_RDONLY, 0666);
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+	if (ioctl(tfd, XFS_IOC_DIOINFO, &dio) < 0)
+		perror("ioctl");
+	else {
+		printf("min io size = %d\n", dio.d_miniosz);
+		printf("max io size = %d\n", dio.d_maxiosz);
+		printf("align = %d\n", dio.d_mem);
+	}
+	close(tfd);
+	return 0;
+}
+
+----
+
+The same disk set returned 'align = 4096' for raid 5, but 'align = 512' for raid 0.
+
+--
+Roger
+
+
 
 _______________________________________________
 xfs mailing list
