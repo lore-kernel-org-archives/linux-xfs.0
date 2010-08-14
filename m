@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7EBRvcl144860 for <xfs@oss.sgi.com>; Sat, 14 Aug 2010 06:27:58 -0500
-Received: from mail.lichtvoll.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4A77FCAE983
-	for <xfs@oss.sgi.com>; Sat, 14 Aug 2010 04:37:19 -0700 (PDT)
-Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
-	cuda.sgi.com with ESMTP id 2bdgg2xuvDf2Qeow for
-	<xfs@oss.sgi.com>; Sat, 14 Aug 2010 04:37:19 -0700 (PDT)
-From: Martin Steigerwald <Martin@lichtvoll.de>
-Subject: Re: observed significant performance improvement using "delaylog" in
-Date: Sat, 14 Aug 2010 13:28:17 +0200
-References: <201008121346.30760.eye.of.the.8eholder@gmail.com>
-	<20100813141344.GE10429@dastard> <4C65AE4D.6070502@sandeen.net>
-	(sfid-20100814_092305_493513_AC7C6900)
-In-Reply-To: <4C65AE4D.6070502@sandeen.net>
+	o7EKlgwe161207 for <xfs@oss.sgi.com>; Sat, 14 Aug 2010 15:47:43 -0500
+Received: from Ishtar.sc.tlinx.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id ABEF5CB053B
+	for <xfs@oss.sgi.com>; Sat, 14 Aug 2010 13:57:05 -0700 (PDT)
+Received: from Ishtar.sc.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
+	cuda.sgi.com with ESMTP id r5cA2ftH5v02iFdL for
+	<xfs@oss.sgi.com>; Sat, 14 Aug 2010 13:57:05 -0700 (PDT)
+Received: from [192.168.3.12] (Athenae [192.168.3.12])
+	by Ishtar.sc.tlinx.org (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	o7EKm11k023216 for <xfs@oss.sgi.com>; Sat, 14 Aug 2010 13:48:03 -0700
+Message-ID: <4C670101.8050901@tlinx.org>
+Date: Sat, 14 Aug 2010 13:48:01 -0700
+From: "Linda A. Walsh" <xfs@tlinx.org>
 MIME-Version: 1.0
-Message-Id: <201008141328.18436.Martin@lichtvoll.de>
+Subject: xfs.fsck change that is unhelpful
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,66 +24,66 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, Eric Sandeen <sandeen@sandeen.net>, Steven Pratt <slpratt@austin.ibm.com>, Christoph Hellwig <hch@infradead.org>, Stan Hoeppner <stan@hardwarefreak.com>
+To: xfs-oss <xfs@oss.sgi.com>
 
 
-Hi!
+Some time ago, when I upgraded a system, I ran into problems when
+it hit a file system that was offline.  It wasn't a critical partition, 
+so it normally wouldn't have been an issue, but somewhere along the line
+someone mangled fsck.xfs. 
 
-Cc'd Steve as I think he is running the benchmarks.
+Instead of doing the useful thing with an xfs file system and being a
+link to ->/bin/true, someone thought it would be neat to return failure if
+it couldn't find the file system that it was supposed to check 
+(mount-by-name, name not yet present, => system refuse to boot).  
 
-Am Freitag 13 August 2010 schrieb Eric Sandeen:
-> Dave Chinner wrote:
-> > On Fri, Aug 13, 2010 at 08:29:07AM -0400, Christoph Hellwig wrote:
-> ...
-> 
-> >> And asking
-> >> him/her to add -o delaylog would also be good.
-> > 
-> > Yes, that would be an interesting comparison...
-> 
-> I was thinking the same thing; I'll do that.
+I asked suse why they put this check in and they said it had been done upstream.
 
-I think its Steven Pratt from IBM.
+This was a bit back, but it keeps biting me with new revisions until I 
+replace it with a link to /bin/true.
 
-Steve, could you add a case for mount option "-o delaylog" to your 
-benchmark runs?
-
-----------  Weitergeleitete Nachricht  ----------
-
-Subject: New performance results
-Date: Samstag 24 April 2010
-From: Steven Pratt <slpratt@austin.ibm.com>
-To: "linux-btrfs" <linux-btrfs@vger.kernel.org>
-
-Well, it's been a while but been very busy on other things. Thanks to 
-Keith Mannthey for helping get some of these runs done.
-
-New raid performance on 2.6.34-rc3:
-
-http://btrfs.boxacle.net/repository/raid/2010-04-14_2004/2.6.34-
-rc3/2.6.34-rc3.html
-
-Also, the long running history graphs are here:
-
-http://btrfs.boxacle.net/repository/raid/history/History.html
+Note: if it actually did a check that was supposed to be done prior to 
+mounting each file system, like ext2 or such, I wouldn't be doing such 
+and probably wouldn't be using the file system if there was an 
+alternative.  I'd rather have the system come up to the best of its 
+ability rather than failing for no good reason.
 
 
-Steve
+So, I'm here - asking, if this was done here, why?  It serves a _less_ 
+_than__useful_ _purpose_ --in that it hinders what is usually a perfectly functional system from coming up where after _REMOTELY_ logging in, 
+the problem could be noted, debugged, and perhaps even fixed remotely.
+In the case of a /dev/Space/Test, file system, it might not be
+necessary to do anything immediately.
 
+I see absolutely no useful purpose served by this.  If it's a key
+file system (which in my case, it never has been -- it's the 
+"peripheral file systems" that have occasionally been absent upon 
+boot, the core file systems being located in the machine).
 
---
-[...]
--------------------------------------------------------
+In my systems design, I'm in the camp that subscribe to having redundancy
+present to automatically work around problems and continue working as
+best as possible in the presence of any problem.  I'm not in the camp of
+designing a 'human', who has a cut finger to immediately go unconscious
+due to a 'fault' in their skin integrity.  Ideally you want the brain to
+come up so it can assess and deal with damage -- at least from my point
+of view.  So I don't understand this 'change'.
 
-Ciao,
--- 
-Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
-GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
+Would it be unreasonable to request that this behavior be reverted?  In 
+my case, at least, it seems only to cause more harm than good.  And 
+while I can imagine scenarios in which you don't want the computer 
+to come up at all, I think they would be in the minority compared
+to those systems where the admin would prefer the system come up so
+it can be reached 'normally' ("normal" interactive login).
+
+If not can you describe how the new functionality results in greater 
+system reliability/availability than before, "cuz", I just don't see it.
+
+thanks,
+Linda Walsh
 
 _______________________________________________
 xfs mailing list
