@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7EKlgwe161207 for <xfs@oss.sgi.com>; Sat, 14 Aug 2010 15:47:43 -0500
-Received: from Ishtar.sc.tlinx.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id ABEF5CB053B
-	for <xfs@oss.sgi.com>; Sat, 14 Aug 2010 13:57:05 -0700 (PDT)
-Received: from Ishtar.sc.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
-	cuda.sgi.com with ESMTP id r5cA2ftH5v02iFdL for
-	<xfs@oss.sgi.com>; Sat, 14 Aug 2010 13:57:05 -0700 (PDT)
-Received: from [192.168.3.12] (Athenae [192.168.3.12])
-	by Ishtar.sc.tlinx.org (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7EKm11k023216 for <xfs@oss.sgi.com>; Sat, 14 Aug 2010 13:48:03 -0700
-Message-ID: <4C670101.8050901@tlinx.org>
-Date: Sat, 14 Aug 2010 13:48:01 -0700
-From: "Linda A. Walsh" <xfs@tlinx.org>
+	o7EMrXDC164347 for <xfs@oss.sgi.com>; Sat, 14 Aug 2010 17:53:34 -0500
+Received: from mail.nethype.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CABCCCAF319
+	for <xfs@oss.sgi.com>; Sat, 14 Aug 2010 16:02:58 -0700 (PDT)
+Received: from mail.nethype.de (mail.nethype.de [78.47.73.129]) by
+	cuda.sgi.com with ESMTP id Luz9a9rgac6ar9XN for
+	<xfs@oss.sgi.com>; Sat, 14 Aug 2010 16:02:58 -0700 (PDT)
+Message-ID: <4C671E83.4060106@nethype.de>
+Date: Sun, 15 Aug 2010 00:53:55 +0200
+From: Marco Maisenhelder <marco@nethype.de>
 MIME-Version: 1.0
-Subject: xfs.fsck change that is unhelpful
+Subject: Re: fs corruption not detected by xfs_check or _repair
+References: <4C656149.6050604@nethype.de>
+	<20100814183537.GA13734@puku.stupidest.org>
+In-Reply-To: <20100814183537.GA13734@puku.stupidest.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,62 +28,31 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Chris Wedgwood <cw@f00f.org>
+Cc: xfs@oss.sgi.com
 
+Chris Wedgwood wrote:
+> On Fri, Aug 13, 2010 at 05:14:17PM +0200, Marco Maisenhelder wrote:
+> 
+>> *marco:/etc# ls -lrt /store/xfs_corruption/x/
+>> ls: cannot access /store/xfs_corruption/x/db.backup2: Invalid argument
+>> ls: cannot access /store/xfs_corruption/x/db.backup1: Invalid argument
+>> total 0
+>> ?????????? ? ? ? ?                ? db.backup2
+>> ?????????? ? ? ? ?                ? db.backup1
+> 
+> where these created with inode64 and now mounted w/o that option?  (in
+> which case inodes > 32-bit are inaccessible)
 
-Some time ago, when I upgraded a system, I ran into problems when
-it hit a file system that was offline.  It wasn't a critical partition, 
-so it normally wouldn't have been an issue, but somewhere along the line
-someone mangled fsck.xfs. 
+I wasn't even aware of the option - I guess I should have spent more 
+time reading the FAQ before trying to find a more complex problem :(
 
-Instead of doing the useful thing with an xfs file system and being a
-link to ->/bin/true, someone thought it would be neat to return failure if
-it couldn't find the file system that it was supposed to check 
-(mount-by-name, name not yet present, => system refuse to boot).  
+inode64 was my problem - mouting the partition with -o inode64 fixes all 
+weirdness.
 
-I asked suse why they put this check in and they said it had been done upstream.
+Thanks a lot and sorry to have bothered you with this!
 
-This was a bit back, but it keeps biting me with new revisions until I 
-replace it with a link to /bin/true.
-
-Note: if it actually did a check that was supposed to be done prior to 
-mounting each file system, like ext2 or such, I wouldn't be doing such 
-and probably wouldn't be using the file system if there was an 
-alternative.  I'd rather have the system come up to the best of its 
-ability rather than failing for no good reason.
-
-
-So, I'm here - asking, if this was done here, why?  It serves a _less_ 
-_than__useful_ _purpose_ --in that it hinders what is usually a perfectly functional system from coming up where after _REMOTELY_ logging in, 
-the problem could be noted, debugged, and perhaps even fixed remotely.
-In the case of a /dev/Space/Test, file system, it might not be
-necessary to do anything immediately.
-
-I see absolutely no useful purpose served by this.  If it's a key
-file system (which in my case, it never has been -- it's the 
-"peripheral file systems" that have occasionally been absent upon 
-boot, the core file systems being located in the machine).
-
-In my systems design, I'm in the camp that subscribe to having redundancy
-present to automatically work around problems and continue working as
-best as possible in the presence of any problem.  I'm not in the camp of
-designing a 'human', who has a cut finger to immediately go unconscious
-due to a 'fault' in their skin integrity.  Ideally you want the brain to
-come up so it can assess and deal with damage -- at least from my point
-of view.  So I don't understand this 'change'.
-
-Would it be unreasonable to request that this behavior be reverted?  In 
-my case, at least, it seems only to cause more harm than good.  And 
-while I can imagine scenarios in which you don't want the computer 
-to come up at all, I think they would be in the minority compared
-to those systems where the admin would prefer the system come up so
-it can be reached 'normally' ("normal" interactive login).
-
-If not can you describe how the new functionality results in greater 
-system reliability/availability than before, "cuz", I just don't see it.
-
-thanks,
-Linda Walsh
+Marco
 
 _______________________________________________
 xfs mailing list
