@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7EMrXDC164347 for <xfs@oss.sgi.com>; Sat, 14 Aug 2010 17:53:34 -0500
-Received: from mail.nethype.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CABCCCAF319
-	for <xfs@oss.sgi.com>; Sat, 14 Aug 2010 16:02:58 -0700 (PDT)
-Received: from mail.nethype.de (mail.nethype.de [78.47.73.129]) by
-	cuda.sgi.com with ESMTP id Luz9a9rgac6ar9XN for
-	<xfs@oss.sgi.com>; Sat, 14 Aug 2010 16:02:58 -0700 (PDT)
-Message-ID: <4C671E83.4060106@nethype.de>
-Date: Sun, 15 Aug 2010 00:53:55 +0200
-From: Marco Maisenhelder <marco@nethype.de>
+	o7F0qI3s167569 for <xfs@oss.sgi.com>; Sat, 14 Aug 2010 19:52:19 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 886DE4BD283
+	for <xfs@oss.sgi.com>; Sat, 14 Aug 2010 17:52:44 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	DEHqdYdqVPnEQsPF for <xfs@oss.sgi.com>;
+	Sat, 14 Aug 2010 17:52:44 -0700 (PDT)
+Date: Sun, 15 Aug 2010 10:52:40 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs.fsck change that is unhelpful
+Message-ID: <20100815005240.GH10429@dastard>
+References: <4C670101.8050901@tlinx.org>
 MIME-Version: 1.0
-Subject: Re: fs corruption not detected by xfs_check or _repair
-References: <4C656149.6050604@nethype.de>
-	<20100814183537.GA13734@puku.stupidest.org>
-In-Reply-To: <20100814183537.GA13734@puku.stupidest.org>
+Content-Disposition: inline
+In-Reply-To: <4C670101.8050901@tlinx.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,35 +25,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Chris Wedgwood <cw@f00f.org>
-Cc: xfs@oss.sgi.com
+To: "Linda A. Walsh" <xfs@tlinx.org>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Chris Wedgwood wrote:
-> On Fri, Aug 13, 2010 at 05:14:17PM +0200, Marco Maisenhelder wrote:
+On Sat, Aug 14, 2010 at 01:48:01PM -0700, Linda A. Walsh wrote:
 > 
->> *marco:/etc# ls -lrt /store/xfs_corruption/x/
->> ls: cannot access /store/xfs_corruption/x/db.backup2: Invalid argument
->> ls: cannot access /store/xfs_corruption/x/db.backup1: Invalid argument
->> total 0
->> ?????????? ? ? ? ?                ? db.backup2
->> ?????????? ? ? ? ?                ? db.backup1
-> 
-> where these created with inode64 and now mounted w/o that option?  (in
-> which case inodes > 32-bit are inaccessible)
+> Some time ago, when I upgraded a system, I ran into problems when
+> it hit a file system that was offline.  It wasn't a critical
+> partition, so it normally wouldn't have been an issue, but somewhere
+> along the line
+> someone mangled fsck.xfs.
 
-I wasn't even aware of the option - I guess I should have spent more 
-time reading the FAQ before trying to find a more complex problem :(
+fsck.xfs is behaving identically to e2fsck when presented with an
+invalid block device - it exits with an error of 8, which is defined
+as "operational error" in the e2fsck man page.
 
-inode64 was my problem - mouting the partition with -o inode64 fixes all 
-weirdness.
+> Instead of doing the useful thing with an xfs file system and being a
+> link to ->/bin/true, someone thought it would be neat to return failure if
+> it couldn't find the file system that it was supposed to check
 
-Thanks a lot and sorry to have bothered you with this!
+If the device is not present when the bootup sequence is attempting
+to access it, then you've got a configuration error somewhere. It
+should return an error.
 
-Marco
+> (mount-by-name, name not yet present, => system refuse to boot).
+
+That sounds like a problem with the distro init scripts or you've
+stuffed up your /etc/fstab config (i.e. fs_passno is wrong). Indeed,
+setting fs_passno = 0 will cause the filesysetm fsck to be skipped
+completely on boot, regardless of the fs type...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
