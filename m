@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7F23KUw169347 for <xfs@oss.sgi.com>; Sat, 14 Aug 2010 21:03:21 -0500
-Received: from Ishtar.sc.tlinx.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 55EC24ADB42
-	for <xfs@oss.sgi.com>; Sat, 14 Aug 2010 19:03:46 -0700 (PDT)
-Received: from Ishtar.sc.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
-	cuda.sgi.com with ESMTP id pNJDvsbUXY83kxtV for
-	<xfs@oss.sgi.com>; Sat, 14 Aug 2010 19:03:46 -0700 (PDT)
-Message-ID: <4C674AE8.7030107@tlinx.org>
-Date: Sat, 14 Aug 2010 19:03:20 -0700
-From: Linda Walsh <xfs@tlinx.org>
+	o7F9M2uT183623 for <xfs@oss.sgi.com>; Sun, 15 Aug 2010 04:22:05 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0CDA91D73227
+	for <xfs@oss.sgi.com>; Sun, 15 Aug 2010 02:22:29 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id fBzfNmEAB5Ut5fav for
+	<xfs@oss.sgi.com>; Sun, 15 Aug 2010 02:22:29 -0700 (PDT)
+Date: Sun, 15 Aug 2010 05:22:22 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: fs corruption not detected by xfs_check or _repair
+Message-ID: <20100815092222.GA1801@infradead.org>
+References: <4C656149.6050604@nethype.de>
+	<20100814183537.GA13734@puku.stupidest.org>
+	<4C671E83.4060106@nethype.de>
 MIME-Version: 1.0
-Subject: Re: xfs.fsck change that is unhelpful
-References: <4C670101.8050901@tlinx.org> <20100815005240.GH10429@dastard>
-In-Reply-To: <20100815005240.GH10429@dastard>
+Content-Disposition: inline
+In-Reply-To: <4C671E83.4060106@nethype.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,48 +26,35 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Marco Maisenhelder <marco@nethype.de>
+Cc: Chris Wedgwood <cw@f00f.org>, xfs@oss.sgi.com
 
-
-
-Dave Chinner wrote:
-> On Sat, Aug 14, 2010 at 01:48:01PM -0700, Linda A. Walsh wrote:
->> Some time ago, when I upgraded a system, I ran into problems when
->> it hit a file system that was offline.  It wasn't a critical
->> partition, so it normally wouldn't have been an issue, but somewhere
->> along the line
->> someone mangled fsck.xfs.
+On Sun, Aug 15, 2010 at 12:53:55AM +0200, Marco Maisenhelder wrote:
+> Chris Wedgwood wrote:
+> >On Fri, Aug 13, 2010 at 05:14:17PM +0200, Marco Maisenhelder wrote:
+> >
+> >>*marco:/etc# ls -lrt /store/xfs_corruption/x/
+> >>ls: cannot access /store/xfs_corruption/x/db.backup2: Invalid argument
+> >>ls: cannot access /store/xfs_corruption/x/db.backup1: Invalid argument
+> >>total 0
+> >>?????????? ? ? ? ?                ? db.backup2
+> >>?????????? ? ? ? ?                ? db.backup1
+> >
+> >where these created with inode64 and now mounted w/o that option?  (in
+> >which case inodes > 32-bit are inaccessible)
 > 
-> fsck.xfs is behaving identically to e2fsck when presented with an
-> invalid block device - it exits with an error of 8, which is defined
-> as "operational error" in the e2fsck man page.
----
-	That may be fine for the ext2 fs, but I am asserting that in actual
-practice, with xfs, it does more harm than good.
+> I wasn't even aware of the option - I guess I should have spent more
+> time reading the FAQ before trying to find a more complex problem :(
+> 
+> inode64 was my problem - mouting the partition with -o inode64 fixes
+> all weirdness.
 
-
-
-> That sounds like a problem with the distro init scripts or you've
-> stuffed up your /etc/fstab config (i.e. fs_passno is wrong). Indeed,
-> setting fs_passno = 0 will cause the filesysetm fsck to be skipped
-> completely on boot, regardless of the fs type...
----
-	Yes, you are right.  They are setup to be check in the order
-I would want them mounted.  But I don't see the benefit to being
-compliant with a checking mechanism for a file system that is
-actually needs fsck.
-
-	It was long a *feature* of xfs, that xfs.fsck, was a noop.
-
-	I don't see that making it fail in ways fsck does for a file
-system that *needs* fsck, is productive.  Sure, it may be dotting i's
-and crossing t's, but in reality, is that a standard xfs should be
-living down to?
+FYI: starting from kernel 2.6.35 you can access all the inodes even
+without -o inode64 and won't get these strange errors.
 
 _______________________________________________
 xfs mailing list
