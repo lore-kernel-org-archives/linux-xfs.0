@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7G9he1A231153 for <xfs@oss.sgi.com>; Mon, 16 Aug 2010 04:43:41 -0500
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 62B834BE627
-	for <xfs@oss.sgi.com>; Mon, 16 Aug 2010 02:44:08 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id DLlXVlTYZqwj8lYn
-	for <xfs@oss.sgi.com>; Mon, 16 Aug 2010 02:44:08 -0700 (PDT)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id A17436C2D8
-	for <xfs@oss.sgi.com>; Mon, 16 Aug 2010 04:44:08 -0500 (CDT)
-Message-ID: <4C690868.6040209@hardwarefreak.com>
-Date: Mon, 16 Aug 2010 04:44:08 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	o7GAWASG232876 for <xfs@oss.sgi.com>; Mon, 16 Aug 2010 05:32:10 -0500
+Received: from mail-vw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 98532CB4428
+	for <xfs@oss.sgi.com>; Mon, 16 Aug 2010 03:41:45 -0700 (PDT)
+Received: from mail-vw0-f53.google.com (mail-vw0-f53.google.com
+	[209.85.212.53]) by cuda.sgi.com with ESMTP id q2xNGI4ebU50bDld
+	for <xfs@oss.sgi.com>; Mon, 16 Aug 2010 03:41:45 -0700 (PDT)
+Received: by vws15 with SMTP id 15so3369518vws.26
+	for <xfs@oss.sgi.com>; Mon, 16 Aug 2010 03:32:37 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: xfs.fsck change that is unhelpful
-References: <4C670101.8050901@tlinx.org>
-	<20100815005240.GH10429@dastard>	<4C674AE8.7030107@tlinx.org>
-	<20100816015505.GJ10429@dastard> <4C68A1CC.4050206@tlinx.org>
-In-Reply-To: <4C68A1CC.4050206@tlinx.org>
+In-Reply-To: <20100712054559.GE25335@dastard>
+References: <AANLkTimKKEvfJx6EQZeQF_HnlBLj6B8Kjfy6jUHGPnz5@mail.gmail.com>
+	<20100706231856.GC25018@dastard>
+	<AANLkTilOGA-XF2V_Z_7WntgA23CHNlfx1u0I8xJtHZDz@mail.gmail.com>
+	<AANLkTimcM9LfOHAH6q95esD4JU8Geb21750YMAh3JKBl@mail.gmail.com>
+	<20100712010832.GA25335@dastard> <20100712054559.GE25335@dastard>
+From: Shaun Adolphson <shaun@adolphson.net>
+Date: Mon, 16 Aug 2010 20:32:16 +1000
+Message-ID: <AANLkTi=oeYHoVof41cAtH0eJKpYZQfpL_V3TSBsJpRC7@mail.gmail.com>
+Subject: Re: CentOS 5.5 XFS internal errors (XFS_WANT_CORRUPTED_GOTO)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,60 +29,81 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Linda Walsh put forth on 8/15/2010 9:26 PM:
-
->     That said -- how many people, who have their /home or /usr/people
-> partition
-> 'local' to their machine, automount it?  
-
-I do.  Who wouldn't?  And why not?
-
-/dev/sda6  /home     xfs   defaults   0     0
-/dev/sda7  /samba    xfs   defaults   0     0
-
-
-> I admit to thinking of the fsck
-> field as having
-> some meaning in the order in which file systems are mounted.  I guess
-> that order is
-> random now, though how I'm supposed to tell mount that '/home needs to
-> be mounted
-> only after "/", but need to be mounted before /home/share, without some
-> ordering
-> in fstab is something that is supposed to be specified....where?
-
-The device mount order is defined by the lines in the fstab file.  Devices are
-mounted in order, top to bottom, as each line is read.
-
->     I.e. isn't that field also the order in which file systems are
-> mounted, or
-> is there some other place that order is maintained other than in fstab?
-
->     Sorry, am definitely showing my ignorance in this area.
-
-No need to apologize.  This is easily remedied by learning.  Start here:
-
-      In general, file system mount order is determined by the order in which
-the file systems appear in the fstab file. The exceptions to this ordering are
-file systems mounted with the _netdev flag or filesystems that have their own
-init scripts.
-
-      A file system with its own init script is mounted later in the
-initialization process, after the file systems in the fstab file.
-
-      File systems mounted with the _netdev flag are mounted when the network
-has been enabled on the system.
-
--- 
-Stan
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gTW9uLCBKdWwgMTIsIDIwMTAgYXQgMzo0NSBQTSwgRGF2ZSBDaGlubmVyIDxkYXZpZEBmcm9t
+b3JiaXQuY29tPiB3cm90ZToKPgo+IE9uIE1vbiwgSnVsIDEyLCAyMDEwIGF0IDExOjA4OjMyQU0g
+KzEwMDAsIERhdmUgQ2hpbm5lciB3cm90ZToKPiA+IE9uIFN1biwgSnVsIDExLCAyMDEwIGF0IDA5
+OjQ0OjA3UE0gKzEwMDAsIFNoYXVuIEFkb2xwaHNvbiB3cm90ZToKPiA+ID4gT24gVGh1LCBKdWwg
+OCwgMjAxMCBhdCA5OjIxIFBNLCBTaGF1biBBZG9scGhzb24gPHNoYXVuQGFkb2xwaHNvbi5uZXQ+
+IHdyb3RlOgo+ID4gPiA+IE9uIFdlZCwgSnVsIDcsIDIwMTAgYXQgOToxOCBBTSwgRGF2ZSBDaGlu
+bmVyIDxkYXZpZEBmcm9tb3JiaXQuY29tPiB3cm90ZToKPiA+ID4gPj4KPiA+ID4gPj4gT24gVHVl
+LCBKdWwgMDYsIDIwMTAgYXQgMDg6NTc6NDVQTSArMTAwMCwgU2hhdW4gQWRvbHBoc29uIHdyb3Rl
+Ogo+ID4gPiA+PiA+IEhpLAo+ID4gPiA+PiA+Cj4gPiA+ID4+ID4gV2UgaGF2ZSBiZWVuIGFibGUg
+dG8gcmVwZWF0YWJseSBwcm9kdWNlIHhmcyBpbnRlcm5hbCBlcnJvcnMKPiA+ID4gPj4gPiAoWEZT
+X1dBTlRfQ09SUlVQVEVEX0dPVE8pIG9uIG9uZSBvZiBvdXIgZmlsZXNlcnZlcnMuIFdlIGFyZSBh
+dHRlbXB0aW5nCj4gPiA+ID4+ID4gdG8gbG9jYWxseSBjb3B5IGEgMjQ4R2lnIGZpbGUgb2ZmIGEg
+dXNiIGRyaXZlIGZvcm1hdGVkIGFzIE5URlMgdG8gdGhlCj4gPiA+ID4+ID4geGZzIGRyaXZlLiBU
+aGUgY29weSBnZXRzIGFib3V0IDk2JSBvZiB0aGUgd2F5IHRocm91Z2ggYW5kIHdlIGdldCB0aGUK
+PiA+ID4gPj4gPiBmb2xsb3dpbmcgbWVzc2FnZXM6Cj4gPiA+ID4+ID4KPiA+ID4gPj4gPiBKdW4g
+MjggMjI6MTQ6NDYgdGVycm9yc2VydmVyIGtlcm5lbDogWEZTIGludGVybmFsIGVycm9yCj4gPiA+
+ID4+ID4gWEZTX1dBTlRfQ09SUlVQVEVEX0dPVE8gYXQgbGluZSAyMDkyIG9mIGZpbGUgZnMveGZz
+L3hmc19ibWFwX2J0cmVlLmMuCj4gPiA+ID4+ID4gQ2FsbGVyIDB4ZmZmZmZmZmY4ODM3NDQ2Zgo+
+ID4gPiA+Pgo+ID4gPiA+PiBJbnRlcmVzdGluZy4gVGhhdCdzIGEgY29ycnVwdGVkIGlub2RlIGV4
+dGVudCBidHJlZSAtIEkgaGF2ZW4ndCBzZWVuCj4gPiA+ID4+IG9uZSBvZiB0aGVtIGZvciBhIGxv
+bmcgd2hpbGUuIFdlcmUgdGhlcmUgYW55IGVycm9ycyAobGlrZSBJTyBlcnJvcnMpCj4gPiA+ID4+
+IHJlcG9ydGVkIGJlZm9yZSB0aGlzPwo+ID4gPiA+Pgo+ID4gPiA+PiBIb3dldmVyLCB0aGUgZmly
+c3Qgc3RlcCBpcyB0byBkZXRlcm1pbmUgaWYgdGhlIGVycm9yIGlzIG9uIGRpc2sgb3IgYW4KPiA+
+ID4gPj4gaW4tbWVtb3J5IGVycm9yLiBDYW4geW91IHBvc3Qgb3V0cHV0IG9mOgo+ID4gPiA+Pgo+
+ID4gPiA+PiDCoCDCoCDCoCDCoC0geGZzX2luZm8gPG1udHB0Pgo+ID4gPgo+ID4gPiBtZXRhLWRh
+dGE9L2Rldi9UZXJyb3JWb2x1bWUvdGVycm9yIGlzaXplPTI1NiDCoCDCoGFnY291bnQ9MTMwMzg1
+LAo+ID4gPiBhZ3NpemU9MzI3NjggYmxrcwo+ID4gPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCA9IMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgc2VjdHN6PTUxMiDCoCBhdHRyPTEKPiA+ID4g
+ZGF0YSDCoCDCoCDCoCDCoD0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBic2l6ZT00
+MDk2IMKgIGJsb2Nrcz00MjcyNDMzMTUyLCBpbWF4cGN0PTI1Cj4gPiA+IMKgIMKgIMKgIMKgIMKg
+IMKgIMKgID0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBzdW5pdD0wIMKgIMKgIMKg
+c3dpZHRoPTAgYmxrcwo+ID4gPiBuYW1pbmcgwqAgPXZlcnNpb24gMiDCoCDCoCDCoCDCoCBic2l6
+ZT00MDk2IMKgIGFzY2lpLWNpPTAKPiA+ID4gbG9nIMKgIMKgIMKgIMKgID1pbnRlcm5hbCDCoCDC
+oCDCoCDCoCDCoCDCoGJzaXplPTQwOTYgwqAgYmxvY2tzPTI1NjAsIHZlcnNpb249MQo+ID4gPiDC
+oCDCoCDCoCDCoCDCoCDCoCDCoD0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgc2Vj
+dHN6PTUxMiDCoCBzdW5pdD0wIGJsa3MsIGxhenktY291bnQ9MAo+ID4gPiByZWFsdGltZSDCoD1u
+b25lIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGV4dHN6PTQwOTYgwqAgYmxvY2tzPTAsIHJ0ZXh0ZW50
+cz0wCj4gPgo+ID4gV0h5IGRpZCB5b3UgbWFrZSB0aGlzIGZpbGVzeXN0ZW0gd2l0aCAxMjhNQiBh
+bGxvY2F0aW9uIGdyb3Vwcz8gVGhlCj4gPiBkZWZhdWx0IGZvciBhIGZpbGVzeXN0ZW0gb2YgdGhp
+cyBzaXplIGlzIDFUQiBhbGxvY2F0aW9uIGdyb3Vwcy4KPiA+IE1vcmUgdGhhbiAxMDBrIGFsbG9j
+YXRpb24gZ3JvdXBzIHdpbGwgY2VydGFpbmx5IHB1c2ggaW50ZXJuYWwgQUcKPiA+IHNjYW5uaW5n
+IHNjYWxhYmlsaXR5IHBhc3QgaXQncyB0ZXN0ZWQgbGltaXRzLi4uLgo+ID4KPiA+IEFsc28sIGEg
+bG9nIG9mIDEwTUIgaXMgcmF0aGVyIHNtYWxsLCBhbmQgaXQgdGVsbHMgbWUgdGhhdCB5b3UgZGlk
+bid0Cj4gPiBqdXN0IGNyZWF0ZSB0aGlzIGZpbGVzeXN0ZW0gZmlyZWN0bHkgb24gdGhlIDE2VEIg
+YmxvY2sgZGV2aWNlIHdpdGggYQo+ID4gcmVjZW50IG1rZnMueGZzLiBUaGF0IGlzLCBhdCBjdXJy
+ZW50IG1rZnMueGZzIGRlZmF1bHRzIHRvIGdldCBhIGxheW91dCBsaWtlCj4gPiB0aGlzIHlvdSdk
+IGhhdmUgdG8g0ZV0YXJ0IHdpdGggYSA1MTJNQiBmaWxlc3lzdGVtIGFuZCBncm93IGl0IHRvCj4g
+PiAxNlRCLgo+Cj4gQWN0dWFsbHksIGFuIG9sZCBta2ZzIHRoYXQgZGVmYXVsdHMgdG8gMTYgQUdz
+IGFuZCBhIGZpbGVzeXN0ZW0gc2l6ZQo+IG9mIDJHQiBpbiBuZWVkZWQgdG8gZ2V0IGEgbG9nIG9m
+IDI1NDAgYmxvY2tzLiBJIGp1c3QgZ3JldyBvbmUgb2YKPiB0aGVzZSB0byByb3VnaGx5IDE2VEIg
+YW5kIGVuZGVkIHVwIHdpdGggMTI1LDAwMCBBR3MsIHNvIGl0J3MgaW4gdGhlCj4gYmFsbHBhcmsu
+IEFsc28sICphbGxvY2F0aW5nKiAyNTBHQiB0byBhIHNpbmdsZSBmaWxlIChhcwo+IHByZWFsbG9j
+YXRpb24pIGRvZXNuJ3QgYXBwZWFyIHRvIGhhdmUgYW55IHByb2JsZW1zIG9uIDIuNi4zNS1yYzQs
+IHNvCj4gdGhlcmUgZG9lc24ndCBhcHBlYXIgdG8gYmUgYW55IGdlbmVyYWwgZXJyb3IgY2F1c2Vk
+IGJ5IHRoaXMKPiBjb25maWd1cmF0aW9uIGluIG1haW5saW5lLi4uLgo+Cj4gQ2FuIHlvdSBydW4g
+dGhpcyBjb21tYW5kOgo+Cj4gIyB4ZnNfaW8gLWYgLWMgInRydW5jYXRlIDI1MGciIC1jICJyZXN2
+c3AgMCAyNTBnIiA8dGVzdCBmaWxlPgo+Cj4gQW5kIHNlZSBpZiB0aGF0IGdlbmVyYXRlcyB0aGUg
+c2FtZSBjb3JydXB0aW9uIGFzIGNvcHlpbmcgYSBmaWxlPwo+Cj4gQ2hlZXJzLAo+Cj4gRGF2ZS4K
+PiAtLQo+IERhdmUgQ2hpbm5lcgo+IGRhdmlkQGZyb21vcmJpdC5jb20KCkhpIERhdmlkLAoKQWZ0
+ZXIgbWFueSB3ZWVrcyBvZiBwbGFubmluZyB0byBtb3ZlIGFsbCB0aGUgZGF0YSBvZmYgYW5kIGJh
+Y2sgb24KYWdhaW4gd2UgYXJlIGhhcHB5IHRvIHNheSB0aGUgdGhlIHBhcnRpdGlvbiBpcyBub3cg
+d29ya2luZyBhcwpleHBlY3RlZC4KCkluIHRoZSBlbmQgd2UgbWFuYWdlZCB0byBiYWNrdXAgYWxs
+IGRhdGEgb24gb3VyIHBhcnRpdGlvbiBhbmQgd2UKcmUtY3JlYXRlZCBpdCB1c2luZyB0aGUgbWtm
+cy54ZnMgZGVmYXVsdCBvcHRpb25zLiBUaGlzIHRpbWUgd2UgaGF2ZSAxNgphbGxvY2F0aW9uIGdy
+b3VwcyBhcyB5b3Ugc3VnZ2VzdGVkIHdlIHNob3VsZCBoYXZlLgoKSXQgYXBwZWFycyB0aGF0IHRo
+ZSBvcmlnaW5hbCBwYXJ0aXRpb24gd2FzIGdyb3duIGZyb20gYW4gZXh0cmVtZWx5CnNtYWxsIHNp
+emUgdG8gaGF2ZSBjcmVhdGVkIHRoYXQgbWFueSBhbGxvY2F0aW9uIGdyb3Vwcy4KCkkgd291bGQg
+bGlrZSB0byB0aGFuayB0aGUgeGZzIG1haWxpbmcgbGlzdCBmb3IgYWxsIGl0cyBoZWxwLgoKUmVn
+YXJkcywKClNoYXVuCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20v
+bWFpbG1hbi9saXN0aW5mby94ZnMK
