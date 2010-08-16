@@ -1,22 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7FMhOmt205551 for <xfs@oss.sgi.com>; Sun, 15 Aug 2010 17:43:25 -0500
-Received: from enyo.dsw2k3.info (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2F3E8170DF55
-	for <xfs@oss.sgi.com>; Sun, 15 Aug 2010 15:43:52 -0700 (PDT)
-Received: from enyo.dsw2k3.info (enyo.dsw2k3.info [195.71.86.239]) by
-	cuda.sgi.com with ESMTP id n6RMuQLV75otcYry for
-	<xfs@oss.sgi.com>; Sun, 15 Aug 2010 15:43:52 -0700 (PDT)
-Date: Mon, 16 Aug 2010 00:43:41 +0200
-From: Matthias Schniedermeyer <ms@citd.de>
-Subject: Re: xfs.fsck change that is unhelpful
-Message-ID: <20100815224341.GA9438@citd.de>
-References: <4C670101.8050901@tlinx.org> <20100815005240.GH10429@dastard>
-	<4C674AE8.7030107@tlinx.org>
+	o7G0TtCj208381 for <xfs@oss.sgi.com>; Sun, 15 Aug 2010 19:29:55 -0500
+Received: from e32.co.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 34CA0170E91C
+	for <xfs@oss.sgi.com>; Sun, 15 Aug 2010 17:30:22 -0700 (PDT)
+Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150]) by
+	cuda.sgi.com with ESMTP id 49PvjgMZqyEMEekO for
+	<xfs@oss.sgi.com>; Sun, 15 Aug 2010 17:30:22 -0700 (PDT)
+Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com
+	[9.17.195.228])
+	by e32.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id o7G0M6cT019547
+	for <xfs@oss.sgi.com>; Sun, 15 Aug 2010 18:22:06 -0600
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	o7G0UFAW206828 for <xfs@oss.sgi.com>; Sun, 15 Aug 2010 18:30:16 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id o7G0UDhZ014023
+	for <xfs@oss.sgi.com>; Sun, 15 Aug 2010 18:30:15 -0600
+Message-ID: <4C688691.2020100@austin.ibm.com>
+Date: Sun, 15 Aug 2010 19:30:09 -0500
+From: Steven Pratt <slpratt@austin.ibm.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4C674AE8.7030107@tlinx.org>
+Subject: Re: observed significant performance improvement using "delaylog" in
+References: <201008121346.30760.eye.of.the.8eholder@gmail.com>
+	<20100813141344.GE10429@dastard> <4C65AE4D.6070502@sandeen.net>
+	(sfid-20100814_092305_493513_AC7C6900)
+	<201008141328.18436.Martin@lichtvoll.de>
+In-Reply-To: <201008141328.18436.Martin@lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,52 +37,74 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linda Walsh <xfs@tlinx.org>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Martin Steigerwald <Martin@lichtvoll.de>
+Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Keith Mannthey <kmannth@us.ibm.com>, Stan Hoeppner <stan@hardwarefreak.com>
 
-On 14.08.2010 19:03, Linda Walsh wrote:
+Martin Steigerwald wrote:
+> Hi!
 >
+> Cc'd Steve as I think he is running the benchmarks.
 >
-> Dave Chinner wrote:
->> On Sat, Aug 14, 2010 at 01:48:01PM -0700, Linda A. Walsh wrote:
->>> Some time ago, when I upgraded a system, I ran into problems when
->>> it hit a file system that was offline.  It wasn't a critical
->>> partition, so it normally wouldn't have been an issue, but somewhere
->>> along the line
->>> someone mangled fsck.xfs.
+> Am Freitag 13 August 2010 schrieb Eric Sandeen:
+>   
+>> Dave Chinner wrote:
+>>     
+>>> On Fri, Aug 13, 2010 at 08:29:07AM -0400, Christoph Hellwig wrote:
+>>>       
+>> ...
 >>
->> fsck.xfs is behaving identically to e2fsck when presented with an
->> invalid block device - it exits with an error of 8, which is defined
->> as "operational error" in the e2fsck man page.
-> ---
-> 	That may be fine for the ext2 fs, but I am asserting that in actual
-> practice, with xfs, it does more harm than good.
+>>     
+>>>> And asking
+>>>> him/her to add -o delaylog would also be good.
+>>>>         
+>>> Yes, that would be an interesting comparison...
+>>>       
+>> I was thinking the same thing; I'll do that.
+>>     
+>
+> I think its Steven Pratt from IBM.
+>
+> Steve, could you add a case for mount option "-o delaylog" to your 
+> benchmark runs?
+>   
+Which filesystem is this for?  Keith has been helping me with some of 
+these runs. We'll see if we can add this.
 
-I would suggest using autofs, so that you can keep fstab to an absolut 
-minimum.
+Steve
 
-Except for devices related to booting, i personally mount everything 
-either with autofs or manually(In that case it's normaly a one-shot 
-thing).
-
-In my case that are all "non boot related" devices, DVD-drive, network 
-filesystems, some "tmpfs"es for playing, removable-devices, etc.
-
-
-
-
-
-Bis denn
-
--- 
-Real Programmers consider "what you see is what you get" to be just as 
-bad a concept in Text Editors as it is in women. No, the Real Programmer
-wants a "you asked for it, you got it" text editor -- complicated, 
-cryptic, powerful, unforgiving, dangerous.
+> ----------  Weitergeleitete Nachricht  ----------
+>
+> Subject: New performance results
+> Date: Samstag 24 April 2010
+> From: Steven Pratt <slpratt@austin.ibm.com>
+> To: "linux-btrfs" <linux-btrfs@vger.kernel.org>
+>
+> Well, it's been a while but been very busy on other things. Thanks to 
+> Keith Mannthey for helping get some of these runs done.
+>
+> New raid performance on 2.6.34-rc3:
+>
+> http://btrfs.boxacle.net/repository/raid/2010-04-14_2004/2.6.34-
+> rc3/2.6.34-rc3.html
+>
+> Also, the long running history graphs are here:
+>
+> http://btrfs.boxacle.net/repository/raid/history/History.html
+>
+>
+> Steve
+>
+>
+> --
+> [...]
+> -------------------------------------------------------
+>
+> Ciao,
+>   
 
 _______________________________________________
 xfs mailing list
