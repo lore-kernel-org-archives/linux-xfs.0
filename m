@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7G2QGXq212279 for <xfs@oss.sgi.com>; Sun, 15 Aug 2010 21:26:16 -0500
-Received: from Ishtar.sc.tlinx.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 30F2E170EF06
-	for <xfs@oss.sgi.com>; Sun, 15 Aug 2010 19:26:41 -0700 (PDT)
-Received: from Ishtar.sc.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
-	cuda.sgi.com with ESMTP id iCCfhV4Zod8GEECH for
-	<xfs@oss.sgi.com>; Sun, 15 Aug 2010 19:26:41 -0700 (PDT)
-Message-ID: <4C68A1CC.4050206@tlinx.org>
-Date: Sun, 15 Aug 2010 19:26:20 -0700
-From: Linda Walsh <xfs@tlinx.org>
+	o7G8aZSU228534 for <xfs@oss.sgi.com>; Mon, 16 Aug 2010 03:36:36 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5F85F4BF336
+	for <xfs@oss.sgi.com>; Mon, 16 Aug 2010 01:37:03 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id JpqXj0Cu4UI3jCl7
+	for <xfs@oss.sgi.com>; Mon, 16 Aug 2010 01:37:03 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id 490EA6C2D8
+	for <xfs@oss.sgi.com>; Mon, 16 Aug 2010 03:37:03 -0500 (CDT)
+Message-ID: <4C68F8AE.2010006@hardwarefreak.com>
+Date: Mon, 16 Aug 2010 03:37:02 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: Re: xfs.fsck change that is unhelpful
-References: <4C670101.8050901@tlinx.org> <20100815005240.GH10429@dastard>
-	<4C674AE8.7030107@tlinx.org> <20100816015505.GJ10429@dastard>
-In-Reply-To: <20100816015505.GJ10429@dastard>
+Subject: [META-LIST] Now: perennial "reply-to-all"  --  Was: Message to Stan
+	- again
+References: <201008131300.40536@zmi.at> <201008152052.59870@zmi.at>
+In-Reply-To: <201008152052.59870@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,81 +27,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-
-
-Dave Chinner wrote:
-> On Sat, Aug 14, 2010 at 07:03:20PM -0700, Linda Walsh wrote:
->> 	It was long a *feature* of xfs, that xfs.fsck, was a noop.
+Michael Monnerie put forth on 8/15/2010 1:52 PM:
+> Sorry to bother all again, I just wanted to inform Stan that his filter 
+> still has a problem:
 > 
-> It wasn't a feature - it was simply to ensure that initscripts
-> worked. There was simply no reason for it to do anything else until
-> someone discovered that their booot problems were caused by
-> non-standard behaviour. i.e.  fsck wasn't catching non-existent
-> devices and telling the init scripts...
-----
-	Fine.  If it's required to be break at the slightest
-provocation, then great. (*fume*)
+> <stan@hardwarefreak.com>: host greer.hardwarefreak.com[65.41.216.221] 
+> said: 554  5.7.1 <mailsrv1.zmi.at[212.69.164.54]>: Client host rejected: 
+> Access denied (in reply to RCPT TO command)
+> 
+> Your .at filter seems removed, but another one still hits (me).
 
-	I'd love to see that logic applied to any system that's
-supposed to be reliable -- like the human body.  Scrape a finger.  
-Sorry -- can't gain consciousness.  Must forever remain dormant until
-someone fixes my scraped finger.  
-
-	I found the computer coming up to a point where I could 
-remotely log into it and fix the problem to be useful far more often
-than I've found it to be when it demands I sit at the console using
-a limited tool set to repair some damage left over after some upgrade
-or installation.
-
-	It's a pathological condition in either case.  My preference
-is to have it "do it's best", and not give up like a petulant child if
-all the t's are not crossed and all the i's are not dotted just so.
-That's why computers break so easily.  I feel it is better design to have
-them try to do what is intended -- even if limpingly.  
-
-	But it is required for 'init'(5) scripts -- which, apparently
-are on their way out and possibly won't be used to start the machine in
-the next SuSE release.  Perhaps the 'fall over and die' mentality is
-part of that decision -- and FWIW, please don't take any of my words as
-directed against *people*, involved in implementing the maladaptive behavior.
-I realize there is a job that must be done.  I just don't always agree
-with a 1970's - 1980's era computer design philosphy that says give up at the
-first error.
-
-	It only bites me when I've done some measure upgrade or install and haven't
-patched fsck -> /bin/true yet -- which I only do for XFS, because for XFS, it's
-the best possible action to take.  If the device isn't there.  It won't be mounted.
-If it really is critical to the system booting up, then the system will be stopped
-later.  But on the off chance that /usr, /etc, /tmp...etc, are ok, the system might
-come up into some state where it can be remotely diagnosed and fixed.  
-
-	I *LOVE* XFS, because I know it won't leave me hung out to dry during a 
-boot due to a failed fsck.  So if init scripts need such broken mentality, I
-just need to remember to 1) patch it, and 2) as others have pointed out -- make changes
-in the system state, so that a missing file system won't prevent bootup.
-
-	That said -- how many people, who have their /home or /usr/people partition
-'local' to their machine, automount it?  I admit to thinking of the fsck field as having
-some meaning in the order in which file systems are mounted.  I guess that order is
-random now, though how I'm supposed to tell mount that '/home needs to be mounted
-only after "/", but need to be mounted before /home/share, without some ordering
-in fstab is something that is supposed to be specified....where?
+Apparently you're just in the wrong part of the world Michael. :)  Ok, it
+should be "fixed" now.  BTW...
 
 
-	I.e. isn't that field also the order in which file systems are mounted, or
-is there some other place that order is maintained other than in fstab?
+Why does "everyone" on this list "reply-to-all" when 99% of the time it is
+totally unnecessary, redundant, and potentially ruffles a sender's feathers,
+as in this case?  TTBOMK in recent months the only time I saw that
+"reply-to-all" was necessary was a thread which included the linux-kernel list
+or someone who wasn't a member of the xfs list.  I love you guys and all, and
+I love XFS, but do I really need _two_ message copies each time someone
+replies to a thread in which I participated?  :)  Do I need to be called out
+in public for a "problem" with my spam filter when one of those two
+_redundant_ messages gets blocked, even though the other made it through, and
+always will?  :)
 
-	Sorry, am definitely showing my ignorance in this area.
+I'm on 7 FOSS technical mailing lists, the others being debian-user, dovecot,
+linux-ide, postfix-users, roundcube, and samba.  Of these 7, only xfs and
+linux-ide routinely suffer the "reply-to-all" syndrome.  And of the others, on
+some, the list OPs will actively scold people when they catch them performing
+this perennial "reply-to-all" act.  Wietse Venema (father of Postfix) in
+particular gets perturbed by the "reply-to-all" behavior.  Not surprising I
+guess, with him living and breathing SMTP mail for the past ~15 years.
 
-	
-Linda
+Most MUA's have a built in "reply-to-list" function these days and if not
+someone usually offers a plug-in.  I use it in TBird, first as a plug-in, and
+now that the function is fully integrated.  It works great.  Never a problem.
+
+I'm not trying to be a PITA for anyone here.  I'm just trying to understand
+the apparent _need_ to always "reply-to-all" given that it's unnecessary 99%
+of the time and simply causes problems, some small, others more severe.
+
+P.S.  When someone feels slighted by the spam filter of a colleague, the first
+thing you should do before making a public statement about it is to find a
+local spammer and physically assault him for an hour or so.  Then type your
+email.  If it weren't for the 10s of thousands of folks around the world like
+the one you just pummeled, my draconian spam filter wouldn't exist.  :)
+Rightly place blame where it _belongs_.
+
+-- 
+Stan
+
 
 _______________________________________________
 xfs mailing list
