@@ -1,25 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7G13fFJ209340 for <xfs@oss.sgi.com>; Sun, 15 Aug 2010 20:03:41 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A3D744BE6AB
-	for <xfs@oss.sgi.com>; Sun, 15 Aug 2010 18:04:08 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	ipZuuZWTIECwpgx8 for <xfs@oss.sgi.com>;
-	Sun, 15 Aug 2010 18:04:08 -0700 (PDT)
-Date: Mon, 16 Aug 2010 11:03:01 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: observed significant performance improvement using "delaylog" in
-Message-ID: <20100816010301.GI10429@dastard>
-References: <201008121346.30760.eye.of.the.8eholder@gmail.com>
-	<20100813141344.GE10429@dastard> <4C65AE4D.6070502@sandeen.net>
-	<201008141328.18436.Martin@lichtvoll.de>
-	<4C688691.2020100@austin.ibm.com>
+	o7G1PqJq209966 for <xfs@oss.sgi.com>; Sun, 15 Aug 2010 20:25:52 -0500
+Received: from postoffice2.aconex.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2EA53CB2D65
+	for <xfs@oss.sgi.com>; Sun, 15 Aug 2010 18:35:11 -0700 (PDT)
+Received: from postoffice2.aconex.com (mail.aconex.com [203.89.202.182]) by
+	cuda.sgi.com with ESMTP id OJa3xV9vkfgxhaHa for
+	<xfs@oss.sgi.com>; Sun, 15 Aug 2010 18:35:11 -0700 (PDT)
+Date: Mon, 16 Aug 2010 11:25:59 +1000 (EST)
+From: Nathan Scott <nathans@aconex.com>
+Message-ID: <1697333467.18161281921959476.JavaMail.root@mail-au.aconex.com>
+In-Reply-To: <20100814111513.GA8214@infradead.org>
+Subject: Re: xfsprogs Debian mantainaince
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4C688691.2020100@austin.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,42 +26,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Steven Pratt <slpratt@austin.ibm.com>
-Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Keith Mannthey <kmannth@us.ibm.com>, Stan Hoeppner <stan@hardwarefreak.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: nathans@debian.org, anibal@debian.org, xfs@oss.sgi.com
 
-On Sun, Aug 15, 2010 at 07:30:09PM -0500, Steven Pratt wrote:
-> Martin Steigerwald wrote:
-> >Hi!
-> >
-> >Cc'd Steve as I think he is running the benchmarks.
-> >
-> >Am Freitag 13 August 2010 schrieb Eric Sandeen:
-> >>Dave Chinner wrote:
-> >>>On Fri, Aug 13, 2010 at 08:29:07AM -0400, Christoph Hellwig wrote:
-> >>...
-> >>
-> >>>>And asking
-> >>>>him/her to add -o delaylog would also be good.
-> >>>Yes, that would be an interesting comparison...
-> >>I was thinking the same thing; I'll do that.
-> >
-> >I think its Steven Pratt from IBM.
-> >
-> >Steve, could you add a case for mount option "-o delaylog" to your
-> >benchmark runs?
-> Which filesystem is this for?  Keith has been helping me with some
-> of these runs. We'll see if we can add this.
 
-XFS - it's a new mount option for 2.6.35. Gory details in
-Documentation/filesystems/xfs-delayed-logging-design.txt.
+----- "Christoph Hellwig" <hch@infradead.org> wrote:
 
-Cheers,
+> Hi Nathan, hi Anibal,
+> 
+> if seen the constant flipping between native and non-native uploads
+> for the xfsprogs Debian packages between the two of you and it's
+> slightly annoying.  I know Nathan likes maintaining the Debian
+> packages
+> in git, which also makes life for us XFS developers trying to build
+> debian packages a lot easier.
+> 
+> What about a compromise?  We'll add a debian-<dist> branches to the
+> xfsprogs-dev repository where we can track the exact packages
+> uploaded
+> to Debian, including the -2/-3 etc packages revisions that only get
+> uploaded to Debian,
 
-Dave.
+IMO, the -2 and -3 revisions are unnecessary and there's really no need
+for a separate branch ... if Anibal had a kernel.org account and merged
+changes in before uploading, there'd be no issue, I think - Anibal?  It
+would make life simpler, for sure.
+
+> And one last request, any chance to get xfsprogs for -testing rebuilt
+> against libblkid now that util-linux-2.17 has finally made it into
+> testing?  Beeing able to use blkid for alignment detection will be
+> very important so that XFS on Debian can deal with 4k sector disks
+> and hardware RAID arrays out of the box.
+
+Sure, I'll take a look at that for next upload.
+
+cheers.
 
 -- 
-Dave Chinner
-david@fromorbit.com
+Nathan
 
 _______________________________________________
 xfs mailing list
