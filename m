@@ -1,34 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7GGMKY4246484 for <xfs@oss.sgi.com>; Mon, 16 Aug 2010 11:22:21 -0500
-Received: from mailout.rz.uni-frankfurt.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B5B7CCC0560
-	for <xfs@oss.sgi.com>; Mon, 16 Aug 2010 09:31:56 -0700 (PDT)
-Received: from mailout.rz.uni-frankfurt.de (mailout.rz.uni-frankfurt.de
-	[141.2.22.233]) by cuda.sgi.com with ESMTP id 2jnQoqcZE5PHxlsn
-	for <xfs@oss.sgi.com>; Mon, 16 Aug 2010 09:31:56 -0700 (PDT)
-Received: from smtpauth.cluster.uni-frankfurt.de ([10.2.22.4]
-	helo=smtpauth3.rz.uni-frankfurt.de)
-	by mailout.rz.uni-frankfurt.de with esmtps (TLSv1:AES256-SHA:256)
-	(Exim 4.71) (envelope-from <mbachman@stud.uni-frankfurt.de>)
-	id 1Ol2SU-00010C-2Z
-	for xfs@oss.sgi.com; Mon, 16 Aug 2010 18:22:46 +0200
-Received: from p4fdd345c.dip.t-dialin.net ([79.221.52.92] helo=server.grafnetz)
-	by smtpauth3.rz.uni-frankfurt.de with esmtpsa (TLSv1:AES256-SHA:256)
-	(Exim 4.71) (envelope-from <mbachman@stud.uni-frankfurt.de>)
-	id 1Ol2SO-0007C9-Fd
-	for xfs@oss.sgi.com; Mon, 16 Aug 2010 18:22:40 +0200
-Received: from x2.grafnetz ([192.168.0.4])
-	by server.grafnetz with esmtps (TLS1.0:DHE_RSA_AES_128_CBC_SHA1:16)
-	(Exim 4.72) (envelope-from <mbachman@stud.uni-frankfurt.de>)
-	id 1Ol2SL-0006mp-J5
-	for xfs@oss.sgi.com; Mon, 16 Aug 2010 18:22:38 +0200
-Date: Mon, 16 Aug 2010 18:22:36 +0200
-From: Mario Bachmann <mbachman@stud.uni-frankfurt.de>
-Subject: xfsdump-3.0.4 problems
-Message-ID: <20100816182236.249a2a0f@x2.grafnetz>
-Mime-Version: 1.0
+	o7GM9G5N003677 for <xfs@oss.sgi.com>; Mon, 16 Aug 2010 17:09:17 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D58BB11D336A
+	for <xfs@oss.sgi.com>; Mon, 16 Aug 2010 15:18:54 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	SxFhxuk0nZIVdxWY for <xfs@oss.sgi.com>;
+	Mon, 16 Aug 2010 15:18:54 -0700 (PDT)
+Date: Tue, 17 Aug 2010 08:09:41 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Kernel BUG when running xfs_fsr with 2.6.35.1
+Message-ID: <20100816220941.GK10429@dastard>
+References: <878w47yn36.fsf@viiru.iki.fi>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <878w47yn36.fsf@viiru.iki.fi>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,76 +25,40 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Arto Jantunen <viiru@debian.org>
+Cc: xfs@oss.sgi.com
 
-SGVsbG8sIAoKbXkga2VybmVsIGlzCkxpbnV4IHgyIDIuNi4zNS4yICMxIFNNUCBTdW4gQXVnIDE1
-IDAwOjMyOjE0IENFU1QgMjAxMCB4ODZfNjQgQU1EIEF0aGxvbih0bSkgNjQgWDIgRHVhbCBDb3Jl
-IFByb2Nlc3NvciA1NjAwKyBBdXRoZW50aWNBTUQgR05VL0xpbnV4CgpJIGdldCBhIGxvdCBvZiBX
-YXJuaW5ncyB3aXRoIHhmc2R1bXAtMy4wLjQgKGJvb3RoLCBnZW50b28gcGFja2FnZSAzLjAuNC1y
-MSBhbmQgZ2l0LXZlcnNpb24pOgoKeDIgfi9zb3VyY2UvZC94ZnNkdW1wL2R1bXAgIyAuL3hmc2R1
-bXAgLWwwIC1MICJUZXN0IiAtIC9kZXYvc2RhMiB8Z3ppcCAtID4gL21udC9kYXRhMi9kdW1wX3Rl
-eHQuZ3oKLi94ZnNkdW1wOiB1c2luZyBmaWxlIGR1bXAgKGRyaXZlX3NpbXBsZSkgc3RyYXRlZ3kK
-Li94ZnNkdW1wOiB2ZXJzaW9uIDMuMC40IChkdW1wIGZvcm1hdCAzLjApIC0gUnVubmluZyBzaW5n
-bGUtdGhyZWFkZWQKLi94ZnNkdW1wOiBsZXZlbCAwIGR1bXAgb2YgeDI6L2hvbWUKLi94ZnNkdW1w
-OiBkdW1wIGRhdGU6IE1vbiBBdWcgMTYgMTc6MzQ6MzAgMjAxMAouL3hmc2R1bXA6IHNlc3Npb24g
-aWQ6IDI4OGVkMjdjLTJiMjYtNGM4Yi1hNWQ0LWJmZDFhMzJmNGI2ZgouL3hmc2R1bXA6IHNlc3Np
-b24gbGFiZWw6ICJUZXN0IgouL3hmc2R1bXA6IGlubyBtYXAgcGhhc2UgMTogY29uc3RydWN0aW5n
-IGluaXRpYWwgZHVtcCBsaXN0Ci4veGZzZHVtcDogaW5vIG1hcCBwaGFzZSAyOiBza2lwcGluZyAo
-bm8gcHJ1bmluZyBuZWNlc3NhcnkpCi4veGZzZHVtcDogaW5vIG1hcCBwaGFzZSAzOiBza2lwcGlu
-ZyAob25seSBvbmUgZHVtcCBzdHJlYW0pCi4veGZzZHVtcDogaW5vIG1hcCBjb25zdHJ1Y3Rpb24g
-Y29tcGxldGUKLi94ZnNkdW1wOiBlc3RpbWF0ZWQgZHVtcCBzaXplOiAzMjM2MzM1ODA4IGJ5dGVz
-Ci4veGZzZHVtcDogY3JlYXRpbmcgZHVtcCBzZXNzaW9uIG1lZGlhIGZpbGUgMCAobWVkaWEgMCwg
-ZmlsZSAwKQouL3hmc2R1bXA6IGR1bXBpbmcgaW5vIG1hcAouL3hmc2R1bXA6IGR1bXBpbmcgZGly
-ZWN0b3JpZXMKLi94ZnNkdW1wOiBXQVJOSU5HOiBjb3VsZCBub3Qgc3RhdCBkaXJlbnQgLmNyYWNr
-LWF0dGFjayBpbm8gMTAwNjYzNjc0OiBEYXMgQXJndW1lbnQgaXN0IHVuZ8O8bHRpZzogdXNpbmcg
-bnVsbCBnZW5lcmF0aW9uIGNvdW50IGluIGRpcmVjdG9yeSBlbnRyeQouL3hmc2R1bXA6IFdBUk5J
-Tkc6IGNvdWxkIG5vdCBzdGF0IGRpcmVudCAua3ZpcmM0LnJjIGlubyAyMzk6IERhcyBBcmd1bWVu
-dCBpc3QgdW5nw7xsdGlnOiB1c2luZyBudWxsIGdlbmVyYXRpb24gY291bnQgaW4gZGlyZWN0b3J5
-IGVudHJ5Ci4veGZzZHVtcDogV0FSTklORzogY291bGQgbm90IHN0YXQgZGlyZW50IC5yZWNlbnRs
-eS11c2VkIGlubyAyNDA6IERhcyBBcmd1bWVudCBpc3QgdW5nw7xsdGlnOiB1c2luZyBudWxsIGdl
-bmVyYXRpb24gY291bnQgaW4gZGlyZWN0b3J5IGVudHJ5Ci4veGZzZHVtcDogV0FSTklORzogY291
-bGQgbm90IHN0YXQgZGlyZW50IC5Eb3dubG9hZE1hbmFnZXIgaW5vIDEwMDY2MzgzNjogRGFzIEFy
-Z3VtZW50IGlzdCB1bmfDvGx0aWc6IHVzaW5nIG51bGwgZ2VuZXJhdGlvbiBjb3VudCBpbiBkaXJl
-Y3RvcnkgZW50cnkKLi94ZnNkdW1wOiBXQVJOSU5HOiBjb3VsZCBub3Qgc3RhdCBkaXJlbnQgLmRp
-c3RjYyBpbm8gMzM1NTQ3MjU6IERhcyBBcmd1bWVudCBpc3QgdW5nw7xsdGlnOiB1c2luZyBudWxs
-IGdlbmVyYXRpb24gY291bnQgaW4gZGlyZWN0b3J5IGVudHJ5Ci4veGZzZHVtcDogV0FSTklORzog
-Y291bGQgbm90IHN0YXQgZGlyZW50IC5qYXZhZnhfZXVsYV9hY2NlcHRlZCBpbm8gMTMyNzogRGFz
-IEFyZ3VtZW50IGlzdCB1bmfDvGx0aWc6IHVzaW5nIG51bGwgZ2VuZXJhdGlvbiBjb3VudCBpbiBk
-aXJlY3RvcnkgZW50cnkKLi94ZnNkdW1wOiBXQVJOSU5HOiBjb3VsZCBub3Qgc3RhdCBkaXJlbnQg
-c29sYXJfa2Fzc2VsX3Rob21hcy50eHQgaW5vIDE2NzE6IERhcyBBcmd1bWVudCBpc3QgdW5nw7xs
-dGlnOiB1c2luZyBudWxsIGdlbmVyYXRpb24gY291bnQgaW4gZGlyZWN0b3J5IGVudHJ5CgpbdGhv
-dXNhbmRzIG9mIHRoZXNlIG1lc3NhZ2VzLi4uXQoKLi94ZnNkdW1wOiBXQVJOSU5HOiBjb3VsZCBu
-b3Qgc3RhdCBkaXJlbnQgLTA3YTk1NDAwMDdhYTc1MDAtMDAwMDAwMDAwMCBpbm8gMzg3OTczOTE6
-IERhcyBBcmd1bWVudCBpc3QgdW5nw7xsdGlnOiB1c2luZyBudWxsIGdlbmVyYXRpb24gY291bnQg
-aW4gZGlyZWN0b3J5IGVudHJ5Ci4veGZzZHVtcDogZHVtcGluZyBub24tZGlyZWN0b3J5IGZpbGVz
-Ci4veGZzZHVtcDogZW5kaW5nIG1lZGlhIGZpbGUKLi94ZnNkdW1wOiBtZWRpYSBmaWxlIHNpemUg
-MzMxOTE3OTU1MiBieXRlcwouL3hmc2R1bXA6IGR1bXAgc2l6ZSAobm9uLWRpciBmaWxlcykgOiAz
-MzEzMDc4MDA4IGJ5dGVzCi4veGZzZHVtcDogZHVtcCBjb21wbGV0ZTogMTc0IHNlY29uZHMgZWxh
-cHNlZAouL3hmc2R1bXA6IER1bXAgU3RhdHVzOiBTVUNDRVNTCgpBdCB0aGUgZW5kIHRoZXJlIGlz
-IGEgZmlsZSB3aXRoIDIsOCBHQi4gV2hlbiByZXN0b3JlZCwgSSBoYXZlIDMsMiBHQi4gCkEgbG90
-IG9mIGZpbGVzIHNpbXBseSBhcmUgbm90IHRoZXJlISAKCldpdGggdGhlICJvbGQiIHZlcnNpb24g
-eGZzZHVtcC0zLjAuMSwgSSBnZXQgbm8gd2FybmluZ3MhCnhmc2R1bXAgLWwwIC1MICJUZXN0IiAt
-IC9kZXYvc2RhMiB8Z3ppcCAtID4gL21udC9kYXRhMi9kdW1wMzAxX3Rlc3QuZ3oKeGZzZHVtcDog
-dXNpbmcgZmlsZSBkdW1wIChkcml2ZV9zaW1wbGUpIHN0cmF0ZWd5Cnhmc2R1bXA6IHZlcnNpb24g
-My4wLjEgKGR1bXAgZm9ybWF0IDMuMCkgLSBSdW5uaW5nIHNpbmdsZS10aHJlYWRlZAp4ZnNkdW1w
-OiBsZXZlbCAwIGR1bXAgb2YgeDI6L2hvbWUKeGZzZHVtcDogZHVtcCBkYXRlOiBNb24gQXVnIDE2
-IDE4OjE0OjQ3IDIwMTAKeGZzZHVtcDogc2Vzc2lvbiBpZDogYjc1YTA4OGYtNjQ4MS00NTgzLTgw
-MjAtN2M2N2ZiZTkyYmNhCnhmc2R1bXA6IHNlc3Npb24gbGFiZWw6ICJUZXN0Igp4ZnNkdW1wOiBp
-bm8gbWFwIHBoYXNlIDE6IGNvbnN0cnVjdGluZyBpbml0aWFsIGR1bXAgbGlzdAp4ZnNkdW1wOiBp
-bm8gbWFwIHBoYXNlIDI6IHNraXBwaW5nIChubyBwcnVuaW5nIG5lY2Vzc2FyeSkKeGZzZHVtcDog
-aW5vIG1hcCBwaGFzZSAzOiBza2lwcGluZyAob25seSBvbmUgZHVtcCBzdHJlYW0pCnhmc2R1bXA6
-IGlubyBtYXAgY29uc3RydWN0aW9uIGNvbXBsZXRlCnhmc2R1bXA6IGVzdGltYXRlZCBkdW1wIHNp
-emU6IDYwMDAwMjA0ODAgYnl0ZXMKeGZzZHVtcDogY3JlYXRpbmcgZHVtcCBzZXNzaW9uIG1lZGlh
-IGZpbGUgMCAobWVkaWEgMCwgZmlsZSAwKQp4ZnNkdW1wOiBkdW1waW5nIGlubyBtYXAKeGZzZHVt
-cDogZHVtcGluZyBkaXJlY3Rvcmllcwp4ZnNkdW1wOiBkdW1waW5nIG5vbi1kaXJlY3RvcnkgZmls
-ZXMKeGZzZHVtcDogZW5kaW5nIG1lZGlhIGZpbGUKeGZzZHVtcDogbWVkaWEgZmlsZSBzaXplIDU3
-MDEzMDY2NTYgYnl0ZXMKeGZzZHVtcDogZHVtcCBzaXplIChub24tZGlyIGZpbGVzKSA6IDU2OTE5
-MzcwMTYgYnl0ZXMKeGZzZHVtcDogZHVtcCBjb21wbGV0ZTogMzA4IHNlY29uZHMgZWxhcHNlZAp4
-ZnNkdW1wOiBEdW1wIFN0YXR1czogU1VDQ0VTUwoKQW5kIHRoZSBmaWxlIGlzIDQsOCBHQi4gQWxs
-IHNlZW1zIHRvIGJlIGNvcnJlY3QhCgpNYXJpbwoKX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0
-cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Mon, Aug 16, 2010 at 11:32:29AM +0300, Arto Jantunen wrote:
+> 
+> Hi List,
+> 
+> I had a kernel BUG yesterday when running xfs_fsr on my Debian Unstable
+> laptop. The kernel is upstream 2.6.35.1. I'm attaching the backtrace
+> below. I haven't tried reproducing the problem yet and don't know if it is
+> reproducible. I can try that, and test patches etc. if it is useful. Let me
+> know if there is any other information I can provide to help with debugging.
+
+It's not obvious what has gone wrong at all - I haven't seen
+anything like this in all my recent testing, so it's something new.
+The first oops implies the inode has not been joined to the
+transaction, but from code inspection I cannot see how that can
+happen.
+
+What compiler did you use to build the kernel? can you reproduce the
+problem at all?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
