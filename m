@@ -1,27 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7HBjQNn046851 for <xfs@oss.sgi.com>; Tue, 17 Aug 2010 06:45:26 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 747F915D4848
-	for <xfs@oss.sgi.com>; Tue, 17 Aug 2010 04:55:07 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	2uwTSVHeJsO17zmU for <xfs@oss.sgi.com>;
-	Tue, 17 Aug 2010 04:55:07 -0700 (PDT)
-Date: Tue, 17 Aug 2010 21:45:50 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] Re: xfsdump-3.0.4 problems
-Message-ID: <20100817114550.GQ10429@dastard>
-References: <20100816182236.249a2a0f@x2.grafnetz>
-	<20100816223021.GL10429@dastard>
-	<20100817083227.06e23889@x2.grafnetz>
-	<20100817071337.GN10429@dastard>
-	<20100817095340.6b9ab8e2@x2.grafnetz>
-	<20100817090534.GP10429@dastard>
+	o7HDfWA6049999 for <xfs@oss.sgi.com>; Tue, 17 Aug 2010 08:41:32 -0500
+Received: from out.rilinfo.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 19ECB32BC
+	for <xfs@oss.sgi.com>; Tue, 17 Aug 2010 06:41:58 -0700 (PDT)
+Received: from out.rilinfo.net (out41.rilinfo.net [202.138.96.41]) by
+	cuda.sgi.com with ESMTP id wLYFqxWQA3FKmYvJ for
+	<xfs@oss.sgi.com>; Tue, 17 Aug 2010 06:41:58 -0700 (PDT)
+Date: Tue, 17 Aug 2010 19:12:12 +0530 (IST)
+From: Nohez <nohez@cmie.com>
+Subject: kernel bug in xfs_lrw.c (centos v5.5, directio, aio)
+Message-ID: <alpine.LNX.2.00.1008171906220.21398@mahi.cmie.ernet.in>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100817090534.GP10429@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,147 +21,196 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mario Bachmann <mbachman@stud.uni-frankfurt.de>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Aug 17, 2010 at 07:05:34PM +1000, Dave Chinner wrote:
-> On Tue, Aug 17, 2010 at 09:53:40AM +0200, Mario Bachmann wrote:
-> > Am Tue, 17 Aug 2010 17:13:37 +1000 > schrieb Dave Chinner <david@fromorbit.com>:
-> > > > Compiler: I use "gcc (Gentoo 4.4.4-r1 p1.0, pie-0.4.5) 4.4.4". 
-> > > > 
-> > > > Testing List (on one machine only):
-> > > > works:   x86_64, 2.6.34.4, xfsdump-3.0.1
-> > > > works:   x86_64, 2.6.34.4, xfsdump-3.0.4
-> > > > failure: x86_64, 2.6.35.2, xfsdump-3.0.1 (worked only one time)
-> > > > failure: x86_64, 2.6.35.2, xfsdump-3.0.4
-> > > 
-> > > Ok, that makes more sense - we changed the way bulkstat works in
-> > > from 2.6.34 to 2.6.35 to correctly validate inode numbers being
-> > > passed in via bulkstat, and hence files unlinked during the dump run
-> > > could return EINVAL when validating the directory structure (as they
-> > > no longer exist). Is you system completely idle while the dump
-> > > is running, or are files being removed while the dump is running?
-> > 
-> > I would call my system idle, when I use xfsdump. No rm or mv operations 
-> > are running while the dump. The first machine has a dual core 2.9 GHz and
-> > 8 GB of RAM and the filesystems are not really big (~10GB used). The second 
-> > machine has a dual core 2 GHz and 2 GB of RAM. 
-> 
-> Yup, I have reproduced it here. What is strange is that xfs_fsr uses
-> XFS_IOC_BULKSTAT_SINGLE, and that works fine on 2.6.35.2. The same
-> ioctl calls from xfsdump are failing, though, so something funny is
-> going on there.
-> 
-> I'll look into it further.
 
-Ok, there is nothing wrong with the changes to the bulkstat code;
-when all the inodes in the filesystem are hot in the inode cache
-xfsdump succeeds.
+Hi,
 
-When I run xfs_fsr per file to exercise the XFS_IOC_BULKSTAT_SINGLE
-path like so:
+I had a kernel bug today when running xfs on CentOS v5.5. I moved to
+xfs from ext3 today.
 
-$ sudo find /mnt/test -type f -exec xfs_fsr -d -v {} \;
+The only application accessing the xfs filesystem is Sybase ASE v15.x.
+Database has been configured to use directio with native kernel
+asynchronous disk i/o enabled.
 
-It succeeds without any bulkstat failures. A subsequent xfsdump
-invocation then succeeds without failure, either. Clearly the find
-is populating the inode cache for the subsequent bulkstat calls,
+Let me know if there is any other information I can provide to help
+with debugging.
 
-Ok, so the reason this wasn't picked up is that xfs_fsr silently
-ignores inodes that it gets an error from bulkstat on.
+Thanks
+Nohez
 
-and it looks like
-Dropping caches then running xfsdump:
 
-$ sudo sh -c "echo 3 > /proc/sys/vm/drop_caches"
-$ sudo xfsdump -l0 -L "Test" - /dev/vda 2> t.t |gzip - > ~/dump_test.gz
+# uname -a
+Linux xxxxxx 2.6.18-194.11.1.el5 #1 SMP Tue Aug 10 19:05:06 EDT 2010 x86_64 x86_64 x86_64 GNU/Linux
 
-Results in failures.
+# modinfo xfs
+filename:       /lib/modules/2.6.18-194.11.1.el5/kernel/fs/xfs/xfs.ko
+license:        GPL
+description:    SGI XFS with ACLs, security attributes, large block/inode numbers, no debug enabled
+author:         Silicon Graphics, Inc.
+srcversion:     5380928C58CAF3C9D7FF438
+depends:
+vermagic:       2.6.18-194.11.1.el5 SMP mod_unload gcc-4.1
+module_sig:     883f3504c61e211db40e56c3525288511247550a0d2737921213759cfcfebb5d4b9c7349defb86f4f0a0c1199fc66696cad525fb805585a3d05072b47923
 
-/me sighs
+# grep xfs /proc/mounts
+/dev/mapper/xxxxxx_syb_vol_6130p1 /sybase xfs rw,noatime,nodiratime,nobarrier,logbufs=8,logbsize=32k,noquota 0 0
 
-My fault. I screwed up the btree lookup for the inode validation.
-Can you test the patch below?
 
-Cheers,
 
-Dave
--- 
-Dave Chinner
-david@fromorbit.com
+<begin /var/log/messages>
 
-xfs: fix untrusted inode number lookup
+Aug 17 14:26:02 xxxxxx kernel: XFS mounting filesystem dm-1
+Aug 17 15:20:09 xxxxxx kernel: BUG: warning at fs/xfs/linux-2.6/xfs_lrw.c:718/xfs_write() (Tainted: G     )
+Aug 17 15:20:09 xxxxxx kernel: 
+Aug 17 15:20:09 xxxxxx kernel: Call Trace:
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff88683d59>] :xfs:xfs_write+0x39f/0x69e
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff800e9226>] core_sys_select+0x1f9/0x265
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff886805a0>] :xfs:xfs_file_aio_write+0x65/0x6a
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff800ef2b6>] aio_pwrite+0x2c/0x75
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff800efd77>] aio_run_iocb+0xef/0x18a
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff800f08e1>] io_submit_one+0x396/0x499
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff800f0ef8>] sys_io_submit+0xbe/0x1a4
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff8005d28d>] tracesys+0xd5/0xe0
+Aug 17 15:20:09 xxxxxx kernel: 
+Aug 17 15:20:09 xxxxxx kernel: BUG: warning at fs/xfs/linux-2.6/xfs_lrw.c:718/xfs_write() (Tainted: G     )
+Aug 17 15:20:09 xxxxxx kernel: 
+Aug 17 15:20:09 xxxxxx kernel: Call Trace:
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff88683d59>] :xfs:xfs_write+0x39f/0x69e
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff800e9226>] core_sys_select+0x1f9/0x265
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff886805a0>] :xfs:xfs_file_aio_write+0x65/0x6a
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff800ef2b6>] aio_pwrite+0x2c/0x75
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff800efd77>] aio_run_iocb+0xef/0x18a
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff800f08e1>] io_submit_one+0x396/0x499
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff800f0ef8>] sys_io_submit+0xbe/0x1a4
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff8005d28d>] tracesys+0xd5/0xe0
+Aug 17 15:20:09 xxxxxx kernel: 
+Aug 17 15:20:09 xxxxxx kernel: BUG: warning at fs/xfs/linux-2.6/xfs_lrw.c:718/xfs_write() (Tainted: G     )
+Aug 17 15:20:09 xxxxxx kernel: 
+Aug 17 15:20:09 xxxxxx kernel: Call Trace:
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff88683d59>] :xfs:xfs_write+0x39f/0x69e
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff800e9226>] core_sys_select+0x1f9/0x265
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff886805a0>] :xfs:xfs_file_aio_write+0x65/0x6a
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff800ef2b6>] aio_pwrite+0x2c/0x75
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff800efd77>] aio_run_iocb+0xef/0x18a
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff800f08e1>] io_submit_one+0x396/0x499
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff800f0ef8>] sys_io_submit+0xbe/0x1a4
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff8005d28d>] tracesys+0xd5/0xe0
+Aug 17 15:20:09 xxxxxx kernel: 
+Aug 17 15:20:09 xxxxxx kernel: BUG: warning at fs/xfs/linux-2.6/xfs_lrw.c:718/xfs_write() (Tainted: G     )
+Aug 17 15:20:09 xxxxxx kernel: 
+Aug 17 15:20:09 xxxxxx kernel: Call Trace:
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff88683d59>] :xfs:xfs_write+0x39f/0x69e
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff800e9226>] core_sys_select+0x1f9/0x265
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff886805a0>] :xfs:xfs_file_aio_write+0x65/0x6a
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff800ef2b6>] aio_pwrite+0x2c/0x75
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff800efd77>] aio_run_iocb+0xef/0x18a
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff800f08e1>] io_submit_one+0x396/0x499
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff800f0ef8>] sys_io_submit+0xbe/0x1a4
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff8005d28d>] tracesys+0xd5/0xe0
+Aug 17 15:20:09 xxxxxx kernel: 
+Aug 17 15:20:09 xxxxxx kernel: BUG: warning at fs/xfs/linux-2.6/xfs_lrw.c:718/xfs_write() (Tainted: G     )
+Aug 17 15:20:09 xxxxxx kernel: 
+Aug 17 15:20:09 xxxxxx kernel: Call Trace:
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff88683d59>] :xfs:xfs_write+0x39f/0x69e
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff800e9226>] core_sys_select+0x1f9/0x265
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff886805a0>] :xfs:xfs_file_aio_write+0x65/0x6a
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff800ef2b6>] aio_pwrite+0x2c/0x75
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff800efd77>] aio_run_iocb+0xef/0x18a
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff800f08e1>] io_submit_one+0x396/0x499
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff800f0ef8>] sys_io_submit+0xbe/0x1a4
+Aug 17 15:20:09 xxxxxx kernel:  [<ffffffff8005d28d>] tracesys+0xd5/0xe0
+Aug 17 15:20:09 xxxxxx kernel: 
+Aug 17 15:20:09 xxxxxx kernel: BUG: warning at fs/xfs/linux-2.6/xfs_lrw.c:718/xfs_write() (Tainted: G     )
+Aug 17 15:20:09 xxxxxx kernel: 
+Aug 17 15:20:10 xxxxxx kernel: Call Trace:
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff88683d59>] :xfs:xfs_write+0x39f/0x69e
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff800e9226>] core_sys_select+0x1f9/0x265
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff886805a0>] :xfs:xfs_file_aio_write+0x65/0x6a
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff800ef2b6>] aio_pwrite+0x2c/0x75
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff800efd77>] aio_run_iocb+0xef/0x18a
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff800f08e1>] io_submit_one+0x396/0x499
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff800f0ef8>] sys_io_submit+0xbe/0x1a4
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff8005d28d>] tracesys+0xd5/0xe0
+Aug 17 15:20:10 xxxxxx kernel: 
+Aug 17 15:20:10 xxxxxx kernel: BUG: warning at fs/xfs/linux-2.6/xfs_lrw.c:718/xfs_write() (Tainted: G     )
+Aug 17 15:20:10 xxxxxx kernel: 
+Aug 17 15:20:10 xxxxxx kernel: Call Trace:
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff88683d59>] :xfs:xfs_write+0x39f/0x69e
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff800e9226>] core_sys_select+0x1f9/0x265
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff886805a0>] :xfs:xfs_file_aio_write+0x65/0x6a
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff800ef2b6>] aio_pwrite+0x2c/0x75
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff800efd77>] aio_run_iocb+0xef/0x18a
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff800f08e1>] io_submit_one+0x396/0x499
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff800f0ef8>] sys_io_submit+0xbe/0x1a4
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff8005d28d>] tracesys+0xd5/0xe0
+Aug 17 15:20:10 xxxxxx kernel: 
+Aug 17 15:20:10 xxxxxx kernel: BUG: warning at fs/xfs/linux-2.6/xfs_lrw.c:718/xfs_write() (Tainted: G     )
+Aug 17 15:20:10 xxxxxx kernel: 
+Aug 17 15:20:10 xxxxxx kernel: Call Trace:
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff88683d59>] :xfs:xfs_write+0x39f/0x69e
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff800e9226>] core_sys_select+0x1f9/0x265
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff886805a0>] :xfs:xfs_file_aio_write+0x65/0x6a
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff800ef2b6>] aio_pwrite+0x2c/0x75
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff800efd77>] aio_run_iocb+0xef/0x18a
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff800f08e1>] io_submit_one+0x396/0x499
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff800f0ef8>] sys_io_submit+0xbe/0x1a4
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff8005d28d>] tracesys+0xd5/0xe0
+Aug 17 15:20:10 xxxxxx kernel: 
+Aug 17 15:20:10 xxxxxx kernel: BUG: warning at fs/xfs/linux-2.6/xfs_lrw.c:718/xfs_write() (Tainted: G     )
+Aug 17 15:20:10 xxxxxx kernel: 
+Aug 17 15:20:10 xxxxxx kernel: Call Trace:
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff88683d59>] :xfs:xfs_write+0x39f/0x69e
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff800e9226>] core_sys_select+0x1f9/0x265
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff886805a0>] :xfs:xfs_file_aio_write+0x65/0x6a
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff800ef2b6>] aio_pwrite+0x2c/0x75
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff800efd77>] aio_run_iocb+0xef/0x18a
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff800f08e1>] io_submit_one+0x396/0x499
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff800f0ef8>] sys_io_submit+0xbe/0x1a4
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff8005d28d>] tracesys+0xd5/0xe0
+Aug 17 15:20:10 xxxxxx kernel: 
+Aug 17 15:20:10 xxxxxx kernel: BUG: warning at fs/xfs/linux-2.6/xfs_lrw.c:718/xfs_write() (Tainted: G     )
+Aug 17 15:20:10 xxxxxx kernel: 
+Aug 17 15:20:10 xxxxxx kernel: Call Trace:
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff88683d59>] :xfs:xfs_write+0x39f/0x69e
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff800e9226>] core_sys_select+0x1f9/0x265
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff886805a0>] :xfs:xfs_file_aio_write+0x65/0x6a
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff800ef2b6>] aio_pwrite+0x2c/0x75
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff800efd77>] aio_run_iocb+0xef/0x18a
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff800f08e1>] io_submit_one+0x396/0x499
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff800f0ef8>] sys_io_submit+0xbe/0x1a4
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff8005d28d>] tracesys+0xd5/0xe0
+Aug 17 15:20:10 xxxxxx kernel: 
+Aug 17 15:20:10 xxxxxx kernel: BUG: warning at fs/xfs/linux-2.6/xfs_lrw.c:718/xfs_write() (Tainted: G     )
+Aug 17 15:20:10 xxxxxx kernel: 
+Aug 17 15:20:10 xxxxxx kernel: Call Trace:
+Aug 17 15:20:10 xxxxxx kernel:  [<ffffffff88683d59>] :xfs:xfs_write+0x39f/0x69e
+Aug 17 15:20:11 xxxxxx kernel:  [<ffffffff800e9226>] core_sys_select+0x1f9/0x265
+Aug 17 15:20:11 xxxxxx kernel:  [<ffffffff886805a0>] :xfs:xfs_file_aio_write+0x65/0x6a
+Aug 17 15:20:11 xxxxxx kernel:  [<ffffffff800ef2b6>] aio_pwrite+0x2c/0x75
+Aug 17 15:20:11 xxxxxx kernel:  [<ffffffff800efd77>] aio_run_iocb+0xef/0x18a
+Aug 17 15:20:11 xxxxxx kernel:  [<ffffffff800f08e1>] io_submit_one+0x396/0x499
+Aug 17 15:20:11 xxxxxx kernel:  [<ffffffff800f0ef8>] sys_io_submit+0xbe/0x1a4
+Aug 17 15:20:11 xxxxxx kernel:  [<ffffffff8005d28d>] tracesys+0xd5/0xe0
+Aug 17 15:20:11 xxxxxx kernel: 
+Aug 17 15:20:11 xxxxxx kernel: BUG: warning at fs/xfs/linux-2.6/xfs_lrw.c:718/xfs_write() (Tainted: G     )
+Aug 17 15:20:11 xxxxxx kernel: 
+Aug 17 15:20:11 xxxxxx kernel: Call Trace:
+Aug 17 15:20:11 xxxxxx kernel:  [<ffffffff88683d59>] :xfs:xfs_write+0x39f/0x69e
+Aug 17 15:20:11 xxxxxx kernel:  [<ffffffff800e9226>] core_sys_select+0x1f9/0x265
+Aug 17 15:20:11 xxxxxx kernel:  [<ffffffff886805a0>] :xfs:xfs_file_aio_write+0x65/0x6a
+Aug 17 15:20:11 xxxxxx kernel:  [<ffffffff800ef2b6>] aio_pwrite+0x2c/0x75
+Aug 17 15:20:11 xxxxxx kernel:  [<ffffffff800efd77>] aio_run_iocb+0xef/0x18a
+Aug 17 15:20:11 xxxxxx kernel:  [<ffffffff800f08e1>] io_submit_one+0x396/0x499
+Aug 17 15:20:11 xxxxxx kernel:  [<ffffffff800f0ef8>] sys_io_submit+0xbe/0x1a4
+Aug 17 15:20:11 xxxxxx kernel:  [<ffffffff8005d28d>] tracesys+0xd5/0xe0
+Aug 17 15:20:11 xxxxxx kernel:
 
-From: Dave Chinner <dchinner@redhat.com>
-
-Commit 7124fe0a5b619d65b739477b3b55a20bf805b06d ("xfs: validate untrusted inode
-numbers during lookup") changes the inode lookup code to do btree lookups for
-untrusted inode numbers. This change made an invalid assumption about the
-alignment of inodes and hence incorrectly calculated the first inode in the
-cluster. As a result, some inode numbers were being incorrectly considered
-invalid when they were actually valid.
-
-The issue was not picked up by the xfstests suite because it always runs fsr
-and dump (the two utilities that utilise the bulkstat interface) on cache hot
-inodes and hence the lookup code in the cold cache path was not sufficiently
-exercised to uncover this intermittent problem.
-
-Fix the issue by relaxing the btree lookup criteria and then checking if the
-record returned contains the inode number we are lookup for. If it we get an
-incorrect record, then the inode number is invalid.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_ialloc.c |   16 ++++++++++------
- 1 files changed, 10 insertions(+), 6 deletions(-)
-
-diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
-index abf80ae..5371d2d 100644
---- a/fs/xfs/xfs_ialloc.c
-+++ b/fs/xfs/xfs_ialloc.c
-@@ -1213,7 +1213,6 @@ xfs_imap_lookup(
- 	struct xfs_inobt_rec_incore rec;
- 	struct xfs_btree_cur	*cur;
- 	struct xfs_buf		*agbp;
--	xfs_agino_t		startino;
- 	int			error;
- 	int			i;
- 
-@@ -1227,13 +1226,13 @@ xfs_imap_lookup(
- 	}
- 
- 	/*
--	 * derive and lookup the exact inode record for the given agino. If the
--	 * record cannot be found, then it's an invalid inode number and we
--	 * should abort.
-+	 * Lookup the inode record for the given agino. If the record cannot be
-+	 * found, then it's an invalid inode number and we should abort. Once
-+	 * we have a record, we need to ensure it contains the inode number
-+	 * we are looking up.
- 	 */
- 	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno);
--	startino = agino & ~(XFS_IALLOC_INODES(mp) - 1);
--	error = xfs_inobt_lookup(cur, startino, XFS_LOOKUP_EQ, &i);
-+	error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_LE, &i);
- 	if (!error) {
- 		if (i)
- 			error = xfs_inobt_get_rec(cur, &rec, &i);
-@@ -1246,6 +1245,11 @@ xfs_imap_lookup(
- 	if (error)
- 		return error;
- 
-+	/* check that the returned record contains the required inode */
-+	if (rec.ir_startino > agino ||
-+	    rec.ir_startino + XFS_IALLOC_INODES(mp) <= agino)
-+		return EINVAL;
-+
- 	/* for untrusted inodes check it is allocated first */
- 	if ((flags & XFS_IGET_UNTRUSTED) &&
- 	    (rec.ir_free & XFS_INOBT_MASK(agino - rec.ir_startino)))
+<end /var/log/messages>
 
 _______________________________________________
 xfs mailing list
