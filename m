@@ -1,31 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7H5Vkno026926 for <xfs@oss.sgi.com>; Tue, 17 Aug 2010 00:31:47 -0500
-Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9228C1D74BFF
-	for <xfs@oss.sgi.com>; Mon, 16 Aug 2010 22:32:13 -0700 (PDT)
-Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id rXBVRYf0OQenSNTY for
-	<xfs@oss.sgi.com>; Mon, 16 Aug 2010 22:32:13 -0700 (PDT)
-Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv14.zmi.at (Postfix) with ESMTPSA id 78ED817A
-	for <xfs@oss.sgi.com>; Tue, 17 Aug 2010 07:32:11 +0200 (CEST)
-Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id 2D83C401C2E
-	for <xfs@oss.sgi.com>; Tue, 17 Aug 2010 07:32:11 +0200 (CEST)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: [META-LIST] Now: perennial "reply-to-all"
-Date: Tue, 17 Aug 2010 07:32:02 +0200
-References: <201008131300.40536@zmi.at> <201008152052.59870@zmi.at>
-	<4C68F8AE.2010006@hardwarefreak.com>
-In-Reply-To: <4C68F8AE.2010006@hardwarefreak.com>
-MIME-Version: 1.0
-Message-Id: <201008170732.10565@zmi.at>
+	o7H6WEcr029469 for <xfs@oss.sgi.com>; Tue, 17 Aug 2010 01:32:15 -0500
+Received: from mailout.rz.uni-frankfurt.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7490F2141
+	for <xfs@oss.sgi.com>; Mon, 16 Aug 2010 23:32:42 -0700 (PDT)
+Received: from mailout.rz.uni-frankfurt.de (mailout.rz.uni-frankfurt.de
+	[141.2.22.233]) by cuda.sgi.com with ESMTP id SsbXLi2EUdh5xbwN
+	for <xfs@oss.sgi.com>; Mon, 16 Aug 2010 23:32:42 -0700 (PDT)
+Date: Tue, 17 Aug 2010 08:32:27 +0200
+From: Mario Bachmann <mbachman@stud.uni-frankfurt.de>
+Subject: Re: xfsdump-3.0.4 problems
+Message-ID: <20100817083227.06e23889@x2.grafnetz>
+In-Reply-To: <20100816223021.GL10429@dastard>
+References: <20100816182236.249a2a0f@x2.grafnetz>
+	<20100816223021.GL10429@dastard>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,71 +24,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============5474154701318837436=="
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
---===============5474154701318837436==
-Content-Type: multipart/signed;
-  boundary="nextPart1303441.apTFxkH0Rn";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
-
---nextPart1303441.apTFxkH0Rn
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-
-On Montag, 16. August 2010 Stan Hoeppner wrote:
-> Why does "everyone" on this list "reply-to-all" when 99% of the time
->  it is totally unnecessary, redundant, and potentially ruffles a
->  sender's feathers, as in this case?
-=20
-I'm also on several lists, but the only list where reply-to-all is used=20
-is this one - so I followed the way it's done here without having=20
-questioned why.
-
-=2D-=20
-mit freundlichen Gr=FCssen,
-Michael Monnerie, Ing. BSc
-
-it-management Internet Services
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: 0660 / 415 65 31
-
-****** Aktuelles Radiointerview! ******
-http://www.it-podcast.at/aktuelle-sendung.html
-
-// Wir haben im Moment zwei H=E4user zu verkaufen:
-// http://zmi.at/langegg/
-// http://zmi.at/haus2009/
-
---nextPart1303441.apTFxkH0Rn
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.12 (GNU/Linux)
-
-iEYEABECAAYFAkxqHtoACgkQzhSR9xwSCbRGngCeIKJXg18ePdodupxYxPcDH3PY
-xREAn1UWf6VsnaZmiT8UJhZd46NOawyf
-=0NS7
------END PGP SIGNATURE-----
-
---nextPart1303441.apTFxkH0Rn--
-
-
---===============5474154701318837436==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---===============5474154701318837436==--
+QW0gVHVlLCAxNyBBdWcgMjAxMCAwODozMDoyMSArMTAwMApzY2hyaWViIERhdmUgQ2hpbm5lciA8
+ZGF2aWRAZnJvbW9yYml0LmNvbT46Cgo+IE9uIE1vbiwgQXVnIDE2LCAyMDEwIGF0IDA2OjIyOjM2
+UE0gKzAyMDAsIE1hcmlvIEJhY2htYW5uIHdyb3RlOgo+ID4gSGVsbG8sIAo+ID4gCj4gPiBteSBr
+ZXJuZWwgaXMKPiA+IExpbnV4IHgyIDIuNi4zNS4yICMxIFNNUCBTdW4gQXVnIDE1IDAwOjMyOjE0
+IENFU1QgMjAxMCB4ODZfNjQgQU1EIEF0aGxvbih0bSkgNjQgWDIgRHVhbCBDb3JlIFByb2Nlc3Nv
+ciA1NjAwKyBBdXRoZW50aWNBTUQgR05VL0xpbnV4Cj4gPiAKPiA+IEkgZ2V0IGEgbG90IG9mIFdh
+cm5pbmdzIHdpdGggeGZzZHVtcC0zLjAuNCAoYm9vdGgsIGdlbnRvbyBwYWNrYWdlIDMuMC40LXIx
+IGFuZCBnaXQtdmVyc2lvbik6Cj4gPiAKPiA+IHgyIH4vc291cmNlL2QveGZzZHVtcC9kdW1wICMg
+Li94ZnNkdW1wIC1sMCAtTCAiVGVzdCIgLSAvZGV2L3NkYTIgfGd6aXAgLSA+IC9tbnQvZGF0YTIv
+ZHVtcF90ZXh0Lmd6Cj4gLi4uLi4KPiA+IC4veGZzZHVtcDogV0FSTklORzogY291bGQgbm90IHN0
+YXQgZGlyZW50IC5jcmFjay1hdHRhY2sgaW5vIDEwMDY2MzY3NDogRGFzIEFyZ3VtZW50IGlzdCB1
+bmfDvGx0aWc6IHVzaW5nIG51bGwgZ2VuZXJhdGlvbiBjb3VudCBpbiBkaXJlY3RvcnkgZW50cnkK
+PiAKPiBidWxrc3RhdCBpcyBmYWlsaW5nLCBpbmRpY2F0aW5nIGFuIGludmFsaWQgb3B0aW9uIHdh
+cyBwYXNzZWQuCj4gCj4gPiBXaXRoIHRoZSAib2xkIiB2ZXJzaW9uIHhmc2R1bXAtMy4wLjEsIEkg
+Z2V0IG5vIHdhcm5pbmdzIQo+ID4geGZzZHVtcCAtbDAgLUwgIlRlc3QiIC0gL2Rldi9zZGEyIHxn
+emlwIC0gPiAvbW50L2RhdGEyL2R1bXAzMDFfdGVzdC5nego+ID4geGZzZHVtcDogdXNpbmcgZmls
+ZSBkdW1wIChkcml2ZV9zaW1wbGUpIHN0cmF0ZWd5Cj4gPiB4ZnNkdW1wOiB2ZXJzaW9uIDMuMC4x
+IChkdW1wIGZvcm1hdCAzLjApIC0gUnVubmluZyBzaW5nbGUtdGhyZWFkZWQKPiAuLi4uCj4gPiB4
+ZnNkdW1wOiBEdW1wIFN0YXR1czogU1VDQ0VTUwo+ID4gCj4gPiBBbmQgdGhlIGZpbGUgaXMgNCw4
+IEdCLiBBbGwgc2VlbXMgdG8gYmUgY29ycmVjdCEKPiAKPiBJIGNhbid0IHNlZSBhbnkgY2hhbmdl
+cyBiZXR3ZWVuIDMuMC4xIGFuZCAzLjAuNCB0aGF0IHdvdWxkIGV4cGxhaW4KPiB0aGlzLiBEaWQg
+eW91IHJ1biB0aGVtIG9uIHRoZSBzYW1lIG1hY2hpbmUgYW5kIGtlcm5lbD8gRGlkIHlvdSBidWls
+ZAo+IHRoZW0gd2l0aCB0aGUgc2FtZSBjb21waWxlcj8gSWYgZXZlcnl0aGluZyBpcyB0aGUgc2Ft
+ZSwgdGhlbiBwZXJoYXBzCj4geW91IGNvdWxkIGJpc2VjdCAob25seSBhIGZldyBjaGFuZ2VzIHNv
+IHNob3VsZCBiZSBxdWljaykgdG8gcG9pbnQKPiBvdXQgdGhlIG9mZmVuZGluZyBjaGFuZ2UuCj4g
+Cj4gQ2hlZXJzLAo+IAo+IERhdmUuCgpBZnRlciBzb21lIHRlc3RpbmcsIEkgdGhpbmsgaXQgaXMg
+Tk9UIGEgcHJvYmxlbSB3aXRoIHhmc2R1bXAsIGJ1dCB3aXRoIHRoZSBuZXcga2VybmVsIDIuNi4z
+NS4yLiBGaXJzdCBJIG11c3QgY29ycmVjdCBteSBsYXN0IHBvc3Rpbmc6IHhmc2R1bXAtMy4wLjEg
+RE8gaGF2ZSB0aGUgc2FtZSBwcm9ibGVtIGFzIHhmc2R1bXAtMy4wLjQgb24ga2VybmVsIDIuNi4z
+NS4yLiBJdCB3YXMganVzdCBhIGNvaW5jaWRlbmNlIHRoYXQgaXMgd29ya2VkIG9uZSB0aW1lIHdp
+dGhvdXQgcHJvYmxlbXMuLi4KCk1hY2hpbmVzOiBJIGhhdmUgdHdvIHg4Nl82NCBhbmQgb25lIHg4
+Ni4gQWxsIG1hY2hpbmVzIGhhdmUgdGhlIHNhbWUgcHJvYmxlbXMgYWZ0ZXIgSSB1cGdyYWRlZCBh
+bGwgdGhyZWUgS2VybmVscyBmcm9tIDIuNi4zNC54IHRvIDIuNi4zNS4yLiBTbyBJIGJlbGlldmUs
+IGl0IGlzIGEgcHJvYmxlbSB3aXRoIDIuNi4zNS4yIG9yIHRoZSBjb21iaW5hdGlvbiBvZiBbMi42
+LjM1LjIgJiB4ZnNkdW1wXQoKQ29tcGlsZXI6IEkgdXNlICJnY2MgKEdlbnRvbyA0LjQuNC1yMSBw
+MS4wLCBwaWUtMC40LjUpIDQuNC40Ii4gCgpUZXN0aW5nIExpc3QgKG9uIG9uZSBtYWNoaW5lIG9u
+bHkpOgp3b3JrczogICB4ODZfNjQsIDIuNi4zNC40LCB4ZnNkdW1wLTMuMC4xCndvcmtzOiAgIHg4
+Nl82NCwgMi42LjM0LjQsIHhmc2R1bXAtMy4wLjQKZmFpbHVyZTogeDg2XzY0LCAyLjYuMzUuMiwg
+eGZzZHVtcC0zLjAuMSAod29ya2VkIG9ubHkgb25lIHRpbWUpCmZhaWx1cmU6IHg4Nl82NCwgMi42
+LjM1LjIsIHhmc2R1bXAtMy4wLjQKCk1hcmlvCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRw
+Oi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
