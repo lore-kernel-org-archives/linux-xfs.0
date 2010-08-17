@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7H959T4038410 for <xfs@oss.sgi.com>; Tue, 17 Aug 2010 04:05:10 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A4BFB1D759D9
-	for <xfs@oss.sgi.com>; Tue, 17 Aug 2010 02:05:37 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	FCyGbuitpS7qy4Yt for <xfs@oss.sgi.com>;
-	Tue, 17 Aug 2010 02:05:37 -0700 (PDT)
-Date: Tue, 17 Aug 2010 19:05:34 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfsdump-3.0.4 problems
-Message-ID: <20100817090534.GP10429@dastard>
-References: <20100816182236.249a2a0f@x2.grafnetz>
-	<20100816223021.GL10429@dastard>
-	<20100817083227.06e23889@x2.grafnetz>
-	<20100817071337.GN10429@dastard>
-	<20100817095340.6b9ab8e2@x2.grafnetz>
+	o7H91MXY038113 for <xfs@oss.sgi.com>; Tue, 17 Aug 2010 04:01:24 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EE5E11D759AB
+	for <xfs@oss.sgi.com>; Tue, 17 Aug 2010 02:01:51 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id mSybSvM9MKswEcTR for
+	<xfs@oss.sgi.com>; Tue, 17 Aug 2010 02:01:51 -0700 (PDT)
+Date: Tue, 17 Aug 2010 05:01:50 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [META-LIST] Now: perennial "reply-to-all"
+Message-ID: <20100817090150.GA1294@infradead.org>
+References: <201008131300.40536@zmi.at> <201008152052.59870@zmi.at>
+	<4C68F8AE.2010006@hardwarefreak.com> <201008170732.10565@zmi.at>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100817095340.6b9ab8e2@x2.grafnetz>
+In-Reply-To: <201008170732.10565@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,44 +29,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mario Bachmann <mbachman@stud.uni-frankfurt.de>
+To: Michael Monnerie <michael.monnerie@is.it-management.at>
 Cc: xfs@oss.sgi.com
 
-On Tue, Aug 17, 2010 at 09:53:40AM +0200, Mario Bachmann wrote:
-> Am Tue, 17 Aug 2010 17:13:37 +1000 > schrieb Dave Chinner <david@fromorbit.com>:
-> > > Compiler: I use "gcc (Gentoo 4.4.4-r1 p1.0, pie-0.4.5) 4.4.4". 
-> > > 
-> > > Testing List (on one machine only):
-> > > works:   x86_64, 2.6.34.4, xfsdump-3.0.1
-> > > works:   x86_64, 2.6.34.4, xfsdump-3.0.4
-> > > failure: x86_64, 2.6.35.2, xfsdump-3.0.1 (worked only one time)
-> > > failure: x86_64, 2.6.35.2, xfsdump-3.0.4
-> > 
-> > Ok, that makes more sense - we changed the way bulkstat works in
-> > from 2.6.34 to 2.6.35 to correctly validate inode numbers being
-> > passed in via bulkstat, and hence files unlinked during the dump run
-> > could return EINVAL when validating the directory structure (as they
-> > no longer exist). Is you system completely idle while the dump
-> > is running, or are files being removed while the dump is running?
-> 
-> I would call my system idle, when I use xfsdump. No rm or mv operations 
-> are running while the dump. The first machine has a dual core 2.9 GHz and
-> 8 GB of RAM and the filesystems are not really big (~10GB used). The second 
-> machine has a dual core 2 GHz and 2 GB of RAM. 
+On Tue, Aug 17, 2010 at 07:32:02AM +0200, Michael Monnerie wrote:
+> On Montag, 16. August 2010 Stan Hoeppner wrote:
+> > Why does "everyone" on this list "reply-to-all" when 99% of the time
+> >  it is totally unnecessary, redundant, and potentially ruffles a
+> >  sender's feathers, as in this case?
+>  
+> I'm also on several lists, but the only list where reply-to-all is used 
+> is this one - so I followed the way it's done here without having 
+> questioned why.
 
-Yup, I have reproduced it here. What is strange is that xfs_fsr uses
-XFS_IOC_BULKSTAT_SINGLE, and that works fine on 2.6.35.2. The same
-ioctl calls from xfsdump are failing, though, so something funny is
-going on there.
-
-I'll look into it further.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+It's done by all Lists in the Linux development universe, and it's the
+only sane way to handle a list.  We don't require people to subsribe to
+post to the list, and keeping everyone in the To/Cc list means it
+arrives at those people as well.  In addition it allows subscribes that
+are on tons of lists to prioritize discussions they're actually involved
+in personally by getting a copy in the inbox that can be replied to ASAP
+while also having an archived copy in the list folder.  Every other way
+to run a list is simply insane.
 
 _______________________________________________
 xfs mailing list
