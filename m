@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7H6WEcr029469 for <xfs@oss.sgi.com>; Tue, 17 Aug 2010 01:32:15 -0500
-Received: from mailout.rz.uni-frankfurt.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7490F2141
-	for <xfs@oss.sgi.com>; Mon, 16 Aug 2010 23:32:42 -0700 (PDT)
-Received: from mailout.rz.uni-frankfurt.de (mailout.rz.uni-frankfurt.de
-	[141.2.22.233]) by cuda.sgi.com with ESMTP id SsbXLi2EUdh5xbwN
-	for <xfs@oss.sgi.com>; Mon, 16 Aug 2010 23:32:42 -0700 (PDT)
-Date: Tue, 17 Aug 2010 08:32:27 +0200
-From: Mario Bachmann <mbachman@stud.uni-frankfurt.de>
+	o7H7DE5k031417 for <xfs@oss.sgi.com>; Tue, 17 Aug 2010 02:13:15 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8B5C8CC6254
+	for <xfs@oss.sgi.com>; Tue, 17 Aug 2010 00:22:53 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
+	[150.101.137.102]) by cuda.sgi.com with ESMTP id
+	dVFDLNCnR72tMctK for <xfs@oss.sgi.com>;
+	Tue, 17 Aug 2010 00:22:53 -0700 (PDT)
+Date: Tue, 17 Aug 2010 17:13:37 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: xfsdump-3.0.4 problems
-Message-ID: <20100817083227.06e23889@x2.grafnetz>
-In-Reply-To: <20100816223021.GL10429@dastard>
+Message-ID: <20100817071337.GN10429@dastard>
 References: <20100816182236.249a2a0f@x2.grafnetz>
 	<20100816223021.GL10429@dastard>
-Mime-Version: 1.0
+	<20100817083227.06e23889@x2.grafnetz>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20100817083227.06e23889@x2.grafnetz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,52 +27,100 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Mario Bachmann <mbachman@stud.uni-frankfurt.de>
 Cc: xfs@oss.sgi.com
 
-QW0gVHVlLCAxNyBBdWcgMjAxMCAwODozMDoyMSArMTAwMApzY2hyaWViIERhdmUgQ2hpbm5lciA8
-ZGF2aWRAZnJvbW9yYml0LmNvbT46Cgo+IE9uIE1vbiwgQXVnIDE2LCAyMDEwIGF0IDA2OjIyOjM2
-UE0gKzAyMDAsIE1hcmlvIEJhY2htYW5uIHdyb3RlOgo+ID4gSGVsbG8sIAo+ID4gCj4gPiBteSBr
-ZXJuZWwgaXMKPiA+IExpbnV4IHgyIDIuNi4zNS4yICMxIFNNUCBTdW4gQXVnIDE1IDAwOjMyOjE0
-IENFU1QgMjAxMCB4ODZfNjQgQU1EIEF0aGxvbih0bSkgNjQgWDIgRHVhbCBDb3JlIFByb2Nlc3Nv
-ciA1NjAwKyBBdXRoZW50aWNBTUQgR05VL0xpbnV4Cj4gPiAKPiA+IEkgZ2V0IGEgbG90IG9mIFdh
-cm5pbmdzIHdpdGggeGZzZHVtcC0zLjAuNCAoYm9vdGgsIGdlbnRvbyBwYWNrYWdlIDMuMC40LXIx
-IGFuZCBnaXQtdmVyc2lvbik6Cj4gPiAKPiA+IHgyIH4vc291cmNlL2QveGZzZHVtcC9kdW1wICMg
-Li94ZnNkdW1wIC1sMCAtTCAiVGVzdCIgLSAvZGV2L3NkYTIgfGd6aXAgLSA+IC9tbnQvZGF0YTIv
-ZHVtcF90ZXh0Lmd6Cj4gLi4uLi4KPiA+IC4veGZzZHVtcDogV0FSTklORzogY291bGQgbm90IHN0
-YXQgZGlyZW50IC5jcmFjay1hdHRhY2sgaW5vIDEwMDY2MzY3NDogRGFzIEFyZ3VtZW50IGlzdCB1
-bmfDvGx0aWc6IHVzaW5nIG51bGwgZ2VuZXJhdGlvbiBjb3VudCBpbiBkaXJlY3RvcnkgZW50cnkK
-PiAKPiBidWxrc3RhdCBpcyBmYWlsaW5nLCBpbmRpY2F0aW5nIGFuIGludmFsaWQgb3B0aW9uIHdh
-cyBwYXNzZWQuCj4gCj4gPiBXaXRoIHRoZSAib2xkIiB2ZXJzaW9uIHhmc2R1bXAtMy4wLjEsIEkg
-Z2V0IG5vIHdhcm5pbmdzIQo+ID4geGZzZHVtcCAtbDAgLUwgIlRlc3QiIC0gL2Rldi9zZGEyIHxn
-emlwIC0gPiAvbW50L2RhdGEyL2R1bXAzMDFfdGVzdC5nego+ID4geGZzZHVtcDogdXNpbmcgZmls
-ZSBkdW1wIChkcml2ZV9zaW1wbGUpIHN0cmF0ZWd5Cj4gPiB4ZnNkdW1wOiB2ZXJzaW9uIDMuMC4x
-IChkdW1wIGZvcm1hdCAzLjApIC0gUnVubmluZyBzaW5nbGUtdGhyZWFkZWQKPiAuLi4uCj4gPiB4
-ZnNkdW1wOiBEdW1wIFN0YXR1czogU1VDQ0VTUwo+ID4gCj4gPiBBbmQgdGhlIGZpbGUgaXMgNCw4
-IEdCLiBBbGwgc2VlbXMgdG8gYmUgY29ycmVjdCEKPiAKPiBJIGNhbid0IHNlZSBhbnkgY2hhbmdl
-cyBiZXR3ZWVuIDMuMC4xIGFuZCAzLjAuNCB0aGF0IHdvdWxkIGV4cGxhaW4KPiB0aGlzLiBEaWQg
-eW91IHJ1biB0aGVtIG9uIHRoZSBzYW1lIG1hY2hpbmUgYW5kIGtlcm5lbD8gRGlkIHlvdSBidWls
-ZAo+IHRoZW0gd2l0aCB0aGUgc2FtZSBjb21waWxlcj8gSWYgZXZlcnl0aGluZyBpcyB0aGUgc2Ft
-ZSwgdGhlbiBwZXJoYXBzCj4geW91IGNvdWxkIGJpc2VjdCAob25seSBhIGZldyBjaGFuZ2VzIHNv
-IHNob3VsZCBiZSBxdWljaykgdG8gcG9pbnQKPiBvdXQgdGhlIG9mZmVuZGluZyBjaGFuZ2UuCj4g
-Cj4gQ2hlZXJzLAo+IAo+IERhdmUuCgpBZnRlciBzb21lIHRlc3RpbmcsIEkgdGhpbmsgaXQgaXMg
-Tk9UIGEgcHJvYmxlbSB3aXRoIHhmc2R1bXAsIGJ1dCB3aXRoIHRoZSBuZXcga2VybmVsIDIuNi4z
-NS4yLiBGaXJzdCBJIG11c3QgY29ycmVjdCBteSBsYXN0IHBvc3Rpbmc6IHhmc2R1bXAtMy4wLjEg
-RE8gaGF2ZSB0aGUgc2FtZSBwcm9ibGVtIGFzIHhmc2R1bXAtMy4wLjQgb24ga2VybmVsIDIuNi4z
-NS4yLiBJdCB3YXMganVzdCBhIGNvaW5jaWRlbmNlIHRoYXQgaXMgd29ya2VkIG9uZSB0aW1lIHdp
-dGhvdXQgcHJvYmxlbXMuLi4KCk1hY2hpbmVzOiBJIGhhdmUgdHdvIHg4Nl82NCBhbmQgb25lIHg4
-Ni4gQWxsIG1hY2hpbmVzIGhhdmUgdGhlIHNhbWUgcHJvYmxlbXMgYWZ0ZXIgSSB1cGdyYWRlZCBh
-bGwgdGhyZWUgS2VybmVscyBmcm9tIDIuNi4zNC54IHRvIDIuNi4zNS4yLiBTbyBJIGJlbGlldmUs
-IGl0IGlzIGEgcHJvYmxlbSB3aXRoIDIuNi4zNS4yIG9yIHRoZSBjb21iaW5hdGlvbiBvZiBbMi42
-LjM1LjIgJiB4ZnNkdW1wXQoKQ29tcGlsZXI6IEkgdXNlICJnY2MgKEdlbnRvbyA0LjQuNC1yMSBw
-MS4wLCBwaWUtMC40LjUpIDQuNC40Ii4gCgpUZXN0aW5nIExpc3QgKG9uIG9uZSBtYWNoaW5lIG9u
-bHkpOgp3b3JrczogICB4ODZfNjQsIDIuNi4zNC40LCB4ZnNkdW1wLTMuMC4xCndvcmtzOiAgIHg4
-Nl82NCwgMi42LjM0LjQsIHhmc2R1bXAtMy4wLjQKZmFpbHVyZTogeDg2XzY0LCAyLjYuMzUuMiwg
-eGZzZHVtcC0zLjAuMSAod29ya2VkIG9ubHkgb25lIHRpbWUpCmZhaWx1cmU6IHg4Nl82NCwgMi42
-LjM1LjIsIHhmc2R1bXAtMy4wLjQKCk1hcmlvCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRw
-Oi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Tue, Aug 17, 2010 at 08:32:27AM +0200, Mario Bachmann wrote:
+> Am Tue, 17 Aug 2010 08:30:21 +1000
+> schrieb Dave Chinner <david@fromorbit.com>:
+> =
+
+> > On Mon, Aug 16, 2010 at 06:22:36PM +0200, Mario Bachmann wrote:
+> > > Hello, =
+
+> > > =
+
+> > > my kernel is
+> > > Linux x2 2.6.35.2 #1 SMP Sun Aug 15 00:32:14 CEST 2010 x86_64 AMD Ath=
+lon(tm) 64 X2 Dual Core Processor 5600+ AuthenticAMD GNU/Linux
+> > > =
+
+> > > I get a lot of Warnings with xfsdump-3.0.4 (booth, gentoo package 3.0=
+.4-r1 and git-version):
+> > > =
+
+> > > x2 ~/source/d/xfsdump/dump # ./xfsdump -l0 -L "Test" - /dev/sda2 |gzi=
+p - > /mnt/data2/dump_text.gz
+> > .....
+> > > ./xfsdump: WARNING: could not stat dirent .crack-attack ino 100663674=
+: Das Argument ist ung=FCltig: using null generation count in directory ent=
+ry
+> > =
+
+> > bulkstat is failing, indicating an invalid option was passed.
+> > =
+
+> > > With the "old" version xfsdump-3.0.1, I get no warnings!
+> > > xfsdump -l0 -L "Test" - /dev/sda2 |gzip - > /mnt/data2/dump301_test.gz
+> > > xfsdump: using file dump (drive_simple) strategy
+> > > xfsdump: version 3.0.1 (dump format 3.0) - Running single-threaded
+> > ....
+> > > xfsdump: Dump Status: SUCCESS
+> > > =
+
+> > > And the file is 4,8 GB. All seems to be correct!
+> > =
+
+> > I can't see any changes between 3.0.1 and 3.0.4 that would explain
+> > this. Did you run them on the same machine and kernel? Did you build
+> > them with the same compiler? If everything is the same, then perhaps
+> > you could bisect (only a few changes so should be quick) to point
+> > out the offending change.
+> =
+
+> After some testing, I think it is NOT a problem with xfsdump, but
+> with the new kernel 2.6.35.2. First I must correct my last
+> posting: xfsdump-3.0.1 DO have the same problem as xfsdump-3.0.4
+> on kernel 2.6.35.2. It was just a coincidence that is worked one
+> time without problems...
+> =
+
+> Machines: I have two x86_64 and one x86. All machines have the
+> same problems after I upgraded all three Kernels from 2.6.34.x to
+> 2.6.35.2. So I believe, it is a problem with 2.6.35.2 or the
+> combination of [2.6.35.2 & xfsdump].
+> =
+
+> Compiler: I use "gcc (Gentoo 4.4.4-r1 p1.0, pie-0.4.5) 4.4.4". =
+
+> =
+
+> Testing List (on one machine only):
+> works:   x86_64, 2.6.34.4, xfsdump-3.0.1
+> works:   x86_64, 2.6.34.4, xfsdump-3.0.4
+> failure: x86_64, 2.6.35.2, xfsdump-3.0.1 (worked only one time)
+> failure: x86_64, 2.6.35.2, xfsdump-3.0.4
+
+Ok, that makes more sense - we changed the way bulkstat works in
+from 2.6.34 to 2.6.35 to correctly validate inode numbers being
+passed in via bulkstat, and hence files unlinked during the dump run
+could return EINVAL when validating the directory structure (as they
+no longer exist). Is you system completely idle while the dump
+is running, or are files being removed while the dump is running?
+
+Cheers,
+
+Dave.
+-- =
+
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
