@@ -1,18 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7HJdG92063740 for <xfs@oss.sgi.com>; Tue, 17 Aug 2010 14:39:17 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 592E14E0468
-	for <xfs@oss.sgi.com>; Tue, 17 Aug 2010 12:39:45 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id pD4lCIOjP9xfjHur for
-	<xfs@oss.sgi.com>; Tue, 17 Aug 2010 12:39:45 -0700 (PDT)
-Message-ID: <4C6AE57D.7090807@redhat.com>
-Date: Tue, 17 Aug 2010 14:39:41 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	o7HN3Xjf072617 for <xfs@oss.sgi.com>; Tue, 17 Aug 2010 18:03:33 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B17094DF64D
+	for <xfs@oss.sgi.com>; Tue, 17 Aug 2010 16:04:01 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	Trd6ZzbBeZUCZz9G for <xfs@oss.sgi.com>;
+	Tue, 17 Aug 2010 16:04:01 -0700 (PDT)
+Date: Wed, 18 Aug 2010 09:03:57 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Kernel BUG when running xfs_fsr with 2.6.35.1
+Message-ID: <20100817230357.GG7362@dastard>
+References: <878w47yn36.fsf@viiru.iki.fi> <20100816220941.GK10429@dastard>
+	<87zkwlxj8g.fsf@viiru.iki.fi>
 MIME-Version: 1.0
-Subject: [PATCH] xfstests 241: run parallel dbench
+Content-Disposition: inline
+In-Reply-To: <87zkwlxj8g.fsf@viiru.iki.fi>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,116 +30,101 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
-Cc: ext4 development <linux-ext4@vger.kernel.org>
+To: Arto Jantunen <viiru@debian.org>
+Cc: xfs@oss.sgi.com
 
-ext4 was corrupting inode table bitmaps due to a mishmash of
-atomic & nonatomic bitops.  This got broken twice and fixed
-twice; let's add a test.
+On Tue, Aug 17, 2010 at 08:05:35PM +0300, Arto Jantunen wrote:
+> Dave Chinner <david@fromorbit.com> writes:
+> >> I had a kernel BUG yesterday when running xfs_fsr on my Debian Unstable
+> >> laptop. The kernel is upstream 2.6.35.1. I'm attaching the backtrace
+> >> below. I haven't tried reproducing the problem yet and don't know if it is
+> >> reproducible. I can try that, and test patches etc. if it is useful. Let me
+> >> know if there is any other information I can provide to help with debugging.
+> >
+> > It's not obvious what has gone wrong at all - I haven't seen
+> > anything like this in all my recent testing, so it's something new.
+> > The first oops implies the inode has not been joined to the
+> > transaction, but from code inspection I cannot see how that can
+> > happen.
+> 
+> I tried to reproduce the problem, and this time xfs_fsr finished without
+> reporting errors, but the kernel output the following two lines (one of which
+> is essentially empty):
+> 
+> [ 6372.878945] Filesystem "sda4": Access to block zero in inode 67203861
+> start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 lastx: 2
+> [ 6372.878950]
 
-On a 4-way box this reliably ends up with a corrupted filesystem
-if we get it wrong (upstream as of 2.6.35 at least is fine again)
+That's a corrupt extent record - it's all zeros, and judging by the
+fact that it's only got 2 extents, it's probaly inline in the inode
+(i.e. the inode fork has been zeroed.)
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
+> 
+> I decided to boot from a usb stick and try xfs_repair -n, I have attached the
+> output of that. There were errors reported. Is this simply a case of random
+> (possibly hardware related) fs corruption, or were the errors actually caused
+> by the xfs_fsr run that crashed the system? Is there a way to tell from this
+> data, is there anything else I can provide?
+....
 
---- /dev/null
-+++ b/241
-@@ -0,0 +1,60 @@
-+#! /bin/bash
-+# FS QA Test No. 241
-+#
-+# Run parallel dbench & check for filesystem corruption
-+# This corrupted ext4 inode bitmaps due to races at one point
-+#
-+# Copyright (c) 2010 Red Hat, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=sandeen@sandeen.net
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1        # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+
-+_supported_fs generic
-+_supported_os Linux
-+
-+[ "$DBENCH_PROG" = "" ] && _notrun "dbench not found"
-+
-+echo "Silence is golden."
-+
-+# real QA test starts here
-+rm -f $seq.full
-+
-+rm -rf $TEST_DIR/dbench
-+mkdir $TEST_DIR/dbench
-+
-+dbench -t 30 -D $TEST_DIR/dbench 4 >> $seq.full
-+
-+status=$?
-+exit
-diff --git a/common.config b/common.config
-index 926846b..04bdcf6 100644
---- a/common.config
-+++ b/common.config
-@@ -149,6 +149,7 @@ export XFS_PARALLEL_REPAIR64_PROG="`set_prog_path xfs_prepair64`"
- export XFSDUMP_PROG="`set_prog_path xfsdump`"
- export XFSRESTORE_PROG="`set_prog_path xfsrestore`"
- export XFSINVUTIL_PROG="`set_prog_path xfsinvutil`"
-+export DBENCH_PROG="`set_prog_path dbench`"
- 
- # Generate a comparable xfsprogs version number in the form of
- # major * 10000 + minor * 100 + release
-diff --git a/common.dbench b/common.dbench
-index 026acdf..b59be71 100755
---- a/common.dbench
-+++ b/common.dbench
-@@ -17,7 +17,7 @@
- #
- 
- #check dbench is installed
--if [ "`whereis dbench`" == "dbench:"]; then
-+if [ "`whereis dbench`" == "dbench:" ]; then
-         echo $0 error dbench not installed.
-         exit
- fi
-diff --git a/group b/group
-index afe7614..2baa538 100644
---- a/group
-+++ b/group
-@@ -354,3 +354,4 @@ deprecated
- 238 auto quick metadata ioctl
- 239 auto aio rw
- 240 auto aio quick rw
-+241 auto
+> Phase 1 - find and verify superblock...
+> Phase 2 - using internal log
+>         - scan filesystem freespace and inode maps...
+>         - found root inode chunk
+> Phase 3 - for each AG...
+>         - scan (but don't clear) agi unlinked lists...
+> error following ag 0 unlinked list
+> error following ag 2 unlinked list
+> error following ag 3 unlinked list
+
+Ok, so a corrupt set of inode unlinked lists
+
+>         - process known inodes and perform inode discovery...
+>         - agno = 0
+> b766fb90: Badness in key lookup (length)
+> bp=(bno 208, len 16384 bytes) key=(bno 208, len 8192 bytes)
+> b766fb90: Badness in key lookup (length)
+> bp=(bno 720, len 16384 bytes) key=(bno 720, len 8192 bytes)
+
+[snip]
+
+> Phase 6 - check inode connectivity...
+>         - traversing filesystem ...
+>         - traversal finished ...
+>         - moving disconnected inodes to lost+found ...
+> disconnected inode 475, would move to lost+found
+> disconnected inode 1457, would move to lost+found
+
+[snip]
+
+> Phase 7 - verify link counts...
+> would have reset inode 475 nlinks from 0 to 1
+> would have reset inode 1457 nlinks from 0 to 1
+
+Ok, so inode #457 is in the inode chunk at block 208, likewise
+inode #1457 is in the chunk at bno 720. This all implies that
+at some point there's been a problem with the second phase of
+the unlink procedure and freeing the inode cluster. It looks like
+the inode cluster has been partially freed (by the "Badness in key
+lookup" errors) as half of the chunk is free space and half appears
+to be in use. The freespace btree is clearly confused about this.
+
+Along with the inodes bein removed from the directory structure and
+the link counts being zero, this really does indicate that something
+went wrong with an inode cluster freeing transaction at some point.
+
+I can't see how normal execution would do this, so it leads me to
+think that transaction recovery might be involved. It smells like
+partial transaction recovery failures so my next question is this:
+what is your hardware, have you had any power loss events and are
+you using barriers?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
