@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7GMTu0x004933 for <xfs@oss.sgi.com>; Mon, 16 Aug 2010 17:29:57 -0500
+	o7H0UqbW011593 for <xfs@oss.sgi.com>; Mon, 16 Aug 2010 19:30:53 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EC90512C4F50
-	for <xfs@oss.sgi.com>; Mon, 16 Aug 2010 15:39:34 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	kzSrm67pGaHZBAYD for <xfs@oss.sgi.com>;
-	Mon, 16 Aug 2010 15:39:34 -0700 (PDT)
-Date: Tue, 17 Aug 2010 08:30:21 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 58087171E0AB
+	for <xfs@oss.sgi.com>; Mon, 16 Aug 2010 17:31:19 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	Tmzp7HUmtqBzBqST for <xfs@oss.sgi.com>;
+	Mon, 16 Aug 2010 17:31:19 -0700 (PDT)
+Date: Tue, 17 Aug 2010 10:31:16 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfsdump-3.0.4 problems
-Message-ID: <20100816223021.GL10429@dastard>
-References: <20100816182236.249a2a0f@x2.grafnetz>
+Subject: Re: Alignment size?
+Message-ID: <20100817003116.GM10429@dastard>
+References: <4C64715F.8060000@msgid.tls.msk.ru>
+	<20100812234911.GC10429@dastard>
+	<4C64E52E.2060806@msgid.tls.msk.ru>
+	<20100813113915.GD10429@dastard>
+	<4C69D554.4010407@msgid.tls.msk.ru>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100816182236.249a2a0f@x2.grafnetz>
+In-Reply-To: <4C69D554.4010407@msgid.tls.msk.ru>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,56 +29,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mario Bachmann <mbachman@stud.uni-frankfurt.de>
+To: Michael Tokarev <mjt@tls.msk.ru>
 Cc: xfs@oss.sgi.com
 
-On Mon, Aug 16, 2010 at 06:22:36PM +0200, Mario Bachmann wrote:
-> Hello, =
+On Tue, Aug 17, 2010 at 04:18:28AM +0400, Michael Tokarev wrote:
+> 13.08.2010 15:39, Dave Chinner wrote:
+> > On Fri, Aug 13, 2010 at 10:24:46AM +0400, Michael Tokarev wrote:
+> []
+> >> And a related question, -- is there a way to create
+> >> xfs fs with the right sector size?  The filesystem
+> >> were ok in years, not only on this machine, and I'm
+> >> quite afraid to replace it with something else (e.g.
+> >> ext4) in a hurry without good prior testing.
+> > 
+> > # mkfs.xfs -s <size> ....
+> > 
+> > if you want to set it manually. YOu shouldn't need to with any
+> > relatively recent mkfs.xfs...
+> 
+> Um.  It appears that mkfs.xfs ignores -s size=512 on this
+> raid5 array, and silently creates a filesystem with 4096
+> sector size, regardless of various -s size=nn and -s log=mm
+> options.
+> 
+> This is xfsprogs  3.1.2-1 (debian squeeze package).
+> 
+> So the question stands...
 
-> =
-
-> my kernel is
-> Linux x2 2.6.35.2 #1 SMP Sun Aug 15 00:32:14 CEST 2010 x86_64 AMD Athlon(=
-tm) 64 X2 Dual Core Processor 5600+ AuthenticAMD GNU/Linux
-> =
-
-> I get a lot of Warnings with xfsdump-3.0.4 (booth, gentoo package 3.0.4-r=
-1 and git-version):
-> =
-
-> x2 ~/source/d/xfsdump/dump # ./xfsdump -l0 -L "Test" - /dev/sda2 |gzip - =
-> /mnt/data2/dump_text.gz
-.....
-> ./xfsdump: WARNING: could not stat dirent .crack-attack ino 100663674: Da=
-s Argument ist ung=FCltig: using null generation count in directory entry
-
-bulkstat is failing, indicating an invalid option was passed.
-
-> With the "old" version xfsdump-3.0.1, I get no warnings!
-> xfsdump -l0 -L "Test" - /dev/sda2 |gzip - > /mnt/data2/dump301_test.gz
-> xfsdump: using file dump (drive_simple) strategy
-> xfsdump: version 3.0.1 (dump format 3.0) - Running single-threaded
-....
-> xfsdump: Dump Status: SUCCESS
-> =
-
-> And the file is 4,8 GB. All seems to be correct!
-
-I can't see any changes between 3.0.1 and 3.0.4 that would explain
-this. Did you run them on the same machine and kernel? Did you build
-them with the same compiler? If everything is the same, then perhaps
-you could bisect (only a few changes so should be quick) to point
-out the offending change.
+IIRC, the current debian xfsprogs package is still being built with
+the old detection library. If you install libblkid and build
+xfsprogs yourself, it should use the newer detection code and
+behave as expected.
 
 Cheers,
 
 Dave.
--- =
-
+-- 
 Dave Chinner
 david@fromorbit.com
 
