@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7H92vKM038234 for <xfs@oss.sgi.com>; Tue, 17 Aug 2010 04:02:57 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 954766F4
-	for <xfs@oss.sgi.com>; Tue, 17 Aug 2010 02:03:26 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id Z5pBRH5XPGZw71Eo for
-	<xfs@oss.sgi.com>; Tue, 17 Aug 2010 02:03:26 -0700 (PDT)
-Date: Tue, 17 Aug 2010 05:03:19 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfsdump-3.0.4 problems
-Message-ID: <20100817090319.GB1294@infradead.org>
-References: <20100816182236.249a2a0f@x2.grafnetz>
-	<20100816223021.GL10429@dastard>
-	<20100817083227.06e23889@x2.grafnetz>
-	<20100817071337.GN10429@dastard>
+	o7H9JDOe039430 for <xfs@oss.sgi.com>; Tue, 17 Aug 2010 04:19:13 -0500
+Received: from emh06.mail.saunalahti.fi (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0CAB21CA80CA
+	for <xfs@oss.sgi.com>; Tue, 17 Aug 2010 02:19:34 -0700 (PDT)
+Received: from emh06.mail.saunalahti.fi (emh06.mail.saunalahti.fi
+	[62.142.5.116]) by cuda.sgi.com with ESMTP id 7KZL4sKHUK8wzYdY
+	for <xfs@oss.sgi.com>; Tue, 17 Aug 2010 02:19:34 -0700 (PDT)
+From: Arto Jantunen <viiru@debian.org>
+Subject: Re: Kernel BUG when running xfs_fsr with 2.6.35.1
+References: <878w47yn36.fsf@viiru.iki.fi> <20100816220941.GK10429@dastard>
+Date: Tue, 17 Aug 2010 12:19:29 +0300
+In-Reply-To: <20100816220941.GK10429@dastard>
+	(sfid-20100817_010956_232755_D2E8C8BA) (Dave Chinner's message
+	of "Tue\, 17 Aug 2010 08\:09\:41 +1000")
+Message-ID: <874oetzjdq.fsf@viiru.iki.fi>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100817071337.GN10429@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,24 +30,33 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Mario Bachmann <mbachman@stud.uni-frankfurt.de>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Tue, Aug 17, 2010 at 05:13:37PM +1000, Dave Chinner wrote:
-> > Testing List (on one machine only):
-> > works:   x86_64, 2.6.34.4, xfsdump-3.0.1
-> > works:   x86_64, 2.6.34.4, xfsdump-3.0.4
-> > failure: x86_64, 2.6.35.2, xfsdump-3.0.1 (worked only one time)
-> > failure: x86_64, 2.6.35.2, xfsdump-3.0.4
-> 
-> Ok, that makes more sense - we changed the way bulkstat works in
-> from 2.6.34 to 2.6.35 to correctly validate inode numbers being
-> passed in via bulkstat, and hence files unlinked during the dump run
-> could return EINVAL when validating the directory structure (as they
-> no longer exist). Is you system completely idle while the dump
-> is running, or are files being removed while the dump is running?
+Dave Chinner <david@fromorbit.com> writes:
 
-I've also seen related issues in xfstests recently, but even going all
-the way back to kernel 2.6.34 does not solve all of them for me.
+> On Mon, Aug 16, 2010 at 11:32:29AM +0300, Arto Jantunen wrote:
+>> I had a kernel BUG yesterday when running xfs_fsr on my Debian Unstable
+>> laptop. The kernel is upstream 2.6.35.1. I'm attaching the backtrace
+>> below. I haven't tried reproducing the problem yet and don't know if it is
+>> reproducible. I can try that, and test patches etc. if it is useful. Let me
+>> know if there is any other information I can provide to help with debugging.
+>
+> It's not obvious what has gone wrong at all - I haven't seen
+> anything like this in all my recent testing, so it's something new.
+> The first oops implies the inode has not been joined to the
+> transaction, but from code inspection I cannot see how that can
+> happen.
+>
+> What compiler did you use to build the kernel? can you reproduce the
+> problem at all?
+
+I used the compiler which is available on current Debian Testing, --version
+reports "gcc (Debian 4.4.4-8) 4.4.5 20100728 (prerelease)".
+
+I'll try to reproduce the problem later today.
+
+-- 
+Arto Jantunen
 
 _______________________________________________
 xfs mailing list
