@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7H7rVLE033508 for <xfs@oss.sgi.com>; Tue, 17 Aug 2010 02:53:31 -0500
-Received: from mailout.rz.uni-frankfurt.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 38E112334
-	for <xfs@oss.sgi.com>; Tue, 17 Aug 2010 00:53:59 -0700 (PDT)
-Received: from mailout.rz.uni-frankfurt.de (mailout.rz.uni-frankfurt.de
-	[141.2.22.233]) by cuda.sgi.com with ESMTP id MmX4F9xwJXiQp3D5
-	for <xfs@oss.sgi.com>; Tue, 17 Aug 2010 00:53:59 -0700 (PDT)
-Date: Tue, 17 Aug 2010 09:53:40 +0200
-From: Mario Bachmann <mbachman@stud.uni-frankfurt.de>
+	o7H959T4038410 for <xfs@oss.sgi.com>; Tue, 17 Aug 2010 04:05:10 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A4BFB1D759D9
+	for <xfs@oss.sgi.com>; Tue, 17 Aug 2010 02:05:37 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
+	[150.101.137.104]) by cuda.sgi.com with ESMTP id
+	FCyGbuitpS7qy4Yt for <xfs@oss.sgi.com>;
+	Tue, 17 Aug 2010 02:05:37 -0700 (PDT)
+Date: Tue, 17 Aug 2010 19:05:34 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: xfsdump-3.0.4 problems
-Message-ID: <20100817095340.6b9ab8e2@x2.grafnetz>
-In-Reply-To: <20100817071337.GN10429@dastard>
+Message-ID: <20100817090534.GP10429@dastard>
 References: <20100816182236.249a2a0f@x2.grafnetz>
 	<20100816223021.GL10429@dastard>
 	<20100817083227.06e23889@x2.grafnetz>
 	<20100817071337.GN10429@dastard>
-Mime-Version: 1.0
+	<20100817095340.6b9ab8e2@x2.grafnetz>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20100817095340.6b9ab8e2@x2.grafnetz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,79 +29,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Mario Bachmann <mbachman@stud.uni-frankfurt.de>
 Cc: xfs@oss.sgi.com
 
-QW0gVHVlLCAxNyBBdWcgMjAxMCAxNzoxMzozNyArMTAwMApzY2hyaWViIERhdmUgQ2hpbm5lciA8
-ZGF2aWRAZnJvbW9yYml0LmNvbT46Cgo+IE9uIFR1ZSwgQXVnIDE3LCAyMDEwIGF0IDA4OjMyOjI3
-QU0gKzAyMDAsIE1hcmlvIEJhY2htYW5uIHdyb3RlOgo+ID4gQW0gVHVlLCAxNyBBdWcgMjAxMCAw
-ODozMDoyMSArMTAwMAo+ID4gc2NocmllYiBEYXZlIENoaW5uZXIgPGRhdmlkQGZyb21vcmJpdC5j
-b20+Ogo+ID4gCj4gPiA+IE9uIE1vbiwgQXVnIDE2LCAyMDEwIGF0IDA2OjIyOjM2UE0gKzAyMDAs
-IE1hcmlvIEJhY2htYW5uIHdyb3RlOgo+ID4gPiA+IEhlbGxvLCAKPiA+ID4gPiAKPiA+ID4gPiBt
-eSBrZXJuZWwgaXMKPiA+ID4gPiBMaW51eCB4MiAyLjYuMzUuMiAjMSBTTVAgU3VuIEF1ZyAxNSAw
-MDozMjoxNCBDRVNUIDIwMTAgeDg2XzY0IEFNRCBBdGhsb24odG0pIDY0IFgyIER1YWwgQ29yZSBQ
-cm9jZXNzb3IgNTYwMCsgQXV0aGVudGljQU1EIEdOVS9MaW51eAo+ID4gPiA+IAo+ID4gPiA+IEkg
-Z2V0IGEgbG90IG9mIFdhcm5pbmdzIHdpdGggeGZzZHVtcC0zLjAuNCAoYm9vdGgsIGdlbnRvbyBw
-YWNrYWdlIDMuMC40LXIxIGFuZCBnaXQtdmVyc2lvbik6Cj4gPiA+ID4gCj4gPiA+ID4geDIgfi9z
-b3VyY2UvZC94ZnNkdW1wL2R1bXAgIyAuL3hmc2R1bXAgLWwwIC1MICJUZXN0IiAtIC9kZXYvc2Rh
-MiB8Z3ppcCAtID4gL21udC9kYXRhMi9kdW1wX3RleHQuZ3oKPiA+ID4gLi4uLi4KPiA+ID4gPiAu
-L3hmc2R1bXA6IFdBUk5JTkc6IGNvdWxkIG5vdCBzdGF0IGRpcmVudCAuY3JhY2stYXR0YWNrIGlu
-byAxMDA2NjM2NzQ6IERhcyBBcmd1bWVudCBpc3QgdW5nw7xsdGlnOiB1c2luZyBudWxsIGdlbmVy
-YXRpb24gY291bnQgaW4gZGlyZWN0b3J5IGVudHJ5Cj4gPiA+IAo+ID4gPiBidWxrc3RhdCBpcyBm
-YWlsaW5nLCBpbmRpY2F0aW5nIGFuIGludmFsaWQgb3B0aW9uIHdhcyBwYXNzZWQuCj4gPiA+IAo+
-ID4gPiA+IFdpdGggdGhlICJvbGQiIHZlcnNpb24geGZzZHVtcC0zLjAuMSwgSSBnZXQgbm8gd2Fy
-bmluZ3MhCj4gPiA+ID4geGZzZHVtcCAtbDAgLUwgIlRlc3QiIC0gL2Rldi9zZGEyIHxnemlwIC0g
-PiAvbW50L2RhdGEyL2R1bXAzMDFfdGVzdC5nego+ID4gPiA+IHhmc2R1bXA6IHVzaW5nIGZpbGUg
-ZHVtcCAoZHJpdmVfc2ltcGxlKSBzdHJhdGVneQo+ID4gPiA+IHhmc2R1bXA6IHZlcnNpb24gMy4w
-LjEgKGR1bXAgZm9ybWF0IDMuMCkgLSBSdW5uaW5nIHNpbmdsZS10aHJlYWRlZAo+ID4gPiAuLi4u
-Cj4gPiA+ID4geGZzZHVtcDogRHVtcCBTdGF0dXM6IFNVQ0NFU1MKPiA+ID4gPiAKPiA+ID4gPiBB
-bmQgdGhlIGZpbGUgaXMgNCw4IEdCLiBBbGwgc2VlbXMgdG8gYmUgY29ycmVjdCEKPiA+ID4gCj4g
-PiA+IEkgY2FuJ3Qgc2VlIGFueSBjaGFuZ2VzIGJldHdlZW4gMy4wLjEgYW5kIDMuMC40IHRoYXQg
-d291bGQgZXhwbGFpbgo+ID4gPiB0aGlzLiBEaWQgeW91IHJ1biB0aGVtIG9uIHRoZSBzYW1lIG1h
-Y2hpbmUgYW5kIGtlcm5lbD8gRGlkIHlvdSBidWlsZAo+ID4gPiB0aGVtIHdpdGggdGhlIHNhbWUg
-Y29tcGlsZXI/IElmIGV2ZXJ5dGhpbmcgaXMgdGhlIHNhbWUsIHRoZW4gcGVyaGFwcwo+ID4gPiB5
-b3UgY291bGQgYmlzZWN0IChvbmx5IGEgZmV3IGNoYW5nZXMgc28gc2hvdWxkIGJlIHF1aWNrKSB0
-byBwb2ludAo+ID4gPiBvdXQgdGhlIG9mZmVuZGluZyBjaGFuZ2UuCj4gPiAKPiA+IEFmdGVyIHNv
-bWUgdGVzdGluZywgSSB0aGluayBpdCBpcyBOT1QgYSBwcm9ibGVtIHdpdGggeGZzZHVtcCwgYnV0
-Cj4gPiB3aXRoIHRoZSBuZXcga2VybmVsIDIuNi4zNS4yLiBGaXJzdCBJIG11c3QgY29ycmVjdCBt
-eSBsYXN0Cj4gPiBwb3N0aW5nOiB4ZnNkdW1wLTMuMC4xIERPIGhhdmUgdGhlIHNhbWUgcHJvYmxl
-bSBhcyB4ZnNkdW1wLTMuMC40Cj4gPiBvbiBrZXJuZWwgMi42LjM1LjIuIEl0IHdhcyBqdXN0IGEg
-Y29pbmNpZGVuY2UgdGhhdCBpcyB3b3JrZWQgb25lCj4gPiB0aW1lIHdpdGhvdXQgcHJvYmxlbXMu
-Li4KPiA+IAo+ID4gTWFjaGluZXM6IEkgaGF2ZSB0d28geDg2XzY0IGFuZCBvbmUgeDg2LiBBbGwg
-bWFjaGluZXMgaGF2ZSB0aGUKPiA+IHNhbWUgcHJvYmxlbXMgYWZ0ZXIgSSB1cGdyYWRlZCBhbGwg
-dGhyZWUgS2VybmVscyBmcm9tIDIuNi4zNC54IHRvCj4gPiAyLjYuMzUuMi4gU28gSSBiZWxpZXZl
-LCBpdCBpcyBhIHByb2JsZW0gd2l0aCAyLjYuMzUuMiBvciB0aGUKPiA+IGNvbWJpbmF0aW9uIG9m
-IFsyLjYuMzUuMiAmIHhmc2R1bXBdLgo+ID4gCj4gPiBDb21waWxlcjogSSB1c2UgImdjYyAoR2Vu
-dG9vIDQuNC40LXIxIHAxLjAsIHBpZS0wLjQuNSkgNC40LjQiLiAKPiA+IAo+ID4gVGVzdGluZyBM
-aXN0IChvbiBvbmUgbWFjaGluZSBvbmx5KToKPiA+IHdvcmtzOiAgIHg4Nl82NCwgMi42LjM0LjQs
-IHhmc2R1bXAtMy4wLjEKPiA+IHdvcmtzOiAgIHg4Nl82NCwgMi42LjM0LjQsIHhmc2R1bXAtMy4w
-LjQKPiA+IGZhaWx1cmU6IHg4Nl82NCwgMi42LjM1LjIsIHhmc2R1bXAtMy4wLjEgKHdvcmtlZCBv
-bmx5IG9uZSB0aW1lKQo+ID4gZmFpbHVyZTogeDg2XzY0LCAyLjYuMzUuMiwgeGZzZHVtcC0zLjAu
-NAo+IAo+IE9rLCB0aGF0IG1ha2VzIG1vcmUgc2Vuc2UgLSB3ZSBjaGFuZ2VkIHRoZSB3YXkgYnVs
-a3N0YXQgd29ya3MgaW4KPiBmcm9tIDIuNi4zNCB0byAyLjYuMzUgdG8gY29ycmVjdGx5IHZhbGlk
-YXRlIGlub2RlIG51bWJlcnMgYmVpbmcKPiBwYXNzZWQgaW4gdmlhIGJ1bGtzdGF0LCBhbmQgaGVu
-Y2UgZmlsZXMgdW5saW5rZWQgZHVyaW5nIHRoZSBkdW1wIHJ1bgo+IGNvdWxkIHJldHVybiBFSU5W
-QUwgd2hlbiB2YWxpZGF0aW5nIHRoZSBkaXJlY3Rvcnkgc3RydWN0dXJlIChhcyB0aGV5Cj4gbm8g
-bG9uZ2VyIGV4aXN0KS4gSXMgeW91IHN5c3RlbSBjb21wbGV0ZWx5IGlkbGUgd2hpbGUgdGhlIGR1
-bXAKPiBpcyBydW5uaW5nLCBvciBhcmUgZmlsZXMgYmVpbmcgcmVtb3ZlZCB3aGlsZSB0aGUgZHVt
-cCBpcyBydW5uaW5nPwo+IAo+IENoZWVycywKPiAKPiBEYXZlLgoKSSB3b3VsZCBjYWxsIG15IHN5
-c3RlbSBpZGxlLCB3aGVuIEkgdXNlIHhmc2R1bXAuIE5vIHJtIG9yIG12IG9wZXJhdGlvbnMgCmFy
-ZSBydW5uaW5nIHdoaWxlIHRoZSBkdW1wLiBUaGUgZmlyc3QgbWFjaGluZSBoYXMgYSBkdWFsIGNv
-cmUgMi45IEdIeiBhbmQKOCBHQiBvZiBSQU0gYW5kIHRoZSBmaWxlc3lzdGVtcyBhcmUgbm90IHJl
-YWxseSBiaWcgKH4xMEdCIHVzZWQpLiBUaGUgc2Vjb25kIAptYWNoaW5lIGhhcyBhIGR1YWwgY29y
-ZSAyIEdIeiBhbmQgMiBHQiBvZiBSQU0uIAoKSXQgZG9lcyBub3QgbWF0dGVyIGlmIEkgZHVtcCB0
-aGUgcnVubmluZyByb290IHBhcnRpdGlvbiBvciB0aGUgZXh0cmEgCmhvbWUgcGFydGl0aW9uIChl
-dmVuIG5vdCBsb2dnZWQgaW4gd2l0aCBhIHVzZXIsIHNvIHRoZXJlIHNob3VsZCBiZSBhYnNvbHV0
-ZWx5IApubyBjaGFuZ2VzIHRvIHRoZSBmaWxlcywgYWxzbyBJIGRpZCBhIHN5bmMgYmVmb3JlIHRo
-ZSBkdW1wKS4gCgpXaGF0IEkgdGVzdGVkIG5vdzogQWZ0ZXIgZG93bmdyYWRpbmcgdG8gMi42LjM0
-LjQgb24gYm90aCB4ODZfNjQsIHhmc2R1bXAgd29ya2VkIGFnYWluLCAKYnV0IHRoYXQgaXMgbm8g
-c29sdXRpb24gdG8gdXNlIGFuIG9sZCBrZXJuZWwhCgpUbyBkZXNjcmliZSB0aGUgcmVzdWx0IG9u
-IDIuNi4zNS4yIGFnYWluIGNsZWFybHk6IHhmc2R1bXAgcHJvZHVjZXMgYSBkdW1wIHdoZXJlIApz
-b21lIGdpZ2FieXRlIG9mIGRhdGEgYXJlIHNpbXBseSBtaXNzaW5nLiBJIHRoaW5rIGFib3V0IDMw
-JSBvZiBhbGwgZmlsZXMgYXJlIAptaXNzaW5nLiAKCk1hcmlvCgpfX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dp
-LmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Tue, Aug 17, 2010 at 09:53:40AM +0200, Mario Bachmann wrote:
+> Am Tue, 17 Aug 2010 17:13:37 +1000 > schrieb Dave Chinner <david@fromorbit.com>:
+> > > Compiler: I use "gcc (Gentoo 4.4.4-r1 p1.0, pie-0.4.5) 4.4.4". 
+> > > 
+> > > Testing List (on one machine only):
+> > > works:   x86_64, 2.6.34.4, xfsdump-3.0.1
+> > > works:   x86_64, 2.6.34.4, xfsdump-3.0.4
+> > > failure: x86_64, 2.6.35.2, xfsdump-3.0.1 (worked only one time)
+> > > failure: x86_64, 2.6.35.2, xfsdump-3.0.4
+> > 
+> > Ok, that makes more sense - we changed the way bulkstat works in
+> > from 2.6.34 to 2.6.35 to correctly validate inode numbers being
+> > passed in via bulkstat, and hence files unlinked during the dump run
+> > could return EINVAL when validating the directory structure (as they
+> > no longer exist). Is you system completely idle while the dump
+> > is running, or are files being removed while the dump is running?
+> 
+> I would call my system idle, when I use xfsdump. No rm or mv operations 
+> are running while the dump. The first machine has a dual core 2.9 GHz and
+> 8 GB of RAM and the filesystems are not really big (~10GB used). The second 
+> machine has a dual core 2 GHz and 2 GB of RAM. 
+
+Yup, I have reproduced it here. What is strange is that xfs_fsr uses
+XFS_IOC_BULKSTAT_SINGLE, and that works fine on 2.6.35.2. The same
+ioctl calls from xfsdump are failing, though, so something funny is
+going on there.
+
+I'll look into it further.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
