@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7IBmUPX111232 for <xfs@oss.sgi.com>; Wed, 18 Aug 2010 06:48:30 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 287785607
-	for <xfs@oss.sgi.com>; Wed, 18 Aug 2010 04:48:58 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	5NLrEx5VJp2mczLY for <xfs@oss.sgi.com>;
-	Wed, 18 Aug 2010 04:48:58 -0700 (PDT)
-Date: Wed, 18 Aug 2010 21:48:56 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Review: xfsprogs with libblkid enabled for Debian
-Message-ID: <20100818114856.GT10429@dastard>
-References: <472498892.114291282107960876.JavaMail.root@mail-au.aconex.com>
-	<86828409.114311282107988740.JavaMail.root@mail-au.aconex.com>
+	o7IEQD00116890 for <xfs@oss.sgi.com>; Wed, 18 Aug 2010 09:26:13 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0836B14D4EAE
+	for <xfs@oss.sgi.com>; Wed, 18 Aug 2010 07:36:02 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id AqDUF2CSjC1pLOVs for
+	<xfs@oss.sgi.com>; Wed, 18 Aug 2010 07:36:02 -0700 (PDT)
+Message-ID: <4C6BED98.10203@redhat.com>
+Date: Wed, 18 Aug 2010 09:26:32 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <86828409.114311282107988740.JavaMail.root@mail-au.aconex.com>
+Subject: Re: [PATCH] xfstests 241: run parallel dbench
+References: <4C6AE57D.7090807@redhat.com> <20100818114507.GS10429@dastard>
+In-Reply-To: <20100818114507.GS10429@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,31 +27,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: nathans@aconex.com
-Cc: xfs <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: ext4 development <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Aug 18, 2010 at 03:06:28PM +1000, nathans@aconex.com wrote:
-> Hi guys,
+Dave Chinner wrote:
+> On Tue, Aug 17, 2010 at 02:39:41PM -0500, Eric Sandeen wrote:
+>> ext4 was corrupting inode table bitmaps due to a mishmash of
+>> atomic & nonatomic bitops.  This got broken twice and fixed
+>> twice; let's add a test.
+>>
+>> On a 4-way box this reliably ends up with a corrupted filesystem
+>> if we get it wrong (upstream as of 2.6.35 at least is fine again)
+>>
+>> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 > 
-> Attached patch adds support for libblkid in Debian builds.
-> There's a couple of other trivial things fixed up while the
-> package was building - man page typos reported by lintian,
-> fix source tarball generation (and deb build) when libblkid
-> is enabled (*must* descend into libdisk to pick up sources)
-> ... but its all pretty straight forward.
+> Looks good, except it's missing a 241.out file for the golden
+> output.
+
+grr "guilt add" :)
+
+Thanks, will add that to the commit.
+
+-Eric
+ 
+> Cheers,
 > 
-> I've checked that mkfs.xfs is linked as expected too. :)
-
-Looks OK to me.
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Dave.
 
 _______________________________________________
 xfs mailing list
