@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7IBghbS111012 for <xfs@oss.sgi.com>; Wed, 18 Aug 2010 06:42:44 -0500
+	o7IBipLw111102 for <xfs@oss.sgi.com>; Wed, 18 Aug 2010 06:44:51 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BE1DD15D525C
-	for <xfs@oss.sgi.com>; Wed, 18 Aug 2010 04:52:31 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 01B9755F0
+	for <xfs@oss.sgi.com>; Wed, 18 Aug 2010 04:45:19 -0700 (PDT)
 Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
 	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	ZbXeZG19U2xI0HYQ for <xfs@oss.sgi.com>;
-	Wed, 18 Aug 2010 04:52:31 -0700 (PDT)
-Date: Wed, 18 Aug 2010 21:43:05 +1000
+	YijVi38FZALWXJsJ for <xfs@oss.sgi.com>;
+	Wed, 18 Aug 2010 04:45:19 -0700 (PDT)
+Date: Wed, 18 Aug 2010 21:45:07 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: kernel bug in xfs_lrw.c (centos v5.5, directio, aio)
-Message-ID: <20100818114305.GR10429@dastard>
-References: <alpine.LNX.2.00.1008171906220.21398@mahi.cmie.ernet.in>
+Subject: Re: [PATCH] xfstests 241: run parallel dbench
+Message-ID: <20100818114507.GS10429@dastard>
+References: <4C6AE57D.7090807@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <alpine.LNX.2.00.1008171906220.21398@mahi.cmie.ernet.in>
+In-Reply-To: <4C6AE57D.7090807@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,34 +29,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Nohez <nohez@cmie.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: ext4 development <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Aug 17, 2010 at 07:12:12PM +0530, Nohez wrote:
+On Tue, Aug 17, 2010 at 02:39:41PM -0500, Eric Sandeen wrote:
+> ext4 was corrupting inode table bitmaps due to a mishmash of
+> atomic & nonatomic bitops.  This got broken twice and fixed
+> twice; let's add a test.
 > 
-> Hi,
+> On a 4-way box this reliably ends up with a corrupted filesystem
+> if we get it wrong (upstream as of 2.6.35 at least is fine again)
 > 
-> I had a kernel bug today when running xfs on CentOS v5.5. I moved to
-> xfs from ext3 today.
-> 
-> The only application accessing the xfs filesystem is Sybase ASE v15.x.
-> Database has been configured to use directio with native kernel
-> asynchronous disk i/o enabled.
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-The warning is being issued because the application is mixing
-buffered IO with direct IO on the same file. i.e. data corruption
-waiting to happen. This is an application bug - the responsibility
-for ensuring data coherency and integrity is assumed by the
-application issuing the direct IO.
-
-This was discussed in more detail on a recent thread on this list -
-you shoul dbe able to find it in the archives easily enough.
-
-> Let me know if there is any other information I can provide to help
-> with debugging.
-
-Report it to the application vendor - it's an application bug, not
-a filesystem bug.
+Looks good, except it's missing a 241.out file for the golden
+output.
 
 Cheers,
 
