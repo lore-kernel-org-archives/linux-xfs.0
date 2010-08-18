@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7IBaNnv110466 for <xfs@oss.sgi.com>; Wed, 18 Aug 2010 06:36:23 -0500
+	o7IBa4wH110367 for <xfs@oss.sgi.com>; Wed, 18 Aug 2010 06:36:04 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C8AF715D5208
-	for <xfs@oss.sgi.com>; Wed, 18 Aug 2010 04:46:10 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
-	[150.101.137.103]) by cuda.sgi.com with ESMTP id
-	PjrDHXcwvfdkQwgM for <xfs@oss.sgi.com>;
-	Wed, 18 Aug 2010 04:46:10 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5CC3F55AA
+	for <xfs@oss.sgi.com>; Wed, 18 Aug 2010 04:36:32 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
+	[150.101.137.102]) by cuda.sgi.com with ESMTP id
+	Gw9pDbeENTvRDXee for <xfs@oss.sgi.com>;
+	Wed, 18 Aug 2010 04:36:32 -0700 (PDT)
 Received: from dastard (unverified [121.44.216.100])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	35523139-1927428
-	for <xfs@oss.sgi.com>; Wed, 18 Aug 2010 21:06:50 +0930 (CST)
+	35480603-1927428
+	for <xfs@oss.sgi.com>; Wed, 18 Aug 2010 21:06:30 +0930 (CST)
 Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1Olgwh-0005Kt-60
-	for xfs@oss.sgi.com; Wed, 18 Aug 2010 21:36:39 +1000
+	(envelope-from <dave@fromorbit.com>) id 1OlgwW-0005Ka-PM
+	for xfs@oss.sgi.com; Wed, 18 Aug 2010 21:36:28 +1000
 Received: from dave by disturbed with local (Exim 4.72)
-	(envelope-from <dave@disturbed.disaster>) id 1Olgwd-0007o6-8w
-	for xfs@oss.sgi.com; Wed, 18 Aug 2010 21:36:35 +1000
+	(envelope-from <dave@disturbed.disaster>) id 1OlgwS-0007np-RT
+	for xfs@oss.sgi.com; Wed, 18 Aug 2010 21:36:24 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 7/8] xfs: use range primitives for xfs page cache operations
-Date: Wed, 18 Aug 2010 21:36:18 +1000
-Message-Id: <1282131379-29932-8-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/8] xfs: unlock items before allowing the CIL to commit
+Date: Wed, 18 Aug 2010 21:36:12 +1000
+Message-Id: <1282131379-29932-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1282131379-29932-1-git-send-email-david@fromorbit.com>
 References: <1282131379-29932-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -42,80 +42,92 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-While XFS passes ranges to operate on from the core code, the
-functions being called ignore the either the entire range or the end
-of the range. This is historical because when the function were
-written linux didn't have the necessary range operations. Update the
-functions to use the correct operations.
+When we commit a transaction using delayed logging, we need to
+unlock the items in the transaciton before we unlock the CIL context
+and allow it to be checkpointed. If we unlock them after we release
+the CIl context lock, the CIL can checkpoint and complete before
+we free the log items. This breaks stale buffer item unlock and
+unpin processing as there is an implicit assumption that the unlock
+will occur before the unpin.
+
+Also, some log items need to store the LSN of the transaction commit
+in the item (inodes and EFIs) and so can race with other transaction
+completions if we don't prevent the CIL from checkpointing before
+the unlock occurs.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/linux-2.6/xfs_fs_subr.c |   31 +++++++++++++++----------------
- 1 files changed, 15 insertions(+), 16 deletions(-)
+ fs/xfs/xfs_log_cil.c    |   14 ++++++++++++++
+ fs/xfs/xfs_trans.c      |    5 +----
+ fs/xfs/xfs_trans_priv.h |    3 ++-
+ 3 files changed, 17 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_fs_subr.c b/fs/xfs/linux-2.6/xfs_fs_subr.c
-index 1f279b0..ed88ed1 100644
---- a/fs/xfs/linux-2.6/xfs_fs_subr.c
-+++ b/fs/xfs/linux-2.6/xfs_fs_subr.c
-@@ -32,10 +32,9 @@ xfs_tosspages(
- 	xfs_off_t	last,
- 	int		fiopt)
- {
--	struct address_space *mapping = VFS_I(ip)->i_mapping;
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index 31e4ea2..ef8e7d9 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -377,9 +377,23 @@ xfs_log_commit_cil(
+ 	xfs_log_done(mp, tp->t_ticket, NULL, log_flags);
+ 	xfs_trans_unreserve_and_mod_sb(tp);
+ 
++	/*
++	 * Once all the items of the transaction have been copied to the CIL,
++	 * the items can be unlocked and freed.
++	 *
++	 * This needs to be done before we drop the CIL context lock because we
++	 * have to update state in the log items and unlock them before they go
++	 * to disk. If we don't, then the CIL checkpoint can race with us and
++	 * we can run checkpoint completion before we've updated and unlocked
++	 * the log items. This affects (at least) processing of stale buffers,
++	 * inodes and EFIs.
++	 */
++	xfs_trans_free_items(tp, *commit_lsn, 0);
++
+ 	/* check for background commit before unlock */
+ 	if (log->l_cilp->xc_ctx->space_used > XLOG_CIL_SPACE_LIMIT(log))
+ 		push = 1;
++
+ 	up_read(&log->l_cilp->xc_ctx_lock);
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index fdca741..1c47eda 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -1167,7 +1167,7 @@ xfs_trans_del_item(
+  * Unlock all of the items of a transaction and free all the descriptors
+  * of that transaction.
+  */
+-STATIC void
++void
+ xfs_trans_free_items(
+ 	struct xfs_trans	*tp,
+ 	xfs_lsn_t		commit_lsn,
+@@ -1653,9 +1653,6 @@ xfs_trans_commit_cil(
+ 		return error;
+ 
+ 	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
 -
--	if (mapping->nrpages)
--		truncate_inode_pages(mapping, first);
-+	/* can't toss partial tail pages, so mask them out */
-+	last &= ~(PAGE_SIZE - 1);
-+	truncate_inode_pages_range(VFS_I(ip)->i_mapping, first, last - 1);
- }
- 
- int
-@@ -50,12 +49,11 @@ xfs_flushinval_pages(
- 
- 	trace_xfs_pagecache_inval(ip, first, last);
- 
--	if (mapping->nrpages) {
--		xfs_iflags_clear(ip, XFS_ITRUNCATED);
--		ret = filemap_write_and_wait(mapping);
--		if (!ret)
--			truncate_inode_pages(mapping, first);
--	}
-+	xfs_iflags_clear(ip, XFS_ITRUNCATED);
-+	ret = filemap_write_and_wait_range(mapping, first,
-+				last == -1 ? LLONG_MAX : last);
-+	if (!ret)
-+		truncate_inode_pages_range(mapping, first, last);
- 	return -ret;
- }
- 
-@@ -71,10 +69,9 @@ xfs_flush_pages(
- 	int		ret = 0;
- 	int		ret2;
- 
--	if (mapping_tagged(mapping, PAGECACHE_TAG_DIRTY)) {
--		xfs_iflags_clear(ip, XFS_ITRUNCATED);
--		ret = -filemap_fdatawrite(mapping);
--	}
-+	xfs_iflags_clear(ip, XFS_ITRUNCATED);
-+	ret = -filemap_fdatawrite_range(mapping, first,
-+				last == -1 ? LLONG_MAX : last);
- 	if (flags & XBF_ASYNC)
- 		return ret;
- 	ret2 = xfs_wait_on_pages(ip, first, last);
-@@ -91,7 +88,9 @@ xfs_wait_on_pages(
- {
- 	struct address_space *mapping = VFS_I(ip)->i_mapping;
- 
--	if (mapping_tagged(mapping, PAGECACHE_TAG_WRITEBACK))
--		return -filemap_fdatawait(mapping);
-+	if (mapping_tagged(mapping, PAGECACHE_TAG_WRITEBACK)) {
-+		return -filemap_fdatawait_range(mapping, first,
-+					last == -1 ? ip->i_size - 1 : last);
-+	}
+-	/* xfs_trans_free_items() unlocks them first */
+-	xfs_trans_free_items(tp, *commit_lsn, 0);
+ 	xfs_trans_free(tp);
  	return 0;
  }
+diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
+index e2d93d8..62da86c 100644
+--- a/fs/xfs/xfs_trans_priv.h
++++ b/fs/xfs/xfs_trans_priv.h
+@@ -25,7 +25,8 @@ struct xfs_trans;
+ 
+ void	xfs_trans_add_item(struct xfs_trans *, struct xfs_log_item *);
+ void	xfs_trans_del_item(struct xfs_log_item *);
+-
++void	xfs_trans_free_items(struct xfs_trans *tp, xfs_lsn_t commit_lsn,
++				int flags);
+ void	xfs_trans_item_committed(struct xfs_log_item *lip,
+ 				xfs_lsn_t commit_lsn, int aborted);
+ void	xfs_trans_unreserve_and_mod_sb(struct xfs_trans *tp);
 -- 
 1.7.1
 
