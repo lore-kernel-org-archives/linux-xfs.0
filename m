@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7IFoP7m120585 for <xfs@oss.sgi.com>; Wed, 18 Aug 2010 10:50:25 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D94986478
-	for <xfs@oss.sgi.com>; Wed, 18 Aug 2010 08:50:53 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	4gSPvIDh6eHDWxzR for <xfs@oss.sgi.com>;
-	Wed, 18 Aug 2010 08:50:53 -0700 (PDT)
-Date: Thu, 19 Aug 2010 01:50:43 +1000
-From: Dave Chinner <david@fromorbit.com>
+	o7IGGxCV122188 for <xfs@oss.sgi.com>; Wed, 18 Aug 2010 11:17:00 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 17499172A92A
+	for <xfs@oss.sgi.com>; Wed, 18 Aug 2010 09:17:29 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id I7MRlFTqfnXhpAHa for
+	<xfs@oss.sgi.com>; Wed, 18 Aug 2010 09:17:29 -0700 (PDT)
+Date: Wed, 18 Aug 2010 12:17:28 -0400
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: page discard on page error
-Message-ID: <20100818155043.GL7362@dastard>
+Message-ID: <20100818161728.GA3511@infradead.org>
 References: <AANLkTimHBE_9pD1wWOkryOnqBgL2bJQTKoe52wYjfNw3@mail.gmail.com>
+	<20100818155043.GL7362@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <AANLkTimHBE_9pD1wWOkryOnqBgL2bJQTKoe52wYjfNw3@mail.gmail.com>
+In-Reply-To: <20100818155043.GL7362@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,54 +29,59 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mike Gao <ygao.linux@gmail.com>
-Cc: hch@lst.de, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Mike Gao <ygao.linux@gmail.com>, xfs@oss.sgi.com
 
-On Wed, Aug 18, 2010 at 09:27:55AM -0500, Mike Gao wrote:
-> Hi, all,
-> 
-> I sync latest XFS last month and build into our embedded system. When I
-> test, I found below issue.
-> It seems that the xfs_iomap failed when it did allocat with
-> xfs_ilock_nowait().
-> I debug this and found that ip->i_lock is locked and there are sometime no
-> unlock coming between two lock trying.
-> This issue will give wrong data in file on disk exactly on that offset.
+On Thu, Aug 19, 2010 at 01:50:43AM +1000, Dave Chinner wrote:
+> The current code does not handle EAGAIN at all, just discards the
+> page. This looks incorrect - I think that EAGAIN should still cause
+> the page to be redirtied, not discarded. I'm not sure if I missed
+> something else, though - can you remember why you removed the EAGAIN
+> case?
 
-Ah, it looks like we dropped the EAGAIN error from xfs_map_blocks()
-on the floor.
+I don't think that was intentional, in fact I'm pretty sure I handled
+it in an earlier version.  Mike, can you test the patch below?
 
-Christoph, the 2.6.34 code did this:
 
-error:
-......
-        /*
-         * If it's delalloc and we have nowhere to put it,
-         * throw it away, unless the lower layers told
-         * us to try again.
-         */
-        if (err != -EAGAIN) {
-                if (!unmapped)
-                        xfs_aops_discard_page(page);
-                ClearPageUptodate(page);
-        }
-
-and the caller redirtied the page on EAGAIN. The EAGAIN comes from
-the BMAPI_TRYLOCK case, so it is a valid return indicating that we
-would have blocked on a non-blocking IO.
-
-The current code does not handle EAGAIN at all, just discards the
-page. This looks incorrect - I think that EAGAIN should still cause
-the page to be redirtied, not discarded. I'm not sure if I missed
-something else, though - can you remember why you removed the EAGAIN
-case?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Index: xfs/fs/xfs/linux-2.6/xfs_aops.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_aops.c	2010-08-18 18:10:48.140261091 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_aops.c	2010-08-18 18:12:41.167005888 +0200
+@@ -1068,7 +1068,7 @@ xfs_vm_writepage(
+ 	 * by themselves.
+ 	 */
+ 	if ((current->flags & (PF_MEMALLOC|PF_KSWAPD)) == PF_MEMALLOC)
+-		goto out_fail;
++		goto redirty;
+ 
+ 	/*
+ 	 * We need a transaction if there are delalloc or unwritten buffers
+@@ -1080,7 +1080,7 @@ xfs_vm_writepage(
+ 	 */
+ 	xfs_count_page_state(page, &delalloc, &unwritten);
+ 	if ((current->flags & PF_FSTRANS) && (delalloc || unwritten))
+-		goto out_fail;
++		goto redirty;
+ 
+ 	/* Is this page beyond the end of the file? */
+ 	offset = i_size_read(inode);
+@@ -1245,12 +1245,15 @@ error:
+ 	if (iohead)
+ 		xfs_cancel_ioend(iohead);
+ 
++	if (err == -EAGAIN)
++		goto redirty;
++
+ 	xfs_aops_discard_page(page);
+ 	ClearPageUptodate(page);
+ 	unlock_page(page);
+ 	return err;
+ 
+-out_fail:
++redirty:
+ 	redirty_page_for_writepage(wbc, page);
+ 	unlock_page(page);
+ 	return 0;
 
 _______________________________________________
 xfs mailing list
