@@ -1,28 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7IBa31Q110365 for <xfs@oss.sgi.com>; Wed, 18 Aug 2010 06:36:04 -0500
+	o7IBaMkq110464 for <xfs@oss.sgi.com>; Wed, 18 Aug 2010 06:36:23 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 583D055A7
-	for <xfs@oss.sgi.com>; Wed, 18 Aug 2010 04:36:32 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8378D55BE
+	for <xfs@oss.sgi.com>; Wed, 18 Aug 2010 04:36:51 -0700 (PDT)
 Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
 	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	KniA7Vaw6a9kCnBh for <xfs@oss.sgi.com>;
-	Wed, 18 Aug 2010 04:36:32 -0700 (PDT)
+	Mjcihw7KxgUeR5eA for <xfs@oss.sgi.com>;
+	Wed, 18 Aug 2010 04:36:51 -0700 (PDT)
 Received: from dastard (unverified [121.44.216.100])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	35480604-1927428
-	for <xfs@oss.sgi.com>; Wed, 18 Aug 2010 21:06:31 +0930 (CST)
+	35480630-1927428
+	for <xfs@oss.sgi.com>; Wed, 18 Aug 2010 21:06:50 +0930 (CST)
 Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1OlgwW-0005KZ-Ou
-	for xfs@oss.sgi.com; Wed, 18 Aug 2010 21:36:28 +1000
+	(envelope-from <dave@fromorbit.com>) id 1Olgwr-0005L6-9u
+	for xfs@oss.sgi.com; Wed, 18 Aug 2010 21:36:49 +1000
 Received: from dave by disturbed with local (Exim 4.72)
-	(envelope-from <dave@disturbed.disaster>) id 1OlgwS-0007nn-PG
-	for xfs@oss.sgi.com; Wed, 18 Aug 2010 21:36:24 +1000
+	(envelope-from <dave@disturbed.disaster>) id 1Olgwd-0007o9-Aj
+	for xfs@oss.sgi.com; Wed, 18 Aug 2010 21:36:35 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/8] xfs: current pending patches
-Date: Wed, 18 Aug 2010 21:36:11 +1000
-Message-Id: <1282131379-29932-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 8/8] xfs: Introduce XFS_IOC_ZERO_RANGE
+Date: Wed, 18 Aug 2010 21:36:19 +1000
+Message-Id: <1282131379-29932-9-git-send-email-david@fromorbit.com>
+In-Reply-To: <1282131379-29932-1-git-send-email-david@fromorbit.com>
+References: <1282131379-29932-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,24 +40,157 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Folks,
+From: Dave Chinner <dchinner@redhat.com>
 
-This is the current list of patches that I have for the main XFS tree.
-Some of the patches have been reviewed, the ones that haven't got reviewed-by
-tags have been updated after the last round of review and need another pass.
+XFS_IOC_ZERO_RANGE is the equivalent of an atomic XFS_IOC_UNRESVSP/
+XFS_IOC_RESVSP call pair. It enabled ranges of written data to be
+turned into zeroes without requiring IO or having to free and
+reallocate the extents in the range given as would occur if we had
+to punch and then preallocate them separately.  This enables
+applications to zero parts of files very quickly without changing
+the layout of the files in any way.
 
-The patches are also available at:
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/linux-2.6/xfs_ioctl.c   |    3 ++-
+ fs/xfs/linux-2.6/xfs_ioctl32.c |    1 +
+ fs/xfs/xfs_bmap.c              |   12 +++++++++---
+ fs/xfs/xfs_bmap.h              |    9 ++++++---
+ fs/xfs/xfs_fs.h                |    1 +
+ fs/xfs/xfs_vnodeops.c          |   10 ++++++++--
+ 6 files changed, 27 insertions(+), 9 deletions(-)
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/xfsdev.git for-oss
-
-Note that this branch is currently based on 2.6.36-rc1, so if you pull from it
-and try it you are likely to have a kernel that hangs in the writeback code. I
-will rebase it on 2.6.35 once I get everything reviewed and have to update all
-the tags.
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/linux-2.6/xfs_ioctl.c b/fs/xfs/linux-2.6/xfs_ioctl.c
+index 237f5ff..a9c4810 100644
+--- a/fs/xfs/linux-2.6/xfs_ioctl.c
++++ b/fs/xfs/linux-2.6/xfs_ioctl.c
+@@ -1292,7 +1292,8 @@ xfs_file_ioctl(
+ 	case XFS_IOC_ALLOCSP64:
+ 	case XFS_IOC_FREESP64:
+ 	case XFS_IOC_RESVSP64:
+-	case XFS_IOC_UNRESVSP64: {
++	case XFS_IOC_UNRESVSP64:
++	case XFS_IOC_ZERO_RANGE: {
+ 		xfs_flock64_t		bf;
+ 
+ 		if (copy_from_user(&bf, arg, sizeof(bf)))
+diff --git a/fs/xfs/linux-2.6/xfs_ioctl32.c b/fs/xfs/linux-2.6/xfs_ioctl32.c
+index 6c83f7f..464bcc7 100644
+--- a/fs/xfs/linux-2.6/xfs_ioctl32.c
++++ b/fs/xfs/linux-2.6/xfs_ioctl32.c
+@@ -574,6 +574,7 @@ xfs_file_compat_ioctl(
+ 	case XFS_IOC_FSGEOMETRY_V1:
+ 	case XFS_IOC_FSGROWFSDATA:
+ 	case XFS_IOC_FSGROWFSRT:
++	case XFS_IOC_ZERO_RANGE:
+ 		return xfs_file_ioctl(filp, cmd, p);
+ #else
+ 	case XFS_IOC_ALLOCSP_32:
+diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+index 23f14e5..d36770f 100644
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -4744,8 +4744,12 @@ xfs_bmapi(
+ 		 * Check if writing previously allocated but
+ 		 * unwritten extents.
+ 		 */
+-		if (wr && mval->br_state == XFS_EXT_UNWRITTEN &&
+-		    ((flags & (XFS_BMAPI_PREALLOC|XFS_BMAPI_DELAY)) == 0)) {
++		if (wr &&
++		    ((mval->br_state == XFS_EXT_UNWRITTEN &&
++		      ((flags & (XFS_BMAPI_PREALLOC|XFS_BMAPI_DELAY)) == 0)) ||
++		     (mval->br_state == XFS_EXT_NORM &&
++		      ((flags & (XFS_BMAPI_PREALLOC|XFS_BMAPI_CONVERT)) ==
++				(XFS_BMAPI_PREALLOC|XFS_BMAPI_CONVERT))))) {
+ 			/*
+ 			 * Modify (by adding) the state flag, if writing.
+ 			 */
+@@ -4757,7 +4761,9 @@ xfs_bmapi(
+ 					*firstblock;
+ 				cur->bc_private.b.flist = flist;
+ 			}
+-			mval->br_state = XFS_EXT_NORM;
++			mval->br_state = (mval->br_state == XFS_EXT_UNWRITTEN)
++						? XFS_EXT_NORM
++						: XFS_EXT_UNWRITTEN;
+ 			error = xfs_bmap_add_extent(ip, lastx, &cur, mval,
+ 				firstblock, flist, &tmp_logflags,
+ 				whichfork, (flags & XFS_BMAPI_RSVBLOCKS));
+diff --git a/fs/xfs/xfs_bmap.h b/fs/xfs/xfs_bmap.h
+index b13569a..71ec9b6 100644
+--- a/fs/xfs/xfs_bmap.h
++++ b/fs/xfs/xfs_bmap.h
+@@ -74,9 +74,12 @@ typedef	struct xfs_bmap_free
+ #define	XFS_BMAPI_IGSTATE	0x080	/* Ignore state - */
+ 					/* combine contig. space */
+ #define	XFS_BMAPI_CONTIG	0x100	/* must allocate only one extent */
+-#define XFS_BMAPI_CONVERT	0x200	/* unwritten extent conversion - */
+-					/* need write cache flushing and no */
+-					/* additional allocation alignments */
++/*
++ * unwritten extent conversion - this needs write cache flushing and no additional
++ * allocation alignments. When specified with XFS_BMAPI_PREALLOC it converts
++ * from written to unwritten, otherwise convert from unwritten to written.
++ */
++#define XFS_BMAPI_CONVERT	0x200
+ 
+ #define XFS_BMAPI_FLAGS \
+ 	{ XFS_BMAPI_WRITE,	"WRITE" }, \
+diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
+index 7cf7220..6af6518 100644
+--- a/fs/xfs/xfs_fs.h
++++ b/fs/xfs/xfs_fs.h
+@@ -446,6 +446,7 @@ typedef struct xfs_handle {
+ /*	XFS_IOC_SETBIOSIZE ---- deprecated 46	   */
+ /*	XFS_IOC_GETBIOSIZE ---- deprecated 47	   */
+ #define XFS_IOC_GETBMAPX	_IOWR('X', 56, struct getbmap)
++#define XFS_IOC_ZERO_RANGE	_IOW ('X', 57, struct xfs_flock64)
+ 
+ /*
+  * ioctl commands that replace IRIX syssgi()'s
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+index 66d585c..3cacf59 100644
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -2272,7 +2272,7 @@ xfs_alloc_file_space(
+ 	count = len;
+ 	imapp = &imaps[0];
+ 	nimaps = 1;
+-	bmapi_flag = XFS_BMAPI_WRITE | (alloc_type ? XFS_BMAPI_PREALLOC : 0);
++	bmapi_flag = XFS_BMAPI_WRITE | alloc_type;
+ 	startoffset_fsb	= XFS_B_TO_FSBT(mp, offset);
+ 	allocatesize_fsb = XFS_B_TO_FSB(mp, count);
+ 
+@@ -2704,6 +2704,7 @@ xfs_change_file_space(
+ 	xfs_off_t	llen;
+ 	xfs_trans_t	*tp;
+ 	struct iattr	iattr;
++	int		prealloc_type;
+ 
+ 	if (!S_ISREG(ip->i_d.di_mode))
+ 		return XFS_ERROR(EINVAL);
+@@ -2746,12 +2747,17 @@ xfs_change_file_space(
+ 	 * size to be changed.
+ 	 */
+ 	setprealloc = clrprealloc = 0;
++	prealloc_type = XFS_BMAPI_PREALLOC;
+ 
+ 	switch (cmd) {
++	case XFS_IOC_ZERO_RANGE:
++		prealloc_type |= XFS_BMAPI_CONVERT;
++		xfs_tosspages(ip, startoffset, startoffset + bf->l_len, 0);
++		/* FALLTHRU */
+ 	case XFS_IOC_RESVSP:
+ 	case XFS_IOC_RESVSP64:
+ 		error = xfs_alloc_file_space(ip, startoffset, bf->l_len,
+-								1, attr_flags);
++						prealloc_type, attr_flags);
+ 		if (error)
+ 			return error;
+ 		setprealloc = 1;
+-- 
+1.7.1
 
 _______________________________________________
 xfs mailing list
