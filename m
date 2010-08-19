@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7IH0buO124365 for <xfs@oss.sgi.com>; Wed, 18 Aug 2010 12:00:37 -0500
-Received: from n21.bullet.mail.mud.yahoo.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id 37DEBCE2676
-	for <xfs@oss.sgi.com>; Wed, 18 Aug 2010 10:10:26 -0700 (PDT)
-Received: from n21.bullet.mail.mud.yahoo.com (n21.bullet.mail.mud.yahoo.com
-	[68.142.206.160]) by cuda.sgi.com with SMTP id 5OVXGiGDHlUbgppv
-	for <xfs@oss.sgi.com>; Wed, 18 Aug 2010 10:10:26 -0700 (PDT)
-Message-ID: <952914.1749.qm@smtp120.plus.mail.sp1.yahoo.com>
-From: "Ptyiapal" <casazza840930@yahoo.de>
-Subject: =?GB2312?B?tvLD18vjt/s=?=
-Date: Thu, 19 Aug 2010 01:00:26 +0800
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="----=alewtk592_3623_146401959.089179"
+	o7J0kTEK139604 for <xfs@oss.sgi.com>; Wed, 18 Aug 2010 19:46:30 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CEC4B5435
+	for <xfs@oss.sgi.com>; Wed, 18 Aug 2010 17:46:59 -0700 (PDT)
+Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
+	by cuda.sgi.com with ESMTP id uAoKgPD1WPx5hio0 for
+	<xfs@oss.sgi.com>; Wed, 18 Aug 2010 17:46:59 -0700 (PDT)
+References: <alpine.LNX.2.00.1008171906220.21398@mahi.cmie.ernet.in>
+	<20100818114305.GR10429@dastard>
+In-Reply-To: <20100818114305.GR10429@dastard>
+Mime-Version: 1.0 (iPhone Mail 8A293)
+Message-Id: <341C002D-C57C-4F73-8B36-5D12B0B91CD5@sandeen.net>
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: kernel bug in xfs_lrw.c (centos v5.5, directio, aio)
+Date: Wed, 18 Aug 2010 19:47:09 -0500
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,156 +24,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Nohez <nohez@cmie.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-This is a multi-part message in MIME format.
+On Aug 18, 2010, at 6:43 AM, Dave Chinner <david@fromorbit.com> wrote:
 
-------=alewtk592_3623_146401959.089179
-Content-Type: text/plain;
-	charset="GB2312"
-Content-Transfer-Encoding: base64
+> On Tue, Aug 17, 2010 at 07:12:12PM +0530, Nohez wrote:
+>> 
+>> Hi,
+>> 
+>> I had a kernel bug today when running xfs on CentOS v5.5. I moved to
+>> xfs from ext3 today.
+>> 
+>> The only application accessing the xfs filesystem is Sybase ASE v15.x.
+>> Database has been configured to use directio with native kernel
+>> asynchronous disk i/o enabled.
+> 
+> The warning is being issued because the application is mixing
+> buffered IO with direct IO on the same file. i.e. data corruption
+> waiting to happen. This is an application bug - the responsibility
+> for ensuring data coherency and integrity is assumed by the
+> application issuing the direct IO.
+> 
+You know... A clearer kernel message might help a lot here...
 
-
-------=alewtk592_3623_146401959.089179
-Content-Type: image/gif;
-	name="Hbldbsw6059.gif"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
-	filename="Hbldbsw6059.gif"
-
-R0lGODdhJQIKAXcAACwAAAAAJQIKAYcAAAAAADMAAGYAAJkAAMwAAP8AMwAAMzMAM2YAM5kAM8wA
-M/8AZgAAZjMAZmYAZpkAZswAZv8AmQAAmTMAmWYAmZkAmcwAmf8AzAAAzDMAzGYAzJkAzMwAzP8A
-/wAA/zMA/2YA/5kA/8wA//8zAAAzADMzAGYzAJkzAMwzAP8zMwAzMzMzM2YzM5kzM8wzM/8zZgAz
-ZjMzZmYzZpkzZswzZv8zmQAzmTMzmWYzmZkzmcwzmf8zzAAzzDMzzGYzzJkzzMwzzP8z/wAz/zMz
-/2Yz/5kz/8wz//9mAABmADNmAGZmAJlmAMxmAP9mMwBmMzNmM2ZmM5lmM8xmM/9mZgBmZjNmZmZm
-ZplmZsxmZv9mmQBmmTNmmWZmmZlmmcxmmf9mzABmzDNmzGZmzJlmzMxmzP9m/wBm/zNm/2Zm/5lm
-/8xm//+ZAACZADOZAGaZAJmZAMyZAP+ZMwCZMzOZM2aZM5mZM8yZM/+ZZgCZZjOZZmaZZpmZZsyZ
-Zv+ZmQCZmTOZmWaZmZmZmcyZmf+ZzACZzDOZzGaZzJmZzMyZzP+Z/wCZ/zOZ/2aZ/5mZ/8yZ///M
-AADMADPMAGbMAJnMAMzMAP/MMwDMMzPMM2bMM5nMM8zMM//MZgDMZjPMZmbMZpnMZszMZv/MmQDM
-mTPMmWbMmZnMmczMmf/MzADMzDPMzGbMzJnMzMzMzP/M/wDM/zPM/2bM/5nM/8zM////AAD/ADP/
-AGb/AJn/AMz/AP//MwD/MzP/M2b/M5n/M8z/M///ZgD/ZjP/Zmb/Zpn/Zsz/Zv//mQD/mTP/mWb/
-mZn/mcz/mf//zAD/zDP/zGb/zJn/zMz/zP///wD//zP//2b//5n//8z///8AAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAADHFJgAAAD7dKgAAAD7kAgAAADHXjAAAAD7ZogAAADHU7AAAADHVKAA
-AAD7cSgAAADHXYgAAADHMCgAAADHZxgAAAD7ncgAAAD7eWgAAAD7eigAAAD7lKgAAAAI/wBlCRxI
-sKDBgwgTKlzIsKHDhxAjSpxIsaLFixgzatzIsaPHjyBDihxJsqTJkyhTqlzJsqXLlzBjypxJs6bN
-mzhz6tzJs6fPn0CDCh1KtKjRo0iTKl3KtKnTp1CjSp1KtarVq1izat3KtavXr2DDih1LtqzZs2jT
-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
-
-------=alewtk592_3623_146401959.089179
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+-Eric
+> This was discussed in more detail on a recent thread on this list -
+> you shoul dbe able to find it in the archives easily enough.
+> 
+>> Let me know if there is any other information I can provide to help
+>> with debugging.
+> 
+> Report it to the application vendor - it's an application bug, not
+> a filesystem bug.
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
-------=alewtk592_3623_146401959.089179--
