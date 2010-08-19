@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7JC32kh170057 for <xfs@oss.sgi.com>; Thu, 19 Aug 2010 07:03:04 -0500
+	o7JCBNmH170309 for <xfs@oss.sgi.com>; Thu, 19 Aug 2010 07:11:23 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3BF1CCEA7FE
-	for <xfs@oss.sgi.com>; Thu, 19 Aug 2010 05:12:56 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3CA909202
+	for <xfs@oss.sgi.com>; Thu, 19 Aug 2010 05:11:54 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id LZENIMVfL5hYdPHA for
-	<xfs@oss.sgi.com>; Thu, 19 Aug 2010 05:12:56 -0700 (PDT)
-Date: Thu, 19 Aug 2010 08:03:30 -0400
+	by cuda.sgi.com with ESMTP id Hzf8k4KvyJpPIcO3 for
+	<xfs@oss.sgi.com>; Thu, 19 Aug 2010 05:11:54 -0700 (PDT)
+Date: Thu, 19 Aug 2010 08:11:53 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: LWN.net article: The end of block barriers
-Message-ID: <20100819120330.GA9358@infradead.org>
-References: <201008191333.55503@zmi.at>
+Subject: Re: Review: xfsprogs with libblkid enabled for Debian
+Message-ID: <20100819121153.GB16045@infradead.org>
+References: <472498892.114291282107960876.JavaMail.root@mail-au.aconex.com>
+	<86828409.114311282107988740.JavaMail.root@mail-au.aconex.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201008191333.55503@zmi.at>
+In-Reply-To: <86828409.114311282107988740.JavaMail.root@mail-au.aconex.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,17 +29,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: xfs@oss.sgi.com
+To: nathans@aconex.com
+Cc: xfs <xfs@oss.sgi.com>
 
-On Thu, Aug 19, 2010 at 01:33:55PM +0200, Michael Monnerie wrote:
-> http://lwn.net/SubscriberLink/400541/c95bd1b7d2a7b5d5/
+On Wed, Aug 18, 2010 at 03:06:28PM +1000, nathans@aconex.com wrote:
+> Hi guys,
 > 
-> A good article, but it leaves some questions open. I've asked them in 
-> the article's discussions, maybe an answer is already there.
+> Attached patch adds support for libblkid in Debian builds.
+> There's a couple of other trivial things fixed up while the
+> package was building - man page typos reported by lintian,
+> fix source tarball generation (and deb build) when libblkid
+> is enabled (*must* descend into libdisk to pick up sources)
+> ... but its all pretty straight forward.
+> 
+> I've checked that mkfs.xfs is linked as expected too. :)
 
-Just take a look at the linux-fsevel list where all this work is
-happening right now.
+All the changes in here look good, but I'd be much happier if you'd
+submit separate changes with separate changelogs for the manpage
+updates and the libdisk packaging fix.
+
+As for the blkid-dev build-dep: we need at least version 2.17 of it
+as that introduced the symbols we need, I think a versioned dependency
+for this would be in order.
+
+The doc/CHANGES update should include the names of external contributors
+where applicable, and currently the release date for is set as part
+of the release.sh process.
+
+I'm fine with pushing out a new 3.1.3 release as it's time anyway, but
+can we also include Dave's patch to add XFS_IOC_ZERO_RANGE support to
+xfs_io and the xfsctl manpage first?
+
+Next week also has Alex back from vacation, so I'd suggest waiting if
+he has any input on this.
+
 
 _______________________________________________
 xfs mailing list
