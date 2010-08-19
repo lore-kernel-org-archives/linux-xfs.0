@@ -1,28 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7JBCNWK168353 for <xfs@oss.sgi.com>; Thu, 19 Aug 2010 06:12:24 -0500
-Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 67629CEACE9
-	for <xfs@oss.sgi.com>; Thu, 19 Aug 2010 04:22:16 -0700 (PDT)
-Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id PEaQU5i2aXXfuDqk for
-	<xfs@oss.sgi.com>; Thu, 19 Aug 2010 04:22:16 -0700 (PDT)
-Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv14.zmi.at (Postfix) with ESMTPSA id 2D772701
-	for <xfs@oss.sgi.com>; Thu, 19 Aug 2010 13:12:50 +0200 (CEST)
-Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id D975C401C3A
-	for <xfs@oss.sgi.com>; Thu, 19 Aug 2010 13:12:49 +0200 (CEST)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: LWN.net article: creating 1 billion files -> XFS looses
-Date: Thu, 19 Aug 2010 13:12:45 +0200
+	o7JC4gto170118 for <xfs@oss.sgi.com>; Thu, 19 Aug 2010 07:04:42 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4AF1C9198
+	for <xfs@oss.sgi.com>; Thu, 19 Aug 2010 05:05:13 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id sZ1HSYvKdJvqCLkF for
+	<xfs@oss.sgi.com>; Thu, 19 Aug 2010 05:05:13 -0700 (PDT)
+Date: Thu, 19 Aug 2010 08:05:12 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: LWN.net article: creating 1 billion files -> XFS looses
+Message-ID: <20100819120512.GB9358@infradead.org>
+References: <201008191312.49346@zmi.at>
 MIME-Version: 1.0
-Message-Id: <201008191312.49346@zmi.at>
+Content-Disposition: inline
+In-Reply-To: <201008191312.49346@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,68 +24,27 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6990076501000483580=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Michael Monnerie <michael.monnerie@is.it-management.at>
+Cc: xfs@oss.sgi.com
 
---===============6990076501000483580==
-Content-Type: multipart/signed;
-  boundary="nextPart22111549.i8vhoulC4t";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+On Thu, Aug 19, 2010 at 01:12:45PM +0200, Michael Monnerie wrote:
+> The subject is a bit harsh, but overall the article says:
+> XFS is slowest on creating and deleting a billion files
+> XFS fsck needs 30GB RAM to fsck that 100TB filesystem.
+> 
+> http://lwn.net/SubscriberLink/400629/3fb4bc34d6223b32/
 
---nextPart22111549.i8vhoulC4t
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+The creation and deletion performance is a known issue, and too a large
+extent fixes by the new delaylog code.  We're not quite as fast as ext4
+yet, but it's getting close.
 
-The subject is a bit harsh, but overall the article says:
-XFS is slowest on creating and deleting a billion files
-XFS fsck needs 30GB RAM to fsck that 100TB filesystem.
-
-http://lwn.net/SubscriberLink/400629/3fb4bc34d6223b32/
-
-=2D-=20
-mit freundlichen Gr=C3=BCssen,
-Michael Monnerie, Ing. BSc
-
-it-management Internet Services
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: 0660 / 415 65 31
-
-****** Aktuelles Radiointerview! ******
-http://www.it-podcast.at/aktuelle-sendung.html
-
-// Wir haben im Moment zwei H=C3=A4user zu verkaufen:
-// http://zmi.at/langegg/
-// http://zmi.at/haus2009/
-
---nextPart22111549.i8vhoulC4t
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.12 (GNU/Linux)
-
-iEYEABECAAYFAkxtEbEACgkQzhSR9xwSCbQEPwCfdrvdTAQwslB/Zo8tfpcP/wO0
-tBEAn19NvyriqrzsP8OYAgGIvs0q7yLR
-=iDRo
------END PGP SIGNATURE-----
-
---nextPart22111549.i8vhoulC4t--
-
-
---===============6990076501000483580==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+The repair result looks a lot like the pre-3.1.0 xfsprogs repair.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6990076501000483580==--
