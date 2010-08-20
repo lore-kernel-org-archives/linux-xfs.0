@@ -1,30 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7JNHs5T203868 for <xfs@oss.sgi.com>; Thu, 19 Aug 2010 18:17:54 -0500
-Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 26556CF6186
-	for <xfs@oss.sgi.com>; Thu, 19 Aug 2010 16:27:47 -0700 (PDT)
-Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id W5Smbf0cvqICVNlv for
-	<xfs@oss.sgi.com>; Thu, 19 Aug 2010 16:27:47 -0700 (PDT)
-Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv14.zmi.at (Postfix) with ESMTPSA id BE56617A
-	for <xfs@oss.sgi.com>; Fri, 20 Aug 2010 01:18:19 +0200 (CEST)
-Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id 726F7401C3A
-	for <xfs@oss.sgi.com>; Fri, 20 Aug 2010 01:18:19 +0200 (CEST)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: Question about XFS recovery and error
-Date: Fri, 20 Aug 2010 01:18:18 +0200
-References: <AANLkTi=prcC7ky3ikNTJ+py8XnALGf4THSOCUwqYhxaq@mail.gmail.com>
-In-Reply-To: <AANLkTi=prcC7ky3ikNTJ+py8XnALGf4THSOCUwqYhxaq@mail.gmail.com>
+	o7K7sv9M225203 for <xfs@oss.sgi.com>; Fri, 20 Aug 2010 02:54:58 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9B658D369
+	for <xfs@oss.sgi.com>; Fri, 20 Aug 2010 00:55:27 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
+	[150.101.137.102]) by cuda.sgi.com with ESMTP id
+	iMCYkIoajide8hOA for <xfs@oss.sgi.com>;
+	Fri, 20 Aug 2010 00:55:27 -0700 (PDT)
+Date: Fri, 20 Aug 2010 17:55:24 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: LWN.net article: creating 1 billion files -> XFS looses
+Message-ID: <20100820075524.GA31488@dastard>
+References: <201008191312.49346@zmi.at> <20100819120512.GB9358@infradead.org>
+	<201008191445.22568@zmi.at>
 MIME-Version: 1.0
-Message-Id: <201008200118.18306@zmi.at>
+Content-Disposition: inline
+In-Reply-To: <201008191445.22568@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,69 +26,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6431227131805028527=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Michael Monnerie <michael.monnerie@is.it-management.at>
+Cc: xfs@oss.sgi.com
 
---===============6431227131805028527==
-Content-Type: multipart/signed;
-  boundary="nextPart5590563.RSI40aLk2m";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+On Thu, Aug 19, 2010 at 02:45:22PM +0200, Michael Monnerie wrote:
+> On Donnerstag, 19. August 2010 Christoph Hellwig wrote:
+> > The creation and deletion performance is a known issue, and too a
+> >  large extent fixes by the new delaylog code.  We're not quite as
+> >  fast as ext4 yet, but it's getting close.
+> > 
+> > The repair result looks a lot like the pre-3.1.0 xfsprogs repair.
+>  
+> Yes I know. I thought some XFS dev might contact the Author to do some 
+> re-testing, as a reputation is quickly destroyed by such articles and 
+> takes long to be returned. Just this week I had a friend in a FS 
+> discussion saying "ins't XFS destroying/zeroing files on power 
+> failure?". That information is ancient, but things like that stay in 
+> peoples brain for(almost)ever.
 
---nextPart5590563.RSI40aLk2m
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+Don't worry too much - I have the details of the test that was run
+and alredy know why XFS appeared so slow: it was single threaded.
+Immediately, that means XFS will be slower to create 1b files
+regardless of any other detail.
 
-On Freitag, 20. August 2010 Mike Gao wrote:
-> Should XFS recovery this at the beginning when mounting?
-=20
-I've had this several times. XFS doesn't normally detect errors during=20
-mount, because it doesn't run fsck - no filesystem does that. So you'll=20
-trip over errors as you use the files involved - like this one.
+Look at it this way - the initial numbers I'm seeing on my test rig
+are sustained create rates of about 8,000/s with default mkfs/mount
+options (i.e. no tuning, no delayed logging, 32k logbsize, etc) and
+it is burning exactly one of 8 CPUs in the VM. I know I can get an
+order of magnitude better performance out of XFS on this VM....
 
-=2D-=20
-mit freundlichen Gr=C3=BCssen,
-Michael Monnerie, Ing. BSc
+It'll take me a few days to run the numbers to be able to write a
+solid reply, but I have every confidence that a "create 1b inodes"
+benchmark tuned to XFS's strengths rather than one designed to avoid
+ext4's weaknesses will show very, very different results.
 
-it-management Internet Services
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: 0660 / 415 65 31
+In the meantime, there is no need to start a flamewar. ;)
 
-****** Aktuelles Radiointerview! ******
-http://www.it-podcast.at/aktuelle-sendung.html
+Cheers,
 
-// Wir haben im Moment zwei H=C3=A4user zu verkaufen:
-// http://zmi.at/langegg/
-// http://zmi.at/haus2009/
-
---nextPart5590563.RSI40aLk2m
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.12 (GNU/Linux)
-
-iEYEABECAAYFAkxtu7oACgkQzhSR9xwSCbR6mACgr+RrV14pWu0kLx0NV+DJaQuY
-0lcAoKYnOtGGBnU4eRQe4F02lmqSZRFr
-=/ZOW
------END PGP SIGNATURE-----
-
---nextPart5590563.RSI40aLk2m--
-
-
---===============6431227131805028527==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6431227131805028527==--
