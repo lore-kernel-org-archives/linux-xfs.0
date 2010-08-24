@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7NM2jlT151198 for <xfs@oss.sgi.com>; Mon, 23 Aug 2010 17:02:46 -0500
-Received: from CGYSNEX001.encana.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EA054D15B5C
-	for <xfs@oss.sgi.com>; Mon, 23 Aug 2010 15:13:04 -0700 (PDT)
-Received: from CGYSNEX001.encana.com (cgysnex001.encana.com [142.56.87.68]) by
-	cuda.sgi.com with ESMTP id AsHi1FoVBC3LnW8s for
-	<xfs@oss.sgi.com>; Mon, 23 Aug 2010 15:13:04 -0700 (PDT)
-Received: from CGYEX203.encana.com (unverified) by CGYSNEX001.encana.com
-	(Clearswift SMTPRS 5.3.2) with ESMTP id
-	<T97ac193b688e3857441690@CGYSNEX001.encana.com> for <xfs@oss.sgi.com>;
-	Mon, 23 Aug 2010 16:03:16 -0600
-Content-class: urn:content-classes:message
+	o7O2iRbc159614 for <xfs@oss.sgi.com>; Mon, 23 Aug 2010 21:44:28 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A2D3E1E50CF7
+	for <xfs@oss.sgi.com>; Mon, 23 Aug 2010 19:44:59 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
+	[150.101.137.100]) by cuda.sgi.com with ESMTP id
+	mIsvFAJrJ8n7L2Bd for <xfs@oss.sgi.com>;
+	Mon, 23 Aug 2010 19:44:59 -0700 (PDT)
+Received: from dastard (unverified [121.44.127.68])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	24753122-1927428
+	for <xfs@oss.sgi.com>; Tue, 24 Aug 2010 12:14:57 +0930 (CST)
+Received: from dave by dastard with local (Exim 4.71)
+	(envelope-from <david@fromorbit.com>) id 1OnjVG-0005HF-1d
+	for xfs@oss.sgi.com; Tue, 24 Aug 2010 12:44:46 +1000
+Date: Tue, 24 Aug 2010 12:44:45 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [GIT Review] xfs: 2.6.36 fixes
+Message-ID: <20100824024445.GJ31488@dastard>
 MIME-Version: 1.0
-Subject: RE: [ANNOUNCE] updated xfs documentation available
-Date: Mon, 23 Aug 2010 16:03:14 -0600
-Message-ID: <F57F2AD357626644AF76410876025D75529953@CGYEX705.encana.com>
-In-Reply-To: <4C72A04F.20104@redhat.com>
-References: <4C72A04F.20104@redhat.com>
-From: "Kinzel, David" <David.Kinzel@encana.com>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,54 +34,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
->Just as an FYI, we've converted some of the older SGI XFS documentation
->to XML/Docbook/Publican[1] format, and it's now available on 
->xfs.org; see
->http://xfs.org/index.php/XFS_Papers_and_Documentation
->
->particularly the 3 links at the top, 
->
->    * XFS User Guide 
->
->    * XFS File System Structure 
->
+Folks,
 
-I am not sure about the other guides, but the images in the html output
-are being sized down making them not-so-readable. Eg,
-http://xfs.org/docs/xfsdocs-xml-dev/XFS_Filesystem_Structure//tmp/en-US/
-html/Internal_Inodes.html
+Can you please cast an eye over the the tree below to check that all
+the bug fixes that need to go into 2.6.36 are there? If so, I'll
+send a pull request to Linus tomorrow.
 
-Would it be possible to regenerate these with the scaling off?
+Note that these are just the outstanding bug fixes that have been
+reviewed (as Linus has again decreed for pull requests after -rc1),
+so it not the complete set of reviewd patches that exist.
 
-Thanks,
+Cheers,
 
->    * XFS Training Labs 
->
->In addition to the XML conversion, much of the documentation has
->been updated & corrected compared to the original docs.
->
->This should be good material for anyone using, developing, or 
->supporting
->XFS.  If omissions or errors are found, we'd be happy to accept
->patches against the XML source for the docs, found at
->http://git.kernel.org/?p=fs/xfs/xfsdocs-xml-dev.git;a=summary
->
->In addition, using that git repo + publican allows one to create
->the documentation in various other forms such as PDFs, txt,
->and epub.
->
->Thanks!
->
->-Eric
->
->[1] https://fedorahosted.org/publican/
-
-This email communication and any files transmitted with it may contain confidential and or proprietary information and is provided for the use of the intended recipient only.  Any review, retransmission or dissemination of this information by anyone other than the intended recipient is prohibited.  If you receive this email in error, please contact the sender and delete this communication and any copies immediately.  Thank you.
-http://www.encana.com
+Dave.
 
 
+The following changes since commit 9ee47476d6734c9deb9ae9ab05d963302f6b6150:
+
+  Merge branch 'radix-tree' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/xfsdev (2010-08-22 19:55:14 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/xfsdev.git 2.6.36-fixes
+
+Christoph Hellwig (1):
+      xfs: do not discard page cache data on EAGAIN
+
+Dave Chinner (8):
+      xfs: unlock items before allowing the CIL to commit
+      xfs: ensure we mark all inodes in a freed cluster XFS_ISTALE
+      xfs: fix untrusted inode number lookup
+      writeback: write_cache_pages doesn't terminate at nr_to_write <= 0
+      xfs: handle negative wbc->nr_to_write during sync writeback
+      xfs: dummy transactions should not dirty VFS state
+      xfs: Reduce log force overhead for delayed logging
+      xfs: don't do memory allocation under the CIL context lock
+
+Stuart Brodsky (1):
+      xfs: ensure f_ffree returned by statfs() is non-negative
+
+ fs/xfs/linux-2.6/xfs_aops.c  |   13 ++-
+ fs/xfs/linux-2.6/xfs_super.c |    9 +-
+ fs/xfs/linux-2.6/xfs_sync.c  |   42 +------
+ fs/xfs/xfs_fsops.c           |   31 +++--
+ fs/xfs/xfs_fsops.h           |    2 +-
+ fs/xfs/xfs_ialloc.c          |   16 ++-
+ fs/xfs/xfs_inode.c           |   49 ++++----
+ fs/xfs/xfs_log.c             |    7 +-
+ fs/xfs/xfs_log_cil.c         |  263 +++++++++++++++++++++++++-----------------
+ fs/xfs/xfs_log_priv.h        |   13 ++-
+ fs/xfs/xfs_trans.c           |    5 +-
+ fs/xfs/xfs_trans_priv.h      |    3 +-
+ mm/page-writeback.c          |   26 ++---
+ 13 files changed, 261 insertions(+), 218 deletions(-)
+
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
