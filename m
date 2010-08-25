@@ -1,20 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7P7RdjT227335 for <xfs@oss.sgi.com>; Wed, 25 Aug 2010 02:27:40 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1BB0B17519CE
-	for <xfs@oss.sgi.com>; Wed, 25 Aug 2010 00:28:12 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	hrTANDBwSIrG2tE6 for <xfs@oss.sgi.com>;
-	Wed, 25 Aug 2010 00:28:12 -0700 (PDT)
-Date: Wed, 25 Aug 2010 17:28:09 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [GIT PULL] xfs: Fixes for 2.6.36-rc3
-Message-ID: <20100825072809.GO31488@dastard>
+	o7P8M5o3229692 for <xfs@oss.sgi.com>; Wed, 25 Aug 2010 03:22:06 -0500
+Received: from smtp-relay.maven.pl (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9786836D513
+	for <xfs@oss.sgi.com>; Wed, 25 Aug 2010 01:32:35 -0700 (PDT)
+Received: from smtp-relay.maven.pl (smtp-relay.maven.pl [193.239.45.138]) by
+	cuda.sgi.com with ESMTP id Z9xsLSwHKSQaKInh for
+	<xfs@oss.sgi.com>; Wed, 25 Aug 2010 01:32:35 -0700 (PDT)
+From: =?UTF-8?q?Arkadiusz=20Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: [PATCH] Validate string -> number conversion.
+Date: Wed, 25 Aug 2010 10:22:36 +0200
+Message-Id: <1282724556-19456-1-git-send-email-arekm@maven.pl>
 MIME-Version: 1.0
-Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,69 +21,49 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Hi Linus,
-
-Can you please pull the XFS and writeback related fixes from the
-tree below? There are writeback efficieny fixes, data integrity
-fixes, race and sanity fixes for the delayed logging mode, making
-the filesystem idle correctly (no more disk writes every 30s),
-ensuring df doesn't return negative free inode counts and fixing
-a thinko in the untrusted inode validation code.
-
-Thanks,,
-
-Dave.
-
-The following changes since commit 9ee47476d6734c9deb9ae9ab05d963302f6b6150:
-
-  Merge branch 'radix-tree' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/xfsdev (2010-08-22 19:55:14 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/xfsdev.git 2.6.36-fixes
-
-Christoph Hellwig (1):
-      xfs: do not discard page cache data on EAGAIN
-
-Dave Chinner (8):
-      xfs: unlock items before allowing the CIL to commit
-      xfs: ensure we mark all inodes in a freed cluster XFS_ISTALE
-      xfs: fix untrusted inode number lookup
-      writeback: write_cache_pages doesn't terminate at nr_to_write <= 0
-      xfs: handle negative wbc->nr_to_write during sync writeback
-      xfs: dummy transactions should not dirty VFS state
-      xfs: Reduce log force overhead for delayed logging
-      xfs: don't do memory allocation under the CIL context lock
-
-Stuart Brodsky (1):
-      xfs: ensure f_ffree returned by statfs() is non-negative
-
- fs/xfs/linux-2.6/xfs_aops.c  |   13 ++-
- fs/xfs/linux-2.6/xfs_super.c |    9 +-
- fs/xfs/linux-2.6/xfs_sync.c  |   42 +------
- fs/xfs/xfs_fsops.c           |   31 +++--
- fs/xfs/xfs_fsops.h           |    2 +-
- fs/xfs/xfs_ialloc.c          |   16 ++-
- fs/xfs/xfs_inode.c           |   49 ++++----
- fs/xfs/xfs_log.c             |    7 +-
- fs/xfs/xfs_log_cil.c         |  263 +++++++++++++++++++++++++-----------------
- fs/xfs/xfs_log_priv.h        |   13 ++-
- fs/xfs/xfs_trans.c           |    5 +-
- fs/xfs/xfs_trans_priv.h      |    3 +-
- mm/page-writeback.c          |   26 ++---
- 13 files changed, 261 insertions(+), 218 deletions(-)
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+TWFrZSBzdXJlIHRoYXQgbnVtYmVycyBwYXNzZWQgYXMgc3RyaW5nIHdpbGwgZml0IGludG8gcHJv
+cGVyCnR5cGVzIHdoZW4gZG9pbmcgc3RyaW5nLT51aWRfdC9naWRfdC9wcmlkX3QgY29udmVyc2lv
+bi4KClNpZ25lZC1vZmYtYnk6IEFya2FkaXVzeiBNacWba2lld2ljeiA8YXJla21AbWF2ZW4ucGw+
+Ci0tLQogbGlieGNtZC9pbnB1dC5jIHwgICAxOCArKysrKysrKysrKysrKystLS0KIHF1b3RhL3By
+b2plY3QuYyB8ICAgIDIgKy0KIDIgZmlsZXMgY2hhbmdlZCwgMTYgaW5zZXJ0aW9ucygrKSwgNCBk
+ZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9saWJ4Y21kL2lucHV0LmMgYi9saWJ4Y21kL2lucHV0
+LmMKaW5kZXggMWJjMDc0NS4uYzc4MDdmZSAxMDA2NDQKLS0tIGEvbGlieGNtZC9pbnB1dC5jCisr
+KyBiL2xpYnhjbWQvaW5wdXQuYwpAQCAtMzM3LDEzICszMzcsMTcgQEAgcHJpZF9mcm9tX3N0cmlu
+ZygKIHsKIAlmc19wcm9qZWN0X3QJKnByajsKIAlwcmlkX3QJCXByaWQ7CisJdW5zaWduZWQgbG9u
+ZyBpbnQJcHJpZF9sb25nOwogCWNoYXIJCSpzcDsKIAogCS8qCiAJICogQWxsb3cgZWl0aGVyIGEg
+ZnVsbCBudW1lcmljIG9yIGEgdmFsaWQgcHJvamVjdG5hbWUsIGV2ZW4KIAkgKiBpZiBpdCBzdGFy
+dHMgd2l0aCBhIGRpZ2l0LgogCSAqLwotCXByaWQgPSAocHJpZF90KXN0cnRvdWwocHJvamVjdCwg
+JnNwLCAxMCk7CisJcHJpZF9sb25nID0gc3RydG91bChwcm9qZWN0LCAmc3AsIDEwKTsKKwlpZiAo
+KHByaWRfbG9uZyA9PSBVTE9OR19NQVggJiYgZXJybm8gPT0gRVJBTkdFKSB8fCAocHJpZF9sb25n
+ID4gKHByaWRfdCktMSkpCisJCXJldHVybiAtMTsKKwlwcmlkID0gKHByaWRfdClwcmlkX2xvbmc7
+CiAJaWYgKCpwcm9qZWN0ICE9ICdcMCcgJiYgKnNwID09ICdcMCcpCiAJCXJldHVybiBwcmlkOwog
+CXByaiA9IGdldHBybmFtKHByb2plY3QpOwpAQCAtMzU4LDkgKzM2MiwxMyBAQCB1aWRfZnJvbV9z
+dHJpbmcoCiB7CiAJc3RydWN0IHBhc3N3ZAkqcHdkOwogCXVpZF90CQl1aWQ7CisJdW5zaWduZWQg
+bG9uZyBpbnQJdWlkX2xvbmc7CiAJY2hhcgkJKnNwOwogCi0JdWlkID0gKHVpZF90KXN0cnRvdWwo
+dXNlciwgJnNwLCAxMCk7CisJdWlkX2xvbmcgPSBzdHJ0b3VsKHVzZXIsICZzcCwgMTApOworCWlm
+ICgodWlkX2xvbmcgPT0gVUxPTkdfTUFYICYmIGVycm5vID09IEVSQU5HRSkgfHwgKHVpZF9sb25n
+ID4gKHVpZF90KS0xKSkKKwkJcmV0dXJuIC0xOworCXVpZCA9ICh1aWRfdCl1aWRfbG9uZzsKIAlp
+ZiAoc3AgIT0gdXNlcikKIAkJcmV0dXJuIHVpZDsKIAlwd2QgPSBnZXRwd25hbSh1c2VyKTsKQEAg
+LTM3NSw5ICszODMsMTMgQEAgZ2lkX2Zyb21fc3RyaW5nKAogewogCXN0cnVjdCBncm91cAkqZ3Jw
+OwogCWdpZF90CQlnaWQ7CisJdW5zaWduZWQgbG9uZyBpbnQJZ2lkX2xvbmc7CiAJY2hhcgkJKnNw
+OwogCi0JZ2lkID0gKGdpZF90KXN0cnRvdWwoZ3JvdXAsICZzcCwgMTApOworCWdpZF9sb25nID0g
+c3RydG91bChncm91cCwgJnNwLCAxMCk7CisJaWYgKChnaWRfbG9uZyA9PSBVTE9OR19NQVggJiYg
+ZXJybm8gPT0gRVJBTkdFKSB8fCAoZ2lkX2xvbmcgPiAoZ2lkX3QpLTEpKQorCQlyZXR1cm4gLTE7
+CisJZ2lkID0gKGdpZF90KWdpZF9sb25nOwogCWlmIChzcCAhPSBncm91cCkKIAkJcmV0dXJuIGdp
+ZDsKIAlncnAgPSBnZXRncm5hbShncm91cCk7CmRpZmYgLS1naXQgYS9xdW90YS9wcm9qZWN0LmMg
+Yi9xdW90YS9wcm9qZWN0LmMKaW5kZXggMWFhY2RkZC4uZTliYWFkZCAxMDA2NDQKLS0tIGEvcXVv
+dGEvcHJvamVjdC5jCisrKyBiL3F1b3RhL3Byb2plY3QuYwpAQCAtMzMxLDcgKzMzMSw3IEBAIHBy
+b2plY3RfZigKIAkJcHJpZCA9IHByaWRfZnJvbV9zdHJpbmcoYXJndltvcHRpbmRdKTsKIAkJaWYg
+KHByaWQgPT0gLTEpIHsKIAkJCWV4aXRjb2RlID0gMTsKLQkJCWZwcmludGYoc3RkZXJyLCBfKCIl
+cyAtIG5vIHN1Y2ggcHJvamVjdCBpbiAlc1xuIiksCisJCQlmcHJpbnRmKHN0ZGVyciwgXygiJXMg
+LSBubyBzdWNoIHByb2plY3QgaW4gJXMgb3IgaW52YWxpZCBwcm9qZWN0IG51bWJlclxuIiksCiAJ
+CQkJYXJndltvcHRpbmRdLCBwcm9qZWN0c19maWxlKTsKIAkJfSBlbHNlCiAJICAgICAgICAgICAg
+ICAgIHByb2plY3QoYXJndltvcHRpbmRdLCB0eXBlKTsKLS0gCjEuNy4xLjEKCl9fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZz
+QG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
