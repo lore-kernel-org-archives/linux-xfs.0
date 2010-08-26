@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7Q4DNQU008552 for <xfs@oss.sgi.com>; Wed, 25 Aug 2010 23:13:23 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CBAF927498
-	for <xfs@oss.sgi.com>; Wed, 25 Aug 2010 21:13:56 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	nDk24ldk4aGlwEtw for <xfs@oss.sgi.com>;
-	Wed, 25 Aug 2010 21:13:56 -0700 (PDT)
-Date: Thu, 26 Aug 2010 14:13:52 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [GIT Review] xfs: 2.6.36 fixes
-Message-ID: <20100826041352.GA705@dastard>
-References: <20100824024445.GJ31488@dastard> <1282690498.1885.74.camel@doink>
-	<20100825011028.GL31488@dastard> <20100825045032.GM31488@dastard>
-	<1282789046.5543.2.camel@doink>
+	o7Q6mnJS016751 for <xfs@oss.sgi.com>; Thu, 26 Aug 2010 01:48:49 -0500
+Received: from smtp-relay.maven.pl (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0F417D4B7D4
+	for <xfs@oss.sgi.com>; Wed, 25 Aug 2010 23:59:23 -0700 (PDT)
+Received: from smtp-relay.maven.pl (smtp-relay.maven.pl [193.239.45.138]) by
+	cuda.sgi.com with ESMTP id CuRGa6hsT7wFXtm6 for
+	<xfs@oss.sgi.com>; Wed, 25 Aug 2010 23:59:23 -0700 (PDT)
+From: =?UTF-8?q?Arkadiusz=20Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: [PATCH] Implictly set PROJID32BIT features2 bit when using 32bit
+	project ids.
+Date: Thu, 26 Aug 2010 08:49:11 +0200
+Message-Id: <1282805351-19192-1-git-send-email-arekm@maven.pl>
+In-Reply-To: <1282770578-6958-1-git-send-email-arekm@maven.pl>
+References: <1282770578-6958-1-git-send-email-arekm@maven.pl>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1282789046.5543.2.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,104 +24,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Aug 25, 2010 at 09:17:26PM -0500, Alex Elder wrote:
-> On Wed, 2010-08-25 at 14:50 +1000, Dave Chinner wrote:
-> > On Wed, Aug 25, 2010 at 11:10:28AM +1000, Dave Chinner wrote:
-> > > On Tue, Aug 24, 2010 at 05:54:58PM -0500, Alex Elder wrote:
-> > > > On Tue, 2010-08-24 at 12:44 +1000, Dave Chinner wrote:
-> > > > > Folks,
-> > > > >
-> > > > > Can you please cast an eye over the the tree below to check that
-> all
-> > > > > the bug fixes that need to go into 2.6.36 are there? If so, I'll
-> > > > > send a pull request to Linus tomorrow.
-> > > > >
-> > > > > Note that these are just the outstanding bug fixes that have
-> been
-> > > > > reviewed (as Linus has again decreed for pull requests after
-> -rc1),
-> > > > > so it not the complete set of reviewd patches that exist.
-> > > > >
-> > > > > Cheers,
-> > > > >
-> > > > > Dave.
-> > > >
-> > > > All of these commits look good to me.  I will have these
-> > > > and all the rest published on the oss.sgi.com tree later
-> > > > this week.  I've been on vacation and have gotten behind.
-> > >
-> > > I'm going to send the pull to Linus, anyway, Alex.
-> > >
-> > > The problem is deeper than "been on vacation" - regardless of
-> > > whether you are on vacation we can't rely on you to do anything
-> > > immediately. It might be code review, triage community reported
-> > > bugs, pulling patches into the OSS tree or sending stuff to Linus,
-> > > but it's always a week or two later than it needs to be. This is
-> > > not a new problem, either.
-> >
-> > So this doesn't get taken the wrong way, this is not a comment on
-> > the quality of the work you do, Alex. My concern is the limited
-> > amount of time you have available to do the required work and
-> > avoiding the bottleneck it causes.
-> 
-> This has been an ongoing issue, and I concur that it's been a matter
-> of giving XFS maintenance the time and attention it requires.
-> 
-> In July I raised this issue internally and got agreement to give
-> this more priority versus other competing demands.  That helped
-> some, but there still were some other things that needed my
-> dedicated focus, and that disrupted the continuity of my attention
-> to XFS maintenance.
-> 
-> My vacation last week, directly on the heels of my trip to Boston
-> the week before (during which I had limited network access) resulted
-> in an extended delay whose cause was actually pretty unusual (and
-> unfortunately timed). 
-> 
-> I have now been directed to spend 100% of my time on XFS maintenance
-> for the community.  This will not result in 10 minute turnaround but
-> it will allow me to offer everything I've got to the cause, without
-> interruption.
-
-Wonderful news, Alex! I can't think of a better way to address my
-concerns.
-
-/me does a happy dance
-
-> SGI continues to be committed to supporting XFS (for more than just
-> its own customers), and in the coming month or so is going to be
-> evaluating what more can be done to serve and benefit the community.
-> In the mean time XFS maintenance has my full attention.
-
-I'd suggest that one thing we really need to do first is work out a
-semi-coherent development roadmap so that we all understand what the
-big issues are that we need to solve. I've been noticing the lack of
-a definite direction for XFS recently - we've been scratching itches
-but not really having an idea of what the next itch is going to be.
-
-I can see some interesting requirements starting to coalesce from
-RedHat customers that are just starting to use XFS, and I'm sure
-that SGI is in the same boat. I also know that there are many
-different lurkers in the community that would like certain features
-in XFS to differentiate their products, so perhaps it is time to
-flush them all out and work out a future direction that we can work
-towards together.....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+U2V0IFBST0pJRDMyQklUIGF1dG9tYXRpY2x5IHdoZW4gdHJ5aW5nIHRvIHVzZSAzMmJpdCBxdW90
+YSBwcm9qZWN0CmlkZW50aWZpY2F0b3IgaW5zdGVhZCBvZiByZXF1aXJpbmcgdXNlciB0byBkbyB0
+aGF0IG1hbnVhbGx5LgoKU2lnbmVkLW9mZi1ieTogQXJrYWRpdXN6IE1pxZtraWV3aWN6IDxhcmVr
+bUBtYXZlbi5wbD4KLS0tCiBmcy94ZnMvbGludXgtMi42L3hmc19pb2N0bC5jIHwgICAxNyArKysr
+KysrKysrKystLS0tLQogZnMveGZzL3hmc19zYi5oICAgICAgICAgICAgICB8ICAgIDYgKysrKysr
+CiAyIGZpbGVzIGNoYW5nZWQsIDE4IGluc2VydGlvbnMoKyksIDUgZGVsZXRpb25zKC0pCgpkaWZm
+IC0tZ2l0IGEvZnMveGZzL2xpbnV4LTIuNi94ZnNfaW9jdGwuYyBiL2ZzL3hmcy9saW51eC0yLjYv
+eGZzX2lvY3RsLmMKaW5kZXggNmJjNDMyZi4uMjg1ZWVlZiAxMDA2NDQKLS0tIGEvZnMveGZzL2xp
+bnV4LTIuNi94ZnNfaW9jdGwuYworKysgYi9mcy94ZnMvbGludXgtMi42L3hmc19pb2N0bC5jCkBA
+IC05MDYsMTEgKzkwNiw2IEBAIHhmc19pb2N0bF9zZXRhdHRyKAogCWlmIChYRlNfRk9SQ0VEX1NI
+VVRET1dOKG1wKSkKIAkJcmV0dXJuIFhGU19FUlJPUihFSU8pOwogCi0JLyogTWFrZSBzdXJlIHVz
+ZXJzcGFjZSBwYXNzZWQgcHJvamlkIHdpbGwgZml0IG9uIGRpc2sgKi8KLQlpZiAoIXhmc19zYl92
+ZXJzaW9uX2hhc3Byb2ppZDMyYml0KCZpcC0+aV9tb3VudC0+bV9zYikgJiYKLQkJCWZhLT5mc3hf
+cHJvamlkID4gKF9fdWludDE2X3QpLTEpCi0JCXJldHVybiBYRlNfRVJST1IoRUlOVkFMKTsgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCi0KIAkvKgogCSAqIElmIGRp
+c2sgcXVvdGFzIGlzIG9uLCB3ZSBtYWtlIHN1cmUgdGhhdCB0aGUgZHF1b3RzIGRvIGV4aXN0IG9u
+IGRpc2ssCiAJICogYmVmb3JlIHdlIHN0YXJ0IGFueSBvdGhlciB0cmFuc2FjdGlvbnMuIFRyeWlu
+ZyB0byBkbyB0aGlzIGxhdGVyCkBAIC05NTEsNiArOTQ2LDE4IEBAIHhmc19pb2N0bF9zZXRhdHRy
+KAogCQlnb3RvIGVycm9yX3JldHVybjsKIAl9CiAKKwkvKiBTd2l0Y2ggb24gdGhlIFBST0pJRDMy
+QklUIHN1cGVyYmxvY2sgYml0IChpbXBsaWVzIGFsc28gRkVBVFVSRVMyKSAqLworCWlmICgheGZz
+X3NiX3ZlcnNpb25faGFzcHJvamlkMzJiaXQoJmlwLT5pX21vdW50LT5tX3NiKSAmJgorCQkJZmEt
+PmZzeF9wcm9qaWQgPiAoX191aW50MTZfdCktMSkgeworCQlzcGluX2xvY2soJmlwLT5pX21vdW50
+LT5tX3NiX2xvY2spOworCQlpZiAoIXhmc19zYl92ZXJzaW9uX2hhc3Byb2ppZDMyYml0KCZpcC0+
+aV9tb3VudC0+bV9zYikpIHsKKwkJCXhmc19zYl92ZXJzaW9uX2FkZHByb2ppZDMyYml0KCZpcC0+
+aV9tb3VudC0+bV9zYik7CisJCQlzcGluX3VubG9jaygmaXAtPmlfbW91bnQtPm1fc2JfbG9jayk7
+CisJCQl4ZnNfbW9kX3NiKHRwLCBYRlNfU0JfVkVSU0lPTk5VTSB8IFhGU19TQl9GRUFUVVJFUzIp
+OworCQl9IGVsc2UKKwkJCXNwaW5fdW5sb2NrKCZpcC0+aV9tb3VudC0+bV9zYl9sb2NrKTsKKwl9
+CisKIAkvKgogCSAqIERvIGEgcXVvdGEgcmVzZXJ2YXRpb24gb25seSBpZiBwcm9qaWQgaXMgYWN0
+dWFsbHkgZ29pbmcgdG8gY2hhbmdlLgogCSAqLwpkaWZmIC0tZ2l0IGEvZnMveGZzL3hmc19zYi5o
+IGIvZnMveGZzL3hmc19zYi5oCmluZGV4IGZlNWIyM2MuLmJjM2RjNzcgMTAwNjQ0Ci0tLSBhL2Zz
+L3hmcy94ZnNfc2IuaAorKysgYi9mcy94ZnMveGZzX3NiLmgKQEAgLTUwMyw2ICs1MDMsMTIgQEAg
+c3RhdGljIGlubGluZSBpbnQgeGZzX3NiX3ZlcnNpb25faGFzcHJvamlkMzJiaXQoeGZzX3NiX3Qg
+KnNicCkKIAkJKHNicC0+c2JfZmVhdHVyZXMyICYgWEZTX1NCX1ZFUlNJT04yX1BST0pJRDMyQklU
+KTsKIH0KIAorc3RhdGljIGlubGluZSB2b2lkIHhmc19zYl92ZXJzaW9uX2FkZHByb2ppZDMyYml0
+KHhmc19zYl90ICpzYnApCit7CisJc2JwLT5zYl92ZXJzaW9ubnVtIHw9IFhGU19TQl9WRVJTSU9O
+X01PUkVCSVRTQklUOworCXNicC0+c2JfZmVhdHVyZXMyIHw9IFhGU19TQl9WRVJTSU9OMl9QUk9K
+SUQzMkJJVDsKK30KKwogLyoKICAqIGVuZCBvZiBzdXBlcmJsb2NrIHZlcnNpb24gbWFjcm9zCiAg
+Ki8KLS0gCjEuNy4xLjEKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNv
+bS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
