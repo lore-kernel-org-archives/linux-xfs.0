@@ -1,16 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7RJkdOl108674 for <xfs@oss.sgi.com>; Fri, 27 Aug 2010 14:46:39 -0500
-Subject: Re: [PATCH v2] xfs: Make fiemap works with sparse file.
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1276764799-4837-1-git-send-email-tao.ma@oracle.com>
-References: <20100614122912.GD6590@dastard>
-	<1276764799-4837-1-git-send-email-tao.ma@oracle.com>
-Date: Fri, 27 Aug 2010 14:46:55 -0500
-Message-ID: <1282938415.2450.109.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	o7RKXOHj110715 for <xfs@oss.sgi.com>; Fri, 27 Aug 2010 15:33:24 -0500
+Received: from smtp-out.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4A8641E56F3A
+	for <xfs@oss.sgi.com>; Fri, 27 Aug 2010 13:33:58 -0700 (PDT)
+Received: from smtp-out.google.com (smtp-out.google.com [74.125.121.35]) by
+	cuda.sgi.com with ESMTP id 4EqD3T7rRgfQyvIU for
+	<xfs@oss.sgi.com>; Fri, 27 Aug 2010 13:33:58 -0700 (PDT)
+Received: from wpaz33.hot.corp.google.com (wpaz33.hot.corp.google.com
+	[172.24.198.97]) by smtp-out.google.com with ESMTP id o7RKXv1h005825
+	for <xfs@oss.sgi.com>; Fri, 27 Aug 2010 13:33:57 -0700
+From: Akshay Lal <alal@google.com>
+Subject: [PATCH] Test to ensure that the EOFBLOCK_FL gets set/unset correctly.
+	As found by Theodore Ts'o: If a 128K file is falloc'ed using
+	the KEEP_SIZE flag, and then write exactly 128K,
+	the EOFBLOCK_FL doesn't get cleared correctly. This forces e2fsck to
+	complain about that inode.
+Date: Fri, 27 Aug 2010 13:33:44 -0700
+Message-Id: <1282941224-5805-1-git-send-email-alal@google.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,94 +27,217 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Tao Ma <tao.ma@oracle.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Akshay Lal <alal@google.com>
 
-On Thu, 2010-06-17 at 16:53 +0800, Tao Ma wrote:
-> Hi Dave,
-> On 06/14/2010 08:29 PM, Dave Chinner wrote:
-> > I just had a thought - if you want to avoid holes being reported to
-> > fiemap, then add a BMV_IF_NO_HOLES flag to xfs_getbmap() and skip
-> > holes in the mappin gloop when this flag is set. That will make
-> > fiemap fill in the full number of extents without hacking the
-> > extent count...
-> Here is the updated one. I have used BVM_IF_NO_HOLES in xfs_getbmap
-> to skip increasing index 'cur_ext'. It is a bit ugly, see my commit
-> log. I guess maybe we can add another flag in xfs_bmapi so that it
-> don't even give us the holes?
+Bug reference:
+http://thread.gmane.org/gmane.comp.file-systems.ext4/20682
+---
+ 243     |  145 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 243.out |   25 +++++++++++
+ group   |    1 +
+ 3 files changed, 171 insertions(+), 0 deletions(-)
+ create mode 100644 243
+ create mode 100644 243.out
 
-Dave said he would commit this but it hasn't been done
-yet, so there's still time to comment!
-
-. . .
-
-> diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-> index 99587de..d49107d 100644
-> --- a/fs/xfs/xfs_bmap.c
-> +++ b/fs/xfs/xfs_bmap.c
-> @@ -5744,12 +5744,24 @@ xfs_getbmap(
->  					map[i].br_startblock))
->  				goto out_free_map;
->  
-> -			nexleft--;
->  			bmv->bmv_offset =
->  				out[cur_ext].bmv_offset +
->  				out[cur_ext].bmv_length;
->  			bmv->bmv_length =
->  				max_t(__int64_t, 0, bmvend - bmv->bmv_offset);
-> +
-> +			/*
-> +			 * In case we don't want to return the hole,
-> +			 * don't increase cur_ext so that we can reuse
-> +			 * it in the next loop.
-> +			 */
-> +			if ((iflags & BMV_IF_NO_HOLES) &&
-> +			    out[cur_ext].bmv_block == -1LL) {
-
-I personally would prefer this to use:
-		if ((iflags & BMV_IF_NO_HOLES) &&
-			map[i].br_startblock == HOLESTARTBLOCK) {
-
-I think this is more obvious that this "extent" represents
-a hole (as opposed to bmv_block == -1, which is how
-xfs_getbmapx_fix_eof_hole() encodes this).
-
-Otherwise looks good.
-
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
-
-
-> +				memset(&out[cur_ext], 0, sizeof(out[cur_ext]));
-> +				continue;
-> +			}
-> +
-> +			nexleft--;
->  			bmv->bmv_entries++;
->  			cur_ext++;
->  		}
-> diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
-> index 7cf7220..87c2e9d 100644
-> --- a/fs/xfs/xfs_fs.h
-> +++ b/fs/xfs/xfs_fs.h
-> @@ -114,8 +114,10 @@ struct getbmapx {
->  #define BMV_IF_NO_DMAPI_READ	0x2	/* Do not generate DMAPI read event  */
->  #define BMV_IF_PREALLOC		0x4	/* rtn status BMV_OF_PREALLOC if req */
->  #define BMV_IF_DELALLOC		0x8	/* rtn status BMV_OF_DELALLOC if req */
-> +#define BMV_IF_NO_HOLES		0x10	/* Do not return holes */
->  #define BMV_IF_VALID	\
-> -	(BMV_IF_ATTRFORK|BMV_IF_NO_DMAPI_READ|BMV_IF_PREALLOC|BMV_IF_DELALLOC)
-> +	(BMV_IF_ATTRFORK|BMV_IF_NO_DMAPI_READ|BMV_IF_PREALLOC|	\
-> +	 BMV_IF_DELALLOC|BMV_IF_NO_HOLES)
->  
->  /*	bmv_oflags values - returned for each non-header segment */
->  #define BMV_OF_PREALLOC		0x1	/* segment = unwritten pre-allocation */
-
-
+diff --git a/243 b/243
+new file mode 100644
+index 0000000..8102f24
+--- /dev/null
++++ b/243
+@@ -0,0 +1,145 @@
++#! /bin/bash
++# FS QA Test No. 243
++#
++# Test to ensure that the EOFBLOCK_FL gets set/unset correctly.
++#
++# As found by Theodore Ts'o:
++# If a 128K file is falloc'ed using the KEEP_SIZE flag, and then
++# write exactly 128K, the EOFBLOCK_FL doesn't get cleared correctly.
++# This forces e2fsck to complain about that inode.
++#
++# creator
++owner=alal@google.com
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1        # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++# Test specific macros.
++BIT_NOT_SET=0   # inode flag - 0x40000 bit is set.
++BIT_SET=1       # inode flag - 0x400000 bit is not set.
++
++# Generic test cleanup function.
++_cleanup()
++{
++   cd /
++   rm -f $tmp.*
++}
++
++# Checks the state of the sample file in the filesystem and returns whether
++# the inode flag 0x400000 is set or not.
++_check_file_state()
++{
++   bit_set=1
++
++   # Check whether EOFBLOCK_FL is set.
++   if [ "${FSTYP}" == "ext4" ]; then
++        # Unmount the ${TEST_DEV}
++        umount ${TEST_DEV}
++
++        # Run debugfs to gather file_parameters - specifically iflags.
++        file_params=`debugfs ${TEST_DEV} -R "stat ${1}" 2>&1 | grep -e Flags:`
++        iflags=${file_params#*Flags: }
++
++        # Ensure that the iflags value was parsed correctly.
++        if [ -z ${iflags} ]; then
++                echo "iFlags value was not parsed successfully."
++                status=1
++                exit ${status}
++        fi
++
++        if ((${iflags} & 0x400000)); then
++                echo "EOFBLOCK_FL bit is set."
++                bit_set=1
++        else
++                echo "EOFBLOCK_FL bit is not set."
++                bit_set=0
++        fi
++
++        # Check current bit state to expected value.
++        if [ ${bit_set} -ne ${2} ]; then
++                echo "Error: Current bit state incorrect."
++                exit ${status}
++        fi
++
++        # Mount the ${TEST_DEV}
++        mount ${TEST_DEV} -t ${FSTYP} ${TEST_DIR}
++   else
++        # Run fsck on the fs. fsck -t ${FSTYP} -fn ${TEST_DEV}.
++        _check_test_fs
++   fi
++
++   # Remove test file
++   rm -f ${TEST_DIR}/${1}
++}
++
++# Get standard environment, filters and checks.
++. ./common.rc
++. ./common.filter
++
++# Prerequisites for the test run.
++_supported_fs generic
++_supported_os Linux
++_require_xfs_io_falloc
++
++# Real QA test starts here.
++rm -f $seq.full
++
++# Begin test cases.
++
++# Using FALLOC_FL_KEEP_SIZE
++# Test 1: Fallocate 40960 bytes and write 4096 bytes (buffered io).
++echo "Test 1: Fallocate 40960 bytes and write 4096 bytes (buffered io)."
++${XFS_IO_PROG} -F -f                            \
++  -c 'falloc -k 0 40960'                        \
++  -c 'pwrite 0 4096'                    \
++  ${TEST_DIR}/test_1 | _filter_xfs_io_unique
++_check_file_state test_1 ${BIT_SET}
++
++# Test 2: Fallocate 40960 bytes and write 4096 bytes (direct io).
++echo "Test 2: Fallocate 40960 bytes and write 4096 bytes (direct io)."
++${XFS_IO_PROG} -F -f -d                         \
++  -c 'falloc -k 0 40960'                        \
++  -c 'pwrite 0 4096'                    \
++  ${TEST_DIR}/test_2 | _filter_xfs_io_unique
++_check_file_state test_2 ${BIT_SET}
++
++# Test 3: Fallocate 40960 bytes and write 40960 bytes (buffered io).
++echo "Test 3: Fallocate 40960 bytes and write 40960 bytes (buffered io)."
++${XFS_IO_PROG} -F -f                            \
++  -c 'falloc -k 0 40960'                        \
++  -c 'pwrite 0 40960'                   \
++  ${TEST_DIR}/test_3 | _filter_xfs_io_unique
++_check_file_state test_3 ${BIT_NOT_SET}
++
++# Test 4: Fallocate 40960 bytes and write 40960 bytes (direct io).
++echo "Test 4: Fallocate 40960 bytes and write 40960 bytes (direct io)."
++${XFS_IO_PROG} -F -f -d                         \
++  -c 'falloc -k 0 40960'                        \
++  -c 'pwrite 0 40960'                   \
++  ${TEST_DIR}/test_4 | _filter_xfs_io_unique
++_check_file_state test_4 ${BIT_NOT_SET}
++
++# Test 5: Fallocate 128k, seek to 256k and write a 4k block (buffered io).
++echo "Test 5: Fallocate 128k, seek to 256k and write a 4k block (buffered io)."
++${XFS_IO_PROG} -F -f                            \
++  -c 'falloc -k 0 128k'                 \
++  -c 'pwrite 256k 4k'                   \
++  ${TEST_DIR}/test_5 | _filter_xfs_io_unique
++_check_file_state test_5 ${BIT_NOT_SET}
++
++# Test 6: Fallocate 128k, seek to 256k and write a 4k block (direct io).
++echo "Test 6: Fallocate 128k, seek to 256k and write a 4k block (direct io)."
++${XFS_IO_PROG} -F -f -d                         \
++  -c 'falloc -k 0 128k'                 \
++  -c 'pwrite 256k 4k'                   \
++  ${TEST_DIR}/test_6 | _filter_xfs_io_unique
++_check_file_state test_6 ${BIT_NOT_SET}
++
++
++status=0
++exit ${status}
+diff --git a/243.out b/243.out
+new file mode 100644
+index 0000000..35583e8
+--- /dev/null
++++ b/243.out
+@@ -0,0 +1,25 @@
++QA output created by 243
++Test 1: Fallocate 40960 bytes and write 4096 bytes (buffered io).
++wrote 4096/4096 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++EOFBLOCK_FL bit is set.
++Test 2: Fallocate 40960 bytes and write 4096 bytes (direct io).
++wrote 4096/4096 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++EOFBLOCK_FL bit is set.
++Test 3: Fallocate 40960 bytes and write 40960 bytes (buffered io).
++wrote 40960/40960 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++EOFBLOCK_FL bit is set.
++Test 4: Fallocate 40960 bytes and write 40960 bytes (direct io).
++wrote 40960/40960 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++EOFBLOCK_FL bit is set.
++Test 5: Fallocate 128k, seek to 256k and write a 4k block (buffered io).
++wrote 4096/4096 bytes at offset 262144
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++EOFBLOCK_FL bit is not set.
++Test 6: Fallocate 128k, seek to 256k and write a 4k block (direct io).
++wrote 4096/4096 bytes at offset 262144
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++EOFBLOCK_FL bit is not set.
+diff --git a/group b/group
+index ff16bb3..e6dab13 100644
+--- a/group
++++ b/group
+@@ -356,3 +356,4 @@ deprecated
+ 240 auto aio quick rw
+ 241 auto
+ 242 auto quick prealloc
++243 auto quick prealloc
+-- 
+1.7.1
 
 _______________________________________________
 xfs mailing list
