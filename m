@@ -1,20 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7RMUsCe115125 for <xfs@oss.sgi.com>; Fri, 27 Aug 2010 17:30:54 -0500
-Received: from smtp-relay.maven.pl (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0A39F2EFB3
-	for <xfs@oss.sgi.com>; Fri, 27 Aug 2010 15:31:29 -0700 (PDT)
-Received: from smtp-relay.maven.pl (smtp-relay.maven.pl [193.239.45.138]) by
-	cuda.sgi.com with ESMTP id 21xBnvYJSrKzKqyY for
-	<xfs@oss.sgi.com>; Fri, 27 Aug 2010 15:31:29 -0700 (PDT)
-From: =?UTF-8?q?Arkadiusz=20Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Subject: [PATCH] xfstests: Quota project id setting overflow
-Date: Sat, 28 Aug 2010 00:31:26 +0200
-Message-Id: <1282948286-11970-1-git-send-email-arekm@maven.pl>
-In-Reply-To: <20100826084249.GF705@dastard>
-References: <20100826084249.GF705@dastard>
+	o7RNA5i3116301 for <xfs@oss.sgi.com>; Fri, 27 Aug 2010 18:10:06 -0500
+Received: from smtp-out.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C5F821782931
+	for <xfs@oss.sgi.com>; Fri, 27 Aug 2010 16:10:40 -0700 (PDT)
+Received: from smtp-out.google.com (smtp-out.google.com [74.125.121.35]) by
+	cuda.sgi.com with ESMTP id iB3noD38E6LB2NCp for
+	<xfs@oss.sgi.com>; Fri, 27 Aug 2010 16:10:40 -0700 (PDT)
+Received: from kpbe15.cbf.corp.google.com (kpbe15.cbf.corp.google.com
+	[172.25.105.79]) by smtp-out.google.com with ESMTP id o7RNAdQQ021472
+	for <xfs@oss.sgi.com>; Fri, 27 Aug 2010 16:10:39 -0700
+Received: from gxk2 (gxk2.prod.google.com [10.202.11.2])
+	by kpbe15.cbf.corp.google.com with ESMTP id o7RNAbUB001055
+	for <xfs@oss.sgi.com>; Fri, 27 Aug 2010 16:10:37 -0700
+Received: by gxk2 with SMTP id 2so1396968gxk.6
+	for <xfs@oss.sgi.com>; Fri, 27 Aug 2010 16:10:37 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <4C783305.5060506@sandeen.net>
+References: <1282941224-5805-1-git-send-email-alal@google.com>
+	<4C783305.5060506@sandeen.net>
+From: Akshay Lal <akshaylal@google.com>
+Date: Fri, 27 Aug 2010 16:10:07 -0700
+Message-ID: <AANLkTi=gRE8=oK2EW6u1LGGUnCEfcrSK7hnWc+mzA1dq@mail.gmail.com>
+Subject: Re: [PATCH] Test to ensure that the EOFBLOCK_FL gets set/unset
+	correctly.
+Reply-To: alal@google.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,96 +34,289 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-RnJvbTogQXJrYWRpdXN6IE1pc2tpZXdpY3ogPGFyZWttQG1hdmVuLnBsPgoKVGVzdCAzIHF1b3Rh
-IHByb2plY3Qgc2V0dGluZyBpZCBjb25kaXRpb25zOgotIHNldCAxNmJpdCBwcm9qZWN0IHF1b3Rh
-IGlkIC0+IHNob3VsZCBzdWNjZWVkCi0gc2V0IDMyYml0IHByb2plY3QgcXVvdGEgaWQgLT4gc2hv
-dWxkIHN1Y2NlZWQgKHdpdGggcHJvamlkMzJiaXQKICBwYXRjaCBhcHBsaWVkOyBmYWlsIG90aGVy
-d2lzZSkKLSBvdmVyIDMyYml0IHByb2plY3QgcXVvdGEgaWQgLT4gc2hvdWxkIGFsd2F5cyBmYWls
-CgpTaWduZWQtb2ZmLWJ5OiBBcmthZGl1c3ogTWnFm2tpZXdpY3ogPGFyZWttQG1hdmVuLnBsPgot
-LS0KIDI0MyAgICAgfCAgMTIxICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKwogMjQzLm91dCB8ICAgIDIgKwogZ3JvdXAgICB8ICAg
-IDEgKwogMyBmaWxlcyBjaGFuZ2VkLCAxMjQgaW5zZXJ0aW9ucygrKSwgMCBkZWxldGlvbnMoLSkK
-IGNyZWF0ZSBtb2RlIDEwMDY0NCAyNDMKIGNyZWF0ZSBtb2RlIDEwMDY0NCAyNDMub3V0CgpkaWZm
-IC0tZ2l0IGEvMjQzIGIvMjQzCm5ldyBmaWxlIG1vZGUgMTAwNjQ0CmluZGV4IDAwMDAwMDAuLjM0
-ZmE5NjkKLS0tIC9kZXYvbnVsbAorKysgYi8yNDMKQEAgLTAsMCArMSwxMjEgQEAKKyMhIC9iaW4v
-YmFzaAorIyBGUyBRQSBUZXN0IE5vLiAyNDMKKyMKKyMgdGVzdCB0byB2ZXJpZnkgdGhhdCBwcm9w
-ZXIgcHJvamVjdCBxdW90YSBpZCBpcyBjb3JyZWN0bHkgc2V0CisjCisjLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0K
-KyMgQ29weXJpZ2h0IChjKSAyMDEwIEFya2FkaXVzeiBNacWba2lld2ljei4gIEFsbCBSaWdodHMg
-UmVzZXJ2ZWQuCisjCisjIFRoaXMgcHJvZ3JhbSBpcyBmcmVlIHNvZnR3YXJlOyB5b3UgY2FuIHJl
-ZGlzdHJpYnV0ZSBpdCBhbmQvb3IKKyMgbW9kaWZ5IGl0IHVuZGVyIHRoZSB0ZXJtcyBvZiB0aGUg
-R05VIEdlbmVyYWwgUHVibGljIExpY2Vuc2UgYXMKKyMgcHVibGlzaGVkIGJ5IHRoZSBGcmVlIFNv
-ZnR3YXJlIEZvdW5kYXRpb24uCisjCisjIFRoaXMgcHJvZ3JhbSBpcyBkaXN0cmlidXRlZCBpbiB0
-aGUgaG9wZSB0aGF0IGl0IHdvdWxkIGJlIHVzZWZ1bCwKKyMgYnV0IFdJVEhPVVQgQU5ZIFdBUlJB
-TlRZOyB3aXRob3V0IGV2ZW4gdGhlIGltcGxpZWQgd2FycmFudHkgb2YKKyMgTUVSQ0hBTlRBQklM
-SVRZIG9yIEZJVE5FU1MgRk9SIEEgUEFSVElDVUxBUiBQVVJQT1NFLiAgU2VlIHRoZQorIyBHTlUg
-R2VuZXJhbCBQdWJsaWMgTGljZW5zZSBmb3IgbW9yZSBkZXRhaWxzLgorIworIyBZb3Ugc2hvdWxk
-IGhhdmUgcmVjZWl2ZWQgYSBjb3B5IG9mIHRoZSBHTlUgR2VuZXJhbCBQdWJsaWMgTGljZW5zZQor
-IyBhbG9uZyB3aXRoIHRoaXMgcHJvZ3JhbTsgaWYgbm90LCB3cml0ZSB0aGUgRnJlZSBTb2Z0d2Fy
-ZSBGb3VuZGF0aW9uLAorIyBJbmMuLCAgNTEgRnJhbmtsaW4gU3QsIEZpZnRoIEZsb29yLCBCb3N0
-b24sIE1BICAwMjExMC0xMzAxICBVU0EKKyMKKyMtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQorIworIyBjcmVhdG9y
-Citvd25lcj1hcmVrbUBtYXZlbi5wbAorCitzZXE9YGJhc2VuYW1lICQwYAorZWNobyAiUUEgb3V0
-cHV0IGNyZWF0ZWQgYnkgJHNlcSIKKworaGVyZT1gcHdkYAordG1wPS90bXAvJCQKK3N0YXR1cz0x
-CSMgZmFpbHVyZSBpcyB0aGUgZGVmYXVsdCEKK3RyYXAgIl9jbGVhbnVwOyBleGl0IFwkc3RhdHVz
-IiAwIDEgMiAzIDE1CisKKyMgZ2V0IHN0YW5kYXJkIGVudmlyb25tZW50LCBmaWx0ZXJzIGFuZCBj
-aGVja3MKKy4gLi9jb21tb24ucmMKKy4gLi9jb21tb24uZmlsdGVyCisuIC4vY29tbW9uLnF1b3Rh
-CisKK19jbGVhbnVwKCkKK3sKKwljZCAvCisJdW1vdW50ICRTQ1JBVENIX01OVCAyPi9kZXYvbnVs
-bAorCXJtIC1mICR0bXAuKgorfQorCisjIHJlYWwgUUEgdGVzdCBzdGFydHMgaGVyZQorX3N1cHBv
-cnRlZF9mcyB4ZnMKKworX3JlcXVpcmVfeGZzX3F1b3RhCisKK2Rpcj0kU0NSQVRDSF9NTlQvcHJv
-amVjdAorCitfcmVxdWlyZV9zY3JhdGNoCitfc2NyYXRjaF9ta2ZzX3hmcyA+L2Rldi9udWxsIDI+
-JjEKKworI2lmIHBxdW90YSdzIGFscmVhZHkgaW4gbW91bnQgb3B0aW9ucyB0aGVuIHdlIGRvbnQg
-bmVlZCB0byBlbmFibGUKKyMgd2UgY2FuJ3QgcnVuIHdpdGggZ3JvdXAgcXVvdGFzCitpZiAoIGVj
-aG8gJE1PVU5UX09QVElPTlMgfCBlZ3JlcCAtcSBnPz9xdW90YSApCit0aGVuCisgICAgX25vdHJ1
-biAiQ2FuJ3QgcnVuIHdpdGggZ3JvdXAgcXVvdGFzIGVuYWJsZWQiCitmaQorRVhUUkFfTU9VTlRf
-T1BUSU9OUz0iLW8gcHF1b3RhIgorCitpZiAhIF9zY3JhdGNoX21vdW50ICIkRVhUUkFfTU9VTlRf
-T1BUSU9OUyIgPiR0bXAub3V0IDI+JjEKK3RoZW4KKyAgICBjYXQgJHRtcC5vdXQKKyAgICBfZmFp
-bCAiISEhIGZhaWxlZCB0byBtb3VudCIKK2ZpCisKK3NyYy9mZWF0dXJlIC1wICRTQ1JBVENIX0RF
-VgorWyAkPyAtbmUgMCBdICYmIF9ub3RydW4gIkluc3RhbGxlZCBrZXJuZWwgZG9lcyBub3Qgc3Vw
-cG9ydCBwcm9qZWN0IHF1b3RhcyIKKworc3RhdHVzPTAKKworZWNobyAiU2lsZW5jZSBpcyBnb2xk
-ZW4iCisKK21rZGlyICRkaXIKK3RvdWNoICRkaXIvYmVsb3cxNmJpdAorIyBiZWxvdyAxNmJpdCB2
-YWx1ZQoreGZzX3F1b3RhIC14IC1jICJwcm9qZWN0IC1zIC1wICRkaXIvYmVsb3cxNmJpdCAzNDIy
-IiAkU0NSQVRDSF9ERVYgPj4gJHNlcS5mdWxsCitwcm9qaWQ9JCgkWEZTX0lPX1BST0cgLXIgLWMg
-ImxzcHJvaiIgJGRpci9iZWxvdzE2Yml0KQoraWYgWyAicHJvamlkID0gMzQyMiIgIT0gIiRwcm9q
-aWQiIF07IHRoZW4KKwllY2hvICJGQUlMOiByZXR1cm5lZCBwcm9qaWQgdmFsdWUgKCRwcm9qaWQp
-IGRvZXNuJ3QgbWF0Y2ggc2V0IG9uZSAocHJvamlkID0gMzQyMikiCisJc3RhdHVzPTEKK2ZpCisK
-KyMgMHgyMCAtIHByb2ppZDMyYml0IGZlYXR1cmVzMiBiaXQKK2ZlYXR1cmVzMl9wcmU9JCh4ZnNf
-ZGIgLXggLXIgLWMgJ3NiJyAtYyAncHJpbnQgZmVhdHVyZXMyJyAkU0NSQVRDSF9ERVYgfCBhd2sg
-JyB7IHByaW50ICQzIH0gJykKK3Byb2ppZDMyYml0X3ByZT0kKChmZWF0dXJlczJfcHJlICYgMHgy
-MCkpCisjIG92ZXIgMTZiaXQgdmFsdWUKK3RvdWNoICRkaXIvb3ZlcjE2Yml0CitpZiAoeGZzX3F1
-b3RhIC14IC1jICJwcm9qZWN0IC1zIC1wICRkaXIvb3ZlcjE2Yml0IDEwODU0NSIgJFNDUkFUQ0hf
-REVWID4+ICRzZXEuZnVsbCk7IHRoZW4KKwkjIHN1Y2Nlc3M/IHZlcmlmeSBpZiBwcm9qaWQgbWF0
-Y2hlcworCXByb2ppZD0kKCRYRlNfSU9fUFJPRyAtciAtYyAibHNwcm9qIiAkZGlyL292ZXIxNmJp
-dCkKKwlpZiBbICJwcm9qaWQgPSAxMDg1NDUiICE9ICIkcHJvamlkIiBdOyB0aGVuCisJCWVjaG8g
-IkZBSUw6IHJldHVybmVkIHByb2ppZCB2YWx1ZSAoJHByb2ppZCkgZG9lc24ndCBtYXRjaCBzZXQg
-b25lIChwcm9qaWQgPSAxMDg1NDUpIgorCQlzdGF0dXM9MQorCWVsc2UKKwkJIyBpZiBpdCByZWFs
-bHkgc3VjY2VlZGVkIHRoZW4gcHJvamlkMzJiaXQgZmVhdHVyZSBiaXQgaXMgc3VwcG9zZWQgdG8g
-YmUgc2V0IGF1dG9tYXRpY2x5CisJCWZlYXR1cmVzMl9wb3N0PSQoeGZzX2RiIC14IC1yIC1jICdz
-YicgLWMgJ3ByaW50IGZlYXR1cmVzMicgJFNDUkFUQ0hfREVWIHwgYXdrICcgeyBwcmludCAkMyB9
-ICcpCisJCXByb2ppZDMyYml0X3Bvc3Q9JCgoZmVhdHVyZXMyX3Bvc3QgJiAweDIwKSkKKwkJaWYg
-WyAiJHByb2ppZDMyYml0X3Bvc3QiIC1lcSAwIF07IHRoZW4KKwkJCWVjaG8gIkZBSUw6IHNldHRp
-bmcgMzJiaXQgcHJvamlkIHN1Y2NlZWRlZCBidXQgcHJvamlkMzJiaXQgZmVhdHVyZXMyIGJpdCB3
-YXNuJ3QgYXV0b21hdGljbHkgc2V0IgorCQkJc3RhdHVzPTEKKwkJZmkKKwlmaQorZWxzZQorCSMg
-ZGlkbid0IHN1Y2NlZWQgYnV0IGl0IHNob3VsZCBpZiBwcm9qaWQzMmJpdCBmZWF0dXJlIGJpdCB3
-YXMgYWxyZWFkeSBzZXQKKwlpZiBbICIkcHJvamlkMzJiaXRfcHJlIiAtZ3QgMCBdOyB0aGVuCisJ
-CWVjaG8gIkZBSUw6IHNldHRpbmcgMzJiaXQgcHJvamlkIGZhaWxlZCBidXQgaXQgc2hvdWxkIHN1
-Y2NlZWRlZCIKKwkJc3RhdHVzPTEKKwlmaQorZmkKKworIyBvdmVyIDMyYml0IHZhbHVlLCBzaG91
-bGQgZmFpbAordG91Y2ggJGRpci9vdmVyMzJiaXQKK2lmIHhmc19xdW90YSAteCAtYyAicHJvamVj
-dCAtcyAtcCAkZGlyL292ZXIzMmJpdCA1MzQ0OTY3Mjk2IiAkU0NSQVRDSF9ERVYgPj4gJHNlcS5m
-dWxsOyB0aGVuCisJZWNobyAiRkFJTDogc2V0dGluZyBvdmVyIDMyYml0IHByb2ppZCBzdWNjZWVk
-ZWQgd2hpbGUgaXQgc2hvdWxkIGZhaWwiCisJc3RhdHVzPTEKK2ZpCmRpZmYgLS1naXQgYS8yNDMu
-b3V0IGIvMjQzLm91dApuZXcgZmlsZSBtb2RlIDEwMDY0NAppbmRleCAwMDAwMDAwLi5kMDc1OTQy
-Ci0tLSAvZGV2L251bGwKKysrIGIvMjQzLm91dApAQCAtMCwwICsxLDIgQEAKK1FBIG91dHB1dCBj
-cmVhdGVkIGJ5IDI0MworU2lsZW5jZSBpcyBnb2xkZW4KZGlmZiAtLWdpdCBhL2dyb3VwIGIvZ3Jv
-dXAKaW5kZXggZmYxNmJiMy4uZTdiYTU5YiAxMDA2NDQKLS0tIGEvZ3JvdXAKKysrIGIvZ3JvdXAK
-QEAgLTM1NiwzICszNTYsNCBAQCBkZXByZWNhdGVkCiAyNDAgYXV0byBhaW8gcXVpY2sgcncKIDI0
-MSBhdXRvCiAyNDIgYXV0byBxdWljayBwcmVhbGxvYworMjQzIGF1dG8gcXVvdGEgcXVpY2sKLS0g
-CjEuNy4xCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4
-ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1h
-bi9saXN0aW5mby94ZnMK
+>> +# Test specific macros.
+>> +BIT_NOT_SET=3D0 =A0 # inode flag - 0x40000 bit is set.
+>> +BIT_SET=3D1 =A0 =A0 =A0 # inode flag - 0x400000 bit is not set.
+>
+> I'm thinking one of the values in the comment is not right :)
+Duh. Thats silly of me.
+Done.
+
+>> +# Checks the state of the sample file in the filesystem and returns whe=
+ther
+>> +# the inode flag 0x400000 is set or not.
+>
+> I guess a little more comment here about why we do this only for ext4 mig=
+ht
+> be good.
+>
+> Just to make it more obvious in the main test could you maybe call
+> it something like _check_ext4_eof_flag() ? =A0If we ever need to do
+> testing on other filesystems we can adjust it.
+Done.
+
+
+>> + =A0 =A0 =A0 =A0if ((${iflags} & 0x400000)); then
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0echo "EOFBLOCK_FL bit is set."
+>
+> This will cause the test to fail on anything but ext4 because
+> it's expected in the output but only happens for ext4...
+>
+> You could redirect it into $seq.full, just to have it for analysis
+> if the test ever fails.
+I've added an else condition to exit the test with the error message
+that the test is only
+supported on ext4 filesystems.
+I've also redirected all echo messages to $seq.full
+
+
+>> + =A0 =A0 =A0 =A0# Run fsck on the fs. fsck -t ${FSTYP} -fn ${TEST_DEV}.
+>> + =A0 =A0 =A0 =A0_check_test_fs
+>
+> Ah now I see why you didn't call it _check_ext4_eof_flag() ;)
+>
+> This may not be necessary, the harness runs fsck after each
+> test anyway. =A0On a large filesystem this could take a pretty
+> long time if you run fsck 6 times. =A0I'd just drop
+> this and let the post-test-fsck catch any problems.
+Removed.
+
+---------------------------------------------------------------------------=
+------------
+Updated patch:
+---------------------------------------------------------------------------=
+------------
+
+>From f1e8df788e4b93ae33e01c48a859f2b21c425357 Mon Sep 17 00:00:00 2001
+From: Akshay Lal <alal@google.com>
+Date: Fri, 27 Aug 2010 13:14:18 -0700
+Subject: [PATCH] Test to ensure that the EOFBLOCK_FL gets set/unset correct=
+ly.
+ As found by Theodore Ts'o:
+ If a 128K file is falloc'ed using the KEEP_SIZE flag, and then
+ write exactly 128K, the EOFBLOCK_FL doesn't get cleared correctly.
+ This forces e2fsck to complain about that inode.
+
+Bug reference:
+http://thread.gmane.org/gmane.comp.file-systems.ext4/20682
+---
+ 243     |  157 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=
+++++
+ 243.out |   13 +++++
+ group   |    1 +
+ 3 files changed, 171 insertions(+), 0 deletions(-)
+ create mode 100644 243
+ create mode 100644 243.out
+
+diff --git a/243 b/243
+new file mode 100644
+index 0000000..804513f
+--- /dev/null
++++ b/243
+@@ -0,0 +1,157 @@
++#! /bin/bash
++# FS QA Test No. 243
++#
++# Test to ensure that the EOFBLOCK_FL gets set/unset correctly.
++#
++# As found by Theodore Ts'o:
++# If a 128K file is falloc'ed using the KEEP_SIZE flag, and then
++# write exactly 128K, the EOFBLOCK_FL doesn't get cleared correctly.
++# This forces e2fsck to complain about that inode.
++#
++# Ref: http://thread.gmane.org/gmane.comp.file-systems.ext4/20682
++#
++# creator
++owner=3Dalal@google.com
++
++seq=3D`basename $0`
++echo "QA output created by $seq"
++
++here=3D`pwd`
++tmp=3D/tmp/$$
++status=3D1        # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++# Test specific macros.
++BIT_NOT_SET=3D0   # inode flag - 0x40000 bit is not set.
++BIT_SET=3D1       # inode flag - 0x400000 bit is set.
++
++# Generic test cleanup function.
++_cleanup()
++{
++   cd /
++   rm -f $tmp.*
++}
++
++# Ext4 uses the EOFBLOCKS_FL bit when fallocating blocks with KEEP_SIZE
++# enabled. The only time this bit should be set is when extending the allo=
+cated
++# blocks further than what the i_size represents. In the situations wherei=
+n the
++# i_size covers all allocated blocks, this bit should be cleared.
++
++# Checks the state of the sample file in the filesystem and returns whether
++# the inode flag 0x400000 is set or not.
++_check_ext4_eof_flag()
++{
++   bit_set=3D1
++
++   # Check whether EOFBLOCK_FL is set.
++   if [ "${FSTYP}" =3D=3D "ext4" ]; then
++        # Unmount the ${TEST_DEV}
++        umount ${TEST_DEV}
++
++        # Run debugfs to gather file_parameters - specifically iflags.
++        file_params=3D`debugfs ${TEST_DEV} -R "stat ${1}" 2>&1 | grep -e F=
+lags:`
++        iflags=3D${file_params#*Flags: }
++
++        # Ensure that the iflags value was parsed correctly.
++        if [ -z ${iflags} ]; then
++                echo "iFlags value was not parsed successfully." >> $seq.f=
+ull
++                status=3D1
++                exit ${status}
++        fi
++
++        # Check if EOFBLOCKS_FL is set.
++        if ((${iflags} & 0x400000)); then
++                echo "EOFBLOCK_FL bit is set." >> $seq.full
++                bit_set=3D1
++        else
++                echo "EOFBLOCK_FL bit is not set." >> $seq.full
++                bit_set=3D0
++        fi
++
++        # Check current bit state to expected value.
++        if [ ${bit_set} -ne ${2} ]; then
++                echo "Error: Current bit state incorrect." >> $seq.full
++                exit ${status}
++        fi
++
++        # Mount the ${TEST_DEV}
++        mount ${TEST_DEV} -t ${FSTYP} ${TEST_DIR}
++   else
++     echo "Only EXT4 filesystems supported." >> $seq.full
++     status=3D1
++     exit ${status}
++  fi
++}
++
++# Get standard environment, filters and checks.
++. ./common.rc
++. ./common.filter
++
++# Prerequisites for the test run.
++_supported_fs generic
++_supported_os Linux
++_require_xfs_io_falloc
++
++# Real QA test starts here.
++rm -f $seq.full
++
++# Begin test cases.
++
++# Using FALLOC_FL_KEEP_SIZE
++# Test 1: Fallocate 40960 bytes and write 4096 bytes (buffered io).
++echo "Test 1: Fallocate 40960 bytes and write 4096 bytes (buffered io)." \
++    >> $seq.full
++${XFS_IO_PROG} -F -f                    \
++  -c 'falloc -k 0 40960'                \
++  -c 'pwrite 0 4096'                    \
++  ${TEST_DIR}/test_1 | _filter_xfs_io_unique
++_check_ext4_eof_flag test_1 ${BIT_SET}
++
++# Test 2: Fallocate 40960 bytes and write 4096 bytes (direct io).
++echo "Test 2: Fallocate 40960 bytes and write 4096 bytes (direct io)." \
++    >> $seq.full
++${XFS_IO_PROG} -F -f -d                 \
++  -c 'falloc -k 0 40960'                \
++  -c 'pwrite 0 4096'                    \
++  ${TEST_DIR}/test_2 | _filter_xfs_io_unique
++_check_ext4_eof_flag test_2 ${BIT_SET}
++
++# Test 3: Fallocate 40960 bytes and write 40960 bytes (buffered io).
++echo "Test 3: Fallocate 40960 bytes and write 40960 bytes (buffered io)." \
++    >> $seq.full
++${XFS_IO_PROG} -F -f                    \
++  -c 'falloc -k 0 40960'                \
++  -c 'pwrite 0 40960'                   \
++  ${TEST_DIR}/test_3 | _filter_xfs_io_unique
++_check_ext4_eof_flag test_3 ${BIT_NOT_SET}
++
++# Test 4: Fallocate 40960 bytes and write 40960 bytes (direct io).
++echo "Test 4: Fallocate 40960 bytes and write 40960 bytes (direct io)." \
++    >> $seq.full
++${XFS_IO_PROG} -F -f -d                 \
++  -c 'falloc -k 0 40960'                \
++  -c 'pwrite 0 40960'                   \
++  ${TEST_DIR}/test_4 | _filter_xfs_io_unique
++_check_ext4_eof_flag test_4 ${BIT_NOT_SET}
++
++# Test 5: Fallocate 128k, seek 256k and write 4k block (buffered io).
++echo "Test 5: Fallocate 128k, seek 256k and write 4k block (buffered io)."=
+ \
++    >> $seq.full
++${XFS_IO_PROG} -F -f                    \
++  -c 'falloc -k 0 128k'                 \
++  -c 'pwrite 256k 4k'                   \
++  ${TEST_DIR}/test_5 | _filter_xfs_io_unique
++_check_ext4_eof_flag test_5 ${BIT_NOT_SET}
++
++# Test 6: Fallocate 128k, seek to 256k and write a 4k block (direct io).
++echo "Test 6: Fallocate 128k, seek to 256k and write a 4k block (direct io=
+)." \
++    >> $seq.full
++${XFS_IO_PROG} -F -f -d                 \
++  -c 'falloc -k 0 128k'                 \
++  -c 'pwrite 256k 4k'                   \
++  ${TEST_DIR}/test_6 | _filter_xfs_io_unique
++_check_ext4_eof_flag test_6 ${BIT_NOT_SET}
++
++
++status=3D0
++exit ${status}
+diff --git a/243.out b/243.out
+new file mode 100644
+index 0000000..290a005
+--- /dev/null
++++ b/243.out
+@@ -0,0 +1,13 @@
++QA output created by 243
++wrote 4096/4096 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 40960/40960 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 40960/40960 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 262144
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 262144
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+diff --git a/group b/group
+index ff16bb3..e6dab13 100644
+--- a/group
++++ b/group
+@@ -356,3 +356,4 @@ deprecated
+ 240 auto aio quick rw
+ 241 auto
+ 242 auto quick prealloc
++243 auto quick prealloc
+-- =
+
+1.7.1
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
