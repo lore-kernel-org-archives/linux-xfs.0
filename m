@@ -1,42 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7QDQF3j030164 for <xfs@oss.sgi.com>; Thu, 26 Aug 2010 08:26:15 -0500
-Received: from postoffice2.aconex.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7CD691E53AB5
-	for <xfs@oss.sgi.com>; Thu, 26 Aug 2010 06:26:49 -0700 (PDT)
-Received: from postoffice2.aconex.com (mail.aconex.com [203.89.202.182]) by
-	cuda.sgi.com with ESMTP id WiMRGgX3X1R8hzGX for
-	<xfs@oss.sgi.com>; Thu, 26 Aug 2010 06:26:49 -0700 (PDT)
-Received: from postoffice.aconex.com (localhost [127.0.0.1])
-	by postoffice2.aconex.com (Spam & Virus Firewall) with ESMTP id
-	5A80A2CAFD4
-	for <xfs@oss.sgi.com>; Thu, 26 Aug 2010 23:26:46 +1000 (EST)
-Received: from postoffice.aconex.com (postoffice.yarra.acx [192.168.102.1]) by
-	postoffice2.aconex.com with ESMTP id MSjfCVu35B2lb0ge for
-	<xfs@oss.sgi.com>; Thu, 26 Aug 2010 23:26:46 +1000 (EST)
-Received: from gatekeeper.aconex.com (gatekeeper.yarra.acx [192.168.102.10])
-	by postoffice.aconex.com (Postfix) with ESMTP id 49AC6A50296
-	for <xfs@oss.sgi.com>; Thu, 26 Aug 2010 23:26:46 +1000 (EST)
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by gatekeeper.aconex.com (Postfix) with ESMTP id 3D8CD9D0002
-	for <xfs@oss.sgi.com>; Thu, 26 Aug 2010 23:26:46 +1000 (EST)
-Received: from gatekeeper.aconex.com ([127.0.0.1])
-	by localhost (gatekeeper.aconex.com [127.0.0.1]) (amavisd-new,
-	port 10024) with ESMTP id 27TSC2ewSwh3 for <xfs@oss.sgi.com>;
-	Thu, 26 Aug 2010 23:26:41 +1000 (EST)
-Received: from mail-au.aconex.com (mail-au.aconex.com [192.168.102.12])
-	by gatekeeper.aconex.com (Postfix) with ESMTP id D3CF49D0001
-	for <xfs@oss.sgi.com>; Thu, 26 Aug 2010 23:26:41 +1000 (EST)
-Received: from mail-au.aconex.com (mail-au.aconex.com [192.168.102.12])
-	by mail-au.aconex.com (Postfix) with ESMTP id CF18964B8659
-	for <xfs@oss.sgi.com>; Thu, 26 Aug 2010 23:26:41 +1000 (EST)
-Date: Thu, 26 Aug 2010 23:26:41 +1000 (EST)
-From: Nathan Scott <nathans@aconex.com>
-Message-ID: <239606566.371721282829201737.JavaMail.root@mail-au.aconex.com>
-In-Reply-To: <20100819121153.GB16045@infradead.org>
-Subject: Re: Review: xfsprogs with libblkid enabled for Debian
+	o7RBHpMM087569 for <xfs@oss.sgi.com>; Fri, 27 Aug 2010 06:17:52 -0500
+Received: from mail-ew0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3266F2C46E
+	for <xfs@oss.sgi.com>; Fri, 27 Aug 2010 04:18:25 -0700 (PDT)
+Received: from mail-ew0-f53.google.com (mail-ew0-f53.google.com
+	[209.85.215.53]) by cuda.sgi.com with ESMTP id Ds6E6DtFOHA2y5dG
+	for <xfs@oss.sgi.com>; Fri, 27 Aug 2010 04:18:25 -0700 (PDT)
+Received: by ewy19 with SMTP id 19so1919127ewy.26
+	for <xfs@oss.sgi.com>; Fri, 27 Aug 2010 04:18:24 -0700 (PDT)
+Date: Fri, 27 Aug 2010 13:18:20 +0200
+From: Iustin Pop <iusty@k1024.org>
+Subject: Re: [PATCH] Re: xfsdump-3.0.4 problems
+Message-ID: <20100827111820.GA9837@teal.hq.k1024.org>
+References: <20100816182236.249a2a0f@x2.grafnetz>
+	<20100816223021.GL10429@dastard>
+	<20100817083227.06e23889@x2.grafnetz>
+	<20100817071337.GN10429@dastard>
+	<20100817095340.6b9ab8e2@x2.grafnetz>
+	<20100817090534.GP10429@dastard> <20100817114550.GQ10429@dastard>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20100817114550.GQ10429@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -49,27 +35,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Mario Bachmann <mbachman@stud.uni-frankfurt.de>, xfs@oss.sgi.com
 
+On Tue, Aug 17, 2010 at 09:45:50PM +1000, Dave Chinner wrote:
+> My fault. I screwed up the btree lookup for the inode validation.
+> Can you test the patch below?
 
------ "Christoph Hellwig" <hch@infradead.org> wrote:
+I just see that 2.6.35.4 has been released, but it doesn't include this
+fix (as far as I can see). Could it be send for inclusion into the next
+stable please (yes, it fixes the issue for me too).
 
-> I'm fine with pushing out a new 3.1.3 release as it's time anyway,
-> but
-> can we also include Dave's patch to add XFS_IOC_ZERO_RANGE support to
-> xfs_io and the xfsctl manpage first?
-> 
-> Next week also has Alex back from vacation, so I'd suggest waiting if
-> he has any input on this.
-
-As discussed on IRC, I made the changes and push out a new release.sh
-tagged git update to kernel.org.  I pushed the src tarball to oss also,
-and libblkid enabled packages will be uploaded to Debian shortly.
-
-cheers.
-
--- 
-Nathan
+thanks,
+iustin
 
 _______________________________________________
 xfs mailing list
