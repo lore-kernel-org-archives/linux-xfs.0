@@ -1,28 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7RBeNZR089524 for <xfs@oss.sgi.com>; Fri, 27 Aug 2010 06:40:24 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7E4C82CC94
-	for <xfs@oss.sgi.com>; Fri, 27 Aug 2010 04:40:58 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
-	[150.101.137.103]) by cuda.sgi.com with ESMTP id
-	0kBBCnK1nFIpaLz3 for <xfs@oss.sgi.com>;
-	Fri, 27 Aug 2010 04:40:58 -0700 (PDT)
-Date: Fri, 27 Aug 2010 21:40:55 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] Re: xfsdump-3.0.4 problems
-Message-ID: <20100827114055.GI705@dastard>
-References: <20100816182236.249a2a0f@x2.grafnetz>
-	<20100816223021.GL10429@dastard>
-	<20100817083227.06e23889@x2.grafnetz>
-	<20100817071337.GN10429@dastard>
-	<20100817095340.6b9ab8e2@x2.grafnetz>
-	<20100817090534.GP10429@dastard> <20100817114550.GQ10429@dastard>
-	<20100827111820.GA9837@teal.hq.k1024.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100827111820.GA9837@teal.hq.k1024.org>
+	o7RIBKVA105962 for <xfs@oss.sgi.com>; Fri, 27 Aug 2010 13:11:20 -0500
+Subject: Re: [PATCH 2/2] xfs: improve buffer cache hash scalability
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <1282522546-7892-3-git-send-email-david@fromorbit.com>
+References: <1282522546-7892-1-git-send-email-david@fromorbit.com>
+	<1282522546-7892-3-git-send-email-david@fromorbit.com>
+Date: Fri, 27 Aug 2010 13:11:53 -0500
+Message-ID: <1282932713.2450.75.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,29 +23,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mario Bachmann <mbachman@stud.uni-frankfurt.de>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Aug 27, 2010 at 01:18:20PM +0200, Iustin Pop wrote:
-> On Tue, Aug 17, 2010 at 09:45:50PM +1000, Dave Chinner wrote:
-> > My fault. I screwed up the btree lookup for the inode validation.
-> > Can you test the patch below?
+On Mon, 2010-08-23 at 10:15 +1000, Dave Chinner wrote:
+> When doing large parallel file creates on a 16p machines, large amounts of
+> time is being spent in _xfs_buf_find(). A system wide profile with perf top
+> shows this:
 > 
-> I just see that 2.6.35.4 has been released, but it doesn't include this
-> fix (as far as I can see). Could it be send for inclusion into the next
-> stable please (yes, it fixes the issue for me too).
+>           1134740.00 19.3% _xfs_buf_find
+>            733142.00 12.5% __ticket_spin_lock
+> 
+> The problem is that the hash contains 45,000 buffers, and the hash table width
+> is only 256 buffers. That means we've got around 200 buffers per chain, and
+> searching it is quite expensive. The hash table size needs to increase.
 
-The commit is now upstream, it had a "cc: stable@kernel.org" in it,
-so it should get automatically queued for inclusion in the next
-stable kernel release. If I don't see it appear in Greg's stable
-queue once he starts processing the commits for the next stable
-release, I'll chase it up....
+My only comment on this is that 4096 buckets is
+good now but someday that may not be right either.
+Is there any better way (based on size of underlying
+block_device and maybe taking into account other things
+like page size or CPU count) to decide this hash size?
 
-Cheers,
+Either way it looks good.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Reviewed-by: Alex Elder <aelder@sgi.com>
+
+. . .
+
 
 _______________________________________________
 xfs mailing list
