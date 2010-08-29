@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7T4IwTC188306 for <xfs@oss.sgi.com>; Sat, 28 Aug 2010 23:18:58 -0500
-Received: from master.debian.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1242F3128A
-	for <xfs@oss.sgi.com>; Sat, 28 Aug 2010 21:19:34 -0700 (PDT)
-Received: from master.debian.org (master.debian.org [70.103.162.29]) by
-	cuda.sgi.com with ESMTP id qK7oIDssuo9T8ozI for
-	<xfs@oss.sgi.com>; Sat, 28 Aug 2010 21:19:34 -0700 (PDT)
-Date: Sun, 29 Aug 2010 14:19:24 +1000
-From: =?iso-8859-1?Q?An=EDbal?= Monsalve Salazar <anibal@debian.org>
-Subject: Re: xfsprogs Debian mantainaince
-Message-ID: <20100829041924.GB2648@mapuche.apana.org.au>
-References: <20100814111513.GA8214@infradead.org>
-	<1697333467.18161281921959476.JavaMail.root@mail-au.aconex.com>
+	o7TKsnom226978 for <xfs@oss.sgi.com>; Sun, 29 Aug 2010 15:54:50 -0500
+Received: from smtpo07.poczta.onet.pl (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8200C1789E40
+	for <xfs@oss.sgi.com>; Sun, 29 Aug 2010 13:55:22 -0700 (PDT)
+Received: from smtpo07.poczta.onet.pl (smtpo07.poczta.onet.pl
+	[213.180.142.138]) by cuda.sgi.com with ESMTP id
+	3nGo5690SDHBQutI for <xfs@oss.sgi.com>;
+	Sun, 29 Aug 2010 13:55:22 -0700 (PDT)
+Received: from rudy.mif.pg.gda.pl ([153.19.42.16]:45478 "EHLO
+	orion.wszechswiat.org" rhost-flags-OK-OK-OK-FAIL) by ps2.m5r2.onet
+	with ESMTPSA id S134218389Ab0H2JU2116YF (ORCPT
+	<rfc822;xfs@oss.sgi.com>); Sun, 29 Aug 2010 11:20:28 +0200
+Message-ID: <4C7A2654.3080106@op.pl>
+Date: Sun, 29 Aug 2010 11:20:20 +0200
+From: Bogdan <bogdandr@op.pl>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1697333467.18161281921959476.JavaMail.root@mail-au.aconex.com>
+Subject: xfsprogs: minimum version with these commands
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,53 +30,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: anibal@debian.org, nathans@debian.org, xfs@oss.sgi.com, Nathan Scott <nathans@aconex.com>
+To: xfs@oss.sgi.com
 
-On Mon, Aug 16, 2010 at 11:25:59AM +1000, Nathan Scott wrote:
->----- "Christoph Hellwig" <hch@infradead.org> wrote:
->
->>Hi Nathan, hi Anibal,
->>
->>if seen the constant flipping between native and non-native uploads
->>for the xfsprogs Debian packages between the two of you and it's
->>slightly annoying.  I know Nathan likes maintaining the Debian
->>packages in git, which also makes life for us XFS developers trying to
->>build debian packages a lot easier.
+ Hello.
 
-Sorry about the unintended nuisance. When I had access to the SGI ptools
-repo it was very easy to keep my uploads to Debian with an updated
-debian directory. 
+ I couldn't find this information in the xfsprogs ChangeLog, so I'm
+asking here: what is the minimum version of xfsprogs to:
 
->>What about a compromise?  We'll add a debian-<dist> branches to the
->>xfsprogs-dev repository where we can track the exact packages uploaded
->>to Debian, including the -2/-3 etc packages revisions that only get
->>uploaded to Debian,
->
->IMO, the -2 and -3 revisions are unnecessary and there's really no need
->for a separate branch ... if Anibal had a kernel.org account and merged
->changes in before uploading, there'd be no issue, I think - Anibal?  It
->would make life simpler, for sure.
+1) contain these utilities: xfs_db, xfs_freeze, xfs_check, and
+2) xfs_db accepts the following command-line parameters: -i, -c, and
+3) xfs_freeze accepts the following command-line parameters: -f, -u, and
+4) xfs_db accepts the following interactive mode commands: "freesp
+-d", "quit", "blockget -n", "ncheck", "sb 0", "print".
 
-I agree.
+ Or is there a ChangeLog that covers all xfsprogs versions in such
+deatil that I would be able to find this myself? If so, where can I
+find it?
 
-On the same subject, I talked to Andreas during LinuxCon2010 in Boston
-about getting access to the acl and attr git repos to update the debian
-directory before uploading packages to Debian. He was very positive
-about that.
-
->>And one last request, any chance to get xfsprogs for -testing rebuilt
->>against libblkid now that util-linux-2.17 has finally made it into
->>testing?  Beeing able to use blkid for alignment detection will be
->>very important so that XFS on Debian can deal with 4k sector disks and
->>hardware RAID arrays out of the box.
->
->Sure, I'll take a look at that for next upload.
->
->cheers.
->
->-- 
->Nathan
+-- 
+Pozdrawiam/Regards - Bogdan                     (GNU/Linux & FreeDOS)
+Kurs asemblera x86 (DOS, GNU/Linux):http://rudy.mif.pg.gda.pl/~bogdro
+Grupy dyskusyjne o asm:  pl.comp.lang.asm alt.pl.asm alt.pl.asm.win32
+www.Xiph.org   www.TorProject.org   Soft (EN): miniurl.pl/bogdro-soft
 
 _______________________________________________
 xfs mailing list
