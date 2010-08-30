@@ -1,13 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7UEL3hB007381 for <xfs@oss.sgi.com>; Mon, 30 Aug 2010 09:21:03 -0500
-Subject: Re: Review: xfsprogs with libblkid enabled for Debian
+	o7UF4cqf008961 for <xfs@oss.sgi.com>; Mon, 30 Aug 2010 10:04:39 -0500
+Received: from cf--amer001e--3.americas.sgi.com
+	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5F8CCAC015
+	for <xfs@oss.sgi.com>; Mon, 30 Aug 2010 08:05:14 -0700 (PDT)
+Subject: Re: [PATCH] xfstests: update README file to document some recent
+	changes
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <239606566.371721282829201737.JavaMail.root@mail-au.aconex.com>
-References: <239606566.371721282829201737.JavaMail.root@mail-au.aconex.com>
-Date: Mon, 30 Aug 2010 09:21:37 -0500
-Message-ID: <1283178097.5273.97.camel@doink>
+In-Reply-To: <1280771460.2236.68.camel@doink>
+References: <1280771460.2236.68.camel@doink>
+Date: Mon, 30 Aug 2010 10:05:12 -0500
+Message-ID: <1283180712.5273.98.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -22,35 +27,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Nathan Scott <nathans@aconex.com>
-Cc: xfs <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Thu, 2010-08-26 at 23:26 +1000, Nathan Scott wrote:
-> ----- "Christoph Hellwig" <hch@infradead.org> wrote:
+On Mon, 2010-08-02 at 12:51 -0500, Alex Elder wrote:
+> Update the README file to document the new _cat_passwd and
+> _cat_group functions, and to recommend passing "-n" to
+> getfacl(1) so it produces numeric output.
 > 
-> > I'm fine with pushing out a new 3.1.3 release as it's time anyway,
-> > but
-> > can we also include Dave's patch to add XFS_IOC_ZERO_RANGE support to
-> > xfs_io and the xfsctl manpage first?
-> > 
-> > Next week also has Alex back from vacation, so I'd suggest waiting if
-> > he has any input on this.
+> Signed-off-by: Alex Elder <aelder@sgi.com>
+
+Ping?  Trivial change (to README).
+
+> ---
+>  README |   14 ++++++++++++++
+>  1 file changed, 14 insertions(+)
 > 
-> As discussed on IRC, I made the changes and push out a new release.sh
-> tagged git update to kernel.org.  I pushed the src tarball to oss also,
-> and libblkid enabled packages will be uploaded to Debian shortly.
+> Index: b/README
+> ===================================================================
+> --- a/README
+> +++ b/README
+> @@ -160,6 +160,20 @@ Test script environment:
+>  				  string DATE for deterministic
+>  				  output
+>  
+> +	_cat_passwd,		- dump the content of the password
+> +	_cat_group		  or group file (both the local file
+> +				  and the content of the NIS database
+> +				  if it is likely to be present)
+> +
+> +     4. General recommendations, usage conventions, etc.:
+> +	- When the content of the password or group file is
+> +	  required, get it using the _cat_passwd and _cat_group
+> +	  functions, to ensure NIS information is included if NIS
+> +	  is active.
+> +	- When calling getfacl in a test, pass the "-n" argument so
+> +	  that numeric rather than symbolic identifiers are used in
+> +	  the output.
+> +
+>  Verified output:
+>  
+>      Each test script has a numerical name, e.g. 007, and an associated
+> 
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
-Sorry I didn't get this done for you last week.  I hadn't looked
-over the patch closely yet and didn't notice you were proposing
-a new release.
 
-Now that I've looked, I can say the changes all look fine to me.
-I'm glad you broke up your recent patch into multiple commits.
-
-I will publish your versioned release on oss.sgi.com today after
-my tests complete.
-
-					-Alex
 
 _______________________________________________
 xfs mailing list
