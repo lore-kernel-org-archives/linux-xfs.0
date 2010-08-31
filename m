@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o7V7Zt0P049568 for <xfs@oss.sgi.com>; Tue, 31 Aug 2010 02:35:56 -0500
-Received: from server655-han.de-nserver.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AFAB23B99C
-	for <xfs@oss.sgi.com>; Tue, 31 Aug 2010 00:36:32 -0700 (PDT)
-Received: from server655-han.de-nserver.de (server655-han.de-nserver.de
-	[85.158.177.45]) by cuda.sgi.com with ESMTP id SPgUXJ1tOPvupCMx
-	for <xfs@oss.sgi.com>; Tue, 31 Aug 2010 00:36:32 -0700 (PDT)
-Message-ID: <4C7CB0FE.1020302@profihost.ag>
-Date: Tue, 31 Aug 2010 09:36:30 +0200
-From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-MIME-Version: 1.0
+	o7V8hskq052321 for <xfs@oss.sgi.com>; Tue, 31 Aug 2010 03:43:54 -0500
+Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3B15512CF50F
+	for <xfs@oss.sgi.com>; Tue, 31 Aug 2010 01:54:58 -0700 (PDT)
+Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
+	cuda.sgi.com with ESMTP id 72NqHl9CUOLiLDsL for
+	<xfs@oss.sgi.com>; Tue, 31 Aug 2010 01:54:58 -0700 (PDT)
+Date: Tue, 31 Aug 2010 10:44:18 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
 Subject: Re: XFS Quota Check OOM
+Message-ID: <20100831104418.058ab6b5@galadriel.home>
+In-Reply-To: <4C7CB0FE.1020302@profihost.ag>
 References: <4C7BA0A0.5090202@profihost.ag>
-In-Reply-To: <4C7BA0A0.5090202@profihost.ag>
+	<4C7CB0FE.1020302@profihost.ag>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,32 +24,29 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+Cc: xfs@oss.sgi.com
 
-Can really nobody help :-(
+Le Tue, 31 Aug 2010 09:36:30 +0200 vous =E9criviez:
 
-Stefan
+> Can really nobody help :-(
 
-Am 30.08.2010 14:14, schrieb Stefan Priebe - Profihost AG:
-> Hi,
->
-> on one of our systems i want to activate prjquota support. The relevant
-> disk is the root disk so i added prjquota to rootflags kernel line.
->
-> But when i do so i always get OOM out of Memory while checking quota's.
-> I also upgraded the system from 8GB to 16GB RAM but still the same.
-> Kernel is vanilla 2.6.32.19.
->
-> Stefan
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+What is the size of the filesystem, output of xfs_info, output of uname
+-a, version of xfs_utils?
+What are the main tasks of the system, memory wise?
+
+-- =
+
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
 
 _______________________________________________
 xfs mailing list
