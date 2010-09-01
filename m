@@ -1,28 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o810mKl0093324 for <xfs@oss.sgi.com>; Tue, 31 Aug 2010 19:48:20 -0500
-Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6D9001799C48
-	for <xfs@oss.sgi.com>; Tue, 31 Aug 2010 17:48:57 -0700 (PDT)
-Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id D3UxYqR3ko5GwQ1z for
-	<xfs@oss.sgi.com>; Tue, 31 Aug 2010 17:48:57 -0700 (PDT)
-Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv14.zmi.at (Postfix) with ESMTPSA id 95A70616
-	for <xfs@oss.sgi.com>; Wed,  1 Sep 2010 02:48:56 +0200 (CEST)
-Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id 49F8A401C2F
-	for <xfs@oss.sgi.com>; Wed,  1 Sep 2010 02:48:56 +0200 (CEST)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: ultra fast XFS now - thanks
-Date: Wed, 1 Sep 2010 02:48:54 +0200
+	o81319Bt099179 for <xfs@oss.sgi.com>; Tue, 31 Aug 2010 22:01:10 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 052AF41100
+	for <xfs@oss.sgi.com>; Tue, 31 Aug 2010 20:01:48 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id H7QelS3N4b3sfKEZ
+	for <xfs@oss.sgi.com>; Tue, 31 Aug 2010 20:01:48 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id CDEBA6C3F6
+	for <xfs@oss.sgi.com>; Tue, 31 Aug 2010 22:01:47 -0500 (CDT)
+Message-ID: <4C7DC21B.1040705@hardwarefreak.com>
+Date: Tue, 31 Aug 2010 22:01:47 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Message-Id: <201009010248.55140@zmi.at>
+Subject: Re: deleting 2TB lots of files with delaylog: sync helps?
+References: <201009010130.41500@zmi.at> <20100901000631.GO705@dastard>
+In-Reply-To: <20100901000631.GO705@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,71 +26,28 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6213911237263843828=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============6213911237263843828==
-Content-Type: multipart/signed;
-  boundary="nextPart1451650.LRgksgOnCq";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+Dave Chinner put forth on 8/31/2010 7:06 PM:
 
---nextPart1451650.LRgksgOnCq
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+> You're probably CPU bound, not IO bound.
 
-I'm on the way to copy the data to the newly formatted drives, and I=20
-just got 109MB/s for a 6GB file, copied with rsync from one PC to the=20
-other over Gb/s LAN. That's damn pretty close to the 125MB/s you can get=20
-from a Gb/s LAN, and it's cool that it's possible to even copy files at=20
-that speed.
+7200 rpm is the highest spindle speed for 2TB drives--5400 is most
+common.  None of them are going to do much over 200 random seeks/second,
+if that.  That's 400 tops for two drives.
 
-Great job, all developers of XFS, the networking, and the kernel in=20
-general. And of course the hardware from AMD, Asus, Areca... great.
+Using any modern Intel/AMD ~2 GHz CPU, you think he's CPU bound?
+Apparently this "rm -rf" type operation is much more complex than I
+previously believed.
 
-=2D-=20
-mit freundlichen Gr=C3=BCssen,
-Michael Monnerie, Ing. BSc
-
-it-management Internet Services
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: 0660 / 415 65 31
-
-****** Aktuelles Radiointerview! ******
-http://www.it-podcast.at/aktuelle-sendung.html
-
-// Wir haben im Moment zwei H=C3=A4user zu verkaufen:
-// http://zmi.at/langegg/
-// http://zmi.at/haus2009/
-
---nextPart1451650.LRgksgOnCq
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.12 (GNU/Linux)
-
-iEYEABECAAYFAkx9ovcACgkQzhSR9xwSCbQxOwCbBo/SlVc4xbkbbyHQZ9gOD13c
-vGUAniRxELiQo7a9wHc/KgZjR/hB0SSX
-=Wwpy
------END PGP SIGNATURE-----
-
---nextPart1451650.LRgksgOnCq--
-
-
---===============6213911237263843828==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6213911237263843828==--
