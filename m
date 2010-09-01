@@ -1,20 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o810MLi4091973 for <xfs@oss.sgi.com>; Tue, 31 Aug 2010 19:22:22 -0500
+	o810QCI7092169 for <xfs@oss.sgi.com>; Tue, 31 Aug 2010 19:26:12 -0500
 Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1A52540C4E
-	for <xfs@oss.sgi.com>; Tue, 31 Aug 2010 17:22:59 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 47CCFD72192
+	for <xfs@oss.sgi.com>; Tue, 31 Aug 2010 17:37:21 -0700 (PDT)
 Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id Cof1A6JxhiFtR9NT for
-	<xfs@oss.sgi.com>; Tue, 31 Aug 2010 17:22:59 -0700 (PDT)
+	cuda.sgi.com with ESMTP id 64h8QU5DcBJS3NhD for
+	<xfs@oss.sgi.com>; Tue, 31 Aug 2010 17:37:21 -0700 (PDT)
+Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv14.zmi.at (Postfix) with ESMTPSA id B1FB5616
+	for <xfs@oss.sgi.com>; Wed,  1 Sep 2010 02:26:47 +0200 (CEST)
+Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id 68D48401C2F
+	for <xfs@oss.sgi.com>; Wed,  1 Sep 2010 02:26:47 +0200 (CEST)
 From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: deleting 2TB lots of files with delaylog: sync helps?
-Date: Wed, 1 Sep 2010 02:22:31 +0200
-References: <201009010130.41500@zmi.at> <20100901000631.GO705@dastard>
-In-Reply-To: <20100901000631.GO705@dastard>
+Subject: broken XFS filesystem not to be repaired by xfs_repair 3.1.2
+Date: Wed, 1 Sep 2010 02:26:46 +0200
 MIME-Version: 1.0
-Message-Id: <201009010222.57350@zmi.at>
+Message-Id: <201009010226.46771@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,55 +31,35 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============4979916487037470756=="
+Content-Type: multipart/mixed; boundary="===============1186258595461852956=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============4979916487037470756==
+--===============1186258595461852956==
 Content-Type: multipart/signed;
-  boundary="nextPart1437051.Y1BxbpQFyr";
+  boundary="nextPart3361018.U3NooiSBJI";
   protocol="application/pgp-signature";
   micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
 
---nextPart1437051.Y1BxbpQFyr
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+--nextPart3361018.U3NooiSBJI
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Mittwoch, 1. September 2010 Dave Chinner wrote:
-> You're probably getting RMW cycles on inode writeback. I've been
-> noticing this lately with my benchmarking - the VM is being _very
-> aggressive_ reclaiming page cache pages vs inode caches and as a
-> result the inode buffers used for IO are being reclaimed between the
-> time it takes to create the inodes and when they are written back.
-> Hence you get lots of reads occurring during inode writeback.
->=20
-> By issuing a sync, you clear out all the inode writeback and all the
-> RMW cycles go away. As a result, there is more disk throughput
-> availble for the unlink processes.  There is a good chance this is
-> the case as the number of reads after the sync drop by an order of
-> magnitude...
+http://zmi.at/x/big.xfs.metadump.bz2
 
-Nice explanation.
-=20
-> > Now it can be that the sync just causes more writes and stalls
-> > reads so overall it's slower, but I'm wondering why none of the
-> > devices says "100% util", which should be the case on deletes? Or
-> > is this again the "mistake" of the utilization calculation that
-> > writes do not really show up there?
->=20
-> You're probably CPU bound, not IO bound.
+After I did the big "rm -r" on that 4TB volume, 4 subdirs with a file in=20
+each are still left even after 20 "xfsrepair;mount;rm -r;umount" cycles.=20
+So I dare to say it can't be repaired here.
 
-This is a hexa-core AMD Phenom(tm) II X6 1090T Processor with up to=20
-3.2GHz per core, so that shouldn't be - or is there only one core used?=20
-I think I read somewhere that each AG should get a core or so...
-=20
-Thanks for your explanation.
+It's not directly important as I'm going to format the filesytem now,=20
+but I'd like this solved in case it hits me once in a real XFS on a=20
+production server.
 
 =2D-=20
-mit freundlichen Gr=FCssen,
+mit freundlichen Gr=C3=BCssen,
 Michael Monnerie, Ing. BSc
 
 it-management Internet Services
@@ -81,26 +69,26 @@ Tel: 0660 / 415 65 31
 ****** Aktuelles Radiointerview! ******
 http://www.it-podcast.at/aktuelle-sendung.html
 
-// Wir haben im Moment zwei H=E4user zu verkaufen:
+// Wir haben im Moment zwei H=C3=A4user zu verkaufen:
 // http://zmi.at/langegg/
 // http://zmi.at/haus2009/
 
---nextPart1437051.Y1BxbpQFyr
+--nextPart3361018.U3NooiSBJI
 Content-Type: application/pgp-signature; name=signature.asc 
 Content-Description: This is a digitally signed message part.
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.12 (GNU/Linux)
 
-iEYEABECAAYFAkx9nOEACgkQzhSR9xwSCbTM8ACfWqqqc9RSN3r5illX4wKdQkbA
-GK4AoOmjgJagdjlScOwgS563COyJ+B+p
-=zwYX
+iEYEABECAAYFAkx9ncYACgkQzhSR9xwSCbQfBwCdFUmDlYy3kY0eWlTl8u/fPGH6
+nlIAn1DLXDj7jg8iOk/ExvOvWX6zGIRL
+=9/MX
 -----END PGP SIGNATURE-----
 
---nextPart1437051.Y1BxbpQFyr--
+--nextPart3361018.U3NooiSBJI--
 
 
---===============4979916487037470756==
+--===============1186258595461852956==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -111,4 +99,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============4979916487037470756==--
+--===============1186258595461852956==--
