@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o81AW7q2128532 for <xfs@oss.sgi.com>; Wed, 1 Sep 2010 05:32:07 -0500
+	o81AIxll127898 for <xfs@oss.sgi.com>; Wed, 1 Sep 2010 05:19:00 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 92C4ED777F1
-	for <xfs@oss.sgi.com>; Wed,  1 Sep 2010 03:24:12 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B4134421E2
+	for <xfs@oss.sgi.com>; Wed,  1 Sep 2010 03:19:39 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id BpdBzj9LU2BN1UmD for
-	<xfs@oss.sgi.com>; Wed, 01 Sep 2010 03:24:12 -0700 (PDT)
-Date: Wed, 1 Sep 2010 06:13:36 -0400
+	by cuda.sgi.com with ESMTP id nVdcX7JBaVAaiEio for
+	<xfs@oss.sgi.com>; Wed, 01 Sep 2010 03:19:39 -0700 (PDT)
+Date: Wed, 1 Sep 2010 06:19:38 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: 4K drives, sectsz=512, bsize=4096
-Message-ID: <20100901101336.GA31648@infradead.org>
-References: <881036.47658.qm@web76207.mail.sg1.yahoo.com>
-	<201009010938.51894@zmi.at>
+Subject: Re: [PATCH] Validate string -> number conversion. [version 3]
+Message-ID: <20100901101938.GD31648@infradead.org>
+References: <20100826082612.GE705@dastard>
+	<1282942476-5296-1-git-send-email-arekm@maven.pl>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201009010938.51894@zmi.at>
+In-Reply-To: <1282942476-5296-1-git-send-email-arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,63 +29,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
+To: Arkadiusz Mi??kiewicz <arekm@maven.pl>
 Cc: xfs@oss.sgi.com
 
-On Wed, Sep 01, 2010 at 09:38:46AM +0200, Michael Monnerie wrote:
-> On Mittwoch, 1. September 2010 Gim Leong Chin wrote:
-> > Should we leave it at the default 256 bytes, or set it to the maximum
-> >  of 2 kB?
->  
-> An interesting question. Why are inodes sizes configurable at all? To 
-> store ACLs? How would one know when bigger Inodes should be used? And 
-> what is the implication when they would be needed but aren't used?
+On Fri, Aug 27, 2010 at 10:54:36PM +0200, Arkadiusz Mi??kiewicz wrote:
+> Make sure that numbers passed as string will fit into proper
+> types when doing string->uid_t/gid_t/prid_t conversion.
 
-The XFS inode consists of three parts:
-
- - the fixed format dinode
- - the data fork
- - the attribute fork
-
-the fixed format inode is fixed size, so any change in the inode size
-only applies to the data and attribute forks.  For regular files we
-generally don't use much space in the data fork as it just contains
-the extent list, and most files have rather few of them.  But we can
-also store short smbolic links directly inside it, as well as the
-content of directories.  The attribute fork is used to store extent
-attributes and if it's large enough we can store them inline instead
-of using external blocks.
-
-You want large inodes mostly if you store lots of extentded attributes,
-either for ACLs, Selinux or posisbly DMAPI.  It will also help if you
-have enough directories that are just too big for the inline directory
-format with smaller inode sizes.
+Looks good,
 
 
-> 
-> -- 
-> mit freundlichen Gr?ssen,
-> Michael Monnerie, Ing. BSc
-> 
-> it-management Internet Services
-> http://proteger.at [gesprochen: Prot-e-schee]
-> Tel: 0660 / 415 65 31
-> 
-> ****** Aktuelles Radiointerview! ******
-> http://www.it-podcast.at/aktuelle-sendung.html
-> 
-> // Wir haben im Moment zwei H?user zu verkaufen:
-> // http://zmi.at/langegg/
-> // http://zmi.at/haus2009/
-
-
-
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
----end quoted text---
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
