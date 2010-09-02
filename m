@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o827fHqw192209 for <xfs@oss.sgi.com>; Thu, 2 Sep 2010 02:41:17 -0500
-Received: from web45805.mail.sp1.yahoo.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id 13CD51BF8B1E
-	for <xfs@oss.sgi.com>; Thu,  2 Sep 2010 00:41:56 -0700 (PDT)
-Received: from web45805.mail.sp1.yahoo.com (web45805.mail.sp1.yahoo.com
-	[68.180.199.50]) by cuda.sgi.com with SMTP id xfSbou46p7SDc0Ij
-	for <xfs@oss.sgi.com>; Thu, 02 Sep 2010 00:41:56 -0700 (PDT)
-Message-ID: <739371.35999.qm@web45805.mail.sp1.yahoo.com>
-References: <356042.32153.qm@web45810.mail.sp1.yahoo.com>
-	<20100902052106.GU705@dastard>
-Date: Thu, 2 Sep 2010 00:41:55 -0700 (PDT)
-From: Poyo VL <poyo_vl@yahoo.com>
-Subject: Patch fs/xfs/xfs_alloc.c
-In-Reply-To: <20100902052106.GU705@dastard>
+	o827ogFZ192642 for <xfs@oss.sgi.com>; Thu, 2 Sep 2010 02:50:42 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 83AA81BF8884
+	for <xfs@oss.sgi.com>; Thu,  2 Sep 2010 00:51:22 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id OKTfGbLjQHXtld8h
+	for <xfs@oss.sgi.com>; Thu, 02 Sep 2010 00:51:22 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id DD2896C004
+	for <xfs@oss.sgi.com>; Thu,  2 Sep 2010 02:51:21 -0500 (CDT)
+Message-ID: <4C7F5779.30201@hardwarefreak.com>
+Date: Thu, 02 Sep 2010 02:51:21 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
+Subject: Re: deleting 2TB lots of files with delaylog: sync helps?
+References: <201009010130.41500@zmi.at>
+	<4C7DC21B.1040705@hardwarefreak.com>	<20100901034156.GQ705@dastard>
+	<201009010945.59204@zmi.at> <20100902011744.GS705@dastard>
+In-Reply-To: <20100902011744.GS705@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,63 +28,28 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-SW0gdXNpbmcgImdjYyB2ZXJzaW9uIDQuNS4wIDIwMTAwNjA0IFtnY2MtNF81LWJyYW5jaCByZXZp
-c2lvbiAxNjAyOTJdIChTVVNFIApMaW51eCkiCgpCZWZvcmUgY29tcGlsaW5nIGtlcm5lbCAoMi42
-LjM1LjQpIEkgc2VsZWN0ZWQgZnJvbSBtZW51Y29uZmlnIGFsbCBYRlMgIm9wdGlvbnMiOiAKUXVv
-dGEgc3VwcHJ0LCBQT1NJWCBBQ0wgc3VwcG9ydCwgUmVhbHRpbWUgc3Vidm9sdW1lIHN1cHBvcnQg
-YW5kIERlYnVnZ2luZyAKc3VwcG9ydC4gSSBzYXZlZCB0aGUgLmNvbmZpZyBhbmQgSSB0eXBlZCAi
-bWFrZSIuIAoKCkkgZ290IHRoZSBmb2xsb3dpbmcgd2FybmluZ3M6Cgpmcy94ZnMveGZzX2FsbG9j
-LmM6IEluIGZ1bmN0aW9uIOKAmHhmc19hbGxvY19hZ192ZXh0ZW50X25lYXLigJk6CmZzL3hmcy94
-ZnNfYWxsb2MuYzo2OTQ6MTU6IHdhcm5pbmc6IOKAmGx0bGVuYeKAmSBtYXkgYmUgdXNlZCB1bmlu
-aXRpYWxpemVkIGluIHRoaXMgCmZ1bmN0aW9uCmZzL3hmcy94ZnNfYWxsb2MuYzo2ODM6MTU6IHdh
-cm5pbmc6IOKAmGd0bGVuYeKAmSBtYXkgYmUgdXNlZCB1bmluaXRpYWxpemVkIGluIHRoaXMgCmZ1
-bmN0aW9uCgpTbyBJIHRyaWVkIHRvIGluaXRpYWxpemUgdGhvc2UgdmFyaWFibGVzIChzdHJ1Y3R1
-cmVzKSB3aXRoIDAuCgpTb3JyeSwgSSBhbSBub3QgbmVpdGhlciBhIEMsIG5vciBhIGtlcm5lbCBl
-eHBlcnQuCgoiUGF0Y2giOgoKLS0tIHhmc19hbGxvYy5jICAgIDIwMTAtMDktMDEgMjI6MDA6NTAu
-MDQ0MDA0MjUzICswMzAwCisrKyB4ZnNfYWxsb2NfMi5jICAgIDIwMTAtMDktMDEgMjI6MDE6MzIu
-NDAwMDA3NDY2ICswMzAwCkBAIC02ODAsNyArNjgwLDcgQEAKICAgICB4ZnNfYWdibG9ja190ICAg
-IGd0Ym5vYTsgICAgICAgIC8qIGFsaWduZWQgLi4uICovCiAgICAgeGZzX2V4dGxlbl90ICAgIGd0
-ZGlmZjsgICAgICAgIC8qIGRpZmZlcmVuY2UgdG8gcmlnaHQgc2lkZSBlbnRyeSAqLwogICAgIHhm
-c19leHRsZW5fdCAgICBndGxlbjsgICAgICAgIC8qIGxlbmd0aCBvZiByaWdodCBzaWRlIGVudHJ5
-ICovCi0gICAgeGZzX2V4dGxlbl90ICAgIGd0bGVuYTsgICAgICAgIC8qIGFsaWduZWQgLi4uICov
-CisgICAgeGZzX2V4dGxlbl90ICAgIGd0bGVuYSA9IHswfTsgICAgICAgIC8qIGFsaWduZWQgLi4u
-ICovCiAgICAgeGZzX2FnYmxvY2tfdCAgICBndG5ldzsgICAgICAgIC8qIHVzZWZ1bCBzdGFydCBi
-bm8gb2YgcmlnaHQgc2lkZSAqLwogICAgIGludCAgICAgICAgZXJyb3I7ICAgICAgICAvKiBlcnJv
-ciBjb2RlICovCiAgICAgaW50ICAgICAgICBpOyAgICAgICAgLyogcmVzdWx0IGNvZGUsIHRlbXBv
-cmFyeSAqLwpAQCAtNjkxLDcgKzY5MSw3IEBACiAgICAgLypSRUZFUkVOQ0VEKi8KICAgICB4ZnNf
-YWdibG9ja190ICAgIGx0ZW5kOyAgICAgICAgLyogZW5kIGJubyBvZiBsZWZ0IHNpZGUgZW50cnkg
-Ki8KICAgICB4ZnNfZXh0bGVuX3QgICAgbHRsZW47ICAgICAgICAvKiBsZW5ndGggb2YgbGVmdCBz
-aWRlIGVudHJ5ICovCi0gICAgeGZzX2V4dGxlbl90ICAgIGx0bGVuYTsgICAgICAgIC8qIGFsaWdu
-ZWQgLi4uICovCisgICAgeGZzX2V4dGxlbl90ICAgIGx0bGVuYSA9IHswfTsgICAgICAgIC8qIGFs
-aWduZWQgLi4uICovCiAgICAgeGZzX2FnYmxvY2tfdCAgICBsdG5ldzsgICAgICAgIC8qIHVzZWZ1
-bCBzdGFydCBibm8gb2YgbGVmdCBzaWRlICovCiAgICAgeGZzX2V4dGxlbl90ICAgIHJsZW47ICAg
-ICAgICAvKiBsZW5ndGggb2YgcmV0dXJuZWQgZXh0ZW50ICovCiAjaWYgZGVmaW5lZChERUJVRykg
-JiYgZGVmaW5lZChfX0tFUk5FTF9fKQoKU2lnbmVkLW9mZi1ieTogSW9udXQgR2FicmllbCBQb3Bl
-c2N1IDxwb3lvX3ZsQHlhaG9vLmNvbT4KClRoYW5rIHlvdSBmb3IgeW91ciB0aW1lLgoKCgotLS0t
-LSBPcmlnaW5hbCBNZXNzYWdlIC0tLS0KRnJvbTogRGF2ZSBDaGlubmVyIDxkYXZpZEBmcm9tb3Ji
-aXQuY29tPgpUbzogUG95byBWTCA8cG95b192bEB5YWhvby5jb20+CkNjOiBhZWxkZXJAc2dpLmNv
-bTsgeGZzQG9zcy5zZ2kuY29tClNlbnQ6IFRodSwgU2VwdGVtYmVyIDIsIDIwMTAgODoyMTowNiBB
-TQpTdWJqZWN0OiBSZTogUGF0Y2ggZnMveGZzL3hmc19hbGxvYy5jCgpPbiBXZWQsIFNlcCAwMSwg
-MjAxMCBhdCAxMjoyNzozOVBNIC0wNzAwLCBQb3lvIFZMIHdyb3RlOgo+IEZpbGU6IGZzL3hmcy94
-ZnNfYWxsb2MuYwo+IEtlcm5lbDogMi42LjM1LjQKPiAKPiBJdCBpcyBub3QgYW4gaW1wb3J0YW50
-IHBhdGNoLCBidXQgSSBnb3Qgc29tZSB3YXJuaW5nczoKPiAKPiBmcy94ZnMveGZzX2FsbG9jLmM6
-IEluIGZ1bmN0aW9uIOKAmHhmc19hbGxvY19hZ192ZXh0ZW50X25lYXLigJk6Cj4gZnMveGZzL3hm
-c19hbGxvYy5jOjY5NDoxNTogd2FybmluZzog4oCYbHRsZW5h4oCZIG1heSBiZSB1c2VkIHVuaW5p
-dGlhbGl6ZWQgaW4gdGhpcyAKCj4gZnVuY3Rpb24KPiBmcy94ZnMveGZzX2FsbG9jLmM6NjgzOjE1
-OiB3YXJuaW5nOiDigJhndGxlbmHigJkgbWF5IGJlIHVzZWQgdW5pbml0aWFsaXplZCBpbiB0aGlz
-IAoKPiBmdW5jdGlvbgoKSSBkb24ndCBzZWUgdGhpcy4gV2hhdCBjb21waWxlciB2ZXJzaW9uIGFy
-ZSB5b3UgdXNpbmc/CgpBbHNvLCBmb3IgcG9zdGluZyBwYXRjaGVzLCB5b3UgbWlnaHQgd2FudCB0
-byByZWFkIGFuZCBmb2xsb3cKRG9jdW1lbnRhdGlvbi9TdWJtaXR0aW5nUGF0Y2hlcy50eHQuIEF0
-IG1pbmltdW0sIHlvdSBuZWVkIHRvIGluY2x1ZGUKYSBTaWduZWQtb2ZmLWJ5IHRhZyAod2UgY2Fu
-J3QgYWNjZXB0IHBhdGNoZXMgd2l0aG91dCB0aGF0KSBhbmQKYXR0YWNoIHlvdXIgcGF0Y2hlcyBh
-cyBwbGFpbiB0ZXh0LgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9t
-b3JiaXQuY29tCgoKCiAgICAgIAoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5z
-Z2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+Dave Chinner put forth on 9/1/2010 8:17 PM:
+
+> You'd need an entire ASIC, not an instruction ;)
+
+More like an FPGA.  As we see on list, daily, the XFS code changes far
+too rapidly for implementation in an ASIC.  ;)
+
+Hay, there's a sales opportunity for SGI:  XFS on Virtex 7 FPGA on a
+PCIe accelerator board. :)  Oh, wait, what about RASC?  Just put in on
+there. :P
+
+-- 
+Stan
+
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
