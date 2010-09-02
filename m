@@ -1,28 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o825HJDl186806 for <xfs@oss.sgi.com>; Thu, 2 Sep 2010 00:17:20 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7CA9A1BF8535
-	for <xfs@oss.sgi.com>; Wed,  1 Sep 2010 22:17:58 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	ScAVBcHW8wKBxj07 for <xfs@oss.sgi.com>;
-	Wed, 01 Sep 2010 22:17:58 -0700 (PDT)
-Received: from dastard (unverified [121.44.127.68])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	37522624-1927428
-	for <xfs@oss.sgi.com>; Thu, 02 Sep 2010 14:47:57 +0930 (CST)
-Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1Or2BE-0002dY-Px
-	for xfs@oss.sgi.com; Thu, 02 Sep 2010 15:17:44 +1000
-Received: from dave by disturbed with local (Exim 4.72)
-	(envelope-from <dave@disturbed.disaster>) id 1Or2BD-0007Jn-Di
-	for xfs@oss.sgi.com; Thu, 02 Sep 2010 15:17:43 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: prevent 32bit overflow in space reservation
-Date: Thu,  2 Sep 2010 15:17:43 +1000
-Message-Id: <1283404663-28105-1-git-send-email-david@fromorbit.com>
+	o825b1Hd187615 for <xfs@oss.sgi.com>; Thu, 2 Sep 2010 00:37:01 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 34F481BF80C1
+	for <xfs@oss.sgi.com>; Wed,  1 Sep 2010 22:37:40 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id kALDIF62VPmntPWD
+	for <xfs@oss.sgi.com>; Wed, 01 Sep 2010 22:37:40 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id 0D0176C004
+	for <xfs@oss.sgi.com>; Thu,  2 Sep 2010 00:37:40 -0500 (CDT)
+Message-ID: <4C7F3823.1040404@hardwarefreak.com>
+Date: Thu, 02 Sep 2010 00:37:39 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
+MIME-Version: 1.0
+Subject: Re: deleting 2TB lots of files with delaylog: sync helps?
+References: <201009010130.41500@zmi.at>
+	<20100901000631.GO705@dastard>	<201009010222.57350@zmi.at>
+	<20100901031954.GP705@dastard>	<4C7DD99F.7000401@hardwarefreak.com>
+	<20100901064439.GR705@dastard>
+In-Reply-To: <20100901064439.GR705@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,58 +29,90 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Dave Chinner put forth on 9/1/2010 1:44 AM:
 
-If we attempt to preallocate more than 2^32 blocks of space in a
-single syscall, the transaction block reservation will overflow
-leading to a hangs in the superblock block accounting code. This
-is trivially reproduced with xfs_io. Fix the problem by capping the
-allocation reservation to the maximum number of blocks a single
-xfs_bmapi() call can allocate (2^21 blocks).
+> 4p VM w/ 2GB RAM with the
+> disk image on a hw-RAID1 device make up of 2x500Gb SATA drives (create
+> and remove 800k files):
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_vnodeops.c |   12 +++++++++---
- 1 files changed, 9 insertions(+), 3 deletions(-)
+> FSUse%        Count         Size    Files/sec     App Overhead
+>      2       800000            0      54517.1          6465501
+> $
+> 
+> The same test run on a 8p VM w/ 16Gb RAM, with the disk image hosted
+> on a 12x2TB SAS dm RAID-0 array:
+> 
+> FSUse%        Count         Size    Files/sec     App Overhead
+>      2       800000            0      51409.5          6186336
 
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index 66d585c..91dd9c8 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -2299,15 +2299,21 @@ xfs_alloc_file_space(
- 			e = allocatesize_fsb;
- 		}
- 
-+		/*
-+		 * we can't allocate more than @nimaps extents at a time,
-+		 * so prevent a 32bit overflow on the transaction reserve
-+		 * by trying to reserve > 16TB worth of blocks for the
-+		 * preallocation.
-+		 */
-+		resblks = min_t(xfs_fileoff_t, (e - s), (MAXEXTLEN * nimaps));
- 		if (unlikely(rt)) {
--			resrtextents = qblocks = (uint)(e - s);
-+			resrtextents = qblocks = resblks;
- 			resrtextents /= mp->m_sb.sb_rextsize;
- 			resblks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
- 			quota_flag = XFS_QMOPT_RES_RTBLKS;
- 		} else {
- 			resrtextents = 0;
--			resblks = qblocks = \
--				XFS_DIOSTRAT_SPACE_RES(mp, (uint)(e - s));
-+			resblks = qblocks = XFS_DIOSTRAT_SPACE_RES(mp, resblks);
- 			quota_flag = XFS_QMOPT_RES_REGBLKS;
- 		}
- 
+Is this a single socket quad core Intel machine with hyperthreading
+enabled?  That would fully explain the results above.  Looks like you
+ran out of memory bandwidth in the 4 "processor" case.  Adding phantom
+CPUs merely made them churn without additional results.
+
+> It was a bit slower despite having a disk subsystem with 10x the
+> bandwidth and 20-30x the iops capability...
+> 
+>> Are you implying/stating that the performance of the disk subsystem is
+>> irrelevant WRT multithreaded unlink workloads with delaylog enabled?
+> 
+> Not entirely irrelevant, just mostly. ;) For workloads that have all
+> the data cached in memory, anyway (i.e. not read latency bound).
+> 
+>> If so, this CPU hit you describe is specific to this workload scenario
+>> only, not necessarily all your XFS test workloads, correct?
+> 
+> It's not a CPU hit - the CPU is gainfully employed doing more work.
+> e.g. The same test as above without delayed logging on the 4p VM:
+> 
+> FSUse%        Count         Size    Files/sec     App Overhead
+>      2       800000            0      15118.3          7524424
+> 
+> delayed logging is 3.6x faster on the same filesystem. It went from
+> 15k files/s at ~120% CPU utilisation, to 54k files/s at 400% CPU
+> utilisation. IOWs, it is _clearly_ CPU bound with delayed logging as
+> there is no idle CPU left in the VM at all.
+
+Without seeing all of what you have available, going on strictly the
+data above, I disagree.  I'd say your bottleneck is your memory/IPC
+bandwidth.
+
+> When trying to improve filesystem performance, there are two goals
+> we are trying to acheive depending on the limiting factor:
+> 
+> 	1. If the workload is IO bound, we want to improve the IO
+> 	patterns enough that performance becomes CPU bound.
+> 
+> 	2. If the workload is CPU bound, we want to reduce the
+> 	per-operation CPU overhead to the point where the workload
+> 	becomes IO bound.
+> 
+> Delayed logging has acheived #1 for metadata operations. To get
+> further improvements, we now need to start optimising based on
+> #2....
+
+If my guess about your platform is correct, try testing on a dual socket
+quad core Opteron with quad memory channels.  Test with 2, 4, 6, and 8
+fs_mark threads.  I'm guessing at some point between 4 and 8 threads
+you'll run out of memory bandwidth, and from then on you won't see the
+additional CPU burn that you are with Intel hyperthreading.
+
+Also, I've not looked at the code, but is there possibly a delayed
+logging global data structure stored in a shared memory location that
+each thread accesses frequently?  If so, that might appear as memory B/W
+starvation, and make each processor appear busy because they're all
+waiting on access to that shared object.  Just a guess from non-dev end
+user with a lot of hardware knowledge and not enough coding skillz. ;)
+
 -- 
-1.7.1
+Stan
+
 
 _______________________________________________
 xfs mailing list
