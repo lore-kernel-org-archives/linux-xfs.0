@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o82CFqNa203589 for <xfs@oss.sgi.com>; Thu, 2 Sep 2010 07:15:53 -0500
+	o82ExJVe208914 for <xfs@oss.sgi.com>; Thu, 2 Sep 2010 09:59:21 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7228644B67
-	for <xfs@oss.sgi.com>; Thu,  2 Sep 2010 05:16:33 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3D2AE44D2F
+	for <xfs@oss.sgi.com>; Thu,  2 Sep 2010 08:00:00 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id zgo6BNLx15A9IqoB for
-	<xfs@oss.sgi.com>; Thu, 02 Sep 2010 05:16:33 -0700 (PDT)
-Date: Thu, 2 Sep 2010 08:16:31 -0400
+	by cuda.sgi.com with ESMTP id ionDgJ9mIMnOJ7VW for
+	<xfs@oss.sgi.com>; Thu, 02 Sep 2010 08:00:00 -0700 (PDT)
+Date: Thu, 2 Sep 2010 10:59:59 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: prevent 32bit overflow in space reservation
-Message-ID: <20100902121631.GA7767@infradead.org>
-References: <1283404663-28105-1-git-send-email-david@fromorbit.com>
+Subject: XFS status update for August 2010
+Message-ID: <20100902145959.GA27887@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1283404663-28105-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,25 +26,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
-On Thu, Sep 02, 2010 at 03:17:43PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> If we attempt to preallocate more than 2^32 blocks of space in a
-> single syscall, the transaction block reservation will overflow
-> leading to a hangs in the superblock block accounting code. This
-> is trivially reproduced with xfs_io. Fix the problem by capping the
-> allocation reservation to the maximum number of blocks a single
-> xfs_bmapi() call can allocate (2^21 blocks).
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+At the first of August we finally saw the release of Linux 2.6.35,
+which includes a large XFS update.  The most prominent feature in
+Linux 2.6.35 is the new delayed logging code which provides massive
+speedups for metadata-intensive workloads, but there has been
+a large amount of other fixes and cleanups, leading to the following
+diffstat:
 
-Looks good,
+	 67 files changed, 4426 insertions(+), 3835 deletions(-)
 
+Given the early release of Linux 2.6.35 the merge window for the
+next release fully fell into the month of August.  The XFS updates
+for Linux 2.6.36 include various additional performance improvements
+in the delayed logging code, for direct I/O writes and for avoiding
+synchronous transactions, as well as various fixed and large amount
+of cleanups, including the removal of the remaining dead DMAPI
+code.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+On the userspace side we saw the 3.1.3 release of xfsprogs, which includes
+various smaller fixes, support for the new XFS_IOC_ZERO_RANGE ioctl and
+Debian packaging updates.  The xfstests package saw one new test case
+and a couple of smaller patches, and xfsdump has not seen any updates at
+all.
+
+The XMLified versions of the XFS users guide, training labs and filesystem
+structure documentation are now available as on the fly generated html on
+the xfs.org website and can be found at:
+
+	http://www.xfs.org/index.php/XFS_Papers_and_Documentation
 
 _______________________________________________
 xfs mailing list
