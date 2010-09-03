@@ -1,14 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o83DmF5x254235 for <xfs@oss.sgi.com>; Fri, 3 Sep 2010 08:48:15 -0500
-Subject: Re: [PATCH] xfs: prevent 32bit overflow in space reservation
+	o83Dgu0h254080 for <xfs@oss.sgi.com>; Fri, 3 Sep 2010 08:42:56 -0500
+Subject: Re: [GIT PULL] xfs: fixes for 2.6.36
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20100903000146.GA705@dastard>
-References: <1283404663-28105-1-git-send-email-david@fromorbit.com>
-	<1283442679.5727.35.camel@doink>  <20100903000146.GA705@dastard>
-Date: Fri, 03 Sep 2010 08:48:03 -0500
-Message-ID: <1283521683.3094.10.camel@doink>
+In-Reply-To: <20100903040850.GB705@dastard>
+References: <20100903040850.GB705@dastard>
+Date: Fri, 03 Sep 2010 08:42:48 -0500
+Message-ID: <1283521368.3094.6.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -26,51 +25,31 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, 2010-09-03 at 10:01 +1000, Dave Chinner wrote:
-> On Thu, Sep 02, 2010 at 10:51:19AM -0500, Alex Elder wrote:
-> > On Thu, 2010-09-02 at 15:17 +1000, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > If we attempt to preallocate more than 2^32 blocks of space in a
-. . .
-
-> > > +		resblks = min_t(xfs_fileoff_t, (e - s), (MAXEXTLEN * nimaps));
-> > 
-> > I guess it's clear that MAXEXTLEN fits in 32 bits because of
-> > sizeof (xfs_extlen_t).
+On Fri, 2010-09-03 at 14:08 +1000, Dave Chinner wrote:
+> Hi Alex,
 > 
-> True, but if sizeof(xfs_extlen_t) was the limiting factor,
-> then the mulitply could still cause 32bit overflows.
+> Can you please pull the following branch for your next 2.6.36
+> bug-fix update to linus? Thanks.
+
+Yes, I'll take it in today.  Thanks.	-Alex
+
 > 
-> The real reason is that MAXEXTLEN defines the maximum extent length
-> supported by the on disk bmap btree record format. The record format
-> defines the extent length in FSBs to be:
+> The following changes since commit 2bfc96a127bc1cc94d26bfaa40159966064f9c8c:
 > 
-> #define MAXEXTLEN       ((xfs_extlen_t)0x001fffff)      /* 21 bits */
+>   Linux 2.6.36-rc3 (2010-08-29 08:36:04 -0700)
 > 
-> and as such fits easily into the 32 bit limit.
-
-Yes, I recognized that but didn't mention it.  However...
-
-> > And inspection shows that nimaps is
-> > just 1, so this does the 32-bit limiting.  But that just
-> > seems indirect.
+> are available in the git repository at:
+>   git://git.kernel.org/pub/scm/linux/kernel/git/dgc/xfsdev.git 2.6.36-xfs-misc
 > 
-> nimaps can be up to:
+> Dave Chinner (2):
+>       xfs: improve buffer cache hash scalability
+>       xfs: prevent 32bit overflow in space reservation
 > 
-> #define XFS_BMAP_MAX_NMAP 4
+>  fs/xfs/linux-2.6/xfs_buf.c |    8 +-------
+>  fs/xfs/linux-2.6/xfs_buf.h |    1 -
+>  fs/xfs/xfs_vnodeops.c      |   13 ++++++++++---
+>  3 files changed, 11 insertions(+), 11 deletions(-)
 
-...I had not noticed that nimap could have been changed from
-its value 1 by the xfs_bmapi() call, so the point you make is
-important.
-
-> So if we change the loop to do more allocations per loop, then
-> the code will already handle it correctly. :)
-
-Yes.  And like I said, just adjusting the comment explains
-why it is safe.
-
-					-Alex
 
 
 _______________________________________________
