@@ -1,15 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o83Dgu0h254080 for <xfs@oss.sgi.com>; Fri, 3 Sep 2010 08:42:56 -0500
-Subject: Re: [GIT PULL] xfs: fixes for 2.6.36
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20100903040850.GB705@dastard>
-References: <20100903040850.GB705@dastard>
-Date: Fri, 03 Sep 2010 08:42:48 -0500
-Message-ID: <1283521368.3094.6.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	o83GW8WO259114 for <xfs@oss.sgi.com>; Fri, 3 Sep 2010 11:32:09 -0500
+Received: from smtpo08.poczta.onet.pl (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D62CB49C25
+	for <xfs@oss.sgi.com>; Fri,  3 Sep 2010 09:32:42 -0700 (PDT)
+Received: from smtpo08.poczta.onet.pl (smtpo08.poczta.onet.pl
+	[213.180.142.139]) by cuda.sgi.com with ESMTP id
+	QhZIxvCgrLsTvDOW for <xfs@oss.sgi.com>;
+	Fri, 03 Sep 2010 09:32:42 -0700 (PDT)
+Received: from rudy.mif.pg.gda.pl ([153.19.42.16]:27149 "EHLO
+	orion.wszechswiat.org" rhost-flags-OK-OK-OK-FAIL) by ps2.m5r2.onet
+	with ESMTPSA id S134218652Ab0ICQclmT97p (ORCPT
+	<rfc822;xfs@oss.sgi.com>); Fri, 3 Sep 2010 18:32:41 +0200
+Message-ID: <4C812320.7080303@op.pl>
+Date: Fri, 03 Sep 2010 18:32:32 +0200
+From: Bogdan <bogdandr@op.pl>
+MIME-Version: 1.0
+Subject: Re: xfsprogs: minimum version with these commands
+References: <4C7A2654.3080106@op.pl> <4C7B0EF6.5030505@sandeen.net>
+	<4C7BDDB1.6030209@op.pl> <4C7BDFE1.10804@sandeen.net>
+	<4C7E7852.9090905@op.pl> <4C7E799F.8050801@sandeen.net>
+In-Reply-To: <4C7E799F.8050801@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,35 +34,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-On Fri, 2010-09-03 at 14:08 +1000, Dave Chinner wrote:
-> Hi Alex,
+On 01.09.2010 18:04, Eric Sandeen wrote:
+> Bogdan wrote:
 > 
-> Can you please pull the following branch for your next 2.6.36
-> bug-fix update to linus? Thanks.
+>>> I think the fastest route, since nothing you asked for is particularly
+>>> "new" would be to just grab a sufficiently old version and double check
+>>> that the commands are there.  Easier than chasing through the repository,
+>>> I think.
+>>
+>>  Surely. But where do I get such old versions?
+>>
+> 
+> CVS should have older but that can be hard to work with
+> 
+> If it's ok with you to use old fedora src.rpms, try:
+> 
+> http://kojipkgs.fedoraproject.org/packages/xfsprogs
+> 
+> which goes back to 2.8.11 in Apr. 2007.
+> 
+> Ah I just found:
+> 
+> ftp://oss.sgi.com/projects/xfs/previous/cmd_tars/xfsprogs-2.7.11.src.tar.gz
+> 
+> as well.
+> 
+> I really think any serious user of xfs will not be using
+> tools which are more than 5 years old, so if these versions satisfy
+> your requirements, I wouldn't worry too much about whether older
+> versions do as well...
 
-Yes, I'll take it in today.  Thanks.	-Alex
+ OK, thank you for your time and help.
 
-> 
-> The following changes since commit 2bfc96a127bc1cc94d26bfaa40159966064f9c8c:
-> 
->   Linux 2.6.36-rc3 (2010-08-29 08:36:04 -0700)
-> 
-> are available in the git repository at:
->   git://git.kernel.org/pub/scm/linux/kernel/git/dgc/xfsdev.git 2.6.36-xfs-misc
-> 
-> Dave Chinner (2):
->       xfs: improve buffer cache hash scalability
->       xfs: prevent 32bit overflow in space reservation
-> 
->  fs/xfs/linux-2.6/xfs_buf.c |    8 +-------
->  fs/xfs/linux-2.6/xfs_buf.h |    1 -
->  fs/xfs/xfs_vnodeops.c      |   13 ++++++++++---
->  3 files changed, 11 insertions(+), 11 deletions(-)
-
-
+-- 
+Pozdrawiam/Regards - Bogdan                     (GNU/Linux & FreeDOS)
+Kurs asemblera x86 (DOS, GNU/Linux):http://rudy.mif.pg.gda.pl/~bogdro
+Grupy dyskusyjne o asm:  pl.comp.lang.asm alt.pl.asm alt.pl.asm.win32
+www.Xiph.org   www.TorProject.org   Soft (EN): miniurl.pl/bogdro-soft
 
 _______________________________________________
 xfs mailing list
