@@ -1,20 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o83LJJTT007345 for <xfs@oss.sgi.com>; Fri, 3 Sep 2010 16:19:20 -0500
-Received: from postoffice2.aconex.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3E6751E580BA
-	for <xfs@oss.sgi.com>; Fri,  3 Sep 2010 14:19:59 -0700 (PDT)
-Received: from postoffice2.aconex.com (mail.aconex.com [203.89.202.182]) by
-	cuda.sgi.com with ESMTP id UlUSrvZK4pKySbuQ for
-	<xfs@oss.sgi.com>; Fri, 03 Sep 2010 14:19:59 -0700 (PDT)
-Date: Sat, 4 Sep 2010 07:19:51 +1000 (EST)
-From: Nathan Scott <nathans@aconex.com>
-Message-ID: <1211297770.647781283548791361.JavaMail.root@mail-au.aconex.com>
-In-Reply-To: <AANLkTi=NhOdoX0VU7fyvYpgM+mbN8b3vC7QrkKrcnDk=@mail.gmail.com>
-Subject: Re: Possible to preallocate files that always begin/end on stripe
-	unit/width?
+	o8480Mof033790 for <xfs@oss.sgi.com>; Sat, 4 Sep 2010 03:00:23 -0500
+Received: from smtp-relay.maven.pl (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C0BAE17AF1F1
+	for <xfs@oss.sgi.com>; Sat,  4 Sep 2010 01:01:02 -0700 (PDT)
+Received: from smtp-relay.maven.pl (smtp-relay.maven.pl [193.239.45.138]) by
+	cuda.sgi.com with ESMTP id T0GAEinue775BlpG for
+	<xfs@oss.sgi.com>; Sat, 04 Sep 2010 01:01:02 -0700 (PDT)
+Received: from chello087207113141.chello.pl ([87.207.113.141]:58382
+	helo=tarm.maven.pl)
+	by smtp-relay.maven.pl with esmtpsa (TLSv1:DHE-RSA-AES256-SHA:256)
+	(Exim 4.72) (envelope-from <arekm@maven.pl>) id 1OrngK-0008U2-JZ
+	for xfs@oss.sgi.com; Sat, 04 Sep 2010 10:01:00 +0200
+Received: from arekm by tarm.maven.pl with local (Exim 4.72)
+	(envelope-from <arekm@maven.pl>) id 1OrngG-0003OW-0P
+	for xfs@oss.sgi.com; Sat, 04 Sep 2010 10:00:56 +0200
+From: Arkadiusz Miskiewicz <arekm@maven.pl>
+Subject: separate project quota from group quota (questions, design issues)
+Date: Sat, 4 Sep 2010 10:00:55 +0200
 MIME-Version: 1.0
+Message-Id: <201009041000.55878.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,38 +29,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Green Guy <greentech3000@gmail.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-
------ "Green Guy" <greentech3000@gmail.com> wrote:
-
-> ... 
-> I know that XFS metadata such as the log, AG info, etc also need to be
-> accounted for, but I am not sure the best way to determine how much
-> space they will take.
-> 
-> ...
-> How can I determine the correct file size and preallocate them in a
-> way where they always begin/end on stripe unit/width taking the
-> filesystem overhead into account?
-> Note: the log needs to stay on the same fs.
-> 
-
-There's no way to make a guaranteed aligned/sized allocation, but you
-can ask for a "best effort" by using the sizing information returned
-from the XFS_IOC_FSGEOMETRY syscall (via xfsctl).
-
-cheers.
-
--- 
-Nathan
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+CkRhdmUgdGhpbmtzIHRoYXQgdGhpcyBzdWJqZWN0IHNob3VsZCBiZSBkaXNjdXNzZWQgZmlyc3Qg
+aGVyZS4KCk15IGdvYWwgaXMgdG8gYmUgYWJsZSB0byB1c2UgdXNlciwgZ3JvdXAgYW5kIHByb2pl
+Y3QgcXVvdGEgYXQgdGhlIHNhbWUgdGltZS4gCkV4YW1wbGUgdXNhZ2UgaXMgYSB3ZWIgaG9zdGlu
+ZyBjb21wYW55IHdoaWNoIGdpdmVzIHNvbWUgc3BhY2UgZm9yIGN1c3RvbWVyIAooZ3JvdXAgcXVv
+dGEpLCBjdXN0b21lciBzcGxpdHMgaXQgaW50byBhY2NvdW50cyAodXNlciBxdW90YSkgYW5kIHRo
+ZW4gZWFjaCAKYWNjb3VudCBjYW4gaGF2ZSBtdWx0aXBsZSB2aG9zdHMgd2l0aCBvd24gcXVvdGEg
+KHByb2plY3QgcXVvdGEpLgoKU2luY2Ugb24tZGlzayBmb3JtYXQga2VlcHMgZ3JvdXAgYW5kIHBy
+b2plY3QgcXVvdGEgc2VwYXJhdGUgYWxyZWFkeSB0aGVuIHdoeSAKbm90IG1ha2luZyBpdCB1c2Fi
+bGUgZm9yIGEgdXNlciBhcyBzZXBhcmF0ZSB0aGluZ3MsIHRvbz8KCkkgc3RhcnRlZCBkb2luZyB0
+aGF0IGJ5IHNwbGl0dGluZyBldmVyeSBncm91cCtwcm9qZWN0IGhhbmRsaW5nIGNvZGUgaW50byAK
+c2VwYXJhdGUgZ3JvdXAgYW5kIHByb2plY3Qgb25lLiBBZGRlZCBzdXBlcmJsb2NrIGZpZWxkIGZv
+ciBwcm9qZWN0IHF1b3RhLiBOZXcgCmZlYXR1cmUgZmxhZyAoU0VQQVJBVEVQUVVPVEEpLgoKSWYg
+b2xkIGZpbGVzeXN0ZW0gKGZvciBTRVBBUkFURVFVT1RBKSBpcyBtb3VudGVkIHRoZW4gSSdsbCBz
+aW1wbHkgbG9hZCAKc2JfZ3F1b3Rpbm8gaW50byBtcC0+bV9zYi5zYl9wcXVvdGlubyB3aGljaCBJ
+IHRoaW5rIGlzIGVub3VnaCB0byBoYW5kbGUgb2xkIGZzIAooc2luY2UgbmV3IGtlcm5lbCBvcGVy
+YXRlcyBvbiBzZXBhcmF0ZSBzdHJ1Y3R1cmVzIGZvciBwcm9qZWN0IHF1b3RhKS4KCk5ldyBmaWxl
+c3lzdGVtICh3aXRob3V0IHF1b3RhIGlub2RlcyBhbGxvY2F0ZWQgeWV0KSwgd2hlbiBtb3VudGVk
+LCBnZXRzIG5ldyAKcXVvdGEgaW5vZGUgYWxsb2NhdGVkIGZvciBwcm9qZWN0IHF1b3RhIGFuZCBT
+RVBBUkFURVFVT1RBIGZlYXR1cmUgYml0IHNldC4KCkNvbnZlcnRpbmcgb2xkIGZzIHRvIHNlcGFy
+YXRlIHF1b3RhIGlzbid0IGN1cnJlbnRseSBzb2x2ZWQuIFVzZXIgY291bGQgbmVlZCAKdHdvIGNo
+b2ljZXMgLSB1c2Ugb2xkIGdyb3VwIHF1b3RhIHN0aWxsIGFzIGdyb3VwIG9yIG9sZCBncm91cCBh
+cyBuZXcgcHJvamVjdCAKcXVvdGEuIE5vdCBzdXJlIGhvdyB0byBoYW5kbGUgdGhlc2UgeWV0LiAK
+QWxzbywgcXVvdGEgZGF0YSBpcyBrZWVwdCBpbiBleHRlbnRzIGFuZCBleHRlbnRzIGhhdmUgZF9m
+bGFncyByZXByZXNlbnRpbmcgCnR5cGUgb2YgcXVvdGEgKHVzZXIvZ3JvdXAvcHJvaikuIE5vdyB3
+aGF0IGhhcHBlbnMgKGluIGN1cnJlbnQgY29kZSkgd2l0aCAKZXh0ZW50cyBvZiBncm91cC9wcm9q
+ZWN0IHF1b3RhIGlub2RlIGlmIG1vdXRpbmcgb25jZSB3aXRoIGdycHF1b3RhIGFuZCBvbmNlIAp3
+aXRoIHByb2pxdW90YT8gQXJlIHRoZSBvdGhlciBleHRlbnQgZW50cmllcyBpZ25vcmVkPyAobGlr
+ZSBtb3VudGVkIHdpdGggZ3JvdXAgCi0+IGV4dGVudHMgd2l0aCBwcm9qIHR5cGUgaWdub3JlZCBv
+ciBkZWxldGVkIG9yIHNvbWV0aGluZyBlbHNlPykuIAoKVGhlcmUgaXMgYWxzbyBpc3N1ZSB3aXRo
+IGtlcm5lbCBnZW5lcmljIHF1b3RhIGludGVyZmFjZSBmc19xdW90YV9zdGF0IHdoaWNoIApkb2Vz
+bid0IGhhbmRsZSB0aGlyZCBxdW90YSBhdCBhbGwuIEl0IHNpbXBseSB3b24ndCBiZSBhYmxlIHRv
+IG9wZXJhdGUgb24gCnByb2plY3QgcXVvdGEgKGFzIEkgZ3Vlc3MgaXQgaXNuJ3QgYWJsZSB0byBk
+byB0aGF0IGV2ZW4gbm93KS4KCkluaXRpYWwsIG5vdCB3b3JraW5nIHlldCAoZHVlIHRvIGxvY2tp
+bmcgaXNzdWVzKSBwYXRjaCBpcyBoZXJlIChvbiB0b3Agb2YgCnByb2ppZDMyYml0IHBhdGNoIGFj
+dHVhbGx5LCBidXQgYm90aCBmZWF0dXJlcyBhcmUgdW5yZWxhdGVkKToKaHR0cDovL2Nhcm1lLnBs
+ZC1saW51eC5vcmcvfmFyZWttL3hmcy1wYXJhbGxlbC1ncnAtcHJqLXF1b3RhLTIucGF0Y2gKCk15
+IGN1cnJlbnQgcHJvYmxlbSBpcyBsYWNrIG9mIHVuZGVyc3RhbmRpbmcgb2YgbG9ja2luZyBpc3N1
+ZXMgaGVyZToKaHR0cDovL3Bhc3RlYmluLmNvbS9ickJIUGF2UgoKSG93IGxvY2tpbmcgc2hvdWxk
+IGxvb2sgbGlrZSB3aGVuIHRoZXJlIGlzIGFsc28gcHJvamVjdCBxdW90YT8gTGluZXMgMTM5MC0x
+Mzk3IAphbmQgMTQxOS0xNDI4LgoKV2l0aCBjdXJyZW50IGNvZGUgYXMgcGFzdGVkIG9uIHBhc3Rl
+YmluIG1vdW50IGhhbmdzIHRyeWluZyB0byBkbyBsb2NrIG9uIDE0MjYgCmxpbmUgd2hpY2ggd2Fz
+IHVubG9ja2VkIGp1c3QgZmV3IGxpbmVzIGJlZm9yZS4KLS0gCkFya2FkaXVzeiBNacWba2lld2lj
+eiAgICAgICAgUExEL0xpbnV4IFRlYW0KYXJla20gLyBtYXZlbi5wbCAgICAgICAgICAgIGh0dHA6
+Ly9mdHAucGxkLWxpbnV4Lm9yZy8KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Mu
+c2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
