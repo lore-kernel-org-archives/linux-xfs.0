@@ -1,26 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8480Mof033790 for <xfs@oss.sgi.com>; Sat, 4 Sep 2010 03:00:23 -0500
-Received: from smtp-relay.maven.pl (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C0BAE17AF1F1
-	for <xfs@oss.sgi.com>; Sat,  4 Sep 2010 01:01:02 -0700 (PDT)
-Received: from smtp-relay.maven.pl (smtp-relay.maven.pl [193.239.45.138]) by
-	cuda.sgi.com with ESMTP id T0GAEinue775BlpG for
-	<xfs@oss.sgi.com>; Sat, 04 Sep 2010 01:01:02 -0700 (PDT)
-Received: from chello087207113141.chello.pl ([87.207.113.141]:58382
-	helo=tarm.maven.pl)
-	by smtp-relay.maven.pl with esmtpsa (TLSv1:DHE-RSA-AES256-SHA:256)
-	(Exim 4.72) (envelope-from <arekm@maven.pl>) id 1OrngK-0008U2-JZ
-	for xfs@oss.sgi.com; Sat, 04 Sep 2010 10:01:00 +0200
-Received: from arekm by tarm.maven.pl with local (Exim 4.72)
-	(envelope-from <arekm@maven.pl>) id 1OrngG-0003OW-0P
-	for xfs@oss.sgi.com; Sat, 04 Sep 2010 10:00:56 +0200
-From: Arkadiusz Miskiewicz <arekm@maven.pl>
-Subject: separate project quota from group quota (questions, design issues)
-Date: Sat, 4 Sep 2010 10:00:55 +0200
+	o84HDDDM062249 for <xfs@oss.sgi.com>; Sat, 4 Sep 2010 12:13:14 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4F35515DFD7B
+	for <xfs@oss.sgi.com>; Sat,  4 Sep 2010 10:24:44 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id 6PJlSzK8GNNLEhwa for
+	<xfs@oss.sgi.com>; Sat, 04 Sep 2010 10:24:44 -0700 (PDT)
+Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv14.zmi.at (Postfix) with ESMTPSA id A82E042B
+	for <xfs@oss.sgi.com>; Sat,  4 Sep 2010 19:13:50 +0200 (CEST)
+Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id 55934401C2F
+	for <xfs@oss.sgi.com>; Sat,  4 Sep 2010 19:13:50 +0200 (CEST)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: separate project quota from group quota (questions, design issues)
+Date: Sat, 4 Sep 2010 19:13:49 +0200
+References: <201009041000.55878.arekm@maven.pl>
+In-Reply-To: <201009041000.55878.arekm@maven.pl>
 MIME-Version: 1.0
-Message-Id: <201009041000.55878.arekm@maven.pl>
+Message-Id: <201009041913.49849@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,55 +33,109 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/mixed; boundary="===============9195721261779496571=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-CkRhdmUgdGhpbmtzIHRoYXQgdGhpcyBzdWJqZWN0IHNob3VsZCBiZSBkaXNjdXNzZWQgZmlyc3Qg
-aGVyZS4KCk15IGdvYWwgaXMgdG8gYmUgYWJsZSB0byB1c2UgdXNlciwgZ3JvdXAgYW5kIHByb2pl
-Y3QgcXVvdGEgYXQgdGhlIHNhbWUgdGltZS4gCkV4YW1wbGUgdXNhZ2UgaXMgYSB3ZWIgaG9zdGlu
-ZyBjb21wYW55IHdoaWNoIGdpdmVzIHNvbWUgc3BhY2UgZm9yIGN1c3RvbWVyIAooZ3JvdXAgcXVv
-dGEpLCBjdXN0b21lciBzcGxpdHMgaXQgaW50byBhY2NvdW50cyAodXNlciBxdW90YSkgYW5kIHRo
-ZW4gZWFjaCAKYWNjb3VudCBjYW4gaGF2ZSBtdWx0aXBsZSB2aG9zdHMgd2l0aCBvd24gcXVvdGEg
-KHByb2plY3QgcXVvdGEpLgoKU2luY2Ugb24tZGlzayBmb3JtYXQga2VlcHMgZ3JvdXAgYW5kIHBy
-b2plY3QgcXVvdGEgc2VwYXJhdGUgYWxyZWFkeSB0aGVuIHdoeSAKbm90IG1ha2luZyBpdCB1c2Fi
-bGUgZm9yIGEgdXNlciBhcyBzZXBhcmF0ZSB0aGluZ3MsIHRvbz8KCkkgc3RhcnRlZCBkb2luZyB0
-aGF0IGJ5IHNwbGl0dGluZyBldmVyeSBncm91cCtwcm9qZWN0IGhhbmRsaW5nIGNvZGUgaW50byAK
-c2VwYXJhdGUgZ3JvdXAgYW5kIHByb2plY3Qgb25lLiBBZGRlZCBzdXBlcmJsb2NrIGZpZWxkIGZv
-ciBwcm9qZWN0IHF1b3RhLiBOZXcgCmZlYXR1cmUgZmxhZyAoU0VQQVJBVEVQUVVPVEEpLgoKSWYg
-b2xkIGZpbGVzeXN0ZW0gKGZvciBTRVBBUkFURVFVT1RBKSBpcyBtb3VudGVkIHRoZW4gSSdsbCBz
-aW1wbHkgbG9hZCAKc2JfZ3F1b3Rpbm8gaW50byBtcC0+bV9zYi5zYl9wcXVvdGlubyB3aGljaCBJ
-IHRoaW5rIGlzIGVub3VnaCB0byBoYW5kbGUgb2xkIGZzIAooc2luY2UgbmV3IGtlcm5lbCBvcGVy
-YXRlcyBvbiBzZXBhcmF0ZSBzdHJ1Y3R1cmVzIGZvciBwcm9qZWN0IHF1b3RhKS4KCk5ldyBmaWxl
-c3lzdGVtICh3aXRob3V0IHF1b3RhIGlub2RlcyBhbGxvY2F0ZWQgeWV0KSwgd2hlbiBtb3VudGVk
-LCBnZXRzIG5ldyAKcXVvdGEgaW5vZGUgYWxsb2NhdGVkIGZvciBwcm9qZWN0IHF1b3RhIGFuZCBT
-RVBBUkFURVFVT1RBIGZlYXR1cmUgYml0IHNldC4KCkNvbnZlcnRpbmcgb2xkIGZzIHRvIHNlcGFy
-YXRlIHF1b3RhIGlzbid0IGN1cnJlbnRseSBzb2x2ZWQuIFVzZXIgY291bGQgbmVlZCAKdHdvIGNo
-b2ljZXMgLSB1c2Ugb2xkIGdyb3VwIHF1b3RhIHN0aWxsIGFzIGdyb3VwIG9yIG9sZCBncm91cCBh
-cyBuZXcgcHJvamVjdCAKcXVvdGEuIE5vdCBzdXJlIGhvdyB0byBoYW5kbGUgdGhlc2UgeWV0LiAK
-QWxzbywgcXVvdGEgZGF0YSBpcyBrZWVwdCBpbiBleHRlbnRzIGFuZCBleHRlbnRzIGhhdmUgZF9m
-bGFncyByZXByZXNlbnRpbmcgCnR5cGUgb2YgcXVvdGEgKHVzZXIvZ3JvdXAvcHJvaikuIE5vdyB3
-aGF0IGhhcHBlbnMgKGluIGN1cnJlbnQgY29kZSkgd2l0aCAKZXh0ZW50cyBvZiBncm91cC9wcm9q
-ZWN0IHF1b3RhIGlub2RlIGlmIG1vdXRpbmcgb25jZSB3aXRoIGdycHF1b3RhIGFuZCBvbmNlIAp3
-aXRoIHByb2pxdW90YT8gQXJlIHRoZSBvdGhlciBleHRlbnQgZW50cmllcyBpZ25vcmVkPyAobGlr
-ZSBtb3VudGVkIHdpdGggZ3JvdXAgCi0+IGV4dGVudHMgd2l0aCBwcm9qIHR5cGUgaWdub3JlZCBv
-ciBkZWxldGVkIG9yIHNvbWV0aGluZyBlbHNlPykuIAoKVGhlcmUgaXMgYWxzbyBpc3N1ZSB3aXRo
-IGtlcm5lbCBnZW5lcmljIHF1b3RhIGludGVyZmFjZSBmc19xdW90YV9zdGF0IHdoaWNoIApkb2Vz
-bid0IGhhbmRsZSB0aGlyZCBxdW90YSBhdCBhbGwuIEl0IHNpbXBseSB3b24ndCBiZSBhYmxlIHRv
-IG9wZXJhdGUgb24gCnByb2plY3QgcXVvdGEgKGFzIEkgZ3Vlc3MgaXQgaXNuJ3QgYWJsZSB0byBk
-byB0aGF0IGV2ZW4gbm93KS4KCkluaXRpYWwsIG5vdCB3b3JraW5nIHlldCAoZHVlIHRvIGxvY2tp
-bmcgaXNzdWVzKSBwYXRjaCBpcyBoZXJlIChvbiB0b3Agb2YgCnByb2ppZDMyYml0IHBhdGNoIGFj
-dHVhbGx5LCBidXQgYm90aCBmZWF0dXJlcyBhcmUgdW5yZWxhdGVkKToKaHR0cDovL2Nhcm1lLnBs
-ZC1saW51eC5vcmcvfmFyZWttL3hmcy1wYXJhbGxlbC1ncnAtcHJqLXF1b3RhLTIucGF0Y2gKCk15
-IGN1cnJlbnQgcHJvYmxlbSBpcyBsYWNrIG9mIHVuZGVyc3RhbmRpbmcgb2YgbG9ja2luZyBpc3N1
-ZXMgaGVyZToKaHR0cDovL3Bhc3RlYmluLmNvbS9ickJIUGF2UgoKSG93IGxvY2tpbmcgc2hvdWxk
-IGxvb2sgbGlrZSB3aGVuIHRoZXJlIGlzIGFsc28gcHJvamVjdCBxdW90YT8gTGluZXMgMTM5MC0x
-Mzk3IAphbmQgMTQxOS0xNDI4LgoKV2l0aCBjdXJyZW50IGNvZGUgYXMgcGFzdGVkIG9uIHBhc3Rl
-YmluIG1vdW50IGhhbmdzIHRyeWluZyB0byBkbyBsb2NrIG9uIDE0MjYgCmxpbmUgd2hpY2ggd2Fz
-IHVubG9ja2VkIGp1c3QgZmV3IGxpbmVzIGJlZm9yZS4KLS0gCkFya2FkaXVzeiBNacWba2lld2lj
-eiAgICAgICAgUExEL0xpbnV4IFRlYW0KYXJla20gLyBtYXZlbi5wbCAgICAgICAgICAgIGh0dHA6
-Ly9mdHAucGxkLWxpbnV4Lm9yZy8KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Mu
-c2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+--===============9195721261779496571==
+Content-Type: multipart/signed;
+  boundary="nextPart1452010.VipQlhjGaA";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
+
+--nextPart1452010.VipQlhjGaA
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+On Samstag, 4. September 2010 Arkadiusz Miskiewicz wrote:
+> My goal is to be able to use user, group and project quota at the
+>  same time.  Example usage is a web hosting company which gives some
+>  space for customer (group quota), customer splits it into accounts
+>  (user quota) and then each account can have multiple vhosts with own
+>  quota (project quota).
+=20
+Nice idea. I'd also like that, but also mixed:
+userdir1 -> user quota
+userdir2
+prjdir1 -> project quota
+prjdir2
+groupdir1 -> group quota for a group of users=20
+groupdir2 -> for a group of projects
+
+=46rom what you write, I'm sure you can't mix groups with users and=20
+projects, instead it needs to be defined at mount time. It would be very=20
+good if that can be mixed at the same time.
+
+I'd like to say users1-5 can have 500G each, together 2T max. And=20
+projects can have 2T each, but project1+2 together max. 2T. users6-9 can=20
+have 100G each, together 100G max. Currently I defined everything as a=20
+project, and manually check quotas for groups of projects if they cross=20
+the "group max" border.
+
+
+But I'd also be very interested in what you write above - it would be a=20
+very welcome expansion of quotas which seems good. Just a question for=20
+setup: We use all dirs side-by-side like
+domain1
+domain2
+ |- prj1
+ |- prj2
+domain3
+Now customer1 can have domain1 and domain2, customer2 has domain3. prj1=20
+and prj2 can have prjquota. Am I right that this is possible with your=20
+approach? Seems like, and I just want to ask to be sure I understand you=20
+correctly.
+
+Just how would you account that? Say each customer gets 20G, each domain=20
+20G, projects 10G each. When above customer1 has 12G in domain1, he has=20
+left 8G for domain2. Are projects also limited to 8G in sum, or is their=20
+10G limit the one that's valid? If prj1 has 5G, is the 8G-5G=3D3G what's=20
+available for domain2, or are projects completely separate?
+I believe there are lots of variations and some people would like to=20
+have it accounted, some not. Can this ever be solved?
+
+=2D-=20
+mit freundlichen Gr=C3=BCssen,
+Michael Monnerie, Ing. BSc
+
+it-management Internet Services
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: 0660 / 415 65 31
+
+****** Aktuelles Radiointerview! ******
+http://www.it-podcast.at/aktuelle-sendung.html
+
+// Wir haben im Moment zwei H=C3=A4user zu verkaufen:
+// http://zmi.at/langegg/
+// http://zmi.at/haus2009/
+
+--nextPart1452010.VipQlhjGaA
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.12 (GNU/Linux)
+
+iEYEABECAAYFAkyCfk0ACgkQzhSR9xwSCbR7xwCbBT/DrmvIyOkV0s4wiu+fKhhw
+eOoAn2+HO3lOpZzF+7kdEAsFzOo0YI7f
+=4sc8
+-----END PGP SIGNATURE-----
+
+--nextPart1452010.VipQlhjGaA--
+
+
+--===============9195721261779496571==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============9195721261779496571==--
