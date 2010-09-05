@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o85HO1Lh125783 for <xfs@oss.sgi.com>; Sun, 5 Sep 2010 12:24:02 -0500
-Received: from smtp-relay.maven.pl (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A1FF0D8F271
-	for <xfs@oss.sgi.com>; Sun,  5 Sep 2010 10:35:37 -0700 (PDT)
-Received: from smtp-relay.maven.pl (smtp-relay.maven.pl [193.239.45.138]) by
-	cuda.sgi.com with ESMTP id g5pTgcj0RlpdbQJM for
-	<xfs@oss.sgi.com>; Sun, 05 Sep 2010 10:35:37 -0700 (PDT)
-From: Arkadiusz Miskiewicz <arekm@maven.pl>
-Subject: Re: separate project quota from group quota (questions, design issues)
-Date: Sun, 5 Sep 2010 19:24:35 +0200
-References: <201009041000.55878.arekm@maven.pl>
-	<20100904233053.GA26586@infradead.org>
-In-Reply-To: <20100904233053.GA26586@infradead.org>
-MIME-Version: 1.0
-Message-Id: <201009051924.36443.arekm@maven.pl>
+	o85Itcme129561 for <xfs@oss.sgi.com>; Sun, 5 Sep 2010 13:55:39 -0500
+Received: from 1wt.eu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CA16C17B0DC0
+	for <xfs@oss.sgi.com>; Sun,  5 Sep 2010 11:56:18 -0700 (PDT)
+Received: from 1wt.eu (1wt.eu [62.212.114.60]) by cuda.sgi.com with ESMTP id
+	wS8clqa22cda98ht for <xfs@oss.sgi.com>;
+	Sun, 05 Sep 2010 11:56:18 -0700 (PDT)
+Date: Sun, 5 Sep 2010 20:56:00 +0200
+From: Willy Tarreau <w@1wt.eu>
+Subject: Re: XFS status update for August 2010
+Message-ID: <20100905185600.GD27623@1wt.eu>
+References: <20100902145959.GA27887@infradead.org>
+	<20100905074457.GC16004@1wt.eu> <201009051137.07678@zmi.at>
+	<20100905104739.GC27623@1wt.eu> <20100905130809.GI705@dastard>
+Mime-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20100905130809.GI705@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,84 +26,71 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, xfs@oss.sgi.com
 
-T24gU3VuZGF5IDA1IG9mIFNlcHRlbWJlciAyMDEwLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90ZToK
-PiBUaGFua3MgZm9yIGRvaW5nIHRoaXMgd29yayBBcmVrLCBJIHRoaW5rIGl0IHdpbGwgYmUgdXNl
-ZnVsIGZvciBzb21lCj4gdXNlcnMgYW5kIGRlZmludGl2ZWx5IGlzIGNsZWFuZXJzIHRoYW4gd2hh
-dCB3ZSBoYXZlIG5vdy4KPiAKPiA+IEkgc3RhcnRlZCBkb2luZyB0aGF0IGJ5IHNwbGl0dGluZyBl
-dmVyeSBncm91cCtwcm9qZWN0IGhhbmRsaW5nIGNvZGUgaW50bwo+ID4gc2VwYXJhdGUgZ3JvdXAg
-YW5kIHByb2plY3Qgb25lLiBBZGRlZCBzdXBlcmJsb2NrIGZpZWxkIGZvciBwcm9qZWN0IHF1b3Rh
-Lgo+ID4gTmV3IGZlYXR1cmUgZmxhZyAoU0VQQVJBVEVQUVVPVEEpLgo+IAo+IE9rLgo+IAo+ID4g
-SWYgb2xkIGZpbGVzeXN0ZW0gKGZvciBTRVBBUkFURVFVT1RBKSBpcyBtb3VudGVkIHRoZW4gSSds
-bCBzaW1wbHkgbG9hZAo+ID4gc2JfZ3F1b3Rpbm8gaW50byBtcC0+bV9zYi5zYl9wcXVvdGlubyB3
-aGljaCBJIHRoaW5rIGlzIGVub3VnaCB0byBoYW5kbGUKPiA+IG9sZCBmcyAoc2luY2UgbmV3IGtl
-cm5lbCBvcGVyYXRlcyBvbiBzZXBhcmF0ZSBzdHJ1Y3R1cmVzIGZvciBwcm9qZWN0Cj4gPiBxdW90
-YSkuCj4gCj4gRG8geW91IG1lYW4gYW4gb2xkIGZpbGVzeXN0ZW0gd2l0aG91dCB0aGUgU0VQQVJB
-VEVRVU9UQSBiaXQgc2V0IGhlcmU/CgpZZXMuIFdoZW4gdHJ5aW5nIHRvIGxvYWQgZXhpc3Rpbmcg
-cHJvamVjdCBxdW90YSBpbm9kZSBpbiAKeGZzX3FtX2luaXRfcXVvdGFpbm9zKCkgSSdtIGRvaW5n
-OgoKKyAgICAgICAgICAgICAgICAgICAgICAgaWYgKCF4ZnNfc2JfdmVyc2lvbl9oYXNzZXBhcmF0
-ZXBxdW90YSgmbXAtPm1fc2IpKSB7CisgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgQVNT
-RVJUKCFYRlNfSVNfR1FVT1RBX09OKG1wKSk7CisgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgbXAtPm1fc2Iuc2JfcHF1b3Rpbm8gPSBtcC0+bV9zYi5zYl9ncXVvdGlubzsKKyAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICBtcC0+bV9zYi5zYl9ncXVvdGlubyA9IDA7CisgICAgICAg
-ICAgICAgICAgICAgICAgIH0KCldoaWxlIHhmc19tb2Rfc2IoKSBub3cgZG9lczoKCiAgICAgICAg
-LyogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgKiBGaWxlc3lzdGVt
-IGhhcyBubyBzZXBhcmF0ZXBxdW90YSB0dXJuZWQgb24sICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAqIHNvIHdlIG5lZWQgdG8gc3RvcmUgcHJv
-amVjdCBxdW90YSBpbiBncm91cCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgCiAgICAgICAgICogcXVvdGEgaW5vZGUgb24gZGlzay4gICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAg
-ICAgICAgKi8gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgIGlmICgheGZz
-X3NiX3ZlcnNpb25faGFzc2VwYXJhdGVwcXVvdGEoJm1wLT5tX3NiKSkgeyAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICBtcC0+bV9zYi5zYl9n
-cXVvdGlubyA9IG1wLT5tX3NiLnNiX3BxdW90aW5vOyAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgIG1wLT5tX3NiLnNiX3BxdW90aW5vID0gMDsg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-IAogICAgICAgIH0gIAoKICAgICAgIHhmc19zYl90b19kaXNrKFhGU19CVUZfVE9fU0JQKGJwKSwg
-Jm1wLT5tX3NiLCBmaWVsZHMpOwoKIFsuLi5dCiAgICAgICAgLyoKICAgICAgICAgKiBSZXN0b3Jl
-IG9yaWdpbmFsIGluLW1lbW9yeSBwcm9qZWN0IHF1b3RhIGlub2RlIHN0YXRlLgogICAgICAgICAq
-LwogICAgICAgIGlmICgheGZzX3NiX3ZlcnNpb25faGFzc2VwYXJhdGVwcXVvdGEoJm1wLT5tX3Ni
-KSkgeyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAg
-ICAgICBtcC0+bV9zYi5zYl9wcXVvdGlubyA9IG1wLT5tX3NiLnNiX2dxdW90aW5vOyAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgIG1wLT5tX3Ni
-LnNiX2dxdW90aW5vID0gMDsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgIAogICAgICAgIH0gICAgIAoKc28gaW4tbWVtb3J5IHNiX3BxdW90
-YWlubyBpcyBhbHdheXMgdXNlZCBmb3IgcHJvamVjdCBxdW90YSAocmVnYXJkbGVzcyBvZiAKU0VQ
-QVJBVEVQUVVPVEEgZmVhdHVyZSkgd2hpbGUgb24tZGlzayBpcyBkZXBlbmRpbmcgb24gU0VQQVJB
-VEVQUVVPVEEgZmVhdHVyZSAKYml0LiBTQiBtb2RpZnkgcGFydCBpcyB1bnRlc3RlZCB5ZXQuCgo+
-ID4gQ29udmVydGluZyBvbGQgZnMgdG8gc2VwYXJhdGUgcXVvdGEgaXNuJ3QgY3VycmVudGx5IHNv
-bHZlZC4gVXNlciBjb3VsZAo+ID4gbmVlZCB0d28gY2hvaWNlcyAtIHVzZSBvbGQgZ3JvdXAgcXVv
-dGEgc3RpbGwgYXMgZ3JvdXAgb3Igb2xkIGdyb3VwIGFzCj4gPiBuZXcgcHJvamVjdCBxdW90YS4g
-Tm90IHN1cmUgaG93IHRvIGhhbmRsZSB0aGVzZSB5ZXQuCj4gCj4gV2Uga25vdyB3aGF0IHNiX2dx
-dW90aW5vIGlzIHVzZWQgZm9yIGN1cnJlbnRseSBmcm9tIHNiX3FmbGFncy4gIElmIGl0J3MKPiB1
-c2VkIGZvciBncm91cCBxdW90YSB3ZSBjYW4gc2ltcGx5IHNldCB0aGUgU0VQQVJBVEVRVU9UQSBi
-aXQgYW5kIHdlJ3JlCj4gZG9uZS4gIFRvIGNvbnZlcnQgYSBmaWxlc3lzdGVtIHVzaW5nIHByb2pl
-Y3QgcXVvdGFzIHRvIFNFUEFSQVRFUVVPVEEKPiBzYl9ncXVvdGlubyBuZWVkcyB0byBiZSBjbGVh
-cmVkIGFuZCBpbnN0ZWFkIHRoZSBuZXcgc2JfcHF1b3Rpbm8gZmllbGQKPiBuZWVkcyB0byBwb2lu
-dCB0byB0aGUgcHJvamVjdCBxdW90YSBpbm9kZS4KCk9rLCBJJ2xsIGFkZCBuZXcgInVwZ3JhZGUg
-PGZlYXR1cmU+IiBjb21tYW5kIHRvIHhmc19kYiAoYW5kIGNhbGwgaXQgZnJvbSAKeGZzX2FkbWlu
-LCB0b28pIHdoZXJlIGZvciBub3cgdGhlIG9ubHkgZmVhdHVyZSB3aWxsIGJlICJzZXBhcmF0ZXBx
-dW90YSIgb25lLgoKLS0gCkFya2FkaXVzeiBNacWba2lld2ljeiAgICAgICAgUExEL0xpbnV4IFRl
-YW0KYXJla20gLyBtYXZlbi5wbCAgICAgICAgICAgIGh0dHA6Ly9mdHAucGxkLWxpbnV4Lm9yZy8K
-Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWls
-aW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3Rp
-bmZvL3hmcwo=
+On Sun, Sep 05, 2010 at 11:08:09PM +1000, Dave Chinner wrote:
+> On Sun, Sep 05, 2010 at 12:47:39PM +0200, Willy Tarreau wrote:
+> > On Sun, Sep 05, 2010 at 11:37:03AM +0200, Michael Monnerie wrote:
+> > > On Sonntag, 5. September 2010 Willy Tarreau wrote:
+> > > > I've just installed 2.6.35.4
+> > > 
+> > > Try the following mount options: 
+> > > relatime,logbufs=8,logbsize=256k,attr2,barrier,largeio,swalloc,delaylog
+> 
+> FYI:
+> 	- relatime,logbufs=8,attr=2,barrier are all defaults.
+
+in fact I already had noatime and logbsize=256k, and remembered having
+played with the other ones in the past.
+
+> 	- largeio only affects stat(2) output if you have
+> 	  sunit/swidth set - unlikely on a laptop drive, and has
+> 	  no effect on unlink performance.
+> 	- swalloc only affects allocation if sunit/swidth are set
+> 	  and has no effect on unlink performance.
+
+OK.
+
+> > Ah thanks for the info Michael, indeed it's a *lot* better: down from 57s
+> > to 1.3s !
+> 
+> 	- delaylog is the option providing that improvement.
+
+That's what I deduced from Christoph's initial description.
+
+> You should keep in mind that delaylog is a brand new experimental
+> feature (as it warns in dmesg output on mount)
+
+yes, I've noticed the warning in the code then in dmesg. It does not
+seem to be considered upon a remount (I did a mount -o remount,delaylog /
+and it did nothing).
+
+> and as such has the potential to eat your data.
+
+noted, thanks for the warning.
+
+> That being said, I've been running
+> my laptop and my production machines (except for the backup target)
+> for a couple of months now with it and haven't had any problems...
+
+Fine, this is typically the type of info I need. Thus I'll be using
+it with an eye on any potential FS-related problem.
+
+Are there any plans to use that option by default once it gets enough
+testing ? I'm asking because I had to convert from XFS to reseirfs at
+least twice due to slow metadata, but I tend to trust XFS a lot more
+(especially due to dirty failures I experienced a few years ago with
+reiserfs - corrupted file tails upon power cut).
+
+Thanks,
+Willy
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
