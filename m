@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o84NUDgM079349 for <xfs@oss.sgi.com>; Sat, 4 Sep 2010 18:30:15 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D107A15DFE76
-	for <xfs@oss.sgi.com>; Sat,  4 Sep 2010 16:41:48 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id hUInwq6HarkHg5b9 for
-	<xfs@oss.sgi.com>; Sat, 04 Sep 2010 16:41:48 -0700 (PDT)
-Date: Sat, 4 Sep 2010 19:30:53 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: separate project quota from group quota (questions, design issues)
-Message-ID: <20100904233053.GA26586@infradead.org>
-References: <201009041000.55878.arekm@maven.pl>
-MIME-Version: 1.0
+	o857ivF0104824 for <xfs@oss.sgi.com>; Sun, 5 Sep 2010 02:44:57 -0500
+Received: from 1wt.eu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4D37DD8E9D9
+	for <xfs@oss.sgi.com>; Sun,  5 Sep 2010 00:56:31 -0700 (PDT)
+Received: from 1wt.eu (1wt.eu [62.212.114.60]) by cuda.sgi.com with ESMTP id
+	urujPXFesLBZFI2A for <xfs@oss.sgi.com>;
+	Sun, 05 Sep 2010 00:56:31 -0700 (PDT)
+Date: Sun, 5 Sep 2010 09:44:57 +0200
+From: Willy Tarreau <w@1wt.eu>
+Subject: Re: XFS status update for August 2010
+Message-ID: <20100905074457.GC16004@1wt.eu>
+References: <20100902145959.GA27887@infradead.org>
+Mime-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201009041000.55878.arekm@maven.pl>
+In-Reply-To: <20100902145959.GA27887@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,44 +28,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Arkadiusz Miskiewicz <arekm@maven.pl>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Thanks for doing this work Arek, I think it will be useful for some
-users and defintively is cleaners than what we have now.
+Hi Christoph,
 
-> I started doing that by splitting every group+project handling code into 
-> separate group and project one. Added superblock field for project quota. New 
-> feature flag (SEPARATEPQUOTA).
+On Thu, Sep 02, 2010 at 10:59:59AM -0400, Christoph Hellwig wrote:
+> At the first of August we finally saw the release of Linux 2.6.35,
+> which includes a large XFS update.  The most prominent feature in
+> Linux 2.6.35 is the new delayed logging code which provides massive
+> speedups for metadata-intensive workloads, but there has been
+> a large amount of other fixes and cleanups, leading to the following
+> diffstat:
+> 
+> 	 67 files changed, 4426 insertions(+), 3835 deletions(-)
+> 
+> Given the early release of Linux 2.6.35 the merge window for the
+> next release fully fell into the month of August.  The XFS updates
+> for Linux 2.6.36 include various additional performance improvements
+> in the delayed logging code, for direct I/O writes and for avoiding
+> synchronous transactions, as well as various fixed and large amount
+> of cleanups, including the removal of the remaining dead DMAPI
+> code.
 
-Ok.
+This is very good news. I have XFS on my laptop and I regret I have
+installed it there, because working on the kernel is very painful with
+it. A "cp -al $old_dir $new_dir" takes about 1 minute while it takes
+approximatively one second on reiserfs. I've just installed 2.6.35.4
+and did not notice any improvement. However, I'm clearly interested
+in testing any possible pending code that you think should improve
+this behaviour by delaying log writes.
 
-> If old filesystem (for SEPARATEQUOTA) is mounted then I'll simply load 
-> sb_gquotino into mp->m_sb.sb_pquotino which I think is enough to handle old fs 
-> (since new kernel operates on separate structures for project quota).
+So if you have any pointer to recommended patches or a git tree (based
+on an kernel reliable enough for a laptop used for work), I'd be
+interested in trying them.
 
-Do you mean an old filesystem without the SEPARATEQUOTA bit set here?
-
-> New filesystem (without quota inodes allocated yet), when mounted, gets new 
-> quota inode allocated for project quota and SEPARATEQUOTA feature bit set.
-
-I think we need the SEPARATEQUOTA bit set explicitly by
-mkfs.xfs/xfs_admin.  But once we start using project quotas with the
-bit set the above sounds fine.
-
-> Converting old fs to separate quota isn't currently solved. User could need 
-> two choices - use old group quota still as group or old group as new project 
-> quota. Not sure how to handle these yet. 
-
-We know what sb_gquotino is used for currently from sb_qflags.  If it's
-used for group quota we can simply set the SEPARATEQUOTA bit and we're
-done.  To convert a filesystem using project quotas to SEPARATEQUOTA
-sb_gquotino needs to be cleared and instead the new sb_pquotino field
-needs to point to the project quota inode.
-
-
-Need to go now, I'll answer to your other questions once I had some more
-time to review them.
+Regards,
+Willy
 
 _______________________________________________
 xfs mailing list
