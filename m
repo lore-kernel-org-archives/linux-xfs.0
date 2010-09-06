@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o86M3WQ1202847 for <xfs@oss.sgi.com>; Mon, 6 Sep 2010 17:03:32 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 72FA215E0DFD
-	for <xfs@oss.sgi.com>; Mon,  6 Sep 2010 15:15:18 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	nALmqB85FjJyBTCA for <xfs@oss.sgi.com>;
-	Mon, 06 Sep 2010 15:15:18 -0700 (PDT)
-Date: Tue, 7 Sep 2010 08:04:10 +1000
-From: Dave Chinner <david@fromorbit.com>
+	o86Mw2Dr205425 for <xfs@oss.sgi.com>; Mon, 6 Sep 2010 17:58:02 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5252A51188
+	for <xfs@oss.sgi.com>; Mon,  6 Sep 2010 15:58:42 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id FrtEmm4zrehkeSr5 for
+	<xfs@oss.sgi.com>; Mon, 06 Sep 2010 15:58:42 -0700 (PDT)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
 Subject: Re: LWN.net article: creating 1 billion files -> XFS looses
-Message-ID: <20100906220410.GD7362@dastard>
+Date: Tue, 7 Sep 2010 00:58:40 +0200
 References: <201008191312.49346@zmi.at>
 	<20100906154254.5542426c@harpe.intellique.com>
+	<20100906220410.GD7362@dastard>
+In-Reply-To: <20100906220410.GD7362@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100906154254.5542426c@harpe.intellique.com>
+Message-Id: <201009070058.40849@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,76 +25,84 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: multipart/mixed; boundary="===============6910811468103351559=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Emmanuel Florac <eflorac@intellique.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Sep 06, 2010 at 03:42:54PM +0200, Emmanuel Florac wrote:
-> Le Thu, 19 Aug 2010 13:12:45 +0200
-> Michael Monnerie <michael.monnerie@is.it-management.at> =E9crivait:
-> =
+--===============6910811468103351559==
+Content-Type: multipart/signed;
+  boundary="nextPart4570324.df362lkYyj";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-> > The subject is a bit harsh, but overall the article says:
-> > XFS is slowest on creating and deleting a billion files
-> > XFS fsck needs 30GB RAM to fsck that 100TB filesystem.
-> =
+--nextPart4570324.df362lkYyj
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-> Just to go on this subject : a colleague (following my suggestion :)
-> tried to create 1 billion files in the same XFS directory.
-> Unfortunately the directories themselves don't scale well that far :
-> after 1 million files in the first 30 minutes, file creation slows down
-> gradually, so after 100 hours we had about 230 million files. The
-> directory size at that point was 5,3 GB.
+On Dienstag, 7. September 2010 Dave Chinner wrote:
+> # mkfs.xfs -d size=3D64k
+>=20
+> Will speed up large directory operations by at least an order of
+> magnitude.
+=20
+I've read the man page for mkfs.xfs, but I couldn't find out if using=20
+mkfs -d su=3D64k,sw=3D2
+would be a redundant (and superior) option for that? I'd guess so,=20
+reading the description of sunit:
 
-Oh, that's larger than I've every run before ;)
+sunit=3Dvalue
+This  is  used  to specify the stripe unit for a RAID device or a=20
+logical volume. The value has to be specified in 512-byte block units.=20
+Use the su suboption to specify the stripe unit size in bytes. This
+suboption ensures that data allocations will be stripe unit aligned when=20
+the current end of file is being extended and the file size is larger=20
+than 512KiB. Also inode allocations and the internal log will
+be stripe unit aligned.
 
-Try using:
+Or would I still need to use size=3D64k?
 
-# mkfs.xfs -d size=3D64k
+=2D-=20
+mit freundlichen Gr=FCssen,
+Michael Monnerie, Ing. BSc
 
-Will speed up large directory operations by at least an order of
-magnitude.
+it-management Internet Services
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: 0660 / 415 65 31
 
-> Now we're starting afresh with 1000 directories with 1 million files
-> each :)
+****** Aktuelles Radiointerview! ******
+http://www.it-podcast.at/aktuelle-sendung.html
 
-Which is exactly the test that was used to generate the numbers that
-were published.
+// Wir haben im Moment zwei H=E4user zu verkaufen:
+// http://zmi.at/langegg/
+// http://zmi.at/haus2009/
 
-> (Kernel version used : vanilla 2.6.32.11 x86_64 smp)
+--nextPart4570324.df362lkYyj
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
-Not much point in testing that kernel - delayed logging is where the
-future is for this sort of workload, which is what I'm testing.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.12 (GNU/Linux)
 
-FWIW, I'm able to create 50 million inodes in under 14 minutes with
-delayed logging and 8 threads using directories of 100k entries.
+iEYEABECAAYFAkyFciAACgkQzhSR9xwSCbQ6iwCeKSyi5unGkl/FpNAsG/mGzE9/
+uzQAn26pCr5FKLf6NHWSgVl12gC5UfeR
+=h7mc
+-----END PGP SIGNATURE-----
 
-The run to 1 billion inodes that I started late last night (10 hours
-in) has just passed 700M inodes on a 16TB filesystem.  It's running
-at about 25,000 creates/s, but it is limited by bad shrinker
-behaviour causing the dentry cache to be completely trashed causing
-~3000 read iops to reload dentries that are still necessary for
-operation. It should be running about 3-4x faster than that.
+--nextPart4570324.df362lkYyj--
 
-FYI, The reason I'm taking a while to get numbers is that parallel
-create workloads of this scale are showing significant problems (VM
-livelocks, shrinker misbehaviour, lock contention in IO completion
-processing, buffer cache hash scaling issues, etc) and I'm trying to
-fix them as I go - these metadata workloads are completely
-unexplored territory....
 
-Cheers,
-
-Dave.
--- =
-
-Dave Chinner
-david@fromorbit.com
+--===============6910811468103351559==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============6910811468103351559==--
