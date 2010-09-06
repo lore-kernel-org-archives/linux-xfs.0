@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o86DgFjo178004 for <xfs@oss.sgi.com>; Mon, 6 Sep 2010 08:42:15 -0500
-Received: from smtp4-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 98D5650086
-	for <xfs@oss.sgi.com>; Mon,  6 Sep 2010 06:42:56 -0700 (PDT)
-Received: from smtp4-g21.free.fr (smtp4-g21.free.fr [212.27.42.4]) by
-	cuda.sgi.com with ESMTP id TxC6i3mwpLI6HXlE for
-	<xfs@oss.sgi.com>; Mon, 06 Sep 2010 06:42:56 -0700 (PDT)
-Received: from harpe.intellique.com (unknown [82.225.196.72])
-	by smtp4-g21.free.fr (Postfix) with ESMTP id 0AE364C8129
-	for <xfs@oss.sgi.com>; Mon,  6 Sep 2010 15:42:48 +0200 (CEST)
-Date: Mon, 6 Sep 2010 15:42:54 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: LWN.net article: creating 1 billion files -> XFS looses
-Message-ID: <20100906154254.5542426c@harpe.intellique.com>
-In-Reply-To: <201008191312.49346@zmi.at>
-References: <201008191312.49346@zmi.at>
-Mime-Version: 1.0
+	o86IaLUS192818 for <xfs@oss.sgi.com>; Mon, 6 Sep 2010 13:36:22 -0500
+Received: from mail-fx0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 122D515DFFA9
+	for <xfs@oss.sgi.com>; Mon,  6 Sep 2010 11:48:06 -0700 (PDT)
+Received: from mail-fx0-f53.google.com (mail-fx0-f53.google.com
+	[209.85.161.53]) by cuda.sgi.com with ESMTP id ANziJotYdheKaZxq
+	for <xfs@oss.sgi.com>; Mon, 06 Sep 2010 11:48:06 -0700 (PDT)
+Received: by fxm15 with SMTP id 15so2777637fxm.26
+	for <xfs@oss.sgi.com>; Mon, 06 Sep 2010 11:37:02 -0700 (PDT)
+Message-ID: <4C8534D0.3050003@googlemail.com>
+Date: Mon, 06 Sep 2010 20:37:04 +0200
+From: Marcus Osdoba <marcus.osdoba@googlemail.com>
+MIME-Version: 1.0
+Subject: Re: xfs on armv5 still with erroneous log in kernel 2.6.35.4
+References: <4C835A34.9080008@googlemail.com> <20100906005230.GX7362@dastard>
+	<4C845EDE.3010806@sandeen.net>
+In-Reply-To: <4C845EDE.3010806@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,39 +26,35 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-Le Thu, 19 Aug 2010 13:12:45 +0200
-Michael Monnerie <michael.monnerie@is.it-management.at> =E9crivait:
+  Am 06.09.2010 05:24, schrieb Eric Sandeen:
+>
+> I do, and owe their donors some testing; if this is still failing
+> on a kernel with the vipt stuff in place I'll haul them out and
+> do some testing..
+>
+> -Eric
+Hi Eric,
+Thank you both for your ansers.
 
-> The subject is a bit harsh, but overall the article says:
-> XFS is slowest on creating and deleting a billion files
-> XFS fsck needs 30GB RAM to fsck that 100TB filesystem.
+I'm using the latest stable kernel 2.6.35.4. The filesystem was created 
+on the target device with a cross compiled xfsprogs 3.1.3.
+The systems runs on an armv5te architecture (sheevaplug derivative). 
+After creating, mounting and writing some data on it, re-mounting was 
+not possible with the above mentioned error. I've found this message in 
+the mailinglistarchive and thought the patches were integrated into 
+mainline.
 
-Just to go on this subject : a colleague (following my suggestion :)
-tried to create 1 billion files in the same XFS directory.
-Unfortunately the directories themselves don't scale well that far :
-after 1 million files in the first 30 minutes, file creation slows down
-gradually, so after 100 hours we had about 230 million files. The
-directory size at that point was 5,3 GB.
+How can I help? What additional information do you need?
 
-Now we're starting afresh with 1000 directories with 1 million files
-each :)
-
-(Kernel version used : vanilla 2.6.32.11 x86_64 smp)
-
--- =
-
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+regards,
+Marcus
 
 _______________________________________________
 xfs mailing list
