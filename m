@@ -1,31 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o865mLN0157755 for <xfs@oss.sgi.com>; Mon, 6 Sep 2010 00:48:22 -0500
-Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B2A18D91858
-	for <xfs@oss.sgi.com>; Sun,  5 Sep 2010 23:00:03 -0700 (PDT)
-Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id t7oD8LEupgmwiVn7 for
-	<xfs@oss.sgi.com>; Sun, 05 Sep 2010 23:00:03 -0700 (PDT)
-Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv14.zmi.at (Postfix) with ESMTPSA id 6036012D
-	for <xfs@oss.sgi.com>; Mon,  6 Sep 2010 07:49:02 +0200 (CEST)
-Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id 2AE07401C2E
-	for <xfs@oss.sgi.com>; Mon,  6 Sep 2010 07:49:02 +0200 (CEST)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: xfs mount/create options (was: XFS status update for August 2010)
-Date: Mon, 6 Sep 2010 07:49:00 +0200
-References: <20100902145959.GA27887@infradead.org>
-	<20100905104739.GC27623@1wt.eu> <20100905130809.GI705@dastard>
-In-Reply-To: <20100905130809.GI705@dastard>
+	o866Rp6c160684 for <xfs@oss.sgi.com>; Mon, 6 Sep 2010 01:27:51 -0500
+Received: from smtp-relay.maven.pl (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9F0ECD90D0C
+	for <xfs@oss.sgi.com>; Sun,  5 Sep 2010 23:39:33 -0700 (PDT)
+Received: from smtp-relay.maven.pl (smtp-relay.maven.pl [193.239.45.138]) by
+	cuda.sgi.com with ESMTP id bCnG3dJQTymP0kI9 for
+	<xfs@oss.sgi.com>; Sun, 05 Sep 2010 23:39:33 -0700 (PDT)
+From: Arkadiusz Miskiewicz <arekm@maven.pl>
+Subject: Re: separate project quota from group quota (questions, design issues)
+Date: Mon, 6 Sep 2010 08:28:19 +0200
+References: <201009041000.55878.arekm@maven.pl>
+	<201009051924.36443.arekm@maven.pl> <20100906011213.GY7362@dastard>
+In-Reply-To: <20100906011213.GY7362@dastard>
 MIME-Version: 1.0
-Message-Id: <201009060749.01405@zmi.at>
+Message-Id: <201009060828.19924.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,98 +24,101 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1478691721023739018=="
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
---===============1478691721023739018==
-Content-Type: multipart/signed;
-  boundary="nextPart1347244.n8PFJfZFbu";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
-
---nextPart1347244.n8PFJfZFbu
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-
-I looked into man mkfs now, which brings up these questions:
-
-On Sonntag, 5. September 2010 Dave Chinner wrote:
->         - relatime,logbufs=3D8,attr=3D2,barrier are all defaults.
-
-Why isn't logbsize=3D256k default, when it's suggested most of the time=20
-anyway? On machines with 32MiB or more 32k is the default, but most=20
-machines these days have multi-gigabytes of RAM, so at least for=20
-RAM>1GiB that could be made default.
-
->         - largeio only affects stat(2) output if you have
->           sunit/swidth set - unlikely on a laptop drive, and has
->           no effect on unlink performance.
->         - swalloc only affects allocation if sunit/swidth are set
->           and has no effect on unlink performance.
-
-Hm, it seems I don't understand that. I tried now on different servers,=20
-using
-stat -f /disks/db --format '%s %S'
-4096 4096
-
-That filesystems were all created with su=3D64k,swidth=3D(values 4-8=20
-depending on RAID). So I retried specifying directly in the mount=20
-options: sunit=3D128,swidth=3D512
-and it still reports "4096" for %s - or is %s not the value I should=20
-look for? Some of the filesystems even have allocsize=3D specified, still=20
-always 4096 is given back. Where is my problem?
-
-And while I am at it: Why does "mount" not provide the su=3D/sw=3D options=
-=20
-that we can use to create a filesystem? Would make life easier, as it's=20
-much easier to read su=3D64k,sw=3D7 than sunit=3D128,swidth=3D896.
-
-When I defined su/sw on mkfs, is it enough, or would I always have to=20
-specify sunit/swidth with every mount too?
-
-=2D-=20
-mit freundlichen Gr=FCssen,
-Michael Monnerie, Ing. BSc
-
-it-management Internet Services
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: 0660 / 415 65 31
-
-****** Aktuelles Radiointerview! ******
-http://www.it-podcast.at/aktuelle-sendung.html
-
-// Wir haben im Moment zwei H=E4user zu verkaufen:
-// http://zmi.at/langegg/
-// http://zmi.at/haus2009/
-
---nextPart1347244.n8PFJfZFbu
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.12 (GNU/Linux)
-
-iEYEABECAAYFAkyEgM0ACgkQzhSR9xwSCbSJxACZARBP0nSjTXPUEFIlAdPhgP6w
-X3sAn2nKCQvlfwTxz4BqVLeENsk6i8oA
-=46Of
------END PGP SIGNATURE-----
-
---nextPart1347244.n8PFJfZFbu--
-
-
---===============1478691721023739018==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---===============1478691721023739018==--
+T24gTW9uZGF5IDA2IG9mIFNlcHRlbWJlciAyMDEwLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4gT24g
+U3VuLCBTZXAgMDUsIDIwMTAgYXQgMDc6MjQ6MzVQTSArMDIwMCwgQXJrYWRpdXN6IE1pc2tpZXdp
+Y3ogd3JvdGU6Cgo+ID4gICAgICAgICAgKiBSZXN0b3JlIG9yaWdpbmFsIGluLW1lbW9yeSBwcm9q
+ZWN0IHF1b3RhIGlub2RlIHN0YXRlLgo+ID4gICAgICAgICAgKi8KPiA+ICAgICAgICAgCj4gPiAg
+ICAgICAgIGlmICgheGZzX3NiX3ZlcnNpb25faGFzc2VwYXJhdGVwcXVvdGEoJm1wLT5tX3NiKSkg
+ewo+ID4gICAgICAgICAKPiA+ICAgICAgICAgICAgICAgICBtcC0+bV9zYi5zYl9wcXVvdGlubyA9
+IG1wLT5tX3NiLnNiX2dxdW90aW5vOwo+ID4gICAgICAgICAgICAgICAgIG1wLT5tX3NiLnNiX2dx
+dW90aW5vID0gMDsKPiA+ICAgICAgICAgCj4gPiAgICAgICAgIH0KPiAKPiBJIGRvbid0IHRoaW5r
+IHRoYXQgaXMgc2FmZSAtIHdlIGNhbiBoYXZlIGNvbmN1cnJlbnQgYWNjZXNzIHRvIHRoZQo+IGlu
+LWNvcmUgc3VwZXJibG9jayAobXAtPm1fc2IpIHdpdGhvdXQgbG9ja2luZyB0aGUgc3VwZXJibG9j
+aywgc28KPiBzb21ldGhpbmcgdGhhdCByYWNlcyB3aXRoIHhmc19tb2Rfc2IoKSBsb29raW5nIHVw
+IHByb2plY3QgcXVvdGEKPiBjb3VsZCBkaWUgYSBob3JyaWJsZSBkZWF0aCBoZXJlLgoKSSB3YXMg
+dGhpbmtpbmcgYWJvdXQgd29ya2luZyBvbiBhIGNvcHksIHRvbywgbGlrZSB0aGlzCisgICAgICAg
+eGZzX3NiX3QgICAgICAgIHNiX2NvcHk7ClsuLi5dCisgICAgICAgbWVtY3B5KCZzYl9jb3B5LCBm
+cm9tLCBzaXplb2Yoc2JfY29weSkpOworICAgICAgIGZyb21fcHRyID0gKHhmc19jYWRkcl90KSZz
+Yl9jb3B5OworCisgICAgICAgaWYgKCF4ZnNfc2JfdmVyc2lvbl9oYXNzZXBhcmF0ZXBxdW90YShm
+cm9tKSAmJgorICAgICAgICAgICAgICAgICAgICAgICAoc2JfY29weS5zYl9xZmxhZ3MgJiBYRlNf
+UFFVT1RBX0FDQ1QpKSB7CisgICAgICAgICAgICAgICBzYl9jb3B5LnNiX2dxdW90aW5vID0gZnJv
+bS0+c2JfcHF1b3Rpbm87CisgICAgICAgICAgICAgICBzYl9jb3B5LnNiX3BxdW90aW5vID0gMDsK
+KworICAgICAgIH0gCgo+IAo+IFRoZSBvbmx5IHRpbWUgdGhhdCB5b3Ugc2hvdWxkIG5lZWQgdG8g
+ZG8gdGhpcyBqdWdnbGluZyBpcyB3aGVuIHRoZQo+IHF1b3RhIGlub2RlIGNoYW5nZXMuIFRoYXQg
+aXMsIHdoZW4gdGhlIFhGU19TQl9HUVVPVElOTyBmaWVsZCBpcwo+IHNldC4gT3RoZXJ3aXNlIHRo
+ZSBmaWVsZCB3b24ndCBiZSBtb2RpZmllZCBhbmQgc28gd2UgZG9uJ3QgbmVlZCB0bwo+IGNvbnZl
+cnQgdGhlIHZhbHVlcy4gVGhhdCBvbmx5IG9jY3VycyB3aGVuIHF1b3RhcyBhcmUgYmVpbmcKPiBp
+bml0aWFsaXNlZCAoeGZzX3FtX3Fpbm9fYWxsb2MoKSkgZHVyaW5nIG1vdW50LCBzbyBpbiB0aGF0
+IGNhc2UKPiB0aGVyZSBjYW4ndCBiZSBhbnkgY29uY3VycmVudCBvcGVyYXRpb25zIG9jY3Vycmlu
+Zy4gSGVuY2Ugc3dpenpsaW5nCj4gdGhlIGlub2RlIGZpZWxkcyBvbmx5IHdoZW4gdGhlIFhGU19T
+Ql9HUVVPVElOTyBmaWxlZCBpcyBzZXQgc2hvdWxkCj4gYmUgc2FmZS4KClVuZm9ydHVuYXRlbHkg
+aXQgdHVybnMgb3V0IHRoYXQgSSBuZWVkIHRvIGNvbnZlcnQgc2JfcWZsYWdzLCB0b28gKHNlZSBi
+ZWxvdykKYW5kIHNiX3FmbGFncyBzZWVtIHRvIGJlIGNoYW5nZXMgaW4gZmV3IGRpZmZlcmVudCBw
+bGFjZXMsIHNvIHhmc19tb2Rfc2IoKQpsb29rcyBhIGdvb2QgcGxhY2UgdG8gZG8gYSBjb252ZXJz
+aW9uIGZvciB0aGlzLgoKc2JfcWZsYWdzIGNvbWUgaW50byBwbGF5LiBPbGQgWEZTX09RVU9UQV9D
+SEtEIGFuZApYRlNfUFFVT1RBX0NIS0QgYXJlIG5vIGxvbmdlciB1c2VkIGJ5IGtlcm5lbCBidXQg
+ZXhpc3RpbmcgZmlsZXN5c3RlbXMKY2FuIGhhdmUgdGhlc2UsIHNvIEknbSBnb2luZyB0byB0cmFu
+c2xhdGUgb2xkIGludG8gbmV3IGZsYWdzIGN1cnJlbnRseQppbiB4ZnNfc2JfZnJvbV9kaXNrKCkg
+YW5kIHZpY2UgdmVyc2EgaW4geGZzX21vZF9zYigpLgoKQEAgLTU3NSw2ICs1ODgsMjYgQEAgeGZz
+X3NiX2Zyb21fZGlzaygKICAgICAgICB0by0+c2JfbG9nc3VuaXQgPSBiZTMyX3RvX2NwdShmcm9t
+LT5zYl9sb2dzdW5pdCk7CiAgICAgICAgdG8tPnNiX2ZlYXR1cmVzMiA9IGJlMzJfdG9fY3B1KGZy
+b20tPnNiX2ZlYXR1cmVzMik7CiAgICAgICAgdG8tPnNiX2JhZF9mZWF0dXJlczIgPSBiZTMyX3Rv
+X2NwdShmcm9tLT5zYl9iYWRfZmVhdHVyZXMyKTsKKyAgICAgICB0by0+c2JfcHF1b3Rpbm8gPSBi
+ZTY0X3RvX2NwdShmcm9tLT5zYl9wcXVvdGlubyk7CisKKyAgICAgICAvKgorICAgICAgICAqIENv
+bnZlcnQgb2xkIHF1b3RhIHRvIHNlcGFyYXRlcHF1b3RhIGZsYWdzLgorICAgICAgICAqLworICAg
+ICAgIGlmICh0by0+c2JfcWZsYWdzICYgWEZTX09RVU9UQV9DSEtEX05PVFVTRUQpIHsKKyAgICAg
+ICAgICAgICAgIGlmICh0by0+c2JfcWZsYWdzICYgWEZTX0dRVU9UQV9BQ0NUKSB7CisgICAgICAg
+ICAgICAgICAgICAgICAgIHRvLT5zYl9xZmxhZ3MgJj0gflhGU19PUVVPVEFfQ0hLRF9OT1RVU0VE
+OworICAgICAgICAgICAgICAgICAgICAgICB0by0+c2JfcWZsYWdzIHw9IFhGU19HUVVPVEFfQ0hL
+RDsKKyAgICAgICAgICAgICAgIH0gZWxzZSBpZiAodG8tPnNiX3FmbGFncyAmIFhGU19QUVVPVEFf
+QUNDVCkgeworICAgICAgICAgICAgICAgICAgICAgICB0by0+c2JfcWZsYWdzICY9IH5YRlNfUFFV
+T1RBX0NIS0RfTk9UVVNFRDsKKyAgICAgICAgICAgICAgICAgICAgICAgdG8tPnNiX3FmbGFncyB8
+PSBYRlNfUFFVT1RBX0NIS0Q7CisgICAgICAgICAgICAgICB9CisgICAgICAgfQorCisgICAgICAg
+aWYgKCF4ZnNfc2JfdmVyc2lvbl9oYXNzZXBhcmF0ZXBxdW90YSh0bykgJiYKKyAgICAgICAgICAg
+ICAgICAgICAgICAgKHRvLT5zYl9xZmxhZ3MgJiBYRlNfUFFVT1RBX0FDQ1QpKSB7CisgICAgICAg
+ICAgICAgICB0by0+c2JfcHF1b3Rpbm8gPSB0by0+c2JfZ3F1b3Rpbm87CisgICAgICAgICAgICAg
+ICB0by0+c2JfZ3F1b3Rpbm8gPSAwOworICAgICAgIH0KIH0KCk5ldyBmbGFncyBhcmUgZ29pbmcg
+dG8gYmUgbGlrZSB0aGlzOgoKICNkZWZpbmUgWEZTX1VRVU9UQV9FTkZEICAgICAgICAweDAwMDIg
+IC8qIHVzZXIgcXVvdGEgbGltaXRzIGVuZm9yY2VkICovICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgIAogI2RlZmluZSBYRlNfVVFVT1RBX0NIS0QgICAgICAgIDB4MDAwNCAgLyogcXVvdGFjaGVj
+ayBydW4gb24gdXNyIHF1b3RhcyAqLyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAjZGVmaW5l
+IFhGU19QUVVPVEFfQUNDVCAgICAgICAgMHgwMDA4ICAvKiBwcm9qZWN0IHF1b3RhIGFjY291bnRp
+bmcgT04gKi8gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKLSNkZWZpbmUgWEZTX09RVU9UQV9F
+TkZEICAgICAgICAweDAwMTAgIC8qIG90aGVyIChncnAvcHJqKSBxdW90YSBsaW1pdHMgZW5mb3Jj
+ZWQgKi8gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgIAotI2RlZmluZSBYRlNfT1FVT1RBX0NIS0QgICAgICAgIDB4
+MDAyMCAgLyogcXVvdGFjaGVjayBydW4gb24gb3RoZXIgKGdycC9wcmopIHF1b3RhcyAqLyAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgCisjZGVmaW5lIFhGU19PUVVPVEFfRU5GRF9OT1RVU0VEICAgICAgICAweDAwMTAg
+IC8qIG90aGVyIChncnAvcHJqKSBxdW90YSBsaW1pdHMgZW5mb3JjZWQgKE5PIExPTkdFUiBVU0VE
+KSovICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKKyNk
+ZWZpbmUgWEZTX09RVU9UQV9DSEtEX05PVFVTRUQgICAgICAgIDB4MDAyMCAgLyogcXVvdGFjaGVj
+ayBydW4gb24gb3RoZXIgKGdycC9wcmopIHF1b3RhcyAoTk8gTE9OR0VSIFVTRUQpKi8gICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogI2RlZmluZSBYRlNfR1FV
+T1RBX0FDQ1QgICAgICAgIDB4MDA0MCAgLyogZ3JvdXAgcXVvdGEgYWNjb3VudGluZyBPTiAqLyAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgCisjZGVmaW5lIFhGU19HUVVPVEFfRU5GRCAgICAg
+ICAgMHgwMDgwICAvKiBncm91cCBxdW90YSBsaW1pdHMgZW5mb3JjZWQgKi8gICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAKKyNkZWZpbmUgWEZTX0dRVU9UQV9DSEtEICAgICAgICAweDAxMDAgIC8q
+IGdyb3VwIHF1b3RhIGFjY291bmdpbnQgT04gKi8gICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+IAorI2RlZmluZSBYRlNfUFFVT1RBX0NIS0QgICAgICAgIDB4MDIwMCAgLyogcXVvdGFjaGVjayBy
+dW4gb24gcHJvamVjdCBxdW90YXMgKi8gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCisjZGVmaW5lIFhG
+U19QUVVPVEFfRU5GRCAgICAgICAgMHgwNDAwICAvKiBwcm9qZWN0IHF1b3RhIGxpbWl0cyBlbmZv
+cmNlZCAqLyAgCgoKPiBDaGVlcnMsCj4gCj4gRGF2ZS4KCgotLSAKQXJrYWRpdXN6IE1pxZtraWV3
+aWN6ICAgICAgICBQTEQvTGludXggVGVhbQphcmVrbSAvIG1hdmVuLnBsICAgICAgICAgICAgaHR0
+cDovL2Z0cC5wbGQtbGludXgub3JnLwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29z
+cy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
