@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o85NLMPI139144 for <xfs@oss.sgi.com>; Sun, 5 Sep 2010 18:21:23 -0500
+	o860pqMb142716 for <xfs@oss.sgi.com>; Sun, 5 Sep 2010 19:51:53 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 11FBD4E3AE
-	for <xfs@oss.sgi.com>; Sun,  5 Sep 2010 16:22:03 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
-	[150.101.137.103]) by cuda.sgi.com with ESMTP id
-	SNgDwYmL7FUECDBG for <xfs@oss.sgi.com>;
-	Sun, 05 Sep 2010 16:22:03 -0700 (PDT)
-Date: Mon, 6 Sep 2010 09:22:00 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F063CD907FE
+	for <xfs@oss.sgi.com>; Sun,  5 Sep 2010 18:03:32 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	u02ASWihmFeBDP8e for <xfs@oss.sgi.com>;
+	Sun, 05 Sep 2010 18:03:32 -0700 (PDT)
+Date: Mon, 6 Sep 2010 10:52:30 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] Extend project quotas to support 32bit project
-	identificators. [version 3]
-Message-ID: <20100905232200.GT7362@dastard>
-References: <1282770578-6958-1-git-send-email-arekm@maven.pl>
-	<1282948798-12622-1-git-send-email-arekm@maven.pl>
+Subject: Re: xfs on armv5 still with erroneous log in kernel 2.6.35.4
+Message-ID: <20100906005230.GX7362@dastard>
+References: <4C835A34.9080008@googlemail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1282948798-12622-1-git-send-email-arekm@maven.pl>
+In-Reply-To: <4C835A34.9080008@googlemail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,57 +25,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+To: Marcus Osdoba <marcus.osdoba@googlemail.com>
 Cc: xfs@oss.sgi.com
 
-T24gU2F0LCBBdWcgMjgsIDIwMTAgYXQgMTI6Mzk6NThBTSArMDIwMCwgQXJrYWRpdXN6IE1pxZtr
-aWV3aWN6IHdyb3RlOgo+IFRoaXMgcGF0Y2ggYWRkcyBzdXBwb3J0IGZvciAzMmJpdCBwcm9qZWN0
-IHF1b3RhIGlkZW50aWZpY2F0b3JzLgo+IAo+IE9uIGRpc2sgZm9ybWF0IGlzIGJhY2t3YXJkIGNv
-bXBhdGlibGUgd2l0aCAxNmJpdCBwcm9qaWQgbnVtYmVycy4gcHJvamlkCj4gb24gZGlzayBpcyBu
-b3cga2VlcHQgaW4gdHdvIDE2Yml0IHZhbHVlcyAtIGRpX3Byb2ppZF9sbyAod2hpY2ggaG9sZHMg
-dGhlCj4gc2FtZSBwb3NpdGlvbiBhcyBvbGQgMTZiaXQgcHJvamlkIHZhbHVlKSBhbmQgbmV3IGRp
-X3Byb2ppZF9oaSAodGFrZXMKPiBleGlzdGluZyBwYWRkaW5nKSBhbmQgY29udmVydGVzIGZyb20v
-dG8gMzJiaXQgdmFsdWUgb24gdGhlIGZseS4KPiAKPiBQUk9KSUQzMkJJVCBmZWF0dXJlMiBmbGFn
-IGlzIHNldCBhdXRvbWF0aWNseSB3aGVuIHRyeWluZyB0byB1c2UgMzJiaXQKPiBxdW90YSBwcm9q
-ZWN0IGlkZW50aWZpY2F0b3IuCj4gCj4gU2lnbmVkLW9mZi1ieTogQXJrYWRpdXN6IE1pxZtraWV3
-aWN6IDxhcmVrbUBtYXZlbi5wbD4KLi4uLi4KPiBAQCAtOTQ2LDEzICs5NDYsMzAgQEAgeGZzX2lv
-Y3RsX3NldGF0dHIoCj4gIAkJZ290byBlcnJvcl9yZXR1cm47Cj4gIAl9Cj4gIAo+IC0JLyoKPiAt
-CSAqIERvIGEgcXVvdGEgcmVzZXJ2YXRpb24gb25seSBpZiBwcm9qaWQgaXMgYWN0dWFsbHkgZ29p
-bmcgdG8gY2hhbmdlLgo+IC0JICovCj4gIAlpZiAobWFzayAmIEZTWF9QUk9KSUQpIHsKPiArCQkv
-Kgo+ICsJCSAqIFN3aXRjaCBvbiB0aGUgUFJPSklEMzJCSVQgc3VwZXJibG9jayBiaXQgd2hlbiBu
-ZWVkZWQKPiArCQkgKiAoaW1wbGllcyBhbHNvIEZFQVRVUkVTMikKPiArCQkgKi8KPiArCQlpZiAo
-IXhmc19zYl92ZXJzaW9uX2hhc3Byb2ppZDMyYml0KCZpcC0+aV9tb3VudC0+bV9zYikgJiYKPiAr
-CQkJCWZhLT5mc3hfcHJvamlkID4gKF9fdWludDE2X3QpLTEpIHsKPiArCQkJc3Bpbl9sb2NrKCZp
-cC0+aV9tb3VudC0+bV9zYl9sb2NrKTsKPiArCQkJaWYgKCF4ZnNfc2JfdmVyc2lvbl9oYXNwcm9q
-aWQzMmJpdCgmaXAtPmlfbW91bnQtPm1fc2IpKSB7Cj4gKwkJCQl4ZnNfc2JfdmVyc2lvbl9hZGRw
-cm9qaWQzMmJpdCgmaXAtPmlfbW91bnQtPm1fc2IpOwo+ICsJCQkJc3Bpbl91bmxvY2soJmlwLT5p
-X21vdW50LT5tX3NiX2xvY2spOwo+ICsJCQkJeGZzX21vZF9zYih0cCwKPiArCQkJCQlYRlNfU0Jf
-VkVSU0lPTk5VTSB8IFhGU19TQl9GRUFUVVJFUzIpOwo+ICsJCQl9IGVsc2UKPiArCQkJCXNwaW5f
-dW5sb2NrKCZpcC0+aV9tb3VudC0+bV9zYl9sb2NrKTsKPiArCQl9CgpDYW4geW91IHNlcGFyYXRl
-IG91dCB0aGUgc3VwZXJibG9jayBmZWF0dXJlIGJpdCBtb2RpZmljYXRpb24gaW50byBhCmhlbHBl
-ciBmdW5jdGlvbj8KCj4gQEAgLTMzNSw2ICszMzYsMjMgQEAgeGZzX2lmbGFnc190ZXN0X2FuZF9j
-bGVhcih4ZnNfaW5vZGVfdCAqaXAsIHVuc2lnbmVkIHNob3J0IGZsYWdzKQo+ICB9Cj4gIAo+ICAv
-Kgo+ICsgKiBQcm9qZWN0IHF1b3RhIGlkIGhlbHBlcnMKPiArICovCj4gK3N0YXRpYyBpbmxpbmUg
-cHJpZF90Cj4gK3hmc19nZXRfcHJvamlkKHhmc19pbm9kZV90ICppcCkKPiArewo+ICsJcmV0dXJu
-IChwcmlkX3QpKGlwLT5pX2QuZGlfcHJvamlkX2hpKSA8PCAxNiB8IGlwLT5pX2QuZGlfcHJvamlk
-X2xvOwo+ICt9CgpJIHRoaW5rIHRoZSBzZXQgb2YgcGFyZW50aGVzaXMgc2hvdWxkIGJlIHNlcGFy
-YXRpbmcgdG8gdGhlIHR3bwpoYWx2ZdGVIG9mIHZhbHVlIGNsZWFybHkgLSB0aGUgcGFyZW50aGVz
-aXMgYXJvdW5kCmlwLT5pX2QuZGlfcHJvamlkX2hpIGFyZSBlZmZlY3RpdmVseSBtZWFuaW5nbGVz
-cy4gaS5lOgoKCXJldHVybiAoKHByaWRfdClpcC0+aV9kLmRpX3Byb2ppZF9oaSA8PCAxNikgfCBp
-cC0+aV9kLmRpX3Byb2ppZF9sbzsKCj4gK3N0YXRpYyBpbmxpbmUgaW50IHhmc19zYl92ZXJzaW9u
-X2hhc3Byb2ppZDMyYml0KHhmc19zYl90ICpzYnApCj4gK3sKPiArCXJldHVybiB4ZnNfc2JfdmVy
-c2lvbl9oYXNtb3JlYml0cyhzYnApICYmCj4gKwkJKHNicC0+c2JfZmVhdHVyZXMyICYgWEZTX1NC
-X1ZFUlNJT04yX1BST0pJRDMyQklUKTsKPiArfQo+ICsKPiArc3RhdGljIGlubGluZSB2b2lkIHhm
-c19zYl92ZXJzaW9uX2FkZHByb2ppZDMyYml0KHhmc19zYl90ICpzYnApCj4gK3sKPiArCXNicC0+
-c2JfdmVyc2lvbm51bSB8PSBYRlNfU0JfVkVSU0lPTl9NT1JFQklUU0JJVDsKPiArCXNicC0+c2Jf
-ZmVhdHVyZXMyIHw9IFhGU19TQl9WRVJTSU9OMl9QUk9KSUQzMkJJVDsKPiArfQoKVGhpcyBhbHNv
-IG5lZWRzIHRvIHNldCB0aGUgYml0IGluIHRoZSBzYnAtPnNiX2JhZF9mZWF0dXJlczIgZmllbGQu
-CgpPdGhlcndpc2UgaXQgbG9va3Mgb2suIEknbGwgdGhyb3cgaXQgaW4gbXkgUUEgc3RhY2sgYW5k
-IHNlZSBob3cgaXQKZ29lcy4KCkNoZWVycywKCkRhdmUuCi0tIApEYXZlIENoaW5uZXIKZGF2aWRA
-ZnJvbW9yYml0LmNvbQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29t
-L21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Sun, Sep 05, 2010 at 10:52:04AM +0200, Marcus Osdoba wrote:
+>  Hello XFS mailinglist,
+> 
+> On my armv5 device I like to use XFS for my simple home made nas,
+> because I think it is ideal for low/medium performance CPUs.
+> I searched the mailing archive about the usage of XFS on arm
+> architecture. I figured out, that the patchset of James Bottomley
+> was applied to the main line. So I expected xfs to run properly on
+> arm. Unfortunatly I still run into this (known) error after writing
+> some data on an xfs partition and remounting it:
+> <mailto:xfs@oss.sgi.com>"
+> SGI XFS with ACLs, security attributes, large block/inode numbers,
+> no debug enabled
+> SGI XFS Quota Management subsystem
+> XFS mounting filesystem sda1
+> Starting XFS recovery on filesystem: sda1 (logdev: internal)
+> XFS: xlog_recover_process_data: bad clientid
+> XFS: log mount/recovery failed: error 5
+> XFS: log mount failed
+> "
+>
+> Am I still forced to use the "hammer" approach (flushing buffers in
+> xfs_buf.c) which was proposed in January 2010? Or did I misinterpret
+> the logfile of the xfs component in the kernel (so no arm fixing
+> patches were applied)?
+
+What kernel version are you running? The xfs-vipt branch was merged into
+mainline in late February, so kernels from 2.6.34 onwards should be
+OK.
+
+If it isn't ok, then we need to know exactly what ARM CPU arch you
+are using, and if the old brute-force cache flushing hack fix the
+problem or not.
+
+> Is xfs NOW be known to work on arm (e.g. armv5)? If so I like to
+> complain. If not, I'm willing to test patches which might solve this
+> issue.
+
+I don't know of any outstanding XFS specific issues on ARM, but I
+don't have any ARM machines here that I can test on....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
