@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o860pqMb142716 for <xfs@oss.sgi.com>; Sun, 5 Sep 2010 19:51:53 -0500
+	o861BaDu143325 for <xfs@oss.sgi.com>; Sun, 5 Sep 2010 20:11:36 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F063CD907FE
-	for <xfs@oss.sgi.com>; Sun,  5 Sep 2010 18:03:32 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	u02ASWihmFeBDP8e for <xfs@oss.sgi.com>;
-	Sun, 05 Sep 2010 18:03:32 -0700 (PDT)
-Date: Mon, 6 Sep 2010 10:52:30 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 719AF14E6AC9
+	for <xfs@oss.sgi.com>; Sun,  5 Sep 2010 18:23:16 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	gXy1j0rIpGHeN87O for <xfs@oss.sgi.com>;
+	Sun, 05 Sep 2010 18:23:16 -0700 (PDT)
+Date: Mon, 6 Sep 2010 11:12:13 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs on armv5 still with erroneous log in kernel 2.6.35.4
-Message-ID: <20100906005230.GX7362@dastard>
-References: <4C835A34.9080008@googlemail.com>
+Subject: Re: separate project quota from group quota (questions, design issues)
+Message-ID: <20100906011213.GY7362@dastard>
+References: <201009041000.55878.arekm@maven.pl>
+	<20100904233053.GA26586@infradead.org>
+	<201009051924.36443.arekm@maven.pl>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4C835A34.9080008@googlemail.com>
+In-Reply-To: <201009051924.36443.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,49 +31,72 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Marcus Osdoba <marcus.osdoba@googlemail.com>
-Cc: xfs@oss.sgi.com
+To: Arkadiusz Miskiewicz <arekm@maven.pl>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Sun, Sep 05, 2010 at 10:52:04AM +0200, Marcus Osdoba wrote:
->  Hello XFS mailinglist,
+On Sun, Sep 05, 2010 at 07:24:35PM +0200, Arkadiusz Miskiewicz wrote:
+> On Sunday 05 of September 2010, Christoph Hellwig wrote:
+> > Thanks for doing this work Arek, I think it will be useful for some
+> > users and defintively is cleaners than what we have now.
+> > 
+> > > I started doing that by splitting every group+project handling code into
+> > > separate group and project one. Added superblock field for project quota.
+> > > New feature flag (SEPARATEPQUOTA).
+> > 
+> > Ok.
+> > 
+> > > If old filesystem (for SEPARATEQUOTA) is mounted then I'll simply load
+> > > sb_gquotino into mp->m_sb.sb_pquotino which I think is enough to handle
+> > > old fs (since new kernel operates on separate structures for project
+> > > quota).
+> > 
+> > Do you mean an old filesystem without the SEPARATEQUOTA bit set here?
 > 
-> On my armv5 device I like to use XFS for my simple home made nas,
-> because I think it is ideal for low/medium performance CPUs.
-> I searched the mailing archive about the usage of XFS on arm
-> architecture. I figured out, that the patchset of James Bottomley
-> was applied to the main line. So I expected xfs to run properly on
-> arm. Unfortunatly I still run into this (known) error after writing
-> some data on an xfs partition and remounting it:
-> <mailto:xfs@oss.sgi.com>"
-> SGI XFS with ACLs, security attributes, large block/inode numbers,
-> no debug enabled
-> SGI XFS Quota Management subsystem
-> XFS mounting filesystem sda1
-> Starting XFS recovery on filesystem: sda1 (logdev: internal)
-> XFS: xlog_recover_process_data: bad clientid
-> XFS: log mount/recovery failed: error 5
-> XFS: log mount failed
-> "
+> Yes. When trying to load existing project quota inode in 
+> xfs_qm_init_quotainos() I'm doing:
+> 
+> +                       if (!xfs_sb_version_hasseparatepquota(&mp->m_sb)) {
+> +                               ASSERT(!XFS_IS_GQUOTA_ON(mp));
+> +                               mp->m_sb.sb_pquotino = mp->m_sb.sb_gquotino;
+> +                               mp->m_sb.sb_gquotino = 0;
+> +                       }
+> 
+> While xfs_mod_sb() now does:
+> 
+>         /*
+>          * Filesystem has no separatepquota turned on,
+>          * so we need to store project quota in group
+>          * quota inode on disk.
+>          */
+>         if (!xfs_sb_version_hasseparatepquota(&mp->m_sb)) {
+>                 mp->m_sb.sb_gquotino = mp->m_sb.sb_pquotino;
+>                 mp->m_sb.sb_pquotino = 0;
+>         }
 >
-> Am I still forced to use the "hammer" approach (flushing buffers in
-> xfs_buf.c) which was proposed in January 2010? Or did I misinterpret
-> the logfile of the xfs component in the kernel (so no arm fixing
-> patches were applied)?
+>        xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb, fields);
+>
+>  [...]
+>         /*
+>          * Restore original in-memory project quota inode state.
+>          */
+>         if (!xfs_sb_version_hasseparatepquota(&mp->m_sb)) {
+>                 mp->m_sb.sb_pquotino = mp->m_sb.sb_gquotino;
+>                 mp->m_sb.sb_gquotino = 0;
+>         }
 
-What kernel version are you running? The xfs-vipt branch was merged into
-mainline in late February, so kernels from 2.6.34 onwards should be
-OK.
+I don't think that is safe - we can have concurrent access to the
+in-core superblock (mp->m_sb) without locking the superblock, so
+something that races with xfs_mod_sb() looking up project quota
+could die a horrible death here.
 
-If it isn't ok, then we need to know exactly what ARM CPU arch you
-are using, and if the old brute-force cache flushing hack fix the
-problem or not.
-
-> Is xfs NOW be known to work on arm (e.g. armv5)? If so I like to
-> complain. If not, I'm willing to test patches which might solve this
-> issue.
-
-I don't know of any outstanding XFS specific issues on ARM, but I
-don't have any ARM machines here that I can test on....
+The only time that you should need to do this juggling is when the
+quota inode changes. That is, when the XFS_SB_GQUOTINO field is
+set. Otherwise the field won't be modified and so we don't need to
+convert the values. That only occurs when quotas are being
+initialised (xfs_qm_qino_alloc()) during mount, so in that case
+there can't be any concurrent operations occurring. Hence swizzling
+the inode fields only when the XFS_SB_GQUOTINO filed is set should
+be safe.
 
 Cheers,
 
