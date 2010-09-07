@@ -1,24 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o87D2IoT242953 for <xfs@oss.sgi.com>; Tue, 7 Sep 2010 08:02:20 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 762F7D9C1CC
-	for <xfs@oss.sgi.com>; Tue,  7 Sep 2010 06:14:08 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	F4lDTXK05vIq996h for <xfs@oss.sgi.com>;
-	Tue, 07 Sep 2010 06:14:08 -0700 (PDT)
-Date: Tue, 7 Sep 2010 23:02:43 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [2.6.36-rc3] Workqueues, XFS, dependencies and deadlocks
-Message-ID: <20100907130243.GQ705@dastard>
-References: <20100907072954.GM705@dastard> <4C86003B.6090706@kernel.org>
-	<20100907100108.GN705@dastard> <4C861582.6080102@kernel.org>
-	<4C862F8E.7030507@kernel.org>
+	o87EojZQ246873 for <xfs@oss.sgi.com>; Tue, 7 Sep 2010 09:50:45 -0500
+From: Alex Elder <aelder@sgi.com>
+Message-Id: <201009071451.o87EpPVc014171@stout.americas.sgi.com>
+Date: Tue, 07 Sep 2010 09:51:24 -0500
+Subject: [GIT PULL] XFS update for 2.6.36-rc4
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4C862F8E.7030507@kernel.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,49 +19,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Sep 07, 2010 at 02:26:54PM +0200, Tejun Heo wrote:
-> On 09/07/2010 12:35 PM, Tejun Heo wrote:
-> > Can you please help me a bit more?  Are you saying the following?
-> > 
-> > Work w0 starts execution on wq0.  w0 tries locking but fails.  Does
-> > delay(1) and requeues itself on wq0 hoping another work w1 would be
-> > queued on wq0 which will release the lock.  The requeueing should make
-> > w0 queued and executed after w1, but instead w1 never gets executed
-> > while w0 hogs the CPU constantly by re-executing itself.  Also, how
-> > does delay(1) help with chewing up CPU?  Are you talking about
-> > avoiding constant lock/unlock ops starving other lockers?  In such
-> > case, wouldn't cpu_relax() make more sense?
-> 
-> Ooh, almost forgot.  There was nr_active underflow bug in workqueue
-> code which could lead to malfunctioning max_active regulation and
-> problems during queue freezing, so you could be hitting that too.  I
-> sent out pull request some time ago but hasn't been pulled into
-> mainline yet.  Can you please pull from the following branch and add
-> WQ_HIGHPRI as discussed before and see whether the problem is still
-> reproducible?
+Linus, please pull the following four XFS changes for 2.6.36.  Three
+are bug fixes, one makes two simple changes to reduce the effect of
+some hot spots on large systems.  Thanks.
 
-I'm currently running with the WQ_HIGHPRI flag. I only change one
-thing at a time so I can tell what caused the change in behaviour...
+					-Alex
 
-> And if the problem is reproducible, can you please
-> trigger sysrq thread dump and attach it?
+The following changes since commit 2bfc96a127bc1cc94d26bfaa40159966064f9c8c:
 
-Well, most of the time the system is 100% unresponsive when the
-livelock occurs, so I'll be lucky to get anything at all....
+  Linux 2.6.36-rc3 (2010-08-29 08:36:04 -0700)
 
->  git://git.kernel.org/pub/scm/linux/kernel/git/tj/wq.git for-linus
+are available in the git repository at:
+  git://oss.sgi.com/xfs/xfs for-linus
 
-I'll try that next if the probelm still persists.
+Alex Elder (1):
+      Merge branch '2.6.36-xfs-misc' of git://git.kernel.org/.../dgc/xfsdev
 
-Cheers,
+Arkadiusz Mi?kiewicz (1):
+      xfs: Disallow 32bit project quota id
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Dave Chinner (2):
+      xfs: improve buffer cache hash scalability
+      xfs: prevent 32bit overflow in space reservation
+
+Tao Ma (1):
+      xfs: Make fiemap work with sparse files
+
+ fs/xfs/linux-2.6/xfs_buf.c   |    8 +-------
+ fs/xfs/linux-2.6/xfs_buf.h   |    1 -
+ fs/xfs/linux-2.6/xfs_ioctl.c |    7 +++++++
+ fs/xfs/linux-2.6/xfs_iops.c  |    2 +-
+ fs/xfs/xfs_bmap.c            |   14 +++++++++++++-
+ fs/xfs/xfs_fs.h              |    4 +++-
+ fs/xfs/xfs_vnodeops.c        |   13 ++++++++++---
+ 7 files changed, 35 insertions(+), 14 deletions(-)
 
 _______________________________________________
 xfs mailing list
