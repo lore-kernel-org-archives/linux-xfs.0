@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o87A0iHb235665 for <xfs@oss.sgi.com>; Tue, 7 Sep 2010 05:00:44 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5DCFD4E4857
-	for <xfs@oss.sgi.com>; Tue,  7 Sep 2010 03:01:25 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	vGGYhkTiFrQaQHOk for <xfs@oss.sgi.com>;
-	Tue, 07 Sep 2010 03:01:25 -0700 (PDT)
-Date: Tue, 7 Sep 2010 20:01:08 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [2.6.36-rc3] Workqueues, XFS, dependencies and deadlocks
-Message-ID: <20100907100108.GN705@dastard>
-References: <20100907072954.GM705@dastard>
- <4C86003B.6090706@kernel.org>
+	o87AZAru237013 for <xfs@oss.sgi.com>; Tue, 7 Sep 2010 05:35:10 -0500
+Received: from hera.kernel.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A6F715292C
+	for <xfs@oss.sgi.com>; Tue,  7 Sep 2010 03:35:53 -0700 (PDT)
+Received: from hera.kernel.org (hera.kernel.org [140.211.167.34]) by
+	cuda.sgi.com with ESMTP id j5w01qcr9MUyuIOQ for
+	<xfs@oss.sgi.com>; Tue, 07 Sep 2010 03:35:53 -0700 (PDT)
+Message-ID: <4C861582.6080102@kernel.org>
+Date: Tue, 07 Sep 2010 12:35:46 +0200
+From: Tejun Heo <tj@kernel.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4C86003B.6090706@kernel.org>
+Subject: Re: [2.6.36-rc3] Workqueues, XFS, dependencies and deadlocks
+References: <20100907072954.GM705@dastard> <4C86003B.6090706@kernel.org>
+	<20100907100108.GN705@dastard>
+In-Reply-To: <20100907100108.GN705@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,155 +28,112 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Tejun Heo <tj@kernel.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Sep 07, 2010 at 11:04:59AM +0200, Tejun Heo wrote:
-> Hello,
+Hello,
+
+On 09/07/2010 12:01 PM, Dave Chinner wrote:
+> The three workqueues are initialised in
+> fs/xfs/linux-2.6/xfs_buf.c::xfs_buf_init().
+>
+> They do not use delayed works, the requeuing of interest here
+> occurs in .../xfs_aops.c::xfs_end_io via
+> .../xfs_aops.c:xfs_finish_ioend() onto the xfsdatad_workqueue
+
+Oh, I was talking about cwq->delayed_works which is a mechanism which
+is used to enforce max_active among other things.
+
+>> Or better, can you give me a small test case which
+>> reproduces the problem?
 > 
-> On 09/07/2010 09:29 AM, Dave Chinner wrote:
-> > 1. I have had xfstests deadlock twice via #3, once on 2.6.36-rc2,
-> > and once on 2.6.36-rc3. This is clearly a regression, but it is not
-> > caused by any XFS changes since 2.6.35.  From what I can tell from
-> > the backtraces I saw was that it appears that the delaying of the
-> > data IO completion processing by requeuing does not allow the
-> > workqueue to move off the kworker thread. As a result, any work that
-> > is still queued on that kworker queue appears to be starved, and
-> > hence we never get the log workqueue processed that would allow data
-> > IO completion processing to make progress.
+> I've seen it twice in about 100 xfstests runs in the past week.
+> I can't remember the test that tripped over it - 078 I think did
+> once, and it was a different test the first time - only some tests
+> use the loopback device. We've never had a reliable reproducer
+> because of the complexity of the race condition that leads to
+> the deadlock....
+
+I see.
+
+>> Creating the workqueue for log completion w/ WQ_HIGHPRI should solve
+>> this.
 > 
-> This is puzzling.  Queueing order shouldn't have changed.  Maybe I
-> screwed up queueing order handling of delayed works.  Which workqueue
-> is this?
+> So what you are saying is that we need to change the workqueue
+> creation interface to use alloc_workqueue() with some special set of
+> flags to make the workqueue behave as we want, and that each
+> workqueue will require a different configuration?  Where can I find
+> the interface documentation that describes how the different flags
+> affect the workqueue behaviour?
 
-The three workqueues are initialised in
-fs/xfs/linux-2.6/xfs_buf.c::xfs_buf_init().
+Heh, sorry about that.  I'm writing it now.  The plan is to audit all
+the create_*workqueue() users and replace them with alloc_workqueue()
+w/ appropriate parameters.  Most of them would be fine with the
+default set of parameters but there are a few which would need some
+adjustments.
 
-They do not use delayed works, the requeuing of interest here
-occurs in .../xfs_aops.c::xfs_end_io via
-.../xfs_aops.c:xfs_finish_ioend() onto the xfsdatad_workqueue.
-
-> Or better, can you give me a small test case which
-> reproduces the problem?
-
-I've seen it twice in about 100 xfstests runs in the past week.
-I can't remember the test that tripped over it - 078 I think did
-once, and it was a different test the first time - only some tests
-use the loopback device. We've never had a reliable reproducer
-because of the complexity of the race condition that leads to
-the deadlock....
-
-> > 2. I have circumstantial evidence that #4 is contributing to
-> > several minute long livelocks. This is intertwined with memory
-> > reclaim and lock contention, but fundamentally log IO completion
-> > processing is being blocked for extremely long periods of time
-> > waiting for a kworker thread to start processing them.  In this
-> > case, I'm creating close to 100,000 inodes every second, and they
-> > are getting written to disk. There is a burst of log IO every 3s or
-> > so, so the log Io completion is getting queued behind at least tens
-> > of thousands of inode IO completion work items. These work
-> > completion items are generating lock contention which slows down
-> > processing even further. The transaciton subsystem stalls completely
-> > while it waits for log IO completion to be processed. AFAICT, this
-> > did not happen on 2.6.35.
+>> I fail to follow here.  Can you elaborate a bit?
 > 
-> Creating the workqueue for log completion w/ WQ_HIGHPRI should solve
-> this.
-
-So what you are saying is that we need to change the workqueue
-creation interface to use alloc_workqueue() with some special set of
-flags to make the workqueue behave as we want, and that each
-workqueue will require a different configuration?  Where can I find
-the interface documentation that describes how the different flags
-affect the workqueue behaviour?
-
-> > XFS has used workqueues for these "separate processing threads"
-> > because they were a simple primitve that provided the separation and
-> > isolation guarantees that XFS IO completion processing required.
-> > That is, work deferred from one processing queue to another would
-> > not block the original queue, and queues can be blocked
-> > independently of the processing of other queues.
+> Here's what the work function does:
 > 
-> Semantically, that property is (or should be) preserved.  The
-> scheduling properties change tho and if the code has been depending on
-> more subtile aspects of work scheduling, it will definitely need to be
-> adjusted.
+>  -> run @work
+> 	-> trylock returned EAGAIN
+> 	-> queue_work(@work)
+> 	-> delay(1); // to stop workqueue spinning chewing up CPU
+>
+> So basically I'm seeing a kworker thread blocked in delay(1) - it's
+> appears to be making progress by processing the same work item over and over
+> again with delay(1) calls between them. The queued log IO completion
+> is not being processed, even though it is sitting in a queue
+> waiting...
 
-Which means?
+Can you please help me a bit more?  Are you saying the following?
 
-> >>From what I can tell of the new kworker thread based implementation,
-> > I cannot see how it provides the same work queue separation,
-> > blocking and isolation guarantees. If we block during work
-> > processing, then anything on the queue for that thread appears to be
-> > blocked from processing until the work is unblocked.
+Work w0 starts execution on wq0.  w0 tries locking but fails.  Does
+delay(1) and requeues itself on wq0 hoping another work w1 would be
+queued on wq0 which will release the lock.  The requeueing should make
+w0 queued and executed after w1, but instead w1 never gets executed
+while w0 hogs the CPU constantly by re-executing itself.  Also, how
+does delay(1) help with chewing up CPU?  Are you talking about
+avoiding constant lock/unlock ops starving other lockers?  In such
+case, wouldn't cpu_relax() make more sense?
+
+>> To preserve the original behavior, create_workqueue() and friends
+>> create workqueues with @max_active of 1, which is pretty silly and bad
+>> for latency.  Aside from fixing the above problems, it would be nice
+>> to find out better values for @max_active for xfs workqueues.  For
 > 
-> I fail to follow here.  Can you elaborate a bit?
+> Um, call me clueless, but WTF does max_active actually do?
 
-Here's what the work function does:
+It regulates the maximum level of per-cpu concurrency.  ie. If a
+workqueue has @max_active of 16.  16 works on the workqueue may
+execute concurrently per-cpu.
 
- -> run @work
-	-> trylock returned EAGAIN
-	-> queue_work(@work)
-	-> delay(1); // to stop workqueue spinning chewing up CPU
+> It's not described anywhere, it's clamped to magic numbers ("I
+> really like 512"), etc.
 
-So basically I'm seeing a kworker thread blocked in delay(1) - it's
-appears to be making progress by processing the same work item over and over
-again with delay(1) calls between them. The queued log IO completion
-is not being processed, even though it is sitting in a queue
-waiting...
+Yeap, that's just a random safety value I chose.  In most cases, the
+level of concurrency is limited by the number of work_struct, so the
+default limit is there just to survive complete runaway cases.
 
-> > Hence my main concern is that the new work queue implementation does
-> > not provide the same semantics as the old workqueues, and as such
-> > re-introduces a class of problems that will cause random hangs and
-> > other bad behaviours on XFS filesystems under heavy load.
+>> most users, using the pretty high default value is okay as they
+>> usually have much stricter constraint elsewhere (like limited number
+>> of work_struct), but last time I tried xfs allocated work_structs and
+>> fired them as fast as it could, so it looked like it definitely needed
+>> some kind of resasonable capping value.
 > 
-> I don't think it has that level of fundamental design flaw.
-> 
-> > Hence, I'd like to know if my reading of the new workqueue code is
-> > correct and:
-> 
-> Probably not.
-> 
-> > 	a) if not, understand why the workqueues are deadlocking;
-> 
-> Yeah, let's track this one down.
-> 
-> > 	c) understand how we can prioritise log IO completion
-> > 	processing over data, metadata and unwritten extent IO
-> > 	completion processing; and
-> 
-> As I wrote above, WQ_HIGHPRI is there for you.
-> 
-> > 	d) what can be done before 2.6.36 releases.
-> 
-> To preserve the original behavior, create_workqueue() and friends
-> create workqueues with @max_active of 1, which is pretty silly and bad
-> for latency.  Aside from fixing the above problems, it would be nice
-> to find out better values for @max_active for xfs workqueues.  For
+> What part of XFS fired work structures as fast as it could? Queuing
+> rates are determined completely by the IO completion rates...
 
-Um, call me clueless, but WTF does max_active actually do? It's not
-described anywhere, it's clamped to magic numbers ("I really like
-512"), etc. AFAICT, it determines whether the work is queued as
-delayed work or whether it is put on an active worklist straight
-away. However, the lack of documentation describing the behaviour of
-the workqueues and why I might want to set a value other than 1 or
-the default makes it pretty hard to work out anything for sure...
+I don't remember but once I increased maximum concurrency for every
+workqueue (the limit was 128 or something) and xfs pretty quickly hit
+the concurrency limit.  IIRC, there was a function which allocates
+work_struct and schedules it.  I'll look through the emails.
 
-> most users, using the pretty high default value is okay as they
-> usually have much stricter constraint elsewhere (like limited number
-> of work_struct), but last time I tried xfs allocated work_structs and
-> fired them as fast as it could, so it looked like it definitely needed
-> some kind of resasonable capping value.
+Thanks.
 
-What part of XFS fired work structures as fast as it could? Queuing
-rates are determined completely by the IO completion rates...
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+tejun
 
 _______________________________________________
 xfs mailing list
