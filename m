@@ -1,30 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o88FCT2u042694 for <xfs@oss.sgi.com>; Wed, 8 Sep 2010 10:12:29 -0500
+	o88FKAQ6043233 for <xfs@oss.sgi.com>; Wed, 8 Sep 2010 10:20:11 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 987121E60C92
-	for <xfs@oss.sgi.com>; Wed,  8 Sep 2010 08:13:12 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	qiJdur4NAfgfa7zT for <xfs@oss.sgi.com>;
-	Wed, 08 Sep 2010 08:13:12 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2CCE557EDB
+	for <xfs@oss.sgi.com>; Wed,  8 Sep 2010 08:20:53 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	0lWAGHqKuStPQopb for <xfs@oss.sgi.com>;
+	Wed, 08 Sep 2010 08:20:53 -0700 (PDT)
 Received: from dastard (unverified [121.44.127.68])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	38296797-1927428
-	for <xfs@oss.sgi.com>; Thu, 09 Sep 2010 00:43:11 +0930 (CST)
+	38171084-1927428
+	for <xfs@oss.sgi.com>; Thu, 09 Sep 2010 00:50:52 +0930 (CST)
 Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1OtMKj-0003zA-Iw
-	for xfs@oss.sgi.com; Thu, 09 Sep 2010 01:13:09 +1000
+	(envelope-from <dave@fromorbit.com>) id 1OtMSB-00040V-4p
+	for xfs@oss.sgi.com; Thu, 09 Sep 2010 01:20:51 +1000
 Received: from dave by disturbed with local (Exim 4.72)
-	(envelope-from <dave@disturbed.disaster>) id 1OtMKc-0007TO-Aj
-	for xfs@oss.sgi.com; Thu, 09 Sep 2010 01:13:02 +1000
+	(envelope-from <dave@disturbed.disaster>) id 1OtMS4-0007b5-0d
+	for xfs@oss.sgi.com; Thu, 09 Sep 2010 01:20:44 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/4] xfs: kill XBF_FS_MANAGED buffers
-Date: Thu,  9 Sep 2010 01:12:55 +1000
-Message-Id: <1283958778-28610-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1283958778-28610-1-git-send-email-david@fromorbit.com>
-References: <1283958778-28610-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH] xfs: single thread inode cache shrinking.
+Date: Thu,  9 Sep 2010 01:20:43 +1000
+Message-Id: <1283959243-29176-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -42,196 +40,80 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Filesystem level managed buffers are buffers that have their
-lifecycle controlled by the filesystem layer, not the buffer cache.
-We currently hash these buffers, which makes cleanup and hash
-walking somewhat troublesome. Convert the fs managed buffers to
-unhashed buffers obtained by via xfs_buf_get_noaddr(), and remove the
-XBF_FS_MANAGED special cases from the buffer cache.
+Having multiple CPUs trying to do the same cache shrinking work can
+be actively harmful to perforamnce when the shrinkers land in the
+same AGs.  They then lockstep on perag locks, causing contention and
+slowing each other down. Reclaim walking is sufficiently efficient
+that we do no need parallelism to make significant progress, so stop
+parallel access at the door.
+
+Instead, keep track of the number of objects the shrinkers want
+cleaned and make sure the single running shrinker does not stop
+until it has hit the threshold that the other shrinker calls have
+built up.
+
+This increases the cold-cache unlink rate of a 8-way parallel unlink
+workload from about 15,000 unlinks/s to 60-70,000 unlinks/s for the
+same CPU usage (~700%), resulting in the runtime for a 200M inode
+unlink workload dropping from 4h50m to just under 1 hour.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/linux-2.6/xfs_buf.c |   20 +++-------------
- fs/xfs/linux-2.6/xfs_buf.h |    4 ---
- fs/xfs/xfs_mount.c         |   54 +++++++++++++++++++++++++------------------
- 3 files changed, 35 insertions(+), 43 deletions(-)
+ fs/xfs/linux-2.6/xfs_sync.c |   17 ++++++++++++++++-
+ fs/xfs/xfs_mount.h          |    2 ++
+ 2 files changed, 18 insertions(+), 1 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
-index 998bfb3..860a23c 100644
---- a/fs/xfs/linux-2.6/xfs_buf.c
-+++ b/fs/xfs/linux-2.6/xfs_buf.c
-@@ -791,8 +791,6 @@ xfs_buf_rele(
- 			atomic_inc(&bp->b_hold);
- 			spin_unlock(&hash->bh_lock);
- 			(*(bp->b_relse)) (bp);
--		} else if (bp->b_flags & XBF_FS_MANAGED) {
--			spin_unlock(&hash->bh_lock);
- 		} else {
- 			ASSERT(!(bp->b_flags & (XBF_DELWRI|_XBF_DELWRI_Q)));
- 			list_del_init(&bp->b_hash_list);
-@@ -1401,26 +1399,16 @@ void
- xfs_wait_buftarg(
- 	xfs_buftarg_t	*btp)
+diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+index d59c4a6..46a826f 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.c
++++ b/fs/xfs/linux-2.6/xfs_sync.c
+@@ -883,12 +883,25 @@ xfs_reclaim_inode_shrink(
+ 	int		reclaimable;
+ 
+ 	mp = container_of(shrink, struct xfs_mount, m_inode_shrink);
++
+ 	if (nr_to_scan) {
+-		if (!(gfp_mask & __GFP_FS))
++		if (!mutex_trylock(&mp->m_ino_shrink_lock)) {
++			atomic64_add(nr_to_scan, &mp->m_ino_shrink_nr);
++			return -1;
++		}
++
++		if (!(gfp_mask & __GFP_FS)) {
++			atomic64_add(nr_to_scan, &mp->m_ino_shrink_nr);
++			mutex_unlock(&mp->m_ino_shrink_lock);
+ 			return -1;
++		}
+ 
++		nr_to_scan += atomic64_read(&mp->m_ino_shrink_nr);
++		atomic64_set(&mp->m_ino_shrink_nr, 0);
+ 		xfs_inode_ag_iterator(mp, xfs_reclaim_inode, 0,
+ 					XFS_ICI_RECLAIM_TAG, 1, &nr_to_scan);
++		mutex_unlock(&mp->m_ino_shrink_lock);
++
+ 		/* if we don't exhaust the scan, don't bother coming back */
+ 		if (nr_to_scan > 0)
+ 			return -1;
+@@ -910,6 +923,8 @@ xfs_inode_shrinker_register(
  {
--	xfs_buf_t	*bp, *n;
- 	xfs_bufhash_t	*hash;
- 	uint		i;
- 
- 	for (i = 0; i < (1 << btp->bt_hashshift); i++) {
- 		hash = &btp->bt_hash[i];
--again:
- 		spin_lock(&hash->bh_lock);
--		list_for_each_entry_safe(bp, n, &hash->bh_list, b_hash_list) {
--			ASSERT(btp == bp->b_target);
--			if (!(bp->b_flags & XBF_FS_MANAGED)) {
--				spin_unlock(&hash->bh_lock);
--				/*
--				 * Catch superblock reference count leaks
--				 * immediately
--				 */
--				BUG_ON(bp->b_bn == 0);
--				delay(100);
--				goto again;
--			}
-+		while (!list_empty(&hash->bh_list)) {
-+			spin_unlock(&hash->bh_lock);
-+			delay(100);
-+			spin_lock(&hash->bh_lock);
- 		}
- 		spin_unlock(&hash->bh_lock);
- 	}
-diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
-index 2a05614..72215d8 100644
---- a/fs/xfs/linux-2.6/xfs_buf.h
-+++ b/fs/xfs/linux-2.6/xfs_buf.h
-@@ -51,7 +51,6 @@ typedef enum {
- #define XBF_DONE	(1 << 5) /* all pages in the buffer uptodate */
- #define XBF_DELWRI	(1 << 6) /* buffer has dirty pages */
- #define XBF_STALE	(1 << 7) /* buffer has been staled, do not find it */
--#define XBF_FS_MANAGED	(1 << 8) /* filesystem controls freeing memory */
- #define XBF_ORDERED	(1 << 11)/* use ordered writes */
- #define XBF_READ_AHEAD	(1 << 12)/* asynchronous read-ahead */
- #define XBF_LOG_BUFFER	(1 << 13)/* this is a buffer used for the log */
-@@ -104,7 +103,6 @@ typedef unsigned int xfs_buf_flags_t;
- 	{ XBF_DONE,		"DONE" }, \
- 	{ XBF_DELWRI,		"DELWRI" }, \
- 	{ XBF_STALE,		"STALE" }, \
--	{ XBF_FS_MANAGED,	"FS_MANAGED" }, \
- 	{ XBF_ORDERED,		"ORDERED" }, \
- 	{ XBF_READ_AHEAD,	"READ_AHEAD" }, \
- 	{ XBF_LOCK,		"LOCK" },  	/* should never be set */\
-@@ -276,8 +274,6 @@ extern void xfs_buf_terminate(void);
- 					XFS_BUF_DONE(bp);	\
- 				} while (0)
- 
--#define XFS_BUF_UNMANAGE(bp)	((bp)->b_flags &= ~XBF_FS_MANAGED)
--
- #define XFS_BUF_DELAYWRITE(bp)		((bp)->b_flags |= XBF_DELWRI)
- #define XFS_BUF_UNDELAYWRITE(bp)	xfs_buf_delwri_dequeue(bp)
- #define XFS_BUF_ISDELAYWRITE(bp)	((bp)->b_flags & XBF_DELWRI)
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index aeb9d72..b2009e3 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -639,7 +639,6 @@ int
- xfs_readsb(xfs_mount_t *mp, int flags)
- {
- 	unsigned int	sector_size;
--	unsigned int	extra_flags;
- 	xfs_buf_t	*bp;
- 	int		error;
- 
-@@ -652,17 +651,29 @@ xfs_readsb(xfs_mount_t *mp, int flags)
- 	 * access to the superblock.
- 	 */
- 	sector_size = xfs_getsize_buftarg(mp->m_ddev_targp);
--	extra_flags = XBF_LOCK | XBF_FS_MANAGED | XBF_MAPPED;
- 
--	bp = xfs_buf_read(mp->m_ddev_targp, XFS_SB_DADDR, BTOBB(sector_size),
--			  extra_flags);
-+reread:
-+	bp = xfs_buf_get_noaddr(sector_size, mp->m_ddev_targp);
-+
- 	if (!bp || XFS_BUF_ISERROR(bp)) {
--		xfs_fs_mount_cmn_err(flags, "SB read failed");
-+		xfs_fs_mount_cmn_err(flags, "SB buffer alloc failed");
- 		error = bp ? XFS_BUF_GETERROR(bp) : ENOMEM;
- 		goto fail;
- 	}
--	ASSERT(XFS_BUF_ISBUSY(bp));
--	ASSERT(XFS_BUF_VALUSEMA(bp) <= 0);
-+
-+	/* set up the buffer for a read IO */
-+	xfs_buf_lock(bp);
-+	XFS_BUF_SET_ADDR(bp, XFS_SB_DADDR);
-+        XFS_BUF_READ(bp);
-+        XFS_BUF_BUSY(bp);
-+
-+	xfsbdstrat(mp, bp);
-+	error = xfs_iowait(bp);
-+	if (error || XFS_BUF_ISERROR(bp)) {
-+		xfs_fs_mount_cmn_err(flags, "SB read failed");
-+		error = error ? error : XFS_BUF_GETERROR(bp);
-+		goto fail;
-+	}
- 
- 	/*
- 	 * Initialize the mount structure from the superblock.
-@@ -692,33 +703,25 @@ xfs_readsb(xfs_mount_t *mp, int flags)
- 	 * re-read the superblock so the buffer is correctly sized.
- 	 */
- 	if (sector_size < mp->m_sb.sb_sectsize) {
--		XFS_BUF_UNMANAGE(bp);
- 		xfs_buf_relse(bp);
- 		sector_size = mp->m_sb.sb_sectsize;
--		bp = xfs_buf_read(mp->m_ddev_targp, XFS_SB_DADDR,
--				  BTOBB(sector_size), extra_flags);
--		if (!bp || XFS_BUF_ISERROR(bp)) {
--			xfs_fs_mount_cmn_err(flags, "SB re-read failed");
--			error = bp ? XFS_BUF_GETERROR(bp) : ENOMEM;
--			goto fail;
--		}
--		ASSERT(XFS_BUF_ISBUSY(bp));
--		ASSERT(XFS_BUF_VALUSEMA(bp) <= 0);
-+		goto reread;
- 	}
- 
- 	/* Initialize per-cpu counters */
- 	xfs_icsb_reinit_counters(mp);
- 
-+	/* grab a reference for caching the buffer */
-+        XFS_BUF_HOLD(bp);
- 	mp->m_sb_bp = bp;
-+
- 	xfs_buf_relse(bp);
- 	ASSERT(XFS_BUF_VALUSEMA(bp) > 0);
- 	return 0;
- 
-- fail:
--	if (bp) {
--		XFS_BUF_UNMANAGE(bp);
-+fail:
-+	if (bp)
- 		xfs_buf_relse(bp);
--	}
- 	return error;
+ 	mp->m_inode_shrink.shrink = xfs_reclaim_inode_shrink;
+ 	mp->m_inode_shrink.seeks = DEFAULT_SEEKS;
++	atomic64_set(&mp->m_ino_shrink_nr, 0);
++	mutex_init(&mp->m_ino_shrink_lock);
+ 	register_shrinker(&mp->m_inode_shrink);
  }
  
-@@ -2007,9 +2010,14 @@ xfs_freesb(
- 	 * when we call xfs_buf_relse().
- 	 */
- 	bp = xfs_getsb(mp, 0);
--	XFS_BUF_UNMANAGE(bp);
--	xfs_buf_relse(bp);
- 	mp->m_sb_bp = NULL;
-+
-+	/*
-+	 * need to release the buffer twice to free it because we hold an extra
-+	 * reference count on it.
-+	 */
-+	xfs_buf_relse(bp);
-+	xfs_buf_relse(bp);
- }
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 622da21..57b5644 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -199,6 +199,8 @@ typedef struct xfs_mount {
+ 	__int64_t		m_update_flags;	/* sb flags we need to update
+ 						   on the next remount,rw */
+ 	struct shrinker		m_inode_shrink;	/* inode reclaim shrinker */
++	atomic64_t		m_ino_shrink_nr;
++	struct mutex		m_ino_shrink_lock;
+ } xfs_mount_t;
  
  /*
 -- 
