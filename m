@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o88ABj5F029147 for <xfs@oss.sgi.com>; Wed, 8 Sep 2010 05:11:46 -0500
+	o88AwITw030992 for <xfs@oss.sgi.com>; Wed, 8 Sep 2010 05:58:19 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6083C555B6
-	for <xfs@oss.sgi.com>; Wed,  8 Sep 2010 03:12:29 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	KXB8QBW2yCW50wq9 for <xfs@oss.sgi.com>;
-	Wed, 08 Sep 2010 03:12:29 -0700 (PDT)
-Date: Wed, 8 Sep 2010 20:12:22 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3683817BB084
+	for <xfs@oss.sgi.com>; Wed,  8 Sep 2010 03:59:01 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
+	[150.101.137.102]) by cuda.sgi.com with ESMTP id
+	H6ja9hRS42Is6qdn for <xfs@oss.sgi.com>;
+	Wed, 08 Sep 2010 03:59:01 -0700 (PDT)
+Date: Wed, 8 Sep 2010 20:58:58 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [2.6.36-rc3] Workqueues, XFS, dependencies and deadlocks
-Message-ID: <20100908101222.GY705@dastard>
-References: <20100907072954.GM705@dastard> <4C86003B.6090706@kernel.org>
-	<20100907100108.GN705@dastard> <4C861582.6080102@kernel.org>
-	<20100907124850.GP705@dastard> <4C865CC4.9070701@kernel.org>
-	<20100908073428.GR705@dastard> <4C87474B.3050405@kernel.org>
-	<20100908082819.GV705@dastard> <4C874D55.6080402@kernel.org>
+Subject: Re: xfs mount/create options (was: XFS status update for August 2010)
+Message-ID: <20100908105858.GZ705@dastard>
+References: <20100902145959.GA27887@infradead.org>
+	<20100905130809.GI705@dastard> <201009060749.01405@zmi.at>
+	<201009080738.58483@zmi.at>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4C874D55.6080402@kernel.org>
+In-Reply-To: <201009080738.58483@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,51 +31,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Michael Monnerie <michael.monnerie@is.it-management.at>
+Cc: xfs@oss.sgi.com
 
-On Wed, Sep 08, 2010 at 10:46:13AM +0200, Tejun Heo wrote:
-> On 09/08/2010 10:28 AM, Dave Chinner wrote:
-> >> They may if necessary to keep the workqueue progressing.
-> > 
-> > Ok, so the normal case is that they will all be processed local to the
-> > CPU they were queued on, like the old workqueue code?
+On Wed, Sep 08, 2010 at 07:38:54AM +0200, Michael Monnerie wrote:
+> I just found that my questions from Monday were not solved, but this is 
+> interesting, so I want to warm it up again.
 > 
-> Bound workqueues always process works locally.  Please consider the
-> following scenario.
-> 
->  w0, w1, w2 are queued to q0 on the same CPU.  w0 burns CPU for 5ms
->  then sleeps for 10ms then burns CPU for 5ms again then finishes.  w1
->  and w2 sleeps for 10ms.
-> 
-> The following is what happens with the original workqueue (ignoring
-> all other tasks and processing overhead).
-> 
->  TIME IN MSECS	EVENT
->  0		w0 burns CPU
->  5		w0 sleeps
->  15		w0 wakes and burns CPU
->  20		w0 finishes, w1 starts and sleeps
->  30		w1 finishes, w2 starts and sleeps
->  40		w2 finishes
-> 
-> With cmwq if @max_active >= 3,
-> 
->  TIME IN MSECS	EVENT
->  0		w0 burns CPU
->  5		w0 sleeps, w1 starts and sleeps, w2 starts and sleeps
->  15		w0 wakes and burns CPU, w1 finishes, w2 finishes
->  20		w0 finishes
-> 
-> IOW, cmwq assigns a new worker when there are more work items to
-> process but no work item is currently in progress on the CPU.  Please
-> note that this behavior is across *all* workqueues.  It doesn't matter
-> which work item belongs to which workqueue.
+> On Montag, 6. September 2010 Michael Monnerie wrote:
+>  I looked into man mkfs now, which brings up these questions:
+>  
+>  On Sonntag, 5. September 2010 Dave Chinner wrote:
+>  >         - relatime,logbufs=8,attr=2,barrier are all defaults.
+>  
+>  Why isn't logbsize=256k default, when it's suggested most of the time
+>  anyway?
 
-Ok, so in this case if this was on CPU 1, I'd see kworker[1:0],
-kworker[1:1] and kworker[1:2] threads all accumulate CPU time?  I'm
-just trying to relate your example it to behaviour I've seen to
-check if I understand the example correctly.
+It's suggested when people are asking about performance tuning. When
+the performance is acceptible with the default value, then you don't
+hear about it, do you?
+
+>  On machines with 32MiB or more 32k is the default, but most
+>  machines these days have multi-gigabytes of RAM, so at least for
+>  RAM>1GiB that could be made default.
+
+That is definitely not true. XFS is widely used in the embedded NAS
+space, where memory is very limited and might be configured with
+many filesystems.  32k is the default because those sorts of machines
+can't afford to burn 2MB RAM per filesystem just in log buffers.
+
+Also, you can go and search the archives or git history as to why we
+don't tune the logbsize based on physical memory size anymore, too.
+
+
+>  >         - largeio only affects stat(2) output if you have
+>  >           sunit/swidth set - unlikely on a laptop drive, and has
+>  >           no effect on unlink performance.
+>  >         - swalloc only affects allocation if sunit/swidth are set
+>  >           and has no effect on unlink performance.
+>  
+>  Hm, it seems I don't understand that. I tried now on different
+>   servers, using
+>  stat -f /disks/db --format '%s %S'
+>  4096 4096
+
+You're getting the wrong information there. largeio affects the
+output of the optimal IO size reported by stat(2). 'stat -f" does
+a statfs(2) call. Try 'stat /disk/db/<file> --format %o'....
+
+>  And while I am at it: Why does "mount" not provide the su=/sw=
+>   options that we can use to create a filesystem? Would make life
+>   easier, as it's much easier to read su=64k,sw=7 than
+>   sunit=128,swidth=896.
+
+You should never, ever need to use the mount options.
+
+>  When I defined su/sw on mkfs, is it enough, or would I always have to
+>  specify sunit/swidth with every mount too?
+
+Yes, no. mkfs.xfs stores sunit/swidth on disk in the superblock.
 
 Cheers,
 
