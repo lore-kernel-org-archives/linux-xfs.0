@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o887hGlZ020329 for <xfs@oss.sgi.com>; Wed, 8 Sep 2010 02:43:17 -0500
+	o888RjH9022531 for <xfs@oss.sgi.com>; Wed, 8 Sep 2010 03:27:46 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 65E0C56A3A
-	for <xfs@oss.sgi.com>; Wed,  8 Sep 2010 00:44:00 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	AcmrFQxtQcTWTzVL for <xfs@oss.sgi.com>;
-	Wed, 08 Sep 2010 00:44:00 -0700 (PDT)
-Date: Wed, 8 Sep 2010 17:43:57 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2DEB753BE7
+	for <xfs@oss.sgi.com>; Wed,  8 Sep 2010 01:28:29 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	qqgzVNmQuu5Lm8xw for <xfs@oss.sgi.com>;
+	Wed, 08 Sep 2010 01:28:29 -0700 (PDT)
+Date: Wed, 8 Sep 2010 18:28:19 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs on armv5 still with erroneous log in kernel 2.6.35.4
-Message-ID: <20100908074357.GS705@dastard>
-References: <4C835A34.9080008@googlemail.com> <20100906005230.GX7362@dastard>
-	<4C845EDE.3010806@sandeen.net> <4C8534D0.3050003@googlemail.com>
-	<20100907060331.GK705@dastard> <4C86B4E3.5090202@googlemail.com>
+Subject: Re: [2.6.36-rc3] Workqueues, XFS, dependencies and deadlocks
+Message-ID: <20100908082819.GV705@dastard>
+References: <20100907072954.GM705@dastard> <4C86003B.6090706@kernel.org>
+	<20100907100108.GN705@dastard> <4C861582.6080102@kernel.org>
+	<20100907124850.GP705@dastard> <4C865CC4.9070701@kernel.org>
+	<20100908073428.GR705@dastard> <4C87474B.3050405@kernel.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4C86B4E3.5090202@googlemail.com>
+In-Reply-To: <4C87474B.3050405@kernel.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,33 +28,38 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Marcus Osdoba <marcus.osdoba@googlemail.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-T24gVHVlLCBTZXAgMDcsIDIwMTAgYXQgMTE6NTU6NDdQTSArMDIwMCwgTWFyY3VzIE9zZG9iYSB3
-cm90ZToKPiAgQW0gMDcuMDkuMjAxMCAwODowMywgc2NocmllYiBEYXZlIENoaW5uZXI6Cj4gPk9u
-IE1vbiwgU2VwIDA2LCAyMDEwIGF0IDA4OjM3OjA0UE0gKzAyMDAsIE1hcmN1cyBPc2RvYmEgd3Jv
-dGU6Cj4gPj5JJ20gdXNpbmcgdGhlIGxhdGVzdCBzdGFibGUga2VybmVsIDIuNi4zNS40LiBUaGUg
-ZmlsZXN5c3RlbSB3YXMKPiA+PmNyZWF0ZWQgb24gdGhlIHRhcmdldCBkZXZpY2Ugd2l0aCBhIGNy
-b3NzIGNvbXBpbGVkIHhmc3Byb2dzIDMuMS4zLgo+ID4+VGhlIHN5c3RlbXMgcnVucyBvbiBhbiBh
-cm12NXRlIGFyY2hpdGVjdHVyZSAoc2hlZXZhcGx1ZyBkZXJpdmF0aXZlKS4KPiA+PkFmdGVyIGNy
-ZWF0aW5nLCBtb3VudGluZyBhbmQgd3JpdGluZyBzb21lIGRhdGEgb24gaXQsIHJlLW1vdW50aW5n
-Cj4gPj53YXMgbm90IHBvc3NpYmxlIHdpdGggdGhlIGFib3ZlIG1lbnRpb25lZCBlcnJvci4gSSd2
-ZSBmb3VuZCB0aGlzCj4gPj5tZXNzYWdlIGluIHRoZSBtYWlsaW5nbGlzdGFyY2hpdmUgYW5kIHRo
-b3VnaHQgdGhlIHBhdGNoZXMgd2VyZQo+ID4+aW50ZWdyYXRlZCBpbnRvIG1haW5saW5lLgo+ID4+
-Cj4gPj5Ib3cgY2FuIEkgaGVscD8gV2hhdCBhZGRpdGlvbmFsIGluZm9ybWF0aW9uIGRvIHlvdSBu
-ZWVkPwouLi4uCgo+IElzIHN5bmMnaW5nIGVub3VnaCBmb3Igc29sdmluZyB0aGlzIGlzc3VlPyAt
-PiBSZXByb2R1Y2U6Cj4gPm1vdW50IC9kZXYvc2RhMSAvZGF0YQo+ID5jcCBzb21ldGhpbmcgbW9y
-ZSBvbiBpdAo+ID5zeW5jCj4gPnVtb3VudCAvZGF0YQo+ID5kZXZpY2Ugb3IgcmVzb3VyY2UgYnVz
-eQoKV2hhdCBpcyB0aGlzIGVycm9yPyBBbnl0aGluZyBpbiBkbWVzZz8gRG9lcyB0aGlzIGFsd2F5
-cyBvY2N1cgpiZWZvcmUgdGhlIGxvZyByZWNvdmVyeSBlcnJvciBvbiBuZXh0IG1vdW50PwoKRldJ
-VywgcGxlYXNlIGNvcHkgdGhlIGV4YWN0IGNvbW1hbmRzIGFuZCBlcnJvcnMgZnJvbSB5b3VyIHRl
-cm1pbmFsIC0KcGFyYXBocmFzaW5nIHRoZW0gbGlrZSB0aGlzIGRvZXMgbm90IGhlbHAgbWUgdW5k
-ZXLRlXRhbmQgZXhhY3RseSB3aGF0CmlzIGhhcHBlbmluZy4uLgoKQ2hlZXJzLAoKRGF2ZS4KLS0g
-CkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNv
-bQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Wed, Sep 08, 2010 at 10:20:27AM +0200, Tejun Heo wrote:
+> On 09/08/2010 09:34 AM, Dave Chinner wrote:
+> >> Probably I have overloaded the term 'concurrency' too much.  In this
+> >> case, I meant the number of workers assigned to work items of the wq.
+> >> If you fire off N work items which sleep at the same time, cmwq will
+> >> eventually try to create N workers as each previous worker goes to
+> >> sleep so that the CPU doesn't sit idle while there are work items to
+> >> process as long as N < @wq->nr->active.
+> > 
+> > Ok, so if I queue N items on a single CPU when max_active == N, they
+> > get spread across N worker threads on different CPUs? 
+> 
+> They may if necessary to keep the workqueue progressing.
+
+Ok, so the normal case is that they will all be processed local to the
+CPU they were queued on, like the old workqueue code?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
