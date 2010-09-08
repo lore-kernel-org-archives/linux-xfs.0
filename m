@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o880gBGp004964 for <xfs@oss.sgi.com>; Tue, 7 Sep 2010 19:42:11 -0500
+	o881DAml005855 for <xfs@oss.sgi.com>; Tue, 7 Sep 2010 20:13:10 -0500
 Received: from EXHUB018-3.exch018.msoutlookonline.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 21CCB17B7F43
-	for <xfs@oss.sgi.com>; Tue,  7 Sep 2010 17:42:51 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7B48717B815E
+	for <xfs@oss.sgi.com>; Tue,  7 Sep 2010 18:13:53 -0700 (PDT)
 Received: from EXHUB018-3.exch018.msoutlookonline.net
 	(exhub018-3.exch018.msoutlookonline.net [64.78.17.18]) by
-	cuda.sgi.com with ESMTP id ENwHCUbqcOjZsNzZ for
-	<xfs@oss.sgi.com>; Tue, 07 Sep 2010 17:42:51 -0700 (PDT)
+	cuda.sgi.com with ESMTP id CXnGCzsYCawtMgrt for
+	<xfs@oss.sgi.com>; Tue, 07 Sep 2010 18:13:53 -0700 (PDT)
 From: Brady Chang <bchang@greenplum.com>
-Date: Tue, 7 Sep 2010 17:45:41 -0700
-Subject: fragmentation question
-Message-ID: <C8AC2AC5.6CA9%bchang@greenplum.com>
+Date: Tue, 7 Sep 2010 18:16:43 -0700
+Subject: Re: fragmentation question
+Message-ID: <C8AC320B.6CB6%bchang@greenplum.com>
+In-Reply-To: <C8AC2AC5.6CA9%bchang@greenplum.com>
 Content-Language: en
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -23,19 +24,27 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3660870170882881279=="
+Content-Type: multipart/mixed; boundary="===============6726082990017508048=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
---===============3660870170882881279==
+--===============6726082990017508048==
 Content-Language: en
 Content-Type: multipart/alternative;
-	boundary="_000_C8AC2AC56CA9bchanggreenplumcom_"
+	boundary="_000_C8AC320B6CB6bchanggreenplumcom_"
 
---_000_C8AC2AC56CA9bchanggreenplumcom_
+--_000_C8AC320B6CB6bchanggreenplumcom_
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
+
+By the way, the os is RHEL 5.5 kernel 2.6.18-194.11.1.el5
+
+thanks in advance.
+-Brady
+
+
+On 9/7/10 5:45 PM, "Brady Chang" <bchang@greenplum.com> wrote:
 
 Hello All,
 I have an issue with fragmentation on a particular device
@@ -155,17 +164,27 @@ Cache Policy              : Not Applicable
 Stripe Element Size       : 128 KB
 Disk Cache Policy         : Disabled
 
---_000_C8AC2AC56CA9bchanggreenplumcom_
+--_000_C8AC320B6CB6bchanggreenplumcom_
 Content-Type: text/html; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 
 <HTML>
 <HEAD>
-<TITLE>fragmentation question</TITLE>
+<TITLE>Re: fragmentation question</TITLE>
 </HEAD>
 <BODY>
 <FONT FACE=3D"Calibri, Verdana, Helvetica, Arial"><SPAN STYLE=3D'font-size:=
-11pt'>Hello All,<BR>
+11pt'>By the way, the os is RHEL 5.5 kernel 2.6.18-194.11.1.el5<BR>
+<BR>
+thanks in advance.<BR>
+-Brady<BR>
+<BR>
+<BR>
+On 9/7/10 5:45 PM, &quot;Brady Chang&quot; &lt;<a href=3D"bchang@greenplum.=
+com">bchang@greenplum.com</a>&gt; wrote:<BR>
+<BR>
+</SPAN></FONT><BLOCKQUOTE><FONT FACE=3D"Calibri, Verdana, Helvetica, Arial"=
+><SPAN STYLE=3D'font-size:11pt'>Hello All,<BR>
 I have an issue with fragmentation on a particular device<BR>
 thanks for any advice.<BR>
 <BR>
@@ -350,15 +369,15 @@ bsp;&nbsp;&nbsp;: Not Applicable<BR>
 Stripe Element Size &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 128 KB<BR>
 Disk Cache Policy &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Disable=
 d<BR>
-</SPAN></FONT>
+</SPAN></FONT></BLOCKQUOTE>
 </BODY>
 </HTML>
 
 
---_000_C8AC2AC56CA9bchanggreenplumcom_--
+--_000_C8AC320B6CB6bchanggreenplumcom_--
 
 
---===============3660870170882881279==
+--===============6726082990017508048==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -369,4 +388,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============3660870170882881279==--
+--===============6726082990017508048==--
