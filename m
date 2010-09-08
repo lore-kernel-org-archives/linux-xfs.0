@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o888jba2023312 for <xfs@oss.sgi.com>; Wed, 8 Sep 2010 03:45:37 -0500
+	o888oo8U023544 for <xfs@oss.sgi.com>; Wed, 8 Sep 2010 03:50:51 -0500
 Received: from hera.kernel.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4415C5698B
-	for <xfs@oss.sgi.com>; Wed,  8 Sep 2010 01:46:20 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9B05E1036D00
+	for <xfs@oss.sgi.com>; Wed,  8 Sep 2010 02:02:44 -0700 (PDT)
 Received: from hera.kernel.org (hera.kernel.org [140.211.167.34]) by
-	cuda.sgi.com with ESMTP id MrimIFMClDhNDr8d for
-	<xfs@oss.sgi.com>; Wed, 08 Sep 2010 01:46:20 -0700 (PDT)
-Message-ID: <4C874D55.6080402@kernel.org>
-Date: Wed, 08 Sep 2010 10:46:13 +0200
+	cuda.sgi.com with ESMTP id LDYNlurcFQsxLjUG for
+	<xfs@oss.sgi.com>; Wed, 08 Sep 2010 02:02:44 -0700 (PDT)
+Message-ID: <4C874E90.5040405@kernel.org>
+Date: Wed, 08 Sep 2010 10:51:28 +0200
 From: Tejun Heo <tj@kernel.org>
 MIME-Version: 1.0
 Subject: Re: [2.6.36-rc3] Workqueues, XFS, dependencies and deadlocks
 References: <20100907072954.GM705@dastard> <4C86003B.6090706@kernel.org>
 	<20100907100108.GN705@dastard> <4C861582.6080102@kernel.org>
-	<20100907124850.GP705@dastard> <4C865CC4.9070701@kernel.org>
-	<20100908073428.GR705@dastard> <4C87474B.3050405@kernel.org>
-	<20100908082819.GV705@dastard>
-In-Reply-To: <20100908082819.GV705@dastard>
+	<4C862F8E.7030507@kernel.org> <20100908082249.GT705@dastard>
+In-Reply-To: <20100908082249.GT705@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,42 +34,48 @@ Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
 Hello,
 
-On 09/08/2010 10:28 AM, Dave Chinner wrote:
->> They may if necessary to keep the workqueue progressing.
+On 09/08/2010 10:22 AM, Dave Chinner wrote:
+> Ok, it looks as if the WQ_HIGHPRI is all that was required to avoid
+> the log IO completion starvation livelocks. I haven't yet pulled
+> the tree below, but I've now created about a billion inodes without
+> seeing any evidence of the livelock occurring.
 > 
-> Ok, so the normal case is that they will all be processed local to the
-> CPU they were queued on, like the old workqueue code?
+> Hence it looks like I've been seeing two livelocks - one caused by
+> the VM that Mel's patches fix, and one caused by the workqueue
+> changeover that is fixed by the WQ_HIGHPRI change.
+> 
+> Thanks for you insights, Tejun - I'll push the workqueue change
+> through the XFS tree to Linus.
 
-Bound workqueues always process works locally.  Please consider the
-following scenario.
+Great, BTW, I have several questions regarding wq usage in xfs.
 
- w0, w1, w2 are queued to q0 on the same CPU.  w0 burns CPU for 5ms
- then sleeps for 10ms then burns CPU for 5ms again then finishes.  w1
- and w2 sleeps for 10ms.
+* Do you think @max_active > 1 could be useful for xfs?  If most works
+  queued on the wq are gonna contend for the same (blocking) set of
+  resources, it would just make more threads sleeping on those
+  resources but otherwise it would help reducing execution latency a
+  lot.
 
-The following is what happens with the original workqueue (ignoring
-all other tasks and processing overhead).
+* xfs_mru_cache is a singlethread workqueue.  Do you specifically need
+  singlethreadedness (strict ordering of works) or is it just to avoid
+  creating dedicated per-cpu workers?  If the latter, there's no need
+  to use singlethread one anymore.
 
- TIME IN MSECS	EVENT
- 0		w0 burns CPU
- 5		w0 sleeps
- 15		w0 wakes and burns CPU
- 20		w0 finishes, w1 starts and sleeps
- 30		w1 finishes, w2 starts and sleeps
- 40		w2 finishes
+* Are all four workqueues in xfs used during memory allocation?  With
+  the new implementation, the reasons to have dedicated wqs are,
 
-With cmwq if @max_active >= 3,
+  - Forward progress guarantee in the memory allocation path.  Each
+    workqueue w/ WQ_RESCUER has _one_ rescuer thread reserved for
+    execution of works on the specific wq, which will be used under
+    memory pressure to make forward progress.
 
- TIME IN MSECS	EVENT
- 0		w0 burns CPU
- 5		w0 sleeps, w1 starts and sleeps, w2 starts and sleeps
- 15		w0 wakes and burns CPU, w1 finishes, w2 finishes
- 20		w0 finishes
+  - A wq is a flush domain.  You can flush works on it as a group.
 
-IOW, cmwq assigns a new worker when there are more work items to
-process but no work item is currently in progress on the CPU.  Please
-note that this behavior is across *all* workqueues.  It doesn't matter
-which work item belongs to which workqueue.
+  - A wq is also a attribute domain.  If certain work items need to be
+    handled differently (highpri, cpu intensive, execution ordering,
+    etc...), they can be queued to a wq w/ those attributes specified.
+
+  Maybe some of those workqueues can drop WQ_RESCUER or merged or just
+  use the system workqueue?
 
 Thanks.
 
