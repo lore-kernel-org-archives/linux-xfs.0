@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o888oo8U023544 for <xfs@oss.sgi.com>; Wed, 8 Sep 2010 03:50:51 -0500
-Received: from hera.kernel.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9B05E1036D00
-	for <xfs@oss.sgi.com>; Wed,  8 Sep 2010 02:02:44 -0700 (PDT)
-Received: from hera.kernel.org (hera.kernel.org [140.211.167.34]) by
-	cuda.sgi.com with ESMTP id LDYNlurcFQsxLjUG for
-	<xfs@oss.sgi.com>; Wed, 08 Sep 2010 02:02:44 -0700 (PDT)
-Message-ID: <4C874E90.5040405@kernel.org>
-Date: Wed, 08 Sep 2010 10:51:28 +0200
-From: Tejun Heo <tj@kernel.org>
-MIME-Version: 1.0
+	o88A4RYj028869 for <xfs@oss.sgi.com>; Wed, 8 Sep 2010 05:04:28 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 78FB25556F
+	for <xfs@oss.sgi.com>; Wed,  8 Sep 2010 03:05:09 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	PXKAxiCbrXDbzzbE for <xfs@oss.sgi.com>;
+	Wed, 08 Sep 2010 03:05:09 -0700 (PDT)
+Date: Wed, 8 Sep 2010 20:05:03 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [2.6.36-rc3] Workqueues, XFS, dependencies and deadlocks
+Message-ID: <20100908100503.GX705@dastard>
 References: <20100907072954.GM705@dastard> <4C86003B.6090706@kernel.org>
 	<20100907100108.GN705@dastard> <4C861582.6080102@kernel.org>
 	<4C862F8E.7030507@kernel.org> <20100908082249.GT705@dastard>
-In-Reply-To: <20100908082249.GT705@dastard>
+	<4C874E90.5040405@kernel.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4C874E90.5040405@kernel.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,64 +28,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Tejun Heo <tj@kernel.org>
 Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Hello,
-
-On 09/08/2010 10:22 AM, Dave Chinner wrote:
-> Ok, it looks as if the WQ_HIGHPRI is all that was required to avoid
-> the log IO completion starvation livelocks. I haven't yet pulled
-> the tree below, but I've now created about a billion inodes without
-> seeing any evidence of the livelock occurring.
-> 
-> Hence it looks like I've been seeing two livelocks - one caused by
-> the VM that Mel's patches fix, and one caused by the workqueue
-> changeover that is fixed by the WQ_HIGHPRI change.
-> 
-> Thanks for you insights, Tejun - I'll push the workqueue change
-> through the XFS tree to Linus.
-
-Great, BTW, I have several questions regarding wq usage in xfs.
-
-* Do you think @max_active > 1 could be useful for xfs?  If most works
-  queued on the wq are gonna contend for the same (blocking) set of
-  resources, it would just make more threads sleeping on those
-  resources but otherwise it would help reducing execution latency a
-  lot.
-
-* xfs_mru_cache is a singlethread workqueue.  Do you specifically need
-  singlethreadedness (strict ordering of works) or is it just to avoid
-  creating dedicated per-cpu workers?  If the latter, there's no need
-  to use singlethread one anymore.
-
-* Are all four workqueues in xfs used during memory allocation?  With
-  the new implementation, the reasons to have dedicated wqs are,
-
-  - Forward progress guarantee in the memory allocation path.  Each
-    workqueue w/ WQ_RESCUER has _one_ rescuer thread reserved for
-    execution of works on the specific wq, which will be used under
-    memory pressure to make forward progress.
-
-  - A wq is a flush domain.  You can flush works on it as a group.
-
-  - A wq is also a attribute domain.  If certain work items need to be
-    handled differently (highpri, cpu intensive, execution ordering,
-    etc...), they can be queued to a wq w/ those attributes specified.
-
-  Maybe some of those workqueues can drop WQ_RESCUER or merged or just
-  use the system workqueue?
-
-Thanks.
-
--- 
-tejun
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gV2VkLCBTZXAgMDgsIDIwMTAgYXQgMTA6NTE6MjhBTSArMDIwMCwgVGVqdW4gSGVvIHdyb3Rl
+Ogo+IEhlbGxvLAo+IAo+IE9uIDA5LzA4LzIwMTAgMTA6MjIgQU0sIERhdmUgQ2hpbm5lciB3cm90
+ZToKPiA+IE9rLCBpdCBsb29rcyBhcyBpZiB0aGUgV1FfSElHSFBSSSBpcyBhbGwgdGhhdCB3YXMg
+cmVxdWlyZWQgdG8gYXZvaWQKPiA+IHRoZSBsb2cgSU8gY29tcGxldGlvbiBzdGFydmF0aW9uIGxp
+dmVsb2Nrcy4gSSBoYXZlbid0IHlldCBwdWxsZWQKPiA+IHRoZSB0cmVlIGJlbG93LCBidXQgSSd2
+ZSBub3cgY3JlYXRlZCBhYm91dCBhIGJpbGxpb24gaW5vZGVzIHdpdGhvdXQKPiA+IHNlZWluZyBh
+bnkgZXZpZGVuY2Ugb2YgdGhlIGxpdmVsb2NrIG9jY3VycmluZy4KPiA+IAo+ID4gSGVuY2UgaXQg
+bG9va3MgbGlrZSBJJ3ZlIGJlZW4gc2VlaW5nIHR3byBsaXZlbG9ja3MgLSBvbmUgY2F1c2VkIGJ5
+Cj4gPiB0aGUgVk0gdGhhdCBNZWwncyBwYXRjaGVzIGZpeCwgYW5kIG9uZSBjYXVzZWQgYnkgdGhl
+IHdvcmtxdWV1ZQo+ID4gY2hhbmdlb3ZlciB0aGF0IGlzIGZpeGVkIGJ5IHRoZSBXUV9ISUdIUFJJ
+IGNoYW5nZS4KPiA+IAo+ID4gVGhhbmtzIGZvciB5b3UgaW5zaWdodHMsIFRlanVuIC0gSSdsbCBw
+dXNoIHRoZSB3b3JrcXVldWUgY2hhbmdlCj4gPiB0aHJvdWdoIHRoZSBYRlMgdHJlZSB0byBMaW51
+cy4KPiAKPiBHcmVhdCwgQlRXLCBJIGhhdmUgc2V2ZXJhbCBxdWVzdGlvbnMgcmVnYXJkaW5nIHdx
+IHVzYWdlIGluIHhmcy4KPiAKPiAqIERvIHlvdSB0aGluayBAbWF4X2FjdGl2ZSA+IDEgY291bGQg
+YmUgdXNlZnVsIGZvciB4ZnM/ICBJZiBtb3N0IHdvcmtzCj4gICBxdWV1ZWQgb24gdGhlIHdxIGFy
+ZSBnb25uYSBjb250ZW5kIGZvciB0aGUgc2FtZSAoYmxvY2tpbmcpIHNldCBvZgo+ICAgcmVzb3Vy
+Y2VzLCBpdCB3b3VsZCBqdXN0IG1ha2UgbW9yZSB0aHJlYWRzIHNsZWVwaW5nIG9uIHRob3NlCj4g
+ICByZXNvdXJjZXMgYnV0IG90aGVyd2lzZSBpdCB3b3VsZCBoZWxwIHJlZHVjaW5nIGV4ZWN1dGlv
+biBsYXRlbmN5IGEKPiAgIGxvdC4KCkl0IG1heSBpbmRlZWQgaGVscCwgYnV0IEkgY2FuJ3QgcmVh
+bGx5IHNheSBtdWNoIG1vcmUgdGhhbiB0aGF0IHJpZ2h0Cm5vdy4gSSBuZWVkIGEgZGVlcGVyIHVu
+ZGVyc3RhbmRpbmcgb2YgdGhlIGltcGFjdCBvZiBpbmNyZWFzaW5nCm1heF9hY3RpdmUgKEkgaGF2
+ZSBhIGJhc2ljIHVuZGVyc3RhbmRpbmcgbm93KSBiZWZvcmUgSSBjb3VsZCBzYXkgZm9yCmNlcnRh
+aW4uCgo+ICogeGZzX21ydV9jYWNoZSBpcyBhIHNpbmdsZXRocmVhZCB3b3JrcXVldWUuICBEbyB5
+b3Ugc3BlY2lmaWNhbGx5IG5lZWQKPiAgIHNpbmdsZXRocmVhZGVkbmVzcyAoc3RyaWN0IG9yZGVy
+aW5nIG9mIHdvcmtzKSBvciBpcyBpdCBqdXN0IHRvIGF2b2lkCj4gICBjcmVhdGluZyBkZWRpY2F0
+ZWQgcGVyLWNwdSB3b3JrZXJzPyAgSWYgdGhlIGxhdHRlciwgdGhlcmUncyBubyBuZWVkCj4gICB0
+byB1c2Ugc2luZ2xldGhyZWFkIG9uZSBhbnltb3JlLgoKRGlkbid0IG5lZWQgcGVyLWNwdSB3b3Jr
+ZXJzLCBzbyBjb3VsZCBwcm9iYWJseSBkcm9wIGl0IG5vdy4KCj4gKiBBcmUgYWxsIGZvdXIgd29y
+a3F1ZXVlcyBpbiB4ZnMgdXNlZCBkdXJpbmcgbWVtb3J5IGFsbG9jYXRpb24/ICBXaXRoCj4gICB0
+aGUgbmV3IGltcGxlbWVudGF0aW9uLCB0aGUgcmVhc29ucyB0byBoYXZlIGRlZGljYXRlZCB3cXMg
+YXJlLAoKVGhlIHhmc2RhdGFkLCB4ZnNsb2dkIGFuZCB4ZnNjb252ZXJ0ZCBhcmUgYWxsIGluIHRo
+ZSBtZW1vcnkgcmVjbGFpbQpwYXRoLiBUaGF0IGlzLCB0aGV5IG5lZWQgdG8gYmUgYWJsZSB0byBy
+dW4gYW5kIG1ha2UgcHJvZ3Jlc3Mgd2hlbgptZW1vcnkgaXMgbG93IGJlY2F1c2UgaWYgdGhlIElP
+IGRvZXMgbm90IGNvbXBsZXRlLCBwYWdlcyB1bmRlciBJTwp3aWxsIG5ldmVyIGNvbXBsZXRlIHRo
+ZSB0cmFuc2l0aW9uIGZyb20gZGlydHkgdG8gY2xlYW4uIEhlbmNlIHRoZXkKYXJlIG5vdCBpbiB0
+aGUgZGlyZWN0IG1lbW9yeSBhbGxvY2F0aW9uIHBhdGgsIGJ1dCB0aGV5IGFyZQpkZWZpbml0ZWx5
+IGFuIGltcG9ydGFudCBwYXJ0IG9mIHRoZSBtZW1vcnkgcmVjbGFpbSBwYXRoIHRoYXQKb3BlcmF0
+ZXMgaW4gbG93IG1lbW9yeSBjb25kaXRpb25zLgoKPiAgIC0gRm9yd2FyZCBwcm9ncmVzcyBndWFy
+YW50ZWUgaW4gdGhlIG1lbW9yeSBhbGxvY2F0aW9uIHBhdGguICBFYWNoCj4gICAgIHdvcmtxdWV1
+ZSB3LyBXUV9SRVNDVUVSIGhhcyBfb25lXyByZXNjdWVyIHRocmVhZCByZXNlcnZlZCBmb3IKPiAg
+ICAgZXhlY3V0aW9uIG9mIHdvcmtzIG9uIHRoZSBzcGVjaWZpYyB3cSwgd2hpY2ggd2lsbCBiZSB1
+c2VkIHVuZGVyCj4gICAgIG1lbW9yeSBwcmVzc3VyZSB0byBtYWtlIGZvcndhcmQgcHJvZ3Jlc3Mu
+CgpUaGF0LCB0byBtZSwgc2F5cyB0aGV5IGFsbCBuZWVkIGEgcmVzY3VlciB0aHJlYWQgYmVjYXVz
+ZSB0aGV5IGFsbApuZWVkIHRvIGJlIGFibGUgdG8gbWFrZSBmb3J3YXJkIHByb2dyZXNzIGluIE9P
+TSBjb25kaXRpb25zLgoKPiAgIC0gQSB3cSBpcyBhIGZsdXNoIGRvbWFpbi4gIFlvdSBjYW4gZmx1
+c2ggd29ya3Mgb24gaXQgYXMgYSBncm91cC4KCldlIGRvIHRoYXQgYXMgd2VsbCBmb3IgdGhlIGFi
+b3ZlIHdvcmtxdWV1ZXMgYXMgd2VsbCB0byBlbnN1cmUKY29ycmVjdCBzeW5jKDEpLCBmcmVlemUg
+YW5kIHVubW91bnQgYmVoYXZpb3VyIChzZWUKeGZzX2ZsdXNoX2J1ZnRhcmcoKSkuCgo+ICAgLSBB
+IHdxIGlzIGFsc28gYSBhdHRyaWJ1dGUgZG9tYWluLiAgSWYgY2VydGFpbiB3b3JrIGl0ZW1zIG5l
+ZWQgdG8gYmUKPiAgICAgaGFuZGxlZCBkaWZmZXJlbnRseSAoaGlnaHByaSwgY3B1IGludGVuc2l2
+ZSwgZXhlY3V0aW9uIG9yZGVyaW5nLAo+ICAgICBldGMuLi4pLCB0aGV5IGNhbiBiZSBxdWV1ZWQg
+dG8gYSB3cSB3LyB0aG9zZSBhdHRyaWJ1dGVzIHNwZWNpZmllZC4KCkFuZCB3ZSBhbHJlYWR5IGtu
+b3cgdGhhdCB0aGF0IHhmc2xvZ2Rfd29ya3F1ZXVlIG5lZWRzIHRoZSBXUV9ISUdIUFJJCmZsYWcu
+Li4uCgo+ICAgTWF5YmUgc29tZSBvZiB0aG9zZSB3b3JrcXVldWVzIGNhbiBkcm9wIFdRX1JFU0NV
+RVIgb3IgbWVyZ2VkIG9yIGp1c3QKPiAgIHVzZSB0aGUgc3lzdGVtIHdvcmtxdWV1ZT8KCk1heWJl
+IHRoZSBtcnUgd3EgY2FuIHVzZSB0aGUgc3lzdGVtIHdxLCBidXQgSSdtIHJlYWxseSBvcHBvc2Vk
+IHRvCm1lcmdpbmcgWEZTIHdxcyB3aXRoIHN5c3RlbSB3b3JrIHF1ZXVlcyBzaW1wbHkgZnJvbSBh
+IGRlYnVnZ2luZyBQT1YuCkkndmUgbG9zdCBjb3VudCBvZiB0aGUgbnVtYmVyIG9mIHRpbWVzIEkn
+dmUgd2Fsa2VkIHRoZSBJTyBjb21wbGV0aW9uCnF1ZXVl0ZUgd2l0aCBhIGRlYnVnZ2VyIG9yIGNy
+YXNoIGR1bXAgYW5hbHlzZXIgdG8gdHJ5IHRvIHdvcmsgb3V0IGlmCm1pc3NpbmcgSU8gdGhhdCB3
+ZWRnZWQgdGhlIGZpbGVzeXN0ZW0gZ290IHN0dWNrIG9uIHRoZSBjb21wbGV0aW9uCnF1ZXVlLiBJ
+ZiBJIHdhbnQgdG8gYmUgYWJsZSB0byBzYXkgInRoZSBJTyB3YXMgbG9zdCBieSBhIGxvd2VyCmxh
+eWVyIiwgdGhlbiBJIGhhdmUgdG8gYmUgYWJsZSB0byBjb25maXJtIGl0IGlzIG5vdCBzdHVjayBp
+biBhCmNvbXBsZXRpb24gcXVldWUuIFRoYXQgbXVjaCBoYXJkZXIgaWYgSSBkb24ndCBrbm93IHdo
+YXQgdGhlIHdvcmsKY29udGFpbmVyIG9iamVjdHMgb24gdGhlIHF1ZXVlIGFyZS4uLi4KCkNoZWVy
+cywKCkRhdmUuCi0tIApEYXZlIENoaW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4
+ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
