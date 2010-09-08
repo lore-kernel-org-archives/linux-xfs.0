@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o888ME1o022343 for <xfs@oss.sgi.com>; Wed, 8 Sep 2010 03:22:14 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1EA6DDA47D5
-	for <xfs@oss.sgi.com>; Wed,  8 Sep 2010 01:34:08 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	0krXwJ45hTbNFcam for <xfs@oss.sgi.com>;
-	Wed, 08 Sep 2010 01:34:08 -0700 (PDT)
-Date: Wed, 8 Sep 2010 18:22:49 +1000
-From: Dave Chinner <david@fromorbit.com>
+	o888JpL4022242 for <xfs@oss.sgi.com>; Wed, 8 Sep 2010 03:19:51 -0500
+Received: from hera.kernel.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B82F31B3461A
+	for <xfs@oss.sgi.com>; Wed,  8 Sep 2010 01:20:35 -0700 (PDT)
+Received: from hera.kernel.org (hera.kernel.org [140.211.167.34]) by
+	cuda.sgi.com with ESMTP id Jyca1CcovllmlC7J for
+	<xfs@oss.sgi.com>; Wed, 08 Sep 2010 01:20:35 -0700 (PDT)
+Message-ID: <4C87474B.3050405@kernel.org>
+Date: Wed, 08 Sep 2010 10:20:27 +0200
+From: Tejun Heo <tj@kernel.org>
+MIME-Version: 1.0
 Subject: Re: [2.6.36-rc3] Workqueues, XFS, dependencies and deadlocks
-Message-ID: <20100908082249.GT705@dastard>
 References: <20100907072954.GM705@dastard> <4C86003B.6090706@kernel.org>
 	<20100907100108.GN705@dastard> <4C861582.6080102@kernel.org>
-	<4C862F8E.7030507@kernel.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4C862F8E.7030507@kernel.org>
+	<20100907124850.GP705@dastard> <4C865CC4.9070701@kernel.org>
+	<20100908073428.GR705@dastard>
+In-Reply-To: <20100908073428.GR705@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,48 +30,69 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Tejun Heo <tj@kernel.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Sep 07, 2010 at 02:26:54PM +0200, Tejun Heo wrote:
-> On 09/07/2010 12:35 PM, Tejun Heo wrote:
-> > Can you please help me a bit more?  Are you saying the following?
-> > 
-> > Work w0 starts execution on wq0.  w0 tries locking but fails.  Does
-> > delay(1) and requeues itself on wq0 hoping another work w1 would be
-> > queued on wq0 which will release the lock.  The requeueing should make
-> > w0 queued and executed after w1, but instead w1 never gets executed
-> > while w0 hogs the CPU constantly by re-executing itself.  Also, how
-> > does delay(1) help with chewing up CPU?  Are you talking about
-> > avoiding constant lock/unlock ops starving other lockers?  In such
-> > case, wouldn't cpu_relax() make more sense?
+Hello,
+
+On 09/08/2010 09:34 AM, Dave Chinner wrote:
+>> I see.  The use case itself shouldn't be problematic at all for cmwq
+>> (sans bugs of course).  In the other reply, you said "the system is
+>> 100% unresponsive when the livelock occurs", which is kind of
+>> puzzling.  It isn't really a livelock.
 > 
-> Ooh, almost forgot.  There was nr_active underflow bug in workqueue
-> code which could lead to malfunctioning max_active regulation and
-> problems during queue freezing, so you could be hitting that too.  I
-> sent out pull request some time ago but hasn't been pulled into
-> mainline yet.  Can you please pull from the following branch and add
-> WQ_HIGHPRI as discussed before and see whether the problem is still
-> reproducible?
+> Actually, it is. You don't need to burn CPU to livelock, you just
+> need a loop in the state machine that cannot be broken by internal
+> or external events to be considered livelocked.
 
-Ok, it looks as if the WQ_HIGHPRI is all that was required to avoid
-the log IO completion starvation livelocks. I haven't yet pulled
-the tree below, but I've now created about a billion inodes without
-seeing any evidence of the livelock occurring.
+Yeah, but for the system to be completely unresponsive even to sysrq,
+the system needs to be live/dead locked in a pretty specific way.
 
-Hence it looks like I've been seeing two livelocks - one caused by
-the VM that Mel's patches fix, and one caused by the workqueue
-changeover that is fixed by the WQ_HIGHPRI change.
+> However, this is not what I was calling the livelock problem - this
+> is what I was calling the deadlock problem because to all external
+> appearences the state machine is deadlocked on the inode lock....
+> 
+> The livelock case I described where the system is completely
+> unresponsive is the one I'm testing the WQ_HIGHPRI mod against.
+> 
+> FWIW, having considered the above case again, and seeing what the
+> WQ_HIGHPRI mod does in terms of queuing, I think that it may also
+> solve this deadlock as the log IO completionwill always be queued
+> ahead of the data IO completion now.
 
-Thanks for you insights, Tejun - I'll push the workqueue change
-through the XFS tree to Linus.
+Cool, but please keep in mind that the nr_active underflow bug may end
+up stalling or loosening ordering rules for a workqueue.  Linus has
+pulled in the pending fixes today.
 
-Cheers,
+>> Hmm... The point where I'm confused is that *delay()'s are busy waits.
+>> They burn CPU cycles.  I suppose you're referring to *sleep()'s,
+>> right?
+> 
+> fs/xfs/linux-2.6/time.h:
+> 
+> static inline void delay(long ticks)
+> {
+>         schedule_timeout_uninterruptible(ticks);
+> }
 
-Dave.
+Heh yeah, there's my confusion.
+
+>> Probably I have overloaded the term 'concurrency' too much.  In this
+>> case, I meant the number of workers assigned to work items of the wq.
+>> If you fire off N work items which sleep at the same time, cmwq will
+>> eventually try to create N workers as each previous worker goes to
+>> sleep so that the CPU doesn't sit idle while there are work items to
+>> process as long as N < @wq->nr->active.
+> 
+> Ok, so if I queue N items on a single CPU when max_active == N, they
+> get spread across N worker threads on different CPUs? 
+
+They may if necessary to keep the workqueue progressing.
+
+Thanks.
+
 -- 
-Dave Chinner
-david@fromorbit.com
+tejun
 
 _______________________________________________
 xfs mailing list
