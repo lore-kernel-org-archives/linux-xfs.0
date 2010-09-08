@@ -1,21 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o881DAml005855 for <xfs@oss.sgi.com>; Tue, 7 Sep 2010 20:13:10 -0500
-Received: from EXHUB018-3.exch018.msoutlookonline.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7B48717B815E
-	for <xfs@oss.sgi.com>; Tue,  7 Sep 2010 18:13:53 -0700 (PDT)
-Received: from EXHUB018-3.exch018.msoutlookonline.net
-	(exhub018-3.exch018.msoutlookonline.net [64.78.17.18]) by
-	cuda.sgi.com with ESMTP id CXnGCzsYCawtMgrt for
-	<xfs@oss.sgi.com>; Tue, 07 Sep 2010 18:13:53 -0700 (PDT)
-From: Brady Chang <bchang@greenplum.com>
-Date: Tue, 7 Sep 2010 18:16:43 -0700
-Subject: Re: fragmentation question
-Message-ID: <C8AC320B.6CB6%bchang@greenplum.com>
-In-Reply-To: <C8AC2AC5.6CA9%bchang@greenplum.com>
-Content-Language: en
+	o885cJxh016430 for <xfs@oss.sgi.com>; Wed, 8 Sep 2010 00:38:19 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 93F81563FC
+	for <xfs@oss.sgi.com>; Tue,  7 Sep 2010 22:39:00 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id EUeOA7mnbwdsJpU3 for
+	<xfs@oss.sgi.com>; Tue, 07 Sep 2010 22:39:00 -0700 (PDT)
+Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv14.zmi.at (Postfix) with ESMTPSA id 6CAEE605
+	for <xfs@oss.sgi.com>; Wed,  8 Sep 2010 07:38:59 +0200 (CEST)
+Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id 2478D401C2E
+	for <xfs@oss.sgi.com>; Wed,  8 Sep 2010 07:38:59 +0200 (CEST)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: xfs mount/create options (was: XFS status update for August 2010)
+Date: Wed, 8 Sep 2010 07:38:54 +0200
+References: <20100902145959.GA27887@infradead.org>
+	<20100905130809.GI705@dastard> <201009060749.01405@zmi.at>
+In-Reply-To: <201009060749.01405@zmi.at>
 MIME-Version: 1.0
+Message-Id: <201009080738.58483@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,360 +34,97 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6726082990017508048=="
+Content-Type: multipart/mixed; boundary="===============5737999489125892661=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
---===============6726082990017508048==
-Content-Language: en
-Content-Type: multipart/alternative;
-	boundary="_000_C8AC320B6CB6bchanggreenplumcom_"
+--===============5737999489125892661==
+Content-Type: multipart/signed;
+  boundary="nextPart4103586.OOzVkmiRHJ";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
---_000_C8AC320B6CB6bchanggreenplumcom_
-Content-Type: text/plain; charset="iso-8859-1"
+--nextPart4103586.OOzVkmiRHJ
+Content-Type: Text/Plain;
+  charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
 
-By the way, the os is RHEL 5.5 kernel 2.6.18-194.11.1.el5
+I just found that my questions from Monday were not solved, but this is=20
+interesting, so I want to warm it up again.
 
-thanks in advance.
--Brady
-
-
-On 9/7/10 5:45 PM, "Brady Chang" <bchang@greenplum.com> wrote:
-
-Hello All,
-I have an issue with fragmentation on a particular device
-thanks for any advice.
-
--Brady
-
-I have a Dell r510 with 12 disks
-2xraid 5 (6 disks each)
-raid group1:
-48 GB   carved out for os mounted as /
-remaining space  2.7 TB for xfs mounted as /data1
-raid group2:
-48 GB  for swap
-remaining space 2.7 TB for xfs mounted as /data2
-
-The strange thing is that /data1 never gets fragmented where as /data2 is b=
-adly fragmented.
-I believe increase allocsize would help, but not sure how to explain why /d=
-ata2(/dev/sdd) always gets fragmented and not /data1(/dev/sdb)
-
-It's a data warehouse application.  the I/O is balanced between /data1 and =
-/data2:
-output of xfs_db
-[root@sdw4 data1]# xfs_db -c frag -r /dev/sdb
-actual 14353, ideal 13702, fragmentation factor 4.54%
-[root@sdw4 data1]# xfs_db -c frag -r /dev/sdd
-actual 408674, ideal 13719, fragmentation factor 96.64%
-df output
-/dev/sdb              2.7T  967G  1.8T  36% /data1
-/dev/sdd              2.7T  1.1T  1.7T  39% /data2
-
-LABEL=3D/data1        /data1     xfs     allocsize=3D1048576,logbufs=3D8,no=
-atime,nodiratime 0 0
-LABEL=3D/data2        /data2     xfs     allocsize=3D1048576,logbufs=3D8,no=
-atime,nodiratime 0 0
+On Montag, 6. September 2010 Michael Monnerie wrote:
+ I looked into man mkfs now, which brings up these questions:
+=20
+ On Sonntag, 5. September 2010 Dave Chinner wrote:
+ >         - relatime,logbufs=3D8,attr=3D2,barrier are all defaults.
+=20
+ Why isn't logbsize=3D256k default, when it's suggested most of the time
+ anyway? On machines with 32MiB or more 32k is the default, but most
+ machines these days have multi-gigabytes of RAM, so at least for
+ RAM>1GiB that could be made default.
+=20
+ >         - largeio only affects stat(2) output if you have
+ >           sunit/swidth set - unlikely on a laptop drive, and has
+ >           no effect on unlink performance.
+ >         - swalloc only affects allocation if sunit/swidth are set
+ >           and has no effect on unlink performance.
+=20
+ Hm, it seems I don't understand that. I tried now on different
+  servers, using
+ stat -f /disks/db --format '%s %S'
+ 4096 4096
+=20
+ That filesystems were all created with su=3D64k,swidth=3D(values 4-8
+ depending on RAID). So I retried specifying directly in the mount
+ options: sunit=3D128,swidth=3D512
+ and it still reports "4096" for %s - or is %s not the value I should
+ look for? Some of the filesystems even have allocsize=3D specified,
+  still always 4096 is given back. Where is my problem?
+=20
+ And while I am at it: Why does "mount" not provide the su=3D/sw=3D
+  options that we can use to create a filesystem? Would make life
+  easier, as it's much easier to read su=3D64k,sw=3D7 than
+  sunit=3D128,swidth=3D896.
+=20
+ When I defined su/sw on mkfs, is it enough, or would I always have to
+ specify sunit/swidth with every mount too?
+=20
 
 
-raid config output:
-[root@sdw4 data1]# omreport storage vdisk
-List of Virtual Disks in the System
 
-Controller PERC H700 Integrated (Slot 4)
-ID                        : 0
-Status                    : Ok
-Name                      : boot
-State                     : Ready
-Hot Spare Policy violated : Not Assigned
-Virtual Disk Bad Blocks   : No
-Secured                   : Not Applicable
-Progress                  : Not Applicable
-Layout                    : RAID-5
-Size                      : 48.99 GB (52602470400 bytes)
-Device Name               : /dev/sda
-Bus Protocol              : SAS
-Media                     : HDD
-Read Policy               : No Read Ahead
-Write Policy              : Force Write Back
-Cache Policy              : Not Applicable
-Stripe Element Size       : 128 KB
-Disk Cache Policy         : Disabled
+=2D-=20
+mit freundlichen Gr=C3=BCssen,
+Michael Monnerie, Ing. BSc
 
-ID                        : 1
-Status                    : Ok
-Name                      : data1
-State                     : Ready
-Hot Spare Policy violated : Not Assigned
-Virtual Disk Bad Blocks   : No
-Secured                   : Not Applicable
-Progress                  : Not Applicable
-Layout                    : RAID-5
-Size                      : 2,742.89 GB (2945150484480 bytes)
-Device Name               : /dev/sdb
-Bus Protocol              : SAS
-Media                     : HDD
-Read Policy               : No Read Ahead
-Write Policy              : Force Write Back
-Cache Policy              : Not Applicable
-Stripe Element Size       : 128 KB
-Disk Cache Policy         : Disabled
+it-management Internet Services
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: 0660 / 415 65 31
 
-ID                        : 2
-Status                    : Ok
-Name                      : swap
-State                     : Ready
-Hot Spare Policy violated : Not Assigned
-Virtual Disk Bad Blocks   : No
-Secured                   : Not Applicable
-Progress                  : Not Applicable
-Layout                    : RAID-5
-Size                      : 48.99 GB (52602470400 bytes)
-Device Name               : /dev/sdc
-Bus Protocol              : SAS
-Media                     : HDD
-Read Policy               : No Read Ahead
-Write Policy              : Force Write Back
-Cache Policy              : Not Applicable
-Stripe Element Size       : 128 KB
-Disk Cache Policy         : Disabled
+****** Aktuelles Radiointerview! ******
+http://www.it-podcast.at/aktuelle-sendung.html
 
-ID                        : 3
-Status                    : Ok
-Name                      : data2
-State                     : Ready
-Hot Spare Policy violated : Not Assigned
-Virtual Disk Bad Blocks   : No
-Secured                   : Not Applicable
-Progress                  : Not Applicable
-Layout                    : RAID-5
-Size                      : 2,742.89 GB (2945150484480 bytes)
-Device Name               : /dev/sdd
-Bus Protocol              : SAS
-Media                     : HDD
-Read Policy               : No Read Ahead
-Write Policy              : Force Write Back
-Cache Policy              : Not Applicable
-Stripe Element Size       : 128 KB
-Disk Cache Policy         : Disabled
+// Wir haben im Moment zwei H=C3=A4user zu verkaufen:
+// http://zmi.at/langegg/
+// http://zmi.at/haus2009/
 
---_000_C8AC320B6CB6bchanggreenplumcom_
-Content-Type: text/html; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+--nextPart4103586.OOzVkmiRHJ
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
-<HTML>
-<HEAD>
-<TITLE>Re: fragmentation question</TITLE>
-</HEAD>
-<BODY>
-<FONT FACE=3D"Calibri, Verdana, Helvetica, Arial"><SPAN STYLE=3D'font-size:=
-11pt'>By the way, the os is RHEL 5.5 kernel 2.6.18-194.11.1.el5<BR>
-<BR>
-thanks in advance.<BR>
--Brady<BR>
-<BR>
-<BR>
-On 9/7/10 5:45 PM, &quot;Brady Chang&quot; &lt;<a href=3D"bchang@greenplum.=
-com">bchang@greenplum.com</a>&gt; wrote:<BR>
-<BR>
-</SPAN></FONT><BLOCKQUOTE><FONT FACE=3D"Calibri, Verdana, Helvetica, Arial"=
-><SPAN STYLE=3D'font-size:11pt'>Hello All,<BR>
-I have an issue with fragmentation on a particular device<BR>
-thanks for any advice.<BR>
-<BR>
--Brady<BR>
-<BR>
-I have a Dell r510 with 12 disks <BR>
-2xraid 5 (6 disks each) <BR>
-raid group1:<BR>
-48 GB &nbsp;&nbsp;carved out for os mounted as / <BR>
-remaining space &nbsp;2.7 TB for xfs mounted as /data1<BR>
-raid group2:<BR>
-48 GB &nbsp;for swap<BR>
-remaining space 2.7 TB for xfs mounted as /data2<BR>
-<BR>
-The strange thing is that /data1 never gets fragmented where as /data2 is b=
-adly fragmented.<BR>
-I believe increase allocsize would help, but not sure how to explain why /d=
-ata2(/dev/sdd) always gets fragmented and not /data1(/dev/sdb)<BR>
-<BR>
-It's a data warehouse application. &nbsp;the I/O is balanced between /data1=
- and /data2:<BR>
-output of xfs_db<BR>
-[root@sdw4 data1]# xfs_db -c frag -r /dev/sdb<BR>
-actual 14353, ideal 13702, fragmentation factor 4.54%<BR>
-[root@sdw4 data1]# xfs_db -c frag -r /dev/sdd<BR>
-actual 408674, ideal 13719, fragmentation factor 96.64%<BR>
-df output<BR>
-/dev/sdb &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;2.7T &nbsp;967G &nbsp;1.8T &nbsp;36% /data1<BR>
-/dev/sdd &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;2.7T &nbsp;1.1T &nbsp;1.7T &nbsp;39% /data2<BR>
-<BR>
-LABEL=3D/data1 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/data1 &nbsp;&nbsp=
-;&nbsp;&nbsp;xfs &nbsp;&nbsp;&nbsp;&nbsp;allocsize=3D1048576,logbufs=3D8,no=
-atime,nodiratime 0 0<BR>
-LABEL=3D/data2 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/data2 &nbsp;&nbsp=
-;&nbsp;&nbsp;xfs &nbsp;&nbsp;&nbsp;&nbsp;allocsize=3D1048576,logbufs=3D8,no=
-atime,nodiratime 0 0<BR>
-<BR>
-<BR>
-raid config output:<BR>
-[root@sdw4 data1]# omreport storage vdisk <BR>
-List of Virtual Disks in the System<BR>
-<BR>
-Controller PERC H700 Integrated (Slot 4)<BR>
-ID &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 0<BR>
-Status &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
-bsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Ok<BR>
-Name &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: boot<BR>
-State &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Ready<BR>
-Hot Spare Policy violated : Not Assigned<BR>
-Virtual Disk Bad Blocks &nbsp;&nbsp;: No<BR>
-Secured &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Not Applicable<BR>
-Progress &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Not Applicable<BR>
-Layout &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
-bsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: RAID-5<BR>
-Size &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 48.99 GB (5260247=
-0400 bytes)<BR>
-Device Name &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;: /dev/sda<BR>
-Bus Protocol &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
-bsp;&nbsp;&nbsp;: SAS<BR>
-Media &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: HDD<BR>
-Read Policy &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;: No Read Ahead<BR>
-Write Policy &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
-bsp;&nbsp;&nbsp;: Force Write Back<BR>
-Cache Policy &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
-bsp;&nbsp;&nbsp;: Not Applicable<BR>
-Stripe Element Size &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 128 KB<BR>
-Disk Cache Policy &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Disable=
-d<BR>
-<BR>
-ID &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 1<BR>
-Status &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
-bsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Ok<BR>
-Name &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: data1<BR>
-State &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Ready<BR>
-Hot Spare Policy violated : Not Assigned<BR>
-Virtual Disk Bad Blocks &nbsp;&nbsp;: No<BR>
-Secured &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Not Applicable<BR>
-Progress &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Not Applicable<BR>
-Layout &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
-bsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: RAID-5<BR>
-Size &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 2,742.89 GB (2945=
-150484480 bytes)<BR>
-Device Name &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;: /dev/sdb<BR>
-Bus Protocol &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
-bsp;&nbsp;&nbsp;: SAS<BR>
-Media &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: HDD<BR>
-Read Policy &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;: No Read Ahead<BR>
-Write Policy &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
-bsp;&nbsp;&nbsp;: Force Write Back<BR>
-Cache Policy &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
-bsp;&nbsp;&nbsp;: Not Applicable<BR>
-Stripe Element Size &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 128 KB<BR>
-Disk Cache Policy &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Disable=
-d<BR>
-<BR>
-ID &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 2<BR>
-Status &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
-bsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Ok<BR>
-Name &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: swap<BR>
-State &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Ready<BR>
-Hot Spare Policy violated : Not Assigned<BR>
-Virtual Disk Bad Blocks &nbsp;&nbsp;: No<BR>
-Secured &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Not Applicable<BR>
-Progress &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Not Applicable<BR>
-Layout &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
-bsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: RAID-5<BR>
-Size &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 48.99 GB (5260247=
-0400 bytes)<BR>
-Device Name &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;: /dev/sdc<BR>
-Bus Protocol &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
-bsp;&nbsp;&nbsp;: SAS<BR>
-Media &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: HDD<BR>
-Read Policy &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;: No Read Ahead<BR>
-Write Policy &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
-bsp;&nbsp;&nbsp;: Force Write Back<BR>
-Cache Policy &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
-bsp;&nbsp;&nbsp;: Not Applicable<BR>
-Stripe Element Size &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 128 KB<BR>
-Disk Cache Policy &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Disable=
-d<BR>
-<BR>
-ID &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 3<BR>
-Status &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
-bsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Ok<BR>
-Name &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: data2<BR>
-State &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Ready<BR>
-Hot Spare Policy violated : Not Assigned<BR>
-Virtual Disk Bad Blocks &nbsp;&nbsp;: No<BR>
-Secured &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Not Applicable<BR>
-Progress &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Not Applicable<BR>
-Layout &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
-bsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: RAID-5<BR>
-Size &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 2,742.89 GB (2945=
-150484480 bytes)<BR>
-Device Name &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;: /dev/sdd<BR>
-Bus Protocol &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
-bsp;&nbsp;&nbsp;: SAS<BR>
-Media &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: HDD<BR>
-Read Policy &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;: No Read Ahead<BR>
-Write Policy &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
-bsp;&nbsp;&nbsp;: Force Write Back<BR>
-Cache Policy &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
-bsp;&nbsp;&nbsp;: Not Applicable<BR>
-Stripe Element Size &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 128 KB<BR>
-Disk Cache Policy &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Disable=
-d<BR>
-</SPAN></FONT></BLOCKQUOTE>
-</BODY>
-</HTML>
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.12 (GNU/Linux)
+
+iEYEABECAAYFAkyHIXIACgkQzhSR9xwSCbTRBgCgr0f87rPbBR5mi3m1mGMVc8R6
+SakAn2dMVVr4kMFdqqcBItx3SUBCNOKb
+=GseD
+-----END PGP SIGNATURE-----
+
+--nextPart4103586.OOzVkmiRHJ--
 
 
---_000_C8AC320B6CB6bchanggreenplumcom_--
-
-
---===============6726082990017508048==
+--===============5737999489125892661==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -388,4 +135,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============6726082990017508048==--
+--===============5737999489125892661==--
