@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o89HkunI111159 for <xfs@oss.sgi.com>; Thu, 9 Sep 2010 12:46:57 -0500
-Received: from smtp-relay.maven.pl (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CC64B14EF29F
-	for <xfs@oss.sgi.com>; Thu,  9 Sep 2010 10:59:00 -0700 (PDT)
-Received: from smtp-relay.maven.pl (smtp-relay.maven.pl [193.239.45.138]) by
-	cuda.sgi.com with ESMTP id 3eqmy9yRISPDdtLl for
-	<xfs@oss.sgi.com>; Thu, 09 Sep 2010 10:59:00 -0700 (PDT)
-From: =?UTF-8?q?Arkadiusz=20Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Subject: [PATCH] [xfstests]: Fix project quota checks
-Date: Thu,  9 Sep 2010 19:47:35 +0200
-Message-Id: <1284054455-30126-1-git-send-email-arekm@maven.pl>
-In-Reply-To: <1284051737-25840-1-git-send-email-arekm@maven.pl>
-References: <1284051737-25840-1-git-send-email-arekm@maven.pl>
+	o89Ie1Ie112903 for <xfs@oss.sgi.com>; Thu, 9 Sep 2010 13:40:01 -0500
+Received: from mail-fx0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5059B1D85CCE
+	for <xfs@oss.sgi.com>; Thu,  9 Sep 2010 11:40:45 -0700 (PDT)
+Received: from mail-fx0-f53.google.com (mail-fx0-f53.google.com
+	[209.85.161.53]) by cuda.sgi.com with ESMTP id HUdhUu85Zni65KuC
+	for <xfs@oss.sgi.com>; Thu, 09 Sep 2010 11:40:45 -0700 (PDT)
+Received: by fxm15 with SMTP id 15so1210657fxm.26
+	for <xfs@oss.sgi.com>; Thu, 09 Sep 2010 11:40:44 -0700 (PDT)
+Message-ID: <4C892A32.1000404@googlemail.com>
+Date: Thu, 09 Sep 2010 20:40:50 +0200
+From: Marcus Osdoba <marcus.osdoba@googlemail.com>
 MIME-Version: 1.0
+Subject: logerrors on armv5te hardware rendering xfs-partition unmountable
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,54 +23,112 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Eric Sandeen <sandeen@sandeen.net>
 
-UHJvamVjdCBxdW90YSBjaGVjayBpbiBmZXcgdGVzdHMgc2hvdWxkIGNoZWNrIFNDUkFUQ0hfREVW
-IGFuZCBub3QKVEVTVF9ERVYuIEZpeCB0aGF0IGJ5IG1ha2luZyBwb3NzaWJsZSB0byBwYXNzIGRl
-dmljZSB0byBiZSBjaGVja2VkIHRvCl9yZXF1aXJlX3ByanF1b3RhKCkuCgpEdWUgdG8gdGhlIHBy
-b2JsZW0gdGVzdHMgZGlkbid0IHJ1biB3aXRoICJJbnN0YWxsZWQga2VybmVsIGRvZXMgbm90CnN1
-cHBvcnQgcHJvamVjdCBxdW90YXMiIGVycm9yLgoKU2lnbmVkLW9mZi1ieTogQXJrYWRpdXN6IE1p
-xZtraWV3aWN6IDxhcmVrbUBtYXZlbi5wbD4KLS0tCiAxMDYgICAgICAgICAgfCAgICA1ICsrKy0t
-CiAxMDcgICAgICAgICAgfCAgICAzICstLQogMTA4ICAgICAgICAgIHwgICAgNSArKysrLQogY29t
-bW9uLnF1b3RhIHwgICAgMyArKy0KIDQgZmlsZXMgY2hhbmdlZCwgMTAgaW5zZXJ0aW9ucygrKSwg
-NiBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS8xMDYgYi8xMDYKaW5kZXggNWJmZjY2MC4uODI3
-ODY5MSAxMDA3NTUKLS0tIGEvMTA2CisrKyBiLzEwNgpAQCAtNDMsNyArNDMsNiBAQCBfc3VwcG9y
-dGVkX2ZzIHhmcwogX3N1cHBvcnRlZF9vcyBMaW51eCAjSVJJWAogX3JlcXVpcmVfc2NyYXRjaAog
-X3JlcXVpcmVfeGZzX3F1b3RhCi1fcmVxdWlyZV9wcmpxdW90YQogCiAjIHJlYWwgUUEgdGVzdCBz
-dGFydHMgaGVyZQogX3NjcmF0Y2hfbWtmc194ZnMgfCBfZmlsdGVyX21rZnMgMj4kdG1wLm1rZnMK
-QEAgLTU3LDggKzU2LDEwIEBAIGVsc2UKIAlleHBvcnQgTU9VTlRfT1BUSU9OUz0iJE1PVU5UX09Q
-VElPTlMgLW8gc3luYyIKIGZpCiAKLSMgaW5pdGlhbCBwb3B1bGF0ZQogX3Ftb3VudAorX3JlcXVp
-cmVfcHJqcXVvdGEgJFNDUkFUQ0hfREVWCisKKyMgaW5pdGlhbCBwb3B1bGF0ZQogdGFyZ2V0PSRT
-Q1JBVENIX01OVC90YXJnZXQKICRGU1NUUkVTU19QUk9HIC1zIDB4ZGVlZCAtbTggLXcgLXA0IC1u
-MTAwMCAkRlNTVFJFU1NfQVZPSUQgLWQgJHRhcmdldAogJEZTU1RSRVNTX1BST0cgLXMgMHhkZWVk
-IC1tOCAteiAtcDQgLW4xMDAwIC1mc2V0eGF0dHI9NTAwIC1mY2hvd249NTAwIC1kICR0YXJnZXQK
-ZGlmZiAtLWdpdCBhLzEwNyBiLzEwNwppbmRleCBjMjcwZjBlLi43NDQwM2U2IDEwMDc1NQotLS0g
-YS8xMDcKKysrIGIvMTA3CkBAIC01NSw3ICs1NSw2IEBAIF9zdXBwb3J0ZWRfZnMgeGZzCiBfc3Vw
-cG9ydGVkX29zIExpbnV4ICNJUklYCiBfcmVxdWlyZV9zY3JhdGNoCiBfcmVxdWlyZV94ZnNfcXVv
-dGEKLV9yZXF1aXJlX3ByanF1b3RhCiAKICMgcmVhbCBRQSB0ZXN0IHN0YXJ0cyBoZXJlCiBfc2Ny
-YXRjaF9ta2ZzX3hmcyB8IF9maWx0ZXJfbWtmcyAyPiR0bXAubWtmcwpAQCAtNzAsNyArNjksNyBA
-QCBlbHNlCiBmaQogCiBfcW1vdW50Ci1zcmMvZmVhdHVyZSAtcCAkU0NSQVRDSF9NTlQgJiYgX25v
-dHJ1biAiQ2Fubm90IHJ1biB3aXRob3V0IHByb2plY3QgcXVvdGEiCitfcmVxdWlyZV9wcmpxdW90
-YSAkU0NSQVRDSF9ERVYKIAogZWNobyAiIyMjIGNyZWF0ZSBwcm9qZWN0cyBmaWxlIgogcm0gLWYg
-JHRtcC5wcm9qZWN0cwpkaWZmIC0tZ2l0IGEvMTA4IGIvMTA4CmluZGV4IGI0MjliYzYuLmMxZmIz
-ZDMgMTAwNzU1Ci0tLSBhLzEwOAorKysgYi8xMDgKQEAgLTUwLDcgKzUwLDYgQEAgX3N1cHBvcnRl
-ZF9mcyB4ZnMKIF9zdXBwb3J0ZWRfb3MgTGludXggI0lSSVgKIF9yZXF1aXJlX3NjcmF0Y2gKIF9y
-ZXF1aXJlX3hmc19xdW90YQotX3JlcXVpcmVfcHJqcXVvdGEKIAogdGVzdF9maWxlcygpCiB7CkBA
-IC04Niw2ICs4NSwxMCBAQCB0ZXN0X2FjY291bnRpbmcoKQogCXhmc19xdW90YSAtYyAicXVvdGEg
-LWhuciAtJHR5cGUgJGlkIiAkUUFSR1MgfCBmaWx0ZXJfc2NyYXRjaAogfQogCitleHBvcnQgTU9V
-TlRfT1BUSU9OUz0iLW9wcXVvdGEiCitfcmVxdWlyZV9wcmpxdW90YQorX3Ftb3VudAorCiAjIHJl
-YWwgUUEgdGVzdCBzdGFydHMgaGVyZQogcm0gLWYgJHRtcC5wcm9qZWN0cyAkc2VxLmZ1bGwKIHVt
-b3VudCAkU0NSQVRDSF9ERVYgMj4vZGV2L251bGwKZGlmZiAtLWdpdCBhL2NvbW1vbi5xdW90YSBi
-L2NvbW1vbi5xdW90YQppbmRleCA4NjhlNTYzLi4xNTIwZGYxIDEwMDY0NAotLS0gYS9jb21tb24u
-cXVvdGEKKysrIGIvY29tbW9uLnF1b3RhCkBAIC01MCw3ICs1MCw4IEBAIF9yZXF1aXJlX3hmc19x
-dW90YSgpCiAjCiBfcmVxdWlyZV9wcmpxdW90YSgpCiB7Ci0gICAgc3JjL2ZlYXR1cmUgLXAgJFRF
-U1RfREVWCisgICAgWyAtbiAiJDEiIF0gJiYgX2Rldj0iJDEiIHx8IF9kZXY9IiRURVNUX0RFViIK
-KyAgICBzcmMvZmVhdHVyZSAtcCAkX2RldgogICAgIFsgJD8gLW5lIDAgXSAmJiBfbm90cnVuICJJ
-bnN0YWxsZWQga2VybmVsIGRvZXMgbm90IHN1cHBvcnQgcHJvamVjdCBxdW90YXMiCiB9CiAKLS0g
-CjEuNy4yLjIKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-CnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWls
-bWFuL2xpc3RpbmZvL3hmcwo=
+  Dear mailinglist,
+
+I run a kernel 2.6.35.4 on my SeagateDockStar which is based on the 
+sheevaplug (kirkwood armv5te).
+Once searching the archive of the this mailinglist, I figured out, that 
+there problems in the past with running xfs on CPUs with virtually 
+indexed caches (like arm). A series of patches was applied in Febuary 
+2010 with the purpose to resolve the problems on arm devices.
+
+With the recent linux kernel I'm using, I still discover errors. I was 
+forced to run xfs_repair -l /dev/sdx1 before I could mount the partition 
+again.
+I was asked by one of the respectable mailinglist members to give the 
+complete output of the commands I launched.
+
+Please find below the hardcopy of my terminal output and let me know, 
+what debug information do you need and how (and when) this must be obtained.
+
+Thank you and kind regards,
+Marcus
+
+$ mkfs.xfs -f /dev/sda1
+meta-data=/dev/sda1              isize=256    agcount=4, agsize=19535620 
+blks
+          =                       sectsz=512   attr=2
+data     =                       bsize=4096   blocks=78142479, imaxpct=25
+          =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal log           bsize=4096   blocks=38155, version=2
+          =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+$ mount -t xfs /dev/sda1 /data
+$ dmesg|tail
+sd 0:0:0:0: [sda] Assuming drive cache: write through
+sd 0:0:0:0: [sda] Attached SCSI disk
+SGI XFS with ACLs, security attributes, large block/inode numbers, no 
+debug enabled
+SGI XFS Quota Management subsystem
+XFS mounting filesystem sda1
+Ending clean XFS mount for filesystem: sda1
+$ cp /bin/* /data
+$ umount /data
+$ xfs_logprint /dev/sda1|tail
+----------------------------------------------------------------------------
+Oper (0): tid: 22e742e6  len: 4  clientid: TRANS  flags: WAS_CONT END
+Left over region from split log item
+----------------------------------------------------------------------------
+Oper (1): tid: 22e742e6  len: 512  clientid: TRANS  flags: none
+Left over region from split log item
+----------------------------------------------------------------------------
+Oper (2): tid: 22e742e6  len: 256  clientid: TRANS  flags: none
+xfs_logprint: unknown log operation type (e3cf)
+**********************************************************************
+* ERROR: data block=66                                                *
+**********************************************************************
+Bad data in log
+$ mount -t xfs /dev/sda1 /data
+$ dmesg|tail
+SGI XFS with ACLs, security attributes, large block/inode numbers, no 
+debug enabled
+SGI XFS Quota Management subsystem
+XFS mounting filesystem sda1
+Ending clean XFS mount for filesystem: sda1
+XFS mounting filesystem sda1
+Ending clean XFS mount for filesystem: sda1
+XFS mounting filesystem sda1
+Ending clean XFS mount for filesystem: sda1
+XFS mounting filesystem sda1
+Ending clean XFS mount for filesystem: sda1
+$ mkdir /data/usr;cp -r /usr /data/usr
+$ umount /data
+$ xfs_logprint /dev/sda1|tail
+xfs_logprint: unknown log operation type (e3cf)
+Bad data in log
+Oper (0): tid: 22e742e6  len: 4  clientid: TRANS  flags: WAS_CONT END
+Left over region from split log item
+----------------------------------------------------------------------------
+Oper (1): tid: 22e742e6  len: 512  clientid: TRANS  flags: none
+Left over region from split log item
+----------------------------------------------------------------------------
+Oper (2): tid: 22e742e6  len: 256  clientid: TRANS  flags: none
+**********************************************************************
+* ERROR: data block=66                                                *
+**********************************************************************
+$ mount -t xfs /dev/sda1 /data
+mount: mounting /dev/sda1 on /data failed: Input/output error
+$ dmesg|tail
+Ending clean XFS mount for filesystem: sda1
+XFS mounting filesystem sda1
+Ending clean XFS mount for filesystem: sda1
+XFS mounting filesystem sda1
+Starting XFS recovery on filesystem: sda1 (logdev: internal)
+XFS: xlog_recover_process_data: bad clientid
+XFS: log mount/recovery failed: error 5
+XFS: log mount failed
+$
+
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
