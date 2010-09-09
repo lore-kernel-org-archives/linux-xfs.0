@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o898Sh6q091936 for <xfs@oss.sgi.com>; Thu, 9 Sep 2010 03:28:43 -0500
-Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CBDCC5BB6D
-	for <xfs@oss.sgi.com>; Thu,  9 Sep 2010 01:29:26 -0700 (PDT)
-Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id 3k64mXQxI06nmABS for
-	<xfs@oss.sgi.com>; Thu, 09 Sep 2010 01:29:26 -0700 (PDT)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: xfs mount/create options (was: XFS status update for August 2010)
-Date: Thu, 9 Sep 2010 10:29:23 +0200
-References: <20100902145959.GA27887@infradead.org> <201009090130.22983@zmi.at>
-	<20100909072726.GB7032@dastard>
-In-Reply-To: <20100909072726.GB7032@dastard>
+	o89BB2xs097086 for <xfs@oss.sgi.com>; Thu, 9 Sep 2010 06:11:02 -0500
+Received: from gir.skynet.ie (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3ABEC5C270
+	for <xfs@oss.sgi.com>; Thu,  9 Sep 2010 04:11:46 -0700 (PDT)
+Received: from gir.skynet.ie (gir.skynet.ie [193.1.99.77]) by cuda.sgi.com
+	with ESMTP id LJwzmAZDxlQcRGrg for <xfs@oss.sgi.com>;
+	Thu, 09 Sep 2010 04:11:46 -0700 (PDT)
+Date: Thu, 9 Sep 2010 12:11:32 +0100
+From: Mel Gorman <mel@csn.ul.ie>
+Subject: [RFC PATCH] fs,xfs: Use __GFP_MOVABLE for XFS buffers
+Message-ID: <20100909111131.GO29263@csn.ul.ie>
 MIME-Version: 1.0
-Message-Id: <201009091029.23333@zmi.at>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,77 +22,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============8035237673989317073=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, Alex Elder <aelder@sgi.com>
 
---===============8035237673989317073==
-Content-Type: multipart/signed;
-  boundary="nextPart2211801.QSd6tmYC89";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+Fragmentation avoidance in the kernel depends on reclaimable and movable
+allocations being marked-up at page allocation time. Reclaimable allocations
+refer to slab caches such as inode caches which can be reclaimed although
+not necessarily in a targetted fashion. Movable pages are those pages that
+can be moved to backing storage (during page reclaim) or migrated.
 
---nextPart2211801.QSd6tmYC89
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+When testing against XFS, it was noticed that large page allocation rates
+against XFS were far lower than expected in comparison to ext3. Investigation
+showed that buffer pages allocated by XFS are placed on the LRU but not
+marked __GFP_MOVABLE at allocation time.
 
-On Donnerstag, 9. September 2010 Dave Chinner wrote:
-> That is, if you have SATA drives then running them for 3 or 4 days
-> at 100% duty cycle while a reshape takes place is putting them far
-> outside their design limits.
-=20
-Your arguments are all valid. Our hardware supplier recommended one=20
-drive type, and we only buy these and really they work very well. For=20
-the BER, I really hope the controller does read-after-write during=20
-rebuild. When I see the time it takes to resize an array, I think and=20
-hope they do it. That said, I've never had a problem on resize, and hope=20
-it stays like that :-)
+This patch updates xb_to_gfp() to specify __GFP_MOVABLE and is correct iff
+all pages allocated from a mask derived from xb_to_gfp() are guaranteed to
+be movable be it via page reclaim or page migration. It needs an XFS expert
+to make that determination but when applied, huge page allocation success
+rates are similar to those seen on tests backed by ext3.
 
-There are other reasons to do a resize, which I don't want to discuss in=20
-public.
+Signed-off-by: Mel Gorman <mel@csn.ul.ie>
+---
+ fs/xfs/linux-2.6/xfs_buf.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-=2D-=20
-mit freundlichen Gr=FCssen,
-Michael Monnerie, Ing. BSc
-
-it-management Internet Services
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: 0660 / 415 65 31
-
-****** Aktuelles Radiointerview! ******
-http://www.it-podcast.at/aktuelle-sendung.html
-
-// Wir haben im Moment zwei H=E4user zu verkaufen:
-// http://zmi.at/langegg/
-// http://zmi.at/haus2009/
-
---nextPart2211801.QSd6tmYC89
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.12 (GNU/Linux)
-
-iEYEABECAAYFAkyImuMACgkQzhSR9xwSCbSGqQCffZOsLHxZnJET+6pXkqR5aawL
-bX8AoLO4Q2lZ+jMYOI2YuP1CVHmHbIrt
-=1rqO
------END PGP SIGNATURE-----
-
---nextPart2211801.QSd6tmYC89--
-
-
---===============8035237673989317073==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
+index ea79072..93f3fb0 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.c
++++ b/fs/xfs/linux-2.6/xfs_buf.c
+@@ -67,7 +67,7 @@ struct workqueue_struct *xfsconvertd_workqueue;
+ 
+ #define xb_to_gfp(flags) \
+ 	((((flags) & XBF_READ_AHEAD) ? __GFP_NORETRY : \
+-	  ((flags) & XBF_DONT_BLOCK) ? GFP_NOFS : GFP_KERNEL) | __GFP_NOWARN)
++	  ((flags) & XBF_DONT_BLOCK) ? GFP_NOFS : GFP_KERNEL) | __GFP_NOWARN | __GFP_MOVABLE)
+ 
+ #define xb_to_km(flags) \
+ 	 (((flags) & XBF_DONT_BLOCK) ? KM_NOFS : KM_SLEEP)
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============8035237673989317073==--
