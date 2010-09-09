@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o89ImSvg113234 for <xfs@oss.sgi.com>; Thu, 9 Sep 2010 13:48:29 -0500
-Received: from mail-iw0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5B93F12DC5AC
-	for <xfs@oss.sgi.com>; Thu,  9 Sep 2010 12:00:33 -0700 (PDT)
-Received: from mail-iw0-f181.google.com (mail-iw0-f181.google.com
-	[209.85.214.181]) by cuda.sgi.com with ESMTP id
-	pul3i5EJi9OdtXk0 for <xfs@oss.sgi.com>;
-	Thu, 09 Sep 2010 12:00:33 -0700 (PDT)
-Received: by iwn39 with SMTP id 39so1352665iwn.26
-	for <xfs@oss.sgi.com>; Thu, 09 Sep 2010 11:49:13 -0700 (PDT)
+	o89LuAW0119081 for <xfs@oss.sgi.com>; Thu, 9 Sep 2010 16:56:10 -0500
+Received: from EXHUB018-4.exch018.msoutlookonline.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7A1A51E61F47
+	for <xfs@oss.sgi.com>; Thu,  9 Sep 2010 14:56:54 -0700 (PDT)
+Received: from EXHUB018-4.exch018.msoutlookonline.net
+	(exhub018-4.exch018.msoutlookonline.net [64.78.17.19]) by
+	cuda.sgi.com with ESMTP id PivX4fRvke9UYq8M for
+	<xfs@oss.sgi.com>; Thu, 09 Sep 2010 14:56:54 -0700 (PDT)
+From: Brady Chang <bchang@greenplum.com>
+Date: Thu, 9 Sep 2010 14:59:47 -0700
+Subject: Re: fragmentation question
+Message-ID: <C8AEA6E3.6E2E%bchang@greenplum.com>
+In-Reply-To: <4C88EB62.5060000@sandeen.net>
+Content-Language: en
 MIME-Version: 1.0
-In-Reply-To: <4C892A32.1000404@googlemail.com>
-References: <4C892A32.1000404@googlemail.com>
-Date: Thu, 9 Sep 2010 11:49:12 -0700
-Message-ID: <AANLkTikZLHXXLsjBhJHtGN3vAW4fMtMCNTaNG5ju_Wxi@mail.gmail.com>
-Subject: Re: logerrors on armv5te hardware rendering xfs-partition unmountable
-From: Richard Sharpe <realrichardsharpe@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,151 +24,202 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: multipart/mixed; boundary="===============2573671831867914319=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Marcus Osdoba <marcus.osdoba@googlemail.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Thu, Sep 9, 2010 at 11:40 AM, Marcus Osdoba
-<marcus.osdoba@googlemail.com> wrote:
-> =A0Dear mailinglist,
->
-> I run a kernel 2.6.35.4 on my SeagateDockStar which is based on the
-> sheevaplug (kirkwood armv5te).
-> Once searching the archive of the this mailinglist, I figured out, that
-> there problems in the past with running xfs on CPUs with virtually indexed
-> caches (like arm). A series of patches was applied in Febuary 2010 with t=
-he
-> purpose to resolve the problems on arm devices.
+--===============2573671831867914319==
+Content-Language: en
+Content-Type: multipart/alternative;
+	boundary="_000_C8AEA6E36E2Ebchanggreenplumcom_"
 
-The Marvell 78x00 processors have VIVT caches. Is the Kirkwood series
-different? Would a VIVT cache require different patches to a VIPT
-cache, and what types of cache architectures were the patches for?
+--_000_C8AEA6E36E2Ebchanggreenplumcom_
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-> With the recent linux kernel I'm using, I still discover errors. I was
-> forced to run xfs_repair -l /dev/sdx1 before I could mount the partition
-> again.
-> I was asked by one of the respectable mailinglist members to give the
-> complete output of the commands I launched.
->
-> Please find below the hardcopy of my terminal output and let me know, what
-> debug information do you need and how (and when) this must be obtained.
->
-> Thank you and kind regards,
-> Marcus
->
-> $ mkfs.xfs -f /dev/sda1
-> meta-data=3D/dev/sda1 =A0 =A0 =A0 =A0 =A0 =A0 =A0isize=3D256 =A0 =A0agcou=
-nt=3D4, agsize=3D19535620
-> blks
-> =A0 =A0 =A0 =A0 =3D =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 sectsz=3D=
-512 =A0 attr=3D2
-> data =A0 =A0 =3D =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 bsize=3D4096=
- =A0 blocks=3D78142479, imaxpct=3D25
-> =A0 =A0 =A0 =A0 =3D =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 sunit=3D0=
- =A0 =A0 =A0swidth=3D0 blks
-> naming =A0 =3Dversion 2 =A0 =A0 =A0 =A0 =A0 =A0 =A0bsize=3D4096 =A0 ascii=
--ci=3D0
-> log =A0 =A0 =A0=3Dinternal log =A0 =A0 =A0 =A0 =A0 bsize=3D4096 =A0 block=
-s=3D38155, version=3D2
-> =A0 =A0 =A0 =A0 =3D =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 sectsz=3D=
-512 =A0 sunit=3D0 blks, lazy-count=3D1
-> realtime =3Dnone =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 extsz=3D4096 =A0 blo=
-cks=3D0, rtextents=3D0
-> $ mount -t xfs /dev/sda1 /data
-> $ dmesg|tail
-> sd 0:0:0:0: [sda] Assuming drive cache: write through
-> sd 0:0:0:0: [sda] Attached SCSI disk
-> SGI XFS with ACLs, security attributes, large block/inode numbers, no deb=
-ug
-> enabled
-> SGI XFS Quota Management subsystem
-> XFS mounting filesystem sda1
-> Ending clean XFS mount for filesystem: sda1
-> $ cp /bin/* /data
-> $ umount /data
-> $ xfs_logprint /dev/sda1|tail
-> -------------------------------------------------------------------------=
----
-> Oper (0): tid: 22e742e6 =A0len: 4 =A0clientid: TRANS =A0flags: WAS_CONT E=
-ND
-> Left over region from split log item
-> -------------------------------------------------------------------------=
----
-> Oper (1): tid: 22e742e6 =A0len: 512 =A0clientid: TRANS =A0flags: none
-> Left over region from split log item
-> -------------------------------------------------------------------------=
----
-> Oper (2): tid: 22e742e6 =A0len: 256 =A0clientid: TRANS =A0flags: none
-> xfs_logprint: unknown log operation type (e3cf)
-> **********************************************************************
-> * ERROR: data block=3D66 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*
-> **********************************************************************
-> Bad data in log
-> $ mount -t xfs /dev/sda1 /data
-> $ dmesg|tail
-> SGI XFS with ACLs, security attributes, large block/inode numbers, no deb=
-ug
-> enabled
-> SGI XFS Quota Management subsystem
-> XFS mounting filesystem sda1
-> Ending clean XFS mount for filesystem: sda1
-> XFS mounting filesystem sda1
-> Ending clean XFS mount for filesystem: sda1
-> XFS mounting filesystem sda1
-> Ending clean XFS mount for filesystem: sda1
-> XFS mounting filesystem sda1
-> Ending clean XFS mount for filesystem: sda1
-> $ mkdir /data/usr;cp -r /usr /data/usr
-> $ umount /data
-> $ xfs_logprint /dev/sda1|tail
-> xfs_logprint: unknown log operation type (e3cf)
-> Bad data in log
-> Oper (0): tid: 22e742e6 =A0len: 4 =A0clientid: TRANS =A0flags: WAS_CONT E=
-ND
-> Left over region from split log item
-> -------------------------------------------------------------------------=
----
-> Oper (1): tid: 22e742e6 =A0len: 512 =A0clientid: TRANS =A0flags: none
-> Left over region from split log item
-> -------------------------------------------------------------------------=
----
-> Oper (2): tid: 22e742e6 =A0len: 256 =A0clientid: TRANS =A0flags: none
-> **********************************************************************
-> * ERROR: data block=3D66 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*
-> **********************************************************************
-> $ mount -t xfs /dev/sda1 /data
-> mount: mounting /dev/sda1 on /data failed: Input/output error
-> $ dmesg|tail
-> Ending clean XFS mount for filesystem: sda1
-> XFS mounting filesystem sda1
-> Ending clean XFS mount for filesystem: sda1
-> XFS mounting filesystem sda1
-> Starting XFS recovery on filesystem: sda1 (logdev: internal)
-> XFS: xlog_recover_process_data: bad clientid
-> XFS: log mount/recovery failed: error 5
-> XFS: log mount failed
-> $
->
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
->
+thanks guys for the feedback.
+iostat shows balanced io between two filesystems.
+testing with RHEL 54, no issues there. seems to be happening on RHEL 55 onl=
+y.
+I do not have the latest 55 kernel. I'm going to upgrade to the latest 55 k=
+ernel and rerun the test.
 
 
 
--- =
+On 9/9/10 7:12 AM, "Eric Sandeen" <sandeen@sandeen.net> wrote:
 
-Regards,
-Richard Sharpe
+Brady Chang wrote:
+> Hello All,
+> I have an issue with fragmentation on a particular device
+> thanks for any advice.
+>
+> -Brady
+>
+> I have a Dell r510 with 12 disks
+> 2xraid 5 (6 disks each)
+> raid group1:
+> 48 GB   carved out for os mounted as /
+> remaining space  2.7 TB for xfs mounted as /data1
+> raid group2:
+> 48 GB  for swap
+> remaining space 2.7 TB for xfs mounted as /data2
+>
+> The strange thing is that /data1 never gets fragmented where as /data2
+> is badly fragmented.
+> I believe increase allocsize would help, but not sure how to explain why
+> /data2(/dev/sdd) always gets fragmented and not /data1(/dev/sdb)
+>
+> It's a data warehouse application.  the I/O is balanced between /data1
+> and /data2:
+> output of xfs_db
+> [root@sdw4 data1]# xfs_db -c frag -r /dev/sdb
+> actual 14353, ideal 13702, fragmentation factor 4.54%
+> [root@sdw4 data1]# xfs_db -c frag -r /dev/sdd
+> actual 408674, ideal 13719, fragmentation factor 96.64%
+
+so each file has 30 extents on average (actual/ideal)
+
+> df output
+> /dev/sdb              2.7T  967G  1.8T  36% /data1
+> /dev/sdd              2.7T  1.1T  1.7T  39% /data2
+
+1.1T/408674 extents is ~3M per extent, not so good.
+
+How many files are on each fs?
+
+> LABEL=3D/data1        /data1     xfs
+>     allocsize=3D1048576,logbufs=3D8,noatime,nodiratime 0 0
+> LABEL=3D/data2        /data2     xfs
+>     allocsize=3D1048576,logbufs=3D8,noatime,nodiratime 0 0
+
+Everything but the first option is default, BTW.
+
+Is xfs_info output on the 2 filesystems the same?
+
+Otherwise Emmanuel's idea is a good one, maybe it's not
+as balanced as you think it is, or maybe they have aged
+differently and have different amounts of freespace
+(see the freesp command in xfs_db)
+
+> By the way, the os is RHEL 5.5 kernel 2.6.18-194.11.1.el5
+
+Was Red Hat support not helpful?
+
+-Eric
+
+
+
+--_000_C8AEA6E36E2Ebchanggreenplumcom_
+Content-Type: text/html; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+<HTML>
+<HEAD>
+<TITLE>Re: fragmentation question</TITLE>
+</HEAD>
+<BODY>
+<FONT FACE=3D"Calibri, Verdana, Helvetica, Arial"><SPAN STYLE=3D'font-size:=
+11pt'>thanks guys for the feedback.<BR>
+iostat shows balanced io between two filesystems.<BR>
+testing with RHEL 54, no issues there. seems to be happening on RHEL 55 onl=
+y.<BR>
+I do not have the latest 55 kernel. I'm going to upgrade to the latest 55 k=
+ernel and rerun the test.<BR>
+<BR>
+<BR>
+<BR>
+On 9/9/10 7:12 AM, &quot;Eric Sandeen&quot; &lt;<a href=3D"sandeen@sandeen.=
+net">sandeen@sandeen.net</a>&gt; wrote:<BR>
+<BR>
+</SPAN></FONT><BLOCKQUOTE><FONT FACE=3D"Calibri, Verdana, Helvetica, Arial"=
+><SPAN STYLE=3D'font-size:11pt'>Brady Chang wrote:<BR>
+&gt; Hello All,<BR>
+&gt; I have an issue with fragmentation on a particular device<BR>
+&gt; thanks for any advice.<BR>
+&gt;<BR>
+&gt; -Brady<BR>
+&gt;<BR>
+&gt; I have a Dell r510 with 12 disks<BR>
+&gt; 2xraid 5 (6 disks each)<BR>
+&gt; raid group1:<BR>
+&gt; 48 GB &nbsp;&nbsp;carved out for os mounted as /<BR>
+&gt; remaining space &nbsp;2.7 TB for xfs mounted as /data1<BR>
+&gt; raid group2:<BR>
+&gt; 48 GB &nbsp;for swap<BR>
+&gt; remaining space 2.7 TB for xfs mounted as /data2<BR>
+&gt;<BR>
+&gt; The strange thing is that /data1 never gets fragmented where as /data2=
+<BR>
+&gt; is badly fragmented.<BR>
+&gt; I believe increase allocsize would help, but not sure how to explain w=
+hy<BR>
+&gt; /data2(/dev/sdd) always gets fragmented and not /data1(/dev/sdb)<BR>
+&gt;<BR>
+&gt; It's a data warehouse application. &nbsp;the I/O is balanced between /=
+data1<BR>
+&gt; and /data2:<BR>
+&gt; output of xfs_db<BR>
+&gt; [root@sdw4 data1]# xfs_db -c frag -r /dev/sdb<BR>
+&gt; actual 14353, ideal 13702, fragmentation factor 4.54%<BR>
+&gt; [root@sdw4 data1]# xfs_db -c frag -r /dev/sdd<BR>
+&gt; actual 408674, ideal 13719, fragmentation factor 96.64%<BR>
+<BR>
+so each file has 30 extents on average (actual/ideal)<BR>
+<BR>
+&gt; df output<BR>
+&gt; /dev/sdb &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
+nbsp;&nbsp;&nbsp;2.7T &nbsp;967G &nbsp;1.8T &nbsp;36% /data1<BR>
+&gt; /dev/sdd &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
+nbsp;&nbsp;&nbsp;2.7T &nbsp;1.1T &nbsp;1.7T &nbsp;39% /data2<BR>
+<BR>
+1.1T/408674 extents is ~3M per extent, not so good.<BR>
+<BR>
+How many files are on each fs?<BR>
+<BR>
+&gt; LABEL=3D/data1 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/data1 &nbsp;=
+&nbsp;&nbsp;&nbsp;xfs<BR>
+&gt; &nbsp;&nbsp;&nbsp;&nbsp;allocsize=3D1048576,logbufs=3D8,noatime,nodira=
+time 0 0<BR>
+&gt; LABEL=3D/data2 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/data2 &nbsp;=
+&nbsp;&nbsp;&nbsp;xfs<BR>
+&gt; &nbsp;&nbsp;&nbsp;&nbsp;allocsize=3D1048576,logbufs=3D8,noatime,nodira=
+time 0 0<BR>
+<BR>
+Everything but the first option is default, BTW.<BR>
+<BR>
+Is xfs_info output on the 2 filesystems the same?<BR>
+<BR>
+Otherwise Emmanuel's idea is a good one, maybe it's not<BR>
+as balanced as you think it is, or maybe they have aged<BR>
+differently and have different amounts of freespace<BR>
+(see the freesp command in xfs_db)<BR>
+<BR>
+&gt; By the way, the os is RHEL 5.5 kernel 2.6.18-194.11.1.el5<BR>
+<BR>
+Was Red Hat support not helpful?<BR>
+<BR>
+-Eric<BR>
+<BR>
+<BR>
+</SPAN></FONT></BLOCKQUOTE>
+</BODY>
+</HTML>
+
+
+--_000_C8AEA6E36E2Ebchanggreenplumcom_--
+
+
+--===============2573671831867914319==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============2573671831867914319==--
