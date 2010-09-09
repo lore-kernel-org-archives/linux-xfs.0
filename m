@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o896iiqY088736 for <xfs@oss.sgi.com>; Thu, 9 Sep 2010 01:44:45 -0500
+	o897QjHp090025 for <xfs@oss.sgi.com>; Thu, 9 Sep 2010 02:26:45 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F18F2DA4E62
-	for <xfs@oss.sgi.com>; Wed,  8 Sep 2010 23:56:44 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 19A265B99A
+	for <xfs@oss.sgi.com>; Thu,  9 Sep 2010 00:27:28 -0700 (PDT)
 Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
 	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	nox7CxXahCHSuujR for <xfs@oss.sgi.com>;
-	Wed, 08 Sep 2010 23:56:44 -0700 (PDT)
-Date: Thu, 9 Sep 2010 16:45:24 +1000
+	kkX0MnS35RqSAnDV for <xfs@oss.sgi.com>;
+	Thu, 09 Sep 2010 00:27:28 -0700 (PDT)
+Date: Thu, 9 Sep 2010 17:27:26 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs on armv5 still with erroneous log in kernel 2.6.35.4
-Message-ID: <20100909064524.GA7032@dastard>
-References: <4C835A34.9080008@googlemail.com> <20100906005230.GX7362@dastard>
-	<4C845EDE.3010806@sandeen.net> <4C8534D0.3050003@googlemail.com>
-	<20100907060331.GK705@dastard> <4C86B4E3.5090202@googlemail.com>
-	<20100908074357.GS705@dastard> <4C87D793.8000103@googlemail.com>
+Subject: Re: xfs mount/create options (was: XFS status update for August 2010)
+Message-ID: <20100909072726.GB7032@dastard>
+References: <20100902145959.GA27887@infradead.org> <201009081538.54488@zmi.at>
+	<20100908145148.GB705@dastard> <201009090130.22983@zmi.at>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4C87D793.8000103@googlemail.com>
+In-Reply-To: <201009090130.22983@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,72 +30,59 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Marcus Osdoba <marcus.osdoba@googlemail.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Michael Monnerie <michael.monnerie@is.it-management.at>
+Cc: xfs@oss.sgi.com
 
-On Wed, Sep 08, 2010 at 08:36:03PM +0200, Marcus Osdoba wrote:
->  Am 08.09.2010 09:43, schrieb Dave Chinner:
-> >mount -t xfs /dev/sda1 /data
-> >cp /bin/sh /data
-> >sync
-> >umount /data
-> >xfs_printlog /dev/sda1
-> #no ERROR entry visible
+On Thu, Sep 09, 2010 at 01:30:15AM +0200, Michael Monnerie wrote:
+> On Mittwoch, 8. September 2010 Dave Chinner wrote:
+> > Dynamically changing the RAID array geometry is a Bad Idea.  Yes,
+> > you can do it, but if you've got a filesystem full of data and
+> > metadata aligned to the old geometry then after the modification
+> > it won't be aligned anymore.
+> > 
+> > If you want to do this, then either don't bother about geomtry hints
+> > in the first place, or dump, rebuild the array, mkfs and restore so
+> > everything is properly aligned with the new world order. Hell,
+> > dump/mkfs/restore might even be faster than reshaping a large
+> > array...
+>  
+> You're right. But there are some customers who don't want to spend the 
+> money for a 2nd array, and can't afford the downtime of backup, rebuild 
+> raid (takes 8-48 hours), restore. So an online upgrade is needed. We're 
+> not in an ideal world.
 
-Again, can you pleae paste the entire logprint output here?  I'm
-asking for _exactly_ what is in your terminal as a result of the
-commands you ran. That is, if everything is working correctly, I
-would expect you to be pasting in something like this:
+If you can't afford downtime, then I'd seriously question using
+reshaping to expand storage because it is one of the highest risk
+methods of increasing storage capacity you can use. That means
+you've still got to do the backup before you reshape your raid
+device - if reshaping fails, and then you need to rebuild + restore.
 
-# mount /dev/vdb /mnt/scratch
-# cp /bin/sh /mnt/scratch
-# sync
-# umount /mnt/scratch
-# xfs_logprint -t /dev/vdb
-xfs_logprint:
-    data device: 0xfd10
-    log device: 0xfd10 daddr: 10485792 length: 20480
+Reshaping is a dangerous operation - you can't go back once it has
+started, and failures while reshaping can cause data loss. That is,
+the risk of catastrophic failure goes up significantly while a
+reshape is in progress. This is the same increase in risk of
+failures occuring during rebuild after losing a disk - the next disk
+failure is most likely to occur while the rebuild is in progress,
+simply because of the sustained inrease in load on the drives.
 
-    log tail: 6924 head: 6924 state: <CLEAN>
+That is, if you have SATA drives then running them for 3 or 4 days
+at 100% duty cycle while a reshape takes place is putting them far
+outside their design limits. SATA drives are generally designed for
+a 20-30% duty cycle for sustained operation. Put disks that are a
+couple of years old under this sort of load....
 
-#
+Of even more concern is that reshaping a multi-terabyte array
+requires moving the same order of magnitude of bits around as the
+BER of the drives. Hence there's every chance of introducing silent
+bit errors into your data by reshaping unless you further slow the
+reshape down by having it read back all the data to verify it was
+reshaped correctly.
 
-If it is different to this, then those differences might
-tell me is going wrong. but without the exact commands and output,
-I cannot help you....
-
-> # The following command chain trys to reproduce the error
-> >mount -t xfs /dev/sda1 /data
-> >cp /bin/* /data
-> >sync
-> Device or resource busy.
-
-This should not be occurring.  What is generating this error? is
-there anything in your logs/dmesg, etc that indicates what might be
-the cause?  This is the error that we need to understand first...
-
-> My expectations:
-> - sync should never be mandatory before  unmounting to keep the FS
-> clean (any FS)
-
-It's not. I asked you to run it first to separate writeback from the
-unmount process to determine if it was writeback that was having
-problems. Clearly, if sync is triggering an error, then the problem
-is realted to writeback, and not unmount.
-
-FYI: Without a sync, you should still see a clean log:
-
-# mount /dev/vdb /mnt/scratch
-# cp /bin/* /mnt/scratch
-# umount /mnt/scratch
-# xfs_logprint -t /dev/vdb
-xfs_logprint:
-    data device: 0xfd10
-    log device: 0xfd10 daddr: 10485792 length: 20480
-
-    log tail: 8703 head: 8703 state: <CLEAN>
-
-#
+IMO, reshaping is not a practise you should be designing your
+capacity upgrade processes around, especially if you have uptime and
+perforamnce SLA guarantees. It's a very risky operation, and not
+something I would suggest anyone uses in production unless they have
+absolutely no other option.
 
 Cheers,
 
