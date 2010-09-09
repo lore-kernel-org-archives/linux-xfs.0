@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o89H1ejv109642 for <xfs@oss.sgi.com>; Thu, 9 Sep 2010 12:01:41 -0500
-Received: from smtp-relay.maven.pl (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8D79414EF0E9
-	for <xfs@oss.sgi.com>; Thu,  9 Sep 2010 10:13:42 -0700 (PDT)
-Received: from smtp-relay.maven.pl (smtp-relay.maven.pl [193.239.45.138]) by
-	cuda.sgi.com with ESMTP id FtADkAYkzBq5TagD for
-	<xfs@oss.sgi.com>; Thu, 09 Sep 2010 10:13:42 -0700 (PDT)
-From: =?UTF-8?q?Arkadiusz=20Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Subject: [PATCH] [xfstests v2]: Don't hardcode paths to many binaries.
-Date: Thu,  9 Sep 2010 19:02:17 +0200
-Message-Id: <1284051737-25840-1-git-send-email-arekm@maven.pl>
-In-Reply-To: <1284044278-17430-1-git-send-email-arekm@maven.pl>
-References: <1284044278-17430-1-git-send-email-arekm@maven.pl>
+	o89Ghcjk109036
+	for <linux-xfs@oss.sgi.com>; Thu, 9 Sep 2010 11:43:38 -0500
+Received: from mail35.elabs3.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2837B1E61B9E
+	for <linux-xfs@oss.sgi.com>; Thu,  9 Sep 2010 09:44:23 -0700 (PDT)
+Received: from mail35.elabs3.com (mail35.elabs3.com [208.66.204.135]) by
+	cuda.sgi.com with ESMTP id fU3s13Db9EAVaeWB for
+	<linux-xfs@oss.sgi.com>; Thu, 09 Sep 2010 09:44:23 -0700 (PDT)
+Subject: =?utf-8?Q?New=20Retained=20Searches?=
+Date: Thu, 09 Sep 2010 09:44:23 -0700
+Content-description: d7ae72dde1linux-xfs@oss.sgi.com!3b151!1f2566!5a9e!rynof3.pbz!
+Message-Id: <20100909164434.D7AE72DDE124@elabs3.com>
 MIME-Version: 1.0
+From: "=?utf-8?Q?Michael=20A.=20Rothstein?="
+	<mrothstein@executive-advantage.com>
+Reply-To: mrothstein@executive-advantage.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,186 +25,307 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/mixed; boundary="===============6942770801894574084=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-U3RvcCBoYXJkY29kaW5nIHBhdGhzIHRvIGdldGZhdHRyLCBzZXRmYXR0ciwgYXR0ciwgcXVvdGEs
-IHhmc19xdW90YSwKa2lsbGFsbCwgaW5kZW50IGFuZCB4ZnNfY29weSBiaW5hcmllcy4KClNpZ25l
-ZC1vZmYtYnk6IEFya2FkaXVzeiBNacWba2lld2ljeiA8YXJla21AbWF2ZW4ucGw+CgotIG5ldwot
-LS0KIDAyMCAgICAgICAgICAgfCAgIDEwICsrKysrLS0tLS0KIDAyMSAgICAgICAgICAgfCAgICA0
-ICsrLS0KIDA2MiAgICAgICAgICAgfCAgICA2ICsrKy0tLQogMDczICAgICAgICAgICB8ICAgMTAg
-KysrKystLS0tLQogMDg1ICAgICAgICAgICB8ICAgIDIgKy0KIDA5NCAgICAgICAgICAgfCAgICAy
-ICstCiAxMDMgICAgICAgICAgIHwgICAgMiArLQogMTIyICAgICAgICAgICB8ICAgIDIgKy0KIDE2
-NyAgICAgICAgICAgfCAgICA1ICsrLS0tCiAxODYgICAgICAgICAgIHwgICAgNCArKy0tCiAxODcg
-ICAgICAgICAgIHwgICAgNCArKy0tCiAyMjcgICAgICAgICAgIHwgICAgMiArLQogY29tbW9uLmNv
-bmZpZyB8ICAgIDggKysrKysrKysKIGNvbW1vbi5xdW90YSAgfCAgICA0ICsrLS0KIGNvbW1vbi5y
-YyAgICAgfCAgICA0ICsrKy0KIDE1IGZpbGVzIGNoYW5nZWQsIDM5IGluc2VydGlvbnMoKyksIDMw
-IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhLzAyMCBiLzAyMAppbmRleCAwMTE4ZTYxLi43ZjRm
-YjVhIDEwMDc1NQotLS0gYS8wMjAKKysrIGIvMDIwCkBAIC00OSw3ICs0OSw3IEBAIF9maWx0ZXIo
-KQogCiBfYXR0cigpCiB7Ci0gICAgYXR0ciAkKiAyPiR0bXAuZXJyID4kdG1wLm91dAorICAgICRB
-VFRSX1BST0cgJCogMj4kdG1wLmVyciA+JHRtcC5vdXQKICAgICBleGl0PSQ/CiAgICAgX2ZpbHRl
-ciAkdG1wLm91dAogICAgIF9maWx0ZXIgJHRtcC5lcnIgMT4mMgpAQCAtNTgsNyArNTgsNyBAQCBf
-YXR0cigpCiAKIF9nZXRmYXR0cigpCiB7Ci0gICAgZ2V0ZmF0dHIgJCogMj4kdG1wLmVyciA+JHRt
-cC5vdXQKKyAgICAkR0VURkFUVFJfUFJPRyAkKiAyPiR0bXAuZXJyID4kdG1wLm91dAogICAgIGV4
-aXQ9JD8KICAgICBfZmlsdGVyICR0bXAub3V0CiAgICAgX2ZpbHRlciAkdG1wLmVyciAxPiYyCkBA
-IC04Miw4ICs4Miw4IEBAIF9hdHRyX2xpc3QoKQogX3N1cHBvcnRlZF9mcyB4ZnMgdWRmCiBfc3Vw
-cG9ydGVkX29zIExpbnV4CiAKLVsgLXggL3Vzci9iaW4vYXR0ciBdIHx8IF9ub3RydW4gImF0dHIg
-aXMgbm90IGluc3RhbGxlZCIKLVsgLXggL3Vzci9iaW4vZ2V0ZmF0dHIgXSB8fCBfbm90cnVuICJn
-ZXRmYXR0ciBpcyBub3QgaW5zdGFsbGVkIgorWyAtbiAkQVRUUl9QUk9HIF0gfHwgX25vdHJ1biAi
-YXR0ciBpcyBub3QgaW5zdGFsbGVkIgorWyAtbiAkR0VURkFUVFJfUFJPRyBdIHx8IF9ub3RydW4g
-ImdldGZhdHRyIGlzIG5vdCBpbnN0YWxsZWQiCiAKIF9zZXR1cF90ZXN0ZGlyCiAKQEAgLTE0NSw3
-ICsxNDUsNyBAQCBlY2hvICIqKiogcmVtb3ZlIGxvdHMgb2YgYXR0cmlidXRlcyIKIHY9MAogd2hp
-bGUgWyAkdiAtbHQgMTAwMCBdCiBkbwotICAgIGlmICEgYXR0ciAtciAiYXR0cmlidXRlXyR2IiAk
-dGVzdGZpbGUgPj4kc2VxLmZ1bGwKKyAgICBpZiAhICRBVFRSX1BST0cgLXIgImF0dHJpYnV0ZV8k
-diIgJHRlc3RmaWxlID4+JHNlcS5mdWxsCiAgICAgdGhlbgogICAgICAgICBlY2hvICIhISEgZmFp
-bGVkIHRvIHJlbW92ZSBcImF0dHJpYnV0ZV8kdlwiIgogICAgICAgICBleGl0IDEKZGlmZiAtLWdp
-dCBhLzAyMSBiLzAyMQppbmRleCAxODI4NGViLi4xMGM0NjExIDEwMDc1NQotLS0gYS8wMjEKKysr
-IGIvMDIxCkBAIC03Niw4ICs3Niw4IEBAIF9nZXRmYXR0cigpCiBfc3VwcG9ydGVkX2ZzIHhmcwog
-X3N1cHBvcnRlZF9vcyBMaW51eAogCi1bIC14IC91c3IvYmluL2F0dHIgXSB8fCBfbm90cnVuICJh
-dHRyIGlzIG5vdCBpbnN0YWxsZWQiCi1bIC14IC91c3IvYmluL2dldGZhdHRyIF0gfHwgX25vdHJ1
-biAiZ2V0ZmF0dHIgaXMgbm90IGluc3RhbGxlZCIKK1sgLW4gJEFUVFJfUFJPRyBdIHx8IF9ub3Ry
-dW4gImF0dHIgaXMgbm90IGluc3RhbGxlZCIKK1sgLW4gJEdFVEZBVFRSX1BST0cgXSB8fCBfbm90
-cnVuICJnZXRmYXR0ciBpcyBub3QgaW5zdGFsbGVkIgogCiBfcmVxdWlyZV9zY3JhdGNoCiAKZGlm
-ZiAtLWdpdCBhLzA2MiBiLzA2MgppbmRleCA3NmFkNTEzLi4yYmFlNmEzIDEwMDc1NQotLS0gYS8w
-NjIKKysrIGIvMDYyCkBAIC05MywxMiArOTMsMTIgQEAgX2xpbnV4X2F0dHJfY2FsbHMoKQogCiBn
-ZXRmYXR0cigpCiB7Ci0gICAgL3Vzci9iaW4vZ2V0ZmF0dHIgLS1hYnNvbHV0ZS1uYW1lcyAtZGgg
-JEAgMj4mMSB8IF9maWx0ZXJfc2NyYXRjaAorICAgICRHRVRGQVRUUl9QUk9HIC0tYWJzb2x1dGUt
-bmFtZXMgLWRoICRAIDI+JjEgfCBfZmlsdGVyX3NjcmF0Y2gKIH0KIAogc2V0ZmF0dHIoKQogewot
-ICAgIC91c3IvYmluL3NldGZhdHRyICRAIDI+JjEgfCBfZmlsdGVyX3NjcmF0Y2gKKyAgICAkU0VU
-RkFUVFJfUFJPRyAkQCAyPiYxIHwgX2ZpbHRlcl9zY3JhdGNoCiB9CiAKIF9jcmVhdGVfdGVzdF9i
-ZWQoKQpAQCAtMjE5LDcgKzIxOSw3IEBAIGVjaG87IGVjaG8KIF9iYWNrdXAoKQogewogCSMgTkI6
-IG5vIGZpbHRlcmluZyBvZiBzY3JhdGNoIGhlcmUuLi4gKG5lZWQgdG8gcmVzdG9yZSB0b28pCi0J
-L3Vzci9iaW4vZ2V0ZmF0dHIgLS1hYnNvbHV0ZS1uYW1lcyAtZGggLVIgLW0gJy4nICRTQ1JBVENI
-X01OVCA+JDEKKwkkR0VURkFUVFJfUFJPRyAtLWFic29sdXRlLW5hbWVzIC1kaCAtUiAtbSAnLicg
-JFNDUkFUQ0hfTU5UID4kMQogCWVjaG8gQkFDS1VQICQxID4+JHNlcS5mdWxsCiAJY2F0ICQxID4+
-ICRzZXEuZnVsbAogCVsgISAtcyAkMSBdICYmIGVjaG8gIndhcm5pbmc6ICQxIChiYWNrdXAgZmls
-ZSkgaXMgZW1wdHkiCmRpZmYgLS1naXQgYS8wNzMgYi8wNzMKaW5kZXggN2NlNmVmYi4uMTgyNTdk
-NCAxMDA3NTUKLS0tIGEvMDczCisrKyBiLzA3MwpAQCAtMTMwLDcgKzEzMCw3IEBAIF9zdXBwb3J0
-ZWRfZnMgeGZzCiBfc3VwcG9ydGVkX29zIExpbnV4CiAKIFsgIiRVU0VfRVhURVJOQUwiID0geWVz
-IF0gJiYgX25vdHJ1biAiQ2Fubm90IHhmc19jb3B5IHdpdGggZXh0ZXJuYWwgZGV2aWNlcyIKLVsg
-LXggL3Vzci9zYmluL3hmc19jb3B5IF0gfHwgX25vdHJ1biAieGZzX2NvcHkgYmluYXJ5IG5vdCB5
-ZXQgaW5zdGFsbGVkIgorWyAtbiAiJFhGU19DT1BZX1BST0ciIF0gfHwgX25vdHJ1biAieGZzX2Nv
-cHkgYmluYXJ5IG5vdCB5ZXQgaW5zdGFsbGVkIgogCiBfcmVxdWlyZV9zY3JhdGNoCiBfcmVxdWly
-ZV9sb29wCkBAIC0xNDUsMTIgKzE0NSwxMiBAQCB1bW91bnQgJFNDUkFUQ0hfTU5UIDI+L2Rldi9u
-dWxsCiAKIGVjaG8KIGVjaG8gPT09IGNvcHlpbmcgc2NyYXRjaCBkZXZpY2UgdG8gc2luZ2xlIHRh
-cmdldAoteGZzX2NvcHkgJFNDUkFUQ0hfREVWICRpbWdzLmltYWdlIHwgX2ZpbHRlcl9jb3B5ICcj
-JyAkaW1ncy5pbWFnZSAnIycgJyMnCiskWEZTX0NPUFlfUFJPRyAkU0NSQVRDSF9ERVYgJGltZ3Mu
-aW1hZ2UgfCBfZmlsdGVyX2NvcHkgJyMnICRpbWdzLmltYWdlICcjJyAnIycKIF92ZXJpZnlfY29w
-eSAkaW1ncy5pbWFnZSAkU0NSQVRDSF9ERVYgJFNDUkFUQ0hfTU5UCiAKIGVjaG8KIGVjaG8gPT09
-IGNvcHlpbmcgc2NyYXRjaCBkZXZpY2UgdG8gc2luZ2xlIHRhcmdldCwgZHVwbGljYXRlIFVVSUQK
-LXhmc19jb3B5IC1kICRTQ1JBVENIX0RFViAkaW1ncy5pbWFnZSB8IF9maWx0ZXJfY29weSAnIycg
-JGltZ3MuaW1hZ2UgJyMnICcjJworJFhGU19DT1BZX1BST0cgLWQgJFNDUkFUQ0hfREVWICRpbWdz
-LmltYWdlIHwgX2ZpbHRlcl9jb3B5ICcjJyAkaW1ncy5pbWFnZSAnIycgJyMnCiBfdmVyaWZ5X2Nv
-cHkgJGltZ3MuaW1hZ2UgJFNDUkFUQ0hfREVWICRTQ1JBVENIX01OVAogCiBlY2hvIApAQCAtMTYz
-LDcgKzE2Myw3IEBAIG1vdW50IC10IHhmcyAtbyBsb29wICRpbWdzLnNvdXJjZSAkaW1ncy5zb3Vy
-Y2VfZGlyCiBsb29wMj1gbW91bnQgfCBncmVwICRpbWdzLnNvdXJjZSB8IGdyZXAgLW8gLWUgJ2xv
-b3A9LipbXiksXScgfCBncmVwIC1vIC1lICcvLiokJ2AKIGNwIC1hICRoZXJlICRpbWdzLnNvdXJj
-ZV9kaXIKIG1vdW50IC10IHhmcyAtbyByZW1vdW50LHJvICRpbWdzLnNvdXJjZSAkaW1ncy5zb3Vy
-Y2VfZGlyCi14ZnNfY29weSAkaW1ncy5zb3VyY2UgJGltZ3MuaW1hZ2UgfCBfZmlsdGVyX2NvcHkg
-JyMnICRpbWdzLmltYWdlICcjJyAnIycKKyRYRlNfQ09QWV9QUk9HICRpbWdzLnNvdXJjZSAkaW1n
-cy5pbWFnZSB8IF9maWx0ZXJfY29weSAnIycgJGltZ3MuaW1hZ2UgJyMnICcjJwogX3ZlcmlmeV9j
-b3B5ICRpbWdzLmltYWdlICRpbWdzLnNvdXJjZSAkaW1ncy5zb3VyY2VfZGlyCiAKICMgSEFDSyBX
-QVJOSU5HOgpAQCAtMTc0LDcgKzE3NCw3IEBAIGxvc2V0dXAgLWQgJGxvb3AyID4gL2Rldi9udWxs
-IDI+JjEKIAogZWNobwogZWNobyA9PT0gY29weWluZyBzY3JhdGNoIGRldmljZSB0byBtdWx0aXBs
-ZSB0YXJnZXRzCi14ZnNfY29weSAtTCRpbWdzLmxvZyAtYiAkU0NSQVRDSF9ERVYgJGltZ3MuaW1h
-Z2UxICRpbWdzLmltYWdlMiBcCiskWEZTX0NPUFlfUFJPRyAtTCRpbWdzLmxvZyAtYiAkU0NSQVRD
-SF9ERVYgJGltZ3MuaW1hZ2UxICRpbWdzLmltYWdlMiBcCiAJfCBfZmlsdGVyX2NvcHkgJyMnICRp
-bWdzLmltYWdlMSAnIycgJGltZ3MuaW1hZ2UyCiBfdmVyaWZ5X2NvcHkgJGltZ3MuaW1hZ2UxICRT
-Q1JBVENIX0RFViAkU0NSQVRDSF9NTlQKIF92ZXJpZnlfY29weSAkaW1ncy5pbWFnZTIgJFNDUkFU
-Q0hfREVWICRTQ1JBVENIX01OVApkaWZmIC0tZ2l0IGEvMDg1IGIvMDg1CmluZGV4IDM2MWFlYzEu
-LmY0YTQ1YjcgMTAwNzU1Ci0tLSBhLzA4NQorKysgYi8wODUKQEAgLTcxLDcgKzcxLDcgQEAgX3By
-aW50X2xvZ3N0YXRlCiAKICMgY3VyaW91cyBpZiBGUyBjb25zaXN0ZW50IGF0IHN0YXJ0CiBpZiBm
-YWxzZTsgdGhlbgotICAgIGlmIC91c3Ivc2Jpbi94ZnNfY2hlY2sgJFNDUkFUQ0hfREVWOyB0aGVu
-CisgICAgaWYgJFhGU19DSEVDS19QUk9HICRTQ1JBVENIX0RFVjsgdGhlbgogICAgICAgIGVjaG8g
-IioqKiBjaGVja2VkIG9rICoqKiIKICAgICBmaQogZmkKZGlmZiAtLWdpdCBhLzA5NCBiLzA5NApp
-bmRleCA4ZThiNWU3Li43NWZjNTY1IDEwMDc1NQotLS0gYS8wOTQKKysrIGIvMDk0CkBAIC00Nyw3
-ICs0Nyw3IEBAIF9zdXBwb3J0ZWRfZnMgeGZzCiBfc3VwcG9ydGVkX29zIElSSVggTGludXgKIF9y
-ZXF1aXJlX3JlYWx0aW1lCiBfcmVxdWlyZV9zY3JhdGNoCi1fcmVxdWlyZV9jb21tYW5kIC91c3Iv
-c2Jpbi94ZnNfaW8KK19yZXF1aXJlX2NvbW1hbmQgJFhGU19JT19QUk9HIHhmc19pbwogCiBfZmls
-dGVyX3JlYWx0aW1lX2ZsYWcoKQogewpkaWZmIC0tZ2l0IGEvMTAzIGIvMTAzCmluZGV4IDhmN2U0
-NWIuLjRhNmJjYjEgMTAwNzU1Ci0tLSBhLzEwMworKysgYi8xMDMKQEAgLTc4LDcgKzc4LDcgQEAg
-X2ZpbHRlcl9ub3ltbGlua3NfZmxhZygpCiAjIHJlYWwgUUEgdGVzdCBzdGFydHMgaGVyZQogX3N1
-cHBvcnRlZF9vcyBMaW51eCBJUklYCiBfc3VwcG9ydGVkX2ZzIHhmcwotX3JlcXVpcmVfY29tbWFu
-ZCAvdXNyL3NiaW4veGZzX2lvCitfcmVxdWlyZV9jb21tYW5kICRYRlNfSU9fUFJPRyB4ZnNfaW8K
-IF9yZXF1aXJlX3NjcmF0Y2gKIAogX2NyZWF0ZV9zY3JhdGNoCmRpZmYgLS1naXQgYS8xMjIgYi8x
-MjIKaW5kZXggNGMxMTU1Ni4uNWYxZTEwYyAxMDA3NTUKLS0tIGEvMTIyCisrKyBiLzEyMgpAQCAt
-NDAsNyArNDAsNyBAQCB0cmFwICJybSAtZiAkdG1wLio7IGV4aXQgXCRzdGF0dXMiIDAgMSAyIDMg
-MTUKICMgcmVhbCBRQSB0ZXN0IHN0YXJ0cyBoZXJlCiBfc3VwcG9ydGVkX2ZzIHhmcwogX3N1cHBv
-cnRlZF9vcyBMaW51eAotX3JlcXVpcmVfY29tbWFuZCAvdXNyL2Jpbi9pbmRlbnQKK19yZXF1aXJl
-X2NvbW1hbmQgJElOREVOVF9QUk9HICJpbmRlbnQiCiAKICMgZmlsdGVyIG91dCBrbm93biBjaGFu
-Z2VzIHRvIHhmcyB0eXBlIHNpemVzCiBfdHlwZV9zaXplX2ZpbHRlcigpCmRpZmYgLS1naXQgYS8x
-NjcgYi8xNjcKaW5kZXggOThiNTVlNi4uY2NiNmMyYSAxMDA3NTUKLS0tIGEvMTY3CisrKyBiLzE2
-NwpAQCAtMjcsNyArMjcsNiBAQCBvd25lcj1kZ2NAc2dpLmNvbQogc2VxPWBiYXNlbmFtZSAkMGAK
-IGVjaG8gIlFBIG91dHB1dCBjcmVhdGVkIGJ5ICRzZXEiCiAKLWtpbGxhbGw9Ii91c3IvYmluL2tp
-bGxhbGwiCiBoZXJlPWBwd2RgCiB0bXA9L3RtcC8kJAogcm0gLWYgJHNlcS5mdWxsCkBAIC0zNiw3
-ICszNSw3IEBAIHRyYXAgIl9jbGVhbnVwOyBleGl0IFwkc3RhdHVzIiAwIDEgMiAzIDE1CiAKIF9j
-bGVhbnVwKCkKIHsKLQlraWxsYWxsIC1yIC1xIC1URVJNIGZzc3RyZXNzIDI+IC9kZXYvbnVsbAor
-CSRLSUxMQUxMX1BST0cgLXIgLXEgLVRFUk0gZnNzdHJlc3MgMj4gL2Rldi9udWxsCiAJc3luYwkj
-IGVuc3VyZXMgYWxsIGZzc3RyZXNzIHByb2Nlc3NlcyBkaWVkCiAJX2NsZWFudXBfdGVzdGRpcgog
-fQpAQCAtNTgsNyArNTcsNyBAQCB3b3Jrb3V0KCkKIF9zdXBwb3J0ZWRfZnMgeGZzCiBfc3VwcG9y
-dGVkX29zIExpbnV4CiAKLVsgLXggJGtpbGxhbGwgXSB8fCBfbm90cnVuICIka2lsbGFsbCBleGVj
-dXRhYmxlIG5vdCBmb3VuZCIKK1sgLW4gIiRLSUxMQUxMX1BST0ciIF0gfHwgX25vdHJ1biAia2ls
-bGFsbCBleGVjdXRhYmxlIG5vdCBmb3VuZCIKIAogX3NldHVwX3Rlc3RkaXIKIF9yZXF1aXJlX3Nj
-cmF0Y2gKZGlmZiAtLWdpdCBhLzE4NiBiLzE4NgppbmRleCA2NDNmNGIxLi44MGM0MDZkIDEwMDc1
-NQotLS0gYS8xODYKKysrIGIvMTg2CkBAIC02NCw3ICs2NCw3IEBAIF9jcmVhdGVfZWFzKCkKIAlz
-dGFydF9udW09JDEKIAllbmRfbnVtPSQyCiAJZm9yIGkgaW4gYHNlcSAkc3RhcnRfbnVtICRlbmRf
-bnVtYDsgZG8KLQkJc2V0ZmF0dHIgLW4gdXNlci4kaSAtdiAweGJhYmUgJGZvcmtfZGlyCisJCSRT
-RVRGQVRUUl9QUk9HIC1uIHVzZXIuJGkgLXYgMHhiYWJlICRmb3JrX2RpcgogCWRvbmUKIH0KIApA
-QCAtNzMsNyArNzMsNyBAQCBfcm12X2VhcygpCiAJc3RhcnRfbnVtPSQxCiAJZW5kX251bT0kMgog
-CWZvciBpIGluIGBzZXEgJHN0YXJ0X251bSAkZW5kX251bWA7IGRvCi0JCXNldGZhdHRyIC14IHVz
-ZXIuJGkgJGZvcmtfZGlyCisJCSRTRVRGQVRUUl9QUk9HIC14IHVzZXIuJGkgJGZvcmtfZGlyCiAJ
-ZG9uZQogfQogCmRpZmYgLS1naXQgYS8xODcgYi8xODcKaW5kZXggNmE0ODlkMC4uYWQyODA1MSAx
-MDA3NTUKLS0tIGEvMTg3CisrKyBiLzE4NwpAQCAtMTA2LDggKzEwNiw4IEBAIGVjaG8gIiIKIF9z
-Y3JhdGNoX21vdW50IC1vIG5vYXR0cjIKIGNkICRTQ1JBVENIX01OVAogdG91Y2ggdGVzdGZpbGUK
-LXNldGZhdHRyIC1uIHVzZXIudGVzdCAtdiAweGJhYmUgdGVzdGZpbGUKLWdldGZhdHRyIHRlc3Rm
-aWxlCiskU0VURkFUVFJfUFJPRyAtbiB1c2VyLnRlc3QgLXYgMHhiYWJlIHRlc3RmaWxlCiskR0VU
-RkFUVFJfUFJPRyB0ZXN0ZmlsZQogY2QgJGhlcmUKICRVTU9VTlRfUFJPRyAkU0NSQVRDSF9NTlQK
-ICRYRlNfREJfUFJPRyAtYyB2ZXJzaW9uICRTQ1JBVENIX0RFViAyPiYxIHwgX2ZpbHRlcl92ZXJz
-aW9uCmRpZmYgLS1naXQgYS8yMjcgYi8yMjcKaW5kZXggYWM2MTg5Yy4uY2I3ZmE3MCAxMDA2NDQK
-LS0tIGEvMjI3CisrKyBiLzIyNwpAQCAtODcsNyArODcsNyBAQCBmcmFnbWVudF9mcmVlc3BhY2Uo
-KQogY3JlYXRlX2F0dHJzKCkKIHsKIAlmb3IgZm9vIGluIGBzZXEgMCAxICQxYDsgZG8KLQkJc2V0
-ZmF0dHIgLW4gdXNlci4kZm9vIC12IDB4YmFiZSAkMgorCQkkU0VURkFUVFJfUFJPRyAtbiB1c2Vy
-LiRmb28gLXYgMHhiYWJlICQyCiAJZG9uZQogfQogCmRpZmYgLS1naXQgYS9jb21tb24uY29uZmln
-IGIvY29tbW9uLmNvbmZpZwppbmRleCAwNGJkY2Y2Li4zNjQyMTM5IDEwMDY0NAotLS0gYS9jb21t
-b24uY29uZmlnCisrKyBiL2NvbW1vbi5jb25maWcKQEAgLTE1MCw2ICsxNTAsMTQgQEAgZXhwb3J0
-IFhGU0RVTVBfUFJPRz0iYHNldF9wcm9nX3BhdGggeGZzZHVtcGAiCiBleHBvcnQgWEZTUkVTVE9S
-RV9QUk9HPSJgc2V0X3Byb2dfcGF0aCB4ZnNyZXN0b3JlYCIKIGV4cG9ydCBYRlNJTlZVVElMX1BS
-T0c9ImBzZXRfcHJvZ19wYXRoIHhmc2ludnV0aWxgIgogZXhwb3J0IERCRU5DSF9QUk9HPSJgc2V0
-X3Byb2dfcGF0aCBkYmVuY2hgIgorZXhwb3J0IEdFVEZBVFRSX1BST0c9ImBzZXRfcHJvZ19wYXRo
-IGdldGZhdHRyYCIKK2V4cG9ydCBTRVRGQVRUUl9QUk9HPSJgc2V0X3Byb2dfcGF0aCBzZXRmYXR0
-cmAiCitleHBvcnQgQVRUUl9QUk9HPSJgc2V0X3Byb2dfcGF0aCBhdHRyYCIKK2V4cG9ydCBRVU9U
-QV9QUk9HPSJgc2V0X3Byb2dfcGF0aCBxdW90YWAiCitleHBvcnQgWEZTX1FVT1RBX1BST0c9ImBz
-ZXRfcHJvZ19wYXRoIHhmc19xdW90YWAiCitleHBvcnQgS0lMTEFMTF9QUk9HPSJgc2V0X3Byb2df
-cGF0aCBraWxsYWxsYCIKK2V4cG9ydCBJTkRFTlRfUFJPRz0iYHNldF9wcm9nX3BhdGggaW5kZW50
-YCIKK2V4cG9ydCBYRlNfQ09QWV9QUk9HPSJgc2V0X3Byb2dfcGF0aCB4ZnNfY29weWAiCiAKICMg
-R2VuZXJhdGUgYSBjb21wYXJhYmxlIHhmc3Byb2dzIHZlcnNpb24gbnVtYmVyIGluIHRoZSBmb3Jt
-IG9mCiAjIG1ham9yICogMTAwMDAgKyBtaW5vciAqIDEwMCArIHJlbGVhc2UKZGlmZiAtLWdpdCBh
-L2NvbW1vbi5xdW90YSBiL2NvbW1vbi5xdW90YQppbmRleCBlZmIzZWY5Li44NjhlNTYzIDEwMDY0
-NAotLS0gYS9jb21tb24ucXVvdGEKKysrIGIvY29tbW9uLnF1b3RhCkBAIC0yNiw3ICsyNiw3IEBA
-CiAjCiBfcmVxdWlyZV9xdW90YSgpCiB7Ci0gICAgWyAteCAvdXNyL2Jpbi9xdW90YSBdIHx8IF9u
-b3RydW4gIlF1b3RhIHVzZXIgdG9vbHMgbm90IGluc3RhbGxlZCIKKyAgICBbIC1uICRRVU9UQV9Q
-Uk9HIF0gfHwgX25vdHJ1biAiUXVvdGEgdXNlciB0b29scyBub3QgaW5zdGFsbGVkIgogICAgIGlm
-IFsgJEZTVFlQID0gInhmcyIgXTsgdGhlbgogCVsgLWYgL3Byb2MvZnMveGZzL3hxbXN0YXQgXSB8
-fCBfbm90cnVuICJJbnN0YWxsZWQga2VybmVsIGRvZXMgbm90IHN1cHBvcnQgWEZTIHF1b3RhIgog
-ICAgIGVsaWYgWyAkRlNUWVAgIT0gImdmczIiIF07IHRoZW4KQEAgLTQyLDcgKzQyLDcgQEAgX3Jl
-cXVpcmVfeGZzX3F1b3RhKCkKIHsKICAgICBzcmMvZmVhdHVyZSAtcSAkVEVTVF9ERVYKICAgICBb
-ICQ/IC1uZSAwIF0gJiYgX25vdHJ1biAiSW5zdGFsbGVkIGtlcm5lbCBkb2VzIG5vdCBzdXBwb3J0
-IFhGUyBxdW90YSIKLSAgICBbIC14IC91c3Ivc2Jpbi94ZnNfcXVvdGEgXSB8fCBfbm90cnVuICJY
-RlMgcXVvdGEgdXNlciB0b29scyBub3QgaW5zdGFsbGVkIgorICAgIFsgLW4gJFhGU19RVU9UQV9Q
-Uk9HIF0gfHwgX25vdHJ1biAiWEZTIHF1b3RhIHVzZXIgdG9vbHMgbm90IGluc3RhbGxlZCIKIH0K
-IAogIwpkaWZmIC0tZ2l0IGEvY29tbW9uLnJjIGIvY29tbW9uLnJjCmluZGV4IDA4ZDRmNzEuLmJj
-MmQzMTggMTAwNjQ0Ci0tLSBhL2NvbW1vbi5yYworKysgYi9jb21tb24ucmMKQEAgLTc3OSwxMCAr
-Nzc5LDEyIEBAIF9yZXF1aXJlX3JlYWx0aW1lKCkKIH0KIAogIyB0aGlzIHRlc3QgcmVxdWlyZXMg
-dGhhdCBhIHNwZWNpZmllZCBjb21tYW5kIChleGVjdXRhYmxlKSBleGlzdHMKKyMgJDEgLSBjb21t
-YW5kLCAkMiAtIG5hbWUgZm9yIGVycm9yIG1lc3NhZ2UKICMKIF9yZXF1aXJlX2NvbW1hbmQoKQog
-ewotICAgIFsgLXggIiQxIiBdIHx8IF9ub3RydW4gIiQxIHV0aWxpdHkgcmVxdWlyZWQsIHNraXBw
-ZWQgdGhpcyB0ZXN0IgorICAgIFsgLW4gIiQxIiBdICYmIF9jbWQ9IiQxIiB8fCBfY21kPSIkMiIK
-KyAgICBbIC1uICIkMSIgLWEgLXggIiQxIiBdIHx8IF9ub3RydW4gIiRfY21kIHV0aWxpdHkgcmVx
-dWlyZWQsIHNraXBwZWQgdGhpcyB0ZXN0IgogfQogCiAjIHRoaXMgdGVzdCByZXF1aXJlcyB0aGF0
-IGV4dGVybmFsIGxvZy9yZWFsdGltZSBkZXZpY2VzIGFyZSBub3QgaW4gdXNlCi0tIAoxLjcuMi4y
-CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFp
-bGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0
-aW5mby94ZnMK
+This is a MIME encoded message.
+
+--===============6942770801894574084==
+Content-description: d7ae72dde1linux-xfs@oss.sgi.com!3b151!1f2566!5a9e!rynof3.pbz!
+Content-Type: multipart/alternative;
+	boundary="=_255b939b91dfd175f02971206bd08f5b"
+
+This is a MIME encoded message.
+
+--=_255b939b91dfd175f02971206bd08f5b
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Nathan
+
+After successfully completing 3 retained executive searches (VP, Engineering; VP, Global Service and Support; Sr. Product Manager, User Experience) for our client Zhone Technologies, Inc., Executive Advantage Group, Inc. has recently been retained to assist Zhone (a $126M telecom capital equipment provider) with additional mission critical roles:
+
+We've showcased each new retained search in the corresponding search specific websites below.
+
+At the top of each respective search specific website's - The Position Profile - page there is a link to - download the Detailed Position Spec for that role.   
+
+If you are aware of a stellar candidate that would excel in either of these roles based on the individual brief position descriptions below please have them send their resume to me, Michael A. Rothstein, Managing Principal, Executive Advantage Group, Inc. (Email: mrothstein@executive-advantage.com, Direct: 503-372-9084).
+
+* Reporting to the Chief Marketing Officer: Senior Product Manager, MXK Product Platform.
+http://executive-advantage.com/Zhone_SPM
+
+The ideal Senior Product Manager, MXK Product Platform candidate must possess +10 years technical aptitude and experience as a successful product manager responsible for successfully taking multiple advanced multi-service broadband telecommunications platform systems products from inception to complete systems launch. Candidate must have a strong engineering and technology foundation: understands soft-switching call control, telephony networks, IPTV, and the media & entertainment market's related telecommunication needs. Possesses thorough understanding of service delivery over todayâ€™s public telephone network, including voice and data services, as well as legacy voice, VoIP, and IP networking protocols. Must possess domain expertise in GPON and PON management protocols: OMCI technologies, SNMP. Very familiar with data networking, possesses domain expertise in Layer 2, Layer 3 and knowledgeable in Layer 1 (fiber).
+
+* Reporting to the Director of Information Systems: Senior Web Applications Developer.
+http://executive-advantage.com/Zhone_SWAD
+
+The ideal Senior Web Applications Developer candidate must possess +8 years of hands on Web Applications Development industry experience to include Intranet as well as the Extranet web applications development experience. Possessing strong expertise in Object-oriented Perl (including mod_perl and CGI.pm), this individual must possess strong expertise in JavaScript, HTML, CSS, XML, as well as with Prototype and Scriptaculous toolkits. Strong experience with Template: Toolkit is highly desirable. This role combines development, project management and maintenance of web based information infrastructure with a very broad range of responsibilities and potential for strategic impact with company. As a result, the role will have a lot of senior executive interface responsibility within the company, and give the Senior Web Applications Developer a lot of exposure to Oracle ERP applications and associated business process flows and the associated ability to pick up related skills.
+
+Executive Advantage Group, Inc. - Experts in Mission Critical Search Solutions:
+
+We fill positions with top A-Player talent - we don't throw stacks of resumes at our clients. If you, or any business colleagues, have similar search needs at -any- mission critical position level or functional discipline, we can help provide you with the same service as the recent clients below have commented on. 
+
+* Andy Holroyd, Senior Vice President, Instruments Division, Ashtead Technology. 
+We recently completed a retained executive search for our new VP of Sales & Marketing role using the services of Executive Advantage Group's Ron Bates and Michael Rothstein. One thing I'll say is Executive Advantage Group's networking reach and ability to cover the largest possible candidate population is impressive and quite effective. Out of the first 4 candidates submitted with the first month of the search, 2 of them became finalists with the second candidate submitted being the one we ultimately hired. Ultimately, the individual we hired is going to be invaluable. 
+
+* Laura Larsen, Dir. HR & Administration, Zhone Technologies, Inc. 
+Compared to my experiences with large firms as well as other smaller firms, Executive Advantage Group is vastly different in a very positive way. Michael and Ron are much more thorough than anyone else. Executive Advantage Group completed our VP of Global Customer Service search in 42 days with the first candidate being submitted within the first 20 days after the spec was approved, and with all 3 candidates interviewed submitted 23 days into the search. 
+
+* Sandra Swann, Director of Human Resources, ViewCast Corporation. 
+Thanks to the efforts of Executive Advantage Group's Ron Bates and Michael Rothstein, completed a Vice President of Sales retained search in 62 days with the hired candidate submitted 29 days after the spec was approved. Compared to the other both large and boutique search firms I've used, Executive Advantage Group's network is very large and they tuned into our industry specifically. There's no comparison. I knew we would be more likely to find candidates that fit our industry requirements going with Executive Advantage Group, Inc. 
+
+* Frank Madren, President, GarrettCom, Inc. 
+We recently had the need to conduct a confidential executive search to fill our Vice President of Engineering & Chief Technical Officer role at GarrettCom, Inc. Our new Vice President of Engineering & Chief Technical Officer was submitted 23 days after the search began and started work 99 days after we signed the retained search contract with Executive Advantage Group. The level of screening they took candidates through prior to formal candidate submission allowed us to go into interviews knowing more than we've ever known before on candidates prior to interview. 
+
+* Steve Harris, VP, Research, Development and Engineering, Electro Scientific Industries, Inc. 
+I recently retained Michael Rothstein and Ron Bates of Executive Advantage Group, Inc. to fill three high impact senior management positions that will be key parts of how we grow Electro Scientific Industries, Inc. We tried for 3 months to fill these positions prior to engaging Executive Advantage Group. I would strongly recommend Executive Advantage Group to others with mission critical recruiting needs for one simple reason - results - Michael and Ron got it done. One of the candidates we hired even said, "I wish I would have found those guys when I was looking to hire candidates. 
+
+Our firm's references and example full-page client reference letters can be viewed on our website under - Client References. You'll note from our references we are a truly unique retained search firm that consistently gets the job done for clients that retain our services. We have filled every search in the last 9 years within 45-90 days (or less) with the hired candidate being one of 2-4 bull's eye rifle shots submitted within the first 30 days of the search. I would happy to speak with you about your company's search needs when you feel the timing is right. 
+
+With each Principal having +20-year careers in sales, marketing & technology management and having worked for Hewlett Packard, MentorGraphics, TRW, Raytheon, ComputerVision and Spherion, we're former top performing Managing Directors, Vice Presidents, and Partners with Heidrick & Struggles and StratfordGroup - both retained executive search firms. You will -never- find retained executive recruiters with our experience and direct industry backgrounds. We work with client's that believe it's paramount they acquire the -best- possible talent for mission critical positions.  We excel at identifying, assessing, and assisting our clients in capturing differentiated talent. 
+
+I look forward to your response. 
+
+Sincerely, 
+
+Michael A. Rothstein
+Managing Principal
+Executive Advantage Group 
+Direct: 503-372-9084
+mrothstein@executive-advantage.com
+Executive-Advantage.com 
+
+
+ 
+Silicon Valley Offices - 1250 Oakmead Parkway, Suite 250, Sunnyvale, CA 94085 - Direct: 408-451-8414 
+Pacific Northwest Offices - 14385 Benchview Terrace, Portland, OR 97224 - Direct: 503-372-9084
+
+To submit your preferred contact information - go here:  http://www.executive-advantage.com/database/index.html
+
+
+To permanently unsubscribe from all future mailings, send an email to: globalunsub-23198@elabs3.com with the adddress: linux-xfs@oss.sgi.com in the subject line.
+
+This document is provided for information only. This information is not a promise or guarantee nor is the accuracy of any information generated after this item is published guaranteed. This document is provided AS IS without warranty of any kind, express or implied, including but not limited to service provider. Advertisement. DISCLAIMER: This e-mail is sent in compliance with strict anti-abuse regulations, and is in compliance as long as there is a way to be removed.
+
+--=_255b939b91dfd175f02971206bd08f5b
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+<P ALIGN=LEFT><FONT FACE="Arial,Helvetica,Geneva,Sans-serif,sans-serif"></FONT><FONT SIZE="-1">Nathan</font></FONT></P>
+                <P ALIGN=LEFT><FONT SIZE="-1" FACE="Arial,Helvetica,Geneva,Sans-serif,sans-serif"></FONT><FONT SIZE="-1">
+
+After successfully completing 3 retained executive searches (VP, Engineering; VP, Global Service and Support; Sr. Product Manager, User Experience) for our client Zhone Technologies, Inc., Executive Advantage Group, Inc. has recently been retained to assist Zhone (a $126M telecom capital equipment
+provider) with additional mission critical roles:<br><br>
+
+We've showcased each new retained search in the corresponding search specific websites below.<br><br>
+
+At the top of each respective search specific website's - The Position Profile - page there is a link to - download the Detailed Position Spec for that role.&nbsp;&nbsp;
+
+</FONT></P>
+                <P ALIGN=LEFT><FONT SIZE="-1" FACE="Arial,Helvetica,Geneva,Sans-serif,sans-serif"></FONT><FONT SIZE="-1">
+
+If you are aware of a stellar candidate that would excel in either of these roles based on the individual brief position descriptions below please have them send their resume to me, Michael A. Rothstein, Managing Principal, Executive Advantage Group, Inc. (Email: </FONT><A
+HREF="mailto:mrothstein@executive-advantage.com?subject=Resume Submission - Zhone Technologies, Inc. - Retained Search&body=Please indicate the specific title of the role you are responding to, and remember to attach your resume with your response."><FONT
+SIZE="-1">mrothstein@executive-advantage.com</FONT></A><FONT SIZE="-1">, Direct: 503-372-9084).</FONT></P>
+                
+                    <UL><LI><FONT SIZE="-1">
+
+
+<b>Reporting to the Chief Marketing Officer:  Senior Product Manager, MXK Product Platform</b><br>
+
+<A HREF="http://www.elabs3.com/c.html?rtr=on&s=hwe,17qzq,56q9,32uk,hrn4,ixnr,40yp"><B><FONT SIZE="-1">http://executive-advantage.com/Zhone_SPM</B></A><br>
+
+The ideal Senior Product Manager, MXK Product Platform candidate must possess +10 years technical aptitude and experience as a successful product manager responsible for successfully taking multiple advanced multi-service broadband telecommunications platform systems products from inception to
+complete systems launch. Candidate must have a strong engineering and technology foundation: understands soft-switching call control, telephony networks, IPTV, and the media & entertainment market's related telecommunication needs. Possesses thorough understanding of service delivery over today’s
+public telephone network, including voice and data services, as well as legacy voice, VoIP, and IP networking protocols. Must possess domain expertise in GPON and PON management protocols: OMCI technologies, SNMP. Very familiar with data networking, possesses domain expertise in Layer 2, Layer 3 and
+knowledgeable in Layer 1 (fiber).</LI></UL>
+
+
+
+<UL><LI>      
+<b>Reporting to the Director of Information Systems: Senior Web Applications Developer</b><br>
+
+<A HREF="http://www.elabs3.com/c.html?rtr=on&s=hwe,17qzq,56q9,e1ih,hw0d,ixnr,40yp"><B><FONT SIZE="-1">http://executive-advantage.com/Zhone_SWAD</B></A><br>
+
+The ideal Senior Web Applications Developer candidate must possess +8 years of hands on Web Applications Development industry experience to include Intranet as well as the Extranet web applications development experience. Possessing strong expertise in Object-oriented Perl (including mod_perl and
+CGI.pm), this individual must possess strong expertise in JavaScript, HTML, CSS, XML, as well as with Prototype and Scriptaculous toolkits.  Strong experience with Template: Toolkit is highly desirable. This role combines development, project management and maintenance of web based information
+infrastructure with a very broad range of responsibilities and potential for strategic impact with company.  As a result, the role will have a lot of senior executive interface responsibility within the company, and give the Senior Web Applications Developer a lot of exposure to Oracle ERP
+applications and associated business process flows and the associated ability to pick up related skills.</LI></UL></P>
+
+        
+                <P ALIGN=LEFT><FONT SIZE="-1" FACE="Arial,Helvetica,Geneva,Sans-serif,sans-serif"></FONT><FONT SIZE="-1">
+
+
+
+<strong>Executive Advantage Group, Inc. - Experts in Mission Critical Search Solutions:</strong><br><br>
+
+
+We fill positions with top A-Player talent - we don't throw stacks of resumes at our clients. If you, or any business colleagues, have similar search needs at -any- mission critical position level or functional discipline, we can help provide you with the same service as the recent clients below
+have commented on.
+
+</FONT> </P>
+
+<UL>
+                    <LI><B><FONT SIZE="-1">
+
+
+Andy Holroyd, Senior Vice President, Instruments Division, Ashtead Technology  
+<BR></FONT></B><FONT SIZE="-1">
+We recently completed a retained executive search for our new VP of Sales & Marketing role using the services of Executive Advantage Group's Ron Bates and Michael Rothstein.  One thing I'll say is Executive Advantage Group's networking reach and ability to cover the largest possible candidate
+population is impressive and quite effective. Out of the first 4 candidates submitted with the first month of the search, 2 of them became finalists with the second candidate submitted being the one we ultimately hired.  Ultimately, the individual we hired is going to be invaluable. 
+
+
+
+</FONT></LI>
+                </UL>
+
+
+
+<UL>
+                    <LI><B><FONT SIZE="-1">
+
+
+Laura Larsen, Dir. HR & Administration, Zhone Technologies, Inc.
+<BR></FONT></B><FONT SIZE="-1">Compared to my experiences with large firms as well as other smaller firms, Executive Advantage Group is vastly different in a very positive way. Michael and Ron are much more thorough than anyone else. Executive Advantage Group completed our VP of Global Customer
+Service search in 42 days with the first candidate being submitted within the first 20 days after the spec was approved, and with all 3 candidates interviewed submitted 23 days into the search. 
+
+</FONT></LI>
+                </UL>
+
+
+                               <UL>
+                    <LI><B><FONT SIZE="-1">
+
+
+Sandra Swann, Director of Human Resources, ViewCast Corporation 
+<BR></FONT></B><FONT SIZE="-1">Thanks to the efforts of Executive Advantage Group's Ron Bates and Michael Rothstein, completed a Vice President of Sales retained search in 62 days with the hired candidate submitted 29 days after the spec was approved. Compared to the other both large and boutique
+search firms I've used, Executive Advantage Group's network is very large and they tuned into our industry specifically.  There's no comparison.  I knew we would be more likely to find candidates that fit our industry requirements going with Executive Advantage Group, Inc.
+
+
+</FONT></LI>
+                </UL>
+
+<UL>
+
+                    <LI><B><FONT SIZE="-1">
+
+
+Frank Madren, President, GarrettCom, Inc.
+<BR></FONT></B><FONT SIZE="-1">We recently had the need to conduct a confidential executive search to fill our Vice President of Engineering & Chief Technical Officer role at GarrettCom, Inc. Our new Vice President of Engineering & Chief Technical Officer was submitted 23 days after the search
+began and started work 99 days after we signed the retained search contract with Executive Advantage Group. The level of screening they took candidates through prior to formal candidate submission allowed us to go into interviews knowing more than we've ever known before on candidates prior to
+interview.
+
+
+</FONT></LI>
+                </UL>
+
+                
+
+
+                <UL>
+                    <LI><B><FONT SIZE="-1">
+
+
+Steve Harris, VP, Research, Development and Engineering, Electro Scientific Industries, Inc.
+<BR></FONT></B><FONT SIZE="-1">I recently retained Michael Rothstein and Ron Bates of Executive Advantage Group, Inc. to fill three high impact senior management positions that will be key parts of how we grow Electro Scientific Industries, Inc. We tried for 3 months to fill these positions prior
+to engaging Executive Advantage Group.  I would strongly recommend Executive Advantage Group to others with mission critical recruiting needs for one simple reason - results - Michael and Ron got it done.  One of the candidates we hired even said, "I wish I would have found those guys when I was
+looking to hire candidates.
+
+</FONT></LI>
+                </UL>
+                
+                
+
+                <P ALIGN=LEFT><FONT SIZE="-1" FACE="Arial,Helvetica,Geneva,Sans-serif,sans-serif"></FONT><FONT SIZE="-1">
+
+
+Our firm's references and example full-page client reference letters can be viewed on our website under - </FONT><A HREF="http://www.elabs3.com/c.html?rtr=on&s=hwe,17qzq,56q9,gzzs,hk6s,ixnr,40yp"><FONT SIZE="-1">Client References</FONT></A><FONT SIZE="-1">. You'll note from our references we are a
+truly unique retained search firm that consistently gets the job done for clients that retain our services. We have filled every search in the last 9 years within 45-90 days (or less) with the hired candidate being one of 2-4 bull's eye rifle shots submitted within the first 30 days of the search.
+I would happy to speak with you about your company's search needs when you feel the timing is right.
+
+
+
+
+
+
+
+</FONT></P>
+
+<P ALIGN=LEFT><FONT SIZE="-1" FACE="Arial,Helvetica,Geneva,Sans-serif,sans-serif"></FONT><FONT SIZE="-1">
+
+
+With each Principal having +20-year careers in sales, marketing &amp; technology management and having worked for Hewlett Packard, MentorGraphics, TRW, Raytheon, ComputerVision and Spherion, we're former top performing Managing Directors, Vice Presidents, and Partners with Heidrick &amp; Struggles
+and StratfordGroup - both retained executive search firms. You will -never- find retained executive recruiters with our experience and direct industry backgrounds. We work with client's that believe it's paramount they acquire the -best- possible talent for mission critical positions.&nbsp; We
+excel at&nbsp;identifying, assessing, and assisting our clients in capturing differentiated talent.
+
+
+</FONT></P>
+                
+                <P ALIGN=LEFT><FONT SIZE="-1" FACE="Arial,Helvetica,Geneva,Sans-serif,sans-serif"></FONT><FONT SIZE="-1">
+
+
+I look forward to your response.
+
+</FONT></P>
+                <P ALIGN=LEFT><FONT SIZE="-1" FACE="Arial,Helvetica,Geneva,Sans-serif,sans-serif"></FONT><FONT SIZE="-1">
+
+Sincerely,
+
+</FONT></P>
+<P ALIGN=LEFT><FONT SIZE="-1" FACE="Arial,Helvetica,Geneva,Sans-serif,sans-serif"></FONT><FONT SIZE="-1"><B><I>Michael A. Rothstein<BR></I></B>Managing Principal<BR>Executive Advantage Group <BR>Direct: 503-372-9084<BR></FONT>
+<A HREF="mailto:mrothstein@executive-advantage.com?subject=Resume Submission - Zhone Technologies, Inc. - Retained Search&body=Please indicate the specific title of the role you are responding to, and remember to attach your resume with your response."><FONT
+SIZE="-1">mrothstein@executive-advantage.com</FONT></A><BR>
+<A HREF="http://www.elabs3.com/c.html?rtr=on&s=hwe,17qzq,56q9,4fah,lezc,ixnr,40yp"><FONT SIZE="-1">Executive-Advantage.com</FONT></A><FONT SIZE="-1"> 
+
+<br><br>
+
+
+
+
+ 
+<FONT SIZE="-1"><BR>&nbsp;</FONT></P>
+                <P ALIGN=LEFT><FONT SIZE="-1" FACE="Arial,Helvetica,Geneva,Sans-serif,sans-serif"></FONT><FONT SIZE="-1">Silicon Valley Offices - 1250 Oakmead Parkway, Suite 250, Sunnyvale, CA 94085 - Direct: 408-451-8414 <BR>Pacific Northwest Offices - 14385 Benchview Terrace, Portland, OR 97224 -
+Direct: 503-372-9084</FONT></P>
+                
+                <P ALIGN=LEFT><FONT SIZE="-1" FACE="Arial,Helvetica,Geneva,Sans-serif,sans-serif"></FONT><FONT COLOR="#999999" SIZE="-1"><B>Executive Advantage Group, Inc.<BR>Experts in Mission Critical Retained Search<BR>&nbsp;</B></FONT><B></B></P>
+                <P ALIGN=LEFT><FONT SIZE="-1" FACE="Arial,Helvetica,Geneva,Sans-serif,sans-serif"></FONT><FONT COLOR="#666666" SIZE="-1"><B>To submit your preferred contact information - </B></FONT><A HREF="http://www.elabs3.com/c.html?rtr=on&s=hwe,17qzq,56q9,4uey,9l27,ixnr,40yp"><FONT SIZE="-1">go
+here</FONT></A>
+
+<FONT COLOR="#999999" SIZE="-1">
+
+<br><br>To permanently opt-out from all future mailings, <a href="http://www.elabs3.com/functions/mailing_list.html?mid=2041190&submitaction=4&mlid=242001&activity=submit&siteid=23198&email=linux-xfs@oss.sgi.com&redirection=http%3A%2F%2Fwww.elabs3.com%2Ffunctions%2Funsubscribed.html">go here</a> or
+send an email to: globalunsub-23198@elabs3.com with the address: linux-xfs@oss.sgi.com in the subject line.
+<br><br>
+
+
+
+</FONT>
+
+<FONT COLOR="#999999" SIZE="-1"><BR>This document is provided for information only. This information is not a promise or guarantee nor is the accuracy of any information generated after this item is published
+guaranteed. This document is provided AS IS without warranty of any kind, express or implied, including but not limited to service provider. Advertisement. DISCLAIMER: This e-mail is sent in compliance with strict anti-abuse regulations, and is in compliance as long as there is a way to be
+removed.</FONT></P>
+                
+
+            </TD>
+        </TR></TBODY>
+    </TABLE>
+    </CENTER>
+</body></html><img src="http://www.elabs3.com/images/mlopen_post.html?rtr=on&siteid=23198&mid=2041190&mlid=242001&uid=d7ae72dde1">
+
+--=_255b939b91dfd175f02971206bd08f5b--
+
+
+--===============6942770801894574084==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============6942770801894574084==--
