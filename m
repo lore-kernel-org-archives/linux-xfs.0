@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o89BB2xs097086 for <xfs@oss.sgi.com>; Thu, 9 Sep 2010 06:11:02 -0500
-Received: from gir.skynet.ie (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3ABEC5C270
-	for <xfs@oss.sgi.com>; Thu,  9 Sep 2010 04:11:46 -0700 (PDT)
-Received: from gir.skynet.ie (gir.skynet.ie [193.1.99.77]) by cuda.sgi.com
-	with ESMTP id LJwzmAZDxlQcRGrg for <xfs@oss.sgi.com>;
-	Thu, 09 Sep 2010 04:11:46 -0700 (PDT)
-Date: Thu, 9 Sep 2010 12:11:32 +0100
-From: Mel Gorman <mel@csn.ul.ie>
-Subject: [RFC PATCH] fs,xfs: Use __GFP_MOVABLE for XFS buffers
-Message-ID: <20100909111131.GO29263@csn.ul.ie>
+	o89EC6uE103350 for <xfs@oss.sgi.com>; Thu, 9 Sep 2010 09:12:06 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C3B115D047
+	for <xfs@oss.sgi.com>; Thu,  9 Sep 2010 07:12:51 -0700 (PDT)
+Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
+	by cuda.sgi.com with ESMTP id BbSLO1sojxyGRcLX for
+	<xfs@oss.sgi.com>; Thu, 09 Sep 2010 07:12:51 -0700 (PDT)
+Message-ID: <4C88EB62.5060000@sandeen.net>
+Date: Thu, 09 Sep 2010 09:12:50 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
+Subject: Re: fragmentation question
+References: <C8AC2AC5.6CA9%bchang@greenplum.com>
+In-Reply-To: <C8AC2AC5.6CA9%bchang@greenplum.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,44 +27,67 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, Alex Elder <aelder@sgi.com>
+To: Brady Chang <bchang@greenplum.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Fragmentation avoidance in the kernel depends on reclaimable and movable
-allocations being marked-up at page allocation time. Reclaimable allocations
-refer to slab caches such as inode caches which can be reclaimed although
-not necessarily in a targetted fashion. Movable pages are those pages that
-can be moved to backing storage (during page reclaim) or migrated.
+Brady Chang wrote:
+> Hello All,
+> I have an issue with fragmentation on a particular device
+> thanks for any advice.
+> 
+> -Brady
+> 
+> I have a Dell r510 with 12 disks
+> 2xraid 5 (6 disks each)
+> raid group1:
+> 48 GB   carved out for os mounted as /
+> remaining space  2.7 TB for xfs mounted as /data1
+> raid group2:
+> 48 GB  for swap
+> remaining space 2.7 TB for xfs mounted as /data2
+> 
+> The strange thing is that /data1 never gets fragmented where as /data2
+> is badly fragmented.
+> I believe increase allocsize would help, but not sure how to explain why
+> /data2(/dev/sdd) always gets fragmented and not /data1(/dev/sdb)
+> 
+> It's a data warehouse application.  the I/O is balanced between /data1
+> and /data2:
+> output of xfs_db
+> [root@sdw4 data1]# xfs_db -c frag -r /dev/sdb
+> actual 14353, ideal 13702, fragmentation factor 4.54%
+> [root@sdw4 data1]# xfs_db -c frag -r /dev/sdd
+> actual 408674, ideal 13719, fragmentation factor 96.64%
 
-When testing against XFS, it was noticed that large page allocation rates
-against XFS were far lower than expected in comparison to ext3. Investigation
-showed that buffer pages allocated by XFS are placed on the LRU but not
-marked __GFP_MOVABLE at allocation time.
+so each file has 30 extents on average (actual/ideal)
 
-This patch updates xb_to_gfp() to specify __GFP_MOVABLE and is correct iff
-all pages allocated from a mask derived from xb_to_gfp() are guaranteed to
-be movable be it via page reclaim or page migration. It needs an XFS expert
-to make that determination but when applied, huge page allocation success
-rates are similar to those seen on tests backed by ext3.
+> df output
+> /dev/sdb              2.7T  967G  1.8T  36% /data1
+> /dev/sdd              2.7T  1.1T  1.7T  39% /data2
 
-Signed-off-by: Mel Gorman <mel@csn.ul.ie>
----
- fs/xfs/linux-2.6/xfs_buf.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+1.1T/408674 extents is ~3M per extent, not so good.
 
-diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
-index ea79072..93f3fb0 100644
---- a/fs/xfs/linux-2.6/xfs_buf.c
-+++ b/fs/xfs/linux-2.6/xfs_buf.c
-@@ -67,7 +67,7 @@ struct workqueue_struct *xfsconvertd_workqueue;
- 
- #define xb_to_gfp(flags) \
- 	((((flags) & XBF_READ_AHEAD) ? __GFP_NORETRY : \
--	  ((flags) & XBF_DONT_BLOCK) ? GFP_NOFS : GFP_KERNEL) | __GFP_NOWARN)
-+	  ((flags) & XBF_DONT_BLOCK) ? GFP_NOFS : GFP_KERNEL) | __GFP_NOWARN | __GFP_MOVABLE)
- 
- #define xb_to_km(flags) \
- 	 (((flags) & XBF_DONT_BLOCK) ? KM_NOFS : KM_SLEEP)
+How many files are on each fs?
+
+> LABEL=/data1        /data1     xfs
+>     allocsize=1048576,logbufs=8,noatime,nodiratime 0 0
+> LABEL=/data2        /data2     xfs
+>     allocsize=1048576,logbufs=8,noatime,nodiratime 0 0
+
+Everything but the first option is default, BTW.
+
+Is xfs_info output on the 2 filesystems the same?
+
+Otherwise Emmanuel's idea is a good one, maybe it's not
+as balanced as you think it is, or maybe they have aged
+differently and have different amounts of freespace
+(see the freesp command in xfs_db)
+
+> By the way, the os is RHEL 5.5 kernel 2.6.18-194.11.1.el5
+
+Was Red Hat support not helpful?
+
+-Eric
 
 _______________________________________________
 xfs mailing list
