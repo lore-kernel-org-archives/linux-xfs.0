@@ -1,20 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o89EC6uE103350 for <xfs@oss.sgi.com>; Thu, 9 Sep 2010 09:12:06 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C3B115D047
-	for <xfs@oss.sgi.com>; Thu,  9 Sep 2010 07:12:51 -0700 (PDT)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id BbSLO1sojxyGRcLX for
-	<xfs@oss.sgi.com>; Thu, 09 Sep 2010 07:12:51 -0700 (PDT)
-Message-ID: <4C88EB62.5060000@sandeen.net>
-Date: Thu, 09 Sep 2010 09:12:50 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	o89EvKci105081 for <xfs@oss.sgi.com>; Thu, 9 Sep 2010 09:57:20 -0500
+Received: from smtp-relay.maven.pl (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EC2DE17C5959
+	for <xfs@oss.sgi.com>; Thu,  9 Sep 2010 07:58:04 -0700 (PDT)
+Received: from smtp-relay.maven.pl (smtp-relay.maven.pl [193.239.45.138]) by
+	cuda.sgi.com with ESMTP id uKzapeCQNpubbdl9 for
+	<xfs@oss.sgi.com>; Thu, 09 Sep 2010 07:58:04 -0700 (PDT)
+From: =?UTF-8?q?Arkadiusz=20Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: [PATCH] [xfstests]: Don't hardcode getfattr/setfattr/attr paths.
+Date: Thu,  9 Sep 2010 16:57:58 +0200
+Message-Id: <1284044278-17430-1-git-send-email-arekm@maven.pl>
 MIME-Version: 1.0
-Subject: Re: fragmentation question
-References: <C8AC2AC5.6CA9%bchang@greenplum.com>
-In-Reply-To: <C8AC2AC5.6CA9%bchang@greenplum.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,73 +21,87 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Brady Chang <bchang@greenplum.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Brady Chang wrote:
-> Hello All,
-> I have an issue with fragmentation on a particular device
-> thanks for any advice.
-> 
-> -Brady
-> 
-> I have a Dell r510 with 12 disks
-> 2xraid 5 (6 disks each)
-> raid group1:
-> 48 GB   carved out for os mounted as /
-> remaining space  2.7 TB for xfs mounted as /data1
-> raid group2:
-> 48 GB  for swap
-> remaining space 2.7 TB for xfs mounted as /data2
-> 
-> The strange thing is that /data1 never gets fragmented where as /data2
-> is badly fragmented.
-> I believe increase allocsize would help, but not sure how to explain why
-> /data2(/dev/sdd) always gets fragmented and not /data1(/dev/sdb)
-> 
-> It's a data warehouse application.  the I/O is balanced between /data1
-> and /data2:
-> output of xfs_db
-> [root@sdw4 data1]# xfs_db -c frag -r /dev/sdb
-> actual 14353, ideal 13702, fragmentation factor 4.54%
-> [root@sdw4 data1]# xfs_db -c frag -r /dev/sdd
-> actual 408674, ideal 13719, fragmentation factor 96.64%
-
-so each file has 30 extents on average (actual/ideal)
-
-> df output
-> /dev/sdb              2.7T  967G  1.8T  36% /data1
-> /dev/sdd              2.7T  1.1T  1.7T  39% /data2
-
-1.1T/408674 extents is ~3M per extent, not so good.
-
-How many files are on each fs?
-
-> LABEL=/data1        /data1     xfs
->     allocsize=1048576,logbufs=8,noatime,nodiratime 0 0
-> LABEL=/data2        /data2     xfs
->     allocsize=1048576,logbufs=8,noatime,nodiratime 0 0
-
-Everything but the first option is default, BTW.
-
-Is xfs_info output on the 2 filesystems the same?
-
-Otherwise Emmanuel's idea is a good one, maybe it's not
-as balanced as you think it is, or maybe they have aged
-differently and have different amounts of freespace
-(see the freesp command in xfs_db)
-
-> By the way, the os is RHEL 5.5 kernel 2.6.18-194.11.1.el5
-
-Was Red Hat support not helpful?
-
--Eric
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+U3RvcCBoYXJkY29kaW5nIHBhdGhzIHRvIGdldGZhdHRyLCBzZXRmYXR0ciBhbmQgYXR0ciBiaW5h
+cmllcy4KClNpZ25lZC1vZmYtYnk6IEFya2FkaXVzeiBNacWba2lld2ljeiA8YXJla21AbWF2ZW4u
+cGw+Ci0tLQogMDIwICAgICAgICAgICB8ICAgMTAgKysrKystLS0tLQogMDIxICAgICAgICAgICB8
+ICAgIDQgKystLQogMDYyICAgICAgICAgICB8ICAgIDYgKysrLS0tCiAxODYgICAgICAgICAgIHwg
+ICAgNCArKy0tCiAxODcgICAgICAgICAgIHwgICAgNCArKy0tCiAyMjcgICAgICAgICAgIHwgICAg
+MiArLQogY29tbW9uLmNvbmZpZyB8ICAgIDMgKysrCiA3IGZpbGVzIGNoYW5nZWQsIDE4IGluc2Vy
+dGlvbnMoKyksIDE1IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhLzAyMCBiLzAyMAppbmRleCAw
+MTE4ZTYxLi5mNWYyZGI4IDEwMDc1NQotLS0gYS8wMjAKKysrIGIvMDIwCkBAIC00OSw3ICs0OSw3
+IEBAIF9maWx0ZXIoKQogCiBfYXR0cigpCiB7Ci0gICAgYXR0ciAkKiAyPiR0bXAuZXJyID4kdG1w
+Lm91dAorICAgICRBVFRSX1BST0cgJCogMj4kdG1wLmVyciA+JHRtcC5vdXQKICAgICBleGl0PSQ/
+CiAgICAgX2ZpbHRlciAkdG1wLm91dAogICAgIF9maWx0ZXIgJHRtcC5lcnIgMT4mMgpAQCAtNTgs
+NyArNTgsNyBAQCBfYXR0cigpCiAKIF9nZXRmYXR0cigpCiB7Ci0gICAgZ2V0ZmF0dHIgJCogMj4k
+dG1wLmVyciA+JHRtcC5vdXQKKyAgICAkR0VURkFUVFJfUFJPRyAkKiAyPiR0bXAuZXJyID4kdG1w
+Lm91dAogICAgIGV4aXQ9JD8KICAgICBfZmlsdGVyICR0bXAub3V0CiAgICAgX2ZpbHRlciAkdG1w
+LmVyciAxPiYyCkBAIC04Miw4ICs4Miw4IEBAIF9hdHRyX2xpc3QoKQogX3N1cHBvcnRlZF9mcyB4
+ZnMgdWRmCiBfc3VwcG9ydGVkX29zIExpbnV4CiAKLVsgLXggL3Vzci9iaW4vYXR0ciBdIHx8IF9u
+b3RydW4gImF0dHIgaXMgbm90IGluc3RhbGxlZCIKLVsgLXggL3Vzci9iaW4vZ2V0ZmF0dHIgXSB8
+fCBfbm90cnVuICJnZXRmYXR0ciBpcyBub3QgaW5zdGFsbGVkIgorWyAteCAkQVRUUl9QUk9HIF0g
+fHwgX25vdHJ1biAiYXR0ciBpcyBub3QgaW5zdGFsbGVkIgorWyAteCAkR0VURkFUVFJfUFJPRyBd
+IHx8IF9ub3RydW4gImdldGZhdHRyIGlzIG5vdCBpbnN0YWxsZWQiCiAKIF9zZXR1cF90ZXN0ZGly
+CiAKQEAgLTE0NSw3ICsxNDUsNyBAQCBlY2hvICIqKiogcmVtb3ZlIGxvdHMgb2YgYXR0cmlidXRl
+cyIKIHY9MAogd2hpbGUgWyAkdiAtbHQgMTAwMCBdCiBkbwotICAgIGlmICEgYXR0ciAtciAiYXR0
+cmlidXRlXyR2IiAkdGVzdGZpbGUgPj4kc2VxLmZ1bGwKKyAgICBpZiAhICRBVFRSX1BST0cgLXIg
+ImF0dHJpYnV0ZV8kdiIgJHRlc3RmaWxlID4+JHNlcS5mdWxsCiAgICAgdGhlbgogICAgICAgICBl
+Y2hvICIhISEgZmFpbGVkIHRvIHJlbW92ZSBcImF0dHJpYnV0ZV8kdlwiIgogICAgICAgICBleGl0
+IDEKZGlmZiAtLWdpdCBhLzAyMSBiLzAyMQppbmRleCAxODI4NGViLi4yYzc2Y2MxIDEwMDc1NQot
+LS0gYS8wMjEKKysrIGIvMDIxCkBAIC03Niw4ICs3Niw4IEBAIF9nZXRmYXR0cigpCiBfc3VwcG9y
+dGVkX2ZzIHhmcwogX3N1cHBvcnRlZF9vcyBMaW51eAogCi1bIC14IC91c3IvYmluL2F0dHIgXSB8
+fCBfbm90cnVuICJhdHRyIGlzIG5vdCBpbnN0YWxsZWQiCi1bIC14IC91c3IvYmluL2dldGZhdHRy
+IF0gfHwgX25vdHJ1biAiZ2V0ZmF0dHIgaXMgbm90IGluc3RhbGxlZCIKK1sgLXggJEFUVFJfUFJP
+RyBdIHx8IF9ub3RydW4gImF0dHIgaXMgbm90IGluc3RhbGxlZCIKK1sgLXggJEdFVEZBVFRSX1BS
+T0cgXSB8fCBfbm90cnVuICJnZXRmYXR0ciBpcyBub3QgaW5zdGFsbGVkIgogCiBfcmVxdWlyZV9z
+Y3JhdGNoCiAKZGlmZiAtLWdpdCBhLzA2MiBiLzA2MgppbmRleCA3NmFkNTEzLi4yYmFlNmEzIDEw
+MDc1NQotLS0gYS8wNjIKKysrIGIvMDYyCkBAIC05MywxMiArOTMsMTIgQEAgX2xpbnV4X2F0dHJf
+Y2FsbHMoKQogCiBnZXRmYXR0cigpCiB7Ci0gICAgL3Vzci9iaW4vZ2V0ZmF0dHIgLS1hYnNvbHV0
+ZS1uYW1lcyAtZGggJEAgMj4mMSB8IF9maWx0ZXJfc2NyYXRjaAorICAgICRHRVRGQVRUUl9QUk9H
+IC0tYWJzb2x1dGUtbmFtZXMgLWRoICRAIDI+JjEgfCBfZmlsdGVyX3NjcmF0Y2gKIH0KIAogc2V0
+ZmF0dHIoKQogewotICAgIC91c3IvYmluL3NldGZhdHRyICRAIDI+JjEgfCBfZmlsdGVyX3NjcmF0
+Y2gKKyAgICAkU0VURkFUVFJfUFJPRyAkQCAyPiYxIHwgX2ZpbHRlcl9zY3JhdGNoCiB9CiAKIF9j
+cmVhdGVfdGVzdF9iZWQoKQpAQCAtMjE5LDcgKzIxOSw3IEBAIGVjaG87IGVjaG8KIF9iYWNrdXAo
+KQogewogCSMgTkI6IG5vIGZpbHRlcmluZyBvZiBzY3JhdGNoIGhlcmUuLi4gKG5lZWQgdG8gcmVz
+dG9yZSB0b28pCi0JL3Vzci9iaW4vZ2V0ZmF0dHIgLS1hYnNvbHV0ZS1uYW1lcyAtZGggLVIgLW0g
+Jy4nICRTQ1JBVENIX01OVCA+JDEKKwkkR0VURkFUVFJfUFJPRyAtLWFic29sdXRlLW5hbWVzIC1k
+aCAtUiAtbSAnLicgJFNDUkFUQ0hfTU5UID4kMQogCWVjaG8gQkFDS1VQICQxID4+JHNlcS5mdWxs
+CiAJY2F0ICQxID4+ICRzZXEuZnVsbAogCVsgISAtcyAkMSBdICYmIGVjaG8gIndhcm5pbmc6ICQx
+IChiYWNrdXAgZmlsZSkgaXMgZW1wdHkiCmRpZmYgLS1naXQgYS8xODYgYi8xODYKaW5kZXggNjQz
+ZjRiMS4uODBjNDA2ZCAxMDA3NTUKLS0tIGEvMTg2CisrKyBiLzE4NgpAQCAtNjQsNyArNjQsNyBA
+QCBfY3JlYXRlX2VhcygpCiAJc3RhcnRfbnVtPSQxCiAJZW5kX251bT0kMgogCWZvciBpIGluIGBz
+ZXEgJHN0YXJ0X251bSAkZW5kX251bWA7IGRvCi0JCXNldGZhdHRyIC1uIHVzZXIuJGkgLXYgMHhi
+YWJlICRmb3JrX2RpcgorCQkkU0VURkFUVFJfUFJPRyAtbiB1c2VyLiRpIC12IDB4YmFiZSAkZm9y
+a19kaXIKIAlkb25lCiB9CiAKQEAgLTczLDcgKzczLDcgQEAgX3Jtdl9lYXMoKQogCXN0YXJ0X251
+bT0kMQogCWVuZF9udW09JDIKIAlmb3IgaSBpbiBgc2VxICRzdGFydF9udW0gJGVuZF9udW1gOyBk
+bwotCQlzZXRmYXR0ciAteCB1c2VyLiRpICRmb3JrX2RpcgorCQkkU0VURkFUVFJfUFJPRyAteCB1
+c2VyLiRpICRmb3JrX2RpcgogCWRvbmUKIH0KIApkaWZmIC0tZ2l0IGEvMTg3IGIvMTg3CmluZGV4
+IDZhNDg5ZDAuLmFkMjgwNTEgMTAwNzU1Ci0tLSBhLzE4NworKysgYi8xODcKQEAgLTEwNiw4ICsx
+MDYsOCBAQCBlY2hvICIiCiBfc2NyYXRjaF9tb3VudCAtbyBub2F0dHIyCiBjZCAkU0NSQVRDSF9N
+TlQKIHRvdWNoIHRlc3RmaWxlCi1zZXRmYXR0ciAtbiB1c2VyLnRlc3QgLXYgMHhiYWJlIHRlc3Rm
+aWxlCi1nZXRmYXR0ciB0ZXN0ZmlsZQorJFNFVEZBVFRSX1BST0cgLW4gdXNlci50ZXN0IC12IDB4
+YmFiZSB0ZXN0ZmlsZQorJEdFVEZBVFRSX1BST0cgdGVzdGZpbGUKIGNkICRoZXJlCiAkVU1PVU5U
+X1BST0cgJFNDUkFUQ0hfTU5UCiAkWEZTX0RCX1BST0cgLWMgdmVyc2lvbiAkU0NSQVRDSF9ERVYg
+Mj4mMSB8IF9maWx0ZXJfdmVyc2lvbgpkaWZmIC0tZ2l0IGEvMjI3IGIvMjI3CmluZGV4IGFjNjE4
+OWMuLmNiN2ZhNzAgMTAwNjQ0Ci0tLSBhLzIyNworKysgYi8yMjcKQEAgLTg3LDcgKzg3LDcgQEAg
+ZnJhZ21lbnRfZnJlZXNwYWNlKCkKIGNyZWF0ZV9hdHRycygpCiB7CiAJZm9yIGZvbyBpbiBgc2Vx
+IDAgMSAkMWA7IGRvCi0JCXNldGZhdHRyIC1uIHVzZXIuJGZvbyAtdiAweGJhYmUgJDIKKwkJJFNF
+VEZBVFRSX1BST0cgLW4gdXNlci4kZm9vIC12IDB4YmFiZSAkMgogCWRvbmUKIH0KIApkaWZmIC0t
+Z2l0IGEvY29tbW9uLmNvbmZpZyBiL2NvbW1vbi5jb25maWcKaW5kZXggMDRiZGNmNi4uMjU2ZjE0
+NCAxMDA2NDQKLS0tIGEvY29tbW9uLmNvbmZpZworKysgYi9jb21tb24uY29uZmlnCkBAIC0xNTAs
+NiArMTUwLDkgQEAgZXhwb3J0IFhGU0RVTVBfUFJPRz0iYHNldF9wcm9nX3BhdGggeGZzZHVtcGAi
+CiBleHBvcnQgWEZTUkVTVE9SRV9QUk9HPSJgc2V0X3Byb2dfcGF0aCB4ZnNyZXN0b3JlYCIKIGV4
+cG9ydCBYRlNJTlZVVElMX1BST0c9ImBzZXRfcHJvZ19wYXRoIHhmc2ludnV0aWxgIgogZXhwb3J0
+IERCRU5DSF9QUk9HPSJgc2V0X3Byb2dfcGF0aCBkYmVuY2hgIgorZXhwb3J0IEdFVEZBVFRSX1BS
+T0c9ImBzZXRfcHJvZ19wYXRoIGdldGZhdHRyYCIKK2V4cG9ydCBTRVRGQVRUUl9QUk9HPSJgc2V0
+X3Byb2dfcGF0aCBzZXRmYXR0cmAiCitleHBvcnQgQVRUUl9QUk9HPSJgc2V0X3Byb2dfcGF0aCBh
+dHRyYCIKIAogIyBHZW5lcmF0ZSBhIGNvbXBhcmFibGUgeGZzcHJvZ3MgdmVyc2lvbiBudW1iZXIg
+aW4gdGhlIGZvcm0gb2YKICMgbWFqb3IgKiAxMDAwMCArIG1pbm9yICogMTAwICsgcmVsZWFzZQot
+LSAKMS43LjIuMgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21h
+aWxtYW4vbGlzdGluZm8veGZzCg==
