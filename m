@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o891p5iv076755 for <xfs@oss.sgi.com>; Wed, 8 Sep 2010 20:51:06 -0500
+	o8930DWK079366 for <xfs@oss.sgi.com>; Wed, 8 Sep 2010 22:00:14 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8ED1114EEACB
-	for <xfs@oss.sgi.com>; Wed,  8 Sep 2010 19:03:06 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E78DB56EB0
+	for <xfs@oss.sgi.com>; Wed,  8 Sep 2010 20:00:58 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id uvnRbs44puKosaIR for
-	<xfs@oss.sgi.com>; Wed, 08 Sep 2010 19:03:06 -0700 (PDT)
-Date: Wed, 8 Sep 2010 21:51:50 -0400
+	by cuda.sgi.com with ESMTP id GcsqA6vCy84HfLmP for
+	<xfs@oss.sgi.com>; Wed, 08 Sep 2010 20:00:58 -0700 (PDT)
+Date: Wed, 8 Sep 2010 23:00:57 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/4] xfs: convert buffer cache hash to rbtree
-Message-ID: <20100909015150.GB11362@infradead.org>
-References: <1283958778-28610-1-git-send-email-david@fromorbit.com>
-	<1283958778-28610-5-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] xfs: single thread inode cache shrinking.
+Message-ID: <20100909030057.GA32472@infradead.org>
+References: <1283959243-29176-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1283958778-28610-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1283959243-29176-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,43 +31,36 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Sep 09, 2010 at 01:12:58AM +1000, Dave Chinner wrote:
-> I have selected rbtrees for indexing becuse they can have O(log n)
-> search scalability, and insert and remove cost is not excessive,
-> even on large trees. Hence we should be able to cache large numbers
-> of buffers without incurring the excessive cache miss search
-> penalties that the hash is imposing on us.
+On Thu, Sep 09, 2010 at 01:20:43AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Having multiple CPUs trying to do the same cache shrinking work can
+> be actively harmful to perforamnce when the shrinkers land in the
+> same AGs.  They then lockstep on perag locks, causing contention and
+> slowing each other down. Reclaim walking is sufficiently efficient
+> that we do no need parallelism to make significant progress, so stop
+> parallel access at the door.
+> 
+> Instead, keep track of the number of objects the shrinkers want
+> cleaned and make sure the single running shrinker does not stop
+> until it has hit the threshold that the other shrinker calls have
+> built up.
+> 
+> This increases the cold-cache unlink rate of a 8-way parallel unlink
+> workload from about 15,000 unlinks/s to 60-70,000 unlinks/s for the
+> same CPU usage (~700%), resulting in the runtime for a 200M inode
+> unlink workload dropping from 4h50m to just under 1 hour.
 
-Once thing that worries me about the rbtrees is that the Linux
-implementation doesn't allow for lockless readers.  But in the end the
-buffer cache implementation is very well encapsulated, so if the need
-arises we could easily change the underlying data structure.
+The code looks good, but long term I think this needs to be fixed
+in the caller, not in every shrinker instance.
 
-> +	/*
-> +	 * The buftarg cache should never be used by external devices.
-> +	 * Ensure we catch any users with extreme prejudice.
-> +	 */
-> +	btp->bt_mp = external ? NULL : mp;
 
-I'd much prefer to always initialize this field.  We currently have a
-b_mount field struct xfs_buf which is used only in a few places
-and initialized rather, ehmm, lazily.  If we could replace it with
-->b_target->bt_mount we can shrink struct buf and make the information
-available much more consistently.  Just adding the mount argument
-to the buftarg and removing it from the buf would be a nice little
-preparatory patch.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-And yes, I think bt_mount would be much nicer name than bt_mp.
+> +		nr_to_scan += atomic64_read(&mp->m_ino_shrink_nr);
+> +		atomic64_set(&mp->m_ino_shrink_nr, 0);
 
-> @@ -210,8 +210,6 @@ xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t agno)
->  	pag = radix_tree_lookup(&mp->m_perag_tree, agno);
->  	if (pag) {
->  		ASSERT(atomic_read(&pag->pag_ref) >= 0);
-> -		/* catch leaks in the positive direction during testing */
-> -		ASSERT(atomic_read(&pag->pag_ref) < 1000);
-
-Di you manage to hit this during testing?  Either way it should probably
-be a separate patch.
+To be totally race free this should use atomic64_cmpxchg.
 
 _______________________________________________
 xfs mailing list
