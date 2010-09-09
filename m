@@ -1,18 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o89EvKci105081 for <xfs@oss.sgi.com>; Thu, 9 Sep 2010 09:57:20 -0500
-Received: from smtp-relay.maven.pl (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EC2DE17C5959
-	for <xfs@oss.sgi.com>; Thu,  9 Sep 2010 07:58:04 -0700 (PDT)
-Received: from smtp-relay.maven.pl (smtp-relay.maven.pl [193.239.45.138]) by
-	cuda.sgi.com with ESMTP id uKzapeCQNpubbdl9 for
-	<xfs@oss.sgi.com>; Thu, 09 Sep 2010 07:58:04 -0700 (PDT)
-From: =?UTF-8?q?Arkadiusz=20Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Subject: [PATCH] [xfstests]: Don't hardcode getfattr/setfattr/attr paths.
-Date: Thu,  9 Sep 2010 16:57:58 +0200
-Message-Id: <1284044278-17430-1-git-send-email-arekm@maven.pl>
+	o89GdWH0108863 for <xfs@oss.sgi.com>; Thu, 9 Sep 2010 11:39:33 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2F63C1D85642
+	for <xfs@oss.sgi.com>; Thu,  9 Sep 2010 09:40:15 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id 5slNPC58XmHa6MrE for
+	<xfs@oss.sgi.com>; Thu, 09 Sep 2010 09:40:15 -0700 (PDT)
+Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv14.zmi.at (Postfix) with ESMTPSA id 61117606
+	for <xfs@oss.sgi.com>; Thu,  9 Sep 2010 18:40:14 +0200 (CEST)
+Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id 12AE5401C2E
+	for <xfs@oss.sgi.com>; Thu,  9 Sep 2010 18:40:14 +0200 (CEST)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Workqueues in 2.6.36
+Date: Thu, 9 Sep 2010 18:40:13 +0200
 MIME-Version: 1.0
+Message-Id: <201009091840.13478@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,87 +31,66 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/mixed; boundary="===============0409995086028576244=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-U3RvcCBoYXJkY29kaW5nIHBhdGhzIHRvIGdldGZhdHRyLCBzZXRmYXR0ciBhbmQgYXR0ciBiaW5h
-cmllcy4KClNpZ25lZC1vZmYtYnk6IEFya2FkaXVzeiBNacWba2lld2ljeiA8YXJla21AbWF2ZW4u
-cGw+Ci0tLQogMDIwICAgICAgICAgICB8ICAgMTAgKysrKystLS0tLQogMDIxICAgICAgICAgICB8
-ICAgIDQgKystLQogMDYyICAgICAgICAgICB8ICAgIDYgKysrLS0tCiAxODYgICAgICAgICAgIHwg
-ICAgNCArKy0tCiAxODcgICAgICAgICAgIHwgICAgNCArKy0tCiAyMjcgICAgICAgICAgIHwgICAg
-MiArLQogY29tbW9uLmNvbmZpZyB8ICAgIDMgKysrCiA3IGZpbGVzIGNoYW5nZWQsIDE4IGluc2Vy
-dGlvbnMoKyksIDE1IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhLzAyMCBiLzAyMAppbmRleCAw
-MTE4ZTYxLi5mNWYyZGI4IDEwMDc1NQotLS0gYS8wMjAKKysrIGIvMDIwCkBAIC00OSw3ICs0OSw3
-IEBAIF9maWx0ZXIoKQogCiBfYXR0cigpCiB7Ci0gICAgYXR0ciAkKiAyPiR0bXAuZXJyID4kdG1w
-Lm91dAorICAgICRBVFRSX1BST0cgJCogMj4kdG1wLmVyciA+JHRtcC5vdXQKICAgICBleGl0PSQ/
-CiAgICAgX2ZpbHRlciAkdG1wLm91dAogICAgIF9maWx0ZXIgJHRtcC5lcnIgMT4mMgpAQCAtNTgs
-NyArNTgsNyBAQCBfYXR0cigpCiAKIF9nZXRmYXR0cigpCiB7Ci0gICAgZ2V0ZmF0dHIgJCogMj4k
-dG1wLmVyciA+JHRtcC5vdXQKKyAgICAkR0VURkFUVFJfUFJPRyAkKiAyPiR0bXAuZXJyID4kdG1w
-Lm91dAogICAgIGV4aXQ9JD8KICAgICBfZmlsdGVyICR0bXAub3V0CiAgICAgX2ZpbHRlciAkdG1w
-LmVyciAxPiYyCkBAIC04Miw4ICs4Miw4IEBAIF9hdHRyX2xpc3QoKQogX3N1cHBvcnRlZF9mcyB4
-ZnMgdWRmCiBfc3VwcG9ydGVkX29zIExpbnV4CiAKLVsgLXggL3Vzci9iaW4vYXR0ciBdIHx8IF9u
-b3RydW4gImF0dHIgaXMgbm90IGluc3RhbGxlZCIKLVsgLXggL3Vzci9iaW4vZ2V0ZmF0dHIgXSB8
-fCBfbm90cnVuICJnZXRmYXR0ciBpcyBub3QgaW5zdGFsbGVkIgorWyAteCAkQVRUUl9QUk9HIF0g
-fHwgX25vdHJ1biAiYXR0ciBpcyBub3QgaW5zdGFsbGVkIgorWyAteCAkR0VURkFUVFJfUFJPRyBd
-IHx8IF9ub3RydW4gImdldGZhdHRyIGlzIG5vdCBpbnN0YWxsZWQiCiAKIF9zZXR1cF90ZXN0ZGly
-CiAKQEAgLTE0NSw3ICsxNDUsNyBAQCBlY2hvICIqKiogcmVtb3ZlIGxvdHMgb2YgYXR0cmlidXRl
-cyIKIHY9MAogd2hpbGUgWyAkdiAtbHQgMTAwMCBdCiBkbwotICAgIGlmICEgYXR0ciAtciAiYXR0
-cmlidXRlXyR2IiAkdGVzdGZpbGUgPj4kc2VxLmZ1bGwKKyAgICBpZiAhICRBVFRSX1BST0cgLXIg
-ImF0dHJpYnV0ZV8kdiIgJHRlc3RmaWxlID4+JHNlcS5mdWxsCiAgICAgdGhlbgogICAgICAgICBl
-Y2hvICIhISEgZmFpbGVkIHRvIHJlbW92ZSBcImF0dHJpYnV0ZV8kdlwiIgogICAgICAgICBleGl0
-IDEKZGlmZiAtLWdpdCBhLzAyMSBiLzAyMQppbmRleCAxODI4NGViLi4yYzc2Y2MxIDEwMDc1NQot
-LS0gYS8wMjEKKysrIGIvMDIxCkBAIC03Niw4ICs3Niw4IEBAIF9nZXRmYXR0cigpCiBfc3VwcG9y
-dGVkX2ZzIHhmcwogX3N1cHBvcnRlZF9vcyBMaW51eAogCi1bIC14IC91c3IvYmluL2F0dHIgXSB8
-fCBfbm90cnVuICJhdHRyIGlzIG5vdCBpbnN0YWxsZWQiCi1bIC14IC91c3IvYmluL2dldGZhdHRy
-IF0gfHwgX25vdHJ1biAiZ2V0ZmF0dHIgaXMgbm90IGluc3RhbGxlZCIKK1sgLXggJEFUVFJfUFJP
-RyBdIHx8IF9ub3RydW4gImF0dHIgaXMgbm90IGluc3RhbGxlZCIKK1sgLXggJEdFVEZBVFRSX1BS
-T0cgXSB8fCBfbm90cnVuICJnZXRmYXR0ciBpcyBub3QgaW5zdGFsbGVkIgogCiBfcmVxdWlyZV9z
-Y3JhdGNoCiAKZGlmZiAtLWdpdCBhLzA2MiBiLzA2MgppbmRleCA3NmFkNTEzLi4yYmFlNmEzIDEw
-MDc1NQotLS0gYS8wNjIKKysrIGIvMDYyCkBAIC05MywxMiArOTMsMTIgQEAgX2xpbnV4X2F0dHJf
-Y2FsbHMoKQogCiBnZXRmYXR0cigpCiB7Ci0gICAgL3Vzci9iaW4vZ2V0ZmF0dHIgLS1hYnNvbHV0
-ZS1uYW1lcyAtZGggJEAgMj4mMSB8IF9maWx0ZXJfc2NyYXRjaAorICAgICRHRVRGQVRUUl9QUk9H
-IC0tYWJzb2x1dGUtbmFtZXMgLWRoICRAIDI+JjEgfCBfZmlsdGVyX3NjcmF0Y2gKIH0KIAogc2V0
-ZmF0dHIoKQogewotICAgIC91c3IvYmluL3NldGZhdHRyICRAIDI+JjEgfCBfZmlsdGVyX3NjcmF0
-Y2gKKyAgICAkU0VURkFUVFJfUFJPRyAkQCAyPiYxIHwgX2ZpbHRlcl9zY3JhdGNoCiB9CiAKIF9j
-cmVhdGVfdGVzdF9iZWQoKQpAQCAtMjE5LDcgKzIxOSw3IEBAIGVjaG87IGVjaG8KIF9iYWNrdXAo
-KQogewogCSMgTkI6IG5vIGZpbHRlcmluZyBvZiBzY3JhdGNoIGhlcmUuLi4gKG5lZWQgdG8gcmVz
-dG9yZSB0b28pCi0JL3Vzci9iaW4vZ2V0ZmF0dHIgLS1hYnNvbHV0ZS1uYW1lcyAtZGggLVIgLW0g
-Jy4nICRTQ1JBVENIX01OVCA+JDEKKwkkR0VURkFUVFJfUFJPRyAtLWFic29sdXRlLW5hbWVzIC1k
-aCAtUiAtbSAnLicgJFNDUkFUQ0hfTU5UID4kMQogCWVjaG8gQkFDS1VQICQxID4+JHNlcS5mdWxs
-CiAJY2F0ICQxID4+ICRzZXEuZnVsbAogCVsgISAtcyAkMSBdICYmIGVjaG8gIndhcm5pbmc6ICQx
-IChiYWNrdXAgZmlsZSkgaXMgZW1wdHkiCmRpZmYgLS1naXQgYS8xODYgYi8xODYKaW5kZXggNjQz
-ZjRiMS4uODBjNDA2ZCAxMDA3NTUKLS0tIGEvMTg2CisrKyBiLzE4NgpAQCAtNjQsNyArNjQsNyBA
-QCBfY3JlYXRlX2VhcygpCiAJc3RhcnRfbnVtPSQxCiAJZW5kX251bT0kMgogCWZvciBpIGluIGBz
-ZXEgJHN0YXJ0X251bSAkZW5kX251bWA7IGRvCi0JCXNldGZhdHRyIC1uIHVzZXIuJGkgLXYgMHhi
-YWJlICRmb3JrX2RpcgorCQkkU0VURkFUVFJfUFJPRyAtbiB1c2VyLiRpIC12IDB4YmFiZSAkZm9y
-a19kaXIKIAlkb25lCiB9CiAKQEAgLTczLDcgKzczLDcgQEAgX3Jtdl9lYXMoKQogCXN0YXJ0X251
-bT0kMQogCWVuZF9udW09JDIKIAlmb3IgaSBpbiBgc2VxICRzdGFydF9udW0gJGVuZF9udW1gOyBk
-bwotCQlzZXRmYXR0ciAteCB1c2VyLiRpICRmb3JrX2RpcgorCQkkU0VURkFUVFJfUFJPRyAteCB1
-c2VyLiRpICRmb3JrX2RpcgogCWRvbmUKIH0KIApkaWZmIC0tZ2l0IGEvMTg3IGIvMTg3CmluZGV4
-IDZhNDg5ZDAuLmFkMjgwNTEgMTAwNzU1Ci0tLSBhLzE4NworKysgYi8xODcKQEAgLTEwNiw4ICsx
-MDYsOCBAQCBlY2hvICIiCiBfc2NyYXRjaF9tb3VudCAtbyBub2F0dHIyCiBjZCAkU0NSQVRDSF9N
-TlQKIHRvdWNoIHRlc3RmaWxlCi1zZXRmYXR0ciAtbiB1c2VyLnRlc3QgLXYgMHhiYWJlIHRlc3Rm
-aWxlCi1nZXRmYXR0ciB0ZXN0ZmlsZQorJFNFVEZBVFRSX1BST0cgLW4gdXNlci50ZXN0IC12IDB4
-YmFiZSB0ZXN0ZmlsZQorJEdFVEZBVFRSX1BST0cgdGVzdGZpbGUKIGNkICRoZXJlCiAkVU1PVU5U
-X1BST0cgJFNDUkFUQ0hfTU5UCiAkWEZTX0RCX1BST0cgLWMgdmVyc2lvbiAkU0NSQVRDSF9ERVYg
-Mj4mMSB8IF9maWx0ZXJfdmVyc2lvbgpkaWZmIC0tZ2l0IGEvMjI3IGIvMjI3CmluZGV4IGFjNjE4
-OWMuLmNiN2ZhNzAgMTAwNjQ0Ci0tLSBhLzIyNworKysgYi8yMjcKQEAgLTg3LDcgKzg3LDcgQEAg
-ZnJhZ21lbnRfZnJlZXNwYWNlKCkKIGNyZWF0ZV9hdHRycygpCiB7CiAJZm9yIGZvbyBpbiBgc2Vx
-IDAgMSAkMWA7IGRvCi0JCXNldGZhdHRyIC1uIHVzZXIuJGZvbyAtdiAweGJhYmUgJDIKKwkJJFNF
-VEZBVFRSX1BST0cgLW4gdXNlci4kZm9vIC12IDB4YmFiZSAkMgogCWRvbmUKIH0KIApkaWZmIC0t
-Z2l0IGEvY29tbW9uLmNvbmZpZyBiL2NvbW1vbi5jb25maWcKaW5kZXggMDRiZGNmNi4uMjU2ZjE0
-NCAxMDA2NDQKLS0tIGEvY29tbW9uLmNvbmZpZworKysgYi9jb21tb24uY29uZmlnCkBAIC0xNTAs
-NiArMTUwLDkgQEAgZXhwb3J0IFhGU0RVTVBfUFJPRz0iYHNldF9wcm9nX3BhdGggeGZzZHVtcGAi
-CiBleHBvcnQgWEZTUkVTVE9SRV9QUk9HPSJgc2V0X3Byb2dfcGF0aCB4ZnNyZXN0b3JlYCIKIGV4
-cG9ydCBYRlNJTlZVVElMX1BST0c9ImBzZXRfcHJvZ19wYXRoIHhmc2ludnV0aWxgIgogZXhwb3J0
-IERCRU5DSF9QUk9HPSJgc2V0X3Byb2dfcGF0aCBkYmVuY2hgIgorZXhwb3J0IEdFVEZBVFRSX1BS
-T0c9ImBzZXRfcHJvZ19wYXRoIGdldGZhdHRyYCIKK2V4cG9ydCBTRVRGQVRUUl9QUk9HPSJgc2V0
-X3Byb2dfcGF0aCBzZXRmYXR0cmAiCitleHBvcnQgQVRUUl9QUk9HPSJgc2V0X3Byb2dfcGF0aCBh
-dHRyYCIKIAogIyBHZW5lcmF0ZSBhIGNvbXBhcmFibGUgeGZzcHJvZ3MgdmVyc2lvbiBudW1iZXIg
-aW4gdGhlIGZvcm0gb2YKICMgbWFqb3IgKiAxMDAwMCArIG1pbm9yICogMTAwICsgcmVsZWFzZQot
-LSAKMS43LjIuMgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21h
-aWxtYW4vbGlzdGluZm8veGZzCg==
+--===============0409995086028576244==
+Content-Type: multipart/signed;
+  boundary="nextPart1360983.4UFeRq1Udm";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
+
+--nextPart1360983.4UFeRq1Udm
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+http://lwn.net/SubscriberLink/403891/4669bb13fa3f55cb/
+
+There's an article in lwn.net about the new workqueues.
+
+=2D-=20
+mit freundlichen Gr=C3=BCssen,
+Michael Monnerie, Ing. BSc
+
+it-management Internet Services
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: 0660 / 415 65 31
+
+****** Aktuelles Radiointerview! ******
+http://www.it-podcast.at/aktuelle-sendung.html
+
+// Wir haben im Moment zwei H=C3=A4user zu verkaufen:
+// http://zmi.at/langegg/
+// http://zmi.at/haus2009/
+
+--nextPart1360983.4UFeRq1Udm
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.12 (GNU/Linux)
+
+iEYEABECAAYFAkyJDe0ACgkQzhSR9xwSCbTRqACguBmnrjyBIPAMfGXW6oxwFq+1
+IgcAoJFnCG4FjKWhiZpfqne5EpZD1Oim
+=fnUf
+-----END PGP SIGNATURE-----
+
+--nextPart1360983.4UFeRq1Udm--
+
+
+--===============0409995086028576244==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============0409995086028576244==--
