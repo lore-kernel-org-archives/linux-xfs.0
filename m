@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o891LMil075498
-	for <linux-xfs@oss.sgi.com>; Wed, 8 Sep 2010 20:21:23 -0500
-Received: from out1.ip07ir2.opaltelecom.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 084AB15E2184
-	for <linux-xfs@oss.sgi.com>; Wed,  8 Sep 2010 18:33:20 -0700 (PDT)
-Received: from out1.ip07ir2.opaltelecom.net (out1.ip07ir2.opaltelecom.net
-	[62.24.128.243]) by cuda.sgi.com with ESMTP id FfQExc6Wp56ZQkaG
-	for <linux-xfs@oss.sgi.com>; Wed, 08 Sep 2010 18:33:20 -0700 (PDT)
-Message-ID: <0118c54b$40430$3f5b0986622801@regina>
-From: "Sam L. Carl" <mail@traffictractor.com>
-Subject: Sorry! I made an error in my last email!
-Date: Thu, 9 Sep 2010 02:22:04 +0100
+	o891WSfu075936 for <xfs@oss.sgi.com>; Wed, 8 Sep 2010 20:32:29 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9870F14EE9ED
+	for <xfs@oss.sgi.com>; Wed,  8 Sep 2010 18:44:28 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id zJrk7qY103DqdMqq for
+	<xfs@oss.sgi.com>; Wed, 08 Sep 2010 18:44:28 -0700 (PDT)
+Date: Wed, 8 Sep 2010 21:33:13 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/4] xfs: kill XBF_FS_MANAGED buffers
+Message-ID: <20100909013312.GB29825@infradead.org>
+References: <1283958778-28610-1-git-send-email-david@fromorbit.com>
+	<1283958778-28610-2-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Reply-To: "Sam L. Carl" <mail@traffictractor.com>
+Content-Disposition: inline
+In-Reply-To: <1283958778-28610-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,51 +29,78 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Hey,
+Looks good, but a few comments below:
 
-Sorry I made an error with the links in my last email. Here is how it should of been:
+> +	bp = xfs_buf_get_noaddr(sector_size, mp->m_ddev_targp);
+> +
+>  	if (!bp || XFS_BUF_ISERROR(bp)) {
 
-Over the past few months I have taken a lot of my time to research and ask as many people as possible what the top 5 money making methods are. 
+xfs_buf_get_noaddr will never return a buffer with an error set.
 
-After weeks and weeks of different answers and even trying over 50 popular products and systems I have come to my conclusion and made the top 5 money making products online list. 
+> -	ASSERT(XFS_BUF_VALUSEMA(bp) <= 0);
+> +
+> +	/* set up the buffer for a read IO */
+> +	xfs_buf_lock(bp);
+> +	XFS_BUF_SET_ADDR(bp, XFS_SB_DADDR);
+> +        XFS_BUF_READ(bp);
+> +        XFS_BUF_BUSY(bp);
 
-So here it goes: 
+Various indentation problems.
 
-1) The Mobile Monopoly - http://tiny.cc/ndonh
+> +	/* grab a reference for caching the buffer */
+> +        XFS_BUF_HOLD(bp);
+>  	mp->m_sb_bp = bp;
+> +
+>  	xfs_buf_relse(bp);
 
-2) Auto Traffic Avalanche - http://tiny.cc/3wsuq
+Grabbing the reference just to drop it three lines later is rather
+pointless, just remove both.
 
-3) Auto Blog System - http://tiny.cc/ytf7r
+>  	ASSERT(XFS_BUF_VALUSEMA(bp) > 0);
 
-4) Zero Cost Commissions - http://tiny.cc/ermdw
+Given that we took the lock a few lines above this one also feels rather
+poinless.
 
-5) CPA Instruments - http://tiny.cc/ruh9b
+> +fail:
+> +	if (bp)
+>  		xfs_buf_relse(bp);
+> -	}
+>  	return error;
 
+I'd rather see this split into a fail_buf_relese label that puts the
+buffer, and a fail label that just returns the error.
 
-So there you have it. The reason I did this is because I am sick of "gurus" ripping people off, most of them are scammers! Be careful when buying online, only buy from trusted sources. I have checked the 5 sources above and so have thousands of other people just like you and me, and they do work. 
+>  	 * when we call xfs_buf_relse().
+>  	 */
+>  	bp = xfs_getsb(mp, 0);
+> -	XFS_BUF_UNMANAGE(bp);
+> -	xfs_buf_relse(bp);
+>  	mp->m_sb_bp = NULL;
+> +
+> +	/*
+> +	 * need to release the buffer twice to free it because we hold an extra
+> +	 * reference count on it.
+> +	 */
+> +	xfs_buf_relse(bp);
+> +	xfs_buf_relse(bp);
 
-The problem with the internet is you don't know who to trust. The joke is you can check up reviews on some products and people would give it mixed reviews, some will be saying " amazing products, worked for me" others " a scam don't buy it" so sometimes you don't know who is telling the truth right? 
+I'd rather rewrite xfs_freesb to not use xfs_getsb and thus avoid taking
+the superflous reference:
 
-Well I let you in to a little secret here, most "gurus" will write reviews about their competitors saying how rubbish they are. They do this to wipe of competition. Therefore I decided I will take action and maybe get a some kind of Internet peace award for this :p so I tested and tested numerous products and came up with this list. 
+void
+xfs_freesb(
+	struct xfs_mount	*mp);
 
-So enjoy, it's worth checking these 5 products out, they do work especially the first two, the other three still work but are a bit over hyped. 
+	struct xfs_buf		*bp = mp->m_sb_bp;
 
-
-1) The Mobile Monopoly - http://tiny.cc/ndonh
-
-2) Auto Traffic Avalanche - http://tiny.cc/3wsuq
-
-3) Auto Blog System - http://tiny.cc/ytf7r
-
-4) Zero Cost Commissions - http://tiny.cc/ermdw
-
-5) CPA Instruments - http://tiny.cc/ruh9b
-
-
-All the best,
-Sam L. Carl
+	mp->m_sb_bp = NULL;
+	if (xfs_buf_cond_lock(bp)
+		BUG();
+	xfs_buf_relse(bp);
+}
 
 _______________________________________________
 xfs mailing list
