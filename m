@@ -1,15 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8AKKxFt163519 for <xfs@oss.sgi.com>; Fri, 10 Sep 2010 15:20:59 -0500
-Subject: Re: [PATCH] xfs: remove the ->kill_root btree operation
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20100907233407.GA17728@infradead.org>
-References: <20100907233407.GA17728@infradead.org>
-Date: Fri, 10 Sep 2010 15:20:47 -0500
-Message-ID: <1284150047.2468.16.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	o8ALfJjG166610 for <xfs@oss.sgi.com>; Fri, 10 Sep 2010 16:41:19 -0500
+Received: from smtp.sauce.co.nz (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 335056416B
+	for <xfs@oss.sgi.com>; Fri, 10 Sep 2010 14:42:04 -0700 (PDT)
+Received: from smtp.sauce.co.nz (smtp.sauce.co.nz [210.48.49.72]) by
+	cuda.sgi.com with ESMTP id 4YYFq76G7mgLQerj for
+	<xfs@oss.sgi.com>; Fri, 10 Sep 2010 14:42:04 -0700 (PDT)
+Message-ID: <4C8AA62A.9020704@sauce.co.nz>
+Date: Sat, 11 Sep 2010 09:42:02 +1200
+From: Richard Scobie <richard@sauce.co.nz>
+MIME-Version: 1.0
+Subject: Re: XFS over LVM over md RAID
+References: <4C89668E.6010800@sauce.co.nz> <20100910013026.GA24409@dastard>
+	<4C899816.6030506@sauce.co.nz> <4C8A3F8F.4000704@sandeen.net>
+In-Reply-To: <4C8A3F8F.4000704@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,48 +24,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-On Tue, 2010-09-07 at 19:34 -0400, Christoph Hellwig wrote:
-> The implementation os ->kill_root only differ by either simply zeroing
-> out the now unused buffer in the btree cursor in the inode allocation
-> btree or using xfs_btree_setbuf in the allocation btree.
-> 
-> Initially both of them used xfs_btree_setbuf, but the use in the ialloc
-> btree was removed early on because it interacted badly with xfs_trans_binval.
-> 
-> In addition to zeroing out the buffer in the cursor xfs_btree_setbuf updates
-> the bc_ra array in the btree cursor, and calls xfs_trans_brelse on the
-> buffer previous occupying the slot.
-> 
-> The bc_ra update should be done for the alloc btree updated too, although
-> the lack of it does not cause serious problems.  The xfs_trans_brelse
-> call on the other hand is effectively a no-op in the end - it keeps
-> decrementing the bli_recur refcount until it hits zero, and then just
-> skips out because the buffer will always be dirty at this point.  So
-> removing it for the allocation btree is just fine.
-> 
-> So unify the code and move it to xfs_btree.c.  While we're at it also
-> replace the call to xfs_btree_setbuf with a NULL bp argument in
-> xfs_btree_del_cursor with a direct call to xfs_trans_brelse given
-> that the cursor is beeing freed just after this and the state updates
-> are superflous.  After this xfs_btree_setbuf is only used with a non-NULL
-> bp argument and can thus be simplified.
+Eric Sandeen wrote:
 
-Looks good.
+> yup F11 doesn't have all the nice blkid topology bits; F11 still has
+> libblkid in e2fsprogs, from before it was liberated to util-linux-ng.
+>
+> (I wonder if we shouldn't just convert xfsprogs over to use the ioctls...)
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+Thanks both for your help. For various reasons, I'll just rely on using 
+the non-topology aware version.
 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-. . .
+In the future this lv will be grown in multiples of  256K chunk, 16 
+drive RAID6 arrays, so am I correct in thinking that the sunit/swidth 
+parameter can stay the same as it is expanded?
 
+I am thinking that XFS allocates ag's across all the space and that it 
+will only be writing to any one array at a time, or would there be more 
+configured if mkfs.xfs were aware that it was being created on say, 2 x 
+16 RAID6 arrays?
 
+This is based on backing up the first array prior to expansion, adding 
+the second and mkfs.xfs, as I imagine just expanding the fs over the 
+second would result in non optimal performance.
+
+Regards,
+
+Richard
 
 _______________________________________________
 xfs mailing list
