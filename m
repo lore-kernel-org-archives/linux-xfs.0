@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8A3SXlw128882 for <xfs@oss.sgi.com>; Thu, 9 Sep 2010 22:28:34 -0500
+	o8A3EAmt128485 for <xfs@oss.sgi.com>; Thu, 9 Sep 2010 22:14:10 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 863B317C9579
-	for <xfs@oss.sgi.com>; Thu,  9 Sep 2010 20:29:18 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	E6eTJ3aymwcPsKtj for <xfs@oss.sgi.com>;
-	Thu, 09 Sep 2010 20:29:18 -0700 (PDT)
-Date: Fri, 10 Sep 2010 13:29:15 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F014F1D85001
+	for <xfs@oss.sgi.com>; Thu,  9 Sep 2010 20:14:54 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	RZwJQXYjDRIHCUUB for <xfs@oss.sgi.com>;
+	Thu, 09 Sep 2010 20:14:54 -0700 (PDT)
+Date: Fri, 10 Sep 2010 13:14:52 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: single thread inode cache shrinking.
-Message-ID: <20100910032915.GE24409@dastard>
-References: <1283959243-29176-1-git-send-email-david@fromorbit.com>
-	<20100909030057.GA32472@infradead.org>
+Subject: Re: [PATCH 2/4] xfs: use unhashed buffers for size checks
+Message-ID: <20100910031452.GC24409@dastard>
+References: <1283958778-28610-1-git-send-email-david@fromorbit.com>
+	<1283958778-28610-3-git-send-email-david@fromorbit.com>
+	<20100909013806.GC29825@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100909030057.GA32472@infradead.org>
+In-Reply-To: <20100909013806.GC29825@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,40 +34,55 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Wed, Sep 08, 2010 at 11:00:57PM -0400, Christoph Hellwig wrote:
-> On Thu, Sep 09, 2010 at 01:20:43AM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Having multiple CPUs trying to do the same cache shrinking work can
-> > be actively harmful to perforamnce when the shrinkers land in the
-> > same AGs.  They then lockstep on perag locks, causing contention and
-> > slowing each other down. Reclaim walking is sufficiently efficient
-> > that we do no need parallelism to make significant progress, so stop
-> > parallel access at the door.
-> > 
-> > Instead, keep track of the number of objects the shrinkers want
-> > cleaned and make sure the single running shrinker does not stop
-> > until it has hit the threshold that the other shrinker calls have
-> > built up.
-> > 
-> > This increases the cold-cache unlink rate of a 8-way parallel unlink
-> > workload from about 15,000 unlinks/s to 60-70,000 unlinks/s for the
-> > same CPU usage (~700%), resulting in the runtime for a 200M inode
-> > unlink workload dropping from 4h50m to just under 1 hour.
+On Wed, Sep 08, 2010 at 09:38:07PM -0400, Christoph Hellwig wrote:
+> > +struct xfs_buf *
+> > +xfs_buf_read_uncached(
+> > +	struct xfs_mount	*mp,
+> > +	struct xfs_buftarg	*target,
+> > +	xfs_daddr_t		daddr,
+> > +	size_t			length)
+> > +{
+> > +	xfs_buf_t	*bp;
+> > +	int		error;
 > 
-> The code looks good, but long term I think this needs to be fixed
-> in the caller, not in every shrinker instance.
-
-Agreed.
-
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> struct xfs_buf and the same indentation as the parameters, please.
 > 
-> > +		nr_to_scan += atomic64_read(&mp->m_ino_shrink_nr);
-> > +		atomic64_set(&mp->m_ino_shrink_nr, 0);
+> > +
+> > +	bp = xfs_buf_get_noaddr(length, target);
 > 
-> To be totally race free this should use atomic64_cmpxchg.
+> I think both the buf_get and buf_read interfaces for the non-hash
+> buffers should have the same name.  Either your uncached or maybe better
+> unhashed?  (And certainly no noaddr, which is not very useful)
 
-Oh, I didn't realise that existed. I'll fix it.
+I'll rename it *_uncached, because the hash is going away ;)
+
+> 
+> > +	if (!bp || XFS_BUF_ISERROR(bp))
+> > +		goto fail;
+> 
+> xfs_buf_get_noaddr never returns an error in the buffer.
+
+I'll fix all these - they are just CNP from the previous patch.
+> 
+> Also this one returns the buffer locked, while buf_get_noaddr doesn't.
+> I suspect we should also change buf_get_noaddr to return a locked buffer
+> to make it consistant with all other buf_read/get interfaces.
+
+None of the other callers require locked buffers. I'll leave this
+for a separate patch set for the moment.
+
+> > +struct xfs_buf * xfs_buf_read_uncached(struct xfs_mount *mp,
+> > +				struct xfs_buftarg *target,
+> > +				xfs_daddr_t daddr, size_t length);
+> 
+> wrong placement of the *
+> 
+> 
+> This patch, or at least the introduction of the new read helper should
+> be moved before patch 1 so that we don't add code that gets removed a
+> little later.
+
+Yes, I plan to do that.
 
 Cheers,
 
