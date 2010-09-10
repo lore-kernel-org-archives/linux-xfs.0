@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8A3EAmt128485 for <xfs@oss.sgi.com>; Thu, 9 Sep 2010 22:14:10 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F014F1D85001
-	for <xfs@oss.sgi.com>; Thu,  9 Sep 2010 20:14:54 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	RZwJQXYjDRIHCUUB for <xfs@oss.sgi.com>;
-	Thu, 09 Sep 2010 20:14:54 -0700 (PDT)
-Date: Fri, 10 Sep 2010 13:14:52 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/4] xfs: use unhashed buffers for size checks
-Message-ID: <20100910031452.GC24409@dastard>
-References: <1283958778-28610-1-git-send-email-david@fromorbit.com>
-	<1283958778-28610-3-git-send-email-david@fromorbit.com>
-	<20100909013806.GC29825@infradead.org>
+	o8A3MgNX128757 for <xfs@oss.sgi.com>; Thu, 9 Sep 2010 22:22:43 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5AC5F17C93F2
+	for <xfs@oss.sgi.com>; Thu,  9 Sep 2010 20:23:28 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id aEDxVQ0MwKAiy3K8
+	for <xfs@oss.sgi.com>; Thu, 09 Sep 2010 20:23:28 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id CACD26C011
+	for <xfs@oss.sgi.com>; Thu,  9 Sep 2010 22:23:26 -0500 (CDT)
+Message-ID: <4C89A4AE.2070904@hardwarefreak.com>
+Date: Thu, 09 Sep 2010 22:23:26 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100909013806.GC29825@infradead.org>
+Subject: Re: fragmentation question
+References: <C8AEA6E3.6E2E%bchang@greenplum.com>
+In-Reply-To: <C8AEA6E3.6E2E%bchang@greenplum.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,65 +30,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Sep 08, 2010 at 09:38:07PM -0400, Christoph Hellwig wrote:
-> > +struct xfs_buf *
-> > +xfs_buf_read_uncached(
-> > +	struct xfs_mount	*mp,
-> > +	struct xfs_buftarg	*target,
-> > +	xfs_daddr_t		daddr,
-> > +	size_t			length)
-> > +{
-> > +	xfs_buf_t	*bp;
-> > +	int		error;
-> 
-> struct xfs_buf and the same indentation as the parameters, please.
-> 
-> > +
-> > +	bp = xfs_buf_get_noaddr(length, target);
-> 
-> I think both the buf_get and buf_read interfaces for the non-hash
-> buffers should have the same name.  Either your uncached or maybe better
-> unhashed?  (And certainly no noaddr, which is not very useful)
+Brady Chang put forth on 9/9/2010 4:59 PM:
+> thanks guys for the feedback.
+> iostat shows balanced io between two filesystems.
 
-I'll rename it *_uncached, because the hash is going away ;)
+Can we please see the "iostat -x" output for the duration of the TPC-H
+run _only_?
 
-> 
-> > +	if (!bp || XFS_BUF_ISERROR(bp))
-> > +		goto fail;
-> 
-> xfs_buf_get_noaddr never returns an error in the buffer.
-
-I'll fix all these - they are just CNP from the previous patch.
-> 
-> Also this one returns the buffer locked, while buf_get_noaddr doesn't.
-> I suspect we should also change buf_get_noaddr to return a locked buffer
-> to make it consistant with all other buf_read/get interfaces.
-
-None of the other callers require locked buffers. I'll leave this
-for a separate patch set for the moment.
-
-> > +struct xfs_buf * xfs_buf_read_uncached(struct xfs_mount *mp,
-> > +				struct xfs_buftarg *target,
-> > +				xfs_daddr_t daddr, size_t length);
-> 
-> wrong placement of the *
-> 
-> 
-> This patch, or at least the introduction of the new read helper should
-> be moved before patch 1 so that we don't add code that gets removed a
-> little later.
-
-Yes, I plan to do that.
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Stan
 
 _______________________________________________
 xfs mailing list
