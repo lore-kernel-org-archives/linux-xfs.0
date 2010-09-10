@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8A2T0WV126998 for <xfs@oss.sgi.com>; Thu, 9 Sep 2010 21:29:00 -0500
-Received: from smtp.sauce.co.nz (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 79E845FC0F
-	for <xfs@oss.sgi.com>; Thu,  9 Sep 2010 19:29:44 -0700 (PDT)
-Received: from smtp.sauce.co.nz (smtp.sauce.co.nz [210.48.49.72]) by
-	cuda.sgi.com with ESMTP id peddGy36wKUWzqDG for
-	<xfs@oss.sgi.com>; Thu, 09 Sep 2010 19:29:44 -0700 (PDT)
-Message-ID: <4C899816.6030506@sauce.co.nz>
-Date: Fri, 10 Sep 2010 14:29:42 +1200
-From: Richard Scobie <richard@sauce.co.nz>
+	o8A39Ohj128235 for <xfs@oss.sgi.com>; Thu, 9 Sep 2010 22:09:24 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2C5891BA20C9
+	for <xfs@oss.sgi.com>; Thu,  9 Sep 2010 20:10:07 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
+	[150.101.137.100]) by cuda.sgi.com with ESMTP id
+	GsiUW6GWCLsXBURI for <xfs@oss.sgi.com>;
+	Thu, 09 Sep 2010 20:10:07 -0700 (PDT)
+Date: Fri, 10 Sep 2010 13:10:04 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/4] xfs: kill XBF_FS_MANAGED buffers
+Message-ID: <20100910031004.GB24409@dastard>
+References: <1283958778-28610-1-git-send-email-david@fromorbit.com>
+	<1283958778-28610-2-git-send-email-david@fromorbit.com>
+	<20100909013312.GB29825@infradead.org>
 MIME-Version: 1.0
-Subject: Re: XFS over LVM over md RAID
-References: <4C89668E.6010800@sauce.co.nz> <20100910013026.GA24409@dastard>
-In-Reply-To: <20100910013026.GA24409@dastard>
+Content-Disposition: inline
+In-Reply-To: <20100909013312.GB29825@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,136 +27,104 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="windows-1252"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-Hi Dave,
+On Wed, Sep 08, 2010 at 09:33:13PM -0400, Christoph Hellwig wrote:
+> Looks good, but a few comments below:
+> 
+> > +	bp = xfs_buf_get_noaddr(sector_size, mp->m_ddev_targp);
+> > +
+> >  	if (!bp || XFS_BUF_ISERROR(bp)) {
+> 
+> xfs_buf_get_noaddr will never return a buffer with an error set.
 
-Dave Chinner wrote:
-> On Fri, Sep 10, 2010 at 10:58:22AM +1200, Richard Scobie wrote:
->> Using the latest, stable versions of LVM2 and xfsprogs and the
->> 2.6.35.4 kernel, I am setting up lvm on a 16 drive, 256k chunk md
->> RAID6, which has been used to date with XFS directly on the RAID.
->>
->> mkfs.xfs directly on the RAID gives:
->>
->> meta-data=3D/dev/md8               isize=3D256    agcount=3D32,
->> agsize=3D106814656 blks
->>           =3D                       sectsz=3D4096  attr=3D2
->> data     =3D                       bsize=3D4096   blocks=3D3418068864, i=
-maxpct=3D5
->>           =3D                       sunit=3D64     swidth=3D896 blks
->> naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0
->>
->> which gives the correct sunit and swidth values for the array.
->>
->> Creating an lv which uses the entire array and mkfs.xfs on that, gives:
->>
->> meta-data=3D/dev/vg_local/Storage  isize=3D256    agcount=3D13,
->> agsize=3D268435455 blks
->>           =3D                       sectsz=3D512   attr=3D2
->> data     =3D                       bsize=3D4096   blocks=3D3418067968, i=
-maxpct=3D5
->>           =3D                       sunit=3D0      swidth=3D0 blks
->> naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0
->
-> Hmmm - it's treating MD very differently to the LVM volume -
-> different numbers of AGs, different sunit/swdith. Did you
-> build xfsprogs yourself? Is it linked against libblkid or libdisk?
+OK, will fix.
 
-I should clarify - the first set was created with xfsprogs 3.0.0 and =
+> > -	ASSERT(XFS_BUF_VALUSEMA(bp) <= 0);
+> > +
+> > +	/* set up the buffer for a read IO */
+> > +	xfs_buf_lock(bp);
+> > +	XFS_BUF_SET_ADDR(bp, XFS_SB_DADDR);
+> > +        XFS_BUF_READ(bp);
+> > +        XFS_BUF_BUSY(bp);
+> 
+> Various indentation problems.
 
-second was done with xfsprogs 3.1.3, so I wondered if the default ag =
+I'll fix all these by putting the uncached read function factoring
+into an initial patch.
 
-count had changed.
+> > +	/* grab a reference for caching the buffer */
+> > +        XFS_BUF_HOLD(bp);
+> >  	mp->m_sb_bp = bp;
+> > +
+> >  	xfs_buf_relse(bp);
+> 
+> Grabbing the reference just to drop it three lines later is rather
+> pointless, just remove both.
 
-Given a 12TB array, would I be better using 32?
+Except that xfs_buf_relse(bp) also unlocks bp. maybe I coul djust
+make it do an explicit unlock....
 
-I did build 3.1.3. Is libblkid preferable?  I note it is defaulted off =
+> >  	ASSERT(XFS_BUF_VALUSEMA(bp) > 0);
+> 
+> Given that we took the lock a few lines above this one also feels rather
+> poinless.
 
-in configure and I used the default configuration.
+That's checking the buffer is unlocked, which could be removed if
+there is an explicit unlock call. I'll do that.
 
-l appear to have e2fsprogs and devel packages installed (Fedora 11), for =
+> 
+> > +fail:
+> > +	if (bp)
+> >  		xfs_buf_relse(bp);
+> > -	}
+> >  	return error;
+> 
+> I'd rather see this split into a fail_buf_relese label that puts the
+> buffer, and a fail label that just returns the error.
+> 
+> >  	 * when we call xfs_buf_relse().
+> >  	 */
+> >  	bp = xfs_getsb(mp, 0);
+> > -	XFS_BUF_UNMANAGE(bp);
+> > -	xfs_buf_relse(bp);
+> >  	mp->m_sb_bp = NULL;
+> > +
+> > +	/*
+> > +	 * need to release the buffer twice to free it because we hold an extra
+> > +	 * reference count on it.
+> > +	 */
+> > +	xfs_buf_relse(bp);
+> > +	xfs_buf_relse(bp);
+> 
+> I'd rather rewrite xfs_freesb to not use xfs_getsb and thus avoid taking
+> the superflous reference:
+> 
+> void
+> xfs_freesb(
+> 	struct xfs_mount	*mp);
+> 
+> 	struct xfs_buf		*bp = mp->m_sb_bp;
+> 
+> 	mp->m_sb_bp = NULL;
+> 	if (xfs_buf_cond_lock(bp)
+> 		BUG();
+> 	xfs_buf_relse(bp);
+> }
 
-libblkid, but when I enable and try to build, it fails:
+Yeah, that's better. I'll do that.
 
-     [CC]     xfs_mkfs.o
-xfs_mkfs.c: In function =91check_overwrite=92:
-xfs_mkfs.c:298: error: =91blkid_probe=92 undeclared (first use in this func=
-tion)
-xfs_mkfs.c:298: error: (Each undeclared identifier is reported only once
-xfs_mkfs.c:298: error: for each function it appears in.)
-xfs_mkfs.c:298: error: expected =91;=92 before =91pr=92
-xfs_mkfs.c:321: error: =91pr=92 undeclared (first use in this function)
-xfs_mkfs.c:321: warning: implicit declaration of function =
+Cheers,
 
-=91blkid_new_probe_from_filename=92
-xfs_mkfs.c:325: warning: implicit declaration of function =
-
-=91blkid_probe_enable_partitions=92
-xfs_mkfs.c:329: warning: implicit declaration of function =
-
-=91blkid_do_fullprobe=92
-xfs_mkfs.c:345: warning: implicit declaration of function =
-
-=91blkid_probe_lookup_value=92
-xfs_mkfs.c:362: warning: implicit declaration of function =91blkid_free_pro=
-be=92
-xfs_mkfs.c: In function =91blkid_get_topology=92:
-xfs_mkfs.c:372: error: =91blkid_topology=92 undeclared (first use in this =
-
-function)
-xfs_mkfs.c:372: error: expected =91;=92 before =91tp=92
-xfs_mkfs.c:373: error: =91blkid_probe=92 undeclared (first use in this func=
-tion)
-xfs_mkfs.c:373: error: expected =91;=92 before =91pr=92
-xfs_mkfs.c:381: error: =91pr=92 undeclared (first use in this function)
-xfs_mkfs.c:385: error: =91tp=92 undeclared (first use in this function)
-xfs_mkfs.c:385: warning: implicit declaration of function =
-
-=91blkid_probe_get_topology=92
-xfs_mkfs.c:397: warning: implicit declaration of function =
-
-=91blkid_topology_get_minimum_io_size=92
-xfs_mkfs.c:400: warning: implicit declaration of function =
-
-=91blkid_topology_get_optimal_io_size=92
-xfs_mkfs.c:403: warning: implicit declaration of function =
-
-=91blkid_probe_get_sectorsize=92
-xfs_mkfs.c:406: warning: implicit declaration of function =
-
-=91blkid_topology_get_alignment_offset=92
-gmake[2]: *** [xfs_mkfs.o] Error 1
-gmake[1]: *** [mkfs] Error 2
-make: *** [default] Error 2
-
-
-> Or it might be that LVM is not exporting the characteristic of the
-> underlying volume. Can you check if there are different parameter
-> values exported by the two devices in /sys/block/<dev>/queue?
-
-They look the same.
-
->> Limited testing using dd and bonnie++ shows no difference in write
->> performance whether I use sunit=3D64/swidth=3D896 or sunit=3D0/swidth=3D=
-0 on
->> the lv.
->
-> These benchmarks won't realy show any difference on an empty
-> filesystem. It will have an impact on how the filesystems age and
-> how well aligned the IO will be to the underlying device under more
-> complex workloads...
-
-I figured I'd go with the geometry specified.
-
-Regards,
-
-Richard
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
