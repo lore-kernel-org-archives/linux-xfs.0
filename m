@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8A4usBx132307 for <xfs@oss.sgi.com>; Thu, 9 Sep 2010 23:56:54 -0500
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E03D1D8F60D
-	for <xfs@oss.sgi.com>; Thu,  9 Sep 2010 22:09:00 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id 1d8I5IyYQsEB1hD8
-	for <xfs@oss.sgi.com>; Thu, 09 Sep 2010 22:09:00 -0700 (PDT)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id EAB426C011
-	for <xfs@oss.sgi.com>; Thu,  9 Sep 2010 23:57:36 -0500 (CDT)
-Message-ID: <4C89BAC0.4000607@hardwarefreak.com>
-Date: Thu, 09 Sep 2010 23:57:36 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	o8A8WXY9141506 for <xfs@oss.sgi.com>; Fri, 10 Sep 2010 03:32:33 -0500
+Received: from gir.skynet.ie (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D963460829
+	for <xfs@oss.sgi.com>; Fri, 10 Sep 2010 01:33:18 -0700 (PDT)
+Received: from gir.skynet.ie (gir.skynet.ie [193.1.99.77]) by cuda.sgi.com
+	with ESMTP id 2ZSHLZO3gb0CxsEj for <xfs@oss.sgi.com>;
+	Fri, 10 Sep 2010 01:33:18 -0700 (PDT)
+Date: Fri, 10 Sep 2010 09:33:04 +0100
+From: Mel Gorman <mel@csn.ul.ie>
+Subject: Re: [RFC PATCH] fs,xfs: Use __GFP_MOVABLE for XFS buffers
+Message-ID: <20100910083304.GD340@csn.ul.ie>
+References: <20100909111131.GO29263@csn.ul.ie> <20100910003706.GC7032@dastard>
 MIME-Version: 1.0
-Subject: Re: fragmentation question
-References: <C8AEA6E3.6E2E%bchang@greenplum.com>
-	<4C89A4AE.2070904@hardwarefreak.com>
-In-Reply-To: <4C89A4AE.2070904@hardwarefreak.com>
+Content-Disposition: inline
+In-Reply-To: <20100910003706.GC7032@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,41 +28,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-mm@kvack.org, Alex Elder <aelder@sgi.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Stan Hoeppner put forth on 9/9/2010 10:23 PM:
-> Brady Chang put forth on 9/9/2010 4:59 PM:
->> thanks guys for the feedback.
->> iostat shows balanced io between two filesystems.
+On Fri, Sep 10, 2010 at 10:37:06AM +1000, Dave Chinner wrote:
+> On Thu, Sep 09, 2010 at 12:11:32PM +0100, Mel Gorman wrote:
+> > Fragmentation avoidance in the kernel depends on reclaimable and movable
+> > allocations being marked-up at page allocation time. Reclaimable allocations
+> > refer to slab caches such as inode caches which can be reclaimed although
+> > not necessarily in a targetted fashion. Movable pages are those pages that
+> > can be moved to backing storage (during page reclaim) or migrated.
+> > 
+> > When testing against XFS, it was noticed that large page allocation rates
+> > against XFS were far lower than expected in comparison to ext3. Investigation
+> > showed that buffer pages allocated by XFS are placed on the LRU but not
+> > marked __GFP_MOVABLE at allocation time.
+> > 
+> > This patch updates xb_to_gfp() to specify __GFP_MOVABLE and is correct iff
+> > all pages allocated from a mask derived from xb_to_gfp() are guaranteed to
+> > be movable be it via page reclaim or page migration. It needs an XFS expert
+> > to make that determination but when applied, huge page allocation success
+> > rates are similar to those seen on tests backed by ext3.
+> > 
+> > Signed-off-by: Mel Gorman <mel@csn.ul.ie>
 > 
-> Can we please see the "iostat -x" output for the duration of the TPC-H
-> run _only_?
+> I don't see any problems with this, but I don't think it's going to
+> be useful for very long given the work I'm doing on the XFS buffer
+> cache right now - converting it to caching buffers with a shrinker
+> traversed LRU for reclaim instead of using the page cache and hoping
+> reclaim doesn't trash the working set.
+> 
 
-What db engine are you using?  Oracle, DB2, MySQL, or PostgreSQL?
+THat's ok. After I sent the patch, I ran another test with just this
+patch applied and the success rates are still much lower than ext3. My
+initial results had other patches in the mix confusing the results.
+There also appears to be allocations that should have got
+__GFP_RECLAIMABLE.
 
-Exactly how are you instructing it to split files between /data1 and /data2?
+> I'm hoping to have it done in time for the .37 merge window, so
+> adding __GFP_MOVEABLE now might not to even see a release....
+> 
 
-Are you instructing your db engine to split your transaction logs and db
-files equally across both filesystems?
-
-On which filesystem are you locating your database engine scratch space
-if any?
-
-Can you run xfs_bmap on the files on each filesystem to determine which
-are the most fragmented?  Doing this may/should produce the smoking gun.
-
-At this point, I'm guessing you have transaction logs and db scratch
-space allocated to /data2 which is causing the heavy fragmentation.
-
-It would be instructive if you dropped /data2 out of the picture
-entirely and ran the TPC-H benchy using only /data1.  I'm sure you'll
-see the fragmentation on /data1 in this case.
-
-It seems clear your fragmentation issue is a database management issue,
-not an XFS issue.  Your answers to my questions should tell us which.
+I'll revisit it later so and see can I spot what allocations need to be
+marked up to play nicely with fragmentation avoidance. Thanks
 
 -- 
-Stan
+Mel Gorman
+Part-time Phd Student                          Linux Technology Center
+University of Limerick                         IBM Dublin Software Lab
 
 _______________________________________________
 xfs mailing list
