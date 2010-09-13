@@ -1,31 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8D84ftA059869 for <xfs@oss.sgi.com>; Mon, 13 Sep 2010 03:04:42 -0500
-Received: from bork.lsof.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 85FDE11E4274
-	for <xfs@oss.sgi.com>; Mon, 13 Sep 2010 01:17:07 -0700 (PDT)
-Received: from bork.lsof.org (bork.lsof.org [87.253.148.42]) by cuda.sgi.com
-	with ESMTP id i3pNDmaFyfWBRLXD for <xfs@oss.sgi.com>;
-	Mon, 13 Sep 2010 01:17:07 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-	by bork.lsof.org (Postfix) with ESMTP id 45DB5B836
-	for <xfs@oss.sgi.com>; Mon, 13 Sep 2010 10:05:27 +0200 (CEST)
-Received: from bork.lsof.org ([127.0.0.1])
-	by localhost (bork.lsof.org [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id 9J6eiMOgB7bc for <xfs@oss.sgi.com>;
-	Mon, 13 Sep 2010 10:05:25 +0200 (CEST)
-Received: from bork.lsof.org (localhost [127.0.0.1])
-	by bork.lsof.org (Postfix) with ESMTP id 4BA17B832
-	for <xfs@oss.sgi.com>; Mon, 13 Sep 2010 10:05:25 +0200 (CEST)
-References: <4C8A4395.5070702@kickstone.com> <4C8B27E4.2050102@kickstone.com>
-	<20100911082330.GG705@dastard> <4C8BDAC8.8010203@hardwarefreak.com>
-Message-ID: <cone.1284365125.256876.62928.1001@bork.lsof.org>
-From: Roel van Meer <rolek@bokxing.nl>
-Subject: Re: XFS defragmentation issue
-Date: Mon, 13 Sep 2010 10:05:25 +0200
+	o8DGxH4G082451 for <xfs@oss.sgi.com>; Mon, 13 Sep 2010 11:59:17 -0500
+Subject: Re: [PATCH 4/4] xfs: convert buffer cache hash to rbtree
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20100909015150.GB11362@infradead.org>
+References: <1283958778-28610-1-git-send-email-david@fromorbit.com>
+	<1283958778-28610-5-git-send-email-david@fromorbit.com>
+	<20100909015150.GB11362@infradead.org>
+Date: Mon, 13 Sep 2010 11:59:45 -0500
+Message-ID: <1284397185.2404.54.camel@doink>
 Mime-Version: 1.0
-Content-Disposition: inline
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,28 +20,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Stan Hoeppner writes:
 
-> Out of curiosity, who here schedules automatic xfs_fsr runs, and with
-> what frequency?  Currently I just run it manually now and then when
-> performance starts to seem sluggish.
+> > @@ -210,8 +210,6 @@ xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t agno)
+> >  	pag = radix_tree_lookup(&mp->m_perag_tree, agno);
+> >  	if (pag) {
+> >  		ASSERT(atomic_read(&pag->pag_ref) >= 0);
+> > -		/* catch leaks in the positive direction during testing */
+> > -		ASSERT(atomic_read(&pag->pag_ref) < 1000);
+> 
+> Di you manage to hit this during testing?  Either way it should probably
+> be a separate patch.
 
-I run it daily during the week, at a time when load is practically nil, on 
-two boxes with 24TB storage each, divided into six parts of about 4GB. A 
-10-pass xfs_fsr run usually completes in under one hour, except on monday, 
-when it takes three to four hours.
+I'm pretty sure this is due to each buffer now holding
+a perag reference.  It might be nice to preserve this
+functionality by checking against the number of blocks
+in the AG or something similar.  But it's debug so it's
+not quite as critical.
 
-I don't have any stats on the net effect, though.
-
-Regards,
-
-roel
+					-Alex
 
 _______________________________________________
 xfs mailing list
