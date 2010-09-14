@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8EAu5ts121082 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 05:56:06 -0500
+	o8EAuUqT121315 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 05:56:30 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 740CC11E4F78
-	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 04:08:36 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	H2QUw5RwVjuy6zhc for <xfs@oss.sgi.com>;
-	Tue, 14 Sep 2010 04:08:36 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BE41A1E65326
+	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 03:57:17 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	77FLw2hUEfj1rLYq for <xfs@oss.sgi.com>;
+	Tue, 14 Sep 2010 03:57:17 -0700 (PDT)
 Received: from dastard (unverified [121.44.127.68])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	39287317-1927428
-	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 20:26:50 +0930 (CST)
+	38735027-1927428
+	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 20:27:16 +0930 (CST)
 Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1OvTBx-0004OV-An
-	for xfs@oss.sgi.com; Tue, 14 Sep 2010 20:56:49 +1000
+	(envelope-from <dave@fromorbit.com>) id 1OvTCM-0004PQ-UH
+	for xfs@oss.sgi.com; Tue, 14 Sep 2010 20:57:14 +1000
 Received: from dave by disturbed with local (Exim 4.72)
-	(envelope-from <dave@disturbed.disaster>) id 1OvTBa-0000Q4-Vi
-	for xfs@oss.sgi.com; Tue, 14 Sep 2010 20:56:26 +1000
+	(envelope-from <dave@disturbed.disaster>) id 1OvTC0-0000Qg-I6
+	for xfs@oss.sgi.com; Tue, 14 Sep 2010 20:56:52 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 06/18] xfs: convert pag_ici_lock to a spin lock
-Date: Tue, 14 Sep 2010 20:56:05 +1000
-Message-Id: <1284461777-1496-7-git-send-email-david@fromorbit.com>
+Subject: [PATCH 16/18] xfs: convert xfsbud shrinker to a per-buftarg shrinker.
+Date: Tue, 14 Sep 2010 20:56:15 +1000
+Message-Id: <1284461777-1496-17-git-send-email-david@fromorbit.com>
 In-Reply-To: <1284461777-1496-1-git-send-email-david@fromorbit.com>
 References: <1284461777-1496-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -42,157 +42,206 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-now that we are using RCU protection for the inode cache lookups,
-the lock is only needed on the modification side. Hence it is not
-necessary for the lock to be a rwlock as there are no read side
-holders anymore. Convert it to a spin lock to reflect it's exclusive
-nature.
+Before we introduce per-buftarg LRU lists, split the shrinker
+implementation into per-buftarg shrinker callbacks. At the moment
+we wake all the xfsbufds to run the delayed write queues to free
+the dirty buffers and make their pages available for reclaim.
+However, with an LRU, we want to be able to free clean, unused
+buffers as well, so we need to separate the xfsbufd from the
+shrinker callbacks.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/linux-2.6/xfs_sync.c |   16 ++++++++--------
- fs/xfs/xfs_ag.h             |    2 +-
- fs/xfs/xfs_iget.c           |   10 +++++-----
- fs/xfs/xfs_mount.c          |    2 +-
- 4 files changed, 15 insertions(+), 15 deletions(-)
+ fs/xfs/linux-2.6/xfs_buf.c |   89 ++++++++++++--------------------------------
+ fs/xfs/linux-2.6/xfs_buf.h |    4 +-
+ 2 files changed, 27 insertions(+), 66 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index e549d67..c093e91 100644
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -100,13 +100,13 @@ restart:
- 		xfs_inode_t	*ip;
+diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
+index cce427d..3b54fee 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.c
++++ b/fs/xfs/linux-2.6/xfs_buf.c
+@@ -44,12 +44,7 @@
  
- 		if (exclusive)
--			write_lock(&pag->pag_ici_lock);
-+			spin_lock(&pag->pag_ici_lock);
- 		else
- 			rcu_read_lock();
- 		ip = xfs_inode_ag_lookup(mp, pag, &first_index, tag);
- 		if (!ip) {
- 			if (exclusive)
--				write_unlock(&pag->pag_ici_lock);
-+				spin_unlock(&pag->pag_ici_lock);
- 			else
- 				rcu_read_unlock();
- 			break;
-@@ -659,12 +659,12 @@ xfs_inode_set_reclaim_tag(
- 	struct xfs_perag *pag;
+ static kmem_zone_t *xfs_buf_zone;
+ STATIC int xfsbufd(void *);
+-STATIC int xfsbufd_wakeup(struct shrinker *, int, gfp_t);
+ STATIC void xfs_buf_delwri_queue(xfs_buf_t *, int);
+-static struct shrinker xfs_buf_shake = {
+-	.shrink = xfsbufd_wakeup,
+-	.seeks = DEFAULT_SEEKS,
+-};
  
- 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
--	write_lock(&pag->pag_ici_lock);
-+	spin_lock(&pag->pag_ici_lock);
- 	spin_lock(&ip->i_flags_lock);
- 	__xfs_inode_set_reclaim_tag(pag, ip);
- 	__xfs_iflags_set(ip, XFS_IRECLAIMABLE);
- 	spin_unlock(&ip->i_flags_lock);
--	write_unlock(&pag->pag_ici_lock);
-+	spin_unlock(&pag->pag_ici_lock);
- 	xfs_perag_put(pag);
+ static struct workqueue_struct *xfslogd_workqueue;
+ struct workqueue_struct *xfsdatad_workqueue;
+@@ -337,7 +332,6 @@ _xfs_buf_lookup_pages(
+ 					__func__, gfp_mask);
+ 
+ 			XFS_STATS_INC(xb_page_retries);
+-			xfsbufd_wakeup(NULL, 0, gfp_mask);
+ 			congestion_wait(BLK_RW_ASYNC, HZ/50);
+ 			goto retry;
+ 		}
+@@ -1475,28 +1469,23 @@ xfs_wait_buftarg(
+ 	}
  }
  
-@@ -757,12 +757,12 @@ xfs_reclaim_inode(
- 	if (__xfs_iflags_test(ip, XFS_IRECLAIM)) {
- 		/* ignore as it is already under reclaim */
- 		spin_unlock(&ip->i_flags_lock);
--		write_unlock(&pag->pag_ici_lock);
-+		spin_unlock(&pag->pag_ici_lock);
- 		return 0;
- 	}
- 	__xfs_iflags_set(ip, XFS_IRECLAIM);
- 	spin_unlock(&ip->i_flags_lock);
--	write_unlock(&pag->pag_ici_lock);
-+	spin_unlock(&pag->pag_ici_lock);
+-/*
+- *	buftarg list for delwrite queue processing
+- */
+-static LIST_HEAD(xfs_buftarg_list);
+-static DEFINE_SPINLOCK(xfs_buftarg_lock);
+-
+-STATIC void
+-xfs_register_buftarg(
+-	xfs_buftarg_t           *btp)
+-{
+-	spin_lock(&xfs_buftarg_lock);
+-	list_add(&btp->bt_list, &xfs_buftarg_list);
+-	spin_unlock(&xfs_buftarg_lock);
+-}
+-
+-STATIC void
+-xfs_unregister_buftarg(
+-	xfs_buftarg_t           *btp)
++int
++xfs_buftarg_shrink(
++	struct shrinker		*shrink,
++	int			nr_to_scan,
++	gfp_t			mask)
+ {
+-	spin_lock(&xfs_buftarg_lock);
+-	list_del(&btp->bt_list);
+-	spin_unlock(&xfs_buftarg_lock);
++	struct xfs_buftarg	*btp = container_of(shrink,
++					struct xfs_buftarg, bt_shrinker);
++	if (nr_to_scan) {
++		if (test_bit(XBT_FORCE_SLEEP, &btp->bt_flags))
++			return -1;
++		if (list_empty(&btp->bt_delwrite_queue))
++			return -1;
++		set_bit(XBT_FORCE_FLUSH, &btp->bt_flags);
++		wake_up_process(btp->bt_task);
++	}
++	return list_empty(&btp->bt_delwrite_queue) ? -1 : 1;
+ }
  
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	if (!xfs_iflock_nowait(ip)) {
-@@ -834,11 +834,11 @@ reclaim:
- 	 * added to the tree assert that it's been there before to catch
- 	 * problems with the inode life time early on.
- 	 */
--	write_lock(&pag->pag_ici_lock);
-+	spin_lock(&pag->pag_ici_lock);
- 	if (!radix_tree_delete(&pag->pag_ici_root,
- 				XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino)))
- 		ASSERT(0);
--	write_unlock(&pag->pag_ici_lock);
-+	spin_unlock(&pag->pag_ici_lock);
+ void
+@@ -1504,17 +1493,14 @@ xfs_free_buftarg(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_buftarg	*btp)
+ {
++	unregister_shrinker(&btp->bt_shrinker);
++
+ 	xfs_flush_buftarg(btp, 1);
+ 	if (mp->m_flags & XFS_MOUNT_BARRIER)
+ 		xfs_blkdev_issue_flush(btp);
+ 	iput(btp->bt_mapping->host);
  
- 	/*
- 	 * Here we do an (almost) spurious inode lock in order to coordinate
-diff --git a/fs/xfs/xfs_ag.h b/fs/xfs/xfs_ag.h
-index 51c42c2..6de9128 100644
---- a/fs/xfs/xfs_ag.h
-+++ b/fs/xfs/xfs_ag.h
-@@ -227,7 +227,7 @@ typedef struct xfs_perag {
+-	/* Unregister the buftarg first so that we don't get a
+-	 * wakeup finding a non-existent task
+-	 */
+-	xfs_unregister_buftarg(btp);
+ 	kthread_stop(btp->bt_task);
+-
+ 	kmem_free(btp);
+ }
  
- 	atomic_t        pagf_fstrms;    /* # of filestreams active in this AG */
+@@ -1610,20 +1596,13 @@ xfs_alloc_delwrite_queue(
+ 	xfs_buftarg_t		*btp,
+ 	const char		*fsname)
+ {
+-	int	error = 0;
+-
+-	INIT_LIST_HEAD(&btp->bt_list);
+ 	INIT_LIST_HEAD(&btp->bt_delwrite_queue);
+ 	spin_lock_init(&btp->bt_delwrite_lock);
+ 	btp->bt_flags = 0;
+ 	btp->bt_task = kthread_run(xfsbufd, btp, "xfsbufd/%s", fsname);
+-	if (IS_ERR(btp->bt_task)) {
+-		error = PTR_ERR(btp->bt_task);
+-		goto out_error;
+-	}
+-	xfs_register_buftarg(btp);
+-out_error:
+-	return error;
++	if (IS_ERR(btp->bt_task))
++		return PTR_ERR(btp->bt_task);
++	return 0;
+ }
  
--	rwlock_t	pag_ici_lock;	/* incore inode lock */
-+	spinlock_t	pag_ici_lock;	/* incore inode cache lock */
- 	struct radix_tree_root pag_ici_root;	/* incore inode cache root */
- 	int		pag_ici_reclaimable;	/* reclaimable inodes */
+ xfs_buftarg_t *
+@@ -1646,6 +1625,9 @@ xfs_alloc_buftarg(
+ 		goto error;
+ 	if (xfs_alloc_delwrite_queue(btp, fsname))
+ 		goto error;
++	btp->bt_shrinker.shrink = xfs_buftarg_shrink,
++	btp->bt_shrinker.seeks = DEFAULT_SEEKS,
++	register_shrinker(&btp->bt_shrinker);
+ 	return btp;
  
-diff --git a/fs/xfs/xfs_iget.c b/fs/xfs/xfs_iget.c
-index f3a46b6..c46ce03 100644
---- a/fs/xfs/xfs_iget.c
-+++ b/fs/xfs/xfs_iget.c
-@@ -234,14 +234,14 @@ xfs_iget_cache_hit(
- 			goto out_error;
- 		}
+ error:
+@@ -1750,27 +1732,6 @@ xfs_buf_runall_queues(
+ 	flush_workqueue(queue);
+ }
  
--		write_lock(&pag->pag_ici_lock);
-+		spin_lock(&pag->pag_ici_lock);
- 		spin_lock(&ip->i_flags_lock);
- 		ip->i_flags &= ~(XFS_IRECLAIMABLE | XFS_IRECLAIM);
- 		ip->i_flags |= XFS_INEW;
- 		__xfs_inode_clear_reclaim_tag(mp, pag, ip);
- 		inode->i_state = I_NEW;
- 		spin_unlock(&ip->i_flags_lock);
--		write_unlock(&pag->pag_ici_lock);
-+		spin_unlock(&pag->pag_ici_lock);
- 	} else {
- 		/* If the VFS inode is being torn down, pause and try again. */
- 		if (!igrab(inode)) {
-@@ -319,7 +319,7 @@ xfs_iget_cache_miss(
- 			BUG();
- 	}
+-STATIC int
+-xfsbufd_wakeup(
+-	struct shrinker		*shrink,
+-	int			priority,
+-	gfp_t			mask)
+-{
+-	xfs_buftarg_t		*btp;
+-
+-	spin_lock(&xfs_buftarg_lock);
+-	list_for_each_entry(btp, &xfs_buftarg_list, bt_list) {
+-		if (test_bit(XBT_FORCE_SLEEP, &btp->bt_flags))
+-			continue;
+-		if (list_empty(&btp->bt_delwrite_queue))
+-			continue;
+-		set_bit(XBT_FORCE_FLUSH, &btp->bt_flags);
+-		wake_up_process(btp->bt_task);
+-	}
+-	spin_unlock(&xfs_buftarg_lock);
+-	return 0;
+-}
+-
+ /*
+  * Move as many buffers as specified to the supplied list
+  * idicating if we skipped any buffers to prevent deadlocks.
+@@ -1965,7 +1926,6 @@ xfs_buf_init(void)
+ 	if (!xfsconvertd_workqueue)
+ 		goto out_destroy_xfsdatad_workqueue;
  
--	write_lock(&pag->pag_ici_lock);
-+	spin_lock(&pag->pag_ici_lock);
- 
- 	/* insert the new inode */
- 	error = radix_tree_insert(&pag->pag_ici_root, agino, ip);
-@@ -334,14 +334,14 @@ xfs_iget_cache_miss(
- 	ip->i_udquot = ip->i_gdquot = NULL;
- 	xfs_iflags_set(ip, XFS_INEW);
- 
--	write_unlock(&pag->pag_ici_lock);
-+	spin_unlock(&pag->pag_ici_lock);
- 	radix_tree_preload_end();
- 
- 	*ipp = ip;
+-	register_shrinker(&xfs_buf_shake);
  	return 0;
  
- out_preload_end:
--	write_unlock(&pag->pag_ici_lock);
-+	spin_unlock(&pag->pag_ici_lock);
- 	radix_tree_preload_end();
- 	if (lock_flags)
- 		xfs_iunlock(ip, lock_flags);
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 14fc6e9..546eb1f 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -450,7 +450,7 @@ xfs_initialize_perag(
- 			goto out_unwind;
- 		pag->pag_agno = index;
- 		pag->pag_mount = mp;
--		rwlock_init(&pag->pag_ici_lock);
-+		spin_lock_init(&pag->pag_ici_lock);
- 		INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
+  out_destroy_xfsdatad_workqueue:
+@@ -1981,7 +1941,6 @@ xfs_buf_init(void)
+ void
+ xfs_buf_terminate(void)
+ {
+-	unregister_shrinker(&xfs_buf_shake);
+ 	destroy_workqueue(xfsconvertd_workqueue);
+ 	destroy_workqueue(xfsdatad_workqueue);
+ 	destroy_workqueue(xfslogd_workqueue);
+diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
+index 44f66cd..6e9310b 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.h
++++ b/fs/xfs/linux-2.6/xfs_buf.h
+@@ -137,10 +137,12 @@ typedef struct xfs_buftarg {
  
- 		if (radix_tree_preload(GFP_NOFS))
+ 	/* per device delwri queue */
+ 	struct task_struct	*bt_task;
+-	struct list_head	bt_list;
+ 	struct list_head	bt_delwrite_queue;
+ 	spinlock_t		bt_delwrite_lock;
+ 	unsigned long		bt_flags;
++
++	/* LRU control structures */
++	struct shrinker		bt_shrinker;
+ } xfs_buftarg_t;
+ 
+ /*
 -- 
 1.7.1
 
