@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8EEnj8L130989 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 09:49:46 -0500
+	o8EExVNh131397 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 09:59:32 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 49A94DD9EE3
-	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 08:02:20 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6D210DD91A7
+	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 08:12:06 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id Lv6LW7zjzR2Wm6G4 for
-	<xfs@oss.sgi.com>; Tue, 14 Sep 2010 08:02:20 -0700 (PDT)
-Date: Tue, 14 Sep 2010 10:50:34 -0400
+	by cuda.sgi.com with ESMTP id 3rW9HAbZbu8c4BfP for
+	<xfs@oss.sgi.com>; Tue, 14 Sep 2010 08:12:06 -0700 (PDT)
+Date: Tue, 14 Sep 2010 11:00:19 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 04/18] xfs: lockless per-ag lookups
-Message-ID: <20100914145034.GD3400@infradead.org>
+Subject: Re: [PATCH 12/18] xfs: use unhashed buffers for size checks
+Message-ID: <20100914150019.GJ3400@infradead.org>
 References: <1284461777-1496-1-git-send-email-david@fromorbit.com>
-	<1284461777-1496-5-git-send-email-david@fromorbit.com>
+	<1284461777-1496-13-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1284461777-1496-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1284461777-1496-13-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,21 +32,14 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Sep 14, 2010 at 08:56:03PM +1000, Dave Chinner wrote:
+On Tue, Sep 14, 2010 at 08:56:11PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> When we start taking a reference to the per-ag for every cached
-> buffer in the system, kernel lockstat profiling on an 8-way create
-> workload shows the mp->m_perag_lock has higher acquisition rates
-> than the inode lock and has significantly more contention. That is,
-> it becomes the highest contended lock in the system.
-> 
-> The perag lookup is trivial to convert to lock-less RCU lookups
-> because perag structures never go away. Hence the only thing we need
-> to protect against is tree structure changes during a grow. THis can
-> be done simply by replacing the locking in xfs_perag_get() with RCU
-> read locking. This removes the mp->m_perag_lock completely from this
-> path.
+> When we are checking we can access the last block of each device, we
+> do not need to use cached buffers as they will be tossed away
+> immediately. Use uncached buffers for size checks so that all IO
+> prior to full in-memory structure initialisation does not use the
+> buffer cache.
 
 Looks good,
 
