@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8EAu6BW121096 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 05:56:06 -0500
+	o8EAuE2Z121187 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 05:56:14 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E32031E6530B
-	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 03:56:53 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	aHDEjfOrEGvPjaxD for <xfs@oss.sgi.com>;
-	Tue, 14 Sep 2010 03:56:53 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5A3131E65317
+	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 03:57:02 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	XCGKeYzN2t62LuMD for <xfs@oss.sgi.com>;
+	Tue, 14 Sep 2010 03:57:02 -0700 (PDT)
 Received: from dastard (unverified [121.44.127.68])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	38830800-1927428
-	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 20:26:51 +0930 (CST)
+	39287352-1927428
+	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 20:27:01 +0930 (CST)
 Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1OvTBn-0004OJ-2O
-	for xfs@oss.sgi.com; Tue, 14 Sep 2010 20:56:39 +1000
+	(envelope-from <dave@fromorbit.com>) id 1OvTBx-0004Om-GS
+	for xfs@oss.sgi.com; Tue, 14 Sep 2010 20:56:49 +1000
 Received: from dave by disturbed with local (Exim 4.72)
-	(envelope-from <dave@disturbed.disaster>) id 1OvTBa-0000Pq-LW
-	for xfs@oss.sgi.com; Tue, 14 Sep 2010 20:56:26 +1000
+	(envelope-from <dave@disturbed.disaster>) id 1OvTBl-0000QC-4D
+	for xfs@oss.sgi.com; Tue, 14 Sep 2010 20:56:37 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 01/18] xfs: single thread inode cache shrinking.
-Date: Tue, 14 Sep 2010 20:56:00 +1000
-Message-Id: <1284461777-1496-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 09/18] xfs: introduced uncached buffer read primitve
+Date: Tue, 14 Sep 2010 20:56:08 +1000
+Message-Id: <1284461777-1496-10-git-send-email-david@fromorbit.com>
 In-Reply-To: <1284461777-1496-1-git-send-email-david@fromorbit.com>
 References: <1284461777-1496-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -42,94 +42,74 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Having multiple CPUs trying to do the same cache shrinking work can
-be actively harmful to perforamnce when the shrinkers land in the
-same AGs.  They then lockstep on perag locks, causing contention and
-slowing each other down. Reclaim walking is sufficiently efficient
-that we do no need parallelism to make significant progress, so stop
-parallel access at the door.
-
-Instead, keep track of the number of objects the shrinkers want
-cleaned and make sure the single running shrinker does not stop
-until it has hit the threshold that the other shrinker calls have
-built up.
-
-This increases the cold-cache unlink rate of a 8-way parallel unlink
-workload from about 15,000 unlinks/s to 60-70,000 unlinks/s for the
-same CPU usage (~700%), resulting in the runtime for a 200M inode
-unlink workload dropping from 4h50m to just under 1 hour.
+To avoid the need to use cached buffers for single-shot or buffers
+cached at the filesystem level, introduce a new buffer read
+primitive that bypasses the cache an reads directly from disk.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/linux-2.6/xfs_sync.c |   21 +++++++++++++++++++--
- fs/xfs/xfs_mount.h          |    2 ++
- 2 files changed, 21 insertions(+), 2 deletions(-)
+ fs/xfs/linux-2.6/xfs_buf.c |   33 +++++++++++++++++++++++++++++++++
+ fs/xfs/linux-2.6/xfs_buf.h |    3 +++
+ 2 files changed, 36 insertions(+), 0 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index d59c4a6..bc54cd6 100644
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -869,7 +869,9 @@ xfs_reclaim_inodes(
+diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
+index 03563d4..8555974 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.c
++++ b/fs/xfs/linux-2.6/xfs_buf.c
+@@ -638,6 +638,39 @@ xfs_buf_readahead(
+ 	xfs_buf_read(target, ioff, isize, flags);
  }
  
- /*
-- * Shrinker infrastructure.
-+ * Shrinker infrastructure. We allow filesystem reclaim recursion here because
-+ * we trylock everything in the reclaim path and hence will not deadlock with
-+ * locks that may already be held through direct reclaim.
-  */
- static int
- xfs_reclaim_inode_shrink(
-@@ -883,12 +885,25 @@ xfs_reclaim_inode_shrink(
- 	int		reclaimable;
- 
- 	mp = container_of(shrink, struct xfs_mount, m_inode_shrink);
++/*
++ * Read an uncached buffer from disk. Allocates and returns a locked
++ * buffer containing the disk contents or nothing.
++ */
++struct xfs_buf *
++xfs_buf_read_uncached(
++	struct xfs_mount	*mp,
++	struct xfs_buftarg	*target,
++	xfs_daddr_t		daddr,
++	size_t			length)
++{
++	xfs_buf_t		*bp;
++	int			error;
 +
- 	if (nr_to_scan) {
--		if (!(gfp_mask & __GFP_FS))
-+		int64_t scan_cnt;
++	bp = xfs_buf_get_uncached(length, target);
++	if (!bp)
++		return NULL;
 +
-+		if (!mutex_trylock(&mp->m_ino_shrink_lock)) {
-+			atomic64_add(nr_to_scan, &mp->m_ino_shrink_nr);
- 			return -1;
-+		}
- 
-+		do {
-+			scan_cnt = atomic64_read(&mp->m_ino_shrink_nr);
-+		} while (scan_cnt !=
-+			atomic64_cmpxchg(&mp->m_ino_shrink_nr, scan_cnt, 0));
++	/* set up the buffer for a read IO */
++	xfs_buf_lock(bp);
++	XFS_BUF_SET_ADDR(bp, daddr);
++	XFS_BUF_READ(bp);
++	XFS_BUF_BUSY(bp);
 +
-+		nr_to_scan += scan_cnt;
- 		xfs_inode_ag_iterator(mp, xfs_reclaim_inode, 0,
- 					XFS_ICI_RECLAIM_TAG, 1, &nr_to_scan);
-+		mutex_unlock(&mp->m_ino_shrink_lock);
++	xfsbdstrat(mp, bp);
++	error = xfs_iowait(bp);
++	if (error || bp->b_error) {
++		xfs_buf_relse(bp);
++		return NULL;
++	}
++	return bp;
++}
 +
- 		/* if we don't exhaust the scan, don't bother coming back */
- 		if (nr_to_scan > 0)
- 			return -1;
-@@ -910,6 +925,8 @@ xfs_inode_shrinker_register(
- {
- 	mp->m_inode_shrink.shrink = xfs_reclaim_inode_shrink;
- 	mp->m_inode_shrink.seeks = DEFAULT_SEEKS;
-+	atomic64_set(&mp->m_ino_shrink_nr, 0);
-+	mutex_init(&mp->m_ino_shrink_lock);
- 	register_shrinker(&mp->m_inode_shrink);
- }
+ xfs_buf_t *
+ xfs_buf_get_empty(
+ 	size_t			len,
+diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
+index 73a3a8e..4d5937d 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.h
++++ b/fs/xfs/linux-2.6/xfs_buf.h
+@@ -218,6 +218,9 @@ extern int xfs_buf_associate_memory(xfs_buf_t *, void *, size_t);
+ extern void xfs_buf_hold(xfs_buf_t *);
+ extern void xfs_buf_readahead(xfs_buftarg_t *, xfs_off_t, size_t,
+ 				xfs_buf_flags_t);
++struct xfs_buf *xfs_buf_read_uncached(struct xfs_mount *mp,
++				struct xfs_buftarg *target,
++				xfs_daddr_t daddr, size_t length);
  
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 622da21..57b5644 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -199,6 +199,8 @@ typedef struct xfs_mount {
- 	__int64_t		m_update_flags;	/* sb flags we need to update
- 						   on the next remount,rw */
- 	struct shrinker		m_inode_shrink;	/* inode reclaim shrinker */
-+	atomic64_t		m_ino_shrink_nr;
-+	struct mutex		m_ino_shrink_lock;
- } xfs_mount_t;
- 
- /*
+ /* Releasing Buffers */
+ extern void xfs_buf_free(xfs_buf_t *);
 -- 
 1.7.1
 
