@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8EEtTZa131220 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 09:55:29 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A9982DD89C1
-	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 08:08:03 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id i20nBqMNEOKW0OSL for
-	<xfs@oss.sgi.com>; Tue, 14 Sep 2010 08:08:03 -0700 (PDT)
-Date: Tue, 14 Sep 2010 10:56:17 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 08/18] xfs: rename xfs_buf_get_nodaddr to be more
-	appropriate
-Message-ID: <20100914145617.GF3400@infradead.org>
-References: <1284461777-1496-1-git-send-email-david@fromorbit.com>
-	<1284461777-1496-9-git-send-email-david@fromorbit.com>
+	o8EG8Pij134760 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 11:08:25 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B9DF0714DE
+	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 09:09:13 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id HcGUr0Q4FIeR6Eja
+	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 09:09:13 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id E61D46C0B8
+	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 11:09:12 -0500 (CDT)
+Message-ID: <4C8F9E29.2000803@hardwarefreak.com>
+Date: Tue, 14 Sep 2010 11:09:13 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1284461777-1496-9-git-send-email-david@fromorbit.com>
+Subject: Re: XFS Filesystem not mounting
+References: <29704010.post@talk.nabble.com>	<20100914082504.4109712d@galadriel.home>	<29708085.post@talk.nabble.com>
+	<201009141603.24754@zmi.at>
+In-Reply-To: <201009141603.24754@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,25 +31,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
->  xfs_buf_t *
-> -xfs_buf_get_noaddr(
-> +xfs_buf_get_uncached(
->  	size_t			len,
->  	xfs_buftarg_t		*target)
->  {
-> @@ -725,7 +725,7 @@ xfs_buf_get_noaddr(
->  		goto fail_free_buf;
->  
->  	for (i = 0; i < page_count; i++) {
-> -		bp->b_pages[i] = alloc_page(GFP_KERNEL);
-> +		bp->b_pages[i] = alloc_page(GFP_NOFS);
+Michael Monnerie put forth on 9/14/2010 9:03 AM:
 
-Instead of doingthis unconditionally I think it's better to add a flags
-aregument which can contain XBF_DONT_BLOCK, and then use xb_to_gfp for
-the flags.
+> I'm currently on 11.2, and must say it's the best I ever worked with. 
+> Especially upgrading is so fast, smooth and easy now (in-place upgrade) 
+> that it really makes fun. Didn't have time to upgrade to 11.3, I just 
+> did a fresh install of it once and it looked even better (desktop 
+> version on a notebook).
+
+I've been using Debian for headless servers for many years.
+Distribution upgrades via apt-get or aptitude have been smooth and easy
+for many years.  I have one server that's been in-place upgraded from
+Woody through Lenny with only minor dependency issues--that's 4
+distribution upgrades over 5 years--Woody, Sarge, Etch, Lenny.
+
+Then again, I don't use Debian kernels, so my kernels were never
+upgraded during the dist upgrade.  This may have prevented some
+headaches.  I roll my own kernels from kernel.org source and tend to
+keep fairly current.  So, when I do a dist upgrade my current kernel is
+usually newer than what the dist upgrade provides.  The fact I leave out
+features I don't need may play a role in preventing problems as well.
+
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
